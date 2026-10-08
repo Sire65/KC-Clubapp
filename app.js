@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.91.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.92.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -2678,7 +2678,35 @@ function onlineAnsagen(liste) {
   OA.vorher = new Set(andere.map((x) => x.person_id)); OA.zuletzt = jetzt;
   if (!neu.length || document.hidden) return;
   onlineAnsageSprechen(neu.map((x) => x.vorname || x.name));
+  try { spurFrage(neu); } catch {} // KC-CLUB-SPUR-FRAGE (2.92.0) – darf die Ansage nie stören
 }
+// ---------- KC-CLUB-SPUR-FRAGE (2.92.0, Wunsch Hansi): meldet sich ein Mitglied an → nur der Admin wird gefragt, ob er sehen möchte,
+// was es gerade macht. Ja → „Wege der Benutzung“ mit allen, die gerade da sind (antippbar). Nie über einem anderen offenen Fenster,
+// nie in der Ruhezeit; abschaltbar („Nicht mehr fragen“) und im Wege-Fenster wieder einschaltbar.
+const SPUR_FRAGE = "kc_club_spur_frage";
+const spurFrageAn = () => !!ICH?.admin && lsLesen(SPUR_FRAGE) !== "0";
+function spurFrage(neu) {
+  if (!spurFrageAn() || !neu?.length || inRuheJetzt(INIT?.einstellungen?.ruhezeit) || (typeof RUF !== "undefined" && RUF)) return;
+  if (!$("adminBlatt")?.classList.contains("versteckt")) return; // Admin-Fenster (z. B. die Wege) ist schon offen
+  const alt = $("spurFrageBlatt");
+  if (!alt && document.querySelector(".blatt:not(.versteckt)")) return; // nicht mitten in etwas anderes hinein
+  const namen = [...new Set([...(alt ? JSON.parse(alt.dataset.namen || "[]") : []), ...neu.map((x) => x.vorname || x.name)])];
+  const wer = namen.length === 1 ? `<b>${esc(namen[0])}</b> hat sich gerade angemeldet` : `<b>${esc(namen.slice(0, -1).join(", "))}</b> und <b>${esc(namen[namen.length - 1])}</b> haben sich gerade angemeldet`;
+  const f = blattAuf("spurFrageBlatt", `<h3 style="margin-top:0">🟢 ${wer}</h3>
+    <p style="margin:0 0 10px">Möchtest du sehen, was ${namen.length === 1 ? esc(namen[0]) : "sie"} gerade ${namen.length === 1 ? "macht" : "machen"}?</p>
+    <div class="knoepfe"><button class="knopf" data-nein="1">Nein</button><button class="knopf haupt" data-ja="1">👀 Ja, ansehen</button></div>
+    <p style="margin:8px 0 0;text-align:center"><button class="knopf klein" data-aus="1">🔕 Nicht mehr fragen</button></p>`);
+  f.dataset.namen = JSON.stringify(namen);
+  f.querySelector("[data-nein]").onclick = () => f.remove();
+  f.querySelector("[data-ja]").onclick = () => { f.remove(); spurAdmin(heuteIso(), null); };
+  f.querySelector("[data-aus]").onclick = () => { f.remove(); spurFrageSchalter(false); };
+}
+function spurFrageSchalter(an) {
+  lsSetzen(SPUR_FRAGE, an ? "1" : "0");
+  melde(an ? "🔔 Bei jeder Anmeldung wirst du gefragt" : "🔕 Nicht mehr fragen – wieder einschalten im Fenster „Wege der Benutzung“");
+  if ($("spurFrageKnopf")) $("spurFrageKnopf").outerHTML = spurFrageKnopf();
+}
+const spurFrageKnopf = () => `<button class="knopf klein" id="spurFrageKnopf" onclick="spurFrageSchalter(${!spurFrageAn()})">${spurFrageAn() ? "🔔 Bei Anmeldung fragen: an" : "🔕 Bei Anmeldung fragen: aus"}</button>`;
 // KC-CLUB-ONLINE-ANSAGE-PUSH (1.64.0, Fund Hansi „Steven angemeldet, keine Ansage“): Ton/Ansage auf DIESEM Gerät – aus dem
 // Online-Takt oder aus dem Admin-Push („🟢 X ist jetzt online“, den der Service Worker bei offener App hierher gibt).
 // Dieselbe Person höchstens einmal je 10 Min. (egal über welchen Weg); nie in der Ruhezeit.
@@ -20789,7 +20817,7 @@ async function spurAdmin(tag, person) {
     <p class="hinweis" style="margin:0">Was geöffnet wurde und mit wem – mit Uhrzeit, <b>ohne Inhalte</b>. Nur du siehst das; nach 30 Tagen wird es gelöscht.</p>
     <select onchange="spurAdmin(this.value, null)" aria-label="Tag">${tage.map((t) => `<option value="${t}"${t === SPW.tag ? " selected" : ""}>${tagText(t)}</option>`).join("")}</select>`;
   const heuteDa = SPW.tag === tage[0];
-  const fuss = `${heuteDa ? `<p class="hinweis" style="margin:8px 0 0">⚡ Stand ${esc(new Date().toLocaleTimeString("de-DE"))} · aktualisiert sich alle 20 Sekunden von selbst, solange dieses Fenster offen ist</p>` : ""}<div class="knoepfe">${SPW.person ? `<button class="knopf" onclick="spurAdmin(null, null)">‹ Alle an diesem Tag</button>` : ""}<button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
+  const fuss = `${heuteDa ? `<p class="hinweis" style="margin:8px 0 0">⚡ Stand ${esc(new Date().toLocaleTimeString("de-DE"))} · aktualisiert sich alle 20 Sekunden von selbst, solange dieses Fenster offen ist</p>` : ""}<div class="knoepfe">${SPW.person ? `<button class="knopf" onclick="spurAdmin(null, null)">‹ Alle an diesem Tag</button>` : ""}<button class="knopf" onclick="nzAdmin()">‹ Nutzung</button>${heuteDa && !SPW.person ? spurFrageKnopf() : ""}</div>`;
   let inhalt;
   if (!SPW.person) {
     // KC-CLUB-SPUR-LIVE (2.81.0): wer gerade in der App ist, steht oben mit 🟢 (Quelle: Online-Takt – Verborgene erscheinen nie als online)

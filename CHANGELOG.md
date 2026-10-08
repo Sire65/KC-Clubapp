@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.92.0 – 2026-10-08 – 🟢 Bei Anmeldung fragen: „Möchtest du sehen, was … gerade macht?“ (Admin)
+Meldet sich ein Mitglied an, fragt die App den Admin, ob er sehen möchte, was es gerade macht. Bei Ja öffnet sich „Wege der Benutzung“ mit allen, die gerade in der App sind – zum Antippen. Nicht in der Ruhezeit und nie über einem anderen offenen Fenster; abschaltbar.
+
 ## 2.91.0 – 2026-10-08 – 🔢 Anmeldung mit Code einfacher (iPad/iPhone) + 💬 Rückfragen zur Änderungsmeldung
 Nach dem Code-Eintippen dreht die Kochmütze, bis die App startet. Auf iPhone/iPad zeigt die App zuerst, wie die Kochmütze auf den Home-Bildschirm kommt – der Code wird dann direkt dort eingegeben, ein zweiter Code ist nicht mehr nötig. Bei eigenen, noch nicht eingetragenen Änderungsmeldungen gibt es den Knopf „💬 Rückfragen?“ – er öffnet direkt den Chat mit dem, der die Meldung bearbeitet.
 

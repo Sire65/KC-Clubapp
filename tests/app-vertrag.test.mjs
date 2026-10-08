@@ -6434,3 +6434,13 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/ansprech: \[freigegeben_von, \.\.\.\(empfaenger \?\? \[\]\)\]\.find\(\(id: any\) => id && id !== ich\.person_id\) \|\| null/.test(server) && /\(\{ freigegeben_von, empfaenger, \.\.\.x \}: any\)/.test(server), "nur eine Ansprechperson, keine Empfängerliste ans Mitglied");
   assert.ok(/await direkt\(pid\);/.test(programm) && /\$\{aeRueckKnopf\(x, x\.name\)\}/.test(programm) && /\$\{aeRueckKnopf\(x, a\?\.t \|\| x\.art\)\}/.test(programm), "Rückfrage-Knopf in Meine Daten und in der Meldungsliste → Chat");
 }
+
+// 4xx. 2.92.0: Admin wird bei einer Anmeldung gefragt, ob er sehen möchte, was das Mitglied gerade macht (KC-CLUB-SPUR-FRAGE, Wunsch Hansi)
+{
+  assert.ok(/onlineAnsageSprechen\(neu\.map\(\(x\) => x\.vorname \|\| x\.name\)\);\n  try \{ spurFrage\(neu\); \} catch \{\}/.test(programm), "nur bei echten Neuankömmlingen aus dem Online-Takt");
+  const f = programm.slice(programm.indexOf("function spurFrage(neu)"), programm.indexOf("function spurFrageSchalter(an)"));
+  assert.ok(/const spurFrageAn = \(\) => !!ICH\?\.admin && lsLesen\(SPUR_FRAGE\) !== "0";/.test(programm) && /if \(!spurFrageAn\(\)/.test(f), "nur Admin, abschaltbar");
+  assert.ok(/inRuheJetzt\(/.test(f) && /document\.querySelector\("\.blatt:not\(\.versteckt\)"\)\) return;/.test(f), "nie in der Ruhezeit, nie über einem anderen Fenster");
+  assert.ok(/spurAdmin\(heuteIso\(\), null\)/.test(f) && !/api\(/.test(f), "Ja → Wege mit allen, die gerade da sind; selbst nichts senden");
+  assert.ok(/\$\{heuteDa && !SPW\.person \? spurFrageKnopf\(\) : ""\}/.test(programm), "im Wege-Fenster wieder einschaltbar");
+}
