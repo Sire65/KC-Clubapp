@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.87.0 – 2026-10-08 – 🎙️ Sprachsteuerung Stufe 3
+Neue Sprachbefehle: „Ich komme zum Clubabend“ / „Ich kann nicht“ / „Vielleicht“ (Antwort für den nächsten Termin, nach Rückfrage), „Lies mir die neuen Nachrichten vor“ (sagt, wer geschrieben hat, und liest vor), „Was steht auf der Pinnwand?“ (liest die Zettel vor), „Ruf Klaus an“ (in der App, wenn online – sonst Telefon & WhatsApp), „Öffne den Ordner Verträge“. Alle auch in der 📋 Liste. (KC-CLUB-SPRACHE-STUFE3)
+
 ## 2.86.0 – 2026-10-08 – 🤝 Merkblatt „Die App hilft dir“
 Neues Merkblatt (2 Seiten, mit Bildern) unter 📚 Meine Dokumente: Wie viel Hilfe, Schritt-Hilfe mit rotem Rahmen und Vorlesen, Ablage-Vorschlag, Sprachsteuerung mit Beispielsätzen, Stumm und Liste, die App lernt dazu. Zum Ausdrucken für den Clubabend. (KC-CLUB-MERKBLATT-HILFE)
 

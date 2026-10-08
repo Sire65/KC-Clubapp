@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.86.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.87.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1599,6 +1599,50 @@ const HILFE = [
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „🎨 Darstellung“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("darstellung", "setAnimiert"), seit: "2.24.1" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
 ];
+// ---------- KC-CLUB-SPRACHE-STUFE3 (2.87.0, Wunsch Hansi): zusagen, Nachrichten und Pinnwand vorlesen, anrufen, Ordner öffnen ----------
+// Vorgelesen wird nur auf dem eigenen Handy, was man selbst sehen darf. Zusagen und Anrufen erst nach Rückfrage (Ja sagen oder tippen).
+const sbChatName = (u) => u.gruppe?.name ? "der Gruppe " + u.gruppe.name : (u.teilnehmer || []).length ? (u.teilnehmer.length === 1 ? "" : "dem Chat mit ") + u.teilnehmer.map((n) => String(n).split(" ")[0]).join(" und ") : u.betreff || "einem Chat";
+async function sbStufe3(b) {
+  if (b.art === "antwort") {
+    const t = INIT?.naechstesTreffen; if (!t) { sbSagen("Im Moment ist kein Termin geplant."); return zeige("termine"); }
+    const wort = { ja: "zusagen", nein: "absagen", vielleicht: "mit Vielleicht antworten" }[b.a], satz = `${t.titel}, ${wann(t.beginn)}`;
+    if (t.meine === b.a) return sbSagen(`Für ${satz} hast du schon so geantwortet.`);
+    const ok = await sbFrage("📅 " + t.titel, `${wann(t.beginn)} – soll ich für dich ${wort}?`, b.a === "ja" ? "✅ Ja, ich komme" : b.a === "nein" ? "❌ Ja, absagen" : "❓ Ja, vielleicht", "Abbrechen");
+    if (!ok) return melde("Nichts geändert");
+    await antwort(t.id, b.a); t.meine = b.a; return;
+  }
+  if (b.art === "lies_nachrichten") {
+    let u = []; try { u = ((await api("unterhaltungen", {})).unterhaltungen || []).filter((x) => x.ungelesen > 0 && !(typeof stummAn === "function" && stummAn(x.id))); } catch (e) { return meldeFehler(e); }
+    if (!u.length) return sbSagen("Du hast keine neuen Nachrichten."), melde("💬 Keine neuen Nachrichten");
+    const n = u.reduce((s, x) => s + x.ungelesen, 0), wo = u.slice(0, 4).map((x) => `${x.ungelesen} ${x.gruppe?.name ? "in" : "von"} ${sbChatName(x)}`).join(", ");
+    const ok = await sbFrage("💬 " + (n === 1 ? "1 neue Nachricht" : `${n} neue Nachrichten`), `${wo}. Soll ich ${u.length === 1 ? "sie" : "die erste"} vorlesen?`, "🔊 Ja, vorlesen", "Nein");
+    if (!ok) return;
+    await chatOeffnen(u[0].id); setTimeout(() => chatVorlesenStart("neu"), 1200); return;
+  }
+  if (b.art === "lies_pinnwand") {
+    try { pwUebernehmen(await api("pinnwand", {}, { warten: true })); } catch (e) { return meldeFehler(e); }
+    zeige("pinnwand");
+    const z = (PW.zettel || []).filter((x) => !x.erledigt).slice(0, 6);
+    if (!z.length) return sbSagen("Auf der Pinnwand hängt gerade nichts.");
+    sbSagen(`Auf der Pinnwand ${z.length === 1 ? "hängt ein Zettel" : `hängen ${z.length} Zettel`}. ` + z.map((x) => `${x.wichtig ? "Wichtig! " : ""}Von ${x.vonMir ? "dir" : x.von?.vorname || String(x.von?.name || x.von || "?").split(" ")[0]}: ${String(x.text || "").replace(/[.!?]+$/, "")}`).join(". "));
+    return;
+  }
+  if (b.art === "anruf") {
+    if (b.personen?.length !== 1) { melde(b.personen?.length > 1 ? `Mehrere passen zu „${b.wort}“ – bitte das Mitglied antippen` : `„${b.wort}“ kenne ich nicht – bitte das Mitglied antippen`, true); return zeige("mitglieder"); }
+    const pid = b.personen[0], vn = sbVorname(pid) || "das Mitglied";
+    if (!ONL.ids?.has(pid)) { sbSagen(`${vn} ist gerade nicht in der App. Hier findest du Telefon und WhatsApp.`); return mitgliedOeffnen(pid); }
+    const ok = await sbFrage("📞 " + vn + " anrufen?", `${vn} ist gerade in der App. Soll ich anrufen?`, "📞 Ja, anrufen", "Abbrechen");
+    if (ok) anrufen(pid); return;
+  }
+  if (b.art === "ordner") {
+    let d; try { d = await api("archiv_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+    AR.daten = d; const w = sbLaut(b.name);
+    const o = (d.ordner || []).filter((x) => !x.auto).map((x) => ({ x, n: sbLaut(x.besitzer ? (x.eigen ? "mein ordner" : x.titel) : x.titel) }))
+      .filter((y) => y.n === w || y.n.startsWith(w) || w.startsWith(y.n) || (w.length >= 4 && y.n.includes(w))).sort((p, q) => q.x.jahr - p.x.jahr)[0]?.x;
+    if (!o) { sbSagen(`Einen Ordner ${b.name} habe ich nicht gefunden.`); return arStart(); }
+    AR.ziel = o.id; arStart(); sbSagen(`Ordner ${o.titel} ${o.art === "chronik" ? "" : o.jahr}`); return;
+  }
+}
 // ---------- KC-CLUB-UNTERSTUETZUNG (2.85.0, Wunsch Hansi): „Wie viel Unterstützung möchtest du?“ – einmal, dann unter ⚙️ ----------
 // „Viel“ schaltet in einem Rutsch ein: einfache Ansicht, große Schrift, Schritt-Hilfe mit Vorlesen, Sprachsteuerung (wenn das Handy es kann).
 // „Ein bisschen“: nur die Schritt-Hilfe. „Komme klar“: nichts. Alles bleibt einzeln unter ⚙️ abschaltbar. Gefragt wird erst, wenn
@@ -1679,6 +1723,16 @@ function sbErkennen(roh, mitglieder = [], ich = "") {
   if (/^(zur |zu der |auf die |die )?(start ?seite|haupt ?seite|startbildschirm|anfang)$|^(zurück )?(zum|zur) (start|anfang|start ?seite|haupt ?seite)$|^nach hause$|^ich weiß nicht weiter$/.test(t)) return { art: "start" };
   if (/^zurück$/.test(t)) return { art: "zurueck" };
   if (/^(hilfe|was kann ich sagen)$/.test(t)) return { art: "hilfe" };
+  // 2.87.0 Stufe 3 (Wunsch Hansi): zusagen, vorlesen, anrufen, Ordner öffnen
+  if (/^(ich )?(komme|bin dabei)( (gerne|auch))?( (zum|zur|zu) .+)?$|^zusagen$|^ich komme mit$/.test(t)) return { art: "antwort", a: "ja" };
+  if (/^ich kann (leider )?nicht( kommen)?( .+)?$|^absagen$|^ich komme nicht( .+)?$/.test(t)) return { art: "antwort", a: "nein" };
+  if (/^(ich komme )?vielleicht( komme ich)?( .+)?$/.test(t)) return { art: "antwort", a: "vielleicht" };
+  if (/(lies|lese|vorlesen).*(nachricht|chat)|^(habe ich|gibt es|hab ich) neue nachrichten$|^neue nachrichten vorlesen$/.test(t)) return { art: "lies_nachrichten" };
+  if (/was (steht|hängt|gibt es) (auf|an) der pinnwand|(lies|lese).*pinnwand|pinnwand vorlesen/.test(t)) return { art: "lies_pinnwand" };
+  let ru = t.match(/^(?:ruf(?:e)?|anrufen) (.+?)(?: an)?$|^telefonier(?:e)? mit (.+)$/);
+  if (ru) { const n = sbErkennen("Nachricht an " + (ru[1] || ru[2]), mitglieder, ich); return { art: "anruf", personen: n?.personen || [], wort: n?.wort || (ru[1] || ru[2]), vorschlag: n?.vorschlag || [] }; }
+  let od = t.match(/^(?:(?:öffne|zeig(?:e)?(?: mir)?) )?(?:den |das )?ordner (.+)$/);
+  if (od) return { art: "ordner", name: od[1] };
   if (/^(einen? )?(neue[nrs]? )?(zettel|notiz)\b|pinnwand/.test(t)) return { art: "pinnwand", text: sbRest(roh, /^\s*(einen?\s+)?(neue[nrs]?\s+)?(zettel|notiz)?\s*((an|auf|für|in)\s+(die|der)\s+)?(pinnwand)?\s*/i) };
   if (/^(neue[rn]? )?nachricht (an|für) alle[n]?\b|^schreib(e)? (an )?alle[n]?\b/.test(t)) return { art: "nachricht", alle: true, text: sbRest(roh, /^\s*((neue[rn]?\s+)?nachricht\s+(an|für)|schreibe?(\s+an)?)\s+alle[n]?\s*/i) };
   if (/^(eine )?(neue[rn]? )?nachricht( (an|für|schreiben))?$|^schreib(e|en)?( an)?$/.test(t)) return { art: "nachricht", personen: [], wort: "", text: "" }; // Stufe 2: „An wen?“
@@ -1776,6 +1830,9 @@ const SB_BEFEHLE = [
   ["Nachricht an alle: Treffen fällt aus", "📢 Nachricht an alle Mitglieder vorbereiten"], ["Neue Nachricht", "✍️ Die App fragt: An wen?"], ["Nachrichten", "💬 Alle Unterhaltungen ansehen"],
   ["Zettel an die Pinnwand: Schürzen abgeben", "📝 Neuer Pinnwand-Zettel mit Text"], ["Neuer Zettel", "📝 Neuer Pinnwand-Zettel – die App bietet Diktieren an"],
   ["Termine", "📅 Termine ansehen"], ["Neuer Termin", "➕ Neuen Termin anlegen"], ["Nächster Termin", "⏭️ sagt den nächsten Termin an und öffnet ihn"],
+  ["Ich komme zum Clubabend", "✅ Zusage für den nächsten Termin (fragt vorher)"], ["Ich kann nicht", "❌ Absage für den nächsten Termin"], ["Vielleicht", "❓ Vielleicht beim nächsten Termin"],
+  ["Lies mir die neuen Nachrichten vor", "🔊 sagt, wer geschrieben hat, und liest vor"], ["Was steht auf der Pinnwand?", "🔊 liest die Zettel vor"],
+  ["Ruf Klaus an", "📞 ruft in der App an, wenn Klaus online ist – sonst Telefon & WhatsApp"], ["Öffne den Ordner Verträge", "🗂️ öffnet den Ordner im Archiv"],
   ["Mitglieder", "👥 Mitgliederliste"], ["Fotoalbum", "📷 Fotos ansehen"], ["Fotos hochladen", "⬆️ Neue Fotos ins Album"], ["Archiv", "🗄️ Ordner und Dokumente"],
   ["Erstattung", "💶 Fahrtkosten oder Auslagen erstattet bekommen"], ["Helfen", "🤝 Helfen & Leihen"], ["Börse", "🛍️ Biete und suche"], ["Protokolle", "📄 Sitzungsprotokolle"],
   ["Vorschläge", "💡 Vorschläge ansehen und einreichen"], ["Mein Dienst", "🗓️ Dienstpläne"], ["Einstellungen", "⚙️ Einstellungen"], ["Suche Glühwein", "🔍 in der ganzen App suchen"], ["Hilfe", "❓ Beispiele zeigen"],
@@ -1927,7 +1984,7 @@ function sbFrage(kopf, text, ja, nein) {
     f.querySelectorAll("[data-w]").forEach((k) => (k.onclick = () => zu(k.dataset.w === "1")));
     const hoeren = () => { if (SB.antwort !== fertig) return; f.classList.remove("sb-still");
       sbZuhoeren((alt) => { const w = alt.map(sbJaNein).find((x) => x !== null); if (w != null) return zu(w); if ($("sbGehoert")) $("sbGehoert").textContent = "Bitte antippen: „" + ja + "“ oder „" + nein + "“"; }, () => {}); };
-    sbSagen(kopf.replace(/^[^\p{L}]+/u, "") + ". " + text, hoeren);
+    sbSagen(kopf.replace(/^[^\p{L}\p{N}]+/u, "") + ". " + text, hoeren);
   });
 }
 // angekommen → sofort fragen, ob gleich diktiert werden soll (Diktieren schreibt nur ins Feld; senden tippt man selbst)
@@ -1971,6 +2028,7 @@ function sbWerWahl(b) {
 function sbAnPerson(pid) { const text = SB.text; sbStopp(); sbAusfuehren({ art: "nachricht", personen: [pid], wort: "", text }); }
 const sbVorname = (pid) => String(MITGLIEDER?.find((m) => m.person_id === pid)?.name || "").split(" ")[0];
 async function sbAusfuehren(b) {
+  if (["antwort", "lies_nachrichten", "lies_pinnwand", "anruf", "ordner"].includes(b.art)) return sbStufe3(b); // 2.87.0
   if (b.art === "ziel") { const z = SB_ZIELE.find((x) => x.id === b.ziel); if (!z) return; if (["start", "naechster", "nachricht_neu", "pinnwand_neu"].includes(z.id)) return z.los(); if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist"); return z.los(); }
   if (b.art === "start") return sbStartseite();
   if (b.art === "hilfe") return sbNichtVerstanden("Das kannst du zur App sagen:", "");

@@ -6384,3 +6384,23 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/\{ id: "merkblatt-hilfe", sym: "🤝", t: "Die App hilft dir"[^\n]*datei: "dokumente\/Koecheclub-App_Merkblatt_Hilfe\.pdf"/.test(programm), "Eintrag in Meine Dokumente");
   assert.ok(fs.existsSync(new URL("../dokumente/Koecheclub-App_Merkblatt_Hilfe.pdf", import.meta.url)), "PDF liegt bei");
 }
+
+// 4xx. 2.87.0: Sprachsteuerung Stufe 3 – zusagen, Nachrichten/Pinnwand vorlesen, anrufen, Ordner öffnen (KC-CLUB-SPRACHE-STUFE3, Wunsch Hansi)
+{
+  const a = programm.indexOf("const sbNorm = "), b = programm.indexOf("// ungespeicherte Eingaben auf der jetzigen Seite?");
+  const sbErkennen = new Function(programm.slice(a, b) + "\nreturn sbErkennen;")();
+  const mg = [{ person_id: "K", name: "Klaus Zander" }];
+  assert.deepEqual(sbErkennen("Ich komme zum Clubabend"), { art: "antwort", a: "ja" });
+  assert.deepEqual(sbErkennen("Ich kann leider nicht"), { art: "antwort", a: "nein" });
+  assert.deepEqual(sbErkennen("Vielleicht"), { art: "antwort", a: "vielleicht" });
+  assert.deepEqual(sbErkennen("Lies mir die neuen Nachrichten vor"), { art: "lies_nachrichten" });
+  assert.deepEqual(sbErkennen("Habe ich neue Nachrichten?"), { art: "lies_nachrichten" });
+  assert.deepEqual(sbErkennen("Was steht auf der Pinnwand?"), { art: "lies_pinnwand" }, "nicht: neuer Zettel");
+  assert.equal(sbErkennen("Zettel an die Pinnwand: Hallo").art, "pinnwand", "neuer Zettel bleibt");
+  assert.deepEqual(sbErkennen("Ruf Klaus an", mg).personen, ["K"]);
+  assert.deepEqual(sbErkennen("Öffne den Ordner Verträge"), { art: "ordner", name: "verträge" });
+  const f = programm.slice(programm.indexOf("async function sbStufe3(b)"), programm.indexOf("// ---------- KC-CLUB-UNTERSTUETZUNG (2.85.0"));
+  assert.ok(/await sbFrage\("📅 " \+ t\.titel/.test(f) && /await antwort\(t\.id, b\.a\);/.test(f), "zusagen erst nach Rückfrage, über die vorhandene Antwort-Funktion");
+  assert.ok(/if \(ok\) anrufen\(pid\);/.test(f) && /if \(!ONL\.ids\?\.has\(pid\)\)/.test(f), "anrufen nur nach Ja und nur, wenn online");
+  assert.ok(/chatVorlesenStart\("neu"\)/.test(f), "vorlesen über den vorhandenen Vorlese-Kern");
+}
