@@ -5561,6 +5561,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/SH\.nach = setTimeout\(shAktualisieren, 700\)/.test(programm), "spät öffnende Fenster werden erkannt");
 }
 
+// 4xx. 2.71.0: Schritt-Unterstützung bei Protokollen (KC-CLUB-SCHRITT-HILFE, Wunsch Hansi)
+{
+  const ab = programm.slice(programm.indexOf("const SH_ABLAEUFE = {"), programm.indexOf("const SH = {"));
+  assert.ok(ab.includes("protokolle: [") && ab.includes("protokoll: ["), "Abläufe Liste + Formular");
+  for (const z of ["#prT", "#protokollInhalt .zwei", "#protokollInhalt details.prda", "#prTO", "#prB", "#protokollInhalt .anhaengen", "#protokollInhalt .karte:has(#aufWas)"]) assert.ok(ab.includes(`ziel: "${z}"`), "Schritt " + z);
+  for (const id of ["prT", "prD", "prTO", "prB", "aufWas"]) assert.ok(programm.includes(`id="${id}"`), "Ziel vorhanden: " + id);
+  assert.ok(/<details class="prda"/.test(programm) && /<div class="anhaengen">/.test(programm), "Anwesenheit / Anhängen");
+  assert.ok(ab.includes(`ziel: '#protokollInhalt [onclick="einmal(this, protokollVeroeffentlichen)"]'`) && /onclick="einmal\(this, protokollVeroeffentlichen\)">📢 Veröffentlichen/.test(programm), "Veröffentlichen");
+  assert.ok(ab.includes(`ziel: '#v-protokolle [onclick*="protokollAnlegen("]'`) && /onclick="einmal\(this, \(\) => protokollAnlegen\('\$\{t\.id\}'\)\)">＋ Anlegen/.test(programm), "Anlegen aus der Liste");
+  assert.ok(ab.includes(`ziel: '#protokollInhalt [onclick="einwandSchreiben()"]'`) && /onclick="einwandSchreiben\(\)">⚠️ Einwand erheben/.test(programm), "Lesen: Einwand");
+  assert.ok(/if \(!el && \(SH\.suche = \(SH\.suche \|\| 0\) \+ 1\) < 8\)/.test(programm), "Seite lädt noch → nochmal suchen");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

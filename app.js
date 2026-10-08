@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.70.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.71.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1602,7 +1602,7 @@ const HILFE = [
 // ---------- KC-CLUB-SCHRITT-HILFE (2.63.0, Wunsch Hansi; 2.64.0 verfeinert): Schritt-Unterstützung ----------
 // Eingeschaltet (⚙️ Einstellungen → „👣 Schritt-Unterstützung“, nur auf diesem Gerät) bekommt immer genau der nächste Schritt
 // einen pulsierenden roten Rahmen; unten steht mit zwei laufenden Schuhen „Schritt 2 von 6: …“ (bei offener Tastatur oben,
-// damit sie nichts verdeckt). Abläufe stehen in der Registry SH_ABLAEUFE (Bereich → Schritte); Pinnwand (2.63.0), Nachrichten (2.67.0, Sonderwege 2.68.0), Termine (2.69.0, Kalender/To-do/Terminfindung 2.70.0) – weitere
+// damit sie nichts verdeckt). Abläufe stehen in der Registry SH_ABLAEUFE (Bereich → Schritte); Pinnwand (2.63.0), Nachrichten (2.67.0, Sonderwege 2.68.0), Termine (2.69.0, Kalender/To-do/Terminfindung 2.70.0), Protokolle (2.71.0) – weitere
 // Bereiche = neuer Eintrag hier, sonst nichts. Schritt: ziel (CSS), t (Text, mit Ort), fertig() erledigt?, wenn() gilt nur dann,
 // ruhe = Ausgangszustand (nichts angefangen; dort wird nach dem letzten Schritt gelobt); start = erster Schritt eines Wegs:
 // solange er nicht erledigt ist, gilt der Weg als nicht angefangen (wie ein Schritt ohne wenn);
@@ -1665,6 +1665,22 @@ const SH_ABLAEUFE = {
     { id: "ta-wann", ziel: "#terminanfrageForm .zwei", t: "Datum und Uhrzeit – zum Ändern hineintippen", wenn: () => shTmForm("terminanfrageForm"), fertig: () => !!$("taDatum").value, weiter: true },
     { id: "ta-ort", ziel: "#taOrtWahl", t: "Ort auswählen – oder „noch offen“ lassen", wenn: () => shTmForm("terminanfrageForm"), fertig: () => true, weiter: true },
     { id: "los", ziel: "#terminanfrageForm .knoepfe .knopf.haupt", t: "Tippe unten auf „📨 Anfrage senden“", wenn: () => shTmForm("terminanfrageForm"), fertig: () => false, ende: true, lob: "Deine Anfrage ist unterwegs." },
+  ],
+  // 2.71.0 Protokolle: Liste (anlegen / öffnen) → Formular 1 Vorlage · 2 Anhang · 3 Aufgaben → Veröffentlichen; Lesen: Einwand / Archiv
+  protokolle: [
+    { id: "anlegen", ruhe: true, ziel: '#v-protokolle [onclick*="protokollAnlegen("]', t: "Für eine Sitzung fehlt noch das Protokoll: tippe auf „＋ Anlegen“ – die Vorlage ist dann schon ausgefüllt", wenn: () => !!document.querySelector('#v-protokolle [onclick*="protokollAnlegen("]'), fertig: () => false },
+    { id: "start", ruhe: true, ziel: '#v-protokolle .kopf2 [onclick="protokollNeu()"]', t: "Protokoll lesen: tippe unten eins an. Neues Protokoll: oben rechts „＋ Neu“. Mit 🔽 suchst du nach Jahr, Monat, Ort", wenn: () => !document.querySelector('#v-protokolle [onclick*="protokollAnlegen("]'), fertig: () => false },
+  ],
+  protokoll: [
+    { id: "pr-titel", start: true, ziel: "#prT", t: "1 · Vorlage: Titel prüfen – ist schon ausgefüllt", wenn: () => !!$("prT"), fertig: () => !!$("prT").value.trim(), weiter: true },
+    { id: "pr-wann", ziel: "#protokollInhalt .zwei", t: "Datum und Ort prüfen – zum Ändern hineintippen", wenn: () => !!$("prT"), fertig: () => !!$("prD").value, weiter: true },
+    { id: "pr-da", ziel: "#protokollInhalt details.prda", t: "👥 Wer war da? Aufklappen und bei jedem ✅ da oder 🙋 entschuldigt ankreuzen", wenn: () => !!$("prT"), fertig: () => true, weiter: true },
+    { id: "pr-to", ziel: "#prTO", t: "Tagesordnung – ein Punkt pro Zeile", wenn: () => !!$("prT"), fertig: () => true, weiter: true },
+    { id: "pr-b", ziel: "#prB", t: "Beschlüsse – einer pro Zeile (leer lassen geht auch)", wenn: () => !!$("prT"), fertig: () => true, weiter: true },
+    { id: "pr-anhang", ziel: "#protokollInhalt .anhaengen", t: "2 · Protokoll anhängen: 📷 Foto vom Blatt, 🖼️ aus der Galerie oder 📄 Datei – mehrere Seiten nacheinander", wenn: () => !!$("prT"), fertig: () => true, weiter: true },
+    { id: "pr-aufgaben", ziel: "#protokollInhalt .karte:has(#aufWas)", t: "3 · Aufgaben (freiwillig): „Wer?“ antippen, „Was?“ eintragen, hinzufügen – oder einfach weiter", wenn: () => !!$("prT"), fertig: () => true, weiter: true },
+    { id: "los", ziel: '#protokollInhalt [onclick="einmal(this, protokollVeroeffentlichen)"]', t: "Fertig? Tippe auf „📢 Veröffentlichen“ – alle bekommen Bescheid. Noch nicht fertig: „💾 Speichern“", wenn: () => !!$("prT"), fertig: () => false, ende: true, lob: "Das Protokoll ist veröffentlicht – alle bekommen Bescheid." },
+    { id: "pr-lesen", ruhe: true, ziel: '#protokollInhalt [onclick="einwandSchreiben()"]', t: "Lies das Protokoll in Ruhe. Stimmt etwas nicht? Unten „⚠️ Einwand erheben“. Behalten: „🗄️ In mein Archiv legen“", wenn: () => !$("prT"), fertig: () => false },
   ],
   gruppe: [
     { id: "name", ziel: "#grName", t: "Gib der Gruppe einen Namen, z. B. „Grillabend“", fertig: () => !!$("grName").value.trim(), weiter: true },
@@ -1786,6 +1802,7 @@ function shAktualisieren() {
   const s = gilt[i], el = document.querySelector(s.ziel);
   document.querySelectorAll(".sh-ziel").forEach((e) => e !== el && e.classList.remove("sh-ziel"));
   el?.classList.add("sh-ziel"); if (SH.el !== el) shRahmen(el); shLage();
+  if (!el && (SH.suche = (SH.suche || 0) + 1) < 8) { clearTimeout(SH.nochmal); SH.nochmal = setTimeout(shAktualisieren, 800); } else if (el) SH.suche = 0; // Seite lädt noch → gleich nochmal
   shLeiste(`<b>${gilt.length > 1 ? `Schritt ${i + 1} von ${gilt.length}` : "Tipp"}:</b> ${esc(shText(s))}${s.weiter && s.fertig() ? `<button type="button" class="sh-weiter" onclick="shWeiter('${s.id}')">Fertig – weiter ➜</button>` : ""}`);
   if (SH.letzter !== s.id) { // nur bei neuem Schritt ins Bild holen – nicht beim Tippen
     SH.letzter = s.id; const a = document.activeElement; shSag(`Schritt ${i + 1}: ${shText(s)}`);

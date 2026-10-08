@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.71.0 – 2026-10-08 – KC-CLUB-SCHRITT-HILFE Protokolle
+- Schritt-Unterstützung bei Protokollen: Liste (＋ Anlegen / ＋ Neu / öffnen), Formular (Titel → Datum/Ort → Anwesend → Tagesordnung → Beschlüsse → Anhängen → Aufgaben → Veröffentlichen), Lesen (Einwand / Archiv).
+
 ## 2.70.0 – 2026-10-08 – KC-CLUB-SCHRITT-HILFE Termine komplett
 - Schritt-Unterstützung bei Termine jetzt auch für Kalender (Tag antippen), To-do (aufschreiben → wer → für wen → eintragen) und Terminfindung (Clubleitung); Auswahlfenster „Wer soll es machen?“ wird gezeigt; Hinweis auf offene Terminfindungen.
 
