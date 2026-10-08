@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.78.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.79.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -11501,6 +11501,7 @@ const BU_REGAL = [
   { id: "besprechungen", sym: "🤝", t: "Besprechungen", farbe: "#6b6f86", fn: "arStartTitel('Besprechungen')", recht: "L" }, // KC-CLUB-ARCHIV-KOPIEREN (2.59.0): Entwürfe/Unterlagen, bevor es ein Protokoll ist
   { id: "chronik", sym: "📖", t: "Chronik", farbe: "#8a6d4e", fn: "arStartArt('chronik')" },
   { id: "archiv", sym: "🗄️", t: "Archiv", farbe: "#5f5a57", fn: "arStart()" },
+  { id: "inhalt", sym: "🗂️", t: "Inhaltsverzeichnis", farbe: "#5d6b5a", fn: "ivDrucken()" }, // KC-CLUB-INHALTSVERZEICHNIS (2.79.0): alle Ordner als PDF/Ausdruck
   { id: "verwaltung", sym: "🔐", t: "Freigaben", farbe: "#55606b", fn: "buRechte()", recht: "A" },
 ];
 const buRecht = (x) => !x.recht || (x.recht === "S" && buSchreiben()) || (x.recht === "L" && !!ICH?.vorstand) || (x.recht === "A" && !!ICH?.admin);
@@ -18166,6 +18167,7 @@ const DRUCKARTEN = {
   rezept: { bauen: (o, id) => druckRezept(id) },
   fitness: { bauen: () => fiDruck() }, // KC-CLUB-FITNESS (2.55.0) // KC-CLUB-REZEPTBUCH (2.23.83)
   kmabrechnung: { titel: "🖨️ km-Abrechnung drucken", optionen: () => druckKmOptionen(), bauen: () => druckKmAbrechnung() }, // KC-CLUB-KM-ABRECHNUNG (2.25.3)
+  inhaltsverzeichnis: { titel: "🗂️ Inhaltsverzeichnis drucken / als PDF", optionen: () => ivOptionen(), bauen: () => druckInhaltsverzeichnis() }, // KC-CLUB-INHALTSVERZEICHNIS (2.79.0)
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----
@@ -19245,7 +19247,7 @@ function arZeigen() {
   const kopf = `<div class="karte ar-filter">
       <input id="arSuche" type="search" placeholder="🔍 Suchen: Titel, Stichwort, Inhalt …" value="${esc(AR.suche)}" oninput="AR.suche=this.value;arListeZeigen()" onkeydown="if(event.key==='Escape'){this.value='';AR.suche='';arListeZeigen()}" autocomplete="off" enterkeyhint="search">
       <div class="ar-zeile"><label class="feld">Jahr<select onchange="AR.jahr=this.value;arFilterMerken();arZeigen()"><option value="">Alle Jahre</option>${jahre.map((j) => `<option ${String(j) === AR.jahr ? "selected" : ""}>${j}</option>`).join("")}</select></label>
-        <div class="knoepfe">${d.darf ? `<button class="knopf klein haupt" onclick="arOrdnerForm()">＋ Ordner</button>` : ""}<button class="knopf klein" onclick="AR.korb=true;arZeigen()">🗑️ Papierkorb</button></div></div>
+        <div class="knoepfe">${d.darf ? `<button class="knopf klein haupt" onclick="arOrdnerForm()">＋ Ordner</button>` : ""}<button class="knopf klein" onclick="ivDrucken()">🗂️ Inhaltsverzeichnis</button><button class="knopf klein" onclick="AR.korb=true;arZeigen()">🗑️ Papierkorb</button></div></div>
       <div class="chips ar-chips">${chip("", "Alle")}${chip("auto", "🤖 Clubleben")}${(d.alben || []).some((a) => a.sichtbar === "alle") ? chip("alben", "📸 Fotoalben") : ""}${Object.entries(d.arten).map(([k, a]) => chip(k, a.sym + " " + esc(a.t))).join("")}${d.vorstand ? chip("vorstand", "🔒 Nur Clubleitung") : ""}</div>
     </div><div id="arListe"></div>`;
   $("arInhalt").innerHTML = kopf;
@@ -19275,6 +19277,71 @@ function arListeZeigen() {
   const adminSicht = d.persoenlich?.length ? `<details class="karte" style="margin-top:12px"><summary><b>👤 Persönliche Ordner der Mitglieder (${d.persoenlich.length}) – nur Übersicht, kein Inhalt</b></summary>
       ${d.persoenlich.map((x) => `<div class="ar-dok"><span class="sym">👤</span><div><b>${esc(x.name)} ${x.jahr}</b><div class="hinweis">${x.anzahl} ${x.anzahl === 1 ? "Dokument" : "Dokumente"} · ${arGroesse(x.groesse) || "0 KB"}</div></div><span></span></div>`).join("")}</details>` : "";
   $("arListe").innerHTML = pers + `<div class="abschnitt"><h3>🗄️ Clubarchiv</h3></div>` + chronikTeil + (chroniken.length && !ordner.length && !alben.length ? "" : verein) + adminSicht;
+}
+// ---------- KC-CLUB-INHALTSVERZEICHNIS (2.79.0, Wunsch Hansi): Inhaltsverzeichnis aller Ordner zum Ausdrucken / als PDF ----------
+// Je Person genau das, was sie im Archiv sieht (Server: archiv_liste). Gegliedert: Bereich (persönlich / öffentlich) → Ordner → Register →
+// Einträge. Knöpfe: im Büro (alle Ordner), im Archiv-Regal (alle) und in jedem Ordner (nur dieser – umschaltbar). Drucken über den Druck-Kern.
+const IV = { ordner: null };
+const IV_BEREICHE = [ // Reihenfolge = Reihenfolge im Ausdruck; sicht: wofür der Filter „persönlich/öffentlich“ gilt
+  { id: "eigen", sicht: "privat", titel: "👤 Persönlich – meine Ordner", hinweis: "Nur du siehst diese Ordner.", gilt: (o) => o.eigen },
+  { id: "geteilt", sicht: "privat", titel: "🤝 Persönlich – mit mir geteilt", hinweis: "Ordner anderer Mitglieder, die dir auf Zeit freigegeben sind (nur die freigegebenen Register).", gilt: (o) => !!o.besitzer && !o.eigen },
+  { id: "club", sicht: "oeffentlich", titel: "🗄️ Öffentlich – Clubarchiv", hinweis: "Für alle Mitglieder sichtbar.", gilt: (o) => !o.besitzer && !o.auto && !o.nur_vorstand },
+  { id: "leitung", sicht: "oeffentlich", titel: "🔒 Clubarchiv – nur Clubleitung", hinweis: "Nur für die Clubleitung sichtbar.", gilt: (o) => !o.besitzer && !o.auto && !!o.nur_vorstand },
+  { id: "auto", sicht: "oeffentlich", titel: "🤖 Clubleben (automatisch)", hinweis: "Füllt sich von selbst aus Terminen, Protokollen, Abstimmungen …", gilt: (o) => !!o.auto },
+];
+// reine Funktion (getestet): daten = archiv_liste, opt = { umfang: alle|privat|oeffentlich, ordner: id|null, auto: bool }
+function ivGliedern(daten, opt = {}) {
+  const auto = [...new Set((daten.auto || []).map((x) => String(x.datum || "").slice(0, 4)).filter(Boolean))]
+    .map((j) => ({ id: "auto:" + j, auto: true, jahr: Number(j), titel: "Clubleben", register: Object.values(typeof AR_AUTO === "undefined" ? {} : AR_AUTO).map((a) => a[1]) }));
+  const autoReg = (x) => (typeof AR_AUTO === "undefined" ? {} : AR_AUTO)[x.art]?.[1] || "Sonstiges";
+  const alle = [...(daten.ordner || []), ...auto].filter((o) => (opt.ordner ? o.id === opt.ordner : opt.auto || !o.auto));
+  const eintraegeVon = (o) => o.auto ? (daten.auto || []).filter((x) => String(x.datum || "").slice(0, 4) === String(o.jahr)).map((x) => ({ titel: x.titel, datum: x.datum, register: autoReg(x) }))
+    : (daten.dokumente || []).filter((d) => d.ordner_id === o.id && d.status !== "abgelehnt");
+  const datumSort = (a, b) => String(a.datum || "9999").localeCompare(String(b.datum || "9999")) || String(a.titel || "").localeCompare(String(b.titel || ""), "de");
+  return IV_BEREICHE.filter((b) => !opt.umfang || opt.umfang === "alle" || opt.umfang === b.sicht).map((b) => ({ ...b,
+    ordner: alle.filter(b.gilt).sort((x, y) => (y.art === "chronik") - (x.art === "chronik") || y.jahr - x.jahr || String(x.titel).localeCompare(String(y.titel), "de")).map((o) => {
+      const ein = eintraegeVon(o), bekannt = (o.register || []).filter((r) => !((o.besitzer && !o.eigen) || o.auto) || ein.some((e) => e.register === r)); // geteilt/Clubleben: nur Register mit Inhalt
+      const extra = [...new Set(ein.map((e) => e.register || "").filter((r) => r && !bekannt.includes(r)))];
+      const register = [...bekannt, ...extra].map((r) => ({ name: r, eintraege: ein.filter((e) => e.register === r).sort(datumSort) }));
+      const ohne = ein.filter((e) => !e.register); if (ohne.length) register.push({ name: "Ohne Register", eintraege: ohne.sort(datumSort) });
+      return { id: o.id, titel: o.titel, jahr: o.art === "chronik" ? null : o.jahr, art: o.art, register, anzahl: ein.length };
+    }) })).filter((b) => b.ordner.length);
+}
+async function ivDrucken(ordnerId = null) {
+  IV.ordner = ordnerId;
+  try { AR.daten = await api("archiv_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  druckStarten("inhaltsverzeichnis");
+}
+function ivOptionen() {
+  const o = IV.ordner && arAlleOrdner().find((x) => x.id === IV.ordner);
+  const r = (name, wert, text, an) => `<label><input type="radio" name="${name}" value="${wert}" ${an ? "checked" : ""}> ${text}</label>`;
+  return (o ? `<b>Welche Ordner?</b><div class="dwahl">${r("dIvWas", "dieser", `🗂️ Nur „${esc(o.titel)}${o.art === "chronik" ? "" : " " + o.jahr}“`, true)}${r("dIvWas", "alle", "🗄️ Alle meine Ordner", false)}</div>` : "")
+    + `<b>Was soll drinstehen?</b><div class="dwahl">${r("dIvUmfang", "alle", "📚 Persönliche und öffentliche Ordner", true)}${r("dIvUmfang", "privat", "👤 Nur persönliche Ordner", false)}${r("dIvUmfang", "oeffentlich", "🗄️ Nur öffentliche (Club-)Ordner", false)}</div>
+    <label class="schalter" style="margin-top:8px"><span>🤖 Clubleben (automatisch) mit aufführen</span><input type="checkbox" id="dIvAuto"></label>
+    <label class="schalter"><span>📎 Dateiname und „abgelegt von“ dazuschreiben</span><input type="checkbox" id="dIvDatei"></label>`;
+}
+function druckInhaltsverzeichnis() {
+  const d = AR.daten; if (!d) throw new Error("Bitte das Archiv kurz öffnen und nochmal versuchen.");
+  const nurDieser = IV.ordner && (document.querySelector('input[name="dIvWas"]:checked')?.value || "dieser") === "dieser";
+  const umfang = nurDieser ? "alle" : document.querySelector('input[name="dIvUmfang"]:checked')?.value || "alle", mitDatei = !!$("dIvDatei")?.checked;
+  const teile = ivGliedern(d, { umfang, ordner: nurDieser ? IV.ordner : null, auto: nurDieser || !!$("dIvAuto")?.checked });
+  if (!teile.length) throw new Error("Für diese Auswahl gibt es keine Ordner.");
+  const datum = (x) => { const m = String(x || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}.${m[2]}.${m[1]}` : "–"; };
+  const ordnerName = (o) => `${o.titel}${o.jahr ? " " + o.jahr : ""}`;
+  let nr = 0;
+  const uebersicht = `<table style="width:100%;border-collapse:collapse;font-size:3.4mm;margin-bottom:4mm"><thead><tr style="text-align:left;border-bottom:.5mm solid #741521"><th style="padding:1.2mm 2mm;width:8mm">Nr.</th><th style="padding:1.2mm 2mm">Ordner</th><th style="padding:1.2mm 2mm">Bereich</th><th style="padding:1.2mm 2mm;width:18mm">Register</th><th style="padding:1.2mm 2mm;width:20mm">Einträge</th></tr></thead><tbody>`
+    + teile.flatMap((b) => b.ordner.map((o) => `<tr style="border-bottom:.2mm solid #bbb"><td style="padding:1mm 2mm">${++nr}</td><td style="padding:1mm 2mm;font-weight:700">${esc(ordnerName(o))}</td><td style="padding:1mm 2mm">${esc(b.titel.replace(/^\S+\s/, ""))}</td><td style="padding:1mm 2mm">${o.register.length}</td><td style="padding:1mm 2mm">${o.anzahl}</td></tr>`)).join("") + "</tbody></table>";
+  nr = 0;
+  const html = (nurDieser ? "" : `<h2 style="font-size:4.6mm;margin:2mm 0">Übersicht</h2>${uebersicht}`) + teile.map((b) => `<div style="break-inside:avoid"><h2 style="font-size:5mm;margin:6mm 0 1mm;color:#741521">${esc(b.titel)}</h2><p style="margin:0 0 2mm;font-size:3.2mm;color:#555">${esc(b.hinweis)}</p>`
+    + b.ordner.map((o, oi) => (oi === 1 ? "</div>" : "") + `<div style="border:.3mm solid #741521;border-radius:2mm;padding:2.5mm 3mm;margin:0 0 4mm"><h3 style="font-size:4.4mm;margin:0 0 1.5mm;break-after:avoid">${nurDieser ? "" : ++nr + ". "}🗂️ ${esc(ordnerName(o))} <span style="font-weight:400;font-size:3.3mm;color:#555">· ${o.anzahl} ${o.anzahl === 1 ? "Eintrag" : "Einträge"}</span></h3>`
+      + (o.register.length ? o.register.map((r) => `<div style="break-inside:avoid;margin:0 0 2mm"><div style="font-weight:700;font-size:3.6mm;border-bottom:.2mm solid #999;padding:.8mm 0">📑 Register „${esc(r.name)}“ <span style="font-weight:400;color:#555">(${r.eintraege.length})</span></div>`
+        + (r.eintraege.length ? `<table style="width:100%;border-collapse:collapse;font-size:3.3mm">${r.eintraege.map((e) => `<tr><td style="padding:.6mm 2mm;width:24mm;vertical-align:top;color:#444">${esc(datum(e.datum))}</td><td style="padding:.6mm 2mm">${esc(e.titel || e.name || "–")}${e.status === "pruefung" ? " <i>(wartet auf Prüfung)</i>" : ""}${mitDatei && (e.name || e.von) ? `<div style="color:#666;font-size:3mm">${[e.name ? "📎 " + e.name : "", e.von ? "abgelegt von " + e.von : ""].filter(Boolean).map(esc).join(" · ")}</div>` : ""}</td></tr>`).join("")}</table>` : `<div style="font-size:3.2mm;color:#777;padding:.6mm 2mm">– noch leer –</div>`) + "</div>").join("")
+        : `<div style="font-size:3.2mm;color:#777">– keine Register –</div>`) + "</div>").join("") + (b.ordner.length === 1 ? "</div>" : "")).join(""); // Bereichstitel bleibt beim ersten Ordner
+  const anz = teile.reduce((s, b) => s + b.ordner.length, 0), privat = teile.some((b) => b.sicht === "privat");
+  spur("inhaltsverzeichnis"); // nur die Aktion
+  return { titel: nurDieser ? `Inhaltsverzeichnis – ${ordnerName(teile[0].ordner[0])}` : "Inhaltsverzeichnis meiner Ordner",
+    unter: `${ICH?.name || ""} · ${anz} ${anz === 1 ? "Ordner" : "Ordner"} · Stand ${datum(heuteIso())}${umfang === "privat" ? " · nur persönliche" : umfang === "oeffentlich" ? " · nur öffentliche" : ""}`,
+    html, fuss: privat ? "Enthält persönliche Ordner – nicht weitergeben" : "" };
 }
 // KC-CLUB-FOTO-ALBEN (1.63.0, Wunsch Hansi): Fotoalben als eigene Rücken im Regal – antippen öffnet das Album unter Fotos
 const arAlben = (privat) => (AR.daten?.alben || []).filter((a) => privat ? a.eigen && a.sichtbar !== "alle" : a.sichtbar === "alle");
@@ -19454,6 +19521,7 @@ function arOrdnerZeigen() {
       : !o.auto && d.darf ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">＋ Dokument</button><button class="knopf klein" onclick="arOrdnerForm('${o.id}')">✏️ Ordner</button><button class="knopf klein" onclick="arOrdnerLoeschen('${o.id}')">🗑️ Ordner</button></div>`
       : !o.auto && o.einreichen ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">📥 Beitrag einreichen</button></div>` : ""}
     ${(o.auto ? eintraege.length : o.art === "chronik" || eintraege.some((x) => x.status === "ok")) ? `<button class="knopf haupt ar-blaettern" onclick="blOrdner('${o.id}')">📖 Blättern${o.art === "chronik" ? " – die Chronik wie ein Buch" : ""}</button>` : ""}
+    <div class="knoepfe" style="margin:0 0 8px;justify-content:flex-end"><button class="knopf klein" onclick="ivDrucken('${o.id}')">🗂️ Inhaltsverzeichnis drucken</button></div>
     ${o.einleitung ? `<details class="karte ar-anleitung" open><summary><b>📜 ${esc(o.einleitung.trim().split("\n")[0])}</b></summary>${arEinleitungHtml(o.einleitung).replace(/<h3>.*?<\/h3>/, "")}</details>` : ""}
     ${o.art === "chronik" ? `<details class="karte ar-anleitung" ${eintraege.length ? "" : "open"}><summary><b>📌 So füllen wir unsere Chronik</b></summary>${CHRONIK_ANLEITUNG}</details>` : ""}
     ${eintraege.length > 3 ? `<input id="arOrdnerSuche" class="ar-ordnersuche" type="search" autocomplete="off" enterkeyhint="search" placeholder="🔍 In diesem Ordner suchen …" value="${esc(AR.ordnerSuche || "")}" oninput="AR.ordnerSuche=this.value;arOrdnerListe()" onkeydown="if(event.key==='Escape'){this.value='';AR.ordnerSuche='';arOrdnerListe()}">` : ""}
@@ -20285,7 +20353,7 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) spurS
 const SPUR_WAS = { vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
-  sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
+  sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
 const SPW = { tag: null, person: null };
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;

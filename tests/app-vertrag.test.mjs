@@ -6253,3 +6253,30 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const f = programm.slice(programm.indexOf("async function sensibelGaesteOk("), programm.indexOf("async function senden() {"));
   assert.ok(/m\.nichtMitglied/.test(f) && /ja: "📤 Ja, trotzdem senden", nein: "✋ Nein, nicht senden", gefahr: true/.test(f) && /spur\("sensibel_gaeste_frage"\)/.test(f), "Frage mit Namen, Fokus auf Nein, Protokoll nur die Art");
 }
+
+// 4xx. 2.79.0: Inhaltsverzeichnis aller Ordner (Bereich → Ordner → Register → Einträge) zum Drucken / als PDF (KC-CLUB-INHALTSVERZEICHNIS, Wunsch Hansi)
+{
+  const a = programm.indexOf("const IV_BEREICHE = "), b = programm.indexOf("async function ivDrucken(");
+  const ivGliedern = new Function("AR_AUTO", programm.slice(a, b) + "\nreturn ivGliedern;")({ treffen: ["📅", "Termine"], protokoll: ["📄", "Protokolle"] });
+  const d = {
+    ordner: [{ id: "p1", titel: "Ich", jahr: 2026, register: ["Urkunden", "Gesundheit"], besitzer: "A", eigen: true },
+      { id: "g1", titel: "Klaus", jahr: 2026, register: ["Schulung", "Privat"], besitzer: "B", eigen: false },
+      { id: "v1", titel: "Verträge", jahr: 2026, register: ["Vereinsverträge", "Sonstiges"], nur_vorstand: true },
+      { id: "k1", titel: "Kasse", jahr: 2025, register: ["Belege"] }],
+    dokumente: [{ ordner_id: "p1", register: "Urkunden", titel: "B", datum: "2020-01-01" }, { ordner_id: "p1", register: "Urkunden", titel: "A", datum: "1989-06-30" },
+      { ordner_id: "g1", register: "Schulung", titel: "S" }, { ordner_id: "v1", register: "Vereinsverträge", titel: "Vertrag" }, { ordner_id: "k1", register: "", titel: "lose" }],
+    auto: [{ art: "treffen", titel: "Clubabend", datum: "2026-09-15" }],
+  };
+  const alle = ivGliedern(d, { umfang: "alle" });
+  assert.deepEqual(alle.map((x) => x.id), ["eigen", "geteilt", "club", "leitung"], "persönlich vor öffentlich, Clubleben nur auf Wunsch");
+  assert.deepEqual(alle[0].ordner[0].register.map((r) => [r.name, r.eintraege.map((e) => e.titel)]), [["Urkunden", ["A", "B"]], ["Gesundheit", []]], "Register in Ordner-Reihenfolge, leere bleiben, Einträge nach Datum");
+  assert.deepEqual(alle[1].ordner[0].register.map((r) => r.name), ["Schulung"], "geteilt: nur Register mit (freigegebenem) Inhalt");
+  assert.deepEqual(alle[2].ordner[0].register.map((r) => r.name), ["Belege", "Ohne Register"], "Einträge ohne Register gehen nicht verloren");
+  assert.deepEqual(ivGliedern(d, { umfang: "privat" }).map((x) => x.id), ["eigen", "geteilt"]);
+  assert.deepEqual(ivGliedern(d, { umfang: "oeffentlich", auto: true }).map((x) => x.id), ["club", "leitung", "auto"]);
+  assert.deepEqual(ivGliedern(d, { ordner: "v1" }).map((x) => x.ordner.map((o) => o.id)), [["v1"]], "nur dieser Ordner");
+  assert.ok(/inhaltsverzeichnis: \{ titel: "🗂️ Inhaltsverzeichnis drucken \/ als PDF", optionen: \(\) => ivOptionen\(\), bauen: \(\) => druckInhaltsverzeichnis\(\) \}/.test(programm), "über den Druck-Kern");
+  assert.ok(/\{ id: "inhalt", sym: "🗂️", t: "Inhaltsverzeichnis", farbe: "#5d6b5a", fn: "ivDrucken\(\)" \}/.test(programm), "Knopf im Büro");
+  assert.ok(/onclick="ivDrucken\(\)">🗂️ Inhaltsverzeichnis<\/button>/.test(programm) && /onclick="ivDrucken\('\$\{o\.id\}'\)">🗂️ Inhaltsverzeichnis drucken<\/button>/.test(programm), "Knopf im Archiv und in jedem Ordner");
+  assert.ok(/fuss: privat \? "Enthält persönliche Ordner – nicht weitergeben" : ""/.test(programm));
+}

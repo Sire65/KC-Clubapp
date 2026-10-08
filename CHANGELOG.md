@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.79.0 – 2026-10-08 – 🗂️ Inhaltsverzeichnis aller Ordner (PDF/Druck)
+Neuer Knopf im Büro, im Archiv und in jedem Ordner: Inhaltsverzeichnis zum Ausdrucken oder als PDF – Übersicht, dann je Bereich (persönlich / mit mir geteilt / öffentlich / nur Clubleitung) jeder Ordner mit seinen Registern und Einträgen. Wahl: alles, nur persönliche oder nur öffentliche Ordner; optional Clubleben, Dateiname und „abgelegt von“. (KC-CLUB-INHALTSVERZEICHNIS)
+
 ## 2.78.0 – 2026-10-08 – ⚠️ Vertrauliches an Nicht-Mitglieder: Rückfrage
 Steht in einer Nachricht etwas Vertrauliches (z. B. Vertrag im Text oder Dateinamen, oder ein Dokument wie PDF/Word/Excel) und ist ein Empfänger kein ordentliches Mitglied (Gast, ausgetreten), fragt die App vor dem Senden – auch beim Weiterleiten – mit Namen: „Sollen diese Personen die Nachricht wirklich bekommen?“ Server 2.78.0 liefert dafür das Merkmal. (KC-CLUB-SENSIBEL-GAESTE)
 
