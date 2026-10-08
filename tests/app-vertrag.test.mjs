@@ -6173,3 +6173,31 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/await spurSenden\(\); await spurAdmin\(SPW\.tag, SPW\.person\);/.test(f) && /finally \{ k\?\.classList\.remove\("dreht"\); \}/.test(f), "gleicher Tag/Person, eigene Schritte zuerst senden");
 }
 
+
+// 4xx. 2.75.0: 🎙️ Sprachsteuerung Stufe 1 – eigener Knopf unten, Startseite mit Prüfung auf ungespeicherte Eingaben (KC-CLUB-SPRACHSTEUERUNG, Wunsch Hansi)
+{
+  const a = programm.indexOf("const sbNorm = "), b = programm.indexOf("// ungespeicherte Eingaben auf der jetzigen Seite?");
+  assert.ok(a > 0 && b > a, "Erkennung als reine Funktion");
+  const sbErkennen = new Function(programm.slice(a, b) + "\nreturn sbErkennen;")();
+  const mg = [{ person_id: "KC-P-M0009", name: "Klaus Zander" }, { person_id: "KC-P-002", name: "Hans-Joachim Koch" }, { person_id: "KC-P-M0011", name: "Jürgen Bär" }];
+  const n = sbErkennen("Nachricht an Klaus: Bin gleich da", mg, "KC-P-002");
+  assert.deepEqual([n.art, n.personen, n.text], ["nachricht", ["KC-P-M0009"], "Bin gleich da"], "Name → genau ein Mitglied, Text danach");
+  assert.deepEqual(sbErkennen("Nachricht an Klaus Zander bin gleich da", mg).personen, ["KC-P-M0009"], "voller Name");
+  assert.equal(sbErkennen("Schreib Jürgen Bär komm vorbei", mg).text, "komm vorbei", "Umlaute im Namen");
+  assert.deepEqual(sbErkennen("Nachricht an Peter hallo", mg).personen, [], "unbekannter Name → niemand geraten");
+  const al = sbErkennen("Nachricht an alle Treffen fällt aus", mg);
+  assert.ok(al.alle && al.text === "Treffen fällt aus", "an alle");
+  assert.deepEqual(sbErkennen("Zettel an die Pinnwand: Schürzen abgeben"), { art: "pinnwand", text: "Schürzen abgeben" });
+  for (const s of ["Startseite", "Hauptseite", "zur Startseite", "Ich weiß nicht weiter", "nach Hause"]) assert.equal(sbErkennen(s)?.art, "start", s);
+  assert.equal(sbErkennen("Nächster Termin")?.art, "naechster");
+  assert.equal(sbErkennen("Termine")?.art, "termine");
+  assert.deepEqual(sbErkennen("Suche Glühwein"), { art: "suche", q: "glühwein" });
+  assert.equal(sbErkennen("blabla"), null, "unklar → nichts tun");
+  assert.ok(/<input type="checkbox" id="setSprache" onchange="sbSchalter\(this\.checked\)">/.test(seite), "Schalter unter ⚙️");
+  assert.ok(/\.sb-knopf \{ position: fixed;/.test(seite) && /sbKnopfZeigen\(\); \/\/ KC-CLUB-SPRACHSTEUERUNG/.test(programm), "eigener Knopf unten");
+  const f = programm.slice(programm.indexOf("async function sbEingabenOk()"), programm.indexOf("function sbSchalter("));
+  assert.ok(/if \(!sbUngespeichert\(\)\) return true;/.test(f) && /ja: "🗑️ Verwerfen und weiter", nein: "✋ Hierbleiben"/.test(f), "vor dem Wechsel: verwerfen oder hierbleiben");
+  const x = programm.slice(programm.indexOf("async function sbAusfuehren(b)"), programm.indexOf("// ---------- KC-CLUB-SCHRITT-HILFE (2.63.0"));
+  assert.ok(!/pwSpeichern\(|senden\(|api\(/.test(x), "nie selbst senden oder anheften");
+  assert.ok(/spur\("sprache_" \+ b\.art\); \/\/ nur die Art/.test(programm), "Protokoll nur mit der Art, nie mit dem Text");
+}

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.74.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.75.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1599,6 +1599,140 @@ const HILFE = [
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „🎨 Darstellung“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("darstellung", "setAnimiert"), seit: "2.24.1" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
 ];
+// ---------- KC-CLUB-SPRACHSTEUERUNG (2.75.0, Wunsch Hansi): 🎙️ Sprachbefehle, Stufe 1 ----------
+// Eigener Knopf unten links (nur wenn unter ⚙️ eingeschaltet und das Gerät Sprache erkennt). Zugehört wird NUR nach Antippen.
+// Erkannt wird mit der Spracherkennung des Handys (kostenlos). Befehle: Registry in sbErkennen (reine Funktion, getestet).
+// Nie wird etwas von selbst gesendet: die App öffnet das Formular und trägt den Text ein – senden/anheften geht nur per Tipp.
+// „Startseite“: vorher wird geprüft, ob auf der Seite noch ungespeicherte Eingaben stehen → verwerfen oder hierbleiben.
+const SB_KEY = "kc_club_sprachsteuerung", sbAn = () => lsLesen(SB_KEY) === "1" && DIKTAT_GEHT;
+const SB_BEISPIELE = ["„Nachricht an Klaus: Bin gleich da“", "„Nachricht an alle: Treffen fällt aus“", "„Zettel an die Pinnwand: Schürzen abgeben“", "„Termine“ oder „Nächster Termin“", "„Suche Glühwein“", "„Startseite“ – wenn du nicht weiterweißt"];
+const sbNorm = (t) => String(t || "").toLowerCase().replace(/[.,!?;:„“"]/g, " ").replace(/\s+/g, " ").trim();
+const sbRest = (roh, re) => String(roh || "").replace(re, "").replace(/^[\s:,.\-–]+/, "").trim();
+function sbErkennen(roh, mitglieder = [], ich = "") {
+  const t = sbNorm(roh); if (!t) return null;
+  if (/^(zur |zu der |auf die |die )?(start ?seite|haupt ?seite|startbildschirm|anfang)$|^(zurück )?(zum|zur) (start|anfang|start ?seite|haupt ?seite)$|^nach hause$|^ich weiß nicht weiter$/.test(t)) return { art: "start" };
+  if (/^zurück$/.test(t)) return { art: "zurueck" };
+  if (/^(hilfe|was kann ich sagen)$/.test(t)) return { art: "hilfe" };
+  if (/^(einen? )?(neue[nrs]? )?(zettel|notiz)\b|pinnwand/.test(t)) return { art: "pinnwand", text: sbRest(roh, /^\s*(einen?\s+)?(neue[nrs]?\s+)?(zettel|notiz)?\s*((an|auf|für|in)\s+(die|der)\s+)?(pinnwand)?\s*/i) };
+  if (/^(neue[rn]? )?nachricht (an|für) alle[n]?\b|^schreib(e)? (an )?alle[n]?\b/.test(t)) return { art: "nachricht", alle: true, text: sbRest(roh, /^\s*((neue[rn]?\s+)?nachricht\s+(an|für)|schreibe?(\s+an)?)\s+alle[n]?\s*/i) };
+  let m = t.match(/^(?:(?:neue[rn]? )?nachricht (?:an|für)|schreib(?:e)?(?: an)?) (.+)$/);
+  if (m) {
+    const r = m[1], wer = (mitglieder || []).filter((x) => x.person_id !== ich).map((x) => ({ x, voll: sbNorm(x.name), vor: sbNorm(String(x.name).split(" ")[0]) }));
+    const voll = wer.filter((w) => r === w.voll || r.startsWith(w.voll + " ")), vor = voll.length ? [] : wer.filter((w) => r === w.vor || r.startsWith(w.vor + " "));
+    const treffer = voll.length ? voll : vor, wort = treffer[0] ? (voll.length ? treffer[0].voll : treffer[0].vor) : r.split(" ")[0];
+    const text = sbRest(String(roh).replace(new RegExp("^[\\s\\S]*?(?<!\\p{L})" + wort.split(" ").pop().replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?!\\p{L})", "iu"), ""), /^/);
+    return { art: "nachricht", personen: treffer.map((w) => w.x.person_id), wort, text };
+  }
+  if (/^nachricht$|^neue nachricht$/.test(t)) return { art: "nachricht", personen: [], wort: "", text: "" };
+  if (/(nächste[rn]?|wann ist) .*termin|^nächster termin$/.test(t)) return { art: "naechster" };
+  if (/^(meine )?termine?$|^kalender$|^(zeig|öffne)(e)? (die |den |meine )?(termine|kalender)$/.test(t)) return { art: "termine" };
+  if ((m = t.match(/^(?:such(?:e)?|finde?|wo ist)(?: nach)? (.+)$/))) return { art: "suche", q: m[1] };
+  return null;
+}
+// ungespeicherte Eingaben auf der jetzigen Seite? (geänderte, sichtbare Felder – Suchfelder zählen nicht; Protokoll/Chat speichern selbst)
+function sbUngespeichert() {
+  if (aktuelleAnsicht === "protokoll") return false;
+  const sec = $("v-" + aktuelleAnsicht); if (!sec) return false;
+  return [...sec.querySelectorAll("input, textarea, select")].some((el) => {
+    if (!el.offsetParent || el.disabled) return false;
+    const typ = String(el.type || "").toLowerCase();
+    if (["search", "checkbox", "radio", "hidden", "file", "button", "submit"].includes(typ) || /such/i.test(el.id) || el.dataset.diktat === "einmal") return false;
+    if (el.tagName === "SELECT") return [...el.options].some((o) => o.selected !== o.defaultSelected) && el.selectedIndex > 0;
+    return el.value.trim() !== "" && el.value !== el.defaultValue;
+  });
+}
+async function sbEingabenOk() {
+  if (!sbUngespeichert()) return true;
+  return await frage("✋ Noch nicht gespeichert\n\nAuf dieser Seite steht etwas, das noch nicht gespeichert oder gesendet ist. Wirklich verwerfen?", { ja: "🗑️ Verwerfen und weiter", nein: "✋ Hierbleiben" });
+}
+async function sbStartseite() {
+  if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist");
+  document.querySelectorAll(".blatt[data-dyn]").forEach((b) => fensterZu(b));
+  if (aktuelleAnsicht === "chat" && $("text")?.value.trim()) melde("🏠 Startseite – dein angefangener Text bleibt als Entwurf im Chat"); else melde("🏠 Startseite");
+  zeige("start");
+}
+function sbSchalter(an) {
+  if (an && !DIKTAT_GEHT) { if ($("setSprache")) $("setSprache").checked = false; return melde("Dieses Gerät kann leider keine Sprache erkennen.", true); }
+  const setzen = () => { lsSetzen(SB_KEY, an ? "1" : "0"); if ($("setSprache")) $("setSprache").checked = an; sbKnopfZeigen(); melde(an ? "🎙️ Sprachsteuerung an – unten links auf 🎙️ tippen und sagen, was du tun möchtest" : "🎙️ Sprachsteuerung aus"); };
+  if (!an || lsLesen(SB_KEY + "_ok") === "1") return setzen();
+  frage("🎙️ Sprachsteuerung einschalten?\n\nZugehört wird nur, wenn du auf 🎙️ tippst. Das Gesprochene wandelt dein Handy (Google bzw. Apple) in Text um. Gesendet wird nie von selbst – das tust immer du.", { ja: "🎙️ Einschalten", nein: "Abbrechen" })
+    .then((ok) => { if (ok) { lsSetzen(SB_KEY + "_ok", "1"); setzen(); } else if ($("setSprache")) $("setSprache").checked = false; });
+}
+function sbKnopfZeigen() {
+  if ($("setSprache")) $("setSprache").checked = sbAn();
+  let k = $("sbKnopf");
+  if (!k && sbAn()) { document.body.insertAdjacentHTML("beforeend", '<button type="button" class="sb-knopf" id="sbKnopf" title="Sprachsteuerung" aria-label="Sprachsteuerung – sag, was du tun möchtest" onclick="sbHoeren()">🎙️</button>'); k = $("sbKnopf"); }
+  k?.classList.toggle("versteckt", !sbAn());
+}
+const SB = { erk: null };
+function sbStopp() { try { SB.erk?.abort(); } catch {} SB.erk = null; fensterZu($("sbBlatt")); }
+function sbHoeren() {
+  if (!sbAn()) return;
+  if (!MITGLIEDER) mitgliederHolen().catch(() => {}); // für Namen („Nachricht an Klaus“)
+  try { speechSynthesis.cancel(); } catch {}
+  const Erk = window.SpeechRecognition || window.webkitSpeechRecognition, e = new Erk(); SB.erk = e;
+  e.lang = "de-DE"; e.interimResults = true; e.maxAlternatives = 3; e.continuous = false;
+  blattAuf("sbBlatt", `<h3 style="margin:0">🎙️ Ich höre zu …</h3><div class="sb-welle" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <p class="sb-gehoert" id="sbGehoert">Sag, was du tun möchtest</p>
+    <p class="hinweis" style="margin:0">Zum Beispiel:<br>${SB_BEISPIELE.map(esc).join("<br>")}</p>
+    <button class="knopf" style="width:100%;text-align:center;margin-top:10px" onclick="sbStopp()">Abbrechen</button>`);
+  let fertig = false;
+  e.onresult = (ev) => {
+    const r = ev.results[ev.results.length - 1], alt = [...r].map((a) => a.transcript);
+    if ($("sbGehoert")) $("sbGehoert").textContent = "„" + alt[0] + "“";
+    if (!r.isFinal) return;
+    fertig = true; const roh = alt.find((a) => sbErkennen(a, MITGLIEDER || [], ICH?.person_id)) ?? alt[0];
+    sbVerstanden(roh);
+  };
+  e.onerror = (ev) => { if (fertig) return; fertig = true;
+    sbNichtVerstanden(ev.error === "not-allowed" || ev.error === "service-not-allowed" ? "Das Mikrofon ist nicht erlaubt – bitte in den Handy-Einstellungen für den Browser freigeben." : ev.error === "no-speech" ? "Ich habe nichts gehört." : ev.error === "network" ? "Ohne Internet geht die Spracherkennung leider nicht." : "", ""); };
+  e.onend = () => { if (!fertig) { fertig = true; sbNichtVerstanden("Ich habe nichts gehört.", ""); } };
+  try { e.start(); } catch { sbNichtVerstanden("Die Spracherkennung startet gerade nicht – bitte nochmal tippen.", ""); }
+}
+function sbNichtVerstanden(grund, roh) {
+  SB.erk = null; spur("sprache_unklar");
+  blattAuf("sbBlatt", `<h3 style="margin:0">🤔 ${roh ? "Nicht verstanden" : "Hat nicht geklappt"}</h3>
+    ${roh ? `<p class="sb-gehoert">„${esc(roh)}“</p>` : ""}${grund ? `<p style="margin:6px 0">${esc(grund)}</p>` : ""}
+    <p class="hinweis" style="margin:0">Du kannst zum Beispiel sagen:<br>${SB_BEISPIELE.map(esc).join("<br>")}</p>
+    <button class="knopf haupt" style="width:100%;text-align:center;margin-top:10px" onclick="sbHoeren()">🎙️ Nochmal</button>
+    ${roh ? `<button class="knopf" style="width:100%;text-align:center" onclick="fensterZu($('sbBlatt'));sucheAuf(${esc(JSON.stringify(roh))})">🔍 Danach suchen</button>` : ""}
+    <button class="knopf" style="width:100%;text-align:center" onclick="fensterZu($('sbBlatt'))">Schließen</button>`);
+}
+async function sbVerstanden(roh) {
+  SB.erk = null;
+  const b = sbErkennen(roh, MITGLIEDER || [], ICH?.person_id);
+  if (!b) return sbNichtVerstanden("", roh);
+  fensterZu($("sbBlatt")); spur("sprache_" + b.art); // nur die Art, nie der gesprochene Text
+  melde(`🎙️ Verstanden: „${roh}“`);
+  await sbAusfuehren(b);
+}
+async function sbAusfuehren(b) {
+  if (b.art === "start") return sbStartseite();
+  if (b.art === "hilfe") return sbNichtVerstanden("Das kannst du zur App sagen:", "");
+  if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist");
+  if (b.art === "zurueck") return history.back();
+  if (b.art === "pinnwand") {
+    zeige("pinnwand");
+    setTimeout(() => { pwForm(true); if (b.text) { $("pwText").value = b.text.slice(0, PW.zeichen || 200); pwZaehlen(); } $("pwForm").scrollIntoView({ behavior: "smooth", block: "start" }); }, 400);
+    return;
+  }
+  if (b.art === "nachricht") {
+    const text = (b.text || "").trim(), rein = () => { if (text) { textVorbelegen(text); $("text").dispatchEvent(new Event("input")); } };
+    if (b.alle) { await neueNachricht(); empfWahl = { personen: [], aemter: [], alle: true, vorstand: false }; empfListe(); neuWeiter(); return rein(); }
+    if (b.personen?.length === 1) { await direkt(b.personen[0]); return setTimeout(rein, 600); }
+    await neueNachricht();
+    if (b.personen?.length > 1) { $("empfSuche").value = b.wort || ""; empfListe(); melde(`Mehrere passen zu „${b.wort}“ – bitte den richtigen Namen antippen`); }
+    else if (b.wort) { $("empfSuche").value = b.wort; empfListe(); melde(`Wen meinst du mit „${b.wort}“? Bitte Namen antippen`); }
+    return;
+  }
+  if (b.art === "termine") return zeige("termine");
+  if (b.art === "naechster") {
+    const t = INIT?.naechstesTreffen;
+    if (!t) { melde("📅 Im Moment ist kein Termin geplant"); return zeige("termine"); }
+    const satz = `Der nächste Termin ist ${t.titel}, ${wann(t.beginn)}.`; melde("📅 " + satz); sprechen(satz); return zumTreffen();
+  }
+  if (b.art === "suche") { sucheAuf(b.q); setTimeout(() => { try { suSucheKnopf(); } catch {} }, 100); }
+}
 // ---------- KC-CLUB-SCHRITT-HILFE (2.63.0, Wunsch Hansi; 2.64.0 verfeinert): Schritt-Unterstützung ----------
 // Eingeschaltet (⚙️ Einstellungen → „👣 Schritt-Unterstützung“, nur auf diesem Gerät) bekommt immer genau der nächste Schritt
 // einen pulsierenden roten Rahmen; unten steht mit zwei laufenden Schuhen „Schritt 2 von 6: …“ (bei offener Tastatur oben,
@@ -1778,6 +1912,7 @@ function shAufraeumen() {
 }
 function shBereich(v) { // beim Wechsel der Ansicht (zeige)
   if ($("setSchrittHilfe")) $("setSchrittHilfe").checked = shAn(); if ($("setSchrittVorlesen")) $("setSchrittVorlesen").checked = shVorlesenAn();
+  sbKnopfZeigen(); // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
   shWechsel(shAblaufKey());
 }
 function shWechsel(key) { // anderer Ablauf (Seite gewechselt, Fenster auf/zu)
@@ -19997,7 +20132,8 @@ setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
 const SPUR_WAS = { vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
-  mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet" };
+  mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
+  sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
 const SPW = { tag: null, person: null };
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;
