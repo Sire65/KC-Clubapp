@@ -5482,9 +5482,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/shBereich\(v\); \/\/ KC-CLUB-SCHRITT-HILFE/.test(programm), "beim Ansichtswechsel");
   assert.ok(/const shAn = \(\) => lsLesen\(SH_KEY\) === "1";/.test(programm), "aus, bis man es einschaltet (nur dieses Gerät)");
   assert.ok(/SH\.beruehrt\.delete\("los"\)/.test(programm), "Abbrechen gilt nicht als angeheftet");
-  assert.ok(/\.sh-ziel \{ outline: 3px solid #e11d48;[^}]*animation: shPuls/.test(seite) && /@keyframes shPuls \{[^\n]*box-shadow: 0 0 22px/.test(seite) && /\.sh-ziel-frei \{ outline: 2px dashed/.test(seite), "rot pulsierend mit Leuchten, vorbelegt gestrichelt");
+  assert.ok(/\.sh-ziel \{ outline: 3px solid #e11d48;[^}]*animation: shPuls/.test(seite) && /@keyframes shPuls \{[^\n]*box-shadow: 0 0 22px/.test(seite), "rot pulsierend mit Leuchten");
+  assert.ok(/id: "wichtig", ziel: "#pwWichtig", t: "Wichtigkeit wählen[^\n]*waehlen: true/.test(programm) && !/frei: true/.test(ab), "Wichtigkeit ist ein eigener Schritt (2.64.0)");
+  assert.ok(/t: "Tippe oben rechts auf „＋ Zettel“"/.test(programm), "erster Schritt sagt, wo");
+  assert.ok(/function shLage\(\)[\s\S]{0,300}innerHeight - vv\.height - vv\.offsetTop > 120/.test(programm) && /visualViewport\?\.addEventListener\("resize", shLage\)/.test(programm) && /\.sh-leiste\.oben \{ bottom: auto; \}/.test(seite), "Tastatur offen → Leiste oben");
+  assert.ok(/const SH_SCHUHE = `<svg class="sh-schuhe"[^`]*class="l"[^`]*class="r"/.test(programm) && /@keyframes shSchritt/.test(seite) && /\.sh-schuhe \.r \{ animation-delay/.test(seite), "zwei Schuhe gehen abwechselnd");
   assert.ok(/\.sh-leiste \{[^}]*pointer-events: none;/.test(seite), "Leiste verdeckt keine Knöpfe");
 }
+
+// 2.64.0: Prüfungen zur verfeinerten Schritt-Unterstützung stehen im Block KC-CLUB-SCHRITT-HILFE (2.63.0)
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

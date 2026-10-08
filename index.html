@@ -1521,14 +1521,20 @@
   @keyframes klickPuls { 0%, 100% { outline-width: 2px; outline-offset: 1px; outline-color: rgba(225, 29, 72, .55); } 50% { outline-width: 4px; outline-offset: 4px; outline-color: rgba(225, 29, 72, 1); } }
   @media (prefers-reduced-motion: reduce) { body.klick-zeigen :is(button, a[href], [onclick], [role="button"], [role="tab"], select, input, textarea, summary, label) { animation: none !important; } }
   .klick-leiste { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); top: calc(8px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 10px; max-width: calc(100vw - 24px); padding: 8px 8px 8px 14px; border-radius: 999px; background: #e11d48; color: #fff; box-shadow: var(--schatten); font-size: .9rem; white-space: nowrap; }
-  /* KC-CLUB-SCHRITT-HILFE (2.63.0): nächster Schritt rot pulsierend, vorbelegte Auswahl gestrichelt; Leiste unten über „?“ – Tipps gehen hindurch */
+  /* KC-CLUB-SCHRITT-HILFE (2.63.0/2.64.0): genau der nächste Schritt rot pulsierend mit Leuchten; Leiste unten über „?“
+     (bei offener Tastatur oben im sichtbaren Bereich), zwei laufende Schuhe; Tipps gehen durch die Leiste hindurch */
   .sh-ziel { outline: 3px solid #e11d48; outline-offset: 3px; border-radius: 12px; animation: shPuls 1.2s ease-in-out infinite; }
   @keyframes shPuls { 0%, 100% { outline-width: 3px; outline-offset: 2px; outline-color: rgba(225, 29, 72, .6); box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); } 50% { outline-width: 5px; outline-offset: 6px; outline-color: rgba(225, 29, 72, 1); box-shadow: 0 0 22px 8px rgba(225, 29, 72, .45); } }
-  .sh-ziel-frei { outline: 2px dashed #e11d48; outline-offset: 3px; border-radius: 12px; }
-  @media (prefers-reduced-motion: reduce) { .sh-ziel { animation: none; } }
-  .sh-leiste { position: fixed; z-index: 59; left: 50%; transform: translateX(-50%); bottom: calc(190px + env(safe-area-inset-bottom)); pointer-events: none; display: flex; align-items: center; gap: 10px; width: max-content; max-width: calc(100vw - 24px); padding: 8px 8px 8px 14px; border-radius: 18px; background: #e11d48; color: #fff; box-shadow: var(--schatten); font-size: .95rem; line-height: 1.3; }
-  .sh-leiste span { flex: 1; } .sh-leiste small { display: block; font-size: .78rem; opacity: .9; }
+  .sh-leiste { position: fixed; z-index: 59; left: 50%; transform: translateX(-50%); bottom: calc(190px + env(safe-area-inset-bottom)); pointer-events: none; display: flex; align-items: center; gap: 10px; width: max-content; max-width: calc(100vw - 24px); padding: 8px 8px 8px 10px; border-radius: 18px; background: #e11d48; color: #fff; box-shadow: var(--schatten); font-size: .95rem; line-height: 1.3; }
+  .sh-leiste.oben { bottom: auto; }
+  .sh-leiste span { flex: 1; }
   .sh-leiste button { border: 0; border-radius: 999px; background: #fff; color: #9f1239; font-weight: 800; padding: 6px 11px; cursor: pointer; flex: none; pointer-events: auto; }
+  .sh-schuhe { width: 32px; height: 40px; flex: none; fill: #fff; }
+  .sh-schuhe .sohle { fill: none; stroke: #e11d48; stroke-width: 1.6; stroke-linecap: round; }
+  .sh-schuhe g { transform-box: fill-box; transform-origin: 50% 80%; animation: shSchritt 1.1s ease-in-out infinite; }
+  .sh-schuhe .r { animation-delay: -.55s; }
+  @keyframes shSchritt { 0%, 100% { transform: translateY(5px) scale(1); } 25% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(-5px) scale(1); } 75% { transform: translateY(0) scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .sh-ziel, .sh-schuhe g { animation: none; } }
   .klick-leiste button { border: 0; border-radius: 999px; background: #fff; color: #9f1239; font-weight: 800; padding: 6px 12px; cursor: pointer; }
   .hz-frage.versteckt, body.im-chat .hz-frage, body.su-auf .hz-frage, body.kt-aktiv .hz-frage, body.fa-waehlen .hz-frage { display: none; }
   .hz-suchfeld { display: block; background: var(--karte); border-radius: var(--radius); box-shadow: var(--schatten); padding: 10px 12px 12px; margin: 0 0 12px; border-left: 5px solid var(--rot); }
@@ -3407,6 +3413,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.63.0" data-v="2.63.0"></script>
+<script src="app.js?v=2.64.0" data-v="2.64.0"></script>
 </body>
 </html>

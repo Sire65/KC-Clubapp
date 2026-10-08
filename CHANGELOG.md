@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.64.0 – 2026-10-08 – KC-CLUB-SCHRITT-HILFE verfeinert
+- Schritt-Unterstützung: Leiste wandert bei offener Tastatur nach oben, erster Schritt sagt „oben rechts“, Wichtigkeit und Antwort-Knopf sind eigene Schritte (immer nur ein Rahmen), zwei laufende Schuhe als Animation.
+
 ## 2.63.0 – 2026-10-08 – KC-CLUB-SCHRITT-HILFE
 - Schritt-Unterstützung (⚙️ Einstellungen → „👣 Schritt-Unterstützung“): roter pulsierender Rahmen um den nächsten sinnvollen Schritt, Leiste „Schritt 2 von 4: …“, vorbelegte Auswahl gestrichelt. Zum Ausprobieren erst an der Pinnwand; weitere Bereiche über die Registry SH_ABLAEUFE.
 

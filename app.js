@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.63.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.64.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1598,32 +1598,35 @@ const HILFE = [
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „🎨 Darstellung“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("darstellung", "setAnimiert"), seit: "2.24.1" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
 ];
-// ---------- KC-CLUB-SCHRITT-HILFE (2.63.0, Wunsch Hansi): Schritt-Unterstützung ----------
-// Eingeschaltet (⚙️ Einstellungen → „👣 Schritt-Unterstützung“, nur auf diesem Gerät) bekommt immer der nächste sinnvolle Schritt
-// einen pulsierenden roten Rahmen, unten steht „Schritt 2 von 5: …“. Abläufe stehen in der Registry SH_ABLAEUFE (Bereich → Schritte);
-// erst die Pinnwand – weitere Bereiche = neuer Eintrag hier, sonst nichts. Schritt: ziel (CSS), t (Text), fertig() erledigt?,
-// wenn() gilt nur dann, frei = schon vorbelegt (gestrichelt, darf übersprungen werden), ende = letzter Knopf.
+// ---------- KC-CLUB-SCHRITT-HILFE (2.63.0, Wunsch Hansi; 2.64.0 verfeinert): Schritt-Unterstützung ----------
+// Eingeschaltet (⚙️ Einstellungen → „👣 Schritt-Unterstützung“, nur auf diesem Gerät) bekommt immer genau der nächste Schritt
+// einen pulsierenden roten Rahmen; unten steht mit zwei laufenden Schuhen „Schritt 2 von 6: …“ (bei offener Tastatur oben,
+// damit sie nichts verdeckt). Abläufe stehen in der Registry SH_ABLAEUFE (Bereich → Schritte); erst die Pinnwand – weitere
+// Bereiche = neuer Eintrag hier, sonst nichts. Schritt: ziel (CSS), t (Text, mit Ort), fertig() erledigt?, wenn() gilt nur dann,
+// waehlen = Auswahl ist vorbelegt: erledigt, sobald angetippt oder ein späterer Schritt schon dran war; ende = letzter Knopf.
 const SH_KEY = "kc_club_schritt_hilfe";
 const SH_ABLAEUFE = {
   pinnwand: [
-    { id: "neu", ziel: "#pwNeuKnopf", t: "Tippe auf „＋ Zettel“", fertig: () => !$("pwForm").classList.contains("versteckt") },
-    { id: "text", ziel: "#pwText", t: "Schreib deine kurze Nachricht", fertig: () => !!$("pwText").value.trim() },
-    { id: "wichtig", ziel: "#pwWichtig", t: "Wichtigkeit – „Normal“ ist schon gewählt", frei: true },
-    { id: "fuer", ziel: "#pwFuer", t: "Für wen ist der Zettel?", fertig: () => !!PW.form?.fuer },
+    { id: "neu", ziel: "#pwNeuKnopf", t: "Tippe oben rechts auf „＋ Zettel“", fertig: () => !$("pwForm").classList.contains("versteckt") },
+    { id: "text", ziel: "#pwText", t: "Schreib deine kurze Nachricht in das Feld", fertig: () => !!$("pwText").value.trim() },
+    { id: "wichtig", ziel: "#pwWichtig", t: "Wichtigkeit wählen: „📝 Normal“ oder „❗ Hoch“", waehlen: true },
+    { id: "fuer", ziel: "#pwFuer", t: "Für wen ist der Zettel? Tippe eine Auswahl an", fertig: () => !!PW.form?.fuer },
     { id: "personen", ziel: "#pwPersonen", t: "Hake an, wer den Zettel bekommen soll", wenn: () => PW.form?.fuer === "personen", fertig: () => PW.form.personen.length > 0 },
-    { id: "antw", ziel: "#pwAntw", t: "Antwort-Knopf – ist schon gewählt", wenn: () => !!PW.form?.fuer && PW.form.fuer !== "ich", frei: true },
-    { id: "los", ziel: "#pwSpeichernKnopf", t: "Fertig? Tippe auf „📌 Anheften“", fertig: () => false, ende: true },
+    { id: "antw", ziel: "#pwAntw", t: "Dürfen andere antworten? Mit oder ohne Antwort-Knopf wählen", wenn: () => PW.form?.fuer !== "ich", waehlen: true },
+    { id: "los", ziel: "#pwSpeichernKnopf", t: "Fertig? Tippe unten auf „📌 Anheften“", fertig: () => false, ende: true },
   ],
 };
 const SH = { bereich: null, beruehrt: new Set(), letzter: null, geschafft: false, timer: null };
 const shAn = () => lsLesen(SH_KEY) === "1";
+// zwei Schuhe (von oben), die abwechselnd einen Schritt machen
+const SH_SCHUHE = `<svg class="sh-schuhe" viewBox="0 0 32 40" aria-hidden="true"><g class="l"><path d="M9 4c4 0 5.5 5 5 10-.4 4-1.4 6-1 10 .4 4-1.6 6.5-4.3 6.5S4.5 28 5 24c.5-4-1.8-7-1.8-12C3.2 7 5.3 4 9 4z"/><path class="sohle" d="M5.6 25.5h6.6M6.8 10.5h4.4M6.6 13.5h4.6M6.6 16.5h4.4"/></g><g class="r"><path d="M23 4c-4 0-5.5 5-5 10 .4 4 1.4 6 1 10-.4 4 1.6 6.5 4.3 6.5S27.5 28 27 24c-.5-4 1.8-7 1.8-12C28.8 7 26.7 4 23 4z"/><path class="sohle" d="M19.8 25.5h6.6M20.8 10.5h4.4M20.8 13.5h4.6M21 16.5h4.4"/></g></svg>`;
 function shSchalter(an) {
   lsSetzen(SH_KEY, an ? "1" : "0"); if ($("setSchrittHilfe")) $("setSchrittHilfe").checked = an;
   melde(an ? "👣 Schritt-Unterstützung an – zum Ausprobieren erst an der 📌 Pinnwand" : "👣 Schritt-Unterstützung aus");
   if (!an) shAufraeumen();
 }
 function shAufraeumen() {
-  document.querySelectorAll(".sh-ziel, .sh-ziel-frei").forEach((e) => e.classList.remove("sh-ziel", "sh-ziel-frei"));
+  document.querySelectorAll(".sh-ziel").forEach((e) => e.classList.remove("sh-ziel"));
   $("shLeiste")?.remove(); SH.letzter = null;
 }
 function shBereich(v) { // beim Wechsel der Ansicht (zeige)
@@ -1631,16 +1634,23 @@ function shBereich(v) { // beim Wechsel der Ansicht (zeige)
   SH.bereich = SH_ABLAEUFE[v] ? v : null; SH.beruehrt.clear(); SH.geschafft = false; clearTimeout(SH.timer);
   shAufraeumen(); if (SH.bereich) setTimeout(shAktualisieren, 120);
 }
+// Tastatur offen (sichtbarer Bereich deutlich kleiner) → Leiste oben in den sichtbaren Bereich, sonst unten über dem „?“
+function shLage() {
+  const l = $("shLeiste"), vv = window.visualViewport; if (!l) return;
+  const tastatur = vv && innerHeight - vv.height - vv.offsetTop > 120;
+  l.classList.toggle("oben", !!tastatur); l.style.top = tastatur ? `${Math.round(vv.offsetTop) + 8}px` : "";
+}
+window.visualViewport?.addEventListener("resize", shLage); window.visualViewport?.addEventListener("scroll", shLage);
 function shLeiste(html) {
-  let l = $("shLeiste"); if (!l) { document.body.insertAdjacentHTML("beforeend", `<div class="sh-leiste" id="shLeiste" role="status" aria-live="polite"><span></span><button type="button" onclick="shSchalter(false)" aria-label="Schritt-Unterstützung ausschalten">✕</button></div>`); l = $("shLeiste"); }
-  l.querySelector("span").innerHTML = html;
+  let l = $("shLeiste"); if (!l) { document.body.insertAdjacentHTML("beforeend", `<div class="sh-leiste" id="shLeiste" role="status" aria-live="polite">${SH_SCHUHE}<span></span><button type="button" onclick="shSchalter(false)" aria-label="Schritt-Unterstützung ausschalten">✕</button></div>`); l = $("shLeiste"); }
+  l.querySelector("span").innerHTML = html; shLage();
 }
 function shAktualisieren() {
   const ablauf = SH_ABLAEUFE[SH.bereich];
   if (!ablauf || !shAn() || aktuelleAnsicht !== SH.bereich || SH.geschafft) return;
   const gilt = ablauf.filter((s) => !s.wenn || s.wenn());
-  // fertig: erledigt, oder (vorbelegt) angetippt bzw. ein späterer Schritt ist schon dran gewesen
-  const fertig = (s, i) => (s.fertig ? s.fertig() : false) || (s.frei && (SH.beruehrt.has(s.id) || gilt.slice(i + 1).some((x) => SH.beruehrt.has(x.id) || x.fertig?.())));
+  // erledigt: fertig(), oder (Auswahl vorbelegt) angetippt bzw. ein späterer Schritt war schon dran – der Rahmen springt nie zurück
+  const fertig = (s, i) => (s.fertig ? s.fertig() : false) || (s.waehlen && (SH.beruehrt.has(s.id) || gilt.slice(i + 1).some((x) => SH.beruehrt.has(x.id) || x.fertig?.())));
   if (!gilt[0].fertig()) { // Formular zu
     if (SH.beruehrt.has("los")) { // gerade angeheftet → kurz loben, dann Ruhe bis zum nächsten Besuch
       SH.geschafft = true; shAufraeumen(); shLeiste("✅ <b>Geschafft!</b> Dein Zettel hängt an der Pinnwand.");
@@ -1650,15 +1660,13 @@ function shAktualisieren() {
   }
   if (SH.beruehrt.has("los")) { clearTimeout(SH.warte); SH.warte = setTimeout(shAktualisieren, 500); } // Anheften läuft noch → nachsehen
   const i = gilt.findIndex((s, n) => !fertig(s, n)); if (i < 0) return;
-  const s = gilt[i], danach = s.frei ? gilt.slice(i + 1).find((x) => !x.frei) : null;
-  document.querySelectorAll(".sh-ziel, .sh-ziel-frei").forEach((e) => e.classList.remove("sh-ziel", "sh-ziel-frei"));
-  const el = document.querySelector(s.ziel), el2 = danach && document.querySelector(danach.ziel);
-  el?.classList.add(s.frei ? "sh-ziel-frei" : "sh-ziel"); el2?.classList.add("sh-ziel");
-  const pflicht = gilt.filter((x) => !x.frei), nr = pflicht.indexOf(danach || s) + 1; // vorbelegte zählen nicht mit
-  shLeiste(`👣 <b>Schritt ${nr} von ${pflicht.length}:</b> ${esc(danach ? danach.t : s.t)}${danach ? `<small>Ändern geht: ${esc(s.t)}</small>` : ""}`);
+  const s = gilt[i], el = document.querySelector(s.ziel);
+  document.querySelectorAll(".sh-ziel").forEach((e) => e !== el && e.classList.remove("sh-ziel"));
+  el?.classList.add("sh-ziel");
+  shLeiste(`<b>Schritt ${i + 1} von ${gilt.length}:</b> ${esc(s.t)}`);
   if (SH.letzter !== s.id) { // nur bei neuem Schritt ins Bild holen – nicht beim Tippen
-    SH.letzter = s.id; const z = el2 || el, a = document.activeElement;
-    if (z && !(a && /^(TEXTAREA|INPUT)$/.test(a.tagName) && !z.contains(a))) { const r = z.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight - 300) z.scrollIntoView({ behavior: "smooth", block: "center" }); }
+    SH.letzter = s.id; const a = document.activeElement;
+    if (el && !(a && /^(TEXTAREA|INPUT)$/.test(a.tagName) && !el.contains(a))) { const r = el.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight - 300) el.scrollIntoView({ behavior: "smooth", block: "center" }); }
   }
 }
 // angetippt / getippt → Schritt merken und den nächsten zeigen (eine Stelle für alle Bereiche)
