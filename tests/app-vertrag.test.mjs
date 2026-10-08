@@ -6236,3 +6236,20 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/ja: "🔇 Ausschalten", nein: "🎙️ Anlassen" \}\)\) sbSchalter\(false\);/.test(f), "erst nach Ja aus");
   assert.ok(/\.sb-knopf \{ -webkit-touch-callout: none;/.test(seite));
 }
+
+// 4xx. 2.78.0: Vertrauliches (z. B. Verträge) an Nicht-Mitglieder → vorher fragen (KC-CLUB-SENSIBEL-GAESTE, Wunsch Hansi)
+{
+  const a = programm.indexOf("const SENSIBEL_WOERTER = "), b = programm.indexOf("// wer bekommt die Nachricht?");
+  const sensibelGrund = new Function(programm.slice(a, b) + "\nreturn sensibelGrund;")();
+  assert.equal(sensibelGrund("Hallo zusammen", [{ name: "Vertrag_Köchelub Werne.pdf" }]), "die Datei „Vertrag_Köchelub Werne.pdf“", "Vertrag im Dateinamen");
+  assert.equal(sensibelGrund("Anbei der neue Mietvertrag", []), "der Text");
+  assert.equal(sensibelGrund("Bitte lesen", [{ name: "Scan_0815.pdf" }]), "das Dokument „Scan_0815.pdf“", "Dokumente gelten als vertraulich");
+  assert.equal(sensibelGrund("Schönen Abend!", [{ name: "Foto.jpg" }]), "", "Foto + Gruß → keine Frage");
+  assert.ok(/const ordentlich = new Set\(\(mitgl \?\? \[\]\)\.filter\(\(x: any\) => x\.membership_type === "regular" && x\.membership_status === "active"\)/.test(server)
+    && /\.\.\.\(ordentlich\.has\(m\.person_id\) \? \{\} : \{ nichtMitglied: true \}\)/.test(server), "Server: Gast/ausgetreten/ohne Eintrag = Nicht-Mitglied (unbekannt nie OK)");
+  const s = programm.slice(programm.indexOf("async function senden() {"), programm.indexOf("async function senden() {") + 400);
+  assert.ok(/if \(!\(await sensibelGaesteOk\(text\)\)\) return;/.test(s), "vor jedem Senden");
+  assert.ok(/if \(!\(await sensibelGaesteOk\(m\.text \|\| "", m\.anlagen \|\| \[\], wer\)\)\) return;/.test(programm), "auch beim Weiterleiten");
+  const f = programm.slice(programm.indexOf("async function sensibelGaesteOk("), programm.indexOf("async function senden() {"));
+  assert.ok(/m\.nichtMitglied/.test(f) && /ja: "📤 Ja, trotzdem senden", nein: "✋ Nein, nicht senden", gefahr: true/.test(f) && /spur\("sensibel_gaeste_frage"\)/.test(f), "Frage mit Namen, Fokus auf Nein, Protokoll nur die Art");
+}

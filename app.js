@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.77.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.78.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -14180,6 +14180,9 @@ async function weiterleiten(art, id) {
   const m = WL.quelle; if (!m) return;
   const kopf = `↪️ Weitergeleitet${m.eigen ? "" : " von " + m.von.split(" ")[0]}:`, text = m.text && m.text !== "📎" ? `${kopf}\n${m.text}` : kopf;
   const daten = { text, anlagen: (m.anlagen || []).map((a) => a.id), weiterleiten_von: m.id, wege: [] };
+  // KC-CLUB-SENSIBEL-GAESTE (2.78.0): auch beim Weiterleiten fragen
+  const wer = (mg) => art === "p" ? [id] : ((n) => mg.filter((x) => n.has(x.name)).map((x) => x.person_id))(new Set(WL.liste.find((u) => u.id === id)?.teilnehmer || []));
+  if (!(await sensibelGaesteOk(m.text || "", m.anlagen || [], wer))) return;
   try {
     const r = art === "t" ? await api("nachricht_senden", { id, ...daten }) : await api("nachricht_senden", { ...daten, empfaenger: { personen: [id], aemter: [], alle: false, vorstand: false }, betreff: "" });
     document.getElementById("wlFenster")?.remove();
@@ -14945,10 +14948,44 @@ function wichtigUmschalten(an) {
   t?.classList.toggle("wichtig", WICHTIG); if (t) t.placeholder = WICHTIG ? "❗ Wichtige Nachricht schreiben …" : "Nachricht schreiben …";
   if (an === undefined) melde(WICHTIG ? "❗ Wird als WICHTIG gesendet – bei allen farbig markiert" : "Normale Wichtigkeit");
 }
+// ---------- KC-CLUB-SENSIBEL-GAESTE (2.78.0, Wunsch Hansi): vertrauliche Inhalte (z. B. Verträge) an Nicht-Mitglieder? ----------
+// Vor dem Senden: Ist der Inhalt vertraulich (Wort im Text oder Dateinamen, oder ein Dokument wie PDF/Word/Excel) UND bekommt ihn
+// jemand, der kein ordentliches Mitglied ist (Server: nichtMitglied – Gast, ausgetreten oder ohne Eintrag), wird vorher gefragt.
+// Weitere Wörter/Dateiarten = Eintrag in den beiden Listen, sonst nichts.
+const SENSIBEL_WOERTER = /vertr[aä]g|vereinbarung|kündigung|satzung|\biban\b|bankverbindung|kontonummer|kontostand|passw[oö]rt|kennwort|zugangsdaten|vertraulich|geheim|gesundheit|diagnose|attest|krankmeldung|gehalt|\blohn|rechnung|mahnung|ausweis|geburtsdatum|mitgliederliste|finanz|kassenbericht|kassenprüfung|haushalt|beschluss|vorstandsprotokoll|versicherung|schaden/i;
+const SENSIBEL_DATEI = /\.(pdf|docx?|xlsx?|odt|ods|csv|rtf|pages|numbers)$/i;
+// warum vertraulich? (rein, getestet) – "" = nicht vertraulich
+function sensibelGrund(text, anl = []) {
+  const n = anl.find((a) => SENSIBEL_WOERTER.test(a?.name || "")); if (n) return `die Datei „${n.name}“`;
+  if (SENSIBEL_WOERTER.test(text || "")) return "der Text";
+  const d = anl.find((a) => SENSIBEL_DATEI.test(a?.name || "")); if (d) return `das Dokument „${d.name}“`;
+  return "";
+}
+// wer bekommt die Nachricht? (Personen-IDs; bei „gleiche Nachricht an mehrere Chats“ über die Namen der Teilnehmer)
+function sendenEmpfaenger(mg) {
+  if (chatId) return (CHAT?.teilnehmer || []).map((t) => t.person_id);
+  if (neuEntwurf?.mehrfach) { const namen = new Set(neuEntwurf.mehrfach.flatMap((id) => UH.liste.find((u) => u.id === id)?.teilnehmer || [])); return mg.filter((m) => namen.has(m.name)).map((m) => m.person_id); }
+  const e = neuEntwurf?.empfaenger || {};
+  if (e.alle) return mg.map((m) => m.person_id);
+  return [...new Set([...(e.personen || []), ...mg.filter((m) => (e.vorstand && m.vorstand) || (e.aemter || []).some((a) => (m.aemter || []).includes(a))).map((m) => m.person_id)])];
+}
+async function sensibelGaesteOk(text, anl = anlagen, empf = null) { // empf(mg) → Empfänger-IDs; ohne: wie beim normalen Senden
+  const grund = sensibelGrund(text, anl); if (!grund) return true;
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch { return true; } // ohne Liste nicht blockieren – der Server prüft Empfänger wie bisher
+  const ids = new Set((empf || sendenEmpfaenger)(MITGLIEDER || [])), gaeste = (MITGLIEDER || []).filter((m) => ids.has(m.person_id) && m.person_id !== ICH?.person_id && m.nichtMitglied);
+  if (!gaeste.length) return true;
+  const n = gaeste.length, namen = gaeste.map((m) => m.name).join(", ");
+  spur("sensibel_gaeste_frage"); // nur die Art – nie Text, Datei oder Namen
+  const ok = await frage(`⚠️ Vertraulicher Inhalt an Nicht-Mitglieder?\n\nIn dieser Nachricht steht ${grund} – das sieht nach vertraulichen Daten aus.\n\n${n === 1 ? "1 Empfänger ist kein Mitglied" : n + " Empfänger sind keine Mitglieder"}: ${namen}.\n\n${n === 1 ? "Soll diese Person" : "Sollen diese Personen"} die Nachricht wirklich bekommen?`,
+    { ja: "📤 Ja, trotzdem senden", nein: "✋ Nein, nicht senden", gefahr: true });
+  if (!ok) melde("✋ Nicht gesendet – der Text bleibt stehen. Tipp: in einem Chat nur mit Mitgliedern senden.");
+  return ok;
+}
 async function senden() {
   emoUmschalten(false); // KC-CLUB-EMOJI
   const text = $("text").value.trim();
   if (!text && !anlagen.length) return;
+  if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
   // KC-CLUB-OFFLINE (2.1.0): Handy ohne Netz → Text vormerken statt Fehlermeldung (nur bestehender Chat, ohne Anhänge)
   if (!navigator.onLine && chatId && !anlagen.length && text) {
     owSchreiben([...owLesen(), { id: crypto.randomUUID?.() || String(Date.now()), chat: chatId, text, wege: ["push", "email"].filter((w) => ZW[w]),
@@ -20248,7 +20285,7 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) spurS
 const SPUR_WAS = { vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
-  sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
+  sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
 const SPW = { tag: null, person: null };
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;

@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.78.0 – 2026-10-08 – ⚠️ Vertrauliches an Nicht-Mitglieder: Rückfrage
+Steht in einer Nachricht etwas Vertrauliches (z. B. Vertrag im Text oder Dateinamen, oder ein Dokument wie PDF/Word/Excel) und ist ein Empfänger kein ordentliches Mitglied (Gast, ausgetreten), fragt die App vor dem Senden – auch beim Weiterleiten – mit Namen: „Sollen diese Personen die Nachricht wirklich bekommen?“ Server 2.78.0 liefert dafür das Merkmal. (KC-CLUB-SENSIBEL-GAESTE)
+
 ## 2.77.0 – 2026-10-08 – 🎙️ Lange drücken: Sprachsteuerung ausschalten
 Lange auf den 🎙️-Knopf drücken fragt: „Sprachsteuerung ausschalten?“ – kurz tippen hört wie bisher zu. (KC-CLUB-SPRACHSTEUERUNG)
 
