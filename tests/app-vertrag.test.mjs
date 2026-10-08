@@ -5482,7 +5482,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/shBereich\(v\); \/\/ KC-CLUB-SCHRITT-HILFE/.test(programm), "beim Ansichtswechsel");
   assert.ok(/const shAn = \(\) => lsLesen\(SH_KEY\) === "1";/.test(programm), "aus, bis man es einschaltet (nur dieses Gerät)");
   assert.ok(/SH\.beruehrt\.delete\("los"\)/.test(programm), "Abbrechen gilt nicht als angeheftet");
-  assert.ok(/\.sh-ziel \{ outline: 3px solid #e11d48;[^}]*animation: klickPuls/.test(seite) && /\.sh-ziel-frei \{ outline: 2px dashed/.test(seite), "rot pulsierend (gleicher Puls wie 👆), vorbelegt gestrichelt");
+  assert.ok(/\.sh-ziel \{ outline: 3px solid #e11d48;[^}]*animation: shPuls/.test(seite) && /@keyframes shPuls \{[^\n]*box-shadow: 0 0 22px/.test(seite) && /\.sh-ziel-frei \{ outline: 2px dashed/.test(seite), "rot pulsierend mit Leuchten, vorbelegt gestrichelt");
   assert.ok(/\.sh-leiste \{[^}]*pointer-events: none;/.test(seite), "Leiste verdeckt keine Knöpfe");
 }
 
