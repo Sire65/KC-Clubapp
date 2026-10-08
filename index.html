@@ -1525,10 +1525,10 @@
   /* KC-CLUB-SCHRITT-HILFE (2.63.0/2.64.0): genau der nächste Schritt rot pulsierend mit Leuchten; Leiste unten über „?“
      (bei offener Tastatur oben im sichtbaren Bereich), zwei laufende Schuhe; Tipps gehen durch die Leiste hindurch */
   /* 2.65.0: eigener Rahmen über dem Ziel (#shRahmen) – kräftiger Puls: dicker Rand, Leuchten nach außen, leichtes Atmen */
-  .sh-rahmen { position: fixed; z-index: 58; pointer-events: none; border: 4px solid #e11d48; border-radius: 16px; background: rgba(225, 29, 72, .07); animation: shPuls 1s ease-in-out infinite; }
+  .sh-rahmen { position: fixed; z-index: 5001; pointer-events: none; border: 4px solid #e11d48; border-radius: 16px; background: rgba(225, 29, 72, .07); animation: shPuls 1s ease-in-out infinite; }
   @keyframes shPuls { 0%, 100% { transform: scale(1); border-width: 4px; border-color: rgba(225, 29, 72, .75); box-shadow: 0 0 0 0 rgba(225, 29, 72, .55), inset 0 0 0 0 rgba(225, 29, 72, 0); }
     50% { transform: scale(1.035); border-width: 6px; border-color: #ff1f4b; box-shadow: 0 0 0 10px rgba(225, 29, 72, .28), 0 0 28px 12px rgba(225, 29, 72, .45), inset 0 0 14px rgba(225, 29, 72, .25); } }
-  .sh-leiste { position: fixed; z-index: 59; left: 50%; transform: translateX(-50%); bottom: calc(190px + env(safe-area-inset-bottom)); pointer-events: none; display: flex; align-items: center; gap: 10px; width: max-content; max-width: calc(100vw - 24px); padding: 8px 8px 8px 10px; border-radius: 18px; background: #e11d48; color: #fff; box-shadow: var(--schatten); font-size: .95rem; line-height: 1.3; }
+  .sh-leiste { position: fixed; z-index: 5002; left: 50%; transform: translateX(-50%); bottom: calc(190px + env(safe-area-inset-bottom)); pointer-events: none; display: flex; align-items: center; gap: 10px; width: max-content; max-width: calc(100vw - 24px); padding: 8px 8px 8px 10px; border-radius: 18px; background: #e11d48; color: #fff; box-shadow: var(--schatten); font-size: .95rem; line-height: 1.3; }
   .sh-leiste.oben { bottom: auto; }
   .sh-leiste span { flex: 1; }
   .sh-leiste .sh-weiter { display: block; margin-top: 6px; border: 0; border-radius: 999px; background: #fff; color: #9f1239; font-weight: 800; padding: 7px 14px; font-size: .95rem; }
@@ -3419,6 +3419,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.68.0" data-v="2.68.0"></script>
+<script src="app.js?v=2.69.0" data-v="2.69.0"></script>
 </body>
 </html>

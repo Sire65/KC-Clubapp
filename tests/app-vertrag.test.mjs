@@ -5518,21 +5518,36 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const z of ["#empfWahlBereich", "#neuBetreff", "#text", "#sendenKnopf"]) { assert.ok(ab.includes(`ziel: "${z}"`), "Schritt " + z); assert.ok(seite.includes(`id="${z.slice(1)}"`), "Ziel vorhanden: " + z); }
   assert.ok(ab.includes(`ziel: '#v-nachrichten .kopf2 [onclick="uhNeu()"]'`) && /<button[^>]*onclick="uhNeu\(\)"/.test(seite), "＋ Neu");
   assert.ok(ab.includes(`ziel: '#v-neu [onclick="neuWeiter()"]'`) && /onclick="neuWeiter\(\)">Weiter zum Schreiben ›<\/button>/.test(seite), "Weiter zum Schreiben");
-  assert.ok(/lob: "Deine Nachricht ist unterwegs\."/.test(ab) && /const lob = ablauf\.find\(\(x\) => x\.ende\)\?\.lob/.test(programm), "Lob je Ablauf");
+  assert.ok(/lob: "Deine Nachricht ist unterwegs\."/.test(ab) && /const lob = SH\.lobJetzt \|\| ablauf\.find\(\(x\) => x\.ende\)\?\.lob/.test(programm), "Lob je Ablauf");
   assert.ok(/const deckt = z && z\.height && a\.top < z\.bottom \+ 10 && a\.bottom > z\.top - 10;/.test(programm), "Leiste weicht aus, wenn sie das Ziel verdeckt");
 }
 
 // 4xx. 2.68.0: Schritt-Unterstützung – Sonderwege bei Nachrichten (Öffnen, mehrere markieren, Gruppe) (KC-CLUB-SCHRITT-HILFE, Wunsch Hansi)
 {
   const ab = programm.slice(programm.indexOf("const SH_ABLAEUFE = {"), programm.indexOf("const SH = {"));
-  assert.ok(/id: "oeffnen", ziel: "#unterhListe \.uhaktion \.knopf\.haupt"[^\n]*wenn: \(\) => !!UH\.wahl && !UH\.mark\.size/.test(ab), "angetippt → „💬 Öffnen“");
+  assert.ok(/id: "oeffnen", ruhe: true, ziel: "#unterhListe \.uhaktion \.knopf\.haupt"[^\n]*wenn: \(\) => !!UH\.wahl && !UH\.mark\.size/.test(ab), "angetippt → „💬 Öffnen“");
   assert.ok(/id: "mark", ziel: "#unterhListe"[^\n]*wenn: \(\) => UH\.mark\.size > 0[^\n]*weiter: true/.test(ab) && /id: "los", ziel: "#uhMarkLeiste \.knopf\.haupt"/.test(ab), "markiert → weitere markieren → „Gleiche Nachricht an …“");
   assert.ok(/<button class="knopf haupt klein" onclick="uhMehrfachStarten\(\)">/.test(programm), "Ziel-Knopf der Markier-Leiste");
   assert.ok(/function uhMarkZeichnen\(\) \{[\s\S]{0,300}setTimeout\(shAktualisieren, 60\);/.test(programm), "langes Drücken aktualisiert die Schritte");
   assert.ok(ab.includes("gruppe: [") && /ziel: "#grName"/.test(ab) && /ziel: "#grSymbole"/.test(ab) && /ziel: "#grListe"/.test(ab) && /ziel: "#grKnopf"/.test(ab), "Gruppe anlegen");
   for (const id of ["grName", "grSymbole", "grListe", "grKnopf"]) assert.ok(seite.includes(`id="${id}"`), "Ziel vorhanden: " + id);
-  assert.ok(/const lob = shAn\(\) && SH\.beruehrt\.has\("los"\) && SH_ABLAEUFE\[SH\.bereich\]\?\.find\(\(x\) => x\.ende\)\?\.lob;/.test(programm), "Lob auch, wenn die App danach selbst die Ansicht wechselt");
+  assert.ok(/const lob = shAn\(\) && SH\.beruehrt\.has\("los"\) && \(SH\.lobJetzt \|\| SH_ABLAEUFE\[SH\.bereich\]\?\.find\(\(x\) => x\.ende\)\?\.lob\);/.test(programm), "Lob auch, wenn die App danach selbst die Ansicht wechselt");
   assert.ok(/const unten = z\.bottom \+ 14 \+ a\.height < innerHeight - 8;/.test(programm), "Leiste lieber unter das Ziel, wenn Platz");
+}
+
+// 4xx. 2.69.0: Schritt-Unterstützung bei Termine (KC-CLUB-SCHRITT-HILFE, Wunsch Hansi)
+{
+  const ab = programm.slice(programm.indexOf("const SH_ABLAEUFE = {"), programm.indexOf("const SH = {"));
+  assert.ok(ab.includes("termine: ["), "Ablauf Termine");
+  for (const z of ["#neuTreffenKnopf", "#ptTitel", "#ptOrt", "#ptErinnerung", "#tfDatum", "#tfInfo"]) { const id = z.slice(1); assert.ok(seite.includes(`id="${id}"`) || programm.includes(`id="${id}"`), "Ziel vorhanden: " + z); }
+  for (const z of ["#neuTreffenKnopf", "#ptTitel", "#ptOrt", "#ptErinnerung", "#tfTitelWahl", "#tfOrtWahl", "#taAnlassWahl", "#taOrtWahl", "#treffenForm label:has(#tfInfo)", "#treffenInfo .antworten", "#neuWahlBlatt .wahl"]) assert.ok(ab.includes(`ziel: "${z}"`), "Schritt " + z);
+  assert.ok(/comboFeld\("taAnlass"/.test(programm) && /comboFeld\("taOrt"/.test(programm) && /comboFeld\("tfTitel"/.test(programm) && /<select id="\$\{id\}Wahl"/.test(programm), "Auswahl-Felder heißen …Wahl");
+  assert.ok(/const shTmOffen = \(\) =>/.test(programm) && /id: "start", ruhe: true, ziel: "#neuTreffenKnopf"/.test(ab), "Ausgangszustand nur ohne offenes Formular");
+  assert.ok(/lob: "Deine Antwort ist gespeichert\."/.test(ab) && /lob: "Deine Anfrage ist unterwegs\."/.test(ab), "Lob je Weg");
+  assert.ok(/if \(\(!s\.wenn \|\| s\.wenn\(\)\) && e\.target\.closest\?\.\(s\.ziel\)\) \{ SH\.beruehrt\.add\(s\.id\); if \(s\.ende\) SH\.lobJetzt = s\.lob; \}/.test(programm), "nur geltende Schritte zählen beim Antippen");
+  assert.ok(/const dlg = document\.querySelector\("\.dlg-blatt \.blatt-innen"\);/.test(programm) && /\.sh-rahmen \{ position: fixed; z-index: 5001;/.test(seite) && /\.sh-leiste \{ position: fixed; z-index: 5002;/.test(seite), "Rückfrage-Fenster zuerst; Rahmen und Leiste über allen Fenstern");
+  assert.ok(/new MutationObserver\(\(\) => \{ if \(SH\.bereich && shAn\(\)\)/.test(programm), "Fenster auf/zu prüft neu");
+  assert.ok(/if \(SH\.geschafft\) \{ if \(ruhe\) return; SH\.geschafft = false;/.test(programm), "nach „Geschafft“ läuft die Hilfe beim nächsten Anfang wieder");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
