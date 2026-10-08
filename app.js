@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.116.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.118.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1545,7 +1545,7 @@ const HILFE = [
   { id: "vorschlag_unterstuetzen", thema: "club", sym: "👍", t: "Gute Ideen unterstützen", x: "Bei den <b>🗳️ Vorschlägen</b> kannst du Themen anderer mit 👍 unterstützen. So sieht die Clubleitung schnell, was vielen am Herzen liegt.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spende", thema: "club", sym: "💝", t: "Ein Spendenprojekt vorschlagen", x: "Kennst du ein Projekt, das der Club unterstützen könnte? Bei den Vorschlägen gibt es dafür die Art <b>„💝 Spende“</b> – die Projekte kommen dann in die nächste Sitzung.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spiel_mitglieder", thema: "club", sym: "🎲", t: "Gegen andere Mitglieder spielen", x: "In den Spielen unter <b>„👥 Gegen Mitglieder“</b> forderst du jemanden heraus – ihr zieht abwechselnd, und du bekommst Bescheid, wenn du dran bist. An offenen Partien lässt sich sogar <b>„📅 Termin vereinbaren“</b>. Oben steht der 🏆 Pokal des Monats.", zeig: () => spStart(), seit: "2.23.1" },
-  { id: "spiel_schach", thema: "club", sym: "♟️", t: "Schach: schieben, Rochade, Twinkey", x: "Figuren einfach mit dem Finger <b>schieben</b> – oder antippen und dann das Zielfeld. <b>Rochade:</b> den König auf den Turm schieben. Geht sie nicht, sagt dir Twinkey in der Sprechblase, warum (z. B. „Im Schach darfst du nicht rochieren“). Gegen den Computer spielst du gegen <b>🧑‍🍳 Twinkey</b>: Er macht Sprüche, und mit <b>💡 Tipp</b> verrät er dir einen guten Zug. Mit <b>🔊 Ansage</b> spricht er auch. <b>🔔 Töne</b> schaltet das leise Klacken beim Ziehen. Die Küchenbrigade gibt es weiter über <b>👨‍🍳 Brigade</b>. Während einer Partie ist oben alles ausgeblendet, damit das Brett groß ist – mit <b>⚙️ Einstellungen</b> holst du es zurück.", zeig: () => spStart("pc", "schach"), seit: "2.116.0" },
+  { id: "spiel_schach", thema: "club", sym: "♟️", t: "Schach: schieben, Rochade, Twinkey", x: "Figuren einfach mit dem Finger <b>schieben</b> – oder antippen und dann das Zielfeld. <b>Rochade:</b> den König auf den Turm schieben. Geht sie nicht, sagt dir Twinkey in der Sprechblase, warum (z. B. „Im Schach darfst du nicht rochieren“). Gegen den Computer spielst du gegen <b>🧑‍🍳 Twinkey</b>: Er macht Sprüche, und mit <b>💡 Tipp</b> verrät er dir einen guten Zug. Mit <b>🔊 Ansage</b> spricht er auch. <b>🔔 Töne</b> schaltet das leise Klacken beim Ziehen. Die Küchenbrigade gibt es weiter über <b>👨‍🍳 Brigade</b>. Während einer Partie ist oben alles ausgeblendet, damit das Brett groß ist – mit <b>⚙️ Einstellungen</b> holst du es zurück. <b>📼 Meine Partien:</b> Jede Partie wird aufgezeichnet – mit <b>▶ Nachspielen</b> siehst du sie Zug für Zug noch einmal an (⏮ ◀ ▶ ⏭ oder ▶️ Abspielen). Bei Partien gegen Mitglieder geht das auch über <b>📼 Nachspielen</b>.", zeig: () => spStart("pc", "schach"), seit: "2.118.0" },
   { id: "spiel_pause", thema: "club", sym: "⏸", t: "Spiel kurz anhalten", x: "Kommt beim Spielen gegen den Computer etwas dazwischen? Unten auf <b>„⏸ Pause“</b> tippen – mit <b>„▶ Weiter“</b> geht es genau dort weiter.", zeig: () => spStart(), seit: "2.23.1" },
   // 🔔 Benachrichtigungen & Töne
   { id: "meine_geraete", thema: "toene", sym: "📱", t: "Auf welchen Geräten kommt Push an?", x: "Kommt auf dem Tablet nichts an? Unter ⚙️ → „🔔 Benachrichtigungen“ zeigt <b>„📱 Meine Geräte“</b>, welche deiner Handys und Tablets Benachrichtigungen bekommen. Daneben schickt „Test-Push senden“ eine Probe.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.23.1" },
@@ -4946,6 +4946,7 @@ function spZeigen() {
   $("spEdition").innerHTML = art === "schach" ? `<b>♟️ Schach</b><span>Köcheclub Edition · ${schBrigade() ? "Küchenbrigade Weiß gegen Schwarz" : "Weiß gegen Schwarz"}</span>` : art === "bsk" ? "<b>🃏 Bauernskat</b><span>Köcheclub Edition · zu zweit</span>" : art === "kt" ? "<b>🔪 Küchenterror</b><span>Köcheclub Edition · Küchenquiz auf Zeit</span>" : art === "mae" ? "<b>🎲 Mensch ärgere dich nicht</b><span>Köcheclub Edition · würfeln, rauswerfen, ins Ziel</span>" : art === "fdk" ? "<b>🧑‍🍳 Fang den Koch</b><span>Köcheclub Edition · das Küchen-Brettspiel</span>" : art === "dk" ? "<b>👑 Doppelkopf</b><span>Köcheclub Edition · zu viert</span>" : "<b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span>";
   clearInterval(SP.takt); SP.takt = null;
   document.body.classList.remove("sch-fokus"); // KC-CLUB-SCHACH-FOKUS: setzt nur das laufende Schachspiel wieder
+  schNsStopp(); // KC-CLUB-SCHACH-ARCHIV: Nachspielen endet beim Wechsel
   if (SP.tab === "pc") return SP.art === "schach" ? schPcZeigen() : SP.art === "bsk" ? bskPcZeigen() : SP.art === "kt" ? ktPcZeigen() : SP.art === "mae" ? (maePcZeigen(), maePcFortsetzen()) : SP.art === "fdk" ? (fdkPcZeigen(), fdkFortsetzen()) : SP.art === "dk" ? dkPcZeigen() : spPcZeigen();
   if (SP.offen) return spSpielZeigen();
   spListeZeigen();
@@ -5618,46 +5619,67 @@ function schRochadeGrund(ch, seite) {
 }
 // Twinkeys Sprüche: {dein}/{deinA}/{mein}/{meinA}/{denA}/{zum} = Figur mit Artikel, {bauer} = Bauer/Praktikant, {er} = Gegenüber.
 // Gegen den Computer ist Twinkey der Gegner, gegen Mitglieder schaut er zu („mg_…“).
+// KC-CLUB-SCHACH-SPRUECHE (2.118.0, Wunsch Hansi): mehr Sprüche je Lage, frech im Stil bekannter Schach-Figuren, aber eigene Küchen-Sprüche
 const SCH_TW_SPRUECHE = {
   start: ["Heute schlage ich dich bestimmt – ich habe die ganze Nacht geübt!", "Ich habe keine Angst. Du hast Angst. 😄", "Na, bereit? Ich hab mir extra eine frische Schürze angezogen.",
-    "Auf geht's! Möge die bessere Küche gewinnen.", "Ich habe heute schon drei Partien gewonnen – gegen mich selbst.", "Los geht's – aber nicht zu schnell, ich muss noch die Soße abschmecken."],
+    "Auf geht's! Möge die bessere Küche gewinnen.", "Ich habe heute schon drei Partien gewonnen – gegen mich selbst.", "Los geht's – aber nicht zu schnell, ich muss noch die Soße abschmecken.",
+    "Ich hab mein Glücks-Nudelholz dabei – heute gewinne ich!", "Meine Schürze ist frisch gestärkt. Ich bin bereit!", "Möge der bessere Koch gewinnen – also ich. 😄"],
   startLeicht: ["Ich bin heute noch etwas verschlafen – sei nett zu mir!", "Ich spiel heute ganz gemütlich. Mal sehen, ob das reicht …", "Heute spiel ich nur mit halber Kraft – die andere Hälfte rührt die Suppe."],
   startSchwer: ["Heute spiele ich mit voller Konzentration. Kein Erbarmen in der Küche!", "Ich habe die ganze Nacht Schachbücher gelesen. Zieh dich warm an!", "Heute gewinne ich – das hab ich meinem Küchenchef versprochen."],
   weiter: ["Weiter geht's – ich hab das Brett so gelassen, wie es war. Ehrenwort!", "Da bist du ja wieder! Ich hab schon auf dich gewartet.", "Schön, dass du wieder da bist. Wo waren wir stehengeblieben?"],
-  ruhigIch: ["Aha, so willst du das also machen.", "Hm, damit hab ich nicht gerechnet.", "Nicht schlecht, nicht schlecht …", "Mutig, mutig!", "Das merk ich mir für die nächste Partie.", "Interessant … sehr interessant."],
-  ruhigEr: ["So, jetzt du!", "Na, was sagst du jetzt?", "Den Zug hab ich mir beim Zwiebelschneiden ausgedacht.", "Dein Zug, Chef!", "Hehe – der war gut, oder?", "Ich hab da so einen Plan …"],
+  ruhigIch: ["Aha, so willst du das also machen.", "Hm, damit hab ich nicht gerechnet.", "Nicht schlecht, nicht schlecht …", "Mutig, mutig!", "Das merk ich mir für die nächste Partie.", "Interessant … sehr interessant.",
+    "Moment … was hast du denn vor?", "Hmm, das sieht verdächtig nach einem Plan aus."],
+  ruhigEr: ["So, jetzt du!", "Na, was sagst du jetzt?", "Den Zug hab ich mir beim Zwiebelschneiden ausgedacht.", "Dein Zug, Chef!", "Hehe – der war gut, oder?", "Ich hab da so einen Plan …",
+    "Den Zug hab ich aus einem alten Kochbuch.", "Raffiniert, oder? Wie Omas Geheimsoße."],
   schnell: ["{dein} ist heute aber schnell unterwegs!", "Huiii – {dein} rennt ja quer übers Brett!", "Wo will denn {dein} so eilig hin?"],
   bauerWeit: ["Deinen {bauerA} möchte ich so weit vorne eigentlich nicht sehen …", "Halt! Dein {bauer} kommt mir zu nahe!", "Dein {bauer} will wohl befördert werden – nicht mit mir!"],
-  ichSchlage: ["Aua, {mein}! Den brauchte ich noch.", "Ich wollte {meinA} sowieso loswerden … ehrlich!", "Hey! Das war {mein}!", "Na warte, das zahl ich dir heim!"],
-  ichSchlageDame: ["{mein}! Das gibt's doch nicht!", "Oh nein, {mein} … Jetzt wird's schwer für mich."],
-  erSchlaegt: ["Danke für {deinA} – kommt direkt in die Suppe!", "Lecker – {deinA} nehme ich gern mit!", "Ups – {dein} stand da ganz schön allein herum."],
-  erSchlaegtDame: ["{dein}! Die nehme ich mit Kusshand.", "Ohje – {dein} ist weg. Das tut mir fast leid … aber nur fast."],
-  ichSchach: ["Huch, Schach! Da muss ich aufpassen.", "Oha – mein König schwitzt!", "Schach? Das hab ich natürlich kommen sehen …"],
-  erSchach: ["Schach! Pass auf deinen König auf.", "Schach! Jetzt wird's heiß in der Küche.", "Schach – wohin jetzt mit deinem König?"],
+  ichSchlage: ["Aua, {mein}! Den brauchte ich noch.", "Ich wollte {meinA} sowieso loswerden … ehrlich!", "Hey! Das war {mein}!", "Na warte, das zahl ich dir heim!",
+    "Autsch! Das kommt auf deine Rechnung.", "Pff – {mein} war eh nur zur Deko da.", "Den hätte ich noch für die Vorspeise gebraucht!", "Das war ein Test. Du hast ihn bestanden. Leider."],
+  ichSchlageDame: ["{mein}! Das gibt's doch nicht!", "Oh nein, {mein} … Jetzt wird's schwer für mich.",
+    "{mein}! Was wird bloß mein Küchenchef dazu sagen?", "Nicht {meinA}! Die hatte heute Geburtstag!", "{mein} … ich glaub, ich muss mich kurz setzen.", "Das melde ich der Küchenleitung!"],
+  erSchlaegt: ["Danke für {deinA} – kommt direkt in die Suppe!", "Lecker – {deinA} nehme ich gern mit!", "Ups – {dein} stand da ganz schön allein herum.",
+    "Hmm, {deinA} nehme ich mit – als Beilage.", "{deinA} werfe ich direkt in den Topf!", "Tja – wer nicht aufpasst, landet in der Suppe."],
+  erSchlaegtDame: ["{dein}! Die nehme ich mit Kusshand.", "Ohje – {dein} ist weg. Das tut mir fast leid … aber nur fast.",
+    "{dein} hat gekündigt – und arbeitet ab jetzt bei mir.", "{dein}? Die ist jetzt in meiner Küche. 😄"],
+  ichSchach: ["Huch, Schach! Da muss ich aufpassen.", "Oha – mein König schwitzt!", "Schach? Das hab ich natürlich kommen sehen …",
+    "Huch! Wer hat denn die Herdplatte so heiß gedreht?", "Schach? Moment, das war so nicht abgesprochen!", "Keine Panik, Twinkey … keine Panik …"],
+  erSchach: ["Schach! Pass auf deinen König auf.", "Schach! Jetzt wird's heiß in der Küche.", "Schach – wohin jetzt mit deinem König?",
+    "Ich hol mir jetzt die Kochmütze – Schach!", "Schach! Riechst du das? Da brennt was an – dein König.", "Schach! Dein König sollte langsam die Schürze packen."],
   ichRochade: ["Schöne Rochade – dein König sitzt jetzt sicher.", "Rochade! Da hat jemand aufgepasst."],
-  erRochade: ["Ich bring meinen König in Sicherheit – Rochade!", "Rochade! Mein König macht es sich gemütlich."],
-  ichUmwandlung: ["Was? Dein {bauer} wird {zum}? Das ist unfair!", "Oh nein – dein {bauer} hat es geschafft!"],
+  erRochade: ["Ich bring meinen König in Sicherheit – Rochade!", "Rochade! Mein König macht es sich gemütlich.",
+    "Mein König zieht sich in die Speisekammer zurück – Rochade!"],
+  ichUmwandlung: ["Was? Dein {bauer} wird {zum}? Das ist unfair!", "Oh nein – dein {bauer} hat es geschafft!",
+    "Dein {bauer} wird befördert? Das ging bei mir nie so schnell!"],
   erUmwandlung: ["Mein {bauer} ist durch – Beförderung {zum}!", "Hehe, mein {bauer} wird {zum}!"],
-  ichSieg: ["Glückwunsch, du hast gewonnen! Revanche? Diesmal pass ich besser auf.", "Schachmatt … ich geh dann mal Zwiebeln schneiden. Gut gespielt!"],
-  erSieg: ["Schachmatt! Hab ich doch gesagt – die ganze Nacht geübt! 😄", "Gewonnen! Aber du hast gut gekämpft. Noch eine?"],
-  remis: ["Unentschieden – wir sind wohl gleich gut!", "Remis! Dann teilen wir uns den Nachtisch."],
-  warten: ["Lass dir Zeit – ich hol mir solange einen Kaffee ☕", "Ich mach in der Zwischenzeit schon mal die Spülmaschine an …", "Brauchst du Hilfe? Tipp auf 💡 Tipp, dann verrate ich dir einen Zug."],
-  zurueck: ["Zug zurück? Na gut, ausnahmsweise.", "Okay, wir tun so, als wär nichts gewesen."],
+  ichSieg: ["Glückwunsch, du hast gewonnen! Revanche? Diesmal pass ich besser auf.", "Schachmatt … ich geh dann mal Zwiebeln schneiden. Gut gespielt!",
+    "Das war natürlich Absicht – ich wollte dir eine Freude machen!", "Ich verlange eine Revanche – gleich nach dem Abwasch!", "Glückwunsch! Ich geh dann mal heimlich in die Zwiebeln weinen.", "Das lag nur am Messer – das war stumpf!", "Na gut – heute koche ich den Nachtisch für dich."],
+  erSieg: ["Schachmatt! Hab ich doch gesagt – die ganze Nacht geübt! 😄", "Gewonnen! Aber du hast gut gekämpft. Noch eine?",
+    "Noch ein Sieg für Team Kochmütze!", "Sei nicht traurig – ich bin halt ein Naturtalent am Herd.", "Gewonnen – und das ganz ohne Rezept!", "Das gibt heute Abend Extra-Nachtisch – für mich. 😋", "Keine Sorge – auch große Köche haben klein angefangen."],
+  remis: ["Unentschieden – wir sind wohl gleich gut!", "Remis! Dann teilen wir uns den Nachtisch.",
+    "Unentschieden – dann kochen wir eben zusammen.", "Keiner gewinnt – wie ein Soufflé, das nicht aufgeht."],
+  warten: ["Lass dir Zeit – ich hol mir solange einen Kaffee ☕", "Ich mach in der Zwischenzeit schon mal die Spülmaschine an …", "Brauchst du Hilfe? Tipp auf 💡 Tipp, dann verrate ich dir einen Zug.",
+    "Keine Eile – ich schäle solange Kartoffeln.", "Ich hab Zeit. Die Suppe muss eh noch ziehen."],
+  zurueck: ["Zug zurück? Na gut, ausnahmsweise.", "Okay, wir tun so, als wär nichts gewesen.",
+    "Zurücknehmen? Na gut – in der Küche darf man ja auch nachwürzen."],
   mg_start: ["Viel Spaß gegen {er}! Ich schau zu und helfe dir, wenn du nicht weiterweißt.", "Auf eine schöne Partie gegen {er}! Ich drück dir die Daumen."],
   mg_schnell: ["{dein} ist heute aber schnell unterwegs!", "Huiii – {dein} rennt ja quer übers Brett!"],
   mg_bauerWeit: ["Dein {bauer} marschiert mutig nach vorne – {er} wird nervös!"],
   mg_ichSchlage: ["Stark – du hast {er} {denA} abgenommen!", "Zack – {denA} von {er} hast du dir geschnappt!"],
-  mg_ichSchlageDame: ["Wow – du hast {er} {denA} abgenommen!"],
+  mg_ichSchlageDame: ["Wow – du hast {er} {denA} abgenommen!",
+    "Die Dame von {er} ist weg! Was wird da bloß der Küchenchef sagen?"],
   mg_erSchlaegt: ["Oje – {er} hat {deinA} geschlagen.", "Autsch – {deinA} hat {er} dir weggeschnappt."],
   mg_erSchlaegtDame: ["Oh nein – {er} hat {deinA} geschlagen! Jetzt gut aufpassen."],
   mg_ichSchach: ["Schach! Jetzt muss sich {er} was einfallen lassen."],
-  mg_erSchach: ["Achtung, {er} sagt Schach! Rette deinen König."],
+  mg_erSchach: ["Achtung, {er} sagt Schach! Rette deinen König.",
+    "{er} will sich die Kochmütze holen – Schach! Pass auf."],
   mg_ichRochade: ["Schöne Rochade – dein König sitzt jetzt sicher."],
   mg_erRochade: ["{er} hat rochiert – der König dort steht jetzt sicherer."],
   mg_ichUmwandlung: ["Dein {bauer} wird {zum} – stark!"],
   mg_erUmwandlung: ["Achtung – bei {er} wird ein {bauer} {zum}!"],
-  mg_ichSieg: ["Schachmatt – du hast gewonnen! Glückwunsch! 🏆"],
-  mg_erSieg: ["Schachmatt – diesmal hat {er} gewonnen. Revanche?"],
+  mg_ichSieg: ["Schachmatt – du hast gewonnen! Glückwunsch! 🏆",
+    "Gewonnen gegen {er}! Das muss gefeiert werden. 🏆"],
+  mg_erSieg: ["Schachmatt – diesmal hat {er} gewonnen. Revanche?",
+    "{er} hat gewonnen – aber du verlangst doch sicher eine Revanche?"],
   mg_remis: ["Unentschieden – ihr seid wohl gleich gut!"],
   mg_weiterIch: ["Gut gezogen – jetzt ist {er} dran.", "So, jetzt muss {er} überlegen."],
   mg_weiterEr: ["{er} hat gezogen – du bist dran!", "Jetzt bist du wieder dran."],
@@ -5900,8 +5922,9 @@ let SCH = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(SCH_K
   return { farbe: "w", staerke: "mittel", uhrMin: 0, uhr: null, stand: { ich: 0, pc: 0, remis: 0 }, pgn: "", ...(w || {}), ch: null, auswahl: null, ziele: [], denkt: false, gewertet: false, ichFarbe: "w" }; })();
 if (SCH.uhr) SCH.uhr.seit = null; // 2.23.38: nach dem Neuladen ist die Uhr angehalten, bis das Fenster wieder zu sehen ist
 const schMerken = () => { try { const u = SCH.uhr ? { ...SCH.uhr, rest: { ...SCH.uhr.rest } } : null; if (u?.seit) { const f = SCH.ch.turn(); u.rest[f] = Math.max(0, u.rest[f] - (Date.now() - u.seit)); u.seit = null; }
-  localStorage.setItem(SCH_KEY, JSON.stringify({ farbe: SCH.farbe, staerke: SCH.staerke, uhrMin: SCH.uhrMin, uhr: u, stand: SCH.stand, pgn: SCH.ch?.pgn() || "", ichFarbe: SCH.ichFarbe, gewertet: SCH.gewertet })); } catch {} };
+  localStorage.setItem(SCH_KEY, JSON.stringify({ farbe: SCH.farbe, staerke: SCH.staerke, uhrMin: SCH.uhrMin, uhr: u, stand: SCH.stand, pgn: SCH.ch?.pgn() || "", ichFarbe: SCH.ichFarbe, gewertet: SCH.gewertet, partieSeit: SCH.partieSeit || null })); } catch {} };
 async function schPcZeigen() {
+  if (SCH_NS) return schNsZeigen(); // KC-CLUB-SCHACH-ARCHIV: gerade wird nachgespielt
   if (!SCH.ch) { const C = await chessLaden(); SCH.ch = new C(); if (SCH.pgn) try { SCH.ch.loadPgn(SCH.pgn); } catch { SCH.ch = new C(); } }
   const ch = SCH.ch, ich = SCH.ichFarbe, s = SCH.stand, aus = SCH.uhr?.aus, ende = ch.isGameOver() || !!aus;
   if (SCH_TW.partie !== "pc") { SCH_TW.partie = "pc"; SCH_TW.hinweis = false; SCH_TW.text = schTwWahl(ch.history().length ? "weiter" : schTwStart()); } // KC-CLUB-SCHACH-SPASS: Twinkey begrüßt
@@ -5920,7 +5943,7 @@ async function schPcZeigen() {
       ${banner}
       ${schTwHtml()}
       ${schTischHtml(schGeschlagenHtml(ch) + schBrettHtml(ch, { unten: ich, auswahl: SCH.auswahl, ziele: SCH.ziele, letzter: (() => { const h = ch.history({ verbose: true }).slice(-1)[0]; return h ? h.from + h.to : null; })(), klick: "schPcKlick", aus: ende || SCH.denkt, tipp: SCH.tipp }), st, "🧑‍🍳 Twinkey")}
-      <div class="sch-leiste"><button class="knopf haupt klein" onclick="schPcNeu()">↺ Neue Partie</button>${SCH.uhr ? "" : `<button class="knopf klein" onclick="schPcZurueck()" ${ch.history().length < 1 || SCH.denkt ? "disabled" : ""}>↶ Zug zurück</button>`}${SCH.uhr || ende ? "" : `<button class="knopf klein" onclick="schPcTipp()" ${ch.turn() !== ich || SCH.denkt ? "disabled" : ""}>💡 Tipp</button>`}${spAnsageKnopf("schach")}${schTonKnopf()}${schStilKnopf()}${schFokusKnopf(laeuft, partie)}<button class="knopf klein" onclick="schPcStandWeg()" title="Spielstand zurücksetzen">🗑️ Stand</button></div>
+      <div class="sch-leiste"><button class="knopf haupt klein" onclick="schPcNeu()">↺ Neue Partie</button>${SCH.uhr ? "" : `<button class="knopf klein" onclick="schPcZurueck()" ${ch.history().length < 1 || SCH.denkt ? "disabled" : ""}>↶ Zug zurück</button>`}${SCH.uhr || ende ? "" : `<button class="knopf klein" onclick="schPcTipp()" ${ch.turn() !== ich || SCH.denkt ? "disabled" : ""}>💡 Tipp</button>`}${spAnsageKnopf("schach")}${schTonKnopf()}${schStilKnopf()}${schFokusKnopf(laeuft, partie)}<button class="knopf klein" onclick="schArchivOeffnen()">📼 Meine Partien</button><button class="knopf klein" onclick="schPcStandWeg()" title="Spielstand zurücksetzen">🗑️ Stand</button></div>
       ${schVerlaufHtml(ch.history())}
       ${schStilHtml()}
       <p class="hinweis sch-tipp">Figur schieben – oder antippen, dann das Zielfeld. Rochade: König auf den Turm schieben.${SCH.uhr ? " Mit Uhr gibt es kein „Zug zurück“ und keinen Tipp – wie im Turnier." : ""}</p>
@@ -5954,7 +5977,8 @@ function schPcTipp() {
 async function schPcNeu(fragen = true) {
   const ch = SCH.ch;
   if (fragen && ch && ch.history().length > 2 && !ch.isGameOver() && !SCH.uhr?.aus && !(await frage("Neue Partie beginnen? Die laufende Partie wird nicht gewertet.", { ja: "↺ Neue Partie", nein: "Weiterspielen" }))) return;
-  const C = await chessLaden(); SCH.ch = new C(); SCH.auswahl = null; SCH.ziele = []; SCH.gewertet = false; SCH.uhr = schPcUhrNeu(); SCH.denkt = false;
+  if (ch && ch.history().length >= 2 && !SCH.gewertet) schArchivPc("abgebrochen"); // KC-CLUB-SCHACH-ARCHIV
+  const C = await chessLaden(); SCH.ch = new C(); SCH.auswahl = null; SCH.ziele = []; SCH.gewertet = false; SCH.uhr = schPcUhrNeu(); SCH.denkt = false; SCH.partieSeit = Date.now();
   SCH.runde = (SCH.runde || 0) + 1; SCH.ichFarbe = SCH.farbe === "wechsel" ? (SCH.runde % 2 ? "w" : "b") : SCH.farbe; SCH.tipp = null;
   SCH_TW.partie = "pc"; schTwSag(schTwWahl(schTwStart())); // KC-CLUB-SCHACH-SPASS
   schMerken(); schPcZeigen(); if (SCH.ichFarbe === "b") schPcComputerStart();
@@ -5974,6 +5998,7 @@ function schPcWerten() {
   SCH.gewertet = true; if (SCH.uhr) SCH.uhr.seit = null;
   const verlierer = aus ? (schKannMatt(ch, aus === "w" ? "b" : "w") ? aus : null) : ch.isCheckmate() ? ch.turn() : null; // KC-CLUB-SCHACH-UHR: Zeit
   if (!verlierer) SCH.stand.remis++; else if (verlierer !== SCH.ichFarbe) SCH.stand.ich++; else SCH.stand.pc++;
+  schArchivPc(!verlierer ? "remis" : verlierer !== SCH.ichFarbe ? "gewonnen" : "verloren", aus ? "Zeit" : ch.isCheckmate() ? "Schachmatt" : ch.isStalemate() ? "Patt" : ""); // KC-CLUB-SCHACH-ARCHIV
   try { navigator.vibrate?.(verlierer && verlierer !== SCH.ichFarbe ? [60, 40, 60] : 40); } catch {}
 }
 // KC-CLUB-SCHACH-SPASS: neu = Auswahl zuerst aufheben (Schieben beginnt), gezogen = Figur wurde geschoben (nicht noch einmal gleiten)
@@ -6015,6 +6040,7 @@ function schPcComputerStart(zeichnen = true) {
 let SCHM = { id: null, auswahl: null, ziele: [] };
 const SCH_STELLUNG = new Map(); // KC-CLUB-SPIEL-ANSAGE: letzte gesehene Stellung je Partie
 async function schSpielZeigen(g) {
+  if (SCH_NS) return schNsZeigen(); // KC-CLUB-SCHACH-ARCHIV: gerade wird nachgespielt
   const C = await chessLaden(), ch = new C(g.brett), ich = g.ichBin === "x" ? "w" : "b";
   // KC-CLUB-SPIEL-ANSAGE: neuer Zug des Gegenübers seit dem letzten Blick → aus der vorigen Stellung nachvollziehen und ansagen
   const vor = SCH_STELLUNG.get(g.id);
@@ -6035,13 +6061,15 @@ async function schSpielZeigen(g) {
     : `<div class="sp-status${g.ichDran ? " sp-ichdran" : ""}">${schStatusText(ch, ich, er)}</div>`;
   const st = g.uhr ? schUhrStand() : null, laeuft = g.status === "laeuft";
   schFokus(laeuft, g.id); // KC-CLUB-SCHACH-FOKUS
+  const nsEintrag = { id: "mg-" + g.id, zeit: Date.parse(g.geaendert) || Date.now(), art: "mg", gegner: g.gegner.vorname, ich, ergebnis: g.ergebnis || "", grund: g.aufgegeben ? "aufgegeben" : g.uhr?.aus ? "Zeit" : "", zuege: g.verlauf || [] };
+  SCH_NS_MG = nsEintrag; if (g.status === "beendet") schArchivMerken(nsEintrag); // KC-CLUB-SCHACH-ARCHIV
   $("spInhalt").innerHTML = `<div class="karte sp-karte sch-karte">
       <div class="sch-kopf"><button class="knopf klein" onclick="SP.offen=null;spZeigen();spLaden(true)">‹ Übersicht</button><b>♟️ Du (${ich === "w" ? "Weiß" : "Schwarz"}) gegen ${er}${g.uhr ? ` · ⏱️ ${g.uhr.min} Min.` : ""}</b></div>
       ${banner}
       ${spTerminHtml(g)}
       ${schTwHtml()}
       ${schTischHtml(schGeschlagenHtml(ch) + schBrettHtml(ch, { unten: ich, auswahl: SCHM.auswahl, ziele: SCHM.ziele, letzter: g.letzterZug, klick: "schMgKlick", aus: !g.ichDran }), st, g.gegner.vorname)}
-      <div class="sch-leiste">${g.status === "beendet" ? `<button class="knopf haupt klein" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf klein" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}${spAnsageKnopf("schach")}${schTonKnopf()}${schStilKnopf()}${schFokusKnopf(laeuft, g.id)}</div>
+      <div class="sch-leiste">${g.status === "beendet" ? `<button class="knopf haupt klein" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf klein" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}${spAnsageKnopf("schach")}${schTonKnopf()}${schStilKnopf()}${schFokusKnopf(laeuft, g.id)}${(g.verlauf || []).length ? `<button class="knopf klein" onclick="schNachspielen(SCH_NS_MG)">📼 Nachspielen</button>` : ""}</div>
       ${schVerlaufHtml(g.verlauf || [])}
       ${schStilHtml()}
       <p class="hinweis sch-tipp">Figur schieben – oder antippen, dann das Zielfeld. Rochade: König auf den Turm schieben. ${g.uhr ? "Live-Partie mit Uhr: beide ersten Züge sind frei, danach läuft die Zeit – auch wenn die App zu ist." : `Du musst nicht warten – ${er} bekommt Bescheid.`}</p>
@@ -6074,6 +6102,88 @@ async function schMgKlick(feld, neu = false, gezogen = false) { // KC-CLUB-SCHAC
   else { SCHM.auswahl = null; SCHM.ziele = []; }
   schTwSag(hinweis || schHinweisNach(ch, SCHM.auswahl, SCHM.ziele, g.id), { hinweis: true }); // KC-CLUB-SCHACH-SPASS
   schSpielZeigen(g);
+}
+
+// ---------- KC-CLUB-SCHACH-ARCHIV (2.118.0, Wunsch Hansi „Partie aufzeichnen, um sie später nochmal anzusehen“) ----------
+// Jede Partie gegen Twinkey wird am Ende (oder beim Abbrechen ab 2 Zügen) von selbst aufgezeichnet, Partien gegen Mitglieder,
+// sobald man sie beendet ansieht (die Züge liegen ohnehin auf dem Server). Gespeichert sind nur die Züge – auf diesem Gerät,
+// die letzten 40 Partien. „📼 Meine Partien“ zeigt die Liste, „Nachspielen“ das Brett mit ⏮ ◀ ▶ ⏭, Schieberegler und Abspielen.
+const SCH_ARCHIV_KEY = "kc_club_schach_archiv", SCH_ARCHIV_MAX = 40;
+const schArchiv = () => { try { const l = JSON.parse(localStorage.getItem(SCH_ARCHIV_KEY) || "[]"); return Array.isArray(l) ? l : []; } catch { return []; } };
+function schArchivMerken(e) {
+  if (!e?.id || !Array.isArray(e.zuege) || !e.zuege.length) return;
+  const l = schArchiv().filter((x) => x.id !== e.id); l.unshift(e);
+  lsSetzen(SCH_ARCHIV_KEY, JSON.stringify(l.slice(0, SCH_ARCHIV_MAX)));
+}
+function schArchivPc(ergebnis, grund = "") { // Partie gegen Twinkey aufzeichnen (ergebnis aus meiner Sicht)
+  const ch = SCH.ch; if (!ch || ch.history().length < 1) return;
+  schArchivMerken({ id: "pc-" + (SCH.partieSeit || Date.now()), zeit: Date.now(), art: "pc", gegner: "Twinkey", stufe: SCH.staerke, ich: SCH.ichFarbe, ergebnis, grund, zuege: ch.history() });
+}
+const schArchivErgebnis = (e) => ({ gewonnen: "🏆 gewonnen", verloren: "verloren", remis: "🤝 unentschieden", abgebrochen: "abgebrochen" }[e.ergebnis] || "") + (e.grund ? ` (${e.grund})` : "");
+const schArchivTitel = (e) => `Du (${e.ich === "w" ? "Weiß" : "Schwarz"}) gegen ${e.gegner}${e.art === "pc" && e.stufe ? ` (${{ leicht: "Leicht", mittel: "Mittel", schwer: "Schwer" }[e.stufe] || e.stufe})` : ""}`;
+const schArchivDatum = (t) => { try { return new Date(t).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }); } catch { return ""; } };
+// Ansicht: SCH_NS = { modus: "liste" } oder { modus: "partie", e, i, vonListe, takt }
+let SCH_NS = null, SCH_NS_MG = null; // SCH_NS_MG = gerade offene Partie gegen ein Mitglied (für „📼 Nachspielen“)
+function schNsStopp() { if (SCH_NS?.takt) clearInterval(SCH_NS.takt); SCH_NS = null; }
+function schArchivOeffnen() { schNsStopp(); SCH_NS = { modus: "liste" }; schNsZeigen(); }
+function schNachspielen(e, vonListe = false) {
+  if (SCH_NS?.takt) clearInterval(SCH_NS.takt);
+  SCH_NS = { modus: "partie", e, i: e.zuege.length, vonListe, takt: null }; schNsZeigen();
+}
+function schNsZu() { // ‹ Zurück: aus der Partie zur Liste (wenn von dort), sonst zurück ins Spiel
+  if (SCH_NS?.modus === "partie" && SCH_NS.vonListe) return schArchivOeffnen();
+  schNsStopp(); spZeigen();
+}
+function schArchivWeg(id) { lsSetzen(SCH_ARCHIV_KEY, JSON.stringify(schArchiv().filter((x) => x.id !== id))); schNsZeigen(); }
+let SCH_NS_C = null; // chess.js-Klasse (wird mit dem Spiel geladen)
+function schNsStellung(e, bis) { // Stellung nach „bis“ Zügen; ok = false, wenn die Aufzeichnung dort nicht weitergeht
+  const ch = new SCH_NS_C(); let letzter = null, ok = true;
+  for (let k = 0; k < bis; k++) { try { letzter = ch.move(e.zuege[k]); } catch { ok = false; break; } }
+  return { ch, letzter, ok };
+}
+async function schNsZeigen() {
+  const n = SCH_NS; if (!n) return; SCH_NS_C = SCH_NS_C || (await chessLaden());
+  if (SCH_NS !== n) return;
+  document.body.classList.remove("sch-fokus");
+  if (n.modus === "liste") {
+    const l = schArchiv();
+    $("spInhalt").innerHTML = `<div class="karte sp-karte sch-karte">
+      <div class="sch-kopf"><button class="knopf klein" onclick="schNsZu()">‹ Zurück</button><b>📼 Meine Partien</b></div>
+      ${l.length ? l.map((e) => `<div class="zeile sch-ns-zeile"><div style="flex:1;min-width:0"><b>${esc(schArchivTitel(e))}</b><div class="hinweis" style="margin:0;font-size:.85rem">${esc(schArchivDatum(e.zeit))} · ${esc(schArchivErgebnis(e))} · ${e.zuege.length} Halbzüge</div></div>
+        <button class="knopf klein haupt" onclick="schNachspielen(schArchiv().find((x) => x.id === '${esc(e.id)}'), true)">▶ Nachspielen</button><button class="knopf klein" onclick="schArchivWeg('${esc(e.id)}')" title="Aus der Liste löschen" aria-label="Löschen">🗑️</button></div>`).join("")
+        : `<p class="hinweis">Noch keine Partie aufgezeichnet. Jede Partie gegen Twinkey kommt nach dem Ende von selbst hierher, Partien gegen Mitglieder, sobald du sie beendet ansiehst.</p>`}
+      <p class="hinweis sch-tipp">Gespeichert auf diesem Gerät – die letzten ${SCH_ARCHIV_MAX} Partien.</p></div>`;
+    return;
+  }
+  document.body.classList.toggle("sch-fokus", aktuelleAnsicht === "spiele"); // wie in der Partie: oben weg, Brett groß
+  const e = n.e, i = Math.max(0, Math.min(n.i, e.zuege.length)), { ch, letzter, ok } = schNsStellung(e, i);
+  const anz = e.zuege.length, text = !i ? "Ausgangsstellung" : letzter ? `Zug ${i} von ${anz}: ${schZugAnsage(letzter, ch, e.ich)}` : "";
+  const knopf = (sym, fn, an, titel) => `<button class="knopf klein" onclick="${fn}" ${an ? "" : "disabled"} aria-label="${titel}" title="${titel}">${sym}</button>`;
+  const zuege = []; for (let k = 0; k < anz; k += 2) zuege.push(`<span><b>${k / 2 + 1}.</b> ${[k, k + 1].filter((x) => x < anz).map((x) => `<button class="sch-ns-zug${x + 1 === i ? " an" : ""}" onclick="schNsGehe(${x + 1})">${esc(e.zuege[x])}</button>`).join(" ")}</span>`);
+  $("spInhalt").innerHTML = `<div class="karte sp-karte sch-karte">
+      <div class="sch-kopf"><button class="knopf klein" onclick="schNsZu()">‹ Zurück</button><b>📼 ${esc(schArchivTitel(e))}</b></div>
+      <div class="sp-status">${esc(schArchivDatum(e.zeit))} · ${esc(schArchivErgebnis(e))}</div>
+      <p class="sch-ns-text" aria-live="polite">${esc(text)}${ok ? "" : " – die Aufzeichnung ist hier unvollständig."}</p>
+      ${schTischHtml(schGeschlagenHtml(ch) + schBrettHtml(ch, { unten: e.ich, letzter: letzter ? letzter.from + letzter.to : null, klick: "schNsGehe", aus: true }), null)}
+      <div class="sch-leiste sch-ns-leiste">${knopf("⏮", "schNsGehe(0)", i > 0, "Zum Anfang")}${knopf("◀", `schNsGehe(${i - 1})`, i > 0, "Zug zurück")}${knopf(n.takt ? "⏸ Anhalten" : "▶️ Abspielen", "schNsAbspielen()", n.takt || i < anz, n.takt ? "Anhalten" : "Abspielen")}${knopf("▶", `schNsGehe(${i + 1})`, i < anz, "Zug vor")}${knopf("⏭", `schNsGehe(${anz})`, i < anz, "Zum Ende")}</div>
+      <input class="sch-ns-regler" type="range" min="0" max="${anz}" value="${i}" oninput="schNsGehe(+this.value, true)" aria-label="Zug wählen">
+      <details class="sch-verlauf" open><summary>📜 Züge (${anz})</summary><div>${zuege.join(" ")}</div></details>
+    </div>`;
+  schAnimStart();
+}
+function schNsGehe(i, regler = false) {
+  const n = SCH_NS; if (n?.modus !== "partie") return;
+  const neu = Math.max(0, Math.min(i, n.e.zuege.length));
+  if (neu === n.i + 1) { const { ch, letzter } = schNsStellung(n.e, neu); if (letzter) { if (!regler) schAnimMerken(letzter); schTon(ch.inCheck() ? "schach" : letzter.captured ? "schlag" : /[kq]/.test(letzter.flags) ? "rochade" : "zug"); spSag("schach", schZugAnsage(letzter, ch, n.e.ich), null, true); } }
+  n.i = neu; if (n.takt && neu >= n.e.zuege.length) { clearInterval(n.takt); n.takt = null; }
+  schNsZeigen();
+}
+function schNsAbspielen() {
+  const n = SCH_NS; if (n?.modus !== "partie") return;
+  if (n.takt) { clearInterval(n.takt); n.takt = null; return schNsZeigen(); }
+  if (n.i >= n.e.zuege.length) n.i = 0;
+  n.takt = setInterval(() => { if (SCH_NS !== n || aktuelleAnsicht !== "spiele") return clearInterval(n.takt); schNsGehe(n.i + 1); }, 1400);
+  schNsGehe(n.i + 1);
 }
 
 // ---------- KC-CLUB-BAUERNSKAT (2.9.0, Wunsch Hansi – Stufe 3 der Spiele): Bauernskat – Köcheclub Edition ----------

@@ -252,6 +252,11 @@
   .sch-tw-blase { position: relative; flex: 1; min-width: 0; margin: 0; padding: 5px 10px; border-radius: 12px; background: var(--karte); color: var(--text); border: 2px solid var(--linie); font-size: .9rem; line-height: 1.3; overflow-wrap: anywhere; }
   .sch-tw-blase::before { content: ""; position: absolute; left: -7px; bottom: 9px; width: 10px; height: 10px; background: inherit; border-left: 2px solid var(--linie); border-bottom: 2px solid var(--linie); transform: rotate(45deg); }
   .sch-tw-blase b { font-size: .8rem; opacity: .7; }
+  /* KC-CLUB-SCHACH-ARCHIV (2.118.0): Meine Partien + Nachspielen */
+  .sch-ns-zeile { gap: 6px; } .sch-ns-zeile .knopf { margin: 0; flex: none; width: auto; }
+  .sch-ns-text { margin: 0; min-height: 2.6em; text-align: center; font-size: .92rem; font-weight: 700; }
+  .sch-ns-leiste .knopf { min-width: 48px; font-size: 1.05rem; } .sch-ns-regler { width: min(100%, 440px); margin: 0 auto; display: block; accent-color: var(--rot); }
+  .sch-ns-zug { border: none; background: none; padding: 1px 3px; border-radius: 6px; font: inherit; color: inherit; cursor: pointer; } .sch-ns-zug.an { background: #ffe58a; color: #222; font-weight: 800; }
   /* KC-CLUB-SCHACH-FOKUS (2.116.0): laufende Partie – oben alles weg, Brett so groß wie der Bildschirm es zulässt */
   body.sch-fokus #v-spiele #spEdition, body.sch-fokus #v-spiele #spTabs, body.sch-fokus #v-spiele .sch-einst, body.sch-fokus #v-spiele .sp-stand, body.sch-fokus .su-klein, body.sch-fokus #fuss { display: none !important; }
   body.sch-fokus #v-spiele .sch-karte { gap: 6px; padding-left: 6px; padding-right: 6px; } body.sch-fokus #v-spiele .sch-tisch { gap: 2px; } body.sch-fokus #v-spiele .sch-geschlagen { min-height: 22px; margin: 0; line-height: 1; } body.sch-fokus #v-spiele .sp-status { padding: 4px 8px; font-size: .92rem; }
@@ -3498,6 +3503,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.116.0" data-v="2.116.0"></script>
+<script src="app.js?v=2.118.0" data-v="2.118.0"></script>
 </body>
 </html>

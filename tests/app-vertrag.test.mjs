@@ -6707,7 +6707,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   // eingebaut gegen Computer und Mitglieder
   assert.ok(/async function schPcKlick\(feld, neu = false, gezogen = false\)/.test(programm) && /async function schMgKlick\(feld, neu = false, gezogen = false\)/.test(programm), "Klick-Wege kennen Schieben");
   assert.equal((programm.match(/schZugErlebt\(mz, /g) || []).length, 4, "eigener Zug, Twinkeys Zug, eigener und fremder Zug gegen Mitglieder");
-  assert.equal((programm.match(/schAnimStart\(\);/g) || []).length, 2, "Figur gleitet in beiden Ansichten");
+  assert.equal((programm.match(/schAnimStart\(\);/g) || []).length, 3, "Figur gleitet in beiden Ansichten und beim Nachspielen (2.118.0)");
   assert.ok((programm.match(/\$\{schTwHtml\(\)\}/g) || []).length === 2 && (programm.match(/\$\{schTonKnopf\(\)\}/g) || []).length === 2, "Twinkey + Töne-Knopf in beiden Ansichten");
   assert.ok(/onclick="schPcTipp\(\)"/.test(programm) && /\$\{SCH\.uhr \|\| ende \? "" : `<button class="knopf klein" onclick="schPcTipp\(\)"/.test(programm), "💡 Tipp nur gegen den Computer und ohne Uhr");
   assert.ok(/🧑‍🍳 Twinkey überlegt …/.test(programm) && /schStatusText\(ch, ich, "Twinkey"\)/.test(programm), "gegen den Computer spielt Twinkey");
@@ -6745,7 +6745,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(in_("ichRochade", nach(ro.fen(), "O-O")), "eigene Rochade");
   assert.ok(in_("ichSieg", nach("6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1", "Rd8#")), "Matt");
   const s1 = nach("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2", "exd5");
-  assert.ok(/(mein|meinen) Bauern?|Na warte/.test(s1), "Twinkey verliert einen Bauern: " + s1);
+  assert.ok(S.SCH_TW_SPRUECHE.ichSchlage.some((x) => x.split(/\{\w+\}/).every((teil) => s1.includes(teil.trim()))), "Twinkey verliert einen Bauern: " + s1);
   const s2 = nach("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2", "exd5", "b", "Erika");
   assert.match(s2, /Erika hat deinen Bauern geschlagen|deinen Bauern hat Erika/, "gegen Mitglieder: wer hat was geschlagen");
   assert.ok(S.SCH_TW_SPRUECHE.start.some((x) => /die ganze Nacht geübt/.test(x)) && S.SCH_TW_SPRUECHE.schnell.some((x) => /schnell unterwegs/.test(x)) && S.SCH_TW_SPRUECHE.bauerWeit.some((x) => /so weit vorne/.test(x)), "Sprüche wie gewünscht");
@@ -6768,4 +6768,38 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/laeuft = g\.status === "laeuft";\n  schFokus\(laeuft, g\.id\);/.test(programm), "gegen Mitglieder: solange die Partie läuft");
   assert.ok(/document\.body\.classList\.remove\("sch-fokus"\); \/\/ KC-CLUB-SCHACH-FOKUS/.test(programm) && /if \(v !== "spiele"\) \{ \$\("spPause"\)\?\.classList\.add\("versteckt"\); document\.body\.classList\.remove\("sch-fokus"\); \}/.test(programm), "abgebrochen/verlassen: alles wieder da");
   assert.equal((programm.match(/\$\{schFokusKnopf\(laeuft, /g) || []).length, 2, "⚙️ Einstellungen einblenden in beiden Ansichten");
+}
+
+// 4xx. 2.118.0: Mehr Twinkey-Sprüche je Spiellage, eigene Küchen-Sprüche (KC-CLUB-SCHACH-SPRUECHE)
+{
+  const a = programm.indexOf("const SCH_TW_SPRUECHE = {"), sp = new Function(programm.slice(a, programm.indexOf("};", a) + 2) + "; return SCH_TW_SPRUECHE;")();
+  for (const [k, n] of [["start", 8], ["ichSchlage", 8], ["ichSchlageDame", 6], ["erSchlaegt", 6], ["ichSchach", 6], ["erSchach", 6], ["ichSieg", 7], ["erSieg", 7], ["remis", 4]]) assert.ok(sp[k].length >= n, `genug Sprüche: ${k}`);
+  assert.ok(sp.ichSchlageDame.some((x) => /Was wird bloß mein Küchenchef dazu sagen/.test(x)) && sp.erSieg.some((x) => /Team Kochmütze/.test(x)) && sp.erSchach.some((x) => /Kochmütze/.test(x)), "auf Twinkey abgewandelt");
+  assert.ok(!Object.values(sp).flat().some((x) => /Schnurrbart|Oskar|Duolingo/i.test(x)), "keine fremden Figuren/Marken");
+  for (const l of Object.values(sp)) assert.equal(new Set(l).size, l.length, "keine doppelten Sprüche");
+}
+
+// 4xx. 2.118.0: Partien aufzeichnen und nachspielen (KC-CLUB-SCHACH-ARCHIV)
+{
+  assert.ok(/const SCH_ARCHIV_KEY = "kc_club_schach_archiv", SCH_ARCHIV_MAX = 40;/.test(programm), "auf dem Gerät, die letzten 40");
+  assert.ok(/schArchivPc\(!verlierer \? "remis" : verlierer !== SCH\.ichFarbe \? "gewonnen" : "verloren"/.test(programm) && /if \(ch && ch\.history\(\)\.length >= 2 && !SCH\.gewertet\) schArchivPc\("abgebrochen"\);/.test(programm), "Twinkey-Partien: am Ende und beim Abbrechen von selbst");
+  assert.ok(/if \(g\.status === "beendet"\) schArchivMerken\(nsEintrag\);/.test(programm) && /onclick="schNachspielen\(SCH_NS_MG\)">📼 Nachspielen/.test(programm), "Mitglieder-Partien: aufzeichnen + Nachspielen");
+  assert.ok(/document\.body\.classList\.toggle\("sch-fokus", aktuelleAnsicht === "spiele"\); \/\/ wie in der Partie/.test(programm), "Nachspielen mit großem Brett");
+  assert.ok(/onclick="schArchivOeffnen\(\)">📼 Meine Partien/.test(programm) && /schNsStopp\(\); \/\/ KC-CLUB-SCHACH-ARCHIV/.test(programm), "Liste + Ende beim Wechsel");
+  assert.equal((programm.match(/if \(SCH_NS\) return schNsZeigen\(\);/g) || []).length, 2, "spätes Zeichnen überschreibt das Nachspielen nicht");
+  // mit der echten Bibliothek: Stellungen nach n Zügen, unvollständige Aufzeichnung
+  const { Chess } = await import(new URL("../lib/chess/chess.js", import.meta.url));
+  const code = programm.slice(programm.indexOf("const SCH_ARCHIV_KEY"), programm.indexOf("async function schNsZeigen()"));
+  const mem = {}, ls = { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = v; } };
+  const A = new Function("localStorage", "lsSetzen", "SCH", "Chess", code + "; SCH_NS_C = Chess; return { schArchiv, schArchivMerken, schArchivPc, schNsStellung, schArchivTitel, schArchivErgebnis };")(ls, (k, v) => ls.setItem(k, v), { ch: (() => { const c = new Chess(); ["e4", "e5", "Nf3"].forEach((m) => c.move(m)); return c; })(), staerke: "mittel", ichFarbe: "w", partieSeit: 1 }, Chess);
+  A.schArchivPc("abgebrochen"); A.schArchivPc("gewonnen", "Schachmatt");
+  assert.equal(A.schArchiv().length, 1, "dieselbe Partie nur einmal");
+  assert.equal(A.schArchivErgebnis(A.schArchiv()[0]), "🏆 gewonnen (Schachmatt)");
+  assert.equal(A.schArchivTitel(A.schArchiv()[0]), "Du (Weiß) gegen Twinkey (Mittel)");
+  for (let k = 0; k < 45; k++) A.schArchivMerken({ id: "x" + k, zuege: ["e4"] });
+  assert.equal(A.schArchiv().length, 40, "höchstens 40");
+  const e = { zuege: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "O-O"] };
+  assert.equal(A.schNsStellung(e, 7).letzter.san, "O-O", "Rochade wird nachgespielt");
+  assert.equal(A.schNsStellung(e, 2).ch.fen().split(" ")[0], "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR", "Stellung nach 2 Halbzügen");
+  assert.equal(A.schNsStellung({ zuege: ["e4", "Kxz9"] }, 2).ok, false, "unvollständige Aufzeichnung wird erkannt");
 }
