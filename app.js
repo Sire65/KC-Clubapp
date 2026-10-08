@@ -20487,8 +20487,13 @@ async function spurAdmin(tag, person) {
     // KC-CLUB-SPUR-LIVE (2.81.0): wer gerade in der App ist, steht oben mit 🟢 (Quelle: Online-Takt – Verborgene erscheinen nie als online)
     const on = (id) => heuteDa && ONL.stand && Date.now() - ONL.stand < 3 * 60000 && ONL.ids.has(id);
     const liste = [...r.personen].sort((a, b) => on(b.person_id) - on(a.person_id));
-    inhalt = liste.length ? `<div style="display:grid;gap:6px">${liste.map((x) => `<button class="knopf${on(x.person_id) ? " spur-on" : ""}" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">${on(x.person_id) ? "🟢 " : ""}<b>${esc(x.name)}</b>${on(x.person_id) ? ' <small class="spur-jetzt">gerade in der App</small>' : ""} <small class="hinweis">· ${x.anzahl} Schritte · ${esc(zeitKurz(x.erste))}–${esc(zeitKurz(x.letzte))} Uhr</small></button>`).join("")}</div>`
-      : `<p class="hinweis">An diesem Tag nichts aufgezeichnet (gezählt ab Version 2.23.88).</p>`;
+    // KC-CLUB-SPUR-JETZT (2.81.0): je Person, was sie zuletzt aufgerufen hat – bei 🟢 „ist gerade bei …“
+    const was = (w) => w ? SPUR_WAS[w] || NZ_NAMEN[w] || w : "";
+    const vor = (iso) => { const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000)); return m < 1 ? "gerade eben" : m === 1 ? "vor 1 Min." : m < 60 ? `vor ${m} Min.` : `um ${zeitKurz(iso)} Uhr`; };
+    const jetzt = liste.filter((x) => on(x.person_id));
+    inhalt = (heuteDa ? `<div class="karte spur-jetzt-box"><b>🟢 Gerade in der App${jetzt.length ? ` (${jetzt.length})` : ""}</b>${jetzt.length ? jetzt.map((x) => `<div class="spur-jetzt-zeile" onclick="spurAdmin(null, '${esc(x.person_id)}')"><b>${esc(x.name)}</b> ist bei <b>${esc(was(x.zuletzt) || "?")}</b> <small class="hinweis">· ${esc(vor(x.letzte))}</small></div>`).join("") : '<div class="hinweis">Gerade ist niemand in der App (oder hat die Online-Anzeige verborgen).</div>'}</div>` : "")
+      + (liste.length ? `<div style="display:grid;gap:6px">${liste.map((x) => `<button class="knopf${on(x.person_id) ? " spur-on" : ""}" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">${on(x.person_id) ? "🟢 " : ""}<b>${esc(x.name)}</b>${on(x.person_id) ? ' <small class="spur-jetzt">gerade in der App</small>' : ""} <small class="hinweis">· ${x.anzahl} Schritte · ${esc(zeitKurz(x.erste))}–${esc(zeitKurz(x.letzte))} Uhr</small>${x.zuletzt ? `<br><small>${on(x.person_id) ? "👉 jetzt" : "zuletzt"}: ${esc(was(x.zuletzt))} · ${esc(vor(x.letzte))}</small>` : ""}</button>`).join("")}</div>`
+      : `<p class="hinweis">An diesem Tag nichts aufgezeichnet (gezählt ab Version 2.23.88).</p>`);
   } else {
     inhalt = `<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle">${r.schritte.map((x) => `<tr><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${esc(SPUR_WAS[x.w] || NZ_NAMEN[x.w] || x.w)}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}</td></tr>`).join("")}</table>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
   }

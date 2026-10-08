@@ -6317,3 +6317,10 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/if \(!INIT \|\| !SPUR\.length \|\| SPUR_LAEUFT\) return;/.test(programm), "nie doppelt senden");
   assert.ok(/if \(heuteDa\) SPW\.uhr = setTimeout\(/.test(programm) && /aktualisiert sich alle 20 Sekunden von selbst/.test(programm) && /gerade in der App/.test(programm), "Wege: alle 20 s neu, wer gerade drin ist, oben mit 🟢");
 }
+
+// 4xx. 2.81.0: Wege der Mitglieder – „was macht jeder gerade, was ruft er auf“ (KC-CLUB-SPUR-JETZT, Wunsch Hansi)
+{
+  assert.ok(/e\.w = x\.w; je\.set\(x\.p, e\);/.test(server) && /zuletzt: e\.w \}\)\)/.test(server), "Server liefert den letzten Schritt je Person (nur die Art)");
+  assert.ok(/🟢 Gerade in der App/.test(programm) && /ist bei <b>\$\{esc\(was\(x\.zuletzt\) \|\| "\?"\)\}<\/b>/.test(programm) && /"👉 jetzt" : "zuletzt"/.test(programm), "Übersicht: wer ist gerade wo");
+  assert.ok(/const SERVER_VERSION = "2\.81\.0"/.test(server));
+}

@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.78.0";
+const SERVER_VERSION = "2.81.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -7157,11 +7157,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const schritte = (data ?? []).flatMap((z: any) => (Array.isArray(z.details?.s) ? z.details.s : []).map((x: any) => ({ p: z.person_id as string, t: Number(x[0]), w: String(x[1]), mit: x[2] == null ? null : String(x[2]) })))
           .filter((x: any) => berlinTag(new Date(x.t)) === tag).sort((a: any, b: any) => a.t - b.t);
         if (!pid) {
-          const je = new Map<string, { anzahl: number; erste: number; letzte: number }>();
-          for (const x of schritte) { const e = je.get(x.p) ?? { anzahl: 0, erste: x.t, letzte: x.t }; e.anzahl++; e.letzte = x.t; je.set(x.p, e); }
+          // KC-CLUB-SPUR-JETZT (2.81.0, Wunsch Hansi „was macht jeder gerade, was ruft er auf“): letzter Schritt je Person (nur die Art, nie Inhalte)
+          const je = new Map<string, { anzahl: number; erste: number; letzte: number; w: string }>();
+          for (const x of schritte) { const e = je.get(x.p) ?? { anzahl: 0, erste: x.t, letzte: x.t, w: x.w }; e.anzahl++; e.letzte = x.t; e.w = x.w; je.set(x.p, e); }
           const leute = await personen([...je.keys()]);
           return json({ tag, personen: [...je.entries()].map(([id, e]) => ({ person_id: id, name: leute.get(id)?.display_name || id, anzahl: e.anzahl,
-            erste: new Date(e.erste).toISOString(), letzte: new Date(e.letzte).toISOString() })).sort((a, b) => b.letzte.localeCompare(a.letzte)) });
+            erste: new Date(e.erste).toISOString(), letzte: new Date(e.letzte).toISOString(), zuletzt: e.w })).sort((a, b) => b.letzte.localeCompare(a.letzte)) });
         }
         // „mit wem“: Mitglieds-Kennung → Name; Unterhaltung → Gruppenname oder die anderen Teilnehmer (keine Inhalte)
         const chats = [...new Set<string>(schritte.filter((x: any) => x.mit && !x.mit.startsWith("KC-P-")).map((x: any) => x.mit as string))].filter((x) => UUID_ALBUM.test(x)).slice(0, 200);
