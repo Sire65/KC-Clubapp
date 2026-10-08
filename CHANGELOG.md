@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.121.0 – 2026-10-08 – Online-Zahl überall gleich
+„Online (n)“ auf der Mitgliederseite, der Online-Filter und die Anklopf-/Anruf-Knöpfe nehmen jetzt dieselbe, laufend aufgefrischte Online-Liste wie die Zahl in der unteren Leiste (KC-CLUB-ONLINE-EINE-QUELLE).
+
 ## 2.120.0 – 2026-10-08 – Schulung unter Vorbehalt im Kalender
 Angebotene Schulungstermine, die noch niemand gewählt hat, stehen für den Admin gestrichelt lila im Kalender – „unter Vorbehalt“, mit dem Namen der Eingeladenen (KC-CLUB-SCHULUNG-VORBEHALT).
 

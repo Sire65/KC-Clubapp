@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.120.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.121.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -17006,7 +17006,7 @@ function mgDaText(m) {
 }
 function mgKachelnHtml(liste) {
   const k = (m) => {
-    const ich = m.person_id === ICH.person_id, on = !!m.online;
+    const ich = m.person_id === ICH.person_id, on = mgOn(m);
     const da = on ? '<span class="mk-unter" style="color:var(--textGruen);font-weight:800">● online</span>' : m.zuletztDa ? `<span class="mk-unter">🕒 ${esc(zuletztText(m.zuletztDa))}</span>` : m.status || m.aktiv ? "" : '<span class="mk-unter">⚪ noch nicht in der App</span>';
     return `<div class="mini-kachel mg-kachel${on ? " mg-online" : ""}" onclick="mitgliedOeffnen('${m.person_id}')" role="button" tabindex="0">
       ${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}</span>
@@ -17070,29 +17070,33 @@ function mgGruppenZeichnen() {
   return g;
 }
 // KC-CLUB-ANRUF-LISTE (2.23.67, Wunsch Hansi): 📞 / 🎥 bei jedem Namen – aktiv, wenn die Person online ist; sonst blass mit Erklärung
+// KC-CLUB-ONLINE-EINE-QUELLE (2.121.0, Hinweis Hansi „oben Online (0), unten 1“): auch Zahl, Filter, Anklopfen und Anruf-Knöpfe der
+// Mitgliederseite aus dem laufenden Online-Takt (wie Kreis, LED und Zahl in der Leiste) – die Liste wird nur beim Öffnen geladen.
+// Stand älter als 3 Min. → Wert aus der Liste (nie „online“ aus altem Stand erfinden).
+const mgOn = (m) => { try { if (m && !m.verborgen && ONL.stand && Date.now() - ONL.stand < 3 * 60 * 1000) return ONL.ids.has(m.person_id) && m.person_id !== ICH?.person_id; } catch {} return !!m?.online; };
 function mgAnrufKnoepfe(m) {
-  const on = !!m.online, vn = esc(String(m.name || "").split(" ")[0]).replace(/'/g, "&#39;");
+  const on = mgOn(m), vn = esc(String(m.name || "").split(" ")[0]).replace(/'/g, "&#39;");
   const aus = `melde('${vn} ist gerade nicht online – Anrufen geht nur, wenn ihr beide die App offen habt. Schreib ${vn} lieber 💬 oder klopf später an.')`;
   return `<button class="knopf klein${on ? "" : " mg-aus"}" title="Anrufen" aria-label="Anrufen" onclick="${on ? `anrufen('${m.person_id}')` : aus}">📞</button>`
     + `<button class="knopf klein${on ? "" : " mg-aus"}" title="Videoanruf" aria-label="Videoanruf" onclick="${on ? `anrufen('${m.person_id}', true)` : aus}">🎥</button>`;
 }
 function mitgliederZeichnen() {
   try {
-    const sichtbar = ONLINE_SICHTBAR !== false, anzahl = MITGLIEDER.filter((m) => m.online).length, nurOnline = (MG_EINMAL || MG_FILTER) === "online" && sichtbar;
+    const sichtbar = ONLINE_SICHTBAR !== false, anzahl = MITGLIEDER.filter((m) => mgOn(m)).length, nurOnline = (MG_EINMAL || MG_FILTER) === "online" && sichtbar;
     document.querySelectorAll("#mgFilter button").forEach((b) => { b.classList.toggle("an", b.dataset.f === (nurOnline ? "online" : "alle")); if (b.dataset.f === "online") { b.disabled = !sichtbar; b.textContent = `🟢 Online${sichtbar ? ` (${anzahl})` : ""}`; b.title = sichtbar ? "" : "Du hast deine Online-Anzeige verborgen – dann siehst du auch andere nicht online (⚙️ → Privatsphäre)"; } });
     const gr = mgGruppenZeichnen();
-    const liste = (nurOnline ? MITGLIEDER.filter((m) => m.online) : MITGLIEDER).filter((m) => !gr || gr.personen.includes(m.person_id));
+    const liste = (nurOnline ? MITGLIEDER.filter((m) => mgOn(m)) : MITGLIEDER).filter((m) => !gr || gr.personen.includes(m.person_id));
     if (gr && !liste.length) { $("mitgliederListe").innerHTML = `<div class="leer">Aus dieser Gruppe ist gerade niemand online.<br><button class="knopf klein" style="margin-top:8px" onclick="mgFilterSetzen('alle')">👥 Alle der Gruppe anzeigen</button></div>`; return; }
     if (nurOnline && !liste.length) { $("mitgliederListe").innerHTML = `<div class="leer">Gerade ist niemand online.<br><button class="knopf klein" style="margin-top:8px" onclick="mgFilterSetzen('alle')">👥 Alle anzeigen</button></div>`; return; }
     $("mitgliederListe").classList.toggle("karte", MG_ANSICHT === "liste"); // Kacheln/Tafel ohne weiße Unterlage
     if (MG_ANSICHT === "kacheln") { $("mitgliederListe").innerHTML = mgKachelnHtml(liste); return; }
     if (MG_ANSICHT === "tafel") { $("mitgliederListe").innerHTML = mgTafelHtml(liste); return; }
-    $("mitgliederListe").innerHTML = kreisLegende() + liste.map((m) => `<div class="zeile${m.online ? " mg-online" : ""}">
+    $("mitgliederListe").innerHTML = kreisLegende() + liste.map((m) => `<div class="zeile${mgOn(m) ? " mg-online" : ""}">
       ${kreis(m, m.name, 40, `onclick="mitgliedOeffnen('${m.person_id}')"`)}
       <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
-        <div class="hinweis" style="font-size:.85rem">${m.online ? '<b style="color:var(--textGruen)">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}${!m.online && m.zuletztDa ? ` · 🕒 ${esc(zuletztText(m.zuletztDa))}` : ""}</div>
+        <div class="hinweis" style="font-size:.85rem">${mgOn(m) ? '<b style="color:var(--textGruen)">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}${!mgOn(m) && m.zuletztDa ? ` · 🕒 ${esc(zuletztText(m.zuletztDa))}` : ""}</div>
         ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false || m.unerreichbar || m.probe) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.unerreichbar ? "📵 nicht erreichbar – kein Push, keine Mail" : m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : "", m.probe ? "🧪 Probephase" : "", m.app && m.zuletzt ? (m.ansicht === "einfach" ? "🟢 einfache Ansicht" : m.ansicht === "erweitert" ? "🔧 erweiterte Ansicht" : "❔ Ansicht noch nicht gewählt") : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
-      <div class="mg-akt${ICH.admin ? " mg-akt3" : ""}">${m.online ? `<button class="knopf klein" title="Anklopfen – direkt schreiben" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${m.person_id !== ICH.person_id ? `<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${mgAnrufKnoepfe(m)}` : ""}
+      <div class="mg-akt${ICH.admin ? " mg-akt3" : ""}">${mgOn(m) ? `<button class="knopf klein" title="Anklopfen – direkt schreiben" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${m.person_id !== ICH.person_id ? `<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${mgAnrufKnoepfe(m)}` : ""}
       ${ICH.admin ? `<button class="knopf klein" title="App-Link" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" title="Einrichtungskarte drucken" onclick="einrichtungskarte('${m.person_id}')">🖨️</button><button class="knopf klein" title="Amt & Rechte" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div></div>`).join("")
       + '<p class="hinweis">Namen antippen für Details (Telefon, Adresse … sofern freigegeben).</p>'
       + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Amt und Rechte.</p>' : "");

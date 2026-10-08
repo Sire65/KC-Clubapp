@@ -1284,7 +1284,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 93. 0.72.0: Mitgliederliste „Alle | Nur online“ (KC-CLUB-ONLINEFILTER)
 {
   assert.ok(/id="mgFilter"/.test(html) && /onclick="mgFilterSetzen\('alle'\)">👥 Alle<\/button><button data-f="online" onclick="mgFilterSetzen\('online'\)">/.test(html), "Umschalter fehlt");
-  assert.ok(/nurOnline = (\(MG_EINMAL \|\| MG_FILTER\)|MG_FILTER) === "online" && sichtbar/.test(html) && /MITGLIEDER\.filter\(\(m\) => m\.online\)/.test(html) && /ONLINE_SICHTBAR = r\.onlineSichtbar !== false/.test(html), "Filter / Online-Privatsphäre");
+  assert.ok(/nurOnline = (\(MG_EINMAL \|\| MG_FILTER\)|MG_FILTER) === "online" && sichtbar/.test(html) && /MITGLIEDER\.filter\(\(m\) => (m\.online|mgOn\(m\))\)/.test(html) && /ONLINE_SICHTBAR = r\.onlineSichtbar !== false/.test(html), "Filter / Online-Privatsphäre");
   assert.ok(/Gerade ist niemand online\./.test(html), "leere Liste ohne Hinweis");
 }
 
@@ -4451,7 +4451,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const k = html.slice(html.indexOf("function mgKachelnHtml(liste)"), html.indexOf("// KC-CLUB-MG-GRUPPEN (1.34.0"));
   assert.ok(/\$\{mgAnrufKnoepfe\(m\)\}<\/span>/.test(k), "Kachel nutzt denselben Anruf-Baustein wie die Liste");
-  assert.ok(/const on = !!m\.online[\s\S]{0,400}mg-aus/.test(html.slice(html.indexOf("function mgAnrufKnoepfe"))), "aktiv nur bei online, sonst blass");
+  assert.ok(/const on = (!!m\.online|mgOn\(m\))[\s\S]{0,400}mg-aus/.test(html.slice(html.indexOf("function mgAnrufKnoepfe"))), "aktiv nur bei online, sonst blass");
   assert.ok(/\$\("raster"\)\.classList\.toggle\("klein3", reg !== "admin" && !einfach\(\) && kachelKlein\(\)\)/.test(html), "klein nur in der erweiterten Ansicht");
   assert.ok(/#raster\.klein3, #raster\.ad-raster \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/.test(html), "gleiche Regeln wie das Admin-Register (kein zweites Raster)");
   assert.ok(/id="kachelGroesseWahl"/.test(html) && /localStorage\.setItem\("kc_club_kachelgroesse", g\)/.test(html) && /try \{ const g = localStorage\.getItem\("kc_club_kachelgroesse"\); return g === "klein" \|\| g === "mini" \? g : "normal"; \} catch \{ return "normal"; \}/.test(html), "Einstellung je Gerät, sicher ohne Speicher (2.54.0: + sehr klein)");
@@ -6034,7 +6034,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 {
   assert.ok(/\.mg-kacheln \.mg-online \.avatar, #mitgliederListe \.zeile\.mg-online \.avatar \{[^}]*#6ee87a[^}]*animation: mgOnlinePuls 2\.4s ease-in-out infinite;/.test(html), "hellgrüner Rand + Pulsieren (Kacheln und Liste)");
   assert.ok(/@keyframes mgOnlinePuls \{/.test(html) && /@keyframes mgOnlinePulsKlein \{/.test(html) && /prefers-reduced-motion: reduce\) \{ \.mg-kacheln \.mg-online \.avatar, #mitgliederListe \.zeile\.mg-online \.avatar \{ animation: (none|kOnlineAtem 3\.2s ease-in-out infinite); \}/.test(html), "Keyframes, ruhig bei „Bewegung reduzieren“"); // 2.24.4: dort nur Leuchten ohne Bewegung
-  assert.ok(/liste\.map\(\(m\) => `<div class="zeile\$\{m\.online \? " mg-online" : ""\}">/.test(html) && /class="mini-kachel mg-kachel\$\{on \? " mg-online" : ""\}"/.test(html), "beide Ansichten markieren online");
+  assert.ok(/liste\.map\(\(m\) => `<div class="zeile\$\{(m\.online|mgOn\(m\)) \? " mg-online" : ""\}">/.test(html) && /class="mini-kachel mg-kachel\$\{on \? " mg-online" : ""\}"/.test(html), "beide Ansichten markieren online");
 }
 
 // 4xx. 2.25.0: Küchenterror – 100 neue Fragen, jede Partie fängt anders an (KC-CLUB-KUECHENTERROR-ABWECHSLUNG, Wunsch Hansi
@@ -6817,4 +6817,11 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/s\.status === "offen" && !aktiv\.has\(s\.id\) && s\.beginn > jetztIso/.test(f) && /\.eq\("status", "offen"\)\.eq\("ist_test", false\)\.gt\("gueltig_bis", jetztIso\)/.test(f) && !/insert|update|delete/.test(f), "nur offene, freie, künftige Termine – nur lesend");
   assert.ok(/x\.status === "vorbehalt" \? "schulung-vb"/.test(programm) && /Schulung – unter Vorbehalt/.test(programm) && /\.ktag\.schulung-vb \{ outline: 2px dashed #7d3c98;/.test(seite), "gestrichelt im Kalender");
   assert.ok(/x\.status !== "abgesagt" && x\.status !== "vorbehalt"\) e\.push/.test(programm), "nicht in „Demnächst“");
+}
+
+// 4xx. 2.121.0: Mitgliederseite – Zahl/Filter/Knöpfe aus dem laufenden Online-Takt (KC-CLUB-ONLINE-EINE-QUELLE, Hinweis Hansi „oben 0, unten 1“)
+{
+  assert.ok(/const mgOn = \(m\) => \{ try \{ if \(m && !m\.verborgen && ONL\.stand && Date\.now\(\) - ONL\.stand < 3 \* 60 \* 1000\) return ONL\.ids\.has\(m\.person_id\)/.test(programm), "eine Quelle, alter Stand → Liste");
+  const f = programm.slice(programm.indexOf("function mitgliederZeichnen()"), programm.indexOf("function mitgliederZeichnen()") + 3000);
+  assert.ok(/anzahl = MITGLIEDER\.filter\(\(m\) => mgOn\(m\)\)\.length/.test(f) && !/\bm\.online\b/.test(f), "Zahl „Online (n)“ = Leiste");
 }
