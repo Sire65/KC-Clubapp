@@ -1,11 +1,17 @@
 # Änderungen
 
-## 2.118.0 – 2026-10-08 – 🧑‍🍳 Twinkey: viele neue Schach-Sprüche (Wunsch Hansi)
+## 2.118.0 – 2026-10-08 – 🧑‍🍳 Twinkey: viele neue Schach-Sprüche, 📼 Partien nachspielen (Wunsch Hansi)
 Twinkey hat je Spiellage mehr Sprüche (6–9 statt 2–4) – frech im Stil bekannter Schach-Figuren aus Lern-Apps, aber eigene
 Küchen-Sprüche: „Meine Dame! Was wird bloß mein Küchenchef dazu sagen?“, „Ich hol mir jetzt die Kochmütze – Schach!“,
 „Das war natürlich Absicht – ich wollte dir eine Freude machen!“, „Ich verlange eine Revanche – gleich nach dem Abwasch!“,
 „Noch ein Sieg für Team Kochmütze!“, „Sei nicht traurig – ich bin halt ein Naturtalent am Herd.“ Auch gegen Mitglieder mehr
 Sprüche. 2.117.0 bleibt frei für die Änderungsmeldung (claude/aenderungsmeldung) (KC-CLUB-SCHACH-SPRUECHE).
+
+**📼 Partien aufzeichnen und nachspielen (KC-CLUB-SCHACH-ARCHIV, Wunsch Hansi):** Jede Partie gegen Twinkey wird am Ende von
+selbst aufgezeichnet (auch beim Abbrechen ab 2 Zügen), Partien gegen Mitglieder, sobald man sie beendet ansieht. „📼 Meine Partien“
+listet die letzten 40 (Datum, Gegner, Ergebnis); „▶ Nachspielen“ zeigt das große Brett mit ⏮ ◀ ▶ ⏭, Schieberegler, ▶️ Abspielen und
+anklickbarer Zugliste – Figuren gleiten, mit 🔊 Ansage wird jeder Zug vorgelesen. In Partien gegen Mitglieder zusätzlich „📼 Nachspielen“.
+Gespeichert werden nur die Züge, auf dem Gerät (keine Datenbank-Änderung, keine Kosten).
 
 ## 2.116.0 – 2026-10-08 – ♟️ Schach macht mehr Spaß – Twinkey spielt mit, mehr Platz fürs Brett (Test-Rückmeldung + Wunsch Hansi)
 Ein Testnutzer fand Schach „macht keinen Spaß“: Figuren schlecht zu erkennen, Brettmuster zu dominant, Rochade „klappt nicht“.
