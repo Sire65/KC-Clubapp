@@ -6620,7 +6620,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const n = server.indexOf('case "buero_mail_senden"'), c = server.slice(n, server.indexOf("\n      case ", n + 10));
   assert.ok(n > 0 && /nurBueroSchreiben\(ich\);/.test(c), "nur Büro mit Schreibrecht");
   assert.ok(/aktiveMitglieder\(\)\)\.filter\(\(m: any\) => m\.email\)/.test(c) && /ziel\.length !== an\.length/.test(c), "nur aktive Mitglieder mit Mail – keine freie Adresse");
-  assert.ok(/dateien\.length > 5/.test(c) && /12 \* 1024 \* 1024/.test(c) && /dateiAblegen\(ich, d\?\.name, d\?\.mime, d\?\.daten, ARCHIV_DATEITYPEN\)/.test(c), "Grenzen + erlaubte Dateitypen");
+  assert.ok(/dateien\.length > (5|10)/.test(c) && /12 \* 1024 \* 1024/.test(c) && /dateiAblegen\(ich, d\?\.name, d\?\.mime, d\?\.daten, ARCHIV_DATEITYPEN\)/.test(c), "Grenzen + erlaubte Dateitypen");
   assert.ok(/\(count \?\? 0\) >= 3/.test(c), "höchstens 3 Mails je Minute");
   assert.ok(/routerSenden\("club_nachricht_mail", ziel, \{[^]*attachmentIds: anl\.map/.test(c), "Versand über den KC Communicator mit Anhang");
   assert.ok(/protokoll\(ich\.person_id, "buero_mail", \{ empfaenger: ziel\.length, anhaenge: anl\.length/.test(c) && !/betreff|text/.test(c.slice(c.indexOf('protokoll(ich.person_id, "buero_mail"'), c.indexOf('protokoll(ich.person_id, "buero_mail"') + 120)), "Protokoll nur Zahlen");
@@ -6651,6 +6651,16 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(n > 0 && /await ekPruefen\(ich, art, id\);/.test(c) && /await ekDoku\(art, id\)/.test(c) && !/insert|update|delete/.test(c), "Server: nur lesen, Rechte wie beim Ablegen");
   const f = programm.slice(programm.indexOf("async function einlAusKorb()"), programm.indexOf("async function einlKorbOeffnen("));
   for (const art of ["erstattung", "dienstwunsch", "aenderung", "vorschlag"]) assert.ok(f.includes(`art: "${art}"`), "Eingang: " + art);
-  assert.ok(/api\("eingang_doku", \{ art, id \}/.test(f) && /einlZiel\(\[new File\(/.test(f), "Vorgang → Wohin damit?");
+  assert.ok(/api\("eingang_doku", \{ art, id \}/.test(f) && /einlZiel\(\[(new File\(|text\])/.test(f), "Vorgang → Wohin damit?");
   assert.ok(/Im Eingangskorb und im Eingang liegt gerade nichts\./.test(f) && /📥 Aus Eingangskorb oder Eingang/.test(programm), "Texte");
+}
+
+// 4xx. 2.112.0: Vorgang aus dem Eingang – fragen, ob Belege/Bilder mitgeschickt werden sollen (KC-CLUB-BUERO-EINLESEN-EINGANG)
+{
+  const n = server.indexOf('case "eingang_doku"'), c = server.slice(n, server.indexOf("\n      case ", n + 10));
+  assert.ok(/createSignedUrl\(x\.object_path, 600\)/.test(c) && c.indexOf("await ekPruefen") < c.indexOf("createSignedUrl"), "Belege nur nach Rechteprüfung, Links kurzlebig");
+  const f = programm.slice(programm.indexOf("async function einlEingangOeffnen("), programm.indexOf("async function einlKorbOeffnen("));
+  assert.ok(/📎 Anhänge mitschicken\?/.test(f) && /data-anh="\$\{i\}" checked/.test(f) && /einlAnhWeiter\(true\)/.test(f) && /einlAnhWeiter\(false\)/.test(f), "Frage mit Häkchen je Anhang");
+  assert.ok(/if \(!d\.anhaenge\?\.length\) return einlZiel\(\[text\]/.test(f), "ohne Anhänge keine Frage");
+  assert.ok(/await urlAlsDatei\(a\.url, a\.name, a\.mime\)/.test(f) && /async function urlAlsDatei\(url, name, mime\) \{\n  const r = await fetch\(url, \{ signal: zeitSignal\(60000\) \}\)/.test(programm), "Laden mit Zeitgrenze (gemeinsamer Datei-Weg)");
 }

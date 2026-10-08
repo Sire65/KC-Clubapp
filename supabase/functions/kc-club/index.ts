@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.111.0";
+const SERVER_VERSION = "2.112.0";
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
 async function ssBeenden(pid: string, w: any) {
@@ -6424,7 +6424,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-BUERO-MAIL (2.108.0, Wunsch Hansi „Einlesen per Mail ruft ein fremdes Programm über Teilen auf – geht das nicht direkt?“):
         // eingelesene Dateien direkt aus der Club-App per E-Mail an ausgewählte Mitglieder (Auswahl, keine freie Adresse – der KC
         // Communicator kennt nur hinterlegte Adressen). Gleicher Weg wie der Wunschbogen: Anlagen-Kern + routerSenden mit Anhang.
-        // Nur Büro mit Schreibrecht, höchstens 5 Dateien (je 8 MB, zusammen 12 MB), höchstens 3 Mails je Minute. Protokoll nur Zahlen.
+        // Nur Büro mit Schreibrecht, höchstens 10 Dateien (je 8 MB, zusammen 12 MB), höchstens 3 Mails je Minute. Protokoll nur Zahlen.
         nurBueroSchreiben(ich);
         // 2.109.0 (Wunsch Hansi „CC und BCC muss möglich sein“): je Person An, CC oder BCC – jede Person nur einmal (An vor CC vor BCC)
         const liste = (x: unknown) => [...new Set((Array.isArray(x) ? x : []).map((y: unknown) => String(y || "")).filter(Boolean))].slice(0, 120);
@@ -6436,7 +6436,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (p.kopie && !an.includes(ich.person_id) && !cc.includes(ich.person_id) && !bcc.includes(ich.person_id)) bcc.push(ich.person_id); // „Kopie an mich“ = BCC
         const dateien = Array.isArray(p.dateien) ? p.dateien : [];
         if (!dateien.length) throw new Fehler("Es hängt keine Datei an.", 400);
-        if (dateien.length > 5) throw new Fehler("Höchstens 5 Dateien auf einmal – bitte aufteilen.", 400);
+        if (dateien.length > 10) throw new Fehler("Höchstens 10 Dateien auf einmal – bitte aufteilen.", 400); // 2.112.0: 10 (Aufstellung + Belege)
         if (dateien.reduce((n: number, d: any) => n + String(d?.daten || "").length * 0.75, 0) > 12 * 1024 * 1024) throw new Fehler("Die Dateien sind zusammen zu groß (höchstens 12 MB) – bitte aufteilen.", 413);
         const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "buero_mail").gte("zeit", new Date(Date.now() - 60_000).toISOString());
         if ((count ?? 0) >= 3) throw new Fehler("Gerade sind schon mehrere Mails verschickt worden – bitte eine Minute warten.", 429);
@@ -8810,7 +8810,19 @@ Köcheclub Werne`,
         const art = String(p.art || ""), id = String(p.id || "");
         await ekPruefen(ich, art, id);
         const doku = await ekDoku(art, id); if (!doku) throw new Fehler("Vorgang nicht gefunden.", 404);
-        return json({ titel: `${doku.wer}: ${doku.titel}`, dateiname: doku.dateiname, text: doku.text });
+        // 2.112.0 (Wunsch Hansi „bei Anhängen und Bildern fragen, ob sie mitgeschickt werden sollen“): Belege einer Erstattung
+        // als kurzlebige Links (10 Min.) – die App fragt, welche mit sollen. Gleiche Berechtigung wie oben (ekPruefen).
+        let anhaenge: { name: string; mime: string; groesse: number; url: string }[] = [];
+        if (art === "erstattung") {
+          const { data: e } = await db.from("kc_club_erstattung").select("positionen").eq("id", id).maybeSingle();
+          const ids = [...new Set((e?.positionen ?? []).flatMap((x: any) => Array.isArray(x?.belege) ? x.belege.map(String) : []))].slice(0, 20) as string[];
+          const { data: att } = ids.length ? await db.from("kc_communication_attachments").select("id,bucket,object_path,file_name,mime_type,size_bytes").in("id", ids) : { data: [] as any[] };
+          for (const x of att ?? []) {
+            const { data: u } = await db.storage.from(x.bucket).createSignedUrl(x.object_path, 600);
+            if (u?.signedUrl) anhaenge.push({ name: x.file_name || "Beleg", mime: x.mime_type || "application/octet-stream", groesse: Number(x.size_bytes || 0), url: u.signedUrl });
+          }
+        }
+        return json({ titel: `${doku.wer}: ${doku.titel}`, dateiname: doku.dateiname, text: doku.text, anhaenge });
       }
 
       case "eingang_ablage_ziele": {

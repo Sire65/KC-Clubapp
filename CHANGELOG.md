@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.112.0 – 2026-10-08 – Einlesen aus dem Eingang: Anhänge mitschicken?
+Gehören zu einem Vorgang aus dem Eingang Belege oder Bilder (z. B. bei einer Erstattung), fragt die App, welche mitgeschickt bzw. mit abgelegt werden sollen – Häkchen je Anhang. Mail aus dem Büro: bis zu 10 Dateien (KC-CLUB-BUERO-EINLESEN-EINGANG).
+
 ## 2.111.0 – 2026-10-08 – Einlesen: auch aus dem Büro-Eingang
 Beim Einlesen im Büro stehen unter „📥 Aus Eingangskorb oder Eingang“ jetzt auch Erstattungen, Dienstzeiten, Änderungsmeldungen und offene Vorschläge aus dem Eingang – antippen, dann ablegen, als Nachricht schicken oder per E-Mail (An/CC/BCC) versenden (KC-CLUB-BUERO-EINLESEN-EINGANG).
 

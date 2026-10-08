@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.111.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.112.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -7415,7 +7415,7 @@ async function zugangAnfordern() {
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
 const WARTEN_STILL = new Set(["nutzung_melden", "spur_melden", "standort_update", "standort_liste", "terminanfragen_liste", "init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu", "pinnwand_gesehen"]);
-const WARTEN_TEXT = { buero_mail_senden: "E-Mail wird gesendet …", standort_ort: "Standort wird bestimmt …", sos_ort: "Adresse wird gesucht …", standort_start: "Standort wird geteilt …", standort_ende: "Wird beendet …", terminanfrage_senden: "Anfrage wird gesendet …", terminanfrage_antwort: "Antwort wird gemeldet …", terminanfrage_absagen: "Wird abgesagt …", nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
+const WARTEN_TEXT = { buero_mail_senden: "E-Mail wird gesendet …", anhaenge_laden: "Anhänge werden geladen …", standort_ort: "Standort wird bestimmt …", sos_ort: "Adresse wird gesucht …", standort_start: "Standort wird geteilt …", standort_ende: "Wird beendet …", terminanfrage_senden: "Anfrage wird gesendet …", terminanfrage_antwort: "Antwort wird gemeldet …", terminanfrage_absagen: "Wird abgesagt …", nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …",
   init: "Wird aktualisiert …", wetter: "Wetter wird abgefragt …", admin_lage: "Server, Datenbank und Verbindungen werden geprüft …", kalender: "Termine werden geladen …",
@@ -15853,9 +15853,32 @@ async function einlAusKorb() {
   BU_EIN.archiv = ar;
 }
 async function einlEingangOeffnen(art, id) {
-  try { const d = await api("eingang_doku", { art, id }, { warten: true });
-    einlZiel([new File(["\ufeff" + d.text], d.dateiname || "Vorgang.txt", { type: "text/plain" })], { titel: d.titel }); }
-  catch (e) { meldeFehler(e); }
+  let d; try { d = await api("eingang_doku", { art, id }, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const text = new File(["\ufeff" + d.text], d.dateiname || "Vorgang.txt", { type: "text/plain" });
+  if (!d.anhaenge?.length) return einlZiel([text], { titel: d.titel });
+  // 2.112.0 (Wunsch Hansi): Belege/Bilder gehören dazu → fragen, welche mitgeschickt werden sollen (vorab alle angehakt)
+  EINL_ANH = { d, text };
+  const gr = (b) => b < 102400 ? Math.max(1, Math.round(b / 1024)) + " KB" : (b / 1048576).toFixed(1).replace(".", ",") + " MB";
+  blattAuf("einlBlatt", `<h3 style="margin-top:0">📎 Anhänge mitschicken?</h3>
+    <p style="margin:0 0 8px"><b>${esc(d.titel)}</b></p>
+    <p class="hinweis" style="margin:0 0 6px">Dazu gehör${d.anhaenge.length === 1 ? "t ein Beleg/Bild" : `en ${d.anhaenge.length} Belege/Bilder`}. Häkchen = wird mitgeschickt bzw. mit abgelegt.</p>
+    <div style="display:grid;gap:4px">${d.anhaenge.map((a, i) => `<label style="display:flex;gap:10px;align-items:center;padding:6px 4px;min-height:40px"><input type="checkbox" data-anh="${i}" checked> ${a.mime.startsWith("image/") ? "🖼️" : arDateiSym(a.mime)} ${esc(a.name)} <small class="hinweis">${gr(a.groesse)}</small></label>`).join("")}</div>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch;margin-top:8px">
+      <button class="knopf haupt" onclick="einlAnhWeiter(true)">📎 Mit den angehakten Anhängen</button>
+      <button class="knopf" onclick="einlAnhWeiter(false)">📄 Nur die Aufstellung (ohne Anhänge)</button>
+      <button class="knopf" onclick="einlAusKorb()">‹ Zurück</button></div>`);
+}
+let EINL_ANH = null;
+async function einlAnhWeiter(mit) {
+  const A = EINL_ANH; if (!A) return;
+  const wahl = mit ? [...document.querySelectorAll("#einlBlatt [data-anh]")].filter((x) => x.checked).map((x) => A.d.anhaenge[Number(x.dataset.anh)]) : [];
+  const dateien = [A.text];
+  wartenStart("anhaenge_laden", true);
+  try {
+    for (const a of wahl) { const x = await urlAlsDatei(a.url, a.name, a.mime); dateien.push(new File([x.blob], x.name, { type: x.mime })); }
+  } catch (e) { wartenEnde(); return meldeFehler(e?.name === "TimeoutError" || e?.name === "AbortError" ? new Error("Das Netz ist gerade zu langsam – bitte gleich nochmal versuchen.") : e); }
+  wartenEnde(); EINL_ANH = null;
+  einlZiel(dateien, { titel: A.d.titel });
 }
 async function einlKorbOeffnen(id) {
   const d = (BU_EIN.archiv?.dokumente || AR.daten?.dokumente || []).find((x) => x.id === id); if (!d) return melde("Das Dokument gibt es nicht mehr.", true);
@@ -20649,8 +20672,13 @@ const ARCHIV_ABLAGE_ARTEN = {
 const ARCHIV_TYP_OK = (mime) => /^(application\/pdf|image\/(jpeg|png|webp)|text\/plain|application\/msword|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet))$/.test(String(mime || ""));
 // Datei einer Nachricht/eines Protokolls holen (nur was man ohnehin öffnen darf – der Server prüft bei anlage_url)
 async function anlageAlsDatei(a) {
-  const r = await api("anlage_url", { id: a.id }), blob = await (await fetch(r.url, { signal: zeitSignal(60000) })).blob();
-  return { blob, mime: a.mime || blob.type, name: a.name || "Datei" };
+  const r = await api("anlage_url", { id: a.id });
+  return urlAlsDatei(r.url, a.name, a.mime);
+}
+// Datei hinter einem (kurzlebigen) Speicher-Link holen – mit Zeitgrenze; 2.112.0 auch für Belege aus dem Büro-Eingang
+async function urlAlsDatei(url, name, mime) {
+  const r = await fetch(url, { signal: zeitSignal(60000) }); if (!r.ok) throw new Error("Die Datei konnte nicht geladen werden – bitte gleich nochmal versuchen.");
+  const blob = await r.blob(); return { blob, mime: mime || blob.type, name: name || "Datei" };
 }
 // Textdatei (UTF-8 mit BOM, damit Umlaute auf jedem Gerät richtig erscheinen)
 const textDatei = (text) => new Blob(["\ufeff" + text], { type: "text/plain" });
