@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.79.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.80.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -14982,6 +14982,15 @@ async function sensibelGaesteOk(text, anl = anlagen, empf = null) { // empf(mg) 
   if (!ok) melde("✋ Nicht gesendet – der Text bleibt stehen. Tipp: in einem Chat nur mit Mitgliedern senden.");
   return ok;
 }
+// ---------- KC-CLUB-ABLAGE-VORSCHLAG (2.80.0, Wunsch Hansi): nach dem Senden von Dokumenten/Fotos sofort vorschlagen, wo sie hingehören ----------
+// Gleicher Kern wie überall (archivAblageFragen + arVorschlag); Sprachnachrichten und Unbekanntes werden nicht angeboten.
+const ABLEGBAR_NAME = /\.(pdf|jpe?g|png|webp|docx?|xlsx?|txt)$/i;
+const gesendetAblegbar = (liste) => (liste || []).filter((a) => a?.id && ABLEGBAR_NAME.test(a.name || ""));
+function gesendetAblageFragen(liste) {
+  const titel = liste.length === 1 ? liste[0].name.replace(/\.\w+$/, "").replace(/[_-]+/g, " ").trim() : `${liste.length} Dateien`;
+  return archivAblageFragen("anlage", { titel: liste.length === 1 ? titel : `${titel}: ${liste.map((a) => a.name).join(", ")}`.slice(0, 160), datum: heuteIso(), hinweis: "gerade gesendet",
+    dateien: async () => { const aus = []; for (const a of liste) { const f = await anlageAlsDatei(a); aus.push({ titel: a.name.replace(/\.\w+$/, "").replace(/[_-]+/g, " ").trim().slice(0, 120), name: f.name, mime: f.mime, blob: f.blob }); } return aus; } });
+}
 async function senden() {
   emoUmschalten(false); // KC-CLUB-EMOJI
   const text = $("text").value.trim();
@@ -14995,6 +15004,7 @@ async function senden() {
     melde("📴 Kein Netz – deine Nachricht ist vorgemerkt und geht automatisch raus, sobald du wieder Internet hast."); owZeigen(); return;
   }
   $("sendenKnopf").disabled = true;
+  const anlagenVorher = [...anlagen];
   try {
     const daten = { text, anlagen: anlagen.map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]),
       ...(NA.antwort && chatId ? { antwort_auf: NA.antwort.id } : {}), ...(chatId ? { erwaehnt: naErwaehnteIds(text) } : {}), // KC-CLUB-ANTWORT / -ERWAEHNUNG
@@ -15006,8 +15016,10 @@ async function senden() {
     $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
     spur(daten.anlagen.length ? "gesendet_anlage" : "gesendet", r?.id || chatId); // KC-CLUB-SPUR: nur „gesendet“ + Unterhaltung, nie der Text
     if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
+    const gesendet = gesendetAblegbar(anlagenVorher); // KC-CLUB-ABLAGE-VORSCHLAG (2.80.0)
     if (!chatId) { chatId = r.id; history.replaceState({ v: "chat", id: r.id, tiefe: history.state?.tiefe }, "", location.pathname + "#nachricht=" + r.id); clearInterval(chatTimer); chatTimer = setInterval(chatTakt, CHAT_TAKT_MS); }
     await chatLaden(true);
+    if (gesendet.length) setTimeout(() => gesendetAblageFragen(gesendet), 500);
   } catch (e) { meldeFehler(e); }
   $("sendenKnopf").disabled = false;
 }
@@ -19697,26 +19709,57 @@ function arDokForm(id) {
 // Gleiche Regeln wie der Server: nur innerhalb des eigenen Bereichs (persönlich ↔ Verein nie gemischt).
 const AR_ZIEL_KEY = "kc_club_ar_ziel";
 const AR_VORSCHLAG = [
+  // 2.80.0 KC-CLUB-ABLAGE-VORSCHLAG (Wunsch Hansi „wo gehört es hin?“): spezielle Regeln zuerst – erste passende Regel mit vorhandenem Ordner/Register gewinnt
+  { re: /miet|pacht|räum|raum(?!fahrt)|halle|vereinsheim/i, und: /vertr[aä]g|vereinbarung|kündigung|miete|pacht/i, ordner: /vertr/i, register: ["Miete & Räume"] },
+  { re: /versicherung|police|haftpflicht|schadensmeldung|schadenfall/i, ordner: /vertr/i, register: ["Versicherungen"] },
+  { re: /lieferant|liefervertrag|rahmenvertrag|bestellung|angebot|getränke|großhandel|metro/i, und: /vertr[aä]g|vereinbarung|bestellung|angebot|konditionen|liste/i, ordner: /vertr/i, register: ["Lieferanten"] },
+  { re: /vertr[aä]g|vereinbarung|kündigung|kooperation|sponsor|genehmigung/i, ordner: /vertr/i, register: ["Vereinsverträge", "Verträge", "Genehmigungen", "Sonstiges"] },
+  { re: /vertr[aä]g|vereinbarung|kündigung/i, register: ["Verträge", "Sonstiges"] }, // persönlicher Ordner hat kein Register „Verträge“
+  { re: /versicherung|police|haftpflicht/i, register: ["Versicherungen"] },
+  { re: /satzung|geschäftsordnung|vereinsregister|registergericht/i, register: ["Satzung", "Geschäftsordnung", "Vereinsregister"] },
+  { re: /einladung/i, ordner: /versamml|besprech/i, register: ["Einladung", "Unterlagen"] },
+  { re: /anwesenheit|teilnehmerliste/i, register: ["Anwesenheit"] },
+  { re: /presse|zeitung|artikel|bericht in/i, register: ["Presse"] },
+  { re: /mitglied(?:s|er)?(?:antrag|meldung)|aufnahme|austritt|beitritt|adressänderung|änderungsmeldung/i, ordner: /mitglied/i, register: ["Meldungen"] },
+  { re: /ausleih|leihschein|verleih/i, register: ["Ausleihe"] },
+  // bisherige Regeln (2.59.0)
   { re: /besprech|tagesordnung|agenda|entwurf/i, ordner: /besprech/i, register: ["Entwürfe", "Unterlagen"] },
-  { re: /protokoll/i, ordner: /besprech|protokoll|versammlung|sitzung/i, register: ["Protokolle"] },
-  { re: /rechnung|beleg|quittung|erstattung|abrechnung/i, register: ["Rechnungen"] },
-  { re: /schulung/i, register: ["Schulungen"] },
+  { re: /protokoll/i, ordner: /besprech|protokoll|versammlung|sitzung/i, register: ["Protokolle", "Protokoll"] },
+  { re: /rechnung|beleg|quittung|erstattung|abrechnung|kassenbon|bon\b/i, register: ["Rechnungen"] },
+  { re: /schulung|zertifikat|teilnahmebescheinigung|lehrgang|kurs/i, register: ["Schulungen"] },
   { re: /dienst(zeit|plan|wunsch)|wünsche/i, ordner: /dienstpl/i, register: ["Wünsche", "Gesamtplan"] },
-  { re: /urkunde|ehrung/i, register: ["Urkunden", "Ehrungen & Urkunden"] },
+  { re: /urkunde|ehrung|meisterbrief|gesellenbrief|zeugnis|auszeichnung/i, register: ["Urkunden", "Ehrungen & Urkunden"] },
   { re: /sicherheit/i, register: ["Sicherheitscheck"] },
   { re: /chat|nachricht/i, register: ["Chats"] },
-  { re: /foto|bild/i, register: ["Fotos"] },
+  { re: /foto|bild|\.(jpe?g|png|webp|heic)\b|^img[_ -]|\bpxl[_ ]|whatsapp image/i, register: ["Fotos"] },
 ];
 // liste: mögliche Zielordner (neueste zuerst) · jetzt: {ordner, register} = wo es schon liegt (wird nicht vorgeschlagen)
+// Reihenfolge: 1. Regel aus AR_VORSCHLAG · 2. Wort im Text passt zu einem Register-/Ordnernamen · 3. zuletzt gewähltes Ziel
 function arVorschlag(text, liste, jetzt = {}) {
-  const passt = (o, r) => o && (o.register || []).includes(r) && !(o.id === jetzt.ordner && r === jetzt.register);
+  const passt = (o, r) => o && (o.register || []).includes(r) && !(o.id === jetzt.ordner && r === jetzt.register), t = String(text || "");
+  const arStamm = (w) => String(w || "").toLowerCase().replace(/[^a-zäöüß]/g, "").slice(0, 5); // Wortanfang zum Vergleichen
   for (const v of AR_VORSCHLAG) {
-    if (!v.re.test(String(text || ""))) continue;
-    for (const o of liste.filter((y) => !v.ordner || v.ordner.test(y.titel || ""))) { const r = v.register.find((x) => passt(o, x)); if (r) return { o, r, grund: "passt zum Titel" }; }
+    const m = t.match(v.re); if (!m || (v.und && !v.und.test(t))) continue;
+    for (const o of liste.filter((y) => !v.ordner || v.ordner.test(y.titel || ""))) { const r = v.register.find((x) => passt(o, x)); if (r) return { o, r, grund: `„${m[0].trim()}“ im Namen` }; }
   }
+  // 2.80.0: freie Zuordnung – Wortanfang (5 Buchstaben) im Text = Register- oder Ordnername (Register zählt mehr)
+  const worte = new Set(t.split(/[^A-Za-zÄÖÜäöüß]+/).filter((w) => w.length >= 4).map(arStamm));
+  let best = null;
+  for (const o of liste) {
+    const os = String(o.titel || "").split(/\s+/).map(arStamm).some((x) => x.length >= 4 && worte.has(x)) ? 2 : 0;
+    for (const r of o.register || []) {
+      if (!passt(o, r) || r === "Sonstiges") continue;
+      const rs = String(r).split(/[\s&,-]+/).map(arStamm).some((x) => x.length >= 4 && worte.has(x)) ? 3 : 0, wert = rs + os;
+      if (wert && (!best || wert > best.wert)) best = { o, r, wert, grund: rs ? `passt zum Register „${r}“` : `passt zum Ordner „${o.titel}“` };
+    }
+  }
+  if (best) return { o: best.o, r: best.r, grund: best.grund };
   let z = null; try { z = JSON.parse(lsLesen(AR_ZIEL_KEY) || "null"); } catch {}
   const o = z && liste.find((y) => y.id === z.ordner);
-  return o && passt(o, z.register) ? { o, r: z.register, grund: "zuletzt gewählt" } : null;
+  if (o && passt(o, z.register)) return { o, r: z.register, grund: "zuletzt gewählt" };
+  if (jetzt.ordner) return null; // beim Verschieben nichts Beliebiges vorschlagen
+  const f = liste.find((y) => passt(y, "Sonstiges")); // 2.80.0: immer ein Vorschlag – zur Not „Sonstiges“
+  return f ? { o: f, r: "Sonstiges", grund: "nichts Genaueres gefunden – bitte prüfen" } : null;
 }
 let AR_ZIEL = null;
 function arZielBlatt(id, art) {
@@ -19765,6 +19808,24 @@ async function arDateiGewaehlt(input) {
   AR.datei = d;
   $("arDateiName").textContent = `${arDateiSym(d.type)} ${d.name} · ${arGroesse(d.size)}`;
   if (!$("arDokTitel").value.trim()) $("arDokTitel").value = roh.name.replace(/\.\w+$/, "").replace(/[_-]+/g, " ").slice(0, 120);
+  arDokVorschlag(`${$("arDokTitel").value} ${roh.name}`);
+}
+// 2.80.0 KC-CLUB-ABLAGE-VORSCHLAG: passendes Register im offenen Ordner vorwählen – passt ein anderer Ordner besser, als Knopf anbieten
+function arDokVorschlag(text) {
+  const d = AR.daten, o = d?.ordner.find((y) => y.id === AR.ordner), sel = $("arDokReg"); if (!o || !sel) return;
+  const hier = arVorschlag(text, [o]), alle = arVorschlag(text, d.ordner.filter((y) => !y.auto && y.art !== "chronik" && (y.besitzer || null) === (o.besitzer || null) && (!o.besitzer || y.eigen) && (y.eigen || d.darf)).sort((a, b) => b.jahr - a.jahr));
+  if (hier && hier.r !== "Sonstiges" && [...sel.options].some((x) => x.value === hier.r)) sel.value = hier.r;
+  $("arDokTipp")?.remove();
+  const besser = alle && alle.o.id !== o.id && alle.r !== "Sonstiges" && (!hier || hier.r === "Sonstiges") ? alle : null;
+  const tipp = besser ? `💡 Passt besser in <b>„${esc(besser.o.titel)} ${besser.o.jahr}“ › „${esc(besser.r)}“</b> (${esc(besser.grund)}) <button class="knopf klein" onclick="arDokUmziehen('${besser.o.id}', ${esc(JSON.stringify(besser.r))})">➡️ Dorthin</button>`
+    : hier && hier.r !== "Sonstiges" ? `💡 Vorschlag: Register <b>„${esc(hier.r)}“</b> (${esc(hier.grund)})` : "";
+  if (tipp) sel.closest(".zwei")?.insertAdjacentHTML("afterend", `<p class="hinweis abl-vorschlag" id="arDokTipp" style="padding:6px 8px;border-radius:10px">${tipp}</p>`);
+}
+function arDokUmziehen(oid, reg) {
+  const datei = AR.datei, titel = $("arDokTitel")?.value || "", name = $("arDateiName")?.textContent || "";
+  AR.ordner = oid; AR.register = reg; arOrdnerZeigen(); arDokForm();
+  AR.datei = datei; if ($("arDokTitel")) $("arDokTitel").value = titel; if ($("arDateiName")) $("arDateiName").textContent = name; if ($("arDokReg")) $("arDokReg").value = reg;
+  melde(`➡️ Ordner gewechselt: ${arOrdnerAktuell()?.titel || ""} › ${reg}`);
 }
 async function arDokSpeichern(id) {
   const werte = { titel: $("arDokTitel").value.trim(), datum: $("arDokDatum").value || null, register: $("arDokReg").value, stichworte: $("arDokStich").value, beschreibung: $("arDokBeschr")?.value.trim() || "" };
@@ -19819,15 +19880,18 @@ async function archivAblageFragen(art, { titel, datum, hinweis, dateien, frage, 
   const verein = d.darf ? (d.ordner || []).filter((o) => !o.besitzer && !o.auto && o.art !== "chronik" && (o.register || []).length).sort((x, y) => y.jahr - x.jahr || x.titel.localeCompare(y.titel, "de")) : [];
   const ordner = [...nfpEigeneOrdner(d), ...verein]; if (!ordner.length) return false;
   const jahr = Number(String(datum || heuteIso()).slice(0, 4)), vs = arVorschlag(titel, ordner), vor = vs?.o || ordner.find((o) => o.besitzer && o.jahr === jahr) || ordner[0];
-  ABL = { a, d, titel, datum: datum || heuteIso(), dateien, danach, vorReg: vs?.r };
-  blattAuf("ablageBlatt", `${einwHtml("b-ablage")}<h3 style="margin-top:0">🗄️ ${esc(frage || "Auch in deinen Archiv-Ordner legen?")}</h3>
+  ABL = { a, d, titel, datum: datum || heuteIso(), dateien, danach, vorReg: vs?.r, vs, ja };
+  const vsName = vs ? (vs.o.besitzer ? "Mein Ordner " + vs.o.jahr : vs.o.titel + " " + vs.o.jahr) : "";
+  // 2.80.0 KC-CLUB-ABLAGE-VORSCHLAG: der Vorschlag steht als Frage oben („Soll ich … in den Ordner … im Register … ablegen?“)
+  blattAuf("ablageBlatt", `${einwHtml("b-ablage")}<h3 style="margin-top:0">🗄️ ${esc(vs ? "Wohin damit? Mein Vorschlag" : frage || "Auch in deinen Archiv-Ordner legen?")}</h3>
     <p style="margin:0 0 8px">${a.sym} <b>${esc(titel)}</b>${hinweis ? `<br><span class="hinweis">${esc(hinweis)}</span>` : ""}</p>
-    ${vs ? `<p class="hinweis" style="margin:0 0 4px">💡 Vorschlag: <b>${esc(vs.o.besitzer ? "Mein Ordner " + vs.o.jahr : vs.o.titel + " " + vs.o.jahr)} › ${esc(vs.r)}</b> (${esc(vs.grund)})</p>` : ""}
+    ${vs ? `<div class="karte abl-vorschlag">💡 Soll ich das in den Ordner <b>„${esc(vsName)}“</b>${vs.o.nur_vorstand ? " 🔒" : ""} im Register <b>„${esc(vs.r)}“</b> ablegen?<div class="hinweis" style="margin-top:2px">${esc(vs.grund)}</div></div>
+      <p class="hinweis" style="margin:6px 0 2px">Oder einen anderen Platz wählen:</p>` : ""}
     <label class="feld">Ordner<select id="ablOrdner" onchange="ablRegister()">${ordner.map((o) => `<option value="${esc(o.id)}"${o.id === vor.id ? " selected" : ""}>${o.besitzer ? `👤 Mein Ordner ${esc(String(o.jahr))}` : `🗄️ ${esc(o.titel)} ${esc(String(o.jahr))}${o.nur_vorstand ? " 🔒" : ""}`}</option>`).join("")}</select></label>
-    <label class="feld">Register<select id="ablReg"></select></label>
+    <label class="feld">Register<select id="ablReg" onchange="ablKnopf()"></select></label>
     ${wahl ? `<label class="schalter"><span>${esc(wahl.text)}</span><input type="checkbox" id="ablWahl"${wahl.an !== false ? " checked" : ""}></label>` : ""}
     <p class="hinweis" id="ablSicht">🔒 Deinen Ordner siehst nur du (und wem du ihn selbst freigibst).</p>
-    <button class="knopf haupt" style="text-align:center" onclick="einmal(this, ablAblegen)">🗄️ ${esc(ja || "Ja, ablegen")}</button>
+    <button class="knopf haupt" id="ablJa" style="text-align:center" onclick="einmal(this, ablAblegen)">🗄️ ${esc(ja || "Ja, ablegen")}</button>
     <button class="knopf" style="text-align:center" onclick="ablNein()">${esc(nein || "Nein, danke")}</button>
     ${danach ? '<button class="knopf" style="text-align:center" onclick="ablZu()">Abbrechen</button>' : ""}`);
   ablRegister();
@@ -19839,6 +19903,13 @@ function ablRegister() {
   const reg = o.register?.length ? o.register : (ABL.d.register || ["Sonstiges"]), vor = (reg.includes(ABL.vorReg) ? ABL.vorReg : null) || ABL.a.register.find((r) => reg.includes(r)) || reg[0];
   if ($("ablSicht")) $("ablSicht").textContent = o.besitzer ? "🔒 Deinen Ordner siehst nur du (und wem du ihn selbst freigibst)." : o.nur_vorstand ? "🔒 Club-Ordner – sehen nur Clubsprecher, Kassenwart und Admin." : "🗄️ Club-Ordner – alle Mitglieder können ihn sehen.";
   $("ablReg").innerHTML = reg.map((r) => `<option${r === vor ? " selected" : ""}>${esc(r)}</option>`).join("");
+  ablKnopf();
+}
+// 2.80.0: Knopf sagt, wohin – „Ja, dort ablegen“ beim Vorschlag, sonst das gewählte Ziel
+function ablKnopf() {
+  const k = $("ablJa"), vs = ABL?.vs; if (!k || !vs) return;
+  const amVorschlag = $("ablOrdner")?.value === vs.o.id && $("ablReg")?.value === vs.r;
+  k.textContent = amVorschlag ? "✅ Ja, dort ablegen" : `🗄️ In „${$("ablReg")?.value || ""}“ ablegen`;
 }
 async function ablAblegen() {
   if (!ABL) return;

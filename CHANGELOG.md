@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.80.0 – 2026-10-08 – 💡 Ablage-Vorschlag: wohin gehört das Dokument?
+Bei jedem Dokument, Foto oder Papier schlägt die App vor, wo es hingehört: „Soll ich das in den Ordner „Verträge 2026“ im Register „Vereinsverträge“ ablegen?“ – nach dem Senden mit Anhang, beim Ablegen aus Chats/Nachrichten/Fotos/Protokollen und beim Hochladen im Archiv (Register vorgewählt, besserer Ordner als Knopf). Erkennt Verträge, Miete, Versicherungen, Lieferanten, Protokolle, Rechnungen, Urkunden, Fotos … und passende Register-Namen; zur Not „Sonstiges“. (KC-CLUB-ABLAGE-VORSCHLAG)
+
 ## 2.79.0 – 2026-10-08 – 🗂️ Inhaltsverzeichnis aller Ordner (PDF/Druck)
 Neuer Knopf im Büro, im Archiv und in jedem Ordner: Inhaltsverzeichnis zum Ausdrucken oder als PDF – Übersicht, dann je Bereich (persönlich / mit mir geteilt / öffentlich / nur Clubleitung) jeder Ordner mit seinen Registern und Einträgen. Wahl: alles, nur persönliche oder nur öffentliche Ordner; optional Clubleben, Dateiname und „abgelegt von“. (KC-CLUB-INHALTSVERZEICHNIS)
 

@@ -1730,8 +1730,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const ARCHIV_ABLAGE_ARTEN = \{\s*erstattung: \{ sym: "💶", register: \["Rechnungen", "Sonstiges"\]/.test(f), "Registry der Ablage-Anlässe");
   // 1.19.0: dazu nur lesende, vorhandene Wege für Dateien aus Nachrichten/Protokollen (anlage_url) und Fotos (foto_oeffnen)
   assert.ok([...f.matchAll(/api\("(\w+)"/g)].every((m) => ["archiv_liste", "archiv_hochladen", "anlage_url", "foto_oeffnen"].includes(m[1])), "nur vorhandene Archiv-/Lese-Wege");
-  assert.ok(/const ordner = (nfpEigeneOrdner\(d\)|\[\.\.\.nfpEigeneOrdner\(d\), \.\.\.verein\])/.test(f) && /const verein = d\.darf \? /.test(f) && /<select id="ablOrdner"/.test(f) && /<select id="ablReg">/.test(f), "nur eigene Ordner, Auswahl statt Freitext");
-  assert.ok(/onclick="einmal\(this, ablAblegen\)">🗄️ \$\{esc\(ja \|\| "Ja, ablegen"\)\}/.test(f) && /onclick="ablNein\(\)">\$\{esc\(nein \|\| "Nein, danke"\)\}/.test(f), "Rückfrage mit Ja/Nein (1.19.0: Texte je Anlass)");
+  assert.ok(/const ordner = (nfpEigeneOrdner\(d\)|\[\.\.\.nfpEigeneOrdner\(d\), \.\.\.verein\])/.test(f) && /const verein = d\.darf \? /.test(f) && /<select id="ablOrdner"/.test(f) && /<select id="ablReg"( onchange="ablKnopf\(\)")?>/.test(f), "nur eigene Ordner, Auswahl statt Freitext");
+  assert.ok(/( id="ablJa" style="text-align:center"| style="text-align:center") onclick="einmal\(this, ablAblegen\)">🗄️ \$\{esc\(ja \|\| "Ja, ablegen"\)\}/.test(f) && /onclick="ablNein\(\)">\$\{esc\(nein \|\| "Nein, danke"\)\}/.test(f), "Rückfrage mit Ja/Nein (1.19.0: Texte je Anlass)");
   const s = html.slice(html.indexOf("async function erstattungSenden()"), html.indexOf("// KC-CLUB-KMSATZ (0.39.0): Admin"));
   assert.ok(s.indexOf('api("erstattung_senden"') < s.indexOf("erstattungAblageFragen(kopie, r)"), "Ablage erst nach erfolgreichem Versand");
   assert.ok(/positionen: ERS\.pos\.map\(\(\{ belegNamen, belegDateien, satz, \.\.\.x \}\) => x\)/.test(s), "Beleg-Dateien gehen nicht mit dem Antrag an den Server");
@@ -6279,4 +6279,30 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/\{ id: "inhalt", sym: "🗂️", t: "Inhaltsverzeichnis", farbe: "#5d6b5a", fn: "ivDrucken\(\)" \}/.test(programm), "Knopf im Büro");
   assert.ok(/onclick="ivDrucken\(\)">🗂️ Inhaltsverzeichnis<\/button>/.test(programm) && /onclick="ivDrucken\('\$\{o\.id\}'\)">🗂️ Inhaltsverzeichnis drucken<\/button>/.test(programm), "Knopf im Archiv und in jedem Ordner");
   assert.ok(/fuss: privat \? "Enthält persönliche Ordner – nicht weitergeben" : ""/.test(programm));
+}
+
+// 4xx. 2.80.0: Ablage-Vorschlag – „Soll ich das in den Ordner Verträge im Register … ablegen?“ (KC-CLUB-ABLAGE-VORSCHLAG, Wunsch Hansi)
+{
+  const a = programm.indexOf("const AR_VORSCHLAG = ["), b = programm.indexOf("let AR_ZIEL = null;");
+  const arVorschlag = new Function("lsLesen", "AR_ZIEL_KEY", programm.slice(a, b) + "\nreturn arVorschlag;")(() => null, "x");
+  const eigen = { id: "p", titel: "Hansi", jahr: 2026, besitzer: "A", register: ["Urkunden", "Schulungen", "Rechnungen", "Fotos", "Sonstiges"] };
+  const vertr = { id: "v", titel: "Verträge", jahr: 2026, register: ["Vereinsverträge", "Versicherungen", "Miete & Räume", "Lieferanten", "Sonstiges"] };
+  const besp = { id: "b", titel: "Besprechungen", jahr: 2026, register: ["Entwürfe", "Protokolle", "Unterlagen", "Sonstiges"] };
+  const l = [eigen, vertr, besp], wo = (t) => { const v = arVorschlag(t, l); return v && [v.o.id, v.r]; };
+  assert.deepEqual(wo("Vertrag_Köchelub Werne.pdf"), ["v", "Vereinsverträge"], "Klaus' Vertrag → Verträge › Vereinsverträge");
+  assert.deepEqual(wo("Mietvertrag Vereinsheim 2026.pdf"), ["v", "Miete & Räume"], "Mietvertrag → Miete & Räume");
+  assert.deepEqual(wo("Police Haftpflicht.pdf"), ["v", "Versicherungen"]);
+  assert.deepEqual(wo("Angebot Getränke Großhandel Liste.pdf"), ["v", "Lieferanten"]);
+  assert.deepEqual(wo("Protokoll Sitzung 08.10.pdf"), ["b", "Protokolle"]);
+  assert.deepEqual(wo("Meisterbrief.jpg"), ["p", "Urkunden"]);
+  assert.deepEqual(wo("IMG_2034.jpg"), ["p", "Fotos"], "Handyfoto → Fotos");
+  assert.deepEqual(wo("Unterlagen für Montag.pdf"), ["b", "Unterlagen"], "freie Zuordnung über Registernamen");
+  assert.deepEqual(wo("xyz.pdf"), ["p", "Sonstiges"], "immer ein Vorschlag – zur Not Sonstiges");
+  assert.equal(arVorschlag("xyz.pdf", l, { ordner: "p", register: "Fotos" }), null, "beim Verschieben nichts Beliebiges");
+  assert.equal(arVorschlag("Vertrag.pdf", [eigen]).r, "Sonstiges", "ohne Club-Ordner: persönlich");
+  const f = programm.slice(programm.indexOf("async function archivAblageFragen("), programm.indexOf("function ablNein()"));
+  assert.ok(/💡 Soll ich das in den Ordner <b>„\$\{esc\(vsName\)\}“<\/b>/.test(f) && /im Register <b>„\$\{esc\(vs\.r\)\}“<\/b> ablegen\?/.test(f), "Vorschlag als Frage oben");
+  assert.ok(/k\.textContent = amVorschlag \? "✅ Ja, dort ablegen"/.test(programm), "Knopf sagt, wohin");
+  assert.ok(/const gesendet = gesendetAblegbar\(anlagenVorher\);/.test(programm) && /if \(gesendet\.length\) setTimeout\(\(\) => gesendetAblageFragen\(gesendet\), 500\);/.test(programm), "nach dem Senden von Dokumenten/Fotos fragen");
+  assert.ok(/arDokVorschlag\(`\$\{\$\("arDokTitel"\)\.value\} \$\{roh\.name\}`\);/.test(programm) && /➡️ Dorthin<\/button>/.test(programm), "beim Hochladen im Archiv: Register vorwählen, besseren Ordner anbieten");
 }
