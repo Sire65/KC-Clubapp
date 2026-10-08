@@ -5,3 +5,4 @@ Lizenz: Der Urheber stellt die Dateien wahlweise unter GFDL, BSD, GPL (und CC BY
         Die Köcheclub-App nutzt sie unter der BSD-Lizenz – siehe LICENSE. Keine Kosten.
 Änderungen für die Köcheclub-App: nur viewBox="0 0 45 45" ergänzt (damit die Figur mit dem Feld mitwächst),
 Dateinamen <farbe><figur>.svg mit farbe w/b (Weiß/Schwarz), figur k/q/r/b/n/p wie in chess.js.
+Abgeleitet (2.123.0): lib/schach/elfenbein/*.svg – dieselben Figuren, Füllung Elfenbein/Tiefschwarz mit Verlauf (tools/schach/elfenbein.mjs), ebenfalls BSD.

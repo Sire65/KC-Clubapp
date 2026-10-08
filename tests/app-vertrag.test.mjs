@@ -6702,7 +6702,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/return localStorage\.getItem\("kc_club_schach_stil"\) === "brigade" \? "brigade" : "klassisch";/.test(programm), "klassisch (Cburnett) ist Standard, Brigade bleibt wählbar");
   assert.ok(/onerror="this\.parentNode\.classList\.remove\('bild'\);this\.replaceWith\(/.test(programm), "fehlt ein Bild, steht das Schriftzeichen da");
   // ruhiges Brett statt Braun/Beige mit rotem Rahmen
-  assert.ok(/\.sch-feld\.hell \{ background-color: #f5f4f0; \} \.sch-feld\.dunkel \{ background-color: #dcdad3; \}/.test(html) && !/box-shadow: 0 0 0 3px var\(--rot\), 0 6px 14px/.test(html), "helles, ruhiges Brett");
+  assert.ok(/\.sch-feld\.hell \{ background-color: #f1f1f1;/.test(html) && /\.sch-feld\.dunkel \{ background-color: #bdbdbd;/.test(html) && !/box-shadow: 0 0 0 3px var\(--rot\), 0 6px 14px/.test(html), "graues Brett mit sanftem Glanz (2.123.0), kein roter Rahmen");
   assert.ok(/\.sch-brett:not\(\.aus\) \.sch-feld \{ touch-action: none; \}/.test(html) && /\.sch-geist \{ position: fixed !important;/.test(html), "Schieben mit dem Finger");
   // eingebaut gegen Computer und Mitglieder
   assert.ok(/async function schPcKlick\(feld, neu = false, gezogen = false\)/.test(programm) && /async function schMgKlick\(feld, neu = false, gezogen = false\)/.test(programm), "Klick-Wege kennen Schieben");
@@ -6866,8 +6866,20 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   }
   assert.ok(/MIT License/.test(lies("lib/schach/plastisch/LICENSE")) && /Maurizio Monge/.test(lies("lib/schach/plastisch/HERKUNFT.txt")), "Lizenz + Herkunft");
   assert.ok(/const SCH_STILE = \["klassisch", "plastisch", "brigade"\]/.test(programm) && /localStorage\.getItem\("kc_club_schach_stil2"\)/.test(programm), "drei Stile, neuer Schlüssel");
-  assert.ok(/lib\/schach\/\$\{SCH_STIL === "plastisch" \? "plastisch\/" : ""\}/.test(programm), "Bildpfad je Stil");
+  assert.ok(/lib\/schach\/\$\{SCH_STIL === "plastisch" \? "plastisch" : "elfenbein"\}\//.test(programm), "Bildpfad je Stil");
   assert.ok(/SCH_STIL = SCH_STILE\[\(SCH_STILE\.indexOf\(SCH_STIL\) \+ 1\) % SCH_STILE\.length\]/.test(programm) && /♟️ Figuren: \$\{SCH_STIL_NAME\[SCH_STIL\]\}<\/button>/.test(programm), "Knopf schaltet reihum");
   const f = programm.slice(programm.indexOf("function schTwSprich("), programm.indexOf("const schAbstand"));
   assert.ok(/const st = stimmeFuer\("m"\)/.test(f) && /if \(!text \|\| !spAnsageAn\("schach"\)/.test(f), "Männerstimme, nur mit 🔊 Ansage");
+}
+
+// 4xx. 2.123.0: Klassisch in Elfenbein/Tiefschwarz, graues Brett, Beschriftung außen (KC-CLUB-SCHACH-ELFENBEIN, Wunsch Hansi nach Bild)
+{
+  for (const c of ["w", "b"]) for (const t of ["k", "q", "r", "b", "n", "p"]) {
+    const svg = lies(`lib/schach/elfenbein/${c}${t}.svg`), orig = lies(`lib/schach/${c}${t}.svg`);
+    assert.ok(svg.includes(c === "w" ? 'id="kcw"' : 'id="kcb"') && /fill(:|=")url\(#kc[wb]\)/.test(svg), `elfenbein ${c}${t}: Verlauf`);
+    assert.deepEqual(svg.match(/ d="[^"]+"/g), orig.match(/ d="[^"]+"/g), `elfenbein ${c}${t}: Formen unverändert`);
+    assert.ok(!(c === "w" ? /fill:\s*#ffffff/i : /fill:\s*#000000/i).test(svg), `elfenbein ${c}${t}: keine alte Füllung übrig`);
+  }
+  assert.ok(/lib\/schach\/\$\{SCH_STIL === "plastisch" \? "plastisch" : "elfenbein"\}\//.test(programm), "Klassisch zeigt die Elfenbein-Figuren");
+  assert.ok(/<div class="sch-rahmen"><div class="sch-zahlen"/.test(programm) && /class="sch-buchst"/.test(programm) && !/class="sch-r"/.test(programm), "Beschriftung außen");
 }

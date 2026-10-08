@@ -5585,7 +5585,8 @@ let SCH_STIL = (() => { try { const w = localStorage.getItem("kc_club_schach_sti
   return localStorage.getItem("kc_club_schach_stil") === "brigade" ? "brigade" : "klassisch"; } catch { return "klassisch"; } })();
 const schBrigade = () => SCH_STIL === "brigade";
 const schFigName = (t) => schBrigade() ? SCH_BRIGADE_NAME[t] : SCH_NAME[t];
-const SCH_BILD_V = 1, schFigBild = (t, farbe) => `lib/schach/${SCH_STIL === "plastisch" ? "plastisch/" : ""}${farbe === "w" ? "w" : "b"}${t}.svg?v=${SCH_BILD_V}`;
+// KC-CLUB-SCHACH-ELFENBEIN (2.123.0, Wunsch Hansi nach Bild): klassisch = Cburnett in Elfenbein/Tiefschwarz mit Verlauf (lib/schach/elfenbein)
+const SCH_BILD_V = 2, schFigBild = (t, farbe) => `lib/schach/${SCH_STIL === "plastisch" ? "plastisch" : "elfenbein"}/${farbe === "w" ? "w" : "b"}${t}.svg?v=${SCH_BILD_V}`;
 // fehlt ein Bild (offline, nie geladen), steht dort das Schriftzeichen wie bisher
 const schFigHtml = (t, farbe) => schBrigade() ? `<span class="sch-fig brigade ${farbe === "w" ? "weiss" : "schwarz"}${t === "k" ? " chef" : t === "q" ? " dame" : ""}" title="${SCH_BRIGADE_NAME[t]}">${SCH_BRIGADE[t]}</span>`
   : `<span class="sch-fig bild ${farbe === "w" ? "weiss" : "schwarz"}"><img src="${schFigBild(t, farbe)}" alt="" draggable="false" onerror="this.parentNode.classList.remove('bild');this.replaceWith('${SCH_FIG[t]}\uFE0E')"></span>`;
@@ -5603,10 +5604,12 @@ function schBrettHtml(ch, { unten = "w", auswahl = null, ziele = [], letzter = n
     const feld = "abcdefgh"[c] + (8 - r), f = brett[r][c], hell = (r + c) % 2 === 0, ziel = ziele.includes(feld);
     const kl = ["sch-feld", hell ? "hell" : "dunkel", auswahl === feld ? "gewaehlt" : "", letzter && (letzter.slice(0, 2) === feld || letzter.slice(2, 4) === feld) ? "letzter" : "",
       ziel ? (!f ? "ziel" : f.color === ch.turn() ? "ziel rochade" : "ziel schlag") : "", tipp === feld ? "tipp" : "", f && f.type === "k" && f.color === schachK ? "imschach" : ""].filter(Boolean).join(" ");
-    const rand = (c === spalten[0] ? `<i class="sch-r">${8 - r}</i>` : "") + (r === reihen[7] ? `<i class="sch-l">${"abcdefgh"[c]}</i>` : "");
-    h += `<button class="${kl}" data-feld="${feld}" ${aus ? "disabled" : ""} onclick="${klick}('${feld}')" aria-label="${feld}${f ? ": " + (f.color === "w" ? "Weiß: " : "Schwarz: ") + schFigName(f.type) : ""}">${f ? schFigHtml(f.type, f.color) : ""}${rand}</button>`;
+    h += `<button class="${kl}" data-feld="${feld}" ${aus ? "disabled" : ""} onclick="${klick}('${feld}')" aria-label="${feld}${f ? ": " + (f.color === "w" ? "Weiß: " : "Schwarz: ") + schFigName(f.type) : ""}">${f ? schFigHtml(f.type, f.color) : ""}</button>`;
   }
-  return `<div class="sch-brett${aus ? " aus" : ""}" role="grid" aria-label="Schachbrett" data-klick="${klick}" data-ich="${unten}">${h}</div>`;
+  // KC-CLUB-SCHACH-ELFENBEIN: Beschriftung außen – Zahlen links, Buchstaben unten (wie auf einem echten Brett)
+  return `<div class="sch-rahmen"><div class="sch-zahlen" aria-hidden="true">${reihen.map((r) => `<span>${8 - r}</span>`).join("")}</div>`
+    + `<div class="sch-brett${aus ? " aus" : ""}" role="grid" aria-label="Schachbrett" data-klick="${klick}" data-ich="${unten}">${h}</div>`
+    + `<div></div><div class="sch-buchst" aria-hidden="true">${spalten.map((c) => `<span>${"ABCDEFGH"[c]}</span>`).join("")}</div></div>`;
 }
 // ---------- KC-CLUB-SCHACH-SPASS (2.116.0, Test-Rückmeldung + Wunsch Hansi): Schach soll Spaß machen ----------
 // Figuren schieben (Finger oder Maus) zusätzlich zum Antippen, Figuren gleiten, leise Holz-Töne (🔔, Standard an),

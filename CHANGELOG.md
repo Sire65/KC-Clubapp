@@ -1,8 +1,11 @@
 # Änderungen
 
-## 2.123.0 – 2026-10-08 – ♟️ Schach: plastische Figuren zur Wahl, Twinkey mit Männerstimme (Rückmeldung Testerin)
+## 2.123.0 – 2026-10-08 – ♟️ Schach: Elfenbein-Figuren auf grauem Brett, plastische Figuren zur Wahl, Twinkey mit Männerstimme
 Der Testerin gefielen Figuren und Stimme noch nicht. Aus sechs kostenlosen Figurensätzen kam „Spatial“ dazu; Standard bleibt
 auf Wunsch Hansi der klassische Satz (Cburnett).
+- Klassisch (Standard) im Look nach Hansis Vorlage: Cburnett-Figuren in Elfenbein bzw. Tiefschwarz mit sanftem Verlauf
+  (abgeleitet unter BSD, `lib/schach/elfenbein`, erzeugt mit `tools/schach/elfenbein.mjs`, Formen unverändert), graues Brett
+  mit leichtem Glanz, Beschriftung außen – Zahlen links, Buchstaben unten (KC-CLUB-SCHACH-ELFENBEIN).
 - Neuer Figurensatz „plastisch“ (Spatial von Maurizio Monge, MIT-Lizenz, `lib/schach/plastisch`). Der Knopf „♟️ Figuren“
   schaltet reihum: Klassisch (Standard) → Plastisch → Brigade (je Gerät). Wer die Brigade gewählt hatte, behält sie (KC-CLUB-SCHACH-FIGUREN).
 - Twinkey spricht mit der Männerstimme – dieselbe wie „Männer im Chat“ (⚙️ Einstellungen → Stimme); hat das Gerät keine,
