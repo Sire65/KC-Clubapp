@@ -6310,7 +6310,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 // 4xx. 2.81.0: Schritt-Hilfe für Erstattung und Archiv + Wege der Mitglieder „live“ (KC-CLUB-SCHRITT-HILFE, KC-CLUB-SPUR-LIVE, Wunsch Hansi)
 {
   for (const k of ["erstattung", "archiv", "archivDok", "ablage"]) assert.ok(new RegExp(`\\n  ${k}: \\[`).test(programm), "Ablauf " + k);
-  assert.ok(/\["ablageBlatt", "ablage"\], \[\(\) => !!\$\("arDateiEin"\), "archivDok"\]\]/.test(programm) && /typeof id === "function" \? id\(\) : \$\(id\)/.test(programm), "Fenster-Abläufe auch mit Prüfung");
+  assert.ok(/\["ablageBlatt", "ablage"\], \[\(\) => !!\$\("arDateiEin"\), "archivDok"\](\]|,)/.test(programm) && /typeof id === "function" \? id\(\) : \$\(id\)/.test(programm), "Fenster-Abläufe auch mit Prüfung");
   assert.ok(/const shErsForm = \(\) => !ERS\.pos\.length/.test(programm), "nach der ersten Position weiter zur Auszahlung");
   assert.ok(/id: "los", ziel: "#ersSendenKnopf"[^\n]*ende: true/.test(programm) && /id: "los", ziel: "#ablJa"[^\n]*ende: true/.test(programm), "Ende-Schritte");
   assert.ok(/function spurBaldSenden\(\) \{ if \(SPAR\.an \|\| document\.hidden\) return; clearTimeout\(SPUR_BALD\); SPUR_BALD = setTimeout\(spurSenden, 15000\); \}/.test(programm) && /spurBaldSenden\(\); \/\/ KC-CLUB-SPUR-LIVE/.test(programm), "Schritte nach 15 s gebündelt senden");
@@ -6567,4 +6567,19 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   for (const k of ["aktionen", "aktion", "dokumente", "feedback", "buero"]) assert.ok(new RegExp("\\n  " + k + ": \\[").test(sh), "Ablauf " + k);
   assert.ok(/\{ id: "los", ziel: "#fbSenden",[^\n]*ende: true/.test(sh) && /wenn: \(\) => FB\?\.schritt === 1, fertig: \(\) => \(FB\?\.schritt \|\| 0\) > 1/.test(sh), "Feedback Schritt für Schritt bis „Absenden“");
   assert.ok(/wenn: \(\) => BU\.sicht === "start"/.test(sh) && /wenn: \(\) => BU\.sicht === "eingang"/.test(sh), "Büro: Start und Eingang");
+}
+
+// 4xx. 2.105.0: Schritt-Hilfe überall – alle Seiten (außer SOS), alle Büro-Bereiche, wichtige Fenster (KC-CLUB-SCHRITT-HILFE-KOMPLETT)
+{
+  const a = programm.indexOf("const SH_ABLAEUFE"), sh = programm.slice(a, programm.indexOf("\n};", a));
+  const keys = new Set([...sh.matchAll(/^  "?([a-z_]+)"?: \[/gm)].map((m) => m[1]));
+  const seiten = [...seite.matchAll(/<section id="v-([a-z_]+)"/g)].map((m) => m[1]).filter((v) => v !== "sos");
+  const ohne = seiten.filter((v) => !keys.has(v));
+  assert.deepEqual(ohne, [], "jede Seite außer SOS hat eine Schritt-Hilfe");
+  assert.ok(!keys.has("sos"), "SOS bekommt bewusst keine Schritt-Hilfe");
+  const bu = [...programm.matchAll(/BU\.sicht = "([a-z]+)"/g)].map((m) => m[1]).filter((x) => !["start", "eingang"].includes(x));
+  const txt = programm.slice(programm.indexOf("const BU_SH_TEXT = {"), programm.indexOf("};", programm.indexOf("const BU_SH_TEXT = {")));
+  assert.deepEqual([...new Set(bu)].filter((x) => !new RegExp("\\n  " + x + ": ").test(txt)), [], "jeder Büro-Bereich hat einen Text");
+  for (const [f, k] of [["aeBlatt", "aenderung"], ["mfAnbieten", "mitfahrt"], ["faAlbumForm", "album"], ["einlBlatt", "einlesen"]])
+    assert.ok(programm.includes(`["${f}", "${k}"]`) && keys.has(k), "Fenster " + f);
 }

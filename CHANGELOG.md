@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.105.0 – 2026-10-08 – 👣 Schritt-Hilfe jetzt überall
+Alle Seiten der App (außer SOS) haben jetzt eine Schritt-Hilfe – auch Startseite, Hilfe & Tipps, PDF-Ansicht, Standorte, Sicherheits-Check, alle Büro-Bereiche sowie die Fenster Änderungsmeldung, Mitfahren anbieten, Fotoalbum anlegen und Einlesen.
+
 ## 2.104.0 – 2026-10-08 – 👣 Schritt-Hilfe: Aktionen, Dokumente, Feedback, Büro
 Die Schritt-Hilfe zeigt jetzt auch bei Aktionen, Meine Dokumente, Feedback (Schritt für Schritt bis „Absenden“) und im Büro, was als Nächstes zu tun ist.
 

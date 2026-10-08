@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.104.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.105.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -2271,6 +2271,35 @@ const SH_ABLAEUFE = {
   buero: [
     { id: "start", ruhe: true, ziel: "#buInhalt .bu-knopfreihe", t: "Das Büro: oben 📥 Einlesen (Foto/Datei), 📋 Übersicht und die Ansicht wechseln. Darunter die Ordner – antippen öffnet sie", wenn: () => BU.sicht === "start", fertig: () => false },
     { id: "eingang", ruhe: true, ziel: "#buInhalt .ek-kopf", t: "📥 Der Eingang: jede Zeile antippen → ansehen und bearbeiten. Mit den Knöpfen darunter gleich erledigen oder 🗄️ ablegen", wenn: () => BU.sicht === "eingang", fertig: () => false },
+    // 2.105.0: alle weiteren Büro-Bereiche (Ordner aus dem Regal)
+    { id: "bereich", ruhe: true, ziel: "#buInhalt", t: () => BU_SH_TEXT[BU.sicht] || "Von oben nach unten durchgehen – mit ‹ oben links geht es zurück ins Büro", wenn: () => !["start", "eingang"].includes(BU.sicht), fertig: () => false },
+  ],
+  // 2.105.0 KC-CLUB-SCHRITT-HILFE-KOMPLETT: alle übrigen Seiten (SOS bleibt bewusst ohne)
+  start: [{ id: "kachel", ruhe: true, ziel: "#raster", t: "Tippe eine Kachel an, um den Bereich zu öffnen. Unten in der Leiste: 🏠 Start, Termine, Nachrichten, Mitglieder und Mehr", fertig: () => false }],
+  dokansicht: [{ id: "oben", ruhe: true, ziel: "#dokaDrucken", t: "Oben: 🖨️ Drucken oder 📤 Teilen / Speichern. Mit ‹ geht es zurück zu Meine Dokumente", fertig: () => false }],
+  "programme": [{ id: "wahl", ruhe: true, ziel: "#progRaster", t: "Tippe ein Programm an, um es zu öffnen", fertig: () => false }],
+  ueberblick: [{ id: "lesen", ruhe: true, ziel: "#ueInhalt", t: "Hier siehst du auf einen Blick, was die Club-App alles kann – zum Lesen und Ausdrucken", fertig: () => false }],
+  standort: [{ id: "wahl", ruhe: true, ziel: "#stListe", t: "Die Standorte des Clubs – antippen zeigt Adresse und den Weg dorthin", fertig: () => false }],
+  sicherheit: [{ id: "lesen", ruhe: true, ziel: "#siInhalt", t: "Der Sicherheits-Check prüft dein Gerät. Steht etwas in Rot da, steht direkt dabei, was zu tun ist", fertig: () => false }],
+  hilfezentrum: [{ id: "frag", ruhe: true, ziel: "#hzSuche", t: "Frag einfach: oben eintippen oder mit 🎤 sprechen. Darunter alle Themen zum Aufklappen", fertig: () => false }],
+  // Fenster (über SH_FENSTER_ABLAEUFE)
+  aenderung: [
+    { id: "wahl", ziel: "#aeBlatt .ae-wahl", t: "Was hat sich geändert? Antippen", wenn: () => !AE.art, fertig: () => !!AE.art },
+    { id: "feld", ziel: "#aeBlatt .ae-feld", t: "Die neue Angabe eintragen – „(freiwillig)“ heißt: muss nicht sein", wenn: () => !!AE.art, fertig: () => true, weiter: true },
+    { id: "los", ziel: '#aeBlatt [onclick="aeSenden(this)"]', t: "Tippe auf „📨 Änderung melden“", wenn: () => !!AE.art, fertig: () => false, ende: true, lob: "Gemeldet – du bekommst Bescheid, sobald es eingetragen ist." },
+  ],
+  mitfahrt: [
+    { id: "plaetze", ziel: "#mfAnbieten .hl-chips", t: "Wie viele freie Plätze hast du? Antippen", fertig: () => true, weiter: true },
+    { id: "treff", ziel: "#mfTreff", t: "Treffpunkt – freiwillig, z. B. „Marktplatz 17:30“", fertig: () => true, weiter: true },
+    { id: "los", ziel: "#mfAnbieten .dlg-knoepfe .knopf.haupt", t: "Tippe auf „✅ Anbieten“", fertig: () => false, ende: true, lob: "Eingetragen – wer mitfahren möchte, sieht es jetzt." },
+  ],
+  album: [
+    { id: "name", ziel: "#faAName", t: "Wie soll das Album heißen? z. B. „Weihnachtsfeier“", fertig: () => !!$("faAName")?.value.trim(), weiter: true },
+    { id: "los", ziel: "#faAlbumForm [data-ok]", t: "Tippe auf „📸 Album anlegen“ bzw. „💾 Speichern“", fertig: () => false, ende: true, lob: "Fertig – jetzt kannst du Fotos ins Album legen." },
+  ],
+  einlesen: [
+    { id: "wie", ziel: "#einlBlatt .einl-wahl", t: "📷 Foto machen oder 📁 Datei wählen – am PC kannst du sie auch hineinziehen", wenn: () => !!$("einlZiehen"), fertig: () => !$("einlZiehen") },
+    { id: "wohin", ziel: "#einlBlatt .knoepfe", t: "Wohin damit? 🗄️ in einen Ordner (mit Vorschlag), 📥 Eingangskorb, 💬 als Nachricht oder 📧 per E-Mail – antippen", wenn: () => !$("einlZiehen"), fertig: () => false },
   ],
   dienste: [
     { id: "wer", ruhe: true, ziel: "#dpPersonen", t: "Tippe deinen Namen an – mehrere Namen zeigen eure Zeiten untereinander. Mit ‹ Woche und Woche › blätterst du", fertig: () => false },
@@ -2312,7 +2341,23 @@ const SH_FENSTER = [
 ];
 // 2.73.0 Fenster mit eigenem Ablauf (gehen vor der Seite): offen = Ablauf aktiv, zu = zurück zur Seite
 // 2.81.0: statt Fenster-ID geht auch eine Prüfung (z. B. nur das Formular „Dokument ablegen“, nicht jedes Archiv-Fenster)
-const SH_FENSTER_ABLAEUFE = [["avbBlatt", "avatarBauen"], ["avBlatt", "avatar"], ["ablageBlatt", "ablage"], [() => !!$("arDateiEin"), "archivDok"]];
+const SH_FENSTER_ABLAEUFE = [["avbBlatt", "avatarBauen"], ["avBlatt", "avatar"], ["ablageBlatt", "ablage"], [() => !!$("arDateiEin"), "archivDok"],
+  ["aeBlatt", "aenderung"], ["mfAnbieten", "mitfahrt"], ["faAlbumForm", "album"], ["einlBlatt", "einlesen"]]; // 2.105.0
+// 2.105.0: Kurz-Erklärung je Büro-Bereich (Ordner aus dem Regal)
+const BU_SH_TEXT = {
+  sitzung: "Sitzung vorbereiten: Anwesende antippen, Tagesordnung ordnen – unten speichern oder die Einladung senden",
+  nachher: "Nachbereitung der letzten Sitzung: Fotos, Aufgaben und Mitteilungen – von oben nach unten",
+  brief: "Brief schreiben: Empfänger wählen, Text eintragen – dann drucken oder als PDF speichern",
+  kontakt: "Kontakte: Gruppe oder Personen antippen – dann ✍️ Schreiben oder ✉️ Brief",
+  feste: "Glückwünsche: Person antippen → 💬 Nachricht, ✉️ Brief oder 📌 Pinnwand",
+  fl: "Freud & Leid: einen Fall antippen oder mit ＋ einen neuen anlegen",
+  flneu: "Neuer Fall: Art wählen, Person und Text eintragen – dann speichern",
+  fall: "Hier steht alles zu diesem Fall – mit ‹ geht es zurück",
+  liste: "Mitgliederliste: antippen zeigt die Kontaktdaten; oben kannst du drucken",
+  termine: "Termine: antippen zum Ansehen oder Ändern – mit ＋ einen neuen anlegen",
+  ordner: "Ordner: Bereich antippen, um ihn zu öffnen",
+  rechte: "Rechte: wer im Büro schreiben oder nur lesen darf – antippen zum Ändern, dann speichern",
+};
 const shAblaufKey = () => SH_FENSTER_ABLAEUFE.find(([id]) => (typeof id === "function" ? id() : $(id)))?.[1] || (SH_ABLAEUFE[aktuelleAnsicht] ? aktuelleAnsicht : null);
 const shErsForm = () => !ERS.pos.length || !!($("ersKm")?.value || $("ersBetrag")?.value || $("ersWas")?.value); // Erstattung: Formular dran?
 // Termine: welches Formular ist offen? (ohne Fenster „＋ Neu“ / Termin-Info)
