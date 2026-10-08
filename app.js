@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.62.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.63.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1598,6 +1598,76 @@ const HILFE = [
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „🎨 Darstellung“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("darstellung", "setAnimiert"), seit: "2.24.1" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
 ];
+// ---------- KC-CLUB-SCHRITT-HILFE (2.63.0, Wunsch Hansi): Schritt-Unterstützung ----------
+// Eingeschaltet (⚙️ Einstellungen → „👣 Schritt-Unterstützung“, nur auf diesem Gerät) bekommt immer der nächste sinnvolle Schritt
+// einen pulsierenden roten Rahmen, unten steht „Schritt 2 von 5: …“. Abläufe stehen in der Registry SH_ABLAEUFE (Bereich → Schritte);
+// erst die Pinnwand – weitere Bereiche = neuer Eintrag hier, sonst nichts. Schritt: ziel (CSS), t (Text), fertig() erledigt?,
+// wenn() gilt nur dann, frei = schon vorbelegt (gestrichelt, darf übersprungen werden), ende = letzter Knopf.
+const SH_KEY = "kc_club_schritt_hilfe";
+const SH_ABLAEUFE = {
+  pinnwand: [
+    { id: "neu", ziel: "#pwNeuKnopf", t: "Tippe auf „＋ Zettel“", fertig: () => !$("pwForm").classList.contains("versteckt") },
+    { id: "text", ziel: "#pwText", t: "Schreib deine kurze Nachricht", fertig: () => !!$("pwText").value.trim() },
+    { id: "wichtig", ziel: "#pwWichtig", t: "Wichtigkeit – „Normal“ ist schon gewählt", frei: true },
+    { id: "fuer", ziel: "#pwFuer", t: "Für wen ist der Zettel?", fertig: () => !!PW.form?.fuer },
+    { id: "personen", ziel: "#pwPersonen", t: "Hake an, wer den Zettel bekommen soll", wenn: () => PW.form?.fuer === "personen", fertig: () => PW.form.personen.length > 0 },
+    { id: "antw", ziel: "#pwAntw", t: "Antwort-Knopf – ist schon gewählt", wenn: () => !!PW.form?.fuer && PW.form.fuer !== "ich", frei: true },
+    { id: "los", ziel: "#pwSpeichernKnopf", t: "Fertig? Tippe auf „📌 Anheften“", fertig: () => false, ende: true },
+  ],
+};
+const SH = { bereich: null, beruehrt: new Set(), letzter: null, geschafft: false, timer: null };
+const shAn = () => lsLesen(SH_KEY) === "1";
+function shSchalter(an) {
+  lsSetzen(SH_KEY, an ? "1" : "0"); if ($("setSchrittHilfe")) $("setSchrittHilfe").checked = an;
+  melde(an ? "👣 Schritt-Unterstützung an – zum Ausprobieren erst an der 📌 Pinnwand" : "👣 Schritt-Unterstützung aus");
+  if (!an) shAufraeumen();
+}
+function shAufraeumen() {
+  document.querySelectorAll(".sh-ziel, .sh-ziel-frei").forEach((e) => e.classList.remove("sh-ziel", "sh-ziel-frei"));
+  $("shLeiste")?.remove(); SH.letzter = null;
+}
+function shBereich(v) { // beim Wechsel der Ansicht (zeige)
+  if ($("setSchrittHilfe")) $("setSchrittHilfe").checked = shAn();
+  SH.bereich = SH_ABLAEUFE[v] ? v : null; SH.beruehrt.clear(); SH.geschafft = false; clearTimeout(SH.timer);
+  shAufraeumen(); if (SH.bereich) setTimeout(shAktualisieren, 120);
+}
+function shLeiste(html) {
+  let l = $("shLeiste"); if (!l) { document.body.insertAdjacentHTML("beforeend", `<div class="sh-leiste" id="shLeiste" role="status" aria-live="polite"><span></span><button type="button" onclick="shSchalter(false)" aria-label="Schritt-Unterstützung ausschalten">✕</button></div>`); l = $("shLeiste"); }
+  l.querySelector("span").innerHTML = html;
+}
+function shAktualisieren() {
+  const ablauf = SH_ABLAEUFE[SH.bereich];
+  if (!ablauf || !shAn() || aktuelleAnsicht !== SH.bereich || SH.geschafft) return;
+  const gilt = ablauf.filter((s) => !s.wenn || s.wenn());
+  // fertig: erledigt, oder (vorbelegt) angetippt bzw. ein späterer Schritt ist schon dran gewesen
+  const fertig = (s, i) => (s.fertig ? s.fertig() : false) || (s.frei && (SH.beruehrt.has(s.id) || gilt.slice(i + 1).some((x) => SH.beruehrt.has(x.id) || x.fertig?.())));
+  if (!gilt[0].fertig()) { // Formular zu
+    if (SH.beruehrt.has("los")) { // gerade angeheftet → kurz loben, dann Ruhe bis zum nächsten Besuch
+      SH.geschafft = true; shAufraeumen(); shLeiste("✅ <b>Geschafft!</b> Dein Zettel hängt an der Pinnwand.");
+      SH.timer = setTimeout(() => $("shLeiste")?.remove(), 4000); return;
+    }
+    SH.beruehrt.clear();
+  }
+  if (SH.beruehrt.has("los")) { clearTimeout(SH.warte); SH.warte = setTimeout(shAktualisieren, 500); } // Anheften läuft noch → nachsehen
+  const i = gilt.findIndex((s, n) => !fertig(s, n)); if (i < 0) return;
+  const s = gilt[i], danach = s.frei ? gilt.slice(i + 1).find((x) => !x.frei) : null;
+  document.querySelectorAll(".sh-ziel, .sh-ziel-frei").forEach((e) => e.classList.remove("sh-ziel", "sh-ziel-frei"));
+  const el = document.querySelector(s.ziel), el2 = danach && document.querySelector(danach.ziel);
+  el?.classList.add(s.frei ? "sh-ziel-frei" : "sh-ziel"); el2?.classList.add("sh-ziel");
+  const pflicht = gilt.filter((x) => !x.frei), nr = pflicht.indexOf(danach || s) + 1; // vorbelegte zählen nicht mit
+  shLeiste(`👣 <b>Schritt ${nr} von ${pflicht.length}:</b> ${esc(danach ? danach.t : s.t)}${danach ? `<small>Ändern geht: ${esc(s.t)}</small>` : ""}`);
+  if (SH.letzter !== s.id) { // nur bei neuem Schritt ins Bild holen – nicht beim Tippen
+    SH.letzter = s.id; const z = el2 || el, a = document.activeElement;
+    if (z && !(a && /^(TEXTAREA|INPUT)$/.test(a.tagName) && !z.contains(a))) { const r = z.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight - 300) z.scrollIntoView({ behavior: "smooth", block: "center" }); }
+  }
+}
+// angetippt / getippt → Schritt merken und den nächsten zeigen (eine Stelle für alle Bereiche)
+for (const art of ["click", "input", "change"]) document.addEventListener(art, (e) => {
+  if (!SH.bereich || !shAn()) return;
+  if (art === "click" && SH.geschafft && e.target.closest?.(SH_ABLAEUFE[SH.bereich][0].ziel)) { SH.geschafft = false; SH.beruehrt.clear(); clearTimeout(SH.timer); } // noch einmal von vorn
+  if (art === "click") { SH.beruehrt.delete("los"); /* nur der letzte Tipp zählt (Abbrechen ≠ angeheftet) */ for (const s of SH_ABLAEUFE[SH.bereich]) if (e.target.closest?.(s.ziel)) SH.beruehrt.add(s.id); }
+  clearTimeout(SH.warte); SH.warte = setTimeout(shAktualisieren, art === "input" ? 250 : 80);
+}, true);
 const HZ = { thema: null, q: "", vorher: null, gruss: 0, unterwegs: null, herkunft: null, sicht: null };
 // 2.23.1 (Wunsch Hansi: „immer etwas anders formuliert, freundlich, nicht aufdringlich“): wechselnde Einleitungen – neu gewählt
 // beim Öffnen und bei jedem Themenwechsel (nicht beim Tippen in der Suche, damit nichts flackert)
@@ -9937,6 +10007,7 @@ function zeige(v, ausHistorie) {
   if (v !== "spiele") { clearInterval(SP.takt); SP.takt = null; } else spZeigen(); // KC-CLUB-SPIELE (2.7.0)
   einwZeigen(v); // KC-CLUB-EINWEISUNG (2.4.0)
   hzFrageEinsetzen(v); // KC-CLUB-HILFEZENTRUM (2.23.4): „?“ unten rechts, passend zur Ansicht
+  shBereich(v); // KC-CLUB-SCHRITT-HILFE (2.63.0)
   kzGesehen(v); // KC-CLUB-KACHEL-ZAHLEN (2.22.12): Fotoalbum/Dienstpläne geöffnet → Zahl weg
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
   $("eingabe").classList.toggle("versteckt", v !== "chat");

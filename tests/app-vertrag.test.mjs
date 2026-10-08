@@ -5471,6 +5471,21 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.bsk-ansage-tisch \{/.test(seite), "auf dem Tisch gestaltet");
 }
 
+// 4xx. 2.63.0: Schritt-Unterstützung – roter Rahmen um den nächsten sinnvollen Schritt, erst an der Pinnwand (KC-CLUB-SCHRITT-HILFE, Wunsch Hansi)
+{
+  assert.ok(/<input type="checkbox" id="setSchrittHilfe" onchange="shSchalter\(this\.checked\)">/.test(seite), "Schalter unter ⚙️ Einstellungen (einfach + erweitert)");
+  assert.ok(/const SH_ABLAEUFE = \{\n  pinnwand: \[/.test(programm), "Registry: Bereich → Schritte, zuerst nur Pinnwand");
+  const ab = programm.slice(programm.indexOf("const SH_ABLAEUFE = {"), programm.indexOf("const SH = {"));
+  for (const z of ["#pwNeuKnopf", "#pwText", "#pwWichtig", "#pwFuer", "#pwPersonen", "#pwAntw", "#pwSpeichernKnopf"]) {
+    assert.ok(ab.includes(`ziel: "${z}"`), "Schritt " + z); assert.ok(seite.includes(`id="${z.slice(1)}"`), "Ziel vorhanden: " + z);
+  }
+  assert.ok(/shBereich\(v\); \/\/ KC-CLUB-SCHRITT-HILFE/.test(programm), "beim Ansichtswechsel");
+  assert.ok(/const shAn = \(\) => lsLesen\(SH_KEY\) === "1";/.test(programm), "aus, bis man es einschaltet (nur dieses Gerät)");
+  assert.ok(/SH\.beruehrt\.delete\("los"\)/.test(programm), "Abbrechen gilt nicht als angeheftet");
+  assert.ok(/\.sh-ziel \{ outline: 3px solid #e11d48;[^}]*animation: klickPuls/.test(seite) && /\.sh-ziel-frei \{ outline: 2px dashed/.test(seite), "rot pulsierend (gleicher Puls wie 👆), vorbelegt gestrichelt");
+  assert.ok(/\.sh-leiste \{[^}]*pointer-events: none;/.test(seite), "Leiste verdeckt keine Knöpfe");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

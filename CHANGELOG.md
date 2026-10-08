@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.63.0 – 2026-10-08 – KC-CLUB-SCHRITT-HILFE
+- Schritt-Unterstützung (⚙️ Einstellungen → „👣 Schritt-Unterstützung“): roter pulsierender Rahmen um den nächsten sinnvollen Schritt, Leiste „Schritt 2 von 4: …“, vorbelegte Auswahl gestrichelt. Zum Ausprobieren erst an der Pinnwand; weitere Bereiche über die Registry SH_ABLAEUFE.
+
 ## 2.62.0 – 2026-10-08 – KC-CLUB-DOPPELKOPF
 - Doppelkopf zu viert gegen drei Computer-Köche (Erika, Kurt, Paul): 48 Karten, Re/Kontra, Hochzeit oder still allein, Extrapunkte (keine 90/60/30, schwarz, gegen die Alten, Fuchs, Doppelkopf, Karlchen), Stand auf dem Gerät.
 - Bauernskat: Trumpfwahl erscheint jetzt im grünen Spielbereich und verschwindet nach der Wahl.
