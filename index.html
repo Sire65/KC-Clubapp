@@ -553,6 +553,7 @@
   .zettel .zknoepfe button.erl { background: #2e7d4f; color: #fff; border-color: #2e7d4f; }
   .zettel.erledigt { opacity: .7; }
   .zettel details { margin-top: 6px; font-size: .78rem; } .zettel summary { cursor: pointer; font-weight: 800; }
+  .pw-kopfzeile { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; } .pw-kopfzeile .zaehler200 { margin: 0; } /* 2.66.0: Zeichen gleich hinter „Kurze Nachricht“ */
   .zaehler200 { text-align: right; font-size: .85rem; font-weight: 800; color: var(--grau); margin-top: 4px; } .zaehler200.knapp { color: #b26a00; } .zaehler200.voll { color: #c62828; }
   /* Nachts: Akzent als Schrift auf dunklem Grund in der helleren Variante, damit er lesbar bleibt */
   :root.dunkel .umschalter button.an, :root.dunkel .fuss-leiste button.an, :root.dunkel details.karte .pfeil, :root.dunkel .kalnav .pf { color: var(--textRot); }
@@ -1530,6 +1531,7 @@
   .sh-leiste { position: fixed; z-index: 59; left: 50%; transform: translateX(-50%); bottom: calc(190px + env(safe-area-inset-bottom)); pointer-events: none; display: flex; align-items: center; gap: 10px; width: max-content; max-width: calc(100vw - 24px); padding: 8px 8px 8px 10px; border-radius: 18px; background: #e11d48; color: #fff; box-shadow: var(--schatten); font-size: .95rem; line-height: 1.3; }
   .sh-leiste.oben { bottom: auto; }
   .sh-leiste span { flex: 1; }
+  .sh-leiste .sh-weiter { display: block; margin-top: 6px; border: 0; border-radius: 999px; background: #fff; color: #9f1239; font-weight: 800; padding: 7px 14px; font-size: .95rem; }
   .sh-leiste button { border: 0; border-radius: 999px; background: #fff; color: #9f1239; font-weight: 800; padding: 6px 11px; cursor: pointer; flex: none; pointer-events: auto; }
   .sh-schuhe { width: 32px; height: 40px; flex: none; fill: #fff; }
   .sh-schuhe .sohle { fill: none; stroke: #e11d48; stroke-width: 1.6; stroke-linecap: round; }
@@ -2861,11 +2863,10 @@
     <div id="pwForm" class="karte versteckt">
       <div id="pwAntwortAn" class="hinweis versteckt" style="margin:0 0 8px"></div>
       <div id="pwVoll" class="hinweis versteckt" style="margin:0 0 8px;border:2px solid #d68910;border-radius:10px;padding:8px"></div>
-      <label class="feld">Kurze Nachricht<textarea id="pwText" data-diktat rows="3" maxlength="200" placeholder="z. B. Schürzen bitte bis Freitag abgeben" oninput="pwZaehlen()" onblur="emoStelleMerken('pwText')" onkeyup="emoStelleMerken('pwText')" onclick="emoStelleMerken('pwText')"></textarea></label>
+      <label class="feld"><span class="pw-kopfzeile">Kurze Nachricht <span class="zaehler200" id="pwZaehler" aria-live="polite">0 / 200 Zeichen</span></span><textarea id="pwText" data-diktat rows="3" maxlength="200" placeholder="z. B. Schürzen bitte bis Freitag abgeben" oninput="pwZaehlen()" onblur="emoStelleMerken('pwText')" onkeyup="emoStelleMerken('pwText')" onclick="emoStelleMerken('pwText')"></textarea></label>
       <!-- KC-CLUB-PINNWAND-EMOJI (1.94.0, Wunsch Hansi: „auf Post-its Emojis, z. B. jemand ist krank → gute Besserung“) -->
       <div class="pw-emo" id="pwEmoSchnell"></div>
       <div class="emo-feld pw-emo-feld versteckt" id="pwEmoFeld" role="dialog" aria-label="Emoji auswählen"><div class="emo-reiter" id="pwEmoReiter"></div><div class="emo-gitter" id="pwEmoGitter"></div></div>
-      <div class="zaehler200" id="pwZaehler">0/200</div>
       <div class="hinweis" style="margin:8px 0 4px">Wichtigkeit</div>
       <div class="umschalter" id="pwWichtig"><button data-w="0" onclick="pwWichtig(false)">📝 Normal</button><button data-w="1" onclick="pwWichtig(true)">❗ Hoch – beim Öffnen zeigen</button></div>
       <div class="hinweis" style="margin:4px 0 4px">Für wen?</div>
@@ -3417,6 +3418,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.65.0" data-v="2.65.0"></script>
+<script src="app.js?v=2.66.0" data-v="2.66.0"></script>
 </body>
 </html>

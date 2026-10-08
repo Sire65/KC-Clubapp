@@ -8,6 +8,10 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.66.0 – 2026-10-08 – KC-CLUB-SCHRITT-HILFE Eingabe abwarten
+- Pinnwand: Zeichenzähler „34 / 200 Zeichen“ direkt hinter „Kurze Nachricht“.
+- Schritt-Unterstützung: Text-Schritt wartet, bis man „Fertig – weiter ➜“ tippt oder selbst den nächsten Schritt antippt (vorher sprang sie nach dem ersten Buchstaben weiter).
+
 ## 2.65.0 – 2026-10-08 – KC-CLUB-SCHRITT-HILFE Puls + Vorlesen
 - Schritt-Unterstützung: eigener, kräftig pulsierender Rahmen über dem nächsten Schritt (unabhängig vom Aussehen des Ziels), Text-Schritt mit Emoji-Hinweis, Schritte vorlesen (🔈 in der Leiste oder ⚙️ Einstellungen).
 

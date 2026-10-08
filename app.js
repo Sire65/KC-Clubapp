@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.65.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.66.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -915,7 +915,7 @@ function pwEmoSchnell() {
 }
 function pwZaehlen() {
   const n = [...$("pwText").value].length, max = PW.zeichen, el = $("pwZaehler");
-  el.textContent = `${n}/${max}`; el.classList.toggle("knapp", n >= max - 20 && n < max); el.classList.toggle("voll", n >= max);
+  el.textContent = `${n} / ${max} Zeichen`; el.classList.toggle("knapp", n >= max - 20 && n < max); el.classList.toggle("voll", n >= max);
 }
 function pwAntw(an) { PW.form.antworten = an; document.querySelectorAll("#pwAntw button").forEach((b) => b.classList.toggle("an", (b.dataset.a === "1") === an)); }
 function pwWichtig(an) { PW.form.wichtig = an; document.querySelectorAll("#pwWichtig button").forEach((b) => b.classList.toggle("an", (b.dataset.w === "1") === an)); }
@@ -1603,12 +1603,13 @@ const HILFE = [
 // einen pulsierenden roten Rahmen; unten steht mit zwei laufenden Schuhen „Schritt 2 von 6: …“ (bei offener Tastatur oben,
 // damit sie nichts verdeckt). Abläufe stehen in der Registry SH_ABLAEUFE (Bereich → Schritte); erst die Pinnwand – weitere
 // Bereiche = neuer Eintrag hier, sonst nichts. Schritt: ziel (CSS), t (Text, mit Ort), fertig() erledigt?, wenn() gilt nur dann,
-// waehlen = Auswahl ist vorbelegt: erledigt, sobald angetippt oder ein späterer Schritt schon dran war; ende = letzter Knopf.
+// waehlen = Auswahl ist vorbelegt: erledigt, sobald angetippt oder ein späterer Schritt schon dran war; ende = letzter Knopf;
+// weiter = Eingabe (2.66.0): bleibt dran, bis man „Weiter ➜“ tippt oder selbst einen späteren Schritt antippt – nie mitten im Schreiben.
 const SH_KEY = "kc_club_schritt_hilfe";
 const SH_ABLAEUFE = {
   pinnwand: [
     { id: "neu", ziel: "#pwNeuKnopf", t: "Tippe oben rechts auf „＋ Zettel“", fertig: () => !$("pwForm").classList.contains("versteckt") },
-    { id: "text", ziel: "#pwText", t: "✍️ Schreib deine kurze Nachricht in das Feld – wenn du magst, tippe darunter noch ein Emoji an 😊", fertig: () => !!$("pwText").value.trim() },
+    { id: "text", ziel: "#pwText", t: "✍️ Schreib deine kurze Nachricht in das Feld – wenn du magst, tippe darunter noch ein Emoji an 😊", fertig: () => !!$("pwText").value.trim(), weiter: true },
     { id: "wichtig", ziel: "#pwWichtig", t: "Wichtigkeit wählen: „📝 Normal“ oder „❗ Hoch“", waehlen: true },
     { id: "fuer", ziel: "#pwFuer", t: "Für wen ist der Zettel? Tippe eine Auswahl an", fertig: () => !!PW.form?.fuer },
     { id: "personen", ziel: "#pwPersonen", t: "Hake an, wer den Zettel bekommen soll", wenn: () => PW.form?.fuer === "personen", fertig: () => PW.form.personen.length > 0 },
@@ -1673,7 +1674,9 @@ function shAktualisieren() {
   if (!ablauf || !shAn() || aktuelleAnsicht !== SH.bereich || SH.geschafft) return;
   const gilt = ablauf.filter((s) => !s.wenn || s.wenn());
   // erledigt: fertig(), oder (Auswahl vorbelegt) angetippt bzw. ein späterer Schritt war schon dran – der Rahmen springt nie zurück
-  const fertig = (s, i) => (s.fertig ? s.fertig() : false) || (s.waehlen && (SH.beruehrt.has(s.id) || gilt.slice(i + 1).some((x) => SH.beruehrt.has(x.id) || x.fertig?.())));
+  const spaeter = (i) => gilt.slice(i + 1).some((x) => SH.beruehrt.has(x.id) || (!x.weiter && x.fertig?.()));
+  const fertig = (s, i) => s.weiter ? s.fertig() && (SH.beruehrt.has(s.id + ":weiter") || spaeter(i))
+    : (s.fertig ? s.fertig() : false) || (s.waehlen && (SH.beruehrt.has(s.id) || spaeter(i)));
   if (!gilt[0].fertig()) { // Formular zu
     if (SH.beruehrt.has("los")) { // gerade angeheftet → kurz loben, dann Ruhe bis zum nächsten Besuch
       SH.geschafft = true; shAufraeumen(); shLeiste("✅ <b>Geschafft!</b> Dein Zettel hängt an der Pinnwand."); shSag("Geschafft! Dein Zettel hängt an der Pinnwand.");
@@ -1686,12 +1689,13 @@ function shAktualisieren() {
   const s = gilt[i], el = document.querySelector(s.ziel);
   document.querySelectorAll(".sh-ziel").forEach((e) => e !== el && e.classList.remove("sh-ziel"));
   el?.classList.add("sh-ziel"); if (SH.el !== el) shRahmen(el);
-  shLeiste(`<b>Schritt ${i + 1} von ${gilt.length}:</b> ${esc(s.t)}`);
+  shLeiste(`<b>Schritt ${i + 1} von ${gilt.length}:</b> ${esc(s.t)}${s.weiter && s.fertig() ? `<button type="button" class="sh-weiter" onclick="shWeiter('${s.id}')">Fertig – weiter ➜</button>` : ""}`);
   if (SH.letzter !== s.id) { // nur bei neuem Schritt ins Bild holen – nicht beim Tippen
     SH.letzter = s.id; const a = document.activeElement; shSag(`Schritt ${i + 1}: ${s.t}`);
     if (el && !(a && /^(TEXTAREA|INPUT)$/.test(a.tagName) && !el.contains(a))) { const r = el.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight - 300) el.scrollIntoView({ behavior: "smooth", block: "center" }); }
   }
 }
+function shWeiter(id) { SH.beruehrt.add(id + ":weiter"); document.activeElement?.blur?.(); shAktualisieren(); } // Eingabe fertig → Tastatur zu, nächster Schritt
 // angetippt / getippt → Schritt merken und den nächsten zeigen (eine Stelle für alle Bereiche)
 for (const art of ["click", "input", "change"]) document.addEventListener(art, (e) => {
   if (!SH.bereich || !shAn()) return;

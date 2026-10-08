@@ -5498,6 +5498,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 
 // 2.65.0: Prüfungen (Rahmen-Puls, Emoji-Hinweis, Vorlesen) stehen im Block KC-CLUB-SCHRITT-HILFE (2.63.0)
 
+// 4xx. 2.66.0: Pinnwand-Zeichenzähler hinter „Kurze Nachricht“; Schritt-Unterstützung wartet beim Schreiben (Wunsch Hansi)
+{
+  assert.ok(/<label class="feld"><span class="pw-kopfzeile">Kurze Nachricht <span class="zaehler200" id="pwZaehler"[^>]*>0 \/ 200 Zeichen<\/span><\/span><textarea id="pwText"/.test(seite), "Zähler gleich hinter der Überschrift");
+  assert.ok(/el\.textContent = `\$\{n\} \/ \$\{max\} Zeichen`;/.test(programm), "Form „34 / 200 Zeichen“");
+  assert.ok(/id: "text", ziel: "#pwText",[^\n]*weiter: true \}/.test(programm), "Text-Schritt ist eine Eingabe");
+  assert.ok(/s\.weiter \? s\.fertig\(\) && \(SH\.beruehrt\.has\(s\.id \+ ":weiter"\) \|\| spaeter\(i\)\)/.test(programm), "erst nach „Weiter ➜“ oder einem späteren Schritt weiter – nicht nach dem ersten Buchstaben");
+  assert.ok(/class="sh-weiter" onclick="shWeiter\('\$\{s\.id\}'\)">Fertig – weiter ➜<\/button>/.test(programm) && /function shWeiter\(id\) \{ SH\.beruehrt\.add\(id \+ ":weiter"\); document\.activeElement\?\.blur\?\.\(\);/.test(programm), "Knopf „Fertig – weiter ➜“ schließt die Tastatur");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
