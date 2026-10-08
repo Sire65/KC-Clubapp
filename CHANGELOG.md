@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.107.0 – 2026-10-08 – Lade-Sicherheit überall
+Dauert Laden wegen langsamem Netz zu lange (12 s) oder klappt nicht, erscheint überall eine Leiste „Laden dauert zu lange – bitte gleich nochmal versuchen“ mit 🔄 Nochmal versuchen und Abbrechen. Senden/Speichern wird nie doppelt wiederholt. Alle übrigen Abrufe haben jetzt eine Zeitgrenze (KC-CLUB-LADE-SICHERHEIT).
+
 ## 2.106.0 – 2026-10-08 – Schnecke bei langsamem Netz + Twinkey hängt nicht mehr
 🐌 erscheint auf jeder Seite, solange das Netz gerade langsam ist (gemessen an den echten Antwortzeiten), und verschwindet von selbst. Twinkey zeigt bei langsamem Netz nach 8 s einen Hinweis und statt endlosem Laden „🔄 Nochmal versuchen“ (KC-CLUB-SCHNECKE, KC-CLUB-TWINKEY-FRIST).
 

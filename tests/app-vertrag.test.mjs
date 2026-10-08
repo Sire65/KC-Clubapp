@@ -724,7 +724,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 55. 0.33.0: drehende Kochmütze bei längeren Anfragen – nicht bei Hintergrund-Abfragen, immer wieder ausgeblendet
 {
   assert.ok(/id="warten"/.test(html) && /kc-kochmuetze-weiss\.webp" alt=""><\/div><b id="wartenText">/.test(html), "Kochmütze fehlt");
-  assert.ok(/const warte = wartenStart\(action, opt\.warten(, opt\.still)?\);\s*try \{[^]{0,1400}\n  finally \{ if \(warte\) wartenEnde\(\); \}/ /* 2.0.0: api() etwas länger (Notbetrieb nur Lesen) */ /* 0.93.0: catch nur zum Protokollieren, wirft weiter */.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
+  assert.ok(/const warte = wartenStart\(action, opt\.warten(, opt\.still)?\);\s*try \{[^]{0,2600}\n  finally \{ if \(warte\) wartenEnde\(\); \}/ /* 2.0.0: api() etwas länger (Notbetrieb nur Lesen) */ /* 0.93.0: catch nur zum Protokollieren, wirft weiter */ /* 2.107.0: Lade-Sicherheit (Nochmal/Abbrechen) in api() */.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
   for (const a of ["online", "anruf_status", "unterhaltung", "protokoll_speichern", "init"]) assert.ok(new RegExp(`WARTEN_STILL = new Set\\([^)]*"${a}"`).test(html), `Hintergrund-Abfrage ${a} ließe die Mütze flackern`);
   assert.ok(/nachricht_senden: "Nachricht wird gesendet …"/.test(html), "Text beim Senden fehlt");
 }
@@ -960,7 +960,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 72. 0.51.0: Kochmütze auch bei „stillen“ Abfragen, wenn das Mitglied selbst etwas antippt (Hintergrund bleibt still)
 {
   assert.ok(/function wartenStart\(action, erzwingen(, still)?\) \{\s*if \((still \|\| )?WARTEN_STILL\.has\(action\) && !erzwingen\) return false;/.test(html), "Erzwingen der Kochmütze fehlt");
-  assert.ok(/async function api\(action, daten = \{\}, opt = \{\}\) \{\s*const warte = wartenStart\(action, opt\.warten(, opt\.still)?\);/.test(html), "api reicht warten nicht durch");
+  assert.ok(/async function api\(action, daten = \{\}, opt = \{\}\) \{\s*(?:const sichtbar = ladeSichtbar\(action, opt\);[^\n]*\s*)?const warte = wartenStart\(action, opt\.warten(, opt\.still)?\);/.test(html), "api reicht warten nicht durch");
   assert.ok(/api\("init", \{[^}]*\}, \{ warten: !!vonHand \}\)/.test(html), "Aktualisieren ohne Kochmütze"); // 2.22.12: init bekommt fotosSeit/dienstSeit
   assert.ok(/api\("wetter", \{\}, \{ warten: !!sichtbar \}\)/.test(html) && /wetterLaden\(erzwingen\)/.test(html), "Wetter ohne Kochmütze");
   assert.ok(/infoDatenLaden\(f, erzwingen\)/.test(html) && /const warte = sichtbar && wartenStart\(f\.id, true\)/.test(html) && /finally \{ if \(warte\) wartenEnde\(\); \}/.test(html), "Info-Karten ohne Kochmütze");
@@ -3103,7 +3103,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const ja = html.slice(html.indexOf("async function jetztAktualisieren() {"), html.indexOf("function updateRuhig() {"));
   assert.ok(/addEventListener\("controllerchange", neu, \{ once: true \}\)/.test(ja) && /sw\.addEventListener\("statechange"/.test(ja) && !/setTimeout\(\(\) => location\.reload\(\), 400\)/.test(ja), "Update wartet auf Einrichtung + Übernahme");
   assert.ok(/updatePruefen\(false\)\.then\(updateSelbst\)/.test(html) && (/z\.v === NEUE_VERSION && Date\.now\(\) - z\.t < 10 \* 60000/.test(html) || /UPDATE_PAUSE_MS = 10 \* 60000/.test(html) && /nochmal && Date\.now\(\) - z\.t < \(z\.misslungen \? UPDATE_MISSLUNGEN_MS : UPDATE_PAUSE_MS\)/.test(html)), "Selbst-Update beim Zurückholen, mit Schleifenschutz"); // 2.6.1: + 6-Std.-Pause nach misslungenem Versuch
-  assert.ok(/signal: (AbortSignal\.timeout\?\.|zeitSignal)\(zeitMs\)/.test(html) /* 2.6.1: zeitSignal (auch ältere iPhones) */ && /fe\?\.name === "TimeoutError"/.test(html) && /if \(API_LESEN\.test\(action\)\) return apiRoh/.test(html), "Zeitgrenze + nur Lesen wiederholen");
+  assert.ok(/signal: (AbortSignal\.timeout\?\.|zeitSignal|zeitSignalMit)\(zeitMs(, abbruch)?\)/.test(html) /* 2.6.1: zeitSignal (auch ältere iPhones) */ && /fe\?\.name === "TimeoutError"/.test(html) && /if \(API_LESEN\.test\(action\)\) return apiRoh/.test(html), "Zeitgrenze + nur Lesen wiederholen");
   assert.ok(/if \(NEU_LADEN_LAUF && !vonHand\) return (NEU_LADEN_LAUF;|NEU_LADEN_FOLGE \|\|)/.test(html) /* 2.1.1: mit Folge-Laden */ && /if \(fuer !== chatId\) return;/.test(html) && /clearInterval\(chatTimer\); if \(chatId === offenId/.test(html), "Laden/Chat nicht doppelt");
   assert.ok(/todoAnlegen = nurEinmal\("todoAnlegen", todoAnlegen\)/.test(html) && /erstattungSenden = nurEinmal/.test(html), "Doppeltippen gesperrt");
   assert.ok(/else if \(push\.zustand !== "ok" \|\| email\.zustand !== "ok"\) \{ farbe = "grau"/.test(server) && /ok: r\.status < 400/.test(server) && /if \(teilFehler\) throw new Fehler/.test(server), "unbekannt nie grün");
@@ -5673,7 +5673,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/FP_ANONYM_JE_STUNDE/.test(server) && /FP_GERAET_JE_STUNDE/.test(server), "Grenzen gegen Missbrauch fehlen");
   assert.ok(/token\|key\|schluessel\|passwort/.test(server) && /\[\?&\]k=/.test(server), "Zugangsdaten müssen herausgefiltert werden");
   assert.ok(/case "hilfe_anfordern"/.test(server) && /case "fehlerprotokoll": \{\s*nurAdmin\(ich\)/.test(server), "Hilfe/Adminansicht auf dem Server fehlt");
-  assert.ok(/catch \(e\) \{[^]{0,1000}fpApiFehler\(action, e\); throw e; \/\/ KC-CLUB-FEHLERPROTOKOLL\n  \}/ /* 2.0.0: länger */.test(html), "Serverfehler werden nicht protokolliert");
+  assert.ok(/catch \(e\) \{[^]{0,1400}fpApiFehler\(action, e\);( throw e;)? \/\/ KC-CLUB-FEHLERPROTOKOLL\n[^]{0,300}throw e;\n  \}/ /* 2.107.0: dazwischen Frage Nochmal\/Abbrechen */ /* 2.0.0: länger */.test(html), "Serverfehler werden nicht protokolliert");
   assert.ok(/id: "ios_fremd"/.test(html) && /id: "ios_chrome"/.test(html) && !/nur in <b>Safari<\/b> richtig/.test(html) && /Teilen □↑/.test(html) && /id: "inapp"/.test(html) && /id: "privat"/.test(html) && /id: "mehrfach"/.test(html), "Hilfe-Schritte fehlen");
   assert.ok(/fpProblemMelden\(\)/.test(html) && /onclick="fpAdmin\(\)"/.test(html), "Problem melden / Admin-Knopf fehlt");
   assert.ok(/fpNeu\("alte_version"/.test(html) && /Jetzt aktualisieren<\/button>/.test(html), "alte Version: protokollieren + direkt aktualisieren");
@@ -6598,4 +6598,19 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/id="dwLangsam"[^\n]*🐌/.test(l) && /}, 8000\);/.test(l), "Twinkey: nach 8 s Hinweis");
   assert.ok(/id="dwNochmal"/.test(l) && /addEventListener\("click", \(\) => location\.reload\(\)\)/.test(l), "Twinkey: Nochmal versuchen");
   assert.ok(/skript = \(src\) => frist\(/.test(l) && /clearTimeout\(langsam\); laden\.remove\(\);/.test(l), "Twinkey: Skripte mit Frist");
+}
+
+// 4xx. 2.107.0: Lade-Sicherheit überall – „Laden dauert zu lange“ mit Nochmal versuchen / Abbrechen (KC-CLUB-LADE-SICHERHEIT)
+{
+  const a = programm.slice(programm.indexOf("async function api("), programm.indexOf("// ---------- KC-CLUB-LADE-SICHERHEIT"));
+  assert.ok(/const sichtbar = ladeSichtbar\(action, opt\);/.test(a) && /apiRoh\(action, daten, false, lauf\?\.ab\.signal\)/.test(a), "api() mit Abbruch-Signal");
+  assert.ok(/if \(lauf\?\.wunsch === "nochmal"\) continue;/.test(a) && /abgebrochen: true/.test(a), "Nochmal / Abbrechen");
+  assert.ok(/if \(sichtbar && e\?\.leitung && navigator\.onLine && !NOT\.an && API_LESEN\.test\(action\) && \(await ladeFrage\(\)\)\) continue;/.test(a), "nach Netzfehler fragen – nur Lesen");
+  assert.ok(/for \(const l of LADE\.laufe\) if \(l\.lesen && l\.langsam\)/.test(programm), "Schreiben wird nie abgebrochen/wiederholt");
+  assert.ok(/if \(opt\.still \|\| LADE_NIE\.has\(action\) \|\| NOT\.an \|\| document\.hidden\) return false;/.test(programm), "Hintergrund bleibt still");
+  assert.ok(/const LADE_LANGSAM_MS = 12000/.test(programm) && /\.lade-hilfe \{ position: fixed; z-index: 3000;/.test(seite), "Leiste nach 12 s, über allem");
+  for (const r of [/return apiRoh\(action, daten, zweiterVersuch, abbruch\); \} \/\/ Region weg/, /return apiRoh\(action, daten, true, abbruch\); \}/, /signal: zeitSignalMit\(zeitMs, abbruch\)/]) assert.ok(r.test(programm), "Abbruch reicht durch: " + r);
+  // keine Anfrage mehr ohne Zeitgrenze (außer Hochladen/Bilder über eigene Wege)
+  const ohne = [...programm.matchAll(/await fetch\(([^\n]*)/g)].map((m) => m[1]).filter((z) => !/signal:/.test(z));
+  assert.deepEqual(ohne, [], "fetch ohne Zeitgrenze");
 }

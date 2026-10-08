@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.106.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.107.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -7256,13 +7256,13 @@ async function kurzcodeEinloesen(hier) {
   $("kcCodeKnopf").disabled = true; a.textContent = "⏳ Einen Moment …"; KC_LAEUFT = true;
   kcWarten(true); // 2.91.0 KC-CLUB-KURZCODE-WARTEN: drehende Kochmütze, bis die App startet
   try {
-    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "kurzcode_einloesen", code }) });
+    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "kurzcode_einloesen", code }), signal: zeitSignal(30000) }); // KC-CLUB-LADE-SICHERHEIT
     const d = await r.json().catch(() => ({}));
     if (!r.ok || !d.k) throw new Error(d.error || "Das hat nicht geklappt – bitte nochmal.");
     a.textContent = "✅ Angemeldet – die App startet …";
     try { localStorage.setItem("kc_club_key", d.k); } catch {}
     location.href = location.pathname + "?k=" + d.k;
-  } catch (e) { kcWarten(false); a.textContent = "⚠️ " + e.message; $("kcCodeKnopf").disabled = false; $("kcCode").select?.(); KC_LAEUFT = false; }
+  } catch (e) { kcWarten(false); a.textContent = "⚠️ " + (e?.name === "TimeoutError" || e?.name === "AbortError" ? "Das Netz ist gerade zu langsam – bitte gleich nochmal versuchen." : e.message); $("kcCodeKnopf").disabled = false; $("kcCode").select?.(); KC_LAEUFT = false; }
 }
 function kcWarten(an) {
   const z = $("warten"); if (!z) return;
@@ -7391,10 +7391,10 @@ async function zugangAnfordern() {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) return ($("zaAntwort").textContent = "Bitte eine gültige E-Mail-Adresse eingeben.");
   $("zaKnopf").disabled = true; $("zaAntwort").textContent = "⏳ Wird gesendet …";
   try {
-    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-version": APP_VERSION }, body: JSON.stringify({ action: "zugang_anfordern", email: mail }) });
+    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-version": APP_VERSION }, body: JSON.stringify({ action: "zugang_anfordern", email: mail }), signal: zeitSignal(30000) });
     const j = await r.json().catch(() => ({}));
     $("zaAntwort").innerHTML = r.ok ? "✅ " + esc(j.text || "Wenn die Adresse bei uns hinterlegt ist, kommt gleich eine Mail mit deinem Link.") + "<br>Bitte den Link in der Mail antippen (im Browser Chrome öffnen)." : "⚠️ " + esc(j.error || "Fehler " + r.status);
-  } catch { $("zaAntwort").textContent = "⚠️ Keine Verbindung – bitte gleich nochmal versuchen."; }
+  } catch { $("zaAntwort").textContent = "⚠️ Keine Verbindung oder das Netz ist zu langsam – bitte gleich nochmal versuchen."; }
   setTimeout(() => { $("zaKnopf").disabled = false; }, 20000);
 }
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
@@ -7425,12 +7425,17 @@ function wartenEnde() {
   clearTimeout(wartenTimer); wartenTimer = null; clearTimeout(wartenLangTimer); wartenLangTimer = null; $("warten").classList.remove("an"); setTimeout(() => { if (!wartenZahl) $("warten").classList.add("versteckt"); }, 200);
 }
 async function api(action, daten = {}, opt = {}) {
+  const sichtbar = ladeSichtbar(action, opt); // KC-CLUB-LADE-SICHERHEIT: vor wartenStart prüfen (Tipp-Zeitpunkt)
   const warte = wartenStart(action, opt.warten, opt.still);
+  try { for (;;) {
+  const lauf = sichtbar ? ladeBeginn(action) : null;
   try {
     if (NOT.an) return await notApi(action, daten); // KC-CLUB-NOTBETRIEB
-    const r = await apiRoh(action, daten); NOT.fehler = 0; return r;
+    const r = await apiRoh(action, daten, false, lauf?.ab.signal); NOT.fehler = 0; return r;
   }
   catch (e) {
+    if (lauf?.wunsch === "nochmal") continue; // KC-CLUB-LADE-SICHERHEIT: Mitglied hat „Nochmal versuchen“ gewählt
+    if (lauf?.wunsch === "abbrechen") throw Object.assign(new Error("Abgebrochen – du kannst es jederzeit nochmal versuchen."), { abgebrochen: true });
     // KC-CLUB-NOTBETRIEB: Server mehrmals nicht erreichbar (oder schon der Start scheitert) → Ersatz-Server versuchen
     // 2.3.3: vorher Gegenprobe – nur umschalten, wenn der Club-Server auch nach kurzer Pause wirklich nicht antwortet
     if (!NOT.an && e?.leitung && (++NOT.fehler >= NOT_FEHLER_GRENZE || action === "init") && (await notGegenprobe()) && (await notEinschaltenEinmal("auto"))) {
@@ -7439,9 +7444,58 @@ async function api(action, daten = {}, opt = {}) {
       if (API_LESEN.test(action)) try { return await notApi(action, daten); } catch (e2) { e = e2; }
       else e = Object.assign(new Error("Der Server war gerade nicht erreichbar – bitte prüfen, ob es angekommen ist, und sonst nochmal senden."), { leitung: true });
     }
-    fpApiFehler(action, e); throw e; // KC-CLUB-FEHLERPROTOKOLL
+    fpApiFehler(action, e); // KC-CLUB-FEHLERPROTOKOLL
+    // KC-CLUB-LADE-SICHERHEIT: Laden scheiterte am Netz → fragen „Nochmal versuchen / Abbrechen“ statt nur Fehlertext (nur Lesen – Schreiben nie still doppelt)
+    if (sichtbar && e?.leitung && navigator.onLine && !NOT.an && API_LESEN.test(action) && (await ladeFrage())) continue;
+    throw e;
   }
+  finally { if (lauf) ladeEnde(lauf); }
+  } }
   finally { if (warte) wartenEnde(); }
+}
+// ---------- KC-CLUB-LADE-SICHERHEIT (2.107.0, Wunsch Hansi „überall Sicherheiten: Laden dauert zu lange wegen langsamem Netz –
+// bitte gleich nochmal; Knöpfe Nochmal versuchen / Abbrechen“) ----------
+// Gilt zentral für jede Anfrage, die das Mitglied sieht: Kochmütze sichtbar (warten) oder kurz nach einem Tipp gestartet.
+// Hintergrund (Lebenszeichen, Takt, Nachladen) bleibt still. Dauert Laden > LADE_LANGSAM_MS: Leiste mit 🔄 Nochmal versuchen
+// (bricht ab und fragt neu) und ✖ Abbrechen. Scheitert Laden am Netz: dieselbe Frage. Schreiben (Senden/Speichern) wird nie
+// abgebrochen oder wiederholt (sonst evtl. doppelt) – dort nur „bitte warten, nicht doppelt senden“.
+const LADE_LANGSAM_MS = 12000, LADE_TIPP_MS = 1500;
+const LADE_NIE = new Set(["lebenszeichen", "online", "ping", "nutzung_melden", "spur_melden", "tippen", "anruf_status", "diagnose", "communicator_status", "standort_update", "protokoll_speichern", "pinnwand_gesehen", "schnappschuss_bild", "schnappschuss_holen"]);
+const LADE = { laufe: new Set(), frage: null, zu: false };
+let ladeTippZeit = 0;
+try { addEventListener("pointerdown", () => { ladeTippZeit = Date.now(); }, true); addEventListener("keydown", () => { ladeTippZeit = Date.now(); }, true); } catch {}
+function ladeSichtbar(action, opt) {
+  if (opt.still || LADE_NIE.has(action) || NOT.an || document.hidden) return false;
+  return !!opt.warten || !WARTEN_STILL.has(action) || Date.now() - ladeTippZeit < LADE_TIPP_MS;
+}
+function ladeBeginn(action) {
+  const lauf = { action, lesen: API_LESEN.test(action), ab: new AbortController(), wunsch: "" };
+  lauf.timer = setTimeout(() => { lauf.langsam = true; LADE.zu = false; ladeZeigen(); }, LADE_LANGSAM_MS);
+  LADE.laufe.add(lauf); return lauf;
+}
+function ladeEnde(lauf) { clearTimeout(lauf.timer); LADE.laufe.delete(lauf); ladeZeigen(); }
+function ladeWahl(w) { // w: "nochmal" | "abbrechen" | "ok"
+  if (LADE.frage) { const f = LADE.frage; LADE.frage = null; f.ok(w === "nochmal"); ladeZeigen(); return; }
+  if (w === "ok") { LADE.zu = true; ladeZeigen(); return; }
+  for (const l of LADE.laufe) if (l.lesen && l.langsam) { l.wunsch = w; l.ab.abort(); }
+}
+function ladeFrage() {
+  if (!LADE.frage) { let ok; const p = new Promise((j) => { ok = j; }); LADE.frage = { p, ok }; ladeZeigen(); }
+  return LADE.frage.p;
+}
+function ladeZeigen() {
+  let z = document.getElementById("ladeHilfe");
+  if (!z && document.body) { document.body.insertAdjacentHTML("beforeend", '<div id="ladeHilfe" class="lade-hilfe versteckt" role="alertdialog" aria-live="assertive"></div>'); z = document.getElementById("ladeHilfe"); }
+  if (!z) return;
+  const langsam = [...LADE.laufe].filter((l) => l.langsam), lesen = langsam.some((l) => l.lesen);
+  const knopf = (w, t, k) => `<button type="button" class="${k}" onclick="ladeWahl('${w}')">${t}</button>`;
+  if (LADE.frage) z.innerHTML = `<b>⚠️ Laden hat nicht geklappt</b><span>Das Netz ist gerade zu langsam. Bitte gleich nochmal versuchen.</span><div>${knopf("nochmal", "🔄 Nochmal versuchen", "lh-ja")}${knopf("abbrechen", "Abbrechen", "lh-nein")}</div>`;
+  else if (langsam.length && !LADE.zu) z.innerHTML = lesen
+    ? `<b>🐌 Laden dauert zu lange</b><span>Das Netz ist gerade langsam. Du kannst warten oder es gleich nochmal versuchen.</span><div>${knopf("nochmal", "🔄 Nochmal versuchen", "lh-ja")}${knopf("abbrechen", "Abbrechen", "lh-nein")}</div>`
+    : `<b>🐌 Senden dauert länger</b><span>Das Netz ist gerade langsam. Bitte warten und nicht doppelt senden – es läuft weiter.</span><div>${knopf("ok", "OK", "lh-nein")}</div>`;
+  const an = !!LADE.frage || (langsam.length > 0 && !LADE.zu);
+  z.classList.toggle("versteckt", !an);
+  if (!langsam.length) LADE.zu = false;
 }
 // ---------- KC-CLUB-NOTBETRIEB (1.52.0, Wunsch Hansi): Supabase fällt aus → Ersatz-Server bei Cloudflare ----------
 // Der Ersatz-Server liefert jedem Mitglied die Antworten, die der Club-Server vorher genau für es berechnet hat (alle 15 Min.,
@@ -7602,7 +7656,7 @@ async function notApi(action, daten = {}) {
   const schreiben = NOT_SCHREIBEN.includes(action);
   if (schreiben) daten = { ...daten, notId: notNeueId() };
   let r;
-  try { r = await fetch(NOT.url + "/", { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) }); }
+  try { r = await fetch(NOT.url + "/", { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }), signal: zeitSignal(API_LESEN.test(action) ? 25000 : 140000) }); }
   catch { throw new Error(navigator.onLine ? "Keine Verbindung – weder Club-Server noch Ersatz-Server erreichbar." : "Keine Internetverbindung."); }
   const j = await r.json().catch(() => null);
   if (j?._notbetrieb?.stand && j._notbetrieb.stand !== NOT.stand) { NOT.stand = j._notbetrieb.stand; notBandZeigen(); }
@@ -7663,6 +7717,13 @@ function notErnstfallSetzen(an) {
 // hat unseren Code nie erreicht) → einmal still wiederholen. Andere Fehler nicht wiederholen (sonst evtl. doppelt gesendet).
 const AUSSETZER_PAUSE_MS = 800;
 // 2.6.1 (Prüfung): Zeitgrenze auch auf älteren iPhones (AbortSignal.timeout fehlt dort)
+// KC-CLUB-LADE-SICHERHEIT: Zeitgrenze + Abbruch durch das Mitglied (ohne AbortSignal.any – ältere iPads)
+function zeitSignalMit(ms, abbruch) {
+  if (!abbruch) return zeitSignal(ms);
+  const c = new AbortController(), t = setTimeout(() => c.abort(new DOMException("Zeit abgelaufen", "TimeoutError")), ms);
+  if (abbruch.aborted) c.abort(); else abbruch.addEventListener("abort", () => { clearTimeout(t); c.abort(); }, { once: true });
+  return c.signal;
+}
 function zeitSignal(ms) { if (AbortSignal.timeout) return AbortSignal.timeout(ms); const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal; }
 const VERKEHR_LAGER = "kc_club_verkehr_v1";
 // KC-CLUB-DATENSTROM (0.89.0): echter Zähler der Datenabrufe dieses Geräts (jede beantwortete Anfrage an den Club-Server,
@@ -7680,7 +7741,7 @@ const apiAdresse = () => (Date.now() < REGION_AUS_BIS ? API : `${API}?forceFunct
 // Aktionen, die nur lesen – nur diese dürfen nach einer Störung still wiederholt werden
 const SCHNECKE_NICHT = new Set(["admin_lage", "wetter", "suche", "anlage_url"]); // KC-CLUB-SCHNECKE: diese dauern auch bei schnellem Netz länger
 const API_LESEN = /^(init|hilfe_bewertungen|ping|lebenszeichen|online|tagesinfo|pinnwand|pinnwand_neu|unterhaltung|unterhaltungen|mitglieder|mitglied_details|kalender|kalender_daten|protokoll_laden|fotos_neueste|anlage_url|suche|buero_start|.*_liste|.*_statistik|.*_holen|.*_info|.*_stand|fitness_daten)$/; // 2.1.1: kein „*_start“ mehr (anruf_start/standort_start schreiben)
-async function apiRoh(action, daten = {}, zweiterVersuch = false) {
+async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null) {
   // KC-CLUB-NOTBETRIEB-ERNSTFALL: simulierter Ausfall – genau der Fehler, den ein unerreichbarer Club-Server liefert
   if (notErnstfall()) { vbStart(); await new Promise((ok) => setTimeout(ok, 300)); vbEnde(false, 0, "Server nicht erreichbar (Simulation)"); throw Object.assign(new Error("Keine Verbindung zum Server – bitte gleich nochmal versuchen."), { leitung: true }); }
   // KC-CLUB-VERBINDUNG: jede Anfrage zählt für die LEDs (Datenverkehr + Status)
@@ -7691,15 +7752,16 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false) {
   // sonst drehte sich die Sanduhr bis zu 2½ Minuten und der Notbetrieb sprang nicht an
   // 2.1.1: Lesen 25 s; Schreiben 140 s (der Server speichert zuerst und benachrichtigt dann – das darf dauern, sonst doppelt)
   const zeitMs = API_LESEN.test(action) ? 25000 : 140000;
-  try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }), signal: zeitSignal(zeitMs) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
-  catch (fe) { if (fe?.name === "TimeoutError" || fe?.name === "AbortError") { vbEnde(false, 0, "Server antwortet nicht"); try { if (navigator.onLine) schneckeMessen(zeitMs); } catch {} /* KC-CLUB-SCHNECKE: nur Anzeige, darf api() nie stören */ throw Object.assign(new Error(API_LESEN.test(action) ? "Der Server antwortet gerade nicht – bitte gleich nochmal versuchen." : "Der Server antwortet gerade nicht – bitte kurz prüfen, ob es angekommen ist, bevor du es nochmal sendest."), { leitung: true, zeit: true }); }
-    if (mitRegion && navigator.onLine) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(true, performance.now() - t0, ""); return apiRoh(action, daten, zweiterVersuch); } // Region weg → Standardweg
+  try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }), signal: zeitSignalMit(zeitMs, abbruch) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
+  catch (fe) { if (abbruch?.aborted) { VB.laufend = Math.max(0, VB.laufend - 1); vbDatenLed(); throw Object.assign(new Error("Abgebrochen."), { abgebrochen: true }); } // KC-CLUB-LADE-SICHERHEIT
+    if (fe?.name === "TimeoutError" || fe?.name === "AbortError") { vbEnde(false, 0, "Server antwortet nicht"); try { if (navigator.onLine) schneckeMessen(zeitMs); } catch {} /* KC-CLUB-SCHNECKE: nur Anzeige, darf api() nie stören */ throw Object.assign(new Error(API_LESEN.test(action) ? "Der Server antwortet gerade nicht – bitte gleich nochmal versuchen." : "Der Server antwortet gerade nicht – bitte kurz prüfen, ob es angekommen ist, bevor du es nochmal sendest."), { leitung: true, zeit: true }); }
+    if (mitRegion && navigator.onLine) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(true, performance.now() - t0, ""); return apiRoh(action, daten, zweiterVersuch, abbruch); } // Region weg → Standardweg
     vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw Object.assign(new Error(navigator.onLine ? "Keine Verbindung zum Server – bitte gleich nochmal versuchen." : "Keine Internetverbindung."), { leitung: navigator.onLine }); }
   const j = await r.json().catch(() => null);
   try { if (r.ok && API_LESEN.test(action) && !SCHNECKE_NICHT.has(action)) schneckeMessen(performance.now() - t0); } catch {} // KC-CLUB-SCHNECKE: nur Lesen (Schreiben darf länger dauern)
   // Region gestört → Standardweg. 1.97.0: LED-Zähler ausgleichen; Schreib-Aktionen NICHT still wiederholen (sonst evtl. doppelt gespeichert)
-  if (mitRegion && r.status >= 502 && r.status <= 504 && !j?.error) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(false, performance.now() - t0, "Region gestört " + r.status); if (API_LESEN.test(action)) return apiRoh(action, daten, zweiterVersuch); }
-  if (r.status === 503 && !j?.error && !zweiterVersuch) { vbEnde(true, performance.now() - t0, ""); await new Promise((ok) => setTimeout(ok, AUSSETZER_PAUSE_MS)); return apiRoh(action, daten, true); }
+  if (mitRegion && r.status >= 502 && r.status <= 504 && !j?.error) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(false, performance.now() - t0, "Region gestört " + r.status); if (API_LESEN.test(action)) return apiRoh(action, daten, zweiterVersuch, abbruch); }
+  if (r.status === 503 && !j?.error && !zweiterVersuch) { vbEnde(true, performance.now() - t0, ""); await new Promise((ok) => setTimeout(ok, AUSSETZER_PAUSE_MS)); return apiRoh(action, daten, true, abbruch); }
   // Verbindungsfehler: Gateway (502–504) oder 5xx ohne Antwort des Programms; Fachfehler (z. B. 400/403) heißen „verbunden“
   const leitungKaputt = (r.status >= 502 && r.status <= 504) || (r.status >= 500 && !j);
   vbEnde(!leitungKaputt, performance.now() - t0, leitungKaputt ? "Serverfehler " + r.status : "");
@@ -8272,7 +8334,7 @@ async function dokDrucken() {
 async function dokTeilen() {
   const d = dokAktuell(); if (!d) return;
   try {
-    const datei = new File([await (await fetch(dokUrl(d))).blob()], d.datei.split("/").pop(), { type: "application/pdf" });
+    const datei = new File([await (await fetch(dokUrl(d), { signal: zeitSignal(60000) })).blob()], d.datei.split("/").pop(), { type: "application/pdf" });
     if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: d.t }); return; }
   } catch (e) { if (e?.name === "AbortError") return; }
   dokExtern(); // Teilen geht hier nicht → PDF-Betrachter (dort drucken/speichern)
@@ -8324,7 +8386,7 @@ function ueberblickHtml(v, druck) {
     <p class="hinweis" style="margin:10px 2px 0">Fragen zur App? Einfach ${adminName()} ansprechen.</p>`;
 }
 async function ueberblickLaden() {
-  if (!VERSION_INFO) { try { VERSION_INFO = await (await fetch("version.json?x=" + Date.now(), { cache: "no-store" })).json(); } catch {} }
+  if (!VERSION_INFO) { try { VERSION_INFO = await (await fetch("version.json?x=" + Date.now(), { cache: "no-store", signal: zeitSignal(15000) })).json(); } catch {} }
   return VERSION_INFO;
 }
 async function ueberblickZeigen() { $("ueInhalt").innerHTML = ueberblickHtml(await ueberblickLaden()); }
@@ -14446,7 +14508,7 @@ async function sicherheitPruefen() {
     const t1 = performance.now(), s2 = await api("sicherheit_pruefen", {}, { warten: false }).catch(() => null), ms2 = Math.round(performance.now() - t1);
     if (s2 && ms2 < r.serverMs) { r.serverMs = ms2; r.s = { ...s2, dbMs: Math.min(s2.dbMs ?? Infinity, r.s.dbMs ?? Infinity) }; } else if (s2?.dbMs != null && r.s.dbMs != null) r.s.dbMs = Math.min(r.s.dbMs, s2.dbMs); }
   catch (e) { r.zugang = /zugang|link|berechtig/i.test(e.message) ? false : null; }
-  try { r.neueste = (await (await fetch("version.json?t=" + Date.now(), { cache: "no-store" })).json()).version || null; } catch {}
+  try { r.neueste = (await (await fetch("version.json?t=" + Date.now(), { cache: "no-store", signal: zeitSignal(15000) })).json()).version || null; } catch {}
   SI.r = r; SI.zeit = new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
   for (let i = 1; i <= SICHERHEIT_PRUEFUNGEN.length; i++) { if (aktuelleAnsicht !== "sicherheit") break; sicherheitZeigen(i); await new Promise((ok) => setTimeout(ok, 180)); }
   SI.laeuft = false; sicherheitZeigen(SICHERHEIT_PRUEFUNGEN.length);
@@ -17270,7 +17332,7 @@ async function scKalVerbinden(k) {
   } catch (e) { meldeFehler(e); } finally { k.disabled = false; }
 }
 async function scSkriptKopieren() {
-  try { const r = await fetch(SC_SKRIPT, { cache: "no-store" }); if (!r.ok) throw new Error(); await scKopieren(await r.text(), "Skript"); }
+  try { const r = await fetch(SC_SKRIPT, { cache: "no-store", signal: zeitSignal(20000) }); if (!r.ok) throw new Error(); await scKopieren(await r.text(), "Skript"); }
   catch { melde("Skript konnte nicht geladen werden – bitte später nochmal.", true); }
 }
 // ----- Protokoll + Chronologie -----
@@ -18734,7 +18796,7 @@ async function fotoSpeichern() {
 async function fotoTeilen() {
   const f = FA.fotos[faIndex];
   try {
-    const blob = await (await fetch(faUrl.get(f.id) || (await api("foto_oeffnen", { id: f.id })).url)).blob();
+    const blob = await (await fetch(faUrl.get(f.id) || (await api("foto_oeffnen", { id: f.id })).url, { signal: zeitSignal(60000) })).blob();
     const datei = new File([blob], `koecheclub-${f.datum}.jpg`, { type: blob.type || "image/jpeg" });
     const text = [f.thema, fTagDe(f.datum), f.beschreibung].filter(Boolean).join(" · ");
     if (navigator.canShare?.({ files: [datei] })) await navigator.share({ files: [datei], text });
@@ -19764,12 +19826,12 @@ async function nachUpdatePruefen(begruesst) {
   let alt = null; try { alt = localStorage.getItem("kc_club_version_gesehen"); localStorage.setItem("kc_club_version_gesehen", APP_VERSION); } catch {}
   if (!alt || begruesst || !versionNeuer(APP_VERSION, alt)) return; // erste Nutzung oder nichts Neues
   if (!ICH?.admin) return; // KC-CLUB-RUHE (2.24.13): Mitglieder bekommen kein „Neu in dieser Version“-Fenster mehr
-  try { const v = VERSION_INFO || await (await fetch("version.json?x=" + Date.now(), { cache: "no-store" })).json(); VERSION_INFO = VERSION_INFO || v;
+  try { const v = VERSION_INFO || await (await fetch("version.json?x=" + Date.now(), { cache: "no-store", signal: zeitSignal(15000) })).json(); VERSION_INFO = VERSION_INFO || v;
     neuigkeitenZeigen(`✅ Aktualisiert auf Version ${esc(APP_VERSION)} – das ist neu`, neuigkeitenSeit(v, alt, APP_VERSION), false); } catch {}
 }
 async function updatePruefen(vonHand) {
   try {
-    const v = await (await fetch("version.json?x=" + Date.now(), { cache: "no-store" })).json();
+    const v = await (await fetch("version.json?x=" + Date.now(), { cache: "no-store", signal: zeitSignal(15000) })).json();
     VERSION_INFO = v; NEUE_VERSION = versionNeuer(v.version, APP_VERSION) ? v.version : null;
     if (NEUE_VERSION) {
       // KC-CLUB-FEHLERPROTOKOLL (0.93.0): alte Version mitschreiben und „Jetzt aktualisieren“ direkt anbieten (Fund: Mitglied lief auf 0.69)
@@ -20501,7 +20563,7 @@ const ARCHIV_ABLAGE_ARTEN = {
 const ARCHIV_TYP_OK = (mime) => /^(application\/pdf|image\/(jpeg|png|webp)|text\/plain|application\/msword|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet))$/.test(String(mime || ""));
 // Datei einer Nachricht/eines Protokolls holen (nur was man ohnehin öffnen darf – der Server prüft bei anlage_url)
 async function anlageAlsDatei(a) {
-  const r = await api("anlage_url", { id: a.id }), blob = await (await fetch(r.url)).blob();
+  const r = await api("anlage_url", { id: a.id }), blob = await (await fetch(r.url, { signal: zeitSignal(60000) })).blob();
   return { blob, mime: a.mime || blob.type, name: a.name || "Datei" };
 }
 // Textdatei (UTF-8 mit BOM, damit Umlaute auf jedem Gerät richtig erscheinen)
@@ -20615,7 +20677,7 @@ function fotoInsArchiv() {
   const f = FA?.fotos?.[faIndex]; if (!f) return;
   const titel = [f.thema || "Foto", fTagDe(f.datum)].join(" · ");
   archivAblageFragen("foto", { titel, datum: f.datum, hinweis: f.beschreibung || "",
-    dateien: async () => { const blob = await (await fetch(faUrl.get(f.id) || (await api("foto_oeffnen", { id: f.id })).url)).blob();
+    dateien: async () => { const blob = await (await fetch(faUrl.get(f.id) || (await api("foto_oeffnen", { id: f.id })).url, { signal: zeitSignal(60000) })).blob();
       return [{ titel, name: `koecheclub-${f.datum}.jpg`, mime: blob.type || "image/jpeg", blob, stichworte: f.thema || "" }]; } });
 }
 // ----- 1.19.0: Protokoll (Text als Datei + auf Wunsch die Protokoll-Dateien/Fotos) -----
