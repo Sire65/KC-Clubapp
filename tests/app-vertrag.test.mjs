@@ -6624,6 +6624,8 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/\(count \?\? 0\) >= 3/.test(c), "höchstens 3 Mails je Minute");
   assert.ok(/routerSenden\("club_nachricht_mail", ziel, \{[^]*attachmentIds: anl\.map/.test(c), "Versand über den KC Communicator mit Anhang");
   assert.ok(/protokoll\(ich\.person_id, "buero_mail", \{ empfaenger: ziel\.length, anhaenge: anl\.length/.test(c) && !/betreff|text/.test(c.slice(c.indexOf('protokoll(ich.person_id, "buero_mail"'), c.indexOf('protokoll(ich.person_id, "buero_mail"') + 120)), "Protokoll nur Zahlen");
+  assert.ok(/const an = liste\(p\.an\), cc = liste\(p\.cc\)\.filter\(\(id\) => !an\.includes\(id\)\), bcc = liste\(p\.bcc\)/.test(c) && /cc\.length \|\| bcc\.length \? \{ cc, bcc \} : undefined/.test(c), "2.109.0: CC und BCC");
+  assert.ok(/knopf\(m, "an", "An"\)\}\$\{knopf\(m, "cc", "CC"\)\}\$\{knopf\(m, "bcc", "BCC"\)\}/.test(programm) && /an: nach\("an"\), cc: nach\("cc"\), bcc: nach\("bcc"\)/.test(programm), "2.109.0: je Person An/CC/BCC");
   assert.ok(/onclick="emSenden\(\)">📧 Jetzt senden/.test(programm) && /\(MITGLIEDER \|\| \[\]\)\.filter\(\(m\) => m\.wege\?\.mail\)/.test(programm), "Fenster mit Auswahl aus der Mitgliederliste");
   assert.ok(/onclick="einlPerMailExtern\(\)">📤 Anderes Mail-Programm/.test(programm) && /async function einlPerMailExtern\(\)/.test(programm), "Teilen bleibt als zweiter Weg");
   assert.ok(/\{ id: "mailan", ziel: "#emListe"/.test(programm), "Schritt-Hilfe im Mail-Fenster");

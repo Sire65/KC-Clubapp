@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.109.0 – 2026-10-08 – Büro-Mail mit CC und BCC
+Beim Mailen aus dem Büro wählst du je Person An, CC oder BCC; „Kopie an mich“ geht als BCC (KC-CLUB-BUERO-MAIL).
+
 ## 2.108.0 – 2026-10-08 – Büro: Mail direkt aus der App
 Eingelesene Dokumente gehen im Büro jetzt direkt aus der Club-App per E-Mail an ausgewählte Mitglieder – Empfänger anhaken, Betreff, Text, Anhang hängt schon an, auf Wunsch Kopie an mich. Für Adressen außerhalb des Clubs bleibt „Anderes Mail-Programm“ (KC-CLUB-BUERO-MAIL).
 

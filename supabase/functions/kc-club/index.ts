@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.108.0";
+const SERVER_VERSION = "2.109.0";
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
 async function ssBeenden(pid: string, w: any) {
@@ -6426,11 +6426,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // Communicator kennt nur hinterlegte Adressen). Gleicher Weg wie der Wunschbogen: Anlagen-Kern + routerSenden mit Anhang.
         // Nur Büro mit Schreibrecht, höchstens 5 Dateien (je 8 MB, zusammen 12 MB), höchstens 3 Mails je Minute. Protokoll nur Zahlen.
         nurBueroSchreiben(ich);
-        const an = [...new Set((Array.isArray(p.an) ? p.an : []).map((x: unknown) => String(x || "")).filter(Boolean))].slice(0, 120);
-        if (!an.length) throw new Fehler("Bitte mindestens einen Empfänger auswählen.", 400);
+        // 2.109.0 (Wunsch Hansi „CC und BCC muss möglich sein“): je Person An, CC oder BCC – jede Person nur einmal (An vor CC vor BCC)
+        const liste = (x: unknown) => [...new Set((Array.isArray(x) ? x : []).map((y: unknown) => String(y || "")).filter(Boolean))].slice(0, 120);
+        const an = liste(p.an), cc = liste(p.cc).filter((id) => !an.includes(id)), bcc = liste(p.bcc).filter((id) => !an.includes(id) && !cc.includes(id));
+        if (!an.length) throw new Fehler("Bitte mindestens einen Empfänger bei „An“ auswählen.", 400);
         const mitMail = new Map((await aktiveMitglieder()).filter((m: any) => m.email).map((m: any) => [m.person_id, m]));
         const ziel = an.filter((id) => mitMail.has(id));
-        if (ziel.length !== an.length) throw new Fehler("Bei einem Empfänger ist keine E-Mail-Adresse hinterlegt – bitte die Auswahl prüfen.", 400);
+        if (ziel.length !== an.length || cc.some((id) => !mitMail.has(id)) || bcc.some((id) => !mitMail.has(id))) throw new Fehler("Bei einem Empfänger ist keine E-Mail-Adresse hinterlegt – bitte die Auswahl prüfen.", 400);
+        if (p.kopie && !an.includes(ich.person_id) && !cc.includes(ich.person_id) && !bcc.includes(ich.person_id)) bcc.push(ich.person_id); // „Kopie an mich“ = BCC
         const dateien = Array.isArray(p.dateien) ? p.dateien : [];
         if (!dateien.length) throw new Fehler("Es hängt keine Datei an.", 400);
         if (dateien.length > 5) throw new Fehler("Höchstens 5 Dateien auf einmal – bitte aufteilen.", 400);
@@ -6448,10 +6451,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           betreff: `Köcheclub Werne – ${betreff}`,
           text: `${text || `Hallo,\n\nim Anhang ${anl.length === 1 ? "findest du das Dokument" : "findest du die Dokumente"}: ${anl.map((x) => x.name).join(", ")}.`}\n\nViele Grüße\n${ich.name}`,
           url: APP_URL, attachmentIds: anl.map((x) => x.id),
-        }, `club-buero-mail:${ich.person_id}:${Date.now()}`, p.kopie ? { bcc: [ich.person_id] } : undefined);
-        await protokoll(ich.person_id, "buero_mail", { empfaenger: ziel.length, anhaenge: anl.length, kopie: !!p.kopie, versand });
+        }, `club-buero-mail:${ich.person_id}:${Date.now()}`, cc.length || bcc.length ? { cc, bcc } : undefined);
+        await protokoll(ich.person_id, "buero_mail", { empfaenger: ziel.length, anhaenge: anl.length, cc: cc.length, bcc: bcc.length, kopie: !!p.kopie, versand });
         if (!versand.gesendet) throw new Fehler("Die E-Mail konnte gerade nicht verschickt werden – bitte später noch einmal.", 502);
-        return json({ ok: true, ...versand, empfaenger: ziel.length });
+        return json({ ok: true, ...versand, empfaenger: ziel.length, cc: cc.length, bcc: bcc.length });
       }
 
       case "wunschbogen_mailen": {

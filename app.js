@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.108.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.109.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -2300,7 +2300,7 @@ const SH_ABLAEUFE = {
   einlesen: [
     { id: "wie", ziel: "#einlBlatt .einl-wahl", t: "📷 Foto machen oder 📁 Datei wählen – am PC kannst du sie auch hineinziehen", wenn: () => !!$("einlZiehen"), fertig: () => !$("einlZiehen") },
     { id: "wohin", ziel: "#einlBlatt .knoepfe", t: "Wohin damit? 🗄️ in einen Ordner (mit Vorschlag), 📥 Eingangskorb, 💬 als Nachricht oder 📧 per E-Mail – antippen", wenn: () => !$("einlZiehen") && !$("emListe"), fertig: () => false },
-    { id: "mailan", ziel: "#emListe", t: "Hake an, wer die Mail bekommt – oben den Namen eintippen, dann geht das Suchen schneller", wenn: () => !!$("emListe") && !EMAIL?.wahl.size, fertig: () => !!EMAIL?.wahl.size },
+    { id: "mailan", ziel: "#emListe", t: "Bei jeder Person An, CC oder BCC antippen – oben den Namen eintippen, dann geht das Suchen schneller", wenn: () => !!$("emListe") && !EMAIL?.wahl.size, fertig: () => !!EMAIL?.wahl.size },
     { id: "mailsenden", ziel: "#emSenden", t: "Betreff prüfen, wenn du magst einen Text dazuschreiben – dann 📧 Jetzt senden. Die Datei hängt schon an", wenn: () => !!$("emListe") && !!EMAIL?.wahl.size, fertig: () => false, ende: true },
   ],
   dienste: [
@@ -15760,11 +15760,11 @@ let EMAIL = null;
 async function einlPerMail() {
   const E = EINL; if (!E) return;
   try { if (!MITGLIEDER) await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
-  EMAIL = { wahl: new Set(), suche: "", kopie: true };
+  EMAIL = { wahl: new Map(), suche: "", kopie: true }; // person_id → "an" | "cc" | "bcc"
   const groesse = E.dateien.reduce((n, f) => n + (f.size || 0), 0);
   blattAuf("einlBlatt", `<div class="em-mail"><h3 style="margin-top:0">📧 Per E-Mail senden</h3>
     <p class="hinweis" style="margin:0 0 8px">📎 ${E.dateien.map((f) => esc(f.name || "Dokument")).join(", ")} <span style="opacity:.7">(${groesse < 102400 ? Math.max(1, Math.round(groesse / 1024)) + " KB" : (groesse / 1048576).toFixed(1).replace(".", ",") + " MB"})</span></p>
-    <label style="font-weight:700">An wen?</label>
+    <label style="font-weight:700">An wen?</label> <span class="hinweis" style="font-size:.85rem">Je Person <b>An</b>, <b>CC</b> (Kopie – alle sehen es) oder <b>BCC</b> (Blindkopie – unsichtbar für die anderen)</span>
     <input id="emSuche" type="search" placeholder="🔍 Name eintippen …" autocomplete="off" style="width:100%;margin:4px 0" oninput="EMAIL.suche=this.value.toLowerCase();emListe()">
     <div id="emListe" style="max-height:34vh;overflow-y:auto;border:1px solid var(--rand,#ddd);border-radius:12px;padding:4px"></div>
     <div id="emGewaehlt" class="hinweis" style="margin:6px 0"></div>
@@ -15772,7 +15772,7 @@ async function einlPerMail() {
     <input id="emBetreff" maxlength="150" style="width:100%;margin:4px 0 8px" value="${esc(E.titel || "")}">
     <label style="font-weight:700" for="emText">Text <span style="font-weight:400;opacity:.7">(kann leer bleiben)</span></label>
     <textarea id="emText" rows="4" maxlength="3000" style="width:100%;margin:4px 0" placeholder="Hallo, im Anhang …"></textarea>
-    <label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="emKopie" checked onchange="EMAIL.kopie=this.checked"> Kopie an mich</label>
+    <label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="emKopie" checked onchange="EMAIL.kopie=this.checked"> Kopie an mich (BCC)</label>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">
       <button class="knopf haupt" id="emSenden" onclick="emSenden()">📧 Jetzt senden</button>
       <button class="knopf" onclick="einlPerMailExtern()">📤 Anderes Mail-Programm (Adresse außerhalb des Clubs)</button>
@@ -15783,15 +15783,19 @@ function emListe() {
   const z = $("emListe"); if (!z || !EMAIL) return;
   const alle = (MITGLIEDER || []).filter((m) => m.wege?.mail).sort((a, b) => String(a.name).localeCompare(String(b.name), "de"));
   const sicht = alle.filter((m) => !EMAIL.suche || String(m.name).toLowerCase().includes(EMAIL.suche));
-  z.innerHTML = (sicht.length ? sicht.map((m) => `<label style="display:flex;gap:10px;align-items:center;padding:8px 6px;min-height:40px"><input type="checkbox" ${EMAIL.wahl.has(m.person_id) ? "checked" : ""} onchange="emWahl('${esc(m.person_id)}',this.checked)"> ${esc(m.name)}${m.person_id === ICH?.person_id ? " (ich)" : ""}</label>`).join("")
+  const knopf = (m, art, t) => { const an = EMAIL.wahl.get(m.person_id) === art;
+    return `<button type="button" class="chip${an ? " an" : ""}" aria-pressed="${an}" style="min-width:0;min-height:38px;padding:4px 9px;flex:0 0 auto" onclick="emWahl('${esc(m.person_id)}','${art}')">${t}</button>`; };
+  z.innerHTML = (sicht.length ? sicht.map((m) => `<div class="em-zeile" style="display:flex;gap:6px;align-items:center;padding:6px;min-height:44px;border-bottom:1px solid var(--rand,#eee)"><span style="flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap${EMAIL.wahl.has(m.person_id) ? ";font-weight:700" : ""}">${esc(m.name)}${m.person_id === ICH?.person_id ? " (ich)" : ""}</span>${knopf(m, "an", "An")}${knopf(m, "cc", "CC")}${knopf(m, "bcc", "BCC")}</div>`).join("")
     : '<p class="hinweis" style="margin:8px">Niemand gefunden.</p>');
   const ohne = (MITGLIEDER || []).length - alle.length;
-  $("emGewaehlt").textContent = (EMAIL.wahl.size ? `✅ ${EMAIL.wahl.size} ausgewählt` : "Noch niemand ausgewählt") + (ohne > 0 ? ` · ${ohne} ohne hinterlegte Mail-Adresse (nicht in der Liste)` : "");
+  const zahl = (art) => [...EMAIL.wahl.values()].filter((x) => x === art).length, n = { an: zahl("an"), cc: zahl("cc"), bcc: zahl("bcc") };
+  $("emGewaehlt").textContent = (EMAIL.wahl.size ? `✅ An: ${n.an}${n.cc ? ` · CC: ${n.cc}` : ""}${n.bcc ? ` · BCC: ${n.bcc}` : ""}` : "Noch niemand ausgewählt") + (ohne > 0 ? ` · ${ohne} ohne hinterlegte Mail-Adresse (nicht in der Liste)` : "");
 }
-function emWahl(pid, an) { if (!EMAIL) return; if (an) EMAIL.wahl.add(pid); else EMAIL.wahl.delete(pid); emListe(); }
+function emWahl(pid, art) { if (!EMAIL) return; if (EMAIL.wahl.get(pid) === art) EMAIL.wahl.delete(pid); else EMAIL.wahl.set(pid, art); emListe(); } // nochmal antippen = abwählen
 async function emSenden() {
   const E = EINL; if (!E || !EMAIL) return;
-  if (!EMAIL.wahl.size) return melde("Bitte zuerst oben mindestens einen Empfänger anhaken.", true);
+  const nach = (art) => [...EMAIL.wahl].filter(([, x]) => x === art).map(([pid]) => pid);
+  if (!nach("an").length) return melde("Bitte oben mindestens eine Person bei „An“ antippen.", true);
   const k = $("emSenden"); if (k?.disabled) return; if (k) k.disabled = true;
   try {
     const dateien = [];
@@ -15799,8 +15803,8 @@ async function emSenden() {
       if (!ARCHIV_TYP_OK(einlMime(f))) { melde(`„${f.name}“ kann nicht per Mail verschickt werden (Dateityp).`, true); if (k) k.disabled = false; return; }
       dateien.push({ name: f.name || "Dokument", mime: einlMime(f), daten: base64(await f.arrayBuffer()) });
     }
-    const r = await api("buero_mail_senden", { an: [...EMAIL.wahl], betreff: $("emBetreff")?.value || "", text: $("emText")?.value || "", kopie: EMAIL.kopie, dateien }, { warten: true });
-    melde(`📧 Gesendet an ${r.empfaenger === 1 ? "1 Person" : r.empfaenger + " Personen"}${EMAIL.kopie ? " – Kopie an dich" : ""}`);
+    const r = await api("buero_mail_senden", { an: nach("an"), cc: nach("cc"), bcc: nach("bcc"), betreff: $("emBetreff")?.value || "", text: $("emText")?.value || "", kopie: EMAIL.kopie, dateien }, { warten: true });
+    melde(`📧 Gesendet an ${r.empfaenger === 1 ? "1 Person" : r.empfaenger + " Personen"}${r.cc ? ` · CC ${r.cc}` : ""}${r.bcc ? ` · BCC ${r.bcc}` : ""}${EMAIL.kopie ? " – Kopie an dich" : ""}`);
     EMAIL = null; einlNachher(E);
   } catch (e) { if (k) k.disabled = false; meldeFehler(e); }
 }
