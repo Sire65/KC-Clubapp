@@ -6689,3 +6689,83 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/await protokoll\(null, "protokoll_waechter", \{ laerm, alt, voll, vorher: /.test(w), "Zahlen im Protokoll, keine Inhalte");
   assert.ok(/await protokollWaechter\(\)\.catch\(/.test(server), "läuft im Wartungslauf");
 }
+
+// 4xx. 2.116.0: Schach soll Spaß machen – Figuren schieben, gezeichnete Figuren, ruhiges Brett, Rochade-Hinweis mit Grund,
+// Twinkey als Gegner/Zuschauer mit Sprüchen und 💡 Tipp, Töne, gleitende Figuren (KC-CLUB-SCHACH-SPASS)
+{
+  // Figuren: 12 Bilder, skalierbar (viewBox), Lizenz BSD liegt bei
+  for (const c of ["w", "b"]) for (const t of ["k", "q", "r", "b", "n", "p"]) {
+    const svg = lies(`lib/schach/${c}${t}.svg`);
+    assert.ok(/<svg[^>]*viewBox="0 0 45 45"/.test(svg) && !/<script|href=/i.test(svg), `Figur ${c}${t}: viewBox, ohne Skript/Links`);
+  }
+  assert.ok(/Redistribution and use in source and binary forms/.test(lies("lib/schach/LICENSE")) && /Cburnett/.test(lies("lib/schach/HERKUNFT.txt")) && /BSD/.test(lies("lib/schach/HERKUNFT.txt")), "Lizenz + Herkunft");
+  assert.ok(/localStorage\.getItem\("kc_club_schach_stil"\) === "brigade" \? "brigade" : "klassisch"/.test(programm), "klassisch ist Standard, Brigade bleibt wählbar");
+  assert.ok(/onerror="this\.parentNode\.classList\.remove\('bild'\);this\.replaceWith\(/.test(programm), "fehlt ein Bild, steht das Schriftzeichen da");
+  // ruhiges Brett statt Braun/Beige mit rotem Rahmen
+  assert.ok(/\.sch-feld\.hell \{ background-color: #f5f4f0; \} \.sch-feld\.dunkel \{ background-color: #dcdad3; \}/.test(html) && !/box-shadow: 0 0 0 3px var\(--rot\), 0 6px 14px/.test(html), "helles, ruhiges Brett");
+  assert.ok(/\.sch-brett:not\(\.aus\) \.sch-feld \{ touch-action: none; \}/.test(html) && /\.sch-geist \{ position: fixed !important;/.test(html), "Schieben mit dem Finger");
+  // eingebaut gegen Computer und Mitglieder
+  assert.ok(/async function schPcKlick\(feld, neu = false, gezogen = false\)/.test(programm) && /async function schMgKlick\(feld, neu = false, gezogen = false\)/.test(programm), "Klick-Wege kennen Schieben");
+  assert.equal((programm.match(/schZugErlebt\(mz, /g) || []).length, 4, "eigener Zug, Twinkeys Zug, eigener und fremder Zug gegen Mitglieder");
+  assert.equal((programm.match(/schAnimStart\(\);/g) || []).length, 2, "Figur gleitet in beiden Ansichten");
+  assert.ok((programm.match(/\$\{schTwHtml\(\)\}/g) || []).length === 2 && (programm.match(/\$\{schTonKnopf\(\)\}/g) || []).length === 2, "Twinkey + Töne-Knopf in beiden Ansichten");
+  assert.ok(/onclick="schPcTipp\(\)"/.test(programm) && /\$\{SCH\.uhr \|\| ende \? "" : `<button class="knopf klein" onclick="schPcTipp\(\)"/.test(programm), "💡 Tipp nur gegen den Computer und ohne Uhr");
+  assert.ok(/🧑‍🍳 Twinkey überlegt …/.test(programm) && /schStatusText\(ch, ich, "Twinkey"\)/.test(programm), "gegen den Computer spielt Twinkey");
+  assert.ok(/\{ id: "spiel_schach", thema: "club"/.test(programm) && /"spiele": \["e:spiele", "h:spiel_schach",/.test(programm), "Hilfe-Zentrum");
+  // Regeln und Texte mit der echten Bibliothek
+  const { Chess } = await import(new URL("../lib/chess/chess.js", import.meta.url));
+  const code = programm.slice(programm.indexOf("const SCH_WEIBLICH"), programm.indexOf("function schGeschlagenHtml(ch) {"));
+  const gesagt = [], doc = { addEventListener() {}, querySelector: () => null };
+  const S = new Function("Chess", "esc", "spSag", "document", "SP", "SCH", "SPAR", code + "; return { schRochadeGrund, schRochade, schZieleMitRochade, schHinweisVor, schHinweisNach, schTwKommentar, schTwSag, schBrettHtml, SCH_TW, SCH_TW_SPRUECHE, schComputerZug };")(
+    Chess, (x) => String(x), (art, t) => gesagt.push(t), doc, {}, {}, { an: false });
+  const grund = (fen, seite) => S.schRochadeGrund(new Chess(fen), seite);
+  assert.equal(grund("r3k2r/pppq1ppp/2npbn2/4p3/2B1P3/2NP1N2/PPP2PPP/R1BQK2R w KQkq - 0 1", "k"), null, "Rochade erlaubt → kein Grund");
+  assert.match(grund("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "k"), /stehen noch der Läufer und der Springer/, "Figuren dazwischen");
+  assert.match(grund("4k3/8/8/8/8/8/4r3/R3K2R w KQ - 0 1", "k"), /Im Schach darfst du nicht rochieren/, "im Schach");
+  assert.match(grund("4k3/8/8/8/8/5r2/8/R3K2R w KQ - 0 1", "k"), /über ein angegriffenes Feld.*F 1/, "durch ein angegriffenes Feld");
+  assert.match(grund("4k3/8/8/8/8/6r1/8/R3K2R w KQ - 0 1", "k"), /stünde dein König auf G 1 im Schach/, "Zielfeld angegriffen");
+  assert.match(grund("4k3/8/8/8/8/8/8/R3K2R w Q - 0 1", "k"), /Dieser Turm hat schon gezogen/, "Turm hat gezogen");
+  assert.match(grund("4k3/8/8/8/8/8/8/R3K2R w - - 0 1", "q"), /König hat schon einmal gezogen/, "König hat gezogen");
+  assert.match(grund("4k3/8/8/8/8/8/8/R4K1R w - - 0 1", "k"), /König hat schon gezogen/, "König steht nicht mehr auf E 1");
+  assert.equal(grund("r3k2r/8/8/8/8/8/8/4K3 b kq - 0 1", "q"), null, "Schwarz: lange Rochade erlaubt");
+  const start = new Chess();
+  assert.match(S.schHinweisVor(start, "e1", S.schZieleMitRochade(start, "e1"), "h1", "w"), /Zwischen König und Turm/, "König, dann Turm: Grund");
+  assert.match(S.schHinweisVor(start, null, [], "e7", "w"), /Das ist meine Figur/, "fremde Figur gegen Twinkey");
+  assert.match(S.schHinweisVor(start, null, [], "e7", "w", "Erika"), /Das ist eine Figur von Erika/, "fremde Figur gegen Mitglieder");
+  assert.match(S.schHinweisVor(start, "b1", S.schZieleMitRochade(start, "b1"), "b3", "w"), /Dein Springer kann nicht nach B 3\./, "falsches Zielfeld");
+  assert.equal(S.schHinweisVor(start, "b1", S.schZieleMitRochade(start, "b1"), "c3", "w"), "", "erlaubter Zug: kein Hinweis");
+  assert.match(S.schHinweisNach(start, "a1", [], "p1"), /Dein Turm kann gerade nicht ziehen\./, "Figur ohne Zug");
+  const ro = new Chess("r3k2r/pppq1ppp/2npbn2/4p3/2B1P3/2NP1N2/PPP2PPP/R1BQK2R w KQkq - 0 1");
+  assert.match(S.schHinweisNach(ro, "e1", S.schZieleMitRochade(ro, "e1"), "p2"), /Hier geht die Rochade/, "Rochade-Tipp …");
+  assert.equal(S.schHinweisNach(ro, "e1", S.schZieleMitRochade(ro, "e1"), "p2"), "", "… nur einmal je Partie");
+  assert.deepEqual(S.schRochade(ro, "e1", "h1"), { von: "e1", nach: "g1" }, "König auf Turm = kurze Rochade");
+  // Sprüche nach dem Zug (Ereignisse ohne Zufall)
+  const nach = (fen, san, ich = "w", er = null) => { const ch = new Chess(fen), m = ch.move(san); return S.schTwKommentar(m, ch, ich, er); };
+  const in_ = (art, t) => S.SCH_TW_SPRUECHE[art].map((x) => x.replace(/\{\w+\}/g, "")).some((x) => t.includes(x.slice(0, 8).trim()));
+  assert.ok(in_("ichRochade", nach(ro.fen(), "O-O")), "eigene Rochade");
+  assert.ok(in_("ichSieg", nach("6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1", "Rd8#")), "Matt");
+  const s1 = nach("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2", "exd5");
+  assert.ok(/(mein|meinen) Bauern?|Na warte/.test(s1), "Twinkey verliert einen Bauern: " + s1);
+  const s2 = nach("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2", "exd5", "b", "Erika");
+  assert.match(s2, /Erika hat deinen Bauern geschlagen|deinen Bauern hat Erika/, "gegen Mitglieder: wer hat was geschlagen");
+  assert.ok(S.SCH_TW_SPRUECHE.start.some((x) => /die ganze Nacht geübt/.test(x)) && S.SCH_TW_SPRUECHE.schnell.some((x) => /schnell unterwegs/.test(x)) && S.SCH_TW_SPRUECHE.bauerWeit.some((x) => /so weit vorne/.test(x)), "Sprüche wie gewünscht");
+  for (const [k, l] of Object.entries(S.SCH_TW_SPRUECHE)) assert.ok(l.length && l.every((x) => !/\{(?!dein\}|deinA\}|mein\}|meinA\}|denA\}|zum\}|bauer\}|bauerA\}|er\})/.test(x)), "Platzhalter in " + k);
+  // Twinkey spricht nur mit eingeschalteter Ansage (spSag) – ohne Emojis
+  S.schTwSag("Ich habe keine Angst. Du hast Angst. 😄"); assert.equal(gesagt.at(-1), "Ich habe keine Angst. Du hast Angst.", "Vorlesen ohne Emoji");
+  // Brett: data-feld zum Schieben, eigener Turm als Rochade-Ziel gestrichelt, Tipp-Feld
+  const b = S.schBrettHtml(ro, { unten: "w", auswahl: "e1", ziele: S.schZieleMitRochade(ro, "e1"), klick: "schPcKlick", tipp: "g1" });
+  assert.ok(/class="sch-brett" role="grid" aria-label="Schachbrett" data-klick="schPcKlick" data-ich="w"/.test(b) && /class="sch-feld hell ziel rochade" data-feld="h1"/.test(b) && /class="sch-feld dunkel ziel tipp" data-feld="g1"/.test(b), "Brett: Schieben, Rochade-Ziel, Tipp");
+  assert.ok(/class="sch-brett aus"/.test(S.schBrettHtml(ro, { aus: true })), "gesperrtes Brett lässt sich nicht schieben");
+}
+
+// 4xx. 2.116.0: Laufende Schachpartie – oben alles ausblenden, Brett größer, Twinkey kleiner (KC-CLUB-SCHACH-FOKUS)
+{
+  assert.ok(/body\.sch-fokus #v-spiele #spEdition, body\.sch-fokus #v-spiele #spTabs, body\.sch-fokus #v-spiele \.sch-einst, body\.sch-fokus #v-spiele \.sp-stand, body\.sch-fokus \.su-klein, body\.sch-fokus #fuss \{ display: none !important; \}/.test(html), "oben und Fußleiste weg");
+  assert.ok(/body\.sch-fokus #v-spiele \.sch-tisch \.sch-mitte, body\.sch-fokus #v-spiele \.sch-twinkey \{ width: min\(100%, max\(320px, calc\(100vh - 250px\)\), 640px\);/.test(html), "Brett wächst mit dem Bildschirm");
+  const f = programm.slice(programm.indexOf("function schFokus("), programm.indexOf("function schGeschlagenHtml(ch) {"));
+  assert.ok(/const an = !!aktiv && SCH_FOKUS_ZEIGEN !== partie && aktuelleAnsicht === "spiele";/.test(f) && /document\.body\.classList\.toggle\("sch-fokus", an\);/.test(f), "nur während der Partie und nur in den Spielen");
+  assert.ok(/partie = "pc:" \+ \(SCH\.runde \|\| 0\), laeuft = !ende && ch\.history\(\)\.length > 0;\n  schFokus\(laeuft, partie\);/.test(programm), "gegen den Computer: ab dem ersten Zug bis zum Ende");
+  assert.ok(/laeuft = g\.status === "laeuft";\n  schFokus\(laeuft, g\.id\);/.test(programm), "gegen Mitglieder: solange die Partie läuft");
+  assert.ok(/document\.body\.classList\.remove\("sch-fokus"\); \/\/ KC-CLUB-SCHACH-FOKUS/.test(programm) && /if \(v !== "spiele"\) \{ \$\("spPause"\)\?\.classList\.add\("versteckt"\); document\.body\.classList\.remove\("sch-fokus"\); \}/.test(programm), "abgebrochen/verlassen: alles wieder da");
+  assert.equal((programm.match(/\$\{schFokusKnopf\(laeuft, /g) || []).length, 2, "⚙️ Einstellungen einblenden in beiden Ansichten");
+}

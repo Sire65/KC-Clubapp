@@ -188,7 +188,7 @@ export const TEILE = [
     text: "Die Kachel <b>🎲 Spiele</b> findest du im Register <b>Club</b>. Tippe auf ein Spiel und wähle <b>🤖 Gegen den Computer</b> (mit Stärke) oder <b>👥 Gegen Mitglieder</b>.",
     abschnitte: [{ nr: "+", titel: "Spielen", zeilen: [
       ["s-ttt", "Tic-Tac-Toe", "Feld antippen – dann ist der andere dran. Wer zuerst eine Reihe hat, gewinnt.", "neu"],
-      ["s-schach", "Schach", "Figur antippen, dann das Zielfeld. Spielbare Felder werden markiert. Mit 🔊 <b>Ansage</b> liest die App die Züge vor.", "neu"],
+      ["s-schach", "Schach", "Figur schieben – oder antippen, dann das Zielfeld. Spielbare Felder werden markiert. Rochade: König auf den Turm schieben. Gegen den Computer spielt 🧑‍🍳 Twinkey mit Sprüchen und 💡 Tipp. Mit 🔊 <b>Ansage</b> liest die App die Züge vor.", "neu"],
       [null, "⏸ Pause", "In jedem Spiel: „⏸ Pause“ hält an, „▶ Weiter“ geht genau dort weiter.", "neu"],
       [null, "⏱️ Schachuhr", "Bedenkzeit 5, 10 oder 15 Minuten je Spieler – oben bei „⏱️ Uhr“ oder beim Herausfordern („⏱️ Live“). Nach jedem Zug hält deine Uhr an und die des Gegners läuft; in der letzten Minute wird sie rot. Wer keine Zeit mehr hat, verliert.", "neu"]] }],
     weiter: [{ bild: "spiele-mg", titel: "Gegen Mitglieder und der Pokal", legende: [],

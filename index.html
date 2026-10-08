@@ -221,6 +221,7 @@
   .sch-fig.brigade.weiss { background: #fffdf7; border: 3px solid #5a3b22; box-shadow: 0 2px 3px rgba(0,0,0,.35); }
   .sch-fig.brigade.schwarz { background: #2b2b2b; border: 3px solid #0d0d0d; box-shadow: 0 2px 3px rgba(0,0,0,.45), inset 0 0 0 2px #777; }
   .sch-fig.brigade.chef { border-color: #d4a017; box-shadow: 0 0 0 2px #d4a017, 0 2px 3px rgba(0,0,0,.4); }
+  .sch-fig.brigade.dame { border-color: #c2185b; } /* KC-CLUB-SCHACH-SPASS: Kaltmamsell gut vom Küchenchef zu unterscheiden */
   .sch-geschlagen .sch-fig.brigade { width: 1.55em; font-size: .85rem; border-width: 2px; }
   .sch-umw .sch-fig.brigade { width: 2.4em; font-size: 1.4rem; }
   .sch-legende { display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: center; margin: 6px 0 0; font-size: .85rem; }
@@ -245,6 +246,19 @@
   @keyframes schUhrPuls { 50% { box-shadow: 0 0 0 6px rgba(192,57,43,.25); } } @media (prefers-reduced-motion: reduce) { .sch-uhr.laeuft.knapp { animation: none; } }
   .sch-leiste { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; } .sch-leiste .knopf { margin: 0; flex: 0 0 auto; width: auto; min-height: 40px; padding: 6px 12px; font-size: .9rem; }
   .sch-wer summary { cursor: pointer; font-weight: 800; text-align: center; } .sch-tipp { text-align: center; margin: 0; font-size: .85rem; }
+  /* KC-CLUB-SCHACH-SPASS (2.116.0): Twinkey mit Sprechblase über dem Brett */
+  .sch-twinkey { display: flex; align-items: flex-end; gap: 10px; width: min(100%, 440px); margin: 0 auto; }
+  .sch-tw-kopf { flex: none; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; background: var(--karte2); border: 2px solid var(--linie); }
+  .sch-tw-blase { position: relative; flex: 1; min-width: 0; margin: 0; padding: 5px 10px; border-radius: 12px; background: var(--karte); color: var(--text); border: 2px solid var(--linie); font-size: .9rem; line-height: 1.3; overflow-wrap: anywhere; }
+  .sch-tw-blase::before { content: ""; position: absolute; left: -7px; bottom: 9px; width: 10px; height: 10px; background: inherit; border-left: 2px solid var(--linie); border-bottom: 2px solid var(--linie); transform: rotate(45deg); }
+  .sch-tw-blase b { font-size: .8rem; opacity: .7; }
+  /* KC-CLUB-SCHACH-FOKUS (2.116.0): laufende Partie – oben alles weg, Brett so groß wie der Bildschirm es zulässt */
+  body.sch-fokus #v-spiele #spEdition, body.sch-fokus #v-spiele #spTabs, body.sch-fokus #v-spiele .sch-einst, body.sch-fokus #v-spiele .sp-stand, body.sch-fokus .su-klein, body.sch-fokus #fuss { display: none !important; }
+  body.sch-fokus #v-spiele .sch-karte { gap: 6px; padding-left: 6px; padding-right: 6px; } body.sch-fokus #v-spiele .sch-tisch { gap: 2px; } body.sch-fokus #v-spiele .sch-geschlagen { min-height: 22px; margin: 0; line-height: 1; } body.sch-fokus #v-spiele .sp-status { padding: 4px 8px; font-size: .92rem; }
+  body.sch-fokus #v-spiele .sch-tisch .sch-mitte, body.sch-fokus #v-spiele .sch-twinkey { width: min(100%, max(320px, calc(100vh - 250px)), 640px); width: min(100%, max(320px, calc(100svh - 250px)), 640px); }
+  .sch-twinkey.hinweis .sch-tw-blase { background: #fff8dc; color: #4a3b00; border-color: #e6b800; } .sch-twinkey.hinweis .sch-tw-blase::before { border-color: #e6b800; }
+  .sch-twinkey.neu .sch-tw-blase { animation: schTwPop .3s ease-out; } @keyframes schTwPop { from { transform: scale(.94); opacity: .3; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .sch-twinkey.neu .sch-tw-blase { animation: none; } }
   /* 2.14.0 KC-CLUB-KUECHENTERROR: Küchenquiz auf Zeit */
   .kt-kopf { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 800; margin: 0 0 6px; }
   .kt-meister { text-align: center; font-weight: 800; padding: 6px 10px; margin: 0 0 6px; border-radius: 12px; background: linear-gradient(135deg, #f7dc6f, #d4a017); color: #3d2b00; }
@@ -450,20 +464,30 @@
   .sp-wer { width: 100%; border: 2px solid var(--linie); border-radius: 14px; background: var(--karte); color: var(--text); font: inherit; margin: 4px 0; cursor: pointer; }
   @media (prefers-reduced-motion: reduce) { .sp-feld, .sp-feld.sp-sieg { animation: none; } }
   /* KC-CLUB-SCHACH (2.8.0): Brett in Clubfarben */
-  .sch-brett { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: min(100%, 440px); aspect-ratio: 1; margin: 6px auto; border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 3px var(--rot), 0 6px 14px rgba(0,0,0,.25); }
+  /* KC-CLUB-SCHACH-SPASS (2.116.0): ruhiges helles Brett (statt Braun/Beige mit rotem Rahmen), gezeichnete Figuren, Schieben */
+  .sch-brett { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: min(100%, 440px); aspect-ratio: 1; margin: 6px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.14), 0 4px 14px rgba(0,0,0,.12); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  .sch-brett:not(.aus) .sch-feld { touch-action: none; }
   .sch-feld { position: relative; border: none; padding: 0; margin: 0; min-width: 0; min-height: 0; aspect-ratio: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; font: inherit; line-height: 1; }
-  .sch-feld.hell { background: #f3e5c8; } .sch-feld.dunkel { background: #b5835a; }
-  .sch-feld.letzter { box-shadow: inset 0 0 0 100px rgba(241,196,15,.38); } .sch-feld.gewaehlt { box-shadow: inset 0 0 0 4px #1e8449, inset 0 0 0 100px rgba(46,204,113,.35); }
-  .sch-feld.ziel::after { content: ""; width: 30%; height: 30%; border-radius: 50%; background: rgba(30,132,73,.65); position: absolute; }
-  .sch-feld.ziel.schlag::after { width: 86%; height: 86%; background: none; border: 4px solid rgba(30,132,73,.75); }
-  .sch-feld.imschach { background: radial-gradient(circle, #ff6b6b 0%, #c0392b 70%) !important; }
+  .sch-feld.hell { background-color: #f5f4f0; } .sch-feld.dunkel { background-color: #dcdad3; }
+  .sch-feld.letzter { box-shadow: inset 0 0 0 100px rgba(255,210,70,.3); } .sch-feld.gewaehlt { box-shadow: inset 0 0 0 3px rgba(39,140,85,.7), inset 0 0 0 100px rgba(46,204,113,.2); }
+  .sch-feld.tipp { box-shadow: inset 0 0 0 3px #e6b800, inset 0 0 0 100px rgba(255,210,70,.3); } .sch-feld.drueber { box-shadow: inset 0 0 0 3px rgba(39,140,85,.85), inset 0 0 0 100px rgba(46,204,113,.15); }
+  .sch-feld.ziel::after, .sch-feld.ziehziel::after { content: ""; width: 28%; height: 28%; border-radius: 50%; background: rgba(39,110,75,.35); position: absolute; z-index: 2; pointer-events: none; }
+  .sch-feld.ziel.schlag::after, .sch-feld.ziehziel:has(.sch-fig)::after { width: 90%; height: 90%; box-sizing: border-box; background: none; border: 4px solid rgba(39,110,75,.4); }
+  .sch-feld.ziel.rochade::after { width: 90%; height: 90%; box-sizing: border-box; background: none; border: 3px dashed rgba(39,140,85,.85); }
+  .sch-feld.imschach { background-image: radial-gradient(circle, rgba(231,76,60,.95) 0%, rgba(231,76,60,.55) 40%, rgba(231,76,60,0) 72%) !important; }
+  .sch-feld.gleitet { overflow: visible; z-index: 3; }
   .sch-feld:disabled { cursor: default; color: inherit; opacity: 1; }
   .sch-fig { font-size: clamp(1.7rem, 9.5vw, 2.6rem); font-family: "DejaVu Sans", "Segoe UI Symbol", "Noto Sans Symbols2", serif; position: relative; z-index: 1; }
   .sch-fig.weiss { color: #fff; text-shadow: 0 0 1px #000, 0 0 2px #000, 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; }
   .sch-fig.schwarz { color: #1b1b1b; text-shadow: 0 1px 1px rgba(255,255,255,.35); }
-  .sch-r, .sch-l { position: absolute; font-style: normal; font-size: .62rem; font-weight: 800; color: rgba(0,0,0,.55); } .sch-r { top: 2px; left: 3px; } .sch-l { bottom: 1px; right: 3px; }
+  .sch-fig.bild { display: flex; width: 92%; height: 92%; text-shadow: none; filter: drop-shadow(0 1px 1px rgba(0,0,0,.22)); } .sch-fig.bild img { width: 100%; height: 100%; display: block; pointer-events: none; }
+  .sch-fig.weg { opacity: .25; } .sch-brett.ziehen { cursor: grabbing; }
+  .sch-geist { position: fixed !important; left: 0; top: 0; z-index: 10000; pointer-events: none; margin: 0; filter: drop-shadow(0 6px 8px rgba(0,0,0,.3)); will-change: transform; }
+  .sch-geist.sch-fig:not(.bild):not(.brigade) { display: flex; align-items: center; justify-content: center; }
+  .sch-geschlagen .sch-fig.bild { display: inline-block; width: 22px; height: 22px; vertical-align: middle; } .sch-umw .sch-fig.bild { width: 54px; height: 54px; }
+  .sch-r, .sch-l { position: absolute; font-style: normal; font-size: .62rem; font-weight: 800; color: rgba(0,0,0,.4); } .sch-r { top: 2px; left: 3px; } .sch-l { bottom: 1px; right: 3px; }
   .sch-geschlagen { display: flex; justify-content: space-between; gap: 8px; min-height: 1.6em; margin: 4px 0 0; } .sch-geschlagen .sch-fig { font-size: 1.15rem; }
-  .sch-umw { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; } .sch-umw button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border: 2px solid var(--linie); border-radius: 14px; background: #f3e5c8; cursor: pointer; font: inherit; }
+  .sch-umw { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; } .sch-umw button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border: 2px solid var(--linie); border-radius: 14px; background: #f5f4f0; color: #222; cursor: pointer; font: inherit; }
   .sch-umw .sch-fig { font-size: 2.4rem; } .sch-verlauf { margin: 6px 0; } .sch-verlauf summary { cursor: pointer; font-weight: 800; } .sch-verlauf div { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .9rem; margin-top: 4px; }
   #spArt { margin-bottom: 6px; grid-template-columns: 1fr 1fr 1fr; } #spArt button { padding: 8px 4px; font-size: .92rem; }
   /* KC-CLUB-BAUERNSKAT (2.9.0): Karten groß und klar (♥ ♦ rot, ♣ ♠ schwarz), Trümpfe mit goldenem Rand */
@@ -3474,6 +3498,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.114.0" data-v="2.114.0"></script>
+<script src="app.js?v=2.116.0" data-v="2.116.0"></script>
 </body>
 </html>

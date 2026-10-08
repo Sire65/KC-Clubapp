@@ -1,5 +1,25 @@
 # Änderungen
 
+## 2.116.0 – 2026-10-08 – ♟️ Schach macht mehr Spaß – Twinkey spielt mit, mehr Platz fürs Brett (Test-Rückmeldung + Wunsch Hansi)
+Ein Testnutzer fand Schach „macht keinen Spaß“: Figuren schlecht zu erkennen, Brettmuster zu dominant, Rochade „klappt nicht“.
+Die Rochade-Regel war richtig (chess.js) – es fehlten Schieben und eine Erklärung, wenn sie nicht erlaubt ist (KC-CLUB-SCHACH-SPASS).
+- Figuren **schieben** mit Finger oder Maus – Antippen geht weiter. Rochade: König auf den Turm schieben.
+- Geht die Rochade nicht, sagt Twinkey warum: König/Turm hat schon gezogen, Figuren dazwischen, im Schach, Feld angegriffen.
+- Gezeichnete Figuren (Cburnett, BSD-Lizenz, `lib/schach`) statt Schriftzeichen; **klassisch ist jetzt Standard**,
+  die Küchenbrigade bleibt über „👨‍🍳 Brigade“ wählbar (Kaltmamsell mit eigenem Rand, gut vom Küchenchef zu unterscheiden).
+- Ruhiges helles Brett (Hellgrau/Weiß, dünner Rand), sanfte Markierungen, eigener Turm als gestricheltes Rochade-Ziel.
+- 🧑‍🍳 **Twinkey** in einer Sprechblase: gegen den Computer ist er der Gegner („Heute schlage ich dich bestimmt – ich habe die ganze
+  Nacht geübt!“, „Dein Läufer ist heute aber schnell unterwegs!“), gegen Mitglieder schaut er zu und hilft. Hinweise bei falschen
+  Zügen. **💡 Tipp** (gegen den Computer, ohne Uhr) zeigt einen guten Zug. Mit 🔊 Ansage spricht Twinkey auch.
+- Figuren gleiten beim Ziehen (nicht im Sparmodus / bei „Bewegung reduzieren“), leise Holz-Töne (🔔 Töne an/aus, je Gerät).
+- Regeln, Server und Datenbank unverändert. Test „Schach soll Spaß machen“.
+
+**Mehr Platz fürs Brett (KC-CLUB-SCHACH-FOKUS):** Läuft eine Partie (gegen den Computer ab dem ersten Zug, gegen Mitglieder solange sie läuft), verschwindet alles über dem Brett:
+„Köcheclub Edition“, Computer/Mitglieder, Stärke/Farbe/Uhr, Spielstand – und die Fußleiste. Das Brett wird so groß, wie der
+Bildschirm es zulässt (bis 640 px). Twinkey ist kleiner (eine Zeile mit Namen davor). Ist die Partie zu Ende oder abgebrochen
+(neue Partie, ‹ Übersicht, andere Seite), ist alles wieder da. „⚙️ Einstellungen“ blendet es für diese Partie wieder ein,
+„🔲 Mehr Platz“ wieder aus (KC-CLUB-SCHACH-FOKUS).
+
 ## Google-Skript – 2026-10-07 – Keine Mails mehr an Gäste (KC-KALENDER-STILL, App unverändert)
 - Fall Thomas: Sein Termin war in Google von Hand mit ihm als Gast eingetragen. Jede Änderung durch das Skript (Titel, Zeit,
   Ort, Text, Farbe einzeln) löste bei Google eine Mail „Aktualisierte Einladung“ an ihn aus – 4 Mails am 07.10.
