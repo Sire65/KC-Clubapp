@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.75.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.76.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1599,15 +1599,39 @@ const HILFE = [
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „🎨 Darstellung“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("darstellung", "setAnimiert"), seit: "2.24.1" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
 ];
-// ---------- KC-CLUB-SPRACHSTEUERUNG (2.75.0, Wunsch Hansi): 🎙️ Sprachbefehle, Stufe 1 ----------
+// ---------- KC-CLUB-SPRACHSTEUERUNG (2.75.0, Wunsch Hansi): 🎙️ Sprachbefehle, Stufe 1; Stufe 2 (2.76.0): Rückfragen im Gespräch ----------
+// Stufe 2: „Nachricht an Klaus“ → bei mehreren Klaus „Welchen Klaus?“, unbekannt → ähnliche Namen; angekommen → „Soll ich das Diktieren gleich einschalten?“ (Ja/Nein sagen oder tippen).
 // Eigener Knopf unten links (nur wenn unter ⚙️ eingeschaltet und das Gerät Sprache erkennt). Zugehört wird NUR nach Antippen.
 // Erkannt wird mit der Spracherkennung des Handys (kostenlos). Befehle: Registry in sbErkennen (reine Funktion, getestet).
 // Nie wird etwas von selbst gesendet: die App öffnet das Formular und trägt den Text ein – senden/anheften geht nur per Tipp.
 // „Startseite“: vorher wird geprüft, ob auf der Seite noch ungespeicherte Eingaben stehen → verwerfen oder hierbleiben.
 const SB_KEY = "kc_club_sprachsteuerung", sbAn = () => lsLesen(SB_KEY) === "1" && DIKTAT_GEHT;
-const SB_BEISPIELE = ["„Nachricht an Klaus: Bin gleich da“", "„Nachricht an alle: Treffen fällt aus“", "„Zettel an die Pinnwand: Schürzen abgeben“", "„Termine“ oder „Nächster Termin“", "„Suche Glühwein“", "„Startseite“ – wenn du nicht weiterweißt"];
+const SB_BEISPIELE = ["„Nachricht an Klaus“ – ich frage dann nach", "„Nachricht an alle: Treffen fällt aus“", "„Zettel an die Pinnwand: Schürzen abgeben“", "„Termine“ oder „Nächster Termin“", "„Suche Glühwein“", "„Startseite“ – wenn du nicht weiterweißt"];
 const sbNorm = (t) => String(t || "").toLowerCase().replace(/[.,!?;:„“"]/g, " ").replace(/\s+/g, " ").trim();
 const sbRest = (roh, re) => String(roh || "").replace(re, "").replace(/^[\s:,.\-–]+/, "").trim();
+// Stufe 2 (2.76.0): Namen nach Klang vergleichen – die Spracherkennung schreibt „Claus“, „Maier“, „Hans Joachim“ …
+const sbLaut = (t) => sbNorm(t).replace(/[-–]/g, " ").replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
+  .replace(/ph/g, "f").replace(/th/g, "t").replace(/dt/g, "t").replace(/ck/g, "k").replace(/c(?!h)/g, "k").replace(/a[iy]|ey/g, "ei").replace(/y/g, "i")
+  .replace(/ie/g, "i").replace(/(.)\1+/g, "$1").replace(/\s+/g, " ").trim();
+const sbWorte = (t) => sbLaut(t).split(" ").filter(Boolean);
+// Text nach den ersten k Wörtern (gezählt wie sbWorte: Bindestrich trennt, reine Satzzeichen zählen nicht)
+function sbAbWort(roh, k) {
+  const re = /[^\s\-–]+/g; let m, n = 0; roh = String(roh || "");
+  while (n < k && (m = re.exec(roh))) if (sbLaut(m[0])) n++;
+  return n < k ? "" : roh.slice(m ? m.index + m[0].length : 0).replace(/^[\s:,.\-–]+/, "").trim();
+}
+function sbAbstand(a, b) { // Tippfehler-Abstand (klein, für ähnliche Namen)
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+// unbekannter Name → ähnlich klingende Mitglieder vorschlagen (höchstens 4)
+function sbAehnlich(wort, mitglieder = [], ich = "") {
+  const w = sbLaut(wort); if (w.length < 2) return [];
+  return (mitglieder || []).filter((x) => x.person_id !== ich).map((x) => ({ x, d: Math.min(...String(x.name).split(/[\s-]+/).map((n) => sbAbstand(w, sbLaut(n)))) }))
+    .filter((y) => y.d <= (w.length > 4 ? 2 : 1)).sort((p, q) => p.d - q.d).slice(0, 4).map((y) => y.x.person_id);
+}
 function sbErkennen(roh, mitglieder = [], ich = "") {
   const t = sbNorm(roh); if (!t) return null;
   if (/^(zur |zu der |auf die |die )?(start ?seite|haupt ?seite|startbildschirm|anfang)$|^(zurück )?(zum|zur) (start|anfang|start ?seite|haupt ?seite)$|^nach hause$|^ich weiß nicht weiter$/.test(t)) return { art: "start" };
@@ -1615,20 +1639,24 @@ function sbErkennen(roh, mitglieder = [], ich = "") {
   if (/^(hilfe|was kann ich sagen)$/.test(t)) return { art: "hilfe" };
   if (/^(einen? )?(neue[nrs]? )?(zettel|notiz)\b|pinnwand/.test(t)) return { art: "pinnwand", text: sbRest(roh, /^\s*(einen?\s+)?(neue[nrs]?\s+)?(zettel|notiz)?\s*((an|auf|für|in)\s+(die|der)\s+)?(pinnwand)?\s*/i) };
   if (/^(neue[rn]? )?nachricht (an|für) alle[n]?\b|^schreib(e)? (an )?alle[n]?\b/.test(t)) return { art: "nachricht", alle: true, text: sbRest(roh, /^\s*((neue[rn]?\s+)?nachricht\s+(an|für)|schreibe?(\s+an)?)\s+alle[n]?\s*/i) };
-  let m = t.match(/^(?:(?:neue[rn]? )?nachricht (?:an|für)|schreib(?:e)?(?: an)?) (.+)$/);
+  if (/^(eine )?(neue[rn]? )?nachricht( (an|für|schreiben))?$|^schreib(e|en)?( an)?$/.test(t)) return { art: "nachricht", personen: [], wort: "", text: "" }; // Stufe 2: „An wen?“
+  const m = t.match(/^((?:(?:neue[rn]? )?nachricht (?:an|für)|schreib(?:e)?(?: an)?) )(.+)$/);
   if (m) {
-    const r = m[1], wer = (mitglieder || []).filter((x) => x.person_id !== ich).map((x) => ({ x, voll: sbNorm(x.name), vor: sbNorm(String(x.name).split(" ")[0]) }));
-    const voll = wer.filter((w) => r === w.voll || r.startsWith(w.voll + " ")), vor = voll.length ? [] : wer.filter((w) => r === w.vor || r.startsWith(w.vor + " "));
-    const treffer = voll.length ? voll : vor, wort = treffer[0] ? (voll.length ? treffer[0].voll : treffer[0].vor) : r.split(" ")[0];
-    const text = sbRest(String(roh).replace(new RegExp("^[\\s\\S]*?(?<!\\p{L})" + wort.split(" ").pop().replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?!\\p{L})", "iu"), ""), /^/);
-    return { art: "nachricht", personen: treffer.map((w) => w.x.person_id), wort, text };
+    const vorne = sbWorte(m[1]).length, r = sbWorte(m[2]), passt = (w) => w.length && w.every((x, i) => r[i] === x);
+    const wer = (mitglieder || []).filter((x) => x.person_id !== ich).map((x) => { const n = String(x.name).trim().split(/\s+/); return { x, voll: sbWorte(x.name), vor: sbWorte(n[0]), nach: n.length > 1 ? sbWorte(n[n.length - 1]) : [] }; });
+    let treffer = [], k = 0, wie = "";
+    for (const art of ["voll", "vor", "nach"]) { treffer = wer.filter((w) => passt(w[art])); if (treffer.length) { k = Math.max(...treffer.map((w) => w[art].length)); treffer = treffer.filter((w) => w[art].length === k); wie = art; break; } }
+    const n0 = treffer[0] && String(treffer[0].x.name).trim().split(/\s+/);
+    const wort = treffer.length === 1 ? treffer[0].x.name : treffer.length ? (wie === "vor" ? n0[0] : wie === "nach" ? n0[n0.length - 1] : treffer[0].x.name) : sbAbWort(roh, vorne).split(/\s+/)[0].replace(/[.,!?;:„“"]+$/, "");
+    return { art: "nachricht", personen: treffer.map((w) => w.x.person_id), wort, text: sbAbWort(roh, vorne + (k || 1)), vorschlag: treffer.length ? [] : sbAehnlich(wort, mitglieder, ich) };
   }
-  if (/^nachricht$|^neue nachricht$/.test(t)) return { art: "nachricht", personen: [], wort: "", text: "" };
   if (/(nächste[rn]?|wann ist) .*termin|^nächster termin$/.test(t)) return { art: "naechster" };
   if (/^(meine )?termine?$|^kalender$|^(zeig|öffne)(e)? (die |den |meine )?(termine|kalender)$/.test(t)) return { art: "termine" };
-  if ((m = t.match(/^(?:such(?:e)?|finde?|wo ist)(?: nach)? (.+)$/))) return { art: "suche", q: m[1] };
+  let q; if ((q = t.match(/^(?:such(?:e)?|finde?|wo ist)(?: nach)? (.+)$/))) return { art: "suche", q: q[1] };
   return null;
 }
+// Antwort auf eine Ja/Nein-Rückfrage (gesprochen)
+const sbJaNein = (roh) => { const t = sbNorm(roh); return /^(ja|jo|jawohl|gerne?|ok(ay)?|klar|bitte|mach( das)?|ja bitte|ja gerne|einschalten|diktieren)\b/.test(t) ? true : /^(nein|nee|ne|nö|nicht|lieber nicht|tippen|ich tippe)\b/.test(t) ? false : null; };
 // ungespeicherte Eingaben auf der jetzigen Seite? (geänderte, sichtbare Felder – Suchfelder zählen nicht; Protokoll/Chat speichern selbst)
 function sbUngespeichert() {
   if (aktuelleAnsicht === "protokoll") return false;
@@ -1669,30 +1697,42 @@ function sbKnopfZeigen() {
   if (!k && sbAn()) { document.body.insertAdjacentHTML("beforeend", '<button type="button" class="sb-knopf" id="sbKnopf" title="Sprachsteuerung" aria-label="Sprachsteuerung – sag, was du tun möchtest" onclick="sbHoeren()">🎙️</button>'); k = $("sbKnopf"); }
   k?.classList.toggle("versteckt", !sbAn());
 }
-const SB = { erk: null };
-function sbStopp() { try { SB.erk?.abort(); } catch {} SB.erk = null; fensterZu($("sbBlatt")); }
+const SB = { erk: null, text: "", antwort: null };
+function sbStopp() {
+  try { SB.erk?.abort(); } catch {} SB.erk = null; try { speechSynthesis.cancel(); } catch {}
+  const a = SB.antwort; SB.antwort = null; a?.(null); fensterZu($("sbBlatt"));
+}
+// Stufe 2: erst sprechen, dann (wieder) zuhören – damit das Handy sich nicht selbst hört. Spätestens nach 6 s geht es weiter.
+function sbSagen(text, dann) {
+  let los = false; const weiter = () => { if (los) return; los = true; dann?.(); };
+  try { if (!("speechSynthesis" in window)) return weiter(); speechSynthesis.cancel(); const u = sprechAusgabe(text); u.onend = weiter; u.onerror = weiter; speechSynthesis.speak(u); setTimeout(weiter, 6000); } catch { weiter(); }
+}
+// ein Mal zuhören: fertig(alternativen) oder fehler(grund); zeigt Zwischenstand in #sbGehoert
+function sbZuhoeren(fertig, fehler) {
+  try { SB.erk?.abort(); } catch {}
+  const Erk = window.SpeechRecognition || window.webkitSpeechRecognition, e = new Erk(); SB.erk = e;
+  e.lang = "de-DE"; e.interimResults = true; e.maxAlternatives = 3; e.continuous = false;
+  let aus = false; const ende = (f) => { if (aus || SB.erk !== e) return; aus = true; SB.erk = null; $("sbBlatt")?.classList.add("sb-still"); f(); };
+  e.onresult = (ev) => {
+    const r = ev.results[ev.results.length - 1], alt = [...r].map((x) => x.transcript);
+    if ($("sbGehoert")) $("sbGehoert").textContent = "„" + alt[0] + "“";
+    if (r.isFinal) ende(() => fertig(alt));
+  };
+  e.onerror = (ev) => ende(() => fehler(ev.error === "not-allowed" || ev.error === "service-not-allowed" ? "Das Mikrofon ist nicht erlaubt – bitte in den Handy-Einstellungen für den Browser freigeben." : ev.error === "no-speech" ? "Ich habe nichts gehört." : ev.error === "network" ? "Ohne Internet geht die Spracherkennung leider nicht." : "", ev.error));
+  e.onend = () => ende(() => fehler("Ich habe nichts gehört.", "no-speech"));
+  try { e.start(); } catch { ende(() => fehler("Die Spracherkennung startet gerade nicht – bitte nochmal tippen.", "start")); }
+}
+const SB_WELLE = '<div class="sb-welle" aria-hidden="true"><i></i><i></i><i></i><i></i></div>';
 function sbHoeren() {
   if (!sbAn()) return;
   if (!MITGLIEDER) mitgliederHolen().catch(() => {}); // für Namen („Nachricht an Klaus“)
   try { speechSynthesis.cancel(); } catch {}
-  const Erk = window.SpeechRecognition || window.webkitSpeechRecognition, e = new Erk(); SB.erk = e;
-  e.lang = "de-DE"; e.interimResults = true; e.maxAlternatives = 3; e.continuous = false;
-  blattAuf("sbBlatt", `<h3 style="margin:0">🎙️ Ich höre zu …</h3><div class="sb-welle" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  SB.text = "";
+  blattAuf("sbBlatt", `<h3 style="margin:0">🎙️ Ich höre zu …</h3>${SB_WELLE}
     <p class="sb-gehoert" id="sbGehoert">Sag, was du tun möchtest</p>
     <p class="hinweis" style="margin:0">Zum Beispiel:<br>${SB_BEISPIELE.map(esc).join("<br>")}</p>
     <button class="knopf" style="width:100%;text-align:center;margin-top:10px" onclick="sbStopp()">Abbrechen</button>`);
-  let fertig = false;
-  e.onresult = (ev) => {
-    const r = ev.results[ev.results.length - 1], alt = [...r].map((a) => a.transcript);
-    if ($("sbGehoert")) $("sbGehoert").textContent = "„" + alt[0] + "“";
-    if (!r.isFinal) return;
-    fertig = true; const roh = alt.find((a) => sbErkennen(a, MITGLIEDER || [], ICH?.person_id)) ?? alt[0];
-    sbVerstanden(roh);
-  };
-  e.onerror = (ev) => { if (fertig) return; fertig = true;
-    sbNichtVerstanden(ev.error === "not-allowed" || ev.error === "service-not-allowed" ? "Das Mikrofon ist nicht erlaubt – bitte in den Handy-Einstellungen für den Browser freigeben." : ev.error === "no-speech" ? "Ich habe nichts gehört." : ev.error === "network" ? "Ohne Internet geht die Spracherkennung leider nicht." : "", ""); };
-  e.onend = () => { if (!fertig) { fertig = true; sbNichtVerstanden("Ich habe nichts gehört.", ""); } };
-  try { e.start(); } catch { sbNichtVerstanden("Die Spracherkennung startet gerade nicht – bitte nochmal tippen.", ""); }
+  sbZuhoeren((alt) => sbVerstanden(alt.find((a) => sbErkennen(a, MITGLIEDER || [], ICH?.person_id)) ?? alt[0]), (grund) => sbNichtVerstanden(grund, ""));
 }
 function sbNichtVerstanden(grund, roh) {
   SB.erk = null; spur("sprache_unklar");
@@ -1711,24 +1751,83 @@ async function sbVerstanden(roh) {
   melde(`🎙️ Verstanden: „${roh}“`);
   await sbAusfuehren(b);
 }
+// Stufe 2: Rückfrage mit Ja/Nein – antippen ODER sagen („ja“, „gerne“, „nein“ …). Ergebnis true/false, null = abgebrochen.
+function sbFrage(kopf, text, ja, nein) {
+  return new Promise((fertig) => {
+    SB.antwort = fertig;
+    const zu = (w) => { if (SB.antwort !== fertig) return; SB.antwort = null; try { SB.erk?.abort(); } catch {} SB.erk = null; try { speechSynthesis.cancel(); } catch {} fensterZu($("sbBlatt")); fertig(w); };
+    const f = blattAuf("sbBlatt", `<h3 style="margin:0">${esc(kopf)}</h3><p style="margin:8px 0 0;font-size:1.1rem">${esc(text)}</p>${SB_WELLE}
+      <p class="sb-gehoert" id="sbGehoert">Sag „Ja“ oder „Nein“ – oder tippe</p>
+      <button class="knopf haupt" data-w="1" style="width:100%;text-align:center">${esc(ja)}</button>
+      <button class="knopf" data-w="0" style="width:100%;text-align:center">${esc(nein)}</button>`);
+    f.classList.add("sb-still"); f.onclick = (e) => { if (e.target === f) zu(null); };
+    f.querySelectorAll("[data-w]").forEach((k) => (k.onclick = () => zu(k.dataset.w === "1")));
+    const hoeren = () => { if (SB.antwort !== fertig) return; f.classList.remove("sb-still");
+      sbZuhoeren((alt) => { const w = alt.map(sbJaNein).find((x) => x !== null); if (w != null) return zu(w); if ($("sbGehoert")) $("sbGehoert").textContent = "Bitte antippen: „" + ja + "“ oder „" + nein + "“"; }, () => {}); };
+    sbSagen(kopf.replace(/^[^\p{L}]+/u, "") + ". " + text, hoeren);
+  });
+}
+// angekommen → sofort fragen, ob gleich diktiert werden soll (Diktieren schreibt nur ins Feld; senden tippt man selbst)
+async function sbDiktierenAnbieten(kopf, ziel) {
+  if (!DIKTAT_GEHT) return;
+  const ok = await sbFrage(kopf, "Soll ich das Diktieren gleich einschalten?", "✍️ Ja, diktieren", "⌨️ Nein, ich tippe");
+  if (ok) setTimeout(() => diktatStart(ziel === "text" ? undefined : ziel), 350);
+  else if (ok === false) $(ziel)?.focus();
+}
+// Stufe 2: „Wen meinst du?“ – mehrere passen, Name unbekannt oder gar kein Name gesagt. Antippen oder Namen sagen.
+function sbWerWahl(b) {
+  SB.text = b.text || "";
+  const mg = (MITGLIEDER || []).filter((m) => m.person_id !== ICH?.person_id), kand = (b.personen?.length > 1 ? b.personen : b.vorschlag || []).map((id) => mg.find((m) => m.person_id === id)).filter(Boolean);
+  const kopf = b.personen?.length > 1 ? `👤 Welchen ${b.wort} meinst du?` : b.wort ? `🤔 „${b.wort}“ kenne ich nicht` : "👤 An wen soll die Nachricht gehen?";
+  const satz = b.personen?.length > 1 ? `Welchen ${b.wort} meinst du? ${kand.map((m) => m.name).join(" oder ")}?` : b.wort ? (kand.length ? `${b.wort} kenne ich nicht. Meinst du ${kand.map((m) => m.name).join(" oder ")}?` : `${b.wort} kenne ich nicht. Sag bitte den Namen nochmal.`) : "An wen soll die Nachricht gehen?";
+  const f = blattAuf("sbBlatt", `<h3 style="margin:0">${esc(kopf)}</h3>${kand.length && b.wort && !(b.personen?.length > 1) ? '<p style="margin:6px 0 0">Meinst du …</p>' : ""}
+    ${kand.length ? `<div class="sb-wer">${kand.map((m) => `<button class="knopf" data-pid="${esc(m.person_id)}">${kreis(m, m.name, 36)}<b>${esc(m.name)}</b></button>`).join("")}</div>` : ""}
+    ${SB_WELLE}<p class="sb-gehoert" id="sbGehoert">Sag einen Namen${kand.length ? "" : " – z. B. „Klaus“"} oder „alle“</p>
+    <button class="knopf" data-a="nochmal" style="width:100%;text-align:center">🎙️ Namen nochmal sagen</button>
+    <button class="knopf" data-a="liste" style="width:100%;text-align:center">📋 Aus der Liste wählen</button>
+    <button class="knopf" data-a="zu" style="width:100%;text-align:center">Abbrechen</button>`);
+  f.classList.add("sb-still");
+  f.querySelectorAll("[data-pid]").forEach((k) => (k.onclick = () => sbAnPerson(k.dataset.pid)));
+  f.querySelector('[data-a="nochmal"]').onclick = () => sbWerWahl({ text: SB.text });
+  f.querySelector('[data-a="liste"]').onclick = () => { sbStopp(); neueNachricht(); };
+  f.querySelector('[data-a="zu"]').onclick = () => sbStopp();
+  sbSagen(satz, () => { if ($("sbBlatt") !== f) return; f.classList.remove("sb-still");
+    sbZuhoeren((alt) => {
+      for (const a of alt) { // erst unter den Vorschlägen suchen, dann unter allen
+        const n = sbErkennen("Nachricht an " + a, kand.length ? kand : mg, ICH?.person_id);
+        if (n?.alle) { sbStopp(); return sbAusfuehren({ art: "nachricht", alle: true, text: SB.text }); }
+        if (n?.personen?.length === 1) return sbAnPerson(n.personen[0]);
+      }
+      const n = sbErkennen("Nachricht an " + alt[0], mg, ICH?.person_id);
+      if (n?.alle) { sbStopp(); return sbAusfuehren({ art: "nachricht", alle: true, text: SB.text }); }
+      if (n?.personen?.length === 1) return sbAnPerson(n.personen[0]);
+      sbWerWahl({ ...(n || {}), text: SB.text });
+    }, () => {});
+  });
+}
+function sbAnPerson(pid) { const text = SB.text; sbStopp(); sbAusfuehren({ art: "nachricht", personen: [pid], wort: "", text }); }
+const sbVorname = (pid) => String(MITGLIEDER?.find((m) => m.person_id === pid)?.name || "").split(" ")[0];
 async function sbAusfuehren(b) {
   if (b.art === "start") return sbStartseite();
   if (b.art === "hilfe") return sbNichtVerstanden("Das kannst du zur App sagen:", "");
+  if (b.art === "nachricht" && !b.alle && b.personen?.length !== 1) return sbWerWahl(b); // erst klären, wer gemeint ist
   if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist");
   if (b.art === "zurueck") return history.back();
   if (b.art === "pinnwand") {
     zeige("pinnwand");
-    setTimeout(() => { pwForm(true); if (b.text) { $("pwText").value = b.text.slice(0, PW.zeichen || 200); pwZaehlen(); } $("pwForm").scrollIntoView({ behavior: "smooth", block: "start" }); }, 400);
-    return;
+    await new Promise((r) => setTimeout(r, 400));
+    pwForm(true); if (b.text) { $("pwText").value = b.text.slice(0, PW.zeichen || 200); pwZaehlen(); } $("pwForm").scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!b.text) return sbDiktierenAnbieten("📌 Neuer Zettel für die Pinnwand", "pwText");
+    return sbSagen("Der Text steht auf dem Zettel. Zum Anheften unten auf Anheften tippen.");
   }
   if (b.art === "nachricht") {
     const text = (b.text || "").trim(), rein = () => { if (text) { textVorbelegen(text); $("text").dispatchEvent(new Event("input")); } };
-    if (b.alle) { await neueNachricht(); empfWahl = { personen: [], aemter: [], alle: true, vorstand: false }; empfListe(); neuWeiter(); return rein(); }
-    if (b.personen?.length === 1) { await direkt(b.personen[0]); return setTimeout(rein, 600); }
-    await neueNachricht();
-    if (b.personen?.length > 1) { $("empfSuche").value = b.wort || ""; empfListe(); melde(`Mehrere passen zu „${b.wort}“ – bitte den richtigen Namen antippen`); }
-    else if (b.wort) { $("empfSuche").value = b.wort; empfListe(); melde(`Wen meinst du mit „${b.wort}“? Bitte Namen antippen`); }
-    return;
+    if (b.alle) { await neueNachricht(); empfWahl = { personen: [], aemter: [], alle: true, vorstand: false }; empfListe(); neuWeiter(); }
+    else await direkt(b.personen[0]);
+    await new Promise((r) => setTimeout(r, 600));
+    const wer = b.alle ? "alle" : sbVorname(b.personen[0]) || "dem Mitglied";
+    if (text) { rein(); melde(`💬 Bei ${wer}: Der Text steht drin – zum Senden auf ➤ tippen`); return sbSagen(`Du bist bei ${wer}. Der Text steht drin. Zum Senden auf den Pfeil tippen.`); }
+    return sbDiktierenAnbieten(b.alle ? "💬 Nachricht an alle" : `💬 Du bist jetzt bei ${wer}`, "text");
   }
   if (b.art === "termine") return zeige("termine");
   if (b.art === "naechster") {

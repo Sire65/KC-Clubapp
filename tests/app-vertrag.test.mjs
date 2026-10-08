@@ -6202,3 +6202,28 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/spur\("sprache_" \+ b\.art\); \/\/ nur die Art/.test(programm), "Protokoll nur mit der Art, nie mit dem Text");
   assert.ok(/<button data-v="start" class="an" onclick="startKnopf\(\)">/.test(seite) && /if \(aktuelleAnsicht !== "start" && !\(await sbEingabenOk\(\)\)\) return/.test(programm), "auch 🏠 Start unten fragt vorher");
 }
+
+// 4xx. 2.76.0: 🎙️ Sprachsteuerung Stufe 2 – Rückfragen im Gespräch: „Welchen Klaus?“, ähnliche Namen, „Soll ich das Diktieren gleich einschalten?“ (KC-CLUB-SPRACHSTEUERUNG)
+{
+  const a = programm.indexOf("const sbNorm = "), b = programm.indexOf("// ungespeicherte Eingaben auf der jetzigen Seite?");
+  const { sbErkennen, sbJaNein } = new Function(programm.slice(a, b) + "\nreturn { sbErkennen, sbJaNein };")();
+  const mg = [{ person_id: "K", name: "Klaus Zander" }, { person_id: "K2", name: "Klaus Müller" }, { person_id: "H", name: "Hans-Joachim Koch" }, { person_id: "M", name: "Manfred Meier" }, { person_id: "W", name: "Willfried Schulte" }];
+  const k = sbErkennen("Nachricht an Klaus: Bin gleich da", mg, "X");
+  assert.deepEqual([k.personen, k.wort, k.text], [["K", "K2"], "Klaus", "Bin gleich da"], "zwei Klaus → beide zur Auswahl, Text bleibt");
+  assert.deepEqual(sbErkennen("Nachricht an Claus Zander bin gleich da", mg).personen, ["K"], "Klang: Claus = Klaus");
+  assert.deepEqual(sbErkennen("Nachricht an Hans Joachim hallo du", mg).personen, ["H"], "Bindestrich-Namen gesprochen");
+  assert.deepEqual(sbErkennen("Nachricht an Maier Termin", mg).personen, ["M"], "Nachname, Klang ai/ei");
+  assert.deepEqual(sbErkennen("Nachricht an Wilfried", mg).personen, ["W"], "doppelte Buchstaben egal");
+  assert.equal(sbErkennen("Schreibe an Klaus Müller: Danke!", mg).text, "Danke!");
+  const u = sbErkennen("Nachricht an Manfret hallo", mg);
+  assert.deepEqual([u.personen, u.wort, u.vorschlag, u.text], [[], "Manfret", ["M"], "hallo"], "unbekannt → ähnliche Namen vorschlagen, nie raten");
+  for (const s of ["Nachricht", "Nachricht an", "neue Nachricht", "schreiben"]) assert.deepEqual(sbErkennen(s, mg).personen, [], s + " → „An wen?“");
+  assert.deepEqual(["Ja gerne", "ok", "nein danke", "ich tippe", "vielleicht"].map(sbJaNein), [true, true, false, false, null]);
+  const x = programm.slice(programm.indexOf("async function sbAusfuehren(b)"), programm.indexOf("// ---------- KC-CLUB-SCHRITT-HILFE (2.63.0"));
+  assert.ok(/if \(b\.art === "nachricht" && !b\.alle && b\.personen\?\.length !== 1\) return sbWerWahl\(b\);/.test(x), "erst klären, wer gemeint ist");
+  assert.ok(/return sbDiktierenAnbieten\(b\.alle \? "💬 Nachricht an alle" : `💬 Du bist jetzt bei \$\{wer\}`, "text"\);/.test(x) && /sbDiktierenAnbieten\("📌 Neuer Zettel für die Pinnwand", "pwText"\)/.test(x), "angekommen → sofort fragen");
+  const d = programm.slice(programm.indexOf("async function sbDiktierenAnbieten("), programm.indexOf("function sbWerWahl("));
+  assert.ok(/"Soll ich das Diktieren gleich einschalten\?", "✍️ Ja, diktieren", "⌨️ Nein, ich tippe"/.test(d) && /diktatStart\(ziel === "text" \? undefined : ziel\)/.test(d), "Diktieren nur nach Ja – senden tippt man selbst");
+  assert.ok(/sbSagen\(kopf\.replace/.test(programm) && /u\.onend = weiter;/.test(programm), "erst fertig sprechen, dann zuhören");
+  assert.ok(/\.sb-still \.sb-welle \{ display: none; \}/.test(seite) && /\.sb-wer \{/.test(seite));
+}
