@@ -6745,7 +6745,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(in_("ichRochade", nach(ro.fen(), "O-O")), "eigene Rochade");
   assert.ok(in_("ichSieg", nach("6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1", "Rd8#")), "Matt");
   const s1 = nach("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2", "exd5");
-  assert.ok(/(mein|meinen) Bauern?|Na warte/.test(s1), "Twinkey verliert einen Bauern: " + s1);
+  assert.ok(S.SCH_TW_SPRUECHE.ichSchlage.some((x) => x.split(/\{\w+\}/).every((teil) => s1.includes(teil.trim()))), "Twinkey verliert einen Bauern: " + s1);
   const s2 = nach("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2", "exd5", "b", "Erika");
   assert.match(s2, /Erika hat deinen Bauern geschlagen|deinen Bauern hat Erika/, "gegen Mitglieder: wer hat was geschlagen");
   assert.ok(S.SCH_TW_SPRUECHE.start.some((x) => /die ganze Nacht geübt/.test(x)) && S.SCH_TW_SPRUECHE.schnell.some((x) => /schnell unterwegs/.test(x)) && S.SCH_TW_SPRUECHE.bauerWeit.some((x) => /so weit vorne/.test(x)), "Sprüche wie gewünscht");
@@ -6768,4 +6768,13 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/laeuft = g\.status === "laeuft";\n  schFokus\(laeuft, g\.id\);/.test(programm), "gegen Mitglieder: solange die Partie läuft");
   assert.ok(/document\.body\.classList\.remove\("sch-fokus"\); \/\/ KC-CLUB-SCHACH-FOKUS/.test(programm) && /if \(v !== "spiele"\) \{ \$\("spPause"\)\?\.classList\.add\("versteckt"\); document\.body\.classList\.remove\("sch-fokus"\); \}/.test(programm), "abgebrochen/verlassen: alles wieder da");
   assert.equal((programm.match(/\$\{schFokusKnopf\(laeuft, /g) || []).length, 2, "⚙️ Einstellungen einblenden in beiden Ansichten");
+}
+
+// 4xx. 2.118.0: Mehr Twinkey-Sprüche je Spiellage, eigene Küchen-Sprüche (KC-CLUB-SCHACH-SPRUECHE)
+{
+  const a = programm.indexOf("const SCH_TW_SPRUECHE = {"), sp = new Function(programm.slice(a, programm.indexOf("};", a) + 2) + "; return SCH_TW_SPRUECHE;")();
+  for (const [k, n] of [["start", 8], ["ichSchlage", 8], ["ichSchlageDame", 6], ["erSchlaegt", 6], ["ichSchach", 6], ["erSchach", 6], ["ichSieg", 7], ["erSieg", 7], ["remis", 4]]) assert.ok(sp[k].length >= n, `genug Sprüche: ${k}`);
+  assert.ok(sp.ichSchlageDame.some((x) => /Was wird bloß mein Küchenchef dazu sagen/.test(x)) && sp.erSieg.some((x) => /Team Kochmütze/.test(x)) && sp.erSchach.some((x) => /Kochmütze/.test(x)), "auf Twinkey abgewandelt");
+  assert.ok(!Object.values(sp).flat().some((x) => /Schnurrbart|Oskar|Duolingo/i.test(x)), "keine fremden Figuren/Marken");
+  for (const l of Object.values(sp)) assert.equal(new Set(l).size, l.length, "keine doppelten Sprüche");
 }

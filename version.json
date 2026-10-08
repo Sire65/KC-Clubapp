@@ -1,11 +1,17 @@
 {
-  "version": "2.116.0",
+  "version": "2.118.0",
   "datum": "2026-10-06",
   "neu": [
-    "♟️ Schach macht mehr Spaß: Figuren schieben, klare Figuren, ruhiges Brett – während der Partie ist das Brett größer",
-    "🧑‍🍳 Twinkey spielt mit – mit Sprüchen, Rochade-Hinweisen und 💡 Tipp"
+    "🧑‍🍳 Twinkey hat beim Schach viele neue Sprüche – beim Schlagen, im Schach, beim Gewinnen und Verlieren"
   ],
   "verlauf": [
+    {
+      "version": "2.118.0",
+      "datum": "2026-10-08",
+      "neu": [
+        "🧑‍🍳 Twinkey hat beim Schach viele neue Sprüche – beim Schlagen, im Schach, beim Gewinnen und Verlieren"
+      ]
+    },
     {
       "version": "2.116.0",
       "datum": "2026-10-08",

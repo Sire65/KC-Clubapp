@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.118.0 – 2026-10-08 – 🧑‍🍳 Twinkey: viele neue Schach-Sprüche (Wunsch Hansi)
+Twinkey hat je Spiellage mehr Sprüche (6–9 statt 2–4) – frech im Stil bekannter Schach-Figuren aus Lern-Apps, aber eigene
+Küchen-Sprüche: „Meine Dame! Was wird bloß mein Küchenchef dazu sagen?“, „Ich hol mir jetzt die Kochmütze – Schach!“,
+„Das war natürlich Absicht – ich wollte dir eine Freude machen!“, „Ich verlange eine Revanche – gleich nach dem Abwasch!“,
+„Noch ein Sieg für Team Kochmütze!“, „Sei nicht traurig – ich bin halt ein Naturtalent am Herd.“ Auch gegen Mitglieder mehr
+Sprüche. 2.117.0 bleibt frei für die Änderungsmeldung (claude/aenderungsmeldung) (KC-CLUB-SCHACH-SPRUECHE).
+
 ## 2.116.0 – 2026-10-08 – ♟️ Schach macht mehr Spaß – Twinkey spielt mit, mehr Platz fürs Brett (Test-Rückmeldung + Wunsch Hansi)
 Ein Testnutzer fand Schach „macht keinen Spaß“: Figuren schlecht zu erkennen, Brettmuster zu dominant, Rochade „klappt nicht“.
 Die Rochade-Regel war richtig (chess.js) – es fehlten Schieben und eine Erklärung, wenn sie nicht erlaubt ist (KC-CLUB-SCHACH-SPASS).
