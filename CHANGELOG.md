@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.65.0 – 2026-10-08 – KC-CLUB-SCHRITT-HILFE Puls + Vorlesen
+- Schritt-Unterstützung: eigener, kräftig pulsierender Rahmen über dem nächsten Schritt (unabhängig vom Aussehen des Ziels), Text-Schritt mit Emoji-Hinweis, Schritte vorlesen (🔈 in der Leiste oder ⚙️ Einstellungen).
+
 ## 2.64.0 – 2026-10-08 – KC-CLUB-SCHRITT-HILFE verfeinert
 - Schritt-Unterstützung: Leiste wandert bei offener Tastatur nach oben, erster Schritt sagt „oben rechts“, Wichtigkeit und Antwort-Knopf sind eigene Schritte (immer nur ein Rahmen), zwei laufende Schuhe als Animation.
 

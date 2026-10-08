@@ -1523,8 +1523,10 @@
   .klick-leiste { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); top: calc(8px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 10px; max-width: calc(100vw - 24px); padding: 8px 8px 8px 14px; border-radius: 999px; background: #e11d48; color: #fff; box-shadow: var(--schatten); font-size: .9rem; white-space: nowrap; }
   /* KC-CLUB-SCHRITT-HILFE (2.63.0/2.64.0): genau der nächste Schritt rot pulsierend mit Leuchten; Leiste unten über „?“
      (bei offener Tastatur oben im sichtbaren Bereich), zwei laufende Schuhe; Tipps gehen durch die Leiste hindurch */
-  .sh-ziel { outline: 3px solid #e11d48; outline-offset: 3px; border-radius: 12px; animation: shPuls 1.2s ease-in-out infinite; }
-  @keyframes shPuls { 0%, 100% { outline-width: 3px; outline-offset: 2px; outline-color: rgba(225, 29, 72, .6); box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); } 50% { outline-width: 5px; outline-offset: 6px; outline-color: rgba(225, 29, 72, 1); box-shadow: 0 0 22px 8px rgba(225, 29, 72, .45); } }
+  /* 2.65.0: eigener Rahmen über dem Ziel (#shRahmen) – kräftiger Puls: dicker Rand, Leuchten nach außen, leichtes Atmen */
+  .sh-rahmen { position: fixed; z-index: 58; pointer-events: none; border: 4px solid #e11d48; border-radius: 16px; background: rgba(225, 29, 72, .07); animation: shPuls 1s ease-in-out infinite; }
+  @keyframes shPuls { 0%, 100% { transform: scale(1); border-width: 4px; border-color: rgba(225, 29, 72, .75); box-shadow: 0 0 0 0 rgba(225, 29, 72, .55), inset 0 0 0 0 rgba(225, 29, 72, 0); }
+    50% { transform: scale(1.035); border-width: 6px; border-color: #ff1f4b; box-shadow: 0 0 0 10px rgba(225, 29, 72, .28), 0 0 28px 12px rgba(225, 29, 72, .45), inset 0 0 14px rgba(225, 29, 72, .25); } }
   .sh-leiste { position: fixed; z-index: 59; left: 50%; transform: translateX(-50%); bottom: calc(190px + env(safe-area-inset-bottom)); pointer-events: none; display: flex; align-items: center; gap: 10px; width: max-content; max-width: calc(100vw - 24px); padding: 8px 8px 8px 10px; border-radius: 18px; background: #e11d48; color: #fff; box-shadow: var(--schatten); font-size: .95rem; line-height: 1.3; }
   .sh-leiste.oben { bottom: auto; }
   .sh-leiste span { flex: 1; }
@@ -1534,7 +1536,8 @@
   .sh-schuhe g { transform-box: fill-box; transform-origin: 50% 80%; animation: shSchritt 1.1s ease-in-out infinite; }
   .sh-schuhe .r { animation-delay: -.55s; }
   @keyframes shSchritt { 0%, 100% { transform: translateY(5px) scale(1); } 25% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(-5px) scale(1); } 75% { transform: translateY(0) scale(1); } }
-  @media (prefers-reduced-motion: reduce) { .sh-ziel, .sh-schuhe g { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .sh-schuhe g { animation: none; } .sh-rahmen { animation-name: shPulsRuhig; } } /* Rahmen soll auffallen: ohne Bewegung, nur Leuchten */
+  @keyframes shPulsRuhig { 0%, 100% { border-color: rgba(225, 29, 72, .6); box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); } 50% { border-color: #ff1f4b; box-shadow: 0 0 26px 10px rgba(225, 29, 72, .5); } }
   .klick-leiste button { border: 0; border-radius: 999px; background: #fff; color: #9f1239; font-weight: 800; padding: 6px 12px; cursor: pointer; }
   .hz-frage.versteckt, body.im-chat .hz-frage, body.su-auf .hz-frage, body.kt-aktiv .hz-frage, body.fa-waehlen .hz-frage { display: none; }
   .hz-suchfeld { display: block; background: var(--karte); border-radius: var(--radius); box-shadow: var(--schatten); padding: 10px 12px 12px; margin: 0 0 12px; border-left: 5px solid var(--rot); }
@@ -2971,6 +2974,7 @@
       <div class="schalter"><div><b>👋 Beim Öffnen zeigen, was neu ist</b><div class="hinweis">Neue Nachrichten (Chats und Gruppen), Pinnwand-Einträge und Spiele, die auf dich warten – auf einen Blick, mit Knopf direkt dorthin</div></div><input type="checkbox" id="setWasNeu" onchange="einstellung('wasNeu', this.checked)"></div> <!-- 2.24.12 KC-CLUB-WAS-NEU -->
       <div class="schalter"><div><b>❓ Fragezeichen unten rechts</b><div class="hinweis">Öffnet die passende Hilfe zum Bereich. Ausblenden geht auch: lange auf das „?“ drücken</div></div><input type="checkbox" id="setHzFrage" checked onchange="hzFrageSchalter(this.checked)"></div> <!-- KC-CLUB-HILFEZENTRUM (2.23.5) -->
       <div class="schalter"><div><b>👣 Schritt-Unterstützung</b><div class="hinweis">Ein roter Rahmen zeigt Schritt für Schritt, was als Nächstes kommt. Zum Ausprobieren erst an der 📌 Pinnwand.</div></div><input type="checkbox" id="setSchrittHilfe" onchange="shSchalter(this.checked)"></div> <!-- KC-CLUB-SCHRITT-HILFE (2.63.0) -->
+      <div class="schalter"><div><b>🔊 Schritte vorlesen</b><div class="hinweis">Die Schritt-Unterstützung sagt jeden Schritt auch an. Geht auch mit 🔈 in der roten Leiste.</div></div><input type="checkbox" id="setSchrittVorlesen" onchange="shVorlesen(this.checked)"></div> <!-- KC-CLUB-SCHRITT-HILFE (2.65.0) -->
       <div class="schalter"><div><b>❓ Alle Tipps nachlesen</b><div class="hinweis">Hilfe-Zentrum: alle Tipps und Erklärungen nach Themen – auch im Register Technik</div></div><button class="knopf klein" onclick="hzStart()">Öffnen</button></div>
       <!-- KC-CLUB-EINWEISUNG (2.4.0) -->
       <div class="schalter"><div><b>🎓 Einweisung beim ersten Öffnen</b><div class="hinweis">Beim ersten Besuch eines Bereichs eine kurze Erklärung, was man dort machen kann</div></div><input type="checkbox" id="setEinw" checked onchange="einwSchalter(this.checked)"></div>
@@ -3413,6 +3417,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.64.0" data-v="2.64.0"></script>
+<script src="app.js?v=2.65.0" data-v="2.65.0"></script>
 </body>
 </html>

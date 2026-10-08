@@ -5482,7 +5482,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/shBereich\(v\); \/\/ KC-CLUB-SCHRITT-HILFE/.test(programm), "beim Ansichtswechsel");
   assert.ok(/const shAn = \(\) => lsLesen\(SH_KEY\) === "1";/.test(programm), "aus, bis man es einschaltet (nur dieses Gerät)");
   assert.ok(/SH\.beruehrt\.delete\("los"\)/.test(programm), "Abbrechen gilt nicht als angeheftet");
-  assert.ok(/\.sh-ziel \{ outline: 3px solid #e11d48;[^}]*animation: shPuls/.test(seite) && /@keyframes shPuls \{[^\n]*box-shadow: 0 0 22px/.test(seite), "rot pulsierend mit Leuchten");
+  assert.ok(/\.sh-rahmen \{ position: fixed;[^}]*pointer-events: none;[^}]*animation: shPuls 1s/.test(seite) && /@keyframes shPuls \{[^@]*scale\(1\.035\)[^@]*0 0 28px 12px/.test(seite), "eigener Rahmen über dem Ziel, kräftig pulsierend (2.65.0)");
+  assert.ok(/function shRahmen\(el\)[\s\S]{0,900}requestAnimationFrame\(folgen\)/.test(programm) && /if \(SH\.el !== el\) shRahmen\(el\)/.test(programm), "Rahmen folgt dem Ziel");
+  assert.ok(/t: "✍️ Schreib deine kurze Nachricht in das Feld – wenn du magst, tippe darunter noch ein Emoji an 😊"/.test(programm), "Text-Schritt mit Emoji-Hinweis");
+  assert.ok(/id="setSchrittVorlesen" onchange="shVorlesen\(this\.checked\)"/.test(seite) && /id="shLaut"[^`]*onclick="shVorlesen\(!shVorlesenAn\(\)\)"/.test(programm) && /shSag\(`Schritt \$\{i \+ 1\}: \$\{s\.t\}`\)/.test(programm), "Schritte vorlesen (Schalter + 🔈 in der Leiste)");
+  assert.ok(/function shSag\(t\) \{ if \(!shVorlesenAn\(\)\) return;[^\n]*sprechen\(shSprechText\(t\)\)/.test(programm), "gleicher Sprach-Kern (sprechen), nur wenn eingeschaltet");
   assert.ok(/id: "wichtig", ziel: "#pwWichtig", t: "Wichtigkeit wählen[^\n]*waehlen: true/.test(programm) && !/frei: true/.test(ab), "Wichtigkeit ist ein eigener Schritt (2.64.0)");
   assert.ok(/t: "Tippe oben rechts auf „＋ Zettel“"/.test(programm), "erster Schritt sagt, wo");
   assert.ok(/function shLage\(\)[\s\S]{0,300}innerHeight - vv\.height - vv\.offsetTop > 120/.test(programm) && /visualViewport\?\.addEventListener\("resize", shLage\)/.test(programm) && /\.sh-leiste\.oben \{ bottom: auto; \}/.test(seite), "Tastatur offen → Leiste oben");
@@ -5491,6 +5495,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 
 // 2.64.0: Prüfungen zur verfeinerten Schritt-Unterstützung stehen im Block KC-CLUB-SCHRITT-HILFE (2.63.0)
+
+// 2.65.0: Prüfungen (Rahmen-Puls, Emoji-Hinweis, Vorlesen) stehen im Block KC-CLUB-SCHRITT-HILFE (2.63.0)
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

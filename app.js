@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.64.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.65.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1608,7 +1608,7 @@ const SH_KEY = "kc_club_schritt_hilfe";
 const SH_ABLAEUFE = {
   pinnwand: [
     { id: "neu", ziel: "#pwNeuKnopf", t: "Tippe oben rechts auf „＋ Zettel“", fertig: () => !$("pwForm").classList.contains("versteckt") },
-    { id: "text", ziel: "#pwText", t: "Schreib deine kurze Nachricht in das Feld", fertig: () => !!$("pwText").value.trim() },
+    { id: "text", ziel: "#pwText", t: "✍️ Schreib deine kurze Nachricht in das Feld – wenn du magst, tippe darunter noch ein Emoji an 😊", fertig: () => !!$("pwText").value.trim() },
     { id: "wichtig", ziel: "#pwWichtig", t: "Wichtigkeit wählen: „📝 Normal“ oder „❗ Hoch“", waehlen: true },
     { id: "fuer", ziel: "#pwFuer", t: "Für wen ist der Zettel? Tippe eine Auswahl an", fertig: () => !!PW.form?.fuer },
     { id: "personen", ziel: "#pwPersonen", t: "Hake an, wer den Zettel bekommen soll", wenn: () => PW.form?.fuer === "personen", fertig: () => PW.form.personen.length > 0 },
@@ -1616,8 +1616,31 @@ const SH_ABLAEUFE = {
     { id: "los", ziel: "#pwSpeichernKnopf", t: "Fertig? Tippe unten auf „📌 Anheften“", fertig: () => false, ende: true },
   ],
 };
-const SH = { bereich: null, beruehrt: new Set(), letzter: null, geschafft: false, timer: null };
+const SH = { bereich: null, beruehrt: new Set(), letzter: null, geschafft: false, timer: null, el: null, lauf: 0 };
 const shAn = () => lsLesen(SH_KEY) === "1";
+// 2.65.0: Vorlesen der Schritte (🔊 in der Leiste oder ⚙️ Einstellungen) – gleicher Sprach-Kern wie überall (sprechen)
+const SH_VORLESEN_KEY = "kc_club_schritt_vorlesen", shVorlesenAn = () => lsLesen(SH_VORLESEN_KEY) === "1";
+const shSprechText = (t) => String(t).replace(/<[^>]+>/g, " ").replace(/＋/g, "Plus").replace(/[\p{Extended_Pictographic}\uFE0F\u200D„“"]/gu, "").replace(/\s+/g, " ").trim();
+function shSag(t) { if (!shVorlesenAn()) return; try { speechSynthesis.cancel(); } catch {} sprechen(shSprechText(t)); }
+function shVorlesen(an) {
+  lsSetzen(SH_VORLESEN_KEY, an ? "1" : "0"); if ($("setSchrittVorlesen")) $("setSchrittVorlesen").checked = an;
+  $("shLaut")?.setAttribute("aria-pressed", String(an)); if ($("shLaut")) $("shLaut").textContent = an ? "🔊" : "🔈";
+  if (an) { const t = $("shLeiste")?.querySelector("span")?.textContent; sprechen(t ? shSprechText(t) : "Die Schritte werden jetzt vorgelesen."); } else try { speechSynthesis.cancel(); } catch {}
+}
+// 2.65.0 (Wunsch Hansi: „Rahmen pulsieren zu wenig“): eigener Rahmen über dem Ziel – unabhängig von dessen eigenem Aussehen
+// (Fokus-Rahmen, „Neu“-Puls usw.), kräftig pulsierend; folgt dem Ziel beim Scrollen, bis der Schritt wechselt
+function shRahmen(el) {
+  SH.el = el; const lauf = ++SH.lauf;
+  let r = $("shRahmen"); if (!el) { r?.remove(); return; }
+  if (!r) { document.body.insertAdjacentHTML("beforeend", '<div class="sh-rahmen" id="shRahmen" aria-hidden="true"></div>'); r = $("shRahmen"); }
+  const folgen = () => {
+    if (lauf !== SH.lauf || !el.isConnected) { if (lauf === SH.lauf) r.remove(); return; }
+    const b = el.getBoundingClientRect(), weg = !b.width && !b.height;
+    r.style.display = weg ? "none" : ""; if (!weg) Object.assign(r.style, { top: `${b.top - 7}px`, left: `${b.left - 7}px`, width: `${b.width + 14}px`, height: `${b.height + 14}px` });
+    requestAnimationFrame(folgen);
+  };
+  folgen();
+}
 // zwei Schuhe (von oben), die abwechselnd einen Schritt machen
 const SH_SCHUHE = `<svg class="sh-schuhe" viewBox="0 0 32 40" aria-hidden="true"><g class="l"><path d="M9 4c4 0 5.5 5 5 10-.4 4-1.4 6-1 10 .4 4-1.6 6.5-4.3 6.5S4.5 28 5 24c.5-4-1.8-7-1.8-12C3.2 7 5.3 4 9 4z"/><path class="sohle" d="M5.6 25.5h6.6M6.8 10.5h4.4M6.6 13.5h4.6M6.6 16.5h4.4"/></g><g class="r"><path d="M23 4c-4 0-5.5 5-5 10 .4 4 1.4 6 1 10-.4 4 1.6 6.5 4.3 6.5S27.5 28 27 24c-.5-4 1.8-7 1.8-12C28.8 7 26.7 4 23 4z"/><path class="sohle" d="M19.8 25.5h6.6M20.8 10.5h4.4M20.8 13.5h4.6M21 16.5h4.4"/></g></svg>`;
 function shSchalter(an) {
@@ -1627,10 +1650,10 @@ function shSchalter(an) {
 }
 function shAufraeumen() {
   document.querySelectorAll(".sh-ziel").forEach((e) => e.classList.remove("sh-ziel"));
-  $("shLeiste")?.remove(); SH.letzter = null;
+  $("shLeiste")?.remove(); shRahmen(null); SH.letzter = null;
 }
 function shBereich(v) { // beim Wechsel der Ansicht (zeige)
-  if ($("setSchrittHilfe")) $("setSchrittHilfe").checked = shAn();
+  if ($("setSchrittHilfe")) $("setSchrittHilfe").checked = shAn(); if ($("setSchrittVorlesen")) $("setSchrittVorlesen").checked = shVorlesenAn();
   SH.bereich = SH_ABLAEUFE[v] ? v : null; SH.beruehrt.clear(); SH.geschafft = false; clearTimeout(SH.timer);
   shAufraeumen(); if (SH.bereich) setTimeout(shAktualisieren, 120);
 }
@@ -1642,7 +1665,7 @@ function shLage() {
 }
 window.visualViewport?.addEventListener("resize", shLage); window.visualViewport?.addEventListener("scroll", shLage);
 function shLeiste(html) {
-  let l = $("shLeiste"); if (!l) { document.body.insertAdjacentHTML("beforeend", `<div class="sh-leiste" id="shLeiste" role="status" aria-live="polite">${SH_SCHUHE}<span></span><button type="button" onclick="shSchalter(false)" aria-label="Schritt-Unterstützung ausschalten">✕</button></div>`); l = $("shLeiste"); }
+  let l = $("shLeiste"); if (!l) { document.body.insertAdjacentHTML("beforeend", `<div class="sh-leiste" id="shLeiste" role="status" aria-live="polite">${SH_SCHUHE}<span></span><button type="button" id="shLaut" aria-pressed="${shVorlesenAn()}" aria-label="Schritte vorlesen" onclick="shVorlesen(!shVorlesenAn())">${shVorlesenAn() ? "🔊" : "🔈"}</button><button type="button" onclick="shSchalter(false)" aria-label="Schritt-Unterstützung ausschalten">✕</button></div>`); l = $("shLeiste"); }
   l.querySelector("span").innerHTML = html; shLage();
 }
 function shAktualisieren() {
@@ -1653,7 +1676,7 @@ function shAktualisieren() {
   const fertig = (s, i) => (s.fertig ? s.fertig() : false) || (s.waehlen && (SH.beruehrt.has(s.id) || gilt.slice(i + 1).some((x) => SH.beruehrt.has(x.id) || x.fertig?.())));
   if (!gilt[0].fertig()) { // Formular zu
     if (SH.beruehrt.has("los")) { // gerade angeheftet → kurz loben, dann Ruhe bis zum nächsten Besuch
-      SH.geschafft = true; shAufraeumen(); shLeiste("✅ <b>Geschafft!</b> Dein Zettel hängt an der Pinnwand.");
+      SH.geschafft = true; shAufraeumen(); shLeiste("✅ <b>Geschafft!</b> Dein Zettel hängt an der Pinnwand."); shSag("Geschafft! Dein Zettel hängt an der Pinnwand.");
       SH.timer = setTimeout(() => $("shLeiste")?.remove(), 4000); return;
     }
     SH.beruehrt.clear();
@@ -1662,10 +1685,10 @@ function shAktualisieren() {
   const i = gilt.findIndex((s, n) => !fertig(s, n)); if (i < 0) return;
   const s = gilt[i], el = document.querySelector(s.ziel);
   document.querySelectorAll(".sh-ziel").forEach((e) => e !== el && e.classList.remove("sh-ziel"));
-  el?.classList.add("sh-ziel");
+  el?.classList.add("sh-ziel"); if (SH.el !== el) shRahmen(el);
   shLeiste(`<b>Schritt ${i + 1} von ${gilt.length}:</b> ${esc(s.t)}`);
   if (SH.letzter !== s.id) { // nur bei neuem Schritt ins Bild holen – nicht beim Tippen
-    SH.letzter = s.id; const a = document.activeElement;
+    SH.letzter = s.id; const a = document.activeElement; shSag(`Schritt ${i + 1}: ${s.t}`);
     if (el && !(a && /^(TEXTAREA|INPUT)$/.test(a.tagName) && !el.contains(a))) { const r = el.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight - 300) el.scrollIntoView({ behavior: "smooth", block: "center" }); }
   }
 }
