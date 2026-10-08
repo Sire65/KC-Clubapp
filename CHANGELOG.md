@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.84.0 – 2026-10-08 – 🔇 Stumm und 📋 Liste am Mikrofon
+Über dem 🎙️-Knopf zwei kleine Knöpfe: 🔇 Stumm schaltet das Mikrofon aus (Knopf wird grau, Tippen öffnet die Liste) – 📋 Liste zeigt alle Sprachbefehle mit Erklärung, auch die gelernten, mit Live-Suche zum Scrollen; Antippen führt den Befehl aus; oben „🎙️ Mikrofon wieder an“. (KC-CLUB-SPRACHE-LISTE)
+
 ## 2.83.0 – 2026-10-08 – 🎙️ Selbstlernende Sprachsteuerung
 Kennt die Sprachsteuerung einen Satz nicht (z. B. „Treffen planen“), fragt sie: „Was meinst du damit?“ – Antippen führt es aus und merkt es sich in der Datenbank; beim nächsten Mal wird der Satz erkannt (auch mit kleinen Hörfehlern). Gelernt gilt erst für das Mitglied selbst, ab 2 Mitgliedern mit gleicher Zuordnung für alle. Admin: 👥 Nutzung → 🎙️ Sprachbefehle (unbekannte Sätze zuordnen, 🌍 für alle an/aus). Nur kurze Sätze (bis 8 Wörter) werden gespeichert. Neue direkte Befehle: „Neuer Termin“, „Fotos hochladen“, „Archiv“, „Mitglieder“, „Börse“ … (KC-CLUB-SPRACHE-LERNEN, Server 2.83.0)
 

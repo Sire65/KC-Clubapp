@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.83.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.84.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1710,9 +1710,57 @@ function sbSchalter(an) {
 function sbKnopfZeigen() {
   if ($("setSprache")) $("setSprache").checked = sbAn();
   let k = $("sbKnopf");
-  if (!k && sbAn()) { document.body.insertAdjacentHTML("beforeend", '<button type="button" class="sb-knopf" id="sbKnopf" title="Sprachsteuerung" aria-label="Sprachsteuerung – sag, was du tun möchtest" onclick="sbKnopfTipp()">🎙️</button>'); k = $("sbKnopf"); sbLangDruck(k); }
+  if (!k && sbAn()) { document.body.insertAdjacentHTML("beforeend", '<button type="button" class="sb-knopf" id="sbKnopf" title="Sprachsteuerung" aria-label="Sprachsteuerung – sag, was du tun möchtest" onclick="sbKnopfTipp()">🎙️</button>'
+      + '<button type="button" class="sb-mini" id="sbStummKnopf" onclick="sbStumm(!sbStummAn())"></button><button type="button" class="sb-mini" id="sbListeKnopf" title="Alle Sprachbefehle" aria-label="Liste aller Sprachbefehle" onclick="sbListe()">📋</button>'); // 2.84.0
+    k = $("sbKnopf"); sbLangDruck(k); }
   k?.classList.toggle("versteckt", !sbAn());
+  // KC-CLUB-SPRACHE-LISTE (2.84.0): stumm = Mikrofon aus (Knopf grau 🔇, Tippen öffnet die Liste mit „Mikrofon wieder an“)
+  const st = sbStummAn();
+  k?.classList.toggle("stumm", st); if (k) { k.textContent = st ? "🔇" : "🎙️"; k.setAttribute("aria-label", st ? "Mikrofon ist aus – Liste öffnen" : "Sprachsteuerung – sag, was du tun möchtest"); }
+  for (const id of ["sbStummKnopf", "sbListeKnopf"]) $(id)?.classList.toggle("versteckt", !sbAn());
+  const m = $("sbStummKnopf"); if (m) { m.textContent = st ? "🎙️" : "🔇"; m.title = st ? "Mikrofon wieder an" : "Stumm – Mikrofon aus"; m.setAttribute("aria-label", m.title); }
 }
+// ---------- KC-CLUB-SPRACHE-LISTE (2.84.0, Wunsch Hansi): zwei kleine Knöpfe am Mikrofon – 🔇 Stumm und 📋 Liste aller Sprachbefehle ----------
+const SB_STUMM_KEY = "kc_club_sprache_stumm", sbStummAn = () => lsLesen(SB_STUMM_KEY) === "1";
+function sbStumm(an) {
+  lsSetzen(SB_STUMM_KEY, an ? "1" : "0"); if (an) sbStopp();
+  sbKnopfZeigen(); melde(an ? "🔇 Mikrofon aus – mit 🎙️ oder in der 📋 Liste wieder einschalten" : "🎙️ Mikrofon wieder an");
+  if ($("sbListeBlatt")) sbListe(); // Liste offen → Knopf oben aktualisieren
+}
+// Registry: was man sagen kann (Beispiel → Erklärung). Jeder Satz wird von sbErkennen erkannt (Test).
+const SB_BEFEHLE = [
+  ["Startseite", "🏠 Zurück zur Startseite – geht immer, wenn du nicht weiterweißt"], ["Hauptseite", "🏠 wie „Startseite“"], ["Ich weiß nicht weiter", "🏠 bringt dich zur Startseite"], ["Zurück", "↩️ eine Seite zurück"],
+  ["Nachricht an Klaus", "✍️ Chat mit Klaus öffnen – danach fragt die App, ob sie gleich mitschreiben soll"], ["Nachricht an Klaus: Bin gleich da", "✍️ Chat öffnen, Text steht schon drin"],
+  ["Nachricht an alle: Treffen fällt aus", "📢 Nachricht an alle Mitglieder vorbereiten"], ["Neue Nachricht", "✍️ Die App fragt: An wen?"], ["Nachrichten", "💬 Alle Unterhaltungen ansehen"],
+  ["Zettel an die Pinnwand: Schürzen abgeben", "📝 Neuer Pinnwand-Zettel mit Text"], ["Neuer Zettel", "📝 Neuer Pinnwand-Zettel – die App bietet Diktieren an"],
+  ["Termine", "📅 Termine ansehen"], ["Neuer Termin", "➕ Neuen Termin anlegen"], ["Nächster Termin", "⏭️ sagt den nächsten Termin an und öffnet ihn"],
+  ["Mitglieder", "👥 Mitgliederliste"], ["Fotoalbum", "📷 Fotos ansehen"], ["Fotos hochladen", "⬆️ Neue Fotos ins Album"], ["Archiv", "🗄️ Ordner und Dokumente"],
+  ["Erstattung", "💶 Fahrtkosten oder Auslagen erstattet bekommen"], ["Helfen", "🤝 Helfen & Leihen"], ["Börse", "🛍️ Biete und suche"], ["Protokolle", "📄 Sitzungsprotokolle"],
+  ["Vorschläge", "💡 Vorschläge ansehen und einreichen"], ["Mein Dienst", "🗓️ Dienstpläne"], ["Einstellungen", "⚙️ Einstellungen"], ["Suche Glühwein", "🔍 in der ganzen App suchen"], ["Hilfe", "❓ Beispiele zeigen"],
+];
+function sbListe() {
+  if (!SB.woerter) sbWoerterLaden()?.then(() => { if (SB.woerter && $("sbListeBlatt")) sbListe(); }); // gelernte Sätze nachreichen
+  spur("sprache_liste");
+  const altQ = $("sbListeSuche")?.value || "";
+  const st = sbStummAn(), w = SB.woerter || { meine: [], alle: [] }, zName = (id) => { const z = SB_ZIELE.find((x) => x.id === id); return z ? `${z.sym} ${z.t}` : id; };
+  const gelernt = [...w.meine.map((e) => [e.s, zName(e.z) + " · 🧠 von dir beigebracht"]), ...w.alle.filter((e) => !w.meine.some((m) => m.s === e.s)).map((e) => [e.s, zName(e.z) + " · 🧠 gelernt"])];
+  const zeilen = [...SB_BEFEHLE.map(([a, b]) => [a, b, false]), ...gelernt.map(([a, b]) => [a, b, true])];
+  const f = blattAuf("sbListeBlatt", `<h3 style="margin:0 0 6px">📋 Das kannst du sagen</h3>
+    <button class="knopf ${st ? "haupt" : ""}" style="width:100%;text-align:center;margin:0 0 8px" onclick="sbStumm(${!st})">${st ? "🎙️ Mikrofon wieder an" : "🔇 Mikrofon aus (stumm)"}</button>
+    <input type="search" id="sbListeSuche" class="hz-suche" placeholder="🔍 Befehl suchen …" autocomplete="off" enterkeyhint="search" style="width:100%;box-sizing:border-box">
+    <div id="sbListeInhalt" class="sb-liste">${zeilen.map(([a, b, g], i) => `<button class="sb-befehl" data-i="${i}" data-such="${esc(sbNorm(a + " " + b))}"><b>„${esc(a)}“</b><small>${esc(b)}</small></button>`).join("")}</div>
+    <p class="hinweis" id="sbListeLeer" style="display:none">Nichts gefunden. Sag es einfach – kennt die App den Satz nicht, fragt sie und lernt ihn.</p>
+    <p class="hinweis" style="margin:6px 0 0">Antippen = gleich ausführen. Zum Sprechen auf 🎙️ unten links tippen.</p>
+    <button class="knopf" style="width:100%;text-align:center" onclick="fensterZu($('sbListeBlatt'))">Schließen</button>`);
+  const such = $("sbListeSuche");
+  such.oninput = () => { const q = sbNorm(such.value); let n = 0; f.querySelectorAll(".sb-befehl").forEach((b) => { const ja = !q || b.dataset.such.includes(q); b.style.display = ja ? "" : "none"; if (ja) n++; }); $("sbListeLeer").style.display = n ? "none" : ""; };
+  if (altQ) { such.value = altQ; such.oninput(); } // beim Neuaufbau bleibt die Suche stehen
+  // Antippen führt aus – Beispiele mit Namen oder Text (Klaus, „: …“, Glühwein) sind nur Muster: dann zum Sprechen auffordern
+  f.querySelectorAll(".sb-befehl").forEach((b) => (b.onclick = () => { const [satz] = zeilen[+b.dataset.i];
+    if (/klaus|:|glühwein/i.test(satz)) return melde(sbStummAn() ? "Nur ein Beispiel – zum Sprechen erst oben „🎙️ Mikrofon wieder an“" : "Nur ein Beispiel – tippe unten auf 🎙️ und sag es mit dem richtigen Namen bzw. Text");
+    fensterZu(f); sbVerstanden(satz); }));
+}
+function sbKnopfTipp() { if (SB.lang) { SB.lang = false; return; } if (sbStummAn()) return sbListe(); sbHoeren(); } // stumm → Liste mit „Mikrofon wieder an“
 // 2.83.0 KC-CLUB-SPRACHE-LERNEN: Ziele, die man einem unbekannten Satz zuordnen kann (gleiche IDs wie im Server: SPRACHE_ZIELE)
 const SB_ZIELE = [
   { id: "start", sym: "🏠", t: "Startseite", los: () => sbAusfuehren({ art: "start" }) },
@@ -1736,7 +1784,7 @@ const SB_ZIELE = [
   { id: "einstellungen", sym: "⚙️", t: "Einstellungen", los: () => zeige("einstellungen") },
   { id: "hilfe", sym: "❓", t: "Hilfe & Tipps", los: () => zeige("hilfezentrum") },
 ];
-function sbWoerterLaden() { if (SB.woerter || SB.laedt) return; SB.laedt = true; api("sprache_woerter").then((r) => { SB.woerter = r && Array.isArray(r.meine) ? r : { meine: [], alle: [] }; }).catch(() => {}).finally(() => { SB.laedt = false; }); }
+function sbWoerterLaden() { if (SB.woerter || SB.laedt) return SB.laedt || null; return (SB.laedt = api("sprache_woerter").then((r) => { SB.woerter = r && Array.isArray(r.meine) ? r : { meine: [], alle: [] }; }).catch(() => {}).finally(() => { SB.laedt = false; })); }
 // unbekannter Satz → „Was meinst du damit?“ – Antippen merkt es sich (Datenbank) und führt es gleich aus
 function sbLernFrage(roh) {
   const merkbar = sbMerkbar(roh);
@@ -1767,7 +1815,6 @@ function sbLangDruck(k) {
   ["pointerup", "pointerleave", "pointercancel"].forEach((e) => k.addEventListener(e, weg));
   k.addEventListener("contextmenu", (e) => e.preventDefault());
 }
-function sbKnopfTipp() { if (SB.lang) { SB.lang = false; return; } sbHoeren(); }
 async function sbAusFragen() {
   if (await frage("🎙️ Sprachsteuerung ausschalten?\n\nDer 🎙️-Knopf verschwindet. Wieder einschalten: ⚙️ → „🎙️ Sprachsteuerung“.", { ja: "🔇 Ausschalten", nein: "🎙️ Anlassen" })) sbSchalter(false);
 }
@@ -20568,7 +20615,7 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) spurS
 const SPUR_WAS = { vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
-  sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", sprache_ziel: "🎙️ Sprache: Seite geöffnet", sprache_gelernt: "🎙️ Sprache: neuen Befehl gelernt", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
+  sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", sprache_ziel: "🎙️ Sprache: Seite geöffnet", sprache_gelernt: "🎙️ Sprache: neuen Befehl gelernt", sprache_liste: "📋 Liste der Sprachbefehle geöffnet", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
 const SPW = { tag: null, person: null, uhr: null };
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;

@@ -1533,6 +1533,13 @@
   @media (prefers-reduced-motion: reduce) { .sb-welle i { animation: none; height: 24px; } }
   .sb-gehoert { font-size: 1.15rem; font-weight: 700; text-align: center; margin: 4px 0 8px; }
   .sb-still .sb-welle { display: none; }
+  /* 2.84.0 KC-CLUB-SPRACHE-LISTE: 🔇 und 📋 über dem Mikrofon; stumm = grauer Knopf */
+  .sb-mini { position: fixed; z-index: 21; left: calc(max(12px, calc(50% - 372px)) + 8px); width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; background: var(--karte); color: var(--text); font-size: 1.05rem; line-height: 1; padding: 0; box-shadow: var(--schatten); cursor: pointer; }
+  #sbStummKnopf { bottom: calc(148px + env(safe-area-inset-bottom)); } #sbListeKnopf { bottom: calc(196px + env(safe-area-inset-bottom)); }
+  .sb-mini.versteckt, body.im-chat .sb-mini, body.su-auf .sb-mini, body.kt-aktiv .sb-mini, body.fa-waehlen .sb-mini { display: none; }
+  .sb-knopf.stumm { background: #8a8580; }
+  .sb-liste { display: grid; gap: 6px; margin-top: 8px; } .sb-befehl { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; width: 100%; border: 1px solid var(--linie); border-radius: 12px; background: var(--karte2); color: var(--text); padding: 8px 10px; font: inherit; cursor: pointer; }
+  .sb-befehl small { color: var(--grau, #6b625c); }
   .sb-ziele { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 6px; } .sb-ziele .knopf { min-width: 0; width: 100%; box-sizing: border-box; display: flex; gap: 6px; align-items: center; text-align: left; font-size: .95rem; padding: 8px 10px; margin: 0; } /* 2.83.0 KC-CLUB-SPRACHE-LERNEN */
   .sb-knopf { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; touch-action: manipulation; } /* 2.77.0: langes Drücken ohne Handy-Menü */ /* 2.76.0: Welle nur, solange wirklich zugehört wird */
   .sb-wer { display: grid; gap: 8px; margin: 10px 0 0; } .sb-wer .knopf { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; } .sb-wer .knopf b { flex: 1; }
@@ -3437,6 +3444,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.83.0" data-v="2.83.0"></script>
+<script src="app.js?v=2.84.0" data-v="2.84.0"></script>
 </body>
 </html>

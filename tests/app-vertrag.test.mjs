@@ -6230,9 +6230,9 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 
 // 4xx. 2.77.0: lange auf 🎙️ drücken → „Sprachsteuerung ausschalten?“ (KC-CLUB-SPRACHSTEUERUNG, Wunsch Hansi)
 {
-  assert.ok(/onclick="sbKnopfTipp\(\)">🎙️<\/button>'\); k = \$\("sbKnopf"\); sbLangDruck\(k\);/.test(programm), "Knopf bekommt langes Drücken");
+  assert.ok(/onclick="sbKnopfTipp\(\)">🎙️<\/button>'[\s\S]{0,400}k = \$\("sbKnopf"\); sbLangDruck\(k\);/.test(programm), "Knopf bekommt langes Drücken");
   const f = programm.slice(programm.indexOf("function sbLangDruck(k)"), programm.indexOf("function sbStopp()"));
-  assert.ok(/SB\.lang = true;[^\n]*sbAusFragen\(\); \}, 650\)/.test(f) && /function sbKnopfTipp\(\) \{ if \(SB\.lang\) \{ SB\.lang = false; return; \} sbHoeren\(\); \}/.test(f), "lang → Frage, danach kein Zuhören");
+  assert.ok(/SB\.lang = true;[^\n]*sbAusFragen\(\); \}, 650\)/.test(f) && /function sbKnopfTipp\(\) \{ if \(SB\.lang\) \{ SB\.lang = false; return; \}( if \(sbStummAn\(\)\) return sbListe\(\);)? sbHoeren\(\); \}/.test(programm), "lang → Frage, danach kein Zuhören");
   assert.ok(/ja: "🔇 Ausschalten", nein: "🎙️ Anlassen" \}\)\) sbSchalter\(false\);/.test(f), "erst nach Ja aus");
   assert.ok(/\.sb-knopf \{ -webkit-touch-callout: none;/.test(seite));
 }
@@ -6353,4 +6353,17 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/case "sprache_lernen": \{/.test(server) && /schluessel: "sprache_gelernt"/.test(server) && /p\.size >= 2 && !gesperrt\.has\(k\)/.test(server), "persönlich gemerkt, ab 2 Mitgliedern für alle");
   assert.ok(/case "sprache_admin": \{\s*nurAdmin\(ich\);/.test(server) && /case "sprache_global": \{\s*nurAdmin\(ich\);/.test(server), "Admin-Übersicht nur für den Admin");
   assert.ok(/s\.length <= 60 && s\.split\(" "\)\.length <= 8/.test(server), "Server merkt nur kurze Sätze");
+}
+
+// 4xx. 2.84.0: 🔇 Stumm und 📋 Liste aller Sprachbefehle am Mikrofon (KC-CLUB-SPRACHE-LISTE, Wunsch Hansi)
+{
+  const a = programm.indexOf("const sbNorm = "), b = programm.indexOf("// ungespeicherte Eingaben auf der jetzigen Seite?");
+  const sbErkennen = new Function(programm.slice(a, b) + "\nreturn sbErkennen;")();
+  const bef = new Function(programm.slice(programm.indexOf("const SB_BEFEHLE = ["), programm.indexOf("function sbListe()")) + "\nreturn SB_BEFEHLE;")();
+  assert.ok(bef.length >= 20, "Liste vollständig");
+  for (const [satz] of bef) assert.ok(sbErkennen(satz, [{ person_id: "K", name: "Klaus Zander" }], "X"), `Beispiel „${satz}“ wird erkannt`);
+  assert.ok(/id="sbStummKnopf" onclick="sbStumm\(!sbStummAn\(\)\)"/.test(programm) && /id="sbListeKnopf"[^>]*onclick="sbListe\(\)">📋/.test(programm), "zwei kleine Knöpfe am Mikrofon");
+  assert.ok(/if \(sbStummAn\(\)\) return sbListe\(\); sbHoeren\(\);/.test(programm) && /🎙️ Mikrofon wieder an/.test(programm), "stumm: Mikrofon hört nicht zu, Liste bietet „wieder an“");
+  assert.ok(/such\.oninput = \(\) => \{ const q = sbNorm\(such\.value\);/.test(programm), "Live-Suche");
+  assert.ok(/\.sb-mini \{ position: fixed;/.test(seite) && /\.sb-knopf\.stumm \{/.test(seite));
 }
