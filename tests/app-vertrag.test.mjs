@@ -5485,7 +5485,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.sh-rahmen \{ position: fixed;[^}]*pointer-events: none;[^}]*animation: shPuls 1s/.test(seite) && /@keyframes shPuls \{[^@]*scale\(1\.035\)[^@]*0 0 28px 12px/.test(seite), "eigener Rahmen über dem Ziel, kräftig pulsierend (2.65.0)");
   assert.ok(/function shRahmen\(el\)[\s\S]{0,900}requestAnimationFrame\(folgen\)/.test(programm) && /if \(SH\.el !== el\) shRahmen\(el\)/.test(programm), "Rahmen folgt dem Ziel");
   assert.ok(/t: "✍️ Schreib deine kurze Nachricht in das Feld – wenn du magst, tippe darunter noch ein Emoji an 😊"/.test(programm), "Text-Schritt mit Emoji-Hinweis");
-  assert.ok(/id="setSchrittVorlesen" onchange="shVorlesen\(this\.checked\)"/.test(seite) && /id="shLaut"[^`]*onclick="shVorlesen\(!shVorlesenAn\(\)\)"/.test(programm) && /shSag\(`Schritt \$\{i \+ 1\}: \$\{s\.t\}`\)/.test(programm), "Schritte vorlesen (Schalter + 🔈 in der Leiste)");
+  assert.ok(/id="setSchrittVorlesen" onchange="shVorlesen\(this\.checked\)"/.test(seite) && /id="shLaut"[^`]*onclick="shVorlesen\(!shVorlesenAn\(\)\)"/.test(programm) && /shSag\(`Schritt \$\{i \+ 1\}: \$\{shText\(s\)\}`\)/.test(programm), "Schritte vorlesen (Schalter + 🔈 in der Leiste)");
   assert.ok(/function shSag\(t\) \{ if \(!shVorlesenAn\(\)\) return;[^\n]*sprechen\(shSprechText\(t\)\)/.test(programm), "gleicher Sprach-Kern (sprechen), nur wenn eingeschaltet");
   assert.ok(/id: "wichtig", ziel: "#pwWichtig", t: "Wichtigkeit wählen[^\n]*waehlen: true/.test(programm) && !/frei: true/.test(ab), "Wichtigkeit ist ein eigener Schritt (2.64.0)");
   assert.ok(/t: "Tippe oben rechts auf „＋ Zettel“"/.test(programm), "erster Schritt sagt, wo");
@@ -5545,9 +5545,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const shTmOffen = \(\) =>/.test(programm) && /id: "start", ruhe: true, ziel: "#neuTreffenKnopf"/.test(ab), "Ausgangszustand nur ohne offenes Formular");
   assert.ok(/lob: "Deine Antwort ist gespeichert\."/.test(ab) && /lob: "Deine Anfrage ist unterwegs\."/.test(ab), "Lob je Weg");
   assert.ok(/if \(\(!s\.wenn \|\| s\.wenn\(\)\) && e\.target\.closest\?\.\(s\.ziel\)\) \{ SH\.beruehrt\.add\(s\.id\); if \(s\.ende\) SH\.lobJetzt = s\.lob; \}/.test(programm), "nur geltende Schritte zählen beim Antippen");
-  assert.ok(/const dlg = document\.querySelector\("\.dlg-blatt \.blatt-innen"\);/.test(programm) && /\.sh-rahmen \{ position: fixed; z-index: 5001;/.test(seite) && /\.sh-leiste \{ position: fixed; z-index: 5002;/.test(seite), "Rückfrage-Fenster zuerst; Rahmen und Leiste über allen Fenstern");
+  assert.ok(/const dlg = document\.querySelector\("\.dlg-blatt \.blatt-innen"\)/.test(programm) && /\.sh-rahmen \{ position: fixed; z-index: 5001;/.test(seite) && /\.sh-leiste \{ position: fixed; z-index: 5002;/.test(seite), "Rückfrage-Fenster zuerst; Rahmen und Leiste über allen Fenstern");
   assert.ok(/new MutationObserver\(\(\) => \{ if \(SH\.bereich && shAn\(\)\)/.test(programm), "Fenster auf/zu prüft neu");
   assert.ok(/if \(SH\.geschafft\) \{ if \(ruhe\) return; SH\.geschafft = false;/.test(programm), "nach „Geschafft“ läuft die Hilfe beim nächsten Anfang wieder");
+}
+
+// 4xx. 2.70.0: Schritt-Unterstützung bei Termine – Kalender, To-do, Terminfindung; Auswahlfenster (KC-CLUB-SCHRITT-HILFE, Wunsch Hansi)
+{
+  const ab = programm.slice(programm.indexOf("const SH_ABLAEUFE = {"), programm.indexOf("const SH = {"));
+  for (const z of ["#kalGitter", "#kalTag", "#todoText", "#todoWer", "#todoFuer", "#todoBereich .todoform > .knopf.haupt", "#terminumfrageForm .artwahl", "#tuTitel", "#tuReihen", "#tuFrist", "#terminumfrageForm label:has(#tuInfo)", "#terminumfrageForm .knoepfe .knopf.haupt"]) assert.ok(ab.includes(`ziel: "${z}"`), "Schritt " + z);
+  for (const id of ["kalGitter", "kalTag", "todoText", "todoWer", "todoFuer", "tuTitel", "tuReihen", "tuFrist", "tuInfo"]) assert.ok(seite.includes(`id="${id}"`) || programm.includes(`id="${id}"`), "Ziel vorhanden: " + id);
+  assert.ok(/id: "todo-text", start: true,/.test(ab) && /const ruhe = gilt\[0\]\.ruhe \|\| \(\(gilt\[0\]\.start \?\? !gilt\[0\]\.wenn\) && !gilt\[0\]\.fertig\(\)\);/.test(programm), "To-do: leeres Feld = nichts angefangen (dort wird gelobt)");
+  assert.ok(/const SH_FENSTER = \[\n  \{ offen: \(\) => !\$\("personenBlatt"\)\?\.classList\.contains\("versteckt"\), ziel: "#personenBlatt \.blatt-innen"/.test(programm) && /id="personenBlatt"/.test(seite), "Auswahlfenster „Wer?“ wird gezeigt");
+  assert.ok(/const shText = \(s\) => \(typeof s\.t === "function" \? s\.t\(\) : s\.t\);/.test(programm), "Text darf vom Zustand abhängen");
+  assert.ok(/SH\.nach = setTimeout\(shAktualisieren, 700\)/.test(programm), "spät öffnende Fenster werden erkannt");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.69.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.70.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1602,9 +1602,10 @@ const HILFE = [
 // ---------- KC-CLUB-SCHRITT-HILFE (2.63.0, Wunsch Hansi; 2.64.0 verfeinert): Schritt-Unterstützung ----------
 // Eingeschaltet (⚙️ Einstellungen → „👣 Schritt-Unterstützung“, nur auf diesem Gerät) bekommt immer genau der nächste Schritt
 // einen pulsierenden roten Rahmen; unten steht mit zwei laufenden Schuhen „Schritt 2 von 6: …“ (bei offener Tastatur oben,
-// damit sie nichts verdeckt). Abläufe stehen in der Registry SH_ABLAEUFE (Bereich → Schritte); Pinnwand (2.63.0), Nachrichten (2.67.0, Sonderwege 2.68.0), Termine (2.69.0) – weitere
+// damit sie nichts verdeckt). Abläufe stehen in der Registry SH_ABLAEUFE (Bereich → Schritte); Pinnwand (2.63.0), Nachrichten (2.67.0, Sonderwege 2.68.0), Termine (2.69.0, Kalender/To-do/Terminfindung 2.70.0) – weitere
 // Bereiche = neuer Eintrag hier, sonst nichts. Schritt: ziel (CSS), t (Text, mit Ort), fertig() erledigt?, wenn() gilt nur dann,
-// ruhe = Ausgangszustand (nichts angefangen; dort wird nach dem letzten Schritt gelobt);
+// ruhe = Ausgangszustand (nichts angefangen; dort wird nach dem letzten Schritt gelobt); start = erster Schritt eines Wegs:
+// solange er nicht erledigt ist, gilt der Weg als nicht angefangen (wie ein Schritt ohne wenn);
 // waehlen = Auswahl ist vorbelegt: erledigt, sobald angetippt oder ein späterer Schritt schon dran war; ende = letzter Knopf;
 // weiter = Eingabe (2.66.0): bleibt dran, bis man „Weiter ➜“ tippt oder selbst einen späteren Schritt antippt – nie mitten im Schreiben.
 const SH_KEY = "kc_club_schritt_hilfe";
@@ -1630,7 +1631,21 @@ const SH_ABLAEUFE = {
   // 2.69.0 Termine: Übersicht → „＋ Neu“ → Auswahl → privater Termin / Termin für alle (Clubleitung) / Terminanfrage;
   // Zusagen: Termin antippen → ✅ / ❓ / ❌ → Schließen. Es gilt immer der Weg, dessen Formular gerade offen ist.
   termine: [
-    { id: "start", ruhe: true, ziel: "#neuTreffenKnopf", t: "Neuer Termin oder Anfrage? Tippe oben rechts auf „＋ Neu“. Zu- oder absagen: tippe unten einen Termin an", wenn: () => !shTmOffen(), fertig: () => false },
+    { id: "start", ruhe: true, ziel: "#neuTreffenKnopf", t: () => "Neuer Termin oder Anfrage? Tippe oben rechts auf „＋ Neu“. Zu- oder absagen: tippe unten einen Termin an"
+      + ($("terminfindung")?.textContent.trim() ? ". 🗓️ Terminfindung: bei jedem Vorschlag ✅, ❓ oder ❌ antippen" : ""), wenn: () => !shTmOffen() && termineArt === "liste", fertig: () => false },
+    // 2.70.0 Kalender: Tag antippen → Termine des Tages; To-do: aufschreiben → wer → für wen → eintragen; Terminfindung (Clubleitung)
+    { id: "kal-tag", ruhe: true, ziel: "#kalGitter", t: "Tippe auf einen Tag – darunter siehst du seine Termine. Mit ‹ und › blätterst du die Monate", wenn: () => !shTmOffen() && termineArt === "kalender" && !$("kalTag")?.querySelector("h3"), fertig: () => false },
+    { id: "kal-liste", ruhe: true, ziel: "#kalTag", t: "Das sind die Termine an diesem Tag – antippen öffnet einen Termin. Neuer Termin: oben rechts „＋ Neu“", wenn: () => !shTmOffen() && termineArt === "kalender" && !!$("kalTag")?.querySelector("h3"), fertig: () => false },
+    { id: "todo-text", start: true, ziel: "#todoText", t: "✍️ Was ist zu tun? Kurz aufschreiben, z. B. „Getränke einkaufen“", wenn: () => !shTmOffen() && termineArt === "todo", fertig: () => !!$("todoText")?.value.trim(), weiter: true },
+    { id: "todo-wer", ziel: "#todoWer", t: "👉 Wer soll es machen? Antippen und Namen anhaken – oder offen lassen", wenn: () => !shTmOffen() && termineArt === "todo", fertig: () => true, weiter: true },
+    { id: "todo-fuer", ziel: "#todoFuer", t: "Nur für dich oder für alle sichtbar?", wenn: () => !shTmOffen() && termineArt === "todo", fertig: () => true, weiter: true },
+    { id: "los", ziel: "#todoBereich .todoform > .knopf.haupt", t: "Tippe auf „＋ Eintragen“", wenn: () => !shTmOffen() && termineArt === "todo", fertig: () => false, ende: true, lob: "Eingetragen – es steht jetzt in der Liste. Abhaken geht mit dem Kästchen." },
+    { id: "tu-art", ziel: "#terminumfrageForm .artwahl", t: "🗓️ Terminfindung: Sitzung oder Veranstaltung?", wenn: () => shTmForm("terminumfrageForm"), fertig: () => true, weiter: true },
+    { id: "tu-titel", ziel: "#tuTitel", t: "Titel – z. B. „Köcheclub-Sitzung“ oder „Grillabend“", wenn: () => shTmForm("terminumfrageForm"), fertig: () => !!$("tuTitel").value.trim(), weiter: true },
+    { id: "tu-termine", ziel: "#tuReihen", t: "Trag mindestens 2 Terminvorschläge ein (Datum und Uhrzeit). Mehr: „＋ weiterer Termin“", wenn: () => shTmForm("terminumfrageForm"), fertig: () => [...document.querySelectorAll("#tuReihen .tuDatum")].filter((x) => x.value).length >= 2, weiter: true },
+    { id: "tu-frist", ziel: "#tuFrist", t: "Bis wann sollen alle antworten? Freiwillig – leer lassen geht auch", wenn: () => shTmForm("terminumfrageForm"), fertig: () => true, weiter: true },
+    { id: "tu-info", ziel: "#terminumfrageForm label:has(#tuInfo)", t: "📣 Alle benachrichtigen? Haken an = Push bzw. E-Mail an alle", wenn: () => shTmForm("terminumfrageForm"), fertig: () => true, weiter: true },
+    { id: "los", ziel: "#terminumfrageForm .knoepfe .knopf.haupt", t: "Tippe unten auf „🗓️ Starten“", wenn: () => shTmForm("terminumfrageForm"), fertig: () => false, ende: true, lob: "Die Terminfindung läuft – alle können jetzt ankreuzen. Mit 📅 legst du später den besten Termin fest." },
     { id: "wahl", ruhe: true, ziel: "#neuWahlBlatt .wahl", t: "Was möchtest du anlegen? Tippe eine Möglichkeit an", wenn: () => !!$("neuWahlBlatt"), fertig: () => false },
     { id: "antwort", ziel: "#treffenInfo .antworten", t: "Sag zu oder ab: tippe „✅ Ich komme“, „❓ Vielleicht“ oder „❌ Kann nicht“", wenn: () => !!$("treffenInfo")?.querySelector(".antworten"), fertig: () => !!$("treffenInfo")?.querySelector(".antworten .an") },
     { id: "los", ziel: "#treffenInfo .blatt-innen > .knopf", t: "Gespeichert! Tippe auf „Schließen“. Nach „Ich komme“ kannst du vorher noch eine Mitfahrt suchen oder anbieten", wenn: () => !!$("treffenInfo")?.querySelector(".antworten"), fertig: () => false, ende: true, lob: "Deine Antwort ist gespeichert." },
@@ -1667,9 +1682,14 @@ const SH_ABLAEUFE = {
     { id: "los", ziel: "#sendenKnopf", t: "Tippe rechts unten auf ➤ – dann ist deine Nachricht unterwegs", fertig: () => false, ende: true, lob: "Deine Nachricht ist unterwegs." },
   ],
 };
+// 2.70.0 Auswahlfenster mitten im Ablauf (z. B. „Wer soll es machen?“): solange offen, zeigt die Hilfe darauf
+const SH_FENSTER = [
+  { offen: () => !$("personenBlatt")?.classList.contains("versteckt"), ziel: "#personenBlatt .blatt-innen", t: "Hake an, wer es machen soll – dann unten auf „✅ Fertig“ tippen" },
+];
 // Termine: welches Formular ist offen? (ohne Fenster „＋ Neu“ / Termin-Info)
 const shTmForm = (id, feld) => !!$(id) && !$(id).classList.contains("versteckt") && (!feld || !!$(feld));
 const shTmOffen = () => !!$("neuWahlBlatt") || !!$("treffenInfo") || shTmForm("treffenForm") || shTmForm("terminanfrageForm") || shTmForm("terminumfrageForm");
+const shText = (s) => (typeof s.t === "function" ? s.t() : s.t); // Text darf vom Zustand abhängen
 const SH = { bereich: null, beruehrt: new Set(), letzter: null, geschafft: false, timer: null, el: null, lauf: 0 };
 const shAn = () => lsLesen(SH_KEY) === "1";
 // 2.65.0: Vorlesen der Schritte (🔊 in der Leiste oder ⚙️ Einstellungen) – gleicher Sprach-Kern wie überall (sprechen)
@@ -1738,7 +1758,7 @@ function shAktualisieren() {
   const ablauf = SH_ABLAEUFE[SH.bereich];
   if (!ablauf || !shAn() || aktuelleAnsicht !== SH.bereich) return;
   const gilt = ablauf.filter((s) => !s.wenn || s.wenn());
-  const ruhe = gilt[0].ruhe || (!gilt[0].wenn && !gilt[0].fertig());
+  const ruhe = gilt[0].ruhe || ((gilt[0].start ?? !gilt[0].wenn) && !gilt[0].fertig());
   if (SH.geschafft) { if (ruhe) return; SH.geschafft = false; clearTimeout(SH.timer); SH.beruehrt.clear(); } // 2.69.0: etwas Neues angefangen → Hilfe läuft wieder
   // erledigt: fertig(), oder (Auswahl vorbelegt) angetippt bzw. ein späterer Schritt war schon dran – der Rahmen springt nie zurück
   const spaeter = (i) => gilt.slice(i + 1).some((x) => SH.beruehrt.has(x.id) || (!x.weiter && x.fertig?.()));
@@ -1755,7 +1775,10 @@ function shAktualisieren() {
   }
   if (SH.beruehrt.has("los")) { clearTimeout(SH.warte); SH.warte = setTimeout(shAktualisieren, 500); } // Anheften läuft noch → nachsehen
   // 2.69.0: Rückfrage-Fenster offen (frage/eingabe, z. B. „Thema vorschlagen?“) → erst das beantworten
-  const dlg = document.querySelector(".dlg-blatt .blatt-innen");
+  const dlg = document.querySelector(".dlg-blatt .blatt-innen"), fw = !dlg && SH_FENSTER.find((f) => f.offen());
+  if (fw) { const z = document.querySelector(fw.ziel); document.querySelectorAll(".sh-ziel").forEach((e) => e.classList.remove("sh-ziel"));
+    if (z && SH.el !== z) shRahmen(z); if (SH.letzter !== fw.ziel) { SH.letzter = fw.ziel; shSag(fw.t); }
+    shLeiste(`<b>Kurz dazwischen:</b> ${esc(fw.t)}`); return; }
   if (dlg) { document.querySelectorAll(".sh-ziel").forEach((e) => e.classList.remove("sh-ziel")); if (SH.el !== dlg) shRahmen(dlg);
     if (SH.letzter !== "dlg") { SH.letzter = "dlg"; shSag("Bitte zuerst die Frage im Fenster beantworten."); }
     shLeiste("<b>Kurz dazwischen:</b> Bitte zuerst die Frage im Fenster beantworten 👇"); return; }
@@ -1763,9 +1786,9 @@ function shAktualisieren() {
   const s = gilt[i], el = document.querySelector(s.ziel);
   document.querySelectorAll(".sh-ziel").forEach((e) => e !== el && e.classList.remove("sh-ziel"));
   el?.classList.add("sh-ziel"); if (SH.el !== el) shRahmen(el); shLage();
-  shLeiste(`<b>${gilt.length > 1 ? `Schritt ${i + 1} von ${gilt.length}` : "Tipp"}:</b> ${esc(s.t)}${s.weiter && s.fertig() ? `<button type="button" class="sh-weiter" onclick="shWeiter('${s.id}')">Fertig – weiter ➜</button>` : ""}`);
+  shLeiste(`<b>${gilt.length > 1 ? `Schritt ${i + 1} von ${gilt.length}` : "Tipp"}:</b> ${esc(shText(s))}${s.weiter && s.fertig() ? `<button type="button" class="sh-weiter" onclick="shWeiter('${s.id}')">Fertig – weiter ➜</button>` : ""}`);
   if (SH.letzter !== s.id) { // nur bei neuem Schritt ins Bild holen – nicht beim Tippen
-    SH.letzter = s.id; const a = document.activeElement; shSag(`Schritt ${i + 1}: ${s.t}`);
+    SH.letzter = s.id; const a = document.activeElement; shSag(`Schritt ${i + 1}: ${shText(s)}`);
     if (el && !(a && /^(TEXTAREA|INPUT)$/.test(a.tagName) && !el.contains(a))) { const r = el.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight - 300) el.scrollIntoView({ behavior: "smooth", block: "center" }); }
   }
 }
@@ -1779,6 +1802,7 @@ for (const art of ["click", "input", "change"]) document.addEventListener(art, (
   if (art === "click") { SH.beruehrt.delete("los"); /* nur der letzte Tipp zählt (Abbrechen ≠ angeheftet) */
     for (const s of SH_ABLAEUFE[SH.bereich]) if ((!s.wenn || s.wenn()) && e.target.closest?.(s.ziel)) { SH.beruehrt.add(s.id); if (s.ende) SH.lobJetzt = s.lob; } }
   clearTimeout(SH.warte); SH.warte = setTimeout(shAktualisieren, art === "input" ? 250 : 80);
+  if (art === "click") { clearTimeout(SH.nach); SH.nach = setTimeout(shAktualisieren, 700); } // Fenster, die erst nach dem Laden aufgehen
 }, true);
 const HZ = { thema: null, q: "", vorher: null, gruss: 0, unterwegs: null, herkunft: null, sicht: null };
 // 2.23.1 (Wunsch Hansi: „immer etwas anders formuliert, freundlich, nicht aufdringlich“): wechselnde Einleitungen – neu gewählt
