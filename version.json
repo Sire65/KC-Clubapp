@@ -1,11 +1,17 @@
 {
-  "version": "2.118.0",
+  "version": "2.119.0",
   "datum": "2026-10-06",
   "neu": [
-    "🧑‍🍳 Twinkey hat beim Schach viele neue Sprüche – beim Schlagen, im Schach, beim Gewinnen und Verlieren",
-    "📼 Schach: Partien werden aufgezeichnet – unter „Meine Partien“ Zug für Zug nachspielen"
+    "💬 Chat: Bei langsamem Netz stauen sich die „schreibt …“-Meldungen nicht mehr – Chat und Senden bleiben flott"
   ],
   "verlauf": [
+    {
+      "version": "2.119.0",
+      "datum": "2026-10-08",
+      "neu": [
+        "💬 Chat: Bei langsamem Netz stauen sich die „schreibt …“-Meldungen nicht mehr – Chat und Senden bleiben flott"
+      ]
+    },
     {
       "version": "2.118.0",
       "datum": "2026-10-08",

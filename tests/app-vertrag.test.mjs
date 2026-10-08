@@ -6803,3 +6803,9 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.equal(A.schNsStellung(e, 2).ch.fen().split(" ")[0], "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR", "Stellung nach 2 Halbzügen");
   assert.equal(A.schNsStellung({ zuege: ["e4", "Kxz9"] }, 2).ok, false, "unvollständige Aufzeichnung wird erkannt");
 }
+
+// 4xx. 2.115.0 (live als 2.119.0): „schreibt …“ – nie mehr als eine Meldung unterwegs (KC-CLUB-TEMPO, Befund Tempo-Log)
+{
+  const f = programm.slice(programm.indexOf("function tippenMelden()"), programm.indexOf("let TIPP_UNTERWEGS"));
+  assert.ok(/if \(TIPP_UNTERWEGS\) \{ TIPP_NOCHMAL = true; return; \}/.test(f) && /\.finally\(\(\) => \{ TIPP_UNTERWEGS = false;/.test(f), "kein Stau beim Tippen");
+}
