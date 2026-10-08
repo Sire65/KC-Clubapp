@@ -6322,7 +6322,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 {
   assert.ok(/e\.w = x\.w; je\.set\(x\.p, e\);/.test(server) && /zuletzt: e\.w \}\)\)/.test(server), "Server liefert den letzten Schritt je Person (nur die Art)");
   assert.ok(/🟢 Gerade in der App/.test(programm) && /ist bei <b>\$\{esc\(was\(x\.zuletzt\) \|\| "\?"\)\}<\/b>/.test(programm) && /"👉 jetzt" : "zuletzt"/.test(programm), "Übersicht: wer ist gerade wo");
-  assert.ok(/const SERVER_VERSION = "2\.81\.0"/.test(server));
+  assert.ok(/const SERVER_VERSION = "2\.(8[1-9]|9\d)\.0"/.test(server));
 }
 
 // 4xx. 2.82.0: Schritt-Hilfe für Mitglieder, Helfen & Leihen (Hilfe suchen, Börse) und Fotos (KC-CLUB-SCHRITT-HILFE, Wunsch Hansi)
@@ -6331,4 +6331,26 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   for (const a of ["hf-art", "hf-wann", "hf-anzahl", "hf-wo", "hf-an", "bo-art", "bo-rubrik", "bo-preis"]) assert.ok(programm.includes(`<div class="hl-frage" data-sh="${a}">`) && programm.includes(`'[data-sh="${a}"] + `), "Formular-Anker " + a);
   assert.ok(/<input id="boTitel"/.test(programm) && /<input id="boPreis"/.test(programm) && /<textarea id="boText"/.test(programm), "Börse-Felder haben IDs");
   assert.ok(/id: "los", ziel: "#faKnopf"[^\n]*ende: true/.test(programm) && /id: "los", ziel: "#hlInhalt \.hl-form \.knoepfe \.knopf\.haupt"/.test(programm), "Ende-Schritte Fotos/Helfen");
+}
+
+// 4xx. 2.83.0: selbstlernende Sprachsteuerung – unbekannter Satz → „Was meinst du damit?“ → in der Datenbank gemerkt (KC-CLUB-SPRACHE-LERNEN, Wunsch Hansi)
+{
+  const a = programm.indexOf("const sbNorm = "), b = programm.indexOf("// ungespeicherte Eingaben auf der jetzigen Seite?");
+  const { sbErkennen, sbGelernt, sbMerkbar } = new Function(programm.slice(a, b) + "\nreturn { sbErkennen, sbGelernt, sbMerkbar };")();
+  assert.deepEqual(sbErkennen("Neuer Termin"), { art: "ziel", ziel: "termin_neu" });
+  assert.deepEqual(sbErkennen("Fotos hochladen"), { art: "ziel", ziel: "foto_neu" });
+  assert.deepEqual(sbErkennen("Archiv"), { art: "ziel", ziel: "archiv" });
+  assert.equal(sbErkennen("Treffen planen"), null, "unbekannt bleibt unbekannt – nie raten");
+  const w = { meine: [{ s: "treffen planen", z: "termin_neu" }], alle: [{ s: "zeig mir die bilder vom fest", z: "fotos" }] };
+  assert.deepEqual(sbGelernt("Treffen planen!", w), { art: "ziel", ziel: "termin_neu", gelernt: true }, "gelernt (eigene)");
+  assert.deepEqual(sbGelernt("zeig mir die bilder vom test", w), { art: "ziel", ziel: "fotos", gelernt: true }, "fast gleich (Hörfehler) – für alle");
+  assert.equal(sbGelernt("ganz was anderes", w), null);
+  assert.ok(sbMerkbar("Treffen planen") && !sbMerkbar("eins zwei drei vier fünf sechs sieben acht neun"), "nur kurze Sätze werden gemerkt");
+  const zT = programm.slice(programm.indexOf("const SB_ZIELE = ["), programm.indexOf("function sbWoerterLaden()")), zA = [...zT.matchAll(/\{ id: "([a-z_]+)", sym: /g)].map((m) => m[1]);
+  const zS = JSON.parse(server.match(/const SPRACHE_ZIELE = (\[[^\]]+\]);/)[1]);
+  assert.deepEqual([...zA].sort(), [...zS].sort(), "App- und Server-Ziele gleich");
+  assert.ok(/if \(!b\) return sbLernFrage\(roh\);/.test(programm) && /api\("sprache_lernen", \{ satz: roh, ziel \}\)/.test(programm), "nachfragen und merken");
+  assert.ok(/case "sprache_lernen": \{/.test(server) && /schluessel: "sprache_gelernt"/.test(server) && /p\.size >= 2 && !gesperrt\.has\(k\)/.test(server), "persönlich gemerkt, ab 2 Mitgliedern für alle");
+  assert.ok(/case "sprache_admin": \{\s*nurAdmin\(ich\);/.test(server) && /case "sprache_global": \{\s*nurAdmin\(ich\);/.test(server), "Admin-Übersicht nur für den Admin");
+  assert.ok(/s\.length <= 60 && s\.split\(" "\)\.length <= 8/.test(server), "Server merkt nur kurze Sätze");
 }

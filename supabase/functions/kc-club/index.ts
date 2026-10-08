@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.81.0";
+const SERVER_VERSION = "2.83.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -2279,6 +2279,11 @@ async function wochenberichtLauf() {
 }
 // KC-CLUB-SPUR (2.23.88): erlaubte Schritte (Bereichs-Kürzel) und „mit wem“ (Mitglieds-Kennung oder Unterhaltungs-ID) – nie freier Text
 const SPUR_WAS = /^[a-z][a-z0-9_]{0,29}$/;
+// KC-CLUB-SPRACHE-LERNEN (2.83.0, Wunsch Hansi): selbstlernende Sprachsteuerung. Ziele = gleiche Registry wie in der App (SB_ZIELE).
+// Persönlich gelernt: kc_club_person_einstellung „sprache_gelernt“; für alle: kc_club_konfig „sprache_gelernt“ (Admin) – oder automatisch,
+// sobald 2 verschiedene Mitglieder denselben Satz demselben Ziel zuordnen. Unbekannte Sätze (nur kurze, ohne Inhalte) → Protokoll, 30 Tage für den Admin.
+const SPRACHE_ZIELE = ["start", "termine", "termin_neu", "naechster", "nachrichten", "nachricht_neu", "pinnwand", "pinnwand_neu", "mitglieder", "fotos", "foto_neu", "archiv", "erstattung", "helfen", "boerse", "protokolle", "vorschlaege", "einstellungen", "hilfe", "dienste"];
+const sprachSatz = (t: unknown) => { const s = String(t ?? "").toLowerCase().replace(/[.,!?;:„“"]/g, " ").replace(/\s+/g, " ").trim(); return s.length >= 2 && s.length <= 60 && s.split(" ").length <= 8 ? s : ""; };
 const SPUR_MIT = /^(KC-P-[A-Z0-9-]{1,30}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 const SPUR_TAGE = 30;
 // KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): jeder App-Start mit Dauer, Gerät und Browser (Name nur für den Admin sichtbar), 180 Tage
@@ -7141,6 +7146,67 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           push: (pu ?? []).map((x: any) => ({ z: x.created_at, s: x.status, a: String(x.anlass || "").slice(0, 40), an: !!x.displayed_at, auf: !!x.opened_at })),
           club: (ms ?? []).map((x: any) => ({ z: x.created_at, a: x.sender_person_id === pid ? "geschrieben" : "bekommen" })),
           pushAb: "2026-09-23", mailAb: "2026-08-25" });
+      }
+      // ----- KC-CLUB-SPRACHE-LERNEN (2.83.0) -----
+      case "sprache_woerter": {
+        const [{ data: mein }, { data: glob }, { data: alle }] = await Promise.all([
+          db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "sprache_gelernt").maybeSingle(),
+          db.from("kc_club_konfig").select("wert").eq("schluessel", "sprache_gelernt").maybeSingle(),
+          db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "sprache_gelernt"),
+        ]);
+        // automatisch für alle: derselbe Satz → dasselbe Ziel bei mindestens 2 Mitgliedern (nicht, wenn der Admin ihn gesperrt hat)
+        const zaehl = new Map<string, Set<string>>();
+        for (const x of alle ?? []) for (const e of ((x as any).wert?.eintraege ?? []) as any[]) { const k = e.s + "|" + e.z; if (!zaehl.has(k)) zaehl.set(k, new Set()); zaehl.get(k)!.add((x as any).person_id); }
+        const gesperrt = new Set<string>(((glob?.wert?.gesperrt ?? []) as string[]));
+        const auto = [...zaehl.entries()].filter(([k, p]) => p.size >= 2 && !gesperrt.has(k)).map(([k]) => ({ s: k.split("|")[0], z: k.split("|")[1] }));
+        return json({ meine: ((mein?.wert?.eintraege ?? []) as any[]).map((e) => ({ s: e.s, z: e.z })), alle: [...((glob?.wert?.eintraege ?? []) as any[]).map((e) => ({ s: e.s, z: e.z })), ...auto] });
+      }
+      case "sprache_lernen": {
+        const satz = sprachSatz(p.satz), ziel = String(p.ziel || "");
+        if (!satz) throw new Fehler("Der Satz ist zu lang zum Merken (höchstens 8 Wörter).", 400);
+        if (!SPRACHE_ZIELE.includes(ziel)) throw new Fehler("Unbekanntes Ziel.", 400);
+        if (ich.nurLesen) return json({ ok: true });
+        const { data: alt } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "sprache_gelernt").maybeSingle();
+        const eintraege = [{ s: satz, z: ziel, t: jetzt() }, ...((alt?.wert?.eintraege ?? []) as any[]).filter((e) => e.s !== satz)].slice(0, 100);
+        const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "sprache_gelernt", wert: { eintraege }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (error) throw new Fehler("Konnte ich mir gerade nicht merken – bitte später nochmal.", 503);
+        await protokoll(ich.person_id, "sprache_gelernt", { satz, ziel });
+        return json({ ok: true });
+      }
+      case "sprache_unbekannt": {
+        const satz = sprachSatz(p.satz);
+        if (satz && !ich.nurLesen) await protokoll(ich.person_id, "sprache_unbekannt", { satz });
+        return json({ ok: true, gespeichert: !!satz });
+      }
+      case "sprache_admin": {
+        nurAdmin(ich);
+        const seit = new Date(Date.now() - 30 * 86400000).toISOString();
+        const [{ data: unb }, { data: alle }, { data: glob }] = await Promise.all([
+          db.from("kc_club_protokoll").select("person_id,details,zeit").eq("aktion", "sprache_unbekannt").gte("zeit", seit).order("zeit", { ascending: false }).limit(1000),
+          db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "sprache_gelernt"),
+          db.from("kc_club_konfig").select("wert").eq("schluessel", "sprache_gelernt").maybeSingle(),
+        ]);
+        const u = new Map<string, { n: number; personen: Set<string>; zuletzt: string }>();
+        for (const x of unb ?? []) { const k = String((x as any).details?.satz || ""); if (!k) continue; const e = u.get(k) ?? { n: 0, personen: new Set(), zuletzt: (x as any).zeit }; e.n++; e.personen.add((x as any).person_id); u.set(k, e); }
+        const g = new Map<string, { s: string; z: string; personen: Set<string> }>();
+        for (const x of alle ?? []) for (const e of ((x as any).wert?.eintraege ?? []) as any[]) { const k = e.s + "|" + e.z; const v = g.get(k) ?? { s: e.s, z: e.z, personen: new Set() }; v.personen.add((x as any).person_id); g.set(k, v); }
+        const gl = new Set(((glob?.wert?.eintraege ?? []) as any[]).map((e) => e.s + "|" + e.z)), gesperrt = new Set<string>(((glob?.wert?.gesperrt ?? []) as string[]));
+        return json({ ziele: SPRACHE_ZIELE,
+          unbekannt: [...u.entries()].map(([s, e]) => ({ s, n: e.n, personen: e.personen.size, zuletzt: e.zuletzt })).sort((a, b) => b.n - a.n).slice(0, 100),
+          gelernt: [...g.entries()].map(([k, v]) => ({ s: v.s, z: v.z, personen: v.personen.size, global: gl.has(k) || (v.personen.size >= 2 && !gesperrt.has(k)), gesperrt: gesperrt.has(k) })).sort((a, b) => b.personen - a.personen),
+          global: ((glob?.wert?.eintraege ?? []) as any[]).map((e) => ({ s: e.s, z: e.z })) });
+      }
+      case "sprache_global": {
+        nurAdmin(ich);
+        const satz = sprachSatz(p.satz), ziel = String(p.ziel || ""), an = !!p.an;
+        if (!satz || !SPRACHE_ZIELE.includes(ziel)) throw new Fehler("Ungültiger Eintrag.", 400);
+        const { data: glob } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "sprache_gelernt").maybeSingle();
+        const k = satz + "|" + ziel, eintraege = ((glob?.wert?.eintraege ?? []) as any[]).filter((e) => e.s + "|" + e.z !== k), gesperrt = ((glob?.wert?.gesperrt ?? []) as string[]).filter((x) => x !== k);
+        if (an) eintraege.unshift({ s: satz, z: ziel }); else gesperrt.push(k); // „aus“ sperrt auch die automatische Übernahme
+        const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "sprache_gelernt", wert: { eintraege: eintraege.slice(0, 300), gesperrt: gesperrt.slice(0, 300) }, geaendert_von: ich.person_id, geaendert_am: jetzt() });
+        if (error) throw new Fehler("Speichern ging gerade nicht.", 503);
+        await protokoll(ich.person_id, "sprache_global", { satz, ziel, an });
+        return json({ ok: true });
       }
       case "spur_liste": {
         nurAdmin(ich);

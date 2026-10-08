@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.83.0 – 2026-10-08 – 🎙️ Selbstlernende Sprachsteuerung
+Kennt die Sprachsteuerung einen Satz nicht (z. B. „Treffen planen“), fragt sie: „Was meinst du damit?“ – Antippen führt es aus und merkt es sich in der Datenbank; beim nächsten Mal wird der Satz erkannt (auch mit kleinen Hörfehlern). Gelernt gilt erst für das Mitglied selbst, ab 2 Mitgliedern mit gleicher Zuordnung für alle. Admin: 👥 Nutzung → 🎙️ Sprachbefehle (unbekannte Sätze zuordnen, 🌍 für alle an/aus). Nur kurze Sätze (bis 8 Wörter) werden gespeichert. Neue direkte Befehle: „Neuer Termin“, „Fotos hochladen“, „Archiv“, „Mitglieder“, „Börse“ … (KC-CLUB-SPRACHE-LERNEN, Server 2.83.0)
+
 ## 2.82.0 – 2026-10-08 – 👣 Schritt-Hilfe: Mitglieder, Helfen & Börse, Fotos
 Schritt-Unterstützung jetzt auch für 👥 Mitglieder (antippen → schreiben, anklopfen, anrufen), 🤝 Helfen & Leihen (Hilfe-Aufruf Schritt für Schritt: wobei, wann, wie viele, wo, an wen, Beschreibung; 🛍️ Börse: biete/suche, Rubrik, was, Preis, Fotos, Beschreibung) und 📷 Fotos (wählen, Thema, Anlass, Beschreibung, hochladen). (KC-CLUB-SCHRITT-HILFE)
 

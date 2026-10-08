@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.82.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.83.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1652,9 +1652,25 @@ function sbErkennen(roh, mitglieder = [], ich = "") {
   }
   if (/(nächste[rn]?|wann ist) .*termin|^nächster termin$/.test(t)) return { art: "naechster" };
   if (/^(meine )?termine?$|^kalender$|^(zeig|öffne)(e)? (die |den |meine )?(termine|kalender)$/.test(t)) return { art: "termine" };
+  // 2.83.0: weitere Ziele direkt (Registry SB_ZIELE) – „neuer Termin“, „Fotos“, „Archiv“ …
+  if (/^(einen? )?(neue[nrs]? )?termin (anlegen|eintragen|machen|erstellen)$|^neue[rns]? termin$|^termin (anlegen|eintragen)$/.test(t)) return { art: "ziel", ziel: "termin_neu" };
+  if (/^(neue )?fotos? (hochladen|hinzufügen)$/.test(t)) return { art: "ziel", ziel: "foto_neu" };
+  for (const [re, ziel] of [[/^(die )?mitglieder(liste)?$/, "mitglieder"], [/^(das )?foto ?album$|^(die )?fotos$|^bilder$/, "fotos"], [/^(das )?archiv$|^(meine )?ordner$/, "archiv"],
+    [/^erstattung$|^(geld|kosten) (zurück|erstatten)$|^fahrtkosten$/, "erstattung"], [/^helfen( und leihen)?$|^hilfe suchen$/, "helfen"], [/^(die )?börse$|^flohmarkt$/, "boerse"],
+    [/^(die )?protokolle$/, "protokolle"], [/^(die )?vorschläge$/, "vorschlaege"], [/^einstellungen$/, "einstellungen"], [/^(mein )?dienst(e|plan)?$/, "dienste"], [/^(alle )?nachrichten$|^(meine )?chats$/, "nachrichten"]])
+    if (re.test(t)) return { art: "ziel", ziel };
   let q; if ((q = t.match(/^(?:such(?:e)?|finde?|wo ist)(?: nach)? (.+)$/))) return { art: "suche", q: q[1] };
   return null;
 }
+// 2.83.0 KC-CLUB-SPRACHE-LERNEN: gelernte Sätze (eigene zuerst, dann für alle) – gleich geschrieben oder fast gleich (kleine Hörfehler)
+function sbGelernt(roh, woerter) {
+  const t = sbNorm(roh); if (!t || !woerter) return null;
+  const liste = [...(woerter.meine || []), ...(woerter.alle || [])];
+  const genau = liste.find((e) => e.s === t); if (genau) return { art: "ziel", ziel: genau.z, gelernt: true };
+  const nah = t.length >= 8 && liste.map((e) => ({ e, d: sbAbstand(t, e.s) })).filter((x) => x.d <= 2).sort((a, b) => a.d - b.d)[0];
+  return nah ? { art: "ziel", ziel: nah.e.z, gelernt: true } : null;
+}
+const sbMerkbar = (roh) => { const t = sbNorm(roh); return t.length >= 2 && t.length <= 60 && t.split(" ").length <= 8; }; // wie der Server (sprachSatz)
 // Antwort auf eine Ja/Nein-Rückfrage (gesprochen)
 const sbJaNein = (roh) => { const t = sbNorm(roh); return /^(ja|jo|jawohl|gerne?|ok(ay)?|klar|bitte|mach( das)?|ja bitte|ja gerne|einschalten|diktieren)\b/.test(t) ? true : /^(nein|nee|ne|nö|nicht|lieber nicht|tippen|ich tippe)\b/.test(t) ? false : null; };
 // ungespeicherte Eingaben auf der jetzigen Seite? (geänderte, sichtbare Felder – Suchfelder zählen nicht; Protokoll/Chat speichern selbst)
@@ -1697,7 +1713,53 @@ function sbKnopfZeigen() {
   if (!k && sbAn()) { document.body.insertAdjacentHTML("beforeend", '<button type="button" class="sb-knopf" id="sbKnopf" title="Sprachsteuerung" aria-label="Sprachsteuerung – sag, was du tun möchtest" onclick="sbKnopfTipp()">🎙️</button>'); k = $("sbKnopf"); sbLangDruck(k); }
   k?.classList.toggle("versteckt", !sbAn());
 }
-const SB = { erk: null, text: "", antwort: null };
+// 2.83.0 KC-CLUB-SPRACHE-LERNEN: Ziele, die man einem unbekannten Satz zuordnen kann (gleiche IDs wie im Server: SPRACHE_ZIELE)
+const SB_ZIELE = [
+  { id: "start", sym: "🏠", t: "Startseite", los: () => sbAusfuehren({ art: "start" }) },
+  { id: "termin_neu", sym: "➕", t: "Neuer Termin", los: () => { zeige("termine"); setTimeout(() => $("neuTreffenKnopf")?.click(), 500); } },
+  { id: "termine", sym: "📅", t: "Termine ansehen", los: () => zeige("termine") },
+  { id: "naechster", sym: "⏭️", t: "Nächster Termin", los: () => sbAusfuehren({ art: "naechster" }) },
+  { id: "nachricht_neu", sym: "✍️", t: "Neue Nachricht", los: () => sbAusfuehren({ art: "nachricht", personen: [], wort: "", text: "" }) },
+  { id: "nachrichten", sym: "💬", t: "Nachrichten ansehen", los: () => zeige("nachrichten") },
+  { id: "pinnwand_neu", sym: "📝", t: "Neuer Pinnwand-Zettel", los: () => sbAusfuehren({ art: "pinnwand", text: "" }) },
+  { id: "pinnwand", sym: "📌", t: "Pinnwand ansehen", los: () => zeige("pinnwand") },
+  { id: "mitglieder", sym: "👥", t: "Mitglieder", los: () => zeige("mitglieder") },
+  { id: "fotos", sym: "📷", t: "Fotoalbum", los: () => zeige("fotos") },
+  { id: "foto_neu", sym: "⬆️", t: "Fotos hochladen", los: () => { zeige("fotos"); setTimeout(() => fotoForm(), 400); } },
+  { id: "archiv", sym: "🗄️", t: "Archiv / Ordner", los: () => arStart() },
+  { id: "erstattung", sym: "💶", t: "Erstattung", los: () => zeige("erstattung") },
+  { id: "helfen", sym: "🤝", t: "Helfen & Leihen", los: () => hlStart("helfen") },
+  { id: "boerse", sym: "🛍️", t: "Börse", los: () => hlStart("boerse") },
+  { id: "protokolle", sym: "📄", t: "Protokolle", los: () => zeige("protokolle") },
+  { id: "vorschlaege", sym: "💡", t: "Vorschläge", los: () => zeige("vorschlaege") },
+  { id: "dienste", sym: "🗓️", t: "Mein Dienst", los: () => zeige("dienste") },
+  { id: "einstellungen", sym: "⚙️", t: "Einstellungen", los: () => zeige("einstellungen") },
+  { id: "hilfe", sym: "❓", t: "Hilfe & Tipps", los: () => zeige("hilfezentrum") },
+];
+function sbWoerterLaden() { if (SB.woerter || SB.laedt) return; SB.laedt = true; api("sprache_woerter").then((r) => { SB.woerter = r && Array.isArray(r.meine) ? r : { meine: [], alle: [] }; }).catch(() => {}).finally(() => { SB.laedt = false; }); }
+// unbekannter Satz → „Was meinst du damit?“ – Antippen merkt es sich (Datenbank) und führt es gleich aus
+function sbLernFrage(roh) {
+  const merkbar = sbMerkbar(roh);
+  if (merkbar) api("sprache_unbekannt", { satz: roh }).catch(() => {}); // nur kurze Sätze, ohne Inhalte – der Admin sieht, was gesucht wurde
+  blattAuf("sbBlatt", `<h3 style="margin:0">🤔 Das kenne ich noch nicht</h3><p class="sb-gehoert">„${esc(roh)}“</p>
+    <p style="margin:4px 0 8px"><b>Was meinst du damit?</b> ${merkbar ? "Tipp es an – dann merke ich mir das und weiß es beim nächsten Mal." : "(Der Satz ist zum Merken zu lang – beim nächsten Mal bitte kürzer sagen.)"}</p>
+    <div class="sb-ziele">${SB_ZIELE.map((z) => `<button class="knopf" data-z="${z.id}"><span>${z.sym}</span>${esc(z.t)}</button>`).join("")}</div>
+    <button class="knopf haupt" style="width:100%;text-align:center;margin-top:10px" onclick="sbHoeren()">🎙️ Nochmal sagen</button>
+    <button class="knopf" style="width:100%;text-align:center" onclick="fensterZu($('sbBlatt'));sucheAuf(${esc(JSON.stringify(roh))})">🔍 Danach suchen</button>
+    <button class="knopf" style="width:100%;text-align:center" onclick="fensterZu($('sbBlatt'))">Schließen</button>`)
+    .querySelectorAll("[data-z]").forEach((k) => (k.onclick = () => sbLernen(roh, k.dataset.z, merkbar)));
+}
+async function sbLernen(roh, ziel, merkbar) {
+  const z = SB_ZIELE.find((x) => x.id === ziel); if (!z) return;
+  fensterZu($("sbBlatt")); spur("sprache_gelernt");
+  if (merkbar) {
+    const s = sbNorm(roh); SB.woerter = SB.woerter || { meine: [], alle: [] }; SB.woerter.meine = [{ s, z: ziel }, ...SB.woerter.meine.filter((e) => e.s !== s)];
+    api("sprache_lernen", { satz: roh, ziel }).then(() => melde(`👍 Gemerkt: „${s}“ = ${z.t}`)).catch((e) => melde(e.message || "Konnte ich mir gerade nicht merken.", true));
+  }
+  if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist");
+  z.los();
+}
+const SB = { erk: null, text: "", antwort: null, woerter: null, laedt: false };
 // 2.77.0 (Wunsch Hansi): lange auf 🎙️ drücken → „Sprachsteuerung ausschalten?“ (kurz tippen hört wie bisher zu)
 function sbLangDruck(k) {
   let uhr = null; const weg = () => { clearTimeout(uhr); uhr = null; };
@@ -1737,13 +1799,14 @@ const SB_WELLE = '<div class="sb-welle" aria-hidden="true"><i></i><i></i><i></i>
 function sbHoeren() {
   if (!sbAn()) return;
   if (!MITGLIEDER) mitgliederHolen().catch(() => {}); // für Namen („Nachricht an Klaus“)
+  sbWoerterLaden(); // 2.83.0: gelernte Sätze
   try { speechSynthesis.cancel(); } catch {}
   SB.text = "";
   blattAuf("sbBlatt", `<h3 style="margin:0">🎙️ Ich höre zu …</h3>${SB_WELLE}
     <p class="sb-gehoert" id="sbGehoert">Sag, was du tun möchtest</p>
     <p class="hinweis" style="margin:0">Zum Beispiel:<br>${SB_BEISPIELE.map(esc).join("<br>")}</p>
     <button class="knopf" style="width:100%;text-align:center;margin-top:10px" onclick="sbStopp()">Abbrechen</button>`);
-  sbZuhoeren((alt) => sbVerstanden(alt.find((a) => sbErkennen(a, MITGLIEDER || [], ICH?.person_id)) ?? alt[0]), (grund) => sbNichtVerstanden(grund, ""));
+  sbZuhoeren((alt) => sbVerstanden(alt.find((a) => sbErkennen(a, MITGLIEDER || [], ICH?.person_id) || sbGelernt(a, SB.woerter)) ?? alt[0]), (grund) => sbNichtVerstanden(grund, ""));
 }
 function sbNichtVerstanden(grund, roh) {
   SB.erk = null; spur("sprache_unklar");
@@ -1756,8 +1819,8 @@ function sbNichtVerstanden(grund, roh) {
 }
 async function sbVerstanden(roh) {
   SB.erk = null;
-  const b = sbErkennen(roh, MITGLIEDER || [], ICH?.person_id);
-  if (!b) return sbNichtVerstanden("", roh);
+  const b = sbErkennen(roh, MITGLIEDER || [], ICH?.person_id) || sbGelernt(roh, SB.woerter);
+  if (!b) return sbLernFrage(roh); // 2.83.0: nachfragen und lernen statt nur „nicht verstanden“
   fensterZu($("sbBlatt")); spur("sprache_" + b.art); // nur die Art, nie der gesprochene Text
   melde(`🎙️ Verstanden: „${roh}“`);
   await sbAusfuehren(b);
@@ -1819,6 +1882,7 @@ function sbWerWahl(b) {
 function sbAnPerson(pid) { const text = SB.text; sbStopp(); sbAusfuehren({ art: "nachricht", personen: [pid], wort: "", text }); }
 const sbVorname = (pid) => String(MITGLIEDER?.find((m) => m.person_id === pid)?.name || "").split(" ")[0];
 async function sbAusfuehren(b) {
+  if (b.art === "ziel") { const z = SB_ZIELE.find((x) => x.id === b.ziel); if (!z) return; if (["start", "naechster", "nachricht_neu", "pinnwand_neu"].includes(z.id)) return z.los(); if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist"); return z.los(); }
   if (b.art === "start") return sbStartseite();
   if (b.art === "hilfe") return sbNichtVerstanden("Das kannst du zur App sagen:", "");
   if (b.art === "nachricht" && !b.alle && b.personen?.length !== 1) return sbWerWahl(b); // erst klären, wer gemeint ist
@@ -20504,7 +20568,7 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) spurS
 const SPUR_WAS = { vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
-  sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
+  sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", sprache_ziel: "🎙️ Sprache: Seite geöffnet", sprache_gelernt: "🎙️ Sprache: neuen Befehl gelernt", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
 const SPW = { tag: null, person: null, uhr: null };
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;
@@ -20537,6 +20601,24 @@ async function spurAdmin(tag, person) {
   // KC-CLUB-SPUR-LIVE (2.81.0): heute → alle 20 s still neu laden, solange das Fenster die Wege zeigt
   clearTimeout(SPW.uhr);
   if (heuteDa) SPW.uhr = setTimeout(() => { if (!$("adminBlatt").classList.contains("versteckt") && $("adminBlattInhalt").querySelector(".spur-neu[aria-label='Wege aktualisieren']") && !document.hidden) { onlinePing().catch(() => {}).finally(() => spurAdmin(SPW.tag, SPW.person)); } }, 20000);
+}
+// ---------- KC-CLUB-SPRACHE-LERNEN (2.83.0, Wunsch Hansi): Admin-Übersicht – was die Sprachsteuerung (noch) nicht kennt und was sie gelernt hat ----------
+// Gelernt ist erst nur für das Mitglied selbst; 🌍 = für alle (vom Admin – oder von selbst, wenn 2 Mitglieder denselben Satz gleich zuordnen).
+async function sbAdmin() {
+  let r; try { r = await api("sprache_admin", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  SB.admin = r; const zName = (id) => { const z = SB_ZIELE.find((x) => x.id === id); return z ? `${z.sym} ${z.t}` : id; };
+  const wahl = (i) => `<select data-i="${i}" aria-label="Ziel wählen"><option value="">– zuordnen … –</option>${SB_ZIELE.map((z) => `<option value="${z.id}">${z.sym} ${esc(z.t)}</option>`).join("")}</select>`;
+  $("adminBlattInhalt").innerHTML = `<div class="spur-kopf"><h3 style="margin:0;flex:1">🎙️ Sprachbefehle</h3><button class="rund spur-neu" title="Aktualisieren" aria-label="Sprachbefehle aktualisieren" onclick="sbAdmin()">↻</button></div>
+    <p class="hinweis" style="margin:0">Was Mitglieder gesagt haben und die App nicht kannte (30 Tage, nur kurze Sätze) – und was sie ihr beigebracht haben. 🌍 = gilt für alle.</p>
+    <h4 style="margin:10px 0 4px">❓ Noch unbekannt</h4>${r.unbekannt.length ? r.unbekannt.map((x, i) => `<div class="zeile" style="gap:6px;flex-wrap:wrap"><div style="flex:1;min-width:150px"><b>„${esc(x.s)}“</b><div class="hinweis" style="margin:0">${x.n}× · ${x.personen} ${x.personen === 1 ? "Mitglied" : "Mitglieder"}</div></div>${wahl(i)}</div>`).join("") : '<p class="hinweis">Nichts – alles wurde erkannt 👍</p>'}
+    <h4 style="margin:12px 0 4px">🧠 Gelernt</h4>${r.gelernt.length ? r.gelernt.map((x, i) => `<div class="zeile" style="gap:6px"><div style="flex:1"><b>„${esc(x.s)}“</b> → ${esc(zName(x.z))}<div class="hinweis" style="margin:0">${x.personen} ${x.personen === 1 ? "Mitglied" : "Mitglieder"}${x.global ? " · 🌍 für alle" : " · nur persönlich"}</div></div><button class="knopf klein" data-g="${i}">${x.global ? "🚫 Nicht für alle" : "🌍 Für alle"}</button></div>`).join("") : '<p class="hinweis">Noch nichts gelernt.</p>'}
+    <div class="knoepfe"><button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
+  $("adminBlattInhalt").querySelectorAll("select[data-i]").forEach((el) => (el.onchange = () => el.value && sbAdminGlobal(r.unbekannt[+el.dataset.i].s, el.value, true)));
+  $("adminBlattInhalt").querySelectorAll("[data-g]").forEach((k) => (k.onclick = () => { const x = r.gelernt[+k.dataset.g]; sbAdminGlobal(x.s, x.z, !x.global); }));
+  $("adminBlatt").classList.remove("versteckt");
+}
+async function sbAdminGlobal(satz, ziel, an) {
+  try { await api("sprache_global", { satz, ziel, an }); SB.woerter = null; melde(an ? "🌍 Gilt jetzt für alle" : "🚫 Gilt nicht mehr für alle"); sbAdmin(); } catch (e) { meldeFehler(e); }
 }
 // ---------- KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): Wie schnell startet die App bei wem, auf welchem Gerät, mit welchem Browser? ----------
 // Nur Admin. Grün bis 3 s, gelb bis 6 s, rot darüber. Filter nach Mitglied und Gerät; Übersichten je Mitglied und je Gerät/Browser, dazu die Starts einzeln.
@@ -20681,7 +20763,7 @@ async function nzAdmin(tage) {
   const zeilen = [...haupt.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).flatMap(([o, n]) => [[o, n, false], ...liste.filter(([b]) => nzOber(b) === o).map(([b, m]) => [b, m, true])]);
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">📊 Nutzung – ohne Namen</h3>
     <p class="hinweis" style="margin:0">Wie oft die Bereiche geöffnet wurden und <b>👤 von wie vielen verschiedenen Mitgliedern</b>. Es wird nie gespeichert, wer – nur Tag, Bereich, Anzahl und eine zufällige Geräte-Kennung; die Uhrzeit nur als Stunde, getrennt vom Bereich.</p>
-    <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}<button class="knopf klein" onclick="spurAdmin(heuteIso(), null)">👣 Wege der Mitglieder</button><button class="knopf klein" onclick="startStatistik(30)">⏱️ Startstatistik</button><button class="knopf klein" onclick="nachrichtenStatistik()">📨 Nachrichten</button>${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
+    <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}<button class="knopf klein" onclick="spurAdmin(heuteIso(), null)">👣 Wege der Mitglieder</button><button class="knopf klein" onclick="startStatistik(30)">⏱️ Startstatistik</button><button class="knopf klein" onclick="sbAdmin()">🎙️ Sprachbefehle</button><button class="knopf klein" onclick="nachrichtenStatistik()">📨 Nachrichten</button>${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
     <b>Insgesamt ${gesamt} Öffnungen in ${r.tage} Tagen${r.geraeteGesamt == null ? " · 👤 unbekannt" : r.geraeteGesamt ? ` · 👤 ${r.geraeteGesamt} verschiedene Geräte (≈ Mitglieder${r.mitglieder ? `, ${r.mitglieder} im Club` : ""})` : ""}</b>
     <span class="hinweis" style="margin:0">👤 = verschiedene Mitglieder (genau: Geräte – wer Handy und Tablet nutzt, zählt doppelt). Gezählt ab Version 2.6.0. <span class="nz-wer nur1">👤 1</span> = nur ein einziges Mitglied. Bei 30/90 Tagen zählen die Öffnungen auch aus der Zeit davor.</span><span class="hinweis" style="margin:0">↳ = Teilbereich (z. B. Büro → Eingang). Die Zahl beim Hauptbereich zählt nur das Öffnen selbst.</span>
     <div class="nz-tage" title="Öffnungen je Tag">${tagListe.map(([t, n]) => `<div title="${esc(t.slice(8) + "." + t.slice(5, 7) + ".: " + n)}"><i style="height:${Math.round(n / tmax * 100)}%"></i></div>`).join("")}</div>
