@@ -2868,7 +2868,7 @@
       <div class="pw-emo" id="pwEmoSchnell"></div>
       <div class="emo-feld pw-emo-feld versteckt" id="pwEmoFeld" role="dialog" aria-label="Emoji auswählen"><div class="emo-reiter" id="pwEmoReiter"></div><div class="emo-gitter" id="pwEmoGitter"></div></div>
       <div class="hinweis" style="margin:8px 0 4px">Wichtigkeit</div>
-      <div class="umschalter" id="pwWichtig"><button data-w="0" onclick="pwWichtig(false)">📝 Normal</button><button data-w="1" onclick="pwWichtig(true)">❗ Hoch – beim Öffnen zeigen</button></div>
+      <div class="umschalter" id="pwWichtig"><button data-w="0" onclick="pwFormWichtig(false)">📝 Normal</button><button data-w="1" onclick="pwFormWichtig(true)">❗ Hoch – beim Öffnen zeigen</button></div>
       <div class="hinweis" style="margin:4px 0 4px">Für wen?</div>
       <div class="umschalter modus3" id="pwFuer"><button data-f="ich" onclick="pwFuer('ich')">🙋 Nur für mich</button><button data-f="alle" onclick="pwFuer('alle')">👥 Für alle</button><button data-f="personen" onclick="pwFuer('personen')">✅ Bestimmte</button></div>
       <div id="pwPersonen" class="versteckt">
@@ -2904,10 +2904,11 @@
     <div class="kopf2"><button class="zurueck" onclick="zurueck('nachrichten')" aria-label="Zurück">‹</button><h2>Neue Nachricht</h2></div>
     <div id="neuGruppen"></div><!-- 1.33.1 (Wunsch Hansi): vorhandene Gruppen direkt wählbar -->
     <div class="karte">
+      <div id="empfWahlBereich"><!-- 2.67.0: Rahmen der Schritt-Unterstützung -->
       <h3>An wen?</h3>
       <div class="knoepfe" id="schnellEmpf"></div>
       <label class="feld">Name suchen<input id="empfSuche" placeholder="🔍 z. B. Anne" oninput="empfListe()"></label>
-      <div class="wahlliste" id="empfListe"></div>
+      <div class="wahlliste" id="empfListe"></div></div>
       <label class="feld">Betreff (freiwillig, z. B. bei Gruppen)<input id="neuBetreff" maxlength="120"></label>
     </div>
     <div class="karte"><div class="hinweis">Gewählt: <b id="empfGewaehlt">niemand</b></div><div class="knoepfe"><button class="knopf haupt" onclick="neuWeiter()">Weiter zum Schreiben ›</button></div></div>
@@ -2974,7 +2975,7 @@
       <div class="schalter"><div><b>💡 Tipp des Tages</b><div class="hinweis">Beim Öffnen höchstens einmal in der Woche ein kurzer Tipp</div></div><input type="checkbox" id="setTipps" checked onchange="tippSchalter(this.checked)"></div>
       <div class="schalter"><div><b>👋 Beim Öffnen zeigen, was neu ist</b><div class="hinweis">Neue Nachrichten (Chats und Gruppen), Pinnwand-Einträge und Spiele, die auf dich warten – auf einen Blick, mit Knopf direkt dorthin</div></div><input type="checkbox" id="setWasNeu" onchange="einstellung('wasNeu', this.checked)"></div> <!-- 2.24.12 KC-CLUB-WAS-NEU -->
       <div class="schalter"><div><b>❓ Fragezeichen unten rechts</b><div class="hinweis">Öffnet die passende Hilfe zum Bereich. Ausblenden geht auch: lange auf das „?“ drücken</div></div><input type="checkbox" id="setHzFrage" checked onchange="hzFrageSchalter(this.checked)"></div> <!-- KC-CLUB-HILFEZENTRUM (2.23.5) -->
-      <div class="schalter"><div><b>👣 Schritt-Unterstützung</b><div class="hinweis">Ein roter Rahmen zeigt Schritt für Schritt, was als Nächstes kommt. Zum Ausprobieren erst an der 📌 Pinnwand.</div></div><input type="checkbox" id="setSchrittHilfe" onchange="shSchalter(this.checked)"></div> <!-- KC-CLUB-SCHRITT-HILFE (2.63.0) -->
+      <div class="schalter"><div><b>👣 Schritt-Unterstützung</b><div class="hinweis">Ein roter Rahmen zeigt Schritt für Schritt, was als Nächstes kommt. Zum Ausprobieren an der 📌 Pinnwand und bei 💬 Nachrichten.</div></div><input type="checkbox" id="setSchrittHilfe" onchange="shSchalter(this.checked)"></div> <!-- KC-CLUB-SCHRITT-HILFE (2.63.0) -->
       <div class="schalter"><div><b>🔊 Schritte vorlesen</b><div class="hinweis">Die Schritt-Unterstützung sagt jeden Schritt auch an. Geht auch mit 🔈 in der roten Leiste.</div></div><input type="checkbox" id="setSchrittVorlesen" onchange="shVorlesen(this.checked)"></div> <!-- KC-CLUB-SCHRITT-HILFE (2.65.0) -->
       <div class="schalter"><div><b>❓ Alle Tipps nachlesen</b><div class="hinweis">Hilfe-Zentrum: alle Tipps und Erklärungen nach Themen – auch im Register Technik</div></div><button class="knopf klein" onclick="hzStart()">Öffnen</button></div>
       <!-- KC-CLUB-EINWEISUNG (2.4.0) -->
@@ -3418,6 +3419,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.66.0" data-v="2.66.0"></script>
+<script src="app.js?v=2.67.0" data-v="2.67.0"></script>
 </body>
 </html>

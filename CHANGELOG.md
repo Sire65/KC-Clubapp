@@ -8,6 +8,10 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.67.0 – 2026-10-08 – KC-CLUB-SCHRITT-HILFE Nachrichten
+- Pinnwand: „❗ Hoch – beim Öffnen zeigen“ wird wieder übernommen (Funktionsname war doppelt seit 2.13.0; Test verhindert das künftig).
+- Schritt-Unterstützung jetzt auch bei Nachrichten: ＋ Neu → An wen? → Betreff (freiwillig) → Weiter zum Schreiben → schreiben → ➤. Leiste weicht aus, wenn sie das Ziel verdeckt.
+
 ## 2.66.0 – 2026-10-08 – KC-CLUB-SCHRITT-HILFE Eingabe abwarten
 - Pinnwand: Zeichenzähler „34 / 200 Zeichen“ direkt hinter „Kurze Nachricht“.
 - Schritt-Unterstützung: Text-Schritt wartet, bis man „Fertig – weiter ➜“ tippt oder selbst den nächsten Schritt antippt (vorher sprang sie nach dem ersten Buchstaben weiter).

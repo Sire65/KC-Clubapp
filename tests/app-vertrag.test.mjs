@@ -5507,6 +5507,21 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/class="sh-weiter" onclick="shWeiter\('\$\{s\.id\}'\)">Fertig – weiter ➜<\/button>/.test(programm) && /function shWeiter\(id\) \{ SH\.beruehrt\.add\(id \+ ":weiter"\); document\.activeElement\?\.blur\?\.\(\);/.test(programm), "Knopf „Fertig – weiter ➜“ schließt die Tastatur");
 }
 
+// 4xx. 2.67.0: Pinnwand „❗ Hoch“ wird wieder übernommen + Schritt-Unterstützung für Nachrichten (KC-CLUB-SCHRITT-HILFE, Wunsch Hansi)
+{
+  const namen = [...programm.matchAll(/^(?:async )?function ([A-Za-z0-9_$]+)/gm)].map((m) => m[1]);
+  const doppelt = namen.filter((n, i) => namen.indexOf(n) !== i);
+  assert.deepEqual(doppelt, [], "keine Funktion darf zweimal heißen – die spätere überdeckt sonst still die frühere (so ging „❗ Hoch“ verloren)");
+  assert.ok(/onclick="pwFormWichtig\(false\)">📝 Normal<\/button><button data-w="1" onclick="pwFormWichtig\(true\)">/.test(seite) && /function pwFormWichtig\(an\) \{ PW\.form\.wichtig = an;/.test(programm) && /pwFormWichtig\(false\); pwAntw\(true\)/.test(programm), "Formular-Wichtigkeit hat eigenen Namen");
+  const ab = programm.slice(programm.indexOf("const SH_ABLAEUFE = {"), programm.indexOf("const SH = {"));
+  for (const k of ["nachrichten: [", "neu: [", "chat: ["]) assert.ok(ab.includes(k), "Ablauf " + k);
+  for (const z of ["#empfWahlBereich", "#neuBetreff", "#text", "#sendenKnopf"]) { assert.ok(ab.includes(`ziel: "${z}"`), "Schritt " + z); assert.ok(seite.includes(`id="${z.slice(1)}"`), "Ziel vorhanden: " + z); }
+  assert.ok(ab.includes(`ziel: '#v-nachrichten .kopf2 [onclick="uhNeu()"]'`) && /<button[^>]*onclick="uhNeu\(\)"/.test(seite), "＋ Neu");
+  assert.ok(ab.includes(`ziel: '#v-neu [onclick="neuWeiter()"]'`) && /onclick="neuWeiter\(\)">Weiter zum Schreiben ›<\/button>/.test(seite), "Weiter zum Schreiben");
+  assert.ok(/lob: "Deine Nachricht ist unterwegs\."/.test(ab) && /const lob = ablauf\.find\(\(x\) => x\.ende\)\?\.lob/.test(programm), "Lob je Ablauf");
+  assert.ok(/const deckt = z && z\.height && a\.top < z\.bottom \+ 10 && a\.bottom > z\.top - 10;/.test(programm), "Leiste weicht aus, wenn sie das Ziel verdeckt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

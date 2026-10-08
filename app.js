@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.66.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.67.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -877,7 +877,7 @@ function pwForm(an, antwort) {
   PW.form = { wichtig: false, fuer: "", personen: [], antwortAuf: antwort?.id || null, antworten: true }; $("pwText").value = ""; $("pwSuche").value = "";
   $("pwAntwortAn").innerHTML = antwort ? `↩️ Antwort an <b>${esc(antwort.name)}</b> – vorausgewählt nur für ${esc(antwort.name)} (privat). Für alle? Unten „👥 Für alle“ tippen.` : "";
   $("pwAntwortAn").classList.toggle("versteckt", !antwort);
-  pwVoll(); pwZaehlen(); pwWichtig(false); pwAntw(true); pwEmoSchnell(); // KC-CLUB-PINNWAND-EMOJI
+  pwVoll(); pwZaehlen(); pwFormWichtig(false); pwAntw(true); pwEmoSchnell(); // KC-CLUB-PINNWAND-EMOJI
   if (antwort) { PW.form.personen = [antwort.personId]; pwFuer("personen"); } else pwFuer("");
   $("pwText").focus();
 }
@@ -918,7 +918,8 @@ function pwZaehlen() {
   el.textContent = `${n} / ${max} Zeichen`; el.classList.toggle("knapp", n >= max - 20 && n < max); el.classList.toggle("voll", n >= max);
 }
 function pwAntw(an) { PW.form.antworten = an; document.querySelectorAll("#pwAntw button").forEach((b) => b.classList.toggle("an", (b.dataset.a === "1") === an)); }
-function pwWichtig(an) { PW.form.wichtig = an; document.querySelectorAll("#pwWichtig button").forEach((b) => b.classList.toggle("an", (b.dataset.w === "1") === an)); }
+// 2.67.0: eigener Name – hieß wie pwWichtig(id, an) (Zettel nachträglich wichtig, 2.13.0) und wurde davon überdeckt, „❗ Hoch“ ging verloren
+function pwFormWichtig(an) { PW.form.wichtig = an; document.querySelectorAll("#pwWichtig button").forEach((b) => b.classList.toggle("an", (b.dataset.w === "1") === an)); }
 async function pwFuer(f) {
   PW.form.fuer = f; document.querySelectorAll("#pwFuer button").forEach((b) => b.classList.toggle("an", b.dataset.f === f));
   $("pwPersonen").classList.toggle("versteckt", f !== "personen");
@@ -1601,7 +1602,7 @@ const HILFE = [
 // ---------- KC-CLUB-SCHRITT-HILFE (2.63.0, Wunsch Hansi; 2.64.0 verfeinert): Schritt-Unterstützung ----------
 // Eingeschaltet (⚙️ Einstellungen → „👣 Schritt-Unterstützung“, nur auf diesem Gerät) bekommt immer genau der nächste Schritt
 // einen pulsierenden roten Rahmen; unten steht mit zwei laufenden Schuhen „Schritt 2 von 6: …“ (bei offener Tastatur oben,
-// damit sie nichts verdeckt). Abläufe stehen in der Registry SH_ABLAEUFE (Bereich → Schritte); erst die Pinnwand – weitere
+// damit sie nichts verdeckt). Abläufe stehen in der Registry SH_ABLAEUFE (Bereich → Schritte); Pinnwand (2.63.0), Nachrichten (2.67.0) – weitere
 // Bereiche = neuer Eintrag hier, sonst nichts. Schritt: ziel (CSS), t (Text, mit Ort), fertig() erledigt?, wenn() gilt nur dann,
 // waehlen = Auswahl ist vorbelegt: erledigt, sobald angetippt oder ein späterer Schritt schon dran war; ende = letzter Knopf;
 // weiter = Eingabe (2.66.0): bleibt dran, bis man „Weiter ➜“ tippt oder selbst einen späteren Schritt antippt – nie mitten im Schreiben.
@@ -1614,7 +1615,21 @@ const SH_ABLAEUFE = {
     { id: "fuer", ziel: "#pwFuer", t: "Für wen ist der Zettel? Tippe eine Auswahl an", fertig: () => !!PW.form?.fuer },
     { id: "personen", ziel: "#pwPersonen", t: "Hake an, wer den Zettel bekommen soll", wenn: () => PW.form?.fuer === "personen", fertig: () => PW.form.personen.length > 0 },
     { id: "antw", ziel: "#pwAntw", t: "Dürfen andere antworten? Mit oder ohne Antwort-Knopf wählen", wenn: () => PW.form?.fuer !== "ich", waehlen: true },
-    { id: "los", ziel: "#pwSpeichernKnopf", t: "Fertig? Tippe unten auf „📌 Anheften“", fertig: () => false, ende: true },
+    { id: "los", ziel: "#pwSpeichernKnopf", t: "Fertig? Tippe unten auf „📌 Anheften“", fertig: () => false, ende: true, lob: "Dein Zettel hängt an der Pinnwand." },
+  ],
+  // 2.67.0 Nachrichten: Übersicht → „＋ Neu“ → An wen? → Betreff (freiwillig) → Weiter zum Schreiben → Chat: schreiben → ➤
+  // (vorhandenes Gespräch: Antippen öffnet den Chat, dort geht es mit „schreiben → ➤“ weiter)
+  nachrichten: [
+    { id: "neu", ziel: '#v-nachrichten .kopf2 [onclick="uhNeu()"]', t: "Neue Nachricht? Tippe oben rechts auf „＋ Neu“. Weiterschreiben: tippe unten ein Gespräch an", fertig: () => false },
+  ],
+  neu: [
+    { id: "an", ziel: "#empfWahlBereich", t: "An wen? Tippe einen Namen an – oder „Alle“. Suchen geht über das Feld „Name suchen“", fertig: () => !!(empfWahl.alle || empfWahl.vorstand || empfWahl.aemter.length || empfWahl.personen.length), weiter: true },
+    { id: "betreff", ziel: "#neuBetreff", t: "Betreff – freiwillig, z. B. „Grillfest“. Leer lassen geht auch", fertig: () => true, weiter: true },
+    { id: "los", ziel: '#v-neu [onclick="neuWeiter()"]', t: "Tippe unten auf „Weiter zum Schreiben ›“", fertig: () => false, ende: true },
+  ],
+  chat: [
+    { id: "text", ziel: "#text", t: "✍️ Schreib deine Nachricht unten ins Feld. Wenn du magst: 😊 Emoji, 📎 Foto oder Datei, 🎤 sprechen", fertig: () => !!($("text").value.trim() || anlagen.length), weiter: true },
+    { id: "los", ziel: "#sendenKnopf", t: "Tippe rechts unten auf ➤ – dann ist deine Nachricht unterwegs", fertig: () => false, ende: true, lob: "Deine Nachricht ist unterwegs." },
   ],
 };
 const SH = { bereich: null, beruehrt: new Set(), letzter: null, geschafft: false, timer: null, el: null, lauf: 0 };
@@ -1646,7 +1661,7 @@ function shRahmen(el) {
 const SH_SCHUHE = `<svg class="sh-schuhe" viewBox="0 0 32 40" aria-hidden="true"><g class="l"><path d="M9 4c4 0 5.5 5 5 10-.4 4-1.4 6-1 10 .4 4-1.6 6.5-4.3 6.5S4.5 28 5 24c.5-4-1.8-7-1.8-12C3.2 7 5.3 4 9 4z"/><path class="sohle" d="M5.6 25.5h6.6M6.8 10.5h4.4M6.6 13.5h4.6M6.6 16.5h4.4"/></g><g class="r"><path d="M23 4c-4 0-5.5 5-5 10 .4 4 1.4 6 1 10-.4 4 1.6 6.5 4.3 6.5S27.5 28 27 24c-.5-4 1.8-7 1.8-12C28.8 7 26.7 4 23 4z"/><path class="sohle" d="M19.8 25.5h6.6M20.8 10.5h4.4M20.8 13.5h4.6M21 16.5h4.4"/></g></svg>`;
 function shSchalter(an) {
   lsSetzen(SH_KEY, an ? "1" : "0"); if ($("setSchrittHilfe")) $("setSchrittHilfe").checked = an;
-  melde(an ? "👣 Schritt-Unterstützung an – zum Ausprobieren erst an der 📌 Pinnwand" : "👣 Schritt-Unterstützung aus");
+  melde(an ? "👣 Schritt-Unterstützung an – zum Ausprobieren an der 📌 Pinnwand und bei 💬 Nachrichten" : "👣 Schritt-Unterstützung aus");
   if (!an) shAufraeumen();
 }
 function shAufraeumen() {
@@ -1659,10 +1674,15 @@ function shBereich(v) { // beim Wechsel der Ansicht (zeige)
   shAufraeumen(); if (SH.bereich) setTimeout(shAktualisieren, 120);
 }
 // Tastatur offen (sichtbarer Bereich deutlich kleiner) → Leiste oben in den sichtbaren Bereich, sonst unten über dem „?“
+// 2.67.0: liegt die Leiste über dem Ziel (z. B. Eingabefeld im Chat), weicht sie ebenfalls nach oben aus
 function shLage() {
   const l = $("shLeiste"), vv = window.visualViewport; if (!l) return;
   const tastatur = vv && innerHeight - vv.height - vv.offsetTop > 120;
-  l.classList.toggle("oben", !!tastatur); l.style.top = tastatur ? `${Math.round(vv.offsetTop) + 8}px` : "";
+  l.classList.remove("oben"); l.style.top = "";
+  const a = l.getBoundingClientRect(), z = SH.el?.isConnected ? SH.el.getBoundingClientRect() : null;
+  const deckt = z && z.height && a.top < z.bottom + 10 && a.bottom > z.top - 10;
+  if (tastatur) { l.classList.add("oben"); l.style.top = `${Math.round(vv.offsetTop) + 8}px`; }
+  else if (deckt) { l.classList.add("oben"); l.style.top = `${Math.max(8, Math.round(z.top - a.height - 18))}px`; } // direkt über das Ziel
 }
 window.visualViewport?.addEventListener("resize", shLage); window.visualViewport?.addEventListener("scroll", shLage);
 function shLeiste(html) {
@@ -1679,7 +1699,8 @@ function shAktualisieren() {
     : (s.fertig ? s.fertig() : false) || (s.waehlen && (SH.beruehrt.has(s.id) || spaeter(i)));
   if (!gilt[0].fertig()) { // Formular zu
     if (SH.beruehrt.has("los")) { // gerade angeheftet → kurz loben, dann Ruhe bis zum nächsten Besuch
-      SH.geschafft = true; shAufraeumen(); shLeiste("✅ <b>Geschafft!</b> Dein Zettel hängt an der Pinnwand."); shSag("Geschafft! Dein Zettel hängt an der Pinnwand.");
+      const lob = ablauf.find((x) => x.ende)?.lob || "Fertig.";
+      SH.geschafft = true; shAufraeumen(); shLeiste(`✅ <b>Geschafft!</b> ${esc(lob)}`); shSag("Geschafft! " + lob);
       SH.timer = setTimeout(() => $("shLeiste")?.remove(), 4000); return;
     }
     SH.beruehrt.clear();
@@ -1688,8 +1709,8 @@ function shAktualisieren() {
   const i = gilt.findIndex((s, n) => !fertig(s, n)); if (i < 0) return;
   const s = gilt[i], el = document.querySelector(s.ziel);
   document.querySelectorAll(".sh-ziel").forEach((e) => e !== el && e.classList.remove("sh-ziel"));
-  el?.classList.add("sh-ziel"); if (SH.el !== el) shRahmen(el);
-  shLeiste(`<b>Schritt ${i + 1} von ${gilt.length}:</b> ${esc(s.t)}${s.weiter && s.fertig() ? `<button type="button" class="sh-weiter" onclick="shWeiter('${s.id}')">Fertig – weiter ➜</button>` : ""}`);
+  el?.classList.add("sh-ziel"); if (SH.el !== el) shRahmen(el); shLage();
+  shLeiste(`<b>${gilt.length > 1 ? `Schritt ${i + 1} von ${gilt.length}` : "Tipp"}:</b> ${esc(s.t)}${s.weiter && s.fertig() ? `<button type="button" class="sh-weiter" onclick="shWeiter('${s.id}')">Fertig – weiter ➜</button>` : ""}`);
   if (SH.letzter !== s.id) { // nur bei neuem Schritt ins Bild holen – nicht beim Tippen
     SH.letzter = s.id; const a = document.activeElement; shSag(`Schritt ${i + 1}: ${s.t}`);
     if (el && !(a && /^(TEXTAREA|INPUT)$/.test(a.tagName) && !el.contains(a))) { const r = el.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight - 300) el.scrollIntoView({ behavior: "smooth", block: "center" }); }
