@@ -6518,3 +6518,17 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/\["pageshow", "focus", "resume"\]/.test(f), "Wieder-da-Ereignisse setzen den Takt zurück");
   assert.ok(/luecke > 5000 && !document\.hidden/.test(f), "kurze echte Hänger werden weiter erkannt");
 }
+
+// 4xx. 2.101.0: Büro – Dokumente einlesen (Foto, Datei, Hineinziehen, aus dem Eingangskorb) + Wohin damit? (KC-CLUB-BUERO-EINLESEN, Wunsch Hansi)
+{
+  const f = programm.slice(programm.indexOf("// ---------- KC-CLUB-BUERO-EINLESEN"), programm.indexOf("// ---------- KC-CLUB-BILDSCHIRMFOTO (1.24.0"));
+  assert.ok(/accept="image\/\*" capture="environment"/.test(f) && /type="file" accept="application\/pdf,image\/\*[^"]*" multiple/.test(f) && /addEventListener\("drop"/.test(f) && /einlAusKorb\(\)/.test(f), "Foto, Dateimanager, Hineinziehen, Eingangskorb");
+  assert.ok(/archivAblageFragen\("eingelesen"/.test(f) && /eingelesen: \{ sym: "📄"/.test(programm), "Ablage über den vorhandenen Kern mit Vorschlag");
+  assert.ok(/TEILEN = \{ text: "", dateien: E\.dateien \}; teilenChatWahl\(\);/.test(f), "Nachricht über den Teilen-Kern – Senden drückt man selbst");
+  assert.ok(/navigator\.canShare\?\.\(\{ files \}\)/.test(f) && /await navigator\.share\(\{ files/.test(f), "Mail mit Anhang über das Teilen-Menü des Geräts (eigenes Mail-Programm)");
+  assert.ok(/stichworte: `\$\{EINL_MARKE\}, eingelesen`/.test(f) && /api\("archiv_mein_ordner"/.test(f), "Eingangskorb = eigener Ordner + Stichwort, kein neuer Serverweg");
+  assert.ok(/for \(const d of einlKorbDoks\(ar\)\)/.test(programm) && /einlKorbErledigt\(/.test(programm), "Eingelesenes erscheint im Eingangskorb");
+  assert.ok(/api\("archiv_loeschen", \{ id \}\)/.test(f) && /Papierkorb/.test(f), "nach Ablage keine doppelte Datei (Papierkorb, wiederherstellbar)");
+  assert.ok((programm.match(/onclick="buEinlesen\(\)"/g) || []).length >= 2 && /ding\("bu-scanner"/.test(programm), "Knopf in Liste und Büro-Raum");
+  assert.ok(!/fetch\(|sendGewaehlt|api\("nachricht_senden"/.test(f), "schickt nie selbst etwas ab");
+}

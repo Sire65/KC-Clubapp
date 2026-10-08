@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.101.0 – 2026-10-08 – 📥 Büro: Dokumente einlesen
+Im Büro gibt es „📥 Einlesen“: Foto machen, Datei wählen, am PC hineinziehen oder aus dem Eingangskorb holen. Danach fragt die App, wohin damit – in einen Ordner (mit Vorschlag), in den Eingangskorb für später, als Nachricht in der App oder per E-Mail mit Anhang.
+
 ## 2.100.0 – 2026-10-08 – 🧊 Kein falscher Hänger-Alarm nach Pause (iPad)
 iPad/iPhone frieren die App ein, wenn man kurz in eine andere App wechselt – danach kam fälschlich „Die App hat kurz gehangen“. Pausen über einer Minute zählen jetzt nicht mehr als Hänger.
 

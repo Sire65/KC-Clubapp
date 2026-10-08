@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.100.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.101.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -11857,7 +11857,7 @@ function buStartListeHtml() {
     ["💶", "Erstattungen", e.erstattungen || 0, "buEingang()"], ["📅", "Dienstzeiten", e.dienstzeiten || 0, "buEingang()"]]; // KC-CLUB-EINGANGSKORB (2.23.6)
   const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => f.alter ? `🎉 ${esc(f.vorname)} wird ${f.alter}` : `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
-  return `<div class="karte bu-gruss"><div class="bu-knopfreihe">${ICH?.vorstand ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button></div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
+  return `<div class="karte bu-gruss"><div class="bu-knopfreihe">${ICH?.vorstand ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button>${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
     ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken. Ändern und Versenden schaltet der Admin frei.</div>' : dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${dran}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
     ${ICH?.admin ? buBereich("verwaltung", "🔐 Verwaltung", `<div class="mini-kacheln"><button class="mini-kachel" onclick="buRechte()"><span class="mk-sym">🔐</span><span class="mk-titel">Büro-Freigaben</span><span class="mk-unter">wer darf ins Büro – nur lesen oder lesen &amp; schreiben</span></button></div>`) : ""}
     ${buBereich("sitzung", "🗂️ Sitzung", `<div class="mini-kacheln">
@@ -11914,7 +11914,7 @@ function buRaumHtml() {
   const kal = naechst ? new Date(naechst.beginn) : null;
   const ding = (cls, inhalt, label, fn, extra = "") => `<button class="bu-ding ${cls}" onclick="${fn}">${inhalt}<span class="bu-dlabel">${label}</span>${extra}</button>`;
   return `<div class="karte bu-gruss"><div class="bu-knopfreihe">
-      ${L ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">☰ Liste</button></div>
+      ${L ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">☰ Liste</button>${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>
       ${BSPR.geht ? '<button class="bu-mikro" onclick="buSprechen()" aria-label="Sprachsteuerung: sag z. B. „Öffne Ordner Protokolle“"><span>🎙️</span><b>Sag mir, was du brauchst</b><small>z. B. „Öffne Ordner Protokolle“ oder „Anrufen Erika“</small></button>' : ""}
       ${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0 0">🎉 Heute: ${festHeute.map((f) => f.jahre ? `${esc(f.vorname)} – ${f.jahre} Jahre im Club` : `${esc(f.vorname)} hat Geburtstag`).join(" · ")}</div>` : ""}
       ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}</div>
@@ -11933,6 +11933,7 @@ function buRaumHtml() {
           ${L ? ding("bu-post", '<span class="bu-dsym">📨</span>', "Nachricht &amp; Mail", "buNachricht()") : ""}
           ${ding("bu-kalender", kal ? `<span class="bu-kal"><span class="bu-kmon">${esc(kal.toLocaleDateString("de-DE", { month: "short" }))}</span><span class="bu-ktag">${kal.getDate()}</span><span class="bu-kwt">${esc(kal.toLocaleDateString("de-DE", { weekday: "short" }))}</span></span>` : '<span class="bu-dsym">📅</span>', kal ? esc(naechst.titel || "Nächster Termin") : "Termine", S ? "buTermine()" : "zeige('termine')")}
           ${ding("bu-drucker", '<span class="bu-dsym">🖨️</span>', "Drucken", "buDrucker()")}
+          ${S ? ding("bu-scanner", '<span class="bu-dsym">📠</span>', "Einlesen", "buEinlesen()") : ""}
           ${fest.length ? ding("bu-karte", '<span class="bu-dsym">🎂</span>', fest.length === 1 ? "1 Glückwunsch" : `${fest.length} Glückwünsche`, "buFeste()") : ""}
         </div>
       </div>
@@ -12263,6 +12264,9 @@ function buEingangAuffrischen() { if (aktuelleAnsicht === "buero" && BU.sicht ==
 function buEingangPosten() {
   const l = BU_EIN.leihen, v = BU_EIN.vorschlaege, h = BU_EIN.hilfe, pr = BU_EIN.protokolle, ar = BU_EIN.archiv, P = [];
   ekPosten(P); // KC-CLUB-EINGANGSKORB (2.23.6): Erstattungen + Dienstzeiten zuerst
+  for (const d of einlKorbDoks(ar)) // 2.101.0 KC-CLUB-BUERO-EINLESEN: Eingelesenes, das „später erledigt“ werden soll
+    P.push({ wer: ICH?.name, datum: d.am || d.datum, sym: arDateiSym(d.mime), gruppe: "Eingelesen – noch zu erledigen", titel: d.titel, unter: [d.name, d.datum ? tagKurz(d.datum) : ""].filter(Boolean).join(" · "), auf: `einlKorbOeffnen('${d.id}')`,
+      ordner: ["🗄️", "Archiv", "arStart()"], schnell: [["🗄️ Ablegen / 💬 Senden", `einlKorbOeffnen('${d.id}')`, true], ["✔ Erledigt", `einlKorbErledigt('${d.id}')`]] });
   const leihWas = (a) => a.positionen.length === 1 ? `${a.positionen[0].anzahl} × ${a.positionen[0].name}` : a.positionen.map((x) => `${x.anzahl}× ${x.name}`).join(", ");
   for (const a of (l?.ausleihen || []).filter((x) => x.status === "angefragt"))
     P.push({ wer: a.eigen ? ICH?.name : a.wer, datum: a.abholung, sym: a.positionen[0]?.sym || "📦", gruppe: "Ausleihe – bitte entscheiden", titel: leihWas(a), unter: `${a.eigen ? "Du" : a.wer} · 📤 ${hlTagName(a.abholung)}`, auf: `HL.tab='leihen';leihInfo('${a.id}')`, ordner: ["🤝", "Helfen & Leihen", "hlStart()"] });
@@ -15498,6 +15502,122 @@ function teilenArchiv() {
       ...t.dateien.map((d) => ({ titel: d.name.replace(/\.[^.]+$/, "").slice(0, 120), name: d.name, mime: /\.txt$/i.test(d.name) ? "text/plain" : d.type, blob: d })),
     ] });
 }
+
+// ---------- KC-CLUB-BUERO-EINLESEN (2.101.0, Wunsch Hansi „damit alles schneller geht“): im Büro Dokumente einlesen –
+// 📷 Foto, 📁 Dateimanager, ⬇️ Hineinziehen (PC) oder 📥 aus dem Eingangskorb – danach fragt die App, wohin damit:
+// 🗄️ Ordner/Register (mit Vorschlag, archivAblageFragen), 📥 Eingangskorb (später erledigen), 💬 als Nachricht (Teilen-Kern) oder
+// 📧 per Mail mit Anhang (eigenes Mail-Programm über das Teilen-Menü des Geräts – nichts geht ungefragt raus). Kein neuer Serverweg.
+const EINL_MARKE = "Eingangskorb"; // Stichwort: liegt im Eingangskorb, noch zu erledigen
+let EINL = null;
+const einlMime = (d) => /\.txt$/i.test(d.name) ? "text/plain" : d.type || "application/octet-stream";
+const einlTitel = (d) => String(d.name || "Dokument").replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim().slice(0, 120) || "Dokument";
+function buEinlesen() {
+  const f = blattAuf("einlBlatt", `<h3 style="margin-top:0">📥 Dokument einlesen</h3>
+    <p class="hinweis" style="margin:0 0 8px">Foto machen, Datei wählen oder hierher ziehen – danach fragt die App, wohin damit.</p>
+    <div class="einl-wahl">
+      <label class="knopf haupt">📷 Foto machen<input type="file" accept="image/*" capture="environment" hidden onchange="einlDateien(this.files)"></label>
+      <label class="knopf">📁 Datei wählen<input type="file" accept="application/pdf,image/*,.txt,.doc,.docx,.xls,.xlsx" multiple hidden onchange="einlDateien(this.files)"></label>
+      ${ICH?.vorstand || ICH?.admin ? '<button class="knopf" onclick="einlAusKorb()">📥 Aus dem Eingangskorb</button>' : ""}
+    </div>
+    <div class="einl-ziehen" id="einlZiehen">⬇️ Dateien hierher ziehen (am PC)</div>
+    <button class="knopf" style="width:100%;text-align:center" onclick="fensterZu($('einlBlatt'))">Abbrechen</button>`);
+  const z = f.querySelector("#einlZiehen");
+  ["dragenter", "dragover"].forEach((t) => f.addEventListener(t, (e) => { e.preventDefault(); z.classList.add("an"); }));
+  ["dragleave", "drop"].forEach((t) => f.addEventListener(t, (e) => { e.preventDefault(); if (t === "drop" || e.target === z) z.classList.remove("an"); }));
+  f.addEventListener("drop", (e) => einlDateien(e.dataTransfer?.files));
+  spur("buero_einlesen");
+}
+async function einlDateien(liste) {
+  const roh = [...(liste || [])].filter(Boolean).slice(0, 10); if (!roh.length) return;
+  $("einlBlatt")?.remove();
+  const dateien = [];
+  for (const d of roh) { try { dateien.push(/^image\//.test(d.type) ? await verkleinern(d, 2400, 0.85) : d); } catch { dateien.push(d); } } // Fotos wie im Chat verkleinern
+  einlZiel(dateien, {});
+}
+function einlZiel(dateien, { korbId = null, titel = "" } = {}) {
+  EINL = { dateien, korbId, titel: titel || (dateien.length === 1 ? einlTitel(dateien[0]) : `${dateien.length} Dokumente`) };
+  const L = !!(ICH?.vorstand || ICH?.admin), nichtArchiv = dateien.filter((d) => !ARCHIV_TYP_OK(einlMime(d))).length;
+  blattAuf("einlBlatt", `<h3 style="margin-top:0">📄 Wohin damit?</h3>
+    <p style="margin:0 0 8px">${dateien.map((d) => `${arDateiSym(d.type)} <b>${esc(d.name)}</b>`).join("<br>")}</p>
+    ${nichtArchiv ? `<p class="hinweis" style="margin:0 0 8px">⚠️ ${nichtArchiv === 1 ? "Eine Datei hat" : nichtArchiv + " Dateien haben"} ein Format, das nicht ins Archiv passt – Senden geht trotzdem.</p>` : ""}
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      <button class="knopf haupt" onclick="einlAblegen()">🗄️ In einen Ordner ablegen <small>(mit Vorschlag)</small></button>
+      ${L && !korbId ? '<button class="knopf" onclick="einmal(this, einlInKorb)">📥 In den Eingangskorb – später erledigen</button>' : ""}
+      <button class="knopf" onclick="einlNachricht()">💬 Als Nachricht in der App</button>
+      <button class="knopf" onclick="einlPerMail()">📧 Per E-Mail mit Anhang</button>
+      <button class="knopf" onclick="fensterZu($('einlBlatt'));EINL=null">Abbrechen</button></div>
+    <p class="hinweis" style="margin:8px 0 0">💬 Bei „Als Nachricht“ wählst du im Chat wie gewohnt, ob zusätzlich Push oder E-Mail-Hinweis rausgeht. 📧 „Per E-Mail“ öffnet dein eigenes Mail-Programm mit der Datei als Anhang.</p>`);
+}
+function einlAblegen() {
+  const E = EINL; if (!E) return; $("einlBlatt")?.remove();
+  let gemacht = false;
+  archivAblageFragen("eingelesen", { titel: E.titel, datum: heuteIso(), hinweis: `${E.dateien.length} Datei${E.dateien.length > 1 ? "en" : ""}`, frage: "Wohin damit?", ja: "Ablegen", nein: "Doch nicht",
+    dateien: async () => { gemacht = true; return E.dateien.map((d) => ({ titel: E.dateien.length === 1 ? E.titel : einlTitel(d), name: d.name, mime: einlMime(d), blob: d })); },
+    danach: async () => { if (!gemacht) return einlZiel(E.dateien, E); if (E.korbId) await einlKorbWeg(E.korbId); einlNachher(E); } })
+    .then((gefragt) => { if (!gefragt) { melde("Das Archiv ist gerade nicht erreichbar – bitte gleich nochmal.", true); einlZiel(E.dateien, E); } });
+}
+// nach dem Ablegen: gleich versenden? (Dateien sind noch im Speicher → ein Tipp genügt, auch fürs Teilen-Menü)
+function einlNachher(E) {
+  EINL = E;
+  blattAuf("einlBlatt", `<h3 style="margin-top:0">✅ Abgelegt</h3><p style="margin:0 0 8px">Gleich auch versenden?</p>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      <button class="knopf" onclick="einlNachricht()">💬 Als Nachricht in der App</button>
+      <button class="knopf" onclick="einlPerMail()">📧 Per E-Mail mit Anhang</button>
+      <button class="knopf haupt" onclick="fensterZu($('einlBlatt'));EINL=null;buEingangAuffrischen()">👍 Fertig</button></div>`);
+}
+async function einlInKorb() {
+  const E = EINL; if (!E) return;
+  try {
+    const d = AR.daten || await api("archiv_liste"), mein = await api("archiv_mein_ordner", { jahr: new Date().getFullYear() });
+    const register = (d.register || []).includes("Sonstiges") ? "Sonstiges" : (d.register || ["Sonstiges"])[0];
+    let n = 0;
+    for (const f of E.dateien) {
+      if (!ARCHIV_TYP_OK(einlMime(f))) continue;
+      await api("archiv_hochladen", { ordner_id: mein.id, register, titel: E.dateien.length === 1 ? E.titel : einlTitel(f), datum: heuteIso(), stichworte: `${EINL_MARKE}, eingelesen`,
+        name: f.name, mime: einlMime(f), daten: base64(await f.arrayBuffer()) }, { warten: true });
+      n++;
+    }
+    $("einlBlatt")?.remove(); EINL = null; AR.daten = null;
+    melde(n ? `📥 Im Eingangskorb – ${n === 1 ? "liegt" : n + " Dateien liegen"} dort, bis du es erledigst` : "Diese Datei passt nicht ins Archiv – bitte als Nachricht oder Mail senden.", !n);
+    buEingangAuffrischen();
+  } catch (e) { meldeFehler(e); }
+}
+function einlNachricht() {
+  const E = EINL; if (!E) return; $("einlBlatt")?.remove();
+  TEILEN = { text: "", dateien: E.dateien }; teilenChatWahl(); // gleicher Weg wie „Teilen → Köcheclub“: Anhänge vorausgefüllt, ➤ drückst du selbst
+}
+async function einlPerMail() {
+  const E = EINL; if (!E) return;
+  const files = E.dateien.map((d) => d instanceof File ? d : new File([d], d.name || "Dokument", { type: d.type }));
+  try {
+    if (navigator.canShare?.({ files })) { await navigator.share({ files, title: E.titel }); return melde("📧 Im Teilen-Menü „Mail“ wählen – die Datei hängt schon an"); }
+  } catch (e) { if (e?.name === "AbortError") return; }
+  for (const f of files) { const a = document.createElement("a"); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+  melde("📧 Dieses Gerät kann Dateien nicht direkt ans Mail-Programm geben – sie wurden gespeichert. In der Mail über 📎 anhängen.");
+}
+// ----- Eingangskorb: was mit „📥 später erledigen“ eingelesen wurde (eigener Ordner, Stichwort „Eingangskorb“) -----
+const einlKorbDoks = (ar) => { const eigen = new Set((ar?.ordner || []).filter((o) => o.besitzer && o.eigen).map((o) => o.id));
+  return (ar?.dokumente || []).filter((d) => eigen.has(d.ordner_id) && (Array.isArray(d.stichworte) ? d.stichworte : String(d.stichworte || "").split(/[,;]\s*/)).includes(EINL_MARKE)); };
+async function einlAusKorb() {
+  let ar; try { ar = await api("archiv_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const l = einlKorbDoks(ar);
+  blattAuf("einlBlatt", `<h3 style="margin-top:0">📥 Aus dem Eingangskorb</h3>
+    ${l.length ? `<div style="display:grid;gap:6px">${l.map((d) => `<button class="knopf" style="text-align:left" onclick="einlKorbOeffnen('${d.id}')">${arDateiSym(d.mime)} <b>${esc(d.titel)}</b> <small class="hinweis">${d.datum ? esc(tagKurz(d.datum)) : ""}</small></button>`).join("")}</div>`
+      : '<p class="hinweis">Im Eingangskorb liegt gerade nichts Eingelesenes.</p>'}
+    <button class="knopf" style="width:100%;text-align:center;margin-top:8px" onclick="buEinlesen()">‹ Zurück</button>`);
+  BU_EIN.archiv = ar;
+}
+async function einlKorbOeffnen(id) {
+  const d = (BU_EIN.archiv?.dokumente || AR.daten?.dokumente || []).find((x) => x.id === id); if (!d) return melde("Das Dokument gibt es nicht mehr.", true);
+  try { const f = await anlageAlsDatei({ id: d.datei, mime: d.mime, name: d.name }); einlZiel([new File([f.blob], f.name, { type: f.mime })], { korbId: id, titel: d.titel }); }
+  catch (e) { meldeFehler(e); }
+}
+async function einlKorbErledigt(id) {
+  const d = (BU_EIN.archiv?.dokumente || []).find((x) => x.id === id); if (!d) return;
+  try { await api("archiv_aendern", { id, stichworte: (d.stichworte || []).filter((w) => w !== EINL_MARKE) }); melde("✔ Erledigt – bleibt in deinem Ordner"); buEingangAuffrischen(); } catch (e) { meldeFehler(e); }
+}
+// nach dem Ablegen woanders: die Eingangskorb-Fassung in den Papierkorb (dort 30 Tage wiederherstellbar) – keine doppelte Datei
+async function einlKorbWeg(id) { try { await api("archiv_loeschen", { id }); } catch {} AR.daten = null; buEingangAuffrischen(); }
 
 // ---------- KC-CLUB-BILDSCHIRMFOTO (1.24.0, Wunsch Hansi): Auslöser antippen → in Ruhe hingehen → Foto der App → einzeichnen → senden ----------
 // Am Handy darf eine Web-App nur sich selbst abbilden (kein Fremd-Bildschirm, kein Video). Die App zeichnet sich dafür selbst
@@ -20273,6 +20393,7 @@ const ARCHIV_ABLAGE_ARTEN = {
   foto: { sym: "📷", register: ["Fotos", "Sonstiges"], stichworte: "Foto" },
   protokoll: { sym: "📝", register: ["Protokolle", "Sonstiges"], stichworte: "Protokoll" },
   geteilt: { sym: "📥", register: ["Chats", "Sonstiges"], stichworte: "geteilt" }, // 1.22.0: über „Teilen → Köcheclub“ (z. B. WhatsApp-Export)
+  eingelesen: { sym: "📄", register: ["Sonstiges"], stichworte: "eingelesen" }, // 2.101.0 KC-CLUB-BUERO-EINLESEN
 };
 // Dateitypen, die das Archiv annimmt (gleiche Liste wie ARCHIV_DATEITYPEN im Server) – anderes (z. B. Sprachnachrichten) wird übersprungen
 const ARCHIV_TYP_OK = (mime) => /^(application\/pdf|image\/(jpeg|png|webp)|text\/plain|application\/msword|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet))$/.test(String(mime || ""));
@@ -20293,7 +20414,8 @@ async function archivAblageFragen(art, { titel, datum, hinweis, dateien, frage, 
   let d; try { d = await api("archiv_liste"); } catch { return false; } // Archiv gerade nicht erreichbar → Frage entfällt, Hauptaktion ist erledigt
   // KC-CLUB-ARCHIV-KOPIEREN (2.59.0): wer das Club-Archiv pflegt, kann auch in Club-Ordner ablegen (z. B. „Besprechungen“) – mit Vorschlag
   const verein = d.darf ? (d.ordner || []).filter((o) => !o.besitzer && !o.auto && o.art !== "chronik" && (o.register || []).length).sort((x, y) => y.jahr - x.jahr || x.titel.localeCompare(y.titel, "de")) : [];
-  const ordner = [...nfpEigeneOrdner(d), ...verein]; if (!ordner.length) return false;
+  // 2.101.0: eigene Ordner haben keine eigene Registerliste (es gelten die Standard-Register) → mitgeben, sonst schlägt arVorschlag sie nie vor
+  const ordner = [...nfpEigeneOrdner(d).map((o) => o.register?.length ? o : { ...o, register: d.register || ["Sonstiges"] }), ...verein]; if (!ordner.length) return false;
   const jahr = Number(String(datum || heuteIso()).slice(0, 4)), vs = arVorschlag(titel, ordner), vor = vs?.o || ordner.find((o) => o.besitzer && o.jahr === jahr) || ordner[0];
   ABL = { a, d, titel, datum: datum || heuteIso(), dateien, danach, vorReg: vs?.r, vs, ja };
   const vsName = vs ? (vs.o.besitzer ? "Mein Ordner " + vs.o.jahr : vs.o.titel + " " + vs.o.jahr) : "";
