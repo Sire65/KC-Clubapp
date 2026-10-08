@@ -6444,3 +6444,11 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/spurAdmin\(heuteIso\(\), null\)/.test(f) && !/api\(/.test(f), "Ja → Wege mit allen, die gerade da sind; selbst nichts senden");
   assert.ok(/\$\{heuteDa && !SPW\.person \? spurFrageKnopf\(\) : ""\}/.test(programm), "im Wege-Fenster wieder einschaltbar");
 }
+
+// 4xx. 2.93.0: „Korrektur meiner Daten“ an EINEN Admin geht in den vorhandenen Zweierchat (KC-CLUB-KORREKTUR-EIN-CHAT, Fall Wilfried)
+{
+  const f = programm.slice(programm.indexOf("async function korrekturMelden()"), programm.indexOf("// Einstellungen → Privatsphäre"));
+  assert.ok(/betreff: einer \? "" : "📝 Korrektur meiner Daten"/.test(f) && /\(einer \? "📝 Korrektur meiner Daten: " : ""\) \+ text\.trim\(\)/.test(f), "ohne Betreff → kein neuer Chat");
+  assert.ok(/if \(ziel\.length === 1 && !betreff\) threadId = \(await zweierGespraech\(ich\.person_id, ziel\[0\]\)\) \|\| "";/.test(server), "Server führt Zweiergespräch ohne Betreff weiter");
+  assert.ok(fs.existsSync("supabase/migrations/20261008_kc_club_chat_wilfried_zusammen.sql"), "Zusammenführung per Weg B");
+}

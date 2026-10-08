@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.93.0 – 2026-10-08 – 💬 „Korrektur meiner Daten“ landet im vorhandenen Chat
+Wer „📝 Korrektur meiner Daten“ schickt, schreibt jetzt in den vorhandenen Chat mit dem Admin – statt jedes Mal einen neuen Chat anzulegen.
+
 ## 2.92.0 – 2026-10-08 – 🟢 Bei Anmeldung fragen: „Möchtest du sehen, was … gerade macht?“ (Admin)
 Meldet sich ein Mitglied an, fragt die App den Admin, ob er sehen möchte, was es gerade macht. Bei Ja öffnet sich „Wege der Benutzung“ mit allen, die gerade in der App sind – zum Antippen. Nicht in der Ruhezeit und nie über einem anderen offenen Fenster; abschaltbar.
 

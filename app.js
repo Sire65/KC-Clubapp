@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.92.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.93.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -19189,7 +19189,10 @@ async function korrekturMelden() {
     if (!MITGLIEDER) await mitgliederHolen();
     const admins = MITGLIEDER.filter((x) => x.admin).map((x) => x.person_id);
     if (!admins.length) return melde("Kein Admin gefunden – bitte " + adminName() + " direkt Bescheid geben.", true);
-    await api("nachricht_senden", { empfaenger: { personen: admins, aemter: [], alle: false, vorstand: false }, betreff: "📝 Korrektur meiner Daten", text: text.trim() });
+    // 2.93.0 KC-CLUB-KORREKTUR-EIN-CHAT (Fall Wilfried): bei EINEM Admin ohne Betreff → landet im vorhandenen Zweierchat statt jedes Mal
+    // in einem neuen Chat (der Server führt Zweiergespräche nur ohne Betreff weiter); die Überschrift steht dafür vorn im Text
+    const einer = admins.length === 1;
+    await api("nachricht_senden", { empfaenger: { personen: admins, aemter: [], alle: false, vorstand: false }, betreff: einer ? "" : "📝 Korrektur meiner Daten", text: (einer ? "📝 Korrektur meiner Daten: " : "") + text.trim() });
     melde("📝 Danke – deine Korrektur ist bei " + adminName() + " angekommen");
   } catch (e) { meldeFehler(e); }
 }
