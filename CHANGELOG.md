@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.89.0 – 2026-10-08 – 🎙️ Weniger Knöpfe am Mikrofon
+📋 Alle Befehle und 🔇 Mikro aus stehen jetzt im Fenster „Ich höre zu …“ statt als zwei zusätzliche Knöpfe auf dem Bildschirm. Merkblatt „Die App hilft dir“ aktualisiert (mit den neuen Befehlen der Stufe 3). (KC-CLUB-SPRACHE-LISTE)
+
 ## 2.88.0 – 2026-10-08 – 📮 Gemeldete Änderungen sichtbar
 Hat ein Mitglied z. B. eine neue Anschrift gemeldet, steht in „Meine Daten“ und auf der eigenen Mitglieder-Seite: „📮 Von dir gemeldet – noch nicht eingetragen: Anschrift (ab …): 👍 freigegeben – wird in Kürze eingetragen“. Nach der Freigabe bekommt das Mitglied einmal eine Push-Nachricht. Nur Anzeige – eingetragen wird weiter im KC Manager. (KC-CLUB-AE-HINWEIS, KC-CLUB-AE-FREIGABE-PUSH, Server 2.88.0)
 

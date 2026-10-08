@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.88.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.89.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1806,15 +1806,13 @@ function sbSchalter(an) {
 function sbKnopfZeigen() {
   if ($("setSprache")) $("setSprache").checked = sbAn();
   let k = $("sbKnopf");
-  if (!k && sbAn()) { document.body.insertAdjacentHTML("beforeend", '<button type="button" class="sb-knopf" id="sbKnopf" title="Sprachsteuerung" aria-label="Sprachsteuerung – sag, was du tun möchtest" onclick="sbKnopfTipp()">🎙️</button>'
-      + '<button type="button" class="sb-mini" id="sbStummKnopf" onclick="sbStumm(!sbStummAn())"></button><button type="button" class="sb-mini" id="sbListeKnopf" title="Alle Sprachbefehle" aria-label="Liste aller Sprachbefehle" onclick="sbListe()">📋</button>'); // 2.84.0
+  if (!k && sbAn()) { document.body.insertAdjacentHTML("beforeend", '<button type="button" class="sb-knopf" id="sbKnopf" title="Sprachsteuerung" aria-label="Sprachsteuerung – sag, was du tun möchtest" onclick="sbKnopfTipp()">🎙️</button>');
     k = $("sbKnopf"); sbLangDruck(k); }
+  // 2.89.0 (Wunsch Hansi „zu viele Knöpfe“): 🔇 und 📋 stehen nicht mehr auf dem Bildschirm, sondern im Fenster „Ich höre zu …“
   k?.classList.toggle("versteckt", !sbAn());
   // KC-CLUB-SPRACHE-LISTE (2.84.0): stumm = Mikrofon aus (Knopf grau 🔇, Tippen öffnet die Liste mit „Mikrofon wieder an“)
   const st = sbStummAn();
   k?.classList.toggle("stumm", st); if (k) { k.textContent = st ? "🔇" : "🎙️"; k.setAttribute("aria-label", st ? "Mikrofon ist aus – Liste öffnen" : "Sprachsteuerung – sag, was du tun möchtest"); }
-  for (const id of ["sbStummKnopf", "sbListeKnopf"]) $(id)?.classList.toggle("versteckt", !sbAn());
-  const m = $("sbStummKnopf"); if (m) { m.textContent = st ? "🎙️" : "🔇"; m.title = st ? "Mikrofon wieder an" : "Stumm – Mikrofon aus"; m.setAttribute("aria-label", m.title); }
 }
 // ---------- KC-CLUB-SPRACHE-LISTE (2.84.0, Wunsch Hansi): zwei kleine Knöpfe am Mikrofon – 🔇 Stumm und 📋 Liste aller Sprachbefehle ----------
 const SB_STUMM_KEY = "kc_club_sprache_stumm", sbStummAn = () => lsLesen(SB_STUMM_KEY) === "1";
@@ -1951,7 +1949,8 @@ function sbHoeren() {
   blattAuf("sbBlatt", `<h3 style="margin:0">🎙️ Ich höre zu …</h3>${SB_WELLE}
     <p class="sb-gehoert" id="sbGehoert">Sag, was du tun möchtest</p>
     <p class="hinweis" style="margin:0">Zum Beispiel:<br>${SB_BEISPIELE.map(esc).join("<br>")}</p>
-    <button class="knopf" style="width:100%;text-align:center;margin-top:10px" onclick="sbStopp()">Abbrechen</button>`);
+    <div class="sb-fensterknoepfe"><button class="knopf" onclick="sbStopp();sbListe()">📋 Alle Befehle</button><button class="knopf" onclick="sbStopp();sbStumm(true)">🔇 Mikro aus</button></div>
+    <button class="knopf" style="width:100%;text-align:center;margin-top:6px" onclick="sbStopp()">Abbrechen</button>`);
   sbZuhoeren((alt) => sbVerstanden(alt.find((a) => sbErkennen(a, MITGLIEDER || [], ICH?.person_id) || sbGelernt(a, SB.woerter)) ?? alt[0]), (grund) => sbNichtVerstanden(grund, ""));
 }
 function sbNichtVerstanden(grund, roh) {

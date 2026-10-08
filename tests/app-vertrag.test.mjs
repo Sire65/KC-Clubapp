@@ -6362,10 +6362,10 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const bef = new Function(programm.slice(programm.indexOf("const SB_BEFEHLE = ["), programm.indexOf("function sbListe()")) + "\nreturn SB_BEFEHLE;")();
   assert.ok(bef.length >= 20, "Liste vollständig");
   for (const [satz] of bef) assert.ok(sbErkennen(satz, [{ person_id: "K", name: "Klaus Zander" }], "X"), `Beispiel „${satz}“ wird erkannt`);
-  assert.ok(/id="sbStummKnopf" onclick="sbStumm\(!sbStummAn\(\)\)"/.test(programm) && /id="sbListeKnopf"[^>]*onclick="sbListe\(\)">📋/.test(programm), "zwei kleine Knöpfe am Mikrofon");
+  assert.ok(/onclick="sbStopp\(\);sbListe\(\)">📋 Alle Befehle<\/button><button class="knopf" onclick="sbStopp\(\);sbStumm\(true\)">🔇 Mikro aus<\/button>/.test(programm) && !/id="sbStummKnopf"/.test(programm), "2.89.0: 📋/🔇 im Fenster „Ich höre zu …“, nicht mehr auf dem Bildschirm");
   assert.ok(/if \(sbStummAn\(\)\) return sbListe\(\); sbHoeren\(\);/.test(programm) && /🎙️ Mikrofon wieder an/.test(programm), "stumm: Mikrofon hört nicht zu, Liste bietet „wieder an“");
   assert.ok(/such\.oninput = \(\) => \{ const q = sbNorm\(such\.value\);/.test(programm), "Live-Suche");
-  assert.ok(/\.sb-mini \{ position: fixed;/.test(seite) && /\.sb-knopf\.stumm \{/.test(seite));
+  assert.ok(/\.sb-fensterknoepfe \{/.test(seite) && /\.sb-knopf\.stumm \{/.test(seite));
 }
 
 // 4xx. 2.85.0: „Wie viel Unterstützung möchtest du?“ – einmal fragen, „Viel Hilfe“ schaltet alles ein (KC-CLUB-UNTERSTUETZUNG, Wunsch Hansi)

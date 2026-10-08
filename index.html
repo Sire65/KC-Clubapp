@@ -1535,10 +1535,8 @@
   .sb-still .sb-welle { display: none; }
   .ae-offen-hinweis { border: 2px solid #d68910; background: rgba(214,137,16,.08); } .ae-offen-hinweis div { margin: 3px 0; } /* 2.88.0 KC-CLUB-AE-HINWEIS */
   .ust-wahl { display: grid; gap: 8px; } .ust-wahl .knopf { display: flex; gap: 12px; align-items: center; text-align: left; width: 100%; padding: 12px; margin: 0; } .ust-wahl small { display: block; font-weight: 400; opacity: .85; margin-top: 2px; } .ust-sym { font-size: 1.8rem; } /* 2.85.0 KC-CLUB-UNTERSTUETZUNG */
-  /* 2.84.0 KC-CLUB-SPRACHE-LISTE: 🔇 und 📋 über dem Mikrofon; stumm = grauer Knopf */
-  .sb-mini { position: fixed; z-index: 21; left: calc(max(12px, calc(50% - 372px)) + 8px); width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; background: var(--karte); color: var(--text); font-size: 1.05rem; line-height: 1; padding: 0; box-shadow: var(--schatten); cursor: pointer; }
-  #sbStummKnopf { bottom: calc(148px + env(safe-area-inset-bottom)); } #sbListeKnopf { bottom: calc(196px + env(safe-area-inset-bottom)); }
-  .sb-mini.versteckt, body.im-chat .sb-mini, body.su-auf .sb-mini, body.kt-aktiv .sb-mini, body.fa-waehlen .sb-mini { display: none; }
+  /* 2.84.0 KC-CLUB-SPRACHE-LISTE: stumm = grauer Knopf; 2.89.0: 📋/🔇 im Fenster „Ich höre zu …“ statt auf dem Bildschirm */
+  .sb-fensterknoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; } .sb-fensterknoepfe .knopf { margin: 0; text-align: center; }
   .sb-knopf.stumm { background: #8a8580; }
   .sb-liste { display: grid; gap: 6px; margin-top: 8px; } .sb-befehl { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; width: 100%; border: 1px solid var(--linie); border-radius: 12px; background: var(--karte2); color: var(--text); padding: 8px 10px; font: inherit; cursor: pointer; }
   .sb-befehl small { color: var(--grau, #6b625c); }
@@ -3447,6 +3445,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.88.0" data-v="2.88.0"></script>
+<script src="app.js?v=2.89.0" data-v="2.89.0"></script>
 </body>
 </html>
