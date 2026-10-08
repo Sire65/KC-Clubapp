@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.61.0 – 2026-10-07 – KC-CLUB-WARTEBILD
+Neues Wartebild „🥞 Pfannkuchen wenden“: farbige Pfanne wirft den Pfannkuchen hoch, er dreht sich in der Luft und landet wieder.
+
 ## 2.60.1 – 2026-10-07 – KC-CLUB-KLICK-ZEIGEN
 Die roten Rahmen beim 👆 pulsieren jetzt ruhig (bei „Bewegung reduzieren“ stehend).
 

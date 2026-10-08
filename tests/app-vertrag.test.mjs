@@ -5434,6 +5434,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.hz-klick\.versteckt, body\.im-chat \.hz-klick/.test(seite), "👆 muss sich wie das ? ausblenden");
 }
 // 2.60.1: Puls siehe KC-CLUB-KLICK-ZEIGEN-Test
+// 2.61.0 KC-CLUB-WARTEBILD: farbiges Motiv „Pfannkuchen wenden“ (Pfanne wirft, Pfannkuchen dreht sich, landet)
+{
+  assert.ok(programm.includes('{ id: "pfannkuchen", t: "Pfannkuchen wenden", x: "Wird gewendet …"'), "Motiv fehlt");
+  for (const k of ["wbPkPfanne", "wbPkFlug", "wbPkDreh", "wbPkSchatten"]) assert.ok(seite.includes("@keyframes " + k), "Bewegung fehlt: " + k);
+  assert.ok(seite.includes(".wb-svg.wb-pfannkuchen { stroke: none;"), "farbiges Motiv darf keine weißen Striche bekommen");
+  assert.ok(programm.includes('{ id: "pfanne", t: "Pfanne schwenken"'), "bisheriges Pfannen-Motiv muss bleiben");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
