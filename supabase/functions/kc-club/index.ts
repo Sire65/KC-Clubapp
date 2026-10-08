@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.109.0";
+const SERVER_VERSION = "2.111.0";
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
 async function ssBeenden(pid: string, w: any) {
@@ -8803,6 +8803,16 @@ Köcheclub Werne`,
       }
 
       // 🗄️ Wohin ablegen? – Auswahl (kein Freitext): Vereinsordner, Ordner des Mitglieds, mein Ordner
+      case "eingang_doku": {
+        // KC-CLUB-BUERO-EINLESEN-EINGANG (2.111.0, Fund Hansi: „Eingang: 12 Sachen“, aber „Aus dem Eingangskorb“ war leer):
+        // ein Vorgang aus dem Büro-Eingang als Text-Dokument (gleiche Fassung wie beim Ablegen, ekDoku) – damit er beim Einlesen
+        // abgelegt, als Nachricht geschickt oder per Mail versendet werden kann. Nur lesen; Rechte wie beim Ablegen (ekPruefen).
+        const art = String(p.art || ""), id = String(p.id || "");
+        await ekPruefen(ich, art, id);
+        const doku = await ekDoku(art, id); if (!doku) throw new Fehler("Vorgang nicht gefunden.", 404);
+        return json({ titel: `${doku.wer}: ${doku.titel}`, dateiname: doku.dateiname, text: doku.text });
+      }
+
       case "eingang_ablage_ziele": {
         const art = String(p.art || ""), id = String(p.id || "");
         await ekPruefen(ich, art, id);

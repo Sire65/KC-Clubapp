@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.110.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.111.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1607,7 +1607,7 @@ const HILFE = [
   { id: "aenderung_rueckfrage", thema: "club", sym: "💬", t: "Rückfrage zu deiner Änderungsmeldung", x: "Hast du eine Änderung deiner Daten gemeldet und dazu noch eine Frage? Solange sie noch nicht eingetragen ist, steht bei der Meldung der Knopf <b>„💬 Rückfragen?“</b> – er öffnet direkt einen Chat mit der Clubleitung, der Bezug ist schon eingetragen.", zeig: () => aeStart(), seit: "2.91.0" },
   { id: "schritt_hilfe_ueberall", thema: "start", sym: "🤝", t: "Schritt-für-Schritt-Hilfe – jetzt überall", x: "Mit eingeschalteter Unterstützung zeigt ein <b>roter Rahmen</b> auf jeder Seite (außer SOS) und in den wichtigen Fenstern den nächsten sinnvollen Schritt – auf Wunsch mit Vorlesen. Einschalten oder ändern: ⚙️ → <b>„🤝 Unterstützung“</b>.", zeig: () => zeige("einstellungen"), seit: "2.105.0" },
   { id: "code_ipad", thema: "privat", sym: "📲", t: "iPad/iPhone: erst installieren, dann den Code", x: "Auf iPad und iPhone zuerst die App auf den Home-Bildschirm legen (Teilen ⬆️ → „Zum Home-Bildschirm“) und <b>dann</b> in der installierten App den 6-stelligen Code eintippen. Sonst fragt die App nach dem Öffnen vom Home-Bildschirm noch einmal nach einem Code. Während die Anmeldung läuft, dreht sich die Kochmütze.", zeig: () => einstiegHin("install"), seit: "2.91.0" },
-  { id: "buero_einlesen", thema: "club", sym: "📥", t: "Dokumente ins Büro einlesen", x: "Im Büro auf <b>„📥 Einlesen“</b>: 📷 Foto machen, 📁 Datei wählen, am PC einfach hineinziehen – oder etwas aus dem Eingangskorb nehmen. Danach fragt die App, <b>wohin</b>: in einen Ordner (mit Vorschlag), in den 📥 Eingangskorb (später erledigen), als 💬 Nachricht oder 📧 per E-Mail.", nur: () => !!ICH?.buero, zeig: () => zeige("buero"), seit: "2.101.0" },
+  { id: "buero_einlesen", thema: "club", sym: "📥", t: "Dokumente ins Büro einlesen", x: "Im Büro auf <b>„📥 Einlesen“</b>: 📷 Foto machen, 📁 Datei wählen, am PC einfach hineinziehen – oder unter <b>„📥 Aus Eingangskorb oder Eingang“</b> etwas nehmen, z. B. eine Erstattung, Dienstzeiten oder eine Änderungsmeldung. Danach fragt die App, <b>wohin</b>: in einen Ordner (mit Vorschlag), in den 📥 Eingangskorb (später erledigen), als 💬 Nachricht oder 📧 per E-Mail.", nur: () => !!ICH?.buero, zeig: () => zeige("buero"), seit: "2.101.0" },
   { id: "buero_mail", thema: "club", sym: "📧", t: "Per E-Mail mit Anhang – direkt aus der App", x: "Nach dem Einlesen <b>„📧 Per E-Mail mit Anhang“</b> wählen. Bei jedem Namen <b>An</b>, <b>CC</b> (Kopie – alle sehen es) oder <b>BCC</b> (Blindkopie – unsichtbar für die anderen) antippen; oben den Namen eintippen geht schneller. Betreff prüfen, Text dazu (kann leer bleiben), „Kopie an mich“ – dann <b>„📧 Jetzt senden“</b>. Für Adressen außerhalb des Clubs: „📤 Anderes Mail-Programm“ (Teilen).", nur: () => !!ICH?.buero, zeig: () => zeige("buero"), seit: "2.109.0" },
   { id: "mitschauen", thema: "technik", sym: "🔴", t: "Bildschirm ansehen und live mitschauen (Admin)", x: "Admin → Nutzung → ein Mitglied → <b>„📸 Bild“</b> oder <b>„🔴 Live mitschauen“</b>. Das Mitglied wird immer <b>gefragt</b> und muss zustimmen; beim Live-Mitschauen sieht es oben ein rotes Band „schaut zu“ und kann jederzeit beenden. Live endet nach 10 Minuten von selbst.", nur: () => !!ICH?.admin, seit: "2.103.0" },
   { id: "wege_frage", thema: "technik", sym: "👣", t: "Wege eines Mitglieds ansehen (Admin)", x: "Meldet sich ein Mitglied an, fragt die App, ob du seine Wege durch die App ansehen möchtest – <b>„👀 Ja, ansehen“</b> öffnet die Liste aller Angemeldeten zum Antippen. Mit <b>„🔕 Nicht mehr fragen“</b> schaltest du die Frage ab.", nur: () => !!ICH?.admin, seit: "2.92.0" },
@@ -15696,7 +15696,7 @@ function buEinlesen() {
     <div class="einl-wahl">
       <label class="knopf haupt">📷 Foto machen<input type="file" accept="image/*" capture="environment" hidden onchange="einlDateien(this.files)"></label>
       <label class="knopf">📁 Datei wählen<input type="file" accept="application/pdf,image/*,.txt,.doc,.docx,.xls,.xlsx" multiple hidden onchange="einlDateien(this.files)"></label>
-      ${ICH?.vorstand || ICH?.admin ? '<button class="knopf" onclick="einlAusKorb()">📥 Aus dem Eingangskorb</button>' : ""}
+      ${ICH?.vorstand || ICH?.admin ? '<button class="knopf" onclick="einlAusKorb()">📥 Aus Eingangskorb oder Eingang</button>' : ""}
     </div>
     <div class="einl-ziehen" id="einlZiehen">⬇️ Dateien hierher ziehen (am PC)</div>
     <button class="knopf" style="width:100%;text-align:center" onclick="fensterZu($('einlBlatt'))">Abbrechen</button>`);
@@ -15833,14 +15833,29 @@ async function einlPerMailExtern() {
 // ----- Eingangskorb: was mit „📥 später erledigen“ eingelesen wurde (eigener Ordner, Stichwort „Eingangskorb“) -----
 const einlKorbDoks = (ar) => { const eigen = new Set((ar?.ordner || []).filter((o) => o.besitzer && o.eigen).map((o) => o.id));
   return (ar?.dokumente || []).filter((d) => eigen.has(d.ordner_id) && (Array.isArray(d.stichworte) ? d.stichworte : String(d.stichworte || "").split(/[,;]\s*/)).includes(EINL_MARKE)); };
+// 2.111.0 KC-CLUB-BUERO-EINLESEN-EINGANG (Fund Hansi): auch die Vorgänge aus dem Büro-Eingang anbieten – Erstattungen, Dienstzeiten,
+// Änderungsmeldungen – als Text-Dokument (Server „eingang_doku“, gleiche Fassung wie beim Ablegen). So geht z. B. eine Erstattung gleich per Mail.
 async function einlAusKorb() {
-  let ar; try { ar = await api("archiv_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
-  const l = einlKorbDoks(ar);
+  const L = !!(ICH?.vorstand || ICH?.admin);
+  const [a, k, ae, v] = await Promise.allSettled([api("archiv_liste", {}, { warten: true }), L ? api("eingang_korb") : Promise.reject(0), L ? aeEingangLaden() : Promise.reject(0), L ? api("vorschlaege_liste") : Promise.reject(0)]);
+  if (a.status !== "fulfilled") return meldeFehler(a.reason);
+  const ar = a.value, l = einlKorbDoks(ar); if (k.status === "fulfilled") BU_EIN.korb = k.value; if (v.status === "fulfilled") BU_EIN.vorschlaege = v.value.vorschlaege;
+  const ein = [...(BU_EIN.korb?.erstattungen || []).map((x) => ({ art: "erstattung", id: x.id, sym: "💶", t: `Erstattung ${x.name}: ${euro(x.summe)}`, u: zeitKurz(x.erstellt_am) })),
+    ...(BU_EIN.korb?.dienstwuensche || []).map((x) => ({ art: "dienstwunsch", id: x.id, sym: "📅", t: `Dienstzeiten ${x.name}`, u: zeitKurz(x.zuletzt) })),
+    ...(AE.eingang?.meldungen || []).filter((y) => y.wartetAufMich ?? y.status === "offen").map((x) => { const t = AE.eingang.arten?.find((y) => y.id === x.art); return { art: "aenderung", id: x.id, sym: t?.sym || "✏️", t: `${t?.t || "Änderung"}: ${x.name}`, u: zeitKurz(x.erstellt_am) }; }),
+    ...(BU_EIN.vorschlaege || []).filter((y) => y.status === "offen").map((x) => ({ art: "vorschlag", id: x.id, sym: x.art === "spende" ? "💝" : "💡", t: `Vorschlag: ${x.titel || x.spenden?.[0]?.empfaenger || "Spende"}`, u: x.von?.name || "" }))];
+  const kopf = (t) => `<p style="margin:10px 0 4px;font-weight:700">${t}</p>`;
   blattAuf("einlBlatt", `<h3 style="margin-top:0">📥 Aus dem Eingangskorb</h3>
-    ${l.length ? `<div style="display:grid;gap:6px">${l.map((d) => `<button class="knopf" style="text-align:left" onclick="einlKorbOeffnen('${d.id}')">${arDateiSym(d.mime)} <b>${esc(d.titel)}</b> <small class="hinweis">${d.datum ? esc(tagKurz(d.datum)) : ""}</small></button>`).join("")}</div>`
-      : '<p class="hinweis">Im Eingangskorb liegt gerade nichts Eingelesenes.</p>'}
+    ${l.length ? kopf("📥 Eingelesen – noch zu erledigen") + `<div style="display:grid;gap:6px">${l.map((d) => `<button class="knopf" style="text-align:left" onclick="einlKorbOeffnen('${d.id}')">${arDateiSym(d.mime)} <b>${esc(d.titel)}</b> <small class="hinweis">${d.datum ? esc(tagKurz(d.datum)) : ""}</small></button>`).join("")}</div>` : ""}
+    ${ein.length ? kopf(`🗂️ Aus dem Eingang (${ein.length})`) + `<div style="display:grid;gap:6px">${ein.map((x) => `<button class="knopf" style="text-align:left" onclick="einlEingangOeffnen('${x.art}','${esc(x.id)}')">${x.sym} <b>${esc(x.t)}</b> <small class="hinweis">${esc(x.u || "")}</small></button>`).join("")}</div>` : ""}
+    ${!l.length && !ein.length ? '<p class="hinweis">Im Eingangskorb und im Eingang liegt gerade nichts.</p>' : ""}
     <button class="knopf" style="width:100%;text-align:center;margin-top:8px" onclick="buEinlesen()">‹ Zurück</button>`);
   BU_EIN.archiv = ar;
+}
+async function einlEingangOeffnen(art, id) {
+  try { const d = await api("eingang_doku", { art, id }, { warten: true });
+    einlZiel([new File(["\ufeff" + d.text], d.dateiname || "Vorgang.txt", { type: "text/plain" })], { titel: d.titel }); }
+  catch (e) { meldeFehler(e); }
 }
 async function einlKorbOeffnen(id) {
   const d = (BU_EIN.archiv?.dokumente || AR.daten?.dokumente || []).find((x) => x.id === id); if (!d) return melde("Das Dokument gibt es nicht mehr.", true);

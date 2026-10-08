@@ -6644,3 +6644,13 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
     assert.ok(new RegExp(`\\{ id: "${id}", thema: "`).test(programm), "Hilfe-Eintrag " + id);
   assert.ok(/schickt die Datei direkt aus der App an Mitglieder \(An, CC, BCC\)/.test(programm), "Hinweis „Wohin damit?“ aktuell");
 }
+
+// 4xx. 2.111.0: Einlesen – auch Vorgänge aus dem Büro-Eingang anbieten (KC-CLUB-BUERO-EINLESEN-EINGANG, Fund Hansi)
+{
+  const n = server.indexOf('case "eingang_doku"'), c = server.slice(n, server.indexOf("\n      case ", n + 10));
+  assert.ok(n > 0 && /await ekPruefen\(ich, art, id\);/.test(c) && /await ekDoku\(art, id\)/.test(c) && !/insert|update|delete/.test(c), "Server: nur lesen, Rechte wie beim Ablegen");
+  const f = programm.slice(programm.indexOf("async function einlAusKorb()"), programm.indexOf("async function einlKorbOeffnen("));
+  for (const art of ["erstattung", "dienstwunsch", "aenderung", "vorschlag"]) assert.ok(f.includes(`art: "${art}"`), "Eingang: " + art);
+  assert.ok(/api\("eingang_doku", \{ art, id \}/.test(f) && /einlZiel\(\[new File\(/.test(f), "Vorgang → Wohin damit?");
+  assert.ok(/Im Eingangskorb und im Eingang liegt gerade nichts\./.test(f) && /📥 Aus Eingangskorb oder Eingang/.test(programm), "Texte");
+}
