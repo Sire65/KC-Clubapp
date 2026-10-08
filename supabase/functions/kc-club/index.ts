@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.114.0";
+const SERVER_VERSION = "2.120.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
@@ -3434,7 +3434,8 @@ async function schulungenListe(ich: Ich, von: string, bis: string) {
   if (error || !sl?.length) return [];
   const { data: buRoh } = await db.from("kc_termin_buchungen").select("id,slot_id,einladung_id,personen,besuchsart,status,besuch_id,bestaetigung_gesendet_am").in("slot_id", sl.map((x: any) => x.id)).in("status", ["vorgemerkt", "bestaetigt", "storniert"]);
   const bu = (buRoh ?? []).filter((b: any) => b.status !== "storniert" || b.besuch_id || b.bestaetigung_gesendet_am).map((b: any) => (b.status === "storniert" ? { ...b, status: "abgesagt" } : b));
-  if (!bu.length) return [];
+  const vorbehalt = ich.admin ? await schulungVorbehalt(sl, buRoh ?? []) : []; // KC-CLUB-SCHULUNG-VORBEHALT (2.120.0)
+  if (!bu.length) return vorbehalt;
   const { data: ei } = await db.from("kc_termin_einladungen").select("id,person_ids,ist_test").in("id", bu.map((b: any) => b.einladung_id).filter(Boolean));
   const einl = new Map((ei ?? []).map((e: any) => [e.id, e]));
   const liste = bu.map((b: any) => ({ b, s: sl.find((x: any) => x.id === b.slot_id), e: einl.get(b.einladung_id) as any }))
@@ -3442,7 +3443,23 @@ async function schulungenListe(ich: Ich, von: string, bis: string) {
   const leute = await personen(liste.flatMap((x: any) => x.e.person_ids ?? []));
   return liste.map((x: any) => ({ id: x.b.id, beginn: x.s.beginn, ende: x.s.ende, status: x.b.status, art: SCHULUNG_ART[x.b.besuchsart || x.s.besuchsart] || "",
     besuch: x.b.besuch_id || null, namen: (x.e.person_ids ?? []).map((id: string) => vorname(leute.get(id)) || leute.get(id)?.display_name || "Mitglied"),
-    ichDabei: (x.e.person_ids ?? []).includes(ich.person_id) })).sort((a: any, b: any) => String(a.beginn).localeCompare(String(b.beginn)));
+    ichDabei: (x.e.person_ids ?? []).includes(ich.person_id) })).concat(vorbehalt).sort((a: any, b: any) => String(a.beginn).localeCompare(String(b.beginn)));
+}
+// KC-CLUB-SCHULUNG-VORBEHALT (2.120.0, Wunsch Hansi „Termine unter Vorbehalt im Kalender – da ist nix drin“): angebotene Termine,
+// die noch niemand gewählt hat, stehen für den Admin im Kalender – „unter Vorbehalt“, mit den Vornamen der Eingeladenen, denen der
+// Termin gerade angeboten wird (offene, gültige Einladung; leere slot_ids = alle freien Termine). Nur lesend, nur Admin.
+async function schulungVorbehalt(sl: any[], buRoh: any[]) {
+  const aktiv = new Set(buRoh.filter((b: any) => b.status === "vorgemerkt" || b.status === "bestaetigt").map((b: any) => b.slot_id));
+  const jetztIso = new Date().toISOString();
+  const frei = sl.filter((s: any) => s.status === "offen" && !aktiv.has(s.id) && s.beginn > jetztIso);
+  if (!frei.length) return [];
+  const { data: ei } = await db.from("kc_termin_einladungen").select("person_ids,slot_ids").eq("status", "offen").eq("ist_test", false).gt("gueltig_bis", jetztIso).limit(100);
+  const leute = await personen((ei ?? []).flatMap((e: any) => e.person_ids ?? []));
+  return frei.map((s: any) => {
+    const an = (ei ?? []).filter((e: any) => !(e.slot_ids ?? []).length || (e.slot_ids ?? []).includes(s.id)).flatMap((e: any) => e.person_ids ?? []);
+    return { id: "vb:" + s.id, beginn: s.beginn, ende: s.ende, status: "vorbehalt", art: SCHULUNG_ART[s.besuchsart] || "", besuch: null,
+      namen: [...new Set(an)].map((id: string) => vorname(leute.get(id)) || leute.get(id)?.display_name || "Mitglied"), ichDabei: false };
+  });
 }
 
 // ---------- KC-CLUB-SCHULUNG-HINWEIS (2.23.68, Wunsch Hansi): was wartet, was ist neu, was steht an – nur lesend ----------

@@ -4939,8 +4939,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const f = server.slice(server.indexOf("async function schulungenListe("), server.indexOf("// ---------- KC-CLUB-SCHULUNG-HINWEIS"));
   assert.ok(/in\("status", \["offen", "abgesagt"\]\)/.test(f) && /status: "abgesagt"/.test(f), "abgesagte Schulungstermine bleiben im Kalender");
   assert.ok(/x\.status === "abgesagt" \? "CANCELLED"/.test(server), "Handy-Kalender: abgesagt");
-  assert.ok(/art: x\.status === "abgesagt" \? "schulung-ab" : "schulung"/.test(html) && /x\.art === "schulung-ab"\) return `<div class="keintrag sc-abgesagt">/.test(html) && /❌ abgesagt/.test(html), "eigene Farbe + „abgesagt“");
-  assert.ok(/for \(const x of k\.schulungen \|\| \[\]\) if \(x\.status !== "abgesagt"\)/.test(html) && /\.p-schulung-ab \{ background: #9aa0a6; \}/.test(seite), "Demnächst ohne Abgesagte, grauer Punkt");
+  assert.ok(/art: x\.status === "abgesagt" \? "schulung-ab" : (x\.status === "vorbehalt" \? "schulung-vb" : )?"schulung"/.test(html) && /x\.art === "schulung-ab"\) return `<div class="keintrag sc-abgesagt">/.test(html) && /❌ abgesagt/.test(html), "eigene Farbe + „abgesagt“");
+  assert.ok(/for \(const x of k\.schulungen \|\| \[\]\) if \(x\.status !== "abgesagt"( && x\.status !== "vorbehalt")?\)/.test(html) && /\.p-schulung-ab \{ background: #9aa0a6; \}/.test(seite), "Demnächst ohne Abgesagte, grauer Punkt");
   const tm = lies("supabase/functions/kc-termine/index.ts");
   assert.ok(/❌ Abgesagt: KC-Besuch \$\{namen\(ab\)\}/.test(tm) && /b\.status === "storniert" && \(b\.besuch_id \|\| b\.bestaetigung_gesendet_am\)/.test(tm), "Google-Kalender: abgesagt mit Namen, rot");
   // Willkommens-Zettel: „Ich möchte auch begrüßen“ → Chat mit dem neuen Mitglied
@@ -6808,4 +6808,13 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 {
   const f = programm.slice(programm.indexOf("function tippenMelden()"), programm.indexOf("let TIPP_UNTERWEGS"));
   assert.ok(/if \(TIPP_UNTERWEGS\) \{ TIPP_NOCHMAL = true; return; \}/.test(f) && /\.finally\(\(\) => \{ TIPP_UNTERWEGS = false;/.test(f), "kein Stau beim Tippen");
+}
+
+// 4xx. 2.120.0: Schulungstermine „unter Vorbehalt“ im Kalender – angeboten, noch nicht gewählt (KC-CLUB-SCHULUNG-VORBEHALT)
+{
+  const f = server.slice(server.indexOf("async function schulungVorbehalt("), server.indexOf("// ---------- KC-CLUB-SCHULUNG-HINWEIS"));
+  assert.ok(/const vorbehalt = ich\.admin \? await schulungVorbehalt\(sl, buRoh \?\? \[\]\) : \[\];/.test(server) && /if \(!bu\.length\) return vorbehalt;/.test(server), "nur für den Admin");
+  assert.ok(/s\.status === "offen" && !aktiv\.has\(s\.id\) && s\.beginn > jetztIso/.test(f) && /\.eq\("status", "offen"\)\.eq\("ist_test", false\)\.gt\("gueltig_bis", jetztIso\)/.test(f) && !/insert|update|delete/.test(f), "nur offene, freie, künftige Termine – nur lesend");
+  assert.ok(/x\.status === "vorbehalt" \? "schulung-vb"/.test(programm) && /Schulung – unter Vorbehalt/.test(programm) && /\.ktag\.schulung-vb \{ outline: 2px dashed #7d3c98;/.test(seite), "gestrichelt im Kalender");
+  assert.ok(/x\.status !== "abgesagt" && x\.status !== "vorbehalt"\) e\.push/.test(programm), "nicht in „Demnächst“");
 }

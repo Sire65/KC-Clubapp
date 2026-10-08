@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.120.0 – 2026-10-08 – Schulung unter Vorbehalt im Kalender
+Angebotene Schulungstermine, die noch niemand gewählt hat, stehen für den Admin gestrichelt lila im Kalender – „unter Vorbehalt“, mit dem Namen der Eingeladenen (KC-CLUB-SCHULUNG-VORBEHALT).
+
 ## 2.119.0 – 2026-10-08 – Kein Stau beim Tippen
 Bei langsamem Netz stauten sich die „schreibt …“-Meldungen und bremsten danach Chat und Senden. Jetzt ist immer nur eine unterwegs (KC-CLUB-TEMPO).
 Vorbereitet als 2.115.0 (Zweig claude/aenderungsmeldung); live als 2.119.0, weil 2.116.0 und 2.118.0 (Schach) schon vorher live gingen.

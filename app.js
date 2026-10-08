@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.119.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.120.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -10882,7 +10882,7 @@ function demnaechstListe(k) {
   for (const v of k.fristen || []) if (v.offen) e.push({ tag: berlinIso(v.frist), sym: "🗳️", text: "Abstimmung endet: " + v.titel });
   for (const x of k.anfragen || []) e.push({ tag: berlinIso(x.beginn), zeit: fZeit.format(new Date(x.beginn)), sym: "📨", text: x.anlass + (x.vonMir ? " (an " + taAnWen(x) + ")" : " (" + x.von.vorname + ")") });
   for (const x of k.privat || []) e.push({ tag: berlinIso(x.beginn), zeit: x.ganztaegig ? "" : fZeit.format(new Date(x.beginn)), sym: "🔒", text: x.titel });
-  for (const x of k.schulungen || []) if (x.status !== "abgesagt") e.push({ tag: berlinIso(x.beginn), zeit: fZeit.format(new Date(x.beginn)), sym: "🎓", text: "Schulung" + (x.ichDabei && !ICH?.admin ? "" : ": " + x.namen.join(", ")) }); // KC-CLUB-SCHULUNGSTERMINE
+  for (const x of k.schulungen || []) if (x.status !== "abgesagt" && x.status !== "vorbehalt") e.push({ tag: berlinIso(x.beginn), zeit: fZeit.format(new Date(x.beginn)), sym: "🎓", text: "Schulung" + (x.ichDabei && !ICH?.admin ? "" : ": " + x.namen.join(", ")) }); // KC-CLUB-SCHULUNGSTERMINE
   for (const g of k.geburtstage || []) { // nächster Geburtstag im Zeitraum (nur Tag/Monat)
     for (const j of [heute.slice(0, 4), String(+heute.slice(0, 4) + 1)]) { const tag = `${j}-${g.md}`; if (tag >= heute && tag <= bis) { e.push({ tag, sym: "🎂", text: `${g.name} hat Geburtstag` }); break; } }
   }
@@ -11702,13 +11702,13 @@ function kalEintraege(tag, Q = KAL, mitFeiertagen = einst("feiertage", true)) { 
   for (const f of Q.fristen) if (berlinIso(f.frist) === tag) e.push({ art: "frist", f });
   for (const x of Q.anfragen || []) if (berlinIso(x.beginn) === tag) e.push({ art: "anfrage", x }); // KC-CLUB-TERMINANFRAGE
   for (const x of Q.privat || []) { const v = berlinIso(x.beginn), b = x.ende ? berlinIso(x.ende) : v; if (tag >= v && tag <= b) e.push({ art: "privat", x }); } // KC-CLUB-PRIVATTERMIN
-  for (const x of Q.schulungen || []) if (berlinIso(x.beginn) === tag) e.push({ art: x.status === "abgesagt" ? "schulung-ab" : "schulung", x }); // KC-CLUB-SCHULUNGSTERMINE (2.23.59); 2.30.1: abgesagte grau
+  for (const x of Q.schulungen || []) if (berlinIso(x.beginn) === tag) e.push({ art: x.status === "abgesagt" ? "schulung-ab" : x.status === "vorbehalt" ? "schulung-vb" : "schulung", x }); // KC-CLUB-SCHULUNGSTERMINE (2.23.59); 2.30.1: abgesagte grau; 2.120.0: Vorbehalt gestrichelt
   const md = tag.slice(5), schalt = new Date(Date.UTC(+tag.slice(0, 4), 1, 29)).getUTCDate() === 29;
   for (const g of Q.geburtstage) if (g.md === md || (!schalt && md === "02-28" && g.md === "02-29")) e.push({ art: "geb", g });
   return e;
 }
 function kalZeichnen() {
-  const heute = heuteIso(), rang = ["treffen", "schulung", "anfrage", "privat", "aktion", "veranst", "dienst", "feiertag", "frist", "geb", "schulung-ab"];
+  const heute = heuteIso(), rang = ["treffen", "schulung", "anfrage", "privat", "schulung-vb", "aktion", "veranst", "dienst", "feiertag", "frist", "geb", "schulung-ab"];
   const tage = [...Array(42)].map((_, i) => tagPlus(KAL.start, i));
   // letzte Woche weglassen, wenn sie ganz im Folgemonat liegt
   const sichtbar = +tage[35].slice(5, 7) - 1 !== kalM ? tage.slice(0, 35) : tage;
@@ -11732,6 +11732,7 @@ function kalTagZeigen() {
   const zeilen = e.filter((x) => x.art !== "treffen" && x.art !== "veranst").map((x) => {
     if (x.art === "privat") return `<div class="keintrag" onclick="privatForm(PT.nachId('${x.x.id}'),'${kalTagWahl}')"><div class="farbe" style="background:#5b7fa6"></div><div style="flex:1"><b>🔒 ${x.x.ganztaegig ? "" : esc(fZeit.format(new Date(x.x.beginn))) + " "}${esc(x.x.titel)}</b><small>privat – nur du siehst das${x.x.wiederholung && x.x.wiederholung !== "keine" ? " · 🔁 " + esc(WDH_KURZ[x.x.wiederholung]) : ""}${x.x.ort ? " · 📍 " + esc(x.x.ort) : ""}${x.x.erinnerung_min ? " · ⏰" : ""}</small></div></div>`;
     if (x.art === "schulung-ab") return `<div class="keintrag sc-abgesagt"><div class="farbe" style="background:#9aa0a6"></div><div style="flex:1"><b><s>🎓 ${esc(fZeit.format(new Date(x.x.beginn)))}–${esc(fZeit.format(new Date(x.x.ende)))} Schulung${x.x.ichDabei && !ICH?.admin ? "" : ": " + esc(x.x.namen.join(", "))}</s></b><small><span class="marke rot">❌ abgesagt</span> ${esc(x.x.art || "")} · aus dem Termin-Programm</small></div></div>`; // KC-CLUB-SCHULUNG-ABGESAGT-KALENDER (2.30.1)
+    if (x.art === "schulung-vb") return `<div class="keintrag sc-vorbehalt"><div class="farbe" style="background:repeating-linear-gradient(#7d3c98 0 6px,transparent 6px 10px)"></div><div style="flex:1"><b>🎓 ${esc(fZeit.format(new Date(x.x.beginn)))}–${esc(fZeit.format(new Date(x.x.ende)))} Schulung – unter Vorbehalt</b><small>${x.x.namen.length ? "angeboten an " + esc(x.x.namen.join(", ")) : "noch niemandem angeboten"} · ${esc(x.x.art || "")} · noch nicht gewählt</small></div></div>`; // KC-CLUB-SCHULUNG-VORBEHALT (2.120.0)
     if (x.art === "schulung") return `<div class="keintrag"><div class="farbe" style="background:#7d3c98"></div><div style="flex:1"><b>🎓 ${esc(fZeit.format(new Date(x.x.beginn)))}–${esc(fZeit.format(new Date(x.x.ende)))} Schulung${x.x.ichDabei && !ICH?.admin ? "" : ": " + esc(x.x.namen.join(", "))}</b><small>${esc(x.x.art || "")}${x.x.status === "vorgemerkt" ? " · ⏳ vorgemerkt" : " · ✅ bestätigt"}${x.x.besuch ? " · " + esc(x.x.besuch) : ""} · aus dem Termin-Programm</small></div></div>`; // KC-CLUB-SCHULUNGSTERMINE
     if (x.art === "anfrage") return `<div class="keintrag" onclick="taZeigen('${x.x.id}')"><div class="farbe" style="background:var(--gold)"></div><div style="flex:1"><b>📨 ${esc(fZeit.format(new Date(x.x.beginn)))} ${esc(x.x.anlass)}</b><small>${x.x.vonMir ? "Anfrage an " + esc(taAnWen(x.x)) + (x.x.empfaenger.length === 1 && x.x.status !== "abgesagt" ? " · " + taStatus(x.x, x.x.empfaenger[0]).sym + " " + esc(taStatus(x.x, x.x.empfaenger[0]).t) : "") : "von " + esc(x.x.von.vorname)}${x.x.ort ? " · 📍 " + esc(x.x.ort) : ""}${x.x.meine ? " · " + TA_ANTW[x.x.meine] : ""}</small></div></div>`;
     if (x.art === "feiertag") return `<div class="keintrag"><div class="farbe" style="background:var(--rot3)"></div><div style="flex:1"><b>🇩🇪 Feiertag: ${esc(x.name)}</b><small>gesetzlicher Feiertag in NRW</small></div></div>`;
