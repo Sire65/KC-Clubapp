@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.88.0";
+const SERVER_VERSION = "2.91.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -8441,9 +8441,11 @@ Köcheclub-App`,
       }
       case "aenderung_start": {
         const [stand, { data: meine }] = await Promise.all([aenderungStand(ich),
-          db.from("kc_club_aenderungen").select("id,art,neu,gilt_ab,status,erstellt_am,erledigt_am,antwort").eq("person_id", ich.person_id).order("erstellt_am", { ascending: false }).limit(10)]);
+          db.from("kc_club_aenderungen").select("id,art,neu,gilt_ab,status,erstellt_am,erledigt_am,antwort,freigegeben_von,empfaenger").eq("person_id", ich.person_id).order("erstellt_am", { ascending: false }).limit(10)]);
         return json({ arten: AENDERUNG.arten.map((a) => ({ ...a, anText: (a.an.length ? a.an : a.waehlbar ?? []).map((x) => AE_AN_NAME[x] || x) })), anNamen: AE_AN_NAME, stand,
-          meine: (meine ?? []).map((x: any) => ({ ...x, neu: aeKurz(x) })) });
+          meine: (meine ?? []).map(({ freigegeben_von, empfaenger, ...x }: any) => ({ ...x, neu: aeKurz(x),
+            // 2.91.0 KC-CLUB-AE-RUECKFRAGE: an wen Rückfragen gehen – wer freigegeben hat, sonst der erste Empfänger (nur eine Person, keine Liste)
+            ansprech: [freigegeben_von, ...(empfaenger ?? [])].find((id: any) => id && id !== ich.person_id) || null })) });
       }
 
       case "aenderung_senden": {

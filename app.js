@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.90.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.91.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -7138,11 +7138,15 @@ function melde(t, fehler) {
 // KC-CLUB-KURZCODE (1.87.0): 6 Ziffern einlösen → Schlüssel merken → App starten (kein Kopieren/Einfügen)
 function kcCodeTippen(el) { const d = el.value.replace(/\D/g, "").slice(0, 6); el.value = d.length > 3 ? d.slice(0, 3) + " " + d.slice(3) : d; if (d.length === 6) kurzcodeEinloesen(); }
 let KC_LAEUFT = false;
-async function kurzcodeEinloesen() {
+async function kurzcodeEinloesen(hier) {
   if (KC_LAEUFT) return; // 2.1.1: Auto-Senden bei der 6. Ziffer + Enter → nur einmal
   const code = ($("kcCode")?.value || "").replace(/\D/g, ""), a = $("kcCodeAntwort");
   if (code.length !== 6) { a.textContent = "Bitte alle 6 Ziffern eingeben."; return; }
+  // 2.91.0 KC-CLUB-KURZCODE-IOS (Wunsch Hansi, iPad): im Safari erst die Kochmütze auf den Home-Bildschirm legen und den Code DORT eingeben –
+  // die Home-Bildschirm-App hat auf iPhone/iPad einen eigenen Speicher; sonst wäre ein zweiter Code nötig. Der Code bleibt bis dahin gültig.
+  if (!hier && kcIosErstInstallieren()) return;
   $("kcCodeKnopf").disabled = true; a.textContent = "⏳ Einen Moment …"; KC_LAEUFT = true;
+  kcWarten(true); // 2.91.0 KC-CLUB-KURZCODE-WARTEN: drehende Kochmütze, bis die App startet
   try {
     const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "kurzcode_einloesen", code }) });
     const d = await r.json().catch(() => ({}));
@@ -7150,7 +7154,25 @@ async function kurzcodeEinloesen() {
     a.textContent = "✅ Angemeldet – die App startet …";
     try { localStorage.setItem("kc_club_key", d.k); } catch {}
     location.href = location.pathname + "?k=" + d.k;
-  } catch (e) { a.textContent = "⚠️ " + e.message; $("kcCodeKnopf").disabled = false; $("kcCode").select?.(); KC_LAEUFT = false; }
+  } catch (e) { kcWarten(false); a.textContent = "⚠️ " + e.message; $("kcCodeKnopf").disabled = false; $("kcCode").select?.(); KC_LAEUFT = false; }
+}
+function kcWarten(an) {
+  const z = $("warten"); if (!z) return;
+  if (an) { $("wartenText").textContent = "Anmeldung läuft – die App startet gleich …"; z.classList.remove("versteckt"); requestAnimationFrame(() => z.classList.add("an")); }
+  else { z.classList.remove("an"); z.classList.add("versteckt"); }
+}
+function kcIosErstInstallieren() {
+  const g = einrichtenGeraet();
+  if (!g.ios || g.inapp || START_ART !== "browser") return false;
+  const schritte = einrichtenSchritteRoh(g, (t, x, bild) => ({ t, x, bild })).slice(0, 3);
+  const f = blattAuf("kcIosBlatt", `<h3 style="margin-top:0">📲 Erst die Kochmütze auf den Home-Bildschirm</h3>
+    <p style="margin:0 0 8px">Auf dem <b>${esc(g.name)}</b> gibst du den Code am besten <b>gleich in der App</b> ein – dann brauchst du nur <b>einen</b> Code. Der Code bleibt so lange gültig.</p>
+    <ol class="er-schritte">${schritte.map((x) => `<li><b>${x.t}</b><div>${x.x}</div>${x.bild || ""}</li>`).join("")}
+      <li><b>Kochmütze öffnen und Code eingeben</b><div>Die neue <b>Köcheclub-Kochmütze</b> auf dem Home-Bildschirm antippen und dort diesen Code eintippen: <b class="kc-code-merk">${esc($("kcCode").value)}</b></div></li></ol>
+    <div class="knoepfe"><button class="knopf" data-hier="1">Nur hier im Browser nutzen</button><button class="knopf haupt" data-zu="1">👍 Verstanden</button></div>`);
+  f.querySelector("[data-zu]").onclick = () => { f.remove(); $("kcCodeAntwort").textContent = "👉 Jetzt die Kochmütze auf dem Home-Bildschirm öffnen und den Code dort eingeben."; };
+  f.querySelector("[data-hier]").onclick = () => { f.remove(); kurzcodeEinloesen(true); };
+  return true;
 }
 // Code für ein weiteres Gerät bzw. die gerade installierte App (nur angemeldet)
 async function kurzcodeHolen() { const r = await api("kurzcode_erzeugen", {}, { warten: true }); return { ...r, schoen: r.code.slice(0, 3) + " " + r.code.slice(3) }; }
@@ -9955,10 +9977,17 @@ async function aeOffenLaden() {
   try { const r = await api("aenderung_start"); const n = Object.fromEntries((r.arten || []).map((a) => [a.id, `${a.sym || ""} ${a.t || a.id}`.trim()]));
     return (r.meine || []).filter((x) => ["offen", "freigegeben"].includes(x.status)).map((x) => ({ ...x, name: n[x.art] || x.art })); } catch { return []; }
 }
+// 2.91.0 KC-CLUB-AE-RUECKFRAGE: „Hast du Rückfragen?“ → direkt in den Chat mit dem, der die Meldung bearbeitet (Wunsch Hansi, Fall Wilfried)
+const aeRueckKnopf = (x, name) => x?.ansprech && ["offen", "freigegeben"].includes(x.status) ? `<button class="knopf klein" onclick='aeRueckChat(${JSON.stringify(x.ansprech)}, ${JSON.stringify(name || "").replace(/'/g, "&#39;")})'>💬 Rückfragen?</button>` : "";
+async function aeRueckChat(pid, name) {
+  document.querySelectorAll(".blatt[data-dyn]").forEach((b) => b.remove()); $("aeBlatt")?.remove(); // nur geöffnete Fenster, die festen bleiben
+  await direkt(pid);
+  const e = $("text"); if (e && !e.value?.trim()) { e.value = `Rückfrage zu meiner Änderung „${name}“: `; e.dispatchEvent(new Event("input", { bubbles: true })); try { e.focus(); } catch {} }
+}
 function aeOffenHtml(liste) {
   if (!liste?.length) return "";
   const ab = (d) => d ? ` (ab ${String(d).slice(0, 10).split("-").reverse().join(".")})` : "";
-  return `<div class="karte ae-offen-hinweis"><b>📮 Von dir gemeldet – noch nicht eingetragen</b>${liste.map((x) => `<div>• ${esc(x.name)}${esc(ab(x.gilt_ab))}: ${x.status === "freigegeben" ? "👍 freigegeben – wird in Kürze eingetragen" : "⏳ gemeldet – wird geprüft"}</div>`).join("")}
+  return `<div class="karte ae-offen-hinweis"><b>📮 Von dir gemeldet – noch nicht eingetragen</b>${liste.map((x) => `<div>• ${esc(x.name)}${esc(ab(x.gilt_ab))}: ${x.status === "freigegeben" ? "👍 freigegeben – wird in Kürze eingetragen" : "⏳ gemeldet – wird geprüft"} ${aeRueckKnopf(x, x.name)}</div>`).join("")}
     <small class="hinweis">Bis dahin steht hier noch der bisherige Stand. Sobald es eingetragen ist, bekommst du Bescheid.</small></div>`;
 }
 function druckMeineDaten() {
@@ -17938,7 +17967,7 @@ function aeZeichnen() {
       <div class="ae-wahl">${d.arten.map((a) => a.aus ? `<button class="knopf" disabled style="opacity:.45" aria-disabled="true"><span class="ae-sym">${a.sym}</span><span><b>${esc(a.t)}</b><small>zurzeit nicht nötig</small></span></button>` // 2.22.19: Bank ausgegraut
         : `<button class="knopf" onclick="AE.art='${a.id}';aeZeichnen()"><span class="ae-sym">${a.sym}</span><span><b>${esc(a.t)}</b><small>an ${esc(a.anText.join(", "))}</small></span></button>`).join("")}</div>
       ${d.meine.length ? `<b>Meine letzten Meldungen</b>${d.meine.map((x) => { const a = d.arten.find((y) => y.id === x.art);
-        return `<div class="ae-meine"><span>${a?.sym || ""} <b>${esc(a?.t || x.art)}</b><small>${esc(zeitKurz(x.erstellt_am))} · ${AE_STATUS[x.status] || ""}${x.antwort ? ` · „${esc(x.antwort)}“` : ""}</small></span>${x.status === "offen" ? `<button class="knopf klein" onclick="aeZurueck('${x.id}')">↩️ Zurückziehen</button>` : ""}</div>`; }).join("")}` : ""}
+        return `<div class="ae-meine"><span>${a?.sym || ""} <b>${esc(a?.t || x.art)}</b><small>${esc(zeitKurz(x.erstellt_am))} · ${AE_STATUS[x.status] || ""}${x.antwort ? ` · „${esc(x.antwort)}“` : ""}</small></span>${x.status === "offen" ? `<button class="knopf klein" onclick="aeZurueck('${x.id}')">↩️ Zurückziehen</button>` : ""}${aeRueckKnopf(x, a?.t || x.art)}</div>`; }).join("")}` : ""}
       <div class="knoepfe">${ICH?.vorstand || ICH?.admin ? `<button class="knopf" onclick="$('aeBlatt').remove();aeEingang()">📬 Eingegangene Meldungen${AE.offen ? ` (${AE.offen})` : ""}</button>` : ""}<button class="knopf" onclick="$('aeBlatt').remove()">Schließen</button></div>`;
   } else {
     const alt = d.stand[art.id], leer = ["bank", "sonstiges", "mitgliedschaft"].includes(art.id);

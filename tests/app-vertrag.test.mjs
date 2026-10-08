@@ -2991,7 +2991,7 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(/KURZCODE_MIN = 15, KURZCODE_FEHL_NETZ = 8, KURZCODE_FEHL_GESAMT = 60/.test(server) && /delete\(\)\.eq\("code_hash", z\.code_hash\); \/\/ nur einmal gültig/.test(server), "Gültigkeit, Bremse, einmalig");
   assert.ok(/eq\("token_hash", await sha256\(k\)\)/.test(server), "Code eines älteren Links wird abgelehnt");
   assert.ok(!/protokoll\([^)]*code[,: ][^)]*\)/.test(server.slice(server.indexOf('case "kurzcode_erzeugen"'), server.indexOf('case "init"'))), "Code nicht im Protokoll");
-  assert.ok(/<input id="kcCode" class="kc-code" inputmode="numeric" autocomplete="one-time-code"/.test(html) && /function kurzcodeEinloesen\(\)/.test(html), "Code-Feld auf dem Anmeldebildschirm");
+  assert.ok(/<input id="kcCode" class="kc-code" inputmode="numeric" autocomplete="one-time-code"/.test(html) && /function kurzcodeEinloesen\((hier)?\)/.test(html), "Code-Feld auf dem Anmeldebildschirm");
   for (const g of ["g.ios", "g.android && g.browser === \"samsung\"", "g.android"]) assert.ok(html.includes(`if (${g}`), "Assistent: " + g);
   assert.ok(/function einrichtenEinmal\(\)/.test(html) && /lsSetzen\("kc_club_einrichten_gezeigt", "1"\)/.test(html) && /if \(START_ART !== "app"\) return einrichtenAssistent\(\);/.test(html), "einmal von selbst, sonst über installHilfe");
   const mig = fs.readFileSync(new URL("../supabase/migrations/20261003_kc_club_v1870_kurzcode.sql", import.meta.url), "utf8");
@@ -6422,4 +6422,15 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
     assert.ok(programm.includes(`{ id: "${k}", ziel: '[data-sh="${k}"]`), "Schritt " + k + " zeigt auf den Anker");
   }
   for (const k of ["dienste", "einstellungen", "spiele"]) assert.ok(new RegExp("\\n\\s*" + k + ": \\[\\s*\\{ id: \"\\w+\", ruhe: true").test(programm), "Ablauf " + k);
+}
+
+// 4xx. 2.91.0: Code-Anmeldung mit drehender Kochmütze, iPhone/iPad erst installieren, Rückfrage-Knopf bei Änderungsmeldungen
+// (KC-CLUB-KURZCODE-WARTEN, KC-CLUB-KURZCODE-IOS, KC-CLUB-AE-RUECKFRAGE; Wunsch Hansi)
+{
+  const f = programm.slice(programm.indexOf("async function kurzcodeEinloesen(hier)"), programm.indexOf("// Code für ein weiteres Gerät"));
+  assert.ok(/if \(!hier && kcIosErstInstallieren\(\)\) return;/.test(f) && f.indexOf("kcIosErstInstallieren()") < f.indexOf("fetch(API"), "iOS: erst installieren, Code noch nicht verbrauchen");
+  assert.ok(/kcWarten\(true\)/.test(f) && /catch \(e\) \{ kcWarten\(false\)/.test(f), "Kochmütze dreht und verschwindet bei Fehler");
+  assert.ok(/if \(!g\.ios \|\| g\.inapp \|\| START_ART !== "browser"\) return false;/.test(f) && /kurzcodeEinloesen\(true\)/.test(f), "nur Safari auf iPhone/iPad, „nur hier“ bleibt möglich");
+  assert.ok(/ansprech: \[freigegeben_von, \.\.\.\(empfaenger \?\? \[\]\)\]\.find\(\(id: any\) => id && id !== ich\.person_id\) \|\| null/.test(server) && /\(\{ freigegeben_von, empfaenger, \.\.\.x \}: any\)/.test(server), "nur eine Ansprechperson, keine Empfängerliste ans Mitglied");
+  assert.ok(/await direkt\(pid\);/.test(programm) && /\$\{aeRueckKnopf\(x, x\.name\)\}/.test(programm) && /\$\{aeRueckKnopf\(x, a\?\.t \|\| x\.art\)\}/.test(programm), "Rückfrage-Knopf in Meine Daten und in der Meldungsliste → Chat");
 }
