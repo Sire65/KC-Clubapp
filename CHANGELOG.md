@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.96.0 – 2026-10-08 – 📖 Bedienungsanleitung Version 8
+Die Bedienungsanleitung gibt es jetzt in Version 8 (58 Seiten) – neu ist Teil 20 mit allem, was seit Version 7 dazugekommen ist: Unterstützung wählen, Schritt-für-Schritt-Hilfe, Sprachsteuerung, 👆 Was kann ich antippen?, neue Spiele, Inhaltsverzeichnis, Rückfragen und mehr. Zu finden unter Meine Dokumente.
+
 ## 2.95.0 – 2026-10-08 – 🧭 Browser-Meldungen im Fehlerprotokoll grau
 „Script error.“ ohne Fundstelle kommt vom Browser selbst (z. B. Safari) und steht jetzt grau als „Browser-Meldung“ statt gelb als Programmfehler.
 

@@ -1,5 +1,5 @@
 // Inhalt der Club-App-Anleitung (Texte). Bilder: bild/<name>.png (ganze Seite) und bild/s-<name>.png (Ausschnitt).
-export const VERSION = { anleitung: 7, app: "2.24.15", stand: "06.10.2026" };
+export const VERSION = { anleitung: 8, app: "2.95.0", stand: "08.10.2026" };
 export const INHALT = [
   ["So fängst du an", "in 5 Schritten"], ["1. Startseite", "einfache Ansicht – das Wichtigste auf einen Blick"], ["2. Erweiterte Ansicht", "alle Funktionen, Anzeigen im Kopf"],
   ["3. Nachrichten", "Chats, Schreiben, Diktieren, wichtige Nachrichten, Chats archivieren"], ["4. Termine", "zu- und absagen, Mitfahren, Kalender, Terminanfragen mit Erinnerung"], ["5. Mitglieder", "wer ist online, Status, Kontakt, Anklopfen"],
@@ -10,18 +10,19 @@ export const INHALT = [
   ["16. Dienstwünsche", "mit Twinkey eintragen, leerer Wunschbogen zum Ausdrucken"], ["17. Meine Daten haben sich geändert", "neue Anschrift, Handynummer & Co. melden"],
   ["18. Neu in Version 6", "Mein Bild, Anwesenheitstafel, Anrufen von der Kachel, mehr am Pfeil, Mein Dienst, Meine Daten und mehr"],
   ["19. Neu in Version 7", "Meldung beim Öffnen, weniger Fenster, Gruppen-Admins, Bauernskat nach Köcheclub-Regeln und mehr"],
+  ["20. Neu in Version 8", "Schritt-für-Schritt-Hilfe, Sprachsteuerung, 👆 Was kann ich antippen?, neue Spiele, Inhaltsverzeichnis und mehr"],
 ];
 export const GUT_ZU_WISSEN = [
   "<b>Gut zu wissen:</b> Alle Bilder zeigen <b>Beispieldaten</b> – Namen wie „Max Mustermann“ und alle Telefonnummern sind erfunden. In deiner App stehen die echten Mitglieder und Termine.",
   "Die App hat eine <b>einfache</b> und eine <b>erweiterte Ansicht</b> – Umschalten geht jederzeit (Teil 1 und 2).",
   "Die Farben kannst du in den Einstellungen ändern („Lieblingsfarbe“) – es gibt jetzt <b>22 Farbschemen</b>. Die Bilder zeigen „Köcheclub Klassik“ am Tag.",
-  "<b>Neu in Version 7</b> – alles in <b>Teil 19</b>: 👋 beim Öffnen auf einen Blick, was neu ist, weniger Fenster, 👑 Gruppen-Admins und 📋 Meine Gruppen, 🃏 Bauernskat nach Köcheclub-Regeln, ✨ Animierte Knöpfe an/aus, 🎤 Diktieren in mehr Feldern und mehr. Was in Version 6 dazukam, steht in <b>Teil 18</b>.",
+  "<b>Neu in Version 8</b> – alles in <b>Teil 20</b>: 🤝 wie viel Hilfe du möchtest, 👣 Schritt für Schritt mit rotem Rahmen, 🎙️ Sprachsteuerung („Nachricht an Klaus“), 👆 Was kann ich antippen?, 🎲 Mensch ärgere dich nicht, 🧑‍🍳 Fang den Koch, 👑 Doppelkopf, 🗂️ Inhaltsverzeichnis deiner Ordner und mehr. Was in Version 7 dazukam, steht in <b>Teil 19</b>.",
   "<b><u>Beachte:</u></b> Die Club-App ist noch eine Beta-Version. Einige Funktionen können sich mit der Zeit noch ändern, weil ständig weiterentwickelt wird.",
 ];
 export const START_SCHRITTE = [
   ["s-ohne-link", "Persönlichen Link öffnen", "Von Hansi bekommst du einen <b>persönlichen Link</b> (per WhatsApp oder Mail) – oder eine <b>Einrichtungskarte</b> mit QR-Code: Kamera draufhalten und den Link antippen. Einfach antippen – die App öffnet sich und weiß, wer du bist. Den Link nicht weitergeben: Er ist dein Schlüssel."],
   ["@icon", "Auf den Startbildschirm legen", "Die App zeigt dir mit <b>„📲 Köcheclub als App einrichten“</b> Schritt für Schritt, was du tippen musst – passend zu deinem Handy. Kurz: <b>iPhone (Safari):</b> Teilen ⬆️ → „Zum Home-Bildschirm“. <b>Android (Chrome):</b> ⋮ → „App installieren“. Danach die App immer über das Köcheclub-Symbol öffnen."],
-  ["s-kurzcode", "Mit Code anmelden", "Fragt die neue App nach einem Code: im Browser zeigt die App bei der Einrichtung einen <b>6-stelligen Code</b> – den hier eintippen. So brauchst du den langen Link nicht abzutippen. Auch für ein zweites Gerät (Tablet): ⚙️ → „🔢 Code für ein anderes Gerät“."],
+  ["s-kurzcode", "Mit Code anmelden", "Fragt die neue App nach einem Code: im Browser zeigt die App bei der Einrichtung einen <b>6-stelligen Code</b> – den hier eintippen, dann dreht sich kurz die Kochmütze und die App startet. <b>iPhone/iPad:</b> erst die Kochmütze auf den Home-Bildschirm legen und den Code <b>dort</b> eingeben – dann reicht ein einziger Code. Auch für ein zweites Gerät: ⚙️ → App-Installation → „🔢 Code für ein anderes Gerät“."],
   ["s-benachr-ein", "Benachrichtigungen einschalten", "Damit Nachrichten und Termine aufs Handy kommen: unter <b>Heute wichtig</b> auf <b>Einschalten</b> tippen und erlauben."],
   ["s-status", "Status setzen", "Oben im Kopf zeigst du den anderen, ob du <b>verfügbar</b>, beschäftigt, im Urlaub, krank oder abwesend bist. Antippen und auswählen."],
 ];
@@ -255,4 +256,47 @@ export const TEILE = [
         [null, "✨ Animierte Knöpfe an/aus", "Wer es ruhiger mag: in der <b>erweiterten Ansicht</b> unter ⚙️ → <b>🎨 Darstellung</b> → <b>„✨ Animierte Knöpfe“</b> ausschalten. Dann zoomt und leuchtet nichts mehr, auch der Online-Ring und das Austeilen beim Bauernskat bleiben ruhig.", "neu"],
         [null, "🎤 Diktieren in mehr Feldern", "Das kleine 🎤 rechts im Feld gibt es jetzt auch in der <b>🔍 Suche</b>, im <b>Hilfe-Zentrum</b>, beim <b>Pinnwand-Zettel</b>, beim <b>Hilfe-Aufruf</b> und beim <b>Angebot</b>: antippen, sprechen – das Handy schreibt mit (wenn dein Handy das kann).", "neu"],
         [null, "Status-Pfeil in deiner Farbe", "Der kleine Pfeil unter deinem Status oben hat jetzt die <b>Farbe deines Status</b> – z. B. grün bei „verfügbar“. Antippen öffnet die Auswahl.", "neu"]] }] }] },
+  { titel: "20. Neu in Version 8", unter: "Was seit Version 7 dazugekommen ist", bild: "neu8-ust",
+    legende: [["🙋 Viel Hilfe, bitte", "einfache Ansicht, große Schrift, Schritt-für-Schritt-Hilfe mit Vorlesen und 🎙️ Sprachsteuerung"], ["👌 Ein bisschen Hilfe", "ein roter Rahmen zeigt Schritt für Schritt, was als Nächstes kommt"], ["😎 Danke, ich komme klar", "alles bleibt, wie es ist"]],
+    text: "Die App fragt einmal: <b>„🤝 Wie viel Unterstützung möchtest du?“</b> – du tippst an, was zu dir passt, die App stellt alles passend ein. Ändern geht jederzeit: <b>⚙️ Einstellungen → „🤝 Unterstützung“ → Wählen</b>.",
+    weiter: [
+      { bild: "neu8-sh", titel: "👣 Schritt für Schritt", text: "Ist die Schritt-Hilfe an, zeigt ein <b>roter, pulsierender Rahmen</b>, wo du als Nächstes tippen sollst. Unten steht in einer roten Leiste, was zu tun ist – z. B. <b>„Schritt 1 von 6: Tippe oben rechts auf ‚＋ Zettel‘“</b>. Hast du es gemacht, kommt der nächste Schritt von selbst. Am Ende gibt es ein kleines Lob.",
+        abschnitte: [{ nr: "+", titel: "So bedienst du die Schritt-Hilfe", zeilen: [
+          [null, "🔈 Vorlesen", "Der Lautsprecher in der Leiste liest den Schritt vor. Bei „Viel Hilfe“ wird von selbst vorgelesen.", "neu"],
+          [null, "Fertig – weiter ➜", "Bei Feldern, die du nicht ausfüllen musst (z. B. Beschreibung), geht es mit diesem Knopf weiter.", "neu"],
+          [null, "✕ Schließen", "beendet die Hilfe für diesen Vorgang. Ganz aus- oder einschalten: ⚙️ Einstellungen → „🤝 Unterstützung“.", "neu"],
+          [null, "Wo gibt es sie?", "Pinnwand, Nachrichten, Termine, Protokolle, Vorschläge, Mein Bild, Erstattung, Archiv, Mitglieder, Helfen & Leihen, Börse, Fotos, Gruppen, Dienstpläne, Einstellungen und Spiele.", "neu"]] }] },
+      { bild: "neu8-sb", titel: "🎙️ Sprachsteuerung", text: "Unten links sitzt das runde <b>🎙️ Mikrofon</b>. Antippen, dann im Fenster <b>„Ich höre zu …“</b> einfach sagen, was du möchtest – z. B. <b>„Nachricht an Klaus“</b>. Gibt es mehrere Klaus, fragt die App nach; danach fragt sie, ob sie gleich <b>mitschreiben</b> soll. Zugehört wird <b>nur</b>, wenn du auf 🎙️ tippst. Im Fenster: <b>„📋 Alle Befehle“</b> und <b>„🔇 Mikro aus“</b>. <b>Lange drücken</b> auf 🎙️ fragt, ob du die Sprachsteuerung ganz ausschalten möchtest.",
+        abschnitte: [{ nr: "+", titel: "Das kannst du zum Beispiel sagen", zeilen: [
+          [null, "„Startseite“ / „Ich weiß nicht weiter“", "bringt dich immer zurück zur Startseite. „Zurück“ geht eine Seite zurück.", "neu"],
+          [null, "„Nachricht an Klaus: Bin gleich da“", "öffnet den Chat mit Klaus, der Text steht schon drin. „Nachricht an alle: …“ bereitet eine Nachricht an alle vor – gesendet wird erst, wenn <b>du</b> auf Senden tippst.", "neu"],
+          [null, "„Zettel an die Pinnwand: Schürzen abgeben“", "neuer Pinnwand-Zettel mit diesem Text.", "neu"],
+          [null, "„Nächster Termin“ / „Ich komme zum Clubabend“", "sagt den nächsten Termin an bzw. sagt zu – die App fragt vorher noch einmal nach. Auch „Ich kann nicht“ und „Vielleicht“.", "neu"],
+          [null, "„Lies mir die neuen Nachrichten vor“", "sagt, wer geschrieben hat, und liest vor. „Was steht auf der Pinnwand?“ liest die Zettel vor.", "neu"],
+          [null, "„Ruf Klaus an“ / „Öffne den Ordner Verträge“", "ruft in der App an (wenn Klaus online ist, sonst Telefon/WhatsApp) bzw. öffnet den Ordner im Archiv.", "neu"],
+          ["neu8-sbliste", "📋 Alle Befehle mit Suche", "Die Liste zeigt alle Sätze, mit Suchfeld oben. Kennt die App einen Satz noch nicht, fragt sie <b>„Was meinst du damit?“</b> – du tippst das Ziel an, und beim nächsten Mal versteht sie dich (🧠 gelernt).", "neu"]] }] },
+      { bild: "neu8-klick", titel: "👆 Was kann ich antippen?", text: "Über dem <b>„?“</b> unten rechts sitzt der Knopf <b>👆</b>. Antippen – dann wird <b>alles, was man antippen kann, rot umrandet</b>. Ausschalten mit ✕ oder es geht nach 2 Minuten von selbst aus." },
+      { bild: "neu8-spiele", titel: "🎲 Neue Spiele", text: "Bei <b>🎲 Spiele</b> sind dazugekommen: <b>Mensch ärgere dich nicht</b> (würfeln, rauswerfen, ins Ziel – bis zu 4 Farben), <b>Fang den Koch</b> (Würfelspiel: Zutaten sammeln, Gerichte kochen – einfach und kurz) und <b>Doppelkopf</b> (zu viert gegen drei Computer-Köche). <b>Küchenterror</b> hat 100 neue Fragen – jede Partie fängt anders an.",
+    abschnitte: [
+      { nr: "+", titel: "💬 Nachrichten", zeilen: [
+        [null, "Immer derselbe Chat", "„💬 Nachricht in der App“ öffnet den <b>vorhandenen</b> Chat mit dieser Person – mit allen bisherigen Nachrichten. Auch „📝 Korrektur meiner Daten“ landet dort.", "neu"],
+        [null, "Mehreren einzeln schreiben", "In der Chat-Übersicht einen Chat <b>lange drücken</b> = markieren ✓, weitere antippen, dann „＋ Neu“: jeder markierte Chat bekommt die Nachricht <b>einzeln</b>.", "neu"],
+        [null, "Anhang-Vorschau", "Ein Bild oder Dokument über dem Schreibfeld zeigt ein kleines Vorschaubild – antippen öffnet es groß (✅ Behalten / 🗑️ Entfernen).", "neu"],
+        [null, "⚠️ Vertrauliches", "Schickst du etwas Vertrauliches (z. B. einen Vertrag) und es sind auch Nicht-Mitglieder dabei, fragt die App vorher nach.", "neu"],
+        [null, "📊 Meine Nachrichten-Statistik", "Im Chat oben ⋮: wie viele Mails, Push und Nachrichten du bekommen und geschrieben hast – nur Anzahl und Zeit, keine Inhalte.", "neu"],
+        [null, "Push mit Absender", "Die Benachrichtigung sagt jetzt, wer dir geschrieben hat – z. B. „Klaus hat dir eine Nachricht geschickt“.", "neu"]] },
+      { nr: "+", titel: "🗄️ Archiv & Ordner", zeilen: [
+        [null, "🗂️ Inhaltsverzeichnis", "Im Archiv (und im Büro) der Knopf <b>„🗂️ Inhaltsverzeichnis“</b>: eine Übersicht als PDF, was in deinen Ordnern liegt – zum Ausdrucken und vorn in den Ordner legen. Wahlweise privat und öffentlich getrennt.", "neu"],
+        [null, "💡 Ablage-Vorschlag", "Legst du ein Dokument, Foto oder einen Vertrag ab, schlägt die App vor, wohin es gehört – z. B. „Ordner Verträge, Register …“. Du bestätigst oder wählst selbst.", "neu"],
+        [null, "📋 Kopieren / ➡️ Verschieben", "Ein Dokument antippen: „Kopieren nach …“ oder „Verschieben nach …“ – mit Vorschlag.", "neu"]] },
+      { nr: "+", titel: "✏️ Meine Daten", zeilen: [
+        [null, "📮 Gemeldet – noch nicht eingetragen", "Hast du eine Änderung gemeldet, steht sie in <b>Meine Daten</b> mit ihrem Stand (⏳ gemeldet / 👍 freigegeben). Wird sie freigegeben, bekommst du eine kurze Push-Nachricht.", "neu"],
+        [null, "💬 Rückfragen?", "Bei jeder noch offenen Meldung: der Knopf öffnet direkt den Chat mit dem, der sie bearbeitet – der Anfang „Rückfrage zu meiner Änderung …“ steht schon drin.", "neu"],
+        [null, "🆘 Notfallkontakt", "Bitte <b>nicht dich selbst</b> eintragen, sondern eine <b>andere Person</b>, die im Notfall benachrichtigt werden soll – z. B. Ehefrau, Sohn, Tochter oder Nachbar. Trägst du doch deinen Namen ein, fragt die App nach.", "neu"]] },
+      { nr: "+", titel: "Sonst noch neu", zeilen: [
+        [null, "🔢 Anmelden auf iPhone/iPad", "Erst die Kochmütze auf den Home-Bildschirm legen, dann den Code dort eingeben – ein Code reicht. Beim Anmelden dreht sich die Kochmütze, bis die App startet.", "neu"],
+        [null, "⏳ Warten mit Bild", "Dauert etwas einen Moment, zeigt die App kleine Küchen-Bilder (z. B. ein Schneebesen, der rührt) statt einer Sanduhr.", "neu"],
+        [null, "🐢 Sparmodus", "Bei langsamem Netz oder schwachem Handy schaltet die App von selbst Bewegungen ab und lädt seltener nach – im Kopf steht dann 🐢. Ein-/ausschalten: ⚙️ → 🎨 Darstellung.", "neu"],
+        [null, "🔄 Kochjacke jeden Tag", "Bei 🧑‍🍳 Mein Bild: „Kochjacke wechselt jeden Tag“ – Montag weiß, Dienstag schwarz … bis Sonntag hellblau.", "neu"],
+        [null, "💐 Willkommen", "Meldet sich ein neues Mitglied zum ersten Mal an, hängt die App einen Willkommens-Zettel an die Pinnwand.", "neu"]] }] }] },
 ];

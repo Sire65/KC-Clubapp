@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.95.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.96.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -8061,7 +8061,7 @@ const DOKUMENTE = [
   // 1.81.0: Version 2 (Register Club/Technik, Sprachansagen, Diktieren, Tippfehler, Farbschemen, Fotoalben, Archiv & Chronik) – V1 bleibt als Datei unverändert;
   // neue id, damit die leise „NEU“-Zeile (KC-CLUB-DOK-NEU) einmal wieder erscheint
   // KC-CLUB-ANLEITUNG-V4 (2.23.33): Version 4 mit Spielen, Hilfe-Zentrum, Wunschbogen, Meine Daten, Erinnerung, Chats archivieren, SOS an alle – V3 bleibt als Datei
-  { id: "bedienung-club-app-v7", sym: "📖", t: "Bedienungsanleitung Club-App", u: "Version 7 · alles erklärt, mit Bildern · 51 Seiten", datei: "dokumente/Koecheclub-App_Anleitung_V7.pdf", neuBis: "2026-12-31" }, // 2.24.15: ersetzt V6
+  { id: "bedienung-club-app-v8", sym: "📖", t: "Bedienungsanleitung Club-App", u: "Version 8 · alles erklärt, mit Bildern · 58 Seiten", datei: "dokumente/Koecheclub-App_Anleitung_V8.pdf", neuBis: "2026-12-31" }, // 2.96.0: ersetzt V7 (KC-CLUB-ANLEITUNG-V8)
   // KC-CLUB-VERTRETUNG (2.2.0): Betriebsanleitung für die Admin-Vertretung + Notfall-Umschlag (ohne Zugangsdaten) – nur für Admins sichtbar
   { id: "vertretung", sym: "🛡️", t: "Vertretung des Admins", u: "Betriebsanleitung + Notfall-Umschlag zum Ausfüllen", datei: "dokumente/Vertretung_Admin_V1.pdf", nur: () => !!ICH?.admin },
   { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Kurzanleitung V4.1 · 28 Seiten", datei: "dokumente/Kurzanleitung_Bilderrechner_V4.1.pdf" },
