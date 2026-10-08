@@ -6560,3 +6560,11 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(m.indexOf("await frage(") < m.indexOf("mlStart(einl.id"), "erst fragen");
   assert.ok(/ssStart\('\$\{esc\(SPW\.person\)\}', \$\{esc\(JSON\.stringify\(r\.name \|\| ""\)\)\}, true\)">🔴 Live mitschauen/.test(programm), "Knopf bei den Wegen");
 }
+
+// 4xx. 2.104.0: Schritt-Hilfe für Aktionen, Dokumente, Feedback und Büro (KC-CLUB-SCHRITT-HILFE-REST2)
+{
+  const a = programm.indexOf("const SH_ABLAEUFE"), sh = programm.slice(a, programm.indexOf("\n};", a));
+  for (const k of ["aktionen", "aktion", "dokumente", "feedback", "buero"]) assert.ok(new RegExp("\\n  " + k + ": \\[").test(sh), "Ablauf " + k);
+  assert.ok(/\{ id: "los", ziel: "#fbSenden",[^\n]*ende: true/.test(sh) && /wenn: \(\) => FB\?\.schritt === 1, fertig: \(\) => \(FB\?\.schritt \|\| 0\) > 1/.test(sh), "Feedback Schritt für Schritt bis „Absenden“");
+  assert.ok(/wenn: \(\) => BU\.sicht === "start"/.test(sh) && /wenn: \(\) => BU\.sicht === "eingang"/.test(sh), "Büro: Start und Eingang");
+}

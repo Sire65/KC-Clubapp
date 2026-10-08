@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.103.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.104.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -2257,6 +2257,21 @@ const SH_ABLAEUFE = {
       wenn: () => !!(BO.form || HL.form || HL.angebotForm), fertig: () => false, ende: true, lob: () => HL.tab === "boerse" ? "Deine Anzeige ist drin – wer passt, bekommt Bescheid." : "Erledigt – alle können es jetzt sehen." },
   ],
   // 2.90.0 kurze Tipps für Dienstpläne, Einstellungen, Spiele (ein Schritt – zeigt, wo es losgeht)
+  // 2.104.0 KC-CLUB-SCHRITT-HILFE-REST2: Aktionen, Dokumente, Feedback, Büro
+  aktionen: [{ id: "wahl", ruhe: true, ziel: "#aktionListe", t: "Tippe eine Aktion an – dort steht alles dazu, auch wer mitfährt", fertig: () => false }],
+  aktion: [{ id: "mit", ruhe: true, ziel: "#aktionInhalt > .karte:nth-of-type(2)", t: "🚗 Mitfahren: Platz im Auto anbieten oder eine Mitfahrt suchen – hier antippen. Ganz unten: 📷 Fotos zur Aktion", fertig: () => false }],
+  dokumente: [{ id: "wahl", ruhe: true, ziel: "#dokRaster", t: "Tippe ein Dokument an – es öffnet sich in der App. Oben dann 🖨️ Drucken oder Teilen, mit ‹ geht es zurück", fertig: () => false }],
+  feedback: [
+    { id: "fertig0", ruhe: true, ziel: "#feedbackInhalt .knoepfe", t: "Dein Feedback ist schon angekommen – mit „✏️ Antworten ändern“ passt du es an, oder du startest ein neues", wenn: () => FB?.schritt === 0, fertig: () => false },
+    { id: "fb1", ziel: "#feedbackInhalt > .karte:last-child", t: "⭐ Tippe bei jeder Frage eine Antwort an – dann unten „Weiter ›“", wenn: () => FB?.schritt === 1, fertig: () => (FB?.schritt || 0) > 1 },
+    { id: "fb2", ziel: "#feedbackInhalt > .karte:last-child", t: "💡 Was wünschst du dir? Antippen, eigene Idee unten freiwillig – dann „Weiter ›“", wenn: () => FB?.schritt === 2, fertig: () => (FB?.schritt || 0) > 2 },
+    { id: "fb3", ziel: "#fbMitteilung", t: "✍️ Deine Nachricht – freiwillig. Darunter: Haken setzen, wenn es ohne deinen Namen ankommen soll", wenn: () => FB?.schritt === 3, fertig: () => true, weiter: true },
+    { id: "los", ziel: "#fbSenden", t: "Tippe auf „📨 Absenden“", wenn: () => FB?.schritt === 3, fertig: () => false, ende: true, lob: "Danke für dein Feedback! 🙏" },
+  ],
+  buero: [
+    { id: "start", ruhe: true, ziel: "#buInhalt .bu-knopfreihe", t: "Das Büro: oben 📥 Einlesen (Foto/Datei), 📋 Übersicht und die Ansicht wechseln. Darunter die Ordner – antippen öffnet sie", wenn: () => BU.sicht === "start", fertig: () => false },
+    { id: "eingang", ruhe: true, ziel: "#buInhalt .ek-kopf", t: "📥 Der Eingang: jede Zeile antippen → ansehen und bearbeiten. Mit den Knöpfen darunter gleich erledigen oder 🗄️ ablegen", wenn: () => BU.sicht === "eingang", fertig: () => false },
+  ],
   dienste: [
     { id: "wer", ruhe: true, ziel: "#dpPersonen", t: "Tippe deinen Namen an – mehrere Namen zeigen eure Zeiten untereinander. Mit ‹ Woche und Woche › blätterst du", fertig: () => false },
   ],

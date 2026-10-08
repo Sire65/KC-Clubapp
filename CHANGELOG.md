@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.104.0 – 2026-10-08 – 👣 Schritt-Hilfe: Aktionen, Dokumente, Feedback, Büro
+Die Schritt-Hilfe zeigt jetzt auch bei Aktionen, Meine Dokumente, Feedback (Schritt für Schritt bis „Absenden“) und im Büro, was als Nächstes zu tun ist.
+
 ## 2.103.0 – 2026-10-08 – 🔴 Live mitschauen (Admin, mit Erlaubnis)
 Neu für den Admin bei Nutzung → Wege eines Mitglieds: „🔴 Live mitschauen“. Nach dem Ja des Mitglieds kommt alle paar Sekunden ein neues Bild der Club-App; beim Mitglied steht oben „🔴 … schaut zu – Beenden“. Endet spätestens nach 10 Minuten.
 
