@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.59.0";
+const SERVER_VERSION = "2.74.0";
 const ORG = "KC_WERNE";
 const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
@@ -487,6 +487,11 @@ const gruppenAdmin = (g: any, pid: string) => g?.erstellt_von === pid || (Array.
 
 // ---------- Dateien (KC-CLUB-ANLAGEN) ----------
 // Eine Datei in den Anlagen-Kern legen (Bucket + kc_communication_attachments) – für Nachrichten, Protokolle und das Fotoalbum.
+const UMLAUT: Record<string, string> = { ä: "ae", ö: "oe", ü: "ue", Ä: "Ae", Ö: "Oe", Ü: "Ue", ß: "ss" };
+function speicherName(name: string) {
+  return name.normalize("NFC").replace(/[äöüÄÖÜß]/g, (z) => UMLAUT[z]).normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-z0-9._-]/g, "_").replace(/_+/g, "_").slice(0, 120) || "Anlage";
+}
 async function dateiAblegen(ich: Ich, nameRoh: unknown, mimeRoh: unknown, datenRoh: unknown, erlaubt?: RegExp) {
   const name = txt(nameRoh, 150).replace(/[\\/]/g, "_") || "Anlage";
   const mime = txt(mimeRoh, 100) || "application/octet-stream";
@@ -497,7 +502,9 @@ async function dateiAblegen(ich: Ich, nameRoh: unknown, mimeRoh: unknown, datenR
   const bytes = (() => { try { return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)); } catch { throw new Fehler("Die Datei konnte nicht gelesen werden – bitte noch einmal auswählen."); } })();
   if (!bytes.length) throw new Fehler("Leere Datei.");
   if (bytes.length > MAX_ANLAGE) throw new Fehler("Die Datei ist zu groß (höchstens 8 MB).");
-  const pfad = `club/${ich.person_id}/${crypto.randomUUID()}-${name.replace(/[^\w.\-äöüÄÖÜß ]/g, "_")}`;
+  // 2.74.0 (Fund Klaus: „Vertrag_Köchelub Werne.pdf“ → 400 vom Speicher): der Speicherpfad darf nur einfache Zeichen enthalten –
+  // Umlaute/ß werden umschrieben, Leerzeichen und Sonderzeichen zu „_“. Der echte Dateiname bleibt in file_name und wird so angezeigt.
+  const pfad = `club/${ich.person_id}/${crypto.randomUUID()}-${speicherName(name)}`;
   const up = await db.storage.from(BUCKET).upload(pfad, bytes, { contentType: mime, upsert: false });
   if (up.error) throw new Fehler("Hochladen fehlgeschlagen.", 500);
   const { data: link } = await db.from("kc_core_user_links").select("user_id").eq("person_id", SYSTEM_UPLOADER).eq("active", true).limit(1).maybeSingle();

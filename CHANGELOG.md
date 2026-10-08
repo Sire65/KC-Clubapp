@@ -8,6 +8,9 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.74.0 – 2026-10-08 – KC-CLUB-SPEICHERNAME
+- Fehler behoben: Dateien mit Umlauten oder Sonderzeichen im Namen (z. B. „Vertrag_Köcheclub Werne.pdf“) ließen sich nicht hochladen. Der Speicherpfad wird jetzt umgeschrieben, angezeigt wird weiter der echte Name. Server 2.74.0.
+
 ## 2.73.0 – 2026-10-08 – KC-CLUB-SCHRITT-HILFE Mein Bild
 - Schritt-Unterstützung für „Mein Bild“ (Figur antippen → Übernehmen/Bearbeiten) und den Baukasten (Typ → Haut → Frisur → Haarfarbe → Kopf → … → Kochjacke → Muster → Knöpfe → Hintergrund → Halstuch → Speichern). Kern: Fenster können einen eigenen Ablauf haben.
 

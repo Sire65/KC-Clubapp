@@ -5597,6 +5597,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(ab.includes(`ziel: '#avbInhalt .bs-fuss .knopf.haupt'`) && /<div class="na-pfeil-knoepfe bs-fuss"><button class="knopf haupt" onclick="avSetzen\(avbCode\(\)\)/.test(programm), "Speichern im Baukasten");
 }
 
+// 4xx. 2.74.0: Hochladen mit Umlauten im Dateinamen (Fund Klaus: „Vertrag_Köchelub Werne.pdf“ → Speicher lehnte den Pfad ab) (KC-CLUB-SPEICHERNAME)
+{
+  const f = server.slice(server.indexOf("const UMLAUT: Record<string, string>"), server.indexOf("async function dateiAblegen("));
+  const speicherName = new Function(f.replace(/: Record<string, string>/, "").replace(/\(name: string\)/, "(name)") + "\nreturn speicherName;")();
+  assert.equal(speicherName("Vertrag_Köchelub Werne.pdf"), "Vertrag_Koechelub_Werne.pdf");
+  assert.equal(speicherName("Vertrag_Köcheclub Werne.pdf"), "Vertrag_Koecheclub_Werne.pdf", "auch zerlegte Umlaute (Android)");
+  assert.equal(speicherName("Größe (1).pdf"), "Groesse_1_.pdf");
+  assert.ok(/^[A-Za-z0-9._-]+$/.test(speicherName("café–menü ½ 日本.docx")), "nur einfache Zeichen im Speicherpfad");
+  assert.ok(/const pfad = `club\/\$\{ich\.person_id\}\/\$\{crypto\.randomUUID\(\)\}-\$\{speicherName\(name\)\}`;/.test(server), "Pfad nutzt speicherName");
+  assert.ok(/object_path: pfad, file_name: name,/.test(server), "angezeigter Name bleibt der echte");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
