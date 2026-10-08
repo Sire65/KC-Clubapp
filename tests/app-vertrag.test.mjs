@@ -5441,6 +5441,36 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(seite.includes(".wb-svg.wb-pfannkuchen { stroke: none;"), "farbiges Motiv darf keine weißen Striche bekommen");
   assert.ok(programm.includes('{ id: "pfanne", t: "Pfanne schwenken"'), "bisheriges Pfannen-Motiv muss bleiben");
 }
+// 4xx. 2.62.0: Doppelkopf zu viert gegen drei Computer-Köche (KC-CLUB-DOPPELKOPF) + Bauernskat-Trumpfwahl auf dem grünen Tisch (Wunsch Hansi)
+{
+  const st = programm.indexOf('const DK_KEY = "kc_club_doppelkopf"'), en = programm.indexOf("let DK = (() =>");
+  assert.ok(st > 0 && en > st, "Doppelkopf-Kern vorhanden");
+  const D = new Function("BSK_FARBEN", "BSK_AUGEN", programm.slice(st, en) + "\nreturn { dkNeu, dkVorbehalt, dkErlaubt, dkSpielen, dkStichAbschliessen, dkErgebnis, dkStichGewinner, dkComputerKarte, dkSumme, DK_TRUMPF };")(
+    ["kr", "pi", "he", "ka"], { A: 11, "10": 10, K: 4, D: 3, B: 2, "9": 0, "8": 0, "7": 0 });
+  assert.deepEqual(D.DK_TRUMPF.slice(0, 5), ["he-10", "kr-D", "pi-D", "he-D", "ka-D"], "Trumpf von oben: ♥10, dann Damen");
+  const T = (l) => D.dkStichGewinner(l.map((k, i) => ({ s: i, k })));
+  assert.equal(T(["he-10-1", "he-10-2", "kr-D-1", "ka-9-1"]), 0, "gleiche Karten: die erste gewinnt");
+  assert.equal(T(["kr-A-1", "ka-9-1", "kr-10-1", "pi-A-1"]), 1, "Trumpf sticht Fehl");
+  assert.equal(T(["he-A-1", "he-K-1", "he-10-1", "he-9-1"]), 2, "♥10 ist Trumpf, nicht Herz");
+  const z0 = D.dkNeu(3); assert.equal(z0.hand.flat().length, 48); assert.equal(new Set(z0.hand.flat()).size, 48, "48 verschiedene Karten, je 12");
+  for (let n = 0; n < 300; n++) {
+    const z = D.dkNeu(n % 4); if (z.phase === "vorbehalt") D.dkVorbehalt(z, n % 2 ? "hochzeit" : "solo");
+    let i = 0; while (z.phase === "spiel" && i++ < 60) { const s = z.amZug, k = D.dkComputerKarte(z, s, "mittel"); assert.ok(D.dkErlaubt(z, s).includes(k), "nur erlaubte Karten"); if (D.dkSpielen(z, s, k)) D.dkStichAbschliessen(z); }
+    assert.equal(z.phase, "ende"); const e = D.dkErgebnis(z);
+    assert.equal(e.reAug + e.koAug, 240); assert.equal(D.dkSumme(z.stiche.flat()), 240, "240 Augen");
+    assert.equal(e.punkte.reduce((a, x) => a + x, 0), 0, "Punkte gehen auf");
+    if (z.hochzeit && z.solo == null) assert.equal(z.re.length, 2, "Hochzeit hat einen Partner");
+  }
+  assert.ok(/\["dk", "👑", "Doppelkopf"/.test(programm) && /SP\.art === "dk" \? dkPcZeigen\(\)/.test(programm), "in den Spielen angemeldet");
+  assert.ok(/dkPcVorbehalt\('hochzeit'\)/.test(programm) && /dkPcVorbehalt\('solo'\)/.test(programm), "Hochzeit / still allein wählbar");
+  assert.ok(/\.dk-tisch \{/.test(seite) && /\.dk-vorbehalt \{/.test(seite), "Tisch gestaltet");
+  // Bauernskat: Trumpfwahl erscheint im grünen Spielbereich und verschwindet nach der Wahl
+  assert.ok(/const bskAnsageKnoepfe = \(fn\) => `<div class="bsk-ansage bsk-ansage-tisch"/.test(programm), "Knöpfe für den Tisch");
+  assert.ok(/\$\{ansageKlick && z\.phase === "ansage" \? bskAnsageKnoepfe\(ansageKlick\) : `<div class="bsk-stich">/.test(programm), "nur in der Ansage-Phase, danach wieder der Stich");
+  assert.ok(/ansageKlick: z\.phase === "ansage" && z\.vorhand === 0 \? "bskPcAnsage" : ""/.test(programm) && /"bskMgAnsage" : ""/.test(programm), "gegen Computer und Mitglieder");
+  assert.ok(/\.bsk-ansage-tisch \{/.test(seite), "auf dem Tisch gestaltet");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

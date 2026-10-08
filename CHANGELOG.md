@@ -8,6 +8,10 @@
   ist der Dienst aus, bleiben Einträge mit Gästen unverändert. Ohne Gäste nur das setzen, was sich geändert hat.
 - Hansi muss das Skript einmal erneuern (google/ANLEITUNG.md → „Skript erneuern“).
 
+## 2.62.0 – 2026-10-08 – KC-CLUB-DOPPELKOPF
+- Doppelkopf zu viert gegen drei Computer-Köche (Erika, Kurt, Paul): 48 Karten, Re/Kontra, Hochzeit oder still allein, Extrapunkte (keine 90/60/30, schwarz, gegen die Alten, Fuchs, Doppelkopf, Karlchen), Stand auf dem Gerät.
+- Bauernskat: Trumpfwahl erscheint jetzt im grünen Spielbereich und verschwindet nach der Wahl.
+
 ## 2.61.0 – 2026-10-07 – KC-CLUB-WARTEBILD
 Neues Wartebild „🥞 Pfannkuchen wenden“: farbige Pfanne wirft den Pfannkuchen hoch, er dreht sich in der Luft und landet wieder.
 

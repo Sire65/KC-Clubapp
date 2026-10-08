@@ -504,6 +504,33 @@
   .bsk-ansage { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
   .bsk-ansage button { min-height: 64px; border: 2px solid var(--linie); border-radius: 14px; background: #fffdf8; color: #1b1b1b; font-size: 1.8rem; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
   .bsk-ansage button.rot { color: #c0392b; } .bsk-ansage small { font-size: .72rem; font-weight: 800; color: #444; }
+  /* KC-CLUB-DOPPELKOPF (2.62.0): Vierer-Tisch – oben/links/rechts Computer-Köche, unten du, Stich in der Mitte */
+  .dk-tisch { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.3fr) minmax(0, 1fr); grid-template-areas: ". oben ." "links mitte rechts" ". unten ."; gap: 6px; padding: 8px; border-radius: 16px; background: radial-gradient(ellipse at 50% 40%, #3a8250 0%, #2e6b40 60%, #24573a 100%); color: #fff; margin: 8px 0; box-shadow: inset 0 0 18px rgba(0,0,0,.35); }
+  .dk-p2 { grid-area: oben; } .dk-p1 { grid-area: links; } .dk-p3 { grid-area: rechts; } .dk-p0 { grid-area: unten; }
+  .dk-platz { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; font-size: .85rem; padding: 4px 2px; border-radius: 12px; border: 2px solid transparent; }
+  .dk-platz small { opacity: .85; font-size: .72rem; } .dk-platz.dran { border-color: #f5c84c; background: rgba(245,200,76,.18); }
+  .dk-re, .dk-ko { font-size: .68rem; font-weight: 800; padding: 1px 7px; border-radius: 999px; } .dk-re { background: #f5c84c; color: #4a3200; } .dk-ko { background: #e8eef5; color: #1d3557; }
+  .dk-mitte { grid-area: mitte; position: relative; min-height: 178px; border-radius: 50%; background: rgba(255,255,255,.06); cursor: pointer; }
+  .dk-leer { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.6) !important; }
+  .dk-s { position: absolute; width: 50px; transition: transform .2s; } .dk-s .bsk-karte { width: 50px; max-width: 50px; }
+  .dk-s-unten { left: 50%; bottom: 4px; transform: translateX(-50%) rotate(3deg); } .dk-s-oben { left: 50%; top: 4px; transform: translateX(-50%) rotate(-4deg); }
+  .dk-s-links { left: 6px; top: 50%; transform: translateY(-50%) rotate(-8deg); } .dk-s-rechts { right: 6px; top: 50%; transform: translateY(-50%) rotate(7deg); }
+  .dk-letzter { position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%); white-space: nowrap; font-size: .72rem; background: rgba(0,0,0,.45); padding: 2px 8px; border-radius: 999px; }
+  .dk-vorbehalt { position: relative; z-index: 2; padding: 10px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; }
+  .dk-vorbehalt .knopf { width: 100%; max-width: 220px; margin: 0; padding: 8px 10px; font-size: .95rem; min-height: 0; } .dk-mitte:has(.dk-vorbehalt) { border-radius: 18px; } .dk-vorbehalt .knopf:not(.haupt) { color: #3b2a20; } .dk-vorbehalt small { font-size: .7rem; opacity: .9; margin-bottom: 4px; }
+  .dk-hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin: 6px 0; }
+  .dk-hand .bsk-karte { width: 54px; max-width: 54px; } .dk-k { border: 0; background: none; padding: 0; cursor: pointer; border-radius: 8px; } .dk-k:active .bsk-karte { transform: translateY(-4px); }
+  .dk-hand .dk-k .bsk-karte { transform: translateY(-5px); } /* spielbar: leicht angehoben (goldener Rand = Trumpf) */
+  .dk-stand { display: grid !important; grid-template-columns: repeat(4, 1fr); text-align: center; gap: 4px; } .dk-stand span { display: flex; flex-direction: column; font-size: .8rem; }
+  .dk-abrechnung { margin: 6px 0; padding: 8px 10px; border-radius: 12px; background: var(--karte2); font-size: .88rem; } .dk-abrechnung > div { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+  .dk-summe { border-top: 1px solid var(--linie); margin-top: 4px; padding-top: 4px !important; font-weight: 800; }
+  .dk-punkte { display: grid !important; grid-template-columns: repeat(4, 1fr); text-align: center; margin-top: 6px; } .dk-punkte span { display: flex; flex-direction: column; } .dk-punkte .plus { color: var(--textGruen, #2e7d4f); } .dk-punkte .minus { color: var(--textRot, #c0392b); }
+  /* 2.62.0: Trumpfwahl auf dem grünen Tisch */
+  .bsk-ansage-tisch { grid-template-columns: repeat(5, minmax(0, 1fr)); align-content: center; animation: bskAnsageEin .35s ease-out; }
+  .bsk-ansage-tisch > b { grid-column: 1 / -1; text-align: center; font-size: 1rem; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .bsk-ansage-tisch button { box-shadow: 0 3px 8px rgba(0,0,0,.35); border-color: #e9e2d4; min-height: 58px; font-size: 1.6rem; }
+  .bsk-ansage-tisch button:active { transform: scale(.94); }
+  @keyframes bskAnsageEin { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
   .sp-termin { padding: 8px 10px; border-radius: 12px; background: var(--karte2); margin: 6px 0; display: flex; flex-direction: column; gap: 4px; } /* KC-CLUB-SPIEL-TERMIN */
   .sp-pokal { border: 2px solid #d4ac0d; background: linear-gradient(180deg, #fef9e7, var(--karte) 60%); }
   .sp-pokal-kopf { display: flex; align-items: center; gap: 12px; } .sp-pokal-sym { font-size: 2.6rem; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
@@ -3371,6 +3398,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.61.0" data-v="2.61.0"></script>
+<script src="app.js?v=2.62.0" data-v="2.62.0"></script>
 </body>
 </html>

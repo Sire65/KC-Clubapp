@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.61.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.62.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -3904,9 +3904,9 @@ const SP_ZEICHEN = { x: "🍅", o: "🥦" }, SP_NAME = { x: "Tomate", o: "Brokko
 const SP_KEY = "kc_club_spiel_pc", SP_TAKT_MS = 3000;
 // 2.11.0 KC-CLUB-SPIELE-KACHELN (Wunsch Hansi): art = null → Übersicht mit einer Kachel je Spiel; erst in der Kachel Computer/Mitglieder usw.
 let SP = { tab: "pc", art: null, liste: null, offen: null, takt: null, laedt: false, ch: null };
-const SP_ARTEN = [["ttt", "❌⭕", "Tic-Tac-Toe", "🍅 gegen 🥦 · 3 × 3 oder 4 × 4"], ["schach", "♟️", "Schach", "Die Küchenbrigade tritt an"], ["bsk", "🃏", "Bauernskat", "Zu zweit · französisches Blatt"], ["kt", "🔪", "Küchenterror", "Küchenquiz auf Zeit · 10 Sekunden je Frage"], ["mae", "🎲", "Mensch ärgere dich nicht", "Würfeln, rauswerfen, ins Ziel · bis zu 4 Farben"], ["fdk", "🧑‍🍳", "Fang den Koch", "Würfelspiel · Zutaten sammeln, Gerichte kochen"]];
+const SP_ARTEN = [["ttt", "❌⭕", "Tic-Tac-Toe", "🍅 gegen 🥦 · 3 × 3 oder 4 × 4"], ["schach", "♟️", "Schach", "Die Küchenbrigade tritt an"], ["bsk", "🃏", "Bauernskat", "Zu zweit · französisches Blatt"], ["kt", "🔪", "Küchenterror", "Küchenquiz auf Zeit · 10 Sekunden je Frage"], ["mae", "🎲", "Mensch ärgere dich nicht", "Würfeln, rauswerfen, ins Ziel · bis zu 4 Farben"], ["fdk", "🧑‍🍳", "Fang den Koch", "Würfelspiel · Zutaten sammeln, Gerichte kochen"], ["dk", "👑", "Doppelkopf", "Zu viert · mit drei Computer-Köchen"]];
 // KC-CLUB-SCHACH (2.8.0): Spielauswahl oben (gilt für „gegen den Computer“ und als Vorschlag beim Herausfordern)
-function spArtWahl(a) { SP.pause = false; SP.nachholen = null; SP.art = ["schach", "bsk", "kt", "mae", "fdk"].includes(a) ? a : "ttt"; if (SP.art === "fdk") SP.tab = "pc"; /* FDK Stufe 1: nur gegen den Computer */ if (SP.offen) SP.offen = null; spZeigen(); if (SP.tab === "mg") spLaden(true); }
+function spArtWahl(a) { SP.pause = false; SP.nachholen = null; SP.art = ["schach", "bsk", "kt", "mae", "fdk", "dk"].includes(a) ? a : "ttt"; if (SP.art === "fdk" || SP.art === "dk") SP.tab = "pc"; /* FDK Stufe 1: nur gegen den Computer */ if (SP.offen) SP.offen = null; spZeigen(); if (SP.tab === "mg") spLaden(true); }
 // KC-CLUB-SPIELE-PAUSE (2.18.0, Wunsch Hansi): je Spiel unten ein Umschalter ⏸ Pause ↔ ▶ Weiter.
 // Gegen den Computer: Spiel steht still – Computer zieht nicht, Küchenterror-Uhr hält an, das Brett/die Frage ist verschwommen.
 // Weiter: Küchenterror gibt nochmal 3-2-1 Lesezeit, dann läuft die restliche Zeit weiter. Gegen Mitglieder (Küchenterror) misst der
@@ -4005,15 +4005,15 @@ function spZeigen() {
   setTimeout(spPauseZeigen, 0); // 2.18.0
   const uebersicht = !SP.art && !SP.offen;
   ["spEdition", "spTabs"].forEach((id) => $(id).classList.toggle("versteckt", uebersicht));
-  if (!uebersicht) $("spTabs").classList.toggle("versteckt", SP.art === "fdk" && !SP.offen); // KC-CLUB-FDK Stufe 1: nur gegen den Computer
+  if (!uebersicht) $("spTabs").classList.toggle("versteckt", (SP.art === "fdk" || SP.art === "dk") && !SP.offen); // 2.62.0 Doppelkopf: Stufe 1 nur mit Computern // KC-CLUB-FDK Stufe 1: nur gegen den Computer
   if (uebersicht) { clearInterval(SP.takt); SP.takt = null; return spKachelnZeigen(); }
   document.querySelectorAll("#spTabs button").forEach((b) => b.classList.toggle("an", b.dataset.t === SP.tab));
   const art = SP.tab === "mg" && SP.offen ? SP.offen.spiel : SP.art;
   document.querySelectorAll("#spArt button").forEach((b) => b.classList.toggle("an", b.dataset.a === art));
   $("spArt").classList.add("versteckt"); // Spielwechsel jetzt über die Kacheln (‹ zurück)
-  $("spEdition").innerHTML = art === "schach" ? `<b>♟️ Schach</b><span>Köcheclub Edition · ${schBrigade() ? "Küchenbrigade Weiß gegen Schwarz" : "Weiß gegen Schwarz"}</span>` : art === "bsk" ? "<b>🃏 Bauernskat</b><span>Köcheclub Edition · zu zweit</span>" : art === "kt" ? "<b>🔪 Küchenterror</b><span>Köcheclub Edition · Küchenquiz auf Zeit</span>" : art === "mae" ? "<b>🎲 Mensch ärgere dich nicht</b><span>Köcheclub Edition · würfeln, rauswerfen, ins Ziel</span>" : art === "fdk" ? "<b>🧑‍🍳 Fang den Koch</b><span>Köcheclub Edition · das Küchen-Brettspiel</span>" : "<b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span>";
+  $("spEdition").innerHTML = art === "schach" ? `<b>♟️ Schach</b><span>Köcheclub Edition · ${schBrigade() ? "Küchenbrigade Weiß gegen Schwarz" : "Weiß gegen Schwarz"}</span>` : art === "bsk" ? "<b>🃏 Bauernskat</b><span>Köcheclub Edition · zu zweit</span>" : art === "kt" ? "<b>🔪 Küchenterror</b><span>Köcheclub Edition · Küchenquiz auf Zeit</span>" : art === "mae" ? "<b>🎲 Mensch ärgere dich nicht</b><span>Köcheclub Edition · würfeln, rauswerfen, ins Ziel</span>" : art === "fdk" ? "<b>🧑‍🍳 Fang den Koch</b><span>Köcheclub Edition · das Küchen-Brettspiel</span>" : art === "dk" ? "<b>👑 Doppelkopf</b><span>Köcheclub Edition · zu viert</span>" : "<b>Tic-Tac-Toe</b><span>Köcheclub Edition · 🍅 gegen 🥦</span>";
   clearInterval(SP.takt); SP.takt = null;
-  if (SP.tab === "pc") return SP.art === "schach" ? schPcZeigen() : SP.art === "bsk" ? bskPcZeigen() : SP.art === "kt" ? ktPcZeigen() : SP.art === "mae" ? (maePcZeigen(), maePcFortsetzen()) : SP.art === "fdk" ? (fdkPcZeigen(), fdkFortsetzen()) : spPcZeigen();
+  if (SP.tab === "pc") return SP.art === "schach" ? schPcZeigen() : SP.art === "bsk" ? bskPcZeigen() : SP.art === "kt" ? ktPcZeigen() : SP.art === "mae" ? (maePcZeigen(), maePcFortsetzen()) : SP.art === "fdk" ? (fdkPcZeigen(), fdkFortsetzen()) : SP.art === "dk" ? dkPcZeigen() : spPcZeigen();
   if (SP.offen) return spSpielZeigen();
   spListeZeigen();
 }
@@ -4289,11 +4289,209 @@ function mdKachelnOrdnen() {
 // ---------- KC-CLUB-SCHACH (2.8.0, Wunsch Hansi – Stufe 2 der Spiele): Schach – Köcheclub Edition ----------
 // Regeln (erlaubte Züge, Schach, Matt, Patt, Remis, Rochade, en passant, Umwandlung) liefert chess.js (BSD-2, liegt in lib/chess –
 // nichts kommt von fremden Servern). Antippen: Figur wählen → erlaubte Felder leuchten → Zielfeld antippen.
+// ---------- KC-CLUB-DOPPELKOPF (2.62.0, Wunsch Hansi): Doppelkopf zu viert – du gegen/mit drei Computer-Köchen ----------
+// Regeln (Turnierregeln, vereinfacht): 48 Karten (2 × 9 bis Ass), je 12. Trumpf von oben: ♥10 (Dulle), Damen ♣ ♠ ♥ ♦, Buben ♣ ♠ ♥ ♦,
+// dann ♦ A 10 K 9. Fehlfarben ♣ und ♠: A 10 K 9, ♥: A K 9. Bedienpflicht; bei zwei gleichen Karten gewinnt die zuerst gespielte.
+// Re = wer eine Kreuz-Dame hat (erst sichtbar, wenn sie gespielt wird), die anderen sind Kontra. Hat einer beide Kreuz-Damen,
+// sagt er Hochzeit an (wer in den ersten drei Stichen zuerst einen Stich macht, wird Partner; sonst allein) oder spielt
+// still allein (zählt dreifach). Die Computer sagen immer Hochzeit an. Re braucht 121 Augen, Kontra gewinnt mit 120.
+// Punkte: 1 gewonnen, je 1 für „keine 90 / 60 / 30 / schwarz“, 1 „gegen die Alten“ (Kontra gewinnt); Sonderpunkte: Fuchs gefangen
+// (♦ Ass der Gegenseite), Doppelkopf (Stich mit 40 Augen oder mehr), Karlchen (♣ Bube macht den letzten Stich). Ansagen und
+// Soli kommen später. Kartenbilder = Bauernskat-Blatt (lib/karten). Stand und laufendes Spiel bleiben auf dem Gerät.
+const DK_KEY = "kc_club_doppelkopf", DK_NAMEN = ["Du", "Erika", "Kurt", "Paul"], DK_WERTE = ["A", "10", "K", "9"];
+const DK_TRUMPF = ["he-10", "kr-D", "pi-D", "he-D", "ka-D", "kr-B", "pi-B", "he-B", "ka-B", "ka-A", "ka-10", "ka-K", "ka-9"];
+const dkBasis = (id) => id.slice(0, id.lastIndexOf("-"));
+const dkIstTrumpf = (id) => DK_TRUMPF.includes(dkBasis(id));
+const dkFarbe = (id) => (dkIstTrumpf(id) ? "T" : id.split("-")[0]);
+const dkAugen = (id) => BSK_AUGEN[id.split("-")[1]];
+const dkRang = (id) => (dkIstTrumpf(id) ? 100 + (DK_TRUMPF.length - DK_TRUMPF.indexOf(dkBasis(id))) : 4 - DK_WERTE.indexOf(id.split("-")[1]));
+const dkSumme = (l) => l.reduce((a, k) => a + dkAugen(k), 0);
+function dkStichGewinner(stich) { // stich = [{s, k}] in Spielreihenfolge – gleiche Karte: die erste gewinnt (nur „>“)
+  const f = dkFarbe(stich[0].k); let best = stich[0];
+  for (const x of stich.slice(1)) { const fx = dkFarbe(x.k), fb = dkFarbe(best.k);
+    if ((fx === "T" && fb !== "T") || (fx === fb && dkRang(x.k) > dkRang(best.k))) best = x; }
+  return best.s;
+}
+function dkNeu(geber) {
+  const d = []; for (const f of BSK_FARBEN) for (const w of ["A", "10", "K", "D", "B", "9"]) for (const n of [1, 2]) d.push(`${f}-${w}-${n}`); // 48 Karten
+  for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; }
+  const hand = [0, 1, 2, 3].map((s) => d.slice(s * 12, s * 12 + 12));
+  const re = [0, 1, 2, 3].filter((s) => hand[s].some((k) => dkBasis(k) === "kr-D"));
+  const z = { hand, geber, amZug: (geber + 1) % 4, stich: [], stiche: [[], [], [], []], letzter: null, phase: "spiel", re, solo: null, hochzeit: null, offen: [], sonder: [] };
+  // Beide ♣ Damen bei einem: Computer sagen Hochzeit an; du entscheidest selbst (Phase „vorbehalt“: 💍 Hochzeit oder 🤫 still allein)
+  if (re.length === 1) { if (re[0] === 0) z.phase = "vorbehalt"; else z.hochzeit = { von: re[0], partner: null }; }
+  return z;
+}
+// Hochzeit: wer von den anderen in den ersten 3 Stichen zuerst einen Stich macht, wird Partner (Re); sonst spielt die Braut allein
+function dkVorbehalt(z, art) {
+  if (z.phase !== "vorbehalt") return;
+  if (art === "hochzeit") z.hochzeit = { von: 0, partner: null }; else z.solo = 0;
+  z.phase = "spiel";
+}
+const dkIstRe = (z, s) => z.re.includes(s);
+function dkErlaubt(z, s) {
+  const h = z.hand[s]; if (!z.stich.length) return [...h];
+  const f = dkFarbe(z.stich[0].k), bed = h.filter((k) => dkFarbe(k) === f); return bed.length ? bed : [...h];
+}
+function dkSpielen(z, s, k) {
+  const i = z.hand[s].indexOf(k); if (i < 0) throw new Error("Karte nicht vorhanden");
+  z.hand[s].splice(i, 1); z.stich.push({ s, k }); if (dkBasis(k) === "kr-D" && !z.offen.includes(s)) z.offen.push(s);
+  z.amZug = (s + 1) % 4; return z.stich.length === 4;
+}
+function dkStichAbschliessen(z) {
+  const g = dkStichGewinner(z.stich), aug = dkSumme(z.stich.map((x) => x.k)), letzter = z.hand.every((h) => !h.length);
+  z.stiche[g].push(...z.stich.map((x) => x.k));
+  if (z.solo == null) { // Sonderpunkte nur im Normalspiel
+    if (aug >= 40) z.sonder.push({ art: "doppelkopf", s: g });
+    for (const x of z.stich) if (dkBasis(x.k) === "ka-A" && dkIstRe(z, x.s) !== dkIstRe(z, g)) z.sonder.push({ art: "fuchs", s: g, von: x.s });
+    const sieg = z.stich.find((x) => x.s === g);
+    if (letzter && dkBasis(sieg.k) === "kr-B") z.sonder.push({ art: "karlchen", s: g });
+  }
+  if (z.hochzeit && z.hochzeit.partner == null && z.solo == null) { const nr = z.stiche.reduce((a, l) => a + l.length, 0) / 4;
+    if (g !== z.hochzeit.von) { z.hochzeit.partner = g; z.re.push(g); } else if (nr >= 3) z.solo = z.hochzeit.von; }
+  z.letzter = { stich: z.stich, gewinner: g, augen: aug }; z.stich = []; z.amZug = g;
+  if (letzter) z.phase = "ende";
+}
+function dkErgebnis(z) {
+  const reS = [0, 1, 2, 3].filter((s) => dkIstRe(z, s)), koS = [0, 1, 2, 3].filter((s) => !dkIstRe(z, s));
+  const reAug = reS.reduce((a, s) => a + dkSumme(z.stiche[s]), 0), koAug = 240 - reAug;
+  const reStiche = reS.reduce((a, s) => a + z.stiche[s].length, 0) / 4, koStiche = 12 - reStiche;
+  const reGew = reAug >= 121, verlAug = reGew ? koAug : reAug, verlStiche = reGew ? koStiche : reStiche;
+  const zeilen = [["Gewonnen", 1]];
+  if (verlAug < 90) zeilen.push(["Keine 90", 1]); if (verlAug < 60) zeilen.push(["Keine 60", 1]); if (verlAug < 30) zeilen.push(["Keine 30", 1]);
+  if (verlStiche === 0) zeilen.push(["Schwarz", 1]);
+  if (!reGew && z.solo == null) zeilen.push(["Gegen die Alten", 1]);
+  const name = { doppelkopf: "Doppelkopf", fuchs: "Fuchs gefangen", karlchen: "Karlchen" };
+  for (const x of z.sonder) zeilen.push([`${name[x.art]} (${DK_NAMEN[x.s]})`, dkIstRe(z, x.s) === reGew ? 1 : -1]);
+  const wert = zeilen.reduce((a, [, p]) => a + p, 0), punkte = [0, 0, 0, 0];
+  for (const s of [0, 1, 2, 3]) { const gew = dkIstRe(z, s) === reGew; const faktor = z.solo === s ? 3 : 1; punkte[s] = (gew ? 1 : -1) * wert * faktor; }
+  return { reS, koS, reAug, koAug, reGew, zeilen, wert, punkte };
+}
+// ----- Computer -----
+function dkBekanntRe(z, s) { return new Set([...z.offen, ...(dkIstRe(z, s) ? [s] : []), ...(z.hochzeit ? z.re : [])]); } // Hochzeit ist angesagt – alle wissen es
+function dkPartnerSicher(z, s, w) { // weiß Spieler s sicher, dass w zu seiner Partei gehört?
+  if (w === s) return true; // stille Hochzeit: nur der Alleinspieler weiß es – für die anderen sieht es wie ein Normalspiel aus
+  const re = dkBekanntRe(z, s);
+  if (dkIstRe(z, s)) return re.has(w);
+  return re.size >= 2 && !re.has(w); // Kontra weiß es, wenn beide Re bekannt sind
+}
+function dkComputerKarte(z, s, staerke) {
+  const erl = dkErlaubt(z, s); if (staerke === "leicht" && Math.random() < 0.45) return erl[Math.floor(Math.random() * erl.length)];
+  const nachRang = (l) => [...l].sort((a, b) => dkRang(a) - dkRang(b)), nachAugen = (l) => [...l].sort((a, b) => dkAugen(a) - dkAugen(b));
+  const tr = erl.filter(dkIstTrumpf), fehl = erl.filter((k) => !dkIstTrumpf(k));
+  if (!z.stich.length) { // ausspielen
+    const asse = fehl.filter((k) => k.split("-")[1] === "A");
+    if (asse.length) { const zahl = (k) => z.hand[s].filter((x) => dkFarbe(x) === dkFarbe(k)).length; return [...asse].sort((a, b) => zahl(a) - zahl(b))[0]; }
+    if (dkIstRe(z, s) && tr.length >= 5) return nachRang(tr).reverse().find((k) => dkBasis(k) !== "he-10") || nachRang(tr).pop();
+    if (fehl.length) return nachAugen(fehl)[0];
+    return nachRang(tr).find((k) => dkBasis(k) !== "ka-A") || nachRang(tr)[0];
+  }
+  const jetzt = dkStichGewinner(z.stich), letzter = z.stich.length === 3, wert = dkSumme(z.stich.map((x) => x.k));
+  const gewinnt = (k) => dkStichGewinner([...z.stich, { s, k }]) === s;
+  if (dkPartnerSicher(z, s, jetzt) && (letzter || dkRang(z.stich.find((x) => x.s === jetzt).k) >= dkRang(`kr-D-1`))) {
+    const schmier = erl.filter((k) => !["he-10", "kr-D", "pi-D", "he-D"].includes(dkBasis(k))); // Partner hat sicher: Augen dazugeben
+    return [...(schmier.length ? schmier : erl)].sort((a, b) => dkAugen(b) - dkAugen(a))[0];
+  }
+  const sieger = erl.filter(gewinnt);
+  if (sieger.length && (letzter || wert >= 10 || staerke === "schwer")) {
+    const billig = nachRang(sieger).filter((k) => letzter || dkRang(k) >= dkRang("he-D-1") || !dkIstTrumpf(k));
+    return (billig.length ? billig : nachRang(sieger))[0];
+  }
+  return nachAugen(erl.filter((k) => dkBasis(k) !== "ka-A")).concat(nachAugen(erl))[0];
+}
+// ----- Zustand, Anzeige -----
+let DK = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(DK_KEY) || "null"); } catch {}
+  return { staerke: "mittel", stand: [0, 0, 0, 0], spiele: 0, z: null, ...(w || {}), denkt: false, gewertet: w?.gewertet || false }; })();
+const dkMerken = () => { try { localStorage.setItem(DK_KEY, JSON.stringify({ staerke: DK.staerke, stand: DK.stand, spiele: DK.spiele, z: DK.z, gewertet: DK.gewertet })); } catch {} };
+const dkSort = (l) => [...l].sort((a, b) => { const fa = dkFarbe(a), fb = dkFarbe(b); return fa === fb ? dkRang(b) - dkRang(a) : fa === "T" ? -1 : fb === "T" ? 1 : BSK_FARBEN.indexOf(fa) - BSK_FARBEN.indexOf(fb); });
+function dkKarteHtml(id, { klick = "", blass = false, klein = false } = {}) {
+  const html = bskKarteHtml(dkBasis(id), { klein, blass }).replace('class="bsk-karte', `class="bsk-karte${dkIstTrumpf(id) ? " trumpf" : ""}`);
+  return klick ? `<button class="dk-k" onclick="${klick}('${id}')" aria-label="${BSK_FNAME[id.split("-")[0]]} ${id.split("-")[1]}${dkIstTrumpf(id) ? ", Trumpf" : ""}">${html}</button>` : html;
+}
+function dkParteiMarke(z, s) { // was ICH sehe: eigene Partei immer, andere erst wenn bekannt
+  if (z.phase === "ende") return dkIstRe(z, s) ? '<span class="dk-re">Re</span>' : '<span class="dk-ko">Kontra</span>';
+  if (z.hochzeit?.von === s && z.solo == null) return `<span class="dk-re">💍 Hochzeit</span>`;
+  if (s === 0) return z.solo === 0 ? '<span class="dk-re">Re · allein</span>' : dkIstRe(z, 0) ? '<span class="dk-re">Re</span>' : z.phase === "vorbehalt" ? "" : '<span class="dk-ko">Kontra</span>';
+  if (z.hochzeit && z.hochzeit.partner === s) return '<span class="dk-re">Re 💍</span>';
+  if (z.offen.includes(s)) return '<span class="dk-re">Re ♣D</span>';
+  return dkPartnerSicher(z, 0, s) ? `<span class="${dkIstRe(z, 0) ? "dk-re" : "dk-ko"}">${dkIstRe(z, 0) ? "Re" : "Kontra"}</span>` : "";
+}
+function dkPlatz(z, s) {
+  const amZug = z.phase === "spiel" && z.amZug === s && !z.stich.some((x) => x.s === s);
+  return `<div class="dk-platz dk-p${s}${amZug ? " dran" : ""}"><b>${s ? "🤖 " : ""}${DK_NAMEN[s]}</b>${dkParteiMarke(z, s)}${s ? `<small>${z.hand[s].length} Karten</small>` : ""}<small>${z.stiche[s].length / 4} Stiche</small></div>`;
+}
+function dkPcZeigen() {
+  bskBilderVorladen();
+  if (!DK.z) dkPcNeu(false);
+  const z = DK.z, erl = z.phase === "spiel" && z.amZug === 0 && !DK.denkt && z.stich.length < 4 ? dkErlaubt(z, 0) : [];
+  const stich = z.stich.length ? z.stich : z.letzter && DK.zeigeLetzten ? z.letzter.stich : [];
+  let status;
+  if (z.phase === "ende") { const e = dkErgebnis(z), ich = dkIstRe(z, 0) === e.reGew;
+    status = `<div class="sp-banner ${ich ? "sieg" : "niederlage"}">${ich ? "🏆 Gewonnen!" : "Verloren"} – ${e.reGew ? "Re" : "Kontra"} gewinnt<br><small>Re (${e.reS.map((s) => DK_NAMEN[s]).join(" & ")}${z.solo != null ? ", allein" : ""}) ${e.reAug} : ${e.koAug} Kontra</small></div>
+      <div class="dk-abrechnung">${e.zeilen.map(([t, p]) => `<div><span>${esc(t)}</span><b>${p > 0 ? "+" : ""}${p}</b></div>`).join("")}<div class="dk-summe"><span>Spielwert${z.solo != null ? " (Solo × 3)" : ""}</span><b>${e.wert}</b></div>
+      <div class="dk-punkte">${[0, 1, 2, 3].map((s) => `<span>${DK_NAMEN[s]} <b class="${e.punkte[s] > 0 ? "plus" : e.punkte[s] < 0 ? "minus" : ""}">${e.punkte[s] > 0 ? "+" : ""}${e.punkte[s]}</b></span>`).join("")}</div></div>`; }
+  else if (z.phase === "vorbehalt") status = `<div class="sp-status sp-ichdran">Du hast beide ♣ Damen – wähle unten auf dem Tisch</div>`;
+  else status = `<div class="sp-status${z.amZug === 0 && !DK.denkt ? " sp-ichdran" : ""}">${z.hochzeit && z.hochzeit.partner == null && z.solo == null ? `💍 ${z.hochzeit.von === 0 ? "Deine" : DK_NAMEN[z.hochzeit.von] + "s"} Hochzeit – wer zuerst einen Stich macht, wird Partner · ` : ""}${z.amZug === 0 && !DK.denkt ? (z.stich.length ? "Du bist dran – bedienen, wenn du kannst" : "Du spielst aus") : `🤖 ${DK_NAMEN[z.amZug]} ist dran …`}</div>`;
+  const pos = (s) => ["unten", "links", "oben", "rechts"][s];
+  $("spInhalt").innerHTML = `<div class="karte sp-karte">
+      ${spWahl("Stärke", DK.staerke, [["leicht", "😊 Leicht"], ["mittel", "🙂 Mittel"], ["schwer", "😎 Schwer"]], "dkPcStaerke")}
+      <div class="sp-stand dk-stand">${[0, 1, 2, 3].map((s) => `<span>${DK_NAMEN[s]} <b>${DK.stand[s]}</b></span>`).join("")}</div>
+      ${status}
+      <div class="dk-tisch">
+        ${dkPlatz(z, 2)}${dkPlatz(z, 1)}
+        <div class="dk-mitte" onclick="dkWeiter()">${z.phase === "vorbehalt" ? `<div class="dk-vorbehalt"><b>Beide ♣ Damen!</b><button class="knopf haupt" onclick="event.stopPropagation();dkPcVorbehalt('hochzeit')">💍 Hochzeit ansagen</button><small>Wer zuerst einen Stich macht, spielt mit dir</small><button class="knopf" onclick="event.stopPropagation();dkPcVorbehalt('solo')">🤫 Still allein spielen</button><small>Zählt dreifach</small></div>` : ""}${stich.map((x) => `<div class="dk-s dk-s-${pos(x.s)}">${dkKarteHtml(x.k, { klein: true })}</div>`).join("") || (z.phase === "vorbehalt" ? "" : '<span class="hinweis dk-leer">Stich</span>')}
+          ${!z.stich.length && stich.length ? `<div class="dk-letzter">${z.letzter.gewinner === 0 ? "Dein Stich" : DK_NAMEN[z.letzter.gewinner] + "s Stich"} · ${z.letzter.augen} Augen</div>` : ""}</div>
+        ${dkPlatz(z, 3)}${dkPlatz(z, 0)}
+      </div>
+      <div class="dk-hand">${dkSort(z.hand[0]).map((k) => dkKarteHtml(k, { klick: erl.includes(k) ? "dkPcKarte" : "", blass: erl.length > 0 && !erl.includes(k) })).join("")}</div>
+      <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("dk")}</div>
+      <div class="sp-knopfreihe"><button class="knopf haupt" onclick="dkPcNeu()"><span class="kt-ico">↺</span>${z.phase === "ende" ? "Nächstes Spiel" : "Neu geben"}</button><button class="knopf" onclick="dkStandWeg()" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️</span>Stand löschen</button></div>
+      <details class="sch-verlauf"><summary>📖 Regeln kurz</summary><p class="hinweis" style="margin:4px 0">Vier Spieler, je 12 Karten. <b>Trumpf</b> von oben: ♥ Zehn, alle Damen (♣ ♠ ♥ ♦), alle Buben (♣ ♠ ♥ ♦), dann ♦ Ass, Zehn, König, Neun. Trümpfe haben einen goldenen Rand. Farbe bedienen ist Pflicht – wer nicht kann, darf stechen oder abwerfen. Bei zwei gleichen Karten gewinnt die zuerst gespielte.<br><b>Re</b> sind die beiden mit einer ♣ Dame – wer das ist, sieht man erst, wenn sie gespielt wird. Re braucht 121 Augen, Kontra reichen 120. Hat einer beide ♣ Damen, sagt er <b>Hochzeit</b> an (wer in den ersten drei Stichen zuerst einen Stich macht, spielt mit ihm) – oder spielt still allein (zählt dreifach).<br><b>Extrapunkte:</b> keine 90/60/30, schwarz, gegen die Alten, Fuchs gefangen (♦ Ass der Gegner), Doppelkopf (Stich mit 40 Augen), Karlchen (♣ Bube macht den letzten Stich).</p></details>
+    </div>`;
+  if (z.phase === "spiel" && !DK.denkt && !DK.wartet && (z.amZug !== 0 || z.stich.length === 4)) dkPcWeiterLaufen();
+}
+function dkPcVorbehalt(art) { const z = DK.z; if (!z || z.phase !== "vorbehalt") return; dkVorbehalt(z, art); dkMerken();
+  spSag("dk", art === "hochzeit" ? "Du sagst Hochzeit an." : "Du spielst still allein.", null, true); dkPcZeigen(); }
+function dkPcStaerke(w) { DK.staerke = w; dkMerken(); dkPcZeigen(); }
+function dkStandWeg() { DK.stand = [0, 0, 0, 0]; DK.spiele = 0; dkMerken(); dkPcZeigen(); melde("🗑️ Spielstand gelöscht"); }
+function dkPcNeu(zeigen = true) {
+  const geber = DK.z ? (DK.z.geber + 1) % 4 : 3; DK.z = dkNeu(geber); DK.gewertet = false; DK.denkt = false; DK.wartet = false; DK.zeigeLetzten = false; dkMerken();
+  if (!zeigen) return;
+  spSag("dk", DK.z.phase === "vorbehalt" ? "Neues Spiel. Du hast beide Kreuz-Damen." : `Neues Spiel.${DK.z.hochzeit ? ` ${DK_NAMEN[DK.z.hochzeit.von]} sagt Hochzeit an.` : ""} ${DK.z.amZug === 0 ? "Du spielst aus." : DK_NAMEN[DK.z.amZug] + " spielt aus."}`, "dk:neu:" + Date.now(), true);
+  dkPcZeigen();
+}
+function dkWeiter() { if (DK.wartet) { clearTimeout(DK.wartet); DK.wartet = false; dkStichFertig(); } }
+function dkStichFertig() {
+  const z = DK.z; if (!z || z.stich.length !== 4) return;
+  dkStichAbschliessen(z); DK.zeigeLetzten = true; const l = z.letzter;
+  spSag("dk", `${l.gewinner === 0 ? "Dein Stich" : DK_NAMEN[l.gewinner] + " bekommt den Stich"}${l.augen ? `, ${l.augen} Augen` : ""}.`);
+  if (z.phase === "ende" && !DK.gewertet) { const e = dkErgebnis(z); e.punkte.forEach((p, s) => (DK.stand[s] += p)); DK.spiele++; DK.gewertet = true;
+    spSag("dk", `${e.reGew ? "Re" : "Kontra"} gewinnt mit ${e.reGew ? e.reAug : e.koAug} Augen. ${e.punkte[0] > 0 ? "Du gewinnst" : "Du verlierst"} ${Math.abs(e.punkte[0])} Punkte.`, null, true); }
+  dkMerken(); dkPcZeigen();
+}
+function dkPcKarte(k) {
+  const z = DK.z; if (z.phase !== "spiel" || z.amZug !== 0 || DK.denkt || !dkErlaubt(z, 0).includes(k)) return;
+  DK.zeigeLetzten = false; dkSpielen(z, 0, k); dkMerken();
+  dkPcZeigen(); // voller Stich / Computer am Zug: dkPcWeiterLaufen übernimmt
+}
+function dkPcWeiterLaufen() {
+  const z = DK.z; if (DK.denkt || DK.wartet || z.phase !== "spiel" || aktuelleAnsicht !== "spiele" || SP.art !== "dk" || SP.pause) return;
+  if (z.stich.length === 4) { DK.wartet = setTimeout(() => { DK.wartet = false; dkStichFertig(); }, 1300); return; }
+  if (z.amZug === 0) return;
+  DK.denkt = true;
+  setTimeout(() => {
+    DK.denkt = false; if (DK.z !== z || z.phase !== "spiel" || z.amZug === 0) return;
+    const s = z.amZug, k = dkComputerKarte(z, s, DK.staerke); DK.zeigeLetzten = false;
+    dkSpielen(z, s, k); dkMerken();
+    spSag("dk", `${DK_NAMEN[s]}: ${bskKarteWort(dkBasis(k))}${dkBasis(k) === "kr-D" ? " – Re" : ""}.`);
+    dkPcZeigen();
+  }, 650);
+}
 // ---------- KC-CLUB-SPIEL-ANSAGE (2.22.16, Wunsch Hansi): Spiele ansagen lassen – je Spiel ein eigener 🔊-Schalter (Gerät) ----------
 // Schach: jeder Zug („Dein Bauer auf C 6“, „Schwarzer Läufer auf E 5 – hat gerade deinen Springer geschlagen“, Schach/Matt),
 // Küchenterror: Frage + Antworten und die Auflösung, Bauernskat: Trumpf, Karten des Gegners, wer den Stich bekommt, Ergebnis.
 // Tic-Tac-Toe bewusst ohne. Nutzt die vorhandene Vorlese-Stimme (sprechen); jede Ansage nur einmal (SP_GESAGT).
-const SP_ANSAGE_KEY = "kc_club_sp_ansage", SP_ANSAGE_NAME = { schach: "Schach", kt: "Küchenterror", bsk: "Bauernskat", ttt: "Tic-Tac-Toe", mae: "Mensch ärgere dich nicht", fdk: "Fang den Koch" };
+const SP_ANSAGE_KEY = "kc_club_sp_ansage", SP_ANSAGE_NAME = { schach: "Schach", kt: "Küchenterror", bsk: "Bauernskat", ttt: "Tic-Tac-Toe", mae: "Mensch ärgere dich nicht", fdk: "Fang den Koch", dk: "Doppelkopf" };
 const spAnsageAn = (art) => { try { return !!JSON.parse(localStorage.getItem(SP_ANSAGE_KEY) || "{}")[art]; } catch { return false; } };
 function spAnsageKnopf(art, kachel = false) {
   const an = spAnsageAn(art);
@@ -4821,7 +5019,9 @@ const bskSort = (l, t) => [...l].sort((a, b) => { const fa = bskFarbe(a, t || "k
 function bskTischHtml(z, s, { klick = "", erlaubt = [], aus = false, ichDran = false } = {}) {
   return `<div class="bsk-tisch">${z.sp[s].tisch.map((p) => `<div class="bsk-stapel${p.unten ? " mit-unten" : ""}">${p.unten ? bskKarteHtml(null, { verdeckt: true, klein: true }) : ""}${p.oben ? bskKarteHtml(p.oben, { klick: klick && erlaubt.includes(p.oben) ? klick : "", aus, trumpf: z.trumpf, blass: ichDran && !erlaubt.includes(p.oben) }) : '<span class="bsk-leer"></span>'}</div>`).join("")}</div>`;
 }
-function bskBrettHtml(z, ich, { klick, aus, gegnerName, ansageSicht }) {
+// 2.62.0 (Wunsch Hansi): Trumpfwahl erscheint im grünen Spielbereich (statt oben) und verschwindet nach der Wahl
+const bskAnsageKnoepfe = (fn) => `<div class="bsk-ansage bsk-ansage-tisch" role="group" aria-label="Trumpf wählen"><b>Was ist Trumpf?</b>${BSK_FARBEN.map((f) => `<button class="${f === "he" || f === "ka" ? "rot" : ""}" onclick="${fn}('${f}')">${BSK_SYM[f]}<small>${BSK_FNAME[f]}</small></button>`).join("")}<button onclick="${fn}('grand')">🃏<small>Grand</small></button></div>`;
+function bskBrettHtml(z, ich, { klick, aus, gegnerName, ansageSicht, ansageKlick }) {
   const er = 1 - ich, erl = !aus && z.phase === "spiel" && z.amZug === ich ? bskErlaubt(z, ich) : [];
   const hand = ansageSicht ? z.sp[ich].hand.slice(0, 4) : bskSort(z.sp[ich].hand, z.trumpf), mitHand = z.sp[ich].hand.length > 0 || z.sp[er].hand.length > 0; // 2.24.9: neue Partien ohne Hand
   const rest = (s) => z.sp[s].hand.length + z.sp[s].tisch.reduce((a, p) => a + (p.oben ? 1 : 0) + (p.unten ? 1 : 0), 0);
@@ -4831,7 +5031,7 @@ function bskBrettHtml(z, ich, { klick, aus, gegnerName, ansageSicht }) {
     <div class="bsk-kopf"><span>${esc(gegnerName)} · ${mitHand ? z.sp[er].hand.length + " Handkarten" : rest(er) + " Karten"}</span><span>Augen: <b>${aug[er]}</b></span></div>
     ${bskTischHtml(z, er)}
     <div class="bsk-mitte"><div class="bsk-trumpf">${z.trumpf ? `Trumpf<br><b>${z.trumpf === "grand" ? "Grand<br><small>nur Buben</small>" : BSK_SYM[z.trumpf] + " " + BSK_FNAME[z.trumpf]}</b>` : "Trumpf<br><b>?</b>"}<br><small>Ansager: ${z.vorhand === ich ? "Du" : esc(gegnerName)}</small></div>
-      <div class="bsk-stich">${stich.map((x) => `<div class="bsk-stich-karte ${x.s === ich ? "ich" : "er"}">${bskKarteHtml(x.k, { trumpf: z.trumpf })}</div>`).join("") || '<span class="hinweis">Stich</span>'}</div>
+      ${ansageKlick && z.phase === "ansage" ? bskAnsageKnoepfe(ansageKlick) : `<div class="bsk-stich">${stich.map((x) => `<div class="bsk-stich-karte ${x.s === ich ? "ich" : "er"}">${bskKarteHtml(x.k, { trumpf: z.trumpf })}</div>`).join("") || '<span class="hinweis">Stich</span>'}</div>`}
       ${!z.stich.length && stich.length ? `<div class="bsk-letzter">Letzter Stich – ${z.letzter.gewinner === ich ? "an dich" : "an " + esc(gegnerName)}</div>` : ""}</div>
     ${bskTischHtml(z, ich, { klick, erlaubt: erl, aus, ichDran: erl.length > 0 })}
     ${mitHand ? `<div class="bsk-hand">${hand.map((k) => bskKarteHtml(k, { klick: erl.includes(k) ? klick : "", trumpf: z.trumpf, blass: erl.length > 0 && !erl.includes(k) })).join("")}${ansageSicht && z.sp[ich].hand.length ? '<span class="bsk-karte rueck"></span>'.repeat(4) : ""}</div>` : ""}
@@ -4873,7 +5073,7 @@ function bskPcZeigen() {
   if (!BSK.denkt && BSK.z && ((BSK.z.phase === "spiel" && BSK.z.amZug === 1 && BSK.z.stich.length < 2) || (BSK.z.phase === "ansage" && BSK.z.vorhand === 1)) && !bskPcZeigen.laeuft) { bskPcZeigen.laeuft = true; setTimeout(() => { bskPcZeigen.laeuft = false; bskPcComputer(); }, 700); }
   const z = BSK.z, s = BSK.stand;
   let status;
-  if (z.phase === "ansage") status = z.vorhand === 0 ? `<div class="sp-status sp-ichdran">Du bist Vorhand – sag Trumpf an:</div><div class="bsk-ansage">${BSK_FARBEN.map((f) => `<button class="${f === "he" || f === "ka" ? "rot" : ""}" onclick="bskPcAnsage('${f}')">${BSK_SYM[f]}<small>${BSK_FNAME[f]}</small></button>`).join("")}<button onclick="bskPcAnsage('grand')">🃏<small>Grand</small></button></div>` : `<div class="sp-status">🤖 Der Computer überlegt, was Trumpf wird …</div>`;
+  if (z.phase === "ansage") status = z.vorhand === 0 ? `<div class="sp-status sp-ichdran">Du bist Vorhand – wähle unten auf dem grünen Tisch, was Trumpf ist</div>` : `<div class="sp-status">🤖 Der Computer überlegt, was Trumpf wird …</div>`;
   else if (z.phase === "ende") { const e = bskErgebnis(z), ich = e.gewinner === 0;
     status = `<div class="sp-banner ${ich ? "sieg" : "niederlage"}">${ich ? "🏆 Du hast gewonnen!" : "🤖 Der Computer hat gewonnen"}<br><small>${e.augen[0]} : ${e.augen[1]} Augen · ${e.ansager === 0 ? "du hast" : "der Computer hat"} angesagt – ${e.augen[e.ansager] >= 61 ? "61 geschafft" : "unter 61 geblieben"}</small></div>`; }
   else status = `<div class="sp-status${z.amZug === 0 ? " sp-ichdran" : ""}">${BSK.denkt || z.amZug === 1 ? "🤖 Der Computer ist dran …" : z.stich.length ? "Du bist dran – bedienen, wenn du kannst" : "Du spielst aus"}</div>`;
@@ -4881,7 +5081,7 @@ function bskPcZeigen() {
       ${spWahl("Stärke", BSK.staerke, [["leicht", "😊 Leicht"], ["mittel", "🙂 Mittel"], ["schwer", "😎 Schwer"]], "bskPcStaerke")}
       <div class="sp-stand"><span>Du <b>${s.ich}</b></span><span><b>${s.pc}</b> Computer</span></div>
       ${status}
-      ${bskBrettHtml(z, 0, { klick: "bskPcKarte", aus: BSK.denkt || z.phase !== "spiel" || z.amZug !== 0, gegnerName: "Computer", ansageSicht: z.phase === "ansage" })}
+      ${bskBrettHtml(z, 0, { klick: "bskPcKarte", aus: BSK.denkt || z.phase !== "spiel" || z.amZug !== 0, gegnerName: "Computer", ansageSicht: z.phase === "ansage", ansageKlick: z.phase === "ansage" && z.vorhand === 0 ? "bskPcAnsage" : "" })}
       <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("bsk")}</div>
       <div class="sp-knopfreihe"><button class="knopf haupt" onclick="bskPcNeu()"><span class="kt-ico">↺</span>Neues Spiel</button><button class="knopf" onclick="bskPcStandWeg()" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️</span>Stand löschen</button></div>
       <details class="sch-verlauf"><summary>📖 Regeln kurz</summary><p class="hinweis" style="margin:4px 0">Jeder hat 8 Häufchen auf dem Tisch: unten verdeckt, oben offen. Ausgeteilt wird in Viererpäckchen – je zweimal verdeckt, dann zweimal offen; wer gibt, wechselt. Vorhand sieht ihre offenen Karten und muss Trumpf ansagen – eine Farbe oder Grand (nur Buben), dann spielt sie aus. Gespielt wird immer eine offene Karte; die Karte darunter wird sofort aufgedeckt. Buben sind die höchsten Trümpfe (♣ ♠ ♥ ♦), dann Ass, Zehn, König, Dame, 9, 8, 7. Farbe bedienen, wenn möglich – sonst stechen oder abwerfen. Der Ansager braucht 61 Augen (Ass 11, Zehn 10, König 4, Dame 3, Bube 2).</p></details>
@@ -4950,14 +5150,14 @@ function bskSpielZeigen(g) {
       : `<div class="sp-banner niederlage">${g.aufgegeben ? "Du hast aufgegeben." : `${er} hat gewonnen.`}${zeile}</div>`;
   } else if (g.status === "angefragt") status = `<div class="sp-status">⏳ Warte, bis ${er} annimmt …</div>`;
   else if (g.status !== "laeuft") status = `<div class="sp-status">Diese Partie findet nicht statt.</div>`;
-  else if (z.phase === "ansage") status = g.ichDran ? `<div class="sp-status sp-ichdran">Du bist Vorhand – sag Trumpf an:</div><div class="bsk-ansage">${BSK_FARBEN.map((f) => `<button class="${f === "he" || f === "ka" ? "rot" : ""}" onclick="bskMgAnsage('${f}')">${BSK_SYM[f]}<small>${BSK_FNAME[f]}</small></button>`).join("")}<button onclick="bskMgAnsage('grand')">🃏<small>Grand</small></button></div>`
+  else if (z.phase === "ansage") status = g.ichDran ? `<div class="sp-status sp-ichdran">Du bist Vorhand – wähle unten auf dem grünen Tisch, was Trumpf ist</div>`
     : `<div class="sp-status">${er} ist Vorhand und sagt Trumpf an …</div>`;
   else status = `<div class="sp-status${g.ichDran ? " sp-ichdran" : ""}">${g.ichDran ? (z.stich.length ? "Du bist dran – bedienen, wenn du kannst" : "Du spielst aus") : `${er} ist dran …`}</div>`;
   $("spInhalt").innerHTML = `<div class="karte sp-karte">
       <div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="SP.offen=null;spZeigen();spLaden(true)">‹ Übersicht</button><b style="flex:1;text-align:right">🃏 Du gegen ${er}</b></div>
       ${status}
       ${spTerminHtml(g)}
-      ${bskBrettHtml(z, 0, { klick: "bskMgKarte", aus: !g.ichDran || z.phase !== "spiel", gegnerName: g.gegner.vorname, ansageSicht: z.phase === "ansage" })}
+      ${bskBrettHtml(z, 0, { klick: "bskMgKarte", aus: !g.ichDran || z.phase !== "spiel", gegnerName: g.gegner.vorname, ansageSicht: z.phase === "ansage", ansageKlick: z.phase === "ansage" && g.ichDran && g.status === "laeuft" ? "bskMgAnsage" : "" })}
       <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("bsk")}</div>
       <p class="hinweis" style="text-align:center;margin:6px 0">Karte antippen zum Spielen. Du musst nicht warten – ${er} bekommt Bescheid.</p>
       <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div>
