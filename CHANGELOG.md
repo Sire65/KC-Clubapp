@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.127.0 – 2026-10-09 – Adressbuch übersichtlicher
+🔧 Kleine Systemverbesserungen
+Admin-Notiz (Wunsch Hansi): Adressbuch – Suchfeld mit gutem Kontrast (wie die übrigen Suchfelder, auch dunkel), Adressen als Klappbereiche je Kategorie (zu, bis gesucht/gefiltert wird; offene bleiben offen).
+
 ## 2.126.0 – 2026-10-09 – Drei wandernde Schnecken
 🔧 Kleine Systemverbesserungen
 Fehler behoben (Meldung Hansi 09.10.): Adressbuch stürzte beim Anzeigen ab („reading 'replace'“) – ab der 2. Adresse fehlte die Kennung (adrSauber direkt an .map übergeben).

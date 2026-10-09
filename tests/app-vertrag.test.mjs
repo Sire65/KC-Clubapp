@@ -6943,3 +6943,9 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 }
 // 2.126.0 Fehler Hansi 09.10. (Adressbuch: „reading 'replace'“): adrSauber nie direkt an .map geben (Index würde nurFelder)
 assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\(a\)\)/.test(server), "Adressbuch: jede Adresse behält ihre id");
+
+// 4xx. 2.127.0: Adressbuch – Suchfeld mit Kontrast, Klappbereiche je Kategorie (Wunsch Hansi)
+{
+  assert.ok(/<input id="adbSuche" type="search" class="hz-suche"/.test(programm), "Suchfeld wie die anderen (Kontrast)");
+  assert.ok(/function adbGruppen\(liste, karte\)/.test(programm) && /<details class="ds-mehr adb-gruppe"\$\{offen\(k\) \? " open" : ""\}/.test(programm) && /const offen = \(k\) => !!ADB\.such\.trim\(\) \|\| !!ADB\.kat \|\| gr\.size === 1 \|\| ADB_AUF\.has\(k\);/.test(programm), "Klappbereiche, offen bei Suche/Filter");
+}

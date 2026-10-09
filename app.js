@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.126.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.127.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12553,7 +12553,7 @@ async function adbStart(wahl = false) {
   ADB.wahl = !!wahl;
   blattAuf("adbBlatt", `<h3 style="margin:0">📒 Adressbuch${ADB.wahl ? " – Empfänger wählen" : ""}</h3>
     <p class="hinweis" style="margin:4px 0 8px">Lieferanten, Sponsoren, Presse, Behörden … aus <b>KC Verwaltung</b>. Mitglieder stehen im Ordner „📇 Mitglieder“.</p>
-    <input id="adbSuche" type="search" placeholder="🔎 Suchen (Name, Firma, Ort …)" value="${esc(ADB.such)}" oninput="ADB.such=this.value;adbListe()" style="width:100%;margin-bottom:6px">
+    <input id="adbSuche" type="search" class="hz-suche" autocomplete="off" placeholder="🔎 Suchen (Name, Firma, Ort …)" value="${esc(ADB.such)}" oninput="ADB.such=this.value;adbListe()" style="width:100%;box-sizing:border-box;margin-bottom:6px">
     <div class="hl-chips" id="adbKat"></div><div id="adbInhalt"><p class="hinweis">Wird geladen …</p></div>
     <button class="knopf" onclick="$('adbBlatt').remove()">Schließen</button>`);
   await adbLaden();
@@ -12591,8 +12591,17 @@ function adbListe() {
   z.innerHTML = `${!d.vorhanden ? '<div class="karte hinweis">⚠️ In KC Verwaltung ist noch keine Adressliste gespeichert.</div>' : ""}
     <p class="hinweis" style="margin:4px 0">${liste.length} von ${d.adressen.length} Adressen${stand ? " · " + stand : ""}</p>
     ${d.darfMelden && !ADB.wahl ? '<button class="knopf klein" style="margin:0 0 6px" onclick="adbFormular(null)">➕ Neue Adresse melden</button>' : ""}
-    ${liste.map(karte).join("") || `<div class="karte hinweis">${d.adressen.length ? "Nichts gefunden." : "Noch keine externen Adressen in KC Verwaltung."}</div>`}${ml}`;
+    ${adbGruppen(liste, karte) || `<div class="karte hinweis">${d.adressen.length ? "Nichts gefunden." : "Noch keine externen Adressen in KC Verwaltung."}</div>`}${ml}`;
 }
+// 2.127.0 (Wunsch Hansi): Adressen als Klappbereiche je Kategorie – zu, bis gesucht oder eine Kategorie gewählt wird; offene Bereiche merken
+const ADB_AUF = new Set();
+function adbGruppen(liste, karte) {
+  const gr = new Map(); for (const a of liste) { const k = a.category || "Ohne Kategorie"; if (!gr.has(k)) gr.set(k, []); gr.get(k).push(a); }
+  const offen = (k) => !!ADB.such.trim() || !!ADB.kat || gr.size === 1 || ADB_AUF.has(k);
+  return [...gr.keys()].sort((a, b) => (a === "Ohne Kategorie") - (b === "Ohne Kategorie") || a.localeCompare(b, "de"))
+    .map((k) => `<details class="ds-mehr adb-gruppe"${offen(k) ? " open" : ""} ontoggle='adbAuf(${hlJs(k)}, this.open)'><summary>${esc(k)} <span class="hinweis">(${gr.get(k).length})</span></summary>${gr.get(k).map(karte).join("")}</details>`).join("");
+}
+function adbAuf(k, auf) { if (ADB.such.trim() || ADB.kat) return; auf ? ADB_AUF.add(k) : ADB_AUF.delete(k); }
 function adbFuerBrief(id) {
   const a = ADB.d?.adressen.find((x) => x.id === id); if (!a || typeof BRIEF === "undefined" || !BRIEF) return;
   BRIEF.empfaenger = adbAnschrift(a); briefMerken(); $("adbBlatt")?.remove(); buZeigen(); melde("✉️ Empfänger übernommen");
