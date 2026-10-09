@@ -7370,6 +7370,6 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/zt\.zl = Date\.now\(\) - t0Anfrage/.test(ini) && /zt\.ende = Date\.now\(\) - t0Anfrage/.test(ini), "Zählen und Ende gemessen");
   const kzF = server.slice(server.indexOf("async function kachelZahlen("), server.indexOf("async function kachelZahlen(") + 3000);
   assert.ok(/const \[offenTr, an\] = await Promise\.all\(\[/.test(kzF), "Treffen- und Terminanfrage-Kette laufen gleichzeitig");
-  assert.ok(/const startMessTeile = \(\) =>/.test(app) && /\.\.\.p, \.\.\.startMessTeile\(\) \}/.test(app), "App schickt Teilzeiten nur ins Fehlerprotokoll");
-  assert.ok(/\.slice\(0, 390\)/.test(app.slice(app.indexOf("const startMessTeile"), app.indexOf("const startMessTeile") + 600)), "Teilzeiten-Text bleibt unter der Protokoll-Grenze");
+  assert.ok(/const startMessTeile = \(\) =>/.test(html) && /\.\.\.p, \.\.\.startMessTeile\(\) \}/.test(html), "App schickt Teilzeiten nur ins Fehlerprotokoll");
+  assert.ok(/\.slice\(0, 390\)/.test(html.slice(html.indexOf("const startMessTeile"), html.indexOf("const startMessTeile") + 600)), "Teilzeiten-Text bleibt unter der Protokoll-Grenze");
 }

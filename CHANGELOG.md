@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.158.0 – 2026-10-09 – Korrektur: Startmessung-Test (KC-CLUB-START-PARALLEL-3)
+🔧 Kleine Systemverbesserungen
+
 ## 2.157.0 – 2026-10-09 – ⚡ Schnellerer Start: Server-Teilzeiten messen, Kachel-Zahlen gleichzeitig (KC-CLUB-START-PARALLEL-3)
 🔧 Kleine Systemverbesserungen
 
