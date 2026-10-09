@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.147.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.148.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -3759,7 +3759,15 @@ function gruppenFarbe(name) {
   const [hell, dunkel] = GRUPPEN_FARBEN[i % GRUPPEN_FARBEN.length]; return `--pf:${hell};--pfd:${dunkel}`;
 }
 // KC-CLUB-ENTWURF-ANZEIGE (1.21.0, Wunsch Hansi): steht Text im Feld, der noch nicht gesendet ist → „✏️ Entwurf“
-function entwurfMarkeZeigen() { const t = $("text"), m = $("entwurfMarke"); if (t && m) m.classList.toggle("versteckt", !t.value.trim()); sprungHinweisZeigen(); }
+function entwurfMarkeZeigen() { const t = $("text"), m = $("entwurfMarke"); if (t && m) m.classList.toggle("versteckt", !t.value.trim()); $("textLeerenKnopf")?.classList.toggle("versteckt", !t?.value); sprungHinweisZeigen(); }
+// KC-CLUB-EINGABE-LEEREN (2.148.0, Wunsch Hansi): rotes ✕ im Schreibfeld – löscht nur den noch nicht gesendeten Text (und dessen Entwurf), nichts im Chat
+function textLeeren() {
+  const t = $("text"); if (!t) return;
+  clearTimeout(entwurfTimer); if (chatId) entwurfWeg(chatId);
+  t.value = ""; t.style.height = "auto"; entwurfMarkeZeigen();
+  try { naErwPruefen(); } catch {}
+  try { t.focus(); } catch {}
+}
 // 2.23.99: steht ein App-Sprung im Entwurf, sagen wir, dass daraus nach dem Senden ein Knopf wird (im Schreibfeld geht nur Text)
 function sprungHinweisZeigen() {
   const t = $("text"), h = $("sprungHinweis"); if (!t || !h) return;

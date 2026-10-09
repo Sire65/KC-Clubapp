@@ -7156,3 +7156,12 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   const m = fs.readFileSync(new URL("../supabase/migrations/20261009_kc_club_archiv_weihnachtsmarkt.sql", import.meta.url), "utf8");
   assert.ok(/where not exists/.test(m) && !/\b(delete|drop|truncate|update)\b/i.test(m.replace(/^--.*$/gm, "")), "Migration nur anlegen, wiederholbar, nichts löschen");
 }
+
+// 2.148.0 KC-CLUB-EINGABE-LEEREN (Wunsch Hansi): rotes ✕ im Schreibfeld löscht nur den ungesendeten Text
+{
+  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const f = p.slice(p.indexOf("function textLeeren()"), p.indexOf("// 2.23.99: steht ein App-Sprung"));
+  assert.ok(/id="textLeerenKnopf" onclick="textLeeren\(\)">✕<\/button>/.test(h) && /\.text-leeren \{[^}]*background: #d50000/.test(h), "rotes ✕ im Schreibfeld");
+  assert.ok(/\$\("textLeerenKnopf"\)\?\.classList\.toggle\("versteckt", !t\?\.value\)/.test(p), "nur sichtbar, wenn Text drinsteht");
+  assert.ok(/entwurfWeg\(chatId\)/.test(f) && /t\.value = ""/.test(f) && !/api\(|senden\(|anlagen/.test(f), "löscht Text + Entwurf, sendet nichts, Anlagen bleiben");
+}

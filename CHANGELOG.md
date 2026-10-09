@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.148.0 – 2026-10-09 – ✕ Text im Schreibfeld auf einmal löschen (KC-CLUB-EINGABE-LEEREN)
+🔧 Kleine Systemverbesserungen
+
 ## 2.147.0 – 2026-10-09 – 🎄 Büro-Ordner „Weihnachtsmarkt“ mit Jahren (2026, 2027 …) und Unterregistern (Checklisten, Verträge …) (KC-CLUB-ARCHIV-UNTERREGISTER)
 🔧 Kleine Systemverbesserungen
 

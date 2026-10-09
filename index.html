@@ -1463,6 +1463,11 @@
      (höher, größere Schrift) mit ➤ daneben, darunter die Knöpfe 📎 🎤 😊 🔔 – kleiner, links */
   .eingabe .innen { display: grid; grid-template-columns: auto auto auto auto auto auto 1fr auto; gap: 6px 8px; align-items: end; } /* 1.36.0: + 📋, 1.53.0: + ❗ */
   .eingabe .innen > #text { grid-row: 1; grid-column: 1 / 8; min-height: 56px; max-height: 40vh; font-size: 1.12rem; line-height: 1.35; padding: 14px 16px; border-radius: 20px; }
+  /* KC-CLUB-EINGABE-LEEREN (2.148.0): rotes ✕ oben rechts im Schreibfeld */
+  .eingabe .innen > #text { padding-right: 46px; }
+  .eingabe .innen > .text-leeren { grid-row: 1; grid-column: 7; justify-self: end; align-self: start; z-index: 2; margin: 8px 8px 0 0; width: 32px; height: 32px; padding: 0;
+    border: none; border-radius: 50%; background: #d50000; color: #fff; font-size: 1rem; font-weight: 900; line-height: 32px; text-align: center; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+  .eingabe .innen > .text-leeren.versteckt { display: none; }
   .eingabe .innen > #sendenKnopf { grid-row: 1; grid-column: 8; width: 52px; height: 52px; font-size: 1.3rem; }
   .eingabe .innen > .rund:not(#sendenKnopf) { grid-row: 2; width: 40px !important; height: 40px !important; font-size: 1.05rem !important; }
   .eingabe .innen > .bf-chat-knopf { background: var(--karte2) !important; }
@@ -3427,6 +3432,8 @@
     <!-- KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): Nachricht mit „Wichtigkeit hoch“ – wird beim Empfänger farbig umrandet -->
     <button class="rund wichtig-knopf" title="Wichtig – Wichtigkeit hoch" aria-label="Als wichtig senden" aria-pressed="false" id="wichtigKnopf" onclick="wichtigUmschalten()">❗</button>
     <textarea id="text" rows="2" spellcheck="true" lang="de" autocapitalize="sentences" autocorrect="on" placeholder="Nachricht schreiben …" onblur="emoStelleMerken('text')" onkeyup="emoStelleMerken('text')" onclick="emoStelleMerken('text')" oninput="emoStelleMerken('text');naErwPruefen();this.style.height='auto';this.style.height=this.scrollHeight+'px';tippenMelden();entwurfMerken();entwurfMarkeZeigen()"></textarea>
+    <!-- KC-CLUB-EINGABE-LEEREN (2.148.0, Wunsch Hansi): rotes ✕ rechts im Schreibfeld – Text auf einmal löschen (nur sichtbar, wenn Text drinsteht) -->
+    <button class="text-leeren versteckt" type="button" title="Text löschen" aria-label="Geschriebenen Text löschen" id="textLeerenKnopf" onclick="textLeeren()">✕</button>
     <button class="rund" title="Senden" id="sendenKnopf" onclick="senden()">➤</button>
     <!-- KC-CLUB-WA-SENDEN (1.21.3, Wunsch Hansi): Text an WhatsApp übergeben und WhatsApp öffnen -->
     <button class="rund wa-knopf" title="Mit WhatsApp senden" aria-label="Mit WhatsApp senden" id="waKnopf" onclick="waSenden()">WA</button>
@@ -3643,6 +3650,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.147.0" data-v="2.147.0"></script>
+<script src="app.js?v=2.148.0" data-v="2.148.0"></script>
 </body>
 </html>
