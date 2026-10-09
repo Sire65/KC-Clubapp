@@ -7015,3 +7015,11 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/const begruesst = geburtstagPruefen\(\) \|\| ansichtPruefen\(\)/.test(programm) && /kc_club_hb_\$\{ICH\.person_id\}_\$\{heuteIso\(\)\}/.test(programm) && /if \(einst\("ton", true\)\) setTimeout\(hbSpielen, 400\);/.test(programm), "Ständchen einmal je Tag, Ton-Einstellung beachtet");
   assert.ok(/const HB_MELODIE = \[\[392, \.75\]/.test(programm) && !/\.mp3|\.ogg/.test(programm.slice(programm.indexOf("const HB_MELODIE"), programm.indexOf("function geburtstagPruefen"))), "Melodie selbst erzeugt, keine Datei");
 }
+
+// 2.135.0 KC-CLUB-SS-SPEICHERN: Schnappschuss/Live-Bild beim Admin speichern (Teilen-Menü → Fotos, sonst Download)
+{
+  const sp = programm.slice(programm.indexOf("async function ssSpeichern()"), programm.indexOf("// ----- beim Mitglied -----"));
+  assert.ok(/const b = \$\("ssBild"\)\?\.src;/.test(sp) && /new File\(\[Uint8Array\.from\(bin/.test(sp) && /navigator\.share\(\{ files: \[datei\]/.test(sp), "aktuelles Bild wird als Datei geteilt/gesichert");
+  assert.ok(/e\?\.name === "AbortError"\) return;/.test(sp) && /a\.download = name;/.test(sp), "Abbrechen still, sonst Download als Rückfall");
+  assert.ok(/💾 Dieses Bild bei mir speichern/.test(programm) && /💾 Bei mir speichern/.test(programm) && /💾 Letztes Bild speichern/.test(programm), "Knopf bei Live, Einzelbild und nach dem Ende");
+}

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.134.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.135.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -21963,12 +21963,12 @@ function ssZeigen(art, bild) {
   if (art === "live" && $("ssBild") && $("ssBlatt")?.dataset.art === "live") { $("ssBild").src = bild; $("ssZeit").textContent = new Date().toLocaleTimeString("de-DE"); return; } // nur das Bild tauschen
   const html = art === "live" ? `<h3 style="margin:0">🔴 Live: ${n}</h3><p class="hinweis" style="margin:2px 0 8px">Neues Bild alle paar Sekunden · zuletzt <b id="ssZeit">${esc(new Date().toLocaleTimeString("de-DE"))}</b> · endet spätestens nach 10 Min.</p>
       <img id="ssBild" src="${bild}" alt="Bildschirm von ${n}" style="width:100%;border:3px solid #d32f2f;border-radius:12px">
-      <div class="knoepfe" style="margin-top:8px"><button class="knopf" onclick="ssSpeichern()">💾 Dieses Bild speichern</button><button class="knopf haupt" onclick="ssAbbrechen()">⏹ Beenden</button></div>`
+      <div class="knoepfe" style="margin-top:8px"><button class="knopf" onclick="ssSpeichern()">💾 Dieses Bild bei mir speichern</button><button class="knopf haupt" onclick="ssAbbrechen()">⏹ Beenden</button></div>`
     : art === "bild" ? `<h3 style="margin:0">📸 Bildschirm von ${n}</h3><p class="hinweis" style="margin:2px 0 8px">Aufgenommen ${esc(new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }))} – liegt nicht mehr auf dem Server.</p>
       <img id="ssBild" src="${bild}" alt="Bildschirm von ${n}" style="width:100%;border:1px solid var(--linie,#ccc);border-radius:12px">
-      <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" onclick="ssSpeichern()">💾 Speichern</button><button class="knopf" onclick="${knopfStart(false)}">🔄 Noch einmal</button><button class="knopf" onclick="${knopfStart(true)}">🔴 Live</button><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button></div>`
+      <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" onclick="ssSpeichern()">💾 Bei mir speichern</button><button class="knopf" onclick="${knopfStart(false)}">🔄 Noch einmal</button><button class="knopf" onclick="${knopfStart(true)}">🔴 Live</button><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button></div>`
     : art === "beendet" ? `<h3 style="margin:0">⏹ Mitschauen beendet</h3>${bild ? `<img id="ssBild" src="${bild}" alt="" style="width:100%;opacity:.6;border-radius:12px;margin:6px 0">` : ""}<p>Das Mitschauen ist zu Ende – auf dem Server liegt kein Bild mehr.</p>
-      <div class="knoepfe"><button class="knopf" onclick="${knopfStart(true)}">🔴 Neu fragen</button><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button></div>`
+      <div class="knoepfe">${bild ? `<button class="knopf" onclick="ssSpeichern()">💾 Letztes Bild speichern</button>` : ""}<button class="knopf" onclick="${knopfStart(true)}">🔴 Neu fragen</button><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button></div>`
     : art === "abgelehnt" ? `<h3 style="margin:0">🙅 ${n} möchte gerade nicht</h3><p>Das ist in Ordnung – am besten kurz persönlich nachfragen.</p><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button>`
     : art === "keine_antwort" ? `<h3 style="margin:0">⏳ Keine Antwort</h3><p>${n} hat in 3 Minuten nicht geantwortet – vielleicht ist die App gerade nicht offen.</p><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button>`
     : `<h3 style="margin:0">${SS.live ? "🔴" : "📸"} Warte auf ${n} …</h3><p>${n} wird gefragt, ob du ${SS.live ? "mitschauen" : "den Bildschirm sehen"} darfst. Das Fenster aktualisiert sich von selbst (höchstens 3 Minuten).</p><button class="knopf" onclick="ssAbbrechen()">Abbrechen</button>`;
@@ -21991,10 +21991,21 @@ async function ssHolen() {
     if (["abgelehnt", "keine_antwort", "vorbei", "abgeholt", "beendet"].includes(r.status) || Date.now() > SS.bis + 10000 && !SS.seit) { clearInterval(SS.uhr); SS.id = null; return ssZeigen(r.status === "abgelehnt" ? "abgelehnt" : "keine_antwort"); }
   } catch {} finally { SS.laeuft = false; }
 }
-function ssSpeichern() {
+// 2.135.0 KC-CLUB-SS-SPEICHERN (Wunsch Hansi „beim Live-Schauen und Bild-Machen bei mir speichern“): das gerade angezeigte Bild wird
+// sofort festgehalten (beim Live-Schauen kommt sonst gleich das nächste) und über das Teilen-Menü gespeichert – auf iPhone/iPad
+// „Bild sichern“ → Fotos; geht Teilen nicht, wird es als Datei heruntergeladen. Das Bild bleibt nur auf dem eigenen Gerät.
+async function ssSpeichern() {
   const b = $("ssBild")?.src; if (!b) return;
-  const a = document.createElement("a"); a.href = b; a.download = `Bildschirm_${(SS.name || "Mitglied").replace(/[^\wäöüÄÖÜß]+/g, "_")}_${heuteIso()}_${new Date().toTimeString().slice(0, 8).replace(/:/g, "")}.jpg`; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500);
-  melde("💾 Bild gespeichert");
+  const name = `Bildschirm_${(SS.name || "Mitglied").replace(/[^\wäöüÄÖÜß]+/g, "_")}_${heuteIso()}_${new Date().toTimeString().slice(0, 8).replace(/:/g, "")}.jpg`;
+  let datei = null;
+  try { const [kopf, roh] = b.split(","), typ = /^data:([^;,]+)/.exec(kopf)?.[1] || "image/jpeg", bin = atob(roh); // Bild kommt als data:-Adresse – ohne Netz in eine Datei wandeln
+    datei = new File([Uint8Array.from(bin, (z) => z.charCodeAt(0))], name, { type: typ }); } catch {}
+  if (datei) {
+    try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: name }); melde("💾 Bild gespeichert"); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  }
+  const a = document.createElement("a"); a.href = datei ? URL.createObjectURL(datei) : b; a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { a.remove(); if (datei) URL.revokeObjectURL(a.href); }, 30000);
+  melde("💾 Bild gespeichert (Ordner „Downloads“)");
 }
 // ----- beim Mitglied -----
 const MSCH = { id: null, uhr: null, bis: 0, laeuft: false, wer: "" };

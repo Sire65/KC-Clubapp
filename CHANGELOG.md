@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.135.0 – 2026-10-09 – Bildschirm-Schnappschuss/Live: Bild bei mir speichern (Fotos über Teilen-Menü)
+🔧 Kleine Systemverbesserungen
+
 ## 2.134.0 – 2026-10-09 – Geburtstags-Ständchen und Gratulieren an der Pinnwand
 🔧 Kleine Systemverbesserungen
 Admin-Notiz (KC-CLUB-GEBURTSTAG-PINNWAND / -STAENDCHEN, Wunsch Hansi): Wer an seinem (freigegebenen) Geburtstag die App öffnet, bekommt eine Glückwunsch-Karte mit „Happy Birthday“ (selbst erzeugte Melodie, einmal je Tag/Gerät, bei „Ton aus“ per Knopf). Gleichzeitig hängt die Clubleitung einen ❗ wichtigen Zettel „🎂 Heute hat unser Clubmitglied … Geburtstag“ für alle auf, mit „🎂 Ich möchte auch gratulieren“ (öffnet den Chat mit „Alles Gute zum Geburtstag …“). Einmal je Jahr, ohne Push/Mail; die Wartung nimmt ihn am nächsten Tag ab. Willkommens- und Geburtstags-Zettel teilen sich clubZettelAushaengen().
