@@ -4830,33 +4830,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   E.maeWuerfeln(y, 6); E.maeZiehen(y, 3); assert.ok(y.sitze[1].fig.includes(0) && y.dran === 1 && y.phase === "wuerfeln", "6: raus + nochmal");
   E.maeWuerfeln(y, 6); assert.deepEqual(E.maeMoeglich(y), [y.sitze[1].fig.indexOf(0)], "Startfeld räumen");
 }
-// 2.27.0 KC-CLUB-FDK → 2.32.0 KC-CLUB-FDK-EINFACH: Fang den Koch neu und einfach (Wunsch Hansi) – Regeln, Tempo, Bedienung
-{
-  assert.ok(/\["fdk", "🧑‍🍳", "Fang den Koch"/.test(html) && /SP\.art === "fdk" \? \(fdkPcZeigen\(\), fdkFortsetzen\(\)\)/.test(html), "Kachel + Ansicht");
-  assert.ok(/if \(FDKP\.kette\) return; FDKP\.kette = true;/.test(html) && /async function fdkAbbrechen\(\)/.test(html), "eine Computer-Kette, Abbrechen");
-  assert.ok(/onclick="fdkWuerfeln\(\)"[^>]*><span class="kt-ico">🎲<\/span>Würfeln<\/button><button class="knopf" onclick="fdkRegeln\(\)"><span class="kt-ico">📖<\/span>Regeln<\/button><button class="knopf" onclick="fdkAbbrechen\(\)">/.test(html), "unten genau drei Knöpfe: Würfeln, Regeln, Abbrechen");
-  assert.ok(/if \(!FDKP\.regelnGesehen\) return fdkRegeln\(fdkStart\);/.test(html) && /So geht Fang den Koch/.test(html), "Regeln mit 3 Bildern beim ersten Spiel");
-  assert.ok(!/fdkTipp|fdkNimm|fdkWeg\(/.test(html.slice(html.indexOf("// ---------- KC-CLUB-FDK"), html.indexOf("function fdkFortsetzen()"))), "nichts mehr auswählen oder weglegen – alles automatisch");
-  { const tb = html.slice(html.indexOf("function fdkTablett("), html.indexOf("function fdkPcZeigen()")); assert.ok(tb && !/onclick/.test(tb), "2.52.0: Tabletts nur zum Ansehen – nichts antippen"); }
-  const a = html.indexOf("const FDK_RUNDEN"), b = html.indexOf("// ----- FDK Regeln Ende -----", a);
-  const R = new Function(html.slice(a, b) + "\nreturn { fdkNeu, fdkZug, fdkSieger, FDK_FELD, FDK_GERICHTE };")();
-  assert.equal(R.FDK_FELD.length, 12); assert.equal(R.FDK_FELD.filter((f) => f === "pass").length, 2);
-  for (const [, g] of Object.entries(R.FDK_GERICHTE)) assert.equal(Object.keys(g[2]).length, 3, "jedes Gericht genau 3 Zutaten aus 3 Lagern");
-  // Vorbeikommen reicht: vom Start mit 6 → Kühlhaus, Gemüse, Trocken, Gewürze durchlaufen
-  { const F = R.fdkNeu(() => 0); F.sp[0].bon = { g: "spaghetti", hat: [] }; F.sp[1].pos = 11; R.fdkZug(F, 0, 5, () => 0);
-    assert.deepEqual(F.sp[0].bon.hat.sort(), ["gemuese", "kuehl", "trocken"], "Zutaten im Vorbeigehen"); R.fdkZug(F, 1, 1, () => 0.9);
-    const r = R.fdkZug(F, 0, 1, () => 0); assert.ok(r.ev.some((e) => e.art === "fertig") && F.sp[0].sterne === 1 && F.sp[0].bon.g !== "spaghetti", "am Pass vorbei: fertig, ⭐, neuer Bon"); }
-  // Fangen: genau auf dem anderen landen nimmt eine Zutat weg
-  { const F = R.fdkNeu(() => 0); F.sp[1].bon = { g: "gulasch", hat: ["kuehl"] }; F.sp[1].pos = 3; F.sp[0].bon = { g: "spaghetti", hat: [] };
-    const r = R.fdkZug(F, 0, 3, () => 0.5); assert.ok(r.ev.some((e) => e.art === "fang") && !F.sp[1].bon.hat.includes("kuehl"), "gefangen: Zutat weg"); }
-  // Ganze Partien: Ende nach 15 Runden, Tempo und Spannung
-  let st = 0, n = 0, remis = 0;
-  for (let p = 0; p < 300; p++) { const F = R.fdkNeu(); let k = 0;
-    while (F.phase !== "ende") { assert.ok(++k < 200, "Partie endet"); R.fdkZug(F, F.dran, 1 + Math.floor(Math.random() * 6)); }
-    assert.equal(F.runde, 16); st += F.sp[0].sterne + F.sp[1].sterne; n += 2; if (R.fdkSieger(F) < 0) remis++; }
-  assert.ok(st / n >= 3 && st / n <= 8, "Tempo: 3–8 ⭐ je Koch (" + (st / n).toFixed(2) + ")");
-  assert.ok(remis / 300 < 0.15, "selten unentschieden (" + remis + "/300)");
-}
+// 2.27.0 KC-CLUB-FDK → 2.32.0 KC-CLUB-FDK-EINFACH: ersetzt durch KC-CLUB-FDK-RALLYE (2.154.0, Test weiter unten)
 // 2.27.1 KC-CLUB-INKO-KNOPF: Brille auf der Startseite ausblenden (nur Admin, je Gerät)
 {
   assert.ok(/<input type="checkbox" id="setInkoKnopf" checked onchange="inkoKnopfSetzen\(this\.checked\)">/.test(html) && /body:not\(\.ist-admin\) #setInkoKnopfZeile/.test(html) && /body\.inko-knopf-aus #inkoKnopf \{ display: none; \}/.test(html), "Schalter nur für Admin, Brille ausblendbar");
@@ -5254,15 +5228,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function prKarte\(m\) \{\n  if \(!ICH\?\.admin \|\| m\.selbst/.test(html) && /\$\{prKarte\(m\)\}/.test(html), "Karte nur für den Admin auf der Mitglied-Seite");
   assert.ok(/api\("probe_ende", \{ person_id: pid, art: "beenden", nachrichten_entfernen: mit \}\)/.test(html) && /api\("probe_ende", \{ person_id: pid, art: "uebernehmen", begruessen \}\)/.test(html), "Übernehmen fragt nach Begrüßung, Beenden mit Häkchen");
 }
-// 2.52.0 KC-CLUB-FDK-TABLETT (Wunsch Hansi): Fang den Koch – Tabletts links (Du) und rechts (Kurt) mit den Zutaten, Standort des Kochs deutlich, Nehmen groß gezeigt
-{
-  const a = html.indexOf("// KC-CLUB-FDK-TABLETT (2.52.0"), f = html.slice(a, html.indexOf("function fdkPcZeigen()", a));
-  assert.ok(/<div class="fdk-tisch">\$\{fdkTablett\(F, 0\)\}<div class="fdk-brett"[^`]*\$\{fdkTablett\(F, 1\)\}<\/div>/.test(html), "links Du, rechts Kurt, Brett in der Mitte");
-  assert.ok(/S\.bon\.hat\.includes\(l\)/.test(f) && /fdk-neu/.test(f) && /\$\{S\.bon\.hat\.length\}\/3/.test(f), "Tablett zeigt gesammelte Zutaten, neue springt auf");
-  assert.ok(/ev\.push\(\{ art: "nimmt", l: f, z: fdkZutat\(S, f\), i \}\)/.test(html) && /e\.art === "nimmt" && e\.i === i \+ 1/.test(html) && /FDKP\.zeigt = \{ s, z: nimmt\.z \}/.test(html), "Nehmen genau auf dem Feld groß in der Mitte");
-  assert.ok(/fdk-hier\$\{koeche\.length > 1 \? "2" : koeche\[0\]\}/.test(html) && /\.fdk-feld\.fdk-hier0 \{ box-shadow: 0 0 0 3px #d63a3a/.test(html) && /\.fdk-feld\.fdk-hier1 \{ box-shadow: 0 0 0 3px #2f6fdf/.test(html), "Feld des Kochs in seiner Farbe umrandet");
-  assert.ok(/@media \(prefers-reduced-motion: reduce\) \{ \.fdk-neu, \.fdk-nimmt/.test(html), "Bewegung reduzieren beachtet");
-}
+// 2.52.0 KC-CLUB-FDK-TABLETT: ersetzt durch KC-CLUB-FDK-RALLYE (2.154.0) – Tabletts links/rechts bleiben, Test weiter unten
 // 2.52.1 KC-CLUB-ALT-ANDROID (Fall Leih-Tablet, Chrome 81): Euro-Format nie mit maximumFractionDigits unter der Währungs-Voreinstellung
 {
   for (const m of programm.matchAll(/style: "currency"[^}]*\}/g)) assert.ok(!/maximumFractionDigits: [^,}]*\? 0/.test(m[0]) || /minimumFractionDigits/.test(m[0]), "Währung: Mindeststellen mit angeben (alte Browser)");
@@ -7295,3 +7261,82 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   const s = programm.slice(programm.indexOf("async function senden() {"), programm.indexOf("async function uhMehrfachSenden("));
   assert.ok(/await inkoChatFrage\(chatId \? "c:" \+ chatId : "neu"\);/.test(s) && s.indexOf("inkoChatFrage") < s.indexOf('api("nachricht_senden"'), "vor dem Senden");
 }
+
+// 4xx. 2.154.0: 🧑‍🍳 Fang den Koch – Küchenrallye gegen Twinkey (KC-CLUB-FDK-RALLYE, Wunsch Hansi)
+{
+  const a = programm.indexOf("// ---------- KC-CLUB-FDK-RALLYE"), b = programm.indexOf("// ----- FDK Regeln Ende -----", a);
+  assert.ok(a > 0 && b > a, "Regelblock vorhanden");
+  const R = new Function(programm.slice(a, b) + "\nreturn { fdkNeu, fdkOptionen, fdkZiehen, fdkWurfBeginn, fdkWeiter, fdkKiWahl, fdkSieger, fdkHygiene, fdkAbgeben, fdkNutzen, fdkRichtWuerfe, fdkGerichtWeg, FDK_FELD, FDK_GERICHTE, FDK_KARTEN, FDK_PECH, FDK_N };")();
+  // Spielfeld: 24 Felder, alle Stationen genau einmal, 4 Durchreichen, Ereignisfelder
+  assert.equal(R.FDK_FELD.length, 24);
+  for (const st of ["start", "lager", "kuehl", "gemuese", "gewuerz", "herd", "fritteuse", "ofen", "buero"]) assert.equal(R.FDK_FELD.filter((f) => f === st).length, 1, "Station " + st);
+  assert.equal(R.FDK_FELD.filter((f) => f === "d").length, 4, "vier Durchreichen zum Pass");
+  assert.ok(R.FDK_FELD.filter((f) => f === "e").length >= 5, "Ereignisfelder");
+  // Gerichte: je Stufe gleich viele Zutaten und Arbeitszüge (fair)
+  const nachStufe = {};
+  for (const [id, G] of Object.entries(R.FDK_GERICHTE)) { const k = G[3].length + "/" + G[4].reduce((x, y) => x + y[2], 0); (nachStufe[G[2]] ||= new Set()).add(k);
+    assert.ok(G[3].every((z) => ["lager", "kuehl", "gemuese", "gewuerz"].includes(z[0])) && G[4].every((x) => ["herd", "fritteuse", "ofen"].includes(x[0])), "Stationen richtig: " + id); }
+  for (const [st, k] of Object.entries(nachStufe)) assert.equal(k.size, 1, "gleich viel Arbeit je Stufe: " + st + " " + [...k]);
+  assert.ok(R.FDK_GERICHTE.pfannkuchen[2] === "leicht" && R.FDK_GERICHTE.gulasch[2] === "mittel" && R.FDK_GERICHTE.roulade[2] === "schwer", "Beispiele aus dem Wunsch");
+  // Beide Köche: gleiche Stufe, ähnlich langer Weg (≤ 2 Felder)
+  for (let i = 0; i < 200; i++) { const st = ["leicht", "mittel", "schwer"][i % 3], F = R.fdkNeu({ stufe: st, anzahl: 3 });
+    for (let n = 0; n < 3; n++) { const [x, y] = [F.plan[0][n], F.plan[1][n]]; assert.ok(R.FDK_GERICHTE[x][2] === st && R.FDK_GERICHTE[y][2] === st && x !== y, "gleiche Stufe, verschiedene Gerichte");
+      assert.ok(Math.abs(R.fdkGerichtWeg(x) - R.fdkGerichtWeg(y)) <= 2, "ähnlich langer Weg"); } }
+  // Optionen: beide Richtungen + Anhalten an einer Station, die man braucht
+  { const F = R.fdkNeu({ stufe: "leicht", anzahl: 1, zufall: () => 0 }); F.sp[0].bon = { g: "pfannkuchen", hat: [false, false, false], schritt: [false], uhr: 0, pech: false };
+    const o = R.fdkOptionen(F, 0, 6), felder = o.map((x) => x.feld).sort((x, y) => x - y);
+    assert.ok(felder.includes(6) && felder.includes(18), "Endfeld in beide Richtungen");
+    assert.ok(o.some((x) => x.feld === 2 && x.halt) && o.some((x) => x.feld === 4 && x.halt), "unterwegs am Lager/Kühlhaus anhalten");
+    assert.ok(!o.some((x) => x.halt && R.FDK_FELD[x.feld] === "gemuese"), "nicht anhalten, wo es nichts zu holen gibt");
+    R.fdkZiehen(F, 0, o.find((x) => x.feld === 4)); assert.deepEqual(F.sp[0].bon.hat, [false, true, true], "Kühlhaus: Eier und Milch auf einmal");
+    // kochen erst, wenn alles da ist
+    F.sp[0].pos = 11; assert.equal(R.fdkNutzen(F.sp[0], 11), null, "Herd erst mit allen Zutaten");
+    F.sp[0].bon.hat = [true, true, true]; assert.equal(R.fdkNutzen(F.sp[0], 11), "kochen");
+    R.fdkZiehen(F, 0, { feld: 11, weg: [11] }); assert.deepEqual(F.sp[0].bon.schritt, [true], "Pfannkuchen gebacken");
+    const ev = R.fdkZiehen(F, 0, { feld: 9, weg: [9] }); const ab = ev.find((e) => e.art === "abgabe");
+    assert.ok(ab && ab.punkte >= 10 + 3 && F.sp[0].fertig, "fertig an der Durchreiche: Klingel, Punkte, Erster am Pass"); }
+  // Unvollständig abgeben: Abzug −3 je Zutat, −5 je Schritt
+  { const F = R.fdkNeu({ stufe: "leicht", anzahl: 1, zufall: () => 0 }); F.sp[0].bon = { g: "pfannkuchen", hat: [true, false, true], schritt: [false], uhr: 0, pech: false };
+    const ab = R.fdkAbgeben(F, 0); assert.equal(ab.punkte, 10 - 3 - 5, "Abzug für Vergessenes"); assert.equal(ab.teile.tempo, 0, "kein Tempo-Bonus für Unfertiges"); }
+  // Gas leer: Herd gesperrt bis zum Büro
+  { const F = R.fdkNeu({ stufe: "leicht", anzahl: 1, zufall: () => 0 }); const S = F.sp[0]; S.bon = { g: "pfannkuchen", hat: [true, true, true], schritt: [false], uhr: 0, pech: false }; S.gasLeer = true;
+    assert.equal(R.fdkNutzen(S, 11), null, "ohne Gas kein Herd"); assert.equal(R.fdkNutzen(S, 20), "bestellen", "Büro bestellt Gas");
+    S.pos = 20; R.fdkZiehen(F, 0, { feld: 20, weg: [] }); assert.ok(!S.gasLeer && R.fdkNutzen(S, 11) === "kochen", "nach dem Büro geht der Herd wieder"); }
+  // Zusammenstoß nur im Gang, nicht an Stationen
+  { const F = R.fdkNeu({ stufe: "leicht", anzahl: 1, zufall: () => 0 }); F.sp[1].bon.hat = F.sp[1].bon.hat.map(() => true);
+    F.sp[1].pos = 4; let ev = R.fdkZiehen(F, 0, { feld: 4, weg: [] }); assert.ok(!ev.some((e) => e.art === "stoss"), "an der Station kein Zusammenstoß");
+    F.sp[1].pos = 7; ev = R.fdkZiehen(F, 0, { feld: 7, weg: [] }); assert.ok(ev.some((e) => e.art === "stoss" && e.z) && F.sp[1].bon.hat.includes(false), "im Gang: Zutat fällt herunter"); }
+  // Schmoren dauert: 2 Züge, der zweite läuft beim nächsten Mal automatisch
+  { const F = R.fdkNeu({ stufe: "mittel", anzahl: 1, zufall: () => 0 }); const S = F.sp[0]; S.bon = { g: "gulasch", hat: [true, true, true, true], schritt: [false], uhr: 0, pech: false };
+    R.fdkZiehen(F, 0, { feld: 11, weg: [] }); assert.ok(S.wartet === 1 && !S.bon.schritt[0], "Gulasch schmort");
+    F.dran = 1; R.fdkWeiter(F); assert.ok(S.bon.schritt[0] && F.dran === 1, "nach einem Zug fertig geschmort, Twinkey ist dran"); }
+  // Karten: Pech mit Aufgabe, Glück hilft; Hygiene fragt
+  assert.ok(R.FDK_KARTEN.some(([k]) => k === "fallen") && R.FDK_KARTEN.some(([k]) => k === "gas") && R.FDK_KARTEN.some(([k]) => k === "braun") && R.FDK_KARTEN.some(([k]) => k === "hygiene"), "Azubi, Gas, Blumenkohl, Hygiene");
+  const pech = R.FDK_KARTEN.filter(([k]) => R.FDK_PECH.has(k)).reduce((x, [, n]) => x + n, 0), alle = R.FDK_KARTEN.reduce((x, [, n]) => x + n, 0);
+  assert.ok(pech / alle >= 0.3 && pech / alle <= 0.6, "Pech und Glück ausgewogen (" + pech + "/" + alle + ")");
+  // Ganze Partien Twinkey gegen Twinkey: enden, sind fair und kurzweilig
+  for (const st of ["leicht", "mittel", "schwer"]) {
+    let wuerfe = 0, n = 0, siegA = 0, siegB = 0, tempo = 0, abg = 0, sauber = 0;
+    for (let p = 0; p < 150; p++) { const F = R.fdkNeu({ stufe: st, anzahl: 2 }); F.dran = p % 2; let k = 0;
+      while (F.phase !== "ende") { assert.ok(++k < 500, "Partie endet"); const s = F.dran;
+        if (F.phase === "frage") { R.fdkHygiene(F, s, Math.random() < 0.7); R.fdkWeiter(F); continue; }
+        R.fdkWurfBeginn(F, s); const o = R.fdkKiWahl(F, s, R.fdkOptionen(F, s, 1 + Math.floor(Math.random() * 6))); R.fdkZiehen(F, s, o);
+        if (F.phase === "frage") continue; R.fdkWeiter(F); }
+      for (const S of F.sp) { assert.equal(S.ergebnisse.length, 2, "beide Gerichte abgegeben"); wuerfe += S.wuerfe; n++; for (const e of S.ergebnisse) { abg++; tempo += e.teile.tempo; if (e.teile.sauber) sauber++; } }
+      const sg = R.fdkSieger(F); if (sg === 0) siegA++; if (sg === 1) siegB++; }
+    assert.ok(wuerfe / n >= 10 && wuerfe / n <= 40, st + ": Länge " + (wuerfe / n).toFixed(1) + " Würfe je Koch");
+    assert.ok(Math.abs(siegA - siegB) <= 40, st + ": fair (" + siegA + ":" + siegB + ")");
+    assert.ok(tempo / abg >= 1 && tempo / abg <= 7, st + ": Tempo-Bonus erreichbar (" + (tempo / abg).toFixed(1) + ")");
+    assert.ok(sauber / abg >= 0.35, st + ": meist ohne Pech (" + (100 * sauber / abg).toFixed(0) + " %)");
+  }
+  // Ansicht: Tabletts links Du, rechts Twinkey; Felder antippen; Stoppuhr; Klingel; Hygienefrage aus Küchenterror; Fokus wie beim Schach
+  assert.ok(/<div class="fdk-tisch">\$\{fdkTablett\(F, 0\)\}\$\{fdkBrettHtml\(F\)\}\$\{fdkTablett\(F, 1\)\}<\/div>/.test(programm), "Tabletts links/rechts");
+  assert.ok(/onclick="fdkFeldKlick\(\$\{i\}\)"/.test(programm) && /fdk-halt-schild">Halt</.test(programm), "leuchtende Felder antippen, Halt-Schild");
+  assert.ok(/⏱️ \$\{uhr\} Min\.<small>Richtzeit \$\{richt\}<\/small>/.test(programm) && /function fdkKlingel\(\)/.test(programm), "Stoppuhr + Klingel");
+  assert.ok(/await ktFragenLaden\(\)/.test(programm.slice(programm.indexOf("async function fdkHygieneFrage"))) , "Hygienefrage aus Küchenterror");
+  assert.ok(/Jetzt schon abgeben und klingeln\? Es fehlt noch/.test(programm), "Rückfrage vor unvollständigem Abgeben");
+  assert.ok(/document\.body\.classList\.toggle\("sch-fokus", !!F && F\.phase !== "ende" && fdkSichtbar\(\)\)/.test(programm), "oben ausgeblendet während der Partie");
+  assert.ok(/F\.dran = FDKP\.runde % 2 \? 0 : 1;/.test(programm), "wer anfängt, wechselt");
+  assert.ok(/\["fdk", "🧑‍🍳", "Fang den Koch", "Küchenrallye/.test(programm) && /SP\.art === "fdk" \? \(fdkPcZeigen\(\), fdkFortsetzen\(\)\)/.test(programm), "Kachel + Ansicht");
+}
+assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = \{ stand: alt\.stand, regelnGesehen: false \}/.test(programm), "FDK-Rallye: alter Spielstand bleibt erhalten, neue Regeln werden einmal gezeigt");
