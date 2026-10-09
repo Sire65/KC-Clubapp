@@ -7124,3 +7124,17 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/AR\.ziel = oid; AR\.zielRegister = register;/.test(f) && /if \(zr\) \{ AR\.register = zr; arZeigen\(\); \}/.test(p), "Register wird nach dem Öffnen gewählt");
   assert.ok(/if \(!auto\) return arAnlage\(id, true\);/.test(f) && /if \(art === "protokoll"\) return protokollOeffnen\(id\);/.test(f), "Dokument öffnet wie im Archiv");
 }
+
+// 2.145.0 KC-CLUB-CHAT-FARBEN (Wunsch Hansi): Blasenfarben + Hintergrund mit Motiv, eine Wahl für alle Chats, nur für mich
+{
+  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8"), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
+  assert.ok(/chat_farben: \(w\) => \{ const id = \(x: unknown\) => \(typeof x === "string" && \/\^\[a-z0-9_\]\{1,24\}\$\/\.test\(x\) \? x : "standard"\);/.test(sv), "Server speichert nur Kennungen");
+  const f = p.slice(p.indexOf("const CF_EIGEN = ["), p.indexOf("function chatMenue() {"));
+  for (const id of ["wolken", "sonnenuntergang", "schneeberge", "meer", "wald", "sterne"]) assert.ok(f.includes(`{ id: "${id}",`), "Hintergrund " + id);
+  assert.ok(!/https?:\/\//.test(f.replace(/http:\/\/www\.w3\.org\/2000\/svg/g, "")), "keine fremden Bilder – alles selbst gezeichnet");
+  assert.ok(/const cfLesbar = /.test(f) && /--cfEigenText/.test(f), "Schriftfarbe automatisch lesbar");
+  assert.ok(/api\("einstellung_setzen", \{ schluessel: "chat_farben", wert: CF \}/.test(f) && /cfUebernehmen\(INIT\?\.einstellungen\?\.chat_farben\)/.test(p), "auf allen Geräten gleich");
+  assert.ok(/onclick="cfOeffnen\(\)">🎨 Chat-Farben &amp; Hintergrund<\/button>/.test(h) && /onclick="cfOeffnen\(\)">🎨 Wählen<\/button>/.test(h), "im Chat-Menü und unter Einstellungen → Darstellung");
+  assert.ok(/\.chat-hg \{ position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: \.5; \}/.test(h) && /:root\.dunkel \.chat-hg \{ filter: brightness\(\.38\)/.test(h), "Hintergrund blass, nachts abgedunkelt");
+  assert.ok(/\.cf-hgs \{ display: grid; grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); grid-auto-rows: 1fr;/.test(h), "Auswahl gleich groß");
+}

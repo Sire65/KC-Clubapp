@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.144.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.145.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -11526,7 +11526,7 @@ async function neuLadenRoh(vonHand) {
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   try {
     const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
-    INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); stKnopf(); /* KC-CLUB-STUDIO */ // KC-CLUB-KOPF-EINFACH
+    INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ document.body.classList.toggle("sos-frei", !!INIT?.sosFuerAlle); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
@@ -16066,6 +16066,73 @@ async function nachrichtLoeschen(id) {
   if (!(await frage("Diese Nachricht für alle löschen?"))) return;
   try { await api("nachricht_loeschen", { id }); await reisswolf(document.querySelector(`#chat [data-id="${CSS.escape(id)}"]`)); chatStand = ""; melde("🗑️ Gelöscht"); chatLaden(false); } catch (e) { meldeFehler(e); }
 }
+// ---------- KC-CLUB-CHAT-FARBEN (2.145.0, Wunsch Hansi): Farben der eigenen und der fremden Sprechblasen + Hintergrund mit Motiv ----------
+// Eine Wahl für alle Chats, nur für mich, auf allen Geräten (Einstellung „chat_farben“). Farben zum Antippen (keine freie Eingabe);
+// Schrift wählt die App selbst (schwarz/weiß nach Lesbarkeit). Fremde Blasen nur helle Töne, damit Namen in Gruppen lesbar bleiben.
+// Hintergründe: selbst gezeichnet (SVG im Programm, keine Fremd-Bilder, kostenlos), blass – „nicht zu dominant“; nachts abgedunkelt.
+const CF_EIGEN = [
+  { id: "standard", t: "Standard" }, { id: "weinrot", c: "#741521" }, { id: "rot", c: "#b3261e" }, { id: "orange", c: "#c0662b" }, { id: "gold", c: "#b8892f" },
+  { id: "gruen", c: "#2e7d4f" }, { id: "petrol", c: "#1f6f78" }, { id: "blau", c: "#2d5f8a" }, { id: "lila", c: "#6b4c8a" }, { id: "rosa", c: "#b04a6f" }, { id: "grau", c: "#55595e" }, { id: "hellgruen", c: "#cfe8cf" }, { id: "hellblau", c: "#cfe2f3" },
+];
+const CF_ANDERE = [ // c = Tag, cd = Nacht
+  { id: "standard", t: "Standard" }, { id: "weiss", c: "#ffffff", cd: "#2a2021" }, { id: "creme", c: "#f6efe2", cd: "#352c22" }, { id: "hellblau", c: "#e3eefa", cd: "#1f2c3a" },
+  { id: "hellgruen", c: "#e4f3e6", cd: "#1f3326" }, { id: "gelb", c: "#fdf3cf", cd: "#3a3218" }, { id: "rosa", c: "#fbe6ee", cd: "#3a2230" }, { id: "lila", c: "#efe7f7", cd: "#2e2538" }, { id: "grau", c: "#eceeef", cd: "#2c2f33" },
+];
+const cfSvg = (s) => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 700' preserveAspectRatio='xMidYMax slice'>${s}</svg>`)}")`;
+const CF_HG = [
+  { id: "standard", t: "Ohne", sym: "⬜", css: "" },
+  { id: "wolken", t: "Wolken", sym: "☁️", css: `${cfSvg("<g fill='#fff' opacity='.9'><ellipse cx='90' cy='120' rx='70' ry='24'/><ellipse cx='130' cy='105' rx='45' ry='26'/><ellipse cx='300' cy='260' rx='80' ry='26'/><ellipse cx='340' cy='245' rx='46' ry='26'/><ellipse cx='120' cy='430' rx='75' ry='24'/><ellipse cx='160' cy='415' rx='42' ry='24'/><ellipse cx='310' cy='580' rx='70' ry='22'/></g>")}, linear-gradient(#cfe4f6, #eef5fb)` },
+  { id: "sonnenuntergang", t: "Sonnenuntergang", sym: "🌅", css: `${cfSvg("<circle cx='200' cy='520' r='70' fill='#ffd27a' opacity='.85'/><rect y='560' width='400' height='140' fill='#c8796b' opacity='.35'/><g stroke='#fff' stroke-opacity='.5' stroke-width='3'><line x1='140' y1='600' x2='260' y2='600'/><line x1='160' y1='625' x2='240' y2='625'/></g>")}, linear-gradient(#f7d9c4, #f6b9a3 55%, #e9c4d6)` },
+  { id: "schneeberge", t: "Schneeberge", sym: "🏔️", css: `${cfSvg("<path d='M0 560 L90 420 L150 500 L230 360 L320 490 L400 410 L400 700 L0 700Z' fill='#9fb4c8' opacity='.7'/><path d='M230 360 L262 405 L245 400 L230 418 L214 402 L200 408Z M90 420 L112 455 L98 450 L88 462 L76 452Z M400 410 L370 452 L386 446 L400 458Z' fill='#fff'/><path d='M0 620 L120 540 L210 600 L300 530 L400 590 L400 700 L0 700Z' fill='#c9d7e3' opacity='.8'/>")}, linear-gradient(#e6eff7, #f7fafc)` },
+  { id: "meer", t: "Meer", sym: "🌊", css: `${cfSvg("<g fill='none' stroke='#7fb2cf' stroke-opacity='.55' stroke-width='4'><path d='M0 520 q50 -18 100 0 t100 0 t100 0 t100 0'/><path d='M0 570 q50 -18 100 0 t100 0 t100 0 t100 0'/><path d='M0 620 q50 -18 100 0 t100 0 t100 0 t100 0'/></g><rect y='600' width='400' height='100' fill='#a9d0e4' opacity='.35'/>")}, linear-gradient(#e7f3f9, #d3e8f2)` },
+  { id: "wald", t: "Wald", sym: "🌲", css: `${cfSvg("<g fill='#6f9a74' opacity='.55'><path d='M40 640 L70 560 L100 640Z M80 650 L120 540 L160 650Z M150 640 L180 570 L210 640Z M230 650 L270 530 L310 650Z M300 640 L330 565 L360 640Z M350 650 L385 560 L400 600 L400 650Z'/></g><rect y='640' width='400' height='60' fill='#9cbf98' opacity='.45'/>")}, linear-gradient(#eef5ea, #dfeedb)` },
+  { id: "huegel", t: "Hügel", sym: "🌄", css: `${cfSvg("<path d='M0 560 Q100 500 200 560 T400 540 L400 700 L0 700Z' fill='#bcd8a8' opacity='.7'/><path d='M0 610 Q120 560 240 610 T400 600 L400 700 L0 700Z' fill='#9cc28a' opacity='.6'/><circle cx='320' cy='150' r='36' fill='#ffe39a' opacity='.7'/>")}, linear-gradient(#eaf4fb, #f6faef)` },
+  { id: "blumen", t: "Blumenwiese", sym: "🌼", css: `${cfSvg("<rect y='600' width='400' height='100' fill='#bfdca9' opacity='.6'/><g opacity='.75'><circle cx='50' cy='620' r='7' fill='#ffd54f'/><circle cx='120' cy='640' r='6' fill='#f48fb1'/><circle cx='190' cy='615' r='7' fill='#fff'/><circle cx='260' cy='645' r='6' fill='#ce93d8'/><circle cx='330' cy='625' r='7' fill='#ffd54f'/><circle cx='380' cy='650' r='5' fill='#f48fb1'/></g>")}, linear-gradient(#f3f8ee, #e8f3df)` },
+  { id: "sterne", t: "Sternennacht", sym: "✨", css: `${cfSvg("<g fill='#fff'><circle cx='40' cy='60' r='1.6'/><circle cx='120' cy='140' r='1.2'/><circle cx='210' cy='70' r='1.8'/><circle cx='300' cy='120' r='1.3'/><circle cx='360' cy='40' r='1.5'/><circle cx='80' cy='260' r='1.3'/><circle cx='250' cy='230' r='1.6'/><circle cx='350' cy='300' r='1.2'/><circle cx='150' cy='380' r='1.5'/><circle cx='60' cy='480' r='1.2'/><circle cx='320' cy='470' r='1.6'/></g><path d='M330 110 a26 26 0 1 0 22 40 a20 20 0 1 1 -22 -40Z' fill='#fff3c4' opacity='.85'/>")}, linear-gradient(#26314f, #3c4a6e)`, dunkel: true },
+  { id: "kueche", t: "Kochmützen", sym: "🧑‍🍳", css: `${cfSvg("<g fill='#741521' opacity='.07'>" + [[60, 90], [240, 60], [150, 250], [330, 230], [60, 420], [250, 430], [150, 600], [340, 600]].map(([x, y]) => `<path transform='translate(${x} ${y})' d='M-18 8 a12 12 0 0 1 4 -20 a14 14 0 0 1 28 0 a12 12 0 0 1 4 20Z M-14 10 h28 v10 h-28Z'/>`).join("") + "</g>")}, linear-gradient(#f8f2e8, #f3ead9)` },
+];
+const CF_KEY = "kc_club_chat_farben";
+let CF = (() => { try { return JSON.parse(localStorage.getItem(CF_KEY) || "null") || {}; } catch { return {}; } })();
+const cfLesbar = (hex) => { const n = parseInt(String(hex).slice(1), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255; return (0.299 * r + 0.587 * g + 0.114 * b) > 160 ? "#1f1416" : "#ffffff"; };
+function cfAnwenden() {
+  const root = document.documentElement, e = CF_EIGEN.find((x) => x.id === CF.eigen && x.c), a = CF_ANDERE.find((x) => x.id === CF.andere && x.c), h = CF_HG.find((x) => x.id === CF.hintergrund && x.css);
+  root.classList.toggle("cf-eigen", !!e); root.classList.toggle("cf-andere", !!a); root.classList.toggle("cf-hg", !!h); root.classList.toggle("cf-hg-dunkel", !!h?.dunkel);
+  if (e) { root.style.setProperty("--cfEigen", e.c); root.style.setProperty("--cfEigenText", cfLesbar(e.c)); }
+  if (a) { root.style.setProperty("--cfAndere", a.c); root.style.setProperty("--cfAndereD", a.cd); }
+  let hg = $("chatHg"); if (!hg && $("v-chat")) { $("v-chat").insertAdjacentHTML("afterbegin", '<div id="chatHg" class="chat-hg" aria-hidden="true"></div>'); hg = $("chatHg"); }
+  if (hg) hg.style.background = h ? h.css : "";
+  if (h) { hg.style.backgroundSize = "cover"; hg.style.backgroundPosition = "center bottom"; }
+}
+async function cfSetzen(feld, id) {
+  CF = { ...CF, [feld]: id }; try { localStorage.setItem(CF_KEY, JSON.stringify(CF)); } catch {}
+  cfAnwenden(); cfBlattZeichnen();
+  clearTimeout(cfSetzen.t); cfSetzen.t = setTimeout(async () => {
+    try { await api("einstellung_setzen", { schluessel: "chat_farben", wert: CF }, { still: true }); INIT.einstellungen = { ...(INIT.einstellungen || {}), chat_farben: CF }; }
+    catch { melde("🎨 Nur auf diesem Handy gemerkt – Server gerade nicht erreichbar", true); }
+  }, 600);
+}
+function cfUebernehmen(w) { if (!w || typeof w !== "object") return; CF = { eigen: w.eigen, andere: w.andere, hintergrund: w.hintergrund }; try { localStorage.setItem(CF_KEY, JSON.stringify(CF)); } catch {} cfAnwenden(); }
+function cfStandard() { CF = { eigen: "standard", andere: "standard", hintergrund: "standard" }; cfSetzen("eigen", "standard"); }
+function cfOeffnen() {
+  fensterZu($("chatBlatt"));
+  const f = blattAuf("cfBlatt", `<div class="iv-kopf"><h3>🎨 Chat-Farben</h3><button type="button" class="rund" aria-label="Schließen" onclick="fensterZu($('cfBlatt'))">✕</button></div><div id="cfInhalt"></div>`);
+  f.classList.add("cf-blatt"); cfBlattZeichnen();
+}
+function cfBlattZeichnen() {
+  const box = $("cfInhalt"); if (!box) return;
+  const e = CF_EIGEN.find((x) => x.id === CF.eigen && x.c), a = CF_ANDERE.find((x) => x.id === CF.andere && x.c), h = CF_HG.find((x) => x.id === CF.hintergrund && x.css);
+  const dunkel = document.documentElement.classList.contains("dunkel");
+  const farbe = (liste, feld) => `<div class="cf-farben">${liste.map((x) => `<button type="button" class="cf-farbe${(CF[feld] || "standard") === x.id ? " an" : ""}" aria-label="${esc(x.t || x.id)}" title="${esc(x.t || x.id)}" onclick="cfSetzen('${feld}','${x.id}')" style="${x.c ? `background:${dunkel && x.cd ? x.cd : x.c}` : ""}">${x.c ? "" : "↺"}</button>`).join("")}</div>`;
+  box.innerHTML = `<div class="cf-vorschau" style="${h ? esc(`background:${h.css};background-size:cover;background-position:center bottom`) : ""}">
+      <div class="blase cf-v" style="${a ? `background:${dunkel ? a.cd : a.c}` : ""}"><div class="von">Klaus</div>Hallo zusammen – wer bringt den Glühwein mit? 🍷</div>
+      <div class="blase eigen cf-v" style="${e ? `background:${e.c};color:${cfLesbar(e.c)}` : ""}">Mache ich, bis heute Abend! 👍</div></div>
+    <h4 class="cf-h">💬 Meine Sprechblasen</h4>${farbe(CF_EIGEN, "eigen")}
+    <h4 class="cf-h">👥 Sprechblasen der anderen</h4>${farbe(CF_ANDERE, "andere")}
+    <h4 class="cf-h">🖼️ Hintergrund</h4><div class="cf-hgs">${CF_HG.map((x) => `<button type="button" class="cf-hgw${(CF.hintergrund || "standard") === x.id ? " an" : ""}" onclick="cfSetzen('hintergrund','${x.id}')"><span class="cf-hgbild" style="${x.css ? esc(`background:${x.css};background-size:cover;background-position:center bottom`) : ""}">${x.css ? "" : x.sym}</span><span class="cf-hgt">${esc(x.t)}</span></button>`).join("")}</div>
+    <p class="hinweis" style="margin:8px 0">Gilt für alle deine Chats – nur bei dir. Die anderen sehen ihre eigenen Farben.</p>
+    <div class="iv-fuss"><button type="button" class="knopf" onclick="cfStandard()">↺ Wie vorher</button><button type="button" class="knopf haupt" onclick="fensterZu($('cfBlatt'))">✅ Fertig</button></div>`;
+}
+cfAnwenden(); // gemerkte Wahl gleich beim Start (ohne auf den Server zu warten)
 function chatMenue() {
   const g = chatId && CHAT?.id === chatId ? CHAT.gruppe : null;
   $("chatBlattTitel").textContent = g ? `${g.symbol} ${g.name}` : "Unterhaltung";

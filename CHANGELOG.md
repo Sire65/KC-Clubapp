@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.145.0 – 2026-10-09 – 🎨 Chat-Farben: eigene und fremde Sprechblasen + Hintergrund mit Motiv (Wolken, Sonnenuntergang, Schneeberge …) – für alle Chats (KC-CLUB-CHAT-FARBEN)
+🔧 Kleine Systemverbesserungen
+
 ## 2.144.0 – 2026-10-09 – 🗂️ Inhaltsverzeichnis auf dem Bildschirm: Ordner, Register oder Dokument antippen öffnet genau das – füllt sich selbst (KC-CLUB-INHALTSVERZEICHNIS-ANTIPPEN)
 🔧 Kleine Systemverbesserungen
 

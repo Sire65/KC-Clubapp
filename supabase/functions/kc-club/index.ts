@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.144.0";
+const SERVER_VERSION = "2.145.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -916,6 +916,8 @@ async function feedbackArchivieren(ich: Ich, grund: string, nurPerson: string | 
 const KA_ID = /^[a-z0-9_-]{1,30}$/;
 const kaIds = (v: unknown) => [...new Set((Array.isArray(v) ? v : []).filter((x) => typeof x === "string" && KA_ID.test(x)))].slice(0, 50) as string[];
 const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
+  // KC-CLUB-CHAT-FARBEN (2.145.0): nur kurze Kennungen aus der Auswahl der App – nie freie Farben/Bilder
+  chat_farben: (w) => { const id = (x: unknown) => (typeof x === "string" && /^[a-z0-9_]{1,24}$/.test(x) ? x : "standard"); return { eigen: id(w?.eigen), andere: id(w?.andere), hintergrund: id(w?.hintergrund) }; },
   kacheln: (w) => ({
     reihenfolge: Object.fromEntries(Object.entries(w?.reihenfolge && typeof w.reihenfolge === "object" ? w.reihenfolge : {})
       .filter(([r]) => KA_ID.test(r)).slice(0, 10).map(([r, l]) => [r, kaIds(l)])),

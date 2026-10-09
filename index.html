@@ -828,6 +828,24 @@
   .iv-d { display: grid; grid-template-columns: 84px 1fr auto; gap: 8px; align-items: baseline; width: calc(100% - 28px); margin-left: 28px; font-size: .92rem; }
   .iv-datum { color: var(--grau); font-variant-numeric: tabular-nums; font-size: .82rem; } .iv-titel { min-width: 0; overflow-wrap: break-word; }
   .iv-fuss { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); grid-auto-flow: column; gap: 8px; margin-top: 12px; } .iv-fuss .knopf { width: 100%; margin: 0; text-align: center; }
+  /* KC-CLUB-CHAT-FARBEN (2.145.0): eigene Farben der Sprechblasen + Hintergrund (blass, nachts abgedunkelt) */
+  :root.cf-eigen .blase.eigen { background: var(--cfEigen); color: var(--cfEigenText); }
+  :root.cf-andere .blase:not(.eigen) { background: var(--cfAndere); } :root.dunkel.cf-andere .blase:not(.eigen) { background: var(--cfAndereD); }
+  .chat-hg { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .5; }
+  :root:not(.cf-hg) .chat-hg { display: none; } :root.dunkel .chat-hg { filter: brightness(.38) saturate(.8); opacity: .9; } :root.cf-hg-dunkel:not(.dunkel) .chat-hg { opacity: .55; }
+  #v-chat > .chat { position: relative; z-index: 1; }
+  .cf-blatt .blatt-innen { max-width: 640px; margin: 0 auto; }
+  .cf-vorschau { display: flex; flex-direction: column; gap: 6px; padding: 14px 10px; border-radius: 14px; border: 1px solid var(--linie); background: var(--bg); min-height: 130px; }
+  .cf-vorschau .blase { max-width: 85%; cursor: default; }
+  .cf-h { margin: 14px 0 6px; }
+  .cf-farben { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 8px; }
+  .cf-farbe { aspect-ratio: 1; width: 100%; border-radius: 50%; border: 2px solid var(--linie); background: var(--karte2); cursor: pointer; font-weight: 800; color: var(--grau); }
+  .cf-farbe.an { outline: 3px solid var(--text); outline-offset: 2px; }
+  .cf-hgs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 8px; }
+  .cf-hgw { display: flex; flex-direction: column; gap: 4px; padding: 4px; border: 2px solid var(--linie); border-radius: 12px; background: var(--karte); color: inherit; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+  .cf-hgw.an { border-color: var(--rot); box-shadow: 0 0 0 2px var(--rot); }
+  .cf-hgbild { display: grid; place-items: center; height: 64px; border-radius: 8px; background: var(--bg); font-size: 1.4rem; opacity: .9; }
+  .cf-hgt { text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .zpult { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
   .zknopf { display: grid; justify-items: center; gap: 2px; padding: 8px 2px; border: 1px solid rgba(255,255,255,.3); border-radius: 12px; background: rgba(255,255,255,.16); color: #fff; font: inherit; font-size: .72rem; font-weight: 700; cursor: pointer; }
   .zknopf b { font-size: 1.35rem; font-weight: 400; }
@@ -3251,6 +3269,7 @@
       <div style="margin-top:8px"><b>🌗 Tag- und Nachtmodus</b></div>
       <div class="umschalter modus3" id="modusWahl"><button data-m="auto" onclick="modusWaehlen('auto')">🔄 Automatisch</button><button data-m="tag" onclick="modusWaehlen('tag')">☀️ Immer Tag</button><button data-m="nacht" onclick="modusWaehlen('nacht')">🌙 Immer Nacht</button></div>
       <p class="hinweis" id="modusInfo" style="margin-top:-4px"></p>
+      <div class="schalter"><div><b>💬 Chat-Farben &amp; Hintergrund</b><div class="hinweis">Farbe deiner und der fremden Sprechblasen, Hintergrund mit Motiv (Wolken, Sonnenuntergang, Schneeberge …) – gilt für alle Chats</div></div><button class="knopf klein" onclick="cfOeffnen()">🎨 Wählen</button></div> <!-- KC-CLUB-CHAT-FARBEN 2.145.0 -->
       <div><b>🎨 Farbdesign</b><div class="hinweis">Antippen – die App färbt sich sofort um</div></div>
       <div class="designwahl" id="designWahl"></div>
       <details class="ds-mehr" id="designMehrKlappe"><summary>🎨 Weitere Farbschemen <span class="hinweis" id="designMehrZahl"></span></summary><div class="designwahl" id="designWahlMehr"></div></details>
@@ -3581,6 +3600,7 @@
     <div class="na-pfeil-knoepfe"><button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');chatKopieren()">📋 Kopieren</button>
       <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');druckStarten('chat')">🖨️ Ausdrucken</button></div>
     <button class="knopf" onclick="chatInsArchiv()">🗄️ Chat in mein Archiv legen</button>
+    <button class="knopf" onclick="cfOeffnen()">🎨 Chat-Farben &amp; Hintergrund</button> <!-- KC-CLUB-CHAT-FARBEN 2.145.0 -->
     <button class="knopf" id="chatArchivKnopf" onclick="chatArchivieren(chatId, !!UH.liste.find((u) => u.id === chatId)?.archiviert)">📦 Chat archivieren</button> <!-- KC-CLUB-CHAT-ARCHIV 2.23.28 -->
     <button class="knopf" onclick="unterhaltungWeg(false)">🙈 Nur bei mir entfernen</button>
     <button class="knopf" id="chatKomplettKnopf" onclick="chatKomplettLoeschen(chatId)">🗑️ Bei mir komplett löschen</button>
@@ -3617,6 +3637,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.144.0" data-v="2.144.0"></script>
+<script src="app.js?v=2.145.0" data-v="2.145.0"></script>
 </body>
 </html>
