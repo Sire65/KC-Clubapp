@@ -6981,3 +6981,12 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(!/icon-192\.png/.test(programm.slice(programm.indexOf("const DRUCKARTEN"))), "kein altes Logo in Ausdrucken");
   assert.ok(/#druck \.cd-kopf \{/.test(seite) && /#druck \.cd-logo \{[^}]*background: var\(--cd-rot\)/.test(seite), "CD-Druckstile");
 }
+
+// 4xx. 2.131.0: To-do-Fristen im Kalender (KC-CLUB-TODO-IM-KALENDER) + WM-To-dos (KC-CLUB-WM-TODO, Weg B)
+{
+  assert.ok(/if \(Q === KAL\) for \(const t of TODO\.eintraege\) if \(t\.faellig === tag && !t\.erledigt && \(t\.vonMir \|\| \(t\.zustaendige \|\| \[\]\)\.some\(\(z\) => z\.ich\)\)\) e\.push\(\{ art: "todo", t \}\);/.test(programm), "nur eigene/zugeteilte offene To-dos, nicht im Druck-Kalender");
+  assert.ok(/if \(x\.art === "todo"\) return `<div class="keintrag" onclick="termineArt='todo';treffenLaden\(\)">/.test(programm) && /\.p-todo \{ background: #741521; \}/.test(seite), "Tagesansicht + Punkt");
+  const mig = lies("supabase/migrations/20261009_kc_club_todo_weihnachtsmarkt.sql");
+  assert.ok((mig.match(/\('🎄 WM: /g) || []).length === 17 && /select 'KC-P-002', v\.text, v\.kat, 'ich', v\.faellig::date/.test(mig) && /where not exists \(select 1 from public\.kc_club_todo t where t\.person_id = 'KC-P-002' and t\.text = v\.text/.test(mig), "17 To-dos, nur Hansi, wiederholbar");
+  assert.ok(!/zustaendig/.test(mig.split("insert into")[1]), "keine Zuständigen → keine Benachrichtigung");
+}

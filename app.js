@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.130.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.131.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -11724,6 +11724,8 @@ async function kalLaden() {
   const start = montag(erster), ende = tagPlus(start, 41); // 6 Wochen Raster
   $("kalMonat").textContent = MONATE[kalM]; $("kalJahr").textContent = kalJ;
   try { KAL = await api("kalender", { von: start, bis: ende }, { warten: true }); KAL.start = start; (KAL.privat || []).forEach((x) => PT.map.set(x.id, x)); kalZeichnen(); } catch (e) { meldeFehler(e); }
+  // 2.131.0 KC-CLUB-TODO-IM-KALENDER (Wunsch Hansi): meine offenen To-dos mit Frist erscheinen am Fälligkeitstag – Liste nachladen, falls noch nicht da
+  if (!TODO.eintraege.length) try { const r = await api("todo_liste"); TODO.eintraege = r.eintraege || []; TODO.kategorien = r.kategorien || TODO.kategorien; if (KAL && $("kalGitter")) kalZeichnen(); } catch {}
 }
 // Einträge je Tag (YYYY-MM-DD) zusammenstellen
 // Gesetzliche Feiertage NRW – für jedes Jahr berechnet (Ostern nach der Gauß'schen Osterformel), ohne Server
@@ -11752,6 +11754,7 @@ function kalEintraege(tag, Q = KAL, mitFeiertagen = einst("feiertage", true)) { 
   for (const a of Q.aktionen || []) if (tag >= a.von && tag <= a.bis) e.push({ art: "aktion", a });
   for (const d of Q.dienste) if (d.datum === tag) e.push({ art: "dienst", d });
   for (const f of Q.fristen) if (berlinIso(f.frist) === tag) e.push({ art: "frist", f });
+  if (Q === KAL) for (const t of TODO.eintraege) if (t.faellig === tag && !t.erledigt && (t.vonMir || (t.zustaendige || []).some((z) => z.ich))) e.push({ art: "todo", t }); // 2.131.0: nur eigene/zugeteilte, nur offene
   for (const x of Q.anfragen || []) if (berlinIso(x.beginn) === tag) e.push({ art: "anfrage", x }); // KC-CLUB-TERMINANFRAGE
   for (const x of Q.privat || []) { const v = berlinIso(x.beginn), b = x.ende ? berlinIso(x.ende) : v; if (tag >= v && tag <= b) e.push({ art: "privat", x }); } // KC-CLUB-PRIVATTERMIN
   for (const x of Q.schulungen || []) if (berlinIso(x.beginn) === tag) e.push({ art: x.status === "abgesagt" ? "schulung-ab" : x.status === "vorbehalt" ? "schulung-vb" : "schulung", x }); // KC-CLUB-SCHULUNGSTERMINE (2.23.59); 2.30.1: abgesagte grau; 2.120.0: Vorbehalt gestrichelt
@@ -11760,7 +11763,7 @@ function kalEintraege(tag, Q = KAL, mitFeiertagen = einst("feiertage", true)) { 
   return e;
 }
 function kalZeichnen() {
-  const heute = heuteIso(), rang = ["treffen", "schulung", "anfrage", "privat", "schulung-vb", "aktion", "veranst", "dienst", "feiertag", "frist", "geb", "schulung-ab"];
+  const heute = heuteIso(), rang = ["treffen", "schulung", "anfrage", "privat", "schulung-vb", "aktion", "veranst", "dienst", "feiertag", "frist", "todo", "geb", "schulung-ab"];
   const tage = [...Array(42)].map((_, i) => tagPlus(KAL.start, i));
   // letzte Woche weglassen, wenn sie ganz im Folgemonat liegt
   const sichtbar = +tage[35].slice(5, 7) - 1 !== kalM ? tage.slice(0, 35) : tage;
@@ -11791,6 +11794,7 @@ function kalTagZeigen() {
     if (x.art === "aktion") { const n = Math.round((new Date(kalTagWahl + "T12:00:00Z") - new Date(x.a.von + "T12:00:00Z")) / 86400000) + 1, ges = Math.round((new Date(x.a.bis + "T12:00:00Z") - new Date(x.a.von + "T12:00:00Z")) / 86400000) + 1;
       return `<div class="keintrag" onclick="aktionOeffnen('${esc(x.a.id)}')"><div class="farbe" style="background:var(--tuerkis)"></div><div style="flex:1"><b>${aktionSymbol(x.a)} ${esc(x.a.titel)}</b><small>${ges > 1 ? `Tag ${n} von ${ges}` : "Aktion"}${x.a.veranstalter ? " · " + esc(x.a.veranstalter) : ""}</small></div><b style="color:var(--rot)">›</b></div>`; }
     if (x.art === "dienst") return `<div class="keintrag" onclick="dpNurIch()"><div class="farbe" style="background:var(--blau)"></div><div style="flex:1"><b>🗓️ Mein Dienst ${esc(x.d.start)}–${esc(x.d.ende)} Uhr</b><small>${esc(x.d.bereich || "Dienstplan")}</small></div><b style="color:var(--rot)">›</b></div>`;
+    if (x.art === "todo") return `<div class="keintrag" onclick="termineArt='todo';treffenLaden()"><div class="farbe" style="background:#741521"></div><div style="flex:1"><b>✅ Frist: ${esc(x.t.text)}</b><small>To-do – antippen zum Abhaken</small></div></div>`;
     if (x.art === "frist") return `<div class="keintrag" onclick="zeige('vorschlaege')"><div class="farbe" style="background:#d19a22"></div><div style="flex:1"><b>🗳️ ${x.f.offen ? "Abstimmen bis" : "Abstimmung endete"} ${esc(fZeit.format(new Date(x.f.frist)))} Uhr</b><small>${esc(x.f.titel)}</small></div><b style="color:var(--rot)">›</b></div>`;
     const ich = x.g.person_id === ICH?.person_id;
     return `<div class="keintrag"${ich ? "" : ` onclick="gratulieren('${x.g.person_id}', true)"`}><div class="farbe" style="background:var(--lila)"></div><div style="flex:1"><b>🎂 ${ich ? "Dein Geburtstag – alles Gute!" : esc(x.g.name) + " hat Geburtstag"}</b>${ich ? "" : "<small>💬 antippen zum Gratulieren</small>"}</div>${ich ? "" : '<b style="color:var(--rot)">›</b>'}</div>`;

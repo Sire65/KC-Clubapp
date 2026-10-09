@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.131.0 – 2026-10-09 – To-do-Fristen im Kalender
+🔧 Kleine Systemverbesserungen
+Admin-Notiz (KC-CLUB-TODO-IM-KALENDER, Wunsch Hansi): eigene bzw. mir zugeteilte offene To-dos mit Frist erscheinen im Kalender am Fälligkeitstag (weinroter Punkt, „✅ Frist: …“, antippen → To-do-Liste). Daten (Weg B, KC-CLUB-WM-TODO): 17 To-dos Weihnachtsmarkt Kirchplatz 04.–13.12. aus dem Vertrag mit Werne Marketing für Hansi („nur ich“, ohne Benachrichtigung).
+
 ## 2.130.0 – 2026-10-09 – Corporate Design für alle Ausdrucke
 🔧 Kleine Systemverbesserungen
 Admin-Notiz (KC-CLUB-CD, Wunsch Hansi): Corporate Design festgelegt (docs/CORPORATE_DESIGN.md) – Kochmütze im weinroten Kreis, Schriftzug „Köcheclub Werne“, Weinrot + Beige. Zentraler Druckrahmen und Briefbogen nutzen nur noch cdKopf/cdFuss; Fußzeile Briefbogen „Köcheclub Werne · Clubsprecher · <aktueller Clubsprecher>“ (eigene Zusätze wie Bankverbindung darunter). Tabellenköpfe beige. Regel 19 in AGENTS.md + Vertragstest.
