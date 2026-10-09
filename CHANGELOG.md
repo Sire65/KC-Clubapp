@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.169.0 – 2026-10-09 – 🎬 Spezialeffekte: Kacheln als Jalousie, Kartenstapel oder Umdrehen beim Register-Wechsel + 🎉 Konfetti bei Sieg und Geburtstag (KC-CLUB-REGISTER-EFFEKTE, KC-CLUB-KONFETTI)
+🔧 Kleine Systemverbesserungen
+
 ## 2.168.0 – 2026-10-09 – 🗂️ Datei-Menü in Ordnern (rechte Maustaste/lang drücken: Ausschneiden, Kopieren, Einfügen, Senden, Speichern, Löschen) + ⏳ auch eigene alte Nachrichten selbstlöschend (KC-CLUB-ARCHIV-MENUE, KC-CLUB-SELBSTLOESCHEN-ALT)
 🔧 Kleine Systemverbesserungen
 

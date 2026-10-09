@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.168.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.169.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -615,7 +615,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
 }
 function designWahlZeigen() {
@@ -924,6 +924,7 @@ function geburtstagPruefen() {
     <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" onclick="hbSpielen()">🎵 Ständchen ${einst("ton", true) ? "nochmal" : "abspielen"}</button>
     <button class="knopf" onclick="$('hbBlatt').remove()">Danke! 😊</button></div>`);
   if (einst("ton", true)) setTimeout(hbSpielen, 400);
+  setTimeout(() => konfetti(), 300); // KC-CLUB-KONFETTI (2.169.0)
   return true;
 }
 async function pwBegruessen(w) {
@@ -9805,8 +9806,74 @@ addEventListener("resize", regRahmenMessen);
 function register(r, richtung) {
   const neu = r !== reg; reg = r; registerZeigen(); kachelnZeigen(); if (reg === "admin") adLaden(); /* KC-CLUB-ADMIN-REGISTER: Lage holen (höchstens alle 2 Min.) */
   if (neu) { const b = document.querySelector(`#register button[data-r="${r}"]`); if (b) { b.classList.add("reg-lauf"); setTimeout(() => b.classList.remove("reg-lauf"), 1600); } } // KC-CLUB-REGISTER-AMEISEN
+  if (neu && regEffekt(richtung)) return; // KC-CLUB-REGISTER-EFFEKTE (2.169.0): Jalousie / Kartenstapel / Umdrehen
   if (richtung) { const ra = $("raster"); ra.classList.remove("rein-links", "rein-rechts"); void ra.offsetWidth; ra.classList.add(richtung > 0 ? "rein-links" : "rein-rechts"); }
 }
+// ---------- KC-CLUB-REGISTER-EFFEKTE (2.169.0, Wunsch Hansi „schöne Spezialeffekte mit Wow“) ----------
+// Beim Wechsel Club / Meins / Technik erscheinen die Kacheln mit Effekt. Je Gerät wählbar (⚙️ → 🎨 Darstellung), Standard Jalousie
+// (passt zum Kopf). Kurz (≈ 0,5 s), nur transform/opacity (Grafikkarte, auch auf älteren Handys flüssig). Aus bei „✨ Animierte Knöpfe“
+// aus oder im Sparmodus. Läuft nur beim Antippen/Wischen – nie von selbst.
+const REG_EFFEKTE = [["jalousie", "🪟 Jalousie"], ["karten", "🃏 Kartenstapel"], ["drehen", "🔄 Umdrehen"], ["zufall", "🎲 Zufall"], ["aus", "🚫 Aus"]];
+const regEffektWahl = () => { try { const w = localStorage.getItem("kc_club_regEffekt"); return REG_EFFEKTE.some(([k]) => k === w) ? w : "jalousie"; } catch { return "jalousie"; } };
+function regEffekt(richtung, art) {
+  let w = art || regEffektWahl();
+  if (w === "aus" || !einst("animiert", true) || SPAR?.an || kaBearb || einfach()) return false;
+  if (w === "zufall") w = ["jalousie", "karten", "drehen"][Math.floor(Math.random() * 3)];
+  const ra = $("raster"); if (!ra?.animate) return false;
+  const k = [...ra.querySelectorAll(":scope > .kachel, :scope > .mini-kachel, :scope > *")].filter((x) => x.offsetParent !== null).slice(0, 40);
+  if (!k.length) return false;
+  ra.getAnimations?.({ subtree: true }).forEach((a) => a.cancel());
+  const oben = Math.min(...k.map((x) => x.offsetTop)), reihe = (x) => Math.round((x.offsetTop - oben) / Math.max(40, k[0].offsetHeight * 0.6));
+  const seite = richtung < 0 ? -1 : 1, P = "perspective(800px) ";
+  k.forEach((x, i) => {
+    const r = reihe(x), spalte = k.filter((y, j) => j < i && reihe(y) === r).length;
+    let f, o;
+    if (w === "jalousie") { // Lamellen: jede Kachel klappt von oben herunter, Reihe für Reihe
+      x.style.transformOrigin = "50% 0";
+      f = [{ transform: P + "rotateX(-92deg)", opacity: 0 }, { transform: P + "rotateX(14deg)", opacity: 1, offset: 0.62 }, { transform: P + "rotateX(-5deg)", offset: 0.82 }, { transform: P + "rotateX(0)", opacity: 1 }];
+      o = { duration: 520, delay: r * 85 + spalte * 30, easing: "cubic-bezier(.25,.7,.35,1)" };
+    } else if (w === "karten") { // Kartenstapel: fliegen in Wischrichtung herein und legen sich ab
+      f = [{ transform: `translate(${seite * 115}%, -18%) rotate(${seite * 16}deg) scale(.82)`, opacity: 0 }, { transform: `translate(${seite * -4}%, 2%) rotate(${seite * -2.5}deg) scale(1.03)`, opacity: 1, offset: 0.72 }, { transform: "none", opacity: 1 }];
+      o = { duration: 540, delay: i * 48, easing: "cubic-bezier(.2,.85,.3,1)" };
+    } else { // Umdrehen: eine schnelle Drehung um die eigene Achse, kommt wie eine Karte nach vorn
+      f = [{ transform: P + "rotateY(-300deg) scale(.6)", opacity: 0 }, { transform: P + "rotateY(18deg) scale(1.05)", opacity: 1, offset: 0.7 }, { transform: P + "rotateY(0) scale(1)", opacity: 1 }];
+      o = { duration: 640, delay: i * 42, easing: "cubic-bezier(.2,.7,.3,1)" };
+    }
+    const a = x.animate(f, { ...o, fill: "backwards" });
+    a.onfinish = a.oncancel = () => { x.style.transformOrigin = ""; };
+  });
+  return true;
+}
+function regEffektSetzen(w) { try { localStorage.setItem("kc_club_regEffekt", w); } catch {} regEffektZeigen(); melde(`🎬 ${REG_EFFEKTE.find(([k]) => k === w)?.[1] || w}`); }
+function regEffektZeigen() {
+  const z = $("regEffektWahl"); if (!z) return; const w = regEffektWahl();
+  z.innerHTML = REG_EFFEKTE.map(([k, t]) => `<button type="button" class="chip${k === w ? " an" : ""}" aria-pressed="${k === w}" onclick="regEffektSetzen('${k}')">${t}</button>`).join("");
+}
+function regEffektVorschau() { zeige("start"); setTimeout(() => { if (!regEffekt(1, regEffektWahl() === "aus" ? "jalousie" : undefined)) melde("Effekte sind aus – „✨ Animierte Knöpfe“ einschalten (und Sparmodus aus).", true); }, 350); }
+// ---------- KC-CLUB-KONFETTI (2.169.0): nur zu besonderen Anlässen – Spiel gewonnen, eigener Geburtstag ----------
+const KONFETTI_FARBEN = ["#7b1e2b", "#a8364a", "#efe3d1", "#d4a017", "#ffffff", "#c9a26b"]; // Weinrot + Beige + Gold (CD)
+function konfetti(x, y, menge = 90) {
+  if (!einst("animiert", true) || SPAR?.an || !document.body.animate) return;
+  const w = document.createElement("div"); w.className = "konfetti"; w.setAttribute("aria-hidden", "true"); document.body.appendChild(w);
+  const cx = x ?? innerWidth / 2, cy = y ?? innerHeight * 0.35;
+  for (let i = 0; i < menge; i++) {
+    const t = document.createElement("i"), stern = i % 9 === 0;
+    t.textContent = stern ? "✨" : ""; t.style.background = stern ? "none" : KONFETTI_FARBEN[i % KONFETTI_FARBEN.length];
+    t.style.width = stern ? "auto" : 6 + Math.random() * 6 + "px"; t.style.height = stern ? "auto" : 10 + Math.random() * 8 + "px"; t.style.left = cx + "px"; t.style.top = cy + "px";
+    w.appendChild(t);
+    const win = Math.random() * Math.PI * 2, kraft = 120 + Math.random() * 260, dx = Math.cos(win) * kraft, dy = Math.sin(win) * kraft - 140, fall = 380 + Math.random() * 320, dreh = (Math.random() - 0.5) * 1440;
+    t.animate([{ transform: "translate(-50%,-50%) rotate(0) scale(.4)", opacity: 1 }, { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${dreh / 2}deg) scale(1)`, opacity: 1, offset: 0.35 },
+      { transform: `translate(calc(-50% + ${dx * 1.25}px), calc(-50% + ${dy + fall}px)) rotate(${dreh}deg) scale(.9)`, opacity: 0 }], { duration: 1500 + Math.random() * 900, easing: "cubic-bezier(.15,.6,.4,1)", fill: "forwards" });
+  }
+  setTimeout(() => w.remove(), 2600);
+}
+// Spiel gewonnen: das Sieger-Banner erscheint (alle Spiele) → einmal Konfetti je Banner
+if (typeof MutationObserver !== "undefined" && typeof document !== "undefined") new MutationObserver((ms) => {
+  for (const m of ms) for (const n of m.addedNodes) {
+    const b = n.nodeType === 1 ? (n.matches?.(".sp-banner.sieg") ? n : n.querySelector?.(".sp-banner.sieg")) : null;
+    if (b && !b.dataset.konfetti && b.offsetParent !== null && Date.now() - (konfetti.zuletzt || 0) > 8000) { b.dataset.konfetti = "1"; konfetti.zuletzt = Date.now(); const r = b.getBoundingClientRect(); konfetti(r.left + r.width / 2, r.top + r.height / 2); }
+  }
+}).observe(document.body || document.documentElement, { childList: true, subtree: true });
 // KC-CLUB-ZOOM-OEFFNEN (1.85.0): Kacheln, Büro-Ordner/-Gegenstände und Archiv-Ordner zoomen kurz (180 ms), dann wird geöffnet.
 // Nicht beim Anordnen/Ziehen (die Klick-Sperren davor setzen preventDefault) und nicht, wenn ein Knopf IN der Kachel getippt wurde.
 const ZOOM_ZIELE = ".kachel, .mini-kachel, .bu-ordner, .bu-ding, .kacheln3 .mini, .ordner";

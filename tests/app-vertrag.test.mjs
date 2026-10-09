@@ -7463,3 +7463,17 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/if \(AR_LANG\.unterdruecken\) \{ AR_LANG\.unterdruecken = false; return; \}/.test(html) && /if \(dok && datei\) \{ arDateiVorladen\(dok\); return anlageDateiZeigen\(\); \}/.test(html), "langes Drücken öffnet nicht zusätzlich die Datei; Öffnen wie im Chat");
   assert.ok(/\$\{esc\(E\.kopf \|\| "✅ Abgelegt"\)\}/.test(html), "Versenden-Fenster mit eigenem Kopf");
 }
+// 2.169.0 KC-CLUB-REGISTER-EFFEKTE + KC-CLUB-KONFETTI (Wunsch Hansi „Spezialeffekte mit Wow“)
+{
+  const m = html.slice(html.indexOf("// ---------- KC-CLUB-REGISTER-EFFEKTE"), html.indexOf("// Spiel gewonnen: das Sieger-Banner"));
+  assert.ok(/if \(neu && regEffekt\(richtung\)\) return;/.test(html), "Effekt nur beim echten Register-Wechsel");
+  assert.ok(/if \(w === "aus" \|\| !einst\("animiert", true\) \|\| SPAR\?\.an \|\| kaBearb \|\| einfach\(\)\) return false;/.test(m), "aus bei ‚Animierte Knöpfe' aus, Sparmodus, Anordnen, einfacher Ansicht");
+  assert.ok(/w === "jalousie"[\s\S]{0,200}rotateX\(-92deg\)/.test(m) && /w === "karten"[\s\S]{0,200}translate\(\$\{seite \* 115\}%/.test(m) && /rotateY\(-300deg\)/.test(m), "drei Effekte: Jalousie, Kartenstapel (Wischrichtung), Umdrehen");
+  assert.ok(/fill: "backwards"/.test(m) && !/(width|height|top|left|margin)\s*:/.test(m.slice(m.indexOf("k.forEach"), m.indexOf("return true;"))), "nur transform/opacity – flüssig auch auf älteren Handys");
+  assert.ok(/\["zufall", "🎲 Zufall"\], \["aus", "🚫 Aus"\]/.test(m) && /return REG_EFFEKTE\.some\(\(\[k\]\) => k === w\) \? w : "jalousie";/.test(m), "wählbar, Standard Jalousie");
+  assert.ok(/id="regEffektWahl"/.test(html) && /onclick="regEffektVorschau\(\)"/.test(html) && /\$\("setAnimiert"\)\.checked = einst\("animiert", true\); regEffektZeigen\(\);/.test(html), "Auswahl + Vorschau in Darstellung");
+  const k = html.slice(html.indexOf("function konfetti("), html.indexOf("function konfetti(") + 2400);
+  assert.ok(/KONFETTI_FARBEN = \["#7b1e2b", "#a8364a", "#efe3d1", "#d4a017"/.test(html) && /if \(!einst\("animiert", true\) \|\| SPAR\?\.an/.test(k) && /setTimeout\(\(\) => w\.remove\(\), 2600\)/.test(k), "Konfetti in CD-Farben, räumt sich auf, respektiert Einstellungen");
+  assert.ok(/\.sp-banner\.sieg/.test(html) && /Date\.now\(\) - \(konfetti\.zuletzt \|\| 0\) > 8000/.test(html) && /setTimeout\(\(\) => konfetti\(\), 300\); \/\/ KC-CLUB-KONFETTI/.test(html), "Konfetti nur bei Sieg und eigenem Geburtstag, nicht dauernd");
+  assert.ok(/\.konfetti \{ position: fixed; inset: 0; pointer-events: none;/.test(html), "Konfetti blockiert nichts");
+}

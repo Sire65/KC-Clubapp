@@ -1074,6 +1074,10 @@
   .register.vier { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .register.vier button { padding: 11px 2px; font-size: .9rem; } .register.vier .anz { margin-left: 3px; padding: 0 4px; min-width: 16px; }
   .raster { touch-action: pan-y; }
   .rein-links { animation: reinLinks .22s ease-out; }
+  /* KC-CLUB-REGISTER-EFFEKTE / KC-CLUB-KONFETTI (2.169.0) */
+  .reg-effekt-wahl { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .konfetti { position: fixed; inset: 0; pointer-events: none; z-index: 100000; overflow: hidden; }
+  .konfetti i { position: absolute; display: block; border-radius: 2px; font-style: normal; font-size: 18px; line-height: 1; will-change: transform, opacity; }
   .rein-rechts { animation: reinRechts .22s ease-out; }
   @keyframes reinLinks { from { transform: translateX(40px); opacity: .3; } to { transform: none; opacity: 1; } }
   @keyframes reinRechts { from { transform: translateX(-40px); opacity: .3; } to { transform: none; opacity: 1; } }
@@ -3322,6 +3326,9 @@
       <details class="ds-mehr" id="wbKlappe" style="margin:2px 0 10px"><summary>⏳ Warte-Bild: <span id="wbAktName">Kochmütze</span></summary><div class="hinweis" style="margin-top:6px">Erscheint, wenn die App etwas länger braucht. Antippen wählt das Bild.</div><div id="wbWahl"></div></details> <!-- KC-CLUB-WARTEBILD 2.46.0 -->
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
       <div class="schalter"><div><b>✨ Animierte Knöpfe</b><div class="hinweis">Kacheln zoomen kurz beim Antippen, Reiter und „＋ Neu“ leuchten auf – aus: alles ruhig</div></div><input type="checkbox" id="setAnimiert" onchange="einstellung('animiert', this.checked)"></div> <!-- 2.24.1 (Wunsch Hansi) -->
+      <!-- KC-CLUB-REGISTER-EFFEKTE (2.169.0, Wunsch Hansi) -->
+      <div class="schalter" style="display:block"><div><b>🎬 Effekt beim Register-Wechsel</b><div class="hinweis">Wenn du zwischen Club, Meins und Technik wechselst, erscheinen die Kacheln mit Effekt. Gilt für dieses Gerät.</div></div>
+        <div class="reg-effekt-wahl" id="regEffektWahl"></div><button type="button" class="knopf klein" onclick="regEffektVorschau()">▶ Vorschau auf der Startseite</button></div>
       <div class="schalter"><div><b>🔄 Kacheln umdrehen</b><div class="hinweis">Doppelt auf eine Kachel tippen – hinten stehen Schnellaktionen (z. B. „Neue Nachricht“)</div></div><input type="checkbox" id="setKachelRueck" onchange="einstellung('kachelrueck', this.checked)"></div> <!-- KC-CLUB-KACHEL-RUECKSEITE 2.54.0 -->
       <div class="schalter"><div><b>🗑️ Reißwolf beim Löschen</b><div class="hinweis">Gelöschtes läuft sichtbar durch den Aktenvernichter</div></div><input type="checkbox" id="setReisswolf" onchange="einstellung('reisswolf', this.checked)"></div> <!-- KC-CLUB-REISSWOLF 2.54.0 -->
       <div style="margin-top:8px"><b>🌗 Tag- und Nachtmodus</b></div>
@@ -3701,6 +3708,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.168.0" data-v="2.168.0"></script>
+<script src="app.js?v=2.169.0" data-v="2.169.0"></script>
 </body>
 </html>
