@@ -353,6 +353,13 @@
      alle Knopfreihen sind Raster mit GLEICH breiten Spalten und gleicher Höhe; Text mittig, kürzt sich statt umzubrechen */
   .statusleiste #studioKnopf { width: 40px; height: 40px; font-size: 1.05rem; margin-right: 8px; }
   .st-aktionen .st-akt { flex-direction: column; gap: 2px; min-height: 64px; padding: 6px 4px; } .st-akt .st-sym { font-size: 1.35rem; line-height: 1; } .st-akt .st-t { font-size: .9rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  /* KC-CLUB-SPRACHE-BRIEF (2.137.0): Auswahl im Brief-Assistenten – gleich breite, gleich hohe Knöpfe */
+  .sbb-optionen { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 8px; margin: 10px 0 4px; }
+  .sbb-optionen .knopf { width: 100%; margin: 0; min-height: 52px; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; line-height: 1.2; font-size: .95rem; }
+  .sbb-sym { font-size: 1.25rem; flex: none; }
+  .sbb-fuss { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; margin-top: 6px; }
+  .sbb-fuss .knopf { width: 100%; margin: 0; min-height: 60px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .88rem; }
+  .sbb-opt > span:last-child { min-width: 0; width: 100%; text-align: center; }
   #studioKnopf.st-an { background: #d32f2f; animation: stPuls 1.6s ease-in-out infinite; }
   @keyframes stPuls { 50% { box-shadow: 0 0 0 6px rgba(211,47,47,.35); } }
   .st-blatt .blatt-innen { max-width: 640px; margin: 0 auto; }
@@ -3580,6 +3587,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.136.0" data-v="2.136.0"></script>
+<script src="app.js?v=2.137.0" data-v="2.137.0"></script>
 </body>
 </html>

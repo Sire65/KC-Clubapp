@@ -4022,7 +4022,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/id="suEingabe" data-diktat="einmal"/.test(html) && /id="hzSuche" data-diktat="einmal"/.test(html), "Suchfelder: nach dem ersten Satz fertig");
   const f = html.slice(html.indexOf("function diktatAnbauen("), html.indexOf("// ---------- KC-CLUB-SPRACHE (0.37.0)"));
   assert.ok(/if \(!DIKTAT_GEHT\) return;/.test(f) && /diktatStart\(feld\.id, null, \{ einmal: feld\.dataset\.diktat === "einmal" \}\)/.test(f) && /new MutationObserver/.test(f), "ein Baustein über den vorhandenen Diktier-Kern, nur wenn das Gerät kann");
-  assert.ok(/\$\{!ziel \|\| nachSenden \? '<button class="knopf haupt" data-d="senden">📤 Senden<\/button>' : ""\}/.test(html) && /if \(DT\.aktiv && DT\.einmal && DT\.vorher\.length\) return diktatEnde\("fertig"\);/.test(html), "kein Senden in Feldern, Suche endet von selbst");
+  assert.ok(/\$\{!ziel \|\| nachSenden \? `<button class="knopf haupt" data-d="senden">\$\{esc\(opt\.weiter \|\| "📤 Senden"\)\}<\/button>` : ""\}/.test(html) && /if \(DT\.aktiv && DT\.einmal && DT\.vorher\.length\) return diktatEnde\("fertig"\);/.test(html), "kein Senden in Feldern, Suche endet von selbst");
   assert.ok(/#diktatBlatt\.blatt \{ z-index: 9000; \}/.test(html) && /\{ id: "diktat_feld", thema: "start"/.test(html), "über der Suche + Hilfe");
 }
 // 397. 2.23.48 → 2.23.49: „🧑‍🍳 Frag Twinkey“ (früher „Frag den Küchenchef“) – Fragen in eigenen Worten (KC-CLUB-TWINKEY)
@@ -7057,4 +7057,24 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/function vfVorhang\(\)/.test(programm) && /if \(SPG\.vorhang\) \{ if \(!SPG\.vorhangGesendet\) f = \{ vorhang: true \}; \}/.test(sg), "🙈 Vorhang");
   assert.ok(/const SPG_NIE_ID = new Set\(\["studioBlatt", "vfLeiste", "ssLiveLeiste", "spgSchirm"\]\)/.test(sg), "Studio selbst und Leisten nie im Bild");
   assert.ok(!/await fetch\(/.test(sg), "keine neuen Netzwege");
+}
+
+// 2.137.0 KC-CLUB-SPRACHE-BRIEF (Wunsch Hansi): „Neuen Brief diktieren“ → Büro + Briefbogen, dann Art · an wen · Anrede · Betreff · Text · Gruß
+{
+  const a = programm.indexOf("const sbNorm"), b = programm.indexOf("// 2.83.0 KC-CLUB-SPRACHE-LERNEN: gelernte Sätze");
+  const erk = new Function(programm.slice(a, b) + "\nreturn sbErkennen;")();
+  for (const s of ["Neuen Brief diktieren", "Brief schreiben", "Schreib einen Brief", "Diktiere einen neuen Brief", "Brief"]) assert.equal(erk(s)?.art, "brief", "erkannt: " + s);
+  assert.deepEqual(erk("Brief an Klaus"), { art: "brief", an: "klaus" }, "Brief an …");
+  assert.equal(erk("Schreib Klaus komm vorbei", [{ person_id: "P9", name: "Klaus Zander" }])?.art, "nachricht", "Nachricht bleibt Nachricht");
+  assert.ok(/if \(b\.art === "brief"\) return sbBrief\(b\);/.test(programm) && /\{ id: "brief_neu", sym: "✉️", t: "Neuer Brief"/.test(programm) && /"brief_neu"\]; \/\/ 2\.137\.0/.test(server), "Ausführen + lernbares Ziel (App und Server gleich)");
+  const f = programm.slice(programm.indexOf("// ---------- KC-CLUB-SPRACHE-BRIEF"), programm.indexOf("// ---------- KC-CLUB-SCHRITT-HILFE (2.63.0"));
+  assert.ok(/if \(!buSchreiben\(\)\)/.test(f) && /zeige\("buero"\)/.test(f) && /buBrief\(\);/.test(f), "nur Büro mit Schreibrecht; öffnet Büro + Briefbogen");
+  const reihe = ["Was für ein Brief?", "An wen geht der Brief?", "Welche Anrede?", "Wie lautet der Betreff?", "Soll ich den Text der Vorlage nehmen", "Welcher Gruß zum Schluss?"].map((x) => f.indexOf(x));
+  assert.ok(reihe.every((i, k) => i > 0 && (k === 0 || i > reihe[k - 1])), "Reihenfolge der Fragen: Art → an wen → Anrede → Betreff → Text → Gruß");
+  assert.ok(/if \(!ICH\?\.vorstand\) return \[\];/.test(f) && /adbAnschrift\(k\.a\)/.test(f) && /SBB\.adbWarten/.test(programm), "Adressbuch nur Clubleitung; Anschrift wird übernommen; Weiter nach Auswahl im Adressbuch");
+  assert.ok(/return \[`Liebe \$\{vn\},`, `Lieber \$\{vn\},`, `Hallo \$\{vn\},`\];/.test(f) && /\/frau\/i\.test\(a\.salutation/.test(f), "Anrede: beim Mitglied zur Wahl (nie geraten), bei Adressen aus der gespeicherten Anrede");
+  assert.ok(/diktatStart\("briefFeld_text", \(\) => sbbGruss\(\), \{ weiter: "➜ Weiter: Gruß", immerWeiter: true \}\)/.test(f) && /id="briefFeld_\$\{k\}"/.test(programm) && /if \(DT\.immerWeiter && DT\.nachSenden\) return DT\.nachSenden\(\);/.test(programm), "Text diktieren, danach geht es zum Gruß");
+  assert.ok(/geburtstag: \{ sym: "🎂", t: "Geburtstag"/.test(programm) && /const BRIEF_VORLAGE_WORTE = \{/.test(programm), "Vorlage Geburtstag + Erkennungswörter (Registry)");
+  assert.ok(!/druckStarten\("brief"\);?\s*\}?\s*$/.test(f.slice(0, f.indexOf("sbFrage(\"✅ Brief ist fertig\""))) && /if \(v\) druckStarten\("brief"\)/.test(f), "Vorschau nur auf Wunsch – nie selbst drucken oder versenden");
+  assert.ok(/\.sbb-optionen \{ display: grid; grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); grid-auto-rows: 1fr;/.test(seite), "Auswahl-Knöpfe gleich groß");
 }

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.136.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.137.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1771,6 +1771,9 @@ function sbErkennen(roh, mitglieder = [], ich = "") {
   if (/^(zur |zu der |auf die |die )?(start ?seite|haupt ?seite|startbildschirm|anfang)$|^(zurück )?(zum|zur) (start|anfang|start ?seite|haupt ?seite)$|^nach hause$|^ich weiß nicht weiter$/.test(t)) return { art: "start" };
   if (/^zurück$/.test(t)) return { art: "zurueck" };
   if (/^(hilfe|was kann ich sagen)$/.test(t)) return { art: "hilfe" };
+  // 2.137.0 KC-CLUB-SPRACHE-BRIEF: „Neuen Brief diktieren“, „Brief schreiben“, „Brief an Klaus“ (vor „schreib …“, sonst wäre es eine Nachricht)
+  if (/^(einen? )?(neue[nr]? )?brief( (diktieren|schreiben|anlegen|aufsetzen|machen))?$|^(diktier|schreib)(e|en)? (mal )?(einen? )?(neue[nr]? )?brief$|^(neue[rn]? )?briefbogen$/.test(t)) return { art: "brief" };
+  let bf = t.match(/^(?:(?:diktier|schreib)(?:e|en)? )?(?:einen? )?(?:neue[nr]? )?brief (?:an|für) (.+)$/); if (bf) return { art: "brief", an: bf[1] };
   // 2.87.0 Stufe 3 (Wunsch Hansi): zusagen, vorlesen, anrufen, Ordner öffnen
   if (/^(ich )?(komme|bin dabei)( (gerne|auch))?( (zum|zur|zu) .+)?$|^zusagen$|^ich komme mit$/.test(t)) return { art: "antwort", a: "ja" };
   if (/^ich kann (leider )?nicht( kommen)?( .+)?$|^absagen$|^ich komme nicht( .+)?$/.test(t)) return { art: "antwort", a: "nein" };
@@ -1873,7 +1876,8 @@ function sbStumm(an) {
 const SB_BEFEHLE = [
   ["Startseite", "🏠 Zurück zur Startseite – geht immer, wenn du nicht weiterweißt"], ["Hauptseite", "🏠 wie „Startseite“"], ["Ich weiß nicht weiter", "🏠 bringt dich zur Startseite"], ["Zurück", "↩️ eine Seite zurück"],
   ["Nachricht an Klaus", "✍️ Chat mit Klaus öffnen – danach fragt die App, ob sie gleich mitschreiben soll"], ["Nachricht an Klaus: Bin gleich da", "✍️ Chat öffnen, Text steht schon drin"],
-  ["Nachricht an alle: Treffen fällt aus", "📢 Nachricht an alle Mitglieder vorbereiten"], ["Neue Nachricht", "✍️ Die App fragt: An wen?"], ["Nachrichten", "💬 Alle Unterhaltungen ansehen"],
+  ["Nachricht an alle: Treffen fällt aus", "📢 Nachricht an alle Mitglieder vorbereiten"],
+  ["Neuen Brief diktieren", "✉️ Öffnet Büro + Briefbogen und fragt: Art, an wen, Anrede, Betreff, Text, Gruß (Büro)"], ["Brief an Klaus", "✉️ wie oben, Empfänger steht schon fest"], ["Neue Nachricht", "✍️ Die App fragt: An wen?"], ["Nachrichten", "💬 Alle Unterhaltungen ansehen"],
   ["Zettel an die Pinnwand: Schürzen abgeben", "📝 Neuer Pinnwand-Zettel mit Text"], ["Neuer Zettel", "📝 Neuer Pinnwand-Zettel – die App bietet Diktieren an"],
   ["Termine", "📅 Termine ansehen"], ["Neuer Termin", "➕ Neuen Termin anlegen"], ["Nächster Termin", "⏭️ sagt den nächsten Termin an und öffnet ihn"],
   ["Ich komme zum Clubabend", "✅ Zusage für den nächsten Termin (fragt vorher)"], ["Ich kann nicht", "❌ Absage für den nächsten Termin"], ["Vielleicht", "❓ Vielleicht beim nächsten Termin"],
@@ -1914,6 +1918,7 @@ const SB_ZIELE = [
   { id: "naechster", sym: "⏭️", t: "Nächster Termin", los: () => sbAusfuehren({ art: "naechster" }) },
   { id: "nachricht_neu", sym: "✍️", t: "Neue Nachricht", los: () => sbAusfuehren({ art: "nachricht", personen: [], wort: "", text: "" }) },
   { id: "nachrichten", sym: "💬", t: "Nachrichten ansehen", los: () => zeige("nachrichten") },
+  { id: "brief_neu", sym: "✉️", t: "Neuer Brief", los: () => sbAusfuehren({ art: "brief" }) }, // 2.137.0 KC-CLUB-SPRACHE-BRIEF
   { id: "pinnwand_neu", sym: "📝", t: "Neuer Pinnwand-Zettel", los: () => sbAusfuehren({ art: "pinnwand", text: "" }) },
   { id: "pinnwand", sym: "📌", t: "Pinnwand ansehen", los: () => zeige("pinnwand") },
   { id: "mitglieder", sym: "👥", t: "Mitglieder", los: () => zeige("mitglieder") },
@@ -2089,7 +2094,8 @@ function sbAnPerson(pid) { const text = SB.text; sbStopp(); sbAusfuehren({ art: 
 const sbVorname = (pid) => String(MITGLIEDER?.find((m) => m.person_id === pid)?.name || "").split(" ")[0];
 async function sbAusfuehren(b) {
   if (["antwort", "lies_nachrichten", "lies_pinnwand", "anruf", "ordner"].includes(b.art)) return sbStufe3(b); // 2.87.0
-  if (b.art === "ziel") { const z = SB_ZIELE.find((x) => x.id === b.ziel); if (!z) return; if (["start", "naechster", "nachricht_neu", "pinnwand_neu"].includes(z.id)) return z.los(); if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist"); return z.los(); }
+  if (b.art === "brief") return sbBrief(b); // 2.137.0 KC-CLUB-SPRACHE-BRIEF
+  if (b.art === "ziel") { const z = SB_ZIELE.find((x) => x.id === b.ziel); if (!z) return; if (["start", "naechster", "nachricht_neu", "pinnwand_neu", "brief_neu"].includes(z.id)) return z.los(); if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist"); return z.los(); }
   if (b.art === "start") return sbStartseite();
   if (b.art === "hilfe") return sbNichtVerstanden("Das kannst du zur App sagen:", "");
   if (b.art === "nachricht" && !b.alle && b.personen?.length !== 1) return sbWerWahl(b); // erst klären, wer gemeint ist
@@ -2119,6 +2125,153 @@ async function sbAusfuehren(b) {
   }
   if (b.art === "suche") { sucheAuf(b.q); setTimeout(() => { try { suSucheKnopf(); } catch {} }, 100); }
 }
+// ---------- KC-CLUB-SPRACHE-BRIEF (2.137.0, Wunsch Hansi „Neuen Brief diktieren“): Büro + Briefbogen öffnen, dann Schritt für Schritt fragen ----------
+// Art (Vorlage) → An wen? (Mitglied oder Adressbuch) → Anrede → Betreff → Text (Vorlage oder diktieren) → Gruß → Vorschau.
+// Jeder Schritt: antippen ODER sagen; „Überspringen“ lässt das Feld, wie es ist. Alles landet sofort im Briefbogen (Entwurf bleibt gespeichert).
+// Nur Büro mit Schreibrecht (wie der Briefbogen selbst); Adressbuch nur für die Clubleitung (wie im Büro).
+const SBB = { an: false, adbWarten: null };
+const sbbFertig = () => { SBB.an = false; SBB.adbWarten = null; };
+// Auswahl-Fenster für einen Schritt: optionen [{ id, t, sym?, re? }]; frei = gesprochener Text wird übernommen.
+// Ergebnis: { id } | { text } | "weiter" (überspringen) | null (abgebrochen)
+function sbbFrage({ kopf, satz, optionen = [], frei = false, hinweis = "", extra = [] }) {
+  return new Promise((fertig) => {
+    SB.antwort = fertig;
+    const zu = (w) => { if (SB.antwort !== fertig) return; SB.antwort = null; try { SB.erk?.abort(); } catch {} SB.erk = null; try { speechSynthesis.cancel(); } catch {} fensterZu($("sbBlatt")); fertig(w); };
+    const f = blattAuf("sbBlatt", `<h3 style="margin:0">${esc(kopf)}</h3>${hinweis ? `<p class="hinweis" style="margin:6px 0 0">${hinweis}</p>` : ""}
+      ${optionen.length ? `<div class="sbb-optionen">${optionen.map((o, i) => `<button type="button" class="knopf sbb-opt" data-i="${i}">${o.sym ? `<span class="sbb-sym">${o.sym}</span>` : ""}<span>${esc(o.t)}</span></button>`).join("")}</div>` : ""}
+      ${SB_WELLE}<p class="sb-gehoert" id="sbGehoert">${frei ? "Sag es einfach – oder tippe" : "Sag es – oder tippe"}</p>
+      <div class="sbb-fuss">${extra.map((x, i) => { const [sym, ...w] = x.t.split(" "); return `<button type="button" class="knopf" data-x="${i}"><span class="sbb-sym">${sym}</span>${w.join(" ")}</button>`; }).join("")}<button type="button" class="knopf" data-a="nochmal"><span class="sbb-sym">🎙️</span>Nochmal</button><button type="button" class="knopf" data-a="weiter"><span class="sbb-sym">⏭️</span>Weiter</button><button type="button" class="knopf" data-a="zu"><span class="sbb-sym">✕</span>Abbrechen</button></div>`);
+    f.classList.add("sb-still"); f.onclick = null;
+    f.querySelectorAll("[data-i]").forEach((k) => (k.onclick = () => zu({ id: optionen[+k.dataset.i].id })));
+    f.querySelectorAll("[data-x]").forEach((k) => (k.onclick = () => { const x = extra[+k.dataset.x]; zu("extra"); x.los(); }));
+    f.querySelector('[data-a="weiter"]').onclick = () => zu("weiter");
+    f.querySelector('[data-a="zu"]').onclick = () => zu(null);
+    const hoeren = () => { if (SB.antwort !== fertig) return; f.classList.remove("sb-still");
+      sbZuhoeren((alt) => {
+        const t = alt.map(sbNorm);
+        if (t.some((x) => /^(überspringen|weiter|nächste[rs]?|egal)$/.test(x))) return zu("weiter");
+        if (t.some((x) => /^(abbrechen|stopp|aufhören|ende)$/.test(x))) return zu(null);
+        for (const x of t) { const o = optionen.find((o) => (o.re && o.re.test(x)) || x === sbNorm(o.t)); if (o) return zu({ id: o.id }); }
+        if (frei && alt[0]?.trim()) return zu({ text: alt[0].trim() });
+        if ($("sbGehoert")) $("sbGehoert").textContent = "„" + alt[0] + "“ – bitte antippen oder „Nochmal“";
+        f.classList.add("sb-still");
+      }, () => { if ($("sbGehoert")) $("sbGehoert").textContent = "Nichts gehört – bitte antippen oder „Nochmal“"; f.classList.add("sb-still"); }); };
+    f.querySelector('[data-a="nochmal"]').onclick = hoeren;
+    sbSagen(satz, hoeren);
+  });
+}
+// Adressbuch nur laden, nicht anzeigen (für „An wen?“)
+async function sbbAdressen() { if (!ICH?.vorstand) return []; return (await adbDatenHolen()) || []; }
+function sbbAdressTreffer(roh, adressen) {
+  const w = sbWorte(roh).filter((x) => x.length >= 3 && !/^(den|die|das|der|dem|herrn?|frau|firma|an|brief)$/.test(x)); if (!w.length) return [];
+  return adressen.map((a) => { const namen = sbWorte([a.company, a.firstName, a.lastName, a.contactPerson].filter(Boolean).join(" "));
+    return { a, n: w.filter((x) => namen.some((y) => y === x || (x.length > 4 && sbAbstand(x, y) <= 1))).length }; })
+    .filter((x) => x.n).sort((p, q) => q.n - p.n).slice(0, 4).map((x) => x.a);
+}
+// Anrede-Vorschläge: beim Mitglied beide Formen zum Wählen (nie raten); bei Adressen nur aus der gespeicherten Anrede
+function sbbAnreden(wer) {
+  if (wer?.m) { const vn = wer.m.vorname || String(wer.m.name).split(" ")[0]; return [`Liebe ${vn},`, `Lieber ${vn},`, `Hallo ${vn},`]; }
+  const a = wer?.a; if (!a) return [];
+  const nach = [a.title, a.lastName].filter(Boolean).join(" ");
+  if (/frau/i.test(a.salutation || "") && a.lastName) return [`Sehr geehrte Frau ${nach},`];
+  if (/herr/i.test(a.salutation || "") && a.lastName) return [`Sehr geehrter Herr ${nach},`];
+  return a.company ? ["Sehr geehrte Damen und Herren,"] : [];
+}
+async function sbBrief(b = {}) {
+  if (!buSchreiben()) { melde("✉️ Briefe schreibt das Büro der Clubleitung – dafür fehlt dir das Recht.", true); return sbSagen("Briefe schreibt das Büro der Clubleitung. Dafür fehlt dir das Recht."); }
+  if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist");
+  if (!MITGLIEDER) await mitgliederHolen().catch(() => {});
+  zeige("buero"); await new Promise((r) => setTimeout(r, 300));
+  let alt = null; try { alt = JSON.parse(localStorage.getItem("kc_club_brief_entwurf") || "null"); } catch {}
+  buBrief();
+  if (alt && (alt.text || "").trim() && alt.text !== BRIEF_VORLAGEN[alt.vorlage]?.text) {
+    const neu = await sbFrage("✉️ Angefangener Brief", "Es gibt noch einen angefangenen Brief. Soll ich einen neuen beginnen?", "🆕 Neuer Brief", "✏️ Den alten weiter");
+    if (neu === null) return;
+    if (neu) { const { absender, fuss, name, amt } = BRIEF; try { localStorage.removeItem("kc_club_brief_entwurf"); } catch {} BRIEF = null; buBrief(); Object.assign(BRIEF, { absender, fuss, name, amt }); }
+  }
+  SBB.an = true; buZeigen(); window.scrollTo(0, 0);
+  // 1) Art
+  const art = await sbbFrage({ kopf: "✉️ Was für ein Brief?", satz: "Was für ein Brief? Zum Beispiel Einladung, Dankeschön, Geburtstag, Spende oder Beileid.",
+    optionen: Object.entries(BRIEF_VORLAGEN).map(([id, v]) => ({ id, sym: v.sym, t: v.t, re: BRIEF_VORLAGE_WORTE[id] })) });
+  if (art === null) return sbbAbbruch();
+  if (art?.id) { const v = BRIEF_VORLAGEN[art.id]; Object.assign(BRIEF, { vorlage: art.id, betreff: v.betreff, text: v.text }); briefMerken(); buZeigen(); }
+  // 2) An wen?
+  const e = await sbbEmpfaenger(b.an || "");
+  if (!e) return sbbAbbruch(); if (e === "warten") return; // Adressbuch offen – es geht nach der Auswahl weiter (adbFuerBrief)
+  return sbbAnrede();
+}
+async function sbbEmpfaenger(gesagt) {
+  const adressen = await sbbAdressen(), mg = (MITGLIEDER || []).filter((m) => m.person_id !== ICH?.person_id);
+  let wort = gesagt;
+  for (let runde = 0; runde < 3; runde++) {
+    if (!wort) {
+      const w = await sbbFrage({ kopf: "👤 An wen geht der Brief?", satz: `An wen geht der Brief? Sag einen Namen – ein Mitglied${adressen.length ? " oder eine Adresse aus dem Adressbuch" : ""}.`, frei: true,
+        hinweis: adressen.length ? "Mitglied oder Name/Firma aus dem 📒 Adressbuch" : "Name eines Mitglieds",
+        extra: adressen.length ? [{ t: "📒 Adressbuch", los: () => { SBB.adbWarten = (a) => { SBB.adbWarten = null; SBB.wer = { a }; sbbAnrede(); }; adbStart(true); } }] : [] });
+      if (w === null) return false; if (w === "weiter") return true; if (w === "extra") return "warten"; wort = w.text || "";
+    }
+    const n = sbErkennen("Nachricht an " + wort, mg, ICH?.person_id), mids = n?.personen?.length ? n.personen : n?.vorschlag || [];
+    const kand = [...mids.map((id) => ({ m: mg.find((x) => x.person_id === id) })).filter((x) => x.m), ...sbbAdressTreffer(wort, adressen).map((a) => ({ a }))].slice(0, 6);
+    if (kand.length === 1) return sbbWerSetzen(kand[0]);
+    if (kand.length) {
+      const w = await sbbFrage({ kopf: `👤 Wen meinst du mit „${wort}“?`, satz: `Wen meinst du? ${kand.map((k) => k.m ? k.m.name : adbName(k.a) || k.a.company).join(" oder ")}?`,
+        optionen: kand.map((k, i) => ({ id: i, sym: k.m ? "👤" : "📒", t: k.m ? k.m.name : [k.a.company, adbName(k.a)].filter(Boolean).join(" – "), re: new RegExp("^" + sbNorm(k.m ? k.m.name.split(" ")[0] : (k.a.lastName || k.a.company || "")).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) })) });
+      if (w === null) return false; if (w === "weiter") return true;
+      if (w.id != null && kand[w.id]) return sbbWerSetzen(kand[w.id]);
+      wort = w.text || ""; continue;
+    }
+    melde(`🤔 „${wort}“ habe ich weder bei den Mitgliedern noch im Adressbuch gefunden`); wort = "";
+  }
+  return true;
+}
+function sbbWerSetzen(k) { SBB.wer = k; BRIEF.empfaenger = k.m ? k.m.name : adbAnschrift(k.a); briefMerken(); buZeigen(); melde(`✉️ Empfänger: ${k.m ? k.m.name : adbName(k.a) || k.a.company}`); return true; }
+async function sbbAnrede() {
+  if (!SBB.an) return;
+  const vorschlag = sbbAnreden(SBB.wer), liste = [...new Set([...vorschlag, ...BRIEF_ANREDEN.filter((x) => !vorschlag.length || !/…/.test(x))])];
+  const w = await sbbFrage({ kopf: "👋 Welche Anrede?", satz: `Welche Anrede? ${liste.slice(0, 3).map((x) => x.replace(/,$/, "")).join(", oder ")}. Oder sag sie selbst.`, frei: true,
+    optionen: liste.map((x, i) => ({ id: i, t: x, re: new RegExp("^" + sbNorm(x).replace(/[.*+?^${}()|[\]\\…]/g, "") + "$") })) });
+  if (w === null) return sbbAbbruch();
+  if (w?.id != null) BRIEF.anrede = liste[w.id]; else if (w?.text) BRIEF.anrede = w.text.replace(/[,.!]*$/, ",");
+  briefMerken(); buZeigen(); return sbbBetreff();
+}
+async function sbbBetreff() {
+  const b = (BRIEF.betreff || "").trim();
+  const w = await sbbFrage({ kopf: "📌 Betreff", satz: b ? `Betreff: ${b}. Passt das? Sag „passt“ oder sag einen neuen Betreff.` : "Wie lautet der Betreff?", frei: true,
+    optionen: b ? [{ id: "lassen", sym: "✅", t: `„${b}“ lassen`, re: /^(passt|ja|lassen|so lassen|gut|okay|ok|stimmt)( so)?$/ }] : [] });
+  if (w === null) return sbbAbbruch();
+  if (w?.text) { BRIEF.betreff = w.text.charAt(0).toUpperCase() + w.text.slice(1); briefMerken(); buZeigen(); }
+  return sbbText();
+}
+async function sbbText() {
+  const vorlage = BRIEF_VORLAGEN[BRIEF.vorlage]?.text, hat = (BRIEF.text || "").trim();
+  let w = "diktieren";
+  if (hat) {
+    const a = await sbbFrage({ kopf: "📝 Brieftext", satz: vorlage && hat === vorlage.trim() ? "Soll ich den Text der Vorlage nehmen, oder möchtest du selbst diktieren?" : "Es steht schon ein Text drin. Lassen, oder neu diktieren?",
+      hinweis: `<i>${esc(hat.slice(0, 160))}${hat.length > 160 ? " …" : ""}</i>`,
+      optionen: [{ id: "lassen", sym: "✅", t: vorlage && hat === vorlage.trim() ? "Vorlage nehmen" : "Text lassen", re: /vorlage|nehmen|lassen|passt|^ja$|^gut$/ },
+        { id: "diktieren", sym: "🎙️", t: "Selbst diktieren", re: /diktier|selbst|eigen|neu/ }, { id: "ergaenzen", sym: "➕", t: "Ergänzen", re: /ergänz|dazu|anhängen/ }] });
+    if (a === null) return sbbAbbruch();
+    w = a === "weiter" ? "lassen" : a.id || "lassen";
+  }
+  if (w === "lassen") return sbbGruss();
+  if (w === "diktieren") { BRIEF.text = ""; briefMerken(); buZeigen(); }
+  await new Promise((r) => setTimeout(r, 300));
+  $("briefFeld_text")?.scrollIntoView({ block: "center", behavior: "smooth" });
+  if (!DIKTAT_GEHT) { melde("📝 Bitte den Text eintippen – danach geht es mit dem Gruß weiter", true); $("briefFeld_text")?.focus(); return; }
+  diktatStart("briefFeld_text", () => sbbGruss(), { weiter: "➜ Weiter: Gruß", immerWeiter: true });
+}
+async function sbbGruss() {
+  if (!SBB.an) return;
+  const w = await sbbFrage({ kopf: "🤝 Welcher Gruß?", satz: `Welcher Gruß zum Schluss? ${BRIEF_GRUESSE.slice(0, 3).join(", oder ")}. Oder sag ihn selbst.`, frei: true,
+    optionen: BRIEF_GRUESSE.map((x, i) => ({ id: i, t: x, re: new RegExp("^" + sbNorm(x) + "$") })) });
+  if (w === null) return sbbAbbruch();
+  if (w?.id != null) BRIEF.gruss = BRIEF_GRUESSE[w.id]; else if (w?.text) BRIEF.gruss = w.text.replace(/[,.!]*$/, "");
+  briefMerken(); buZeigen(); sbbFertig();
+  const klammer = /\[[^\]]+\]/.test(`${BRIEF.betreff} ${BRIEF.text}`);
+  const v = await sbFrage("✅ Brief ist fertig", klammer ? "Im Text stehen noch Stellen in eckigen Klammern – bitte noch ersetzen. Vorschau zeigen?" : "Soll ich die Vorschau zum Drucken zeigen?", "👁️ Vorschau & Drucken", "✏️ Erst prüfen");
+  if (v) druckStarten("brief"); else { window.scrollTo(0, 0); melde("✏️ Der Brief steht im Büro – prüfen, dann „👁️ Vorschau & Drucken“"); }
+}
+function sbbAbbruch() { sbbFertig(); melde("✉️ Der Brief bleibt als Entwurf im Büro"); }
 // ---------- KC-CLUB-SCHRITT-HILFE (2.63.0, Wunsch Hansi; 2.64.0 verfeinert): Schritt-Unterstützung ----------
 // Eingeschaltet (⚙️ Einstellungen → „👣 Schritt-Unterstützung“, nur auf diesem Gerät) bekommt immer genau der nächste Schritt
 // einen pulsierenden roten Rahmen; unten steht mit zwei laufenden Schuhen „Schritt 2 von 6: …“ (bei offener Tastatur oben,
@@ -4403,11 +4556,11 @@ async function diktatStart(ziel, nachSenden, opt = {}) { // 2.22.0: auch für an
   if (DT.aktiv || DT.fragt) return;
   DT.fragt = true; let frei = false; try { frei = await mikroFreigabe(); } finally { DT.fragt = false; } // KC-CLUB-MIKRO-FREIGABE
   if (!frei || DT.aktiv) return;
-  DT.ziel = ziel || "text"; DT.nachSenden = nachSenden || null; DT.einmal = !!opt.einmal; // 2.23.47: einmal = Suchfeld, nach dem ersten Satz fertig
+  DT.ziel = ziel || "text"; DT.nachSenden = nachSenden || null; DT.einmal = !!opt.einmal; DT.weiterText = opt.weiter || ""; DT.immerWeiter = !!opt.immerWeiter; // 2.137.0: Brief-Assistent // 2.23.47: einmal = Suchfeld, nach dem ersten Satz fertig
   const feld = $(DT.ziel); DT.basis = feld.value; DT.fertig = ""; DT.aktiv = true; DT.seit = Date.now(); DT.vorher = []; DT.sitzung = []; DT.zwischen = "";
   const f = blattAuf("diktatBlatt", `<div class="diktat"><span class="bu-hpunkt">✍️</span><b>Ich schreibe mit …</b>
     <div class="diktat-text" id="diktatText"><span class="hinweis">Sprich einfach los. Satzzeichen sagen: „Punkt“, „Komma“, „Fragezeichen“, „neue Zeile“.</span></div>
-    <div class="knoepfe" style="justify-content:center">${!ziel || nachSenden ? '<button class="knopf haupt" data-d="senden">📤 Senden</button>' : ""}<button class="knopf${!ziel || nachSenden ? "" : " haupt"}" data-d="fertig">✅ Fertig${!ziel || nachSenden ? " – noch prüfen" : ""}</button><button class="knopf" data-d="weg">✕ Verwerfen</button></div>
+    <div class="knoepfe" style="justify-content:center">${!ziel || nachSenden ? `<button class="knopf haupt" data-d="senden">${esc(opt.weiter || "📤 Senden")}</button>` : ""}<button class="knopf${!ziel || nachSenden ? "" : " haupt"}" data-d="fertig">✅ Fertig${!ziel || nachSenden ? " – noch prüfen" : ""}</button><button class="knopf" data-d="weg">✕ Verwerfen</button></div>
     <p class="hinweis" style="font-size:.8rem;margin:6px 0 0">🔒 Das Handy hört nur zu, solange dieses Fenster offen ist.</p></div>`);
   f.onclick = null; // nicht aus Versehen durch Tippen daneben schließen
   f.querySelectorAll("[data-d]").forEach((b) => (b.onclick = () => diktatEnde(b.dataset.d)));
@@ -4444,6 +4597,7 @@ function diktatEnde(was) {
   if (was === "weg") { feld.value = DT.basis; feld.dispatchEvent(new Event("input", { bubbles: true })); return melde("✕ Diktat verworfen"); }
   feld.value = feld.value.trim(); feld.dispatchEvent(new Event("input", { bubbles: true }));
   if (was === "senden" && DT.nachSenden) { if (!feld.value) return melde("Es wurde nichts erkannt – bitte nochmal.", true); return DT.nachSenden(); } // 2.22.0: z. B. Notfall-Meldung
+  if (DT.immerWeiter && DT.nachSenden) return DT.nachSenden(); // 2.137.0: Brief-Assistent – auch „Fertig“ geht zum nächsten Schritt
   if (was === "senden") { if (!feld.value) return melde("Es wurde nichts erkannt – bitte nochmal.", true); return senden(); }
   feld.focus();
 }
@@ -12595,6 +12749,8 @@ async function adbStart(wahl = false) {
     <button class="knopf" onclick="$('adbBlatt').remove()">Schließen</button>`);
   await adbLaden();
 }
+// 2.137.0 KC-CLUB-SPRACHE-BRIEF: nur die Adressen holen (ohne Fenster) – für „An wen?“ im Brief-Assistenten; Fehler → keine Adressen
+async function adbDatenHolen() { if (!ADB.d) try { ADB.d = await api("buero_adressen", {}, { still: true }); } catch { return null; } return ADB.d?.adressen || []; }
 async function adbLaden() {
   try { ADB.d = await api("buero_adressen", {}, { warten: true }); }
   catch (e) { const z = $("adbInhalt"); if (z) z.innerHTML = `<div class="karte sc-fehler">⚠️ ${esc(e?.message || "Nicht erreichbar")} – das Adressbuch bleibt leer, bis es wieder geht.</div>`; return; }
@@ -12642,6 +12798,7 @@ function adbAuf(k, auf) { if (ADB.such.trim() || ADB.kat) return; auf ? ADB_AUF.
 function adbFuerBrief(id) {
   const a = ADB.d?.adressen.find((x) => x.id === id); if (!a || typeof BRIEF === "undefined" || !BRIEF) return;
   BRIEF.empfaenger = adbAnschrift(a); briefMerken(); $("adbBlatt")?.remove(); buZeigen(); melde("✉️ Empfänger übernommen");
+  if (SBB.adbWarten) SBB.adbWarten(a); // 2.137.0 KC-CLUB-SPRACHE-BRIEF: Sprach-Assistent fragt weiter (Anrede …)
 }
 async function adbKopieren(id) {
   const a = ADB.d?.adressen.find((x) => x.id === id); if (!a) return;
@@ -13320,8 +13477,11 @@ const BRIEF_VORLAGEN = {
   genesung: { sym: "💐", t: "Gute Besserung", betreff: "Gute Besserung!", text: "wir haben gehört, dass es dir gerade nicht gut geht, und wünschen dir von Herzen gute Besserung.\n\nWerde schnell wieder gesund – wir freuen uns, dich bald wieder bei uns zu sehen." },
   geburt: { sym: "👶", t: "Geburt", betreff: "Herzlichen Glückwunsch zur Geburt", text: "zur Geburt von [Name] gratulieren wir euch ganz herzlich.\n\nWir wünschen der ganzen Familie viel Glück, Gesundheit und eine wunderschöne Zeit." },
   hochzeit: { sym: "💍", t: "Hochzeit", betreff: "Herzlichen Glückwunsch zur Hochzeit", text: "zu eurer Hochzeit gratulieren wir euch im Namen aller Mitglieder des Köcheclubs Werne ganz herzlich.\n\nFür euren gemeinsamen Weg wünschen wir euch viel Liebe, Glück und immer etwas Gutes auf dem Tisch." },
+  geburtstag: { sym: "🎂", t: "Geburtstag", betreff: "Herzlichen Glückwunsch zum Geburtstag", text: "zu deinem Geburtstag gratulieren wir dir im Namen aller Mitglieder des Köcheclubs Werne ganz herzlich.\n\nWir wünschen dir Gesundheit, Glück und viele schöne Stunden – gern auch mit uns in der Küche." }, // 2.137.0 (Wunsch Hansi „Geburtstagsgrüße“)
   glueckwunsch: { sym: "🎉", t: "Glückwunsch", betreff: "Herzlichen Glückwunsch", text: "zu [Anlass] gratulieren wir Ihnen im Namen aller Mitglieder des Köcheclubs Werne ganz herzlich.\n\nFür die Zukunft wünschen wir Ihnen alles Gute." },
 };
+// 2.137.0 KC-CLUB-SPRACHE-BRIEF: woran die Sprachsteuerung die Brief-Art erkennt (gleiche Schlüssel wie BRIEF_VORLAGEN)
+const BRIEF_VORLAGE_WORTE = { leer: /leer|normal|einfach|frei|allgemein|sonstig/, spende: /spend/, dank: /dank/, einladung: /einlad/, beileid: /beileid|trauer|kondolenz|tod|gestorben/, genesung: /besserung|krank|genes/, geburt: /geburt(?!stag)|baby/, hochzeit: /hochzeit|heirat/, geburtstag: /geburtstag/, glueckwunsch: /glückwunsch|gratul|jubil/ };
 const BRIEF_ANREDEN = ["Sehr geehrte Damen und Herren,", "Sehr geehrte Frau …,", "Sehr geehrter Herr …,", "Liebe …,", "Hallo zusammen,"];
 const BRIEF_GRUESSE = ["Mit freundlichen Grüßen", "Herzliche Grüße", "Mit herzlichen Grüßen aus der Küche", "Viele Grüße", "In stiller Anteilnahme"];
 let BRIEF = null;
@@ -13344,7 +13504,7 @@ async function briefVorlage(k) {
 function briefWahl(k, w) { BRIEF[k] = w; briefMerken(); buZeigen(); }
 function buBriefHtml() {
   const b = BRIEF, chips = (k, l) => `<div class="hl-chips">${l.map((w) => `<button class="chip${b[k] === w ? " an" : ""}" onclick='briefWahl(${hlJs(k)}, ${hlJs(w)})'>${esc(w)}</button>`).join("")}</div>`;
-  const fe = (k, label, ph, rows) => `<label class="feld">${label}${rows ? `<textarea rows="${rows}" maxlength="${k === "text" ? 6000 : 400}" placeholder="${esc(ph)}" oninput="briefFeld('${k}', this)">${esc(b[k])}</textarea>` : `<input maxlength="200" placeholder="${esc(ph)}" value="${esc(b[k])}" oninput="briefFeld('${k}', this)">`}</label>`;
+  const fe = (k, label, ph, rows) => `<label class="feld">${label}${rows ? `<textarea id="briefFeld_${k}" rows="${rows}" maxlength="${k === "text" ? 6000 : 400}" placeholder="${esc(ph)}" oninput="briefFeld('${k}', this)">${esc(b[k])}</textarea>` : `<input id="briefFeld_${k}" maxlength="200" placeholder="${esc(ph)}" value="${esc(b[k])}" oninput="briefFeld('${k}', this)">`}</label>`;
   return `<div class="karte bu-kopf"><img src="kc-kochmuetze-weiss.webp" alt="" class="bu-logo"><div><b>✉️ Briefbogen</b><br><small class="hinweis">Mit Logo und „Köcheclub Werne“ – zum Ausdrucken oder als PDF</small></div></div>
     <div class="karte"><h3 style="margin-top:0">1️⃣ Vorlage</h3><div class="mini-kacheln">${Object.entries(BRIEF_VORLAGEN).map(([k, v]) => `<button class="mini-kachel${b.vorlage === k ? " mk-offen" : ""}" onclick="briefVorlage('${k}')"><span class="mk-sym">${v.sym}</span><span class="mk-titel">${esc(v.t)}</span></button>`).join("")}</div>
       <p class="hinweis" style="margin:6px 0 0">Stellen in [eckigen Klammern] bitte ersetzen.</p></div>

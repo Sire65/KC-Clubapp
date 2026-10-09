@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.137.0 – 2026-10-09 – 🎙️ Sprachsteuerung „Neuen Brief diktieren“: Büro + Briefbogen öffnen, dann Art, Empfänger (Mitglied/Adressbuch), Anrede, Betreff, Text, Gruß abfragen (KC-CLUB-SPRACHE-BRIEF)
+🔧 Kleine Systemverbesserungen
+
 ## 2.136.0 – 2026-10-09 – 🎬 Studio-Zentrale: Mitglied wählen, Foto · Mitschauen · Live zeigen an einem Platz, Uhr, Fotos speichern, Freischalten; echtes Live statt Fotos (KC-CLUB-STUDIO)
 🔧 Kleine Systemverbesserungen
 

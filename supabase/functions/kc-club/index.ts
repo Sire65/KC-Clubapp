@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.136.0";
+const SERVER_VERSION = "2.137.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2405,7 +2405,7 @@ const SPUR_WAS = /^[a-z][a-z0-9_]{0,29}$/;
 // KC-CLUB-SPRACHE-LERNEN (2.83.0, Wunsch Hansi): selbstlernende Sprachsteuerung. Ziele = gleiche Registry wie in der App (SB_ZIELE).
 // Persönlich gelernt: kc_club_person_einstellung „sprache_gelernt“; für alle: kc_club_konfig „sprache_gelernt“ (Admin) – oder automatisch,
 // sobald 2 verschiedene Mitglieder denselben Satz demselben Ziel zuordnen. Unbekannte Sätze (nur kurze, ohne Inhalte) → Protokoll, 30 Tage für den Admin.
-const SPRACHE_ZIELE = ["start", "termine", "termin_neu", "naechster", "nachrichten", "nachricht_neu", "pinnwand", "pinnwand_neu", "mitglieder", "fotos", "foto_neu", "archiv", "erstattung", "helfen", "boerse", "protokolle", "vorschlaege", "einstellungen", "hilfe", "dienste"];
+const SPRACHE_ZIELE = ["start", "termine", "termin_neu", "naechster", "nachrichten", "nachricht_neu", "pinnwand", "pinnwand_neu", "mitglieder", "fotos", "foto_neu", "archiv", "erstattung", "helfen", "boerse", "protokolle", "vorschlaege", "einstellungen", "hilfe", "dienste", "brief_neu"]; // 2.137.0: brief_neu (KC-CLUB-SPRACHE-BRIEF)
 const sprachSatz = (t: unknown) => { const s = String(t ?? "").toLowerCase().replace(/[.,!?;:„“"]/g, " ").replace(/\s+/g, " ").trim(); return s.length >= 2 && s.length <= 60 && s.split(" ").length <= 8 ? s : ""; };
 const SPUR_MIT = /^(KC-P-[A-Z0-9-]{1,30}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 const SPUR_TAGE = 30;
