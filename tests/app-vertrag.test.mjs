@@ -7517,3 +7517,13 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/if \(!fxAn\(\) \|\| !von\) return;/.test(html) && /setTimeout\(\(\) => f\.remove\(\), dauer \+ 400\);/.test(html), "nur bei Effekten an, räumt sicher auf");
   assert.ok(/id="sendeEffektWahl"/.test(idx) && /sendeEffektVorschau\(this\)/.test(idx) && /sendeEffektZeigen\(\);/.test(html), "Auswahl + Vorschau unter 🎨 Darstellung");
 }
+
+// 2.176.0 KC-CLUB-SENDE-EFFEKT Postauto + Blaulicht (Wunsch Hansi)
+{
+  const idx = lies("index.html");
+  assert.ok(/\["postauto", "🚐 Postauto"\]/.test(html) && /const SENDE_REIHE = \["flieger", "taube", "postauto"\];/.test(html), "Postauto als dritte Wahl, Abwechselnd über alle drei");
+  assert.ok(/const art = wichtig \? "blaulicht" :/.test(html) && /function papierflieger\(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG\)/.test(html), "❗ wichtig → Blaulicht");
+  assert.ok(/if \(wahl === "aus"\) return;/.test(html), "Aus bleibt aus – auch bei wichtig");
+  assert.ok(/const POSTAUTO_SVG = /.test(html) && /const BLAULICHT_SVG = /.test(html) && /KÖCHECLUB-POST/.test(html) && !/Deutsche Post|POLIZEI/i.test(html.slice(html.indexOf("const POSTAUTO_SVG"), html.indexOf("function sendeFahrzeug"))), "neutral, kein fremdes Zeichen");
+  assert.ok(/blaulichtVorschau\(this\)/.test(idx), "Vorschau „wichtig“");
+}

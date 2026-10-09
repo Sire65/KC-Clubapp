@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.176.0 – 2026-10-09 – 🚐 Senden: gelbes Postauto, bei ❗ wichtig Blaulicht
+🔧 Kleine Systemverbesserungen
+
 ## 2.175.0 – 2026-10-09 – 🕊️ Senden: Papierflieger in Schlangenlinien oder Brieftaube
 🔧 Kleine Systemverbesserungen
 

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.175.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.176.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -9892,7 +9892,9 @@ function regEffektVorschau() { zeige("start"); setTimeout(() => { if (!regEffekt
 const fxAn = () => einst("animiert", true) && !SPAR?.an && typeof document !== "undefined" && !!document.body?.animate;
 // 1) ✉️ Nachricht gesendet: ein Papierflieger (oder eine Brieftaube) startet am Senden-Knopf und fliegt davon
 // 2.175.0 (Wunsch Hansi „etwas in Schlangenlinien – oder eine weiße Brieftaube mit Kuvert im Schnabel“): Wahl je Gerät unter 🎨 Darstellung
-const SENDE_EFFEKTE = [["flieger", "✈️ Papierflieger"], ["taube", "🕊️ Brieftaube"], ["wechsel", "🔀 Abwechselnd"], ["aus", "🚫 Aus"]];
+// 2.176.0 (Wunsch Hansi „als drittes ein gelbes Postauto – und wenn als wichtig markiert ein Auto mit Blaulicht“)
+const SENDE_EFFEKTE = [["flieger", "✈️ Papierflieger"], ["taube", "🕊️ Brieftaube"], ["postauto", "🚐 Postauto"], ["wechsel", "🔀 Abwechselnd"], ["aus", "🚫 Aus"]];
+const SENDE_REIHE = ["flieger", "taube", "postauto"];
 const sendeEffektWahl = () => { try { const w = localStorage.getItem("kc_club_sendeEffekt"); return SENDE_EFFEKTE.some(([k]) => k === w) ? w : "wechsel"; } catch { return "wechsel"; } };
 let SENDE_FX_N = 0;
 const FLIEGER_SVG = (g) => `<svg viewBox="0 0 120 120" width="${g}" height="${g}" style="transform:scaleX(-1)">
@@ -9909,11 +9911,12 @@ const TAUBE_SVG = (g) => `<svg viewBox="0 0 140 120" width="${Math.round(g * 1.1
     <path d="M29 51 17 55 29 57Z" fill="#e8a33d" stroke="#b97a1e" stroke-width="1" stroke-linejoin="round"/>
     <g transform="rotate(-8 17 64)"><rect x="4" y="57" width="26" height="17" rx="2" fill="#f3e6cf" stroke="#7b1e2b" stroke-width="2"/><path d="M4 57 17 67 30 57" fill="none" stroke="#7b1e2b" stroke-width="2"/><circle cx="17" cy="67" r="2.6" fill="#7b1e2b"/></g>
     <g class="fl-vorn" fill="#fff" stroke="#9a948c" stroke-width="2" stroke-linejoin="round"><path d="M58 60C58 30 76 6 106 2 100 22 92 42 80 62Z"/><path d="M72 40 88 22M76 48 94 32" fill="none" stroke-width="1.5"/></g></svg>`;
-function papierflieger(von) {
+function papierflieger(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG) {
   if (!fxAn() || !von) return;
   const r = von.getBoundingClientRect(); if (!r.width) return;
   const wahl = sendeEffektWahl(); if (wahl === "aus") return;
-  const art = wahl === "wechsel" ? (SENDE_FX_N++ % 2 ? "taube" : "flieger") : wahl;
+  const art = wichtig ? "blaulicht" : wahl === "wechsel" ? SENDE_REIHE[SENDE_FX_N++ % SENDE_REIHE.length] : wahl; // ❗ wichtig → immer Blaulicht
+  if (art === "postauto" || art === "blaulicht") return sendeFahrzeug(r, art);
   const g = Math.round(Math.min(130, innerWidth * 0.3));
   const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
   f.innerHTML = art === "taube" ? TAUBE_SVG(g) : FLIEGER_SVG(g);
@@ -9939,6 +9942,42 @@ function papierflieger(von) {
   });
   setTimeout(() => f.remove(), dauer + 400);
 }
+// 🚐 Postauto / 🚨 Blaulicht-Wagen: fährt vom Senden-Knopf mit drehenden Rädern und leichtem Federn nach links aus dem Bild.
+// Neutral gestaltet (kein Firmen- oder Behördenzeichen): gelbes Club-Postauto mit Kuvert, weißer Wagen mit weinroter Linie + Blaulicht
+const RAD = (x) => `<g class="fz-rad"><circle cx="${x}" cy="92" r="13" fill="#222"/><circle cx="${x}" cy="92" r="6" fill="#bbb"/><path d="M${x - 6} 92h12M${x} 86v12" stroke="#555" stroke-width="2"/></g>`;
+const POSTAUTO_SVG = (b) => `<svg viewBox="0 0 200 110" width="${b}" height="${Math.round(b * 0.55)}" overflow="visible">
+    <g stroke="#3b2a00" stroke-width="2.5" stroke-linejoin="round"><path d="M70 20h112q8 0 8 8v62H70Z" fill="#f5c400"/><path d="M70 36H38q-6 0-10 6L14 62q-4 4-4 10v18h60Z" fill="#f5c400"/></g>
+    <path d="M64 42H40q-4 0-6 4l-10 16h40Z" fill="#cfe9f7" stroke="#3b2a00" stroke-width="2"/>
+    <rect x="98" y="34" width="56" height="36" rx="3" fill="#fff" stroke="#7b1e2b" stroke-width="2.5"/><path d="M98 34 126 56 154 34" fill="none" stroke="#7b1e2b" stroke-width="2.5"/><circle cx="126" cy="56" r="4" fill="#7b1e2b"/>
+    <text x="126" y="84" text-anchor="middle" font-size="10" font-weight="700" fill="#3b2a00" font-family="sans-serif">KÖCHECLUB-POST</text>
+    <rect x="8" y="76" width="8" height="6" rx="2" fill="#ffe680" stroke="#3b2a00" stroke-width="1.5"/>${RAD(42)}${RAD(158)}
+    <g class="fz-rauch" fill="#d6d1c8"><circle cx="198" cy="94" r="5"/><circle cx="210" cy="88" r="7"/><circle cx="224" cy="82" r="9"/></g></svg>`;
+const BLAULICHT_SVG = (b) => `<svg viewBox="0 0 200 110" width="${b}" height="${Math.round(b * 0.55)}" overflow="visible">
+    <circle class="bl-schein bl-a" cx="78" cy="22" r="26" fill="#2f7bff" opacity=".35"/><circle class="bl-schein bl-b" cx="108" cy="22" r="26" fill="#2f7bff" opacity=".35"/>
+    <path d="M10 72q0-12 12-14l30-4 22-20q6-6 14-6h52q10 0 16 8l18 20 14 4q10 2 10 12v18H10Z" fill="#fff" stroke="#333" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M82 36 64 54h40V36ZM110 36v18h44l-14-16q-2-2-6-2Z" fill="#cfe9f7" stroke="#333" stroke-width="2"/>
+    <rect x="12" y="64" width="176" height="10" fill="#7b1e2b"/><text x="100" y="86" text-anchor="middle" font-size="11" font-weight="800" fill="#7b1e2b" font-family="sans-serif">❗ WICHTIG</text>
+    <rect x="70" y="18" width="46" height="9" rx="3" fill="#333"/><rect class="bl-a" x="72" y="16" width="20" height="9" rx="3" fill="#2f7bff"/><rect class="bl-b" x="94" y="16" width="20" height="9" rx="3" fill="#2f7bff"/>
+    <rect x="10" y="64" width="7" height="7" rx="2" fill="#ffe680" stroke="#333" stroke-width="1.5"/>${RAD(46)}${RAD(156)}</svg>`;
+function sendeFahrzeug(r, art) {
+  const b = Math.round(Math.min(190, innerWidth * 0.42)), h = Math.round(b * 0.55);
+  const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
+  f.innerHTML = art === "blaulicht" ? BLAULICHT_SVG(b) : POSTAUTO_SVG(b);
+  const links = Math.max(0, Math.min(r.right, innerWidth) - b - 6); // ganz im Bild starten, Heck am Senden-Knopf
+  f.style.left = links + "px"; f.style.top = r.top - h - 4 + "px"; document.body.appendChild(f);
+  const dx = -(links + b + 20), N = 18, bild = [{ transform: "translate(30px,0) scale(.4)", opacity: 0 }, { transform: "translate(0,0) rotate(3deg) scale(1)", opacity: 1, offset: 0.1 }];
+  for (let i = 1; i <= N; i++) { const t = i / N, x = dx * (0.2 * t + 0.8 * t * t), y = -Math.abs(Math.sin(t * Math.PI * 7)) * 4; bild.push({ transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${(i < 4 ? 3 - i : 0)}deg)`, opacity: 1, offset: 0.1 + t * 0.9 }); }
+  const dauer = art === "blaulicht" ? 1900 : 2300;
+  f.animate(bild, { duration: dauer, easing: "ease-in", fill: "forwards" }).onfinish = () => f.remove();
+  f.querySelectorAll(".fz-rad").forEach((rad) => { rad.style.transformBox = "fill-box"; rad.style.transformOrigin = "center"; rad.animate([{ transform: "rotate(0deg)" }, { transform: "rotate(-360deg)" }], { duration: 380, iterations: Infinity }); });
+  f.querySelectorAll(".fz-rauch circle").forEach((c, i) => c.animate([{ opacity: 0, transform: "scale(.4)" }, { opacity: .8, transform: "scale(1)" }, { opacity: 0, transform: "scale(1.6) translate(8px,-6px)" }], { duration: 700, iterations: Infinity, delay: i * 180 }));
+  if (art === "blaulicht") {
+    f.querySelectorAll(".bl-a").forEach((x) => x.animate([{ opacity: 1 }, { opacity: 0.15 }], { duration: 160, iterations: Infinity, direction: "alternate" }));
+    f.querySelectorAll(".bl-b").forEach((x) => x.animate([{ opacity: 0.15 }, { opacity: 1 }], { duration: 160, iterations: Infinity, direction: "alternate" }));
+    try { navigator.vibrate?.([60, 60, 60]); } catch {}
+  }
+  setTimeout(() => f.remove(), dauer + 400);
+}
 function sendeEffektSetzen(w) { try { localStorage.setItem("kc_club_sendeEffekt", w); } catch {} sendeEffektZeigen(); melde(SENDE_EFFEKTE.find(([k]) => k === w)?.[1] || w); }
 function sendeEffektZeigen() {
   const z = $("sendeEffektWahl"); if (!z) return; const w = sendeEffektWahl();
@@ -9947,8 +9986,9 @@ function sendeEffektZeigen() {
 function sendeEffektVorschau(knopf) {
   if (!fxAn()) return melde("Effekte sind aus – „✨ Animierte Knöpfe“ einschalten (und Sparmodus aus).", true);
   if (sendeEffektWahl() === "aus") return melde("Sende-Effekt ist aus – oben einen auswählen.", true);
-  papierflieger(knopf);
+  papierflieger(knopf, false);
 }
+function blaulichtVorschau(knopf) { if (!fxAn()) return melde("Effekte sind aus – „✨ Animierte Knöpfe“ einschalten (und Sparmodus aus).", true); if (sendeEffektWahl() === "aus") return melde("Sende-Effekt ist aus – oben einen auswählen.", true); papierflieger(knopf, true); }
 // 3) 📌 neuer Pinnwand-Zettel: fällt leicht schräg herunter, setzt auf, die Nadel wird hineingedrückt
 function zettelAnpinnen(el) {
   if (!fxAn() || !el) return;
