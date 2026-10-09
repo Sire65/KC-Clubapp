@@ -7410,3 +7410,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/slWahl\('\$\{nurDiese \? "nachricht" : "chat"\}'\)/.test(f) && /Verstanden/.test(f), "Ändern führt zur passenden Auswahl");
   assert.ok(/ⓘ` : `⏳ Selbstlöschen in diesem Chat: nach \$\{slText\(w\)\} ⓘ`/.test(html), "ⓘ zeigt: hier gibt es eine Erklärung");
 }
+// 2.164.0 KC-CLUB-ANLAGE-WARTEN (Fund Hansi: PDF fehlte in der Nachricht – Senden getippt, während die Anlage noch hochlud)
+{
+  const s = html.slice(html.indexOf("async function senden() {"), html.indexOf("// KC-CLUB-MEHRFACH-NACHRICHT: nacheinander"));
+  assert.ok(/if \(anlagen\.some\(\(a\) => a\.laedt\)\) \{[\s\S]{0,200}const fertig = await anlagenFertig\(\);/.test(s), "Senden wartet auf ladende Anlagen");
+  assert.ok(/if \(!fertig\) return melde\([^)]*nichts wurde gesendet/.test(s), "klappt das Hochladen nicht: nichts senden, Text bleibt");
+  assert.ok(s.indexOf("await anlagenFertig()") < s.indexOf("const daten = {"), "erst warten, dann Anlagen einsammeln");
+  assert.ok(/anlagen: anlagen\.filter\(\(a\) => a\.id\)\.map\(\(a\) => a\.id\)/.test(s), "nie eine Anlage ohne Kennung mitschicken");
+  assert.ok(/async function anlagenFertig\(maxMs = 180000\) \{[\s\S]{0,200}while \(anlagen\.some\(\(a\) => a\.laedt\)\)/.test(html), "Warten mit Obergrenze");
+}

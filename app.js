@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.163.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.164.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -17063,12 +17063,27 @@ function gesendetAblageFragen(liste) {
   return archivAblageFragen("anlage", { titel: liste.length === 1 ? titel : `${titel}: ${liste.map((a) => a.name).join(", ")}`.slice(0, 160), datum: heuteIso(), hinweis: "gerade gesendet",
     dateien: async () => { const aus = []; for (const a of liste) { const f = await anlageAlsDatei(a); aus.push({ titel: a.name.replace(/\.\w+$/, "").replace(/[_-]+/g, " ").trim().slice(0, 120), name: f.name, mime: f.mime, blob: f.blob }); } return aus; } });
 }
+// 2.164.0 KC-CLUB-ANLAGE-WARTEN: wartet, bis keine Anlage mehr lädt (höchstens 3 Minuten) – true = alle fertig
+async function anlagenFertig(maxMs = 180000) {
+  const bis = Date.now() + maxMs;
+  while (anlagen.some((a) => a.laedt)) { if (Date.now() > bis) return false; await new Promise((r) => setTimeout(r, 250)); }
+  return true;
+}
 async function senden() {
   emoUmschalten(false); // KC-CLUB-EMOJI
   const text = $("text").value.trim();
   if (!text && !anlagen.length) return;
   if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
   await inkoChatFrage(chatId ? "c:" + chatId : "neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT: auch beim Schreiben in einem schon offenen Chat (einmal je Chat)
+  // 2.164.0 KC-CLUB-ANLAGE-WARTEN (Fund Hansi: PDF fehlte – Senden getippt, während die Anlage noch hochlud; sie wurde still weggelassen):
+  // lädt noch eine Anlage, wird gewartet, bis sie fertig ist – dann geht alles zusammen raus. Klappt das Hochladen nicht, bleibt der Text stehen.
+  if (anlagen.some((a) => a.laedt)) {
+    $("sendenKnopf").disabled = true; melde("⏳ Die Anlage lädt noch – deine Nachricht geht mit ihr zusammen raus, sobald sie fertig ist …");
+    const fertig = await anlagenFertig();
+    $("sendenKnopf").disabled = false;
+    if (!fertig) return melde("⚠️ Die Anlage ist noch nicht fertig hochgeladen – nichts wurde gesendet. Bitte kurz warten und nochmal auf ➤ tippen.", true);
+    if (!$("text").value.trim() && !anlagen.length) return;
+  }
   // KC-CLUB-OFFLINE (2.1.0): Handy ohne Netz → Text vormerken statt Fehlermeldung (nur bestehender Chat, ohne Anhänge)
   if (!navigator.onLine && chatId && !anlagen.length && text) {
     owSchreiben([...owLesen(), { id: crypto.randomUUID?.() || String(Date.now()), chat: chatId, text, wege: ["push", "email"].filter((w) => ZW[w]),
@@ -17079,7 +17094,7 @@ async function senden() {
   $("sendenKnopf").disabled = true;
   const anlagenVorher = [...anlagen];
   try {
-    const daten = { text, anlagen: anlagen.map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]),
+    const daten = { text, anlagen: anlagen.filter((a) => a.id).map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]),
       ...(NA.antwort && chatId ? { antwort_auf: NA.antwort.id } : {}), ...(chatId ? { erwaehnt: naErwaehnteIds(text) } : {}), // KC-CLUB-ANTWORT / -ERWAEHNUNG
       ...(WICHTIG ? { wichtig: true } : {}), // KC-CLUB-WICHTIG
       ...(SL.std !== null && SL.chat === chatId ? { ablauf_std: SL.std } : {}) }; // KC-CLUB-SELBSTLOESCHEN: ⏳ nur diese Nachricht

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.164.0 – 2026-10-09 – 📎 Anlage geht nicht mehr verloren: Senden wartet, bis sie hochgeladen ist (KC-CLUB-ANLAGE-WARTEN)
+🔧 Kleine Systemverbesserungen
+
 ## 2.163.0 – 2026-10-09 – ⏳ Selbstlöschen-Leiste antippbar mit Erklärung (KC-CLUB-SELBSTLOESCHEN)
 🔧 Kleine Systemverbesserungen
 
