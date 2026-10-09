@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.178.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.179.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -9994,9 +9994,12 @@ function empfangsEffekt(u) {
   const erst = EMPF.chat !== u?.id; EMPF.chat = u?.id;
   if (!letzte) { EMPF.letzte = null; return; }
   const neu = !erst && letzte.id !== EMPF.letzte; EMPF.letzte = letzte.id;
-  if (!neu || document.hidden || !fxAn() || sendeEffektWahl() === "aus" || Date.now() - Date.parse(letzte.zeit) > 120000) return;
-  const art = fxArt(u.sendeEffekte?.[letzte.vonId], letzte.wichtig, letzte.id); if (!art) return;
-  setTimeout(() => { const el = document.getElementById("msg-" + letzte.id); if (el) ankunftEffekt(el, art).catch(() => {}); }, 450);
+  // 2.179.0 (Wunsch Hansi „auch spätere Nachrichten sollen die Animation bekommen“): beim Öffnen einer Unterhaltung bekommt die erste
+  // ungelesene Nachricht anderer ihren Effekt – genau die, zu der die App springt („⬇ Neue Nachrichten“). Höchstens 7 Tage alt.
+  const ziel = neu ? letzte : erst && u.gelesenBis ? u.nachrichten.find((m) => !m.eigen && m.zeit > u.gelesenBis) : null;
+  if (!ziel || document.hidden || !fxAn() || sendeEffektWahl() === "aus" || Date.now() - Date.parse(ziel.zeit) > (neu ? 120000 : 7 * 86400000)) return;
+  const art = fxArt(u.sendeEffekte?.[ziel.vonId], ziel.wichtig, ziel.id); if (!art) return;
+  setTimeout(() => { const el = document.getElementById("msg-" + ziel.id); if (el) ankunftEffekt(el, art).catch(() => {}); }, neu ? 450 : 750);
 }
 const fxWarte = (a) => new Promise((ok) => { a.onfinish = a.oncancel = () => ok(); });
 const fxEl = (html, x, y) => { const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true"); f.innerHTML = html; f.style.left = x + "px"; f.style.top = y + "px"; document.body.appendChild(f); return f; };

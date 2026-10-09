@@ -7533,8 +7533,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/sende_effekt: \(w\) => \(\{ art: SENDE_EFFEKT_ARTEN\.includes\(w\?\.art\) \? w\.art : "wechsel" \}\)/.test(server), "Server merkt nur bekannte Kennungen");
   assert.ok(/\.eq\("schluessel", "sende_effekt"\)\.in\("person_id", \(tn \?\? \[\]\)\.map/.test(server) && /selbstloeschen: slStd\(slChat\?\.stunden\), sendeEffekte,/.test(server), "Unterhaltung liefert Effekte der Teilnehmer");
   assert.ok(/return json\(\{ ok: true, id: threadId, versand, mid: m\.id \}\);/.test(server), "Senden liefert Nachrichten-Kennung");
-  assert.ok(/const fxReihe = \(mid\) =>/.test(html) && /fxArt\(u\.sendeEffekte\?\.\[letzte\.vonId\], letzte\.wichtig, letzte\.id\)/.test(html), "gleicher Effekt bei Absender und Empfänger");
-  assert.ok(/const neu = !erst && letzte\.id !== EMPF\.letzte;/.test(html) && /Date\.now\(\) - Date\.parse\(letzte\.zeit\) > 120000\) return;/.test(html) && /sendeEffektWahl\(\) === "aus"/.test(html), "nur neue, frische Nachrichten, nicht beim Öffnen, abschaltbar");
+  assert.ok(/const fxReihe = \(mid\) =>/.test(html) && /fxArt\(u\.sendeEffekte\?\.\[ziel\.vonId\], ziel\.wichtig, ziel\.id\)/.test(html), "gleicher Effekt bei Absender und Empfänger");
+  assert.ok(/const neu = !erst && letzte\.id !== EMPF\.letzte;/.test(html) && /Date\.now\(\) - Date\.parse\(ziel\.zeit\) > \(neu \? 120000 : 7 \* 86400000\)\) return;/.test(html) && /sendeEffektWahl\(\) === "aus"/.test(html), "nur neue, frische Nachrichten, nicht beim Öffnen, abschaltbar");
   assert.ok(/empfangsEffekt\(u\); \/\/ 2\.177\.0/.test(html) && /sendeEffektMelden\(\); \/\/ 2\.177\.0/.test(html), "eingebunden in Chat-Laden und Start");
   assert.ok(/class="tb-brief"/.test(html) && /if \(brief\) brief\.style\.visibility = "hidden";/.test(html) && /\} finally \{ fertig\(\); \}/.test(html), "Taube lässt das Kuvert fallen, alles wird sicher weggeräumt");
 }
@@ -7545,4 +7545,9 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/function fxZeichen\(wurzel\)/.test(html) && /return aus\.length >= 160 \? \[\] : aus;/.test(html), "Lage jedes Zeichens, sehr lange Nachrichten ohne Regen");
   assert.ok(/txt\.style\.visibility = "hidden"; zurueck\.push\(\(\) => \{ txt\.style\.visibility = ""; \}\);/.test(html) && /zurueck\.forEach\(\(f\) => f\(\)\)/.test(html), "Text wird sicher wieder sichtbar");
   assert.ok(/s\.className = "fx-buchstabe"/.test(html) && /\.fx-buchstabe \{ position: fixed;/.test(idx) && /s\.setAttribute\("aria-hidden", "true"\)/.test(html), "Buchstaben nur Schmuck (Vorlesen liest die echte Nachricht)");
+}
+
+// 2.179.0 KC-CLUB-EMPFANGS-EFFEKT-SPAETER (Wunsch Hansi: auch später gelesene Nachrichten bekommen die Animation)
+{
+  assert.ok(/const ziel = neu \? letzte : erst && u\.gelesenBis \? u\.nachrichten\.find\(\(m\) => !m\.eigen && m\.zeit > u\.gelesenBis\) : null;/.test(html), "beim Öffnen: erste ungelesene Nachricht anderer");
 }

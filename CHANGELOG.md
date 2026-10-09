@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.179.0 – 2026-10-09 – 🕊️ Effekte auch für später gelesene Nachrichten
+🔧 Kleine Systemverbesserungen
+
 ## 2.178.0 – 2026-10-09 – ✈️ Flieger lässt Buchstaben regnen – daraus wird die Nachricht
 🔧 Kleine Systemverbesserungen
 
