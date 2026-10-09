@@ -2,6 +2,7 @@
 
 ## 2.126.0 – 2026-10-09 – Drei wandernde Schnecken
 🔧 Kleine Systemverbesserungen
+Fehler behoben (Meldung Hansi 09.10.): Adressbuch stürzte beim Anzeigen ab („reading 'replace'“) – ab der 2. Adresse fehlte die Kennung (adrSauber direkt an .map übergeben).
 Admin-Notiz (KC-CLUB-SCHNECKEN-WANDERN, Wunsch Hansi): Im Langsam-Modus wandern oben 3 🐌 von rechts nach links (Streifen lässt Tipps durch, Schnecke antippen = Info; Sparmodus/„weniger Bewegung“: stehen still in der Mitte).
 
 ## 2.125.0 – 2026-10-09 – Adressbuch im Büro

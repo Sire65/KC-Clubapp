@@ -6941,3 +6941,5 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/@keyframes schneckeWandern \{ 0% \{ transform: translate\(0, 0\); \}[^@]*100% \{ transform: translate\(calc\(-100vw - 40px\), 0\); \} \}/.test(seite), "von rechts nach links");
   assert.ok(/html\.spar \.schnecke i \{ animation: none;/.test(seite) && /prefers-reduced-motion: reduce\) \{ \.schnecke i \{ animation: none;/.test(seite), "Sparmodus/weniger Bewegung: still");
 }
+// 2.126.0 Fehler Hansi 09.10. (Adressbuch: „reading 'replace'“): adrSauber nie direkt an .map geben (Index würde nurFelder)
+assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\(a\)\)/.test(server), "Adressbuch: jede Adresse behält ihre id");

@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.125.0";
+const SERVER_VERSION = "2.126.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
@@ -5517,7 +5517,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         ]);
         if (fa) throw new Fehler("Die Adressen aus KC Verwaltung sind gerade nicht abrufbar.", 503); // UNKNOWN ≠ leer
         const roh = Array.isArray(ab?.payload?.data) ? ab.payload.data : null;
-        const adressen = (roh ?? []).filter((a: any) => a && typeof a === "object" && !adrIstMitglied(a)).map(adrSauber);
+        const adressen = (roh ?? []).filter((a: any) => a && typeof a === "object" && !adrIstMitglied(a)).map((a: any) => adrSauber(a)); // 2.126.0: adrSauber nie direkt an map geben – map reicht den Index als 2. Wert durch (= nurFelder → ab der 2. Adresse ohne id → Absturz im Adressbuch)
         const kat = Array.isArray(kb?.payload?.data?.addressCategories) ? kb.payload.data.addressCategories : [];
         const kategorien = [...new Set([...kat, ...adressen.map((a: any) => a.category)].map((k: any) => txt(k, 40)).filter((k: string) => k && !ADR_MITGLIED_KAT.has(k)))].sort((a, b) => a.localeCompare(b, "de"));
         const leute = await personen([...new Set<string>((me ?? []).map((m: any) => m.von_person))]);
