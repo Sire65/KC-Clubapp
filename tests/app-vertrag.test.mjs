@@ -826,7 +826,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 65. 0.42.0: Info-Feld blätterbar (Registry, Pfeile, Punkte, Wischen) + Wetter (Adapter/Registry, nur Admin stellt ein, Rule 11)
 {
   const ids = [...html.slice(html.indexOf("const INFO_ALLE = ["), html.indexOf("];", html.indexOf("const INFO_ALLE = ["))).matchAll(/id: "([a-z]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(ids, ["treffen", "schnellstart", "wetter", "fuerdich", "demnaechst", "fotos", "zentrale", "admin"], "Info-Felder falsch (1.8.1: + schnellstart)");
+  assert.deepEqual(ids, ["treffen", "schnellstart", "wetter", "fuerdich", "demnaechst", "fotos", "zentrale", "admin", "studio"], "Info-Felder falsch (1.8.1: + schnellstart; 2.139.0: + studio)");
   assert.ok(/class="ipfeil links( mit-sprung)?"[^>]*onclick="infoBlaettern\(-1\)"/.test(html) && /onclick="infoBlaettern\(1\)"/.test(html) && /class="ipunkt\$\{i === INFO_I \? " an" : ""\}"/.test(html), "Pfeile/Punkte fehlen");
   assert.ok(/\[\$\("heroInfo"\), infoBlaettern\]/.test(html), "Wischen im Info-Feld fehlt");
   assert.ok(!/setInterval\([^)]*infoBlaettern/.test(html), "Info-Feld darf nicht automatisch blättern");
@@ -7088,3 +7088,14 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/catch\(\(\) => new Set<string>\(\)\)/.test(f), "im Zweifel (Fehler) lieber Push senden als verschlucken");
 }
 assert.ok(/\{ id: "studio", sym: "🎬", t: "Studio", u: "Foto · Mitschauen · Live zeigen", aktion: "stOeffnen\(\)", nur: \(\) => !!studioStufe\(\) \}/.test(fs.readFileSync(new URL("../app.js", import.meta.url), "utf8")), "2.138.0: Studio-Kachel nur mit Recht");
+
+// 2.139.0 KC-CLUB-STUDIO-KARTE (Wunsch Hansi „Studio wie die Admin-Zentrale“): Karte im Kopf, nur mit Recht
+{
+  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.ok(/\{ id: "studio", t: "Studio", html: \(\) => infoStudio\(\), laden: \(\) => \(ICH\?\.admin \? api\("studio_rechte"\) : Promise\.resolve\(\{ liste: \[\] \}\)\), neuMin: 2, nur: \(\) => !!studioStufe\(\) \}/.test(p), "Karte nur mit Studio-Recht; Rechte-Liste nur Admin");
+  const f = p.slice(p.indexOf("function infoStudio()"), p.indexOf("function stKarteWahl("));
+  assert.ok(/<div class="adisplay">/.test(f) && /<span>🎬 STUDIO<\/span>/.test(f) && /lampe\(/.test(f), "Anzeige wie die Admin-Zentrale");
+  assert.ok(/const onAlt = !ONL\.stand \|\| Date\.now\(\) - ONL\.stand > 3 \* 60000;/.test(f) && /⚠️ Stand veraltet/.test(f), "veralteter Online-Stand sichtbar markiert");
+  assert.ok(/<div class="spult">/.test(f) && /\.spult \{ display: grid; grid-template-columns: repeat\(4, minmax\(0, 1fr\)\); grid-auto-rows: 1fr;/.test(h), "Pult: vier gleich große Knöpfe");
+  assert.ok(/if \(f\.id === "studio"\) stKarteUhr\(\);/.test(p) && /stKnopf\(\); stKarteFrisch\(\);/.test(p), "Uhr läuft, Karte frischt bei jedem Wechsel auf");
+}

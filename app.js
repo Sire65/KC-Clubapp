@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.138.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.139.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -9449,6 +9449,8 @@ const INFO_ALLE = [
   { id: "fotos", t: "Neueste Fotos", html: () => infoFotos(), laden: () => api("fotos_neueste", { anzahl: 4 }), neuMin: 20 },
   { id: "zentrale", t: "Kommunikationszentrale", html: () => infoZentrale(), laden: () => api("unterhaltungen"), neuMin: 1 },
   { id: "admin", t: "Admin-Zentrale", html: () => infoAdmin(), laden: () => api("admin_lage"), neuMin: 2, nur: () => !!ICH?.admin },
+  // KC-CLUB-STUDIO-KARTE (2.139.0, Wunsch Hansi „das Studio so aufbauen wie die Admin-Zentrale“): eigene Karte im Kopf, nur mit Studio-Recht
+  { id: "studio", t: "Studio", html: () => infoStudio(), laden: () => (ICH?.admin ? api("studio_rechte") : Promise.resolve({ liste: [] })), neuMin: 2, nur: () => !!studioStufe() },
 ];
 // sichtbare Karten (manche nur für bestimmte Rollen, z. B. die Admin-Zentrale) – nach jedem Laden neu bestimmt
 let INFO_FELDER = INFO_ALLE.filter((f) => !f.nur), infoFelderGeladen = false;
@@ -9490,6 +9492,7 @@ function heroZeigen(richtung) {
   if (f.id === "wetter") { wetterSzene(); if (!WET.laedt && Date.now() - WET.geholt > WETTER_NEU_MIN * 60000) wetterLaden(erzwingen); }
   if (f.laden) infoDatenLaden(f, erzwingen);
   if (f.id === "zentrale") zeUhr();
+  if (f.id === "studio") stKarteUhr();
 }
 // KC-CLUB-INFOFELD (0.44.0): Start-Karte wählbar (⚙️ → Darstellung); „zuletzt“ = die zuletzt gezeigte Karte
 let infoStartGesetzt = false;
@@ -10377,7 +10380,7 @@ async function vfSenden(f) {
 function vfVorhang() {
   if (VF.rolle !== "zeigt") return;
   VF.vorhang = !VF.vorhang; SPG.vorhang = VF.vorhang; SPG.vorhangGesendet = false; SPG.letzt = ""; SPG.schmutzig = true;
-  melde(VF.vorhang ? `🙈 Vorhang zu – ${VF.gegen} sieht gerade nichts` : `🙉 Vorhang auf – ${VF.gegen} sieht wieder mit`); vfLeiste(); stAktionen();
+  melde(VF.vorhang ? `🙈 Vorhang zu – ${VF.gegen} sieht gerade nichts` : `🙉 Vorhang auf – ${VF.gegen} sieht wieder mit`); vfLeiste(); stAktionen(); stKarteFrisch();
 }
 // Zuschauer: Einladung annehmen, Live-Bild im Vollbild zeigen
 async function vfAnfrage(einl) {
@@ -10438,7 +10441,7 @@ async function vfBeenden() {
 function vfAufraeumen(stand = "beendet") {
   clearInterval(VF.takt); if (VF.rolle === "zeigt") { spgSenderStopp(); if (STD.modus === "zeigen") stSetzen("zeigen", stand); }
   $("spgSchirm")?.remove();
-  Object.assign(VF, { rolle: null, id: null, an: null, status: null, takt: null, seit: 0, fseit: 0, vorhang: false, bis: 0 }); vfLeiste(); stKnopf();
+  Object.assign(VF, { rolle: null, id: null, an: null, status: null, takt: null, seit: 0, fseit: 0, vorhang: false, bis: 0 }); vfLeiste(); stKnopf(); stKarteFrisch();
 }
 // ---------- KC-CLUB-FITNESS (2.55.0, Wunsch Hansi): 🏋️ Fit bleiben – Twinkey macht vor, man macht mit; eigene Auswertung ----------
 // Ruhig und erwachsen: sanfte Übungen (auch im Sitzen), Stufe + Dauer wählbar, großer Countdown, Ansage abschaltbar.
@@ -22216,8 +22219,49 @@ function stFotos() {
   f.innerHTML = STD.fotos.length ? `<div class="st-fotos-titel">📷 Fotos dieser Sitzung – antippen zum Speichern</div><div class="st-fotos-reihe">${STD.fotos.map((x, i) =>
     `<button type="button" class="st-foto" onclick="stFotoSpeichern(${i})" aria-label="Foto ${i + 1} von ${esc(x.zeit)} speichern"><img src="${x.bild}" alt=""><span>${esc(x.zeit)} 💾</span></button>`).join("")}</div>` : "";
 }
-function stFotoNeu(bild) { STD.fotos.push({ bild, zeit: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", second: "2-digit" }), name: STD.name }); if (STD.fotos.length > 12) STD.fotos.shift(); stFotos(); stAktionen(); }
-function stSetzen(modus, status, extra = {}) { Object.assign(STD, { modus, status }, extra); stBuehne(); stStatus(); stAktionen(); stKnopf(); document.querySelectorAll("#stdInhalt .st-modus").forEach((b) => b.classList.remove("an")); if (modus && ["wartet", "live", "bild"].includes(status)) $("stdInhalt")?.querySelector(`.st-modus[onclick*="'${modus}'"]`)?.classList.add("an"); }
+function stFotoNeu(bild) { setTimeout(stKarteFrisch, 0); STD.fotos.push({ bild, zeit: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", second: "2-digit" }), name: STD.name }); if (STD.fotos.length > 12) STD.fotos.shift(); stFotos(); stAktionen(); }
+// ---------- KC-CLUB-STUDIO-KARTE (2.139.0): 🎬 Studio als Karte im Kopf – Anzeige wie die Admin-Zentrale, darunter Online-Mitglieder und das Pult ----------
+let stKarteTimer = null;
+function infoStudio() {
+  const s = studioStufe(), zeigt = VF.rolle === "zeigt", lauf = zeigt || ["wartet", "live"].includes(STD.status);
+  const modus = zeigt ? "zeigen" : STD.modus, status = zeigt ? (VF.status === "laeuft" ? "live" : "wartet") : STD.status;
+  const name = zeigt ? VF.gegen : String(STD.name || "").split(" ")[0], art = { foto: "Foto", mitschauen: "Mitschauen", zeigen: "Zeigen" }[modus] || "";
+  const start = zeigt ? VF.start : STD.start, bis = zeigt ? VF.bis : STD.bis;
+  const zeile = (f, n, t, id) => `<div class="azeile">${lampe(f)}<b>${esc(n)}</b><span${id ? ` id="${id}"` : ""}>${esc(t)}</span></div>`;
+  const onAlt = !ONL.stand || Date.now() - ONL.stand > 3 * 60000; // veraltet nie als „aktuell“ zeigen
+  const on = onAlt ? [] : [...ONL.ids].filter((id) => id !== ICH?.person_id).map((id) => (MITGLIEDER || []).find((m) => m.person_id === id)).filter(Boolean);
+  const rechte = (INFO_DATEN.studio?.r?.liste || STD.rechte || []).filter((r) => r.stufe);
+  const meinRecht = ICH?.admin ? "Admin – alles" : s === "alles" ? `⭐ alles${INIT?.studio?.allesBis ? " bis " + fZeit.format(new Date(INIT.studio.allesBis)) : ""}` : "📺 Live zeigen";
+  const k = (sym, t, fn, aus, an) => `<button type="button" class="${an ? "an" : ""}" ${aus ? "disabled" : `onclick="${fn}"`}><span>${sym}</span>${t}</button>`;
+  return `<div class="adisplay">
+      <div class="zdkopf"><span>🎬 STUDIO</span><span class="zuhr" id="stKarteZeit">${esc(fZeit.format(new Date()))}</span></div>
+      ${zeile(status === "live" ? "rot" : status === "wartet" ? "gelb" : "grau", "Sitzung", status === "live" ? `LIVE · ${art} · ${name}` : status === "wartet" ? `${art} · wartet auf ${name} …` : status === "abgelehnt" ? `${name} wollte gerade nicht` : status === "beendet" ? "beendet" : "keine")}
+      ${lauf ? zeile(status === "live" ? "gruen" : "gelb", "Uhr", `läuft ${stZeit(Date.now() - start)}${status === "live" && bis ? ` · noch ${stZeit(bis - Date.now())}` : ""}`, "stKarteLauf") : ""}
+      ${zeile(STD.pid ? "gruen" : "grau", "Mitglied", STD.pid ? STD.name : "noch keins gewählt")}
+      ${zeile(onAlt ? "grau" : on.length ? "gruen" : "grau", "Online", onAlt ? "⚠️ Stand veraltet" : on.length ? `${on.length} in der App` : "niemand in der App")}
+      ${zeile(STD.fotos.length ? "gruen" : "grau", "Fotos", STD.fotos.length ? `${STD.fotos.length} in dieser Sitzung` : "keine")}
+      ${zeile("gruen", "Recht", meinRecht)}
+      ${ICH?.admin ? zeile(rechte.length ? "gelb" : "grau", "Freigeschaltet", rechte.length ? rechte.map((r) => String(r.name).split(" ")[0] + (r.allesBis ? " ⭐" : " 📺")).join(", ") : "niemand") : ""}
+    </div>
+    ${on.length ? `<div class="zwer">${on.slice(0, 8).map((m) => `<button type="button" class="zchip${STD.pid === m.person_id ? " an" : ""}" onclick="stKarteWahl('${esc(m.person_id)}')">🟢 ${esc(String(m.name).split(" ")[0])}</button>`).join("")}</div>` : ""}
+    <div class="spult">${lauf ? k("🎬", "Studio", "stOeffnen()") + k("📱", "Zur App", "infoGehe(0)") + k(zeigt && VF.vorhang ? "🙉" : "🙈", "Vorhang", "vfVorhang()", !zeigt || VF.status !== "laeuft") + k("⏹", "Beenden", "stKarteEnde()", false, true)
+      : k("📸", "Foto", "stKarteModus('foto')", s !== "alles") + k("🔴", "Zusehen", "stKarteModus('mitschauen')", s !== "alles") + k("📺", "Zeigen", "stKarteModus('zeigen')", !s) + k("🎬", "Studio", "stOeffnen()")}</div>`;
+}
+function stKarteWahl(pid) { if (STD.modus && ["wartet", "live"].includes(STD.status)) return melde("Erst die laufende Sitzung beenden.", true); Object.assign(STD, { pid, name: (MITGLIEDER || []).find((m) => m.person_id === pid)?.name || "", modus: null, status: null, frame: null }); heroZeigen(0); }
+function stKarteModus(m) { if (!STD.pid) { melde("👤 Erst ein Mitglied wählen – oben antippen oder im Studio suchen"); return stOeffnen(); } if (m === "zeigen") return vfStart(STD.pid); stOeffnen(STD.pid, STD.name); stModus(m); }
+function stKarteEnde() { if (VF.rolle === "zeigt") return vfBeenden(); ssAbbrechen(); }
+function stKarteFrisch() { if (INFO_FELDER[INFO_I]?.id === "studio" && $("heroInfo")) heroZeigen(0); }
+function stKarteUhr() {
+  clearInterval(stKarteTimer);
+  stKarteTimer = setInterval(() => {
+    if (INFO_FELDER[INFO_I]?.id !== "studio" || !$("stKarteZeit")) { clearInterval(stKarteTimer); stKarteTimer = null; return; }
+    $("stKarteZeit").textContent = fZeit.format(new Date());
+    const l = $("stKarteLauf"); if (!l) return;
+    const zeigt = VF.rolle === "zeigt", start = zeigt ? VF.start : STD.start, bis = zeigt ? VF.bis : STD.bis, live = zeigt ? VF.status === "laeuft" : STD.status === "live";
+    l.textContent = `läuft ${stZeit(Date.now() - start)}${live && bis ? ` · noch ${stZeit(bis - Date.now())}` : ""}`;
+  }, 1000);
+}
+function stSetzen(modus, status, extra = {}) { Object.assign(STD, { modus, status }, extra); stBuehne(); stStatus(); stAktionen(); stKnopf(); stKarteFrisch(); document.querySelectorAll("#stdInhalt .st-modus").forEach((b) => b.classList.remove("an")); if (modus && ["wartet", "live", "bild"].includes(status)) $("stdInhalt")?.querySelector(`.st-modus[onclick*="'${modus}'"]`)?.classList.add("an"); }
 // Foto aus dem laufenden Live-Bild (auf meinem Gerät gemacht – das Mitglied wird nicht noch einmal gefragt)
 async function stFesthalten() {
   const ifr = $("stdBuehne")?.querySelector("iframe.spg-iframe"), doc = ifr?.contentDocument; if (!doc) return;
