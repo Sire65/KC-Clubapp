@@ -536,6 +536,9 @@
   /* KC-CLUB-SCHACH-SPASS (2.116.0): ruhiges helles Brett (statt Braun/Beige mit rotem Rahmen), gezeichnete Figuren, Schieben */
   .sch-brett { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: min(100%, 440px); aspect-ratio: 1; margin: 6px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.14), 0 4px 14px rgba(0,0,0,.12); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
   .sch-brett:not(.aus) .sch-feld { touch-action: none; }
+  /* KC-CLUB-SCHACH-STILL (2.141.0): in der laufenden Partie bewegt sich auf dem Brett (auch Rand, auch während Twinkey überlegt) nichts mit,
+     und die ganze Seite federt/lädt nicht neu, wenn man über den Rand hinaus zieht */
+  body.sch-fokus .sch-rahmen { touch-action: none; } html:has(body.sch-fokus), body.sch-fokus { overscroll-behavior: none; }
   .sch-feld { position: relative; border: none; padding: 0; margin: 0; min-width: 0; min-height: 0; aspect-ratio: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; font: inherit; line-height: 1; }
   .sch-feld.hell { background-color: #f1f1f1; background-image: linear-gradient(135deg, #fbfbfb, #e6e6e6); } .sch-feld.dunkel { background-color: #bdbdbd; background-image: linear-gradient(135deg, #cdcdcd, #b0b0b0); } /* KC-CLUB-SCHACH-ELFENBEIN: graues Brett mit sanftem Glanz */
   .sch-rahmen { display: grid; grid-template-columns: 1.3em minmax(0, 1fr); width: 100%; margin: 4px 0 0; } .sch-rahmen .sch-brett { width: 100%; margin: 0; }
@@ -3596,6 +3599,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.140.0" data-v="2.140.0"></script>
+<script src="app.js?v=2.141.0" data-v="2.141.0"></script>
 </body>
 </html>

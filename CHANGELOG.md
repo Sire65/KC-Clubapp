@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.141.0 – 2026-10-09 – ♟️ Schach: Seite bleibt beim Schieben ruhig (Wunsch Hansi)
+Beim Schieben einer Figur mit dem Finger verschob sich manchmal die ganze Seite. Jetzt bewegt sich in einer laufenden Partie
+auf dem Brett nichts mit – auch am Rand mit den Zahlen und während Twinkey überlegt; die Seite federt nicht nach und lädt
+nicht neu, wenn man über den Rand hinaus zieht (Android). Unter dem Brett lässt sich die Seite weiter normal schieben.
+Zusätzlich eine Sperre per Programm für iOS, das die CSS-Sperre nicht überall beachtet (KC-CLUB-SCHACH-STILL).
+
 ## 2.140.0 – 2026-10-09 – 🔴 ON-AIR-Schild wie im Filmstudio, solange eine Live-Verbindung läuft (KC-CLUB-ON-AIR); 🎬-Knopf aus der Statusleiste entfernt (Studio als Kachel + Karte)
 🔧 Kleine Systemverbesserungen
 

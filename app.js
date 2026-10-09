@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.140.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.141.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -6062,6 +6062,13 @@ function schZiehEnde(e, abbruch) {
   if (nach && nach !== z.von) { z.fn(z.von, true); z.fn(nach, false, true); }
   else z.fn(z.von, true); // zurückgelegt: Figur bleibt gewählt, die Ziele leuchten
 }
+// KC-CLUB-SCHACH-STILL (2.141.0, Wunsch Hansi „beim Schieben verschiebt sich manchmal das ganze Bild“): während eine Figur
+// geschoben wird – und in einer laufenden Partie überhaupt auf dem Brett – darf der Finger die Seite nie mitbewegen
+// (iOS Safari beachtet touch-action nicht überall; dieselbe Sperre wie beim Sortieren per Ziehen).
+document.addEventListener("touchmove", (e) => {
+  if (!e.cancelable) return;
+  if (SCH_ZIEH || (document.body.classList.contains("sch-fokus") && e.target.closest?.(".sch-rahmen"))) e.preventDefault();
+}, { passive: false });
 document.addEventListener("pointerup", (e) => schZiehEnde(e, false));
 document.addEventListener("pointercancel", (e) => schZiehEnde(e, true));
 // KC-CLUB-SCHACH-FOKUS (2.116.0, Wunsch Hansi „Twinkey nimmt oben Platz weg, Brett zu klein“): Läuft eine Partie, verschwindet alles

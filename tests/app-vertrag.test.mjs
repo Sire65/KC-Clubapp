@@ -7107,3 +7107,10 @@ assert.ok(/\{ id: "studio", sym: "🎬", t: "Studio", u: "Foto · Mitschauen · 
   assert.ok(/<span id="stdOnAir">/.test(p) && /<span>🎬 STUDIO<\/span>\$\{stdOnAirAn\(\) \? onAirSchild\(true\) : ""\}/.test(p) && /\$\{laeuft \? onAirSchild\(true\) : ""\}/.test(p) && /id="ssLiveLeiste" class="ss-live-leiste" role="status">\$\{onAirSchild\(true\)\}/.test(p), "Studio-Fenster, Karte, Leiste beim Zeigen/Zuschauen, Balken beim Mitglied");
   assert.ok(/\.onair \{ display: inline-flex;/.test(h) && /@media \(prefers-reduced-motion: reduce\) \{ \.onair \{ animation: none; \} \}/.test(h), "Leuchtschild, ruhig bei „weniger Bewegung“");
 }
+
+// 4xx. 2.141.0: In der laufenden Partie bewegt sich beim Schieben die Seite nicht mit (KC-CLUB-SCHACH-STILL)
+{
+  assert.ok(/body\.sch-fokus \.sch-rahmen \{ touch-action: none; \} html:has\(body\.sch-fokus\), body\.sch-fokus \{ overscroll-behavior: none; \}/.test(html), "Brett ruhig, kein Nachfedern/Neuladen");
+  const f = programm.slice(programm.indexOf("// KC-CLUB-SCHACH-STILL"), programm.indexOf('document.addEventListener("pointerup", (e) => schZiehEnde'));
+  assert.ok(/document\.addEventListener\("touchmove", \(e\) => \{/.test(f) && /if \(SCH_ZIEH \|\| \(document\.body\.classList\.contains\("sch-fokus"\) && e\.target\.closest\?\.\("\.sch-rahmen"\)\)\) e\.preventDefault\(\);/.test(f) && /\{ passive: false \}/.test(f), "Sperre auch für iOS: beim Schieben und auf dem Brett der laufenden Partie");
+}
