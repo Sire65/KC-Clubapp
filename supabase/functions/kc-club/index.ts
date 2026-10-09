@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.161.0";
+const SERVER_VERSION = "2.162.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -138,11 +138,17 @@ async function personen(ids: string[]): Promise<Map<string, Person>> {
   const { data } = await db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,email").in("person_id", u);
   return new Map((data ?? []).map((p: Person) => [p.person_id, p]));
 }
+// KC-CLUB-START-PARALLEL-3 (2.162.0): laufen mehrere Aufrufe gleichzeitig (z. B. beim Start), teilen sie sich EINE Abfrage –
+// nichts wird zwischengespeichert, jeder bekommt eine eigene Kopie (spart Datenbank-Verbindungen, Inhalt bleibt gleich)
+let MG_LAUF: Promise<(Person & { birth_date?: string })[]> | null = null;
 async function aktiveMitglieder() {
-  // birth_date nur für „Geburtstag heute“ – wird nie ungefiltert an die App gegeben
-  const { data } = await db.from("kc_core_people").select("person_id,display_name,given_name,family_name,preferred_name,email,birth_date")
-    .eq("active", true).eq("org_id", ORG).not("person_id", "like", "KC-P-TEST%").order("display_name");
-  return (data ?? []) as (Person & { birth_date?: string })[];
+  if (!MG_LAUF) MG_LAUF = (async () => {
+    // birth_date nur für „Geburtstag heute“ – wird nie ungefiltert an die App gegeben
+    const { data } = await db.from("kc_core_people").select("person_id,display_name,given_name,family_name,preferred_name,email,birth_date")
+      .eq("active", true).eq("org_id", ORG).not("person_id", "like", "KC-P-TEST%").order("display_name");
+    return (data ?? []) as (Person & { birth_date?: string })[];
+  })().finally(() => { MG_LAUF = null; });
+  return (await MG_LAUF).map((x) => ({ ...x }));
 }
 async function protokoll(person: string | null, aktion: string, details: Record<string, unknown> = {}) {
   await db.from("kc_club_protokoll").insert({ person_id: person, aktion, details });
@@ -1613,12 +1619,28 @@ const PINNWAND_MAX = 4, PINNWAND_ZEICHEN = 200;
 const PINNWAND_FRISTEN_STANDARD = { erinnernTage: 3, pauseTage: 7 };
 const PINNWAND_FRISTEN_GRENZEN = { erinnernTage: [1, 30], pauseTage: [1, 60] } as const;
 // KC-CLUB-SOS-FREIGABE (2.22.5, Wunsch Hansi): der Admin kann „🚨 SOS an alle“ für alle Mitglieder freigeben (Club-Einstellung „sos“)
+// KC-CLUB-START-PARALLEL-3 (2.162.0): Lesungen aus kc_club_konfig, die im selben Augenblick anfallen (Start: sos, pinnwand,
+// einstieg, anruf_antworten), gehen gebündelt in EINER Abfrage raus – kein Zwischenspeicher, jede Lesung ist frisch
+const KONFIG_WARTE = new Map<string, ((r: { data: any; error: any }) => void)[]>();
+function konfigZeile(schluessel: string): Promise<{ data: { wert: any; geaendert_am: string | null } | null; error: any }> {
+  return new Promise((fertig) => {
+    const liste = KONFIG_WARTE.get(schluessel); if (liste) { liste.push(fertig); return; }
+    KONFIG_WARTE.set(schluessel, [fertig]);
+    if (KONFIG_WARTE.size > 1) return; // Abfrage ist schon angemeldet
+    queueMicrotask(async () => {
+      const warte = new Map(KONFIG_WARTE); KONFIG_WARTE.clear();
+      let rows: any[] = [], error: any = null;
+      try { const r = await db.from("kc_club_konfig").select("schluessel,wert,geaendert_am").in("schluessel", [...warte.keys()]); rows = r.data ?? []; error = r.error; } catch (e) { error = e; }
+      for (const [k, fs] of warte) { const z = rows.find((x: any) => x.schluessel === k); for (const f of fs) f({ data: z ? { wert: z.wert, geaendert_am: z.geaendert_am ?? null } : null, error }); }
+    });
+  });
+}
 async function sosFuerAlle(): Promise<boolean> {
-  const { data } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "sos").maybeSingle();
+  const { data } = await konfigZeile("sos");
   return !!(data?.wert as any)?.alle;
 }
 async function pinnwandFristen() {
-  const { data } = await db.from("kc_club_konfig").select("wert,geaendert_am").eq("schluessel", "pinnwand").maybeSingle();
+  const { data } = await konfigZeile("pinnwand");
   const w: any = data?.wert ?? {}, zahl = (k: keyof typeof PINNWAND_FRISTEN_GRENZEN) => {
     const n = Math.round(Number(w[k])), [lo, hi] = PINNWAND_FRISTEN_GRENZEN[k];
     return Number.isFinite(n) && n >= lo && n <= hi ? n : PINNWAND_FRISTEN_STANDARD[k]; };
@@ -1628,7 +1650,7 @@ async function pinnwandFristen() {
 const EINSTIEG_STANDARD = { aktiv: true, farbeTage: 3, privatTage: 3, erweitertTage: 14, spaeterTage: 3, feedbackTage: 28, geraeteTage: 21 };
 const EINSTIEG_GRENZEN = { farbeTage: [1, 20], privatTage: [1, 30], erweitertTage: [1, 90], spaeterTage: [1, 30], feedbackTage: [1, 180], geraeteTage: [1, 120] } as const;
 async function einstiegFristen() {
-  const { data } = await db.from("kc_club_konfig").select("wert,geaendert_am").eq("schluessel", "einstieg").maybeSingle();
+  const { data } = await konfigZeile("einstieg");
   const w: any = data?.wert ?? {}, zahl = (k: keyof typeof EINSTIEG_GRENZEN) => {
     const n = Math.round(Number(w[k])), [lo, hi] = EINSTIEG_GRENZEN[k];
     return Number.isFinite(n) && n >= lo && n <= hi ? n : EINSTIEG_STANDARD[k]; };
@@ -4705,6 +4727,17 @@ Köcheclub Werne`,
 
 // KC-CLUB-NOTBETRIEB (1.52.0): alle angemeldeten Aktionen in einer Funktion – so kann der Server dieselben Antworten
 // auch intern (nur lesend) für das Notfall-Paket berechnen. Inhalt unverändert aus Deno.serve übernommen.
+// KC-CLUB-START-PARALLEL-3 (2.162.0): meine sichtbaren Chats MIT Zahl der ungelesenen Nachrichten in EINER Datenbank-Abfrage
+// (vorher eine je Chat – bei 21 Chats 21 Anfragen, die sich um 10 Verbindungen drängeln). Gezählt wird genau wie bisher:
+// Nachrichten anderer, nach meinem letzten Lesen. Fehlt die Funktion oder klemmt sie → bisheriger Weg (Zählen je Chat).
+async function ungelesenJeChat(ich: Ich): Promise<{ data: any[] | null; error: any }> {
+  try {
+    const r = await db.rpc("kc_club_ungelesen_je_chat", { p_person: ich.person_id });
+    if (!r.error && Array.isArray(r.data)) return { data: r.data, error: null };
+    console.error("ungelesen_je_chat", r.error?.message ?? "keine Liste");
+  } catch (e) { console.error("ungelesen_je_chat", String(e)); }
+  return await db.from("kc_communication_thread_participants").select("thread_id,last_read_at").eq("person_id", ich.person_id).is("hidden_at", null);
+}
 async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anfrage: number, anmeldungMs: number): Promise<Response> {
     switch (a) {
       // ----- KC-CLUB-KURZCODE (1.87.0): Code für ein weiteres Gerät / die installierte App erzeugen -----
@@ -4807,7 +4840,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         for (const [n, x] of Object.entries({ pk: pPk, st: pStatus, abst: pAbst, nd: pNd, wahl: pWahlPm, geb: pGeb, kz: pKz, comm: pComm, sos: pSos, adm: pAdmin, auf: pAufgaben, tf: pTermin, rest: pRest, will: pWillkommen } as Record<string, PromiseLike<unknown>>)) mess(n, x).catch(() => {});
         const [naechstes, { data: teil, error: teilFehler }, mitglieder] = await Promise.all([
           mess("tr", treffenListe(ich, true)),
-          mess("teil", db.from("kc_communication_thread_participants").select("thread_id,last_read_at").eq("person_id", ich.person_id).is("hidden_at", null)),
+          mess("teil", ungelesenJeChat(ich)),
           mess("mg", aktiveMitglieder()),
         ]);
         // KC-CLUB-UNBEKANNT-NICHT-OK (1.97.0, Gesamtprüfung): klemmt die Datenbank, lieber ehrlich „gerade nicht möglich“ (503 → App
@@ -4817,6 +4850,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: stummE } = await pStumm;
         // KC-CLUB-SCHNELLSTART-SERVER (1.16.0): alle Unterhaltungen gleichzeitig zählen statt nacheinander (spart je Chat eine Runde)
         const zahlen = await Promise.all((teil ?? []).map(async (t: any) => {
+          if (Number.isFinite(t.n)) return { t, n: Number(t.n) }; // 2.162.0: schon von der Datenbank gezählt
           let q = db.from("kc_communication_messages").select("id", { count: "exact", head: true }).eq("thread_id", t.thread_id).neq("sender_person_id", ich.person_id);
           if (t.last_read_at) q = q.gt("created_at", t.last_read_at);
           const { count, error } = await q; if (error) { zaehlUnsicher = true; return { t, n: 0 }; } // 2.1.1: einzelne Zahl fehlt → „unsicher“, kein Notbetrieb

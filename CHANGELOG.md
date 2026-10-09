@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.162.0 – 2026-10-09 – ⚡ Schnellerer Start: weniger Datenbank-Anfragen (ungelesene je Chat in einer Abfrage, gebündelte Lesungen) (KC-CLUB-START-PARALLEL-3)
+🔧 Kleine Systemverbesserungen
+
 ## 2.161.0 – 2026-10-09 – 🪟 Kopf-Jalousie läuft auch bei „Bewegung reduzieren“ (KC-CLUB-KOPF-ROLLO)
 🔧 Kleine Systemverbesserungen
 

@@ -7388,3 +7388,16 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/function kopfRollo\(\) \{[\s\S]{0,300}localStorage\.setItem\(KOPF_ROLLO, "1"\) : localStorage\.removeItem\(KOPF_ROLLO\)/.test(html) && /try \{ if \(localStorage\.getItem\(KOPF_ROLLO\) === "1"\) kopfRolloSetzen\(true\); \} catch \{\}/.test(html), "Zustand gemerkt, Speicherfehler harmlos");
   assert.ok(/k\.setAttribute\("aria-expanded", zu \? "false" : "true"\)/.test(html), "Vorlesehilfe kennt den Zustand");
 }
+// 2.162.0 KC-CLUB-START-PARALLEL-3 (Wunsch Hansi „Start optimieren, nicht schlechter“): weniger Datenbank-Anfragen beim Start, gleicher Inhalt
+{
+  const mig = lies("supabase/migrations/20261009_kc_club_v2162_ungelesen_je_chat.sql");
+  assert.ok(/create or replace function public\.kc_club_ungelesen_je_chat\(p_person text\)/.test(mig) && /language sql\s+stable/.test(mig), "Zähl-Funktion nur lesend");
+  assert.ok(/m\.sender_person_id <> p_person/.test(mig) && /t\.last_read_at is null or m\.created_at > t\.last_read_at/.test(mig) && /t\.hidden_at is null/.test(mig), "zählt wie bisher (andere, nach Lesen, sichtbare Chats)");
+  assert.ok(/revoke all on function public\.kc_club_ungelesen_je_chat\(text\) from public, anon, authenticated;/.test(mig) && /grant execute on function public\.kc_club_ungelesen_je_chat\(text\) to service_role;/.test(mig), "nur der Server darf sie aufrufen");
+  const f = server.slice(server.indexOf("async function ungelesenJeChat("), server.indexOf("async function aktionAusfuehren("));
+  assert.ok(/db\.rpc\("kc_club_ungelesen_je_chat", \{ p_person: ich\.person_id \}\)/.test(f) && /return await db\.from\("kc_communication_thread_participants"\)\.select\("thread_id,last_read_at"\)\.eq\("person_id", ich\.person_id\)\.is\("hidden_at", null\);/.test(f), "Rückfall auf den bisherigen Weg");
+  assert.ok(/mess\("teil", ungelesenJeChat\(ich\)\)/.test(server) && /if \(Number\.isFinite\(t\.n\)\) return \{ t, n: Number\(t\.n\) \};/.test(server), "init nutzt die gezählten Zahlen, sonst wie bisher je Chat");
+  assert.ok(/let MG_LAUF:/.test(server) && /\.finally\(\(\) => \{ MG_LAUF = null; \}\)/.test(server) && /return \(await MG_LAUF\)\.map\(\(x\) => \(\{ \.\.\.x \}\)\);/.test(server), "Mitgliederliste: gleichzeitige Aufrufe teilen eine Abfrage, ohne Zwischenspeicher, jeder eine Kopie");
+  assert.ok(/function konfigZeile\(schluessel: string\)/.test(server) && /\.in\("schluessel", \[\.\.\.warte\.keys\(\)\]\)/.test(server), "Club-Einstellungen gebündelt gelesen");
+  for (const k of ["sos", "pinnwand", "einstieg"]) assert.ok(server.includes(`await konfigZeile("${k}")`), `${k} über die gebündelte Lesung`);
+}
