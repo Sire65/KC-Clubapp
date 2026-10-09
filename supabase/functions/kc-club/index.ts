@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.124.0";
+const SERVER_VERSION = "2.125.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
@@ -3298,7 +3298,18 @@ async function aufgabeHolen(ich: Ich, id: unknown) {
 // ---------- Aktionen / Ausflüge (KC-CLUB-AKTIONEN) ----------
 // Quelle ist der KC Manager (Bereich „Aktivitäten / Ausflüge“) – die Club-App liest nur, keine zweite Datenhaltung.
 // Teilnehmer: Mitglied im KC Manager (m_kc_…) → kc_core_people über Nachname + Anfang des Vornamens (Anne/Annegret).
-const AKTIONEN_QUELLE = { tabelle: "kc_manager_state_sections", aktionen: "activities", mitglieder: "members" };
+// KC-CLUB-BUERO-ADRESSEN (2.125.0): Felder der KC-Verwaltungs-Adressen (17_address_inventory_core.js), die das Büro sieht/melden darf
+const ADR_FELDER: [string, number][] = [["salutation", 30], ["title", 40], ["firstName", 60], ["lastName", 60], ["company", 120], ["contactPerson", 80], ["category", 40], ["status", 20],
+  ["street", 120], ["zip", 12], ["city", 80], ["country", 40], ["phone1", 40], ["phone2", 40], ["fax", 40], ["website", 160], ["email1", 120], ["email2", 120], ["notes", 1000]];
+const ADR_MITGLIED_KAT = new Set(["Mitglied", "Mitarbeiter"]);
+const adrIstMitglied = (a: any) => a?.sourceType === "member" || !!a?.sourceMemberId || ADR_MITGLIED_KAT.has(String(a?.category || ""));
+function adrSauber(a: any, nurFelder = false): Record<string, string> {
+  const o: Record<string, string> = {};
+  if (!nurFelder) { o.id = txt(a?.id, 80); o.no = txt(a?.no, 20); o.geaendert = txt(a?.updatedAt, 40); }
+  for (const [k, n] of ADR_FELDER) { const v = txt(a?.[k], n); if (v) o[k] = v; }
+  return o;
+}
+const AKTIONEN_QUELLE = { tabelle: "kc_manager_state_sections", aktionen: "activities", mitglieder: "members", adressen: "addresses", auswahl: "combos" }; // adressen/auswahl: KC-CLUB-BUERO-ADRESSEN (2.125.0)
 const namensSchluessel = (vor: string, nach: string) => `${String(nach || "").trim().toLowerCase()}|${String(vor || "").trim().toLowerCase().slice(0, 3)}`;
 // Reiseverlauf aus der Beschreibung („11.05.2027 Bremerhaven - 12.05.2027 Seetag - …“); Preiszeilen werden abgeschnitten
 function reiseverlauf(beschreibung: unknown) {
@@ -5493,6 +5504,53 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       // ----- KC-CLUB-BUERO-MITGLIEDERLISTE (1.31.0): Liste zum Drucken – Kontaktdaten nach denselben Regeln wie die Mitglieder-Seite -----
+      // ----- KC-CLUB-BUERO-ADRESSEN (2.125.0, Wunsch Hansi): Adressbuch im Büro – Original bleibt KC Verwaltung (Abschnitt „addresses“) -----
+      // Gezeigt werden nur EXTERNE Adressen (Lieferant, Sponsor, Presse, Behörde …). Mitglieder stehen im Ordner „📇 Mitglieder“ – dort mit
+      // ihren Kontakt-Freigaben (die Kopie in der Verwaltung würde die Freigaben umgehen). Ändern: nur als Meldung an KC Verwaltung.
+      case "buero_adressen": {
+        nurVorstand(ich); nurBueroLesen(ich);
+        const [{ data: ab, error: fa }, { data: kb }, { data: me }] = await Promise.all([
+          db.from(AKTIONEN_QUELLE.tabelle).select("payload,updated_at").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.adressen).maybeSingle(),
+          db.from(AKTIONEN_QUELLE.tabelle).select("payload").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.auswahl).maybeSingle(),
+          db.from("kc_club_adress_meldungen").select("id,art,adresse_id,daten,grund,von_person,status,erstellt_am,erledigt_am,antwort").eq("org_id", ORG)
+            .or(`status.eq.offen,erledigt_am.gte.${new Date(Date.now() - 30 * 86400000).toISOString()}`).order("erstellt_am", { ascending: false }).limit(100),
+        ]);
+        if (fa) throw new Fehler("Die Adressen aus KC Verwaltung sind gerade nicht abrufbar.", 503); // UNKNOWN ≠ leer
+        const roh = Array.isArray(ab?.payload?.data) ? ab.payload.data : null;
+        const adressen = (roh ?? []).filter((a: any) => a && typeof a === "object" && !adrIstMitglied(a)).map(adrSauber);
+        const kat = Array.isArray(kb?.payload?.data?.addressCategories) ? kb.payload.data.addressCategories : [];
+        const kategorien = [...new Set([...kat, ...adressen.map((a: any) => a.category)].map((k: any) => txt(k, 40)).filter((k: string) => k && !ADR_MITGLIED_KAT.has(k)))].sort((a, b) => a.localeCompare(b, "de"));
+        const leute = await personen([...new Set<string>((me ?? []).map((m: any) => m.von_person))]);
+        return json({ ok: true, vorhanden: roh !== null, stand: ab?.updated_at ?? null, adressen, kategorien, darfMelden: ich.buero === "schreiben",
+          meldungen: (me ?? []).map((m: any) => ({ ...m, von: vorname(leute.get(m.von_person)) || "Büro", meine: m.von_person === ich.person_id, von_person: undefined })) });
+      }
+      case "buero_adresse_melden": {
+        nurVorstand(ich); nurBueroSchreiben(ich);
+        const art = String(p.art || "");
+        if (!["neu", "aendern", "entfernen"].includes(art)) throw new Fehler("Unbekannte Art der Meldung.", 400);
+        const adresseId = art === "neu" ? null : txt(p.adresse_id, 80);
+        if (art !== "neu") {
+          const { data: ab } = await db.from(AKTIONEN_QUELLE.tabelle).select("payload").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.adressen).maybeSingle();
+          const alt = (Array.isArray(ab?.payload?.data) ? ab.payload.data : []).find((a: any) => a?.id === adresseId);
+          if (!alt || adrIstMitglied(alt)) throw new Fehler("Diese Adresse gibt es in KC Verwaltung nicht (mehr).", 404);
+        }
+        const daten = art === "entfernen" ? {} : adrSauber(p.daten ?? {}, true);
+        if (art !== "entfernen" && !(daten.company || daten.lastName || daten.firstName)) throw new Fehler("Bitte mindestens Firma oder Name angeben.", 400);
+        if (ADR_MITGLIED_KAT.has(String(daten.category || ""))) throw new Fehler("Mitglieder-Adressen ändert jedes Mitglied selbst (Meins → Änderung melden).", 400);
+        const { count } = await db.from("kc_club_adress_meldungen").select("id", { count: "exact", head: true }).eq("von_person", ich.person_id).gte("erstellt_am", new Date(Date.now() - 3600000).toISOString());
+        if ((count ?? 0) >= 30) throw new Fehler("Gerade sind schon viele Adress-Meldungen unterwegs – bitte später weitermachen.", 429);
+        const { data: neu, error } = await db.from("kc_club_adress_meldungen").insert({ org_id: ORG, art, adresse_id: adresseId, daten, grund: txt(p.grund, 300) || null, von_person: ich.person_id }).select("id").single();
+        if (error) throw new Error(error.message);
+        await protokoll(ich.person_id, "adresse_gemeldet", { art, id: neu.id }); // ohne Inhalte
+        return json({ ok: true, id: neu.id });
+      }
+      case "buero_adresse_zurueckziehen": {
+        nurVorstand(ich); nurBueroSchreiben(ich);
+        const id = String(p.id || ""); if (!UUID_ALBUM.test(id)) throw new Fehler("Ungültig.", 400);
+        const { data } = await db.from("kc_club_adress_meldungen").update({ status: "zurueckgezogen", erledigt_am: jetzt() }).eq("id", id).eq("von_person", ich.person_id).eq("status", "offen").select("id");
+        if (!data?.length) throw new Fehler("Die Meldung ist schon bearbeitet oder nicht von dir.", 409);
+        return json({ ok: true });
+      }
       case "buero_mitgliederliste": {
         nurVorstand(ich);
         const leute = await aktiveMitglieder();

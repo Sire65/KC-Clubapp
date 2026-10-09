@@ -6912,3 +6912,24 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/Kommst du zu mir, bring bitte dein Tablet mit – komme ich zu dir, leg es bitte bereit/.test(termine) && /Leg bitte dein Tablet bereit/.test(termine) && /Bring bitte dein Tablet mit/.test(termine), "Tablet-Hinweis klar");
   assert.ok(/tabletHinweis\(n, frei\.length && frei\.every\(\(s\) => s\.besuchsart === frei\[0\]\.besuchsart\) \? frei\[0\]\.besuchsart : undefined\)/.test(termine), "gleiche Art → passender Satz");
 }
+
+// 4xx. 2.125.0: Adressbuch im Büro (KC-CLUB-BUERO-ADRESSEN) – Original KC Verwaltung, Club-App liest + meldet
+{
+  const mig = lies("supabase/migrations/20261009_kc_club_adress_meldungen.sql");
+  assert.ok(/create table if not exists public\.kc_club_adress_meldungen/.test(mig) && /revoke all on public\.kc_club_adress_meldungen from public, anon, authenticated/.test(mig), "Meldungstabelle nur über Server/Funktionen");
+  assert.ok(/m\.role in \('operator', 'manager', 'admin'\)/.test(mig) && (mig.match(/raise exception 'Keine Berechtigung für diesen Bereich'/g) || []).length === 2, "beide Funktionen prüfen die Verwaltungs-Rolle");
+  assert.ok(/if v_alt <> 'offen' then return/.test(mig) && /where id = p_id and status = 'offen'/.test(mig), "Quittung nur einmal, Wiederholung ohne Fehler");
+  assert.ok(/revoke all on function public\.kc_club_adress_meldungen_offen\(text\) from public, anon;/.test(mig) && /grant execute on function public\.kc_club_adress_meldung_erledigen\(uuid, text, text\) to authenticated;/.test(mig), "Rechte der Funktionen");
+  assert.ok(/\('adressen', 'KC_CLUBAPP', false, true, false,/.test(mig) && /\('adressen', 'KC_KNG', true,/.test(mig), "Datenvertrag: Verwaltung besitzt, Club-App liest");
+  const ba = server.slice(server.indexOf('case "buero_adressen"'), server.indexOf('case "buero_mitgliederliste"'));
+  assert.ok(/nurVorstand\(ich\); nurBueroLesen\(ich\);/.test(ba) && /nurVorstand\(ich\); nurBueroSchreiben\(ich\);/.test(ba), "lesen: Clubleitung + Büro; melden: Büro-Schreibrecht");
+  assert.ok(/!adrIstMitglied\(a\)/.test(ba) && /throw new Fehler\("Die Adressen aus KC Verwaltung sind gerade nicht abrufbar\.", 503\)/.test(ba), "Mitglieder nicht über die Kopie (Freigaben), UNKNOWN ≠ leer");
+  assert.ok(!/kc_core_people"\)\.(insert|update|upsert)/.test(ba) && !/AKTIONEN_QUELLE\.tabelle\)\.(insert|update|upsert)/.test(ba), "schreibt weder Personen noch Verwaltungs-Abschnitte");
+  assert.ok(/const ADR_FELDER: \[string, number\]\[\] = \[/.test(server) && /for \(const \[k, n\] of ADR_FELDER\) \{ const v = txt\(a\?\.\[k\], n\);/.test(server), "nur bekannte Felder, gekürzt");
+  assert.ok(/\{ id: "adressen", sym: "📒", t: "Adressbuch", farbe: "#6d7468", fn: "adbStart\(\)", recht: "L" \}/.test(programm), "Ordner im Büro-Regal (Registry)");
+  const ad = programm.slice(programm.indexOf("// ---------- KC-CLUB-BUERO-ADRESSEN"), programm.indexOf("const buRecht = (x) =>"));
+  assert.ok(/api\("buero_adresse_melden", \{ art: id \? "aendern" : "neu"/.test(ad) && /api\("buero_adresse_melden", \{ art: "entfernen", adresse_id: id \}/.test(ad) && /if \(!\(await frage\(/.test(ad), "melden statt ändern, Entfernen mit Rückfrage");
+  assert.ok(!/\$\{a\.(company|firstName|lastName|street|city|notes)\}/.test(ad), "alle Adressfelder escaped");
+  assert.ok(/onclick="adbStart\(true\)">📒 Aus dem Adressbuch<\/button>/.test(programm) && /BRIEF\.empfaenger = adbAnschrift\(a\)/.test(ad), "Briefbogen: Empfänger aus dem Adressbuch");
+  assert.ok(/:root\.gross \.kacheln3 \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}/.test(seite), "große Schrift: Startseite nicht breiter als der Bildschirm");
+}

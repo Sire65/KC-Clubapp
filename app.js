@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.124.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.125.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12529,6 +12529,7 @@ const BU_REGAL = [
   { id: "feste", sym: "🎂", t: "Geburtstage", farbe: "#a1866f", fn: "buFeste()" },
   { id: "fl", sym: "🤍", t: "Freud & Leid", farbe: "#7d6b7f", fn: "buFreudLeid()", recht: "L" },
   { id: "liste", sym: "📇", t: "Mitglieder", farbe: "#6a7a74", fn: "buListe()", recht: "L" },
+  { id: "adressen", sym: "📒", t: "Adressbuch", farbe: "#6d7468", fn: "adbStart()", recht: "L" }, // KC-CLUB-BUERO-ADRESSEN (2.125.0): Original in KC Verwaltung
   { id: "termine", sym: "📅", t: "Termine", farbe: "#8b6f5a", fn: "buTermine()", recht: "S" },
   { id: "briefe", sym: "✉️", t: "Briefe", farbe: "#6e6a5c", fn: "buBrief()", recht: "S" },
   { id: "erstattung", sym: "💶", t: "Erstattung", farbe: "#7a7f5e", fn: "zeige('erstattung')", recht: "L" },
@@ -12538,6 +12539,101 @@ const BU_REGAL = [
   { id: "inhalt", sym: "🗂️", t: "Inhaltsverzeichnis", farbe: "#5d6b5a", fn: "ivDrucken()" }, // KC-CLUB-INHALTSVERZEICHNIS (2.79.0): alle Ordner als PDF/Ausdruck
   { id: "verwaltung", sym: "🔐", t: "Freigaben", farbe: "#55606b", fn: "buRechte()", recht: "A" },
 ];
+// ---------- KC-CLUB-BUERO-ADRESSEN (2.125.0, Wunsch Hansi): Adressbuch im Büro ----------
+// Original = Adressverwaltung in KC Verwaltung. Hier nur LESEN (externe Adressen: Lieferant, Sponsor, Presse, Behörde …) und
+// Änderungen als MELDUNG schicken – KC Verwaltung übernimmt sie dort. Mitglieder stehen im Ordner „📇 Mitglieder“ (mit Freigaben).
+const ADB = { d: null, such: "", kat: "", wahl: false };
+const ADB_FELDER = [["category", "Kategorie"], ["company", "Firma / Einrichtung"], ["salutation", "Anrede"], ["title", "Titel"], ["firstName", "Vorname"], ["lastName", "Nachname"],
+  ["contactPerson", "Ansprechpartner"], ["street", "Straße und Nr."], ["zip", "PLZ"], ["city", "Ort"], ["country", "Land"], ["phone1", "Telefon"], ["phone2", "Telefon 2 / Handy"],
+  ["fax", "Fax"], ["email1", "E-Mail"], ["email2", "E-Mail 2"], ["website", "Internetseite"], ["notes", "Notiz"]];
+const adbName = (a) => [a.salutation, a.title, a.firstName, a.lastName].filter(Boolean).join(" ");
+const adbTitel = (a) => a.company || adbName(a) || "(ohne Namen)";
+const adbAnschrift = (a) => [a.company, a.company ? (a.contactPerson || adbName(a)) : adbName(a), a.street, [a.zip, a.city].filter(Boolean).join(" "), a.country && !/^(deutschland|de|germany)$/i.test(a.country) ? a.country : ""].filter(Boolean).join("\n");
+async function adbStart(wahl = false) {
+  ADB.wahl = !!wahl;
+  blattAuf("adbBlatt", `<h3 style="margin:0">📒 Adressbuch${ADB.wahl ? " – Empfänger wählen" : ""}</h3>
+    <p class="hinweis" style="margin:4px 0 8px">Lieferanten, Sponsoren, Presse, Behörden … aus <b>KC Verwaltung</b>. Mitglieder stehen im Ordner „📇 Mitglieder“.</p>
+    <input id="adbSuche" type="search" placeholder="🔎 Suchen (Name, Firma, Ort …)" value="${esc(ADB.such)}" oninput="ADB.such=this.value;adbListe()" style="width:100%;margin-bottom:6px">
+    <div class="hl-chips" id="adbKat"></div><div id="adbInhalt"><p class="hinweis">Wird geladen …</p></div>
+    <button class="knopf" onclick="$('adbBlatt').remove()">Schließen</button>`);
+  await adbLaden();
+}
+async function adbLaden() {
+  try { ADB.d = await api("buero_adressen", {}, { warten: true }); }
+  catch (e) { const z = $("adbInhalt"); if (z) z.innerHTML = `<div class="karte sc-fehler">⚠️ ${esc(e?.message || "Nicht erreichbar")} – das Adressbuch bleibt leer, bis es wieder geht.</div>`; return; }
+  adbListe();
+}
+function adbListe() {
+  const d = ADB.d, z = $("adbInhalt"), k = $("adbKat"); if (!d || !z) return;
+  if (k) k.innerHTML = ["", ...d.kategorien].map((x) => `<button class="chip${ADB.kat === x ? " an" : ""}" onclick='ADB.kat=${hlJs(x)};adbListe()'>${esc(x || "Alle")}</button>`).join("");
+  const q = ADB.such.trim().toLowerCase();
+  const liste = d.adressen.filter((a) => (!ADB.kat || a.category === ADB.kat) && (!q || Object.values(a).join(" ").toLowerCase().includes(q)))
+    .sort((a, b) => adbTitel(a).localeCompare(adbTitel(b), "de"));
+  const offen = new Map(d.meldungen.filter((m) => m.status === "offen" && m.adresse_id).map((m) => [m.adresse_id, m]));
+  const stand = d.stand ? `Stand aus KC Verwaltung: ${esc(new Date(d.stand).toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" }))}` : "";
+  const karte = (a) => `<div class="karte" style="margin:6px 0">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><b>${esc(adbTitel(a))}</b>${a.category ? `<span class="chip" style="flex:none">${esc(a.category)}</span>` : ""}</div>
+      ${a.company && (a.contactPerson || adbName(a)) ? `<div>${esc(a.contactPerson || adbName(a))}</div>` : ""}
+      ${a.street || a.city ? `<div class="hinweis">${esc([a.street, [a.zip, a.city].filter(Boolean).join(" ")].filter(Boolean).join(", "))}</div>` : ""}
+      ${a.status && !/^aktiv$/i.test(a.status) ? `<div class="hinweis">Status: ${esc(a.status)}</div>` : ""}
+      ${offen.has(a.id) ? '<div class="hinweis">⏳ Meldung an KC Verwaltung offen</div>' : ""}
+      <div class="hl-chips" style="margin-top:6px">
+        ${ADB.wahl ? `<button class="chip an" onclick='adbFuerBrief(${hlJs(a.id)})'>✉️ Für den Brief</button>` : ""}
+        ${a.phone1 ? `<a class="chip" href="tel:${esc(a.phone1.replace(/[^\d+]/g, ""))}">📞 Anrufen</a>` : ""}${a.phone2 ? `<a class="chip" href="tel:${esc(a.phone2.replace(/[^\d+]/g, ""))}">📱 Tel. 2</a>` : ""}
+        ${a.email1 ? `<a class="chip" href="mailto:${esc(a.email1)}">✉️ E-Mail</a>` : ""}
+        <button class="chip" onclick='adbKopieren(${hlJs(a.id)})'>📋 Kopieren</button>
+        ${d.darfMelden && !ADB.wahl ? `<button class="chip" onclick='adbFormular(${hlJs(a.id)})'>✏️ Änderung melden</button><button class="chip" onclick='adbEntfernen(${hlJs(a.id)})'>🗑️ Entfernen melden</button>` : ""}
+      </div></div>`;
+  const ml = d.meldungen.length && !ADB.wahl ? `<details class="karte" style="margin-top:10px"><summary><b>📨 Meldungen an KC Verwaltung</b> (${d.meldungen.filter((m) => m.status === "offen").length} offen)</summary>
+      ${d.meldungen.map((m) => `<div style="padding:6px 0;border-top:1px solid var(--linie)">${{ neu: "➕ Neu", aendern: "✏️ Ändern", entfernen: "🗑️ Entfernen" }[m.art]}: <b>${esc(adbTitel(m.art === "neu" ? m.daten : (d.adressen.find((a) => a.id === m.adresse_id) || m.daten)))}</b>
+        <div class="hinweis">${esc(m.von)} · ${esc(new Date(m.erstellt_am).toLocaleDateString("de-DE"))} · ${{ offen: "⏳ wartet auf KC Verwaltung", uebernommen: "✅ übernommen", abgelehnt: "❌ abgelehnt", zurueckgezogen: "↩️ zurückgezogen" }[m.status] || esc(m.status)}${m.antwort ? ` – ${esc(m.antwort)}` : ""}</div>
+        ${m.meine && m.status === "offen" ? `<button class="chip" onclick='adbZurueck(${hlJs(m.id)})'>↩️ Zurückziehen</button>` : ""}</div>`).join("")}</details>` : "";
+  z.innerHTML = `${!d.vorhanden ? '<div class="karte hinweis">⚠️ In KC Verwaltung ist noch keine Adressliste gespeichert.</div>' : ""}
+    <p class="hinweis" style="margin:4px 0">${liste.length} von ${d.adressen.length} Adressen${stand ? " · " + stand : ""}</p>
+    ${d.darfMelden && !ADB.wahl ? '<button class="knopf klein" style="margin:0 0 6px" onclick="adbFormular(null)">➕ Neue Adresse melden</button>' : ""}
+    ${liste.map(karte).join("") || `<div class="karte hinweis">${d.adressen.length ? "Nichts gefunden." : "Noch keine externen Adressen in KC Verwaltung."}</div>`}${ml}`;
+}
+function adbFuerBrief(id) {
+  const a = ADB.d?.adressen.find((x) => x.id === id); if (!a || typeof BRIEF === "undefined" || !BRIEF) return;
+  BRIEF.empfaenger = adbAnschrift(a); briefMerken(); $("adbBlatt")?.remove(); buZeigen(); melde("✉️ Empfänger übernommen");
+}
+async function adbKopieren(id) {
+  const a = ADB.d?.adressen.find((x) => x.id === id); if (!a) return;
+  const t = [adbAnschrift(a), a.phone1 && "Tel. " + a.phone1, a.phone2 && "Tel. " + a.phone2, a.email1 && a.email1].filter(Boolean).join("\n");
+  try { await navigator.clipboard.writeText(t); melde("📋 Adresse kopiert"); } catch { melde("Kopieren geht hier nicht – bitte lange auf den Text tippen"); }
+}
+function adbFormular(id) {
+  const a = id ? ADB.d?.adressen.find((x) => x.id === id) : null; if (id && !a) return;
+  const kats = ADB.d?.kategorien || [];
+  const feld = ([k, l]) => k === "category"
+    ? `<label class="feld">${l}<select id="adbF_${k}"><option value=""></option>${kats.map((x) => `<option${a?.[k] === x ? " selected" : ""}>${esc(x)}</option>`).join("")}</select></label>`
+    : k === "notes" ? `<label class="feld">${l}<textarea id="adbF_${k}" rows="3" maxlength="1000">${esc(a?.[k] || "")}</textarea></label>`
+    : `<label class="feld">${l}<input id="adbF_${k}" maxlength="${k === "website" ? 160 : 120}" value="${esc(a?.[k] || "")}"${/email/.test(k) ? ' type="email"' : /phone|fax/.test(k) ? ' type="tel"' : ""}></label>`;
+  blattAuf("adbFormBlatt", `<h3 style="margin:0">${a ? "✏️ Änderung melden" : "➕ Neue Adresse melden"}</h3>
+    <p class="hinweis" style="margin:4px 0 8px">Geht als Meldung an <b>KC Verwaltung</b> – dort wird sie übernommen. Bis dahin bleibt die Adresse hier wie bisher.</p>
+    ${ADB_FELDER.map(feld).join("")}<label class="feld">Kurzer Grund (freiwillig)<input id="adbF_grund" maxlength="300" placeholder="z. B. neue Anschrift laut Rechnung"></label>
+    <button class="knopf haupt" onclick='adbSenden(${hlJs(id || "")}, this)'>📨 An KC Verwaltung melden</button><button class="knopf" onclick="$('adbFormBlatt').remove()">Abbrechen</button>`);
+}
+async function adbSenden(id, knopf) {
+  const daten = {}; for (const [k] of ADB_FELDER) { const v = ($("adbF_" + k)?.value || "").trim(); if (v) daten[k] = v; }
+  if (!daten.company && !daten.lastName && !daten.firstName) return melde("Bitte mindestens Firma oder Name angeben.");
+  const alt = id ? ADB.d?.adressen.find((x) => x.id === id) : null;
+  if (alt && ADB_FELDER.every(([k]) => (daten[k] || "") === (alt[k] || ""))) return melde("Es wurde nichts geändert.");
+  if (knopf) knopf.disabled = true;
+  try {
+    await api("buero_adresse_melden", { art: id ? "aendern" : "neu", adresse_id: id || null, daten, grund: $("adbF_grund")?.value || "" }, { warten: true });
+    $("adbFormBlatt")?.remove(); melde("📨 Gemeldet – KC Verwaltung übernimmt die Adresse"); adbLaden();
+  } catch (e) { if (knopf) knopf.disabled = false; meldeFehler(e); }
+}
+async function adbEntfernen(id) {
+  const a = ADB.d?.adressen.find((x) => x.id === id); if (!a) return;
+  if (!(await frage(`„${adbTitel(a)}“ zum Entfernen an KC Verwaltung melden?`))) return;
+  try { await api("buero_adresse_melden", { art: "entfernen", adresse_id: id }, { warten: true }); melde("📨 Gemeldet – KC Verwaltung entscheidet"); adbLaden(); } catch (e) { meldeFehler(e); }
+}
+async function adbZurueck(id) {
+  if (!(await frage("Diese Meldung zurückziehen?"))) return;
+  try { await api("buero_adresse_zurueckziehen", { id }, { warten: true }); melde("↩️ Zurückgezogen"); adbLaden(); } catch (e) { meldeFehler(e); }
+}
 const buRecht = (x) => !x.recht || (x.recht === "S" && buSchreiben()) || (x.recht === "L" && !!ICH?.vorstand) || (x.recht === "A" && !!ICH?.admin);
 function buRaumHtml() {
   const r = BU.start; if (!r) return '<div class="karte hinweis">Wird geladen …</div>';
@@ -13206,7 +13302,7 @@ function buBriefHtml() {
   return `<div class="karte bu-kopf"><img src="kc-kochmuetze-weiss.webp" alt="" class="bu-logo"><div><b>✉️ Briefbogen</b><br><small class="hinweis">Mit Logo und „Köcheclub Werne“ – zum Ausdrucken oder als PDF</small></div></div>
     <div class="karte"><h3 style="margin-top:0">1️⃣ Vorlage</h3><div class="mini-kacheln">${Object.entries(BRIEF_VORLAGEN).map(([k, v]) => `<button class="mini-kachel${b.vorlage === k ? " mk-offen" : ""}" onclick="briefVorlage('${k}')"><span class="mk-sym">${v.sym}</span><span class="mk-titel">${esc(v.t)}</span></button>`).join("")}</div>
       <p class="hinweis" style="margin:6px 0 0">Stellen in [eckigen Klammern] bitte ersetzen.</p></div>
-    <div class="karte"><h3 style="margin-top:0">2️⃣ An wen?</h3>${fe("empfaenger", "Empfänger (Name und Anschrift)", "z. B. Kinderhospiz Lünen/Werne\nStraße Nr.\n59368 Werne", 4)}
+    <div class="karte"><h3 style="margin-top:0">2️⃣ An wen?</h3>${ICH?.vorstand ? '<button class="knopf klein" style="margin:0 0 6px" onclick="adbStart(true)">📒 Aus dem Adressbuch</button>' : ""}${fe("empfaenger", "Empfänger (Name und Anschrift)", "z. B. Kinderhospiz Lünen/Werne\nStraße Nr.\n59368 Werne", 4)}
       <div class="zwei">${fe("ort", "Ort", "Werne")}<label class="feld">Datum<input type="date" value="${esc(b.datum)}" onchange="briefFeld('datum', this)"></label></div></div>
     <div class="karte"><h3 style="margin-top:0">3️⃣ Text</h3>${fe("betreff", "Betreff", "z. B. Spende des Köcheclubs Werne")}
       <div class="hinweis" style="margin:6px 0 4px">Anrede</div>${chips("anrede", BRIEF_ANREDEN)}

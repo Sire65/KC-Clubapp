@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.125.0 – 2026-10-09 – Adressbuch im Büro
+🔧 Kleine Systemverbesserungen
+Admin-Notiz (KC-CLUB-BUERO-ADRESSEN, Wunsch Hansi): Büro-Ordner „📒 Adressbuch“ (Clubleitung) – liest die externen Adressen (Lieferant, Sponsor, Presse, Behörde …)
+aus der Adressverwaltung von KC Verwaltung (Abschnitt addresses, Original bleibt dort); Suchen, Kategorien, Anrufen, E-Mail, Kopieren, „Aus dem Adressbuch“ im Briefbogen.
+Neu/Ändern/Entfernen nur als Meldung (kc_club_adress_meldungen, Weg B) – KC Verwaltung 54.8.19 zeigt „📥 Meldungen aus der Club-App“, übernimmt und quittiert.
+Mitglieder bleiben im Ordner „📇 Mitglieder“ (mit Kontakt-Freigaben). Datenvertrag: adressen (Eigentümer KC_KNG, Club-App liest), adress_meldungen.
+Außerdem: große Schrift – Startseite war 15 px zu breit („Neue Nachr.“).
+
 ## 2.124.0 – 2026-10-08 – Notfall-Paket in Teilen, Tablet-Hinweis
 🔧 Kleine Systemverbesserungen
 Admin-Notiz: Notfall-Paket wird je Mitglied in einem eigenen Server-Aufruf gebaut (KC-CLUB-NOTPAKET-TEILE) – der Gesamtlauf brach mit „CPU Time exceeded“ (546) ab; fehlt ein Teil, bleibt das alte Paket.
