@@ -5359,14 +5359,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.56.0 KC-CLUB-VORFUEHREN (Wunsch Hansi „Klaus etwas zeigen“): Live zeigen – Zuschauer-App folgt, ohne Bildübertragung, nichts wird beim Zuschauer ausgelöst
 {
   const f = server.slice(server.indexOf('case "vorfuehren_start": {'), server.indexOf('case "anklopfen": {'));
-  assert.ok(/case "vorfuehren_start": \{\s*nurAdmin\(ich\);/.test(f), "Vorführen vorerst nur Admin");
+  assert.ok(/case "vorfuehren_start": \{\s*await studioDarf\(ich, "zeigen"\);/.test(f), "Vorführen: Admin oder freigeschaltet (2.136.0 KC-CLUB-STUDIO)");
   assert.ok(/if \(an !== ich\.person_id && w\.von !== ich\.person_id\) throw new Fehler\("Kein Zugriff\.", 403\);/.test(f), "nur Vorführender und Zuschauer");
-  assert.ok(/\.slice\(-VF_EV_MAX\)/.test(f) && /3 \* 60000 : 3 \* 3600000/.test(f), "begrenzt, Anfrage verfällt nach 3 Min., Sitzung nach 3 Std.");
+  assert.ok(/\.slice\(-VF_EV_MAX\)/.test(f) && /3 \* 60000 : STUDIO_MS\)/.test(f), "begrenzt, Anfrage verfällt nach 3 Min., Sitzung nach 30 Min. (2.136.0)");
   assert.ok(/\.\.\.\(vf \? \{ vorfuehren: \{ id: vf\.id, von: wer\(vf\.von\) \} \} : \{\}\)/.test(server), "Einladung kommt mit dem Online-Abgleich");
-  const n = html.slice(html.indexOf("function vfNachspielen(e) {"), html.indexOf("function vfHinweis("));
+  const n = html.slice(html.indexOf("function vfNachspielen(e) {"), html.indexOf("function vfLeiste("));
   assert.ok(!/\.click\(\)/.test(n) && /classList\.add\("vf-blink"\)/.test(n), "beim Zuschauer wird nur markiert, nie geklickt");
-  assert.ok(/if \(VF\.rolle === "zeigt"\) vfMelden\(\{ art: "ansicht", v \}\);/.test(html) && /if \(r\.vorfuehren\) vfAnfrage\(r\.vorfuehren\);/.test(html), "Seitenwechsel gemeldet, Einladung angezeigt");
-  assert.ok(/onclick="vfStart\('\$\{m\.person_id\}'\)"><span class="kt-ico">📺<\/span>Live zeigen/.test(html) && /onclick="vfBeenden\(\)">⏹ Beenden/.test(html), "Knopf auf der Mitglied-Seite, beide können beenden");
+  assert.ok(/spgSenderStart\(vfSenden, true\);/.test(html) && /if \(r\.vorfuehren\) vfAnfrage\(r\.vorfuehren\);/.test(html), "2.136.0: echtes Live-Bild statt Seitenwechsel-Meldungen, Einladung angezeigt");
+  assert.ok(/onclick="vfStart\('\$\{m\.person_id\}'\)"><span class="kt-ico">📺<\/span>Live zeigen/.test(html) && /k\("⏹ Beenden", "vfBeenden\(\)"\)/.test(html), "Knopf auf der Mitglied-Seite, beide können beenden");
 }
 // KC-CLUB-CLOUDFLARE-UMZUG (Vorbereitung, nichts veröffentlicht): Paket nur aus der Positivliste, Server-Code/Tests/Doku bleiben draußen
 {
@@ -6536,7 +6536,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 // 4xx. 2.102.0: Terminkachel „✅ 3/18 angemeldet“ (KC-CLUB-TERMIN-ANTEIL) + Bildschirm-Schnappschuss nur mit Zustimmung (KC-CLUB-SCHNAPPSCHUSS)
 {
   assert.ok(/const alle = Number\(INIT\?\.mitgliederAnzahl\) \|\| 0, gesamtTxt = alle \? `✅ <b>\$\{t\.ja\}\/\$\{alle\}<\/b> angemeldet`/.test(programm), "x/y angemeldet auf der Terminkachel");
-  assert.ok(/case "schnappschuss_anfragen": \{\s*nurAdmin\(ich\);/.test(server) && /case "schnappschuss_holen": \{\s*nurAdmin\(ich\);/.test(server), "anfragen und abholen nur Admin");
+  assert.ok(/case "schnappschuss_anfragen": \{\s*await studioDarf\(ich, "alles"\);/.test(server) && /case "schnappschuss_holen": \{\s*await studioDarf\(ich, "alles"\);/.test(server), "anfragen und abholen: Admin oder kurz für alles freigeschaltet (2.136.0)");
   const a = server.slice(server.indexOf('case "schnappschuss_antwort"'), server.indexOf('case "schnappschuss_holen"'));
   assert.ok(/eq\("person_id", ich\.person_id\)/.test(a) && /p\.erlaubt === true/.test(a) && a.includes("^data:image\\/jpeg;base64,"), "nur das Mitglied selbst antwortet, nur JPEG");
   const h = server.slice(server.indexOf('case "schnappschuss_holen"'), server.indexOf('case "anklopfen"'));
@@ -6549,14 +6549,14 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 
 // 4xx. 2.103.0: Live-Mitschauen als Bildfolge – nur mit Zustimmung, roter Balken beim Mitglied, Ende nach 10 Min. (KC-CLUB-MITSCHAUEN)
 {
-  assert.ok(/SS_LIVE_MS = 10 \* 60000/.test(server) && /async function ssBeenden\(pid: string, w: any\)/.test(server), "Ende nach 10 Min.; Beenden löscht das Bild");
+  assert.ok(/SS_LIVE_MS = 30 \* 60000/.test(server) && /async function ssBeenden\(pid: string, w: any\)/.test(server), "Ende nach 30 Min. (2.136.0); Beenden löscht das Bild");
   const b = server.slice(server.indexOf('case "schnappschuss_bild"'), server.indexOf('case "schnappschuss_ende"'));
   assert.ok(/eq\("person_id", ich\.person_id\)/.test(b) && /w\.status !== "live"/.test(b) && /n: \(w\.n \|\| 0\) \+ 1/.test(b), "nur das Mitglied selbst schickt Bilder, nur solange live; immer nur das neueste");
   const e = server.slice(server.indexOf('case "schnappschuss_ende"'), server.indexOf('case "schnappschuss_holen"'));
   assert.ok(/an !== ich\.person_id && w\.von !== ich\.person_id/.test(e), "beenden darf Mitglied oder fragender Admin");
   const m = programm.slice(programm.indexOf("// ----- beim Mitglied -----"), programm.indexOf("// ---------- KC-CLUB-SPRACHE-LERNEN"));
   assert.ok(/id="ssLiveLeiste"/.test(m) && /onclick="mlEnde\(true\)">Beenden<\/button>/.test(m), "roter Balken mit Beenden");
-  assert.ok(/if \(MSCH\.laeuft \|\| document\.hidden\) return;/.test(m) && /setInterval\(mlTakt, 2500\)/.test(m) && /Date\.now\(\) \+ 10 \* 60000/.test(m), "Takt 2,5 s, nur sichtbar, 10 Min.");
+  assert.ok(/if \(!SPG\.an \|\| SPG\.laeuft \|\| document\.hidden\) return;/.test(programm) && /spgSenderStart\(mlSenden, false\);/.test(m) && /Date\.now\(\) \+ ST_LIVE_MIN \* 60000/.test(m), "2.136.0: echtes Live nur bei Änderung, nur sichtbar, 30 Min.");
   assert.ok(m.indexOf("await frage(") < m.indexOf("mlStart(einl.id"), "erst fragen");
   assert.ok(/ssStart\('\$\{esc\(SPW\.person\)\}', \$\{esc\(JSON\.stringify\(r\.name \|\| ""\)\)\}, true\)">🔴 Live mitschauen/.test(programm), "Knopf bei den Wegen");
 }
@@ -7018,8 +7018,43 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.135.0 KC-CLUB-SS-SPEICHERN: Schnappschuss/Live-Bild beim Admin speichern (Teilen-Menü → Fotos, sonst Download)
 {
-  const sp = programm.slice(programm.indexOf("async function ssSpeichern()"), programm.indexOf("// ----- beim Mitglied -----"));
-  assert.ok(/const b = \$\("ssBild"\)\?\.src;/.test(sp) && /new File\(\[Uint8Array\.from\(bin/.test(sp) && /navigator\.share\(\{ files: \[datei\]/.test(sp), "aktuelles Bild wird als Datei geteilt/gesichert");
+  const sp = programm.slice(programm.indexOf("async function bildSpeichern(b, wer)"), programm.indexOf("// ---------- KC-CLUB-STUDIO-SPIEGEL"));
+  assert.ok(/function ssSpeichern\(\) \{ const f = STD\.fotos\[STD\.fotos\.length - 1\]; return bildSpeichern\(/.test(sp) && /new File\(\[Uint8Array\.from\(bin/.test(sp) && /navigator\.share\(\{ files: \[datei\]/.test(sp), "aktuelles Bild wird als Datei geteilt/gesichert");
   assert.ok(/e\?\.name === "AbortError"\) return;/.test(sp) && /a\.download = name;/.test(sp), "Abbrechen still, sonst Download als Rückfall");
-  assert.ok(/💾 Dieses Bild bei mir speichern/.test(programm) && /💾 Bei mir speichern/.test(programm) && /💾 Letztes Bild speichern/.test(programm), "Knopf bei Live, Einzelbild und nach dem Ende");
+  assert.ok(/k\("💾 Speichern", "ssSpeichern\(\)", !hatFoto\)/.test(programm) && /onclick="stFotoSpeichern\(\$\{i\}\)"/.test(programm), "2.136.0: Speichern im Studio-Pult und bei jedem Foto der Sitzung");
+}
+
+// 2.136.0 KC-CLUB-STUDIO / KC-CLUB-STUDIO-SPIEGEL (Wunsch Hansi): 🎬 Studio im Kopf – Mitglied wählen, Pult (Foto · Mitschauen · Live zeigen),
+// Uhr, Fotos speichern, Freischalten (📺 dauerhaft / ⭐ alles nur kurz); echtes Live statt Fotos; beim Zeigen Chats/Büro verdeckt + Vorhang
+{
+  // Server: Rechte nur vom Admin, Mitglied wird immer gefragt, 30 Min.
+  const r = server.slice(server.indexOf('case "studio_rechte"'), server.indexOf('case "anklopfen": {'));
+  assert.ok(/case "studio_rechte": \{\s*nurAdmin\(ich\);/.test(r) && /case "studio_recht_setzen": \{\s*nurAdmin\(ich\);/.test(r), "freischalten nur Admin");
+  assert.ok(/STUDIO_ALLES_MIN = \[30, 60, 120, 480\]/.test(server) && /if \(min && !STUDIO_ALLES_MIN\.includes\(min\)\)/.test(r) && /alles_bis: min \? new Date\(Date\.now\(\) \+ min \* 60000\)/.test(r), "„alles“ nur befristet");
+  assert.ok(/protokoll\(ich\.person_id, "studio_recht", \{ an, zeigen: wert\.zeigen, alles_min: min \|\| 0 \}\)/.test(r), "Freischalten im Protokoll");
+  assert.ok(!/studio_recht:/.test(server.slice(server.indexOf("const EINSTELLUNGEN"), server.indexOf("const EINSTELLUNGEN") + 6000)), "Mitglied kann sich nicht selbst freischalten");
+  assert.ok(/if \(ich\.admin\) return "alles";/.test(server) && /allesBis \? "alles" : zeigen \? "zeigen" : null/.test(server), "Admin alles; danach zurück auf 📺 oder nichts");
+  assert.ok(/STUDIO_MS = 30 \* 60000/.test(server) && /SS_LIVE_MS = 30 \* 60000/.test(server), "30 Minuten");
+  // Server: Live-Bild nur vom Sender, nur solange es läuft, nur Form/Größe geprüft
+  const fr = server.slice(server.indexOf("function studioFrame(f: any)"), server.indexOf("function studioFrame(f: any)") + 1500);
+  assert.ok(/d\.length > SS_MAX_ZEICHEN \|\| !\/\^\[A-Za-z0-9\+\/=\]\+\$\/\.test\(d\)/.test(fr), "Live-Bild: nur Base64, Größe begrenzt");
+  assert.ok(/if \(a === "vorfuehren_bild"\) \{\s*if \(w\.von !== ich\.person_id\) throw new Fehler\("Kein Zugriff\.", 403\);\s*const f = w\.status === "laeuft" \? studioFrame\(p\.f\) : null;/.test(server), "nur der Vorführende, nur solange zugeschaut wird");
+  assert.ok(/w\.frame \? \{ frame: w\.frame \} : \{ bild: w\.bild \}/.test(server), "Mitschauen liefert Live-Bild (oder älteres Foto)");
+  // App: Kopf-Knopf, Pult mit gleich breiten Knöpfen, Uhr, Rechte
+  assert.ok(/id="studioKnopf"[^>]*onclick="stOeffnen\(\)">🎬<\/button>/.test(seite) && /k\.classList\.toggle\("versteckt", !studioStufe\(\)\);/.test(programm), "🎬 im Kopf nur mit Recht");
+  assert.ok(/\.st-modi \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}/.test(seite) && /\.st-aktionen \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/.test(seite) && /grid-auto-rows: 1fr;/.test(seite), "alle Knopfreihen gleich breit und gleich hoch");
+  assert.ok(/modus\("foto", "📸", "Foto", "alles"\)\}\$\{modus\("mitschauen", "🔴", "Mitschauen", "alles"\)\}\$\{modus\("zeigen", "📺", "Live zeigen", "zeigen"\)\}/.test(programm), "drei Betriebsarten, Recht je Art");
+  assert.ok(/⏱ <b id="stdLaeuft">/.test(programm) && /noch <b id="stdNoch">/.test(programm) && /vfUhr/.test(programm), "Uhr: läuft seit / noch – auch in der Leiste beim Zeigen");
+  assert.ok(/const stDarf = \(was\) => \{ const s = studioStufe\(\); return !!s && \(was === "zeigen" \|\| s === "alles"\); \};/.test(programm) && /if \(s\.stufe === "alles" && s\.allesBis && Date\.now\(\) > Date\.parse\(s\.allesBis\)\) return s\.zeigen \? "zeigen" : null;/.test(programm), "Recht läuft auch in der App ab");
+  // Spiegel: keine Skripte, Geheimes nie, Privates beim Zeigen verdeckt
+  const sg = programm.slice(programm.indexOf("// ---------- KC-CLUB-STUDIO-SPIEGEL"), programm.indexOf("// ----- beim Mitglied -----"));
+  assert.ok(/sandbox="allow-same-origin"/.test(sg) && !/allow-scripts/.test(sg), "Empfänger-Rahmen ohne Skripte");
+  assert.ok(/SPG_NIE_TAG = new Set\(\["SCRIPT"/.test(sg) && /if \(n\.startsWith\("on"\) \|\|/.test(sg) && /t\.content\.querySelectorAll\("script, iframe, object, embed, link, meta, base, frame"\)\.forEach\(\(x\) => x\.remove\(\)\)/.test(sg), "Skripte und on…-Attribute nie – beim Senden und beim Empfang");
+  assert.ok(/geheim = typ === "password" \|\| typ === "hidden" \|\| SPG_GEHEIM\.test/.test(sg) && /"••••"/.test(sg), "PIN-/Passwortfelder nie übertragen");
+  assert.ok(/\{ sel: "#v-chat", t: "Unterhaltung" \}/.test(sg) && /\{ sel: "#v-buero", t: "Büro" \}/.test(sg) && /const priv = privat && SPG_PRIVAT\.find/.test(sg), "beim Zeigen: Chats/Büro verdeckt (Registry)");
+  assert.ok(/spgSenderStart\(vfSenden, true\);/.test(programm) && /spgSenderStart\(mlSenden, false\);/.test(programm), "Zeigen = mit Verdecken; Mitschauen = was das Mitglied freigibt");
+  assert.ok(/if \(!SPG\.schmutzig && !\(SPG\.vorhang && !SPG\.vorhangGesendet\) && jetzt - SPG\.ping < 4000\) return;/.test(sg) && /SPG\.uhr = setInterval\(spgSenderTakt, 700\)/.test(sg), "nur bei Änderung, höchstens alle 0,7 s");
+  assert.ok(/function vfVorhang\(\)/.test(programm) && /if \(SPG\.vorhang\) \{ if \(!SPG\.vorhangGesendet\) f = \{ vorhang: true \}; \}/.test(sg), "🙈 Vorhang");
+  assert.ok(/const SPG_NIE_ID = new Set\(\["studioBlatt", "vfLeiste", "ssLiveLeiste", "spgSchirm"\]\)/.test(sg), "Studio selbst und Leisten nie im Bild");
+  assert.ok(!/await fetch\(/.test(sg), "keine neuen Netzwege");
 }

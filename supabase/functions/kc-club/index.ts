@@ -42,9 +42,38 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.135.0";
+const SERVER_VERSION = "2.136.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
-const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
+const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
+// KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
+// Rechte (kc_club_person_einstellung „studio_recht“, setzt nur der Admin): zeigen = dauerhaft „📺 Live zeigen“; alles_bis = für kurze Zeit
+// auch Foto + Mitschauen. Der Admin hat immer alles. Das andere Mitglied wird IMMER gefragt und kann jederzeit beenden.
+const STUDIO_MS = 30 * 60000, STUDIO_ALLES_MIN = [30, 60, 120, 480];
+type StudioStufe = "zeigen" | "alles" | null;
+function studioAusWert(w: any): { stufe: StudioStufe; zeigen: boolean; allesBis: string | null } {
+  const zeigen = w?.zeigen === true, allesBis = w?.alles_bis && Date.now() < new Date(w.alles_bis).getTime() ? String(w.alles_bis) : null;
+  return { stufe: allesBis ? "alles" : zeigen ? "zeigen" : null, zeigen, allesBis };
+}
+async function studioStufe(ich: { person_id: string; admin: boolean }): Promise<StudioStufe> {
+  if (ich.admin) return "alles";
+  const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "studio_recht").maybeSingle();
+  return studioAusWert(data?.wert).stufe;
+}
+async function studioDarf(ich: { person_id: string; admin: boolean }, was: "zeigen" | "alles") {
+  const st = await studioStufe(ich);
+  if (!st || (was === "alles" && st !== "alles")) throw new Fehler(was === "alles" ? "Foto und Mitschauen sind für dich gerade nicht freigeschaltet." : "Das Studio ist für dich nicht freigeschaltet.", 403);
+}
+// Ein Live-Bild = der sichtbare Inhalt der Club-App (gepackt), kein Foto – geprüft wird nur Form und Größe; angezeigt wird es beim Empfänger
+// in einem abgeschotteten Rahmen ohne Skripte.
+function studioFrame(f: any) {
+  if (!f || typeof f !== "object") return null;
+  const zahl = (v: any, min: number, max: number) => Number.isFinite(Number(v)) ? Math.max(min, Math.min(max, Math.round(Number(v)))) : min;
+  if (f.vorhang === true) return { vorhang: true, am: jetzt() };
+  const d = String(f.d || "");
+  if (!d || d.length > SS_MAX_ZEICHEN || !/^[A-Za-z0-9+/=]+$/.test(d)) throw new Fehler("Das Live-Bild ist zu groß oder ungültig.", 400);
+  const t = f.tipp && Number.isFinite(Number(f.tipp.x)) && Number.isFinite(Number(f.tipp.y)) ? { x: Math.max(0, Math.min(1, Number(f.tipp.x))), y: Math.max(0, Math.min(1, Number(f.tipp.y))), n: zahl(f.tipp.n, 0, 1e9) } : null;
+  return { d, z: f.z === "gzip" ? "gzip" : "roh", w: zahl(f.w, 200, 4000), h: zahl(f.h, 200, 4000), tipp: t, am: jetzt() };
+}
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
 async function ssBeenden(pid: string, w: any) {
   await db.from("kc_club_person_einstellung").update({ wert: { id: w.id, von: w.von, status: "beendet", seit: w.seit, am: jetzt() }, geaendert_am: jetzt() }).eq("person_id", pid).eq("schluessel", "schnappschuss");
@@ -4793,7 +4822,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { count: spieleDran } = await pSpiele;
         const kz = await pKz; // KC-CLUB-KACHEL-ZAHLEN (2.22.12)
         await pWillkommen;
-        return json({ meinGeburtstag, alarm, kz, sosFuerAlle: await pSos, spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
+        return json({ meinGeburtstag, alarm, kz, studio, sosFuerAlle: await pSos, spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -8047,7 +8077,7 @@ Köcheclub-App`,
       // Der Zuschauer sieht dabei SEINE eigenen Daten. Zustand beim Zuschauer in kc_club_person_einstellung „vorfuehren“
       // (nur die letzten VF_EV_MAX Ereignisse). Vorführen darf vorerst nur der Admin; Zuschauer kann jederzeit beenden.
       case "vorfuehren_start": {
-        nurAdmin(ich);
+        await studioDarf(ich, "zeigen"); // 2.136.0 KC-CLUB-STUDIO: Admin oder freigeschaltetes Mitglied
         const an = String(p.an || "");
         if (an === ich.person_id || !(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
         const id = crypto.randomUUID(), wert = { id, von: ich.person_id, status: "angefragt", seit: jetzt(), ev: [] as any[], n: 0 };
@@ -8062,17 +8092,17 @@ Köcheclub-App`,
         await protokoll(ich.person_id, "vorfuehren_gestartet", { an, versand });
         return json({ ok: true, id, push: versand.gesendet > 0 });
       }
-      case "vorfuehren_antwort": case "vorfuehren_holen": case "vorfuehren_senden": case "vorfuehren_ende": {
-        const an = a === "vorfuehren_senden" || (a === "vorfuehren_ende" && p.an) ? String(p.an || "") : ich.person_id;
+      case "vorfuehren_antwort": case "vorfuehren_holen": case "vorfuehren_senden": case "vorfuehren_ende": case "vorfuehren_bild": {
+        const an = a === "vorfuehren_senden" || a === "vorfuehren_bild" || (a === "vorfuehren_ende" && p.an) ? String(p.an || "") : ich.person_id;
         const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", an).eq("schluessel", "vorfuehren").maybeSingle();
         const w: any = data?.wert;
         if (!w || w.id !== String(p.id || "")) return json({ ok: true, status: "beendet", ev: [] });
         if (an !== ich.person_id && w.von !== ich.person_id) throw new Fehler("Kein Zugriff.", 403);
-        const alt = Date.now() - new Date(w.seit).getTime() > (w.status === "angefragt" ? 3 * 60000 : 3 * 3600000);
-        if (alt && w.status !== "beendet") w.status = "beendet";
+        const alt = Date.now() - new Date(w.seit).getTime() > (w.status === "angefragt" ? 3 * 60000 : STUDIO_MS); // 2.136.0: läuft höchstens 30 Min.
         const speichern = () => db.from("kc_club_person_einstellung").update({ wert: w, geaendert_am: jetzt() }).eq("person_id", an).eq("schluessel", "vorfuehren");
+        if (alt && w.status !== "beendet") { w.status = "beendet"; if (w.frame) { w.frame = null; await speichern(); } } // 2.136.0: letztes Live-Bild nicht liegen lassen
         if (a === "vorfuehren_antwort" && w.status === "angefragt") { w.status = p.annehmen === true ? "laeuft" : "abgelehnt"; w.seit = jetzt(); await speichern(); }
-        if (a === "vorfuehren_ende" && w.status !== "beendet") { w.status = "beendet"; await speichern(); }
+        if (a === "vorfuehren_ende" && (w.status !== "beendet" || w.frame)) { w.status = "beendet"; w.frame = null; await speichern(); } // 2.136.0: Ende löscht das Live-Bild
         if (a === "vorfuehren_senden" && w.status === "laeuft") {
           const neu = (Array.isArray(p.ev) ? p.ev : []).slice(0, 10).map((e: any) => ({
             n: ++w.n, art: ["ansicht", "tipp", "scroll", "fenster", "fenster_zu"].includes(String(e?.art)) ? String(e.art) : "tipp",
@@ -8081,16 +8111,24 @@ Köcheclub-App`,
             r: Number.isFinite(Number(e?.r)) ? Math.max(0, Math.min(1, Number(e.r))) : null }));
           if (neu.length) { w.ev = [...(w.ev || []), ...neu].slice(-VF_EV_MAX); await speichern(); }
         }
+        // 2.136.0 KC-CLUB-STUDIO-SPIEGEL: echtes Live – der Vorführende schickt den sichtbaren Inhalt seiner App (nur bei Änderung)
+        if (a === "vorfuehren_bild") {
+          if (w.von !== ich.person_id) throw new Fehler("Kein Zugriff.", 403);
+          const f = w.status === "laeuft" ? studioFrame(p.f) : null;
+          if (f) { w.frame = { ...f, n: (w.frame?.n || 0) + 1 }; await speichern(); }
+        }
         const seit = Number(p.seit) || 0, vonP = (await personen([w.von])).get(w.von);
         return json({ ok: true, status: w.status, von: { person_id: w.von, vorname: vorname(vonP ?? null) || w.von, name: vonP?.display_name || w.von },
-          ev: a === "vorfuehren_holen" ? (w.ev || []).filter((e: any) => e.n > seit) : [], n: w.n || 0 });
+          ev: a === "vorfuehren_holen" ? (w.ev || []).filter((e: any) => e.n > seit) : [], n: w.n || 0,
+          bis: w.status === "laeuft" ? new Date(new Date(w.seit).getTime() + STUDIO_MS).toISOString() : null,
+          ...(a === "vorfuehren_holen" && w.frame && w.frame.n > (Number(p.fseit) || 0) ? { frame: w.frame } : {}) });
       }
 
       // ----- KC-CLUB-SCHNAPPSCHUSS (2.102.0, Wunsch Hansi „Bildschirm des Mitglieds ansehen“): nur mit Zustimmung des Mitglieds,
       // nur EIN Bild und nur von der Club-App (eine Web-App kann nichts anderes vom Gerät abbilden). Das Bild liegt nur kurz in
       // kc_club_person_einstellung „schnappschuss“ und wird beim Abholen durch den Admin sofort gelöscht. Protokoll ohne Bild.
       case "schnappschuss_anfragen": {
-        nurAdmin(ich);
+        await studioDarf(ich, "alles"); // 2.136.0 KC-CLUB-STUDIO: Admin oder kurz für alles freigeschaltet
         const an = String(p.an || "");
         if (an === ich.person_id || !(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
         const id = crypto.randomUUID(), live = p.live === true, wert = { id, von: ich.person_id, status: "angefragt", seit: jetzt(), live };
@@ -8120,10 +8158,13 @@ Köcheclub-App`,
         const w: any = data?.wert;
         if (!w || w.id !== String(p.id || "") || w.status !== "live") return json({ ok: true, status: w?.status === "live" ? "vorbei" : (w?.status || "vorbei") });
         if (Date.now() > new Date(w.bis).getTime()) { await ssBeenden(ich.person_id, w); return json({ ok: true, status: "beendet" }); }
-        const bild = String(p.bild || "");
+        // 2.136.0 KC-CLUB-STUDIO-SPIEGEL: statt Foto der sichtbare Inhalt (f); ohne f und ohne Bild = nur „läuft noch?“
+        const f = studioFrame(p.f), bild = String(p.bild || "");
+        if (f) { await db.from("kc_club_person_einstellung").update({ wert: { ...w, frame: f, am: jetzt(), n: (w.n || 0) + 1 }, geaendert_am: jetzt() }).eq("person_id", ich.person_id).eq("schluessel", "schnappschuss"); return json({ ok: true, status: "live", bis: w.bis }); }
+        if (!bild) return json({ ok: true, status: "live", bis: w.bis });
         if (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(bild) || bild.length > SS_MAX_ZEICHEN) throw new Fehler("Das Bild ist zu groß oder ungültig.", 400);
-        await db.from("kc_club_person_einstellung").update({ wert: { ...w, bild, am: jetzt(), n: (w.n || 0) + 1 }, geaendert_am: jetzt() }).eq("person_id", ich.person_id).eq("schluessel", "schnappschuss");
-        return json({ ok: true, status: "live" });
+        await db.from("kc_club_person_einstellung").update({ wert: { ...w, bild, frame: null, am: jetzt(), n: (w.n || 0) + 1 }, geaendert_am: jetzt() }).eq("person_id", ich.person_id).eq("schluessel", "schnappschuss");
+        return json({ ok: true, status: "live", bis: w.bis });
       }
       case "schnappschuss_ende": {
         const an = p.an ? String(p.an) : ich.person_id;
@@ -8136,7 +8177,7 @@ Köcheclub-App`,
         return json({ ok: true });
       }
       case "schnappschuss_holen": {
-        nurAdmin(ich);
+        await studioDarf(ich, "alles");
         const an = String(p.an || "");
         const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", an).eq("schluessel", "schnappschuss").maybeSingle();
         const w: any = data?.wert;
@@ -8145,12 +8186,32 @@ Köcheclub-App`,
         if (w.status === "live") {
           if (Date.now() > new Date(w.bis).getTime()) { await ssBeenden(an, w); return json({ ok: true, status: "beendet" }); }
           const seit = Number(p.seit) || 0; // nur ein neueres Bild ausliefern; immer nur das neueste liegt auf dem Server
-          return json({ ok: true, status: "live", n: w.n || 0, am: w.am, bis: w.bis, ...((w.n || 0) > seit ? { bild: w.bild } : {}) });
+          return json({ ok: true, status: "live", n: w.n || 0, am: w.am, bis: w.bis, ...((w.n || 0) > seit ? (w.frame ? { frame: w.frame } : { bild: w.bild }) : {}) });
         }
         if (w.status !== "bild") return json({ ok: true, status: w.status });
         // Bild nur einmal ausliefern und sofort vom Server löschen
         await db.from("kc_club_person_einstellung").update({ wert: { id: w.id, von: w.von, status: "abgeholt", seit: w.seit, am: w.am }, geaendert_am: jetzt() }).eq("person_id", an).eq("schluessel", "schnappschuss");
         return json({ ok: true, status: "bild", bild: w.bild, am: w.am });
+      }
+
+      // ----- KC-CLUB-STUDIO (2.136.0): Freischalten – nur der Admin -----
+      case "studio_rechte": {
+        nurAdmin(ich);
+        const { data } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "studio_recht");
+        const leute = await personen((data ?? []).map((x: any) => x.person_id));
+        return json({ liste: (data ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id, ...studioAusWert(x.wert) })).filter((x: any) => x.stufe) });
+      }
+      case "studio_recht_setzen": {
+        nurAdmin(ich);
+        const an = String(p.an || "");
+        if (an === ich.person_id || !(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        const min = Number(p.allesMinuten) || 0;
+        if (min && !STUDIO_ALLES_MIN.includes(min)) throw new Fehler("Ungültige Dauer.");
+        const wert = { zeigen: p.zeigen === true, alles_bis: min ? new Date(Date.now() + min * 60000).toISOString() : null, von: ich.person_id, am: jetzt() };
+        if (!wert.zeigen && !wert.alles_bis) await db.from("kc_club_person_einstellung").delete().eq("person_id", an).eq("schluessel", "studio_recht");
+        else { const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: an, schluessel: "studio_recht", wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" }); if (error) throw new Fehler("Das Freischalten hat nicht geklappt.", 500); }
+        await protokoll(ich.person_id, "studio_recht", { an, zeigen: wert.zeigen, alles_min: min || 0 });
+        return json({ ok: true, ...studioAusWert(wert) });
       }
 
       case "anklopfen": {

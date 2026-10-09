@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.136.0 – 2026-10-09 – 🎬 Studio-Zentrale: Mitglied wählen, Foto · Mitschauen · Live zeigen an einem Platz, Uhr, Fotos speichern, Freischalten; echtes Live statt Fotos (KC-CLUB-STUDIO)
+🔧 Kleine Systemverbesserungen
+
 ## 2.135.0 – 2026-10-09 – Bildschirm-Schnappschuss/Live: Bild bei mir speichern (Fotos über Teilen-Menü)
 🔧 Kleine Systemverbesserungen
 

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.135.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.136.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -10184,106 +10184,107 @@ async function avSetzen(figur) {
     fensterZu($("avBlatt")); try { kachelnZeigen?.(); } catch {}
   } catch (e) { meldeFehler(e); }
 }
-// ---------- KC-CLUB-VORFUEHREN (2.56.0, Wunsch Hansi): 📺 Live zeigen – die App des Zuschauers folgt meiner App ----------
-// Kein Bildschirm-Teilen (geht in Handy-Browsern nicht): übertragen werden nur Seitenwechsel, Tipps (als Markierung), Scrollen und
-// geöffnete Fenster (als Hinweis). Beim Zuschauer wird nie etwas ausgelöst – er sieht seine EIGENEN Daten. Beide können jederzeit beenden.
-const VF = { rolle: null, id: null, an: null, gegen: null, status: null, takt: null, schlange: [], seit: 0, zuletztTipp: 0, scrollT: null, beob: null, gefragt: new Set() };
+// ---------- KC-CLUB-VORFUEHREN (2.56.0, Wunsch Hansi): 📺 Live zeigen ----------
+// 2.136.0 KC-CLUB-STUDIO-SPIEGEL (Wunsch Hansi „Steven hat nur rote Punkte gesehen – er soll wirklich live sehen, was ich mache“):
+// der Zuschauer sieht jetzt den ECHTEN Bildschirm der Club-App des Vorführenden (sichtbarer Inhalt, ~1 s Versatz) in einem Vollbild.
+// Chats, Nachrichten und Büro sind dabei verdeckt (SPG_PRIVAT); 🙈 Vorhang verdeckt kurz alles. Höchstens 30 Minuten; beide können beenden.
+// Dürfen: Admin und für „📺 Zeigen“ freigeschaltete Mitglieder (KC-CLUB-STUDIO). Ältere Tipp-Ereignisse werden beim Zuschauer weiter verstanden.
+const VF = { rolle: null, id: null, an: null, gegen: null, status: null, takt: null, uhrT: null, seit: 0, fseit: 0, start: 0, bis: 0, vorhang: false, gefragt: new Set() };
 async function vfStart(pid) {
-  if (!ICH?.admin) return;
+  if (!stDarf("zeigen")) return melde("📺 Live zeigen ist für dich nicht freigeschaltet.", true);
   if (VF.rolle) return melde("📺 Es läuft schon eine Vorführung.", true);
-  const m = (MITGLIEDER || []).find((x) => x.person_id === pid) || (MD?.person_id === pid ? MD : { name: "", vorname: "" });
-  if (!(await frage(`📺 ${m.vorname || m.name} live etwas zeigen?\nDie App von ${m.vorname || m.name} folgt dann deiner: Seiten, Fenster und wo du hintippst. ${m.vorname || m.name} sieht dabei die eigenen Daten, nicht deine.`, { ja: "📺 Live zeigen" }))) return;
+  if (STD.modus && ["wartet", "live"].includes(STD.status) && STD.modus !== "zeigen") return melde("Erst die laufende Sitzung im Studio beenden (⏹).", true);
+  const m = (MITGLIEDER || []).find((x) => x.person_id === pid) || (MD?.person_id === pid ? MD : { name: "", vorname: "" }), vn = m.vorname || String(m.name || "").split(" ")[0] || "Das Mitglied";
+  if (!(await frage(`📺 ${vn} deine App live zeigen?\n\n${vn} sieht dann live genau das, was du in der Club-App machst. Chats, Nachrichten und Büro sind dabei automatisch verdeckt; mit 🙈 Vorhang verdeckst du jederzeit kurz alles. Höchstens ${ST_LIVE_MIN} Minuten.`, { ja: "📺 Live zeigen" }))) return;
   try {
     const r = await api("vorfuehren_start", { an: pid }, { warten: true });
-    Object.assign(VF, { rolle: "zeigt", id: r.id, an: pid, gegen: m.vorname || m.name, status: "angefragt", schlange: [{ art: "ansicht", v: aktuelleAnsicht }] });
-    spur("vorfuehren"); vfLeiste(); vfBeobachten(true);
-    VF.takt = setInterval(vfSendenTakt, 1200);
-    melde(r.push ? `📺 Anfrage an ${VF.gegen} geschickt – warte auf Zusage …` : `📺 Anfrage gestellt – ${VF.gegen} sieht sie beim nächsten Öffnen der App.`);
+    Object.assign(VF, { rolle: "zeigt", id: r.id, an: pid, gegen: vn, status: "angefragt", vorhang: false, start: Date.now(), bis: 0 });
+    Object.assign(STD, { pid, name: m.name || STD.name }); stSetzen("zeigen", "wartet", { start: Date.now(), bis: 0 });
+    spur("vorfuehren"); vfLeiste(); spgSenderStart(vfSenden, true);
+    melde(r.push ? `📺 Anfrage an ${vn} geschickt – warte auf Zusage …` : `📺 Anfrage gestellt – ${vn} sieht sie beim nächsten Öffnen der App.`);
   } catch (e) { meldeFehler(e); }
 }
-async function vfSendenTakt() {
-  if (VF.rolle !== "zeigt") return;
-  const ev = VF.status === "laeuft" ? VF.schlange.splice(0, 10) : [];
-  try {
-    const r = await api("vorfuehren_senden", { id: VF.id, an: VF.an, ev }, { still: true });
-    if (r.status !== VF.status) {
-      if (r.status === "laeuft") { melde(`📺 ${VF.gegen} schaut jetzt zu`); try { navigator.vibrate?.(60); } catch {} VF.schlange.unshift({ art: "ansicht", v: aktuelleAnsicht }); }
-      VF.status = r.status; vfLeiste();
-      if (r.status === "abgelehnt" || r.status === "beendet") { melde(r.status === "abgelehnt" ? `📺 ${VF.gegen} möchte gerade nicht zuschauen.` : `📺 Vorführung beendet.`); vfAufraeumen(); }
+// Sender: fragt dabei auch den Stand ab (angefragt → läuft → beendet); Bilder gehen erst, wenn zugeschaut wird
+async function vfSenden(f) {
+  if (VF.rolle !== "zeigt") return false;
+  const r = await api("vorfuehren_bild", { id: VF.id, an: VF.an, f: VF.status === "laeuft" ? f : null }, { still: true });
+  if (r.status !== VF.status) {
+    if (r.status === "laeuft") {
+      melde(`📺 ${VF.gegen} schaut jetzt zu`); try { navigator.vibrate?.(60); } catch {}
+      Object.assign(VF, { start: Date.now(), bis: r.bis ? Date.parse(r.bis) : Date.now() + ST_LIVE_MIN * 60000 }); SPG.letzt = ""; SPG.schmutzig = true;
+      stSetzen("zeigen", "live", { start: VF.start, bis: VF.bis });
     }
-  } catch { VF.schlange.unshift(...ev); }
+    VF.status = r.status; vfLeiste();
+    if (r.status === "abgelehnt" || r.status === "beendet") { melde(r.status === "abgelehnt" ? `📺 ${VF.gegen} möchte gerade nicht zuschauen.` : "📺 Vorführung beendet."); vfAufraeumen(r.status === "abgelehnt" ? "abgelehnt" : "beendet"); return false; }
+  }
+  return VF.status === "laeuft";
 }
-function vfMelden(ev) { if (VF.rolle === "zeigt" && VF.status === "laeuft") { VF.schlange.push(ev); if (VF.schlange.length > 30) VF.schlange.splice(0, VF.schlange.length - 30); } }
-// Vorführender: Tipps, Scrollen und Fenster beobachten
-function vfZiel(el) {
-  const z = el.closest?.("button, a, summary, label, select, input, .kachel, .mini-kachel, [data-id], [onclick]"); if (!z || z.closest("#vfLeiste")) return null;
-  const sel = z.id ? "#" + CSS.escape(z.id) : z.dataset?.id ? `[data-id="${CSS.escape(z.dataset.id)}"]` : null;
-  return { z, sel, text: (z.textContent || z.getAttribute("aria-label") || "").replace(/\s+/g, " ").trim().slice(0, 60) };
+function vfVorhang() {
+  if (VF.rolle !== "zeigt") return;
+  VF.vorhang = !VF.vorhang; SPG.vorhang = VF.vorhang; SPG.vorhangGesendet = false; SPG.letzt = ""; SPG.schmutzig = true;
+  melde(VF.vorhang ? `🙈 Vorhang zu – ${VF.gegen} sieht gerade nichts` : `🙉 Vorhang auf – ${VF.gegen} sieht wieder mit`); vfLeiste(); stAktionen();
 }
-function vfTipp(e) {
-  if (VF.rolle !== "zeigt" || VF.status !== "laeuft" || Date.now() - VF.zuletztTipp < 250) return;
-  VF.zuletztTipp = Date.now(); const t = vfZiel(e.target);
-  vfMelden({ art: "tipp", sel: t?.sel || null, text: t?.text || null, x: e.clientX / innerWidth, y: e.clientY / innerHeight });
-}
-function vfScroll() { if (VF.rolle !== "zeigt") return; clearTimeout(VF.scrollT); VF.scrollT = setTimeout(() => { const h = document.documentElement.scrollHeight - innerHeight; vfMelden({ art: "scroll", r: h > 0 ? scrollY / h : 0 }); }, 400); }
-function vfBeobachten(an) {
-  if (an) {
-    document.addEventListener("pointerdown", vfTipp, true); addEventListener("scroll", vfScroll, { passive: true });
-    VF.beob = new MutationObserver((ml) => { for (const m of ml) { for (const n of m.addedNodes) if (n.nodeType === 1 && n.classList?.contains("blatt") && n.id !== "vfLeiste") vfMelden({ art: "fenster", titel: (n.querySelector("h3, h2")?.textContent || "ein Fenster").trim().slice(0, 80) });
-      for (const n of m.removedNodes) if (n.nodeType === 1 && n.classList?.contains("blatt")) vfMelden({ art: "fenster_zu" }); } });
-    VF.beob.observe(document.body, { childList: true });
-  } else { document.removeEventListener("pointerdown", vfTipp, true); removeEventListener("scroll", vfScroll); VF.beob?.disconnect(); VF.beob = null; }
-}
-// Zuschauer: Einladung annehmen, Ereignisse abholen und nachspielen
+// Zuschauer: Einladung annehmen, Live-Bild im Vollbild zeigen
 async function vfAnfrage(einl) {
   if (!einl?.id || VF.gefragt.has(einl.id) || VF.rolle) return; VF.gefragt.add(einl.id);
   try { navigator.vibrate?.([80, 60, 80]); } catch {}
-  const ja = await frage(`📺 ${einl.von?.vorname || "Hansi"} möchte dir etwas in der App zeigen.\nDeine App folgt dann mit – du siehst dabei deine eigenen Daten. Du kannst jederzeit beenden.`, { ja: "📺 Zuschauen", nein: "Jetzt nicht" });
+  const wer = einl.von?.vorname || "Hansi";
+  const ja = await frage(`📺 ${wer} möchte dir etwas in der App zeigen.\nDu siehst dann live, was ${wer} in der Club-App macht. Du kannst jederzeit beenden.`, { ja: "📺 Zuschauen", nein: "Jetzt nicht" });
   try { const r = await api("vorfuehren_antwort", { id: einl.id, annehmen: ja }, { warten: true });
     if (!ja || r.status !== "laeuft") { if (ja) melde("📺 Die Vorführung ist schon vorbei."); return; }
-    Object.assign(VF, { rolle: "schaut", id: einl.id, gegen: r.von?.vorname || einl.von?.vorname, status: "laeuft", seit: r.n || 0 });
-    spur("vorfuehren_zuschauen"); vfLeiste(); VF.takt = setInterval(vfHolen, 1200); vfHolen();
+    Object.assign(VF, { rolle: "schaut", id: einl.id, gegen: r.von?.vorname || wer, status: "laeuft", seit: r.n || 0, fseit: 0, start: Date.now(), bis: r.bis ? Date.parse(r.bis) : Date.now() + ST_LIVE_MIN * 60000 });
+    spur("vorfuehren_zuschauen"); vfSchirm(); vfLeiste(); VF.takt = setInterval(vfHolen, 800); vfHolen();
   } catch (e) { meldeFehler(e); }
 }
+function vfSchirm() {
+  if ($("spgSchirm")) return;
+  document.body.insertAdjacentHTML("beforeend", `<div id="spgSchirm" class="spg-schirm" role="dialog" aria-modal="true" aria-label="Live-Bild"><div class="st-buehne spg-voll" id="spgSchirmBuehne"><div class="st-leer"><span class="st-gross">📺</span>Gleich kommt das Bild …</div></div></div>`);
+}
 async function vfHolen() {
-  if (VF.rolle !== "schaut") return;
+  if (VF.rolle !== "schaut" || VF.laeuft) return; VF.laeuft = true;
   try {
-    const r = await api("vorfuehren_holen", { id: VF.id, seit: VF.seit }, { still: true });
-    for (const e of r.ev || []) { VF.seit = Math.max(VF.seit, e.n); try { vfNachspielen(e); } catch {} }
+    const r = await api("vorfuehren_holen", { id: VF.id, seit: VF.seit, fseit: VF.fseit }, { still: true });
+    if (r.frame) { VF.fseit = r.frame.n; await spgZeigen($("spgSchirmBuehne"), r.frame); }
+    for (const e of r.ev || []) { VF.seit = Math.max(VF.seit, e.n); if (!VF.fseit) try { vfNachspielen(e); } catch {} } // ältere Vorführ-Art (ohne Live-Bild)
     if (r.status !== "laeuft") { melde(`📺 ${VF.gegen} hat die Vorführung beendet.`); vfAufraeumen(); }
-  } catch {}
+  } catch {} finally { VF.laeuft = false; }
 }
 function vfNachspielen(e) {
-  if (e.art === "ansicht" && e.v && e.v !== aktuelleAnsicht && document.getElementById("v-" + e.v)) { document.querySelectorAll(".blatt[data-dyn]").forEach((b) => b.id !== "vfLeiste" && b.remove()); zeige(e.v); vfHinweis(""); }
+  if (e.art === "ansicht" && e.v && e.v !== aktuelleAnsicht && document.getElementById("v-" + e.v)) { document.querySelectorAll(".blatt[data-dyn]").forEach((b) => b.id !== "vfLeiste" && b.remove()); zeige(e.v); }
   else if (e.art === "scroll" && e.r != null) { const h = document.documentElement.scrollHeight - innerHeight; scrollTo({ top: Math.round(h * e.r), behavior: "smooth" }); }
-  else if (e.art === "fenster") vfHinweis(`öffnet „${e.titel || "ein Fenster"}“`);
-  else if (e.art === "fenster_zu") vfHinweis("");
   else if (e.art === "tipp") {
     let el = null;
     try { if (e.sel) el = [...document.querySelectorAll(e.sel)].find((x) => x.offsetParent); } catch {}
     if (!el && e.text) el = [...document.querySelectorAll("button, a, summary, .kachel, .mini-kachel, label")].find((x) => x.offsetParent && (x.textContent || "").replace(/\s+/g, " ").trim().startsWith(e.text.slice(0, 24)));
-    const r = el?.getBoundingClientRect();
-    if (el) { el.classList.remove("vf-blink"); void el.offsetWidth; el.classList.add("vf-blink"); setTimeout(() => el.classList.remove("vf-blink"), 1500); if (r.top < 60 || r.bottom > innerHeight - 60) el.scrollIntoView({ block: "center", behavior: "smooth" }); }
-    const x = r ? r.left + r.width / 2 : (e.x ?? .5) * innerWidth, y = r ? r.top + r.height / 2 : (e.y ?? .5) * innerHeight;
-    const p = document.createElement("div"); p.className = "vf-punkt"; p.style.left = x + "px"; p.style.top = y + "px"; document.body.appendChild(p); setTimeout(() => p.remove(), 1400);
-    if (!el && e.text) vfHinweis(`tippt auf „${e.text}“`);
+    if (el) { el.classList.remove("vf-blink"); void el.offsetWidth; el.classList.add("vf-blink"); setTimeout(() => el.classList.remove("vf-blink"), 1500); }
   }
 }
-function vfHinweis(t) { const h = $("vfWas"); if (h) h.textContent = t ? ` ${t}` : ""; }
 function vfLeiste() {
-  let l = $("vfLeiste"); if (!VF.rolle) { l?.remove(); document.body.classList.remove("vf-an"); return; }
+  let l = $("vfLeiste"); if (!VF.rolle) { l?.remove(); document.body.classList.remove("vf-an"); clearInterval(VF.uhrT); VF.uhrT = null; return; }
   if (!l) { l = document.createElement("div"); l.id = "vfLeiste"; l.setAttribute("role", "status"); document.body.appendChild(l); }
   document.body.classList.add("vf-an");
-  const text = VF.rolle === "zeigt" ? (VF.status === "laeuft" ? `📺 Du zeigst ${esc(VF.gegen)} gerade die App` : `📺 Warte, bis ${esc(VF.gegen)} zuschaut …`) : `📺 ${esc(VF.gegen)} zeigt dir die App<span id="vfWas"></span>`;
-  l.className = "vf-leiste" + (VF.rolle === "schaut" ? " vf-schaut" : "");
-  l.innerHTML = `<span class="vf-text">${text}</span><button type="button" class="knopf klein" onclick="vfBeenden()">⏹ Beenden</button>`;
+  const zeigt = VF.rolle === "zeigt", laeuft = VF.status === "laeuft";
+  const text = zeigt ? (laeuft ? (VF.vorhang ? `🙈 Vorhang zu – ${esc(VF.gegen)} sieht nichts` : `📺 Du zeigst ${esc(VF.gegen)} deine App`) : `📺 Warte, bis ${esc(VF.gegen)} zuschaut …`) : `📺 ${esc(VF.gegen)} zeigt dir live`;
+  l.className = "vf-leiste" + (zeigt ? "" : " vf-schaut") + (VF.vorhang ? " vf-vorhang" : "");
+  const k = (t, fn, aus) => `<button type="button" class="knopf klein" ${aus ? "disabled" : `onclick="${fn}"`}>${t}</button>`;
+  l.innerHTML = `<div class="vf-zeile"><span class="vf-text">${text}</span><span class="vf-uhr" id="vfUhr"></span></div>
+    <div class="vf-knoepfe${zeigt ? "" : " eins"}">${zeigt ? k(VF.vorhang ? "🙉 Auf" : "🙈 Vorhang", "vfVorhang()", !laeuft) + k("🎬 Studio", "stOeffnen()") : ""}${k("⏹ Beenden", "vfBeenden()")}</div>`;
+  vfLeisteUhr(); if (!VF.uhrT) VF.uhrT = setInterval(vfLeisteUhr, 1000);
+}
+function vfLeisteUhr() {
+  const u = $("vfUhr"); if (!u) return;
+  u.textContent = VF.status === "laeuft" ? `⏱ ${stZeit(Date.now() - VF.start)}${VF.bis ? ` · noch ${stZeit(VF.bis - Date.now())}` : ""}` : `⏳ ${stZeit(Date.now() - VF.start)}`;
 }
 async function vfBeenden() {
   const id = VF.id, an = VF.rolle === "zeigt" ? VF.an : null; vfAufraeumen();
   try { await api("vorfuehren_ende", { id, ...(an ? { an } : {}) }); } catch {}
   melde("📺 Vorführung beendet.");
 }
-function vfAufraeumen() { clearInterval(VF.takt); if (VF.rolle === "zeigt") vfBeobachten(false); Object.assign(VF, { rolle: null, id: null, an: null, status: null, takt: null, schlange: [], seit: 0 }); vfLeiste(); }
+function vfAufraeumen(stand = "beendet") {
+  clearInterval(VF.takt); if (VF.rolle === "zeigt") { spgSenderStopp(); if (STD.modus === "zeigen") stSetzen("zeigen", stand); }
+  $("spgSchirm")?.remove();
+  Object.assign(VF, { rolle: null, id: null, an: null, status: null, takt: null, seit: 0, fseit: 0, vorhang: false, bis: 0 }); vfLeiste(); stKnopf();
+}
 // ---------- KC-CLUB-FITNESS (2.55.0, Wunsch Hansi): 🏋️ Fit bleiben – Twinkey macht vor, man macht mit; eigene Auswertung ----------
 // Ruhig und erwachsen: sanfte Übungen (auch im Sitzen), Stufe + Dauer wählbar, großer Countdown, Ansage abschaltbar.
 // Gesundheitsdaten: nur für einen selbst (Server: fitness_daten / fitness_speichern), kein Admin-Einblick, keine Pushs.
@@ -11359,7 +11360,7 @@ async function neuLadenRoh(vonHand) {
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   try {
     const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
-    INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); // KC-CLUB-KOPF-EINFACH
+    INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); stKnopf(); /* KC-CLUB-STUDIO */ // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ document.body.classList.toggle("sos-frei", !!INIT?.sosFuerAlle); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
@@ -11486,7 +11487,6 @@ const ZEIGE_OHNE_ICH = new Set(["start", "sos"]);
 let startBereitLoesen; const startBereit = new Promise((ok) => { startBereitLoesen = ok; });
 let ZEIGE_WARTET = null;
 function zeige(v, ausHistorie) {
-  if (VF.rolle === "zeigt") vfMelden({ art: "ansicht", v }); // KC-CLUB-VORFUEHREN: Seitenwechsel an den Zuschauer
   setTimeout(() => document.querySelectorAll(".klappen-alle").forEach(klappenAlleZeigen), 50); // KC-CLUB-KLAPPEN-ALLE: Beschriftung passend zum Stand
   if (v !== "chat" && CV.an) chatVorlesenStopp(true); /* KC-CLUB-CHAT-VORLESEN: nur im offenen Chat */
   document.body.classList.remove("kt-aktiv"); /* 2.17.1: Fußleiste nach dem Quiz wieder zeigen */
@@ -20198,7 +20198,7 @@ function mitgliedZeigen() {
       ${!m.selbst && !ONL.ids.has(m.person_id) ? `<p class="hinweis breit" style="margin:4px 0">📞 🎥 Anrufen und Video gehen, sobald ${esc(String(m.name || "").split(" ")[0])} die App offen hat (🟢 online).</p>` : ""}
       ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')"><span class="kt-ico">💬</span>Nachricht in der App${m.chatAnzahl ? `<small class="md-zahl">${m.chatAnzahl} ${m.chatAnzahl === 1 ? "Nachricht" : "Nachrichten"}</small>` : ""}</button><div id="mdSpiel" hidden></div>`}
       ${ICH?.admin ? `<button class="knopf" onclick="nachrichtenStatistik('${m.person_id}')"><span class="kt-ico">📊</span>Statistik</button>` : ""}
-      ${ICH?.admin && !m.selbst ? `<button class="knopf" onclick="vfStart('${m.person_id}')"><span class="kt-ico">📺</span>Live zeigen</button>` : ""}
+      ${stDarf("zeigen") && !m.selbst ? `<button class="knopf" onclick="vfStart('${m.person_id}')"><span class="kt-ico">📺</span>Live zeigen</button>` : ""}
       ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button>` : ""}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
     </div>
@@ -21942,61 +21942,201 @@ async function spurAdmin(tag, person) {
   if (heuteDa) SPW.uhr = setTimeout(() => { if (!$("adminBlatt").classList.contains("versteckt") && $("adminBlattInhalt").querySelector(".spur-neu[aria-label='Wege aktualisieren']") && !document.hidden) { onlinePing().catch(() => {}).finally(() => spurAdmin(SPW.tag, SPW.person)); } }, 20000);
 }
 // ---------- KC-CLUB-SCHNAPPSCHUSS (2.102.0, Wunsch Hansi „Bildschirm des Mitglieds ansehen – Schnappschuss“) ----------
-// Admin bittet um EIN Bild der Club-App eines Mitglieds (z. B. um zu helfen). Das Mitglied wird gefragt und entscheidet selbst;
-// abgebildet wird nur die Club-App (anderes vom Gerät kann eine Web-App nicht sehen). Das Bild liegt nur bis zum Abholen auf dem Server.
-const SS = { id: null, an: null, name: "", uhr: null, bis: 0, live: false, seit: 0, gefragt: new Set() };
-// 2.103.0 KC-CLUB-MITSCHAUEN (Wunsch Hansi „live mitschauen“): wie der Schnappschuss, aber als Bildfolge (alle ~2,5 s ein neues Bild),
-// beim Mitglied die ganze Zeit ein roter Balken „🔴 … schaut zu – Beenden“, Ende spätestens nach 10 Min. Auf dem Server liegt nur das neueste Bild.
+// ---------- KC-CLUB-STUDIO (2.136.0, Wunsch Hansi „mein TV- und Fotostudio – alles an einem Platz“) ----------
+// 🎬 im Kopf: erst Mitglied suchen/wählen, dann das Pult: 📸 Foto · 🔴 Mitschauen · 📺 Live zeigen – mit Bühne, Uhr („läuft seit“ /
+// „noch“), Fotos dieser Sitzung zum Speichern. Rechte: Admin alles; Mitglieder nur, wenn freigeschaltet (📺 Zeigen dauerhaft,
+// ⭐ alles nur für kurze Zeit). Das andere Mitglied wird IMMER gefragt und kann jederzeit beenden. Bilder bleiben nur auf dem eigenen Gerät.
+const SS = { id: null, an: null, name: "", uhr: null, bis: 0, live: false, seit: 0, gefragt: new Set() }; // Mitschauen/Foto (Server „schnappschuss“)
+const STD = { pid: null, name: "", suche: "", modus: null, status: null, start: 0, bis: 0, uhr: null, fotos: [], rechte: null, frame: null };
+const ST_LIVE_MIN = 30;
+function studioStufe() {
+  if (ICH?.admin) return "alles";
+  const s = INIT?.studio; if (!s?.stufe) return null;
+  if (s.stufe === "alles" && s.allesBis && Date.now() > Date.parse(s.allesBis)) return s.zeigen ? "zeigen" : null;
+  return s.stufe;
+}
+const stDarf = (was) => { const s = studioStufe(); return !!s && (was === "zeigen" || s === "alles"); };
+function stKnopf() {
+  const k = $("studioKnopf"); if (!k) return;
+  k.classList.toggle("versteckt", !studioStufe());
+  k.classList.toggle("st-an", !!(STD.modus && ["wartet", "live"].includes(STD.status)) || VF.rolle === "zeigt");
+}
+const stZeit = (ms) => { const s = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+function stOeffnen(pid, name) {
+  if (!studioStufe()) return melde("🎬 Das Studio ist für dich nicht freigeschaltet.", true);
+  if (pid) Object.assign(STD, { pid, name: name || (MITGLIEDER || []).find((m) => m.person_id === pid)?.name || "" });
+  const f = blattAuf("studioBlatt", `<div class="st-kopf"><h3>🎬 Studio</h3><button type="button" class="rund" aria-label="Studio schließen" onclick="stSchliessen()">✕</button></div><div id="stdInhalt"></div>`);
+  f.onclick = null; f.classList.add("st-blatt"); f._zu = stSchliessen;
+  if (!MITGLIEDER) mitgliederHolen().then(() => stListe()).catch(() => { const l = $("stdListe"); if (l) l.innerHTML = '<p class="hinweis">⚠️ Mitglieder gerade nicht erreichbar – bitte gleich nochmal öffnen.</p>'; });
+  if (ICH?.admin && !STD.rechte) stRechteLaden();
+  stZeichnen(); clearInterval(STD.uhr); STD.uhr = setInterval(stUhr, 1000); stKnopf();
+}
+function stSchliessen() {
+  if (STD.modus === "mitschauen" || STD.modus === "foto") ssAbbrechen(true);
+  clearInterval(STD.uhr); STD.uhr = null; $("studioBlatt")?.remove(); stKnopf();
+}
+function stZeichnen() {
+  const box = $("stdInhalt"); if (!box) return;
+  if (!STD.pid) {
+    box.innerHTML = `<input class="hz-suche" id="stdSuche" type="search" placeholder="🔍 Mitglied suchen …" aria-label="Mitglied suchen" value="${esc(STD.suche)}" oninput="STD.suche=this.value;stListe()">
+      <div class="st-liste" id="stdListe"></div>${ICH?.admin ? '<div id="stdRechteUebersicht"></div>' : ""}`;
+    stListe(); stRechteUebersicht(); return;
+  }
+  const on = ONL.ids.has(STD.pid), m = (MITGLIEDER || []).find((x) => x.person_id === STD.pid), vn = esc(String(STD.name || "").split(" ")[0] || "Mitglied");
+  const modus = (id, sym, t, recht) => { const ok = stDarf(recht), an = STD.modus === id && ["wartet", "live", "bild"].includes(STD.status);
+    return `<button type="button" class="st-modus${an ? " an" : ""}" ${ok ? `onclick="stModus('${id}')"` : "disabled"} aria-pressed="${an}"><span class="st-sym">${ok ? sym : "🔒"}</span><span class="st-t">${t}</span></button>`; };
+  box.innerHTML = `<div class="st-person">${m ? kreis(m, m.name, 44) : `<div class="avatar" style="width:44px;height:44px">${esc(initialen(STD.name))}</div>`}
+      <div class="st-wer"><b>${esc(STD.name)}</b><small>${on ? "🟢 gerade online" : "⚪ gerade nicht in der App"}</small></div>
+      <button type="button" class="knopf klein st-wechseln" onclick="stWahl()" aria-label="Anderes Mitglied wählen">‹ Wechseln</button></div>
+    <div class="st-modi">${modus("foto", "📸", "Foto", "alles")}${modus("mitschauen", "🔴", "Mitschauen", "alles")}${modus("zeigen", "📺", "Live zeigen", "zeigen")}</div>
+    <div class="st-buehne" id="stdBuehne"></div>
+    <div class="st-status" id="stdStatus"></div>
+    <div class="st-aktionen" id="stdAktionen"></div>
+    <div class="st-fotos" id="stdFotos"></div>
+    ${ICH?.admin ? `<details class="ds-mehr st-recht" id="stdRecht"><summary>🔑 Studio für ${vn} freischalten</summary><div id="stdRechtInhalt"></div></details>` : ""}`;
+  stBuehne(); stStatus(); stAktionen(); stFotos(); stRechtZeichnen();
+}
+function stListe() {
+  const l = $("stdListe"); if (!l) return;
+  if (!MITGLIEDER) { l.innerHTML = '<p class="hinweis">Mitglieder werden geladen …</p>'; return; }
+  const q = (STD.suche || "").trim().toLowerCase();
+  const liste = MITGLIEDER.filter((m) => m.person_id !== ICH?.person_id && (!q || String(m.name || "").toLowerCase().includes(q)))
+    .sort((a, b) => (ONL.ids.has(b.person_id) - ONL.ids.has(a.person_id)) || String(a.name).localeCompare(String(b.name), "de"));
+  l.innerHTML = liste.length ? liste.map((m) => `<button type="button" class="st-zeile" onclick="stWaehlen('${esc(m.person_id)}')">${kreis(m, m.name, 40)}
+      <span class="st-wer"><b>${esc(m.name)}</b><small>${ONL.ids.has(m.person_id) ? "🟢 gerade online" : "⚪ nicht in der App"}</small></span><span class="st-pfeil" aria-hidden="true">›</span></button>`).join("")
+    : '<p class="hinweis">Niemand gefunden.</p>';
+}
+function stWaehlen(pid) { if (STD.modus && ["wartet", "live"].includes(STD.status)) return melde("Erst die laufende Sitzung beenden.", true); Object.assign(STD, { pid, name: (MITGLIEDER || []).find((m) => m.person_id === pid)?.name || "", modus: null, status: null, frame: null }); stZeichnen(); }
+function stWahl() { if (STD.modus && ["wartet", "live"].includes(STD.status)) return melde("Erst die laufende Sitzung beenden.", true); Object.assign(STD, { pid: null, modus: null, status: null, frame: null }); stZeichnen(); setTimeout(() => $("stdSuche")?.focus(), 50); }
+async function stModus(id) {
+  if (STD.modus && ["wartet", "live"].includes(STD.status)) { if (STD.modus === id) return; return melde("Erst die laufende Sitzung beenden (⏹).", true); }
+  if (id === "zeigen") return vfStart(STD.pid);
+  return ssStart(STD.pid, STD.name, id === "mitschauen");
+}
+// Bühne: Platzhalter, Foto oder echter Live-Spiegel
+function stBuehne() {
+  const b = $("stdBuehne"); if (!b) return;
+  const vn = esc(String(STD.name || "").split(" ")[0] || "Das Mitglied");
+  if (STD.modus === "mitschauen" && STD.status === "live" && STD.frame) { spgZeigen(b, STD.frame); return; }
+  const letztes = STD.fotos[STD.fotos.length - 1];
+  b.innerHTML = STD.status === "wartet" ? `<div class="st-leer"><span class="st-gross">⏳</span>Warte auf ${vn} …<small>${vn} wird gefragt und entscheidet selbst (höchstens 3 Minuten).</small></div>`
+    : STD.status === "live" && STD.modus === "zeigen" ? `<div class="st-leer"><span class="st-gross">📺</span>Du zeigst ${vn} gerade deine App.<small>Schließe das Studio und tippe dich durch die App – ${vn} sieht es live. Chats und Büro sind dabei verdeckt.</small></div>`
+    : STD.status === "live" ? `<div class="st-leer"><span class="st-gross">🔴</span>Gleich kommt das Bild …</div>`
+    : STD.status === "abgelehnt" ? `<div class="st-leer"><span class="st-gross">🙅</span>${vn} möchte gerade nicht.<small>Das ist in Ordnung – am besten kurz persönlich nachfragen.</small></div>`
+    : STD.status === "keine_antwort" ? `<div class="st-leer"><span class="st-gross">⏳</span>Keine Antwort.<small>${vn} hat die App vielleicht gerade nicht offen.</small></div>`
+    : letztes ? `<img class="st-bild" id="ssBild" src="${letztes.bild}" alt="Bildschirm von ${vn}">`
+    : `<div class="st-leer"><span class="st-gross">🎬</span>Bereit.<small>Oben wählen: 📸 ein Foto, 🔴 live mitschauen oder 📺 deine App live zeigen.</small></div>`;
+}
+function stStatus() {
+  const s = $("stdStatus"); if (!s) return;
+  const lauf = ["wartet", "live"].includes(STD.status);
+  s.classList.toggle("versteckt", !lauf && STD.status !== "beendet");
+  const art = STD.status === "live" ? '<span class="st-live">● LIVE</span>' : STD.status === "wartet" ? '<span class="st-wartet">⏳ wartet</span>' : '<span>⏹ beendet</span>';
+  s.innerHTML = `<div>${art}</div><div>⏱ <b id="stdLaeuft">${stZeit(Date.now() - STD.start)}</b></div><div>${STD.bis && STD.status === "live" ? `noch <b id="stdNoch">${stZeit(STD.bis - Date.now())}</b>` : "&nbsp;"}</div>`;
+}
+function stUhr() {
+  if ($("stdLaeuft") && ["wartet", "live"].includes(STD.status)) $("stdLaeuft").textContent = stZeit(Date.now() - STD.start);
+  if ($("stdNoch")) $("stdNoch").textContent = stZeit(STD.bis - Date.now());
+  vfLeisteUhr();
+}
+function stAktionen() {
+  const a = $("stdAktionen"); if (!a) return;
+  // alle drei Knöpfe gleich: Zeichen oben, Wort darunter – nichts wird abgeschnitten
+  const k = (t, fn, aus, klasse = "") => { const [sym, ...w] = t.split(" "); return `<button type="button" class="knopf st-akt ${klasse}" ${aus ? "disabled" : `onclick="${fn}"`}><span class="st-sym">${sym}</span><span class="st-t">${w.join(" ")}</span></button>`; };
+  const lauf = ["wartet", "live"].includes(STD.status), hatFoto = STD.fotos.length > 0;
+  if (!STD.modus && !hatFoto) { a.innerHTML = ""; return; }
+  a.innerHTML = STD.modus === "mitschauen" && STD.status === "live" ? k("📸 Foto", "stFesthalten()", !STD.frame, "haupt") + k("💾 Speichern", "ssSpeichern()", !hatFoto) + k("⏹ Beenden", "ssAbbrechen()")
+    : STD.modus === "zeigen" && lauf ? k("📱 Zur App", "stSchliessen()", false, "haupt") + k(VF.vorhang ? "🙉 Vorhang auf" : "🙈 Vorhang", "vfVorhang()", STD.status !== "live") + k("⏹ Beenden", "vfBeenden()")
+    : lauf ? k("📸 Foto", "", true) + k("💾 Speichern", "", true) + k("⏹ Abbrechen", "ssAbbrechen()")
+    : k("📸 Foto", "stModus('foto')", !stDarf("alles"), "haupt") + k("💾 Speichern", "ssSpeichern()", !hatFoto) + k("🔴 Live", "stModus('mitschauen')", !stDarf("alles"));
+}
+function stFotos() {
+  const f = $("stdFotos"); if (!f) return;
+  f.innerHTML = STD.fotos.length ? `<div class="st-fotos-titel">📷 Fotos dieser Sitzung – antippen zum Speichern</div><div class="st-fotos-reihe">${STD.fotos.map((x, i) =>
+    `<button type="button" class="st-foto" onclick="stFotoSpeichern(${i})" aria-label="Foto ${i + 1} von ${esc(x.zeit)} speichern"><img src="${x.bild}" alt=""><span>${esc(x.zeit)} 💾</span></button>`).join("")}</div>` : "";
+}
+function stFotoNeu(bild) { STD.fotos.push({ bild, zeit: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", second: "2-digit" }), name: STD.name }); if (STD.fotos.length > 12) STD.fotos.shift(); stFotos(); stAktionen(); }
+function stSetzen(modus, status, extra = {}) { Object.assign(STD, { modus, status }, extra); stBuehne(); stStatus(); stAktionen(); stKnopf(); document.querySelectorAll("#stdInhalt .st-modus").forEach((b) => b.classList.remove("an")); if (modus && ["wartet", "live", "bild"].includes(status)) $("stdInhalt")?.querySelector(`.st-modus[onclick*="'${modus}'"]`)?.classList.add("an"); }
+// Foto aus dem laufenden Live-Bild (auf meinem Gerät gemacht – das Mitglied wird nicht noch einmal gefragt)
+async function stFesthalten() {
+  const ifr = $("stdBuehne")?.querySelector("iframe.spg-iframe"), doc = ifr?.contentDocument; if (!doc) return;
+  try {
+    await bfBibliothek();
+    const w = STD.frame?.w || 400, h = STD.frame?.h || 700;
+    const c = await window.html2canvas(doc.documentElement, { x: 0, y: doc.defaultView.scrollY, width: w, height: h, windowWidth: w, windowHeight: h, scale: 1, useCORS: true, logging: false, backgroundColor: getComputedStyle(doc.body).backgroundColor });
+    stFotoNeu(c.toDataURL("image/jpeg", 0.8)); melde("📸 Festgehalten – unten antippen zum Speichern");
+  } catch (e) { melde("📸 Festhalten ging gerade nicht – bitte nochmal.", true); }
+}
+// ----- Freischalten (nur Admin) -----
+async function stRechteLaden() { try { STD.rechte = (await api("studio_rechte", {}, { still: true })).liste || []; } catch { STD.rechte = STD.rechte || []; } stRechteUebersicht(); stRechtZeichnen(); }
+function stRechtText(r) { return r?.allesBis ? `⭐ alles bis ${new Date(r.allesBis).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr${r.zeigen ? ", danach 📺 Zeigen" : ""}` : r?.zeigen ? "📺 darf Live zeigen" : "kein Studio"; }
+function stRechteUebersicht() {
+  const u = $("stdRechteUebersicht"); if (!u || !ICH?.admin) return;
+  const l = (STD.rechte || []).filter((r) => r.stufe);
+  u.innerHTML = `<h4 class="st-h4">🔑 Freigeschaltet</h4>${l.length ? l.map((r) => `<button type="button" class="st-zeile klein" onclick="stWaehlen('${esc(r.person_id)}')"><span class="st-wer"><b>${esc(r.name)}</b><small>${esc(stRechtText(r))}</small></span><span class="st-pfeil" aria-hidden="true">›</span></button>`).join("")
+    : '<p class="hinweis" style="margin:0">Noch niemand – Mitglied wählen, dann unten „🔑 freischalten“.</p>'}`;
+}
+function stRechtZeichnen() {
+  const box = $("stdRechtInhalt"); if (!box) return;
+  const r = (STD.rechte || []).find((x) => x.person_id === STD.pid) || { zeigen: false, allesBis: null };
+  const k = (t, fn, an) => `<button type="button" class="knopf${an ? " haupt" : ""}" onclick="${fn}" aria-pressed="${!!an}">${t}</button>`;
+  box.innerHTML = `<p class="hinweis" style="margin:4px 0 8px">Jetzt: <b>${esc(stRechtText(r))}</b>. Das andere Mitglied wird immer gefragt.</p>
+    <div class="st-rechtzeile"><span>📺 Live zeigen (dauerhaft)</span><div class="st-knopfgitter zwei">${k("Aus", `stRechtSetzen(false,null)`, !r.zeigen)}${k("An", `stRechtSetzen(true,null)`, r.zeigen)}</div></div>
+    <div class="st-rechtzeile"><span>⭐ Kurz alles (Foto + Mitschauen)</span><div class="st-knopfgitter vier">${[[30, "30 Min"], [60, "1 Std"], [120, "2 Std"], [480, "8 Std"]].map(([m, t]) => k(t, `stRechtSetzen(null,${m})`, false)).join("")}</div>
+    ${r.allesBis ? `<div class="st-knopfgitter eins">${k("⏹ „Alles“ jetzt beenden", "stRechtSetzen(null,0)", false)}</div>` : ""}</div>`;
+}
+async function stRechtSetzen(zeigen, minuten) {
+  const r = (STD.rechte || []).find((x) => x.person_id === STD.pid) || { zeigen: false, allesBis: null };
+  const restMin = r.allesBis ? Math.max(0, Math.round((Date.parse(r.allesBis) - Date.now()) / 60000)) : 0;
+  const neuZeigen = zeigen == null ? !!r.zeigen : zeigen, neuMin = minuten == null ? (restMin ? [30, 60, 120, 480].find((m) => m >= restMin) || 480 : 0) : minuten;
+  try { const x = await api("studio_recht_setzen", { an: STD.pid, zeigen: neuZeigen, allesMinuten: neuMin }, { warten: true });
+    STD.rechte = [...(STD.rechte || []).filter((y) => y.person_id !== STD.pid), { person_id: STD.pid, name: STD.name, ...x }];
+    melde(x.stufe ? `🔑 ${String(STD.name).split(" ")[0]}: ${stRechtText(x)}` : `🔒 Studio für ${String(STD.name).split(" ")[0]} aus`); stRechtZeichnen();
+  } catch (e) { meldeFehler(e); }
+}
+// ----- Foto / Mitschauen (Server „schnappschuss“) -----
 async function ssStart(pid, name, live = false) {
-  if (!ICH?.admin) return;
+  if (!stDarf("alles")) return melde("📸 Foto und Mitschauen sind für dich gerade nicht freigeschaltet.", true);
+  if (!$("studioBlatt") || STD.pid !== pid) stOeffnen(pid, name);
   const n = name || "Das Mitglied";
-  if (!(await frage(live ? `🔴 ${n} fragen, ob du eine Weile mitschauen darfst, was in der Club-App angezeigt wird?\n\nIn der App kommt eine Frage – die Entscheidung liegt dort. Dann siehst du alle paar Sekunden ein neues Bild (höchstens 10 Minuten); beim Mitglied steht die ganze Zeit „🔴 … schaut zu – Beenden“.`
+  if (!(await frage(live ? `🔴 ${n} fragen, ob du eine Weile live mitschauen darfst, was in der Club-App angezeigt wird?\n\nIn der App kommt eine Frage – die Entscheidung liegt dort. Du siehst dann live mit (höchstens ${ST_LIVE_MIN} Minuten); beim Mitglied steht die ganze Zeit „🔴 … schaut zu – Beenden“.`
     : `📸 ${n} fragen, ob du kurz sehen darfst, was in der Club-App gerade angezeigt wird?\n\nIn der App kommt eine Frage – die Entscheidung liegt dort. Du siehst dann ein einziges Bild – nur von der Club-App.`, { ja: live ? "🔴 Fragen" : "📸 Fragen", nein: "Abbrechen" }))) return;
   try {
     const r = await api("schnappschuss_anfragen", { an: pid, live }, { warten: true });
     Object.assign(SS, { id: r.id, an: pid, name: name || "", bis: Date.now() + 3 * 60000, live, seit: 0 });
-    ssZeigen("warten"); clearInterval(SS.uhr); SS.uhr = setInterval(ssHolen, 2000);
+    stSetzen(live ? "mitschauen" : "foto", "wartet", { start: Date.now(), bis: 0, frame: null });
+    clearInterval(SS.uhr); SS.uhr = setInterval(ssHolen, 1500);
   } catch (e) { meldeFehler(e); }
 }
-function ssZeigen(art, bild) {
-  const n = esc(SS.name || "Das Mitglied"), knopfStart = (live) => `ssStart('${esc(SS.an)}', ${esc(JSON.stringify(SS.name))}, ${live})`;
-  if (art === "live" && $("ssBild") && $("ssBlatt")?.dataset.art === "live") { $("ssBild").src = bild; $("ssZeit").textContent = new Date().toLocaleTimeString("de-DE"); return; } // nur das Bild tauschen
-  const html = art === "live" ? `<h3 style="margin:0">🔴 Live: ${n}</h3><p class="hinweis" style="margin:2px 0 8px">Neues Bild alle paar Sekunden · zuletzt <b id="ssZeit">${esc(new Date().toLocaleTimeString("de-DE"))}</b> · endet spätestens nach 10 Min.</p>
-      <img id="ssBild" src="${bild}" alt="Bildschirm von ${n}" style="width:100%;border:3px solid #d32f2f;border-radius:12px">
-      <div class="knoepfe" style="margin-top:8px"><button class="knopf" onclick="ssSpeichern()">💾 Dieses Bild bei mir speichern</button><button class="knopf haupt" onclick="ssAbbrechen()">⏹ Beenden</button></div>`
-    : art === "bild" ? `<h3 style="margin:0">📸 Bildschirm von ${n}</h3><p class="hinweis" style="margin:2px 0 8px">Aufgenommen ${esc(new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }))} – liegt nicht mehr auf dem Server.</p>
-      <img id="ssBild" src="${bild}" alt="Bildschirm von ${n}" style="width:100%;border:1px solid var(--linie,#ccc);border-radius:12px">
-      <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" onclick="ssSpeichern()">💾 Bei mir speichern</button><button class="knopf" onclick="${knopfStart(false)}">🔄 Noch einmal</button><button class="knopf" onclick="${knopfStart(true)}">🔴 Live</button><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button></div>`
-    : art === "beendet" ? `<h3 style="margin:0">⏹ Mitschauen beendet</h3>${bild ? `<img id="ssBild" src="${bild}" alt="" style="width:100%;opacity:.6;border-radius:12px;margin:6px 0">` : ""}<p>Das Mitschauen ist zu Ende – auf dem Server liegt kein Bild mehr.</p>
-      <div class="knoepfe">${bild ? `<button class="knopf" onclick="ssSpeichern()">💾 Letztes Bild speichern</button>` : ""}<button class="knopf" onclick="${knopfStart(true)}">🔴 Neu fragen</button><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button></div>`
-    : art === "abgelehnt" ? `<h3 style="margin:0">🙅 ${n} möchte gerade nicht</h3><p>Das ist in Ordnung – am besten kurz persönlich nachfragen.</p><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button>`
-    : art === "keine_antwort" ? `<h3 style="margin:0">⏳ Keine Antwort</h3><p>${n} hat in 3 Minuten nicht geantwortet – vielleicht ist die App gerade nicht offen.</p><button class="knopf" onclick="fensterZu($('ssBlatt'))">Schließen</button>`
-    : `<h3 style="margin:0">${SS.live ? "🔴" : "📸"} Warte auf ${n} …</h3><p>${n} wird gefragt, ob du ${SS.live ? "mitschauen" : "den Bildschirm sehen"} darfst. Das Fenster aktualisiert sich von selbst (höchstens 3 Minuten).</p><button class="knopf" onclick="ssAbbrechen()">Abbrechen</button>`;
-  const f = blattAuf("ssBlatt", html); f.onclick = null; f.dataset.art = art;
-}
-function ssAbbrechen() {
+function ssAbbrechen(still) {
   clearInterval(SS.uhr); if (SS.id) api("schnappschuss_ende", { an: SS.an, id: SS.id }).catch(() => {});
-  SS.id = null; fensterZu($("ssBlatt"));
+  SS.id = null; if (STD.modus === "mitschauen" || STD.modus === "foto") stSetzen(STD.modus, STD.status === "live" || STD.status === "wartet" ? "beendet" : STD.status, { frame: null });
+  if (!still) melde("⏹ Beendet");
 }
 async function ssHolen() {
-  if (!SS.id || !$("ssBlatt")) { if (SS.id) api("schnappschuss_ende", { an: SS.an, id: SS.id }).catch(() => {}); clearInterval(SS.uhr); SS.id = null; return; } // Fenster weg → Mitschauen beenden
+  if (!SS.id || !$("studioBlatt")) { if (SS.id) api("schnappschuss_ende", { an: SS.an, id: SS.id }).catch(() => {}); clearInterval(SS.uhr); SS.id = null; return; } // Studio zu → Mitschauen beenden
   // 2.122.0 KC-CLUB-SS-TAKT: nur eine Abfrage gleichzeitig; späte Antworten zu einer beendeten Sitzung oder alte Bilder verwerfen
   if (SS.laeuft) return; SS.laeuft = true; const id = SS.id;
   try {
     const r = await api("schnappschuss_holen", { an: SS.an, id, seit: SS.seit });
     if (SS.id !== id) return;
-    if (r.status === "live") { if (r.bild && !(r.n <= SS.seit)) { SS.seit = r.n; ssZeigen("live", r.bild); } return; }
-    if (r.status === "bild") { clearInterval(SS.uhr); SS.id = null; return ssZeigen("bild", r.bild); }
-    if (r.status === "beendet" && SS.seit) { clearInterval(SS.uhr); SS.id = null; return ssZeigen("beendet", $("ssBild")?.src); }
-    if (["abgelehnt", "keine_antwort", "vorbei", "abgeholt", "beendet"].includes(r.status) || Date.now() > SS.bis + 10000 && !SS.seit) { clearInterval(SS.uhr); SS.id = null; return ssZeigen(r.status === "abgelehnt" ? "abgelehnt" : "keine_antwort"); }
+    if (r.status === "live") {
+      if (STD.status !== "live") { stSetzen("mitschauen", "live", { start: Date.now(), bis: r.bis ? Date.parse(r.bis) : Date.now() + ST_LIVE_MIN * 60000 }); clearInterval(SS.uhr); SS.uhr = setInterval(ssHolen, 800); }
+      if (!(r.n <= SS.seit)) { SS.seit = r.n;
+        if (r.frame) { STD.frame = r.frame; const b = $("stdBuehne"); if (b) await spgZeigen(b, r.frame); stAktionen(); }
+        else if (r.bild) { STD.frame = null; const b = $("stdBuehne"); if (b) b.innerHTML = `<img class="st-bild" id="ssBild" src="${r.bild}" alt="">`; stLetztesBild = r.bild; stAktionen(); } }
+      return;
+    }
+    if (r.status === "bild") { clearInterval(SS.uhr); SS.id = null; stFotoNeu(r.bild); return stSetzen("foto", "bild"); }
+    if (r.status === "beendet" && SS.seit) { clearInterval(SS.uhr); SS.id = null; return stSetzen("mitschauen", "beendet", { frame: null }); }
+    if (["abgelehnt", "keine_antwort", "vorbei", "abgeholt", "beendet"].includes(r.status) || Date.now() > SS.bis + 10000 && !SS.seit) { clearInterval(SS.uhr); SS.id = null; return stSetzen(STD.modus, r.status === "abgelehnt" ? "abgelehnt" : "keine_antwort"); }
   } catch {} finally { SS.laeuft = false; }
 }
-// 2.135.0 KC-CLUB-SS-SPEICHERN (Wunsch Hansi „beim Live-Schauen und Bild-Machen bei mir speichern“): das gerade angezeigte Bild wird
-// sofort festgehalten (beim Live-Schauen kommt sonst gleich das nächste) und über das Teilen-Menü gespeichert – auf iPhone/iPad
-// „Bild sichern“ → Fotos; geht Teilen nicht, wird es als Datei heruntergeladen. Das Bild bleibt nur auf dem eigenen Gerät.
-async function ssSpeichern() {
-  const b = $("ssBild")?.src; if (!b) return;
-  const name = `Bildschirm_${(SS.name || "Mitglied").replace(/[^\wäöüÄÖÜß]+/g, "_")}_${heuteIso()}_${new Date().toTimeString().slice(0, 8).replace(/:/g, "")}.jpg`;
+let stLetztesBild = "";
+// Speichern über das Teilen-Menü (iPhone/iPad: „Bild sichern“ → Fotos), sonst als Download (2.135.0 KC-CLUB-SS-SPEICHERN)
+async function bildSpeichern(b, wer) {
+  if (!b) return;
+  const name = `Bildschirm_${(wer || "Mitglied").replace(/[^\wäöüÄÖÜß]+/g, "_")}_${heuteIso()}_${new Date().toTimeString().slice(0, 8).replace(/:/g, "")}.jpg`;
   let datei = null;
   try { const [kopf, roh] = b.split(","), typ = /^data:([^;,]+)/.exec(kopf)?.[1] || "image/jpeg", bin = atob(roh); // Bild kommt als data:-Adresse – ohne Netz in eine Datei wandeln
     datei = new File([Uint8Array.from(bin, (z) => z.charCodeAt(0))], name, { type: typ }); } catch {}
@@ -22007,6 +22147,126 @@ async function ssSpeichern() {
   setTimeout(() => { a.remove(); if (datei) URL.revokeObjectURL(a.href); }, 30000);
   melde("💾 Bild gespeichert (Ordner „Downloads“)");
 }
+function ssSpeichern() { const f = STD.fotos[STD.fotos.length - 1]; return bildSpeichern(f?.bild || $("ssBild")?.src || stLetztesBild, f?.name || STD.name || SS.name); }
+function stFotoSpeichern(i) { const f = STD.fotos[i]; if (f) bildSpeichern(f.bild, f.name); }
+
+// ---------- KC-CLUB-STUDIO-SPIEGEL (2.136.0): echtes Live statt Fotos ----------
+// Der Sender schickt bei jeder Änderung den SICHTBAREN Inhalt seiner Club-App (Text, Knöpfe, Bilder – keine Skripte), gepackt; der Empfänger
+// baut ihn in einem abgeschotteten Rahmen (sandbox ohne Skripte) mit denselben App-Farben nach. Scharf, flüssig, etwa 1 Sekunde Versatz.
+// Nie übertragen: Eingaben in PIN-/Passwortfeldern. Beim Zeigen zusätzlich verdeckt: die Bereiche aus SPG_PRIVAT (Registry, erweiterbar).
+const SPG_PRIVAT = [
+  { sel: "#v-chat", t: "Unterhaltung" }, { sel: "#v-nachrichten", t: "Nachrichten" }, { sel: "#v-gruppe", t: "Gruppe" },
+  { sel: "#v-buero", t: "Büro" }, { sel: ".blatt[id^='bu']", t: "Büro" }, { sel: "#v-erstattung", t: "Erstattung" },
+  { sel: "#gmFenster", t: "Gemerkte Nachrichten" }, { sel: "#adminBlatt", t: "Admin" },
+];
+const SPG_NIE_TAG = new Set(["SCRIPT", "NOSCRIPT", "TEMPLATE", "IFRAME", "OBJECT", "EMBED", "VIDEO", "AUDIO", "LINK", "META", "BASE", "FRAME", "FRAMESET", "PORTAL"]);
+const SPG_NIE_ID = new Set(["studioBlatt", "vfLeiste", "ssLiveLeiste", "spgSchirm"]);
+const SPG_GEHEIM = /pin|pass|code|kennwort|geheim|token/i;
+const spgUrlOk = (v) => /^data:image\//i.test(v) || /^blob:/i.test(v) ? false : (/^(https?:)?\/\//i.test(v) ? (v.startsWith(location.origin) || v.startsWith("https://ptblnpiroqftcvlsrhac.supabase.co/")) : !/^\s*(javascript|vbscript|data):/i.test(v));
+function spgSchnappen(privat) {
+  const aus = [], at = (n, v) => ` ${n}="${String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;")}"`;
+  const geh = (el) => {
+    for (const k of el.childNodes) {
+      if (k.nodeType === 3) { aus.push(esc(k.nodeValue)); continue; }
+      if (k.nodeType !== 1 || SPG_NIE_TAG.has(k.tagName) || SPG_NIE_ID.has(k.id)) continue;
+      const svg = k.namespaceURI === "http://www.w3.org/2000/svg", tag = svg ? k.tagName : k.tagName.toLowerCase();
+      if (!svg && !["option", "optgroup", "br", "wbr", "style"].includes(tag) && !k.getClientRects().length) continue; // unsichtbar → weglassen
+      if (tag === "style") { aus.push(`<style>${(k.textContent || "").replace(/<\/style/gi, "<\\/style")}</style>`); continue; }
+      if (tag === "canvas") { let d = ""; try { d = k.toDataURL("image/jpeg", 0.6); } catch {} const r = k.getBoundingClientRect(); aus.push(`<img${at("class", k.className || "")}${at("style", `${k.getAttribute("style") || ""};width:${r.width}px;height:${r.height}px`)}${d.length > 6 && d.length < 400000 ? at("src", d) : ""}>`); continue; }
+      let a = "";
+      for (const x of k.attributes) {
+        const n = x.name.toLowerCase(); let v = x.value;
+        if (n.startsWith("on") || n === "srcdoc" || n === "value" || n === "checked" || n === "selected") continue;
+        if (["src", "href", "xlink:href", "poster", "action", "formaction", "srcset"].includes(n)) { if (n === "srcset" || !(/^data:image\//i.test(v) ? v.length < 80000 : spgUrlOk(v))) continue; }
+        if (n === "style") v = v.replace(/url\(\s*['"]?\s*(?:https?:)?\/\/[^)]*\)/gi, "none");
+        a += at(x.name, v);
+      }
+      const priv = privat && SPG_PRIVAT.find((p) => { try { return k.matches(p.sel); } catch { return false; } });
+      if (priv) { aus.push(`<${tag}${a}><div class="spg-privat" style="min-height:${Math.max(80, Math.min(k.clientHeight || 0, 4000))}px">🙈 ${esc(priv.t)} – privat</div></${tag}>`); continue; }
+      if (tag === "input") {
+        const typ = (k.type || "").toLowerCase(), geheim = typ === "password" || typ === "hidden" || SPG_GEHEIM.test(`${k.name} ${k.id} ${k.autocomplete}`);
+        if (["checkbox", "radio"].includes(typ)) a += k.checked ? " checked" : "";
+        else if (!["file", "button", "submit", "image"].includes(typ)) a += at("value", geheim && k.value ? "••••" : k.value);
+        aus.push(`<input${a}>`); continue;
+      }
+      if (tag === "textarea") { aus.push(`<textarea${a}>${esc(SPG_GEHEIM.test(`${k.name} ${k.id}`) && k.value ? "••••" : k.value)}</textarea>`); continue; }
+      if (tag === "select") { aus.push(`<select${a}>${[...k.options].map((o, i) => `<option${i === k.selectedIndex ? " selected" : ""}>${esc(o.text)}</option>`).join("")}</select>`); continue; }
+      if (k.scrollTop > 0 || k.scrollLeft > 0) a += at("data-spg-st", `${Math.round(k.scrollTop)},${Math.round(k.scrollLeft)}`);
+      aus.push(`<${tag}${a}>`);
+      if (!["img", "br", "wbr", "hr", "input", "source", "col", "area"].includes(tag)) { geh(k); aus.push(`</${tag}>`); }
+    }
+  };
+  geh(document.body);
+  const attrs = (el, weg) => [...el.attributes].filter((x) => !x.name.startsWith("on")).map((x) => [x.name, x.name === "class" ? x.value.split(/\s+/).filter((c) => !weg.includes(c)).join(" ") : x.value]);
+  return { html: aus.join(""), ha: attrs(document.documentElement, []), ba: attrs(document.body, ["vf-an"]), w: innerWidth, h: innerHeight, sy: Math.round(scrollY) };
+}
+async function spgPacken(obj) {
+  let bytes = new TextEncoder().encode(JSON.stringify(obj)), z = "roh";
+  if (window.CompressionStream) { try { bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer()); z = "gzip"; } catch { bytes = new TextEncoder().encode(JSON.stringify(obj)); } }
+  let b = ""; for (let i = 0; i < bytes.length; i += 0x8000) b += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return { d: btoa(b), z };
+}
+async function spgAuspacken(f) {
+  let bytes = Uint8Array.from(atob(f.d), (c) => c.charCodeAt(0));
+  if (f.z === "gzip") bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer());
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+// Sender: beobachtet die eigene App, schickt höchstens alle 0,7 s – und nur, wenn sich etwas geändert hat (sonst alle 4 s „läuft noch“)
+const SPG = { an: false, privat: false, vorhang: false, schmutzig: true, letzt: "", tipp: null, tippN: 0, beob: null, uhr: null, laeuft: false, ping: 0, senden: null, vorhangGesendet: false };
+const spgSchmutz = () => { SPG.schmutzig = true; };
+function spgTippen(e) { if (!SPG.an || e.target?.closest?.("#vfLeiste, #ssLiveLeiste")) return; SPG.tipp = { x: e.clientX / innerWidth, y: e.clientY / innerHeight, n: ++SPG.tippN }; SPG.schmutzig = true; }
+function spgSenderStart(senden, privat) {
+  spgSenderStopp(); Object.assign(SPG, { an: true, privat: !!privat, vorhang: false, schmutzig: true, letzt: "", tipp: null, senden, ping: 0, vorhangGesendet: false });
+  SPG.beob = new MutationObserver(spgSchmutz); SPG.beob.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
+  addEventListener("scroll", spgSchmutz, { capture: true, passive: true }); addEventListener("input", spgSchmutz, true); addEventListener("resize", spgSchmutz); document.addEventListener("pointerdown", spgTippen, true);
+  SPG.uhr = setInterval(spgSenderTakt, 700); spgSenderTakt();
+}
+function spgSenderStopp() {
+  SPG.an = false; clearInterval(SPG.uhr); SPG.beob?.disconnect(); SPG.beob = null;
+  removeEventListener("scroll", spgSchmutz, { capture: true }); removeEventListener("input", spgSchmutz, true); removeEventListener("resize", spgSchmutz); document.removeEventListener("pointerdown", spgTippen, true);
+}
+async function spgSenderTakt() {
+  if (!SPG.an || SPG.laeuft || document.hidden) return;
+  const jetzt = Date.now(); if (!SPG.schmutzig && !(SPG.vorhang && !SPG.vorhangGesendet) && jetzt - SPG.ping < 4000) return;
+  SPG.laeuft = true;
+  try {
+    let f = null;
+    if (SPG.vorhang) { if (!SPG.vorhangGesendet) f = { vorhang: true }; }
+    else if (SPG.schmutzig) {
+      SPG.schmutzig = false; const s = spgSchnappen(SPG.privat), sch = s.html.length + "|" + s.sy + "|" + s.w + "|" + (SPG.tipp?.n || 0) + "|" + s.ba.join() + "|" + s.html;
+      if (sch !== SPG.letzt) { SPG.letzt = sch; f = { ...(await spgPacken(s)), w: s.w, h: s.h, tipp: SPG.tipp }; }
+    }
+    SPG.ping = jetzt; const ok = await SPG.senden(f);
+    if (f?.vorhang && ok !== false) SPG.vorhangGesendet = true;
+  } catch { SPG.schmutzig = true; } finally { SPG.laeuft = false; }
+}
+// Empfänger: Rahmen ohne Skripte; Inhalt wird bereinigt eingesetzt, auf die Breite der Bühne verkleinert
+async function spgZeigen(buehne, f) {
+  if (!buehne || !f) return;
+  let rahmen = buehne.querySelector(".spg-rahmen");
+  if (!rahmen) {
+    buehne.innerHTML = `<div class="spg-rahmen"><iframe class="spg-iframe" sandbox="allow-same-origin" tabindex="-1" aria-hidden="true" title="Live-Bild"></iframe><div class="spg-vorhang versteckt">🙈 Vorhang ist kurz zu …</div></div>`;
+    rahmen = buehne.querySelector(".spg-rahmen");
+    const css = [...document.head.querySelectorAll("style, link[rel='stylesheet']")].map((e) => e.outerHTML).join("");
+    rahmen.querySelector("iframe").srcdoc = `<!doctype html><html><head><meta charset="utf-8"><base href="${esc(location.href.split("#")[0])}">${css}<style>html,body{overflow:hidden!important}.spg-privat{display:grid;place-items:center;background:repeating-linear-gradient(45deg,#ddd,#ddd 10px,#eee 10px,#eee 20px);color:#555;font-weight:800;border-radius:12px;margin:8px;filter:none}</style></head><body></body></html>`;
+  }
+  const vorhang = rahmen.querySelector(".spg-vorhang"); vorhang.classList.toggle("versteckt", !f.vorhang); if (f.vorhang) return;
+  const ifr = rahmen.querySelector("iframe");
+  if (!ifr.contentDocument?.body || ifr.contentDocument.readyState !== "complete") await new Promise((ok) => { ifr.addEventListener("load", ok, { once: true }); setTimeout(ok, 1500); });
+  let s; try { s = await spgAuspacken(f); } catch { return; }
+  const doc = ifr.contentDocument; if (!doc?.body) return;
+  const t = doc.createElement("template"); t.innerHTML = s.html;
+  t.content.querySelectorAll("script, iframe, object, embed, link, meta, base, frame").forEach((x) => x.remove());
+  t.content.querySelectorAll("*").forEach((x) => { for (const a of [...x.attributes]) if (/^on/i.test(a.name) || (/^(src|href|xlink:href|action|formaction)$/i.test(a.name) && /^\s*(javascript|vbscript):/i.test(a.value))) x.removeAttribute(a.name); });
+  const setz = (el, liste) => { for (const a of [...el.attributes]) el.removeAttribute(a.name); for (const [n, v] of liste || []) { if (!/^on/i.test(n)) try { el.setAttribute(n, v); } catch {} } };
+  setz(doc.documentElement, s.ha); setz(doc.body, s.ba); doc.body.replaceChildren(t.content);
+  ifr.style.width = s.w + "px"; ifr.style.height = s.h + "px";
+  const breit = buehne.clientWidth || s.w, hoch = buehne.classList.contains("spg-voll") ? buehne.clientHeight : Math.round(innerHeight * 0.62);
+  const m = Math.min(1, breit / s.w, hoch / s.h); ifr.style.transform = `scale(${m})`; rahmen.style.width = Math.round(s.w * m) + "px"; rahmen.style.height = Math.round(s.h * m) + "px";
+  doc.defaultView.scrollTo(0, s.sy); doc.querySelectorAll("[data-spg-st]").forEach((el) => { const [y, x] = el.dataset.spgSt.split(",").map(Number); el.scrollTop = y; el.scrollLeft = x; });
+  if (f.tipp && f.tipp.n !== rahmen._tipp) { rahmen._tipp = f.tipp.n; const p = document.createElement("div"); p.className = "spg-tipp"; p.style.left = f.tipp.x * 100 + "%"; p.style.top = f.tipp.y * 100 + "%"; rahmen.appendChild(p); setTimeout(() => p.remove(), 1400); }
+}
+
 // ----- beim Mitglied -----
 const MSCH = { id: null, uhr: null, bis: 0, laeuft: false, wer: "" };
 async function ssBildMachen() {
@@ -22023,7 +22283,7 @@ async function ssAnfrage(einl) {
   if (!einl?.id || SS.gefragt.has(einl.id) || MSCH.id) return; SS.gefragt.add(einl.id);
   try { navigator.vibrate?.([80, 60, 80]); } catch {}
   const wer = einl.von?.vorname || "Hansi", live = !!einl.live;
-  const ja = await frage(live ? `🔴 ${wer} möchte dir helfen und eine Weile mitschauen, was in deiner Club-App angezeigt wird.\n\nAlle paar Sekunden geht ein Bild der Club-App an ${wer} – nichts anderes von deinem Gerät. Oben steht dann ein roter Balken; damit kannst du jederzeit beenden. Spätestens nach 10 Minuten endet es von selbst. Erlauben?`
+  const ja = await frage(live ? `🔴 ${wer} möchte dir helfen und eine Weile mitschauen, was in deiner Club-App angezeigt wird.\n\n${wer} sieht dann live, was in deiner Club-App angezeigt wird – nichts anderes von deinem Gerät, keine PIN. Oben steht dann ein roter Balken; damit kannst du jederzeit beenden. Spätestens nach 30 Minuten endet es von selbst. Erlauben?`
     : `📸 ${wer} möchte dir helfen und kurz sehen, was in deiner Club-App gerade angezeigt wird.\n\nEs wird ein einziges Bild gemacht – nur von der Club-App, nichts anderes von deinem Gerät. Erlauben?`, { ja: "✅ Ja, erlauben", nein: "Nein, jetzt nicht" });
   let bild = "";
   if (ja) { try { await new Promise((ok) => setTimeout(ok, 450)); bild = await ssBildMachen(); } catch { bild = ""; } }
@@ -22033,23 +22293,23 @@ async function ssAnfrage(einl) {
     melde(ja ? (bild ? `📸 Danke – ${wer} sieht jetzt das Bild` : "Das Bild hat leider nicht geklappt.") : "👍 In Ordnung – es wurde nichts gezeigt.", ja && !bild);
   } catch (e) { meldeFehler(e); }
 }
+// 2.136.0 KC-CLUB-STUDIO-SPIEGEL: statt alle 2,5 s ein Foto jetzt echtes Live (sichtbarer Inhalt, nur bei Änderung), höchstens 30 Min.
 function mlStart(id, wer) {
-  Object.assign(MSCH, { id, wer, bis: Date.now() + 10 * 60000, laeuft: false });
+  Object.assign(MSCH, { id, wer, bis: Date.now() + ST_LIVE_MIN * 60000, laeuft: false });
   document.getElementById("ssLiveLeiste")?.remove();
   document.body.insertAdjacentHTML("beforeend", `<div id="ssLiveLeiste" class="ss-live-leiste" role="status"><span>🔴 ${esc(wer)} schaut zu</span><button onclick="mlEnde(true)">Beenden</button></div>`);
   spur("mitschauen_laeuft");
-  clearInterval(MSCH.uhr); MSCH.uhr = setInterval(mlTakt, 2500);
+  clearInterval(MSCH.uhr); MSCH.uhr = setInterval(() => { if (MSCH.id && Date.now() > MSCH.bis) mlEnde(true, `⏹ Mitschauen nach ${ST_LIVE_MIN} Minuten beendet`); }, 5000);
+  spgSenderStart(mlSenden, false);
 }
-async function mlTakt() {
-  if (!MSCH.id) return;
-  if (Date.now() > MSCH.bis) return mlEnde(true, "⏹ Mitschauen nach 10 Minuten beendet");
-  if (MSCH.laeuft || document.hidden) return; // nur, wenn die App sichtbar ist; nie zwei Bilder gleichzeitig
-  MSCH.laeuft = true;
-  try { const r = await api("schnappschuss_bild", { id: MSCH.id, bild: await ssBildMachen() }); if (r.status !== "live") mlEnde(false, `⏹ ${MSCH.wer} schaut nicht mehr zu`); }
-  catch {} finally { MSCH.laeuft = false; }
+async function mlSenden(f) {
+  if (!MSCH.id) return false;
+  const r = await api("schnappschuss_bild", { id: MSCH.id, f }, { still: true });
+  if (r.status !== "live") { mlEnde(false, `⏹ ${MSCH.wer} schaut nicht mehr zu`); return false; }
+  return true;
 }
 function mlEnde(selbst, text) {
-  const id = MSCH.id; clearInterval(MSCH.uhr); MSCH.id = null; document.getElementById("ssLiveLeiste")?.remove();
+  const id = MSCH.id; clearInterval(MSCH.uhr); MSCH.id = null; spgSenderStopp(); document.getElementById("ssLiveLeiste")?.remove();
   if (selbst && id) api("schnappschuss_ende", { id }).catch(() => {});
   if (id) melde(text || "⏹ Mitschauen beendet");
 }
