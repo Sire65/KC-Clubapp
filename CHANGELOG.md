@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.144.0 – 2026-10-09 – 🗂️ Inhaltsverzeichnis auf dem Bildschirm: Ordner, Register oder Dokument antippen öffnet genau das – füllt sich selbst (KC-CLUB-INHALTSVERZEICHNIS-ANTIPPEN)
+🔧 Kleine Systemverbesserungen
+
 ## 2.143.0 – 2026-10-09 – 🎬 Studio-Kachel nur noch unter „Meins“ bei freigeschalteten Mitgliedern (Admin: Studio-Karte im Kopf)
 🔧 Kleine Systemverbesserungen
 

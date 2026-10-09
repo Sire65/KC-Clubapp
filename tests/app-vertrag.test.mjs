@@ -6276,8 +6276,8 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.deepEqual(ivGliedern(d, { umfang: "oeffentlich", auto: true }).map((x) => x.id), ["club", "leitung", "auto"]);
   assert.deepEqual(ivGliedern(d, { ordner: "v1" }).map((x) => x.ordner.map((o) => o.id)), [["v1"]], "nur dieser Ordner");
   assert.ok(/inhaltsverzeichnis: \{ titel: "🗂️ Inhaltsverzeichnis drucken \/ als PDF", optionen: \(\) => ivOptionen\(\), bauen: \(\) => druckInhaltsverzeichnis\(\) \}/.test(programm), "über den Druck-Kern");
-  assert.ok(/\{ id: "inhalt", sym: "🗂️", t: "Inhaltsverzeichnis", farbe: "#5d6b5a", fn: "ivDrucken\(\)" \}/.test(programm), "Knopf im Büro");
-  assert.ok(/onclick="ivDrucken\(\)">🗂️ Inhaltsverzeichnis<\/button>/.test(programm) && /onclick="ivDrucken\('\$\{o\.id\}'\)">🗂️ Inhaltsverzeichnis drucken<\/button>/.test(programm), "Knopf im Archiv und in jedem Ordner");
+  assert.ok(/\{ id: "inhalt", sym: "🗂️", t: "Inhaltsverzeichnis", farbe: "#5d6b5a", fn: "ivAnsicht\(\)" \}/.test(programm), "Knopf im Büro (2.144.0: erst auf dem Bildschirm)");
+  assert.ok(/onclick="ivAnsicht\(\)">🗂️ Inhaltsverzeichnis<\/button>/.test(programm) && /onclick="ivAnsicht\('\$\{o\.id\}'\)">🗂️ Inhaltsverzeichnis<\/button>/.test(programm) && /ivDrucken\(IVA\.ordner\)">🖨️ Drucken<\/button>/.test(programm), "Knopf im Archiv und in jedem Ordner; Drucken im Verzeichnis");
   assert.ok(/fuss: privat \? "Enthält persönliche Ordner – nicht weitergeben" : ""/.test(programm));
 }
 
@@ -7114,4 +7114,13 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/body\.sch-fokus \.sch-rahmen \{ touch-action: none; \} html:has\(body\.sch-fokus\), body\.sch-fokus \{ overscroll-behavior: none; \}/.test(html), "Brett ruhig, kein Nachfedern/Neuladen");
   const f = programm.slice(programm.indexOf("// KC-CLUB-SCHACH-STILL"), programm.indexOf('document.addEventListener("pointerup", (e) => schZiehEnde'));
   assert.ok(/document\.addEventListener\("touchmove", \(e\) => \{/.test(f) && /if \(SCH_ZIEH \|\| \(document\.body\.classList\.contains\("sch-fokus"\) && e\.target\.closest\?\.\("\.sch-rahmen"\)\)\) e\.preventDefault\(\);/.test(f) && /\{ passive: false \}/.test(f), "Sperre auch für iOS: beim Schieben und auf dem Brett der laufenden Partie");
+}
+
+// 2.144.0 KC-CLUB-INHALTSVERZEICHNIS-ANTIPPEN (Wunsch Hansi): Ordner/Register/Dokument antippen öffnet genau das; füllt sich selbst
+{
+  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), f = p.slice(p.indexOf("const IVA = {"), p.indexOf("async function ivDrucken("));
+  assert.ok(/AR\.daten = await api\("archiv_liste", \{\}, \{ warten: true \}\);/.test(f) && /const teile = ivGliedern\(AR\.daten,/.test(f), "bei jedem Öffnen frisch aus dem Archiv, gleiche Gliederung wie der Ausdruck");
+  assert.ok(/onclick="event\.preventDefault\(\);ivOeffne\('\$\{esc\(o\.id\)\}'\)"/.test(f) && /ivOeffne\(\$\{hlJs\(o\.id\)\}, \$\{hlJs\(r\.name\)\}\)/.test(f) && /onclick='ivDok\(/.test(f), "Ordner, Register, Dokument antippbar");
+  assert.ok(/AR\.ziel = oid; AR\.zielRegister = register;/.test(f) && /if \(zr\) \{ AR\.register = zr; arZeigen\(\); \}/.test(p), "Register wird nach dem Öffnen gewählt");
+  assert.ok(/if \(!auto\) return arAnlage\(id, true\);/.test(f) && /if \(art === "protokoll"\) return protokollOeffnen\(id\);/.test(f), "Dokument öffnet wie im Archiv");
 }

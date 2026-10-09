@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.143.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.144.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12739,7 +12739,7 @@ const BU_REGAL = [
   { id: "besprechungen", sym: "🤝", t: "Besprechungen", farbe: "#6b6f86", fn: "arStartTitel('Besprechungen')", recht: "L" }, // KC-CLUB-ARCHIV-KOPIEREN (2.59.0): Entwürfe/Unterlagen, bevor es ein Protokoll ist
   { id: "chronik", sym: "📖", t: "Chronik", farbe: "#8a6d4e", fn: "arStartArt('chronik')" },
   { id: "archiv", sym: "🗄️", t: "Archiv", farbe: "#5f5a57", fn: "arStart()" },
-  { id: "inhalt", sym: "🗂️", t: "Inhaltsverzeichnis", farbe: "#5d6b5a", fn: "ivDrucken()" }, // KC-CLUB-INHALTSVERZEICHNIS (2.79.0): alle Ordner als PDF/Ausdruck
+  { id: "inhalt", sym: "🗂️", t: "Inhaltsverzeichnis", farbe: "#5d6b5a", fn: "ivAnsicht()" }, // 2.144.0: erst auf dem Bildschirm (antippbar), Drucken darin // KC-CLUB-INHALTSVERZEICHNIS (2.79.0): alle Ordner als PDF/Ausdruck
   { id: "verwaltung", sym: "🔐", t: "Freigaben", farbe: "#55606b", fn: "buRechte()", recht: "A" },
 ];
 // ---------- KC-CLUB-BUERO-ADRESSEN (2.125.0, Wunsch Hansi): Adressbuch im Büro ----------
@@ -20873,7 +20873,8 @@ async function arLaden() {
   try { AR.daten = await api("archiv_liste");
     if (AR.zielArt) { const za = AR.daten.ordner.find((o) => !o.besitzer && o.art === AR.zielArt); AR.zielArt = null; if (za) return arOrdnerOeffnen(za.id); }
     if (AR.zielTitel) { const zt = AR.daten.ordner.filter((o) => !o.besitzer && o.titel === AR.zielTitel).sort((a, b) => b.jahr - a.jahr)[0]; const t = AR.zielTitel; AR.zielTitel = null; if (zt) return arOrdnerOeffnen(zt.id); melde(`Den Ordner „${t}“ gibt es noch nicht – im Archiv mit „＋“ anlegen.`, true); }
-    if (AR.ziel) { const z = AR.ziel; AR.ziel = null; if (AR.daten.ordner.some((o) => o.id === z)) return arOrdnerOeffnen(z); } arZeigen(); } catch (e) { $("arInhalt").innerHTML = `<div class="karte hinweis">⚠️ ${esc(e.message)}</div>`; }
+    if (AR.ziel) { const z = AR.ziel, zr = AR.zielRegister; AR.ziel = null; AR.zielRegister = "";
+      if (AR.daten.ordner.some((o) => o.id === z) || (String(z).startsWith("auto:") && arAlleOrdner().some((o) => o.id === z))) { arOrdnerOeffnen(z); if (zr) { AR.register = zr; arZeigen(); } return; } } arZeigen(); } catch (e) { $("arInhalt").innerHTML = `<div class="karte hinweis">⚠️ ${esc(e.message)}</div>`; }
 }
 const arJahr = (datum) => String(datum || "").slice(0, 4);
 const arAutoOrdner = (jahr) => ({ id: "auto:" + jahr, auto: true, jahr: Number(jahr), titel: "Clubleben", farbe: 0, register: Object.keys(AR_AUTO).map((k) => AR_AUTO[k][1]) });
@@ -20901,7 +20902,7 @@ function arZeigen() {
   const kopf = `<div class="karte ar-filter">
       <input id="arSuche" type="search" placeholder="🔍 Suchen: Titel, Stichwort, Inhalt …" value="${esc(AR.suche)}" oninput="AR.suche=this.value;arListeZeigen()" onkeydown="if(event.key==='Escape'){this.value='';AR.suche='';arListeZeigen()}" autocomplete="off" enterkeyhint="search">
       <div class="ar-zeile"><label class="feld">Jahr<select onchange="AR.jahr=this.value;arFilterMerken();arZeigen()"><option value="">Alle Jahre</option>${jahre.map((j) => `<option ${String(j) === AR.jahr ? "selected" : ""}>${j}</option>`).join("")}</select></label>
-        <div class="knoepfe">${d.darf ? `<button class="knopf klein haupt" onclick="arOrdnerForm()">＋ Ordner</button>` : ""}<button class="knopf klein" onclick="ivDrucken()">🗂️ Inhaltsverzeichnis</button><button class="knopf klein" onclick="AR.korb=true;arZeigen()">🗑️ Papierkorb</button></div></div>
+        <div class="knoepfe">${d.darf ? `<button class="knopf klein haupt" onclick="arOrdnerForm()">＋ Ordner</button>` : ""}<button class="knopf klein" onclick="ivAnsicht()">🗂️ Inhaltsverzeichnis</button><button class="knopf klein" onclick="AR.korb=true;arZeigen()">🗑️ Papierkorb</button></div></div>
       <div class="chips ar-chips">${chip("", "Alle")}${chip("auto", "🤖 Clubleben")}${(d.alben || []).some((a) => a.sichtbar === "alle") ? chip("alben", "📸 Fotoalben") : ""}${Object.entries(d.arten).map(([k, a]) => chip(k, a.sym + " " + esc(a.t))).join("")}${d.vorstand ? chip("vorstand", "🔒 Nur Clubleitung") : ""}</div>
     </div><div id="arListe"></div>`;
   $("arInhalt").innerHTML = kopf;
@@ -20949,7 +20950,7 @@ function ivGliedern(daten, opt = {}) {
     .map((j) => ({ id: "auto:" + j, auto: true, jahr: Number(j), titel: "Clubleben", register: Object.values(typeof AR_AUTO === "undefined" ? {} : AR_AUTO).map((a) => a[1]) }));
   const autoReg = (x) => (typeof AR_AUTO === "undefined" ? {} : AR_AUTO)[x.art]?.[1] || "Sonstiges";
   const alle = [...(daten.ordner || []), ...auto].filter((o) => (opt.ordner ? o.id === opt.ordner : opt.auto || !o.auto));
-  const eintraegeVon = (o) => o.auto ? (daten.auto || []).filter((x) => String(x.datum || "").slice(0, 4) === String(o.jahr)).map((x) => ({ titel: x.titel, datum: x.datum, register: autoReg(x) }))
+  const eintraegeVon = (o) => o.auto ? (daten.auto || []).filter((x) => String(x.datum || "").slice(0, 4) === String(o.jahr)).map((x) => ({ titel: x.titel, datum: x.datum, register: autoReg(x), id: x.id, art: x.art, auto: true }))
     : (daten.dokumente || []).filter((d) => d.ordner_id === o.id && d.status !== "abgelehnt");
   const datumSort = (a, b) => String(a.datum || "9999").localeCompare(String(b.datum || "9999")) || String(a.titel || "").localeCompare(String(b.titel || ""), "de");
   return IV_BEREICHE.filter((b) => !opt.umfang || opt.umfang === "alle" || opt.umfang === b.sicht).map((b) => ({ ...b,
@@ -20960,6 +20961,62 @@ function ivGliedern(daten, opt = {}) {
       const ohne = ein.filter((e) => !e.register); if (ohne.length) register.push({ name: "Ohne Register", eintraege: ohne.sort(datumSort) });
       return { id: o.id, titel: o.titel, jahr: o.art === "chronik" ? null : o.jahr, art: o.art, register, anzahl: ein.length };
     }) })).filter((b) => b.ordner.length);
+}
+// ---------- KC-CLUB-INHALTSVERZEICHNIS-ANTIPPEN (2.144.0, Wunsch Hansi): Inhaltsverzeichnis auf dem Bildschirm – alles antippbar ----------
+// Ordnername → öffnet den Ordner · Register → öffnet den Ordner genau auf diesem Register · Dokument → öffnet das Dokument.
+// Füllt sich selbst: wird bei jedem Öffnen frisch aus dem Archiv gebaut (gleiche Gliederung wie der Ausdruck: ivGliedern).
+const IVA = { umfang: "alle", auto: false, such: "", ordner: null, auf: new Set() };
+async function ivAnsicht(ordnerId = null) {
+  IVA.ordner = ordnerId; IVA.such = ""; if (ordnerId) IVA.auf = new Set([ordnerId]);
+  const f = blattAuf("ivBlatt", `<div class="iv-kopf"><h3>🗂️ Inhaltsverzeichnis</h3><button type="button" class="rund" aria-label="Schließen" onclick="fensterZu($('ivBlatt'))">✕</button></div><div id="ivInhalt"><p class="hinweis">Wird zusammengestellt …</p></div>`);
+  f.classList.add("iv-blatt");
+  try { AR.daten = await api("archiv_liste", {}, { warten: true }); } catch (e) { const z = $("ivInhalt"); if (z) z.innerHTML = `<div class="karte hinweis">⚠️ ${esc(e?.message || "Archiv gerade nicht erreichbar")} – bitte gleich nochmal.</div>`; return; }
+  ivAnsichtZeichnen();
+}
+function ivAnsichtZeichnen() {
+  const box = $("ivInhalt"); if (!box || !AR.daten) return;
+  const teile = ivGliedern(AR.daten, { umfang: IVA.umfang, ordner: IVA.ordner, auto: !!IVA.ordner || IVA.auto });
+  const q = IVA.such.trim(), passt = (...t) => !q || arPasstAlle(q, ...t);
+  const datum = (x) => { const m = String(x || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}.${m[2]}.${m[1]}` : ""; };
+  const chip = (w, t) => `<button type="button" class="chip${IVA.umfang === w ? " an" : ""}" onclick="IVA.umfang='${w}';ivAnsichtZeichnen()">${t}</button>`;
+  let n = 0;
+  const html = teile.map((b) => {
+    const ordner = b.ordner.map((o) => {
+      const name = `${o.titel}${o.jahr ? " " + o.jahr : ""}`, oTreffer = passt(name);
+      const regs = o.register.map((r) => ({ ...r, eintraege: r.eintraege.filter((e) => oTreffer || passt(name, r.name, e.titel || e.name, e.register)) }))
+        .filter((r) => oTreffer || r.eintraege.length || passt(r.name));
+      if (q && !oTreffer && !regs.length) return "";
+      n++;
+      const offen = !!q || IVA.auf.has(o.id) || !!IVA.ordner;
+      return `<details class="iv-ordner" ${offen ? "open" : ""} ontoggle="this.open ? IVA.auf.add('${esc(o.id)}') : IVA.auf.delete('${esc(o.id)}')">
+        <summary><span class="iv-zeile"><button type="button" class="iv-link iv-o" onclick="event.preventDefault();ivOeffne('${esc(o.id)}')">🗂️ ${esc(name)}</button><span class="iv-zahl">${o.anzahl}</span></span></summary>
+        ${regs.length ? regs.map((r) => `<div class="iv-reg"><button type="button" class="iv-link iv-r" ${r.name === "Ohne Register" ? `onclick="ivOeffne('${esc(o.id)}')"` : `onclick='ivOeffne(${hlJs(o.id)}, ${hlJs(r.name)})'`}>📑 ${esc(r.name)}</button><span class="iv-zahl">${r.eintraege.length}</span></div>
+          ${r.eintraege.map((e) => `<button type="button" class="iv-link iv-d" onclick='ivDok(${hlJs(e.id || "")}, ${hlJs(e.art || "")}, ${e.auto ? "true" : "false"})'><span class="iv-datum">${esc(datum(e.datum))}</span><span class="iv-titel">${esc(e.titel || e.name || "–")}</span>${e.status === "pruefung" ? '<span class="marke gelb">⏳</span>' : ""}</button>`).join("")}`).join("")
+          : '<p class="hinweis" style="margin:4px 0 6px 12px">– keine Register –</p>'}
+      </details>`;
+    }).join("");
+    return ordner ? `<h4 class="iv-bereich">${esc(b.titel)}</h4>${ordner}` : "";
+  }).join("");
+  box.innerHTML = `${IVA.ordner ? "" : `<div class="hl-chips">${chip("alle", "📚 Alle")}${chip("privat", "👤 Persönlich")}${chip("oeffentlich", "🗄️ Club")}<button type="button" class="chip${IVA.auto ? " an" : ""}" onclick="IVA.auto=!IVA.auto;ivAnsichtZeichnen()">🤖 Clubleben</button></div>`}
+    <input type="search" class="hz-suche" id="ivSuche" placeholder="🔍 Ordner, Register oder Dokument suchen …" autocomplete="off" value="${esc(IVA.such)}" oninput="IVA.such=this.value;ivAnsichtZeichnen()">
+    <p class="hinweis" style="margin:6px 0">Antippen: <b>Ordner</b> öffnet den Ordner · <b>Register</b> öffnet das Register · <b>Dokument</b> öffnet das Dokument. Füllt sich von selbst – Stand jetzt.</p>
+    <div class="iv-liste">${html || `<p class="hinweis">${q ? "Nichts gefunden." : "Noch keine Ordner."}</p>`}</div>
+    <div class="iv-fuss">${IVA.ordner ? `<button type="button" class="knopf" onclick="ivAnsicht()">🗄️ Alle Ordner</button>` : ""}<button type="button" class="knopf" onclick="fensterZu($('ivBlatt'));ivDrucken(IVA.ordner)">🖨️ Drucken</button><button type="button" class="knopf" onclick="fensterZu($('ivBlatt'))">Schließen</button></div>`;
+  const such = $("ivSuche"); if (q && such && document.activeElement !== such) { such.focus(); such.setSelectionRange(such.value.length, such.value.length); }
+}
+function ivOeffne(oid, register = "") {
+  fensterZu($("ivBlatt"));
+  if (aktuelleAnsicht === "archiv" && AR.daten) { arOrdnerOeffnen(oid); if (register) { AR.register = register; arZeigen(); } return; }
+  AR.ziel = oid; AR.zielRegister = register; AR.ordner = null; AR.korb = false; AR.suche = ""; zeige("archiv");
+}
+function ivDok(id, art, auto) {
+  if (!id) return;
+  if (!auto) return arAnlage(id, true);
+  fensterZu($("ivBlatt"));
+  if (art === "protokoll") return protokollOeffnen(id);
+  if (art === "aktion") return aktionOeffnen(id);
+  if (art === "anhang") return arAnlage(id);
+  melde("ℹ️ Dieser Eintrag hat kein eigenes Dokument – er steht im Ordner „Clubleben“.");
 }
 async function ivDrucken(ordnerId = null) {
   IV.ordner = ordnerId;
@@ -21175,7 +21232,7 @@ function arOrdnerZeigen() {
       : !o.auto && d.darf ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">＋ Dokument</button><button class="knopf klein" onclick="arOrdnerForm('${o.id}')">✏️ Ordner</button><button class="knopf klein" onclick="arOrdnerLoeschen('${o.id}')">🗑️ Ordner</button></div>`
       : !o.auto && o.einreichen ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">📥 Beitrag einreichen</button></div>` : ""}
     ${(o.auto ? eintraege.length : o.art === "chronik" || eintraege.some((x) => x.status === "ok")) ? `<button class="knopf haupt ar-blaettern" onclick="blOrdner('${o.id}')">📖 Blättern${o.art === "chronik" ? " – die Chronik wie ein Buch" : ""}</button>` : ""}
-    <div class="knoepfe" style="margin:0 0 8px;justify-content:flex-end"><button class="knopf klein" onclick="ivDrucken('${o.id}')">🗂️ Inhaltsverzeichnis drucken</button></div>
+    <div class="knoepfe" style="margin:0 0 8px;justify-content:flex-end"><button class="knopf klein" onclick="ivAnsicht('${o.id}')">🗂️ Inhaltsverzeichnis</button></div>
     ${o.einleitung ? `<details class="karte ar-anleitung" open><summary><b>📜 ${esc(o.einleitung.trim().split("\n")[0])}</b></summary>${arEinleitungHtml(o.einleitung).replace(/<h3>.*?<\/h3>/, "")}</details>` : ""}
     ${o.art === "chronik" ? `<details class="karte ar-anleitung" ${eintraege.length ? "" : "open"}><summary><b>📌 So füllen wir unsere Chronik</b></summary>${CHRONIK_ANLEITUNG}</details>` : ""}
     ${eintraege.length > 3 ? `<input id="arOrdnerSuche" class="ar-ordnersuche" type="search" autocomplete="off" enterkeyhint="search" placeholder="🔍 In diesem Ordner suchen …" value="${esc(AR.ordnerSuche || "")}" oninput="AR.ordnerSuche=this.value;arOrdnerListe()" onkeydown="if(event.key==='Escape'){this.value='';AR.ordnerSuche='';arOrdnerListe()}">` : ""}
