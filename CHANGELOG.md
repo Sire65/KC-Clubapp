@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.163.0 – 2026-10-09 – ⏳ Selbstlöschen-Leiste antippbar mit Erklärung (KC-CLUB-SELBSTLOESCHEN)
+🔧 Kleine Systemverbesserungen
+
 ## 2.162.0 – 2026-10-09 – ⚡ Schnellerer Start: weniger Datenbank-Anfragen (ungelesene je Chat in einer Abfrage, gebündelte Lesungen) (KC-CLUB-START-PARALLEL-3)
 🔧 Kleine Systemverbesserungen
 

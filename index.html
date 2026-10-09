@@ -1489,7 +1489,7 @@
   /* KC-CLUB-SELBSTLOESCHEN (2.148.0): ⏳ an = violett; neun gleich große Knöpfe passen auch auf schmale Handys (alle gleich breit) */
   .eingabe .innen > .rund:not(#sendenKnopf) { width: min(40px, calc((100vw - 140px) / 8)) !important; height: min(40px, calc((100vw - 140px) / 8)) !important; }
   .eingabe .innen > #ablaufKnopf.rund.an { background: #6a1b9a !important; border-color: #4a148c !important; color: #fff; box-shadow: 0 0 0 3px rgba(106,27,154,.3); }
-  .eingabe-entwurf.sl-leiste { color: #6a1b9a; } :root.dunkel .eingabe-entwurf.sl-leiste { color: #ce93d8; }
+  .eingabe-entwurf.sl-leiste { color: #6a1b9a; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; } /* 2.163.0: antippbar */ :root.dunkel .eingabe-entwurf.sl-leiste { color: #ce93d8; }
   .chat-unterzeile { display: flex; align-items: center; gap: 6px; min-width: 0; } .chat-unterzeile > #chatTeilnehmer { min-width: 0; }
   .sl-kopf { flex: none; margin: 0; padding: 2px 8px; border: 2px solid #6a1b9a; border-radius: 999px; background: #f3e5f5; color: #4a148c; font: inherit; font-size: .8rem; font-weight: 800; white-space: nowrap; cursor: pointer; }
   .sl-kopf.versteckt { display: none; }
@@ -3470,7 +3470,7 @@
     <button class="knopf klein" onclick="spracheAbbrechen()">✖ Verwerfen</button><button class="knopf haupt klein" onclick="spracheSenden()">➤ Senden</button></div>
   <!-- KC-CLUB-ENTWURF-ANZEIGE (1.21.0): geschrieben, aber noch nicht gesendet -->
   <div class="eingabe-entwurf versteckt" id="entwurfMarke">✏️ Entwurf – noch nicht gesendet</div>
-  <div class="eingabe-entwurf sl-leiste versteckt" id="slMarke"></div> <!-- KC-CLUB-SELBSTLOESCHEN (2.148.0) -->
+  <div class="eingabe-entwurf sl-leiste versteckt" id="slMarke" role="button" tabindex="0" title="Antippen: Was bedeutet das?" onclick="slErklaeren()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();slErklaeren()}"></div> <!-- KC-CLUB-SELBSTLOESCHEN (2.148.0); 2.163.0: antippbar mit Erklärung -->
   <div class="eingabe-entwurf versteckt" id="sprungHinweis"></div> <!-- 2.23.99 (Wunsch Hansi): App-Link im Entwurf → „wird als Knopf angezeigt“ -->
   <div class="innen">
     <button class="rund" title="Anlage" onclick="anlageMenue()">📎</button>
@@ -3701,6 +3701,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.162.0" data-v="2.162.0"></script>
+<script src="app.js?v=2.163.0" data-v="2.163.0"></script>
 </body>
 </html>

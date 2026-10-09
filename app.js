@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.162.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.163.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -16977,8 +16977,25 @@ function slRest(bis) {
 function slAnzeigen() {
   const w = slWirksam(), c = slChat(), eigen = SL.std !== null && SL.chat === chatId;
   const k = $("ablaufKnopf"); if (k) { k.classList.toggle("an", !!w); k.setAttribute("aria-pressed", String(!!w)); k.title = w ? `Löscht sich nach ${slText(w)} – antippen zum Ändern` : "Nachricht löscht sich selbst …"; }
-  const m = $("slMarke"); if (m) { m.classList.toggle("versteckt", !w); m.textContent = !w ? "" : eigen && w !== c ? `⏳ Diese Nachricht löscht sich nach ${slText(w)}` : `⏳ Selbstlöschen in diesem Chat: nach ${slText(w)}`; }
+  const m = $("slMarke"); if (m) { m.classList.toggle("versteckt", !w); m.textContent = !w ? "" : eigen && w !== c ? `⏳ Diese Nachricht löscht sich nach ${slText(w)} ⓘ` : `⏳ Selbstlöschen in diesem Chat: nach ${slText(w)} ⓘ`; }
   const h = $("chatSlMarke"); if (h) { h.classList.toggle("versteckt", !c); h.textContent = c ? `⏳ ${slText(c)}` : ""; }
+}
+// 2.163.0 (Wunsch Hansi): Leiste über dem Schreibfeld antippen → kurz erklärt, was Selbstlöschen hier bedeutet, mit „Ändern“
+function slErklaeren() {
+  const w = slWirksam(), c = slChat(), eigen = SL.std !== null && SL.chat === chatId && w !== c;
+  if (!w) return;
+  const nurDiese = eigen;
+  blattAuf("slBlatt", `<h3 style="margin:0 0 6px">⏳ Was bedeutet das?</h3>
+    <p style="margin:0 0 8px">${nurDiese
+      ? `Die <b>nächste Nachricht</b>, die du jetzt sendest, <b>löscht sich nach ${esc(slText(w))} von selbst</b> – bei dir und bei allen im Chat.`
+      : `In diesem Chat ist <b>Selbstlöschen</b> eingeschaltet: Jede <b>neue</b> Nachricht – von dir und von allen anderen – <b>löscht sich nach ${esc(slText(w))} von selbst</b>, bei allen Teilnehmern.`}</p>
+    <ul class="hinweis" style="margin:0 0 10px;padding-left:18px">
+      <li>Gelöscht wird automatisch auf dem Server – auch wenn niemand die App offen hat.</li>
+      <li>In jeder betroffenen Blase steht, wie lange sie noch da ist (z. B. „⏳ noch 3 Std“).</li>
+      <li>Push und E-Mail zu solchen Nachrichten enthalten <b>keinen Text</b> – lesen nur in der App.</li>
+      ${nurDiese ? "" : "<li>Ältere Nachrichten von vorher bleiben stehen. Einstellen oder ausschalten darf jedes Mitglied im Chat: oben <b>⋮ → „⏳ Selbstlöschen“</b>.</li>"}
+    </ul>
+    <div class="dlg-knoepfe"><button class="knopf" onclick="$('slBlatt').remove();slWahl('${nurDiese ? "nachricht" : "chat"}')">⏳ Ändern</button><button class="knopf haupt" onclick="$('slBlatt').remove()">Verstanden</button></div>`);
 }
 function slZurueck() { SL = { chat: null, std: null }; slAnzeigen(); }
 function slWahl(art) {

@@ -7401,3 +7401,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/function konfigZeile\(schluessel: string\)/.test(server) && /\.in\("schluessel", \[\.\.\.warte\.keys\(\)\]\)/.test(server), "Club-Einstellungen gebündelt gelesen");
   for (const k of ["sos", "pinnwand", "einstieg"]) assert.ok(server.includes(`await konfigZeile("${k}")`), `${k} über die gebündelte Lesung`);
 }
+// 2.163.0 KC-CLUB-SELBSTLOESCHEN (Wunsch Hansi): Leiste über dem Schreibfeld antippbar – erklärt, was Selbstlöschen hier bedeutet
+{
+  assert.ok(/id="slMarke" role="button" tabindex="0"[^>]*onclick="slErklaeren\(\)"/.test(html), "Leiste ist ein Knopf");
+  assert.ok(/\.eingabe-entwurf\.sl-leiste \{ color: #6a1b9a; cursor: pointer;/.test(html), "sieht antippbar aus");
+  const f = html.slice(html.indexOf("function slErklaeren()"), html.indexOf("function slZurueck()"));
+  assert.ok(/Was bedeutet das\?/.test(f) && /nächste Nachricht/.test(f) && /Jede <b>neue<\/b> Nachricht/.test(f) && /keinen Text/.test(f) && /esc\(slText\(w\)\)/.test(f), "erklärt beide Fälle (nur diese Nachricht / ganzer Chat)");
+  assert.ok(/slWahl\('\$\{nurDiese \? "nachricht" : "chat"\}'\)/.test(f) && /Verstanden/.test(f), "Ändern führt zur passenden Auswahl");
+  assert.ok(/ⓘ` : `⏳ Selbstlöschen in diesem Chat: nach \$\{slText\(w\)\} ⓘ`/.test(html), "ⓘ zeigt: hier gibt es eine Erklärung");
+}
