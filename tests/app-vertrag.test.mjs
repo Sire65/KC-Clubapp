@@ -2018,7 +2018,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/brief: \{ bauen: \(\) => druckBrief\(\) \}/.test(html) && /\$\("druck"\)\.innerHTML = s\.ohneRahmen \? s\.html :/.test(html), "Briefdruck mit eigenem Kopf");
   for (const k of ["leer", "spende", "dank", "einladung", "glueckwunsch"]) assert.ok(new RegExp(`\\b${k}: \\{ sym:`).test(html.slice(html.indexOf("const BRIEF_VORLAGEN"), html.indexOf("const BRIEF_ANREDEN"))), `Briefvorlage ${k}`);
   assert.ok(/briefbogen: \(w\) => \(\{ absender: txt\(w\?\.absender, 200\)/.test(server), "Einstellung briefbogen geprüft");
-  assert.ok(/src="icon-192\.png"[^>]*style="width:22mm/.test(html) && /Köcheclub Werne<\/div>/.test(html), "Logo + Name im Briefkopf");
+  assert.ok(/<div class="cd-blatt cd-brief">\$\{cdKopf\(\)\}/.test(html) && /<div class="cd-name">\$\{esc\(KC_CD\.name\)\}<\/div>/.test(html), "Logo + Name im Briefkopf (seit 2.130.0 über das Corporate Design)");
 }
 
 // 176. 1.27.0: Büro – Termine bearbeiten, Mitglieder kontaktieren (KC-CLUB-BUERO-TERMINE, KC-CLUB-BUERO-KONTAKT)
@@ -6965,4 +6965,19 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/\$\{flFesteHtml\(\)\}/.test(fl) && /onclick="buFeste\(true\)">🗓️ Alle anzeigen · drucken<\/button>/.test(fl) && /f\.tage >= 0 && f\.tage <= 30/.test(fl), "Klappbereich in Freud & Leid");
   assert.ok(/Promise\.all\(\[flLaden\(\), BU_F \? null : buFesteListe\(60\)\]\)/.test(programm) && /BU\.festeVonFl \? '<button class="knopf" onclick="buFreudLeid\(\)">🤍 Zurück zu Freud & Leid<\/button>'/.test(programm), "lädt mit, Rückweg");
   assert.ok(/const zahl = \{ fl: flOffen \+ \(L \? fest\.length : 0\),/.test(programm), "Zahl am Ordner");
+}
+
+// 4xx. 2.130.0: Corporate Design (KC-CLUB-CD, Wunsch Hansi) – alles Gedruckte sieht gleich aus
+{
+  assert.ok(/const KC_CD = \{\s*name: "Köcheclub Werne",[^}]*weinrot: "#741521", beige: "#f3e9dc"[^}]*logo: "kc-kochmuetze-weiss\.webp"/.test(programm), "eine Quelle: Logo, Schriftzug, Farben");
+  assert.ok(/function cdKopf\(/.test(programm) && /function cdFuss\(zusatz = "", brief = false\)/.test(programm) && /`\$\{KC_CD\.name\} · \$\{KC_CD\.briefAmt\} · \$\{cdClubsprecher\(\)\}`/.test(programm), "Kopf/Fuß zentral, Brief-Fußzeile Clubsprecher");
+  const rahmen = programm.slice(programm.indexOf("async function druckSeiteBauen()"), programm.indexOf("async function druckSeiteBauen()") + 1500);
+  assert.ok(/\$\{cdKopf\(s\.titel, s\.unter,/.test(rahmen) && /\$\{cdFuss\(`Gedruckt am/.test(rahmen) && !/icon-192\.png/.test(rahmen), "zentraler Druckrahmen = CD");
+  const brief = programm.slice(programm.indexOf("function druckBrief()"), programm.indexOf("function druckBrief()") + 3000);
+  assert.ok(/<div class="cd-blatt cd-brief">\$\{cdKopf\(\)\}/.test(brief) && /\$\{cdFuss\(b\.fuss \? absatz\(b\.fuss\) : "", true\)\}/.test(brief) && !/icon-192\.png/.test(brief), "Briefbogen = CD");
+  // Regel: kein Ausdruck ohne CD-Rahmen – eigene Layouts (ohneRahmen) nur Brief (mit cdKopf) und Originalseiten als Bild
+  const ohne = [...programm.matchAll(/return \{[^}]*ohneRahmen: true[^}]*\}/g)].map((m) => m[0]);
+  assert.ok(ohne.length === 3 && ohne.every((x) => /dseite|titel: b\.betreff/.test(x)), "nur Originalseiten (Bild) und Brief ohne zentralen Rahmen");
+  assert.ok(!/icon-192\.png/.test(programm.slice(programm.indexOf("const DRUCKARTEN"))), "kein altes Logo in Ausdrucken");
+  assert.ok(/#druck \.cd-kopf \{/.test(seite) && /#druck \.cd-logo \{[^}]*background: var\(--cd-rot\)/.test(seite), "CD-Druckstile");
 }

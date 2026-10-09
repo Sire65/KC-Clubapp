@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.129.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.130.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -13318,7 +13318,7 @@ function buBriefHtml() {
       ${fe("anrede", "", "Anrede")}${fe("text", "Brieftext", "Text …", 9)}
       <div class="hinweis" style="margin:6px 0 4px">Gruß</div>${chips("gruss", BRIEF_GRUESSE)}</div>
     <div class="karte"><h3 style="margin-top:0">4️⃣ Unterschrift & Absender</h3><div class="zwei">${fe("name", "Name", "Vor- und Nachname")}${fe("amt", "Amt", "z. B. Clubsprecher")}</div>
-      ${fe("absender", "Absenderzeile (oben, klein)", "Köcheclub Werne · Straße · 59368 Werne")}${fe("fuss", "Fußzeile (freiwillig)", "z. B. Bankverbindung, E-Mail, Internet")}
+      ${fe("absender", "Absenderzeile (oben, klein)", "Köcheclub Werne · Straße · 59368 Werne")}${fe("fuss", "Zusatz unter der Fußzeile (freiwillig)", "z. B. Bankverbindung, E-Mail, Internet")}<p class="hinweis" style="margin:2px 0 8px">Fußzeile immer: <b>${esc(KC_CD.name)} · ${esc(KC_CD.briefAmt)} · ${esc(cdClubsprecher())}</b> (Corporate Design)</p>
       <button class="knopf klein" onclick="briefStandardSpeichern()">💾 Absender & Unterschrift für nächstes Mal merken</button></div>
     ${lvKasten()}
     <div class="bu-leiste"><div class="knoepfe" style="margin:0"><button class="knopf haupt" style="flex:1;text-align:center" onclick="druckStarten('brief')">👁️ Vorschau & Drucken</button><button class="knopf" onclick="briefNeu()">🆕 Neu</button></div></div>`;
@@ -13338,10 +13338,7 @@ function druckBrief() {
   const b = BRIEF; if (!b) throw new Error("Bitte den Brief im Büro ausfüllen.");
   const datum = b.datum ? new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(b.datum + "T12:00:00Z")) : "";
   const absatz = (t) => esc(t).replace(/\n/g, "<br>");
-  const html = `<div style="font-family:Georgia,'Times New Roman',serif;color:#111;font-size:4mm;line-height:1.45;min-height:240mm;display:flex;flex-direction:column">
-    <div style="display:flex;align-items:center;gap:5mm;border-bottom:1.2mm solid #741521;padding-bottom:3mm">
-      <img src="icon-192.png" alt="" style="width:22mm;height:22mm;border-radius:50%">
-      <div style="flex:1"><div style="font-size:9mm;font-weight:700;color:#741521;letter-spacing:.3mm">Köcheclub Werne</div><div style="font-size:3.4mm;color:#555">Gemeinsam kochen · feiern · helfen</div></div></div>
+  const html = `<div class="cd-blatt cd-brief">${cdKopf()}
     <div style="display:flex;justify-content:space-between;margin-top:12mm;gap:10mm">
       <div style="width:85mm"><div style="font-size:2.6mm;color:#555;border-bottom:.2mm solid #888;padding-bottom:.6mm;margin-bottom:3mm">${esc(b.absender || "Köcheclub Werne")}</div>
         <div style="min-height:30mm">${absatz(b.empfaenger || "")}</div></div>
@@ -13351,9 +13348,9 @@ function druckBrief() {
     <div style="margin-top:4mm">${absatz(b.text || "")}</div>
     <div style="margin-top:7mm">${esc(b.gruss || "")}</div>
     <div style="height:16mm"></div>
-    <div>${esc(b.name || "")}${b.amt ? `<br><span style="color:#555">${esc(b.amt)}, Köcheclub Werne</span>` : ""}</div>
+    <div>${esc(b.name || "")}${b.amt ? `<br><span style="color:${KC_CD.grau}">${esc(b.amt)}, ${esc(KC_CD.name)}</span>` : ""}</div>
     <div style="flex:1"></div>
-    ${b.fuss ? `<div style="border-top:.3mm solid #741521;margin-top:10mm;padding-top:2mm;font-size:2.8mm;color:#555;text-align:center">${absatz(b.fuss)}</div>` : ""}</div>`;
+    ${cdFuss(b.fuss ? absatz(b.fuss) : "", true)}</div>`;
   return { titel: b.betreff || "Brief", ohneRahmen: true, html };
 }
 
@@ -19565,6 +19562,26 @@ const druckKnopf = (klick, klasse = "") => `<button type="button" class="druckkn
 const IST_IOS_APP = () => IST_IOS && (navigator.standalone === true || matchMedia("(display-mode: standalone)").matches);
 let DRUCK = null; // { art, param }
 const DRUCK_INHALTE = [["treffen", "🍽️ Sitzungen & Veranstaltungen"], ["aktion", "🧳 Aktionen & Ausflüge"], ["geb", "🎂 Geburtstage"], ["dienst", "🗓️ Meine Dienste"], ["frist", "🗳️ Abstimmungen"], ["feiertag", "🇩🇪 Feiertage"]];
+// ---------- KC-CLUB-CD (2.130.0, Wunsch Hansi): Corporate Design des Köcheclubs – EINE Quelle für alles Gedruckte ----------
+// Logo = Kochmütze, Schriftzug „Köcheclub Werne“, Farben Weinrot + Beige. Briefbögen, Protokolle, Listen usw. benutzen nur cdKopf/cdFuss
+// (Regel in AGENTS.md + Test: kein Ausdruck baut eigenen Kopf, eigene Farben oder ein anderes Logo).
+const KC_CD = {
+  name: "Köcheclub Werne", zeile: "Gemeinsam kochen · feiern · helfen",
+  weinrot: "#741521", beige: "#f3e9dc", beigeRand: "#e0cfb9", text: "#1d1a17", grau: "#5b544d",
+  logo: "kc-kochmuetze-weiss.webp", schrift: "Georgia,'Times New Roman',serif",
+  briefAmt: "Clubsprecher", briefAmtVorgabe: "Klaus Zander", // Fußzeile Briefbogen: aktueller Clubsprecher laut Ämtern, sonst diese Vorgabe
+};
+// Wer ist gerade Clubsprecher? (aus den Ämtern der Mitgliederliste – so stimmt die Fußzeile auch nach einer Wahl)
+const cdClubsprecher = () => { try { const m = (MITGLIEDER || []).find((x) => (x.aemter || []).some((a) => /^clubsprecher\b/i.test(a)) && !/stellv/i.test((x.aemter || []).join(" "))); if (m) return m.name; } catch {} return KC_CD.briefAmtVorgabe; };
+function cdLogo(mm = 16) { let src = KC_CD.logo; try { src = new URL(KC_CD.logo, location.href).href; } catch {} return `<span class="cd-logo" style="width:${mm}mm;height:${mm}mm"><img src="${esc(src)}" alt=""></span>`; } // volle Adresse: auch in der geteilten Druckseite sichtbar
+function cdKopf(titel = "", unter = "", rechts = "") {
+  return `<div class="cd-kopf">${cdLogo()}<div class="cd-marke"><div class="cd-name">${esc(KC_CD.name)}</div><div class="cd-zeile">${esc(KC_CD.zeile)}</div></div>
+    ${titel || unter || rechts ? `<div class="cd-titel">${titel ? `<h1>${esc(titel)}</h1>` : ""}${unter ? `<div class="unter">${esc(unter)}</div>` : ""}${rechts ? `<div class="unter">${rechts}</div>` : ""}</div>` : ""}</div>`;
+}
+function cdFuss(zusatz = "", brief = false) {
+  const haupt = brief ? `${KC_CD.name} · ${KC_CD.briefAmt} · ${cdClubsprecher()}` : KC_CD.name;
+  return `<div class="cd-fuss"><b>${esc(haupt)}</b>${zusatz ? `<br>${zusatz}` : ""}</div>`;
+}
 const DRUCKARTEN = {
   termine: { titel: "🖨️ Termine drucken", optionen: () => druckTermineOptionen(), bauen: (o) => (o.art === "todo" ? druckTodo(o) : druckKalender(o)) },
   treffen: { bauen: (o, id) => druckTreffen(id) },
@@ -19634,10 +19651,10 @@ function druckOptionenLesen() {
 async function druckSeiteBauen() {
   const d = DRUCKARTEN[DRUCK.art], o = druckOptionenLesen();
   const s = await d.bauen(o, DRUCK.param); if (!s) return false;
-  $("druck").innerHTML = s.ohneRahmen ? s.html : `<div class="dkopf"><img src="icon-192.png" alt=""><div><h1>${esc(s.titel)}</h1>${s.unter ? `<div class="unter">${esc(s.unter)}</div>` : ""}</div>
-      <div class="dklub"><b>Köcheclub Werne</b><br>${esc(fKurzJahr.format(new Date()))}</div></div>
+  // KC-CLUB-CD (2.130.0): jeder Ausdruck mit demselben Kopf (Kochmütze, Schriftzug, Weinrot) und derselben Fußzeile
+  $("druck").innerHTML = s.ohneRahmen ? s.html : `<div class="cd-blatt">${cdKopf(s.titel, s.unter, esc(fKurzJahr.format(new Date())))}
     ${s.html}
-    <div class="dfuss">Gedruckt am ${esc(wann(new Date().toISOString()))} von ${esc(ICH?.name || "")} · Köcheclub-App v${APP_VERSION}${s.fuss ? " · " + esc(s.fuss) : ""}</div>`;
+    ${cdFuss(`Gedruckt am ${esc(wann(new Date().toISOString()))} von ${esc(ICH?.name || "")} · Köcheclub-App v${APP_VERSION}${s.fuss ? " · " + esc(s.fuss) : ""}`)}</div>`;
   let st = $("druckSeitenformat"); if (!st) { st = document.createElement("style"); st.id = "druckSeitenformat"; document.head.appendChild(st); }
   st.textContent = `@page { size: A4 ${s.quer ? "landscape" : "portrait"};${s.randlos ? " margin: 0;" : ""} }`;
   DRUCK.titel = s.titel; DRUCK.quer = !!s.quer;

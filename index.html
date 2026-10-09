@@ -1657,6 +1657,19 @@
     html, body { background: #fff !important; color: #000 !important; }
     body > *:not(#druck) { display: none !important; }
     #druck { display: block !important; font: 10.5pt/1.35 "Segoe UI", Roboto, Arial, sans-serif; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    /* KC-CLUB-CD (2.130.0): Corporate Design – Kochmütze im weinroten Kreis, Schriftzug „Köcheclub Werne“, Weinrot + Beige; gilt für ALLE Ausdrucke */
+    #druck { --cd-rot: #741521; --cd-beige: #f3e9dc; --cd-beige-rand: #e0cfb9; --cd-grau: #5b544d; }
+    #druck .cd-kopf { display: flex; align-items: center; gap: 4mm; border-bottom: 1.2mm solid var(--cd-rot); padding-bottom: 3mm; margin-bottom: 5mm; }
+    #druck .cd-logo { flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--cd-rot); }
+    #druck .cd-logo img { width: 80%; height: 80%; object-fit: contain; }
+    #druck .cd-marke { flex: 1; min-width: 0; }
+    #druck .cd-name { font: 700 20pt/1.1 Georgia, "Times New Roman", serif; color: var(--cd-rot); letter-spacing: .3pt; }
+    #druck .cd-zeile { font-size: 9pt; color: var(--cd-grau); }
+    #druck .cd-titel { text-align: right; max-width: 55%; } #druck .cd-titel h1 { font-size: 13pt; } #druck .cd-titel .unter { font-size: 9pt; }
+    #druck .cd-fuss { margin-top: 8mm; border-top: .5mm solid var(--cd-rot); padding: 2mm 0 0; font-size: 8pt; color: var(--cd-grau); text-align: center; background: none; }
+    #druck .cd-fuss b { color: var(--cd-rot); }
+    #druck .cd-brief { font-family: Georgia, "Times New Roman", serif; color: #111; font-size: 4mm; line-height: 1.45; min-height: 255mm; display: flex; flex-direction: column; }
+    #druck .cd-brief .cd-fuss { font-family: "Segoe UI", Roboto, Arial, sans-serif; }
     #druck .dkopf { display: flex; align-items: center; gap: 10px; border-bottom: 2.5pt solid #741521; padding-bottom: 6pt; margin-bottom: 10pt; }
     #druck .dkopf img { width: 38pt; height: 38pt; }
     #druck .dkopf > div:first-of-type { flex: 1; }
@@ -1666,7 +1679,7 @@
     #druck h2 { font-size: 12pt; color: #741521; margin: 12pt 0 4pt; break-after: avoid; }
     #druck table { width: 100%; border-collapse: collapse; margin: 4pt 0; }
     #druck th, #druck td { border: .6pt solid #999; padding: 3pt 5pt; text-align: left; vertical-align: top; }
-    #druck thead th { background: #f1e7e2; }
+    #druck thead th { background: var(--cd-beige, #f1e7e2); } /* KC-CLUB-CD: Tabellenköpfe beige */
     #druck tr { break-inside: avoid; }
     #druck tr.we td, #druck td.we { background: #f6f2ee; }
     #druck td.ft { background: #fbe9ea; }
@@ -3514,6 +3527,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.129.0" data-v="2.129.0"></script>
+<script src="app.js?v=2.130.0" data-v="2.130.0"></script>
 </body>
 </html>

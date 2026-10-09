@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.130.0 – 2026-10-09 – Corporate Design für alle Ausdrucke
+🔧 Kleine Systemverbesserungen
+Admin-Notiz (KC-CLUB-CD, Wunsch Hansi): Corporate Design festgelegt (docs/CORPORATE_DESIGN.md) – Kochmütze im weinroten Kreis, Schriftzug „Köcheclub Werne“, Weinrot + Beige. Zentraler Druckrahmen und Briefbogen nutzen nur noch cdKopf/cdFuss; Fußzeile Briefbogen „Köcheclub Werne · Clubsprecher · <aktueller Clubsprecher>“ (eigene Zusätze wie Bankverbindung darunter). Tabellenköpfe beige. Regel 19 in AGENTS.md + Vertragstest.
+
 ## 2.129.0 – 2026-10-09 – Geburtstage in Freud & Leid
 🔧 Kleine Systemverbesserungen
 Admin-Notiz (KC-CLUB-FL-GEBURTSTAGE, Wunsch Hansi): Ordner „🎂 Geburtstage“ für die Clubleitung in „🤍 Freud & Leid“ eingebaut – Klappbereich „Geburtstage & Jubiläen“ (nächste 30 Tage, offen wenn diese Woche etwas ansteht), „Alle anzeigen · drucken“ öffnet die volle Liste mit Rückweg; Zahl am Ordner Freud & Leid zählt die Glückwünsche dieser Woche mit. Büro ohne Clubleitung behält den eigenen Ordner Geburtstage.
