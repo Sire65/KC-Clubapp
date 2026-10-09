@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.174.0 – 2026-10-09 – ✉️ Papierflieger größer und auffälliger
+🔧 Kleine Systemverbesserungen
+
 ## 2.173.0 – 2026-10-09 – 🗣️ Admin kann Online-/Verlassen-Ansagen für ein Mitglied einschalten (KC-CLUB-ANSAGE-VORGABE)
 🔧 Kleine Systemverbesserungen
 

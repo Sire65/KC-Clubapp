@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.173.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.174.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -9892,16 +9892,26 @@ function regEffektVorschau() { zeige("start"); setTimeout(() => { if (!regEffekt
 const fxAn = () => einst("animiert", true) && !SPAR?.an && typeof document !== "undefined" && !!document.body?.animate;
 // 1) ✉️ Nachricht gesendet: ein Papierflieger startet am Senden-Knopf und fliegt im Bogen nach oben weg
 function papierflieger(von) {
+  // 2.174.0 (Wunsch Hansi „größer und auffälliger“, Vorbild Sticker): großer Flieger in Club-Farben mit weißem Sticker-Rand und
+  // Tempo-Strichen; startet am Senden-Knopf, holt kurz Schwung und zieht im großen Bogen quer über den Bildschirm davon
   if (!fxAn() || !von) return;
   const r = von.getBoundingClientRect(); if (!r.width) return;
+  const g = Math.round(Math.min(130, innerWidth * 0.3));
   const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
-  f.innerHTML = '<svg viewBox="0 0 24 24" width="30" height="30"><path d="M2 11.5 22 3l-7.5 19-3.2-7.6L2 11.5Z" fill="#fff" stroke="#7b1e2b" stroke-width="1.3" stroke-linejoin="round"/><path d="M22 3 11.3 14.4" stroke="#7b1e2b" stroke-width="1.1"/></svg>';
-  f.style.left = r.left + r.width / 2 - 15 + "px"; f.style.top = r.top + r.height / 2 - 15 + "px"; document.body.appendChild(f);
-  const w = -Math.min(innerWidth * 0.55, r.left + 20), h = -Math.max(220, r.top - 30);
-  f.animate([{ transform: "translate(0,0) rotate(-10deg) scale(.6)", opacity: 0 }, { transform: "translate(-6px,-10px) rotate(-18deg) scale(1.15)", opacity: 1, offset: 0.12 },
-    { transform: `translate(${w * 0.45}px, ${h * 0.35}px) rotate(-38deg) scale(1)`, opacity: 1, offset: 0.5 },
-    { transform: `translate(${w}px, ${h}px) rotate(-62deg) scale(.55)`, opacity: 0 }], { duration: 1100, easing: "cubic-bezier(.3,.1,.5,1)", fill: "forwards" }).onfinish = () => f.remove();
-  setTimeout(() => f.remove(), 1500);
+  f.innerHTML = `<svg viewBox="0 0 120 120" width="${g}" height="${g}">
+    <g stroke="#fff" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" fill="#fff"><path d="M10 72 108 14 70 108 56 78Z"/></g>
+    <path d="M10 72 108 14 56 78Z" fill="#c0392b"/><path d="M108 14 70 108 56 78Z" fill="#7b1e2b"/><path d="M56 78 64 96 70 108Z" fill="#5a1520"/>
+    <path d="M10 72 108 14 56 78Z" fill="none" stroke="#3b0d14" stroke-width="2.5" stroke-linejoin="round"/><path d="M108 14 70 108 56 78" fill="none" stroke="#3b0d14" stroke-width="2.5" stroke-linejoin="round"/>
+    <g stroke="#3b0d14" stroke-width="4" stroke-linecap="round"><path d="M20 102 34 88"/><path d="M8 92 20 80"/><path d="M34 112 44 102"/></g></svg>`;
+  f.style.left = r.left + r.width / 2 - g / 2 + "px"; f.style.top = r.top + r.height / 2 - g / 2 + "px"; document.body.appendChild(f);
+  const ziel = { x: -(r.left + g), y: -(r.top + g * 0.6) };
+  f.animate([{ transform: "translate(0,0) rotate(10deg) scale(.3)", opacity: 0 },
+    { transform: "translate(18px,24px) rotate(18deg) scale(1.1)", opacity: 1, offset: 0.16 },
+    { transform: "translate(6px,10px) rotate(-6deg) scale(1)", opacity: 1, offset: 0.28 },
+    { transform: `translate(${ziel.x * 0.35}px, ${ziel.y * 0.15}px) rotate(-18deg) scale(1.05)`, opacity: 1, offset: 0.55 },
+    { transform: `translate(${ziel.x * 0.7}px, ${ziel.y * 0.55}px) rotate(-30deg) scale(.85)`, opacity: 1, offset: 0.8 },
+    { transform: `translate(${ziel.x}px, ${ziel.y}px) rotate(-38deg) scale(.6)`, opacity: 0 }], { duration: 1500, easing: "cubic-bezier(.35,.05,.4,1)", fill: "forwards" }).onfinish = () => f.remove();
+  setTimeout(() => f.remove(), 1900);
 }
 // 3) 📌 neuer Pinnwand-Zettel: fällt leicht schräg herunter, setzt auf, die Nadel wird hineingedrückt
 function zettelAnpinnen(el) {
