@@ -7099,3 +7099,11 @@ assert.ok(/\{ id: "studio", sym: "🎬", t: "Studio", u: "Foto · Mitschauen · 
   assert.ok(/<div class="spult">/.test(f) && /\.spult \{ display: grid; grid-template-columns: repeat\(4, minmax\(0, 1fr\)\); grid-auto-rows: 1fr;/.test(h), "Pult: vier gleich große Knöpfe");
   assert.ok(/if \(f\.id === "studio"\) stKarteUhr\(\);/.test(p) && /stKnopf\(\); stKarteFrisch\(\);/.test(p), "Uhr läuft, Karte frischt bei jedem Wechsel auf");
 }
+
+// 2.140.0 KC-CLUB-ON-AIR (Wunsch Hansi): rotes „ON AIR“-Schild nur während einer Live-Verbindung
+{
+  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.ok(/const stdOnAirAn = \(\) => \(STD\.modus === "mitschauen" && STD\.status === "live"\) \|\| \(VF\.rolle && VF\.status === "laeuft"\) \|\| !!MSCH\.id;/.test(p), "nur wenn wirklich live");
+  assert.ok(/<span id="stdOnAir">/.test(p) && /<span>🎬 STUDIO<\/span>\$\{stdOnAirAn\(\) \? onAirSchild\(true\) : ""\}/.test(p) && /\$\{laeuft \? onAirSchild\(true\) : ""\}/.test(p) && /id="ssLiveLeiste" class="ss-live-leiste" role="status">\$\{onAirSchild\(true\)\}/.test(p), "Studio-Fenster, Karte, Leiste beim Zeigen/Zuschauen, Balken beim Mitglied");
+  assert.ok(/\.onair \{ display: inline-flex;/.test(h) && /@media \(prefers-reduced-motion: reduce\) \{ \.onair \{ animation: none; \} \}/.test(h), "Leuchtschild, ruhig bei „weniger Bewegung“");
+}

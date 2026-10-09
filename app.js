@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.139.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.140.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -10425,7 +10425,7 @@ function vfLeiste() {
   const text = zeigt ? (laeuft ? (VF.vorhang ? `🙈 Vorhang zu – ${esc(VF.gegen)} sieht nichts` : `📺 Du zeigst ${esc(VF.gegen)} deine App`) : `📺 Warte, bis ${esc(VF.gegen)} zuschaut …`) : `📺 ${esc(VF.gegen)} zeigt dir live`;
   l.className = "vf-leiste" + (zeigt ? "" : " vf-schaut") + (VF.vorhang ? " vf-vorhang" : "");
   const k = (t, fn, aus) => `<button type="button" class="knopf klein" ${aus ? "disabled" : `onclick="${fn}"`}>${t}</button>`;
-  l.innerHTML = `<div class="vf-zeile"><span class="vf-text">${text}</span><span class="vf-uhr" id="vfUhr"></span></div>
+  l.innerHTML = `<div class="vf-zeile">${laeuft ? onAirSchild(true) : ""}<span class="vf-text">${text}</span><span class="vf-uhr" id="vfUhr"></span></div>
     <div class="vf-knoepfe${zeigt ? "" : " eins"}">${zeigt ? k(VF.vorhang ? "🙉 Auf" : "🙈 Vorhang", "vfVorhang()", !laeuft) + k("🎬 Studio", "stOeffnen()") : ""}${k("⏹ Beenden", "vfBeenden()")}</div>`;
   vfLeisteUhr(); if (!VF.uhrT) VF.uhrT = setInterval(vfLeisteUhr, 1000);
 }
@@ -22120,7 +22120,12 @@ function studioStufe() {
   return s.stufe;
 }
 const stDarf = (was) => { const s = studioStufe(); return !!s && (was === "zeigen" || s === "alles"); };
+// KC-CLUB-ON-AIR (2.140.0, Wunsch Hansi „rotes Schild wie an einem Filmstudio – On Air, wenn eine Live-Verbindung läuft“):
+// leuchtet nur, solange wirklich live übertragen wird (Mitschauen läuft, ich zeige und es wird zugeschaut, mir wird gezeigt, bei mir wird zugeschaut)
+const stdOnAirAn = () => (STD.modus === "mitschauen" && STD.status === "live") || (VF.rolle && VF.status === "laeuft") || !!MSCH.id;
+const onAirSchild = (klein) => `<span class="onair${klein ? " klein" : ""}" role="status" aria-label="Live-Verbindung läuft">ON AIR</span>`;
 function stKnopf() {
+  const oa = $("stdOnAir"); if (oa) oa.innerHTML = stdOnAirAn() ? onAirSchild() : "";
   const k = $("studioKnopf"); if (!k) return;
   k.classList.toggle("versteckt", !studioStufe());
   k.classList.toggle("st-an", !!(STD.modus && ["wartet", "live"].includes(STD.status)) || VF.rolle === "zeigt");
@@ -22129,7 +22134,7 @@ const stZeit = (ms) => { const s = Math.max(0, Math.floor(ms / 1000)); return `$
 function stOeffnen(pid, name) {
   if (!studioStufe()) return melde("🎬 Das Studio ist für dich nicht freigeschaltet.", true);
   if (pid) Object.assign(STD, { pid, name: name || (MITGLIEDER || []).find((m) => m.person_id === pid)?.name || "" });
-  const f = blattAuf("studioBlatt", `<div class="st-kopf"><h3>🎬 Studio</h3><button type="button" class="rund" aria-label="Studio schließen" onclick="stSchliessen()">✕</button></div><div id="stdInhalt"></div>`);
+  const f = blattAuf("studioBlatt", `<div class="st-kopf"><h3>🎬 Studio</h3><span id="stdOnAir">${stdOnAirAn() ? onAirSchild() : ""}</span><button type="button" class="rund" aria-label="Studio schließen" onclick="stSchliessen()">✕</button></div><div id="stdInhalt"></div>`);
   f.onclick = null; f.classList.add("st-blatt"); f._zu = stSchliessen;
   if (!MITGLIEDER) mitgliederHolen().then(() => stListe()).catch(() => { const l = $("stdListe"); if (l) l.innerHTML = '<p class="hinweis">⚠️ Mitglieder gerade nicht erreichbar – bitte gleich nochmal öffnen.</p>'; });
   if (ICH?.admin && !STD.rechte) stRechteLaden();
@@ -22234,7 +22239,7 @@ function infoStudio() {
   const meinRecht = ICH?.admin ? "Admin – alles" : s === "alles" ? `⭐ alles${INIT?.studio?.allesBis ? " bis " + fZeit.format(new Date(INIT.studio.allesBis)) : ""}` : "📺 Live zeigen";
   const k = (sym, t, fn, aus, an) => `<button type="button" class="${an ? "an" : ""}" ${aus ? "disabled" : `onclick="${fn}"`}><span>${sym}</span>${t}</button>`;
   return `<div class="adisplay">
-      <div class="zdkopf"><span>🎬 STUDIO</span><span class="zuhr" id="stKarteZeit">${esc(fZeit.format(new Date()))}</span></div>
+      <div class="zdkopf"><span>🎬 STUDIO</span>${stdOnAirAn() ? onAirSchild(true) : ""}<span class="zuhr" id="stKarteZeit">${esc(fZeit.format(new Date()))}</span></div>
       ${zeile(status === "live" ? "rot" : status === "wartet" ? "gelb" : "grau", "Sitzung", status === "live" ? `LIVE · ${art} · ${name}` : status === "wartet" ? `${art} · wartet auf ${name} …` : status === "abgelehnt" ? `${name} wollte gerade nicht` : status === "beendet" ? "beendet" : "keine")}
       ${lauf ? zeile(status === "live" ? "gruen" : "gelb", "Uhr", `läuft ${stZeit(Date.now() - start)}${status === "live" && bis ? ` · noch ${stZeit(bis - Date.now())}` : ""}`, "stKarteLauf") : ""}
       ${zeile(STD.pid ? "gruen" : "grau", "Mitglied", STD.pid ? STD.name : "noch keins gewählt")}
@@ -22502,7 +22507,7 @@ async function ssAnfrage(einl) {
 function mlStart(id, wer) {
   Object.assign(MSCH, { id, wer, bis: Date.now() + ST_LIVE_MIN * 60000, laeuft: false });
   document.getElementById("ssLiveLeiste")?.remove();
-  document.body.insertAdjacentHTML("beforeend", `<div id="ssLiveLeiste" class="ss-live-leiste" role="status"><span>🔴 ${esc(wer)} schaut zu</span><button onclick="mlEnde(true)">Beenden</button></div>`);
+  document.body.insertAdjacentHTML("beforeend", `<div id="ssLiveLeiste" class="ss-live-leiste" role="status">${onAirSchild(true)}<span>${esc(wer)} schaut zu</span><button onclick="mlEnde(true)">Beenden</button></div>`);
   spur("mitschauen_laeuft");
   clearInterval(MSCH.uhr); MSCH.uhr = setInterval(() => { if (MSCH.id && Date.now() > MSCH.bis) mlEnde(true, `⏹ Mitschauen nach ${ST_LIVE_MIN} Minuten beendet`); }, 5000);
   spgSenderStart(mlSenden, false);
