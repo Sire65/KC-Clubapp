@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.161.0 – 2026-10-09 – 🪟 Kopf-Jalousie läuft auch bei „Bewegung reduzieren“ (KC-CLUB-KOPF-ROLLO)
+🔧 Kleine Systemverbesserungen
+
 ## 2.160.0 – 2026-10-09 – 🪟 Kopf-Jalousie: echte Lamellen, fährt langsam hoch und runter (KC-CLUB-KOPF-ROLLO)
 🔧 Kleine Systemverbesserungen
 

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.160.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.161.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -10005,8 +10005,9 @@ function kopfRolloSetzen(zu) {
 }
 async function kopfRolloFahren(zu) {
   const h = document.querySelector("#v-start .hero"), kz = h?.querySelector(".kopfzeile");
-  let ruhig = false; try { ruhig = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch {}
-  if (!h || !kz || !h.animate || ruhig || h.offsetParent === null) return kopfRolloSetzen(zu);
+  // 2.161.0 (Hansi: „kein Jalousie-Effekt“ – sein Handy meldet „Bewegung reduzieren“): die Jalousie läuft nur auf Antippen,
+  // dauert ~2 s und blinkt nicht – sie läuft deshalb immer, außer das Gerät kann keine Animationen oder der Kopf ist nicht sichtbar.
+  if (!h || !kz || typeof h.animate !== "function" || !h.getClientRects().length) return kopfRolloSetzen(zu);
   if (h.dataset.rollt) return; h.dataset.rollt = "1";
   const k = $("kopfPfeil"); if (k) k.classList.toggle("dreh", !!zu);
   const oben = kz.offsetTop + kz.offsetHeight + 6, klein = (() => { h.classList.add("eingerollt"); const x = h.offsetHeight; h.classList.remove("eingerollt"); return x; })();

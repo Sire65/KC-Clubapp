@@ -7384,7 +7384,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/\.rl-lamelle \{[^}]*linear-gradient/.test(html) && /\.rollo-leiste \{ position: absolute;[^}]*bottom: 0/.test(html), "Lamellen und Abschlussleiste");
   const f = html.slice(html.indexOf("async function kopfRolloFahren("), html.indexOf("function kopfRollo() {"));
   assert.ok(/ROLLO_FAHRT_MS = 1400/.test(html) && /await klappen\(false\);[\s\S]{0,80}await fahren\(gross, klein\);/.test(f) && /await fahren\(klein, gross\);[\s\S]{0,80}await klappen\(true\);/.test(f), "hoch: zuklappen, dann hochfahren – runter umgekehrt");
-  assert.ok(/prefers-reduced-motion: reduce/.test(f) && /if \(h\.dataset\.rollt\) return;/.test(f) && /finally \{[\s\S]{0,200}vorhang\.remove\(\); leiste\.remove\(\); delete h\.dataset\.rollt;/.test(f), "ruhig bei reduzierter Bewegung, kein Doppelstart, räumt immer auf");
+  assert.ok(!/prefers-reduced-motion/.test(f) && /typeof h\.animate !== "function" \|\| !h\.getClientRects\(\)\.length\) return kopfRolloSetzen\(zu\)/.test(f) && /if \(h\.dataset\.rollt\) return;/.test(f) && /finally \{[\s\S]{0,200}vorhang\.remove\(\); leiste\.remove\(\); delete h\.dataset\.rollt;/.test(f), "läuft auf Antippen immer (2.161.0), kein Doppelstart, räumt immer auf");
   assert.ok(/function kopfRollo\(\) \{[\s\S]{0,300}localStorage\.setItem\(KOPF_ROLLO, "1"\) : localStorage\.removeItem\(KOPF_ROLLO\)/.test(html) && /try \{ if \(localStorage\.getItem\(KOPF_ROLLO\) === "1"\) kopfRolloSetzen\(true\); \} catch \{\}/.test(html), "Zustand gemerkt, Speicherfehler harmlos");
   assert.ok(/k\.setAttribute\("aria-expanded", zu \? "false" : "true"\)/.test(html), "Vorlesehilfe kennt den Zustand");
 }
