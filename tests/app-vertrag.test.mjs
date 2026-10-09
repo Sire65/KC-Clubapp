@@ -4901,7 +4901,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(\/\^KC-P-TEST\/\.test\(ich\.person_id\) \|\| ich\.admin\) return;/.test(w), "keine Test-Personen, nicht der Admin selbst");
   assert.ok(/WILLKOMMEN_MIN \* 60000/.test(w) && /erstmals_gesehen/.test(w), "nur kurz nach der ersten Anmeldung (keine alten Mitglieder nachträglich)");
   assert.ok(/schluessel: "willkommen_zettel"[\s\S]*ignoreDuplicates: true \}\)\.select\("person_id"\)/.test(w) && /if \(!sperre\?\.length\) return;/.test(w), "genau einmal je Mitglied");
-  assert.ok(/wichtig: true, fuer: "alle"/.test(w) && /💐 Herzlich willkommen! Wir begrüßen unser neues Mitglied \$\{name\}/.test(w), "wichtig, für alle, mit Blumenstrauß");
+  assert.ok(/wichtig: true, fuer: "alle"/.test(w) && /💐 Herzlich willkommen! Wir begrüßen unser (?:neues Mitglied|Clubmitglied) \$\{name\}/.test(w), "wichtig, für alle, mit Blumenstrauß");
   assert.ok(!/senden\(/.test(w), "kein Push/Mail (Ruhe-Regel)");
   assert.ok(/pinnwand_willkommen_voll/.test(w) && /frueher\.has\(z\.id\)/.test(w), "volle Pinnwand: nur alten Willkommens-Zettel abnehmen, sonst Vermerk");
   assert.ok(/const pWillkommen = willkommenZettel\(ich\)\.catch/.test(server) && /await pWillkommen;/.test(server), "beim Start geprüft, Fehler bremsen den Start nicht");

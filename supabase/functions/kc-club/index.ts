@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.132.0";
+const SERVER_VERSION = "2.133.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
@@ -1612,13 +1612,14 @@ async function willkommenZettel(ich: Ich) {
 }
 // Willkommens-Zettel aushängen (gemeinsam für die erste Anmeldung und „Probephase übernehmen“)
 async function willkommenAushaengen(pid: string, name: string): Promise<boolean | undefined> {
-  name = name || "unser neues Mitglied";
+  name = name || "";
   const { data: sperre } = await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "willkommen_zettel", wert: { am: jetzt() }, geaendert_am: jetzt() },
     { onConflict: "person_id,schluessel", ignoreDuplicates: true }).select("person_id");
   if (!sperre?.length) return; // schon begrüßt (oder gerade parallel)
   const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).not("person_id", "like", "KC-P-TEST%").order("person_id").limit(1);
   const von = ad?.[0]?.person_id; if (!von) return false;
-  const text = `💐 Herzlich willkommen! Wir begrüßen unser neues Mitglied ${name} in der Köcheclub-App. Schön, dass du dabei bist! 💐`.slice(0, PINNWAND_ZEICHEN);
+  // 2.133.0 (Wunsch Hansi): die meisten sind langjährige Clubmitglieder, nur neu in der App → „unser Clubmitglied“
+  const text = `💐 Herzlich willkommen! Wir begrüßen unser Clubmitglied ${name} in der Köcheclub-App. Schön, dass du dabei bist! 💐`.slice(0, PINNWAND_ZEICHEN);
   let { data: haengt } = await db.from("kc_club_pinnwand").select("id,farbe,erstellt_am").eq("person_id", von).is("entfernt_am", null).order("erstellt_am");
   if ((haengt ?? []).length >= PINNWAND_MAX) {
     const { data: fr } = await db.from("kc_club_protokoll").select("details").eq("aktion", "pinnwand_willkommen").order("zeit", { ascending: false }).limit(50);

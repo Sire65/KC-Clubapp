@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.133.0 – 2026-10-09 – Begrüßung: unser Clubmitglied
+🔧 Kleine Systemverbesserungen
+Admin-Notiz (Wunsch Hansi): Willkommens-Zettel an der Pinnwand sagt „Wir begrüßen unser Clubmitglied … in der Köcheclub-App“ (statt „neues Mitglied“ – die meisten sind langjährige Mitglieder, nur neu in der App). Manfreds Zettel wurde am 09.10. erneut aufgehängt und angepasst (Weg B).
+
 ## 2.132.0 – 2026-10-09 – Erinnerung an To-do-Fristen
 🔧 Kleine Systemverbesserungen
 Admin-Notiz (KC-CLUB-TODO-ERINNERUNG, Wunsch Hansi): offene To-dos mit Frist erinnern automatisch 5 Tage vorher und am Tag selbst morgens ab 7 Uhr („⏰ Frist läuft heute ab“) per Push + E-Mail (nach den Benachrichtigungs-Einstellungen der Person) – an die Zuständigen, sonst an den, der es aufgeschrieben hat; je Frist nur einmal (Merkspalten erinnert_vorher/erinnert_heute, Weg B).
