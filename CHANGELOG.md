@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.165.0 – 2026-10-09 – 📄 PDF-Anlagen öffnen sich direkt in der App (KC-CLUB-ANLAGE-OEFFNEN)
+🔧 Kleine Systemverbesserungen
+
 ## 2.164.0 – 2026-10-09 – 📎 Anlage geht nicht mehr verloren: Senden wartet, bis sie hochgeladen ist (KC-CLUB-ANLAGE-WARTEN)
 🔧 Kleine Systemverbesserungen
 

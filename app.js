@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.164.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.165.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -9446,16 +9446,16 @@ function pdfjsHolen() {
     .catch((e) => { pdfjsLaden = null; throw e; });
   return pdfjsLaden;
 }
-const dokUrl = (d) => new URL(d.datei + "?v=" + APP_VERSION, location.href).href;
-const dokAktuell = () => DOKUMENTE.find((x) => x.id === DOKA.id) || null;
+const dokUrl = (d) => d.datei instanceof Blob ? URL.createObjectURL(d.datei) : new URL(d.datei + "?v=" + APP_VERSION, location.href).href;
+const dokAktuell = () => (DOKA.anl && DOKA.anl.id === DOKA.id ? DOKA.anl : DOKUMENTE.find((x) => x.id === DOKA.id) || null); // 2.165.0: auch Chat-Anlagen
 async function dokAnzeigen(d, ausHistorie) {
-  DOKA.id = d.id; DOKA.bilder = []; const lauf = ++DOKA.lauf;
+  DOKA.id = d.id; DOKA.bilder = []; DOKA.anl = d.datei instanceof Blob ? d : null; const lauf = ++DOKA.lauf;
   $("dokaTitel").textContent = d.t; $("dokaSeiten").innerHTML = ""; $("dokaDrucken").disabled = true;
   $("dokaStand").textContent = "Wird geladen …";
   zeige("dokansicht", ausHistorie);
   try {
     const pdfjs = await pdfjsHolen();
-    const pdf = await pdfjs.getDocument({ url: dokUrl(d), isEvalSupported: false }).promise;
+    const pdf = await pdfjs.getDocument(DOKA.anl ? { data: new Uint8Array(await d.datei.arrayBuffer()), isEvalSupported: false } : { url: dokUrl(d), isEvalSupported: false }).promise;
     const breite = Math.min(1400, Math.round(($("dokaSeiten").clientWidth || innerWidth) * Math.min(2, devicePixelRatio || 1)));
     for (let n = 1; n <= pdf.numPages; n++) {
       if (lauf !== DOKA.lauf) return pdf.destroy();
@@ -9481,7 +9481,7 @@ async function pdfSeiteAlsBild(pdf, n, breite) {
   await seite.render({ canvasContext: cx, viewport: vp }).promise;
   const src = c.toDataURL("image/jpeg", 0.85); c.width = c.height = 0; return src;
 }
-function dokAufraeumen() { DOKA.lauf++; DOKA.id = null; DOKA.bilder = []; $("dokaSeiten").innerHTML = ""; }
+function dokAufraeumen() { DOKA.lauf++; DOKA.id = null; DOKA.bilder = []; DOKA.anl = null; $("dokaSeiten").innerHTML = ""; }
 function dokExtern() { const d = dokAktuell(); if (d) extOeffnen(dokUrl(d)); }
 function dokDruckSeite() {
   const d = dokAktuell(); if (!d || !DOKA.bilder.length) return null;
@@ -9495,7 +9495,7 @@ async function dokDrucken() {
 async function dokTeilen() {
   const d = dokAktuell(); if (!d) return;
   try {
-    const datei = new File([await (await fetch(dokUrl(d), { signal: zeitSignal(60000) })).blob()], d.datei.split("/").pop(), { type: "application/pdf" });
+    const datei = d.datei instanceof Blob ? d.datei : new File([await (await fetch(dokUrl(d), { signal: zeitSignal(60000) })).blob()], d.datei.split("/").pop(), { type: "application/pdf" });
     if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: d.t }); return; }
   } catch (e) { if (e?.name === "AbortError") return; }
   dokExtern(); // Teilen geht hier nicht → PDF-Betrachter (dort drucken/speichern)
@@ -16736,17 +16736,44 @@ async function bildLaden(img, frisch = false) {
     img.src = bildCache[id].url;
   } catch {}
 }
-async function anlageOeffnen(id) { try { const r = await api("anlage_url", { id }); window.open(r.url, "_blank"); } catch (e) { meldeFehler(e); } }
+// 2.165.0 KC-CLUB-ANLAGE-OEFFNEN (Fund Hansi: „Liste angeklickt – öffnet sich nicht“): das Fenster muss beim Antippen selbst aufgehen –
+// erst nach dem Laden (await) blockt Android es stillschweigend. Also sofort ein leeres Fenster, dann die Adresse hinein;
+// ist es trotzdem gesperrt, kommt ein Knopf „↗ Jetzt öffnen“ (ein echter Link, den man selbst antippt).
+async function anlageOeffnen(id) {
+  let w = null; try { w = window.open("", "_blank"); } catch {}
+  try {
+    const r = await api("anlage_url", { id });
+    if (w && !w.closed) { try { w.opener = null; } catch {} w.location.href = r.url; return; }
+    anlageLinkZeigen(r.url, "Datei");
+  } catch (e) { try { w?.close(); } catch {} meldeFehler(e); }
+}
+function anlageLinkZeigen(url, name) {
+  blattAuf("anlLinkBlatt", `<h3 style="margin:0 0 6px">📄 ${esc(name)}</h3><p class="hinweis" style="margin:0 0 10px">Die Datei ist bereit.</p>
+    <a class="knopf haupt" href="${esc(url)}" target="_blank" rel="noopener" onclick="setTimeout(() => $('anlLinkBlatt')?.remove(), 300)">↗ Jetzt öffnen</a>
+    <button class="knopf" onclick="$('anlLinkBlatt').remove()">Schließen</button>`);
+}
+// PDF-Anlagen in der App zeigen (wie „Meine Dokumente“: ‹ Zurück, 🖨️ Drucken, 📤 Teilen) – andere Dateien im Betrachter des Handys
+const istPdf = (name, mime) => /pdf/i.test(mime || "") || /\.pdf$/i.test(name || "");
+async function anlageDateiZeigen() {
+  const t = ANL_T; if (!t) return;
+  $("anlBlatt")?.remove();
+  if (istPdf(t.name, t.mime)) {
+    if (!t.datei && !t.fehler) { melde("⏳ Datei wird geladen …"); await t.warten; }
+    if (t.datei) return dokAnzeigen({ id: "anl:" + t.id, t: t.name || "Dokument", datei: t.datei });
+  }
+  if (t.datei) { const url = URL.createObjectURL(t.datei); const w = window.open(url, "_blank"); if (w) { try { w.opener = null; } catch {} return; } return anlageLinkZeigen(url, t.name || "Datei"); }
+  return anlageOeffnen(t.id);
+}
 // 2.128.0 KC-CLUB-ANLAGE-TEILEN (Wunsch Hansi): Datei-Anhang antippen → Öffnen / Teilen / Speichern.
 // Die Datei wird beim Öffnen des Fensters schon geholt (der Server prüft wie immer, ob man sie sehen darf) – so kommt das Teilen-Menü
 // direkt beim Antippen (iPhone verlangt das), ohne erneutes Laden.
 let ANL_T = null;
 function anlageAktion(id, name, mime) {
-  ANL_T = { id, datei: null, fehler: null };
+  ANL_T = { id, name, mime, datei: null, fehler: null };
   const lauf = ANL_T;
   lauf.warten = anlageAlsDatei({ id, name, mime }).then((d) => { lauf.datei = new File([d.blob], d.name, { type: d.mime || "application/octet-stream" }); }).catch((e) => { lauf.fehler = e; });
   blattAuf("anlBlatt", `<h3 style="margin:0 0 4px">📄 ${esc(name)}</h3><p class="hinweis" style="margin:0 0 10px">Was möchtest du mit der Datei machen?</p>
-    <button class="knopf haupt" onclick="$('anlBlatt').remove();anlageOeffnen(${esc(JSON.stringify(id))})">👁️ Öffnen</button>
+    <button class="knopf haupt" onclick="anlageDateiZeigen()">👁️ Öffnen</button>
     <button class="knopf" onclick="anlageTeilen(false)">📤 Teilen / Weiterleiten</button>
     <button class="knopf" onclick="anlageTeilen(true)">⬇️ Auf dem Gerät speichern</button>
     <button class="knopf" onclick="$('anlBlatt').remove()">Schließen</button>`);

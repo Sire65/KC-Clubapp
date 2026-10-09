@@ -7419,3 +7419,14 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/anlagen: anlagen\.filter\(\(a\) => a\.id\)\.map\(\(a\) => a\.id\)/.test(s), "nie eine Anlage ohne Kennung mitschicken");
   assert.ok(/async function anlagenFertig\(maxMs = 180000\) \{[\s\S]{0,200}while \(anlagen\.some\(\(a\) => a\.laedt\)\)/.test(html), "Warten mit Obergrenze");
 }
+// 2.165.0 KC-CLUB-ANLAGE-OEFFNEN (Fund Hansi: „Liste im Chat angeklickt – öffnet sich nicht“): Fenster erst nach dem Laden → Android blockt es still
+{
+  assert.ok((html.match(/^(async )?function anlageDateiZeigen\(/gm) || []).length === 1 && (html.match(/^(async )?function anlageAnsehen\(/gm) || []).length === 1, "kein Namenskonflikt (anlageAnsehen gibt es schon)");
+  assert.ok(/<button class="knopf haupt" onclick="anlageDateiZeigen\(\)">👁️ Öffnen<\/button>/.test(html), "Öffnen im Anlage-Fenster");
+  const f = html.slice(html.indexOf("async function anlageDateiZeigen("), html.indexOf("async function anlageDateiZeigen(") + 900);
+  assert.ok(/if \(istPdf\(t\.name, t\.mime\)\)[\s\S]{0,200}return dokAnzeigen\(\{ id: "anl:" \+ t\.id, t: t\.name \|\| "Dokument", datei: t\.datei \}\)/.test(f), "PDF in der App anzeigen (schon geladene Datei)");
+  const o = html.slice(html.indexOf("async function anlageOeffnen("), html.indexOf("function anlageLinkZeigen("));
+  assert.ok(o.indexOf('window.open("", "_blank")') < o.indexOf('await api("anlage_url"') && /anlageLinkZeigen\(r\.url, "Datei"\)/.test(o), "Fenster sofort beim Antippen, sonst Link-Knopf");
+  assert.ok(/DOKA\.anl \? \{ data: new Uint8Array\(await d\.datei\.arrayBuffer\(\)\), isEvalSupported: false \}/.test(html) && /function dokAufraeumen\(\) \{[^}]*DOKA\.anl = null;/.test(html), "Dokument-Anzeige kann Anlagen, räumt auf");
+  assert.ok(/onclick="zurueck\(DOKA\.anl \? 'chat' : 'dokumente'\)"/.test(html), "Zurück führt in den Chat");
+}
