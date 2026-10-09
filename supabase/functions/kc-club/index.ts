@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.167.0";
+const SERVER_VERSION = "2.168.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -7759,19 +7759,31 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await binTeilnehmer(id, ich.person_id);
         if (Number(p.stunden) && !std) throw new Fehler("Diese Zeit gibt es nicht.");
         const { data: alt } = await db.from("kc_club_chat_selbstloeschen").select("stunden").eq("thread_id", id).maybeSingle();
-        if (slStd(alt?.stunden) === std) return json({ ok: true, stunden: std, unveraendert: true });
+        if (slStd(alt?.stunden) === std && !(std && p.auchMeineAlten === true)) return json({ ok: true, stunden: std, unveraendert: true });
         const { error } = std ? await db.from("kc_club_chat_selbstloeschen").upsert({ thread_id: id, stunden: std, von: ich.person_id, am: jetzt() }, { onConflict: "thread_id" })
           : await db.from("kc_club_chat_selbstloeschen").delete().eq("thread_id", id);
         if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        // 2.168.0 KC-CLUB-SELBSTLOESCHEN-ALT (Wunsch Hansi): auf Wunsch auch die BISHERIGEN EIGENEN Nachrichten – nur die eigenen,
+        // fremde nie (sonst könnte jeder den Verlauf des anderen löschen). Ablauf ab jetzt, schon gesetzte Abläufe bleiben.
+        let alteMeine = 0;
+        if (std && p.auchMeineAlten === true) {
+          const { data: meine } = await db.from("kc_communication_messages").select("id").eq("thread_id", id).eq("sender_person_id", ich.person_id).order("created_at", { ascending: false }).limit(1000);
+          const ids = (meine ?? []).map((x: any) => x.id);
+          const { data: schon } = ids.length ? await db.from("kc_club_nachricht_ablauf").select("message_id").in("message_id", ids) : { data: [] as any[] };
+          const hat = new Set((schon ?? []).map((x: any) => x.message_id)), bis = new Date(Date.now() + std * 3600000).toISOString();
+          const neu = ids.filter((x: string) => !hat.has(x)).map((x: string) => ({ message_id: x, thread_id: id, stunden: std, loescht_am: bis }));
+          if (neu.length) { const { error: ae } = await db.from("kc_club_nachricht_ablauf").insert(neu); if (ae) throw new Fehler("Die bisherigen Nachrichten konnten nicht eingestellt werden.", 500); }
+          alteMeine = neu.length;
+        }
         // Hinweiszeile für alle (bleibt stehen, löscht sich selbst nicht) – ohne Push/Mail
-        const body = std ? `⏳ ${ich.vorname} hat Selbstlöschen eingeschaltet: neue Nachrichten in diesem Chat löschen sich nach ${slText(std)}.` : `⏳ ${ich.vorname} hat Selbstlöschen ausgeschaltet: neue Nachrichten bleiben stehen.`;
+        const body = std ? `⏳ ${ich.vorname} hat Selbstlöschen eingeschaltet: neue Nachrichten in diesem Chat löschen sich nach ${slText(std)}.${alteMeine ? ` Auch ${alteMeine === 1 ? "eine bisherige Nachricht" : `${alteMeine} bisherige Nachrichten`} von ${ich.vorname} verschwinden nach ${slText(std)}.` : ""}` : `⏳ ${ich.vorname} hat Selbstlöschen ausgeschaltet: neue Nachrichten bleiben stehen.`;
         const { data: m } = await db.from("kc_communication_messages").insert({ thread_id: id, sender_person_id: ich.person_id, body }).select("created_at").single();
         await Promise.all([
           db.from("kc_communication_threads").update({ updated_at: jetzt() }).eq("id", id),
           m ? db.from("kc_communication_thread_participants").update({ last_read_at: m.created_at }).eq("thread_id", id).eq("person_id", ich.person_id) : Promise.resolve(),
         ]);
-        await protokoll(ich.person_id, "chat_selbstloeschen", { thread: id, stunden: std });
-        return json({ ok: true, stunden: std });
+        await protokoll(ich.person_id, "chat_selbstloeschen", { thread: id, stunden: std, alte_eigene: alteMeine });
+        return json({ ok: true, stunden: std, alteMeine });
       }
 
       case "nachricht_bearbeiten": {

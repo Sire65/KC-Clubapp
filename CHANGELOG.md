@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.168.0 – 2026-10-09 – 🗂️ Datei-Menü in Ordnern (rechte Maustaste/lang drücken: Ausschneiden, Kopieren, Einfügen, Senden, Speichern, Löschen) + ⏳ auch eigene alte Nachrichten selbstlöschend (KC-CLUB-ARCHIV-MENUE, KC-CLUB-SELBSTLOESCHEN-ALT)
+🔧 Kleine Systemverbesserungen
+
 ## 2.167.0 – 2026-10-09 – 📄 Anlage im Chat antippen öffnet wieder das richtige Fenster (KC-CLUB-ANLAGE-OEFFNEN)
 🔧 Kleine Systemverbesserungen
 

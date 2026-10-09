@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.167.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.168.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -17047,7 +17047,11 @@ function slWahl(art) {
 async function slGewaehlt(art, std) {
   $("slBlatt")?.remove();
   if (art === "nachricht") { SL = std === slChat() ? { chat: null, std: null } : { chat: chatId, std }; slAnzeigen(); return melde(std ? `⏳ Die nächste Nachricht löscht sich nach ${slText(std)}` : "Die nächste Nachricht bleibt stehen"); }
-  try { const r = await api("chat_selbstloeschen", { id: chatId, stunden: std }); if (CHAT?.id === chatId) CHAT.selbstloeschen = r.stunden; slAnzeigen(); melde(r.stunden ? `⏳ Neue Nachrichten in diesem Chat löschen sich nach ${slText(r.stunden)}` : "⏳ Selbstlöschen aus"); await chatLaden(true); }
+  // 2.168.0 KC-CLUB-SELBSTLOESCHEN-ALT (Wunsch Hansi): beim Einschalten fragen, ob auch die eigenen bisherigen Nachrichten verschwinden sollen
+  const meineDa = std > 0 && (CHAT?.nachrichten || []).some((m) => m.eigen);
+  const auchMeineAlten = meineDa ? await frage(`⏳ Sollen auch deine bisherigen Nachrichten in diesem Chat nach ${slText(std)} verschwinden?\n\nDas gilt nur für deine eigenen Nachrichten – die der anderen bleiben stehen. Gelöscht wird bei allen und kann nicht rückgängig gemacht werden.`, { ja: "🗑️ Ja, meine auch", nein: "Nein, nur neue" }) : false;
+  try { const r = await api("chat_selbstloeschen", { id: chatId, stunden: std, ...(auchMeineAlten ? { auchMeineAlten: true } : {}) }); if (CHAT?.id === chatId) CHAT.selbstloeschen = r.stunden; slAnzeigen();
+    melde(r.stunden ? `⏳ Neue Nachrichten in diesem Chat löschen sich nach ${slText(r.stunden)}${r.alteMeine ? ` – auch ${r.alteMeine === 1 ? "deine bisherige Nachricht" : `deine ${r.alteMeine} bisherigen Nachrichten`}` : ""}` : "⏳ Selbstlöschen aus"); await chatLaden(true); }
   catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): ❗ = „Wichtigkeit hoch“ für die nächste Nachricht (gilt nur für diesen Chat)
@@ -17289,7 +17293,7 @@ function einlAblegen() {
 // nach dem Ablegen: gleich versenden? (Dateien sind noch im Speicher → ein Tipp genügt, auch fürs Teilen-Menü)
 function einlNachher(E) {
   EINL = E;
-  blattAuf("einlBlatt", `<h3 style="margin-top:0">✅ Abgelegt</h3><p style="margin:0 0 8px">Gleich auch versenden?</p>
+  blattAuf("einlBlatt", `<h3 style="margin-top:0">${esc(E.kopf || "✅ Abgelegt")}</h3><p style="margin:0 0 8px">${esc(E.unter || "Gleich auch versenden?")}</p>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">
       <button class="knopf" onclick="einlNachricht()">💬 Als Nachricht in der App</button>
       <button class="knopf" onclick="einlPerMail()">📧 Per E-Mail mit Anhang</button>
@@ -22364,7 +22368,7 @@ function arOrdnerListe() {
   const liste = arEintraege(o).filter((x) => arImRegister(x, AR.register)
     && (!suchen || (o.auto ? arPasstAlle(q, x.titel, x.text, x.voll) : arPasstAlle(q, x.titel, x.name, x.register, x.stichworte || [], x.beschreibung || ""))));
   if (o.art === "chronik") liste.sort((a, b) => String(a.datum || "9999").localeCompare(String(b.datum || "9999"))); // KC-CLUB-CHRONIK: Zeitleiste
-  $("arOrdnerListe").innerHTML = (suchen ? `<p class="hinweis ar-zahl" style="margin:4px 6px">${liste.length} Treffer${AR.register ? ` im Register „${esc(AR.register)}“ <button class="knopf klein" onclick="AR.register='';arZeigen()">in allen suchen</button>` : ""}</p>` : "")
+  $("arOrdnerListe").innerHTML = arEinfuegenLeiste(o) + (suchen ? `<p class="hinweis ar-zahl" style="margin:4px 6px">${liste.length} Treffer${AR.register ? ` im Register „${esc(AR.register)}“ <button class="knopf klein" onclick="AR.register='';arZeigen()">in allen suchen</button>` : ""}</p>` : "")
     + (liste.sort((a, b) => (b.status === "pruefung") - (a.status === "pruefung")).map((x) => arZeile(x, o.auto, false, m)).join("") || `<p class="hinweis" style="margin:6px">${suchen ? "Nichts gefunden." : o.auto ? "Hier ist nichts." : o.eigen || (!o.besitzer && d.darf) ? "Noch leer – tippe auf „＋ Dokument“." : "Noch leer."}</p>`);
 }
 function arDateiSym(mime) { return /pdf/.test(mime || "") ? "📕" : /^image\//.test(mime || "") ? "🖼️" : /word/.test(mime || "") ? "📝" : /excel|sheet/.test(mime || "") ? "📊" : "📄"; }
@@ -22382,17 +22386,20 @@ function arZeile(x, auto, mitOrt, m) {
   const o = AR.daten.ordner.find((y) => y.id === x.ordner_id), pruef = x.status === "pruefung";
   const darfAendern = !pruef && (o?.eigen || (!o?.besitzer && AR.daten.darf));
   const pruefer = o?.eigen || (!o?.besitzer && AR.daten.darf); // KC-CLUB-CHRONIK: im Clubordner prüft die Archiv-Pflege
-  return `<div class="ar-dok klickbar" onclick="arAnlage('${x.id}', true)"><span class="sym">${arDateiSym(x.mime)}</span>
+  return `<div class="ar-dok klickbar" data-dok="${esc(x.id)}" onclick="arAnlage('${x.id}', true)"><span class="sym">${arDateiSym(x.mime)}</span>
     <div>${pruef ? `<span class="marke gelb">⏳ ${pruefer ? "zur Prüfung · von " + esc(x.von) : "wartet auf Prüfung"}</span><br>` : ""}<b>${mk(x.titel)}</b><div class="hinweis">${[arTag(x.datum), x.register, arGroesse(x.groesse)].filter(Boolean).map(mk).join(" · ")}${mitOrt && o ? ` · ${o.besitzer ? (o.eigen ? "👤 Mein Ordner" : "🤝 " + mk(o.titel)) : mk(o.titel)} ${o.jahr}` : ""}</div>
     ${x.beschreibung ? `<div class="hinweis ar-beschr">${mk(x.beschreibung)}</div>` : ""}
     ${pruef && pruefer ? `<div class="knoepfe" style="margin:6px 0 0"><button class="knopf klein haupt" onclick="event.stopPropagation();einmal(this, () => arPruefung('${x.id}', true))">✔ Annehmen</button><button class="knopf klein" onclick="event.stopPropagation();einmal(this, () => arPruefung('${x.id}', false))">✖ Ablehnen</button></div>` : ""}
     ${pruef && !pruefer && x.vonIch ? `<div class="knoepfe" style="margin:6px 0 0"><button class="knopf klein" onclick="event.stopPropagation();arEinreichungZurueck('${x.id}')">↩ Zurückziehen</button></div>` : ""}
     ${x.name && m && suPasstText(x.name, AR.suche) && !suPasstText(x.titel, AR.suche) ? `<div class="hinweis">📎 ${mk(x.name)}</div>` : ""}
     ${x.stichworte?.length ? `<div class="ar-stichworte">${x.stichworte.map((s) => `<span>#${mk(s)}</span>`).join("")}</div>` : ""}</div>
-    ${darfAendern ? `<span class="ar-dok-knoepfe"><button class="knopf klein" onclick="event.stopPropagation();arDokForm('${x.id}')" title="Ändern" aria-label="Ändern">✏️</button><button class="knopf klein" onclick="event.stopPropagation();arDokLoeschen('${x.id}')" title="Löschen" aria-label="Löschen">🗑️</button></span>` : '<span class="pfeil">›</span>'}</div>`;
+    ${pruef ? "" : `<button class="knopf klein ar-dok-mehr" onclick="event.stopPropagation();arDokMenue('${x.id}')" title="Mehr: Kopieren, Ausschneiden, Senden, Speichern …" aria-label="Mehr">⋮</button>`}${darfAendern ? `<span class="ar-dok-knoepfe"><button class="knopf klein" onclick="event.stopPropagation();arDokForm('${x.id}')" title="Ändern" aria-label="Ändern">✏️</button><button class="knopf klein" onclick="event.stopPropagation();arDokLoeschen('${x.id}')" title="Löschen" aria-label="Löschen">🗑️</button></span>` : '<span class="pfeil">›</span>'}</div>`;
 }
 async function arAnlage(id, archivDok) {
-  const datei = archivDok ? AR.daten.dokumente.find((x) => x.id === id)?.datei : id;
+  if (AR_LANG.unterdruecken) { AR_LANG.unterdruecken = false; return; } // 2.168.0: langes Drücken öffnet das Menü, nicht die Datei
+  const dok = archivDok ? AR.daten.dokumente.find((x) => x.id === id) : null, datei = archivDok ? dok?.datei : id;
+  // 2.168.0: wie im Chat – PDF in der App, andere Dateien ohne gesperrtes Fenster (vorher: Fenster erst nach dem Laden → Android blockt)
+  if (dok && datei) { arDateiVorladen(dok); return anlageDateiZeigen(); }
   try { extOeffnen((await api("anlage_url", { id: datei })).url); } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-ARCHIV-SUCHE (1.4.1): Live-Suche wie die globale Suche – ab 2 Buchstaben, Umlaut-tolerant (ä=a=ae, ß=ss),
@@ -22544,6 +22551,84 @@ function arVorschlag(text, liste, jetzt = {}) {
   if (jetzt.ordner) return null; // beim Verschieben nichts Beliebiges vorschlagen
   const f = liste.find((y) => passt(y, "Sonstiges")); // 2.80.0: immer ein Vorschlag – zur Not „Sonstiges“
   return f ? { o: f, r: "Sonstiges", grund: "nichts Genaueres gefunden – bitte prüfen" } : null;
+}
+// ---------- KC-CLUB-ARCHIV-MENUE (2.168.0, Wunsch Hansi „rechte Maustaste: ausschneiden, kopieren, löschen, per E-Mail, speichern …“) ----------
+// Menü je Dokument: rechte Maustaste, langes Drücken oder ⋮. Ausschneiden/Kopieren legen es in die Zwischenablage; im Ziel-Ordner
+// „📋 Hier einfügen“. Rechte wie bisher (Server prüft: Pflege des Ordners); Senden/Speichern darf, wer das Dokument sehen darf.
+let AR_ABLAGE = null; // { id, art: "verschieben" | "kopieren", titel }
+const AR_LANG = { t: null, x: 0, y: 0, unterdruecken: false };
+function arDokInfo(id) {
+  const d = AR.daten, x = d?.dokumente.find((y) => y.id === id), o = x && d.ordner.find((y) => y.id === x.ordner_id);
+  return { x, o, darf: !!x && x.status !== "pruefung" && !!(o?.eigen || (!o?.besitzer && d.darf)) };
+}
+function arDokMenue(id) {
+  const { x, o, darf } = arDokInfo(id); if (!x || !o) return;
+  const k = (sym, t, fn, art = "") => `<button class="knopf${art}" style="text-align:left" onclick="$('arMenue')?.remove();${fn}">${sym} ${t}</button>`;
+  blattAuf("arMenue", `<h3 style="margin:0 0 2px">${arDateiSym(x.mime)} ${esc(x.titel)}</h3><p class="hinweis" style="margin:0 0 10px">${esc(arName(o))} › ${esc(x.register || "Allgemein")}</p>
+    <div class="knoepfe ar-menue" style="flex-direction:column;align-items:stretch">
+    ${k("👁️", "Öffnen", `arAnlage('${x.id}', true)`, " haupt")}
+    ${darf ? k("✂️", "Ausschneiden", `arMerken('${x.id}','verschieben')`) + k("📋", "Kopieren", `arMerken('${x.id}','kopieren')`)
+      + k("📂", "Kopie in anderen Ordner …", `arZielBlatt('${x.id}','kopieren')`) + k("➡️", "Verschieben nach …", `arZielBlatt('${x.id}','verschieben')`)
+      + k("✏️", "Umbenennen / ändern", `arDokForm('${x.id}')`) : ""}
+    ${k("💬", "Als Nachricht in der App senden", `arDokVersenden('${x.id}','nachricht')`)}
+    ${ICH?.buero === "schreiben" ? k("📧", "Per E-Mail senden", `arDokVersenden('${x.id}','mail')`) : ""}
+    ${k("📤", "Teilen / Weiterleiten", `arDokTeilen('${x.id}', false)`)}
+    ${k("⬇️", "Auf dem Gerät speichern", `arDokTeilen('${x.id}', true)`)}
+    ${darf ? k("🗑️", "Löschen (in den Papierkorb)", `arDokLoeschen('${x.id}')`) : ""}
+    <button class="knopf" onclick="$('arMenue')?.remove()">Schließen</button></div>`);
+}
+function arMerken(id, art) {
+  const { x } = arDokInfo(id); if (!x) return;
+  AR_ABLAGE = { id, art, titel: x.titel }; arOrdnerListe();
+  melde(`${art === "kopieren" ? "📋 Kopiert" : "✂️ Ausgeschnitten"} – Ziel-Ordner öffnen (Register wählen) und dort „📋 Hier einfügen“ tippen`);
+}
+function arEinfuegenLeiste(o) {
+  const z = AR_ABLAGE, d = AR.daten; if (!z || !o || o.auto) return "";
+  const q = d?.dokumente.find((y) => y.id === z.id), qo = q && d.ordner.find((y) => y.id === q.ordner_id);
+  if (!q) { AR_ABLAGE = null; return ""; }
+  const darf = o.eigen || (!o.besitzer && d.darf), gleicherBereich = !!o.besitzer === !!qo?.besitzer;
+  return `<div class="ar-einfuegen karte" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:4px 0 8px;padding:8px 10px">
+    <span style="flex:1 1 180px;min-width:0">${z.art === "kopieren" ? "📋" : "✂️"} <b>${esc(z.titel)}</b>${darf && gleicherBereich ? "" : `<br><small class="hinweis">${!darf ? "In diesen Ordner darfst du nichts ablegen." : "Zwischen eigenen Ordnern und Club-Ordnern geht das nicht."}</small>`}</span>
+    ${darf && gleicherBereich ? `<button class="knopf haupt klein" onclick="einmal(this, arEinfuegen)">📋 Hier einfügen${AR.register ? ` (${esc(AR.register)})` : ""}</button>` : ""}
+    <button class="knopf klein" onclick="AR_ABLAGE=null;arOrdnerListe()" aria-label="Zwischenablage leeren">✕</button></div>`;
+}
+async function arEinfuegen() {
+  const z = AR_ABLAGE, o = arOrdnerAktuell(), q = z && AR.daten?.dokumente.find((y) => y.id === z.id); if (!z || !o || !q) return;
+  const regs = o.register.length ? o.register : ["Allgemein"];
+  const register = AR.register && regs.includes(AR.register) ? AR.register : regs.includes(q.register) ? q.register : regs[0];
+  if (z.art === "verschieben" && o.id === q.ordner_id && register === q.register) return melde("Liegt schon hier – bitte einen anderen Ordner oder ein anderes Register öffnen.", true);
+  try {
+    if (z.art === "kopieren") await api("archiv_kopieren", { id: z.id, ordner_id: o.id, register }, { warten: true });
+    else await api("archiv_aendern", { id: z.id, ordner_id: o.id, register });
+    AR_ABLAGE = null; melde(`${z.art === "kopieren" ? "📋 Kopie eingefügt" : "➡️ Verschoben"} nach ${arName(o)} › ${register}`); await arLaden();
+  } catch (e) { meldeFehler(e); }
+}
+// Datei des Dokuments vorladen (für Öffnen/Teilen/Speichern/Senden) – nutzt den Anlage-Weg (ANL_T) wie im Chat
+function arDateiVorladen(x) {
+  ANL_T = { id: x.datei, name: x.name || x.titel || "Dokument", mime: x.mime || "", datei: null, fehler: null };
+  const lauf = ANL_T;
+  lauf.warten = anlageAlsDatei({ id: x.datei, name: lauf.name, mime: lauf.mime }).then((d) => { lauf.datei = new File([d.blob], d.name, { type: d.mime || "application/octet-stream" }); }).catch((e) => { lauf.fehler = e; });
+  return lauf;
+}
+function arDokTeilen(id, speichern) { const { x } = arDokInfo(id); if (!x?.datei) return; arDateiVorladen(x); anlageTeilen(speichern); }
+async function arDokVersenden(id, wie) {
+  const { x } = arDokInfo(id); if (!x?.datei) return;
+  const t = arDateiVorladen(x); melde("⏳ Datei wird geladen …"); await t.warten;
+  if (!t.datei) return meldeFehler(t.fehler || new Error("Die Datei konnte nicht geladen werden."));
+  EINL = { dateien: [t.datei], titel: x.titel, kopf: "📤 Versenden", unter: `${arDateiSym(x.mime)} ${x.titel}`, ausArchiv: true };
+  if (wie === "mail") return einlPerMail();
+  einlNachricht();
+}
+// rechte Maustaste / langes Drücken auf einem Dokument (nur Dokumente mit data-dok, nicht die automatischen)
+if (typeof document !== "undefined") { // (in Tests wird dieser Teil ohne Browser geladen)
+document.addEventListener("contextmenu", (e) => { const z = e.target.closest?.(".ar-dok[data-dok]"); if (!z) return; e.preventDefault(); arDokMenue(z.dataset.dok); });
+document.addEventListener("pointerdown", (e) => {
+  const z = e.target.closest?.(".ar-dok[data-dok]"); if (!z || e.button > 0 || e.target.closest("button")) return;
+  clearTimeout(AR_LANG.t); AR_LANG.x = e.clientX; AR_LANG.y = e.clientY; AR_LANG.unterdruecken = false;
+  AR_LANG.t = setTimeout(() => { AR_LANG.unterdruecken = true; try { navigator.vibrate?.(15); } catch {} arDokMenue(z.dataset.dok); setTimeout(() => { AR_LANG.unterdruecken = false; }, 800); }, 550);
+});
+document.addEventListener("pointermove", (e) => { if (AR_LANG.t && Math.hypot(e.clientX - AR_LANG.x, e.clientY - AR_LANG.y) > 10) { clearTimeout(AR_LANG.t); AR_LANG.t = null; } });
+["pointerup", "pointercancel"].forEach((n) => document.addEventListener(n, () => { clearTimeout(AR_LANG.t); AR_LANG.t = null; }));
 }
 let AR_ZIEL = null;
 function arZielBlatt(id, art) {

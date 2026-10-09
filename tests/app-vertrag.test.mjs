@@ -7141,7 +7141,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   const m = fs.readFileSync(new URL("../supabase/migrations/20261009_kc_club_v2148_selbstloeschen.sql", import.meta.url), "utf8");
   assert.ok(/const SELBSTLOESCHEN_STD = \[1, 24, 168\];/.test(sv) && /check \(stunden in \(1, 24, 168\)\)/.test(m), "nur 1 Std / 24 Std / 7 Tage – Server und Datenbank gleich");
   const c = sv.slice(sv.indexOf('case "chat_selbstloeschen"'), sv.indexOf('case "nachricht_bearbeiten"'));
-  assert.ok(/await binTeilnehmer\(id, ich\.person_id\)/.test(c) && !/nurAdmin|ich\.admin/.test(c) && /protokoll\(ich\.person_id, "chat_selbstloeschen", \{ thread: id, stunden: std \}\)/.test(c), "jeder Teilnehmer darf, Protokoll ohne Text");
+  assert.ok(/await binTeilnehmer\(id, ich\.person_id\)/.test(c) && !/nurAdmin|ich\.admin/.test(c) && /protokoll\(ich\.person_id, "chat_selbstloeschen", \{ thread: id, stunden: std, alte_eigene: alteMeine \}\)/.test(c), "jeder Teilnehmer darf, Protokoll ohne Text");
   assert.ok(/hat Selbstlöschen eingeschaltet/.test(c) && /hat Selbstlöschen ausgeschaltet/.test(c), "alle sehen die Änderung im Chat");
   const s = sv.slice(sv.indexOf('case "nachricht_senden"'), sv.indexOf('case "privattermin_speichern"'));
   assert.ok(/if \(!notfall\)/.test(s) && /kc_club_nachricht_ablauf"\)\.insert/.test(s) && /\$\{slHinweis \|\| text\}/.test(s) && /slHinweis \? slHinweis :/.test(s), "Notfall löscht sich nie; Push/Mail ohne Text");
@@ -7442,4 +7442,24 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // der Sprechblase, das sich über das Anlage-Fenster legte → Tipp auf Anlage/Bild darf nicht zur Blase durchgehen
 {
   assert.ok(/onclick="event\.stopPropagation\(\);anlageOeffnen\('\$\{a\.id\}'\)"/.test(html) && /<div class="anlage" onclick='event\.stopPropagation\(\);anlageAktion\(/.test(html), "Anlage und Bild im Chat: Tipp bleibt bei der Anlage");
+}
+// 2.168.0 KC-CLUB-SELBSTLOESCHEN-ALT (Wunsch Hansi): beim Einschalten auf Wunsch auch die eigenen bisherigen Nachrichten – nie fremde
+{
+  const c = server.slice(server.indexOf('case "chat_selbstloeschen": {'), server.indexOf('case "nachricht_bearbeiten": {'));
+  assert.ok(/if \(std && p\.auchMeineAlten === true\)/.test(c) && /\.eq\("thread_id", id\)\.eq\("sender_person_id", ich\.person_id\)/.test(c), "nur eigene Nachrichten, nur auf ausdrücklichen Wunsch");
+  assert.ok(/ids\.filter\(\(x: string\) => !hat\.has\(x\)\)/.test(c) && /loescht_am: bis/.test(c), "schon gesetzte Abläufe bleiben, Ablauf ab jetzt");
+  const k = html.slice(html.indexOf("async function slGewaehlt("), html.indexOf("async function slGewaehlt(") + 1500);
+  assert.ok(/const meineDa = std > 0 && \(CHAT\?\.nachrichten \|\| \[\]\)\.some\(\(m\) => m\.eigen\);/.test(k) && /await frage\(/.test(k) && /die der anderen bleiben stehen/.test(k) && /auchMeineAlten: true/.test(k), "App fragt nur, wenn es eigene Nachrichten gibt");
+}
+// 2.168.0 KC-CLUB-ARCHIV-MENUE (Wunsch Hansi „rechte Maustaste: ausschneiden, kopieren, löschen, per E-Mail, speichern …“)
+{
+  const m = html.slice(html.indexOf("// ---------- KC-CLUB-ARCHIV-MENUE"), html.indexOf("let AR_ZIEL = null;"));
+  assert.ok(/document\.addEventListener\("contextmenu", \(e\) => \{ const z = e\.target\.closest\?\.\("\.ar-dok\[data-dok\]"\)/.test(m) && /setTimeout\(\(\) => \{ AR_LANG\.unterdruecken = true;[\s\S]{0,120}arDokMenue\(z\.dataset\.dok\)/.test(m), "rechte Maustaste und langes Drücken öffnen das Menü");
+  assert.ok(/class="ar-dok klickbar" data-dok="\$\{esc\(x\.id\)\}"/.test(html) && /onclick="event\.stopPropagation\(\);arDokMenue\('\$\{x\.id\}'\)"[^>]*aria-label="Mehr">⋮<\/button>/.test(html), "⋮ an jedem Dokument");
+  for (const t of ["✂️\", \"Ausschneiden", "📋\", \"Kopieren", "📂\", \"Kopie in anderen Ordner …", "➡️\", \"Verschieben nach …", "🗑️\", \"Löschen (in den Papierkorb)", "📧\", \"Per E-Mail senden", "⬇️\", \"Auf dem Gerät speichern", "📤\", \"Teilen / Weiterleiten"]) assert.ok(m.includes(t), `Menüpunkt ${t}`);
+  assert.ok(/\$\{darf \? k\("✂️"/.test(m) && /\$\{darf \? k\("🗑️"/.test(m) && /ICH\?\.buero === "schreiben" \? k\("📧"/.test(m), "Ändern/Löschen nur mit Pflegerecht, Mail nur mit Büro-Schreibrecht");
+  assert.ok(/await api\("archiv_kopieren", \{ id: z\.id, ordner_id: o\.id, register \}/.test(m) && /await api\("archiv_aendern", \{ id: z\.id, ordner_id: o\.id, register \}\)/.test(m), "Einfügen nutzt die vorhandenen Server-Aktionen (Server prüft Rechte)");
+  assert.ok(/\$\("arOrdnerListe"\)\.innerHTML = arEinfuegenLeiste\(o\) \+/.test(html), "Einfügen-Leiste im Ziel-Ordner");
+  assert.ok(/if \(AR_LANG\.unterdruecken\) \{ AR_LANG\.unterdruecken = false; return; \}/.test(html) && /if \(dok && datei\) \{ arDateiVorladen\(dok\); return anlageDateiZeigen\(\); \}/.test(html), "langes Drücken öffnet nicht zusätzlich die Datei; Öffnen wie im Chat");
+  assert.ok(/\$\{esc\(E\.kopf \|\| "✅ Abgelegt"\)\}/.test(html), "Versenden-Fenster mit eigenem Kopf");
 }
