@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.155.0 – 2026-10-09 – ⚡ Schnellerer Start: Server fragt beim Start alles gleichzeitig ab, misst seine Zeit mit; Büro-Absturz bei Adresse ohne Kennung abgesichert (KC-CLUB-START-PARALLEL-2)
+🔧 Kleine Systemverbesserungen
+
 ## 2.154.1 – 2026-10-09 – 🧮 Schnellanleitung Bilderrechner Version 4.2
 - Meine Dokumente: Kurzanleitung Bilderrechner **Version 4.2** (33 Seiten) ersetzt Version 4.1.
 - Teil 7 neu: **Reklamation** mit Bildkacheln und Anzahl (mehrere Artikel, Schuss Rum/Amaretto), Pfand als Spende

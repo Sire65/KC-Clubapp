@@ -1930,7 +1930,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\{ id: "helfen", sym: "🤝", t: "Helfen & Leihen", u: "Wer kann helfen\? · Ausleihen", aktion: "hlStart\(\)" \}/.test(k), "Kachel 🤝 im Register Verein");
   assert.ok(/id="v-helfen"/.test(html) && /"sicherheit", "helfen"[,\]]/.test(html) && /"#archiv", "#helfen"\]\.includes\(h\)/.test(html), "Ansicht + Sprung #helfen");
   assert.ok(/onclick="hlTab\('helfen'\)">🙋 Wer kann helfen\?/.test(html) && /onclick="hlTab\('leihen'\)">📦 Ausleihen/.test(html), "zwei Bereiche");
-  assert.ok(/const hlJs = \(v\) => JSON\.stringify\(v\)\.replace\(\/&\/g, "&amp;"\)\.replace\(\/'\/g, "&#39;"\)/.test(html), "Werte im onclick sicher maskiert");
+  assert.ok(/const hlJs = \(v\) => \(JSON\.stringify\(v\) \?\? "null"\)\.replace\(\/&\/g, "&amp;"\)\.replace\(\/'\/g, "&#39;"\)/.test(html), "Werte im onclick sicher maskiert (2.155.0: undefined stürzt nicht ab)");
 }
 
 // 168. 1.23.0: Spendenprojekte in Vorschlägen (KC-CLUB-SPENDE)
@@ -4885,7 +4885,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const a = server.indexOf('      case "init": {'), ini = server.slice(a, server.indexOf('      case "mitglieder": {', a));
   // Supabase-Abfragen laufen erst beim await – darum Promise.resolve(…) zum sofortigen Start; keine unbehandelten Fehler
   for (const n of ["pPk", "pNd", "pGfs", "pKf", "pSpiele"]) assert.ok(new RegExp(`const ${n} = Promise\\.resolve\\(db\\.`).test(ini), n + " startet sofort");
-  assert.ok(/for \(const x of \[pPk, pStatus, pAbst, pNd, pWahlPm, pGeb, pGfs, pKf, pSpiele, pSos, pAdmin\]\) x\.catch\(\(\) => \{\}\);/.test(ini), "abgebrochener Start ohne unbehandelte Fehler");
+  assert.ok(/for \(const x of \[pPk, pStatus, pAbst, pNd, pWahlPm, pGeb, pGfs, pKf, pSpiele, pSos, pAdmin(, pStumm, pAufgaben, pTermin, pRest)?\]\) x\.catch\(\(\) => \{\}\);/.test(ini), "abgebrochener Start ohne unbehandelte Fehler");
   assert.ok(ini.indexOf("const pPk") < ini.indexOf("const [naechstes,"), "alles startet vor dem ersten Warten");
   for (const x of ["await pPk", "await pStatus", "await pAbst", "await pNd", "await pWahlPm", "await pGeb", "await pGfs", "await pKf", "await pComm", "await pSpiele", "await pKz", "await pWillkommen", "await pSos", "await pAdmin"]) assert.ok(ini.includes(x), "Ergebnis genutzt: " + x);
   assert.ok(!/await db\.from\("kc_club_vorschlaege"\)\.select\("id,ziel_ids"\)[\s\S]*const \[naechstes/.test(ini.replace(/const pAbst = \(async[\s\S]*?\}\)\(\);/, "")), "keine Abfrage doppelt");
@@ -7340,3 +7340,14 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/\["fdk", "🧑‍🍳", "Fang den Koch", "Küchenrallye/.test(programm) && /SP\.art === "fdk" \? \(fdkPcZeigen\(\), fdkFortsetzen\(\)\)/.test(programm), "Kachel + Ansicht");
 }
 assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = \{ stand: alt\.stand, regelnGesehen: false \}/.test(programm), "FDK-Rallye: alter Spielstand bleibt erhalten, neue Regeln werden einmal gezeigt");
+
+// 2.155.0 KC-CLUB-START-PARALLEL-2 (Wunsch Hansi „heute öfter langsam“): übrige Start-Ketten sofort mitstarten, Server-Zeit mitmessen
+{
+  const a = server.indexOf('      case "init": {'), ini = server.slice(a, server.indexOf('      case "mitglieder": {', a));
+  const erstesWarten = ini.indexOf("const [naechstes,");
+  for (const n of ["const pStumm", "const pAufgaben", "const pTermin", "const pRest"]) assert.ok(ini.indexOf(n) > 0 && ini.indexOf(n) < erstesWarten, n + " startet vor dem ersten Warten");
+  for (const x of ["await pStumm", "await pAufgaben", "await pTermin", "await pRest", "await pNotfall"]) assert.ok(ini.includes(x), "Ergebnis genutzt: " + x);
+  assert.ok(/for \(const x of \[[^\]]*pStumm, pAufgaben, pTermin, pRest\]\) x\.catch\(\(\) => \{\}\);/.test(ini) && /pNotfall\.catch\(\(\) => \{\}\);/.test(ini), "abgebrochener Start ohne unbehandelte Fehler");
+  assert.ok(!/await db\.from\("kc_club_terminumfragen"\)/.test(ini.slice(erstesWarten)) && !/await db\.from\("kc_club_aufgaben"\)/.test(ini.slice(erstesWarten)), "keine Ketten mehr nacheinander nach dem Zählen");
+  assert.ok(/srvMs: Date\.now\(\) - t0Anfrage, anmMs: anmeldungMs/.test(ini) && /if \(Number\.isFinite\(INIT\?\.srvMs\)\) \{ p\.srv = INIT\.srvMs;/.test(html), "Server-Zeit in der Startmessung");
+}

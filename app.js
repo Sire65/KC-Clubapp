@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.154.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.155.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -14589,7 +14589,7 @@ async function hlLaden() {
   } catch (e) { $("hlInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
 }
 // Kachel-Reihe: ein Wert aus einer Liste [{w, t}]
-const hlJs = (v) => JSON.stringify(v).replace(/&/g, "&amp;").replace(/'/g, "&#39;");
+const hlJs = (v) => (JSON.stringify(v) ?? "null").replace(/&/g, "&amp;").replace(/'/g, "&#39;"); // 2.155.0: undefined → null statt Absturz (Fund 09.10., Büro-Adressbuch in 2.125)
 const hlChips = (feld, opt, aktuell) => `<div class="hl-chips">${opt.map((o) => `<button class="chip${String(aktuell ?? "") === String(o.w) ? " an" : ""}" onclick='hlSetze(${hlJs(feld)}, ${hlJs(o.w)})'>${esc(o.t)}</button>`).join("")}</div>`;
 // Tage als Kacheln (heute … +6) und für alles andere der Kalender
 function hlTageWahl(feld, aktuell, ab) {
@@ -21608,6 +21608,8 @@ function startMessFertig() {
   const prog = performance.getEntriesByType?.("resource")?.find((e) => /\/app\.js\?v=/.test(e.name));
   const m = START_MESS, rund = (x) => Math.max(0, Math.round(x));
   const p = { seite, programm: rund(m.prog - seite), einrichten: rund(m.eingerichtet - m.prog), server: rund(m.initBis - m.initAb), anzeige: rund(m.fertig - m.initBis) };
+  // 2.155.0 KC-CLUB-START-PARALLEL-2: wie viel davon der Server selbst brauchte (Rest = Netz/Verbindungsaufbau)
+  if (Number.isFinite(INIT?.srvMs)) { p.srv = INIT.srvMs; p.anm = INIT.anmMs ?? null; }
   // was zwischen „eingerichtet“ und der Server-Anfrage liegt (kurz), zählt zum Einrichten – die Summe ergibt immer die Gesamtzeit
   p.einrichten += rund(m.initAb - m.eingerichtet);
   const eintrag = { z: Date.now(), v: APP_VERSION, netz: navigator.connection?.effectiveType || "", quelle: !prog ? "" : prog.transferSize === 0 ? "speicher" : "netz", ges: rund(m.fertig), p };
