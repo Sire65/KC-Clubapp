@@ -7351,3 +7351,14 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(!/await db\.from\("kc_club_terminumfragen"\)/.test(ini.slice(erstesWarten)) && !/await db\.from\("kc_club_aufgaben"\)/.test(ini.slice(erstesWarten)), "keine Ketten mehr nacheinander nach dem Zählen");
   assert.ok(/srvMs: Date\.now\(\) - t0Anfrage, anmMs: anmeldungMs/.test(ini) && /if \(Number\.isFinite\(INIT\?\.srvMs\)\) \{ p\.srv = INIT\.srvMs;/.test(html), "Server-Zeit in der Startmessung");
 }
+
+// 2.155.1 (Fund Hansi „jetzt kommen immer Hilfetexte“): ein // -Kommentar mitten in der Antwortzeile von init hat den Rest der Zeile
+// (Einstellungen, ungelesen, Aufgaben …) abgeschnitten. Die Antwortzeile darf keinen Zeilenkommentar vor ihren Feldern haben.
+{
+  const a = server.indexOf('      case "init": {'), ini = server.slice(a, server.indexOf('      case "mitglieder": {', a));
+  const zeile = ini.split("\n").find((l) => l.includes("return json({ meinGeburtstag"));
+  const vorKommentar = zeile.split("//")[0];
+  for (const f of ["adminName", "ungelesen,", "ungelesenLaut", "offeneAbstimmungen", "naechsterDienst", "einstellungen", "meineAufgaben", "protokolleUngelesen", "terminfindungOffen", "kontaktFreigabe", "benachrichtigung"])
+    assert.ok(ini.slice(ini.indexOf("return json({ meinGeburtstag")).split("einstieg:")[0].replace(/\/\/[^\n]*/g, "").includes(f), `init liefert ${f}`);
+  assert.ok(!/\/\/[^\n]*\bungelesen\b/.test(zeile) && vorKommentar.includes("ungelesen"), "kein Zeilenkommentar schneidet Felder ab");
+}

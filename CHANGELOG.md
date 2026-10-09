@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.155.1 – 2026-10-09 – Korrektur: Startdaten wieder vollständig (Einstellungen, ungelesen, Aufgaben)
+🔧 Kleine Systemverbesserungen
+
 ## 2.155.0 – 2026-10-09 – ⚡ Schnellerer Start: Server fragt beim Start alles gleichzeitig ab, misst seine Zeit mit; Büro-Absturz bei Adresse ohne Kennung abgesichert (KC-CLUB-START-PARALLEL-2)
 🔧 Kleine Systemverbesserungen
 
