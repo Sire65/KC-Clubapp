@@ -1,11 +1,17 @@
 {
-  "version": "2.154.0",
+  "version": "2.154.1",
   "datum": "2026-10-09",
   "neu": [
-    "🧑‍🍳 Fang den Koch ganz neu: Küchenrallye gegen Twinkey – Zutaten holen, kochen, am Pass klingeln",
-    "❗ Ereigniskarten, Stoppuhr in Küchenminuten, Punkte für Tempo und Sorgfalt"
+    "🧮 Schnellanleitung Bilderrechner Version 4.2: Reklamation mit Bildern und Anzahl, geparkte Bons verbinden, halbe Portion, Gutschein-Teilzahlung"
   ],
   "verlauf": [
+    {
+      "version": "2.154.1",
+      "datum": "2026-10-09",
+      "neu": [
+        "🧮 Schnellanleitung Bilderrechner Version 4.2: Reklamation mit Bildern und Anzahl, geparkte Bons verbinden, halbe Portion, Gutschein-Teilzahlung"
+      ]
+    },
     {
       "version": "2.154.0",
       "datum": "2026-10-09",

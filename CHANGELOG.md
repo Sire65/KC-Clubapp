@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.154.1 – 2026-10-09 – 🧮 Schnellanleitung Bilderrechner Version 4.2
+- Meine Dokumente: Kurzanleitung Bilderrechner **Version 4.2** (33 Seiten) ersetzt Version 4.1.
+- Teil 7 neu: **Reklamation** mit Bildkacheln und Anzahl (mehrere Artikel, Schuss Rum/Amaretto), Pfand als Spende
+  mit Rückfrage; Personalverbrauch, Konto und Menge mit aktuellen Bildern.
+- Teil 8 neu: **geparkte Bons verbinden** (Markieren, Verbinden, Alle holen), **halbe Portion** fest auf 0,5 mit
+  Auflösen über den Mülleimer, **Gutschein einlösen auch bei zu wenig Guthaben** (Teilzahlung).
+- Gutschein gilt bis zum 31.12. des dritten Jahres. Version 4.1 bleibt als Datei erhalten.
+
 ## 2.154.0 – 2026-10-09 – 🧑‍🍳 Fang den Koch: Küchenrallye gegen Twinkey (Wunsch Hansi)
 Fang den Koch ist neu gebaut – wie ein Brettspiel (KC-CLUB-FDK-RALLYE, ersetzt KC-CLUB-FDK-EINFACH):
 - Rundweg mit 24 Feldern um die Küche: 🌾 Lager, 🧊 Kühlhaus, 🥕 Gemüse, 🧂 Gewürzregal, 🔥 Herd, 🍟 Fritteuse, ♨️ Ofen, 📋 Büro,
