@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.175.0 – 2026-10-09 – 🕊️ Senden: Papierflieger in Schlangenlinien oder Brieftaube
+🔧 Kleine Systemverbesserungen
+
 ## 2.174.0 – 2026-10-09 – ✉️ Papierflieger größer und auffälliger
 🔧 Kleine Systemverbesserungen
 

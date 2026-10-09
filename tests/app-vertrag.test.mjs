@@ -7506,3 +7506,14 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/ansageVorgabeUebernehmen\(INIT\.einstellungen\?\.ansage_vorgabe\);/.test(html) && /Ändern: ⚙️ → „🗣️ Ansagen, Töne & Tipps“/.test(html), "Mitglied bekommt einen Hinweis");
   assert.ok(/onclick="ansageVorgabeSetzen\('\$\{m\.person_id\}'/.test(html), "Knopf auf der Mitgliedsseite (Admin)");
 }
+
+// 2.175.0 KC-CLUB-SENDE-EFFEKT (Wunsch Hansi: Papierflieger in Schlangenlinien oder weiße Brieftaube mit Kuvert)
+{
+  const idx = lies("index.html");
+  assert.ok(/const SENDE_EFFEKTE = \[\["flieger", .*\["taube", .*\["wechsel", .*\["aus", /.test(html), "Wahl: Flieger, Taube, Abwechselnd, Aus");
+  assert.ok(/const art = wahl === "wechsel" \? \(SENDE_FX_N\+\+ % 2 \? "taube" : "flieger"\) : wahl;/.test(html) && /if \(wahl === "aus"\) return;/.test(html), "Abwechselnd und Aus");
+  assert.ok(/Math\.sin\(t \* Math\.PI \* 5\) \* amp \* Math\.sin\(t \* Math\.PI\)/.test(html) && /Math\.atan2\(q\.y - p0\.y, q\.x - p0\.x\)/.test(html), "Schlangenlinie, Spitze in Flugrichtung");
+  assert.ok(/const TAUBE_SVG = /.test(html) && /class="fl-vorn"/.test(html) && /fill="#f3e6cf" stroke="#7b1e2b"/.test(html), "Taube mit schlagenden Flügeln und Kuvert in CD-Farben");
+  assert.ok(/if \(!fxAn\(\) \|\| !von\) return;/.test(html) && /setTimeout\(\(\) => f\.remove\(\), dauer \+ 400\);/.test(html), "nur bei Effekten an, räumt sicher auf");
+  assert.ok(/id="sendeEffektWahl"/.test(idx) && /sendeEffektVorschau\(this\)/.test(idx) && /sendeEffektZeigen\(\);/.test(html), "Auswahl + Vorschau unter 🎨 Darstellung");
+}

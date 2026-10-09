@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.174.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.175.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -615,7 +615,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
 }
 function designWahlZeigen() {
@@ -9890,28 +9890,64 @@ function regEffektVorschau() { zeige("start"); setTimeout(() => { if (!regEffekt
 // ---------- KC-CLUB-EFFEKTE-2 (2.172.0, Wunsch Hansi: 1 Papierflieger, 3 Zettel anpinnen, 4 Zahlen zählen hoch, 6 Jahreszeiten, 8 Geburtstagskerze) ----------
 // Alle: kurz, nur transform/opacity, aus bei „✨ Animierte Knöpfe“ aus oder Sparmodus. Laufen nur, wenn etwas passiert (außer Jahreszeiten – sanft im Kopf).
 const fxAn = () => einst("animiert", true) && !SPAR?.an && typeof document !== "undefined" && !!document.body?.animate;
-// 1) ✉️ Nachricht gesendet: ein Papierflieger startet am Senden-Knopf und fliegt im Bogen nach oben weg
-function papierflieger(von) {
-  // 2.174.0 (Wunsch Hansi „größer und auffälliger“, Vorbild Sticker): großer Flieger in Club-Farben mit weißem Sticker-Rand und
-  // Tempo-Strichen; startet am Senden-Knopf, holt kurz Schwung und zieht im großen Bogen quer über den Bildschirm davon
-  if (!fxAn() || !von) return;
-  const r = von.getBoundingClientRect(); if (!r.width) return;
-  const g = Math.round(Math.min(130, innerWidth * 0.3));
-  const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
-  f.innerHTML = `<svg viewBox="0 0 120 120" width="${g}" height="${g}">
+// 1) ✉️ Nachricht gesendet: ein Papierflieger (oder eine Brieftaube) startet am Senden-Knopf und fliegt davon
+// 2.175.0 (Wunsch Hansi „etwas in Schlangenlinien – oder eine weiße Brieftaube mit Kuvert im Schnabel“): Wahl je Gerät unter 🎨 Darstellung
+const SENDE_EFFEKTE = [["flieger", "✈️ Papierflieger"], ["taube", "🕊️ Brieftaube"], ["wechsel", "🔀 Abwechselnd"], ["aus", "🚫 Aus"]];
+const sendeEffektWahl = () => { try { const w = localStorage.getItem("kc_club_sendeEffekt"); return SENDE_EFFEKTE.some(([k]) => k === w) ? w : "wechsel"; } catch { return "wechsel"; } };
+let SENDE_FX_N = 0;
+const FLIEGER_SVG = (g) => `<svg viewBox="0 0 120 120" width="${g}" height="${g}" style="transform:scaleX(-1)">
     <g stroke="#fff" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" fill="#fff"><path d="M10 72 108 14 70 108 56 78Z"/></g>
     <path d="M10 72 108 14 56 78Z" fill="#c0392b"/><path d="M108 14 70 108 56 78Z" fill="#7b1e2b"/><path d="M56 78 64 96 70 108Z" fill="#5a1520"/>
     <path d="M10 72 108 14 56 78Z" fill="none" stroke="#3b0d14" stroke-width="2.5" stroke-linejoin="round"/><path d="M108 14 70 108 56 78" fill="none" stroke="#3b0d14" stroke-width="2.5" stroke-linejoin="round"/>
     <g stroke="#3b0d14" stroke-width="4" stroke-linecap="round"><path d="M20 102 34 88"/><path d="M8 92 20 80"/><path d="M34 112 44 102"/></g></svg>`;
-  f.style.left = r.left + r.width / 2 - g / 2 + "px"; f.style.top = r.top + r.height / 2 - g / 2 + "px"; document.body.appendChild(f);
-  const ziel = { x: -(r.left + g), y: -(r.top + g * 0.6) };
-  f.animate([{ transform: "translate(0,0) rotate(10deg) scale(.3)", opacity: 0 },
-    { transform: "translate(18px,24px) rotate(18deg) scale(1.1)", opacity: 1, offset: 0.16 },
-    { transform: "translate(6px,10px) rotate(-6deg) scale(1)", opacity: 1, offset: 0.28 },
-    { transform: `translate(${ziel.x * 0.35}px, ${ziel.y * 0.15}px) rotate(-18deg) scale(1.05)`, opacity: 1, offset: 0.55 },
-    { transform: `translate(${ziel.x * 0.7}px, ${ziel.y * 0.55}px) rotate(-30deg) scale(.85)`, opacity: 1, offset: 0.8 },
-    { transform: `translate(${ziel.x}px, ${ziel.y}px) rotate(-38deg) scale(.6)`, opacity: 0 }], { duration: 1500, easing: "cubic-bezier(.35,.05,.4,1)", fill: "forwards" }).onfinish = () => f.remove();
-  setTimeout(() => f.remove(), 1900);
+// Taube schaut nach links (Flugrichtung), Flügel schlagen getrennt; Kuvert in Club-Farben (Beige/Weinrot) hängt am Schnabel
+const TAUBE_SVG = (g) => `<svg viewBox="0 0 140 120" width="${Math.round(g * 1.17)}" height="${g}" overflow="visible">
+    <g class="fl-hinten" fill="#e4e1dc" stroke="#9a948c" stroke-width="2" stroke-linejoin="round"><path d="M64 60C66 34 84 14 112 10 104 28 96 44 84 60Z"/></g>
+    <path d="M94 60 130 46 126 62 134 76 94 72Z" fill="#fff" stroke="#9a948c" stroke-width="2" stroke-linejoin="round"/>
+    <ellipse cx="72" cy="64" rx="30" ry="16" fill="#fff" stroke="#9a948c" stroke-width="2"/>
+    <circle cx="40" cy="52" r="12" fill="#fff" stroke="#9a948c" stroke-width="2"/><circle cx="36" cy="50" r="2.2" fill="#222"/>
+    <path d="M29 51 17 55 29 57Z" fill="#e8a33d" stroke="#b97a1e" stroke-width="1" stroke-linejoin="round"/>
+    <g transform="rotate(-8 17 64)"><rect x="4" y="57" width="26" height="17" rx="2" fill="#f3e6cf" stroke="#7b1e2b" stroke-width="2"/><path d="M4 57 17 67 30 57" fill="none" stroke="#7b1e2b" stroke-width="2"/><circle cx="17" cy="67" r="2.6" fill="#7b1e2b"/></g>
+    <g class="fl-vorn" fill="#fff" stroke="#9a948c" stroke-width="2" stroke-linejoin="round"><path d="M58 60C58 30 76 6 106 2 100 22 92 42 80 62Z"/><path d="M72 40 88 22M76 48 94 32" fill="none" stroke-width="1.5"/></g></svg>`;
+function papierflieger(von) {
+  if (!fxAn() || !von) return;
+  const r = von.getBoundingClientRect(); if (!r.width) return;
+  const wahl = sendeEffektWahl(); if (wahl === "aus") return;
+  const art = wahl === "wechsel" ? (SENDE_FX_N++ % 2 ? "taube" : "flieger") : wahl;
+  const g = Math.round(Math.min(130, innerWidth * 0.3));
+  const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
+  f.innerHTML = art === "taube" ? TAUBE_SVG(g) : FLIEGER_SVG(g);
+  const b = art === "taube" ? Math.round(g * 1.17) : g;
+  f.style.left = r.left + r.width / 2 - b / 2 + "px"; f.style.top = r.top + r.height / 2 - g / 2 + "px"; document.body.appendChild(f);
+  // Schlangenlinie: Grundbogen nach oben links + seitliches Pendeln (2½ Wellen), Spitze zeigt immer in Flugrichtung
+  const dx = -(r.left + b), dy = -(r.top + g * 0.6), len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len;
+  const amp = Math.min(70, innerWidth * 0.12), N = 16, bild = [];
+  const pos = (t) => { const welle = Math.sin(t * Math.PI * 5) * amp * Math.sin(t * Math.PI); return { x: dx * t + nx * welle, y: dy * (t * t * 0.4 + t * 0.6) + ny * welle }; };
+  const nase = art === "taube" ? 180 : -149; // Richtung, in die die Figur ohne Drehung zeigt
+  bild.push({ transform: "translate(0,0) rotate(0deg) scale(.3)", opacity: 0 }, { transform: "translate(14px,18px) rotate(8deg) scale(1.1)", opacity: 1, offset: 0.12 });
+  for (let i = 0; i <= N; i++) {
+    const t = i / N, p = pos(t), q = pos(Math.min(1, t + 0.02)), p0 = pos(Math.max(0, t - 0.02));
+    let w = Math.atan2(q.y - p0.y, q.x - p0.x) * 180 / Math.PI - nase; w = ((w + 540) % 360) - 180;
+    if (art === "taube") w = Math.max(-35, Math.min(35, w)); // Taube neigt sich nur, kippt nicht über Kopf
+    bild.push({ transform: `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) rotate(${w.toFixed(1)}deg) scale(${(1 - t * 0.45).toFixed(2)})`, opacity: t > 0.9 ? (1 - t) * 10 : 1, offset: 0.2 + t * 0.8 });
+  }
+  const dauer = art === "taube" ? 2400 : 2000;
+  f.animate(bild, { duration: dauer, easing: "ease-in-out", fill: "forwards" }).onfinish = () => f.remove();
+  if (art === "taube") f.querySelectorAll(".fl-vorn, .fl-hinten").forEach((fl, i) => {
+    fl.style.transformOrigin = "72px 60px";
+    fl.animate([{ transform: "scaleY(1)" }, { transform: `scaleY(${i ? -0.45 : -0.6})` }], { duration: 190, iterations: Math.ceil(dauer / 190), direction: "alternate", easing: "ease-in-out", delay: i ? 30 : 0 });
+  });
+  setTimeout(() => f.remove(), dauer + 400);
+}
+function sendeEffektSetzen(w) { try { localStorage.setItem("kc_club_sendeEffekt", w); } catch {} sendeEffektZeigen(); melde(SENDE_EFFEKTE.find(([k]) => k === w)?.[1] || w); }
+function sendeEffektZeigen() {
+  const z = $("sendeEffektWahl"); if (!z) return; const w = sendeEffektWahl();
+  z.innerHTML = SENDE_EFFEKTE.map(([k, t]) => `<button type="button" class="chip${k === w ? " an" : ""}" aria-pressed="${k === w}" onclick="sendeEffektSetzen('${k}')">${t}</button>`).join("");
+}
+function sendeEffektVorschau(knopf) {
+  if (!fxAn()) return melde("Effekte sind aus – „✨ Animierte Knöpfe“ einschalten (und Sparmodus aus).", true);
+  if (sendeEffektWahl() === "aus") return melde("Sende-Effekt ist aus – oben einen auswählen.", true);
+  papierflieger(knopf);
 }
 // 3) 📌 neuer Pinnwand-Zettel: fällt leicht schräg herunter, setzt auf, die Nadel wird hineingedrückt
 function zettelAnpinnen(el) {
