@@ -5,7 +5,7 @@ Festgelegt von Hansi am 09.10.2026. **Alles Gedruckte sieht gleich aus.**
 | Element | Festlegung |
 |---|---|
 | Logo | Kochmütze (`kc-kochmuetze-weiss.webp`) weiß im weinroten Kreis |
-| Schriftzug | „Köcheclub Werne“ (Georgia/Serif, fett, weinrot), darunter „Gemeinsam kochen · feiern · helfen“ |
+| Schriftzug | „Köcheclub Werne“ (Georgia/Serif, fett, weinrot), darunter der Spruch „Gemeinsam kochen, gemeinsam helfen“ (festgelegt 09.10.2026, 2.149.0) |
 | Farben | Weinrot `#741521` (Linien, Überschriften, Logo-Kreis), Beige `#f3e9dc` (Tabellenköpfe, Kästen); Text schwarz auf Weiß |
 | Kopf | Logo + Schriftzug links, Titel/Datum rechts, weinrote Linie darunter |
 | Fußzeile Briefbogen | „Köcheclub Werne · Clubsprecher · <aktueller Clubsprecher>“ (aus den Ämtern; Vorgabe Klaus Zander) |

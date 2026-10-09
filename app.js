@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.148.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.149.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -19896,7 +19896,7 @@ const DRUCK_INHALTE = [["treffen", "🍽️ Sitzungen & Veranstaltungen"], ["akt
 // Logo = Kochmütze, Schriftzug „Köcheclub Werne“, Farben Weinrot + Beige. Briefbögen, Protokolle, Listen usw. benutzen nur cdKopf/cdFuss
 // (Regel in AGENTS.md + Test: kein Ausdruck baut eigenen Kopf, eigene Farben oder ein anderes Logo).
 const KC_CD = {
-  name: "Köcheclub Werne", zeile: "Gemeinsam kochen · feiern · helfen",
+  name: "Köcheclub Werne", zeile: "Gemeinsam kochen, gemeinsam helfen", // 2.149.0: Spruch festgelegt von Hansi (09.10.2026)
   weinrot: "#741521", beige: "#f3e9dc", beigeRand: "#e0cfb9", text: "#1d1a17", grau: "#5b544d",
   logo: "kc-kochmuetze-weiss.webp", schrift: "Georgia,'Times New Roman',serif",
   briefAmt: "Clubsprecher", briefAmtVorgabe: "Klaus Zander", // Fußzeile Briefbogen: aktueller Clubsprecher laut Ämtern, sonst diese Vorgabe

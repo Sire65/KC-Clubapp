@@ -7182,3 +7182,11 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/id="ablaufKnopf" onclick="slWahl\('nachricht'\)">⏳<\/button>/.test(h) && /id="chatSlKnopf" onclick="\$\('chatBlatt'\)\.classList\.add\('versteckt'\);slWahl\('chat'\)"/.test(h) && /id="chatSlMarke"/.test(h) && /id="slMarke"/.test(h), "⏳ beim Schreiben, im ⋮-Menü, im Chat-Kopf und über dem Schreibfeld");
   assert.ok(/ablauf_std: SL\.std/.test(p) && /⏳ noch \$\{slRest\(m\.loeschtAm\)\}/.test(p) && /\.sl-wahl \{ display: grid; grid-template-columns: 1fr 1fr;/.test(h), "Blase zeigt Restzeit, Auswahl gleich groß");
 }
+
+// 2.149.0 KC-CLUB-CD-SPRUCH (Hansi 09.10.2026): Spruch unter dem Schriftzug – zentral im CD, überall gleich
+{
+  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), d = fs.readFileSync(new URL("../docs/CORPORATE_DESIGN.md", import.meta.url), "utf8");
+  assert.ok(/zeile: "Gemeinsam kochen, gemeinsam helfen"/.test(p) && /„Gemeinsam kochen, gemeinsam helfen“/.test(d), "Spruch im CD und in der Beschreibung");
+  assert.ok(!/feiern · helfen/.test(p + d), "alter Spruch nirgends mehr");
+  assert.equal((p.match(/Gemeinsam kochen, gemeinsam helfen/g) || []).length, 1, "nur an einer Stelle (KC_CD.zeile) – alle Ausdrucke nutzen cdKopf()");
+}
