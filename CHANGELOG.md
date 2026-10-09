@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.138.0 – 2026-10-09 – Push bei neuen Nachrichten nur, wenn das Mitglied gerade nicht in der App ist (KC-CLUB-PUSH-NUR-OFFLINE)
+## 2.138.0 – 2026-10-09 – Push bei neuen Nachrichten nur, wenn das Mitglied gerade nicht in der App ist (KC-CLUB-PUSH-NUR-OFFLINE); 🎬 Studio auch als Kachel
 🔧 Kleine Systemverbesserungen
 
 ## 2.137.0 – 2026-10-09 – 🎙️ Sprachsteuerung „Neuen Brief diktieren“: Büro + Briefbogen öffnen, dann Art, Empfänger (Mitglied/Adressbuch), Anrede, Betreff, Text, Gruß abfragen (KC-CLUB-SPRACHE-BRIEF)

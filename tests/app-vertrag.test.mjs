@@ -7087,3 +7087,4 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/const IN_APP_SEK = 75;/.test(server) && /\.gte\("zuletzt_gesehen", new Date\(Date\.now\(\) - IN_APP_SEK \* 1000\)/.test(server), "nur wer die App gerade sichtbar offen hat");
   assert.ok(/catch\(\(\) => new Set<string>\(\)\)/.test(f), "im Zweifel (Fehler) lieber Push senden als verschlucken");
 }
+assert.ok(/\{ id: "studio", sym: "🎬", t: "Studio", u: "Foto · Mitschauen · Live zeigen", aktion: "stOeffnen\(\)", nur: \(\) => !!studioStufe\(\) \}/.test(fs.readFileSync(new URL("../app.js", import.meta.url), "utf8")), "2.138.0: Studio-Kachel nur mit Recht");
