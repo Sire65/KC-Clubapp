@@ -7538,3 +7538,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/empfangsEffekt\(u\); \/\/ 2\.177\.0/.test(html) && /sendeEffektMelden\(\); \/\/ 2\.177\.0/.test(html), "eingebunden in Chat-Laden und Start");
   assert.ok(/class="tb-brief"/.test(html) && /if \(brief\) brief\.style\.visibility = "hidden";/.test(html) && /\} finally \{ fertig\(\); \}/.test(html), "Taube lässt das Kuvert fallen, alles wird sicher weggeräumt");
 }
+
+// 2.178.0 KC-CLUB-BUCHSTABENREGEN (Wunsch Hansi: „Papierflieger kommt, ganz viele Buchstaben fallen runter, daraus wird die Nachricht“)
+{
+  const idx = lies("index.html");
+  assert.ok(/function fxZeichen\(wurzel\)/.test(html) && /return aus\.length >= 160 \? \[\] : aus;/.test(html), "Lage jedes Zeichens, sehr lange Nachrichten ohne Regen");
+  assert.ok(/txt\.style\.visibility = "hidden"; zurueck\.push\(\(\) => \{ txt\.style\.visibility = ""; \}\);/.test(html) && /zurueck\.forEach\(\(f\) => f\(\)\)/.test(html), "Text wird sicher wieder sichtbar");
+  assert.ok(/s\.className = "fx-buchstabe"/.test(html) && /\.fx-buchstabe \{ position: fixed;/.test(idx) && /s\.setAttribute\("aria-hidden", "true"\)/.test(html), "Buchstaben nur Schmuck (Vorlesen liest die echte Nachricht)");
+}

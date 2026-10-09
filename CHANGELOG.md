@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.178.0 – 2026-10-09 – ✈️ Flieger lässt Buchstaben regnen – daraus wird die Nachricht
+🔧 Kleine Systemverbesserungen
+
 ## 2.177.0 – 2026-10-09 – 🕊️ Nachricht kommt beim Empfänger mit Taube, Flieger, Postauto oder Blaulicht an
 🔧 Kleine Systemverbesserungen
 

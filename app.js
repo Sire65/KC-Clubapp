@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.177.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.178.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -10001,9 +10001,18 @@ function empfangsEffekt(u) {
 const fxWarte = (a) => new Promise((ok) => { a.onfinish = a.oncancel = () => ok(); });
 const fxEl = (html, x, y) => { const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true"); f.innerHTML = html; f.style.left = x + "px"; f.style.top = y + "px"; document.body.appendChild(f); return f; };
 const fxHuepfen = (el) => el.animate([{ transform: "none" }, { transform: "translateY(-6px) scale(1.04)" }, { transform: "translateY(2px) scale(.99)" }, { transform: "none" }], { duration: 520, easing: "ease-out" });
+// Lage jedes sichtbaren Zeichens der Nachricht (höchstens 160, Leerzeichen zählen nicht) – für den Buchstabenregen des Fliegers
+function fxZeichen(wurzel) {
+  const aus = [], w = document.createTreeWalker(wurzel, NodeFilter.SHOW_TEXT), rg = document.createRange();
+  for (let n = w.nextNode(); n && aus.length < 160; n = w.nextNode()) {
+    const t = n.textContent; let i = 0;
+    for (const c of t) { const l = c.length; if (c.trim()) { rg.setStart(n, i); rg.setEnd(n, i + l); const b = rg.getClientRects()[0]; if (b && b.width) aus.push({ c, x: b.left, y: b.top, h: b.height }); } i += l; if (aus.length >= 160) break; }
+  }
+  return aus.length >= 160 ? [] : aus; // sehr lange Nachrichten: lieber ohne Regen als halb
+}
 async function ankunftEffekt(el, art) {
   const r = el.getBoundingClientRect(); if (!r.width || r.bottom < 0 || r.top > innerHeight) return;
-  const weg = []; const fertig = () => weg.forEach((x) => x.remove()); setTimeout(fertig, 6000);
+  const weg = [], zurueck = []; const fertig = () => { weg.forEach((x) => x.remove()); zurueck.forEach((f) => f()); }; setTimeout(fertig, 8000);
   try {
     if (art === "taube") {
       // fliegt von oben rechts in Wellen heran, schwebt über der Blase, lässt das Kuvert fallen und fliegt nach links davon
@@ -10026,20 +10035,41 @@ async function ankunftEffekt(el, art) {
       }
       flap.forEach((a) => a.cancel());
     } else if (art === "flieger") {
-      // kommt von oben rechts in Schlangenlinien, setzt auf der Blase auf und schlüpft hinein
+      // 2.178.0 (Wunsch Hansi): kommt in Schlangenlinien angeflogen, bleibt über der Blase stehen und schüttelt ganz viele Buchstaben aus –
+      // sie regnen herunter und setzen sich genau an ihren Platz: daraus wird die Nachricht. Danach fliegt er davon.
+      const txt = el.querySelector(".txt") || el, zeichen = fxZeichen(txt);
       const g = Math.round(Math.min(100, innerWidth * 0.24));
-      const zx = Math.max(4, Math.min(innerWidth - g - 4, r.left + r.width / 2 - g / 2)), zy = r.top + r.height / 2 - g / 2;
+      const zx = Math.max(4, Math.min(innerWidth - g - 4, r.left + r.width / 2 - g / 2)), zy = Math.max(4, r.top - g * 1.15);
+      if (zeichen.length) { txt.style.visibility = "hidden"; zurueck.push(() => { txt.style.visibility = ""; }); }
       const f = fxEl(FLIEGER_SVG(g), zx, zy); weg.push(f);
       const sx = innerWidth - zx + g, sy = -zy - g, len = Math.hypot(sx, sy) || 1, nx = -sy / len, ny = sx / len, amp = Math.min(50, innerWidth * 0.1), bild = [];
       const pos = (t) => { const w = Math.sin(t * Math.PI * 4) * amp * Math.sin(t * Math.PI); return { x: sx * (1 - t) + nx * w, y: sy * (1 - t) + ny * w }; };
       for (let i = 0; i <= 14; i++) {
         const t = i / 14, p = pos(t), q = pos(Math.min(1, t + 0.03)), p0 = pos(Math.max(0, t - 0.03));
         let w = Math.atan2(q.y - p0.y, q.x - p0.x) * 180 / Math.PI + 149; w = ((w + 540) % 360) - 180;
-        bild.push({ transform: `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) rotate(${w.toFixed(1)}deg) scale(${(0.7 + t * 0.3).toFixed(2)})`, opacity: 1 });
+        bild.push({ transform: `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) rotate(${(i === 14 ? 0 : w).toFixed(1)}deg) scale(${(0.7 + t * 0.3).toFixed(2)})`, opacity: 1 });
       }
-      await fxWarte(f.animate(bild, { duration: 1500, easing: "ease-out", fill: "forwards" }));
-      fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1200);
-      await fxWarte(f.animate([{ transform: "scale(1)", opacity: 1 }, { transform: "scale(.2) rotate(20deg)", opacity: 0 }], { duration: 420, easing: "ease-in", fill: "forwards" }));
+      await fxWarte(f.animate(bild, { duration: 1400, easing: "ease-out", fill: "forwards" }));
+      if (zeichen.length) {
+        const wackeln = f.animate([{ transform: "rotate(0deg)" }, { transform: "rotate(-12deg) translateY(-4px)" }, { transform: "rotate(10deg)" }, { transform: "rotate(0deg)" }], { duration: 300, iterations: Infinity });
+        const st = getComputedStyle(txt), ox = zx + g / 2, oy = zy + g * 0.6, schritt = Math.max(8, Math.min(28, 1100 / zeichen.length));
+        const regen = zeichen.map((z, i) => {
+          const s = document.createElement("span"); s.className = "fx-buchstabe"; s.textContent = z.c; s.setAttribute("aria-hidden", "true");
+          s.style.cssText = `left:${z.x}px;top:${z.y}px;font:${st.font};color:${st.color};line-height:${z.h}px`; document.body.appendChild(s); weg.push(s);
+          const vx = ox - z.x + (Math.random() - 0.5) * 60, vy = oy - z.y + (Math.random() - 0.5) * 20, dreh = (Math.random() - 0.5) * 540;
+          return fxWarte(s.animate([{ transform: `translate(${vx}px, ${vy}px) rotate(${dreh}deg) scale(.4)`, opacity: 0 },
+            { transform: `translate(${vx * 0.45}px, ${vy * 0.25 - 30}px) rotate(${dreh / 2}deg) scale(1.3)`, opacity: 1, offset: 0.35 },
+            { transform: "translate(0, 3px) rotate(0deg) scale(1)", opacity: 1, offset: 0.85 }, { transform: "translate(0,0) scale(1)", opacity: 1 }],
+            { duration: 750, delay: i * schritt, easing: "cubic-bezier(.3,.6,.4,1)", fill: "both" }));
+        });
+        await Promise.all(regen); wackeln.cancel();
+        txt.style.visibility = ""; fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1200);
+        weg.filter((x) => x.classList?.contains("fx-buchstabe")).forEach((x) => x.remove());
+        await fxWarte(f.animate([{ transform: "translate(0,0)" }, { transform: `translate(${-(zx + g + 20)}px, ${-(zy + g)}px) rotate(-30deg) scale(.7)` }], { duration: 800, easing: "ease-in", fill: "forwards" }));
+      } else {
+        fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1200);
+        await fxWarte(f.animate([{ transform: "scale(1)", opacity: 1 }, { transform: "scale(.2) rotate(20deg)", opacity: 0 }], { duration: 420, easing: "ease-in", fill: "forwards" }));
+      }
     } else {
       // 🚐/🚨 fährt von rechts heran, bremst neben der Blase, liefert ab (Kuvert hüpft hinein / Blaulicht blinkt) und fährt links davon
       const b = Math.round(Math.min(170, innerWidth * 0.38)), h = Math.round(b * 0.55);
