@@ -7373,3 +7373,14 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/const startMessTeile = \(\) =>/.test(html) && /\.\.\.p, \.\.\.startMessTeile\(\) \}/.test(html), "App schickt Teilzeiten nur ins Fehlerprotokoll");
   assert.ok(/\.slice\(0, 390\)/.test(html.slice(html.indexOf("const startMessTeile"), html.indexOf("const startMessTeile") + 600)), "Teilzeiten-Text bleibt unter der Protokoll-Grenze");
 }
+// 2.159.0 KC-CLUB-KOPF-ROLLO (Wunsch Hansi): Pfeil oben mittig rollt den Kopf wie eine Jalousie hoch/runter, Pfeil dreht sich, gemerkt je Gerät
+{
+  const start = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('<div class="kopfzeile">', html.indexOf('<section id="v-start">')));
+  assert.ok(/<button type="button" class="kopf-pfeil" id="kopfPfeil"[^>]*aria-expanded="true"[^>]*onclick="kopfRollo\(\)">/.test(start), "Pfeil oben im Kopf der Startseite");
+  assert.ok(/\.kopf-pfeil \{ position: absolute; top: 0; left: 50%; transform: translateX\(-50%\)/.test(html), "Pfeil mittig oben");
+  assert.ok(/#v-start \.hero\.eingerollt > \.statusleiste, #v-start \.hero\.eingerollt > #heroInfo, #v-start \.hero\.eingerollt > #infoPunkte \{ max-height: 0; min-height: 0; opacity: 0;/.test(html), "Statusleiste + Infofeld rollen ein, Kopfzeile bleibt");
+  assert.ok(/#v-start \.hero\.eingerollt \.kopf-pfeil span \{ transform: rotate\(180deg\)/.test(html), "Pfeil dreht sich um");
+  assert.ok(/#v-start \.hero\.rollt::after \{[^}]*repeating-linear-gradient/.test(html) && /prefers-reduced-motion: reduce\) \{ #v-start \.hero > \.statusleiste/.test(html), "Jalousie-Lamellen, ruhig bei reduzierter Bewegung");
+  assert.ok(/function kopfRollo\(\) \{[\s\S]{0,300}localStorage\.setItem\(KOPF_ROLLO, "1"\) : localStorage\.removeItem\(KOPF_ROLLO\)/.test(html) && /try \{ if \(localStorage\.getItem\(KOPF_ROLLO\) === "1"\) kopfRolloSetzen\(true, false\); \} catch \{\}/.test(html), "Zustand gemerkt, Speicherfehler harmlos");
+  assert.ok(/k\.setAttribute\("aria-expanded", zu \? "false" : "true"\)/.test(html), "Vorlesehilfe kennt den Zustand");
+}

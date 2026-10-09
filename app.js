@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.158.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.159.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -9993,6 +9993,22 @@ async function infoDatenLaden(f, sichtbar) {
 }
 let INFO_I = (() => { try { return Math.max(0, INFO_FELDER.findIndex((f) => f.id === localStorage.getItem("kc_club_infofeld"))); } catch { return 0; } })();
 let infoLetztes = "";
+// ---------- KC-CLUB-KOPF-ROLLO (2.159.0, Wunsch Hansi) ----------
+// Pfeil oben mittig: Kopf rollt sich wie eine Jalousie hoch (Statusleiste + Infofeld weg, Kopfzeile bleibt) und wieder runter.
+// Gemerkt nur auf diesem Gerät (Bequemlichkeit, keine wichtigen Daten).
+const KOPF_ROLLO = "kc_club_kopf_eingerollt";
+function kopfRolloSetzen(zu, mitAnimation) {
+  const h = document.querySelector("#v-start .hero"), k = $("kopfPfeil"); if (!h) return;
+  if (mitAnimation) { h.classList.remove("rollt"); void h.offsetWidth; h.classList.add("rollt"); clearTimeout(kopfRolloSetzen.t); kopfRolloSetzen.t = setTimeout(() => h.classList.remove("rollt"), 600); }
+  h.classList.toggle("eingerollt", !!zu);
+  if (k) { k.setAttribute("aria-expanded", zu ? "false" : "true"); k.title = zu ? "Kopf ausrollen – alles zeigen" : "Kopf einrollen – mehr Platz"; k.setAttribute("aria-label", zu ? "Kopf ausrollen" : "Kopf einrollen"); }
+}
+function kopfRollo() {
+  const zu = !document.querySelector("#v-start .hero")?.classList.contains("eingerollt");
+  kopfRolloSetzen(zu, true);
+  try { zu ? localStorage.setItem(KOPF_ROLLO, "1") : localStorage.removeItem(KOPF_ROLLO); } catch {}
+}
+try { if (localStorage.getItem(KOPF_ROLLO) === "1") kopfRolloSetzen(true, false); } catch {}
 function heroZeigen(richtung) {
   const f = INFO_FELDER[INFO_I] || INFO_FELDER[0], inhalt = f.html();
   // gleicher Inhalt → nicht neu zeichnen (sonst springen Wetter-Animationen bei jedem Online-Takt neu an)

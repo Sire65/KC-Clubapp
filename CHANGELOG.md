@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.159.0 – 2026-10-09 – 🪟 Kopf als Jalousie: Pfeil oben rollt den Kopf ein und aus (KC-CLUB-KOPF-ROLLO)
+🔧 Kleine Systemverbesserungen
+
 ## 2.158.0 – 2026-10-09 – Korrektur: Startmessung-Test (KC-CLUB-START-PARALLEL-3)
 🔧 Kleine Systemverbesserungen
 
