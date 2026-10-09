@@ -1,10 +1,17 @@
 {
-  "version": "2.141.0",
+  "version": "2.142.0",
   "datum": "2026-10-09",
   "neu": [
-    "♟️ Schach: Beim Schieben der Figuren bewegt sich die Seite nicht mehr mit"
+    "🔧 Kleine Systemverbesserungen"
   ],
   "verlauf": [
+    {
+      "version": "2.142.0",
+      "datum": "2026-10-09",
+      "neu": [
+        "🔧 Kleine Systemverbesserungen"
+      ]
+    },
     {
       "version": "2.141.0",
       "datum": "2026-10-09",

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.142.0 – 2026-10-09 – 🐌 Schnecken wandern auch im Sparmodus (KC-CLUB-SCHNECKEN-WANDERN)
+🔧 Kleine Systemverbesserungen
+
 ## 2.141.0 – 2026-10-09 – ♟️ Schach: Seite bleibt beim Schieben ruhig (Wunsch Hansi)
 Beim Schieben einer Figur mit dem Finger verschob sich manchmal die ganze Seite. Jetzt bewegt sich in einer laufenden Partie
 auf dem Brett nichts mit – auch am Rand mit den Zahlen und während Twinkey überlegt; die Seite federt nicht nach und lädt

@@ -2165,7 +2165,7 @@
   .schnecke i { position: absolute; top: 2px; left: 100%; font-style: normal; font-size: 1.15rem; line-height: 1; cursor: pointer; pointer-events: auto; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); animation: schneckeWandern 27s linear infinite; }
   .schnecke i:nth-child(2) { animation-delay: -9s; } .schnecke i:nth-child(3) { animation-delay: -18s; }
   @keyframes schneckeWandern { 0% { transform: translate(0, 0); } 25% { transform: translate(calc(-25vw - 10px), 1px); } 50% { transform: translate(calc(-50vw - 20px), 0); } 75% { transform: translate(calc(-75vw - 30px), 1px); } 100% { transform: translate(calc(-100vw - 40px), 0); } }
-  html.spar .schnecke i { animation: none; left: calc(50% - 40px + var(--n) * 28px); }
+  /* 2.142.0 (Wunsch Hansi „die Schnecken stehen nur – sie sollen wandern“): auch im Sparmodus wandern sie – 3 kleine Zeichen, nur verschoben (kostet kaum Akku). Still nur bei „weniger Bewegung“ im Handy. */
   @media (prefers-reduced-motion: reduce) { .schnecke i { animation: none; left: calc(50% - 40px + var(--n) * 28px); } }
   .ss-live-leiste button { background: #fff; color: #d32f2f; border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 800; cursor: pointer; }
   /* 2.101.0 KC-CLUB-BUERO-EINLESEN */
@@ -3599,6 +3599,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.141.0" data-v="2.141.0"></script>
+<script src="app.js?v=2.142.0" data-v="2.142.0"></script>
 </body>
 </html>
