@@ -1,6 +1,7 @@
 # Änderungen
 
-## 2.148.0 – 2026-10-09 – ✕ Text im Schreibfeld auf einmal löschen (KC-CLUB-EINGABE-LEEREN)
+## 2.148.0 – 2026-10-09 – ⏳ Nachrichten löschen sich selbst (je Chat oder je Nachricht: 1 Std / 24 Std / 7 Tage) + ✕ Text im Schreibfeld löschen (KC-CLUB-SELBSTLOESCHEN, KC-CLUB-EINGABE-LEEREN)
+DB (Weg B): 20261009_kc_club_v2148_selbstloeschen.sql – zwei neue Tabellen, Löschfunktion, Zeitplaner alle 5 Minuten; Kern-Tabellen unverändert. Push/Mail selbstlöschender Nachrichten ohne Text.
 🔧 Kleine Systemverbesserungen
 
 ## 2.147.0 – 2026-10-09 – 🎄 Büro-Ordner „Weihnachtsmarkt“ mit Jahren (2026, 2027 …) und Unterregistern (Checklisten, Verträge …) (KC-CLUB-ARCHIV-UNTERREGISTER)

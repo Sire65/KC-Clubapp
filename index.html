@@ -1461,14 +1461,14 @@
   @media (max-width: 420px) { .eingabe .innen { gap: 5px; } .eingabe .innen > .rund:not(.zustell-knopf) { width: 42px; height: 42px; font-size: 1.05rem; } } /* 1.12.0: mehr Platz fürs Schreibfeld */
   /* KC-CLUB-EINGABE-GROSS (1.21.0, Wunsch Hansi „Eingabe größer und breiter“): oben das Schreibfeld über die ganze Breite
      (höher, größere Schrift) mit ➤ daneben, darunter die Knöpfe 📎 🎤 😊 🔔 – kleiner, links */
-  .eingabe .innen { display: grid; grid-template-columns: auto auto auto auto auto auto 1fr auto; gap: 6px 8px; align-items: end; } /* 1.36.0: + 📋, 1.53.0: + ❗ */
-  .eingabe .innen > #text { grid-row: 1; grid-column: 1 / 8; min-height: 56px; max-height: 40vh; font-size: 1.12rem; line-height: 1.35; padding: 14px 16px; border-radius: 20px; }
+  .eingabe .innen { display: grid; grid-template-columns: auto auto auto auto auto auto auto 1fr auto; gap: 6px 8px; align-items: end; } /* 1.36.0: + 📋, 1.53.0: + ❗, 2.148.0: + ⏳ */
+  .eingabe .innen > #text { grid-row: 1; grid-column: 1 / 9; min-height: 56px; max-height: 40vh; font-size: 1.12rem; line-height: 1.35; padding: 14px 16px; border-radius: 20px; }
   /* KC-CLUB-EINGABE-LEEREN (2.148.0): rotes ✕ oben rechts im Schreibfeld */
   .eingabe .innen > #text { padding-right: 46px; }
-  .eingabe .innen > .text-leeren { grid-row: 1; grid-column: 7; justify-self: end; align-self: start; z-index: 2; margin: 8px 8px 0 0; width: 32px; height: 32px; padding: 0;
+  .eingabe .innen > .text-leeren { grid-row: 1; grid-column: 8; justify-self: end; align-self: start; z-index: 2; margin: 8px 8px 0 0; width: 32px; height: 32px; padding: 0;
     border: none; border-radius: 50%; background: #d50000; color: #fff; font-size: 1rem; font-weight: 900; line-height: 32px; text-align: center; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
   .eingabe .innen > .text-leeren.versteckt { display: none; }
-  .eingabe .innen > #sendenKnopf { grid-row: 1; grid-column: 8; width: 52px; height: 52px; font-size: 1.3rem; }
+  .eingabe .innen > #sendenKnopf { grid-row: 1; grid-column: 9; width: 52px; height: 52px; font-size: 1.3rem; }
   .eingabe .innen > .rund:not(#sendenKnopf) { grid-row: 2; width: 40px !important; height: 40px !important; font-size: 1.05rem !important; }
   .eingabe .innen > .bf-chat-knopf { background: var(--karte2) !important; }
   .eingabe .innen > .wa-einf-knopf { background: var(--karte2) !important; justify-self: end; }
@@ -1480,6 +1480,15 @@
   /* KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): ❗ an = Schreibfeld und Knopf orange; wichtige Nachrichten orange umrandet mit Marke */
   .eingabe .innen > #wichtigKnopf.rund.an { background: #ff9800 !important; border-color: #e65100 !important; color: #fff; box-shadow: 0 0 0 3px rgba(255,152,0,.35); }
   .eingabe .innen > #text.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.25); }
+  /* KC-CLUB-SELBSTLOESCHEN (2.148.0): ⏳ an = violett; neun gleich große Knöpfe passen auch auf schmale Handys (alle gleich breit) */
+  .eingabe .innen > .rund:not(#sendenKnopf) { width: min(40px, calc((100vw - 140px) / 8)) !important; height: min(40px, calc((100vw - 140px) / 8)) !important; }
+  .eingabe .innen > #ablaufKnopf.rund.an { background: #6a1b9a !important; border-color: #4a148c !important; color: #fff; box-shadow: 0 0 0 3px rgba(106,27,154,.3); }
+  .eingabe-entwurf.sl-leiste { color: #6a1b9a; } :root.dunkel .eingabe-entwurf.sl-leiste { color: #ce93d8; }
+  .chat-unterzeile { display: flex; align-items: center; gap: 6px; min-width: 0; } .chat-unterzeile > #chatTeilnehmer { min-width: 0; }
+  .sl-kopf { flex: none; margin: 0; padding: 2px 8px; border: 2px solid #6a1b9a; border-radius: 999px; background: #f3e5f5; color: #4a148c; font: inherit; font-size: .8rem; font-weight: 800; white-space: nowrap; cursor: pointer; }
+  .sl-kopf.versteckt { display: none; }
+  .blase .sl-marke { font-weight: 700; color: #6a1b9a; } .blase.eigen .sl-marke { color: inherit; opacity: .95; } :root.dunkel .blase .sl-marke { color: #ce93d8; }
+  .sl-wahl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 10px; } .sl-wahl .knopf { margin: 0; }
   /* 2.16.0 KC-CLUB-CHAT-VORLESEN */
   .blase.cv-jetzt { outline: 3px solid #2e86de; outline-offset: 2px; }
   .cv-leiste { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(196px + env(safe-area-inset-bottom)); z-index: 60; display: flex; align-items: center; gap: 8px; max-width: calc(100% - 24px);
@@ -1523,7 +1532,7 @@
   .ni-zeile.ni-wichtig { border: 2px solid #ff9800; border-radius: 12px; padding: 8px 10px; background: rgba(255,152,0,.12); font-weight: 700; }
   .unterh.wichtig-neu { box-shadow: inset 4px 0 0 #ff9800; background: rgba(255,152,0,.10); }
   .unterh .punkt.wichtig { background: #ff9800; color: #1f1300; }
-  @media (max-width: 420px) { .eingabe .innen { gap: 6px 5px; } .eingabe .innen > .rund:not(#sendenKnopf) { width: 38px !important; height: 38px !important; } }
+  @media (max-width: 420px) { .eingabe { padding-left: 8px; padding-right: 8px; } .eingabe .innen { gap: 6px 4px; } .eingabe .innen > .rund:not(#sendenKnopf) { width: min(38px, calc((100vw - 100px) / 8)) !important; height: min(38px, calc((100vw - 100px) / 8)) !important; } } /* 2.148.0: 9 gleich große Knöpfe passen in jede Breite */
   fieldset.bu-fs { border: 0; padding: 0; margin: 0; min-width: 0; }
   /* KC-CLUB-HILFE-ANGEBOT (1.42.0) */
   .hl-zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -2988,7 +2997,7 @@
     <div class="chat-kopf" id="chatKopf">
       <div class="kopf2"><button class="zurueck" onclick="zurueck('nachrichten')" aria-label="Zurück">‹</button><span class="chat-kopf-bild" id="chatKopfBild" aria-hidden="true" onclick="chatMitgliederZeigen()"></span><h2 id="chatTitel" onclick="chatMitgliederZeigen()" style="cursor:pointer">…</h2><button class="rund" id="chatVorlesenKnopf" title="Neue Nachrichten vorlesen" aria-label="Neue Nachrichten vorlesen" aria-pressed="false" onclick="vorlesenSchalter(!vorlesenAn())">🔇</button><button class="rund" id="chatSuchKnopf" title="Im Chat suchen" aria-label="Im Chat suchen" onclick="chatSucheAuf()">🔍</button><button class="rund" id="chatMenueKnopf" title="Mehr" onclick="chatMenue()">⋮</button></div>
       <div id="chatSuchLeiste" class="versteckt"><input id="chatSuchFeld" type="search" placeholder="Im Chat suchen …" autocomplete="off" oninput="chatSucheJetzt(true)" onkeydown="if(event.key==='Enter'){event.preventDefault();chatSucheSpringen(1)}"><span id="chatSuchZahl"></span><button title="vorheriger Treffer" onclick="chatSucheSpringen(-1)">▲</button><button title="nächster Treffer" onclick="chatSucheSpringen(1)">▼</button><button title="Suche schließen" onclick="chatSucheZu()">✕</button></div>
-      <div class="hinweis" id="chatTeilnehmer" style="margin-left:54px;cursor:pointer" onclick="if(CHAT?.gruppe||(CHAT?.teilnehmer||[]).length>2)chatMitgliederZeigen()"></div>
+      <div class="chat-unterzeile"><div class="hinweis" id="chatTeilnehmer" style="margin-left:54px;cursor:pointer" onclick="if(CHAT?.gruppe||(CHAT?.teilnehmer||[]).length>2)chatMitgliederZeigen()"></div><button class="sl-kopf versteckt" id="chatSlMarke" title="Selbstlöschen in diesem Chat – antippen zum Ändern" onclick="slWahl('chat')"></button></div> <!-- KC-CLUB-SELBSTLOESCHEN 2.148.0: ⏳ neben „online“ -->
       <div id="chatAngeheftet"></div>
       <div id="chatRunde"></div>
     </div>
@@ -3423,6 +3432,7 @@
     <button class="knopf klein" onclick="spracheAbbrechen()">✖ Verwerfen</button><button class="knopf haupt klein" onclick="spracheSenden()">➤ Senden</button></div>
   <!-- KC-CLUB-ENTWURF-ANZEIGE (1.21.0): geschrieben, aber noch nicht gesendet -->
   <div class="eingabe-entwurf versteckt" id="entwurfMarke">✏️ Entwurf – noch nicht gesendet</div>
+  <div class="eingabe-entwurf sl-leiste versteckt" id="slMarke"></div> <!-- KC-CLUB-SELBSTLOESCHEN (2.148.0) -->
   <div class="eingabe-entwurf versteckt" id="sprungHinweis"></div> <!-- 2.23.99 (Wunsch Hansi): App-Link im Entwurf → „wird als Knopf angezeigt“ -->
   <div class="innen">
     <button class="rund" title="Anlage" onclick="anlageMenue()">📎</button>
@@ -3431,6 +3441,8 @@
     <button class="rund zustell-knopf" title="Wie benachrichtigen? (Push, E-Mail, WhatsApp)" id="zustellKnopf" aria-expanded="false" onclick="zustellUmschalten()">🔔</button>
     <!-- KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): Nachricht mit „Wichtigkeit hoch“ – wird beim Empfänger farbig umrandet -->
     <button class="rund wichtig-knopf" title="Wichtig – Wichtigkeit hoch" aria-label="Als wichtig senden" aria-pressed="false" id="wichtigKnopf" onclick="wichtigUmschalten()">❗</button>
+    <!-- KC-CLUB-SELBSTLOESCHEN (2.148.0, Wunsch Hansi): ⏳ diese Nachricht löscht sich nach 1 Std / 24 Std / 7 Tagen selbst -->
+    <button class="rund ablauf-knopf" title="Nachricht löscht sich selbst …" aria-label="Selbstlöschen für diese Nachricht" aria-pressed="false" id="ablaufKnopf" onclick="slWahl('nachricht')">⏳</button>
     <textarea id="text" rows="2" spellcheck="true" lang="de" autocapitalize="sentences" autocorrect="on" placeholder="Nachricht schreiben …" onblur="emoStelleMerken('text')" onkeyup="emoStelleMerken('text')" onclick="emoStelleMerken('text')" oninput="emoStelleMerken('text');naErwPruefen();this.style.height='auto';this.style.height=this.scrollHeight+'px';tippenMelden();entwurfMerken();entwurfMarkeZeigen()"></textarea>
     <!-- KC-CLUB-EINGABE-LEEREN (2.148.0, Wunsch Hansi): rotes ✕ rechts im Schreibfeld – Text auf einmal löschen (nur sichtbar, wenn Text drinsteht) -->
     <button class="text-leeren versteckt" type="button" title="Text löschen" aria-label="Geschriebenen Text löschen" id="textLeerenKnopf" onclick="textLeeren()">✕</button>
@@ -3614,6 +3626,7 @@
       <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');druckStarten('chat')">🖨️ Ausdrucken</button></div>
     <button class="knopf" onclick="chatInsArchiv()">🗄️ Chat in mein Archiv legen</button>
     <button class="knopf" onclick="cfOeffnen()">🎨 Chat-Farben &amp; Hintergrund</button> <!-- KC-CLUB-CHAT-FARBEN 2.145.0 -->
+    <button class="knopf" id="chatSlKnopf" onclick="$('chatBlatt').classList.add('versteckt');slWahl('chat')">⏳ Selbstlöschen: Aus</button> <!-- KC-CLUB-SELBSTLOESCHEN 2.148.0 -->
     <button class="knopf" id="chatArchivKnopf" onclick="chatArchivieren(chatId, !!UH.liste.find((u) => u.id === chatId)?.archiviert)">📦 Chat archivieren</button> <!-- KC-CLUB-CHAT-ARCHIV 2.23.28 -->
     <button class="knopf" onclick="unterhaltungWeg(false)">🙈 Nur bei mir entfernen</button>
     <button class="knopf" id="chatKomplettKnopf" onclick="chatKomplettLoeschen(chatId)">🗑️ Bei mir komplett löschen</button>

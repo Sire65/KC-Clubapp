@@ -348,6 +348,10 @@ async function chatArchivSetzen(pid: string, threads: Record<string, string>) {
 }
 // KC-CLUB-BEARBEITEN (1.9.0): eigene Nachricht bis zu 15 Minuten nach dem Senden ändern (wie WhatsApp)
 const BEARBEITEN_MIN = 15;
+// KC-CLUB-SELBSTLOESCHEN (2.148.0, Wunsch Hansi): Nachrichten löschen sich nach dieser Zeit selbst (Stunden) – je Chat oder je Nachricht, jedes Mitglied darf
+const SELBSTLOESCHEN_STD = [1, 24, 168];
+const slStd = (v: unknown) => SELBSTLOESCHEN_STD.includes(Number(v)) ? Number(v) : 0;
+const slText = (std: number) => std === 1 ? "1 Std" : std === 24 ? "24 Std" : std === 168 ? "7 Tage" : `${std} Std`;
 // KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0): wer Anklopfen ausgeschaltet hat (Standard: erlaubt)
 async function anklopfenErlaubtMap(ids: string[]) {
   if (!ids.length) return new Map<string, boolean>();
@@ -7053,6 +7057,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const alleIds = (msgsRoh ?? []).map((m: any) => m.id);
         const { data: weg } = alleIds.length ? await db.from("kc_communication_message_hidden").select("message_id").eq("person_id", ich.person_id).in("message_id", alleIds) : { data: [] as any[] };
         const wegIds = new Set((weg ?? []).map((x: any) => x.message_id));
+        // KC-CLUB-SELBSTLOESCHEN (2.148.0): Ablaufzeit je Nachricht + Einstellung des Chats; Abgelaufenes nie zeigen (der Zeitplaner löscht es)
+        const [{ data: ablauf }, { data: slChat }] = await Promise.all([
+          alleIds.length ? db.from("kc_club_nachricht_ablauf").select("message_id,loescht_am").in("message_id", alleIds) : Promise.resolve({ data: [] as any[] }),
+          db.from("kc_club_chat_selbstloeschen").select("stunden").eq("thread_id", id).maybeSingle(),
+        ]);
+        const ablaufMap = new Map((ablauf ?? []).map((x: any) => [x.message_id, x.loescht_am]));
+        let abgelaufen = 0;
+        for (const [mid, bis] of ablaufMap) if (Date.parse(String(bis)) <= Date.now()) { wegIds.add(mid); abgelaufen++; }
+        if (abgelaufen) db.rpc("kc_club_selbstloeschen_ausfuehren").then(() => {}, () => {});
         const msgs = (msgsRoh ?? []).filter((m: any) => !wegIds.has(m.id));
         const mids = (msgs ?? []).map((m: any) => m.id);
         const { data: ma } = mids.length ? await db.from("kc_communication_message_attachments").select("message_id,attachment_id").in("message_id", mids) : { data: [] as any[] };
@@ -7142,7 +7155,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             reaktionen: reaktionen(m.id),
             antwortAuf: bezug ? { id: bezug.id, von: bezug.sender_person_id === ich.person_id ? "Du" : vorname(leute.get(bezug.sender_person_id)) || "?", text: txt(bezug.body, 90) } : null,
             erwaehnt: erw.map((x: any) => x.person_id === ich.person_id ? "dich" : vorname(rkLeute.get(x.person_id)) || "?"), erwaehntMich: erw.some((x: any) => x.person_id === ich.person_id),
-            bearbeitet: bearbMap.get(m.id) ?? null,
+            bearbeitet: bearbMap.get(m.id) ?? null, loeschtAm: ablaufMap.get(m.id) ?? null,
             gemerkt: gemSet.has(m.id), angeheftet: pinIds.includes(m.id), umfrage: umfrageVon(m.id), kontakt: kontaktVon(m.id), wichtig: wichtigIds.has(m.id),
             ...(eigen && m.body !== "📎" && !(umf ?? []).some((x: any) => x.message_id === m.id) && !(kon ?? []).some((x: any) => x.message_id === m.id) && Date.now() - Date.parse(m.created_at) < BEARBEITEN_MIN * 60000 ? { bearbeitbarBis: new Date(Date.parse(m.created_at) + BEARBEITEN_MIN * 60000).toISOString() } : {}),
           };
@@ -7180,7 +7193,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           }
           runde = { ersteller: t?.created_by_person_id === ich.person_id || ich.admin, gleiche };
         }
-        return json({ id, betreff: t?.subject ?? "", tippt, entwurf, spricht, angeheftet, gelesenBis, partnerDa, runde,
+        return json({ id, betreff: t?.subject ?? "", tippt, entwurf, spricht, angeheftet, gelesenBis, partnerDa, runde, selbstloeschen: slStd(slChat?.stunden),
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, admins: gr.admins ?? [], darfVerwalten: gruppenAdmin(gr, ich.person_id) || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
       }
 
@@ -7289,6 +7302,18 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { error: we } = await db.from("kc_club_nachricht_wichtig").insert({ message_id: m.id, person_id: ich.person_id });
           if (we) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler("Wichtige Nachricht konnte nicht gespeichert werden.", 500); }
         }
+        // KC-CLUB-SELBSTLOESCHEN (2.148.0): ⏳ dieser Nachricht (0 = bewusst aus) vor der Einstellung des Chats; Notfall löscht sich nie
+        let slNachricht = 0;
+        if (!notfall) {
+          if (p.ablauf_std !== undefined && p.ablauf_std !== null) slNachricht = slStd(p.ablauf_std);
+          else { const { data: sc } = await db.from("kc_club_chat_selbstloeschen").select("stunden").eq("thread_id", threadId).maybeSingle(); slNachricht = slStd(sc?.stunden); }
+        }
+        if (slNachricht) {
+          const { error: ae } = await db.from("kc_club_nachricht_ablauf").insert({ message_id: m.id, thread_id: threadId, stunden: slNachricht, loescht_am: new Date(Date.parse(m.created_at) + slNachricht * 3600000).toISOString() });
+          if (ae) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler("Selbstlöschen konnte nicht gespeichert werden – Nachricht nicht gesendet.", 500); }
+        }
+        // Selbstlöschende Nachrichten: Text nie in Push/Mail (eine Mail bliebe sonst im Postfach stehen)
+        const slHinweis = slNachricht ? `⏳ Nachricht löscht sich nach ${slText(slNachricht)} – nur in der App lesen` : "";
         const wMarke = notfall ? "🚨 NOTFALL – " : wichtig ? "❗ Wichtig – " : "";
         await Promise.all([
           // neue Nachricht: wer die Unterhaltung ausgeblendet hatte, sieht sie wieder (wie bei WhatsApp)
@@ -7314,9 +7339,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (erwaehnt.length) {
           await db.from("kc_club_erwaehnungen").insert(erwaehnt.map((person_id) => ({ message_id: m.id, person_id })));
           versandErw = await sendenGewaehlt("club_nachricht", erwaehnt, ["push"], {
-            titel: `${wMarke}📣 ${ich.vorname} hat dich erwähnt${grp ? ` – ${grp.symbol} ${grp.name}` : ""}`, kurz: txt(text, 140) || "Neue Nachricht",
+            titel: `${wMarke}📣 ${ich.vorname} hat dich erwähnt${grp ? ` – ${grp.symbol} ${grp.name}` : ""}`, kurz: (slHinweis || txt(text, 140)) || "Neue Nachricht",
             betreff: `Köcheclub Werne – ${ich.name} hat dich erwähnt${grp ? " in " + grp.name : ""}`,
-            text: `Hallo,\n\n${ich.name} hat dich${grp ? ` in der Gruppe „${grp.name}“` : ""} erwähnt:\n\n${text}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
+            text: `Hallo,\n\n${ich.name} hat dich${grp ? ` in der Gruppe „${grp.name}“` : ""} erwähnt:\n\n${slHinweis || text}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
             url: `${APP_URL}#nachricht=${threadId}`,
           }, `club-nachricht:${m.id}:erwaehnt`, { erwaehnung: true });
           for (let i = ziel.length - 1; i >= 0; i--) if (erwaehnt.includes(ziel[i])) ziel.splice(i, 1);
@@ -7329,12 +7354,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const inApp = notfall || wichtig ? new Set<string>() : await geradeInDerApp(ziel.filter((x: string) => x !== ich.person_id)).catch(() => new Set<string>());
         for (let i = ziel.length - 1; i >= 0; i--) if (inApp.has(ziel[i])) ziel.splice(i, 1);
         const versand = await sendenGewaehlt("club_nachricht", ziel, wege, {
-          titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
+          titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : slHinweis ? slHinweis : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
           betreff: `${wMarke}Köcheclub Werne – ${wichtig ? "wichtige" : "neue"} Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
-          text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
+          text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${slHinweis || text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`,
         }, `club-nachricht:${m.id}`, { notfall });
-        await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
+        await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, selbstloeschen: slNachricht, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand });
       }
 
@@ -7614,6 +7639,27 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await geloescht(ich, "nachricht", { nachricht: m, anlagen: (ma ?? []).map((x: any) => x.attachment_id) });
         await db.from("kc_communication_messages").delete().eq("id", m.id);
         return json({ ok: true });
+      }
+
+      // KC-CLUB-SELBSTLOESCHEN (2.148.0): ⏳ für den ganzen Chat ein-/ausschalten – jeder Teilnehmer darf; alle sehen es als Zeile im Chat
+      case "chat_selbstloeschen": {
+        const id = String(p.id || ""), std = slStd(p.stunden);
+        await binTeilnehmer(id, ich.person_id);
+        if (Number(p.stunden) && !std) throw new Fehler("Diese Zeit gibt es nicht.");
+        const { data: alt } = await db.from("kc_club_chat_selbstloeschen").select("stunden").eq("thread_id", id).maybeSingle();
+        if (slStd(alt?.stunden) === std) return json({ ok: true, stunden: std, unveraendert: true });
+        const { error } = std ? await db.from("kc_club_chat_selbstloeschen").upsert({ thread_id: id, stunden: std, von: ich.person_id, am: jetzt() }, { onConflict: "thread_id" })
+          : await db.from("kc_club_chat_selbstloeschen").delete().eq("thread_id", id);
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        // Hinweiszeile für alle (bleibt stehen, löscht sich selbst nicht) – ohne Push/Mail
+        const body = std ? `⏳ ${ich.vorname} hat Selbstlöschen eingeschaltet: neue Nachrichten in diesem Chat löschen sich nach ${slText(std)}.` : `⏳ ${ich.vorname} hat Selbstlöschen ausgeschaltet: neue Nachrichten bleiben stehen.`;
+        const { data: m } = await db.from("kc_communication_messages").insert({ thread_id: id, sender_person_id: ich.person_id, body }).select("created_at").single();
+        await Promise.all([
+          db.from("kc_communication_threads").update({ updated_at: jetzt() }).eq("id", id),
+          m ? db.from("kc_communication_thread_participants").update({ last_read_at: m.created_at }).eq("thread_id", id).eq("person_id", ich.person_id) : Promise.resolve(),
+        ]);
+        await protokoll(ich.person_id, "chat_selbstloeschen", { thread: id, stunden: std });
+        return json({ ok: true, stunden: std });
       }
 
       case "nachricht_bearbeiten": {

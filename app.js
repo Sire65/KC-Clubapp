@@ -1639,6 +1639,8 @@ const HILFE = [
   { id: "twinkey_haengt", thema: "technik", sym: "🧑‍🍳", t: "Twinkey lädt nicht", x: "Bei langsamem Netz zeigt Twinkey nach 8 Sekunden „🐌 Das Netz ist gerade langsam – noch einen Moment …“. Klappt es gar nicht, kommt <b>„🔄 Nochmal versuchen“</b> – antippen, oder mit „Zurück zur Club-App“ später wiederkommen.", seit: "2.106.0" },
   { id: "termin_zahl", thema: "termine", sym: "✅", t: "Was heißt „7/18 angemeldet“?", x: "Auf der Termin-Kachel oben auf der Startseite steht, wie viele schon zugesagt haben – z. B. <b>„✅ 7/18 angemeldet“</b> heißt: 7 von 18 Mitgliedern kommen. So siehst du auf einen Blick, wie voll es wird.", zeig: () => zeige("start"), seit: "2.102.0" },
   { id: "notfallkontakt_wer", thema: "notfall", sym: "☎️", t: "Der Notfallkontakt ist jemand anderes", x: "Als <b>Notfallkontakt</b> bitte nicht dich selbst eintragen, sondern die Person, die <b>benachrichtigt werden soll</b>, wenn dir etwas passiert – z. B. Partnerin, Partner, Kind oder Nachbar. Trägst du deinen eigenen Namen oder deine eigene Nummer ein, fragt die App nach.", zeig: () => sosStart(), seit: "2.94.0" },
+  { id: "selbstloeschen", thema: "nachrichten", sym: "⏳", t: "Nachrichten, die sich selbst löschen", x: "Ganzer Chat: oben auf <b>⋮ → „⏳ Selbstlöschen“</b> – alle <b>neuen</b> Nachrichten in diesem Chat verschwinden nach <b>1 Std, 24 Std oder 7 Tagen</b> – bei allen. Nur für eine einzelne Nachricht: beim Schreiben unten auf <b>⏳</b> tippen. Erkennbar an <b>⏳</b> oben im Chat, an der Leiste über dem Schreibfeld und an <b>„⏳ noch 3 Std“</b> in jeder Blase. Push und E-Mail enthalten dann keinen Text – lesen nur in der App.", zeig: () => zeige("nachrichten"), seit: "2.148.0" },
+  { id: "eingabe_leeren", thema: "nachrichten", sym: "✕", t: "Geschriebenen Text auf einmal löschen", x: "Steht Text im Schreibfeld, erscheint rechts oben ein <b>rotes ✕</b>. Antippen löscht den noch nicht gesendeten Text – gesendete Nachrichten bleiben.", zeig: () => zeige("nachrichten"), seit: "2.148.0" },
   { id: "aenderung_rueckfrage", thema: "club", sym: "💬", t: "Rückfrage zu deiner Änderungsmeldung", x: "Hast du eine Änderung deiner Daten gemeldet und dazu noch eine Frage? Solange sie noch nicht eingetragen ist, steht bei der Meldung der Knopf <b>„💬 Rückfragen?“</b> – er öffnet direkt einen Chat mit der Clubleitung, der Bezug ist schon eingetragen.", zeig: () => aeStart(), seit: "2.91.0" },
   { id: "schritt_hilfe_ueberall", thema: "start", sym: "🤝", t: "Schritt-für-Schritt-Hilfe – jetzt überall", x: "Mit eingeschalteter Unterstützung zeigt ein <b>roter Rahmen</b> auf jeder Seite (außer SOS) und in den wichtigen Fenstern den nächsten sinnvollen Schritt – auf Wunsch mit Vorlesen. Einschalten oder ändern: ⚙️ → <b>„🤝 Unterstützung“</b>.", zeig: () => zeige("einstellungen"), seit: "2.105.0" },
   { id: "code_ipad", thema: "privat", sym: "📲", t: "iPad/iPhone: erst installieren, dann den Code", x: "Auf iPad und iPhone zuerst die App auf den Home-Bildschirm legen (Teilen ⬆️ → „Zum Home-Bildschirm“) und <b>dann</b> in der installierten App den 6-stelligen Code eintippen. Sonst fragt die App nach dem Öffnen vom Home-Bildschirm noch einmal nach einem Code. Während die Anmeldung läuft, dreht sich die Kochmütze.", zeig: () => einstiegHin("install"), seit: "2.91.0" },
@@ -14962,7 +14964,7 @@ async function chatLaden(scrollen) {
   try {
     const fuer = chatId, u = await api("unterhaltung", { id: fuer });
     if (fuer !== chatId) return; // 1.97.0: inzwischen eine andere Unterhaltung geöffnet → alte Antwort verwerfen
-    CHAT = u; setTimeout(owZeigen, 0); // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
+    CHAT = u; setTimeout(owZeigen, 0); slAnzeigen(); // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
     // KC-CLUB-CHAT-KOPF-BILD (2.24.19): Bild vorn (Person: Avatar/Kreis; Gruppe: Symbol mit 🔗; Runde: gestrichelt), Titel ohne doppeltes Symbol
     $("chatTitel").textContent = (u.gruppe ? u.gruppe.name : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");
@@ -14978,7 +14980,7 @@ async function chatLaden(scrollen) {
     tipptZeigen(u.tippt || [], u.entwurf || [], u.spricht || []); chatAbstand();
     if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
     const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, m.haken, (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join(""),
-      m.text, m.bearbeitet, m.gemerkt, m.angeheftet, m.umfrage?.optionen.map((o) => o.stimmen + (o.meine ? "*" : "")).join(",")])); // 1.12.0: auch Stimmen/Bearbeitungen anderer
+      m.text, m.bearbeitet, m.gemerkt, m.angeheftet, m.umfrage?.optionen.map((o) => o.stimmen + (o.meine ? "*" : "")).join(","), m.loeschtAm ? slRest(m.loeschtAm) : ""])); // 1.12.0: auch Stimmen/Bearbeitungen anderer
     const idStand = u.nachrichten.map((m) => m.id).join(",");
     vorlesenNeue(u.nachrichten); // KC-CLUB-VORLESEN
     if (NA.antwort && !u.nachrichten.some((m) => m.id === NA.antwort.id)) naAntwortWeg(); // Antwort gehört zu einem anderen Chat
@@ -14996,7 +14998,7 @@ async function chatLaden(scrollen) {
       ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}
       ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
-      <div class="fuss">${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("") + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2
+      <div class="fuss">${m.loeschtAm ? `<span class="sl-marke" title="Löscht sich selbst – für alle">⏳ noch ${slRest(m.loeschtAm)}</span> ` : ""}${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("") + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
     naWischenEinrichten();
@@ -16160,6 +16162,8 @@ function chatMenue() {
   const archiviert = !!UH.liste.find((u) => u.id === chatId)?.archiviert; // KC-CLUB-CHAT-ARCHIV (2.23.28)
   $("chatArchivKnopf").textContent = archiviert ? "📤 Aus dem Archiv holen (wieder aktivieren)" : "📦 Chat archivieren";
   $("chatArchivKnopf").classList.toggle("versteckt", !chatId); $("chatKomplettKnopf").classList.toggle("versteckt", !chatId);
+  const sl = chatId && CHAT?.id === chatId ? CHAT.selbstloeschen || 0 : 0; // KC-CLUB-SELBSTLOESCHEN (2.148.0)
+  $("chatSlKnopf").textContent = `⏳ Selbstlöschen: ${sl ? "nach " + slText(sl) : "Aus"}`; $("chatSlKnopf").classList.toggle("versteckt", !chatId);
   stummBereichZeigen();
   $("chatBlatt").classList.remove("versteckt");
 }
@@ -16408,6 +16412,40 @@ function grNachfolgerWahl(andere, g) {
   });
 }
 
+// ---------- KC-CLUB-SELBSTLOESCHEN (2.148.0, Wunsch Hansi): Nachrichten löschen sich nach 1 Std / 24 Std / 7 Tagen selbst ----------
+// Zwei Wege, jedes Mitglied darf: ⋮ → „⏳ Selbstlöschen“ für den ganzen Chat (alle sehen eine Hinweiszeile) oder ⏳ beim Schreiben nur
+// für die nächste Nachricht. Kenntlich: ⏳ im Chat-Kopf, ⏳-Leiste über dem Schreibfeld, „⏳ noch 3 Std“ in jeder Blase.
+// Gelöscht wird auf dem Server (Zeitplaner alle 5 Minuten) – auch wenn niemand die App offen hat. Push/Mail enthalten dann keinen Text.
+const SL_WAHL = [[0, "Aus"], [1, "1 Std"], [24, "24 Std"], [168, "7 Tage"]];
+const slText = (std) => SL_WAHL.find((x) => x[0] === std)?.[1] || `${std} Std`;
+let SL = { chat: null, std: null }; // ⏳ nur für die nächste Nachricht in diesem Chat (null = wie im Chat eingestellt, 0 = diesmal nicht)
+const slChat = () => (chatId && CHAT?.id === chatId ? CHAT.selbstloeschen || 0 : 0);
+const slWirksam = () => SL.std !== null && SL.chat === chatId ? SL.std : slChat();
+function slRest(bis) {
+  const min = Math.ceil((Date.parse(bis) - Date.now()) / 60000);
+  return min <= 1 ? "1 Min" : min < 60 ? `${min} Min` : min < 48 * 60 ? `${Math.round(min / 60)} Std` : `${Math.round(min / 1440)} Tage`;
+}
+function slAnzeigen() {
+  const w = slWirksam(), c = slChat(), eigen = SL.std !== null && SL.chat === chatId;
+  const k = $("ablaufKnopf"); if (k) { k.classList.toggle("an", !!w); k.setAttribute("aria-pressed", String(!!w)); k.title = w ? `Löscht sich nach ${slText(w)} – antippen zum Ändern` : "Nachricht löscht sich selbst …"; }
+  const m = $("slMarke"); if (m) { m.classList.toggle("versteckt", !w); m.textContent = !w ? "" : eigen && w !== c ? `⏳ Diese Nachricht löscht sich nach ${slText(w)}` : `⏳ Selbstlöschen in diesem Chat: nach ${slText(w)}`; }
+  const h = $("chatSlMarke"); if (h) { h.classList.toggle("versteckt", !c); h.textContent = c ? `⏳ ${slText(c)}` : ""; }
+}
+function slZurueck() { SL = { chat: null, std: null }; slAnzeigen(); }
+function slWahl(art) {
+  const akt = art === "chat" ? slChat() : slWirksam();
+  if (art === "chat" && !chatId) return melde("Erst die erste Nachricht senden – dann lässt sich der ganze Chat einstellen. Für diese Nachricht: ⏳ unten.", true);
+  blattAuf("slBlatt", `<h3 style="margin:0 0 4px">⏳ ${art === "chat" ? "Selbstlöschen für diesen Chat" : "Diese Nachricht löscht sich …"}</h3>
+    <p class="hinweis" style="margin:0 0 10px">${art === "chat" ? "Gilt für alle <b>neuen</b> Nachrichten in diesem Chat – bei allen Teilnehmern. Alle sehen im Chat, dass du es eingestellt hast." : "Gilt nur für die nächste Nachricht, die du sendest. Sie verschwindet danach bei allen."}</p>
+    <div class="sl-wahl">${SL_WAHL.map(([s, t]) => `<button class="knopf${s === akt ? " haupt" : ""}" onclick="slGewaehlt('${art}', ${s})">${s ? "⏳ " + t : "🚫 Aus"}</button>`).join("")}</div>
+    <button class="knopf" onclick="$('slBlatt').remove()">Abbrechen</button>`);
+}
+async function slGewaehlt(art, std) {
+  $("slBlatt")?.remove();
+  if (art === "nachricht") { SL = std === slChat() ? { chat: null, std: null } : { chat: chatId, std }; slAnzeigen(); return melde(std ? `⏳ Die nächste Nachricht löscht sich nach ${slText(std)}` : "Die nächste Nachricht bleibt stehen"); }
+  try { const r = await api("chat_selbstloeschen", { id: chatId, stunden: std }); if (CHAT?.id === chatId) CHAT.selbstloeschen = r.stunden; slAnzeigen(); melde(r.stunden ? `⏳ Neue Nachrichten in diesem Chat löschen sich nach ${slText(r.stunden)}` : "⏳ Selbstlöschen aus"); await chatLaden(true); }
+  catch (e) { meldeFehler(e); }
+}
 // KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): ❗ = „Wichtigkeit hoch“ für die nächste Nachricht (gilt nur für diesen Chat)
 let WICHTIG = false;
 function wichtigUmschalten(an) {
@@ -16476,11 +16514,12 @@ async function senden() {
   try {
     const daten = { text, anlagen: anlagen.map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]),
       ...(NA.antwort && chatId ? { antwort_auf: NA.antwort.id } : {}), ...(chatId ? { erwaehnt: naErwaehnteIds(text) } : {}), // KC-CLUB-ANTWORT / -ERWAEHNUNG
-      ...(WICHTIG ? { wichtig: true } : {}) }; // KC-CLUB-WICHTIG
+      ...(WICHTIG ? { wichtig: true } : {}), // KC-CLUB-WICHTIG
+      ...(SL.std !== null && SL.chat === chatId ? { ablauf_std: SL.std } : {}) }; // KC-CLUB-SELBSTLOESCHEN: ⏳ nur diese Nachricht
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
-    if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG
+    if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN
     $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
     spur(daten.anlagen.length ? "gesendet_anlage" : "gesendet", r?.id || chatId); // KC-CLUB-SPUR: nur „gesendet“ + Unterhaltung, nie der Text
     if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
@@ -16499,7 +16538,7 @@ async function uhMehrfachSenden(daten, text) {
     for (const id of ids) { try { await api("nachricht_senden", { id, ...daten }); } catch (e) { fehl.push(id); if (fehl.length === ids.length) throw e; } }
     spur("gesendet_mehrfach", null); // nur die Aktion, nie Text oder Empfänger
     UH.mark = new Set(fehl);
-    if (!fehl.length) { clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; chipsZeigen(); neuEntwurf = null;
+    if (!fehl.length) { clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); slZurueck(); $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; chipsZeigen(); neuEntwurf = null;
       if (ZW.whatsapp && text) melde("🟢 WhatsApp geht bei mehreren Chats nur einzeln – im jeweiligen Chat auf WA tippen."); }
     else neuEntwurf = { mehrfach: fehl };
     melde(fehl.length ? `📨 ${ids.length - fehl.length} von ${ids.length} Chats bekommen – ${fehl.length} ging nicht (bleibt markiert, einfach nochmal ➤)` : `📨 An ${ids.length === 1 ? "den Chat" : `alle ${ids.length} Chats`} gesendet`, !!fehl.length);

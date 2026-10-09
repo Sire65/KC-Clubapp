@@ -1825,7 +1825,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 157. 1.21.0: größeres Schreibfeld + „Entwurf“ (KC-CLUB-EINGABE-GROSS, KC-CLUB-ENTWURF-ANZEIGE)
 {
-  assert.ok(/\.eingabe \.innen > #text \{ grid-row: 1; grid-column: 1 \/ [78]; min-height: 56px;/.test(html) && /\.eingabe \.innen > \.rund:not\(#sendenKnopf\) \{ grid-row: 2;/.test(html), "Schreibfeld oben volle Breite, Knöpfe darunter");
+  assert.ok(/\.eingabe \.innen > #text \{ grid-row: 1; grid-column: 1 \/ [789]; min-height: 56px;/.test(html) && /\.eingabe \.innen > \.rund:not\(#sendenKnopf\) \{ grid-row: 2;/.test(html), "Schreibfeld oben volle Breite, Knöpfe darunter");
   for (const id of ["mikroKnopf", "emoKnopf", "zustellKnopf", "sendenKnopf"]) assert.ok(new RegExp(`id="${id}"`).test(html), `Knopf ${id} bleibt`);
   assert.ok(/id="entwurfMarke">✏️ Entwurf – noch nicht gesendet/.test(html) && /entwurfMerken\(\);entwurfMarkeZeigen\(\)/.test(html) && /\$\("text"\)\.value = ""; \$\("text"\)\.style\.height = "auto"; entwurfMarkeZeigen\(\);/.test(html), "Entwurf-Hinweis an/aus");
   assert.ok(/entwurfAlle\(\)\[u\.id\]\?\.trim\(\) \? `<span class="entwurf-marke">✏️ Entwurf:<\/span>/.test(html), "Chatliste zeigt Entwurf");
@@ -2162,7 +2162,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/Promise\.race\(\[navigator\.clipboard\.readText\(\)/.test(html) && /id="waEinfFeld"/.test(html), "Zwischenablage mit Zeitlimit, sonst Einfügefeld");
   const f = html.slice(html.indexOf("function waEinsetzen("), html.indexOf("async function waEinfuegen("));
   assert.ok(!/senden\(\)/.test(f) && /\$\("text"\)/.test(f), "nie automatisch senden – nur ins Schreibfeld");
-  assert.ok(/grid-template-columns: auto auto auto auto auto (auto )?1fr auto;/.test(html) && /#sendenKnopf \{ grid-row: 1; grid-column: [78];/.test(html), "Leiste mit 7 Spalten (ab 1.53.0 mit ❗: 8)");
+  assert.ok(/grid-template-columns: auto auto auto auto auto (auto )?(auto )?1fr auto;/.test(html) && /#sendenKnopf \{ grid-row: 1; grid-column: [789];/.test(html), "Leiste mit 7 Spalten (ab 1.53.0 mit ❗: 8, ab 2.148.0 mit ⏳: 9)");
 }
 
 // 190. 1.37.0: Büro-Freigaben je Mitglied (KC-CLUB-BUERO-RECHTE) + Kontrast der Chat-Knöpfe (KC-CLUB-EINGABE-KONTRAST)
@@ -2425,7 +2425,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const srv = lies("supabase/functions/kc-club/index.ts"), mig = lies("supabase/migrations/20261002_kc_club_v1530_wichtig.sql");
   assert.match(html, /id="wichtigKnopf" onclick="wichtigUmschalten\(\)">❗<\/button>/, "❗-Knopf unter dem Schreibfeld");
   assert.match(html, /\.\.\.\(WICHTIG \? \{ wichtig: true \} : \{\}\)/, "senden schickt wichtig nur wenn an");
-  assert.match(html, /wichtigUmschalten\(false\); \/\/ KC-CLUB-ENTWURF \/ -RUHIGE-EINGABE \/ -WICHTIG/, "nach dem Senden wieder normal");
+  assert.match(html, /wichtigUmschalten\(false\);( slZurueck\(\);)? \/\/ KC-CLUB-ENTWURF \/ -RUHIGE-EINGABE \/ -WICHTIG/, "nach dem Senden wieder normal");
   assert.match(html, /\$\{m\.wichtig \? " wichtig" : ""\}/, "Blase bekommt Klasse wichtig");
   assert.match(html, /\.blase\.wichtig \{ border: 3px solid #ff9800/, "wichtige Nachricht orange umrandet");
   assert.match(html, /u\.wichtigNeu \? " wichtig-neu" : ""/, "Chat-Liste markiert ungelesene wichtige Nachricht");
@@ -7164,4 +7164,21 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/id="textLeerenKnopf" onclick="textLeeren\(\)">✕<\/button>/.test(h) && /\.text-leeren \{[^}]*background: #d50000/.test(h), "rotes ✕ im Schreibfeld");
   assert.ok(/\$\("textLeerenKnopf"\)\?\.classList\.toggle\("versteckt", !t\?\.value\)/.test(p), "nur sichtbar, wenn Text drinsteht");
   assert.ok(/entwurfWeg\(chatId\)/.test(f) && /t\.value = ""/.test(f) && !/api\(|senden\(|anlagen/.test(f), "löscht Text + Entwurf, sendet nichts, Anlagen bleiben");
+}
+
+// 2.148.0 KC-CLUB-SELBSTLOESCHEN (Wunsch Hansi): Nachrichten löschen sich nach 1 Std / 24 Std / 7 Tagen – je Chat oder je Nachricht, alle dürfen
+{
+  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8"), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
+  const m = fs.readFileSync(new URL("../supabase/migrations/20261009_kc_club_v2148_selbstloeschen.sql", import.meta.url), "utf8");
+  assert.ok(/const SELBSTLOESCHEN_STD = \[1, 24, 168\];/.test(sv) && /check \(stunden in \(1, 24, 168\)\)/.test(m), "nur 1 Std / 24 Std / 7 Tage – Server und Datenbank gleich");
+  const c = sv.slice(sv.indexOf('case "chat_selbstloeschen"'), sv.indexOf('case "nachricht_bearbeiten"'));
+  assert.ok(/await binTeilnehmer\(id, ich\.person_id\)/.test(c) && !/nurAdmin|ich\.admin/.test(c) && /protokoll\(ich\.person_id, "chat_selbstloeschen", \{ thread: id, stunden: std \}\)/.test(c), "jeder Teilnehmer darf, Protokoll ohne Text");
+  assert.ok(/hat Selbstlöschen eingeschaltet/.test(c) && /hat Selbstlöschen ausgeschaltet/.test(c), "alle sehen die Änderung im Chat");
+  const s = sv.slice(sv.indexOf('case "nachricht_senden"'), sv.indexOf('case "privattermin_speichern"'));
+  assert.ok(/if \(!notfall\)/.test(s) && /kc_club_nachricht_ablauf"\)\.insert/.test(s) && /\$\{slHinweis \|\| text\}/.test(s) && /slHinweis \? slHinweis :/.test(s), "Notfall löscht sich nie; Push/Mail ohne Text");
+  assert.ok(/Date\.parse\(String\(bis\)\) <= Date\.now\(\)\) \{ wegIds\.add\(mid\)/.test(sv) && /loeschtAm: ablaufMap\.get\(m\.id\)/.test(sv), "Abgelaufenes wird nie gezeigt");
+  assert.ok(/on delete cascade/.test(m) && /cron\.schedule\('kc-club-selbstloeschen', '\*\/5 \* \* \* \*'/.test(m) && /a\.loescht_am <= now\(\)/.test(m) && /revoke all on function public\.kc_club_selbstloeschen_ausfuehren\(\) from public, anon, authenticated/.test(m), "Server löscht selbst, nur abgelaufene, nur service_role");
+  assert.ok(!/\b(drop|truncate|update)\b/i.test(m.replace(/^--.*$/gm, "")) && !/alter table kc_communication/i.test(m), "Kern-Tabellen unverändert");
+  assert.ok(/id="ablaufKnopf" onclick="slWahl\('nachricht'\)">⏳<\/button>/.test(h) && /id="chatSlKnopf" onclick="\$\('chatBlatt'\)\.classList\.add\('versteckt'\);slWahl\('chat'\)"/.test(h) && /id="chatSlMarke"/.test(h) && /id="slMarke"/.test(h), "⏳ beim Schreiben, im ⋮-Menü, im Chat-Kopf und über dem Schreibfeld");
+  assert.ok(/ablauf_std: SL\.std/.test(p) && /⏳ noch \$\{slRest\(m\.loeschtAm\)\}/.test(p) && /\.sl-wahl \{ display: grid; grid-template-columns: 1fr 1fr;/.test(h), "Blase zeigt Restzeit, Auswahl gleich groß");
 }
