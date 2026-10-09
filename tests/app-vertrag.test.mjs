@@ -6990,3 +6990,14 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok((mig.match(/\('🎄 WM: /g) || []).length === 17 && /select 'KC-P-002', v\.text, v\.kat, 'ich', v\.faellig::date/.test(mig) && /where not exists \(select 1 from public\.kc_club_todo t where t\.person_id = 'KC-P-002' and t\.text = v\.text/.test(mig), "17 To-dos, nur Hansi, wiederholbar");
   assert.ok(!/zustaendig/.test(mig.split("insert into")[1]), "keine Zuständigen → keine Benachrichtigung");
 }
+
+// 4xx. 2.132.0: Erinnerung an To-do-Fristen (KC-CLUB-TODO-ERINNERUNG, Wunsch Hansi)
+{
+  const f = server.slice(server.indexOf("async function todoFristenErinnern()"), server.indexOf("// ----- KC-CLUB-ERSTATTUNG (0.38.0)"));
+  assert.ok(/const TODO_ERINNERN_TAGE = 5, TODO_ERINNERN_AB = 7;/.test(server) && /if \(berlinStunde\(jetztD\) < TODO_ERINNERN_AB\) return;/.test(f), "5 Tage vorher, morgens ab 7");
+  assert.ok(/\.is\("erledigt_am", null\)\.is\("entfernt_am", null\)\.gte\("faellig", heute\)\.lte\("faellig", bis\)/.test(f) && /stufe === "heute" \? t\.erinnert_heute === t\.faellig : t\.erinnert_vorher === t\.faellig\) continue;/.test(f), "nur offene, je Frist einmal");
+  assert.ok(/t\.zustaendige\?\.length \? t\.zustaendige : \[t\.zustaendig \|\| t\.person_id\]/.test(f) && /senden\("club_aufgabe", an,/.test(f) && /"⏰ Frist läuft heute ab"/.test(f), "an Zuständige, sonst Ersteller; Push+Mail über Communicator");
+  assert.ok(/await todoFristenErinnern\(\)\.catch/.test(server), "läuft in der Wartung");
+  const mig = lies("supabase/migrations/20261009_kc_club_todo_erinnerung.sql");
+  assert.ok(/add column if not exists erinnert_vorher date/.test(mig) && /add column if not exists erinnert_heute date/.test(mig), "Merkspalten");
+}

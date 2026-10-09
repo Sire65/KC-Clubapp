@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.126.0";
+const SERVER_VERSION = "2.132.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
@@ -983,6 +983,43 @@ async function todoBenachrichtigen(ich: Ich, an: string, text: string, faellig: 
   }, `club-todo:${id}:${an}`);
   await protokoll(ich.person_id, "todo_zugewiesen", { an, versand: r });
   return r;
+}
+// KC-CLUB-TODO-ERINNERUNG (2.132.0, Wunsch Hansi): To-do-Fristen – TODO_ERINNERN_TAGE Tage vorher und am Tag selbst morgens,
+// jeweils einmal (Merkspalte = Frist-Datum, an der sich auch eine geänderte Frist erkennen lässt). Empfänger: die Zuständigen, sonst wer es
+// aufgeschrieben hat. Push + E-Mail über den Communicator (gleiches Ereignis wie „neue Aufgabe“). Nur ab TODO_ERINNERN_AB Uhr (Berlin).
+const TODO_ERINNERN_TAGE = 5, TODO_ERINNERN_AB = 7;
+async function todoFristenErinnern() {
+  const jetztD = new Date(); if (berlinStunde(jetztD) < TODO_ERINNERN_AB) return;
+  const heute = berlinTag(jetztD), bis = tagDazu(heute, TODO_ERINNERN_TAGE);
+  const { data, error } = await db.from("kc_club_todo").select("id,person_id,text,faellig,zustaendig,zustaendige,erinnert_vorher,erinnert_heute")
+    .is("erledigt_am", null).is("entfernt_am", null).gte("faellig", heute).lte("faellig", bis).limit(200);
+  if (error) throw new Error(error.message);
+  for (const t of data ?? []) {
+    const stufe = t.faellig === heute ? "heute" : "vorher";
+    if (stufe === "heute" ? t.erinnert_heute === t.faellig : t.erinnert_vorher === t.faellig) continue;
+    const an: string[] = [...new Set<string>(t.zustaendige?.length ? t.zustaendige : [t.zustaendig || t.person_id])];
+    const tage = Math.round((Date.parse(t.faellig + "T12:00:00Z") - Date.parse(heute + "T12:00:00Z")) / 86400000);
+    const datum = String(t.faellig).split("-").reverse().join(".");
+    const titel = stufe === "heute" ? "⏰ Frist läuft heute ab" : `⏳ Frist in ${tage} ${tage === 1 ? "Tag" : "Tagen"}`;
+    const r = await senden("club_aufgabe", an, {
+      titel, kurz: `${t.text} – bis ${datum}`,
+      betreff: stufe === "heute" ? `Köcheclub Werne – Frist läuft heute ab: ${t.text}` : `Köcheclub Werne – Erinnerung: Frist am ${datum}`,
+      text: `Hallo,
+
+${stufe === "heute" ? "heute läuft die Frist für diese Aufgabe ab" : `in ${tage} ${tage === 1 ? "Tag" : "Tagen"} (am ${datum}) läuft die Frist für diese Aufgabe ab`}:
+
+„${t.text}“
+
+Abhaken kannst du sie in der Köcheclub-App unter Termine → ✅ To-do.
+
+Viele Grüße
+Köcheclub Werne`,
+      url: `${APP_URL}#todo`,
+    }, `club-todo-frist:${t.id}:${stufe}:${t.faellig}`);
+    // auch die Vorab-Erinnerung als erledigt merken, wenn es schon der Tag selbst ist (kein Nachholen am Fälligkeitstag)
+    await db.from("kc_club_todo").update(stufe === "heute" ? { erinnert_heute: t.faellig, erinnert_vorher: t.faellig } : { erinnert_vorher: t.faellig }).eq("id", t.id);
+    await protokoll(null, "todo_frist_erinnert", { stufe, an: an.length, versand: r });
+  }
 }
 // ----- KC-CLUB-ERSTATTUNG (0.38.0): Fahrtkosten, vorgestreckter Einkauf, sonstige Auslagen (Registry) -----
 // KC-CLUB-AENDERUNG (2.22.7, Wunsch Hansi): „✏️ Meine Daten haben sich geändert“ – Register der Meldungs-Arten.
@@ -4154,6 +4191,7 @@ Deno.serve(async (req) => {
       await dbWarnungLauf().catch((e) => console.error("db warnung", String(e))); // KC-CLUB-DB-AUFRAEUMEN (2.24.7)
       await schulungNachfrageErinnern().catch((e) => console.error("schulung nachfrage", String(e))); // KC-CLUB-SCHULUNG-NACHFRAGE (2.35.0)
       await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
+      await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-SPUR (2.23.88): Wege der Mitglieder nur 30 Tage aufbewahren
       { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }
