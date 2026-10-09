@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.171.0 – 2026-10-09 – 🐌 Schnecken wandern wieder (auch bei „Bewegung reduzieren“ am Handy) und kriechen dabei
+🔧 Kleine Systemverbesserungen
+
 ## 2.170.0 – 2026-10-09 – 🎙️ Sprachbefehle-Liste: jeder Befehl lässt sich antippen und führt aus (KC-CLUB-SPRACHE-LISTE-TIPPEN)
 🔧 Kleine Systemverbesserungen
 

@@ -6905,7 +6905,9 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/onclick="schneckeInfo\(\)"><i style="--n:0">🐌<\/i><i style="--n:1">🐌<\/i><i style="--n:2">🐌<\/i><\/button>/.test(programm), "drei Schnecken");
   assert.ok(/\.schnecke \{ position: fixed;[^}]*pointer-events: none; \}/.test(seite) && /\.schnecke i \{[^}]*pointer-events: auto;[^}]*animation: schneckeWandern 27s linear infinite; \}/.test(seite), "Streifen lässt Tipps durch, Schnecken wandern");
   assert.ok(/@keyframes schneckeWandern \{ 0% \{ transform: translate\(0, 0\); \}[^@]*100% \{ transform: translate\(calc\(-100vw - 40px\), 0\); \} \}/.test(seite), "von rechts nach links");
-  assert.ok(!/html\.spar \.schnecke i \{ animation: none/.test(seite) && /prefers-reduced-motion: reduce\) \{ \.schnecke i \{ animation: none;/.test(seite), "weniger Bewegung: still (2.142.0: im Sparmodus wandern sie – Wunsch Hansi)");
+  // 2.171.0 (Hansi: „Schnecken laufen immer noch nicht“): Handy-Einstellung „weniger Bewegung“ hält sie nicht mehr an – nur „✨ Animierte Knöpfe“ aus
+  assert.ok(!/html\.spar \.schnecke i \{ animation: none/.test(seite) && !/prefers-reduced-motion: reduce\) \{ \.schnecke i \{ animation: none;/.test(seite) && /:root\.ohne-anim \.schnecke i \{ animation: none;/.test(seite), "still nur bei ausgeschalteten Animationen der App");
+  assert.ok(/\.schnecke i \{ animation: schneckeWandern 27s linear infinite, schneckeKriechen 1\.6s ease-in-out infinite;/.test(seite) && /@keyframes schneckeKriechen/.test(seite), "Schnecken kriechen beim Wandern");
 }
 // 2.126.0 Fehler Hansi 09.10. (Adressbuch: „reading 'replace'“): adrSauber nie direkt an .map geben (Index würde nurFelder)
 assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\(a\)\)/.test(server), "Adressbuch: jede Adresse behält ihre id");
