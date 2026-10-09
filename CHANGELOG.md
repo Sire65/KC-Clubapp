@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.173.0 – 2026-10-09 – 🗣️ Admin kann Online-/Verlassen-Ansagen für ein Mitglied einschalten (KC-CLUB-ANSAGE-VORGABE)
+🔧 Kleine Systemverbesserungen
+
 ## 2.172.0 – 2026-10-09 – ✨ Neue Effekte: Papierflieger beim Senden, Zettel wird angepinnt, Zahlen zählen hoch, Jahreszeiten im Kopf, Geburtstagskerze (KC-CLUB-EFFEKTE-2)
 🔧 Kleine Systemverbesserungen
 

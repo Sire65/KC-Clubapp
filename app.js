@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.172.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.173.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -3411,6 +3411,22 @@ const ANS_ARTEN = [
 const ANS_KEY = "kc_club_sprachansagen", ANS = { q: [], t: null, gesagt: new Map(), st: null };
 function ansWahl() { let w = null; try { w = JSON.parse(lsLesen(ANS_KEY) || "null"); } catch {} return { ...(w && typeof w === "object" ? w : Object.fromEntries(ANS_ARTEN.map((a) => [a.id, !!a.an]))), online: ansageAn() }; }
 const ansAn = (id) => !!ansWahl()[id];
+// ---------- KC-CLUB-ANSAGE-VORGABE (2.173.0, Wunsch Hansi): Admin schaltet bei einem Mitglied „online“/„verlässt die App“ ein ----------
+// Die Vorgabe kommt mit „init“; je Gerät genau einmal übernommen (Stempel „am“), danach entscheidet wieder das Mitglied selbst.
+const ANS_VORGABE_KEY = "kc_club_ansage_vorgabe_am";
+function ansageVorgabeUebernehmen(v) {
+  if (!v?.am || lsLesen(ANS_VORGABE_KEY) === v.am) return;
+  lsSetzen(ANS_VORGABE_KEY, v.am);
+  ansSetzen("online", !!v.online); ansSetzen("verlassen", !!v.verlassen);
+  const was = [v.online && "wenn jemand online kommt", v.verlassen && "wenn jemand die App verlässt"].filter(Boolean).join(" und ");
+  setTimeout(() => melde(was ? `🗣️ ${v.von || "Der Admin"} hat für dich die Ansage eingeschaltet, ${was}. Ändern: ⚙️ → „🗣️ Ansagen, Töne & Tipps“.` : `🗣️ ${v.von || "Der Admin"} hat die Online-Ansagen für dich ausgeschaltet.`), 2500);
+}
+async function ansageVorgabeSetzen(pid, name) {
+  const ja = await frage(`🗣️ Ansagen für ${name} einschalten?\n\nSein/ihr Handy sagt dann, wenn jemand online kommt und wenn jemand die App verlässt (nur bei offener App, nie in der Ruhezeit). ${name} sieht beim nächsten Öffnen einen Hinweis und kann es selbst wieder ändern.`, { ja: "🟢 Ja, einschalten", nein: "Abbrechen" });
+  if (!ja) return;
+  try { await api("ansage_vorgabe_setzen", { an: pid, online: true, verlassen: true }); melde(`🗣️ Für ${name} eingeschaltet – gilt ab dem nächsten Öffnen der App`); }
+  catch (e) { meldeFehler(e); }
+}
 function ansStandZeigen() {
   const w = ansWahl(), n = ANS_ARTEN.filter((a) => w[a.id]);
   if ($("sprAnsStand")) $("sprAnsStand").textContent = n.length ? `An: ${n.map((a) => a.k || a.t.split(" ")[0].replace(/,$/, "")).join(", ")}` : "Aus – nichts wird angesagt";
@@ -12245,6 +12261,7 @@ async function neuLadenRoh(vonHand) {
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     ansichtUebernehmen(INIT.einstellungen?.ansicht);
+    ansageVorgabeUebernehmen(INIT.einstellungen?.ansage_vorgabe); // 2.173.0 KC-CLUB-ANSAGE-VORGABE
     const begruesst = geburtstagPruefen() || ansichtPruefen() || begruessungPruefen(); // 2.134.0: am eigenen Geburtstag zuerst das Ständchen
     if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); herzStarten(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
@@ -21581,7 +21598,7 @@ function mitgliedZeigen() {
       ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')"><span class="kt-ico">💬</span>Nachricht in der App${m.chatAnzahl ? `<small class="md-zahl">${m.chatAnzahl} ${m.chatAnzahl === 1 ? "Nachricht" : "Nachrichten"}</small>` : ""}</button><div id="mdSpiel" hidden></div>`}
       ${ICH?.admin ? `<button class="knopf" onclick="nachrichtenStatistik('${m.person_id}')"><span class="kt-ico">📊</span>Statistik</button>` : ""}
       ${stDarf("zeigen") && !m.selbst ? `<button class="knopf" onclick="vfStart('${m.person_id}')"><span class="kt-ico">📺</span>Live zeigen</button>` : ""}
-      ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button>` : ""}
+      ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button><button class="knopf" onclick="ansageVorgabeSetzen('${m.person_id}', ${esc(JSON.stringify((m.name || "").split(" ")[0]))})"><span class="kt-ico">🗣️</span>Online-Ansagen einschalten</button>` : ""}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
     </div>
     ${prKarte(m)}

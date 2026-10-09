@@ -7498,3 +7498,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/if \(\(m === 12 && t === 31\) \|\| \(m === 1 && t === 1\)\) return "silvester";/.test(m) && /return "herbst";/.test(m) && /einst\("jahreszeit", true\)/.test(m) && /id="setJahreszeit" onchange="jahreszeitUmschalten\(this\.checked\)"/.test(html), "Jahreszeiten nach Datum, abschaltbar");
   assert.ok(/\.jz-schicht \{ position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none;/.test(html) && /\.papierflieger \{ position: fixed; z-index: 99999; pointer-events: none;/.test(html), "Effekte blockieren keine Tipps");
 }
+// 2.173.0 KC-CLUB-ANSAGE-VORGABE (Wunsch Hansi „bei Marianne Online-/Verlassen-Info einschalten“)
+{
+  const c = server.slice(server.indexOf('case "ansage_vorgabe_setzen": {'), server.indexOf('case "studio_recht_setzen": {'));
+  assert.ok(/nurAdmin\(ich\);/.test(c) && /an === ich\.person_id \|\| !\(await aktiveMitglieder\(\)\)\.some/.test(c) && /schluessel: "ansage_vorgabe"/.test(c) && /protokoll\(ich\.person_id, "ansage_vorgabe"/.test(c), "nur Admin, nur aktive Mitglieder, protokolliert");
+  assert.ok(/if \(!v\?\.am \|\| lsLesen\(ANS_VORGABE_KEY\) === v\.am\) return;/.test(html) && /ansSetzen\("online", !!v\.online\); ansSetzen\("verlassen", !!v\.verlassen\);/.test(html), "je Gerät genau einmal übernommen, danach entscheidet das Mitglied");
+  assert.ok(/ansageVorgabeUebernehmen\(INIT\.einstellungen\?\.ansage_vorgabe\);/.test(html) && /Ändern: ⚙️ → „🗣️ Ansagen, Töne & Tipps“/.test(html), "Mitglied bekommt einen Hinweis");
+  assert.ok(/onclick="ansageVorgabeSetzen\('\$\{m\.person_id\}'/.test(html), "Knopf auf der Mitgliedsseite (Admin)");
+}

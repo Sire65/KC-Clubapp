@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.172.0";
+const SERVER_VERSION = "2.173.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -8384,6 +8384,19 @@ Köcheclub-App`,
         const { data } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "studio_recht");
         const leute = await personen((data ?? []).map((x: any) => x.person_id));
         return json({ liste: (data ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id, ...studioAusWert(x.wert) })).filter((x: any) => x.stufe) });
+      }
+      // KC-CLUB-ANSAGE-VORGABE (2.173.0, Wunsch Hansi „bei Marianne einschalten: Info, wenn jemand online kommt oder rausgeht“):
+      // Ansagen sind eine Einstellung je Gerät – der Admin hinterlegt eine Vorgabe, die App des Mitglieds übernimmt sie beim nächsten
+      // Öffnen einmal (je Gerät) und sagt es dem Mitglied; danach kann es jederzeit selbst wieder ändern. Nur online/verlassen.
+      case "ansage_vorgabe_setzen": {
+        nurAdmin(ich);
+        const an = String(p.an || "");
+        if (an === ich.person_id || !(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        const wert = { online: p.online === true, verlassen: p.verlassen === true, von: ich.vorname || "Admin", am: jetzt() };
+        const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: an, schluessel: "ansage_vorgabe", wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (error) throw new Fehler("Die Vorgabe konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "ansage_vorgabe", { an, online: wert.online, verlassen: wert.verlassen });
+        return json({ ok: true, ...wert });
       }
       case "studio_recht_setzen": {
         nurAdmin(ich);
