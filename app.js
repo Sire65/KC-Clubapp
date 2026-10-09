@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.128.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.129.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12526,7 +12526,7 @@ const BU_REGAL = [
   { id: "sitzung", sym: "🗂️", t: "Sitzung", farbe: "#6f7f6a", bereich: "sitzung" },
   { id: "nachher", sym: "📸", t: "Nachbereitung", farbe: "#8a7560", bereich: "nachher", recht: "S" },
   { id: "protokolle", sym: "📄", t: "Protokolle", farbe: "#5d6f82", fn: "zeige('protokolle')" },
-  { id: "feste", sym: "🎂", t: "Geburtstage", farbe: "#a1866f", fn: "buFeste()" },
+  { id: "feste", sym: "🎂", t: "Geburtstage", farbe: "#a1866f", fn: "buFeste()", recht: "oL" }, // 2.129.0: für die Clubleitung in „Freud & Leid“ (Wunsch Hansi), eigener Ordner nur noch für Büro ohne Clubleitung
   { id: "fl", sym: "🤍", t: "Freud & Leid", farbe: "#7d6b7f", fn: "buFreudLeid()", recht: "L" },
   { id: "liste", sym: "📇", t: "Mitglieder", farbe: "#6a7a74", fn: "buListe()", recht: "L" },
   { id: "adressen", sym: "📒", t: "Adressbuch", farbe: "#6d7468", fn: "adbStart()", recht: "L" }, // KC-CLUB-BUERO-ADRESSEN (2.125.0): Original in KC Verwaltung
@@ -12643,7 +12643,7 @@ async function adbZurueck(id) {
   if (!(await frage("Diese Meldung zurückziehen?"))) return;
   try { await api("buero_adresse_zurueckziehen", { id }, { warten: true }); melde("↩️ Zurückgezogen"); adbLaden(); } catch (e) { meldeFehler(e); }
 }
-const buRecht = (x) => !x.recht || (x.recht === "S" && buSchreiben()) || (x.recht === "L" && !!ICH?.vorstand) || (x.recht === "A" && !!ICH?.admin);
+const buRecht = (x) => !x.recht || (x.recht === "S" && buSchreiben()) || (x.recht === "L" && !!ICH?.vorstand) || (x.recht === "A" && !!ICH?.admin) || (x.recht === "oL" && !ICH?.vorstand);
 function buRaumHtml() {
   const r = BU.start; if (!r) return '<div class="karte hinweis">Wird geladen …</div>';
   if (!Array.isArray(r.sitzungen) || !r.eingang) return '<div class="karte hinweis">⚠️ Das Büro ist gerade nicht abrufbar – bitte gleich noch einmal öffnen.</div>'; // 2.24.15: unvollständige Antwort nie als leer/OK zeigen
@@ -12653,7 +12653,7 @@ function buRaumHtml() {
   const dranFn = nt ? `buNachherWahl(${esc(JSON.stringify(nt.text))})` : { vorbereiten: "buSitzungWahl()", einladung: "buEinladungWahl(false)", erinnerung: "buEinladungWahl(true)" }[n];
   const fest = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7) : [], festHeute = fest.filter((f) => f.tage === 0);
   const flOffen = FL.d ? FL.d.faelle.filter((f) => f.status === "offen").length : 0;
-  const zahl = { fl: flOffen, feste: fest.length, nachher: nt ? 1 : 0, liste: AE.offen }; // 2.22.10: Änderungsmeldungen im Ordner „Mitglieder“
+  const zahl = { fl: flOffen + (L ? fest.length : 0), feste: fest.length, nachher: nt ? 1 : 0, liste: AE.offen }; // 2.22.10: Änderungsmeldungen im Ordner „Mitglieder“
   const ordner = BU_REGAL.filter(buRecht);
   const ruecken = (o) => `<button class="bu-ordner" style="--of:${o.farbe}" onclick="${o.bereich ? `buOrdner('${o.id}')` : o.fn}" aria-label="${esc(o.t)}"><span class="bu-osym">${o.sym}</span><span class="bu-otext">${esc(o.t)}</span>${zahl[o.id] ? `<span class="bu-ozahl">${zahl[o.id]}</span>` : ""}<span class="bu-oloch"></span></button>`;
   const naechst = (r.sitzungen || []).find((x) => new Date(x.beginn) >= Date.now() - 6 * 3600000) || t;
@@ -13548,7 +13548,7 @@ async function buFesteListe(tage = 60) {
   return BU_F;
 }
 const buFTag = (f) => f.tage === 0 ? "heute 🎉" : f.tage === 1 ? "morgen" : f.tage === -1 ? "gestern" : f.tage < 0 ? `vor ${-f.tage} Tagen` : `${fTagDp.format(new Date(f.datum + "T12:00:00Z"))} · in ${f.tage} Tagen`;
-function buFeste() { BU.sicht = "feste"; buZeigen(); buFesteListe(BU_F?.tage || 60).then(() => { if (aktuelleAnsicht === "buero" && BU.sicht === "feste") buZeigen(); }); window.scrollTo(0, 0); }
+function buFeste(vonFl = false) { BU.festeVonFl = !!vonFl; BU.sicht = "feste"; buZeigen(); buFesteListe(BU_F?.tage || 60).then(() => { if (aktuelleAnsicht === "buero" && BU.sicht === "feste") buZeigen(); }); window.scrollTo(0, 0); }
 function buFesteKachel(f, art) {
   const heute = f.tage === 0;
   return `<button class="mini-kachel${heute ? " bu-dran" : f.rund ? " mk-offen" : ""}" onclick="buFestInfo('${art}','${f.person_id}')"><span class="mk-sym">${art === "geb" ? (f.alter ? "🎉" : "🎂") : f.rund ? "🏆" : "🏅"}</span>
@@ -13566,7 +13566,7 @@ function buFesteHtml() {
     ${gruppe("⏪ Gerade vorbei", alle.filter((f) => f.tage < 0))}
     ${!alle.length ? '<div class="karte hinweis">In diesem Zeitraum steht nichts an.</div>' : ""}
     ${d.ohneFreigabe ? `<p class="hinweis">🔒 ${d.ohneFreigabe} Mitglied${d.ohneFreigabe === 1 ? " hat seinen" : "er haben ihren"} Geburtstag nicht freigegeben – deshalb ${d.ohneFreigabe === 1 ? "erscheint er" : "erscheinen sie"} hier nicht.</p>` : ""}
-    <div class="knoepfe"><button class="knopf" onclick="druckStarten('feste')">🖨️ Liste drucken</button><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
+    <div class="knoepfe"><button class="knopf" onclick="druckStarten('feste')">🖨️ Liste drucken</button>${BU.festeVonFl ? '<button class="knopf" onclick="buFreudLeid()">🤍 Zurück zu Freud & Leid</button>' : '<button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button>'}</div>`;
 }
 function buFest(art, pid) { return (art === "geb" ? BU_F?.geburtstage : BU_F?.jubilaeen)?.find((x) => x.person_id === pid); }
 function buFestInfo(art, pid) {
@@ -13665,7 +13665,7 @@ function druckMitgliederliste() {
 // Fall anlegen in drei Schritten (Was? – Wen? – Was ist zu tun?), Checkliste aus der Server-Registry mit Wer/Bis wann vorbelegt.
 let FL = { d: null, neu: null, fall: null };
 async function flLaden() { try { const r = await api("fl_liste"); FL.d = r && Array.isArray(r.faelle) ? r : null; } catch { FL.d = null; } return FL.d; }
-function buFreudLeid() { BU.sicht = "fl"; buZeigen(); flLaden().then(() => { if (aktuelleAnsicht === "buero" && BU.sicht === "fl") buZeigen(); }); window.scrollTo(0, 0); }
+function buFreudLeid() { BU.sicht = "fl"; buZeigen(); Promise.all([flLaden(), BU_F ? null : buFesteListe(60)]).then(() => { if (aktuelleAnsicht === "buero" && BU.sicht === "fl") buZeigen(); }); window.scrollTo(0, 0); } // 2.129.0: Geburtstage gleich mit laden
 const flArt = (k) => FL.d?.arten?.[k] || { sym: "🤍", t: k, gruppe: "freude" };
 const flLeid = (f) => flArt(f.art).gruppe === "leid";
 function flKachel(f) {
@@ -13680,7 +13680,18 @@ function buFlHtml() {
     <button class="knopf haupt hl-gross" onclick="flNeu()">＋ Neuer Fall</button>
     <div class="abschnitt"><h3>Offen</h3></div>${offen.length ? `<div class="mini-kacheln">${offen.map(flKachel).join("")}</div>` : '<div class="karte hinweis">Gerade nichts offen.</div>'}
     ${zu.length ? `<details class="karte"><summary><b>Abgeschlossen (${zu.length})</b></summary><div class="mini-kacheln" style="margin-top:8px">${zu.map(flKachel).join("")}</div></details>` : ""}
+    ${flFesteHtml()}
     <div class="knoepfe"><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
+}
+// 2.129.0 KC-CLUB-FL-GEBURTSTAGE (Wunsch Hansi): Geburtstage & Jubiläen gehören zu „Freud & Leid“ – als Klappbereich mit den nächsten 30 Tagen;
+// „Alle anzeigen“ öffnet die volle Liste (Zeitraum, Drucken, Gratulieren) und führt zurück hierher.
+function flFesteHtml() {
+  const d = BU_F; if (!d) return '<details class="karte"><summary><b>🎂 Geburtstage & Jubiläen</b></summary><p class="hinweis">Wird geladen …</p></details>';
+  const alle = [...d.geburtstage.map((f) => ({ ...f, art: "geb" })), ...d.jubilaeen.map((f) => ({ ...f, art: "jub" }))].filter((f) => f.tage >= 0 && f.tage <= 30).sort((a, b) => a.datum.localeCompare(b.datum));
+  const bald = alle.filter((f) => f.tage <= 7).length;
+  return `<details class="karte"${bald ? " open" : ""}><summary style="display:list-item"><b>🎂 Geburtstage & Jubiläen</b><br><small class="hinweis">${alle.length} in den nächsten 30 Tagen${bald ? ` · ${bald} diese Woche` : ""}</small></summary>
+    ${alle.length ? `<div class="mini-kacheln" style="margin-top:8px">${alle.map((f) => buFesteKachel(f, f.art)).join("")}</div>` : '<p class="hinweis">In den nächsten 30 Tagen steht nichts an.</p>'}
+    <button class="knopf klein" style="margin-top:8px" onclick="buFeste(true)">🗓️ Alle anzeigen · drucken</button></details>`;
 }
 // --- neuer Fall ---
 function flBis(regel) {

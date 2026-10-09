@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.129.0 – 2026-10-09 – Geburtstage in Freud & Leid
+🔧 Kleine Systemverbesserungen
+Admin-Notiz (KC-CLUB-FL-GEBURTSTAGE, Wunsch Hansi): Ordner „🎂 Geburtstage“ für die Clubleitung in „🤍 Freud & Leid“ eingebaut – Klappbereich „Geburtstage & Jubiläen“ (nächste 30 Tage, offen wenn diese Woche etwas ansteht), „Alle anzeigen · drucken“ öffnet die volle Liste mit Rückweg; Zahl am Ordner Freud & Leid zählt die Glückwünsche dieser Woche mit. Büro ohne Clubleitung behält den eigenen Ordner Geburtstage.
+
 ## 2.128.0 – 2026-10-09 – Anhänge teilen
 🔧 Kleine Systemverbesserungen
 Admin-Notiz (KC-CLUB-ANLAGE-TEILEN, Wunsch Hansi): Datei-Anhang in Nachrichten und Protokollen antippen → „👁️ Öffnen“, „📤 Teilen / Weiterleiten“ (Teilen-Menü des Handys, z. B. an Claude, Mail, WhatsApp) oder „⬇️ Auf dem Gerät speichern“. Die Datei wird beim Öffnen des Fensters schon geladen (Server prüft das Recht wie bisher).

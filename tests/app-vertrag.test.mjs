@@ -3619,7 +3619,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 {
   assert.ok(/const MITGLIEDER_ORDNER = \{ art: "sonstiges", titel: "Personal", farbe: 3, register: \["Meldungen", "Sonstiges"\] \};/.test(server) && /const adminOrdner = \(jahr: number, register: string\) => vereinsOrdner\(ADMIN_ORDNER, jahr, register\);/.test(server), "Vereinsordner Mitglieder, Admin-Ordner unverändert nutzbar");
   assert.ok(!/id: "aenderungen", sym: "📬", t: "Änderungen", farbe/.test(html), "kein eigener Regal-Ordner mehr");
-  assert.ok(/const zahl = \{ fl: flOffen, feste: fest\.length, nachher: nt \? 1 : 0, liste: AE\.offen \};/.test(html) && /ordner: \["📇", "Mitglieder", "buListe\(\)"\]/.test(html), "Zahl am Ordner Mitglieder, Eingangskorb führt dorthin");
+  assert.ok(/const zahl = \{ fl: flOffen(?: \+ \(L \? fest\.length : 0\))?, feste: fest\.length, nachher: nt \? 1 : 0, liste: AE\.offen \};/.test(html) && /ordner: \["📇", "Mitglieder", "buListe\(\)"\]/.test(html), "Zahl am Ordner Mitglieder, Eingangskorb führt dorthin");
 }
 // 336. 2.22.11: Hilfe-Aufrufe – wer hat ihn gesehen (KC-CLUB-HILFE-GESEHEN)
 {
@@ -6956,4 +6956,13 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok((programm.match(/^function anlageAktion\(/gm) || []).length === 1 && (programm.match(/^function anlageMenue\(/gm) || []).length === 1, "kein Namenskonflikt mit dem Anlage-hinzufügen-Menü");
   const f = programm.slice(programm.indexOf("function anlageAktion("), programm.indexOf("function anlageAktion(") + 2600);
   assert.ok(/lauf\.warten = anlageAlsDatei\(\{ id, name, mime \}\)/.test(f) && /navigator\.canShare\?\.\(\{ files: \[datei\] \}\)/.test(f) && /a\.download = datei\.name/.test(f), "vorab laden, teilen, sonst speichern");
+}
+
+// 4xx. 2.129.0: Geburtstage in Freud & Leid (KC-CLUB-FL-GEBURTSTAGE, Wunsch Hansi)
+{
+  assert.ok(/\{ id: "feste", sym: "🎂", t: "Geburtstage", farbe: "#a1866f", fn: "buFeste\(\)", recht: "oL" \}/.test(programm) && /\(x\.recht === "oL" && !ICH\?\.vorstand\)/.test(programm), "eigener Ordner nur noch ohne Clubleitung");
+  const fl = programm.slice(programm.indexOf("function buFlHtml()"), programm.indexOf("function flFesteHtml()") + 1500);
+  assert.ok(/\$\{flFesteHtml\(\)\}/.test(fl) && /onclick="buFeste\(true\)">🗓️ Alle anzeigen · drucken<\/button>/.test(fl) && /f\.tage >= 0 && f\.tage <= 30/.test(fl), "Klappbereich in Freud & Leid");
+  assert.ok(/Promise\.all\(\[flLaden\(\), BU_F \? null : buFesteListe\(60\)\]\)/.test(programm) && /BU\.festeVonFl \? '<button class="knopf" onclick="buFreudLeid\(\)">🤍 Zurück zu Freud & Leid<\/button>'/.test(programm), "lädt mit, Rückweg");
+  assert.ok(/const zahl = \{ fl: flOffen \+ \(L \? fest\.length : 0\),/.test(programm), "Zahl am Ordner");
 }
