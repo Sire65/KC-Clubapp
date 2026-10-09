@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.146.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.147.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12736,6 +12736,7 @@ const BU_REGAL = [
   { id: "termine", sym: "📅", t: "Termine", farbe: "#8b6f5a", fn: "buTermine()", recht: "S" },
   { id: "briefe", sym: "✉️", t: "Briefe", farbe: "#6e6a5c", fn: "buBrief()", recht: "S" },
   { id: "erstattung", sym: "💶", t: "Erstattung", farbe: "#7a7f5e", fn: "zeige('erstattung')", recht: "L" },
+  { id: "weihnachtsmarkt", sym: "🎄", t: "Weihnachtsmarkt", farbe: "#2e5d3a", fn: "arStartTitel('Weihnachtsmarkt')", recht: "L" }, // 2.147.0 (Wunsch Hansi): Ordner mit Jahren und Unterregistern
   { id: "besprechungen", sym: "🤝", t: "Besprechungen", farbe: "#6b6f86", fn: "arStartTitel('Besprechungen')", recht: "L" }, // KC-CLUB-ARCHIV-KOPIEREN (2.59.0): Entwürfe/Unterlagen, bevor es ein Protokoll ist
   { id: "chronik", sym: "📖", t: "Chronik", farbe: "#8a6d4e", fn: "arStartArt('chronik')" },
   { id: "archiv", sym: "🗄️", t: "Archiv", farbe: "#5f5a57", fn: "arStart()" },
@@ -20932,6 +20933,14 @@ function updateSelbst() {
 // ---------- KC-CLUB-ARCHIV (1.2.0, Wunsch Hansi): Regal mit Aktenordnern (Jahreszahl + Inhalt), innen Register ----------
 // Automatisch: „Clubleben JJJJ“ je Jahr aus vorhandenen Daten (nur lesen). Von Hand: Ordner mit Art, Jahr, Farbe, Registern.
 // Pflegen (Ordner, Hochladen, Ändern, Löschen): Clubsprecher und Admin – der Server prüft das.
+// KC-CLUB-ARCHIV-UNTERREGISTER (2.147.0, Wunsch Hansi „Ordner Weihnachtsmarkt mit Registern 2026, 2027 … und darunter z. B. Checklisten“):
+// Ein Register „2026 › Checklisten“ ist ein Unterregister von „2026“. Oben stehen die Jahre, darunter die Unterregister des gewählten Jahres.
+// Ein Ordner mit solchen Registern gilt als mehrjährig – sein Name kommt ohne Jahreszahl (das Jahr steckt im Register).
+const AR_TRENN = " › ";
+const arMehrjahr = (o) => (o?.register || []).some((r) => String(r).includes(AR_TRENN));
+const arName = (o) => (arMehrjahr(o) || o?.art === "chronik" ? o.titel : `${o.titel} ${o.jahr}`);
+const arJahrSpanne = (o) => { const j = [...new Set((o.register || []).map((r) => String(r).split(AR_TRENN)[0]).filter((x) => /^\d{4}$/.test(x)))].sort(); return j.length ? (j.length > 1 ? `${j[0]}–${j[j.length - 1]}` : j[0]) : String(o.jahr); };
+const arImRegister = (x, reg) => !reg || x.register === reg || String(x.register || "").startsWith(reg + AR_TRENN);
 const AR_FARBEN = ["#8b1e2d", "#1f5f99", "#2e7d4f", "#b36b00", "#5b3f8c", "#3f4a54", "#0f7c80", "#a33b6b"];
 const AR_AUTO = { treffen: ["📅", "Termine"], protokoll: ["📄", "Protokolle"], abstimmung: ["🗳️", "Abstimmungen"], aktion: ["🧳", "Aktionen"], pinnwand: ["📌", "Pinnwand"], anhang: ["📎", "Anhänge"], dienst: ["🗓️", "Dienste"] };
 let AR = { ziel: null, daten: null, ordner: null, register: "", suche: "", jahr: "", art: "", korb: false, datei: null };
@@ -21032,7 +21041,7 @@ function ivGliedern(daten, opt = {}) {
       const extra = [...new Set(ein.map((e) => e.register || "").filter((r) => r && !bekannt.includes(r)))];
       const register = [...bekannt, ...extra].map((r) => ({ name: r, eintraege: ein.filter((e) => e.register === r).sort(datumSort) }));
       const ohne = ein.filter((e) => !e.register); if (ohne.length) register.push({ name: "Ohne Register", eintraege: ohne.sort(datumSort) });
-      return { id: o.id, titel: o.titel, jahr: o.art === "chronik" ? null : o.jahr, art: o.art, register, anzahl: ein.length };
+      return { id: o.id, titel: o.titel, jahr: o.art === "chronik" || (typeof arMehrjahr === "function" && arMehrjahr(o)) ? null : o.jahr, art: o.art, register, anzahl: ein.length };
     }) })).filter((b) => b.ordner.length);
 }
 // ---------- KC-CLUB-INHALTSVERZEICHNIS-ANTIPPEN (2.144.0, Wunsch Hansi): Inhaltsverzeichnis auf dem Bildschirm – alles antippbar ----------
@@ -21258,9 +21267,9 @@ async function arChronikAnlegen() {
 function arAnzahl(o) { return o.auto ? AR.daten.auto.filter((x) => arJahr(x.datum) === String(o.jahr)).length : o.anzahl; }
 function arRuecken(o) {
   const n = arAnzahl(o), geteilt = o.besitzer && !o.eigen;
-  return `<button class="ordner" style="--of:${arFarbe(o)}" onclick="arOrdnerOeffnen('${o.id}')" title="${esc(o.titel)} ${o.jahr}">
+  return `<button class="ordner" style="--of:${arFarbe(o)}" onclick="arOrdnerOeffnen('${o.id}')" title="${esc(arName(o))}">
     ${o.nur_vorstand ? '<span class="schloss">🔒</span>' : ""}${o.eigen && o.pruefung ? `<span class="schloss" title="wartet auf deine Prüfung">⏳${o.pruefung}</span>` : ""}${o.eigen && o.freigaben?.length ? '<span class="ar-frei" title="freigegeben">🔓</span>' : ""}<span class="sym">${arSym(o)}</span>
-    <span class="schild"><span class="jahr">${o.jahr}</span><span class="name">${esc(o.titel)}</span></span>
+    <span class="schild"><span class="jahr">${arMehrjahr(o) ? esc(arJahrSpanne(o)) : o.jahr}</span><span class="name">${esc(o.titel)}</span></span>
     <span class="anz">${geteilt ? "bis " + arBisKurz(o) : `${n} ${n === 1 ? "Eintrag" : "Einträge"}`}</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>`;
 }
 const arBisText = (iso) => new Date(iso).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) + " Uhr";
@@ -21293,12 +21302,12 @@ function arOrdnerZeigen() {
   const eintraege = arEintraege(o);
   const reg = o.auto ? o.register.filter((r) => eintraege.some((x) => x.register === r))
     : o.besitzer && !o.eigen ? o.register.filter((r) => arFreiRegister(o).includes(r) || eintraege.some((x) => x.register === r)) : o.register;
-  if (AR.register && !reg.includes(AR.register)) AR.register = "";
+  if (AR.register && !reg.some((r) => r === AR.register || r.startsWith(AR.register + AR_TRENN))) AR.register = "";
   if (o.art === "chronik") eintraege.sort((a, b) => String(a.datum || "9999").localeCompare(String(b.datum || "9999"))); // KC-CLUB-CHRONIK: Zeitleiste alt → neu
-  const sichtbar = eintraege.filter((x) => !AR.register || x.register === AR.register);
+  const sichtbar = eintraege.filter((x) => arImRegister(x, AR.register));
   const art = o.auto ? "automatisch aus der App" : o.eigen ? "Dein persönlicher Ordner · nur du siehst ihn"
     : o.besitzer ? `freigegeben bis ${arBisText((o.geteilt || []).map((f) => f.bis).sort().pop())} · ${arDarfHinein(o) ? "ansehen + hineinlegen (zur Prüfung)" : "nur ansehen"}` : (d.arten[o.art]?.t || "");
-  $("arInhalt").innerHTML = `<div class="ar-kopf" style="--of:${arFarbe(o)}"><span class="sym">${arSym(o)}</span><div><b>${esc(o.titel)} ${o.jahr}</b><div class="klein">${esc(art)}${o.nur_vorstand ? " · 🔒 nur Clubleitung" : ""}</div></div><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""></div>
+  $("arInhalt").innerHTML = `<div class="ar-kopf" style="--of:${arFarbe(o)}"><span class="sym">${arSym(o)}</span><div><b>${esc(arName(o))}</b><div class="klein">${esc(art)}${o.nur_vorstand ? " · 🔒 nur Clubleitung" : ""}</div></div><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""></div>
     ${o.eigen ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">＋ Dokument</button><button class="knopf klein" onclick="arFreigabeForm('${o.id}')">🔓 Freigeben</button><button class="knopf klein" onclick="arOrdnerForm('${o.id}')">✏️ Register</button><button class="knopf klein" onclick="arOrdnerLoeschen('${o.id}')">🗑️ Ordner</button></div>
         ${o.pruefung ? `<div class="karte hinweis" style="border:2px solid #d68910">⏳ <b>${o.pruefung} ${o.pruefung === 1 ? "Dokument wartet" : "Dokumente warten"} auf deine Prüfung</b> – unten annehmen oder ablehnen.</div>` : ""}${arFreigabenListe(o)}`
       : o.besitzer ? (arDarfHinein(o) ? `<div class="knoepfe" style="margin:8px 0"><button class="knopf klein haupt" onclick="arDokForm()">📥 Dokument hineinlegen</button></div><p class="hinweis" style="margin:0 4px 8px">Was du hineinlegst, sieht ${esc(o.titel)} erst nach Prüfung – angenommen oder abgelehnt bekommst du Bescheid.</p>` : "")
@@ -21309,8 +21318,9 @@ function arOrdnerZeigen() {
     ${o.einleitung ? `<details class="karte ar-anleitung" open><summary><b>📜 ${esc(o.einleitung.trim().split("\n")[0])}</b></summary>${arEinleitungHtml(o.einleitung).replace(/<h3>.*?<\/h3>/, "")}</details>` : ""}
     ${o.art === "chronik" ? `<details class="karte ar-anleitung" ${eintraege.length ? "" : "open"}><summary><b>📌 So füllen wir unsere Chronik</b></summary>${CHRONIK_ANLEITUNG}</details>` : ""}
     ${eintraege.length > 3 ? `<input id="arOrdnerSuche" class="ar-ordnersuche" type="search" autocomplete="off" enterkeyhint="search" placeholder="🔍 In diesem Ordner suchen …" value="${esc(AR.ordnerSuche || "")}" oninput="AR.ordnerSuche=this.value;arOrdnerListe()" onkeydown="if(event.key==='Escape'){this.value='';AR.ordnerSuche='';arOrdnerListe()}">` : ""}
-    <div class="ar-register">${[["", "Alle", eintraege.length], ...reg.map((r) => [r, r, eintraege.filter((x) => x.register === r).length])].map(([w, t, n], i) => `<button class="${AR.register === w ? "an" : ""}" style="--rf:${i ? AR_FARBEN[(i - 1) % AR_FARBEN.length] : "var(--grau)"}" onclick="AR.register=${esc(JSON.stringify(w))};arZeigen()">${esc(t)} <small>${n}</small></button>`).join("")}</div>
-    ${AR.register && (o.eigen || (!o.besitzer && !o.auto && d.darf)) ? `<div class="knoepfe" style="margin:6px 0 0;justify-content:flex-end"><button class="knopf klein" onclick="arRegisterLoeschen()">🗑️ Register „${esc(AR.register)}“ löschen</button></div>` : ""}
+    ${arRegisterTabs(reg, eintraege)}
+    ${!o.besitzer && !o.auto && d.darf && arMehrjahr(o) ? `<div class="knoepfe" style="margin:6px 0 0;justify-content:flex-end"><button class="knopf klein" onclick="arJahrDazu('${o.id}')">＋ Jahr ${esc(String(arNaechstesJahr(o)))} anlegen</button></div>` : ""}
+    ${AR.register && reg.includes(AR.register) && (o.eigen || (!o.besitzer && !o.auto && d.darf)) ? `<div class="knoepfe" style="margin:6px 0 0;justify-content:flex-end"><button class="knopf klein" onclick="arRegisterLoeschen()">🗑️ Register „${esc(AR.register)}“ löschen</button></div>` : ""}
     <div class="ar-blatt" id="arOrdnerListe"></div>`;
   arOrdnerListe();
 }
@@ -21346,10 +21356,31 @@ async function arKorbLeeren(liste) {
   melde(`❌ ${n} endgültig gelöscht – Speicher frei`); await arLaden(); arKorbZeigen();
 }
 // KC-CLUB-ARCHIV-SUCHE: Live-Filter im geöffneten Ordner (im gewählten Register; ab 2 Buchstaben)
+// Register-Reiter: flach wie bisher – bei „Jahr › Unterregister“ zwei Reihen (oben Jahre, darunter die Unterregister des gewählten Jahres)
+function arRegisterTabs(reg, eintraege) {
+  const knopf = (w, t, n, i) => `<button class="${AR.register === w ? "an" : ""}" style="--rf:${i ? AR_FARBEN[(i - 1) % AR_FARBEN.length] : "var(--grau)"}" onclick="AR.register=${esc(JSON.stringify(w))};arZeigen()">${esc(t)} <small>${n}</small></button>`;
+  const zahl = (w) => eintraege.filter((x) => arImRegister(x, w)).length;
+  if (!reg.some((r) => r.includes(AR_TRENN))) return `<div class="ar-register">${[["", "Alle", eintraege.length], ...reg.map((r) => [r, r, zahl(r)])].map(([w, t, n], i) => knopf(w, t, n, i)).join("")}</div>`;
+  const oben = [...new Set(reg.map((r) => r.split(AR_TRENN)[0]))], aktiv = AR.register ? AR.register.split(AR_TRENN)[0] : "";
+  const unter = aktiv ? reg.filter((r) => r.startsWith(aktiv + AR_TRENN)) : [];
+  return `<div class="ar-register">${[["", "Alle", eintraege.length], ...oben.map((t) => [t, t, zahl(t)])].map(([w, t, n], i) => `<button class="${aktiv === w && (w || !AR.register) ? "an" : ""}" style="--rf:${i ? AR_FARBEN[(i - 1) % AR_FARBEN.length] : "var(--grau)"}" onclick="AR.register=${esc(JSON.stringify(w))};arZeigen()">${esc(t)} <small>${n}</small></button>`).join("")}</div>
+    ${unter.length ? `<div class="ar-register ar-unterregister">${[[aktiv, "Alle " + aktiv, zahl(aktiv)], ...unter.map((r) => [r, r.slice(aktiv.length + AR_TRENN.length), zahl(r)])].map(([w, t, n], i) => knopf(w, t, n, i)).join("")}</div>` : ""}`;
+}
+const arNaechstesJahr = (o) => { const j = (o.register || []).map((r) => Number(String(r).split(AR_TRENN)[0])).filter((x) => x > 1900); return (j.length ? Math.max(...j) : new Date().getFullYear()) + 1; };
+// neues Jahr = dieselben Unterregister wie das jüngste Jahr (z. B. Checklisten, Verträge …) – nichts wird verschoben oder gelöscht
+async function arJahrDazu(oid) {
+  const o = AR.daten?.ordner?.find((x) => x.id === oid); if (!o) return;
+  const neu = arNaechstesJahr(o), alt = String(neu - 1), vorlage = (o.register || []).filter((r) => r.startsWith(alt + AR_TRENN)).map((r) => r.slice(alt.length + AR_TRENN.length));
+  const reg = [...o.register, ...(vorlage.length ? vorlage : ["Checklisten", "Sonstiges"]).map((u) => `${neu}${AR_TRENN}${u}`)];
+  if (!(await frage(`📅 Im Ordner „${o.titel}“ das Jahr ${neu} anlegen?\n\nMit den Unterregistern: ${(vorlage.length ? vorlage : ["Checklisten", "Sonstiges"]).join(", ")}.`, { ja: `＋ ${neu} anlegen`, nein: "Abbrechen" }))) return;
+  try { await api("archiv_ordner_speichern", { id: o.id, art: o.art, jahr: o.jahr, titel: o.titel, farbe: o.farbe, register: reg, nur_vorstand: !!o.nur_vorstand, einreichen: !!o.einreichen }, { warten: true });
+    melde(`📅 ${neu} angelegt`); AR.register = String(neu); await arLaden(); arOrdnerOeffnen(o.id); AR.register = String(neu); arZeigen();
+  } catch (e) { meldeFehler(e); }
+}
 function arOrdnerListe() {
   const o = arOrdnerAktuell(), d = AR.daten; if (!o || !$("arOrdnerListe")) return;
   const q = AR.ordnerSuche || "", suchen = arSuchLang(q), m = suchen ? suMusterFuer(arWoerter(q)) : null;
-  const liste = arEintraege(o).filter((x) => (!AR.register || x.register === AR.register)
+  const liste = arEintraege(o).filter((x) => arImRegister(x, AR.register)
     && (!suchen || (o.auto ? arPasstAlle(q, x.titel, x.text, x.voll) : arPasstAlle(q, x.titel, x.name, x.register, x.stichworte || [], x.beschreibung || ""))));
   if (o.art === "chronik") liste.sort((a, b) => String(a.datum || "9999").localeCompare(String(b.datum || "9999"))); // KC-CLUB-CHRONIK: Zeitleiste
   $("arOrdnerListe").innerHTML = (suchen ? `<p class="hinweis ar-zahl" style="margin:4px 6px">${liste.length} Treffer${AR.register ? ` im Register „${esc(AR.register)}“ <button class="knopf klein" onclick="AR.register='';arZeigen()">in allen suchen</button>` : ""}</p>` : "")
@@ -21448,7 +21479,7 @@ async function arOrdnerSpeichern(id) {
 }
 async function arOrdnerLoeschen(id) {
   const o = AR.daten.ordner.find((x) => x.id === id); if (!o) return;
-  if (!(await frage(`Ordner „${o.titel} ${o.jahr}“ mit ${o.anzahl} Dokument(en) in den Papierkorb legen?\n\nEr lässt sich ${AR.daten.papierkorbTage} Tage lang wiederherstellen.`))) return;
+  if (!(await frage(`Ordner „${arName(o)}“ mit ${o.anzahl} Dokument(en) in den Papierkorb legen?\n\nEr lässt sich ${AR.daten.papierkorbTage} Tage lang wiederherstellen.`))) return;
   try { await api("archiv_ordner_loeschen", { id }); melde("🗑️ Im Papierkorb"); AR.ordner = null; await arLaden(); } catch (e) { meldeFehler(e); }
 }
 // ----- Dokument ablegen / ändern -----
@@ -21542,7 +21573,7 @@ function arZielBlatt(id, art) {
   AR_ZIEL = { id, art, jetzt: { ordner: o.id, register: x.register } };
   const kop = art === "kopieren";
   arBlatt(`<h3>${kop ? "📋 Kopieren nach …" : "➡️ Verschieben nach …"}</h3>
-    <p class="hinweis" style="margin:0 0 8px">${arDateiSym(x.mime)} <b>${esc(x.titel)}</b><br>liegt jetzt in: ${esc(o.titel)} ${o.jahr}${o.nur_vorstand ? " 🔒" : ""} › ${esc(x.register || "Allgemein")}</p>
+    <p class="hinweis" style="margin:0 0 8px">${arDateiSym(x.mime)} <b>${esc(x.titel)}</b><br>liegt jetzt in: ${esc(arName(o))}${o.nur_vorstand ? " 🔒" : ""} › ${esc(x.register || "Allgemein")}</p>
     ${v ? `<button class="knopf haupt ar-vorschlag" style="width:100%;text-align:left" onclick="arZielSetzen('${v.o.id}', ${esc(JSON.stringify(v.r))})">💡 Vorschlag: <b>${esc(v.o.titel)} ${v.o.jahr} › ${esc(v.r)}</b> <small>(${esc(v.grund)})</small></button>` : ""}
     <label class="feld">Ordner<select id="arZielOrdner" onchange="arZielRegister()">${liste.map((y) => `<option value="${y.id}">${esc(y.titel)} ${y.jahr}${y.nur_vorstand ? " 🔒" : ""}</option>`).join("")}</select></label>
     <label class="feld">Register<select id="arZielReg"></select></label>
@@ -21565,7 +21596,7 @@ async function arZielAusfuehren() {
     else await api("archiv_aendern", { id: z.id, ordner_id, register });
     lsSetzen(AR_ZIEL_KEY, JSON.stringify({ ordner: ordner_id, register }));
     const o = AR.daten.ordner.find((y) => y.id === ordner_id);
-    AR_ZIEL = null; arBlattZu(); melde(`${z.art === "kopieren" ? "📋 Kopiert" : "➡️ Verschoben"} nach ${o ? `${o.titel} ${o.jahr}` : "…"} › ${register}`); await arLaden();
+    AR_ZIEL = null; arBlattZu(); melde(`${z.art === "kopieren" ? "📋 Kopiert" : "➡️ Verschoben"} nach ${o ? arName(o) : "…"} › ${register}`); await arLaden();
   } catch (e) { meldeFehler(e); }
 }
 function arDokOrdnerWechsel(oid) {
@@ -21666,7 +21697,7 @@ async function archivAblageFragen(art, { titel, datum, hinweis, dateien, frage, 
     <p style="margin:0 0 8px">${a.sym} <b>${esc(titel)}</b>${hinweis ? `<br><span class="hinweis">${esc(hinweis)}</span>` : ""}</p>
     ${vs ? `<div class="karte abl-vorschlag">💡 Soll ich das in den Ordner <b>„${esc(vsName)}“</b>${vs.o.nur_vorstand ? " 🔒" : ""} im Register <b>„${esc(vs.r)}“</b> ablegen?<div class="hinweis" style="margin-top:2px">${esc(vs.grund)}</div></div>
       <p class="hinweis" style="margin:6px 0 2px">Oder einen anderen Platz wählen:</p>` : ""}
-    <label class="feld">Ordner<select id="ablOrdner" onchange="ablRegister()">${ordner.map((o) => `<option value="${esc(o.id)}"${o.id === vor.id ? " selected" : ""}>${o.besitzer ? `👤 Mein Ordner ${esc(String(o.jahr))}` : `🗄️ ${esc(o.titel)} ${esc(String(o.jahr))}${o.nur_vorstand ? " 🔒" : ""}`}</option>`).join("")}</select></label>
+    <label class="feld">Ordner<select id="ablOrdner" onchange="ablRegister()">${ordner.map((o) => `<option value="${esc(o.id)}"${o.id === vor.id ? " selected" : ""}>${o.besitzer ? `👤 Mein Ordner ${esc(String(o.jahr))}` : `🗄️ ${esc(arName(o))}${o.nur_vorstand ? " 🔒" : ""}`}</option>`).join("")}</select></label>
     <label class="feld">Register<select id="ablReg" onchange="ablKnopf()"></select></label>
     ${wahl ? `<label class="schalter"><span>${esc(wahl.text)}</span><input type="checkbox" id="ablWahl"${wahl.an !== false ? " checked" : ""}></label>` : ""}
     <p class="hinweis" id="ablSicht">🔒 Deinen Ordner siehst nur du (und wem du ihn selbst freigibst).</p>

@@ -7140,3 +7140,19 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 }
 { const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), f = p.slice(p.indexOf("async function briefVerwerfen()"), p.indexOf("async function briefNeu()"));
   assert.ok(/onclick="briefVerwerfen\(\)">🗑️ Verwerfen<\/button>/.test(p) && /await frage\(/.test(f) && /clearTimeout\(briefTimer\); try \{ localStorage\.removeItem\("kc_club_brief_entwurf"\); \} catch \{\}/.test(f) && !/api\(|druckStarten/.test(f), "2.146.0: Verwerfen fragt, löscht den Entwurf (auch ein noch wartendes Speichern), sendet/druckt nichts"); }
+
+// 2.147.0 KC-CLUB-ARCHIV-UNTERREGISTER (Wunsch Hansi): Ordner mit Jahren und Unterregistern
+{
+  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
+  const a = p.indexOf("const AR_TRENN = "), b = p.indexOf("const AR_FARBEN = [");
+  const F = new Function(p.slice(a, b) + "\nreturn { arMehrjahr, arName, arJahrSpanne, arImRegister };")();
+  const o = { titel: "Weihnachtsmarkt", jahr: 2026, register: ["2026 › Checklisten", "2026 › Verträge", "2027 › Checklisten"] };
+  assert.ok(F.arMehrjahr(o) && F.arName(o) === "Weihnachtsmarkt" && F.arJahrSpanne(o) === "2026–2027", "mehrjährig: Name ohne Jahr, Rücken mit Spanne");
+  assert.equal(F.arName({ titel: "Verträge", jahr: 2026, register: ["Sonstiges"] }), "Verträge 2026", "normale Ordner unverändert");
+  assert.ok(F.arImRegister({ register: "2026 › Checklisten" }, "2026") && F.arImRegister({ register: "2026 › Checklisten" }, "2026 › Checklisten") && !F.arImRegister({ register: "2027 › Checklisten" }, "2026") && !F.arImRegister({ register: "20261" }, "2026"), "Jahr zeigt alle seine Unterregister");
+  assert.ok(/function arRegisterTabs\(reg, eintraege\)/.test(p) && /ar-unterregister/.test(p) && /async function arJahrDazu\(oid\)/.test(p), "zwei Reiterreihen, neues Jahr mit denselben Unterregistern");
+  assert.ok(/slice\(0, liste\.some\(\(r\) => r\.includes\(" › "\)\) \? 80 : 12\)/.test(sv), "Server erlaubt mehr Register nur für mehrjährige Ordner");
+  assert.ok(/\{ id: "weihnachtsmarkt", sym: "🎄", t: "Weihnachtsmarkt", farbe: "#2e5d3a", fn: "arStartTitel\('Weihnachtsmarkt'\)", recht: "L" \}/.test(p), "im Büro-Regal");
+  const m = fs.readFileSync(new URL("../supabase/migrations/20261009_kc_club_archiv_weihnachtsmarkt.sql", import.meta.url), "utf8");
+  assert.ok(/where not exists/.test(m) && !/\b(delete|drop|truncate|update)\b/i.test(m.replace(/^--.*$/gm, "")), "Migration nur anlegen, wiederholbar, nichts löschen");
+}

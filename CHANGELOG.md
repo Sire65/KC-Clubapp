@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.147.0 – 2026-10-09 – 🎄 Büro-Ordner „Weihnachtsmarkt“ mit Jahren (2026, 2027 …) und Unterregistern (Checklisten, Verträge …) (KC-CLUB-ARCHIV-UNTERREGISTER)
+🔧 Kleine Systemverbesserungen
+
 ## 2.146.0 – 2026-10-09 – 🗑️ Briefbogen: Knopf „Verwerfen“ löscht den Entwurf (KC-CLUB-BRIEF-VERWERFEN)
 🔧 Kleine Systemverbesserungen
 
