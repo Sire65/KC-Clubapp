@@ -1,10 +1,19 @@
 {
-  "version": "2.153.0",
+  "version": "2.154.0",
   "datum": "2026-10-09",
   "neu": [
-    "🔧 Kleine Systemverbesserungen"
+    "🧑‍🍳 Fang den Koch ganz neu: Küchenrallye gegen Twinkey – Zutaten holen, kochen, am Pass klingeln",
+    "❗ Ereigniskarten, Stoppuhr in Küchenminuten, Punkte für Tempo und Sorgfalt"
   ],
   "verlauf": [
+    {
+      "version": "2.154.0",
+      "datum": "2026-10-09",
+      "neu": [
+        "🧑‍🍳 Fang den Koch ganz neu: Küchenrallye gegen Twinkey – Zutaten holen, kochen, am Pass klingeln",
+        "❗ Ereigniskarten, Stoppuhr in Küchenminuten, Punkte für Tempo und Sorgfalt"
+      ]
+    },
     {
       "version": "2.153.0",
       "datum": "2026-10-09",

@@ -1,5 +1,25 @@
 # Änderungen
 
+## 2.154.0 – 2026-10-09 – 🧑‍🍳 Fang den Koch: Küchenrallye gegen Twinkey (Wunsch Hansi)
+Fang den Koch ist neu gebaut – wie ein Brettspiel (KC-CLUB-FDK-RALLYE, ersetzt KC-CLUB-FDK-EINFACH):
+- Rundweg mit 24 Feldern um die Küche: 🌾 Lager, 🧊 Kühlhaus, 🥕 Gemüse, 🧂 Gewürzregal, 🔥 Herd, 🍟 Fritteuse, ♨️ Ofen, 📋 Büro,
+  ❗ Ereignisfelder; in der Mitte der 🛎️ Pass mit Klingel, erreichbar über vier Durchreichen.
+- Würfeln, dann ein leuchtendes Feld antippen – links- oder rechtsherum; an einer Station, die man braucht, darf man
+  unterwegs anhalten („Halt“, Rest-Augen verfallen). Erst alle Zutaten holen, dann kochen (manches dauert 2 Züge), dann
+  an einer Durchreiche abgeben – die Klingel stoppt die eigene Stoppuhr.
+- Stoppuhr in Küchenminuten (jeder Wurf 3 Min.) – die echte Zeit zählt nicht. Punkte je Gericht: Grundpunkte
+  (leicht 10 / mittel 15 / schwer 20), Tempo unter der Richtzeit, +3 Erster am Pass, +2 sauber gearbeitet;
+  −3 je vergessene Zutat, −5 je fehlender Schritt („🛎️ Jetzt abgeben“ an der Durchreiche, mit Rückfrage).
+- Gerichte nach Stufe: leicht z. B. Pfannkuchen, mittel z. B. Gulasch, schwer z. B. Rinderroulade. Beide Köche bekommen
+  gleich schwere Gerichte mit gleich vielen Zutaten und Arbeitsschritten und ähnlich langem Weg. Länge 1, 2 oder 3 Gerichte.
+- ❗ Ereigniskarten: Azubi lässt etwas fallen, Gemüse braun, Kühlhaus offen, kein Gas (erst ins 📋 Büro), Fritteuse
+  übergeschäumt, 🧪 Hygienekontrolle mit einer Frage aus Küchenterror; Glück: Lieferant, Chef hilft, Spüler, Mise en place, Lob.
+- Zusammenstoß: Landet ein Koch im Gang genau auf dem anderen, lässt der eine Zutat fallen.
+- Twinkey (blaue Mütze) ist der Gegner – mit Sprüchen und Männerstimme (🔊 Ansage); Tabletts links (Du) und rechts (Twinkey),
+  auf dem Handy nebeneinander über dem Brett; während der Partie ist oben alles ausgeblendet; wer anfängt, wechselt.
+- Abrechnung am Ende mit Punkten je Gericht; der bisherige Spielstand bleibt erhalten.
+- Geprüft mit 450 durchgespielten Partien im Vertragstest (Länge, Fairness, Tempo-Bonus, Pech-Anteil) und im Browser.
+
 ## 2.153.0 – 2026-10-09 – 🕶️ Inkognito: beim Chat-Beginnen fragen, ob Inkognito aufgehoben werden soll (KC-CLUB-INKOGNITO-CHAT)
 🔧 Kleine Systemverbesserungen
 
