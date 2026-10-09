@@ -7069,7 +7069,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   for (const s of ["Neuen Brief diktieren", "Brief schreiben", "Schreib einen Brief", "Diktiere einen neuen Brief", "Brief"]) assert.equal(erk(s)?.art, "brief", "erkannt: " + s);
   assert.deepEqual(erk("Brief an Klaus"), { art: "brief", an: "klaus" }, "Brief an …");
   assert.equal(erk("Schreib Klaus komm vorbei", [{ person_id: "P9", name: "Klaus Zander" }])?.art, "nachricht", "Nachricht bleibt Nachricht");
-  assert.ok(/if \(b\.art === "brief"\) return sbBrief\(b\);/.test(programm) && /\{ id: "brief_neu", sym: "✉️", t: "Neuer Brief"/.test(programm) && /"brief_neu"\]; \/\/ 2\.137\.0/.test(server), "Ausführen + lernbares Ziel (App und Server gleich)");
+  assert.ok(/if \(b\.art === "brief"\) return sbBrief\(b\);/.test(programm) && /\{ id: "brief_neu", sym: "✉️", t: "Neuer Brief"/.test(programm) && /"brief_neu"(, "[a-z_]+")*\]; \/\/ 2\.137\.0/.test(server), "Ausführen + lernbares Ziel (App und Server gleich)");
   const f = programm.slice(programm.indexOf("// ---------- KC-CLUB-SPRACHE-BRIEF"), programm.indexOf("// ---------- KC-CLUB-SCHRITT-HILFE (2.63.0"));
   assert.ok(/if \(!buSchreiben\(\)\)/.test(f) && /zeige\("buero"\)/.test(f) && /buBrief\(\);/.test(f), "nur Büro mit Schreibrecht; öffnet Büro + Briefbogen");
   const reihe = ["Was für ein Brief?", "An wen geht der Brief?", "Welche Anrede?", "Wie lautet der Betreff?", "Soll ich den Text der Vorlage nehmen", "Welcher Gruß zum Schluss?"].map((x) => f.indexOf(x));
@@ -7250,4 +7250,39 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   const sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8"), v = sv.slice(sv.indexOf('case "sprache_vergessen"'), sv.indexOf('case "sprache_unbekannt"'));
   assert.ok(/eq\("person_id", ich\.person_id\)/.test(v) && /filter\(\(e\) => e\.s !== satz\)/.test(v) && /protokoll\(ich\.person_id, "sprache_vergessen"/.test(v), "Server: nur eigene Sätze vergessen");
   assert.ok(/data-vergiss="\$\{i\}">🗑️ Vergessen<\/button>/.test(programm) && /async function sbVergessen\(e\)/.test(programm) && /await frage\(`„\$\{e\.s\}“ vergessen\?/.test(programm), "Liste: 🗑️ Vergessen mit Rückfrage");
+}
+
+// 2.152.0 KC-CLUB-SPRACH-TRAINING (Wunsch Hansi): Sätze nachsprechen – die App lernt Satz- und Namens-Varianten je Person, führt beim Training nichts aus
+{
+  const a = programm.indexOf("const sbNorm = "), b = programm.indexOf("// ungespeicherte Eingaben auf der jetzigen Seite?");
+  const erk = new Function(programm.slice(a, b) + "\nreturn sbErkennen;")();
+  const mod = programm.slice(programm.indexOf("// ---------- KC-CLUB-SPRACH-TRAINING (2.152.0"), programm.indexOf("const SB = { erk: null"));
+  const SBTR = new Function("ICH", "studioStufe", mod.slice(0, mod.indexOf("const SBT = {")) + "\nreturn SB_TRAINING;")({}, () => null);
+  const mg = [{ person_id: "KC-P-M0009", name: "Klaus Zander" }, { person_id: "KC-P-002", name: "Hans-Joachim Koch" }];
+  assert.ok(SBTR.length >= 35 && SBTR.filter((x) => x.kurz).length === 15, "Liste vollständig, Kurz-Training = 15");
+  for (const x of SBTR) { const s = x.s.replace("{name}", "Klaus"); assert.ok(erk(s, mg, "KC-P-002"), `Trainings-Satz „${s}“ wird erkannt`); }
+  assert.ok(!SBTR.some((x) => /notfall|sos|alarm/i.test(x.s)), "kein SOS/Notfall im Training");
+  assert.deepEqual(erk("Zettel für alle an die Pinnwand hängen"), { art: "pinnwand", text: "" }, "Zettel für alle → leerer Zettel");
+  assert.deepEqual(erk("Schild drucken"), { art: "ziel", ziel: "schilder" }, "Schild drucken");
+  assert.deepEqual(erk("Studio öffnen"), { art: "ziel", ziel: "studio" }, "Studio öffnen");
+  // Varianten anwenden (wie in der App)
+  const v = programm.slice(programm.indexOf("function sbVorbereiten(roh)"), programm.indexOf("const SB = { erk: null"));
+  const sbNorm = (t) => String(t || "").toLowerCase().replace(/[.,!?;:„“"]/g, " ").replace(/\s+/g, " ").trim();
+  const sbAbstand = new Function(programm.slice(programm.indexOf("function sbAbstand("), programm.indexOf("function sbAehnlich(")) + "\nreturn sbAbstand;")();
+  const SB = { woerter: { training: { saetze: [{ h: "chat mit klaus offen", k: "Chat mit Klaus öffnen" }], namen: [{ h: "hanse", n: "Hansi" }] } } };
+  const vorb = new Function("SB", "sbNorm", "sbAbstand", v + "\nreturn sbVorbereiten;")(SB, sbNorm, sbAbstand);
+  assert.equal(vorb("Chat mit Klaus offen"), "Chat mit Klaus öffnen", "Satz-Variante");
+  assert.equal(vorb("Nachricht an Hanse: bin gleich da"), "Nachricht an Hansi: bin gleich da", "Namens-Variante gilt für alle Befehle, Text bleibt");
+  assert.equal(vorb("Hansestadt Hamburg"), "Hansestadt Hamburg", "nur ganze Wörter");
+  // Training führt nie etwas aus
+  const lauf = mod.slice(mod.indexOf("function sbtPruefen("), mod.indexOf("function sbtWeiter("));
+  assert.ok(!/sbAusfuehren|sbVerstanden|api\("nachricht_senden"|treffen_antwort/.test(mod) && /api\("sprache_training", eintrag\)/.test(lauf), "beim Training wird nichts ausgeführt – nur gemerkt");
+  assert.ok(/mitteH\.split\(" "\)\.length <= 2 && mitteH\.length >= 3 && sbAbstand\(mitteH, mitteS\) <= Math\.max\(2, Math\.ceil\(mitteS\.length \/ 2\)\)/.test(lauf), "Namens-Variante nur ähnlich klingend, ≥ 3 Buchstaben, höchstens 2 Wörter");
+  const sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8"), t = sv.slice(sv.indexOf('case "sprache_training"'), sv.indexOf('case "sprache_training_reset"'));
+  assert.ok(/eq\("person_id", ich\.person_id\)/.test(t) && /protokoll\(ich\.person_id, "sprache_training", \{ art \}\)/.test(t) && /slice\(0, 300\)/.test(t) && /slice\(0, 200\)/.test(t), "Server: nur eigene, begrenzt, Protokoll ohne Text");
+  assert.ok(/training: \{ saetze: /.test(sv) && /"schilder", "studio"\]/.test(sv), "Gelerntes kommt mit sprache_woerter; neue Ziele auch im Server");
+  // Tipp des Tages für alle, Einstiege
+  assert.ok(/\{ id: "sprach_training", thema: "start", sym: "🎓", t: "Steuere die App mit deiner Stimme",/.test(programm) && /ja: "🎓 Jetzt trainieren", testen: \(\) => sbtStart\(\), nur: \(\) => !!DIKTAT_GEHT, seit: "2\.152\.0"/.test(programm), "Tipp des Tages");
+  assert.ok(/onclick="sbtStart\(\)">🎓 Trainieren<\/button>/.test(html) && /sbtStart\(\)">🎓 Trainieren<\/button>/.test(programm), "Einstellungen + Befehlsliste");
+  assert.ok(/\.sbt-wahl \{ display: grid; grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/.test(html) && /\.sbt-knoepfe \{ display: grid; grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/.test(html), "Knöpfe gleich groß");
 }

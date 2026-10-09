@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.151.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.152.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1337,6 +1337,10 @@ function einwSchalterZeigen() { if ($("setEinw")) $("setEinw").checked = einwSta
 // (⚙️ Einstellungen → „💡 Tipp des Tages“, Standard an). Gespeichert in der Server-Einstellung „tipps“ (geräteübergreifend).
 const TIPP_SPAETER_TAGE = 3;
 const TIPPS = [
+  // KC-CLUB-SPRACH-TRAINING (2.152.0, Wunsch Hansi „alle sollen es beim Tipp des Tages bekommen“)
+  { id: "sprach_training", thema: "start", sym: "🎓", t: "Steuere die App mit deiner Stimme",
+    x: "Du kannst wichtige Dinge in der App mit deiner Sprache steuern – zum Beispiel <i>„Chat mit Klaus öffnen“</i>, <i>„Nächster Termin“</i> oder <i>„Lies mir die neuen Nachrichten vor“</i>. Schalte dazu die <b>Sprachsteuerung</b> ein und <b>trainiere deine Befehle</b>: Die App zeigt dir die Sätze, du sprichst sie nach – so lernt sie, wie <b>du</b> sprichst. Ausgeführt wird beim Training nichts.",
+    ja: "🎓 Jetzt trainieren", testen: () => sbtStart(), nur: () => !!DIKTAT_GEHT, seit: "2.152.0" },
   // KC-CLUB-TWINKEY (2.23.49, Wunsch Hansi): ganz vorne = kommt als nächster Tipp
   { id: "frag_twinkey", sym: "🧑‍🍳", t: "Frag einfach Twinkey!",
     x: "Du suchst etwas in der App? Tippe auf <b>🧑‍🍳 Frag Twinkey</b> und frag in deinen eigenen Worten – getippt oder mit 🎤 gesprochen. Zum Beispiel: <i>„Wie schicke ich ein Foto?“</i> Weiß Twinkey es noch nicht, recherchiert er und schickt dir die Antwort später.",
@@ -1813,6 +1817,7 @@ function sbErkennen(roh, mitglieder = [], ich = "") {
   if (ru) { const n = sbErkennen("Nachricht an " + (ru[1] || ru[2]), mitglieder, ich); return { art: "anruf", personen: n?.personen || [], wort: n?.wort || (ru[1] || ru[2]), vorschlag: n?.vorschlag || [] }; }
   let od = t.match(/^(?:(?:öffne|zeig(?:e)?(?: mir)?) )?(?:den |das )?ordner (.+)$/);
   if (od) return { art: "ordner", name: od[1] };
+  if (/^(einen? )?(neue[nrs]? )?zettel( für alle)? (an|auf) (die|der) pinnwand( (hängen|machen|kleben|aufhängen))?$/.test(t)) return { art: "pinnwand", text: "" }; // 2.152.0
   if (/^(einen? )?(neue[nrs]? )?(zettel|notiz)\b|pinnwand/.test(t)) return { art: "pinnwand", text: sbRest(roh, /^\s*(einen?\s+)?(neue[nrs]?\s+)?(zettel|notiz)?\s*((an|auf|für|in)\s+(die|der)\s+)?(pinnwand)?\s*/i) };
   if (/^(neue[rn]? )?nachricht (an|für) alle[n]?\b|^schreib(e)? (an )?alle[n]?\b/.test(t)) return { art: "nachricht", alle: true, text: sbRest(roh, /^\s*((neue[rn]?\s+)?nachricht\s+(an|für)|schreibe?(\s+an)?)\s+alle[n]?\s*/i) };
   if (/^(eine )?(neue[rn]? )?nachricht( (an|für|schreiben))?$|^schreib(e|en)?( an)?$/.test(t)) return { art: "nachricht", personen: [], wort: "", text: "" }; // Stufe 2: „An wen?“
@@ -1838,6 +1843,8 @@ function sbErkennen(roh, mitglieder = [], ich = "") {
   // 2.83.0: weitere Ziele direkt (Registry SB_ZIELE) – „neuer Termin“, „Fotos“, „Archiv“ …
   if (/^(einen? )?(neue[nrs]? )?termin (anlegen|eintragen|machen|erstellen)$|^neue[rns]? termin$|^termin (anlegen|eintragen)$/.test(t)) return { art: "ziel", ziel: "termin_neu" };
   if (/^(neue )?fotos? (hochladen|hinzufügen)$/.test(t)) return { art: "ziel", ziel: "foto_neu" };
+  if (/^(ein |neues? )?schild (drucken|machen|erstellen|gestalten)$|^(die )?schilder ?druckerei$/.test(t)) return { art: "ziel", ziel: "schilder" }; // 2.152.0
+  if (/^(das )?studio( (öffnen|aufmachen|starten))?$|^(öffne|zeig(e)?) (das )?studio$/.test(t)) return { art: "ziel", ziel: "studio" }; // 2.152.0
   for (const [re, ziel] of [[/^(die )?mitglieder(liste)?$/, "mitglieder"], [/^(das )?foto ?album$|^(die )?fotos$|^bilder$/, "fotos"], [/^(das )?archiv$|^(meine )?ordner$/, "archiv"],
     [/^erstattung$|^(geld|kosten) (zurück|erstatten)$|^fahrtkosten$/, "erstattung"], [/^helfen( und leihen)?$|^hilfe suchen$/, "helfen"], [/^(die )?börse$|^flohmarkt$/, "boerse"],
     [/^(die )?protokolle$/, "protokolle"], [/^(die )?vorschläge$/, "vorschlaege"], [/^einstellungen$/, "einstellungen"], [/^(mein )?dienst(e|plan)?$/, "dienste"], [/^(alle )?nachrichten$|^(meine )?chats$/, "nachrichten"]])
@@ -1931,7 +1938,7 @@ function sbListe() {
   const gelernt = [...w.meine.map((e) => [e.s, zName(e.z) + " · 🧠 von dir beigebracht"]), ...w.alle.filter((e) => !w.meine.some((m) => m.s === e.s)).map((e) => [e.s, zName(e.z) + " · 🧠 gelernt"])];
   const zeilen = [...SB_BEFEHLE.map(([a, b]) => [a, b, false]), ...gelernt.map(([a, b]) => [a, b, true])];
   const f = blattAuf("sbListeBlatt", `<h3 style="margin:0 0 6px">📋 Das kannst du sagen</h3>
-    <button class="knopf ${st ? "haupt" : ""}" style="width:100%;text-align:center;margin:0 0 8px" onclick="sbStumm(${!st})">${st ? "🎙️ Mikrofon wieder an" : "🔇 Mikrofon aus (stumm)"}</button>
+    <div class="sbt-fuss" style="margin:0 0 8px"><button class="knopf ${st ? "haupt" : ""}" onclick="sbStumm(${!st})">${st ? "🎙️ Mikrofon wieder an" : "🔇 Mikrofon aus (stumm)"}</button><button class="knopf" onclick="fensterZu($('sbListeBlatt'));sbtStart()">🎓 Trainieren</button></div>
     <input type="search" id="sbListeSuche" class="hz-suche" placeholder="🔍 Befehl suchen …" autocomplete="off" enterkeyhint="search" style="width:100%;box-sizing:border-box">
     <div id="sbListeInhalt" class="sb-liste">${zeilen.map(([a, b, g], i) => `<button class="sb-befehl" data-i="${i}" data-such="${esc(sbNorm(a + " " + b))}"><b>„${esc(a)}“</b><small>${esc(b)}</small></button>`).join("")}</div>
     <p class="hinweis" id="sbListeLeer" style="display:none">Nichts gefunden. Sag es einfach – kennt die App den Satz nicht, fragt sie und lernt ihn.</p>
@@ -1983,6 +1990,8 @@ const SB_ZIELE = [
   { id: "dienste", sym: "🗓️", t: "Mein Dienst", los: () => zeige("dienste") },
   { id: "einstellungen", sym: "⚙️", t: "Einstellungen", los: () => zeige("einstellungen") },
   { id: "hilfe", sym: "❓", t: "Hilfe & Tipps", los: () => zeige("hilfezentrum") },
+  { id: "schilder", sym: "🪧", t: "Schilder-Druckerei", nur: () => !!(ICH?.vorstand || ICH?.admin), los: () => schStart() }, // 2.152.0
+  { id: "studio", sym: "🎬", t: "Studio", nur: () => !!studioStufe(), los: () => stOeffnen() }, // 2.152.0
 ];
 function sbWoerterLaden() { if (SB.woerter || SB.laedt) return SB.laedt || null; return (SB.laedt = api("sprache_woerter").then((r) => { SB.woerter = r && Array.isArray(r.meine) ? r : { meine: [], alle: [] }; }).catch(() => {}).finally(() => { SB.laedt = false; })); }
 // unbekannter Satz → „Was meinst du damit?“ – Antippen merkt es sich (Datenbank) und führt es gleich aus
@@ -1991,7 +2000,7 @@ function sbLernFrage(roh) {
   if (merkbar) api("sprache_unbekannt", { satz: roh }).catch(() => {}); // nur kurze Sätze, ohne Inhalte – der Admin sieht, was gesucht wurde
   blattAuf("sbBlatt", `<h3 style="margin:0">🤔 Das kenne ich noch nicht</h3><p class="sb-gehoert">„${esc(roh)}“</p>
     <p style="margin:4px 0 8px"><b>Was meinst du damit?</b> ${merkbar ? "Tipp es an – dann merke ich mir das und weiß es beim nächsten Mal." : "(Der Satz ist zum Merken zu lang – beim nächsten Mal bitte kürzer sagen.)"}</p>
-    <div class="sb-ziele">${SB_ZIELE.map((z) => `<button class="knopf" data-z="${z.id}"><span>${z.sym}</span>${esc(z.t)}</button>`).join("")}</div>
+    <div class="sb-ziele">${SB_ZIELE.filter((z) => !z.nur || z.nur()).map((z) => `<button class="knopf" data-z="${z.id}"><span>${z.sym}</span>${esc(z.t)}</button>`).join("")}</div>
     <button class="knopf haupt" style="width:100%;text-align:center;margin-top:10px" onclick="sbHoeren()">🎙️ Nochmal sagen</button>
     <button class="knopf" style="width:100%;text-align:center" onclick="fensterZu($('sbBlatt'));sucheAuf(${esc(JSON.stringify(roh))})">🔍 Danach suchen</button>
     <button class="knopf" style="width:100%;text-align:center" onclick="fensterZu($('sbBlatt'))">Schließen</button>`)
@@ -2006,6 +2015,156 @@ async function sbLernen(roh, ziel, merkbar) {
   }
   if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist");
   z.los();
+}
+// ---------- KC-CLUB-SPRACH-TRAINING (2.152.0, Wunsch Hansi): 🎓 Sprach-Training – die App lernt, wie jeder seine Befehle spricht ----------
+// Die Spracherkennung macht das Handy (Google/Apple) – die App bekommt nur den erkannten TEXT. Gelernt wird deshalb, was das Handy hört,
+// wenn DU einen Satz sagst: ganze Satz-Varianten („chat mit klaus offen“ → „Chat mit Klaus öffnen“) und Namens-Varianten
+// („hanse“ → Hansi, gilt dann für alle Befehle mit Namen). Keine Tonaufnahmen, nur kurze Texte (≤ 8 Wörter), je Person.
+// Beim Training wird NIE etwas ausgeführt (nichts gesendet, zugesagt, angerufen). SOS/Notfall gibt es hier nicht.
+// Neue Trainings-Sätze = Eintrag in SB_TRAINING (Test prüft: jeder Satz wird erkannt). {name} = ein Mitglied (Chat-Partner).
+const SB_TRAINING = [
+  { s: "Startseite", b: "🏠 Bewegen", kurz: true }, { s: "Zurück", b: "🏠 Bewegen", kurz: true }, { s: "Hilfe", b: "🏠 Bewegen" },
+  { s: "Chat mit {name} öffnen", b: "💬 Nachrichten", kurz: true }, { s: "Nachricht an {name}", b: "💬 Nachrichten" }, { s: "Nachricht an alle", b: "💬 Nachrichten", kurz: true },
+  { s: "Neue Nachricht", b: "💬 Nachrichten" }, { s: "Lies mir die neuen Nachrichten vor", b: "💬 Nachrichten", kurz: true }, { s: "Meine Chats", b: "💬 Nachrichten" },
+  { s: "Zettel für alle an die Pinnwand hängen", b: "📌 Pinnwand", kurz: true }, { s: "Neuer Zettel", b: "📌 Pinnwand" }, { s: "Was steht auf der Pinnwand", b: "📌 Pinnwand", kurz: true },
+  { s: "Termine", b: "📅 Termine", kurz: true }, { s: "Neuer Termin", b: "📅 Termine" }, { s: "Nächster Termin", b: "📅 Termine", kurz: true },
+  { s: "Ich komme", b: "📅 Termine", kurz: true }, { s: "Ich kann nicht", b: "📅 Termine" }, { s: "Vielleicht", b: "📅 Termine" },
+  { s: "Ruf {name} an", b: "📞 Telefon" },
+  { s: "Fotoalbum", b: "📷 Fotos & Ordner", kurz: true }, { s: "Fotos hochladen", b: "📷 Fotos & Ordner" }, { s: "Archiv", b: "📷 Fotos & Ordner" },
+  { s: "Mitglieder", b: "🧰 Club", kurz: true }, { s: "Erstattung", b: "🧰 Club" }, { s: "Helfen", b: "🧰 Club" }, { s: "Börse", b: "🧰 Club" },
+  { s: "Protokolle", b: "🧰 Club" }, { s: "Vorschläge", b: "🧰 Club" }, { s: "Mein Dienst", b: "🧰 Club" }, { s: "Suche Glühwein", b: "🧰 Club", kurz: true },
+  { s: "Kachelgröße 4 x 3", b: "⚙️ Einstellungen", kurz: true }, { s: "Einstellung Schriftgröße", b: "⚙️ Einstellungen", kurz: true }, { s: "Dunkel einstellen", b: "⚙️ Einstellungen" },
+  { s: "Ruhezeit ändern", b: "⚙️ Einstellungen" }, { s: "Wo stelle ich das Wetter ein", b: "⚙️ Einstellungen" }, { s: "Vorlesen einstellen", b: "⚙️ Einstellungen" },
+  { s: "Neuen Brief diktieren", b: "✒️ Büro", nur: () => !!ICH?.buero }, { s: "Brief an {name}", b: "✒️ Büro", nur: () => !!ICH?.buero },
+  { s: "Schild drucken", b: "✒️ Büro", nur: () => !!(ICH?.vorstand || ICH?.admin) }, { s: "Öffne den Ordner Weihnachtsmarkt", b: "✒️ Büro", nur: () => !!(ICH?.vorstand || ICH?.admin) },
+  { s: "Studio öffnen", b: "🎬 Studio", nur: () => !!studioStufe() },
+];
+const SBT = { art: "", liste: [], i: 0, erg: { gut: 0, neu: 0, weg: 0 }, weiterHoeren: false };
+const sbtKey = () => "kc_club_sbt_" + (ICH?.person_id || "x");
+// was zählt: Art + Ziel/Person/Einstellung – diktierter Freitext nicht
+function sbtKern(b) { if (!b) return null; const { art, ziel, g, k, a, q, name } = b; return JSON.stringify({ art, ziel, g, k, a, q, name, alle: !!b.alle, p: (b.personen || []).join(",") }); }
+// Namen so, wie man sie sagt: Vorname – ist er doppelt, der ganze Name
+function sbtName(m) { const v = String(m.name || "").trim().split(/\s+/)[0]; return (MITGLIEDER || []).filter((x) => String(x.name || "").trim().split(/\s+/)[0] === v).length > 1 ? m.name : v; }
+async function sbtNamen(alle) {
+  const mg = (MITGLIEDER || []).filter((m) => m.person_id !== ICH?.person_id);
+  if (alle) return mg.map(sbtName).sort((a, b) => a.localeCompare(b, "de"));
+  let top = [];
+  try { const l = (await api("unterhaltungen", {}, { warten: true })).unterhaltungen || [];
+    for (const u of l) if (!u.gruppe && (u.teilnehmer || []).length === 1) { const m = mg.find((x) => x.name === u.teilnehmer[0]); if (m && !top.includes(m)) top.push(m); if (top.length >= 8) break; } } catch {}
+  for (const m of mg) { if (top.length >= 8) break; if (!top.includes(m)) top.push(m); } // zu wenige Chats: mit weiteren Mitgliedern auffüllen
+  return top.map(sbtName);
+}
+async function sbtKarten(art) {
+  const darf = (x) => !x.nur || x.nur(), namen = await sbtNamen(art === "allenamen");
+  const mit = (x, n) => ({ s: x.s.replace("{name}", n), b: x.b, name: x.s.includes("{name}") ? n : "" });
+  if (art === "namen" || art === "allenamen") return namen.map((n) => ({ s: `Chat mit ${n} öffnen`, b: "👥 Namen", name: n }));
+  const erster = namen[0] || "";
+  const satz = SB_TRAINING.filter((x) => darf(x) && (art !== "kurz" || x.kurz) && (!x.s.includes("{name}") || erster)).map((x) => mit(x, erster));
+  return art === "alles" ? [...satz, ...namen.slice(1).map((n) => ({ s: `Chat mit ${n} öffnen`, b: "👥 Namen", name: n }))] : satz;
+}
+async function sbtStart() {
+  if (!DIKTAT_GEHT) return melde("Dieses Gerät kann leider keine Sprache erkennen.", true);
+  if (!MITGLIEDER) await mitgliederHolen().catch(() => {});
+  sbWoerterLaden(); if (SB.laedt) await SB.laedt;
+  const tr = SB.woerter?.training || { saetze: [], namen: [] };
+  let stand = null; try { stand = JSON.parse(localStorage.getItem(sbtKey()) || "null"); } catch {}
+  const NAME = { kurz: "⚡ Kurz-Training", namen: "👥 Namen-Training", allenamen: "👥 Alle Namen", alles: "📚 Alles" };
+  blattAuf("sbtBlatt", `<h3 style="margin:0 0 4px">🎓 Sprach-Training</h3>
+    <p style="margin:0 0 8px">So lernt die App, wie <b>du</b> sprichst: Du siehst einen Satz, tippst auf 🎙️ und sprichst ihn nach. <b>Ausgeführt wird dabei nichts</b> – es wird nichts gesendet, zugesagt oder angerufen.</p>
+    ${sbAn() ? "" : `<div class="karte" style="margin:0 0 8px"><b>🎙️ Erst die Sprachsteuerung einschalten</b><p class="hinweis" style="margin:4px 0 6px">Danach geht es gleich los.</p><button class="knopf haupt" style="width:100%;text-align:center" onclick="sbtEinschalten()">🎙️ Sprachsteuerung einschalten</button></div>`}
+    ${stand && sbAn() ? `<button class="knopf haupt" style="width:100%;text-align:center;margin:0 0 8px" onclick="sbtLos('${esc(stand.art)}', ${Number(stand.i) || 0})">▶️ Weiter, wo du aufgehört hast <small>(${esc(NAME[stand.art] || "")} · ${Number(stand.i) + 1} von ${Number(stand.n) || "?"})</small></button>` : ""}
+    <div class="sbt-wahl">${[["kurz", "⚡", "Kurz-Training", "die wichtigsten 15 · ca. 3 Min."], ["namen", "👥", "Namen", "deine 8 häufigsten Chats"], ["allenamen", "👥", "Alle Namen", "jedes Mitglied"], ["alles", "📚", "Alles", "die ganze Liste"]]
+      .map(([a, s, t, u]) => `<button class="knopf" ${sbAn() ? "" : "disabled"} onclick="sbtLos('${a}', 0)"><span>${s}</span><b>${t}</b><small>${u}</small></button>`).join("")}</div>
+    <p class="hinweis" style="margin:10px 0 4px">🧠 Schon gelernt: <b>${tr.saetze.length}</b> Satz-Varianten · <b>${tr.namen.length}</b> Namens-Varianten. Gespeichert werden nur kurze Texte, keine Tonaufnahmen.</p>
+    <div class="sbt-fuss">${tr.saetze.length || tr.namen.length ? '<button class="knopf" onclick="sbtZuruecksetzen()">🔄 Training zurücksetzen</button>' : ""}<button class="knopf" onclick="fensterZu($('sbtBlatt'))">Schließen</button></div>`);
+}
+function sbtEinschalten() {
+  sbSchalter(true); let n = 0;
+  const warte = setInterval(() => { if (sbAn() || ++n > 60) { clearInterval(warte); if (sbAn() && $("sbtBlatt")) sbtStart(); } }, 300);
+}
+async function sbtZuruecksetzen() {
+  if (!(await frage("🔄 Alles Gelernte aus dem Training löschen?\n\nDie App versteht dann wieder nur die Standard-Sätze. Was du ihr über „Was meinst du damit?“ beigebracht hast, bleibt.", { ja: "🔄 Zurücksetzen", nein: "Behalten" }))) return;
+  try { await api("sprache_training_reset"); if (SB.woerter) SB.woerter.training = { saetze: [], namen: [] }; try { localStorage.removeItem(sbtKey()); } catch {} melde("🔄 Training zurückgesetzt"); sbtStart(); }
+  catch (e) { meldeFehler(e); }
+}
+async function sbtLos(art, ab = 0) {
+  SBT.art = art; SBT.liste = await sbtKarten(art); SBT.i = Math.min(Math.max(0, ab), Math.max(0, SBT.liste.length - 1)); SBT.erg = { gut: 0, neu: 0, weg: 0 }; SBT.weiterHoeren = false;
+  if (!SBT.liste.length) return melde("Für dieses Training gibt es gerade keine Sätze.", true);
+  spur("sprache_training"); // nur die Aktion, nie das Gesagte
+  sbtKarte();
+}
+function sbtKarte() {
+  const k = SBT.liste[SBT.i]; if (!k) return sbtFertig();
+  try { localStorage.setItem(sbtKey(), JSON.stringify({ art: SBT.art, i: SBT.i, n: SBT.liste.length })); } catch {}
+  const f = blattAuf("sbtBlatt", `<div class="sbt-kopf"><span>${esc(k.b)}</span><span>${SBT.i + 1} von ${SBT.liste.length}</span></div>
+    <div class="sbt-balken"><i style="width:${Math.round((SBT.i / SBT.liste.length) * 100)}%"></i></div>
+    <p style="margin:12px 0 4px">Sag:</p><div class="sbt-satz">„${esc(k.s)}“</div>
+    ${SB_WELLE}<p class="sb-gehoert" id="sbGehoert">Tippe auf 🎙️ und sprich den Satz</p><div id="sbtErg" class="sbt-erg"></div>
+    <div class="sbt-knoepfe"><button class="knopf haupt" id="sbtMikro" onclick="sbtHoeren()"><span>🎙️</span>Sprechen</button><button class="knopf" onclick="sbtWeiter('weg')"><span>⏭️</span>Überspringen</button><button class="knopf" onclick="sbtEnde()"><span>✋</span>Beenden</button></div>`);
+  f.classList.add("sb-still");
+  if (SBT.weiterHoeren) setTimeout(() => { if ($("sbtBlatt") === f) sbtHoeren(); }, 650); // nach einem Treffer gleich weiter zuhören
+}
+function sbtHoeren() {
+  const f = $("sbtBlatt"), k = SBT.liste[SBT.i]; if (!f || !k) return;
+  try { speechSynthesis.cancel(); } catch {}
+  f.classList.remove("sb-still"); $("sbGehoert").textContent = "Ich höre zu …"; $("sbtErg").innerHTML = "";
+  const still = () => $("sbtBlatt")?.classList.add("sb-still");
+  sbZuhoeren((alt) => { still(); sbtPruefen(alt); }, (grund) => { still(); SBT.weiterHoeren = false; $("sbtErg").innerHTML = `<div class="sbt-nein">❌ ${esc(grund || "Nichts gehört")} – tippe nochmal auf 🎙️</div>`; });
+}
+function sbtPruefen(alt) {
+  const k = SBT.liste[SBT.i], mg = MITGLIEDER || [], ich = ICH?.person_id;
+  const soll = sbtKern(sbErkennen(k.s, mg, ich));
+  const passt = (a) => { const v = sbVorbereiten(a); return sbtKern(sbErkennen(v, mg, ich) || sbGelernt(v, SB.woerter)) === soll; };
+  if (alt.some(passt)) { SBT.erg.gut++; $("sbtErg").innerHTML = '<div class="sbt-ja">✅ Verstanden!</div>'; return setTimeout(() => sbtWeiter("gut"), 900); }
+  const h = alt[0] || "";
+  if (!sbMerkbar(h)) { SBT.weiterHoeren = false; $("sbtErg").innerHTML = `<div class="sbt-nein">❌ ${h ? "Das war zu lang" : "Nichts verstanden"} – tippe nochmal auf 🎙️</div>`; return; }
+  // lernen: unterscheidet sich nur der Name → Namens-Variante (gilt für alle Befehle), sonst die ganze Satz-Variante
+  const hw = sbNorm(h).split(" "), sw = sbNorm(k.s).split(" ");
+  let v = 0; while (v < hw.length && v < sw.length && hw[v] === sw[v]) v++;
+  let e = 0; while (e < hw.length - v && e < sw.length - v && hw[hw.length - 1 - e] === sw[sw.length - 1 - e]) e++;
+  const mitteH = hw.slice(v, hw.length - e).join(" "), mitteS = sw.slice(v, sw.length - e).join(" ");
+  const tr = SB.woerter = SB.woerter || { meine: [], alle: [] }; tr.training = tr.training || { saetze: [], namen: [] };
+  let eintrag = null;
+  // Namens-Variante nur, wenn das Gehörte dem Namen ähnlich ist (≥ 3 Buchstaben, wenig Abstand) – sonst würde z. B. „a“ zu „Erika“
+  if (k.name && mitteS === sbNorm(k.name) && mitteH && mitteH.split(" ").length <= 2 && mitteH.length >= 3 && sbAbstand(mitteH, mitteS) <= Math.max(2, Math.ceil(mitteS.length / 2))) {
+    tr.training.namen = [{ h: mitteH, n: k.name }, ...tr.training.namen.filter((x) => x.h !== mitteH)];
+    eintrag = { art: "name", h: mitteH, n: k.name };
+  }
+  if (!eintrag || !passt(h)) { // Name allein reicht nicht (oder kein Name) → ganzen Satz merken
+    tr.training.saetze = [{ h: sbNorm(h), k: k.s }, ...tr.training.saetze.filter((x) => x.h !== sbNorm(h))];
+    eintrag = { art: "satz", h, k: k.s };
+  }
+  api("sprache_training", eintrag).catch((err) => melde(err.message || "Konnte ich mir gerade nicht merken.", true));
+  SBT.erg.neu++;
+  $("sbtErg").innerHTML = `<div class="sbt-neu">🟡 Gehört: „${esc(h)}“<br><b>Gemerkt!</b> Beim nächsten Mal verstehe ich das.</div>`;
+  setTimeout(() => sbtWeiter("neu"), 1800);
+}
+function sbtWeiter(wie) {
+  if (wie === "weg") { SBT.erg.weg++; SBT.weiterHoeren = false; try { SB.erk?.abort(); } catch {} } else SBT.weiterHoeren = true;
+  if (!$("sbtBlatt")) return; // zwischendurch geschlossen
+  SBT.i++; sbtKarte();
+}
+function sbtEnde() { try { SB.erk?.abort(); } catch {} fensterZu($("sbtBlatt")); melde("🎓 Training pausiert – unter 🎙️ → 📋 Alle Befehle → 🎓 Trainieren geht es weiter"); }
+function sbtFertig() {
+  try { localStorage.removeItem(sbtKey()); } catch {}
+  const r = SBT.erg;
+  blattAuf("sbtBlatt", `<h3 style="margin:0 0 6px">🎉 Geschafft!</h3>
+    <div class="sbt-bilanz"><div><b>${r.gut}</b>✅ sofort verstanden</div><div><b>${r.neu}</b>🟡 neu gelernt</div><div><b>${r.weg}</b>⏭️ übersprungen</div></div>
+    <p class="hinweis">Ab jetzt versteht die App diese Sätze so, wie du sie sprichst. Sag einfach unten links 🎙️ – zum Beispiel „${esc(SBT.liste[0]?.s || "Startseite")}“.</p>
+    <div class="sbt-fuss"><button class="knopf" onclick="sbtStart()">🎓 Weiter trainieren</button><button class="knopf haupt" onclick="fensterZu($('sbtBlatt'))">👍 Fertig</button></div>`);
+}
+// 2.152.0 KC-CLUB-SPRACH-TRAINING: Gelerntes aus dem Training anwenden – erst ganze Satz-Varianten, dann Namens-Varianten (je einmal, im Originaltext)
+function sbVorbereiten(roh) {
+  const tr = SB.woerter?.training; if (!tr || !roh) return roh;
+  const t = sbNorm(roh), saetze = tr.saetze || [];
+  const s = saetze.find((x) => x.h === t) || (t.length >= 8 && saetze.map((x) => ({ x, d: sbAbstand(t, x.h) })).filter((y) => y.d <= 2).sort((a, b) => a.d - b.d)[0]?.x);
+  if (s) return s.k;
+  let aus = String(roh);
+  for (const n of [...(tr.namen || [])].sort((a, b) => b.h.length - a.h.length)) {
+    const re = new RegExp(`(^|[\\s,.;:!?„“"])${n.h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "\\s+")}(?=$|[\\s,.;:!?„“"])`, "i");
+    aus = aus.replace(re, (m0, vor) => vor + n.n);
+  }
+  return aus;
 }
 const SB = { erk: null, text: "", antwort: null, woerter: null, laedt: false };
 // 2.77.0 (Wunsch Hansi): lange auf 🎙️ drücken → „Sprachsteuerung ausschalten?“ (kurz tippen hört wie bisher zu)
@@ -2067,7 +2226,7 @@ function sbHoeren() {
     <p class="hinweis" style="margin:0">Zum Beispiel:<br>${SB_BEISPIELE.map(esc).join("<br>")}</p>
     <div class="sb-fensterknoepfe"><button class="knopf" onclick="sbStopp();sbListe()">📋 Alle Befehle</button><button class="knopf" onclick="sbStopp();sbStumm(true)">🔇 Mikro aus</button></div>
     <button class="knopf" style="width:100%;text-align:center;margin-top:6px" onclick="sbStopp()">Abbrechen</button>`);
-  sbZuhoeren((alt) => sbVerstanden(alt.find((a) => sbErkennen(a, MITGLIEDER || [], ICH?.person_id) || sbGelernt(a, SB.woerter)) ?? alt[0]), (grund) => sbNichtVerstanden(grund, ""));
+  sbZuhoeren((roh) => { const alt = roh.map(sbVorbereiten); sbVerstanden(alt.find((a) => sbErkennen(a, MITGLIEDER || [], ICH?.person_id) || sbGelernt(a, SB.woerter)) ?? alt[0]); }, (grund) => sbNichtVerstanden(grund, "")); // 2.152.0: + Training
 }
 function sbNichtVerstanden(grund, roh) {
   SB.erk = null; spur("sprache_unklar");
@@ -2129,11 +2288,11 @@ function sbWerWahl(b) {
   sbSagen(satz, () => { if ($("sbBlatt") !== f) return; f.classList.remove("sb-still");
     sbZuhoeren((alt) => {
       for (const a of alt) { // erst unter den Vorschlägen suchen, dann unter allen
-        const n = sbErkennen("Nachricht an " + a, kand.length ? kand : mg, ICH?.person_id);
+        const n = sbErkennen("Nachricht an " + sbVorbereiten(a), kand.length ? kand : mg, ICH?.person_id); // 2.152.0: Namens-Varianten aus dem Training
         if (n?.alle) { sbStopp(); return sbAusfuehren({ art: "nachricht", alle: true, text: SB.text }); }
         if (n?.personen?.length === 1) return sbAnPerson(n.personen[0]);
       }
-      const n = sbErkennen("Nachricht an " + alt[0], mg, ICH?.person_id);
+      const n = sbErkennen("Nachricht an " + sbVorbereiten(alt[0]), mg, ICH?.person_id);
       if (n?.alle) { sbStopp(); return sbAusfuehren({ art: "nachricht", alle: true, text: SB.text }); }
       if (n?.personen?.length === 1) return sbAnPerson(n.personen[0]);
       sbWerWahl({ ...(n || {}), text: SB.text });
@@ -2145,7 +2304,7 @@ const sbVorname = (pid) => String(MITGLIEDER?.find((m) => m.person_id === pid)?.
 async function sbAusfuehren(b) {
   if (["antwort", "lies_nachrichten", "lies_pinnwand", "anruf", "ordner"].includes(b.art)) return sbStufe3(b); // 2.87.0
   if (b.art === "brief") return sbBrief(b); // 2.137.0 KC-CLUB-SPRACHE-BRIEF
-  if (b.art === "ziel") { const z = SB_ZIELE.find((x) => x.id === b.ziel); if (!z) return; if (["start", "naechster", "nachricht_neu", "pinnwand_neu", "brief_neu"].includes(z.id)) return z.los(); if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist"); return z.los(); }
+  if (b.art === "ziel") { const z = SB_ZIELE.find((x) => x.id === b.ziel); if (!z) return; if (z.nur && !z.nur()) return melde("Das ist für dich nicht freigeschaltet.", true); if (["start", "naechster", "nachricht_neu", "pinnwand_neu", "brief_neu"].includes(z.id)) return z.los(); if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist"); return z.los(); }
   if (b.art === "start") return sbStartseite();
   if (b.art === "einst") { const e = SB_EINST.find((x) => x.k === b.k); if (!e) return; melde(`⚙️ Einstellungen → ${e.t}`); return einstiegHin(e.klappe, e.id); } // 2.151.0: genau zum Schalter
   if (b.art === "kachel") { // 2.151.0: Kachelgröße gleich umstellen und zeigen, wo das steht (rückgängig: einfach nochmal sagen oder antippen)
@@ -22650,7 +22809,7 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) spurS
 const SPUR_WAS = { vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
-  sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", sprache_ziel: "🎙️ Sprache: Seite geöffnet", sprache_gelernt: "🎙️ Sprache: neuen Befehl gelernt", sprache_liste: "📋 Liste der Sprachbefehle geöffnet", unterstuetzung_viel: "🙋 Unterstützung: viel Hilfe gewählt", unterstuetzung_etwas: "👌 Unterstützung: ein bisschen Hilfe", unterstuetzung_keine: "😎 Unterstützung: keine", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
+  sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", sprache_ziel: "🎙️ Sprache: Seite geöffnet", sprache_gelernt: "🎙️ Sprache: neuen Befehl gelernt", sprache_liste: "📋 Liste der Sprachbefehle geöffnet", sprache_training: "🎓 Sprach-Training gestartet", unterstuetzung_viel: "🙋 Unterstützung: viel Hilfe gewählt", unterstuetzung_etwas: "👌 Unterstützung: ein bisschen Hilfe", unterstuetzung_keine: "😎 Unterstützung: keine", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
 const SPW = { tag: null, person: null, uhr: null };
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;

@@ -1488,6 +1488,16 @@
   .sl-kopf { flex: none; margin: 0; padding: 2px 8px; border: 2px solid #6a1b9a; border-radius: 999px; background: #f3e5f5; color: #4a148c; font: inherit; font-size: .8rem; font-weight: 800; white-space: nowrap; cursor: pointer; }
   .sl-kopf.versteckt { display: none; }
   .blase .sl-marke { font-weight: 700; color: #6a1b9a; } .blase.eigen .sl-marke { color: inherit; opacity: .95; } :root.dunkel .blase .sl-marke { color: #ce93d8; }
+  /* 2.152.0 KC-CLUB-SPRACH-TRAINING: Karten zum Nachsprechen – alle Knöpfe gleich groß im Raster */
+  .sbt-wahl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } #sbtBlatt .sbt-wahl .knopf { margin: 0; min-height: 88px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 8px 6px; font-size: .95rem; line-height: 1.15; }
+  #sbtBlatt .sbt-wahl .knopf span { font-size: 1.5rem; } #sbtBlatt .sbt-wahl .knopf small { opacity: .75; font-weight: 600; font-size: .78rem; } #sbtBlatt .sbt-wahl .knopf:disabled { opacity: .45; }
+  .sbt-fuss { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; margin-top: 8px; } .sbt-fuss .knopf { margin: 0; text-align: center; padding: 12px 6px; }
+  .sbt-kopf { display: flex; justify-content: space-between; font-weight: 800; font-size: .9rem; } .sbt-balken { height: 8px; border-radius: 99px; background: var(--linie); overflow: hidden; margin-top: 6px; } .sbt-balken i { display: block; height: 100%; background: var(--rot); transition: width .3s; }
+  .sbt-satz { font-size: 1.6rem; font-weight: 900; line-height: 1.2; text-align: center; padding: 14px 10px; border-radius: 14px; background: var(--karte2, #f3e9dc); border: 2px solid var(--rot); }
+  .sbt-erg { min-height: 54px; } .sbt-erg > div { padding: 10px 12px; border-radius: 12px; font-weight: 700; text-align: center; } .sbt-ja { background: #e3f4e5; color: #1b5e20; } .sbt-neu { background: #fff4d6; color: #6d4c00; } .sbt-nein { background: #fde4e4; color: #8e1b1b; }
+  .sbt-knoepfe { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; } #sbtBlatt .sbt-knoepfe .knopf { margin: 0; text-align: center; min-height: 64px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: .88rem; } #sbtBlatt .sbt-knoepfe .knopf span { font-size: 1.35rem; }
+  .sbt-bilanz { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 6px 0 10px; } .sbt-bilanz > div { text-align: center; padding: 10px 4px; border-radius: 12px; background: var(--karte2, #f3e9dc); font-size: .82rem; } .sbt-bilanz b { display: block; font-size: 1.6rem; }
+  :root.dunkel .sbt-ja { background: #1e3b22; color: #b9e6bd; } :root.dunkel .sbt-neu { background: #3d3216; color: #ffe2a0; } :root.dunkel .sbt-nein { background: #3f1d1d; color: #ffc2c2; }
   /* 2.151.0 KC-CLUB-SPRACHE-VERGESSEN: eigene gelernte Sätze mit „Vergessen“ – Text links, Knopf rechts, alle Knöpfe gleich breit */
   .sb-gelernt { display: grid; gap: 6px; margin-bottom: 8px; } .sb-gelernt > div { display: grid; grid-template-columns: 1fr 128px; gap: 8px; align-items: center; padding: 6px 8px; border: 1px solid var(--linie); border-radius: 10px; }
   .sb-gelernt span { min-width: 0; overflow-wrap: anywhere; } .sb-gelernt small { display: block; opacity: .75; } #sbListeBlatt .sb-gelernt .knopf { margin: 0; padding: 8px 4px; text-align: center; font-size: .85rem; }
@@ -3231,6 +3241,7 @@
       <div class="schalter"><div><b>👣 Schritt-Unterstützung</b><div class="hinweis">Ein roter Rahmen zeigt Schritt für Schritt, was als Nächstes kommt. Zum Ausprobieren an der 📌 Pinnwand und bei 💬 Nachrichten.</div></div><input type="checkbox" id="setSchrittHilfe" onchange="shSchalter(this.checked)"></div> <!-- KC-CLUB-SCHRITT-HILFE (2.63.0) -->
       <div class="schalter"><div><b>🔊 Schritte vorlesen</b><div class="hinweis">Die Schritt-Unterstützung sagt jeden Schritt auch an. Geht auch mit 🔈 in der roten Leiste.</div></div><input type="checkbox" id="setSchrittVorlesen" onchange="shVorlesen(this.checked)"></div> <!-- KC-CLUB-SCHRITT-HILFE (2.65.0) -->
       <div class="schalter"><div><b>🎙️ Sprachsteuerung</b><div class="hinweis">Unten links auf 🎙️ tippen und sagen, was du tun möchtest – z. B. „Nachricht an Klaus“, „Zettel an die Pinnwand“, „Startseite“.</div></div><input type="checkbox" id="setSprache" onchange="sbSchalter(this.checked)"></div> <!-- KC-CLUB-SPRACHSTEUERUNG (2.75.0) -->
+      <div class="schalter"><div><b>🎓 Sprach-Training</b><div class="hinweis">Die App lernt, wie du deine Befehle sprichst: Sätze nachsprechen – fertig. Ausgeführt wird dabei nichts.</div></div><button class="knopf klein" onclick="sbtStart()">🎓 Trainieren</button></div> <!-- KC-CLUB-SPRACH-TRAINING (2.152.0) -->
       <div class="schalter"><div><b>❓ Alle Tipps nachlesen</b><div class="hinweis">Hilfe-Zentrum: alle Tipps und Erklärungen nach Themen – auch im Register Technik</div></div><button class="knopf klein" onclick="hzStart()">Öffnen</button></div>
       <!-- KC-CLUB-EINWEISUNG (2.4.0) -->
       <div class="schalter"><div><b>🎓 Einweisung beim ersten Öffnen</b><div class="hinweis">Beim ersten Besuch eines Bereichs eine kurze Erklärung, was man dort machen kann</div></div><input type="checkbox" id="setEinw" checked onchange="einwSchalter(this.checked)"></div>
@@ -3682,6 +3693,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.151.0" data-v="2.151.0"></script>
+<script src="app.js?v=2.152.0" data-v="2.152.0"></script>
 </body>
 </html>

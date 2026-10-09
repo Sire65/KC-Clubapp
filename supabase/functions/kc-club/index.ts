@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.151.0";
+const SERVER_VERSION = "2.152.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2432,7 +2432,7 @@ const SPUR_WAS = /^[a-z][a-z0-9_]{0,29}$/;
 // KC-CLUB-SPRACHE-LERNEN (2.83.0, Wunsch Hansi): selbstlernende Sprachsteuerung. Ziele = gleiche Registry wie in der App (SB_ZIELE).
 // Persönlich gelernt: kc_club_person_einstellung „sprache_gelernt“; für alle: kc_club_konfig „sprache_gelernt“ (Admin) – oder automatisch,
 // sobald 2 verschiedene Mitglieder denselben Satz demselben Ziel zuordnen. Unbekannte Sätze (nur kurze, ohne Inhalte) → Protokoll, 30 Tage für den Admin.
-const SPRACHE_ZIELE = ["start", "termine", "termin_neu", "naechster", "nachrichten", "nachricht_neu", "pinnwand", "pinnwand_neu", "mitglieder", "fotos", "foto_neu", "archiv", "erstattung", "helfen", "boerse", "protokolle", "vorschlaege", "einstellungen", "hilfe", "dienste", "brief_neu"]; // 2.137.0: brief_neu (KC-CLUB-SPRACHE-BRIEF)
+const SPRACHE_ZIELE = ["start", "termine", "termin_neu", "naechster", "nachrichten", "nachricht_neu", "pinnwand", "pinnwand_neu", "mitglieder", "fotos", "foto_neu", "archiv", "erstattung", "helfen", "boerse", "protokolle", "vorschlaege", "einstellungen", "hilfe", "dienste", "brief_neu", "schilder", "studio"]; // 2.137.0: brief_neu (KC-CLUB-SPRACHE-BRIEF); 2.152.0: schilder, studio
 const sprachSatz = (t: unknown) => { const s = String(t ?? "").toLowerCase().replace(/[.,!?;:„“"]/g, " ").replace(/\s+/g, " ").trim(); return s.length >= 2 && s.length <= 60 && s.split(" ").length <= 8 ? s : ""; };
 const SPUR_MIT = /^(KC-P-[A-Z0-9-]{1,30}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 const SPUR_TAGE = 30;
@@ -7489,17 +7489,19 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
       // ----- KC-CLUB-SPRACHE-LERNEN (2.83.0) -----
       case "sprache_woerter": {
-        const [{ data: mein }, { data: glob }, { data: alle }] = await Promise.all([
+        const [{ data: mein }, { data: glob }, { data: alle }, { data: trn }] = await Promise.all([
           db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "sprache_gelernt").maybeSingle(),
           db.from("kc_club_konfig").select("wert").eq("schluessel", "sprache_gelernt").maybeSingle(),
           db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "sprache_gelernt"),
+          db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "sprache_training").maybeSingle(), // 2.152.0
         ]);
         // automatisch für alle: derselbe Satz → dasselbe Ziel bei mindestens 2 Mitgliedern (nicht, wenn der Admin ihn gesperrt hat)
         const zaehl = new Map<string, Set<string>>();
         for (const x of alle ?? []) for (const e of ((x as any).wert?.eintraege ?? []) as any[]) { const k = e.s + "|" + e.z; if (!zaehl.has(k)) zaehl.set(k, new Set()); zaehl.get(k)!.add((x as any).person_id); }
         const gesperrt = new Set<string>(((glob?.wert?.gesperrt ?? []) as string[]));
         const auto = [...zaehl.entries()].filter(([k, p]) => p.size >= 2 && !gesperrt.has(k)).map(([k]) => ({ s: k.split("|")[0], z: k.split("|")[1] }));
-        return json({ meine: ((mein?.wert?.eintraege ?? []) as any[]).map((e) => ({ s: e.s, z: e.z })), alle: [...((glob?.wert?.eintraege ?? []) as any[]).map((e) => ({ s: e.s, z: e.z })), ...auto] });
+        return json({ training: { saetze: ((trn?.wert?.saetze ?? []) as any[]).map((e) => ({ h: e.h, k: e.k })), namen: ((trn?.wert?.namen ?? []) as any[]).map((e) => ({ h: e.h, n: e.n })) }, // 2.152.0: nur die eigenen
+          meine: ((mein?.wert?.eintraege ?? []) as any[]).map((e) => ({ s: e.s, z: e.z })), alle: [...((glob?.wert?.eintraege ?? []) as any[]).map((e) => ({ s: e.s, z: e.z })), ...auto] });
       }
       case "sprache_lernen": {
         const satz = sprachSatz(p.satz), ziel = String(p.ziel || "");
@@ -7511,6 +7513,30 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "sprache_gelernt", wert: { eintraege }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
         if (error) throw new Fehler("Konnte ich mir gerade nicht merken – bitte später nochmal.", 503);
         await protokoll(ich.person_id, "sprache_gelernt", { satz, ziel });
+        return json({ ok: true });
+      }
+      // 2.152.0 KC-CLUB-SPRACH-TRAINING: was das Handy hört, wenn ICH einen Satz sage – Satz-Variante (h → k) oder Namens-Variante (h → n)
+      // Nur kurze Texte (≤ 8 Wörter, Namen ≤ 2 Wörter), nur für mich, keine Tonaufnahmen. Protokoll nur die Art, nie der Text.
+      case "sprache_training": {
+        const art = p.art === "name" ? "name" : "satz", h = sprachSatz(p.h);
+        if (!h) throw new Fehler("Der Satz ist zu lang zum Merken (höchstens 8 Wörter).", 400);
+        const ziel = art === "name" ? txt(p.n, 60) : txt(p.k, 80);
+        if (!ziel || (art === "name" && h.split(" ").length > 2) || (art === "satz" && !sprachSatz(ziel))) throw new Fehler("Ungültiger Eintrag.", 400);
+        if (ich.nurLesen) return json({ ok: true });
+        const { data: alt } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "sprache_training").maybeSingle();
+        let saetze = Array.isArray(alt?.wert?.saetze) ? alt!.wert.saetze : [], namen = Array.isArray(alt?.wert?.namen) ? alt!.wert.namen : [];
+        if (art === "name") namen = [{ h, n: ziel }, ...namen.filter((e: any) => e.h !== h)].slice(0, 200);
+        else saetze = [{ h, k: ziel }, ...saetze.filter((e: any) => e.h !== h)].slice(0, 300);
+        const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "sprache_training", wert: { saetze, namen }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (error) throw new Fehler("Konnte ich mir gerade nicht merken – bitte später nochmal.", 503);
+        if (await protokollPlatz(ich.person_id, "sprache_training", 30)) await protokoll(ich.person_id, "sprache_training", { art });
+        return json({ ok: true });
+      }
+      case "sprache_training_reset": {
+        if (ich.nurLesen) return json({ ok: true });
+        const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "sprache_training", wert: { saetze: [], namen: [] }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (error) throw new Fehler("Zurücksetzen ging gerade nicht.", 503);
+        await protokoll(ich.person_id, "sprache_training_reset", {});
         return json({ ok: true });
       }
       // 2.151.0 KC-CLUB-SPRACHE-VERGESSEN (Wunsch Hansi „falsch zugeordnet – wie löse ich die Verknüpfung?“): eigenen gelernten Satz wieder löschen

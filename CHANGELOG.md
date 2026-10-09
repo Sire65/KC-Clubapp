@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.152.0 – 2026-10-09 – 🎓 Sprach-Training: Sätze nachsprechen, die App lernt wie jeder spricht (Satz- und Namens-Varianten), Tipp des Tages für alle (KC-CLUB-SPRACH-TRAINING)
+🔧 Kleine Systemverbesserungen
+
 ## 2.151.0 – 2026-10-09 – 🎙️ Sprache: Kachelgröße und Einstellungen genau ansteuern, „Chat mit … öffnen“, Gelerntes vergessen (KC-CLUB-SPRACHE-EINSTELLUNG, KC-CLUB-SPRACHE-VERGESSEN)
 🔧 Kleine Systemverbesserungen
 
