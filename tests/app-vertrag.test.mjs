@@ -7423,10 +7423,18 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok((html.match(/^(async )?function anlageDateiZeigen\(/gm) || []).length === 1 && (html.match(/^(async )?function anlageAnsehen\(/gm) || []).length === 1, "kein Namenskonflikt (anlageAnsehen gibt es schon)");
   assert.ok(/<button class="knopf haupt" onclick="anlageDateiZeigen\(\)">👁️ Öffnen<\/button>/.test(html), "Öffnen im Anlage-Fenster");
-  const f = html.slice(html.indexOf("async function anlageDateiZeigen("), html.indexOf("async function anlageDateiZeigen(") + 900);
-  assert.ok(/if \(istPdf\(t\.name, t\.mime\)\)[\s\S]{0,200}return dokAnzeigen\(\{ id: "anl:" \+ t\.id, t: t\.name \|\| "Dokument", datei: t\.datei \}\)/.test(f), "PDF in der App anzeigen (schon geladene Datei)");
+  const f = html.slice(html.indexOf("async function anlageDateiZeigen("), html.indexOf("async function anlageDateiZeigen(") + 1600);
+  assert.ok(/const pdf = istPdf\(t\.name, t\.mime\)/.test(f) && /await dokAnzeigen\(\{ id: "anl:" \+ t\.id, t: t\.name \|\| "Dokument", \.\.\.quelle \}\)/.test(html), "PDF in der App anzeigen (2.166.0: Datei oder Link)");
   const o = html.slice(html.indexOf("async function anlageOeffnen("), html.indexOf("function anlageLinkZeigen("));
   assert.ok(o.indexOf('window.open("", "_blank")') < o.indexOf('await api("anlage_url"') && /anlageLinkZeigen\(r\.url, "Datei"\)/.test(o), "Fenster sofort beim Antippen, sonst Link-Knopf");
-  assert.ok(/DOKA\.anl \? \{ data: new Uint8Array\(await d\.datei\.arrayBuffer\(\)\), isEvalSupported: false \}/.test(html) && /function dokAufraeumen\(\) \{[^}]*DOKA\.anl = null;/.test(html), "Dokument-Anzeige kann Anlagen, räumt auf");
+  assert.ok(/d\.datei instanceof Blob \? \{ data: new Uint8Array\(await d\.datei\.arrayBuffer\(\)\), isEvalSupported: false \}/.test(html) && /function dokAufraeumen\(\) \{[^}]*DOKA\.anl = null;/.test(html), "Dokument-Anzeige kann Anlagen, räumt auf");
   assert.ok(/onclick="zurueck\(DOKA\.anl \? 'chat' : 'dokumente'\)"/.test(html), "Zurück führt in den Chat");
+}
+// 2.166.0 KC-CLUB-ANLAGE-OEFFNEN (Hansi: „PDF öffnen sich nicht“): Diagnose je Schritt + zweiter Weg (Betrachter holt die Datei selbst)
+{
+  const f = html.slice(html.indexOf("async function anlageDateiZeigen("), html.indexOf("async function anlageDateiZeigen(") + 2000);
+  assert.ok(/const quelle = t\.datei \? \{ datei: t\.datei \} : \{ url: \(await api\("anlage_url", \{ id: t\.id \}\)\)\.url \};/.test(f), "Vorladen klemmt → Betrachter mit frischem Link");
+  assert.ok(/api\("diagnose", \{ art: "anlage", daten: \{ schritt, pdf, mime: t\.mime \|\| "", \.\.\.x \} \}\)/.test(f) && !/text|inhalt|body/i.test(f.slice(f.indexOf("const diag"), f.indexOf("const diag") + 160)), "Diagnose nur Art/Fehler, nie Inhalt");
+  assert.ok(/const dokUrl = \(d\) => d\.url \? d\.url :/.test(html) && /DOKA\.anl = d\.datei instanceof Blob \|\| d\.url \? d : null;/.test(html), "Dokument-Anzeige kann auch einen Link");
+  assert.ok(/schritt: "angetippt"/.test(html), "Antippen wird gemeldet");
 }
