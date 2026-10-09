@@ -7087,7 +7087,8 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/const IN_APP_SEK = 75;/.test(server) && /\.gte\("zuletzt_gesehen", new Date\(Date\.now\(\) - IN_APP_SEK \* 1000\)/.test(server), "nur wer die App gerade sichtbar offen hat");
   assert.ok(/catch\(\(\) => new Set<string>\(\)\)/.test(f), "im Zweifel (Fehler) lieber Push senden als verschlucken");
 }
-assert.ok(/\{ id: "studio", sym: "🎬", t: "Studio", u: "Foto · Mitschauen · Live zeigen", aktion: "stOeffnen\(\)", nur: \(\) => !!studioStufe\(\) \}/.test(fs.readFileSync(new URL("../app.js", import.meta.url), "utf8")), "2.138.0: Studio-Kachel nur mit Recht");
+{ const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), mein = p.slice(p.indexOf("  mein: ["), p.indexOf("  programme: [")), verein = p.slice(p.indexOf("  verein: ["), p.indexOf("  mein: ["));
+  assert.ok(!/id: "studio"/.test(verein) && /\{ id: "studio", sym: "🎬", t: "Studio",[^\n]*nur: \(\) => !ICH\?\.admin && !!studioStufe\(\) \}/.test(mein), "2.143.0: Studio-Kachel nicht unter Club – nur unter Meins und nur für freigeschaltete Mitglieder"); }
 
 // 2.139.0 KC-CLUB-STUDIO-KARTE (Wunsch Hansi „Studio wie die Admin-Zentrale“): Karte im Kopf, nur mit Recht
 {

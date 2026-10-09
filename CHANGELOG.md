@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.143.0 – 2026-10-09 – 🎬 Studio-Kachel nur noch unter „Meins“ bei freigeschalteten Mitgliedern (Admin: Studio-Karte im Kopf)
+🔧 Kleine Systemverbesserungen
+
 ## 2.142.0 – 2026-10-09 – 🐌 Schnecken wandern auch im Sparmodus (KC-CLUB-SCHNECKEN-WANDERN)
 🔧 Kleine Systemverbesserungen
 
