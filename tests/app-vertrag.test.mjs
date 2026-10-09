@@ -7138,3 +7138,5 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/\.chat-hg \{ position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: \.5; \}/.test(h) && /:root\.dunkel \.chat-hg \{ filter: brightness\(\.38\)/.test(h), "Hintergrund blass, nachts abgedunkelt");
   assert.ok(/\.cf-hgs \{ display: grid; grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); grid-auto-rows: 1fr;/.test(h), "Auswahl gleich groß");
 }
+{ const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), f = p.slice(p.indexOf("async function briefVerwerfen()"), p.indexOf("async function briefNeu()"));
+  assert.ok(/onclick="briefVerwerfen\(\)">🗑️ Verwerfen<\/button>/.test(p) && /await frage\(/.test(f) && /clearTimeout\(briefTimer\); try \{ localStorage\.removeItem\("kc_club_brief_entwurf"\); \} catch \{\}/.test(f) && !/api\(|druckStarten/.test(f), "2.146.0: Verwerfen fragt, löscht den Entwurf (auch ein noch wartendes Speichern), sendet/druckt nichts"); }

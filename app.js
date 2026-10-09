@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.145.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.146.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -13530,7 +13530,13 @@ function buBriefHtml() {
       ${fe("absender", "Absenderzeile (oben, klein)", "Köcheclub Werne · Straße · 59368 Werne")}${fe("fuss", "Zusatz unter der Fußzeile (freiwillig)", "z. B. Bankverbindung, E-Mail, Internet")}<p class="hinweis" style="margin:2px 0 8px">Fußzeile immer: <b>${esc(KC_CD.name)} · ${esc(KC_CD.briefAmt)} · ${esc(cdClubsprecher())}</b> (Corporate Design)</p>
       <button class="knopf klein" onclick="briefStandardSpeichern()">💾 Absender & Unterschrift für nächstes Mal merken</button></div>
     ${lvKasten()}
-    <div class="bu-leiste"><div class="knoepfe" style="margin:0"><button class="knopf haupt" style="flex:1;text-align:center" onclick="druckStarten('brief')">👁️ Vorschau & Drucken</button><button class="knopf" onclick="briefNeu()">🆕 Neu</button></div></div>`;
+    <div class="bu-leiste"><div class="bu-brief-knoepfe"><button class="knopf haupt" onclick="druckStarten('brief')">👁️ Vorschau & Drucken</button><button class="knopf" onclick="briefNeu()">🆕 Neu</button><button class="knopf" onclick="briefVerwerfen()">🗑️ Verwerfen</button></div></div>`;
+}
+// 2.146.0 KC-CLUB-BRIEF-VERWERFEN (Wunsch Hansi): Entwurf ganz wegwerfen und zurück ins Büro – nichts wird gesendet, nichts gedruckt
+async function briefVerwerfen() {
+  if (!(await frage("🗑️ Diesen Brief verwerfen?\n\nDer Entwurf wird gelöscht – er wurde nicht verschickt und nicht gedruckt.", { ja: "🗑️ Verwerfen", nein: "Behalten" }))) return;
+  clearTimeout(briefTimer); try { localStorage.removeItem("kc_club_brief_entwurf"); } catch {}
+  BRIEF = null; sbbFertig(); BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); melde("🗑️ Brief verworfen – der Entwurf ist gelöscht");
 }
 async function briefNeu() {
   if (!(await frage("Neuen, leeren Brief beginnen? Der jetzige Entwurf wird verworfen."))) return;

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.146.0 – 2026-10-09 – 🗑️ Briefbogen: Knopf „Verwerfen“ löscht den Entwurf (KC-CLUB-BRIEF-VERWERFEN)
+🔧 Kleine Systemverbesserungen
+
 ## 2.145.0 – 2026-10-09 – 🎨 Chat-Farben: eigene und fremde Sprechblasen + Hintergrund mit Motiv (Wolken, Sonnenuntergang, Schneeberge …) – für alle Chats (KC-CLUB-CHAT-FARBEN)
 🔧 Kleine Systemverbesserungen
 
