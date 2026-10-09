@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.152.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.153.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1616,6 +1616,7 @@ const HILFE = [
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
   { id: "ttt_toene", thema: "club", sym: "🔊", t: "Tic-Tac-Toe mit Tönen", x: "Unter dem Spielfeld gibt es den Knopf <b>„🔊 Töne an / 🔇 aus“</b>. Dann klingt jeder Zug – deiner hell, der des Gegners tiefer – und am Ende hörst du, ob du gewonnen, verloren oder unentschieden gespielt hast. Gilt nur auf diesem Gerät.", zeig: () => { zeige("spiele"); spArtWahl("ttt"); }, seit: "2.23.8" },
+  { id: "inkognito_chat", thema: "privat", sym: "🕶️", t: "Inkognito und schreiben (Admin)", x: "Bist du <b>inkognito</b> und beginnst einen Chat mit einem Mitglied (oder schreibst in einem Chat), fragt die App einmal: <b>„Möchtest du Inkognito jetzt aufheben?“</b> – sonst merkt dein Gegenüber, dass du schreibst, obwohl du nicht als anwesend angezeigt wirst. „🕶️ Inkognito bleibt“ lässt alles, wie es ist.", nur: () => !!ICH?.admin, seit: "2.153.0" },
   { id: "inkognito_blinkt", thema: "privat", sym: "🕶️", t: "Die Brille blinkt rot", x: "Solange <b>Inkognito</b> an ist, blinkt die Brille oben rot und dein <b>Status-Feld pulsiert gelb–rot</b> – damit du nicht vergisst, dass dich gerade niemand online sieht. Antippen der Brille schaltet Inkognito wieder aus.", nur: () => !!ICH?.admin, zeig: () => zeige("start"), seit: "2.23.8" },
   // 2.23.95 (Wunsch Hansi): Hilfen zu den Neuerungen seit Anleitung V5
   { id: "mein_bild", thema: "darstellung", sym: "🧑‍🍳", t: "Ein Bild statt Buchstaben", x: "Lieber eine Figur als Buchstaben? Bei <b>Meins</b> → <b>„🧑‍🍳 Mein Bild“</b> tippst du eine von 40 Koch-Figuren an – oben siehst du sie groß – und dann <b>„✅ Übernehmen“</b>. Sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Mit „Kein Bild“ hast du wieder deine Buchstaben.", zeig: () => avWahl(), seit: "2.23.85" },
@@ -3787,6 +3788,15 @@ function inkoAmeisen() {
   h.classList.add("inko-lauf");
   h.insertAdjacentHTML("beforeend", '<svg class="inko-ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="30"/></svg>');
   inkoAmeisen.t = setTimeout(() => { h.querySelector(".inko-ameisen")?.remove(); h.classList.remove("inko-lauf"); }, INKO_AMEISEN_MS);
+}
+// 2.153.0 KC-CLUB-INKOGNITO-CHAT (Wunsch Hansi): Wer inkognito einen Chat mit einem Mitglied beginnt oder schreibt, wird gefragt, ob Inkognito
+// aufgehoben werden soll – sonst merkt das Gegenüber, dass man schreibt, obwohl man nicht als anwesend angezeigt wird. Je Chat einmal pro Sitzung.
+const INKO_GEFRAGT = new Set();
+async function inkoChatFrage(schluessel) {
+  if (!inkognitoAn() || INKO_GEFRAGT.has(schluessel || "neu")) return;
+  INKO_GEFRAGT.add(schluessel || "neu");
+  const ja = await frage("🕶️ Du bist gerade inkognito.\n\nWenn du jetzt schreibst, merkt dein Gegenüber, dass du da bist – obwohl du nicht als anwesend angezeigt wirst.\n\nMöchtest du Inkognito jetzt aufheben?", { ja: "🟢 Inkognito aufheben", nein: "🕶️ Inkognito bleibt" });
+  if (ja) await inkognitoSetzen(false);
 }
 async function inkognitoSetzen(an) {
   if (!ICH?.admin || !INIT) return;
@@ -16433,6 +16443,7 @@ async function anlageTeilen(speichern) {
 let ONLINE_SICHTBAR = true; // KC-CLUB-ONLINEFILTER: sehe ich überhaupt, wer online ist? (Server: onlineSichtbar)
 async function mitgliederHolen() { const r = await api("mitglieder"); MITGLIEDER = r.mitglieder; MITGLIEDER_STAND = Date.now(); AEMTER = r.aemter; ONLINE_SICHTBAR = r.onlineSichtbar !== false; return r; }
 async function neueNachricht() {
+  await inkoChatFrage("neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; $("empfSuche").value = "";
   zeige("neu"); empfListe(); neuGruppenZeigen("neuGruppen", true);
@@ -16716,6 +16727,7 @@ async function senden() {
   const text = $("text").value.trim();
   if (!text && !anlagen.length) return;
   if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
+  await inkoChatFrage(chatId ? "c:" + chatId : "neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT: auch beim Schreiben in einem schon offenen Chat (einmal je Chat)
   // KC-CLUB-OFFLINE (2.1.0): Handy ohne Netz → Text vormerken statt Fehlermeldung (nur bestehender Chat, ohne Anhänge)
   if (!navigator.onLine && chatId && !anlagen.length && text) {
     owSchreiben([...owLesen(), { id: crypto.randomUUID?.() || String(Date.now()), chat: chatId, text, wege: ["push", "email"].filter((w) => ZW[w]),
@@ -21122,6 +21134,7 @@ async function gratulieren(pid, ohneFrage) {
 // KC-CLUB-EINZELCHAT (2.40.0, Wunsch Hansi): gibt es schon einen Chat nur mit dieser Person, öffnet „💬 Nachricht in der App“ ihn
 // (mit allen bisherigen Nachrichten); sonst – oder ohne Verbindung – wie bisher ein leerer Entwurf.
 async function direkt(pid) {
+  if (pid && pid !== ICH?.person_id) await inkoChatFrage("p:" + pid); // 2.153.0 KC-CLUB-INKOGNITO-CHAT
   if (pid && pid !== ICH?.person_id) try { const r = await api("einzelchat_finden", { person_id: pid }); if (r?.id) return chatOeffnen(r.id); } catch {}
   return direktNeu(pid);
 }

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.153.0 – 2026-10-09 – 🕶️ Inkognito: beim Chat-Beginnen fragen, ob Inkognito aufgehoben werden soll (KC-CLUB-INKOGNITO-CHAT)
+🔧 Kleine Systemverbesserungen
+
 ## 2.152.0 – 2026-10-09 – 🎓 Sprach-Training: Sätze nachsprechen, die App lernt wie jeder spricht (Satz- und Namens-Varianten), Tipp des Tages für alle (KC-CLUB-SPRACH-TRAINING)
 🔧 Kleine Systemverbesserungen
 

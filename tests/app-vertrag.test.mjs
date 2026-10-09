@@ -7286,3 +7286,12 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/onclick="sbtStart\(\)">🎓 Trainieren<\/button>/.test(html) && /sbtStart\(\)">🎓 Trainieren<\/button>/.test(programm), "Einstellungen + Befehlsliste");
   assert.ok(/\.sbt-wahl \{ display: grid; grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/.test(html) && /\.sbt-knoepfe \{ display: grid; grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/.test(html), "Knöpfe gleich groß");
 }
+
+// 2.153.0 KC-CLUB-INKOGNITO-CHAT (Wunsch Hansi): inkognito einen Chat beginnen/schreiben → „Inkognito jetzt aufheben?“
+{
+  const f = programm.slice(programm.indexOf("async function inkoChatFrage("), programm.indexOf("async function inkognitoSetzen("));
+  assert.ok(/if \(!inkognitoAn\(\) \|\| INKO_GEFRAGT\.has\(schluessel \|\| "neu"\)\) return;/.test(f) && /Möchtest du Inkognito jetzt aufheben\?/.test(f) && /if \(ja\) await inkognitoSetzen\(false\);/.test(f), "fragt nur inkognito, je Chat einmal, hebt nur auf Wunsch auf");
+  assert.ok(/async function direkt\(pid\) \{\n  if \(pid && pid !== ICH\?\.person_id\) await inkoChatFrage\("p:" \+ pid\);/.test(programm) && /async function neueNachricht\(\) \{\n  await inkoChatFrage\("neu"\);/.test(programm), "beim Chat-Beginnen");
+  const s = programm.slice(programm.indexOf("async function senden() {"), programm.indexOf("async function uhMehrfachSenden("));
+  assert.ok(/await inkoChatFrage\(chatId \? "c:" \+ chatId : "neu"\);/.test(s) && s.indexOf("inkoChatFrage") < s.indexOf('api("nachricht_senden"'), "vor dem Senden");
+}
