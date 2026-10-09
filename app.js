@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.159.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.160.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -9993,22 +9993,54 @@ async function infoDatenLaden(f, sichtbar) {
 }
 let INFO_I = (() => { try { return Math.max(0, INFO_FELDER.findIndex((f) => f.id === localStorage.getItem("kc_club_infofeld"))); } catch { return 0; } })();
 let infoLetztes = "";
-// ---------- KC-CLUB-KOPF-ROLLO (2.159.0, Wunsch Hansi) ----------
+// ---------- KC-CLUB-KOPF-ROLLO (2.159.0, Wunsch Hansi; 2.160.0: „zu schnell, soll hochlaufen wie eine Jalousie“) ----------
 // Pfeil oben mittig: Kopf rollt sich wie eine Jalousie hoch (Statusleiste + Infofeld weg, Kopfzeile bleibt) und wieder runter.
+// Hoch: Lamellen klappen von oben nach unten zu, dann fährt die Jalousie mit der Abschlussleiste langsam hoch. Runter: umgekehrt.
 // Gemerkt nur auf diesem Gerät (Bequemlichkeit, keine wichtigen Daten).
-const KOPF_ROLLO = "kc_club_kopf_eingerollt";
-function kopfRolloSetzen(zu, mitAnimation) {
+const KOPF_ROLLO = "kc_club_kopf_eingerollt", ROLLO_FAHRT_MS = 1400, ROLLO_KLAPP_MS = 320, ROLLO_VERSATZ_MS = 22;
+function kopfRolloSetzen(zu) {
   const h = document.querySelector("#v-start .hero"), k = $("kopfPfeil"); if (!h) return;
-  if (mitAnimation) { h.classList.remove("rollt"); void h.offsetWidth; h.classList.add("rollt"); clearTimeout(kopfRolloSetzen.t); kopfRolloSetzen.t = setTimeout(() => h.classList.remove("rollt"), 600); }
   h.classList.toggle("eingerollt", !!zu);
-  if (k) { k.setAttribute("aria-expanded", zu ? "false" : "true"); k.title = zu ? "Kopf ausrollen – alles zeigen" : "Kopf einrollen – mehr Platz"; k.setAttribute("aria-label", zu ? "Kopf ausrollen" : "Kopf einrollen"); }
+  if (k) { k.classList.toggle("dreh", !!zu); k.setAttribute("aria-expanded", zu ? "false" : "true"); k.title = zu ? "Kopf ausrollen – alles zeigen" : "Kopf einrollen – mehr Platz"; k.setAttribute("aria-label", zu ? "Kopf ausrollen" : "Kopf einrollen"); }
+}
+async function kopfRolloFahren(zu) {
+  const h = document.querySelector("#v-start .hero"), kz = h?.querySelector(".kopfzeile");
+  let ruhig = false; try { ruhig = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch {}
+  if (!h || !kz || !h.animate || ruhig || h.offsetParent === null) return kopfRolloSetzen(zu);
+  if (h.dataset.rollt) return; h.dataset.rollt = "1";
+  const k = $("kopfPfeil"); if (k) k.classList.toggle("dreh", !!zu);
+  const oben = kz.offsetTop + kz.offsetHeight + 6, klein = (() => { h.classList.add("eingerollt"); const x = h.offsetHeight; h.classList.remove("eingerollt"); return x; })();
+  h.classList.remove("eingerollt"); const gross = h.offsetHeight;
+  const vorhang = document.createElement("div"); vorhang.className = "rollo-lamellen"; vorhang.style.top = oben + "px"; vorhang.style.height = Math.max(0, gross - oben) + "px";
+  const anzahl = Math.ceil(Math.max(0, gross - oben) / 16);
+  vorhang.innerHTML = '<i class="rl-lamelle"></i>'.repeat(anzahl);
+  const leiste = document.createElement("div"); leiste.className = "rollo-leiste";
+  const lamellen = [...vorhang.children], warten = (a) => a.finished.catch(() => {});
+  const klappen = (auf) => Promise.all(lamellen.map((l, i) => warten(l.animate(auf ? [{ transform: "scaleY(1)", opacity: 1 }, { transform: "scaleY(.06)", opacity: 0 }] : [{ transform: "scaleY(.06)", opacity: 0 }, { transform: "scaleY(1)", opacity: 1 }],
+    { duration: ROLLO_KLAPP_MS, delay: (auf ? anzahl - 1 - i : i) * ROLLO_VERSATZ_MS, easing: "ease-in-out", fill: "forwards" }))));
+  const fahren = (von, bis) => { h.style.overflow = "hidden"; return warten(h.animate([{ height: von + "px" }, { height: bis + "px" }], { duration: ROLLO_FAHRT_MS, easing: "cubic-bezier(.45,.05,.4,1)", fill: "forwards" })); };
+  try {
+    if (zu) {
+      h.append(vorhang, leiste); lamellen.forEach((l) => { l.style.opacity = "0"; });
+      await klappen(false);                       // Lamellen klappen zu
+      await fahren(gross, klein);                 // Jalousie fährt hoch
+      kopfRolloSetzen(true);
+    } else {
+      h.classList.remove("eingerollt"); h.append(vorhang, leiste);
+      await fahren(klein, gross);                 // Jalousie fährt runter (geschlossen)
+      await klappen(true);                        // Lamellen öffnen sich – Inhalt erscheint
+      kopfRolloSetzen(false);
+    }
+  } finally {
+    h.getAnimations?.().forEach((a) => a.cancel()); h.style.overflow = ""; vorhang.remove(); leiste.remove(); delete h.dataset.rollt;
+  }
 }
 function kopfRollo() {
   const zu = !document.querySelector("#v-start .hero")?.classList.contains("eingerollt");
-  kopfRolloSetzen(zu, true);
+  kopfRolloFahren(zu);
   try { zu ? localStorage.setItem(KOPF_ROLLO, "1") : localStorage.removeItem(KOPF_ROLLO); } catch {}
 }
-try { if (localStorage.getItem(KOPF_ROLLO) === "1") kopfRolloSetzen(true, false); } catch {}
+try { if (localStorage.getItem(KOPF_ROLLO) === "1") kopfRolloSetzen(true); } catch {}
 function heroZeigen(richtung) {
   const f = INFO_FELDER[INFO_I] || INFO_FELDER[0], inhalt = f.html();
   // gleicher Inhalt → nicht neu zeichnen (sonst springen Wetter-Animationen bei jedem Online-Takt neu an)

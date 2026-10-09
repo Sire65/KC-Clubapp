@@ -7374,13 +7374,17 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/\.slice\(0, 390\)/.test(html.slice(html.indexOf("const startMessTeile"), html.indexOf("const startMessTeile") + 600)), "Teilzeiten-Text bleibt unter der Protokoll-Grenze");
 }
 // 2.159.0 KC-CLUB-KOPF-ROLLO (Wunsch Hansi): Pfeil oben mittig rollt den Kopf wie eine Jalousie hoch/runter, Pfeil dreht sich, gemerkt je Gerät
+// 2.160.0 (Hansi: „zu schnell, läuft nicht hoch wie eine Jalousie“): echte Lamellen klappen zu, Jalousie fährt mit Abschlussleiste langsam hoch
 {
   const start = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('<div class="kopfzeile">', html.indexOf('<section id="v-start">')));
   assert.ok(/<button type="button" class="kopf-pfeil" id="kopfPfeil"[^>]*aria-expanded="true"[^>]*onclick="kopfRollo\(\)">/.test(start), "Pfeil oben im Kopf der Startseite");
   assert.ok(/\.kopf-pfeil \{ position: absolute; top: 0; left: 50%; transform: translateX\(-50%\)/.test(html), "Pfeil mittig oben");
-  assert.ok(/#v-start \.hero\.eingerollt > \.statusleiste, #v-start \.hero\.eingerollt > #heroInfo, #v-start \.hero\.eingerollt > #infoPunkte \{ max-height: 0; min-height: 0; opacity: 0;/.test(html), "Statusleiste + Infofeld rollen ein, Kopfzeile bleibt");
-  assert.ok(/#v-start \.hero\.eingerollt \.kopf-pfeil span \{ transform: rotate\(180deg\)/.test(html), "Pfeil dreht sich um");
-  assert.ok(/#v-start \.hero\.rollt::after \{[^}]*repeating-linear-gradient/.test(html) && /prefers-reduced-motion: reduce\) \{ #v-start \.hero > \.statusleiste/.test(html), "Jalousie-Lamellen, ruhig bei reduzierter Bewegung");
-  assert.ok(/function kopfRollo\(\) \{[\s\S]{0,300}localStorage\.setItem\(KOPF_ROLLO, "1"\) : localStorage\.removeItem\(KOPF_ROLLO\)/.test(html) && /try \{ if \(localStorage\.getItem\(KOPF_ROLLO\) === "1"\) kopfRolloSetzen\(true, false\); \} catch \{\}/.test(html), "Zustand gemerkt, Speicherfehler harmlos");
+  assert.ok(/#v-start \.hero\.eingerollt > \.statusleiste, #v-start \.hero\.eingerollt > #heroInfo, #v-start \.hero\.eingerollt > #infoPunkte \{ display: none; \}/.test(html), "Statusleiste + Infofeld rollen ein, Kopfzeile bleibt");
+  assert.ok(/\.kopf-pfeil\.dreh span \{ transform: rotate\(180deg\)/.test(html), "Pfeil dreht sich um");
+  assert.ok(/\.rl-lamelle \{[^}]*linear-gradient/.test(html) && /\.rollo-leiste \{ position: absolute;[^}]*bottom: 0/.test(html), "Lamellen und Abschlussleiste");
+  const f = html.slice(html.indexOf("async function kopfRolloFahren("), html.indexOf("function kopfRollo() {"));
+  assert.ok(/ROLLO_FAHRT_MS = 1400/.test(html) && /await klappen\(false\);[\s\S]{0,80}await fahren\(gross, klein\);/.test(f) && /await fahren\(klein, gross\);[\s\S]{0,80}await klappen\(true\);/.test(f), "hoch: zuklappen, dann hochfahren – runter umgekehrt");
+  assert.ok(/prefers-reduced-motion: reduce/.test(f) && /if \(h\.dataset\.rollt\) return;/.test(f) && /finally \{[\s\S]{0,200}vorhang\.remove\(\); leiste\.remove\(\); delete h\.dataset\.rollt;/.test(f), "ruhig bei reduzierter Bewegung, kein Doppelstart, räumt immer auf");
+  assert.ok(/function kopfRollo\(\) \{[\s\S]{0,300}localStorage\.setItem\(KOPF_ROLLO, "1"\) : localStorage\.removeItem\(KOPF_ROLLO\)/.test(html) && /try \{ if \(localStorage\.getItem\(KOPF_ROLLO\) === "1"\) kopfRolloSetzen\(true\); \} catch \{\}/.test(html), "Zustand gemerkt, Speicherfehler harmlos");
   assert.ok(/k\.setAttribute\("aria-expanded", zu \? "false" : "true"\)/.test(html), "Vorlesehilfe kennt den Zustand");
 }

@@ -704,21 +704,17 @@
   .versteckt { display: none !important; }
 
   /* Kopf (Hero) */
-  /* KC-CLUB-KOPF-ROLLO (2.159.0): Statusleiste + Infofeld rollen sich wie eine Jalousie unter die Kopfzeile; Pfeil dreht sich */
+  /* KC-CLUB-KOPF-ROLLO (2.159.0/2.160.0): Statusleiste + Infofeld verschwinden unter einer Jalousie – Lamellen klappen zu,
+     dann fährt sie mit Abschlussleiste langsam hoch (runter umgekehrt). Lamellen in Club-Beige (CD), Leiste Weinrot. */
   #v-start .hero { position: relative; }
-  .kopf-pfeil { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 56px; height: 20px; border: none; border-radius: 0 0 14px 14px; background: rgba(0,0,0,.22); color: #fff; padding: 0; cursor: pointer; display: grid; place-items: center; z-index: 2; }
-  .kopf-pfeil span { display: block; font-size: 18px; line-height: 1; margin-top: 4px; transition: transform .45s ease; }
+  .kopf-pfeil { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 56px; height: 20px; border: none; border-radius: 0 0 14px 14px; background: rgba(0,0,0,.22); color: #fff; padding: 0; cursor: pointer; display: grid; place-items: center; z-index: 3; }
+  .kopf-pfeil span { display: block; font-size: 18px; line-height: 1; margin-top: 4px; transition: transform .8s ease; }
   .kopf-pfeil:active { background: rgba(0,0,0,.35); }
-  #v-start .hero > .statusleiste, #v-start .hero > #heroInfo, #v-start .hero > #infoPunkte { max-height: 520px; transition: max-height .5s ease, opacity .4s ease, margin .5s ease, padding .5s ease; }
-  #v-start .hero.eingerollt > .statusleiste, #v-start .hero.eingerollt > #heroInfo, #v-start .hero.eingerollt > #infoPunkte { max-height: 0; min-height: 0; opacity: 0; margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; border-width: 0; overflow: hidden; pointer-events: none; }
-  #v-start .hero.eingerollt .kopf-pfeil span { transform: rotate(180deg); margin-top: 0; }
-  /* Jalousie-Lamellen nur während des Rollens */
-  #v-start .hero.rollt::after { content: ""; position: absolute; left: 0; right: 0; top: 70px; bottom: 0; border-radius: 0 0 26px 26px; pointer-events: none;
-    background: repeating-linear-gradient(to bottom, rgba(255,255,255,.16) 0 3px, rgba(0,0,0,.14) 3px 5px, transparent 5px 14px); animation: rolloLamellen .5s ease forwards; }
-  #v-start .hero.rollt.eingerollt::after { animation-name: rolloLamellenHoch; }
-  @keyframes rolloLamellen { from { opacity: .9; transform: scaleY(.15); transform-origin: top; } to { opacity: 0; transform: scaleY(1); transform-origin: top; } }
-  @keyframes rolloLamellenHoch { from { opacity: .9; transform: scaleY(1); transform-origin: top; } to { opacity: 0; transform: scaleY(.1); transform-origin: top; } }
-  @media (prefers-reduced-motion: reduce) { #v-start .hero > .statusleiste, #v-start .hero > #heroInfo, #v-start .hero > #infoPunkte, .kopf-pfeil span { transition: none; } #v-start .hero.rollt::after { display: none; } }
+  #v-start .hero.eingerollt > .statusleiste, #v-start .hero.eingerollt > #heroInfo, #v-start .hero.eingerollt > #infoPunkte { display: none; }
+  .kopf-pfeil.dreh span { transform: rotate(180deg); margin-top: 0; }
+  .rollo-lamellen { position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none; display: flex; flex-direction: column; gap: 1px; padding-top: 1px; background: rgba(60,10,20,.35); }
+  .rl-lamelle { flex: none; height: 15px; transform-origin: center; background: linear-gradient(to bottom, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+  .rollo-leiste { position: absolute; left: 0; right: 0; bottom: 0; height: 9px; z-index: 2; pointer-events: none; background: linear-gradient(to bottom, #a8364a, #6d1424); box-shadow: 0 -1px 3px rgba(0,0,0,.4); }
   .hero { background: var(--heroverlauf, linear-gradient(135deg, var(--hero1) 0%, var(--rot) 45%, var(--rot2) 75%, var(--hero4) 100%)); color: #fff; border-radius: 26px; padding: 18px; box-shadow: 0 12px 30px var(--heroschatten); }
   .kopfzeile { display: flex; align-items: flex-start; gap: 12px; }
   .kopftext { flex: 1; min-width: 0; }
@@ -3705,6 +3701,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.159.0" data-v="2.159.0"></script>
+<script src="app.js?v=2.160.0" data-v="2.160.0"></script>
 </body>
 </html>

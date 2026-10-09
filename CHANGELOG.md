@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.160.0 – 2026-10-09 – 🪟 Kopf-Jalousie: echte Lamellen, fährt langsam hoch und runter (KC-CLUB-KOPF-ROLLO)
+🔧 Kleine Systemverbesserungen
+
 ## 2.159.0 – 2026-10-09 – 🪟 Kopf als Jalousie: Pfeil oben rollt den Kopf ein und aus (KC-CLUB-KOPF-ROLLO)
 🔧 Kleine Systemverbesserungen
 
