@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.140.0 – 2026-10-09 – 🔴 ON-AIR-Schild wie im Filmstudio, solange eine Live-Verbindung läuft (KC-CLUB-ON-AIR)
+## 2.140.0 – 2026-10-09 – 🔴 ON-AIR-Schild wie im Filmstudio, solange eine Live-Verbindung läuft (KC-CLUB-ON-AIR); 🎬-Knopf aus der Statusleiste entfernt (Studio als Kachel + Karte)
 🔧 Kleine Systemverbesserungen
 
 ## 2.139.0 – 2026-10-09 – 🎬 Studio als Karte im Kopf – aufgebaut wie die Admin-Zentrale (Anzeige mit Lämpchen und Uhr, Online-Mitglieder, Pult) (KC-CLUB-STUDIO-KARTE)

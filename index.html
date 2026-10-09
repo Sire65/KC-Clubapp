@@ -351,7 +351,6 @@
   body.vf-an { padding-top: 46px; }
   /* KC-CLUB-STUDIO (2.136.0, Wunsch Hansi „alles aufgeräumt und ausgerichtet – keine Knöpfe, einer länger, einer kürzer“):
      alle Knopfreihen sind Raster mit GLEICH breiten Spalten und gleicher Höhe; Text mittig, kürzt sich statt umzubrechen */
-  .statusleiste #studioKnopf { width: 36px; height: 36px; font-size: 1rem; margin: 0; flex: none; }
   .st-aktionen .st-akt { flex-direction: column; gap: 2px; min-height: 64px; padding: 6px 4px; } .st-akt .st-sym { font-size: 1.35rem; line-height: 1; } .st-akt .st-t { font-size: .9rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
   /* KC-CLUB-SPRACHE-BRIEF (2.137.0): Auswahl im Brief-Assistenten – gleich breite, gleich hohe Knöpfe */
   .sbb-optionen { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 8px; margin: 10px 0 4px; }
@@ -368,8 +367,6 @@
   @keyframes onairGlow { 50% { box-shadow: 0 0 18px rgba(255,0,0,.95), inset 0 0 14px rgba(255,0,0,.6); color: #ff7070; } }
   @media (prefers-reduced-motion: reduce) { .onair { animation: none; } }
   .st-kopf #stdOnAir:empty { display: none; }
-  #studioKnopf.st-an { background: #d32f2f; animation: stPuls 1.6s ease-in-out infinite; }
-  @keyframes stPuls { 50% { box-shadow: 0 0 0 6px rgba(211,47,47,.35); } }
   .st-blatt .blatt-innen { max-width: 640px; margin: 0 auto; }
   .st-kopf { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; } .st-kopf h3 { margin: 0; flex: 1; }
   .st-kopf .rund { background: var(--karte2); color: var(--text); width: 44px; height: 44px; }
@@ -2769,7 +2766,6 @@
       <div class="statusleiste">
         <button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button>
         <span class="sl-luecke"></span>
-        <button class="rund versteckt" id="studioKnopf" title="Studio – Foto, Mitschauen, Live zeigen" aria-label="Studio – Foto, Mitschauen, Live zeigen" onclick="stOeffnen()">🎬</button><!-- KC-CLUB-STUDIO (2.136.0): in der Statusleiste – oben bleibt der Gruß lesbar -->
         <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led grau" id="ledComm"></i><i class="led daten" id="ledDaten"></i><i class="led-trenner" aria-hidden="true"></i><i class="led grau led-online" id="ledOnline" role="button" tabindex="0" title="Wer ist gerade online?" aria-label="Wer ist gerade online?" onclick="event.stopPropagation();onlineBlatt()"></i></button>
         <span class="sl-extra"><button class="herz" id="herzKnopf" title="Lebenszeichen – antippen: die letzten 15" aria-label="Lebenszeichen, antippen für die letzten 15" onclick="herzListe()">♥</button><button id="sparZeichen" class="spar-zeichen" title="Sparmodus an – antippen für Infos" aria-label="Sparmodus an" onclick="sparInfo()">🐢</button><button id="inkoKnopf" title="Inkognito – antippen zum Umschalten" aria-label="Inkognito umschalten" aria-pressed="false" onclick="inkognitoSetzen(!inkognitoAn())">🕶️</button></span>
       </div>

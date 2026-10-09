@@ -22126,9 +22126,7 @@ const stdOnAirAn = () => (STD.modus === "mitschauen" && STD.status === "live") |
 const onAirSchild = (klein) => `<span class="onair${klein ? " klein" : ""}" role="status" aria-label="Live-Verbindung läuft">ON AIR</span>`;
 function stKnopf() {
   const oa = $("stdOnAir"); if (oa) oa.innerHTML = stdOnAirAn() ? onAirSchild() : "";
-  const k = $("studioKnopf"); if (!k) return;
-  k.classList.toggle("versteckt", !studioStufe());
-  k.classList.toggle("st-an", !!(STD.modus && ["wartet", "live"].includes(STD.status)) || VF.rolle === "zeigt");
+  // 2.140.0 (Wunsch Hansi): kein eigener 🎬-Knopf mehr in der Statusleiste – das Studio steht als Kachel und als Karte im Kopf
 }
 const stZeit = (ms) => { const s = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
 function stOeffnen(pid, name) {

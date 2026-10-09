@@ -1,6 +1,6 @@
 # 🎬 Studio (KC-CLUB-STUDIO, ab 2.136.0)
 
-Foto, Mitschauen und Live zeigen an einem Platz: 🎬 in der Statusleiste oben.
+Foto, Mitschauen und Live zeigen an einem Platz: Kachel „🎬 Studio“ und Karte „🎬 STUDIO“ oben im Kopf (wie die Admin-Zentrale). Während einer Live-Verbindung leuchtet „ON AIR“.
 
 ## Bedienung
 1. Mitglied suchen und antippen (wer gerade online ist, steht oben).

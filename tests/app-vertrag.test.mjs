@@ -7041,7 +7041,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/if \(a === "vorfuehren_bild"\) \{\s*if \(w\.von !== ich\.person_id\) throw new Fehler\("Kein Zugriff\.", 403\);\s*const f = w\.status === "laeuft" \? studioFrame\(p\.f\) : null;/.test(server), "nur der Vorführende, nur solange zugeschaut wird");
   assert.ok(/w\.frame \? \{ frame: w\.frame \} : \{ bild: w\.bild \}/.test(server), "Mitschauen liefert Live-Bild (oder älteres Foto)");
   // App: Kopf-Knopf, Pult mit gleich breiten Knöpfen, Uhr, Rechte
-  assert.ok(/id="studioKnopf"[^>]*onclick="stOeffnen\(\)">🎬<\/button>/.test(seite) && /k\.classList\.toggle\("versteckt", !studioStufe\(\)\);/.test(programm), "🎬 im Kopf nur mit Recht");
+  assert.ok(!/id="studioKnopf"/.test(seite) && /\{ id: "studio", sym: "🎬", t: "Studio"/.test(programm), "2.140.0: kein 🎬-Knopf in der Statusleiste mehr – Studio als Kachel und Karte im Kopf (nur mit Recht)");
   assert.ok(/\.st-modi \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}/.test(seite) && /\.st-aktionen \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/.test(seite) && /grid-auto-rows: 1fr;/.test(seite), "alle Knopfreihen gleich breit und gleich hoch");
   assert.ok(/modus\("foto", "📸", "Foto", "alles"\)\}\$\{modus\("mitschauen", "🔴", "Mitschauen", "alles"\)\}\$\{modus\("zeigen", "📺", "Live zeigen", "zeigen"\)\}/.test(programm), "drei Betriebsarten, Recht je Art");
   assert.ok(/⏱ <b id="stdLaeuft">/.test(programm) && /noch <b id="stdNoch">/.test(programm) && /vfUhr/.test(programm), "Uhr: läuft seit / noch – auch in der Leiste beim Zeigen");
