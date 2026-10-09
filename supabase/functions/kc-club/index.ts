@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.150.0";
+const SERVER_VERSION = "2.151.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -7512,6 +7512,19 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (error) throw new Fehler("Konnte ich mir gerade nicht merken – bitte später nochmal.", 503);
         await protokoll(ich.person_id, "sprache_gelernt", { satz, ziel });
         return json({ ok: true });
+      }
+      // 2.151.0 KC-CLUB-SPRACHE-VERGESSEN (Wunsch Hansi „falsch zugeordnet – wie löse ich die Verknüpfung?“): eigenen gelernten Satz wieder löschen
+      case "sprache_vergessen": {
+        const satz = sprachSatz(p.satz);
+        if (!satz) throw new Fehler("Unbekannter Satz.", 400);
+        if (ich.nurLesen) return json({ ok: true });
+        const { data: alt } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "sprache_gelernt").maybeSingle();
+        const vorher = ((alt?.wert?.eintraege ?? []) as any[]), eintraege = vorher.filter((e) => e.s !== satz);
+        if (eintraege.length === vorher.length) return json({ ok: true, entfernt: 0 });
+        const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "sprache_gelernt", wert: { eintraege }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (error) throw new Fehler("Konnte ich gerade nicht vergessen – bitte später nochmal.", 503);
+        await protokoll(ich.person_id, "sprache_vergessen", { satz });
+        return json({ ok: true, entfernt: 1 });
       }
       case "sprache_unbekannt": {
         const satz = sprachSatz(p.satz);

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.150.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.151.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1639,6 +1639,7 @@ const HILFE = [
   { id: "twinkey_haengt", thema: "technik", sym: "🧑‍🍳", t: "Twinkey lädt nicht", x: "Bei langsamem Netz zeigt Twinkey nach 8 Sekunden „🐌 Das Netz ist gerade langsam – noch einen Moment …“. Klappt es gar nicht, kommt <b>„🔄 Nochmal versuchen“</b> – antippen, oder mit „Zurück zur Club-App“ später wiederkommen.", seit: "2.106.0" },
   { id: "termin_zahl", thema: "termine", sym: "✅", t: "Was heißt „7/18 angemeldet“?", x: "Auf der Termin-Kachel oben auf der Startseite steht, wie viele schon zugesagt haben – z. B. <b>„✅ 7/18 angemeldet“</b> heißt: 7 von 18 Mitgliedern kommen. So siehst du auf einen Blick, wie voll es wird.", zeig: () => zeige("start"), seit: "2.102.0" },
   { id: "notfallkontakt_wer", thema: "notfall", sym: "☎️", t: "Der Notfallkontakt ist jemand anderes", x: "Als <b>Notfallkontakt</b> bitte nicht dich selbst eintragen, sondern die Person, die <b>benachrichtigt werden soll</b>, wenn dir etwas passiert – z. B. Partnerin, Partner, Kind oder Nachbar. Trägst du deinen eigenen Namen oder deine eigene Nummer ein, fragt die App nach.", zeig: () => sosStart(), seit: "2.94.0" },
+  { id: "sprache_einstellung", thema: "start", sym: "🎙️", t: "Einstellungen per Sprache – und Gelerntes wieder vergessen", x: "Sag zum Beispiel <b>„Kachelgröße 4 x 3“</b> (4 nebeneinander), <b>„Kacheln normal“</b>, <b>„Einstellung Schriftgröße“</b>, <b>„Ruhezeit ändern“</b> oder <b>„Wo stelle ich das Wetter ein“</b> – die App springt genau zu dem Schalter. Hast du der App einen Satz falsch beigebracht: 🎙️ → <b>📋 Alle Befehle</b> → unten <b>„🧠 Von dir beigebracht“</b> → <b>🗑️ Vergessen</b>.", zeig: () => sbListe(), seit: "2.151.0" },
   { id: "schilder", thema: "club", sym: "🪧", t: "Schilder-Druckerei (Clubleitung)", x: "Büro → <b>🪧 Schilder-Druckerei</b>: Anlass wählen (z. B. Weihnachtsmarkt), eine Vorlage antippen – „Nur Barzahlung“, Preisliste, Öffnungszeiten, Parkverbot, Durchgang freihalten … Text ändern, Schrift, Farbe, Rahmen und Symbol wählen, <b>F</b>/<b>K</b>/<b>U</b> für fett, kursiv, unterstrichen. Dann <b>🖨️ Drucken</b> oder <b>📤 Senden & Ablegen</b>: an Mitglieder senden, die es zuhause drucken (praktisch am Stand ohne Drucker), per E-Mail oder im Büro-Ordner ablegen. <b>💾 Speichern</b> hebt das Schild auf – nächstes Jahr wieder öffnen.", zeig: () => schStart(), seit: "2.150.0" },
   { id: "selbstloeschen", thema: "nachrichten", sym: "⏳", t: "Nachrichten, die sich selbst löschen", x: "Ganzer Chat: oben auf <b>⋮ → „⏳ Selbstlöschen“</b> – alle <b>neuen</b> Nachrichten in diesem Chat verschwinden nach <b>1 Std, 24 Std oder 7 Tagen</b> – bei allen. Nur für eine einzelne Nachricht: beim Schreiben unten auf <b>⏳</b> tippen. Erkennbar an <b>⏳</b> oben im Chat, an der Leiste über dem Schreibfeld und an <b>„⏳ noch 3 Std“</b> in jeder Blase. Push und E-Mail enthalten dann keinen Text – lesen nur in der App.", zeig: () => zeige("nachrichten"), seit: "2.148.0" },
   { id: "eingabe_leeren", thema: "nachrichten", sym: "✕", t: "Geschriebenen Text auf einmal löschen", x: "Steht Text im Schreibfeld, erscheint rechts oben ein <b>rotes ✕</b>. Antippen löscht den noch nicht gesendeten Text – gesendete Nachrichten bleiben.", zeig: () => zeige("nachrichten"), seit: "2.148.0" },
@@ -1769,6 +1770,31 @@ function sbAehnlich(wort, mitglieder = [], ich = "") {
   return (mitglieder || []).filter((x) => x.person_id !== ich).map((x) => ({ x, d: Math.min(...String(x.name).split(/[\s-]+/).map((n) => sbAbstand(w, sbLaut(n)))) }))
     .filter((y) => y.d <= (w.length > 4 ? 2 : 1)).sort((p, q) => p.d - q.d).slice(0, 4).map((y) => y.x.person_id);
 }
+// 2.151.0 KC-CLUB-SPRACHE-EINSTELLUNG (Wunsch Hansi): Einstellungen per Sprache genau ansteuern – Eintrag = Wort + Klappe + Schalter
+// (dieselben Sprungziele wie in Hilfe und Tipps: einstiegHin). Neue Einstellung = eine Zeile hier.
+const SB_EINST = [
+  { k: "kacheln", re: /kachel/, klappe: "darstellung", id: "kachelGroesseWahl", t: "Kachelgröße" },
+  { k: "schrift", re: /schrift|große buchstaben|lesbar/, klappe: "darstellung", id: "setGross", t: "Große Schrift" },
+  { k: "modus", re: /dunkel|hell|nacht ?modus|farbe der app/, klappe: "darstellung", id: "modusWahl", t: "Hell / Dunkel" },
+  { k: "wetter", re: /wetter/, klappe: "darstellung", id: "meinWetterort", t: "Wetterort" },
+  { k: "animation", re: /animation|bewegung/, klappe: "darstellung", id: "setAnimiert", t: "Bewegungen" },
+  { k: "feiertage", re: /feiertag/, klappe: "darstellung", id: "setFeiertage", t: "Feiertage" },
+  { k: "ansicht", re: /mitglieder ?ansicht|ansicht der mitglieder/, klappe: "darstellung", id: "mgAnsichtWahl", t: "Mitglieder-Ansicht" },
+  { k: "ruhezeit", re: /ruhe ?zeit|nachtruhe|nicht stören/, klappe: "benachrichtigung", id: "ruheVon", t: "Ruhezeit" },
+  { k: "vorlesen", re: /vorlesen|vorlese/, klappe: "ansagen", id: "setVorlesenZeile", t: "Vorlesen" },
+  { k: "tipps", re: /tipps?\b|tagestipp/, klappe: "ansagen", id: "setTipps", t: "Tipps" },
+  { k: "spiele", re: /spiel/, klappe: "privat", id: "setSpiele", t: "Spiele" },
+  { k: "livetippen", re: /live ?tippen|mitlesen/, klappe: "privat", id: "setLiveTippen", t: "Live-Tippen" },
+];
+// erste Zahl zählt: „4 x 3“ / „vier mal drei“ = 4 nebeneinander; „sehr klein“ = 4, „klein“ = 3, „normal/groß“ = 2
+function sbKachelStufe(t) {
+  if (/sehr klein|ganz klein|mini|winzig/.test(t)) return "mini";
+  const z = t.match(/(vier|drei|zwei|\d)/)?.[1];
+  if (z) return { 4: "mini", vier: "mini", 3: "klein", drei: "klein", 2: "normal", zwei: "normal" }[z] || null;
+  if (/klein/.test(t)) return "klein";
+  if (/normal|groß|größer/.test(t)) return "normal";
+  return null;
+}
 function sbErkennen(roh, mitglieder = [], ich = "") {
   const t = sbNorm(roh); if (!t) return null;
   if (/^(zur |zu der |auf die |die )?(start ?seite|haupt ?seite|startbildschirm|anfang)$|^(zurück )?(zum|zur) (start|anfang|start ?seite|haupt ?seite)$|^nach hause$|^ich weiß nicht weiter$/.test(t)) return { art: "start" };
@@ -1800,6 +1826,13 @@ function sbErkennen(roh, mitglieder = [], ich = "") {
     const wort = treffer.length === 1 ? treffer[0].x.name : treffer.length ? (wie === "vor" ? n0[0] : wie === "nach" ? n0[n0.length - 1] : treffer[0].x.name) : sbAbWort(roh, vorne).split(/\s+/)[0].replace(/[.,!?;:„“"]+$/, "");
     return { art: "nachricht", personen: treffer.map((w) => w.x.person_id), wort, text: sbAbWort(roh, vorne + (k || 1)), vorschlag: treffer.length ? [] : sbAehnlich(wort, mitglieder, ich) };
   }
+  // 2.151.0 KC-CLUB-SPRACHE-EINSTELLUNG (Wunsch Hansi): „Chat mit Klaus öffnen“ = Chat mit Klaus (wie „Nachricht an Klaus“)
+  let ch = t.match(/^(?:(?:öffne|zeig(?:e)?(?: mir)?) )?(?:den |einen )?chat mit (.+?)(?: (?:öffnen|aufmachen|starten|anfangen))?$/);
+  if (ch) return sbErkennen("Nachricht an " + ch[1], mitglieder, ich);
+  // „Kachelgröße auf 4 x 3 ändern“, „Kacheln sehr klein“ → direkt umstellen; ohne Größe → genau zur Einstellung springen
+  if (/kachel/.test(t)) { const g = sbKachelStufe(t); return g ? { art: "kachel", g } : { art: "einst", k: "kacheln" }; }
+  // „Einstellung Schriftgröße“, „Ruhezeit ändern“, „wo stelle ich das Wetter ein“ → genau zu dem Schalter in den Einstellungen
+  if (/einstell|änder|umstell|anpass|ein ?schalten|aus ?schalten|wo (kann|stelle) ich/.test(t)) { const e = SB_EINST.find((x) => x.re.test(t)); if (e) return { art: "einst", k: e.k }; }
   if (/(nächste[rn]?|wann ist) .*termin|^nächster termin$/.test(t)) return { art: "naechster" };
   if (/^(meine )?termine?$|^kalender$|^(zeig|öffne)(e)? (die |den |meine )?(termine|kalender)$/.test(t)) return { art: "termine" };
   // 2.83.0: weitere Ziele direkt (Registry SB_ZIELE) – „neuer Termin“, „Fotos“, „Archiv“ …
@@ -1888,7 +1921,7 @@ const SB_BEFEHLE = [
   ["Ruf Klaus an", "📞 ruft in der App an, wenn Klaus online ist – sonst Telefon & WhatsApp"], ["Öffne den Ordner Verträge", "🗂️ öffnet den Ordner im Archiv"],
   ["Mitglieder", "👥 Mitgliederliste"], ["Fotoalbum", "📷 Fotos ansehen"], ["Fotos hochladen", "⬆️ Neue Fotos ins Album"], ["Archiv", "🗄️ Ordner und Dokumente"],
   ["Erstattung", "💶 Fahrtkosten oder Auslagen erstattet bekommen"], ["Helfen", "🤝 Helfen & Leihen"], ["Börse", "🛍️ Biete und suche"], ["Protokolle", "📄 Sitzungsprotokolle"],
-  ["Vorschläge", "💡 Vorschläge ansehen und einreichen"], ["Mein Dienst", "🗓️ Dienstpläne"], ["Einstellungen", "⚙️ Einstellungen"], ["Suche Glühwein", "🔍 in der ganzen App suchen"], ["Hilfe", "❓ Beispiele zeigen"],
+  ["Vorschläge", "💡 Vorschläge ansehen und einreichen"], ["Mein Dienst", "🗓️ Dienstpläne"], ["Einstellungen", "⚙️ Einstellungen"], ["Kachelgröße 4 x 3", "🔲 Kacheln: 4 nebeneinander (auch „3 x 3“, „klein“, „normal“)"], ["Einstellung Schriftgröße", "⚙️ springt genau zu dieser Einstellung (auch Ruhezeit, Wetter, Dunkel, Vorlesen …)"], ["Chat mit Klaus öffnen", "💬 öffnet den Chat mit Klaus"], ["Suche Glühwein", "🔍 in der ganzen App suchen"], ["Hilfe", "❓ Beispiele zeigen"],
 ];
 function sbListe() {
   if (!SB.woerter) sbWoerterLaden()?.then(() => { if (SB.woerter && $("sbListeBlatt")) sbListe(); }); // gelernte Sätze nachreichen
@@ -1902,15 +1935,29 @@ function sbListe() {
     <input type="search" id="sbListeSuche" class="hz-suche" placeholder="🔍 Befehl suchen …" autocomplete="off" enterkeyhint="search" style="width:100%;box-sizing:border-box">
     <div id="sbListeInhalt" class="sb-liste">${zeilen.map(([a, b, g], i) => `<button class="sb-befehl" data-i="${i}" data-such="${esc(sbNorm(a + " " + b))}"><b>„${esc(a)}“</b><small>${esc(b)}</small></button>`).join("")}</div>
     <p class="hinweis" id="sbListeLeer" style="display:none">Nichts gefunden. Sag es einfach – kennt die App den Satz nicht, fragt sie und lernt ihn.</p>
+    ${w.meine.length ? `<h4 style="margin:12px 0 4px">🧠 Von dir beigebracht</h4><p class="hinweis" style="margin:0 0 6px">Falsch zugeordnet? Auf „🗑️ Vergessen“ tippen – dann fragt die App beim nächsten Mal wieder.</p>
+    <div class="sb-gelernt">${w.meine.map((e, i) => `<div><span>„${esc(e.s)}“<small>→ ${esc(zName(e.z))}</small></span><button class="knopf" data-vergiss="${i}">🗑️ Vergessen</button></div>`).join("")}</div>` : ""}
     <p class="hinweis" style="margin:6px 0 0">Antippen = gleich ausführen. Zum Sprechen auf 🎙️ unten links tippen.</p>
     <button class="knopf" style="width:100%;text-align:center" onclick="fensterZu($('sbListeBlatt'))">Schließen</button>`);
   const such = $("sbListeSuche");
   such.oninput = () => { const q = sbNorm(such.value); let n = 0; f.querySelectorAll(".sb-befehl").forEach((b) => { const ja = !q || b.dataset.such.includes(q); b.style.display = ja ? "" : "none"; if (ja) n++; }); $("sbListeLeer").style.display = n ? "none" : ""; };
   if (altQ) { such.value = altQ; such.oninput(); } // beim Neuaufbau bleibt die Suche stehen
+  f.querySelectorAll("[data-vergiss]").forEach((b) => (b.onclick = () => sbVergessen(w.meine[+b.dataset.vergiss]))); // 2.151.0
   // Antippen führt aus – Beispiele mit Namen oder Text (Klaus, „: …“, Glühwein) sind nur Muster: dann zum Sprechen auffordern
   f.querySelectorAll(".sb-befehl").forEach((b) => (b.onclick = () => { const [satz] = zeilen[+b.dataset.i];
     if (/klaus|:|glühwein/i.test(satz)) return melde(sbStummAn() ? "Nur ein Beispiel – zum Sprechen erst oben „🎙️ Mikrofon wieder an“" : "Nur ein Beispiel – tippe unten auf 🎙️ und sag es mit dem richtigen Namen bzw. Text");
     fensterZu(f); sbVerstanden(satz); }));
+}
+// 2.151.0 KC-CLUB-SPRACHE-VERGESSEN (Wunsch Hansi): falsch beigebrachten Satz wieder lösen
+async function sbVergessen(e) {
+  if (!e) return;
+  const z = SB_ZIELE.find((x) => x.id === e.z);
+  if (!(await frage(`„${e.s}“ vergessen?\n\nBisher öffnet der Satz: ${z ? z.sym + " " + z.t : e.z}. Danach fragt die App wieder, was du meinst.`, { ja: "🗑️ Vergessen", nein: "Behalten" }))) return;
+  try {
+    await api("sprache_vergessen", { satz: e.s });
+    if (SB.woerter) SB.woerter.meine = SB.woerter.meine.filter((x) => x.s !== e.s);
+    melde(`🗑️ Vergessen: „${e.s}“`); if ($("sbListeBlatt")) sbListe();
+  } catch (err) { meldeFehler(err); }
 }
 function sbKnopfTipp() { if (SB.lang) { SB.lang = false; return; } if (sbStummAn()) return sbListe(); sbHoeren(); } // stumm → Liste mit „Mikrofon wieder an“
 // 2.83.0 KC-CLUB-SPRACHE-LERNEN: Ziele, die man einem unbekannten Satz zuordnen kann (gleiche IDs wie im Server: SPRACHE_ZIELE)
@@ -2100,6 +2147,12 @@ async function sbAusfuehren(b) {
   if (b.art === "brief") return sbBrief(b); // 2.137.0 KC-CLUB-SPRACHE-BRIEF
   if (b.art === "ziel") { const z = SB_ZIELE.find((x) => x.id === b.ziel); if (!z) return; if (["start", "naechster", "nachricht_neu", "pinnwand_neu", "brief_neu"].includes(z.id)) return z.los(); if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist"); return z.los(); }
   if (b.art === "start") return sbStartseite();
+  if (b.art === "einst") { const e = SB_EINST.find((x) => x.k === b.k); if (!e) return; melde(`⚙️ Einstellungen → ${e.t}`); return einstiegHin(e.klappe, e.id); } // 2.151.0: genau zum Schalter
+  if (b.art === "kachel") { // 2.151.0: Kachelgröße gleich umstellen und zeigen, wo das steht (rückgängig: einfach nochmal sagen oder antippen)
+    kachelGroesse(b.g); einstiegHin("darstellung", "kachelGroesseWahl");
+    if (typeof einfach === "function" && einfach()) melde("ℹ️ Gilt nur in der erweiterten Ansicht – in der einfachen Ansicht bleiben die Kacheln groß", true);
+    return;
+  }
   if (b.art === "hilfe") return sbNichtVerstanden("Das kannst du zur App sagen:", "");
   if (b.art === "nachricht" && !b.alle && b.personen?.length !== 1) return sbWerWahl(b); // erst klären, wer gemeint ist
   if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist");

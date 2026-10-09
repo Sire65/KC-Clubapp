@@ -7222,3 +7222,32 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/#schBlatt \.sdr-leiste \.knopf \{[^}]*display: flex;/.test(h) && /\.sdr-leiste \{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/.test(h) && /\.sdr-symbole \{ display: grid; grid-template-columns: repeat\(6, minmax\(0, 1fr\)\)/.test(h), "Knöpfe gleich groß im Raster");
   assert.ok(!/\.sch-(feld|zeile|preis|leiste|vorschau)\b/.test(mod), "eigene Klassen (sdr-) – keine Überschneidung mit dem Schachbrett (sch-)");
 }
+
+// 2.151.0 KC-CLUB-SPRACHE-EINSTELLUNG + KC-CLUB-SPRACHE-VERGESSEN (Wunsch Hansi): „Kachelgröße auf 4 x 3 ändern“, Einstellungen genau ansteuern,
+// „Chat mit Klaus öffnen“, falsch beigebrachte Sätze wieder vergessen
+{
+  const a = programm.indexOf("const sbNorm = "), b = programm.indexOf("// ungespeicherte Eingaben auf der jetzigen Seite?");
+  const sbErkennen = new Function(programm.slice(a, b) + "\nreturn sbErkennen;")();
+  const mg = [{ person_id: "KC-P-M0009", name: "Klaus Zander" }, { person_id: "KC-P-002", name: "Hans-Joachim Koch" }];
+  assert.deepEqual(sbErkennen("Kachelgröße auf 4 x 3 ändern"), { art: "kachel", g: "mini" }, "4 x 3 → 4 nebeneinander");
+  assert.deepEqual(sbErkennen("Kacheln 4x3"), { art: "kachel", g: "mini" }, "auch ohne Leerzeichen");
+  assert.deepEqual(sbErkennen("Kachelgröße vier mal drei"), { art: "kachel", g: "mini" }, "als Wort");
+  assert.deepEqual(sbErkennen("Kacheln auf 3 x 3"), { art: "kachel", g: "klein" }, "3 nebeneinander");
+  assert.deepEqual(sbErkennen("Kacheln sehr klein"), { art: "kachel", g: "mini" }, "sehr klein");
+  assert.deepEqual(sbErkennen("Kacheln wieder normal"), { art: "kachel", g: "normal" }, "normal");
+  assert.deepEqual(sbErkennen("Kachelgröße ändern"), { art: "einst", k: "kacheln" }, "ohne Größe → genau zur Einstellung");
+  assert.deepEqual(sbErkennen("Einstellung Schriftgröße"), { art: "einst", k: "schrift" }, "Schriftgröße");
+  assert.deepEqual(sbErkennen("Ruhezeit ändern"), { art: "einst", k: "ruhezeit" }, "Ruhezeit");
+  assert.deepEqual(sbErkennen("Wo stelle ich das Wetter ein"), { art: "einst", k: "wetter" }, "Wetter");
+  assert.deepEqual(sbErkennen("Einstellungen"), { art: "ziel", ziel: "einstellungen" }, "„Einstellungen“ allein wie bisher");
+  assert.deepEqual(sbErkennen("Chat mit Klaus öffnen", mg, "KC-P-002").personen, ["KC-P-M0009"], "Chat mit Klaus öffnen = Chat mit Klaus");
+  assert.equal(sbErkennen("Chat mit Klaus öffnen", mg, "KC-P-002").art, "nachricht", "als Nachricht an Klaus");
+  const n = sbErkennen("Nachricht an Klaus: das Wetter bitte ändern", mg, "KC-P-002");
+  assert.ok(n.art === "nachricht" && /wetter/i.test(n.text), "diktierte Nachricht bleibt Nachricht – keine Einstellung");
+  assert.ok(/if \(b\.art === "einst"\) \{ const e = SB_EINST\.find\(\(x\) => x\.k === b\.k\); if \(!e\) return; melde\(`⚙️ Einstellungen → \$\{e\.t\}`\); return einstiegHin\(e\.klappe, e\.id\); \}/.test(programm), "springt mit einstiegHin genau zum Schalter");
+  for (const e of new Function(programm.slice(programm.indexOf("const SB_EINST = ["), programm.indexOf("// erste Zahl zählt")) + "\nreturn SB_EINST;")())
+    assert.ok(new RegExp(`einstiegHin\\("${e.klappe}", "${e.id}"\\)`).test(programm) || e.id === "kachelGroesseWahl", `Sprungziel ${e.k} gibt es`);
+  const sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8"), v = sv.slice(sv.indexOf('case "sprache_vergessen"'), sv.indexOf('case "sprache_unbekannt"'));
+  assert.ok(/eq\("person_id", ich\.person_id\)/.test(v) && /filter\(\(e\) => e\.s !== satz\)/.test(v) && /protokoll\(ich\.person_id, "sprache_vergessen"/.test(v), "Server: nur eigene Sätze vergessen");
+  assert.ok(/data-vergiss="\$\{i\}">🗑️ Vergessen<\/button>/.test(programm) && /async function sbVergessen\(e\)/.test(programm) && /await frage\(`„\$\{e\.s\}“ vergessen\?/.test(programm), "Liste: 🗑️ Vergessen mit Rückfrage");
+}

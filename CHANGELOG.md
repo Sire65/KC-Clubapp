@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.151.0 – 2026-10-09 – 🎙️ Sprache: Kachelgröße und Einstellungen genau ansteuern, „Chat mit … öffnen“, Gelerntes vergessen (KC-CLUB-SPRACHE-EINSTELLUNG, KC-CLUB-SPRACHE-VERGESSEN)
+🔧 Kleine Systemverbesserungen
+
 ## 2.150.0 – 2026-10-09 – 🪧 Schilder-Druckerei im Büro: Vorlagen nach Anlass, gestalten, drucken, an Mitglieder senden, ablegen, wiederverwenden (KC-CLUB-SCHILDER)
 DB (Weg B): 20261009_kc_club_v2150_schilder.sql – neue Tabelle kc_club_schilder (gespeicherte Schilder, weich löschbar); Server: schild_liste / schild_speichern / schild_loeschen (nur Clubleitung).
 🔧 Kleine Systemverbesserungen

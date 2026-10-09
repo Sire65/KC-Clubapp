@@ -1488,6 +1488,9 @@
   .sl-kopf { flex: none; margin: 0; padding: 2px 8px; border: 2px solid #6a1b9a; border-radius: 999px; background: #f3e5f5; color: #4a148c; font: inherit; font-size: .8rem; font-weight: 800; white-space: nowrap; cursor: pointer; }
   .sl-kopf.versteckt { display: none; }
   .blase .sl-marke { font-weight: 700; color: #6a1b9a; } .blase.eigen .sl-marke { color: inherit; opacity: .95; } :root.dunkel .blase .sl-marke { color: #ce93d8; }
+  /* 2.151.0 KC-CLUB-SPRACHE-VERGESSEN: eigene gelernte Sätze mit „Vergessen“ – Text links, Knopf rechts, alle Knöpfe gleich breit */
+  .sb-gelernt { display: grid; gap: 6px; margin-bottom: 8px; } .sb-gelernt > div { display: grid; grid-template-columns: 1fr 128px; gap: 8px; align-items: center; padding: 6px 8px; border: 1px solid var(--linie); border-radius: 10px; }
+  .sb-gelernt span { min-width: 0; overflow-wrap: anywhere; } .sb-gelernt small { display: block; opacity: .75; } #sbListeBlatt .sb-gelernt .knopf { margin: 0; padding: 8px 4px; text-align: center; font-size: .85rem; }
   /* KC-CLUB-SCHILDER (2.150.0): Schilder-Druckerei – alle Wahlknöpfe gleich groß im Raster */
   .sdr-anlaesse { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } #schBlatt .sdr-anlaesse .knopf { margin: 0; min-height: 56px; text-align: center; word-break: break-word; hyphens: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: .85rem; line-height: 1.15; padding: 6px 4px; } .sdr-anlaesse .knopf span { font-size: 1.3rem; }
   .sdr-vorlagen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } @media (min-width: 640px) { .sdr-vorlagen { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
@@ -3679,6 +3682,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.150.0" data-v="2.150.0"></script>
+<script src="app.js?v=2.151.0" data-v="2.151.0"></script>
 </body>
 </html>
