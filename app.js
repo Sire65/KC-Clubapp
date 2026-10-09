@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.169.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.170.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1946,16 +1946,35 @@ function sbListe() {
     <p class="hinweis" id="sbListeLeer" style="display:none">Nichts gefunden. Sag es einfach – kennt die App den Satz nicht, fragt sie und lernt ihn.</p>
     ${w.meine.length ? `<h4 style="margin:12px 0 4px">🧠 Von dir beigebracht</h4><p class="hinweis" style="margin:0 0 6px">Falsch zugeordnet? Auf „🗑️ Vergessen“ tippen – dann fragt die App beim nächsten Mal wieder.</p>
     <div class="sb-gelernt">${w.meine.map((e, i) => `<div><span>„${esc(e.s)}“<small>→ ${esc(zName(e.z))}</small></span><button class="knopf" data-vergiss="${i}">🗑️ Vergessen</button></div>`).join("")}</div>` : ""}
-    <p class="hinweis" style="margin:6px 0 0">Antippen = gleich ausführen. Zum Sprechen auf 🎙️ unten links tippen.</p>
+    <p class="hinweis" style="margin:6px 0 0">Antippen = gleich ausführen (bei Namen fragt die App „Mit wem?“). Zum Sprechen auf 🎙️ unten links tippen.</p>
     <button class="knopf" style="width:100%;text-align:center" onclick="fensterZu($('sbListeBlatt'))">Schließen</button>`);
   const such = $("sbListeSuche");
   such.oninput = () => { const q = sbNorm(such.value); let n = 0; f.querySelectorAll(".sb-befehl").forEach((b) => { const ja = !q || b.dataset.such.includes(q); b.style.display = ja ? "" : "none"; if (ja) n++; }); $("sbListeLeer").style.display = n ? "none" : ""; };
   if (altQ) { such.value = altQ; such.oninput(); } // beim Neuaufbau bleibt die Suche stehen
   f.querySelectorAll("[data-vergiss]").forEach((b) => (b.onclick = () => sbVergessen(w.meine[+b.dataset.vergiss]))); // 2.151.0
-  // Antippen führt aus – Beispiele mit Namen oder Text (Klaus, „: …“, Glühwein) sind nur Muster: dann zum Sprechen auffordern
-  f.querySelectorAll(".sb-befehl").forEach((b) => (b.onclick = () => { const [satz] = zeilen[+b.dataset.i];
-    if (/klaus|:|glühwein/i.test(satz)) return melde(sbStummAn() ? "Nur ein Beispiel – zum Sprechen erst oben „🎙️ Mikrofon wieder an“" : "Nur ein Beispiel – tippe unten auf 🎙️ und sag es mit dem richtigen Namen bzw. Text");
-    fensterZu(f); sbVerstanden(satz); }));
+  // Antippen führt aus. 2.170.0 (Wunsch Hansi „Befehl anklicken → Punkt aufrufen“): Beispiele mit Namen fragen „Mit wem?“,
+  // Beispiele mit Text öffnen dasselbe ohne Text (Text schreibst/diktierst du dann), „Suche …“ öffnet die Suche
+  f.querySelectorAll(".sb-befehl").forEach((b) => (b.onclick = () => { const [satz, , gelernt] = zeilen[+b.dataset.i]; fensterZu(f); sbBefehlTippen(satz, gelernt); }));
+}
+// 2.170.0 KC-CLUB-SPRACHE-LISTE-TIPPEN: Befehl aus der Liste antippen = so, als hätte man ihn gesagt (Muster werden vorher vervollständigt)
+function sbBefehlTippen(satz, gelernt) {
+  if (gelernt || !/klaus|:|glühwein/i.test(satz)) return sbVerstanden(satz);
+  if (/glühwein/i.test(satz)) return sucheAuf();
+  const ohneText = satz.replace(/:.*$/, "").trim(); // „Nachricht an Klaus: Bin gleich da“ → „Nachricht an Klaus“
+  if (!/klaus/i.test(ohneText)) return sbVerstanden(/pinnwand/i.test(ohneText) ? "Neuer Zettel" : ohneText);
+  sbPersonWaehlen(ohneText);
+}
+async function sbPersonWaehlen(muster) {
+  try { if (!MITGLIEDER) await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+  const liste = (MITGLIEDER || []).filter((m) => m.person_id !== ICH?.person_id).sort((a, b) => String(a.name).localeCompare(String(b.name), "de"));
+  const titel = muster.replace(/klaus/i, "…");
+  const f = blattAuf("sbPersonBlatt", `<h3 style="margin:0 0 6px">👤 ${esc(titel)} – mit wem?</h3>
+    <input type="search" id="sbPersonSuche" class="hz-suche" placeholder="🔍 Name eintippen …" autocomplete="off" style="width:100%;box-sizing:border-box">
+    <div class="sb-liste" id="sbPersonListe">${liste.map((m, i) => `<button class="sb-befehl" data-i="${i}" data-such="${esc(sbNorm(m.name))}"><b>${esc(m.name)}</b></button>`).join("")}</div>
+    <button class="knopf" style="width:100%;text-align:center;margin-top:8px" onclick="fensterZu($('sbPersonBlatt'))">Abbrechen</button>`);
+  const such = $("sbPersonSuche");
+  such.oninput = () => { const q = sbNorm(such.value); f.querySelectorAll(".sb-befehl").forEach((b) => { b.style.display = !q || b.dataset.such.includes(q) ? "" : "none"; }); };
+  f.querySelectorAll(".sb-befehl").forEach((b) => (b.onclick = () => { const m = liste[+b.dataset.i]; fensterZu(f); sbVerstanden(muster.replace(/klaus/i, m.name)); }));
 }
 // 2.151.0 KC-CLUB-SPRACHE-VERGESSEN (Wunsch Hansi): falsch beigebrachten Satz wieder lösen
 async function sbVergessen(e) {

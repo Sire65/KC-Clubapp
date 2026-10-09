@@ -7477,3 +7477,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/\.sp-banner\.sieg/.test(html) && /Date\.now\(\) - \(konfetti\.zuletzt \|\| 0\) > 8000/.test(html) && /setTimeout\(\(\) => konfetti\(\), 300\); \/\/ KC-CLUB-KONFETTI/.test(html), "Konfetti nur bei Sieg und eigenem Geburtstag, nicht dauernd");
   assert.ok(/\.konfetti \{ position: fixed; inset: 0; pointer-events: none;/.test(html), "Konfetti blockiert nichts");
 }
+// 2.170.0 KC-CLUB-SPRACHE-LISTE-TIPPEN (Wunsch Hansi): Liste der Sprachbefehle – Antippen führt den Punkt aus, auch Beispiele mit Namen/Text
+{
+  const f = html.slice(html.indexOf("function sbBefehlTippen("), html.indexOf("async function sbPersonWaehlen("));
+  assert.ok(/if \(gelernt \|\| !\/klaus\|:\|glühwein\/i\.test\(satz\)\) return sbVerstanden\(satz\);/.test(f) && /return sucheAuf\(\);/.test(f) && /satz\.replace\(\/:\.\*\$\/, ""\)/.test(f) && /sbPersonWaehlen\(ohneText\)/.test(f), "jeder Eintrag tut etwas: direkt, Suche, ohne Text oder „Mit wem?“");
+  assert.ok(/sbVerstanden\(muster\.replace\(\/klaus\/i, m\.name\)\)/.test(html) && /– mit wem\?/.test(html), "Personenwahl setzt den echten Namen ein");
+  assert.ok(!/Nur ein Beispiel – tippe unten auf 🎙️/.test(html), "kein „Nur ein Beispiel“ mehr");
+  assert.ok(/onclick="sbListe\(\)">📋 Alle Sprachbefehle anzeigen/.test(html), "Liste auch in den Einstellungen erreichbar");
+}

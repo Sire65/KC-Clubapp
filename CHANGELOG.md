@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.170.0 – 2026-10-09 – 🎙️ Sprachbefehle-Liste: jeder Befehl lässt sich antippen und führt aus (KC-CLUB-SPRACHE-LISTE-TIPPEN)
+🔧 Kleine Systemverbesserungen
+
 ## 2.169.0 – 2026-10-09 – 🎬 Spezialeffekte: Kacheln als Jalousie, Kartenstapel oder Umdrehen beim Register-Wechsel + 🎉 Konfetti bei Sieg und Geburtstag (KC-CLUB-REGISTER-EFFEKTE, KC-CLUB-KONFETTI)
 🔧 Kleine Systemverbesserungen
 
