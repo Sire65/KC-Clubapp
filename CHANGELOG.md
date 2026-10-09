@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.128.0 – 2026-10-09 – Anhänge teilen
+🔧 Kleine Systemverbesserungen
+Admin-Notiz (KC-CLUB-ANLAGE-TEILEN, Wunsch Hansi): Datei-Anhang in Nachrichten und Protokollen antippen → „👁️ Öffnen“, „📤 Teilen / Weiterleiten“ (Teilen-Menü des Handys, z. B. an Claude, Mail, WhatsApp) oder „⬇️ Auf dem Gerät speichern“. Die Datei wird beim Öffnen des Fensters schon geladen (Server prüft das Recht wie bisher).
+
 ## 2.127.0 – 2026-10-09 – Adressbuch übersichtlicher
 🔧 Kleine Systemverbesserungen
 Admin-Notiz (Wunsch Hansi): Adressbuch – Suchfeld mit gutem Kontrast (wie die übrigen Suchfelder, auch dunkel), Adressen als Klappbereiche je Kategorie (zu, bis gesucht/gefiltert wird; offene bleiben offen).

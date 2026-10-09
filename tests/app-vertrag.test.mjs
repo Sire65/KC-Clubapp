@@ -6949,3 +6949,11 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/<input id="adbSuche" type="search" class="hz-suche"/.test(programm), "Suchfeld wie die anderen (Kontrast)");
   assert.ok(/function adbGruppen\(liste, karte\)/.test(programm) && /<details class="ds-mehr adb-gruppe"\$\{offen\(k\) \? " open" : ""\}/.test(programm) && /const offen = \(k\) => !!ADB\.such\.trim\(\) \|\| !!ADB\.kat \|\| gr\.size === 1 \|\| ADB_AUF\.has\(k\);/.test(programm), "Klappbereiche, offen bei Suche/Filter");
 }
+
+// 4xx. 2.128.0: Datei-Anhänge teilen/speichern (KC-CLUB-ANLAGE-TEILEN, Wunsch Hansi)
+{
+  assert.ok((programm.match(/onclick='anlageAktion\(\$\{hlJs\(a\.id\)\}, \$\{hlJs\(a\.name \|\| "Datei"\)\}, \$\{hlJs\(a\.mime \|\| ""\)\}\)'/g) || []).length === 2, "Chat + Protokoll: Anhang öffnet Auswahl");
+  assert.ok((programm.match(/^function anlageAktion\(/gm) || []).length === 1 && (programm.match(/^function anlageMenue\(/gm) || []).length === 1, "kein Namenskonflikt mit dem Anlage-hinzufügen-Menü");
+  const f = programm.slice(programm.indexOf("function anlageAktion("), programm.indexOf("function anlageAktion(") + 2600);
+  assert.ok(/lauf\.warten = anlageAlsDatei\(\{ id, name, mime \}\)/.test(f) && /navigator\.canShare\?\.\(\{ files: \[datei\] \}\)/.test(f) && /a\.download = datei\.name/.test(f), "vorab laden, teilen, sonst speichern");
+}

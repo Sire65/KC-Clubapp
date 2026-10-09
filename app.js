@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.127.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.128.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -14762,7 +14762,7 @@ async function chatLaden(scrollen) {
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
     $("chat").innerHTML = u.nachrichten.map((m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')">
       ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}
-      ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</div>`).join("")}
+      ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       <div class="fuss">${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("") + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
@@ -15886,6 +15886,32 @@ async function bildLaden(img, frisch = false) {
   } catch {}
 }
 async function anlageOeffnen(id) { try { const r = await api("anlage_url", { id }); window.open(r.url, "_blank"); } catch (e) { meldeFehler(e); } }
+// 2.128.0 KC-CLUB-ANLAGE-TEILEN (Wunsch Hansi): Datei-Anhang antippen → Öffnen / Teilen / Speichern.
+// Die Datei wird beim Öffnen des Fensters schon geholt (der Server prüft wie immer, ob man sie sehen darf) – so kommt das Teilen-Menü
+// direkt beim Antippen (iPhone verlangt das), ohne erneutes Laden.
+let ANL_T = null;
+function anlageAktion(id, name, mime) {
+  ANL_T = { id, datei: null, fehler: null };
+  const lauf = ANL_T;
+  lauf.warten = anlageAlsDatei({ id, name, mime }).then((d) => { lauf.datei = new File([d.blob], d.name, { type: d.mime || "application/octet-stream" }); }).catch((e) => { lauf.fehler = e; });
+  blattAuf("anlBlatt", `<h3 style="margin:0 0 4px">📄 ${esc(name)}</h3><p class="hinweis" style="margin:0 0 10px">Was möchtest du mit der Datei machen?</p>
+    <button class="knopf haupt" onclick="$('anlBlatt').remove();anlageOeffnen(${esc(JSON.stringify(id))})">👁️ Öffnen</button>
+    <button class="knopf" onclick="anlageTeilen(false)">📤 Teilen / Weiterleiten</button>
+    <button class="knopf" onclick="anlageTeilen(true)">⬇️ Auf dem Gerät speichern</button>
+    <button class="knopf" onclick="$('anlBlatt').remove()">Schließen</button>`);
+}
+async function anlageTeilen(speichern) {
+  const t = ANL_T; if (!t) return;
+  if (!t.datei && !t.fehler) { melde("⏳ Datei wird geladen …"); await t.warten; }
+  if (t.fehler || !t.datei) return meldeFehler(t.fehler || new Error("Die Datei konnte nicht geladen werden."));
+  const datei = t.datei;
+  if (!speichern) {
+    try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: datei.name }); $("anlBlatt")?.remove(); return; } } catch (e) { if (e?.name === "AbortError") return; }
+    melde("Teilen geht auf diesem Gerät nicht – die Datei wird stattdessen gespeichert.");
+  }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(datei); a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 30000); $("anlBlatt")?.remove(); melde("💾 Gespeichert (Ordner „Downloads“)");
+}
 
 let ONLINE_SICHTBAR = true; // KC-CLUB-ONLINEFILTER: sehe ich überhaupt, wer online ist? (Server: onlineSichtbar)
 async function mitgliederHolen() { const r = await api("mitglieder"); MITGLIEDER = r.mitglieder; MITGLIEDER_STAND = Date.now(); AEMTER = r.aemter; ONLINE_SICHTBAR = r.onlineSichtbar !== false; return r; }
@@ -16920,7 +16946,7 @@ function anlagenListe(bearbeiten) {
   if (!PR.anlagen.length) return bearbeiten ? '<p class="hinweis">Noch nichts angehängt.</p>' : "";
   return PR.anlagen.map((a) => /^image\//.test(a.mime)
     ? `<div class="prbild"><img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="anlageOeffnen('${a.id}')">${bearbeiten ? `<button class="knopf klein" onclick="protokollAnlageWeg('${a.id}')">✕ entfernen</button>` : ""}</div>`
-    : `<div class="zeile"><button class="anlage" style="flex:1;text-align:left" onclick="anlageOeffnen('${a.id}')">📄 ${esc(a.name)}</button>${bearbeiten ? `<button class="knopf klein" onclick="protokollAnlageWeg('${a.id}')">✕</button>` : ""}</div>`).join("");
+    : `<div class="zeile"><button class="anlage" style="flex:1;text-align:left" onclick='anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</button>${bearbeiten ? `<button class="knopf klein" onclick="protokollAnlageWeg('${a.id}')">✕</button>` : ""}</div>`).join("");
 }
 function aufgabeZeile(a, darfAbhaken, darfLoeschen) {
   return `<div class="zeile">${darfAbhaken ? `<button class="knopf klein ${a.erledigt_am ? "gruen" : ""}" title="erledigt" onclick="aufgabeErledigt('${a.id}', ${!a.erledigt_am})">${a.erledigt_am ? "✔" : "☐"}</button>` : `<span>${a.erledigt_am ? "✔" : "📌"}</span>`}
