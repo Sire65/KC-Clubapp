@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.149.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.150.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1639,6 +1639,7 @@ const HILFE = [
   { id: "twinkey_haengt", thema: "technik", sym: "🧑‍🍳", t: "Twinkey lädt nicht", x: "Bei langsamem Netz zeigt Twinkey nach 8 Sekunden „🐌 Das Netz ist gerade langsam – noch einen Moment …“. Klappt es gar nicht, kommt <b>„🔄 Nochmal versuchen“</b> – antippen, oder mit „Zurück zur Club-App“ später wiederkommen.", seit: "2.106.0" },
   { id: "termin_zahl", thema: "termine", sym: "✅", t: "Was heißt „7/18 angemeldet“?", x: "Auf der Termin-Kachel oben auf der Startseite steht, wie viele schon zugesagt haben – z. B. <b>„✅ 7/18 angemeldet“</b> heißt: 7 von 18 Mitgliedern kommen. So siehst du auf einen Blick, wie voll es wird.", zeig: () => zeige("start"), seit: "2.102.0" },
   { id: "notfallkontakt_wer", thema: "notfall", sym: "☎️", t: "Der Notfallkontakt ist jemand anderes", x: "Als <b>Notfallkontakt</b> bitte nicht dich selbst eintragen, sondern die Person, die <b>benachrichtigt werden soll</b>, wenn dir etwas passiert – z. B. Partnerin, Partner, Kind oder Nachbar. Trägst du deinen eigenen Namen oder deine eigene Nummer ein, fragt die App nach.", zeig: () => sosStart(), seit: "2.94.0" },
+  { id: "schilder", thema: "club", sym: "🪧", t: "Schilder-Druckerei (Clubleitung)", x: "Büro → <b>🪧 Schilder-Druckerei</b>: Anlass wählen (z. B. Weihnachtsmarkt), eine Vorlage antippen – „Nur Barzahlung“, Preisliste, Öffnungszeiten, Parkverbot, Durchgang freihalten … Text ändern, Schrift, Farbe, Rahmen und Symbol wählen, <b>F</b>/<b>K</b>/<b>U</b> für fett, kursiv, unterstrichen. Dann <b>🖨️ Drucken</b> oder <b>📤 Senden & Ablegen</b>: an Mitglieder senden, die es zuhause drucken (praktisch am Stand ohne Drucker), per E-Mail oder im Büro-Ordner ablegen. <b>💾 Speichern</b> hebt das Schild auf – nächstes Jahr wieder öffnen.", zeig: () => schStart(), seit: "2.150.0" },
   { id: "selbstloeschen", thema: "nachrichten", sym: "⏳", t: "Nachrichten, die sich selbst löschen", x: "Ganzer Chat: oben auf <b>⋮ → „⏳ Selbstlöschen“</b> – alle <b>neuen</b> Nachrichten in diesem Chat verschwinden nach <b>1 Std, 24 Std oder 7 Tagen</b> – bei allen. Nur für eine einzelne Nachricht: beim Schreiben unten auf <b>⏳</b> tippen. Erkennbar an <b>⏳</b> oben im Chat, an der Leiste über dem Schreibfeld und an <b>„⏳ noch 3 Std“</b> in jeder Blase. Push und E-Mail enthalten dann keinen Text – lesen nur in der App.", zeig: () => zeige("nachrichten"), seit: "2.148.0" },
   { id: "eingabe_leeren", thema: "nachrichten", sym: "✕", t: "Geschriebenen Text auf einmal löschen", x: "Steht Text im Schreibfeld, erscheint rechts oben ein <b>rotes ✕</b>. Antippen löscht den noch nicht gesendeten Text – gesendete Nachrichten bleiben.", zeig: () => zeige("nachrichten"), seit: "2.148.0" },
   { id: "aenderung_rueckfrage", thema: "club", sym: "💬", t: "Rückfrage zu deiner Änderungsmeldung", x: "Hast du eine Änderung deiner Daten gemeldet und dazu noch eine Frage? Solange sie noch nicht eingetragen ist, steht bei der Meldung der Knopf <b>„💬 Rückfragen?“</b> – er öffnet direkt einen Chat mit der Clubleitung, der Bezug ist schon eingetragen.", zeig: () => aeStart(), seit: "2.91.0" },
@@ -12745,6 +12746,7 @@ const BU_REGAL = [
   { id: "adressen", sym: "📒", t: "Adressbuch", farbe: "#6d7468", fn: "adbStart()", recht: "L" }, // KC-CLUB-BUERO-ADRESSEN (2.125.0): Original in KC Verwaltung
   { id: "termine", sym: "📅", t: "Termine", farbe: "#8b6f5a", fn: "buTermine()", recht: "S" },
   { id: "briefe", sym: "✉️", t: "Briefe", farbe: "#6e6a5c", fn: "buBrief()", recht: "S" },
+  { id: "schilder", sym: "🪧", t: "Schilder-Druckerei", farbe: "#7a5c3e", fn: "schStart()", recht: "L" }, // KC-CLUB-SCHILDER (2.150.0): Hinweise, Preislisten, Öffnungszeiten …
   { id: "erstattung", sym: "💶", t: "Erstattung", farbe: "#7a7f5e", fn: "zeige('erstattung')", recht: "L" },
   { id: "weihnachtsmarkt", sym: "🎄", t: "Weihnachtsmarkt", farbe: "#2e5d3a", fn: "arStartTitel('Weihnachtsmarkt')", recht: "L" }, // 2.147.0 (Wunsch Hansi): Ordner mit Jahren und Unterregistern
   { id: "besprechungen", sym: "🤝", t: "Besprechungen", farbe: "#6b6f86", fn: "arStartTitel('Besprechungen')", recht: "L" }, // KC-CLUB-ARCHIV-KOPIEREN (2.59.0): Entwürfe/Unterlagen, bevor es ein Protokoll ist
@@ -12915,7 +12917,7 @@ function buOrdnerHtml() {
 function buFueller() {
   const S = buSchreiben(), L = !!ICH?.vorstand;
   const w = [[S, "✉️", "Brief", "mit Briefkopf – Dank, Spende, Einladung", "buBrief()"], [S, "📨", "Einladung zur Sitzung", "mit Tagesordnung an alle", "buEinladungWahl(false)"],
-    [true, "📄", "Protokoll", "schreiben · veröffentlichen", "zeige('protokolle')"], [L, "👥", "Nachricht an Mitglieder", "Gruppe wählen · schreiben", "buKontakt()"],
+    [true, "📄", "Protokoll", "schreiben · veröffentlichen", "zeige('protokolle')"], [L, "👥", "Nachricht an Mitglieder", "Gruppe wählen · schreiben", "buKontakt()"], [L, "🪧", "Schild drucken", "Hinweis · Preisliste · Öffnungszeiten", "schStart()"],
     [true, "🎂", "Glückwunsch", "Geburtstag oder Jubiläum", "buFeste()"], [true, "📌", "Zettel an die Pinnwand", "für alle oder einzelne", "zeige('pinnwand')"]].filter((x) => x[0]);
   const f = blattAuf("buFuellerBlatt", `${einwHtml("b-bu-schreiben")}<h3 style="margin-top:0">✒️ Was möchtest du schreiben?</h3>${S ? "" : '<p class="hinweis">👁️ Mit Leserechten kannst du Briefe und Einladungen nicht verschicken.</p>'}
     <div class="bu-wahl">${w.map(([, sym, t2, u, fn]) => `<button class="mini-kachel" data-fn="${esc(fn)}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-unter">${esc(u)}</span></button>`).join("")}</div>
@@ -19912,7 +19914,315 @@ function cdFuss(zusatz = "", brief = false) {
   const haupt = brief ? `${KC_CD.name} · ${KC_CD.briefAmt} · ${cdClubsprecher()}` : KC_CD.name;
   return `<div class="cd-fuss"><b>${esc(haupt)}</b>${zusatz ? `<br>${zusatz}` : ""}</div>`;
 }
+// ---------- KC-CLUB-SCHILDER (2.150.0, Wunsch Hansi): 🪧 Schilder-Druckerei im Büro (nur Clubleitung) ----------
+// Wie eine kleine Druckerei: 1. Anlass + Vorlage wählen → 2. Text ändern → 3. Aussehen (Schrift, Farbe, Rahmen, Symbol, fett/kursiv/
+// unterstrichen) → 4. 🖨️ Drucken oder 📤 Senden & Ablegen: an Mitglieder senden (die drucken zuhause – am Stand gibt es keinen Drucker),
+// per E-Mail oder im Büro-Ordner ablegen (gleicher Weg wie „📥 Einlesen“). 💾 Gespeicherte Schilder lassen sich nächstes Jahr wieder öffnen.
+// Alles selbst gezeichnet (Canvas), das PDF baut die App selbst – keine fremden Dienste, nichts kostet. Unten auf jedem Schild das CD
+// (Kochmütze + „Köcheclub Werne“). Neue Vorlage/Schrift/Rahmen/Symbol = ein Eintrag in der jeweiligen Liste, sonst nichts.
+const SCH_ANLAESSE = [
+  { id: "weihnachtsmarkt", sym: "🎄", t: "Weihnachts\u00admarkt" },
+  { id: "fest", sym: "🎉", t: "Feste & Feiern" },
+  { id: "kochen", sym: "🧑‍🍳", t: "Kochabend & Kurs" },
+  { id: "verein", sym: "🏠", t: "Vereinsheim" },
+  { id: "allgemein", sym: "🪧", t: "Allgemein" },
+];
+const SCH_SCHRIFTEN = [
+  { id: "club", t: "Club", css: "Georgia,'Times New Roman',serif" },
+  { id: "klar", t: "Klar", css: "'Arial Black','Helvetica Neue',Arial,sans-serif" },
+  { id: "kreide", t: "Kreide", css: "'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive" },
+  { id: "fest", t: "Festlich", css: "'Snell Roundhand','Apple Chancery','Brush Script MT','Lucida Handwriting',cursive" },
+];
+// Grundfarben aus dem CD; Signalrot nur für Verbote/Warnungen (Wunsch: Hinweise müssen sofort auffallen)
+const SCH_FARBEN = [
+  { id: "weinrot", t: "Weinrot", c: KC_CD.weinrot }, { id: "schwarz", t: "Schwarz", c: KC_CD.text },
+  { id: "signal", t: "Signalrot", c: "#c62828" }, { id: "gruen", t: "Grün", c: "#1e5631" },
+];
+const SCH_RAHMEN = [
+  { id: "keiner", t: "Ohne" }, { id: "schlicht", t: "Schlicht" }, { id: "doppelt", t: "Doppelt" },
+  { id: "band", t: "Breit" }, { id: "gestrichelt", t: "Gestrichelt" }, { id: "fest", t: "Festlich" },
+];
+// e = Zeichen (Emoji); ohne e wird das Symbol selbst gezeichnet (schSymbolMalen)
+const SCH_SYMBOLE = [
+  { id: "", t: "Ohne", e: "—" }, { id: "bar", t: "Bargeld", e: "💶" }, { id: "parkverbot", t: "Parkverbot" }, { id: "achtung", t: "Achtung" },
+  { id: "rauchen", t: "Rauchen verboten", e: "🚭" }, { id: "uhr", t: "Uhrzeit", e: "🕒" }, { id: "durchgang", t: "Durchgang", e: "🚶" }, { id: "hand", t: "Nicht berühren", e: "✋" },
+  { id: "info", t: "Information", e: "ℹ️" }, { id: "heiss", t: "Heiß", e: "🔥" }, { id: "pfand", t: "Pfand", e: "♻️" }, { id: "wc", t: "Toiletten", e: "🚻" },
+  { id: "rolli", t: "Barrierefrei", e: "♿" }, { id: "rechts", t: "Pfeil rechts", e: "➡️" }, { id: "links", t: "Pfeil links", e: "⬅️" }, { id: "oben", t: "Pfeil geradeaus", e: "⬆️" },
+  { id: "baum", t: "Tannenbaum", e: "🎄" }, { id: "stern", t: "Stern", e: "⭐" }, { id: "glocke", t: "Glocke", e: "🔔" }, { id: "koch", t: "Koch", e: "🧑‍🍳" },
+  { id: "suppe", t: "Suppe", e: "🍲" }, { id: "gluehwein", t: "Glühwein", e: "🍷" }, { id: "kaffee", t: "Kaffee", e: "☕" }, { id: "herz", t: "Herz", e: "❤️" },
+];
+// Vorlagen: fuer = Anlässe, in denen sie erscheinen ("alle" = überall). Preise bleiben leer (… €) – die trägt man selbst ein, nichts wird erfunden.
+const SCH_VORLAGEN = [
+  { id: "willkommen_wm", fuer: ["weihnachtsmarkt"], d: { symbol: "baum", titel: "Herzlich willkommen", text: `am Stand vom Köcheclub Werne\n${KC_CD.zeile}`, farbe: "gruen", rahmen: "fest", schrift: "fest" } },
+  { id: "preise_wm", fuer: ["weihnachtsmarkt"], d: { symbol: "suppe", titel: "Unsere Preise", preise: [{ a: "Grünkohl", p: "" }, { a: "Eintopf", p: "" }, { a: "Glühwein", p: "" }, { a: "Kinderpunsch", p: "" }, { a: "Tassenpfand", p: "" }], farbe: "gruen", rahmen: "fest", schrift: "club" } },
+  { id: "zeiten_wm", fuer: ["weihnachtsmarkt"], d: { symbol: "uhr", titel: "Öffnungszeiten", text: "Mo – Fr   15 – 21 Uhr\nSa   12 – 22 Uhr\nSo   12 – 20 Uhr", farbe: "weinrot", rahmen: "band", schrift: "club" } },
+  { id: "bar", fuer: "alle", d: { symbol: "bar", titel: "Nur Barzahlung", text: "Kartenzahlung ist leider nicht möglich.\nVielen Dank für Ihr Verständnis!", farbe: "weinrot", rahmen: "doppelt", schrift: "klar" } },
+  { id: "pfand", fuer: ["weihnachtsmarkt", "fest"], d: { symbol: "pfand", titel: "Tassenpfand", text: "Bitte geben Sie Ihre Tasse hier zurück –\nSie erhalten Ihr Pfand.", farbe: "weinrot", rahmen: "schlicht", schrift: "club" } },
+  { id: "preise", fuer: ["fest", "kochen", "verein", "allgemein"], d: { symbol: "", titel: "Preise", preise: [{ a: "", p: "" }, { a: "", p: "" }, { a: "", p: "" }], farbe: "weinrot", rahmen: "doppelt", schrift: "club" } },
+  { id: "zeiten", fuer: ["fest", "kochen", "verein", "allgemein"], d: { symbol: "uhr", titel: "Öffnungszeiten", text: "Mo – Fr   … Uhr\nSa   … Uhr\nSo   … Uhr", farbe: "weinrot", rahmen: "band", schrift: "club" } },
+  { id: "parken", fuer: "alle", d: { symbol: "parkverbot", titel: "Bitte nicht parken", text: "Zufahrt freihalten –\nauch für Rettungsfahrzeuge.", farbe: "signal", rahmen: "schlicht", schrift: "klar" } },
+  { id: "durchgang", fuer: "alle", d: { symbol: "durchgang", titel: "Durchgang bitte freihalten", text: "Vielen Dank!", farbe: "signal", rahmen: "schlicht", schrift: "klar" } },
+  { id: "personal", fuer: "alle", d: { symbol: "achtung", titel: "Nur für Personal", text: "Kein Zutritt für Unbefugte.", farbe: "signal", rahmen: "schlicht", schrift: "klar" } },
+  { id: "heiss", fuer: ["weihnachtsmarkt", "fest", "kochen"], d: { symbol: "heiss", titel: "Vorsicht – heiß!", text: "Bitte Abstand halten.", farbe: "signal", rahmen: "schlicht", schrift: "klar" } },
+  { id: "beruehren", fuer: ["weihnachtsmarkt", "fest", "kochen"], d: { symbol: "hand", titel: "Bitte nicht berühren", text: "Wir bedienen Sie gern!", farbe: "weinrot", rahmen: "schlicht", schrift: "klar" } },
+  { id: "rauchen", fuer: "alle", d: { symbol: "rauchen", titel: "Bitte nicht rauchen", text: "", farbe: "signal", rahmen: "schlicht", schrift: "klar" } },
+  { id: "allergene", fuer: ["weihnachtsmarkt", "fest", "kochen"], d: { symbol: "info", titel: "Allergene", text: "Fragen Sie uns gern –\nwir informieren Sie über Zutaten und Allergene.", farbe: "schwarz", rahmen: "schlicht", schrift: "club" } },
+  { id: "zurueck", fuer: "alle", d: { symbol: "uhr", titel: "Gleich zurück!", text: "Wir sind in wenigen Minuten\nwieder für Sie da.", farbe: "weinrot", rahmen: "gestrichelt", schrift: "kreide" } },
+  { id: "ausverkauft", fuer: ["weihnachtsmarkt", "fest"], d: { symbol: "", titel: "Ausverkauft", text: "Für heute ist leider alles weg.\nMorgen gibt es Nachschub!", farbe: "weinrot", rahmen: "gestrichelt", schrift: "kreide" } },
+  { id: "spende", fuer: ["weihnachtsmarkt", "fest"], d: { symbol: "herz", titel: "Danke für Ihre Spende!", text: KC_CD.zeile + ".", farbe: "weinrot", rahmen: "fest", schrift: "fest" } },
+  { id: "willkommen", fuer: ["fest", "kochen", "verein", "allgemein"], d: { symbol: "koch", titel: "Herzlich willkommen", text: "beim Köcheclub Werne", farbe: "weinrot", rahmen: "fest", schrift: "fest" } },
+  { id: "reserviert", fuer: ["fest", "kochen", "verein"], d: { symbol: "", titel: "Reserviert", text: "für …", farbe: "weinrot", rahmen: "doppelt", schrift: "fest" } },
+  { id: "wc", fuer: "alle", d: { symbol: "wc", titel: "Toiletten", text: "hier entlang ➜", farbe: "schwarz", rahmen: "schlicht", schrift: "klar" } },
+  { id: "weg", fuer: "alle", d: { symbol: "rechts", titel: "Hier entlang", text: "", farbe: "weinrot", rahmen: "schlicht", schrift: "klar" } },
+  { id: "geschlossen", fuer: ["kochen", "verein", "allgemein"], d: { symbol: "", titel: "Heute geschlossen", text: "", farbe: "weinrot", rahmen: "doppelt", schrift: "club" } },
+  { id: "frei", fuer: "alle", d: { symbol: "", titel: "", text: "", farbe: "weinrot", rahmen: "schlicht", schrift: "club" } },
+];
+const SCH_LEER = { vorlage: "frei", format: "hoch", schrift: "club", rahmen: "schlicht", farbe: "weinrot", symbol: "", titel: "", text: "", preise: [], titelStil: { f: true, k: false, u: false }, textStil: { f: false, k: false, u: false } };
+const schNeu = (v) => ({ ...JSON.parse(JSON.stringify(SCH_LEER)), ...JSON.parse(JSON.stringify(v?.d || {})), vorlage: v?.id || "frei" });
+const schVorlagenFuer = (anlass) => SCH_VORLAGEN.filter((v) => v.fuer === "alle" || v.fuer.includes(anlass));
+const schName = (v) => v.d.titel || (v.id === "frei" ? "Leeres Schild" : v.id);
+let SDR = { anlass: "weihnachtsmarkt", d: null, id: null, name: "", liste: null, sicht: "start" };
+const SCH_LOGO = new Image(); SCH_LOGO.src = KC_CD.logo; // CD-Kochmütze unten auf jedem Schild
+
+function schDarf() { return !!(ICH?.vorstand || ICH?.admin); }
+function schStart() {
+  if (!schDarf()) return melde("Die Schilder-Druckerei ist für die Clubleitung.", true);
+  SDR.sicht = "start"; SDR.d = null; SDR.id = null; SDR.name = ""; schZeigen(); schListeLaden();
+}
+async function schListeLaden() {
+  try { SDR.liste = (await api("schild_liste")).schilder || []; } catch (e) { SDR.liste = SDR.liste || []; SDR.fehler = e.message || "nicht erreichbar"; }
+  if (SDR.sicht === "start" && $("schBlatt")) schZeigen();
+}
+function schZeigen() {
+  if (SDR.sicht === "edit") return schEditor();
+  const vor = schVorlagenFuer(SDR.anlass), gesp = (SDR.liste || []).filter((x) => x.anlass === SDR.anlass);
+  const f = blattAuf("schBlatt", `<h3 style="margin:0 0 2px">🪧 Schilder-Druckerei</h3>
+    <p class="hinweis" style="margin:0 0 10px">1. Anlass und Vorlage wählen · 2. Text ändern · 3. Aussehen · 4. 🖨️ Drucken oder 📤 an Mitglieder senden (die drucken zuhause)</p>
+    <div class="sdr-anlaesse">${SCH_ANLAESSE.map((a) => `<button class="knopf${a.id === SDR.anlass ? " haupt" : ""}" onclick="SDR.anlass='${a.id}';schZeigen()"><span>${a.sym}</span>${esc(a.t)}</button>`).join("")}</div>
+    <h4 style="margin:12px 0 6px">📋 Vorlagen</h4>
+    <div class="sdr-vorlagen">${vor.map((v) => `<button class="sdr-vorlage" onclick="schVorlage('${v.id}')"><canvas data-schmini="${v.id}"></canvas><span>${esc(schName(v))}</span></button>`).join("")}</div>
+    <h4 style="margin:14px 0 6px">💾 Gespeicherte Schilder${gesp.length ? ` (${gesp.length})` : ""}</h4>
+    ${SDR.liste === null ? '<p class="hinweis">Wird geladen …</p>' : SDR.fehler && !SDR.liste.length ? `<p class="hinweis">⚠️ Gespeicherte Schilder gerade nicht erreichbar – Vorlagen gehen trotzdem.</p>`
+      : gesp.length ? `<div class="sdr-gespeichert">${gesp.map((x) => `<div><button class="knopf" onclick="schOeffnen('${x.id}')">🪧 ${esc(x.titel)}<small>${esc([x.von, x.geaendert_am ? zeitKurz(x.geaendert_am) : ""].filter(Boolean).join(" · "))}</small></button><button class="knopf" title="Löschen" aria-label="Löschen" onclick="schLoeschen('${x.id}')">🗑️</button></div>`).join("")}</div>`
+      : '<p class="hinweis">Für diesen Anlass ist noch nichts gespeichert. Fertige Schilder mit „💾 Speichern“ aufheben – nächstes Jahr wieder öffnen.</p>'}
+    <div class="knoepfe" style="margin-top:12px"><button class="knopf" onclick="$('schBlatt').remove()">Schließen</button></div>`);
+  f.querySelectorAll("[data-schmini]").forEach((c) => { const v = SCH_VORLAGEN.find((x) => x.id === c.dataset.schmini); if (v) schZeichnen(c, schNeu(v), 150); });
+}
+function schVorlage(id) { const v = SCH_VORLAGEN.find((x) => x.id === id); SDR.d = schNeu(v); SDR.id = null; SDR.name = ""; SDR.sicht = "edit"; schEditor(); }
+function schOeffnen(id) {
+  const x = (SDR.liste || []).find((s) => s.id === id); if (!x) return;
+  SDR.d = { ...JSON.parse(JSON.stringify(SCH_LEER)), ...JSON.parse(JSON.stringify(x.daten || {})) }; SDR.id = x.id; SDR.name = x.titel; SDR.anlass = x.anlass; SDR.sicht = "edit"; schEditor();
+}
+async function schLoeschen(id) {
+  const x = (SDR.liste || []).find((s) => s.id === id); if (!x) return;
+  if (!(await frage(`🗑️ Gespeichertes Schild „${x.titel}“ löschen?\n\nAbgelegte PDFs im Büro-Ordner bleiben erhalten.`, { ja: "🗑️ Löschen", nein: "Behalten" }))) return;
+  try { await api("schild_loeschen", { id }); melde("🗑️ Gelöscht"); await schListeLaden(); } catch (e) { meldeFehler(e); }
+}
+const schWahlKnopf = (feld, w, inhalt, an, extra = "") => `<button class="knopf${an ? " haupt" : ""}" data-schf="${feld}" data-schw="${esc(w)}" onclick="schWahl('${feld}', '${esc(w)}')" ${extra}>${inhalt}</button>`;
+const schStilKnoepfe = (feld) => ["f", "k", "u"].map((k) => `<button class="knopf sdr-stil${SDR.d[feld][k] ? " haupt" : ""}" data-schs="${feld}.${k}" onclick="schStil('${feld}', '${k}')" aria-label="${{ f: "fett", k: "kursiv", u: "unterstrichen" }[k]}" style="${{ f: "font-weight:900", k: "font-style:italic", u: "text-decoration:underline" }[k]}">${{ f: "F", k: "K", u: "U" }[k]}</button>`).join("");
+function schEditor() {
+  const d = SDR.d;
+  const f = blattAuf("schBlatt", `<h3 style="margin:0 0 6px">🪧 ${SDR.name ? esc(SDR.name) : "Neues Schild"}</h3>
+    <div class="sdr-vorschau"><canvas id="schCanvas"></canvas></div>
+    <div class="sdr-feld"><label>Überschrift</label><div class="sdr-zeile"><input id="schTitel" value="${esc(d.titel)}" placeholder="z. B. Nur Barzahlung" oninput="SDR.d.titel=this.value;schVorschau()">${schStilKnoepfe("titelStil")}</div></div>
+    <div class="sdr-feld"><label>Text <small>(neue Zeile = Enter)</small></label><div class="sdr-zeile"><textarea id="schText" rows="3" placeholder="freiwillig" oninput="SDR.d.text=this.value;schVorschau()">${esc(d.text)}</textarea>${schStilKnoepfe("textStil")}</div></div>
+    <div class="sdr-feld"><label>Preisliste <small>(freiwillig)</small></label><div id="schPreise"></div></div>
+    <details class="sdr-aussehen" open><summary>🎨 Aussehen</summary>
+      <label>Format</label><div class="sdr-wahl2">${schWahlKnopf("format", "hoch", "Hochformat", d.format === "hoch")}${schWahlKnopf("format", "quer", "Querformat", d.format === "quer")}</div>
+      <label>Schrift</label><div class="sdr-wahl4">${SCH_SCHRIFTEN.map((s) => schWahlKnopf("schrift", s.id, esc(s.t), d.schrift === s.id, `style="font-family:${esc(s.css)}"`)).join("")}</div>
+      <label>Farbe</label><div class="sdr-wahl4">${SCH_FARBEN.map((c) => schWahlKnopf("farbe", c.id, `<i style="background:${c.c}"></i>${esc(c.t)}`, d.farbe === c.id)).join("")}</div>
+      <label>Rahmen</label><div class="sdr-wahl3">${SCH_RAHMEN.map((r) => schWahlKnopf("rahmen", r.id, esc(r.t), d.rahmen === r.id)).join("")}</div>
+      <label>Symbol</label><div class="sdr-symbole">${SCH_SYMBOLE.map((s) => schWahlKnopf("symbol", s.id, s.e ? `<span>${s.e}</span>` : `<canvas data-schsym="${s.id}"></canvas>`, d.symbol === s.id, `title="${esc(s.t)}" aria-label="${esc(s.t)}"`)).join("")}</div>
+    </details>
+    <p class="hinweis" style="margin:8px 0 0">📤 <b>Senden & Ablegen</b>: an ein oder mehrere Mitglieder senden (die drucken zuhause), per E-Mail oder im Büro-Ordner ablegen.</p>
+    <div class="sdr-leiste"><button class="knopf" onclick="SDR.sicht='start';schZeigen()"><span>⬅️</span>Vorlagen</button><button class="knopf" onclick="einmal(this, schSpeichern)"><span>💾</span>Speichern</button><button class="knopf" onclick="schDrucken()"><span>🖨️</span>Drucken</button><button class="knopf haupt" onclick="einmal(this, schWeitergeben)"><span>📤</span>Senden & Ablegen</button></div>`);
+  f.querySelectorAll("[data-schsym]").forEach((c) => { c.width = c.height = 64; const x = c.getContext("2d"); schSymbolMalen(x, c.dataset.schsym, 32, 32, 56); });
+  schPreiseZeigen(); schVorschau();
+}
+function schPreiseZeigen() {
+  const p = SDR.d.preise, el = $("schPreise"); if (!el) return;
+  el.innerHTML = p.map((x, i) => `<div class="sdr-preis"><input value="${esc(x.a)}" placeholder="Artikel" oninput="SDR.d.preise[${i}].a=this.value;schVorschau()"><input value="${esc(x.p)}" placeholder="0,00 €" inputmode="decimal" onchange="SDR.d.preise[${i}].p=schEuro(this.value);this.value=SDR.d.preise[${i}].p;schVorschau()" oninput="SDR.d.preise[${i}].p=this.value;schVorschau()"><button class="knopf" aria-label="Zeile entfernen" onclick="SDR.d.preise.splice(${i},1);schPreiseZeigen();schVorschau()">✕</button></div>`).join("")
+    + (p.length < 20 ? `<button class="knopf klein" onclick="SDR.d.preise.push({a:'',p:''});schPreiseZeigen()">＋ Zeile</button>` : "");
+}
+// „3,5“ / „3.50“ / „3“ → „3,50 €“; Text wie „frei“ bleibt stehen
+function schEuro(v) { const t = String(v || "").trim(); const m = t.replace(/\s*€$/, "").replace(",", ".").match(/^\d{1,4}(\.\d{1,2})?$/); return m ? Number(m[0]).toFixed(2).replace(".", ",") + " €" : t; }
+function schWahl(feld, w) {
+  SDR.d[feld] = w;
+  document.querySelectorAll(`#schBlatt [data-schf="${feld}"]`).forEach((b) => b.classList.toggle("haupt", b.dataset.schw === w));
+  schVorschau();
+}
+function schStil(feld, k) { SDR.d[feld][k] = !SDR.d[feld][k]; document.querySelector(`#schBlatt [data-schs="${feld}.${k}"]`)?.classList.toggle("haupt", SDR.d[feld][k]); schVorschau(); }
+let schVorschauLauf = 0;
+function schVorschau() {
+  cancelAnimationFrame(schVorschauLauf);
+  schVorschauLauf = requestAnimationFrame(() => { const c = $("schCanvas"); if (c && SDR.d) schZeichnen(c, SDR.d, 700); });
+}
+
+// --- Zeichnen (Vorschau und Druck mit derselben Funktion – was man sieht, wird gedruckt) ---
+function schZeilen(ctx, text, maxW) {
+  const aus = [];
+  for (const absatz of String(text || "").split("\n")) {
+    const w = absatz.split(/\s+/).filter(Boolean); if (!w.length) { aus.push(""); continue; }
+    let z = w[0];
+    for (const x of w.slice(1)) { if (ctx.measureText(z + " " + x).width <= maxW) z += " " + x; else { aus.push(z); z = x; } }
+    aus.push(z);
+  }
+  return aus;
+}
+const schFont = (stil, px, css) => `${stil.k ? "italic " : ""}${stil.f ? "bold " : ""}${Math.max(1, Math.round(px))}px ${css}`;
+// größte Schrift, bei der der Text in das Feld passt (Zeilen umbrechen, Höhe und Breite einhalten)
+function schPassend(ctx, text, stil, css, maxW, maxH, maxPx) {
+  let lo = 4, hi = Math.max(4, maxPx), best = { px: 4, zeilen: [] };
+  for (let i = 0; i < 14; i++) {
+    const px = (lo + hi) / 2; ctx.font = schFont(stil, px, css);
+    const zeilen = schZeilen(ctx, text, maxW), breit = Math.max(0, ...zeilen.map((z) => ctx.measureText(z).width));
+    if (zeilen.length * px * 1.2 <= maxH && breit <= maxW) { best = { px, zeilen }; lo = px; } else hi = px;
+  }
+  return best;
+}
+function schSymbolMalen(ctx, id, cx, cy, s) {
+  const sym = SCH_SYMBOLE.find((x) => x.id === id); if (!sym || !id) return;
+  ctx.save();
+  if (id === "parkverbot") {
+    ctx.beginPath(); ctx.arc(cx, cy, s * 0.46, 0, Math.PI * 2); ctx.fillStyle = "#fff"; ctx.fill();
+    ctx.lineWidth = s * 0.09; ctx.strokeStyle = "#c62828"; ctx.stroke();
+    ctx.fillStyle = "#1f4fa3"; ctx.font = `bold ${Math.round(s * 0.58)}px Arial,sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("P", cx, cy + s * 0.03);
+    ctx.beginPath(); ctx.moveTo(cx - s * 0.32, cy - s * 0.32); ctx.lineTo(cx + s * 0.32, cy + s * 0.32); ctx.lineWidth = s * 0.09; ctx.strokeStyle = "#c62828"; ctx.stroke();
+  } else if (id === "achtung") {
+    const h = s * 0.86, w = s * 0.98;
+    ctx.beginPath(); ctx.moveTo(cx, cy - h / 2); ctx.lineTo(cx + w / 2, cy + h / 2); ctx.lineTo(cx - w / 2, cy + h / 2); ctx.closePath();
+    ctx.fillStyle = "#fff"; ctx.fill(); ctx.lineJoin = "round"; ctx.lineWidth = s * 0.09; ctx.strokeStyle = "#c62828"; ctx.stroke();
+    ctx.fillStyle = "#111"; ctx.font = `bold ${Math.round(s * 0.5)}px Arial,sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("!", cx, cy + s * 0.12);
+  } else {
+    ctx.font = `${Math.round(s * 0.86)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(sym.e, cx, cy + s * 0.04);
+  }
+  ctx.restore();
+}
+function schStern(ctx, cx, cy, r) {
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, rr = i % 2 ? r * 0.42 : r; ctx.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); }
+  ctx.closePath(); ctx.fill();
+}
+function schRahmenMalen(ctx, art, W, H, u, c) {
+  ctx.save(); ctx.strokeStyle = c; ctx.fillStyle = c;
+  const rect = (m, lw) => { ctx.lineWidth = lw; ctx.strokeRect(m, m, W - 2 * m, H - 2 * m); };
+  if (art === "schlicht") rect(4 * u, 1.2 * u);
+  else if (art === "doppelt") { rect(3.5 * u, 1.4 * u); rect(6 * u, 0.5 * u); }
+  else if (art === "band") rect(5 * u, 3.6 * u);
+  else if (art === "gestrichelt") { ctx.setLineDash([3 * u, 2 * u]); rect(4 * u, 1 * u); }
+  else if (art === "fest") {
+    rect(3.5 * u, 0.9 * u); rect(5.5 * u, 0.35 * u);
+    for (const [x, y] of [[5.5, 5.5], [W / u - 5.5, 5.5], [5.5, H / u - 5.5], [W / u - 5.5, H / u - 5.5]]) schStern(ctx, x * u, y * u, 2.6 * u);
+    for (const [x, y] of [[W / u / 2, 3.5], [W / u / 2, H / u - 3.5]]) { ctx.fillStyle = "#fff"; ctx.fillRect(x * u - 4 * u, y * u - 1.5 * u, 8 * u, 3 * u); ctx.fillStyle = c; schStern(ctx, x * u, y * u, 1.6 * u); }
+  }
+  ctx.restore();
+}
+function schZeichnen(cv, d, breite) {
+  const quer = d.format === "quer", W = Math.round(breite), H = Math.round(W * (quer ? 210 / 297 : 297 / 210));
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext("2d"), u = Math.min(W, H) / 100;
+  const farbe = (SCH_FARBEN.find((x) => x.id === d.farbe) || SCH_FARBEN[0]).c, css = (SCH_SCHRIFTEN.find((x) => x.id === d.schrift) || SCH_SCHRIFTEN[0]).css;
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, H);
+  schRahmenMalen(ctx, d.rahmen, W, H, u, farbe);
+  // CD unten: Kochmütze im weinroten Kreis + „Köcheclub Werne“
+  const fussY = H - 7.5 * u, r = 2.4 * u;
+  ctx.font = `bold ${Math.round(2.6 * u)}px ${KC_CD.schrift}`; const nw = ctx.measureText(KC_CD.name).width, fx = W / 2 - (nw + 2 * r + 1.2 * u) / 2;
+  ctx.fillStyle = KC_CD.weinrot; ctx.beginPath(); ctx.arc(fx + r, fussY, r, 0, Math.PI * 2); ctx.fill();
+  if (SCH_LOGO.complete && SCH_LOGO.naturalWidth) ctx.drawImage(SCH_LOGO, fx + r * 0.35, fussY - r * 0.65, r * 1.3, r * 1.3);
+  ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillText(KC_CD.name, fx + 2 * r + 1.2 * u, fussY);
+  // Inhalt: Symbol, Überschrift, Text, Preisliste – zusammen senkrecht mittig
+  const x0 = 11 * u, bw = W - 22 * u, oben = 10 * u, unten = fussY - 4 * u, h = unten - oben;
+  const preise = (d.preise || []).filter((p) => p.a || p.p), hatText = !!String(d.text || "").trim(), hatTitel = !!String(d.titel || "").trim();
+  const symH = d.symbol ? Math.min(30 * u, h * (hatTitel || hatText || preise.length ? 0.26 : 0.6)) : 0;
+  const rest = h - symH - (symH ? 3 * u : 0);
+  const titelH = !hatTitel ? 0 : hatText || preise.length ? rest * (preise.length ? 0.24 : 0.42) : rest, textH = hatText ? (preise.length ? rest * 0.18 : rest - titelH - (titelH ? 3 * u : 0)) : 0;
+  const preisH = preise.length ? rest - titelH - textH - (titelH ? 3 * u : 0) - (textH ? 2 * u : 0) : 0;
+  ctx.textBaseline = "alphabetic";
+  const T = hatTitel ? schPassend(ctx, d.titel, d.titelStil, css, bw, titelH, 26 * u) : null;
+  const X = hatText ? schPassend(ctx, d.text, d.textStil, css, bw, textH, Math.min(11 * u, T ? T.px * 0.62 : 11 * u)) : null;
+  let P = null;
+  if (preise.length) {
+    let px = Math.min(9 * u, preisH / (preise.length * 1.55));
+    for (; px > 4; px -= 0.5) { ctx.font = schFont(d.textStil, px, css); if (Math.max(...preise.map((p) => ctx.measureText(p.a).width + ctx.measureText(p.p || "… €").width)) + 6 * px <= bw) break; }
+    P = { px, h: preise.length * px * 1.55 };
+  }
+  const gesamt = symH + (symH ? 3 * u : 0) + (T ? T.zeilen.length * T.px * 1.2 : 0) + (X ? (T ? 3 * u : 0) + X.zeilen.length * X.px * 1.2 : 0) + (P ? ((T || X) ? 3 * u : 0) + P.h : 0);
+  let y = oben + Math.max(0, (h - gesamt) / 2);
+  if (symH) { schSymbolMalen(ctx, d.symbol, W / 2, y + symH / 2, symH); y += symH + 3 * u; }
+  const block = (B, stil) => {
+    ctx.font = schFont(stil, B.px, css); ctx.fillStyle = farbe; ctx.textAlign = "center";
+    for (const z of B.zeilen) {
+      y += B.px; ctx.fillText(z, W / 2, y);
+      if (stil.u && z) { const zw = ctx.measureText(z).width; ctx.fillRect(W / 2 - zw / 2, y + B.px * 0.1, zw, Math.max(1, B.px * 0.06)); }
+      y += B.px * 0.2;
+    }
+  };
+  if (T) block(T, d.titelStil);
+  if (X) { if (T) y += 3 * u; block(X, d.textStil); }
+  if (P) {
+    if (T || X) y += 3 * u;
+    ctx.font = schFont(d.textStil, P.px, css);
+    for (const p of preise) {
+      y += P.px * 1.2; ctx.fillStyle = farbe; ctx.textAlign = "left"; ctx.fillText(p.a, x0, y);
+      ctx.textAlign = "right"; ctx.fillStyle = p.p ? farbe : "#9a9a9a"; ctx.fillText(p.p || "… €", x0 + bw, y);
+      const a = x0 + ctx.measureText(p.a).width + P.px * 0.6, b = x0 + bw - ctx.measureText(p.p || "… €").width - P.px * 0.6;
+      ctx.fillStyle = farbe; for (let x = a; x < b; x += P.px * 0.5) ctx.fillRect(x, y - P.px * 0.08, Math.max(1, P.px * 0.08), Math.max(1, P.px * 0.08)); // Punktlinie
+      if (d.textStil.u) { ctx.fillRect(x0, y + P.px * 0.12, bw, Math.max(1, P.px * 0.05)); }
+      y += P.px * 0.35;
+    }
+  }
+}
+
+// --- PDF (selbst gebaut: eine A4-Seite mit dem Schild als Bild – druckt überall gleich, auch zuhause) ---
+function schBild() {
+  const c = document.createElement("canvas"); schZeichnen(c, SDR.d, SDR.d.format === "quer" ? 2339 : 1654); // 200 dpi
+  return c;
+}
+function schPdf(c) {
+  const quer = c.width > c.height, pw = quer ? 841.89 : 595.28, ph = quer ? 595.28 : 841.89;
+  const jpg = Uint8Array.from(atob(c.toDataURL("image/jpeg", 0.9).split(",")[1]), (z) => z.charCodeAt(0));
+  const enc = new TextEncoder(), teile = [], off = []; let len = 0;
+  const add = (x) => { const b = typeof x === "string" ? enc.encode(x) : x; teile.push(b); len += b.length; };
+  const obj = (n, kopf, strom) => { off[n] = len; add(`${n} 0 obj\n${kopf}\n`); if (strom) { add("stream\n"); add(strom); add("\nendstream\n"); } add("endobj\n"); };
+  const inhalt = enc.encode(`q ${pw} 0 0 ${ph} 0 0 cm /Im0 Do Q`);
+  add("%PDF-1.4\n");
+  obj(1, "<< /Type /Catalog /Pages 2 0 R >>");
+  obj(2, "<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+  obj(3, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`);
+  obj(4, `<< /Length ${inhalt.length} >>`, inhalt);
+  obj(5, `<< /Type /XObject /Subtype /Image /Width ${c.width} /Height ${c.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>`, jpg);
+  const xref = len;
+  add(`xref\n0 6\n0000000000 65535 f \n${[1, 2, 3, 4, 5].map((n) => String(off[n]).padStart(10, "0") + " 00000 n \n").join("")}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return new Blob(teile, { type: "application/pdf" });
+}
+const schDateiName = () => "Schild_" + (String(SDR.name || SDR.d.titel || "Koecheclub").replace(/[^\wäöüÄÖÜß-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 40) || "Koecheclub") + ".pdf";
+function schLeer() { const d = SDR.d; if (!String(d.titel || "").trim() && !String(d.text || "").trim() && !(d.preise || []).some((p) => p.a || p.p)) { melde("Das Schild ist noch leer – bitte eine Überschrift eingeben.", true); return true; } return false; }
+async function schWeitergeben() {
+  if (schLeer()) return;
+  const datei = new File([schPdf(schBild())], schDateiName(), { type: "application/pdf" });
+  einlZiel([datei], { titel: `Schild – ${SDR.name || SDR.d.titel || "Köcheclub"}`.slice(0, 120) }); // gleicher Weg wie 📥 Einlesen: Ordner, Nachricht, E-Mail
+}
+function schDrucken() { if (schLeer()) return; SDR.bildUrl = schBild().toDataURL("image/jpeg", 0.92); druckStarten("schild"); }
+function druckSchild() {
+  const quer = SDR.d?.format === "quer";
+  return { titel: SDR.name || SDR.d?.titel || "Schild", ohneRahmen: true, quer, randlos: false,
+    html: `<img src="${SDR.bildUrl}" alt="" style="display:block;margin:0 auto;width:auto;height:auto;max-width:100%;max-height:${quer ? "180mm" : "268mm"}">` };
+}
+async function schSpeichern() {
+  if (schLeer()) return;
+  let neu = !SDR.id;
+  if (SDR.id && !(await frage(`„${SDR.name}“ mit den Änderungen überschreiben?`, { ja: "💾 Überschreiben", nein: "Als neues Schild" }))) neu = true;
+  const name = await eingabe("Name für das gespeicherte Schild:", neu ? (SDR.d.titel || "").slice(0, 80) : SDR.name, { ja: "💾 Speichern", vorschlaege: neu ? [`${SDR.d.titel || "Schild"} ${new Date().getFullYear()}`.slice(0, 80)] : [] });
+  if (name === null || !name.trim()) return;
+  try {
+    const r = await api("schild_speichern", { id: neu ? null : SDR.id, titel: name.trim(), anlass: SDR.anlass, daten: SDR.d });
+    SDR.id = r.id; SDR.name = name.trim(); SDR.liste = null; schListeLaden();
+    melde(`💾 Gespeichert unter „${SDR.anlass ? (SCH_ANLAESSE.find((a) => a.id === SDR.anlass)?.t || "") : ""}“ – nächstes Mal unter „Gespeicherte Schilder“`);
+    const h = document.querySelector("#schBlatt h3"); if (h) h.textContent = "🪧 " + SDR.name;
+  } catch (e) { meldeFehler(e); }
+}
 const DRUCKARTEN = {
+  schild: { bauen: () => druckSchild() }, // KC-CLUB-SCHILDER (2.150.0)
   termine: { titel: "🖨️ Termine drucken", optionen: () => druckTermineOptionen(), bauen: (o) => (o.art === "todo" ? druckTodo(o) : druckKalender(o)) },
   treffen: { bauen: (o, id) => druckTreffen(id) },
   protokoll: { bauen: () => druckProtokoll() },

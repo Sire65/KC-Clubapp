@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.149.0";
+const SERVER_VERSION = "2.150.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -348,6 +348,18 @@ async function chatArchivSetzen(pid: string, threads: Record<string, string>) {
 }
 // KC-CLUB-BEARBEITEN (1.9.0): eigene Nachricht bis zu 15 Minuten nach dem Senden ändern (wie WhatsApp)
 const BEARBEITEN_MIN = 15;
+// KC-CLUB-SCHILDER (2.150.0): nur bekannte Felder, kurze Texte, Auswahl-Kennungen als Kurzwörter – Gestaltung kommt aus den Listen der App
+const SCHILD_ID = /^[a-z0-9_-]{0,30}$/;
+function schildDaten(d: any) {
+  if (!d || typeof d !== "object" || Array.isArray(d)) throw new Fehler("Ungültiges Schild.");
+  const id = (v: unknown, std: string) => SCHILD_ID.test(String(v ?? "")) && String(v ?? "") ? String(v) : std;
+  const stil = (v: any) => ({ f: !!v?.f, k: !!v?.k, u: !!v?.u });
+  const preise = (Array.isArray(d.preise) ? d.preise : []).slice(0, 20).map((x: any) => ({ a: txt(x?.a, 60), p: txt(x?.p, 14) })).filter((x: any) => x.a || x.p);
+  const r = { vorlage: id(d.vorlage, "frei"), format: d.format === "quer" ? "quer" : "hoch", schrift: id(d.schrift, "club"), rahmen: id(d.rahmen, "schlicht"), farbe: id(d.farbe, "weinrot"),
+    symbol: id(d.symbol, ""), titel: txt(d.titel, 120), text: txt(d.text, 700), preise, titelStil: stil(d.titelStil), textStil: stil(d.textStil) };
+  if (!r.titel && !r.text && !preise.length) throw new Fehler("Das Schild ist noch leer.");
+  return r;
+}
 // KC-CLUB-SELBSTLOESCHEN (2.148.0, Wunsch Hansi): Nachrichten löschen sich nach dieser Zeit selbst (Stunden) – je Chat oder je Nachricht, jedes Mitglied darf
 const SELBSTLOESCHEN_STD = [1, 24, 168];
 const slStd = (v: unknown) => SELBSTLOESCHEN_STD.includes(Number(v)) ? Number(v) : 0;
@@ -10195,6 +10207,43 @@ Köcheclub Werne`,
       }
 
       // ----- Archiv (KC-CLUB-ARCHIV, 1.2.0) -----
+      // ----- KC-CLUB-SCHILDER (2.150.0, Wunsch Hansi): Schilder-Druckerei – gespeicherte Schilder zum Wiederverwenden (nur Clubleitung) -----
+      case "schild_liste": {
+        nurLeitung(ich);
+        const { data, error } = await db.from("kc_club_schilder").select("id,titel,anlass,daten,erstellt_von,geaendert_am").is("entfernt_am", null).order("anlass").order("titel").limit(300);
+        if (error) throw new Fehler("Gespeicherte Schilder gerade nicht erreichbar.", 503);
+        const leute = await personen((data ?? []).map((x: any) => x.erstellt_von));
+        return json({ schilder: (data ?? []).map((x: any) => ({ ...x, von: vorname(leute.get(x.erstellt_von)) || "" })) });
+      }
+      case "schild_speichern": {
+        nurLeitung(ich);
+        const titel = txt(p.titel, 80), anlass = /^[a-z0-9_-]{1,30}$/.test(String(p.anlass || "")) ? String(p.anlass) : "allgemein";
+        if (!titel) throw new Fehler("Bitte einen Namen für das Schild eingeben.");
+        const daten = schildDaten(p.daten);
+        const id = String(p.id || "");
+        if (id) {
+          const { data: alt } = await db.from("kc_club_schilder").select("id").eq("id", id).is("entfernt_am", null).maybeSingle();
+          if (!alt) throw new Fehler("Dieses Schild gibt es nicht mehr – bitte neu speichern.", 404);
+          const { error } = await db.from("kc_club_schilder").update({ titel, anlass, daten, geaendert_von: ich.person_id, geaendert_am: jetzt() }).eq("id", id);
+          if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+          await protokoll(ich.person_id, "schild_gespeichert", { schild: id, neu: false });
+          return json({ ok: true, id });
+        }
+        const { data: n, error } = await db.from("kc_club_schilder").insert({ titel, anlass, daten, erstellt_von: ich.person_id, geaendert_von: ich.person_id }).select("id").single();
+        if (error || !n) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "schild_gespeichert", { schild: n.id, neu: true });
+        return json({ ok: true, id: n.id });
+      }
+      case "schild_loeschen": {
+        nurLeitung(ich);
+        // weich löschen (entfernt_am) – Recovery: entfernt_am wieder auf null setzen
+        const { data, error } = await db.from("kc_club_schilder").update({ entfernt_am: jetzt(), geaendert_von: ich.person_id }).eq("id", String(p.id || "")).is("entfernt_am", null).select("id");
+        if (error) throw new Fehler("Konnte nicht gelöscht werden.", 500);
+        if (!(data ?? []).length) throw new Fehler("Dieses Schild gibt es nicht mehr.", 404);
+        await protokoll(ich.person_id, "schild_geloescht", { schild: String(p.id) });
+        return json({ ok: true });
+      }
+
       case "archiv_liste": {
         // KC-CLUB-ARCHIV-PERSOENLICH (1.5.0): eigener Ordner des laufenden Jahres entsteht beim ersten Öffnen von selbst
         await archivEigenerOrdner(ich, Number(berlinTag(new Date()).slice(0, 4))).catch((e) => console.error("eigener Ordner", String(e)));

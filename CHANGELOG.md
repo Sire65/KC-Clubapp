@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.150.0 – 2026-10-09 – 🪧 Schilder-Druckerei im Büro: Vorlagen nach Anlass, gestalten, drucken, an Mitglieder senden, ablegen, wiederverwenden (KC-CLUB-SCHILDER)
+DB (Weg B): 20261009_kc_club_v2150_schilder.sql – neue Tabelle kc_club_schilder (gespeicherte Schilder, weich löschbar); Server: schild_liste / schild_speichern / schild_loeschen (nur Clubleitung).
+🔧 Kleine Systemverbesserungen
+
 ## 2.149.0 – 2026-10-09 – Spruch im Corporate Design: „Gemeinsam kochen, gemeinsam helfen“ (KC-CLUB-CD-SPRUCH)
 🔧 Kleine Systemverbesserungen
 

@@ -1488,6 +1488,22 @@
   .sl-kopf { flex: none; margin: 0; padding: 2px 8px; border: 2px solid #6a1b9a; border-radius: 999px; background: #f3e5f5; color: #4a148c; font: inherit; font-size: .8rem; font-weight: 800; white-space: nowrap; cursor: pointer; }
   .sl-kopf.versteckt { display: none; }
   .blase .sl-marke { font-weight: 700; color: #6a1b9a; } .blase.eigen .sl-marke { color: inherit; opacity: .95; } :root.dunkel .blase .sl-marke { color: #ce93d8; }
+  /* KC-CLUB-SCHILDER (2.150.0): Schilder-Druckerei – alle Wahlknöpfe gleich groß im Raster */
+  .sdr-anlaesse { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } #schBlatt .sdr-anlaesse .knopf { margin: 0; min-height: 56px; text-align: center; word-break: break-word; hyphens: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: .85rem; line-height: 1.15; padding: 6px 4px; } .sdr-anlaesse .knopf span { font-size: 1.3rem; }
+  .sdr-vorlagen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } @media (min-width: 640px) { .sdr-vorlagen { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .sdr-vorlage { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px; border: 1px solid var(--linie); border-radius: 12px; background: var(--karte); color: var(--text); font: inherit; font-size: .78rem; font-weight: 700; line-height: 1.15; cursor: pointer; min-width: 0; }
+  .sdr-vorlage canvas { width: 100%; height: auto; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.25); background: #fff; } .sdr-vorlage span { overflow: hidden; text-overflow: ellipsis; max-width: 100%; white-space: nowrap; }
+  .sdr-gespeichert { display: grid; gap: 6px; } .sdr-gespeichert > div { display: grid; grid-template-columns: 1fr 52px; gap: 6px; } #schBlatt .sdr-gespeichert .knopf { margin: 0; text-align: left; padding: 10px 12px; } .sdr-gespeichert .knopf small { display: block; opacity: .7; font-weight: 600; }
+  .sdr-vorschau { background: #8a8580; border-radius: 12px; padding: 10px; text-align: center; margin-bottom: 10px; } .sdr-vorschau canvas { max-width: 100%; max-height: 42vh; width: auto; height: auto; box-shadow: 0 3px 12px rgba(0,0,0,.35); background: #fff; }
+  .sdr-feld { margin: 0 0 8px; } .sdr-feld > label, .sdr-aussehen > label { display: block; font-weight: 800; font-size: .85rem; margin: 6px 0 3px; }
+  .sdr-zeile { display: grid; grid-template-columns: 1fr 44px 44px 44px; gap: 6px; align-items: start; } .sdr-zeile input, .sdr-zeile textarea { min-width: 0; width: 100%; box-sizing: border-box; }
+  #schBlatt .sdr-stil.knopf { text-align: center; margin: 0; padding: 0; height: 44px; font-size: 1.05rem; }
+  .sdr-preis { display: grid; grid-template-columns: 1fr 96px 44px; gap: 6px; margin-bottom: 6px; } .sdr-preis input { min-width: 0; } #schBlatt .sdr-preis .knopf { text-align: center; margin: 0; padding: 0; height: 44px; }
+  .sdr-aussehen summary { font-weight: 800; cursor: pointer; margin: 6px 0; }
+  .sdr-wahl2, .sdr-wahl3, .sdr-wahl4 { display: grid; gap: 6px; } .sdr-wahl2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sdr-wahl3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .sdr-wahl4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  #schBlatt .sdr-wahl2 .knopf, #schBlatt .sdr-wahl3 .knopf, #schBlatt .sdr-wahl4 .knopf { text-align: center; margin: 0; min-height: 44px; padding: 4px; font-size: .88rem; } .sdr-wahl4 .knopf i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+  .sdr-symbole { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; } #schBlatt .sdr-symbole .knopf { margin: 0; padding: 0; aspect-ratio: 1; min-height: 0; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; } .sdr-symbole canvas { width: 70%; height: 70%; }
+  .sdr-leiste { position: sticky; bottom: -1px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 8px 0 2px; background: var(--karte); } #schBlatt .sdr-leiste .knopf { text-align: center; margin: 0; padding: 5px 2px; min-height: 56px; font-size: .76rem; line-height: 1.1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; } #schBlatt .sdr-leiste .knopf span { font-size: 1.15rem; }
   .sl-wahl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 10px; } .sl-wahl .knopf { margin: 0; }
   /* 2.16.0 KC-CLUB-CHAT-VORLESEN */
   .blase.cv-jetzt { outline: 3px solid #2e86de; outline-offset: 2px; }
@@ -3663,6 +3679,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.149.0" data-v="2.149.0"></script>
+<script src="app.js?v=2.150.0" data-v="2.150.0"></script>
 </body>
 </html>

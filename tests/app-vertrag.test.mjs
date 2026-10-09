@@ -6977,7 +6977,10 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/<div class="cd-blatt cd-brief">\$\{cdKopf\(\)\}/.test(brief) && /\$\{cdFuss\(b\.fuss \? absatz\(b\.fuss\) : "", true\)\}/.test(brief) && !/icon-192\.png/.test(brief), "Briefbogen = CD");
   // Regel: kein Ausdruck ohne CD-Rahmen – eigene Layouts (ohneRahmen) nur Brief (mit cdKopf) und Originalseiten als Bild
   const ohne = [...programm.matchAll(/return \{[^}]*ohneRahmen: true[^}]*\}/g)].map((m) => m[0]);
-  assert.ok(ohne.length === 3 && ohne.every((x) => /dseite|titel: b\.betreff/.test(x)), "nur Originalseiten (Bild) und Brief ohne zentralen Rahmen");
+  // 2.150.0: Schilder (KC-CLUB-SCHILDER) haben ihr CD im Bild selbst (Kochmütze im weinroten Kreis + „Köcheclub Werne“ unten)
+  assert.ok(ohne.length === 4 && ohne.every((x) => /dseite|titel: b\.betreff|SDR\.bildUrl/.test(x)), "nur Originalseiten (Bild), Brief und Schild ohne zentralen Rahmen");
+  const schild = programm.slice(programm.indexOf("function schZeichnen("), programm.indexOf("function schBild()"));
+  assert.ok(/ctx\.fillStyle = KC_CD\.weinrot/.test(schild) && /ctx\.drawImage\(SCH_LOGO/.test(schild) && /ctx\.fillText\(KC_CD\.name/.test(schild) && /const SCH_LOGO = new Image\(\); SCH_LOGO\.src = KC_CD\.logo;/.test(programm), "Schild trägt das CD selbst");
   assert.ok(!/icon-192\.png/.test(programm.slice(programm.indexOf("const DRUCKARTEN"))), "kein altes Logo in Ausdrucken");
   assert.ok(/#druck \.cd-kopf \{/.test(seite) && /#druck \.cd-logo \{[^}]*background: var\(--cd-rot\)/.test(seite), "CD-Druckstile");
 }
@@ -7189,4 +7192,33 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/zeile: "Gemeinsam kochen, gemeinsam helfen"/.test(p) && /„Gemeinsam kochen, gemeinsam helfen“/.test(d), "Spruch im CD und in der Beschreibung");
   assert.ok(!/feiern · helfen/.test(p + d), "alter Spruch nirgends mehr");
   assert.equal((p.match(/Gemeinsam kochen, gemeinsam helfen/g) || []).length, 1, "nur an einer Stelle (KC_CD.zeile) – alle Ausdrucke nutzen cdKopf()");
+}
+
+// 2.150.0 KC-CLUB-SCHILDER (Wunsch Hansi): Schilder-Druckerei im Büro – nur Clubleitung, Vorlagen nach Anlass, PDF selbst gebaut, Senden/Ablegen über den Einlese-Weg
+{
+  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8"), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
+  const m = fs.readFileSync(new URL("../supabase/migrations/20261009_kc_club_v2150_schilder.sql", import.meta.url), "utf8");
+  const mod = p.slice(p.indexOf("// ---------- KC-CLUB-SCHILDER (2.150.0"), p.indexOf("const DRUCKARTEN = {"));
+  assert.ok(/\{ id: "schilder", sym: "🪧", t: "Schilder-Druckerei", farbe: "#[0-9a-f]{6}", fn: "schStart\(\)", recht: "L" \}/.test(p) && /\[L, "🪧", "Schild drucken",/.test(p), "im Büro-Regal und unter Schreiben – nur Clubleitung");
+  assert.ok(/function schDarf\(\) \{ return !!\(ICH\?\.vorstand \|\| ICH\?\.admin\); \}/.test(mod) && /if \(!schDarf\(\)\) return melde/.test(mod), "App: nur Clubleitung");
+  for (const a of ["schild_liste", "schild_speichern", "schild_loeschen"]) assert.ok(new RegExp(`case "${a}": \\{\\s*nurLeitung\\(ich\\);`).test(sv), `Server ${a}: nur Clubleitung`);
+  assert.ok(/function schildDaten\(d: any\)/.test(sv) && /txt\(d\.text, 700\)/.test(sv) && /slice\(0, 20\)/.test(sv), "Server prüft Schilddaten (Länge, Felder)");
+  assert.ok(/update\(\{ entfernt_am: jetzt\(\)/.test(sv.slice(sv.indexOf('case "schild_loeschen"'))) && /entfernt_am timestamptz/.test(m), "Löschen ist weich (Recovery)");
+  assert.ok(!/\b(drop|truncate|update|delete)\b/i.test(m.replace(/^--.*$/gm, "")) && /enable row level security/.test(m) && /revoke all on kc_club_schilder from anon, authenticated/.test(m), "Migration: nur neue Tabelle, geschützt");
+  // Vorlagen: jede gehört zu bekannten Anlässen, nutzt bekannte Schrift/Farbe/Rahmen/Symbol; Preise nie erfunden (leer)
+  const F = new Function("KC_CD", mod.slice(0, mod.indexOf("const SCH_LEER")) + "\nreturn { SCH_ANLAESSE, SCH_SCHRIFTEN, SCH_FARBEN, SCH_RAHMEN, SCH_SYMBOLE, SCH_VORLAGEN };")({ weinrot: "#741521", text: "#1d1a17", zeile: "Gemeinsam kochen, gemeinsam helfen" });
+  const ids = (l) => new Set(l.map((x) => x.id)), an = ids(F.SCH_ANLAESSE);
+  for (const v of F.SCH_VORLAGEN) {
+    assert.ok(v.fuer === "alle" || v.fuer.every((x) => an.has(x)), `Vorlage ${v.id}: Anlass bekannt`);
+    assert.ok(ids(F.SCH_SCHRIFTEN).has(v.d.schrift) && ids(F.SCH_FARBEN).has(v.d.farbe) && ids(F.SCH_RAHMEN).has(v.d.rahmen) && ids(F.SCH_SYMBOLE).has(v.d.symbol), `Vorlage ${v.id}: Gestaltung aus den Listen`);
+    assert.ok((v.d.preise || []).every((x) => x.p === ""), `Vorlage ${v.id}: keine erfundenen Preise`);
+  }
+  for (const a of F.SCH_ANLAESSE) assert.ok(F.SCH_VORLAGEN.filter((v) => v.fuer === "alle" || v.fuer.includes(a.id)).length >= 8, `genug Vorlagen für ${a.id}`);
+  assert.ok(["bar", "parken", "durchgang", "zeiten_wm", "preise_wm"].every((id) => F.SCH_VORLAGEN.some((v) => v.id === id)), "Nur Barzahlung, Parkverbot, Durchgang, Öffnungszeiten, Preise vorhanden");
+  assert.ok(!/https?:\/\//.test(mod) && !/fetch\(/.test(mod), "nichts aus dem Internet – alles selbst gezeichnet, PDF selbst gebaut");
+  assert.ok(/\/Filter \/DCTDecode/.test(mod) && /%PDF-1\.4/.test(mod) && /startxref/.test(mod), "PDF selbst gebaut");
+  assert.ok(/einlZiel\(\[datei\], \{ titel:/.test(mod) && !/api\("nachricht_senden"/.test(mod), "Senden & Ablegen über den vorhandenen Weg – nie automatisch senden");
+  assert.ok(/schild: \{ bauen: \(\) => druckSchild\(\) \}/.test(p), "Drucken über den zentralen Druck");
+  assert.ok(/#schBlatt \.sdr-leiste \.knopf \{[^}]*display: flex;/.test(h) && /\.sdr-leiste \{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/.test(h) && /\.sdr-symbole \{ display: grid; grid-template-columns: repeat\(6, minmax\(0, 1fr\)\)/.test(h), "Knöpfe gleich groß im Raster");
+  assert.ok(!/\.sch-(feld|zeile|preis|leiste|vorschau)\b/.test(mod), "eigene Klassen (sdr-) – keine Überschneidung mit dem Schachbrett (sch-)");
 }
