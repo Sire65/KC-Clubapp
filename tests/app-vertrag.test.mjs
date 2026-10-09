@@ -7362,3 +7362,14 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
     assert.ok(ini.slice(ini.indexOf("return json({ meinGeburtstag")).split("einstieg:")[0].replace(/\/\/[^\n]*/g, "").includes(f), `init liefert ${f}`);
   assert.ok(!/\/\/[^\n]*\bungelesen\b/.test(zeile) && vorKommentar.includes("ungelesen"), "kein Zeilenkommentar schneidet Felder ab");
 }
+// 2.157.0 KC-CLUB-START-PARALLEL-3 / KC-CLUB-START-MESSUNG: Server-Teilzeiten in der Startmessung, Kachel-Zahlen-Ketten gleichzeitig
+{
+  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 16000);
+  assert.ok(/const mess = <T,>\(n: string, x: PromiseLike<T>\)/.test(ini) && /srvT: zt,/.test(ini), "init misst Teilzeiten und liefert srvT");
+  for (const n of ['mess("tr",', 'mess("teil",', 'mess("mg",', "kz: pKz", "comm: pComm", "rest: pRest", "auf: pAufgaben", "tf: pTermin"]) assert.ok(ini.includes(n), `Teilzeit ${n} gemessen`);
+  assert.ok(/zt\.zl = Date\.now\(\) - t0Anfrage/.test(ini) && /zt\.ende = Date\.now\(\) - t0Anfrage/.test(ini), "Zählen und Ende gemessen");
+  const kzF = server.slice(server.indexOf("async function kachelZahlen("), server.indexOf("async function kachelZahlen(") + 3000);
+  assert.ok(/const \[offenTr, an\] = await Promise\.all\(\[/.test(kzF), "Treffen- und Terminanfrage-Kette laufen gleichzeitig");
+  assert.ok(/const startMessTeile = \(\) =>/.test(app) && /\.\.\.p, \.\.\.startMessTeile\(\) \}/.test(app), "App schickt Teilzeiten nur ins Fehlerprotokoll");
+  assert.ok(/\.slice\(0, 390\)/.test(app.slice(app.indexOf("const startMessTeile"), app.indexOf("const startMessTeile") + 600)), "Teilzeiten-Text bleibt unter der Protokoll-Grenze");
+}

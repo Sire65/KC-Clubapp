@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.156.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.157.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -21601,6 +21601,9 @@ async function appInfoDaten() {
 // ---------- KC-CLUB-STARTZEIT (2.24.11) ----------
 const STARTMESS_SPEICHER = "kc_club_startmess", STARTMESS_TEILE = [["seite", "📄 Seite laden"], ["programm", "📦 Programm laden"], ["einrichten", "⚙️ Programm einrichten"], ["server", "🌐 Warten auf den Server"], ["anzeige", "🖼️ Anzeigen"]];
 const startMessLesen = () => { try { const l = JSON.parse(localStorage.getItem(STARTMESS_SPEICHER) || "[]"); return Array.isArray(l) ? l : []; } catch { return []; } };
+// 2.157.0 KC-CLUB-START-MESSUNG: Server-Teilzeiten als kurzer Text („tr:120,zl:480,…“) – nur fürs Fehlerprotokoll, nicht für die Anzeige
+const startMessTeile = () => { const t = INIT?.srvT; if (!t || typeof t !== "object") return {};
+  return { srvT: Object.entries(t).filter(([, v]) => Number.isFinite(v)).sort((x, y) => x[1] - y[1]).map(([k, v]) => `${String(k).slice(0, 6)}:${Math.round(v)}`).join(",").slice(0, 390) }; };
 function startMessFertig() {
   if (START_MESS.fertig || !START_MESS.initBis) return;
   START_MESS.fertig = performance.now();
@@ -21614,7 +21617,7 @@ function startMessFertig() {
   p.einrichten += rund(m.initAb - m.eingerichtet);
   const eintrag = { z: Date.now(), v: APP_VERSION, netz: navigator.connection?.effectiveType || "", quelle: !prog ? "" : prog.transferSize === 0 ? "speicher" : "netz", ges: rund(m.fertig), p };
   try { localStorage.setItem(STARTMESS_SPEICHER, JSON.stringify([eintrag, ...startMessLesen()].slice(0, 10))); } catch {}
-  try { if (!sessionStorage.getItem("kc_club_fp_startzeit")) { sessionStorage.setItem("kc_club_fp_startzeit", "1"); fpNeu("startzeit", { ms: eintrag.ges, netz: eintrag.netz, quelle: eintrag.quelle, ...p }); } } catch {}
+  try { if (!sessionStorage.getItem("kc_club_fp_startzeit")) { sessionStorage.setItem("kc_club_fp_startzeit", "1"); fpNeu("startzeit", { ms: eintrag.ges, netz: eintrag.netz, quelle: eintrag.quelle, ...p, ...startMessTeile() }); } } catch {}
   if ($("appInfo")?.offsetParent) appInfoZeigen();
   // KC-CLUB-SPUR-OEFFNEN (2.30.0, Fall Reinhilde: nur kurz auf der Startseite → im Weg stand nichts): jedes Öffnen zählt als Schritt
   // und geht nach 3 s gleich los (nicht erst nach 2 Min.), damit auch ganz kurze Besuche sichtbar sind
