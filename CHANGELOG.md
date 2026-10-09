@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.167.0 – 2026-10-09 – 📄 Anlage im Chat antippen öffnet wieder das richtige Fenster (KC-CLUB-ANLAGE-OEFFNEN)
+🔧 Kleine Systemverbesserungen
+
 ## 2.166.0 – 2026-10-09 – 📄 PDF-Anlagen: zweiter Weg + Diagnose (KC-CLUB-ANLAGE-OEFFNEN)
 🔧 Kleine Systemverbesserungen
 
