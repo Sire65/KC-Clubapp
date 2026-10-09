@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.173.0";
+const SERVER_VERSION = "2.177.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -937,7 +937,10 @@ async function feedbackArchivieren(ich: Ich, grund: string, nurPerson: string | 
 // Erlaubte Schlüssel mit Prüfung; neue Einstellungen (z. B. Farben) kommen hier dazu.
 const KA_ID = /^[a-z0-9_-]{1,30}$/;
 const kaIds = (v: unknown) => [...new Set((Array.isArray(v) ? v : []).filter((x) => typeof x === "string" && KA_ID.test(x)))].slice(0, 50) as string[];
+// KC-CLUB-EMPFANGS-EFFEKT (2.177.0): mit welchem Effekt meine Nachrichten beim Empfänger ankommen (Wahl unter 🎨 Darstellung)
+const SENDE_EFFEKT_ARTEN = ["flieger", "taube", "postauto", "wechsel", "aus"];
 const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
+  sende_effekt: (w) => ({ art: SENDE_EFFEKT_ARTEN.includes(w?.art) ? w.art : "wechsel" }),
   // KC-CLUB-CHAT-FARBEN (2.145.0): nur kurze Kennungen aus der Auswahl der App – nie freie Farben/Bilder
   chat_farben: (w) => { const id = (x: unknown) => (typeof x === "string" && /^[a-z0-9_]{1,24}$/.test(x) ? x : "standard"); return { eigen: id(w?.eigen), andere: id(w?.andere), hintergrund: id(w?.hintergrund) }; },
   kacheln: (w) => ({
@@ -7144,7 +7147,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: ma } = mids.length ? await db.from("kc_communication_message_attachments").select("message_id,attachment_id").in("message_id", mids) : { data: [] as any[] };
         const aids = (ma ?? []).map((x: any) => x.attachment_id);
         const { data: att } = aids.length ? await db.from("kc_communication_attachments").select("id,file_name,mime_type,size_bytes").in("id", aids) : { data: [] as any[] };
-        const leute = await personen([...(tn ?? []).map((x: any) => x.person_id), ...(msgs ?? []).map((m: any) => m.sender_person_id)]);
+        // KC-CLUB-EMPFANGS-EFFEKT (2.177.0): gewählter Sende-Effekt der Teilnehmer – parallel zu den Namen, nur kurze Kennung
+        const [leute, { data: seE }] = await Promise.all([personen([...(tn ?? []).map((x: any) => x.person_id), ...(msgs ?? []).map((m: any) => m.sender_person_id)]),
+          db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "sende_effekt").in("person_id", (tn ?? []).map((x: any) => x.person_id))]);
+        const sendeEffekte = Object.fromEntries((seE ?? []).map((x: any) => [x.person_id, x.wert?.art]).filter(([, a]: any) => SENDE_EFFEKT_ARTEN.includes(a)));
         const andere = (tn ?? []).filter((x: any) => x.person_id !== ich.person_id);
         // KC-CLUB-QUITTUNG (0.34.0): Zustellung meiner Nachrichten aus dem Communicator (Push angezeigt/geöffnet, Mail verschickt)
         const eigeneIds = (msgs ?? []).filter((m: any) => m.sender_person_id === ich.person_id).slice(-60).map((m: any) => m.id);
@@ -7266,7 +7272,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           }
           runde = { ersteller: t?.created_by_person_id === ich.person_id || ich.admin, gleiche };
         }
-        return json({ id, betreff: t?.subject ?? "", tippt, entwurf, spricht, angeheftet, gelesenBis, partnerDa, runde, selbstloeschen: slStd(slChat?.stunden),
+        return json({ id, betreff: t?.subject ?? "", tippt, entwurf, spricht, angeheftet, gelesenBis, partnerDa, runde, selbstloeschen: slStd(slChat?.stunden), sendeEffekte,
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, admins: gr.admins ?? [], darfVerwalten: gruppenAdmin(gr, ich.person_id) || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
       }
 
@@ -7433,7 +7439,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           url: `${APP_URL}#nachricht=${threadId}`,
         }, `club-nachricht:${m.id}`, { notfall });
         await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, selbstloeschen: slNachricht, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
-        return json({ ok: true, id: threadId, versand });
+        return json({ ok: true, id: threadId, versand, mid: m.id }); // mid: KC-CLUB-EMPFANGS-EFFEKT (2.177.0) – gleicher „Abwechselnd“-Effekt bei Absender und Empfänger
       }
 
       // ----- KC-CLUB-PRIVATTERMIN (1.0.0): nur für mich sichtbar – jeder darf, jeder nur seine eigenen -----

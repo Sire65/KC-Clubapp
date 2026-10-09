@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.177.0 – 2026-10-09 – 🕊️ Nachricht kommt beim Empfänger mit Taube, Flieger, Postauto oder Blaulicht an
+🔧 Kleine Systemverbesserungen
+
 ## 2.176.0 – 2026-10-09 – 🚐 Senden: gelbes Postauto, bei ❗ wichtig Blaulicht
 🔧 Kleine Systemverbesserungen
 

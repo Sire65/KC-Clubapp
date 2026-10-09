@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.176.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.177.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -9909,13 +9909,13 @@ const TAUBE_SVG = (g) => `<svg viewBox="0 0 140 120" width="${Math.round(g * 1.1
     <ellipse cx="72" cy="64" rx="30" ry="16" fill="#fff" stroke="#9a948c" stroke-width="2"/>
     <circle cx="40" cy="52" r="12" fill="#fff" stroke="#9a948c" stroke-width="2"/><circle cx="36" cy="50" r="2.2" fill="#222"/>
     <path d="M29 51 17 55 29 57Z" fill="#e8a33d" stroke="#b97a1e" stroke-width="1" stroke-linejoin="round"/>
-    <g transform="rotate(-8 17 64)"><rect x="4" y="57" width="26" height="17" rx="2" fill="#f3e6cf" stroke="#7b1e2b" stroke-width="2"/><path d="M4 57 17 67 30 57" fill="none" stroke="#7b1e2b" stroke-width="2"/><circle cx="17" cy="67" r="2.6" fill="#7b1e2b"/></g>
+    <g class="tb-brief" transform="rotate(-8 17 64)"><rect x="4" y="57" width="26" height="17" rx="2" fill="#f3e6cf" stroke="#7b1e2b" stroke-width="2"/><path d="M4 57 17 67 30 57" fill="none" stroke="#7b1e2b" stroke-width="2"/><circle cx="17" cy="67" r="2.6" fill="#7b1e2b"/></g>
     <g class="fl-vorn" fill="#fff" stroke="#9a948c" stroke-width="2" stroke-linejoin="round"><path d="M58 60C58 30 76 6 106 2 100 22 92 42 80 62Z"/><path d="M72 40 88 22M76 48 94 32" fill="none" stroke-width="1.5"/></g></svg>`;
-function papierflieger(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG) {
+function papierflieger(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG, mid = null) {
   if (!fxAn() || !von) return;
   const r = von.getBoundingClientRect(); if (!r.width) return;
   const wahl = sendeEffektWahl(); if (wahl === "aus") return;
-  const art = wichtig ? "blaulicht" : wahl === "wechsel" ? SENDE_REIHE[SENDE_FX_N++ % SENDE_REIHE.length] : wahl; // ❗ wichtig → immer Blaulicht
+  const art = fxArt(wahl, wichtig, mid); if (!art) return; // ❗ wichtig → immer Blaulicht; „Abwechselnd“ nach Nachrichten-Kennung (2.177.0)
   if (art === "postauto" || art === "blaulicht") return sendeFahrzeug(r, art);
   const g = Math.round(Math.min(130, innerWidth * 0.3));
   const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
@@ -9978,7 +9978,97 @@ function sendeFahrzeug(r, art) {
   }
   setTimeout(() => f.remove(), dauer + 400);
 }
-function sendeEffektSetzen(w) { try { localStorage.setItem("kc_club_sendeEffekt", w); } catch {} sendeEffektZeigen(); melde(SENDE_EFFEKTE.find(([k]) => k === w)?.[1] || w); }
+// ---------- KC-CLUB-EMPFANGS-EFFEKT (2.177.0, Wunsch Hansi „mit Taube schicken → bei ihm kommt die Taube an und lässt den Brief fallen“) ----------
+// Der Absender bestimmt den Effekt (Wahl unter 🎨 Darstellung, beim Server als „sende_effekt“ gemerkt). „Abwechselnd“ hängt an der
+// Nachrichten-Kennung → Absender und Empfänger sehen dasselbe. ❗ wichtig → Blaulicht. Der Empfänger sieht es nur bei offener
+// Unterhaltung, frischer Nachricht, eigenen Effekten an (✨ Animierte Knöpfe, kein Sparmodus) und eigenem Sende-Effekt nicht „Aus“.
+const fxReihe = (mid) => { let h = 0; for (const c of String(mid)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return SENDE_REIHE[h % SENDE_REIHE.length]; };
+const fxArt = (wahl, wichtig, mid) => wahl === "aus" ? null : wichtig ? "blaulicht" : wahl === "wechsel" ? (mid ? fxReihe(mid) : SENDE_REIHE[SENDE_FX_N++ % SENDE_REIHE.length]) : SENDE_REIHE.includes(wahl) ? wahl : null;
+function sendeEffektMelden() {
+  const w = sendeEffektWahl(); if (!INIT?.einstellungen || INIT.einstellungen.sende_effekt?.art === w) return;
+  api("einstellung_setzen", { schluessel: "sende_effekt", wert: { art: w } }).then(() => { INIT.einstellungen.sende_effekt = { art: w }; }).catch(() => {});
+}
+const EMPF = { chat: null, letzte: null };
+function empfangsEffekt(u) {
+  const letzte = [...(u?.nachrichten || [])].reverse().find((m) => !m.eigen);
+  const erst = EMPF.chat !== u?.id; EMPF.chat = u?.id;
+  if (!letzte) { EMPF.letzte = null; return; }
+  const neu = !erst && letzte.id !== EMPF.letzte; EMPF.letzte = letzte.id;
+  if (!neu || document.hidden || !fxAn() || sendeEffektWahl() === "aus" || Date.now() - Date.parse(letzte.zeit) > 120000) return;
+  const art = fxArt(u.sendeEffekte?.[letzte.vonId], letzte.wichtig, letzte.id); if (!art) return;
+  setTimeout(() => { const el = document.getElementById("msg-" + letzte.id); if (el) ankunftEffekt(el, art).catch(() => {}); }, 450);
+}
+const fxWarte = (a) => new Promise((ok) => { a.onfinish = a.oncancel = () => ok(); });
+const fxEl = (html, x, y) => { const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true"); f.innerHTML = html; f.style.left = x + "px"; f.style.top = y + "px"; document.body.appendChild(f); return f; };
+const fxHuepfen = (el) => el.animate([{ transform: "none" }, { transform: "translateY(-6px) scale(1.04)" }, { transform: "translateY(2px) scale(.99)" }, { transform: "none" }], { duration: 520, easing: "ease-out" });
+async function ankunftEffekt(el, art) {
+  const r = el.getBoundingClientRect(); if (!r.width || r.bottom < 0 || r.top > innerHeight) return;
+  const weg = []; const fertig = () => weg.forEach((x) => x.remove()); setTimeout(fertig, 6000);
+  try {
+    if (art === "taube") {
+      // fliegt von oben rechts in Wellen heran, schwebt über der Blase, lässt das Kuvert fallen und fliegt nach links davon
+      const g = Math.round(Math.min(110, innerWidth * 0.26)), b = Math.round(g * 1.17);
+      const zx = Math.max(4, Math.min(innerWidth - b - 4, r.left + r.width / 2 - b * 0.2)), zy = Math.max(4, r.top - g * 0.95);
+      const f = fxEl(TAUBE_SVG(g), zx, zy); weg.push(f);
+      const sx = innerWidth - zx + 20, sy = -zy - g, flap = [];
+      f.querySelectorAll(".fl-vorn, .fl-hinten").forEach((fl, i) => { fl.style.transformOrigin = "72px 60px"; flap.push(fl.animate([{ transform: "scaleY(1)" }, { transform: `scaleY(${i ? -0.45 : -0.6})` }], { duration: 190, iterations: Infinity, direction: "alternate", easing: "ease-in-out", delay: i ? 30 : 0 })); });
+      const hin = []; for (let i = 0; i <= 10; i++) { const t = i / 10, e = 1 - Math.pow(1 - t, 2); hin.push({ transform: `translate(${(sx * (1 - e)).toFixed(1)}px, ${(sy * (1 - e) + Math.sin(t * Math.PI * 3) * 18 * (1 - t)).toFixed(1)}px) rotate(${(-12 * (1 - t)).toFixed(1)}deg)` }); }
+      await fxWarte(f.animate(hin, { duration: 1300, fill: "forwards" }));
+      await fxWarte(f.animate([{ transform: "translate(0,0)" }, { transform: "translate(0,-6px)" }, { transform: "translate(0,0)" }], { duration: 380, fill: "forwards" }));
+      const brief = f.querySelector(".tb-brief"); const br = brief?.getBoundingClientRect(); if (brief) brief.style.visibility = "hidden";
+      if (br) {
+        const k = fxEl(`<svg viewBox="0 0 30 22" width="${Math.round(br.width)}" height="${Math.round(br.height)}"><rect x="2" y="2" width="26" height="17" rx="2" fill="#f3e6cf" stroke="#7b1e2b" stroke-width="2"/><path d="M2 2 15 12 28 2" fill="none" stroke="#7b1e2b" stroke-width="2"/><circle cx="15" cy="12" r="2.6" fill="#7b1e2b"/></svg>`, br.left, br.top); weg.push(k);
+        const fall = r.top + Math.min(24, r.height / 2) - br.top;
+        f.animate([{ transform: "translate(0,0)" }, { transform: `translate(${-(zx + b + 30)}px, ${-(zy + g)}px) rotate(-14deg)` }], { duration: 1200, easing: "ease-in", fill: "forwards" });
+        await fxWarte(k.animate([{ transform: "translate(0,0) rotate(-8deg)" }, { transform: `translate(6px, ${fall * 0.5}px) rotate(16deg) scale(1.4)`, offset: 0.45 }, { transform: `translate(-4px, ${fall}px) rotate(-6deg) scale(1.8)`, offset: 0.85 }, { transform: `translate(0, ${fall - 4}px) rotate(0deg) scale(1.9)` }], { duration: 900, easing: "ease-in", fill: "forwards" }));
+        fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1200);
+        await fxWarte(k.animate([{ opacity: 1 }, { opacity: 0, transform: `translate(0, ${fall}px) scale(.5)` }], { duration: 450, fill: "forwards" }));
+      }
+      flap.forEach((a) => a.cancel());
+    } else if (art === "flieger") {
+      // kommt von oben rechts in Schlangenlinien, setzt auf der Blase auf und schlüpft hinein
+      const g = Math.round(Math.min(100, innerWidth * 0.24));
+      const zx = Math.max(4, Math.min(innerWidth - g - 4, r.left + r.width / 2 - g / 2)), zy = r.top + r.height / 2 - g / 2;
+      const f = fxEl(FLIEGER_SVG(g), zx, zy); weg.push(f);
+      const sx = innerWidth - zx + g, sy = -zy - g, len = Math.hypot(sx, sy) || 1, nx = -sy / len, ny = sx / len, amp = Math.min(50, innerWidth * 0.1), bild = [];
+      const pos = (t) => { const w = Math.sin(t * Math.PI * 4) * amp * Math.sin(t * Math.PI); return { x: sx * (1 - t) + nx * w, y: sy * (1 - t) + ny * w }; };
+      for (let i = 0; i <= 14; i++) {
+        const t = i / 14, p = pos(t), q = pos(Math.min(1, t + 0.03)), p0 = pos(Math.max(0, t - 0.03));
+        let w = Math.atan2(q.y - p0.y, q.x - p0.x) * 180 / Math.PI + 149; w = ((w + 540) % 360) - 180;
+        bild.push({ transform: `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) rotate(${w.toFixed(1)}deg) scale(${(0.7 + t * 0.3).toFixed(2)})`, opacity: 1 });
+      }
+      await fxWarte(f.animate(bild, { duration: 1500, easing: "ease-out", fill: "forwards" }));
+      fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1200);
+      await fxWarte(f.animate([{ transform: "scale(1)", opacity: 1 }, { transform: "scale(.2) rotate(20deg)", opacity: 0 }], { duration: 420, easing: "ease-in", fill: "forwards" }));
+    } else {
+      // 🚐/🚨 fährt von rechts heran, bremst neben der Blase, liefert ab (Kuvert hüpft hinein / Blaulicht blinkt) und fährt links davon
+      const b = Math.round(Math.min(170, innerWidth * 0.38)), h = Math.round(b * 0.55);
+      const zx = Math.min(innerWidth - b - 6, Math.max(r.right - b * 0.35, 6)), zy = Math.min(innerHeight - h - 4, r.bottom - h * 0.75);
+      const f = fxEl(art === "blaulicht" ? BLAULICHT_SVG(b) : POSTAUTO_SVG(b), zx, zy); weg.push(f);
+      const raeder = [...f.querySelectorAll(".fz-rad")].map((rad) => { rad.style.transformBox = "fill-box"; rad.style.transformOrigin = "center"; return rad.animate([{ transform: "rotate(0deg)" }, { transform: "rotate(-360deg)" }], { duration: 380, iterations: Infinity }); });
+      if (art === "blaulicht") {
+        f.querySelectorAll(".bl-a").forEach((x) => x.animate([{ opacity: 1 }, { opacity: 0.15 }], { duration: 160, iterations: Infinity, direction: "alternate" }));
+        f.querySelectorAll(".bl-b").forEach((x) => x.animate([{ opacity: 0.15 }, { opacity: 1 }], { duration: 160, iterations: Infinity, direction: "alternate" }));
+      }
+      f.querySelectorAll(".fz-rauch circle").forEach((c, i) => c.animate([{ opacity: 0, transform: "scale(.4)" }, { opacity: .8, transform: "scale(1)" }, { opacity: 0, transform: "scale(1.6) translate(8px,-6px)" }], { duration: 700, iterations: Infinity, delay: i * 180 }));
+      await fxWarte(f.animate([{ transform: `translate(${innerWidth - zx + 10}px,0)` }, { transform: "translate(-6px,0) rotate(-3deg)", offset: 0.85 }, { transform: "translate(0,0) rotate(0deg)" }], { duration: art === "blaulicht" ? 900 : 1200, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" }));
+      raeder.forEach((a) => a.pause());
+      if (art === "postauto") {
+        const k = fxEl(`<svg viewBox="0 0 30 22" width="${Math.round(b * 0.22)}" height="${Math.round(b * 0.16)}"><rect x="2" y="2" width="26" height="17" rx="2" fill="#f3e6cf" stroke="#7b1e2b" stroke-width="2"/><path d="M2 2 15 12 28 2" fill="none" stroke="#7b1e2b" stroke-width="2"/><circle cx="15" cy="12" r="2.6" fill="#7b1e2b"/></svg>`, zx + b * 0.55, zy + h * 0.3); weg.push(k);
+        const dx = r.left + r.width / 2 - (zx + b * 0.55), dy = r.top + Math.min(20, r.height / 2) - (zy + h * 0.3);
+        await fxWarte(k.animate([{ transform: "translate(0,0) scale(.5)" }, { transform: `translate(${dx * 0.5}px, ${dy - 50}px) scale(1.2) rotate(-12deg)`, offset: 0.5 }, { transform: `translate(${dx}px, ${dy}px) scale(1) rotate(0deg)` }], { duration: 750, easing: "ease-in-out", fill: "forwards" }));
+        fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1200); k.remove();
+      } else {
+        fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1600);
+        try { navigator.vibrate?.([60, 60, 60]); } catch {}
+        await new Promise((ok) => setTimeout(ok, 700));
+      }
+      raeder.forEach((a) => a.play());
+      await fxWarte(f.animate([{ transform: "translate(0,0)" }, { transform: `translate(${-(zx + b + 20)}px,0)` }], { duration: 900, easing: "ease-in", fill: "forwards" }));
+    }
+  } finally { fertig(); }
+}
+function sendeEffektSetzen(w) { try { localStorage.setItem("kc_club_sendeEffekt", w); } catch {} sendeEffektZeigen(); sendeEffektMelden(); melde(SENDE_EFFEKTE.find(([k]) => k === w)?.[1] || w); }
 function sendeEffektZeigen() {
   const z = $("sendeEffektWahl"); if (!z) return; const w = sendeEffektWahl();
   z.innerHTML = SENDE_EFFEKTE.map(([k, t]) => `<button type="button" class="chip${k === w ? " an" : ""}" aria-pressed="${k === w}" onclick="sendeEffektSetzen('${k}')">${t}</button>`).join("");
@@ -12348,6 +12438,7 @@ async function neuLadenRoh(vonHand) {
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     ansichtUebernehmen(INIT.einstellungen?.ansicht);
     ansageVorgabeUebernehmen(INIT.einstellungen?.ansage_vorgabe); // 2.173.0 KC-CLUB-ANSAGE-VORGABE
+    sendeEffektMelden(); // 2.177.0 KC-CLUB-EMPFANGS-EFFEKT
     const begruesst = geburtstagPruefen() || ansichtPruefen() || begruessungPruefen(); // 2.134.0: am eigenen Geburtstag zuerst das Ständchen
     if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); herzStarten(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
@@ -15817,6 +15908,7 @@ async function chatLaden(scrollen) {
     if (NA.trennerSprung) { NA.trennerSprung = false; setTimeout(() => $("neuTrenner")?.scrollIntoView({ block: "start" }), 50); }
     else if (scrollen || (neuVonAnderen && !weitOben())) setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
     else if (neuVonAnderen) NA.neuUnten = true;
+    empfangsEffekt(u); // 2.177.0 KC-CLUB-EMPFANGS-EFFEKT
     setTimeout(nachUntenPruefen, 120);
   } catch (e) { meldeFehler(e); }
 }
@@ -17401,7 +17493,7 @@ async function senden() {
       ...(SL.std !== null && SL.chat === chatId ? { ablauf_std: SL.std } : {}) }; // KC-CLUB-SELBSTLOESCHEN: ⏳ nur diese Nachricht
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
-    papierflieger($("sendenKnopf")); // 2.172.0 KC-CLUB-EFFEKTE-2
+    papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN
     $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“

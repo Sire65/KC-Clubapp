@@ -7491,7 +7491,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const m = html.slice(html.indexOf("// ---------- KC-CLUB-EFFEKTE-2"), html.indexOf("// ---------- KC-CLUB-KONFETTI (2.169.0)"));
   assert.ok(/const fxAn = \(\) => einst\("animiert", true\) && !SPAR\?\.an/.test(m) && (m.match(/if \(!fxAn\(\)/g) || []).length >= 3, "alle Effekte aus bei ‚Animierte Knöpfe' aus / Sparmodus");
-  assert.ok(/papierflieger\(\$\("sendenKnopf"\)\); \/\/ 2\.172\.0/.test(html) && /\.onfinish = \(\) => f\.remove\(\);/.test(m), "Papierflieger nach erfolgreichem Senden, räumt auf");
+  assert.ok(/papierflieger\(\$\("sendenKnopf"\), undefined, r\?\.mid\); \/\/ 2\.172\.0/.test(html) && /\.onfinish = \(\) => f\.remove\(\);/.test(m), "Papierflieger nach erfolgreichem Senden, räumt auf");
   assert.ok(/const vorher = new Set\(\(PW\.zettel \|\| \[\]\)\.map\(\(z\) => z\.id\)\);/.test(html) && /zettelAnpinnen\(document\.querySelector\(`#pwWand \.zettel\[data-zid="\$\{CSS\.escape\(z\.id\)\}"\]`\)\)/.test(html), "nur der neue Zettel wird angepinnt");
   assert.ok(/if \(!fxAn\(\) \|\| neu <= alt\) return;/.test(m) && /zahlenHochzaehlen\(\$\("raster"\), "\.kachel\[data-id\] > \.zahl"/.test(html) && /zahlenHochzaehlen\(\$\("heroInfo"\)/.test(html), "Zahlen zählen nur aufwärts hoch (Kacheln + Kopf)");
   assert.ok(/const gbHeute = \(pid\) => \(INIT\?\.geburtstageHeute \|\| \[\]\)\.some/.test(m) && (html.match(/\$\{gbKerze\(m\.person_id\)\}/g) || []).length === 3, "Kerze in Tafel, Kacheln und Liste – nur freigegebene Geburtstage");
@@ -7511,7 +7511,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const idx = lies("index.html");
   assert.ok(/const SENDE_EFFEKTE = \[\["flieger", .*\["taube", .*\["wechsel", .*\["aus", /.test(html), "Wahl: Flieger, Taube, Abwechselnd, Aus");
-  assert.ok(/wahl === "wechsel" \? SENDE_REIHE\[SENDE_FX_N\+\+ % SENDE_REIHE\.length\] : wahl;/.test(html) && /if \(wahl === "aus"\) return;/.test(html), "Abwechselnd und Aus");
+  assert.ok(/wahl === "wechsel" \? \(mid \? fxReihe\(mid\) : SENDE_REIHE\[SENDE_FX_N\+\+ % SENDE_REIHE\.length\]\)/.test(html) && /if \(wahl === "aus"\) return;/.test(html), "Abwechselnd und Aus");
   assert.ok(/Math\.sin\(t \* Math\.PI \* 5\) \* amp \* Math\.sin\(t \* Math\.PI\)/.test(html) && /Math\.atan2\(q\.y - p0\.y, q\.x - p0\.x\)/.test(html), "Schlangenlinie, Spitze in Flugrichtung");
   assert.ok(/const TAUBE_SVG = /.test(html) && /class="fl-vorn"/.test(html) && /fill="#f3e6cf" stroke="#7b1e2b"/.test(html), "Taube mit schlagenden Flügeln und Kuvert in CD-Farben");
   assert.ok(/if \(!fxAn\(\) \|\| !von\) return;/.test(html) && /setTimeout\(\(\) => f\.remove\(\), dauer \+ 400\);/.test(html), "nur bei Effekten an, räumt sicher auf");
@@ -7522,8 +7522,19 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const idx = lies("index.html");
   assert.ok(/\["postauto", "🚐 Postauto"\]/.test(html) && /const SENDE_REIHE = \["flieger", "taube", "postauto"\];/.test(html), "Postauto als dritte Wahl, Abwechselnd über alle drei");
-  assert.ok(/const art = wichtig \? "blaulicht" :/.test(html) && /function papierflieger\(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG\)/.test(html), "❗ wichtig → Blaulicht");
+  assert.ok(/const fxArt = \(wahl, wichtig, mid\) => wahl === "aus" \? null : wichtig \? "blaulicht" :/.test(html) && /function papierflieger\(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG, mid = null\)/.test(html), "❗ wichtig → Blaulicht");
   assert.ok(/if \(wahl === "aus"\) return;/.test(html), "Aus bleibt aus – auch bei wichtig");
   assert.ok(/const POSTAUTO_SVG = /.test(html) && /const BLAULICHT_SVG = /.test(html) && /KÖCHECLUB-POST/.test(html) && !/Deutsche Post|POLIZEI/i.test(html.slice(html.indexOf("const POSTAUTO_SVG"), html.indexOf("function sendeFahrzeug"))), "neutral, kein fremdes Zeichen");
   assert.ok(/blaulichtVorschau\(this\)/.test(idx), "Vorschau „wichtig“");
+}
+
+// 2.177.0 KC-CLUB-EMPFANGS-EFFEKT (Wunsch Hansi: „mit Taube schicken → bei ihm kommt die Taube an und lässt den Brief fallen“)
+{
+  assert.ok(/sende_effekt: \(w\) => \(\{ art: SENDE_EFFEKT_ARTEN\.includes\(w\?\.art\) \? w\.art : "wechsel" \}\)/.test(server), "Server merkt nur bekannte Kennungen");
+  assert.ok(/\.eq\("schluessel", "sende_effekt"\)\.in\("person_id", \(tn \?\? \[\]\)\.map/.test(server) && /selbstloeschen: slStd\(slChat\?\.stunden\), sendeEffekte,/.test(server), "Unterhaltung liefert Effekte der Teilnehmer");
+  assert.ok(/return json\(\{ ok: true, id: threadId, versand, mid: m\.id \}\);/.test(server), "Senden liefert Nachrichten-Kennung");
+  assert.ok(/const fxReihe = \(mid\) =>/.test(html) && /fxArt\(u\.sendeEffekte\?\.\[letzte\.vonId\], letzte\.wichtig, letzte\.id\)/.test(html), "gleicher Effekt bei Absender und Empfänger");
+  assert.ok(/const neu = !erst && letzte\.id !== EMPF\.letzte;/.test(html) && /Date\.now\(\) - Date\.parse\(letzte\.zeit\) > 120000\) return;/.test(html) && /sendeEffektWahl\(\) === "aus"/.test(html), "nur neue, frische Nachrichten, nicht beim Öffnen, abschaltbar");
+  assert.ok(/empfangsEffekt\(u\); \/\/ 2\.177\.0/.test(html) && /sendeEffektMelden\(\); \/\/ 2\.177\.0/.test(html), "eingebunden in Chat-Laden und Start");
+  assert.ok(/class="tb-brief"/.test(html) && /if \(brief\) brief\.style\.visibility = "hidden";/.test(html) && /\} finally \{ fertig\(\); \}/.test(html), "Taube lässt das Kuvert fallen, alles wird sicher weggeräumt");
 }
