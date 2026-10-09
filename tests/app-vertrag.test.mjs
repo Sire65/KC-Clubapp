@@ -7487,3 +7487,14 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(!/Nur ein Beispiel – tippe unten auf 🎙️/.test(html), "kein „Nur ein Beispiel“ mehr");
   assert.ok(/onclick="sbListe\(\)">📋 Alle Sprachbefehle anzeigen/.test(html), "Liste auch in den Einstellungen erreichbar");
 }
+// 2.172.0 KC-CLUB-EFFEKTE-2 (Wunsch Hansi: 1 Papierflieger, 3 Zettel anpinnen, 4 Zahlen zählen hoch, 6 Jahreszeiten, 8 Geburtstagskerze)
+{
+  const m = html.slice(html.indexOf("// ---------- KC-CLUB-EFFEKTE-2"), html.indexOf("// ---------- KC-CLUB-KONFETTI (2.169.0)"));
+  assert.ok(/const fxAn = \(\) => einst\("animiert", true\) && !SPAR\?\.an/.test(m) && (m.match(/if \(!fxAn\(\)/g) || []).length >= 3, "alle Effekte aus bei ‚Animierte Knöpfe' aus / Sparmodus");
+  assert.ok(/papierflieger\(\$\("sendenKnopf"\)\); \/\/ 2\.172\.0/.test(html) && /\.onfinish = \(\) => f\.remove\(\);/.test(m), "Papierflieger nach erfolgreichem Senden, räumt auf");
+  assert.ok(/const vorher = new Set\(\(PW\.zettel \|\| \[\]\)\.map\(\(z\) => z\.id\)\);/.test(html) && /zettelAnpinnen\(document\.querySelector\(`#pwWand \.zettel\[data-zid="\$\{CSS\.escape\(z\.id\)\}"\]`\)\)/.test(html), "nur der neue Zettel wird angepinnt");
+  assert.ok(/if \(!fxAn\(\) \|\| neu <= alt\) return;/.test(m) && /zahlenHochzaehlen\(\$\("raster"\), "\.kachel\[data-id\] > \.zahl"/.test(html) && /zahlenHochzaehlen\(\$\("heroInfo"\)/.test(html), "Zahlen zählen nur aufwärts hoch (Kacheln + Kopf)");
+  assert.ok(/const gbHeute = \(pid\) => \(INIT\?\.geburtstageHeute \|\| \[\]\)\.some/.test(m) && (html.match(/\$\{gbKerze\(m\.person_id\)\}/g) || []).length === 3, "Kerze in Tafel, Kacheln und Liste – nur freigegebene Geburtstage");
+  assert.ok(/if \(\(m === 12 && t === 31\) \|\| \(m === 1 && t === 1\)\) return "silvester";/.test(m) && /return "herbst";/.test(m) && /einst\("jahreszeit", true\)/.test(m) && /id="setJahreszeit" onchange="jahreszeitUmschalten\(this\.checked\)"/.test(html), "Jahreszeiten nach Datum, abschaltbar");
+  assert.ok(/\.jz-schicht \{ position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none;/.test(html) && /\.papierflieger \{ position: fixed; z-index: 99999; pointer-events: none;/.test(html), "Effekte blockieren keine Tipps");
+}

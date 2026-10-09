@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.171.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.172.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -615,7 +615,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
 }
 function designWahlZeigen() {
@@ -976,8 +976,10 @@ async function pwAnheften() {
   if (!PW.form.fuer) return melde("Bitte wählen: nur für mich, für alle oder bestimmte Personen.", true);
   if (PW.form.fuer === "personen" && !PW.form.personen.length) return melde("Bitte mindestens eine Person auswählen.", true);
   $("pwSpeichernKnopf").disabled = true;
+  const vorher = new Set((PW.zettel || []).map((z) => z.id)); // 2.172.0 KC-CLUB-EFFEKTE-2: der neue Zettel wird sichtbar angepinnt
   try { await api("pinnwand_anheften", { text, wichtig: PW.form.wichtig, fuer: PW.form.fuer, personen: PW.form.personen, antworten: PW.form.antworten !== false, ...(PW.form.antwortAuf ? { antwort_auf: PW.form.antwortAuf } : {}) });
-    melde(PW.form.antwortAuf ? "📌 Antwort angeheftet" : "📌 Angeheftet"); pwForm(false); await pwLaden(); }
+    melde(PW.form.antwortAuf ? "📌 Antwort angeheftet" : "📌 Angeheftet"); pwForm(false); await pwLaden();
+    (PW.zettel || []).filter((z) => !vorher.has(z.id)).forEach((z) => zettelAnpinnen(document.querySelector(`#pwWand .zettel[data-zid="${CSS.escape(z.id)}"]`))); }
   catch (e) { meldeFehler(e); } finally { $("pwSpeichernKnopf").disabled = false; }
 }
 async function pwErledigt(id, zurueck) {
@@ -9869,6 +9871,71 @@ function regEffektZeigen() {
   z.innerHTML = REG_EFFEKTE.map(([k, t]) => `<button type="button" class="chip${k === w ? " an" : ""}" aria-pressed="${k === w}" onclick="regEffektSetzen('${k}')">${t}</button>`).join("");
 }
 function regEffektVorschau() { zeige("start"); setTimeout(() => { if (!regEffekt(1, regEffektWahl() === "aus" ? "jalousie" : undefined)) melde("Effekte sind aus – „✨ Animierte Knöpfe“ einschalten (und Sparmodus aus).", true); }, 350); }
+// ---------- KC-CLUB-EFFEKTE-2 (2.172.0, Wunsch Hansi: 1 Papierflieger, 3 Zettel anpinnen, 4 Zahlen zählen hoch, 6 Jahreszeiten, 8 Geburtstagskerze) ----------
+// Alle: kurz, nur transform/opacity, aus bei „✨ Animierte Knöpfe“ aus oder Sparmodus. Laufen nur, wenn etwas passiert (außer Jahreszeiten – sanft im Kopf).
+const fxAn = () => einst("animiert", true) && !SPAR?.an && typeof document !== "undefined" && !!document.body?.animate;
+// 1) ✉️ Nachricht gesendet: ein Papierflieger startet am Senden-Knopf und fliegt im Bogen nach oben weg
+function papierflieger(von) {
+  if (!fxAn() || !von) return;
+  const r = von.getBoundingClientRect(); if (!r.width) return;
+  const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
+  f.innerHTML = '<svg viewBox="0 0 24 24" width="30" height="30"><path d="M2 11.5 22 3l-7.5 19-3.2-7.6L2 11.5Z" fill="#fff" stroke="#7b1e2b" stroke-width="1.3" stroke-linejoin="round"/><path d="M22 3 11.3 14.4" stroke="#7b1e2b" stroke-width="1.1"/></svg>';
+  f.style.left = r.left + r.width / 2 - 15 + "px"; f.style.top = r.top + r.height / 2 - 15 + "px"; document.body.appendChild(f);
+  const w = -Math.min(innerWidth * 0.55, r.left + 20), h = -Math.max(220, r.top - 30);
+  f.animate([{ transform: "translate(0,0) rotate(-10deg) scale(.6)", opacity: 0 }, { transform: "translate(-6px,-10px) rotate(-18deg) scale(1.15)", opacity: 1, offset: 0.12 },
+    { transform: `translate(${w * 0.45}px, ${h * 0.35}px) rotate(-38deg) scale(1)`, opacity: 1, offset: 0.5 },
+    { transform: `translate(${w}px, ${h}px) rotate(-62deg) scale(.55)`, opacity: 0 }], { duration: 1100, easing: "cubic-bezier(.3,.1,.5,1)", fill: "forwards" }).onfinish = () => f.remove();
+  setTimeout(() => f.remove(), 1500);
+}
+// 3) 📌 neuer Pinnwand-Zettel: fällt leicht schräg herunter, setzt auf, die Nadel wird hineingedrückt
+function zettelAnpinnen(el) {
+  if (!fxAn() || !el) return;
+  el.animate([{ translate: "0 -140px", scale: "1.12", opacity: 0 }, { translate: "0 8px", scale: "1", opacity: 1, offset: 0.68 }, { translate: "0 -3px", offset: 0.84 }, { translate: "0 0", scale: "1", opacity: 1 }],
+    { duration: 720, easing: "cubic-bezier(.3,.7,.3,1)" });
+  const n = document.createElement("span"); n.className = "zettel-nadel"; n.textContent = "📌"; n.setAttribute("aria-hidden", "true"); el.appendChild(n);
+  n.animate([{ transform: "translate(-50%, -60px) scale(1.8)", opacity: 0 }, { transform: "translate(-50%, -60px) scale(1.8)", opacity: 1, offset: 0.55 }, { transform: "translate(-50%, 0) scale(1)", opacity: 1, offset: 0.85 }, { transform: "translate(-50%, 0) scale(1)", opacity: 0 }],
+    { duration: 1700, easing: "ease-in", fill: "forwards" }).onfinish = () => n.remove();
+  try { navigator.vibrate?.(12); } catch {}
+}
+// 4) 🔢 Zahlen auf Kacheln/im Kopf zählen hoch, wenn sie (neu) erscheinen oder steigen – sinken springt sofort
+const ZAHL_ALT = new Map();
+function zahlenHochzaehlen(wurzel, sel, schluessel) {
+  if (!wurzel) return;
+  wurzel.querySelectorAll(sel).forEach((el) => {
+    const neu = parseInt(el.textContent, 10), k = schluessel(el); if (!Number.isFinite(neu) || String(neu) !== el.textContent.trim()) return;
+    const alt = ZAHL_ALT.has(k) ? ZAHL_ALT.get(k) : 0; ZAHL_ALT.set(k, neu);
+    if (!fxAn() || neu <= alt) return;
+    const t0 = performance.now(), dauer = Math.min(900, 380 + (neu - alt) * 60);
+    const schritt = (t) => { const p = Math.min(1, (t - t0) / dauer), e = 1 - Math.pow(1 - p, 3); if (!el.isConnected) return; el.textContent = String(Math.round(alt + (neu - alt) * e)); if (p < 1) requestAnimationFrame(schritt); };
+    el.textContent = String(alt); requestAnimationFrame(schritt);
+    el.animate([{ scale: "1" }, { scale: "1.35" }, { scale: "1" }], { duration: dauer + 200, easing: "ease-out" });
+  });
+}
+// 8) 🎂 Geburtstag heute: brennende Kerze am Namen (Mitgliederliste, -kacheln, -tafel) – nur freigegebene Geburtstage (Server)
+const gbHeute = (pid) => (INIT?.geburtstageHeute || []).some((g) => g.person_id === pid);
+const gbKerze = (pid) => gbHeute(pid) ? '<span class="gb-kerze" title="Hat heute Geburtstag 🎂" aria-label="hat heute Geburtstag"><span class="gb-torte">🎂</span><i class="gb-flamme"></i></span>' : "";
+// 6) ❄️ Jahreszeiten im Kopf: Herbstlaub, Schnee im Advent und Winter, Feuerwerk zu Silvester, Blüten im Frühling, Schmetterlinge im Sommer
+function jahreszeitArt(d = new Date()) {
+  const m = d.getMonth() + 1, t = d.getDate();
+  const weih = new Date(d.getFullYear(), 11, 25), advent1 = new Date(weih); advent1.setDate(25 - ((weih.getDay() || 7)) - 21); // 4 Sonntage vor dem 25.12.
+  if ((m === 12 && t === 31) || (m === 1 && t === 1)) return "silvester";
+  if (d >= advent1 && (m === 11 || (m === 12 && t <= 30))) return "advent";
+  if (m === 12 || m <= 2 || (m === 3 && t < 20)) return "winter";
+  if (m <= 5) return "fruehling";
+  if (m < 9 || (m === 9 && t < 22)) return "sommer";
+  return "herbst";
+}
+const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"] };
+function jahreszeitKopf() {
+  const h = document.querySelector("#v-start .hero"); if (!h) return;
+  h.querySelector(".jz-schicht")?.remove();
+  if (!fxAn() || !einst("jahreszeit", true)) return;
+  const art = jahreszeitArt(), teile = JZ_TEILE[art], n = art === "sommer" ? 3 : art === "silvester" ? 9 : 11;
+  const s = document.createElement("div"); s.className = `jz-schicht jz-${art}`; s.setAttribute("aria-hidden", "true");
+  s.innerHTML = Array.from({ length: n }, (_, i) => `<i style="--x:${(i * 97 + 13) % 100};--v:${(i * 37) % 11};--d:${(art === "silvester" ? 2.4 : 7) + ((i * 53) % 9) * 0.7}s;--s:${0.6 + ((i * 29) % 7) / 10}">${teile[i % teile.length]}</i>`).join("");
+  h.prepend(s);
+}
+function jahreszeitUmschalten(an) { einstellung("jahreszeit", an); jahreszeitKopf(); }
 // ---------- KC-CLUB-KONFETTI (2.169.0): nur zu besonderen Anlässen – Spiel gewonnen, eigener Geburtstag ----------
 const KONFETTI_FARBEN = ["#7b1e2b", "#a8364a", "#efe3d1", "#d4a017", "#ffffff", "#c9a26b"]; // Weinrot + Beige + Gold (CD)
 function konfetti(x, y, menge = 90) {
@@ -10038,6 +10105,7 @@ function kachelnZeigen() {
     return `<button class="kachel${k.bald ? " bald" : ""}${kl ? " " + kl : ""}${k.neuFarbe && z ? " neu-da" : ""}" data-id="${k.id}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
       <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(typeof k.u === "function" ? k.u() : k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}</button>`;
   }).join("");
+  zahlenHochzaehlen($("raster"), ".kachel[data-id] > .zahl", (el) => "k:" + el.parentElement.dataset.id); // 2.172.0 KC-CLUB-EFFEKTE-2
 }
 // ---------- KC-CLUB-INFOFELD (0.42.0): Info-Feld oben zum Blättern ----------
 // ‹ › antippen, im Feld wischen oder einen Punkt antippen. Felder kommen aus der Registry; die App merkt sich das zuletzt gezeigte.
@@ -10141,6 +10209,8 @@ function heroZeigen(richtung) {
     <button class="ipfeil links sprung" aria-label="Zur ersten Karte" title="Zur ersten Karte" onclick="infoSpringen(-1)">«</button><button class="ipfeil rechts sprung" aria-label="Zur letzten Karte" title="Zur letzten Karte" onclick="infoSpringen(1)">»</button>`;
   // 0.44.0: Pfeile mittig auf dem Rahmen, Punkte direkt unter dem Feld (keine eigene Steuerzeile mehr)
   $("infoPunkte").innerHTML = INFO_FELDER.map((x, i) => `<button class="ipunkt${i === INFO_I ? " an" : ""}" aria-label="${esc(x.t)}" title="${esc(x.t)}" onclick="infoGehe(${i})"></button>`).join("");
+  zahlenHochzaehlen($("heroInfo"), ".mini > b:not(.mini-zeile)", (el) => "h:" + (el.parentElement.querySelector("span")?.textContent || "").slice(0, 20)); // 2.172.0 KC-CLUB-EFFEKTE-2
+  if (!document.querySelector("#v-start .hero .jz-schicht")) jahreszeitKopf();
   if (f.id === "wetter") { wetterSzene(); if (!WET.laedt && Date.now() - WET.geholt > WETTER_NEU_MIN * 60000) wetterLaden(erzwingen); }
   if (f.laden) infoDatenLaden(f, erzwingen);
   if (f.id === "zentrale") zeUhr();
@@ -17228,6 +17298,7 @@ async function senden() {
       ...(SL.std !== null && SL.chat === chatId ? { ablauf_std: SL.std } : {}) }; // KC-CLUB-SELBSTLOESCHEN: ⏳ nur diese Nachricht
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
+    papierflieger($("sendenKnopf")); // 2.172.0 KC-CLUB-EFFEKTE-2
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN
     $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
@@ -18221,7 +18292,7 @@ function mgTafelHtml(liste) {
   return kreisLegende().replace(/class="avatar k-([a-z]+)"[^>]*>/g, 'class="mg-led l-$1" style="width:12px;height:12px">')
     + `<div class="mg-tafel">${sortiert.map((m) => { const k = kreisArt(m);
       const da = m.person_id === ICH.person_id ? "" : mgDaText(m); // KC-CLUB-ONLINE-SEIT (2.25.5): unter dem Namen
-      return `<button type="button" onclick="mitgliedOeffnen('${esc(m.person_id)}')" aria-label="${esc(m.name + ": " + k.text + (da ? ", " + da : ""))}" title="${esc(k.text)}"><span class="mg-led l-${k.art}"></span><span class="mg-tafel-text"><b>${esc(m.name)}${m.person_id === ICH.person_id ? ` <small class="hinweis">(du${inkognitoAn() ? " · 🕶️ inkognito" : ""})</small>` : ""}</b>${da ? `<small class="mg-da${/^online/.test(da) ? " an" : ""}">${esc(da)}</small>` : ""}</span></button>`; }).join("")}</div>`;
+      return `<button type="button" onclick="mitgliedOeffnen('${esc(m.person_id)}')" aria-label="${esc(m.name + ": " + k.text + (da ? ", " + da : ""))}" title="${esc(k.text)}"><span class="mg-led l-${k.art}"></span><span class="mg-tafel-text"><b>${esc(m.name)}${gbKerze(m.person_id)}${m.person_id === ICH.person_id ? ` <small class="hinweis">(du${inkognitoAn() ? " · 🕶️ inkognito" : ""})</small>` : ""}</b>${da ? `<small class="mg-da${/^online/.test(da) ? " an" : ""}">${esc(da)}</small>` : ""}</span></button>`; }).join("")}</div>`;
 }
 // KC-CLUB-ONLINE-SEIT (2.25.5, Wunsch Hansi): „online seit 14:32“ bzw. „zuletzt online heute um 18:05 / gestern / am 01.10.“.
 // Nur was der Server liefert (Privatsphäre: wer „zuletzt da“ verbirgt, liefert nichts → keine Zeile). Unbekannt = keine Angabe, nie „online“.
@@ -18240,7 +18311,7 @@ function mgKachelnHtml(liste) {
     const ich = m.person_id === ICH.person_id, on = mgOn(m);
     const da = on ? '<span class="mk-unter" style="color:var(--textGruen);font-weight:800">● online</span>' : m.zuletztDa ? `<span class="mk-unter">🕒 ${esc(zuletztText(m.zuletztDa))}</span>` : m.status || m.aktiv ? "" : '<span class="mk-unter">⚪ noch nicht in der App</span>';
     return `<div class="mini-kachel mg-kachel${on ? " mg-online" : ""}" onclick="mitgliedOeffnen('${m.person_id}')" role="button" tabindex="0">
-      ${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}</span>
+      ${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}${gbKerze(m.person_id)}</span>
       ${m.aemter?.length ? `<span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
       ${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : ""}${da}${ICH.admin && m.unerreichbar ? '<span class="mk-unter" title="kein Push, keine E-Mail – nur über 🔗 Link oder Telefon">📵 nicht erreichbar</span>' : ""}${ICH.admin && m.probe ? `<span class="mk-unter" title="Probephase – nur für dich als Admin sichtbar">🧪 Probe${m.probe.bis ? " bis " + esc(prDatum(m.probe.bis)) : ""}</span>` : ""}
       ${ich ? '<span class="mk-unter"><b>(du)</b></span>' : `<span class="mg-knoepfe" onclick="event.stopPropagation()"><button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${on ? `<button class="knopf klein" title="Anklopfen" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${mgAnrufKnoepfe(m)}</span>`}</div>`; // 2.23.87 (Wunsch Hansi): 📞/🎥 auch auf der Kachel – aktiv bei online (gleicher Baustein wie in der Liste)
@@ -18324,7 +18395,7 @@ function mitgliederZeichnen() {
     if (MG_ANSICHT === "tafel") { $("mitgliederListe").innerHTML = mgTafelHtml(liste); return; }
     $("mitgliederListe").innerHTML = kreisLegende() + liste.map((m) => `<div class="zeile${mgOn(m) ? " mg-online" : ""}">
       ${kreis(m, m.name, 40, `onclick="mitgliedOeffnen('${m.person_id}')"`)}
-      <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
+      <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${gbKerze(m.person_id)}${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
         <div class="hinweis" style="font-size:.85rem">${mgOn(m) ? '<b style="color:var(--textGruen)">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}${!mgOn(m) && m.zuletztDa ? ` · 🕒 ${esc(zuletztText(m.zuletztDa))}` : ""}</div>
         ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false || m.unerreichbar || m.probe) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.unerreichbar ? "📵 nicht erreichbar – kein Push, keine Mail" : m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : "", m.probe ? "🧪 Probephase" : "", m.app && m.zuletzt ? (m.ansicht === "einfach" ? "🟢 einfache Ansicht" : m.ansicht === "erweitert" ? "🔧 erweiterte Ansicht" : "❔ Ansicht noch nicht gewählt") : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
       <div class="mg-akt${ICH.admin ? " mg-akt3" : ""}">${mgOn(m) ? `<button class="knopf klein" title="Anklopfen – direkt schreiben" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${m.person_id !== ICH.person_id ? `<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${mgAnrufKnoepfe(m)}` : ""}

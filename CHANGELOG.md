@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.172.0 – 2026-10-09 – ✨ Neue Effekte: Papierflieger beim Senden, Zettel wird angepinnt, Zahlen zählen hoch, Jahreszeiten im Kopf, Geburtstagskerze (KC-CLUB-EFFEKTE-2)
+🔧 Kleine Systemverbesserungen
+
 ## 2.171.0 – 2026-10-09 – 🐌 Schnecken wandern wieder (auch bei „Bewegung reduzieren“ am Handy) und kriechen dabei
 🔧 Kleine Systemverbesserungen
 
