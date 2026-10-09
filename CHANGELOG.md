@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.126.0 – 2026-10-09 – Drei wandernde Schnecken
+🔧 Kleine Systemverbesserungen
+Admin-Notiz (KC-CLUB-SCHNECKEN-WANDERN, Wunsch Hansi): Im Langsam-Modus wandern oben 3 🐌 von rechts nach links (Streifen lässt Tipps durch, Schnecke antippen = Info; Sparmodus/„weniger Bewegung“: stehen still in der Mitte).
+
 ## 2.125.0 – 2026-10-09 – Adressbuch im Büro
 🔧 Kleine Systemverbesserungen
 Admin-Notiz (KC-CLUB-BUERO-ADRESSEN, Wunsch Hansi): Büro-Ordner „📒 Adressbuch“ (Clubleitung) – liest die externen Adressen (Lieferant, Sponsor, Presse, Behörde …)

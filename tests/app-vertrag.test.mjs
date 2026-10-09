@@ -6933,3 +6933,11 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/onclick="adbStart\(true\)">📒 Aus dem Adressbuch<\/button>/.test(programm) && /BRIEF\.empfaenger = adbAnschrift\(a\)/.test(ad), "Briefbogen: Empfänger aus dem Adressbuch");
   assert.ok(/:root\.gross \.kacheln3 \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}/.test(seite), "große Schrift: Startseite nicht breiter als der Bildschirm");
 }
+
+// 4xx. 2.126.0: Drei wandernde Schnecken im Langsam-Modus (KC-CLUB-SCHNECKEN-WANDERN, Wunsch Hansi)
+{
+  assert.ok(/onclick="schneckeInfo\(\)"><i style="--n:0">🐌<\/i><i style="--n:1">🐌<\/i><i style="--n:2">🐌<\/i><\/button>/.test(programm), "drei Schnecken");
+  assert.ok(/\.schnecke \{ position: fixed;[^}]*pointer-events: none; \}/.test(seite) && /\.schnecke i \{[^}]*pointer-events: auto;[^}]*animation: schneckeWandern 27s linear infinite; \}/.test(seite), "Streifen lässt Tipps durch, Schnecken wandern");
+  assert.ok(/@keyframes schneckeWandern \{ 0% \{ transform: translate\(0, 0\); \}[^@]*100% \{ transform: translate\(calc\(-100vw - 40px\), 0\); \} \}/.test(seite), "von rechts nach links");
+  assert.ok(/html\.spar \.schnecke i \{ animation: none;/.test(seite) && /prefers-reduced-motion: reduce\) \{ \.schnecke i \{ animation: none;/.test(seite), "Sparmodus/weniger Bewegung: still");
+}
