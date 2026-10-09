@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.133.0";
+const SERVER_VERSION = "2.134.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 10 * 60000; // 2.103.0: Live-Mitschauen endet nach 10 Min.
 // Beenden = Bild sofort vom Server löschen (KC-CLUB-MITSCHAUEN)
@@ -1613,36 +1613,57 @@ async function willkommenZettel(ich: Ich) {
 // Willkommens-Zettel aushängen (gemeinsam für die erste Anmeldung und „Probephase übernehmen“)
 async function willkommenAushaengen(pid: string, name: string): Promise<boolean | undefined> {
   name = name || "";
-  const { data: sperre } = await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "willkommen_zettel", wert: { am: jetzt() }, geaendert_am: jetzt() },
+  // 2.133.0 (Wunsch Hansi): die meisten sind langjährige Clubmitglieder, nur neu in der App → „unser Clubmitglied“
+  const text = `💐 Herzlich willkommen! Wir begrüßen unser Clubmitglied ${name} in der Köcheclub-App. Schön, dass du dabei bist! 💐`.slice(0, PINNWAND_ZEICHEN);
+  return clubZettelAushaengen(pid, "willkommen_zettel", text, "pinnwand_willkommen", {});
+}
+// KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0, Wunsch Hansi): Meldet sich ein Mitglied an seinem Geburtstag an (und hat den Geburtstag freigegeben),
+// hängt die Clubleitung einen ❗ wichtigen Zettel „🎂 Heute hat … Geburtstag“ für alle auf – mit „🎂 Ich möchte auch gratulieren“.
+// Einmal je Mitglied und Jahr (Sperre „geburtstag_zettel_JJJJ“), ohne Push/Mail; am nächsten Tag nimmt die Wartung ihn wieder ab.
+async function geburtstagZettel(ich: Ich, heute: string) {
+  if (/^KC-P-TEST/.test(ich.person_id)) return;
+  if (await inProbe(ich.person_id)) return;
+  const text = `🎂 Heute hat unser Clubmitglied ${ich.name || ich.vorname} Geburtstag! Herzlichen Glückwunsch und alles Gute! 🥳`.slice(0, PINNWAND_ZEICHEN);
+  return clubZettelAushaengen(ich.person_id, `geburtstag_zettel_${heute.slice(0, 4)}`, text, "pinnwand_geburtstag", { tag: heute });
+}
+async function geburtstagZettelAbnehmen() {
+  const heute = berlinTag(new Date());
+  const { data } = await db.from("kc_club_protokoll").select("details").eq("aktion", "pinnwand_geburtstag").gte("zeit", new Date(Date.now() - 10 * 86400000).toISOString()).limit(100);
+  const alt = (data ?? []).filter((x: any) => x.details?.tag && x.details.tag < heute).map((x: any) => String(x.details.zettel || "")).filter(Boolean);
+  if (alt.length) await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: null }).in("id", alt).is("entfernt_am", null);
+}
+// Ein Zettel der Clubleitung (Willkommen, Geburtstag): Sperre setzen, Platz schaffen (ältesten früheren Club-Zettel abnehmen), aufhängen, vermerken
+const CLUB_ZETTEL_AKTIONEN = ["pinnwand_willkommen", "pinnwand_geburtstag"];
+async function clubZettelAushaengen(pid: string, sperreKey: string, text: string, aktion: string, extra: Record<string, unknown>): Promise<boolean | undefined> {
+  const { data: sperre } = await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: sperreKey, wert: { am: jetzt() }, geaendert_am: jetzt() },
     { onConflict: "person_id,schluessel", ignoreDuplicates: true }).select("person_id");
-  if (!sperre?.length) return; // schon begrüßt (oder gerade parallel)
+  if (!sperre?.length) return; // schon aufgehängt (oder gerade parallel)
   const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).not("person_id", "like", "KC-P-TEST%").order("person_id").limit(1);
   const von = ad?.[0]?.person_id; if (!von) return false;
   // 2.133.0 (Wunsch Hansi): die meisten sind langjährige Clubmitglieder, nur neu in der App → „unser Clubmitglied“
-  const text = `💐 Herzlich willkommen! Wir begrüßen unser Clubmitglied ${name} in der Köcheclub-App. Schön, dass du dabei bist! 💐`.slice(0, PINNWAND_ZEICHEN);
   let { data: haengt } = await db.from("kc_club_pinnwand").select("id,farbe,erstellt_am").eq("person_id", von).is("entfernt_am", null).order("erstellt_am");
   if ((haengt ?? []).length >= PINNWAND_MAX) {
-    const { data: fr } = await db.from("kc_club_protokoll").select("details").eq("aktion", "pinnwand_willkommen").order("zeit", { ascending: false }).limit(50);
+    const { data: fr } = await db.from("kc_club_protokoll").select("details").in("aktion", CLUB_ZETTEL_AKTIONEN).order("zeit", { ascending: false }).limit(50);
     const frueher = new Set((fr ?? []).map((x: any) => x.details?.zettel)), alt = (haengt ?? []).find((z: any) => frueher.has(z.id));
-    if (!alt) { await protokoll(pid, "pinnwand_willkommen_voll", {}); return false; }
+    if (!alt) { await protokoll(pid, aktion + "_voll", {}); return false; }
     await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: von }).eq("id", alt.id);
     haengt = (haengt ?? []).filter((z: any) => z.id !== alt.id);
   }
   const belegt = new Set((haengt ?? []).map((x: any) => x.farbe)), farbe = [1, 2, 3, 4].find((n) => !belegt.has(n)) ?? 1;
   const { data: z, error } = await db.from("kc_club_pinnwand").insert({ person_id: von, text, wichtig: true, fuer: "alle", personen: [], farbe, antworten: true }).select("id").single();
-  if (error || !z) { await protokoll(pid, "pinnwand_willkommen_fehler", {}); return false; }
-  await protokoll(von, "pinnwand_willkommen", { zettel: z.id, fuer: pid });
+  if (error || !z) { await protokoll(pid, aktion + "_fehler", {}); return false; }
+  await protokoll(von, aktion, { zettel: z.id, fuer: pid, ...extra });
   return true;
 }
 // KC-CLUB-WILLKOMMEN-BEGRUESSEN (2.30.1, Wunsch Hansi): Welcher Zettel begrüßt wen? (aus dem Protokoll „pinnwand_willkommen“) →
 // an diesem Zettel „💐 Ich möchte auch begrüßen“ – öffnet den Chat mit dem neuen Mitglied.
-async function willkommenFuer(ids: string[]): Promise<Map<string, { person_id: string; vorname: string }>> {
-  const aus = new Map<string, { person_id: string; vorname: string }>();
+async function willkommenFuer(ids: string[]): Promise<Map<string, { person_id: string; vorname: string; art?: string }>> {
+  const aus = new Map<string, { person_id: string; vorname: string; art?: string }>();
   if (!ids.length) return aus;
-  const { data } = await db.from("kc_club_protokoll").select("details").eq("aktion", "pinnwand_willkommen").in("details->>zettel", ids).limit(50);
-  const paar = (data ?? []).map((x: any) => [String(x.details?.zettel || ""), String(x.details?.fuer || "")]).filter(([z, p]) => z && p);
+  const { data } = await db.from("kc_club_protokoll").select("aktion,details").in("aktion", CLUB_ZETTEL_AKTIONEN).in("details->>zettel", ids).limit(50);
+  const paar = (data ?? []).map((x: any) => [String(x.details?.zettel || ""), String(x.details?.fuer || ""), x.aktion === "pinnwand_geburtstag" ? "geburtstag" : "willkommen"]).filter(([z, p]) => z && p);
   const leute = await personen(paar.map(([, p]) => p));
-  for (const [z, p] of paar) aus.set(z, { person_id: p, vorname: vorname(leute.get(p) ?? null) || leute.get(p)?.display_name || "" });
+  for (const [z, p, art] of paar) aus.set(z, { person_id: p, vorname: vorname(leute.get(p) ?? null) || leute.get(p)?.display_name || "", art }); // 2.134.0: art „geburtstag“ → „🎂 Ich möchte auch gratulieren“
   return aus;
 }
 // KC-CLUB-PUSH-PERSOENLICH (2.58.0, Wunsch Hansi): Push-Text sagt, WER WAS geschickt hat – statt „Neue Nachricht im Köcheclub“.
@@ -4193,6 +4214,7 @@ Deno.serve(async (req) => {
       await schulungNachfrageErinnern().catch((e) => console.error("schulung nachfrage", String(e))); // KC-CLUB-SCHULUNG-NACHFRAGE (2.35.0)
       await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
       await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
+      await geburtstagZettelAbnehmen().catch((e) => console.error("geburtstag zettel ab", String(e))); // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0)
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-SPUR (2.23.88): Wege der Mitglieder nur 30 Tage aufbewahren
       { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }
@@ -4720,6 +4742,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: gfs } = await pGfs;
         const gf = (gfs ?? []).find((x: any) => x.bereich === "geburtstag"), rgf = (gfs ?? []).find((x: any) => x.bereich === "runder_geburtstag");
         const hatGeburtstag = !!(mitglieder.find((m: any) => m.person_id === ich.person_id) as any)?.birth_date;
+        // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0): heute mein (freigegebener) Geburtstag → Ständchen in der App + Zettel für alle
+        const meinGeburtstag = geburtstageHeute.some((g) => g.person_id === ich.person_id);
+        if (meinGeburtstag) await geburtstagZettel(ich, berlinTag(new Date())).catch((e) => console.error("geburtstag zettel", String(e)));
         // KC-CLUB-AUFGABEN / KC-CLUB-PROTOKOLLE: meine offenen Aufgaben, ungelesene Protokolle
         let meineAufgaben: any[] = [], protokolleUngelesen = 0;
         if (ich.protokolle) {
@@ -4768,7 +4793,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { count: spieleDran } = await pSpiele;
         const kz = await pKz; // KC-CLUB-KACHEL-ZAHLEN (2.22.12)
         await pWillkommen;
-        return json({ alarm, kz, sosFuerAlle: await pSos, spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ meinGeburtstag, alarm, kz, sosFuerAlle: await pSos, spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)

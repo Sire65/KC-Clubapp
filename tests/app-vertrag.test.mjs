@@ -1175,7 +1175,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/ansicht: \(w\) => \(\{ art: w\?\.art === "erweitert" \? "erweitert" : "einfach", gewaehlt: w\?\.gewaehlt === true/.test(server), "Server speichert die Ansicht nicht (Standard einfach)");
   assert.ok(/ansicht: ansicht\.get\(m\.person_id\) \?\? null \} : \{\}\)/.test(server), "Ansicht je Mitglied nur für den Admin");
-  assert.ok(/const begruesst = ansichtPruefen\(\) \|\| begruessungPruefen\(\);/.test(html) && /INIT\?\.einstellungen\?\.ansicht\?\.gewaehlt\) return false/.test(html), "Frage beim Start fehlt / käme mehrfach");
+  assert.ok(/const begruesst = (?:geburtstagPruefen\(\) \|\| )?ansichtPruefen\(\) \|\| begruessungPruefen\(\);/.test(html) && /INIT\?\.einstellungen\?\.ansicht\?\.gewaehlt\) return false/.test(html), "Frage beim Start fehlt / käme mehrfach");
   assert.ok(/id="ansichtBlatt" onclick="if\(event\.target===this\)ansichtSetzen\('einfach', true\)"/.test(html) && /Du kannst jederzeit umschalten/.test(html), "Überspringen = einfach / Umschalt-Hinweis fehlt");
   assert.ok(/const EINFACH_KACHELN = \["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"(, "dokumente")?(, "spiele")?(, "sos")?\];/.test(html) && /const kacheln = \(r\) => einfach\(\) \? einfachKacheln\(\) : kaSortiert/.test(html), "Einfache Startseite fehlt");
   const alle = [...html.matchAll(/\{ id: "([a-z]+)", sym:/g)].map((m) => m[1]);
@@ -3512,7 +3512,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/\} else if \(NOTFALL_RE\.test\(text\)\) text = text\.replace\(NOTFALL_RE, ""\)/.test(ns), "Marke bei anderen entfernt");
   assert.ok(/if \(notfall\) stumm\.clear\(\);/.test(ns) && /const wege = notfall \? \["push", "email"\]/.test(ns) && /\{ notfall \}\);/.test(ns), "an alle, Push + Mail, auch stumm");
   assert.ok(/if \(w\.includes\("push"\) && !opt\.notfall\)/.test(server), "auch in der Ruhezeit");
-  assert.ok(/async function notfallUnterhaltung\(ich: Ich\)/.test(server) && /return json\(\{ alarm, /.test(server), "eine Notfall-Unterhaltung, Alarm beim Start");
+  assert.ok(/async function notfallUnterhaltung\(ich: Ich\)/.test(server) && /return json\(\{ (?:meinGeburtstag, )?alarm, /.test(server), "eine Notfall-Unterhaltung, Alarm beim Start");
   assert.ok(/function notfallSenden\(\)[\s\S]{0,400}await frage\(/.test(html) && /api\("nachricht_senden", \{ notfall: true, text, empfaenger: \{ alle: true \} \}/.test(html), "einmal bestätigen, dann senden");
   assert.ok(/\.blase\.notfall \{ border: 4px solid #d50000/.test(html) && /istNotfall\(m\) \? " notfall" : ""/.test(html), "roter Rand im Chat");
   assert.ok(/alarmPruefen\(\); \/\* KC-CLUB-NOTFALL-MELDUNG \*\//.test(html) && /localStorage\.setItem\("kc_club_alarm_gesehen", a\.id\)/.test(html), "Alarm-Fenster einmal je Meldung");
@@ -4900,10 +4900,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const w = server.slice(server.indexOf("async function willkommenZettel("), server.indexOf("const pinnwandHinweis = "));
   assert.ok(/if \(\/\^KC-P-TEST\/\.test\(ich\.person_id\) \|\| ich\.admin\) return;/.test(w), "keine Test-Personen, nicht der Admin selbst");
   assert.ok(/WILLKOMMEN_MIN \* 60000/.test(w) && /erstmals_gesehen/.test(w), "nur kurz nach der ersten Anmeldung (keine alten Mitglieder nachträglich)");
-  assert.ok(/schluessel: "willkommen_zettel"[\s\S]*ignoreDuplicates: true \}\)\.select\("person_id"\)/.test(w) && /if \(!sperre\?\.length\) return;/.test(w), "genau einmal je Mitglied");
+  assert.ok(/clubZettelAushaengen\(pid, "willkommen_zettel", text, "pinnwand_willkommen", \{\}\)/.test(w) && /schluessel: sperreKey[\s\S]*ignoreDuplicates: true \}\)\.select\("person_id"\)/.test(w) && /if \(!sperre\?\.length\) return;/.test(w), "genau einmal je Mitglied (seit 2.134.0 über clubZettelAushaengen)");
   assert.ok(/wichtig: true, fuer: "alle"/.test(w) && /💐 Herzlich willkommen! Wir begrüßen unser (?:neues Mitglied|Clubmitglied) \$\{name\}/.test(w), "wichtig, für alle, mit Blumenstrauß");
   assert.ok(!/senden\(/.test(w), "kein Push/Mail (Ruhe-Regel)");
-  assert.ok(/pinnwand_willkommen_voll/.test(w) && /frueher\.has\(z\.id\)/.test(w), "volle Pinnwand: nur alten Willkommens-Zettel abnehmen, sonst Vermerk");
+  assert.ok(/aktion \+ "_voll"/.test(w) && /frueher\.has\(z\.id\)/.test(w) && /\.in\("aktion", CLUB_ZETTEL_AKTIONEN\)/.test(w), "volle Pinnwand: nur alten Club-Zettel (Willkommen/Geburtstag) abnehmen, sonst Vermerk");
   assert.ok(/const pWillkommen = willkommenZettel\(ich\)\.catch/.test(server) && /await pWillkommen;/.test(server), "beim Start geprüft, Fehler bremsen den Start nicht");
 }
 // 2.30.0 KC-CLUB-START-PARALLEL + KC-CLUB-SPARMODUS (Fall Klara: schwaches Netz, Start 3–55 s)
@@ -7000,4 +7000,18 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/await todoFristenErinnern\(\)\.catch/.test(server), "läuft in der Wartung");
   const mig = lies("supabase/migrations/20261009_kc_club_todo_erinnerung.sql");
   assert.ok(/add column if not exists erinnert_vorher date/.test(mig) && /add column if not exists erinnert_heute date/.test(mig), "Merkspalten");
+}
+
+// 4xx. 2.134.0: Geburtstag – Ständchen + Pinnwand-Zettel mit „Ich möchte auch gratulieren“ (KC-CLUB-GEBURTSTAG-PINNWAND / -STAENDCHEN)
+{
+  assert.ok(/const meinGeburtstag = geburtstageHeute\.some\(\(g\) => g\.person_id === ich\.person_id\);/.test(server) && /return json\(\{ meinGeburtstag, alarm,/.test(server), "nur freigegebener Geburtstag (geburtstageHeute)");
+  const gz = server.slice(server.indexOf("async function geburtstagZettel("), server.indexOf("async function clubZettelAushaengen("));
+  assert.ok(/`geburtstag_zettel_\$\{heute\.slice\(0, 4\)\}`/.test(gz) && /"pinnwand_geburtstag", \{ tag: heute \}/.test(gz) && /inProbe\(ich\.person_id\)/.test(gz) && /KC-P-TEST/.test(gz), "einmal je Jahr, nicht Probe/Test");
+  assert.ok(/x\.details\.tag < heute/.test(gz) && /await geburtstagZettelAbnehmen\(\)\.catch/.test(server), "am nächsten Tag abgenommen");
+  const cz = server.slice(server.indexOf("async function clubZettelAushaengen("), server.indexOf("async function clubZettelAushaengen(") + 2500);
+  assert.ok(/insert\(\{ person_id: von, text, wichtig: true, fuer: "alle", personen: \[\], farbe, antworten: true \}\)/.test(cz) && !/senden\(|routerSenden\(/.test(cz), "wichtig für alle, ohne Push/Mail");
+  assert.ok(/x\.aktion === "pinnwand_geburtstag" \? "geburtstag" : "willkommen"/.test(server), "Zettel weiß, wen er meint");
+  assert.ok(/const pwWillkText = \(z\) => \(z\?\.willkommen\?\.art === "geburtstag" \? "🎂 Ich möchte auch gratulieren"/.test(programm) && /if \(w\.art === "geburtstag"\) return gratulieren\(w\.person_id, true\);/.test(programm), "Knopf gratuliert");
+  assert.ok(/const begruesst = geburtstagPruefen\(\) \|\| ansichtPruefen\(\)/.test(programm) && /kc_club_hb_\$\{ICH\.person_id\}_\$\{heuteIso\(\)\}/.test(programm) && /if \(einst\("ton", true\)\) setTimeout\(hbSpielen, 400\);/.test(programm), "Ständchen einmal je Tag, Ton-Einstellung beachtet");
+  assert.ok(/const HB_MELODIE = \[\[392, \.75\]/.test(programm) && !/\.mp3|\.ogg/.test(programm.slice(programm.indexOf("const HB_MELODIE"), programm.indexOf("function geburtstagPruefen"))), "Melodie selbst erzeugt, keine Datei");
 }

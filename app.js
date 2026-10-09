@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.133.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.134.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -755,7 +755,7 @@ function pwFenster(neu) {
     <div class="pwfenster-zettel">${liste.map((z, i) => `<div class="zettel${z.wichtig ? " wichtig" : ""}${pwFarbe(z)}" style="--dreh:${pwDreh(z.id)}deg">
       ${z.wichtig ? '<span class="zwichtig">❗ WICHTIG</span>' : ""}${pwKopf(z.von, z.zeit)}<div class="ztext">${esc(z.text || "")}</div>
       ${z.privat ? '<div class="zfuss">nur für dich</div>' : ""}
-      ${(z.vonId && z.antworten !== false) || pwWillkommenWer(z) ? `<div class="zknoepfe">${pwWillkommenWer(z) ? `<button class="antw" data-willk="${i}">💐 Ich möchte auch begrüßen</button>` : ""}${z.vonId && z.antworten !== false ? `<button class="antw" data-antw="${i}">✍️ Antworten</button>` : ""}</div>` : ""}</div>`).join("")}</div>
+      ${(z.vonId && z.antworten !== false) || pwWillkommenWer(z) ? `<div class="zknoepfe">${pwWillkommenWer(z) ? `<button class="antw" data-willk="${i}">${pwWillkText(z)}</button>` : ""}${z.vonId && z.antworten !== false ? `<button class="antw" data-antw="${i}">✍️ Antworten</button>` : ""}</div>` : ""}</div>`).join("")}</div>
     ${neu.length > liste.length ? `<p class="hinweis" style="margin:0">… und ${neu.length - liste.length} weitere an der Pinnwand</p>` : ""}
     <button class="knopf haupt" style="text-align:center" data-k="gelesen">✓ Gelesen</button>
     <button class="knopf" style="text-align:center" data-k="wand">📌 Zur Pinnwand</button></div>`;
@@ -843,7 +843,7 @@ function pwZeigen() {
   if (!PW.zettel.length) return ($("pwWand").innerHTML = aushang + (aushang ? "" : `<div class="leer">Noch keine Zettel an der Pinnwand.<br>Mit „＋ Zettel“ einen anheften.</div>`));
   $("pwWand").innerHTML = aushang + PW.zettel.map((z) => {
     const knoepfe = [];
-    if (pwWillkommenWer(z)) knoepfe.push(`<button class="antw" onclick="pwBegruessen(PW.zettel.find((x) => x.id === '${z.id}')?.willkommen)">💐 Ich möchte auch begrüßen</button>`); // 2.30.1
+    if (pwWillkommenWer(z)) knoepfe.push(`<button class="antw" onclick="pwBegruessen(PW.zettel.find((x) => x.id === '${z.id}')?.willkommen)">${pwWillkText(z)}</button>`); // 2.30.1
     if (!z.vonMir && z.antworten !== false) knoepfe.push(`<button class="antw" onclick="pwAntworten('${z.id}','${esc(z.von.person_id)}','${esc(z.von.vorname).replace(/'/g, "")}')">✍️ Antworten</button>`);
     if (!z.vonMir) knoepfe.push(z.erledigt ? `<button class="erl" onclick="pwErledigt('${z.id}', true)">✓ erl. ${zeitKurz(z.erledigt)}</button>` : `<button onclick="pwErledigt('${z.id}')">✓ erl.</button>`);
     if (z.vonMir) knoepfe.push(`<button onclick="pwWichtig('${z.id}', ${!z.wichtig})">${z.wichtig ? "❗ nicht mehr wichtig" : "❗ wichtig machen"}</button>`); // 2.13.0
@@ -894,8 +894,41 @@ function pwVoll() {
 // KC-CLUB-WILLKOMMEN-BEGRUESSEN (2.30.1, Wunsch Hansi): am Willkommens-Zettel „💐 Ich möchte auch begrüßen“ → sofort der Chat mit dem
 // neuen Mitglied, Anfang schon eingetragen („Herzlich willkommen, Klara! 💐 “) – den Rest schreibt man selbst, gesendet wird erst mit ➤.
 const pwWillkommenWer = (z) => (z?.willkommen?.person_id && z.willkommen.person_id !== ICH?.person_id ? z.willkommen : null);
+const pwWillkText = (z) => (z?.willkommen?.art === "geburtstag" ? "🎂 Ich möchte auch gratulieren" : "💐 Ich möchte auch begrüßen"); // 2.134.0 KC-CLUB-GEBURTSTAG-PINNWAND
+// ---------- KC-CLUB-GEBURTSTAG-STAENDCHEN (2.134.0, Wunsch Hansi): am eigenen Geburtstag beim Öffnen „Happy Birthday“ + Glückwunsch ----------
+// Melodie (gemeinfrei) selbst erzeugt – keine Datei, kein Dienst. Einmal je Tag und Gerät; mit „🎵 Nochmal“ beliebig oft.
+// Ton aus (Einstellung) oder Handy blockiert den Ton → die Karte kommt trotzdem, das Ständchen dann per Antippen.
+const HB_MELODIE = [[392, .75], [392, .25], [440, 1], [392, 1], [523.25, 1], [493.88, 2], [392, .75], [392, .25], [440, 1], [392, 1], [587.33, 1], [523.25, 2],
+  [392, .75], [392, .25], [783.99, 1], [659.25, 1], [523.25, 1], [493.88, 1], [440, 2], [698.46, .75], [698.46, .25], [659.25, 1], [523.25, 1], [587.33, 1], [523.25, 3]];
+function hbSpielen() {
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.();
+    const schlag = 0.42; let t = audio.currentTime + 0.1;
+    for (const [f, d] of HB_MELODIE) {
+      const o = audio.createOscillator(), g = audio.createGain(), dauer = d * schlag;
+      o.type = "triangle"; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + dauer * 0.95);
+      o.connect(g).connect(audio.destination); o.start(t); o.stop(t + dauer); t += dauer;
+    }
+    return true;
+  } catch { return false; }
+}
+function geburtstagPruefen() {
+  if (!INIT?.meinGeburtstag || !ICH?.person_id) return false;
+  const k = `kc_club_hb_${ICH.person_id}_${heuteIso()}`;
+  try { if (localStorage.getItem(k)) return false; localStorage.setItem(k, "1"); } catch {}
+  blattAuf("hbBlatt", `<div class="info-gross" style="text-align:center"><div style="font-size:4rem;line-height:1">🎂</div>
+    <h2 style="margin:8px 0 4px;color:var(--rot)">Alles Gute zum Geburtstag, ${esc(ICH.vorname || ICH.name || "")}!</h2>
+    <p style="margin:0 0 6px">Der Köcheclub Werne gratuliert dir ganz herzlich! 🥳</p>
+    <p class="hinweis" style="margin:0">An der Pinnwand hängt ein Geburtstags-Zettel – dort können dir alle gratulieren.</p></div>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" onclick="hbSpielen()">🎵 Ständchen ${einst("ton", true) ? "nochmal" : "abspielen"}</button>
+    <button class="knopf" onclick="$('hbBlatt').remove()">Danke! 😊</button></div>`);
+  if (einst("ton", true)) setTimeout(hbSpielen, 400);
+  return true;
+}
 async function pwBegruessen(w) {
   if (!w?.person_id) return;
+  if (w.art === "geburtstag") return gratulieren(w.person_id, true); // 2.134.0: Geburtstags-Zettel → Gratulation (Chat mit „Alles Gute zum Geburtstag …“)
   await direkt(w.person_id);
   const t = $("text"); if (!t) return;
   if (!t.value.trim()) t.value = `Herzlich willkommen${w.vorname ? ", " + w.vorname : ""}! 💐 `;
@@ -11331,7 +11364,7 @@ async function neuLadenRoh(vonHand) {
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     ansichtUebernehmen(INIT.einstellungen?.ansicht);
-    const begruesst = ansichtPruefen() || begruessungPruefen();
+    const begruesst = geburtstagPruefen() || ansichtPruefen() || begruessungPruefen(); // 2.134.0: am eigenen Geburtstag zuerst das Ständchen
     if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); herzStarten(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
