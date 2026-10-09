@@ -7078,3 +7078,12 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(!/druckStarten\("brief"\);?\s*\}?\s*$/.test(f.slice(0, f.indexOf("sbFrage(\"✅ Brief ist fertig\""))) && /if \(v\) druckStarten\("brief"\)/.test(f), "Vorschau nur auf Wunsch – nie selbst drucken oder versenden");
   assert.ok(/\.sbb-optionen \{ display: grid; grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); grid-auto-rows: 1fr;/.test(seite), "Auswahl-Knöpfe gleich groß");
 }
+
+// 2.138.0 KC-CLUB-PUSH-NUR-OFFLINE (Wunsch Hansi): bei normalen Nachrichten kein Push/keine Mail an Mitglieder, die gerade in der App sind
+{
+  const f = server.slice(server.indexOf('case "nachricht_senden": {'), server.indexOf('// ----- KC-CLUB-PRIVATTERMIN'));
+  assert.ok(/const inApp = notfall \|\| wichtig \? new Set<string>\(\) : await geradeInDerApp\(/.test(f) && f.indexOf("const inApp") < f.indexOf('await sendenGewaehlt("club_nachricht", ziel, wege'), "vor dem Versand herausgenommen; Notfall und ❗ wichtig immer");
+  assert.ok(f.indexOf('sendenGewaehlt("club_nachricht", erwaehnt') < f.indexOf("const inApp"), "@Erwähnung bleibt unverändert");
+  assert.ok(/const IN_APP_SEK = 75;/.test(server) && /\.gte\("zuletzt_gesehen", new Date\(Date\.now\(\) - IN_APP_SEK \* 1000\)/.test(server), "nur wer die App gerade sichtbar offen hat");
+  assert.ok(/catch\(\(\) => new Set<string>\(\)\)/.test(f), "im Zweifel (Fehler) lieber Push senden als verschlucken");
+}

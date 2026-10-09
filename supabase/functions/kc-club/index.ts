@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.137.0";
+const SERVER_VERSION = "2.138.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -471,6 +471,15 @@ async function onlineSeitMerken(pid: string) {
   const jetztMs = Date.now(), z = Date.parse(data?.wert?.zuletzt || ""), neu = !(z > 0) || jetztMs - z > ONLINE_SEK * 1000;
   if (!neu && jetztMs - z < 30000) return;
   await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "online_seit", wert: { seit: neu ? jetzt() : data!.wert.seit, zuletzt: jetzt() }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+}
+// KC-CLUB-PUSH-NUR-OFFLINE (2.138.0, Wunsch Hansi „Push nur, wenn das Mitglied gerade nicht in der App ist – sind beide online, ist das nicht nötig“):
+// wer die App in den letzten IN_APP_SEK Sekunden sichtbar offen hatte (die App meldet sich nur, solange sie sichtbar ist), sieht neue Nachrichten
+// ohnehin sofort. Unabhängig davon, ob jemand „online“ anzeigen lässt oder unsichtbar ist – das betrifft nur die Anzeige für andere.
+const IN_APP_SEK = 75;
+async function geradeInDerApp(ids: string[]): Promise<Set<string>> {
+  if (!ids.length) return new Set();
+  const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).in("person_id", ids).gte("zuletzt_gesehen", new Date(Date.now() - IN_APP_SEK * 1000).toISOString());
+  return new Set((data ?? []).map((x: any) => x.person_id));
 }
 async function onlineJetzt(mitInkognito = false): Promise<Set<string>> {
   const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
@@ -7314,13 +7323,16 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const stumm = await stummFuer(ziel.filter((x: string) => x !== ich.person_id), threadId);
         if (notfall) stumm.clear(); // KC-CLUB-NOTFALL-MELDUNG: Notfall erreicht auch stummgeschaltete Chats
         for (let i = ziel.length - 1; i >= 0; i--) if (stumm.has(ziel[i])) ziel.splice(i, 1);
+        // KC-CLUB-PUSH-NUR-OFFLINE (2.138.0): wer gerade in der App ist, bekommt bei normalen Nachrichten keinen Push/keine Mail – Notfall und ❗ wichtig weiter immer
+        const inApp = notfall || wichtig ? new Set<string>() : await geradeInDerApp(ziel.filter((x: string) => x !== ich.person_id)).catch(() => new Set<string>());
+        for (let i = ziel.length - 1; i >= 0; i--) if (inApp.has(ziel[i])) ziel.splice(i, 1);
         const versand = await sendenGewaehlt("club_nachricht", ziel, wege, {
           titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
           betreff: `${wMarke}Köcheclub Werne – ${wichtig ? "wichtige" : "neue"} Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`,
         }, `club-nachricht:${m.id}`, { notfall });
-        await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
+        await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand });
       }
 
