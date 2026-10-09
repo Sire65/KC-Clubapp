@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.156.0 – 2026-10-09 – Korrektur: Startdaten wieder vollständig (Einstellungen, ungelesen, Aufgaben)
+🔧 Kleine Systemverbesserungen
+
 ## 2.155.1 – 2026-10-09 – Korrektur: Startdaten wieder vollständig (Einstellungen, ungelesen, Aufgaben)
 🔧 Kleine Systemverbesserungen
 
