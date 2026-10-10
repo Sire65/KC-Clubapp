@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.189.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.190.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12545,23 +12545,22 @@ if (typeof document !== "undefined") { const rkStart = () => rkEinrichten("v-ein
 // den Inhalt frei. Beim schnellen Durchdrehen nur auf der letzten Karte – man soll nie lange warten. Je Gerät per 🪟 oben an/aus (Standard an).
 const rkJalAn = () => { try { return localStorage.getItem("kc_club_rk_jal") !== "aus"; } catch { return true; } };
 function rkJalousie(z, still) {
-  // 2.188.0 (Fund Hansi „blinkt nur 2×“): echte Jalousie IN der Karte (fährt mit ihr nach vorn) – erst kippen die Lamellen auf
-  // (Inhalt schimmert durch), dann zieht die Unterleiste die Lamellen von unten nach oben zu einem Paket zusammen. ≈ 0,9 s.
+  // 2.190.0 (Fund Hansi „blinkt einmal, dann rollt er hoch“): kein Aufkippen mehr – die Jalousie ist zu, sobald die Karte vorn ankommt,
+  // und rollt sofort zügig hoch (≈ 0,45 s): die Unterleiste nimmt die Lamellen von unten mit, oben verschwindet das Paket ohne Ausblenden.
   if (!rkJalAn() || !fxAn() || !z?.an) return;
   const d = z.karten[z.i]; if (!d) return;
   z.w.querySelectorAll(".rk-jal").forEach((x) => x.remove());
   const n = 12, H = d.clientHeight, h = H / n, j = document.createElement("div"); j.className = "rk-jal"; j.setAttribute("aria-hidden", "true");
-  j.innerHTML = Array.from({ length: n }, (_, i) => `<i style="top:${(i * h).toFixed(1)}px;height:${(h + 1).toFixed(1)}px"></i>`).join("") + `<b class="rk-jal-leiste" style="top:${(H - 12).toFixed(1)}px"><span></span></b>`;
+  j.innerHTML = `<div class="rk-jal-zug">${Array.from({ length: n }, (_, i) => `<i style="top:${(i * h).toFixed(1)}px;height:${(h + 1).toFixed(1)}px"></i>`).join("")}<b class="rk-jal-leiste" style="top:${(H - 12).toFixed(1)}px"><span></span></b></div>`;
   d.scrollTop = 0; d.appendChild(j);
-  const warte = still ? 120 : 380, kippen = 230, hoch = 640, P = "perspective(600px) ";
+  const warte = still ? 60 : 160, hoch = 360, paket = n * 3 + 12;
   [...j.querySelectorAll("i")].forEach((l, i) => {
-    const ab = warte + kippen + ((n - 1 - i) / n) * hoch, dauer = (i / n) * hoch + 60, ziel = -(i * h) + i * 3;
-    l.animate([{ transform: P + "rotateX(0deg)" }, { transform: P + "rotateX(68deg)" }], { duration: kippen, delay: warte + i * 12, easing: "ease-out", fill: "forwards" });
-    l.animate([{ translate: "0 0", scale: "1 1" }, { translate: `0 ${ziel.toFixed(1)}px`, scale: "1 .22" }], { duration: dauer, delay: ab, easing: "linear", fill: "forwards" });
+    const ab = warte + ((n - 1 - i) / n) * hoch, dauer = Math.max(30, (i / n) * hoch), ziel = -(i * h) + i * 3;
+    l.animate([{ transform: "translateY(0) scaleY(1)" }, { transform: `translateY(${ziel.toFixed(1)}px) scaleY(.22)` }], { duration: dauer, delay: ab, easing: "linear", fill: "both" });
   });
-  j.querySelector(".rk-jal-leiste").animate([{ transform: "translateY(0)" }, { transform: `translateY(${-(H - 12 - n * 3).toFixed(1)}px)` }], { duration: hoch, delay: warte + kippen, easing: "cubic-bezier(.45,.05,.55,.95)", fill: "forwards" });
-  j.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, delay: warte + kippen + hoch, fill: "forwards" });
-  setTimeout(() => j.remove(), warte + kippen + hoch + 220);
+  j.querySelector(".rk-jal-leiste").animate([{ transform: "translateY(0)" }, { transform: `translateY(${-(H - paket).toFixed(1)}px)` }], { duration: hoch, delay: warte, easing: "cubic-bezier(.4,0,.6,1)", fill: "both" });
+  j.querySelector(".rk-jal-zug").animate([{ transform: "translateY(0)" }, { transform: `translateY(${-(paket + 24)}px)` }], { duration: 120, delay: warte + hoch, easing: "ease-in", fill: "both" });
+  setTimeout(() => j.remove(), warte + hoch + 160);
 }
 let rkAudio = null;
 function rkKlick() {

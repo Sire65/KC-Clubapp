@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.190.0 – 2026-10-10 – 🪟 Jalousie rollt sofort und schneller hoch
+🔧 Kleine Systemverbesserungen
+
 ## 2.189.0 – 2026-10-10 – 👥 Mitglieder-Kartei: mehr Platz
 🔧 Kleine Systemverbesserungen
 
