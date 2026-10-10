@@ -7745,3 +7745,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/<span id="begruessung">Hallo!<\/span><span id="gedenkKerze" class="versteckt"><\/span>/.test(html) && /function gedenkenZeigen\(\)/.test(html) && /In stillem Gedenken/.test(html), "Kerze neben dem Gruß");
   assert.ok(/@media \(prefers-reduced-motion: reduce\) \{ \.kz-flamme \{ animation: none; \} \}/.test(html), "Flackern abschaltbar");
 }
+
+// 2.205.0 (Wunsch Hansi: Schiffsymbol bei der Kreuzfahrt) – Countdown nutzt dasselbe Symbol wie die Aktionen
+{
+  assert.ok(/text: aktionSymbol\(a\) === "🚢" \? "🚢 Kreuz\\u00ADfahrt"/.test(html) && /schiff\|kreuz\|cruis\|fjord/.test(html) && /veranstalter: a\.veranstalter \?\? null, von: a\.von/.test(server), "Schiff bei Kreuzfahrt");
+}

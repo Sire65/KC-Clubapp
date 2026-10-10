@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.204.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.205.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12489,7 +12489,8 @@ const cdNaechsterTag = (md) => { const h = heuteIso(), j = +h.slice(0, 4); for (
 const cdNoch = (tage) => tage <= 0 ? "Heute!" : tage === 1 ? "Morgen" : `${tage} Tage`; // kurz – die Kachel ist schmal
 const CD_ARTEN = [ // [Schlüssel, Bezeichnung in den Einstellungen, Einträge liefern]
   ["reise", "🚢 Reisen & Ausflüge, bei denen ich dabei bin", () => (CD.daten?.reisen || []).map((a) => { const t = cdTageBis(a.von);
-    return t < 0 || t > 400 ? null : { id: "r" + a.id, zahl: cdNoch(t), text: `${/kreuz|schiff/i.test(a.titel) ? "🚢" : "🧳"} ` + (([...a.titel].length > 22 ? [...a.titel].slice(0, 21).join("") + "…" : a.titel)).replace(/kreuzfahrt/i, (w) => w.slice(0, 5) + "\u00AD" + w.slice(5)), los: () => aktionOeffnen(a.id) }; })],
+    return t < 0 || t > 400 ? null : { id: "r" + a.id, zahl: cdNoch(t), // 2.205.0 (Wunsch Hansi): Schiffsreise = „🚢 Kreuzfahrt“, Symbol wie bei den Aktionen
+      text: aktionSymbol(a) === "🚢" ? "🚢 Kreuz\u00ADfahrt" : `${aktionSymbol(a)} ` + ([...a.titel].length > 22 ? [...a.titel].slice(0, 21).join("") + "…" : a.titel), los: () => aktionOeffnen(a.id) }; })],
   ["weihnachten", "🎄 Weihnachten (ab Oktober)", () => { const h = heuteIso(), t = cdTageBis(h.slice(0, 4) + "-12-24"); const m = +h.slice(5, 7);
     return m >= 10 && t >= -2 ? [{ id: "x", zahl: t <= 0 ? "Frohes Fest!" : cdNoch(t), text: "🎄 Weih\u00ADnachten", los: () => zeige("termine") }] : []; }],
   ["silvester", "🎆 Silvester (im Dezember)", () => { const h = heuteIso(), t = cdTageBis(h.slice(0, 4) + "-12-31");
@@ -18545,7 +18546,7 @@ async function dateienGewaehlt(input) {
 // ---------- Aktionen / Ausflüge (KC-CLUB-AKTIONEN) – Daten aus dem KC Manager, hier nur zum Ansehen ----------
 const fDatumLang = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
 const euro = (n) => new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 2 }).format(n);
-const aktionSymbol = (a) => /schiff|kreuz|cruise|fjord|fähre/i.test(a.titel + " " + (a.veranstalter || "")) ? "🚢" : /bus/i.test(a.titel) ? "🚌" : "🧳";
+const aktionSymbol = (a) => /schiff|kreuz|cruis|fjord|fähre/i.test(a.titel + " " + (a.veranstalter || "")) ? "🚢" : /bus/i.test(a.titel) ? "🚌" : "🧳";
 let AKTIONEN = null, AKTIONEN_STAND = null, aktionId = null;
 // Übersicht als Kacheln (Symbol, Name, Datum, Countdown); Details erst nach Antippen
 async function aktionenLaden() {

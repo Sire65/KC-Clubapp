@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.205.0 – 2026-10-10 – 🚢 Schiffsymbol bei der Kreuzfahrt
+🚢 Kreuzfahrt im Countdown mit Schiff
+
 ## 2.204.0 – 2026-10-10 – 🕯️ Gedenkkerze für verstorbene Mitglieder
 🕯️ Gedenkkerze, wenn ein Mitglied verstorben ist
 

@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.204.0";
+const SERVER_VERSION = "2.205.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -9721,7 +9721,7 @@ Köcheclub Werne`,
       case "countdowns": {
         const heute = berlinTag(new Date());
         const [akt, geburtstage] = await Promise.all([aktionenLesen(ich), geburtstageSichtbar(ich)]);
-        const reisen = (akt.aktionen as any[]).filter((a: any) => a.dabei && String(a.bis || a.von) >= heute).map((a: any) => ({ id: a.id, titel: a.titel, von: a.von, bis: a.bis }));
+        const reisen = (akt.aktionen as any[]).filter((a: any) => a.dabei && String(a.bis || a.von) >= heute).map((a: any) => ({ id: a.id, titel: a.titel, veranstalter: a.veranstalter ?? null, von: a.von, bis: a.bis }));
         return json({ reisen, geburtstage });
       }
 
