@@ -3098,7 +3098,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 // 278. 1.97.0: Updates & Ausfallsicherheit
 {
   const sw = lies("sw.js");
-  assert.ok(/c\.addAll\(DATEIEN\.map\(\(u\) => new Request\(u, \{ cache: "reload" \}\)\)\)/.test(sw) && /cache: "no-cache"/.test(sw) && /url\.searchParams\.has\("k"\)/.test(sw) && /e\.waitUntil\(caches\.open\(CACHE\)/.test(sw) && /navi \? caches\.match\("index\.html"\) : Response\.error\(\)/.test(sw), "Service Worker sicher");
+  assert.ok(/c\.addAll\(DATEIEN\.map\(\(u\) => new Request\(u, \{ cache: "reload" \}\)\)\)/.test(sw) && /cache: "no-cache"/.test(sw) && /url\.searchParams\.has\("k"\)/.test(sw) && /e\.waitUntil\(caches\.open\(CACHE\)/.test(sw) && (/navi \? caches\.match\("index\.html"\) : Response\.error\(\)/.test(sw) || /r \|\| caches\.match\("index\.html"\)/.test(sw)), "Service Worker sicher"); // 2.209.0: Seitenaufruf in seiteHolen
   assert.ok(!/self\.addEventListener\("install"[^\n]*skipWaiting/.test(sw), "kein Sofort-Umschalten beim Einrichten (Mischstand)");
   const ja = html.slice(html.indexOf("async function jetztAktualisieren() {"), html.indexOf("function updateRuhig() {"));
   assert.ok(/addEventListener\("controllerchange", neu, \{ once: true \}\)/.test(ja) && /sw\.addEventListener\("statechange"/.test(ja) && !/setTimeout\(\(\) => location\.reload\(\), 400\)/.test(ja), "Update wartet auf Einrichtung + Übernahme");
@@ -6871,7 +6871,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 {
   const termine = lies("supabase/functions/kc-termine/index.ts");
   const nt = server.slice(server.indexOf('if (a === "notpaket_teil")'), server.indexOf('if (a === "notpaket_teil")') + 900);
-  assert.ok(/p\.cronSecret !== geheim\) return json\(\{ error: "Kein Zugang" \}, 401\)/.test(nt) && /pid\.startsWith\("KC-P-TEST"\)/.test(nt) && /DB_AUS\.n !== dbAusVorher\) return json\(\{ error: "Datenbank antwortet nicht" \}, 503\)/.test(nt), "Teil nur mit Geheimnis, nie halb");
+  assert.ok(/(?:p\.cronSecret !== geheim|!gleichZeit\(p\.cronSecret, geheim\))\) return json\(\{ error: "Kein Zugang" \}, 401\)/.test(nt) && /pid\.startsWith\("KC-P-TEST"\)/.test(nt) && /DB_AUS\.n !== dbAusVorher\) return json\(\{ error: "Datenbank antwortet nicht" \}, 503\)/.test(nt), "Teil nur mit Geheimnis, nie halb");
   const nb = server.slice(server.indexOf("async function notpaketBauen(geheim: string)"), server.indexOf("// ---------- KC-CLUB-NOTBETRIEB-STUFE2"));
   assert.ok(/action: "notpaket_teil", cronSecret: geheim, person_id: z\.person_id/.test(nb) && /if \(!r\.ok \|\| !j\?\.ok\) throw new Error/.test(nb) && !/aktionAusfuehren/.test(nb), "Hauptlauf setzt nur zusammen, fehlender Teil → altes Paket bleibt");
   assert.ok(/ich: Ich = \{ \.\.\.ichAus\(p0, ro \?\? null\), nurLesen: true \}/.test(server), "Teil weiter nur lesend");
@@ -7730,7 +7730,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/const CD_ARTEN = \[/.test(html) && ["reise", "weihnachten", "silvester", "meingeb", "mggeb"].every((k) => new RegExp(`\\["${k}", "`).test(html)), "Countdown-Registry fehlt");
   assert.ok(/if \(cdNur\(\)\) return l;/.test(html) && /<b>📌 Standard: nur nächstes Clubtreffen<\/b>/.test(html), "Standard = nur nächstes Clubtreffen");
   assert.ok(/Math\.ceil\(\(new Date\(t\.beginn\) - Date\.now\(\)\) \/ 86400000\) <= 2\) return l;/.test(html), "Treffen in ≤ 2 Tagen bleibt stehen");
-  assert.ok(/id="cdKachel"/.test(html) && /id="cdWahl"/.test(html) && /cdEinstellungenZeigen\(\); tippSchalterZeigen\(\)/.test(html), "Kachel/Einstellungen fehlen");
+  assert.ok(/id="cdKachel"/.test(html) && /id="cdWahl"/.test(html) && /cdEinstellungenZeigen\(\);(?: try \{ schalterZeilen\(\$\("v-einstellungen"\)\); \} catch \{\})? tippSchalterZeigen\(\)/.test(html), "Kachel/Einstellungen fehlen");
   assert.ok(/case "countdowns": \{/.test(server) && /a\.dabei && String\(a\.bis \|\| a\.von\) >= heute/.test(server), "Server: nur eigene Reisen");
 }
 
@@ -7770,4 +7770,18 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/\["markt", "🎄 Weihnachtsmarkt \(Club-Termin\)", \(\) => cdVeranstaltung\(CD_VERANSTALTUNGEN\.markt\)\]/.test(html) && /ohne: \/aufbau\|abbau\|nachbereitung\|vorbereitung\/i/.test(html), "Weihnachtsmarkt-Countdown");
   assert.ok(/\.eq\("art", "veranstaltung"\)\.eq\("status", "geplant"\)/.test(server) && /return json\(\{ reisen, geburtstage, veranstaltungen \}\);/.test(server), "Server liefert Veranstaltungen");
+}
+
+// 2.209.0 Gesamtprüfung 5 – Korrekturen
+{
+  assert.ok(/const jsArg = \(v\) => esc\(JSON\.stringify\(String\(v \?\? ""\)\)\);/.test(html) && !/esc\(z\.von\.vorname\)\.replace\(\/'\/g, ""\)/.test(html) && /mfSitzBuchen\('\$\{m\.id\}', \$\{sicher\(fahrer\)\}\)/.test(html), "Namen in onclick als JSON-Zeichenkette");
+  assert.ok(/const sprungDef = \(id\) => \(Object\.hasOwn\(SPRUENGE, id\)/.test(html), "#zu=constructor kein Ziel");
+  assert.ok(/function hashSprung\(h\)/.test(html) && /if \(e\.data\?\.typ === "oeffnen"\) pushOeffnen\(e\.data\.url\);/.test(html), "Push-Antippen bei offener App springt");
+  assert.ok(/function ladeFehlerStand\(id, e, nochmal\)/.test(html) && /ladeFehlerStand\("mitgliederListe", e, "mitgliederLaden\(\)"\)/.test(html) && !/esc\(e\??\.message\)/.test(html), "kein ewiges „Wird geladen“, keine englischen Fehlertexte");
+  assert.ok(/window\.addEventListener\("offline", \(\) => \{ try \{ ONL\.liste = \[\]; ONL\.ids = new Set\(\); ONL\.stand = 0;/.test(html), "ohne Netz kein grünes Online");
+  assert.ok(/function schalterZeilen\(wurzel = document\)/.test(html), "Schalterzeilen antippbar + benannt");
+  const sw = lies("sw.js");
+  assert.ok(/ignoreSearch: !url\.pathname\.endsWith\("\/app\.js"\)/.test(sw) && /t\.includes\("app\.js\?v=" \+ VERSION\)/.test(sw) && /const NAVI_WARTEN_MS = 4000;/.test(sw), "SW: kein Mischstand, Seite nur passend gemerkt, 4 s Netzgrenze");
+  assert.ok(/offen\.postMessage\(\{ typ: "oeffnen", url: ziel \}\)/.test(sw) && /await Promise\.allSettled\(\[q, fertig\]\)/.test(sw), "SW: Push-Ziel an offene App, Quittung abgewartet");
+  assert.ok(/const sub = \{ endpoint: endpunkt, expirationTime:/.test(server) && /function gleichZeit\(a: unknown, b: string\)/.test(server) && !/p\.cronSecret !== geheim/.test(server), "Server: Push-Anmeldung begrenzt, Geheimnisvergleich");
 }

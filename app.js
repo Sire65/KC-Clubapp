@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.208.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.209.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -47,7 +47,7 @@ const WBILD = [
   { id: "flamme", t: "Herdflamme", x: "Wird erhitzt …", svg: '<path d="M10 16h28v6a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4z"/><path d="M8 30h32"/><g class="wb-a-flamme"><path d="M17 38c-2-3 1-5 1-8 2 2 3 4 1 8"/><path d="M24 38c-2-3 1-6 1-9 2 3 3 5 1 9"/><path d="M31 38c-2-3 1-5 1-8 2 2 3 4 1 8"/></g>' },
   { id: "plaetzchen", t: "Plätzchen ausstechen", x: "Wird ausgestochen …", saison: true, svg: '<path d="M6 37c6-3 30-3 36 0"/><path class="wb-a-stern" d="M24 8l3 6 6.5 1-4.7 4.5 1.1 6.5L24 23l-5.9 3 1.1-6.5L14.5 15l6.5-1z"/>' },
 ];
-const WB_MODUS = [["fest", "Fest"], ["wechsel", "🔀 Abwechselnd"], ["taeglich", "📅 Täglich anders"], ["saison", "🗓️ Nach Jahreszeit"]];
+const WB_MODUS = [["fest", "📌 Fest"], ["wechsel", "🔀 Abwechselnd"], ["taeglich", "📅 Täglich anders"], ["saison", "🗓️ Nach Jahreszeit"]];
 function wbLesen() { try { const w = JSON.parse(localStorage.getItem(WB_KEY) || "null"); if (w && WBILD.some((x) => x.id === w.bild) && WB_MODUS.some(([m]) => m === w.modus)) return w; } catch {} return { bild: "muetze", modus: "fest" }; }
 function wbAktuell(d = new Date()) {
   const w = wbLesen(), alle = WBILD.filter((x) => !x.saison || d.getMonth() === 11);
@@ -96,6 +96,9 @@ const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+// 2.209.0 KC-CLUB-JS-ARG (Gesamtprüfung 5): Text als Argument in onclick="f(…)" – sicher auch bei O'Neill oder Anführungszeichen
+// (JSON-Zeichenkette, für das HTML-Attribut maskiert; der Browser entschlüsselt das Attribut, JS bekommt genau den Text)
+const jsArg = (v) => esc(JSON.stringify(String(v ?? "")));
 const fTag = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "short", day: "2-digit", month: "2-digit" });
 const fZeit = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
 const fKurz = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit" });
@@ -825,7 +828,7 @@ function pwErinnern() {
   return true;
 }
 async function pwLaden() {
-  try { pwUebernehmen(await api("pinnwand", {}, { warten: true })); } catch (e) { $("pwWand").innerHTML = `<div class="leer">⚠️ ${esc(e.message)}</div>`; return; }
+  try { pwUebernehmen(await api("pinnwand", {}, { warten: true })); } catch (e) { $("pwWand").innerHTML = `<div class="leer">⚠️ ${esc(fehlerText(e))}</div>`; return; }
   pwZeigen();
 }
 function pwZeigen() {
@@ -846,7 +849,7 @@ function pwZeigen() {
   $("pwWand").innerHTML = aushang + PW.zettel.map((z) => {
     const knoepfe = [];
     if (pwWillkommenWer(z)) knoepfe.push(`<button class="antw" onclick="pwBegruessen(PW.zettel.find((x) => x.id === '${z.id}')?.willkommen)">${pwWillkText(z)}</button>`); // 2.30.1
-    if (!z.vonMir && z.antworten !== false) knoepfe.push(`<button class="antw" onclick="pwAntworten('${z.id}','${esc(z.von.person_id)}','${esc(z.von.vorname).replace(/'/g, "")}')">✍️ Antworten</button>`);
+    if (!z.vonMir && z.antworten !== false) knoepfe.push(`<button class="antw" onclick="pwAntworten('${z.id}','${esc(z.von.person_id)}',${jsArg(z.von.vorname)})">✍️ Antworten</button>`);
     if (!z.vonMir) knoepfe.push(z.erledigt ? `<button class="erl" onclick="pwErledigt('${z.id}', true)">✓ erl. ${zeitKurz(z.erledigt)}</button>` : `<button onclick="pwErledigt('${z.id}')">✓ erl.</button>`);
     if (z.vonMir) knoepfe.push(`<button onclick="pwWichtig('${z.id}', ${!z.wichtig})">${z.wichtig ? "❗ nicht mehr wichtig" : "❗ wichtig machen"}</button>`); // 2.13.0
     if (z.vonMir || ICH?.vorstand) knoepfe.push(`<button onclick="pwAbnehmen('${z.id}')">🗑️ abnehmen</button>`);
@@ -4051,7 +4054,7 @@ function textLeeren() {
 // 2.23.99: steht ein App-Sprung im Entwurf, sagen wir, dass daraus nach dem Senden ein Knopf wird (im Schreibfeld geht nur Text)
 function sprungHinweisZeigen() {
   const t = $("text"), h = $("sprungHinweis"); if (!t || !h) return;
-  const ziele = [...t.value.matchAll(SPRUNG_RE)].map((m) => SPRUENGE[m[1]]).filter(Boolean);
+  const ziele = [...t.value.matchAll(SPRUNG_RE)].map((m) => sprungDef(m[1])).filter(Boolean);
   h.classList.toggle("versteckt", !ziele.length);
   h.textContent = ziele.length ? `🔘 Wird nach dem Senden als Knopf angezeigt: ${ziele.map((z) => `„${z.sym} ${z.t}“`).join(", ")}` : "";
 }
@@ -4547,7 +4550,7 @@ let TODO = { eintraege: [], kategorien: [], filter: "alle", erledigteZeigen: fal
 async function todoLaden() {
   if (!$("todoBereich").innerHTML) todoGeruest();
   try { const r = await api("todo_liste"); TODO.eintraege = r.eintraege || []; TODO.kategorien = r.kategorien || []; todoKategorienFuellen(); todoZeigen(); }
-  catch (e) { $("todoTabelle").innerHTML = `<p class="hinweis">⚠️ ${esc(e.message)}</p>`; }
+  catch (e) { $("todoTabelle").innerHTML = `<p class="hinweis">⚠️ ${esc(fehlerText(e))}</p>`; }
 }
 function todoGeruest() {
   $("todoBereich").innerHTML = `<div class="karte todoform">
@@ -5056,7 +5059,7 @@ async function twWeitergeben(fr) { // erst nach ausdrücklichem „➤ Fragen“
     const r = await api("twinkey_frage", { frage: fr });
     if (p && r?.schonDa) p.insertAdjacentHTML("beforeend", "<br><small class=\"hinweis\">Diese Frage hatte ich mir schon notiert.</small>");
     await twLaden(); twMeineZeigen();
-  } catch (e) { if (p) p.innerHTML = `⚠️ ${esc(e?.message || "Gerade keine Verbindung.")} Versuch es später noch einmal.`; }
+  } catch (e) { if (p) p.innerHTML = `⚠️ ${esc(fehlerText(e, "Gerade keine Verbindung."))} Versuch es später noch einmal.`; }
 }
 function twZeig(id) {
   const e = twEintraege().find((x) => x.id === id); $("twBlatt")?.remove(); if (!e) return;
@@ -8357,7 +8360,7 @@ function erstattungAblageFragen(k, r) {
 
 // KC-CLUB-KMSATZ (0.39.0): Admin pflegt die Kilometerpauschale mit „gilt ab“
 async function kmSatzAdminLaden() {
-  try { const r = await api("erstattung_meine"); kmSaetzeZeigen(r.saetze || [], r.kmSatz); } catch (e) { $("kmSaetze").innerHTML = `<p class="hinweis">⚠️ ${esc(e.message)}</p>`; }
+  try { const r = await api("erstattung_meine"); kmSaetzeZeigen(r.saetze || [], r.kmSatz); } catch (e) { $("kmSaetze").innerHTML = `<p class="hinweis">⚠️ ${esc(fehlerText(e))}</p>`; }
   if (!$("kmSatzAb").value) $("kmSatzAb").value = heuteIso();
 }
 function kmSaetzeZeigen(saetze, aktuell) {
@@ -8390,6 +8393,22 @@ function appSchliessen() {
 // Mitglied sieht einen verständlichen deutschen Satz statt englischer Technik. Fachliche Meldungen (Server) bleiben unverändert.
 const JS_FEHLER = /Cannot read propert|Cannot set propert|is not a function|is not defined|is not iterable|is not an object|undefined is not|null is not/;
 const JS_FEHLER_TEXT = "Da hat in der App etwas nicht geklappt – bitte nochmal versuchen. Der Fehler ist gemeldet.";
+// 2.209.0 KC-CLUB-FEHLERTEXT (Gesamtprüfung 5): nie englische Programmtexte („Cannot read properties …“) in Karten zeigen
+const fehlerText = (e, sonst = "Das hat gerade nicht geklappt.") => {
+  const t = String(e?.message || (typeof e === "string" ? e : "") || "");
+  if (!t) return sonst;
+  if (JS_FEHLER.test(t) || /^Script error/i.test(t)) return JS_FEHLER_TEXT;
+  if (/Failed to fetch|NetworkError|Load failed|network/i.test(t)) return "Keine Verbindung – bitte gleich nochmal versuchen.";
+  return t;
+};
+// 2.209.0 KC-CLUB-LADE-FEHLER-STAND (Gesamtprüfung 5): schlägt das Laden fehl, bleibt nicht ewig „Wird geladen …“ stehen –
+// stattdessen ein ehrlicher Hinweis mit „Nochmal laden“. Ein schon gezeigter Stand bleibt stehen (dann reicht die Meldung oben).
+function ladeFehlerStand(id, e, nochmal) {
+  const z = $(id); if (!z) return;
+  const t = z.textContent.replace(/\s+/g, " ").trim();
+  if (t && !/wird geladen|lädt|^…$/i.test(t)) return;
+  z.innerHTML = `<div class="karte hinweis">⚠️ ${esc(fehlerText(e, "Konnte nicht geladen werden."))}<div style="margin-top:8px"><button type="button" class="knopf klein" onclick="${nochmal}">🔄 Nochmal laden</button></div></div>`;
+}
 function fehlerStapel(st) { return String(st || "").split("\n").slice(0, 6).map((z) => z.trim().replace(/https?:\/\/[^\s)]*\/([^/\s)]+)/g, "$1")).join(" < "); }
 // ---------- KC-CLUB-ABSTURZSCHUTZ (2.47.0, Wunsch Hansi: „wenn etwas hängt oder hakt … abfangen, Meldung, protokollieren“) ----------
 // Ergänzt das Fehlerprotokoll (index.html schreibt jeden Fehler mit) um das, was bisher fehlte:
@@ -9446,7 +9465,7 @@ async function wbMailen(knopf) {
       // 2.23.29 (Wunsch Hansi): deutliche Bestätigung im Fenster selbst (nicht nur kurz oben)
       $("wbStatus").innerHTML = '<div class="wb-ok">✅ <b>Die E-Mail wurde an dich geschickt.</b><br>Der Bogen hängt als PDF an – schau gleich in dein Postfach (auch im Spam-Ordner).</div>';
       melde("✉️ E-Mail mit deinem Wunschbogen wurde an dich geschickt");
-    } catch (e) { $("wbStatus").innerHTML = `<div class="wb-fehler">⚠️ ${esc(e?.message || "Die E-Mail konnte nicht verschickt werden.")}</div>`; meldeFehler(e); }
+    } catch (e) { $("wbStatus").innerHTML = `<div class="wb-fehler">⚠️ ${esc(fehlerText(e, "Die E-Mail konnte nicht verschickt werden."))}</div>`; meldeFehler(e); }
   });
 }
 window.addEventListener("message", (e) => {
@@ -10550,7 +10569,7 @@ function infoZentrale() {
   const tick = ticker.length ? ticker.map((t) => `▸ ${esc(t)}`).join("&emsp;&emsp;") : (d?.fehler ? "⚠️ " + esc(d.fehler) : d?.r ? "▸ Noch keine Nachrichten" : "▸ Wird geladen …");
   const n = ZE.personen.length, eine = !ZE.gruppe && n === 1, pid = eine ? ZE.personen[0] : null, online = !!pid && ONL.ids?.has(pid), leer = !ZE.gruppe && !n;
   const nurEine = "Dafür genau 1 Person auswählen", nichtOnline = pid ? `${zeVorname(pid)} ist gerade nicht online – das geht nur, wenn beide die App offen haben` : nurEine;
-  const knopf = (sym, text, grund, klick) => `<button class="zknopf${grund ? " aus" : ""}" onclick="${grund ? `melde('${esc(grund).replace(/'/g, "&#39;")}')` : klick}"><b>${sym}</b><span>${text}</span></button>`;
+  const knopf = (sym, text, grund, klick) => `<button class="zknopf${grund ? " aus" : ""}" onclick="${grund ? `melde(${jsArg(grund)})` : klick}"><b>${sym}</b><span>${text}</span></button>`;
   const weg = (k, sym, t) => `<button class="zweg${ZE.wege[k] ? " an" : ""}" aria-pressed="${ZE.wege[k]}" onclick="ZE.wege.${k}=!ZE.wege.${k};heroZeigen(0)">${sym} ${t}</button>`;
   return `<div class="zdisplay" role="status">
       <div class="zdkopf"><span>📡 KOMMUNIKATIONS&shy;ZENTRALE</span><span class="zuhr" id="zUhr">--:--</span></div>
@@ -11080,7 +11099,7 @@ async function sperrenLaden() {
         <button class="knopf klein" onclick="sperreAufheben('${esc(x.person_id)}', this)">🔓 Freigeben</button></div>`).join("")}</div>
         <p class="hinweis" style="margin:4px 0 0;font-size:.85rem">🔔 Push/E-Mail laufen weiter · 📵 keine Push, keine E-Mail – Symbol antippen zum Umschalten.</p>`
       : '<p class="hinweis" style="margin:0">Zurzeit ist niemand gesperrt.</p>';
-  } catch (e) { if ($("adSperren")) $("adSperren").innerHTML = `<p class="hinweis" style="margin:0">⚠️ Liste nicht geladen: ${esc(e.message)}</p>`; }
+  } catch (e) { if ($("adSperren")) $("adSperren").innerHTML = `<p class="hinweis" style="margin:0">⚠️ Liste nicht geladen: ${esc(fehlerText(e))}</p>`; }
 }
 async function sperreStumm(pid, stumm, knopf) {
   await einmal(knopf, async () => {
@@ -11769,7 +11788,7 @@ async function rzStart() {
   await rzLaden();
 }
 async function rzLaden() {
-  try { RZ.liste = (await api("rezepte_liste")).rezepte; } catch (e) { if ($("rzInhalt")) $("rzInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ ${esc(e.message)}</div>`; return; }
+  try { RZ.liste = (await api("rezepte_liste")).rezepte; } catch (e) { if ($("rzInhalt")) $("rzInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ ${esc(fehlerText(e))}</div>`; return; }
   rzListeZeigen();
 }
 function rzListeZeigen() {
@@ -11907,7 +11926,7 @@ function mdatAbschnitte(d) {
 async function mdatStart() {
   const f = blattAuf("mdatBlatt", `<h3 style="margin:0">🔐 Meine Daten</h3><div id="mdatInhalt"><p class="hinweis">Wird geladen …</p></div>`);
   f.classList.add("sc-blatt");
-  try { MDAT = await api("meine_daten", {}, { warten: true }); } catch (e) { $("mdatInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ ${esc(e?.message || "Nicht geladen")}</div><button class="knopf" onclick="fensterZu($('mdatBlatt'))">Schließen</button>`; return; }
+  try { MDAT = await api("meine_daten", {}, { warten: true }); } catch (e) { $("mdatInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ ${esc(fehlerText(e, "Nicht geladen"))}</div><button class="knopf" onclick="fensterZu($('mdatBlatt'))">Schließen</button>`; return; }
   const aeOffen = await aeOffenLaden(); // KC-CLUB-AE-HINWEIS (2.88.0)
   $("mdatInhalt").innerHTML = `<p class="hinweis" style="margin:0 0 6px">Das ist gespeichert, was dich betrifft – nur du siehst diese Übersicht. Stand ${esc(zeitDe(MDAT.stand))}.</p>${aeOffenHtml(aeOffen)}
     ${mdatAbschnitte(MDAT).map(([t, z]) => `<div class="ps-schritt"><b>${esc(t)}</b><table class="vb-tabelle">${z.map(([a, v]) => `<tr><td>${esc(a)}</td><td>${esc(v)}</td></tr>`).join("")}</table></div>`).join("")}
@@ -11953,7 +11972,7 @@ async function fgLaden() {
     const { funktionen } = await api("freigaben_liste"); if (!$("adFreigaben")) return;
     $("adFreigaben").innerHTML = `<div style="display:grid;gap:6px">${funktionen.map((f) => `<div class="ps-schritt"><b>${esc(f.t)}</b><small class="hinweis">${esc(f.u)}</small>
       <div class="umschalter" style="margin:4px 0 0"><button type="button" class="${f.fuer === "admin" ? "an" : ""}" onclick="fgSetzen('${f.id}','admin',this)">🔒 Nur für mich (Test)</button><button type="button" class="${f.fuer === "alle" ? "an" : ""}" onclick="fgSetzen('${f.id}','alle',this)">✅ Für alle frei</button></div></div>`).join("")}</div>`;
-  } catch (e) { if ($("adFreigaben")) $("adFreigaben").innerHTML = `<p class="hinweis" style="margin:0">⚠️ ${esc(e.message)}</p>`; }
+  } catch (e) { if ($("adFreigaben")) $("adFreigaben").innerHTML = `<p class="hinweis" style="margin:0">⚠️ ${esc(fehlerText(e))}</p>`; }
 }
 async function fgSetzen(id, fuer, knopf) {
   if (fuer === "alle" && !(await frage("Für alle freigeben?\n\nAlle Mitglieder sehen die Funktion dann sofort (nach dem nächsten Öffnen der App). Es wird nichts verschickt.", { ja: "✅ Ja, freigeben", nein: "Abbrechen" }))) return;
@@ -11974,7 +11993,7 @@ async function dbBelegungLaden() {
     const max = Math.max(1, ...(r.tabellen || []).map((t) => t.bytes));
     $("adBelegung").innerHTML = `${r.tabellen == null ? `<p class="hinweis" style="margin:0">⚠️ Größte Tabellen nicht abrufbar</p>` : `<b style="font-size:.95rem">Was am meisten Platz braucht</b>
       <table class="vb-tabelle">${r.tabellen.map((t) => `<tr><td>${esc(dbTabName(t.tabelle))}</td><td style="text-align:right;white-space:nowrap">${esc(adGr(t.bytes))}</td><td style="width:35%"><div style="height:8px;border-radius:4px;background:#8884"><div style="height:8px;border-radius:4px;background:${AD_FARBE.gruen};width:${Math.max(2, Math.round((t.bytes / max) * 100))}%"></div></div></td></tr>`).join("")}</table>`}`;
-  } catch (e) { if ($("adBelegung")) $("adBelegung").innerHTML = `<p class="hinweis" style="margin:0">⚠️ ${esc(e.message)}</p>`; }
+  } catch (e) { if ($("adBelegung")) $("adBelegung").innerHTML = `<p class="hinweis" style="margin:0">⚠️ ${esc(fehlerText(e))}</p>`; }
 }
 async function dbAufraeumen(knopf) {
   if (!(await frage("Jetzt aufräumen?\n\nGelöscht werden nur alte technische Protokolle und Messwerte (älter als 90 Tage). Club-Daten, Kasse, Dienstpläne und Mitglieder bleiben unberührt.", { ja: "🧹 Ja, aufräumen", nein: "Abbrechen" }))) return;
@@ -12377,7 +12396,7 @@ async function wetterAdminLaden() {
     $("wetterAktuell").innerHTML = `<p style="margin:0 0 6px">Angezeigter Ort: <b>${esc(k.ort.name)}</b>${k.ort.region ? ` <span class="hinweis">(${esc(k.ort.region)})</span>` : ""}</p>`;
     $("wetterApp").innerHTML = k.apps.map((a) => `<option value="${a.id}" ${a.id === k.app ? "selected" : ""}>${esc(a.name)}</option>`).join("");
     $("wetterQuelle").innerHTML = k.quellen.map((q) => `<option value="${q.id}" ${q.id === k.quelle ? "selected" : ""}>${esc(q.name)} – ${esc(q.hinweis)}</option>`).join("");
-  } catch (e) { $("wetterAktuell").innerHTML = `<p class="hinweis">⚠️ ${esc(e.message)}</p>`; }
+  } catch (e) { $("wetterAktuell").innerHTML = `<p class="hinweis">⚠️ ${esc(fehlerText(e))}</p>`; }
 }
 // ---------- KC-CLUB-WETTERORT (0.74.0, Wunsch Hansi): eigener Wetterort je Mitglied ----------
 // Schnellauswahl aus der Umgebung (Registry) + Suche nach jedem anderen Ort. „Club-Vorgabe“ = Ort, den der Admin einstellt.
@@ -12452,13 +12471,57 @@ function infoTreffen() {
     bisTreffen = tage <= 0 ? "Heute" : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
     frist = fristStufe(tage);
   } else kopf = `<h2>Kein Termin geplant</h2><div class="unter">Sobald ein Köcheclub-Termin ansteht, siehst du es hier.</div>`;
-  return `<div class="klick" onclick="zumTreffen()">${kopf}</div>
+  return `<div class="klick" role="button" tabindex="0" onclick="zumTreffen()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();zumTreffen()}">${kopf}</div>
     <div class="kacheln3">
       <button class="mini${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${n}</b><span>Neue Nachr.</span>${mpfeil("nachrichten", n > 0, n)}</button>
       ${(() => { const on = ONL.zeigen && mpOnline() > 0; /* 2.207.0 KC-CLUB-MINI-ONLINE-AMEISEN (Wunsch Hansi): ist jemand online, läuft um die ganze Kachel ein Ameisenlauf – wie bei neuen Nachrichten, in Online-Grün */
         return `<button class="mini${on ? " mini-online" : ""}" onclick="mgNurOnline()">${on ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}`; })()}<b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b><span>Mitglieder${inkognitoAn() ? '<i class="inko-marke" title="Inkognito ist an – niemand sieht dich online">🕶️</i>' : ""}</span>${mpfeil("mitglieder", ONL.zeigen && mpOnline() > 0, mpOnline())}</button>
       <button id="cdKachel" class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}${cdInhalt(bisTreffen)}${mpfeil("termin", !!t, t ? `${t.id || t.beginn}|${frist}` : "", frist)}</button>
     </div>`;
+}
+// 2.209.0 KC-CLUB-PUSH-SPRUNG (Gesamtprüfung 5): Sprungziele aus dem Link (#nachricht=…, #termine, …) – beim Start UND wenn ein
+// Push angetippt wird, während die App schon offen ist (der Service Worker schickt dann „oeffnen“ statt die Seite neu zu laden)
+function hashSprung(h) {
+  h = String(h || "");
+    if (h.startsWith("#nachricht=")) chatOeffnen(h.slice(11));
+    else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
+    else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
+    else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
+    else if (h === "#boerse" || h.startsWith("#boerse=")) { BO.oeffnen = h.slice(8) || null; hlStart("boerse"); } // KC-CLUB-BOERSE
+    else if (h.startsWith("#angebot=")) angebotDirekt(decodeURIComponent(h.slice(9))); // KC-CLUB-HILFE-KANAELE (2.23.44): Push/Mail → Angebot
+    else if (h.startsWith("#hilfe=")) hilfeDirekt(decodeURIComponent(h.slice(7))); // KC-CLUB-HILFE-KURZ (1.93.0): Push/Mail → Kurzansicht
+    else if (h.startsWith("#mitglied=")) mitgliedOeffnen(decodeURIComponent(h.slice(10)));
+    else if (h.startsWith("#dokument=")) dokOeffnen(decodeURIComponent(h.slice(10))); // KC-CLUB-DOK-ANZEIGE
+    else if (h.startsWith("#bestaetigung=")) bestaetigungZeigen(decodeURIComponent(h.slice(14))); // KC-CLUB-BESTAETIGUNG
+    else if (h === "#geteilt") geteiltEmpfangen();
+    else if (h === "#todo") { termineArt = "todo"; zeige("termine"); }
+    else if (h === "#pinnwand") zeige("pinnwand");
+    else if (h === "#standort") zeige("standort");
+    else if (h === "#dienstwunsch") dwOeffnen();
+    else if (h === "#wunschbogen") wbStart(); // KC-CLUB-WUNSCHBOGEN (2.23.28)
+    else if (h === "#schulung") smStart(); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62)
+    else if (h.startsWith("#besuch=")) bsDirekt(decodeURIComponent(h.slice(8))); // KC-CLUB-BESUCHE (2.23.65): „Protokoll öffnen“ aus Mails wie im alten Programm
+    else if (h === "#schulungen") scStart();
+    else if (h === "#mikrofon") mikroAssistent(); // KC-CLUB-MIKRO-ASSISTENT (2.23.72)
+    else if (h.startsWith("#zu=")) sprung(h.slice(4)); // KC-CLUB-SPRUNGKNOPF (2.23.97): Link aus Nachricht, Push oder E-Mail
+    else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart();
+    else if (h.startsWith("#vorfuehren=")) setTimeout(onlinePing, 300); // KC-CLUB-VORFUEHREN: aus dem Push – die Einladung kommt mit dem nächsten Online-Abgleich
+    else if (h === "#mfrage") twFrageStart(); // KC-CLUB-MITGLIEDER-FRAGEN (2.23.51): Push/Mail → Fragen an mich bzw. Antworten // KC-CLUB-TWINKEY-FRAGEN (2.23.49): Push/Mail → Frage bzw. Antwort
+    else if (h.startsWith("#spiel=")) spOeffnen(decodeURIComponent(h.slice(7))); // KC-CLUB-SPIELE (2.7.0): aus dem Push
+    else if (h === "#spiele") spStart();
+    else if (h === "#hilfezentrum" || h.startsWith("#hilfezentrum=")) hzStart(decodeURIComponent(h.slice(14))); // KC-CLUB-HILFEZENTRUM (2.23.0)
+    else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen", "#archiv", "#helfen"].includes(h)) zeige(h.slice(1));
+    else if (h === "#buero" && ICH?.buero) buStart();
+    else if (h === "#eingang" && ICH?.buero) { buStart(); buEingang(); } // KC-CLUB-EINGANGSKORB (2.23.6): Push führt direkt in den Eingang
+    else if (h === "#aenderungen") ICH?.vorstand || ICH?.admin ? aeEingang() : aeStart(); // KC-CLUB-AENDERUNG (2.22.7): aus Push/Mail
+}
+function pushOeffnen(url) {
+  let h = ""; try { h = new URL(url, location.href).hash; } catch { return; }
+  if (!h) return zeige("start");
+  document.querySelectorAll(".blatt[data-dyn]").forEach((b) => { if (!b.closest("#vfLeiste")) b.remove(); });
+  if (h.startsWith("#anruf=")) { ONL.erledigt?.add("r" + h.slice(7)); return anrufEingehend(h.slice(7)); }
+  if (h.startsWith("#anklopfen=")) return anklopfenAusLink(h.slice(11));
+  try { hashSprung(h); } catch (e) { meldeFehler(e); }
 }
 // ---------- KC-CLUB-ZYKLUS (2.206.0, Wunsch Hansi „Toggle-Knöpfe: statt mehrerer Knöpfe einer – mehrmals tippen, gedrehter Pfeil,
 // logisch, bedienfreundlich und klar zu erkennen, dass da mehr ist“) ----------
@@ -12507,11 +12570,23 @@ function zkEinrichten(box) {
   if (!box._zkBeob) { box._zkBeob = new MutationObserver((r) => { if (r.some((x) => !x.target.closest?.(".zk"))) zkZeichnen(box); }); box._zkBeob.observe(box, { attributes: true, attributeFilter: ["class", "aria-pressed", "hidden", "style", "disabled"], subtree: true }); }
   zkZeichnen(box);
 }
+// 2.209.0 KC-CLUB-SCHALTER-ZEILE (Gesamtprüfung 5): in den Einstellungen schaltet auch ein Tipp auf den Text der Zeile (nicht nur das
+// kleine Kästchen); Bildschirmleser nennen den Namen. Nur Zeilen mit genau EINEM Kästchen direkt in der Zeile; Knöpfe/Links bleiben.
+function schalterZeilen(wurzel = document) {
+  wurzel.querySelectorAll("div.schalter").forEach((z) => {
+    const boxen = [...z.querySelectorAll(':scope > input[type="checkbox"]')]; if (boxen.length !== 1) return;
+    const cb = boxen[0], titel = (z.querySelector(":scope > div b") || z.querySelector(":scope > div"))?.textContent.replace(/\s+/g, " ").trim();
+    if (titel && !cb.getAttribute("aria-label")) cb.setAttribute("aria-label", titel);
+    if (z.dataset.schalterKlick) return; z.dataset.schalterKlick = "1";
+    z.addEventListener("click", (e) => { if (e.target === cb || e.target.closest("input, button, select, textarea, a, label, summary")) return; if (!cb.disabled) cb.click(); });
+  });
+}
 function zkAlle() { document.querySelectorAll("[data-zyklus]").forEach((b) => { try { zkEinrichten(b); } catch {} }); }
 function zkStart() {
-  zkAlle();
+  zkAlle(); try { schalterZeilen(); } catch {}
   // neu gezeichnete Bereiche (Vorlagen per innerHTML) bekommen ihren Knopf von selbst – gebündelt, höchstens alle 120 ms
-  ZK.beob = new MutationObserver(() => { if (ZK.plan) return; ZK.plan = setTimeout(() => { ZK.plan = 0; zkAlle(); }, 120); });
+  // 2.209.0 (Gesamtprüfung 5): direkt im Beobachter (läuft vor dem nächsten Bild) – kein kurzes Aufblitzen der alten Knöpfe
+  ZK.beob = new MutationObserver(() => { document.querySelectorAll("[data-zyklus]").forEach((b) => { if (!b.querySelector(":scope > .zk")) try { zkEinrichten(b); } catch {} }); });
   ZK.beob.observe(document.body, { childList: true, subtree: true });
 }
 // ---------- KC-CLUB-GEDENKEN (2.204.0, Wunsch Hansi „wenn jemand aus unserer Gruppe verstorben ist, eine brennende Kerze anzeigen“) ----------
@@ -12771,8 +12846,10 @@ function rkAufbauen(z) {
   z.karten = rkKarten(w);
   z.karten.forEach((d) => { if (d.dataset.rkVorher === undefined) d.dataset.rkVorher = d.open ? "1" : "0"; d.open = true; d.classList.add("rk-karte"); });
   z.i = Math.max(0, Math.min(z.i, z.karten.length - 1));
-  z.reiter.innerHTML = z.karten.map((d, i) => { const t = d.querySelector(":scope > summary")?.textContent.trim() || ""; const sym = z.opts?.tabSym?.(d) || [...t][0] || "•";
-    return `<button type="button" role="tab" class="rk-tab" data-i="${i}" title="${esc(t)}" aria-label="${esc(t)}">${z.opts?.tabSym ? sym : esc(sym)}<small>${esc(z.opts?.tabText?.(d) ?? (t.replace(/^\S+\s*/, "").match(/[\p{L}\d-]+/u) || [""])[0])}</small></button>`; }).join("");
+  // 2.209.0 (Gesamtprüfung 5): Reiter-Name ohne Schloss/Pfeil am Ende und ohne Artikel („Das Wichtigste“ → „Wichtigste“, nicht „Das“)
+  const rkKurz = (t) => { const w = t.replace(/^\S+\s*/, "").match(/[\p{L}\d-]+/gu) || []; return /^(das|die|der|mein|meine|dein|deine|ein|eine)$/i.test(w[0] || "") && w[1] ? w[1] : w[0] || ""; };
+  z.reiter.innerHTML = z.karten.map((d, i) => { const t = (d.querySelector(":scope > summary")?.textContent || "").replace(/[\s🔓🔒▾▸▴▼▲]+$/u, "").trim(); const sym = z.opts?.tabSym?.(d) || [...t][0] || "•";
+    return `<button type="button" role="tab" class="rk-tab" data-i="${i}" title="${esc(t)}" aria-label="${esc(t)}">${z.opts?.tabSym ? sym : esc(sym)}<small>${esc(z.opts?.tabText?.(d) ?? rkKurz(t))}</small></button>`; }).join("");
   z.reiter.querySelectorAll(".rk-tab").forEach((b) => (b.onclick = () => rkGehe(z, Number(b.dataset.i))));
   rkMasse(z); rkStellen(z, true); setTimeout(() => rkJalousie(z, true), 60);
 }
@@ -12988,6 +13065,10 @@ function offlineStandZeigen(an) {
     : `📴 <b>Kein Netz – das ist dein Stand von ${esc(fKurz.format(d))} ${esc(fZeit.format(d))} Uhr.</b> Neues kommt, sobald du wieder Internet hast.`;
 }
 window.addEventListener("online", () => { if (KEY) neuLaden(); owSenden(); }); // 2.1.1: INIT nicht leeren – das Neuladen ersetzt den Offline-Stand
+// 2.209.0 KC-CLUB-ONLINE-OFFLINE (Gesamtprüfung 5, AGENTS Regel 11): ohne Netz wissen wir nicht, wer online ist – Anzeige
+// „X sind gerade online“, grüne Zahl und Ameisenlauf verschwinden sofort statt grün stehen zu bleiben; mit Netz kommt der Stand neu
+window.addEventListener("offline", () => { try { ONL.liste = []; ONL.ids = new Set(); ONL.stand = 0; onlineLeisteZeigen(); if (INIT) heroZeigen(); } catch {} });
+window.addEventListener("online", () => { try { if (KEY) onlinePing(); } catch {} });
 // Nachrichten ohne Netz: nicht verlieren, sondern auf dem Gerät vormerken und bei Netz automatisch senden.
 // Nur wenn das Handy sicher offline ist (dann hat der Server die Nachricht garantiert nicht bekommen → nie doppelt).
 const OW_KEY = "kc_club_warteschlange";
@@ -13107,7 +13188,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { MG_AMEISEN.bis = 0; MG_AMEISEN.neu = true; mgAnsichtWahlZeigen(); mitgliederLaden(); } // KC-CLUB-GRUPPEN-AMEISEN
-  if (v === "einstellungen") { leitungStartZeigen(); notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+  if (v === "einstellungen") { leitungStartZeigen(); notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;
@@ -13652,7 +13733,7 @@ async function vorschlaegeLaden() {
       + `<div class="abschnitt"><h3>💡 Themen für die nächste Sitzung</h3></div>`
       + (themen.length ? `<div class="mini-kacheln">${themen.map(vorschlagKachel).join("")}</div>` : '<div class="karte hinweis">Noch keine Themen. Tippe oben auf „＋ Neu“, um etwas vorzuschlagen.</div>')
       + (fertig.length ? `<div class="abschnitt"><h3>Erledigt</h3></div><div class="mini-kacheln">${fertig.map(vorschlagKachel).join("")}</div>` : "");
-  } catch (e) { meldeFehler(e); }
+  } catch (e) { meldeFehler(e); ladeFehlerStand("vorschlagListe", e, "vorschlaegeLaden()"); }
 }
 function balken(v) {
   if (!v.ergebnis) return `<p class="hinweis">🔒 Geheime Abstimmung – das Ergebnis erscheint, wenn sie beendet ist. ${v.stimmen} von ${v.berechtigt} haben abgestimmt.</p>`;
@@ -14038,7 +14119,7 @@ function buNeuOeffnen() {
 }
 function buNeuWeg() { BNN.liste.forEach((u) => BNN.weg.add(bnnSchluessel(u))); buNeuZeigen([]); }
 async function buLaden() {
-  try { [BU.start] = await Promise.all([api("buero_start"), buNachherListe(), buFesteListe(BU_F?.tage || 60), flLaden(), ICH?.vorstand || ICH?.admin ? aeEingangLaden().catch(() => null) : null]); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; return; }
+  try { [BU.start] = await Promise.all([api("buero_start"), buNachherListe(), buFesteListe(BU_F?.tage || 60), flLaden(), ICH?.vorstand || ICH?.admin ? aeEingangLaden().catch(() => null) : null]); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(fehlerText(e))}</div>`; return; }
   buZeigen();
 }
 function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
@@ -14063,7 +14144,7 @@ async function lvJetzt() {
     const zoom = Math.min(1, (r.parentNode.clientWidth || 300) / ((DRUCK.quer ? 297 : 210) * 3.78 + 20));
     r.onload = () => { try { r.style.height = Math.min(4000, r.contentDocument.documentElement.scrollHeight + 4) + "px"; } catch {} };
     r.srcdoc = druckHtml(true).replace("</style>", `html{zoom:${zoom.toFixed(3)}}body{padding:4px 0!important}</style>`);
-  } catch (e) { r.srcdoc = `<p style="font:15px sans-serif;color:#666;padding:12px">${esc(e.message)}</p>`; r.style.height = "60px"; }
+  } catch (e) { r.srcdoc = `<p style="font:15px sans-serif;color:#666;padding:12px">${esc(fehlerText(e))}</p>`; r.style.height = "60px"; }
   finally { DRUCK = alt; }
 }
 function lvGross() { if (LV.art) druckStarten(LV.art); }
@@ -14165,7 +14246,7 @@ async function adbStart(wahl = false) {
 async function adbDatenHolen() { if (!ADB.d) try { ADB.d = await api("buero_adressen", {}, { still: true }); } catch { return null; } return ADB.d?.adressen || []; }
 async function adbLaden() {
   try { ADB.d = await api("buero_adressen", {}, { warten: true }); }
-  catch (e) { const z = $("adbInhalt"); if (z) z.innerHTML = `<div class="karte sc-fehler">⚠️ ${esc(e?.message || "Nicht erreichbar")} – das Adressbuch bleibt leer, bis es wieder geht.</div>`; return; }
+  catch (e) { const z = $("adbInhalt"); if (z) z.innerHTML = `<div class="karte sc-fehler">⚠️ ${esc(fehlerText(e, "Nicht erreichbar"))} – das Adressbuch bleibt leer, bis es wieder geht.</div>`; return; }
   adbListe();
 }
 function adbListe() {
@@ -14706,7 +14787,7 @@ function dvGanttHtml() {
       const e = p.eintraege.filter((y) => y.d === t), kann = e.filter((y) => y.t === "available").map((y) => `${y.s}–${y.e}`);
       const bal = ["unavailable", "available", "if_needed", "preferred"].flatMap((typ) => e.filter((y) => y.t === typ).map((y) => `<i class="dv-bal ${DV_TYP[typ]}" style="left:${x(y.s)}%;width:${Math.max(2, x(y.e) - x(y.s))}%"></i>`)).join("");
       const titel = e.map((y) => `${{ available: "Kann", preferred: "Wunsch", if_needed: "Wenn nötig", unavailable: "Sperre" }[y.t]} ${y.s}–${y.e} Uhr`).join(", ");
-      h += `<div class="dv-zelle${we(t) ? " dv-we" : ""}"${titel ? ` title="${esc(titel)}" onclick="melde('${esc(p.name.split(" ")[0])} ${t.slice(8)}.${t.slice(5, 7)}.: ${esc(titel)}')"` : ""}>${bal}${kann.length ? `<small>${kann.join(" ")}</small>` : ""}</div>`;
+      h += `<div class="dv-zelle${we(t) ? " dv-we" : ""}"${titel ? ` title="${esc(titel)}" onclick="melde(${jsArg(`${p.name.split(" ")[0]} ${t.slice(8)}.${t.slice(5, 7)}.: ${titel}`)})"` : ""}>${bal}${kann.length ? `<small>${kann.join(" ")}</small>` : ""}</div>`;
     }
     const wunsch = dvStunden(p.eintraege.filter((y) => y.t === "preferred"));
     h += `<div class="dv-ges">${std.get(p.id)} Std${wunsch ? `<small>Wunsch ${wunsch}</small>` : ""}</div>`;
@@ -15476,7 +15557,7 @@ async function hlLaden() {
     const bi = document.getElementById("boInfo"); if (bi && HL.tab === "boerse") boInfo(bi.dataset.id);
     if (HL.tab === "boerse" && BO.oeffnen) { const id = BO.oeffnen; BO.oeffnen = null; boInfo(id); } // Sprung aus Push/Mail (#boerse=…)
     buEingangAuffrischen(); // KC-CLUB-BUERO-EINGANG
-  } catch (e) { $("hlInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
+  } catch (e) { $("hlInhalt").innerHTML = `<div class="karte hinweis">${esc(fehlerText(e))}</div>`; }
 }
 // Kachel-Reihe: ein Wert aus einer Liste [{w, t}]
 const hlJs = (v) => (JSON.stringify(v) ?? "null").replace(/&/g, "&amp;").replace(/'/g, "&#39;"); // 2.155.0: undefined → null statt Absturz (Fund 09.10., Büro-Adressbuch in 2.125)
@@ -16041,7 +16122,7 @@ const MD_WUNSCH = { offen: "📨 abgegeben – wartet auf den Planer", uebernomm
 async function mdStart() {
   const f = blattAuf("mdBlatt", `<h3 style="margin:0">🗓️ Mein Dienst</h3><div id="mdInhalt"><p class="hinweis">Wird geladen …</p></div><button class="knopf" onclick="$('mdBlatt').remove()">Schließen</button>`);
   f.classList.add("sc-blatt");
-  try { MD_D = await api("mein_dienst", {}, { warten: true }); } catch (e) { $("mdInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ Stand konnte nicht geladen werden: ${esc(e?.message || "")} <button class="knopf klein" onclick="mdStart()">🔄 Nochmal</button></div>`; return; }
+  try { MD_D = await api("mein_dienst", {}, { warten: true }); } catch (e) { $("mdInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ Stand konnte nicht geladen werden: ${esc(fehlerText(e, ""))} <button class="knopf klein" onclick="mdStart()">🔄 Nochmal</button></div>`; return; }
   const w = MD_D?.wunsch || {}, so = MD_D?.soll || { anzahl: 0 }, ist = MD_D?.ist || {}; // Gesamtprüfung 3: unvollständige Antwort → leer statt Absturz
   const schritt = (n, an) => `<span class="marke${an ? " ta-st-ja" : ""}">${n}</span>`;
   $("mdInhalt").innerHTML = `<p class="hinweis" style="margin:0 0 6px">So entsteht dein Dienst: erst deine <b>Wünsche</b>, dann plant der Planer (<b>Soll</b>), am Ende zählt, was du gearbeitet hast (<b>Ist</b>).</p>
@@ -16151,7 +16232,7 @@ async function unterhLaden() {
       || (arch.length ? '<p class="hinweis">Alle Chats sind archiviert – oben auf „📦 Archiviert“ tippen.</p>' : '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>');
     UH.mark.forEach((id) => { if (!zeigen.some((u) => u.id === id)) UH.mark.delete(id); }); uhMarkZeichnen(); uhLangDruck(); // KC-CLUB-MEHRFACH-NACHRICHT
     uhAmeisen();
-  } catch (e) { meldeFehler(e); }
+  } catch (e) { meldeFehler(e); ladeFehlerStand("unterhListe", e, "unterhLaden()"); }
 }
 // ---------- KC-CLUB-CHAT-KARTEI (2.191.0) ----------
 // Je Chat eine Karteikarte; vorn (und die nächste) werden die letzten 6 Nachrichten gezeigt – als „Vorschau“, die NICHT als gelesen
@@ -16180,7 +16261,7 @@ async function uhkLaden(karte) {
   try { const u = await api("unterhaltung", { id, vorschau: true });
     const l = (u.nachrichten || []).slice(-6), html = l.map((m) => `<div class="uhk-msg${m.eigen ? " eigen" : ""}${m.wichtig ? " wichtig" : ""}"><small>${esc(m.eigen ? "Du" : m.von || "")} · ${esc(zeitKurz(m.zeit))}</small><div>${esc(String(m.text || (m.anlagen?.length ? "📎 Anhang" : "")).slice(0, 220))}${String(m.text || "").length > 220 ? " …" : ""}</div></div>`).join("") || '<p class="hinweis">Noch keine Nachricht.</p>';
     UHK.vs.set(id, { stand, html }); document.querySelectorAll(`#uhKartei .uhk[data-id="${CSS.escape(id)}"]`).forEach((k) => uhkZeigen(k, html)); }
-  catch (e) { UHK.vs.delete(id); const v = karte.querySelector('[data-teil="verlauf"]'); if (v) v.innerHTML = `<p class="hinweis">⚠️ ${esc(e.message || "Konnte nicht geladen werden")}</p>`; }
+  catch (e) { UHK.vs.delete(id); const v = karte.querySelector('[data-teil="verlauf"]'); if (v) v.innerHTML = `<p class="hinweis">⚠️ ${esc(fehlerText(e, "Konnte nicht geladen werden"))}</p>`; }
 }
 function uhkZeigen(karte, html) { const v = karte.querySelector('[data-teil="verlauf"]'); if (v) { v.innerHTML = html; v.scrollTop = v.scrollHeight; } }
 function uhKarteiAn() {
@@ -16480,13 +16561,14 @@ const SPRUENGE = {
   update: { sym: "🔄", t: "Update holen", fn: () => updateKachel() },
 };
 // nur Ziele, die alle Mitglieder schon haben (nicht freigegebene Neuheiten nicht anbieten)
-const sprungFuerAlle = (id) => !!SPRUENGE[id] && (!SPRUENGE[id].frei || INIT?.freigaben?.[SPRUENGE[id].frei] === "alle");
+const sprungDef = (id) => (Object.hasOwn(SPRUENGE, id) ? SPRUENGE[id] : null); // 2.209.0 (Gesamtprüfung 5): „#zu=constructor“ ist kein Ziel
+const sprungFuerAlle = (id) => !!sprungDef(id) && (!SPRUENGE[id].frei || INIT?.freigaben?.[SPRUENGE[id].frei] === "alle");
 function sprungKnopf(id) {
-  const s = SPRUENGE[id]; if (!s) return esc(SPRUNG_URL + id);
+  const s = sprungDef(id); if (!s) return esc(SPRUNG_URL + id);
   return `<button type="button" class="knopf klein na-sprung" onclick="event.stopPropagation();sprung('${id}')">${s.sym} ${esc(s.t)} ›</button>`;
 }
 function sprung(id) {
-  const s = SPRUENGE[id];
+  const s = sprungDef(id);
   if (!s || (s.frei && !frei(s.frei))) return melde("Diese Stelle gibt es in deiner App noch nicht – bitte unter Technik → 🔄 Update prüfen.", true);
   try { s.fn(); } catch (e) { meldeFehler(e); }
 }
@@ -18623,7 +18705,7 @@ async function aktionenLaden() {
     $("aktionListe").innerHTML = (kommend.length ? `<div class="raster">${kommend.map(aktionKachel).join("")}</div>` : '<div class="karte hinweis">Zurzeit ist keine Aktion geplant.</div>')
       + (vorbei.length ? `<div class="abschnitt"><h3>Vergangene Aktionen</h3></div><div class="raster">${vorbei.map(aktionKachel).join("")}</div>` : "")
       + `<p class="hinweis" style="font-size:.85rem">Die Angaben kommen aus dem KC Manager${stand ? ` (Stand ${esc(zeitKurz(stand))})` : " – Stand unbekannt"}. Änderungen bitte dort eintragen.</p>`;
-  } catch (e) { meldeFehler(e); }
+  } catch (e) { meldeFehler(e); ladeFehlerStand("aktionListe", e, "aktionenLaden()"); }
 }
 const fKurzJahr = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });
 function aktionZeitraum(a) {
@@ -18699,7 +18781,7 @@ async function protokolleLaden() {
     prAnsichtKnopf();
     klappenMerken($("protokollListe")); // 1.46.0: Klappbereiche mit Pfeil und Schloss wie überall
     if (!$("prFilterFeld").classList.contains("versteckt")) prFilterFuellen(); else prFilterAnwenden(); // 2.23.36: Filter bleibt nach dem Neuladen
-  } catch (e) { meldeFehler(e); }
+  } catch (e) { meldeFehler(e); ladeFehlerStand("protokollListe", e, "protokolleLaden()"); }
 }
 function protokollFilter() { prFilterAnwenden(); } // Suchfeld + Filter wirken zusammen (2.23.36)
 // ---------- KC-CLUB-PROTOKOLL-FILTER (2.23.36, Wunsch Hansi): oben „🔽 Filter“ → Jahr, Monat, Ort, Protokollführer (2 × 2 Felder) ----------
@@ -18784,7 +18866,7 @@ async function protokollOeffnen(id, ausHistorie) {
     PR = await api("protokoll_laden", { id }); aufgabenMitGruppe(PR.aufgaben || []);
     if (PR.darfBearbeiten && PR.protokoll.roh === "entwurf") protokollFormular(); else protokollLesen();
     neuLaden();
-  } catch (e) { $("protokollInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
+  } catch (e) { $("protokollInhalt").innerHTML = `<div class="karte hinweis">${esc(fehlerText(e))}</div>`; }
 }
 const nameVon = (pid) => MITGLIEDER?.find((m) => m.person_id === pid)?.name || pid;
 function anlagenListe(bearbeiten) {
@@ -19080,7 +19162,7 @@ async function mgAktualisieren(k) {
   catch (e) { meldeFehler(e); } finally { k?.classList.remove("dreht"); }
 }
 async function mitgliederLaden() {
-  try { await mitgliederHolen(); mitgliederZeichnen(); } catch (e) { meldeFehler(e); }
+  try { await mitgliederHolen(); mitgliederZeichnen(); } catch (e) { meldeFehler(e); ladeFehlerStand("mitgliederListe", e, "mitgliederLaden()"); }
   try { MG_GRUPPEN = ((await api("unterhaltungen", {})).unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); } catch { MG_GRUPPEN = []; }
   if (MG_GRUPPE && !MG_GRUPPEN.some((g) => g.id === MG_GRUPPE)) MG_GRUPPE = null;
   if (MITGLIEDER) mitgliederZeichnen();
@@ -19186,7 +19268,7 @@ async function mgkLaden(karte) {
   if (c?.laeuft) return; MGK.det.set(pid, { ...(c || {}), laeuft: true, zeit: c?.zeit || 0 });
   try { const d = await api("mitglied_details", { person_id: pid }); MGK.det.set(pid, { zeit: Date.now(), d });
     document.querySelectorAll(`#mgKartei .mgk[data-pid="${CSS.escape(pid)}"]`).forEach((x) => mgkFuellen(x, d)); }
-  catch (e) { MGK.det.delete(pid); const z = karte.querySelector('[data-teil="kontakt"]'); if (z) z.innerHTML = `<p class="hinweis">⚠️ ${esc(e.message || "Konnte nicht geladen werden")}</p>`; }
+  catch (e) { MGK.det.delete(pid); const z = karte.querySelector('[data-teil="kontakt"]'); if (z) z.innerHTML = `<p class="hinweis">⚠️ ${esc(fehlerText(e, "Konnte nicht geladen werden"))}</p>`; }
 }
 function mgkFuellen(karte, d) {
   const m = MITGLIEDER?.find((x) => x.person_id === karte.dataset.pid) || { person_id: karte.dataset.pid, name: d.name };
@@ -19486,7 +19568,7 @@ async function scStart(tab) {
 async function scLaden() {
   // KC-CLUB-BESUCHE: für „🎓 geschult“ und die Liste – danach nur die betroffenen Teile neu zeigen (Eingaben bleiben stehen; 2.23.63)
   if (!BS.liste.length && !BS.geladen) { BS.geladen = true; bsLaden().then(() => { if ((SC.tab || "termine") === "besuche") scZeigen(); else { if ($("scMListe") && SC.T) scMitglieder(); if ($("scEinladungen") && SC.T) scEinladungen(); /* 2.25.1: Danksagung-Haken braucht die Besuche */ } }); }
-  try { SC.T = await scApi("t_init"); } catch (e) { const z = $("scInhalt"); if (z) z.innerHTML = `<div class="karte sc-fehler">⚠️ ${esc(e?.message || "Nicht erreichbar")}</div>`; return; }
+  try { SC.T = await scApi("t_init"); } catch (e) { const z = $("scInhalt"); if (z) z.innerHTML = `<div class="karte sc-fehler">⚠️ ${esc(fehlerText(e, "Nicht erreichbar"))}</div>`; return; }
   scZeigen();
 }
 function scZeigen() {
@@ -20624,7 +20706,7 @@ function stBalken() {
 function stAlter(iso) { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "gerade eben" : m === 1 ? "vor 1 Min" : m < 60 ? `vor ${m} Min` : `um ${fZeit.format(new Date(iso))} Uhr`; }
 async function stLaden(still) {
   let liste = [];
-  try { liste = (await api("standort_liste", {}, still ? {} : { warten: true })).standorte || []; } catch (e) { if (!still) $("stListe").innerHTML = `<div class="karte">⚠️ ${esc(e.message)}</div>`; return; }
+  try { liste = (await api("standort_liste", {}, still ? {} : { warten: true })).standorte || []; } catch (e) { if (!still) $("stListe").innerHTML = `<div class="karte">⚠️ ${esc(fehlerText(e))}</div>`; return; }
   ST.fremde = liste.filter((x) => !x.vonMir).length;
   const eigen = liste.find((x) => x.vonMir);
   $("stListe").innerHTML = (eigen ? `<div class="karte"><b>🔴 Du teilst deinen Standort</b> mit ${esc(eigen.an.join(", "))} – bis ${esc(fZeit.format(new Date(eigen.bis)))} Uhr
@@ -20749,13 +20831,13 @@ function mfAutoHtml(m, art, bezugId, aktiv, offen, ichDabei) {
   const mit = m.mitfahrer.slice(), meinIdx = m.dabei ? mit.findIndex((n) => n === ICH?.name) : -1;
   const sitze = Array.from({ length: m.plaetze }, (_, i) => i < mit.length ? (i === (meinIdx >= 0 ? meinIdx : -1) ? { art: "du", name: mit[i] } : { art: "belegt", name: mit[i] }) : { art: "frei" });
   if (m.dabei && meinIdx < 0) { const b = sitze.findIndex((x) => x.art === "belegt"); if (b >= 0) sitze[b] = { art: "du", name: ICH?.name }; } // Name abweichend → trotzdem „Du“ zeigen
-  const fahrer = mfVorname(m.fahrer.name), sicher = (t) => esc(t).replace(/'/g, "&#39;");
+  const fahrer = mfVorname(m.fahrer.name), sicher = jsArg; // 2.209.0: als JSON-Zeichenkette (vorher brach O'Neill den Knopf)
   const sitz = (x) => {
     if (x.art === "fahrer") return `<div class="mf-platz"><div class="mf-sitz mf-fahrer" aria-label="Fahrer ${esc(m.fahrer.name)}"><span class="mf-ic">🛞</span>Fahrer</div><small>${esc(fahrer)}</small></div>`;
     if (x.art === "belegt") return `<div class="mf-platz"><div class="mf-sitz mf-belegt" role="img" aria-label="belegt: ${esc(x.name)}"><span class="mf-ic">👤</span>${esc(mfKuerzel(x.name))}</div><small>${esc(mfVorname(x.name))}</small></div>`;
-    if (x.art === "du") return `<div class="mf-platz"><button class="mf-sitz mf-du" ${aktiv ? `onclick="mfSitzFreigeben('${m.id}', '${sicher(fahrer)}')"` : "disabled"} aria-label="Dein Platz – antippen zum Freigeben"><span class="mf-ic">✔</span>Du</button><small>dein Platz</small></div>`;
+    if (x.art === "du") return `<div class="mf-platz"><button class="mf-sitz mf-du" ${aktiv ? `onclick="mfSitzFreigeben('${m.id}', ${sicher(fahrer)})"` : "disabled"} aria-label="Dein Platz – antippen zum Freigeben"><span class="mf-ic">✔</span>Du</button><small>dein Platz</small></div>`;
     const waehlbar = aktiv && !m.eigen && !ichDabei;
-    return `<div class="mf-platz"><button class="mf-sitz mf-frei${waehlbar ? "" : " mf-aus"}" ${waehlbar ? `onclick="mfSitzBuchen('${m.id}', '${sicher(fahrer)}')"` : "disabled"} aria-label="freier Platz${waehlbar ? " – antippen zum Reservieren" : ""}"><span class="mf-ic">＋</span>frei</button><small>${waehlbar ? "antippen" : "frei"}</small></div>`;
+    return `<div class="mf-platz"><button class="mf-sitz mf-frei${waehlbar ? "" : " mf-aus"}" ${waehlbar ? `onclick="mfSitzBuchen('${m.id}', ${sicher(fahrer)})"` : "disabled"} aria-label="freier Platz${waehlbar ? " – antippen zum Reservieren" : ""}"><span class="mf-ic">＋</span>frei</button><small>${waehlbar ? "antippen" : "frei"}</small></div>`;
   };
   // Reihen: vorne Fahrer + 1, dahinter Bänke mit je 3 (Kleinbus bei mehr als 4 Plätzen)
   const reihen = [[{ art: "fahrer" }, ...sitze.slice(0, 1)]];
@@ -21073,7 +21155,7 @@ async function fotosLaden(formBehalten) {
   if (!formBehalten) $("fotoForm").classList.add("versteckt");
   try { FA = await api("fotos_liste", { ...faFilter, papierkorb: faPapierkorb }); fotosZeigen();
     if (faGeteilt) { const d = faGeteilt; faGeteilt = null; fotoForm(); faGewaehlt({ files: d, value: "" }); } }
-  catch (e) { $("fotoListe").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
+  catch (e) { $("fotoListe").innerHTML = `<div class="karte hinweis">${esc(fehlerText(e))}</div>`; }
 }
 function fotosZeigen() {
   faAlbenZeigen(); faLeisteZeigen(); // KC-CLUB-FOTO-ALBEN (1.63.0)
@@ -22112,7 +22194,7 @@ async function fbLaden() {
     FB = { fragen: r.fragen, umgesetzt: r.umgesetzt || [], a: JSON.parse(JSON.stringify(r.antwort?.antworten || {})) /* 2.17.3: auch ältere Browser */, idee: r.antwort?.idee || "", mitteilung: r.antwort?.mitteilung || "", anonym: !!r.antwort?.anonym,
       gesendet: r.antwort?.geaendert_am || null, schritt: r.antwort ? 0 : 1 };
     fbZeigen();
-  } catch (e) { $("feedbackInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
+  } catch (e) { $("feedbackInhalt").innerHTML = `<div class="karte hinweis">${esc(fehlerText(e))}</div>`; }
 }
 function fbTexteMerken() { if (!FB || FB.schritt !== 3) return; FB.idee = $("fbIdee").value; FB.mitteilung = $("fbMitteilung").value; FB.anonym = $("fbAnonym").checked; }
 function fbZeigen() {
@@ -22194,7 +22276,7 @@ async function fbAuswertung() {
       + `<div class="karte"><b>✍️ Ideen & Mitteilungen (${r.texte.length})</b>${r.texte.length ? r.texte.map((t) => `<div class="fbtext"><div class="hinweis" style="font-size:.85rem">${esc(t.wer || "ohne Namen")} · ${esc(wann(t.zeit))}</div>
           ${t.idee ? `<div>💡 ${esc(t.idee)}</div>` : ""}${t.mitteilung ? `<div>✍️ ${esc(t.mitteilung)}</div>` : ""}</div>`).join("") : '<p class="hinweis">Noch keine.</p>'}</div>`;
     scrollTo(0, 0);
-  } catch (e) { el.innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
+  } catch (e) { el.innerHTML = `<div class="karte hinweis">${esc(fehlerText(e))}</div>`; }
 }
 
 // ---------- Mitglieder-Details (KC-CLUB-KONTAKT) ----------
@@ -22345,7 +22427,7 @@ async function mitgliedOeffnen(pid, ausHistorie) {
   $("mitgliedInhalt").innerHTML = '<div class="karte hinweis">Wird geladen …</div>';
   zeige("mitglied", ausHistorie);
   try { MD = await api("mitglied_details", { person_id: pid }); mitgliedZeigen(); if (!MD.selbst) spMitgliedKnopf(pid); /* KC-CLUB-SPIELE */ }
-  catch (e) { $("mitgliedInhalt").innerHTML = `<div class="karte hinweis">${esc(e.message)}</div>`; }
+  catch (e) { $("mitgliedInhalt").innerHTML = `<div class="karte hinweis">${esc(fehlerText(e))}</div>`; }
 }
 function mitgliedZeigen() {
   if (MD && !MD.selbst) setTimeout(() => mgGemeinsameZeigen(MD.person_id), 0); // 2.23.100
@@ -22897,7 +22979,7 @@ async function arLaden() {
     if (AR.zielArt) { const za = AR.daten.ordner.find((o) => !o.besitzer && o.art === AR.zielArt); AR.zielArt = null; if (za) return arOrdnerOeffnen(za.id); }
     if (AR.zielTitel) { const zt = AR.daten.ordner.filter((o) => !o.besitzer && o.titel === AR.zielTitel).sort((a, b) => b.jahr - a.jahr)[0]; const t = AR.zielTitel; AR.zielTitel = null; if (zt) return arOrdnerOeffnen(zt.id); melde(`Den Ordner „${t}“ gibt es noch nicht – im Archiv mit „＋“ anlegen.`, true); }
     if (AR.ziel) { const z = AR.ziel, zr = AR.zielRegister; AR.ziel = null; AR.zielRegister = "";
-      if (AR.daten.ordner.some((o) => o.id === z) || (String(z).startsWith("auto:") && arAlleOrdner().some((o) => o.id === z))) { arOrdnerOeffnen(z); if (zr) { AR.register = zr; arZeigen(); } return; } } arZeigen(); } catch (e) { $("arInhalt").innerHTML = `<div class="karte hinweis">⚠️ ${esc(e.message)}</div>`; }
+      if (AR.daten.ordner.some((o) => o.id === z) || (String(z).startsWith("auto:") && arAlleOrdner().some((o) => o.id === z))) { arOrdnerOeffnen(z); if (zr) { AR.register = zr; arZeigen(); } return; } } arZeigen(); } catch (e) { $("arInhalt").innerHTML = `<div class="karte hinweis">⚠️ ${esc(fehlerText(e))}</div>`; }
 }
 const arJahr = (datum) => String(datum || "").slice(0, 4);
 const arAutoOrdner = (jahr) => ({ id: "auto:" + jahr, auto: true, jahr: Number(jahr), titel: "Clubleben", farbe: 0, register: Object.keys(AR_AUTO).map((k) => AR_AUTO[k][1]) });
@@ -22993,7 +23075,7 @@ async function ivAnsicht(ordnerId = null) {
   IVA.ordner = ordnerId; IVA.such = ""; if (ordnerId) IVA.auf = new Set([ordnerId]);
   const f = blattAuf("ivBlatt", `<div class="iv-kopf"><h3>🗂️ Inhaltsverzeichnis</h3><button type="button" class="rund" aria-label="Schließen" onclick="fensterZu($('ivBlatt'))">✕</button></div><div id="ivInhalt"><p class="hinweis">Wird zusammengestellt …</p></div>`);
   f.classList.add("iv-blatt");
-  try { AR.daten = await api("archiv_liste", {}, { warten: true }); } catch (e) { const z = $("ivInhalt"); if (z) z.innerHTML = `<div class="karte hinweis">⚠️ ${esc(e?.message || "Archiv gerade nicht erreichbar")} – bitte gleich nochmal.</div>`; return; }
+  try { AR.daten = await api("archiv_liste", {}, { warten: true }); } catch (e) { const z = $("ivInhalt"); if (z) z.innerHTML = `<div class="karte hinweis">⚠️ ${esc(fehlerText(e, "Archiv gerade nicht erreichbar"))} – bitte gleich nochmal.</div>`; return; }
   ivAnsichtZeichnen();
 }
 function ivAnsichtZeichnen() {
@@ -25079,43 +25161,14 @@ async function fpAdmin(tage) {
   history.pushState({ v: "start", tiefe: 1 }, "", url.pathname);
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
-      if (e.data?.typ === "online-ansage") { onlineAnsageSprechen([e.data.name]); onlinePing(); } }); // KC-CLUB-ONLINE-ANSAGE-PUSH; 2.24.18: LED/Zahl/Ring sofort mitziehen (Hinweis Hansi: Ansage kam immer zuerst)
+      if (e.data?.typ === "online-ansage") { onlineAnsageSprechen([e.data.name]); onlinePing(); }
+      if (e.data?.typ === "oeffnen") pushOeffnen(e.data.url); }); // 2.209.0 KC-CLUB-PUSH-SPRUNG // KC-CLUB-ONLINE-ANSAGE-PUSH; 2.24.18: LED/Zahl/Ring sofort mitziehen (Hinweis Hansi: Ansage kam immer zuerst)
   }
   // Messung: wie wurde die App gestartet (einmal je Sitzung) – zeigt, ob die Installation geklappt hat
   try { if (!sessionStorage.getItem("kc_club_start_gemeldet")) { sessionStorage.setItem("kc_club_start_gemeldet", "1"); setTimeout(() => api("diagnose", { art: "start", daten: { start: START_ART, referrer: (document.referrer || "").slice(0, 80) } }).catch(() => {}), 1500); } } catch {}
   neuLaden().then(() => {
     const h = startSprung;
-    if (h.startsWith("#nachricht=")) chatOeffnen(h.slice(11));
-    else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
-    else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
-    else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
-    else if (h === "#boerse" || h.startsWith("#boerse=")) { BO.oeffnen = h.slice(8) || null; hlStart("boerse"); } // KC-CLUB-BOERSE
-    else if (h.startsWith("#angebot=")) angebotDirekt(decodeURIComponent(h.slice(9))); // KC-CLUB-HILFE-KANAELE (2.23.44): Push/Mail → Angebot
-    else if (h.startsWith("#hilfe=")) hilfeDirekt(decodeURIComponent(h.slice(7))); // KC-CLUB-HILFE-KURZ (1.93.0): Push/Mail → Kurzansicht
-    else if (h.startsWith("#mitglied=")) mitgliedOeffnen(decodeURIComponent(h.slice(10)));
-    else if (h.startsWith("#dokument=")) dokOeffnen(decodeURIComponent(h.slice(10))); // KC-CLUB-DOK-ANZEIGE
-    else if (h.startsWith("#bestaetigung=")) bestaetigungZeigen(decodeURIComponent(h.slice(14))); // KC-CLUB-BESTAETIGUNG
-    else if (h === "#geteilt") geteiltEmpfangen();
-    else if (h === "#todo") { termineArt = "todo"; zeige("termine"); }
-    else if (h === "#pinnwand") zeige("pinnwand");
-    else if (h === "#standort") zeige("standort");
-    else if (h === "#dienstwunsch") dwOeffnen();
-    else if (h === "#wunschbogen") wbStart(); // KC-CLUB-WUNSCHBOGEN (2.23.28)
-    else if (h === "#schulung") smStart(); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62)
-    else if (h.startsWith("#besuch=")) bsDirekt(decodeURIComponent(h.slice(8))); // KC-CLUB-BESUCHE (2.23.65): „Protokoll öffnen“ aus Mails wie im alten Programm
-    else if (h === "#schulungen") scStart();
-    else if (h === "#mikrofon") mikroAssistent(); // KC-CLUB-MIKRO-ASSISTENT (2.23.72)
-    else if (h.startsWith("#zu=")) sprung(h.slice(4)); // KC-CLUB-SPRUNGKNOPF (2.23.97): Link aus Nachricht, Push oder E-Mail
-    else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart();
-    else if (h.startsWith("#vorfuehren=")) setTimeout(onlinePing, 300); // KC-CLUB-VORFUEHREN: aus dem Push – die Einladung kommt mit dem nächsten Online-Abgleich
-    else if (h === "#mfrage") twFrageStart(); // KC-CLUB-MITGLIEDER-FRAGEN (2.23.51): Push/Mail → Fragen an mich bzw. Antworten // KC-CLUB-TWINKEY-FRAGEN (2.23.49): Push/Mail → Frage bzw. Antwort
-    else if (h.startsWith("#spiel=")) spOeffnen(decodeURIComponent(h.slice(7))); // KC-CLUB-SPIELE (2.7.0): aus dem Push
-    else if (h === "#spiele") spStart();
-    else if (h === "#hilfezentrum" || h.startsWith("#hilfezentrum=")) hzStart(decodeURIComponent(h.slice(14))); // KC-CLUB-HILFEZENTRUM (2.23.0)
-    else if (["#termine", "#vorschlaege", "#aktionen", "#fotos", "#protokolle", "#dienste", "#nachrichten", "#mitglieder", "#einstellungen", "#archiv", "#helfen"].includes(h)) zeige(h.slice(1));
-    else if (h === "#buero" && ICH?.buero) buStart();
-    else if (h === "#eingang" && ICH?.buero) { buStart(); buEingang(); } // KC-CLUB-EINGANGSKORB (2.23.6): Push führt direkt in den Eingang
-    else if (h === "#aenderungen") ICH?.vorstand || ICH?.admin ? aeEingang() : aeStart(); // KC-CLUB-AENDERUNG (2.22.7): aus Push/Mail
+    hashSprung(h); // 2.209.0: eigene Funktion – auch für Push-Antippen bei offener App
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
     if (!h || h === "#") setTimeout(() => ekHinweisPruefen(), 3000); // KC-CLUB-EINGANG-HINWEIS: viel im Eingangskorb?
     if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);

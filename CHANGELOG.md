@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.209.0 – 2026-10-10 – 🔧 Gesamtprüfung: viele kleine Verbesserungen
+🔧 Gesamtprüfung: zuverlässiger offline und bei Updates, Push-Antippen führt direkt zum Ziel, klarere Meldungen
+
 ## 2.208.0 – 2026-10-10 – 🎄 Countdown bis zum Weihnachtsmarkt
 🎄 Oben im Countdown: „Weihnachtsmarkt · 55 Tage“, während er läuft „läuft!“
 

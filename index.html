@@ -122,7 +122,7 @@
     --pulsRing: 208, 2, 27; --pulsRingA: .55;
   }
   :root.dunkel { --pulsRing: 255, 77, 94; --pulsRingA: .9; }
-  :root.dunkel { --textRot: #ff9fae; --textGruen: #7bd88f; --textOrange: #ffbe5c; --textNotruf: #ff8a7a; --bg: #1b1415; --karte: #2a2021; --karte2: #33282a; --text: #f4e9e4; --grau: #b9a8a3; --linie: #45393a; --gruenbg: #1f3a2a; --gelbbg: #3a2f17; --rotbg: #4a2126; --schatten: 0 6px 18px rgba(0,0,0,.35); --blau: #8cbbe8; --blaubg: #1d2c3d; --lila: #cfa3e8; --lilabg: #33203d; --tuerkis: #6fd0d8; --tuerkisbg: #173338; }
+  :root.dunkel { --textRot: #ff9fae; --textGruen: #7bd88f; --textOrange: #ffbe5c; --textNotruf: #ff8a7a; --bg: #1b1415; --karte: #2a2021; --karte2: #33282a; --text: #f4e9e4; --grau: #b9a8a3; --linie: #45393a; --gruenbg: #1f3a2a; --gelbbg: #3a2f17; --gelb: #ffd166; --rotbg: #4a2126; --schatten: 0 6px 18px rgba(0,0,0,.35); --blau: #8cbbe8; --blaubg: #1d2c3d; --lila: #cfa3e8; --lilabg: #33203d; --tuerkis: #6fd0d8; --tuerkisbg: #173338; }
   /* Kalender (KC-CLUB-KALENDER) */
   .umschalter { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--karte2); padding: 5px; border-radius: 16px; margin: 4px 0 12px; }
   .umschalter button { border: none; border-radius: 12px; padding: 10px; font-weight: 800; background: none; cursor: pointer; }
@@ -481,7 +481,15 @@
   [data-zyklus].zk-an > button.zk.kurz { min-height: 42px !important; padding: 4px 6px 4px 10px !important; gap: 6px; } .zk.kurz .zk-titel, .zk.kurz .zk-naechst { display: none; } .zk.kurz .zk-pfeil { width: 28px; height: 28px; font-size: 1rem; }
   :root.dunkel [data-zyklus].zk-an > button.zk { border-color: var(--textRot, #e88) !important; } :root.dunkel .zk-wert { color: var(--text); }
   .mg-schalter > [data-zyklus].zk-an { flex: 1 1 150px !important; min-width: 0; margin: 0 !important; } /* Ansicht + Zeigen nebeneinander, gleich breit */
-  .zk-liste { display: grid; gap: 8px; margin: 10px 0; } .zk-liste button { text-align: left; }
+  .zk-liste { display: grid; gap: 8px; margin: 10px 0; }
+  /* 2.209.0 (Gesamtprüfung 5): aktueller Stand nie abgeschnitten – darf zweizeilig werden; große Schrift: Knöpfe untereinander */
+  [data-zyklus].zk-an > button.zk .zk-wert { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.2; }
+  :root.gross .mg-schalter > [data-zyklus].zk-an { flex-basis: 100% !important; }
+  /* Schalterzeilen: der ganze Text ist antippbar (KC-CLUB-SCHALTER-ZEILE) */
+  .schalter[data-schalter-klick] { cursor: pointer; }
+  /* letzter Inhalt jeder Seite rutscht über die schwebenden Knöpfe (👆 ? 🔍) hinaus */
+  #app section[id^="v-"]::after { content: ""; display: block; height: 76px; }
+  .zwei:has(> .versteckt) { grid-template-columns: 1fr; } /* 2.209.0: „Wiederholen“ volle Breite, solange „bis“ ausgeblendet ist */ .zk-liste button { text-align: left; }
   /* KC-CLUB-COUNTDOWN (2.202.0): wechselnde Termin-Kachel */
   #cdKachel { min-width: 0; } /* feste Höhe: beim Wechsel springt nichts */
   #cdKachel .cd-zahl, #cdKachel .cd-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -2264,7 +2272,7 @@
   .av-vorschau.mit-rechts .av-vorschau-knoepfe { flex-direction: column; align-items: stretch; } .av-vorschau.mit-rechts .av-vorschau-knoepfe .knopf { padding: 8px 10px; font-size: .9rem; }
   .av-vorschau-bild svg { display: block; } .av-vorschau-knoepfe { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; } .av-vorschau-knoepfe .knopf { margin: 0; }
   .av-keins { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; background: var(--rot); color: #fff; font-weight: 800; font-size: 1.1rem; }
-  .avatar.k-online { background: #1e8449; } .avatar.k-heute { background: #2471a3; } .avatar.k-weg { background: #d68910; }
+  .avatar.k-online { background: #1e8449; } .avatar.k-heute { background: #2471a3; } .avatar.k-weg { background: #a85f0a; } /* 2.209.0: Kontrast weiß ≥ 4,5:1 */
   /* KC-CLUB-ONLINE-ATEM (2.24.4, Wunsch Hansi): der grüne Online-Ring schwillt überall langsam an und ab – so sieht man sofort, wer online ist.
      Nur Leuchten, keine Bewegung (darum auch bei „Bewegung reduzieren“ sichtbar); aus mit „✨ Animierte Knöpfe“ = aus. */
   .avatar.k-online { animation: kOnlineAtem 3.2s ease-in-out infinite; }
@@ -3911,6 +3919,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.208.0" data-v="2.208.0"></script>
+<script src="app.js?v=2.209.0" data-v="2.209.0"></script>
 </body>
 </html>

@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.208.0";
+const SERVER_VERSION = "2.209.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -141,6 +141,13 @@ async function gedenkenListe() {
     .gte("informiert_am", new Date(Date.now() - GEDENKEN_TAGE * 86400000).toISOString()).order("informiert_am", { ascending: false }).limit(5);
   const leute = await personen((data ?? []).map((x: any) => x.person_id));
   return (data ?? []).filter((x: any) => leute.has(x.person_id)).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)!.display_name, datum: x.datum ?? null }));
+}
+// 2.209.0 (Gesamtprüfung 5): Geheimnisse in gleichbleibender Zeit vergleichen (kein Erraten Zeichen für Zeichen über die Antwortzeit)
+function gleichZeit(a: unknown, b: string) {
+  const x = new TextEncoder().encode(String(a ?? "")), y = new TextEncoder().encode(b);
+  let d = x.length ^ y.length;
+  for (let i = 0; i < y.length; i++) d |= (x[i] ?? 0) ^ y[i];
+  return d === 0;
 }
 async function personen(ids: string[]): Promise<Map<string, Person>> {
   const u = [...new Set(ids.filter(Boolean))];
@@ -4279,7 +4286,7 @@ Deno.serve(async (req) => {
     // ----- KC-CLUB-NOTBETRIEB (1.52.0): Notfall-Paket bauen und beim Ersatz-Server ablegen (Zeitplaner, alle 15 Min.) -----
     if (a === "notpaket") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
-      if (!geheim || p.cronSecret !== geheim) return json({ error: "Kein Zugang" }, 401);
+      if (!geheim || !gleichZeit(p.cronSecret, geheim)) return json({ error: "Kein Zugang" }, 401);
       // KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0): zuerst nachtragen, was im Notbetrieb geschrieben wurde – dann das Paket bauen
       const nachtrag = await notEingangLauf().catch((e) => ({ ok: false, fehler: txt(String(e?.message || e), 200) }));
       return json({ ...(await notpaketLauf(!!p.erzwingen, geheim)), nachtrag });
@@ -4287,7 +4294,7 @@ Deno.serve(async (req) => {
     // KC-CLUB-NOTPAKET-TEILE (2.124.0): ein Mitglied des Notfall-Pakets bauen – nur der Hauptlauf (Zeitplaner-Geheimnis) ruft das auf
     if (a === "notpaket_teil") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
-      if (!geheim || p.cronSecret !== geheim) return json({ error: "Kein Zugang" }, 401);
+      if (!geheim || !gleichZeit(p.cronSecret, geheim)) return json({ error: "Kein Zugang" }, 401);
       const pid = String(p.person_id || "");
       if (!/^KC-P-[A-Z0-9-]{1,40}$/.test(pid) || pid.startsWith("KC-P-TEST")) return json({ error: "Ungültig" }, 400);
       const antworten = await notpaketMitglied(pid);
@@ -4297,7 +4304,7 @@ Deno.serve(async (req) => {
     // ----- Zeitplaner: Erinnerung am Vortag (ab 9 Uhr) an alle, die nicht abgesagt haben -----
     if (a === "wartung") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
-      if (!geheim || p.cronSecret !== geheim) return json({ error: "Kein Zugang" }, 401);
+      if (!geheim || !gleichZeit(p.cronSecret, geheim)) return json({ error: "Kein Zugang" }, 401);
       // KC-CLUB-FP-UEBERWACHUNG (1.58.0): neue schwerwiegende Einträge im Fehlerprotokoll → Push an den Admin
       await fpUeberwachen().catch((e) => console.error("fp ueberwachung", String(e)));
       await postausgangLauf().catch((e) => console.error("postausgang", String(e))); // KC-CLUB-POSTAUSGANG (1.69.1)
@@ -11296,10 +11303,14 @@ Köcheclub-App`,
 
       // ----- Push -----
       case "push_anmelden": {
-        const sub = p.subscription;
-        if (!sub?.endpoint || !/^https:\/\//.test(String(sub.endpoint)) || !sub?.keys?.p256dh || !sub?.keys?.auth) throw new Fehler("Push-Anmeldung unvollständig.");
+        const roh = p.subscription;
+        if (!roh?.endpoint || !/^https:\/\//.test(String(roh.endpoint)) || !roh?.keys?.p256dh || !roh?.keys?.auth) throw new Fehler("Push-Anmeldung unvollständig.");
+        // 2.209.0 (Gesamtprüfung 5): nur die nötigen Felder, mit Längengrenzen – nie ein beliebiges Objekt in jsonb speichern
+        const endpunkt = String(roh.endpoint), p256 = String(roh.keys.p256dh), auth = String(roh.keys.auth);
+        if (endpunkt.length > 1000 || p256.length > 200 || auth.length > 100) throw new Fehler("Push-Anmeldung ungültig.");
+        const sub = { endpoint: endpunkt, expirationTime: Number.isFinite(Number(roh.expirationTime)) ? Number(roh.expirationTime) : null, keys: { p256dh: p256, auth } };
         const { error } = await db.from("kc_member_push_subscriptions").upsert({
-          person_id: ich.person_id, endpoint: String(sub.endpoint), subscription: sub, user_agent: txt(p.userAgent, 400), quelle: "kc-clubapp", active: true, updated_at: jetzt(),
+          person_id: ich.person_id, endpoint: endpunkt, subscription: sub, user_agent: txt(p.userAgent, 400), quelle: "kc-clubapp", active: true, updated_at: jetzt(),
         }, { onConflict: "endpoint" });
         if (error) throw new Fehler("Push konnte nicht gespeichert werden.", 500);
         await protokoll(ich.person_id, "push_angemeldet", {});

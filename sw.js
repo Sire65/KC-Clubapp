@@ -1,6 +1,6 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json, APP_VERSION in app.js und app.js?v= in index.html übereinstimmen.
-const VERSION = "2.208.0";
+const VERSION = "2.209.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png"];
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm app.js?v=<Version> ändert sich nie unter derselben Adresse → aus dem Speicher
@@ -38,11 +38,33 @@ self.addEventListener("fetch", (e) => {
     return;
   }
   const navi = e.request.mode === "navigate", merken = !url.searchParams.has("k") && !url.pathname.endsWith("notbetrieb.json");
-  e.respondWith(fetch(navi ? new Request(e.request, { cache: "no-cache" }) : e.request).then((r) => {
-    if (r.ok && merken) { const k = r.clone(); e.waitUntil(caches.open(CACHE).then((c) => c.put(navi ? url.origin + url.pathname : e.request, k)).catch(() => {})); }
+  if (navi) { e.respondWith(seiteHolen(e, url, merken)); return; }
+  e.respondWith(fetch(e.request).then((r) => {
+    if (r.ok && merken) { const k = r.clone(); e.waitUntil(caches.open(CACHE).then((c) => c.put(e.request, k)).catch(() => {})); }
     return r; })
-    .catch(() => caches.match(e.request, { ignoreSearch: true }).then((r) => r || (navi ? caches.match("index.html") : Response.error()))));
+    // 2.209.0 (Gesamtprüfung 5): das Programm nie „ungefähr“ liefern – app.js?v=NEU darf offline nicht mit app.js?v=ALT beantwortet werden
+    .catch(() => caches.match(e.request, { ignoreSearch: !url.pathname.endsWith("/app.js") }).then((r) => r || Response.error())));
 });
+// 2.209.0 KC-CLUB-SW-SEITE (Gesamtprüfung 5): Seitenaufruf frisch aus dem Netz; antwortet das Netz nicht binnen NAVI_WARTEN_MS,
+// die gemerkte Seite DIESER Version (schneller Start bei schwachem Netz). Gemerkt wird eine Seite nur, wenn sie zu dieser Version
+// passt (app.js?v=VERSION) – so landet nie eine neue Seite im alten Speicher (kein Mischstand alt/neu, AGENTS Regel 16).
+const NAVI_WARTEN_MS = 4000;
+function seiteMerken(url, r) {
+  return r.text().then((t) => t.includes("app.js?v=" + VERSION)
+    ? caches.open(CACHE).then((c) => c.put(url.origin + url.pathname, new Response(t, { headers: { "content-type": r.headers.get("content-type") || "text/html; charset=utf-8" } })))
+    : null).catch(() => {});
+}
+function seiteHolen(e, url, merken) {
+  const ausSpeicher = () => caches.match(e.request, { ignoreSearch: true }).then((r) => r || caches.match("index.html"));
+  return new Promise((fertig, fehler) => {
+    let erledigt = false; const gib = (r) => { if (!erledigt && r) { erledigt = true; fertig(r); return true; } return false; };
+    const uhr = setTimeout(() => ausSpeicher().then(gib).catch(() => {}), NAVI_WARTEN_MS);
+    fetch(new Request(e.request, { cache: "no-cache" })).then((r) => {
+      if (r.ok && merken) e.waitUntil(seiteMerken(url, r.clone()));
+      clearTimeout(uhr); gib(r);
+    }, () => { clearTimeout(uhr); ausSpeicher().then((r) => { if (!gib(r) && !erledigt) fehler(new Error("offline")); }).catch(fehler); });
+  });
+}
 
 // Push vom KC Communicator: { title, body, data: { url } }
 // KC-CLUB-QUITTUNG (0.34.0): dem KC Communicator melden, dass der Push angezeigt bzw. geöffnet wurde
@@ -76,9 +98,11 @@ self.addEventListener("notificationclick", (e) => {
   e.notification.close();
   const ziel = e.notification.data?.url || "./";
   e.waitUntil((async () => {
-    quittung(e.notification.data?.requestId, "opened");
+    const q = quittung(e.notification.data?.requestId, "opened"); // 2.209.0: im waitUntil abwarten, sonst geht die Quittung verloren
     const fenster = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-    for (const c of fenster) { if ("focus" in c) { await c.navigate(ziel).catch(() => {}); return c.focus(); } }
-    return self.clients.openWindow(ziel);
+    // 2.209.0 KC-CLUB-PUSH-SPRUNG: App schon offen → Ziel an die App schicken (Sprung ohne Neuladen) und nach vorn holen
+    const offen = fenster.find((c) => "focus" in c);
+    const fertig = offen ? (offen.postMessage({ typ: "oeffnen", url: ziel }), offen.focus()) : self.clients.openWindow(ziel);
+    await Promise.allSettled([q, fertig]);
   })());
 });
