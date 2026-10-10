@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.192.0 – 2026-10-10 – 🔄 Neuladen per Ziehen nur auf der Startseite
+🔧 Kleine Systemverbesserungen
+
 ## 2.191.0 – 2026-10-10 – 💬 Chats als Rollkartei, Jalousie weg
 🔧 Kleine Systemverbesserungen
 

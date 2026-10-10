@@ -7639,3 +7639,9 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/return k === "chats" \? w === "an" : w !== "aus";/.test(html) && /id="setRkChats"/.test(idx) && /id="uhKarteiKnopf"/.test(html), "Chats ab Werk aus; ein Umschalter oben + Haken in den Einstellungen");
   assert.ok(/esc\(String\(m\.text \|\| \(m\.anlagen\?\.length \? "📎 Anhang" : ""\)\)\.slice\(0, 220\)\)/.test(html), "Nachrichtentext immer maskiert");
 }
+
+// 2.192.0 KC-CLUB-NUR-START-AUFFRISCHEN (Fund Hansi: Ziehen von oben lud in den Einstellungen die ganze App neu)
+{
+  const idx = lies("index.html");
+  assert.ok(/document\.documentElement\.classList\.toggle\("kein-ptr", v !== "start"\);/.test(html) && /html\.kein-ptr, html\.kein-ptr body \{ overscroll-behavior-y: contain; \}/.test(idx), "Neuladen per Ziehen nur auf der Startseite");
+}

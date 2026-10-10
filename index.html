@@ -1080,6 +1080,7 @@
   /* KC-CLUB-EFFEKTE-2 (2.172.0): Papierflieger, Pinnwand-Nadel, Geburtstagskerze, Jahreszeiten im Kopf */
   .fx-buchstabe { position: fixed; z-index: 99998; pointer-events: none; white-space: pre; will-change: transform, opacity; } /* 2.178.0 Buchstabenregen */
   /* KC-CLUB-ROLLKARTEI (2.180.0): Karteikasten – vorne eine Karte, dahinter Kanten mit Titel, unten das Rad */
+  html.kein-ptr, html.kein-ptr body { overscroll-behavior-y: contain; } /* 2.192.0: Ziehen-zum-Neuladen nur auf der Startseite */
   .rk { position: relative; }
   .rk-umschalter { margin-left: auto; }
   .rk > .klappen-alle-zeile, .rk > .tuer { display: none; }
@@ -3836,6 +3837,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.191.0" data-v="2.191.0"></script>
+<script src="app.js?v=2.192.0" data-v="2.192.0"></script>
 </body>
 </html>

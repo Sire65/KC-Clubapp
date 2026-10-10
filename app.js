@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.191.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.192.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12773,6 +12773,9 @@ function zeige(v, ausHistorie) {
   if (v !== "chat" && typeof CS !== "undefined" && CS.offen) chatSucheZu();
   if (v !== "chat") $("nachUnten")?.classList.add("versteckt");
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
+  // 2.192.0 KC-CLUB-NUR-START-AUFFRISCHEN (Fund Hansi): „von oben nach unten ziehen = neu laden“ nur auf der Startseite – sonst lädt die App
+  // mitten in Einstellungen o. Ä. neu (und meldet bei mehrfachem Neustart sogar „Startprobleme?“)
+  document.documentElement.classList.toggle("kein-ptr", v !== "start");
   nzZaehlen(v); // KC-CLUB-NUTZUNG: nur „Bereich geöffnet“, ohne Namen
   if (v !== "mitglieder" && v !== "mitglied") MG_EINMAL = null; // KC-CLUB-ONLINE-SEITE: nur für diesen Besuch
   if (v !== "buero" && typeof BU !== "undefined") BU.nzSicht = null; // KC-CLUB-NUTZUNG-BEREICHE (1.89.0): beim nächsten Büro-Besuch wieder zählen
