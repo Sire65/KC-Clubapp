@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.195.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.196.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -2876,6 +2876,16 @@ function shLage() {
     l.classList.add("oben"); l.style.top = `${Math.max(8, Math.round(unten ? z.bottom + 14 : z.top - a.height - 18))}px`; }
 }
 window.visualViewport?.addEventListener("resize", shLage); window.visualViewport?.addEventListener("scroll", shLage);
+// 2.196.0 KC-CLUB-TASTATUR-EINGABE (Fund Hansi: lange Nachricht ließ sich nicht durchscrollen, oben schoben sich alte Nachrichten rein):
+// Bei offener Handy-Tastatur liegt das Schreibfeld jetzt direkt über der Tastatur und ist nur so hoch, dass es ganz sichtbar bleibt –
+// dann scrollt der Finger im Feld den Text (und nicht mehr die Seite dahinter).
+function tastaturLage() {
+  const vv = window.visualViewport; if (!vv) return;
+  const unten = Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop)), offen = unten > 120;
+  const r = document.documentElement.style; r.setProperty("--tastatur", offen ? unten + "px" : "0px"); r.setProperty("--vvh", Math.round(vv.height) + "px");
+  document.documentElement.classList.toggle("tastatur-offen", offen);
+}
+window.visualViewport?.addEventListener("resize", tastaturLage); window.visualViewport?.addEventListener("scroll", tastaturLage);
 function shLeiste(html) {
   let l = $("shLeiste"); if (!l) { document.body.insertAdjacentHTML("beforeend", `<div class="sh-leiste" id="shLeiste" role="status" aria-live="polite">${SH_SCHUHE}<span></span><button type="button" id="shLaut" aria-pressed="${shVorlesenAn()}" aria-label="Schritte vorlesen" onclick="shVorlesen(!shVorlesenAn())">${shVorlesenAn() ? "🔊" : "🔈"}</button><button type="button" onclick="shSchalter(false)" aria-label="Schritt-Unterstützung ausschalten">✕</button></div>`); l = $("shLeiste"); }
   l.querySelector("span").innerHTML = html; shLage();

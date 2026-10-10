@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.196.0 – 2026-10-10 – ⌨️ Lange Nachrichten bei offener Tastatur scrollbar
+🔧 Kleine Systemverbesserungen
+
 ## 2.195.0 – 2026-10-10 – 🐌 Schnecken als Trupp mit Schleimspur
 🔧 Kleine Systemverbesserungen
 

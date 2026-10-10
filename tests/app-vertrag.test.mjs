@@ -7670,3 +7670,10 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const idx = lies("index.html");
   assert.ok(/<span class="sn-spur" aria-hidden="true"><\/span><span class="sn-zug">/.test(html) && /\.schnecke \.sn-spur \{[^}]*animation: snSpur 32s linear infinite;/.test(idx) && /\.schnecke\.versteckt \{ display: none; \}/.test(idx), "Trupp + Spur in einem Streifen – verschwindet gemeinsam");
 }
+
+// 2.196.0 KC-CLUB-TASTATUR-EINGABE (Fund Hansi: lange Nachricht nicht durchscrollbar, alte Nachrichten schoben sich rein)
+{
+  const idx = lies("index.html");
+  assert.ok(/function tastaturLage\(\)/.test(html) && /innerHeight - vv\.height - vv\.offsetTop/.test(html) && /window\.visualViewport\?\.addEventListener\("resize", tastaturLage\)/.test(html), "Tastatur-Höhe aus dem sichtbaren Bereich");
+  assert.ok(/html\.tastatur-offen \.eingabe \{ bottom: var\(--tastatur\) !important; \}/.test(idx) && /html\.tastatur-offen \.eingabe \.innen > #text \{ max-height: calc\(var\(--vvh\) \* \.36\); \}/.test(idx) && /\.eingabe \.innen > #text \{ overscroll-behavior: contain; \}/.test(idx), "Schreibfeld über der Tastatur, ganz sichtbar, scrollt in sich");
+}
