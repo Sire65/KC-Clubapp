@@ -7607,3 +7607,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/d\.style\.cssText = ""; d\.inert = false; d\.removeAttribute\("aria-hidden"\);/.test(html), "Abbauen hebt die Sperre wieder auf");
 }
+
+// 2.187.0 KC-CLUB-ROLLKARTEI-JALOUSIE (Wunsch Hansi: Jalousie öffnet sich sehr schnell, wenn eine Karte nach vorn kommt; EIN Umschalter oben)
+{
+  const idx = lies("index.html");
+  assert.ok(/function rkJalousie\(z\)/.test(html) && /if \(!rkJalAn\(\) \|\| !fxAn\(\) \|\| !z\?\.an\) return;/.test(html) && /duration: 200, delay: \(n - 1 - k\) \* 16/.test(html), "sehr schnell (≈ 0,35 s), aus bei Effekte aus");
+  assert.ok(/if \(--rest > 0\) setTimeout\(weiter, 90\); else rkJalousie\(z\);/.test(html), "beim schnellen Drehen nur auf der letzten Karte");
+  assert.ok(/class="rk-jal-knopf/.test(html) && /localStorage\.setItem\("kc_club_rk_jal", an \? "an" : "aus"\)/.test(html) && /\.rk-jal-knopf \{ position: sticky; left: 0;/.test(idx), "ein Umschalter oben, bleibt sichtbar");
+}

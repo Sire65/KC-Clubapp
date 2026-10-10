@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.186.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.187.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12480,7 +12480,11 @@ function rkAufbauen(z) {
   z.reiter.innerHTML = z.karten.map((d, i) => { const t = d.querySelector(":scope > summary")?.textContent.trim() || ""; const sym = z.opts?.tabSym?.(d) || [...t][0] || "•";
     return `<button type="button" role="tab" class="rk-tab" data-i="${i}" title="${esc(t)}" aria-label="${esc(t)}">${z.opts?.tabSym ? sym : esc(sym)}<small>${esc(z.opts?.tabText?.(d) ?? (t.replace(/^\S+\s*/, "").match(/[\p{L}\d-]+/u) || [""])[0])}</small></button>`; }).join("");
   z.reiter.querySelectorAll(".rk-tab").forEach((b) => (b.onclick = () => rkGehe(z, Number(b.dataset.i))));
-  rkMasse(z); rkStellen(z, true);
+  // 2.187.0 (Wunsch Hansi): EIN Umschalter oben für die Jalousie – kein zweiter Knopf
+  z.reiter.insertAdjacentHTML("afterbegin", `<button type="button" class="rk-jal-knopf${rkJalAn() ? " an" : ""}" aria-pressed="${rkJalAn()}" title="Jalousie beim Blättern an/aus">🪟<small>${rkJalAn() ? "an" : "aus"}</small></button>`);
+  z.reiter.querySelector(".rk-jal-knopf").onclick = (e) => { const an = !rkJalAn(); try { localStorage.setItem("kc_club_rk_jal", an ? "an" : "aus"); } catch {}
+    const b = e.currentTarget; b.classList.toggle("an", an); b.setAttribute("aria-pressed", an); b.querySelector("small").textContent = an ? "an" : "aus"; melde(an ? "🪟 Jalousie an – die Karte öffnet sich beim Blättern" : "🪟 Jalousie aus"); if (an) rkJalousie(z); };
+  rkMasse(z); rkStellen(z, true); setTimeout(() => rkJalousie(z), 60);
 }
 function rkAbbauen(z) {
   const w = z.w; z.an = false; w.classList.remove("rk");
@@ -12519,7 +12523,7 @@ function rkGehe(z, i, richtung) {
   const ziel = ((i % n) + n) % n; if (ziel === z.i) return false;
   const vor = (ziel - z.i + n) % n, zurueck = (z.i - ziel + n) % n;
   const r = richtung || (vor <= zurueck ? 1 : -1), schritte = r > 0 ? vor : zurueck;
-  let rest = schritte; const weiter = () => { z.i = (z.i + r + n) % n; rkStellen(z); try { navigator.vibrate?.(6); } catch {} rkKlick(); if (--rest > 0) setTimeout(weiter, 90); };
+  let rest = schritte; const weiter = () => { z.i = (z.i + r + n) % n; rkStellen(z); try { navigator.vibrate?.(6); } catch {} rkKlick(); if (--rest > 0) setTimeout(weiter, 90); else rkJalousie(z); };
   if (schritte > 1) z.w.classList.add("rk-schnell"); weiter();
   setTimeout(() => z.w.classList.remove("rk-schnell"), schritte * 90 + 500);
   z.karten[ziel].scrollTop = 0; return true;
@@ -12537,6 +12541,17 @@ function rkZu(z, el) {
   setTimeout(() => { d.scrollTop = Math.max(0, el.getBoundingClientRect().top - d.getBoundingClientRect().top + d.scrollTop - d.clientHeight / 3); }, Math.abs(i - z.i) * 90 + 120);
 }
 if (typeof document !== "undefined") { const rkStart = () => rkEinrichten("v-einstellungen", "einst"); if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", rkStart); else rkStart(); }
+// 2.187.0 KC-CLUB-ROLLKARTEI-JALOUSIE (Wunsch Hansi): kommt eine Karte nach vorn, fährt eine Jalousie sehr schnell hoch (≈ 0,35 s) und gibt
+// den Inhalt frei. Beim schnellen Durchdrehen nur auf der letzten Karte – man soll nie lange warten. Je Gerät per 🪟 oben an/aus (Standard an).
+const rkJalAn = () => { try { return localStorage.getItem("kc_club_rk_jal") !== "aus"; } catch { return true; } };
+function rkJalousie(z) {
+  if (!rkJalAn() || !fxAn() || !z?.an) return;
+  z.w.querySelector(":scope > .rk-jal")?.remove();
+  const j = document.createElement("div"); j.className = "rk-jal"; j.setAttribute("aria-hidden", "true");
+  const n = 9; j.innerHTML = Array.from({ length: n }, () => "<i></i>").join(""); z.w.appendChild(j);
+  [...j.children].forEach((l, k) => l.animate([{ transform: "scaleY(1)" }, { transform: "scaleY(0)" }], { duration: 200, delay: (n - 1 - k) * 16, easing: "cubic-bezier(.5,0,.7,.4)", fill: "forwards" }));
+  setTimeout(() => j.remove(), 200 + n * 16 + 60);
+}
 let rkAudio = null;
 function rkKlick() {
   if (!einst("ton", true)) return;
