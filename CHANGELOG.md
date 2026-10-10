@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.218.0 – 2026-10-10 – ⚠️ Warnung beim Selbstlöschen
+⚠️ Wer Selbstlöschen einschaltet, wird jetzt deutlich gewarnt: Die Nachrichten verschwinden auf allen Geräten und können nicht wiederhergestellt werden
+
 ## 2.217.0 – 2026-10-10 – 📝 Wunschzeiten unter Dienstpläne
 📝 Unter 🗓️ Dienstpläne stehen jetzt auch die abgegebenen Wunschzeiten (Kann, Wunsch, Wenn nötig, Sperre) – deutlich als „unter Vorbehalt“ markiert, bis der Dienstplan veröffentlicht ist
 

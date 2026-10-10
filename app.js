@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.217.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.218.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18290,12 +18290,15 @@ function slWahl(art) {
   if (art === "chat" && !chatId) return melde("Erst die erste Nachricht senden – dann lässt sich der ganze Chat einstellen. Für diese Nachricht: ⏳ unten.", true);
   blattAuf("slBlatt", `<h3 style="margin:0 0 4px">⏳ ${art === "chat" ? "Selbstlöschen für diesen Chat" : "Diese Nachricht löscht sich …"}</h3>
     <p class="hinweis" style="margin:0 0 10px">${art === "chat" ? "Gilt für alle <b>neuen</b> Nachrichten in diesem Chat – bei allen Teilnehmern. Alle sehen im Chat, dass du es eingestellt hast." : "Gilt nur für die nächste Nachricht, die du sendest. Sie verschwindet danach bei allen."}</p>
+    <div class="sl-warnung">⚠️ <b>Gelöscht ist gelöscht:</b> Die Nachrichten verschwinden ${art === "chat" ? "nach der Zeit automatisch – auch die, die ihr gerade schreibt –" : "nach der Zeit automatisch"} auf <b>allen Geräten</b> (Handy, PC, Tablet) und können <b>nicht wiederhergestellt</b> werden – auch nicht vom Admin oder aus einer Sicherung.</div>
     <div class="sl-wahl">${SL_WAHL.map(([s, t]) => `<button class="knopf${s === akt ? " haupt" : ""}" onclick="slGewaehlt('${art}', ${s})">${s ? "⏳ " + t : "🚫 Aus"}</button>`).join("")}</div>
     <button class="knopf" onclick="$('slBlatt').remove()">Abbrechen</button>`);
 }
 async function slGewaehlt(art, std) {
   $("slBlatt")?.remove();
   if (art === "nachricht") { SL = std === slChat() ? { chat: null, std: null } : { chat: chatId, std }; slAnzeigen(); return melde(std ? `⏳ Die nächste Nachricht löscht sich nach ${slText(std)}` : "Die nächste Nachricht bleibt stehen"); }
+  // 2.218.0 KC-CLUB-SELBSTLOESCHEN-WARNUNG (Wunsch Hansi nach verlorenen Chats): vor dem Einschalten klar sagen, was das bedeutet
+  if (std > 0 && std !== slChat() && !(await frage(`⚠️ Selbstlöschen wirklich einschalten?\n\nAb jetzt verschwindet jede neue Nachricht in diesem Chat nach ${slText(std)} – von dir und von allen anderen, auf allen Geräten (Handy, PC, Tablet).\n\nGelöschte Nachrichten können NICHT wiederhergestellt werden – auch nicht vom Admin oder aus einer Sicherung. Wer später nachlesen will, findet nichts mehr.`, { ja: "⏳ Ja, einschalten", nein: "Abbrechen" }))) return melde("✋ Selbstlöschen bleibt, wie es war");
   // 2.168.0 KC-CLUB-SELBSTLOESCHEN-ALT (Wunsch Hansi): beim Einschalten fragen, ob auch die eigenen bisherigen Nachrichten verschwinden sollen
   const meineDa = std > 0 && (CHAT?.nachrichten || []).some((m) => m.eigen);
   const auchMeineAlten = meineDa ? await frage(`⏳ Sollen auch deine bisherigen Nachrichten in diesem Chat nach ${slText(std)} verschwinden?\n\nDas gilt nur für deine eigenen Nachrichten – die der anderen bleiben stehen. Gelöscht wird bei allen und kann nicht rückgängig gemacht werden.`, { ja: "🗑️ Ja, meine auch", nein: "Nein, nur neue" }) : false;

@@ -7450,7 +7450,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const c = server.slice(server.indexOf('case "chat_selbstloeschen": {'), server.indexOf('case "nachricht_bearbeiten": {'));
   assert.ok(/if \(std && p\.auchMeineAlten === true\)/.test(c) && /\.eq\("thread_id", id\)\.eq\("sender_person_id", ich\.person_id\)/.test(c), "nur eigene Nachrichten, nur auf ausdrücklichen Wunsch");
   assert.ok(/ids\.filter\(\(x: string\) => !hat\.has\(x\)\)/.test(c) && /loescht_am: bis/.test(c), "schon gesetzte Abläufe bleiben, Ablauf ab jetzt");
-  const k = html.slice(html.indexOf("async function slGewaehlt("), html.indexOf("async function slGewaehlt(") + 1500);
+  const k = html.slice(html.indexOf("async function slGewaehlt("), html.indexOf("async function slGewaehlt(") + 2400);
   assert.ok(/const meineDa = std > 0 && \(CHAT\?\.nachrichten \|\| \[\]\)\.some\(\(m\) => m\.eigen\);/.test(k) && /await frage\(/.test(k) && /die der anderen bleiben stehen/.test(k) && /auchMeineAlten: true/.test(k), "App fragt nur, wenn es eigene Nachrichten gibt");
 }
 // 2.168.0 KC-CLUB-ARCHIV-MENUE (Wunsch Hansi „rechte Maustaste: ausschneiden, kopieren, löschen, per E-Mail, speichern …“)
@@ -7912,4 +7912,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/wuensche: wFehler \? null :/.test(f) && /gewaehlt\.includes\(w\.person_id\)/.test(f), "nur gewählte Personen, Fehler ≠ keine Wünsche");
   assert.ok(/const DPW_ARTEN = \{ preferred: \["⭐", "Wunsch"[^}]*available: \["✅", "Kann"[^}]*if_needed: \["🟡", "Wenn nötig"[^}]*unavailable: \["⛔", "Sperre"/.test(html), "alle vier Arten");
   assert.ok(/Abgegebene Wunschzeiten – unter Vorbehalt/.test(html) && /noch kein Dienstplan/.test(html) && /\.dpw-t \{[^}]*dashed/.test(html), "Hinweis „unter Vorbehalt“, gestrichelt");
+}
+
+// 2.218.0 KC-CLUB-SELBSTLOESCHEN-WARNUNG (Wunsch Hansi): vor dem Einschalten deutlich warnen – gelöscht ist gelöscht, keine Wiederherstellung
+{
+  const f = html.slice(html.indexOf("async function slGewaehlt("), html.indexOf("async function slGewaehlt(") + 2400);
+  assert.ok(/if \(std > 0 && std !== slChat\(\) && !\(await frage\(`⚠️ Selbstlöschen wirklich einschalten\?[^`]*NICHT wiederhergestellt/.test(f), "Rückfrage beim Einschalten");
+  assert.ok(/class="sl-warnung">⚠️ <b>Gelöscht ist gelöscht:<\/b>/.test(html) && /\.sl-warnung \{/.test(html), "Warnung im Auswahlfenster");
 }
