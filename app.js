@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.209.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.210.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12656,8 +12656,38 @@ function cdInhalt(bisTreffen) {
   CD.bisTreffen = bisTreffen; const l = cdListe(bisTreffen); if (CD.i >= l.length) CD.i = 0;
   const e = l[CD.i], punkte = l.length > 1 ? `<i class="cd-punkte">${l.map((_, i) => `<i${i === CD.i ? ' class="an"' : ""}></i>`).join("")}</i>` : "";
   cdStart();
-  return `<span class="cd-text">${esc(e.text)}</span><b class="cd-zahl" style="font-size:1.05rem">${esc(e.zahl)}</b>${punkte}`; // 2.203.0: erst was, dann wie lange
+  return `<span class="cd-text">${esc(e.text)}</span><b class="cd-zahl${cdFb() ? " cd-fb" : ""}" style="font-size:1.05rem">${cdZahlHtml(e.zahl)}</b>${punkte}`; // 2.203.0: erst was, dann wie lange
 }
+// ---------- KC-CLUB-FALLBLATT (2.210.0, Wunsch Hansi „Terminkachel wie eine Blätteruhr / Fallblatt-Datumsanzeige, einstellbar unter ⚙️“) ----------
+// Wahl je Gerät (⚙️ → Startseite & Ansicht → Countdown → Darstellung), Grundeinstellung „Normal“. Die Tage stehen auf drei Klappkarten
+// (wie am Bahnhof); beim Wechsel klappt jede geänderte Karte von oben nach unten um. Wörter („Heute!“, „Morgen“) bleiben normaler Text.
+// Ohne Effekte (⚙️ Effekte aus / Sparmodus) wechselt die Zahl ohne Klappen.
+const CD_FB_STELLEN = 3;
+const cdFb = () => { try { return localStorage.getItem("kc_club_cd_stil") === "fallblatt"; } catch { return false; } };
+const cdFbTeile = (zahl) => { const m = /^(\d{1,3}) (Tage?)$/.exec(String(zahl)); return m ? { n: m[1].padStart(CD_FB_STELLEN, " "), einheit: m[2] } : null; };
+const fbKarte = (z) => `<span class="fb-z" data-z="${esc(z)}"><span class="fb-h fb-oben"><i>${esc(z.trim())}</i></span><span class="fb-h fb-unten"><i>${esc(z.trim())}</i></span></span>`;
+function cdZahlHtml(zahl) {
+  const f = cdFb() && cdFbTeile(zahl);
+  return f ? `<span class="fb-reihe" aria-label="${esc(zahl)}">${[...f.n].map(fbKarte).join("")}</span><small class="fb-einheit">${esc(f.einheit)}</small>` : esc(zahl);
+}
+function fbKippen(reihe, neu) {
+  const karten = [...reihe.querySelectorAll(":scope > .fb-z")];
+  karten.forEach((k, i) => {
+    const z = neu[i], alt = k.dataset.z; if (z === alt) return;
+    k.dataset.z = z; const zt = z.trim(), at = alt.trim();
+    if (!fxAn()) { k.querySelectorAll("i").forEach((x) => (x.textContent = zt)); return; }
+    k.querySelector(".fb-oben i").textContent = zt; // hinter der fallenden Klappe steht oben schon die neue Ziffer
+    const k1 = document.createElement("span"); k1.className = "fb-h fb-oben fb-klappe"; k1.innerHTML = `<i>${esc(at)}</i>`;
+    const k2 = document.createElement("span"); k2.className = "fb-h fb-unten fb-klappe"; k2.innerHTML = `<i>${esc(zt)}</i>`; k2.style.transform = "rotateX(90deg)";
+    k.append(k1, k2);
+    const v = i * 70; // Karten klappen kurz nacheinander
+    k1.animate([{ transform: "rotateX(0deg)" }, { transform: "rotateX(-90deg)" }], { duration: 200, delay: v, easing: "ease-in", fill: "forwards" });
+    k2.animate([{ transform: "rotateX(90deg)" }, { transform: "rotateX(0deg)" }], { duration: 200, delay: v + 200, easing: "ease-out", fill: "forwards" }).finished
+      .then(() => { k.querySelector(".fb-unten:not(.fb-klappe) i").textContent = zt; k1.remove(); k2.remove(); }).catch(() => { k1.remove(); k2.remove(); });
+  });
+  reihe.setAttribute("aria-label", neu.trim());
+}
+function cdStil(stil) { try { localStorage.setItem("kc_club_cd_stil", stil); } catch {} cdEinstellungenZeigen(); cdFrisch(); }
 function cdTippen() { const l = cdListe(CD.bisTreffen || ""); (l[CD.i] || l[0]).los(); }
 function cdStart() {
   if (!CD.uhr) CD.uhr = setInterval(cdWeiter, CD_TAKT_MS);
@@ -12671,6 +12701,7 @@ function cdWeiter() {
   CD.i = (CD.i + 1) % l.length;
   if (k.querySelectorAll(".cd-punkte > i").length !== l.length) return cdFrisch(); // Anzahl hat sich geändert
   if (!fxAn()) return cdZeichnen(k, l);
+  if (cdFb()) { const t = k.querySelector(".cd-text"); cdZeichnen(k, l); t?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 }); return; } // Fallblatt: Karten klappen statt Ausblenden
   const teile = k.querySelectorAll(".cd-zahl, .cd-text");
   Promise.all([...teile].map((el) => el.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-6px)" }], { duration: 220, easing: "ease-in" }).finished.catch(() => {})))
     .then(() => { cdZeichnen(k, l); k.querySelectorAll(".cd-zahl, .cd-text").forEach((el) => el.animate([{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: 260, easing: "ease-out" })); });
@@ -12678,14 +12709,19 @@ function cdWeiter() {
 function cdZeichnen(k, l) {
   const e = l[CD.i] || l[0]; if (!e) return;
   const z = k.querySelector(".cd-zahl"), t = k.querySelector(".cd-text"), p = k.querySelector(".cd-punkte");
-  if (z) z.textContent = e.zahl; if (t) t.textContent = e.text;
+  if (z) { const f = cdFb() && cdFbTeile(e.zahl), reihe = z.querySelector(".fb-reihe");
+    if (f && reihe) { fbKippen(reihe, f.n); const ei = z.querySelector(".fb-einheit"); if (ei) ei.textContent = f.einheit; }
+    else { z.innerHTML = cdZahlHtml(e.zahl); z.classList.toggle("cd-fb", !!f); } }
+  if (t) t.textContent = e.text;
   p?.querySelectorAll("i").forEach((x, i) => x.classList.toggle("an", i === CD.i));
   const treffen = e.id === "t"; k.classList.toggle("cd-anders", !treffen); // Fristfarbe/Pfeil gehören nur zum Treffen
 }
 function cdEinstellungenZeigen() {
   const b = $("cdWahl"); if (!b) return;
   const nur = cdNur();
-  b.innerHTML = `<label class="schalter" style="margin:0"><div><b>📌 Standard: nur nächstes Clubtreffen</b><div class="hinweis">Angehakt = kein Wechsel, wie bisher</div></div><input type="checkbox" ${nur ? "checked" : ""} onchange="cdSetzen('nur', this.checked)"></label>
+  const fb = cdFb();
+  b.innerHTML = `<div class="umschalter" data-zyklus="Darstellung" style="margin:0 0 8px"><button type="button" class="${fb ? "" : "an"}" onclick="cdStil('normal')">🔤 Normal</button><button type="button" class="${fb ? "an" : ""}" onclick="cdStil('fallblatt')">🔢 Fallblatt (wie Bahnhofsuhr)</button></div>
+    <label class="schalter" style="margin:0"><div><b>📌 Standard: nur nächstes Clubtreffen</b><div class="hinweis">Angehakt = kein Wechsel, wie bisher</div></div><input type="checkbox" ${nur ? "checked" : ""} onchange="cdSetzen('nur', this.checked)"></label>
     ${CD_ARTEN.map(([k, t]) => `<label class="schalter" style="margin:0${nur ? ";opacity:.5" : ""}"><div>${esc(t)}</div><input type="checkbox" ${cdArtAn(k) ? "checked" : ""} ${nur ? "disabled" : ""} onchange="cdSetzen('${k}', this.checked)"></label>`).join("")}`;
 }
 function cdSetzen(k, an) { einstellung("cd_" + k, an); CD.i = 0; cdEinstellungenZeigen(); cdFrisch(); }

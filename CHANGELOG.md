@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.210.0 – 2026-10-10 – 🔢 Fallblatt-Anzeige für den Countdown
+🔢 Countdown oben wahlweise als Fallblatt-Anzeige wie am Bahnhof (⚙️ → Startseite & Ansicht)
+
 ## 2.209.1 – 2026-10-10 – 🧪 Testversion (RC) für 3.0 – Freigabeplan
 🧪 Testwoche vor der fertigen Version 3.0
 

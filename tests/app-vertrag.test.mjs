@@ -7736,7 +7736,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.203.0 KC-CLUB-COUNTDOWN-KURZ (Wunsch Hansi: kurze Sätze „Weihnachten 75 Tage“, „Clubtreffen 23 Tage“, „Geb. Reinhilde 15 Tage“)
 {
-  assert.ok(/<span class="cd-text">\$\{esc\(e\.text\)\}<\/span><b class="cd-zahl"/.test(html) && /`\$\{tage\} Tage`/.test(html) && /text: `🎂 Geb\. \$\{g\.vorname \|\| g\.name\}`/.test(html), "erst was, dann wie lange");
+  assert.ok(/<span class="cd-text">\$\{esc\(e\.text\)\}<\/span><b class="cd-zahl(?:\$\{cdFb\(\) \? " cd-fb" : ""\})?"/.test(html) && /`\$\{tage\} Tage`/.test(html) && /text: `🎂 Geb\. \$\{g\.vorname \|\| g\.name\}`/.test(html), "erst was, dann wie lange");
 }
 
 // 2.204.0 KC-CLUB-GEDENKEN (Wunsch Hansi: brennende Kerze, wenn jemand aus dem Club verstorben ist)
@@ -7796,4 +7796,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const fr = lies("docs/FREIGABE_3_0.md");
   assert.ok(/## 4\. Prüfschritte vor FINAL/.test(fr) && /Visual-TÜV/.test(fr) && /Release-TÜV/.test(fr), "Freigabeplan unvollständig");
+}
+
+// 2.210.0 KC-CLUB-FALLBLATT (Wunsch Hansi: Terminkachel wie eine Fallblatt-/Blätteranzeige, einstellbar unter ⚙️)
+{
+  assert.ok(/const cdFb = \(\) => \{ try \{ return localStorage\.getItem\("kc_club_cd_stil"\) === "fallblatt";/.test(html) && /function fbKippen\(reihe, neu\)/.test(html), "Fallblatt fehlt");
+  assert.ok(/data-zyklus="Darstellung"[^`]*cdStil\('normal'\)[^`]*cdStil\('fallblatt'\)/.test(html), "Wahl unter ⚙️ (Umschaltknopf)");
+  assert.ok(/if \(!fxAn\(\)\) \{ k\.querySelectorAll\("i"\)\.forEach/.test(html), "ohne Effekte kein Klappen");
 }

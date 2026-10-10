@@ -499,6 +499,20 @@
   #cdKachel .cd-punkte i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .35; }
   #cdKachel .cd-punkte i.an { opacity: 1; }
   #cdKachel.cd-anders .ameisen { display: none; }
+  /* KC-CLUB-FALLBLATT (2.210.0): Klappkarten für die Tage in der Termin-Kachel */
+  #cdKachel .cd-zahl.cd-fb { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; height: auto; min-height: 2.24em; -webkit-line-clamp: unset; overflow: visible; margin-top: 4px; }
+  .fb-reihe { display: inline-flex; gap: 2px; }
+  .fb-z { position: relative; display: inline-block; width: .9em; height: 1.4em; perspective: 120px; font-variant-numeric: tabular-nums; font-size: 1.35rem; line-height: 1; box-shadow: 0 2px 4px rgba(0,0,0,.35); border-radius: 4px; }
+  .fb-h { position: absolute; left: 0; right: 0; height: 50%; overflow: hidden; background: linear-gradient(#3a2427, #241517); color: #fff; backface-visibility: hidden; }
+  .fb-oben { top: 0; border-radius: 4px 4px 0 0; transform-origin: 50% 100%; }
+  .fb-unten { bottom: 0; border-radius: 0 0 4px 4px; transform-origin: 50% 0; background: linear-gradient(#2b1a1c, #1c1012); }
+  .fb-h i { position: absolute; left: 0; right: 0; height: 200%; display: flex; align-items: center; justify-content: center; font-style: normal; font-weight: 900; color: #fff7e8; text-shadow: 0 1px 0 rgba(0,0,0,.6); }
+  .fb-oben i { top: 0; } .fb-unten i { bottom: 0; }
+  .fb-z::after { content: ""; position: absolute; left: 0; right: 0; top: calc(50% - .5px); height: 1px; background: rgba(0,0,0,.75); z-index: 4; }
+  .fb-klappe { z-index: 3; }
+  #cdKachel .fb-reihe, #cdKachel .fb-z, #cdKachel .fb-h { font-size: 1.2rem; letter-spacing: 0; text-transform: none; opacity: 1; margin: 0; padding: 0; line-height: 1; } /* allgemeine Kachel-Regeln (.mini span) nicht auf die Karten anwenden */
+  #cdKachel .fb-z { font-size: 1.2rem; } #cdKachel .fb-h, #cdKachel .fb-reihe { font-size: inherit; }
+  .fb-einheit { font-size: .72rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; opacity: .9; }
   /* KC-CLUB-GEDENKEN (2.204.0): brennende Kerze neben dem Clubnamen, ruhig flackernd */
   #gedenkKerze { display: inline-block; vertical-align: -6px; margin-left: 8px; }
   .kerze-knopf { background: none; border: 0; padding: 0 4px; margin: -6px 0; cursor: pointer; line-height: 0; }
@@ -3919,6 +3933,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.209.1" data-v="2.209.1"></script>
+<script src="app.js?v=2.210.0" data-v="2.210.0"></script>
 </body>
 </html>
