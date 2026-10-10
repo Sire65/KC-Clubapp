@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.191.0 – 2026-10-10 – 💬 Chats als Rollkartei, Jalousie weg
+🔧 Kleine Systemverbesserungen
+
 ## 2.190.0 – 2026-10-10 – 🪟 Jalousie rollt sofort und schneller hoch
 🔧 Kleine Systemverbesserungen
 

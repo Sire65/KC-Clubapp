@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.190.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.191.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12413,7 +12413,7 @@ function klappenMerken(wurzel = document) {
 // blättern – die vordere Karte klappt über das Rad nach vorn weg. Inhalt und Funktionen der Bereiche bleiben unverändert;
 // „☰ Liste“ schaltet je Gerät zur gewohnten Liste zurück. Erst die Einstellungen, später weitere Listen (z. B. Chats).
 const RK = {};
-const rkAn = (k) => { try { return localStorage.getItem("kc_club_rk_" + k) !== "aus"; } catch { return true; } };
+const rkAn = (k) => { try { const w = localStorage.getItem("kc_club_rk_" + k); return k === "chats" ? w === "an" : w !== "aus"; } catch { return k !== "chats"; } }; // Chats ab Werk aus (2.191.0)
 function rkKarten(w) { return [...w.children].filter((d) => d.matches("details.karte[data-klappe]") && getComputedStyle(d).display !== "none" && !d.classList.contains("versteckt")); }
 function rkEinrichten(wurzelId, schluessel) {
   const w = $(wurzelId); if (!w || typeof MutationObserver === "undefined") return;
@@ -12445,7 +12445,7 @@ function rkIn(box, schluessel, opts = {}) {
 // 2.184.0 KC-CLUB-ROLLKARTEI-WAHL: an/aus je Liste über die Einstellungen (gleicher Speicher wie „☰ Liste / 🗂️ Kartei“ oben)
 function rkSchalten(k, an) {
   try { localStorage.setItem("kc_club_rk_" + k, an ? "an" : "aus"); } catch {}
-  if (RK[k]) rkAufbauen(RK[k]);
+  if (k === "chats") { if (aktuelleAnsicht === "nachrichten") unterhLaden(); uhKarteiKnopf(); } else if (RK[k]) rkAufbauen(RK[k]);
   melde(an ? "🗂️ Rollkartei an – wischen, antippen oder ▲▼ am Rad" : "☰ Gewohnte Liste – die Rollkartei ist aus");
   if (an && RK[k]) { const d = $("setRk" + k[0].toUpperCase() + k.slice(1)); if (d) setTimeout(() => rkZu(RK[k], d), 80); }
 }
@@ -12480,10 +12480,6 @@ function rkAufbauen(z) {
   z.reiter.innerHTML = z.karten.map((d, i) => { const t = d.querySelector(":scope > summary")?.textContent.trim() || ""; const sym = z.opts?.tabSym?.(d) || [...t][0] || "•";
     return `<button type="button" role="tab" class="rk-tab" data-i="${i}" title="${esc(t)}" aria-label="${esc(t)}">${z.opts?.tabSym ? sym : esc(sym)}<small>${esc(z.opts?.tabText?.(d) ?? (t.replace(/^\S+\s*/, "").match(/[\p{L}\d-]+/u) || [""])[0])}</small></button>`; }).join("");
   z.reiter.querySelectorAll(".rk-tab").forEach((b) => (b.onclick = () => rkGehe(z, Number(b.dataset.i))));
-  // 2.187.0 (Wunsch Hansi): EIN Umschalter oben für die Jalousie – kein zweiter Knopf
-  z.reiter.insertAdjacentHTML("afterbegin", `<button type="button" class="rk-jal-knopf${rkJalAn() ? " an" : ""}" aria-pressed="${rkJalAn()}" title="Jalousie beim Blättern an/aus">🪟<small>${rkJalAn() ? "an" : "aus"}</small></button>`);
-  z.reiter.querySelector(".rk-jal-knopf").onclick = (e) => { const an = !rkJalAn(); try { localStorage.setItem("kc_club_rk_jal", an ? "an" : "aus"); } catch {}
-    const b = e.currentTarget; b.classList.toggle("an", an); b.setAttribute("aria-pressed", an); b.querySelector("small").textContent = an ? "an" : "aus"; melde(an ? "🪟 Jalousie an – die Karte öffnet sich beim Blättern" : "🪟 Jalousie aus"); if (an) rkJalousie(z, true); };
   rkMasse(z); rkStellen(z, true); setTimeout(() => rkJalousie(z, true), 60);
 }
 function rkAbbauen(z) {
@@ -12543,7 +12539,7 @@ function rkZu(z, el) {
 if (typeof document !== "undefined") { const rkStart = () => rkEinrichten("v-einstellungen", "einst"); if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", rkStart); else rkStart(); }
 // 2.187.0 KC-CLUB-ROLLKARTEI-JALOUSIE (Wunsch Hansi): kommt eine Karte nach vorn, fährt eine Jalousie sehr schnell hoch (≈ 0,35 s) und gibt
 // den Inhalt frei. Beim schnellen Durchdrehen nur auf der letzten Karte – man soll nie lange warten. Je Gerät per 🪟 oben an/aus (Standard an).
-const rkJalAn = () => { try { return localStorage.getItem("kc_club_rk_jal") !== "aus"; } catch { return true; } };
+const rkJalAn = () => false; // 2.191.0 (Wunsch Hansi „nervt bei jeder Karte – weglassen“): Jalousie aus, Umschalter entfernt
 function rkJalousie(z, still) {
   // 2.190.0 (Fund Hansi „blinkt einmal, dann rollt er hoch“): kein Aufkippen mehr – die Jalousie ist zu, sobald die Karte vorn ankommt,
   // und rollt sofort zügig hoch (≈ 0,45 s): die Unterleiste nimmt die Lamellen von unten mit, oben verschwindet das Paket ohne Ausblenden.
@@ -15847,6 +15843,9 @@ async function unterhLaden() {
     const zeigen = unterhaltungen.filter((u) => !!u.archiviert === !!UH.archivAnsicht), archNeu = arch.reduce((n, u) => n + (u.ungelesen || 0), 0);
     const archKopf = UH.archivAnsicht ? `<div class="uh-archiv-kopf"><button class="knopf klein" onclick="uhArchivAnsicht(false)">← Zurück zu den Chats</button><b>📦 Archivierte Chats (${arch.length})</b></div>`
       : arch.length ? `<button class="uh-archiv-zeile" onclick="uhArchivAnsicht(true)"><span>📦 Archiviert</span><span class="hinweis">${arch.length} Chat${arch.length === 1 ? "" : "s"}</span>${archNeu ? `<span class="punkt">${archNeu}</span>` : ""}</button>` : "";
+    // KC-CLUB-CHAT-KARTEI (2.191.0, Wunsch Hansi): Chats als Rollkartei – die vordere Karte ist schon „offen“ (letzte Nachrichten)
+    uhKarteiKnopf(); $("unterhListe").classList.toggle("karte", !(rkAn("chats") && !UH.archivAnsicht && zeigen.length));
+    if (rkAn("chats") && !UH.archivAnsicht && zeigen.length) { $("unterhListe").innerHTML = archKopf + uhKarteiHtml(zeigen); uhKarteiAn(); uhAmeisen(); return; }
     $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Einmal tippen = auswählen (${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen) · doppelt tippen = öffnen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
@@ -15855,6 +15854,43 @@ async function unterhLaden() {
     UH.mark.forEach((id) => { if (!zeigen.some((u) => u.id === id)) UH.mark.delete(id); }); uhMarkZeichnen(); uhLangDruck(); // KC-CLUB-MEHRFACH-NACHRICHT
     uhAmeisen();
   } catch (e) { meldeFehler(e); }
+}
+// ---------- KC-CLUB-CHAT-KARTEI (2.191.0) ----------
+// Je Chat eine Karteikarte; vorn (und die nächste) werden die letzten 6 Nachrichten gezeigt – als „Vorschau“, die NICHT als gelesen
+// zählt (keine Lesehaken für die anderen). Gelesen wird erst mit „💬 Öffnen & antworten“. Ab Werk aus; an/aus oben (🗂️) oder ⚙️.
+const UHK = { vs: new Map() }; // chat-id → { stand, html }
+function uhKarteiKnopf() {
+  let b = $("uhKarteiKnopf"); const an = rkAn("chats");
+  if (!b) { const l = document.querySelector("#v-nachrichten .kom-leiste"); if (!l) return; l.insertAdjacentHTML("afterbegin", '<button type="button" class="knopf klein" id="uhKarteiKnopf"></button>'); b = $("uhKarteiKnopf"); b.onclick = () => rkSchalten("chats", !rkAn("chats")); }
+  b.textContent = an ? "☰ Liste" : "🗂️ Kartei"; b.title = an ? "Chats als gewohnte Liste" : "Chats als Rollkartei";
+  if ($("setRkChats")) $("setRkChats").checked = an;
+}
+function uhKarteiHtml(liste) {
+  return `<div class="rk-box" id="uhKartei">${liste.map((u) => { const titel = u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
+    const bild = u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 30);
+    return `<details class="karte uhk" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</summary>
+      <div class="hinweis uhk-info">${u.gruppe ? `🔗 Feste Gruppe · ${u.anzahl} Mitgl.` : u.anzahl > 2 ? `Runde · ${u.anzahl} Personen` : "Einzelchat"}${u.letzte ? ` · zuletzt ${esc(zeitKurz(u.letzte.zeit))}` : ""}${stummAn(u.id) ? " · 🔕" : ""}</div>
+      <div class="uhk-verlauf" data-teil="verlauf">${u.letzte ? '<p class="hinweis">Wird geladen …</p>' : '<p class="hinweis">Noch keine Nachricht.</p>'}</div>
+      <div class="uhk-knoepfe"><button type="button" class="knopf haupt" onclick="chatOeffnen('${esc(u.id)}')">💬 Öffnen &amp; antworten${u.ungelesen ? ` (${u.ungelesen} neu)` : ""}</button></div>
+    </details>`; }).join("")}</div>`;
+}
+async function uhkLaden(karte) {
+  const id = karte?.dataset.id, stand = karte?.dataset.stand; if (!id || !stand) return;
+  const c = UHK.vs.get(id); if (c?.stand === stand && c.html) return uhkZeigen(karte, c.html);
+  if (c?.laeuft === stand) return; UHK.vs.set(id, { stand, laeuft: stand });
+  try { const u = await api("unterhaltung", { id, vorschau: true });
+    const l = (u.nachrichten || []).slice(-6), html = l.map((m) => `<div class="uhk-msg${m.eigen ? " eigen" : ""}${m.wichtig ? " wichtig" : ""}"><small>${esc(m.eigen ? "Du" : m.von || "")} · ${esc(zeitKurz(m.zeit))}</small><div>${esc(String(m.text || (m.anlagen?.length ? "📎 Anhang" : "")).slice(0, 220))}${String(m.text || "").length > 220 ? " …" : ""}</div></div>`).join("") || '<p class="hinweis">Noch keine Nachricht.</p>';
+    UHK.vs.set(id, { stand, html }); document.querySelectorAll(`#uhKartei .uhk[data-id="${CSS.escape(id)}"]`).forEach((k) => uhkZeigen(k, html)); }
+  catch (e) { UHK.vs.delete(id); const v = karte.querySelector('[data-teil="verlauf"]'); if (v) v.innerHTML = `<p class="hinweis">⚠️ ${esc(e.message || "Konnte nicht geladen werden")}</p>`; }
+}
+function uhkZeigen(karte, html) { const v = karte.querySelector('[data-teil="verlauf"]'); if (v) { v.innerHTML = html; v.scrollTop = v.scrollHeight; } }
+function uhKarteiAn() {
+  const erst = !RK.chats?.w?.isConnected;
+  if (erst) requestAnimationFrame(() => { const r = $("uhKartei")?.querySelector(".rk-reiter"); if (r) scrollTo({ top: Math.max(0, r.getBoundingClientRect().top + scrollY - 6) }); if (RK.chats) rkMasse(RK.chats); });
+  rkIn($("uhKartei"), "chats", { id: (d) => d.dataset.id,
+    tabSym: (d) => d.querySelector("summary .avatar")?.outerHTML || "💬",
+    tabText: (d) => (d.querySelector("summary > span")?.textContent || "").split(/[ ,]/)[0],
+    vorn: (d, z) => { const n = z.karten.length; [0, 1].forEach((k) => uhkLaden(z.karten[(z.i + k) % n])); } });
 }
 // KC-CLUB-GRUPPE-AUS-RUNDE (2.24.19, Wunsch Hansi): feste Gruppe = eigenes Symbol + 🔗-Abzeichen; Runde (mehrere Personen ohne Gruppe)
 // = gestrichelter grauer Kreis mit den Anfangsbuchstaben – so sieht jeder sofort, was eine feste Gruppe ist.

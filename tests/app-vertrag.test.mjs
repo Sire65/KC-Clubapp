@@ -2392,7 +2392,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const worker = lies("notbetrieb/worker.js"), wf = lies(".github/workflows/notbetrieb-hochladen.yml"), mig = lies("supabase/migrations/20261002_kc_club_v1520_notbetrieb.sql");
   // Server: eine Regel – dieselben Aktionen intern, nur lesend; Paket nur bei Änderung, signiert
   assert.ok(/async function aktionAusfuehren\(a: string, p: any, ich: Ich, req: Request/.test(server) && /(return await|const antwort = await) aktionAusfuehren\(a, p, ich, req, t0Anfrage, anmeldungMs\);/.test(server), "Aktionen in einer Funktion (auch intern nutzbar)");
-  assert.ok(/nurLesen: true/.test(server) && /if \(!ich\.nurLesen\) await protokoll\(ich\.person_id, "sos_geoeffnet"/.test(server) && /fremd\.length && !ich\.nurLesen/.test(server) && /if \(!ich\.nurLesen\) await db\.from\("kc_communication_thread_participants"\)\.update/.test(server), "Paket-Bau schreibt nichts");
+  assert.ok(/nurLesen: true/.test(server) && /if \(!ich\.nurLesen\) await protokoll\(ich\.person_id, "sos_geoeffnet"/.test(server) && /fremd\.length && !ich\.nurLesen/.test(server) && /if \(!ich\.nurLesen( && p\.vorschau !== true)?\) await db\.from\("kc_communication_thread_participants"\)\.update/.test(server), "Paket-Bau schreibt nichts");
   assert.ok(/st\.fingerabdruck === fp/.test(server) && /name: "Ed25519"/.test(server) && /if \(!st\.url\) return \{ ok: true, aus:/.test(server), "nur bei Änderung, signiert, aus solange nicht eingerichtet");
   assert.ok(/'secret', false, false, false/.test(mig) && /cron\.schedule\('kc-club-notpaket-15min'/.test(mig), "Schlüssel nie gespiegelt, Lauf alle 15 Min.");
   // Ersatz-Server: nur lesen, Signatur prüfen, keine Geheimnisse
@@ -7556,7 +7556,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const idx = lies("index.html");
   assert.ok(/function rkEinrichten\(wurzelId, schluessel\)/.test(html) && /rkEinrichten\("v-einstellungen", "einst"\)/.test(html), "wiederverwendbarer Kern, Einstellungen eingebunden");
-  assert.ok(/localStorage\.getItem\("kc_club_rk_" \+ k\) !== "aus"/.test(html) && /z\.knopf\.textContent = an \? "☰ Liste" : "🗂️ Kartei"/.test(html), "je Gerät zurück zur gewohnten Liste");
+  assert.ok(/localStorage\.getItem\("kc_club_rk_" \+ k\)/.test(html) && /w !== "aus"/.test(html) && /z\.knopf\.textContent = an \? "☰ Liste" : "🗂️ Kartei"/.test(html), "je Gerät zurück zur gewohnten Liste");
   assert.ok(/if \(z\.an && e\.target\.parentElement === w && e\.target\.classList\.contains\("rk-karte"\)\) e\.stopPropagation\(\);/.test(html) && /d\.open = d\.dataset\.rkVorher === "1"/.test(html), "gemerkte Auf/Zu-Stände der Liste bleiben unverändert");
   assert.ok(/m\.target\.classList\?\.contains\("hervor"\)\) \{ rkZu\(z, m\.target\)/.test(html), "Suche/Tipps/„zeig mir wo“ blättern zur richtigen Karte");
   assert.ok(/d\.inert = k !== 0;/.test(html), "nur die vordere Karte ist bedienbar");
@@ -7613,7 +7613,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const idx = lies("index.html");
   assert.ok(/function rkJalousie\(z, still\)/.test(html) && /if \(!rkJalAn\(\) \|\| !fxAn\(\) \|\| !z\?\.an\) return;/.test(html) && /const warte = still \? 60 : 160, hoch = 360/.test(html), "2.190.0: rollt sofort und zügig hoch, aus bei Effekte aus");
   assert.ok(/if \(--rest > 0\) setTimeout\(weiter, 90\); else rkJalousie\(z\);/.test(html), "beim schnellen Drehen nur auf der letzten Karte");
-  assert.ok(/class="rk-jal-knopf/.test(html) && /localStorage\.setItem\("kc_club_rk_jal", an \? "an" : "aus"\)/.test(html) && /\.rk-jal-knopf \{ position: sticky; left: 0;/.test(idx), "ein Umschalter oben, bleibt sichtbar");
+  assert.ok(!/class="rk-jal-knopf/.test(html) && /const rkJalAn = \(\) => false;/.test(html), "2.191.0: Jalousie auf Wunsch weggelassen, kein Umschalter mehr");
 }
 
 // 2.188.0 KC-CLUB-ROLLKARTEI-JALOUSIE-2 (Fund Hansi: „blinkt nur 2×“) – Lamellen IN der Karte, kippen auf, Leiste zieht das Paket hoch
@@ -7628,4 +7628,14 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const idx = lies("index.html");
   assert.ok(/\$\("v-mitglieder"\)\?\.classList\.toggle\("mg-kartei", MG_ANSICHT === "kartei"\);/.test(html) && /#v-mitglieder\.mg-kartei \.kopf2 h2 \{ font-size: 1\.15rem;/.test(idx), "kompakter Kopf in der Kartei");
   assert.ok(/if \(erst\) requestAnimationFrame\(\(\) => \{ const r = \$\("mgKartei"\)\?\.querySelector\("\.rk-reiter"\);/.test(html), "beim Öffnen bis zu den Reitern scrollen");
+}
+
+// 2.191.0 KC-CLUB-CHAT-KARTEI (Wunsch Hansi: Jalousie weglassen, Chats rollen, die vordere Karte schon offen)
+{
+  const idx = lies("index.html");
+  assert.ok(/if \(!ich\.nurLesen && p\.vorschau !== true\) await db\.from\("kc_communication_thread_participants"\)\.update\(\{ last_read_at: jetzt\(\) \}\)/.test(server), "Vorschau in der Kartei zählt nicht als gelesen");
+  assert.ok(/api\("unterhaltung", \{ id, vorschau: true \}\)/.test(html) && /\.slice\(-6\)/.test(html) && /\[0, 1\]\.forEach\(\(k\) => uhkLaden/.test(html), "vorne die letzten 6 Nachrichten, nur vordere + nächste Karte geladen");
+  assert.ok(/onclick="chatOeffnen\('\$\{esc\(u\.id\)\}'\)">💬 Öffnen &amp; antworten/.test(html), "gelesen erst mit „Öffnen & antworten“");
+  assert.ok(/return k === "chats" \? w === "an" : w !== "aus";/.test(html) && /id="setRkChats"/.test(idx) && /id="uhKarteiKnopf"/.test(html), "Chats ab Werk aus; ein Umschalter oben + Haken in den Einstellungen");
+  assert.ok(/esc\(String\(m\.text \|\| \(m\.anlagen\?\.length \? "📎 Anhang" : ""\)\)\.slice\(0, 220\)\)/.test(html), "Nachrichtentext immer maskiert");
 }
