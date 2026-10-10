@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.222.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.223.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12805,6 +12805,15 @@ async function wetterSetzen(teil) {
     $("wetterOrte").innerHTML = ""; $("wetterOrtQ").value = ""; WET.geholt = 0; infoLetztes = ""; wetterAdminLaden(); wetterLaden(true);
   } catch (e) { meldeFehler(e); wetterAdminLaden(); }
 }
+// KC-CLUB-NACHRICHT-MAHNUNG (2.223.0, Wunsch Hansi „Feld Nachrichten rot/orange blinken lassen, wenn Nachrichten älter als 5 Tage
+// drin sind; bei Wichtigkeit hoch sofort blinken und erst aufhören, wenn alle gelesen sind“): Zahlen liefert der Server (init).
+// Ohne Bewegung (Effekte aus, Sparmodus, „weniger Bewegung“) bleibt ein fester roter Rahmen – sichtbar, aber ohne Blinken.
+function nachrichtMahnung() {
+  const m = INIT?.nachrichtMahnung; if (!m || !(m.wichtig > 0 || m.alt > 0)) return null;
+  const wichtig = m.wichtig > 0, ruhig = !fxAn();
+  return { wichtig, klasse: `mini-mahnung${wichtig ? " schnell" : ""}${ruhig ? " still" : ""}`,
+    titel: wichtig ? `❗ ${m.wichtig === 1 ? "Eine wichtige Nachricht ist" : m.wichtig + " wichtige Nachrichten sind"} noch ungelesen` : `${m.alt === 1 ? "Eine Nachricht ist" : m.alt + " Nachrichten sind"} seit über ${m.tage || 5} Tagen ungelesen` };
+}
 // Feld 1: das nächste Treffen (antippen → Termine), darunter drei Kennzahlen, jede führt in ihren Bereich
 function infoTreffen() {
   const t = INIT?.naechstesTreffen, n = INIT?.ungelesen || 0;
@@ -12821,7 +12830,8 @@ function infoTreffen() {
   } else kopf = `<h2>Kein Termin geplant</h2><div class="unter">Sobald ein Köcheclub-Termin ansteht, siehst du es hier.</div>`;
   return `<div class="klick" role="button" tabindex="0" onclick="zumTreffen()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();zumTreffen()}">${kopf}</div>
     <div class="kacheln3">
-      <button class="mini${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${n}</b><span>Neue Nachr.</span>${mpfeil("nachrichten", n > 0, n)}</button>
+      ${(() => { const m = n ? nachrichtMahnung() : null; /* KC-CLUB-NACHRICHT-MAHNUNG (2.223.0) */
+        return `<button class="mini${n ? " mini-neu" : ""}${m ? " " + m.klasse : ""}"${m ? ` title="${esc(m.titel)}"` : ""} onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${m?.wichtig ? "❗" : ""}${n}</b><span>${m?.wichtig ? "Wichtig!" : m ? "Lange offen" : "Neue Nachr."}</span>`; })()}${mpfeil("nachrichten", n > 0, n)}</button>
       ${(() => { const on = ONL.zeigen && mpOnline() > 0; /* 2.207.0 KC-CLUB-MINI-ONLINE-AMEISEN (Wunsch Hansi): ist jemand online, läuft um die ganze Kachel ein Ameisenlauf – wie bei neuen Nachrichten, in Online-Grün */
         return `<button class="mini${on ? " mini-online" : ""}" onclick="mgNurOnline()">${on ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}`; })()}<b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b><span>Mitglieder${inkognitoAn() ? '<i class="inko-marke" title="Inkognito ist an – niemand sieht dich online">🕶️</i>' : ""}</span>${mpfeil("mitglieder", ONL.zeigen && mpOnline() > 0, mpOnline())}</button>
       <button id="cdKachel" class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}${cdInhalt(bisTreffen)}${mpfeil("termin", !!t, t ? `${t.id || t.beginn}|${frist}` : "", frist)}</button>
@@ -12835,6 +12845,7 @@ function hashSprung(h) {
     else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
+    else if (h.startsWith("#reisecheckliste=")) rcOeffnen(decodeURIComponent(h.slice(17))); // KC-CLUB-REISE-CHECKLISTE (2.223.0): Erinnerung 2 Tage vorher
     else if (h === "#boerse" || h.startsWith("#boerse=")) { BO.oeffnen = h.slice(8) || null; hlStart("boerse"); } // KC-CLUB-BOERSE
     else if (h.startsWith("#angebot=")) angebotDirekt(decodeURIComponent(h.slice(9))); // KC-CLUB-HILFE-KANAELE (2.23.44): Push/Mail → Angebot
     else if (h.startsWith("#hilfe=")) hilfeDirekt(decodeURIComponent(h.slice(7))); // KC-CLUB-HILFE-KURZ (1.93.0): Push/Mail → Kurzansicht
@@ -19219,7 +19230,7 @@ async function aktionOeffnen(id, ausHistorie) {
   const a = AKTIONEN.find((x) => x.id === id);
   if (!a) return zeige("aktionen", ausHistorie);
   zeige("aktion", ausHistorie);
-  $("aktionInhalt").innerHTML = aktionKarte(a) + `<div class="karte">${mitfahrtBlock("aktion", a.id, a.mitfahrten || [], a.bis >= heuteIso(), a.mitfahrtSuche || [], true)}</div>` + `<button class="knopf" style="width:100%;margin-top:12px" onclick="fotosFuer('aktion', '${esc(a.id)}')">📷 Fotos zu dieser Aktion</button>` + `<p class="hinweis" style="font-size:.85rem">Die Angaben kommen aus dem KC Manager${AKTIONEN_STAND ? ` (Stand ${esc(zeitKurz(AKTIONEN_STAND))})` : " – Stand unbekannt"}.</p>`;
+  $("aktionInhalt").innerHTML = aktionKarte(a) + (a.dabei && rcIstKreuzfahrt(a) && a.bis >= heuteIso() ? `<button class="knopf haupt" style="width:100%;margin-top:10px;text-align:center" onclick="rcOeffnen('${esc(a.id)}')">🧳 Meine Reise-Checkliste</button>` : "") /* KC-CLUB-REISE-CHECKLISTE (2.223.0) */ + `<div class="karte">${mitfahrtBlock("aktion", a.id, a.mitfahrten || [], a.bis >= heuteIso(), a.mitfahrtSuche || [], true)}</div>` + `<button class="knopf" style="width:100%;margin-top:12px" onclick="fotosFuer('aktion', '${esc(a.id)}')">📷 Fotos zu dieser Aktion</button>` + `<p class="hinweis" style="font-size:.85rem">Die Angaben kommen aus dem KC Manager${AKTIONEN_STAND ? ` (Stand ${esc(zeitKurz(AKTIONEN_STAND))})` : " – Stand unbekannt"}.</p>`;
 }
 function aktionKarte(a) {
   const heute = heuteIso(), tage = Math.round((new Date(a.von + "T12:00:00Z") - new Date(heute + "T12:00:00Z")) / 86400000);
@@ -22381,7 +22392,209 @@ async function schSpeichern() {
     const h = document.querySelector("#schBlatt h3"); if (h) h.textContent = "🪧 " + SDR.name;
   } catch (e) { meldeFehler(e); }
 }
+// ---------- KC-CLUB-REISE-CHECKLISTE (2.223.0, Wunsch Hansi „persönliche Checkliste für die Kreuzfahrt – 2 Wochen vorher anbieten,
+// ausdrucken (mehrspaltig, Blöcke mit Überschriften, auch Hilfsmittel wie Brille, Hörgeräte; unten ein leerer Block mit Linien) oder am
+// Bildschirm abhaken; auf dem Köcheclub-Kopfbogen; im Archivordner jedes Mitglieds ablegen“) ----------
+const RC_STANDARD = [
+  { t: "📄 Papiere & Unterlagen", p: ["Reisepass / Personalausweis (gültig?)", "Reiseunterlagen & Bordkarte", "Flug- / Bahntickets", "Krankenkassenkarte + Auslandsschutz", "Impfnachweis / Notfallpass", "Kopien wichtiger Papiere", "Notfall-Telefonnummern"] },
+  { t: "💶 Geld & Karten", p: ["Bargeld (Euro + Landeswährung)", "EC-Karte / Kreditkarte", "PIN-Nummern sicher notiert", "Kleingeld für Trinkgeld"] },
+  { t: "💊 Gesundheit", p: ["Medikamente (+ 3 Tage Reserve)", "Medikamentenplan", "Mittel gegen Seekrankheit", "Sonnenschutz & Lippenpflege", "Pflaster & kleine Reiseapotheke", "Mückenschutz"] },
+  { t: "👓 Hilfsmittel", p: ["Brille + Ersatzbrille", "Lesebrille", "Sonnenbrille", "Hörgeräte + Batterien/Lader", "Zahnprothese + Pflegemittel", "Gehstock / Rollator", "Blutdruck-/Zuckermessgerät", "Kompressionsstrümpfe"] },
+  { t: "👔 Kleidung", p: ["Abendgarderobe (Galaabend)", "Rutschfeste bequeme Schuhe", "Regen- / Windjacke", "Warmer Pullover", "Badesachen", "Kopfbedeckung"] },
+  { t: "🔌 Technik", p: ["Handy + Ladegerät", "Powerbank", "Mehrfachstecker (bordtauglich)", "Reiseadapter", "Kopfhörer", "Kamera + Speicherkarte"] },
+  { t: "🧳 Gepäck & Kleines", p: ["Gepäckanhänger der Reederei", "Kleiner Tagesrucksack", "Wäschebeutel", "Reisewecker", "Fernglas", "Lesestoff"] },
+  { t: "🏠 Vor der Abfahrt zuhause", p: ["Nachbarn / Familie informiert", "Post / Zeitung abbestellt", "Pflanzen versorgt", "Fenster zu, Herd & Geräte aus", "Kühlschrank geleert", "Schlüssel hinterlegt"] },
+];
+const RC_LEER_ZEILEN = 6;
+function druckReiseCheckliste(param = {}) {
+  const r = param.reise || {}, bloecke = param.bloecke || RC_STANDARD, haken = param.haken || {}, eigene = param.eigene || [];
+  const datum = (iso) => iso ? fKurzJahr.format(new Date(String(iso).slice(0, 10) + "T12:00:00Z")) : "";
+  const block = (b, bi) => `<section class="rc-block"><h3>${esc(b.t)}</h3><ul>${b.p.map((x, i) => `<li><span class="rc-k">${haken[`${bi}.${i}`] ? "✔" : ""}</span>${esc(x)}</li>`).join("")}</ul></section>`;
+  return { titel: "Persönliche Reise-Checkliste", rechts: "für " + esc(param.name || ICH?.name || ""), unter: `${r.titel || "Kreuzfahrt"}${r.von ? ` · ${datum(r.von)}${r.bis ? ` – ${datum(r.bis)}` : ""}` : ""}`,
+    html: `<div class="rc-spalten">${bloecke.map(block).join("")}</div>
+      <section class="rc-block rc-leer"><h3>✏️ Eigene Punkte</h3><ul>${eigene.map((x, i) => `<li><span class="rc-k">${haken["e" + i] ? "✔" : ""}</span><span class="rc-linie rc-eigen">${esc(x)}</span></li>`).join("")}${Array(Math.max(2, RC_LEER_ZEILEN - eigene.length)).fill('<li><span class="rc-k"></span><span class="rc-linie"></span></li>').join("")}</ul></section>`,
+    fuss: "Reise-Checkliste" };
+}
+// Am Bildschirm: dieselben Blöcke mit großen Kästchen; Stand am Konto (Einstellung „reise_checkliste“, je Reise) – auf jedem Gerät gleich.
+// Angebot 14 Tage vor einer Kreuzfahrt (nur wer dabei ist), Ablage als PDF (CD-Kopfbogen) im eigenen Archiv-Ordner, Erinnerung
+// 2 Tage vorher macht der Server (Zeitplaner), wenn noch Punkte offen sind.
+const RC_ANGEBOT_TAGE = 14, RC_REGISTER_VORSCHLAG = ["Reisen", "Sonstiges"];
+const RC = { reisen: null, id: null, uhr: null };
+const rcAlle = () => ({ ...(INIT?.einstellungen?.reise_checkliste?.reisen || {}) });
+const rcStand = (id) => { const r = rcAlle()[id] || {}; return { haken: { ...(r.haken || {}) }, eigene: [...(r.eigene || [])], art: r.art || null, offen: r.offen || 0, abgelegt: r.abgelegt || null, spaeter: r.spaeter || null }; };
+const rcAnzahl = (st) => RC_STANDARD.reduce((n, b) => n + b.p.length, 0) + st.eigene.length;
+const rcOffen = (st) => rcAnzahl(st) - Object.keys(st.haken).filter((k) => st.haken[k] && (!k.startsWith("e") || +k.slice(1) < st.eigene.length)).length;
+const rcIstKreuzfahrt = (a) => aktionSymbol(a) === "🚢";
+async function rcSichern(id, st) {
+  st.offen = rcOffen(st);
+  const alle = rcAlle(); delete alle[id]; alle[id] = st; // zuletzt bearbeitete Reise hinten – der Server behält die letzten 10
+  INIT.einstellungen = { ...(INIT.einstellungen || {}), reise_checkliste: { reisen: alle } };
+  await einstSpeichern("reise_checkliste", { reisen: alle });
+}
+async function rcReisen(neu) {
+  if (RC.reisen && !neu) return RC.reisen;
+  const r = await api("countdowns", {}, { still: true });
+  RC.reisen = (r.reisen || []).filter(rcIstKreuzfahrt);
+  return RC.reisen;
+}
+// beim Start: Kreuzfahrt in ≤ 14 Tagen, bei der ich dabei bin, und noch nicht gewählt (Druck/Bildschirm) → einmal anbieten
+async function rcAngebotPruefen(versuch = 0) {
+  if (!ICH || !INIT || document.body.classList.contains("im-notbetrieb")) return;
+  let reisen; try { reisen = await rcReisen(); } catch { return; }
+  const heute = heuteIso();
+  const a = reisen.find((x) => { const t = cdTageBis(x.von), st = rcStand(x.id); return t >= 0 && t <= RC_ANGEBOT_TAGE && !st.art && !(st.spaeter && st.spaeter.slice(0, 10) >= heute); });
+  if (!a) return;
+  if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 24) setTimeout(() => rcAngebotPruefen(versuch + 1), 5000); return; }
+  if (!ruheInfo()) return;
+  const t = cdTageBis(a.von);
+  const f = blattAuf("rcAngebotBlatt", `<div style="text-align:center"><div style="font-size:2.6rem;line-height:1.2" aria-hidden="true">🚢 🧳</div>
+      <h3 style="margin:6px 0">${t === 0 ? "Heute" : t === 1 ? "Morgen" : `In ${t} Tagen`} geht es los: ${esc(a.titel)}</h3>
+      <p style="margin:0 0 6px">Hier ist deine <b>persönliche Checkliste für die Kreuzfahrt</b> – damit nichts zuhause bleibt (auch Brille, Hörgeräte, Medikamente …).</p>
+      <p style="margin:0 0 6px"><b>Möchtest du sie ausdrucken oder am Bildschirm abhaken?</b></p></div>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      <button class="knopf haupt" style="text-align:center" onclick="rcAngebotAntwort('${esc(a.id)}', 'druck')">🖨️ Ausdrucken (PDF)</button>
+      <button class="knopf haupt" style="text-align:center" onclick="rcAngebotAntwort('${esc(a.id)}', 'bildschirm')">☑️ Am Bildschirm abhaken</button>
+      <button class="knopf" style="text-align:center" onclick="rcAngebotAntwort('${esc(a.id)}', 'spaeter')">⏰ Später</button></div>
+    <p class="hinweis" style="text-align:center;margin:8px 0 0">Die Liste liegt danach auch in deinem Archiv-Ordner. Du findest sie jederzeit bei der Reise unter 🚢 Aktionen.</p>`);
+  f.onclick = (e) => { if (e.target === f) rcAngebotAntwort(a.id, "spaeter"); };
+}
+async function rcAngebotAntwort(id, wahl) {
+  $("rcAngebotBlatt")?.remove();
+  const st = rcStand(id);
+  if (wahl === "spaeter") { st.spaeter = new Date().toISOString(); rcSichern(id, st).catch(() => {}); return melde("⏰ Gut – ich frage morgen noch einmal"); }
+  st.art = wahl; st.spaeter = null;
+  try { await rcSichern(id, st); } catch (e) { meldeFehler(e); }
+  if (wahl === "druck") return rcDrucken(id);
+  rcOeffnen(id);
+}
+async function rcReise(id) {
+  let a = (RC.reisen || []).find((x) => x.id === id) || (AKTIONEN || []).find((x) => x.id === id);
+  if (!a) { try { a = (await rcReisen(true)).find((x) => x.id === id); } catch (e) { meldeFehler(e); } }
+  return a || null;
+}
+async function rcOeffnen(id) {
+  const a = await rcReise(id); if (!a) return melde("Diese Reise wurde nicht gefunden – bist du (noch) dabei?", true);
+  RC.id = id; const st = rcStand(id);
+  if (!st.art) { st.art = "bildschirm"; rcSichern(id, st).catch(() => {}); }
+  const k = (key, text, extra = "") => `<label class="rc-zeile${st.haken[key] ? " an" : ""}"><input type="checkbox" data-k="${key}"${st.haken[key] ? " checked" : ""} onchange="rcHaken(this)"><span>${esc(text)}</span>${extra}</label>`;
+  const bloecke = RC_STANDARD.map((b, bi) => `<details class="karte rc-sblock" open><summary><b>${esc(b.t)}</b> <small class="hinweis" data-zahl="${bi}"></small></summary>${b.p.map((x, i) => k(`${bi}.${i}`, x)).join("")}</details>`).join("");
+  const eigene = st.eigene.map((x, i) => k("e" + i, x, `<button type="button" class="knopf klein" aria-label="Punkt löschen" onclick="event.preventDefault();rcEigenWeg(${i})">🗑️</button>`)).join("");
+  blattAuf("rcBlatt", `<h3 style="margin:0">🧳 Meine Reise-Checkliste</h3>
+    <p class="hinweis" style="margin:2px 0 8px">${aktionSymbol(a)} ${esc(a.titel)} · ${esc(fKurzJahr.format(new Date(a.von + "T12:00:00Z")))}${a.bis && a.bis !== a.von ? " – " + esc(fKurzJahr.format(new Date(a.bis + "T12:00:00Z"))) : ""}</p>
+    <div class="rc-fortschritt"><div id="rcBalken"></div><span id="rcStandText"></span></div>
+    ${bloecke}
+    <details class="karte rc-sblock" open><summary><b>✏️ Eigene Punkte</b></summary>${eigene}
+      <div style="display:flex;gap:6px;margin-top:6px"><input id="rcNeu" maxlength="80" placeholder="z. B. Reiseführer, Spielkarten …" style="flex:1" onkeydown="if(event.key==='Enter')rcEigenNeu()"><button type="button" class="knopf" onclick="rcEigenNeu()">➕</button></div></details>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch;margin-top:10px">
+      <button class="knopf haupt" style="text-align:center" onclick="rcDrucken('${esc(id)}')">🖨️ Ausdrucken / als PDF</button>
+      <button class="knopf" style="text-align:center" onclick="einmal(this, () => rcAblegen('${esc(id)}'))">🗄️ Aktuellen Stand im Archiv ablegen</button>
+      <button class="knopf" style="text-align:center" onclick="$('rcBlatt').remove()">Schließen</button></div>
+    <p class="hinweis" style="margin:8px 0 0">Jeder Haken wird sofort gespeichert – auf Handy, Tablet und PC gleich. 2 Tage vor der Abfahrt erinnert dich die App, wenn noch etwas offen ist.</p>`);
+  rcFortschritt(st);
+}
+function rcFortschritt(st) {
+  const n = rcAnzahl(st), offen = rcOffen(st), fertig = n - offen;
+  if ($("rcBalken")) $("rcBalken").style.width = (n ? Math.round(fertig / n * 100) : 0) + "%";
+  if ($("rcStandText")) $("rcStandText").textContent = offen ? `${fertig} von ${n} abgehakt – noch ${offen} offen` : `✅ Alles abgehakt – gute Reise!`;
+  RC_STANDARD.forEach((b, bi) => { const z = document.querySelector(`#rcBlatt [data-zahl="${bi}"]`); if (z) { const h = b.p.filter((_, i) => st.haken[`${bi}.${i}`]).length; z.textContent = h === b.p.length ? "✅" : `${h}/${b.p.length}`; } });
+}
+function rcHaken(el) {
+  const id = RC.id, st = rcStand(id), k = el.dataset.k;
+  if (el.checked) st.haken[k] = true; else delete st.haken[k];
+  el.closest(".rc-zeile")?.classList.toggle("an", el.checked);
+  INIT.einstellungen = { ...(INIT.einstellungen || {}), reise_checkliste: { reisen: { ...rcAlle(), [id]: { ...st, offen: rcOffen(st) } } } };
+  rcFortschritt(st);
+  clearTimeout(RC.uhr); RC.uhr = setTimeout(() => rcSichern(id, rcStand(id)).catch((e) => meldeFehler(e)), 700); // mehrere Haken schnell hintereinander = ein Speichern
+}
+async function rcEigenNeu() {
+  const t = String($("rcNeu")?.value || "").trim().slice(0, 80); if (!t) return;
+  const st = rcStand(RC.id); if (st.eigene.length >= 12) return melde("Höchstens 12 eigene Punkte.", true);
+  st.eigene.push(t);
+  try { await rcSichern(RC.id, st); } catch (e) { return meldeFehler(e); }
+  rcOeffnen(RC.id);
+}
+async function rcEigenWeg(i) {
+  const st = rcStand(RC.id);
+  // Haken der folgenden eigenen Punkte nachrücken
+  const h = {}; for (const [k, v] of Object.entries(st.haken)) { if (!k.startsWith("e")) h[k] = v; else { const n = +k.slice(1); if (n < i) h[k] = v; else if (n > i) h["e" + (n - 1)] = v; } }
+  st.haken = h; st.eigene.splice(i, 1);
+  try { await rcSichern(RC.id, st); } catch (e) { return meldeFehler(e); }
+  rcOeffnen(RC.id);
+}
+const rcParam = (a, st) => ({ reise: { titel: `${aktionSymbol(a)} ${a.titel}`, von: a.von, bis: a.bis }, name: ICH?.name || "", haken: st.haken, eigene: st.eigene });
+async function rcDrucken(id) {
+  const a = await rcReise(id); if (!a) return;
+  const st = rcStand(id);
+  if (!st.abgelegt) rcAblegen(id, true).catch(() => {}); // beim ersten Mal still ins Archiv
+  druckStarten("reisecheckliste", rcParam(a, st));
+}
+// PDF auf dem CD-Kopfbogen (gezeichnete A4-Seite) in den eigenen Ordner des laufenden Jahres. Kein neuer Serverweg.
+async function rcAblegen(id, still = false) {
+  const a = await rcReise(id); if (!a) return;
+  const st = rcStand(id);
+  try {
+    const ar = await api("archiv_liste", {}, { still });
+    const o = (ar.ordner || []).filter((x) => x.besitzer && x.eigen).sort((x, y) => (y.jahr === +heuteIso().slice(0, 4)) - (x.jahr === +heuteIso().slice(0, 4)) || y.jahr - x.jahr)[0];
+    if (!o) throw new Error("Dein persönlicher Ordner ist nicht verfügbar (liegt er im Papierkorb?).");
+    const reg = o.register?.length ? o.register : (ar.register || ["Sonstiges"]), register = RC_REGISTER_VORSCHLAG.find((r) => reg.includes(r)) || reg[0];
+    const pdf = schPdf(await rcBild(rcParam(a, st))), heute = heuteIso();
+    await api("archiv_hochladen", { ordner_id: o.id, register, titel: `Reise-Checkliste ${a.titel} (Stand ${fKurzJahr.format(new Date(heute + "T12:00:00Z"))})`, datum: heute,
+      stichworte: "Reise-Checkliste, Kreuzfahrt", name: `Reise-Checkliste-${heute}.pdf`, mime: "application/pdf", daten: base64(await pdf.arrayBuffer()) }, { warten: true, still });
+    st.abgelegt = new Date().toISOString(); await rcSichern(id, st);
+    if (typeof AR !== "undefined") AR.daten = null;
+    if (!still) melde(`🗄️ Checkliste liegt in deinem Ordner ${o.jahr} (Register „${register}“)`);
+  } catch (e) { if (!still) meldeFehler(e); else console.warn("Reise-Checkliste ablegen", e); }
+}
+// Archiv-PDF: die Seite selbst auf ein Bild zeichnen (A4, 200 dpi) – gleicher CD-Kopfbogen wie der Ausdruck (KC_CD: Kochmütze,
+// Schriftzug, Weinrot/Beige, Fußzeile). Bewusst ohne Bildschirmfoto-Bibliothek: die verrutscht bei Druckseiten und Safari
+// verbietet den Umweg über SVG – so klappt es auf iPhone, Android und PC gleich. Verpackt wird mit schPdf (eine A4-Seite).
+async function rcBild(param) {
+  const K = 1654 / 210, mm = (x) => Math.round(x * K), c = document.createElement("canvas"); c.width = 1654; c.height = 2339;
+  const g = c.getContext("2d"), r = param.reise || {}, haken = param.haken || {}, eigene = param.eigene || [];
+  const SANS = "Arial, Helvetica, sans-serif", SERIF = KC_CD.schrift.replace(/'/g, '"');
+  const schrift = (pt, art = SANS, fett = false) => { g.font = `${fett ? "bold " : ""}${Math.round(pt * K * 0.3528)}px ${art}`; };
+  g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+  // Kopf: Kochmütze im weinroten Kreis, Schriftzug, Spruch – rechts Titel, Reise, Name
+  g.fillStyle = KC_CD.weinrot; g.beginPath(); g.arc(mm(23), mm(22), mm(8), 0, 2 * Math.PI); g.fill();
+  try { const img = new Image(); img.src = KC_CD.logo; await img.decode(); g.drawImage(img, mm(17), mm(16), mm(12), mm(12)); } catch {}
+  g.textBaseline = "alphabetic"; g.textAlign = "left";
+  g.fillStyle = KC_CD.weinrot; schrift(22, SERIF, true); g.fillText(KC_CD.name, mm(34), mm(22));
+  g.fillStyle = KC_CD.grau; schrift(9.5); g.fillText(KC_CD.zeile, mm(34), mm(27));
+  g.textAlign = "right"; g.fillStyle = KC_CD.weinrot; schrift(13, SANS, true); g.fillText("Persönliche Reise-Checkliste", mm(195), mm(19));
+  g.fillStyle = KC_CD.grau; schrift(9.5);
+  const dz = (iso) => (iso ? fKurzJahr.format(new Date(String(iso).slice(0, 10) + "T12:00:00Z")) : "");
+  g.fillText(`${r.titel || "Kreuzfahrt"}${r.von ? ` · ${dz(r.von)}${r.bis && r.bis !== r.von ? " – " + dz(r.bis) : ""}` : ""}`, mm(195), mm(24));
+  g.fillText("für " + (param.name || ""), mm(195), mm(29));
+  g.fillStyle = KC_CD.weinrot; g.fillRect(mm(15), mm(34), mm(180), mm(1));
+  g.textAlign = "left";
+  // Blöcke zweispaltig (erste Hälfte links, Rest rechts), darunter „Eigene Punkte“ über die ganze Breite
+  const ZEILE = 5.6, KOPF = 7.2, kasten = (x, y, an) => { g.strokeStyle = "#000"; g.lineWidth = mm(0.35); g.strokeRect(mm(x), mm(y - 3.3), mm(3.8), mm(3.8));
+    if (an) { g.fillStyle = KC_CD.weinrot; schrift(10, SANS, true); g.textAlign = "center"; g.fillText("✔", mm(x + 1.9), mm(y)); g.textAlign = "left"; } };
+  const block = (x, y, w, titel, zeilen) => { // zeilen: [{ text, an }] – liefert die Unterkante
+    const h = KOPF + zeilen.length * ZEILE + 2.5;
+    g.strokeStyle = KC_CD.beigeRand; g.lineWidth = mm(0.3); g.strokeRect(mm(x), mm(y), mm(w), mm(h));
+    g.fillStyle = KC_CD.beige; g.fillRect(mm(x), mm(y), mm(w), mm(KOPF));
+    g.fillStyle = KC_CD.weinrot; g.fillRect(mm(x), mm(y + KOPF), mm(w), mm(0.4));
+    schrift(11, SERIF, true); g.fillText(titel, mm(x + 3), mm(y + 5.2));
+    zeilen.forEach((z, i) => { const zy = y + KOPF + 5.2 + i * ZEILE; kasten(x + 3, zy, z.an);
+      if (z.linie) { g.strokeStyle = "#888"; g.lineWidth = mm(0.3); g.beginPath(); g.moveTo(mm(x + 9), mm(zy + 0.6)); g.lineTo(mm(x + w - 3), mm(zy + 0.6)); g.stroke(); }
+      if (z.text) { g.fillStyle = KC_CD.text; schrift(10); g.fillText(z.text, mm(x + 9), mm(zy)); } });
+    return y + h;
+  };
+  const B = RC_STANDARD, haelfte = Math.ceil(B.length / 2), breit = 86.5;
+  let yl = 39, yr = 39;
+  B.forEach((b, bi) => { const z = b.p.map((t, i) => ({ text: t, an: !!haken[`${bi}.${i}`] }));
+    if (bi < haelfte) yl = block(15, yl, breit, b.t, z) + 3; else yr = block(15 + breit + 7, yr, breit, b.t, z) + 3; });
+  const leer = Math.max(2, RC_LEER_ZEILEN - eigene.length);
+  block(15, Math.max(yl, yr), 180, "✏️ Eigene Punkte", [...eigene.map((t, i) => ({ text: t, an: !!haken["e" + i], linie: true })), ...Array(leer).fill({ linie: true })]);
+  // Fußzeile wie cdFuss
+  g.fillStyle = KC_CD.weinrot; g.fillRect(mm(15), mm(278), mm(180), mm(0.5));
+  g.textAlign = "center"; schrift(8, SANS, true); g.fillText(KC_CD.name, mm(105), mm(282.5));
+  g.fillStyle = KC_CD.grau; schrift(8); g.fillText(`Abgelegt am ${wann(new Date().toISOString())} · Köcheclub-App v${APP_VERSION} · Reise-Checkliste`, mm(105), mm(286.5));
+  return c;
+}
 const DRUCKARTEN = {
+  reisecheckliste: { bauen: (o, p) => druckReiseCheckliste(p) }, // KC-CLUB-REISE-CHECKLISTE (2.223.0)
   schild: { bauen: () => druckSchild() }, // KC-CLUB-SCHILDER (2.150.0)
   termine: { titel: "🖨️ Termine drucken", optionen: () => druckTermineOptionen(), bauen: (o) => (o.art === "todo" ? druckTodo(o) : druckKalender(o)) },
   treffen: { bauen: (o, id) => druckTreffen(id) },
@@ -22452,7 +22665,7 @@ async function druckSeiteBauen() {
   const d = DRUCKARTEN[DRUCK.art], o = druckOptionenLesen();
   const s = await d.bauen(o, DRUCK.param); if (!s) return false;
   // KC-CLUB-CD (2.130.0): jeder Ausdruck mit demselben Kopf (Kochmütze, Schriftzug, Weinrot) und derselben Fußzeile
-  $("druck").innerHTML = s.ohneRahmen ? s.html : `<div class="cd-blatt">${cdKopf(s.titel, s.unter, esc(fKurzJahr.format(new Date())))}
+  $("druck").innerHTML = s.ohneRahmen ? s.html : `<div class="cd-blatt">${cdKopf(s.titel, s.unter, s.rechts ?? esc(fKurzJahr.format(new Date())))}
     ${s.html}
     ${cdFuss(`Gedruckt am ${esc(wann(new Date().toISOString()))} von ${esc(ICH?.name || "")} · Köcheclub-App v${APP_VERSION}${s.fuss ? " · " + esc(s.fuss) : ""}`)}</div>`;
   let st = $("druckSeitenformat"); if (!st) { st = document.createElement("style"); st.id = "druckSeitenformat"; document.head.appendChild(st); }
@@ -25675,6 +25888,7 @@ async function fpAdmin(tage) {
     if (!h || h === "#") setTimeout(() => scHinweisPruefen(), 9000); // KC-CLUB-SCHULUNG-HINWEIS (2.23.68): Admin
     if (!h || h === "#") setTimeout(() => smHinweisPruefen(), 7000); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62): offene Schulungs-Einladung? // KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52): neue Terminanfrage?
     if (!h || h === "#") setTimeout(() => twAntwortPruefen(), 6000); // KC-CLUB-TWINKEY-FRAGEN: Antwort „in der Club-App“
+    if (!h || h === "#") setTimeout(() => rcAngebotPruefen(), 3500); // KC-CLUB-REISE-CHECKLISTE (2.223.0): Kreuzfahrt in ≤ 14 Tagen
     if (!h || h === "#") setTimeout(() => spEinladung(), 4000); // KC-CLUB-SPIEL-EINLADUNG (2.12.0): nach Begrüßung/Neuigkeiten
   });
   // KC-CLUB-UPDATE-AUTO (2.3.2, Wunsch Hansi): auch beim Start und alle 10 Min. (nur auf der Startseite, nichts offen,

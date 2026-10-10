@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.223.0 – 2026-10-10 – Reise-Checkliste für die Kreuzfahrt + Nachrichten-Kachel mahnt
+KC-CLUB-REISE-CHECKLISTE: 14 Tage vor einer Kreuzfahrt bekommt jede/r Teilnehmende die persönliche Checkliste angeboten – ausdrucken (PDF auf dem Köcheclub-Kopfbogen, zweispaltig mit Blöcken inkl. Hilfsmitteln, unten leerer Block) oder am Bildschirm abhaken (Stand auf allen Geräten); Ablage im eigenen Archiv-Ordner; 2 Tage vorher Erinnerung, wenn noch etwas offen ist. KC-CLUB-NACHRICHT-MAHNUNG: Kachel „Neue Nachr.“ blinkt rot/orange bei ungelesenen Nachrichten älter als 5 Tage, bei ❗ wichtigen sofort und schneller – bis alles gelesen ist.
+
 ## 2.222.0 – 2026-10-10 – 🔔 Wer fehlt noch? + Änderung direkt eintragen
 🔔 In der Dienstzeiten-Übersicht steht, wer noch keine Dienstwünsche abgegeben hat – mit Knopf „Freundlich erinnern“. ✅ Freigegebene Änderungsmeldungen kann der Admin selbst eintragen, wenn der KC Manager sie nicht abholt.
 

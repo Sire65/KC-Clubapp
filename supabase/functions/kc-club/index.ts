@@ -44,7 +44,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.222.0";
+const SERVER_VERSION = "2.223.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1008,7 +1008,22 @@ const KA_ID = /^[a-z0-9_-]{1,30}$/;
 const kaIds = (v: unknown) => [...new Set((Array.isArray(v) ? v : []).filter((x) => typeof x === "string" && KA_ID.test(x)))].slice(0, 50) as string[];
 // KC-CLUB-EMPFANGS-EFFEKT (2.177.0): mit welchem Effekt meine Nachrichten beim Empfänger ankommen (Wahl unter 🎨 Darstellung)
 const SENDE_EFFEKT_ARTEN = ["flieger", "taube", "postauto", "wechsel", "aus"];
+const MAHNUNG_TAGE = 5; // KC-CLUB-NACHRICHT-MAHNUNG (2.223.0): ab so vielen Tagen ungelesen blinkt die Nachrichten-Kachel
+const RC_EIGENE_MAX = 12; // KC-CLUB-REISE-CHECKLISTE (2.223.0): eigene Punkte je Reise
 const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
+  // KC-CLUB-REISE-CHECKLISTE (2.223.0, Wunsch Hansi): je Kreuzfahrt (Aktions-ID) die abgehakten Punkte, eigene Punkte, gewählte Art
+  // (Ausdruck / am Bildschirm), wie viele noch offen sind (für die Erinnerung 2 Tage vorher) und wann sie im Archiv abgelegt wurde
+  reise_checkliste: (w) => {
+    const zeit = (x: unknown) => (x && !isNaN(Date.parse(String(x))) ? new Date(String(x)).toISOString() : null);
+    return { reisen: Object.fromEntries(Object.entries(w?.reisen && typeof w.reisen === "object" ? w.reisen : {})
+      .filter(([id]) => /^[\w-]{1,60}$/.test(id)).slice(-10).map(([id, r]: [string, any]) => [id, {
+        haken: Object.fromEntries(Object.entries(r?.haken && typeof r.haken === "object" ? r.haken : {}).filter(([k, v]) => /^(\d{1,2}\.\d{1,2}|e\d{1,2})$/.test(k) && v === true).slice(0, 200)),
+        eigene: (Array.isArray(r?.eigene) ? r.eigene : []).map((x: unknown) => txt(x, 80)).filter(Boolean).slice(0, RC_EIGENE_MAX),
+        art: r?.art === "druck" || r?.art === "bildschirm" ? r.art : null,
+        offen: Math.max(0, Math.min(500, Math.round(Number(r?.offen)) || 0)),
+        abgelegt: zeit(r?.abgelegt), spaeter: zeit(r?.spaeter),
+      }])) };
+  },
   sende_effekt: (w) => ({ art: SENDE_EFFEKT_ARTEN.includes(w?.art) ? w.art : "wechsel" }),
   // KC-CLUB-CHAT-FARBEN (2.145.0): nur kurze Kennungen aus der Auswahl der App – nie freie Farben/Bilder
   chat_farben: (w) => { const id = (x: unknown) => (typeof x === "string" && /^[a-z0-9_]{1,24}$/.test(x) ? x : "standard"); return { eigen: id(w?.eigen), andere: id(w?.andere), hintergrund: id(w?.hintergrund) }; },
@@ -3948,6 +3963,38 @@ async function schulungNachfrageFaellig() {
   return (data ?? []).filter((b: any) => !(b.installiert_auf ?? []).includes("leih") || (b.installiert_auf ?? []).some((g: string) => g !== "leih"));
 }
 // einmal je Besuch: Push/Mail an den Admin „Nachfrage fällig“ (gesendet wird nur von Hand, mit einem Tipp – nie automatisch an Mitglieder)
+// KC-CLUB-REISE-CHECKLISTE (2.223.0, Wunsch Hansi „Erinnerung 2 Tage vorher“): ab 9 Uhr, 2 Tage vor einer Kreuzfahrt, jede/r
+// Teilnehmende, deren Checkliste noch nicht ganz abgehakt ist (oder die sie noch nie geöffnet haben), einmal Push/E-Mail.
+// „Schon erinnert“ merkt sich nur der Server (eigener Schlüssel, die App kann ihn nicht setzen) – kein doppelter Versand.
+const RC_KREUZFAHRT = /schiff|kreuz|cruis|fjord|fähre/i; // wie aktionSymbol() in der App
+const RC_ERINNERN_TAGE = 2;
+async function reiseChecklisteErinnern() {
+  if (berlinStunde(new Date()) < 9) return;
+  const ziel = berlinTag(new Date(Date.now() + RC_ERINNERN_TAGE * 86400000));
+  const { aktionen } = await aktionenLesen({ person_id: "-", name: "System", vorname: "System", admin: false, vorstand: false, aemter: [], protokolle: false, kontakte: false, buero: null, nurLesen: true });
+  for (const a of (aktionen as any[]).filter((x) => x.von === ziel && RC_KREUZFAHRT.test(`${x.titel} ${x.veranstalter || ""}`))) {
+    const ids = [...new Set((a.teilnehmer as any[]).map((t) => t.person_id).filter(Boolean))] as string[];
+    if (!ids.length) continue;
+    const { data: es } = await db.from("kc_club_person_einstellung").select("person_id,schluessel,wert").in("person_id", ids).in("schluessel", ["reise_checkliste", "reise_checkliste_erinnert"]);
+    const wert = (pid: string, k: string) => (es ?? []).find((x: any) => x.person_id === pid && x.schluessel === k)?.wert as any;
+    for (const pid of ids) {
+      const schon: string[] = Array.isArray(wert(pid, "reise_checkliste_erinnert")?.ids) ? wert(pid, "reise_checkliste_erinnert").ids : [];
+      if (schon.includes(a.id)) continue;
+      const r = wert(pid, "reise_checkliste")?.reisen?.[a.id];
+      if (r?.art && Number(r.offen) === 0 && r.art === "bildschirm") continue; // am Bildschirm alles abgehakt → keine Erinnerung
+      const offen = r?.art === "bildschirm" ? Number(r.offen) || 0 : null, url = `${APP_URL}#reisecheckliste=${encodeURIComponent(a.id)}`;
+      await senden("club_nachricht", [pid], {
+        titel: "🧳 In 2 Tagen geht es los!",
+        kurz: offen ? `Auf deiner Checkliste für „${txt(a.titel, 60)}“ sind noch ${offen} Punkte offen.` : `Denk an deine persönliche Checkliste für „${txt(a.titel, 60)}“.`,
+        betreff: `Köcheclub Werne – in 2 Tagen: ${txt(a.titel, 80)}`,
+        text: `Hallo,\n\nin 2 Tagen beginnt „${txt(a.titel, 120)}“.\n${offen ? `Auf deiner persönlichen Checkliste sind noch ${offen} Punkte offen.` : "Hast du schon an alles gedacht? Deine persönliche Checkliste hilft beim Packen."}\n\n${url}\n\nGute Reise wünscht\nKöcheclub Werne`,
+        url,
+      }, `club-reise-checkliste:${a.id}:${pid}`).catch((e) => console.error("reise checkliste senden", String(e)));
+      await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "reise_checkliste_erinnert", wert: { ids: [...schon, a.id].slice(-20) }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+      await protokoll(null, "reise_checkliste_erinnert", { aktion: a.id, person: pid, offen });
+    }
+  }
+}
 async function schulungNachfrageErinnern() {
   const f = (await schulungNachfrageFaellig()).filter((b: any) => !b.nachfrage_erinnert_am);
   if (!f.length) return;
@@ -4458,6 +4505,7 @@ Deno.serve(async (req) => {
       await wochenberichtLauf().catch((e) => console.error("wochenbericht", String(e))); // KC-CLUB-WOCHENBERICHT (2.23.81)
       await dbWarnungLauf().catch((e) => console.error("db warnung", String(e))); // KC-CLUB-DB-AUFRAEUMEN (2.24.7)
       await schulungNachfrageErinnern().catch((e) => console.error("schulung nachfrage", String(e))); // KC-CLUB-SCHULUNG-NACHFRAGE (2.35.0)
+      await reiseChecklisteErinnern().catch((e) => console.error("reise checkliste", String(e))); // KC-CLUB-REISE-CHECKLISTE (2.223.0)
       await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
       await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
       await geburtstagZettelAbnehmen().catch((e) => console.error("geburtstag zettel ab", String(e))); // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0)
@@ -5027,6 +5075,21 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         // KC-CLUB-WAS-NEU (2.24.12, Wunsch Hansi): beim Öffnen getrennt nach Einzel- und Gruppenchats zeigen
         const neuIds = zahlen.filter((x: any) => x.n > 0).map((x: any) => x.t.thread_id);
+        // KC-CLUB-NACHRICHT-MAHNUNG (2.223.0, Wunsch Hansi): ungelesene Nachrichten älter als 5 Tage bzw. ungelesene ❗ wichtige →
+        // die Kachel „Neue Nachr.“ blinkt rot/orange. Fehler hier stören den Start nie (dann ohne Mahnung, Zahl bleibt ehrlich).
+        const pMahnung = (async () => {
+          const grenze = new Date(Date.now() - MAHNUNG_TAGE * 86400000).toISOString();
+          const listen = await Promise.all(zahlen.filter((z) => z.n > 0).slice(0, 40).map(async ({ t }) => {
+            let q = db.from("kc_communication_messages").select("id,created_at").eq("thread_id", t.thread_id).neq("sender_person_id", ich.person_id).order("created_at").limit(100);
+            if (t.last_read_at) q = q.gt("created_at", t.last_read_at);
+            const { data, error } = await q; if (error) throw error; return data ?? [];
+          }));
+          const alle = listen.flat(), ids = alle.map((m: any) => m.id).slice(0, 300);
+          const { data: wi, error } = ids.length ? await db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", ids) : { data: [] as any[], error: null };
+          if (error) throw error;
+          return { alt: alle.filter((m: any) => m.created_at < grenze).length, wichtig: (wi ?? []).length, tage: MAHNUNG_TAGE };
+        })();
+        pMahnung.catch(() => {});
         // 2.155.0: Gruppen-Zahl und Notfall-Prüfung hängen beide nur vom Zählen ab → gleichzeitig
         const pNotfall = (async () => {
           const offen = zahlen.filter((z) => z.n > 0).map((z) => z.t.thread_id);
@@ -5043,6 +5106,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-NOTFALL-MELDUNG (2.21.0): ungelesene Notfall-Meldung der letzten 48 Std. → App zeigt sie sofort groß in Rot
         zt.gr = Date.now() - t0Anfrage;
         const alarm: any = await pNotfall;
+        const nachrichtMahnung = await pMahnung.catch((e) => { console.error("nachricht mahnung", String(e)); return null; });
         const { data: pk } = await pPk;
         const meinStatus = (await pStatus).get(ich.person_id) ?? { status: "verfuegbar", hinweis: null, bis: null };
         // offene Abstimmungen, bei denen ich noch nicht abgestimmt habe
@@ -5075,7 +5139,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await pWillkommen;
         zt.ende = Date.now() - t0Anfrage;
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
-        return json({ meinGeburtstag, alarm, kz, studio, sosFuerAlle: await pSos, spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ meinGeburtstag, alarm, kz, studio, sosFuerAlle: await pSos, spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)

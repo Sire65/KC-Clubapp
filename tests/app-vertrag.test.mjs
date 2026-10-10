@@ -99,7 +99,7 @@ assert.ok(server.includes('from("kc_club_dienst_erinnerung").upsert({ person_id:
 // 13. KC-CLUB-ZURUECK + Kopf: Verlaufseinträge, Kennzahlen führen in Bereiche, kein Zahnrad im Kopf.
 assert.ok(/history\.replaceState\(\{ basis: true \}/.test(html) && /addEventListener\("popstate"/.test(html), "Zurück-Steuerung fehlt");
 assert.ok(/history\.pushState\((st|\{ \.\.\.st, tiefe: tiefe \+ 1 \}),/.test(html), "Ansichten legen keinen Verlaufseintrag an"); // 1.98.0: mit Tiefe (Test 279)
-for (const z of ["nachrichten", "mitglieder"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`) || (z === "mitglieder" && (html.includes(`<button class="mini" onclick="mgNurOnline()">`) || html.includes(`<button class="mini\${on ? " mini-online" : ""}" onclick="mgNurOnline()">`))) || (z === "nachrichten" && html.includes(`<button class="mini\${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">`)), `Kennzahl → ${z} fehlt`); // 1.22.0: orange bei Neuem // 1.91.0: Mitglieder-Kachel → Seite nur online (mgNurOnline zeigt „mitglieder“, Test 271)
+for (const z of ["nachrichten", "mitglieder"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`) || (z === "mitglieder" && (html.includes(`<button class="mini" onclick="mgNurOnline()">`) || html.includes(`<button class="mini\${on ? " mini-online" : ""}" onclick="mgNurOnline()">`))) || (z === "nachrichten" && (html.includes(`<button class="mini\${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">`) || /<button class="mini\$\{n \? " mini-neu" : ""\}[^\n]{0,120}onclick="zeige\('nachrichten'\)">/.test(html))), `Kennzahl → ${z} fehlt`); // 1.22.0: orange bei Neuem // 1.91.0: Mitglieder-Kachel → Seite nur online (mgNurOnline zeigt „mitglieder“, Test 271)
 // 0.27.2: „Nächstes Treffen“ führt über zumTreffen() in Termine (Kalender, Tag ausgewählt)
 assert.ok((html.includes(`<button class="mini" onclick="zumTreffen()">`) || html.includes(`<button class="mini\${frist ? " mini-frist frist-" + frist : ""}" onclick="zumTreffen()">`) || (html.includes(`<button id="cdKachel" class="mini\${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">`) && /\{ id: "t", zahl: String\(bisTreffen\)[^}]*los: \(\) => zumTreffen\(\) \}/.test(html))) /* 2.202.0: Countdown-Kachel, Treffen bleibt erster Eintrag */ && /function zumTreffen\(mitfahrt\) \{[\s\S]{0,400}zeige\("termine"\)/.test(html), "Kennzahl → termine fehlt");
 const kopfHtml = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('id="heroInfo"'));
@@ -1875,7 +1875,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/function teilenWahl\(text, dateien\)/.test(html) && /onclick="teilenChatWahl\(\)">💬 In einen Club-Chat/.test(html) && /onclick="teilenArchiv\(\)">🗄️ In mein Archiv/.test(html), "Auswahl nach dem Teilen");
   const f = html.slice(html.indexOf("async function teilenInChat("), html.indexOf("function teilenArchiv("));
   assert.ok(!/api\("nachricht_senden"/.test(f) && /melde\("📥 Eingefügt – prüfen und mit ➤ senden"\)/.test(f), "nichts wird ungefragt gesendet");
-  assert.ok(/<button class="mini\$\{n \? " mini-neu" : ""\}" onclick="zeige\('nachrichten'\)">/.test(html) && /\.mini\.mini-neu \.ameisen rect \{ fill: none; stroke: #ff9800;/.test(html), "Neue Nachr. orange (ab 1.53.3 als orange Ameisenstraße)");
+  assert.ok(/<button class="mini\$\{n \? " mini-neu" : ""\}[^\n]{0,120}onclick="zeige\('nachrichten'\)">/.test(html) && /\.mini\.mini-neu \.ameisen rect \{ fill: none; stroke: #ff9800;/.test(html), "Neue Nachr. orange (ab 1.53.3 als orange Ameisenstraße)");
 }
 
 // 164. 1.22.1: Sicherheits-Bericht erreicht den Admin sicher + Ablage „Admin <Jahr>“ (KC-CLUB-SICHERHEIT-ZUSTELLUNG/-ARCHIV)
@@ -7366,7 +7366,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 }
 // 2.157.0 KC-CLUB-START-PARALLEL-3 / KC-CLUB-START-MESSUNG: Server-Teilzeiten in der Startmessung, Kachel-Zahlen-Ketten gleichzeitig
 {
-  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 16000);
+  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 18000); // 2.223.0: +Mahnung
   assert.ok(/const mess = <T,>\(n: string, x: PromiseLike<T>\)/.test(ini) && /srvT: zt,/.test(ini), "init misst Teilzeiten und liefert srvT");
   for (const n of ['mess("tr",', 'mess("teil",', 'mess("mg",', "kz: pKz", "comm: pComm", "rest: pRest", "auf: pAufgaben", "tf: pTermin"]) assert.ok(ini.includes(n), `Teilzeit ${n} gemessen`);
   assert.ok(/zt\.zl = Date\.now\(\) - t0Anfrage/.test(ini) && /zt\.ende = Date\.now\(\) - t0Anfrage/.test(ini), "Zählen und Ende gemessen");
@@ -7998,4 +7998,22 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const hm = lies("supabase/migrations/20261010_kc_club_v2222_aenderung_admin.sql");
   assert.ok(/l\.core_role = 'admin'/.test(hm) && /public\.kc_core_person_aenderung_uebernehmen\(p_id, gen_random_uuid\(\), 'uebernehmen'/.test(hm) && /revoke all on function public\.kc_club_aenderung_admin_uebernehmen\(uuid, text\) from public, anon, authenticated/.test(hm), "Hülle: nur Admin, nur Server, ruft den Kern");
   assert.ok(/function dvFehltHtml\(\)/.test(html) && /onclick="dvErinnern\(this\)"/.test(html) && /aeDirekt\('\$\{x\.id\}', this\)/.test(html), "Knöpfe in der App");
+}
+
+// 2.223.0 KC-CLUB-REISE-CHECKLISTE + KC-CLUB-NACHRICHT-MAHNUNG (Wunsch Hansi): Kreuzfahrt-Checkliste (14 Tage vorher, Druck/Bildschirm,
+// Archiv, Erinnerung 2 Tage vorher) · Nachrichten-Kachel blinkt bei alten (> 5 Tage) bzw. wichtigen ungelesenen Nachrichten
+{
+  assert.ok(/reise_checkliste: \(w\) => \{/.test(server) && /RC_EIGENE_MAX = 12/.test(server) && /\.slice\(-10\)/.test(server), "Stand am Konto, geprüft und begrenzt");
+  assert.ok(!/reise_checkliste_erinnert: \(w\)/.test(server), "„schon erinnert“ kann die App nicht setzen");
+  const r = server.slice(server.indexOf("async function reiseChecklisteErinnern()"), server.indexOf("async function schulungNachfrageErinnern()"));
+  assert.ok(/RC_ERINNERN_TAGE = 2/.test(server) && /berlinStunde\(new Date\(\)\) < 9/.test(r) && /schon\.includes\(a\.id\)/.test(r) && /`club-reise-checkliste:\$\{a\.id\}:\$\{pid\}`/.test(r), "2 Tage vorher, ab 9 Uhr, nur einmal");
+  assert.ok(/await reiseChecklisteErinnern\(\)\.catch/.test(server), "läuft im Zeitplaner");
+  assert.ok(/const pMahnung = \(async \(\) =>/.test(server) && /MAHNUNG_TAGE = 5/.test(server) && /ungelesenGruppen, nachrichtMahnung,/.test(server) && /pMahnung\.catch\(\(e\) =>/.test(server), "Mahnung im Start, Fehler stören nicht");
+  assert.ok(/function nachrichtMahnung\(\)/.test(html) && /mini-mahnung\$\{wichtig \? " schnell" : ""\}\$\{ruhig \? " still" : ""\}/.test(html), "Kachel: rot/orange, wichtig schneller, ohne Bewegung fest");
+  assert.ok(/@keyframes miniMahnung/.test(lies("index.html")) && /\.mini\.mini-mahnung\.still/.test(lies("index.html")), "CSS da");
+  assert.ok(/const RC_ANGEBOT_TAGE = 14/.test(html) && /function rcAngebotPruefen\(/.test(html) && /rcIstKreuzfahrt = \(a\) => aktionSymbol\(a\) === "🚢"/.test(html), "Angebot 14 Tage vorher, nur Kreuzfahrt");
+  assert.ok(/reisecheckliste: \{ bauen: \(o, p\) => druckReiseCheckliste\(p\) \}/.test(html) && /class="rc-spalten"/.test(html) && /👓 Hilfsmittel/.test(html) && /✏️ Eigene Punkte/.test(html), "Ausdruck mehrspaltig mit Hilfsmitteln und leerem Block");
+  assert.ok(/cdKopf\(s\.titel, s\.unter, s\.rechts \?\? esc\(/.test(html), "zentraler CD-Kopf");
+  assert.ok(/async function rcBild\(/.test(html) && /api\("archiv_hochladen", \{ ordner_id: o\.id, register,/.test(html) && /mime: "application\/pdf"/.test(html), "PDF in den eigenen Archiv-Ordner");
+  assert.ok(/#reisecheckliste=/.test(html) && /onclick="rcOeffnen\('\$\{esc\(a\.id\)\}'\)">🧳 Meine Reise-Checkliste/.test(html), "aus Erinnerung und bei der Reise erreichbar");
 }
