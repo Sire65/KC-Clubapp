@@ -7585,3 +7585,10 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/const k = \(i - z\.i \+ n\) % n;/.test(html) && /const ziel = \(\(i % n\) \+ n\) % n;/.test(html), "Endlos-Rolle: nach der letzten kommt die erste");
   assert.ok(/\.rk > \.rk-karte\[data-rk="vorn"\] \{ border-top: 7px solid var\(--rot\);/.test(idx), "aktive Karte mit farbigem Rand oben");
 }
+
+// 2.184.0 KC-CLUB-ROLLKARTEI-WAHL (Wunsch Hansi: in den Einstellungen wählbar – jeder entscheidet selbst)
+{
+  const idx = lies("index.html");
+  assert.ok(/id="setRkEinst" onchange="rkSchalten\('einst', this\.checked\)"/.test(idx) && /function rkSchalten\(k, an\)/.test(html) && /localStorage\.setItem\("kc_club_rk_" \+ k, an \? "an" : "aus"\)/.test(html), "Schalter je Liste unter 🧩 Startseite & Ansicht");
+  assert.ok(/if \(sch\) sch\.checked = an;/.test(html), "Schalter zeigt immer den echten Stand (auch nach ☰ Liste / 🗂️ Kartei oben)");
+}

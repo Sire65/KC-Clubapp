@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.183.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.184.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12433,8 +12433,16 @@ function rkEinrichten(wurzelId, schluessel) {
   }
   if (!w.classList.contains("versteckt")) rkAufbauen(z);
 }
+// 2.184.0 KC-CLUB-ROLLKARTEI-WAHL: an/aus je Liste über die Einstellungen (gleicher Speicher wie „☰ Liste / 🗂️ Kartei“ oben)
+function rkSchalten(k, an) {
+  try { localStorage.setItem("kc_club_rk_" + k, an ? "an" : "aus"); } catch {}
+  if (RK[k]) rkAufbauen(RK[k]);
+  melde(an ? "🗂️ Rollkartei an – wischen, antippen oder ▲▼ am Rad" : "☰ Gewohnte Liste – die Rollkartei ist aus");
+  if (an && RK[k]) { const d = $("setRk" + k[0].toUpperCase() + k.slice(1)); if (d) setTimeout(() => rkZu(RK[k], d), 80); }
+}
 function rkAufbauen(z) {
   const w = z.w, an = rkAn(z.schluessel);
+  const sch = $("setRk" + z.schluessel[0].toUpperCase() + z.schluessel.slice(1)); if (sch) sch.checked = an; // Schalter unter 🧩 Startseite & Ansicht
   z.knopf.textContent = an ? "☰ Liste" : "🗂️ Kartei"; z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen";
   if (!an) { if (z.an) rkAbbauen(z); return; }
   if (!z.an) {
