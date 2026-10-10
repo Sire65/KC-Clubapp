@@ -7711,3 +7711,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/"spgSchirm", "vfZeigerFlaeche"\]/.test(html) && /#vfLeiste, #ssLiveLeiste, #vfZeigerFlaeche/.test(html), "Zeigefläche nicht im Live-Bild und kein Tipp-Kreis");
   assert.ok(/const z = p\.z === undefined \? undefined : punkt\(w\.status === "laeuft" \? p\.z : null\);/.test(server) && /zeiger: w\.status === "laeuft" \? w\.zeiger \?\? null : null/.test(server) && /w\.frame = null; w\.zeiger = null;/.test(server), "Server: Zeiger-Punkt prüfen, liefern, beim Ende löschen");
 }
+
+// 2.200.0 KC-CLUB-RK-ONLINE-VORN (Wunsch Hansi: in der Rollkartei steht, wer online ist, immer vorne)
+{
+  assert.ok(/const rkOnlineVorn = \(liste, istOn\) =>/.test(html) && /rkOnlineVorn\(liste, mgOn\)\.map/.test(html) && /rkOnlineVorn\(liste, uhOn\)\.map/.test(html), "Online zuerst in Mitglieder- und Chat-Kartei");
+}

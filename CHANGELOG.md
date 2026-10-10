@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.200.0 – 2026-10-10 – 👉 Zeigepfeil beim Live zeigen · Warte-Mütze nur nach eigenem Tippen
+## 2.200.0 – 2026-10-10 – 👉 Zeigepfeil beim Live zeigen · Warte-Mütze nur nach eigenem Tippen · 🟢 Online-Mitglieder vorne in der Rollkartei
 👉 Roter Zeigepfeil beim Live zeigen · keine Warte-Mütze mehr im offenen Chat
 
 ## 2.199.0 – 2026-10-10 – 🔊 Live zeigen mit Ton: beim Zeigen miteinander sprechen

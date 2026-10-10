@@ -15959,10 +15959,11 @@ function uhKarteiKnopf() {
   if ($("setRkChats")) $("setRkChats").checked = an;
 }
 function uhKarteiHtml(liste) {
-  return `<div class="rk-box" id="uhKartei">${liste.map((u) => { const titel = u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
+  const uhOn = (u) => !u.gruppe && u.anzahl <= 2 && mgOn(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0])); // Einzelchat mit jemandem, der online ist
+  return `<div class="rk-box" id="uhKartei">${rkOnlineVorn(liste, uhOn).map((u) => { const titel = u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
     const bild = u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 30);
     return `<details class="karte uhk" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</summary>
-      <div class="hinweis uhk-info">${u.gruppe ? `🔗 Feste Gruppe · ${u.anzahl} Mitgl.` : u.anzahl > 2 ? `Runde · ${u.anzahl} Personen` : "Einzelchat"}${u.letzte ? ` · zuletzt ${esc(zeitKurz(u.letzte.zeit))}` : ""}${stummAn(u.id) ? " · 🔕" : ""}</div>
+      <div class="hinweis uhk-info">${u.gruppe ? `🔗 Feste Gruppe · ${u.anzahl} Mitgl.` : u.anzahl > 2 ? `Runde · ${u.anzahl} Personen` : "Einzelchat"}${uhOn(u) ? " · 🟢 online" : ""}${u.letzte ? ` · zuletzt ${esc(zeitKurz(u.letzte.zeit))}` : ""}${stummAn(u.id) ? " · 🔕" : ""}</div>
       <div class="uhk-verlauf" data-teil="verlauf">${u.letzte ? '<p class="hinweis">Wird geladen …</p>' : '<p class="hinweis">Noch keine Nachricht.</p>'}</div>
       <div class="uhk-knoepfe"><button type="button" class="knopf haupt" onclick="chatOeffnen('${esc(u.id)}')">💬 Öffnen &amp; antworten${u.ungelesen ? ` (${u.ungelesen} neu)` : ""}</button></div>
     </details>`; }).join("")}</div>`;
@@ -18934,8 +18935,11 @@ function mitgliederZeichnen() {
 // nur was der Server für mich freigibt – wie auf der Mitglieds-Seite); unten ein fester, geordneter Block „So erreichst du …“ – immer
 // dieselben Felder an derselben Stelle; was gerade nicht geht, ist ausgegraut und sagt warum. Reiter oben = Vornamen.
 const MGK = { det: new Map() }; // person_id → { zeit, d } (Details 5 Min. im Speicher)
+// 2.200.0 KC-CLUB-RK-ONLINE-VORN (Wunsch Hansi „bei den Karten in der Rolle ist, wer online ist, immer vorne“): stabil umsortieren –
+// online zuerst, sonst bleibt die Reihenfolge. Die gerade vorne stehende Karte merkt sich die Rolle über ihre ID (kein Springen).
+const rkOnlineVorn = (liste, istOn) => { const on = [], rest = []; for (const x of liste) (istOn(x) ? on : rest).push(x); return [...on, ...rest]; };
 function mgKarteiHtml(liste) {
-  return `<div class="rk-box" id="mgKartei">${liste.map((m) => { const ich = m.person_id === ICH.person_id;
+  return `<div class="rk-box" id="mgKartei">${rkOnlineVorn(liste, mgOn).map((m) => { const ich = m.person_id === ICH.person_id;
     return `<details class="karte mgk" data-klappe="mgk" data-pid="${esc(m.person_id)}" open><summary>${kreis(m, m.name, 30)}<span>${esc(m.name)}</span></summary>
       <div class="mgk-kopf">${kreis(m, m.name, 80, `onclick="mitgliedOeffnen('${esc(m.person_id)}')"`)}
         <div class="mgk-name">${esc(m.name)}${gbKerze(m.person_id)}${ich ? ' <small class="hinweis">(du)</small>' : ""}</div>
