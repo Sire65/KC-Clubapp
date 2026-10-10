@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.215.0 – 2026-10-10 – 🎲 Gleiche Knöpfe in allen Spielen
+🎲 Tic-Tac-Toe, Schach, Bauernskat, Küchenterror, Mensch ärgere dich nicht, Fang den Koch und Doppelkopf haben dieselbe Knopfleiste im festen Raster (Handy 3, breit 4 nebeneinander): Spielknöpfe · ↺ Neues Spiel · ✖ Abbrechen · 🔔 Töne · 🔊 Ansage · Extras
+✖ Abbrechen überall (fragt, zählt nicht, Spielstand bleibt); ↺ Neues Spiel auch mitten im Spiel
+🔔 Töne in allen Spielen mit einem gemeinsamen Schalter (KC-CLUB-SPIELE-LEISTE)
+
 ## 2.214.0 – 2026-10-10 – 🪟 Zweite Jalousie im Kopf
 🪟 Oben im Kopf gibt es jetzt zwei Pfeile: ⌃ rollt nur das Infofeld ein (Status und LEDs bleiben), ⌃⌃ rollt alles bis auf die Kopfzeile ein
 

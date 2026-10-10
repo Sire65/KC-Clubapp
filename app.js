@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.214.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.215.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1626,7 +1626,8 @@ const HILFE = [
   { id: "eingang_hinweis", thema: "club", sym: "📥", t: "Hinweis: viel im Eingangskorb", x: "Liegen <b>mehr als 5 Sachen</b> im Eingangskorb, zeigt die App der Clubleitung beim Start eine kleine Liste – z. B. „5 Dienstpläne, 1 Kostenerstattung, 1 Hilfegesuch“. Eine Zeile antippen öffnet den Eingangskorb gleich mit dieser Art. Darunter: <b>„✅ Ja, jetzt bearbeiten“</b>, <b>„⏰ Später“</b> (in ein paar Stunden wieder) oder <b>„🌙 Heute nicht mehr“</b>. Ganz ausschalten (und die Tages-Übersicht beim Start): ⚙️ → <b>„🗂️ Clubleitung beim Start“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => einstiegHin("leitung_start"), seit: "2.23.43" },
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
-  { id: "ttt_toene", thema: "club", sym: "🔊", t: "Tic-Tac-Toe mit Tönen", x: "Unter dem Spielfeld gibt es den Knopf <b>„🔊 Töne an / 🔇 aus“</b>. Dann klingt jeder Zug – deiner hell, der des Gegners tiefer – und am Ende hörst du, ob du gewonnen, verloren oder unentschieden gespielt hast. Gilt nur auf diesem Gerät.", zeig: () => { zeige("spiele"); spArtWahl("ttt"); }, seit: "2.23.8" },
+  { id: "ttt_toene", thema: "club", sym: "🔔", t: "Spiele mit Tönen", x: "Unter jedem Spiel gibt es den Knopf <b>„🔔 Töne an / 🔕 aus“</b>. Dann klingt jeder Zug, jeder Wurf und jede Karte – und am Ende hörst du, ob du gewonnen, verloren oder unentschieden gespielt hast. Der Schalter gilt für alle Spiele, nur auf diesem Gerät.", zeig: () => { zeige("spiele"); spArtWahl("ttt"); }, seit: "2.23.8" },
+  { id: "spiele_leiste", thema: "club", sym: "🎲", t: "Gleiche Knöpfe in allen Spielen", x: "Alle Spiele haben unten dieselbe Knopfleiste, ordentlich im Raster: <b>↺ Neues Spiel</b>, <b>✖ Abbrechen</b> (zählt nicht, dein Spielstand bleibt), <b>🔔 Töne</b> und <b>🔊 Ansage</b> an oder aus. Oben wählst du <b>gegen den Computer</b> oder <b>gegen Mitglieder</b>.", zeig: () => { zeige("spiele"); }, seit: "2.215.0" },
   { id: "inkognito_chat", thema: "privat", sym: "🕶️", t: "Inkognito und schreiben (Admin)", x: "Bist du <b>inkognito</b> und beginnst einen Chat mit einem Mitglied (oder schreibst in einem Chat), fragt die App einmal: <b>„Möchtest du Inkognito jetzt aufheben?“</b> – sonst merkt dein Gegenüber, dass du schreibst, obwohl du nicht als anwesend angezeigt wirst. „🕶️ Inkognito bleibt“ lässt alles, wie es ist.", nur: () => !!ICH?.admin, seit: "2.153.0" },
   { id: "inkognito_blinkt", thema: "privat", sym: "🕶️", t: "Die Brille blinkt rot", x: "Solange <b>Inkognito</b> an ist, blinkt die Brille oben rot und dein <b>Status-Feld pulsiert gelb–rot</b> – damit du nicht vergisst, dass dich gerade niemand online sieht. Antippen der Brille schaltet Inkognito wieder aus.", nur: () => !!ICH?.admin, zeig: () => zeige("start"), seit: "2.23.8" },
   // 2.23.95 (Wunsch Hansi): Hilfen zu den Neuerungen seit Anleitung V5
@@ -5464,7 +5465,7 @@ function spPcZeigen() {
       ${status}
       ${spBrettHtml(SPC.brett, n, { linie: e?.linie, klick: "spPcZug", aus: !!e || SPC.denkt })}
       <p class="hinweis" style="text-align:center;margin:6px 0">${n === 3 ? "Drei" : "Vier"} in einer Reihe gewinnen – waagerecht, senkrecht oder schräg.</p>
-      <div class="sp-knopfreihe"><button class="knopf haupt" onclick="spPcNeu()"><span class="kt-ico">↺</span>Neue Runde</button><button class="knopf" onclick="spPcStandWeg()" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️</span>Stand löschen</button>${spAnsageKnopf("ttt", true)}</div>
+      ${spLeiste(spNeuKnopf("spPcNeu()"), spAbbrechenKnopf("spPcAbbrechen()"), schTonKnopf(), spStandKnopf("spPcStandWeg()"))}
     </div>`;
 }
 function spPcNeu(zeigen = true) {
@@ -5673,7 +5674,7 @@ function spSpielZeigen() {
       ${spTerminHtml(g)}
       ${spBrettHtml(g.brett, n, { linie: g.linie, klick: "spZug", aus: !g.ichDran })}
       <p class="hinweis" style="text-align:center;margin:6px 0">${n === 3 ? "Drei" : "Vier"} in einer Reihe gewinnen. Du musst nicht warten – ${esc(g.gegner.vorname)} bekommt Bescheid.</p>
-      <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}${spAnsageKnopf("ttt")}</div>
+      ${spLeiste(g.status === "beendet" ? spKnopf("↺", "Revanche", `spRevanche('${g.id}')`, { haupt: true }) : g.status === "laeuft" ? spKnopf("🏳️", "Aufgeben", `spAufgeben('${g.id}')`) : "", schTonKnopf())}
     </div>`;
   if (g.status === "laeuft" || g.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS);
 }
@@ -5873,8 +5874,7 @@ function dkPcZeigen() {
         ${dkPlatz(z, 3)}${dkPlatz(z, 0)}
       </div>
       <div class="dk-hand">${dkSort(z.hand[0]).map((k) => dkKarteHtml(k, { klick: erl.includes(k) ? "dkPcKarte" : "", blass: erl.length > 0 && !erl.includes(k) })).join("")}</div>
-      <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("dk")}</div>
-      <div class="sp-knopfreihe"><button class="knopf haupt" onclick="dkPcNeu()"><span class="kt-ico">↺</span>${z.phase === "ende" ? "Nächstes Spiel" : "Neu geben"}</button><button class="knopf" onclick="dkStandWeg()" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️</span>Stand löschen</button></div>
+      ${spLeiste(spNeuKnopf("dkPcNeuFragen()", z.phase === "ende" ? "Nächstes Spiel" : "Neues Spiel"), spAbbrechenKnopf("spPcAbbrechen()"), schTonKnopf(), spAnsageKnopf("dk"), spStandKnopf("dkStandWeg()"))}
       <details class="sch-verlauf"><summary>📖 Regeln kurz</summary><p class="hinweis" style="margin:4px 0">Vier Spieler, je 12 Karten. <b>Trumpf</b> von oben: ♥ Zehn, alle Damen (♣ ♠ ♥ ♦), alle Buben (♣ ♠ ♥ ♦), dann ♦ Ass, Zehn, König, Neun. Trümpfe haben einen goldenen Rand. Farbe bedienen ist Pflicht – wer nicht kann, darf stechen oder abwerfen. Bei zwei gleichen Karten gewinnt die zuerst gespielte.<br><b>Re</b> sind die beiden mit einer ♣ Dame – wer das ist, sieht man erst, wenn sie gespielt wird. Re braucht 121 Augen, Kontra reichen 120. Hat einer beide ♣ Damen, sagt er <b>Hochzeit</b> an (wer in den ersten drei Stichen zuerst einen Stich macht, spielt mit ihm) – oder spielt still allein (zählt dreifach).<br><b>Extrapunkte:</b> keine 90/60/30, schwarz, gegen die Alten, Fuchs gefangen (♦ Ass der Gegner), Doppelkopf (Stich mit 40 Augen), Karlchen (♣ Bube macht den letzten Stich).</p></details>
     </div>`;
   if (z.phase === "spiel" && !DK.denkt && !DK.wartet && (z.amZug !== 0 || z.stich.length === 4)) dkPcWeiterLaufen();
@@ -5882,7 +5882,11 @@ function dkPcZeigen() {
 function dkPcVorbehalt(art) { const z = DK.z; if (!z || z.phase !== "vorbehalt") return; dkVorbehalt(z, art); dkMerken();
   spSag("dk", art === "hochzeit" ? "Du sagst Hochzeit an." : "Du spielst still allein.", null, true); dkPcZeigen(); }
 function dkPcStaerke(w) { DK.staerke = w; dkMerken(); dkPcZeigen(); }
-function dkStandWeg() { DK.stand = [0, 0, 0, 0]; DK.spiele = 0; dkMerken(); dkPcZeigen(); melde("🗑️ Spielstand gelöscht"); }
+async function dkPcNeuFragen() { // KC-CLUB-SPIELE-LEISTE: mitten im Spiel erst fragen
+  const z = DK.z; if (z && z.phase === "spiel" && (z.stich.length || z.letzter) && !(await frage("Neues Spiel beginnen? Das laufende Spiel wird nicht gewertet.", { ja: "↺ Neues Spiel", nein: "Weiterspielen" }))) return;
+  clearTimeout(DK.wartet); DK.wartet = false; dkPcNeu();
+}
+async function dkStandWeg() { if (!(await frage("Spielstand Doppelkopf auf 0 zurücksetzen?", { ja: "🗑️ Zurücksetzen", nein: "Abbrechen" }))) return; DK.stand = [0, 0, 0, 0]; DK.spiele = 0; dkMerken(); dkPcZeigen(); melde("🗑️ Spielstand gelöscht"); }
 function dkPcNeu(zeigen = true) {
   const geber = DK.z ? (DK.z.geber + 1) % 4 : 3; DK.z = dkNeu(geber); DK.gewertet = false; DK.denkt = false; DK.wartet = false; DK.zeigeLetzten = false; dkMerken();
   if (!zeigen) return;
@@ -5892,15 +5896,15 @@ function dkPcNeu(zeigen = true) {
 function dkWeiter() { if (DK.wartet) { clearTimeout(DK.wartet); DK.wartet = false; dkStichFertig(); } }
 function dkStichFertig() {
   const z = DK.z; if (!z || z.stich.length !== 4) return;
-  dkStichAbschliessen(z); DK.zeigeLetzten = true; const l = z.letzter;
+  dkStichAbschliessen(z); DK.zeigeLetzten = true; const l = z.letzter; spTon(l.gewinner === 0 ? "stich" : "schritt");
   spSag("dk", `${l.gewinner === 0 ? "Dein Stich" : DK_NAMEN[l.gewinner] + " bekommt den Stich"}${l.augen ? `, ${l.augen} Augen` : ""}.`);
-  if (z.phase === "ende" && !DK.gewertet) { const e = dkErgebnis(z); e.punkte.forEach((p, s) => (DK.stand[s] += p)); DK.spiele++; DK.gewertet = true;
+  if (z.phase === "ende" && !DK.gewertet) { const e = dkErgebnis(z); e.punkte.forEach((p, s) => (DK.stand[s] += p)); DK.spiele++; DK.gewertet = true; spEndeTon(e.punkte[0] > 0);
     spSag("dk", `${e.reGew ? "Re" : "Kontra"} gewinnt mit ${e.reGew ? e.reAug : e.koAug} Augen. ${e.punkte[0] > 0 ? "Du gewinnst" : "Du verlierst"} ${Math.abs(e.punkte[0])} Punkte.`, null, true); }
   dkMerken(); dkPcZeigen();
 }
 function dkPcKarte(k) {
   const z = DK.z; if (z.phase !== "spiel" || z.amZug !== 0 || DK.denkt || !dkErlaubt(z, 0).includes(k)) return;
-  DK.zeigeLetzten = false; dkSpielen(z, 0, k); dkMerken();
+  DK.zeigeLetzten = false; dkSpielen(z, 0, k); dkMerken(); spTon("karte");
   dkPcZeigen(); // voller Stich / Computer am Zug: dkPcWeiterLaufen übernimmt
 }
 function dkPcWeiterLaufen() {
@@ -5911,7 +5915,7 @@ function dkPcWeiterLaufen() {
   setTimeout(() => {
     DK.denkt = false; if (DK.z !== z || z.phase !== "spiel" || z.amZug === 0) return;
     const s = z.amZug, k = dkComputerKarte(z, s, DK.staerke); DK.zeigeLetzten = false;
-    dkSpielen(z, s, k); dkMerken();
+    dkSpielen(z, s, k); dkMerken(); spTon("gegner");
     spSag("dk", `${DK_NAMEN[s]}: ${bskKarteWort(dkBasis(k))}${dkBasis(k) === "kr-D" ? " – Re" : ""}.`);
     dkPcZeigen();
   }, 650);
@@ -5925,8 +5929,7 @@ const spAnsageAn = (art) => { try { return !!JSON.parse(localStorage.getItem(SP_
 function spAnsageKnopf(art, kachel = false) {
   const an = spAnsageAn(art);
   const was = art === "ttt" ? "Töne" : "Ansage"; // 2.23.6: Tic-Tac-Toe nur Töne, keine Sprache
-  if (kachel) return `<button class="knopf klein${an ? " haupt" : ""} sp-ansage" data-art="${art}" data-kachel="1" aria-pressed="${an}" onclick="spAnsageSetzen('${art}', ${!an})"><span class="kt-ico">${an ? "🔊" : "🔇"}</span>${was} ${an ? "an" : "aus"}</button>`; // KC-CLUB-KT-KNOEPFE (2.25.9): Kachelform
-  return `<button class="knopf klein${an ? " haupt" : ""} sp-ansage" data-art="${art}" aria-pressed="${an}" onclick="spAnsageSetzen('${art}', ${!an})">${an ? "🔊 " + was + " an" : "🔇 " + was + " aus"}</button>`;
+  return `<button class="knopf sp-ansage" data-art="${art}" data-kachel="1" aria-pressed="${an}" onclick="spAnsageSetzen('${art}', ${!an})"><span class="kt-ico">${an ? "🔊" : "🔇"}</span>${was} ${an ? "an" : "aus"}</button>`; // KC-CLUB-SPIELE-LEISTE (2.215.0): immer Kachelform (kachel bleibt für alte Aufrufe)
 }
 function spAnsageSetzen(art, an) {
   let w = {}; try { w = JSON.parse(localStorage.getItem(SP_ANSAGE_KEY) || "{}") || {}; } catch {}
@@ -5939,19 +5942,56 @@ function spAnsageSetzen(art, an) {
 }
 // KC-CLUB-TTT-TOENE (2.23.6, Wunsch Hansi): Tic-Tac-Toe mit Lautsprecher – nur Töne: eigener Zug (hell), Zug des Gegners/Computers
 // (tiefer), Spielende (Sieg aufsteigend, Niederlage absteigend, Unentschieden zwei gleiche). Schalter gilt für dieses Gerät, Standard aus.
+// KC-CLUB-SPIELE-LEISTE (2.215.0): dieselben Töne jetzt für alle Spiele – ein gemeinsamer Schalter „🔔 Töne an/aus“ (schToeneAn, Standard an).
 const SP_TTT_TOENE = { ich: [[660, 0, 0.1]], gegner: [[392, 0, 0.14]], sieg: [[523, 0, 0.14], [659, 0.14, 0.14], [784, 0.28, 0.14], [1047, 0.42, 0.32]],
-  niederlage: [[523, 0, 0.2], [440, 0.2, 0.2], [349, 0.4, 0.4]], remis: [[523, 0, 0.16], [523, 0.24, 0.16]] };
+  niederlage: [[523, 0, 0.2], [440, 0.2, 0.2], [349, 0.4, 0.4]], remis: [[523, 0, 0.16], [523, 0.24, 0.16]],
+  karte: [[1250, 0, 0.04], [880, 0.03, 0.06]], stich: [[523, 0, 0.1], [784, 0.1, 0.16]], wuerfel: [[190, 0, 0.04], [240, 0.07, 0.04], [170, 0.14, 0.04], [260, 0.21, 0.05]],
+  schritt: [[720, 0, 0.05]], raus: [[620, 0, 0.12], [310, 0.12, 0.26]], richtig: [[659, 0, 0.12], [988, 0.12, 0.22]], falsch: [[233, 0, 0.18], [196, 0.18, 0.3]] };
 function spTttTon(was) {
-  if (!spAnsageAn("ttt") || aktuelleAnsicht !== "spiele") return;
+  if (!schToeneAn() || aktuelleAnsicht !== "spiele") return;
   try {
     audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.();
     for (const [f, t, d] of SP_TTT_TOENE[was] || []) {
       const o = audio.createOscillator(), g = audio.createGain(), s = audio.currentTime + t;
-      o.type = was === "gegner" ? "triangle" : "sine"; o.frequency.value = f;
+      o.type = ["gegner", "karte", "wuerfel", "schritt"].includes(was) ? "triangle" : "sine"; o.frequency.value = f;
       g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(0.22, s + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, s + d);
       o.connect(g).connect(audio.destination); o.start(s); o.stop(s + d + 0.03);
     }
   } catch {}
+}
+const spTon = spTttTon;
+const spEndeTon = (ich, remis = false) => spTon(remis ? "remis" : ich ? "sieg" : "niederlage");
+// KC-CLUB-SPIELE-LEISTE (2.215.0, Wunsch Hansi „überall die gleichen Grundfunktionen wie Ton an, Ton aus, gegen Computer oder
+// Mitspieler, neues Spiel, abbrechen – alle Knöpfe schön unter- und nebeneinander“): eine Knopfleiste für alle Spiele.
+// Gleiche Kachelknöpfe im festen Raster (Handy 3, breit 4 nebeneinander), immer dieselbe Reihenfolge:
+// Spielknöpfe · ↺ Neues Spiel · ✖ Abbrechen · 🔔 Töne · 🔊 Ansage · Extras (Regeln, Stand löschen …).
+const spKnopf = (ico, text, klick, { haupt = false, aus = false, titel = "", id = "" } = {}) => `<button class="knopf${haupt ? " haupt" : ""}"${id ? ` id="${id}"` : ""} onclick="${klick}"${aus ? " disabled" : ""}${titel ? ` title="${esc(titel)}"` : ""}><span class="kt-ico">${ico}</span>${text}</button>`;
+const spLeiste = (...knoepfe) => `<div class="sp-leiste">${knoepfe.flat().filter(Boolean).join("")}</div>`;
+const spNeuKnopf = (klick, text = "Neues Spiel", haupt = true) => spKnopf("↺", text, klick, { haupt });
+const spAbbrechenKnopf = (klick) => spKnopf("✖", "Abbrechen", klick);
+const spStandKnopf = (klick) => spKnopf("🗑️", "Stand löschen", klick, { titel: "Spielstand zurücksetzen" });
+// Tic-Tac-Toe, Schach, Bauernskat, Doppelkopf (Einstellungen stehen direkt über dem Spiel): Abbrechen = Partie verwerfen (nicht
+// gewertet, Spielstand bleibt) und zurück zur Spieleübersicht. Spiele mit Startseite (Küchenterror, Mensch ärgere dich nicht,
+// Fang den Koch) gehen beim Abbrechen auf ihre Startseite zurück.
+function spPcLaeuft(art) {
+  if (art === "ttt") return !!SPC.brett && !SPC.ende && SPC.brett.replace(/\./g, "").length > 0;
+  if (art === "schach") return !!SCH.ch && SCH.ch.history().length > 0 && !SCH.ch.isGameOver() && !SCH.uhr?.aus;
+  if (art === "bsk") return !!BSK.z && BSK.z.phase !== "ende";
+  if (art === "dk") return !!DK.z && DK.z.phase !== "ende";
+  return false;
+}
+async function spPcAbbrechen() {
+  const art = SP.art, laeuft = spPcLaeuft(art);
+  if (laeuft && !(await frage("Spiel abbrechen? Diese Partie wird nicht gewertet – dein Spielstand bleibt.", { ja: "✖ Abbrechen", nein: "▶ Weiterspielen" }))) return;
+  if (SP.art !== art) return;
+  try { speechSynthesis.cancel(); } catch {}
+  if (art === "ttt") { SPC.brett = null; SPC.ende = null; SPC.denkt = false; }
+  else if (art === "schach") { if (SCH.ch && SCH.ch.history().length >= 2 && !SCH.gewertet) schArchivPc("abgebrochen");
+    clearInterval(SCH_UHR_TAKT); SCH_UHR_TAKT = null; SCH.ch = null; SCH.pgn = ""; SCH.uhr = null; SCH.denkt = false; SCH.gewertet = false; SCH.auswahl = null; SCH.ziele = []; SCH.tipp = null; schMerken(); }
+  else if (art === "bsk") { BSK.z = null; BSK.denkt = false; bskMerken(); }
+  else if (art === "dk") { clearTimeout(DK.wartet); DK.z = null; DK.denkt = false; DK.wartet = false; dkMerken(); }
+  SP.art = null; spZeigen();
+  if (laeuft) melde("Spiel abgebrochen – nicht gewertet.");
 }
 const SPT = { id: null, brett: null, status: null }; // zuletzt gezeigte Partie gegen Mitglieder – daraus: wer hat gezogen?
 function spTttTonMg(g) {
@@ -6075,7 +6115,7 @@ const schFigHtml = (t, farbe) => schBrigade() ? `<span class="sch-fig brigade ${
   : `<span class="sch-fig bild ${farbe === "w" ? "weiss" : "schwarz"}"><img src="${schFigBild(t, farbe)}" alt="" draggable="false" onerror="this.parentNode.classList.remove('bild');this.replaceWith('${SCH_FIG[t]}\uFE0E')"></span>`;
 function schStilWechseln() { SCH_STIL = SCH_STILE[(SCH_STILE.indexOf(SCH_STIL) + 1) % SCH_STILE.length]; lsSetzen("kc_club_schach_stil2", SCH_STIL); melde(`♟️ Figuren: ${SCH_STIL_NAME[SCH_STIL]}`); spZeigen(); }
 // 2.23.38 KC-CLUB-SCHACH-AUFGERAEUMT: Umschalt-Knopf schmal in der Knopfleiste, „Wer ist wer“ eingeklappt unter dem Brett
-const schStilKnopf = () => `<button class="knopf klein" onclick="schStilWechseln()" title="Figuren wechseln: Klassisch → Plastisch → Brigade">♟️ Figuren: ${SCH_STIL_NAME[SCH_STIL]}</button>`;
+const schStilKnopf = () => `<button class="knopf" onclick="schStilWechseln()" title="Figuren wechseln: Klassisch → Plastisch → Brigade"><span class="kt-ico">♟️</span>Figuren: ${SCH_STIL_NAME[SCH_STIL]}</button>`;
 const schStilHtml = () => schBrigade() ? `<details class="sch-wer"><summary>👨‍🍳 Wer ist wer?</summary><div class="sch-legende" aria-label="Wer ist wer">${["k", "q", "r", "b", "n", "p"].map((t) => `<span>${SCH_BRIGADE[t]} ${SCH_BRIGADE_NAME[t]}${SCH_BRIGADE_NAME[t] !== SCH_NAME[t] ? ` <small class="hinweis">(${SCH_NAME[t]})</small>` : ""}</span>`).join("")}</div></details>` : "";
 // KC-CLUB-SCHACH-SPASS: data-feld/data-klick/data-ich für das Schieben, eigener Turm als Rochade-Ziel (gestrichelt statt „Schlagen“-Ring),
 // 💡 Tipp-Feld von Twinkey
@@ -6222,7 +6262,8 @@ function schSprache() {
   return spAnsageAn("schach") ? "alles" : "aus"; // noch nichts gewählt: wie der alte Ansage-Schalter
 }
 const schSprachKnopf = () => { const s = schSprache();
-  return `<button class="knopf klein sch-sprache-knopf${s !== "aus" ? " haupt" : ""}" aria-label="Sprache: ${SCH_SPRACHE_TEXT[s]} – antippen zum Wechseln" onclick="schSpracheWechseln()">${SCH_SPRACHE_TEXT[s]}</button>`; };
+  const [ico, ...wort] = SCH_SPRACHE_TEXT[s].split(" ");
+  return `<button class="knopf sch-sprache-knopf" aria-label="Sprache: ${SCH_SPRACHE_TEXT[s]} – antippen zum Wechseln" onclick="schSpracheWechseln()"><span class="kt-ico">${ico}</span>${wort.join(" ")}</button>`; };
 function schSpracheWechseln() {
   const neu = SCH_SPRACHEN[(SCH_SPRACHEN.indexOf(schSprache()) + 1) % SCH_SPRACHEN.length];
   lsSetzen(SCH_SPRACHE_KEY, neu);
@@ -6275,7 +6316,7 @@ function schHinweisNach(ch, auswahl, ziele, schluessel) {
 // Töne: leises Holz-Klopfen je Zug, Schlagen, Rochade, Schach, Spielende – Schalter 🔔 gilt für dieses Gerät, Standard an
 const SCH_TON_KEY = "kc_club_schach_toene";
 const schToeneAn = () => { try { return localStorage.getItem(SCH_TON_KEY) !== "aus"; } catch { return true; } };
-const schTonKnopf = () => `<button class="knopf klein sch-ton-knopf" aria-pressed="${schToeneAn()}" onclick="schToeneSchalten()">${schToeneAn() ? "🔔 Töne an" : "🔕 Töne aus"}</button>`;
+const schTonKnopf = () => `<button class="knopf sch-ton-knopf" aria-pressed="${schToeneAn()}" onclick="schToeneSchalten()"><span class="kt-ico">${schToeneAn() ? "🔔" : "🔕"}</span>Töne ${schToeneAn() ? "an" : "aus"}</button>`; // KC-CLUB-SPIELE-LEISTE: Kachelknopf, gilt für alle Spiele
 function schToeneSchalten() { lsSetzen(SCH_TON_KEY, schToeneAn() ? "aus" : "an"); document.querySelectorAll(".sch-ton-knopf").forEach((b) => (b.outerHTML = schTonKnopf())); schTon("zug"); }
 function schTon(art) {
   if (!schToeneAn() || aktuelleAnsicht !== "spiele") return;
@@ -6377,8 +6418,8 @@ function schFokus(aktiv, partie) {
   return an;
 }
 const schFokusKnopf = (aktiv, partie) => !aktiv ? "" : SCH_FOKUS_ZEIGEN === partie
-  ? `<button class="knopf klein" onclick="SCH_FOKUS_ZEIGEN=null;spZeigen()">🔲 Mehr Platz</button>`
-  : `<button class="knopf klein" onclick="SCH_FOKUS_ZEIGEN='${partie}';spZeigen()">⚙️ Einstellungen</button>`;
+  ? `<button class="knopf" onclick="SCH_FOKUS_ZEIGEN=null;spZeigen()"><span class="kt-ico">🔲</span>Mehr Platz</button>`
+  : `<button class="knopf" onclick="SCH_FOKUS_ZEIGEN='${partie}';spZeigen()"><span class="kt-ico">⚙️</span>Einstellungen</button>`;
 function schGeschlagenHtml(ch) {
   const da = { w: { p: 0, n: 0, b: 0, r: 0, q: 0 }, b: { p: 0, n: 0, b: 0, r: 0, q: 0 } }, voll = { p: 8, n: 2, b: 2, r: 2, q: 1 };
   for (const zeile of ch.board()) for (const f of zeile) if (f && f.type !== "k") da[f.color][f.type]++;
@@ -6483,7 +6524,8 @@ async function schPcZeigen() {
       ${banner}
       ${schTwHtml()}
       ${schTischHtml(schGeschlagenHtml(ch) + schBrettHtml(ch, { unten: ich, auswahl: SCH.auswahl, ziele: SCH.ziele, letzter: (() => { const h = ch.history({ verbose: true }).slice(-1)[0]; return h ? h.from + h.to : null; })(), klick: "schPcKlick", aus: ende || SCH.denkt, tipp: SCH.tipp }), st, "🧑‍🍳 Twinkey")}
-      <div class="sch-leiste"><button class="knopf haupt klein" onclick="schPcNeu()">↺ Neue Partie</button>${SCH.uhr ? "" : `<button class="knopf klein" onclick="schPcZurueck()" ${ch.history().length < 1 || SCH.denkt ? "disabled" : ""}>↶ Zug zurück</button>`}${SCH.uhr || ende ? "" : `<button class="knopf klein" onclick="schPcTipp()" ${ch.turn() !== ich || SCH.denkt ? "disabled" : ""}>💡 Tipp</button>`}${schSprachKnopf()}${schTonKnopf()}${schStilKnopf()}${schFokusKnopf(laeuft, partie)}<button class="knopf klein" onclick="schArchivOeffnen()">📼 Meine Partien</button><button class="knopf klein" onclick="schPcStandWeg()" title="Spielstand zurücksetzen">🗑️ Stand</button></div>
+      ${spLeiste(SCH.uhr ? "" : spKnopf("↶", "Zug zurück", "schPcZurueck()", { aus: ch.history().length < 1 || SCH.denkt }), SCH.uhr || ende ? "" : spKnopf("💡", "Tipp", "schPcTipp()", { aus: ch.turn() !== ich || SCH.denkt }),
+        spNeuKnopf("schPcNeu()"), spAbbrechenKnopf("spPcAbbrechen()"), schTonKnopf(), schSprachKnopf(), schStilKnopf(), schFokusKnopf(laeuft, partie), spKnopf("📼", "Meine Partien", "schArchivOeffnen()"), spStandKnopf("schPcStandWeg()"))}
       ${schVerlaufHtml(ch.history())}
       ${schStilHtml()}
       <p class="hinweis sch-tipp">Figur schieben – oder antippen, dann das Zielfeld. Rochade: König auf den Turm schieben.${SCH.uhr ? " Mit Uhr gibt es kein „Zug zurück“ und keinen Tipp – wie im Turnier." : ""}</p>
@@ -6609,7 +6651,7 @@ async function schSpielZeigen(g) {
       ${spTerminHtml(g)}
       ${schTwHtml()}
       ${schTischHtml(schGeschlagenHtml(ch) + schBrettHtml(ch, { unten: ich, auswahl: SCHM.auswahl, ziele: SCHM.ziele, letzter: g.letzterZug, klick: "schMgKlick", aus: !g.ichDran }), st, g.gegner.vorname)}
-      <div class="sch-leiste">${g.status === "beendet" ? `<button class="knopf haupt klein" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf klein" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}${schSprachKnopf()}${schTonKnopf()}${schStilKnopf()}${schFokusKnopf(laeuft, g.id)}${(g.verlauf || []).length ? `<button class="knopf klein" onclick="schNachspielen(SCH_NS_MG)">📼 Nachspielen</button>` : ""}</div>
+      ${spLeiste(g.status === "beendet" ? spKnopf("↺", "Revanche", `spRevanche('${g.id}')`, { haupt: true }) : g.status === "laeuft" ? spKnopf("🏳️", "Aufgeben", `spAufgeben('${g.id}')`) : "", schTonKnopf(), schSprachKnopf(), schStilKnopf(), schFokusKnopf(laeuft, g.id), (g.verlauf || []).length ? spKnopf("📼", "Nachspielen", "schNachspielen(SCH_NS_MG)") : "")}
       ${schVerlaufHtml(g.verlauf || [])}
       ${schStilHtml()}
       <p class="hinweis sch-tipp">Figur schieben – oder antippen, dann das Zielfeld. Rochade: König auf den Turm schieben. ${g.uhr ? "Live-Partie mit Uhr: beide ersten Züge sind frei, danach läuft die Zeit – auch wenn die App zu ist." : `Du musst nicht warten – ${er} bekommt Bescheid.`}</p>
@@ -6939,8 +6981,7 @@ function bskPcZeigen() {
       <div class="sp-stand"><span>Du <b>${s.ich}</b></span><span><b>${s.pc}</b> Computer</span></div>
       ${status}
       ${bskBrettHtml(z, 0, { klick: "bskPcKarte", aus: BSK.denkt || z.phase !== "spiel" || z.amZug !== 0, gegnerName: "Computer", ansageSicht: z.phase === "ansage", ansageKlick: z.phase === "ansage" && z.vorhand === 0 ? "bskPcAnsage" : "" })}
-      <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("bsk")}</div>
-      <div class="sp-knopfreihe"><button class="knopf haupt" onclick="bskPcNeu()"><span class="kt-ico">↺</span>Neues Spiel</button><button class="knopf" onclick="bskPcStandWeg()" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️</span>Stand löschen</button></div>
+      ${spLeiste(spNeuKnopf("bskPcNeu()"), spAbbrechenKnopf("spPcAbbrechen()"), schTonKnopf(), spAnsageKnopf("bsk"), spStandKnopf("bskPcStandWeg()"))}
       <details class="sch-verlauf"><summary>📖 Regeln kurz</summary><p class="hinweis" style="margin:4px 0">Jeder hat 8 Häufchen auf dem Tisch: unten verdeckt, oben offen. Ausgeteilt wird in Viererpäckchen – je zweimal verdeckt, dann zweimal offen; wer gibt, wechselt. Vorhand sieht ihre offenen Karten und muss Trumpf ansagen – eine Farbe oder Grand (nur Buben), dann spielt sie aus. Gespielt wird immer eine offene Karte; die Karte darunter wird sofort aufgedeckt. Buben sind die höchsten Trümpfe (♣ ♠ ♥ ♦), dann Ass, Zehn, König, Dame, 9, 8, 7. Farbe bedienen, wenn möglich – sonst stechen oder abwerfen. Der Ansager braucht 61 Augen (Ass 11, Zehn 10, König 4, Dame 3, Bube 2).</p></details>
     </div>`;
   if (BSK.teilen) { BSK.teilen = false; bskAusteilen($("spInhalt").querySelector(".bsk"), z, 0); } // KC-CLUB-BAUERNSKAT-AUSTEILEN
@@ -6955,18 +6996,18 @@ const bskPcStaerke = (w) => { BSK.staerke = ["leicht", "mittel", "schwer"].inclu
 async function bskPcStandWeg() { if (!(await frage("Spielstand Bauernskat auf 0 : 0 zurücksetzen?", { ja: "🗑️ Zurücksetzen", nein: "Abbrechen" }))) return; BSK.stand = { ich: 0, pc: 0 }; bskMerken(); bskPcZeigen(); }
 function bskPcAnsage(t) { const z = BSK.z; if (z.phase !== "ansage" || z.vorhand !== 0) return; spSag("bsk", `Du sagst an: ${bskTrumpfWort(t)}.`, null, true); z.trumpf = t; z.phase = "spiel"; z.amZug = 0; bskMerken(); melde(`Trumpf: ${t === "grand" ? "Grand – nur Buben" : BSK_SYM[t] + " " + BSK_FNAME[t]}`); bskPcZeigen(); }
 function bskPcWerten() { const z = BSK.z; if (z.phase !== "ende" || BSK.gewertet) return; BSK.gewertet = true; const e = bskErgebnis(z);
-  spSag("bsk", `Spiel vorbei. ${e.augen[0]} zu ${e.augen[1]} Augen. ${e.gewinner === 0 ? "Du hast gewonnen!" : "Der Computer hat gewonnen."}`); /* KC-CLUB-SPIEL-ANSAGE */ if (e.gewinner === 0) BSK.stand.ich++; else BSK.stand.pc++; try { navigator.vibrate?.(e.gewinner === 0 ? [60, 40, 60] : 40); } catch {} }
+  spSag("bsk", `Spiel vorbei. ${e.augen[0]} zu ${e.augen[1]} Augen. ${e.gewinner === 0 ? "Du hast gewonnen!" : "Der Computer hat gewonnen."}`); /* KC-CLUB-SPIEL-ANSAGE */ if (e.gewinner === 0) BSK.stand.ich++; else BSK.stand.pc++; spEndeTon(e.gewinner === 0); try { navigator.vibrate?.(e.gewinner === 0 ? [60, 40, 60] : 40); } catch {} }
 const bskZeichnen = () => { if (aktuelleAnsicht === "spiele" && SP.tab === "pc" && SP.art === "bsk") bskPcZeigen(); }; // nur, wenn Bauernskat gerade sichtbar ist
 function bskPcNachStich(voll) {
   const z = BSK.z;
   if (voll) { z.letzterZeigen = true; bskMerken(); bskZeichnen(); BSK.denkt = true;
-    setTimeout(() => { bskStichAbschliessen(z); z.letzterZeigen = false; BSK.denkt = false; spSag("bsk", bskStichWort(z, "Der Computer")); bskPcWerten(); bskMerken(); bskZeichnen(); if (z.phase === "spiel" && z.amZug === 1) setTimeout(bskPcComputer, 500); }, 1100);
+    setTimeout(() => { bskStichAbschliessen(z); spTon("stich"); z.letzterZeigen = false; BSK.denkt = false; spSag("bsk", bskStichWort(z, "Der Computer")); bskPcWerten(); bskMerken(); bskZeichnen(); if (z.phase === "spiel" && z.amZug === 1) setTimeout(bskPcComputer, 500); }, 1100);
     return; }
   bskMerken(); bskZeichnen(); if (z.amZug === 1) setTimeout(bskPcComputer, 600);
 }
 function bskPcKarte(k) {
   const z = BSK.z; if (BSK.denkt || z.phase !== "spiel" || z.amZug !== 0 || !bskErlaubt(z, 0).includes(k)) return;
-  bskPcNachStich(bskSpielen(z, 0, k));
+  spTon("karte"); bskPcNachStich(bskSpielen(z, 0, k));
 }
 function bskPcComputer() {
   if (spPauseHalt(bskPcComputer)) return; // 2.18.0: Pause
@@ -6976,7 +7017,7 @@ function bskPcComputer() {
     melde(`🤖 Der Computer sagt an: ${z.trumpf === "grand" ? "Grand – nur Buben" : BSK_SYM[z.trumpf] + " " + BSK_FNAME[z.trumpf]}`); spSag("bsk", `Der Computer sagt an: ${bskTrumpfWort(z.trumpf)}.`); bskZeichnen(); setTimeout(bskPcComputer, 800); return; }
   if (z.phase !== "spiel" || z.amZug !== 1) return;
   const kc = bskZugComputer(z, 1, BSK.staerke); spSag("bsk", `Der Computer spielt ${bskKarteWort(kc)}.`); // KC-CLUB-SPIEL-ANSAGE
-  bskPcNachStich(bskSpielen(z, 1, kc));
+  spTon("gegner"); bskPcNachStich(bskSpielen(z, 1, kc));
 }
 // ----- KC-CLUB-BAUERNSKAT-MG (2.10.0, Wunsch Hansi): gegen ein Mitglied -----
 // Der Server mischt und hält die verdeckten Karten; die App bekommt nur ihre eigene Sicht (ich = Spieler 0) und zeichnet sie mit
@@ -6985,6 +7026,7 @@ const BSK_GESEHEN = new Map(); // KC-CLUB-SPIEL-ANSAGE: was je Partie schon ange
 function bskMgAnsagen(g, z) {
   const er = g.gegner.vorname, alt = BSK_GESEHEN.get(g.id), neu = { zuege: g.zuege, trumpf: z.trumpf, letzter: JSON.stringify(z.letzter || null), stich: JSON.stringify(z.stich || []) };
   BSK_GESEHEN.set(g.id, neu);
+  if (alt && alt.zuege !== g.zuege) spTon(g.status === "beendet" ? (g.ergebnis === "gewonnen" ? "sieg" : g.ergebnis === "verloren" ? "niederlage" : "remis") : "karte"); // KC-CLUB-SPIELE-LEISTE
   if (!alt || alt.zuege === g.zuege || !spAnsageAn("bsk")) return; // erster Blick: nichts Altes vorlesen
   const teile = [];
   if (!alt.trumpf && z.trumpf && z.vorhand === 1) teile.push(`${er} sagt an: ${bskTrumpfWort(z.trumpf)}.`);
@@ -7015,9 +7057,8 @@ function bskSpielZeigen(g) {
       ${status}
       ${spTerminHtml(g)}
       ${bskBrettHtml(z, 0, { klick: "bskMgKarte", aus: !g.ichDran || z.phase !== "spiel", gegnerName: g.gegner.vorname, ansageSicht: z.phase === "ansage", ansageKlick: z.phase === "ansage" && g.ichDran && g.status === "laeuft" ? "bskMgAnsage" : "" })}
-      <div class="knoepfe" style="justify-content:center">${spAnsageKnopf("bsk")}</div>
       <p class="hinweis" style="text-align:center;margin:6px 0">Karte antippen zum Spielen. Du musst nicht warten – ${er} bekommt Bescheid.</p>
-      <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div>
+      ${spLeiste(g.status === "beendet" ? spKnopf("↺", "Revanche", `spRevanche('${g.id}')`, { haupt: true }) : g.status === "laeuft" ? spKnopf("🏳️", "Aufgeben", `spAufgeben('${g.id}')`) : "", schTonKnopf(), spAnsageKnopf("bsk"))}
     </div>`;
   // KC-CLUB-BAUERNSKAT-AUSTEILEN (2.24.9): eine neue Partie sieht man einmal mischen und austeilen
   if (g.status === "laeuft" && z.phase === "ansage" && !z.sp[0].hand.length && !BSK_GETEILT.has(g.id)) { BSK_GETEILT.add(g.id); bskAusteilen($("spInhalt").querySelector(".bsk"), z, 0); }
@@ -7245,7 +7286,7 @@ function maePcZeigen() {
       ${stand}
       <p style="margin:6px 0">🎲 <b>Mensch ärgere dich nicht</b> – bring alle 4 Figuren ins Ziel. Mit einer <b>6</b> kommt eine Figur raus, und du darfst nochmal würfeln.
         Kommst du auf ein Feld mit einer fremden Figur, fliegt sie zurück ins Haus. Ins Ziel geht es nur genau. Wer zuerst alle 4 drin hat, gewinnt!</p>
-      <div class="kt-knoepfe"><button class="knopf haupt kt-los" onclick="maePcStart()"><span class="kt-ico">▶</span>Los geht’s</button>${spAnsageKnopf("mae", true)}${s.ich + s.pc ? '<button class="knopf klein" onclick="maePcStandWeg()" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️</span>Stand löschen</button>' : ""}</div></div>`; return; }
+      ${spLeiste(spKnopf("▶", "Los geht’s", "maePcStart()", { haupt: true }), schTonKnopf(), spAnsageKnopf("mae"), s.ich + s.pc ? spStandKnopf("maePcStandWeg()") : "")}</div>`; return; }
   const namen = z.sitze.map((_, k) => maepName(k)), ich = z.sitze[z.dran]?.wer === "ich", m = ich && z.phase === "ziehen" && !MAEP.anim ? maeMoeglich(z) : [];
   const status = z.phase === "ende" ? (z.sitze[z.sieger]?.wer === "ich" ? `<div class="sp-banner sieg">🏆 Du hast gewonnen!</div>` : `<div class="sp-banner niederlage">${esc(maepName(z.sieger))} war schneller</div>`)
     : `<div class="sp-status${ich ? " sp-ichdran" : ""}">${MAEP.text ? esc(MAEP.text) + " " : ""}${ich ? (z.phase === "wuerfeln" ? (z.versuche ? `🎲 Nochmal würfeln – noch ${3 - z.versuche} ${3 - z.versuche === 1 ? "Versuch" : "Versuche"} für eine 6` : "🎲 Du bist dran – würfeln!") : MAEP.anim ? "" : "👆 Tippe die Figur an, die ziehen soll") : MAEP.anim ? "" : `${esc(maepName(z.dran))} ist dran …`}</div>`;
@@ -7254,8 +7295,8 @@ function maePcZeigen() {
       ${status}
       <div class="mae-brett" id="maeBrett">${maeBrettSvg(z, { klick: "maePcFigur", ziehbar: m, anim: MAEP.anim, letzte: MAEP.letzte, aus: SP.pause })}</div>
       <div class="mae-wurfzeile">${maeWuerfelKnopf(z.wurf, { kann: ich && z.phase === "wuerfeln" && !MAEP.rollt && !MAEP.anim, rollt: MAEP.rollt, klick: "maePcWuerfeln()", farbe: MAE_FARBEN[z.sitze[z.dran]?.f ?? 0] })}</div>
-      ${z.phase === "ende" ? `<div class="sp-knopfreihe"><button class="knopf haupt" onclick="maePcStart()"><span class="kt-ico">↺</span>Neues Spiel</button><button class="knopf" onclick="MAEP.z=null;maepMerken();maePcZeigen()"><span class="kt-ico">⚙️</span>Einstellen</button>${spAnsageKnopf("mae", true)}</div>`
-        : `<div class="sp-knopfreihe">${spAnsageKnopf("mae", true)}<button class="knopf" onclick="maePcAbbrechen()"><span class="kt-ico">✖</span>Spiel abbrechen</button></div>`}
+      ${z.phase === "ende" ? spLeiste(spNeuKnopf("maePcStart()"), spKnopf("⚙️", "Einstellen", "MAEP.z=null;maepMerken();maePcZeigen()"), schTonKnopf(), spAnsageKnopf("mae"))
+        : spLeiste(spNeuKnopf("maePcAbbrechen(true)", "Neues Spiel", false), spAbbrechenKnopf("maePcAbbrechen()"), schTonKnopf(), spAnsageKnopf("mae"))}
     </div>`;
 }
 function maeWuerfelKnopf(w, { kann, rollt, klick, farbe }) {
@@ -7283,6 +7324,7 @@ async function maeWurf(z) { // Würfel rollen lassen (Animation), dann werten
   MAEP.rollt = true; MAEP.text = ""; maePcZeigen();
   const t0 = Date.now(), tick = setInterval(() => { const b = document.querySelector(".mae-wuerfel.rollt"); if (b) b.innerHTML = maeWuerfelSvg(1 + Math.floor(Math.random() * 6)); }, 90);
   try { navigator.vibrate?.(25); } catch {}
+  spTon("wuerfel");
   await maeWarte(Math.max(0, 650 - (Date.now() - t0))); clearInterval(tick); MAEP.rollt = false;
   if (MAEP.z !== z) return;
   const w = 1 + Math.floor(Math.random() * 6), vor = z.n, m = maeWuerfeln(z, w);
@@ -7309,13 +7351,13 @@ async function maeZugMitAnimation(z, i) { // Figur Feld für Feld laufen lassen,
   const s = z.dran, S = z.sitze[s], m = maeMoeglich(z); if (S.fig[i] < 0 && !m.includes(i)) i = m.find((k) => S.fig[k] < 0) ?? i;
   if (!m.includes(i)) return;
   const von = S.fig[i], nach = maeZiel(z, s, i, z.wurf);
-  if (von >= 0) for (let p = von + 1; p < nach; p++) { MAEP.anim = { s, i, p }; maeBrettNeu(); await maeWarte(150); if (MAEP.z !== z) return; }
+  if (von >= 0) for (let p = von + 1; p < nach; p++) { MAEP.anim = { s, i, p }; maeBrettNeu(); spTon("schritt"); await maeWarte(150); if (MAEP.z !== z) return; }
   MAEP.anim = null;
   const vor = z.n, e = maeZiehen(z, i); if (!e) return maePcZeigen();
   MAEP.letzte = [{ s: e.s, i: e.i, von: e.von }];
   const texte = z.log.filter((x) => x.n > vor).map((x) => maeEreignisText(x, maepName, z));
   MAEP.text = texte.join(" ");
-  if (e.opfer) try { navigator.vibrate?.([40, 30, 60]); } catch {}
+  if (e.opfer) { spTon("raus"); try { navigator.vibrate?.([40, 30, 60]); } catch {} }
   if (e.opfer || texte.length > 1 || z.sitze[s].wer !== "ich") spSag("mae", MAEP.text, `maep:${z.n}`);
   maepMerken(); maePcZeigen();
 }
@@ -7338,17 +7380,19 @@ function maePcWerten() {
   const z = MAEP.z; if (!z || z.phase !== "ende" || z.gewertet) return;
   z.gewertet = true; const sieg = z.sitze[z.sieger]?.wer === "ich";
   if (sieg) MAEP.stand.ich++; else MAEP.stand.pc++;
+  spEndeTon(sieg);
   maepMerken(); spSag("mae", sieg ? "Glückwunsch! Du hast alle Figuren im Ziel und gewinnst!" : `${maepName(z.sieger).replace("🤖 ", "")} war schneller. Revanche?`, `maep:ende:${z.n}`, true);
   try { navigator.vibrate?.(sieg ? [60, 40, 60, 40, 120] : 80); } catch {}
   maePcZeigen();
 }
 // wie beim Küchenterror: Abbrechen ohne Wertung (Spielstand bleibt)
-async function maePcAbbrechen() {
+async function maePcAbbrechen(neu = false) { // KC-CLUB-SPIELE-LEISTE: neu = gleich ein neues Spiel mit denselben Einstellungen
   const z = MAEP.z; if (!z || z.phase === "ende") return;
   try { speechSynthesis.cancel(); } catch {}
-  if (!(await frage("Spiel abbrechen? Diese Runde wird nicht gewertet – dein Spielstand bleibt.", { ja: "✖ Abbrechen", nein: "▶ Weiterspielen" }))) { if (MAEP.z === z && z.sitze[z.dran].wer !== "ich") maePcComputer(); return; }
+  if (!(await frage(`${neu ? "Neues Spiel beginnen?" : "Spiel abbrechen?"} Diese Runde wird nicht gewertet – dein Spielstand bleibt.`, { ja: neu ? "↺ Neues Spiel" : "✖ Abbrechen", nein: "▶ Weiterspielen" }))) { if (MAEP.z === z && z.sitze[z.dran].wer !== "ich") maePcComputer(); return; }
   if (MAEP.z !== z) return;
   MAEP.z = null; MAEP.anim = null; MAEP.rollt = false; maepMerken();
+  if (neu) return maePcStart();
   if (maepSichtbar()) maePcZeigen();
   melde("Spiel abgebrochen – nicht gewertet.");
 }
@@ -7368,6 +7412,7 @@ function maeSpielZeigen(g) {
     MAEM.texte = neu.map((e) => maeEreignisText(e, (s) => maeMgName(g, s), z)).filter(Boolean).slice(-6);
     MAEM.letzte = neu.filter((e) => e.t === "zug").map((e) => ({ s: e.s, i: e.i, von: e.von }));
     if (neu.some((e) => e.s !== z.ich)) spSag("mae", MAEM.texte.join(" "), `maem:${g.id}:${z.n}`, true);
+    if (MAE_GESEHEN.has(g.id)) spTon(g.status === "beendet" ? (g.ergebnis === "gewonnen" ? "sieg" : "niederlage") : neu.some((e) => e.opfer) ? "raus" : neu.some((e) => e.s !== z.ich) ? "gegner" : "schritt"); // KC-CLUB-SPIELE-LEISTE
   }
   MAE_GESEHEN.set(g.id, z.n);
   const namen = z.sitze.map((_, s) => maeMgName(g, s)), m = g.ichDran && z.phase === "ziehen" ? z.moeglich || [] : [];
@@ -7384,7 +7429,7 @@ function maeSpielZeigen(g) {
       ${MAEM.texte.length && g.status !== "angefragt" ? `<div class="mae-verlauf" aria-live="polite"><b>Zuletzt:</b>${MAEM.texte.slice(-4).map((t) => `<div>${esc(t)}</div>`).join("")}</div>` : ""}
       ${spTerminHtml(g)}
       <p class="hinweis" style="text-align:center;margin:6px 0">${g.status === "laeuft" ? `Du musst nicht warten – ${esc(g.gegner.vorname)} bekommt Bescheid, wenn er dran ist.${z.sitze.some((S) => S.wer === "pc") ? " 🤖 Die freien Farben spielt der Computer." : ""}` : ""}</p>
-      <div class="sp-knopfreihe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')"><span class="kt-ico">↺</span>Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')"><span class="kt-ico">🏳️</span>Aufgeben</button>` : ""}${spAnsageKnopf("mae", true)}</div>
+      ${spLeiste(g.status === "beendet" ? spKnopf("↺", "Revanche", `spRevanche('${g.id}')`, { haupt: true }) : g.status === "laeuft" ? spKnopf("🏳️", "Aufgeben", `spAufgeben('${g.id}')`) : "", schTonKnopf(), spAnsageKnopf("mae"))}
     </div>`;
   if (g.ichDran && z.phase === "ziehen" && m.length === 1 && !MAEM.sendet) setTimeout(() => { if (SP.offen?.id === g.id && SP.offen.ichDran && SP.offen.mae?.phase === "ziehen") maeMgFigur(m[0]); }, 700);
 }
@@ -7815,8 +7860,7 @@ function fdkPcZeigen() {
       <p style="margin:6px 0">🧑‍🍳 <b>Fang den Koch – Küchenrallye</b>: Du (rote Mütze) gegen Twinkey (blaue Mütze). Hol die Zutaten, koch das Gericht, ab an den Pass und klingeln!</p>
       <div class="sch-einst fdk-einst">${wahl("😊 Gerichte", "fdkStufe", FDKP.stufe, [["leicht", "Leicht"], ["mittel", "Mittel"], ["schwer", "Schwer"]])}${wahl("🍽️ Länge", "fdkAnzahl", FDKP.anzahl, [[1, "1 Gericht"], [2, "2 Gerichte"], [3, "3 Gerichte"]])}</div>
       <p class="hinweis" style="margin:6px 0">Leicht z. B. Pfannkuchen, mittel z. B. Gulasch, schwer z. B. Rinderroulade. Beide bekommen gleich schwere Gerichte.</p>
-      <div class="sp-knopfreihe"><button class="knopf haupt" onclick="fdkStart()"><span class="kt-ico">▶</span>Los geht’s</button><button class="knopf" onclick="fdkRegeln()"><span class="kt-ico">📖</span>Regeln</button>${spAnsageKnopf("fdk", true)}</div><div class="sch-leiste" style="margin-top:6px">${schTonKnopf()}</div>
-      ${s.ich + s.pc + s.remis ? '<button class="knopf klein" style="margin-top:6px" onclick="fdkStandWeg()">🗑️ Spielstand zurücksetzen</button>' : ""}</div>`; return; }
+      ${spLeiste(spKnopf("▶", "Los geht’s", "fdkStart()", { haupt: true }), schTonKnopf(), spAnsageKnopf("fdk"), spKnopf("📖", "Regeln", "fdkRegeln()"), s.ich + s.pc + s.remis ? spStandKnopf("fdkStandWeg()") : "")}</div>`; return; }
   const sg = F.phase === "ende" ? fdkSieger(F) : null, [A, B] = F.sp.map((S) => S.punkte);
   const ende = F.phase !== "ende" ? "" : `<div class="sp-banner ${sg === 0 ? "sieg" : sg === 1 ? "niederlage" : "remis"}">${sg === 0 ? "🏆 Feierabend – du hast gewonnen!" : sg === 1 ? "Feierabend – 🧑‍🍳 Twinkey war besser." : "🤝 Feierabend – unentschieden!"} ⭐ ${A} : ${B}</div>${fdkAbrechnung(F)}`;
   $("spInhalt").innerHTML = `<div class="karte sp-karte fdk-karte">${ende}
@@ -7824,8 +7868,9 @@ function fdkPcZeigen() {
       <div class="fdk-tisch">${fdkTablett(F, 0)}${fdkBrettHtml(F)}${fdkTablett(F, 1)}</div>
       ${fdkHandHtml(F)}
       <div class="sp-status fdk-ansage${F.dran === 0 && (F.phase === "wuerfeln" || F.phase === "wahl") ? " sp-ichdran" : ""}" aria-live="polite">${esc(FDKP.text || "🎲 Tippe auf den Würfel.")}</div>
-      ${F.phase === "ende" ? `<div class="sp-knopfreihe"><button class="knopf haupt" onclick="fdkStart()"><span class="kt-ico">↺</span>Neues Spiel</button><button class="knopf" onclick="FDKP.F=null;fdkMerken();fdkPcZeigen()"><span class="kt-ico">🏠</span>Übersicht</button></div>`
-        : `<div class="sp-knopfreihe"><button class="knopf haupt" onclick="fdkWuerfeln()" ${F.dran === 0 && F.phase === "wuerfeln" && !FDKP.rollt && !FDKP.anim && !FDKP.fragt ? "" : "disabled"}><span class="kt-ico">🎲</span>Würfeln</button>${fdkKannAbgeben(F) ? `<button class="knopf" onclick="fdkJetztAbgeben()"><span class="kt-ico">🛎️</span>Jetzt abgeben</button>` : ""}<button class="knopf" onclick="fdkRegeln()"><span class="kt-ico">📖</span>Regeln</button><button class="knopf" onclick="fdkAbbrechen()"><span class="kt-ico">✖</span>Abbrechen</button></div><div class="sch-leiste" style="margin-top:6px">${schTonKnopf()}${spAnsageKnopf("fdk")}</div>`}
+      ${F.phase === "ende" ? spLeiste(spNeuKnopf("fdkStart()"), spKnopf("⚙️", "Einstellen", "FDKP.F=null;fdkMerken();fdkPcZeigen()"), schTonKnopf(), spAnsageKnopf("fdk"), spKnopf("📖", "Regeln", "fdkRegeln()"))
+        : spLeiste(spKnopf("🎲", "Würfeln", "fdkWuerfeln()", { haupt: true, aus: !(F.dran === 0 && F.phase === "wuerfeln" && !FDKP.rollt && !FDKP.anim && !FDKP.fragt) }), fdkKannAbgeben(F) ? spKnopf("🛎️", "Jetzt abgeben", "fdkJetztAbgeben()") : "",
+          spNeuKnopf("fdkAbbrechen(true)", "Neues Spiel", false), spAbbrechenKnopf("fdkAbbrechen()"), schTonKnopf(), spAnsageKnopf("fdk"), spKnopf("📖", "Regeln", "fdkRegeln()"))}
     </div>`;
 }
 function fdkAbrechnung(F) { // Punkte je Gericht nachvollziehbar
@@ -8009,11 +8054,12 @@ function fdkWerten() {
   try { navigator.vibrate?.(sg === 0 ? [60, 40, 60, 40, 120] : 80); } catch {}
   fdkPcZeigen();
 }
-async function fdkAbbrechen() {
+async function fdkAbbrechen(neu = false) { // KC-CLUB-SPIELE-LEISTE: neu = gleich ein neues Spiel mit denselben Einstellungen
   const F = FDKP.F; if (!F || F.phase === "ende") return;
   try { speechSynthesis.cancel(); } catch {}
-  if (!(await frage("Spiel abbrechen? Diese Partie wird nicht gewertet – dein Spielstand bleibt.", { ja: "✖ Abbrechen", nein: "▶ Weiterspielen" }))) { if (FDKP.F === F && F.dran === 1) fdkPcZug(); return; }
+  if (!(await frage(`${neu ? "Neues Spiel beginnen?" : "Spiel abbrechen?"} Diese Partie wird nicht gewertet – dein Spielstand bleibt.`, { ja: neu ? "↺ Neues Spiel" : "✖ Abbrechen", nein: "▶ Weiterspielen" }))) { if (FDKP.F === F && F.dran === 1) fdkPcZug(); return; }
   if (FDKP.F !== F) return; FDKP.F = null; FDKP.rollt = false; FDKP.anim = null; fdkMerken();
+  if (neu) return fdkStart();
   if (fdkSichtbar()) fdkPcZeigen(); melde("Spiel abgebrochen – nicht gewertet.");
 }
 function fdkFortsetzen() { // nach dem Neuladen: halbe Züge sauber fortsetzen
@@ -8115,12 +8161,12 @@ async function ktPcZeigen() {
       ${stand}
       <p style="margin:6px 0">🔪 <b>Küchenterror</b> – ${F.length} Fragen aus dem Profi-Küchenalltag. Du beantwortest <b>alle 12 Fragen</b> – der Computer rät jedes Mal <b>gleichzeitig mit</b>.
         Jede Frage hat 4 Antworten, nur eine ist richtig. Der Zeitbalken läuft je nach Stufe <b>20, 15 oder 10 Sekunden</b>: richtig gibt 100 Punkte plus bis zu 100 Punkte Zeitbonus – wer schneller ist, holt mehr. Die letzte ist eine schwere <b>🎖️ Meisterfrage</b> – die zählt doppelt!</p>
-      <div class="kt-knoepfe"><button class="knopf haupt kt-los" onclick="ktPcStart()"><span class="kt-ico">▶</span>Los geht’s</button>${spAnsageKnopf("kt", true)}${s.ich + s.pc + s.remis ? '<button class="knopf klein" onclick="ktPcStandWeg()" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️</span>Stand löschen</button>' : ""}</div></div>`; return; } // KC-CLUB-KT-KNOEPFE (2.25.9, Wunsch Hansi): Knöpfe ordentlich nebeneinander
+      ${spLeiste(spKnopf("▶", "Los geht’s", "ktPcStart()", { haupt: true }), schTonKnopf(), spAnsageKnopf("kt"), s.ich + s.pc + s.remis ? spStandKnopf("ktPcStandWeg()") : "")}</div>`; return; } // KC-CLUB-KT-KNOEPFE (2.25.9, Wunsch Hansi): Knöpfe ordentlich nebeneinander
   const kopf = `<div class="kt-kopf"><span>Du <b>${z.punkte[0]}</b></span><span>Frage ${Math.min(z.i + 1, 12)}/12</span><span><b>${z.punkte[1]}</b> Computer</span></div>`;
   if (z.phase === "ende") {
     const [a, b] = z.punkte, sieg = a > b, remis = a === b;
     $("spInhalt").innerHTML = `<div class="karte sp-karte">${stand}<div class="sp-banner ${remis ? "remis" : sieg ? "sieg" : "niederlage"}">${remis ? "🤝 Unentschieden!" : sieg ? "🏆 Du hast gewonnen!" : "🤖 Der Computer hat gewonnen"}<br><small>${a} : ${b} Punkte</small></div>
-      <div class="knoepfe"><button class="knopf haupt" onclick="ktPcStart()">↺ Neues Spiel</button><button class="knopf" onclick="KTP.z=null;ktPcZeigen()">Stufe ändern</button></div></div>`; return; }
+      ${spLeiste(spNeuKnopf("ktPcStart()"), spKnopf("⚙️", "Stufe ändern", "KTP.z=null;ktPcZeigen()"), schTonKnopf(), spAnsageKnopf("kt"))}</div>`; return; }
   const f = F.find((q) => q.id === z.ids[z.i]), alle = [f.r, ...f.x], fr = { f: f.f, a: z.perm.map((k) => alle[k]), m: !!f.m, limitMs: ktpLimit() };
   const kopfWer = z.phase === "frage" ? `<div class="sp-status sp-ichdran">👨‍🍳 Tippe die richtige Antwort an – 🤖 der Computer rät mit <span id="ktPcStatus"></span></div>` : "";
   const pc = z.aufl?.pc, pcZeile = z.phase === "aufl" && pc ? `<div class="kt-ergebnis" style="font-size:1rem">🤖 Computer: ${pc.wahl < 0 ? "keine Antwort" : `${"ABCD"[pc.wahl]}) ` + (pc.ok ? `richtig in ${ktSek(pc.ms)} s – +${pc.p}` : "falsch – 0")}</div>` : "";
@@ -8129,8 +8175,7 @@ async function ktPcZeigen() {
   if (z.phase === "frage") spSag("kt", ktFrageSprache(fr, z.i + 1), ktSchl + ":f", true);
   else if (z.phase === "aufl" && z.aufl) spSag("kt", ktAuflSprache(fr, z.aufl) + (z.aufl.pc ? ` Der Computer: ${z.aufl.pc.wahl < 0 ? "keine Antwort" : z.aufl.pc.ok ? "richtig" : "falsch"}.` : ""), ktSchl + ":a", true);
   $("spInhalt").innerHTML = `<div class="karte sp-karte">${kopf}${kopfWer}${ktFrageHtml(fr, { klick: z.phase === "frage" ? "ktPcAntwort" : "", aufl: z.phase === "aufl" ? z.aufl : null })}${pcZeile}
-    ${z.phase === "aufl" ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktPcWeiter()">${z.i >= 11 ? "🏁 Ergebnis" : "Weiter ›"}</button>${spAnsageKnopf("kt")}</div>` : ""}
-    <div class="kt-abbruch"><button class="knopf klein" onclick="ktPcAbbrechen()">✖ Spiel abbrechen</button></div></div>`; // KC-CLUB-KT-ABBRECHEN (2.25.10)
+    ${spLeiste(z.phase === "aufl" ? spKnopf(z.i >= 11 ? "🏁" : "›", z.i >= 11 ? "Ergebnis" : "Weiter", "ktPcWeiter()", { haupt: true }) : "", spNeuKnopf("ktPcAbbrechen(true)", "Neues Spiel", z.phase !== "aufl"), spAbbrechenKnopf("ktPcAbbrechen()"), schTonKnopf(), spAnsageKnopf("kt"))}</div>`; // KC-CLUB-KT-ABBRECHEN (2.25.10)
   if (z.phase === "frage" && z.pausiert && !SP.pause) return ktPcFortsetzen(); // 2.18.0: nach Rückkehr weiter
   if (z.phase === "frage" && !SP.pause) ktPcUhren();
   spPauseZeigen();
@@ -8172,6 +8217,7 @@ function ktPcAntwort(wahl, vonUhr) {
   const p = ktPunkte(ok, ms, lim) * mal, pcOk = z.pcWahl >= 0 && z.perm[z.pcWahl] === 0, pcP = ktPunkte(pcOk, z.pcZeit, lim) * mal;
   z.punkte[0] += p; z.punkte[1] += pcP; z.phase = "aufl";
   z.aufl = { richtig: z.perm.indexOf(0), gewaehlt: wahl, ok, p, ms, zuSpaet: ms > lim, e: f?.e, pc: { wahl: z.pcWahl, ok: pcOk, p: pcP, ms: z.pcZeit } };
+  spTon(ok ? "richtig" : "falsch");
   try { navigator.vibrate?.(ok ? 30 : [40, 30, 40]); } catch {}
   if (ktpSichtbar()) ktPcZeigen();
 }
@@ -8186,20 +8232,21 @@ function ktPcFortsetzen() { // nochmal 3-2-1 Lesezeit, dann die restliche Zeit
 function ktPcWeiter() {
   const z = KTP.z; if (!z || z.phase !== "aufl") return;
   z.i++;
-  if (z.i >= 12) { z.phase = "ende"; const [a, b] = z.punkte; if (a > b) KTP.stand.ich++; else if (b > a) KTP.stand.pc++; else KTP.stand.remis++; ktpMerken(); }
+  if (z.i >= 12) { z.phase = "ende"; const [a, b] = z.punkte; if (a > b) KTP.stand.ich++; else if (b > a) KTP.stand.pc++; else KTP.stand.remis++; ktpMerken(); spEndeTon(a > b, a === b); }
   else ktPcNeueFrage(z);
   ktPcZeigen();
 }
 const ktPcStaerke = (w) => { KTP.staerke = KT_STAERKE[w] ? w : "mittel"; ktpMerken(); ktPcZeigen(); };
 // KC-CLUB-KT-ABBRECHEN (2.25.10, Wunsch Hansi „kein Abbrechen-Knopf, wenn man zwischendurch aufhören will“): Uhr anhalten, fragen;
 // bei „Abbrechen“ endet das Spiel ohne Wertung (Spielstand bleibt), bei „Weiterspielen“ geht es mit 3-2-1 weiter.
-async function ktPcAbbrechen() {
+async function ktPcAbbrechen(neu = false) { // KC-CLUB-SPIELE-LEISTE: neu = gleich ein neues Spiel
   const z = KTP.z; if (!z || z.phase === "ende") return;
   const lief = z.phase === "frage" && !z.pausiert; if (lief) ktPcPausieren();
   try { speechSynthesis.cancel(); } catch {}
-  if (!(await frage("Spiel abbrechen? Diese Runde wird nicht gewertet – dein Spielstand bleibt.", { ja: "✖ Abbrechen", nein: "▶ Weiterspielen" }))) { if (lief && KTP.z === z && ktpSichtbar()) ktPcFortsetzen(); return; }
+  if (!(await frage(`${neu ? "Neues Spiel beginnen?" : "Spiel abbrechen?"} Diese Runde wird nicht gewertet – dein Spielstand bleibt.`, { ja: neu ? "↺ Neues Spiel" : "✖ Abbrechen", nein: "▶ Weiterspielen" }))) { if (lief && KTP.z === z && ktpSichtbar()) ktPcFortsetzen(); return; }
   if (KTP.z !== z) return;
   clearTimeout(KTP.uhr); clearTimeout(KTP.pcUhr); ktUhrStopp(); KTP.z = null;
+  if (neu) return ktPcStart();
   if (ktpSichtbar()) ktPcZeigen();
   melde("Spiel abgebrochen – nicht gewertet.");
 }
@@ -8219,7 +8266,7 @@ function ktSpielZeigen(g) {
     if (KTM.frage) spSag("kt", ktFrageSprache(fr, fr.nr), `ktm:${g.id}:${fr.nr}:f`, true); // KC-CLUB-SPIEL-ANSAGE
     else if (KTM.aufl) spSag("kt", ktAuflSprache(fr, KTM.aufl), `ktm:${g.id}:${fr.nr}:a`, true);
     $("spInhalt").innerHTML = `<div class="karte sp-karte">${ktFrageHtml({ ...fr, restMs: rest }, { klick: KTM.frage ? "ktMgAntwort" : "", aufl: KTM.aufl, kopf })}
-      ${KTM.aufl ? `<div class="knoepfe"><button class="knopf haupt" onclick="ktMgWeiter()">${g.ichDran && q.offenBeiMir > 0 ? "Nächste Frage ›" : "Fertig ›"}</button>${spAnsageKnopf("kt")}</div>` : ""}</div>`;
+      ${KTM.aufl ? spLeiste(spKnopf("›", g.ichDran && q.offenBeiMir > 0 ? "Nächste Frage" : "Fertig", "ktMgWeiter()", { haupt: true }), schTonKnopf(), spAnsageKnopf("kt")) : ""}</div>`;
     return;
   }
   ktBildFrei(false);
@@ -8236,9 +8283,9 @@ function ktSpielZeigen(g) {
       <div class="knoepfe"><button class="knopf haupt" style="width:100%" onclick="ktMgFrage()">${q.laeuft != null ? "▶ Weiter – deine Frage läuft noch!" : "▶ Los geht’s"}</button></div>
       <p class="hinweis" style="margin:4px 0 0;text-align:center">Je Frage ${(q.limitMs || KT_MS) / 1000} Sekunden – erst tippen, wenn du bereit bist. Mittendrin aufhören zählt als „Zeit abgelaufen“.</p>`
     : `<div class="sp-status">${er} ist dran …</div>`;
-  $("spInhalt").innerHTML = `<div class="karte sp-karte">${zurueck}${status}<div class="knoepfe" style="justify-content:center">${spAnsageKnopf("kt")}</div>${spTerminHtml(g)}${tafel}
+  $("spInhalt").innerHTML = `<div class="karte sp-karte">${zurueck}${status}${spTerminHtml(g)}${tafel}
     ${q.rueckblick ? `<details class="sch-verlauf"><summary>📖 Alle Fragen mit Lösung</summary>${q.rueckblick.filter(Boolean).map((x, i) => `<p style="margin:6px 0"><b>${i + 1}. ${x.m ? "🎖️ " : ""}${esc(x.f)}</b><br>✅ ${esc(x.r)}<br><small class="hinweis">💡 ${esc(x.e)}</small></p>`).join("")}</details>` : ""}
-    <div class="knoepfe">${g.status === "beendet" ? `<button class="knopf haupt" onclick="spRevanche('${g.id}')">↺ Revanche</button>` : g.status === "laeuft" ? `<button class="knopf" onclick="spAufgeben('${g.id}')">🏳️ Aufgeben</button>` : ""}</div></div>`;
+    ${spLeiste(g.status === "beendet" ? spKnopf("↺", "Revanche", `spRevanche('${g.id}')`, { haupt: true }) : g.status === "laeuft" ? spKnopf("🏳️", "Aufgeben", `spAufgeben('${g.id}')`) : "", schTonKnopf(), spAnsageKnopf("kt"))}</div>`;
 }
 function ktMgUebersicht() { clearTimeout(KTM.uhr); ktUhrStopp(); KTM.frage = null; KTM.aufl = null; SP.offen = null; spZeigen(); spLaden(true); }
 async function ktMgFrage() {
@@ -8257,7 +8304,7 @@ async function ktMgAntwort(wahl) {
   KTM.sendet = true; clearTimeout(KTM.uhr); ktUhrStopp();
   document.querySelectorAll(".kt-antwort").forEach((b) => (b.disabled = true));
   try { const r = await api("spiel_zug", { id: g.id, zug: { kt: "antwort", wahl }, zuege: g.zuege }, { warten: true }); SP.offen = r.spiel;
-    KTM.frage = null; KTM.aufl = r.antwort ? { ...r.antwort, frage: fr } : null; try { navigator.vibrate?.(r.antwort?.ok ? 30 : [40, 30, 40]); } catch {} }
+    KTM.frage = null; KTM.aufl = r.antwort ? { ...r.antwort, frage: fr } : null; if (r.antwort) spTon(r.antwort.ok ? "richtig" : "falsch"); try { navigator.vibrate?.(r.antwort?.ok ? 30 : [40, 30, 40]); } catch {} }
   catch (e) { meldeFehler(e); KTM.frage = null; KTM.aufl = null; try { SP.offen = (await api("spiel_holen", { id: g.id })).spiel; } catch {} }
   finally { KTM.sendet = false; }
   if (aktuelleAnsicht === "spiele" && SP.offen) spZeigen();

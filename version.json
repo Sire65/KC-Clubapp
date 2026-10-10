@@ -1,11 +1,20 @@
 {
-  "version": "2.214.0",
+  "version": "2.215.0",
   "datum": "2026-10-10",
   "stufe": "RC",
   "neu": [
-    "🔧 Kleine Systemverbesserungen"
+    "🎲 Alle Spiele mit derselben Knopfleiste: Neues Spiel, Abbrechen, Töne, Ansage – ordentlich im Raster",
+    "🔔 Töne jetzt in allen Spielen (Würfel, Karten, Quiz, Sieg) – ein Schalter für alle"
   ],
   "verlauf": [
+    {
+      "version": "2.215.0",
+      "datum": "2026-10-10",
+      "neu": [
+        "🎲 Alle Spiele mit derselben Knopfleiste: Neues Spiel, Abbrechen, Töne, Ansage – ordentlich im Raster",
+        "🔔 Töne jetzt in allen Spielen (Würfel, Karten, Quiz, Sieg) – ein Schalter für alle"
+      ]
+    },
     {
       "version": "2.214.0",
       "datum": "2026-10-10",
