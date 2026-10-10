@@ -3677,7 +3677,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/function spSag\(art, text, schluessel, vorrang = false\) \{\s*if \(!spAnsageAn\(art\) \|\| !text \|\| aktuelleAnsicht !== "spiele"\) return;/.test(html), "Ansage nur wenn eingeschaltet und in den Spielen");
   assert.ok(/function schZugAnsage\(m, ch, ich\)/.test(html) && /hat gerade \$\{fem\(o\) \? "deine" : "deinen"\} \$\{schFigAkk\(o\)\} geschlagen/.test(html), "Schach: Züge und Schlagen");
-  assert.ok((html.match(/\$\{schSprachKnopf\(\)\}/g) || []).length === 2 && (html.match(/spAnsageKnopf\("kt"\)/g) || []).length >= 3 && (html.match(/spAnsageKnopf\("bsk"\)/g) || []).length === 2 && (html.match(/spAnsageKnopf\("ttt"(, true)?\)/g) || []).length === 2 && !/spSag\("ttt"/.test(html), "Schalter bei Schach, Küchenterror, Bauernskat; Tic-Tac-Toe nur Töne (2.22.22), keine Sprache");
+  assert.ok((html.match(/[ (]schSprachKnopf\(\)/g) || []).length >= 3 && (html.match(/spAnsageKnopf\("kt"\)/g) || []).length >= 3 && (html.match(/spAnsageKnopf\("bsk"\)/g) || []).length === 2 && !/spAnsageKnopf\("ttt"/.test(html) && !/spSag\("ttt"/.test(html), "Schalter bei Schach, Küchenterror, Bauernskat; Tic-Tac-Toe nur Töne (2.22.22, ab 2.215.0 der gemeinsame Töne-Schalter), keine Sprache");
   assert.ok(/spSag\("kt", ktFrageSprache\(fr, z\.i \+ 1\)/.test(html) && /spSag\("bsk", `Der Computer spielt \$\{bskKarteWort\(kc\)\}\.`\)/.test(html), "Küchenterror-Frage, Bauernskat-Karte");
   const regeln = html.slice(html.indexOf("const BSK_FARBEN = "), html.indexOf("// ----- Computer -----", html.indexOf("const BSK_FARBEN = ")));
   assert.ok(!/bskKarteWort|BSK_WNAME/.test(regeln), "Ansage-Helfer nicht in den Regeln (Server-Kopie bleibt gleich)");
@@ -3733,7 +3733,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 356 KC-CLUB-INKO-BLINKEN + KC-CLUB-TTT-TOENE (2.23.6)
 {
   assert.ok(/#inkoKnopf\.an \{[^}]*animation: inkoBlink 1\.2s ease-in-out infinite; \}/.test(html) && /@keyframes inkoBlink \{[^}]*\} 50% \{ background: #d32f2f;/.test(html), "Brille blinkt rot, solange Inkognito an");
-  assert.ok(/if \(!spAnsageAn\("ttt"\) \|\| aktuelleAnsicht !== "spiele"\) return;/.test(html), "Töne nur mit Schalter und nur im Spiel");
+  assert.ok(/if \(!schToeneAn\(\) \|\| aktuelleAnsicht !== "spiele"\) return;/.test(html), "Töne nur mit Schalter und nur im Spiel (ab 2.215.0 der gemeinsame Töne-Schalter)");
   assert.ok(/if \(!spPcEnde\(\)\) \{ spTttTon\("ich"\);/.test(html) && /if \(!spPcEnde\(\) && i !== undefined\) spTttTon\("gegner"\);/.test(html) && /spTttTon\(a\.sieger === "x" \? "sieg"/.test(html), "Computer: Zug + Ende");
   assert.ok(/spTttTonMg\(g\); \/\/ KC-CLUB-TTT-TOENE/.test(html) && /if \(neu >= 0\) spTttTon\(g\.brett\[neu\] === g\.ichBin \? "ich" : "gegner"\);/.test(html), "Mitglieder: Zug + Ende");
   assert.ok(/if \(art === "ttt"\) \{ if \(an\) spTttTon\("sieg"\); return melde/.test(html), "TTT-Schalter spricht nicht");
@@ -3942,7 +3942,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   // Material-Regel mit echten Stellungen prüfen (gleiche Logik wie im Server)
   const kann = (fen, farbe) => { const fig = [...fen.split(" ")[0]].filter((c) => /[a-z]/i.test(c) && c !== "k" && c !== "K" && (farbe === "w" ? c === c.toUpperCase() : c === c.toLowerCase())).map((c) => c.toLowerCase()); return fig.some((c) => c === "p" || c === "q" || c === "r") || fig.length >= 2; };
   assert.ok(!kann("8/8/8/4k3/8/8/8/4K2N w - - 0 1", "w") && kann("8/8/8/4k3/8/8/8/4K2R w - - 0 1", "w") && !kann("8/8/8/4k3/8/8/8/4K3 w - - 0 1", "w") && kann("8/8/8/4k3/8/8/8/2B1K1N1 w - - 0 1", "w"), "Material-Regel");
-  assert.ok(/function schKannMatt\(ch, farbe\)/.test(html) && /function schUhrTakt\(\)/.test(html) && /function schPcUhrAbgleich\(\)/.test(html) && /SCH\.uhr \? "" : `<button class="knopf klein" onclick="schPcZurueck\(\)"/.test(html), "App: Uhr gegen den Computer, kein Zurücknehmen mit Uhr");
+  assert.ok(/function schKannMatt\(ch, farbe\)/.test(html) && /function schUhrTakt\(\)/.test(html) && /function schPcUhrAbgleich\(\)/.test(html) && /SCH\.uhr \? "" : spKnopf\("↶", "Zug zurück", "schPcZurueck\(\)"/.test(html), "App: Uhr gegen den Computer, kein Zurücknehmen mit Uhr");
   assert.ok(/class="sch-tisch\$\{st \? " mit-uhr" : ""\}"/.test(html) && /grid-template-areas: "links mitte rechts"/.test(html) && /\.sch-leiste \{ display: flex; flex-wrap: wrap; justify-content: center;/.test(html) && /<div class="sch-einst">/.test(html), "Brett mittig, Uhren links/rechts, schmale Knöpfe");
   assert.ok(/spWahl\("Uhr", uhr, \[\["0", "📨 Fern"\]/.test(html) && /\.\.\.\(art === "schach" && uhr !== "0" \? \{ uhr: Number\(uhr\) \} : \{\}\)/.test(html), "Herausfordern mit Uhr");
 }
@@ -4777,20 +4777,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 
 // 2.25.9 KC-CLUB-KT-KNOEPFE
 {
-  assert.ok(/<div class="kt-knoepfe"><button class="knopf haupt kt-los" onclick="ktPcStart\(\)"><span class="kt-ico">▶<\/span>Los geht’s<\/button>\$\{spAnsageKnopf\("kt", true\)\}/.test(html) && /onclick="ktPcStandWeg\(\)" title="Spielstand zurücksetzen"><span class="kt-ico">🗑️<\/span>Stand löschen<\/button>/.test(html), "Küchenterror: Los geht’s, Ansage, Stand nebeneinander als Kacheln");
+  assert.ok(/\$\{spLeiste\(spKnopf\("▶", "Los geht’s", "ktPcStart\(\)", \{ haupt: true \}\), schTonKnopf\(\), spAnsageKnopf\("kt"\), s\.ich \+ s\.pc \+ s\.remis \? spStandKnopf\("ktPcStandWeg\(\)"\)/.test(html), "Küchenterror: Los geht’s, Töne, Ansage, Stand nebeneinander als Kacheln (ab 2.215.0 in der gemeinsamen Leiste)");
   assert.ok(/b\.outerHTML = spAnsageKnopf\(art, !!b\.dataset\.kachel\)/.test(html) && /function spAnsageKnopf\(art, kachel = false\)/.test(html), "Umschalten behält Kachelform, andere Spiele unverändert");
   assert.ok(/\.kt-knoepfe, \.sp-knopfreihe \{ display: grid; grid-template-columns: repeat\(auto-fit, minmax\(0, 1fr\)\);/.test(html) && /\.kt-wahl \.sp-wahl > span \{ flex-basis: 100%; \}/.test(html) && /<div class="kt-wahl">\$\{spWahl\("Stufe"/.test(html), "Stufe volle Breite, Knöpfe gleich breit");
 }
 // 2.25.10 KC-CLUB-KT-ABBRECHEN
 {
-  assert.ok(/<div class="kt-abbruch"><button class="knopf klein" onclick="ktPcAbbrechen\(\)">✖ Spiel abbrechen<\/button><\/div>/.test(html), "Küchenterror: Abbrechen-Knopf während des Spiels");
-  assert.ok(/async function ktPcAbbrechen\(\) \{[^]{0,200}if \(lief\) ktPcPausieren\(\);[^]{0,400}nein: "▶ Weiterspielen" \}\)\)\) \{ if \(lief && KTP\.z === z && ktpSichtbar\(\)\) ktPcFortsetzen\(\); return; \}[^]{0,200}KTP\.z = null;/.test(html), "Uhr hält an, Weiterspielen setzt fort, Abbrechen ohne Wertung");
+  assert.ok(/spNeuKnopf\("ktPcAbbrechen\(true\)", "Neues Spiel", z\.phase !== "aufl"\), spAbbrechenKnopf\("ktPcAbbrechen\(\)"\)/.test(html), "Küchenterror: Abbrechen-Knopf während des Spiels");
+  assert.ok(/async function ktPcAbbrechen\(neu = false\) \{[^]{0,200}if \(lief\) ktPcPausieren\(\);[^]{0,400}nein: "▶ Weiterspielen" \}\)\)\) \{ if \(lief && KTP\.z === z && ktpSichtbar\(\)\) ktPcFortsetzen\(\); return; \}[^]{0,200}KTP\.z = null;/.test(html), "Uhr hält an, Weiterspielen setzt fort, Abbrechen ohne Wertung");
   assert.ok(!/async function ktPcAbbrechen[^]{0,900}KTP\.stand\.(ich|pc|remis)\+\+/.test(html), "Abbruch zählt nicht in den Spielstand");
 }
 // 2.25.11 KC-CLUB-SP-KACHELN
 {
-  assert.ok(/<div class="sp-knopfreihe"><button class="knopf haupt" onclick="spPcNeu\(\)"><span class="kt-ico">↺<\/span>Neue Runde<\/button>[^]{0,200}Stand löschen<\/button>\$\{spAnsageKnopf\("ttt", true\)\}<\/div>/.test(html), "Tic-Tac-Toe: Kacheln nebeneinander");
-  assert.ok(/<div class="sp-knopfreihe"><button class="knopf haupt" onclick="bskPcNeu\(\)"><span class="kt-ico">↺<\/span>Neues Spiel<\/button>[^]{0,200}Stand löschen<\/button><\/div>/.test(html), "Bauernskat: Kacheln nebeneinander");
+  assert.ok(/\$\{spLeiste\(spNeuKnopf\("spPcNeu\(\)"\), spAbbrechenKnopf\("spPcAbbrechen\(\)"\), schTonKnopf\(\), spStandKnopf\("spPcStandWeg\(\)"\)\)\}/.test(html), "Tic-Tac-Toe: Kacheln nebeneinander");
+  assert.ok(/\$\{spLeiste\(spNeuKnopf\("bskPcNeu\(\)"\), spAbbrechenKnopf\("spPcAbbrechen\(\)"\), schTonKnopf\(\), spAnsageKnopf\("bsk"\), spStandKnopf\("bskPcStandWeg\(\)"\)\)\}/.test(html), "Bauernskat: Kacheln nebeneinander");
   assert.ok((html.match(/class="sp-kacheln"/g) || []).length === 1 && !/\.sp-kacheln \.knopf/.test(html), "Spiele-Übersicht behält ihr eigenes Raster (Klassenname nicht doppelt belegt)");
   assert.ok(/<div class="md-kacheln" id="mdKacheln">/.test(html) && /function mdKachelnOrdnen\(\)/.test(html) && /if \(kl\.length % 2 === 1\)/.test(html) && /mdKachelnOrdnen\(\); \/\/ KC-CLUB-MD-KACHELN/.test(html), "Mitglieder-Seite: Kacheln 2 je Reihe, einzelne letzte volle Breite (KC-CLUB-MD-KACHELN)");
   assert.ok(/ziel\.outerHTML = `<button class="knopf" onclick="spHerausfordernBlatt/.test(html) && /\.md-kacheln \{ display: grid; grid-template-columns: 1fr 1fr;/.test(html), "Spiel-Knopf als Kachel im Raster");
@@ -4810,7 +4810,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/mae: g\.spiel === "mae" \? maeSicht\(g\.mae, ich, namen\) : null/.test(server) && /SPIEL_ARTEN = \["ttt", "schach", "bsk", "kt", "mae"\]/.test(server), "Sicht + Spielart");
   assert.ok(/\["mae", "🎲", "Mensch ärgere dich nicht"/.test(html) && /\["mae", "<span class=\\"kt-emo\\">🎲<\/span>Mensch ärgere dich nicht"\]\], "spHerausArt"/.test(html) && /\.\.\.\(art === "mae" \? \{ computer: maePc === "ja" \} : \{\}\)/.test(html), "App: Kachel + Herausfordern mit Computer-Wahl");
   assert.ok(/if \(SP\.offen\.spiel === "mae"\) \{ maeSpielZeigen\(SP\.offen\)/.test(html) && /SP\.art === "mae" \? \(maePcZeigen\(\), maePcFortsetzen\(\)\)/.test(html), "App: Ansichten");
-  assert.ok(/if \(MAEP\.kette\) return; MAEP\.kette = true;/.test(html) && /async function maePcAbbrechen\(\)/.test(html) && /<div class="sp-knopfreihe">\$\{spAnsageKnopf\("mae", true\)\}<button class="knopf" onclick="maePcAbbrechen\(\)">/.test(html), "eine Computer-Kette, Abbrechen, Knöpfe als Kacheln");
+  assert.ok(/if \(MAEP\.kette\) return; MAEP\.kette = true;/.test(html) && /async function maePcAbbrechen\(neu = false\)/.test(html) && /spLeiste\(spNeuKnopf\("maePcAbbrechen\(true\)", "Neues Spiel", false\), spAbbrechenKnopf\("maePcAbbrechen\(\)"\), schTonKnopf\(\), spAnsageKnopf\("mae"\)\)/.test(html), "eine Computer-Kette, Abbrechen, Knöpfe als Kacheln");
   // ganze Partien mit der Server-Kopie: nie zwei Figuren auf einem Feld, Sieger hat alle 4 im Ziel, bei „mensch“ gewinnt nie der Computer
   const E = await import(new URL("../supabase/functions/kc-club/mae.js", import.meta.url));
   let saat = 20261006; const zufall = () => { saat = (saat + 0x6d2b79f5) | 0; let t = Math.imul(saat ^ (saat >>> 15), 1 | saat); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; // fester Zufall (wiederholbar)
@@ -6674,8 +6674,8 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/async function schPcKlick\(feld, neu = false, gezogen = false\)/.test(programm) && /async function schMgKlick\(feld, neu = false, gezogen = false\)/.test(programm), "Klick-Wege kennen Schieben");
   assert.equal((programm.match(/schZugErlebt\(mz, /g) || []).length, 4, "eigener Zug, Twinkeys Zug, eigener und fremder Zug gegen Mitglieder");
   assert.equal((programm.match(/schAnimStart\(\);/g) || []).length, 3, "Figur gleitet in beiden Ansichten und beim Nachspielen (2.118.0)");
-  assert.ok((programm.match(/\$\{schTwHtml\(\)\}/g) || []).length === 2 && (programm.match(/\$\{schTonKnopf\(\)\}/g) || []).length >= 2, "Twinkey + Töne-Knopf in beiden Ansichten (2.213.0: auch bei Fang den Koch)");
-  assert.ok(/onclick="schPcTipp\(\)"/.test(programm) && /\$\{SCH\.uhr \|\| ende \? "" : `<button class="knopf klein" onclick="schPcTipp\(\)"/.test(programm), "💡 Tipp nur gegen den Computer und ohne Uhr");
+  assert.ok((programm.match(/\$\{schTwHtml\(\)\}/g) || []).length === 2 && (programm.match(/schTonKnopf\(\)/g) || []).length >= 8, "Twinkey + Töne-Knopf in beiden Ansichten (2.213.0: auch bei Fang den Koch)");
+  assert.ok(/"schPcTipp\(\)"/.test(programm) && /SCH\.uhr \|\| ende \? "" : spKnopf\("💡", "Tipp", "schPcTipp\(\)"/.test(programm), "💡 Tipp nur gegen den Computer und ohne Uhr");
   assert.ok(/🧑‍🍳 Twinkey überlegt …/.test(programm) && /schStatusText\(ch, ich, "Twinkey"\)/.test(programm), "gegen den Computer spielt Twinkey");
   assert.ok(/\{ id: "spiel_schach", thema: "club"/.test(programm) && /"spiele": \["e:spiele", "h:spiel_schach",/.test(programm), "Hilfe-Zentrum");
   // Regeln und Texte mit der echten Bibliothek
@@ -6736,7 +6736,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/partie = "pc:" \+ \(SCH\.runde \|\| 0\), laeuft = !ende && ch\.history\(\)\.length > 0;\n  schFokus\(laeuft, partie\);/.test(programm), "gegen den Computer: ab dem ersten Zug bis zum Ende");
   assert.ok(/laeuft = g\.status === "laeuft";\n  schFokus\(laeuft, g\.id\);/.test(programm), "gegen Mitglieder: solange die Partie läuft");
   assert.ok(/document\.body\.classList\.remove\("sch-fokus"\); \/\/ KC-CLUB-SCHACH-FOKUS/.test(programm) && /if \(v !== "spiele"\) \{ \$\("spPause"\)\?\.classList\.add\("versteckt"\); document\.body\.classList\.remove\("sch-fokus"\); \}/.test(programm), "abgebrochen/verlassen: alles wieder da");
-  assert.equal((programm.match(/\$\{schFokusKnopf\(laeuft, /g) || []).length, 2, "⚙️ Einstellungen einblenden in beiden Ansichten");
+  assert.equal((programm.match(/ schFokusKnopf\(laeuft, /g) || []).length, 2, "⚙️ Einstellungen einblenden in beiden Ansichten");
 }
 
 // 4xx. 2.118.0: Mehr Twinkey-Sprüche je Spiellage, eigene Küchen-Sprüche (KC-CLUB-SCHACH-SPRUECHE)
@@ -6752,9 +6752,9 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 {
   assert.ok(/const SCH_ARCHIV_KEY = "kc_club_schach_archiv", SCH_ARCHIV_MAX = 40;/.test(programm), "auf dem Gerät, die letzten 40");
   assert.ok(/schArchivPc\(!verlierer \? "remis" : verlierer !== SCH\.ichFarbe \? "gewonnen" : "verloren"/.test(programm) && /if \(ch && ch\.history\(\)\.length >= 2 && !SCH\.gewertet\) schArchivPc\("abgebrochen"\);/.test(programm), "Twinkey-Partien: am Ende und beim Abbrechen von selbst");
-  assert.ok(/if \(g\.status === "beendet"\) schArchivMerken\(nsEintrag\);/.test(programm) && /onclick="schNachspielen\(SCH_NS_MG\)">📼 Nachspielen/.test(programm), "Mitglieder-Partien: aufzeichnen + Nachspielen");
+  assert.ok(/if \(g\.status === "beendet"\) schArchivMerken\(nsEintrag\);/.test(programm) && /spKnopf\("📼", "Nachspielen", "schNachspielen\(SCH_NS_MG\)"\)/.test(programm), "Mitglieder-Partien: aufzeichnen + Nachspielen");
   assert.ok(/document\.body\.classList\.toggle\("sch-fokus", aktuelleAnsicht === "spiele"\); \/\/ wie in der Partie/.test(programm), "Nachspielen mit großem Brett");
-  assert.ok(/onclick="schArchivOeffnen\(\)">📼 Meine Partien/.test(programm) && /schNsStopp\(\); \/\/ KC-CLUB-SCHACH-ARCHIV/.test(programm), "Liste + Ende beim Wechsel");
+  assert.ok(/spKnopf\("📼", "Meine Partien", "schArchivOeffnen\(\)"\)/.test(programm) && /schNsStopp\(\); \/\/ KC-CLUB-SCHACH-ARCHIV/.test(programm), "Liste + Ende beim Wechsel");
   assert.equal((programm.match(/if \(SCH_NS\) return schNsZeigen\(\);/g) || []).length, 2, "spätes Zeichnen überschreibt das Nachspielen nicht");
   // mit der echten Bibliothek: Stellungen nach n Zügen, unvollständige Aufzeichnung
   const { Chess } = await import(new URL("../lib/chess/chess.js", import.meta.url));
@@ -6833,7 +6833,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/MIT License/.test(lies("lib/schach/plastisch/LICENSE")) && /Maurizio Monge/.test(lies("lib/schach/plastisch/HERKUNFT.txt")), "Lizenz + Herkunft");
   assert.ok(/const SCH_STILE = \["klassisch", "plastisch", "brigade"\]/.test(programm) && /localStorage\.getItem\("kc_club_schach_stil2"\)/.test(programm), "drei Stile, neuer Schlüssel");
   assert.ok(/lib\/schach\/\$\{SCH_STIL === "plastisch" \? "plastisch" : "elfenbein"\}\//.test(programm), "Bildpfad je Stil");
-  assert.ok(/SCH_STIL = SCH_STILE\[\(SCH_STILE\.indexOf\(SCH_STIL\) \+ 1\) % SCH_STILE\.length\]/.test(programm) && /♟️ Figuren: \$\{SCH_STIL_NAME\[SCH_STIL\]\}<\/button>/.test(programm), "Knopf schaltet reihum");
+  assert.ok(/SCH_STIL = SCH_STILE\[\(SCH_STILE\.indexOf\(SCH_STIL\) \+ 1\) % SCH_STILE\.length\]/.test(programm) && /♟️<\/span>Figuren: \$\{SCH_STIL_NAME\[SCH_STIL\]\}<\/button>/.test(programm), "Knopf schaltet reihum");
   const f = programm.slice(programm.indexOf("function schTwSprich("), programm.indexOf("const schAbstand"));
   assert.ok(/const st = stimmeFuer\("m"\)/.test(f) && /if \(!text \|\| schSprache\(\) === "aus"/.test(f), "Männerstimme, nicht wenn stumm");
 }
@@ -7881,4 +7881,20 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/#v-start \.hero\.halb-eingerollt > #heroInfo, #v-start \.hero\.halb-eingerollt > #infoPunkte \{ display: none; \}/.test(html) && !/halb-eingerollt > \.statusleiste/.test(html), "halb: Statusleiste mit LEDs bleibt");
   assert.ok(/const ROLLO_RANG = \{ offen: 0, halb: 1, ganz: 2 \};/.test(html) && /art === "halb" \? \(von === "offen" \? "halb" : von === "halb" \? "offen" : "halb"\) : \(von === "ganz" \? "offen" : "ganz"\)/.test(html), "drei Stellungen, logische Übergänge");
   assert.ok(/if \(document\.querySelector\("#v-start \.hero"\)\?\.dataset\.rollt\) return;/.test(html), "während der Fahrt nichts merken");
+}
+// 2.215.0 KC-CLUB-SPIELE-LEISTE: alle Spiele mit derselben Knopfleiste (Neues Spiel, Abbrechen, Töne, Ansage) im festen Raster
+{
+  assert.ok(/const spLeiste = \(\.\.\.knoepfe\) => `<div class="sp-leiste">/.test(html) && /\.sp-leiste \{ display: grid; grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/.test(html) && /@media \(min-width: 600px\) \{ \.sp-leiste \{ grid-template-columns: repeat\(4, minmax\(0, 1fr\)\); \} \}/.test(html), "eine Leiste, festes Raster (3 bzw. 4 nebeneinander)");
+  const ansichten = { ttt: "function spPcZeigen", schach: "async function schPcZeigen", bsk: "function bskPcZeigen", dk: "function dkPcZeigen", mae: "function maePcZeigen", fdk: "function fdkPcZeigen", kt: "async function ktPcZeigen" };
+  for (const [art, kopf] of Object.entries(ansichten)) {
+    const i = programm.indexOf(kopf), teil = programm.slice(i, programm.indexOf("\n}\n", i));
+    assert.ok(i > 0 && /spLeiste\(/.test(teil) && /schTonKnopf\(\)/.test(teil) && /spNeuKnopf\(|"Los geht’s"/.test(teil) && /spAbbrechenKnopf\(/.test(teil), `${art}: Leiste mit Neues Spiel, Abbrechen und Tönen`);
+    if (art !== "ttt") assert.ok(/spAnsageKnopf\(|schSprachKnopf\(\)/.test(teil), `${art}: Ansage-Schalter`);
+    assert.ok(!/class="(sch-leiste|kt-knoepfe|sp-knopfreihe|kt-abbruch)"/.test(teil), `${art}: keine alten Knopfreihen mehr`);
+  }
+  assert.ok(/async function spPcAbbrechen\(\) \{[^]{0,300}frage\("Spiel abbrechen\? Diese Partie wird nicht gewertet – dein Spielstand bleibt\."/.test(html) && /SP\.art = null; spZeigen\(\);\n  if \(laeuft\) melde/.test(html), "Abbrechen fragt, zählt nicht und geht zur Übersicht");
+  assert.ok(/async function maePcAbbrechen\(neu = false\)[^]{0,900}if \(neu\) return maePcStart\(\);/.test(html) && /async function fdkAbbrechen\(neu = false\)[^]{0,700}if \(neu\) return fdkStart\(\);/.test(html) && /if \(neu\) return ktPcStart\(\);/.test(html), "Neues Spiel mitten im Spiel: fragen, dann gleich neu");
+  assert.ok(/function spTttTon\(was\) \{\s*if \(!schToeneAn\(\)/.test(html) && /const spTon = spTttTon;/.test(html), "ein gemeinsamer Töne-Schalter");
+  for (const t of ['spTon("karte"); bskPcNachStich', 'spTon("wuerfel")', 'spTon("raus")', 'spTon(ok ? "richtig" : "falsch")', 'dkSpielen(z, 0, k); dkMerken(); spTon("karte")', "spEndeTon(sieg)", "spEndeTon(e.gewinner === 0)", "spEndeTon(e.punkte[0] > 0)", "spEndeTon(a > b, a === b)"]) assert.ok(programm.includes(t), "Töne: " + t);
+  assert.ok(/SP_TTT_TOENE = \{[^]{0,600}karte: [^]{0,400}falsch: /.test(html), "Tonliste für Karten, Würfel, Quiz");
 }
