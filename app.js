@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.211.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.212.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12620,7 +12620,11 @@ const CD = { i: 0, daten: (() => { try { return JSON.parse(localStorage.getItem(
 const cdTageBis = (iso) => Math.round((Date.parse(iso + "T12:00:00Z") - Date.parse(heuteIso() + "T12:00:00Z")) / 86400000);
 const cdNaechsterTag = (md) => { const h = heuteIso(), j = +h.slice(0, 4); for (const y of [j, j + 1]) { const schalt = new Date(Date.UTC(y, 1, 29)).getUTCDate() === 29; const d = `${y}-${md === "02-29" && !schalt ? "02-28" : md}`; if (d >= h) return d; } return null; };
 const cdNoch = (tage) => tage <= 0 ? "Heute!" : tage === 1 ? "Morgen" : `${tage} Tage`; // kurz – die Kachel ist schmal
+const cdZwei = (n) => String(n).padStart(2, "0");
 const CD_ARTEN = [ // [Schlüssel, Bezeichnung in den Einstellungen, Einträge liefern]
+  // 2.212.0 (Wunsch Hansi „in jedem Durchgang auch das Tagesdatum und die Uhrzeit“) – im Fallblatt als Karten 10.10. / 13:42
+  ["datum", "📆 Heutiges Datum", () => { const d = new Date(); return [{ id: "d", zahl: `${cdZwei(d.getDate())}.${cdZwei(d.getMonth() + 1)}.`, text: "📆 " + d.toLocaleDateString("de-DE", { weekday: "long" }), los: () => zeige("termine") }]; }],
+  ["uhr", "🕐 Uhrzeit", () => { const d = new Date(); return [{ id: "u", zahl: `${cdZwei(d.getHours())}:${cdZwei(d.getMinutes())}`, text: "🕐 Uhrzeit", los: () => zeige("termine") }]; }],
   ["reise", "🚢 Reisen & Ausflüge, bei denen ich dabei bin", () => (CD.daten?.reisen || []).map((a) => { const t = cdTageBis(a.von);
     return t < 0 || t > 400 ? null : { id: "r" + a.id, zahl: cdNoch(t), // 2.205.0 (Wunsch Hansi): Schiffsreise = „🚢 Kreuzfahrt“, Symbol wie bei den Aktionen
       text: aktionSymbol(a) === "🚢" ? "🚢 Kreuz\u00ADfahrt" : `${aktionSymbol(a)} ` + ([...a.titel].length > 22 ? [...a.titel].slice(0, 21).join("") + "…" : a.titel), los: () => aktionOeffnen(a.id) }; })],
@@ -12664,11 +12668,16 @@ function cdInhalt(bisTreffen) {
 // Ohne Effekte (⚙️ Effekte aus / Sparmodus) wechselt die Zahl ohne Klappen.
 const CD_FB_STELLEN = 3;
 const cdFb = () => { try { return localStorage.getItem("kc_club_cd_stil") === "fallblatt"; } catch { return false; } };
-const cdFbTeile = (zahl) => { const m = /^(\d{1,3}) (Tage?)$/.exec(String(zahl)); return m ? { n: m[1].padStart(CD_FB_STELLEN, " "), einheit: m[2] } : null; };
+const cdFbTeile = (zahl) => {
+  const m = /^(\d{1,3}) (Tage?)$/.exec(String(zahl)); if (m) return { n: m[1].padStart(CD_FB_STELLEN, " "), sep: "", einheit: m[2] };
+  const d = /^(\d{2})([.:])(\d{2})\.?$/.exec(String(zahl)); return d ? { n: d[1] + d[3], sep: d[2], einheit: "" } : null; // Datum 10.10. / Uhrzeit 13:42
+};
 const fbKarte = (z) => `<span class="fb-z" data-z="${esc(z)}"><span class="fb-h fb-oben"><i>${esc(z.trim())}</i></span><span class="fb-h fb-unten"><i>${esc(z.trim())}</i></span></span>`;
-function cdZahlHtml(zahl) {
+function cdZahlHtml(zahl, leer = false) { // leer: Karten erst ohne Ziffern (klappen dann auf die Zahl)
   const f = cdFb() && cdFbTeile(zahl);
-  return f ? `<span class="fb-reihe" aria-label="${esc(zahl)}">${[...f.n].map(fbKarte).join("")}</span><small class="fb-einheit">${esc(f.einheit)}</small>` : esc(zahl);
+  if (!f) return esc(zahl);
+  const karten = [...f.n].map((z) => fbKarte(leer ? " " : z)); if (f.sep) karten.splice(2, 0, `<span class="fb-sep">${esc(f.sep)}</span>`);
+  return `<span class="fb-reihe${f.n.length > 3 ? " vier" : ""}" data-sep="${esc(f.sep)}" aria-label="${esc(zahl)}">${karten.join("")}</span>${f.einheit ? `<small class="fb-einheit">${esc(f.einheit)}</small>` : ""}`;
 }
 function fbKippen(reihe, neu, dauer = 200, versatz = 70) {
   const karten = [...reihe.querySelectorAll(":scope > .fb-z")];
@@ -12720,8 +12729,9 @@ function cdWeiter() {
 function cdZeichnen(k, l) {
   const e = l[CD.i] || l[0]; if (!e) return;
   const z = k.querySelector(".cd-zahl"), t = k.querySelector(".cd-text"), p = k.querySelector(".cd-punkte");
-  if (z) { const f = cdFb() && cdFbTeile(e.zahl), reihe = z.querySelector(".fb-reihe");
-    if (f && reihe) { CD.wechsel = (CD.wechsel || 0) + 1; if (fxAn() && CD.wechsel % CD_FB_SORTIEREN_JEDER === 0) fbSortieren(reihe, f.n); else fbKippen(reihe, f.n); const ei = z.querySelector(".fb-einheit"); if (ei) ei.textContent = f.einheit; }
+  if (z) { const f = cdFb() && cdFbTeile(e.zahl), reihe = z.querySelector(".fb-reihe"); if (f) CD.wechsel = (CD.wechsel || 0) + 1;
+    if (f && reihe && reihe.querySelectorAll(":scope > .fb-z").length === f.n.length && (reihe.dataset.sep || "") === f.sep) { if (fxAn() && CD.wechsel % CD_FB_SORTIEREN_JEDER === 0) fbSortieren(reihe, f.n); else fbKippen(reihe, f.n); const ei = z.querySelector(".fb-einheit"); if (ei) ei.textContent = f.einheit; reihe.setAttribute("aria-label", e.zahl); }
+    else if (f && fxAn()) { z.innerHTML = cdZahlHtml(e.zahl, true); z.classList.add("cd-fb"); fbKippen(z.querySelector(".fb-reihe"), f.n); } // andere Kartenzahl: neue Karten klappen auf
     else { z.innerHTML = cdZahlHtml(e.zahl); z.classList.toggle("cd-fb", !!f); } }
   if (t) t.textContent = e.text;
   p?.querySelectorAll("i").forEach((x, i) => x.classList.toggle("an", i === CD.i));

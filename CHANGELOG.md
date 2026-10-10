@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.212.0 – 2026-10-10 – 🕐 Datum und Uhrzeit im Countdown
+📆🕐 Der Countdown zeigt im Wechsel auch das Tagesdatum und die Uhrzeit – im Fallblatt als Klappkarten
+
 ## 2.211.0 – 2026-10-10 – 🔢 Fallblatt sortiert sich ab und zu neu
 🔢 Fallblatt-Anzeige: jeder 20. Wechsel rattert kurz durch, als ob sie sich neu sortiert
 

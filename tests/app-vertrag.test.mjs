@@ -7809,3 +7809,9 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/const CD_FB_SORTIEREN_JEDER = 20,/.test(html) && /async function fbSortieren\(reihe, ziel\)/.test(html) && /CD\.wechsel % CD_FB_SORTIEREN_JEDER === 0\) fbSortieren\(reihe, f\.n\)/.test(html), "Sortier-Durchlauf fehlt");
 }
+
+// 2.212.0 KC-CLUB-COUNTDOWN-DATUM-UHR (Wunsch Hansi: in jedem Durchgang auch Tagesdatum und Uhrzeit)
+{
+  assert.ok(/\["datum", "📆 Heutiges Datum"/.test(html) && /\["uhr", "🕐 Uhrzeit"/.test(html), "Datum/Uhrzeit fehlen in CD_ARTEN");
+  assert.ok(/const d = \/\^\(\\d\{2\}\)\(\[\.:\]\)\(\\d\{2\}\)/.test(html) && /\.fb-sep/.test(html), "Fallblatt kann Datum/Uhrzeit nicht klappen");
+}
