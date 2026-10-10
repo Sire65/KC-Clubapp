@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.216.0 – 2026-10-10 – 🏠 Start führt zur Startseite
+🏠 Der Start-Knopf unten links führt aus dem Admin-Register (und auf der Startseite aus jedem Register) zurück zur Startseite
+
 ## 2.215.0 – 2026-10-10 – 🎲 Gleiche Knöpfe in allen Spielen
 🎲 Tic-Tac-Toe, Schach, Bauernskat, Küchenterror, Mensch ärgere dich nicht, Fang den Koch und Doppelkopf haben dieselbe Knopfleiste im festen Raster (Handy 3, breit 4 nebeneinander): Spielknöpfe · ↺ Neues Spiel · ✖ Abbrechen · 🔔 Töne · 🔊 Ansage · Extras
 ✖ Abbrechen überall (fragt, zählt nicht, Spielstand bleibt); ↺ Neues Spiel auch mitten im Spiel

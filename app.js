@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.215.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.216.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1905,8 +1905,14 @@ async function sbStartseite() {
 }
 // 🏠 Start unten (Wunsch Hansi): gleiche Rückfrage wie bei „Startseite“ per Sprache – gilt auch ohne Sprachsteuerung
 async function startKnopf() {
-  if (aktuelleAnsicht !== "start" && !(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist");
+  const schonStart = aktuelleAnsicht === "start";
+  if (!schonStart && !(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist");
   zeige("start");
+  // 2.216.0 KC-CLUB-START-HEIM (Fund Hansi „im Admin-Register bringt mich Start nicht zur Startseite“): 🏠 Start führt aus dem
+  // Admin-Register immer – und auf der Startseite aus jedem anderen Register – zurück auf das erste Register (Startseite, meist „Club“).
+  const heim = REGISTER[0]?.[0];
+  if (heim && reg !== heim && (reg === "admin" || schonStart)) register(heim, -1);
+  if (schonStart) try { scrollTo({ top: 0, behavior: fxAn() ? "smooth" : "auto" }); } catch {}
 }
 function sbSchalter(an) {
   if (an && !DIKTAT_GEHT) { if ($("setSprache")) $("setSprache").checked = false; return melde("Dieses Gerät kann leider keine Sprache erkennen.", true); }

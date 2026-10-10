@@ -6166,7 +6166,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const x = programm.slice(programm.indexOf("async function sbAusfuehren(b)"), programm.indexOf("// ---------- KC-CLUB-SCHRITT-HILFE (2.63.0"));
   assert.ok(!/pwSpeichern\(|senden\(|api\(/.test(x), "nie selbst senden oder anheften");
   assert.ok(/spur\("sprache_" \+ b\.art\); \/\/ nur die Art/.test(programm), "Protokoll nur mit der Art, nie mit dem Text");
-  assert.ok(/<button data-v="start" class="an" onclick="startKnopf\(\)">/.test(seite) && /if \(aktuelleAnsicht !== "start" && !\(await sbEingabenOk\(\)\)\) return/.test(programm), "auch 🏠 Start unten fragt vorher");
+  assert.ok(/<button data-v="start" class="an" onclick="startKnopf\(\)">/.test(seite) && /const schonStart = aktuelleAnsicht === "start";\s*if \(!schonStart && !\(await sbEingabenOk\(\)\)\) return/.test(programm), "auch 🏠 Start unten fragt vorher");
 }
 
 // 4xx. 2.76.0: 🎙️ Sprachsteuerung Stufe 2 – Rückfragen im Gespräch: „Welchen Klaus?“, ähnliche Namen, „Soll ich das Diktieren gleich einschalten?“ (KC-CLUB-SPRACHSTEUERUNG)
@@ -7897,4 +7897,10 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/function spTttTon\(was\) \{\s*if \(!schToeneAn\(\)/.test(html) && /const spTon = spTttTon;/.test(html), "ein gemeinsamer Töne-Schalter");
   for (const t of ['spTon("karte"); bskPcNachStich', 'spTon("wuerfel")', 'spTon("raus")', 'spTon(ok ? "richtig" : "falsch")', 'dkSpielen(z, 0, k); dkMerken(); spTon("karte")', "spEndeTon(sieg)", "spEndeTon(e.gewinner === 0)", "spEndeTon(e.punkte[0] > 0)", "spEndeTon(a > b, a === b)"]) assert.ok(programm.includes(t), "Töne: " + t);
   assert.ok(/SP_TTT_TOENE = \{[^]{0,600}karte: [^]{0,400}falsch: /.test(html), "Tonliste für Karten, Würfel, Quiz");
+}
+
+// 2.216.0 KC-CLUB-START-HEIM (Fund Hansi): 🏠 Start führt aus dem Admin-Register (und auf der Startseite aus jedem Register) zur Startseite
+{
+  const f = html.slice(html.indexOf("async function startKnopf()"), html.indexOf("function sbSchalter("));
+  assert.ok(/const heim = REGISTER\[0\]\?\.\[0\];/.test(f) && /if \(heim && reg !== heim && \(reg === "admin" \|\| schonStart\)\) register\(heim, -1\);/.test(f), "Start führt zurück auf das erste Register");
 }
