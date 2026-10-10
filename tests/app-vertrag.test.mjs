@@ -7645,3 +7645,9 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const idx = lies("index.html");
   assert.ok(/document\.documentElement\.classList\.toggle\("kein-ptr", v !== "start"\);/.test(html) && /html\.kein-ptr, html\.kein-ptr body \{ overscroll-behavior-y: contain; \}/.test(idx), "Neuladen per Ziehen nur auf der Startseite");
 }
+
+// 2.193.0 KC-CLUB-CHAT-KARTEI: Vorschau-Blasen mit gutem Kontrast (Fund Hansi: im dunklen Design kaum lesbar)
+{
+  const idx = lies("index.html");
+  assert.ok(/\.uhk-msg\.eigen \{ align-self: flex-end; border-radius: 12px 12px 4px 12px; background: var\(--rot\); color: #fff; \}/.test(idx) && /:root\.cf-eigen \.uhk-msg\.eigen \{ background: var\(--cfEigen\); color: var\(--cfEigenText\); \}/.test(idx), "eigene Blasen wie im Chat");
+}

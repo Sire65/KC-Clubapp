@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.193.0 – 2026-10-10 – 💬 Chat-Kartei: besser lesbar
+🔧 Kleine Systemverbesserungen
+
 ## 2.192.0 – 2026-10-10 – 🔄 Neuladen per Ziehen nur auf der Startseite
 🔧 Kleine Systemverbesserungen
 
