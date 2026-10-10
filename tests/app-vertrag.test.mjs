@@ -7683,3 +7683,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const idx = lies("index.html");
   assert.ok(/\.eingabe \{ z-index: 25; \}/.test(idx) && /html\.tastatur-offen #v-chat \{ padding-bottom: var\(--tastatur\); \}/.test(idx), "Schreibfeld liegt immer über den Nachrichten");
 }
+
+// 2.198.0 KC-CLUB-VORFUEHREN-ANFRAGE (Fund Hansi: Einladung „Zuschauen“ war nur kurz zu sehen – Danebentippen galt als Absage)
+{
+  assert.ok(/if \(ja === null\) \{ setTimeout\(\(\) => VF\.gefragt\.delete\(einl\.id\), 15000\); return; \}/.test(html) && /<button class="knopf" data-w="0">Jetzt nicht<\/button><\/div>`, \(\) => zu\(null\)\);/.test(html), "nur „Jetzt nicht“ sagt ab; schließen = später noch einmal fragen");
+}

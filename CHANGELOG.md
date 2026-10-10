@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.198.0 – 2026-10-10 – 📺 Zuschauen-Einladung: Danebentippen sagt nicht mehr ab
+🔧 Kleine Systemverbesserungen
+
 ## 2.197.0 – 2026-10-10 – ⌨️ Schreibfeld bleibt über den Nachrichten
 🔧 Kleine Systemverbesserungen
 

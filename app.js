@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.197.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.198.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -11351,7 +11351,15 @@ async function vfAnfrage(einl) {
   if (!einl?.id || VF.gefragt.has(einl.id) || VF.rolle) return; VF.gefragt.add(einl.id);
   try { navigator.vibrate?.([80, 60, 80]); } catch {}
   const wer = einl.von?.vorname || "Hansi";
-  const ja = await frage(`📺 ${wer} möchte dir etwas in der App zeigen.\nDu siehst dann live, was ${wer} in der Club-App macht. Du kannst jederzeit beenden.`, { ja: "📺 Zuschauen", nein: "Jetzt nicht" });
+  // 2.198.0 (Fund Hansi „der Knopf zum Zusagen war nur ganz kurz zu sehen“ → Steven tippte daneben = galt als Absage): Absage NUR mit
+  // „Jetzt nicht“. Daneben tippen / Zurück schließt nur – die Einladung bleibt offen und kommt nach 15 s noch einmal (solange sie gilt).
+  const ja = await new Promise((fertig) => {
+    let f; const zu = (w) => { f?.remove(); fertig(w); };
+    f = dlgOeffnen(`<h3 class="dlg-kopf">📺 ${esc(wer)} möchte dir etwas in der App zeigen</h3><p class="dlg-text">Du siehst dann live, was ${esc(wer)} in der Club-App macht. Du kannst jederzeit beenden.</p>
+      <div class="dlg-knoepfe"><button class="knopf haupt" data-w="1">📺 Zuschauen</button><button class="knopf" data-w="0">Jetzt nicht</button></div>`, () => zu(null));
+    f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => zu(b.dataset.w === "1")));
+  });
+  if (ja === null) { setTimeout(() => VF.gefragt.delete(einl.id), 15000); return; } // nur geschlossen – keine Antwort an den Server
   try { const r = await api("vorfuehren_antwort", { id: einl.id, annehmen: ja }, { warten: true });
     if (!ja || r.status !== "laeuft") { if (ja) melde("📺 Die Vorführung ist schon vorbei."); return; }
     Object.assign(VF, { rolle: "schaut", id: einl.id, gegen: r.von?.vorname || wer, status: "laeuft", seit: r.n || 0, fseit: 0, start: Date.now(), bis: r.bis ? Date.parse(r.bis) : Date.now() + ST_LIVE_MIN * 60000 });
