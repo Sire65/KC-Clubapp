@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.212.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.213.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7420,7 +7420,11 @@ function maeMgFigur(i) { const g = SP.offen; if (!g?.ichDran || g.mae?.phase !==
 // „Sauber gearbeitet“ ohne Pech. ❗-Felder: Ereigniskarten (Pech mit Aufgabe, Glück). Genau auf dem anderen landen =
 // Zusammenstoß, er lässt eine Zutat fallen. Beide bekommen gleich schwere Gerichte mit gleich vielen Zutaten/Arbeitsschritten
 // und ähnlich langem Weg. Regeln hier rein (ohne Bildschirm), damit der Vertragstest ganze Partien durchspielen kann.
-const FDK_KEY = "kc_club_fdk3", FDK_N = 24, FDK_MIN = 3; // Küchenminuten je Wurf
+// KC-CLUB-FDK-SPANNUNG (Wunsch Hansi „langweilig“): 🃏 Aktionskarten auf die Hand (höchstens 3, vor dem Würfeln eine ausspielen:
+// Turbo, Abkürzung, Klauen, Gas abdrehen, Lieferant, Mise en place; Sous-Chef schützt von selbst vor dem nächsten Pech) und
+// 📦 knappe Vorräte: jede Vorratsstation hat nur FDK_VORRAT Kisten – leer heißt: im 📋 Büro nachbestellen (füllt für beide auf).
+const FDK_KEY = "kc_club_fdk3", FDK_N = 24, FDK_MIN = 3, FDK_VORRAT = 2, FDK_HAND = 3; // Küchenminuten je Wurf, Kisten je Station, Karten auf der Hand
+const FDK_LAGER = ["lager", "kuehl", "gemuese", "gewuerz"];
 // Felder: s = Station, d = Durchreiche zum Pass, e = Ereignis, f = frei
 const FDK_FELD = ["start", "e", "lager", "d", "kuehl", "e", "gemuese", "f", "gewuerz", "d", "e", "herd", "f", "e", "fritteuse", "d", "f", "ofen", "e", "f", "buero", "d", "e", "f"];
 const FDK_ST = { start: ["🚪", "Start"], lager: ["🌾", "Lager"], kuehl: ["🧊", "Kühlhaus"], gemuese: ["🥕", "Gemüse"], gewuerz: ["🧂", "Gewürzregal"],
@@ -7448,9 +7452,14 @@ const FDK_GERICHTE = {
 // Ereigniskarten – Pech immer mit einer klaren Aufgabe, Glück hilft weiter
 const FDK_KARTEN = [
   ["fallen", 2], ["braun", 1], ["warm", 1], ["gas", 2], ["schaum", 1], ["hygiene", 2],
-  ["liefer", 2], ["chef", 2], ["spueler", 1], ["mise", 1], ["lob", 2],
+  ["turbo", 2], ["abkuerzung", 2], ["klau", 2], ["gaszu", 1], ["liefer", 2], ["mise", 1], ["schutz", 1], ["lob", 1],
 ];
 const FDK_PECH = new Set(["fallen", "braun", "warm", "gas", "schaum"]);
+const FDK_AKTION = new Set(["turbo", "abkuerzung", "klau", "gaszu", "liefer", "mise", "schutz"]); // kommen auf die Hand
+const FDK_AKTION_NAME = { turbo: ["⚡", "Turbo", "Mit zwei Würfeln würfeln"], abkuerzung: ["🚪", "Abkürzung", "Direkt zur nächsten Station, die du brauchst (statt würfeln)"],
+  klau: ["🤏", "Zutat klauen", "Eine Zutat vom anderen Tablett – die du brauchst, sonst fällt sie herunter"], gaszu: ["🔧", "Gas abdrehen", "Beim anderen geht der Herd aus, bis er im Büro war"],
+  liefer: ["🚚", "Lieferant", "Eine fehlende Zutat kommt direkt aufs Tablett"], mise: ["🔪", "Mise en place", "Dein nächster Arbeitsschritt ist sofort fertig"],
+  schutz: ["🛡️", "Sous-Chef", "Schützt dich von selbst vor dem nächsten Pech"] };
 const fdkAbstand = (a, b) => { const d = Math.abs(a - b) % FDK_N; return Math.min(d, FDK_N - d); };
 const fdkFelderVon = (art) => FDK_FELD.map((f, i) => (f === art ? i : -1)).filter((i) => i >= 0);
 const FDK_DURCH = fdkFelderVon("d");
@@ -7485,9 +7494,10 @@ function fdkNeu({ stufe = "leicht", anzahl = 2, zufall = Math.random } = {}) {
   for (let i = 0; i < anzahl; i++) { const [a, b] = fdkGerichtPaar(stufe, zufall, [...plan[0], ...plan[1]]); const tausch = zufall() < 0.5; plan[0].push(tausch ? b : a); plan[1].push(tausch ? a : b); }
   const stapel = []; for (const [k, n] of FDK_KARTEN) for (let i = 0; i < n; i++) stapel.push(k);
   for (let i = stapel.length - 1; i > 0; i--) { const j = Math.floor(zufall() * (i + 1)) % (i + 1); [stapel[i], stapel[j]] = [stapel[j], stapel[i]]; }
-  const sp = () => ({ pos: 0, punkte: 0, nr: 0, bon: null, fertig: false, aussetzen: 0, wartet: 0, gasLeer: false, mise: false, wuerfe: 0, ergebnisse: [] });
-  const F = { stufe, anzahl, plan, sp: [sp(), sp()], dran: 0, phase: "wuerfeln", wurf: 0, stapel, ablage: [], log: [], zug: 0, erster: [] };
+  const sp = () => ({ pos: 0, punkte: 0, nr: 0, bon: null, fertig: false, aussetzen: 0, wartet: 0, gasLeer: false, mise: false, wuerfe: 0, ergebnisse: [], hand: [], gespielt: false, turbo: false });
+  const F = { stufe, anzahl, plan, sp: [sp(), sp()], dran: 0, phase: "wuerfeln", wurf: 0, stapel, ablage: [], log: [], zug: 0, erster: [], vorrat: Object.fromEntries(FDK_LAGER.map((l) => [l, FDK_VORRAT])) };
   F.sp[0].bon = fdkNeuerBon(plan[0][0]); F.sp[1].bon = fdkNeuerBon(plan[1][0]);
+  const start = ["turbo", "abkuerzung", "liefer", "klau"][Math.floor(zufall() * 4) % 4]; F.sp[0].hand.push(start); F.sp[1].hand.push(start); // Startkarte – beide dieselbe (fair)
   return F;
 }
 const fdkG = (S) => FDK_GERICHTE[S.bon.g];
@@ -7495,14 +7505,16 @@ const fdkAlleZutaten = (S) => S.bon.hat.every(Boolean);
 const fdkFertigGekocht = (S) => S.bon.schritt.every(Boolean);
 const fdkFehlendeZutaten = (S) => fdkG(S)[3].filter((_, i) => !S.bon.hat[i]);
 const fdkNaechsterSchritt = (S) => { const i = S.bon.schritt.indexOf(false); return i < 0 ? null : { i, st: fdkG(S)[4][i][0], text: fdkG(S)[4][i][1], zuege: fdkG(S)[4][i][2] }; };
-// Was kann der Koch an Feld p gerade tun? (für „hier anhalten“ und die grünen Felder)
-function fdkNutzen(S, p) {
+// Was kann der Koch an Feld p gerade tun? (für „hier anhalten“ und die grünen Felder). F für den Vorrat (ohne F: unbegrenzt)
+const fdkBrauchtVon = (S, l) => fdkG(S)[3].some((z, i) => z[0] === l && !S.bon.hat[i]);
+const fdkLeerGebraucht = (F, S) => !!F && FDK_LAGER.some((l) => F.vorrat[l] <= 0 && fdkBrauchtVon(S, l));
+function fdkNutzen(S, p, F) {
   if (S.fertig) return null;
   const f = FDK_FELD[p];
-  if (["lager", "kuehl", "gemuese", "gewuerz"].includes(f) && fdkG(S)[3].some((z, i) => z[0] === f && !S.bon.hat[i])) return "holen";
+  if (FDK_LAGER.includes(f) && fdkBrauchtVon(S, f)) return F && F.vorrat[f] <= 0 ? null : "holen";
   const n = fdkNaechsterSchritt(S);
   if (n && n.st === f && fdkAlleZutaten(S)) return S.gasLeer && f === "herd" ? null : "kochen";
-  if (f === "buero" && S.gasLeer) return "bestellen";
+  if (f === "buero" && (S.gasLeer || fdkLeerGebraucht(F, S))) return "bestellen";
   if (f === "d") return "pass";
   return null;
 }
@@ -7513,7 +7525,7 @@ function fdkOptionen(F, s, w) {
     const weg = [];
     for (let i = 1; i <= w; i++) {
       const p = (S.pos + r * i + FDK_N * 10) % FDK_N; weg.push(p);
-      const nutzen = fdkNutzen(S, p), ende = i === w;
+      const nutzen = fdkNutzen(S, p, F), ende = i === w;
       if (!ende && !(nutzen && nutzen !== "pass") && !(nutzen === "pass" && fdkAlleZutaten(S) && fdkFertigGekocht(S))) continue;
       const alt = m.get(p); if (!alt || alt.weg.length > weg.length) m.set(p, { feld: p, weg: [...weg], richtung: r, halt: !ende, nutzen });
     }
@@ -7527,41 +7539,75 @@ function fdkVerliert(S, station, zufall) {
   if (!idx.length || S.bon.schritt.some(Boolean)) return null; // schon gekocht: nichts mehr zu verlieren
   const i = idx[Math.floor(zufall() * idx.length) % idx.length]; S.bon.hat[i] = false; return fdkG(S)[3][i];
 }
+// 🛡️ Sous-Chef auf der Hand fängt das nächste Pech ab
+const fdkGeschuetzt = (S) => { const i = S.hand.indexOf("schutz"); if (i < 0) return false; S.hand.splice(i, 1); return true; };
 // Ankunft auf Feld p: Station erledigen. Gibt Ereignisse zurück.
 function fdkAnkunft(F, s, abgeben, zufall) {
-  const S = F.sp[s], O = F.sp[1 - s], p = S.pos, ev = [], nutzen = fdkNutzen(S, p);
-  if (nutzen === "holen") fdkG(S)[3].forEach((z, i) => { if (z[0] === FDK_FELD[p] && !S.bon.hat[i]) { S.bon.hat[i] = true; ev.push({ art: "holt", z }); } });
+  const S = F.sp[s], O = F.sp[1 - s], p = S.pos, ev = [], nutzen = fdkNutzen(S, p, F);
+  if (nutzen === "holen") { fdkG(S)[3].forEach((z, i) => { if (z[0] === FDK_FELD[p] && !S.bon.hat[i]) { S.bon.hat[i] = true; ev.push({ art: "holt", z }); } });
+    F.vorrat[FDK_FELD[p]]--; if (F.vorrat[FDK_FELD[p]] <= 0) ev.push({ art: "leer", l: FDK_FELD[p] }); }
   else if (nutzen === "kochen") { const n = fdkNaechsterSchritt(S), z = Math.max(1, n.zuege - (S.mise ? 1 : 0)); S.mise = false;
     if (z <= 1) { S.bon.schritt[n.i] = true; ev.push({ art: "kocht", text: n.text, st: n.st }); } else { S.wartet = z - 1; S.kochtGerade = n.i; ev.push({ art: "kochtLang", text: n.text, st: n.st, zuege: z }); } }
-  else if (nutzen === "bestellen") { S.gasLeer = false; ev.push({ art: "gas" }); }
+  else if (nutzen === "bestellen") { if (S.gasLeer) { S.gasLeer = false; ev.push({ art: "gas" }); }
+    const leer = FDK_LAGER.filter((l) => F.vorrat[l] < FDK_VORRAT); if (leer.length) { for (const l of leer) F.vorrat[l] = FDK_VORRAT; ev.push({ art: "nachbestellt", l: leer }); } }
   else if (nutzen === "pass" && (abgeben || (fdkAlleZutaten(S) && fdkFertigGekocht(S)))) ev.push(fdkAbgeben(F, s));
   // Zusammenstoß: genau auf dem anderen Koch gelandet – nur im Gang (freie und ❗-Felder); an Stationen arbeiten beide friedlich nebeneinander
-  if (!S.fertig && !O.fertig && O.pos === p && (FDK_FELD[p] === "f" || FDK_FELD[p] === "e")) { const z = fdkVerliert(O, null, zufall); ev.push({ art: "stoss", z }); if (z) O.bon.pech = true; }
+  if (!S.fertig && !O.fertig && O.pos === p && (FDK_FELD[p] === "f" || FDK_FELD[p] === "e")) {
+    if (O.bon.hat.some(Boolean) && !O.bon.schritt.some(Boolean) && fdkGeschuetzt(O)) ev.push({ art: "geschuetzt", wer: 1 - s });
+    else { const z = fdkVerliert(O, null, zufall); ev.push({ art: "stoss", z }); if (z) O.bon.pech = true; } }
   if (FDK_FELD[p] === "e" && !S.fertig) ev.push(...fdkKarte(F, s, zufall));
   return ev;
 }
 function fdkKarte(F, s, zufall) {
   const S = F.sp[s], k = fdkKarteZiehen(F), ev = [{ art: "karte", k }];
+  if (FDK_AKTION.has(k)) { S.hand.push(k); if (S.hand.length > FDK_HAND) ev[0].weg = S.hand.shift(); ev[0].hand = true; return ev; }
+  if (FDK_PECH.has(k) && fdkGeschuetzt(S)) { ev[0].geschuetzt = true; return ev; }
   if (k === "fallen") { const z = fdkVerliert(S, null, zufall); ev[0].z = z; if (z) S.bon.pech = true; }
   else if (k === "braun") { const z = fdkVerliert(S, "gemuese", zufall); ev[0].z = z; if (z) S.bon.pech = true; }
   else if (k === "warm") { const z = fdkVerliert(S, "kuehl", zufall); ev[0].z = z; if (z) S.bon.pech = true; }
   else if (k === "gas") { const brauch = fdkG(S)[4].some((x, i) => x[0] === "herd" && !S.bon.schritt[i]); if (brauch) { S.gasLeer = true; S.bon.pech = true; } ev[0].trifft = brauch; }
   else if (k === "schaum") { S.aussetzen++; S.bon.pech = true; }
   else if (k === "hygiene") F.phase = "frage"; // Bildschirm stellt die Frage, dann fdkHygiene(F, s, richtig)
-  else if (k === "liefer") { const i = S.bon.hat.indexOf(false); if (i >= 0) { S.bon.hat[i] = true; ev[0].z = fdkG(S)[3][i]; } }
-  else if (k === "chef") S.nochmal = true;
-  else if (k === "spueler") { const ziel = fdkNaechstesZiel(S); if (ziel != null) { S.pos = ziel; ev.push({ art: "spueler", feld: ziel }, ...fdkAnkunftOhneKarte(F, s, zufall)); } }
-  else if (k === "mise") S.mise = true;
   else if (k === "lob") { S.punkte += 2; }
   return ev;
+}
+// 🃏 Aktionskarte ausspielen (vor dem Würfeln, eine je Zug). Gibt { ev, zugVorbei } zurück – Abkürzung ersetzt das Würfeln.
+function fdkKannSpielen(F, s, k) {
+  const S = F.sp[s], O = F.sp[1 - s];
+  if (F.dran !== s || F.phase !== "wuerfeln" || S.fertig || S.gespielt || !S.hand.includes(k)) return false;
+  if (k === "schutz") return false; // wirkt von selbst
+  if (k === "liefer") return S.bon.hat.includes(false);
+  if (k === "klau") return !O.fertig && O.bon.hat.some(Boolean) && !O.bon.schritt.some(Boolean);
+  if (k === "gaszu") return !O.fertig && !O.gasLeer && fdkG(O)[4].some((x, i) => x[0] === "herd" && !O.bon.schritt[i]);
+  if (k === "abkuerzung") return fdkNaechstesZiel(S, F) != null;
+  if (k === "mise") return !S.mise && S.bon.schritt.includes(false);
+  return k === "turbo" && !S.turbo;
+}
+function fdkKarteSpielen(F, s, k, zufall = Math.random) {
+  if (!fdkKannSpielen(F, s, k)) return null;
+  const S = F.sp[s], O = F.sp[1 - s], ev = [{ art: "spielt", k }]; let zugVorbei = false;
+  S.hand.splice(S.hand.indexOf(k), 1); S.gespielt = true;
+  if (k === "turbo") S.turbo = true;
+  else if (k === "mise") S.mise = true;
+  else if (k === "liefer") { const i = S.bon.hat.indexOf(false); S.bon.hat[i] = true; ev[0].z = fdkG(S)[3][i]; }
+  else if (k === "gaszu") { if (fdkGeschuetzt(O)) ev[0].geschuetzt = true; else { O.gasLeer = true; O.bon.pech = true; } }
+  else if (k === "klau") {
+    if (fdkGeschuetzt(O)) ev[0].geschuetzt = true;
+    else { const idx = O.bon.hat.map((h, i) => (h ? i : -1)).filter((i) => i >= 0), brauch = idx.filter((i) => fdkG(S)[3].some((z, j) => z[2] === fdkG(O)[3][i][2] && !S.bon.hat[j]));
+      const i = (brauch.length ? brauch : idx)[Math.floor(zufall() * (brauch.length || idx.length)) % (brauch.length || idx.length)], z = fdkG(O)[3][i];
+      O.bon.hat[i] = false; O.bon.pech = true; ev[0].z = z;
+      const j = fdkG(S)[3].findIndex((y, n) => y[2] === z[2] && !S.bon.hat[n]); if (j >= 0) { S.bon.hat[j] = true; ev[0].behalten = true; } } }
+  else if (k === "abkuerzung") { fdkWurfBeginn(F, s); const ziel = fdkNaechstesZiel(S, F); S.pos = ziel; F.zug++; ev[0].feld = ziel; ev.push(...fdkAnkunftOhneKarte(F, s, zufall)); zugVorbei = true; }
+  for (const e of ev) F.log.push({ s, e });
+  return { ev, zugVorbei };
 }
 function fdkAnkunftOhneKarte(F, s, zufall) { const p = F.sp[s].pos, alt = FDK_FELD[p]; return alt === "e" ? [] : fdkAnkunft(F, s, false, zufall); }
 function fdkHygiene(F, s, richtig) { const S = F.sp[s]; if (!richtig) { S.aussetzen++; S.bon.pech = true; } F.phase = "wuerfeln"; return { art: "hygiene", richtig }; }
 // nächstes sinnvolles Feld für den Koch (kürzester Weg)
-function fdkNaechstesZiel(S) {
+function fdkNaechstesZiel(S, F) {
   if (S.fertig) return null;
   const ziele = [];
-  for (let p = 0; p < FDK_N; p++) { const n = fdkNutzen(S, p); if (n && (n !== "pass" || (fdkAlleZutaten(S) && fdkFertigGekocht(S)))) ziele.push(p); }
+  for (let p = 0; p < FDK_N; p++) { const n = fdkNutzen(S, p, F); if (n && (n !== "pass" || (fdkAlleZutaten(S) && fdkFertigGekocht(S)))) ziele.push(p); }
   if (!ziele.length) return null;
   return ziele.sort((a, b) => fdkAbstand(S.pos, a) - fdkAbstand(S.pos, b))[0];
 }
@@ -7586,10 +7632,12 @@ function fdkZiehen(F, s, option, { abgeben = false, zufall = Math.random } = {})
 }
 // Uhr läuft bei jedem eigenen Wurf (auch Aussetzen / Schmoren kosten Zeit)
 function fdkWurfBeginn(F, s) { const S = F.sp[s]; S.wuerfe++; if (!S.fertig) S.bon.uhr++; }
+// Augen eines Wurfs: mit ⚡ Turbo zwei Würfel
+function fdkAugen(F, s, zufall = Math.random) { const S = F.sp[s], w = () => 1 + Math.floor(zufall() * 6) % 6; if (S.turbo) { S.turbo = false; const a = w(), b = w(); return { w: a + b, a, b }; } const a = w(); return { w: a, a }; }
 // Wer ist als Nächstes dran? Aussetzen und Schmoren werden dabei automatisch abgearbeitet (mit Ereignis für die Anzeige).
 function fdkWeiter(F) {
   const ev = [], S0 = F.sp[F.dran];
-  if (S0.nochmal) { S0.nochmal = false; F.phase = "wuerfeln"; return [{ s: F.dran, e: { art: "nochmal" } }]; }
+  if (S0.nochmal) { S0.nochmal = false; S0.gespielt = false; F.phase = "wuerfeln"; return [{ s: F.dran, e: { art: "nochmal" } }]; }
   for (let k = 0; k < 8; k++) {
     if (F.sp.every((S) => S.fertig)) { F.phase = "ende"; return ev; }
     F.dran = 1 - F.dran; const S = F.sp[F.dran];
@@ -7598,7 +7646,7 @@ function fdkWeiter(F) {
       if (!S.wartet && S.kochtGerade != null) { S.bon.schritt[S.kochtGerade] = true; e.fertig = fdkG(S)[4][S.kochtGerade][1]; S.kochtGerade = null; }
       ev.push({ s: F.dran, e }); continue; }
     if (S.aussetzen > 0) { fdkWurfBeginn(F, F.dran); S.aussetzen--; ev.push({ s: F.dran, e: { art: "aussetzen" } }); continue; }
-    F.phase = "wuerfeln"; return ev;
+    S.gespielt = false; F.phase = "wuerfeln"; return ev;
   }
   F.phase = F.sp.every((S) => S.fertig) ? "ende" : "wuerfeln"; return ev;
 }
@@ -7607,11 +7655,18 @@ function fdkKiWahl(F, s, opts, zufall = Math.random) {
   const S = F.sp[s], O = F.sp[1 - s];
   const wert = (o) => { const n = o.nutzen; let w = 0;
     if (n === "pass" && fdkAlleZutaten(S) && fdkFertigGekocht(S)) w += 100; else if (n === "holen") w += 60; else if (n === "kochen") w += 70; else if (n === "bestellen") w += 65;
-    const alt = S.pos; S.pos = o.feld; const z = fdkNaechstesZiel(S); w -= z == null ? 0 : fdkAbstand(o.feld, z) * 3; S.pos = alt;
+    const alt = S.pos; S.pos = o.feld; const z = fdkNaechstesZiel(S, F); w -= z == null ? 0 : fdkAbstand(o.feld, z) * 3; S.pos = alt;
     if (O.pos === o.feld && !O.fertig && O.bon.hat.some(Boolean) && (FDK_FELD[o.feld] === "f" || FDK_FELD[o.feld] === "e")) w += 8;
     if (FDK_FELD[o.feld] === "e") w -= 1;
     return w + zufall() * 0.5; };
   return [...opts].sort((a, b) => wert(b) - wert(a))[0];
+}
+// Twinkey spielt eine Karte aus, wenn sie gerade richtig nützt (oder null)
+function fdkKiKarte(F, s) {
+  const S = F.sp[s], O = F.sp[1 - s], ziel = fdkNaechstesZiel(S, F), weit = ziel == null ? 0 : fdkAbstand(S.pos, ziel);
+  const gut = { liefer: true, klau: O.bon.hat.filter(Boolean).length >= 2 || fdkG(O)[3].some((z, i) => O.bon.hat[i] && fdkG(S)[3].some((y, j) => y[2] === z[2] && !S.bon.hat[j])),
+    gaszu: fdkAlleZutaten(O) || O.bon.hat.filter(Boolean).length >= O.bon.hat.length - 1, abkuerzung: weit >= 6, turbo: weit >= 7, mise: fdkAlleZutaten(S) };
+  return ["liefer", "abkuerzung", "gaszu", "klau", "mise", "turbo"].find((k) => gut[k] && fdkKannSpielen(F, s, k)) || null;
 }
 function fdkSieger(F) { const [a, b] = F.sp.map((S) => S.punkte); return a > b ? 0 : b > a ? 1 : -1; }
 // ----- FDK Regeln Ende -----
@@ -7626,10 +7681,6 @@ const FDK_KARTE_TEXT = {
   gas: ["🔥", "Der Gasherd hat kein Gas mehr!", (z, k) => k.trifft ? "Geh ins 📋 Büro und bestell neues – bis dahin bleibt der Herd aus." : "Den Herd brauchst du zum Glück nicht mehr."],
   schaum: ["🍟", "Die Fritteuse ist übergeschäumt!", () => "Erst putzen – einmal aussetzen."],
   hygiene: ["🧪", "Hygienekontrolle!", () => "Beantworte eine Küchenfrage. Richtig: weiter. Falsch: einmal aussetzen."],
-  liefer: ["🚚", "Der Lieferant ist da!", (z) => z ? `${z[1]} ${z[2]} kommt direkt aufs Tablett.` : "Du hast aber schon alles."],
-  chef: ["👨‍🍳", "Der Chef hilft mit!", () => "Du darfst gleich noch einmal würfeln."],
-  spueler: ["🧽", "Der Spüler hat aufgeräumt!", () => "Du gehst direkt zur nächsten Station, die du brauchst."],
-  mise: ["🔪", "Mise en place erledigt!", () => "Dein nächster Arbeitsschritt geht einen Zug schneller."],
   lob: ["⭐", "Ein Gast lobt die Küche!", () => "2 Extrapunkte."],
 };
 const FDK_TW = {
@@ -7641,12 +7692,18 @@ const FDK_TW = {
   pechDu: ["Uiii – das war Pech!", "Kopf hoch, das holst du wieder auf!", "Ach herrje!"],
   stossTw: ["Tschuldigung – die Küche ist eng!", "Hoppla! Vorsicht, heiß!"],
   stossDu: ["Hey! Pass doch auf, wo du hinläufst!", "Aua – mein Tablett!"],
-  gluck: ["Glück muss man haben!", "Läuft bei mir!"],
+  gluck: ["Glück muss man haben!", "Läuft bei mir!", "Die Karte heb ich mir auf …"],
+  holtDu: ["Na, schon wieder schneller als ich?", "Lass mir auch noch was übrig!", "Hmm, die hätte ich auch gebraucht …"],
+  leer: ["Leer! Ha – da musst du jetzt ins Büro!", "Das war die letzte Kiste!"],
+  karteTw: { turbo: "Turbo! Jetzt geht's ab!", abkuerzung: "Ich kenn da eine Abkürzung …", klau: "Danke, die nehm ich mit!", gaszu: "Ups – wer hat denn da am Gashahn gedreht? 😇", liefer: "Mein Lieferant ist pünktlich!", mise: "Mise en place – alles vorbereitet!" },
+  beklaut: ["Hey! Das war meins!", "Na warte, das gibt Rache!"],
+  gasWeg: ["Wer hat mir das Gas abgedreht?!", "Na super – ab ins Büro …"],
   sieg: ["Feierabend – und ich hab gewonnen! Revanche?", "Gewonnen! Die Küche gehört heute mir."],
   niederlage: ["Glückwunsch, Chefkoch! Du warst besser.", "Respekt – heute warst du schneller am Pass."],
 };
 let FDKP = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(FDK_KEY) || "null"); } catch {}
   if (!w) try { const alt = JSON.parse(localStorage.getItem("kc_club_fdk2") || "null"); if (alt?.stand) w = { stand: alt.stand, regelnGesehen: false }; } catch {} // Spielstand aus dem alten Fang den Koch übernehmen
+  if (w?.F) { if (!w.F.vorrat) w.F.vorrat = Object.fromEntries(FDK_LAGER.map((l) => [l, FDK_VORRAT])); for (const S of w.F.sp || []) { if (!S.hand) S.hand = []; S.gespielt = !!S.gespielt; S.turbo = !!S.turbo; } } // Partie aus der Vorversion weiterspielen
   return { stand: { ich: 0, pc: 0, remis: 0 }, regelnGesehen: false, stufe: "leicht", anzahl: 2, runde: 0, ...(w || {}), rollt: false, text: "", kette: false, anim: null, tw: "", fragt: false }; })();
 const fdkMerken = () => { try { localStorage.setItem(FDK_KEY, JSON.stringify({ stand: FDKP.stand, regelnGesehen: FDKP.regelnGesehen, stufe: FDKP.stufe, anzahl: FDKP.anzahl, runde: FDKP.runde, F: FDKP.F || null, tw: FDKP.tw, text: FDKP.text })); } catch {} };
 const fdkSichtbar = () => aktuelleAnsicht === "spiele" && SP.tab === "pc" && SP.art === "fdk";
@@ -7658,7 +7715,29 @@ function fdkSag(text, tw = false) { // Ansage (mit 🔊), Twinkeys Sätze mit M�
     if (tw) { const st = stimmeFuer("m"); if (st.voice) { u.voice = st.voice; u.lang = st.voice.lang; } u.pitch = st.pitch; } else { const st = deStimme(); if (st) { u.voice = st; u.lang = st.lang; } }
     speechSynthesis.speak(u); } catch {}
 }
-function fdkTw(art) { const t = fdkZuf(FDK_TW[art] || []); if (!t) return; FDKP.tw = t; fdkSag(t, true); }
+function fdkTw(art, k) { const t = k ? FDK_TW[art]?.[k] : fdkZuf(FDK_TW[art] || []); if (!t) return; FDKP.tw = t; fdkSag(t, true); }
+// KC-CLUB-FDK-SPANNUNG: Geräusche (Schalter 🔔 Töne – derselbe wie beim Schach, je Gerät)
+function fdkTon(art) {
+  if (!schToeneAn() || aktuelleAnsicht !== "spiele") return;
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.();
+    const ton = (t, f, laut, dauer, typ = "triangle", ziel = f) => { const o = audio.createOscillator(), g = audio.createGain(), s = audio.currentTime + t;
+      o.type = typ; o.frequency.setValueAtTime(f, s); if (ziel !== f) o.frequency.exponentialRampToValueAtTime(ziel, s + dauer);
+      g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(laut, s + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, s + dauer);
+      o.connect(g).connect(audio.destination); o.start(s); o.stop(s + dauer + 0.03); };
+    const rauschen = (t, dauer, laut, frq) => { const n = Math.floor(audio.sampleRate * dauer), buf = audio.createBuffer(1, n, audio.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n); const q = audio.createBufferSource(), fl = audio.createBiquadFilter(), g = audio.createGain();
+      fl.type = "bandpass"; fl.frequency.value = frq; g.gain.value = laut; q.buffer = buf; q.connect(fl).connect(g).connect(audio.destination); q.start(audio.currentTime + t); };
+    if (art === "wuerfel") for (let i = 0; i < 5; i++) ton(i * 0.07, 500 + Math.random() * 500, 0.12, 0.04, "square");
+    else if (art === "schritt") ton(0, 340, 0.06, 0.05, "sine");
+    else if (art === "holen") { ton(0, 520, 0.16, 0.08, "sine"); ton(0.07, 780, 0.16, 0.1, "sine"); }
+    else if (art === "kochen") rauschen(0, 0.7, 0.35, 3200);
+    else if (art === "pech") { ton(0, 440, 0.15, 0.18, "sawtooth", 300); ton(0.18, 330, 0.15, 0.3, "sawtooth", 200); }
+    else if (art === "glueck") [523, 659, 784].forEach((f, i) => ton(i * 0.09, f, 0.14, 0.14, "sine"));
+    else if (art === "karte") rauschen(0, 0.25, 0.5, 1800);
+    else if (art === "leer") ton(0, 160, 0.16, 0.25, "square");
+  } catch {}
+}
 function fdkKlingel() { // 🛎️ Pass-Klingel: zwei helle Töne
   try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.();
     for (const [f, t] of [[1568, 0], [2093, 0.02], [1568, 0.28]]) { const o = audio.createOscillator(), g = audio.createGain(), s = audio.currentTime + t;
@@ -7679,7 +7758,21 @@ function fdkText(s, e) {
   if (e.art === "stoss") return e.z ? `💥 Zusammenstoß! ${du ? "Twinkey lässt" : "Dir fällt"} ${e.z[1]} ${e.z[2]} ${du ? "fallen" : "herunter"}.` : "💥 Zusammenstoß – zum Glück ist nichts heruntergefallen.";
   if (e.art === "spueler") return `🧽 ${wer} ${du ? "gehst" : "geht"} direkt zu ${FDK_ST[FDK_FELD[e.feld]][0]} ${FDK_ST[FDK_FELD[e.feld]][1]}.`;
   if (e.art === "hygiene") return e.richtig ? `🧪 ${du ? "Richtig – Kontrolle bestanden!" : "Twinkey besteht die Kontrolle."}` : `🧪 ${du ? "Leider falsch – einmal aussetzen." : "Twinkey lag falsch – er setzt einmal aus."}`;
+  if (e.art === "karte" && e.hand) { const A = FDK_AKTION_NAME[e.k]; return `🃏 ${wer} ${du ? "bekommst" : "bekommt"} ${A[0]} ${A[1]} auf die Hand.${e.weg ? ` (${FDK_AKTION_NAME[e.weg][1]} fällt weg – höchstens ${FDK_HAND} Karten.)` : ""}`; }
+  if (e.art === "karte" && e.geschuetzt) { const K = FDK_KARTE_TEXT[e.k]; return `${K[0]} ${K[1]} – 🛡️ ${du ? "dein" : "Twinkeys"} Sous-Chef hat aufgepasst, nichts passiert!`; }
   if (e.art === "karte") { const K = FDK_KARTE_TEXT[e.k]; return `${K[0]} ${du ? "" : "Twinkey: "}${K[1]} ${K[2](e.z, e)}`; }
+  if (e.art === "leer") return `📦 Das war die letzte Kiste – ${FDK_ST[e.l][0]} ${FDK_ST[e.l][1]} ist leer. Nachbestellen im 📋 Büro!`;
+  if (e.art === "nachbestellt") return `📋 ${wer} ${du ? "bestellst" : "bestellt"} nach – ${e.l.map((l) => FDK_ST[l][0]).join(" ")} wieder voll.`;
+  if (e.art === "geschuetzt") return `🛡️ ${e.wer ? "Twinkeys" : "Dein"} Sous-Chef hat aufgepasst – nichts heruntergefallen!`;
+  if (e.art === "spielt") { const A = FDK_AKTION_NAME[e.k], d = du ? "spielst" : "spielt";
+    if (e.k === "turbo") return `⚡ ${wer} ${d} Turbo – mit zwei Würfeln!`;
+    if (e.k === "abkuerzung") return `🚪 ${wer} ${du ? "nimmst" : "nimmt"} die Abkürzung zu ${FDK_ST[FDK_FELD[e.feld]][0]} ${FDK_ST[FDK_FELD[e.feld]][1] || "der Durchreiche"}.`;
+    if (e.k === "liefer") return `🚚 ${wer} ${d} den Lieferanten – ${e.z[1]} ${e.z[2]} kommt aufs Tablett.`;
+    if (e.k === "mise") return `🔪 ${wer} ${d} Mise en place – der nächste Arbeitsschritt geht sofort.`;
+    if (e.geschuetzt) return `${A[0]} ${wer} ${d} ${A[1]} – aber 🛡️ der Sous-Chef ${du ? "von Twinkey" : "von dir"} passt auf!`;
+    if (e.k === "gaszu") return `🔧 ${wer} ${du ? "drehst Twinkey" : "dreht dir"} das Gas ab – ${du ? "er muss" : "du musst"} erst ins 📋 Büro!`;
+    if (e.k === "klau") return `🤏 ${wer} ${du ? "klaust Twinkey" : "klaut dir"} ${e.z[1]} ${e.z[2]}${e.behalten ? ` – ${du ? "die brauchst du selbst" : "er braucht sie selbst"}!` : " – sie fällt herunter."}`;
+    return `${A[0]} ${wer} ${d} ${A[1]}.`; }
   if (e.art === "abgabe") return `🛎️ ${wer}: ${FDK_GERICHTE[e.g][0]} ${FDK_GERICHTE[e.g][1]} am Pass – ${e.punkte} Punkte!`;
   return "";
 }
@@ -7692,15 +7785,16 @@ function fdkTablett(F, s) {
     <div class="fdk-t-kopf"><span class="fdk-muetze fdk-m${s}">${s ? "🧑‍🍳" : "👨‍🍳"}</span><b>${s ? "Twinkey" : "Du"}</b><span class="fdk-pkt">⭐ ${S.punkte}</span></div>
     ${S.fertig ? `<div class="fdk-t-fertig">✅ Alle ${F.anzahl} Gerichte am Pass</div>` : `<div class="fdk-t-gericht">${G[0]} <b>${esc(G[1])}</b><small>${FDK_STUFEN[G[2]].name} · Gericht ${S.nr + 1} von ${F.anzahl}</small></div>
     <ul class="fdk-liste">${zut}</ul><ul class="fdk-liste fdk-schritte">${sch}<li class="${""}"><span>🛎️</span><span class="fdk-tx">an den Pass + klingeln</span></li></ul>
-    <div class="fdk-uhr${uhr > richt ? " drueber" : ""}">⏱️ ${uhr} Min.<small>Richtzeit ${richt}</small></div>${sperre}`}</div>`;
+    <div class="fdk-uhr${uhr > richt ? " drueber" : ""}">⏱️ ${uhr} Min.<small>Richtzeit ${richt}</small></div>${sperre}`}
+    ${s && S.hand?.length ? `<div class="fdk-t-hand" title="Twinkeys Karten (verdeckt)">🃏 × ${S.hand.length}${S.hand.includes("schutz") ? " · 🛡️" : ""}</div>` : ""}</div>`;
 }
 function fdkBrettHtml(F) {
   const pos = FDKP.anim || F.sp.map((S) => S.pos), wahl = F.phase === "wahl" && F.dran === 0 && !FDKP.anim ? new Map(F.optionen.map((o) => [o.feld, o])) : null;
   const S0 = F.sp[0];
   const felder = FDK_FELD.map((f, i) => { const [x, y] = FDK_RING[i], koeche = [0, 1].filter((s) => pos[s] === i && !(F.sp[s].fertig && !FDKP.anim)), st = FDK_ST[f];
-    const nutzen = !S0.fertig && F.phase !== "ende" ? fdkNutzen(S0, i) : null, gut = nutzen && (nutzen !== "pass" || (fdkAlleZutaten(S0) && fdkFertigGekocht(S0)));
+    const nutzen = !S0.fertig && F.phase !== "ende" ? fdkNutzen(S0, i, F) : null, gut = nutzen && (nutzen !== "pass" || (fdkAlleZutaten(S0) && fdkFertigGekocht(S0)));
     const o = wahl?.get(i), kl = ["fdk-feld", "fdk-" + f, gut ? "fdk-gut" : "", o ? "fdk-ziel" + (o.halt ? " fdk-halt" : "") : ""].filter(Boolean).join(" ");
-    const inhalt = `${st[0] ? `<span class="fdk-sym" aria-hidden="true">${st[0]}</span>` : ""}${f.length > 1 ? `<span class="fdk-name">${f === "gewuerz" ? "Gewürze" : st[1]}</span>` : ""}${o?.halt ? `<span class="fdk-halt-schild">Halt</span>` : ""}`
+    const inhalt = `${st[0] ? `<span class="fdk-sym" aria-hidden="true">${st[0]}</span>` : ""}${f.length > 1 ? `<span class="fdk-name">${f === "gewuerz" ? "Gewürze" : st[1]}</span>` : ""}${o?.halt ? `<span class="fdk-halt-schild">Halt</span>` : ""}${F.vorrat && FDK_LAGER.includes(f) ? `<span class="fdk-vorrat${F.vorrat[f] <= 0 ? " leer" : ""}" title="Kisten im Vorrat">${F.vorrat[f] <= 0 ? "leer" : "📦" + F.vorrat[f]}</span>` : ""}`
       + (koeche.length ? `<span class="fdk-koeche">${koeche.map((s) => `<span class="fdk-muetze fdk-m${s}">${s ? "🧑‍🍳" : "👨‍🍳"}</span>`).join("")}</span>` : "");
     const name = `${st[1] || "Gang"}${koeche.length ? " – " + koeche.map(fdkWer).join(" und ") : ""}${o ? " – hierhin gehen" : ""}`;
     return o ? `<button class="${kl}" style="grid-column:${x + 1};grid-row:${y + 1}" onclick="fdkFeldKlick(${i})" aria-label="${name}">${inhalt}</button>`
@@ -7721,16 +7815,17 @@ function fdkPcZeigen() {
       <p style="margin:6px 0">🧑‍🍳 <b>Fang den Koch – Küchenrallye</b>: Du (rote Mütze) gegen Twinkey (blaue Mütze). Hol die Zutaten, koch das Gericht, ab an den Pass und klingeln!</p>
       <div class="sch-einst fdk-einst">${wahl("😊 Gerichte", "fdkStufe", FDKP.stufe, [["leicht", "Leicht"], ["mittel", "Mittel"], ["schwer", "Schwer"]])}${wahl("🍽️ Länge", "fdkAnzahl", FDKP.anzahl, [[1, "1 Gericht"], [2, "2 Gerichte"], [3, "3 Gerichte"]])}</div>
       <p class="hinweis" style="margin:6px 0">Leicht z. B. Pfannkuchen, mittel z. B. Gulasch, schwer z. B. Rinderroulade. Beide bekommen gleich schwere Gerichte.</p>
-      <div class="sp-knopfreihe"><button class="knopf haupt" onclick="fdkStart()"><span class="kt-ico">▶</span>Los geht’s</button><button class="knopf" onclick="fdkRegeln()"><span class="kt-ico">📖</span>Regeln</button>${spAnsageKnopf("fdk", true)}</div>
+      <div class="sp-knopfreihe"><button class="knopf haupt" onclick="fdkStart()"><span class="kt-ico">▶</span>Los geht’s</button><button class="knopf" onclick="fdkRegeln()"><span class="kt-ico">📖</span>Regeln</button>${spAnsageKnopf("fdk", true)}</div><div class="sch-leiste" style="margin-top:6px">${schTonKnopf()}</div>
       ${s.ich + s.pc + s.remis ? '<button class="knopf klein" style="margin-top:6px" onclick="fdkStandWeg()">🗑️ Spielstand zurücksetzen</button>' : ""}</div>`; return; }
   const sg = F.phase === "ende" ? fdkSieger(F) : null, [A, B] = F.sp.map((S) => S.punkte);
   const ende = F.phase !== "ende" ? "" : `<div class="sp-banner ${sg === 0 ? "sieg" : sg === 1 ? "niederlage" : "remis"}">${sg === 0 ? "🏆 Feierabend – du hast gewonnen!" : sg === 1 ? "Feierabend – 🧑‍🍳 Twinkey war besser." : "🤝 Feierabend – unentschieden!"} ⭐ ${A} : ${B}</div>${fdkAbrechnung(F)}`;
   $("spInhalt").innerHTML = `<div class="karte sp-karte fdk-karte">${ende}
       <div class="sch-twinkey" role="status" aria-live="polite"><span class="sch-tw-kopf" aria-hidden="true">🧑‍🍳</span><p class="sch-tw-blase"><b>Twinkey:</b> ${esc(FDKP.tw || "Auf die Plätze, fertig, kochen!")}</p></div>
       <div class="fdk-tisch">${fdkTablett(F, 0)}${fdkBrettHtml(F)}${fdkTablett(F, 1)}</div>
+      ${fdkHandHtml(F)}
       <div class="sp-status fdk-ansage${F.dran === 0 && (F.phase === "wuerfeln" || F.phase === "wahl") ? " sp-ichdran" : ""}" aria-live="polite">${esc(FDKP.text || "🎲 Tippe auf den Würfel.")}</div>
       ${F.phase === "ende" ? `<div class="sp-knopfreihe"><button class="knopf haupt" onclick="fdkStart()"><span class="kt-ico">↺</span>Neues Spiel</button><button class="knopf" onclick="FDKP.F=null;fdkMerken();fdkPcZeigen()"><span class="kt-ico">🏠</span>Übersicht</button></div>`
-        : `<div class="sp-knopfreihe"><button class="knopf haupt" onclick="fdkWuerfeln()" ${F.dran === 0 && F.phase === "wuerfeln" && !FDKP.rollt && !FDKP.anim && !FDKP.fragt ? "" : "disabled"}><span class="kt-ico">🎲</span>Würfeln</button>${fdkKannAbgeben(F) ? `<button class="knopf" onclick="fdkJetztAbgeben()"><span class="kt-ico">🛎️</span>Jetzt abgeben</button>` : ""}<button class="knopf" onclick="fdkRegeln()"><span class="kt-ico">📖</span>Regeln</button><button class="knopf" onclick="fdkAbbrechen()"><span class="kt-ico">✖</span>Abbrechen</button></div>`}
+        : `<div class="sp-knopfreihe"><button class="knopf haupt" onclick="fdkWuerfeln()" ${F.dran === 0 && F.phase === "wuerfeln" && !FDKP.rollt && !FDKP.anim && !FDKP.fragt ? "" : "disabled"}><span class="kt-ico">🎲</span>Würfeln</button>${fdkKannAbgeben(F) ? `<button class="knopf" onclick="fdkJetztAbgeben()"><span class="kt-ico">🛎️</span>Jetzt abgeben</button>` : ""}<button class="knopf" onclick="fdkRegeln()"><span class="kt-ico">📖</span>Regeln</button><button class="knopf" onclick="fdkAbbrechen()"><span class="kt-ico">✖</span>Abbrechen</button></div><div class="sch-leiste" style="margin-top:6px">${schTonKnopf()}${spAnsageKnopf("fdk")}</div>`}
     </div>`;
 }
 function fdkAbrechnung(F) { // Punkte je Gericht nachvollziehbar
@@ -7747,7 +7842,9 @@ function fdkRegeln(danach) {
     ${bild(2, "🎲", "Würfeln und laufen", "Würfeln – dann ein leuchtendes Feld antippen, links- oder rechtsherum. Kommst du an einer Station vorbei, die du brauchst, darfst du dort anhalten (Schild „Halt“) – die restlichen Augen verfallen. Grün = hier gibt es etwas für dich.")}
     ${bild(3, "🔥", "Kochen", "Erst alle Zutaten aufs Tablett, dann am 🔥 Herd, in der 🍟 Fritteuse oder im ♨️ Ofen zubereiten. Manches dauert 2 Züge.")}
     ${bild(4, "🛎️", "Pass und Klingel", "Fertig? An eine 🛎️ Durchreiche – dann ist das Gericht am Pass und deine Stoppuhr hält an. Wer es eilig hat, darf an der Durchreiche mit „🛎️ Jetzt abgeben“ auch früher klingeln. Jeder Wurf zählt 3 Küchenminuten. Punkte: Grundpunkte, Tempo unter der Richtzeit, +3 Erster am Pass, +2 ohne Pech; −3 je vergessene Zutat, −5 je fehlender Schritt.")}
-    ${bild(5, "❗", "Ereignisse und Zusammenstoß", "Auf einem ❗-Feld ziehst du eine Karte – Pech mit Aufgabe (z. B. „kein Gas: erst ins 📋 Büro“) oder Glück. Landest du im Gang genau auf Twinkey, lässt er eine Zutat fallen – und umgekehrt!")}
+    ${bild(5, "❗", "Ereignisse und Zusammenstoß", "Auf einem ❗-Feld ziehst du eine Karte. Pech wirkt sofort und hat eine Aufgabe (z. B. „kein Gas: erst ins 📋 Büro“). Landest du im Gang genau auf Twinkey, lässt er eine Zutat fallen – und umgekehrt!")}
+    ${bild(6, "🃏", "Aktionskarten", "Glückskarten kommen auf die Hand (höchstens 3) – jeder startet mit einer. Vor dem Würfeln darfst du eine ausspielen: ⚡ Turbo (zwei Würfel), 🚪 Abkürzung, 🤏 Zutat klauen, 🔧 Twinkey das Gas abdrehen, 🚚 Lieferant, 🔪 Mise en place. 🛡️ Sous-Chef schützt von selbst vor dem nächsten Pech.")}
+    ${bild(7, "📦", "Knappe Vorräte", "Jede Vorratsstation hat nur 2 Kisten – wer zuerst kommt, nimmt! Ist eine leer, muss jemand im 📋 Büro nachbestellen; das füllt für beide wieder auf.")}
     <div class="sp-knopfreihe"><button class="knopf haupt" id="fdkRegelOk"><span class="kt-ico">👍</span>Verstanden</button></div>`);
   f.style.zIndex = "2100";
   $("fdkRegelOk").onclick = () => { $("fdkRegelBlatt")?.remove(); FDKP.regelnGesehen = true; fdkMerken(); if (typeof danach === "function") danach(); };
@@ -7761,16 +7858,17 @@ function fdkStart() {
   FDKP.text = F.dran === 0 ? "Die Küche ist offen – du fängst an. Tippe auf den Würfel!" : "Die Küche ist offen – Twinkey fängt an.";
   fdkMerken(); fdkSag(FDKP.text); fdkPcZeigen(); if (F.dran === 1) fdkPcZug();
 }
-async function fdkWurfAnimation() {
-  FDKP.rollt = true; fdkPcZeigen();
-  const tick = setInterval(() => { const b = document.querySelector(".mae-wuerfel.rollt"); if (b) b.innerHTML = maeWuerfelSvg(1 + Math.floor(Math.random() * 6)); }, 90);
+async function fdkWurfAnimation(F, s) { // gibt { w, a, b } zurück – mit ⚡ Turbo zwei Würfel
+  FDKP.rollt = true; fdkPcZeigen(); fdkTon("wuerfel");
+  const tick = setInterval(() => { const b = document.querySelector(".mae-wuerfel.rollt"); if (b) b.innerHTML = maeWuerfelSvg(1 + Math.floor(Math.random() * 6)); }, 80);
   try { navigator.vibrate?.(25); } catch {}
-  await maeWarte(SPAR?.an ? 250 : 650); clearInterval(tick); FDKP.rollt = false;
-  return 1 + Math.floor(Math.random() * 6);
+  await maeWarte(SPAR?.an ? 200 : 420); clearInterval(tick); FDKP.rollt = false;
+  return fdkAugen(F, s);
 }
+const fdkWurfText = (r) => (r.b ? `${r.a} + ${r.b} = ${r.w} (⚡ Turbo)` : `${r.w}`);
 async function fdkLaufen(F, s, weg) { // Koch läuft Feld für Feld
   FDKP.anim = F.sp.map((S) => S.pos);
-  for (const p of weg) { FDKP.anim[s] = p; if (fdkSichtbar()) fdkPcZeigen(); await maeWarte(SPAR?.an ? 110 : 260); if (FDKP.F !== F) return false; }
+  for (const p of weg) { FDKP.anim[s] = p; if (fdkSichtbar()) fdkPcZeigen(); fdkTon("schritt"); await maeWarte(SPAR?.an ? 80 : 170); if (FDKP.F !== F) return false; }
   FDKP.anim = null; return true;
 }
 // Ereignisse eines Zugs zeigen: Text, Twinkey-Spruch, Klingel, Karten (beim Menschen als Karte zum Antippen)
@@ -7779,10 +7877,12 @@ async function fdkEreignisse(F, s, ev) {
   if (texte.length) FDKP.text = texte.join(" ");
   for (const e of ev) {
     if (e.art === "abgabe") { FDKP.klingelt = true; fdkKlingel(); setTimeout(() => { FDKP.klingelt = false; if (fdkSichtbar()) fdkPcZeigen(); }, 1200); if (s) fdkTw("abgabe"); }
-    if (e.art === "holt" && s && Math.random() < 0.35) fdkTw("holt");
-    if ((e.art === "kocht" || e.art === "kochtLang") && s) fdkTw("kocht");
-    if (e.art === "stoss" && e.z) fdkTw(s ? "stossTw" : "stossDu");
-    if (e.art === "karte") { const pech = FDK_PECH.has(e.k) && (e.z || e.trifft || e.k === "schaum"); if (pech) fdkTw(s ? "pechTw" : "pechDu"); else if (s && e.k !== "hygiene") fdkTw("gluck"); }
+    if (e.art === "holt") { fdkTon("holen"); if (s ? Math.random() < 0.6 : Math.random() < 0.25) fdkTw(s ? "holt" : "holtDu"); }
+    if (e.art === "kocht" || e.art === "kochtLang") { fdkTon("kochen"); if (s) fdkTw("kocht"); }
+    if (e.art === "leer") { fdkTon("leer"); if (s) fdkTw("leer"); }
+    if (e.art === "stoss" && e.z) { fdkTon("pech"); fdkTw(s ? "stossTw" : "stossDu"); }
+    if (e.art === "geschuetzt") fdkTon("glueck");
+    if (e.art === "karte") { const pech = FDK_PECH.has(e.k) && !e.geschuetzt && (e.z || e.trifft || e.k === "schaum"); if (pech) { fdkTon("pech"); fdkTw(s ? "pechTw" : "pechDu"); } else if (e.k !== "hygiene") { fdkTon("glueck"); if (s) fdkTw("gluck"); } }
   }
   fdkSag(FDKP.text); fdkMerken(); if (fdkSichtbar()) fdkPcZeigen();
   if (!s) for (const e of ev) {
@@ -7792,9 +7892,11 @@ async function fdkEreignisse(F, s, ev) {
   if (F.phase === "frage") await fdkHygieneFrage(F, s);
 }
 function fdkKarteZeigen(e) {
-  return new Promise((weiter) => { const K = FDK_KARTE_TEXT[e.k], pech = FDK_PECH.has(e.k);
-    const f = blattAuf("fdkKarteBlatt", `<div class="fdk-kartenbild${pech ? " pech" : " glueck"}"><div class="fdk-k-sym">${K[0]}</div><b>${K[1]}</b><p>${esc(K[2](e.z, e))}</p></div>
-      <div class="sp-knopfreihe"><button class="knopf haupt" id="fdkKarteOk"><span class="kt-ico">👍</span>${pech ? "Na gut" : "Prima"}</button></div>`);
+  return new Promise((weiter) => { const K = FDK_KARTE_TEXT[e.k], pech = FDK_PECH.has(e.k), A = e.hand ? FDK_AKTION_NAME[e.k] : null;
+    const bild = A ? `<div class="fdk-kartenbild glueck"><div class="fdk-k-sym">${A[0]}</div><b>Neue Karte: ${A[1]}</b><p>${esc(A[2])}.</p><p class="hinweis">${e.k === "schutz" ? "Sie wirkt von selbst beim nächsten Pech." : "Sie liegt jetzt unter dem Brett – vor dem Würfeln antippen, wenn du sie brauchst."}${e.weg ? ` (${FDK_AKTION_NAME[e.weg][1]} ist dafür weggefallen.)` : ""}</p></div>`
+      : `<div class="fdk-kartenbild${pech && !e.geschuetzt ? " pech" : " glueck"}"><div class="fdk-k-sym">${K[0]}</div><b>${K[1]}</b><p>${e.geschuetzt ? "🛡️ Dein Sous-Chef hat aufgepasst – nichts passiert!" : esc(K[2](e.z, e))}</p></div>`;
+    const f = blattAuf("fdkKarteBlatt", `${bild}
+      <div class="sp-knopfreihe"><button class="knopf haupt" id="fdkKarteOk"><span class="kt-ico">👍</span>${pech && !e.geschuetzt && !A ? "Na gut" : "Prima"}</button></div>`);
     f.style.zIndex = "2100"; $("fdkKarteOk").onclick = () => { $("fdkKarteBlatt")?.remove(); weiter(); }; });
 }
 function fdkAbgabeZeigen(e) {
@@ -7832,9 +7934,9 @@ async function fdkNachZug(F) {
 }
 async function fdkWuerfeln() {
   const F = FDKP.F; if (!F || F.dran !== 0 || F.phase !== "wuerfeln" || FDKP.rollt || FDKP.anim || FDKP.fragt || SP.pause) return;
-  fdkWurfBeginn(F, 0); const w = await fdkWurfAnimation(); if (FDKP.F !== F) return;
-  F.wurf = w; F.optionen = fdkOptionen(F, 0, w); F.phase = "wahl";
-  FDKP.text = `Du würfelst ${w}. Tippe ein leuchtendes Feld an${F.optionen.some((o) => o.halt) ? " – „Halt“ heißt: dort anhalten, Rest verfällt" : ""}.`;
+  fdkWurfBeginn(F, 0); const r = await fdkWurfAnimation(F, 0), w = r.w; if (FDKP.F !== F) return;
+  F.wurf = Math.min(6, r.a); F.optionen = fdkOptionen(F, 0, w); F.phase = "wahl";
+  FDKP.text = `Du würfelst ${fdkWurfText(r)}. Tippe ein leuchtendes Feld an${F.optionen.some((o) => o.halt) ? " – „Halt“ heißt: dort anhalten, Rest verfällt" : ""}.`;
   fdkMerken(); fdkPcZeigen();
 }
 async function fdkFeldKlick(p) {
@@ -7846,6 +7948,22 @@ async function fdkFeldKlick(p) {
   if (!ev.length) FDKP.text = FDK_FELD[p] === "d" ? "Du stehst an der Durchreiche – mit „🛎️ Jetzt abgeben“ kannst du schon klingeln (kostet Punkte für Fehlendes)." : "Hier gibt es gerade nichts für dich.";
   await fdkEreignisse(F, 0, ev); if (FDKP.F !== F) return;
   await fdkNachZug(F);
+}
+// 🃏 Deine Karten: vor dem Würfeln eine ausspielen (Sous-Chef wirkt von selbst)
+function fdkHandHtml(F) {
+  const S = F.sp[0]; if (!S.hand?.length || F.phase === "ende") return "";
+  const frei = F.dran === 0 && F.phase === "wuerfeln" && !FDKP.anim && !FDKP.rollt && !FDKP.fragt;
+  return `<div class="fdk-hand" aria-label="Deine Karten"><span class="fdk-hand-titel">🃏 Deine Karten${S.gespielt ? " (schon eine gespielt)" : S.turbo ? " – ⚡ Turbo bereit" : ""}</span>${S.hand.map((k) => { const A = FDK_AKTION_NAME[k], kann = frei && fdkKannSpielen(F, 0, k);
+    return `<button class="fdk-handkarte${k === "schutz" ? " passiv" : ""}" ${kann ? `onclick="fdkKarteAusspielen('${k}')"` : "disabled"} title="${esc(A[2])}"><span>${A[0]}</span><b>${A[1]}</b><small>${k === "schutz" ? "wirkt von selbst" : esc(A[2])}</small></button>`; }).join("")}</div>`;
+}
+async function fdkKarteAusspielen(k) {
+  const F = FDKP.F; if (!F || F.dran !== 0 || F.phase !== "wuerfeln" || FDKP.anim || FDKP.rollt || FDKP.fragt) return;
+  const r = fdkKarteSpielen(F, 0, k); if (!r) return;
+  fdkTon("karte"); if (k === "klau" && !r.ev[0].geschuetzt) fdkTw("beklaut"); if (k === "gaszu" && !r.ev[0].geschuetzt) fdkTw("gasWeg");
+  await fdkEreignisse(F, 0, r.ev); if (FDKP.F !== F) return;
+  if (r.zugVorbei) return fdkNachZug(F);
+  if (k === "turbo") FDKP.text += " Jetzt würfeln!";
+  fdkMerken(); fdkPcZeigen();
 }
 // 🛎️ Jetzt abgeben: an einer Durchreiche darf man jederzeit klingeln – auch wenn noch etwas fehlt (nach Rückfrage, kostet Punkte)
 const fdkKannAbgeben = (F) => F && F.dran === 0 && F.phase === "wuerfeln" && !FDKP.anim && !FDKP.rollt && !FDKP.fragt && !F.sp[0].fertig && FDK_FELD[F.sp[0].pos] === "d";
@@ -7864,10 +7982,14 @@ async function fdkPcZug() { // Twinkey zieht von selbst – auch mehrmals hinter
     for (let k = 0; k < 200; k++) {
       const F = FDKP.F; if (!F || F.dran !== 1 || F.phase !== "wuerfeln" || !fdkSichtbar()) return;
       if (spPauseHalt(fdkPcZug)) return;
-      await maeWarte(SPAR?.an ? 400 : 900); if (FDKP.F !== F || !fdkSichtbar()) return;
-      fdkWurfBeginn(F, 1); const w = await fdkWurfAnimation(); if (FDKP.F !== F) return;
-      F.wurf = w; const o = fdkKiWahl(F, 1, fdkOptionen(F, 1, w));
-      FDKP.text = `🧑‍🍳 Twinkey würfelt ${w}.`; F.phase = "laeuft";
+      await maeWarte(SPAR?.an ? 250 : 450); if (FDKP.F !== F || !fdkSichtbar()) return;
+      const karte = fdkKiKarte(F, 1);
+      if (karte) { const r = fdkKarteSpielen(F, 1, karte); fdkTon("karte"); fdkTw("karteTw", karte);
+        await fdkEreignisse(F, 1, r.ev); if (FDKP.F !== F) return; await maeWarte(SPAR?.an ? 300 : 700);
+        if (r.zugVorbei) { await fdkNachZug(F); if (F.dran !== 1 || F.phase !== "wuerfeln") return; continue; } }
+      fdkWurfBeginn(F, 1); const r = await fdkWurfAnimation(F, 1), w = r.w; if (FDKP.F !== F) return;
+      F.wurf = Math.min(6, r.a); const o = fdkKiWahl(F, 1, fdkOptionen(F, 1, w));
+      FDKP.text = `🧑‍🍳 Twinkey würfelt ${fdkWurfText(r)}.`; F.phase = "laeuft";
       if (!(await fdkLaufen(F, 1, o.weg))) return;
       const ev = fdkZiehen(F, 1, o); if (F.phase === "laeuft") F.phase = "wuerfeln";
       if (!ev.length) FDKP.text = `🧑‍🍳 Twinkey würfelt ${w} und läuft weiter.`;

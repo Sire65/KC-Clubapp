@@ -369,6 +369,16 @@
   .fdk-abrechnung { overflow-x: auto; margin: 6px 0; } .fdk-abrechnung table { width: 100%; border-collapse: collapse; font-size: .8rem; }
   .fdk-abrechnung th, .fdk-abrechnung td { padding: 3px 4px; border-bottom: 1px solid var(--linie); text-align: center; } .fdk-abrechnung td:first-child, .fdk-abrechnung th:first-child { text-align: left; } .fdk-abrechnung small { display: block; opacity: .7; }
   .fdk-einst { grid-template-columns: repeat(2, 1fr); }
+  /* KC-CLUB-FDK-SPANNUNG: Kisten im Vorrat, Karten auf der Hand */
+  .fdk-vorrat { position: absolute; top: -6px; right: -5px; background: #fff; border: 1.5px solid #8d6e3f; border-radius: 8px; padding: 0 3px; font-size: .52rem; font-weight: 900; line-height: 1.3; z-index: 4; }
+  .fdk-vorrat.leer { background: #c0392b; border-color: #c0392b; color: #fff; }
+  .fdk-hand { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; justify-content: center; margin: 6px 0 0; }
+  .fdk-hand-titel { flex-basis: 100%; text-align: center; font-weight: 800; font-size: .85rem; }
+  .fdk-handkarte { flex: 1 1 0; min-width: 90px; max-width: 150px; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 4px; border-radius: 12px;
+    border: 2.5px solid #24974a; background: linear-gradient(160deg, #f4fbf5, #cdebd4); color: #17331f; font: inherit; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,.15); }
+  .fdk-handkarte span { font-size: 1.6rem; line-height: 1.1; } .fdk-handkarte b { font-size: .85rem; } .fdk-handkarte small { font-size: .66rem; line-height: 1.15; opacity: .85; text-align: center; }
+  .fdk-handkarte:disabled { cursor: default; opacity: .55; filter: grayscale(.3); } .fdk-handkarte.passiv { border-style: dashed; }
+  .fdk-t-hand { margin-top: 4px; text-align: center; font-weight: 800; font-size: .8rem; background: #fff; border-radius: 8px; padding: 2px 4px; }
   .fdk-kurz { margin: 4px 0 8px; padding-left: 22px; } .fdk-kurz li { margin: 3px 0; }
   .fdk-regel { display: flex; gap: 10px; align-items: flex-start; background: var(--karte2); border-radius: 12px; padding: 8px; margin: 6px 0; }
   .fdk-regel-nr { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--rot); color: #fff; display: grid; place-items: center; font-weight: 800; }
@@ -3935,6 +3945,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.212.0" data-v="2.212.0"></script>
+<script src="app.js?v=2.213.0" data-v="2.213.0"></script>
 </body>
 </html>

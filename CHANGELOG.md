@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.213.0 – 2026-10-10 – 🃏 Fang den Koch wird spannender
+🃏 Aktionskarten auf die Hand (max. 3): Turbo (2 Würfel), Abkürzung, Zutat klauen, Gas abdrehen, Lieferant, Mise en place, Schutzschild – im eigenen Zug vor dem Würfeln ausspielen; beide starten mit derselben Karte
+📦 Knappe Vorräte: jede Station hat 2 Portionen, leer heißt warten – im Büro wird alles nachbestellt
+⚡ Mehr Tempo und Töne (Würfel, Schritte, Kochen, Pech/Glück) – schaltbar mit 🔔 Töne an/aus; Twinkey spielt seine Karten selbst (KC-CLUB-FDK-SPANNUNG)
+
 ## 2.212.0 – 2026-10-10 – 🕐 Datum und Uhrzeit im Countdown
 📆🕐 Der Countdown zeigt im Wechsel auch das Tagesdatum und die Uhrzeit – im Fallblatt als Klappkarten
 

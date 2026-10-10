@@ -6674,7 +6674,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/async function schPcKlick\(feld, neu = false, gezogen = false\)/.test(programm) && /async function schMgKlick\(feld, neu = false, gezogen = false\)/.test(programm), "Klick-Wege kennen Schieben");
   assert.equal((programm.match(/schZugErlebt\(mz, /g) || []).length, 4, "eigener Zug, Twinkeys Zug, eigener und fremder Zug gegen Mitglieder");
   assert.equal((programm.match(/schAnimStart\(\);/g) || []).length, 3, "Figur gleitet in beiden Ansichten und beim Nachspielen (2.118.0)");
-  assert.ok((programm.match(/\$\{schTwHtml\(\)\}/g) || []).length === 2 && (programm.match(/\$\{schTonKnopf\(\)\}/g) || []).length === 2, "Twinkey + Töne-Knopf in beiden Ansichten");
+  assert.ok((programm.match(/\$\{schTwHtml\(\)\}/g) || []).length === 2 && (programm.match(/\$\{schTonKnopf\(\)\}/g) || []).length >= 2, "Twinkey + Töne-Knopf in beiden Ansichten (2.213.0: auch bei Fang den Koch)");
   assert.ok(/onclick="schPcTipp\(\)"/.test(programm) && /\$\{SCH\.uhr \|\| ende \? "" : `<button class="knopf klein" onclick="schPcTipp\(\)"/.test(programm), "💡 Tipp nur gegen den Computer und ohne Uhr");
   assert.ok(/🧑‍🍳 Twinkey überlegt …/.test(programm) && /schStatusText\(ch, ich, "Twinkey"\)/.test(programm), "gegen den Computer spielt Twinkey");
   assert.ok(/\{ id: "spiel_schach", thema: "club"/.test(programm) && /"spiele": \["e:spiele", "h:spiel_schach",/.test(programm), "Hilfe-Zentrum");
@@ -7814,4 +7814,60 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/\["datum", "📆 Heutiges Datum"/.test(html) && /\["uhr", "🕐 Uhrzeit"/.test(html), "Datum/Uhrzeit fehlen in CD_ARTEN");
   assert.ok(/const d = \/\^\(\\d\{2\}\)\(\[\.:\]\)\(\\d\{2\}\)/.test(html) && /\.fb-sep/.test(html), "Fallblatt kann Datum/Uhrzeit nicht klappen");
+}
+
+// 4xx. 2.213.0: Fang den Koch spannender – Aktionskarten auf der Hand, knappe Vorräte, Tempo und Töne (KC-CLUB-FDK-SPANNUNG, Wunsch Hansi „langweilig“)
+{
+  const a = programm.indexOf("// ---------- KC-CLUB-FDK-RALLYE"), b = programm.indexOf("// ----- FDK Regeln Ende -----", a);
+  const R = new Function(programm.slice(a, b) + "\nreturn { fdkNeu, fdkOptionen, fdkZiehen, fdkWurfBeginn, fdkWeiter, fdkKiWahl, fdkKiKarte, fdkKarteSpielen, fdkKannSpielen, fdkAugen, fdkSieger, fdkHygiene, fdkNutzen, FDK_VORRAT, FDK_HAND, FDK_AKTION, FDK_KARTEN };")();
+  // Start: beide dieselbe Startkarte, volle Vorräte
+  for (let i = 0; i < 50; i++) { const F = R.fdkNeu({ stufe: "leicht", anzahl: 1 }); assert.ok(F.sp[0].hand.length === 1 && F.sp[0].hand[0] === F.sp[1].hand[0], "gleiche Startkarte"); assert.ok(Object.values(F.vorrat).every((v) => v === R.FDK_VORRAT), "volle Vorräte"); }
+  // Knappe Vorräte: letzte Kiste → leer → Station hilft nicht mehr, Büro füllt für beide auf
+  { const F = R.fdkNeu({ stufe: "leicht", anzahl: 1, zufall: () => 0 }); const S = F.sp[0]; S.bon = { g: "pfannkuchen", hat: [false, false, false], schritt: [false], uhr: 0, pech: false }; F.vorrat.kuehl = 1;
+    const ev = R.fdkZiehen(F, 0, { feld: 4, weg: [] }); assert.ok(ev.some((e) => e.art === "leer" && e.l === "kuehl") && F.vorrat.kuehl === 0, "letzte Kiste genommen");
+    const T = F.sp[1]; T.bon = { g: "ruehrei", hat: [false, false, false], schritt: [false], uhr: 0, pech: false };
+    assert.equal(R.fdkNutzen(T, 4, F), null, "leeres Kühlhaus hilft nicht"); assert.equal(R.fdkNutzen(T, 20, F), "bestellen", "Büro bestellt nach");
+    assert.ok(!R.fdkOptionen(F, 1, 6).some((o) => o.halt && o.feld === 4), "am leeren Kühlhaus kein Halt");
+    T.pos = 20; const e2 = R.fdkZiehen(F, 1, { feld: 20, weg: [] }); assert.ok(e2.some((e) => e.art === "nachbestellt") && F.vorrat.kuehl === R.FDK_VORRAT, "nachbestellt – für beide wieder voll"); }
+  // Karten: ziehen → auf die Hand (höchstens FDK_HAND), Pech sofort, Sous-Chef schützt
+  { const F = R.fdkNeu({ stufe: "leicht", anzahl: 1 }); const S = F.sp[0]; S.hand = []; F.stapel = ["turbo", "klau", "liefer", "mise"]; F.ablage = [];
+    for (let i = 0; i < 4; i++) R.fdkZiehen(F, 0, { feld: 1, weg: [] });
+    assert.equal(S.hand.length, R.FDK_HAND, "höchstens " + R.FDK_HAND + " Karten"); assert.ok(!S.hand.includes("mise") || S.hand[0] !== "mise", "älteste fällt weg");
+    S.hand = ["schutz"]; S.bon.hat = S.bon.hat.map(() => true); F.stapel = ["fallen"]; const ev = R.fdkZiehen(F, 0, { feld: 1, weg: [] });
+    assert.ok(ev.some((e) => e.art === "karte" && e.geschuetzt) && S.bon.hat.every(Boolean) && !S.hand.length, "Sous-Chef fängt Pech ab"); }
+  // Ausspielen: nur vor dem Würfeln, eine je Zug; Turbo = zwei Würfel; Klau nimmt eine gebrauchte Zutat; Gas abdrehen; Abkürzung beendet den Zug
+  { const F = R.fdkNeu({ stufe: "leicht", anzahl: 1, zufall: () => 0 }); const S = F.sp[0], O = F.sp[1];
+    S.bon = { g: "pfannkuchen", hat: [false, false, false], schritt: [false], uhr: 0, pech: false }; O.bon = { g: "kaiserschmarrn", hat: [true, true, false], schritt: [false], uhr: 0, pech: false };
+    S.hand = ["turbo", "klau", "gaszu", "abkuerzung"]; F.dran = 0; F.phase = "wuerfeln";
+    assert.ok(R.fdkKarteSpielen(F, 0, "turbo") && S.turbo, "Turbo bereit"); assert.equal(R.fdkKarteSpielen(F, 0, "klau"), null, "nur eine Karte je Zug");
+    const w = R.fdkAugen(F, 0, () => 0.99); assert.ok(w.b && w.w === 12 && !S.turbo, "Turbo: zwei Würfel");
+    S.gespielt = false; const k = R.fdkKarteSpielen(F, 0, "klau", () => 0); assert.ok(k.ev[0].behalten && S.bon.hat.some(Boolean) && O.bon.hat.filter(Boolean).length === 1, "Klau: gebrauchte Zutat wandert herüber");
+    S.gespielt = false; R.fdkKarteSpielen(F, 0, "gaszu"); assert.ok(O.gasLeer, "Twinkey ohne Gas");
+    S.gespielt = false; const ab = R.fdkKarteSpielen(F, 0, "abkuerzung"); assert.ok(ab.zugVorbei && R.fdkNutzen(S, S.pos, F) !== "holen", "Abkürzung: direkt hin und gleich erledigt");
+    assert.equal(R.fdkKannSpielen(F, 0, "schutz"), false, "Sous-Chef wird nicht ausgespielt"); }
+  // Ganze Partien mit Karten und Vorräten: enden, fair, Karten werden wirklich gespielt
+  for (const st of ["leicht", "mittel", "schwer"]) {
+    let siegA = 0, siegB = 0, gespielt = 0, nach = 0, wuerfe = 0, n = 0;
+    for (let p = 0; p < 150; p++) { const F = R.fdkNeu({ stufe: st, anzahl: 2 }); F.dran = p % 2; let k = 0;
+      while (F.phase !== "ende") { assert.ok(++k < 700, "Partie endet"); const s = F.dran;
+        if (F.phase === "frage") { R.fdkHygiene(F, s, Math.random() < 0.7); R.fdkWeiter(F); continue; }
+        const karte = R.fdkKiKarte(F, s);
+        if (karte) { const r = R.fdkKarteSpielen(F, s, karte); gespielt++; if (r.ev.some((e) => e.art === "nachbestellt")) nach++; if (r.zugVorbei) { if (F.phase !== "frage") R.fdkWeiter(F); continue; } }
+        R.fdkWurfBeginn(F, s); const ev = R.fdkZiehen(F, s, R.fdkKiWahl(F, s, R.fdkOptionen(F, s, R.fdkAugen(F, s).w)));
+        if (ev.some((e) => e.art === "nachbestellt")) nach++;
+        if (F.phase === "frage") continue; R.fdkWeiter(F); }
+      for (const S of F.sp) { assert.equal(S.ergebnisse.length, 2); wuerfe += S.wuerfe; n++; }
+      const sg = R.fdkSieger(F); if (sg === 0) siegA++; if (sg === 1) siegB++; }
+    assert.ok(Math.abs(siegA - siegB) <= 40, st + ": fair (" + siegA + ":" + siegB + ")");
+    assert.ok(gespielt / 150 >= 2, st + ": Karten werden gespielt (" + (gespielt / 150).toFixed(1) + " je Partie)");
+    assert.ok(nach / 150 >= 0.5, st + ": Vorräte werden knapp (" + (nach / 150).toFixed(1) + "× Büro je Partie)");
+    assert.ok(wuerfe / n <= 40, st + ": nicht zu lang (" + (wuerfe / n).toFixed(1) + " Würfe je Koch)");
+  }
+  // Ansicht: Karten unter dem Brett, Twinkey spielt Karten, Töne, schneller
+  assert.ok(/\$\{fdkHandHtml\(F\)\}/.test(programm) && /onclick="fdkKarteAusspielen\('\$\{k\}'\)"/.test(programm), "Karten antippen");
+  assert.ok(/const karte = fdkKiKarte\(F, 1\);/.test(programm) && /fdkTw\("karteTw", karte\)/.test(programm), "Twinkey spielt Karten und sagt etwas dazu");
+  assert.ok(/function fdkTon\(art\)/.test(programm) && /if \(!schToeneAn\(\)/.test(programm.slice(programm.indexOf("function fdkTon(art)"))) && /fdkTon\("wuerfel"\)/.test(programm), "Töne mit dem Töne-Schalter");
+  assert.ok(/await maeWarte\(SPAR\?\.an \? 250 : 450\)/.test(programm) && /await maeWarte\(SPAR\?\.an \? 80 : 170\)/.test(programm), "Twinkey zieht schneller");
+  assert.ok(/fdk-vorrat\$\{F\.vorrat\[f\] <= 0 \? " leer" : ""\}/.test(programm), "Kisten auf dem Brett sichtbar");
+  assert.ok(/if \(!w\.F\.vorrat\) w\.F\.vorrat = /.test(programm), "Partie aus der Vorversion läuft weiter");
 }
