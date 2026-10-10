@@ -6902,12 +6902,12 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 
 // 4xx. 2.126.0: Drei wandernde Schnecken im Langsam-Modus (KC-CLUB-SCHNECKEN-WANDERN, Wunsch Hansi)
 {
-  assert.ok(/onclick="schneckeInfo\(\)"><i style="--n:0">🐌<\/i><i style="--n:1">🐌<\/i><i style="--n:2">🐌<\/i><\/button>/.test(programm), "drei Schnecken");
-  assert.ok(/\.schnecke \{ position: fixed;[^}]*pointer-events: none; \}/.test(seite) && /\.schnecke i \{[^}]*pointer-events: auto;[^}]*animation: schneckeWandern 27s linear infinite; \}/.test(seite), "Streifen lässt Tipps durch, Schnecken wandern");
-  assert.ok(/@keyframes schneckeWandern \{ 0% \{ transform: translate\(0, 0\); \}[^@]*100% \{ transform: translate\(calc\(-100vw - 40px\), 0\); \} \}/.test(seite), "von rechts nach links");
+  assert.ok(/<span class="sn-zug"><i style="--n:0">🐌<\/i><i style="--n:1">🐌<\/i><i style="--n:2">🐌<\/i><\/span><\/button>/.test(programm), "drei Schnecken (2.195.0: als Trupp)");
+  assert.ok(/\.schnecke \{ position: fixed;[^}]*pointer-events: none; \}/.test(seite) && /\.schnecke \.sn-zug \{[^}]*pointer-events: auto;[^}]*animation: snZug 32s linear infinite; \}/.test(seite), "Streifen lässt Tipps durch, Schnecken wandern gemeinsam");
+  assert.ok(/@keyframes snZug \{ from \{ transform: translateX\(0\); \} to \{ transform: translateX\(calc\(-100vw - 110px\)\); \} \}/.test(seite) && /@keyframes snSpur/.test(seite), "von rechts nach links, mit Schleimspur");
   // 2.171.0 (Hansi: „Schnecken laufen immer noch nicht“): Handy-Einstellung „weniger Bewegung“ hält sie nicht mehr an – nur „✨ Animierte Knöpfe“ aus
   assert.ok(!/html\.spar \.schnecke i \{ animation: none/.test(seite) && !/prefers-reduced-motion: reduce\) \{ \.schnecke i \{ animation: none;/.test(seite) && /:root\.ohne-anim \.schnecke i \{ animation: none;/.test(seite), "still nur bei ausgeschalteten Animationen der App");
-  assert.ok(/\.schnecke i \{ animation: schneckeWandern 27s linear infinite, schneckeKriechen 1\.6s ease-in-out infinite;/.test(seite) && /@keyframes schneckeKriechen/.test(seite), "Schnecken kriechen beim Wandern");
+  assert.ok(/\.schnecke i \{[^}]*animation: schneckeKriechen 1\.6s ease-in-out infinite;/.test(seite) && /@keyframes schneckeKriechen/.test(seite), "Schnecken kriechen beim Wandern");
 }
 // 2.126.0 Fehler Hansi 09.10. (Adressbuch: „reading 'replace'“): adrSauber nie direkt an .map geben (Index würde nurFelder)
 assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\(a\)\)/.test(server), "Adressbuch: jede Adresse behält ihre id");
@@ -7663,4 +7663,10 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.deepEqual([n.personen, n.text], [["KC-P-ST"], "komm bitte vorbei"], "ähnlich klingender Nachname gehört zum Namen");
   assert.equal(sbErkennen("Nachricht an Klaus bin gleich da", mg, "KC-P-002").text, "bin gleich da", "normaler Text bleibt unverändert");
   assert.equal(sbErkennen("Chat mit Klaus öffnen", mg, "KC-P-002").text, "", "„öffnen“ bleibt kein Text");
+}
+
+// 2.195.0 KC-CLUB-SCHNECKE-TRUPP (Wunsch Hansi: die 3 bleiben zusammen, wandern gemeinsam von rechts nach links mit Schleimspur; alles weg, wenn das Netz wieder gut ist)
+{
+  const idx = lies("index.html");
+  assert.ok(/<span class="sn-spur" aria-hidden="true"><\/span><span class="sn-zug">/.test(html) && /\.schnecke \.sn-spur \{[^}]*animation: snSpur 32s linear infinite;/.test(idx) && /\.schnecke\.versteckt \{ display: none; \}/.test(idx), "Trupp + Spur in einem Streifen – verschwindet gemeinsam");
 }

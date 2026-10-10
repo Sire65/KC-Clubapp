@@ -2366,16 +2366,18 @@
      Der Streifen selbst lässt Tipps durch (pointer-events: none) – nur die Schnecken sind antippbar (Info). */
   .schnecke { position: fixed; z-index: 2400; left: 0; right: 0; top: calc(1px + env(safe-area-inset-top)); height: 26px; border: 0; background: none; padding: 0; margin: 0; overflow: hidden; pointer-events: none; }
   .schnecke.versteckt { display: none; }
-  .schnecke i { position: absolute; top: 2px; left: 100%; font-style: normal; font-size: 1.15rem; line-height: 1; cursor: pointer; pointer-events: auto; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); animation: schneckeWandern 27s linear infinite; }
-  .schnecke i:nth-child(2) { animation-delay: -9s; } .schnecke i:nth-child(3) { animation-delay: -18s; }
-  @keyframes schneckeWandern { 0% { transform: translate(0, 0); } 25% { transform: translate(calc(-25vw - 10px), 1px); } 50% { transform: translate(calc(-50vw - 20px), 0); } 75% { transform: translate(calc(-75vw - 30px), 1px); } 100% { transform: translate(calc(-100vw - 40px), 0); } }
-  /* 2.142.0 (Wunsch Hansi „die Schnecken stehen nur – sie sollen wandern“): auch im Sparmodus wandern sie – 3 kleine Zeichen, nur verschoben (kostet kaum Akku).
-     2.171.0 (Hansi: „die Schnecken laufen immer noch nicht“ – sein Handy meldet „weniger Bewegung“): still nur noch, wenn in der App
-     „✨ Animierte Knöpfe“ aus ist – nicht mehr wegen der Handy-Einstellung. Dazu ein leichtes Kriechen (Strecken/Stauchen). */
-  .schnecke i { animation: schneckeWandern 27s linear infinite, schneckeKriechen 1.6s ease-in-out infinite; transform-origin: 100% 100%; }
-  .schnecke i:nth-child(2) { animation-delay: -9s, -.5s; } .schnecke i:nth-child(3) { animation-delay: -18s, -1.1s; }
+  /* 2.195.0 (Wunsch Hansi): die 3 Schnecken bleiben zusammen und wandern GEMEINSAM oben von rechts nach links; hinter ihnen
+     wächst eine glänzende Schleimspur. Ist das Netz wieder gut, verschwindet alles zusammen (Streifen wird ausgeblendet). */
+  .schnecke .sn-zug { position: absolute; top: 2px; left: 100%; display: flex; gap: 3px; pointer-events: auto; cursor: pointer; animation: snZug 32s linear infinite; }
+  .schnecke i { font-style: normal; font-size: 1.15rem; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); animation: schneckeKriechen 1.6s ease-in-out infinite; transform-origin: 100% 100%; }
+  .schnecke i:nth-child(2) { animation-delay: -.5s; } .schnecke i:nth-child(3) { animation-delay: -1.1s; }
+  .schnecke .sn-spur { position: absolute; top: 19px; right: 0; width: 0; height: 3px; border-radius: 3px; pointer-events: none;
+    background: linear-gradient(90deg, rgba(200,225,205,.95), rgba(225,240,228,.55) 40%, rgba(235,245,238,.25)); box-shadow: 0 0 4px rgba(190,230,200,.8), inset 0 1px 0 rgba(255,255,255,.7);
+    animation: snSpur 32s linear infinite; }
+  @keyframes snZug { from { transform: translateX(0); } to { transform: translateX(calc(-100vw - 110px)); } }
+  @keyframes snSpur { 0% { width: 0; } 100% { width: calc(100vw + 30px); } }
   @keyframes schneckeKriechen { 0%, 100% { scale: 1 1; } 50% { scale: 1.12 .9; } }
-  :root.ohne-anim .schnecke i { animation: none; left: calc(50% - 40px + var(--n) * 28px); }
+  :root.ohne-anim .schnecke .sn-zug { animation: none; left: calc(50% - 40px); } :root.ohne-anim .schnecke i { animation: none; } :root.ohne-anim .schnecke .sn-spur { display: none; }
   .ss-live-leiste button { background: #fff; color: #d32f2f; border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 800; cursor: pointer; }
   /* 2.101.0 KC-CLUB-BUERO-EINLESEN */
   .einl-wahl { display: grid; gap: 8px; margin: 0 0 8px; } .einl-wahl .knopf { text-align: center; cursor: pointer; }
@@ -3839,6 +3841,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.194.0" data-v="2.194.0"></script>
+<script src="app.js?v=2.195.0" data-v="2.195.0"></script>
 </body>
 </html>

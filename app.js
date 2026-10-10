@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.194.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.195.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -9012,7 +9012,7 @@ function schneckePruefen() {
 }
 function schneckeZeigen() {
   let z = document.getElementById("schnecke");
-  if (!z && document.body) { document.body.insertAdjacentHTML("beforeend", `<button type="button" id="schnecke" class="schnecke versteckt" title="Netz gerade langsam – antippen für Infos" aria-label="Netz gerade langsam" onclick="schneckeInfo()"><i style="--n:0">🐌</i><i style="--n:1">🐌</i><i style="--n:2">🐌</i></button>`); z = document.getElementById("schnecke"); }
+  if (!z && document.body) { document.body.insertAdjacentHTML("beforeend", `<button type="button" id="schnecke" class="schnecke versteckt" title="Netz gerade langsam – antippen für Infos" aria-label="Netz gerade langsam" onclick="schneckeInfo()"><span class="sn-spur" aria-hidden="true"></span><span class="sn-zug"><i style="--n:0">🐌</i><i style="--n:1">🐌</i><i style="--n:2">🐌</i></span></button>`); /* 2.195.0: die 3 als Trupp mit Schleimspur */ z = document.getElementById("schnecke"); }
   if (z) z.classList.toggle("versteckt", !SCHNECKE.an);
   try { document.documentElement.classList.toggle("netz-langsam", SCHNECKE.an); } catch {}
 }

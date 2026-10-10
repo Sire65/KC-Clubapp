@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.195.0 – 2026-10-10 – 🐌 Schnecken als Trupp mit Schleimspur
+🔧 Kleine Systemverbesserungen
+
 ## 2.194.0 – 2026-10-10 – 🎙️ Sprachsteuerung: Chat öffnen ohne falschen Text
 🔧 Kleine Systemverbesserungen
 
