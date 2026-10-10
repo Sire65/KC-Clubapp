@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.186.0 – 2026-10-10 – 🗂️ Liste: Bereiche wieder antippbar
+🔧 Kleine Systemverbesserungen
+
 ## 2.185.0 – 2026-10-10 – 👥 Mitglieder als Rollkartei
 🔧 Kleine Systemverbesserungen
 

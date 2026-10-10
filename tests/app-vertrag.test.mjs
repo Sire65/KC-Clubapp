@@ -7602,3 +7602,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/api\("mitglied_details", \{ person_id: pid \}\)/.test(html) && /Date\.now\(\) - c\.zeit < 5 \* 60000/.test(html) && /\[0, 1, 2\]\.forEach\(\(k\) => mgkLaden/.test(html), "Kontaktdaten nur für vordere Karten, 5 Min. gemerkt, gleiche Freigaben wie Mitglieds-Seite");
   assert.ok(/kachel\("💬", "Nachricht · Push", true/.test(html) && /kachel\("👋", "Anklopfen", on,/.test(html) && /kachel\("🗺️", "Route", !!k\.adresse,/.test(html) && /class="mgk-weg aus" disabled/.test(html), "feste Reihenfolge der Wege, Nicht-Mögliches ausgegraut mit Grund");
 }
+
+// 2.186.0 KC-CLUB-ROLLKARTEI: zurück zur Liste → Bereiche wieder antippbar (Fund Hansi: blieben „inert“)
+{
+  assert.ok(/d\.style\.cssText = ""; d\.inert = false; d\.removeAttribute\("aria-hidden"\);/.test(html), "Abbauen hebt die Sperre wieder auf");
+}
