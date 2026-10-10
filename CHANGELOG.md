@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.214.0 – 2026-10-10 – 🪟 Zweite Jalousie im Kopf
+🪟 Oben im Kopf gibt es jetzt zwei Pfeile: ⌃ rollt nur das Infofeld ein (Status und LEDs bleiben), ⌃⌃ rollt alles bis auf die Kopfzeile ein
+
 ## 2.213.0 – 2026-10-10 – 🃏 Fang den Koch wird spannender
 🃏 Aktionskarten auf die Hand (max. 3): Turbo (2 Würfel), Abkürzung, Zutat klauen, Gas abdrehen, Lieferant, Mise en place, Schutzschild – im eigenen Zug vor dem Würfeln ausspielen; beide starten mit derselben Karte
 📦 Knappe Vorräte: jede Station hat 2 Portionen, leer heißt warten – im Büro wird alles nachbestellt

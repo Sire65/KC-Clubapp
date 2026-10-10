@@ -803,6 +803,13 @@
   .kopf-pfeil:active { background: rgba(0,0,0,.35); }
   #v-start .hero.eingerollt > .statusleiste, #v-start .hero.eingerollt > #heroInfo, #v-start .hero.eingerollt > #infoPunkte { display: none; }
   .kopf-pfeil.dreh span { transform: rotate(180deg); margin-top: 0; }
+  /* KC-CLUB-KOPF-ROLLO-2 (2.214.0): zwei gleiche Laschen symmetrisch zur Mitte, deutlicher Abstand; Tippfläche nach unten vergrößert */
+  .kopf-pfeil.kp-halb { left: calc(50% - 52px); } .kopf-pfeil.kp-ganz { left: calc(50% + 52px); }
+  .kopf-pfeil { height: 22px; }
+  .kopf-pfeil::after { content: ""; position: absolute; left: -6px; right: -6px; top: 0; height: 36px; }
+  .kp-doppel { display: grid !important; place-items: center; }
+  .kp-doppel b { display: block; font-weight: inherit; margin-top: -11px; }
+  #v-start .hero.halb-eingerollt > #heroInfo, #v-start .hero.halb-eingerollt > #infoPunkte { display: none; }
   .rollo-lamellen { position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none; display: flex; flex-direction: column; gap: 1px; padding-top: 1px; background: rgba(60,10,20,.35); }
   .rl-lamelle { flex: none; height: 15px; transform-origin: center; background: linear-gradient(to bottom, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 0 1px 2px rgba(0,0,0,.35); }
   .rollo-leiste { position: absolute; left: 0; right: 0; bottom: 0; height: 9px; z-index: 2; pointer-events: none; background: linear-gradient(to bottom, #a8364a, #6d1424); box-shadow: 0 -1px 3px rgba(0,0,0,.4); }
@@ -3068,7 +3075,9 @@
   <section id="v-start">
     <div class="hero">
       <!-- KC-CLUB-KOPF-ROLLO (2.159.0, Wunsch Hansi): Pfeil oben mittig rollt den Kopf wie eine Jalousie hoch (mehr Platz) und wieder runter -->
-      <button type="button" class="kopf-pfeil" id="kopfPfeil" title="Kopf einrollen – mehr Platz" aria-label="Kopf einrollen" aria-expanded="true" onclick="kopfRollo()"><span>⌃</span></button>
+      <!-- KC-CLUB-KOPF-ROLLO-2 (2.214.0, Wunsch Hansi): links ⌃ = halb (Statusleiste mit LEDs bleibt), rechts ⌃⌃ = ganz; symmetrisch, mit Abstand -->
+      <button type="button" class="kopf-pfeil kp-halb" id="kopfPfeilHalb" title="Kopf halb einrollen – Statusleiste mit LEDs bleibt" aria-label="Kopf halb einrollen" aria-expanded="true" onclick="kopfRollo('halb')"><span>⌃</span></button>
+      <button type="button" class="kopf-pfeil kp-ganz" id="kopfPfeil" title="Kopf ganz einrollen – nur die Kopfzeile bleibt" aria-label="Kopf ganz einrollen" aria-expanded="true" onclick="kopfRollo('ganz')"><span class="kp-doppel">⌃<b>⌃</b></span></button>
       <!-- KC-CLUB-KOPF-ORDNUNG (2.24.17, Wunsch Hansi): oben Marke + Knöpfe, darunter eine Statusleiste (Status, LEDs, Herz, Brille) -->
       <div class="kopfzeile">
         <div class="kopflogo"><button class="logo" title="Zur Internetseite des Köcheclubs" onclick="webseite()"><img src="kc-kochmuetze-weiss.webp" alt="Kochmütze"></button><button class="kopf-version" id="kopfVersion" title="Update prüfen" aria-label="Version – Update prüfen" onclick="updateKachel()">v–</button></div>
@@ -3945,6 +3954,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.213.0" data-v="2.213.0"></script>
+<script src="app.js?v=2.214.0" data-v="2.214.0"></script>
 </body>
 </html>

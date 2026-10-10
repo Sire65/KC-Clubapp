@@ -7379,16 +7379,16 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.160.0 (Hansi: „zu schnell, läuft nicht hoch wie eine Jalousie“): echte Lamellen klappen zu, Jalousie fährt mit Abschlussleiste langsam hoch
 {
   const start = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('<div class="kopfzeile">', html.indexOf('<section id="v-start">')));
-  assert.ok(/<button type="button" class="kopf-pfeil" id="kopfPfeil"[^>]*aria-expanded="true"[^>]*onclick="kopfRollo\(\)">/.test(start), "Pfeil oben im Kopf der Startseite");
+  assert.ok(/<button type="button" class="kopf-pfeil[^"]*" id="kopfPfeil"[^>]*aria-expanded="true"[^>]*onclick="kopfRollo\('ganz'\)">/.test(start), "Pfeil oben im Kopf der Startseite");
   assert.ok(/\.kopf-pfeil \{ position: absolute; top: 0; left: 50%; transform: translateX\(-50%\)/.test(html), "Pfeil mittig oben");
   assert.ok(/#v-start \.hero\.eingerollt > \.statusleiste, #v-start \.hero\.eingerollt > #heroInfo, #v-start \.hero\.eingerollt > #infoPunkte \{ display: none; \}/.test(html), "Statusleiste + Infofeld rollen ein, Kopfzeile bleibt");
   assert.ok(/\.kopf-pfeil\.dreh span \{ transform: rotate\(180deg\)/.test(html), "Pfeil dreht sich um");
   assert.ok(/\.rl-lamelle \{[^}]*linear-gradient/.test(html) && /\.rollo-leiste \{ position: absolute;[^}]*bottom: 0/.test(html), "Lamellen und Abschlussleiste");
-  const f = html.slice(html.indexOf("async function kopfRolloFahren("), html.indexOf("function kopfRollo() {"));
+  const f = html.slice(html.indexOf("async function kopfRolloFahren("), html.indexOf("function kopfRollo(art"));
   assert.ok(/ROLLO_FAHRT_MS = 1400/.test(html) && /await klappen\(false\);[\s\S]{0,80}await fahren\(gross, klein\);/.test(f) && /await fahren\(klein, gross\);[\s\S]{0,80}await klappen\(true\);/.test(f), "hoch: zuklappen, dann hochfahren – runter umgekehrt");
-  assert.ok(!/prefers-reduced-motion/.test(f) && /typeof h\.animate !== "function" \|\| !h\.getClientRects\(\)\.length\) return kopfRolloSetzen\(zu\)/.test(f) && /if \(h\.dataset\.rollt\) return;/.test(f) && /finally \{[\s\S]{0,200}vorhang\.remove\(\); leiste\.remove\(\); delete h\.dataset\.rollt;/.test(f), "läuft auf Antippen immer (2.161.0), kein Doppelstart, räumt immer auf");
-  assert.ok(/function kopfRollo\(\) \{[\s\S]{0,300}localStorage\.setItem\(KOPF_ROLLO, "1"\) : localStorage\.removeItem\(KOPF_ROLLO\)/.test(html) && /try \{ if \(localStorage\.getItem\(KOPF_ROLLO\) === "1"\) kopfRolloSetzen\(true\); \} catch \{\}/.test(html), "Zustand gemerkt, Speicherfehler harmlos");
-  assert.ok(/k\.setAttribute\("aria-expanded", zu \? "false" : "true"\)/.test(html), "Vorlesehilfe kennt den Zustand");
+  assert.ok(!/prefers-reduced-motion/.test(f) && /typeof h\.animate !== "function" \|\| !h\.getClientRects\(\)\.length\) return kopfRolloSetzen\(ziel\)/.test(f) && /if \(h\.dataset\.rollt\) return;/.test(f) && /finally \{[\s\S]{0,200}vorhang\.remove\(\); leiste\.remove\(\); delete h\.dataset\.rollt;/.test(f), "läuft auf Antippen immer (2.161.0), kein Doppelstart, räumt immer auf");
+  assert.ok(/function kopfRollo\(art = "ganz"\) \{[\s\S]{0,600}localStorage\.removeItem\(KOPF_ROLLO\) : localStorage\.setItem\(KOPF_ROLLO, ziel === "ganz" \? "1" : "halb"\)/.test(html) && /try \{ const w = localStorage\.getItem\(KOPF_ROLLO\); if \(w === "1"\) kopfRolloSetzen\("ganz"\); else if \(w === "halb"\) kopfRolloSetzen\("halb"\); \} catch \{\}/.test(html), "Zustand gemerkt, Speicherfehler harmlos");
+  assert.ok(/[gk]\.setAttribute\("aria-expanded", zu \? "false" : "true"\)/.test(html), "Vorlesehilfe kennt den Zustand");
 }
 // 2.162.0 KC-CLUB-START-PARALLEL-3 (Wunsch Hansi „Start optimieren, nicht schlechter“): weniger Datenbank-Anfragen beim Start, gleicher Inhalt
 {
@@ -7870,4 +7870,15 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/await maeWarte\(SPAR\?\.an \? 250 : 450\)/.test(programm) && /await maeWarte\(SPAR\?\.an \? 80 : 170\)/.test(programm), "Twinkey zieht schneller");
   assert.ok(/fdk-vorrat\$\{F\.vorrat\[f\] <= 0 \? " leer" : ""\}/.test(programm), "Kisten auf dem Brett sichtbar");
   assert.ok(/if \(!w\.F\.vorrat\) w\.F\.vorrat = /.test(programm), "Partie aus der Vorversion läuft weiter");
+}
+
+// 2.214.0 KC-CLUB-KOPF-ROLLO-2 (Wunsch Hansi): zweite Jalousie – links ⌃ halb (Statusleiste mit LEDs bleibt), rechts ⌃⌃ ganz; symmetrisch mit Abstand
+{
+  const start = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('<div class="kopfzeile">', html.indexOf('<section id="v-start">')));
+  assert.ok(/id="kopfPfeilHalb"[^>]*onclick="kopfRollo\('halb'\)"/.test(start) && /id="kopfPfeil"[^>]*onclick="kopfRollo\('ganz'\)"/.test(start), "zwei Pfeile im Kopf");
+  assert.ok(/\.kopf-pfeil\.kp-halb \{ left: calc\(50% - (\d+)px\); \} \.kopf-pfeil\.kp-ganz \{ left: calc\(50% \+ \1px\); \}/.test(html), "Pfeile symmetrisch zur Mitte");
+  const ab = Number(/kp-halb \{ left: calc\(50% - (\d+)px\)/.exec(html)[1]); assert.ok(ab * 2 - 56 >= 40, "mindestens 40 px Abstand zwischen den Laschen");
+  assert.ok(/#v-start \.hero\.halb-eingerollt > #heroInfo, #v-start \.hero\.halb-eingerollt > #infoPunkte \{ display: none; \}/.test(html) && !/halb-eingerollt > \.statusleiste/.test(html), "halb: Statusleiste mit LEDs bleibt");
+  assert.ok(/const ROLLO_RANG = \{ offen: 0, halb: 1, ganz: 2 \};/.test(html) && /art === "halb" \? \(von === "offen" \? "halb" : von === "halb" \? "offen" : "halb"\) : \(von === "ganz" \? "offen" : "ganz"\)/.test(html), "drei Stellungen, logische Übergänge");
+  assert.ok(/if \(document\.querySelector\("#v-start \.hero"\)\?\.dataset\.rollt\) return;/.test(html), "während der Fahrt nichts merken");
 }

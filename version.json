@@ -1,13 +1,18 @@
 {
-  "version": "2.213.0",
+  "version": "2.214.0",
   "datum": "2026-10-10",
   "stufe": "RC",
   "neu": [
-    "🃏 Fang den Koch: Aktionskarten auf die Hand (Turbo, Abkürzung, Klauen, Gas zu …)",
-    "📦 Knappe Vorräte – Stationen werden leer, im Büro nachbestellen",
-    "⚡ Schneller, mit Würfel- und Kochtönen"
+    "🔧 Kleine Systemverbesserungen"
   ],
   "verlauf": [
+    {
+      "version": "2.214.0",
+      "datum": "2026-10-10",
+      "neu": [
+        "🔧 Kleine Systemverbesserungen"
+      ]
+    },
     {
       "version": "2.213.0",
       "datum": "2026-10-10",

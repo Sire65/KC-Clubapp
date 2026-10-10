@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.213.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.214.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -10547,21 +10547,37 @@ let infoLetztes = "";
 // Pfeil oben mittig: Kopf rollt sich wie eine Jalousie hoch (Statusleiste + Infofeld weg, Kopfzeile bleibt) und wieder runter.
 // Hoch: Lamellen klappen von oben nach unten zu, dann fährt die Jalousie mit der Abschlussleiste langsam hoch. Runter: umgekehrt.
 // Gemerkt nur auf diesem Gerät (Bequemlichkeit, keine wichtigen Daten).
+// 2.214.0 KC-CLUB-KOPF-ROLLO-2 (Wunsch Hansi): zweite Jalousie – links ⌃ rollt nur das Infofeld ein (Statusleiste mit LEDs bleibt),
+// rechts ⌃⌃ rollt wie bisher alles bis auf die Kopfzeile ein. Drei Stellungen: offen / halb / ganz. Gleiche Lamellen-Mechanik für beide.
 const KOPF_ROLLO = "kc_club_kopf_eingerollt", ROLLO_FAHRT_MS = 1400, ROLLO_KLAPP_MS = 320, ROLLO_VERSATZ_MS = 22;
-function kopfRolloSetzen(zu) {
-  const h = document.querySelector("#v-start .hero"), k = $("kopfPfeil"); if (!h) return;
-  h.classList.toggle("eingerollt", !!zu);
-  if (k) { k.classList.toggle("dreh", !!zu); k.setAttribute("aria-expanded", zu ? "false" : "true"); k.title = zu ? "Kopf ausrollen – alles zeigen" : "Kopf einrollen – mehr Platz"; k.setAttribute("aria-label", zu ? "Kopf ausrollen" : "Kopf einrollen"); }
+const ROLLO_RANG = { offen: 0, halb: 1, ganz: 2 };
+const kopfRolloStand = () => { const h = document.querySelector("#v-start .hero"); return h?.classList.contains("eingerollt") ? "ganz" : h?.classList.contains("halb-eingerollt") ? "halb" : "offen"; };
+function kopfRolloKlassen(h, stand) { h.classList.toggle("eingerollt", stand === "ganz"); h.classList.toggle("halb-eingerollt", stand === "halb"); }
+function kopfRolloSetzen(stand) {
+  if (stand === true) stand = "ganz"; else if (!stand) stand = "offen";
+  const h = document.querySelector("#v-start .hero"); if (!h) return;
+  kopfRolloKlassen(h, stand);
+  kopfPfeileZeigen(stand);
 }
-async function kopfRolloFahren(zu) {
-  const h = document.querySelector("#v-start .hero"), kz = h?.querySelector(".kopfzeile");
+function kopfPfeileZeigen(stand) {
+  const g = $("kopfPfeil"), hb = $("kopfPfeilHalb");
+  if (g) { const zu = stand === "ganz"; g.classList.toggle("dreh", zu); g.setAttribute("aria-expanded", zu ? "false" : "true"); g.title = zu ? "Kopf ausrollen – alles zeigen" : "Kopf ganz einrollen – nur die Kopfzeile bleibt"; g.setAttribute("aria-label", zu ? "Kopf ausrollen" : "Kopf ganz einrollen"); }
+  if (hb) { const zu = stand !== "offen"; hb.classList.toggle("dreh", zu); hb.setAttribute("aria-expanded", zu ? "false" : "true"); hb.title = stand === "halb" ? "Kopf ausrollen – alles zeigen" : stand === "ganz" ? "Kopf halb ausrollen – Statusleiste mit LEDs zeigen" : "Kopf halb einrollen – Statusleiste mit LEDs bleibt"; hb.setAttribute("aria-label", hb.title.split(" – ")[0]); }
+}
+async function kopfRolloFahren(ziel) {
+  const h = document.querySelector("#v-start .hero"), kz = h?.querySelector(".kopfzeile"), sl = h?.querySelector(".statusleiste");
+  const von = kopfRolloStand(); if (von === ziel) return;
   // 2.161.0 (Hansi: „kein Jalousie-Effekt“ – sein Handy meldet „Bewegung reduzieren“): die Jalousie läuft nur auf Antippen,
   // dauert ~2 s und blinkt nicht – sie läuft deshalb immer, außer das Gerät kann keine Animationen oder der Kopf ist nicht sichtbar.
-  if (!h || !kz || typeof h.animate !== "function" || !h.getClientRects().length) return kopfRolloSetzen(zu);
+  if (!h || !kz || !sl || typeof h.animate !== "function" || !h.getClientRects().length) return kopfRolloSetzen(ziel);
   if (h.dataset.rollt) return; h.dataset.rollt = "1";
-  const k = $("kopfPfeil"); if (k) k.classList.toggle("dreh", !!zu);
-  const oben = kz.offsetTop + kz.offsetHeight + 6, klein = (() => { h.classList.add("eingerollt"); const x = h.offsetHeight; h.classList.remove("eingerollt"); return x; })();
-  h.classList.remove("eingerollt"); const gross = h.offsetHeight;
+  kopfPfeileZeigen(ziel);
+  const zu = ROLLO_RANG[ziel] > ROLLO_RANG[von];
+  const hoehe = (s) => { kopfRolloKlassen(h, s); return h.offsetHeight; };
+  // Die Jalousie deckt nur den Teil ab, der verschwindet: bei „halb“ alles unter der Statusleiste, bei „ganz“ alles unter der Kopfzeile
+  const kante = (s) => (s === "ganz" ? kz.offsetTop + kz.offsetHeight : sl.offsetTop + sl.offsetHeight) + 6;
+  const offenerStand = zu ? von : ziel, engerStand = zu ? ziel : von;
+  const klein = hoehe(engerStand), gross = hoehe(offenerStand), oben = kante(engerStand); // Messung im offeneren Stand
   const vorhang = document.createElement("div"); vorhang.className = "rollo-lamellen"; vorhang.style.top = oben + "px"; vorhang.style.height = Math.max(0, gross - oben) + "px";
   const anzahl = Math.ceil(Math.max(0, gross - oben) / 16);
   vorhang.innerHTML = '<i class="rl-lamelle"></i>'.repeat(anzahl);
@@ -10575,23 +10591,27 @@ async function kopfRolloFahren(zu) {
       h.append(vorhang, leiste); lamellen.forEach((l) => { l.style.opacity = "0"; });
       await klappen(false);                       // Lamellen klappen zu
       await fahren(gross, klein);                 // Jalousie fährt hoch
-      kopfRolloSetzen(true);
+      kopfRolloSetzen(ziel);
     } else {
-      h.classList.remove("eingerollt"); h.append(vorhang, leiste);
+      h.append(vorhang, leiste);
       await fahren(klein, gross);                 // Jalousie fährt runter (geschlossen)
       await klappen(true);                        // Lamellen öffnen sich – Inhalt erscheint
-      kopfRolloSetzen(false);
+      kopfRolloSetzen(ziel);
     }
   } finally {
     h.getAnimations?.().forEach((a) => a.cancel()); h.style.overflow = ""; vorhang.remove(); leiste.remove(); delete h.dataset.rollt;
+    kopfRolloSetzen(kopfRolloStand());
   }
 }
-function kopfRollo() {
-  const zu = !document.querySelector("#v-start .hero")?.classList.contains("eingerollt");
-  kopfRolloFahren(zu);
-  try { zu ? localStorage.setItem(KOPF_ROLLO, "1") : localStorage.removeItem(KOPF_ROLLO); } catch {}
+// art "ganz" (rechts ⌃⌃): offen/halb → ganz, ganz → offen · art "halb" (links ⌃): offen → halb, halb → offen, ganz → halb
+function kopfRollo(art = "ganz") {
+  if (document.querySelector("#v-start .hero")?.dataset.rollt) return; // läuft schon – nichts merken, was nicht passiert
+  const von = kopfRolloStand();
+  const ziel = art === "halb" ? (von === "offen" ? "halb" : von === "halb" ? "offen" : "halb") : (von === "ganz" ? "offen" : "ganz");
+  kopfRolloFahren(ziel);
+  try { ziel === "offen" ? localStorage.removeItem(KOPF_ROLLO) : localStorage.setItem(KOPF_ROLLO, ziel === "ganz" ? "1" : "halb"); } catch {}
 }
-try { if (localStorage.getItem(KOPF_ROLLO) === "1") kopfRolloSetzen(true); } catch {}
+try { const w = localStorage.getItem(KOPF_ROLLO); if (w === "1") kopfRolloSetzen("ganz"); else if (w === "halb") kopfRolloSetzen("halb"); } catch {}
 function heroZeigen(richtung) {
   const f = INFO_FELDER[INFO_I] || INFO_FELDER[0], inhalt = f.html();
   // gleicher Inhalt → nicht neu zeichnen (sonst springen Wetter-Animationen bei jedem Online-Takt neu an)
