@@ -7592,3 +7592,13 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/id="setRkEinst" onchange="rkSchalten\('einst', this\.checked\)"/.test(idx) && /function rkSchalten\(k, an\)/.test(html) && /localStorage\.setItem\("kc_club_rk_" \+ k, an \? "an" : "aus"\)/.test(html), "Schalter je Liste unter 🧩 Startseite & Ansicht");
   assert.ok(/if \(sch\) sch\.checked = an;/.test(html), "Schalter zeigt immer den echten Stand (auch nach ☰ Liste / 🗂️ Kartei oben)");
 }
+
+// 2.185.0 KC-CLUB-MG-KARTEI (Wunsch Hansi: Mitglieder als Rollkartei mit vollen Infos und geordnetem Block der Erreichbarkeit)
+{
+  const idx = lies("index.html");
+  assert.ok(/const MG_ANSICHTEN = \["kacheln", "liste", "tafel", "kartei"\];/.test(html) && /if \(MG_ANSICHT === "kartei"\) \{ \$\("mitgliederListe"\)\.innerHTML = mgKarteiHtml\(liste\); mgKarteiAn\(\); return; \}/.test(html), "vierte Ansicht „Kartei“");
+  assert.ok(/data-a="kartei"/.test(idx) && /id="setRkMitgl" onchange="mgAnsichtSetzen\(this\.checked \? 'kartei' : 'kacheln'\)"/.test(idx), "wählbar oben und unter 🗂️ Rollkartei");
+  assert.ok(/function rkIn\(box, schluessel, opts = \{\}\)/.test(html) && /if \(i > 0\) \{ z\.i = i; rkStellen\(z, true\); \}/.test(html), "Kern wiederverwendet; vordere Karte bleibt beim Neuzeichnen vorn");
+  assert.ok(/api\("mitglied_details", \{ person_id: pid \}\)/.test(html) && /Date\.now\(\) - c\.zeit < 5 \* 60000/.test(html) && /\[0, 1, 2\]\.forEach\(\(k\) => mgkLaden/.test(html), "Kontaktdaten nur für vordere Karten, 5 Min. gemerkt, gleiche Freigaben wie Mitglieds-Seite");
+  assert.ok(/kachel\("💬", "Nachricht · Push", true/.test(html) && /kachel\("👋", "Anklopfen", on,/.test(html) && /kachel\("🗺️", "Route", !!k\.adresse,/.test(html) && /class="mgk-weg aus" disabled/.test(html), "feste Reihenfolge der Wege, Nicht-Mögliches ausgegraut mit Grund");
+}

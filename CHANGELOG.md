@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.185.0 – 2026-10-10 – 👥 Mitglieder als Rollkartei
+🔧 Kleine Systemverbesserungen
+
 ## 2.184.0 – 2026-10-10 – 🗂️ Rollkartei in den Einstellungen wählbar
 🔧 Kleine Systemverbesserungen
 

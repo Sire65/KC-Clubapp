@@ -1115,6 +1115,30 @@
   .rk-zahl { color: #eee; font-weight: 700; min-width: 54px; text-align: center; font-size: .9rem; }
   .rk-pfeil { border: 0; background: var(--rot); color: #fff; width: 40px; height: 32px; border-radius: 10px; font-size: 1rem; cursor: pointer; }
   :root.ohne-anim .rk > .rk-karte { transition-duration: .01s; }
+  /* KC-CLUB-MG-KARTEI (2.185.0): Mitglieder-Karteikarten – sauber untereinander, Wege als gleich große Kacheln */
+  .rk-box { position: relative; }
+  .rk-box > .rk-karte { position: absolute; left: 0; right: 0; top: var(--rk-oben); height: var(--rk-h); margin: 0; overflow: auto; overscroll-behavior: contain;
+    transform-origin: 50% 100%; transition: transform .42s cubic-bezier(.3,.7,.3,1), opacity .42s, box-shadow .42s; backface-visibility: hidden; border-top: 6px solid var(--karte2); box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+  .rk-box > .rk-karte > summary { position: sticky; top: -16px; margin: -16px -16px 8px; padding: 10px 16px; background: var(--karte); z-index: 2; pointer-events: none; list-style: none; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .rk-box > .rk-karte > summary::-webkit-details-marker { display: none; }
+  .rk-box > .rk-karte[data-rk="vorn"] { z-index: 30; transform: none; opacity: 1; border-top: 7px solid var(--rot); box-shadow: 0 -3px 12px -2px var(--rot), 0 6px 18px rgba(0,0,0,.2); }
+  .rk-box > .rk-karte[data-rk="h1"] { z-index: 29; transform: translateY(calc(-42px - .04 * var(--rk-h))) scale(.96); opacity: .97; overflow: hidden; filter: brightness(.97); }
+  .rk-box > .rk-karte[data-rk="h2"] { z-index: 28; transform: translateY(calc(-84px - .08 * var(--rk-h))) scale(.92); opacity: .9; overflow: hidden; filter: brightness(.93); }
+  .rk-box > .rk-karte[data-rk="rest"] { z-index: 1; transform: translateY(calc(-80px - .1 * var(--rk-h))) scale(.9); opacity: 0; pointer-events: none; overflow: hidden; }
+  .rk-box > .rk-karte[data-rk="weg"] { z-index: 31; transform: translateY(40px) rotateX(-98deg); opacity: 0; pointer-events: none; overflow: hidden; }
+  .rk-box.rk-schnell > .rk-karte { transition-duration: .16s; }
+  .rk-box > .rk-griff { left: 0; right: 0; }
+  .rk-box .rk-tab .avatar { width: 30px !important; height: 30px !important; font-size: .8rem; }
+  .mgk-kopf { text-align: center; padding: 4px 0 6px; } .mgk-kopf .avatar { margin: 0 auto; cursor: pointer; }
+  .mgk-name { font-size: 1.35rem; font-weight: 800; margin: 8px 0 4px; } .mgk-da { margin-top: 6px; } .mgk-da.an { color: var(--textGruen); font-weight: 700; }
+  .mgk-t { margin: 14px 0 6px; padding-top: 10px; border-top: 1px solid var(--linie, rgba(0,0,0,.1)); font-size: 1rem; }
+  .mgk-zeile { display: flex; flex-direction: column; padding: 6px 0; border-bottom: 1px dashed var(--linie, rgba(0,0,0,.08)); } .mgk-zeile small { color: var(--grau, #777); } .mgk-zeile b { word-break: break-word; }
+  .mgk-wege { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .mgk-weg { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 76px; padding: 8px 4px; border: 0; border-radius: 14px;
+    background: var(--karte2); color: inherit; text-decoration: none; font: inherit; cursor: pointer; text-align: center; }
+  .mgk-weg span { font-size: 1.7rem; line-height: 1; } .mgk-weg small { font-weight: 700; font-size: .78rem; line-height: 1.15; }
+  .mgk-weg i { font-style: normal; font-size: .62rem; opacity: .8; line-height: 1.1; }
+  .mgk-weg.aus { opacity: .45; cursor: default; } .mgk-weg:not(.aus):active { transform: scale(.96); }
   .papierflieger { position: fixed; z-index: 99999; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); will-change: transform, opacity; }
   .zettel { position: relative; } .zettel-nadel { position: absolute; left: 50%; top: -10px; font-size: 1.6rem; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
   .gb-kerze { position: relative; display: inline-block; margin-left: 4px; font-size: .95em; }
@@ -3252,7 +3276,7 @@
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>👥 Aktive Mitglieder</h2><button class="knopf klein stmarke st-verfuegbar" id="meinStatusKnopf" onclick="statusBlatt()"><small class="st-titel">Mein Status</small>🟢 verfügbar ▾</button><button class="rund mg-neu" id="mgAktualisieren" title="Aktualisieren" aria-label="Mitglieder aktualisieren" onclick="mgAktualisieren(this)">↻</button></div>
     <!-- KC-CLUB-ONLINEFILTER (0.72.0): alle oder nur gerade online -->
     <!-- KC-CLUB-MG-UMSCHALTER (1.47.0): Kacheln | Liste direkt oben, daneben Alle | Online -->
-    <div class="mg-schalter"><div class="umschalter" id="mgAnsichtOben"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')" title="Als Kacheln zeigen" aria-label="Als Kacheln zeigen">🔲</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')" title="Als Liste zeigen" aria-label="Als Liste zeigen">☰</button><button data-a="tafel" onclick="mgAnsichtSetzen('tafel')" title="Anwesenheitstafel: nur Name und Lämpchen" aria-label="Anwesenheitstafel">📋</button></div>
+    <div class="mg-schalter"><div class="umschalter" id="mgAnsichtOben"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')" title="Als Kacheln zeigen" aria-label="Als Kacheln zeigen">🔲</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')" title="Als Liste zeigen" aria-label="Als Liste zeigen">☰</button><button data-a="tafel" onclick="mgAnsichtSetzen('tafel')" title="Anwesenheitstafel: nur Name und Lämpchen" aria-label="Anwesenheitstafel">📋</button><button data-a="kartei" onclick="mgAnsichtSetzen('kartei')" title="Als Rollkartei zeigen" aria-label="Als Rollkartei zeigen">🗂️</button></div>
       <div class="umschalter" id="mgFilter"><button data-f="alle" onclick="mgFilterSetzen('alle')">👥 Alle</button><button data-f="online" onclick="mgFilterSetzen('online')">🟢 Nur online</button></div></div>
     <div id="mgGruppen"></div><!-- KC-CLUB-MG-GRUPPEN (1.34.0): eigene Gruppen als Filter -->
     <div class="karte" id="mitgliederListe"><span class="hinweis">Wird geladen …</span></div>
@@ -3414,7 +3438,8 @@
       <summary>🧩 Startseite &amp; Ansicht</summary>
       <!-- KC-CLUB-ROLLKARTEI-WAHL (2.184.0, Wunsch Hansi): jeder entscheidet selbst – je Liste, gilt für dieses Gerät -->
       <div class="schalter" style="display:block"><div><b>🗂️ Rollkartei</b><div class="hinweis">Lange Listen wie eine Karteikarten-Rolle durchblättern (antippen, wischen, endlos). Aus: die gewohnte Liste. Gilt für dieses Gerät.</div></div>
-        <div class="schalter" style="margin:6px 0 0"><div>⚙️ Einstellungen</div><input type="checkbox" id="setRkEinst" onchange="rkSchalten('einst', this.checked)"></div></div>
+        <div class="schalter" style="margin:6px 0 0"><div>⚙️ Einstellungen</div><input type="checkbox" id="setRkEinst" onchange="rkSchalten('einst', this.checked)"></div>
+        <div class="schalter" style="margin:0"><div>👥 Mitglieder <small class="hinweis">(volle Infos je Karte)</small></div><input type="checkbox" id="setRkMitgl" onchange="mgAnsichtSetzen(this.checked ? 'kartei' : 'kacheln')"></div></div>
       <div class="schalter"><div><b>🪧 Info-Feld oben beim Start</b><div class="hinweis">Welche Karte zuerst erscheint – z. B. Nr. 1 oder die Kommunikationszentrale</div></div><select id="setInfoStart" onchange="infoStartSetzen(this.value)" style="max-width:48%"></select></div>
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Nur das Wichtigste mit großen Knöpfen – jederzeit umschaltbar</div></div><button class="knopf klein" onclick="ansichtSetzen('einfach')">Einschalten</button></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
@@ -3423,7 +3448,7 @@
       <div style="margin-top:8px"><b>🔲 Kacheln auf der Startseite</b> <span class="hinweis">(erweiterte Ansicht, gilt für dieses Gerät)</span></div>
       <div class="umschalter" id="kachelGroesseWahl"><button data-g="normal" onclick="kachelGroesse('normal')">▣ Normal – 2 nebeneinander</button><button data-g="klein" onclick="kachelGroesse('klein')">▦ Klein – 3 nebeneinander</button><button data-g="mini" onclick="kachelGroesse('mini')">▪ Sehr klein – 4 nebeneinander</button></div>
       <div style="margin-top:8px"><b>👥 Mitglieder anzeigen als</b></div>
-      <div class="umschalter" id="mgAnsichtWahl"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')">🔲 Kacheln</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')">☰ Liste</button><button data-a="tafel" onclick="mgAnsichtSetzen('tafel')">📋 Anwesenheit</button></div>
+      <div class="umschalter" id="mgAnsichtWahl"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')">🔲 Kacheln</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')">☰ Liste</button><button data-a="tafel" onclick="mgAnsichtSetzen('tafel')">📋 Anwesenheit</button><button data-a="kartei" onclick="mgAnsichtSetzen('kartei')">🗂️ Kartei</button></div>
       <div class="schalter"><div><b>🇩🇪 Feiertage NRW im Kalender</b><div class="hinweis">Gesetzliche Feiertage in Nordrhein-Westfalen</div></div><input type="checkbox" id="setFeiertage" onchange="einstellung('feiertage', this.checked); if (KAL) kalZeichnen()"></div>
     </details>
     <!-- 2.23.46 KC-CLUB-LEITUNG-START-SCHALTER (Wunsch Hansi): was beim App-Start für die Clubleitung erscheint – je Gerät an/aus -->
@@ -3782,6 +3807,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.184.0" data-v="2.184.0"></script>
+<script src="app.js?v=2.185.0" data-v="2.185.0"></script>
 </body>
 </html>

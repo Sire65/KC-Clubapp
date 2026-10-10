@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.184.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.185.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12433,6 +12433,15 @@ function rkEinrichten(wurzelId, schluessel) {
   }
   if (!w.classList.contains("versteckt")) rkAufbauen(z);
 }
+// 2.185.0: Kartei in einem Behälter, der immer wieder neu gezeichnet wird (z. B. Mitglieder) – die vordere Karte bleibt vorn (opts.id)
+function rkIn(box, schluessel, opts = {}) {
+  if (!box) return;
+  const alt = RK[schluessel], altId = alt?.karten?.[alt.i] && opts.id ? opts.id(alt.karten[alt.i]) : null;
+  const z = RK[schluessel] = { w: box, i: 0, karten: [], schluessel, opts, immer: true };
+  box.addEventListener("click", (e) => { const s = e.target.closest("summary"); if (s && s.parentElement?.parentElement === box) e.preventDefault(); }, true);
+  rkAufbauen(z);
+  if (altId) { const i = z.karten.findIndex((d) => opts.id(d) === altId); if (i > 0) { z.i = i; rkStellen(z, true); } }
+}
 // 2.184.0 KC-CLUB-ROLLKARTEI-WAHL: an/aus je Liste über die Einstellungen (gleicher Speicher wie „☰ Liste / 🗂️ Kartei“ oben)
 function rkSchalten(k, an) {
   try { localStorage.setItem("kc_club_rk_" + k, an ? "an" : "aus"); } catch {}
@@ -12441,9 +12450,9 @@ function rkSchalten(k, an) {
   if (an && RK[k]) { const d = $("setRk" + k[0].toUpperCase() + k.slice(1)); if (d) setTimeout(() => rkZu(RK[k], d), 80); }
 }
 function rkAufbauen(z) {
-  const w = z.w, an = rkAn(z.schluessel);
+  const w = z.w, an = z.immer || rkAn(z.schluessel);
   const sch = $("setRk" + z.schluessel[0].toUpperCase() + z.schluessel.slice(1)); if (sch) sch.checked = an; // Schalter unter 🧩 Startseite & Ansicht
-  z.knopf.textContent = an ? "☰ Liste" : "🗂️ Kartei"; z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen";
+  if (z.knopf) { z.knopf.textContent = an ? "☰ Liste" : "🗂️ Kartei"; z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen"; }
   if (!an) { if (z.an) rkAbbauen(z); return; }
   if (!z.an) {
     z.an = true; w.classList.add("rk");
@@ -12468,8 +12477,8 @@ function rkAufbauen(z) {
   z.karten = rkKarten(w);
   z.karten.forEach((d) => { if (d.dataset.rkVorher === undefined) d.dataset.rkVorher = d.open ? "1" : "0"; d.open = true; d.classList.add("rk-karte"); });
   z.i = Math.max(0, Math.min(z.i, z.karten.length - 1));
-  z.reiter.innerHTML = z.karten.map((d, i) => { const t = d.querySelector(":scope > summary")?.textContent.trim() || ""; const sym = [...t][0] || "•";
-    return `<button type="button" role="tab" class="rk-tab" data-i="${i}" title="${esc(t)}" aria-label="${esc(t)}">${esc(sym)}<small>${esc((t.replace(/^\S+\s*/, "").match(/[\p{L}\d-]+/u) || [""])[0])}</small></button>`; }).join("");
+  z.reiter.innerHTML = z.karten.map((d, i) => { const t = d.querySelector(":scope > summary")?.textContent.trim() || ""; const sym = z.opts?.tabSym?.(d) || [...t][0] || "•";
+    return `<button type="button" role="tab" class="rk-tab" data-i="${i}" title="${esc(t)}" aria-label="${esc(t)}">${z.opts?.tabSym ? sym : esc(sym)}<small>${esc(z.opts?.tabText?.(d) ?? (t.replace(/^\S+\s*/, "").match(/[\p{L}\d-]+/u) || [""])[0])}</small></button>`; }).join("");
   z.reiter.querySelectorAll(".rk-tab").forEach((b) => (b.onclick = () => rkGehe(z, Number(b.dataset.i))));
   rkMasse(z); rkStellen(z, true);
 }
@@ -12481,7 +12490,7 @@ function rkAbbauen(z) {
 }
 function rkMasse(z) {
   const nav = $("fuss")?.getBoundingClientRect().height || 76;
-  const h = Math.max(300, innerHeight - (z.platz.getBoundingClientRect().top) - nav - 12);
+  const h = Math.max(300, Math.round(innerHeight * (z.immer ? 0.72 : 0.5)), innerHeight - (z.platz.getBoundingClientRect().top + scrollY) - nav - 12); // 2.185.0: in hohen Seiten (Mitglieder) mindestens ¾ Bildschirm – die Seite scrollt dann bis zur Kartei
   z.platz.style.height = h + "px";
   // 2.182.0 (Fund Hansi: Mikrofon lag vor ▲): schwebende Knöpfe (🎙️ links, ? und 🔍 rechts) aussparen – das Rad rückt dazwischen
   const rad = z.platz.querySelector(".rk-rad"); if (rad) { rad.style.left = rad.style.right = ""; const pr = z.platz.getBoundingClientRect(), rr = rad.getBoundingClientRect(); let l = 0, r = 0;
@@ -12502,6 +12511,7 @@ function rkStellen(z, still) {
   z.reiter.querySelectorAll(".rk-tab").forEach((b, i) => { b.classList.toggle("an", i === z.i); b.setAttribute("aria-selected", i === z.i); });
   z.reiter.querySelector(".rk-tab.an")?.scrollIntoView({ block: "nearest", inline: "center" });
   z.platz.querySelector(".rk-zahl").textContent = `${z.i + 1} / ${n}`;
+  try { z.opts?.vorn?.(z.karten[z.i], z); } catch {}
 }
 // i darf über das Ende hinaus zeigen (Überlauf); richtung: 1 = vorwärts, -1 = rückwärts, ohne = kürzester Weg (Reiter)
 function rkGehe(z, i, richtung) {
@@ -18630,15 +18640,15 @@ let MG_FILTER = (() => { try { return localStorage.getItem("kc_club_mg_filter") 
 function mgNurOnline() { MG_EINMAL = "online"; zeige("mitglieder"); }
 function mgFilterSetzen(f) { MG_EINMAL = null; MG_FILTER = f === "online" ? "online" : "alle"; try { localStorage.setItem("kc_club_mg_filter", MG_FILTER); } catch {} mitgliederZeichnen(); }
 // KC-CLUB-MG-KACHELN (1.45.0, Wunsch Hansi): Mitglieder als Kacheln oder Liste – jeder wählt selbst (⚙️ → Darstellung, je Gerät)
-const MG_ANSICHTEN = ["kacheln", "liste", "tafel"]; // KC-CLUB-ANWESENHEIT (2.23.89): „tafel“ = nur Name + LED
+const MG_ANSICHTEN = ["kacheln", "liste", "tafel", "kartei"]; // 2.185.0: „kartei“ = Rollkartei // KC-CLUB-ANWESENHEIT (2.23.89): „tafel“ = nur Name + LED
 let MG_ANSICHT = (() => { try { const a = localStorage.getItem("kc_club_mg_ansicht"); return MG_ANSICHTEN.includes(a) ? a : "kacheln"; } catch { return "kacheln"; } })();
 function mgAnsichtSetzen(a) {
   MG_ANSICHT = MG_ANSICHTEN.includes(a) ? a : "kacheln"; try { localStorage.setItem("kc_club_mg_ansicht", MG_ANSICHT); } catch {}
   mgAnsichtWahlZeigen(); if (MITGLIEDER && aktuelleAnsicht === "mitglieder") mitgliederZeichnen();
   if (aktuelleAnsicht === "sos") sosZeigen(); // KC-CLUB-SOS-KACHELN: gleiche Einstellung im SOS-Bereich
-  melde(MG_ANSICHT === "kacheln" ? "👥 Mitglieder werden als Kacheln gezeigt" : MG_ANSICHT === "tafel" ? "📋 Anwesenheitstafel: Name und Lämpchen – antippen öffnet das Mitglied" : "👥 Mitglieder werden als Liste gezeigt");
+  melde(MG_ANSICHT === "kartei" ? "🗂️ Mitglieder als Rollkartei – wischen, antippen oder ▲▼ am Rad" : MG_ANSICHT === "kacheln" ? "👥 Mitglieder werden als Kacheln gezeigt" : MG_ANSICHT === "tafel" ? "📋 Anwesenheitstafel: Name und Lämpchen – antippen öffnet das Mitglied" : "👥 Mitglieder werden als Liste gezeigt");
 }
-function mgAnsichtWahlZeigen() { document.querySelectorAll("#mgAnsichtWahl button, #mgAnsichtOben button").forEach((b) => b.classList.toggle("an", b.dataset.a === MG_ANSICHT));
+function mgAnsichtWahlZeigen() { document.querySelectorAll("#mgAnsichtWahl button, #mgAnsichtOben button").forEach((b) => b.classList.toggle("an", b.dataset.a === MG_ANSICHT)); if ($("setRkMitgl")) $("setRkMitgl").checked = MG_ANSICHT === "kartei";
   document.querySelectorAll("#kachelGroesseWahl button").forEach((b) => b.classList.toggle("an", b.dataset.g === kachelStufe())); } // 2.23.87; 2.54.0: + sehr klein
 // KC-CLUB-ANWESENHEIT (2.23.89, Wunsch Hansi): Anwesenheitstafel – nur Name + LED (Farben wie KREIS_ARTEN), keine Knöpfe;
 // antippen öffnet das Mitglied (dort Nachricht, Anklopfen, Anruf). Reihenfolge: online, abwesend, heute da, Rest.
@@ -18749,6 +18759,7 @@ function mitgliederZeichnen() {
     $("mitgliederListe").classList.toggle("karte", MG_ANSICHT === "liste"); // Kacheln/Tafel ohne weiße Unterlage
     if (MG_ANSICHT === "kacheln") { $("mitgliederListe").innerHTML = mgKachelnHtml(liste); return; }
     if (MG_ANSICHT === "tafel") { $("mitgliederListe").innerHTML = mgTafelHtml(liste); return; }
+    if (MG_ANSICHT === "kartei") { $("mitgliederListe").innerHTML = mgKarteiHtml(liste); mgKarteiAn(); return; } // KC-CLUB-MG-KARTEI
     $("mitgliederListe").innerHTML = kreisLegende() + liste.map((m) => `<div class="zeile${mgOn(m) ? " mg-online" : ""}">
       ${kreis(m, m.name, 40, `onclick="mitgliedOeffnen('${m.person_id}')"`)}
       <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${gbKerze(m.person_id)}${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
@@ -18759,6 +18770,71 @@ function mitgliederZeichnen() {
       + '<p class="hinweis">Namen antippen für Details (Telefon, Adresse … sofern freigegeben).</p>'
       + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Amt und Rechte.</p>' : "");
   } catch (e) { meldeFehler(e); }
+}
+// ---------- KC-CLUB-MG-KARTEI (2.185.0, Wunsch Hansi): Mitglieder als Rollkartei – „das Mitglied nach vorn drehen und alle Infos sehen“ ----------
+// Je Mitglied eine Karteikarte: oben Bild, Name, Ämter, Status, online/zuletzt da; darunter die freigegebenen Kontaktdaten (nachgeladen,
+// nur was der Server für mich freigibt – wie auf der Mitglieds-Seite); unten ein fester, geordneter Block „So erreichst du …“ – immer
+// dieselben Felder an derselben Stelle; was gerade nicht geht, ist ausgegraut und sagt warum. Reiter oben = Vornamen.
+const MGK = { det: new Map() }; // person_id → { zeit, d } (Details 5 Min. im Speicher)
+function mgKarteiHtml(liste) {
+  return `<div class="rk-box" id="mgKartei">${liste.map((m) => { const ich = m.person_id === ICH.person_id;
+    return `<details class="karte mgk" data-klappe="mgk" data-pid="${esc(m.person_id)}" open><summary>${kreis(m, m.name, 30)}<span>${esc(m.name)}</span></summary>
+      <div class="mgk-kopf">${kreis(m, m.name, 80, `onclick="mitgliedOeffnen('${esc(m.person_id)}')"`)}
+        <div class="mgk-name">${esc(m.name)}${gbKerze(m.person_id)}${ich ? ' <small class="hinweis">(du)</small>' : ""}</div>
+        ${m.aemter?.length ? `<div>${m.aemter.map((a) => `<span class="marke">${esc(a)}</span>`).join(" ")}</div>` : ""}
+        ${m.status || m.aktiv ? `<div style="margin-top:6px"><span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "verfügbar")}</span></div>` : ""}
+        ${!ich && mgDaText(m) ? `<div class="hinweis mgk-da${mgOn(m) ? " an" : ""}">${mgOn(m) ? "🟢 " : "🕒 "}${esc(mgDaText(m))}</div>` : ""}</div>
+      <h4 class="mgk-t">📇 Kontakt</h4><div class="mgk-kontakt" data-teil="kontakt"><p class="hinweis">Wird geladen …</p></div>
+      ${ich ? `<div class="knoepfe"><button class="knopf" onclick="mitgliedOeffnen('${esc(m.person_id)}')">👤 Meine Daten ansehen</button></div>`
+        : `<h4 class="mgk-t">📲 So erreichst du ${esc(m.vorname || String(m.name).split(" ")[0])}</h4><div class="mgk-wege" data-teil="wege">${mgkWege(m, null)}</div>`}
+    </details>`; }).join("")}</div>`;
+}
+// Feste Reihenfolge, immer gleiche Stelle: App-Wege (Nachricht/Push, Anklopfen, Anruf, Video), Telefon, WhatsApp, E-Mail, Route, alle Infos
+function mgkWege(m, d) {
+  const pid = esc(m.person_id), on = mgOn(m), k = d?.kontakt || {}, laden = !d;
+  const kachel = (sym, t, an, aktion, warum, href) => an
+    ? (href ? `<a class="mgk-weg" href="${href}" onclick="${aktion}"><span>${sym}</span><small>${t}</small></a>` : `<button type="button" class="mgk-weg" onclick="${aktion}"><span>${sym}</span><small>${t}</small></button>`)
+    : `<button type="button" class="mgk-weg aus" disabled title="${esc(warum)}"><span>${sym}</span><small>${t}</small><i>${esc(warum)}</i></button>`;
+  const nr = (x) => esc(nurZiffern(x || ""));
+  const fehlt = laden ? "wird geladen …" : !d?.darfKontakte ? "nicht freigeschaltet" : "nicht freigegeben";
+  return [
+    kachel("💬", "Nachricht · Push", true, `direkt('${pid}')`),
+    kachel("👋", "Anklopfen", on, `anklopfen('${pid}')`, "nur wenn online"),
+    kachel("📞", "App-Anruf", on, `anrufen('${pid}')`, "nur wenn online"),
+    kachel("🎥", "Video", on, `anrufen('${pid}', true)`, "nur wenn online"),
+    kachel("📱", "Handy", !!k.handy, `spur('telefon', '${pid}')`, fehlt, `tel:${nr(k.handy)}`),
+    kachel("☎️", "Festnetz", !!k.festnetz, `spur('telefon', '${pid}')`, fehlt, `tel:${nr(k.festnetz)}`),
+    kachel("🟢", "WhatsApp", !!k.handy, `spur('whatsapp', '${pid}');mgkExtern('whatsapp', '${pid}')`, fehlt),
+    kachel("✉️", "E-Mail", !!k.mail, `spur('mail', '${pid}')`, fehlt, `mailto:${esc(k.mail || "")}`),
+    kachel("🗺️", "Route", !!k.adresse, `mgkExtern('route', '${pid}')`, fehlt),
+    kachel("👤", "Alle Infos", true, `mitgliedOeffnen('${pid}')`),
+  ].join("");
+}
+function mgkExtern(art, pid) { const k = MGK.det.get(pid)?.d?.kontakt || {}; extern(art, art === "route" ? adresseText(k.adresse) : k.handy); }
+// Kontaktdaten der vorderen (und der nächsten zwei) Karten nachladen – nur einmal je 5 Min.
+async function mgkLaden(karte) {
+  const pid = karte?.dataset.pid; if (!pid) return;
+  const c = MGK.det.get(pid), frisch = c && Date.now() - c.zeit < 5 * 60000;
+  if (frisch) return mgkFuellen(karte, c.d);
+  if (c?.laeuft) return; MGK.det.set(pid, { ...(c || {}), laeuft: true, zeit: c?.zeit || 0 });
+  try { const d = await api("mitglied_details", { person_id: pid }); MGK.det.set(pid, { zeit: Date.now(), d });
+    document.querySelectorAll(`#mgKartei .mgk[data-pid="${CSS.escape(pid)}"]`).forEach((x) => mgkFuellen(x, d)); }
+  catch (e) { MGK.det.delete(pid); const z = karte.querySelector('[data-teil="kontakt"]'); if (z) z.innerHTML = `<p class="hinweis">⚠️ ${esc(e.message || "Konnte nicht geladen werden")}</p>`; }
+}
+function mgkFuellen(karte, d) {
+  const m = MITGLIEDER?.find((x) => x.person_id === karte.dataset.pid) || { person_id: karte.dataset.pid, name: d.name };
+  const k = d.kontakt || {}, zeile = (sym, t, w) => `<div class="mgk-zeile"><small>${sym} ${t}</small><b>${esc(w)}</b></div>`;
+  const z = [k.handy && zeile("📱", "Handy", k.handy), k.festnetz && zeile("☎️", "Festnetz", k.festnetz), k.mail && zeile("✉️", "E-Mail", k.mail), k.adresse && zeile("🏠", "Adresse", adresseText(k.adresse)),
+    d.geburtstag && zeile("🎂", "Geburtstag", d.geburtstag.slice(3) + "." + d.geburtstag.slice(0, 2) + ".")].filter(Boolean).join("");
+  const kt = karte.querySelector('[data-teil="kontakt"]');
+  if (kt) kt.innerHTML = z || `<p class="hinweis">${!d.darfKontakte ? "Kontaktdaten anderer Mitglieder sind für dich nicht freigeschaltet." : d.selbst ? "Für dich sind keine Kontaktdaten gespeichert." : `${esc(d.vorname || "")} hat noch keine Kontaktdaten freigegeben.`}</p>`;
+  const w = karte.querySelector('[data-teil="wege"]'); if (w) w.innerHTML = mgkWege(m, d);
+}
+function mgKarteiAn() {
+  rkIn($("mgKartei"), "mitgl", { id: (d) => d.dataset.pid,
+    tabSym: (d) => { const m = MITGLIEDER?.find((x) => x.person_id === d.dataset.pid); return m ? kreis(m, m.name, 30) : "👤"; },
+    tabText: (d) => (MITGLIEDER?.find((x) => x.person_id === d.dataset.pid)?.vorname || d.querySelector("summary")?.textContent.trim().split(" ")[0] || ""),
+    vorn: (d, z) => { const n = z.karten.length; [0, 1, 2].forEach((k) => mgkLaden(z.karten[(z.i + k) % n])); } });
 }
 // KC-CLUB-WIEDERHOLUNG (1.1.0): Auswahl „🔁 Wiederholen“ für private Termine und Club-Terminreihen
 const WDH_WAHL = [["keine", "nicht wiederholen"], ["taeglich", "täglich"], ["werktags", "werktags (Mo–Fr)"], ["woechentlich", "wöchentlich"], ["zweiwoechentlich", "alle 2 Wochen"],
