@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.177.0";
+const SERVER_VERSION = "2.181.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -7503,7 +7503,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const t = (p.teile && typeof p.teile === "object") ? p.teile : {};
         const d: Record<string, unknown> = { ms: startZahl(p.ms), seite: startZahl(t.seite), programm: startZahl(t.programm), einrichten: startZahl(t.einrichten),
           server: startZahl(t.server), anzeige: startZahl(t.anzeige), netz: startText(p.netz, 10), quelle: startText(p.quelle, 10), app: p.app === true,
-          system: startText(p.system), browser: startText(p.browser), bildschirm: startText(p.bildschirm, 12), v: startText(p.v, 12), spar: p.spar === true };
+          system: startText(p.system), browser: startText(p.browser), bildschirm: startText(p.bildschirm, 12), v: startText(p.v, 12), spar: p.spar === true, hinter: p.hinter === true }; // hinter: 2.181.0 Start im Hintergrund
         if (d.ms === null) throw new Fehler("Messung ungültig.", 400);
         if (await protokollPlatz(ich.person_id, "app_start", 60)) await protokoll(ich.person_id, "app_start", d);
         return json({ ok: true });

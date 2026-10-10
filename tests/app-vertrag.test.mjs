@@ -4685,7 +4685,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.24.11 KC-CLUB-STARTZEIT: Start in Abschnitte zerlegt, letzte 10 auf dem Gerät, in App-Info sichtbar, einmal je Sitzung gemeldet
 {
-  assert.ok(/const START_MESS = \{ prog: performance\.now\(\) \};/.test(programm) && programm.indexOf("const START_MESS") < programm.indexOf("const API ="), "Messung beginnt ganz oben im Programm");
+  assert.ok(/const START_MESS = \{ prog: performance\.now\(\)[,}]/.test(programm) && programm.indexOf("const START_MESS") < programm.indexOf("const API ="), "Messung beginnt ganz oben im Programm");
   assert.ok(/START_MESS\.eingerichtet = performance\.now\(\);/.test(html) && /if \(!START_MESS\.initBis\) \{ START_MESS\.initAb = tInit; START_MESS\.initBis = performance\.now\(\); \}/.test(html), "Einrichten + erste Server-Anfrage gemessen");
   assert.ok(/requestAnimationFrame\(\(\) => setTimeout\(startMessFertig, 0\)\)/.test(html) && /\.slice\(0, 10\)\)\);/.test(html), "fertig = erstes Bild, letzte 10 gespeichert");
   assert.ok(/el\.innerHTML = startMessHtml\(\) \+ APPINFO/.test(html) && /Gemessen wird nur beim Öffnen der App/.test(html), "in App-Info sichtbar");
@@ -7562,4 +7562,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/d\.inert = k !== 0;/.test(html), "nur die vordere Karte ist bedienbar");
   assert.ok(/data-klappe="effekte"/.test(idx) && /data-klappe="startseite"/.test(idx) && /id="sendeEffektWahl"/.test(idx) && /id="kachelGroesseWahl"/.test(idx), "Darstellung aufgeteilt, Inhalte erhalten");
   assert.ok(/\.rk > \.rk-karte\[data-rk="weg"\] \{[^}]*rotateX\(-98deg\)/.test(idx) && /\.rk-rad \{/.test(idx), "Karte klappt über das Rad, Rad mit ▲▼");
+}
+
+// 2.181.0 KC-CLUB-START-HINTERGRUND (Auswertung Hansi: 413 s / 291 s / 193 s waren Starts, bei denen die App im Hintergrund lag)
+{
+  assert.ok(/hinter: typeof document !== "undefined" && !!document\.hidden/.test(html) && /if \(document\.hidden && !START_MESS\.fertig\) START_MESS\.hinter = true;/.test(html), "Hintergrund während des Starts wird erkannt");
+  assert.ok(/hinter: !!START_MESS\.hinter,/.test(html) && /hinter: p\.hinter === true \}/.test(server), "wird mitgemeldet und gespeichert");
+  assert.ok(/const stHinter = \(x\) => x\.hinter === true \|\| \(x\.anzeige \|\| 0\) > 20000;/.test(html) && /l = lMit\.filter\(\(x\) => !stHinter\(x\)\)/.test(html), "zählt nicht für üblich/max./langsam, alte Einträge erkannt");
+  assert.ok(/⏸️ <b>\$\{hinter\.length\} Start/.test(html), "sichtbar markiert statt verschwiegen");
 }

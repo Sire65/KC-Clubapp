@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.180.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.181.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -88,7 +88,9 @@ if (document.currentScript?.dataset.v !== APP_VERSION) {
 }
 // KC-CLUB-STARTZEIT (2.24.11, Wunsch Hansi): jeden Start in Abschnitte zerlegen – Seite, Programm laden, Programm einrichten,
 // Warten auf den Server, Anzeigen. Die letzten 10 Starts bleiben auf dem Gerät (⚙️ → ℹ️ App-Info), einmal je Sitzung geht der Wert mit.
-const START_MESS = { prog: performance.now() };
+const START_MESS = { prog: performance.now(), hinter: typeof document !== "undefined" && !!document.hidden };
+// 2.181.0 KC-CLUB-START-HINTERGRUND: war die App während des Starts im Hintergrund (andere App, Bildschirm aus), zählt die Zeit nicht als Startzeit
+if (typeof document !== "undefined") document.addEventListener("visibilitychange", () => { if (document.hidden && !START_MESS.fertig) START_MESS.hinter = true; });
 try { const u = new URL(location.href); if (u.searchParams.has("neu")) { u.searchParams.delete("neu"); history.replaceState(null, "", u.pathname + u.search + u.hash); } } catch {}
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
@@ -22228,7 +22230,7 @@ function startMessFertig() {
   // und geht nach 3 s gleich los (nicht erst nach 2 Min.), damit auch ganz kurze Besuche sichtbar sind
   spur("geoeffnet"); setTimeout(spurSenden, 3000);
   // KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): jeden Start mit Dauer, Gerät und Browser melden (für die Startstatistik des Admins)
-  setTimeout(() => api("start_melden", { ms: eintrag.ges, teile: p, netz: eintrag.netz, quelle: eintrag.quelle, v: APP_VERSION, spar: SPAR.an,
+  setTimeout(() => api("start_melden", { ms: eintrag.ges, teile: p, netz: eintrag.netz, quelle: eintrag.quelle, v: APP_VERSION, spar: SPAR.an, hinter: !!START_MESS.hinter,
     app: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, system: fpSystem(), browser: fpBrowser(), bildschirm: `${screen.width}x${screen.height}` }).catch(() => {}), 1500);
 }
 const sek = (ms) => (ms / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s";
@@ -24263,6 +24265,8 @@ const STS = { tage: 30, person: "", geraet: "", daten: null };
 const stSek = (ms) => (ms == null ? "–" : (ms / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s");
 const stAmpel = (ms) => (ms == null ? "" : ms <= 3000 ? "st-gruen" : ms <= 6000 ? "st-gelb" : "st-rot");
 const stMedian = (l) => { const z = l.filter((x) => x != null).sort((a, b) => a - b); return z.length ? z[Math.floor((z.length - 1) / 2)] : null; };
+// 2.181.0: Hintergrund-Starts (gemeldet – oder ältere ohne Kennung, deren „Anzeigen“ über 20 s dauerte: das schafft kein echter Start)
+const stHinter = (x) => x.hinter === true || (x.anzeige || 0) > 20000;
 const stGeraet = (x) => String(x.system || "?").replace(/ [\d.]+$/, "") || "?";
 async function startStatistik(tage) {
   if (tage) STS.tage = tage;
@@ -24270,7 +24274,7 @@ async function startStatistik(tage) {
   startStatistikZeigen();
 }
 function startStatistikZeigen() {
-  const alle = STS.daten?.starts || [], l = alle.filter((x) => (!STS.person || x.p === STS.person) && (!STS.geraet || stGeraet(x) === STS.geraet));
+  const roh = STS.daten?.starts || [], alle = roh, lMit = alle.filter((x) => (!STS.person || x.p === STS.person) && (!STS.geraet || stGeraet(x) === STS.geraet)), l = lMit.filter((x) => !stHinter(x)), hinter = lMit.filter(stHinter);
   const personen = [...new Map(alle.map((x) => [x.p, x.name])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
   const geraete = [...new Set(alle.map(stGeraet))].sort();
   const gruppe = (fn) => { const m = new Map(); for (const x of l) { const k = fn(x); m.set(k, [...(m.get(k) || []), x]); } return [...m.entries()].sort((a, b) => b[1].length - a[1].length); };
@@ -24282,16 +24286,17 @@ function startStatistikZeigen() {
     <div class="knoepfe">${[7, 30, 90, 180].map((t) => `<button class="knopf klein${STS.tage === t ? " haupt" : ""}" onclick="startStatistik(${t})">${t} Tage</button>`).join("")}</div>
     <div class="zwei"><select aria-label="Mitglied" onchange="STS.person=this.value;startStatistikZeigen()"><option value="">Alle Mitglieder</option>${personen.map(([id, n]) => `<option value="${esc(id)}"${STS.person === id ? " selected" : ""}>${esc(n)}</option>`).join("")}</select>
       <select aria-label="Gerät" onchange="STS.geraet=this.value;startStatistikZeigen()"><option value="">Alle Geräte</option>${geraete.map((g) => `<option${STS.geraet === g ? " selected" : ""}>${esc(g)}</option>`).join("")}</select></div>
+    ${hinter.length ? `<p class="hinweis" style="margin:6px 0 0">⏸️ <b>${hinter.length} Start${hinter.length > 1 ? "s" : ""} im Hintergrund</b> (App zwischendurch verlassen oder Bildschirm aus) – zählen nicht mit, stehen unten bei „Starts einzeln“.</p>` : ""}
     ${l.length ? `<div class="st-kacheln"><div><b>${l.length}</b><small>Starts</small></div><div class="${stAmpel(stMedian(l.map((x) => x.ms)))}"><b>${stSek(stMedian(l.map((x) => x.ms)))}</b><small>üblicher Start</small></div>
       <div><b>${stSek(stMedian(l.map((x) => x.server)))}</b><small>davon Server</small></div><div class="${langsam ? "st-rot" : "st-gruen"}"><b>${langsam}</b><small>langsam (über 6 s)</small></div></div>
     <details class="karte" open><summary><b>👥 Je Mitglied</b></summary><div class="st-scroll"><table class="vb-tabelle st-tab">${kopfT}${gruppe((x) => x.name).map(([n, g]) => zeile(esc(n), g)).join("")}</table></div></details>
     <details class="karte" open><summary><b>📱 Je Gerät und Browser</b></summary><div class="st-scroll"><table class="vb-tabelle st-tab">${kopfT}${gruppe((x) => `${stGeraet(x)} · ${x.browser || "?"} · ${x.app ? "als App" : "im Browser"}`).map(([n, g]) => zeile(esc(n), g)).join("")}</table></div></details>
     <details class="karte"><summary><b>🌐 Je Netz</b></summary><div class="st-scroll"><table class="vb-tabelle st-tab">${kopfT}${gruppe((x) => (x.netz || "unbekannt").toUpperCase()).map(([n, g]) => zeile(esc(n), g)).join("")}</table></div></details>
-    <details class="karte" open><summary><b>🕒 Starts einzeln</b> <span class="hinweis">(neueste zuerst${l.length > 150 ? ", die letzten 150" : ""})</span></summary>
-      <div class="st-scroll"><table class="vb-tabelle st-tab"><tr><th style="text-align:left">Wann</th><th style="text-align:left">Wer</th><th style="text-align:left">Gerät</th><th>Dauer</th><th>Server</th></tr>${l.slice(0, 150).map((x) => `<tr>
+    <details class="karte" open><summary><b>🕒 Starts einzeln</b> <span class="hinweis">(neueste zuerst${lMit.length > 150 ? ", die letzten 150" : ""})</span></summary>
+      <div class="st-scroll"><table class="vb-tabelle st-tab"><tr><th style="text-align:left">Wann</th><th style="text-align:left">Wer</th><th style="text-align:left">Gerät</th><th>Dauer</th><th>Server</th></tr>${lMit.slice(0, 150).map((x) => `<tr>
         <td style="text-align:left;white-space:nowrap">${esc(zeitKurz(x.zeit))}</td><td style="text-align:left">${esc(x.name)}</td>
         <td style="text-align:left">${esc(x.system || "?")} · ${esc(x.browser || "?")}${x.app ? " · App" : " · Browser"}${x.netz ? " · " + esc(String(x.netz).toUpperCase()) : ""}${x.spar ? " · 🐢" : ""}${x.v ? `<small class="hinweis"> · ${esc(x.v)}</small>` : ""}</td>
-        <td class="${stAmpel(x.ms)}">${stSek(x.ms)}</td><td>${stSek(x.server)}</td></tr>`).join("")}</table></div></details>`
+        ${stHinter(x) ? `<td title="App war während des Starts im Hintergrund">⏸️ ${stSek(x.ms)}</td>` : `<td class="${stAmpel(x.ms)}">${stSek(x.ms)}</td>`}<td>${stSek(x.server)}</td></tr>`).join("")}</table></div></details>`
       : `<p class="hinweis">Im gewählten Zeitraum keine Starts aufgezeichnet (gezählt ab Version 2.31.0).</p>`}
     <div class="knoepfe"><button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
   $("adminBlatt").classList.remove("versteckt");

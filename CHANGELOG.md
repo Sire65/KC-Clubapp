@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.181.0 – 2026-10-10 – ⏱️ Startstatistik: Hintergrund-Starts getrennt
+🔧 Kleine Systemverbesserungen
+
 ## 2.180.0 – 2026-10-10 – 🗂️ Einstellungen als Rollkartei
 🔧 Kleine Systemverbesserungen
 
