@@ -454,6 +454,15 @@
   .vf-zeiger-pfeil { position: absolute; z-index: 4; width: 56px; height: 56px; margin: -3px 0 0 -3px; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.45)); }
   .vf-zeiger-pfeil.weich { transition: left .35s ease-out, top .35s ease-out; }
   .vf-zeiger-pfeil svg { display: block; }
+  /* 2.201.0 KC-CLUB-VORFUEHREN-WERKZEUGE: Kreislinie und Punkt-Welle (Epizentrum) */
+  .vf-kreis-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; overflow: visible; }
+  .vf-punkt-welle { position: absolute; width: 0; height: 0; z-index: 5; pointer-events: none; }
+  .vf-punkt-welle i { position: absolute; left: -60px; top: -60px; width: 120px; height: 120px; border-radius: 50%; border: 4px solid #d61f2c; box-shadow: 0 0 0 2px rgba(255,255,255,.7); opacity: 0; animation: vfWelle 1.5s ease-out forwards; }
+  .vf-punkt-welle i:nth-child(2) { animation-delay: .35s; } .vf-punkt-welle i:nth-child(3) { animation-delay: .7s; }
+  .vf-punkt-welle b { position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%; background: #d61f2c; border: 2px solid #fff; animation: vfKern 2.5s ease-out forwards; }
+  @keyframes vfWelle { 0% { transform: scale(.08); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+  @keyframes vfKern { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
+  .vf-werkzeuge { border-top: 1px solid rgba(255,255,255,.25); padding-top: 6px; }
   @media (max-width: 380px) { .st-knopfgitter.vier { grid-template-columns: repeat(2, minmax(0, 1fr)); } .st-modus .st-t { font-size: .82rem; } }
 
   .vf-punkt { position: fixed; z-index: 2700; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: rgba(214,58,58,.45); border: 3px solid #d63a3a; pointer-events: none; animation: vfPunkt 1.4s ease-out forwards; }
@@ -3860,6 +3869,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.200.0" data-v="2.200.0"></script>
+<script src="app.js?v=2.201.0" data-v="2.201.0"></script>
 </body>
 </html>

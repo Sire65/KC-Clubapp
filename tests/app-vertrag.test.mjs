@@ -7706,7 +7706,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.200.0 KC-CLUB-VORFUEHREN-ZEIGER (Wunsch Hansi: roter Pfeil zum Zeigen)
 {
-  assert.ok(/function vfZeiger\(\)/.test(html) && /function vfZeigerMalen\(z\)/.test(html) && /k\("👉 Zeiger", "vfZeiger\(\)"/.test(html), "Zeiger-Werkzeug fehlt");
+  assert.ok(/function vfZeiger\(\)/.test(html) && /function vfZeigerMalen\(z\)/.test(html) && /"vfZeiger\(\)", !laeuft \|\| VF\.vorhang\)/.test(html), "Zeiger-Werkzeug fehlt");
   assert.ok(/\.\.\.\(zMit \? \{ z: VF\.vorhang \? null : VF\.zeiger \} : \{\}\)/.test(html), "nur der Punkt geht mit, bei Vorhang keiner");
   assert.ok(/"spgSchirm", "vfZeigerFlaeche"\]/.test(html) && /#vfLeiste, #ssLiveLeiste, #vfZeigerFlaeche/.test(html), "Zeigefläche nicht im Live-Bild und kein Tipp-Kreis");
   assert.ok(/const z = p\.z === undefined \? undefined : punkt\(w\.status === "laeuft" \? p\.z : null\);/.test(server) && /zeiger: w\.status === "laeuft" \? w\.zeiger \?\? null : null/.test(server) && /w\.frame = null; w\.zeiger = null;/.test(server), "Server: Zeiger-Punkt prüfen, liefern, beim Ende löschen");
@@ -7715,4 +7715,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.200.0 KC-CLUB-RK-ONLINE-VORN (Wunsch Hansi: in der Rollkartei steht, wer online ist, immer vorne)
 {
   assert.ok(/const rkOnlineVorn = \(liste, istOn\) =>/.test(html) && /rkOnlineVorn\(liste, mgOn\)\.map/.test(html) && /rkOnlineVorn\(liste, uhOn\)\.map/.test(html), "Online zuerst in Mitglieder- und Chat-Kartei");
+}
+
+// 2.201.0 KC-CLUB-VORFUEHREN-WERKZEUGE (Wunsch Hansi: Werkzeugkasten mit Pfeil, Einkreisen und Punkt wie ein Epizentrum)
+{
+  assert.ok(/const VF_WERKZEUGE = \[\["pfeil", "👉", "Pfeil"\], \["kreis", "⭕", "Kreis"\], \["punkt", "📍", "Punkt"\]\];/.test(html) && /function vfWerkzeug\(art\)/.test(html) && /function vfZeichnen\(box, z, lokal\)/.test(html), "Werkzeugkasten fehlt");
+  assert.ok(/k\("✋ Aus", "vfZeigerAus\(\)"\)/.test(html) && /vfWerkzeugHtml\(k\) \+ vfTonHtml\(k\)/.test(html), "Werkzeugzeile in der Leiste");
+  assert.ok(/\.vf-punkt-welle i \{/.test(html) && /@keyframes vfWelle/.test(html), "Punkt-Welle fehlt");
+  assert.ok(/\.slice\(0, 120\)\.filter\(\(q: any\) => Array\.isArray\(q\)/.test(server) && /\["pfeil", "kreis", "punkt"\]\.includes\(String\(v\.art\)\)/.test(server), "Server prüft Werkzeug-Daten");
 }

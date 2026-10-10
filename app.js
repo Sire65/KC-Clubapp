@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.200.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.201.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -11410,7 +11410,7 @@ function vfLeiste() {
   l.className = "vf-leiste" + (zeigt ? "" : " vf-schaut") + (VF.vorhang ? " vf-vorhang" : "");
   const k = (t, fn, aus) => `<button type="button" class="knopf klein" ${aus ? "disabled" : `onclick="${fn}"`}>${t}</button>`;
   l.innerHTML = `<div class="vf-zeile">${laeuft ? onAirSchild(true) : ""}<span class="vf-text">${text}</span><span class="vf-uhr" id="vfUhr"></span></div>
-    <div class="vf-knoepfe${zeigt ? " vier" : " eins"}">${zeigt ? k(VF.vorhang ? "🙉 Auf" : "🙈 Vorhang", "vfVorhang()", !laeuft) + k("👉 Zeiger", "vfZeiger()", !laeuft || VF.vorhang).replace('class="knopf klein"', `class="knopf klein${VF.zeigerAn ? " vf-zeiger-an" : ""}"`) + k("🎬 Studio", "stOeffnen()") : ""}${k("⏹ Beenden", "vfBeenden()")}</div>${laeuft ? vfTonHtml(k) : ""}`;
+    <div class="vf-knoepfe${zeigt ? " vier" : " eins"}">${zeigt ? k(VF.vorhang ? "🙉 Auf" : "🙈 Vorhang", "vfVorhang()", !laeuft) + k(VF.werkzeug ? VF_WERKZEUGE.find((w) => w[0] === VF.werkzeug).slice(1).join(" ") : "🧰 Werkzeug", "vfZeiger()", !laeuft || VF.vorhang).replace('class="knopf klein"', `class="knopf klein${VF.werkzeug ? " vf-zeiger-an" : ""}"`) + k("🎬 Studio", "stOeffnen()") : ""}${k("⏹ Beenden", "vfBeenden()")}</div>${laeuft ? vfWerkzeugHtml(k) + vfTonHtml(k) : ""}`;
   document.documentElement.style.setProperty("--vf-h", l.offsetHeight + "px"); // Platz oben passt sich an (mit/ohne Ton-Zeile)
   vfLeisteUhr(); if (!VF.uhrT) VF.uhrT = setInterval(vfLeisteUhr, 1000);
 }
@@ -11436,35 +11436,80 @@ async function vfTon() {
 }
 function vfTonStumm() { anrufStumm(); vfLeiste(); }
 // ---------- KC-CLUB-VORFUEHREN-ZEIGER (2.200.0, Wunsch Hansi „im Zeigemodus ein Zeigewerkzeug – einen roten Pfeil“) ----------
-// 👉 Zeiger an: eine durchsichtige Fläche liegt über der App (Tippen bedient dann nichts), der rote Pfeil folgt dem Finger und bleibt
-// stehen, wo man loslässt. Beim Zuschauer erscheint er an derselben Stelle im Live-Bild (nur der Punkt geht über den Server, kein Bild).
-// Zeiger aus → Pfeil weg, die App ist wieder bedienbar. Vorhang zu oder Ende → Zeiger aus.
+// 2.201.0 KC-CLUB-VORFUEHREN-WERKZEUGE (Wunsch Hansi „ein Werkzeugkasten: Zeigepfeil, rot einkreisen und ein Punkt, der wie ein
+// Epizentrum nach außen strahlt“): 🧰 öffnet die Werkzeugzeile. Mit einem Werkzeug liegt eine durchsichtige Fläche über der App
+// (Tippen bedient dann nichts); ✋ Aus nimmt Fläche und Zeichnung weg. Zum Zuschauer geht nur die Zeichnung (Punkt bzw. Linie), kein Bild.
 const ZEIGER_SVG = '<svg viewBox="0 0 48 48" width="56" height="56" aria-hidden="true"><path d="M3 3 L41 18 L27 24 L42 39 L37 44 L22 29 L16 43 Z" fill="#d61f2c" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>';
-function vfZeiger() {
+const VF_WERKZEUGE = [["pfeil", "👉", "Pfeil"], ["kreis", "⭕", "Kreis"], ["punkt", "📍", "Punkt"]];
+const VF_KREIS_MAX = 120;
+function vfZeiger() { // 🧰 auf/zu
   if (VF.rolle !== "zeigt" || VF.status !== "laeuft") return;
-  if (VF.zeigerAn) return vfZeigerAus();
-  VF.zeigerAn = true;
-  document.body.insertAdjacentHTML("beforeend", `<div id="vfZeigerFlaeche" class="vf-zeiger-flaeche" aria-label="Zeigefläche"><div id="vfZeiger" class="vf-zeiger-pfeil versteckt">${ZEIGER_SVG}</div></div>`);
-  const fl = $("vfZeigerFlaeche"), pf = $("vfZeiger");
-  const setze = (e) => { e.preventDefault(); pf.classList.remove("versteckt"); pf.style.left = e.clientX + "px"; pf.style.top = e.clientY + "px";
-    VF.zeiger = { x: e.clientX / innerWidth, y: e.clientY / innerHeight }; VF.zN = (VF.zN || 0) + 1; };
-  fl.addEventListener("pointerdown", (e) => { fl.setPointerCapture?.(e.pointerId); setze(e); });
-  fl.addEventListener("pointermove", (e) => { if (e.buttons || e.pointerType === "touch") setze(e); });
-  melde("👉 Zeiger an (roter Knopf) – tipp oder zieh mit dem Finger. Zum Bedienen der App „👉 Zeiger“ nochmal antippen.");
+  VF.kasten = !VF.kasten; if (!VF.kasten && !VF.werkzeug) return vfLeiste();
+  vfLeiste();
+}
+function vfWerkzeugHtml(k) {
+  if (VF.rolle !== "zeigt" || VF.status !== "laeuft" || !VF.kasten) return "";
+  const b = (art, sym, t) => k(`${sym} ${t}`, `vfWerkzeug('${art}')`).replace('class="knopf klein"', `class="knopf klein${VF.werkzeug === art ? " vf-zeiger-an" : ""}"`);
+  return `<div class="vf-knoepfe vier vf-werkzeuge">${VF_WERKZEUGE.map(([a, s, t]) => b(a, s, t)).join("")}${k("✋ Aus", "vfZeigerAus()")}</div>`;
+}
+function vfWerkzeug(art) {
+  if (VF.rolle !== "zeigt" || VF.status !== "laeuft" || VF.vorhang) return;
+  VF.werkzeug = art; VF.zeigerAn = true;
+  let fl = $("vfZeigerFlaeche");
+  if (!fl) {
+    document.body.insertAdjacentHTML("beforeend", `<div id="vfZeigerFlaeche" class="vf-zeiger-flaeche" aria-label="Zeigefläche"></div>`);
+    fl = $("vfZeigerFlaeche");
+    const pos = (e) => [Math.max(0, Math.min(1, e.clientX / innerWidth)), Math.max(0, Math.min(1, e.clientY / innerHeight))];
+    const neu = (z) => { VF.zeiger = z; VF.zN = (VF.zN || 0) + 1; vfZeichnen(fl, z, true); };
+    fl.addEventListener("pointerdown", (e) => {
+      e.preventDefault(); fl.setPointerCapture?.(e.pointerId); const [x, y] = pos(e);
+      if (VF.werkzeug === "kreis") neu({ art: "kreis", pts: [[x, y]] });
+      else if (VF.werkzeug === "punkt") neu({ art: "punkt", x, y, n: (VF.punktN = (VF.punktN || 0) + 1) });
+      else neu({ art: "pfeil", x, y });
+    });
+    fl.addEventListener("pointermove", (e) => {
+      if (!(e.buttons || e.pointerType === "touch") || VF.werkzeug === "punkt") return;
+      const [x, y] = pos(e), z = VF.zeiger;
+      if (VF.werkzeug === "kreis" && z?.art === "kreis") {
+        const l = z.pts[z.pts.length - 1]; if (Math.hypot(x - l[0], y - l[1]) < 0.008) return;
+        let pts = [...z.pts, [x, y]]; if (pts.length > VF_KREIS_MAX) pts = pts.filter((_, i) => i % 2 === 0 || i === pts.length - 1); // Linie ausdünnen
+        neu({ art: "kreis", pts });
+      } else if (VF.werkzeug === "pfeil") neu({ art: "pfeil", x, y });
+    });
+  }
+  const tipp = { pfeil: "👉 Pfeil: tippen oder ziehen", kreis: "⭕ Einkreisen: mit dem Finger einen Kreis malen", punkt: "📍 Punkt: antippen – er strahlt nach außen" }[art];
+  melde(`${tipp}. Zum Bedienen der App „✋ Aus“.`);
   vfLeiste();
 }
 function vfZeigerAus() {
-  if (!VF.zeigerAn && !$("vfZeigerFlaeche")) return;
-  VF.zeigerAn = false; $("vfZeigerFlaeche")?.remove();
+  const war = !!(VF.zeigerAn || VF.kasten || $("vfZeigerFlaeche"));
+  VF.zeigerAn = false; VF.werkzeug = null; VF.kasten = false; $("vfZeigerFlaeche")?.remove();
   if (VF.zeiger) { VF.zeiger = null; VF.zN = (VF.zN || 0) + 1; }
-  vfLeiste();
+  if (war) vfLeiste();
+}
+// Zeichnet Pfeil, Kreislinie oder Punkt-Welle in eine Fläche (beim Zeigenden über der App, beim Zuschauer über dem Live-Bild)
+function vfZeichnen(box, z, lokal) {
+  const art = z ? z.art || "pfeil" : null; // ältere Apps schicken nur { x, y } = Pfeil
+  box.querySelectorAll(".vf-zeiger-pfeil, .vf-kreis-svg").forEach((el) => { if (!z || !el.classList.contains("vf-z-" + art)) el.remove(); });
+  if (!z) return;
+  if (art === "pfeil") {
+    let p = box.querySelector(".vf-zeiger-pfeil");
+    if (!p) { p = document.createElement("div"); p.className = "vf-zeiger-pfeil vf-z-pfeil" + (lokal ? "" : " weich"); p.innerHTML = ZEIGER_SVG; box.appendChild(p); }
+    p.style.left = z.x * 100 + "%"; p.style.top = z.y * 100 + "%";
+  } else if (art === "kreis") {
+    let s = box.querySelector(".vf-kreis-svg");
+    if (!s) { box.insertAdjacentHTML("beforeend", '<svg class="vf-kreis-svg vf-z-kreis" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"><polyline fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><polyline fill="none" stroke="#d61f2c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>'); s = box.querySelector(".vf-kreis-svg"); }
+    const pkt = (z.pts || []).map(([x, y]) => `${Math.round(x * 1000)},${Math.round(y * 1000)}`).join(" ");
+    s.querySelectorAll("polyline").forEach((l) => l.setAttribute("points", pkt));
+  } else if (art === "punkt" && z.n !== box._punktN) {
+    box._punktN = z.n;
+    const w = document.createElement("div"); w.className = "vf-punkt-welle"; w.style.left = z.x * 100 + "%"; w.style.top = z.y * 100 + "%";
+    w.innerHTML = "<i></i><i></i><i></i><b></b>"; box.appendChild(w); setTimeout(() => w.remove(), 2600);
+  }
 }
 function vfZeigerMalen(z) {
   const rahmen = document.querySelector("#spgSchirmBuehne .spg-rahmen"); if (!rahmen) return;
-  let p = rahmen.querySelector(".vf-zeiger-pfeil");
-  if (!z) { p?.remove(); return; }
-  if (!p) { p = document.createElement("div"); p.className = "vf-zeiger-pfeil weich"; p.innerHTML = ZEIGER_SVG; rahmen.appendChild(p); }
-  p.style.left = z.x * 100 + "%"; p.style.top = z.y * 100 + "%";
+  vfZeichnen(rahmen, z, false);
 }
 function vfLeisteUhr() {
   const u = $("vfUhr"); if (!u) return;
@@ -11477,7 +11522,7 @@ async function vfBeenden() {
 }
 function vfAufraeumen(stand = "beendet") {
   if (RUF?.vf) anrufAuflegen(); // KC-CLUB-VORFUEHREN-TON: Ende der Vorführung = Ton aus
-  VF.zeigerAn = false; $("vfZeigerFlaeche")?.remove(); // KC-CLUB-VORFUEHREN-ZEIGER
+  VF.zeigerAn = false; VF.werkzeug = null; VF.kasten = false; $("vfZeigerFlaeche")?.remove(); // KC-CLUB-VORFUEHREN-ZEIGER
   clearInterval(VF.takt); if (VF.rolle === "zeigt") { spgSenderStopp(); if (STD.modus === "zeigen") stSetzen("zeigen", stand); }
   $("spgSchirm")?.remove();
   Object.assign(VF, { zeiger: null, zN: 0, zGes: 0, rolle: null, id: null, an: null, vonPid: null, status: null, takt: null, seit: 0, fseit: 0, vorhang: false, bis: 0 }); vfLeiste(); stKnopf(); stKarteFrisch();

@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.200.0";
+const SERVER_VERSION = "2.201.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -8308,8 +8308,18 @@ Köcheclub-App`,
           const f = w.status === "laeuft" ? studioFrame(p.f) : null;
           if (f) w.frame = { ...f, n: (w.frame?.n || 0) + 1 };
           // 2.200.0 KC-CLUB-VORFUEHREN-ZEIGER (Wunsch Hansi „roter Pfeil zum Zeigen“): nur ein Punkt (0–1 im Bildschirm) oder null
-          const punkt = (v: any) => v && Number.isFinite(Number(v.x)) && Number.isFinite(Number(v.y))
-            ? { x: Math.round(Math.max(0, Math.min(1, Number(v.x))) * 1000) / 1000, y: Math.round(Math.max(0, Math.min(1, Number(v.y))) * 1000) / 1000 } : null;
+          // 2.201.0 KC-CLUB-VORFUEHREN-WERKZEUGE: pfeil (x,y) · kreis (bis 120 Punkte) · punkt (x,y + Zähler n für jede neue Welle)
+          const k1 = (q: any) => Math.round(Math.max(0, Math.min(1, Number(q))) * 1000) / 1000;
+          const punkt = (v: any) => {
+            if (!v || typeof v !== "object") return null;
+            const art = ["pfeil", "kreis", "punkt"].includes(String(v.art)) ? String(v.art) : "pfeil";
+            if (art === "kreis") {
+              const pts = (Array.isArray(v.pts) ? v.pts : []).slice(0, 120).filter((q: any) => Array.isArray(q) && Number.isFinite(Number(q[0])) && Number.isFinite(Number(q[1]))).map((q: any) => [k1(q[0]), k1(q[1])]);
+              return pts.length ? { art, pts } : null;
+            }
+            if (!Number.isFinite(Number(v.x)) || !Number.isFinite(Number(v.y))) return null;
+            return { art, x: k1(v.x), y: k1(v.y), ...(art === "punkt" ? { n: Math.max(0, Math.min(1e9, Math.round(Number(v.n) || 0))) } : {}) };
+          };
           const z = p.z === undefined ? undefined : punkt(w.status === "laeuft" ? p.z : null);
           const zNeu = z !== undefined && JSON.stringify(z) !== JSON.stringify(w.zeiger ?? null);
           if (zNeu) w.zeiger = z;

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.201.0 – 2026-10-10 – 🧰 Werkzeugkasten beim Live zeigen: Pfeil, Einkreisen, Punkt
+🧰 Beim Live zeigen: Pfeil, rot einkreisen und ein strahlender Punkt
+
 ## 2.200.0 – 2026-10-10 – 👉 Zeigepfeil beim Live zeigen · Warte-Mütze nur nach eigenem Tippen · 🟢 Online-Mitglieder vorne in der Rollkartei
 👉 Roter Zeigepfeil beim Live zeigen · keine Warte-Mütze mehr im offenen Chat
 
