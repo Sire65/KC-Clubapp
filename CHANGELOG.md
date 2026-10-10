@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.203.0 – 2026-10-10 – ⏳ Countdown in kurzen Sätzen
+⏳ Countdown kurz: „Weihnachten 75 Tage“, „Clubtreffen 6 Tage“, „Geb. Klaus 3 Tage“
+
 ## 2.202.0 – 2026-10-10 – ⏳ Wechselnder Countdown oben: Treffen, Reisen, Weihnachten, Geburtstage
 ⏳ Oben wechselt der Countdown: Clubtreffen, eigene Reisen, Weihnachten, Silvester, Geburtstage – einstellbar
 

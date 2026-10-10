@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.202.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.203.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12471,20 +12471,20 @@ const cdNaechsterTag = (md) => { const h = heuteIso(), j = +h.slice(0, 4); for (
 const cdNoch = (tage) => tage <= 0 ? "Heute!" : tage === 1 ? "Morgen" : `${tage} Tage`; // kurz – die Kachel ist schmal
 const CD_ARTEN = [ // [Schlüssel, Bezeichnung in den Einstellungen, Einträge liefern]
   ["reise", "🚢 Reisen & Ausflüge, bei denen ich dabei bin", () => (CD.daten?.reisen || []).map((a) => { const t = cdTageBis(a.von);
-    return t < 0 || t > 400 ? null : { id: "r" + a.id, zahl: `${/kreuz|schiff/i.test(a.titel) ? "🚢" : "🧳"} ${cdNoch(t)}`, text: (([...a.titel].length > 22 ? [...a.titel].slice(0, 21).join("") + "…" : a.titel)).replace(/kreuzfahrt/i, (w) => w.slice(0, 5) + "\u00AD" + w.slice(5)), los: () => aktionOeffnen(a.id) }; })],
+    return t < 0 || t > 400 ? null : { id: "r" + a.id, zahl: cdNoch(t), text: `${/kreuz|schiff/i.test(a.titel) ? "🚢" : "🧳"} ` + (([...a.titel].length > 22 ? [...a.titel].slice(0, 21).join("") + "…" : a.titel)).replace(/kreuzfahrt/i, (w) => w.slice(0, 5) + "\u00AD" + w.slice(5)), los: () => aktionOeffnen(a.id) }; })],
   ["weihnachten", "🎄 Weihnachten (ab Oktober)", () => { const h = heuteIso(), t = cdTageBis(h.slice(0, 4) + "-12-24"); const m = +h.slice(5, 7);
-    return m >= 10 && t >= -2 ? [{ id: "x", zahl: t <= 0 ? "🎄 Frohe" : "🎄 " + cdNoch(t), text: "Weih\u00ADnachten", los: () => zeige("termine") }] : []; }],
+    return m >= 10 && t >= -2 ? [{ id: "x", zahl: t <= 0 ? "Frohes Fest!" : cdNoch(t), text: "🎄 Weih\u00ADnachten", los: () => zeige("termine") }] : []; }],
   ["silvester", "🎆 Silvester (im Dezember)", () => { const h = heuteIso(), t = cdTageBis(h.slice(0, 4) + "-12-31");
-    return h.slice(5, 7) === "12" && t >= 0 ? [{ id: "s", zahl: "🎆 " + cdNoch(t), text: "Sil\u00ADves\u00ADter", los: () => zeige("termine") }] : []; }],
+    return h.slice(5, 7) === "12" && t >= 0 ? [{ id: "s", zahl: cdNoch(t), text: "🎆 Sil\u00ADves\u00ADter", los: () => zeige("termine") }] : []; }],
   ["meingeb", "🎂 Mein Geburtstag (30 Tage vorher)", () => { const g = (CD.daten?.geburtstage || []).find((x) => x.person_id === ICH?.person_id); const d = g && cdNaechsterTag(g.md), t = d ? cdTageBis(d) : -1;
-    return t >= 0 && t <= 30 ? [{ id: "g", zahl: "🎂 " + cdNoch(t), text: t === 0 ? "Alles Gute!" : "Dein Ge\u00ADburts\u00ADtag", los: () => zeige("termine") }] : []; }],
+    return t >= 0 && t <= 30 ? [{ id: "g", zahl: t === 0 ? "Alles Gute!" : cdNoch(t), text: "🎂 Mein Geb.", los: () => zeige("termine") }] : []; }],
   ["mggeb", "🎂 Geburtstage der Mitglieder (14 Tage vorher)", () => (CD.daten?.geburtstage || []).filter((x) => x.person_id !== ICH?.person_id).map((g) => { const d = cdNaechsterTag(g.md), t = d ? cdTageBis(d) : -1;
-    return t >= 0 && t <= 14 ? { id: "m" + g.person_id, t, zahl: "🎂 " + cdNoch(t), text: g.vorname || g.name, los: () => mitgliedOeffnen(g.person_id) } : null; }).filter(Boolean).sort((a, b) => a.t - b.t).slice(0, 3)],
+    return t >= 0 && t <= 14 ? { id: "m" + g.person_id, t, zahl: cdNoch(t), text: `🎂 Geb. ${g.vorname || g.name}`, los: () => mitgliedOeffnen(g.person_id) } : null; }).filter(Boolean).sort((a, b) => a.t - b.t).slice(0, 3)],
 ];
 const cdNur = () => einst("cd_nur", false);
 const cdArtAn = (k) => einst("cd_" + k, true);
 function cdListe(bisTreffen) {
-  const t = INIT?.naechstesTreffen, l = [{ id: "t", zahl: bisTreffen, text: "Nächster Termin", los: () => zumTreffen() }];
+  const t = INIT?.naechstesTreffen, l = [{ id: "t", zahl: String(bisTreffen).replace(/^in (\d+) Tagen$/, "$1 Tage"), text: "📅 Club\u00ADtreffen", los: () => zumTreffen() }]; // 2.203.0: kurz „Clubtreffen · 23 Tage“
   if (cdNur()) return l;
   if (t && Math.ceil((new Date(t.beginn) - Date.now()) / 86400000) <= 2) return l; // Treffen steht kurz bevor → nichts anderes zeigen
   for (const [k, , f] of CD_ARTEN) if (cdArtAn(k)) try { l.push(...f().filter(Boolean)); } catch {}
@@ -12494,7 +12494,7 @@ function cdInhalt(bisTreffen) {
   CD.bisTreffen = bisTreffen; const l = cdListe(bisTreffen); if (CD.i >= l.length) CD.i = 0;
   const e = l[CD.i], punkte = l.length > 1 ? `<i class="cd-punkte">${l.map((_, i) => `<i${i === CD.i ? ' class="an"' : ""}></i>`).join("")}</i>` : "";
   cdStart();
-  return `<b class="cd-zahl" style="font-size:1.05rem">${esc(e.zahl)}</b><span class="cd-text">${esc(e.text)}</span>${punkte}`;
+  return `<span class="cd-text">${esc(e.text)}</span><b class="cd-zahl" style="font-size:1.05rem">${esc(e.zahl)}</b>${punkte}`; // 2.203.0: erst was, dann wie lange
 }
 function cdTippen() { const l = cdListe(CD.bisTreffen || ""); (l[CD.i] || l[0]).los(); }
 function cdStart() {

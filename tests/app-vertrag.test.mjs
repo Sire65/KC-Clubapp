@@ -101,7 +101,7 @@ assert.ok(/history\.replaceState\(\{ basis: true \}/.test(html) && /addEventList
 assert.ok(/history\.pushState\((st|\{ \.\.\.st, tiefe: tiefe \+ 1 \}),/.test(html), "Ansichten legen keinen Verlaufseintrag an"); // 1.98.0: mit Tiefe (Test 279)
 for (const z of ["nachrichten", "mitglieder"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`) || (z === "mitglieder" && html.includes(`<button class="mini" onclick="mgNurOnline()">`)) || (z === "nachrichten" && html.includes(`<button class="mini\${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">`)), `Kennzahl → ${z} fehlt`); // 1.22.0: orange bei Neuem // 1.91.0: Mitglieder-Kachel → Seite nur online (mgNurOnline zeigt „mitglieder“, Test 271)
 // 0.27.2: „Nächstes Treffen“ führt über zumTreffen() in Termine (Kalender, Tag ausgewählt)
-assert.ok((html.includes(`<button class="mini" onclick="zumTreffen()">`) || html.includes(`<button class="mini\${frist ? " mini-frist frist-" + frist : ""}" onclick="zumTreffen()">`) || (html.includes(`<button id="cdKachel" class="mini\${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">`) && /\{ id: "t", zahl: bisTreffen, text: "Nächster Termin", los: \(\) => zumTreffen\(\) \}/.test(html))) /* 2.202.0: Countdown-Kachel, Treffen bleibt erster Eintrag */ && /function zumTreffen\(mitfahrt\) \{[\s\S]{0,400}zeige\("termine"\)/.test(html), "Kennzahl → termine fehlt");
+assert.ok((html.includes(`<button class="mini" onclick="zumTreffen()">`) || html.includes(`<button class="mini\${frist ? " mini-frist frist-" + frist : ""}" onclick="zumTreffen()">`) || (html.includes(`<button id="cdKachel" class="mini\${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">`) && /\{ id: "t", zahl: String\(bisTreffen\)[^}]*los: \(\) => zumTreffen\(\) \}/.test(html))) /* 2.202.0: Countdown-Kachel, Treffen bleibt erster Eintrag */ && /function zumTreffen\(mitfahrt\) \{[\s\S]{0,400}zeige\("termine"\)/.test(html), "Kennzahl → termine fehlt");
 const kopfHtml = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('id="heroInfo"'));
 assert.ok(!kopfHtml.includes("⚙️"), "Zahnrad gehört nicht mehr in den Kopf");
 assert.ok(/onclick="webseite\(\)"/.test(kopfHtml), "Kochmütze → Internetseite fehlt");
@@ -2298,7 +2298,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/onclick="termineNeuWahl\(\)"[^>]*>＋ Neu<\/button>/.test(html) && !/id="neuAnfrageKnopf"/.test(html) && /onclick="hlNeuWahl\(\)">＋ Neu<\/button>/.test(html), "ein ＋ Neu oben rechts");
   assert.ok(/protokolle\.length \? `<div class="mini-kacheln\$\{prAlsListe\(\) \? " prl-ansicht" : ""\}">\$\{protokolle\.map\(prAlsListe\(\) \? protokollZeile : protokollKarte\)/.test(html) && /data-klappe="pr_aufgaben"/.test(html), "Protokolle als Kacheln oder Liste (2.54.0), Aufgaben klappbar");
   assert.ok(/data-klappe="tm_umfragen"/.test(html) && /data-klappe="tm_anfragen"/.test(html) && /data-klappe="tm_privat"/.test(html), "Termine-Bereiche klappbar");
-  assert.ok(!/>Zurzeit ist kein Treffen geplant\.</.test(html) && (/<span>Nächster Termin<\/span>\$\{mpfeil\("termin"/.test(html) || /\$\{cdInhalt\(bisTreffen\)\}\$\{mpfeil\("termin"/.test(html) && /text: "Nächster Termin"/.test(html)), "Begriffe: Termin / Sitzung / Veranstaltung"); // 2.202.0: Countdown-Kachel
+  assert.ok(!/>Zurzeit ist kein Treffen geplant\.</.test(html) && (/<span>Nächster Termin<\/span>\$\{mpfeil\("termin"/.test(html) || /\$\{cdInhalt\(bisTreffen\)\}\$\{mpfeil\("termin"/.test(html) && /text: "📅 Club\\u00ADtreffen"/.test(html)), "Begriffe: Termin / Sitzung / Veranstaltung"); // 2.202.0: Countdown-Kachel
 }
 
 // 203. 1.46.1: Themen und Abstimmungen als kleine Kacheln (KC-CLUB-VORSCHLAG-KACHELN)
@@ -7732,4 +7732,9 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/Math\.ceil\(\(new Date\(t\.beginn\) - Date\.now\(\)\) \/ 86400000\) <= 2\) return l;/.test(html), "Treffen in ≤ 2 Tagen bleibt stehen");
   assert.ok(/id="cdKachel"/.test(html) && /id="cdWahl"/.test(html) && /cdEinstellungenZeigen\(\); tippSchalterZeigen\(\)/.test(html), "Kachel/Einstellungen fehlen");
   assert.ok(/case "countdowns": \{/.test(server) && /a\.dabei && String\(a\.bis \|\| a\.von\) >= heute/.test(server), "Server: nur eigene Reisen");
+}
+
+// 2.203.0 KC-CLUB-COUNTDOWN-KURZ (Wunsch Hansi: kurze Sätze „Weihnachten 75 Tage“, „Clubtreffen 23 Tage“, „Geb. Reinhilde 15 Tage“)
+{
+  assert.ok(/<span class="cd-text">\$\{esc\(e\.text\)\}<\/span><b class="cd-zahl"/.test(html) && /`\$\{tage\} Tage`/.test(html) && /text: `🎂 Geb\. \$\{g\.vorname \|\| g\.name\}`/.test(html), "erst was, dann wie lange");
 }
