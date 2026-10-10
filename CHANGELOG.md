@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.189.0 – 2026-10-10 – 👥 Mitglieder-Kartei: mehr Platz
+🔧 Kleine Systemverbesserungen
+
 ## 2.188.0 – 2026-10-10 – 🪟 Rollkartei: echte Jalousie
 🔧 Kleine Systemverbesserungen
 

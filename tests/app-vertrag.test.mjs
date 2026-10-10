@@ -7596,7 +7596,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.185.0 KC-CLUB-MG-KARTEI (Wunsch Hansi: Mitglieder als Rollkartei mit vollen Infos und geordnetem Block der Erreichbarkeit)
 {
   const idx = lies("index.html");
-  assert.ok(/const MG_ANSICHTEN = \["kacheln", "liste", "tafel", "kartei"\];/.test(html) && /if \(MG_ANSICHT === "kartei"\) \{ \$\("mitgliederListe"\)\.innerHTML = mgKarteiHtml\(liste\); mgKarteiAn\(\); return; \}/.test(html), "vierte Ansicht „Kartei“");
+  assert.ok(/const MG_ANSICHTEN = \["kacheln", "liste", "tafel", "kartei"\];/.test(html) && /if \(MG_ANSICHT === "kartei"\) \{ const erst = !RK\.mitgl\?\.w\?\.isConnected; \$\("mitgliederListe"\)\.innerHTML = mgKarteiHtml\(liste\); mgKarteiAn\(\);/.test(html), "vierte Ansicht „Kartei“");
   assert.ok(/data-a="kartei"/.test(idx) && /id="setRkMitgl" onchange="mgAnsichtSetzen\(this\.checked \? 'kartei' : 'kacheln'\)"/.test(idx), "wählbar oben und unter 🗂️ Rollkartei");
   assert.ok(/function rkIn\(box, schluessel, opts = \{\}\)/.test(html) && /if \(i > 0\) \{ z\.i = i; rkStellen\(z, true\); \}/.test(html), "Kern wiederverwendet; vordere Karte bleibt beim Neuzeichnen vorn");
   assert.ok(/api\("mitglied_details", \{ person_id: pid \}\)/.test(html) && /Date\.now\(\) - c\.zeit < 5 \* 60000/.test(html) && /\[0, 1, 2\]\.forEach\(\(k\) => mgkLaden/.test(html), "Kontaktdaten nur für vordere Karten, 5 Min. gemerkt, gleiche Freigaben wie Mitglieds-Seite");
@@ -7621,4 +7621,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const idx = lies("index.html");
   assert.ok(/d\.scrollTop = 0; d\.appendChild\(j\);/.test(html) && /rotateX\(68deg\)/.test(html) && /class="rk-jal-leiste"/.test(html) && /\.rk-jal-leiste \{ position: absolute;/.test(idx), "fährt mit der Karte, kippt, Unterleiste zieht hoch");
   assert.ok(/setTimeout\(\(\) => j\.remove\(\), warte \+ kippen \+ hoch \+ 220\);/.test(html), "räumt sich sicher weg");
+}
+
+// 2.189.0 KC-CLUB-MG-KARTEI-PLATZ (Fund Hansi: oben ging zu viel Platz weg)
+{
+  const idx = lies("index.html");
+  assert.ok(/\$\("v-mitglieder"\)\?\.classList\.toggle\("mg-kartei", MG_ANSICHT === "kartei"\);/.test(html) && /#v-mitglieder\.mg-kartei \.kopf2 h2 \{ font-size: 1\.15rem;/.test(idx), "kompakter Kopf in der Kartei");
+  assert.ok(/if \(erst\) requestAnimationFrame\(\(\) => \{ const r = \$\("mgKartei"\)\?\.querySelector\("\.rk-reiter"\);/.test(html), "beim Öffnen bis zu den Reitern scrollen");
 }

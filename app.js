@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.188.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.189.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -18785,7 +18785,11 @@ function mitgliederZeichnen() {
     $("mitgliederListe").classList.toggle("karte", MG_ANSICHT === "liste"); // Kacheln/Tafel ohne weiße Unterlage
     if (MG_ANSICHT === "kacheln") { $("mitgliederListe").innerHTML = mgKachelnHtml(liste); return; }
     if (MG_ANSICHT === "tafel") { $("mitgliederListe").innerHTML = mgTafelHtml(liste); return; }
-    if (MG_ANSICHT === "kartei") { $("mitgliederListe").innerHTML = mgKarteiHtml(liste); mgKarteiAn(); return; } // KC-CLUB-MG-KARTEI
+    $("v-mitglieder")?.classList.toggle("mg-kartei", MG_ANSICHT === "kartei"); // 2.189.0: kompakter Kopf in der Kartei
+    if (MG_ANSICHT === "kartei") { const erst = !RK.mitgl?.w?.isConnected; $("mitgliederListe").innerHTML = mgKarteiHtml(liste); mgKarteiAn();
+      // 2.189.0 (Fund Hansi „oben geht zu viel Platz weg“): beim Öffnen gleich bis zu den Reitern scrollen – der Kopf bleibt darüber erreichbar
+      if (erst) requestAnimationFrame(() => { const r = $("mgKartei")?.querySelector(".rk-reiter"); if (r) scrollTo({ top: Math.max(0, r.getBoundingClientRect().top + scrollY - 6) }); if (RK.mitgl) rkMasse(RK.mitgl); });
+      return; } // KC-CLUB-MG-KARTEI
     $("mitgliederListe").innerHTML = kreisLegende() + liste.map((m) => `<div class="zeile${mgOn(m) ? " mg-online" : ""}">
       ${kreis(m, m.name, 40, `onclick="mitgliedOeffnen('${m.person_id}')"`)}
       <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${gbKerze(m.person_id)}${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
