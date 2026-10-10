@@ -7576,3 +7576,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/document\.querySelectorAll\("\.sb-knopf, \.hz-frage, \.su-klein"\)/.test(html) && /rad\.style\.left = l \+ "px"; rad\.style\.right = r \+ "px";/.test(html) && /if \(still\) rkMasse\(z\);/.test(html), "Rad spart schwebende Knöpfe aus");
 }
+
+// 2.183.0 KC-CLUB-ROLLKARTEI-2 (Wunsch Hansi: hintere Karten antippen, mit dem Finger drehen, aktive Karte farbig, Endlos-Rolle)
+{
+  const idx = lies("index.html");
+  assert.ok(/g\.className = "rk-griff"; g\.dataset\.k = k; g\.onclick = \(\) => rkGehe\(z, z\.i \+ k, 1\);/.test(html) && /\.rk-griff\[data-k="2"\] \{ top: calc\(var\(--rk-oben\) - 84px\); \}/.test(idx), "hintere Karten direkt antippbar");
+  assert.ok(/const quer = Math\.abs\(dx\) > 50/.test(html) && /schwung = Math\.max\(1, Math\.min\(5,/.test(html) && /if \(hoch && s0\.karte && !\(r > 0 \? s0\.unten : s0\.oben\)\) return;/.test(html), "Wischen dreht (mit Schwung), Karteninhalt scrollt zuerst");
+  assert.ok(/const k = \(i - z\.i \+ n\) % n;/.test(html) && /const ziel = \(\(i % n\) \+ n\) % n;/.test(html), "Endlos-Rolle: nach der letzten kommt die erste");
+  assert.ok(/\.rk > \.rk-karte\[data-rk="vorn"\] \{ border-top: 7px solid var\(--rot\);/.test(idx), "aktive Karte mit farbigem Rand oben");
+}

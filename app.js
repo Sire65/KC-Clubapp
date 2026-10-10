@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.182.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.183.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12442,11 +12442,20 @@ function rkAufbauen(z) {
     z.reiter = document.createElement("div"); z.reiter.className = "rk-reiter"; z.reiter.setAttribute("role", "tablist");
     z.platz = document.createElement("div"); z.platz.className = "rk-platz";
     z.platz.innerHTML = `<div class="rk-rad"><button type="button" class="rk-pfeil" data-r="-1" aria-label="Vorige Karte">▲</button><span class="rk-ring"></span><span class="rk-zahl"></span><span class="rk-ring"></span><button type="button" class="rk-pfeil" data-r="1" aria-label="Nächste Karte">▼</button></div>`;
-    z.platz.querySelectorAll(".rk-pfeil").forEach((b) => (b.onclick = () => rkGehe(z, z.i + Number(b.dataset.r))));
-    const erste = rkKarten(w)[0] || w.querySelector("details.karte"); w.insertBefore(z.reiter, erste); w.insertBefore(z.platz, erste);
+    z.platz.querySelectorAll(".rk-pfeil").forEach((b) => (b.onclick = () => rkGehe(z, z.i + Number(b.dataset.r), Number(b.dataset.r))));
+    // 2.183.0: die hinten herausschauenden Karten direkt antippen
+    z.griffe = [1, 2].map((k) => { const g = document.createElement("button"); g.type = "button"; g.className = "rk-griff"; g.dataset.k = k; g.onclick = () => rkGehe(z, z.i + k, 1); return g; });
+    const erste = rkKarten(w)[0] || w.querySelector("details.karte"); w.insertBefore(z.reiter, erste); w.insertBefore(z.platz, erste); z.griffe.forEach((g) => w.insertBefore(g, erste));
     w.addEventListener("wheel", z.rad = (e) => rkRad(z, e), { passive: false });
-    w.addEventListener("touchstart", z.ts = (e) => { const k = e.target.closest?.(".rk-vorn"); z.t0 = k ? { y: e.touches[0].clientY, oben: k.scrollTop <= 0, unten: k.scrollTop + k.clientHeight >= k.scrollHeight - 2 } : null; }, { passive: true });
-    w.addEventListener("touchend", z.te = (e) => { if (!z.t0) return; const dy = e.changedTouches[0].clientY - z.t0.y; if (dy < -70 && z.t0.unten) rkGehe(z, z.i + 1); else if (dy > 70 && z.t0.oben) rkGehe(z, z.i - 1); z.t0 = null; }, { passive: true });
+    // 2.183.0 (Wunsch Hansi „mit dem Finger drehen“): waagerecht wischen dreht immer, senkrecht außerhalb der Karte immer, auf der
+    // Karte erst am Ende/Anfang ihres Inhalts; schneller Wisch = Schwung über mehrere Karten
+    w.addEventListener("touchstart", z.ts = (e) => { const t = e.touches[0], k = e.target.closest?.(".rk-vorn"), auf = e.target.closest?.(".rk-platz, .rk-karte, .rk-griff");
+      z.t0 = auf && e.touches.length === 1 ? { x: t.clientX, y: t.clientY, zeit: Date.now(), karte: !!k, oben: !k || k.scrollTop <= 0, unten: !k || k.scrollTop + k.clientHeight >= k.scrollHeight - 2 } : null; }, { passive: true });
+    w.addEventListener("touchend", z.te = (e) => { const s0 = z.t0; z.t0 = null; if (!s0) return; const t = e.changedTouches[0], dx = t.clientX - s0.x, dy = t.clientY - s0.y, dt = Math.max(60, Date.now() - s0.zeit);
+      const quer = Math.abs(dx) > 50 && Math.abs(dx) > 1.4 * Math.abs(dy), hoch = Math.abs(dy) > 60 && Math.abs(dy) > 1.4 * Math.abs(dx);
+      if (!quer && !hoch) return; const weg = quer ? dx : dy, schwung = Math.max(1, Math.min(5, Math.round(Math.abs(weg) / dt * 1.8))), r = weg < 0 ? 1 : -1;
+      if (hoch && s0.karte && !(r > 0 ? s0.unten : s0.oben)) return; // erst den Karteninhalt scrollen
+      rkGehe(z, z.i + r * schwung, r); }, { passive: true });
   }
   z.karten = rkKarten(w);
   z.karten.forEach((d) => { if (d.dataset.rkVorher === undefined) d.dataset.rkVorher = d.open ? "1" : "0"; d.open = true; d.classList.add("rk-karte"); });
@@ -12459,7 +12468,7 @@ function rkAufbauen(z) {
 function rkAbbauen(z) {
   const w = z.w; z.an = false; w.classList.remove("rk");
   w.removeEventListener("wheel", z.rad); w.removeEventListener("touchstart", z.ts); w.removeEventListener("touchend", z.te);
-  z.reiter?.remove(); z.platz?.remove();
+  z.reiter?.remove(); z.platz?.remove(); z.griffe?.forEach((g) => g.remove());
   w.querySelectorAll(".rk-karte").forEach((d) => { d.classList.remove("rk-karte", "rk-vorn", "rk-weg"); d.removeAttribute("data-rk"); d.style.cssText = ""; if (d.dataset.rkVorher !== undefined) { d.open = d.dataset.rkVorher === "1"; delete d.dataset.rkVorher; } });
 }
 function rkMasse(z) {
@@ -12474,28 +12483,34 @@ function rkMasse(z) {
 }
 function rkStellen(z, still) {
   if (still) rkMasse(z);
+  const n = z.karten.length;
+  // 2.183.0 Endlos-Rolle: hinter der letzten Karte kommt gleich wieder die erste (Abstand k immer „nach vorn“ gezählt)
   z.karten.forEach((d, i) => {
-    const k = i - z.i; d.dataset.rk = k < 0 ? "weg" : k === 0 ? "vorn" : k <= 2 ? "h" + k : "rest";
+    const k = (i - z.i + n) % n; d.dataset.rk = k === 0 ? "vorn" : k === 1 && n > 1 ? "h1" : k === 2 && n > 2 ? "h2" : k === n - 1 ? "weg" : "rest";
     d.classList.toggle("rk-vorn", k === 0); d.inert = k !== 0; d.setAttribute("aria-hidden", k === 0 ? "false" : "true");
     if (still) { d.style.transition = "none"; requestAnimationFrame(() => (d.style.transition = "")); }
   });
+  z.griffe?.forEach((g) => { const k = Number(g.dataset.k), d = n > k ? z.karten[(z.i + k) % n] : null; g.hidden = !d; if (d) g.setAttribute("aria-label", "Zur Karte " + (d.querySelector(":scope > summary")?.textContent.trim() || "")); });
   z.reiter.querySelectorAll(".rk-tab").forEach((b, i) => { b.classList.toggle("an", i === z.i); b.setAttribute("aria-selected", i === z.i); });
   z.reiter.querySelector(".rk-tab.an")?.scrollIntoView({ block: "nearest", inline: "center" });
-  z.platz.querySelector(".rk-zahl").textContent = `${z.i + 1} / ${z.karten.length}`;
+  z.platz.querySelector(".rk-zahl").textContent = `${z.i + 1} / ${n}`;
 }
-function rkGehe(z, i) {
-  i = Math.max(0, Math.min(z.karten.length - 1, i)); if (i === z.i) return false;
-  const schritte = Math.abs(i - z.i), richtung = Math.sign(i - z.i);
-  const weiter = () => { z.i += richtung; rkStellen(z); try { navigator.vibrate?.(6); } catch {} rkKlick(); if (z.i !== i) setTimeout(weiter, 90); };
+// i darf über das Ende hinaus zeigen (Überlauf); richtung: 1 = vorwärts, -1 = rückwärts, ohne = kürzester Weg (Reiter)
+function rkGehe(z, i, richtung) {
+  const n = z.karten.length; if (n < 2) return false;
+  const ziel = ((i % n) + n) % n; if (ziel === z.i) return false;
+  const vor = (ziel - z.i + n) % n, zurueck = (z.i - ziel + n) % n;
+  const r = richtung || (vor <= zurueck ? 1 : -1), schritte = r > 0 ? vor : zurueck;
+  let rest = schritte; const weiter = () => { z.i = (z.i + r + n) % n; rkStellen(z); try { navigator.vibrate?.(6); } catch {} rkKlick(); if (--rest > 0) setTimeout(weiter, 90); };
   if (schritte > 1) z.w.classList.add("rk-schnell"); weiter();
   setTimeout(() => z.w.classList.remove("rk-schnell"), schritte * 90 + 500);
-  const vorn = z.karten[i]; vorn.scrollTop = 0; return true;
+  z.karten[ziel].scrollTop = 0; return true;
 }
 function rkRad(z, e) {
   const k = e.target.closest?.(".rk-vorn"); if (!e.target.closest?.(".rk-platz, .rk-karte")) return;
   if (k && ((e.deltaY > 0 && k.scrollTop + k.clientHeight < k.scrollHeight - 2) || (e.deltaY < 0 && k.scrollTop > 0))) return; // erst die Karte selbst scrollen
   e.preventDefault(); if (Date.now() - (z.radZeit || 0) < 380 || Math.abs(e.deltaY) < 8) return;
-  z.radZeit = Date.now(); rkGehe(z, z.i + Math.sign(e.deltaY));
+  z.radZeit = Date.now(); rkGehe(z, z.i + Math.sign(e.deltaY), Math.sign(e.deltaY));
 }
 function rkZu(z, el) {
   const d = z.karten.find((k) => k.contains(el)); if (!d) return;

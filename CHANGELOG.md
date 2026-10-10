@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.183.0 – 2026-10-10 – 🗂️ Rollkartei: antippen, drehen, endlos
+🔧 Kleine Systemverbesserungen
+
 ## 2.182.0 – 2026-10-10 – 🗂️ Rollkartei: Mikrofon verdeckt das Rad nicht mehr
 🔧 Kleine Systemverbesserungen
 
