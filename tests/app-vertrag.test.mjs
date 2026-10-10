@@ -7571,3 +7571,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/const stHinter = \(x\) => x\.hinter === true \|\| \(x\.anzeige \|\| 0\) > 20000;/.test(html) && /l = lMit\.filter\(\(x\) => !stHinter\(x\)\)/.test(html), "zählt nicht für üblich/max./langsam, alte Einträge erkannt");
   assert.ok(/⏸️ <b>\$\{hinter\.length\} Start/.test(html), "sichtbar markiert statt verschwiegen");
 }
+
+// 2.182.0 KC-CLUB-ROLLKARTEI: schwebende Knöpfe (🎙️, ?, 🔍) liegen nicht mehr über dem Rad (Fund Hansi)
+{
+  assert.ok(/document\.querySelectorAll\("\.sb-knopf, \.hz-frage, \.su-klein"\)/.test(html) && /rad\.style\.left = l \+ "px"; rad\.style\.right = r \+ "px";/.test(html) && /if \(still\) rkMasse\(z\);/.test(html), "Rad spart schwebende Knöpfe aus");
+}

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.181.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.182.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12465,9 +12465,15 @@ function rkAbbauen(z) {
 function rkMasse(z) {
   const nav = $("fuss")?.getBoundingClientRect().height || 76;
   const h = Math.max(300, innerHeight - (z.platz.getBoundingClientRect().top) - nav - 12);
-  z.platz.style.height = h + "px"; z.w.style.setProperty("--rk-oben", z.platz.offsetTop + 92 + "px"); z.w.style.setProperty("--rk-h", h - 92 - 52 + "px");
+  z.platz.style.height = h + "px";
+  // 2.182.0 (Fund Hansi: Mikrofon lag vor ▲): schwebende Knöpfe (🎙️ links, ? und 🔍 rechts) aussparen – das Rad rückt dazwischen
+  const rad = z.platz.querySelector(".rk-rad"); if (rad) { rad.style.left = rad.style.right = ""; const pr = z.platz.getBoundingClientRect(), rr = rad.getBoundingClientRect(); let l = 0, r = 0;
+    for (const f of document.querySelectorAll(".sb-knopf, .hz-frage, .su-klein")) { const b = f.getBoundingClientRect(); if (!b.width || b.bottom < rr.top || b.top > rr.bottom) continue;
+      if (b.left + b.width / 2 < pr.left + pr.width / 2) l = Math.max(l, b.right - pr.left + 6); else r = Math.max(r, pr.right - b.left + 6); }
+    rad.style.left = l + "px"; rad.style.right = r + "px"; rad.classList.toggle("eng", rad.clientWidth < 250); } z.w.style.setProperty("--rk-oben", z.platz.offsetTop + 92 + "px"); z.w.style.setProperty("--rk-h", h - 92 - 52 + "px");
 }
 function rkStellen(z, still) {
+  if (still) rkMasse(z);
   z.karten.forEach((d, i) => {
     const k = i - z.i; d.dataset.rk = k < 0 ? "weg" : k === 0 ? "vorn" : k <= 2 ? "h" + k : "rest";
     d.classList.toggle("rk-vorn", k === 0); d.inert = k !== 0; d.setAttribute("aria-hidden", k === 0 ? "false" : "true");

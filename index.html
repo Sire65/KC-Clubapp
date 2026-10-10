@@ -1102,9 +1102,10 @@
   .rk > .rk-karte > summary::after, .rk > .rk-karte > summary::before { display: none; }
   .rk > .rk-karte[data-rk="weg"] { z-index: 31; transform: translateY(40px) rotateX(-98deg); opacity: 0; pointer-events: none; overflow: hidden; }
   .rk.rk-schnell > .rk-karte { transition-duration: .16s; }
-  .rk-rad { position: absolute; left: 0; right: 118px; bottom: 0; height: 44px; display: flex; align-items: center; justify-content: center; gap: 14px;
+  .rk-rad { position: absolute; left: 0; right: 0; bottom: 0; height: 44px; display: flex; align-items: center; justify-content: center; gap: 14px;
     background: linear-gradient(#3a3a3a, #1e1e1e); border-radius: 22px; margin: 0 6px; box-shadow: inset 0 2px 3px rgba(255,255,255,.15), 0 3px 8px rgba(0,0,0,.3); }
   .rk-ring { width: 26px; height: 26px; border-radius: 50%; border: 4px solid #b8b8b8; box-shadow: inset 0 0 0 3px #555; }
+  .rk-rad { gap: clamp(4px, 2vw, 14px); } .rk-rad .rk-ring { flex: none; } .rk-rad.eng .rk-ring { display: none; }
   .rk-zahl { color: #eee; font-weight: 700; min-width: 54px; text-align: center; font-size: .9rem; }
   .rk-pfeil { border: 0; background: var(--rot); color: #fff; width: 40px; height: 32px; border-radius: 10px; font-size: 1rem; cursor: pointer; }
   :root.ohne-anim .rk > .rk-karte { transition-duration: .01s; }
@@ -3772,6 +3773,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.181.0" data-v="2.181.0"></script>
+<script src="app.js?v=2.182.0" data-v="2.182.0"></script>
 </body>
 </html>
