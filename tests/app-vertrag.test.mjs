@@ -7611,7 +7611,14 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.187.0 KC-CLUB-ROLLKARTEI-JALOUSIE (Wunsch Hansi: Jalousie öffnet sich sehr schnell, wenn eine Karte nach vorn kommt; EIN Umschalter oben)
 {
   const idx = lies("index.html");
-  assert.ok(/function rkJalousie\(z\)/.test(html) && /if \(!rkJalAn\(\) \|\| !fxAn\(\) \|\| !z\?\.an\) return;/.test(html) && /duration: 200, delay: \(n - 1 - k\) \* 16/.test(html), "sehr schnell (≈ 0,35 s), aus bei Effekte aus");
+  assert.ok(/function rkJalousie\(z, still\)/.test(html) && /if \(!rkJalAn\(\) \|\| !fxAn\(\) \|\| !z\?\.an\) return;/.test(html) && /const warte = still \? 120 : 380, kippen = 230, hoch = 640/.test(html), "2.188.0: echte Jalousie ≈ 0,9 s, aus bei Effekte aus");
   assert.ok(/if \(--rest > 0\) setTimeout\(weiter, 90\); else rkJalousie\(z\);/.test(html), "beim schnellen Drehen nur auf der letzten Karte");
   assert.ok(/class="rk-jal-knopf/.test(html) && /localStorage\.setItem\("kc_club_rk_jal", an \? "an" : "aus"\)/.test(html) && /\.rk-jal-knopf \{ position: sticky; left: 0;/.test(idx), "ein Umschalter oben, bleibt sichtbar");
+}
+
+// 2.188.0 KC-CLUB-ROLLKARTEI-JALOUSIE-2 (Fund Hansi: „blinkt nur 2×“) – Lamellen IN der Karte, kippen auf, Leiste zieht das Paket hoch
+{
+  const idx = lies("index.html");
+  assert.ok(/d\.scrollTop = 0; d\.appendChild\(j\);/.test(html) && /rotateX\(68deg\)/.test(html) && /class="rk-jal-leiste"/.test(html) && /\.rk-jal-leiste \{ position: absolute;/.test(idx), "fährt mit der Karte, kippt, Unterleiste zieht hoch");
+  assert.ok(/setTimeout\(\(\) => j\.remove\(\), warte \+ kippen \+ hoch \+ 220\);/.test(html), "räumt sich sicher weg");
 }

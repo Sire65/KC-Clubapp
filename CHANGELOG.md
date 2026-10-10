@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.188.0 – 2026-10-10 – 🪟 Rollkartei: echte Jalousie
+🔧 Kleine Systemverbesserungen
+
 ## 2.187.0 – 2026-10-10 – 🪟 Rollkartei mit Jalousie
 🔧 Kleine Systemverbesserungen
 

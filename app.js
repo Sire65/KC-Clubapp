@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.187.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.188.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12483,8 +12483,8 @@ function rkAufbauen(z) {
   // 2.187.0 (Wunsch Hansi): EIN Umschalter oben für die Jalousie – kein zweiter Knopf
   z.reiter.insertAdjacentHTML("afterbegin", `<button type="button" class="rk-jal-knopf${rkJalAn() ? " an" : ""}" aria-pressed="${rkJalAn()}" title="Jalousie beim Blättern an/aus">🪟<small>${rkJalAn() ? "an" : "aus"}</small></button>`);
   z.reiter.querySelector(".rk-jal-knopf").onclick = (e) => { const an = !rkJalAn(); try { localStorage.setItem("kc_club_rk_jal", an ? "an" : "aus"); } catch {}
-    const b = e.currentTarget; b.classList.toggle("an", an); b.setAttribute("aria-pressed", an); b.querySelector("small").textContent = an ? "an" : "aus"; melde(an ? "🪟 Jalousie an – die Karte öffnet sich beim Blättern" : "🪟 Jalousie aus"); if (an) rkJalousie(z); };
-  rkMasse(z); rkStellen(z, true); setTimeout(() => rkJalousie(z), 60);
+    const b = e.currentTarget; b.classList.toggle("an", an); b.setAttribute("aria-pressed", an); b.querySelector("small").textContent = an ? "an" : "aus"; melde(an ? "🪟 Jalousie an – die Karte öffnet sich beim Blättern" : "🪟 Jalousie aus"); if (an) rkJalousie(z, true); };
+  rkMasse(z); rkStellen(z, true); setTimeout(() => rkJalousie(z, true), 60);
 }
 function rkAbbauen(z) {
   const w = z.w; z.an = false; w.classList.remove("rk");
@@ -12544,13 +12544,24 @@ if (typeof document !== "undefined") { const rkStart = () => rkEinrichten("v-ein
 // 2.187.0 KC-CLUB-ROLLKARTEI-JALOUSIE (Wunsch Hansi): kommt eine Karte nach vorn, fährt eine Jalousie sehr schnell hoch (≈ 0,35 s) und gibt
 // den Inhalt frei. Beim schnellen Durchdrehen nur auf der letzten Karte – man soll nie lange warten. Je Gerät per 🪟 oben an/aus (Standard an).
 const rkJalAn = () => { try { return localStorage.getItem("kc_club_rk_jal") !== "aus"; } catch { return true; } };
-function rkJalousie(z) {
+function rkJalousie(z, still) {
+  // 2.188.0 (Fund Hansi „blinkt nur 2×“): echte Jalousie IN der Karte (fährt mit ihr nach vorn) – erst kippen die Lamellen auf
+  // (Inhalt schimmert durch), dann zieht die Unterleiste die Lamellen von unten nach oben zu einem Paket zusammen. ≈ 0,9 s.
   if (!rkJalAn() || !fxAn() || !z?.an) return;
-  z.w.querySelector(":scope > .rk-jal")?.remove();
-  const j = document.createElement("div"); j.className = "rk-jal"; j.setAttribute("aria-hidden", "true");
-  const n = 9; j.innerHTML = Array.from({ length: n }, () => "<i></i>").join(""); z.w.appendChild(j);
-  [...j.children].forEach((l, k) => l.animate([{ transform: "scaleY(1)" }, { transform: "scaleY(0)" }], { duration: 200, delay: (n - 1 - k) * 16, easing: "cubic-bezier(.5,0,.7,.4)", fill: "forwards" }));
-  setTimeout(() => j.remove(), 200 + n * 16 + 60);
+  const d = z.karten[z.i]; if (!d) return;
+  z.w.querySelectorAll(".rk-jal").forEach((x) => x.remove());
+  const n = 12, H = d.clientHeight, h = H / n, j = document.createElement("div"); j.className = "rk-jal"; j.setAttribute("aria-hidden", "true");
+  j.innerHTML = Array.from({ length: n }, (_, i) => `<i style="top:${(i * h).toFixed(1)}px;height:${(h + 1).toFixed(1)}px"></i>`).join("") + `<b class="rk-jal-leiste" style="top:${(H - 12).toFixed(1)}px"><span></span></b>`;
+  d.scrollTop = 0; d.appendChild(j);
+  const warte = still ? 120 : 380, kippen = 230, hoch = 640, P = "perspective(600px) ";
+  [...j.querySelectorAll("i")].forEach((l, i) => {
+    const ab = warte + kippen + ((n - 1 - i) / n) * hoch, dauer = (i / n) * hoch + 60, ziel = -(i * h) + i * 3;
+    l.animate([{ transform: P + "rotateX(0deg)" }, { transform: P + "rotateX(68deg)" }], { duration: kippen, delay: warte + i * 12, easing: "ease-out", fill: "forwards" });
+    l.animate([{ translate: "0 0", scale: "1 1" }, { translate: `0 ${ziel.toFixed(1)}px`, scale: "1 .22" }], { duration: dauer, delay: ab, easing: "linear", fill: "forwards" });
+  });
+  j.querySelector(".rk-jal-leiste").animate([{ transform: "translateY(0)" }, { transform: `translateY(${-(H - 12 - n * 3).toFixed(1)}px)` }], { duration: hoch, delay: warte + kippen, easing: "cubic-bezier(.45,.05,.55,.95)", fill: "forwards" });
+  j.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, delay: warte + kippen + hoch, fill: "forwards" });
+  setTimeout(() => j.remove(), warte + kippen + hoch + 220);
 }
 let rkAudio = null;
 function rkKlick() {
