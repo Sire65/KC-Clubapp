@@ -99,7 +99,7 @@ assert.ok(server.includes('from("kc_club_dienst_erinnerung").upsert({ person_id:
 // 13. KC-CLUB-ZURUECK + Kopf: Verlaufseinträge, Kennzahlen führen in Bereiche, kein Zahnrad im Kopf.
 assert.ok(/history\.replaceState\(\{ basis: true \}/.test(html) && /addEventListener\("popstate"/.test(html), "Zurück-Steuerung fehlt");
 assert.ok(/history\.pushState\((st|\{ \.\.\.st, tiefe: tiefe \+ 1 \}),/.test(html), "Ansichten legen keinen Verlaufseintrag an"); // 1.98.0: mit Tiefe (Test 279)
-for (const z of ["nachrichten", "mitglieder"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`) || (z === "mitglieder" && html.includes(`<button class="mini" onclick="mgNurOnline()">`)) || (z === "nachrichten" && html.includes(`<button class="mini\${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">`)), `Kennzahl → ${z} fehlt`); // 1.22.0: orange bei Neuem // 1.91.0: Mitglieder-Kachel → Seite nur online (mgNurOnline zeigt „mitglieder“, Test 271)
+for (const z of ["nachrichten", "mitglieder"]) assert.ok(html.includes(`<button class="mini" onclick="zeige('${z}')">`) || (z === "mitglieder" && (html.includes(`<button class="mini" onclick="mgNurOnline()">`) || html.includes(`<button class="mini\${on ? " mini-online" : ""}" onclick="mgNurOnline()">`))) || (z === "nachrichten" && html.includes(`<button class="mini\${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">`)), `Kennzahl → ${z} fehlt`); // 1.22.0: orange bei Neuem // 1.91.0: Mitglieder-Kachel → Seite nur online (mgNurOnline zeigt „mitglieder“, Test 271)
 // 0.27.2: „Nächstes Treffen“ führt über zumTreffen() in Termine (Kalender, Tag ausgewählt)
 assert.ok((html.includes(`<button class="mini" onclick="zumTreffen()">`) || html.includes(`<button class="mini\${frist ? " mini-frist frist-" + frist : ""}" onclick="zumTreffen()">`) || (html.includes(`<button id="cdKachel" class="mini\${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">`) && /\{ id: "t", zahl: String\(bisTreffen\)[^}]*los: \(\) => zumTreffen\(\) \}/.test(html))) /* 2.202.0: Countdown-Kachel, Treffen bleibt erster Eintrag */ && /function zumTreffen\(mitfahrt\) \{[\s\S]{0,400}zeige\("termine"\)/.test(html), "Kennzahl → termine fehlt");
 const kopfHtml = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('id="heroInfo"'));
@@ -3037,7 +3037,7 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
 }
 // 271. 1.91.0: KC-CLUB-ONLINE-SEITE – Kopf-Kachel öffnet Mitglieder nur online, ohne gemerkte Wahl zu ändern
 {
-  assert.ok(/<button class="mini" onclick="mgNurOnline\(\)">/.test(html) && /onclick="event\.stopPropagation\(\); mgNurOnline\(\)"/.test(html), "Kachel + Zahl → Online-Seite");
+  assert.ok(/<button class="mini(?:\$\{on \? " mini-online" : ""\})?" onclick="mgNurOnline\(\)">/.test(html) && /onclick="event\.stopPropagation\(\); mgNurOnline\(\)"/.test(html), "Kachel + Zahl → Online-Seite");
   assert.ok(/function mgNurOnline\(\) \{ MG_EINMAL = "online"; zeige\("mitglieder"\); \}/.test(html) && /nurOnline = \(MG_EINMAL \|\| MG_FILTER\) === "online" && sichtbar/.test(html), "einmaliger Filter");
   assert.ok(html.indexOf("let MG_EINMAL = null;") < html.indexOf("function zeige(") && /if \(v !== "mitglieder" && v !== "mitglied"\) MG_EINMAL = null;/.test(html) && /function mgFilterSetzen\(f\) \{ MG_EINMAL = null;/.test(html), "zurücksetzen, gemerkte Wahl bleibt");
   assert.ok(/\{ id: "online", sym: "👋", t: "Online", los: \(\) => onlineBlatt\(\) \}/.test(html), "Online-Fenster bleibt erreichbar");
@@ -7759,4 +7759,9 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   for (const id of ["mgAnsichtOben", "mgFilter", "modusWahl", "kachelGroesseWahl", "mgAnsichtWahl", "pwWichtig", "pwAntw", "ersAuszahlung", "sparWahl", "todoFilter", "todoFuer", "sosAnsicht"])
     assert.ok(new RegExp(`id="${id}"[^>]*data-zyklus=`).test(html), `${id} ohne Umschaltknopf`);
   assert.ok(/class="umschalter modus3" data-zyklus="Ansicht"><button data-m="liste"/.test(html), "Termine Liste/Kalender/To-do");
+}
+
+// 2.207.0 KC-CLUB-MINI-ONLINE-AMEISEN (Wunsch Hansi: ist jemand online, Ameisenlauf um die Mitglieder-Kachel wie bei Nachrichten)
+{
+  assert.ok(/const on = ONL\.zeigen && mpOnline\(\) > 0;/.test(html) && /<button class="mini\$\{on \? " mini-online" : ""\}" onclick="mgNurOnline\(\)">/.test(html) && /\.mini\.mini-online \.ameisen rect \{[^}]*stroke: #2ecc71/.test(html), "grüner Ameisenlauf bei Online");
 }

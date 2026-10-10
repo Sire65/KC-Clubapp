@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.206.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.207.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12455,7 +12455,8 @@ function infoTreffen() {
   return `<div class="klick" onclick="zumTreffen()">${kopf}</div>
     <div class="kacheln3">
       <button class="mini${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${n}</b><span>Neue Nachr.</span>${mpfeil("nachrichten", n > 0, n)}</button>
-      <button class="mini" onclick="mgNurOnline()"><b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b><span>Mitglieder${inkognitoAn() ? '<i class="inko-marke" title="Inkognito ist an – niemand sieht dich online">🕶️</i>' : ""}</span>${mpfeil("mitglieder", ONL.zeigen && mpOnline() > 0, mpOnline())}</button>
+      ${(() => { const on = ONL.zeigen && mpOnline() > 0; /* 2.207.0 KC-CLUB-MINI-ONLINE-AMEISEN (Wunsch Hansi): ist jemand online, läuft um die ganze Kachel ein Ameisenlauf – wie bei neuen Nachrichten, in Online-Grün */
+        return `<button class="mini${on ? " mini-online" : ""}" onclick="mgNurOnline()">${on ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}`; })()}<b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b><span>Mitglieder${inkognitoAn() ? '<i class="inko-marke" title="Inkognito ist an – niemand sieht dich online">🕶️</i>' : ""}</span>${mpfeil("mitglieder", ONL.zeigen && mpOnline() > 0, mpOnline())}</button>
       <button id="cdKachel" class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}${cdInhalt(bisTreffen)}${mpfeil("termin", !!t, t ? `${t.id || t.beginn}|${frist}` : "", frist)}</button>
     </div>`;
 }

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.207.0 – 2026-10-10 – 🟢 Ameisenlauf an der Mitglieder-Kachel, wenn jemand online ist
+🟢 Ist jemand online, läuft ein grüner Ameisenlauf um die Mitglieder-Kachel
+
 ## 2.206.0 – 2026-10-10 – ↻ Umschaltknöpfe statt Knopfreihen
 ↻ Aufgeräumt: statt mehrerer Knöpfe ein Umschaltknopf – antippen schaltet weiter, lange drücken zeigt alle
 
