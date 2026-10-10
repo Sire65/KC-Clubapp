@@ -7651,3 +7651,16 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const idx = lies("index.html");
   assert.ok(/\.uhk-msg\.eigen \{ align-self: flex-end; border-radius: 12px 12px 4px 12px; background: var\(--rot\); color: #fff; \}/.test(idx) && /:root\.cf-eigen \.uhk-msg\.eigen \{ background: var\(--cfEigen\); color: var\(--cfEigenText\); \}/.test(idx), "eigene Blasen wie im Chat");
 }
+
+// 2.194.0 KC-CLUB-SPRACHE: falsch verstandener Nachname landet nicht im Schreibfeld; „Chat mit …“ öffnet nur (Fund Hansi: „linlax“)
+{
+  const a = programm.indexOf("const sbNorm = "), b = programm.indexOf("// ungespeicherte Eingaben auf der jetzigen Seite?");
+  const sbErkennen = new Function(programm.slice(a, b) + "\nreturn sbErkennen;")();
+  const mg = [{ person_id: "KC-P-ST", name: "Steven Linley" }, { person_id: "KC-P-M0009", name: "Klaus Zander" }, { person_id: "KC-P-002", name: "Hans-Joachim Koch" }];
+  const c = sbErkennen("Chat mit Steven linlax", mg, "KC-P-002");
+  assert.deepEqual([c.art, c.personen, c.text], ["nachricht", ["KC-P-ST"], ""], "„Chat mit Steven linlax“ → Chat mit Steven, kein Text (danach Frage „einsprechen?“)");
+  const n = sbErkennen("Nachricht an Steven Linlei komm bitte vorbei", mg, "KC-P-002");
+  assert.deepEqual([n.personen, n.text], [["KC-P-ST"], "komm bitte vorbei"], "ähnlich klingender Nachname gehört zum Namen");
+  assert.equal(sbErkennen("Nachricht an Klaus bin gleich da", mg, "KC-P-002").text, "bin gleich da", "normaler Text bleibt unverändert");
+  assert.equal(sbErkennen("Chat mit Klaus öffnen", mg, "KC-P-002").text, "", "„öffnen“ bleibt kein Text");
+}

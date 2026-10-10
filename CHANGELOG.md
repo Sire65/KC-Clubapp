@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.194.0 – 2026-10-10 – 🎙️ Sprachsteuerung: Chat öffnen ohne falschen Text
+🔧 Kleine Systemverbesserungen
+
 ## 2.193.0 – 2026-10-10 – 💬 Chat-Kartei: besser lesbar
 🔧 Kleine Systemverbesserungen
 

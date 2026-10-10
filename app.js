@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.193.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.194.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -1835,11 +1835,16 @@ function sbErkennen(roh, mitglieder = [], ich = "") {
     for (const art of ["voll", "vor", "nach"]) { treffer = wer.filter((w) => passt(w[art])); if (treffer.length) { k = Math.max(...treffer.map((w) => w[art].length)); treffer = treffer.filter((w) => w[art].length === k); wie = art; break; } }
     const n0 = treffer[0] && String(treffer[0].x.name).trim().split(/\s+/);
     const wort = treffer.length === 1 ? treffer[0].x.name : treffer.length ? (wie === "vor" ? n0[0] : wie === "nach" ? n0[n0.length - 1] : treffer[0].x.name) : sbAbWort(roh, vorne).split(/\s+/)[0].replace(/[.,!?;:„“"]+$/, "");
-    return { art: "nachricht", personen: treffer.map((w) => w.x.person_id), wort, text: sbAbWort(roh, vorne + (k || 1)), vorschlag: treffer.length ? [] : sbAehnlich(wort, mitglieder, ich) };
+    // 2.194.0 (Fund Hansi: „Chat mit Steven Linley“ → „linlax“ stand im Schreibfeld): Vorname erkannt und das nächste Wort klingt wie der
+    // Nachname (falsch verstanden) → gehört zum Namen, nicht in die Nachricht
+    let ab = vorne + (k || 1);
+    if (treffer.length === 1 && wie === "vor") { const nn = sbWorte(n0[n0.length - 1])[0] || "", w1 = r[k] || "";
+      if (n0.length > 1 && w1 && nn && (sbAbstand(w1, nn) <= Math.max(2, Math.floor(nn.length / 3)) || (w1.length >= 3 && nn.startsWith(w1.slice(0, 3))))) ab++; }
+    return { art: "nachricht", personen: treffer.map((w) => w.x.person_id), wort, text: sbAbWort(roh, ab), vorschlag: treffer.length ? [] : sbAehnlich(wort, mitglieder, ich) };
   }
   // 2.151.0 KC-CLUB-SPRACHE-EINSTELLUNG (Wunsch Hansi): „Chat mit Klaus öffnen“ = Chat mit Klaus (wie „Nachricht an Klaus“)
   let ch = t.match(/^(?:(?:öffne|zeig(?:e)?(?: mir)?) )?(?:den |einen )?chat mit (.+?)(?: (?:öffnen|aufmachen|starten|anfangen))?$/);
-  if (ch) return sbErkennen("Nachricht an " + ch[1], mitglieder, ich);
+  if (ch) { const n = sbErkennen("Nachricht an " + ch[1], mitglieder, ich); return n?.art === "nachricht" ? { ...n, text: "" } : n; } // 2.194.0: „Chat mit …“ öffnet nur – Text fragt danach „einsprechen?“
   // „Kachelgröße auf 4 x 3 ändern“, „Kacheln sehr klein“ → direkt umstellen; ohne Größe → genau zur Einstellung springen
   if (/kachel/.test(t)) { const g = sbKachelStufe(t); return g ? { art: "kachel", g } : { art: "einst", k: "kacheln" }; }
   // „Einstellung Schriftgröße“, „Ruhezeit ändern“, „wo stelle ich das Wetter ein“ → genau zu dem Schalter in den Einstellungen
