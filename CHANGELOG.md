@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.209.1 – 2026-10-10 – 🧪 Testversion (RC) für 3.0 – Freigabeplan
+🧪 Testwoche vor der fertigen Version 3.0
+
 ## 2.209.0 – 2026-10-10 – 🔧 Gesamtprüfung: viele kleine Verbesserungen
 🔧 Gesamtprüfung: zuverlässiger offline und bei Updates, Push-Antippen führt direkt zum Ziel, klarere Meldungen
 

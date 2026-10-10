@@ -1,5 +1,8 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.209.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.209.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+// KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
+// fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
+const APP_STUFE = "RC";
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -22891,7 +22894,7 @@ function versionAnzeigen() {
   $("versionMarke").textContent = NEUE_VERSION ? `🆕 v${NEUE_VERSION}` : `v${APP_VERSION} ↻`;
   $("versionMarke").classList.toggle("gelb", !!NEUE_VERSION);
   // KC-CLUB-KOPF-ORDNUNG (2.24.17, Wunsch Hansi): Versionsnummer klein unter der Kochmütze, bei Update gelb mit 🆕
-  const kv = $("kopfVersion"); if (kv) { kv.textContent = NEUE_VERSION ? `🆕 v${NEUE_VERSION}` : `v${APP_VERSION}`; kv.classList.toggle("neu", !!NEUE_VERSION); }
+  const kv = $("kopfVersion"); if (kv) { kv.textContent = NEUE_VERSION ? `🆕 v${NEUE_VERSION}` : `v${APP_VERSION}${ICH?.admin && APP_STUFE !== "FINAL" ? " " + APP_STUFE : ""}`; kv.classList.toggle("neu", !!NEUE_VERSION); }
   if (reg === "programme") kachelnZeigen();
 }
 // KC-CLUB-UPDATE-SICHER (1.97.0, Gesamtprüfung: „Updates kommen nicht zuverlässig an“): erst warten, bis die neue Version

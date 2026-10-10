@@ -7785,3 +7785,15 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/offen\.postMessage\(\{ typ: "oeffnen", url: ziel \}\)/.test(sw) && /await Promise\.allSettled\(\[q, fertig\]\)/.test(sw), "SW: Push-Ziel an offene App, Quittung abgewartet");
   assert.ok(/const sub = \{ endpoint: endpunkt, expirationTime:/.test(server) && /function gleichZeit\(a: unknown, b: string\)/.test(server) && !/p\.cronSecret !== geheim/.test(server), "Server: Push-Anmeldung begrenzt, Geheimnisvergleich");
 }
+
+// KC-CLUB-FREIGABESTUFE (AGENTS Regel 9): Stufe in version.json und app.js gleich, nur DEV/RC/FINAL
+{
+  const vj = JSON.parse(lies("version.json")), st = (html.match(/const APP_STUFE = "(DEV|RC|FINAL)";/) || [])[1];
+  assert.ok(["DEV", "RC", "FINAL"].includes(vj.stufe) && st === vj.stufe, "Freigabestufe in version.json und APP_STUFE ungleich");
+}
+
+// 2.209.1 Freigabeplan 3.0 (RC-Testwoche) liegt vor
+{
+  const fr = lies("docs/FREIGABE_3_0.md");
+  assert.ok(/## 4\. Prüfschritte vor FINAL/.test(fr) && /Visual-TÜV/.test(fr) && /Release-TÜV/.test(fr), "Freigabeplan unvollständig");
+}
