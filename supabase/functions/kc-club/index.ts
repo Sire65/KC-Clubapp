@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.191.0";
+const SERVER_VERSION = "2.200.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -8293,7 +8293,7 @@ Köcheclub-App`,
         const speichern = () => db.from("kc_club_person_einstellung").update({ wert: w, geaendert_am: jetzt() }).eq("person_id", an).eq("schluessel", "vorfuehren");
         if (alt && w.status !== "beendet") { w.status = "beendet"; if (w.frame) { w.frame = null; await speichern(); } } // 2.136.0: letztes Live-Bild nicht liegen lassen
         if (a === "vorfuehren_antwort" && w.status === "angefragt") { w.status = p.annehmen === true ? "laeuft" : "abgelehnt"; w.seit = jetzt(); await speichern(); }
-        if (a === "vorfuehren_ende" && (w.status !== "beendet" || w.frame)) { w.status = "beendet"; w.frame = null; await speichern(); } // 2.136.0: Ende löscht das Live-Bild
+        if (a === "vorfuehren_ende" && (w.status !== "beendet" || w.frame)) { w.status = "beendet"; w.frame = null; w.zeiger = null; await speichern(); } // 2.136.0: Ende löscht das Live-Bild
         if (a === "vorfuehren_senden" && w.status === "laeuft") {
           const neu = (Array.isArray(p.ev) ? p.ev : []).slice(0, 10).map((e: any) => ({
             n: ++w.n, art: ["ansicht", "tipp", "scroll", "fenster", "fenster_zu"].includes(String(e?.art)) ? String(e.art) : "tipp",
@@ -8306,13 +8306,21 @@ Köcheclub-App`,
         if (a === "vorfuehren_bild") {
           if (w.von !== ich.person_id) throw new Fehler("Kein Zugriff.", 403);
           const f = w.status === "laeuft" ? studioFrame(p.f) : null;
-          if (f) { w.frame = { ...f, n: (w.frame?.n || 0) + 1 }; await speichern(); }
+          if (f) w.frame = { ...f, n: (w.frame?.n || 0) + 1 };
+          // 2.200.0 KC-CLUB-VORFUEHREN-ZEIGER (Wunsch Hansi „roter Pfeil zum Zeigen“): nur ein Punkt (0–1 im Bildschirm) oder null
+          const punkt = (v: any) => v && Number.isFinite(Number(v.x)) && Number.isFinite(Number(v.y))
+            ? { x: Math.round(Math.max(0, Math.min(1, Number(v.x))) * 1000) / 1000, y: Math.round(Math.max(0, Math.min(1, Number(v.y))) * 1000) / 1000 } : null;
+          const z = p.z === undefined ? undefined : punkt(w.status === "laeuft" ? p.z : null);
+          const zNeu = z !== undefined && JSON.stringify(z) !== JSON.stringify(w.zeiger ?? null);
+          if (zNeu) w.zeiger = z;
+          if (f || zNeu) await speichern();
         }
         const seit = Number(p.seit) || 0, vonP = (await personen([w.von])).get(w.von);
         return json({ ok: true, status: w.status, von: { person_id: w.von, vorname: vorname(vonP ?? null) || w.von, name: vonP?.display_name || w.von },
           ev: a === "vorfuehren_holen" ? (w.ev || []).filter((e: any) => e.n > seit) : [], n: w.n || 0,
           bis: w.status === "laeuft" ? new Date(new Date(w.seit).getTime() + STUDIO_MS).toISOString() : null,
-          ...(a === "vorfuehren_holen" && w.frame && w.frame.n > (Number(p.fseit) || 0) ? { frame: w.frame } : {}) });
+          ...(a === "vorfuehren_holen" && w.frame && w.frame.n > (Number(p.fseit) || 0) ? { frame: w.frame } : {}),
+          ...(a === "vorfuehren_holen" ? { zeiger: w.status === "laeuft" ? w.zeiger ?? null : null } : {}) });
       }
 
       // ----- KC-CLUB-SCHNAPPSCHUSS (2.102.0, Wunsch Hansi „Bildschirm des Mitglieds ansehen“): nur mit Zustimmung des Mitglieds,

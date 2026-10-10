@@ -447,6 +447,13 @@
   .vf-ton { display: flex; align-items: center; gap: 8px; border-top: 1px solid rgba(255,255,255,.25); padding-top: 6px; }
   .vf-ton-text { flex: 1; min-width: 0; font-size: .85rem; }
   .vf-leiste .vf-ton-k { flex: none; grid-auto-flow: column; grid-auto-columns: minmax(84px, auto); grid-template-columns: none; }
+  /* KC-CLUB-VORFUEHREN-ZEIGER (2.200.0): roter Zeigepfeil – Spitze genau am Punkt */
+  .vf-knoepfe.vier { grid-template-columns: repeat(4, minmax(0, 1fr)); } .vf-knoepfe.vier .knopf { font-size: .82rem !important; padding: 6px 3px !important; }
+  .vf-leiste .knopf.vf-zeiger-an { background: #d61f2c; color: #fff; border-color: #fff; }
+  .vf-zeiger-flaeche { position: fixed; inset: 0; z-index: 2590; touch-action: none; cursor: crosshair; background: rgba(214,31,44,.04); }
+  .vf-zeiger-pfeil { position: absolute; z-index: 4; width: 56px; height: 56px; margin: -3px 0 0 -3px; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.45)); }
+  .vf-zeiger-pfeil.weich { transition: left .35s ease-out, top .35s ease-out; }
+  .vf-zeiger-pfeil svg { display: block; }
   @media (max-width: 380px) { .st-knopfgitter.vier { grid-template-columns: repeat(2, minmax(0, 1fr)); } .st-modus .st-t { font-size: .82rem; } }
 
   .vf-punkt { position: fixed; z-index: 2700; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: rgba(214,58,58,.45); border: 3px solid #d63a3a; pointer-events: none; animation: vfPunkt 1.4s ease-out forwards; }
@@ -3853,6 +3860,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.199.0" data-v="2.199.0"></script>
+<script src="app.js?v=2.200.0" data-v="2.200.0"></script>
 </body>
 </html>

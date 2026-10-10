@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.199.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.200.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -8622,8 +8622,15 @@ let wartenZahl = 0, wartenTimer = null, wartenLangTimer = null;
 // (Aktualisieren, Karte öffnen, Admin prüfen …), übergibt der Aufruf { warten: true } → die Kochmütze erscheint auch dort.
 // KC-CLUB-START-STILL (2.24.5, Hinweis Hansi „Kochmütze dreht nach dem Start nochmals“): Prüfungen, die die App nach dem
 // Start von selbst macht (Eingangskorb, Schulungen, Twinkey-Antworten, Tagesinfo), übergeben { still: true } – keine Mütze.
+// 2.200.0 KC-CLUB-WARTEN-NUR-BEI-TIPP (Fund Hansi „im offenen Chat erscheint alle paar Sekunden die Sanduhr – das stört“): die Warte-Mütze
+// zeigt sich nur noch, wenn man gerade selbst etwas angetippt hat (oder der Aufruf sie ausdrücklich will). Abfragen im Hintergrund
+// (Takt, Nachladen, Zähler) laufen immer unsichtbar – egal, ob sie in WARTEN_STILL stehen. Die Lade-Hilfe bei langsamem Netz bleibt.
+const WARTEN_TIPP_MS = 4000;
+let wartenTippZeit = 0;
+try { addEventListener("pointerdown", () => { wartenTippZeit = Date.now(); }, true); } catch {}
 function wartenStart(action, erzwingen, still) {
   if (still || WARTEN_STILL.has(action) && !erzwingen) return false;
+  if (!erzwingen && Date.now() - wartenTippZeit > WARTEN_TIPP_MS) return false;
   wartenZahl++;
   if (!wartenLangTimer) wartenLangTimer = setTimeout(() => { if (!wartenZahl) return; $("wartenText").textContent = "🐌 Dauert länger als üblich … (Netz langsam?)"; try { window.KCFP?.neu("warten_lange", { text: "Vorgang > 20 s", aktion: String(action).slice(0, 40) }); } catch {} }, 20000); // KC-CLUB-ABSTURZSCHUTZ
   if (!wartenTimer) wartenTimer = setTimeout(() => { const wb = wbAktuell(); wbEinsetzen(wb); $("wartenText").textContent = WARTEN_TEXT[action] || (/speichern|setzen|aendern/.test(action) ? "Wird gespeichert …" : wb.x);
@@ -11324,14 +11331,16 @@ async function vfStart(pid) {
     const r = await api("vorfuehren_start", { an: pid }, { warten: true });
     Object.assign(VF, { rolle: "zeigt", id: r.id, an: pid, gegen: vn, status: "angefragt", vorhang: false, start: Date.now(), bis: 0 });
     Object.assign(STD, { pid, name: m.name || STD.name }); stSetzen("zeigen", "wartet", { start: Date.now(), bis: 0 });
-    spur("vorfuehren"); vfLeiste(); spgSenderStart(vfSenden, true);
+    spur("vorfuehren"); vfLeiste(); spgSenderStart(vfSenden, true); SPG.mehr = () => VF.zN !== VF.zGes;
     melde(r.push ? `📺 Anfrage an ${vn} geschickt – warte auf Zusage …` : `📺 Anfrage gestellt – ${vn} sieht sie beim nächsten Öffnen der App.`);
   } catch (e) { meldeFehler(e); }
 }
 // Sender: fragt dabei auch den Stand ab (angefragt → läuft → beendet); Bilder gehen erst, wenn zugeschaut wird
 async function vfSenden(f) {
   if (VF.rolle !== "zeigt") return false;
-  const r = await api("vorfuehren_bild", { id: VF.id, an: VF.an, f: VF.status === "laeuft" ? f : null }, { still: true });
+  const zn = VF.zN, zMit = zn !== VF.zGes; // KC-CLUB-VORFUEHREN-ZEIGER: Pfeil-Punkt nur bei Änderung
+  const r = await api("vorfuehren_bild", { id: VF.id, an: VF.an, f: VF.status === "laeuft" ? f : null, ...(zMit ? { z: VF.vorhang ? null : VF.zeiger } : {}) }, { still: true });
+  if (zMit) VF.zGes = zn;
   if (r.status !== VF.status) {
     if (r.status === "laeuft") {
       melde(`📺 ${VF.gegen} schaut jetzt zu`); try { navigator.vibrate?.(60); } catch {}
@@ -11345,7 +11354,7 @@ async function vfSenden(f) {
 }
 function vfVorhang() {
   if (VF.rolle !== "zeigt") return;
-  VF.vorhang = !VF.vorhang; SPG.vorhang = VF.vorhang; SPG.vorhangGesendet = false; SPG.letzt = ""; SPG.schmutzig = true;
+  VF.vorhang = !VF.vorhang; SPG.vorhang = VF.vorhang; if (VF.vorhang) vfZeigerAus(); SPG.vorhangGesendet = false; SPG.letzt = ""; SPG.schmutzig = true;
   melde(VF.vorhang ? `🙈 Vorhang zu – ${VF.gegen} sieht gerade nichts` : `🙉 Vorhang auf – ${VF.gegen} sieht wieder mit`); vfLeiste(); stAktionen(); stKarteFrisch();
 }
 // Zuschauer: Einladung annehmen, Live-Bild im Vollbild zeigen
@@ -11377,6 +11386,7 @@ async function vfHolen() {
   try {
     const r = await api("vorfuehren_holen", { id: VF.id, seit: VF.seit, fseit: VF.fseit }, { still: true });
     if (r.frame) { VF.fseit = r.frame.n; await spgZeigen($("spgSchirmBuehne"), r.frame); }
+    if ("zeiger" in r) vfZeigerMalen(r.zeiger);
     for (const e of r.ev || []) { VF.seit = Math.max(VF.seit, e.n); if (!VF.fseit) try { vfNachspielen(e); } catch {} } // ältere Vorführ-Art (ohne Live-Bild)
     if (r.status !== "laeuft") { melde(`📺 ${VF.gegen} hat die Vorführung beendet.`); vfAufraeumen(); }
   } catch {} finally { VF.laeuft = false; }
@@ -11400,7 +11410,7 @@ function vfLeiste() {
   l.className = "vf-leiste" + (zeigt ? "" : " vf-schaut") + (VF.vorhang ? " vf-vorhang" : "");
   const k = (t, fn, aus) => `<button type="button" class="knopf klein" ${aus ? "disabled" : `onclick="${fn}"`}>${t}</button>`;
   l.innerHTML = `<div class="vf-zeile">${laeuft ? onAirSchild(true) : ""}<span class="vf-text">${text}</span><span class="vf-uhr" id="vfUhr"></span></div>
-    <div class="vf-knoepfe${zeigt ? "" : " eins"}">${zeigt ? k(VF.vorhang ? "🙉 Auf" : "🙈 Vorhang", "vfVorhang()", !laeuft) + k("🎬 Studio", "stOeffnen()") : ""}${k("⏹ Beenden", "vfBeenden()")}</div>${laeuft ? vfTonHtml(k) : ""}`;
+    <div class="vf-knoepfe${zeigt ? " vier" : " eins"}">${zeigt ? k(VF.vorhang ? "🙉 Auf" : "🙈 Vorhang", "vfVorhang()", !laeuft) + k("👉 Zeiger", "vfZeiger()", !laeuft || VF.vorhang).replace('class="knopf klein"', `class="knopf klein${VF.zeigerAn ? " vf-zeiger-an" : ""}"`) + k("🎬 Studio", "stOeffnen()") : ""}${k("⏹ Beenden", "vfBeenden()")}</div>${laeuft ? vfTonHtml(k) : ""}`;
   document.documentElement.style.setProperty("--vf-h", l.offsetHeight + "px"); // Platz oben passt sich an (mit/ohne Ton-Zeile)
   vfLeisteUhr(); if (!VF.uhrT) VF.uhrT = setInterval(vfLeisteUhr, 1000);
 }
@@ -11425,6 +11435,37 @@ async function vfTon() {
   spur("vorfuehren_ton"); await anrufen(pid, false, true); vfLeiste();
 }
 function vfTonStumm() { anrufStumm(); vfLeiste(); }
+// ---------- KC-CLUB-VORFUEHREN-ZEIGER (2.200.0, Wunsch Hansi „im Zeigemodus ein Zeigewerkzeug – einen roten Pfeil“) ----------
+// 👉 Zeiger an: eine durchsichtige Fläche liegt über der App (Tippen bedient dann nichts), der rote Pfeil folgt dem Finger und bleibt
+// stehen, wo man loslässt. Beim Zuschauer erscheint er an derselben Stelle im Live-Bild (nur der Punkt geht über den Server, kein Bild).
+// Zeiger aus → Pfeil weg, die App ist wieder bedienbar. Vorhang zu oder Ende → Zeiger aus.
+const ZEIGER_SVG = '<svg viewBox="0 0 48 48" width="56" height="56" aria-hidden="true"><path d="M3 3 L41 18 L27 24 L42 39 L37 44 L22 29 L16 43 Z" fill="#d61f2c" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>';
+function vfZeiger() {
+  if (VF.rolle !== "zeigt" || VF.status !== "laeuft") return;
+  if (VF.zeigerAn) return vfZeigerAus();
+  VF.zeigerAn = true;
+  document.body.insertAdjacentHTML("beforeend", `<div id="vfZeigerFlaeche" class="vf-zeiger-flaeche" aria-label="Zeigefläche"><div id="vfZeiger" class="vf-zeiger-pfeil versteckt">${ZEIGER_SVG}</div></div>`);
+  const fl = $("vfZeigerFlaeche"), pf = $("vfZeiger");
+  const setze = (e) => { e.preventDefault(); pf.classList.remove("versteckt"); pf.style.left = e.clientX + "px"; pf.style.top = e.clientY + "px";
+    VF.zeiger = { x: e.clientX / innerWidth, y: e.clientY / innerHeight }; VF.zN = (VF.zN || 0) + 1; };
+  fl.addEventListener("pointerdown", (e) => { fl.setPointerCapture?.(e.pointerId); setze(e); });
+  fl.addEventListener("pointermove", (e) => { if (e.buttons || e.pointerType === "touch") setze(e); });
+  melde("👉 Zeiger an (roter Knopf) – tipp oder zieh mit dem Finger. Zum Bedienen der App „👉 Zeiger“ nochmal antippen.");
+  vfLeiste();
+}
+function vfZeigerAus() {
+  if (!VF.zeigerAn && !$("vfZeigerFlaeche")) return;
+  VF.zeigerAn = false; $("vfZeigerFlaeche")?.remove();
+  if (VF.zeiger) { VF.zeiger = null; VF.zN = (VF.zN || 0) + 1; }
+  vfLeiste();
+}
+function vfZeigerMalen(z) {
+  const rahmen = document.querySelector("#spgSchirmBuehne .spg-rahmen"); if (!rahmen) return;
+  let p = rahmen.querySelector(".vf-zeiger-pfeil");
+  if (!z) { p?.remove(); return; }
+  if (!p) { p = document.createElement("div"); p.className = "vf-zeiger-pfeil weich"; p.innerHTML = ZEIGER_SVG; rahmen.appendChild(p); }
+  p.style.left = z.x * 100 + "%"; p.style.top = z.y * 100 + "%";
+}
 function vfLeisteUhr() {
   const u = $("vfUhr"); if (!u) return;
   u.textContent = VF.status === "laeuft" ? `⏱ ${stZeit(Date.now() - VF.start)}${VF.bis ? ` · noch ${stZeit(VF.bis - Date.now())}` : ""}` : `⏳ ${stZeit(Date.now() - VF.start)}`;
@@ -11436,9 +11477,10 @@ async function vfBeenden() {
 }
 function vfAufraeumen(stand = "beendet") {
   if (RUF?.vf) anrufAuflegen(); // KC-CLUB-VORFUEHREN-TON: Ende der Vorführung = Ton aus
+  VF.zeigerAn = false; $("vfZeigerFlaeche")?.remove(); // KC-CLUB-VORFUEHREN-ZEIGER
   clearInterval(VF.takt); if (VF.rolle === "zeigt") { spgSenderStopp(); if (STD.modus === "zeigen") stSetzen("zeigen", stand); }
   $("spgSchirm")?.remove();
-  Object.assign(VF, { rolle: null, id: null, an: null, vonPid: null, status: null, takt: null, seit: 0, fseit: 0, vorhang: false, bis: 0 }); vfLeiste(); stKnopf(); stKarteFrisch();
+  Object.assign(VF, { zeiger: null, zN: 0, zGes: 0, rolle: null, id: null, an: null, vonPid: null, status: null, takt: null, seit: 0, fseit: 0, vorhang: false, bis: 0 }); vfLeiste(); stKnopf(); stKarteFrisch();
 }
 // ---------- KC-CLUB-FITNESS (2.55.0, Wunsch Hansi): 🏋️ Fit bleiben – Twinkey macht vor, man macht mit; eigene Auswertung ----------
 // Ruhig und erwachsen: sanfte Übungen (auch im Sitzen), Stufe + Dauer wählbar, großer Countdown, Ansage abschaltbar.
@@ -24308,7 +24350,7 @@ const SPG_PRIVAT = [
   { sel: "#gmFenster", t: "Gemerkte Nachrichten" }, { sel: "#adminBlatt", t: "Admin" },
 ];
 const SPG_NIE_TAG = new Set(["SCRIPT", "NOSCRIPT", "TEMPLATE", "IFRAME", "OBJECT", "EMBED", "VIDEO", "AUDIO", "LINK", "META", "BASE", "FRAME", "FRAMESET", "PORTAL"]);
-const SPG_NIE_ID = new Set(["studioBlatt", "vfLeiste", "ssLiveLeiste", "spgSchirm"]);
+const SPG_NIE_ID = new Set(["studioBlatt", "vfLeiste", "ssLiveLeiste", "spgSchirm", "vfZeigerFlaeche"]);
 const SPG_GEHEIM = /pin|pass|code|kennwort|geheim|token/i;
 const spgUrlOk = (v) => /^data:image\//i.test(v) || /^blob:/i.test(v) ? false : (/^(https?:)?\/\//i.test(v) ? (v.startsWith(location.origin) || v.startsWith("https://ptblnpiroqftcvlsrhac.supabase.co/")) : !/^\s*(javascript|vbscript|data):/i.test(v));
 function spgSchnappen(privat) {
@@ -24361,8 +24403,10 @@ async function spgAuspacken(f) {
 }
 // Sender: beobachtet die eigene App, schickt höchstens alle 0,7 s – und nur, wenn sich etwas geändert hat (sonst alle 4 s „läuft noch“)
 const SPG = { an: false, privat: false, vorhang: false, schmutzig: true, letzt: "", tipp: null, tippN: 0, beob: null, uhr: null, laeuft: false, ping: 0, senden: null, vorhangGesendet: false };
-const spgSchmutz = () => { SPG.schmutzig = true; };
-function spgTippen(e) { if (!SPG.an || e.target?.closest?.("#vfLeiste, #ssLiveLeiste")) return; SPG.tipp = { x: e.clientX / innerWidth, y: e.clientY / innerHeight, n: ++SPG.tippN }; SPG.schmutzig = true; }
+const spgSchmutz = (recs) => { // 2.200.0: Bewegungen des Zeigepfeils lösen kein neues Bild aus
+  if (Array.isArray(recs) && recs.length && recs.every((r) => (r.target?.nodeType === 1 ? r.target : r.target?.parentElement)?.closest?.("#vfZeigerFlaeche"))) return;
+  SPG.schmutzig = true; };
+function spgTippen(e) { if (!SPG.an || e.target?.closest?.("#vfLeiste, #ssLiveLeiste, #vfZeigerFlaeche")) return; SPG.tipp = { x: e.clientX / innerWidth, y: e.clientY / innerHeight, n: ++SPG.tippN }; SPG.schmutzig = true; }
 function spgSenderStart(senden, privat) {
   spgSenderStopp(); Object.assign(SPG, { an: true, privat: !!privat, vorhang: false, schmutzig: true, letzt: "", tipp: null, senden, ping: 0, vorhangGesendet: false });
   SPG.beob = new MutationObserver(spgSchmutz); SPG.beob.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
@@ -24370,12 +24414,12 @@ function spgSenderStart(senden, privat) {
   SPG.uhr = setInterval(spgSenderTakt, 700); spgSenderTakt();
 }
 function spgSenderStopp() {
-  SPG.an = false; clearInterval(SPG.uhr); SPG.beob?.disconnect(); SPG.beob = null;
+  SPG.an = false; SPG.mehr = null; clearInterval(SPG.uhr); SPG.beob?.disconnect(); SPG.beob = null;
   removeEventListener("scroll", spgSchmutz, { capture: true }); removeEventListener("input", spgSchmutz, true); removeEventListener("resize", spgSchmutz); document.removeEventListener("pointerdown", spgTippen, true);
 }
 async function spgSenderTakt() {
   if (!SPG.an || SPG.laeuft || document.hidden) return;
-  const jetzt = Date.now(); if (!SPG.schmutzig && !(SPG.vorhang && !SPG.vorhangGesendet) && jetzt - SPG.ping < 4000) return;
+  const jetzt = Date.now(); if (!SPG.schmutzig && !(SPG.vorhang && !SPG.vorhangGesendet) && !SPG.mehr?.() && jetzt - SPG.ping < 4000) return;
   SPG.laeuft = true;
   try {
     let f = null;

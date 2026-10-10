@@ -6288,7 +6288,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 {
   assert.ok(/e\.w = x\.w; je\.set\(x\.p, e\);/.test(server) && /zuletzt: e\.w \}\)\)/.test(server), "Server liefert den letzten Schritt je Person (nur die Art)");
   assert.ok(/🟢 Gerade in der App/.test(programm) && /ist bei <b>\$\{esc\(was\(x\.zuletzt\) \|\| "\?"\)\}<\/b>/.test(programm) && /"👉 jetzt" : "zuletzt"/.test(programm), "Übersicht: wer ist gerade wo");
-  assert.ok(/const SERVER_VERSION = "2\.(8[1-9]|9\d|1\d\d)\.0"/.test(server));
+  assert.ok(/const SERVER_VERSION = "2\.(8[1-9]|9\d|[12]\d\d)\.0"/.test(server));
 }
 
 // 4xx. 2.82.0: Schritt-Hilfe für Mitglieder, Helfen & Leihen (Hilfe suchen, Börse) und Fotos (KC-CLUB-SCHRITT-HILFE, Wunsch Hansi)
@@ -7024,9 +7024,9 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/geheim = typ === "password" \|\| typ === "hidden" \|\| SPG_GEHEIM\.test/.test(sg) && /"••••"/.test(sg), "PIN-/Passwortfelder nie übertragen");
   assert.ok(/\{ sel: "#v-chat", t: "Unterhaltung" \}/.test(sg) && /\{ sel: "#v-buero", t: "Büro" \}/.test(sg) && /const priv = privat && SPG_PRIVAT\.find/.test(sg), "beim Zeigen: Chats/Büro verdeckt (Registry)");
   assert.ok(/spgSenderStart\(vfSenden, true\);/.test(programm) && /spgSenderStart\(mlSenden, false\);/.test(programm), "Zeigen = mit Verdecken; Mitschauen = was das Mitglied freigibt");
-  assert.ok(/if \(!SPG\.schmutzig && !\(SPG\.vorhang && !SPG\.vorhangGesendet\) && jetzt - SPG\.ping < 4000\) return;/.test(sg) && /SPG\.uhr = setInterval\(spgSenderTakt, 700\)/.test(sg), "nur bei Änderung, höchstens alle 0,7 s");
+  assert.ok(/if \(!SPG\.schmutzig && !\(SPG\.vorhang && !SPG\.vorhangGesendet\) && !SPG\.mehr\?\.\(\) && jetzt - SPG\.ping < 4000\) return;/.test(sg) && /SPG\.uhr = setInterval\(spgSenderTakt, 700\)/.test(sg), "nur bei Änderung, höchstens alle 0,7 s");
   assert.ok(/function vfVorhang\(\)/.test(programm) && /if \(SPG\.vorhang\) \{ if \(!SPG\.vorhangGesendet\) f = \{ vorhang: true \}; \}/.test(sg), "🙈 Vorhang");
-  assert.ok(/const SPG_NIE_ID = new Set\(\["studioBlatt", "vfLeiste", "ssLiveLeiste", "spgSchirm"\]\)/.test(sg), "Studio selbst und Leisten nie im Bild");
+  assert.ok(/const SPG_NIE_ID = new Set\(\["studioBlatt", "vfLeiste", "ssLiveLeiste", "spgSchirm"(, "vfZeigerFlaeche")?\]\)/.test(sg), "Studio selbst und Leisten nie im Bild");
   assert.ok(!/await fetch\(/.test(sg), "keine neuen Netzwege");
 }
 
@@ -7697,4 +7697,17 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/k\("🔊 Annehmen", "anrufAnnehmen\(false\)"\)/.test(html), "Mikrofon erst nach eigenem Annehmen");
   assert.ok(/if \(RUF\?\.vf\) anrufAuflegen\(\); \/\/ KC-CLUB-VORFUEHREN-TON/.test(html), "Ende der Vorführung beendet den Ton");
   assert.ok(/if \(RUF && !RUF\.vf\) return "";/.test(html), "normaler Anruf wird nicht gestört");
+}
+
+// 2.200.0 KC-CLUB-WARTEN-NUR-BEI-TIPP (Fund Hansi: im offenen Chat alle paar Sekunden die Warte-Mütze)
+{
+  assert.ok(/if \(!erzwingen && Date\.now\(\) - wartenTippZeit > WARTEN_TIPP_MS\) return false;/.test(html) && /addEventListener\("pointerdown", \(\) => \{ wartenTippZeit = Date\.now\(\); \}, true\)/.test(html), "Mütze nur nach eigenem Tippen");
+}
+
+// 2.200.0 KC-CLUB-VORFUEHREN-ZEIGER (Wunsch Hansi: roter Pfeil zum Zeigen)
+{
+  assert.ok(/function vfZeiger\(\)/.test(html) && /function vfZeigerMalen\(z\)/.test(html) && /k\("👉 Zeiger", "vfZeiger\(\)"/.test(html), "Zeiger-Werkzeug fehlt");
+  assert.ok(/\.\.\.\(zMit \? \{ z: VF\.vorhang \? null : VF\.zeiger \} : \{\}\)/.test(html), "nur der Punkt geht mit, bei Vorhang keiner");
+  assert.ok(/"spgSchirm", "vfZeigerFlaeche"\]/.test(html) && /#vfLeiste, #ssLiveLeiste, #vfZeigerFlaeche/.test(html), "Zeigefläche nicht im Live-Bild und kein Tipp-Kreis");
+  assert.ok(/const z = p\.z === undefined \? undefined : punkt\(w\.status === "laeuft" \? p\.z : null\);/.test(server) && /zeiger: w\.status === "laeuft" \? w\.zeiger \?\? null : null/.test(server) && /w\.frame = null; w\.zeiger = null;/.test(server), "Server: Zeiger-Punkt prüfen, liefern, beim Ende löschen");
 }
