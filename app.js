@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.203.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.204.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12459,6 +12459,24 @@ function infoTreffen() {
       <button id="cdKachel" class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}${cdInhalt(bisTreffen)}${mpfeil("termin", !!t, t ? `${t.id || t.beginn}|${frist}` : "", frist)}</button>
     </div>`;
 }
+// ---------- KC-CLUB-GEDENKEN (2.204.0, Wunsch Hansi „wenn jemand aus unserer Gruppe verstorben ist, eine brennende Kerze anzeigen“) ----------
+// Server liefert INIT.gedenken nur für Trauerfälle, über die das Büro die Mitglieder schon informiert hat (30 Tage lang).
+// Kleine flackernde Kerze neben „KÖCHECLUB WERNE“; antippen → „In stillem Gedenken“ mit Name und Sterbedatum.
+const KERZE_SVG = '<svg viewBox="0 0 24 40" width="16" height="27" aria-hidden="true"><g class="kz-flamme"><path d="M12 1.5c3.2 5 4.3 8 4.3 10.6a4.3 4.3 0 0 1-8.6 0C7.7 9.5 9.2 6.6 12 1.5z" fill="#ffb627"/><path d="M12 6.5c1.6 3 2.1 4.6 2.1 6a2.1 2.1 0 0 1-4.2 0c0-1.4.8-3 2.1-6z" fill="#fff3b0"/></g><rect x="11.4" y="15" width="1.2" height="3.2" rx=".5" fill="#3a2a1a"/><rect x="7" y="18" width="10" height="20.5" rx="1.6" fill="#f7f1e3" stroke="#d6c9ac" stroke-width=".8"/></svg>';
+function gedenkenZeigen() {
+  const e = $("gedenkKerze"); if (!e) return; const g = INIT?.gedenken || [];
+  e.classList.toggle("versteckt", !g.length);
+  e.innerHTML = g.length ? `<button type="button" class="kerze-knopf" onclick="gedenkenOeffnen()" aria-label="In stillem Gedenken an ${esc(g.map((x) => x.name).join(", "))}">${KERZE_SVG}</button>` : "";
+}
+function gedenkenOeffnen() {
+  const g = INIT?.gedenken || []; if (!g.length) return;
+  let f; const zu = () => f?.remove();
+  f = dlgOeffnen(`<div style="text-align:center"><div class="kerze-gross">${KERZE_SVG}</div><h3 class="dlg-kopf" style="margin-top:6px">In stillem Gedenken</h3>
+    ${g.map((x) => `<p class="dlg-text" style="margin:4px 0;font-size:1.1rem"><b>${esc(x.name)}</b>${x.datum ? `<br><span class="hinweis">✝ ${esc(String(x.datum).split("-").reverse().join("."))}</span>` : ""}</p>`).join("")}
+    <p class="hinweis" style="margin-top:10px">Unsere Gedanken sind bei der Familie.</p>
+    <div class="dlg-knoepfe"><button type="button" class="knopf haupt" data-zu>Schließen</button></div></div>`, zu);
+  f.querySelector("[data-zu]").onclick = zu;
+}
 // ---------- KC-CLUB-COUNTDOWN (2.202.0, Wunsch Hansi „die Terminanzeige oben soll abwechseln: noch x Tage bis Weihnachten, bis zur
 // Kreuzfahrt (nur wenn man dabei ist), bis zum nächsten Clubtreffen usw.“) ----------
 // Die rechte kleine Kachel wechselt alle 5 s. Reihenfolge = Registry; neuer Anlass = neuer Eintrag. Steht das Treffen in ≤ 2 Tagen an,
@@ -12848,7 +12866,7 @@ async function neuLadenRoh(vonHand) {
     if (!begruesst) ustPruefen(); // KC-CLUB-UNTERSTUETZUNG (2.85.0): einmal fragen, wie viel Hilfe gewünscht ist
     designUebernehmen(INIT.einstellungen?.design); infoFelderAktualisieren(); infoStartUebernehmen(INIT.einstellungen?.infofeld); ansichtInfo();
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
-    $("begruessung").textContent = "Hallo " + ICH.vorname + "!";
+    $("begruessung").textContent = "Hallo " + ICH.vorname + "!"; try { gedenkenZeigen(); } catch {}
     meinStatusZeigen();
     $("ichName").textContent = ICH.name + (ICH.aemter?.length ? ` (${ICH.aemter.join(", ")})` : ICH.admin ? " (Admin)" : "");
     $("neuTreffenKnopf").classList.remove("versteckt"); // KC-CLUB-PRIVATTERMIN: „＋ Neu“ für alle (Mitglieder: privat)
@@ -12880,7 +12898,7 @@ function standZeigen(g, vorab) {
   try {
     INIT = { ...g.init, _offline: g.zeit, _vorab: vorab }; ICH = INIT.ich; adminNamenSetzen();
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln); ansichtUebernehmen(INIT.einstellungen?.ansicht); designUebernehmen(INIT.einstellungen?.design);
-    $("begruessung").textContent = "Hallo " + ICH.vorname + "!"; meinStatusZeigen();
+    $("begruessung").textContent = "Hallo " + ICH.vorname + "!"; meinStatusZeigen(); gedenkenZeigen();
     heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
   } catch {}
   offlineStandZeigen(true); if (ICH) startBereitLoesen(); return true;

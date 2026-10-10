@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.204.0 – 2026-10-10 – 🕯️ Gedenkkerze für verstorbene Mitglieder
+🕯️ Gedenkkerze, wenn ein Mitglied verstorben ist
+
 ## 2.203.0 – 2026-10-10 – ⏳ Countdown in kurzen Sätzen
 ⏳ Countdown kurz: „Weihnachten 75 Tage“, „Clubtreffen 6 Tage“, „Geb. Klaus 3 Tage“
 

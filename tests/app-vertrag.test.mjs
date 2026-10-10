@@ -3512,7 +3512,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/\} else if \(NOTFALL_RE\.test\(text\)\) text = text\.replace\(NOTFALL_RE, ""\)/.test(ns), "Marke bei anderen entfernt");
   assert.ok(/if \(notfall\) stumm\.clear\(\);/.test(ns) && /const wege = notfall \? \["push", "email"\]/.test(ns) && /\{ notfall \}\);/.test(ns), "an alle, Push + Mail, auch stumm");
   assert.ok(/if \(w\.includes\("push"\) && !opt\.notfall\)/.test(server), "auch in der Ruhezeit");
-  assert.ok(/async function notfallUnterhaltung\(ich: Ich\)/.test(server) && /return json\(\{ (?:meinGeburtstag, )?alarm, /.test(server), "eine Notfall-Unterhaltung, Alarm beim Start");
+  assert.ok(/async function notfallUnterhaltung\(ich: Ich\)/.test(server) && /return json\(\{ (?:gedenken: await pGedenken, )?(?:meinGeburtstag, )?alarm, /.test(server), "eine Notfall-Unterhaltung, Alarm beim Start");
   assert.ok(/function notfallSenden\(\)[\s\S]{0,400}await frage\(/.test(html) && /api\("nachricht_senden", \{ notfall: true, text, empfaenger: \{ alle: true \} \}/.test(html), "einmal bestätigen, dann senden");
   assert.ok(/\.blase\.notfall \{ border: 4px solid #d50000/.test(html) && /istNotfall\(m\) \? " notfall" : ""/.test(html), "roter Rand im Chat");
   assert.ok(/alarmPruefen\(\); \/\* KC-CLUB-NOTFALL-MELDUNG \*\//.test(html) && /localStorage\.setItem\("kc_club_alarm_gesehen", a\.id\)/.test(html), "Alarm-Fenster einmal je Meldung");
@@ -7737,4 +7737,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.203.0 KC-CLUB-COUNTDOWN-KURZ (Wunsch Hansi: kurze Sätze „Weihnachten 75 Tage“, „Clubtreffen 23 Tage“, „Geb. Reinhilde 15 Tage“)
 {
   assert.ok(/<span class="cd-text">\$\{esc\(e\.text\)\}<\/span><b class="cd-zahl"/.test(html) && /`\$\{tage\} Tage`/.test(html) && /text: `🎂 Geb\. \$\{g\.vorname \|\| g\.name\}`/.test(html), "erst was, dann wie lange");
+}
+
+// 2.204.0 KC-CLUB-GEDENKEN (Wunsch Hansi: brennende Kerze, wenn jemand aus dem Club verstorben ist)
+{
+  assert.ok(/\.eq\("art", "tod_mitglied"\)\.not\("informiert_am", "is", null\)/.test(server) && /const GEDENKEN_TAGE = 30;/.test(server) && /gedenken: await pGedenken/.test(server), "Server: nur informierte Trauerfälle, 30 Tage");
+  assert.ok(/<span id="begruessung">Hallo!<\/span><span id="gedenkKerze" class="versteckt"><\/span>/.test(html) && /function gedenkenZeigen\(\)/.test(html) && /In stillem Gedenken/.test(html), "Kerze neben dem Gruß");
+  assert.ok(/@media \(prefers-reduced-motion: reduce\) \{ \.kz-flamme \{ animation: none; \} \}/.test(html), "Flackern abschaltbar");
 }
