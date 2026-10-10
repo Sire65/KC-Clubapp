@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.201.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.202.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12456,8 +12456,83 @@ function infoTreffen() {
     <div class="kacheln3">
       <button class="mini${n ? " mini-neu" : ""}" onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${n}</b><span>Neue Nachr.</span>${mpfeil("nachrichten", n > 0, n)}</button>
       <button class="mini" onclick="mgNurOnline()"><b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b><span>Mitglieder${inkognitoAn() ? '<i class="inko-marke" title="Inkognito ist an – niemand sieht dich online">🕶️</i>' : ""}</span>${mpfeil("mitglieder", ONL.zeigen && mpOnline() > 0, mpOnline())}</button>
-      <button class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="zumTreffen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b style="font-size:1.05rem">${bisTreffen}</b><span>Nächster Termin</span>${mpfeil("termin", !!t, t ? `${t.id || t.beginn}|${frist}` : "", frist)}</button>
+      <button id="cdKachel" class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}${cdInhalt(bisTreffen)}${mpfeil("termin", !!t, t ? `${t.id || t.beginn}|${frist}` : "", frist)}</button>
     </div>`;
+}
+// ---------- KC-CLUB-COUNTDOWN (2.202.0, Wunsch Hansi „die Terminanzeige oben soll abwechseln: noch x Tage bis Weihnachten, bis zur
+// Kreuzfahrt (nur wenn man dabei ist), bis zum nächsten Clubtreffen usw.“) ----------
+// Die rechte kleine Kachel wechselt alle 5 s. Reihenfolge = Registry; neuer Anlass = neuer Eintrag. Steht das Treffen in ≤ 2 Tagen an,
+// bleibt die Kachel beim Treffen. Jeder wählt unter ⚙️ → Startseite, was mitläuft; „Nur nächstes Clubtreffen“ = Standard ohne Wechsel.
+// Reisen und Geburtstage holt die App still im Hintergrund (Server „countdowns“, höchstens alle 6 Std., letzter Stand im Gerät).
+const CD_TAKT_MS = 5000, CD_NEU_MS = 6 * 3600000;
+const CD = { i: 0, daten: (() => { try { return JSON.parse(localStorage.getItem("kc_club_cd") || "null"); } catch { return null; } })(), laedt: false, stand: 0, uhr: null };
+const cdTageBis = (iso) => Math.round((Date.parse(iso + "T12:00:00Z") - Date.parse(heuteIso() + "T12:00:00Z")) / 86400000);
+const cdNaechsterTag = (md) => { const h = heuteIso(), j = +h.slice(0, 4); for (const y of [j, j + 1]) { const schalt = new Date(Date.UTC(y, 1, 29)).getUTCDate() === 29; const d = `${y}-${md === "02-29" && !schalt ? "02-28" : md}`; if (d >= h) return d; } return null; };
+const cdNoch = (tage) => tage <= 0 ? "Heute!" : tage === 1 ? "Morgen" : `${tage} Tage`; // kurz – die Kachel ist schmal
+const CD_ARTEN = [ // [Schlüssel, Bezeichnung in den Einstellungen, Einträge liefern]
+  ["reise", "🚢 Reisen & Ausflüge, bei denen ich dabei bin", () => (CD.daten?.reisen || []).map((a) => { const t = cdTageBis(a.von);
+    return t < 0 || t > 400 ? null : { id: "r" + a.id, zahl: `${/kreuz|schiff/i.test(a.titel) ? "🚢" : "🧳"} ${cdNoch(t)}`, text: (([...a.titel].length > 22 ? [...a.titel].slice(0, 21).join("") + "…" : a.titel)).replace(/kreuzfahrt/i, (w) => w.slice(0, 5) + "\u00AD" + w.slice(5)), los: () => aktionOeffnen(a.id) }; })],
+  ["weihnachten", "🎄 Weihnachten (ab Oktober)", () => { const h = heuteIso(), t = cdTageBis(h.slice(0, 4) + "-12-24"); const m = +h.slice(5, 7);
+    return m >= 10 && t >= -2 ? [{ id: "x", zahl: t <= 0 ? "🎄 Frohe" : "🎄 " + cdNoch(t), text: "Weih\u00ADnachten", los: () => zeige("termine") }] : []; }],
+  ["silvester", "🎆 Silvester (im Dezember)", () => { const h = heuteIso(), t = cdTageBis(h.slice(0, 4) + "-12-31");
+    return h.slice(5, 7) === "12" && t >= 0 ? [{ id: "s", zahl: "🎆 " + cdNoch(t), text: "Sil\u00ADves\u00ADter", los: () => zeige("termine") }] : []; }],
+  ["meingeb", "🎂 Mein Geburtstag (30 Tage vorher)", () => { const g = (CD.daten?.geburtstage || []).find((x) => x.person_id === ICH?.person_id); const d = g && cdNaechsterTag(g.md), t = d ? cdTageBis(d) : -1;
+    return t >= 0 && t <= 30 ? [{ id: "g", zahl: "🎂 " + cdNoch(t), text: t === 0 ? "Alles Gute!" : "Dein Ge\u00ADburts\u00ADtag", los: () => zeige("termine") }] : []; }],
+  ["mggeb", "🎂 Geburtstage der Mitglieder (14 Tage vorher)", () => (CD.daten?.geburtstage || []).filter((x) => x.person_id !== ICH?.person_id).map((g) => { const d = cdNaechsterTag(g.md), t = d ? cdTageBis(d) : -1;
+    return t >= 0 && t <= 14 ? { id: "m" + g.person_id, t, zahl: "🎂 " + cdNoch(t), text: g.vorname || g.name, los: () => mitgliedOeffnen(g.person_id) } : null; }).filter(Boolean).sort((a, b) => a.t - b.t).slice(0, 3)],
+];
+const cdNur = () => einst("cd_nur", false);
+const cdArtAn = (k) => einst("cd_" + k, true);
+function cdListe(bisTreffen) {
+  const t = INIT?.naechstesTreffen, l = [{ id: "t", zahl: bisTreffen, text: "Nächster Termin", los: () => zumTreffen() }];
+  if (cdNur()) return l;
+  if (t && Math.ceil((new Date(t.beginn) - Date.now()) / 86400000) <= 2) return l; // Treffen steht kurz bevor → nichts anderes zeigen
+  for (const [k, , f] of CD_ARTEN) if (cdArtAn(k)) try { l.push(...f().filter(Boolean)); } catch {}
+  return l;
+}
+function cdInhalt(bisTreffen) {
+  CD.bisTreffen = bisTreffen; const l = cdListe(bisTreffen); if (CD.i >= l.length) CD.i = 0;
+  const e = l[CD.i], punkte = l.length > 1 ? `<i class="cd-punkte">${l.map((_, i) => `<i${i === CD.i ? ' class="an"' : ""}></i>`).join("")}</i>` : "";
+  cdStart();
+  return `<b class="cd-zahl" style="font-size:1.05rem">${esc(e.zahl)}</b><span class="cd-text">${esc(e.text)}</span>${punkte}`;
+}
+function cdTippen() { const l = cdListe(CD.bisTreffen || ""); (l[CD.i] || l[0]).los(); }
+function cdStart() {
+  if (!CD.uhr) CD.uhr = setInterval(cdWeiter, CD_TAKT_MS);
+  if (!cdNur() && !CD.laedt && Date.now() - CD.stand > CD_NEU_MS) { CD.laedt = true;
+    setTimeout(() => api("countdowns", {}, { still: true }).then((r) => { CD.daten = { reisen: r.reisen || [], geburtstage: r.geburtstage || [] }; CD.stand = Date.now(); try { localStorage.setItem("kc_club_cd", JSON.stringify(CD.daten)); } catch {} cdFrisch(); })
+      .catch(() => { CD.stand = Date.now() - CD_NEU_MS + 600000; }).finally(() => { CD.laedt = false; }), 4000); } // nach dem Start, nicht mittendrin
+}
+function cdWeiter() {
+  const k = $("cdKachel"); if (!k || document.hidden || aktuelleAnsicht !== "start") return;
+  const l = cdListe(CD.bisTreffen || ""); if (l.length < 2) { if (CD.i) { CD.i = 0; cdZeichnen(k, l); } return; }
+  CD.i = (CD.i + 1) % l.length;
+  if (k.querySelectorAll(".cd-punkte > i").length !== l.length) return cdFrisch(); // Anzahl hat sich geändert
+  if (!fxAn()) return cdZeichnen(k, l);
+  const teile = k.querySelectorAll(".cd-zahl, .cd-text");
+  Promise.all([...teile].map((el) => el.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-6px)" }], { duration: 220, easing: "ease-in" }).finished.catch(() => {})))
+    .then(() => { cdZeichnen(k, l); k.querySelectorAll(".cd-zahl, .cd-text").forEach((el) => el.animate([{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: 260, easing: "ease-out" })); });
+}
+function cdZeichnen(k, l) {
+  const e = l[CD.i] || l[0]; if (!e) return;
+  const z = k.querySelector(".cd-zahl"), t = k.querySelector(".cd-text"), p = k.querySelector(".cd-punkte");
+  if (z) z.textContent = e.zahl; if (t) t.textContent = e.text;
+  p?.querySelectorAll("i").forEach((x, i) => x.classList.toggle("an", i === CD.i));
+  const treffen = e.id === "t"; k.classList.toggle("cd-anders", !treffen); // Fristfarbe/Pfeil gehören nur zum Treffen
+}
+function cdEinstellungenZeigen() {
+  const b = $("cdWahl"); if (!b) return;
+  const nur = cdNur();
+  b.innerHTML = `<label class="schalter" style="margin:0"><div><b>📌 Standard: nur nächstes Clubtreffen</b><div class="hinweis">Angehakt = kein Wechsel, wie bisher</div></div><input type="checkbox" ${nur ? "checked" : ""} onchange="cdSetzen('nur', this.checked)"></label>
+    ${CD_ARTEN.map(([k, t]) => `<label class="schalter" style="margin:0${nur ? ";opacity:.5" : ""}"><div>${esc(t)}</div><input type="checkbox" ${cdArtAn(k) ? "checked" : ""} ${nur ? "disabled" : ""} onchange="cdSetzen('${k}', this.checked)"></label>`).join("")}`;
+}
+function cdSetzen(k, an) { einstellung("cd_" + k, an); CD.i = 0; cdEinstellungenZeigen(); cdFrisch(); }
+function cdFrisch() { // Inhalt neu (z. B. andere Anzahl Anzeigen) – der Rest der Kachel bleibt
+  const k = $("cdKachel"); if (!k) return;
+  k.querySelectorAll(".cd-zahl, .cd-text, .cd-punkte").forEach((e) => e.remove());
+  const html = cdInhalt(CD.bisTreffen || ""), svg = k.querySelector("svg.ameisen");
+  svg ? svg.insertAdjacentHTML("afterend", html) : k.insertAdjacentHTML("afterbegin", html);
+  cdZeichnen(k, cdListe(CD.bisTreffen || ""));
 }
 // KC-CLUB-MINI-PFEIL-BLINK (2.23.18, Wunsch Hansi): der Pfeil am Feld wird farbig, sobald dort etwas ist (neue Nachricht,
 // jemand online, nächster Termin). Bei neuem Stand blinkt er 5× hintereinander, danach bleibt er ruhig, aber farbig.
@@ -12947,7 +13022,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { MG_AMEISEN.bis = 0; MG_AMEISEN.neu = true; mgAnsichtWahlZeigen(); mitgliederLaden(); } // KC-CLUB-GRUPPEN-AMEISEN
-  if (v === "einstellungen") { leitungStartZeigen(); notProbeZeigen(); infoStartZeigen(); tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+  if (v === "einstellungen") { leitungStartZeigen(); notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;

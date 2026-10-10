@@ -463,6 +463,15 @@
   @keyframes vfWelle { 0% { transform: scale(.08); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
   @keyframes vfKern { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
   .vf-werkzeuge { border-top: 1px solid rgba(255,255,255,.25); padding-top: 6px; }
+  /* KC-CLUB-COUNTDOWN (2.202.0): wechselnde Termin-Kachel */
+  #cdKachel { min-width: 0; } /* feste Höhe: beim Wechsel springt nichts */
+  #cdKachel .cd-zahl, #cdKachel .cd-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  #cdKachel .cd-zahl { line-height: 1.12; height: 2.24em; }
+  #cdKachel .cd-text { line-height: 1.2; height: 2.4em; text-transform: none; letter-spacing: 0; font-size: .72rem; hyphens: auto; -webkit-hyphens: auto; }
+  #cdKachel .cd-punkte { display: flex; gap: 3px; justify-content: center; margin-top: 3px; font-style: normal; }
+  #cdKachel .cd-punkte i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .35; }
+  #cdKachel .cd-punkte i.an { opacity: 1; }
+  #cdKachel.cd-anders .ameisen { display: none; }
   @media (max-width: 380px) { .st-knopfgitter.vier { grid-template-columns: repeat(2, minmax(0, 1fr)); } .st-modus .st-t { font-size: .82rem; } }
 
   .vf-punkt { position: fixed; z-index: 2700; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: rgba(214,58,58,.45); border: 3px solid #d63a3a; pointer-events: none; animation: vfPunkt 1.4s ease-out forwards; }
@@ -3502,6 +3511,9 @@
         <div class="schalter" style="margin:6px 0 0"><div>⚙️ Einstellungen</div><input type="checkbox" id="setRkEinst" onchange="rkSchalten('einst', this.checked)"></div>
         <div class="schalter" style="margin:0"><div>💬 Chats <small class="hinweis">(vorne gleich die letzten Nachrichten)</small></div><input type="checkbox" id="setRkChats" onchange="rkSchalten('chats', this.checked)"></div>
         <div class="schalter" style="margin:0"><div>👥 Mitglieder <small class="hinweis">(volle Infos je Karte)</small></div><input type="checkbox" id="setRkMitgl" onchange="mgAnsichtSetzen(this.checked ? 'kartei' : 'kacheln')"></div></div>
+      <!-- KC-CLUB-COUNTDOWN (2.202.0, Wunsch Hansi): was in der Termin-Kachel oben abwechselnd erscheint (gilt für dieses Gerät) -->
+      <div class="schalter" style="display:block"><div><b>⏳ Countdown oben in der Termin-Kachel</b><div class="hinweis">Wechselt alle 5 Sekunden. Antippen öffnet, was gerade angezeigt wird. Gilt für dieses Gerät.</div></div>
+        <div id="cdWahl" style="margin-top:6px"></div></div>
       <div class="schalter"><div><b>🪧 Info-Feld oben beim Start</b><div class="hinweis">Welche Karte zuerst erscheint – z. B. Nr. 1 oder die Kommunikationszentrale</div></div><select id="setInfoStart" onchange="infoStartSetzen(this.value)" style="max-width:48%"></select></div>
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Nur das Wichtigste mit großen Knöpfen – jederzeit umschaltbar</div></div><button class="knopf klein" onclick="ansichtSetzen('einfach')">Einschalten</button></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
@@ -3869,6 +3881,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.201.0" data-v="2.201.0"></script>
+<script src="app.js?v=2.202.0" data-v="2.202.0"></script>
 </body>
 </html>

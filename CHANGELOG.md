@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.202.0 – 2026-10-10 – ⏳ Wechselnder Countdown oben: Treffen, Reisen, Weihnachten, Geburtstage
+⏳ Oben wechselt der Countdown: Clubtreffen, eigene Reisen, Weihnachten, Silvester, Geburtstage – einstellbar
+
 ## 2.201.0 – 2026-10-10 – 🧰 Werkzeugkasten beim Live zeigen: Pfeil, Einkreisen, Punkt
 🧰 Beim Live zeigen: Pfeil, rot einkreisen und ein strahlender Punkt
 
