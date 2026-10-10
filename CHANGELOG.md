@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.222.0 – 2026-10-10 – 🔔 Wer fehlt noch? + Änderung direkt eintragen
+🔔 In der Dienstzeiten-Übersicht steht, wer noch keine Dienstwünsche abgegeben hat – mit Knopf „Freundlich erinnern“. ✅ Freigegebene Änderungsmeldungen kann der Admin selbst eintragen, wenn der KC Manager sie nicht abholt.
+
 ## 2.221.0 – 2026-10-10 – 📋 Kopie aller Vorgänge an den Admin
 📋 Bei jedem Vorgang (Änderungsmeldung, Erstattung, Dienstwunsch, Zugang, Leihen) bekommt der Admin eine Kopie-Mail – mit Empfänger und ob die Zustellung geklappt hat
 

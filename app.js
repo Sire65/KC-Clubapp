@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.221.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.222.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15204,10 +15204,23 @@ function dvGanttHtml() {
   return h;
 }
 const dvLegende = () => `<div class="dv-leg"><span><i class="dv-bal kann"></i>Kann</span><span><i class="dv-bal wunsch"></i>Wunsch</span><span><i class="dv-bal noetig"></i>Wenn nötig</span><span><i class="dv-bal sperre"></i>Sperre</span><span class="hinweis">Tagesfeld = 8 bis 24 Uhr · Gesamt = Stunden „Kann“</span></div>`;
+// KC-CLUB-DW-FEHLT (2.222.0, Wunsch Hansi): wer hat noch keine Dienstwünsche abgegeben + freundlich erinnern (geplant wird in DP2)
+function dvFehltHtml() {
+  const F = DV.daten?.fehlen; if (!Array.isArray(F)) return "";
+  if (!F.length) return `<div class="karte innen dv-fehlt ok">✅ Alle Mitglieder haben ihre Dienstwünsche abgegeben.</div>`;
+  const offen = F.filter((f) => !f.erinnert || Date.now() - Date.parse(f.erinnert) > 24 * 3600000).length;
+  return `<div class="karte innen dv-fehlt"><b>⏳ Noch nicht abgegeben: ${F.length}</b>
+    <div class="dv-fehlt-namen">${F.map((f) => `<span>${esc(f.name)}${f.erinnert ? ` <small title="zuletzt erinnert">🔔 ${esc(zeitKurz(f.erinnert))}</small>` : ""}</span>`).join("")}</div>
+    ${offen ? `<button class="knopf haupt" onclick="dvErinnern(this)">🔔 ${offen === F.length ? "Alle" : offen} freundlich erinnern</button>` : `<small class="hinweis">Alle wurden in den letzten 24 Stunden erinnert.</small>`}</div>`;
+}
+async function dvErinnern(knopf) {
+  if (!(await frage("🔔 Freundlich erinnern?\n\nAlle, die noch keine Dienstwünsche abgegeben haben, bekommen eine kurze Nachricht (Push und E-Mail) mit dem Link zum Eintragen. Du bekommst eine Kopie.", { ja: "🔔 Erinnern", nein: "Abbrechen" }))) return;
+  await einmal(knopf, async () => { try { const r = await api("dw_erinnern", {}, { warten: true }); melde(r.erinnert ? `🔔 ${r.erinnert} erinnert` : r.hinweis || "Niemand zu erinnern"); DV.daten = await api("dienst_uebersicht", {}, { warten: true }); dvZeichnen(); } catch (e) { meldeFehler(e); } });
+}
 function dvZeichnen() {
   const z = $("dvInhalt"); if (!z) return;
   const P = DV.daten?.personen || [];
-  z.innerHTML = `<p class="hinweis" style="margin:0">${esc(DV.daten?.veranstaltung || "")} · ${P.filter((x) => x.eintraege.length).length} Personen · Stand ${esc(zeitKurz(new Date().toISOString()))}</p>
+  z.innerHTML = dvFehltHtml() + `<p class="hinweis" style="margin:0">${esc(DV.daten?.veranstaltung || "")} · ${P.filter((x) => x.eintraege.length).length} Personen · Stand ${esc(zeitKurz(new Date().toISOString()))}</p>
     ${dvLegende()}
     <div class="dv-leiste"><button class="knopf klein${DV.sort === "name" ? " haupt" : ""}" onclick="DV.sort='name';dvZeichnen()">🔤 Name</button><button class="knopf klein${DV.sort === "stunden" ? " haupt" : ""}" onclick="DV.sort='stunden';dvZeichnen()">⏱️ Stunden</button>
       <button class="knopf klein" onclick="dvDrucken()">🖨️ Drucken (A4 quer)</button><button class="knopf klein" onclick="dvAblegen()">🗄️ In Ordner ablegen</button></div>
@@ -21555,7 +21568,7 @@ function aeEingZeichnen() {
       ${x.kenntnis?.length ? `<small class="hinweis">👁️ zur Kenntnis: ${x.kenntnis.map((k) => `${esc(k.name.split(" ")[0])} ${esc(zeitKurz(k.am))}`).join(", ")}</small>` : ""}
       ${x.status === "offen" ? `<div class="knoepfe">${x.kenntnisIch ? "" : `<button class="knopf${x.darfFreigeben ? "" : " haupt"}" onclick="aeKenntnis('${x.id}', this)">👁️ Zur Kenntnis genommen</button>`}${x.darfFreigeben ? `<button class="knopf haupt" onclick="aeFreigeben('${x.id}', this)">✅ Freigeben</button>` : ""}<button class="knopf" onclick="aeRueckfrage('${x.id}', this)">↩️ Rückfrage</button><button class="knopf" onclick="aeKopieren('${x.id}')">📋 Kopieren</button></div>
         ${x.darfFreigeben ? "" : '<small class="hinweis">Freigeben: Clubsprecher oder Admin.</small>'}`
-        : x.status === "freigegeben" ? `<small class="hinweis">👍 Freigegeben von ${esc(x.freigegeben_von || "?")} · ${esc(zeitKurz(x.freigegeben_am))} – liegt für den KC Manager bereit, wird dort übernommen.</small>`
+        : x.status === "freigegeben" ? `<small class="hinweis">👍 Freigegeben von ${esc(x.freigegeben_von || "?")} · ${esc(zeitKurz(x.freigegeben_am))} – liegt für den KC Manager bereit, wird dort übernommen.</small>${ICH?.admin && AE_DIREKT_ARTEN.includes(x.art) ? `<div class="knoepfe"><button class="knopf haupt" onclick="aeDirekt('${x.id}', this)">✅ Jetzt eintragen</button></div>` : ""}`
         : x.status === "abgelehnt" ? `<small class="hinweis">⚠️ ${esc(x.uebernommen_von || "KC-Programm")} hat die Änderung nicht übernommen – bitte prüfen.</small>`
         : x.status === "uebernommen" ? `<small class="hinweis">✅ Übernommen von ${esc(x.uebernommen_von || "KC-Programm")} · ${esc(zeitKurz(x.uebernommen_am))}${x.freigegeben_von ? ` · freigegeben von ${esc(x.freigegeben_von)}` : ""}</small>`
         : x.status === "rueckfrage" ? `<small class="hinweis">❓ Rückfrage${x.erledigt_von ? ` von ${esc(x.erledigt_von)}` : ""}: „${esc(x.rueckfrage || "")}“</small>`
@@ -21585,6 +21598,12 @@ function aeGroessenKopieren() {
   navigator.clipboard.writeText(text).then(() => melde("📋 Liste kopiert"), () => eingabe("Zum Kopieren:", text, { mehrzeilig: true }));
 }
 // KC-CLUB-AENDERUNG-FREIGABE (2.22.19)
+// KC-CLUB-AENDERUNG-DIREKT (2.222.0, Wunsch Hansi): hängt eine freigegebene Meldung, trägt der Admin sie selbst in die Personenliste ein
+const AE_DIREKT_ARTEN = ["anschrift", "name", "handy", "mail", "geburtstag"];
+async function aeDirekt(id, knopf) {
+  if (!(await frage("✅ Jetzt selbst eintragen?\n\nDie Änderung wird sofort in die zentrale Personenliste übernommen (Club-App und alle KC-Programme). Jede Änderung steht im Änderungsprotokoll, das Mitglied bekommt die Bestätigung und du eine Kopie.", { ja: "✅ Eintragen", nein: "Abbrechen" }))) return;
+  await einmal(knopf, async () => { try { await api("aenderung_uebernehmen", { id }); await aeNachAktion("✅ Eingetragen – das Mitglied bekommt gleich die Bestätigung"); } catch (e) { meldeFehler(e); } });
+}
 async function aeNachAktion(text) { melde(text); await aeEingangLaden(); aeEingZeichnen(); buEingangAuffrischen(); kachelnZeigen?.(); }
 async function aeKenntnis(id, knopf) {
   await einmal(knopf, async () => { try { await api("aenderung_kenntnis", { id }); await aeNachAktion("👁️ Zur Kenntnis genommen"); } catch (e) { meldeFehler(e); } });

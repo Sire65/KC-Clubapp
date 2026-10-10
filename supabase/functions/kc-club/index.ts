@@ -44,7 +44,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.221.0";
+const SERVER_VERSION = "2.222.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1272,6 +1272,7 @@ async function aeAblegen(ich: Ich, x: any, art: "Meldung" | "Erledigt" | "Freige
 }
 // KC-CLUB-AENDERUNG-FREIGABE (2.22.19): nach der Freigabe liegt die Änderung für die KC-Programme bereit – Felder im Format der
 // zentralen Personendaten (kc_core_people). Bank, Kleidergröße, Notfallkontakt gehen nie an andere Programme (null = nichts zu übergeben).
+const AE_DIREKT_ARTEN = ["anschrift", "name", "handy", "mail", "geburtstag"]; // KC-CLUB-AENDERUNG-DIREKT: nur Kern-Felder (Festnetz/Mitgliedschaft bleiben beim KC Manager)
 function aeUebergabe(x: any): Record<string, unknown> | null {
   const n = x.neu || {};
   switch (x.art) {
@@ -1918,6 +1919,13 @@ const DW = { vertrag: "KC_DP_WISH_INBOX_V1", projekt: "KC_DP", veranstaltung: "K
   typen: ["available", "preferred", "if_needed", "unavailable"], zonen: ["V", "H", "B", "Z"], maxEintraege: 400 };
 // KC-CLUB-BESTAETIGUNG (1.69.0): eigene Dienstwünsche lesbar aufbereitet – je Tag „Kann / Am liebsten / Wenn nötig / Kann nicht / Bereitschaft“
 // Wortlaut Hansi (1.69.3): steht in Bestätigung, Aufstellung und Archiv-Datei – eine Stelle für alle
+// KC-CLUB-DW-FEHLT (2.222.0): wann wurde wer zuletzt an die Dienstwünsche erinnert (aus dem Protokoll, 30 Tage)
+async function dwZuletztErinnert() {
+  const { data } = await db.from("kc_club_protokoll").select("zeit,details").eq("aktion", "dw_erinnert").gte("zeit", new Date(Date.now() - 30 * 86400000).toISOString()).order("zeit", { ascending: false }).limit(50);
+  const m = new Map<string, string>();
+  for (const x of data ?? []) for (const pid of (Array.isArray(x.details?.personen) ? x.details.personen : [])) if (!m.has(pid)) m.set(pid, x.zeit);
+  return m;
+}
 const DW_HINWEIS = (name: string) => `Vielen Dank für die Übermittlung deiner Dienstzeiten für den ${name}. Bitte beachte, dass es sich um deine Wünsche handelt – eine Abstimmung mit allen Clubmitgliedern erfolgt noch.`;
 const DW_ART: Record<string, string> = { available: "Kann", preferred: "Am liebsten", if_needed: "Wenn nötig", unavailable: "Kann nicht" };
 const DW_ZONE: Record<string, string> = { V: "Bereich V", H: "Bereich H", B: "Bereich B", Z: "Bereich Z" };
@@ -9333,6 +9341,27 @@ Köcheclub-App`,
         return json({ ok: true, uebergabe: !!uebergabe });
       }
 
+      // KC-CLUB-AENDERUNG-DIREKT (2.222.0, Wunsch Hansi): hängt eine freigegebene Meldung, löst der Admin die Übernahme selbst aus.
+      // Die Club-App schreibt dabei NICHT selbst in die Personenliste: ausgeführt wird der vorhandene Kern (Rechte, Altwerte, Wertprüfung,
+      // Audit, Vorgangsnummer, Status) über die Hülle kc_club_aenderung_admin_uebernehmen – als der Admin selbst. Danach bekommt das Mitglied
+      // wie gewohnt die Bestätigung (Admin: Kopie).
+      case "aenderung_uebernehmen": {
+        if (!ich.admin) throw new Fehler("Direkt eintragen darf nur der Admin.", 403);
+        const { data: x } = await db.from("kc_club_aenderungen").select("id,art,status,person_id").eq("id", String(p.id || "")).maybeSingle();
+        if (!x) throw new Fehler("Meldung nicht gefunden.", 404);
+        if (x.status !== "freigegeben") throw new Fehler("Direkt eintragen geht nur bei freigegebenen Meldungen.", 409);
+        if (!AE_DIREKT_ARTEN.includes(x.art)) throw new Fehler("Diese Änderung kann nur im KC Manager eingetragen werden.", 409);
+        const { data: r, error } = await db.rpc("kc_club_aenderung_admin_uebernehmen", { p_id: x.id, p_admin_person: ich.person_id });
+        if (error) throw new Fehler("Eintragen hat nicht geklappt – bitte gleich noch einmal.", 500);
+        if (!r?.ok) {
+          const GRUND: Record<string, string> = { geaendert: "Die Daten wurden inzwischen woanders geändert – bitte die Meldung neu prüfen.", wert_unzulaessig: "Ein neuer Wert ist ungültig (z. B. Datum oder E-Mail).",
+            zu_frueh: "Die Änderung gilt erst ab einem späteren Datum.", bereits_erledigt: "Die Meldung ist schon erledigt.", person_unbekannt: "Das Mitglied wurde nicht gefunden." };
+          throw new Fehler(GRUND[r?.grund] || `Nicht eingetragen (${r?.grund || "unbekannt"}).`, 409);
+        }
+        await protokoll(ich.person_id, "aenderung_direkt_uebernommen", { meldung: x.id, art: x.art, person: x.person_id, felder: (r.felder ?? []).map((f: any) => f.feld) });
+        return json({ ok: true, felder: (r.felder ?? []).map((f: any) => f.feld) });
+      }
+
       // ↩️ Rückfrage an das Mitglied (z. B. etwas unklar) – Meldung bleibt beim Mitglied sichtbar, es kann neu melden
       case "aenderung_rueckfrage": {
         const { data: x } = await db.from("kc_club_aenderungen").select("*").eq("id", String(p.id || "")).maybeSingle();
@@ -9389,13 +9418,35 @@ Köcheclub Werne`,
       }
 
       // KC-CLUB-DIENST-UEBERSICHT (2.23.39, Wunsch Hansi): alle Dienstzeiten der Veranstaltung auf einen Blick (Name × Tag, Zeitbalken)
+      // KC-CLUB-DW-FEHLT (2.222.0): freundliche Erinnerung an alle, die noch keine Dienstwünsche abgegeben haben (höchstens 1× je 24 Std. je Person)
+      case "dw_erinnern": {
+        nurLeitung(ich);
+        const { data: rows, error } = await db.from("kc_dp_wish_inbox").select("person_id").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source", "club_app").limit(300);
+        if (error) throw new Fehler("Die Dienstwünsche konnten gerade nicht geprüft werden.", 503);
+        const abgegeben = new Set((rows ?? []).map((x: any) => x.person_id)), erinnert = await dwZuletztErinnert();
+        const wunsch = Array.isArray(p.personen) ? new Set(p.personen.map(String)) : null;
+        const ziel = (await aktiveMitglieder()).filter((m) => !abgegeben.has(m.person_id) && (!wunsch || wunsch.has(m.person_id)))
+          .filter((m) => { const z = erinnert.get(m.person_id); return !z || Date.now() - Date.parse(z) > 24 * 3600000; });
+        if (!ziel.length) return json({ ok: true, erinnert: 0, hinweis: "Alle Fehlenden wurden in den letzten 24 Stunden schon erinnert." });
+        const r = await sendenGewaehlt("club_nachricht", ziel.map((m) => m.person_id), ["push", "email"], {
+          titel: `🎄 Deine Dienstwünsche für den ${DW.name}`, kurz: "Trag bitte deine Wunschzeiten ein – dauert nur ein paar Minuten.",
+          betreff: `Köcheclub Werne – bitte deine Dienstwünsche für den ${DW.name} eintragen`,
+          text: `Hallo,\n\nfür den ${DW.name} sammeln wir gerade die Wunschzeiten aller Mitglieder. Von dir fehlen sie noch.\n\nBitte trag in der Köcheclub-App ein, wann du kannst, was du dir wünschst und wann du nicht kannst – das dauert nur ein paar Minuten:\n${APP_URL}#dienstwunsch\n\nDanke dir!\n${ich.name}`,
+          url: APP_URL + "#dienstwunsch" }, `club-dw-erinnerung:${Date.now()}`);
+        await protokoll(ich.person_id, "dw_erinnert", { personen: ziel.map((m) => m.person_id), gesendet: r?.gesendet ?? 0 });
+        return json({ ok: true, erinnert: ziel.length, namen: ziel.map((m) => m.display_name) });
+      }
       case "dienst_uebersicht": {
         nurLeitung(ich);
         const { data: rows, error } = await db.from("kc_dp_wish_inbox").select("id,person_id,revision,status,entries,updated_at,taken_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source", "club_app").limit(300);
         if (error) throw new Fehler("Die Dienstzeiten konnten gerade nicht geladen werden.", 503); // Regel 11: unbekannt ≠ leer
         const liste = (rows ?? []).filter((x: any) => !String(x.person_id).startsWith("KC-P-TEST"));
         const leute = await personen(liste.map((x: any) => x.person_id));
-        return json({ veranstaltung: DW.name, personen: liste.map((x: any) => ({ id: x.id, name: leute.get(x.person_id)?.display_name || x.person_id, revision: x.revision, status: x.status,
+        // KC-CLUB-DW-FEHLT (2.222.0, Wunsch Hansi): wer hat noch nichts abgegeben (nur Einsammeln – geplant wird in DP2)
+        const abgegeben = new Set(liste.map((x: any) => x.person_id));
+        const fehlen = (await aktiveMitglieder()).filter((m) => !abgegeben.has(m.person_id)).map((m) => ({ person_id: m.person_id, name: m.display_name }));
+        const erinnert = await dwZuletztErinnert();
+        return json({ fehlen: fehlen.map((f) => ({ ...f, erinnert: erinnert.get(f.person_id) ?? null })), veranstaltung: DW.name, personen: liste.map((x: any) => ({ id: x.id, name: leute.get(x.person_id)?.display_name || x.person_id, revision: x.revision, status: x.status,
           uebernommen: !!x.taken_at, zuletzt: x.updated_at,
           eintraege: (x.entries ?? []).filter((e: any) => DW.typen.includes(e?.wishType) && /^\d{4}-\d{2}-\d{2}$/.test(String(e?.date)) && Number.isFinite(Number(e?.start)) && Number.isFinite(Number(e?.end)))
             .map((e: any) => ({ d: e.date, s: Number(e.start), e: Number(e.end), t: e.wishType })) })) });

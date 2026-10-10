@@ -7986,3 +7986,16 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/async function vorgangKopie\([\s\S]{0,1600}Ergebnis: \$\{stand\}/.test(server) && /korrelation\.replace\(\/:\(ruhe\|push\)\$\/, ""\) \+ ":kopie"/.test(server), "Empfänger + Ergebnis, eine Kopie je Vorgang");
   assert.ok(!/ist jetzt eingetragen \(\$\{prog\}\)/.test(server), "kein Programmvermerk im Text an das Mitglied");
 }
+
+// 2.222.0 KC-CLUB-DW-FEHLT + KC-CLUB-AENDERUNG-DIREKT (Wunsch Hansi): wer hat noch keine Dienstwünsche abgegeben (+ erinnern) · Änderung direkt eintragen
+{
+  const e = server.slice(server.indexOf('case "dw_erinnern": {'), server.indexOf('case "dienst_uebersicht": {'));
+  assert.ok(/nurLeitung\(ich\)/.test(e) && /24 \* 3600000/.test(e) && /`club-dw-erinnerung:\$\{Date\.now\(\)\}`/.test(e) && /protokoll\(ich\.person_id, "dw_erinnert"/.test(e), "nur Leitung, 1× je 24 Std., Admin-Kopie über club-dw-");
+  assert.ok(/const fehlen = \(await aktiveMitglieder\(\)\)\.filter\(\(m\) => !abgegeben\.has\(m\.person_id\)\)/.test(server), "Liste der Fehlenden");
+  const d = server.slice(server.indexOf('case "aenderung_uebernehmen": {'), server.indexOf('case "aenderung_rueckfrage": {'));
+  assert.ok(/if \(!ich\.admin\) throw/.test(d) && /x\.status !== "freigegeben"/.test(d) && /AE_DIREKT_ARTEN\.includes\(x\.art\)/.test(d), "nur Admin, nur freigegeben, nur Kern-Arten");
+  assert.ok(/db\.rpc\("kc_club_aenderung_admin_uebernehmen", \{ p_id: x\.id, p_admin_person: ich\.person_id \}\)/.test(d) && !/from\("kc_core_people"\)/.test(d), "Club-App schreibt nicht selbst – der vorhandene Kern übernimmt (als der Admin)");
+  const hm = lies("supabase/migrations/20261010_kc_club_v2222_aenderung_admin.sql");
+  assert.ok(/l\.core_role = 'admin'/.test(hm) && /public\.kc_core_person_aenderung_uebernehmen\(p_id, gen_random_uuid\(\), 'uebernehmen'/.test(hm) && /revoke all on function public\.kc_club_aenderung_admin_uebernehmen\(uuid, text\) from public, anon, authenticated/.test(hm), "Hülle: nur Admin, nur Server, ruft den Kern");
+  assert.ok(/function dvFehltHtml\(\)/.test(html) && /onclick="dvErinnern\(this\)"/.test(html) && /aeDirekt\('\$\{x\.id\}', this\)/.test(html), "Knöpfe in der App");
+}

@@ -1582,6 +1582,9 @@
   .einmal-wz span { color: rgba(255,255,255,.28); font-weight: 800; font-size: 15px; white-space: nowrap; padding: 26px 18px; text-shadow: 0 0 2px rgba(0,0,0,.6); }
   .einmal-schirm.unscharf img { filter: blur(28px); }
   .einmal-leiste { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: #111; color: #fff; font-size: .9rem; }
+  /* KC-CLUB-DW-FEHLT (2.222.0): wer noch keine Dienstwünsche abgegeben hat */
+  .dv-fehlt { margin: 0 0 10px; display: grid; gap: 8px; } .dv-fehlt.ok { color: var(--textGruen); }
+  .dv-fehlt-namen { display: flex; flex-wrap: wrap; gap: 6px; } .dv-fehlt-namen span { background: var(--gelbbg); border-radius: 999px; padding: 3px 10px; font-size: .85rem; }
   .dpw { margin-top: 8px; display: grid; gap: 6px; }
   /* KC-CLUB-SELBSTLOESCHEN-WARNUNG (2.218.0): unübersehbarer Hinweis „gelöscht ist gelöscht“ */
   .sl-warnung { background: var(--rotbg); border: 1.5px solid #c62828; border-radius: 12px; padding: 8px 10px; margin: 0 0 10px; font-size: .9rem; line-height: 1.4; }
@@ -3984,6 +3987,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.221.0" data-v="2.221.0"></script>
+<script src="app.js?v=2.222.0" data-v="2.222.0"></script>
 </body>
 </html>
