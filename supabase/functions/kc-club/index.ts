@@ -21,8 +21,8 @@ import { Chess } from "./chess.js"; // KC-CLUB-SCHACH (2.8.0): chess.js 1.4.0 (B
 import { bskNeu, bskErlaubt, bskSpielen, bskStichAbschliessen, bskErgebnis } from "./bauernskat.js"; // KC-CLUB-BAUERNSKAT-MG (2.10.0): Regeln = wörtliche Kopie aus index.html
 // @ts-ignore: reine JS-Datei ohne Typen
 import { maeNeu, maeMoeglich, maeWuerfeln, maeZiehen, maeComputerWahl } from "./mae.js"; // KC-CLUB-MAE (2.26.0): Regeln = wörtliche Kopie aus app.js (tools/mae/server-kopie.mjs)
-import { FDK_FELD, fdkNeu, fdkOptionen, fdkZiehen, fdkWurfBeginn, fdkAugen, fdkWeiter, fdkKarteSpielen, fdkHygiene, fdkAbgeben, fdkSieger } from "./fdk.js"; // KC-CLUB-FDK-MG (2.216.0): Regeln = wörtliche Kopie aus app.js (tools/fdk/server-kopie.mjs)
-import { dkNeu, dkVorbehalt, dkErlaubt, dkSpielen, dkStichAbschliessen, dkErgebnis, dkComputerKarte } from "./doppelkopf.js"; // KC-CLUB-DK-MG (2.216.0): Regeln = wörtliche Kopie aus app.js (tools/dk/server-kopie.mjs)
+import { FDK_FELD, fdkNeu, fdkOptionen, fdkZiehen, fdkWurfBeginn, fdkAugen, fdkWeiter, fdkKarteSpielen, fdkHygiene, fdkAbgeben, fdkSieger } from "./fdk.js"; // KC-CLUB-FDK-MG (2.219.0): Regeln = wörtliche Kopie aus app.js (tools/fdk/server-kopie.mjs)
+import { dkNeu, dkVorbehalt, dkErlaubt, dkSpielen, dkStichAbschliessen, dkErgebnis, dkComputerKarte } from "./doppelkopf.js"; // KC-CLUB-DK-MG (2.219.0): Regeln = wörtliche Kopie aus app.js (tools/dk/server-kopie.mjs)
 import { KT_FRAGEN } from "./kt-fragen.js"; // KC-CLUB-KUECHENTERROR (2.14.0): Fragen = wörtliche Kopie aus lib/kuechenterror/fragen.js
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
@@ -44,7 +44,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.218.0";
+const SERVER_VERSION = "2.219.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1941,7 +1941,7 @@ const SPIEL_NAMEN: Record<string, string> = { ttt: "Tic-Tac-Toe", schach: "Schac
 const SPIEL_ARTEN = ["ttt", "schach", "bsk", "kt", "mae", "fdk", "dk"];
 const spielTitel = (g: { spiel: string; groesse: number }) => g.spiel === "ttt" ? `Tic-Tac-Toe ${g.groesse}×${g.groesse}` : SPIEL_NAMEN[g.spiel] || "Spiel";
 const spielSym = (spiel: string) => spiel === "schach" ? "♟️" : spiel === "bsk" ? "🃏" : spiel === "kt" ? "🔪" : spiel === "fdk" ? "🧑‍🍳" : spiel === "dk" ? "👑" : "🎲"; // mae: auch 🎲
-const SPIEL_GROESSE: Record<string, number> = { schach: 8, bsk: 32, kt: 12, mae: 4, fdk: 24, dk: 4 }; // KC-CLUB-FDK-MG / KC-CLUB-DK-MG (2.216.0)
+const SPIEL_GROESSE: Record<string, number> = { schach: 8, bsk: 32, kt: 12, mae: 4, fdk: 24, dk: 4 }; // KC-CLUB-FDK-MG / KC-CLUB-DK-MG (2.219.0)
 // ---------- KC-CLUB-KUECHENTERROR (2.14.0, Wunsch Hansi): Küchenquiz auf Zeit zwischen zwei Mitgliedern ----------
 // 12 Fragen in 4 Runden à 3. Abwechselnd wie beim Quizduell: x spielt Runde 1 → o spielt Runde 1 + 2 → x Runde 2 + 3 →
 // o Runde 3 + 4 → x Runde 4. Beide bekommen dieselben Fragen. Der Server merkt sich die Startzeit jeder Frage (Neuladen setzt sie
@@ -2005,7 +2005,7 @@ function maeSicht(z: any, ich: string, namen: Map<string, Person>) {
     dran: z.dran, wurf: z.wurf, phase: z.phase, versuche: z.versuche, platz: z.platz, sieger: z.sieger, n: z.n, ich: s, log: (z.log ?? []).slice(-24),
     moeglich: z.phase === "ziehen" && z.dran === s ? maeMoeglich(z) : [] };
 }
-// ---------- KC-CLUB-FDK-MG (2.216.0, Wunsch Hansi „auch gegen Mitglieder mit Terminabfrage“): Fang den Koch zwischen zwei Mitgliedern ----------
+// ---------- KC-CLUB-FDK-MG (2.219.0, Wunsch Hansi „auch gegen Mitglieder mit Terminabfrage“): Fang den Koch zwischen zwei Mitgliedern ----------
 // Wer herausfordert, ist Koch 1 (rote Mütze) und fängt an. Der Server würfelt (kryptografischer Zufall), mischt die Karten, prüft jeden
 // Schritt nach den Regeln aus fdk.js (Karte ausspielen → würfeln → Feld wählen; 🧪 Hygienefrage aus Küchenterror; 🛎️ Jetzt abgeben)
 // und gibt dann weiter. Die Handkarten des anderen sieht man nur als Anzahl, gezogene Karten des anderen verdeckt.
@@ -2053,7 +2053,7 @@ function fdkSicht(F: any, s: number) {
     frage: f ? { f: f.f, a: F.frage.perm.map((k: number) => [f.r, ...f.x][k]) } : null,
     log: (F.log ?? []).slice(-30).map((x: any) => ({ n: x.n, s: r(x.s), e: verdeckt(x) ? { ...x.e, k: "verdeckt", weg: x.e.weg ? "verdeckt" : undefined } : x.e })) };
 }
-// ---------- KC-CLUB-DK-MG (2.216.0): Doppelkopf zu viert – zwei Mitglieder (Platz 0 und 2) und zwei Server-Computer (Platz 1 und 3) ----------
+// ---------- KC-CLUB-DK-MG (2.219.0): Doppelkopf zu viert – zwei Mitglieder (Platz 0 und 2) und zwei Server-Computer (Platz 1 und 3) ----------
 // Wer Re ist, zeigt sich wie am echten Tisch erst mit der ♣ Dame. Die Sicht verrät nur, was man selbst weiß: eigene Hand, Kartenzahl der anderen,
 // offene Re-Spieler, Hochzeit. Volle Stich-Inhalte und Sonderpunkte erst am Ende. Gewonnen hat, wer von euch beiden mehr Punkte hat.
 const DK_PC_NAMEN = ["", "Erika", "", "Paul"];
@@ -11210,14 +11210,14 @@ Köcheclub-App`,
         const gegner = g.von === ich.person_id ? g.an : g.von, n = g.groesse;
         let upd: Record<string, unknown>, sieg = false, remis = false, niederlage = false, schachText = "", naechster = gegner, augen = [0, 0];
         if (g.spiel === "fdk") {
-          // KC-CLUB-FDK-MG (2.216.0): Karte / würfeln / Feld / Antwort / abgeben – geprüft nach fdk.js; danach ist der andere dran (oder ich nochmal)
+          // KC-CLUB-FDK-MG (2.219.0): Karte / würfeln / Feld / Antwort / abgeben – geprüft nach fdk.js; danach ist der andere dran (oder ich nochmal)
           const F = structuredClone(g.fdk), s = g.spieler_x === ich.person_id ? 0 : 1;
           fdkMgZug(F, s, p.zug ?? {});
           if (F.phase === "ende") { const w = fdkSieger(F); sieg = w === s; niederlage = w === 1 - s; remis = w === -1; augen = [F.sp[s].punkte, F.sp[1 - s].punkte]; }
           naechster = F.phase === "ende" ? gegner : F.dran === s ? ich.person_id : gegner;
           upd = { fdk: F };
         } else if (g.spiel === "dk") {
-          // KC-CLUB-DK-MG (2.216.0): Karte (Bedienpflicht) oder Hochzeit/still allein; danach spielen die Computer, bis ein Mensch dran ist
+          // KC-CLUB-DK-MG (2.219.0): Karte (Bedienpflicht) oder Hochzeit/still allein; danach spielen die Computer, bis ein Mensch dran ist
           const z = structuredClone(g.dk), s = z.wer.indexOf(ich.person_id);
           if (s < 0) throw new Fehler("Du bist gerade nicht dran.", 409);
           dkMgZug(z, s, p.zug ?? {});

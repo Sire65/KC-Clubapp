@@ -1,4 +1,4 @@
-// KC-CLUB-DK-MG (2.216.0): erzeugt supabase/functions/kc-club/doppelkopf.js aus den Doppelkopf-Regeln in app.js.
+// KC-CLUB-DK-MG (2.219.0): erzeugt supabase/functions/kc-club/doppelkopf.js aus den Doppelkopf-Regeln in app.js.
 // Eine Quelle (app.js) – der Server bekommt eine wörtliche Kopie; tests/app-vertrag.test.mjs prüft, dass beide gleich sind.
 // Aufruf: node tools/dk/server-kopie.mjs
 import fs from "node:fs";

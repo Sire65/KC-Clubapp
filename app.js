@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.218.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.219.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1627,7 +1627,7 @@ const HILFE = [
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
   { id: "ttt_toene", thema: "club", sym: "🔔", t: "Spiele mit Tönen", x: "Unter jedem Spiel gibt es den Knopf <b>„🔔 Töne an / 🔕 aus“</b>. Dann klingt jeder Zug, jeder Wurf und jede Karte – und am Ende hörst du, ob du gewonnen, verloren oder unentschieden gespielt hast. Der Schalter gilt für alle Spiele, nur auf diesem Gerät.", zeig: () => { zeige("spiele"); spArtWahl("ttt"); }, seit: "2.23.8" },
-  { id: "spiele_fdk_dk_mg", thema: "club", sym: "🧑‍🍳", t: "Fang den Koch und Doppelkopf gegen Mitglieder", x: "Unter 🎲 Spiele → Fang den Koch oder Doppelkopf → <b>👥 Gegen Mitglieder</b>: jemanden herausfordern – ist die Person nicht online, gleich einen <b>📅 Termin anfragen</b>. Bei Fang den Koch wählst du Gerichte und Länge, beim Doppelkopf sitzt ihr euch gegenüber und zwei Computer-Köche spielen mit. Der Server würfelt und mischt – niemand kann schummeln.", zeig: () => { zeige("spiele"); spArtWahl("fdk"); }, seit: "2.218.0" },
+  { id: "spiele_fdk_dk_mg", thema: "club", sym: "🧑‍🍳", t: "Fang den Koch und Doppelkopf gegen Mitglieder", x: "Unter 🎲 Spiele → Fang den Koch oder Doppelkopf → <b>👥 Gegen Mitglieder</b>: jemanden herausfordern – ist die Person nicht online, gleich einen <b>📅 Termin anfragen</b>. Bei Fang den Koch wählst du Gerichte und Länge, beim Doppelkopf sitzt ihr euch gegenüber und zwei Computer-Köche spielen mit. Der Server würfelt und mischt – niemand kann schummeln.", zeig: () => { zeige("spiele"); spArtWahl("fdk"); }, seit: "2.219.0" },
   { id: "spiele_leiste", thema: "club", sym: "🎲", t: "Gleiche Knöpfe in allen Spielen", x: "Alle Spiele haben unten dieselbe Knopfleiste, ordentlich im Raster: <b>↺ Neues Spiel</b>, <b>✖ Abbrechen</b> (zählt nicht, dein Spielstand bleibt), <b>🔔 Töne</b> und <b>🔊 Ansage</b> an oder aus. Oben wählst du <b>gegen den Computer</b> oder <b>gegen Mitglieder</b>.", zeig: () => { zeige("spiele"); }, seit: "2.215.0" },
   { id: "inkognito_chat", thema: "privat", sym: "🕶️", t: "Inkognito und schreiben (Admin)", x: "Bist du <b>inkognito</b> und beginnst einen Chat mit einem Mitglied (oder schreibst in einem Chat), fragt die App einmal: <b>„Möchtest du Inkognito jetzt aufheben?“</b> – sonst merkt dein Gegenüber, dass du schreibst, obwohl du nicht als anwesend angezeigt wirst. „🕶️ Inkognito bleibt“ lässt alles, wie es ist.", nur: () => !!ICH?.admin, seit: "2.153.0" },
   { id: "inkognito_blinkt", thema: "privat", sym: "🕶️", t: "Die Brille blinkt rot", x: "Solange <b>Inkognito</b> an ist, blinkt die Brille oben rot und dein <b>Status-Feld pulsiert gelb–rot</b> – damit du nicht vergisst, dass dich gerade niemand online sieht. Antippen der Brille schaltet Inkognito wieder aus.", nur: () => !!ICH?.admin, zeig: () => zeige("start"), seit: "2.23.8" },
@@ -5341,7 +5341,7 @@ const SP_KEY = "kc_club_spiel_pc", SP_TAKT_MS = 3000;
 let SP = { tab: "pc", art: null, liste: null, offen: null, takt: null, laedt: false, ch: null };
 const SP_ARTEN = [["ttt", "❌⭕", "Tic-Tac-Toe", "🍅 gegen 🥦 · 3 × 3 oder 4 × 4"], ["schach", "♟️", "Schach", "Die Küchenbrigade tritt an"], ["bsk", "🃏", "Bauernskat", "Zu zweit · französisches Blatt"], ["kt", "🔪", "Küchenterror", "Küchenquiz auf Zeit · 10 Sekunden je Frage"], ["mae", "🎲", "Mensch ärgere dich nicht", "Würfeln, rauswerfen, ins Ziel · bis zu 4 Farben"], ["fdk", "🧑‍🍳", "Fang den Koch", "Küchenrallye · Zutaten holen, kochen, klingeln"], ["dk", "👑", "Doppelkopf", "Zu viert · mit drei Computer-Köchen"]];
 // KC-CLUB-SCHACH (2.8.0): Spielauswahl oben (gilt für „gegen den Computer“ und als Vorschlag beim Herausfordern)
-function spArtWahl(a) { SP.pause = false; SP.nachholen = null; SP.art = ["schach", "bsk", "kt", "mae", "fdk", "dk"].includes(a) ? a : "ttt"; /* KC-CLUB-FDK-MG / KC-CLUB-DK-MG (2.216.0): jetzt auch gegen Mitglieder */ if (SP.offen) SP.offen = null; spZeigen(); if (SP.tab === "mg") spLaden(true); }
+function spArtWahl(a) { SP.pause = false; SP.nachholen = null; SP.art = ["schach", "bsk", "kt", "mae", "fdk", "dk"].includes(a) ? a : "ttt"; /* KC-CLUB-FDK-MG / KC-CLUB-DK-MG (2.219.0): jetzt auch gegen Mitglieder */ if (SP.offen) SP.offen = null; spZeigen(); if (SP.tab === "mg") spLaden(true); }
 // KC-CLUB-SPIELE-PAUSE (2.18.0, Wunsch Hansi): je Spiel unten ein Umschalter ⏸ Pause ↔ ▶ Weiter.
 // Gegen den Computer: Spiel steht still – Computer zieht nicht, Küchenterror-Uhr hält an, das Brett/die Frage ist verschwommen.
 // Weiter: Küchenterror gibt nochmal 3-2-1 Lesezeit, dann läuft die restliche Zeit weiter. Gegen Mitglieder (Küchenterror) misst der
@@ -5549,7 +5549,7 @@ function spPokalHtml(L) {
     <p class="hinweis" style="margin:6px 0 0">Sieg = 2 Punkte, Unentschieden = 1 Punkt. Nur Partien gegen Mitglieder zählen.</p></div>`;
 }
 // KC-CLUB-SPIELE-STANDARD-AN (2.22.13, Wunsch Hansi): nichts eingestellt = für alle Spiele herausforderbar (eigenes „Aus“ bleibt aus)
-const SP_ALLE_ARTEN = ["ttt", "schach", "bsk", "kt", "mae", "fdk", "dk"]; // 2.216.0: + Fang den Koch, Doppelkopf
+const SP_ALLE_ARTEN = ["ttt", "schach", "bsk", "kt", "mae", "fdk", "dk"]; // 2.219.0: + Fang den Koch, Doppelkopf
 const spMeineArten = () => { const w = INIT?.einstellungen?.spiele; if (!w) return [...SP_ALLE_ARTEN]; return Array.isArray(w?.spiele) && w.spiele.length ? w.spiele : ["ttt", "schach"]; };
 const spHerausAn = () => { const w = INIT?.einstellungen?.spiele; return w ? w.herausforderung === true : true; };
 // beim ersten Mal sagen, dass es an ist und wo man es abstellt (je Gerät einmal; nicht, wer selbst schon etwas eingestellt hat)
@@ -5579,7 +5579,7 @@ async function spHerausfordernBlatt(pid) {
   if (!SP.liste) await spLaden(true);
   const alle = SP.liste?.bereit || [];
   if (!alle.length) return melde("Noch niemand hat „Herausfordern erlauben“ eingeschaltet – frag doch mal im Club 🙂");
-  let gr = 3, art = SP.art || "ttt", stufe = "mittel", uhr = "0", maePc = "ja", fdkStufe = FDKP.stufe || "leicht", fdkAnzahl = String(FDKP.anzahl || 2); // 2.216.0: Fang den Koch – Gerichte und Länge // 2.26.0: Mensch ärgere dich nicht – freie Farben spielt der Computer // 2.10.0: auch Bauernskat; 2.16.0: Zeitstufe für Küchenterror; 2.23.38: Schachuhr
+  let gr = 3, art = SP.art || "ttt", stufe = "mittel", uhr = "0", maePc = "ja", fdkStufe = FDKP.stufe || "leicht", fdkAnzahl = String(FDKP.anzahl || 2); // 2.219.0: Fang den Koch – Gerichte und Länge // 2.26.0: Mensch ärgere dich nicht – freie Farben spielt der Computer // 2.10.0: auch Bauernskat; 2.16.0: Zeitstufe für Küchenterror; 2.23.38: Schachuhr
   const f = blattAuf("spHerausBlatt", `${einwHtml("b-sp-herausfordern")}<div id="spHerausInhalt"></div><button class="knopf" onclick="fensterZu(document.getElementById('spHerausBlatt'))">Abbrechen</button>`);
   const zeichnen = () => {
     const b = alle.filter((m) => (m.spiele || ["ttt"]).includes(art));
@@ -5892,7 +5892,7 @@ function dkPcZeigen() {
     </div>`;
   if (z.phase === "spiel" && !DK.denkt && !DK.wartet && (z.amZug !== 0 || z.stich.length === 4)) dkPcWeiterLaufen();
 }
-// ----- KC-CLUB-DK-MG (2.216.0, Wunsch Hansi „auch gegen Mitglieder mit Terminabfrage“): Doppelkopf mit einem Mitglied -----
+// ----- KC-CLUB-DK-MG (2.219.0, Wunsch Hansi „auch gegen Mitglieder mit Terminabfrage“): Doppelkopf mit einem Mitglied -----
 // Ihr zwei sitzt euch gegenüber, die beiden anderen Plätze spielt der Server-Computer. Wer mit wem spielt (Re/Kontra), zeigt sich wie
 // am echten Tisch erst mit der ♣ Dame. Die Hände der anderen schickt der Server nie. Gewonnen hat, wer von euch beiden mehr Punkte holt.
 const DKM = { id: null, n: null, sendet: false };
@@ -7813,7 +7813,7 @@ let FDKP = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(FDK_
   return { stand: { ich: 0, pc: 0, remis: 0 }, regelnGesehen: false, stufe: "leicht", anzahl: 2, runde: 0, ...(w || {}), rollt: false, text: "", kette: false, anim: null, tw: "", fragt: false }; })();
 const fdkMerken = () => { try { localStorage.setItem(FDK_KEY, JSON.stringify({ stand: FDKP.stand, regelnGesehen: FDKP.regelnGesehen, stufe: FDKP.stufe, anzahl: FDKP.anzahl, runde: FDKP.runde, F: FDKP.F || null, tw: FDKP.tw, text: FDKP.text })); } catch {} };
 const fdkSichtbar = () => aktuelleAnsicht === "spiele" && SP.tab === "pc" && SP.art === "fdk";
-// KC-CLUB-FDK-MG (2.216.0): gegen ein Mitglied steht dessen Vorname statt „Twinkey“ (FDK_MG wird nur beim Zeichnen gesetzt)
+// KC-CLUB-FDK-MG (2.219.0): gegen ein Mitglied steht dessen Vorname statt „Twinkey“ (FDK_MG wird nur beim Zeichnen gesetzt)
 let FDK_MG = null;
 let FDKM = { id: null, anim: null, rollt: false, fragt: false, klingelt: false, sendet: false, texte: [], gesehen: null };
 const fdkUi = () => (FDK_MG ? FDKM : FDKP);
@@ -8131,7 +8131,7 @@ async function fdkAbbrechen(neu = false) { // KC-CLUB-SPIELE-LEISTE: neu = gleic
   if (neu) return fdkStart();
   if (fdkSichtbar()) fdkPcZeigen(); melde("Spiel abgebrochen – nicht gewertet.");
 }
-// ----- KC-CLUB-FDK-MG (2.216.0, Wunsch Hansi „auch gegen Mitglieder mit Terminabfrage“): Fang den Koch gegen ein Mitglied -----
+// ----- KC-CLUB-FDK-MG (2.219.0, Wunsch Hansi „auch gegen Mitglieder mit Terminabfrage“): Fang den Koch gegen ein Mitglied -----
 // Der Server würfelt, mischt und prüft jeden Schritt (Karte → würfeln → Feld; 🧪 Frage; 🛎️ Jetzt abgeben). Die App bekommt die eigene
 // Sicht (ich = Koch 0, rote Mütze) und zeichnet sie mit demselben Brett wie gegen Twinkey. Termin vorschlagen wie bei allen Partien.
 function fdkMgDialoge(F, vor) { // eigene neue Karten / Abgaben als Fenster zeigen (wie gegen Twinkey)
@@ -18440,12 +18440,15 @@ function slWahl(art) {
   if (art === "chat" && !chatId) return melde("Erst die erste Nachricht senden – dann lässt sich der ganze Chat einstellen. Für diese Nachricht: ⏳ unten.", true);
   blattAuf("slBlatt", `<h3 style="margin:0 0 4px">⏳ ${art === "chat" ? "Selbstlöschen für diesen Chat" : "Diese Nachricht löscht sich …"}</h3>
     <p class="hinweis" style="margin:0 0 10px">${art === "chat" ? "Gilt für alle <b>neuen</b> Nachrichten in diesem Chat – bei allen Teilnehmern. Alle sehen im Chat, dass du es eingestellt hast." : "Gilt nur für die nächste Nachricht, die du sendest. Sie verschwindet danach bei allen."}</p>
+    <div class="sl-warnung">⚠️ <b>Gelöscht ist gelöscht:</b> Die Nachrichten verschwinden ${art === "chat" ? "nach der Zeit automatisch – auch die, die ihr gerade schreibt –" : "nach der Zeit automatisch"} auf <b>allen Geräten</b> (Handy, PC, Tablet) und können <b>nicht wiederhergestellt</b> werden – auch nicht vom Admin oder aus einer Sicherung.</div>
     <div class="sl-wahl">${SL_WAHL.map(([s, t]) => `<button class="knopf${s === akt ? " haupt" : ""}" onclick="slGewaehlt('${art}', ${s})">${s ? "⏳ " + t : "🚫 Aus"}</button>`).join("")}</div>
     <button class="knopf" onclick="$('slBlatt').remove()">Abbrechen</button>`);
 }
 async function slGewaehlt(art, std) {
   $("slBlatt")?.remove();
   if (art === "nachricht") { SL = std === slChat() ? { chat: null, std: null } : { chat: chatId, std }; slAnzeigen(); return melde(std ? `⏳ Die nächste Nachricht löscht sich nach ${slText(std)}` : "Die nächste Nachricht bleibt stehen"); }
+  // 2.218.0 KC-CLUB-SELBSTLOESCHEN-WARNUNG (Wunsch Hansi nach verlorenen Chats): vor dem Einschalten klar sagen, was das bedeutet
+  if (std > 0 && std !== slChat() && !(await frage(`⚠️ Selbstlöschen wirklich einschalten?\n\nAb jetzt verschwindet jede neue Nachricht in diesem Chat nach ${slText(std)} – von dir und von allen anderen, auf allen Geräten (Handy, PC, Tablet).\n\nGelöschte Nachrichten können NICHT wiederhergestellt werden – auch nicht vom Admin oder aus einer Sicherung. Wer später nachlesen will, findet nichts mehr.`, { ja: "⏳ Ja, einschalten", nein: "Abbrechen" }))) return melde("✋ Selbstlöschen bleibt, wie es war");
   // 2.168.0 KC-CLUB-SELBSTLOESCHEN-ALT (Wunsch Hansi): beim Einschalten fragen, ob auch die eigenen bisherigen Nachrichten verschwinden sollen
   const meineDa = std > 0 && (CHAT?.nachrichten || []).some((m) => m.eigen);
   const auchMeineAlten = meineDa ? await frage(`⏳ Sollen auch deine bisherigen Nachrichten in diesem Chat nach ${slText(std)} verschwinden?\n\nDas gilt nur für deine eigenen Nachrichten – die der anderen bleiben stehen. Gelöscht wird bei allen und kann nicht rückgängig gemacht werden.`, { ja: "🗑️ Ja, meine auch", nein: "Nein, nur neue" }) : false;

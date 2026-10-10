@@ -1,10 +1,13 @@
 # Änderungen
 
-## 2.218.0 – 2026-10-10 – 🧑‍🍳👑 Fang den Koch und Doppelkopf gegen Mitglieder
+## 2.219.0 – 2026-10-10 – 🧑‍🍳👑 Fang den Koch und Doppelkopf gegen Mitglieder
 🧑‍🍳 Fang den Koch gegen ein Mitglied: Gerichte und Länge beim Herausfordern wählen; der Server würfelt, mischt, stellt die 🧪 Hygienefrage und prüft jeden Schritt; fremde Handkarten bleiben verdeckt (KC-CLUB-FDK-MG)
 👑 Doppelkopf gegen ein Mitglied: ihr zwei sitzt euch gegenüber, zwei Computer-Köche spielen mit; Hochzeit/still allein für jeden; fremde Hände verlässt nie den Server (KC-CLUB-DK-MG)
 📅 Wie bei allen Partien: nicht online → Terminanfrage, Revanche, Aufgeben, Pokal und Rangliste
-🗄️ Datenbank: Migration 20261010_kc_club_v2216_fdk_dk_mitglieder.sql (zwei Spalten, Prüfregeln) – vor dem Herausfordern einspielen
+🗄️ Datenbank: Migration 20261010_kc_club_v2219_fdk_dk_mitglieder.sql (zwei Spalten, Prüfregeln) – vor dem Herausfordern einspielen
+
+## 2.218.0 – 2026-10-10 – ⚠️ Warnung beim Selbstlöschen
+⚠️ Wer Selbstlöschen einschaltet, wird jetzt deutlich gewarnt: Die Nachrichten verschwinden auf allen Geräten und können nicht wiederhergestellt werden
 
 ## 2.217.0 – 2026-10-10 – 📝 Wunschzeiten unter Dienstpläne
 📝 Unter 🗓️ Dienstpläne stehen jetzt auch die abgegebenen Wunschzeiten (Kann, Wunsch, Wenn nötig, Sperre) – deutlich als „unter Vorbehalt“ markiert, bis der Dienstplan veröffentlicht ist

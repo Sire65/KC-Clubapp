@@ -1,4 +1,4 @@
--- KC-CLUB-FDK-MG + KC-CLUB-DK-MG (2.216.0): Probelauf der Migration (läuft in einer Transaktion, die am Ende absichtlich abbricht → nichts bleibt).
+-- KC-CLUB-FDK-MG + KC-CLUB-DK-MG (2.219.0): Probelauf der Migration (läuft in einer Transaktion, die am Ende absichtlich abbricht → nichts bleibt).
 do $$
 declare v_alt int; v_fdk uuid; v_dk uuid; v_falsch text := 'ok';
 begin

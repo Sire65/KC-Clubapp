@@ -1,4 +1,4 @@
--- KC Club-App – Version 2.216.0
+-- KC Club-App – Version 2.219.0
 -- KC-CLUB-FDK-MG + KC-CLUB-DK-MG (Wunsch Hansi „auch gegen Mitglieder mit Terminabfrage“): Fang den Koch und Doppelkopf
 -- zwischen zwei Mitgliedern in kc_club_spiele.
 --   spiel 'fdk': groesse 24 (Felder), brett = 'fdk' (Platzhalter), fdk = Spielstand (Bons, Karten, Vorräte, Verlauf).

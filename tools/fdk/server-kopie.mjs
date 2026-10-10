@@ -1,4 +1,4 @@
-// KC-CLUB-FDK-MG (2.216.0): erzeugt supabase/functions/kc-club/fdk.js aus den Fang-den-Koch-Regeln in app.js.
+// KC-CLUB-FDK-MG (2.219.0): erzeugt supabase/functions/kc-club/fdk.js aus den Fang-den-Koch-Regeln in app.js.
 // Eine Quelle (app.js) – der Server bekommt eine wörtliche Kopie; tests/app-vertrag.test.mjs prüft, dass beide gleich sind.
 // Aufruf: node tools/fdk/server-kopie.mjs
 import fs from "node:fs";

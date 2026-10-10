@@ -7450,7 +7450,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const c = server.slice(server.indexOf('case "chat_selbstloeschen": {'), server.indexOf('case "nachricht_bearbeiten": {'));
   assert.ok(/if \(std && p\.auchMeineAlten === true\)/.test(c) && /\.eq\("thread_id", id\)\.eq\("sender_person_id", ich\.person_id\)/.test(c), "nur eigene Nachrichten, nur auf ausdrücklichen Wunsch");
   assert.ok(/ids\.filter\(\(x: string\) => !hat\.has\(x\)\)/.test(c) && /loescht_am: bis/.test(c), "schon gesetzte Abläufe bleiben, Ablauf ab jetzt");
-  const k = html.slice(html.indexOf("async function slGewaehlt("), html.indexOf("async function slGewaehlt(") + 1500);
+  const k = html.slice(html.indexOf("async function slGewaehlt("), html.indexOf("async function slGewaehlt(") + 2400);
   assert.ok(/const meineDa = std > 0 && \(CHAT\?\.nachrichten \|\| \[\]\)\.some\(\(m\) => m\.eigen\);/.test(k) && /await frage\(/.test(k) && /die der anderen bleiben stehen/.test(k) && /auchMeineAlten: true/.test(k), "App fragt nur, wenn es eigene Nachrichten gibt");
 }
 // 2.168.0 KC-CLUB-ARCHIV-MENUE (Wunsch Hansi „rechte Maustaste: ausschneiden, kopieren, löschen, per E-Mail, speichern …“)
@@ -7913,14 +7913,14 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/const DPW_ARTEN = \{ preferred: \["⭐", "Wunsch"[^}]*available: \["✅", "Kann"[^}]*if_needed: \["🟡", "Wenn nötig"[^}]*unavailable: \["⛔", "Sperre"/.test(html), "alle vier Arten");
   assert.ok(/Abgegebene Wunschzeiten – unter Vorbehalt/.test(html) && /noch kein Dienstplan/.test(html) && /\.dpw-t \{[^}]*dashed/.test(html), "Hinweis „unter Vorbehalt“, gestrichelt");
 }
-// 2.218.0 KC-CLUB-FDK-MG + KC-CLUB-DK-MG: Fang den Koch und Doppelkopf auch gegen Mitglieder (mit Terminanfrage wie alle Partien)
+// 2.219.0 KC-CLUB-FDK-MG + KC-CLUB-DK-MG: Fang den Koch und Doppelkopf auch gegen Mitglieder (mit Terminanfrage wie alle Partien)
 {
   const fdkKopie = lies("supabase/functions/kc-club/fdk.js"), a = programm.indexOf("const FDK_KEY = "), b = programm.indexOf("// ----- FDK Regeln Ende -----", a);
   assert.ok(a > 0 && b > a && fdkKopie.includes(programm.slice(a, b).trimEnd()), "fdk.js weicht von app.js ab – node tools/fdk/server-kopie.mjs");
   const dkKopie = lies("supabase/functions/kc-club/doppelkopf.js"), c = programm.indexOf("const DK_TRUMPF = "), d = programm.indexOf("// ----- DK Regeln Ende -----", c);
   assert.ok(c > 0 && d > c && dkKopie.includes(programm.slice(c, d).trimEnd()), "doppelkopf.js weicht von app.js ab – node tools/dk/server-kopie.mjs");
   assert.ok(/from "\.\/fdk\.js"; \/\/ KC-CLUB-FDK-MG/.test(server) && /from "\.\/doppelkopf\.js"; \/\/ KC-CLUB-DK-MG/.test(server), "Server nutzt die Kopien");
-  const mig = lies("supabase/migrations/20261010_kc_club_v2216_fdk_dk_mitglieder.sql");
+  const mig = lies("supabase/migrations/20261010_kc_club_v2219_fdk_dk_mitglieder.sql");
   assert.ok(/add column if not exists fdk jsonb/.test(mig) && /add column if not exists dk jsonb/.test(mig) && /spiel in \('ttt', 'schach', 'bsk', 'kt', 'mae', 'fdk', 'dk'\)/.test(mig) && /\(spiel = 'fdk' and groesse = 24\)/.test(mig) && /\(spiel = 'dk' and brett = 'dk' and dk is not null/.test(mig) && /\(spiel = 'mae' and brett = 'mae' and mae is not null/.test(mig), "Migration erweitert nur die Prüfregeln");
   assert.ok(/SPIEL_ARTEN = \["ttt", "schach", "bsk", "kt", "mae", "fdk", "dk"\]/.test(server) && /const SPIEL_GROESSE: Record<string, number> = \{ schach: 8, bsk: 32, kt: 12, mae: 4, fdk: 24, dk: 4 \}/.test(server), "Spielarten + Größen");
   const zug = server.slice(server.indexOf('case "spiel_zug": {'), server.indexOf('case "spiel_aufgeben": {'));
@@ -7954,4 +7954,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
     while (z.phase !== "ende") if (DK.dkSpielen(z, z.amZug, DK.dkComputerKarte(z, z.amZug, "mittel"))) DK.dkStichAbschliessen(z);
     const e = DK.dkErgebnis(z, ["Du", "Erika", "Berta", "Paul"]); assert.equal(e.reAug + e.koAug, 240, "240 Augen"); assert.equal(e.punkte.reduce((x, y) => x + y, 0), 0, "Punkte gleichen sich aus");
   }
+}
+
+// 2.218.0 KC-CLUB-SELBSTLOESCHEN-WARNUNG (Wunsch Hansi): vor dem Einschalten deutlich warnen – gelöscht ist gelöscht, keine Wiederherstellung
+{
+  const f = html.slice(html.indexOf("async function slGewaehlt("), html.indexOf("async function slGewaehlt(") + 2400);
+  assert.ok(/if \(std > 0 && std !== slChat\(\) && !\(await frage\(`⚠️ Selbstlöschen wirklich einschalten\?[^`]*NICHT wiederhergestellt/.test(f), "Rückfrage beim Einschalten");
+  assert.ok(/class="sl-warnung">⚠️ <b>Gelöscht ist gelöscht:<\/b>/.test(html) && /\.sl-warnung \{/.test(html), "Warnung im Auswahlfenster");
 }
