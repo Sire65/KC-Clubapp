@@ -1,11 +1,20 @@
 {
-  "version": "2.218.0",
+  "version": "2.219.0",
   "datum": "2026-10-10",
   "stufe": "RC",
   "neu": [
-    "🔧 Kleine Systemverbesserungen"
+    "🧑‍🍳 Fang den Koch jetzt auch gegen Mitglieder – mit Terminanfrage",
+    "👑 Doppelkopf gegen Mitglieder: ihr zwei + zwei Computer-Köche"
   ],
   "verlauf": [
+    {
+      "version": "2.219.0",
+      "datum": "2026-10-10",
+      "neu": [
+        "🧑‍🍳 Fang den Koch jetzt auch gegen Mitglieder – mit Terminanfrage",
+        "👑 Doppelkopf gegen Mitglieder: ihr zwei + zwei Computer-Köche"
+      ]
+    },
     {
       "version": "2.218.0",
       "datum": "2026-10-10",

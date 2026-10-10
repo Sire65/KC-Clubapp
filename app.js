@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.218.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.219.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1627,6 +1627,7 @@ const HILFE = [
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
   { id: "ttt_toene", thema: "club", sym: "🔔", t: "Spiele mit Tönen", x: "Unter jedem Spiel gibt es den Knopf <b>„🔔 Töne an / 🔕 aus“</b>. Dann klingt jeder Zug, jeder Wurf und jede Karte – und am Ende hörst du, ob du gewonnen, verloren oder unentschieden gespielt hast. Der Schalter gilt für alle Spiele, nur auf diesem Gerät.", zeig: () => { zeige("spiele"); spArtWahl("ttt"); }, seit: "2.23.8" },
+  { id: "spiele_fdk_dk_mg", thema: "club", sym: "🧑‍🍳", t: "Fang den Koch und Doppelkopf gegen Mitglieder", x: "Unter 🎲 Spiele → Fang den Koch oder Doppelkopf → <b>👥 Gegen Mitglieder</b>: jemanden herausfordern – ist die Person nicht online, gleich einen <b>📅 Termin anfragen</b>. Bei Fang den Koch wählst du Gerichte und Länge, beim Doppelkopf sitzt ihr euch gegenüber und zwei Computer-Köche spielen mit. Der Server würfelt und mischt – niemand kann schummeln.", zeig: () => { zeige("spiele"); spArtWahl("fdk"); }, seit: "2.219.0" },
   { id: "spiele_leiste", thema: "club", sym: "🎲", t: "Gleiche Knöpfe in allen Spielen", x: "Alle Spiele haben unten dieselbe Knopfleiste, ordentlich im Raster: <b>↺ Neues Spiel</b>, <b>✖ Abbrechen</b> (zählt nicht, dein Spielstand bleibt), <b>🔔 Töne</b> und <b>🔊 Ansage</b> an oder aus. Oben wählst du <b>gegen den Computer</b> oder <b>gegen Mitglieder</b>.", zeig: () => { zeige("spiele"); }, seit: "2.215.0" },
   { id: "inkognito_chat", thema: "privat", sym: "🕶️", t: "Inkognito und schreiben (Admin)", x: "Bist du <b>inkognito</b> und beginnst einen Chat mit einem Mitglied (oder schreibst in einem Chat), fragt die App einmal: <b>„Möchtest du Inkognito jetzt aufheben?“</b> – sonst merkt dein Gegenüber, dass du schreibst, obwohl du nicht als anwesend angezeigt wirst. „🕶️ Inkognito bleibt“ lässt alles, wie es ist.", nur: () => !!ICH?.admin, seit: "2.153.0" },
   { id: "inkognito_blinkt", thema: "privat", sym: "🕶️", t: "Die Brille blinkt rot", x: "Solange <b>Inkognito</b> an ist, blinkt die Brille oben rot und dein <b>Status-Feld pulsiert gelb–rot</b> – damit du nicht vergisst, dass dich gerade niemand online sieht. Antippen der Brille schaltet Inkognito wieder aus.", nur: () => !!ICH?.admin, zeig: () => zeige("start"), seit: "2.23.8" },
@@ -5340,7 +5341,7 @@ const SP_KEY = "kc_club_spiel_pc", SP_TAKT_MS = 3000;
 let SP = { tab: "pc", art: null, liste: null, offen: null, takt: null, laedt: false, ch: null };
 const SP_ARTEN = [["ttt", "❌⭕", "Tic-Tac-Toe", "🍅 gegen 🥦 · 3 × 3 oder 4 × 4"], ["schach", "♟️", "Schach", "Die Küchenbrigade tritt an"], ["bsk", "🃏", "Bauernskat", "Zu zweit · französisches Blatt"], ["kt", "🔪", "Küchenterror", "Küchenquiz auf Zeit · 10 Sekunden je Frage"], ["mae", "🎲", "Mensch ärgere dich nicht", "Würfeln, rauswerfen, ins Ziel · bis zu 4 Farben"], ["fdk", "🧑‍🍳", "Fang den Koch", "Küchenrallye · Zutaten holen, kochen, klingeln"], ["dk", "👑", "Doppelkopf", "Zu viert · mit drei Computer-Köchen"]];
 // KC-CLUB-SCHACH (2.8.0): Spielauswahl oben (gilt für „gegen den Computer“ und als Vorschlag beim Herausfordern)
-function spArtWahl(a) { SP.pause = false; SP.nachholen = null; SP.art = ["schach", "bsk", "kt", "mae", "fdk", "dk"].includes(a) ? a : "ttt"; if (SP.art === "fdk" || SP.art === "dk") SP.tab = "pc"; /* FDK Stufe 1: nur gegen den Computer */ if (SP.offen) SP.offen = null; spZeigen(); if (SP.tab === "mg") spLaden(true); }
+function spArtWahl(a) { SP.pause = false; SP.nachholen = null; SP.art = ["schach", "bsk", "kt", "mae", "fdk", "dk"].includes(a) ? a : "ttt"; /* KC-CLUB-FDK-MG / KC-CLUB-DK-MG (2.219.0): jetzt auch gegen Mitglieder */ if (SP.offen) SP.offen = null; spZeigen(); if (SP.tab === "mg") spLaden(true); }
 // KC-CLUB-SPIELE-PAUSE (2.18.0, Wunsch Hansi): je Spiel unten ein Umschalter ⏸ Pause ↔ ▶ Weiter.
 // Gegen den Computer: Spiel steht still – Computer zieht nicht, Küchenterror-Uhr hält an, das Brett/die Frage ist verschwommen.
 // Weiter: Küchenterror gibt nochmal 3-2-1 Lesezeit, dann läuft die restliche Zeit weiter. Gegen Mitglieder (Küchenterror) misst der
@@ -5439,7 +5440,6 @@ function spZeigen() {
   setTimeout(spPauseZeigen, 0); // 2.18.0
   const uebersicht = !SP.art && !SP.offen;
   ["spEdition", "spTabs"].forEach((id) => $(id).classList.toggle("versteckt", uebersicht));
-  if (!uebersicht) $("spTabs").classList.toggle("versteckt", (SP.art === "fdk" || SP.art === "dk") && !SP.offen); // 2.62.0 Doppelkopf: Stufe 1 nur mit Computern // KC-CLUB-FDK Stufe 1: nur gegen den Computer
   if (uebersicht) { clearInterval(SP.takt); SP.takt = null; return spKachelnZeigen(); }
   document.querySelectorAll("#spTabs button").forEach((b) => b.classList.toggle("an", b.dataset.t === SP.tab));
   const art = SP.tab === "mg" && SP.offen ? SP.offen.spiel : SP.art;
@@ -5549,12 +5549,12 @@ function spPokalHtml(L) {
     <p class="hinweis" style="margin:6px 0 0">Sieg = 2 Punkte, Unentschieden = 1 Punkt. Nur Partien gegen Mitglieder zählen.</p></div>`;
 }
 // KC-CLUB-SPIELE-STANDARD-AN (2.22.13, Wunsch Hansi): nichts eingestellt = für alle Spiele herausforderbar (eigenes „Aus“ bleibt aus)
-const SP_ALLE_ARTEN = ["ttt", "schach", "bsk", "kt", "mae"];
+const SP_ALLE_ARTEN = ["ttt", "schach", "bsk", "kt", "mae", "fdk", "dk"]; // 2.219.0: + Fang den Koch, Doppelkopf
 const spMeineArten = () => { const w = INIT?.einstellungen?.spiele; if (!w) return [...SP_ALLE_ARTEN]; return Array.isArray(w?.spiele) && w.spiele.length ? w.spiele : ["ttt", "schach"]; };
 const spHerausAn = () => { const w = INIT?.einstellungen?.spiele; return w ? w.herausforderung === true : true; };
 // beim ersten Mal sagen, dass es an ist und wo man es abstellt (je Gerät einmal; nicht, wer selbst schon etwas eingestellt hat)
 const SP_HINWEIS = "kc_club_sp_standard_hinweis";
-const spHinweisText = "🎲 Herausforderungen sind jetzt bei allen eingeschaltet – andere Mitglieder können dich zu Tic-Tac-Toe, Schach, Bauernskat, Küchenterror und Mensch ärgere dich nicht herausfordern. Möchtest du das nicht, kannst du es jederzeit abstellen: ⚙️ Einstellungen → „Privatsphäre“ → „🎲 Andere dürfen mich zu Spielen herausfordern“.";
+const spHinweisText = "🎲 Herausforderungen sind jetzt bei allen eingeschaltet – andere Mitglieder können dich zu Tic-Tac-Toe, Schach, Bauernskat, Küchenterror, Mensch ärgere dich nicht, Fang den Koch und Doppelkopf herausfordern. Möchtest du das nicht, kannst du es jederzeit abstellen: ⚙️ Einstellungen → „Privatsphäre“ → „🎲 Andere dürfen mich zu Spielen herausfordern“.";
 const spHinweisFaellig = () => !INIT?.einstellungen?.spiele && lsLesen(SP_HINWEIS) !== "1";
 async function spHinweisEinmal() {
   if (!spHinweisFaellig()) return;
@@ -5573,30 +5573,31 @@ function spEinstZeigen() {
   const an = spHerausAn(), l = spMeineArten(); // 2.22.13: Standard an
   if ($("setSpiele")) $("setSpiele").checked = an;
   if ($("setSpieleArten")) { $("setSpieleArten").classList.toggle("versteckt", !an);
-    $("setSpieleArten").innerHTML = [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"], ["kt", "🔪 Küchenterror"], ["mae", "🎲 Mensch ärgere dich nicht"]].map(([a, t]) => `<button class="knopf klein${l.includes(a) ? " haupt" : ""}" aria-pressed="${l.includes(a)}" onclick="spArtSchalten('${a}')">${l.includes(a) ? "✅" : "⬜"} ${t}</button>`).join(""); }
+    $("setSpieleArten").innerHTML = [["ttt", "❌⭕ Tic-Tac-Toe"], ["schach", "♟️ Schach"], ["bsk", "🃏 Bauernskat"], ["kt", "🔪 Küchenterror"], ["mae", "🎲 Mensch ärgere dich nicht"], ["fdk", "🧑‍🍳 Fang den Koch"], ["dk", "👑 Doppelkopf"]].map(([a, t]) => `<button class="knopf klein${l.includes(a) ? " haupt" : ""}" aria-pressed="${l.includes(a)}" onclick="spArtSchalten('${a}')">${l.includes(a) ? "✅" : "⬜"} ${t}</button>`).join(""); }
 }
 async function spHerausfordernBlatt(pid) {
   if (!SP.liste) await spLaden(true);
   const alle = SP.liste?.bereit || [];
   if (!alle.length) return melde("Noch niemand hat „Herausfordern erlauben“ eingeschaltet – frag doch mal im Club 🙂");
-  let gr = 3, art = SP.art || "ttt", stufe = "mittel", uhr = "0", maePc = "ja"; // 2.26.0: Mensch ärgere dich nicht – freie Farben spielt der Computer // 2.10.0: auch Bauernskat; 2.16.0: Zeitstufe für Küchenterror; 2.23.38: Schachuhr
+  let gr = 3, art = SP.art || "ttt", stufe = "mittel", uhr = "0", maePc = "ja", fdkStufe = FDKP.stufe || "leicht", fdkAnzahl = String(FDKP.anzahl || 2); // 2.219.0: Fang den Koch – Gerichte und Länge // 2.26.0: Mensch ärgere dich nicht – freie Farben spielt der Computer // 2.10.0: auch Bauernskat; 2.16.0: Zeitstufe für Küchenterror; 2.23.38: Schachuhr
   const f = blattAuf("spHerausBlatt", `${einwHtml("b-sp-herausfordern")}<div id="spHerausInhalt"></div><button class="knopf" onclick="fensterZu(document.getElementById('spHerausBlatt'))">Abbrechen</button>`);
   const zeichnen = () => {
     const b = alle.filter((m) => (m.spiele || ["ttt"]).includes(art));
     $("spHerausInhalt").innerHTML = `<h3 style="margin:0">🎲 Herausfordern</h3>
-      <div class="kt-wahl sp-spielwahl">${spWahl("Spiel", art, [["ttt", "<span class=\"kt-emo\">❌⭕</span>Tic-Tac-Toe"], ["schach", "<span class=\"kt-emo\">♟️</span>Schach"], ["bsk", "<span class=\"kt-emo\">🃏</span>Bauernskat"], ["kt", "<span class=\"kt-emo\">🔪</span>Küchen&shy;terror"], ["mae", "<span class=\"kt-emo\">🎲</span>Mensch ärgere dich nicht"]], "spHerausArt")}</div>
+      <div class="kt-wahl sp-spielwahl">${spWahl("Spiel", art, [["ttt", "<span class=\"kt-emo\">❌⭕</span>Tic-Tac-Toe"], ["schach", "<span class=\"kt-emo\">♟️</span>Schach"], ["bsk", "<span class=\"kt-emo\">🃏</span>Bauernskat"], ["kt", "<span class=\"kt-emo\">🔪</span>Küchen&shy;terror"], ["mae", "<span class=\"kt-emo\">🎲</span>Mensch ärgere dich nicht"], ["fdk", "<span class=\"kt-emo\">🧑‍🍳</span>Fang den Koch"], ["dk", "<span class=\"kt-emo\">👑</span>Doppel&shy;kopf"]], "spHerausArt")}</div>
+      ${art === "fdk" ? `<div class="kt-wahl">${spWahl("Gerichte", fdkStufe, [["leicht", "<span class=\"kt-emo\">😊</span>Leicht"], ["mittel", "<span class=\"kt-emo\">🙂</span>Mittel"], ["schwer", "<span class=\"kt-emo\">😎</span>Schwer"]], "spHerausFdkStufe")}</div>${spWahl("Länge", fdkAnzahl, [["1", "1 Gericht"], ["2", "2 Gerichte"], ["3", "3 Gerichte"]], "spHerausFdkAnzahl")}` : ""}
       ${art === "mae" ? `<div class="kt-wahl">${spWahl("Mitspieler", maePc, [["ja", "<span class=\"kt-emo\">👥🤖🤖</span>Ihr zwei + 2 Computer"], ["nein", "<span class=\"kt-emo\">👥</span>Nur ihr zwei"]], "spHerausMaePc")}</div>` : ""}
       ${art === "ttt" ? spWahl("Feld", String(gr), [["3", "3 × 3"], ["4", "4 × 4"]], "spHerausGroesse") : ""}
       ${art === "kt" ? spWahl("Zeit", stufe, [["leicht", "😊 20 s"], ["mittel", "🙂 15 s"], ["schwer", "😎 10 s"]], "spHerausStufe") : ""}
       ${art === "schach" ? spWahl("Uhr", uhr, [["0", "📨 Fern"], ...SCH_UHR_MIN.map((m) => [String(m), `⏱️ ${m}′`])], "spHerausUhr") : ""}
-      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? ${art === "mae" ? `Du spielst 🔴 Rot und fängst an, dein Gegenüber spielt 🟢 Grün.${maePc === "ja" ? " 🔵 Blau und 🟡 Gelb spielt der Computer mit – das macht es spannender." : ""} Der Server würfelt für alle – niemand kann schummeln.` : art === "bsk" ? "Du bist Vorhand und sagst Trumpf an. Die Karten mischt der Server – niemand sieht fremde Karten." : art === "kt" ? "12 Küchenfragen in 4 Runden, ihr spielt abwechselnd je eine Runde. Die Zeit je Frage wählst du oben – schnell und richtig gibt die meisten Punkte. Die letzte ist eine 🎖️ Meisterfrage und zählt doppelt. Du fängst an." : `Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).${art === "schach" ? (uhr === "0" ? " 📨 Fernpartie: jeder zieht, wann er Zeit hat." : ` ⏱️ Live mit Schachuhr: ${uhr} Minuten je Spieler – am besten, wenn ihr beide gerade Zeit habt.`) : ""}`}</p>
+      <p class="hinweis" style="margin:0">Wen möchtest du herausfordern? ${art === "mae" ? `Du spielst 🔴 Rot und fängst an, dein Gegenüber spielt 🟢 Grün.${maePc === "ja" ? " 🔵 Blau und 🟡 Gelb spielt der Computer mit – das macht es spannender." : ""} Der Server würfelt für alle – niemand kann schummeln.` : art === "fdk" ? "Ihr bekommt gleich schwere Gerichte – wer schneller und sauberer kocht, gewinnt. Du hast die rote Mütze und fängst an. Der Server würfelt und mischt die Karten – niemand kann schummeln." : art === "dk" ? "Ihr zwei sitzt euch gegenüber, die anderen beiden Plätze spielt der Computer. Wer mit wem spielt, zeigt sich erst mit der ♣ Dame. Wer von euch mehr Punkte holt, gewinnt." : art === "bsk" ? "Du bist Vorhand und sagst Trumpf an. Die Karten mischt der Server – niemand sieht fremde Karten." : art === "kt" ? "12 Küchenfragen in 4 Runden, ihr spielt abwechselnd je eine Runde. Die Zeit je Frage wählst du oben – schnell und richtig gibt die meisten Punkte. Die letzte ist eine 🎖️ Meisterfrage und zählt doppelt. Du fängst an." : `Du fängst an (${art === "schach" ? "Weiß" : SP_ZEICHEN.x}).${art === "schach" ? (uhr === "0" ? " 📨 Fernpartie: jeder zieht, wann er Zeit hat." : ` ⏱️ Live mit Schachuhr: ${uhr} Minuten je Spieler – am besten, wenn ihr beide gerade Zeit habt.`) : ""}`}</p>
       ${(() => {
         // KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): sofort herausfordern nur, wer gerade online ist; sonst Person suchen → Terminanfrage
-        const sym = art === "schach" ? "♟️" : art === "bsk" ? "🃏" : art === "kt" ? "🔪" : "🎲";
+        const sym = art === "schach" ? "♟️" : art === "bsk" ? "🃏" : art === "kt" ? "🔪" : art === "fdk" ? "🧑‍🍳" : art === "dk" ? "👑" : "🎲";
         const on = b.filter((m) => ONL?.ids?.has(m.person_id)), weg = b.filter((m) => !ONL?.ids?.has(m.person_id));
         const q = spHerausSuche.trim().toLowerCase(), treffer = q ? weg.filter((m) => m.name.toLowerCase().includes(q)) : [];
         const person = (m, knopf) => `<div class="zeile sp-wer${m.person_id === pid ? " an" : ""}">${kreis(MITGLIEDER?.find((x) => x.person_id === m.person_id) || {}, m.name, 36)}<b style="flex:1;text-align:left">${esc(m.name)}</b>${knopf}</div>`;
-        if (!b.length) return `<p class="hinweis">Für ${art === "schach" ? "Schach" : art === "bsk" ? "Bauernskat" : art === "kt" ? "Küchenterror" : art === "mae" ? "Mensch ärgere dich nicht" : "Tic-Tac-Toe"} hat sich noch niemand freigeschaltet.</p>`;
+        if (!b.length) return `<p class="hinweis">Für ${esc((SP_NAMEN[art] || "").replace(/^\S+ /, "")) || "Tic-Tac-Toe"} hat sich noch niemand freigeschaltet.</p>`;
         return `<b>🟢 Gerade online – sofort spielen</b>
           ${on.length ? on.map((m) => person(m, `<button class="knopf haupt klein" onclick="spHerausfordern('${m.person_id}')">${sym} Herausfordern</button>`)).join("") : '<p class="hinweis" style="margin:0">Gerade ist niemand online, der mitspielt.</p>'}
           ${weg.length ? `<b style="margin-top:8px;display:block">📅 Nicht online? Termin anfragen</b>
@@ -5606,7 +5607,9 @@ async function spHerausfordernBlatt(pid) {
   };
   let spHerausSuche = "";
   window.spHerausSuchen = (v) => { spHerausSuche = v; zeichnen(); const e = $("spHerausSucheFeld"); if (e) { e.focus(); e.setSelectionRange(v.length, v.length); } };
-  window.spHerausArt = (a) => { art = ["schach", "bsk", "kt", "mae"].includes(a) ? a : "ttt"; zeichnen(); };
+  window.spHerausArt = (a) => { art = ["schach", "bsk", "kt", "mae", "fdk", "dk"].includes(a) ? a : "ttt"; zeichnen(); };
+  window.spHerausFdkStufe = (w) => { fdkStufe = ["leicht", "mittel", "schwer"].includes(w) ? w : "leicht"; zeichnen(); };
+  window.spHerausFdkAnzahl = (w) => { fdkAnzahl = ["1", "2", "3"].includes(String(w)) ? String(w) : "2"; zeichnen(); };
   window.spHerausMaePc = (w) => { maePc = w === "nein" ? "nein" : "ja"; zeichnen(); };
   window.spHerausGroesse = (g) => { gr = Number(g) === 4 ? 4 : 3; zeichnen(); };
   window.spHerausStufe = (w) => { stufe = KT_ZEIT[w] ? w : "mittel"; zeichnen(); };
@@ -5614,12 +5617,12 @@ async function spHerausfordernBlatt(pid) {
   zeichnen();
   // nicht online: Herausforderung anlegen und gleich den Termin vorschlagen (vorhandene Terminanfrage für Partien)
   window.spHerausTermin = async (an) => {
-    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}), ...(art === "schach" && uhr !== "0" ? { uhr: Number(uhr) } : {}), ...(art === "mae" ? { computer: maePc === "ja" } : {}) }, { warten: true }); f.remove();
+    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}), ...(art === "schach" && uhr !== "0" ? { uhr: Number(uhr) } : {}), ...(art === "mae" ? { computer: maePc === "ja" } : {}), ...(art === "fdk" ? { stufe: fdkStufe, anzahl: Number(fdkAnzahl) } : {}) }, { warten: true }); f.remove();
       SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); spTerminBlatt(r.spiel.id); }
     catch (e) { if (!(await spSchonOffen(e, an, f, true))) meldeFehler(e); }
   };
   window.spHerausfordern = async (an) => {
-    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}), ...(art === "schach" && uhr !== "0" ? { uhr: Number(uhr) } : {}), ...(art === "mae" ? { computer: maePc === "ja" } : {}) }, { warten: true }); f.remove(); melde(`🎲 Herausforderung an ${r.spiel.gegner.vorname} geschickt`); SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen(); }
+    try { const r = await api("spiel_herausfordern", { an, groesse: gr, spiel: art, ...(art === "kt" ? { stufe } : {}), ...(art === "schach" && uhr !== "0" ? { uhr: Number(uhr) } : {}), ...(art === "mae" ? { computer: maePc === "ja" } : {}), ...(art === "fdk" ? { stufe: fdkStufe, anzahl: Number(fdkAnzahl) } : {}) }, { warten: true }); f.remove(); melde(`🎲 Herausforderung an ${r.spiel.gegner.vorname} geschickt`); SP.tab = "mg"; SP.offen = null; SP.art = art; await spLaden(true); if (aktuelleAnsicht !== "spiele") zeige("spiele"); else spZeigen(); }
     catch (e) { if (!(await spSchonOffen(e, an, f, false))) meldeFehler(e); }
   };
 }
@@ -5635,7 +5638,7 @@ async function spSchonOffen(e, an, f, mitTermin) {
   return true;
 }
 // KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): bin ich online und jemand fordert mich heraus, erscheint sofort ein Fenster (jede Anfrage einmal)
-const SP_NAMEN = { ttt: "❌⭕ Tic-Tac-Toe", schach: "♟️ Schach", bsk: "🃏 Bauernskat", kt: "🔪 Küchenterror", mae: "🎲 Mensch ärgere dich nicht" };
+const SP_NAMEN = { ttt: "❌⭕ Tic-Tac-Toe", schach: "♟️ Schach", bsk: "🃏 Bauernskat", kt: "🔪 Küchenterror", mae: "🎲 Mensch ärgere dich nicht", fdk: "🧑‍🍳 Fang den Koch", dk: "👑 Doppelkopf" };
 function spielLive(liste) {
   const a = (liste || []).find((x) => !ONL.erledigt.has("s" + x.id)); if (!a || document.getElementById("spLiveBlatt")) return;
   ONL.erledigt.add("s" + a.id);
@@ -5665,6 +5668,8 @@ async function spOeffnen(id) {
 }
 function spSpielZeigen() {
   if (SP.offen.spiel === "kt") { ktSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; }
+  if (SP.offen.spiel === "fdk") { fdkSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; } // KC-CLUB-FDK-MG
+  if (SP.offen.spiel === "dk") { dkSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; } // KC-CLUB-DK-MG
   if (SP.offen.spiel === "mae") { maeSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; } // KC-CLUB-MAE
   if (SP.offen.spiel === "bsk") { bskSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; }
   if (SP.offen.spiel === "schach") { schSpielZeigen(SP.offen); if (SP.offen.status === "laeuft" || SP.offen.status === "angefragt") SP.takt = setInterval(spNachsehen, SP_TAKT_MS); return; }
@@ -5748,20 +5753,20 @@ function dkStichGewinner(stich) { // stich = [{s, k}] in Spielreihenfolge – gl
     if ((fx === "T" && fb !== "T") || (fx === fb && dkRang(x.k) > dkRang(best.k))) best = x; }
   return best.s;
 }
-function dkNeu(geber) {
+function dkNeu(geber, menschen = [0]) { // KC-CLUB-DK-MG: menschen = Plätze, an denen Menschen sitzen (gegen Mitglieder 0 und 2)
   const d = []; for (const f of BSK_FARBEN) for (const w of ["A", "10", "K", "D", "B", "9"]) for (const n of [1, 2]) d.push(`${f}-${w}-${n}`); // 48 Karten
   for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; }
   const hand = [0, 1, 2, 3].map((s) => d.slice(s * 12, s * 12 + 12));
   const re = [0, 1, 2, 3].filter((s) => hand[s].some((k) => dkBasis(k) === "kr-D"));
   const z = { hand, geber, amZug: (geber + 1) % 4, stich: [], stiche: [[], [], [], []], letzter: null, phase: "spiel", re, solo: null, hochzeit: null, offen: [], sonder: [] };
-  // Beide ♣ Damen bei einem: Computer sagen Hochzeit an; du entscheidest selbst (Phase „vorbehalt“: 💍 Hochzeit oder 🤫 still allein)
-  if (re.length === 1) { if (re[0] === 0) z.phase = "vorbehalt"; else z.hochzeit = { von: re[0], partner: null }; }
+  // Beide ♣ Damen bei einem: Computer sagen Hochzeit an; ein Mensch entscheidet selbst (Phase „vorbehalt“: 💍 Hochzeit oder 🤫 still allein)
+  if (re.length === 1) { if (menschen.includes(re[0])) { z.phase = "vorbehalt"; z.braut = re[0]; } else z.hochzeit = { von: re[0], partner: null }; }
   return z;
 }
 // Hochzeit: wer von den anderen in den ersten 3 Stichen zuerst einen Stich macht, wird Partner (Re); sonst spielt die Braut allein
 function dkVorbehalt(z, art) {
   if (z.phase !== "vorbehalt") return;
-  if (art === "hochzeit") z.hochzeit = { von: 0, partner: null }; else z.solo = 0;
+  const s = z.braut ?? 0; if (art === "hochzeit") z.hochzeit = { von: s, partner: null }; else z.solo = s;
   z.phase = "spiel";
 }
 const dkIstRe = (z, s) => z.re.includes(s);
@@ -5788,7 +5793,7 @@ function dkStichAbschliessen(z) {
   z.letzter = { stich: z.stich, gewinner: g, augen: aug }; z.stich = []; z.amZug = g;
   if (letzter) z.phase = "ende";
 }
-function dkErgebnis(z) {
+function dkErgebnis(z, namen = DK_NAMEN) {
   const reS = [0, 1, 2, 3].filter((s) => dkIstRe(z, s)), koS = [0, 1, 2, 3].filter((s) => !dkIstRe(z, s));
   const reAug = reS.reduce((a, s) => a + dkSumme(z.stiche[s]), 0), koAug = 240 - reAug;
   const reStiche = reS.reduce((a, s) => a + z.stiche[s].length, 0) / 4, koStiche = 12 - reStiche;
@@ -5798,7 +5803,7 @@ function dkErgebnis(z) {
   if (verlStiche === 0) zeilen.push(["Schwarz", 1]);
   if (!reGew && z.solo == null) zeilen.push(["Gegen die Alten", 1]);
   const name = { doppelkopf: "Doppelkopf", fuchs: "Fuchs gefangen", karlchen: "Karlchen" };
-  for (const x of z.sonder) zeilen.push([`${name[x.art]} (${DK_NAMEN[x.s]})`, dkIstRe(z, x.s) === reGew ? 1 : -1]);
+  for (const x of z.sonder) zeilen.push([`${name[x.art]} (${namen[x.s]})`, dkIstRe(z, x.s) === reGew ? 1 : -1]);
   const wert = zeilen.reduce((a, [, p]) => a + p, 0), punkte = [0, 0, 0, 0];
   for (const s of [0, 1, 2, 3]) { const gew = dkIstRe(z, s) === reGew; const faktor = z.solo === s ? 3 : 1; punkte[s] = (gew ? 1 : -1) * wert * faktor; }
   return { reS, koS, reAug, koAug, reGew, zeilen, wert, punkte };
@@ -5835,7 +5840,9 @@ function dkComputerKarte(z, s, staerke) {
   }
   return nachAugen(erl.filter((k) => dkBasis(k) !== "ka-A")).concat(nachAugen(erl))[0];
 }
+// ----- DK Regeln Ende -----
 // ----- Zustand, Anzeige -----
+let DK_MG = null; // KC-CLUB-DK-MG: beim Zeichnen einer Mitglieder-Partie die Namen am Tisch
 let DK = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(DK_KEY) || "null"); } catch {}
   return { staerke: "mittel", stand: [0, 0, 0, 0], spiele: 0, z: null, ...(w || {}), denkt: false, gewertet: w?.gewertet || false }; })();
 const dkMerken = () => { try { localStorage.setItem(DK_KEY, JSON.stringify({ staerke: DK.staerke, stand: DK.stand, spiele: DK.spiele, z: DK.z, gewertet: DK.gewertet })); } catch {} };
@@ -5854,7 +5861,7 @@ function dkParteiMarke(z, s) { // was ICH sehe: eigene Partei immer, andere erst
 }
 function dkPlatz(z, s) {
   const amZug = z.phase === "spiel" && z.amZug === s && !z.stich.some((x) => x.s === s);
-  return `<div class="dk-platz dk-p${s}${amZug ? " dran" : ""}"><b>${s ? "🤖 " : ""}${DK_NAMEN[s]}</b>${dkParteiMarke(z, s)}${s ? `<small>${z.hand[s].length} Karten</small>` : ""}<small>${z.stiche[s].length / 4} Stiche</small></div>`;
+  return `<div class="dk-platz dk-p${s}${amZug ? " dran" : ""}"><b>${DK_MG ? esc(DK_MG.namen[s]) : `${s ? "🤖 " : ""}${DK_NAMEN[s]}`}</b>${dkParteiMarke(z, s)}${s ? `<small>${z.hand[s].length} Karten</small>` : ""}<small>${z.stiche[s].length / 4} Stiche</small></div>`;
 }
 function dkPcZeigen() {
   bskBilderVorladen();
@@ -5885,6 +5892,54 @@ function dkPcZeigen() {
     </div>`;
   if (z.phase === "spiel" && !DK.denkt && !DK.wartet && (z.amZug !== 0 || z.stich.length === 4)) dkPcWeiterLaufen();
 }
+// ----- KC-CLUB-DK-MG (2.219.0, Wunsch Hansi „auch gegen Mitglieder mit Terminabfrage“): Doppelkopf mit einem Mitglied -----
+// Ihr zwei sitzt euch gegenüber, die beiden anderen Plätze spielt der Server-Computer. Wer mit wem spielt (Re/Kontra), zeigt sich wie
+// am echten Tisch erst mit der ♣ Dame. Die Hände der anderen schickt der Server nie. Gewonnen hat, wer von euch beiden mehr Punkte holt.
+const DKM = { id: null, n: null, sendet: false };
+function dkSpielZeigen(g) {
+  const z = g.dk; if (!z) { $("spInhalt").innerHTML = '<div class="karte hinweis">Wird geladen …</div>'; return; }
+  if (DKM.id !== g.id) { DKM.id = g.id; DKM.n = null; }
+  if (DKM.n != null && z.n !== DKM.n) spTon(g.status === "beendet" ? (g.ergebnis === "gewonnen" ? "sieg" : g.ergebnis === "verloren" ? "niederlage" : "remis") : "karte");
+  if (DKM.n !== z.n && g.ichDran) spSag("dk", z.phase === "vorbehalt" ? "Du hast beide Kreuz-Damen." : z.stich.length ? "Du bist dran." : "Du spielst aus.", `dkm:${g.id}:${z.n}`, true);
+  DKM.n = z.n;
+  DK_MG = { namen: z.namen };
+  try {
+    const ich = g.ichDran && g.status === "laeuft" && !DKM.sendet, erl = ich && z.phase === "spiel" && z.amZug === 0 ? dkErlaubt(z, 0) : [];
+    const stich = z.stich.length ? z.stich : z.letzter ? z.letzter.stich : [], pos = (s) => ["unten", "links", "oben", "rechts"][s];
+    let status;
+    if (z.phase === "ende") { const e = dkErgebnis(z, z.namen), gew = g.ergebnis === "gewonnen";
+      status = `<div class="sp-banner ${g.ergebnis === "remis" ? "remis" : gew ? "sieg" : "niederlage"}">${g.aufgegeben ? (gew ? `🏆 ${esc(g.gegner.vorname)} hat aufgegeben.` : "Du hast aufgegeben.") : g.ergebnis === "remis" ? `🤝 Gleich viele Punkte – ihr wart in einer Partei` : gew ? "🏆 Du hast gewonnen!" : `${esc(g.gegner.vorname)} hat gewonnen`} – ${e.reGew ? "Re" : "Kontra"} gewinnt<br><small>Re ${e.reAug} : ${e.koAug} Kontra</small></div>
+        <div class="dk-abrechnung">${e.zeilen.map(([t, p]) => `<div><span>${esc(t)}</span><b>${p > 0 ? "+" : ""}${p}</b></div>`).join("")}<div class="dk-summe"><span>Spielwert${z.solo != null ? " (Solo × 3)" : ""}</span><b>${e.wert}</b></div>
+        <div class="dk-punkte">${[0, 1, 2, 3].map((s) => `<span>${esc(z.namen[s])} <b class="${e.punkte[s] > 0 ? "plus" : e.punkte[s] < 0 ? "minus" : ""}">${e.punkte[s] > 0 ? "+" : ""}${e.punkte[s]}</b></span>`).join("")}</div></div>`; }
+    else if (g.status === "beendet") status = `<div class="sp-banner ${g.ergebnis === "gewonnen" ? "sieg" : "niederlage"}">${g.ergebnis === "gewonnen" ? `🏆 ${esc(g.gegner.vorname)} hat aufgegeben.` : "Du hast aufgegeben."}</div>`;
+    else if (g.status === "angefragt") status = `<div class="sp-status">⏳ Warte, bis ${esc(g.gegner.vorname)} annimmt …</div>`;
+    else if (z.phase === "vorbehalt") status = z.braut === 0 ? `<div class="sp-status sp-ichdran">Du hast beide ♣ Damen – wähle unten auf dem Tisch</div>` : `<div class="sp-status">⏳ ${esc(g.gegner.vorname)} überlegt …</div>`;
+    else status = `<div class="sp-status${ich ? " sp-ichdran" : ""}">${z.hochzeit && z.hochzeit.partner == null && z.solo == null ? `💍 ${z.hochzeit.von === 0 ? "Deine" : esc(z.namen[z.hochzeit.von].replace("🤖 ", "")) + "s"} Hochzeit – wer zuerst einen Stich macht, wird Partner · ` : ""}${ich ? (z.stich.length ? "Du bist dran – bedienen, wenn du kannst" : "Du spielst aus") : `⏳ ${esc(z.namen[z.amZug])} ist dran …`}</div>`;
+    $("spInhalt").innerHTML = `<div class="karte sp-karte">
+      <div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="SP.offen=null;spZeigen();spLaden(true)">‹ Übersicht</button><b style="flex:1;text-align:right">👑 Du und ${esc(g.gegner.vorname)}<br><small class="hinweis">+ 2 Computer-Köche</small></b></div>
+      ${status}
+      <div class="dk-tisch">
+        ${dkPlatz(z, 2)}${dkPlatz(z, 1)}
+        <div class="dk-mitte">${z.phase === "vorbehalt" && z.braut === 0 && ich ? `<div class="dk-vorbehalt"><b>Beide ♣ Damen!</b><button class="knopf haupt" onclick="dkMgZug({ vorbehalt: 'hochzeit' })">💍 Hochzeit ansagen</button><small>Wer zuerst einen Stich macht, spielt mit dir</small><button class="knopf" onclick="dkMgZug({ vorbehalt: 'solo' })">🤫 Still allein spielen</button><small>Zählt dreifach</small></div>` : ""}${stich.map((x) => `<div class="dk-s dk-s-${pos(x.s)}">${dkKarteHtml(x.k, { klein: true })}</div>`).join("") || (z.phase === "vorbehalt" ? "" : '<span class="hinweis dk-leer">Stich</span>')}
+          ${!z.stich.length && stich.length ? `<div class="dk-letzter">${z.letzter.gewinner === 0 ? "Dein Stich" : esc(z.namen[z.letzter.gewinner]) + "s Stich"} · ${z.letzter.augen} Augen</div>` : ""}</div>
+        ${dkPlatz(z, 3)}${dkPlatz(z, 0)}
+      </div>
+      <div class="dk-hand">${dkSort(z.hand[0]).map((k) => dkKarteHtml(k, { klick: erl.includes(k) ? "dkMgKarte" : "", blass: erl.length > 0 && !erl.includes(k) })).join("")}</div>
+      ${spTerminHtml(g)}
+      <p class="hinweis" style="text-align:center;margin:6px 0">${g.status === "laeuft" ? `Du musst nicht warten – ${esc(g.gegner.vorname)} bekommt Bescheid. 🤖 ${esc(z.namen[1].replace("🤖 ", ""))} und ${esc(z.namen[3].replace("🤖 ", ""))} spielt der Computer.` : ""}</p>
+      ${spLeiste(g.status === "beendet" ? spKnopf("↺", "Revanche", `spRevanche('${g.id}')`, { haupt: true }) : g.status === "laeuft" ? spKnopf("🏳️", "Aufgeben", `spAufgeben('${g.id}')`) : "", schTonKnopf(), spAnsageKnopf("dk"))}
+    </div>`;
+  } finally { DK_MG = null; }
+}
+async function dkMgZug(zug) {
+  const g = SP.offen; if (!g?.ichDran || DKM.sendet) return;
+  DKM.sendet = true; if (zug.karte) spTon("karte");
+  try { SP.offen = (await api("spiel_zug", { id: g.id, zug, zuege: g.zuege })).spiel; DKM.n = SP.offen.dk?.n; }
+  catch (e) { meldeFehler(e); try { SP.offen = (await api("spiel_holen", { id: g.id })).spiel; } catch {} }
+  finally { DKM.sendet = false; }
+  if (aktuelleAnsicht === "spiele" && SP.offen?.id === g.id) spZeigen();
+}
+const dkMgKarte = (k) => dkMgZug({ karte: k });
 function dkPcVorbehalt(art) { const z = DK.z; if (!z || z.phase !== "vorbehalt") return; dkVorbehalt(z, art); dkMerken();
   spSag("dk", art === "hochzeit" ? "Du sagst Hochzeit an." : "Du spielst still allein.", null, true); dkPcZeigen(); }
 function dkPcStaerke(w) { DK.staerke = w; dkMerken(); dkPcZeigen(); }
@@ -7758,7 +7813,12 @@ let FDKP = (() => { let w = null; try { w = JSON.parse(localStorage.getItem(FDK_
   return { stand: { ich: 0, pc: 0, remis: 0 }, regelnGesehen: false, stufe: "leicht", anzahl: 2, runde: 0, ...(w || {}), rollt: false, text: "", kette: false, anim: null, tw: "", fragt: false }; })();
 const fdkMerken = () => { try { localStorage.setItem(FDK_KEY, JSON.stringify({ stand: FDKP.stand, regelnGesehen: FDKP.regelnGesehen, stufe: FDKP.stufe, anzahl: FDKP.anzahl, runde: FDKP.runde, F: FDKP.F || null, tw: FDKP.tw, text: FDKP.text })); } catch {} };
 const fdkSichtbar = () => aktuelleAnsicht === "spiele" && SP.tab === "pc" && SP.art === "fdk";
-const fdkWer = (s) => (s ? "Twinkey" : "Du");
+// KC-CLUB-FDK-MG (2.219.0): gegen ein Mitglied steht dessen Vorname statt „Twinkey“ (FDK_MG wird nur beim Zeichnen gesetzt)
+let FDK_MG = null;
+let FDKM = { id: null, anim: null, rollt: false, fragt: false, klingelt: false, sendet: false, texte: [], gesehen: null };
+const fdkUi = () => (FDK_MG ? FDKM : FDKP);
+const fdkGeg = () => FDK_MG?.name || "Twinkey";
+const fdkWer = (s) => (s ? fdkGeg() : "Du");
 const fdkZuf = (l) => l[Math.floor(Math.random() * l.length)];
 function fdkSag(text, tw = false) { // Ansage (mit 🔊), Twinkeys Sätze mit Männerstimme
   if (!text || !spAnsageAn("fdk") || aktuelleAnsicht !== "spiele") return;
@@ -7806,23 +7866,26 @@ function fdkText(s, e) {
   if (e.art === "wartet") return e.fertig ? `✅ ${wer}: ${e.fertig} – fertig!` : `⏳ ${wer} ${du ? "wartest" : "wartet"} am Herd …`;
   if (e.art === "aussetzen") return `⏸ ${wer} ${du ? "setzt" : "setzt"} einmal aus.`;
   if (e.art === "nochmal") return `🎲 ${wer} ${du ? "darfst" : "darf"} noch einmal würfeln.`;
-  if (e.art === "stoss") return e.z ? `💥 Zusammenstoß! ${du ? "Twinkey lässt" : "Dir fällt"} ${e.z[1]} ${e.z[2]} ${du ? "fallen" : "herunter"}.` : "💥 Zusammenstoß – zum Glück ist nichts heruntergefallen.";
+  if (e.art === "stoss") return e.z ? `💥 Zusammenstoß! ${du ? fdkGeg() + " lässt" : "Dir fällt"} ${e.z[1]} ${e.z[2]} ${du ? "fallen" : "herunter"}.` : "💥 Zusammenstoß – zum Glück ist nichts heruntergefallen.";
   if (e.art === "spueler") return `🧽 ${wer} ${du ? "gehst" : "geht"} direkt zu ${FDK_ST[FDK_FELD[e.feld]][0]} ${FDK_ST[FDK_FELD[e.feld]][1]}.`;
-  if (e.art === "hygiene") return e.richtig ? `🧪 ${du ? "Richtig – Kontrolle bestanden!" : "Twinkey besteht die Kontrolle."}` : `🧪 ${du ? "Leider falsch – einmal aussetzen." : "Twinkey lag falsch – er setzt einmal aus."}`;
+  if (e.art === "hygiene") return e.richtig ? `🧪 ${du ? "Richtig – Kontrolle bestanden!" : fdkGeg() + " besteht die Kontrolle."}` : `🧪 ${du ? "Leider falsch – einmal aussetzen." : fdkGeg() + " lag falsch und setzt einmal aus."}`;
+  if (e.art === "wurf") return `🎲 ${wer} ${du ? "würfelst" : "würfelt"} ${fdkWurfText(e)}.`; // KC-CLUB-FDK-MG: Server-Ereignisse
+  if (e.art === "lauf") return "";
+  if (e.art === "karte" && e.hand && e.k === "verdeckt") return `🃏 ${wer} ${du ? "bekommst" : "bekommt"} eine Karte auf die Hand.`;
   if (e.art === "karte" && e.hand) { const A = FDK_AKTION_NAME[e.k]; return `🃏 ${wer} ${du ? "bekommst" : "bekommt"} ${A[0]} ${A[1]} auf die Hand.${e.weg ? ` (${FDK_AKTION_NAME[e.weg][1]} fällt weg – höchstens ${FDK_HAND} Karten.)` : ""}`; }
-  if (e.art === "karte" && e.geschuetzt) { const K = FDK_KARTE_TEXT[e.k]; return `${K[0]} ${K[1]} – 🛡️ ${du ? "dein" : "Twinkeys"} Sous-Chef hat aufgepasst, nichts passiert!`; }
-  if (e.art === "karte") { const K = FDK_KARTE_TEXT[e.k]; return `${K[0]} ${du ? "" : "Twinkey: "}${K[1]} ${K[2](e.z, e)}`; }
+  if (e.art === "karte" && e.geschuetzt) { const K = FDK_KARTE_TEXT[e.k]; return `${K[0]} ${K[1]} – 🛡️ ${du ? "dein" : fdkGeg() + "s"} Sous-Chef hat aufgepasst, nichts passiert!`; }
+  if (e.art === "karte") { const K = FDK_KARTE_TEXT[e.k]; return `${K[0]} ${du ? "" : fdkGeg() + ": "}${K[1]} ${K[2](e.z, e)}`; }
   if (e.art === "leer") return `📦 Das war die letzte Kiste – ${FDK_ST[e.l][0]} ${FDK_ST[e.l][1]} ist leer. Nachbestellen im 📋 Büro!`;
   if (e.art === "nachbestellt") return `📋 ${wer} ${du ? "bestellst" : "bestellt"} nach – ${e.l.map((l) => FDK_ST[l][0]).join(" ")} wieder voll.`;
-  if (e.art === "geschuetzt") return `🛡️ ${e.wer ? "Twinkeys" : "Dein"} Sous-Chef hat aufgepasst – nichts heruntergefallen!`;
+  if (e.art === "geschuetzt") return `🛡️ ${e.wer ? fdkGeg() + "s" : "Dein"} Sous-Chef hat aufgepasst – nichts heruntergefallen!`;
   if (e.art === "spielt") { const A = FDK_AKTION_NAME[e.k], d = du ? "spielst" : "spielt";
     if (e.k === "turbo") return `⚡ ${wer} ${d} Turbo – mit zwei Würfeln!`;
     if (e.k === "abkuerzung") return `🚪 ${wer} ${du ? "nimmst" : "nimmt"} die Abkürzung zu ${FDK_ST[FDK_FELD[e.feld]][0]} ${FDK_ST[FDK_FELD[e.feld]][1] || "der Durchreiche"}.`;
     if (e.k === "liefer") return `🚚 ${wer} ${d} den Lieferanten – ${e.z[1]} ${e.z[2]} kommt aufs Tablett.`;
     if (e.k === "mise") return `🔪 ${wer} ${d} Mise en place – der nächste Arbeitsschritt geht sofort.`;
-    if (e.geschuetzt) return `${A[0]} ${wer} ${d} ${A[1]} – aber 🛡️ der Sous-Chef ${du ? "von Twinkey" : "von dir"} passt auf!`;
-    if (e.k === "gaszu") return `🔧 ${wer} ${du ? "drehst Twinkey" : "dreht dir"} das Gas ab – ${du ? "er muss" : "du musst"} erst ins 📋 Büro!`;
-    if (e.k === "klau") return `🤏 ${wer} ${du ? "klaust Twinkey" : "klaut dir"} ${e.z[1]} ${e.z[2]}${e.behalten ? ` – ${du ? "die brauchst du selbst" : "er braucht sie selbst"}!` : " – sie fällt herunter."}`;
+    if (e.geschuetzt) return `${A[0]} ${wer} ${d} ${A[1]} – aber 🛡️ der Sous-Chef ${du ? "von " + fdkGeg() : "von dir"} passt auf!`;
+    if (e.k === "gaszu") return `🔧 ${wer} ${du ? "drehst " + fdkGeg() : "dreht dir"} das Gas ab – ${du ? fdkGeg() + " muss" : "du musst"} erst ins 📋 Büro!`;
+    if (e.k === "klau") return `🤏 ${wer} ${du ? "klaust " + fdkGeg() : "klaut dir"} ${e.z[1]} ${e.z[2]}${e.behalten ? ` – ${du ? "die brauchst du selbst" : "gebraucht wird sie dort selbst"}!` : " – sie fällt herunter."}`;
     return `${A[0]} ${wer} ${d} ${A[1]}.`; }
   if (e.art === "abgabe") return `🛎️ ${wer}: ${FDK_GERICHTE[e.g][0]} ${FDK_GERICHTE[e.g][1]} am Pass – ${e.punkte} Punkte!`;
   return "";
@@ -7833,27 +7896,27 @@ function fdkTablett(F, s) {
   const sch = G[4].map((x, i) => `<li class="${S.bon.schritt[i] ? "ok" : S.kochtGerade === i ? "laeuft" : ""}"><span>${S.bon.schritt[i] ? "✅" : S.kochtGerade === i ? "⏳" : FDK_ST[x[0]][0]}</span><span class="fdk-tx">${esc(x[1])}${x[2] > 1 ? ` (${x[2]} Züge)` : ""}</span></li>`).join("");
   const sperre = S.gasLeer ? `<div class="fdk-sperre">🔥 kein Gas – erst 📋 Büro</div>` : S.aussetzen ? `<div class="fdk-sperre">⏸ setzt aus</div>` : "";
   return `<div class="fdk-tablett fdk-t${s}${F.dran === s && F.phase !== "ende" ? " dran" : ""}" aria-label="Tablett ${fdkWer(s)}">
-    <div class="fdk-t-kopf"><span class="fdk-muetze fdk-m${s}">${s ? "🧑‍🍳" : "👨‍🍳"}</span><b>${s ? "Twinkey" : "Du"}</b><span class="fdk-pkt">⭐ ${S.punkte}</span></div>
+    <div class="fdk-t-kopf"><span class="fdk-muetze fdk-m${s}">${s ? "🧑‍🍳" : "👨‍🍳"}</span><b>${esc(fdkWer(s))}</b><span class="fdk-pkt">⭐ ${S.punkte}</span></div>
     ${S.fertig ? `<div class="fdk-t-fertig">✅ Alle ${F.anzahl} Gerichte am Pass</div>` : `<div class="fdk-t-gericht">${G[0]} <b>${esc(G[1])}</b><small>${FDK_STUFEN[G[2]].name} · Gericht ${S.nr + 1} von ${F.anzahl}</small></div>
     <ul class="fdk-liste">${zut}</ul><ul class="fdk-liste fdk-schritte">${sch}<li class="${""}"><span>🛎️</span><span class="fdk-tx">an den Pass + klingeln</span></li></ul>
     <div class="fdk-uhr${uhr > richt ? " drueber" : ""}">⏱️ ${uhr} Min.<small>Richtzeit ${richt}</small></div>${sperre}`}
-    ${s && S.hand?.length ? `<div class="fdk-t-hand" title="Twinkeys Karten (verdeckt)">🃏 × ${S.hand.length}${S.hand.includes("schutz") ? " · 🛡️" : ""}</div>` : ""}</div>`;
+    ${s && S.hand?.length ? `<div class="fdk-t-hand" title="${esc(fdkGeg())}s Karten (verdeckt)">🃏 × ${S.hand.length}${S.hand.includes("schutz") ? " · 🛡️" : ""}</div>` : ""}</div>`;
 }
 function fdkBrettHtml(F) {
-  const pos = FDKP.anim || F.sp.map((S) => S.pos), wahl = F.phase === "wahl" && F.dran === 0 && !FDKP.anim ? new Map(F.optionen.map((o) => [o.feld, o])) : null;
+  const pos = fdkUi().anim || F.sp.map((S) => S.pos), wahl = F.phase === "wahl" && F.dran === 0 && !fdkUi().anim ? new Map(F.optionen.map((o) => [o.feld, o])) : null;
   const S0 = F.sp[0];
-  const felder = FDK_FELD.map((f, i) => { const [x, y] = FDK_RING[i], koeche = [0, 1].filter((s) => pos[s] === i && !(F.sp[s].fertig && !FDKP.anim)), st = FDK_ST[f];
+  const felder = FDK_FELD.map((f, i) => { const [x, y] = FDK_RING[i], koeche = [0, 1].filter((s) => pos[s] === i && !(F.sp[s].fertig && !fdkUi().anim)), st = FDK_ST[f];
     const nutzen = !S0.fertig && F.phase !== "ende" ? fdkNutzen(S0, i, F) : null, gut = nutzen && (nutzen !== "pass" || (fdkAlleZutaten(S0) && fdkFertigGekocht(S0)));
     const o = wahl?.get(i), kl = ["fdk-feld", "fdk-" + f, gut ? "fdk-gut" : "", o ? "fdk-ziel" + (o.halt ? " fdk-halt" : "") : ""].filter(Boolean).join(" ");
     const inhalt = `${st[0] ? `<span class="fdk-sym" aria-hidden="true">${st[0]}</span>` : ""}${f.length > 1 ? `<span class="fdk-name">${f === "gewuerz" ? "Gewürze" : st[1]}</span>` : ""}${o?.halt ? `<span class="fdk-halt-schild">Halt</span>` : ""}${F.vorrat && FDK_LAGER.includes(f) ? `<span class="fdk-vorrat${F.vorrat[f] <= 0 ? " leer" : ""}" title="Kisten im Vorrat">${F.vorrat[f] <= 0 ? "leer" : "📦" + F.vorrat[f]}</span>` : ""}`
       + (koeche.length ? `<span class="fdk-koeche">${koeche.map((s) => `<span class="fdk-muetze fdk-m${s}">${s ? "🧑‍🍳" : "👨‍🍳"}</span>`).join("")}</span>` : "");
     const name = `${st[1] || "Gang"}${koeche.length ? " – " + koeche.map(fdkWer).join(" und ") : ""}${o ? " – hierhin gehen" : ""}`;
-    return o ? `<button class="${kl}" style="grid-column:${x + 1};grid-row:${y + 1}" onclick="fdkFeldKlick(${i})" aria-label="${name}">${inhalt}</button>`
+    return o ? `<button class="${kl}" style="grid-column:${x + 1};grid-row:${y + 1}" onclick="${FDK_MG ? "fdkMgFeld" : "fdkFeldKlick"}(${i})" aria-label="${name}">${inhalt}</button>`
       : `<div class="${kl}" style="grid-column:${x + 1};grid-row:${y + 1}" aria-label="${name}">${inhalt}</div>`; }).join("");
-  const ich = F.dran === 0 && F.phase === "wuerfeln" && !FDKP.rollt && !FDKP.anim && !FDKP.fragt;
-  const mitte = `<div class="fdk-mitte"><div class="fdk-pass"><span class="fdk-glocke${FDKP.klingelt ? " klingelt" : ""}" aria-hidden="true">🛎️</span><b>Pass</b></div>
-      ${F.phase === "ende" ? `<div class="fdk-ende-sym">🏁</div>` : maeWuerfelKnopf(F.wurf, { kann: ich, rollt: FDKP.rollt, klick: "fdkWuerfeln()", farbe: F.dran ? "blau" : "rot" })}
-      <div class="fdk-wer-dran">${F.phase === "ende" ? "Feierabend!" : F.phase === "wahl" && F.dran === 0 ? "👆 Leuchtendes Feld antippen" : F.dran === 0 ? "👨‍🍳 Du bist dran" : "🧑‍🍳 Twinkey ist dran"}</div></div>`;
+  const ich = F.dran === 0 && F.phase === "wuerfeln" && (!FDK_MG || FDK_MG.dran) && !fdkUi().rollt && !fdkUi().anim && !fdkUi().fragt;
+  const mitte = `<div class="fdk-mitte"><div class="fdk-pass"><span class="fdk-glocke${fdkUi().klingelt ? " klingelt" : ""}" aria-hidden="true">🛎️</span><b>Pass</b></div>
+      ${F.phase === "ende" ? `<div class="fdk-ende-sym">🏁</div>` : maeWuerfelKnopf(F.wurf, { kann: ich, rollt: fdkUi().rollt, klick: FDK_MG ? "fdkMgWuerfeln()" : "fdkWuerfeln()", farbe: F.dran ? "blau" : "rot" })}
+      <div class="fdk-wer-dran">${F.phase === "ende" ? "Feierabend!" : F.phase === "wahl" && F.dran === 0 ? "👆 Leuchtendes Feld antippen" : F.dran === 0 ? "👨‍🍳 Du bist dran" : `🧑‍🍳 ${esc(fdkGeg())} ist dran`}</div></div>`;
   return `<div class="fdk-brett" role="group" aria-label="Küche">${felder}${mitte}</div>`;
 }
 function fdkPcZeigen() {
@@ -8003,9 +8066,9 @@ async function fdkFeldKlick(p) {
 // 🃏 Deine Karten: vor dem Würfeln eine ausspielen (Sous-Chef wirkt von selbst)
 function fdkHandHtml(F) {
   const S = F.sp[0]; if (!S.hand?.length || F.phase === "ende") return "";
-  const frei = F.dran === 0 && F.phase === "wuerfeln" && !FDKP.anim && !FDKP.rollt && !FDKP.fragt;
+  const frei = F.dran === 0 && F.phase === "wuerfeln" && (!FDK_MG || FDK_MG.dran) && !fdkUi().anim && !fdkUi().rollt && !fdkUi().fragt;
   return `<div class="fdk-hand" aria-label="Deine Karten"><span class="fdk-hand-titel">🃏 Deine Karten${S.gespielt ? " (schon eine gespielt)" : S.turbo ? " – ⚡ Turbo bereit" : ""}</span>${S.hand.map((k) => { const A = FDK_AKTION_NAME[k], kann = frei && fdkKannSpielen(F, 0, k);
-    return `<button class="fdk-handkarte${k === "schutz" ? " passiv" : ""}" ${kann ? `onclick="fdkKarteAusspielen('${k}')"` : "disabled"} title="${esc(A[2])}"><span>${A[0]}</span><b>${A[1]}</b><small>${k === "schutz" ? "wirkt von selbst" : esc(A[2])}</small></button>`; }).join("")}</div>`;
+    return `<button class="fdk-handkarte${k === "schutz" ? " passiv" : ""}" ${kann ? `onclick="${FDK_MG ? "fdkMgKarte" : "fdkKarteAusspielen"}('${k}')"` : "disabled"} title="${esc(A[2])}"><span>${A[0]}</span><b>${A[1]}</b><small>${k === "schutz" ? "wirkt von selbst" : esc(A[2])}</small></button>`; }).join("")}</div>`;
 }
 async function fdkKarteAusspielen(k) {
   const F = FDKP.F; if (!F || F.dran !== 0 || F.phase !== "wuerfeln" || FDKP.anim || FDKP.rollt || FDKP.fragt) return;
@@ -8067,6 +8130,93 @@ async function fdkAbbrechen(neu = false) { // KC-CLUB-SPIELE-LEISTE: neu = gleic
   if (FDKP.F !== F) return; FDKP.F = null; FDKP.rollt = false; FDKP.anim = null; fdkMerken();
   if (neu) return fdkStart();
   if (fdkSichtbar()) fdkPcZeigen(); melde("Spiel abgebrochen – nicht gewertet.");
+}
+// ----- KC-CLUB-FDK-MG (2.219.0, Wunsch Hansi „auch gegen Mitglieder mit Terminabfrage“): Fang den Koch gegen ein Mitglied -----
+// Der Server würfelt, mischt und prüft jeden Schritt (Karte → würfeln → Feld; 🧪 Frage; 🛎️ Jetzt abgeben). Die App bekommt die eigene
+// Sicht (ich = Koch 0, rote Mütze) und zeichnet sie mit demselben Brett wie gegen Twinkey. Termin vorschlagen wie bei allen Partien.
+function fdkMgDialoge(F, vor) { // eigene neue Karten / Abgaben als Fenster zeigen (wie gegen Twinkey)
+  return (F.log || []).filter((x) => x.n > vor && x.s === 0 && ((x.e.art === "karte" && x.e.k !== "hygiene" && x.e.k !== "verdeckt") || x.e.art === "abgabe" || x.e.art === "hygiene")).map((x) => x.e);
+}
+function fdkSpielZeigen(g) {
+  if (FDKM.id !== g.id) FDKM = { id: g.id, anim: null, rollt: false, fragt: false, klingelt: false, sendet: false, texte: [], gesehen: null };
+  const F = g.fdk; if (!F) { $("spInhalt").innerHTML = '<div class="karte hinweis">Wird geladen …</div>'; return; }
+  FDK_MG = { name: g.gegner.vorname, dran: g.ichDran && g.status === "laeuft" && !FDKM.sendet };
+  try {
+    const neu = FDKM.gesehen == null ? [] : (F.log || []).filter((x) => x.n > FDKM.gesehen);
+    if (FDKM.gesehen == null) FDKM.texte = (F.log || []).slice(-4).map((x) => fdkText(x.s, x.e)).filter(Boolean);
+    else if (neu.length) {
+      FDKM.texte = [...FDKM.texte, ...neu.map((x) => fdkText(x.s, x.e)).filter(Boolean)].slice(-6);
+      const seine = neu.filter((x) => x.s === 1);
+      if (seine.length) { spSag("fdk", seine.map((x) => fdkText(1, x.e)).filter(Boolean).join(" "), `fdkm:${g.id}:${F.n}`, true);
+        const arten = new Set(seine.map((x) => x.e.art));
+        if (arten.has("abgabe")) fdkKlingel(); else if (arten.has("stoss") || arten.has("hygiene")) fdkTon("pech"); else if (arten.has("kocht") || arten.has("kochtLang")) fdkTon("kochen"); else if (arten.has("holt")) fdkTon("holen"); else if (arten.has("wurf")) fdkTon("wuerfel"); }
+    }
+    FDKM.gesehen = F.n;
+    const banner = g.status === "beendet" ? (g.ergebnis === "gewonnen" ? `<div class="sp-banner sieg">🏆 Feierabend – du hast gewonnen!${g.aufgegeben ? ` ${esc(g.gegner.vorname)} hat aufgegeben.` : ` ${F.sp[0].punkte} : ${F.sp[1].punkte} Punkte`}</div>`
+        : g.ergebnis === "verloren" ? `<div class="sp-banner niederlage">${g.aufgegeben ? "Du hast aufgegeben." : `Feierabend – ${esc(g.gegner.vorname)} gewinnt ${F.sp[1].punkte} : ${F.sp[0].punkte}.`}</div>` : `<div class="sp-banner remis">🤝 Unentschieden – ${F.sp[0].punkte} : ${F.sp[1].punkte}</div>`)
+      : g.status === "angefragt" ? `<div class="sp-status">⏳ Warte, bis ${esc(g.gegner.vorname)} annimmt …</div>`
+      : g.status !== "laeuft" ? `<div class="sp-status">Diese Partie findet nicht statt.</div>`
+      : `<div class="sp-status fdk-ansage${g.ichDran ? " sp-ichdran" : ""}" aria-live="polite">${g.ichDran ? (F.phase === "wahl" ? `Du hast ${esc(fdkWurfText(F.augen || { w: F.wurf }))} gewürfelt – 👆 tippe ein leuchtendes Feld an.` : F.phase === "frage" ? "🧪 Hygienekontrolle – beantworte die Frage." : "🎲 Du bist dran – würfeln (oder vorher eine Karte ausspielen).") : `⏳ ${esc(g.gegner.vorname)} ist dran …`}</div>`;
+    const laeuft = g.status === "laeuft", kannAbgeben = laeuft && g.ichDran && F.phase === "wuerfeln" && !F.sp[0].fertig && FDK_FELD[F.sp[0].pos] === "d" && !FDKM.sendet;
+    $("spInhalt").innerHTML = `<div class="karte sp-karte fdk-karte">
+      <div class="zeile" style="border:none;padding:0"><button class="knopf klein" onclick="SP.offen=null;spZeigen();spLaden(true)">‹ Übersicht</button><b style="flex:1;text-align:right">🧑‍🍳 Du gegen ${esc(g.gegner.vorname)}<br><small class="hinweis">${FDK_STUFEN[F.stufe]?.name || ""} · ${F.anzahl} ${F.anzahl === 1 ? "Gericht" : "Gerichte"}</small></b></div>
+      ${banner}
+      <div class="fdk-tisch">${fdkTablett(F, 0)}${fdkBrettHtml(F)}${fdkTablett(F, 1)}</div>
+      ${laeuft ? fdkHandHtml(F) : ""}
+      ${FDKM.texte.length && g.status !== "angefragt" ? `<div class="mae-verlauf" aria-live="polite"><b>Zuletzt:</b>${FDKM.texte.slice(-4).map((t) => `<div>${esc(t)}</div>`).join("")}</div>` : ""}
+      ${spTerminHtml(g)}
+      <p class="hinweis" style="text-align:center;margin:6px 0">${laeuft ? `Du musst nicht warten – ${esc(g.gegner.vorname)} bekommt Bescheid, wenn ${esc(g.gegner.vorname)} dran ist. Der Server würfelt und mischt – niemand kann schummeln.` : ""}</p>
+      ${spLeiste(laeuft && g.ichDran && F.phase === "wuerfeln" ? spKnopf("🎲", "Würfeln", "fdkMgWuerfeln()", { haupt: true, aus: FDKM.sendet || FDKM.rollt }) : "", kannAbgeben ? spKnopf("🛎️", "Jetzt abgeben", "fdkMgAbgeben()") : "",
+        g.status === "beendet" ? spKnopf("↺", "Revanche", `spRevanche('${g.id}')`, { haupt: true }) : laeuft ? spKnopf("🏳️", "Aufgeben", `spAufgeben('${g.id}')`) : "", schTonKnopf(), spAnsageKnopf("fdk"), spKnopf("📖", "Regeln", "fdkRegeln()"))}
+    </div>`;
+  } finally { FDK_MG = null; }
+  if (g.ichDran && g.status === "laeuft" && F.phase === "frage" && F.frage && !FDKM.fragt && !FDKM.sendet) fdkMgFrage(F.frage);
+}
+async function fdkMgZug(zug) {
+  const g = SP.offen; if (!g?.ichDran || FDKM.sendet) return null;
+  FDKM.sendet = true; const vor = g.fdk?.n ?? 0;
+  try { SP.offen = (await api("spiel_zug", { id: g.id, zug, zuege: g.zuege })).spiel; }
+  catch (e) { meldeFehler(e); try { SP.offen = (await api("spiel_holen", { id: g.id })).spiel; } catch {} }
+  finally { FDKM.sendet = false; }
+  if (aktuelleAnsicht !== "spiele" || SP.offen?.id !== g.id) return null;
+  const F = SP.offen.fdk; spZeigen();
+  for (const e of F ? fdkMgDialoge(F, vor) : []) {
+    if (e.art === "abgabe") { FDKM.klingelt = true; fdkKlingel(); setTimeout(() => { FDKM.klingelt = false; }, 1200); await fdkAbgabeZeigen(e); }
+    else if (e.art === "karte") { fdkTon(FDK_PECH.has(e.k) && !e.geschuetzt ? "pech" : "glueck"); await fdkKarteZeigen(e); }
+    else if (e.art === "hygiene") await new Promise((weiter) => { const f = blattAuf("fdkFrageBlatt", `<h3 style="margin:0 0 6px">🧪 Hygienekontrolle</h3><p style="margin:0 0 8px"><b>${esc(e.frage || "")}</b></p>
+        <p style="margin:8px 0">${e.richtig ? "✅ Richtig – Kontrolle bestanden!" : `❌ Leider falsch – einmal aussetzen.<br>Richtig ist: <b>${esc(e.r || "")}</b>`}${e.erkl ? `<br><small class="hinweis">${esc(e.erkl)}</small>` : ""}</p>
+        <div class="sp-knopfreihe"><button class="knopf haupt" id="fdkFrageOk">Weiter</button></div>`); f.style.zIndex = "2100"; fdkTon(e.richtig ? "glueck" : "pech"); $("fdkFrageOk").onclick = () => { $("fdkFrageBlatt")?.remove(); weiter(); }; });
+  }
+  return SP.offen;
+}
+async function fdkMgWuerfeln() {
+  const g = SP.offen; if (!g?.ichDran || g.fdk?.phase !== "wuerfeln" || FDKM.sendet || FDKM.rollt) return;
+  FDKM.rollt = true; spZeigen(); fdkTon("wuerfel");
+  const tick = setInterval(() => { const b = document.querySelector(".mae-wuerfel.rollt"); if (b) b.innerHTML = maeWuerfelSvg(1 + Math.floor(Math.random() * 6)); }, 80);
+  try { navigator.vibrate?.(25); } catch {}
+  const t0 = Date.now(), warten = maeWarte(450); await Promise.all([fdkMgZug({ wuerfeln: true }).catch(() => null), warten]);
+  clearInterval(tick); FDKM.rollt = false; if (Date.now() - t0 >= 0 && SP.offen?.id === g.id && aktuelleAnsicht === "spiele") spZeigen();
+}
+async function fdkMgFeld(p) {
+  const g = SP.offen, F = g?.fdk; if (!g?.ichDran || F?.phase !== "wahl" || FDKM.sendet || FDKM.anim) return;
+  const o = (F.optionen || []).find((x) => x.feld === p); if (!o) return;
+  FDKM.anim = F.sp.map((S) => S.pos); // Koch läuft Feld für Feld, dann prüft der Server
+  for (const q of o.weg) { FDKM.anim[0] = q; spZeigen(); fdkTon("schritt"); await maeWarte(SPAR?.an ? 80 : 150); if (SP.offen?.id !== g.id) break; }
+  FDKM.anim = null; await fdkMgZug({ feld: p });
+}
+async function fdkMgKarte(k) { const g = SP.offen; if (!g?.ichDran || g.fdk?.phase !== "wuerfeln" || FDKM.sendet) return; fdkTon("karte"); await fdkMgZug({ karte: k }); }
+async function fdkMgAbgeben() {
+  const g = SP.offen, F = g?.fdk; if (!g?.ichDran || F?.phase !== "wuerfeln" || FDKM.sendet) return; const S = F.sp[0];
+  const fehlt = [...fdkFehlendeZutaten(S).map((z) => `${z[1]} ${z[2]}`), ...fdkG(S)[4].filter((_, i) => !S.bon.schritt[i]).map((x) => `${FDK_ST[x[0]][0]} ${x[1]}`)];
+  if (fehlt.length && !(await frage(`Jetzt schon abgeben und klingeln? Es fehlt noch: ${fehlt.join(", ")}. Das kostet Punkte (−3 je Zutat, −5 je Schritt).`, { ja: "🛎️ Trotzdem abgeben", nein: "Weiterkochen" }))) return;
+  await fdkMgZug({ abgeben: true });
+}
+function fdkMgFrage(fr) { // 🧪 die Frage stellt der Server (aus Küchenterror) – die richtige Antwort kennt nur er
+  FDKM.fragt = true;
+  const f = blattAuf("fdkFrageBlatt", `<h3 style="margin:0 0 6px">🧪 Hygienekontrolle</h3><p style="margin:0 0 8px"><b>${esc(fr.f)}</b></p>
+    <div class="fdk-antworten">${fr.a.map((a, i) => `<button class="knopf" data-i="${i}">${esc(a)}</button>`).join("")}</div>`);
+  f.style.zIndex = "2100";
+  f.querySelectorAll("[data-i]").forEach((b) => (b.onclick = async () => { f.remove(); await fdkMgZug({ antwort: Number(b.dataset.i) }); FDKM.fragt = false; }));
 }
 function fdkFortsetzen() { // nach dem Neuladen: halbe Züge sauber fortsetzen
   const F = FDKP.F; if (!F || F.phase === "ende") return;
@@ -8320,7 +8470,7 @@ function ktMgWeiter() { const g = SP.offen; KTM.aufl = null; if (!KTM.pause && g
 // ---------- KC-CLUB-SPIEL-TERMIN (2.9.1, Wunsch Hansi): zu einer Partie einen Termin vereinbaren ----------
 // Nutzt die vorhandene Terminanfrage (steht dann bei beiden im Kalender und im Kalender-Abo, Vortags-Erinnerung). Dazu eine
 // Erinnerung kurz vor Beginn an beide, sobald zugesagt ist. Zu-/Absagen direkt an der Partie.
-const spTitel = (g) => g.spiel === "schach" ? "♟️ Schach" : g.spiel === "bsk" ? "🃏 Bauernskat" : g.spiel === "kt" ? "🔪 Küchenterror" : g.spiel === "mae" ? "🎲 Mensch ärgere dich nicht" : `❌⭕ Tic-Tac-Toe ${g.groesse}×${g.groesse}`;
+const spTitel = (g) => g.spiel === "ttt" ? `❌⭕ Tic-Tac-Toe ${g.groesse}×${g.groesse}` : SP_NAMEN[g.spiel] || "🎲 Spiel";
 const spTerminZeit = (t) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(t.beginn)) + " Uhr";
 function spTerminKurz(g) {
   const t = g.termin; if (!t) return "";

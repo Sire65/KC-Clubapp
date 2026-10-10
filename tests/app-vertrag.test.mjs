@@ -4807,8 +4807,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(s < 0 \|\| z\.dran !== s\) throw/.test(zug) && /maeWuerfeln\(z, maeWurf\(\)\)/.test(zug) && /if \(!maeZiehen\(z, Number\(zug\.figur\)\)\) throw/.test(zug) && /maeComputerSpielen\(z\);/.test(zug), "Server würfelt, prüft, zieht Computer-Farben");
   assert.ok(/function maeWurf\(\) \{ const z = new Uint8Array\(1\); do crypto\.getRandomValues\(z\); while \(z\[0\] >= 252\)/.test(server), "gleich verteilter Server-Würfel");
   assert.ok(/art === "mae" \? \{ brett: "mae", mae: maeStart\(String\(opt\.x\), String\(opt\.o\), opt\.pc !== false\) \}/.test(server) && /x: g\.spieler_o, o: g\.spieler_x, pc: \(g\.mae\?\.sitze\?\.length \?\? 4\) === 4/.test(server), "Start + Revanche");
-  assert.ok(/mae: g\.spiel === "mae" \? maeSicht\(g\.mae, ich, namen\) : null/.test(server) && /SPIEL_ARTEN = \["ttt", "schach", "bsk", "kt", "mae"\]/.test(server), "Sicht + Spielart");
-  assert.ok(/\["mae", "🎲", "Mensch ärgere dich nicht"/.test(html) && /\["mae", "<span class=\\"kt-emo\\">🎲<\/span>Mensch ärgere dich nicht"\]\], "spHerausArt"/.test(html) && /\.\.\.\(art === "mae" \? \{ computer: maePc === "ja" \} : \{\}\)/.test(html), "App: Kachel + Herausfordern mit Computer-Wahl");
+  assert.ok(/mae: g\.spiel === "mae" \? maeSicht\(g\.mae, ich, namen\) : null/.test(server) && /SPIEL_ARTEN = \["ttt", "schach", "bsk", "kt", "mae"[,\]]/.test(server), "Sicht + Spielart");
+  assert.ok(/\["mae", "🎲", "Mensch ärgere dich nicht"/.test(html) && /\["mae", "<span class=\\"kt-emo\\">🎲<\/span>Mensch ärgere dich nicht"\], /.test(html) && /\.\.\.\(art === "mae" \? \{ computer: maePc === "ja" \} : \{\}\)/.test(html), "App: Kachel + Herausfordern mit Computer-Wahl");
   assert.ok(/if \(SP\.offen\.spiel === "mae"\) \{ maeSpielZeigen\(SP\.offen\)/.test(html) && /SP\.art === "mae" \? \(maePcZeigen\(\), maePcFortsetzen\(\)\)/.test(html), "App: Ansichten");
   assert.ok(/if \(MAEP\.kette\) return; MAEP\.kette = true;/.test(html) && /async function maePcAbbrechen\(neu = false\)/.test(html) && /spLeiste\(spNeuKnopf\("maePcAbbrechen\(true\)", "Neues Spiel", false\), spAbbrechenKnopf\("maePcAbbrechen\(\)"\), schTonKnopf\(\), spAnsageKnopf\("mae"\)\)/.test(html), "eine Computer-Kette, Abbrechen, Knöpfe als Kacheln");
   // ganze Partien mit der Server-Kopie: nie zwei Figuren auf einem Feld, Sieger hat alle 4 im Ziel, bei „mensch“ gewinnt nie der Computer
@@ -7333,7 +7333,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   }
   // Ansicht: Tabletts links Du, rechts Twinkey; Felder antippen; Stoppuhr; Klingel; Hygienefrage aus Küchenterror; Fokus wie beim Schach
   assert.ok(/<div class="fdk-tisch">\$\{fdkTablett\(F, 0\)\}\$\{fdkBrettHtml\(F\)\}\$\{fdkTablett\(F, 1\)\}<\/div>/.test(programm), "Tabletts links/rechts");
-  assert.ok(/onclick="fdkFeldKlick\(\$\{i\}\)"/.test(programm) && /fdk-halt-schild">Halt</.test(programm), "leuchtende Felder antippen, Halt-Schild");
+  assert.ok(/onclick="\$\{FDK_MG \? "fdkMgFeld" : "fdkFeldKlick"\}\(\$\{i\}\)"/.test(programm) && /fdk-halt-schild">Halt</.test(programm), "leuchtende Felder antippen, Halt-Schild");
   assert.ok(/⏱️ \$\{uhr\} Min\.<small>Richtzeit \$\{richt\}<\/small>/.test(programm) && /function fdkKlingel\(\)/.test(programm), "Stoppuhr + Klingel");
   assert.ok(/await ktFragenLaden\(\)/.test(programm.slice(programm.indexOf("async function fdkHygieneFrage"))) , "Hygienefrage aus Küchenterror");
   assert.ok(/Jetzt schon abgeben und klingeln\? Es fehlt noch/.test(programm), "Rückfrage vor unvollständigem Abgeben");
@@ -7864,7 +7864,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
     assert.ok(wuerfe / n <= 40, st + ": nicht zu lang (" + (wuerfe / n).toFixed(1) + " Würfe je Koch)");
   }
   // Ansicht: Karten unter dem Brett, Twinkey spielt Karten, Töne, schneller
-  assert.ok(/\$\{fdkHandHtml\(F\)\}/.test(programm) && /onclick="fdkKarteAusspielen\('\$\{k\}'\)"/.test(programm), "Karten antippen");
+  assert.ok(/\$\{fdkHandHtml\(F\)\}/.test(programm) && /onclick="\$\{FDK_MG \? "fdkMgKarte" : "fdkKarteAusspielen"\}\('\$\{k\}'\)"/.test(programm), "Karten antippen");
   assert.ok(/const karte = fdkKiKarte\(F, 1\);/.test(programm) && /fdkTw\("karteTw", karte\)/.test(programm), "Twinkey spielt Karten und sagt etwas dazu");
   assert.ok(/function fdkTon\(art\)/.test(programm) && /if \(!schToeneAn\(\)/.test(programm.slice(programm.indexOf("function fdkTon(art)"))) && /fdkTon\("wuerfel"\)/.test(programm), "Töne mit dem Töne-Schalter");
   assert.ok(/await maeWarte\(SPAR\?\.an \? 250 : 450\)/.test(programm) && /await maeWarte\(SPAR\?\.an \? 80 : 170\)/.test(programm), "Twinkey zieht schneller");
@@ -7912,6 +7912,48 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/wuensche: wFehler \? null :/.test(f) && /gewaehlt\.includes\(w\.person_id\)/.test(f), "nur gewählte Personen, Fehler ≠ keine Wünsche");
   assert.ok(/const DPW_ARTEN = \{ preferred: \["⭐", "Wunsch"[^}]*available: \["✅", "Kann"[^}]*if_needed: \["🟡", "Wenn nötig"[^}]*unavailable: \["⛔", "Sperre"/.test(html), "alle vier Arten");
   assert.ok(/Abgegebene Wunschzeiten – unter Vorbehalt/.test(html) && /noch kein Dienstplan/.test(html) && /\.dpw-t \{[^}]*dashed/.test(html), "Hinweis „unter Vorbehalt“, gestrichelt");
+}
+// 2.219.0 KC-CLUB-FDK-MG + KC-CLUB-DK-MG: Fang den Koch und Doppelkopf auch gegen Mitglieder (mit Terminanfrage wie alle Partien)
+{
+  const fdkKopie = lies("supabase/functions/kc-club/fdk.js"), a = programm.indexOf("const FDK_KEY = "), b = programm.indexOf("// ----- FDK Regeln Ende -----", a);
+  assert.ok(a > 0 && b > a && fdkKopie.includes(programm.slice(a, b).trimEnd()), "fdk.js weicht von app.js ab – node tools/fdk/server-kopie.mjs");
+  const dkKopie = lies("supabase/functions/kc-club/doppelkopf.js"), c = programm.indexOf("const DK_TRUMPF = "), d = programm.indexOf("// ----- DK Regeln Ende -----", c);
+  assert.ok(c > 0 && d > c && dkKopie.includes(programm.slice(c, d).trimEnd()), "doppelkopf.js weicht von app.js ab – node tools/dk/server-kopie.mjs");
+  assert.ok(/from "\.\/fdk\.js"; \/\/ KC-CLUB-FDK-MG/.test(server) && /from "\.\/doppelkopf\.js"; \/\/ KC-CLUB-DK-MG/.test(server), "Server nutzt die Kopien");
+  const mig = lies("supabase/migrations/20261010_kc_club_v2219_fdk_dk_mitglieder.sql");
+  assert.ok(/add column if not exists fdk jsonb/.test(mig) && /add column if not exists dk jsonb/.test(mig) && /spiel in \('ttt', 'schach', 'bsk', 'kt', 'mae', 'fdk', 'dk'\)/.test(mig) && /\(spiel = 'fdk' and groesse = 24\)/.test(mig) && /\(spiel = 'dk' and brett = 'dk' and dk is not null/.test(mig) && /\(spiel = 'mae' and brett = 'mae' and mae is not null/.test(mig), "Migration erweitert nur die Prüfregeln");
+  assert.ok(/SPIEL_ARTEN = \["ttt", "schach", "bsk", "kt", "mae", "fdk", "dk"\]/.test(server) && /const SPIEL_GROESSE: Record<string, number> = \{ schach: 8, bsk: 32, kt: 12, mae: 4, fdk: 24, dk: 4 \}/.test(server), "Spielarten + Größen");
+  const zug = server.slice(server.indexOf('case "spiel_zug": {'), server.indexOf('case "spiel_aufgeben": {'));
+  assert.ok(/fdkMgZug\(F, s, p\.zug \?\? \{\}\);/.test(zug) && /dkMgZug\(z, s, p\.zug \?\? \{\}\);/.test(zug) && /naechster = dkDranPerson\(z\) \?\? gegner;/.test(zug), "Server prüft jeden Zug");
+  assert.ok(/fdkAugen\(F, s, maeZufall\)/.test(server) && /fdkNeu\(\{ stufe: [^}]*zufall: maeZufall \}\)/.test(server), "Server würfelt und mischt mit Kryptozufall");
+  assert.ok(/hand: k === 0 \? S\.hand : S\.hand\.map\(\(\) => "verdeckt"\)/.test(server) && /k: "verdeckt"/.test(server) && /optionen: F\.dran === s && F\.phase === "wahl" \? F\.optionen : null/.test(server) && /frage: f \? \{ f: f\.f, a: F\.frage\.perm\.map/.test(server), "FDK-Sicht: fremde Hand, Karten, Optionen und Lösung bleiben verborgen");
+  assert.ok(/hand: \[0, 1, 2, 3\]\.map\(\(i\) => \(i === 0 \|\| ende \? z\.hand\[u\(i\)\] : z\.hand\[u\(i\)\]\.map\(\(\) => "x"\)\)\)/.test(server) && /re: \(ende \? z\.re : z\.re\.filter\(\(s: number\) => bekannt\.has\(s\)\)\)\.map\(r\)/.test(server), "DK-Sicht: fremde Hände und unbekannte Re-Spieler bleiben verborgen");
+  assert.ok(/dran: art === "dk" \? dkDranPerson\(start\.dk\) : ich\.person_id/.test(server) && /dran: g\.spiel === "dk" \? dkDranPerson\(start\.dk\) : g\.spieler_o/.test(server), "Doppelkopf: dran ist, wer am Tisch dran ist (Herausfordern + Revanche)");
+  assert.ok(/function dkNeu\(geber, menschen = \[0\]\)/.test(programm) && /if \(menschen\.includes\(re\[0\]\)\) \{ z\.phase = "vorbehalt"; z\.braut = re\[0\]; \}/.test(programm) && /const s = z\.braut \?\? 0;/.test(programm), "Hochzeit/still allein für jeden Menschen am Tisch");
+  // App
+  assert.ok(!/SP\.tab = "pc"; \/\* FDK Stufe 1/.test(programm) && !/Doppelkopf: Stufe 1 nur mit Computern/.test(programm), "Gegen Mitglieder auch bei Fang den Koch und Doppelkopf wählbar");
+  assert.ok(/if \(SP\.offen\.spiel === "fdk"\) \{ fdkSpielZeigen\(SP\.offen\);/.test(programm) && /if \(SP\.offen\.spiel === "dk"\) \{ dkSpielZeigen\(SP\.offen\);/.test(programm), "Mitglieder-Ansichten");
+  for (const f of ["fdkSpielZeigen", "dkSpielZeigen"]) { const i = programm.indexOf(`function ${f}(g)`), t = programm.slice(i, programm.indexOf("\n}\n", i));
+    assert.ok(i > 0 && /\$\{spTerminHtml\(g\)\}/.test(t) && /spRevanche\('\$\{g\.id\}'\)/.test(t) && /spAufgeben\('\$\{g\.id\}'\)/.test(t) && /schTonKnopf\(\)/.test(t), `${f}: Termin, Revanche, Aufgeben, Töne`); }
+  assert.ok(/\["fdk", "<span class=\\"kt-emo\\">🧑‍🍳<\/span>Fang den Koch"\], \["dk", "<span class=\\"kt-emo\\">👑<\/span>Doppel&shy;kopf"\]\], "spHerausArt"/.test(programm) && /\.\.\.\(art === "fdk" \? \{ stufe: fdkStufe, anzahl: Number\(fdkAnzahl\) \} : \{\}\)/.test(programm), "Herausfordern mit Gerichten und Länge");
+  assert.ok(/const SP_ALLE_ARTEN = \["ttt", "schach", "bsk", "kt", "mae", "fdk", "dk"\]/.test(programm) && /\["fdk", "🧑‍🍳 Fang den Koch"\], \["dk", "👑 Doppelkopf"\]\]\.map/.test(programm), "Einstellungen: herausfordern lassen auch für die neuen Spiele");
+  assert.ok(/const fdkGeg = \(\) => FDK_MG\?\.name \|\| "Twinkey";/.test(programm) && !/function fdkText[^]{0,4000}"Twinkey/.test(programm.slice(programm.indexOf("function fdkText"), programm.indexOf("function fdkTablett"))), "Gegenüber mit Vornamen statt Twinkey");
+  // ganze Partien mit den Server-Kopien
+  const FD = await import(new URL("../supabase/functions/kc-club/fdk.js", import.meta.url)), DK = await import(new URL("../supabase/functions/kc-club/doppelkopf.js", import.meta.url));
+  for (let n = 0; n < 40; n++) {
+    const F = FD.fdkNeu({ stufe: "mittel", anzahl: 2 });
+    for (let k = 0; k < 2000 && F.phase !== "ende"; k++) { const s = F.dran;
+      if (F.phase === "frage") { FD.fdkHygiene(F, s, Math.random() < 0.5); FD.fdkWeiter(F); continue; }
+      const kk = FD.fdkKiKarte(F, s); if (kk) { const r = FD.fdkKarteSpielen(F, s, kk); if (r.zugVorbei) { FD.fdkWeiter(F); continue; } }
+      FD.fdkWurfBeginn(F, s); const w = FD.fdkAugen(F, s).w, o = FD.fdkKiWahl(F, s, FD.fdkOptionen(F, s, w)); F.phase = "laeuft"; FD.fdkZiehen(F, s, o); if (F.phase === "laeuft") F.phase = "wuerfeln";
+      if (F.phase !== "frage") FD.fdkWeiter(F); }
+    assert.equal(F.phase, "ende", "FDK-Partie mit der Server-Kopie endet");
+  }
+  for (let n = 0; n < 40; n++) {
+    const z = DK.dkNeu(n % 4, [0, 2]); if (z.phase === "vorbehalt") { assert.ok([0, 2].includes(z.braut), "nur Menschen entscheiden"); DK.dkVorbehalt(z, n % 2 ? "hochzeit" : "solo"); }
+    while (z.phase !== "ende") if (DK.dkSpielen(z, z.amZug, DK.dkComputerKarte(z, z.amZug, "mittel"))) DK.dkStichAbschliessen(z);
+    const e = DK.dkErgebnis(z, ["Du", "Erika", "Berta", "Paul"]); assert.equal(e.reAug + e.koAug, 240, "240 Augen"); assert.equal(e.punkte.reduce((x, y) => x + y, 0), 0, "Punkte gleichen sich aus");
+  }
 }
 
 // 2.218.0 KC-CLUB-SELBSTLOESCHEN-WARNUNG (Wunsch Hansi): vor dem Einschalten deutlich warnen – gelöscht ist gelöscht, keine Wiederherstellung
