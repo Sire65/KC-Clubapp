@@ -70,7 +70,7 @@ Mitglieder (alle 4 Ansichten), Pinnwand, Einstellungen (Rollkartei + Umschaltkn�
 - [ ] Version 3.0.0 überall gleich (app.js, sw.js, index.html, version.json, Server), `"stufe": "FINAL"`
 - [ ] „Was ist neu in 3.0“ für die Mitglieder geschrieben (statt „Kleine Systemverbesserungen“)
 - [ ] Handbuch (Club-App-Anleitung) auf Stand 3.0
-- [ ] Rückweg festgehalten: letzte RC-Version als Tag, Rücksprung = Tag erneut ausrollen
+- [ ] Rückweg festgehalten: letzte RC-Version als Commit (RC 2.209.1 = `544bb26`), Rücksprung = diesen Stand erneut ausrollen
 - [ ] Release-Tag `v3.0.0` auf GitHub (unveränderlich, Regel 17); Fehler danach nur mit 3.0.1 ff.
 - [ ] Ankündigung an die Mitglieder (Pinnwand/Push)
 
