@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.219.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.220.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -468,7 +468,7 @@ const VERLAUF = { state: null, url: "" };
 for (const m of ["pushState", "replaceState"]) { const o = history[m].bind(history); history[m] = (st, t, u) => { o(st, t, u); VERLAUF.state = history.state; VERLAUF.url = location.href; }; } // KC-CLUB-ONLINE-SEITE (1.91.0): einmaliger Filter der Mitglieder-Seite (früh deklariert, zeige() nutzt ihn)
 let MITGLIEDER_STAND = 0; // 2.122.0 KC-CLUB-ONLINE-FRISCH: wann die Mitgliederliste (mit .online) zuletzt frisch geholt wurde
 let START_HASH = "", KEY = "", ICH = null, INIT = null, MITGLIEDER = null, AEMTER = [], aktuelleAnsicht = "start", reg = "verein";
-let chatId = null, chatTimer = null, empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }, anlagen = [], letzteUngelesen = null;
+let chatId = null, chatTimer = null, empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }, anlagen = [], letzteUngelesen = null, EINMAL = false; // EINMAL: KC-CLUB-EINMAL-FOTO
 
 function einst(k, def) { try { const v = localStorage.getItem("kc_club_" + k); return v === null ? def : v === "1"; } catch { return def; } }
 // KC-CLUB-KACHEL-KLEIN (2.23.87, Wunsch Hansi): Startseiten-Kacheln klein (3 je Reihe) – je Gerät, weil Bildschirme verschieden groß sind
@@ -16941,8 +16941,8 @@ async function chatLaden(scrollen) {
     }
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
     $("chat").innerHTML = u.nachrichten.map((m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')">
-      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : m.text === "📎" && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}
-      ${m.anlagen.map((a) => /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
+      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}
+      ${m.anlagen.map((a) => a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       <div class="fuss">${m.loeschtAm ? `<span class="sl-marke" title="Löscht sich selbst – für alle">⏳ noch ${slRest(m.loeschtAm)}</span> ` : ""}${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("") + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
@@ -17045,8 +17045,8 @@ function nachrichtMenue(id) {
     ${m.text ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naKopieren('${id}')">📋 Kopieren</button>` : ""}
     ${m.text && m.text !== "📎" ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naVorlesen('${id}')">🔊 Vorlesen</button>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();chatVorlesenStart('${id}')">🔊 Ab hier alles vorlesen</button>
-    <button class="knopf" onclick="document.getElementById('naMenue').remove();weiterleitenBlatt('${id}')">↪️ Weiterleiten</button>
-    ${(m.anlagen || []).some((a) => ARCHIV_TYP_OK(a.mime)) ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naAnlagenArchiv('${id}')">🗄️ Datei in mein Archiv</button>` : ""}
+    ${(m.anlagen || []).some((a) => a.einmal) ? "" : `<button class="knopf" onclick="document.getElementById('naMenue').remove();weiterleitenBlatt('${id}')">↪️ Weiterleiten</button>`}
+    ${(m.anlagen || []).some((a) => ARCHIV_TYP_OK(a.mime) && !a.einmal) ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naAnlagenArchiv('${id}')">🗄️ Datei in mein Archiv</button>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();nachrichtInfo('${id}')">ℹ️ Details – wann gesendet, angekommen, gelesen</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naLoeschenFragen('${id}')">🗑️ Löschen</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove()">Abbrechen</button></div>`;
@@ -17480,6 +17480,7 @@ function naErwaehnteIds(text) { return [...NA.erw.entries()].filter(([vn]) => ne
 // „↪️ Weitergeleitet von …“, Fotos/Anhänge gehen mit (der Server prüft, dass ich die Quell-Nachricht sehen darf).
 const WL = { quelle: null, liste: [] };
 async function weiterleitenBlatt(id) {
+  if ((CHAT?.nachrichten || []).find((x) => x.id === id)?.anlagen?.some((a) => a.einmal)) return melde("👁️ Ein Einmal-Foto kann nicht weitergeleitet werden.", true); // KC-CLUB-EINMAL-FOTO
   const m = NA.nachrichten.get(id); if (!m) return;
   WL.quelle = m;
   try { await zeMitglieder(); WL.liste = ((await api("unterhaltungen")).unterhaltungen || []).slice(0, 12); } catch (e) { return meldeFehler(e); }
@@ -18541,13 +18542,14 @@ async function senden() {
     const daten = { text, anlagen: anlagen.filter((a) => a.id).map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]),
       ...(NA.antwort && chatId ? { antwort_auf: NA.antwort.id } : {}), ...(chatId ? { erwaehnt: naErwaehnteIds(text) } : {}), // KC-CLUB-ANTWORT / -ERWAEHNUNG
       ...(WICHTIG ? { wichtig: true } : {}), // KC-CLUB-WICHTIG
+      ...(EINMAL && anlagen.length === 1 ? { einmal: true } : {}), // KC-CLUB-EINMAL-FOTO
       ...(SL.std !== null && SL.chat === chatId ? { ablauf_std: SL.std } : {}) }; // KC-CLUB-SELBSTLOESCHEN: ⏳ nur diese Nachricht
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN
-    $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
+    $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; EINMAL = false; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
     spur(daten.anlagen.length ? "gesendet_anlage" : "gesendet", r?.id || chatId); // KC-CLUB-SPUR: nur „gesendet“ + Unterhaltung, nie der Text
     if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
     const gesendet = gesendetAblegbar(anlagenVorher); // KC-CLUB-ABLAGE-VORSCHLAG (2.80.0)
@@ -19089,8 +19091,49 @@ function anlageWahl(id) { $("anlageBlatt").classList.add("versteckt"); dateiWahl
 // KC-CLUB-ANHANG-ANSEHEN (2.39.1, Meldung Hansi „Bildschirmfoto beim Antippen weg“): Antippen des Anhangs zeigt ihn groß –
 // entfernt wird nur noch über das eigene ✕ bzw. „🗑️ Entfernen“. Bilder bekommen ein kleines Vorschaubild (nur auf diesem Gerät).
 const anlageVorschau = (datei) => { try { return /^image\//.test(datei?.type || "") ? URL.createObjectURL(datei) : null; } catch { return null; } };
+// ---------- KC-CLUB-EINMAL-FOTO (2.220.0, Wunsch Hansi „Foto, das nur einmal angesehen werden darf – gegen Missbrauch“) ----------
+// Senden: bei genau einem Foto „👁️ Einmal ansehen“ einschalten. Empfang: Kachel statt Bild; Öffnen nur einmal (der Server gibt das Bild
+// nur einmal heraus), groß mit Namen + Uhrzeit als Wasserzeichen, ohne Speichern/Teilen, unscharf beim Wegwechseln. Zweiter Versuch → Hinweis.
+const EINMAL_TEXT = "👁️ Foto – einmal ansehen";
+function einmalUmschalten() {
+  EINMAL = !EINMAL; chipsZeigen();
+  melde(EINMAL ? "👁️ Einmal ansehen: Der Empfänger kann das Foto nur ein einziges Mal öffnen – danach ist es weg." : "👁️ Einmal ansehen aus – das Foto bleibt normal im Chat.");
+}
+function einmalKachel(a) {
+  const e = a.einmal || {}, zeit = (t) => t ? `${fKurz.format(new Date(t))} um ${fZeit.format(new Date(t))}` : "";
+  if (e.eigen) {
+    const namen = (e.gesehenVon || []).map((x) => `${esc((CHAT?.teilnehmer || []).find((t) => t.person_id === x.person_id)?.name?.split(" ")[0] || "Jemand")} (${zeit(x.am)})`);
+    return `<div class="einmal-kachel eigen"><b>👁️ Einmal-Foto gesendet</b><small>${namen.length ? "Geöffnet von " + namen.join(", ") : e.weg ? "Nicht mehr verfügbar" : "Noch nicht geöffnet"}</small></div>`;
+  }
+  if (e.gesehenAm) return `<div class="einmal-kachel aus" onclick="event.stopPropagation();einmalNochmal()"><b>👁️ Foto geöffnet</b><small>am ${zeit(e.gesehenAm)} – nur einmal möglich</small></div>`;
+  if (e.weg) return `<div class="einmal-kachel aus" onclick="event.stopPropagation();einmalNochmal()"><b>👁️ Foto nicht mehr verfügbar</b><small>abgelaufen</small></div>`;
+  return `<button type="button" class="einmal-kachel neu" onclick="event.stopPropagation();einmalOeffnen('${a.id}')"><b>👁️ Foto – einmal ansehen</b><small>Antippen zum Öffnen · danach ist es weg</small></button>`;
+}
+function einmalNochmal() {
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">⚠️ Nur einmal ansehen</h3><p class="dlg-text">Dieses Foto durfte nur <b>einmal</b> angesehen werden und ist nicht mehr verfügbar.<br><br>So kann es nicht weitergegeben oder missbraucht werden.</p>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="1">✅ Verstanden</button></div>`);
+  const b = f?.querySelector("[data-w]"); if (b) { b.onclick = () => f.remove(); b.focus(); }
+}
+async function einmalOeffnen(id) {
+  if (!(await frage("👁️ Foto jetzt öffnen?\n\nDu kannst es nur EIN EINZIGES MAL ansehen. Sobald du es schließt, ist es weg – auch für dich.", { ja: "👁️ Jetzt ansehen", nein: "Später" }))) return;
+  let r; try { r = await api("einmal_foto_ansehen", { id }, { warten: true }); }
+  catch (e) { if (/nur einmal/.test(String(e?.message || ""))) { einmalNochmal(); chatLaden(true).catch(() => {}); return; } return meldeFehler(e); }
+  const bytes = Uint8Array.from(atob(r.daten), (c) => c.charCodeAt(0)), url = URL.createObjectURL(new Blob([bytes], { type: r.mime || "image/jpeg" }));
+  const zeile = `${esc(r.betrachter || ICH?.name || "")} · ${esc(fKurz.format(new Date(r.am)))} ${esc(fZeit.format(new Date(r.am)))}`;
+  const f = document.createElement("div"); f.id = "einmalSchirm"; f.className = "einmal-schirm"; f.setAttribute("role", "dialog"); f.setAttribute("aria-label", "Einmal-Foto");
+  f.innerHTML = `<div class="einmal-bild"><img src="${url}" alt="Einmal-Foto" draggable="false"><div class="einmal-wz" aria-hidden="true">${Array(18).fill(`<span>${zeile}</span>`).join("")}</div></div>
+    <div class="einmal-leiste"><span>👁️ Nur jetzt sichtbar – beim Schließen ist es weg</span><button type="button" class="knopf haupt" onclick="einmalSchliessen()">✕ Schließen</button></div>`;
+  ["contextmenu", "dragstart", "copy"].forEach((ev) => f.addEventListener(ev, (x) => x.preventDefault()));
+  const unscharf = () => f.classList.toggle("unscharf", document.hidden || !document.hasFocus());
+  f._weg = () => { document.removeEventListener("visibilitychange", unscharf); window.removeEventListener("blur", unscharf); window.removeEventListener("focus", unscharf); URL.revokeObjectURL(url); };
+  document.addEventListener("visibilitychange", unscharf); window.addEventListener("blur", unscharf); window.addEventListener("focus", unscharf);
+  document.body.appendChild(f); spur("einmal_foto", chatId);
+}
+function einmalSchliessen() { const f = $("einmalSchirm"); if (!f) return; f._weg?.(); f.remove(); melde("👁️ Das Foto ist jetzt weg."); chatLaden(true).catch(() => {}); }
 function chipsZeigen() {
+  if (!(anlagen.length === 1 && anlagen[0].bild)) EINMAL = false; // KC-CLUB-EINMAL-FOTO: nur bei genau einem Foto
   $("anlagenChips").innerHTML = anlagen.map((a, i) => `<span class="chip anl-chip"><button type="button" class="anl-auf" onclick="anlageAnsehen(${i})" aria-label="Anhang ansehen: ${esc(a.name)}">${a.bild ? `<img src="${a.bild}" alt="">` : a.laedt ? "⏳" : "📎"} ${esc(a.name)}</button><button type="button" class="anl-weg" onclick="anlageEntfernen(${i})" aria-label="Anhang entfernen" title="Anhang entfernen">✕</button></span>`).join("");
+  if (anlagen.length === 1 && anlagen[0].bild) $("anlagenChips").insertAdjacentHTML("beforeend", `<button type="button" class="chip einmal-chip${EINMAL ? " an" : ""}" onclick="einmalUmschalten()" aria-pressed="${EINMAL}" title="Der Empfänger kann das Foto nur ein einziges Mal öffnen">👁️ Einmal ansehen: ${EINMAL ? "An" : "Aus"}</button>`);
 }
 function anlageEntfernen(i) { const a = anlagen[i]; if (!a) return; anlagen.splice(i, 1); try { if (a.bild) URL.revokeObjectURL(a.bild); } catch {} chipsZeigen(); melde("📎 Anhang entfernt"); }
 function anlageAnsehen(i) {
@@ -24300,7 +24343,7 @@ function chatVerlaufText() {
   return [`Köcheclub-App – Chat „${chatName()}“`, `Teilnehmer: ${(u?.teilnehmer || []).map((t) => t.name).join(", ")}`,
     `Abgelegt am ${zeitDe(new Date().toISOString())} von ${ICH.name}${msgs.length >= 500 ? " (die letzten 500 Nachrichten)" : ""}`, "────────────────────", "", ...zeilen, ""].join("\n");
 }
-function chatAnlagen() { return (CHAT?.nachrichten || []).flatMap((m) => (m.anlagen || []).filter((a) => ARCHIV_TYP_OK(a.mime))); }
+function chatAnlagen() { return (CHAT?.nachrichten || []).flatMap((m) => (m.anlagen || []).filter((a) => ARCHIV_TYP_OK(a.mime) && !a.einmal)); } // KC-CLUB-EINMAL-FOTO: nie ins Archiv
 function chatAblageFragen(extra = {}) {
   if (!CHAT?.nachrichten?.length) return Promise.resolve(false);
   const n = CHAT.nachrichten.length, dateien = chatAnlagen(), heute = heuteIso();

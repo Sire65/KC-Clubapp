@@ -44,7 +44,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.219.0";
+const SERVER_VERSION = "2.220.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -614,6 +614,7 @@ async function dateiAblegen(ich: Ich, nameRoh: unknown, mimeRoh: unknown, datenR
 async function dateiDuplizieren(ich: Ich, attId: unknown) {
   const { data: a } = await db.from("kc_communication_attachments").select("bucket,object_path,file_name,mime_type").eq("id", String(attId || "")).maybeSingle();
   if (!a) throw new Fehler("Die Datei ist nicht mehr vorhanden.", 404);
+  if ((await einmalFotos([String(attId || "")])).size) throw new Fehler("👁️ Ein Einmal-Foto kann nicht kopiert oder abgelegt werden.", 403); // KC-CLUB-EINMAL-FOTO
   const { data: blob, error } = await db.storage.from(a.bucket).download(a.object_path);
   if (error || !blob) throw new Fehler("Die Datei konnte gerade nicht gelesen werden – bitte gleich noch einmal.", 500);
   const bytes = new Uint8Array(await blob.arrayBuffer());
@@ -627,6 +628,37 @@ async function dateienEntfernen(ids: (string | null | undefined)[]) {
   const { data: att } = await db.from("kc_communication_attachments").select("id,bucket,object_path").in("id", u);
   for (const b of new Set((att ?? []).map((x: any) => x.bucket))) await db.storage.from(b).remove((att ?? []).filter((x: any) => x.bucket === b).map((x: any) => x.object_path));
   await db.from("kc_communication_attachments").delete().in("id", u);
+}
+
+// ---------- KC-CLUB-EINMAL-FOTO (2.220.0, Wunsch Hansi „Foto nur einmal ansehen – gegen Missbrauch“) ----------
+// Das Bild gibt nur „einmal_foto_ansehen“ heraus (als Daten, nie als Link); je Empfänger genau einmal (Primärschlüssel).
+// Sobald alle Empfänger es gesehen haben – spätestens nach EINMAL_TAGE – wird die Bilddatei gelöscht.
+const EINMAL_TAGE = 7, EINMAL_TEXT = "👁️ Foto – einmal ansehen";
+async function einmalFotos(ids: string[]) {
+  if (!ids.length) return new Map<string, any>();
+  const { data } = await db.from("kc_club_einmal_foto").select("*").in("attachment_id", ids);
+  return new Map<string, any>((data ?? []).map((x: any) => [x.attachment_id, x]));
+}
+async function einmalDateiWeg(e: any) {
+  if (!e || e.entfernt_am) return;
+  const { data: a } = await db.from("kc_communication_attachments").select("bucket,object_path").eq("id", e.attachment_id).maybeSingle();
+  if (a) await db.storage.from(a.bucket).remove([a.object_path]);
+  await db.from("kc_club_einmal_foto").update({ entfernt_am: jetzt() }).eq("attachment_id", e.attachment_id).is("entfernt_am", null);
+}
+// alle Empfänger (Teilnehmer außer Absender) haben es gesehen – oder es ist zu alt → Datei weg
+async function einmalAufraeumen(e: any) {
+  if (!e || e.entfernt_am) return false;
+  const alt = Date.now() - Date.parse(e.erstellt_am) > EINMAL_TAGE * 86400000;
+  let fertig = alt;
+  if (!fertig) {
+    const [{ data: tn }, { data: ges }] = await Promise.all([
+      db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", e.thread_id),
+      db.from("kc_club_einmal_foto_gesehen").select("person_id").eq("attachment_id", e.attachment_id)]);
+    const empf = (tn ?? []).map((x: any) => x.person_id).filter((x: string) => x !== e.absender), gesehen = new Set((ges ?? []).map((x: any) => x.person_id));
+    fertig = empf.length > 0 && empf.every((x: string) => gesehen.has(x));
+  }
+  if (fertig) await einmalDateiWeg(e);
+  return fertig;
 }
 
 // ---------- Fotoalbum (KC-CLUB-FOTOALBUM) ----------
@@ -7268,6 +7300,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: ma } = mids.length ? await db.from("kc_communication_message_attachments").select("message_id,attachment_id").in("message_id", mids) : { data: [] as any[] };
         const aids = (ma ?? []).map((x: any) => x.attachment_id);
         const { data: att } = aids.length ? await db.from("kc_communication_attachments").select("id,file_name,mime_type,size_bytes").in("id", aids) : { data: [] as any[] };
+        // KC-CLUB-EINMAL-FOTO: Kennzeichnung je Anlage (gesehen? weg?), Absender sieht wer wann; alte/fertige räumt es nebenbei auf
+        const einm = await einmalFotos(aids);
+        const { data: einmGes } = einm.size ? await db.from("kc_club_einmal_foto_gesehen").select("attachment_id,person_id,gesehen_am").in("attachment_id", [...einm.keys()]) : { data: [] as any[] };
+        for (const e of einm.values()) if (!e.entfernt_am && Date.now() - Date.parse(e.erstellt_am) > EINMAL_TAGE * 86400000) einmalDateiWeg(e).catch(() => {});
+        const einmalInfo = (aid: string) => { const e = einm.get(aid); if (!e) return null; const g = (einmGes ?? []).filter((x: any) => x.attachment_id === aid);
+          const weg = !!e.entfernt_am || Date.now() - Date.parse(e.erstellt_am) > EINMAL_TAGE * 86400000;
+          return { eigen: e.absender === ich.person_id, gesehenAm: g.find((x: any) => x.person_id === ich.person_id)?.gesehen_am ?? null, weg,
+            ...(e.absender === ich.person_id ? { gesehenVon: g.map((x: any) => ({ person_id: x.person_id, am: x.gesehen_am })) } : {}) }; };
         // KC-CLUB-EMPFANGS-EFFEKT (2.177.0): gewählter Sende-Effekt der Teilnehmer – parallel zu den Namen, nur kurze Kennung
         const [leute, { data: seE }] = await Promise.all([personen([...(tn ?? []).map((x: any) => x.person_id), ...(msgs ?? []).map((m: any) => m.sender_person_id)]),
           db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "sende_effekt").in("person_id", (tn ?? []).map((x: any) => x.person_id))]);
@@ -7348,7 +7388,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return {
             id: m.id, eigen, von: eigen ? "Du" : leute.get(m.sender_person_id)?.display_name || m.sender_person_id, vonId: m.sender_person_id, text: m.body, zeit: m.created_at,
             anlagen: (ma ?? []).filter((x: any) => x.message_id === m.id).map((x: any) => (att ?? []).find((y: any) => y.id === x.attachment_id)).filter(Boolean)
-              .map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes })),
+              .map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes, ...(einm.has(y.id) ? { einmal: einmalInfo(y.id) } : {}) })),
             ...(eigen ? { gelesenVon, gelesenAlle: andere.length > 0 && gelesenVon.length === andere.length, zustellung: zustellung(m.id),
               // ✓ gesendet · ✓✓ auf allen Handys angekommen · blaue ✓✓ von allen gelesen (wie WhatsApp; Gruppe: erst wenn alle)
               haken: andere.length > 0 && gelesenVon.length === andere.length ? "gelesen" : andere.length > 0 && angekommenBei(m) === andere.length ? "angekommen" : "gesendet" } : {}),
@@ -7477,8 +7517,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (!q) throw new Fehler("Die weitergeleitete Nachricht gibt es nicht mehr.", 404);
           await binTeilnehmer(q.thread_id, ich.person_id); weiterVon = q;
         }
+        // KC-CLUB-EINMAL-FOTO: genau ein eigenes, frisch hochgeladenes Foto; nie weiterleiten
+        const einmal = p.einmal === true;
+        if (einmal && (anlagen.length !== 1 || umfrage || kontaktPid || notfall || p.weiterleiten_von)) throw new Fehler("👁️ „Einmal ansehen“ geht nur mit genau einem Foto.");
+        if (anlagen.length && (await einmalFotos(anlagen)).size) throw new Fehler("👁️ Ein Einmal-Foto kann nicht weitergeleitet werden.", 403);
         if (anlagen.length) {
-          const { data: att } = await db.from("kc_communication_attachments").select("id,object_path").in("id", anlagen);
+          const { data: att } = await db.from("kc_communication_attachments").select("id,object_path,mime_type").in("id", anlagen);
+          if (einmal && !/^image\//.test(String(att?.[0]?.mime_type || ""))) throw new Fehler("👁️ „Einmal ansehen“ geht nur mit einem Foto.");
           const { data: qa } = weiterVon ? await db.from("kc_communication_message_attachments").select("attachment_id").eq("message_id", weiterVon.id) : { data: [] as any[] };
           const ausQuelle = new Set((qa ?? []).map((x: any) => x.attachment_id));
           if ((att ?? []).length !== anlagen.length || (att ?? []).some((x: any) => !String(x.object_path).startsWith(`club/${ich.person_id}/`) && !ausQuelle.has(x.id)))
@@ -7490,10 +7535,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data: b } = await db.from("kc_communication_messages").select("id,thread_id").eq("id", String(p.antwort_auf)).maybeSingle();
           if (b && b.thread_id === threadId) antwortAuf = b.id;
         }
-        const { data: m, error: me } = await db.from("kc_communication_messages").insert({ thread_id: threadId, sender_person_id: ich.person_id, body: text || "📎", reply_to_message_id: antwortAuf }).select("id,created_at").single();
+        const { data: m, error: me } = await db.from("kc_communication_messages").insert({ thread_id: threadId, sender_person_id: ich.person_id, body: text || (einmal ? EINMAL_TEXT : "📎"), reply_to_message_id: antwortAuf }).select("id,created_at").single();
         db.from("kc_club_tippen").delete().eq("thread_id", threadId).eq("person_id", ich.person_id).then(() => {}); // „schreibt …“ endet mit dem Senden
         if (me || !m) throw new Fehler("Nachricht konnte nicht gespeichert werden.", 500);
         if (anlagen.length) await db.from("kc_communication_message_attachments").insert(anlagen.map((attachment_id: string) => ({ message_id: m.id, attachment_id, hochgeladen_von_person_id: ich.person_id })));
+        if (einmal) {
+          const { error: ee } = await db.from("kc_club_einmal_foto").insert({ attachment_id: anlagen[0], message_id: m.id, thread_id: threadId, absender: ich.person_id });
+          if (ee) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler("Das Einmal-Foto konnte nicht gesendet werden.", 500); }
+        }
         if (umfrage || kontaktPid) {
           const { error: ze } = umfrage ? await db.from("kc_club_chat_umfrage").insert({ message_id: m.id, ...umfrage, erstellt_von: ich.person_id })
             : await db.from("kc_club_chat_kontakt").insert({ message_id: m.id, person_id: kontaktPid });
@@ -10164,9 +10213,39 @@ Köcheclub Werne`,
         return json({ ok: true, ...r });
       }
 
+      // KC-CLUB-EINMAL-FOTO (2.220.0): das Bild genau einmal je Empfänger – als Daten (kein wiederverwendbarer Link)
+      case "einmal_foto_ansehen": {
+        const aid = String(p.id || "");
+        const e = (await einmalFotos([aid])).get(aid);
+        if (!e) throw new Fehler("Foto nicht gefunden.", 404);
+        await binTeilnehmer(e.thread_id, ich.person_id);
+        if (e.absender === ich.person_id) throw new Fehler("👁️ Dein Einmal-Foto ist für die Empfänger – du selbst kannst es nach dem Senden nicht mehr öffnen.", 403);
+        const NICHT_MEHR = "⚠️ Dieses Foto durfte nur einmal angesehen werden und ist nicht mehr verfügbar.";
+        if (e.entfernt_am || Date.now() - Date.parse(e.erstellt_am) > EINMAL_TAGE * 86400000) throw new Fehler(NICHT_MEHR, 410);
+        const { data: a } = await db.from("kc_communication_attachments").select("bucket,object_path,mime_type").eq("id", aid).maybeSingle();
+        if (!a) throw new Fehler(NICHT_MEHR, 410);
+        // erst „gesehen“ eintragen (geht je Person nur einmal), dann das Bild holen – ein zweiter Versuch scheitert hier
+        const { error: ge } = await db.from("kc_club_einmal_foto_gesehen").insert({ attachment_id: aid, person_id: ich.person_id });
+        if (ge) {
+          if (String(ge.code) === "23505") { await protokoll(ich.person_id, "einmal_foto_zweiter_versuch", { anlage: aid, absender: e.absender }); throw new Fehler(NICHT_MEHR, 410); }
+          throw new Fehler("Das Foto kann gerade nicht geöffnet werden – bitte gleich noch einmal.", 503);
+        }
+        const { data: blob, error: be } = await db.storage.from(a.bucket).download(a.object_path);
+        if (be || !blob) {
+          await db.from("kc_club_einmal_foto_gesehen").delete().eq("attachment_id", aid).eq("person_id", ich.person_id); // nicht geklappt → nicht verbraucht
+          throw new Fehler("Das Foto kann gerade nicht geöffnet werden – bitte gleich noch einmal.", 503);
+        }
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        let b = ""; for (let i = 0; i < bytes.length; i += 0x8000) b += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+        await protokoll(ich.person_id, "einmal_foto_angesehen", { anlage: aid, absender: e.absender });
+        einmalAufraeumen(e).catch(() => {});
+        return json({ mime: a.mime_type, daten: btoa(b), betrachter: ich.name, am: jetzt() });
+      }
+
       case "anlage_url": {
         const { data: att } = await db.from("kc_communication_attachments").select("id,bucket,object_path,file_name").eq("id", String(p.id || "")).maybeSingle();
         if (!att) throw new Fehler("Anlage nicht gefunden.", 404);
+        if ((await einmalFotos([att.id])).size) throw new Fehler("👁️ Dieses Foto kann nur einmal angesehen werden – bitte im Chat auf die Kachel tippen.", 403); // KC-CLUB-EINMAL-FOTO
         let erlaubt = String(att.object_path).startsWith(`club/${ich.person_id}/`);
         if (!erlaubt) {
           const { data: ma } = await db.from("kc_communication_message_attachments").select("message_id").eq("attachment_id", att.id);

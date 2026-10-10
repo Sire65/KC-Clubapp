@@ -7962,3 +7962,19 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/if \(std > 0 && std !== slChat\(\) && !\(await frage\(`⚠️ Selbstlöschen wirklich einschalten\?[^`]*NICHT wiederhergestellt/.test(f), "Rückfrage beim Einschalten");
   assert.ok(/class="sl-warnung">⚠️ <b>Gelöscht ist gelöscht:<\/b>/.test(html) && /\.sl-warnung \{/.test(html), "Warnung im Auswahlfenster");
 }
+
+// 2.220.0 KC-CLUB-EINMAL-FOTO (Wunsch Hansi): Foto im Chat nur EINMAL ansehen – gegen Missbrauch
+{
+  const mig = lies("supabase/migrations/20261010_kc_club_v2220_einmal_foto.sql");
+  assert.ok(/create table if not exists kc_club_einmal_foto_gesehen[^;]*primary key \(attachment_id, person_id\)/.test(mig) && /enable row level security/.test(mig) && /revoke all on kc_club_einmal_foto_gesehen from anon, authenticated/.test(mig), "je Person nur einmal (Primärschlüssel), RLS");
+  const f = server.slice(server.indexOf('case "einmal_foto_ansehen": {'), server.indexOf('case "anlage_url": {'));
+  assert.ok(/await binTeilnehmer\(e\.thread_id, ich\.person_id\)/.test(f) && /if \(e\.absender === ich\.person_id\) throw/.test(f), "nur Empfänger im Chat");
+  assert.ok(/from\("kc_club_einmal_foto_gesehen"\)\.insert\(/.test(f) && /String\(ge\.code\) === "23505"/.test(f) && /einmal_foto_zweiter_versuch/.test(f), "zweiter Versuch scheitert und wird protokolliert");
+  assert.ok(/daten: btoa\(b\)/.test(f) && !/createSignedUrl/.test(f), "Bild als Daten, kein wiederverwendbarer Link");
+  assert.ok(/case "anlage_url": \{[\s\S]{0,400}einmalFotos\(\[att\.id\]\)\)\.size\) throw/.test(server), "kein Link über anlage_url");
+  assert.ok(/einmalFotos\(\[String\(attId \|\| ""\)\]\)\)\.size\) throw/.test(server) && /Ein Einmal-Foto kann nicht weitergeleitet werden/.test(server), "nicht kopieren/ablegen/weiterleiten");
+  assert.ok(/async function einmalAufraeumen\(e: any\)/.test(server) && /EINMAL_TAGE = 7/.test(server), "Datei weg, wenn alle gesehen bzw. nach 7 Tagen");
+  assert.ok(/function einmalUmschalten\(\)/.test(html) && /\.\.\.\(EINMAL && anlagen\.length === 1 \? \{ einmal: true \} : \{\}\)/.test(html), "Umschalter beim Senden");
+  assert.ok(/a\.einmal \? einmalKachel\(a\)/.test(html) && /function einmalNochmal\(\)/.test(html) && /nur <b>einmal<\/b> angesehen werden und ist nicht mehr verfügbar/.test(html), "Kachel + Hinweis beim zweiten Versuch");
+  assert.ok(/class="einmal-wz"/.test(html) && /\.einmal-schirm\.unscharf img \{ filter: blur/.test(html) && /\["contextmenu", "dragstart", "copy"\]/.test(html), "Wasserzeichen, unscharf, kein Speichern");
+}

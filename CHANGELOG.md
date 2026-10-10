@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.220.0 – 2026-10-10 – 👁️ Foto nur einmal ansehen
+👁️ Fotos im Chat lassen sich als „Einmal ansehen“ senden: Der Empfänger kann es nur ein einziges Mal öffnen (mit seinem Namen als Wasserzeichen), danach ist es weg – ein zweiter Versuch zeigt einen Hinweis. Kein Weiterleiten, Speichern oder Ablegen.
+
 ## 2.219.0 – 2026-10-10 – 🧑‍🍳👑 Fang den Koch und Doppelkopf gegen Mitglieder
 🧑‍🍳 Fang den Koch gegen ein Mitglied: Gerichte und Länge beim Herausfordern wählen; der Server würfelt, mischt, stellt die 🧪 Hygienefrage und prüft jeden Schritt; fremde Handkarten bleiben verdeckt (KC-CLUB-FDK-MG)
 👑 Doppelkopf gegen ein Mitglied: ihr zwei sitzt euch gegenüber, zwei Computer-Köche spielen mit; Hochzeit/still allein für jeden; fremde Hände verlässt nie den Server (KC-CLUB-DK-MG)
