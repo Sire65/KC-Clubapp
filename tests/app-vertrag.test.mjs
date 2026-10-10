@@ -4480,7 +4480,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 440. 2.23.89: Abzeichen am Bild, Anwesenheitstafel, Bild groß, eigenes Foto (KC-CLUB-AVATAR-ABZEICHEN, -ANWESENHEIT, -AVATAR-FOTO)
 {
   assert.ok(/k\.art !== "unbekannt" \? `<i class="k-abz a-\$\{k\.art\}"/.test(html) && /\.k-abz\.a-online \{ background: #1e8449; \}/.test(html), "Abzeichen, nie bei unbekannt");
-  assert.ok(/const MG_ANSICHTEN = \["kacheln", "liste", "tafel"\];/.test(html) && /function mgTafelHtml\(liste\)/.test(html) && /if \(MG_ANSICHT === "tafel"\) \{ \$\("mitgliederListe"\)\.innerHTML = mgTafelHtml\(liste\); return; \}/.test(html), "Tafel als dritte Ansicht");
+  assert.ok(/const MG_ANSICHTEN = \["kacheln", "liste", "tafel"[,\]]/.test(html) && /function mgTafelHtml\(liste\)/.test(html) && /if \(MG_ANSICHT === "tafel"\) \{ \$\("mitgliederListe"\)\.innerHTML = mgTafelHtml\(liste\); return; \}/.test(html), "Tafel als dritte Ansicht");
   const t = html.slice(html.indexOf("function mgTafelHtml"), html.indexOf("function mgKachelnHtml"));
   assert.ok(/onclick="mitgliedOeffnen\(/.test(t) && !/anrufen|anklopfen|nachricht/i.test(t.replace(/\/\/[^\n]*/g, "")) && /class="mg-led l-\$\{k\.art\}"/.test(t), "nur Name + LED, antippen öffnet das Mitglied");
   assert.ok(/data-a="tafel" onclick="mgAnsichtSetzen\('tafel'\)"/.test(html), "Umschalter 📋");
