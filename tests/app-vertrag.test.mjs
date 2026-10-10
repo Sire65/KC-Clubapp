@@ -7677,3 +7677,9 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/function tastaturLage\(\)/.test(html) && /innerHeight - vv\.height - vv\.offsetTop/.test(html) && /window\.visualViewport\?\.addEventListener\("resize", tastaturLage\)/.test(html), "Tastatur-Höhe aus dem sichtbaren Bereich");
   assert.ok(/html\.tastatur-offen \.eingabe \{ bottom: var\(--tastatur\) !important; \}/.test(idx) && /html\.tastatur-offen \.eingabe \.innen > #text \{ max-height: calc\(var\(--vvh\) \* \.36\); \}/.test(idx) && /\.eingabe \.innen > #text \{ overscroll-behavior: contain; \}/.test(idx), "Schreibfeld über der Tastatur, ganz sichtbar, scrollt in sich");
 }
+
+// 2.197.0 KC-CLUB-TASTATUR-EINGABE-2 (Fund Hansi: alte Nachrichten ließen sich über das Schreibfeld schieben)
+{
+  const idx = lies("index.html");
+  assert.ok(/\.eingabe \{ z-index: 25; \}/.test(idx) && /html\.tastatur-offen #v-chat \{ padding-bottom: var\(--tastatur\); \}/.test(idx), "Schreibfeld liegt immer über den Nachrichten");
+}

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.197.0 – 2026-10-10 – ⌨️ Schreibfeld bleibt über den Nachrichten
+🔧 Kleine Systemverbesserungen
+
 ## 2.196.0 – 2026-10-10 – ⌨️ Lange Nachrichten bei offener Tastatur scrollbar
 🔧 Kleine Systemverbesserungen
 
