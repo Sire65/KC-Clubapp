@@ -1303,7 +1303,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/wetterort: \(w\) => \(\{ ort: w\?\.ort \? wetterOrtPruefen\(w\.ort\) : null \}\)/.test(server), "Server prüft den eigenen Ort nicht");
   const wc = server.slice(server.indexOf('case "wetter": {'), server.indexOf('case "wetter_konfig"'));
-  assert.ok(/eq\("person_id", ich\.person_id\)\.eq\("schluessel", "wetterort"\)/.test(wc) && /schl = `\$\{k\.quelle\}:\$\{k\.ort\.lat\},\$\{k\.ort\.lon\}`/.test(wc) && /eigenerOrt: eigen/.test(wc), "eigener Ort wird nicht benutzt / Zwischenspeicher nicht je Ort");
+  assert.ok(/eq\("person_id", ich\.person_id\)\.eq\("schluessel", "wetterort"\)/.test(wc) && (/schl = `\$\{k\.quelle\}:\$\{k\.ort\.lat\},\$\{k\.ort\.lon\}`/.test(wc) || (/await wetterHolen\(k\)/.test(wc) && /schl = `\$\{k\.quelle\}:\$\{k\.ort\.lat\},\$\{k\.ort\.lon\}`/.test(server.slice(server.indexOf("async function wetterHolen("), server.indexOf("async function wetterHolen(") + 600)))) && /eigenerOrt: eigen/.test(wc), "eigener Ort wird nicht benutzt / Zwischenspeicher nicht je Ort");
   const suA = server.indexOf('case "wetter_ort_suchen"'), su = server.slice(suA, server.indexOf('      case "', suA + 10));
   assert.ok(!/nurAdmin/.test(su) && /ich\.admin && WETTER_QUELLEN\[/.test(su), "Suche für Mitglieder / Datenquelle nur Admin");
   for (const o of ["Werne", "Unna", "Bergkamen", "Kamen"]) assert.ok(html.includes(`{ name: "${o}", lat:`), `Ort ${o} fehlt in der Schnellauswahl`);
@@ -8016,4 +8016,17 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/cdKopf\(s\.titel, s\.unter, s\.rechts \?\? esc\(/.test(html), "zentraler CD-Kopf");
   assert.ok(/async function rcBild\(/.test(html) && /api\("archiv_hochladen", \{ ordner_id: o\.id, register,/.test(html) && /mime: "application\/pdf"/.test(html), "PDF in den eigenen Archiv-Ordner");
   assert.ok(/#reisecheckliste=/.test(html) && /onclick="rcOeffnen\('\$\{esc\(a\.id\)\}'\)">🧳 Meine Reise-Checkliste/.test(html), "aus Erinnerung und bei der Reise erreichbar");
+}
+
+// 2.224.0 KC-CLUB-DIENST-GRUSS + Checkliste „Nicht mehr erinnern“ (Wunsch Hansi): Weihnachtsmarkt Fr/Sa/So rote, sonst weiße Kochjacke;
+// am Dienst-Tag Fenster beim Start (Gruß, Schicht, Jacke, Wetter-Hinweise) + Push am Morgen; Kleidungs-Hinweise aus dem Wetter
+{
+  assert.ok(/const DIENST_KLEIDUNG = \[/.test(server) && /jacke: \(wt: number\) => \(\[5, 6, 0\]\.includes\(wt\) \? "rot" : "weiss"\)/.test(server), "Registry: Fr/Sa/So rot, sonst weiß");
+  assert.ok(/ohne: \/aufbau\|abbau\|nachbereitung\|vorbereitung\/i/.test(server), "Auf-/Abbau zählt nicht als Markt");
+  const w = server.slice(server.indexOf("async function dienstWetter("), server.indexOf("async function dienstGruss("));
+  assert.ok(/min <= 0\) h\.push\(`🥶 Heute bis \$\{min\} Grad – denk an Handschuhe, Mütze/.test(w) && /denk an den Schirm/.test(w) && /unbekannt: true/.test(w), "Hinweise; ohne Daten ehrlich unbekannt");
+  assert.ok(/case "dienst_gruss": \{/.test(server) && /await dienstGrussSenden\(\)\.catch/.test(server) && /`club-dienst-gruss:\$\{pid\}:\$\{tag\}`/.test(server) && /schluessel: "dienst_gruss_gesendet"/.test(server), "Aktion + Push morgens, einmal je Tag");
+  assert.ok(/async function wetterHolen\(/.test(server) && /const q = WETTER_QUELLEN\[k\.quelle\], \{ c, fehler \} = await wetterHolen\(k\);/.test(server), "ein Wetter-Weg (Zwischenspeicher) für beide");
+  assert.ok(/function dgPruefen\(/.test(html) && /setTimeout\(\(\) => dgPruefen\(\), 2500\)/.test(html) && /ich wünsche dir einen angenehmen Dienst heute!/.test(html) && /h === "#dienstgruss"/.test(html), "Fenster beim Start");
+  assert.ok(/aus: r\?\.aus === true/.test(server) && /if \(r\?\.aus\) continue;/.test(server) && /'aus'\)">🔕 Nicht mehr erinnern/.test(html) && /!st\.aus &&/.test(html), "Checkliste: nicht mehr erinnern");
 }

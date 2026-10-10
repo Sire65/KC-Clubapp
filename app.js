@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.223.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.224.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12845,6 +12845,7 @@ function hashSprung(h) {
     else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
+    else if (h === "#dienstgruss") dgZeigen(true); // KC-CLUB-DIENST-GRUSS (2.224.0): aus der Push am Morgen
     else if (h.startsWith("#reisecheckliste=")) rcOeffnen(decodeURIComponent(h.slice(17))); // KC-CLUB-REISE-CHECKLISTE (2.223.0): Erinnerung 2 Tage vorher
     else if (h === "#boerse" || h.startsWith("#boerse=")) { BO.oeffnen = h.slice(8) || null; hlStart("boerse"); } // KC-CLUB-BOERSE
     else if (h.startsWith("#angebot=")) angebotDirekt(decodeURIComponent(h.slice(9))); // KC-CLUB-HILFE-KANAELE (2.23.44): Push/Mail → Angebot
@@ -12965,6 +12966,38 @@ function gedenkenOeffnen() {
     <p class="hinweis" style="margin-top:10px">Unsere Gedanken sind bei der Familie.</p>
     <div class="dlg-knoepfe"><button type="button" class="knopf haupt" data-zu>Schließen</button></div></div>`, zu);
   f.querySelector("[data-zu]").onclick = zu;
+}
+// ---------- KC-CLUB-DIENST-GRUSS (2.224.0, Wunsch Hansi „beim Programmstart ein Fenster: ich wünsche einen angenehmen Dienst heute,
+// dazu Kochjacke (Weihnachtsmarkt: Fr/Sa/So rot, sonst weiß) und Wetter-Hinweise zur Kleidung“). Inhalt rechnet der Server
+// (dienst_gruss: Schichten, Veranstaltung, Jacke, Wetter am Club-Ort) – dieselben Regeln wie die Push am Morgen. Einmal je Tag und Gerät.
+const DG_KEY = "kc_club_dienstgruss";
+const DG_JACKE = { rot: { t: "rote Kochjacke", farbe: "#c62828" }, weiss: { t: "weiße Kochjacke", farbe: "#ffffff" } };
+async function dgPruefen(versuch = 0) {
+  if (!ICH || !INIT || document.body.classList.contains("im-notbetrieb")) return;
+  if (INIT.naechsterDienst?.datum !== heuteIso()) return;
+  try { if (localStorage.getItem(DG_KEY) === heuteIso()) return; } catch {}
+  if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 24) setTimeout(() => dgPruefen(versuch + 1), 5000); return; }
+  RUHE_INFO = true; // wichtiger als Spiel-Einladung & Co. – danach kein weiteres Info-Fenster bei diesem Öffnen
+  dgZeigen();
+}
+async function dgZeigen(vonHand = false) {
+  let g; try { g = (await api("dienst_gruss", {}, { still: !vonHand })).gruss; } catch (e) { if (vonHand) meldeFehler(e); return; }
+  if (!g) { if (vonHand) melde("Heute hast du keinen Dienst – schönen Tag! 🙂"); return; }
+  try { localStorage.setItem(DG_KEY, g.tag); } catch {}
+  const j = g.jacke && DG_JACKE[g.jacke], w = g.wetter || {};
+  const zeiten = g.schichten.map((x) => `<div class="dg-zeit">🕐 <b>${esc(x.start)}–${esc(x.ende)} Uhr</b>${x.bereich ? " · " + esc(x.bereich) : ""}</div>`).join("");
+  const wetter = w.unbekannt ? `<p class="hinweis">❔ ${esc(w.fehler || "Wetter gerade nicht abrufbar")} – bitte selbst kurz nachsehen.</p>`
+    : `<div class="dg-wetter"><b>${wetterArt(w.code).sym} Wetter in ${esc(w.ort || "")}: ${grad(w.min)}${w.max !== w.min ? " bis " + grad(w.max) : ""}</b>${(w.hinweise || []).map((h) => `<div>${esc(h)}</div>`).join("")}</div>`;
+  const f = blattAuf("dgBlatt", `<div style="text-align:center"><div style="font-size:2.6rem;line-height:1.2" aria-hidden="true">👨‍🍳</div>
+      <h3 style="margin:6px 0">Hallo ${esc(ICH.vorname || ICH.name || "")}, ich wünsche dir einen angenehmen Dienst heute!</h3>
+      ${g.veranstaltung ? `<p style="margin:0 0 6px">${esc(g.veranstaltung.titel)}</p>` : ""}</div>
+    ${zeiten}
+    ${j ? `<div class="dg-jacke"><span class="dg-farbe" style="background:${j.farbe}"></span><div>Heute bitte die <b>${esc(j.t)}</b> anziehen.<br><small class="hinweis">Freitag, Samstag und Sonntag rot – die übrigen Tage weiß.</small></div></div>` : ""}
+    ${wetter}
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch;margin-top:10px">
+      <button class="knopf haupt" style="text-align:center" onclick="$('dgBlatt').remove()">👍 Danke!</button>
+      <button class="knopf" style="text-align:center" onclick="$('dgBlatt').remove();zeige('dienste')">🗓️ Mein Dienstplan</button></div>`);
+  return f;
 }
 // ---------- KC-CLUB-COUNTDOWN (2.202.0, Wunsch Hansi „die Terminanzeige oben soll abwechseln: noch x Tage bis Weihnachten, bis zur
 // Kreuzfahrt (nur wenn man dabei ist), bis zum nächsten Clubtreffen usw.“) ----------
@@ -22421,7 +22454,7 @@ function druckReiseCheckliste(param = {}) {
 const RC_ANGEBOT_TAGE = 14, RC_REGISTER_VORSCHLAG = ["Reisen", "Sonstiges"];
 const RC = { reisen: null, id: null, uhr: null };
 const rcAlle = () => ({ ...(INIT?.einstellungen?.reise_checkliste?.reisen || {}) });
-const rcStand = (id) => { const r = rcAlle()[id] || {}; return { haken: { ...(r.haken || {}) }, eigene: [...(r.eigene || [])], art: r.art || null, offen: r.offen || 0, abgelegt: r.abgelegt || null, spaeter: r.spaeter || null }; };
+const rcStand = (id) => { const r = rcAlle()[id] || {}; return { haken: { ...(r.haken || {}) }, eigene: [...(r.eigene || [])], art: r.art || null, offen: r.offen || 0, abgelegt: r.abgelegt || null, spaeter: r.spaeter || null, aus: r.aus === true }; };
 const rcAnzahl = (st) => RC_STANDARD.reduce((n, b) => n + b.p.length, 0) + st.eigene.length;
 const rcOffen = (st) => rcAnzahl(st) - Object.keys(st.haken).filter((k) => st.haken[k] && (!k.startsWith("e") || +k.slice(1) < st.eigene.length)).length;
 const rcIstKreuzfahrt = (a) => aktionSymbol(a) === "🚢";
@@ -22442,7 +22475,7 @@ async function rcAngebotPruefen(versuch = 0) {
   if (!ICH || !INIT || document.body.classList.contains("im-notbetrieb")) return;
   let reisen; try { reisen = await rcReisen(); } catch { return; }
   const heute = heuteIso();
-  const a = reisen.find((x) => { const t = cdTageBis(x.von), st = rcStand(x.id); return t >= 0 && t <= RC_ANGEBOT_TAGE && !st.art && !(st.spaeter && st.spaeter.slice(0, 10) >= heute); });
+  const a = reisen.find((x) => { const t = cdTageBis(x.von), st = rcStand(x.id); return t >= 0 && t <= RC_ANGEBOT_TAGE && !st.art && !st.aus && !(st.spaeter && st.spaeter.slice(0, 10) >= heute); });
   if (!a) return;
   if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 24) setTimeout(() => rcAngebotPruefen(versuch + 1), 5000); return; }
   if (!ruheInfo()) return;
@@ -22454,7 +22487,8 @@ async function rcAngebotPruefen(versuch = 0) {
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">
       <button class="knopf haupt" style="text-align:center" onclick="rcAngebotAntwort('${esc(a.id)}', 'druck')">🖨️ Ausdrucken (PDF)</button>
       <button class="knopf haupt" style="text-align:center" onclick="rcAngebotAntwort('${esc(a.id)}', 'bildschirm')">☑️ Am Bildschirm abhaken</button>
-      <button class="knopf" style="text-align:center" onclick="rcAngebotAntwort('${esc(a.id)}', 'spaeter')">⏰ Später</button></div>
+      <button class="knopf" style="text-align:center" onclick="rcAngebotAntwort('${esc(a.id)}', 'spaeter')">⏰ Später</button>
+      <button class="knopf klein" style="text-align:center" onclick="rcAngebotAntwort('${esc(a.id)}', 'aus')">🔕 Nicht mehr erinnern</button></div>
     <p class="hinweis" style="text-align:center;margin:8px 0 0">Die Liste liegt danach auch in deinem Archiv-Ordner. Du findest sie jederzeit bei der Reise unter 🚢 Aktionen.</p>`);
   f.onclick = (e) => { if (e.target === f) rcAngebotAntwort(a.id, "spaeter"); };
 }
@@ -22462,6 +22496,8 @@ async function rcAngebotAntwort(id, wahl) {
   $("rcAngebotBlatt")?.remove();
   const st = rcStand(id);
   if (wahl === "spaeter") { st.spaeter = new Date().toISOString(); rcSichern(id, st).catch(() => {}); return melde("⏰ Gut – ich frage morgen noch einmal"); }
+  // 2.224.0 (Wunsch Hansi): weder Angebot noch Erinnerung 2 Tage vorher – die Liste bleibt bei der Reise unter 🚢 Aktionen erreichbar
+  if (wahl === "aus") { st.aus = true; try { await rcSichern(id, st); } catch (e) { return meldeFehler(e); } return melde("🔕 Gut – keine Erinnerung mehr. Die Liste findest du bei der Reise unter 🚢 Aktionen."); }
   st.art = wahl; st.spaeter = null;
   try { await rcSichern(id, st); } catch (e) { meldeFehler(e); }
   if (wahl === "druck") return rcDrucken(id);
@@ -25888,6 +25924,7 @@ async function fpAdmin(tage) {
     if (!h || h === "#") setTimeout(() => scHinweisPruefen(), 9000); // KC-CLUB-SCHULUNG-HINWEIS (2.23.68): Admin
     if (!h || h === "#") setTimeout(() => smHinweisPruefen(), 7000); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62): offene Schulungs-Einladung? // KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52): neue Terminanfrage?
     if (!h || h === "#") setTimeout(() => twAntwortPruefen(), 6000); // KC-CLUB-TWINKEY-FRAGEN: Antwort „in der Club-App“
+    if (!h || h === "#") setTimeout(() => dgPruefen(), 2500); // KC-CLUB-DIENST-GRUSS (2.224.0): heute Dienst → Gruß, Kochjacke, Wetter
     if (!h || h === "#") setTimeout(() => rcAngebotPruefen(), 3500); // KC-CLUB-REISE-CHECKLISTE (2.223.0): Kreuzfahrt in ≤ 14 Tagen
     if (!h || h === "#") setTimeout(() => spEinladung(), 4000); // KC-CLUB-SPIEL-EINLADUNG (2.12.0): nach Begrüßung/Neuigkeiten
   });

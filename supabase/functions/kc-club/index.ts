@@ -44,7 +44,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.223.0";
+const SERVER_VERSION = "2.224.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1021,7 +1021,7 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
         eigene: (Array.isArray(r?.eigene) ? r.eigene : []).map((x: unknown) => txt(x, 80)).filter(Boolean).slice(0, RC_EIGENE_MAX),
         art: r?.art === "druck" || r?.art === "bildschirm" ? r.art : null,
         offen: Math.max(0, Math.min(500, Math.round(Number(r?.offen)) || 0)),
-        abgelegt: zeit(r?.abgelegt), spaeter: zeit(r?.spaeter),
+        abgelegt: zeit(r?.abgelegt), spaeter: zeit(r?.spaeter), aus: r?.aus === true, // 2.224.0: „nicht mehr erinnern“
       }])) };
   },
   sende_effekt: (w) => ({ art: SENDE_EFFEKT_ARTEN.includes(w?.art) ? w.art : "wechsel" }),
@@ -1663,6 +1663,16 @@ async function stadtAutoLauf() {
   return anzahl;
 }
 const wetterCache = new Map<string, { zeit: number; daten: WetterDaten }>();
+// Wetter mit Zwischenspeicher (30 Min. je Ort) – für das Info-Feld und den Dienst-Gruß (KC-CLUB-DIENST-GRUSS)
+async function wetterHolen(k: { quelle: string; ort: WetterOrt }) {
+  const q = WETTER_QUELLEN[k.quelle], schl = `${k.quelle}:${k.ort.lat},${k.ort.lon}`;
+  let c = wetterCache.get(schl), fehler: string | null = null;
+  if (!c || Date.now() - c.zeit > WETTER.cacheMin * 60000) {
+    try { c = { zeit: Date.now(), daten: await q.holen(k.ort) }; wetterCache.set(schl, c); }
+    catch (e) { fehler = "Wetterdienst gerade nicht erreichbar"; console.error("wetter", String(e)); }
+  }
+  return { c, fehler };
+}
 async function kmSaetze(): Promise<KmSatz[]> {
   const { data } = await db.from("kc_club_km_satz").select("id,satz,gilt_ab").order("gilt_ab", { ascending: true });
   return (data ?? []).map((x: any) => ({ id: x.id, satz: Number(x.satz), ab: x.gilt_ab }));
@@ -3963,6 +3973,82 @@ async function schulungNachfrageFaellig() {
   return (data ?? []).filter((b: any) => !(b.installiert_auf ?? []).includes("leih") || (b.installiert_auf ?? []).some((g: string) => g !== "leih"));
 }
 // einmal je Besuch: Push/Mail an den Admin „Nachfrage fällig“ (gesendet wird nur von Hand, mit einem Tipp – nie automatisch an Mitglieder)
+// ---------- KC-CLUB-DIENST-GRUSS (2.224.0, Wunsch Hansi „Weihnachtsmarkt: Freitag, Samstag, Sonntag rote Kochjacken, den Rest der
+// Woche weiße – täglich daran erinnern, wenn man Dienst hat; Wetter prüfen und Kleidungs-Hinweise geben (–5 Grad: Handschuhe und Mütze;
+// Regen: Schirm …); beim Programmstart ein Fenster: ich wünsche einen angenehmen Dienst heute“) ----------
+// Regeln als Registry: weitere Veranstaltung/Kleiderordnung = weiterer Eintrag. Wochentage: 0 = Sonntag … 6 = Samstag.
+const DIENST_KLEIDUNG = [
+  { id: "markt", re: /weihnachtsmarkt/i, ohne: /aufbau|abbau|nachbereitung|vorbereitung/i, jacke: (wt: number) => ([5, 6, 0].includes(wt) ? "rot" : "weiss") },
+];
+const DG_WIND_KMH = 40; // ab diesen Böen Hinweis „Stand sichern“ (wie Wetter-Hinweis in der App)
+const JACKE_TEXT: Record<string, string> = { rot: "🔴 rote Kochjacke", weiss: "⚪ weiße Kochjacke" };
+const berlinWochentag = (tag: string) => new Date(tag + "T12:00:00Z").getUTCDay();
+async function dienstVeranstaltung(tag: string) {
+  const { data } = await db.from("kc_club_treffen").select("id,titel,beginn,ende").eq("art", "veranstaltung").eq("status", "geplant")
+    .lte("beginn", new Date(Date.parse(tag + "T23:59:59Z") + 2 * 3600000).toISOString()).order("beginn").limit(60);
+  for (const t of data ?? []) {
+    const von = berlinTag(new Date(t.beginn)), bis = berlinTag(new Date(t.ende || t.beginn));
+    if (von > tag || bis < tag) continue;
+    const r = DIENST_KLEIDUNG.find((x) => x.re.test(String(t.titel || "")) && !x.ohne.test(String(t.titel || "")));
+    if (r) return { titel: txt(t.titel, 120), jacke: r.jacke(berlinWochentag(tag)) };
+  }
+  return null;
+}
+// Kleidungs-Hinweise aus dem Wetter am Ort des Clubs für die Dienstzeit (3-Stunden-Werte, sonst Tageswerte). Ohne Daten: ehrlich „unbekannt“.
+const WETTER_REGEN = (c: number) => (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95, WETTER_SCHNEE = (c: number) => (c >= 71 && c <= 77) || c === 85 || c === 86;
+async function dienstWetter(tag: string, von: string, bis: string) {
+  const k = await wetterKonfig(), { c, fehler } = await wetterHolen(k);
+  const t = c?.daten?.tage?.find((x) => x.datum === tag);
+  if (!t) return { ort: k.ort.name, hinweise: [] as string[], unbekannt: true, fehler: fehler || "Für heute liegen keine Wetterdaten vor" };
+  const st = (t.stunden ?? []).filter((x) => x.zeit >= String(von).slice(0, 2) + ":00" && x.zeit <= String(bis).slice(0, 5));
+  const temps = st.length ? st.map((x) => x.temp) : [t.min, t.max], codes = st.length ? st.map((x) => x.code) : [t.code];
+  const min = Math.round(Math.min(...temps)), max = Math.round(Math.max(...temps));
+  const regen = Math.max(...(st.length ? st.map((x) => x.regenWkt ?? 0) : [t.regenWkt ?? 0]));
+  const h: string[] = [];
+  if (min <= 0) h.push(`🥶 Heute bis ${min} Grad – denk an Handschuhe, Mütze und warme Schuhe.`);
+  else if (min <= 6) h.push(`🧣 Kühl (${min} Grad) – warme Jacke, Schal und Mütze einpacken.`);
+  if (codes.some(WETTER_SCHNEE)) h.push("❄️ Schnee möglich – feste, rutschfeste Schuhe anziehen.");
+  if (codes.some((x) => x >= 95)) h.push("⛈️ Gewitter möglich – Stand und Schirme gut sichern.");
+  if (regen >= 50 || codes.some(WETTER_REGEN)) h.push(`☂️ Regen möglich${regen ? ` (${regen} %)` : ""} – denk an den Schirm oder die Regenjacke.`);
+  if ((t.boeenMax ?? 0) >= DG_WIND_KMH) h.push(`💨 Windig (Böen bis ${Math.round(t.boeenMax ?? 0)} km/h) – Deko und Stand gut befestigen.`);
+  if (!h.length) h.push(max >= 25 ? "☀️ Warm – genug trinken und an Sonnenschutz denken." : "🌤️ Kein Regen gemeldet – angenehmes Dienstwetter.");
+  return { ort: k.ort.name, min, max, code: codes[0], regen, hinweise: h, stand: c ? new Date(c.zeit).toISOString() : null, unbekannt: false };
+}
+async function dienstGruss(pid: string, tag: string) {
+  const { data: sch } = await db.from("kc_dp_plan_published").select("start_time,end_time,area").eq("org_id", ORG).eq("status", "published")
+    .eq("person_id", pid).eq("work_date", tag).order("start_time");
+  if (!sch?.length) return null;
+  const schichten = sch.map((x: any) => ({ start: String(x.start_time).slice(0, 5), ende: String(x.end_time).slice(0, 5), bereich: x.area ?? null }));
+  const [veranstaltung, wetter] = await Promise.all([
+    dienstVeranstaltung(tag).catch((e) => { console.error("dienst veranstaltung", String(e)); return null; }),
+    dienstWetter(tag, schichten[0].start, schichten[schichten.length - 1].ende).catch((e) => ({ hinweise: [] as string[], unbekannt: true, fehler: txt(String(e?.message || e), 120) })),
+  ]);
+  return { tag, schichten, veranstaltung, jacke: veranstaltung?.jacke ?? null, wetter };
+}
+// Morgens ab 8 Uhr: wer heute auf dem Weihnachtsmarkt (o. ä., siehe DIENST_KLEIDUNG) Dienst hat, bekommt einmal Kochjacke + Wetter
+async function dienstGrussSenden() {
+  if (berlinStunde(new Date()) < 8) return;
+  const tag = berlinTag(new Date());
+  const v = await dienstVeranstaltung(tag); if (!v) return;
+  const { data: sch } = await db.from("kc_dp_plan_published").select("person_id").eq("org_id", ORG).eq("status", "published").eq("work_date", tag);
+  const ids = [...new Set((sch ?? []).map((x: any) => x.person_id).filter(Boolean))] as string[];
+  if (!ids.length) return;
+  const { data: schon } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "dienst_gruss_gesendet").in("person_id", ids);
+  const offen = ids.filter((pid) => (schon ?? []).find((x: any) => x.person_id === pid)?.wert?.tag !== tag);
+  for (const pid of offen) {
+    const g = await dienstGruss(pid, tag); if (!g) continue;
+    const zeiten = g.schichten.map((x) => `${x.start}–${x.ende} Uhr${x.bereich ? " · " + x.bereich : ""}`).join(", ");
+    const jacke = g.jacke ? JACKE_TEXT[g.jacke] : "", hw = g.wetter.hinweise.length ? g.wetter.hinweise : ["❔ Das Wetter konnte gerade nicht abgerufen werden."];
+    await senden("club_nachricht", [pid], {
+      titel: `👨‍🍳 Heute Dienst – ${jacke || txt(v.titel, 40)}`, kurz: `${zeiten}${hw[0] ? " · " + hw[0] : ""}`,
+      betreff: `Köcheclub Werne – heute Dienst: ${txt(v.titel, 60)}`,
+      text: `Hallo,\n\nich wünsche dir einen angenehmen Dienst heute!\n\n🕐 ${zeiten}\n${jacke ? `👨‍🍳 Heute bitte die ${jacke.replace(/^\S+ /, "")} anziehen.\n` : ""}\n${hw.join("\n")}\n\n${APP_URL}#dienstgruss\n\nViele Grüße\nKöcheclub Werne`,
+      url: APP_URL + "#dienstgruss",
+    }, `club-dienst-gruss:${pid}:${tag}`).catch((e) => console.error("dienst gruss senden", String(e)));
+    await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "dienst_gruss_gesendet", wert: { tag }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+  }
+  await protokoll(null, "dienst_gruss_gesendet", { tag, veranstaltung: v.titel, anzahl: offen.length });
+}
 // KC-CLUB-REISE-CHECKLISTE (2.223.0, Wunsch Hansi „Erinnerung 2 Tage vorher“): ab 9 Uhr, 2 Tage vor einer Kreuzfahrt, jede/r
 // Teilnehmende, deren Checkliste noch nicht ganz abgehakt ist (oder die sie noch nie geöffnet haben), einmal Push/E-Mail.
 // „Schon erinnert“ merkt sich nur der Server (eigener Schlüssel, die App kann ihn nicht setzen) – kein doppelter Versand.
@@ -3981,6 +4067,7 @@ async function reiseChecklisteErinnern() {
       const schon: string[] = Array.isArray(wert(pid, "reise_checkliste_erinnert")?.ids) ? wert(pid, "reise_checkliste_erinnert").ids : [];
       if (schon.includes(a.id)) continue;
       const r = wert(pid, "reise_checkliste")?.reisen?.[a.id];
+      if (r?.aus) continue; // 2.224.0: Mitglied hat „Nicht mehr erinnern“ gewählt
       if (r?.art && Number(r.offen) === 0 && r.art === "bildschirm") continue; // am Bildschirm alles abgehakt → keine Erinnerung
       const offen = r?.art === "bildschirm" ? Number(r.offen) || 0 : null, url = `${APP_URL}#reisecheckliste=${encodeURIComponent(a.id)}`;
       await senden("club_nachricht", [pid], {
@@ -4506,6 +4593,7 @@ Deno.serve(async (req) => {
       await dbWarnungLauf().catch((e) => console.error("db warnung", String(e))); // KC-CLUB-DB-AUFRAEUMEN (2.24.7)
       await schulungNachfrageErinnern().catch((e) => console.error("schulung nachfrage", String(e))); // KC-CLUB-SCHULUNG-NACHFRAGE (2.35.0)
       await reiseChecklisteErinnern().catch((e) => console.error("reise checkliste", String(e))); // KC-CLUB-REISE-CHECKLISTE (2.223.0)
+      await dienstGrussSenden().catch((e) => console.error("dienst gruss", String(e))); // KC-CLUB-DIENST-GRUSS (2.224.0)
       await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
       await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
       await geburtstagZettelAbnehmen().catch((e) => console.error("geburtstag zettel ab", String(e))); // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0)
@@ -4536,10 +4624,11 @@ Deno.serve(async (req) => {
           const { data: neu } = await db.from("kc_club_dienst_erinnerung").upsert({ person_id: pid, datum: morgen }, { onConflict: "person_id,datum", ignoreDuplicates: true }).select("person_id");
           if (!neu?.length) continue;
           const zeiten = liste.map((s: any) => `${String(s.start_time).slice(0, 5)}–${String(s.end_time).slice(0, 5)} Uhr${s.area ? " · " + s.area : ""}`);
+          const jackeMorgen = (await dienstVeranstaltung(morgen).catch(() => null))?.jacke; // KC-CLUB-DIENST-GRUSS (2.224.0)
           await senden("club_dienst", [pid], {
             titel: "🗓️ Morgen hast du Dienst", kurz: zeiten.join(", "),
             betreff: `Köcheclub Werne – Erinnerung: morgen Dienst ${zeiten[0]}`,
-            text: `Hallo,\n\nkurze Erinnerung – morgen hast du Dienst:\n\n${zeiten.map((z) => "🗓️ " + z).join("\n")}\n\nDein Dienstplan in der Köcheclub-App: ${APP_URL}#dienste\n\nViele Grüße\nKöcheclub Werne`,
+            text: `Hallo,\n\nkurze Erinnerung – morgen hast du Dienst:\n\n${zeiten.map((z) => "🗓️ " + z).join("\n")}${jackeMorgen ? `\n👨‍🍳 Bitte die ${JACKE_TEXT[jackeMorgen].replace(/^\S+ /, "")} anziehen.` : ""}\n\nDein Dienstplan in der Köcheclub-App: ${APP_URL}#dienste\n\nViele Grüße\nKöcheclub Werne`,
             url: APP_URL + "#dienste",
           }, `club-dienst:${pid}:${morgen}`);
           dienst++;
@@ -7119,6 +7208,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true, revision: r.data.revision, status: "offen" });
       }
 
+      // KC-CLUB-DIENST-GRUSS (2.224.0): eigener Dienst heute + Kochjacke + Wetter-Hinweise (Fenster beim Programmstart)
+      case "dienst_gruss": {
+        return json({ gruss: await dienstGruss(ich.person_id, berlinTag(new Date())) });
+      }
       case "dienste": {
         const datum = (s: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || "")) ? String(s) : null;
         const von = datum(p.von) ?? berlinTag(new Date());
@@ -9020,12 +9113,7 @@ Köcheclub-App`,
         // KC-CLUB-WETTERORT: eigener Ort des Mitglieds vor der Club-Vorgabe (Zwischenspeicher je Ort)
         const { data: eo } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "wetterort").maybeSingle();
         let eigen = false; try { if ((eo as any)?.wert?.ort) { k.ort = wetterOrtPruefen((eo as any).wert.ort); eigen = true; } } catch { /* Club-Vorgabe */ }
-        const q = WETTER_QUELLEN[k.quelle], schl = `${k.quelle}:${k.ort.lat},${k.ort.lon}`;
-        let c = wetterCache.get(schl), fehler: string | null = null;
-        if (!c || Date.now() - c.zeit > WETTER.cacheMin * 60000) {
-          try { c = { zeit: Date.now(), daten: await q.holen(k.ort) }; wetterCache.set(schl, c); }
-          catch (e) { fehler = "Wetterdienst gerade nicht erreichbar"; console.error("wetter", String(e)); }
-        }
+        const q = WETTER_QUELLEN[k.quelle], { c, fehler } = await wetterHolen(k);
         // Rule 11: „stand“ ist der Abrufzeitpunkt – die App markiert alte Daten; ohne Daten kein Schein-Wetter
         return json({ ort: k.ort, eigenerOrt: eigen, quelle: { id: k.quelle, name: q.name }, app: wetterAppLink(k.app, k.ort), stand: c ? new Date(c.zeit).toISOString() : null, daten: c?.daten ?? null, fehler });
       }
