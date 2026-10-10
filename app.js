@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.205.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.206.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -73,7 +73,7 @@ function wbWahlZeigen() {
   const w = wbLesen();
   if ($("wbAktName")) $("wbAktName").textContent = w.modus === "fest" ? (WBILD.find((x) => x.id === w.bild)?.t || "Kochmütze") : WB_MODUS.find(([m]) => m === w.modus)[1];
   z.innerHTML = `<div class="wb-raster">${WBILD.map((b) => `<button type="button" class="wb-karte${w.bild === b.id ? " an" : ""}" onclick="wbSetzen({ bild: '${b.id}', modus: 'fest' })" aria-pressed="${w.bild === b.id && w.modus === "fest"}"><span class="wb-kreis${b.id === "muetze" ? "" : " wb-motiv"}">${wbGrafik(b)}</span><small>${esc(b.t)}${b.saison ? "<br><i>nur im Dezember</i>" : ""}</small></button>`).join("")}</div>
-    <div class="hl-chips" style="margin-top:8px">${WB_MODUS.map(([m, t]) => `<button type="button" class="chip${w.modus === m ? " an" : ""}" onclick="wbSetzen({ modus: '${m}' })">${t}</button>`).join("")}</div>
+    <div class="hl-chips" data-zyklus="Wechsel" style="margin-top:8px">${WB_MODUS.map(([m, t]) => `<button type="button" class="chip${w.modus === m ? " an" : ""}" onclick="wbSetzen({ modus: '${m}' })">${t}</button>`).join("")}</div>
     <p class="hinweis" style="margin:6px 0 0">${w.modus === "fest" ? "Immer das gewählte Bild." : w.modus === "wechsel" ? "Jedes Mal ein anderes Bild." : w.modus === "taeglich" ? "Jeden Tag ein anderes Bild." : "Passend zur Jahreszeit – im Dezember Plätzchen."} <button type="button" class="wb-vorschau-link" onclick="wbVorschau()">▶ Vorschau</button></p>`;
 }
 function sparInfo() { melde(`🐢 Sparmodus: ${SPAR.grund}. Weniger Bewegung, seltener im Hintergrund nachsehen – Nachrichten kommen trotzdem sofort. Ändern: Einstellungen → 🎨 Darstellung.`); }
@@ -4554,9 +4554,9 @@ function todoGeruest() {
       <input id="todoText" maxlength="200" placeholder="Was ist zu tun? z. B. Getränke einkaufen" onkeydown="if(event.key==='Enter')todoAnlegen()">
       <div class="reihe"><select id="todoKat"></select><input type="date" id="todoFaellig" title="fällig am (freiwillig)"></div>
       <button type="button" class="knopf todower" id="todoWer" onclick="todoWerWaehlen(null)">👉 Wer soll es machen? (offen)</button>
-      <div class="umschalter" id="todoFuer" style="margin:0"><button data-f="ich" onclick="todoFuer('ich')">👤 Nur für mich</button><button data-f="alle" onclick="todoFuer('alle')">👥 Für alle</button></div>
+      <div class="umschalter" id="todoFuer" data-zyklus="Für wen" style="margin:0"><button data-f="ich" onclick="todoFuer('ich')">👤 Nur für mich</button><button data-f="alle" onclick="todoFuer('alle')">👥 Für alle</button></div>
       <button class="knopf haupt" onclick="todoAnlegen()">＋ Eintragen</button></div>
-    <div class="umschalter" id="todoFilter" style="grid-template-columns:repeat(4,1fr)"><button data-f="alle" onclick="todoFilter('alle')">Alle</button><button data-f="mir" onclick="todoFilter('mir')">👉 Mir</button><button data-f="ich" onclick="todoFilter('ich')">👤 Meine</button><button data-f="gemeinsam" onclick="todoFilter('gemeinsam')">👥 Für alle</button></div>
+    <div class="umschalter" id="todoFilter" data-zyklus="Zeigen" style="grid-template-columns:repeat(4,1fr)"><button data-f="alle" onclick="todoFilter('alle')">Alle</button><button data-f="mir" onclick="todoFilter('mir')">👉 Mir</button><button data-f="ich" onclick="todoFilter('ich')">👤 Meine</button><button data-f="gemeinsam" onclick="todoFilter('gemeinsam')">👥 Für alle</button></div>
     <div class="karte"><div id="todoTabelle"><p class="hinweis">Wird geladen …</p></div>
       <label class="schalter" style="margin-top:8px"><span>Erledigte anzeigen</span><input type="checkbox" id="todoErledigte" onchange="TODO.erledigteZeigen=this.checked;todoZeigen()"></label></div>`;
   todoFuer(TODO.fuer); todoFilter(TODO.filter);
@@ -12459,6 +12459,60 @@ function infoTreffen() {
       <button id="cdKachel" class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}${cdInhalt(bisTreffen)}${mpfeil("termin", !!t, t ? `${t.id || t.beginn}|${frist}` : "", frist)}</button>
     </div>`;
 }
+// ---------- KC-CLUB-ZYKLUS (2.206.0, Wunsch Hansi „Toggle-Knöpfe: statt mehrerer Knöpfe einer – mehrmals tippen, gedrehter Pfeil,
+// logisch, bedienfreundlich und klar zu erkennen, dass da mehr ist“) ----------
+// Ein Kern für alle Stellen: Behälter mit data-zyklus="Titel" (optional data-zyklus-kurz) bekommt EINEN Knopf. Er zeigt oben den Titel,
+// groß den aktuellen Stand, darunter „Tippen: <nächster>“, rechts den ↻-Pfeil und Punkte (wie viele Möglichkeiten, welche gerade).
+// Antippen = nächste Möglichkeit, lange drücken = alle zur Auswahl. Die bisherigen Knöpfe bleiben unsichtbar im Behälter und werden
+// angeklickt – die Funktionen selbst (Speichern, Filtern, Hilfe-Touren auf die IDs) bleiben unverändert. Aktiv = Klasse „an“.
+const ZK = { beob: null, plan: 0 };
+const zkOptionen = (box) => [...box.children].filter((b) => b.tagName === "BUTTON" && !b.classList.contains("zk") && !b.hidden && !b.disabled && b.style.display !== "none" && !b.classList.contains("versteckt"));
+const zkText = (b) => (b.dataset.zkText || b.textContent || b.getAttribute("aria-label") || "").replace(/\s+/g, " ").trim();
+function zkZeichnen(box) {
+  const z = box.querySelector(":scope > .zk"); if (!z) return;
+  const o = zkOptionen(box); if (!o.length) return;
+  let i = o.findIndex((b) => b.classList.contains("an") || b.getAttribute("aria-pressed") === "true"); if (i < 0) i = 0;
+  const n = o[(i + 1) % o.length], kurz = box.hasAttribute("data-zyklus-kurz"), titel = box.dataset.zyklus || "";
+  const html = `<span class="zk-links">${titel ? `<span class="zk-titel">${esc(titel)}</span>` : ""}<span class="zk-wert">${esc(zkText(o[i]))}</span>${o.length > 1 ? `<span class="zk-naechst">Tippen: ${esc(zkText(n))}</span>` : ""}</span>
+    <span class="zk-rechts"><span class="zk-pfeil" aria-hidden="true">↻</span><span class="zk-punkte" aria-hidden="true">${o.map((_, k) => `<i${k === i ? ' class="an"' : ""}></i>`).join("")}</span></span>`;
+  if (z.dataset.stand !== html) { z.innerHTML = html; z.dataset.stand = html; }
+  z.classList.toggle("kurz", kurz);
+  z.setAttribute("aria-label", `${titel ? titel + ": " : ""}${zkText(o[i])} (${i + 1} von ${o.length}). Tippen: ${zkText(n)}. Lange drücken: alle zeigen.`);
+}
+function zkWeiter(box) {
+  const o = zkOptionen(box); if (o.length < 2) return;
+  let i = o.findIndex((b) => b.classList.contains("an") || b.getAttribute("aria-pressed") === "true"); if (i < 0) i = 0;
+  o[(i + 1) % o.length].click();
+  const p = box.querySelector(":scope > .zk .zk-pfeil"); try { if (p && fxAn()) p.animate([{ transform: "rotate(0)" }, { transform: "rotate(360deg)" }], { duration: 420, easing: "ease-out" }); } catch {}
+  requestAnimationFrame(() => box.isConnected && zkZeichnen(box));
+}
+function zkAlleZeigen(box) {
+  const o = zkOptionen(box); if (!o.length) return;
+  let f; const zu = () => f?.remove();
+  f = dlgOeffnen(`<h3 class="dlg-kopf">↻ ${esc(box.dataset.zyklus || "Auswählen")}</h3><div class="zk-liste">${o.map((b, k) => `<button type="button" class="knopf${b.classList.contains("an") ? " haupt" : ""}" data-k="${k}">${b.classList.contains("an") ? "✓ " : ""}${esc(zkText(b))}</button>`).join("")}</div>
+    <div class="dlg-knoepfe"><button type="button" class="knopf" data-zu>Schließen</button></div>`, zu);
+  f.querySelectorAll("[data-k]").forEach((x) => (x.onclick = () => { zu(); o[+x.dataset.k]?.click(); requestAnimationFrame(() => zkZeichnen(box)); }));
+  f.querySelector("[data-zu]").onclick = zu;
+}
+function zkEinrichten(box) {
+  if (box.querySelector(":scope > .zk")) return zkZeichnen(box);
+  const z = document.createElement("button"); z.type = "button"; z.className = "zk";
+  let lang = null, langGemacht = false;
+  z.addEventListener("pointerdown", () => { langGemacht = false; clearTimeout(lang); lang = setTimeout(() => { langGemacht = true; try { navigator.vibrate?.(20); } catch {} zkAlleZeigen(box); }, 550); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach((t) => z.addEventListener(t, () => clearTimeout(lang)));
+  z.addEventListener("contextmenu", (e) => e.preventDefault());
+  z.addEventListener("click", (e) => { e.stopPropagation(); if (langGemacht) { langGemacht = false; return; } zkWeiter(box); });
+  box.prepend(z); box.classList.add("zk-an");
+  if (!box._zkBeob) { box._zkBeob = new MutationObserver((r) => { if (r.some((x) => !x.target.closest?.(".zk"))) zkZeichnen(box); }); box._zkBeob.observe(box, { attributes: true, attributeFilter: ["class", "aria-pressed", "hidden", "style", "disabled"], subtree: true }); }
+  zkZeichnen(box);
+}
+function zkAlle() { document.querySelectorAll("[data-zyklus]").forEach((b) => { try { zkEinrichten(b); } catch {} }); }
+function zkStart() {
+  zkAlle();
+  // neu gezeichnete Bereiche (Vorlagen per innerHTML) bekommen ihren Knopf von selbst – gebündelt, höchstens alle 120 ms
+  ZK.beob = new MutationObserver(() => { if (ZK.plan) return; ZK.plan = setTimeout(() => { ZK.plan = 0; zkAlle(); }, 120); });
+  ZK.beob.observe(document.body, { childList: true, subtree: true });
+}
 // ---------- KC-CLUB-GEDENKEN (2.204.0, Wunsch Hansi „wenn jemand aus unserer Gruppe verstorben ist, eine brennende Kerze anzeigen“) ----------
 // Server liefert INIT.gedenken nur für Trauerfälle, über die das Büro die Mitglieder schon informiert hat (30 Tage lang).
 // Kleine flackernde Kerze neben „KÖCHECLUB WERNE“; antippen → „In stillem Gedenken“ mit Name und Sterbedatum.
@@ -12766,6 +12820,7 @@ function rkZu(z, el) {
   setTimeout(() => { d.scrollTop = Math.max(0, el.getBoundingClientRect().top - d.getBoundingClientRect().top + d.scrollTop - d.clientHeight / 3); }, Math.abs(i - z.i) * 90 + 120);
 }
 if (typeof document !== "undefined") { const rkStart = () => rkEinrichten("v-einstellungen", "einst"); if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", rkStart); else rkStart(); }
+if (typeof document !== "undefined") { const zkLos = () => { try { zkStart(); } catch {} }; if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", zkLos); else zkLos(); } // KC-CLUB-ZYKLUS (2.206.0)
 // 2.187.0 KC-CLUB-ROLLKARTEI-JALOUSIE (Wunsch Hansi): kommt eine Karte nach vorn, fährt eine Jalousie sehr schnell hoch (≈ 0,35 s) und gibt
 // den Inhalt frei. Beim schnellen Durchdrehen nur auf der letzten Karte – man soll nie lange warten. Je Gerät per 🪟 oben an/aus (Standard an).
 const rkJalAn = () => false; // 2.191.0 (Wunsch Hansi „nervt bei jeder Karte – weglassen“): Jalousie aus, Umschalter entfernt
@@ -15682,7 +15737,7 @@ function boListeHtml() {
   const chip = (w, t, an, fn) => `<button class="chip${an ? " an" : ""}" onclick="${fn}">${t}</button>`;
   return `<div class="hl-zwei"><button class="knopf hl-gross hl-biete" onclick="boNeu('biete')">🟢 Ich biete …</button><button class="knopf hl-gross bo-suche" onclick="boNeu('suche')">🔵 Ich suche …</button></div>
     <p class="hinweis" style="margin:8px 2px 4px">Verkaufen, verschenken, tauschen unter Mitgliedern – bezahlt wird privat. Passt eine neue Anzeige zu deiner, bekommst du Bescheid.</p>
-    <div class="hl-chips">${chip("alle", "Alle", BO.filter === "alle", "BO.filter='alle';hlZeigen()")}${chip("biete", "🟢 Biete", BO.filter === "biete", "BO.filter='biete';hlZeigen()")}${chip("suche", "🔵 Suche", BO.filter === "suche", "BO.filter='suche';hlZeigen()")}</div>
+    <div class="hl-chips" data-zyklus="Zeigen">${chip("alle", "Alle", BO.filter === "alle", "BO.filter='alle';hlZeigen()")}${chip("biete", "🟢 Biete", BO.filter === "biete", "BO.filter='biete';hlZeigen()")}${chip("suche", "🔵 Suche", BO.filter === "suche", "BO.filter='suche';hlZeigen()")}</div>
     <div class="hl-chips bo-rubriken">${chip("", "Alle Rubriken", !BO.rubrik, "BO.rubrik='';hlZeigen()")}${Object.entries(d.rubriken).map(([k, t]) => chip(k, esc(t), BO.rubrik === k, `BO.rubrik='${k}';hlZeigen()`)).join("")}</div>
     ${aktiv.length ? `<div class="mini-kacheln">${aktiv.map(boKachel).join("")}</div>` : '<div class="karte hinweis">Hier ist gerade nichts von den anderen. Hast du etwas übrig – oder suchst du etwas? Tippe oben auf „Ich biete“ oder „Ich suche“.</div>'}
     ${meine.length ? `<div class="abschnitt"><h3>📋 Meine Anzeigen</h3></div><div class="mini-kacheln">${meine.map((a) => boKachel(a).replace('<span class="mk-unter">deine Anzeige', `<span class="mk-unter">⏳ bis ${esc(boDatum(a.laeuft_bis))} · deine Anzeige`)).join("")}</div>` : ""}`;
@@ -17205,7 +17260,7 @@ function sosZeigen() {
     const ich = d.mitglieder.find((m) => m.selbst && (!q || suNorm(m.name).includes(q)));
     const ichZeile = (m) => `<div class="sos-mitglied"><button class="sos-name" onclick="sosInfo('${m.id}')"><b>${esc(m.name)}</b><small>(du)</small>${m.notfall ? '<small class="nf-ja">🆘</small>' : '<small>⚠️ noch kein Notfallkontakt</small>'}<span>›</span></button></div>`;
     const block = (l, leit, mitIch) => kachelAn ? `<div class="mini-kacheln">${mitIch && ich ? kachel(ich) : ""}${l.map((m) => kachel(m, leit)).join("")}</div>` : `<div class="karte">${mitIch && ich ? ichZeile(ich) : ""}${l.map(zeile).join("")}</div>`;
-    const schalter = `<div class="umschalter sos-ansicht" id="sosAnsicht"><button data-a="kacheln" class="${kachelAn ? "an" : ""}" onclick="mgAnsichtSetzen('kacheln')" title="Als Kacheln zeigen" aria-label="Als Kacheln zeigen">🔲</button><button data-a="liste" class="${kachelAn ? "" : "an"}" onclick="mgAnsichtSetzen('liste')" title="Als Liste zeigen" aria-label="Als Liste zeigen">☰</button></div>`;
+    const schalter = `<div class="umschalter sos-ansicht" id="sosAnsicht" data-zyklus="Ansicht" data-zyklus-kurz><button data-a="kacheln" data-zk-text="🔲 Kacheln" class="${kachelAn ? "an" : ""}" onclick="mgAnsichtSetzen('kacheln')" title="Als Kacheln zeigen" aria-label="Als Kacheln zeigen">🔲</button><button data-a="liste" data-zk-text="☰ Liste" class="${kachelAn ? "" : "an"}" onclick="mgAnsichtSetzen('liste')" title="Als Liste zeigen" aria-label="Als Liste zeigen">☰</button></div>`;
     kontakte = (leitung.length && !d.siehtNotfall ? `<h3 style="margin:16px 4px 6px">⭐ Clubleitung</h3>${block(leitung, true)}` : "")
       + `<div class="sos-kopf"><h3>👥 Mitglieder im Notfall erreichen</h3>${schalter}</div>
       ${d.siehtNotfall && kachelAn ? '<p class="hinweis" style="margin:0 4px 8px;font-size:.85rem"><span class="nf-ja">🆘</span> = Notfallkontakt hinterlegt (rot umrandet) · antippen für Anrufen, SMS, WhatsApp</p>' : ""}

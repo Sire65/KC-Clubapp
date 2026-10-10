@@ -463,6 +463,25 @@
   @keyframes vfWelle { 0% { transform: scale(.08); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
   @keyframes vfKern { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
   .vf-werkzeuge { border-top: 1px solid rgba(255,255,255,.25); padding-top: 6px; }
+  /* KC-CLUB-ZYKLUS (2.206.0, Wunsch Hansi „statt mehrerer Knöpfe einer, mehrmals tippen, gedrehter Pfeil – klar erkennbar, dass da mehr ist“):
+     die alten Knöpfe bleiben (unsichtbar) und tun weiter ihre Arbeit; sichtbar ist nur der Umschaltknopf */
+  [data-zyklus].zk-an { display: block !important; background: none !important; padding: 0 !important; box-shadow: none !important; }
+  [data-zyklus].zk-an > :not(.zk) { display: none !important; }
+  [data-zyklus].zk-an > button.zk { display: flex !important; align-items: center; gap: 10px; width: 100% !important; min-height: 48px !important; margin: 0 !important; padding: 7px 8px 7px 14px !important;
+    border: 2px solid var(--rot) !important; border-radius: 14px !important; background: var(--karte) !important; color: var(--text) !important; font: inherit; font-size: 1rem !important;
+    text-align: left; cursor: pointer; box-shadow: var(--schatten) !important; white-space: normal !important; -webkit-tap-highlight-color: transparent; }
+  .zk:active { transform: scale(.98); }
+  .zk-links { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+  .zk-titel { font-size: .72rem; font-weight: 700; color: var(--grau, #777); text-transform: uppercase; letter-spacing: .04em; }
+  .zk-wert { font-weight: 800; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .zk-naechst { font-size: .78rem; color: var(--grau, #777); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .zk-rechts { flex: none; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .zk-pfeil { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--rot); color: #fff; font-size: 1.15rem; font-weight: 900; line-height: 1; }
+  .zk-punkte { display: flex; gap: 3px; } .zk-punkte i { width: 6px; height: 6px; border-radius: 50%; background: var(--rot); opacity: .25; } .zk-punkte i.an { opacity: 1; }
+  [data-zyklus].zk-an > button.zk.kurz { min-height: 42px !important; padding: 4px 6px 4px 10px !important; gap: 6px; } .zk.kurz .zk-titel, .zk.kurz .zk-naechst { display: none; } .zk.kurz .zk-pfeil { width: 28px; height: 28px; font-size: 1rem; }
+  :root.dunkel [data-zyklus].zk-an > button.zk { border-color: var(--textRot, #e88) !important; } :root.dunkel .zk-wert { color: var(--text); }
+  .mg-schalter > [data-zyklus].zk-an { flex: 1 1 150px !important; min-width: 0; margin: 0 !important; } /* Ansicht + Zeigen nebeneinander, gleich breit */
+  .zk-liste { display: grid; gap: 8px; margin: 10px 0; } .zk-liste button { text-align: left; }
   /* KC-CLUB-COUNTDOWN (2.202.0): wechselnde Termin-Kachel */
   #cdKachel { min-width: 0; } /* feste Höhe: beim Wechsel springt nichts */
   #cdKachel .cd-zahl, #cdKachel .cd-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -3048,7 +3067,7 @@
   <!-- TERMINE -->
   <section id="v-termine" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>📅 Termine</h2><button id="neuTreffenKnopf" class="knopf haupt klein" onclick="termineNeuWahl()" title="Neuer Termin, Terminanfrage oder Terminfindung">＋ Neu</button><button type="button" class="druckknopf" title="Drucken: Kalender (Tag/Woche/Monat/Jahr) oder To-do-Liste" aria-label="Drucken" onclick="druckStarten('termine')" id="druckTermine"></button></div>
-    <div class="umschalter modus3"><button data-m="liste" onclick="termineModus('liste')">☰ Liste</button><button data-m="kalender" onclick="termineModus('kalender')">🗓️ Kalender</button><button data-m="todo" onclick="termineModus('todo')">✅ To-do</button></div>
+    <div class="umschalter modus3" data-zyklus="Ansicht"><button data-m="liste" onclick="termineModus('liste')">☰ Liste</button><button data-m="kalender" onclick="termineModus('kalender')">🗓️ Kalender</button><button data-m="todo" onclick="termineModus('todo')">✅ To-do</button></div>
     <div id="todoBereich" class="versteckt"></div>
     <div id="treffenForm" class="karte versteckt"></div>
     <div id="terminumfrageForm" class="karte versteckt"></div>
@@ -3216,7 +3235,7 @@
       <button class="knopf" onclick="erstattungHinzu()">＋ Position hinzufügen</button></div>
     <div class="karte"><b>2. Deine Positionen</b><div id="ersListe" style="margin-top:6px"></div></div>
     <div class="karte todoform"><b>3. Auszahlung</b>
-      <div class="umschalter" id="ersAuszahlung" style="margin:0"><button data-a="ueberweisung" class="an" onclick="erstattungAuszahlung('ueberweisung')">🏦 Überweisung</button><button data-a="bar" onclick="erstattungAuszahlung('bar')">💶 Bar</button></div>
+      <div class="umschalter" id="ersAuszahlung" data-zyklus="Auszahlung" style="margin:0"><button data-a="ueberweisung" class="an" onclick="erstattungAuszahlung('ueberweisung')">🏦 Überweisung</button><button data-a="bar" onclick="erstattungAuszahlung('bar')">💶 Bar</button></div>
       <label class="feld">Bemerkung (freiwillig)<textarea id="ersBemerkung" rows="2" maxlength="1000" placeholder="z. B. Kontodaten hat der Kassenwart"></textarea></label>
       <button class="knopf haupt" id="ersSendenKnopf" onclick="erstattungSenden()" disabled>📨 Antrag senden</button>
       <p class="hinweis" style="margin:0">Geht per Mail an <b>Kassenwart</b> und <b>Clubsprecher</b>. Du bekommst eine Kopie.</p></div>
@@ -3302,7 +3321,7 @@
       <div class="pw-emo" id="pwEmoSchnell"></div>
       <div class="emo-feld pw-emo-feld versteckt" id="pwEmoFeld" role="dialog" aria-label="Emoji auswählen"><div class="emo-reiter" id="pwEmoReiter"></div><div class="emo-gitter" id="pwEmoGitter"></div></div>
       <div class="hinweis" style="margin:8px 0 4px">Wichtigkeit</div>
-      <div class="umschalter" id="pwWichtig"><button data-w="0" onclick="pwFormWichtig(false)">📝 Normal</button><button data-w="1" onclick="pwFormWichtig(true)">❗ Hoch – beim Öffnen zeigen</button></div>
+      <div class="umschalter" id="pwWichtig" data-zyklus="Wichtigkeit"><button data-w="0" onclick="pwFormWichtig(false)">📝 Normal</button><button data-w="1" onclick="pwFormWichtig(true)">❗ Hoch – beim Öffnen zeigen</button></div>
       <div class="hinweis" style="margin:4px 0 4px">Für wen?</div>
       <div class="umschalter modus3" id="pwFuer"><button data-f="ich" onclick="pwFuer('ich')">🙋 Nur für mich</button><button data-f="alle" onclick="pwFuer('alle')">👥 Für alle</button><button data-f="personen" onclick="pwFuer('personen')">✅ Bestimmte</button></div>
       <div id="pwPersonen" class="versteckt">
@@ -3310,7 +3329,7 @@
         <div class="wahlliste" id="pwListe"></div><div class="hinweis" id="pwGewaehlt"></div></div>
       <!-- KC-CLUB-PINNWAND-ANTWORTKNOPF (2.22.11, Wunsch Hansi): Verfasser entscheidet, ob „✍️ Antworten“ auf dem Zettel steht -->
       <div id="pwAntwZeile"><div class="hinweis" style="margin:4px 0 4px">Sollen andere darauf antworten können?</div>
-      <div class="umschalter" id="pwAntw"><button data-a="1" onclick="pwAntw(true)">✍️ Mit Antwort-Knopf</button><button data-a="0" onclick="pwAntw(false)">🚫 Ohne Antwort-Knopf</button></div></div>
+      <div class="umschalter" id="pwAntw" data-zyklus="Antwort-Knopf"><button data-a="1" onclick="pwAntw(true)">✍️ Mit Antwort-Knopf</button><button data-a="0" onclick="pwAntw(false)">🚫 Ohne Antwort-Knopf</button></div></div>
       <div class="knoepfe"><button class="knopf haupt" id="pwSpeichernKnopf" onclick="pwAnheften()">📌 Anheften</button><button class="knopf" onclick="pwForm(false)">Abbrechen</button></div>
     </div>
     <div class="kork" id="pwWand"><div class="leer">Einen Moment …</div></div>
@@ -3353,8 +3372,8 @@
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>👥 Aktive Mitglieder</h2><button class="knopf klein stmarke st-verfuegbar" id="meinStatusKnopf" onclick="statusBlatt()"><small class="st-titel">Mein Status</small>🟢 verfügbar ▾</button><button class="rund mg-neu" id="mgAktualisieren" title="Aktualisieren" aria-label="Mitglieder aktualisieren" onclick="mgAktualisieren(this)">↻</button></div>
     <!-- KC-CLUB-ONLINEFILTER (0.72.0): alle oder nur gerade online -->
     <!-- KC-CLUB-MG-UMSCHALTER (1.47.0): Kacheln | Liste direkt oben, daneben Alle | Online -->
-    <div class="mg-schalter"><div class="umschalter" id="mgAnsichtOben"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')" title="Als Kacheln zeigen" aria-label="Als Kacheln zeigen">🔲</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')" title="Als Liste zeigen" aria-label="Als Liste zeigen">☰</button><button data-a="tafel" onclick="mgAnsichtSetzen('tafel')" title="Anwesenheitstafel: nur Name und Lämpchen" aria-label="Anwesenheitstafel">📋</button><button data-a="kartei" onclick="mgAnsichtSetzen('kartei')" title="Als Rollkartei zeigen" aria-label="Als Rollkartei zeigen">🗂️</button></div>
-      <div class="umschalter" id="mgFilter"><button data-f="alle" onclick="mgFilterSetzen('alle')">👥 Alle</button><button data-f="online" onclick="mgFilterSetzen('online')">🟢 Nur online</button></div></div>
+    <div class="mg-schalter"><div class="umschalter" id="mgAnsichtOben" data-zyklus="Ansicht"><button data-a="kacheln" data-zk-text="🔲 Kacheln" onclick="mgAnsichtSetzen('kacheln')" title="Als Kacheln zeigen" aria-label="Als Kacheln zeigen">🔲</button><button data-a="liste" data-zk-text="☰ Liste" onclick="mgAnsichtSetzen('liste')" title="Als Liste zeigen" aria-label="Als Liste zeigen">☰</button><button data-a="tafel" data-zk-text="📋 Anwesenheit" onclick="mgAnsichtSetzen('tafel')" title="Anwesenheitstafel: nur Name und Lämpchen" aria-label="Anwesenheitstafel">📋</button><button data-a="kartei" data-zk-text="🗂️ Kartei" onclick="mgAnsichtSetzen('kartei')" title="Als Rollkartei zeigen" aria-label="Als Rollkartei zeigen">🗂️</button></div>
+      <div class="umschalter" id="mgFilter" data-zyklus="Zeigen"><button data-f="alle" onclick="mgFilterSetzen('alle')">👥 Alle</button><button data-f="online" onclick="mgFilterSetzen('online')">🟢 Nur online</button></div></div>
     <div id="mgGruppen"></div><!-- KC-CLUB-MG-GRUPPEN (1.34.0): eigene Gruppen als Filter -->
     <div class="karte" id="mitgliederListe"><span class="hinweis">Wird geladen …</span></div>
   </section>
@@ -3483,11 +3502,11 @@
     <details class="karte" data-klappe="darstellung">
       <summary>🎨 Darstellung</summary>
       <!-- KC-CLUB-SPARMODUS (2.30.0): je Gerät -->
-      <div class="schalter" style="display:block"><div><b>🐢 Sparmodus</b><div class="hinweis">Für schwaches Netz oder ältere Handys: keine Bewegungen, seltener im Hintergrund nachsehen. Automatisch = schaltet sich bei Bedarf selbst ein. <span id="sparStand"></span></div></div><div class="hl-chips" id="sparWahl" style="margin-top:6px"></div></div>
+      <div class="schalter" style="display:block"><div><b>🐢 Sparmodus</b><div class="hinweis">Für schwaches Netz oder ältere Handys: keine Bewegungen, seltener im Hintergrund nachsehen. Automatisch = schaltet sich bei Bedarf selbst ein. <span id="sparStand"></span></div></div><div class="hl-chips" id="sparWahl" data-zyklus="Sparmodus" style="margin-top:6px"></div></div>
       <details class="ds-mehr" id="wbKlappe" style="margin:2px 0 10px"><summary>⏳ Warte-Bild: <span id="wbAktName">Kochmütze</span></summary><div class="hinweis" style="margin-top:6px">Erscheint, wenn die App etwas länger braucht. Antippen wählt das Bild.</div><div id="wbWahl"></div></details> <!-- KC-CLUB-WARTEBILD 2.46.0 -->
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
       <div style="margin-top:8px"><b>🌗 Tag- und Nachtmodus</b></div>
-      <div class="umschalter modus3" id="modusWahl"><button data-m="auto" onclick="modusWaehlen('auto')">🔄 Automatisch</button><button data-m="tag" onclick="modusWaehlen('tag')">☀️ Immer Tag</button><button data-m="nacht" onclick="modusWaehlen('nacht')">🌙 Immer Nacht</button></div>
+      <div class="umschalter modus3" id="modusWahl" data-zyklus="Tag/Nacht"><button data-m="auto" onclick="modusWaehlen('auto')">🔄 Automatisch</button><button data-m="tag" onclick="modusWaehlen('tag')">☀️ Immer Tag</button><button data-m="nacht" onclick="modusWaehlen('nacht')">🌙 Immer Nacht</button></div>
       <p class="hinweis" id="modusInfo" style="margin-top:-4px"></p>
       <div class="schalter"><div><b>💬 Chat-Farben &amp; Hintergrund</b><div class="hinweis">Farbe deiner und der fremden Sprechblasen, Hintergrund mit Motiv (Wolken, Sonnenuntergang, Schneeberge …) – gilt für alle Chats</div></div><button class="knopf klein" onclick="cfOeffnen()">🎨 Wählen</button></div> <!-- KC-CLUB-CHAT-FARBEN 2.145.0 -->
       <div><b>🎨 Farbdesign</b><div class="hinweis">Antippen – die App färbt sich sofort um</div></div>
@@ -3527,9 +3546,9 @@
       <div class="schalter"><div><b>🧩 Startseite anordnen</b><div class="hinweis">Kacheln verschieben oder ausblenden – oder auf der Startseite eine Kachel lange drücken</div></div><button class="knopf klein" onclick="zeige('start');kaBearbeiten(true)">Anordnen</button></div>
       <!-- KC-CLUB-MG-KACHELN (1.45.0, Wunsch Hansi): jeder wählt selbst, wie die Mitglieder angezeigt werden (je Gerät) -->
       <div style="margin-top:8px"><b>🔲 Kacheln auf der Startseite</b> <span class="hinweis">(erweiterte Ansicht, gilt für dieses Gerät)</span></div>
-      <div class="umschalter" id="kachelGroesseWahl"><button data-g="normal" onclick="kachelGroesse('normal')">▣ Normal – 2 nebeneinander</button><button data-g="klein" onclick="kachelGroesse('klein')">▦ Klein – 3 nebeneinander</button><button data-g="mini" onclick="kachelGroesse('mini')">▪ Sehr klein – 4 nebeneinander</button></div>
+      <div class="umschalter" id="kachelGroesseWahl" data-zyklus="Kachelgröße"><button data-g="normal" onclick="kachelGroesse('normal')">▣ Normal – 2 nebeneinander</button><button data-g="klein" onclick="kachelGroesse('klein')">▦ Klein – 3 nebeneinander</button><button data-g="mini" onclick="kachelGroesse('mini')">▪ Sehr klein – 4 nebeneinander</button></div>
       <div style="margin-top:8px"><b>👥 Mitglieder anzeigen als</b></div>
-      <div class="umschalter" id="mgAnsichtWahl"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')">🔲 Kacheln</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')">☰ Liste</button><button data-a="tafel" onclick="mgAnsichtSetzen('tafel')">📋 Anwesenheit</button><button data-a="kartei" onclick="mgAnsichtSetzen('kartei')">🗂️ Kartei</button></div>
+      <div class="umschalter" id="mgAnsichtWahl" data-zyklus="Ansicht"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')">🔲 Kacheln</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')">☰ Liste</button><button data-a="tafel" onclick="mgAnsichtSetzen('tafel')">📋 Anwesenheit</button><button data-a="kartei" onclick="mgAnsichtSetzen('kartei')">🗂️ Kartei</button></div>
       <div class="schalter"><div><b>🇩🇪 Feiertage NRW im Kalender</b><div class="hinweis">Gesetzliche Feiertage in Nordrhein-Westfalen</div></div><input type="checkbox" id="setFeiertage" onchange="einstellung('feiertage', this.checked); if (KAL) kalZeichnen()"></div>
     </details>
     <!-- 2.23.46 KC-CLUB-LEITUNG-START-SCHALTER (Wunsch Hansi): was beim App-Start für die Clubleitung erscheint – je Gerät an/aus -->
@@ -3888,6 +3907,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.205.0" data-v="2.205.0"></script>
+<script src="app.js?v=2.206.0" data-v="2.206.0"></script>
 </body>
 </html>

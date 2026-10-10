@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.206.0 – 2026-10-10 – ↻ Umschaltknöpfe statt Knopfreihen
+↻ Aufgeräumt: statt mehrerer Knöpfe ein Umschaltknopf – antippen schaltet weiter, lange drücken zeigt alle
+
 ## 2.205.0 – 2026-10-10 – 🚢 Schiffsymbol bei der Kreuzfahrt
 🚢 Kreuzfahrt im Countdown mit Schiff
 

@@ -7750,3 +7750,13 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/text: aktionSymbol\(a\) === "🚢" \? "🚢 Kreuz\\u00ADfahrt"/.test(html) && /schiff\|kreuz\|cruis\|fjord/.test(html) && /veranstalter: a\.veranstalter \?\? null, von: a\.von/.test(server), "Schiff bei Kreuzfahrt");
 }
+
+// 2.206.0 KC-CLUB-ZYKLUS (Wunsch Hansi: statt mehrerer Knöpfe ein Umschaltknopf – mehrmals tippen, ↻, klar erkennbar, dass mehr da ist)
+{
+  assert.ok(/function zkEinrichten\(box\)/.test(html) && /function zkWeiter\(box\)/.test(html) && /function zkAlleZeigen\(box\)/.test(html), "Zyklus-Kern fehlt");
+  assert.ok(/Tippen: \$\{esc\(zkText\(n\)\)\}/.test(html) && /zk-punkte/.test(html) && /zk-pfeil/.test(html), "zeigt nächsten Stand, Punkte und Pfeil");
+  assert.ok(/o\[\(i \+ 1\) % o\.length\]\.click\(\);/.test(html), "nutzt die bisherigen Knöpfe (Funktionen unverändert)");
+  for (const id of ["mgAnsichtOben", "mgFilter", "modusWahl", "kachelGroesseWahl", "mgAnsichtWahl", "pwWichtig", "pwAntw", "ersAuszahlung", "sparWahl", "todoFilter", "todoFuer", "sosAnsicht"])
+    assert.ok(new RegExp(`id="${id}"[^>]*data-zyklus=`).test(html), `${id} ohne Umschaltknopf`);
+  assert.ok(/class="umschalter modus3" data-zyklus="Ansicht"><button data-m="liste"/.test(html), "Termine Liste/Kalender/To-do");
+}
