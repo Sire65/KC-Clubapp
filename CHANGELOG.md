@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.221.0 – 2026-10-10 – 📋 Kopie aller Vorgänge an den Admin
+📋 Bei jedem Vorgang (Änderungsmeldung, Erstattung, Dienstwunsch, Zugang, Leihen) bekommt der Admin eine Kopie-Mail – mit Empfänger und ob die Zustellung geklappt hat
+
 ## 2.220.0 – 2026-10-10 – 👁️ Foto nur einmal ansehen
 👁️ Fotos im Chat lassen sich als „Einmal ansehen“ senden: Der Empfänger kann es nur ein einziges Mal öffnen (mit seinem Namen als Wasserzeichen), danach ist es weg – ein zweiter Versuch zeigt einen Hinweis. Kein Weiterleiten, Speichern oder Ablegen.
 

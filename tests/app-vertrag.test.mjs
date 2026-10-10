@@ -7978,3 +7978,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/a\.einmal \? einmalKachel\(a\)/.test(html) && /function einmalNochmal\(\)/.test(html) && /nur <b>einmal<\/b> angesehen werden und ist nicht mehr verfügbar/.test(html), "Kachel + Hinweis beim zweiten Versuch");
   assert.ok(/class="einmal-wz"/.test(html) && /\.einmal-schirm\.unscharf img \{ filter: blur/.test(html) && /\["contextmenu", "dragstart", "copy"\]/.test(html), "Wasserzeichen, unscharf, kein Speichern");
 }
+
+// 2.221.0 KC-CLUB-VORGANG-KOPIE (Wunsch Hansi): Admin bekommt bei jedem Vorgang eine Kopie-Mail mit Empfänger und Versandergebnis – nie bei privaten Chats
+{
+  assert.ok(/const VORGANG_KOPIE = \/\^club-\(aenderung\|erstattung\|bestaetigung\|dw-\|wunschbogen\|zugang\|leihe\)\//.test(server), "nur Vorgänge, keine Chats/Spiele");
+  assert.ok(/if \(VORGANG_KOPIE\.test\(korrelation\) && !korrelation\.endsWith\(":kopie"\)\) await vorgangKopie\(/.test(server), "zentral im Versand, keine Endlosschleife");
+  assert.ok(/async function vorgangKopie\([\s\S]{0,1600}Ergebnis: \$\{stand\}/.test(server) && /korrelation\.replace\(\/:\(ruhe\|push\)\$\/, ""\) \+ ":kopie"/.test(server), "Empfänger + Ergebnis, eine Kopie je Vorgang");
+  assert.ok(!/ist jetzt eingetragen \(\$\{prog\}\)/.test(server), "kein Programmvermerk im Text an das Mitglied");
+}

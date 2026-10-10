@@ -44,7 +44,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.220.0";
+const SERVER_VERSION = "2.221.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -209,7 +209,25 @@ async function routerSendenRoh(eventKey: string, personIds: string[], vars: Reco
       ...(kopie?.cc?.length ? { cc: kopie.cc.map((personId) => ({ personId })) } : {}), ...(kopie?.bcc?.length ? { bcc: kopie.bcc.map((personId) => ({ personId })) } : {}) }),
   });
   const out = await r.json().catch(() => ({}));
-  return { gesendet: Number(out?.sent || 0), fehler: Number(out?.failed || 0) };
+  const ergebnis = { gesendet: Number(out?.sent || 0), fehler: Number(out?.failed || 0) };
+  if (VORGANG_KOPIE.test(korrelation) && !korrelation.endsWith(":kopie")) await vorgangKopie(eventKey, personIds, vars, korrelation, ergebnis).catch((e) => console.error("vorgangKopie", String(e)));
+  return ergebnis;
+}
+// KC-CLUB-VORGANG-KOPIE (2.221.0, Wunsch Hansi „ich muss über alle Vorgänge Bescheid wissen und immer in BCC gesetzt werden, damit ich weiß,
+// dass alles gelaufen ist und geklappt hat“): bei jeder Benachrichtigung zu einem Vorgang (Änderungsmeldung, Erstattung, Dienstwunsch,
+// Zugang/Link, Leihen) bekommt der Admin eine eigene Kopie-Mail – mit Empfänger und Versandergebnis. Auch wenn das Mitglied nur Push bekam.
+// Private Chats, Spiele, Reaktionen usw. bekommen KEINE Kopie. Je Vorgang höchstens eine Kopie (gleiche Kennung → der Versanddienst entdoppelt).
+const VORGANG_KOPIE = /^club-(aenderung|erstattung|bestaetigung|dw-|wunschbogen|zugang|leihe)/;
+async function vorgangKopie(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, erg: { gesendet: number; fehler: number }) {
+  const adm = (await adminIds()).filter((a) => !personIds.includes(a));
+  if (!adm.length || !personIds.length) return;
+  const leute = await personen(personIds), namen = personIds.map((id) => leute.get(id)?.display_name || id).join(", ");
+  const weg = /_push$/.test(eventKey) ? "Push" : /_mail$/.test(eventKey) ? "E-Mail" : "Push + E-Mail";
+  const stand = erg.fehler ? `⚠️ ${erg.gesendet} zugestellt, ${erg.fehler} NICHT zugestellt` : erg.gesendet ? `✅ zugestellt (${erg.gesendet})` : "⚠️ nichts zugestellt (kein Empfangsweg)";
+  const betreff = String(vars.betreff ?? vars.titel ?? "Benachrichtigung");
+  await routerSendenRoh("club_nachricht_mail", adm, { ...vars, titel: `📋 Kopie: ${String(vars.titel ?? betreff)}`, betreff: `📋 Kopie: ${betreff}`, kurz: `Kopie an dich: ${namen}`,
+    text: `Kopie für dich als Admin\nAn: ${namen}\nWeg: ${weg}\nErgebnis: ${stand}\n\n────────────────────\n\n${String(vars.text ?? vars.kurz ?? "")}` },
+    korrelation.replace(/:(ruhe|push)$/, "") + ":kopie");
 }
 // KC-CLUB-BENACHRICHTIGUNG: Ereignis → Bereich, den das Mitglied in den Einstellungen steuert
 const BEREICH_VON: Record<string, string> = { club_treffen: "termine", club_erinnerung: "termine", club_nachricht: "nachrichten", club_vorschlag: "vorschlaege", club_dienst: "dienste", club_geburtstag: "geburtstage",
@@ -1301,7 +1319,7 @@ async function aeUebernahmeMelden() {
     const uebernommen = x.status === "uebernommen";
     if (uebernommen) await sendenGewaehlt("club_nachricht", [x.person_id], ["push", "email"], {
       titel: `✅ Eingetragen: ${art.t}`, kurz: "Deine Änderung ist überall eingetragen – danke!", betreff: `Köcheclub Werne – deine Änderung ist eingetragen: ${art.t}`,
-      text: `Hallo,\n\ndeine Änderung „${art.sym} ${art.t}“ ist jetzt eingetragen (${prog}) – danke für die Meldung!\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL,
+      text: `Hallo,\n\ndeine Änderung „${art.sym} ${art.t}“ ist jetzt überall eingetragen – danke für die Meldung!\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL, // 2.221.0: kein Programmvermerk mehr im Text an das Mitglied
     }, `club-aenderung-uebernommen:${x.id}`).catch(() => null);
     else { // abgelehnt → nicht das Mitglied verunsichern, sondern die Freigebenden informieren
       const an = [x.freigegeben_von, ...(await adminIds())].filter(Boolean);
