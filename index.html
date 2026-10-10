@@ -1079,6 +1079,35 @@
   .konfetti { position: fixed; inset: 0; pointer-events: none; z-index: 100000; overflow: hidden; }
   /* KC-CLUB-EFFEKTE-2 (2.172.0): Papierflieger, Pinnwand-Nadel, Geburtstagskerze, Jahreszeiten im Kopf */
   .fx-buchstabe { position: fixed; z-index: 99998; pointer-events: none; white-space: pre; will-change: transform, opacity; } /* 2.178.0 Buchstabenregen */
+  /* KC-CLUB-ROLLKARTEI (2.180.0): Karteikasten – vorne eine Karte, dahinter Kanten mit Titel, unten das Rad */
+  .rk { position: relative; }
+  .rk-umschalter { margin-left: auto; }
+  .rk > .klappen-alle-zeile, .rk > .tuer { display: none; }
+  .rk-reiter { display: flex; gap: 6px; overflow-x: auto; padding: 4px 2px 8px; scrollbar-width: none; }
+  .rk-tab { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; min-width: 58px; padding: 6px 6px 4px; border: 0; border-radius: 12px 12px 4px 4px;
+    background: var(--karte); box-shadow: var(--schatten); font-size: 1.25rem; line-height: 1.1; color: inherit; cursor: pointer; opacity: .75; transition: transform .2s, opacity .2s; }
+  .rk-tab small { font-size: .62rem; margin-top: 2px; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rk-tab.an { opacity: 1; transform: translateY(3px); background: var(--rot); color: #fff; }
+  .rk-platz { position: relative; perspective: 1500px; }
+  .rk > .rk-karte { position: absolute; left: 12px; right: 12px; top: var(--rk-oben); height: var(--rk-h); margin: 0; overflow: auto; overscroll-behavior: contain;
+    transform-origin: 50% 100%; transition: transform .42s cubic-bezier(.3,.7,.3,1), opacity .42s, box-shadow .42s; backface-visibility: hidden;
+    border-top: 6px solid var(--rot); box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+  .rk > .rk-karte > summary { position: sticky; top: -16px; margin: -16px -16px 8px; padding: 12px 16px; background: var(--karte); z-index: 2; pointer-events: none; list-style: none; font-weight: 700; }
+  .rk > .rk-karte > summary::-webkit-details-marker { display: none; }
+  .rk > .rk-karte[data-rk="vorn"] { z-index: 30; transform: none; opacity: 1; }
+  .rk > .rk-karte[data-rk="h1"] { z-index: 29; transform: translateY(calc(-42px - .04 * var(--rk-h))) scale(.96); opacity: .97; overflow: hidden; filter: brightness(.97); }
+  .rk > .rk-karte[data-rk="h2"] { z-index: 28; transform: translateY(calc(-84px - .08 * var(--rk-h))) scale(.92); opacity: .9; overflow: hidden; filter: brightness(.93); }
+  .rk > .rk-karte[data-rk="rest"] { z-index: 1; transform: translateY(calc(-80px - .1 * var(--rk-h))) scale(.9); opacity: 0; pointer-events: none; overflow: hidden; }
+  .rk > .rk-karte > summary .schloss, .rk > .rk-karte > summary .pfeil, .rk > .rk-karte > .klappe-unten { display: none; }
+  .rk > .rk-karte > summary::after, .rk > .rk-karte > summary::before { display: none; }
+  .rk > .rk-karte[data-rk="weg"] { z-index: 31; transform: translateY(40px) rotateX(-98deg); opacity: 0; pointer-events: none; overflow: hidden; }
+  .rk.rk-schnell > .rk-karte { transition-duration: .16s; }
+  .rk-rad { position: absolute; left: 0; right: 118px; bottom: 0; height: 44px; display: flex; align-items: center; justify-content: center; gap: 14px;
+    background: linear-gradient(#3a3a3a, #1e1e1e); border-radius: 22px; margin: 0 6px; box-shadow: inset 0 2px 3px rgba(255,255,255,.15), 0 3px 8px rgba(0,0,0,.3); }
+  .rk-ring { width: 26px; height: 26px; border-radius: 50%; border: 4px solid #b8b8b8; box-shadow: inset 0 0 0 3px #555; }
+  .rk-zahl { color: #eee; font-weight: 700; min-width: 54px; text-align: center; font-size: .9rem; }
+  .rk-pfeil { border: 0; background: var(--rot); color: #fff; width: 40px; height: 32px; border-radius: 10px; font-size: 1rem; cursor: pointer; }
+  :root.ohne-anim .rk > .rk-karte { transition-duration: .01s; }
   .papierflieger { position: fixed; z-index: 99999; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); will-change: transform, opacity; }
   .zettel { position: relative; } .zettel-nadel { position: absolute; left: 50%; top: -10px; font-size: 1.6rem; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
   .gb-kerze { position: relative; display: inline-block; margin-left: 4px; font-size: .95em; }
@@ -3349,16 +3378,6 @@
       <div class="schalter" style="display:block"><div><b>🐢 Sparmodus</b><div class="hinweis">Für schwaches Netz oder ältere Handys: keine Bewegungen, seltener im Hintergrund nachsehen. Automatisch = schaltet sich bei Bedarf selbst ein. <span id="sparStand"></span></div></div><div class="hl-chips" id="sparWahl" style="margin-top:6px"></div></div>
       <details class="ds-mehr" id="wbKlappe" style="margin:2px 0 10px"><summary>⏳ Warte-Bild: <span id="wbAktName">Kochmütze</span></summary><div class="hinweis" style="margin-top:6px">Erscheint, wenn die App etwas länger braucht. Antippen wählt das Bild.</div><div id="wbWahl"></div></details> <!-- KC-CLUB-WARTEBILD 2.46.0 -->
       <div class="schalter"><div><b>🔠 Große Schrift</b></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
-      <div class="schalter"><div><b>✨ Animierte Knöpfe</b><div class="hinweis">Kacheln zoomen kurz beim Antippen, Reiter und „＋ Neu“ leuchten auf – aus: alles ruhig</div></div><input type="checkbox" id="setAnimiert" onchange="einstellung('animiert', this.checked)"></div> <!-- 2.24.1 (Wunsch Hansi) -->
-      <div class="schalter"><div><b>🍂 Jahreszeiten im Kopf</b><div class="hinweis">Herbstlaub, Schnee im Advent, Feuerwerk zu Silvester, Blüten im Frühling – ganz leise oben im Kopf</div></div><input type="checkbox" id="setJahreszeit" onchange="jahreszeitUmschalten(this.checked)"></div> <!-- 2.172.0 KC-CLUB-EFFEKTE-2 -->
-      <!-- KC-CLUB-REGISTER-EFFEKTE (2.169.0, Wunsch Hansi) -->
-      <div class="schalter" style="display:block"><div><b>🎬 Effekt beim Register-Wechsel</b><div class="hinweis">Wenn du zwischen Club, Meins und Technik wechselst, erscheinen die Kacheln mit Effekt. Gilt für dieses Gerät.</div></div>
-        <div class="reg-effekt-wahl" id="regEffektWahl"></div><button type="button" class="knopf klein" onclick="regEffektVorschau()">▶ Vorschau auf der Startseite</button></div>
-      <!-- KC-CLUB-SENDE-EFFEKT (2.175.0, Wunsch Hansi) -->
-      <div class="schalter" style="display:block"><div><b>✉️ Effekt beim Senden</b><div class="hinweis">Wenn du eine Nachricht abschickst, fliegt sie davon – als Papierflieger in Schlangenlinien, als weiße Brieftaube mit Kuvert oder im gelben Postauto. Ist die Nachricht als ❗ wichtig markiert, fährt ein Wagen mit Blaulicht. Beim Empfänger kommt sie genauso an – die Taube lässt dort das Kuvert fallen, das Postauto liefert ab.</div></div>
-        <div class="reg-effekt-wahl" id="sendeEffektWahl"></div><button type="button" class="knopf klein" onclick="sendeEffektVorschau(this)">▶ Vorschau</button> <button type="button" class="knopf klein" onclick="blaulichtVorschau(this)">🚨 Vorschau „wichtig“</button></div>
-      <div class="schalter"><div><b>🔄 Kacheln umdrehen</b><div class="hinweis">Doppelt auf eine Kachel tippen – hinten stehen Schnellaktionen (z. B. „Neue Nachricht“)</div></div><input type="checkbox" id="setKachelRueck" onchange="einstellung('kachelrueck', this.checked)"></div> <!-- KC-CLUB-KACHEL-RUECKSEITE 2.54.0 -->
-      <div class="schalter"><div><b>🗑️ Reißwolf beim Löschen</b><div class="hinweis">Gelöschtes läuft sichtbar durch den Aktenvernichter</div></div><input type="checkbox" id="setReisswolf" onchange="einstellung('reisswolf', this.checked)"></div> <!-- KC-CLUB-REISSWOLF 2.54.0 -->
       <div style="margin-top:8px"><b>🌗 Tag- und Nachtmodus</b></div>
       <div class="umschalter modus3" id="modusWahl"><button data-m="auto" onclick="modusWaehlen('auto')">🔄 Automatisch</button><button data-m="tag" onclick="modusWaehlen('tag')">☀️ Immer Tag</button><button data-m="nacht" onclick="modusWaehlen('nacht')">🌙 Immer Nacht</button></div>
       <p class="hinweis" id="modusInfo" style="margin-top:-4px"></p>
@@ -3369,6 +3388,23 @@
       <details class="ds-mehr" id="designBuntKlappe"><summary>✨ Ausgefallene Farbschemen <span class="hinweis" id="designBuntZahl"></span></summary><div class="designwahl" id="designWahlBunt"></div></details>
       <button class="knopf klein" onclick="designStandard()">↺ Standard wiederherstellen</button>
       <div class="wortwahl" id="meinWetterort"></div>
+    </details>
+    <!-- KC-CLUB-ROLLKARTEI (2.180.0): „Darstellung“ war zu lang für eine Karteikarte – Effekte und Startseite eigene Bereiche (Inhalt unverändert) -->
+    <details class="karte" data-klappe="effekte">
+      <summary>✨ Effekte</summary>
+      <div class="schalter"><div><b>✨ Animierte Knöpfe</b><div class="hinweis">Kacheln zoomen kurz beim Antippen, Reiter und „＋ Neu“ leuchten auf – aus: alles ruhig</div></div><input type="checkbox" id="setAnimiert" onchange="einstellung('animiert', this.checked)"></div> <!-- 2.24.1 (Wunsch Hansi) -->
+      <div class="schalter"><div><b>🍂 Jahreszeiten im Kopf</b><div class="hinweis">Herbstlaub, Schnee im Advent, Feuerwerk zu Silvester, Blüten im Frühling – ganz leise oben im Kopf</div></div><input type="checkbox" id="setJahreszeit" onchange="jahreszeitUmschalten(this.checked)"></div> <!-- 2.172.0 KC-CLUB-EFFEKTE-2 -->
+      <!-- KC-CLUB-REGISTER-EFFEKTE (2.169.0, Wunsch Hansi) -->
+      <div class="schalter" style="display:block"><div><b>🎬 Effekt beim Register-Wechsel</b><div class="hinweis">Wenn du zwischen Club, Meins und Technik wechselst, erscheinen die Kacheln mit Effekt. Gilt für dieses Gerät.</div></div>
+        <div class="reg-effekt-wahl" id="regEffektWahl"></div><button type="button" class="knopf klein" onclick="regEffektVorschau()">▶ Vorschau auf der Startseite</button></div>
+      <!-- KC-CLUB-SENDE-EFFEKT (2.175.0, Wunsch Hansi) -->
+      <div class="schalter" style="display:block"><div><b>✉️ Effekt beim Senden</b><div class="hinweis">Wenn du eine Nachricht abschickst, fliegt sie davon – als Papierflieger in Schlangenlinien, als weiße Brieftaube mit Kuvert oder im gelben Postauto. Ist die Nachricht als ❗ wichtig markiert, fährt ein Wagen mit Blaulicht. Beim Empfänger kommt sie genauso an – die Taube lässt dort das Kuvert fallen, das Postauto liefert ab.</div></div>
+        <div class="reg-effekt-wahl" id="sendeEffektWahl"></div><button type="button" class="knopf klein" onclick="sendeEffektVorschau(this)">▶ Vorschau</button> <button type="button" class="knopf klein" onclick="blaulichtVorschau(this)">🚨 Vorschau „wichtig“</button></div>
+      <div class="schalter"><div><b>🔄 Kacheln umdrehen</b><div class="hinweis">Doppelt auf eine Kachel tippen – hinten stehen Schnellaktionen (z. B. „Neue Nachricht“)</div></div><input type="checkbox" id="setKachelRueck" onchange="einstellung('kachelrueck', this.checked)"></div> <!-- KC-CLUB-KACHEL-RUECKSEITE 2.54.0 -->
+      <div class="schalter"><div><b>🗑️ Reißwolf beim Löschen</b><div class="hinweis">Gelöschtes läuft sichtbar durch den Aktenvernichter</div></div><input type="checkbox" id="setReisswolf" onchange="einstellung('reisswolf', this.checked)"></div> <!-- KC-CLUB-REISSWOLF 2.54.0 -->
+    </details>
+    <details class="karte" data-klappe="startseite">
+      <summary>🧩 Startseite &amp; Ansicht</summary>
       <div class="schalter"><div><b>🪧 Info-Feld oben beim Start</b><div class="hinweis">Welche Karte zuerst erscheint – z. B. Nr. 1 oder die Kommunikationszentrale</div></div><select id="setInfoStart" onchange="infoStartSetzen(this.value)" style="max-width:48%"></select></div>
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Nur das Wichtigste mit großen Knöpfen – jederzeit umschaltbar</div></div><button class="knopf klein" onclick="ansichtSetzen('einfach')">Einschalten</button></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
@@ -3736,6 +3772,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.179.0" data-v="2.179.0"></script>
+<script src="app.js?v=2.180.0" data-v="2.180.0"></script>
 </body>
 </html>

@@ -7551,3 +7551,15 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/const ziel = neu \? letzte : erst && u\.gelesenBis \? u\.nachrichten\.find\(\(m\) => !m\.eigen && m\.zeit > u\.gelesenBis\) : null;/.test(html), "beim Öffnen: erste ungelesene Nachricht anderer");
 }
+
+// 2.180.0 KC-CLUB-ROLLKARTEI (Wunsch Hansi: lange Listen „wie ein Adressregister vor sich herrollen“ – zuerst die Einstellungen)
+{
+  const idx = lies("index.html");
+  assert.ok(/function rkEinrichten\(wurzelId, schluessel\)/.test(html) && /rkEinrichten\("v-einstellungen", "einst"\)/.test(html), "wiederverwendbarer Kern, Einstellungen eingebunden");
+  assert.ok(/localStorage\.getItem\("kc_club_rk_" \+ k\) !== "aus"/.test(html) && /z\.knopf\.textContent = an \? "☰ Liste" : "🗂️ Kartei"/.test(html), "je Gerät zurück zur gewohnten Liste");
+  assert.ok(/if \(z\.an && e\.target\.parentElement === w && e\.target\.classList\.contains\("rk-karte"\)\) e\.stopPropagation\(\);/.test(html) && /d\.open = d\.dataset\.rkVorher === "1"/.test(html), "gemerkte Auf/Zu-Stände der Liste bleiben unverändert");
+  assert.ok(/m\.target\.classList\?\.contains\("hervor"\)\) \{ rkZu\(z, m\.target\)/.test(html), "Suche/Tipps/„zeig mir wo“ blättern zur richtigen Karte");
+  assert.ok(/d\.inert = k !== 0;/.test(html), "nur die vordere Karte ist bedienbar");
+  assert.ok(/data-klappe="effekte"/.test(idx) && /data-klappe="startseite"/.test(idx) && /id="sendeEffektWahl"/.test(idx) && /id="kachelGroesseWahl"/.test(idx), "Darstellung aufgeteilt, Inhalte erhalten");
+  assert.ok(/\.rk > \.rk-karte\[data-rk="weg"\] \{[^}]*rotateX\(-98deg\)/.test(idx) && /\.rk-rad \{/.test(idx), "Karte klappt über das Rad, Rad mit ▲▼");
+}

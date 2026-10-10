@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.180.0 – 2026-10-10 – 🗂️ Einstellungen als Rollkartei
+🔧 Kleine Systemverbesserungen
+
 ## 2.179.0 – 2026-10-09 – 🕊️ Effekte auch für später gelesene Nachrichten
 🔧 Kleine Systemverbesserungen
 
