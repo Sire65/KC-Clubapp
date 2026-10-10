@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.208.0 – 2026-10-10 – 🎄 Countdown bis zum Weihnachtsmarkt
+🎄 Oben im Countdown: „Weihnachtsmarkt · 55 Tage“, während er läuft „läuft!“
+
 ## 2.207.0 – 2026-10-10 – 🟢 Ameisenlauf an der Mitglieder-Kachel, wenn jemand online ist
 🟢 Ist jemand online, läuft ein grüner Ameisenlauf um die Mitglieder-Kachel
 

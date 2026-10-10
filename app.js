@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.207.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.208.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -12546,6 +12546,9 @@ const CD_ARTEN = [ // [Schlüssel, Bezeichnung in den Einstellungen, Einträge l
   ["reise", "🚢 Reisen & Ausflüge, bei denen ich dabei bin", () => (CD.daten?.reisen || []).map((a) => { const t = cdTageBis(a.von);
     return t < 0 || t > 400 ? null : { id: "r" + a.id, zahl: cdNoch(t), // 2.205.0 (Wunsch Hansi): Schiffsreise = „🚢 Kreuzfahrt“, Symbol wie bei den Aktionen
       text: aktionSymbol(a) === "🚢" ? "🚢 Kreuz\u00ADfahrt" : `${aktionSymbol(a)} ` + ([...a.titel].length > 22 ? [...a.titel].slice(0, 21).join("") + "…" : a.titel), los: () => aktionOeffnen(a.id) }; })],
+  // 2.208.0 (Wunsch Hansi „x Tage bis Weihnachtsmarkt“): aus den Club-Terminen (Veranstaltung „Weihnachtsmarkt“, ohne Auf-/Abbau);
+  // während er läuft: „läuft!“. Weitere Club-Veranstaltungen = weiterer Eintrag in CD_VERANSTALTUNGEN.
+  ["markt", "🎄 Weihnachtsmarkt (Club-Termin)", () => cdVeranstaltung(CD_VERANSTALTUNGEN.markt)],
   ["weihnachten", "🎄 Weihnachten (ab Oktober)", () => { const h = heuteIso(), t = cdTageBis(h.slice(0, 4) + "-12-24"); const m = +h.slice(5, 7);
     return m >= 10 && t >= -2 ? [{ id: "x", zahl: t <= 0 ? "Frohes Fest!" : cdNoch(t), text: "🎄 Weih\u00ADnachten", los: () => zeige("termine") }] : []; }],
   ["silvester", "🎆 Silvester (im Dezember)", () => { const h = heuteIso(), t = cdTageBis(h.slice(0, 4) + "-12-31");
@@ -12555,6 +12558,13 @@ const CD_ARTEN = [ // [Schlüssel, Bezeichnung in den Einstellungen, Einträge l
   ["mggeb", "🎂 Geburtstage der Mitglieder (14 Tage vorher)", () => (CD.daten?.geburtstage || []).filter((x) => x.person_id !== ICH?.person_id).map((g) => { const d = cdNaechsterTag(g.md), t = d ? cdTageBis(d) : -1;
     return t >= 0 && t <= 14 ? { id: "m" + g.person_id, t, zahl: cdNoch(t), text: `🎂 Geb. ${g.vorname || g.name}`, los: () => mitgliedOeffnen(g.person_id) } : null; }).filter(Boolean).sort((a, b) => a.t - b.t).slice(0, 3)],
 ];
+const CD_VERANSTALTUNGEN = { markt: { re: /weihnachtsmarkt/i, ohne: /aufbau|abbau|nachbereitung|vorbereitung/i, text: "🎄 Weih\u00ADnachts\u00ADmarkt", vorlauf: 120 } };
+function cdVeranstaltung(v) {
+  const t = (CD.daten?.veranstaltungen || []).find((x) => v.re.test(x.titel) && !v.ohne.test(x.titel)); if (!t) return [];
+  const von = berlinIso(t.beginn), bis = t.ende ? berlinIso(t.ende) : von, h = heuteIso(), tage = cdTageBis(von);
+  if (h > bis || tage > v.vorlauf) return [];
+  return [{ id: "v" + t.id, zahl: h >= von ? "läuft!" : cdNoch(tage), text: v.text, los: () => zeige("termine") }];
+}
 const cdNur = () => einst("cd_nur", false);
 const cdArtAn = (k) => einst("cd_" + k, true);
 function cdListe(bisTreffen) {
@@ -12574,7 +12584,7 @@ function cdTippen() { const l = cdListe(CD.bisTreffen || ""); (l[CD.i] || l[0]).
 function cdStart() {
   if (!CD.uhr) CD.uhr = setInterval(cdWeiter, CD_TAKT_MS);
   if (!cdNur() && !CD.laedt && Date.now() - CD.stand > CD_NEU_MS) { CD.laedt = true;
-    setTimeout(() => api("countdowns", {}, { still: true }).then((r) => { CD.daten = { reisen: r.reisen || [], geburtstage: r.geburtstage || [] }; CD.stand = Date.now(); try { localStorage.setItem("kc_club_cd", JSON.stringify(CD.daten)); } catch {} cdFrisch(); })
+    setTimeout(() => api("countdowns", {}, { still: true }).then((r) => { CD.daten = { reisen: r.reisen || [], geburtstage: r.geburtstage || [], veranstaltungen: r.veranstaltungen || [] }; CD.stand = Date.now(); try { localStorage.setItem("kc_club_cd", JSON.stringify(CD.daten)); } catch {} cdFrisch(); })
       .catch(() => { CD.stand = Date.now() - CD_NEU_MS + 600000; }).finally(() => { CD.laedt = false; }), 4000); } // nach dem Start, nicht mittendrin
 }
 function cdWeiter() {

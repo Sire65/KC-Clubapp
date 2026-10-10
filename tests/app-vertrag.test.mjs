@@ -7765,3 +7765,9 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/const on = ONL\.zeigen && mpOnline\(\) > 0;/.test(html) && /<button class="mini\$\{on \? " mini-online" : ""\}" onclick="mgNurOnline\(\)">/.test(html) && /\.mini\.mini-online \.ameisen rect \{[^}]*stroke: #2ecc71/.test(html), "grüner Ameisenlauf bei Online");
 }
+
+// 2.208.0 (Wunsch Hansi: „x Tage bis Weihnachtsmarkt“) – aus den Club-Terminen, Auf-/Abbau zählen nicht
+{
+  assert.ok(/\["markt", "🎄 Weihnachtsmarkt \(Club-Termin\)", \(\) => cdVeranstaltung\(CD_VERANSTALTUNGEN\.markt\)\]/.test(html) && /ohne: \/aufbau\|abbau\|nachbereitung\|vorbereitung\/i/.test(html), "Weihnachtsmarkt-Countdown");
+  assert.ok(/\.eq\("art", "veranstaltung"\)\.eq\("status", "geplant"\)/.test(server) && /return json\(\{ reisen, geburtstage, veranstaltungen \}\);/.test(server), "Server liefert Veranstaltungen");
+}

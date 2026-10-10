@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.205.0";
+const SERVER_VERSION = "2.208.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -9720,9 +9720,14 @@ Köcheclub Werne`,
       // nur eigene Reisen/Aktionen (dabei, noch nicht vorbei) und die freigegebenen Geburtstage (nur Tag/Monat, wie im Kalender)
       case "countdowns": {
         const heute = berlinTag(new Date());
-        const [akt, geburtstage] = await Promise.all([aktionenLesen(ich), geburtstageSichtbar(ich)]);
+        const jetztIso = new Date().toISOString(), bisIso = new Date(Date.now() + 150 * 86400000).toISOString();
+        const [akt, geburtstage, { data: vst }] = await Promise.all([aktionenLesen(ich), geburtstageSichtbar(ich),
+          // 2.208.0 (Wunsch Hansi „x Tage bis Weihnachtsmarkt“): kommende Club-Veranstaltungen (nur Titel + Zeitraum) – die App wählt aus
+          db.from("kc_club_treffen").select("id,titel,beginn,ende").eq("art", "veranstaltung").eq("status", "geplant").lt("beginn", bisIso)
+            .or(`ende.gte.${jetztIso},and(ende.is.null,beginn.gte.${jetztIso})`).order("beginn").limit(40)]);
         const reisen = (akt.aktionen as any[]).filter((a: any) => a.dabei && String(a.bis || a.von) >= heute).map((a: any) => ({ id: a.id, titel: a.titel, veranstalter: a.veranstalter ?? null, von: a.von, bis: a.bis }));
-        return json({ reisen, geburtstage });
+        const veranstaltungen = (vst ?? []).map((t: any) => ({ id: t.id, titel: txt(t.titel, 120), beginn: t.beginn, ende: t.ende ?? null }));
+        return json({ reisen, geburtstage, veranstaltungen });
       }
 
       // ----- Sitzungsprotokolle (KC-CLUB-PROTOKOLLE) -----
