@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.210.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.211.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12670,7 +12670,7 @@ function cdZahlHtml(zahl) {
   const f = cdFb() && cdFbTeile(zahl);
   return f ? `<span class="fb-reihe" aria-label="${esc(zahl)}">${[...f.n].map(fbKarte).join("")}</span><small class="fb-einheit">${esc(f.einheit)}</small>` : esc(zahl);
 }
-function fbKippen(reihe, neu) {
+function fbKippen(reihe, neu, dauer = 200, versatz = 70) {
   const karten = [...reihe.querySelectorAll(":scope > .fb-z")];
   karten.forEach((k, i) => {
     const z = neu[i], alt = k.dataset.z; if (z === alt) return;
@@ -12680,12 +12680,23 @@ function fbKippen(reihe, neu) {
     const k1 = document.createElement("span"); k1.className = "fb-h fb-oben fb-klappe"; k1.innerHTML = `<i>${esc(at)}</i>`;
     const k2 = document.createElement("span"); k2.className = "fb-h fb-unten fb-klappe"; k2.innerHTML = `<i>${esc(zt)}</i>`; k2.style.transform = "rotateX(90deg)";
     k.append(k1, k2);
-    const v = i * 70; // Karten klappen kurz nacheinander
-    k1.animate([{ transform: "rotateX(0deg)" }, { transform: "rotateX(-90deg)" }], { duration: 200, delay: v, easing: "ease-in", fill: "forwards" });
-    k2.animate([{ transform: "rotateX(90deg)" }, { transform: "rotateX(0deg)" }], { duration: 200, delay: v + 200, easing: "ease-out", fill: "forwards" }).finished
+    const v = i * versatz; // Karten klappen kurz nacheinander
+    k1.animate([{ transform: "rotateX(0deg)" }, { transform: "rotateX(-90deg)" }], { duration: dauer, delay: v, easing: "ease-in", fill: "forwards" });
+    k2.animate([{ transform: "rotateX(90deg)" }, { transform: "rotateX(0deg)" }], { duration: dauer, delay: v + dauer, easing: "ease-out", fill: "forwards" }).finished
       .then(() => { k.querySelector(".fb-unten:not(.fb-klappe) i").textContent = zt; k1.remove(); k2.remove(); }).catch(() => { k1.remove(); k2.remove(); });
   });
   reihe.setAttribute("aria-label", neu.trim());
+}
+// 2.211.0 KC-CLUB-FALLBLATT-SORTIEREN (Wunsch Hansi „jeder 20. Durchgang ein kurzes Durchblättern, als ob sie sich neu sortieren“):
+// bei jedem 20. Wechsel rattern alle Karten schnell durch einige Ziffern und bleiben dann auf dem Ziel stehen.
+const CD_FB_SORTIEREN_JEDER = 20, CD_FB_SORTIER_SCHRITTE = 7;
+async function fbSortieren(reihe, ziel) {
+  const zufall = () => [...ziel].map(() => String(Math.floor(Math.random() * 10))).join("");
+  for (let n = 0; n < CD_FB_SORTIER_SCHRITTE; n++) {
+    if (!reihe.isConnected) return;
+    fbKippen(reihe, zufall(), 55, 18); await new Promise((r) => setTimeout(r, 150));
+  }
+  if (reihe.isConnected) fbKippen(reihe, ziel, 110, 60);
 }
 function cdStil(stil) { try { localStorage.setItem("kc_club_cd_stil", stil); } catch {} cdEinstellungenZeigen(); cdFrisch(); }
 function cdTippen() { const l = cdListe(CD.bisTreffen || ""); (l[CD.i] || l[0]).los(); }
@@ -12710,7 +12721,7 @@ function cdZeichnen(k, l) {
   const e = l[CD.i] || l[0]; if (!e) return;
   const z = k.querySelector(".cd-zahl"), t = k.querySelector(".cd-text"), p = k.querySelector(".cd-punkte");
   if (z) { const f = cdFb() && cdFbTeile(e.zahl), reihe = z.querySelector(".fb-reihe");
-    if (f && reihe) { fbKippen(reihe, f.n); const ei = z.querySelector(".fb-einheit"); if (ei) ei.textContent = f.einheit; }
+    if (f && reihe) { CD.wechsel = (CD.wechsel || 0) + 1; if (fxAn() && CD.wechsel % CD_FB_SORTIEREN_JEDER === 0) fbSortieren(reihe, f.n); else fbKippen(reihe, f.n); const ei = z.querySelector(".fb-einheit"); if (ei) ei.textContent = f.einheit; }
     else { z.innerHTML = cdZahlHtml(e.zahl); z.classList.toggle("cd-fb", !!f); } }
   if (t) t.textContent = e.text;
   p?.querySelectorAll("i").forEach((x, i) => x.classList.toggle("an", i === CD.i));

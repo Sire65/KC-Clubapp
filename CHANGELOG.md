@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.211.0 – 2026-10-10 – 🔢 Fallblatt sortiert sich ab und zu neu
+🔢 Fallblatt-Anzeige: jeder 20. Wechsel rattert kurz durch, als ob sie sich neu sortiert
+
 ## 2.210.0 – 2026-10-10 – 🔢 Fallblatt-Anzeige für den Countdown
 🔢 Countdown oben wahlweise als Fallblatt-Anzeige wie am Bahnhof (⚙️ → Startseite & Ansicht)
 

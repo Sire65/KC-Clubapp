@@ -7800,7 +7800,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.210.0 KC-CLUB-FALLBLATT (Wunsch Hansi: Terminkachel wie eine Fallblatt-/Blätteranzeige, einstellbar unter ⚙️)
 {
-  assert.ok(/const cdFb = \(\) => \{ try \{ return localStorage\.getItem\("kc_club_cd_stil"\) === "fallblatt";/.test(html) && /function fbKippen\(reihe, neu\)/.test(html), "Fallblatt fehlt");
+  assert.ok(/const cdFb = \(\) => \{ try \{ return localStorage\.getItem\("kc_club_cd_stil"\) === "fallblatt";/.test(html) && /function fbKippen\(reihe, neu[,)]/.test(html), "Fallblatt fehlt");
   assert.ok(/data-zyklus="Darstellung"[^`]*cdStil\('normal'\)[^`]*cdStil\('fallblatt'\)/.test(html), "Wahl unter ⚙️ (Umschaltknopf)");
   assert.ok(/if \(!fxAn\(\)\) \{ k\.querySelectorAll\("i"\)\.forEach/.test(html), "ohne Effekte kein Klappen");
+}
+
+// 2.211.0 KC-CLUB-FALLBLATT-SORTIEREN (Wunsch Hansi: jeder 20. Durchgang kurzes Durchblättern)
+{
+  assert.ok(/const CD_FB_SORTIEREN_JEDER = 20,/.test(html) && /async function fbSortieren\(reihe, ziel\)/.test(html) && /CD\.wechsel % CD_FB_SORTIEREN_JEDER === 0\) fbSortieren\(reihe, f\.n\)/.test(html), "Sortier-Durchlauf fehlt");
 }
