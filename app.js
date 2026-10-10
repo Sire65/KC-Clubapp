@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.198.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.199.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
 // zwei langsamen Starts hintereinander (> 5 s) schaltet die App von selbst auf Sparen: keine Bewegungen/Übergänge und seltener im
 // Hintergrund nachsehen (Online-Punkte, Neuladen, Nutzungszahlen ×3). Jedes Gerät entscheidet für sich (Einstellungen → Darstellung:
@@ -4116,7 +4116,7 @@ async function anrufVerbindung(mitBild) {
   };
   pc.onconnectionstatechange = () => {
     if (!RUF || RUF.pc !== pc) return;
-    if (pc.connectionState === "connected" && !RUF.verbunden) { RUF.verbunden = true; RUF.start = Date.now(); klangAus(); anrufUhr(); anrufKnoepfe("aktiv"); }
+    if (pc.connectionState === "connected" && !RUF.verbunden) { RUF.verbunden = true; RUF.start = Date.now(); klangAus(); anrufUhr(); anrufKnoepfe("aktiv"); if (RUF.vf) { melde(`🔊 Ton an – ihr könnt jetzt miteinander sprechen`); vfLeiste(); } }
     if (pc.connectionState === "connected" && RUF.konf) { const h = RUF.konf.beine.get(RUF.id); if (h) h.verbunden = true; konfAnzeigen(); } // KC-CLUB-KONFERENZ: Hauptverbindung steht
     if (pc.connectionState === "failed") { if (RUF.konf) konfBeinWeg(RUF.id, true); else anrufFehlgeschlagen(); }
     if (pc.connectionState === "disconnected" && !RUF.konf) anrufZustand("⚠️ Verbindung wackelt …");
@@ -4138,7 +4138,7 @@ function klangAus() { if (RUF?.klang) { clearInterval(RUF.klang.t); try { RUF.kl
 function anrufZustand(t) { $("anrufZustand").textContent = t; }
 function anrufSchirm(gegen) {
   $("anrufBild").textContent = initialen(gegen.name || gegen.vorname); $("anrufName").textContent = gegen.name || gegen.vorname;
-  $("anrufSchirm").classList.remove("versteckt");
+  if (!RUF?.vf) $("anrufSchirm").classList.remove("versteckt"); // KC-CLUB-VORFUEHREN-TON: Bedienung steht dann in der Vorführ-Leiste
 }
 function anrufKnoepfe(art) {
   $("anrufBild").classList.toggle("klingelt", art === "eingehend" || art === "rufe");
@@ -4173,10 +4173,10 @@ async function anrufKameraWechseln() {
   } catch { RUF.hinten = !RUF.hinten; melde("Kamera wechseln geht auf diesem Handy nicht.", true); }
 }
 // Ich rufe an
-async function anrufen(pid, mitBild) {
+async function anrufen(pid, mitBild, vf = false) {
   if (RUF) return melde("Es läuft schon ein Anruf.", true);
   const m = MITGLIEDER?.find((x) => x.person_id === pid) || ONL.liste.find((x) => x.person_id === pid) || { person_id: pid, name: "" };
-  RUF = { rolle: "rufer", gegen: m, art: mitBild ? "video" : "ton" }; spur(mitBild ? "video" : "anruf", pid); // KC-CLUB-SPUR
+  RUF = { rolle: "rufer", gegen: m, art: mitBild ? "video" : "ton", vf: !!vf }; spur(mitBild ? "video" : "anruf", pid); // KC-CLUB-SPUR
   anrufSchirm(m); anrufKnoepfe("rufe"); anrufZustand(mitBild ? "Kamera und Mikrofon werden vorbereitet …" : "Mikrofon wird vorbereitet …");
   const lauf = RUF, art = RUF.art; // 2.122.0 (Gesamtprüfung 4, Fehlerprotokoll): wird während der Vorbereitung aufgelegt, ist RUF schon weg
   try {
@@ -4188,7 +4188,7 @@ async function anrufen(pid, mitBild) {
     const r = await api("anruf_start", { an: pid, angebot: pc.localDescription.sdp, art });
     if (r.gegenanruf) { anrufAufraeumen(); return gegenanrufAnnehmen(r.gegenanruf, mitBild); }
     if (RUF !== lauf) { api("anruf_ende", { id: r.id }).catch(() => {}); return; } // während des Startens aufgelegt → beim Server gleich beenden
-    RUF.id = r.id; anrufZustand(`${mitBild ? "🎥" : "📞"} Klingelt bei ${m.vorname || m.name} …`); klang("frei");
+    RUF.id = r.id; anrufZustand(`${mitBild ? "🎥" : "📞"} Klingelt bei ${m.vorname || m.name} …`); klang("frei"); if (RUF.vf) vfLeiste();
     RUF.poll = setInterval(anrufPruefen, 1500);
   } catch (e) { if (RUF !== lauf) return; anrufAufraeumen(); meldeFehler(e); }
 }
@@ -4201,7 +4201,7 @@ async function anrufPruefen() {
     if (RUF.rolle === "rufer" && r.status === "angenommen" && r.antwort && !RUF.pc.remoteDescription) {
       klangAus(); anrufZustand("🔗 Verbindung wird aufgebaut …"); anrufKnoepfe("aktiv");
       await RUF.pc.setRemoteDescription({ type: "answer", sdp: r.antwort });
-      clearInterval(RUF.poll); RUF.poll = setInterval(anrufPruefen, 3000);
+      clearInterval(RUF.poll); RUF.poll = setInterval(anrufPruefen, 3000); if (RUF.vf) vfLeiste();
       setTimeout(() => { if (RUF && !RUF.verbunden) anrufFehlgeschlagen(); }, 15000);
     }
     // KC-CLUB-KONFERENZ (0.82.0): unser Gespräch ist jetzt Teil einer Konferenz → ab hier übernimmt der Konferenz-Takt
@@ -4222,10 +4222,11 @@ async function anrufEingehend(id) {
   try {
     const r = await api("anruf_status", { id });
     if (r.ichRufe || r.status !== "klingelt") { if (r.status === "verpasst") melde(`Verpasster Anruf von ${r.gegenueber.vorname}.`); return; }
-    RUF = { id, rolle: "angerufen", gegen: r.gegenueber, angebot: r.angebot, art: r.art || "ton", konferenzId: r.konferenz || null };
+    RUF = { id, rolle: "angerufen", gegen: r.gegenueber, angebot: r.angebot, art: r.art || "ton", konferenzId: r.konferenz || null,
+      vf: !r.konferenz && VF.status === "laeuft" && !!r.gegenueber?.person_id && r.gegenueber.person_id === vfPartner() }; // KC-CLUB-VORFUEHREN-TON
     anrufSchirm(r.gegenueber); anrufKnoepfe("eingehend");
     anrufZustand(RUF.konferenzId ? `👥 ${r.gegenueber.vorname} holt dich in eine Konferenz …` : RUF.art === "video" ? `🎥 ${r.gegenueber.vorname} ruft per Video an …` : `📞 ${r.gegenueber.vorname} ruft an …`); klang("klingeln");
-    RUF.poll = setInterval(anrufPruefen, 2000);
+    RUF.poll = setInterval(anrufPruefen, 2000); if (RUF.vf) vfLeiste();
   } catch {}
 }
 // ---- KC-CLUB-ANRUF-KURZANTWORT (0.81.0): mit Text ablehnen – Texte vom Admin (INIT.anrufAntworten), sonst Grundeinstellung ----
@@ -4485,7 +4486,7 @@ async function anrufAnnehmen(mitBild) {
   if (!RUF || RUF.rolle !== "angerufen") return;
   klangAus(); anrufZustand("🔗 Verbindung wird aufgebaut …");
   try {
-    const { pc, strom } = await anrufVerbindung(!!mitBild && RUF.art === "video"); Object.assign(RUF, { pc, strom }); anrufKnoepfe("aktiv");
+    const { pc, strom } = await anrufVerbindung(!!mitBild && RUF.art === "video"); Object.assign(RUF, { pc, strom }); anrufKnoepfe("aktiv"); if (RUF.vf) vfLeiste();
     await pc.setRemoteDescription({ type: "offer", sdp: RUF.angebot });
     await pc.setLocalDescription(await pc.createAnswer()); await iceFertig(pc);
     await api("anruf_annehmen", { id: RUF.id, antwort: pc.localDescription.sdp });
@@ -4495,9 +4496,10 @@ async function anrufAnnehmen(mitBild) {
   } catch (e) { const id = RUF?.id; anrufAufraeumen(); if (id) api("anruf_ende", { id }).catch(() => {}); meldeFehler(e); }
 }
 async function anrufFehlgeschlagen() {
-  if (!RUF) return; const g = RUF.gegen, id = RUF.id;
+  if (!RUF) return; const g = RUF.gegen, id = RUF.id, vf = RUF.vf;
   api("diagnose", { art: "anruf", daten: { verbunden: false, rolle: RUF.rolle, ice: RUF.pc?.iceConnectionState || "" } }).catch(() => {});
   anrufAufraeumen(); if (id) api("anruf_ende", { id }).catch(() => {});
+  if (vf) return melde(`🔈 Der Ton zu ${g.vorname || g.name} ließ sich über dieses Netz nicht verbinden – das Zeigen läuft weiter. Am besten kurz normal anrufen.`, true);
   if ((await frage(`Die Verbindung zu ${g.vorname || g.name} ließ sich nicht aufbauen – das passiert in manchen Mobilfunknetzen.\n\nStattdessen eine Nachricht schreiben?`))) direkt(g.person_id);
 }
 async function anrufAuflegen() {
@@ -4517,8 +4519,8 @@ function anrufAufraeumen() {
   try { RUF.pc?.close(); } catch {}
   $("anrufTon").srcObject = null; $("anrufVideo").srcObject = null; $("anrufSelbst").srcObject = null;
   $("anrufVideo").classList.add("versteckt"); $("anrufSelbst").classList.add("versteckt"); $("anrufSchirm").classList.remove("mitbild");
-  $("anrufSchirm").classList.add("versteckt"); RUF = null;
-  anrufAntwortBereich(false);
+  $("anrufSchirm").classList.add("versteckt"); const warVf = RUF.vf; RUF = null;
+  anrufAntwortBereich(false); if (warVf && VF.rolle) vfLeiste();
   if (ZWEIT) { const z = ZWEIT; zweitWeg(); setTimeout(() => anrufEingehend(z.id), 300); } // KC-CLUB-ANRUF-ZWEIT: klingelt noch → normal annehmen können
 }
 
@@ -11362,7 +11364,7 @@ async function vfAnfrage(einl) {
   if (ja === null) { setTimeout(() => VF.gefragt.delete(einl.id), 15000); return; } // nur geschlossen – keine Antwort an den Server
   try { const r = await api("vorfuehren_antwort", { id: einl.id, annehmen: ja }, { warten: true });
     if (!ja || r.status !== "laeuft") { if (ja) melde("📺 Die Vorführung ist schon vorbei."); return; }
-    Object.assign(VF, { rolle: "schaut", id: einl.id, gegen: r.von?.vorname || wer, status: "laeuft", seit: r.n || 0, fseit: 0, start: Date.now(), bis: r.bis ? Date.parse(r.bis) : Date.now() + ST_LIVE_MIN * 60000 });
+    Object.assign(VF, { rolle: "schaut", id: einl.id, vonPid: r.von?.person_id || einl.von?.person_id || null, gegen: r.von?.vorname || wer, status: "laeuft", seit: r.n || 0, fseit: 0, start: Date.now(), bis: r.bis ? Date.parse(r.bis) : Date.now() + ST_LIVE_MIN * 60000 });
     spur("vorfuehren_zuschauen"); vfSchirm(); vfLeiste(); VF.takt = setInterval(vfHolen, 800); vfHolen();
   } catch (e) { meldeFehler(e); }
 }
@@ -11398,9 +11400,31 @@ function vfLeiste() {
   l.className = "vf-leiste" + (zeigt ? "" : " vf-schaut") + (VF.vorhang ? " vf-vorhang" : "");
   const k = (t, fn, aus) => `<button type="button" class="knopf klein" ${aus ? "disabled" : `onclick="${fn}"`}>${t}</button>`;
   l.innerHTML = `<div class="vf-zeile">${laeuft ? onAirSchild(true) : ""}<span class="vf-text">${text}</span><span class="vf-uhr" id="vfUhr"></span></div>
-    <div class="vf-knoepfe${zeigt ? "" : " eins"}">${zeigt ? k(VF.vorhang ? "🙉 Auf" : "🙈 Vorhang", "vfVorhang()", !laeuft) + k("🎬 Studio", "stOeffnen()") : ""}${k("⏹ Beenden", "vfBeenden()")}</div>`;
+    <div class="vf-knoepfe${zeigt ? "" : " eins"}">${zeigt ? k(VF.vorhang ? "🙉 Auf" : "🙈 Vorhang", "vfVorhang()", !laeuft) + k("🎬 Studio", "stOeffnen()") : ""}${k("⏹ Beenden", "vfBeenden()")}</div>${laeuft ? vfTonHtml(k) : ""}`;
+  document.documentElement.style.setProperty("--vf-h", l.offsetHeight + "px"); // Platz oben passt sich an (mit/ohne Ton-Zeile)
   vfLeisteUhr(); if (!VF.uhrT) VF.uhrT = setInterval(vfLeisteUhr, 1000);
 }
+// ---------- KC-CLUB-VORFUEHREN-TON (2.199.0, Wunsch Hansi „im Studio den Ton einschalten, damit wir uns beim Zeigen unterhalten können“) ----------
+// Nutzt den App-Anruf (KC-CLUB-ANRUF, WebRTC direkt von Handy zu Handy, kostenlos) – ohne Vollbild-Anrufschirm: Klingeln, Annehmen,
+// Stumm und Ton aus stehen in der Vorführ-Leiste, das Live-Bild bleibt sichtbar. Beide Seiten können den Ton starten; das Mikrofon
+// geht erst an, wenn die Gegenseite selbst „🔊 Annehmen“ tippt. Ende der Vorführung beendet auch den Ton.
+const vfPartner = () => VF.rolle === "zeigt" ? VF.an : VF.rolle === "schaut" ? VF.vonPid || null : null;
+function vfTonHtml(k) {
+  if (RUF && !RUF.vf) return ""; // normaler Anruf läuft – nichts dazwischenfunken
+  const vn = esc(VF.gegen || "");
+  const zeile = (t, kn) => `<div class="vf-ton"><span class="vf-ton-text">${t}</span><div class="vf-knoepfe vf-ton-k">${kn}</div></div>`;
+  if (!RUF) return zeile("🔈 Ton aus", k("🔊 Ton an", "vfTon()"));
+  if (RUF.rolle === "angerufen" && !RUF.pc) return zeile(`🔊 ${vn} möchte mit dir sprechen`, k("🔊 Annehmen", "anrufAnnehmen(false)") + k("Nein", "anrufAuflegen()"));
+  if (!RUF.verbunden) return zeile(RUF.rolle === "rufer" && !RUF.pc?.remoteDescription ? `🔔 Klingelt bei ${vn} …` : "🔗 Ton wird verbunden …", k("✖ Abbrechen", "anrufAuflegen()"));
+  const stumm = RUF.strom?.getAudioTracks()[0]?.enabled === false;
+  return zeile(stumm ? "🔇 Dein Mikrofon ist aus" : `🔊 Ihr hört euch`, k(stumm ? "🎙️ Mikro an" : "🔇 Stumm", "vfTonStumm()") + k("🔈 Ton aus", "anrufAuflegen()"));
+}
+async function vfTon() {
+  const pid = vfPartner(); if (!pid || VF.status !== "laeuft") return melde("🔊 Ton geht nur, solange live gezeigt wird.", true);
+  if (RUF) return melde(RUF.vf ? "🔊 Der Ton ist schon an." : "Es läuft schon ein Anruf.", true);
+  spur("vorfuehren_ton"); await anrufen(pid, false, true); vfLeiste();
+}
+function vfTonStumm() { anrufStumm(); vfLeiste(); }
 function vfLeisteUhr() {
   const u = $("vfUhr"); if (!u) return;
   u.textContent = VF.status === "laeuft" ? `⏱ ${stZeit(Date.now() - VF.start)}${VF.bis ? ` · noch ${stZeit(VF.bis - Date.now())}` : ""}` : `⏳ ${stZeit(Date.now() - VF.start)}`;
@@ -11411,9 +11435,10 @@ async function vfBeenden() {
   melde("📺 Vorführung beendet.");
 }
 function vfAufraeumen(stand = "beendet") {
+  if (RUF?.vf) anrufAuflegen(); // KC-CLUB-VORFUEHREN-TON: Ende der Vorführung = Ton aus
   clearInterval(VF.takt); if (VF.rolle === "zeigt") { spgSenderStopp(); if (STD.modus === "zeigen") stSetzen("zeigen", stand); }
   $("spgSchirm")?.remove();
-  Object.assign(VF, { rolle: null, id: null, an: null, status: null, takt: null, seit: 0, fseit: 0, vorhang: false, bis: 0 }); vfLeiste(); stKnopf(); stKarteFrisch();
+  Object.assign(VF, { rolle: null, id: null, an: null, vonPid: null, status: null, takt: null, seit: 0, fseit: 0, vorhang: false, bis: 0 }); vfLeiste(); stKnopf(); stKarteFrisch();
 }
 // ---------- KC-CLUB-FITNESS (2.55.0, Wunsch Hansi): 🏋️ Fit bleiben – Twinkey macht vor, man macht mit; eigene Auswertung ----------
 // Ruhig und erwachsen: sanfte Übungen (auch im Sitzen), Stufe + Dauer wählbar, großer Countdown, Ansage abschaltbar.
@@ -24102,7 +24127,7 @@ function stBuehne() {
   if (STD.modus === "mitschauen" && STD.status === "live" && STD.frame) { spgZeigen(b, STD.frame); return; }
   const letztes = STD.fotos[STD.fotos.length - 1];
   b.innerHTML = STD.status === "wartet" ? `<div class="st-leer"><span class="st-gross">⏳</span>Warte auf ${vn} …<small>${vn} wird gefragt und entscheidet selbst (höchstens 3 Minuten).</small></div>`
-    : STD.status === "live" && STD.modus === "zeigen" ? `<div class="st-leer"><span class="st-gross">📺</span>Du zeigst ${vn} gerade deine App.<small>Schließe das Studio und tippe dich durch die App – ${vn} sieht es live. Chats und Büro sind dabei verdeckt.</small></div>`
+    : STD.status === "live" && STD.modus === "zeigen" ? `<div class="st-leer"><span class="st-gross">📺</span>Du zeigst ${vn} gerade deine App.<small>Schließe das Studio und tippe dich durch die App – ${vn} sieht es live. Chats und Büro sind dabei verdeckt.</small>${RUF?.vf ? "" : `<button type="button" class="knopf" style="margin-top:10px" onclick="vfTon()">🔊 Ton an – mit ${vn} sprechen</button>`}</div>`
     : STD.status === "live" ? `<div class="st-leer"><span class="st-gross">🔴</span>Gleich kommt das Bild …</div>`
     : STD.status === "abgelehnt" ? `<div class="st-leer"><span class="st-gross">🙅</span>${vn} möchte gerade nicht.<small>Das ist in Ordnung – am besten kurz persönlich nachfragen.</small></div>`
     : STD.status === "keine_antwort" ? `<div class="st-leer"><span class="st-gross">⏳</span>Keine Antwort.<small>${vn} hat die App vielleicht gerade nicht offen.</small></div>`

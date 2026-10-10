@@ -7688,3 +7688,13 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/if \(ja === null\) \{ setTimeout\(\(\) => VF\.gefragt\.delete\(einl\.id\), 15000\); return; \}/.test(html) && /<button class="knopf" data-w="0">Jetzt nicht<\/button><\/div>`, \(\) => zu\(null\)\);/.test(html), "nur „Jetzt nicht“ sagt ab; schließen = später noch einmal fragen");
 }
+
+// 2.199.0 KC-CLUB-VORFUEHREN-TON (Wunsch Hansi: beim Live zeigen miteinander sprechen) – nutzt den App-Anruf, kein eigener Ton-Kern
+{
+  assert.ok(/async function anrufen\(pid, mitBild, vf = false\)/.test(html) && /await anrufen\(pid, false, true\)/.test(html), "Ton läuft über den vorhandenen App-Anruf");
+  assert.ok(/if \(!RUF\?\.vf\) \$\("anrufSchirm"\)\.classList\.remove\("versteckt"\)/.test(html), "kein Vollbild-Anrufschirm über dem Live-Bild");
+  assert.ok(/vf: !r\.konferenz && VF\.status === "laeuft" && !!r\.gegenueber\?\.person_id && r\.gegenueber\.person_id === vfPartner\(\)/.test(html), "nur der Vorführ-Partner wird in der Leiste angeboten");
+  assert.ok(/k\("🔊 Annehmen", "anrufAnnehmen\(false\)"\)/.test(html), "Mikrofon erst nach eigenem Annehmen");
+  assert.ok(/if \(RUF\?\.vf\) anrufAuflegen\(\); \/\/ KC-CLUB-VORFUEHREN-TON/.test(html), "Ende der Vorführung beendet den Ton");
+  assert.ok(/if \(RUF && !RUF\.vf\) return "";/.test(html), "normaler Anruf wird nicht gestört");
+}

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.199.0 – 2026-10-10 – 🔊 Live zeigen mit Ton: beim Zeigen miteinander sprechen
+🔊 Beim Live zeigen könnt ihr jetzt miteinander sprechen
+
 ## 2.198.0 – 2026-10-10 – 📺 Zuschauen-Einladung: Danebentippen sagt nicht mehr ab
 🔧 Kleine Systemverbesserungen
 
