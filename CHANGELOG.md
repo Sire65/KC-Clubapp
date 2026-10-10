@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.217.0 – 2026-10-10 – 📝 Wunschzeiten unter Dienstpläne
+📝 Unter 🗓️ Dienstpläne stehen jetzt auch die abgegebenen Wunschzeiten (Kann, Wunsch, Wenn nötig, Sperre) – deutlich als „unter Vorbehalt“ markiert, bis der Dienstplan veröffentlicht ist
+
 ## 2.216.0 – 2026-10-10 – 🏠 Start führt zur Startseite
 🏠 Der Start-Knopf unten links führt aus dem Admin-Register (und auf der Startseite aus jedem Register) zurück zur Startseite
 

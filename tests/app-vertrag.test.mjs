@@ -7904,3 +7904,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const f = html.slice(html.indexOf("async function startKnopf()"), html.indexOf("function sbSchalter("));
   assert.ok(/const heim = REGISTER\[0\]\?\.\[0\];/.test(f) && /if \(heim && reg !== heim && \(reg === "admin" \|\| schonStart\)\) register\(heim, -1\);/.test(f), "Start führt zurück auf das erste Register");
 }
+
+// 2.217.0 KC-CLUB-DIENST-WUNSCHZEITEN (Wunsch Hansi): abgegebene Wunschzeiten (Kann, Wunsch, Wenn nötig, Sperre) unter 🗓️ Dienstpläne – „unter Vorbehalt“
+{
+  const f = server.slice(server.indexOf('case "dienste": {'), server.indexOf('case "kalender": {'));
+  assert.ok(/w\.person_id === ich\.person_id \|\| leitung \|\| w\.share_with_colleagues === true \|\| freigegeben\.has\(w\.person_id\)/.test(f), "Sichtbarkeit: ich, Leitung, geteilt");
+  assert.ok(/wuensche: wFehler \? null :/.test(f) && /gewaehlt\.includes\(w\.person_id\)/.test(f), "nur gewählte Personen, Fehler ≠ keine Wünsche");
+  assert.ok(/const DPW_ARTEN = \{ preferred: \["⭐", "Wunsch"[^}]*available: \["✅", "Kann"[^}]*if_needed: \["🟡", "Wenn nötig"[^}]*unavailable: \["⛔", "Sperre"/.test(html), "alle vier Arten");
+  assert.ok(/Abgegebene Wunschzeiten – unter Vorbehalt/.test(html) && /noch kein Dienstplan/.test(html) && /\.dpw-t \{[^}]*dashed/.test(html), "Hinweis „unter Vorbehalt“, gestrichelt");
+}

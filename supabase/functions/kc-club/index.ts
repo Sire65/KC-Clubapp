@@ -42,7 +42,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.209.0";
+const SERVER_VERSION = "2.217.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -6922,8 +6922,17 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_club_freigaben").select("person_id,erlaubt").eq("bereich", "dienstzeiten").eq("erlaubt", true),
         ]);
         const freigegeben = new Set((fr ?? []).map((x: any) => x.person_id));
-        // sichtbar: ich selbst immer, andere nur mit eigener Freigabe
-        const sichtbar = mitglieder.filter((m) => m.person_id === ich.person_id || freigegeben.has(m.person_id));
+        // KC-CLUB-DIENST-WUNSCHZEITEN (2.217.0, Wunsch Hansi „zeige schon mal die abgegebenen Wunschzeiten an … mit dem Hinweis unter Vorbehalt“):
+        // abgegebene Wunschzeiten (Kann, Wunsch, Wenn nötig, Sperre) aus dem Wunsch-Eingang – sichtbar: eigene immer, andere wenn sie das Teilen
+        // erlaubt haben (Wunsch-Freigabe oder Dienstzeiten-Freigabe), die Clubleitung alle. Nur lesend; der Dienstplan (DP2) bleibt maßgeblich.
+        const leitung = !!(ich.vorstand || ich.admin);
+        const { data: wRoh, error: wFehler } = await db.from("kc_dp_wish_inbox").select("person_id,entries,share_with_colleagues,updated_at,taken_at")
+          .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source", "club_app").limit(300);
+        const wSichtbar = (wRoh ?? []).filter((w: any) => !String(w.person_id).startsWith("KC-P-TEST")
+          && (w.person_id === ich.person_id || leitung || w.share_with_colleagues === true || freigegeben.has(w.person_id)));
+        const mitWunsch = new Set(wSichtbar.map((w: any) => w.person_id));
+        // sichtbar: ich selbst immer, andere nur mit eigener Freigabe (Dienstplan) bzw. mit sichtbaren Wunschzeiten
+        const sichtbar = mitglieder.filter((m) => m.person_id === ich.person_id || freigegeben.has(m.person_id) || mitWunsch.has(m.person_id));
         const erlaubt = new Set(sichtbar.map((m) => m.person_id));
         const gewaehlt = (Array.isArray(p.personen) && p.personen.length ? p.personen.map(String) : [ich.person_id]).filter((id: string) => erlaubt.has(id)).slice(0, 8);
         const { data: sch } = gewaehlt.length ? await db.from("kc_dp_plan_published")
@@ -6937,6 +6946,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           gewaehlt,
           dienste: (sch ?? []).map((s: any) => ({ person_id: s.person_id, datum: s.work_date, start: String(s.start_time ?? "").slice(0, 5), ende: String(s.end_time ?? "").slice(0, 5), pause: s.break_minutes ?? 0, bereich: s.area, zone: s.zone })),
           stand: letzte?.[0]?.published_at ?? null,
+          // KC-CLUB-DIENST-WUNSCHZEITEN: null = konnte nicht geladen werden (Regel 11: unbekannt ≠ keine)
+          wuensche: wFehler ? null : wSichtbar.filter((w: any) => gewaehlt.includes(w.person_id)).flatMap((w: any) => (Array.isArray(w.entries) ? w.entries : [])
+            .filter((e: any) => DW.typen.includes(e?.wishType) && /^\d{4}-\d{2}-\d{2}$/.test(String(e?.date)) && e.date >= von && e.date <= bis)
+            .map((e: any) => ({ person_id: w.person_id, datum: e.date, art: e.wishType, ganz: e.scope === "day", start: Number(e.start), ende: Number(e.end) }))),
+          wunschTage: (() => { const d = wSichtbar.flatMap((w: any) => (Array.isArray(w.entries) ? w.entries : []).map((e: any) => String(e?.date || ""))).filter((x: string) => /^\d{4}-\d{2}-\d{2}$/.test(x)).sort();
+            return d.length ? { von: d[0], bis: d[d.length - 1] } : null; })(),
+          wunschPersonen: [...mitWunsch],
+          wunschStand: wSichtbar.map((w: any) => w.updated_at).filter(Boolean).sort().pop() ?? null,
+          veranstaltung: DW.name,
         });
       }
 

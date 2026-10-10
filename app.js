@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.216.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.217.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -16414,17 +16414,46 @@ async function dienstLaden() {
     DP.personen.sort((a, b) => (b.ich - a.ich) || a.name.localeCompare(b.name));
     $("dpPersonen").innerHTML = DP.personen.map((p) => {
       const an = dpWahl.includes(p.person_id), f = dpFarbe(p.person_id);
-      return `<button class="ptaste${an ? " an" : ""}" style="${an ? `background:${f};border-color:${f}` : ""}" onclick="dpPerson('${p.person_id}')"><i style="background:${an ? "#fff" : f}"></i>${p.ich ? "Ich" : esc(p.name)}</button>`;
+      const w = (DP.wunschPersonen || []).includes(p.person_id) ? ' <span title="hat Wunschzeiten abgegeben" aria-label="hat Wunschzeiten abgegeben">📝</span>' : ""; // KC-CLUB-DIENST-WUNSCHZEITEN
+      return `<button class="ptaste${an ? " an" : ""}" style="${an ? `background:${f};border-color:${f}` : ""}" onclick="dpPerson('${p.person_id}')"><i style="background:${an ? "#fff" : f}"></i>${p.ich ? "Ich" : esc(p.name)}${w}</button>`;
     }).join("") + (DP.personen.length === 1 ? '<span class="hinweis" style="font-size:.85rem">Noch hat niemand sonst seine Dienstzeiten freigegeben.</span>' : "");
     dpZeichnen();
   } catch (e) { meldeFehler(e); }
 }
+// ---------- KC-CLUB-DIENST-WUNSCHZEITEN (2.217.0, Wunsch Hansi „zeige schon mal die abgegebenen Wunschzeiten an, auch Kann-Zeiten, Sperrtage
+// etc., aber mit dem Hinweis unter Vorbehalt“): abgegebene Wunschzeiten je Tag unter dem Dienstplan – gestrichelt, klar als Wunsch markiert ----------
+const DPW_ARTEN = { preferred: ["⭐", "Wunsch", "w"], available: ["✅", "Kann", "k"], if_needed: ["🟡", "Wenn nötig", "n"], unavailable: ["⛔", "Sperre", "s"] };
+const dpwStd = (h) => Number(h) >= 24 ? "24:00" : hhmm(Math.round(Number(h) * 60)), dpwDatum = (iso) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.`;
+function dpwTagHtml(t, namen) {
+  const w = (DP.wuensche || []).filter((x) => x.datum === t); if (!w.length) return "";
+  const reihe = Object.keys(DPW_ARTEN);
+  return `<div class="dpw">${dpWahl.filter((pid) => w.some((x) => x.person_id === pid)).map((pid) => {
+    const eig = w.filter((x) => x.person_id === pid).sort((a, b) => reihe.indexOf(a.art) - reihe.indexOf(b.art) || a.start - b.start);
+    return `<div class="dpw-zeile"><b style="color:${dpFarbe(pid)}">📝 ${esc(namen.get(pid) || pid)}</b> ${eig.map((x) => { const [sym, txt, k] = DPW_ARTEN[x.art] || ["", x.art, ""];
+      return `<span class="dpw-t ${k}">${sym} ${txt} ${x.ganz ? "ganzer Tag" : `${dpwStd(x.start)}–${dpwStd(x.ende)}`}</span>`; }).join(" ")}</div>`;
+  }).join("")}</div>`;
+}
+function dpwHinweis(tage) {
+  if (DP.wuensche === null) return `<div class="karte ta-st-nein">⚠️ Die Wunschzeiten konnten gerade nicht geladen werden. <button class="knopf klein" onclick="dienstLaden()">🔄 Nochmal</button></div>`;
+  const z = DP.wunschTage, inWoche = (DP.wuensche || []).some((x) => tage.includes(x.datum));
+  if (!z) return "";
+  const springen = !inWoche ? ` <button class="knopf klein" onclick="dpStart = montag('${z.von}'); dienstLaden()">📝 Zu den Wunschzeiten (${dpwDatum(z.von)}–${dpwDatum(z.bis)})</button>` : "";
+  return `<div class="karte dpw-hinweis"><b>📝 Abgegebene Wunschzeiten – unter Vorbehalt</b><br>Das ist <b>noch kein Dienstplan</b>, sondern was die Mitglieder für den ${esc(DP.veranstaltung || "Weihnachtsmarkt")} angegeben haben. Feste Dienste stehen erst nach der Veröffentlichung hier.${springen}
+    <div class="dpw-legende">${Object.values(DPW_ARTEN).map(([sym, txt, k]) => `<span class="dpw-t ${k}">${sym} ${txt}</span>`).join(" ")}</div>${DP.wunschStand ? `<div class="hinweis" style="margin:4px 0 0;font-size:.8rem">Zuletzt geändert: ${zeitKurz(DP.wunschStand)} Uhr</div>` : ""}</div>`;
+}
 function dpZeichnen() {
   const tage = [...Array(7)].map((_, i) => tagPlus(dpStart, i)), heute = heuteIso();
+  const wNamen = new Map(DP.personen.map((p) => [p.person_id, p.ich ? "Ich" : p.vorname || p.name])), wHin = dpwHinweis(tage);
   // Schichten aufbereiten: über Mitternacht → bis 24:00 (mit Pfeil)
   const sch = DP.dienste.map((d) => { const a = minuten(d.start), e0 = minuten(d.ende); return { ...d, a, e: e0 > a ? e0 : 1440, ueber: e0 <= a }; });
-  if (!sch.length) {
-    $("dpListe").innerHTML = `<div class="karte hinweis">${DP.stand ? "In dieser Woche sind keine Dienste eingetragen." : "Es ist noch kein Dienstplan veröffentlicht. Sobald im Dienstplan der Sollplan veröffentlicht wird, erscheinen die Zeiten hier automatisch."}</div>`;
+  if (!sch.length && (DP.wuensche || []).some((x) => tage.includes(x.datum))) {
+    // KC-CLUB-DIENST-WUNSCHZEITEN: noch kein (Soll-)Dienst in dieser Woche, aber Wunschzeiten → die zeigen (unter Vorbehalt)
+    $("dpListe").innerHTML = wHin + `<div class="karte hinweis" style="font-size:.85rem">${DP.stand ? "In dieser Woche sind noch keine festen Dienste eingetragen." : "Es ist noch kein Dienstplan veröffentlicht."}</div>` + tage.map((t) => {
+      const kopf = `${fTagDp.format(new Date(t + "T12:00:00Z"))}${t === heute ? " · Heute" : ""}`, w = dpwTagHtml(t, wNamen);
+      return w ? `<div class="tag${t === heute ? " heute" : ""}"><h4><span>${kopf}</span></h4>${w}</div>` : `<div class="tag frei${t === heute ? " heute" : ""}"><b>${kopf}</b> – keine Angaben</div>`;
+    }).join("");
+  } else if (!sch.length) {
+    $("dpListe").innerHTML = wHin + `<div class="karte hinweis">${DP.stand ? "In dieser Woche sind keine Dienste eingetragen." : "Es ist noch kein Dienstplan veröffentlicht. Sobald im Dienstplan der Sollplan veröffentlicht wird, erscheinen die Zeiten hier automatisch."}</div>`;
   } else {
     // gemeinsame Skala für die ganze Woche (volle Stunden)
     const lo = Math.floor(Math.min(...sch.map((s) => s.a)) / 60) * 60, hi = Math.ceil(Math.max(...sch.map((s) => s.e)) / 60) * 60;
@@ -16435,7 +16464,7 @@ function dpZeichnen() {
     $("dpListe").innerHTML = tage.map((t) => {
       const heuteS = sch.filter((s) => s.datum === t);
       const kopf = `${fTagDp.format(new Date(t + "T12:00:00Z"))}${t === heute ? " · Heute" : ""}`;
-      if (!heuteS.length) return `<div class="tag frei${t === heute ? " heute" : ""}"><b>${kopf}</b> – frei</div>`;
+      if (!heuteS.length) { const w = dpwTagHtml(t, wNamen); return w ? `<div class="tag${t === heute ? " heute" : ""}"><h4><span>${kopf}</span></h4>${w}</div>` : `<div class="tag frei${t === heute ? " heute" : ""}"><b>${kopf}</b> – frei</div>`; }
       // Zeiten, in denen mindestens zwei Gewählte gleichzeitig Dienst haben
       const grenzen = [...new Set(heuteS.flatMap((s) => [s.a, s.e]))].sort((x, y) => x - y), gemeinsam = [];
       for (let i = 0; i < grenzen.length - 1; i++) {
@@ -16453,8 +16482,9 @@ function dpZeichnen() {
       }).join("");
       const detail = heuteS.map((s) => `<div><b style="color:${dpFarbe(s.person_id)}">●</b> ${esc(namen.get(s.person_id) || "")}: <b>${esc(s.start)}–${esc(s.ende)} Uhr</b>${s.ueber ? " (bis nächster Tag)" : ""}${s.pause ? ` · Pause ${s.pause} Min.` : ""}${s.bereich ? " · " + esc(s.bereich) : ""}${s.zone ? " · " + esc(s.zone) : ""}</div>`).join("");
       return `<div class="tag${t === heute ? " heute" : ""}"><h4><span>${kopf}</span>${gemeinsam.length ? `<span class="marke gelb">🤝 ${gemeinsam.map(([a, e]) => hhmm(a) + "–" + hhmm(e)).join(", ")}</span>` : ""}</h4>
-        ${bahnen}<div class="skala"><div></div><div class="s">${skala}</div></div><div class="dpdetail">${detail}</div></div>`;
+        ${bahnen}<div class="skala"><div></div><div class="s">${skala}</div></div><div class="dpdetail">${detail}</div>${dpwTagHtml(t, wNamen)}</div>`;
     }).join("");
+    if (wHin) $("dpListe").insertAdjacentHTML("afterbegin", wHin);
   }
   // Rule 11: Datenstand sichtbar machen
   $("dpStand").textContent = DP.stand ? `Stand des Dienstplans: veröffentlicht ${zeitKurz(DP.stand)} Uhr` : "";

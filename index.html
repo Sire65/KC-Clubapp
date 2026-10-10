@@ -1568,6 +1568,15 @@
   .skala .s { position: relative; height: 14px; }
   .skala .s span { position: absolute; transform: translateX(-50%); }
   .dpdetail { font-size: .85rem; margin-top: 8px; line-height: 1.5; }
+  /* KC-CLUB-DIENST-WUNSCHZEITEN (2.217.0): abgegebene Wunschzeiten – gestrichelt = unter Vorbehalt, nie wie ein fester Dienst */
+  .dpw { margin-top: 8px; display: grid; gap: 6px; }
+  .dpw-zeile { font-size: .85rem; line-height: 1.6; }
+  .dpw-t { display: inline-block; border: 1.5px dashed currentColor; border-radius: 999px; padding: 1px 8px; font-size: .8rem; font-weight: 700; white-space: nowrap; margin: 1px 0; }
+  .dpw-t.w { color: #1f5fae; background: var(--blaubg); } .dpw-t.k { color: var(--textGruen); background: var(--gruenbg); }
+  .dpw-t.n { color: #8a5a00; background: var(--gelbbg); } .dpw-t.s { color: #b42318; background: var(--rotbg); }
+  :root.dunkel .dpw-t.w { color: #9cc3ff; } :root.dunkel .dpw-t.n { color: var(--gelb); } :root.dunkel .dpw-t.s { color: #ff9b91; }
+  .dpw-hinweis { border: 2px dashed var(--rand, #c9b9a6); }
+  .dpw-legende { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
 
   /* Nachrichten */
   .unterh { display: flex; gap: 12px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--linie); cursor: pointer; }
@@ -3960,6 +3969,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.216.0" data-v="2.216.0"></script>
+<script src="app.js?v=2.217.0" data-v="2.217.0"></script>
 </body>
 </html>
