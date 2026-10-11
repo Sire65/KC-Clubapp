@@ -1,11 +1,18 @@
 {
-  "version": "2.259.0",
+  "version": "2.260.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🧹 Jahreszeiten im Kopf: Laub und Schnee liegen jetzt sichtbar auf eigenem Boden – mal kommt der Wind, mal Twinkey mit Besen oder Schaufel; im Frühling und Sommer gießt er die Blumen"
+    "🔍 „Kochbild“ und „Profilbild“ werden jetzt in der Suche, in der Hilfe und von Twinkey gefunden"
   ],
   "verlauf": [
+    {
+      "version": "2.260.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🔍 „Kochbild“ und „Profilbild“ werden jetzt in der Suche, in der Hilfe und von Twinkey gefunden"
+      ]
+    },
     {
       "version": "2.259.0",
       "datum": "2026-10-11",

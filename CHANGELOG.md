@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.260.0 – 2026-10-11 – KC-CLUB-SUCHE-KOCHBILD: „Kochbild“ wird in Hilfe-Suche, Lupe und Twinkey gefunden (Fund Hansi)
+Die Hilfe-Suche und die Lupe suchen nach genauen Wörtern – „Kochbild“ stand nirgends. Jetzt heißt der Hilfetext „Ein Bild statt Buchstaben (Kochbild, Profilbild)“, und die Lupe kennt „Mein Bild“ unter Kochbild, Profilbild, Profilfoto, Avatar, Koch-Figur. Beides nur, wenn „Mein Bild“ für das Mitglied freigegeben ist (sonst würde die Hilfe etwas erklären, das man nicht sieht).
+
 ## 2.259.0 – 2026-10-11 – KC-CLUB-JAHRESZEIT-TWINKEY: eigener Boden, Twinkey fegt, schippt und gießt (Fund + Wunsch Hansi)
 - Fund Hansi „Blätter bleiben immer noch nicht liegen“: Vermessen – unter dem Infofeld blieben nur ~8–18 px; liegendes Laub lag mit der Mitte auf der runden Unterkante, flachgedrückt und halb abgeschnitten (auf dem Handy praktisch unsichtbar). Jetzt: eigener Bodenstreifen (Kopf unten 32 statt 18 px, nicht im eingerollten Kopf), die Bühne endet 3 px über der Kante, Laub liegt ganz sichtbar (Unterkante auf dem Boden, weniger flach), nichts in den runden Ecken.
 - 🧹 Herbst: im Wechsel Windstoß (Seite wechselt jedes Mal) oder Twinkey mit dem Besen – fegt das Laub weg und sagt einen Spruch („Ja, ja – im Herbst gehört das Laubfegen wohl dazu!“). ❄️ Winter: Windstoß oder Twinkey schippt den Schnee beiseite; jeder 3. Lauf bleibt der Schneemann. 🌱🌻 Frühling/Sommer: Twinkey kommt mit der Gießkanne und gießt Blumen bzw. Sonnenblume.

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.259.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.260.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2318,7 +2318,7 @@ const HILFE = [
   { id: "inkognito_chat", thema: "privat", sym: "🕶️", t: "Inkognito und schreiben (Admin)", x: "Bist du <b>inkognito</b> und beginnst einen Chat mit einem Mitglied (oder schreibst in einem Chat), fragt die App einmal: <b>„Möchtest du Inkognito jetzt aufheben?“</b> – sonst merkt dein Gegenüber, dass du schreibst, obwohl du nicht als anwesend angezeigt wirst. „🕶️ Inkognito bleibt“ lässt alles, wie es ist.", nur: () => !!ICH?.admin, seit: "2.153.0" },
   { id: "inkognito_blinkt", thema: "privat", sym: "🕶️", t: "Die Brille blinkt rot", x: "Solange <b>Inkognito</b> an ist, blinkt die Brille oben rot und dein <b>Status-Feld pulsiert gelb–rot</b> – damit du nicht vergisst, dass dich gerade niemand online sieht. Antippen der Brille schaltet Inkognito wieder aus.", nur: () => !!ICH?.admin, zeig: () => zeige("start"), seit: "2.23.8" },
   // 2.23.95 (Wunsch Hansi): Hilfen zu den Neuerungen seit Anleitung V5
-  { id: "mein_bild", thema: "darstellung", sym: "🧑‍🍳", t: "Ein Bild statt Buchstaben", x: "Lieber eine Figur als Buchstaben? Bei <b>Meins</b> → <b>„🧑‍🍳 Mein Bild“</b> tippst du eine von 40 Koch-Figuren an – oben siehst du sie groß – und dann <b>„✅ Übernehmen“</b>. Sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Mit „Kein Bild“ hast du wieder deine Buchstaben.", zeig: () => avWahl(), seit: "2.23.85" },
+  { id: "mein_bild", thema: "darstellung", sym: "🧑‍🍳", t: "Ein Bild statt Buchstaben (Kochbild, Profilbild)", nur: () => frei("avatar"), x: "Lieber eine Figur als Buchstaben – also ein Kochbild oder Profilbild? Bei <b>Meins</b> → <b>„🧑‍🍳 Mein Bild“</b> tippst du eine von 40 Koch-Figuren an – oben siehst du sie groß – und dann <b>„✅ Übernehmen“</b>. Sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Mit „Kein Bild“ hast du wieder deine Buchstaben.", zeig: () => avWahl(), seit: "2.23.85" },
   { id: "bild_punkt", thema: "club", sym: "🟢", t: "Was der kleine Punkt am Bild bedeutet", x: "Hat jemand ein Bild, zeigt ein kleiner Punkt unten rechts, wie er gerade erreichbar ist: <b>✓ grün</b> = gerade online, <b>blau</b> = heute in der App, <b>orange</b> = abwesend (Urlaub, krank …), <b>grau</b> = länger nicht da. Der farbige Ring ums Bild zeigt dasselbe.", zeig: () => zeige("mitglieder"), seit: "2.23.89" },
   { id: "anwesenheit", thema: "club", sym: "📋", t: "Wer ist da? Die Anwesenheitstafel", x: "Bei <b>👥 Mitglieder</b> oben auf <b>📋</b> tippen: Dann siehst du nur Namen und ein Lämpchen – wer online ist, steht oben. Einen Namen antippen öffnet das Mitglied; dort kannst du schreiben, anklopfen oder anrufen.", zeig: () => { zeige("mitglieder"); mgAnsichtSetzen("tafel"); }, seit: "2.23.89" },
   { id: "bild_gross", thema: "club", sym: "🔍", t: "Ein Bild groß ansehen", x: "Öffne bei <b>👥 Mitglieder</b> ein Mitglied – ganz oben steht sein Bild. Ein Tipp darauf zeigt es groß; noch ein Tipp schließt es wieder.", zeig: () => zeige("mitglieder"), seit: "2.23.89" },
@@ -26607,6 +26607,7 @@ function suAppListe() {
     ["💝", "Spendenprojekt vorschlagen", "spende spenden spendenprojekt kinderhospiz geld verein", () => { zeige("vorschlaege"); vorschlagForm("spende"); }],
     ...(ICH?.buero ? [["🗂️", "Büro – Sitzung vorbereiten, Einladung", "büro buero sitzung vorbereiten tagesordnung einladung protokoll vorlage drucken eingang", () => buStart()]] : []),
     ["📸", "Bildschirmfoto der App", "bildschirmfoto screenshot foto bildschirm aufnahme zeigen problem", () => bfStart()],
+    ...(frei("avatar") ? [["🧑‍🍳", "Mein Bild (Kochbild, Koch-Figur)", "kochbild profilbild profilfoto benutzerbild avatar kochfigur koch-figur figur bild foto selfie baukasten", () => avWahl()]] : []), // 2.260.0 KC-CLUB-SUCHE-KOCHBILD (Fund Hansi)
     ["🆘", "Wo bin ich? (SOS)", "wo bin ich adresse standort notfall sos", () => sosStart()], ["🪪", "Mein Notfallpass", "notfallpass allergien medikamente blutgruppe notfall", () => { sosStart(); nfpBearbeiten(); }],
   ].map(([sym, t, w, fn]) => ({ sym, t, w, fn }));
   const kach = Object.values(KACHELN).flat().filter((k) => !k.bald && (!k.nur || k.nur()) && !SU_NIE.has(k.id))

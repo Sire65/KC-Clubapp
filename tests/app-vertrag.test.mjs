@@ -5690,6 +5690,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/RG\.zurueck\.push\(\(\) => \{ const a = RG\.kopfAlt;/.test(b) && /RG\.zurueck\.push\(\(\) => rgAusDemo\(false\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => rgRegisterTausch\(false\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => rgDrehen\(false\)\)/.test(b) && /if \(a !== null && a !== INFO_I\) infoGehe\(a, -1\)/.test(b), "alles wird zurückgestellt");
 }
 
+// 2.260.0 KC-CLUB-SUCHE-KOCHBILD (Fund Hansi: „Kochbild“ im Suchfeld nicht gefunden): Hilfe-Suche, Lupe und Twinkey kennen das Wort
+{
+  assert.ok(/\{ id: "mein_bild", thema: "darstellung", sym: "🧑‍🍳", t: "Ein Bild statt Buchstaben \(Kochbild, Profilbild\)", nur: \(\) => frei\("avatar"\), x: "[^"]*Kochbild/.test(html), "Hilfetext nennt Kochbild/Profilbild, nur wenn Mein Bild freigegeben");
+  assert.ok(/\.\.\.\(frei\("avatar"\) \? \[\["🧑‍🍳", "Mein Bild \(Kochbild, Koch-Figur\)", "kochbild profilbild[^"]*", \(\) => avWahl\(\)\]\] : \[\]\)/.test(html), "Lupe findet Mein Bild unter Kochbild – nur mit Freigabe");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
