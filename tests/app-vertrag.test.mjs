@@ -5616,7 +5616,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(window\.__rgDsAlt\) \{ window\.__rgDsAlt = neu; return; \}/.test(html) && /w\.dataset\.rgGross === "1"/.test(html) && !/designSpeichern\(\)[^\n]*KC-CLUB-ERKLAERVIDEOS/.test(html), "Vorführung nur anzeigen, nie speichern; Server überschreibt sie nicht");
   assert.ok(/for \(const f of RG\.zurueck\.splice\(0\)\.reverse\(\)\) try \{ f\(\); \} catch \{\}/.test(html) && /RG\.st\[RG\.vorI\]\?\.nach\?\.\(\)/.test(html), "beim Ende alles zurück (aufgeklappt, Beispiele, Formulare)");
   assert.ok(!/RG_(NACHRICHT|TERMIN|PINNWAND|VORSCHLAG)[\s\S]{0,6000}(pwAnheften|privatSpeichern|vorschlagSpeichern|senden)\(/.test(html.slice(html.indexOf("const RG_NACHRICHT"), html.indexOf("const RUNDGAENGE"))), "Videos senden/speichern nie etwas");
-  assert.ok(/return rkZu\(z, e\)/.test(html) && /nur: \(\) => !!ICH\?\.vorstand, vor: \(\) => vorschlagForm\("abstimmung"\)/.test(html), "Rollkartei blättert mit; Abstimmung nur für die Clubleitung");
+  assert.ok(/return rkZu\(z, e\)/.test(html) && /const RG_LEITUNG = \[[\s\S]*vorschlagForm\("abstimmung"\)[\s\S]*const RG_ADMIN/.test(html), "Rollkartei blättert mit; Abstimmung nur im Video der Clubleitung (2.245.0)");
+}
+
+// 2.245.0 KC-CLUB-ERKLAERVIDEOS-ROLLEN (Wunsch Hansi): Videos für alle ohne Admin-/Leitungs-Inhalte; eigene Videos für Clubleitung und Admin
+{
+  const allg = html.slice(html.indexOf("const RG_EINSTELLUNGEN"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-ROLLEN"));
+  assert.ok(allg.length > 1000 && !/Admin|admin\(|Büro(?!klammer)|buero|Für die Clubleitung|leitung_start|termineNeuWahl\(\)|vorschlagForm\("abstimmung"\)/.test(allg), "allgemeine Videos erwähnen/zeigen keine Admin- oder Leitungs-Funktionen");
+  assert.ok(/\{ id: "leitung", ziel: "leitung",[^\n]*nur: \(\) => !!\(ICH\?\.buero \|\| ICH\?\.vorstand\) \}/.test(html) && /\{ id: "admin", ziel: "admin",[^\n]*nur: \(\) => !!ICH\?\.admin \}/.test(html), "eigene Videos nur für die jeweilige Rolle");
+  assert.ok(/RUNDGAENGE\.filter\(\(r\) => !r\.nur \|\| r\.nur\(\)\)/.test(html) && /RUNDGAENGE\.find\(\(x\) => x\.id === id && \(!x\.nur \|\| x\.nur\(\)\)\)/.test(html), "Liste und Link zeigen nur Erlaubtes");
+  assert.ok(/b\.classList\.toggle\("ist-admin", !!ICH\?\.admin && \(!an \|\| ziel === "admin"\)\)/.test(html) && /if \(document\.body\.classList\.contains\("rg-ohne-admin"\)\) document\.body\.classList\.remove\("ist-admin"\);/.test(html), "Admin-Elemente im Video für alle aus – auch nach dem Neuladen");
+  assert.ok(/body\.rg-ohne-admin #adminBereich, body\.rg-ohne-admin #register \[data-r="admin"\], body\.rg-ohne-admin #raster \.kachel\.ad/.test(seite) && /body\.rg-ohne-leitung #leitungStart, body\.rg-ohne-leitung #raster \.kachel\[data-id="buero"\]/.test(seite), "ausgeblendet: Admin-Register, -Kacheln, -Einstellungen, Büro, Leitungs-Einstellungen");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

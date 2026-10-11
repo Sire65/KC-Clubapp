@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.245.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-ROLLEN: Videos ohne Admin-/Leitungs-Inhalte, eigene Videos für Clubleitung und Admin
+- Videos für alle erwähnen und zeigen keine Admin- oder Leitungs-Funktionen mehr (während des Videos ausgeblendet: Admin-Register/-Kacheln/-Einstellungen, Lämpchen, Herz, Brille, Büro-Kachel, Leitungs-Einstellungen).
+- Neu „Für die Clubleitung: Büro & mehr“ (Büro mit Regal, Schreibtisch, Eingang, Schreiben, Telefon/Post/Drucker; Termine für alle, Abstimmung, Leitungs-Einstellungen) und „Für Admins: Leitstand“ – nur für die jeweilige Rolle sichtbar.
+
 ## 2.244.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS: Erklär-Videos mit Ton (Teil 2)
 - Mehrere Rundgänge (Registry RUNDGAENGE): Überblick, Alle Einstellungen erklärt (mit Vorführung: Küchengrün, Nachtmodus, große Schrift – nur angezeigt, nie gespeichert), Neue Nachricht, Termin eintragen, Zettel an die Pinnwand, Vorschlag einreichen. Formulare mit Beispiel, nichts wird gesendet/gespeichert; beim Ende alles zurück.
 - Neue Kachel Technik → 🎬 Erklär-Videos; Hinweis im Überblick; Auswahl auch in ❓ Hilfe & Tipps und ⚙️ Mehr; Link #rundgang=<id>. Rollkartei blättert mit.

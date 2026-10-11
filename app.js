@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.244.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.245.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1399,7 +1399,6 @@ const RG_EINSTELLUNGEN = [
   { v: "einstellungen", sel: [rgKlappe("handykalender")], mussSel: true, vor: () => rgAuf("handykalender"), t: "📲 Termine im Handy-Kalender", x: "Termine im Handy-Kalender: Einmal verbinden – dann stehen alle Sitzungen, Veranstaltungen, Aktionen und freigegebenen Geburtstage automatisch in deinem normalen Kalender und bleiben aktuell." },
   { v: "einstellungen", sel: [rgKlappe("schnellstart")], mussSel: true, vor: () => rgAuf("schnellstart"), t: "⚡ Schnellstart", x: "Schnellstart: eine große Kachel auf der Startseite mit bis zu acht Symbolen – ein Tipp, und es geht sofort los. Du bestimmst, welche Symbole darauf sind." },
   { v: "einstellungen", sel: [rgKlappe("startseite")], mussSel: true, vor: () => rgAuf("startseite"), t: "🧩 Startseite & Ansicht", x: "Startseite und Ansicht: Die Rollkartei blättert lange Listen wie Karteikarten. Beim Countdown oben wählst du, was mitläuft – auch als Fallblatt-Uhr. Das Info-Feld bestimmt, welche Karte zuerst erscheint. Du wechselst zwischen einfacher und erweiterter Ansicht, ordnest die Kacheln, wählst, wie Mitglieder angezeigt werden – und ob Feiertage im Kalender stehen." },
-  { v: "einstellungen", sel: [rgKlappe("leitung_start")], mussSel: true, vor: () => rgAuf("leitung_start"), t: "🗂️ Für die Clubleitung", x: "Für die Clubleitung: eine Tages-Übersicht beim Start mit Eingang, Aufgaben, Geburtstagen und nächster Sitzung – und ein Hinweis, wenn viel im Eingangskorb liegt." },
   { v: "einstellungen", sel: [rgKlappe("install")], mussSel: true, vor: () => rgAuf("install"), t: "📲 App-Installation", x: "Hier steht Schritt für Schritt, wie du die App richtig installierst – auf Android, iPhone, Tablet oder PC." },
   { v: "einstellungen", t: "✅ Fertig", x: "Das waren alle Einstellungen. Deine eigenen Einstellungen sind unverändert – probier in Ruhe aus, was dir gefällt. Weitere Erklär-Videos findest du im Register Technik und in Hilfe und Tipps." },
 ];
@@ -1416,7 +1415,8 @@ const RG_NACHRICHT = [
 ];
 const RG_TERMIN = [
   { v: "termine", sel: ["#neuTreffenKnopf"], t: "📅 Neuer Termin", x: "So trägst du einen Termin ein: In Termine tippst du oben rechts auf Plus Neu." },
-  { v: "termine", vor: () => { termineNeuWahl(); $("neuWahlBlatt")?.classList.add("rg-zeigen"); RG.zurueck.push(() => $("neuWahlBlatt")?.remove()); },
+  { v: "termine", vor: () => { neuWahlFenster("＋ Neu bei Termine", [{ sym: "📅", t: "Privater Termin", u: "nur für dich sichtbar", los: () => {} },
+      { sym: "📨", t: "Terminanfrage", u: "Einzelne, mehrere oder eine Gruppe fragen – Ja / Vielleicht / Nein", los: () => {} }]); $("neuWahlBlatt")?.classList.add("rg-zeigen"); RG.zurueck.push(() => $("neuWahlBlatt")?.remove()); },
     nach: () => $("neuWahlBlatt")?.remove(), sel: ["#neuWahlBlatt .wahl"], t: "📋 Was möchtest du?", x: "Jetzt wählst du: Ein privater Termin – den siehst nur du. Oder eine Terminanfrage: Damit fragst du einzelne Mitglieder oder eine Gruppe, ob sie Zeit haben – sie antworten mit Ja, Vielleicht oder Nein." },
   { v: "termine", vor: () => { if (!$("ptTitel")) { privatForm({ titel: "Zahnarzt", _datum: rgDatum(5), _zeit: "10:30" }); RG.zurueck.push(() => $("treffenForm")?.classList.add("versteckt")); } },
     sel: ["#treffenForm"], t: "✏️ Das Formular", x: "Im Formular trägst du ein: den Titel – zum Beispiel Zahnarzt –, Datum und Uhrzeit, auf Wunsch bis wann, oder ganztägig. Dazu Ort und eine Notiz, wenn du magst." },
@@ -1439,12 +1439,40 @@ const RG_PINNWAND = [
 const RG_VORSCHLAG = [
   { v: "vorschlaege", sel: ["#vorschlagNeuKnopf"], t: "🗳️ Vorschlag einreichen", x: "Du hast eine Idee für den Club? In Vorschläge tippst du oben rechts auf Plus Neu." },
   { v: "vorschlaege", vor: () => { vorschlagForm("thema"); $("vfTitel").value = "Grillabend im Mai"; RG.zurueck.push(() => $("vorschlagForm")?.classList.add("versteckt")); },
-    sel: ["#vorschlagForm .artwahl"], t: "💡 Was für ein Vorschlag?", x: () => "Zuerst wählst du die Art: ein Thema für die Sitzung oder ein Spendenprojekt" + (ICH?.vorstand ? " – als Clubleitung auch eine Abstimmung." : ".") },
+    sel: ["#vorschlagForm .artwahl"], t: "💡 Was für ein Vorschlag?", x: "Zuerst wählst du die Art: ein Thema für die Sitzung oder ein Spendenprojekt." },
   { v: "vorschlaege", vor: () => { if ($("vfTitel") && !$("vfTitel").value) $("vfTitel").value = "Grillabend im Mai"; }, sel: [rgFeld("vfTitel")], t: "✏️ Thema", x: "Dann das Thema, zum Beispiel Grillabend im Mai – und wenn du magst, eine Beschreibung darunter." },
   { v: "vorschlaege", sel: [rgFeld("vfTreffen")], t: "📅 Für welchen Termin?", x: "Hier wählst du, auf welcher Sitzung darüber gesprochen werden soll – oder allgemein." },
   { v: "vorschlaege", sel: [rgFeld("vfInfo")], t: "📨 Abschicken", x: "Clubsprecher und Kassenwart bekommen Bescheid. Mit Vorschlagen schickst du ihn ab – ich schicke hier nichts ab." },
-  { v: "vorschlaege", nur: () => !!ICH?.vorstand, vor: () => vorschlagForm("abstimmung"), sel: ["#vorschlagForm"], t: "🗳️ Abstimmung", x: "Bei einer Abstimmung gibst du eine Frage und die Antworten ein – auf Wunsch geheim und mit Frist – und wählst, wer abstimmen darf: alle, eine Gruppe oder eine Auswahl." },
   { v: "vorschlaege", vor: () => $("vorschlagForm")?.classList.add("versteckt"), t: "✅ Fertig", x: "Die anderen sehen deinen Vorschlag und können abstimmen. So einfach bringst du deine Ideen in den Club." },
+];
+// KC-CLUB-ERKLAERVIDEOS-ROLLEN (2.245.0, Wunsch Hansi „nichts von Admin-Funktionen erklären oder zeigen; eigene Videos für die Clubleitung
+// (Büro, Einstellungen nur für die Leitung) und für Admin-Funktionen“): ziel = "alle" | "leitung" | "admin". Während eines Videos für alle
+// sind Admin- und Leitungs-Elemente ausgeblendet (rgRollenAnsicht), die Leitungs-/Admin-Videos sieht nur, wer die Rolle hat.
+const RG_LEITUNG = [
+  { v: "buero", nur: () => !!ICH?.buero, vor: () => { if (!buRaumAn()) { lsSetzen(BU_ANSICHT, "raum"); RG.zurueck.push(() => { lsSetzen(BU_ANSICHT, "liste"); if (aktuelleAnsicht === "buero") buZeigen(); }); buZeigen(); } },
+    sel: ["#v-buero .bu-gruss", "#buInhalt"], t: "🗂️ Das Büro", x: "Dieses Video ist nur für die Clubleitung. Im Büro erledigst du die Club-Arbeit. Oben: die Tages-Übersicht, der Wechsel zwischen Raum und Liste – und die Sprachsteuerung. Sag zum Beispiel: Öffne Ordner Protokolle." },
+  { v: "buero", nur: () => !!ICH?.buero, sel: ["#v-buero .bu-regal", "#buInhalt"], t: "📚 Das Regal", x: "Im Regal stehen die Ordner: Sitzung, Nachbereitung, Protokolle, Freud und Leid, Mitglieder, Adressbuch, Termine, Briefe, Schilder-Druckerei, Erstattung, Weihnachtsmarkt, Besprechungen, Chronik, Archiv und das Inhaltsverzeichnis. Antippen schlägt einen Ordner auf." },
+  { v: "buero", nur: () => !!ICH?.buero, sel: ["#v-buero .bu-zettelreihe", "#buInhalt"], t: "📝 Nächster Schritt", x: "Auf dem Schreibtisch sagt dir der Zettel Nächster Schritt, was als Nächstes dran ist – zum Beispiel Sitzung vorbereiten, Einladung senden oder Mitglieder erinnern. Daneben siehst du, was im Eingang wartet." },
+  { v: "buero", nur: () => !!ICH?.buero, sel: ["#v-buero .bu-korb", "#buInhalt"], t: "📥 Eingangskorb", x: "Im Eingangskorb liegt alles, was auf euch wartet: Erstattungen, gemeldete Dienstzeiten, Vorschläge und Änderungen der Mitglieder. Es bleibt dort, bis es erledigt ist." },
+  { v: "buero", nur: () => !!ICH?.buero, sel: ["#v-buero .bu-fueller", "#buInhalt"], t: "✒️ Schreiben", x: "Mit dem Füller schreibst du: einen Brief mit Briefkopf, die Einladung zur Sitzung, ein Protokoll, eine Nachricht an Mitglieder, ein Schild, einen Glückwunsch oder einen Zettel an die Pinnwand." },
+  { v: "buero", nur: () => !!ICH?.buero, sel: ["#v-buero .bu-dinge", "#buInhalt"], t: "☎️ Telefon, Post & Drucker", x: "Das Telefon ruft Mitglieder an, die Post schickt Nachricht und E-Mail, der Kalender zeigt die nächste Sitzung, der Drucker druckt Vorlagen und Listen, und mit Einlesen scannst du Unterlagen ins Archiv." },
+  { v: "termine", vor: () => { termineNeuWahl(); $("neuWahlBlatt")?.classList.add("rg-zeigen"); RG.zurueck.push(() => $("neuWahlBlatt")?.remove()); }, nach: () => $("neuWahlBlatt")?.remove(),
+    sel: ["#neuWahlBlatt .wahl"], t: "📅 Termine für alle", x: "In Termine kannst du als Clubleitung Termine für alle eintragen – Sitzungen und Veranstaltungen. Außerdem die Live-Abstimmung auf der Sitzung und die Terminfindung, bei der alle über mehrere Termine abstimmen." },
+  { v: "vorschlaege", vor: () => { vorschlagForm("abstimmung"); RG.zurueck.push(() => $("vorschlagForm")?.classList.add("versteckt")); }, nach: () => $("vorschlagForm")?.classList.add("versteckt"),
+    sel: ["#vorschlagForm"], t: "🗳️ Abstimmung", x: "Bei Vorschlägen startest du eine Abstimmung: Frage und Antworten eingeben, auf Wunsch geheim und mit Frist, und wählen, wer abstimmen darf – alle, eine Gruppe oder eine Auswahl." },
+  { v: "einstellungen", sel: [rgKlappe("leitung_start")], mussSel: true, vor: () => rgAuf("leitung_start"), t: "⚙️ Einstellungen der Clubleitung", x: "In den Einstellungen gibt es für dich den Bereich Clubleitung beim Start: eine Tages-Übersicht mit Eingang, Aufgaben, Geburtstagen und nächster Sitzung – und ein Hinweis, wenn viel im Eingangskorb liegt." },
+  { v: "einstellungen", t: "✅ Fertig", x: "Das war das Video für die Clubleitung. Probier das Büro in Ruhe aus – angezeigt und gedruckt wird nur, was du darfst." },
+];
+const RG_ADMIN = [
+  { v: "start", nur: () => !einfach(), vor: () => { if (!einfach() && reg !== "admin") { const alt = reg; register("admin"); RG.zurueck.push(() => register(alt)); } }, sel: ["#register"], t: "🛠️ Das Admin-Register", x: "Dieses Video ist nur für Admins. Im Register Admin steht dein Leitstand: kleine Kacheln mit Lämpchen – grün gut, gelb aufpassen, rot Problem, grau unbekannt. Grau ist nie in Ordnung." },
+  { v: "start", nur: () => einfach(), t: "🛠️ Erweiterte Ansicht", x: "Dieses Video ist nur für Admins. Das Admin-Register gibt es nur in der erweiterten Ansicht. Schalte unter Mehr auf alle Funktionen um – dann siehst du es neben Club, Meins und Technik." },
+  { v: "start", sel: ['#raster .kachel[data-id="ad-alarm"]'], mussSel: true, t: "🚨 Notfall", x: "Ganz vorn die Notfall-Kacheln: Alarm an alle schickt sofort eine Meldung an alle Mitglieder, und Notfall bündelt alle Werkzeuge für den Ernstfall. Im Ernstfall zuerst Notfall öffnen." },
+  { v: "start", sel: ['#raster .kachel[data-id="ad-lage"]'], mussSel: true, t: "📊 Überwachung", x: "Lage zeigt alles auf einen Blick. Dazu Server, Supabase – mit dem Neustart-Knopf –, Neon-Spiegel, Backups, B2-Backup, Notbetrieb und die direkte Leitung." },
+  { v: "start", sel: ['#raster .kachel[data-id="ad-comm"]'], mussSel: true, t: "📨 Dienste", x: "Die Dienste: Communicator, Mail über Brevo, Push, die Kasse mit dem Gateway und die KC-Programme. Jede Kachel öffnet Einzelheiten und die passenden Werkzeuge." },
+  { v: "start", sel: ['#raster .kachel[data-id="ad-versionen"]'], mussSel: true, t: "📱 App", x: "Zur App: die Versionen der Mitglieder, Fehler, Nutzung, Zugänge, Wartung, Freigaben für neue Funktionen, Inkognito und die Stadt-Termine. Am Ende Direktsprünge in die Verwaltung der Anbieter – angemeldet wird dort." },
+  { v: "start", sel: ["#v-start .statusleiste"], t: "💡 Lämpchen oben", x: "Oben in der Statusleiste siehst nur du die Lämpchen für Verbindung, Communicator, Datenverkehr und wer online ist, dazu das Herz mit den letzten Lebenszeichen und die Brille für Inkognito." },
+  { v: "einstellungen", sel: ["#adminBereich"], mussSel: true, vor: () => rgAuf("admin"), t: "⚙️ Admin-Einstellungen", x: "In den Einstellungen gibt es den Bereich Admin-Einstellungen: Erinnerung an alte Zettel an der Pinnwand, Schnellantworten für Anrufe, Tipps nach und nach für den Einstieg, der Kilometer-Satz für Erstattungen und Ort und Wetter-App." },
+  { v: "einstellungen", t: "✅ Fertig", x: "Das war das Admin-Video. Das Admin-Register und diese Einstellungen sehen nur Admins – in den Videos für alle Mitglieder kommen sie nicht vor." },
 ];
 const RUNDGAENGE = [
   { id: "ueberblick", sym: "🗺️", t: "Überblick: die App in 3 Minuten", u: "Oberfläche, Knöpfe, Register und was die App kann", st: () => RUNDGANG },
@@ -1453,9 +1481,18 @@ const RUNDGAENGE = [
   { id: "termin", sym: "📅", t: "Termin eintragen", u: "Privater Termin, Wiederholen, Erinnerung (ca. 2 Min.)", st: () => RG_TERMIN },
   { id: "pinnwand", sym: "📌", t: "Zettel an die Pinnwand", u: "Schreiben, wichtig, für wen, anheften (ca. 1 Min.)", st: () => RG_PINNWAND },
   { id: "vorschlag", sym: "🗳️", t: "Vorschlag einreichen", u: "Thema oder Spende vorschlagen (ca. 1 Min.)", st: () => RG_VORSCHLAG },
+  { id: "leitung", ziel: "leitung", sym: "🗂️", t: "Für die Clubleitung: Büro & mehr", u: "Büro, Termine für alle, Abstimmung, eigene Einstellungen – nur für die Clubleitung", st: () => RG_LEITUNG, nur: () => !!(ICH?.buero || ICH?.vorstand) },
+  { id: "admin", ziel: "admin", sym: "🛠️", t: "Für Admins: Leitstand", u: "Admin-Register, Lämpchen, Admin-Einstellungen – nur für Admins", st: () => RG_ADMIN, nur: () => !!ICH?.admin },
 ];
+// Während eines Videos nur zeigen, was zur Zielgruppe passt: für alle ohne Admin- und Leitungs-Elemente, für die Leitung ohne Admin-Elemente
+function rgRollenAnsicht(ziel) {
+  const b = document.body, an = !!ziel;
+  b.classList.toggle("rg-ohne-admin", an && ziel !== "admin"); b.classList.toggle("rg-ohne-leitung", an && ziel === "alle");
+  b.classList.toggle("ist-admin", !!ICH?.admin && (!an || ziel === "admin")); // Admin-Lämpchen, Herz, Brille nur im Admin-Video
+  try { if (RK.einst?.an) rkAufbauen(RK.einst); } catch {} // Rollkartei der Einstellungen ohne ausgeblendete Karten neu legen
+}
 function erklaerVideos() {
-  neuWahlFenster("🎬 Erklär-Videos – mit Ton", RUNDGAENGE.map((r) => ({ sym: r.sym, t: r.t, u: r.u, los: () => rundgangStart(false, r.id) })));
+  neuWahlFenster("🎬 Erklär-Videos – mit Ton", RUNDGAENGE.filter((r) => !r.nur || r.nur()).map((r) => ({ sym: r.sym, t: r.t, u: r.u, los: () => rundgangStart(false, r.id) })));
   $("neuWahlBlatt")?.querySelector(".einw-karte")?.remove(); // „Etwas Neues anlegen“ passt hier nicht
 }
 // Vorführung (demo) einer Station: nur anzeigen, nie speichern; alles, was die Station nicht vorführt, wird zurückgestellt
@@ -1471,9 +1508,12 @@ const rgZiel = (s) => (s.sel || []).flatMap((q) => { try { return typeof q === "
 const rgText = (s) => (typeof s.x === "function" ? s.x() : s.x);
 function rundgangStart(mitKnopf, id = "ueberblick") {
   rundgangEnde(true); einwKarteWeg(); vorlesenStopp();
-  const tour = RUNDGAENGE.find((x) => x.id === id) || RUNDGAENGE[0];
+  const tour = RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur())) || RUNDGAENGE[0];
   RG.tour = tour.id; RG.st = tour.st(); RG.zurueck = []; RG.vorI = -1; RG.richtung = 1;
   RG.von = aktuelleAnsicht === "chat" ? "nachrichten" : aktuelleAnsicht; RG.an = true;
+  rgRollenAnsicht(tour.ziel || "alle");
+  rgHinweisZeigen(); // Hinweis-Karte auf der Startseite während eines Videos weg
+  if ((tour.ziel || "alle") !== "admin" && reg === "admin") { register("verein"); RG.zurueck.push(() => register("admin")); }
   if (tour.id === "ueberblick" && !rgErledigt()) rgHinweisErledigt("angesehen"); // KC-CLUB-RUNDGANG-HINWEIS: wer ihn einmal gestartet hat, wird nicht mehr gefragt
   RG.i = 0; RG.pause = !!mitKnopf; RG.ton = "speechSynthesis" in window; document.body.classList.add("rg-an");
   document.body.insertAdjacentHTML("beforeend", `<div class="rg-schicht" id="rgSchicht" role="dialog" aria-modal="true" aria-label="${esc(tour.t)}"><div class="rg-loch" id="rgLoch"></div>
@@ -1570,6 +1610,7 @@ function rundgangEnde(still) {
   for (const f of RG.zurueck.splice(0).reverse()) try { f(); } catch {}
   if (RG.an) rgDemo({}); RG.vorI = -1;
   RG.an = false; RG.ziel = null; try { RG.wach?.release?.(); } catch {} RG.wach = null; $("rgSchicht")?.remove(); document.body.classList.remove("rg-an");
+  rgRollenAnsicht(null);
   removeEventListener("resize", rgLage); removeEventListener("scroll", rgLage, true);
   if (!still) { zeige(RG.von, true); scrollTo(0, 0); } // zurück, wo der Rundgang gestartet wurde
   rgHinweisZeigen();
@@ -13902,7 +13943,7 @@ async function neuLadenRoh(vonHand) {
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   try {
     const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
-    INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
+    INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ document.body.classList.toggle("sos-frei", !!INIT?.sosFuerAlle); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
