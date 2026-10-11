@@ -1977,7 +1977,7 @@ async function dienstwunschAufstellung(ich: Ich) {
   const stand = m?.submitted_at ? new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(m.submitted_at)) + " Uhr" : "–";
   return { veranstaltung: DW.name, hinweis: DW_HINWEIS(DW.name), name: ich.name, stand, revision: m?.revision ?? 0, status: m?.status ?? null, uebernommen: !!m?.taken_at, freigabe: !!m?.share_with_colleagues, tage };
 }
-const NEON_GRENZE = 512 * 1024 * 1024; // Neon kostenlos: 0,5 GB Speicher je Projekt
+const NEON_GRENZE = 1024 * 1024 * 1024; // Neon kostenlos: 1 GB Speicher je Projekt (seit 02.10.2026, vorher 0,5 GB)
 // Neon-Spiegel und Backup (0.48.0): liest nur die Protokolle des KC-Spiegels (kc_db_mirror_*, kc_neon_compute_policy) – steuert nichts
 async function adminSpiegel() {
   const letzter = (typ: string) => db.from("kc_db_mirror_runs").select("started_at,message").eq("run_type", typ).eq("status", "ok").order("started_at", { ascending: false }).limit(1).maybeSingle();

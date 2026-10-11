@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.231.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.231.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11182,7 +11182,7 @@ function infoAdmin() {
       ${zeile(r.wartung?.an ? "gelb" : "gruen", "Wartung", r.wartung?.an ? "an" + (r.wartung.hinweis ? " – " + r.wartung.hinweis : "") : "aus")}
     </div>
     ${adminBalken("🗄️ Datenbank", r.datenbank.bytes, r.datenbank.grenze, r.datenbank.warnPct, r.datenbank.kritPct)}
-    ${adminBalken("🪞 Neon-Spiegel", r.spiegel?.groesse?.bytes ?? null, r.spiegel?.groesse?.grenze || 512 * 1048576, r.datenbank.warnPct, r.datenbank.kritPct, r.spiegel?.groesse?.zeit)}
+    ${adminBalken("🪞 Neon-Spiegel", r.spiegel?.groesse?.bytes ?? null, r.spiegel?.groesse?.grenze || 1024 * 1048576, r.datenbank.warnPct, r.datenbank.kritPct, r.spiegel?.groesse?.zeit)}
     ${adminBalken("📁 Dateien/Fotos", r.speicher.belegt, r.speicher.grenze, 80, 95)}
     <div class="azahlen">
       <span>👥 <b>${m.gesamt}</b> Mitglieder</span><span>🔑 <b>${m.mitZugang}</b> mit Zugang</span><span>🟢 <b>${m.online}</b> online</span>
@@ -11394,7 +11394,7 @@ function adBlatt(id) {
   } else switch (id) {
     case "lage": {
       const ringe = r ? [[adPct(r.datenbank.bytes, r.datenbank.grenze), "Supabase", r.datenbank.bytes != null ? `${mb(r.datenbank.bytes)} / ${mb(r.datenbank.grenze)}` : "unbekannt", r.datenbank.warnPct, r.datenbank.kritPct],
-        [adPct(r.spiegel?.groesse?.bytes, r.spiegel?.groesse?.grenze || 512 * 1048576), "Neon", r.spiegel?.groesse?.bytes ? `${mb(r.spiegel.groesse.bytes)} / ${mb(r.spiegel.groesse.grenze || 512 * 1048576)}` : "unbekannt"],
+        [adPct(r.spiegel?.groesse?.bytes, r.spiegel?.groesse?.grenze || 1024 * 1048576), "Neon", r.spiegel?.groesse?.bytes ? `${mb(r.spiegel.groesse.bytes)} / ${mb(r.spiegel.groesse.grenze || 1024 * 1048576)}` : "unbekannt"],
         [adPct(r.speicher.belegt, r.speicher.grenze), "Fotos/Dateien", `${mb(r.speicher.belegt)} / ${mb(r.speicher.grenze)}`],
         [adPct(r.b2?.b2_stored_bytes ?? null, AD_B2_FREI), "B2 (10 GB frei)", r.b2?.b2_stored_bytes != null ? adGr(r.b2.b2_stored_bytes) : "unbekannt"]] : [];
       html = `${kopf("📊", "Lage auf einen Blick")}
@@ -11444,7 +11444,7 @@ function adBlatt(id) {
         ${sf ? adZeile(adAlt() ? "grau" : sf.neon[0], "Neon-Spiegel", sf.neon[1]) + adZeile(adAlt() ? "grau" : sf.backup[0], "Tägliche Sicherung (Neon)", sf.backup[1]) + adZeile(adAlt() ? "grau" : sf.watchdog[0], "Watchdog", sf.watchdog[1]) + adZeile(adAlt() ? "grau" : sf.abdeckung[0], "Abdeckung", sf.abdeckung[1]) : adZeile("grau", "Spiegel", "unbekannt")}
         ${r?.spiegel?.backup?.restoreTest ? adZeile("keine", "Letzter Wiederherstellungs-Test", seitText(r.spiegel.backup.restoreTest) + " · bestanden") : ""}
         ${adZeile(adZustand("b2")[0], "B2-Backup (Backup-PC)", adZustand("b2")[1])}
-        ${r?.spiegel?.groesse?.bytes ? adminBalken("🪞 Neon-Speicher", r.spiegel.groesse.bytes, r.spiegel.groesse.grenze || 512 * 1048576, r.datenbank.warnPct, r.datenbank.kritPct, r.spiegel.groesse.zeit) : ""}
+        ${r?.spiegel?.groesse?.bytes ? adminBalken("🪞 Neon-Speicher", r.spiegel.groesse.bytes, r.spiegel.groesse.grenze || 1024 * 1048576, r.datenbank.warnPct, r.datenbank.kritPct, r.spiegel.groesse.zeit) : ""}
         <p class="hinweis" style="margin:0">Der Spiegel läuft alle 6 Stunden von selbst; fällt der Anstoß aus, springt stündlich der Spiegel-Wächter (GitHub) ein.</p>
         <div class="knoepfe">${adKnopf("🪞 Jetzt spiegeln – nur im Notfall", "adminSpiegeln()")}${adKnopf("📋 Alle Einzelheiten", "adminBlatt()")}</div>${adLinks("neon")}${adLinks("github")}`;
       break;

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.231.1 – 2026-10-11 – Neon-Füllstand rechnet mit 1 GB
+KC-CLUB-NEON-GROESSE: Neon hat das kostenlose Kontingent am 02.10.2026 auf 1 GB je Projekt verdoppelt; Admin-Zentrale (Balken, Übersicht, Speicher) rechnet jetzt mit 1 GB statt 0,5 GB.
+
 ## 2.231.0 – 2026-10-11 – Live-Abstimmung über den nächsten Sitzungstermin
 KC-CLUB-LIVE-TERMIN: Am Ende der Sitzung startet der Clubsprecher „🔴 Live-Abstimmung: nächster Termin“ (bei Termine). Vorschlag aus dem Kalender: letzter Freitag im nächsten Monat, Uhrzeit und Ort wie beim letzten Treffen (änderbar). Alle mit offener App bekommen sofort ein Fenster: Termin, Blick in den eigenen Club-App-Kalender (Termine, eigene Einträge, Dienste) und ✅ Ich kann · ❔ Unter Vorbehalt · ❌ Ich kann nicht. Der Sprecher sieht das Ergebnis live mit Namen, kann den Termin annehmen (legt ihn an, Zusagen werden übernommen) oder eine Alternative zur Abstimmung stellen. Nach dem Annehmen fragt jedes Handy: „Soll ich den Termin in deinen Kalender eintragen?“ (Handy-Kalender, Google, Outlook). Läuft über die direkte Leitung.
 

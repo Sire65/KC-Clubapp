@@ -1052,7 +1052,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/if \(v !== "chat" && TIPP\.id\) tippenAus\(\);/.test(html), "Verlassen beendet „schreibt …“ nicht");
   assert.ok(/mirror_enabled, backup_enabled, note, updated_at\)\nvalues \('kc_club_tippen', 'Club-App', 'sensitive', false, false, false/.test(lies("supabase/migrations/20260929_kc_club_v54_tippen.sql")), "Spiegel-Regel für kc_club_tippen fehlt");
   // Neon-Größe
-  assert.ok(/eq\("run_type", "neon_groesse"\)\.eq\("status", "ok"\)/.test(server) && /groesse: ng \? \{ bytes:/.test(server) && /const NEON_GRENZE = 512 \* 1024 \* 1024;/.test(server), "Server liefert Neon-Größe nicht");
+  assert.ok(/eq\("run_type", "neon_groesse"\)\.eq\("status", "ok"\)/.test(server) && /groesse: ng \? \{ bytes:/.test(server) && /const NEON_GRENZE = 1024 \* 1024 \* 1024;/.test(server), "Server liefert Neon-Größe nicht");
   const w = lies("supabase/functions/kc-db-mirror-worker/index.ts");
   assert.ok(/if\(neon\)\{try\{/.test(w) && /pg_database_size\(current_database\(\)\)/.test(w) && /30\*60000/.test(w), "Worker misst Neon-Größe nicht (nur bei offener Verbindung, gedrosselt)");
   assert.ok(/adminBalken\("🪞 Neon-Spiegel", r\.spiegel\?\.groesse\?\.bytes \?\? null/.test(html) && /alt \? "grau"/.test(html) && /⚠️ veraltet/.test(html), "Neon-Balken/Veraltet-Markierung fehlt");
