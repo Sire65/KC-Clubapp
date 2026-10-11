@@ -8302,8 +8302,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE"), html.indexOf("// ---------- KC-CLUB-KONFETTI (2.169.0)"));
   assert.ok(b.length > 1000, "Bühne vorhanden");
   assert.ok(/if \(!ruhig && JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
-  assert.ok(/J\.wind = \{ dir: J\.lauf % 2 \? -1 : 1/.test(b), "Windstoß abwechselnd von links und rechts");
-  assert.ok(/if \(J\.lauf % 3 === 2\) jzbSchneemannStart\(\); else jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (Advent mit Weihnachtsmütze)");
+  assert.ok(/J\.wind = \{ dir: \(J\.lauf >> 1\) % 2 \? -1 : 1/.test(b), "Windstoß abwechselnd von links und rechts (2.259.0: über die Wind-Läufe, dazwischen Twinkey)");
+  assert.ok(/if \(J\.lauf % 3 === 2\) jzbSchneemannStart\(\); else (if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else )?jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (Advent mit Weihnachtsmütze)");
   assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!fxAn\(\) \|\| !einst\("jahreszeit", true\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");
   assert.ok(/\.jz-buehne canvas \{ position: absolute; inset: 0;/.test(seite) && /jahreszeitVorschau\('winter'\)/.test(seite), "Canvas im Kopf, Vorschau in den Einstellungen");
 }
@@ -8328,7 +8328,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.250.0 Fund Hansi „Blätter bleiben unten nicht liegen, Windstoß nicht gesehen, Sonnenblume nur kurz“
 {
-  assert.ok(/J\.liegt\.push\(\{ x: b\.x, yb: J\.h - boden \+ b\.s \* \.2,/.test(html) && /jzbBlatt\(c, b\.x, J\.h - b\.yb - Math\.abs\(w\) \* 3,/.test(html) && !/J\.liegt\.push\(\{ x: b\.x, y: /.test(html), "liegendes Laub hält Abstand zum Boden (Kopfhöhe wechselt mit dem Infofeld)");
+  assert.ok(/J\.liegt\.push\(\{ x: b\.x, yb: J\.h - boden \+ b\.s \* \.5,/.test(html) && /jzbBlatt\(c, b\.x, J\.h - b\.yb - Math\.abs\(w\) \* 3,/.test(html) && !/J\.liegt\.push\(\{ x: b\.x, y: /.test(html), "liegendes Laub hält Abstand zum Boden (Kopfhöhe wechselt mit dem Infofeld)");
   assert.ok(/k: h >= 150 \? 1 : Math\.max\(\.55, h \/ 150\)/.test(html), "Größe springt nicht mit der Infofeld-Höhe");
   assert.ok(/const JZB_BLUEHT = 150;/.test(html) && /if \(J\.pt >= 50\) jzbPhase\("schmelzen"\);/.test(html), "längere Blüte, Schneemann steht länger");
 }
@@ -8359,5 +8359,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.257.0 KC-CLUB-TWINKEY-MERKEN-AUS (Wunsch Hansi): „Twinkey merkt sich das“ ist beim Beantworten aus – nur bewusst anhaken
 {
   assert.ok(/<button type="button" class="chip tw-wissen" aria-pressed="false">⬜ 🧠 Twinkey merkt sich das/.test(html) && !/class="chip an tw-wissen"/.test(html), "Merken standardmäßig aus");
+}
+
+// 2.259.0 KC-CLUB-JAHRESZEIT-TWINKEY: eigener Boden (Fund Hansi „Blätter bleiben nicht liegen“), Twinkey fegt/schippt/gießt
+{
+  assert.ok(/#v-start \.hero\.jz-boden:not\(\.eingerollt\):not\(\.halb-eingerollt\) \{ padding-bottom: 32px; \}/.test(seite) && /\.hero > \.jz-schicht\.jz-buehne \{ bottom: 3px; \}/.test(seite) && /h\.classList\.add\("jz-boden"\)/.test(html) && /h\.classList\.remove\("jz-boden"\)/.test(html), "eigener Bodenstreifen, wieder weg ohne Bühne");
+  assert.ok(/if \(J\.lauf % 2\) jzbBesuchStart\("fegen"\); else jzbWindStart\(\);/.test(html) && /else if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else jzbWindStart\(\);/.test(html) && /jzbBesuchStart\("giessen"\)/.test(html), "Wind oder Twinkey im Wechsel; gießen im Frühling/Sommer");
+  assert.ok(/sb\.className = "jz-sprech"; sb\.setAttribute\("aria-hidden", "true"\)/.test(html) && /\.jz-sprech \{[^}]*pointer-events: none;/.test(seite), "Sprechblase stört keine Tipps");
 }
 

@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.259.0 – 2026-10-11 – KC-CLUB-JAHRESZEIT-TWINKEY: eigener Boden, Twinkey fegt, schippt und gießt (Fund + Wunsch Hansi)
+- Fund Hansi „Blätter bleiben immer noch nicht liegen“: Vermessen – unter dem Infofeld blieben nur ~8–18 px; liegendes Laub lag mit der Mitte auf der runden Unterkante, flachgedrückt und halb abgeschnitten (auf dem Handy praktisch unsichtbar). Jetzt: eigener Bodenstreifen (Kopf unten 32 statt 18 px, nicht im eingerollten Kopf), die Bühne endet 3 px über der Kante, Laub liegt ganz sichtbar (Unterkante auf dem Boden, weniger flach), nichts in den runden Ecken.
+- 🧹 Herbst: im Wechsel Windstoß (Seite wechselt jedes Mal) oder Twinkey mit dem Besen – fegt das Laub weg und sagt einen Spruch („Ja, ja – im Herbst gehört das Laubfegen wohl dazu!“). ❄️ Winter: Windstoß oder Twinkey schippt den Schnee beiseite; jeder 3. Lauf bleibt der Schneemann. 🌱🌻 Frühling/Sommer: Twinkey kommt mit der Gießkanne und gießt Blumen bzw. Sonnenblume.
+- Twinkey = 🧑‍🍳 wie beim Schach, mit gezeichneten Beinen und Werkzeug; der Spruch erscheint als Sprechblase. Vorschau: ⚙️ → ✨ Effekte → „🧹 Twinkey fegt“.
+
 ## 2.258.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE: Erklär-Video „Oberfläche nach Wunsch“
 Neues Erklär-Video (Thema „Ich & meine App“): die beiden Pfeile oben (Kopf halb/ganz einrollen), ‹ › im Info-Feld, Kacheln lange drücken und verschieben (◀ ▲ ▼ ▶), mit ✕ verbergen, verborgene Kachel und 👁️ Einblenden, „Nur ausgeblendete zeigen“, Kachel per Doppeltipp umdrehen, Register festhalten und ziehen, zwischen Registern wischen. Alles wird echt vorgeführt, aber nichts gespeichert – am Ende ist die Startseite genau wie vorher. In der einfachen Ansicht: Kopf-Pfeile, Kacheln anordnen und der Weg zur erweiterten Ansicht.
 

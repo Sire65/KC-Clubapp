@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.258.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.259.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11421,7 +11421,7 @@ function jahreszeitArt(d = new Date()) {
 const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"] };
 function jahreszeitKopf() {
   const h = document.querySelector("#v-start .hero"); if (!h) return;
-  h.querySelector(".jz-schicht")?.remove(); jzbStop();
+  h.querySelector(".jz-schicht")?.remove(); h.querySelector(".jz-sprech")?.remove(); h.classList.remove("jz-boden"); jzbStop();
   if (!fxAn() || !einst("jahreszeit", true)) return;
   // 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE: Herbst, Advent/Winter, Frühling und Sommer mit Boden (Laub, Schnee, Gras, Sonnenblume) – Silvester bleibt Feuerwerk
   const ruhig = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches, jetzt = JZB.vorschau || jahreszeitArt();
@@ -11442,7 +11442,7 @@ function jahreszeitUmschalten(an) { einstellung("jahreszeit", an); jahreszeitKop
 // Sparmodus oder „Bewegung reduzieren“ (dann wie bisher). Tippen geht durch (pointer-events: none). Lauf-Zähler je Gerät (kc_club_jzLauf).
 const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer"];
 const JZB_BLUEHT = 150; // 2.250.0 (Fund Hansi „Sonnenblume nur kurz“): Blumen/Sonnenblume blühen 2½ Min., bevor der Wind kommt
-const JZB_SP = 3, JZB_RAND = 16; // Bodenspalten in px; nichts in den runden Ecken ablegen
+const JZB_SP = 3, JZB_RAND = 22; // 2.259.0: 22 statt 16 – nichts in die runden Ecken (Radius 26) // Bodenspalten in px; nichts in den runden Ecken ablegen
 const JZB_LAUB = ["#e0802a", "#c8432b", "#e8b23a", "#a85a2a", "#d96a1f", "#b33a2a", "#cf9a2b"];
 const JZB_GRUEN = ["#5d9b35", "#6fae3e", "#4f8a2b", "#7cbd4a"];
 const JZB_EMOJI = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
@@ -11463,13 +11463,17 @@ function jzbStart(h, art) {
   if (!ctx || typeof ResizeObserver === "undefined") return false;
   const s = document.createElement("div"); s.className = `jz-schicht jz-buehne jz-${art}`; s.setAttribute("aria-hidden", "true");
   s.appendChild(cv); h.prepend(s);
+  // 2.259.0 (Fund Hansi „Blätter bleiben nicht liegen“): unter dem Infofeld waren nur ~8–18 px Boden – liegendes Laub lag halb unter der Kante.
+  // Jetzt eigener Bodenstreifen (CSS .jz-boden) und Sprechblase für Twinkey
+  h.classList.add("jz-boden");
+  const sb = document.createElement("div"); sb.className = "jz-sprech"; sb.setAttribute("aria-hidden", "true"); h.appendChild(sb);
   const saison = art === "advent" ? "winter" : art;
   Object.assign(JZB, { s, cv, ctx, art, saison, w: 0, h: 0, dpr: 0, k: 1, T: 0, pt: 0, letzt: 0, imBild: true, pruef: 0, spawn: 0,
     flug: [], liegt: [], fx: [], boden: [], wind: null, mann: null, halme: [], blumen: [], gaeste: [], welk: 0, phase: "anfang",
-    ext: {}, extraPruef: 0, eier: [], igel: null, igelUhr: undefined, schirm: null, schirmUhr: undefined, tropfen: [], pfuetzen: null, regenSpawn: 0 }); // 2.249.0 KC-CLUB-JAHRESZEIT-EXTRAS
+    blase: sb, besuch: null, gegossen: false, ext: {}, extraPruef: 0, eier: [], igel: null, igelUhr: undefined, schirm: null, schirmUhr: undefined, tropfen: [], pfuetzen: null, regenSpawn: 0 }); // 2.249.0 KC-CLUB-JAHRESZEIT-EXTRAS
   if (!h.dataset.jzKlick) { h.dataset.jzKlick = "1"; h.addEventListener("click", jzbEiAntippen); } // Ostereier antippen
   // Vorschau im Winter: gleich der Schneemann-Lauf, damit man ihn nicht erst nach zwei Windstößen sieht
-  JZB.lauf = JZB.vorschau ? (saison === "winter" ? 2 : 0) : jzbLaufLesen();
+  JZB.lauf = JZB.vorschau ? (JZB.extra === "twinkey" ? 1 : saison === "winter" ? 2 : 0) : jzbLaufLesen(); // Vorschau „🧹 Twinkey“: gleich sein Lauf
   JZB.ro = new ResizeObserver(jzbGroesse); JZB.ro.observe(s);
   if (typeof IntersectionObserver !== "undefined") { JZB.io = new IntersectionObserver((e) => { JZB.imBild = e[e.length - 1].isIntersecting; jzbWeiter(); }); JZB.io.observe(s); }
   if (!JZB.horcht) { JZB.horcht = true; document.addEventListener("visibilitychange", jzbWeiter); }
@@ -11505,12 +11509,12 @@ function jzbBild(ts) {
 function jzbPhase(p) { JZB.phase = p; JZB.pt = 0; }
 function jzbLaufEnde() {
   const J = JZB; J.lauf++; if (!J.vorschau) try { localStorage.setItem("kc_club_jzLauf", String(J.lauf)); } catch {}
-  J.boden.fill(0); J.liegt = []; J.mann = null; J.wind = null; J.welk = 0; J.halme = []; J.blumen = []; J.gaeste = J.gaeste.filter((g) => g.typ === "falter");
+  J.boden.fill(0); J.liegt = []; J.mann = null; J.wind = null; J.besuch = null; J.gegossen = false; J.welk = 0; J.halme = []; J.blumen = []; J.gaeste = J.gaeste.filter((g) => g.typ === "falter");
   jzbPhase("anfang");
 }
 // Windstoß: abwechselnd von links (dir 1) und von rechts (dir -1); die Front zieht über den Kopf und nimmt mit, was liegt
 function jzbWindStart(dauer = 4.2) {
-  const J = JZB; J.wind = { dir: J.lauf % 2 ? -1 : 1, t: 0, dauer, st: 0, front: 0, striche: [], naechster: 0 };
+  const J = JZB; J.wind = { dir: (J.lauf >> 1) % 2 ? -1 : 1, t: 0, dauer, st: 0, front: 0, striche: [], naechster: 0 };
   for (const f of J.flug) J.fx.push({ ...f, vx: 0, vy: f.vy || 20, a: 1 }); J.flug = [];
   jzbPhase("wind");
 }
@@ -11542,7 +11546,7 @@ function jzbFallen(dt) {
     b.y += b.vy * dt * (b.typ === "blatt" ? .65 + .35 * Math.abs(Math.cos(b.ph)) : 1);
     const boden = J.h - jzbBodenH(b.x);
     if (b.typ === "blatt" && b.y + b.s * .3 >= boden) {
-      if (jzbImFeld(b.x)) { J.liegt.push({ x: b.x, yb: J.h - boden + b.s * .2, rot: jzbZ(-.5, .5) + (Math.random() < .5 ? 0 : Math.PI), s: b.s, farbe: b.farbe, form: b.form }); jzbAufhaeufen(b.x, b.s * .16, 3); }
+      if (jzbImFeld(b.x)) { J.liegt.push({ x: b.x, yb: J.h - boden + b.s * .5, rot: jzbZ(-.5, .5) + (Math.random() < .5 ? 0 : Math.PI), s: b.s, farbe: b.farbe, form: b.form }); jzbAufhaeufen(b.x, b.s * .16, 3); }
       b.weg = true;
     } else if (b.typ === "flocke" && b.y + b.r >= boden) {
       if (jzbImFeld(b.x)) jzbAufhaeufen(b.x, b.r * 1.25, 2);
@@ -11575,14 +11579,16 @@ function jzbSchritt(dt) {
   if (S === "herbst") jzbHerbst(dt);
   else if (S === "winter") jzbWinter(dt);
   else jzbBeet(dt);
-  jzbFallen(dt); jzbFxSchritt(dt); jzbGaeste(dt); jzbExtrasSchritt(dt);
+  jzbFallen(dt); jzbFxSchritt(dt); jzbGaeste(dt); jzbExtrasSchritt(dt); jzbBesuchSchritt(dt);
 }
 // 🍂 Herbst
 function jzbHerbst(dt) {
   const J = JZB;
   if (J.phase === "fallen") {
     if ((J.spawn -= dt) <= 0 && J.flug.length < 12) { J.spawn = jzbZ(.45, 1.1); J.flug.push(jzbNeuesTeil("blatt")); }
-    if (J.liegt.length >= Math.max(22, Math.round(J.w / 10))) jzbWindStart(); // 2.250.0: etwas mehr Laub, bevor der Wind kommt
+    if (J.liegt.length >= Math.max(22, Math.round(J.w / 10))) { if (J.lauf % 2) jzbBesuchStart("fegen"); else jzbWindStart(); } // 2.259.0: im Wechsel Wind / Twinkey mit Besen
+  } else if (J.phase === "besuch") {
+    if (!J.besuch && !J.liegt.length && !J.fx.length) { if ((J.spawn -= dt) < -1.5) jzbLaufEnde(); }
   } else if (J.phase === "wind") {
     const W = J.wind;
     for (const b of J.liegt) if (jzbHinterFront(b.x + W.dir * jzbZ(0, 30))) {
@@ -11605,10 +11611,12 @@ function jzbWinter(dt) {
   }
   const innen = B.slice(Math.ceil(JZB_RAND / JZB_SP), Math.floor((J.w - JZB_RAND) / JZB_SP)), schnitt = innen.reduce((a, b) => a + b, 0) / Math.max(1, innen.length);
   if (J.phase === "fallen" && schnitt >= 9 * J.k) {
-    if (J.lauf % 3 === 2) jzbSchneemannStart(); else jzbWindStart();
+    if (J.lauf % 3 === 2) jzbSchneemannStart(); else if (J.lauf % 2) jzbBesuchStart("schippen"); else jzbWindStart();
   } else if (J.phase === "bauen" || J.phase === "stehen") {
     if (J.phase === "bauen") { for (let i = 0; i < n; i++) B[i] -= B[i] * .07 * dt; if (J.pt >= 8) { jzbPhase("stehen"); jzbFunken(); } } // Schnee wird zum Schneemann gerollt
     else { for (let i = 0; i < n; i++) B[i] = Math.min(B[i], 9 * J.k); if (J.pt >= 50) jzbPhase("schmelzen"); }
+  } else if (J.phase === "besuch") {
+    if (!J.besuch && B.every((v) => v < .3) && !J.fx.length) { if ((J.spawn -= dt) < -1.5) jzbLaufEnde(); }
   } else if (J.phase === "schmelzen") {
     if (J.pt >= 5) { J.mann = null; jzbWindStart(); }
   } else if (J.phase === "wind") {
@@ -11654,6 +11662,7 @@ function jzbBeet(dt) {
       if (typeof istNacht === "function" && istNacht()) for (let i = 0; i < 7; i++) J.gaeste.push({ typ: "gluehwurm", x: jzbZ(20, J.w - 20), y: jzbZ(J.h * .35, J.h - 12), vx: jzbZ(-12, 12), vy: jzbZ(-8, 8), ph: jzbZ(0, 6.3) });
       else J.gaeste.push({ typ: "biene", t: 0, b: 0 });
     }
+    if (!J.gegossen && J.pt > (sommer ? 28 : 34)) { J.gegossen = true; jzbBesuchStart("giessen"); } // 2.259.0: Twinkey gießt
     if (sommer && J.pt > JZB_BLUEHT) for (const f of J.blumen) { // Spätsommer: die Blütenblätter fallen eins nach dem anderen
       const soll = Math.floor((J.pt - JZB_BLUEHT - f.t0 * .3) * 2.6);
       while (f.ab.length < Math.min(16, soll)) {
@@ -11694,9 +11703,10 @@ function jzbMalen() {
   jzbExtrasHinten(c); // Ostereier – das Gras wächst darüber
   if (J.saison === "fruehling" || J.saison === "sommer") jzbBeetMalen(c);
   if (J.saison === "winter") jzbSchneeMalen(c);
-  for (const b of J.liegt) { const w = b.wackel ? Math.sin(J.T * 30) * .5 * b.wackel : 0; jzbBlatt(c, b.x, J.h - b.yb - Math.abs(w) * 3, b.s, b.rot + w, 1, .55, b.farbe, b.form); } // raschelt beim Igel
+  for (const b of J.liegt) { const w = b.wackel ? Math.sin(J.T * 30) * .5 * b.wackel : 0; jzbBlatt(c, b.x, J.h - b.yb - Math.abs(w) * 3, b.s, b.rot + w, 1, .65, b.farbe, b.form); } // raschelt beim Igel
   jzbExtrasBoden(c);
   if (J.mann) jzbSchneemannMalen(c);
+  jzbTwinkeyMalen(c);
   for (const g of J.gaeste) jzbGastMalen(c, g);
   const flocken = [];
   for (const p of [...J.flug, ...J.fx]) {
@@ -11705,6 +11715,7 @@ function jzbMalen() {
     else if (p.typ === "blatt") jzbBlatt(c, p.x, p.y, p.s, p.rot, p.liegt ? 1 : Math.cos(p.ph * 1.3), p.liegt ? .55 : 1, p.farbe, p.form);
     else if (p.typ === "bluete" || p.typ === "bluetenblatt") { c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.fillStyle = p.farbe; c.beginPath(); c.ellipse(0, 0, p.s, p.s * (p.typ === "bluete" ? .7 : .35), 0, 0, 7); c.fill(); c.restore(); }
     else if (p.typ === "funke") jzbStern(c, p.x, p.y, p.s, p.farbe);
+    else if (p.typ === "wasser") { c.fillStyle = "rgba(120,190,255,.95)"; c.beginPath(); c.ellipse(p.x, p.y, 1.1, 1.8, 0, 0, 7); c.fill(); }
   }
   c.globalAlpha = 1;
   if (flocken.length) { c.fillStyle = "rgba(255,255,255,.92)"; c.beginPath(); for (const f of flocken) { c.moveTo(f.x + f.r, f.y); c.arc(f.x, f.y, f.r, 0, 7); } c.fill(); }
@@ -12037,6 +12048,76 @@ function jzbRegenMalen(c) {
   const W = J.wind, sx = (W ? W.dir * 160 * W.st : 40) / 300;
   c.strokeStyle = "rgba(205,228,255,.7)"; c.lineWidth = 1.1; c.beginPath();
   for (const t of J.tropfen) { c.moveTo(t.x, t.y); c.lineTo(t.x - sx * 12, t.y - 12); } c.stroke();
+}
+// ---------- KC-CLUB-JAHRESZEIT-TWINKEY (2.259.0, Wunsch Hansi „Twinkey kommt kurz mit einem Besen vorbei und sagt einen Spruch“) ----------
+// Herbst: Twinkey fegt das Laub weg · Winter: Twinkey schippt den Schnee beiseite (im Wechsel mit dem Windstoß; jeder 3. Winter-Lauf bleibt
+// der Schneemann) · Frühling/Sommer: Twinkey gießt die Blumen bzw. die Sonnenblume. Twinkey = 🧑‍🍳 wie beim Schach, Beine und Werkzeug gezeichnet,
+// Spruch als Sprechblase über dem Kopf (aria-hidden, Tippen geht durch).
+const JZB_SPRUECHE = {
+  fegen: ["Ja, ja – im Herbst gehört das Laubfegen wohl dazu!", "Einmal durchfegen – dann ist wieder Platz für neues Laub.", "Mise en place – auch vor der Tür!", "Sauber gefegt ist halb gekocht."],
+  schippen: ["Schnee schippen hält fit – fast wie Teig kneten!", "So, der Weg ist frei!", "Ja, ja – im Winter gehört das Schneeschippen dazu.", "Brrr! Gleich gibt's einen heißen Tee."],
+  giessenSommer: ["Die Sonnenblume hat Durst – ein Schluck Wasser für dich!", "Immer schön begießen – wie beim Braten!", "Wer groß werden will, braucht Sonne und Wasser."],
+  giessenFruehling: ["Die ersten Blumen – die brauchen jetzt viel Liebe.", "Ein bisschen Wasser, dann blüht's noch schöner.", "Frühling! Da wächst alles fast von allein."],
+};
+function jzbBesuchStart(art) {
+  const J = JZB, dir = (J.lauf >> 1) % 2 ? -1 : 1;
+  const B = { art, dir, x: dir > 0 ? -34 : J.w + 34, t: 0, sagt: false, halt: 0, fertig: false };
+  if (art === "giessen") {
+    const f = J.saison === "sommer" ? J.blumen[0] : J.blumen[Math.floor(J.blumen.length / 2)];
+    B.ziel = f ? f.x - dir * (J.saison === "sommer" ? 24 : 18) * J.k : J.w / 2;
+  } else { for (const f of J.flug) J.fx.push({ ...f, vx: 0, vy: f.vy || 20, a: 1 }); J.flug = []; jzbPhase("besuch"); }
+  J.besuch = B;
+}
+function jzbSagen(text) {
+  const b = JZB.blase; if (!b) return;
+  b.textContent = "🧑‍🍳 " + text; b.classList.add("an"); clearTimeout(JZB.blaseUhr);
+  JZB.blaseUhr = setTimeout(() => b.classList.remove("an"), 4200);
+}
+function jzbBesuchSchritt(dt) {
+  const J = JZB, B = J.besuch; if (!B) return;
+  const k = J.k, geht = !(B.halt > 0);
+  B.t += dt;
+  if (geht) B.x += B.dir * 34 * k * dt; else B.halt -= dt;
+  const spitze = B.x + B.dir * 17 * k, hinter = (x) => (B.dir > 0 ? x <= spitze : x >= spitze);
+  if (B.art === "fegen") {
+    for (const b of J.liegt) if (hinter(b.x)) { J.fx.push({ typ: "blatt", x: b.x, y: J.h - b.yb, s: b.s, farbe: b.farbe, form: b.form, rot: b.rot, vr: jzbZ(-8, 8), vx: B.dir * jzbZ(90, 170), vy: -jzbZ(25, 75), ph: jzbZ(0, 6.3), fq: jzbZ(1, 2) }); b.weg = true; }
+    J.liegt = J.liegt.filter((b) => !b.weg);
+    J.boden.forEach((v, i) => { if (v && hinter(i * JZB_SP)) J.boden[i] = 0; });
+  } else if (B.art === "schippen") {
+    J.boden.forEach((v, i) => { if (v > .05 && hinter(i * JZB_SP)) { if (J.fx.length < 170 && Math.random() < v * .35) J.fx.push({ typ: "flocke", x: i * JZB_SP, y: J.h - v, r: jzbZ(.9, 2.3), vx: B.dir * jzbZ(50, 130), vy: -jzbZ(70, 150), a: 1 }); J.boden[i] = 0; } });
+  } else if (B.art === "giessen") {
+    if (!B.gegossen && (B.dir > 0 ? B.x >= B.ziel : B.x <= B.ziel)) { B.gegossen = true; B.halt = 4.5; }
+    if (B.halt > 0 && Math.random() < dt * 30) J.fx.push({ typ: "wasser", x: B.x + B.dir * 21 * k, y: J.h - 24 * k, vx: B.dir * jzbZ(18, 34), vy: jzbZ(10, 30), a: 1, blass: 1.2 });
+  }
+  if (!B.sagt && (B.art === "giessen" ? B.halt > 0 : (B.dir > 0 ? B.x > J.w * .38 : B.x < J.w * .62))) {
+    B.sagt = true; jzbSagen(jzbW(JZB_SPRUECHE[B.art === "giessen" ? (J.saison === "sommer" ? "giessenSommer" : "giessenFruehling") : B.art]));
+  }
+  if (J.blase) { const halb = (J.blase.offsetWidth || 160) / 2 + 8; J.blase.style.left = `${Math.max(halb, Math.min(J.w - halb, B.x))}px`; } // ganz im Kopf
+  if (B.x < -50 || B.x > J.w + 50) J.besuch = null;
+}
+function jzbTwinkeyMalen(c) {
+  const J = JZB, B = J.besuch; if (!B) return;
+  const k = J.k, y = J.h, geht = !(B.halt > 0), schritt = geht ? Math.sin(B.t * 10) : 0, x = B.x;
+  c.save(); c.lineCap = "round";
+  c.strokeStyle = "#2c3e50"; c.lineWidth = 2.6 * k; // Beine
+  for (const s of [-1, 1]) { c.beginPath(); c.moveTo(x + s * 2.5 * k, y - 11 * k); c.lineTo(x + s * 2.5 * k + schritt * s * 3.5 * k, y - 2 * k); c.stroke(); c.fillStyle = "#111"; c.beginPath(); c.ellipse(x + s * 2.5 * k + schritt * s * 3.5 * k + B.dir * 1.2 * k, y - 1.6 * k, 2.4 * k, 1.4 * k, 0, 0, 7); c.fill(); }
+  const hx = x + B.dir * 8 * k, hy = y - 17 * k; // Hand
+  if (B.art === "fegen" || B.art === "schippen") {
+    const zug = Math.sin(B.t * 9), tx = x + B.dir * (17 + zug * 4) * k, ty = y - (B.art === "schippen" ? 3 + Math.max(0, -zug) * 5 : 2) * k;
+    c.strokeStyle = "#8d5a2b"; c.lineWidth = 1.8 * k; c.beginPath(); c.moveTo(hx - B.dir * 3 * k, hy - 6 * k); c.lineTo(tx, ty); c.stroke();
+    c.save(); c.translate(tx, ty); c.scale(B.dir, 1);
+    if (B.art === "fegen") { c.fillStyle = "#d9a441"; c.beginPath(); c.moveTo(-2 * k, -3 * k); c.lineTo(3 * k, -3 * k); c.lineTo(6 * k, 2.4 * k); c.lineTo(-4 * k, 2.4 * k); c.closePath(); c.fill(); c.strokeStyle = "#a87a22"; c.lineWidth = .7; for (const b of [-2, 0, 2, 4]) { c.beginPath(); c.moveTo(b * .6 * k, -2.5 * k); c.lineTo(b * k, 2.2 * k); c.stroke(); } }
+    else { c.fillStyle = "#9aa3ab"; c.beginPath(); c.moveTo(-2 * k, -3 * k); c.lineTo(6 * k, -1 * k); c.lineTo(6 * k, 2.5 * k); c.lineTo(-2 * k, 2.5 * k); c.closePath(); c.fill(); c.fillStyle = "#fff"; c.fillRect(-1 * k, -1 * k, 6 * k, 2 * k); }
+    c.restore();
+  } else { // Gießkanne
+    const kipp = B.halt > 0 ? .55 : .1;
+    c.save(); c.translate(hx + B.dir * 3 * k, hy + 1 * k); c.scale(B.dir, 1); c.rotate(kipp);
+    c.fillStyle = "#2e8b57"; c.beginPath(); c.roundRect ? c.roundRect(-4 * k, -4 * k, 9 * k, 8 * k, 2 * k) : c.rect(-4 * k, -4 * k, 9 * k, 8 * k); c.fill();
+    c.strokeStyle = "#2e8b57"; c.lineWidth = 1.6 * k; c.beginPath(); c.moveTo(5 * k, 1 * k); c.lineTo(11 * k, -4 * k); c.stroke(); c.beginPath(); c.arc(0, -5 * k, 3 * k, Math.PI, 0); c.stroke();
+    c.restore();
+  }
+  c.font = `${26 * k}px ${JZB_EMOJI}`; c.textAlign = "center"; c.textBaseline = "bottom"; c.fillText("🧑‍🍳", x, y - 8 * k + (geht ? -Math.abs(schritt) * 1.2 * k : 0));
+  c.restore();
 }
 // Vorschau aus den Einstellungen: eine Jahreszeit sofort im Kopf zeigen (bis „Heute“ oder Neustart der App)
 function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, topf, ostern, igel

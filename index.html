@@ -1349,7 +1349,13 @@
   @keyframes jzFallen { 0% { transform: translate(0, 0) rotate(0); } 25% { transform: translate(14px, 30%) rotate(60deg); } 50% { transform: translate(-10px, 60%) rotate(140deg); } 75% { transform: translate(12px, 90%) rotate(220deg); } 100% { transform: translate(0, 125%) rotate(300deg); } }
   .hero .jz-schicht i { top: -24px; }
   .jz-buehne canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; } /* 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE */
-  .hero:has(> .jz-buehne) { isolation: isolate; } .hero > .jz-schicht.jz-buehne { z-index: -1; } /* hinter Text und Infofeld (Schneemann/Sonnenblume verdecken nichts) */
+  .hero:has(> .jz-buehne), .hero.jz-boden { isolation: isolate; }
+  /* 2.259.0 (Fund Hansi „Blätter bleiben nicht liegen“): eigener Bodenstreifen unter dem Infofeld; die Bühne endet 3 px über der runden Unterkante */
+  #v-start .hero.jz-boden:not(.eingerollt):not(.halb-eingerollt) { padding-bottom: 32px; } .hero > .jz-schicht.jz-buehne { bottom: 3px; }
+  .jz-sprech { position: absolute; z-index: 3; bottom: 50px; left: 50%; width: max-content; max-width: min(72%, 270px); padding: 5px 10px; border-radius: 12px; background: var(--karte); color: var(--text); border: 2px solid var(--linie);
+    font-size: .82rem; line-height: 1.3; text-shadow: none; pointer-events: none; opacity: 0; transform: translate(-50%, 6px); transition: opacity .3s, transform .3s; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
+  .jz-sprech.an { opacity: 1; transform: translate(-50%, 0); }
+  .jz-sprech::after { content: ""; position: absolute; left: 50%; bottom: -7px; width: 10px; height: 10px; margin-left: -5px; background: inherit; border-right: 2px solid var(--linie); border-bottom: 2px solid var(--linie); transform: rotate(45deg); } .hero > .jz-schicht.jz-buehne { z-index: -1; } /* hinter Text und Infofeld (Schneemann/Sonnenblume verdecken nichts) */
   .jz-advent i, .jz-winter i { animation-name: jzSchnee; } @keyframes jzSchnee { 0% { transform: translate(0, 0); } 50% { transform: translate(10px, 230px); } 100% { transform: translate(-6px, 470px); } }
   .jz-herbst i { animation-name: jzLaub; } @keyframes jzLaub { 0% { transform: translate(0, 0) rotate(0); } 30% { transform: translate(22px, 140px) rotate(90deg); } 60% { transform: translate(-16px, 290px) rotate(200deg); } 100% { transform: translate(10px, 470px) rotate(320deg); } }
   .jz-fruehling i { animation-name: jzLaub; opacity: .85; }
@@ -3718,7 +3724,7 @@
       <div class="schalter"><div><b>✨ Animierte Knöpfe</b><div class="hinweis">Kacheln zoomen kurz beim Antippen, Reiter und „＋ Neu“ leuchten auf – aus: alles ruhig</div></div><input type="checkbox" id="setAnimiert" onchange="einstellung('animiert', this.checked)"></div> <!-- 2.24.1 (Wunsch Hansi) -->
       <div class="schalter"><div><b>🍂 Jahreszeiten im Kopf</b><div class="hinweis">Herbstlaub bleibt unten liegen, bis ein Windstoß es wegweht – Schnee ebenso, jedes 3. Mal wird ein lachender Schneemann daraus. Im Frühling wachsen Gras und Blumen, im Sommer eine Sonnenblume. Feuerwerk zu Silvester.</div></div><input type="checkbox" id="setJahreszeit" onchange="jahreszeitUmschalten(this.checked)"></div> <!-- 2.172.0 KC-CLUB-EFFEKTE-2, 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE -->
       <div class="schalter" style="display:block"><div class="hinweis">Vorschau im Kopf der Startseite:</div><div class="reg-effekt-wahl"><button type="button" class="chip" onclick="jahreszeitVorschau('herbst')">🍂 Herbst</button><button type="button" class="chip" onclick="jahreszeitVorschau('winter')">⛄ Winter</button><button type="button" class="chip" onclick="jahreszeitVorschau('fruehling')">🌱 Frühling</button><button type="button" class="chip" onclick="jahreszeitVorschau('sommer')">🌻 Sommer</button><button type="button" class="chip" onclick="jahreszeitVorschau('heute')">📅 Heute</button></div>
-        <div class="hinweis" style="margin-top:6px">Extras: Nikolaus-Stiefel am 6.12., Regen mit Pfützen (nur wenn es wirklich regnet), Kochtopf am Treffen-Tag, Ostereier zum Suchen, Igel im Herbst</div><div class="reg-effekt-wahl"><button type="button" class="chip" onclick="jahreszeitVorschau('advent', 'nikolaus')">🥾 Nikolaus</button><button type="button" class="chip" onclick="jahreszeitVorschau('', 'regen')">☔ Regen</button><button type="button" class="chip" onclick="jahreszeitVorschau('', 'topf')">🍲 Treffen</button><button type="button" class="chip" onclick="jahreszeitVorschau('fruehling', 'ostern')">🥚 Ostern</button><button type="button" class="chip" onclick="jahreszeitVorschau('herbst', 'igel')">🦔 Igel</button></div></div>
+        <div class="hinweis" style="margin-top:6px">Extras: Nikolaus-Stiefel am 6.12., Regen mit Pfützen (nur wenn es wirklich regnet), Kochtopf am Treffen-Tag, Ostereier zum Suchen, Igel im Herbst</div><div class="reg-effekt-wahl"><button type="button" class="chip" onclick="jahreszeitVorschau('advent', 'nikolaus')">🥾 Nikolaus</button><button type="button" class="chip" onclick="jahreszeitVorschau('', 'regen')">☔ Regen</button><button type="button" class="chip" onclick="jahreszeitVorschau('', 'topf')">🍲 Treffen</button><button type="button" class="chip" onclick="jahreszeitVorschau('fruehling', 'ostern')">🥚 Ostern</button><button type="button" class="chip" onclick="jahreszeitVorschau('herbst', 'igel')">🦔 Igel</button><button type="button" class="chip" onclick="jahreszeitVorschau('herbst', 'twinkey')">🧹 Twinkey fegt</button></div></div>
       <!-- KC-CLUB-REGISTER-EFFEKTE (2.169.0, Wunsch Hansi) -->
       <div class="schalter" style="display:block"><div><b>🎬 Effekt beim Register-Wechsel</b><div class="hinweis">Wenn du zwischen Club, Meins und Technik wechselst, erscheinen die Kacheln mit Effekt. Gilt für dieses Gerät.</div></div>
         <div class="reg-effekt-wahl" id="regEffektWahl"></div><button type="button" class="knopf klein" onclick="regEffektVorschau()">▶ Vorschau auf der Startseite</button></div>
@@ -4108,6 +4114,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.258.0" data-v="2.258.0"></script>
+<script src="app.js?v=2.259.0" data-v="2.259.0"></script>
 </body>
 </html>

@@ -1,11 +1,18 @@
 {
-  "version": "2.258.0",
+  "version": "2.259.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🎨 Neues Erklär-Video „Oberfläche nach Wunsch“: Kopf einrollen, Kacheln verschieben, verbergen und umdrehen, Register anordnen, wischen"
+    "🧹 Jahreszeiten im Kopf: Laub und Schnee liegen jetzt sichtbar auf eigenem Boden – mal kommt der Wind, mal Twinkey mit Besen oder Schaufel; im Frühling und Sommer gießt er die Blumen"
   ],
   "verlauf": [
+    {
+      "version": "2.259.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🧹 Jahreszeiten im Kopf: Laub und Schnee liegen jetzt sichtbar auf eigenem Boden – mal kommt der Wind, mal Twinkey mit Besen oder Schaufel; im Frühling und Sommer gießt er die Blumen"
+      ]
+    },
     {
       "version": "2.258.0",
       "datum": "2026-10-11",
