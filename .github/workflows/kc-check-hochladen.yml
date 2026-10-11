@@ -1,0 +1,52 @@
+# KC-CHECK-HOCHLADEN (11.10.2026, für KC-CLUB-FRA-SICHERUNG): lädt die Edge Function „kc-system-check“ aus dem Paket
+# Sire65/KC-System-Check zu Supabase hoch. Das KC-Check-Paket hat keinen eigenen Hochlade-Ablauf; der vorhandene Schlüssel
+# hier (SUPABASE_ACCESS_TOKEN, nur Edge Functions dieses Projekts) wird mitbenutzt. Ausgelöst wird es, wenn sich in
+# tools/kc-check-stand.txt der gewünschte KC-Check-Stand (Commit) ändert – oder per Hand („Run workflow“).
+# JWT-Prüfung bleibt an (wie bisher bei kc-system-check). Danach: Prüfung, ob die neue Fassung antwortet.
+name: KC-Check hochladen
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/kc-check-stand.txt"
+  workflow_dispatch:
+concurrency:
+  group: kc-check-hochladen
+  cancel-in-progress: false
+jobs:
+  hochladen:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJEKT: ptblnpiroqftcvlsrhac
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gewünschten KC-Check-Stand lesen
+        id: stand
+        run: echo "ref=$(grep -oE '^[0-9a-f]{7,40}' tools/kc-check-stand.txt | head -1)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: Sire65/KC-System-Check
+          ref: ${{ steps.stand.outputs.ref }}
+          path: ksc
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: KC-Check-Tests
+        working-directory: ksc
+        run: for t in tests/*.test.js; do node --test "$t"; done
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - name: Edge Function kc-system-check hochladen
+        working-directory: ksc
+        run: supabase functions deploy kc-system-check --project-ref "$PROJEKT" --use-api
+      - name: Prüfen, ob die neue Fassung antwortet (mit Frankfurt-Sicherung)
+        run: |
+          for i in 1 2 3 4 5 6; do
+            antwort=$(curl -s -m 60 "https://$PROJEKT.supabase.co/functions/v1/kc-system-check?systems=backup_neon_ffm&record=0" -H "apikey: sb_publishable_SqXIeGN-clcZ4gjmpLdSww_4DLfyy24" || true)
+            echo "$antwort" | head -c 600; echo
+            if echo "$antwort" | grep -q '"backup_neon_ffm"'; then echo "KC-Check läuft mit der neuen Prüfung."; exit 0; fi
+            sleep 15
+          done
+          echo "Neue Prüfung nicht gefunden"; exit 1
