@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.233.0 – 2026-10-11 – Handbücher und Schulungsunterlagen in der Archiv-Kopie
+KC-CLUB-ARCHIV-KOPIE Stufe 2: Auch die PDF-Handbücher der Club-App (dokumente/) und alle PDFs aus dem Kasse-Paket (Kassen-Training Karteikarten/Übungsliste, Hüttenblatt, Scanner-Testblatt) kommen nachts in den Neon-Dateispeicher Frankfurt; neue PDFs kommen von selbst mit. Prüfung mit der Git-Prüfsumme. Persönliche Ordner werden weiter mitgesichert (Entscheidung Hansi). Admin-Zentrale zeigt die Aufteilung.
+
 ## 2.232.0 – 2026-10-11 – Archiv-Kopie in Neon Frankfurt
 KC-CLUB-ARCHIV-KOPIE: Jede Nacht (2–5 Uhr) legt der Server von neuen und geänderten Archiv-Dateien eine zweite Kopie im Neon-Dateispeicher in Frankfurt ab (eigenes kostenloses Projekt „KC Archiv Kopie“, 5 GB, privat; Zugang nur im Vault). Prüfsumme wird verglichen; gelöschte Dokumente verschwinden 30 Tage nach dem Löschen auch aus der Kopie. Admin-Zentrale: Lampe „Archiv-Kopie“ (grau bei unbekannt oder älter als 26 Std.) und Füllstand-Balken.
 

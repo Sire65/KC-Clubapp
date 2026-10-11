@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.232.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.233.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11452,6 +11452,7 @@ function adBlatt(id) {
         ${adZeile(adZustand("b2")[0], "B2-Backup (Backup-PC)", adZustand("b2")[1])}
         ${sf ? adZeile(adAlt() ? "grau" : sf.archiv[0], "Archiv-Kopie (Neon Frankfurt)", sf.archiv[1]) : ""}
         ${r?.spiegel?.archiv ? adminBalken("🗂️ Archiv-Kopie", r.spiegel.archiv.bytes, r.spiegel.archiv.grenze, 80, 95, r.spiegel.archiv.zeit, ARCHIV_KOPIE_ALT_STD) : ""}
+        ${r?.spiegel?.archiv?.teile ? `<p class="hinweis" style="margin:0">Archiv-Kopie in Frankfurt: Archiv ${r.spiegel.archiv.teile.archiv?.dateien ?? 0} Dateien (${mb(r.spiegel.archiv.teile.archiv?.bytes ?? 0)}) · Handbücher &amp; Schulungsunterlagen ${r.spiegel.archiv.teile.dokumente?.dateien ?? 0} PDFs (${mb(r.spiegel.archiv.teile.dokumente?.bytes ?? 0)}). Läuft jede Nacht von 2 bis 5 Uhr.</p>` : ""}
         ${r?.spiegel?.groesse?.bytes ? adminBalken("🪞 Neon-Speicher", r.spiegel.groesse.bytes, r.spiegel.groesse.grenze || 1024 * 1048576, r.datenbank.warnPct, r.datenbank.kritPct, r.spiegel.groesse.zeit) : ""}
         <p class="hinweis" style="margin:0">Der Spiegel läuft alle 6 Stunden von selbst; fällt der Anstoß aus, springt stündlich der Spiegel-Wächter (GitHub) ein.</p>
         <div class="knoepfe">${adKnopf("🪞 Jetzt spiegeln – nur im Notfall", "adminSpiegeln()")}${adKnopf("📋 Alle Einzelheiten", "adminBlatt()")}</div>${adLinks("neon")}${adLinks("github")}`;

@@ -45,7 +45,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.232.0";
+const SERVER_VERSION = "2.233.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2005,7 +2005,7 @@ async function adminSpiegel() {
     abdeckung: abdeckung ? { tabellen: abdeckung.tabellen, ohne: abdeckung.ohne_regel, liste: abdeckung.liste } : null,
     watchdog: wd ? { zeit: wd.started_at, status: wd.status, text: wd.message } : null,
     groesse: ng ? { bytes: Number(ng.metrics?.bytes) || null, zeit: ng.started_at, grenze: NEON_GRENZE } : null,
-    archiv: ak ? { zeit: ak.zeit, status: ak.status, text: ak.text, dateien: Number(ak.metrics?.dateien) || 0, bytes: Number(ak.metrics?.bytes) || 0, offen: Number(ak.metrics?.offen) || 0, grenze: ARCHIV_KOPIE_GRENZE } : null,
+    archiv: ak ? { zeit: ak.zeit, status: ak.status, text: ak.text, dateien: Number(ak.metrics?.dateien) || 0, bytes: Number(ak.metrics?.bytes) || 0, offen: Number(ak.metrics?.offen) || 0, grenze: ARCHIV_KOPIE_GRENZE, teile: ak.metrics?.archiv ? { archiv: ak.metrics.archiv, dokumente: ak.metrics.dokumente } : null } : null,
     pause: pause && /paus/i.test(pause.action) ? { zeit: pause.happened_at, text: pause.detail } : null,
   };
 } // kostenloser Supabase-Tarif (falls der System-Check keinen Wert liefert)
@@ -2482,6 +2482,50 @@ async function archivKopieStand(status: "ok" | "warnung" | "fehler", text: strin
   const { error } = await db.from("kc_club_archiv_kopie_stand").upsert({ id: 1, zeit: jetzt(), status, text: txt(text, 300), metrics });
   if (error) console.error("archiv kopie stand", error.message);
 }
+// KC-CLUB-ARCHIV-KOPIE Stufe 2 (2.233.0, Wunsch Hansi): PDF-Handbücher (Club-App „dokumente/“) und Schulungsunterlagen der Kasse.
+// Quellen-Register: neue PDFs in diesen Paketen kommen von selbst mit. Liste über die GitHub-Schnittstelle (öffentlich, ohne Schlüssel),
+// Dateien über raw.githubusercontent.com; Prüfung mit der Git-Prüfsumme (SHA-1 „blob <Länge>\0…“). Aus GitHub entfernte Dateien bleiben in der Kopie.
+const DOKUMENT_QUELLEN: { paket: string; muster: RegExp }[] = [
+  { paket: "Sire65/KC-Clubapp", muster: /^dokumente\/[^/]+\.pdf$/i },
+  { paket: "Sire65/Kasse", muster: /\.pdf$/i },
+];
+const DOKUMENT_KOPIE_MAX_BYTES = 40 * 1024 * 1024;
+async function gitBlobSha(inhalt: Uint8Array) {
+  const kopf = new TextEncoder().encode(`blob ${inhalt.length}\0`), alles = new Uint8Array(kopf.length + inhalt.length);
+  alles.set(kopf); alles.set(inhalt, kopf.length);
+  return [...new Uint8Array(await crypto.subtle.digest("SHA-1", alles))].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+async function dokumenteKopieLauf(s3: AwsClient, url: (k: string) => string, fehler: string[]) {
+  const { data: kopien } = await db.from("kc_club_dokument_kopie").select("quelle,git_sha");
+  const bekannt = new Map((kopien ?? []).map((k: any) => [k.quelle, k.git_sha]));
+  const offen: { paket: string; pfad: string; sha: string; groesse: number }[] = [];
+  for (const q of DOKUMENT_QUELLEN) {
+    try {
+      const r = await fetch(`https://api.github.com/repos/${q.paket}/git/trees/HEAD?recursive=1`, { headers: { accept: "application/vnd.github+json", "user-agent": "kc-club-archiv-kopie" }, signal: AbortSignal.timeout(15000) });
+      if (!r.ok) throw new Error(`GitHub-Liste ${q.paket.split("/")[1]}: ${r.status}`);
+      const j = await r.json();
+      for (const t of j?.tree ?? []) if (t.type === "blob" && q.muster.test(String(t.path)) && bekannt.get(`${q.paket}:${t.path}`) !== t.sha) offen.push({ paket: q.paket, pfad: String(t.path), sha: String(t.sha), groesse: Number(t.size) || 0 });
+    } catch (e) { fehler.push(txt(String((e as any)?.message || e), 80)); }
+  }
+  let kopiert = 0, bytes = 0;
+  for (const d of offen) {
+    if (bytes + d.groesse > DOKUMENT_KOPIE_MAX_BYTES && kopiert > 0) break; // Rest beim nächsten Lauf
+    try {
+      const r = await fetch(`https://raw.githubusercontent.com/${d.paket}/HEAD/${d.pfad.split("/").map(encodeURIComponent).join("/")}`, { signal: AbortSignal.timeout(60000) });
+      if (!r.ok) throw new Error(`GitHub-Datei ${r.status}`);
+      const inhalt = new Uint8Array(await r.arrayBuffer());
+      if ((await gitBlobSha(inhalt)) !== d.sha) throw new Error("Prüfsumme weicht ab");
+      const schluessel = `dokumente/${d.paket}/${d.pfad}`;
+      const p = await s3.fetch(url(schluessel), { method: "PUT", body: inhalt, headers: { "content-type": "application/pdf", "x-amz-meta-git-sha": d.sha } });
+      if (!p.ok) throw new Error(`Neon antwortet ${p.status}`);
+      await p.body?.cancel();
+      const { error } = await db.from("kc_club_dokument_kopie").upsert({ quelle: `${d.paket}:${d.pfad}`, git_sha: d.sha, schluessel, groesse: inhalt.length, kopiert_am: jetzt() });
+      if (error) throw new Error("Verzeichnis nicht gespeichert");
+      kopiert++; bytes += inhalt.length;
+    } catch (e) { fehler.push(txt(String((e as any)?.message || e), 80)); }
+  }
+  return { kopiert, offen: Math.max(0, offen.length - kopiert) };
+}
 async function archivKopieLauf(erzwingen = false) {
   if (!erzwingen) { const h = berlinStunde(new Date()); if (h < 2 || h >= 5) return null; }
   const { data: roh } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_archiv_kopie" });
@@ -2534,9 +2578,13 @@ async function archivKopieLauf(erzwingen = false) {
       entfernt++;
     } catch (e) { fehler.push(txt(String((e as any)?.message || e), 80)); }
   }
-  const { data: alle } = await db.from("kc_club_archiv_kopie").select("groesse");
-  const metrics = { kopiert, entfernt, offen: Math.max(0, offen.length - kopiert), dateien: (alle ?? []).length,
-    bytes: (alle ?? []).reduce((s: number, x: any) => s + (Number(x.groesse) || 0), 0), fehler: fehler.length };
+  // 3) Stufe 2 (2.233.0): PDF-Handbücher und Schulungsunterlagen aus GitHub
+  const dk = await dokumenteKopieLauf(s3, url, fehler);
+  const [{ data: alle }, { data: alleDok }] = await Promise.all([db.from("kc_club_archiv_kopie").select("groesse"), db.from("kc_club_dokument_kopie").select("groesse")]);
+  const summe = (l: any[] | null) => (l ?? []).reduce((s: number, x: any) => s + (Number(x.groesse) || 0), 0);
+  const metrics = { kopiert: kopiert + dk.kopiert, entfernt, offen: Math.max(0, offen.length - kopiert) + dk.offen,
+    dateien: (alle ?? []).length + (alleDok ?? []).length, bytes: summe(alle) + summe(alleDok), fehler: fehler.length,
+    archiv: { dateien: (alle ?? []).length, bytes: summe(alle) }, dokumente: { dateien: (alleDok ?? []).length, bytes: summe(alleDok) } };
   const status = fehler.length && !kopiert && !entfernt ? "fehler" : fehler.length ? "warnung" : "ok";
   await archivKopieStand(status, fehler.length ? `${fehler.length} Fehler: ${[...new Set(fehler)].join(", ")}` : "in Ordnung", metrics);
   return { ok: status !== "fehler", ...metrics };

@@ -8109,3 +8109,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/if \(a\.sha256 && a\.sha256 !== hash\) throw new Error\("Prüfsumme weicht ab"\);/.test(server) && /ARCHIV_KOPIE_NACHLAUF_TAGE = 30/.test(server), "Prüfsumme, gelöschte erst nach 30 Tagen weg");
   assert.ok(/const archiv = !ak \? \["grau", "noch nie gelaufen"\] : akStd > ARCHIV_KOPIE_ALT_STD \? \["grau"/.test(html) && /"Archiv-Kopie", sf2\.archiv\[1\]/.test(html), "Lampe: unbekannt/alt nie als OK");
 }
+
+// 2.233.0 KC-CLUB-ARCHIV-KOPIE Stufe 2 (Wunsch Hansi): PDF-Handbücher und Schulungsunterlagen der Kasse ebenfalls nach Frankfurt
+{
+  const m = lies("supabase/migrations/20261011_kc_club_v2233_dokumente_kopie.sql");
+  assert.ok(/revoke all on public\.kc_club_dokument_kopie from anon, authenticated;/.test(m), "nur Server-Zugriff");
+  assert.ok(/\{ paket: "Sire65\/KC-Clubapp", muster: \/\^dokumente\\\/\[\^\/\]\+\\\.pdf\$\/i \}/.test(server) && /\{ paket: "Sire65\/Kasse", muster: \/\\\.pdf\$\/i \}/.test(server), "Quellen-Register: Handbücher + Kasse-PDFs");
+  assert.ok(/if \(\(await gitBlobSha\(inhalt\)\) !== d\.sha\) throw new Error\("Prüfsumme weicht ab"\);/.test(server) && /const dk = await dokumenteKopieLauf\(s3, url, fehler\);/.test(server), "Git-Prüfsumme, im Nachtlauf");
+}
