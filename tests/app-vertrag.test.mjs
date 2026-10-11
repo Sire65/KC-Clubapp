@@ -4452,7 +4452,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const k = html.slice(html.indexOf("function mgKachelnHtml(liste)"), html.indexOf("// KC-CLUB-MG-GRUPPEN (1.34.0"));
   assert.ok(/\$\{mgAnrufKnoepfe\(m\)\}<\/span>/.test(k), "Kachel nutzt denselben Anruf-Baustein wie die Liste");
   assert.ok(/const on = (!!m\.online|mgOn\(m\))[\s\S]{0,400}mg-aus/.test(html.slice(html.indexOf("function mgAnrufKnoepfe"))), "aktiv nur bei online, sonst blass");
-  assert.ok(/\$\("raster"\)\.classList\.toggle\("klein3", reg !== "admin" && !einfach\(\) && kachelKlein\(\)\)/.test(html), "klein nur in der erweiterten Ansicht");
+  assert.ok(/\$\("raster"\)\.classList\.toggle\("klein3", reg !== "admin" && !einfach\(\) && (kachelKlein\(\)|kStufe !== "normal")\)/.test(html), "klein nur in der erweiterten Ansicht");
   assert.ok(/#raster\.klein3, #raster\.ad-raster \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/.test(html), "gleiche Regeln wie das Admin-Register (kein zweites Raster)");
   assert.ok(/id="kachelGroesseWahl"/.test(html) && /localStorage\.setItem\("kc_club_kachelgroesse", g\)/.test(html) && /try \{ const g = localStorage\.getItem\("kc_club_kachelgroesse"\); return g === "klein" \|\| g === "mini" \? g : "normal"; \} catch \{ return "normal"; \}/.test(html), "Einstellung je Gerät, sicher ohne Speicher (2.54.0: + sehr klein)");
 }
@@ -5267,7 +5267,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/<button data-g="mini" onclick="kachelGroesse\('mini'\)">▪ Sehr klein – 4 nebeneinander<\/button>/.test(html), "Auswahl in der Darstellung");
   assert.ok(/#raster\.klein4 \{ grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/.test(html) && /#raster\.klein4 \.kachel small \{ display: none; \}/.test(html), "4 Spalten, ohne Untertitel");
-  assert.ok(/classList\.toggle\("klein4", reg !== "admin" && !einfach\(\) && kachelStufe\(\) === "mini"\)/.test(html), "nur erweiterte Ansicht, nicht im Admin-Register");
+  assert.ok(/classList\.toggle\("klein4", reg !== "admin" && !einfach\(\) && (kachelStufe\(\)|kStufe) === "mini"\)/.test(html), "nur erweiterte Ansicht, nicht im Admin-Register");
 }
 // 2.54.0 KC-CLUB-KACHEL-RUECKSEITE + KC-CLUB-REISSWOLF (Wunsch Hansi): Doppeltipp dreht die Kachel (Schnellaktionen aus vorhandenen Funktionen), Löschen mit Aktenvernichter
 {
