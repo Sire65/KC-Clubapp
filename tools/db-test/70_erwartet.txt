@@ -4,4 +4,4 @@ dienstplan=1
 inhalt=0
 fremd=null
 manager_kanal=richtig
-getrennt=true
+getrennt=t

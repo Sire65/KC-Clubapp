@@ -16,9 +16,9 @@ begin
   select count(*) into v_geld from realtime.messages
     where inserted_at >= t0 - interval '1 minute' and topic in (k_mgr, k_mb) and event = 'neu' and payload->>'art' = 'geld';
   -- 2. dp2: zwei Abgleich-Zeilen in EINER Anweisung → genau 1 Signal "abgleich"
-  insert into public.kc_dp_sync_operations (seq, operation_id, org_id, project_id, entity, entity_id, operation, remote_version, envelope)
-    values (-900001, 'ZZTEST-RT-1', 'KC_WERNE', 'ZZTEST', 'test', 'zz1', 'upsert', 1, '{}'::jsonb),
-           (-900002, 'ZZTEST-RT-2', 'KC_WERNE', 'ZZTEST', 'test', 'zz2', 'upsert', 1, '{}'::jsonb);
+  insert into public.kc_dp_sync_operations (operation_id, org_id, project_id, entity, entity_id, operation, remote_version, envelope, actor_user_id)
+    values ('ZZTEST-RT-1', 'KC_WERNE', 'ZZTEST', 'test', 'zz1', 'upsert', 1, '{}'::jsonb, '00000000-0000-4000-8000-000000000001'),
+           ('ZZTEST-RT-2', 'KC_WERNE', 'ZZTEST', 'test', 'zz2', 'upsert', 1, '{}'::jsonb, '00000000-0000-4000-8000-000000000001');
   select count(*) into v_dp from realtime.messages
     where inserted_at >= t0 - interval '1 minute' and topic = k_dp and payload->>'art' = 'abgleich';
   -- 3. Sollplan veröffentlicht → 1 Signal "dienstplan" an den Manager
