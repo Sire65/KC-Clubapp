@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.270.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.271.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1770,8 +1770,8 @@ const RG_OBERFLAECHE = [
 // geöffnete Fenster gehen am Ende wieder zu, das Register wird zurückgestellt.
 function rgReg(r) { if (!einfach() && reg !== r) { const alt = reg; register(r); RG.zurueck.push(() => { if (reg !== alt) register(alt); }); } }
 function rgBlatt(id, oeffnen) { // dynamisches Fenster (blattAuf) für das Video öffnen – am Ende wieder zu
-  for (const x of ["mdBlatt", "mdatBlatt", "aeBlatt", "rzBlatt", "smBlatt"]) if (x !== id) $(x)?.remove();
-  if (!$(id)) { oeffnen(); RG.zurueck.push(() => $(id)?.remove()); }
+  for (const x of ["mdBlatt", "mdatBlatt", "aeBlatt", "rzBlatt", "smBlatt", "fiBlatt", "studioBlatt"]) if (x !== id && $(x)) fensterZu($(x)); // 2.271.0: fensterZu – Fenster mit eigenem Schließen
+  if (!$(id)) { oeffnen(); RG.zurueck.push(() => { if ($(id)) fensterZu($(id)); }); }
   $(id)?.classList.add("rg-zeigen");
 }
 function rgStatus(wahl) { // festes Fenster „Mein Status“ zeigen, auf Wunsch mit Beispiel – nie speichern
@@ -1883,6 +1883,53 @@ const RG_FEEDBACK = [
   { v: "feedback", vor: () => rgFeedback(3), sel: [() => $("fbAnonym")?.closest("label") || $("fbAnonym"), "#feedbackInhalt"], t: "🕶️ Auch ohne Namen",
     x: "Möchtest du lieber unerkannt bleiben, hakst du ohne Namen an. Mit Absenden ist es bei Hansi – und du kannst deine Antworten später jederzeit ändern. Hier schicke ich nichts.", live: async (L) => { await L.warte(500); rgFeedback(3); L.ziel(); } },
   { v: "feedback", t: "✅ Danke!", x: "Jede Rückmeldung hilft. Was schon umgesetzt wurde, siehst du auch hier im Feedback." },
+];
+// KC-CLUB-ERKLAERVIDEOS-7 (2.271.0, Wunsch Hansi „mach die restlichen Videos auch noch“): Aktionen & Reisen, Fit bleiben, Studio, Technik
+// (Update, Sicherheits-Check, Test an mich, Programme). Nur vorgeführt: keine Anmeldung, kein Training gestartet, kein Live-Zeigen,
+// keine Test-Nachricht; Fenster am Ende zu (mit ihrem eigenen Schließen), Register zurück.
+const RG_AKTIONEN = [
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgReg("verein"); }, sel: ['#raster .kachel[data-id="aktionen"]'], mussSel: true, t: "🧳 Aktionen & Reisen",
+    x: "Ausflüge und Reisen des Clubs findest du im Register Club unter Aktionen.", live: async (L) => { await L.tipp('#raster .kachel[data-id="aktionen"]'); } },
+  { v: "aktionen", sel: ["#aktionListe"], t: "🗺️ Was steht an?",
+    x: "Hier stehen die kommenden Aktionen – mit Datum und wie viele Tage es noch sind. Ist eine vorbei, findest du sie mit ihren Fotos im Archiv." },
+  { v: "aktionen", sel: ["#aktionListe"], t: "👆 Alle Einzelheiten",
+    x: "Tippst du eine Aktion an, siehst du alles: den Reiseverlauf, wer dabei ist, den Preis pro Person und den Veranstalter mit Telefonnummer. Dazu deine eigene Reise-Checkliste zum Abhaken und die Fotos." },
+  { v: "aktionen", t: "✅ Fertig", x: "So bist du bei jedem Ausflug gut vorbereitet. Fragen zur Reise? Schreib einfach der Clubleitung." },
+];
+const RG_FIT = [
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgReg("mein"); }, sel: ['#raster .kachel[data-id="fitness"]'], mussSel: true, t: "🏋️ Fit bleiben",
+    x: "Ein paar Minuten Bewegung am Tag tun gut. Unter Meins, Fit bleiben, macht Twinkey dir die Übungen vor.", live: async (L) => { await L.tipp('#raster .kachel[data-id="fitness"]'); } },
+  { v: "start", vor: () => rgBlatt("fiBlatt", () => fiStart("training")), sel: [".fi-hinweis", "#fiInhalt"], t: "🩺 Bitte kurz lesen",
+    x: "Ganz wichtig: Mach nur so viel, wie es dir angenehm ist. Bei Schmerzen, Schwindel oder Atemnot sofort aufhören. Erst wenn du den Hinweis mit Verstanden bestätigt hast, geht es los." },
+  { v: "start", vor: () => rgBlatt("fiBlatt", () => fiStart("training")), sel: ["#fiInhalt .ps-schritt", "#fiInhalt"], t: "⚙️ Stufe und Dauer",
+    x: "Wähle eine Stufe – Sanft, ganz im Sitzen, Mittel oder Fordernd – und wie lange du trainieren möchtest. Twinkey sagt die Übungen auf Wunsch an." },
+  { v: "start", vor: () => rgBlatt("fiBlatt", () => fiStart("training")), sel: [".fi-los", "#fiInhalt"], t: "▶️ Los geht's",
+    x: "Mit Los geht's turnt Twinkey dir jede Übung vor – schau hin und mach in deinem Tempo mit. Hier starte ich kein Training." },
+  { v: "start", vor: () => rgBlatt("fiBlatt", () => fiStart("training")), sel: ["#fiTabs"], t: "📊 Auswertung",
+    x: "Unter Auswertung siehst du, wie oft du schon trainiert hast. Das sieht nur du.", live: async (L) => { await L.tipp(() => [...document.querySelectorAll("#fiTabs .chip")].find((c) => /Auswertung/.test(c.textContent))); } },
+];
+const RG_STUDIO = [
+  { v: "start", nur: () => !einfach() && !ICH?.admin, vor: () => { rgKopf("ganz"); rgReg("mein"); }, sel: ['#raster .kachel[data-id="studio"]'], mussSel: true, t: "🎬 Das Studio",
+    x: "Mit dem Studio zeigst du einem anderen Mitglied live deine App – zum Beispiel, um etwas zu erklären. Du findest es unter Meins.", live: async (L) => { await L.tipp('#raster .kachel[data-id="studio"]'); } },
+  { v: "start", vor: () => rgBlatt("studioBlatt", () => stOeffnen()), sel: ["#stdInhalt", "#studioBlatt .blatt-innen"], t: "👥 Mitglied wählen",
+    x: "Zuerst suchst du das Mitglied aus, dem du etwas zeigen möchtest. Dann tippst du auf Live zeigen – dein Gegenüber muss zustimmen." },
+  { v: "start", vor: () => rgBlatt("studioBlatt", () => stOeffnen()), sel: ["#studioBlatt .blatt-innen"], t: "🙈 Sicher zeigen",
+    x: "Dein Gegenüber sieht dann live, was du in der Club-App machst. Chats, Nachrichten und das Büro sind dabei automatisch verdeckt. Mit dem Vorhang verdeckst du jederzeit kurz alles. Nach höchstens 30 Minuten ist Schluss – und beide können vorher beenden. Hier starte ich nichts." },
+];
+const RG_TECHNIK = [
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgReg("programme"); }, sel: ['#raster .kachel[data-id="update"]'], mussSel: true, t: "🔄 Update prüfen",
+    x: "Im Register Technik steht, welche Version du hast. Neue Versionen holt die App beim Öffnen von selbst. Steht hier Neu, tippst du einfach darauf.", live: async (L) => { await L.tipp('#raster .kachel[data-id="update"]'); } },
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#kopfVersion"], puls: ["#kopfVersion"], t: "🔢 Version oben",
+    x: "Auch oben unter der Kochmütze steht die Versionsnummer. Antippen prüft ebenfalls, ob es etwas Neues gibt." },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgReg("programme"); }, sel: ['#raster .kachel[data-id="sicherheit"]'], mussSel: true, t: "🛡️ Sicherheits-Check",
+    x: "Der Sicherheits-Check prüft, ob deine Verbindung sicher und schnell ist.", live: async (L) => { await L.tipp('#raster .kachel[data-id="sicherheit"]'); } },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgReg("programme"); }, sel: ['#raster .kachel[data-id="sicherheit"]'], mussSel: true, t: "✅ Alles sicher?",
+    x: "Tippst du darauf, prüft die App Schritt für Schritt: verschlüsselte Verbindung, dein Zugang, der Server – und wie schnell alles antwortet. Grün heißt: alles in Ordnung. Hier starte ich keine Prüfung." },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgReg("mein"); }, sel: ['#raster .kachel[data-id="test"]'], mussSel: true, t: "🧪 Test an mich",
+    x: "Mit Test an mich schickst du dir selbst eine Probe-Nachricht. So siehst du, ob Push und E-Mail bei dir ankommen. Hier schicke ich nichts." },
+  { v: "programme", sel: ["#progRaster"], t: "💻 Freigegebene Programme",
+    x: "Unter Freigegebene Programme stehen weitere Programme des Clubs – zum Beispiel die Kassen-Schulung. Antippen öffnet sie in einem neuen Fenster." },
+  { v: "programme", t: "✅ Fertig", x: "Das war die Technik. Läuft mal etwas nicht rund, hilft oft schon: App ganz schließen und neu öffnen – oder frag Twinkey." },
 ];
 // KC-CLUB-ERKLAERVIDEOS-EFFEKTE (2.265.0, Wunsch Hansi „Erklär-Video mit den Spezial-Effekten: Kacheln einschweben, Herbst mit Igel, Laub, Besen,
 // Schnee, Frühling und Sommer – kurz zeigen, wo und wie man sie einstellt; dazu die Wetter-Kacheln: antippen und lange festhalten. Darauf
@@ -2012,6 +2059,10 @@ const RUNDGAENGE = [
   { id: "rezepte", stand: "1", sym: "📖", t: "Rezeptbuch", u: "Suchen, Portionen umrechnen, Einkaufsliste, eigenes Rezept (ca. 1 Min.)", st: () => RG_REZEPTE, nur: () => frei("rezepte") }, // 2.270.0 KC-CLUB-ERKLAERVIDEOS-6
   { id: "schulung", stand: "1", sym: "🎓", t: "Meine Schulung", u: "Termin mit Hansi aussuchen, Zusammenfassung (ca. 1 Min.)", st: () => RG_SCHULUNG },
   { id: "feedback", stand: "1", sym: "💭", t: "Feedback geben", u: "Antippen, Ideen schreiben, auch ohne Namen (ca. 1 Min.)", st: () => RG_FEEDBACK },
+  { id: "aktionen", stand: "1", sym: "🧳", t: "Aktionen & Reisen", u: "Ausflüge, Reiseverlauf, Preis, Checkliste (ca. 1 Min.)", st: () => RG_AKTIONEN }, // 2.271.0 KC-CLUB-ERKLAERVIDEOS-7
+  { id: "fit", stand: "1", sym: "🏋️", t: "Fit bleiben", u: "Übungen mit Twinkey – Stufe, Dauer, Auswertung (ca. 1 Min.)", st: () => RG_FIT, nur: () => frei("fitness") },
+  { id: "studio", stand: "1", sym: "🎬", t: "Studio: live zeigen", u: "Einem Mitglied die eigene App live zeigen (ca. 1 Min.)", st: () => RG_STUDIO, nur: () => !!studioStufe() },
+  { id: "technik", stand: "1", sym: "🔧", t: "Technik: Update & Sicherheit", u: "Version, Sicherheits-Check, Test an mich, Programme (ca. 2 Min.)", st: () => RG_TECHNIK },
   { id: "effekte", stand: "1", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 3 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
   { id: "figur", stand: "1", sym: "🧑‍🍳", t: "Koch-Figur als Bild aussuchen", u: "Mein Bild: Figur antippen, übernehmen (ca. 1 Min.)", st: () => RG_FIGUR, nur: () => frei("avatar") }, // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR
   { id: "figurbau", stand: "1", sym: "🧩", t: "Eigene Figur zusammenstellen", u: "Haare, Mütze, Gesicht, Brille, Kochjacke – und später bearbeiten (ca. 2 Min.)", st: () => RG_FIGUR_BAU, nur: () => frei("avatar") && frei("avatar_baukasten") },
@@ -2037,9 +2088,9 @@ const RG_THEMEN = [
   { id: "einstieg", sym: "🚀", t: "Einstieg", videos: ["warum", "ueberblick", "hilfe", "schulung", "feedback"] },
   { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["nachricht", "mitglieder", "pinnwand"] },
   { id: "termine", sym: "📅", t: "Termine & Dienst", videos: ["termin", "zusagen", "dienst"] },
-  { id: "club", sym: "🗄️", t: "Club & Archiv", videos: ["fotos", "lesen", "rezepte", "archiv", "vorschlag", "helfen", "erstattung"] },
-  { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["status", "meinedaten", "einstellungen", "oberflaeche", "effekte", "figur", "figurbau"] },
-  { id: "freizeit", sym: "🎲", t: "Spiele & Notfall", videos: ["spiele", "sos"] },
+  { id: "club", sym: "🗄️", t: "Club & Archiv", videos: ["fotos", "lesen", "rezepte", "aktionen", "archiv", "vorschlag", "helfen", "erstattung"] },
+  { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["status", "meinedaten", "einstellungen", "oberflaeche", "effekte", "figur", "figurbau", "technik", "studio"] },
+  { id: "freizeit", sym: "🎲", t: "Spiele, Fitness & Notfall", videos: ["spiele", "fit", "sos"] },
   { id: "leitung", sym: "🗂️", t: "Für die Clubleitung", videos: ["leitung"] },
   { id: "admin", sym: "🛠️", t: "Für Admins", videos: ["admin"] },
 ];
@@ -6297,7 +6348,7 @@ async function twFrageStart(vorgabe = "") {
 // KC-CLUB-TWINKEY-VIDEOS (2.252.0, Wunsch Hansi „Du kannst es im Hilfetext nachlesen. Aber es gibt auch Erklär-Videos. Was möchtest du dir
 // ansehen?“): Antwort-Eintrag → passende Erklär-Videos (Registry RUNDGAENGE, nur die für das Mitglied sichtbaren) und der ausführliche Hilfetext.
 // Neue Videos hier einfach dem passenden Eintrag (f: Twinkeys Fragen, h: Hilfe-Zentrum) zuordnen.
-const TW_VIDEOS = { "h:wetter": ["effekte"], "f:feedback": ["feedback"], "f:dienstwunsch": ["dienst"], "f:dienstplan": ["dienst"], "f:status": ["status"], "f:protokoll": ["lesen"], "f:handbuch": ["lesen"], "f:adresse": ["meinedaten"], "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
+const TW_VIDEOS = { "h:wetter": ["effekte"], "f:update": ["technik"], "f:feedback": ["feedback"], "f:dienstwunsch": ["dienst"], "f:dienstplan": ["dienst"], "f:status": ["status"], "f:protokoll": ["lesen"], "f:handbuch": ["lesen"], "f:adresse": ["meinedaten"], "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
   "f:nachricht": ["nachricht"], "f:termin-neu": ["termin"], "f:zettel": ["pinnwand"], "f:vorschlag": ["vorschlag"], "f:zusagen": ["zusagen"],
   "f:foto-album": ["fotos"], "f:geld": ["erstattung"], "f:notfall": ["sos"], "f:hilfe-suchen": ["helfen"], "f:leihen": ["helfen"], "f:anrufen": ["mitglieder"], "f:online": ["mitglieder"],
   "f:spielen": ["spiele"], "f:archiv": ["archiv"] }; // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4

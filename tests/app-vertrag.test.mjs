@@ -8450,7 +8450,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-5"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-EFFEKTE"));
   for (const [id, st] of [["dienst", "RG_DIENST"], ["status", "RG_STATUS"], ["lesen", "RG_LESEN"], ["meinedaten", "RG_DATEN"]]) assert.ok(new RegExp(`\\{ id: "${id}", stand: "1", [^\\n]*st: \\(\\) => ${st} \\}`).test(html), `Video ${id} registriert`);
   assert.ok(!/[;{(]\s*(await )?statusSpeichern\(|aeSenden\(|\bapi\(|protokollOeffnen\(|prOeffnen\(|einstellung\(/.test(b) && /\[onclick="statusSpeichern\(\)"\]/.test(b), "nichts gespeichert, gemeldet oder als gelesen markiert (Speichern nur gezeigt)");
-  assert.ok(/RG\.zurueck\.push\(\(\) => \$\(id\)\?\.remove\(\)\)/.test(b) && /\$\("statusBlatt"\)\.classList\.add\("versteckt"\); \$\("statusBlatt"\)\.classList\.remove\("rg-zeigen"\)/.test(b), "Fenster am Ende zu");
+  assert.ok(/RG\.zurueck\.push\(\(\) => \{ if \(\$\(id\)\) fensterZu\(\$\(id\)\); \}\)/.test(b) && /\$\("statusBlatt"\)\.classList\.add\("versteckt"\); \$\("statusBlatt"\)\.classList\.remove\("rg-zeigen"\)/.test(b), "Fenster am Ende zu");
 }
 
 // 2.270.0 KC-CLUB-ERKLAERVIDEOS-6 (Wunsch Hansi): Rezeptbuch, Schulung, Feedback – nur vorgeführt
@@ -8459,5 +8459,13 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/\{ id: "rezepte", stand: "1", [^\n]*st: \(\) => RG_REZEPTE, nur: \(\) => frei\("rezepte"\) \}/.test(html) && /\{ id: "schulung", stand: "1", [^\n]*RG_SCHULUNG \}/.test(html) && /\{ id: "feedback", stand: "1", [^\n]*RG_FEEDBACK \}/.test(html), "drei Videos registriert, Rezeptbuch nur mit Freigabe");
   assert.ok(!/[;{(]\s*(await )?(fbSenden|smWaehlen|smAbsagen|rzSpeichern|rzEinkauf|rzLoeschen)\(|\bapi\(/.test(b), "nichts geschickt, gewählt oder angelegt");
   assert.ok(/FB\.schritt = RG\.fbAlt/.test(b), "Feedback-Schritt am Ende zurück");
+}
+
+// 2.271.0 KC-CLUB-ERKLAERVIDEOS-7 (Wunsch Hansi): Aktionen, Fit bleiben, Studio, Technik – nur vorgeführt, jede Mitglieder-Kachel hat ein Video
+{
+  const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-7"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-EFFEKTE"));
+  assert.ok(/\{ id: "fit", stand: "1", [^\n]*nur: \(\) => frei\("fitness"\) \}/.test(html) && /\{ id: "studio", stand: "1", [^\n]*nur: \(\) => !!studioStufe\(\) \}/.test(html) && /\{ id: "aktionen", stand: "1",/.test(html) && /\{ id: "technik", stand: "1",/.test(html), "vier Videos registriert, Fitness/Studio nur mit Freigabe");
+  assert.ok(!/[;{(]\s*(await )?(fiLos|stModus|vfStart|testAnMich|testAnMichStarten|updateKachel|aktionAnmelden)\(|\bapi\(/.test(b), "nichts gestartet, angemeldet oder geschickt");
+  assert.ok(/RG\.zurueck\.push\(\(\) => \{ if \(\$\(id\)\) fensterZu\(\$\(id\)\); \}\)/.test(html), "Fenster schließen mit eigenem Schließen (Training/Studio)");
 }
 

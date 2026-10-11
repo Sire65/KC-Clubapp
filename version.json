@@ -1,11 +1,18 @@
 {
-  "version": "2.270.0",
+  "version": "2.271.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🎬 Drei neue Erklär-Videos: Rezeptbuch, Meine Schulung, Feedback geben"
+    "🎬 Die letzten Erklär-Videos: Aktionen & Reisen, Fit bleiben, Studio und Technik (Update, Sicherheits-Check, Test an mich, Programme)"
   ],
   "verlauf": [
+    {
+      "version": "2.271.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🎬 Die letzten Erklär-Videos: Aktionen & Reisen, Fit bleiben, Studio und Technik (Update, Sicherheits-Check, Test an mich, Programme)"
+      ]
+    },
     {
       "version": "2.270.0",
       "datum": "2026-10-11",

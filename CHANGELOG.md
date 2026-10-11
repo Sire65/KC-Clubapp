@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.271.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-7: die restlichen Erklär-Videos (Wunsch Hansi)
+- 🧳 „Aktionen & Reisen“: Liste, Einzelheiten (Reiseverlauf, Teilnehmer, Preis, Veranstalter), Reise-Checkliste, Fotos.
+- 🏋️ „Fit bleiben“ (nur mit Freigabe): Gesundheitshinweis, Stufe und Dauer, Ansage, „Los geht's“, Auswertung.
+- 🎬 „Studio: live zeigen“ (nur für Freigeschaltete): Mitglied wählen, Zustimmung, verdeckte Chats, Vorhang, 30 Minuten.
+- 🔧 „Technik: Update & Sicherheit“: Version und Update, Version oben, Sicherheits-Check, Test an mich, Freigegebene Programme.
+- Damit hat jede Kachel für Mitglieder ein Erklär-Video. Nur vorgeführt: keine Anmeldung, kein Training, kein Live-Zeigen, keine Test-Nachricht; Fenster schließen mit ihrem eigenen Schließen (Training/Studio sauber beendet).
+
 ## 2.270.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-6: Rezeptbuch, Meine Schulung, Feedback (Wunsch Hansi)
 - 📖 „Rezeptbuch“ (nur mit Freigabe): suchen, Arten, Rezept aufschlagen, Portionen umrechnen (live auf 10), Zutaten abhaken, Einkaufsliste/Drucken/Teilen, eigenes Rezept.
 - 🎓 „Meine Schulung“: Einladung, Termin aussuchen (bei mir / bei Hansi), eigenen Termin vorschlagen, Zusammenfassung im Archiv.
