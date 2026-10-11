@@ -3200,6 +3200,12 @@
   .fp-rot { background: rgba(198,40,40,.12); border-radius: 8px; padding: 6px; }
   /* KC-CLUB-NACHRICHT-INFO (0.94.0) */
   .blase { cursor: pointer; }
+  /* KC-CLUB-AMPEL (2.287.0) */
+  .ampel { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; margin: 2px 0 8px; cursor: pointer; }
+  .ampel-st { display: inline-flex; flex-direction: column; align-items: center; padding: 3px 7px; border-radius: 10px; font-size: .78rem; line-height: 1.2; background: var(--linie, #e3e3e3); color: var(--grau, #666); opacity: .8; }
+  .ampel-st.an { background: var(--gruenbg, #d7f0dc); color: var(--textGruen, #1b5e20); opacity: 1; font-weight: 600; }
+  .ampel-st small { font-weight: 400; font-size: .7rem; }
+  .ampel-pfeil { color: var(--grau, #999); font-size: .9rem; }
   .ni-zeile { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 4px 0; border-bottom: 1px solid var(--linie); }
   .ni-weg { display: grid; gap: 4px; }
   .ni-status { font-weight: 800; }
@@ -3715,6 +3721,8 @@
       <div class="schalter" style="margin-top:10px"><div><b>🌙 Nicht stören</b><div class="hinweis" id="ruheHinweis">In dieser Zeit kein Push. Anrufe kommen trotzdem durch, danach eine Sammelmeldung.</div></div><input type="checkbox" id="ruheAn" onchange="ruheSpeichern()"></div>
       <div class="zwei ruhe-zeiten"><label class="feld">von<input type="time" id="ruheVon" value="22:00" onchange="ruheSpeichern()"></label><label class="feld">bis<input type="time" id="ruheBis" value="07:00" onchange="ruheSpeichern()"></label></div>
       <div class="schalter"><div><b>📣 @Erwähnungen trotzdem melden</b><div class="hinweis">Wenn dich jemand mit @ direkt anspricht</div></div><input type="checkbox" id="ruheErw" checked onchange="ruheSpeichern()"></div>
+      <!-- KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0) -->
+      <div class="schalter"><div><b>❗ Vor dem Senden nach der Wichtigkeit fragen</b><div class="hinweis">📝 Normal oder ❗ Hoch – je Chat höchstens alle 30 Minuten. Hoch: farbig markiert, Push und E-Mail, nach 24 Std. ungelesen bekommst du Bescheid.</div></div><input type="checkbox" id="setWichtigFrage" onchange="wichtigFrageSetzen(this.checked)"></div>
     </details>
     <!-- KC-CLUB-ONLINE-ANSAGE (1.57.1, 1.58.1 + Tipp des Tages): eigener Kasten – in der einfachen UND der erweiterten Ansicht sichtbar -->
     <details class="karte" data-klappe="ansagen" data-einfach open>
@@ -4207,6 +4215,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.286.0" data-v="2.286.0"></script>
+<script src="app.js?v=2.287.0" data-v="2.287.0"></script>
 </body>
 </html>

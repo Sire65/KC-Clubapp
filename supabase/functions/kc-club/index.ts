@@ -208,6 +208,8 @@ async function routerSendenRoh(eventKey: string, personIds: string[], vars: Reco
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
     body: JSON.stringify({ sourceProgram: "kc-club", eventKey, recipients: personIds.map((personId) => ({ personId })), variables: vars, correlationId: korrelation,
+      // KC-CLUB-WICHTIGKEIT (2.287.0): ❗ hoch / 🚨 Notfall als Priorität an den Communicator (Spalte priority; Notfall = Push mit hoher Dringlichkeit)
+      ...(vars.wichtigkeit === "hoch" ? { priority: "high" } : vars.wichtigkeit === "notfall" ? { priority: "critical" } : {}),
       // 0.38.0: Kopien (Mitgliedsnummern) – der Communicator löst sie zu Mail-Adressen auf
       ...(kopie?.cc?.length ? { cc: kopie.cc.map((personId) => ({ personId })) } : {}), ...(kopie?.bcc?.length ? { bcc: kopie.bcc.map((personId) => ({ personId })) } : {}) }),
   });
@@ -4278,6 +4280,33 @@ async function schulungProtokollFehlt() {
 const SC_VS_AKTION: Record<string, string> = { eingeladen: "einladung", erneut_eingeladen: "einladung", neue_termine_angeboten: "einladung",
   buchung_bestaetigt: "bestaetigung", gegenvorschlag_angenommen: "bestaetigung", termin_direkt_bestaetigt: "bestaetigung", termin_geaendert: "bestaetigung", erinnerung_gesendet: "erinnerung" };
 const SC_VS_TAG = 86400000;
+// KC-CLUB-AMPEL (2.287.0): je Einladung, wer sie wirklich bekommen hat – Push auf dem Handy angezeigt/geöffnet, vom Mail-Anbieter bestätigt
+// oder die Club-App seit dem Versand geöffnet (dort steht die Einladung auch). Gesendet, Link geöffnet und Antwort stehen schon in der Einladung.
+async function schulungAmpel(j: any) {
+  const eins = (j.einladungen ?? []).filter((e: any) => e.gesendet_am && !e.ist_test && !["zurueckgezogen"].includes(e.status)).slice(0, 60);
+  const aus: Record<string, any> = {};
+  if (!eins.length) return aus;
+  const alle = [...new Set(eins.flatMap((e: any) => e.person_ids ?? []))] as string[];
+  const [{ data: req }, { data: zg }, inko] = await Promise.all([
+    db.from("kc_communication_requests").select("id,correlation_id,audit_meta,channel,status").like("correlation_id", "termin-mitglied:%").gte("created_at", new Date(Math.min(...eins.map((e: any) => Date.parse(e.gesendet_am))) - 3600000).toISOString()).limit(2000),
+    alle.length ? db.from("kc_club_zugang").select("person_id,zuletzt_gesehen").in("person_id", alle).not("zuletzt_gesehen", "is", null) : Promise.resolve({ data: [] as any[] }),
+    inkognitoSet(alle)]);
+  const rIds = (req ?? []).map((r: any) => r.id);
+  const { data: ev } = rIds.length ? await db.from("kc_communication_delivery_events").select("request_id,event_type,created_at").in("request_id", rIds).in("event_type", ["delivered", "displayed", "opened"]) : { data: [] as any[] };
+  for (const e of eins) {
+    const zu: Record<string, { am: string; wie: string }> = {};
+    for (const r of (req ?? []).filter((x: any) => String(x.correlation_id).startsWith(`termin-mitglied:${e.id}:`))) {
+      const pid = String(r.audit_meta?.personId || ""); if (!pid) continue;
+      for (const x of (ev ?? []).filter((y: any) => y.request_id === r.id)) if (!zu[pid] || x.created_at < zu[pid].am) zu[pid] = { am: x.created_at, wie: x.event_type === "delivered" ? "vom Mail-Anbieter bestätigt" : "Push auf dem Handy angezeigt" };
+    }
+    for (const pid of e.person_ids ?? []) {
+      const z = (zg ?? []).find((x: any) => x.person_id === pid);
+      if (!zu[pid] && z && !inko.has(pid) && String(z.zuletzt_gesehen) >= e.gesendet_am) zu[pid] = { am: z.zuletzt_gesehen, wie: "Club-App seitdem geöffnet" };
+    }
+    aus[e.id] = { angekommen: zu };
+  }
+  return aus;
+}
 async function schulungVersandstand(j: any, ich: Ich) {
   const eins = (j.einladungen ?? []).filter((e: any) => e.status !== "zurueckgezogen" && !e.ist_test).slice(0, 40);
   const st: Record<string, Record<string, any[]>> = {};
@@ -4553,6 +4582,31 @@ async function antwortErinnerung2T() {
       betreff: `Köcheclub Werne – bitte zu- oder absagen: ${t.titel}, ${wann(t.beginn)}`,
       text: `Hallo,\n\nin 2 Tagen ist unser Treffen „${t.titel}“ (${wann(t.beginn, true)}${t.ort ? ", " + t.ort : ""}).\n\nBitte kurz zu- oder absagen: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
       url: APP_URL + "#termine" }, `club-antwort-2t:${t.id}`).catch((e) => console.error("antwort 2t", String(e)));
+  }
+}
+// KC-CLUB-WICHTIG-UNGELESEN (2.287.0, Wunsch Hansi „nachvollziehen, ob er sie gelesen hat“): Eine ❗ wichtige Nachricht ist nach 24 Std.
+// bei jemandem noch nicht gelesen → EINMAL ein Push an den Absender mit den Namen. Ältere als 3 Tage werden nicht mehr nachgemeldet.
+// „Schon gemeldet“ steht im Protokoll (erst merken, dann senden – nie doppelt). Notfälle laufen über ihren eigenen Weg.
+async function wichtigUngelesenMelden() {
+  const j = Date.now();
+  const { data: ms } = await db.from("kc_communication_messages").select("id,thread_id,sender_person_id,created_at,body")
+    .lte("created_at", new Date(j - 24 * 3600000).toISOString()).gte("created_at", new Date(j - 72 * 3600000).toISOString()).order("created_at").limit(2000);
+  if (!ms?.length) return;
+  const { data: wi } = await db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", ms.map((m: any) => m.id));
+  const wichtige = ms.filter((m: any) => (wi ?? []).some((w: any) => w.message_id === m.id) && !String(m.body || "").startsWith(NOTFALL_MARKE)).slice(0, 30);
+  for (const m of wichtige) {
+    const { data: schon } = await db.from("kc_club_protokoll").select("id").eq("aktion", "wichtig_ungelesen").eq("details->>nachricht", m.id).limit(1);
+    if (schon?.length) continue;
+    const { data: tn } = await db.from("kc_communication_thread_participants").select("person_id,last_read_at").eq("thread_id", m.thread_id).neq("person_id", m.sender_person_id);
+    const offen = (tn ?? []).filter((x: any) => !x.last_read_at || x.last_read_at < m.created_at).map((x: any) => x.person_id);
+    await protokoll(null, "wichtig_ungelesen", { nachricht: m.id, ungelesen: offen.length });
+    if (!offen.length) continue;
+    const pm = await personen(offen), namen = offen.slice(0, 5).map((id: string) => pm.get(id)?.display_name || "Mitglied").join(", ") + (offen.length > 5 ? ` und ${offen.length - 5} weitere` : "");
+    await sendenGewaehlt("club_nachricht", [m.sender_person_id], ["push"], {
+      titel: "❗ Wichtige Nachricht noch ungelesen", kurz: `Seit 24 Std. nicht gelesen: ${namen}`,
+      betreff: "Köcheclub Werne – deine wichtige Nachricht ist noch ungelesen",
+      text: `Hallo,\n\ndeine wichtige Nachricht „${txt(m.body, 120)}“ ist seit 24 Stunden noch nicht gelesen von: ${namen}.\n\nVielleicht kurz anrufen? In der App unter ℹ️ an der Nachricht siehst du die Ampel je Empfänger.\n\n${APP_URL}#nachricht=${m.thread_id}`,
+      url: `${APP_URL}#nachricht=${m.thread_id}` }, `club-wichtig-ungelesen:${m.id}`).catch((e) => console.error("wichtig ungelesen senden", String(e)));
   }
 }
 async function rtZaehlerWarnen() {
@@ -5125,6 +5179,7 @@ Deno.serve(async (req) => {
       await rtZaehlerWarnen().catch((e) => console.error("rt zaehler", String(e))); // KC-CLUB-RT-SPARBREMSE (2.230.0)
       await gastgeberStandLauf().catch((e) => console.error("gastgeber stand", String(e))); // KC-CLUB-GASTGEBER-STAND (2.238.0)
       await antwortErinnerung2T().catch((e) => console.error("antwort 2t", String(e))); // KC-CLUB-ANTWORT-ERINNERUNG-2T (2.240.0)
+      await wichtigUngelesenMelden().catch((e) => console.error("wichtig ungelesen", String(e))); // KC-CLUB-WICHTIG-UNGELESEN (2.287.0)
       await archivKopieLauf().catch((e) => archivKopieStand("fehler", String((e as any)?.message || e), {})); // KC-CLUB-ARCHIV-KOPIE (2.232.0): nur nachts 2–5 Uhr
       await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
       await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
@@ -6181,6 +6236,32 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data: ev } = rids.length ? await db.from("kc_communication_delivery_events").select("request_id,event_type,provider,created_at").in("request_id", rids).order("created_at") : { data: [] as any[] };
           const perMail = new Map<string, string>();
           for (const [id, pe] of leute) if (pe.email) perMail.set(String(pe.email).trim().toLowerCase(), id);
+          // KC-CLUB-AMPEL (2.287.0, Wunsch Hansi „nachvollziehen, ob er sie bekommen und gelesen hat“): je Empfänger
+          // ✉️ gesendet → 📬 angekommen → 👀 gelesen → ✅ beantwortet – nur echte Rückmeldungen, keine Annahmen
+          const refIds = (r: any) => (Array.isArray(r.recipient_refs) ? r.recipient_refs : []).filter((x: any) => !x?.role)
+            .map((x: any) => x?.personId ? String(x.personId) : x?.email ? perMail.get(String(x.email).trim().toLowerCase()) || "" : "").filter(Boolean);
+          const ids = empfaenger.map((e: any) => e.person_id);
+          const [{ data: antw }, { data: zg }, inko] = await Promise.all([
+            ids.length ? db.from("kc_communication_messages").select("sender_person_id,created_at").eq("thread_id", m.thread_id).gt("created_at", m.created_at).in("sender_person_id", ids).order("created_at").limit(500) : Promise.resolve({ data: [] as any[] }),
+            ids.length ? db.from("kc_club_zugang").select("person_id,zuletzt_gesehen").in("person_id", ids).not("zuletzt_gesehen", "is", null) : Promise.resolve({ data: [] as any[] }),
+            ids.length ? inkognitoSet(ids) : Promise.resolve(new Set<string>())]);
+          const OK = ["sent", "delivered", "displayed", "opened"], frueh = (a: string | null, b: string | null) => !a ? b : !b ? a : a < b ? a : b;
+          for (const e of empfaenger as any[]) {
+            const meine = (req ?? []).filter((r: any) => refIds(r).includes(e.person_id)), mIds = new Set(meine.map((r: any) => r.id));
+            const evs = (ev ?? []).filter((x: any) => mIds.has(x.request_id));
+            let gesendet: string | null = null, angekommen: string | null = null, geoeffnet: string | null = null, angWie = "", gesWie: string[] = [];
+            for (const r of meine) if (OK.includes(r.status)) { gesendet = frueh(gesendet, r.sent_at || r.created_at); gesWie.push(r.channel === "email" ? "E-Mail" : "Push"); }
+            for (const x of evs) {
+              if (["delivered", "displayed", "opened"].includes(x.event_type) && (!angekommen || x.created_at < angekommen)) { angekommen = x.created_at; angWie = x.event_type === "delivered" ? "vom Mail-Anbieter bestätigt" : "Push auf dem Handy angezeigt"; }
+              if (x.event_type === "opened") geoeffnet = frueh(geoeffnet, x.created_at);
+            }
+            const z = (zg ?? []).find((x: any) => x.person_id === e.person_id);
+            if (!angekommen && z && !inko.has(e.person_id) && String(z.zuletzt_gesehen) >= m.created_at) { angekommen = z.zuletzt_gesehen; angWie = "Club-App seitdem geöffnet"; }
+            const gelesen = e.gelesen ? (e.zuletztGeoeffnet || null) : null;
+            if (gelesen && !angekommen) { angekommen = gelesen; angWie = "in der App gelesen"; }
+            const a = (antw ?? []).find((x: any) => x.sender_person_id === e.person_id);
+            e.ampel = { gesendet, gesendetWie: [...new Set(gesWie)].join(" + "), angekommen, angekommenWie: angWie, gelesen: gelesen || geoeffnet, gelesenWie: gelesen ? "in der App gelesen" : geoeffnet ? "Push geöffnet" : "", beantwortet: a?.created_at || null };
+          }
           wege = (req ?? []).map((r: any) => ({
             kanal: r.channel, status: r.status,
             an: (Array.isArray(r.recipient_refs) ? r.recipient_refs : []).map((x: any) => x?.personId ? name(x.personId) : x?.email ? (perMail.has(String(x.email).toLowerCase()) ? name(perMail.get(String(x.email).toLowerCase())!) : "E-Mail-Empfänger") : "?"),
@@ -7227,6 +7308,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data: bes } = await db.from("kc_besuche").select("besuch_id,person_ids,status,datum,mitglied,installiert_auf,programme,nachfrage_gesendet_am,nachfrage_aus").order("datum", { ascending: false }).limit(500);
           j.besuche = bes ?? [];
           j.versandstand = await schulungVersandstand(j, ich); // KC-CLUB-SCHULUNG-VERSANDSTAND (2.25.2)
+          j.ampel = await schulungAmpel(j).catch(() => ({})); // KC-CLUB-AMPEL (2.287.0)
           j.mitglieder = (j.mitglieder ?? []).map((m: any) => ({ person_id: m.person_id, display_name: m.display_name, given_name: m.given_name, family_name: m.family_name, hat_email: !!m.hat_email, test: !!m.test }));
         } else await protokoll(ich.person_id, "schulung_" + a.slice(2), {}); // nur die Art – Inhalte stehen im Protokoll des Termin-Bausteins
         return json(j);
@@ -8321,7 +8403,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { count } = await db.from("kc_communication_thread_participants").select("person_id", { count: "exact", head: true }).eq("thread_id", threadId);
           if (count === 1) ziel.push(ich.person_id); // Test-Unterhaltung nur mit mir
         }
-        const wege = notfall ? ["push", "email"] : zustellwege(p.wege);
+        // KC-CLUB-WICHTIGKEIT (2.287.0, Wunsch Hansi): ❗ Wichtigkeit hoch geht wie der Notfall immer per Push UND E-Mail raus
+        const wege = notfall || wichtig ? ["push", "email"] : zustellwege(p.wege);
         const { data: grp } = await db.from("kc_club_gruppen").select("name,symbol").eq("thread_id", threadId).maybeSingle();
         // KC-CLUB-ERWAEHNUNG (0.97.0): @Erwähnte (nur Teilnehmer dieser Unterhaltung) bekommen eine eigene, deutliche Meldung –
         // immer aufs Handy (bzw. Mail, wenn sie die App noch nie geöffnet haben), statt der normalen Nachrichten-Meldung.
@@ -8350,7 +8433,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : slHinweis ? slHinweis : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
           betreff: `${wMarke}Köcheclub Werne – ${wichtig ? "wichtige" : "neue"} Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${slHinweis || text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
-          url: `${APP_URL}#nachricht=${threadId}`,
+          url: `${APP_URL}#nachricht=${threadId}`, ...(notfall ? { wichtigkeit: "notfall" } : wichtig ? { wichtigkeit: "hoch" } : {}),
         }, `club-nachricht:${m.id}`, { notfall });
         await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, selbstloeschen: slNachricht, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand, mid: m.id }); // mid: KC-CLUB-EMPFANGS-EFFEKT (2.177.0) – gleicher „Abwechselnd“-Effekt bei Absender und Empfänger

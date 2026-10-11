@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.286.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.287.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -16301,6 +16301,7 @@ async function neuLadenRoh(vonHand) {
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ document.body.classList.toggle("sos-frei", !!INIT?.sosFuerAlle); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
+    if ($("setWichtigFrage")) $("setWichtigFrage").checked = wichtigFrageAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0)
     ansichtUebernehmen(INIT.einstellungen?.ansicht);
     ansageVorgabeUebernehmen(INIT.einstellungen?.ansage_vorgabe); // 2.173.0 KC-CLUB-ANSAGE-VORGABE
     sendeEffektMelden(); // 2.177.0 KC-CLUB-EMPFANGS-EFFEKT
@@ -20599,12 +20600,30 @@ function niStatusText(w) {
   if (w.status === "failed") return "❌ fehlgeschlagen";
   return "⏳ " + (w.status || "unterwegs");
 }
+// KC-CLUB-AMPEL (2.287.0, Wunsch Hansi „nachvollziehen, ob er sie bekommen und gelesen hat“): ✉️ Gesendet → 📬 Angekommen → 👀 Gelesen → ✅ Beantwortet.
+// Grün nur mit echter Rückmeldung (Zeit + woher), sonst grau. Bei Mails über web.de gibt es keine Zustellmeldung – „angekommen“ zeigt dann erst
+// ein angezeigter Push, die geöffnete Club-App oder das Lesen. Antippen zeigt die Erklärung.
+const AMPEL_INFO = [["✉️ Gesendet", "Push oder E-Mail ist ohne Fehler rausgegangen."], ["📬 Angekommen", "Push auf dem Handy angezeigt, vom Mail-Anbieter bestätigt oder die Club-App seitdem geöffnet."],
+  ["👀 Gelesen / Geöffnet", "In der App gelesen, Push geöffnet oder den Link aus der Mail geöffnet."], ["✅ Beantwortet", "Im Chat geantwortet bzw. einen Termin gewählt."]];
+function ampelErklaeren() {
+  const f = blattAuf("ampelInfo", `<h3 style="margin-top:0">🚦 Die Ampel</h3>${AMPEL_INFO.map(([t, x]) => `<div class="ni-zeile"><b>${t}</b><span class="hinweis">${x}</span></div>`).join("")}
+    <p class="hinweis">Grün = echte Rückmeldung mit Uhrzeit. Grau = dafür gibt es (noch) keine Rückmeldung. Ob eine Mail im Postfach geöffnet wurde, meldet web.de nicht zurück – deshalb zählt bei Mails erst der geöffnete Link, die geöffnete App oder das Lesen.</p>
+    <button class="knopf" onclick="$('ampelInfo').remove()">Verstanden</button>`);
+  f.style.zIndex = "2200";
+}
+function ampelHtml(stufen) {
+  return `<div class="ampel" role="list" onclick="ampelErklaeren()">${stufen.map((x) => `<span role="listitem" class="ampel-st${x.am ? " an" : ""}" title="${esc(x.am ? `${x.t}: ${zeitKurz(x.am)}${x.wie ? " – " + x.wie : ""}` : x.leer || `${x.t}: noch keine Rückmeldung`)}">${x.sym} ${x.t}${x.am ? `<small>${esc(zeitKurz(x.am))}</small>` : ""}</span>`).join('<span class="ampel-pfeil">›</span>')}</div>`;
+}
 async function nachrichtInfo(id) {
   let r; try { r = await api("nachricht_details", { id }, { warten: true }); } catch (e) { return meldeFehler(e); }
   document.getElementById("niFenster")?.remove();
   const f = document.createElement("div"); f.id = "niFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
   const gel = r.empfaenger.filter((e) => e.gelesen).length;
-  const empf = r.empfaenger.map((e) => `<div class="ni-zeile"><span>${e.gelesen ? "✓✓" : "✓"} <b>${esc(e.name)}</b></span><span class="hinweis">${e.gelesen ? "in der App gelesen" + (e.zuletztGeoeffnet ? ` (zuletzt geöffnet ${esc(niZeit(e.zuletztGeoeffnet))})` : "") : "in der App noch nicht gelesen"}</span></div>`).join("");
+  const empf = r.empfaenger.map((e) => `<div class="ni-zeile"><span>${e.gelesen ? "✓✓" : "✓"} <b>${esc(e.name)}</b></span><span class="hinweis">${e.gelesen ? "in der App gelesen" + (e.zuletztGeoeffnet ? ` (zuletzt geöffnet ${esc(niZeit(e.zuletztGeoeffnet))})` : "") : "in der App noch nicht gelesen"}</span></div>${e.ampel ? ampelHtml([
+    { sym: "✉️", t: "Gesendet", am: e.ampel.gesendet, wie: e.ampel.gesendetWie || "", leer: "nur in der App (kein Push, keine Mail)" },
+    { sym: "📬", t: "Angekommen", am: e.ampel.angekommen, wie: e.ampel.angekommenWie },
+    { sym: "👀", t: "Gelesen", am: e.ampel.gelesen, wie: e.ampel.gelesenWie },
+    { sym: "✅", t: "Beantwortet", am: e.ampel.beantwortet, wie: e.ampel.beantwortet ? "hat im Chat geantwortet" : "" }]) : ""}`).join("");
   const wege = !r.wegeSichtbar ? "" : !r.wege.length
     ? `<p class="hinweis" style="margin:0">Kein Push und keine E-Mail verschickt – die Nachricht steht nur in der App (z. B. weil der Empfänger Benachrichtigungen für Nachrichten ausgeschaltet hat oder gerade in der Unterhaltung war).</p>`
     : r.wege.map((w) => `<div class="karte innen ni-weg">
@@ -21371,6 +21390,19 @@ async function slGewaehlt(art, std) {
 }
 // KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): ❗ = „Wichtigkeit hoch“ für die nächste Nachricht (gilt nur für diesen Chat)
 let WICHTIG = false;
+// KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0, Wunsch Hansi „immer fragen, ob Wichtigkeit normal oder hoch“): vor dem Senden 📝 Normal / ❗ Hoch.
+// Je Chat höchstens alle 30 Min. einmal (sonst nervt es beim Hin- und Herschreiben). Schalter: ⚙️ → 🔔 Benachrichtigungen; Standard: an für den Admin.
+const WF_KEY = "kc_wichtig_frage", WF_ZULETZT = {};
+function wichtigFrageAn() { try { const v = localStorage.getItem(WF_KEY); return v === null ? !!ICH?.admin : v === "1"; } catch (e) { return !!ICH?.admin; } }
+function wichtigFrageSetzen(an) { try { localStorage.setItem(WF_KEY, an ? "1" : "0"); } catch (e) { /* ohne Speicher gilt der Standard */ } melde(an ? "❗ Vor dem Senden wird nach der Wichtigkeit gefragt" : "Keine Frage mehr nach der Wichtigkeit – ❗ geht weiter von Hand"); }
+async function wichtigkeitFragen() {
+  if (WICHTIG || !wichtigFrageAn()) return;
+  const k = chatId || "neu";
+  if (chatId && Date.now() - (WF_ZULETZT[k] || 0) < 30 * 60000) return;
+  const hoch = await frage("Wie wichtig ist diese Nachricht?\n\n📝 Normal – wie immer.\n❗ Hoch – bei allen farbig markiert, geht per Push UND E-Mail raus. Liest sie nach 24 Std. noch jemand nicht, bekommst du Bescheid.", { ja: "❗ Hoch", nein: "📝 Normal" });
+  WF_ZULETZT[k] = Date.now();
+  if (hoch) wichtigUmschalten(true);
+}
 function wichtigUmschalten(an) {
   WICHTIG = an ?? !WICHTIG;
   const k = $("wichtigKnopf"), t = $("text");
@@ -21432,6 +21464,7 @@ async function senden() {
   if (!text && !anlagen.length) return;
   if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
   await inkoChatFrage(chatId ? "c:" + chatId : "neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT: auch beim Schreiben in einem schon offenen Chat (einmal je Chat)
+  await wichtigkeitFragen(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0)
   // 2.164.0 KC-CLUB-ANLAGE-WARTEN (Fund Hansi: PDF fehlte – Senden getippt, während die Anlage noch hochlud; sie wurde still weggelassen):
   // lädt noch eine Anlage, wird gewartet, bis sie fertig ist – dann geht alles zusammen raus. Klappt das Hochladen nicht, bleibt der Text stehen.
   if (anlagen.some((a) => a.laedt)) {
@@ -23340,7 +23373,7 @@ function scEinladungen() {
       <div class="hinweis">eingeladen ${esc(zeitKurz(e.erstellt_am))}${e.gesendet_am ? ` · Mail ${esc(zeitKurz(e.gesendet_am))}` : ""}${e.status === "offen" ? ` · Frist bis ${esc(zeitKurz(e.gueltig_bis))}` : ""}${e.geoeffnet_am ? ` · Link geöffnet ${esc(zeitKurz(e.geoeffnet_am))}` : " · Link noch nicht geöffnet"}${s ? ` · ${esc(scZeit(s.beginn, s.ende))}` : ""}</div>
       ${e.mail_link_status === "veraltet" ? '<div class="ta-st-nein">⚠️ Die zuletzt verschickte Mail enthält einen alten Link.</div>' : e.mail_link_status === "kein_link" ? '<div class="ta-st-nein">⚠️ Die Mail enthielt keinen gültigen Termin-Link.</div>' : e.mail_link_status === "aktuell" ? `<div class="hinweis">✉️ Mail-Link aktuell${e.mail_link_gesendet_am ? " · " + esc(zeitKurz(e.mail_link_gesendet_am)) : ""}</div>` : ""}
       ${e.bemerkung ? `<div class="hinweis">„${esc(e.bemerkung)}“</div>` : ""}
-      ${scVersandStand(e)}
+      ${scVersandStand(e)}${scAmpel(e)}
       <div class="knoepfe"><button class="knopf klein" onclick="scChronik('${e.id}')">📜 Ablauf</button>
         ${["offen", "gewaehlt", "gegenvorschlag"].includes(e.status) ? `<button class="knopf klein" onclick="scLinkNeu(this,'${e.id}')">🔗 Link</button>` : ""}
         ${e.status === "abgelaufen" ? `<button class="knopf klein" onclick="scErneut(this,'${e.id}')">📨 Neu einladen</button>` : ""}
@@ -23374,6 +23407,17 @@ function scSchritte(e) {
     Object.assign({ k: "erinnerung", t: "Erinnerung" }, auswerten("erinnerung", { am: null, st: vorbei ? "warn" : b && b.status === "bestaetigt" ? "offen" : "entfaellt", info: vorbei ? "Termin vorbei, keine Erinnerung zugestellt" : b && b.status === "bestaetigt" ? "kommt am Vortag" : "" })),
     Object.assign({ k: "dank", t: "Danksagung", besuch }, dankAm ? { st: "ok", am: dankAm, bel: (vs.dank || []) } : auswerten("dank", { am: null, st: ohneMail ? "warn" : vorbei || (besuch && besuch.status === "fertig") ? "offen" : "entfaellt", info: ohneMail ? "keine E-Mail-Adresse hinterlegt" : !besuch ? "noch kein Besuchsprotokoll" : "" })),
   ];
+}
+// KC-CLUB-AMPEL (2.287.0): je eingeladener Person ✉️ Gesendet → 📬 Angekommen → 👀 Link geöffnet → ✅ Geantwortet
+function scAmpel(e) {
+  if (!e.gesendet_am || e.ist_test) return "";
+  const a = (SC.T.ampel || {})[e.id] || { angekommen: {} }, ids = e.person_ids || [];
+  return ids.map((pid) => { const zu = (a.angekommen || {})[pid] || null;
+    return `${ids.length > 1 ? `<div class="hinweis" style="margin:4px 0 0">${esc(scPerson(pid)?.display_name || pid)}</div>` : ""}${ampelHtml([
+      { sym: "✉️", t: "Gesendet", am: e.gesendet_am, wie: "Einladung per Mail/Push" },
+      { sym: "📬", t: "Angekommen", am: zu?.am || e.geoeffnet_am || e.beantwortet_am || null, wie: zu?.wie || (e.geoeffnet_am ? "Link geöffnet" : e.beantwortet_am ? "hat geantwortet" : "") },
+      { sym: "👀", t: "Geöffnet", am: e.geoeffnet_am, wie: "Termin-Link geöffnet" },
+      { sym: "✅", t: "Geantwortet", am: e.beantwortet_am, wie: "Termin gewählt oder geantwortet" }])}`; }).join("");
 }
 function scVersandStand(e) {
   const sym = { ok: "✅", teil: "◐", warn: "⚠️", offen: "⬜", entfaellt: "➖" };

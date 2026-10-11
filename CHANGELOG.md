@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.287.0 – 2026-10-11 – KC-CLUB-AMPEL + KC-CLUB-WICHTIGKEIT: Zustell-Ampel und Wichtigkeit normal/hoch
+Wunsch Hansi („nachvollziehen, ob er sie bekommen und gelesen hat“; „immer fragen, ob Wichtigkeit normal oder hoch“). Je Empfänger eine Ampel ✉️ Gesendet → 📬 Angekommen → 👀 Gelesen → ✅ Beantwortet – in den ℹ️ Infos einer Nachricht (Absender/Admin) und bei 🎓 Schulungen je Einladung (Gesendet, Angekommen, Link geöffnet, Geantwortet). Grün nur mit echter Rückmeldung (Push angezeigt/geöffnet, Mail-Anbieter, Club-App seitdem geöffnet, gelesen, Antwort); web.de meldet keine Zustellung, das wird ehrlich als grau gezeigt. Vor dem Senden fragt die App „📝 Normal / ❗ Hoch“ (je Chat höchstens alle 30 Min.; Schalter unter ⚙️ → 🔔 Benachrichtigungen, Standard an für den Admin). ❗ Hoch geht wie der Notfall immer per Push und E-Mail raus, wird an den Communicator als Priorität „high“ übergeben (Notfall „critical“) und meldet dem Absender nach 24 Std. einmal, wer noch nicht gelesen hat (Wartung, Protokoll „wichtig_ungelesen“).
+
 ## 2.286.0 – 2026-10-11 – KC-DP-FORMULARE-EINHEITLICH: Wunsch-Formulare einheitlich mit DP2-QR
 DP2 Build 266 übernommen: Jeder QR auf den Wunsch-Formularen trägt jetzt auch die Dokumentart; DP2 ordnet Bögen aus der Club-App sicher über die Mitglieds-ID zu, nimmt nur ausfüllbare Wunschbögen an und meldet einen fremden Zeitraum. Bereitschaft mit mittigen Kästchen und großen Zellen, ausgefüllte Zeiten groß, ☒ als Kästchen mit Kreuz. Die Bestätigung „Meine Dienstwünsche“ hat jetzt oben rechts denselben DP2-QR mit Mitglieds-ID und größere Tageszeilen.
 

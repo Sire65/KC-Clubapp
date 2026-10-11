@@ -3510,7 +3510,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const ns = server.slice(server.indexOf('case "nachricht_senden": {'), server.indexOf('case "privattermin_speichern"'));
   assert.ok(/if \(notfall\) \{\s*if \(!ich\.admin && !\(await sosFuerAlle\(\)\)\) throw new Fehler\("Notfall-Meldungen an alle darf nur der Admin senden\.", 403\);/.test(ns), "nur Admin");
   assert.ok(/\} else if \(NOTFALL_RE\.test\(text\)\) text = text\.replace\(NOTFALL_RE, ""\)/.test(ns), "Marke bei anderen entfernt");
-  assert.ok(/if \(notfall\) stumm\.clear\(\);/.test(ns) && /const wege = notfall \? \["push", "email"\]/.test(ns) && /\{ notfall \}\);/.test(ns), "an alle, Push + Mail, auch stumm");
+  assert.ok(/if \(notfall\) stumm\.clear\(\);/.test(ns) && /const wege = notfall (?:\|\| wichtig )?\? \["push", "email"\]/.test(ns) && /\{ notfall \}\);/.test(ns), "an alle, Push + Mail, auch stumm");
   assert.ok(/if \(w\.includes\("push"\) && !opt\.notfall\)/.test(server), "auch in der Ruhezeit");
   assert.ok(/async function notfallUnterhaltung\(ich: Ich\)/.test(server) && /return json\(\{ (?:gedenken: await pGedenken, )?(?:meinGeburtstag, )?alarm, /.test(server), "eine Notfall-Unterhaltung, Alarm beim Start");
   assert.ok(/function notfallSenden\(\)[\s\S]{0,400}await frage\(/.test(html) && /api\("nachricht_senden", \{ notfall: true, text, empfaenger: \{ alle: true \} \}/.test(html), "einmal bestätigen, dann senden");
@@ -5950,7 +5950,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 
 // 117. 0.94.0: Nachricht antippen → Info-Fenster (KC-CLUB-NACHRICHT-INFO)
 {
-  const f = server.slice(server.indexOf('case "nachricht_details"'), server.indexOf('case "nachricht_details"') + 3200);
+  const f = server.slice(server.indexOf('case "nachricht_details"'), server.indexOf('case "fehler_melden"'));
   assert.ok(/await binTeilnehmer\(m\.thread_id, ich\.person_id\)/.test(f), "Details nur für Teilnehmer der Unterhaltung");
   assert.ok(/darfWege = eigen \|\| ich\.admin/.test(f) && /if \(darfWege\)/.test(f), "Zustellwege nur für Absender/Admin");
   assert.ok(!/email: x\.email|x\?\.email \}/.test(f) && /"E-Mail-Empfänger"/.test(f), "Mail-Adressen dürfen nicht herausgegeben werden");
@@ -8605,3 +8605,14 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(!/rgSchalter\(/.test(b), "keine erst später definierte Hilfe (sonst bricht die App beim Laden ab)");
 }
 
+
+// 2.287.0 KC-CLUB-AMPEL + KC-CLUB-WICHTIGKEIT (Wunsch Hansi): Zustell-Ampel je Empfänger, Wichtigkeit normal/hoch vor dem Senden
+{
+  assert.ok(/function ampelHtml\(stufen\)/.test(html) && /e\.ampel \? ampelHtml\(\[/.test(html) && /\$\{scVersandStand\(e\)\}\$\{scAmpel\(e\)\}/.test(html), "Ampel in Nachrichten-Infos und Schulungs-Karte");
+  assert.ok(/e\.ampel = \{ gesendet, gesendetWie/.test(server) && /j\.ampel = await schulungAmpel\(j\)\.catch\(\(\) => \(\{\}\)\)/.test(server), "Server liefert die Ampel");
+  assert.ok(/!inko\.has\(e\.person_id\)/.test(server) && /!inko\.has\(pid\)/.test(server), "Inkognito-Admin wird über „Club-App geöffnet“ nicht verraten");
+  assert.ok(/await wichtigkeitFragen\(\); \/\/ KC-CLUB-WICHTIGKEIT-FRAGE/.test(html) && /id="setWichtigFrage" onchange="wichtigFrageSetzen\(this\.checked\)"/.test(html), "Frage vor dem Senden + Schalter");
+  assert.ok(/Date\.now\(\) - \(WF_ZULETZT\[k\] \|\| 0\) < 30 \* 60000/.test(html), "je Chat höchstens alle 30 Min.");
+  assert.ok(/const wege = notfall \|\| wichtig \? \["push", "email"\]/.test(server) && /vars\.wichtigkeit === "hoch" \? \{ priority: "high" \}/.test(server), "Hoch: Push + E-Mail, Priorität an den Communicator");
+  assert.ok(/await wichtigUngelesenMelden\(\)/.test(server) && /await protokoll\(null, "wichtig_ungelesen"[^\n]*\n\s*if \(!offen\.length\) continue;/.test(server), "24-Std.-Hinweis einmal (erst merken, dann senden)");
+}
