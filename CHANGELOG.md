@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.279.0 – 2026-10-11 – KC-CLUB-EISZAPFEN-3: Eiszapfen realitätsnah – auch am PC
+Eiszapfen werden in echten Pixeln gezeichnet statt in die Breite gezogen: am breiten PC-Bildschirm mehr Zapfen statt breiter Dreiecke. Jeder Zapfen leicht schief mit Verdickung, rundem Ende, Eis-Verlauf, Glanzkante und Kontur; oben ein unregelmäßiger Eisrand; Tropfen erscheinen nur, wenn sie fallen.
+
 ## 2.278.0 – 2026-10-11 – KC-CLUB-EISZAPFEN-2: Eiszapfen reichen bis ins Feld darunter
 Eiszapfen an der Leiste mit den Lämpchen sind länger: insgesamt längere Zapfen, jeder fünfte lang, und die längsten Spitzen ragen gerade 6 px in das Feld darunter – gemessen am echten Abstand auf dem Gerät (neu gemessen beim Ein-/Ausrollen des Kopfes und beim Drehen des Handys).
 

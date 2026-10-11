@@ -860,8 +860,10 @@
   /* KC-CLUB-JAHRESZEIT-AUTOMATIK (2.273.0): kurze Eiszapfen unter der LED-Leiste – höchstens 9 px, nichts wird verdeckt, Tippen geht durch */
   .statusleiste.jz-eis-an { position: relative; }
   .jz-eis { position: absolute; left: 12px; width: calc(100% - 24px); top: calc(100% - 1px); height: 22px; pointer-events: none; z-index: 1; overflow: visible; filter: drop-shadow(0 1px 1px rgba(0,40,80,.25)); }
-  .jz-eis .jz-tropfen { fill: #dff3ff; animation: jzTropfen 4s ease-in infinite; }
-  .jz-eis .jz-glanz { fill: none; stroke: #fff; stroke-width: 1; stroke-linecap: round; opacity: .8; vector-effect: non-scaling-stroke; }
+  .jz-eis .jz-tropfen { fill: #dff3ff; opacity: 0; animation: jzTropfen 4s ease-in infinite both; } /* 2.279.0: vor dem ersten Tropfen unsichtbar */
+  .jz-eis .jz-glanz { fill: none; stroke: #fff; stroke-width: 1.1; stroke-linecap: round; opacity: .85; }
+  .jz-eis .jz-zapfen { stroke: rgba(120, 180, 230, .55); stroke-width: .6; }
+  .jz-eis .jz-rand { fill: #fbfdff; opacity: .95; } /* 2.279.0: unregelmäßiger Eisrand oben */
   @keyframes jzTropfen { 0%, 70% { transform: translateY(0); opacity: 0; } 75% { opacity: .9; } 100% { transform: translateY(4px); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .jz-eis .jz-tropfen { animation: none; opacity: 0; } }
   /* KC-CLUB-START-HINWEIS (2.268.0): drei Knöpfe untereinander – lange Beschriftung gut lesbar */
@@ -4207,6 +4209,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.278.0" data-v="2.278.0"></script>
+<script src="app.js?v=2.279.0" data-v="2.279.0"></script>
 </body>
 </html>

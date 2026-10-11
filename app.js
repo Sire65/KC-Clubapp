@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.278.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.279.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12305,31 +12305,35 @@ function jzTieferWinter(art) {
 function jzEiszapfen(h, art) {
   const leiste = h.querySelector(".statusleiste"); leiste?.querySelector(".jz-eis")?.remove(); leiste?.classList.remove("jz-eis-an");
   if (!leiste || einfach() || !fxAn() || !einst("jahreszeit", true) || !jzTieferWinter(art)) return;
-  // 2.277.0 (Wunsch Hansi „länger und unterschiedlich wie Eiszapfen am Dach“): unregelmäßige Abstände, viele kurze, einige lange (bis 21 px),
-  // leicht gewellt mit Glanzkante; immer gleich (fester Zufall), damit nichts springt. Höchstens 22 px – das Infofeld darunter bleibt frei.
-  const zf = (i) => { const v = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); }, teile = [];
-  for (let x = 2.5, i = 0; x < 97.5; i++) {
-    const l = Math.min(21, 3.5 + Math.pow(zf(i), 1.3) * 12 + (i % 5 === 2 ? 6 : 0)) /* 2.278.0: insgesamt länger, jeder 5. lang */, b = .45 + l * .045 + zf(i + 50) * .35, X = (v) => v.toFixed(2);
-    teile.push(`<path d="M${X(x - b)} 0 Q${X(x - b * .5)} ${X(l * .45)} ${X(x - b * .12)} ${X(l * .86)} Q${X(x)} ${X(l * 1.02)} ${X(x + b * .12)} ${X(l * .86)} Q${X(x + b * .6)} ${X(l * .4)} ${X(x + b)} 0 Z"/>`
-      + (l > 7 ? `<path class="jz-glanz" d="M${X(x - b * .45)} 1 Q${X(x - b * .3)} ${X(l * .4)} ${X(x - b * .08)} ${X(l * .75)}"/>` : "")
-      + (l > 12 && i % 2 ? `<circle class="jz-tropfen" cx="${X(x)}" cy="${X(l + .7)}" r=".6" style="animation-delay:${X((i * .9) % 5)}s"/>` : ""));
-    x += 1.6 + zf(i + 100) * 3.6;
-  }
-  const zapfen = teile.join("");
   leiste.classList.add("jz-eis-an");
-  leiste.insertAdjacentHTML("beforeend", `<svg class="jz-eis" viewBox="0 0 100 22" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="jzEisVerlauf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="1"/><stop offset=".55" stop-color="#d9f0ff" stop-opacity=".95"/><stop offset="1" stop-color="#9fd4ff" stop-opacity=".7"/></linearGradient></defs><rect x="0" y="0" width="100" height="1.4" rx=".7" fill="#ffffff" opacity=".9"/><g fill="url(#jzEisVerlauf)">${zapfen}</g></svg>`);
+  leiste.insertAdjacentHTML("beforeend", '<svg class="jz-eis" aria-hidden="true"></svg>');
   requestAnimationFrame(jzEisLaenge);
 }
-// 2.278.0 (Wunsch Hansi „noch länger – die Spitzen sollen gerade in das Feld darunter reichen“): die Länge richtet sich nach dem echten
-// Abstand bis zum Infofeld – die längsten Spitzen ragen 6 px hinein. Fehlt das Feld (z. B. Kopf eingerollt), bleibt es bei 22 px.
+// 2.277.0 (Wunsch Hansi „länger und unterschiedlich wie Eiszapfen am Dach“): unregelmäßige Abstände, viele kurze, einige lange.
+// 2.278.0 („Spitzen gerade in das Feld darunter“): Länge nach dem echten Abstand bis zum Infofeld – die längsten ragen 6 px hinein,
+// ohne Feld (z. B. Kopf eingerollt) 22 px.
+// 2.279.0 (Fund Hansi am PC-Monitor „einfach Dreiecke, realitätsnäher“): in echten Pixeln gezeichnet statt in die Breite gezogen – auf dem
+// breiten Bildschirm mehr Zapfen, nie breiter. Jeder Zapfen leicht schief, mit Verdickung, rundem Tropfen-Ende, Eis-Verlauf und Glanzkante;
+// oben ein unregelmäßiger Eisrand. Fester Zufall, damit nichts springt; neu gezeichnet nur, wenn sich Breite oder Länge ändern.
 function jzEisLaenge() {
   const e = document.querySelector("#v-start .statusleiste .jz-eis"); if (!e) return;
   const l = e.parentElement.getBoundingClientRect(), f = document.querySelector("#v-start #heroInfo"), r = f && rgSichtbar(f) ? f.getBoundingClientRect() : null;
-  const luecke = r && r.top > l.bottom ? r.top - l.bottom : 0;
-  // längsten Zapfen messen und das Bild so strecken, dass genau seine Spitze 6 px ins Feld ragt
-  const oben = e.getBoundingClientRect().top, h0 = e.getBoundingClientRect().height || 22;
-  const tief = Math.max(...[...e.querySelectorAll("path:not(.jz-glanz)")].map((x) => x.getBoundingClientRect().bottom)) - oben;
-  e.style.height = `${Math.round(Math.max(22, Math.min(48, luecke ? (luecke + 6) * h0 / Math.max(1, tief) : 22)))}px`;
+  const luecke = r && r.top > l.bottom ? r.top - l.bottom : 0, W = Math.round(e.getBoundingClientRect().width); if (W < 20) return;
+  const lmax = Math.round(luecke ? Math.max(22, Math.min(46, luecke + 6)) : 22), H = lmax + 5, mass = `${W}x${lmax}`;
+  if (e.dataset.mass === mass) return; e.dataset.mass = mass;
+  const zf = (i) => { const v = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); }, X = (v) => v.toFixed(1), roh = [];
+  for (let x = 3, i = 0; x < W - 3; i++) { roh.push({ x, i, r: 3.5 + Math.pow(zf(i), 1.3) * 12 + (i % 5 === 2 ? 6 : 0) }); x += 4 + zf(i + 100) * 8; }
+  const s = lmax / Math.max(...roh.map((z) => z.r));
+  const zapfen = roh.map(({ x, i, r: rr }) => {
+    const L = rr * s, b = 1.4 + L * .085 + zf(i + 50) * 1.3, d = (zf(i + 200) - .5) * b * .7, P = (fx, fy) => `${X(x + fx * b + d * fy)} ${X(fy * L)}`; // d: Spitze leicht schief
+    return `<path class="jz-zapfen" d="M${X(x - b)} 0 C${P(-1.05, .22)} ${P(-.55, .48)} ${P(-.36, .6)} C${P(-.44, .7)} ${P(-.16, .82)} ${P(-.07, .94)} Q${P(0, 1.03)} ${P(.08, .94)} C${P(.2, .8)} ${P(.5, .68)} ${P(.4, .6)} C${P(.62, .47)} ${P(1.05, .22)} ${X(x + b)} 0 Z"/>`
+      + (L > 9 ? `<path class="jz-glanz" d="M${P(-.5, .06)} Q${P(-.42, .38)} ${P(-.16, .74)}"/>` : "")
+      + (L > lmax * .6 && i % 2 ? `<circle class="jz-tropfen" cx="${X(x + d)}" cy="${X(L + .4)}" r="1.1" style="animation-delay:${X((i * .9) % 5)}s"/>` : "");
+  }).join("");
+  let rand = "M0 -1"; for (let x = 0, i = 0; x < W; i++) { const n = Math.min(W, x + 5 + zf(i + 300) * 7); rand += ` Q${X((x + n) / 2)} ${X(2 + zf(i + 400) * 3)} ${X(n)} ${X(.8 + zf(i + 500))}`; x = n; }
+  e.setAttribute("viewBox", `0 0 ${W} ${H}`); e.style.height = `${H}px`;
+  e.innerHTML = `<defs><linearGradient id="jzEisVerlauf" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity=".97"/><stop offset=".4" stop-color="#eaf7ff" stop-opacity=".92"/><stop offset=".8" stop-color="#b9e2ff" stop-opacity=".82"/><stop offset="1" stop-color="#93ccf3" stop-opacity=".72"/></linearGradient></defs>
+    <g fill="url(#jzEisVerlauf)">${zapfen}</g><path class="jz-rand" d="${rand} L${W} -1 Z"/>`;
 }
 addEventListener("resize", () => requestAnimationFrame(jzEisLaenge));
 const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"] };

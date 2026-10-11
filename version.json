@@ -1,11 +1,18 @@
 {
-  "version": "2.278.0",
+  "version": "2.279.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "❄️ Eiszapfen länger – die Spitzen reichen gerade ins Feld darunter"
+    "❄️ Eiszapfen realitätsnah – auch am PC-Bildschirm"
   ],
   "verlauf": [
+    {
+      "version": "2.279.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "❄️ Eiszapfen realitätsnah – auch am PC-Bildschirm"
+      ]
+    },
     {
       "version": "2.278.0",
       "datum": "2026-10-11",

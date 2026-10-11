@@ -5804,7 +5804,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/typ: "flocke", x: p\.x \+ jzbZ\(-14, 14\)/.test(html), "Schal wirbelt mit Schnee hoch");
   assert.ok(/p\.vx = W\.dir \* Math\.min\(110, Math\.max\(50, Math\.abs\(p\.vx\)\)\)/.test(html), "Schal bleibt nie hängen – verlässt das Bild sicher");
   assert.ok(/J\.sonne = null; J\.wind = null;/.test(html), "Sonne verschwindet mit dem Lauf");
-  assert.ok(/viewBox="0 0 100 22"/.test(html) && /\.jz-eis \{[^}]*height: 22px/.test(html) && /Math\.pow\(zf\(i\), 1\.3\)/.test(html), "Eiszapfen länger und unterschiedlich (Grundhöhe 22 px, 2.278.0 bis ins Infofeld gestreckt)");
+  assert.ok(/setAttribute\("viewBox", `0 0 \$\{W\} \$\{H\}`\)/.test(html) && /\.jz-eis \{[^}]*height: 22px/.test(html) && /Math\.pow\(zf\(i\), 1\.3\)/.test(html), "Eiszapfen länger und unterschiedlich (Grundhöhe 22 px, 2.278.0 bis ins Infofeld gestreckt)");
 }
 // 2.277.1: Vertragstest „Schneemann steht 50 s“ an die Sonne angepasst (Verhalten unverändert: nach 50 s beginnt das Schmelzen)
 {
@@ -5812,9 +5812,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.278.0 KC-CLUB-EISZAPFEN-2 (Wunsch Hansi „noch länger – die Spitzen sollen gerade in das Feld darunter reichen“)
 {
-  assert.ok(/function jzEisLaenge\(\)/.test(html) && /e\.style\.height = `\$\{Math\.round\(Math\.max\(22, Math\.min\(48, luecke \? \(luecke \+ 6\) \* h0 \/ Math\.max\(1, tief\) : 22\)\)\)\}px`;/.test(html), "längste Spitze ragt 6 px ins Infofeld, höchstens 48 px");
+  assert.ok(/function jzEisLaenge\(\)/.test(html) && /const lmax = Math\.round\(luecke \? Math\.max\(22, Math\.min\(46, luecke \+ 6\)\) : 22\)/.test(html), "längste Spitze ragt 6 px ins Infofeld, höchstens 46 px (2.279.0 in Pixeln)");
   assert.ok(/requestAnimationFrame\(jzEisLaenge\)/.test(html) && /addEventListener\("resize", \(\) => requestAnimationFrame\(jzEisLaenge\)\)/.test(html), "neu gemessen bei Kopf-Rollo und Größenänderung");
   assert.ok(/i % 5 === 2 \? 6 : 0/.test(html), "jeder fünfte Zapfen lang");
+}
+// 2.279.0 KC-CLUB-EISZAPFEN-3 (Fund Hansi am PC-Monitor „einfach Dreiecke – realitätsnäher“): in echten Pixeln statt in die Breite gezogen
+{
+  assert.ok(!/class="jz-eis" viewBox="0 0 100/.test(html) && !/preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="jzEisVerlauf"/.test(html), "kein Strecken mehr in die Breite");
+  assert.ok(/x \+= 4 \+ zf\(i \+ 100\) \* 8;/.test(html), "Zapfen-Abstand in Pixeln – breiter Bildschirm = mehr Zapfen");
+  assert.ok(/class="jz-zapfen" d="M\$\{X\(x - b\)\} 0 C/.test(html) && /class="jz-rand"/.test(html), "geschwungene Zapfen mit Eisrand");
+  assert.ok(/if \(e\.dataset\.mass === mass\) return;/.test(html), "nur bei geänderter Breite oder Länge neu zeichnen");
+  assert.ok(/\.jz-eis \.jz-tropfen \{ fill: #dff3ff; opacity: 0; animation: jzTropfen 4s ease-in infinite both; \}/.test(html), "Tropfen erst sichtbar, wenn sie fallen");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
