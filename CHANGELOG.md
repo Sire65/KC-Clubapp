@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.226.0 – 2026-10-11 – Direkte Leitung (Realtime) für Chat, Anklopfen und Anrufe
+KC-CLUB-REALTIME: Die App hält eine direkte Leitung zum Server (Supabase Realtime, kostenlos). Neue Nachrichten, „schreibt gerade“, Anklopfen und Anrufe kommen sofort statt im Abfrage-Takt – das spart Akku und Server-Aufrufe. Über die Leitung kommt nur ein Signal („es gibt Neues“), nie Text oder Namen; der Inhalt kommt wie bisher sicher über den Server. Fällt die Leitung aus, fragt die App wie früher selbst nach und verbindet sich von allein neu.
+
 ## 2.225.0 – 2026-10-11 – Suche verzeiht Tippfehler
 KC-CLUB-SUCHE-UNSCHARF: Die Suche findet auch bei Tippfehlern – „Würdemann“ findet Wördemann, „Wilfried“ findet Willfried, auch nur der Wortanfang („Würd“). Gilt für die große Suche (Mitglieder, Aktionen, Chats/Gruppen, App-Funktionen), das Hilfe-Zentrum und die Mitglieder-Auswahl (Telefon, Kontakt teilen, SOS). Erst kommen genaue Treffer; ähnliche nur, wenn es keine genauen gibt. Findet die Suche nichts: „🔎 Meintest du …?“.
 

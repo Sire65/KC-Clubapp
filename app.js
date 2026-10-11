@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.225.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.226.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -3677,12 +3677,54 @@ async function onlinePing() {
     }
   } catch {}
 }
+// ---------- KC-CLUB-REALTIME (2.226.0, Wunsch Hansi „direkte Leitung statt ständig nachfragen“) ----------
+// Die App hält eine offene Leitung (Supabase Realtime, Broadcast, kostenlos) auf ihrem eigenen, nicht erratbaren Kanal (init.rtKanal).
+// Darüber kommt nur ein SIGNAL („chat“, „tippt“, „klopfen“, „anruf“ + ggf. Chat-Kennung) – nie Text oder Namen; den Inhalt holt die App
+// wie bisher über den Server. Steht die Leitung, fragt die App seltener selbst nach; bricht sie ab, gilt wieder der alte Takt und die
+// App verbindet sich mit wachsender Pause neu (1 s … 60 s). Der Schlüssel unten ist der öffentliche Browser-Schlüssel (kein Geheimnis).
+const RT_URL = "wss://ptblnpiroqftcvlsrhac.supabase.co/realtime/v1/websocket", RT_KEY = "sb_publishable_SqXIeGN-clcZ4gjmpLdSww_4DLfyy24";
+const RT_HERZ_MS = 25000, RT_WARTE_MAX_MS = 60000;
+const RT = { ws: null, ok: false, ref: 0, herz: null, neu: null, warte: 1000, kanal: null, zu: false, zaehlen: null, signale: 0 };
+const rtAn = () => RT.ok;
+function rtVerbinden() {
+  const kanal = INIT?.rtKanal;
+  if (!kanal || typeof WebSocket === "undefined" || document.body.classList.contains("im-notbetrieb")) return;
+  if (RT.ws && RT.kanal === kanal && RT.ws.readyState <= 1) return; // steht schon / baut gerade auf
+  rtTrennen(); RT.kanal = kanal; RT.zu = false;
+  let ws; try { ws = new WebSocket(`${RT_URL}?apikey=${RT_KEY}&vsn=1.0.0`); } catch { return rtSpaeter(); }
+  RT.ws = ws;
+  const senden = (o) => { try { ws.send(JSON.stringify({ ...o, ref: String(++RT.ref) })); } catch {} };
+  ws.onopen = () => {
+    senden({ topic: "realtime:" + kanal, event: "phx_join", payload: { config: { broadcast: { self: false }, presence: { key: "" }, private: false } } });
+    clearInterval(RT.herz); RT.herz = setInterval(() => senden({ topic: "phoenix", event: "heartbeat", payload: {} }), RT_HERZ_MS);
+  };
+  ws.onmessage = (e) => {
+    let d; try { d = JSON.parse(e.data); } catch { return; }
+    if (d.event === "phx_reply" && d.topic === "realtime:" + kanal && d.payload?.status === "ok" && !RT.ok) { RT.ok = true; RT.warte = 1000; onlineTakt(); rtNachholen(); }
+    else if (d.event === "broadcast" && d.payload?.event === "neu") rtSignal(d.payload.payload || {});
+  };
+  ws.onclose = () => { if (RT.ws !== ws) return; const war = RT.ok; RT.ok = false; RT.ws = null; clearInterval(RT.herz); if (war) onlineTakt(); if (!RT.zu) rtSpaeter(); };
+  ws.onerror = () => {};
+}
+function rtSpaeter() { clearTimeout(RT.neu); RT.neu = setTimeout(rtVerbinden, RT.warte); RT.warte = Math.min(RT.warte * 2, RT_WARTE_MAX_MS); }
+function rtTrennen() { RT.zu = true; clearTimeout(RT.neu); clearInterval(RT.herz); const ws = RT.ws; RT.ws = null; RT.ok = false; try { ws?.close(); } catch {} }
+// nach dem (Wieder-)Verbinden einmal nachsehen, damit in der Lücke nichts verloren geht
+function rtNachholen() { onlinePing(); if (chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } }
+function rtSignal(s) {
+  RT.signale++;
+  if (s.art === "klopfen" || s.art === "anruf") { onlinePing(); if (RUF?.id) anrufPruefen(); return; }
+  if ((s.art === "chat" || s.art === "tippt") && s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) {
+    chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; });
+  }
+  if (s.art === "chat") { clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500); } // Zähler/Kachel frisch (mehrere Signale = einmal)
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && INIT?.rtKanal && !RT.ok) { RT.warte = 1000; rtVerbinden(); } });
 // Takt: normal 60 s; während ich auf eine Antwort warte alle 4 s (höchstens 3 Minuten)
 function onlineTakt() {
   clearInterval(ONL.timer);
   // KC-CLUB-ANRUF-TAKT (0.80.0): ohne Push erfährt die App von einem Anruf nur über diesen Takt – ein Anruf klingelt 45 s,
   // darum dann alle 15 s nachsehen (mit Push weckt der Push die offene App sofort, 60 s reichen).
-  ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : sparTakt(PUSH_AKTIV ? 60000 : 15000)); // KC-CLUB-SPARMODUS: seltener
+  ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : sparTakt(PUSH_AKTIV || rtAn() ? 60000 : 15000)); // KC-CLUB-SPARMODUS: seltener · KC-CLUB-REALTIME: Leitung steht → wie mit Push
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden) onlinePing(); });
 // KC-CLUB-ONLINE-LED (0.96.0): vierte LED oben unter den drei Verbindungs-LEDs – grün, sobald jemand anderes online ist,
@@ -3985,8 +4027,8 @@ function chatTakt() {
   ONL.takt++;
   if (chatTakt.laeuft || document.hidden) return;
   const jemandDa = (CHAT?.teilnehmer || []).some((t) => t.person_id !== ICH?.person_id && ONL.ids.has(t.person_id));
-  const frisch = Date.now() - CHAT_AKTIV < 90000, ruhig = PUSH_AKTIV ? 10 : 6;
-  if (!(CHAT?.tippt?.length || (jemandDa && ONL.takt % (frisch ? 2 : 4) === 0) || ONL.takt % ruhig === 0)) return;
+  const frisch = Date.now() - CHAT_AKTIV < 90000, ruhig = rtAn() ? 30 : PUSH_AKTIV ? 10 : 6; // KC-CLUB-REALTIME: neue Nachrichten melden sich selbst – nur noch alle 60 s zur Sicherheit
+  if (!(CHAT?.tippt?.length || (jemandDa && ONL.takt % (rtAn() ? 5 : frisch ? 2 : 4) === 0) || ONL.takt % ruhig === 0)) return; // Realtime: „gelesen“-Haken weiter alle 10 s
   chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; });
 }
 // KC-CLUB-TIPPT (0.54.0): beim Tippen höchstens alle 3 s „ich schreibe“ melden, Feld leer → sofort aus.
@@ -13466,6 +13508,7 @@ async function neuLadenRoh(vonHand) {
     $("ichName").textContent = ICH.name + (ICH.aemter?.length ? ` (${ICH.aemter.join(", ")})` : ICH.admin ? " (Admin)" : "");
     $("neuTreffenKnopf").classList.remove("versteckt"); // KC-CLUB-PRIVATTERMIN: „＋ Neu“ für alle (Mitglieder: privat)
     heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
+    rtVerbinden(); // KC-CLUB-REALTIME (2.226.0): Leitung aufbauen bzw. halten
     if (vonHand) { melde("Aktualisiert"); updatePruefen(false); }
     standMerken(); offlineStandZeigen(false); owSenden(); // KC-CLUB-OFFLINE (2.1.0)
     if (ICH) startBereitLoesen(); // KC-CLUB-START-BEREIT

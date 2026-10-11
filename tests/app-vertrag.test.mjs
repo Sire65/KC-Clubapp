@@ -1384,7 +1384,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/eq\("von", an\)\.eq\("an", ich\.person_id\)\.eq\("status", "klingelt"\)/.test(st) && /gegenanruf: gegen\[0\]\.id/.test(st) && st.indexOf("gegenanruf") < st.indexOf('from("kc_club_anruf").insert'), "Server: Gegenanruf vor dem Anlegen prüfen");
   assert.ok(/if \(r\.gegenanruf\) \{ anrufAufraeumen\(\); return gegenanrufAnnehmen\(r\.gegenanruf, mitBild\); \}/.test(html), "App: Gegenanruf annehmen");
   assert.ok(/RUF\.gegen\?\.person_id === ruf\.von\?\.person_id && ICH\?\.person_id > ruf\.von\.person_id/.test(html), "Fallback: feste Regel, wer nachgibt");
-  assert.ok(/ONL\.wartet \? 4000 : sparTakt\(PUSH_AKTIV \? 60000 : 15000\)/.test(html) && html.indexOf("let PUSH_AKTIV") < html.indexOf("let ONL ="), "Takt ohne Push 15 s (vor Nutzung deklariert)");
+  assert.ok(/ONL\.wartet \? 4000 : sparTakt\(PUSH_AKTIV (\|\| rtAn\(\) )?\? 60000 : 15000\)/.test(html) && html.indexOf("let PUSH_AKTIV") < html.indexOf("let ONL ="), "Takt ohne Push 15 s (vor Nutzung deklariert)");
 }
 
 // 102. 0.81.0: Anrufe – Kurzantwort, zweiter Anruf, verpasst (KC-CLUB-ANRUF-KURZANTWORT / -ZWEIT / -VERPASST)
@@ -3746,7 +3746,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 359. 2.23.9: Spar-Takt (KC-CLUB-SPARTAKT) – weniger Server-Aufrufe, damit die kostenlose Grenze sicher hält
 {
   assert.ok(/if \(chatTakt\.laeuft \|\| document\.hidden\) return;/.test(html), "Chat im Hintergrund nicht nachfragen");
-  assert.ok(/const frisch = Date\.now\(\) - CHAT_AKTIV < 90000, ruhig = PUSH_AKTIV \? 10 : 6;/.test(html) && /CHAT\?\.tippt\?\.length \|\| \(jemandDa && ONL\.takt % \(frisch \? 2 : 4\) === 0\)/.test(html), "Tippen bleibt sofort, sonst seltener");
+  assert.ok(/const frisch = Date\.now\(\) - CHAT_AKTIV < 90000, ruhig = (rtAn\(\) \? 30 : )?PUSH_AKTIV \? 10 : 6;/.test(html) && /CHAT\?\.tippt\?\.length \|\| \(jemandDa && ONL\.takt % \((rtAn\(\) \? 5 : )?frisch \? 2 : 4\) === 0\)/.test(html), "Tippen bleibt sofort, sonst seltener"); // 2.226.0: mit Realtime noch seltener
   assert.ok(/NA\.idStand = idStand; CHAT_AKTIV = Date\.now\(\);/.test(html), "neue Nachricht → wieder schnell");
   assert.ok(/if \(SP\.offen\.ichDran \? SPT_TAKT\.n % 5 : SPT_TAKT\.ruhig > 40 && !SP\.offen\.uhr\?\.laeuft && SPT_TAKT\.n % 3\) return;/.test(html) && /SPT_TAKT\.ruhig = 0; const warDran/.test(html), "Spiele-Takt");
   assert.ok(!/function aeErledigt/.test(html), "alter Knopf „Im KC Manager eingetragen“ entfernt");
@@ -8041,4 +8041,16 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   for (const [q, t, soll] of [["Würdemann", "Peter Wördemann", true], ["Wilfried", "Willfried Wittwer", true], ["Würd", "Wördemann", true], ["Hans", "Klaus Zander", false], ["Koch", "Kurt Bach", false]])
     assert.strictEqual(f.suUnscharf(q, t), soll, `${q} → ${t}`);
   assert.deepStrictEqual(f.suFiltern([{ n: "Zander" }, { n: "Zandler" }], "Zander", (m) => m.n), [{ n: "Zander" }], "genaue Treffer zuerst, ähnliche nur ohne genaue");
+}
+
+// 2.226.0 KC-CLUB-REALTIME (Wunsch Hansi „direkte Leitung“): nur Signal über Supabase Realtime, Inhalt weiter über den Server;
+// Kanal je Person nicht erratbar (HMAC, Geheimnis im Vault); Ausfall → alter Takt + Neuverbinden
+{
+  const m = lies("supabase/migrations/20261011_kc_club_v2226_realtime.sql");
+  assert.ok(/extensions\.hmac\(p_person, \(select decrypted_secret from vault\.decrypted_secrets where name = 'kc_club_rt_geheimnis'\)/.test(m) && /revoke all on function public\.kc_club_rt_kanal\(text\) from public, anon, authenticated/.test(m), "Kanal: HMAC, nur Server");
+  assert.ok(/jsonb_build_object\('art', p_art\)/.test(m) && !/body|display_name/.test(m.slice(m.indexOf("kc_club_rt_klingeln"), m.indexOf("kc_club_rt_trigger"))), "nur Art + Chat-Kennung, kein Text");
+  assert.ok(/exception when others then null/.test(m) && /after insert on public\.kc_communication_messages/.test(m) && /kc_club_tippen/.test(m) && /kc_club_anklopfen/.test(m) && /kc_club_anruf/.test(m), "Fehler stören das Speichern nie; alle vier Quellen");
+  assert.ok(/rtKanal: await pRtKanal/.test(server) && /db\.rpc\("kc_club_rt_kanal"/.test(server), "init liefert den eigenen Kanal");
+  assert.ok(/RT_KEY = "sb_publishable_/.test(html) && !/service_role|SERVICE_ROLE/.test(html.slice(html.indexOf("KC-CLUB-REALTIME (2.226.0"), html.indexOf("KC-CLUB-REALTIME (2.226.0") + 5000)), "nur öffentlicher Browser-Schlüssel");
+  assert.ok(/function rtSpaeter\(\)[\s\S]{0,200}RT\.warte \* 2, RT_WARTE_MAX_MS/.test(html) && /PUSH_AKTIV \|\| rtAn\(\) \? 60000 : 15000/.test(html) && /rtNachholen\(\)/.test(html), "Ausfall: Neuverbinden mit Pause, sonst alter Takt; Lücke nachholen");
 }
