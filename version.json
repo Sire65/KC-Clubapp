@@ -1,11 +1,20 @@
 {
-  "version": "2.275.0",
+  "version": "2.276.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🔢 Auch der Rundgang „die App im Überblick“ erklärt die Zahlen an Registern und Kacheln"
+    "📲 Neue Erklär-Videos zum Installieren: persönlicher Link, je Browser (Chrome, Edge, Samsung, Safari, Firefox), weitere Geräte mit Code, Link und Code erklärt",
+    "🔧 Knopf unten auf der Startseite heißt jetzt wie oben „Erweiterte Ansicht“"
   ],
   "verlauf": [
+    {
+      "version": "2.276.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "📲 Neue Erklär-Videos zum Installieren: persönlicher Link, je Browser (Chrome, Edge, Samsung, Safari, Firefox), weitere Geräte mit Code, Link und Code erklärt",
+        "🔧 Knopf unten auf der Startseite heißt jetzt wie oben „Erweiterte Ansicht“"
+      ]
+    },
     {
       "version": "2.275.0",
       "datum": "2026-10-11",

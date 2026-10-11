@@ -764,6 +764,74 @@
   .rg-knoepfe2 { grid-template-columns: 1fr auto; margin-top: 6px; }
   /* KC-CLUB-VIDEO-LIVE (2.261.0): Zeigefinger macht die Aktionen vor – über der Video-Schicht; läuft auch bei „Bewegung reduzieren“ (ist der Inhalt) */
   .rg-finger { position: fixed; left: 0; top: 0; z-index: 9003; pointer-events: none; opacity: 0; transition: opacity .25s; will-change: transform; }
+  /* 2.276.0 KC-CLUB-VIDEO-INSTALL: nachgebaute Browser- und Gerätebilder für die Installations-Videos (unter der Video-Tafel, nie antippbar) */
+  .rg-sim { position: fixed; inset: 0; z-index: 8999; /* gleich wie Lupe/Herz im Video, liegt aber später im Dokument → darüber */ pointer-events: none; display: flex; flex-direction: column; background: #fff; color: #202124; font-family: Roboto, "Segoe UI", system-ui, sans-serif; overflow: hidden; padding-top: env(safe-area-inset-top); }
+  .rg-sim-ueber { background: rgba(0, 0, 0, .35); }
+  .rg-sim-pc, .rg-sim-tablet { background: linear-gradient(160deg, #2f5d8a, #6b4c6e); }
+  .sim-band { position: absolute; top: calc(env(safe-area-inset-top) + 5px); left: 50%; transform: translateX(-50%); z-index: 6; background: rgba(0, 0, 0, .62); color: #fff; font-size: .7rem; padding: 2px 10px; border-radius: 99px; white-space: nowrap; }
+  .sim-status { display: flex; justify-content: space-between; padding: 6px 18px 4px; font-size: .8rem; font-weight: 600; flex: none; }
+  .sim-leiste { display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: #f1f3f4; flex: none; }
+  .sim-leiste.unten { border-top: 1px solid #ddd; justify-content: space-around; padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+  .sim-leiste.safari { background: #f7f7f8; }
+  .sim-leiste.mini { background: #fff; border-bottom: 1px solid #ddd; }
+  .sim-adr { flex: 1; min-width: 0; background: #fff; border-radius: 99px; padding: 8px 12px; font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #3c4043; position: relative; }
+  .sim-adr.mitte { text-align: center; background: #e9e9ec; }
+  .sim-adr.klein { background: none; font-weight: 600; } .sim-adr small { display: block; font-weight: 400; color: #666; font-size: .72rem; overflow: hidden; text-overflow: ellipsis; }
+  .sim-kn { min-width: 34px; height: 34px; padding: 0 6px; display: inline-grid; place-items: center; font-size: 1.15rem; border-radius: 99px; color: #3c4043; flex: none; box-sizing: border-box; }
+  .sim-kn.sim-tabs { font-size: .75rem; font-weight: 700; } .sim-kn.sim-tabs::before { content: ""; position: absolute; width: 16px; height: 16px; border: 2px solid currentColor; border-radius: 4px; }
+  .sim-kn.sim-tabs { position: relative; }
+  .sim-seite { flex: 1; min-height: 0; overflow: hidden; position: relative; background: #f5eee3; }
+  .sim-seite.hell { background: var(--hg, #f5eee3); overflow-y: auto; }
+  .sim-app .sim-hero { background: #741521; color: #fff; padding: 16px 14px; border-radius: 0 0 20px 20px; display: flex; gap: 12px; align-items: center; }
+  .sim-hero img { width: 44px; height: 44px; } .sim-hero small { display: block; font-size: .7rem; letter-spacing: .08em; opacity: .85; } .sim-hero b { font-size: 1.3rem; }
+  .sim-kacheln { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; }
+  .sim-kacheln > div { background: #fff; border-radius: 16px; padding: 14px 12px; font-size: 1.5rem; box-shadow: 0 1px 4px rgba(0, 0, 0, .1); } .sim-kacheln b { display: block; font-size: .9rem; margin-top: 4px; color: #3a1a1e; }
+  .sim-menue { position: absolute; top: 4px; right: 6px; width: min(270px, 78%); background: #fff; border-radius: 10px; box-shadow: 0 6px 24px rgba(0, 0, 0, .3); padding: 6px 0; z-index: 3; }
+  .sim-menue.unten { top: auto; bottom: 6px; } .sim-menue > div { padding: 11px 16px; font-size: .92rem; }
+  .sim-blatt { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 18px 18px 0 0; box-shadow: 0 -6px 24px rgba(0, 0, 0, .25); padding: 8px 12px 16px; z-index: 3; }
+  .sim-blatt.hoch { max-height: 78%; } .sim-griff { width: 40px; height: 4px; border-radius: 4px; background: #ccc; margin: 0 auto 10px; } .sim-btitel { display: block; margin: 0 4px 6px; }
+  .sim-gitter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; } .sim-gitter > div { text-align: center; font-size: .72rem; padding: 8px 2px; border-radius: 12px; line-height: 1.2; }
+  .sim-gitter i { display: block; font-style: normal; font-size: 1.35rem; margin-bottom: 4px; }
+  .sim-liste > div { padding: 12px 10px; border-bottom: 1px solid #eee; font-size: .95rem; }
+  .sim-teilen-apps { display: flex; justify-content: space-around; padding: 4px 0 12px; font-size: .7rem; text-align: center; } .sim-teilen-apps i { display: block; font-style: normal; font-size: 1.6rem; }
+  .sim-dialog-hg { position: absolute; inset: 0; background: rgba(0, 0, 0, .42); display: grid; place-items: center; z-index: 4; }
+  .rg-sim-ueber > .sim-dialog-hg { position: relative; flex: 1; background: none; }
+  .sim-dialog { background: #fff; border-radius: 22px; padding: 18px; width: min(320px, 84%); box-shadow: 0 10px 30px rgba(0, 0, 0, .3); }
+  .sim-dialog.karte { color: var(--text); background: var(--karte, #fff); }
+  .sim-dtitel { display: block; font-size: 1.1rem; margin-bottom: 12px; }
+  .sim-appicon { display: flex; gap: 12px; align-items: center; margin: 6px 0 14px; } .sim-appicon img { width: 46px; height: 46px; border-radius: 12px; }
+  .sim-appicon small { display: block; color: #666; font-size: .75rem; } .sim-appicon.gross img { width: 64px; height: 64px; border-radius: 15px; }
+  .sim-dkn { display: flex; justify-content: flex-end; gap: 6px; } .sim-dkn .sim-kn { color: #1a73e8; font-weight: 600; font-size: .95rem; padding: 0 12px; }
+  .sim-dkn .sim-kn.voll { background: #1a73e8; color: #fff; }
+  .sim-home { flex: 1; background: linear-gradient(165deg, #23395b, #6d4a5c 70%, #a0715e); display: grid; grid-template-columns: repeat(4, 1fr); align-content: start; gap: 22px 4px; padding: 64px 12px 12px; }
+  .sim-home > div { text-align: center; color: #fff; font-size: .72rem; text-shadow: 0 1px 2px rgba(0, 0, 0, .5); }
+  .sim-home i { width: 54px; height: 54px; border-radius: 15px; display: grid; place-items: center; margin: 0 auto 5px; font-size: 1.6rem; font-style: normal; background: rgba(255, 255, 255, .22); }
+  .sim-home img { width: 54px; height: 54px; border-radius: 15px; display: block; margin: 0 auto 5px; box-shadow: 0 2px 8px rgba(0, 0, 0, .35); }
+  .sim-home.pc { grid-template-columns: repeat(auto-fill, 76px); padding: 60px 14px; background: linear-gradient(160deg, #2f5d8a, #6b4c6e); }
+  .sim-neu { animation: simNeu .6s ease-out both; } @keyframes simNeu { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .sim-wa-kopf { background: #075e54; color: #fff; display: flex; gap: 10px; align-items: center; padding: 10px 12px; flex: none; } .sim-wa-kopf small { display: block; font-size: .72rem; opacity: .85; }
+  .sim-wa-bild { width: 36px; height: 36px; border-radius: 50%; background: #fff3; display: grid; place-items: center; }
+  .sim-wa { flex: 1; background: #ece5dd; padding: 14px 10px; }
+  .sim-blase { background: #fff; border-radius: 0 12px 12px 12px; padding: 8px 10px 4px; max-width: 86%; font-size: .92rem; line-height: 1.35; box-shadow: 0 1px 1px rgba(0, 0, 0, .15); }
+  .sim-blase small { display: block; text-align: right; color: #888; font-size: .68rem; }
+  .sim-link { color: #0b57d0; text-decoration: underline; word-break: break-all; display: inline-block; margin-top: 4px; }
+  .sim-link.knopfig { text-decoration: none; background: #741521; color: #fff; padding: 10px 16px; border-radius: 10px; font-weight: 600; }
+  .sim-mail-kopf { padding: 10px 14px; color: #0b57d0; border-bottom: 1px solid #eee; flex: none; } .sim-mail { padding: 14px; flex: 1; } .sim-mail small { display: block; color: #666; margin: 4px 0 10px; }
+  .sim-ios-kopf { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #ddd; flex: none; } .sim-ios-kopf .sim-kn { color: #007aff; font-size: .95rem; }
+  .sim-ios-hinzu { padding: 18px; background: #f2f2f7; }
+  .sim-schalter { display: flex; justify-content: space-between; align-items: center; background: #fff; border-radius: 10px; padding: 10px 12px; }
+  .sim-schalter i { width: 46px; height: 28px; border-radius: 99px; background: #34c759; position: relative; } .sim-schalter i::after { content: ""; position: absolute; right: 2px; top: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; }
+  .sim-browserwahl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 50px 14px 14px; }
+  .sim-browserwahl > div { background: #fff; border-radius: 14px; padding: 12px; text-align: center; box-shadow: 0 1px 4px rgba(0, 0, 0, .12); } .sim-browserwahl i { display: block; font-style: normal; font-size: 1.8rem; }
+  .sim-browserwahl small { display: block; color: #666; font-size: .72rem; } .sim-browserwahl .an { outline: 3px solid #741521; }
+  .sim-pc { flex: 1; display: flex; padding: 44px 10px 10px; } .sim-fenster { flex: 1; max-height: 62vh; display: flex; flex-direction: column; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, .4); }
+  .sim-tabs-pc { display: flex; justify-content: space-between; background: #dee1e6; padding: 6px 10px 0; font-size: .78rem; } .sim-tabs-pc > span:first-child { background: #fff; padding: 6px 12px; border-radius: 8px 8px 0 0; }
+  .sim-plus { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); min-width: 30px; height: 30px; font-size: 1.1rem; }
+  .sim-pc-pop { position: absolute; top: 6px; right: 10px; width: min(280px, 85%); background: #fff; border-radius: 10px; box-shadow: 0 6px 24px rgba(0, 0, 0, .3); padding: 14px; z-index: 3; }
+  .sim-tablet { flex: 1; display: flex; padding: 44px 12px 12px; } .sim-tablet-innen { flex: 1; max-height: 64vh; display: flex; flex-direction: column; border: 12px solid #1d1d1f; border-radius: 26px; overflow: hidden; background: #fff; }
+  .sim-gesperrt { padding-bottom: 20px; } .sim-gesperrt .kc-code { pointer-events: none; }
+  .rg-inst-wahl { display: grid; gap: 8px; margin-bottom: 10px; } .rg-inst-wahl .knopf { text-align: left; } .rg-inst-wahl small { display: block; font-weight: 400; opacity: .8; }
+  @media (prefers-reduced-motion: reduce) { .sim-neu { animation: none; } }
   .rg-finger.an { opacity: 1; }
   .rg-finger span { display: block; font-size: 52px; line-height: 1; transform: translate(-50%, -6px); filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); transition: transform .12s; }
   .rg-finger.drueckt span { transform: translate(-50%, -2px) scale(.86); }
@@ -3282,7 +3350,7 @@
     <div id="kaAusHinweis"></div>
     <div class="wischhinweis">‹ wischen für weitere Bereiche ›</div>
     <div class="karte"><h3 style="display:flex;align-items:center;gap:8px">Heute wichtig<!-- KC-CLUB-TAGESINFO-MANUELL (1.38.0): Tages-Übersicht nochmal (nur Clubleitung) --><button class="knopf klein versteckt" id="tiKnopfStart" style="margin-left:auto" onclick="tagesinfoZeigen(true)">📋 Übersicht</button></h3><div id="wichtig" class="hinweis">…</div></div>
-    <button class="knopf" id="ansichtKnopf" style="width:100%;text-align:center;margin-top:10px" onclick="ansichtWechseln()">🔧 Mehr Funktionen anzeigen</button>
+    <button class="knopf" id="ansichtKnopf" style="width:100%;text-align:center;margin-top:10px" onclick="ansichtWechseln()">🔧 Erweiterte Ansicht</button> <!-- 2.276.0 KC-CLUB-ANSICHT-NAME: gleicher Name wie oben -->
     <button class="tuer" onclick="appSchliessen()">🚪 App schließen</button>
   </section>
 
@@ -3792,7 +3860,7 @@
       <summary>📲 App-Installation</summary>
       <div id="installStand"></div>
       <!-- KC-CLUB-EINRICHTEN (1.87.0) -->
-      <div class="bu-knopfreihe" style="margin:0 0 10px"><button class="knopf haupt" onclick="einrichtenAssistent()">🧭 Schritt für Schritt einrichten</button><button class="knopf" onclick="kurzcodeBlatt()">🔢 Code für ein anderes Gerät</button></div>
+      <div class="bu-knopfreihe" style="margin:0 0 10px"><button class="knopf haupt" onclick="einrichtenAssistent()">🧭 Schritt für Schritt einrichten</button><button class="knopf" onclick="kurzcodeBlatt()">🔢 Code für ein anderes Gerät</button><button class="knopf" onclick="erklaerVideos('installieren')">🎬 Videos zum Installieren</button></div> <!-- 2.276.0 KC-CLUB-VIDEO-INSTALL -->
       <button id="installKnopf" class="knopf haupt versteckt" onclick="installieren()">📲 Jetzt als App installieren</button>
       <button id="zugangKopieren" class="knopf haupt versteckt" onclick="zugangKopieren()">📋 Meinen persönlichen Link kopieren</button>
       <!-- KC-CLUB-PC (0.26.3): denselben Link auf PC/Tablet nutzen – „Link verloren?“ würde den Handy-Link ersetzen -->
@@ -4138,6 +4206,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.275.0" data-v="2.275.0"></script>
+<script src="app.js?v=2.276.0" data-v="2.276.0"></script>
 </body>
 </html>

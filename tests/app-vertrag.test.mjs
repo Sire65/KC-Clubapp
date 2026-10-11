@@ -5776,6 +5776,25 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/puls: \["#raster \.kachel\[data-id\] > \.zahl"\], t: "🔲 Die Kacheln"/.test(html) && /oben in der Ecke eine Zahl: Sie zeigt, was auf dich wartet/.test(html), "Rundgang: Kachel-Zahlen leuchten auf und werden erklärt");
   assert.ok(/id: "ueberblick", stand: "3"/.test(html), "Rundgang-Stand erhöht");
 }
+// 2.276.0 KC-CLUB-ANSICHT-NAME (Wunsch Hansi): Knopf unten heißt wie oben „Erweiterte Ansicht“
+{
+  assert.ok(/onclick="ansichtWechseln\(\)">🔧 Erweiterte Ansicht<\/button>/.test(html) && /einfach\(\) \? "🔧 Erweiterte Ansicht" : "🟢 Einfache Ansicht"/.test(html), "Ansicht-Knopf unten = oben");
+  assert.ok(!/Mehr Funktionen anzeigen/.test(html), "alter Name nirgends mehr");
+}
+// 2.276.0 KC-CLUB-VIDEO-INSTALL (Wunsch Hansi): Installations-Videos – persönlicher Link, je Browser, weitere Geräte, Link und Code
+{
+  for (const id of ["installieren", "inst_chrome", "inst_edge", "inst_samsung", "inst_safari", "inst_firefox", "inst_geraet", "inst_codes"])
+    assert.ok(new RegExp(`\\{ id: "${id}", stand: "1"`).test(html), `Video ${id} in der Registry`);
+  assert.ok(/\{ id: "installieren", sym: "📲", t: "App installieren", videos: \["installieren", "inst_chrome", "inst_edge", "inst_samsung", "inst_safari", "inst_firefox", "inst_geraet", "inst_codes"\] \}/.test(html), "eigenes Thema in der Videoliste");
+  for (const b of ["chrome", "edge", "samsung", "safari", "firefox"]) assert.ok(new RegExp(`\\{ id: "${b}", video: "inst_${b}"`).test(html), `Browser ${b} in RG_INST_BROWSER`);
+  assert.ok(/Gib ihn deshalb nie weiter/.test(html), "Link ist persönlich – nicht weitergeben");
+  assert.ok(/if \(browserWahl\) setTimeout\(rgInstWahl, 400\);/.test(html) && /function rgInstWahl\(\)/.test(html), "nach der Einführung den Browser wählen");
+  assert.ok(/\.rg-sim \{ position: fixed; inset: 0; z-index: 8999;[^}]*pointer-events: none/.test(html), "Beispielbild unter der Video-Tafel, nicht antippbar");
+  assert.ok(/RG\.zurueck\.push\(rgSimWeg\)/.test(html), "Beispielbild verschwindet am Ende sicher");
+  assert.ok(/const RG_INST_CODE = "482 913"; \/\/ nur ein Beispiel/.test(html) && !/kurzcode_erzeugen[^\n]*rgSim/.test(html), "Video holt keinen echten Code");
+  assert.ok(/data-video="1">🎬 Als Video zeigen/.test(html) && /onclick="erklaerVideos\('installieren'\)">🎬 Videos zum Installieren/.test(html), "Assistent und Einstellungen bieten die Videos an");
+  assert.ok(/\/EdgA\\\/\/\.test\(ua\) \? "edge"/.test(html), "Edge auf Android wird erkannt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

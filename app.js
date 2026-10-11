@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.275.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.276.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1066,7 +1066,7 @@ function einfachKacheln() {
 }
 function ansichtAnwenden() {
   document.body.classList.toggle("einfach", einfach());
-  if ($("ansichtKnopf")) $("ansichtKnopf").textContent = einfach() ? "🔧 Mehr Funktionen anzeigen" : "🟢 Einfache Ansicht";
+  if ($("ansichtKnopf")) $("ansichtKnopf").textContent = einfach() ? "🔧 Erweiterte Ansicht" : "🟢 Einfache Ansicht";
   if (einfach() && kaBearb) kaBearbeiten(false);
   ansichtInfo();
   if (INIT) { registerZeigen(); kachelnZeigen(); infoFelderAktualisieren(); heroZeigen(0); }
@@ -1101,7 +1101,7 @@ async function ansichtSetzen(art, ausFrage) {
     if (ANSICHT === "erweitert") begruessungPruefen();
     else { try { localStorage.setItem("kc_club_begruesst_" + ICH.person_id, "1"); } catch {} api("einstellung_setzen", { schluessel: "begruessung", wert: { gesehen: true } }).catch(() => {}); }
   }
-  melde(ANSICHT === "einfach" ? "🟢 Einfache Ansicht – „🔧 Mehr Funktionen“ findest du unten auf der Startseite" : "🔧 Alle Funktionen – „🟢 Einfache Ansicht“ findest du unten auf der Startseite");
+  melde(ANSICHT === "einfach" ? "🟢 Einfache Ansicht – „🔧 Erweiterte Ansicht“ findest du unten auf der Startseite" : "🔧 Erweiterte Ansicht – „🟢 Einfache Ansicht“ findest du unten auf der Startseite");
 }
 function ansichtWechseln() { ansichtSetzen(einfach() ? "erweitert" : "einfach"); }
 // Einstellungen der einfachen Ansicht: eine Frage statt Tabelle (setzt alle Bereiche gleich; genauer geht es in „Erweitert“)
@@ -1984,8 +1984,8 @@ const RG_SPEZIAL = [
     x: "Das Wort Schnellzugriff über den Kacheln ist selbst ein Knopf: Antippen zeigt oben im Info-Feld deine Schnellstart-Symbole – ein Tipp, und es geht sofort los.",
     live: async (L) => { await L.tipp(".sz-link"); rgKopf("offen"); rgInfoKarte("schnellstart"); L.ziel(); } },
   rgOb("👆 Lange drücken"), rgOb("✋ Verschieben"), rgOb("✅ Fertig", 0), rgOb("🔄 Kachel umdrehen"), rgOb("🗂️ Register anordnen"), rgOb("👆 Wischen"),
-  { v: "start", vor: () => { rgKopf("ganz"); rgDrehen(false); }, sel: ["#ansichtKnopf", ".ansichtname"], puls: ["#ansichtKnopf"], t: "🔧 Mehr Funktionen",
-    x: "Ganz unten auf der Startseite wechselst du mit Mehr Funktionen anzeigen in die erweiterte Ansicht – und genauso wieder zurück zur einfachen. Oben neben Schnellzugriff steht, welche Ansicht gerade gilt; antippen wechselt ebenfalls." },
+  { v: "start", vor: () => { rgKopf("ganz"); rgDrehen(false); }, sel: ["#ansichtKnopf", ".ansichtname"], puls: ["#ansichtKnopf"], t: "🔧 Erweiterte Ansicht",
+    x: "Ganz unten auf der Startseite steht der Knopf Erweiterte Ansicht – damit siehst du alle Funktionen. Zurück geht es genauso mit Einfache Ansicht. Oben neben Schnellzugriff steht, welche Ansicht gerade gilt; antippen wechselt ebenfalls." },
   { v: "start", vor: () => { rgKopf("ganz"); rgKlick(false); }, sel: ["#suLupe"], puls: ["#suLupe"], t: "🔍 Die Lupe",
     x: "Die Lupe unten rechts findet alles: Nachrichten, Termine, Archiv, Pinnwand – schon ab zwei Buchstaben. Mit Filter suchst du gezielter.", live: async (L) => { await L.tipp("#suLupe"); } },
   { v: "start", vor: () => rgKlick(false), sel: ["#klickZeigenKnopf"], puls: ["#klickZeigenKnopf"], t: "👆 Was kann ich antippen?",
@@ -2154,8 +2154,265 @@ const RG_FIGUR_BAU = [
   { v: "start", vor: () => rgAvbAuf(), sel: ["#avbInhalt .bs-fuss"], t: "💾 Speichern", x: "Fertig? Ganz unten tippst du auf Speichern – dann ist die Figur dein Bild. Mit Abbrechen bleibt alles, wie es war. Hier speichere ich nichts." },
   { v: "start", vor: () => rgAvAuf(), t: "✏️ Später ändern", x: "Ändern kannst du deine Figur jederzeit: Mein Bild öffnen, deine eigene Figur antippen und auf Bearbeiten. Viel Spaß beim Zusammenstellen!" },
 ];
+// ---------- KC-CLUB-VIDEO-INSTALL (2.276.0, Wunsch Hansi „Erklär-Videos zum Installieren: erst der persönliche Link vom Admin (WhatsApp/E-Mail,
+// nicht weitergeben), dann je Browser die originalen Schritte – Chrome, Edge, Samsung, Safari, Firefox – zum Auswählen, am Ende die Kochmütze
+// auf dem Startbildschirm; weitere Geräte (Tablet, PC) mit dem 6-stelligen Code; Unterschiede Link, Code, Link verloren usw.“) ----------
+// Browser-Menüs gibt es in der App nicht: Sie werden als Beispielbild nachgebaut (#rgSim liegt unter der Video-Tafel, der Finger tippt darauf wie
+// in allen Videos). Die Anmeldeseite wird aus dem echten #gesperrt geklont (gleiche Karten, gleiche Texte). Nichts wird installiert, angefordert
+// oder gespeichert; der Code im Video ist ein Beispiel. Registry RG_INST_BROWSER: ein weiterer Browser = ein Eintrag + seine Stationen.
+const RG_INST_BROWSER = [
+  { id: "chrome", video: "inst_chrome", sym: "🔵", n: "Chrome", wo: "Android" },
+  { id: "edge", video: "inst_edge", sym: "🌊", n: "Edge", wo: "Android" },
+  { id: "samsung", video: "inst_samsung", sym: "🟣", n: "Samsung Internet", wo: "Samsung-Handy" },
+  { id: "safari", video: "inst_safari", sym: "🧭", n: "Safari", wo: "iPhone und iPad" },
+  { id: "firefox", video: "inst_firefox", sym: "🦊", n: "Firefox", wo: "Android" },
+];
+const RG_INST_CODE = "482 913"; // nur ein Beispiel – echte Codes erzeugt der Server
+const simAdr = () => APP_URL_CLUB.replace(/^https?:\/\//, "").replace(/\/$/, "");
+// Browser des Geräts → passendes Video (iPhone/iPad immer Safari-Weg, PC → weiteres Gerät)
+function rgInstErkannt() { const g = einrichtenGeraet(); return g.pc ? null : g.ios ? "safari" : g.browser; }
+function rgSim(html, art = "handy") {
+  let z = $("rgSim");
+  if (!z) { document.body.insertAdjacentHTML("beforeend", '<div id="rgSim" aria-hidden="true"></div>'); z = $("rgSim"); RG.zurueck.push(rgSimWeg); }
+  z.className = "rg-sim rg-sim-" + art; z.innerHTML = `<div class="sim-band">🎬 Beispielbild – so sieht es aus</div>${html}`; return z;
+}
+function rgSimWeg() { $("rgSim")?.remove(); }
+const simStatus = () => `<div class="sim-status"><span>9:41</span><span>📶 🔋</span></div>`;
+// Köcheclub-Seite, wie sie im Browser erscheint (Farben und Logo der App)
+const simApp = () => `<div class="sim-app"><div class="sim-hero"><img src="kc-kochmuetze-weiss.webp" alt=""><div><small>KÖCHECLUB WERNE</small><b>Hallo!</b></div></div>
+  <div class="sim-kacheln"><div>📅<b>Termine</b></div><div>💬<b>Nachrichten</b></div><div>📌<b>Pinnwand</b></div><div>👥<b>Mitglieder</b></div></div></div>`;
+const simKn = (s, t, kl = "") => `<span class="sim-kn ${kl}" data-s="${s}">${t}</span>`;
+const simDialog = (titel, knoepfe, extra = "") => `<div class="sim-dialog-hg"><div class="sim-dialog"><b class="sim-dtitel">${titel}</b>
+  <div class="sim-appicon"><img src="icon-192.png" alt=""><div><b>Köcheclub</b><small>${esc(simAdr())}</small></div></div>${extra}<div class="sim-dkn">${knoepfe}</div></div></div>`;
+const simMenue = (punkte, ziel, unten) => `<div class="sim-menue${unten ? " unten" : ""}">${punkte.map((p) => `<div${p === ziel ? ' data-s="ziel"' : ""}>${p}</div>`).join("")}</div>`;
+const simGitter = (punkte, ziel) => `<div class="sim-blatt"><div class="sim-griff"></div><div class="sim-gitter">${punkte.map(([i, t]) => `<div${t === ziel ? ' data-s="ziel"' : ""}><i>${i}</i>${t}</div>`).join("")}</div></div>`;
+// Browser-Bild: Leisten oben/unten wie im Original, darüber Menü, Blatt oder Rückfrage
+function simBrowser(b, z = {}) {
+  const adr = `<span class="sim-adr">🔒 ${esc(simAdr())}</span>`;
+  const L = {
+    chrome: { oben: `${simKn("home", "⌂")}${adr}${simKn("tabs", "1", "sim-tabs")}${simKn("menue", "⋮")}` },
+    firefox: { oben: `${simKn("home", "⌂")}${adr}${simKn("tabs", "1", "sim-tabs")}${simKn("menue", "⋮")}` },
+    edge: { oben: adr, unten: `${simKn("home", "⌂")}${simKn("cop", "◎")}${simKn("neu", "＋")}${simKn("tabs", "1", "sim-tabs")}${simKn("menue", "≡")}` },
+    samsung: { oben: adr, unten: `${simKn("zur", "‹")}${simKn("vor", "›")}${simKn("home", "⌂")}${simKn("lz", "☆")}${simKn("tabs", "1", "sim-tabs")}${simKn("menue", "≡")}` },
+    safari: { unten: `${simKn("zur", "‹")}<span class="sim-adr mitte">${esc(simAdr().split("/")[0])}</span>${simKn("menue", "⋯")}` },
+    mini: { oben: `${simKn("zu", "✕")}<span class="sim-adr klein">Köcheclub<small>${esc(simAdr())}</small></span>${simKn("menue", "⋮")}` },
+  }[b];
+  return `${simStatus()}${L.oben ? `<div class="sim-leiste ${b}">${L.oben}</div>` : ""}<div class="sim-seite">${simApp()}${z.ueber || ""}</div>${L.unten ? `<div class="sim-leiste unten ${b}">${L.unten}</div>` : ""}`;
+}
+// Startbildschirm mit Apps – die Kochmütze kommt dazu
+const simHome = (mit = true, art = "handy") => `${art === "pc" ? "" : simStatus()}<div class="sim-home${art === "pc" ? " pc" : ""}">${[["📞", "Telefon"], ["💬", "Nachrichten"], ["📷", "Kamera"], ["🖼️", "Galerie"], ["🗺️", "Karten"], ["⏰", "Uhr"], ["✉️", "E-Mail"]]
+  .map(([i, t]) => `<div><i>${i}</i>${t}</div>`).join("")}${mit ? `<div data-s="icon" class="sim-neu"><img src="icon-192.png" alt="">Köcheclub</div>` : ""}</div>`;
+const simWhatsApp = () => `${simStatus()}<div class="sim-wa-kopf"><span>‹</span><span class="sim-wa-bild">🧑‍🍳</span><div><b>Köcheclub Admin</b><small>online</small></div></div>
+  <div class="sim-wa"><div class="sim-blase" data-s="blase">Hallo! Hier ist dein persönlicher Link zur Köcheclub-App. Bitte nicht weitergeben 🙂<br>
+  <span class="sim-link" data-s="link">https://${esc(simAdr())}/?k=4f9c2e7a1b8d…</span><small>10:12</small></div></div>`;
+const simMail = () => `${simStatus()}<div class="sim-mail-kopf"><span>‹ Posteingang</span></div><div class="sim-mail"><b>Dein persönlicher Zugang zur Köcheclub-App</b>
+  <small>Von: Köcheclub Werne</small><p>Hallo,<br>mit diesem Link öffnest du die Köcheclub-App. Er ist nur für dich – bitte nicht weitergeben.</p>
+  <span class="sim-link knopfig" data-s="link">🔗 Köcheclub-App öffnen</span></div>`;
+// Anmeldeseite: echte Karten aus #gesperrt (ohne IDs und Aktionen), je Karte data-s nach ihrer Überschrift
+function simGesperrt(mitUngueltig) {
+  const o = $("gesperrt"); if (!o) return "";
+  const c = o.cloneNode(true); c.removeAttribute("id"); c.className = "seite sim-gesperrt";
+  c.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
+  c.querySelectorAll("[onclick],[oninput],[onkeydown]").forEach((e) => { e.removeAttribute("onclick"); e.removeAttribute("oninput"); e.removeAttribute("onkeydown"); });
+  c.querySelectorAll("input").forEach((e) => { e.readOnly = true; e.tabIndex = -1; e.removeAttribute("autocomplete"); });
+  const art = { "⚠️": "ungueltig", "🔢": "code", "🔑": "noetig", "✉️": "verloren", "📋": "einfuegen" };
+  c.querySelectorAll(":scope > .karte").forEach((k) => { const h = k.querySelector("h3")?.textContent.trim() || ""; const a = Object.keys(art).find((x) => h.startsWith(x)); if (a) k.dataset.s = art[a]; if (art[a] === "ungueltig") k.classList.toggle("versteckt", !mitUngueltig); });
+  return c.outerHTML;
+}
+const simAnmeldung = (rahmen, mitUngueltig) => `${rahmen === "handy" ? simStatus() : ""}<div class="sim-seite hell">${simGesperrt(mitUngueltig)}</div>`;
+const simCodeBlatt = () => `<div class="sim-dialog-hg"><div class="sim-dialog karte"><h3 style="margin-top:0">🔢 Code für ein anderes Gerät</h3>
+  <p style="margin:0 0 6px">Auf dem anderen Gerät die Köcheclub-App öffnen, bei <b>„🔢 Mit Code anmelden“</b> eintippen:</p><div class="kc-code-gross" data-s="code">${RG_INST_CODE}</div>
+  <p class="hinweis" style="text-align:center">gilt 15 Minuten · nur einmal · nicht weitergeben</p><div class="knoepfe"><span class="knopf">↻ Neuer Code</span><span class="knopf haupt">Fertig</span></div></div></div>`;
+// PC: Fenster mit Adresszeile und Installieren-Zeichen ⊕ bzw. Schreibtisch mit Symbol
+const simPc = (z = {}) => `<div class="sim-pc"><div class="sim-fenster"><div class="sim-tabs-pc"><span>🧑‍🍳 Köcheclub</span><span class="sim-pc-x">— ▢ ✕</span></div>
+  <div class="sim-leiste pc">${simKn("zur", "←")}${simKn("neu", "↻")}<span class="sim-adr">🔒 ${esc(simAdr())}${simKn("plus", "⊕", "sim-plus")}</span>${simKn("menue", "⋮")}</div>
+  <div class="sim-seite">${z.seite || simApp()}${z.ueber || ""}</div></div></div>`;
+const simTablet = (inhalt) => `<div class="sim-tablet"><div class="sim-tablet-innen">${inhalt}</div></div>`;
+// Ziffern nacheinander ins Code-Feld der geklonten Anmeldeseite tippen
+async function rgSimCodeTippen(L) {
+  const f = document.querySelector('#rgSim [data-s="code"] input'); if (!f) return;
+  await L.tipp(f); f.value = "";
+  for (const z of RG_INST_CODE) { f.value += z; await L.warte(z === " " ? 60 : 300); }
+  await L.warte(500);
+}
+const rgSimNeu = (html, art) => () => rgSim(typeof html === "function" ? html() : html, art); // vor: Bild der Station aufbauen
+const rgSimTipp = (q, danach, art) => async (L) => { await L.tipp(`#rgSim ${q}`); await L.warte(250); rgSim(danach(), art); L.ziel(); };
+const RG_INST_ENDE = (b) => [
+  { v: "start", vor: rgSimNeu(() => simHome()), sel: ['#rgSim [data-s="icon"]'], t: "🧑‍🍳 Die Kochmütze ist da",
+    x: `Fertig! Die Köcheclub-Kochmütze liegt jetzt auf deinem Startbildschirm${b === "safari" ? "" : " – meistens auch in der App-Liste"}. Ab jetzt öffnest du die App immer über die Kochmütze.`,
+    live: b === "safari" ? null : rgSimTipp('[data-s="icon"]', () => `${simStatus()}<div class="sim-seite">${simApp()}</div>`) },
+];
+const RG_INST_CHROME = [
+  { v: "start", vor: rgSimNeu(() => simBrowser("chrome")), sel: ['#rgSim [data-s="menue"]'], puls: ['#rgSim [data-s="menue"]'], t: "🔵 Chrome: das Menü",
+    x: "Du hast deinen Link in Chrome geöffnet. Oben rechts siehst du drei Punkte untereinander – die tippe ich an.",
+    live: rgSimTipp('[data-s="menue"]', () => simBrowser("chrome", { ueber: simMenue(["Neuer Tab", "Neuer Inkognito-Tab", "Verlauf", "Downloads", "Lesezeichen", "Teilen …", "Auf Seite suchen", "📲 App installieren", "Desktopwebsite", "Einstellungen"], "📲 App installieren") })) },
+  { v: "start", vor: rgSimNeu(() => simBrowser("chrome", { ueber: simMenue(["Neuer Tab", "Neuer Inkognito-Tab", "Verlauf", "Downloads", "Lesezeichen", "Teilen …", "Auf Seite suchen", "📲 App installieren", "Desktopwebsite", "Einstellungen"], "📲 App installieren") })),
+    sel: ['#rgSim [data-s="ziel"]'], t: "📲 App installieren",
+    x: "Im Menü tippst du auf App installieren. Steht dort nur Zum Startbildschirm hinzufügen, nimm das – und wähle im nächsten Fenster Installieren, nicht Verknüpfung erstellen.",
+    live: rgSimTipp('[data-s="ziel"]', () => simBrowser("chrome", { ueber: simDialog("App installieren", simKn("ab", "Abbrechen") + simKn("ok", "Installieren")) })) },
+  { v: "start", vor: rgSimNeu(() => simBrowser("chrome", { ueber: simDialog("App installieren", simKn("ab", "Abbrechen") + simKn("ok", "Installieren")) })), sel: ['#rgSim [data-s="ok"]'], t: "✅ Installieren",
+    x: "Chrome fragt nach: Tippe auf Installieren. Fragt das Handy danach, ob etwas auf den Startbildschirm darf, tippst du auf Zulassen.",
+    live: rgSimTipp('[data-s="ok"]', () => simHome()) },
+  ...RG_INST_ENDE("chrome"),
+];
+const EDGE_MENUE = [["☆", "Favoriten"], ["🕘", "Verlauf"], ["⬇", "Downloads"], ["⊞", "Apps"], ["📲", "Zum Telefon hinzufügen"], ["↗", "Teilen"], ["🔍", "Auf Seite suchen"], ["⚙", "Einstellungen"]];
+const RG_INST_EDGE = [
+  { v: "start", vor: rgSimNeu(() => simBrowser("edge")), sel: ['#rgSim [data-s="menue"]'], puls: ['#rgSim [data-s="menue"]'], t: "🌊 Edge: das Menü",
+    x: "In Edge ist das Menü unten in der Leiste: drei Striche übereinander. Die tippe ich an.",
+    live: rgSimTipp('[data-s="menue"]', () => simBrowser("edge", { ueber: simGitter(EDGE_MENUE, "Zum Telefon hinzufügen") })) },
+  { v: "start", vor: rgSimNeu(() => simBrowser("edge", { ueber: simGitter(EDGE_MENUE, "Zum Telefon hinzufügen") })), sel: ['#rgSim [data-s="ziel"]'], t: "📲 Zum Telefon hinzufügen",
+    x: "Es öffnet sich ein Feld mit vielen Symbolen. Tippe auf Zum Telefon hinzufügen. Heißt es bei dir App installieren oder Zum Startbildschirm hinzufügen, nimm das – manchmal musst du dafür im Feld zur Seite wischen.",
+    live: rgSimTipp('[data-s="ziel"]', () => simBrowser("edge", { ueber: simDialog("App installieren", simKn("ab", "Abbrechen") + simKn("ok", "Installieren")) })) },
+  { v: "start", vor: rgSimNeu(() => simBrowser("edge", { ueber: simDialog("App installieren", simKn("ab", "Abbrechen") + simKn("ok", "Installieren")) })), sel: ['#rgSim [data-s="ok"]'], t: "✅ Installieren",
+    x: "Edge fragt nach: Tippe auf Installieren. Fragt das Handy noch einmal, tippst du auf Hinzufügen oder Zulassen.",
+    live: rgSimTipp('[data-s="ok"]', () => simHome()) },
+  ...RG_INST_ENDE("edge"),
+];
+const SAMSUNG_MENUE = [["🔖", "Lesezeichen"], ["🕘", "Verlauf"], ["⬇", "Downloads"], ["➕", "Seite hinzufügen zu"], ["🛡", "Werbeblocker"], ["🌙", "Dunkler Modus"], ["🔍", "Auf Seite suchen"], ["⚙", "Einstellungen"]];
+const SAMSUNG_ZIEL = `<div class="sim-blatt"><div class="sim-griff"></div><b class="sim-btitel">Seite hinzufügen zu</b><div class="sim-liste"><div>🔖 Lesezeichen</div><div>⚡ Schnellzugriff</div><div data-s="ziel">📱 Startbildschirm</div></div></div>`;
+const RG_INST_SAMSUNG = [
+  { v: "start", vor: rgSimNeu(() => simBrowser("samsung")), sel: ['#rgSim [data-s="menue"]'], puls: ['#rgSim [data-s="menue"]'], t: "🟣 Samsung Internet: das Menü",
+    x: "Im Samsung-Browser Internet tippst du unten rechts auf die drei Striche übereinander.",
+    live: rgSimTipp('[data-s="menue"]', () => simBrowser("samsung", { ueber: simGitter(SAMSUNG_MENUE, "Seite hinzufügen zu") })) },
+  { v: "start", vor: rgSimNeu(() => simBrowser("samsung", { ueber: simGitter(SAMSUNG_MENUE, "Seite hinzufügen zu") })), sel: ['#rgSim [data-s="ziel"]'], t: "➕ Seite hinzufügen zu",
+    x: "Im Menü tippst du auf Seite hinzufügen zu.", live: rgSimTipp('[data-s="ziel"]', () => simBrowser("samsung", { ueber: SAMSUNG_ZIEL })) },
+  { v: "start", vor: rgSimNeu(() => simBrowser("samsung", { ueber: SAMSUNG_ZIEL })), sel: ['#rgSim [data-s="ziel"]'], t: "📱 Startbildschirm",
+    x: "Jetzt Startbildschirm antippen.",
+    live: rgSimTipp('[data-s="ziel"]', () => simBrowser("samsung", { ueber: simDialog("Zum Startbildschirm hinzufügen", simKn("ab", "Abbrechen") + simKn("ok", "Hinzufügen")) })) },
+  { v: "start", vor: rgSimNeu(() => simBrowser("samsung", { ueber: simDialog("Zum Startbildschirm hinzufügen", simKn("ab", "Abbrechen") + simKn("ok", "Hinzufügen")) })), sel: ['#rgSim [data-s="ok"]'], t: "✅ Hinzufügen",
+    x: "Zum Schluss auf Hinzufügen tippen. Fragt das Handy noch einmal nach, nochmals Hinzufügen.", live: rgSimTipp('[data-s="ok"]', () => simHome()) },
+  ...RG_INST_ENDE("samsung"),
+];
+const SAFARI_MENUE = `<div class="sim-menue unten rechts">${["☆ Zu Favoriten", "📖 Zur Leseliste", "🔖 Lesezeichen hinzufügen"].map((p) => `<div>${p}</div>`).join("")}<div data-s="ziel">↗ Teilen</div></div>`;
+const SAFARI_TEILEN = `<div class="sim-blatt hoch"><div class="sim-griff"></div><div class="sim-teilen-apps"><span><i>📡</i>AirDrop</span><span><i>💬</i>Nachrichten</span><span><i>✉️</i>Mail</span><span><i>🟢</i>WhatsApp</span></div>
+  <div class="sim-liste"><div>📋 Kopieren</div><div>👓 Zur Leseliste hinzufügen</div><div>🔖 Lesezeichen hinzufügen</div><div>☆ Zu Favoriten hinzufügen</div><div data-s="ziel">⊞ Zum Home-Bildschirm</div><div>🔍 Auf der Seite suchen</div></div></div>`;
+const SAFARI_HINZU = () => `${simStatus()}<div class="sim-ios-kopf">${simKn("ab", "Abbrechen")}<b>Zum Home-Bildschirm</b>${simKn("ok", "Hinzufügen")}</div><div class="sim-seite hell sim-ios-hinzu">
+  <div class="sim-appicon gross"><img src="icon-192.png" alt=""><div><b>Köcheclub</b><small>${esc(simAdr())}</small></div></div>
+  <div class="sim-schalter" data-s="webapp"><span>Als Web-App öffnen</span><i></i></div></div>`;
+const RG_INST_SAFARI = [
+  { v: "start", vor: rgSimNeu(() => simBrowser("safari")), sel: ['#rgSim [data-s="menue"]'], puls: ['#rgSim [data-s="menue"]'], t: "🧭 Safari: die drei Punkte",
+    x: "Auf dem iPhone öffnest du deinen Link in Safari. Unten rechts tippst du auf die drei Punkte. Bei älteren iPhones steht unten gleich das Teilen-Zeichen, ein Quadrat mit Pfeil nach oben – am iPad oben rechts.",
+    live: rgSimTipp('[data-s="menue"]', () => simBrowser("safari", { ueber: SAFARI_MENUE })) },
+  { v: "start", vor: rgSimNeu(() => simBrowser("safari", { ueber: SAFARI_MENUE })), sel: ['#rgSim [data-s="ziel"]'], t: "↗ Teilen",
+    x: "Im Menü tippst du auf Teilen.", live: rgSimTipp('[data-s="ziel"]', () => simBrowser("safari", { ueber: SAFARI_TEILEN })) },
+  { v: "start", vor: rgSimNeu(() => simBrowser("safari", { ueber: SAFARI_TEILEN })), sel: ['#rgSim [data-s="ziel"]'], t: "⊞ Zum Home-Bildschirm",
+    x: "In der Liste etwas nach unten wischen und Zum Home-Bildschirm antippen.",
+    live: rgSimTipp('[data-s="ziel"]', SAFARI_HINZU) },
+  { v: "start", vor: rgSimNeu(SAFARI_HINZU), sel: ['#rgSim [data-s="ok"]'], puls: ['#rgSim [data-s="webapp"]'], t: "✅ Hinzufügen",
+    x: "Als Web-App öffnen bleibt eingeschaltet. Oben rechts tippst du auf Hinzufügen.", live: rgSimTipp('[data-s="ok"]', () => simHome()) },
+  { v: "start", vor: rgSimNeu(() => simHome()), sel: ['#rgSim [data-s="icon"]'], t: "🧑‍🍳 Die Kochmütze antippen",
+    x: "Die Kochmütze liegt jetzt auf dem Home-Bildschirm. Ich tippe sie an.", live: rgSimTipp('[data-s="icon"]', () => simAnmeldung("handy")) },
+  { v: "start", vor: rgSimNeu(() => simAnmeldung("handy")), sel: ['#rgSim [data-s="code"]'], t: "🔢 Einmal den Code eingeben",
+    x: "Das iPhone gibt der neuen App einen eigenen Speicher – deshalb fragt sie einmal nach einem 6-stelligen Code. Den zeigt dir die App vorher in Safari: Einstellungen, App-Installation, Schritt für Schritt einrichten. Code eintippen – fertig.",
+    live: async (L) => { await rgSimCodeTippen(L); rgSim(`${simStatus()}<div class="sim-seite">${simApp()}</div>`); } },
+  ...RG_INST_ENDE("safari"),
+];
+const FIREFOX_MENUE = ["Neuer Tab", "Lesezeichen", "Verlauf", "Downloads", "📲 Zum Startbildschirm hinzufügen", "Teilen", "Auf Seite suchen", "Einstellungen"];
+const RG_INST_FIREFOX = [
+  { v: "start", vor: rgSimNeu(() => simBrowser("firefox")), sel: ['#rgSim [data-s="menue"]'], puls: ['#rgSim [data-s="menue"]'], t: "🦊 Firefox: das Menü",
+    x: "In Firefox tippst du auf die drei Punkte untereinander – je nach Einstellung oben rechts oder unten rechts.",
+    live: rgSimTipp('[data-s="menue"]', () => simBrowser("firefox", { ueber: simMenue(FIREFOX_MENUE, "📲 Zum Startbildschirm hinzufügen") })) },
+  { v: "start", vor: rgSimNeu(() => simBrowser("firefox", { ueber: simMenue(FIREFOX_MENUE, "📲 Zum Startbildschirm hinzufügen") })), sel: ['#rgSim [data-s="ziel"]'], t: "📲 Zum Startbildschirm hinzufügen",
+    x: "Im Menü tippst du auf Zum Startbildschirm hinzufügen. Bei manchen Versionen heißt es Installieren.",
+    live: rgSimTipp('[data-s="ziel"]', () => simBrowser("firefox", { ueber: simDialog("Zum Startbildschirm hinzufügen", simKn("ab", "Abbrechen") + simKn("ok", "Hinzufügen")) })) },
+  { v: "start", vor: rgSimNeu(() => simBrowser("firefox", { ueber: simDialog("Zum Startbildschirm hinzufügen", simKn("ab", "Abbrechen") + simKn("ok", "Hinzufügen")) })), sel: ['#rgSim [data-s="ok"]'], t: "✅ Hinzufügen",
+    x: "Der Name Köcheclub ist schon eingetragen. Tippe auf Hinzufügen. Fragt das Handy noch einmal, tippst du auf Hinzufügen oder Automatisch hinzufügen.",
+    live: rgSimTipp('[data-s="ok"]', () => simHome()) },
+  ...RG_INST_ENDE("firefox"),
+  { v: "start", vor: rgSimNeu(() => simPc()), sel: ["#rgSim .sim-fenster"], t: "💻 Am PC",
+    x: "Gut zu wissen: Am PC kann Firefox keine Apps installieren. Dort nimmst du Chrome oder Edge – wie das geht, zeigt das Video Weiteres Gerät." },
+];
+const RG_INST_START = [
+  { v: "start", vor: rgSimNeu(simWhatsApp), sel: ['#rgSim [data-s="blase"]'], t: "📲 So kommst du zur App",
+    x: "Die Köcheclub-App holst du dir nicht aus dem App-Store. Du bekommst vom Admin einen persönlichen Link – per WhatsApp oder per E-Mail." },
+  { v: "start", vor: rgSimNeu(simWhatsApp), sel: ['#rgSim [data-s="link"]'], t: "🔗 Den Link antippen",
+    x: "So sieht der Link aus: eine lange Adresse mit vielen Buchstaben und Zahlen. Die tippst du einfach an.",
+    live: rgSimTipp('[data-s="link"]', () => simBrowser("chrome")) },
+  { v: "start", vor: rgSimNeu(simMail), sel: ['#rgSim [data-s="link"]'], t: "✉️ Oder per E-Mail",
+    x: "Kommt der Link per E-Mail, tippst du genauso in der Mail auf den Link.", live: rgSimTipp('[data-s="link"]', () => simBrowser("chrome")) },
+  { v: "start", vor: rgSimNeu(simWhatsApp), sel: ['#rgSim [data-s="link"]'], puls: ['#rgSim [data-s="link"]'], t: "🔒 Nur für dich",
+    x: "Ganz wichtig: Der Link ist dein persönlicher Schlüssel. Wer ihn hat, ist in der App als du angemeldet. Gib ihn deshalb nie weiter – auch nicht an andere Mitglieder." },
+  { v: "start", vor: rgSimNeu(() => simBrowser("chrome")), sel: ["#rgSim .sim-app"], t: "🌐 Die App öffnet sich im Browser",
+    x: "Der Link öffnet die App zuerst im Browser – du bist schon angemeldet. Damit sie wie eine richtige App auf dem Startbildschirm liegt, installierst du sie jetzt." },
+  { v: "start", vor: rgSimNeu(() => simBrowser("mini")), sel: ['#rgSim [data-s="menue"]'], t: "⚠️ Kleines Fenster aus WhatsApp?",
+    x: "Öffnet sich der Link in einem kleinen Fenster innerhalb von WhatsApp, kann man dort nicht installieren. Tippe oben rechts auf die drei Punkte und dann auf Im Browser öffnen – beim iPhone auf das Kompass-Zeichen.",
+    live: async (L) => { await L.tipp('#rgSim [data-s="menue"]'); rgSim(simBrowser("mini", { ueber: simMenue(["Neu laden", "Link kopieren", "🌐 Im Browser öffnen"], "🌐 Im Browser öffnen") })); L.ziel(); await L.warte(900);
+      await L.tipp('#rgSim [data-s="ziel"]'); await L.warte(250); rgSim(simBrowser("chrome")); L.ziel(); } },
+  { v: "start", vor: rgSimNeu(() => `${simStatus()}<div class="sim-seite hell"><div class="sim-browserwahl">${RG_INST_BROWSER.map((b) => `<div data-s="${b.id}"${b.id === rgInstErkannt() ? ' class="an"' : ""}><i>${b.sym}</i><b>${b.n}</b><small>${b.wo}</small></div>`).join("")}</div></div>`),
+    sel: ["#rgSim .sim-browserwahl"], puls: ["#rgSim .sim-browserwahl .an"], t: "🧭 Welcher Browser?",
+    x: () => { const e = RG_INST_BROWSER.find((b) => b.id === rgInstErkannt());
+      return `Wie das Installieren geht, hängt vom Browser ab: Chrome, Edge, Samsung Internet, Safari oder Firefox. ${e ? `Dein Gerät nutzt gerade ${e.n}. ` : ""}Am Ende dieses Videos wählst du deinen Browser – dann siehst du genau die Schritte, die du brauchst.`; } },
+  { v: "start", vor: rgSimNeu(() => simHome()), sel: ['#rgSim [data-s="icon"]'], t: "🧑‍🍳 Das Ziel: die Kochmütze",
+    x: "Am Ende liegt die Köcheclub-Kochmütze auf deinem Startbildschirm – wie jede andere App. Ab dann öffnest du die App immer über die Kochmütze." },
+  { v: "start", vor: rgSimNeu(() => simPc()), sel: ["#rgSim .sim-fenster"], t: "💻 Tablet und PC",
+    x: "Für weitere Geräte wie Tablet oder PC brauchst du keinen neuen Link – dafür gibt es einen 6-stelligen Code. Auch dazu gibt es ein eigenes Video. Jetzt wähle deinen Browser!" },
+];
+const PC_DIALOG = `<div class="sim-pc-pop"><b>App installieren?</b><div class="sim-appicon"><img src="icon-192.png" alt=""><div><b>Köcheclub</b><small>${"{adr}"}</small></div></div><div class="sim-dkn">${simKn("ok", "Installieren", "voll")}${simKn("ab", "Abbrechen")}</div></div>`;
+const simPcDialog = () => PC_DIALOG.replace("{adr}", esc(simAdr()));
+const RG_INST_GERAET = [
+  { v: "start", vor: rgSimNeu(() => simTablet(simAnmeldung("tablet")), "tablet"), sel: ["#rgSim .sim-tablet"], t: "💻 Noch ein Gerät",
+    x: "Du nutzt die App schon auf dem Handy und möchtest sie auch auf dem Tablet oder am PC? Dafür brauchst du keinen neuen Link – ein 6-stelliger Code reicht." },
+  { v: "einstellungen", vor: () => { rgSimWeg(); const d = document.querySelector('#v-einstellungen details[data-klappe="install"]'); if (d && !d.open) { d.open = true; RG.zurueck.push(() => { d.open = false; }); } },
+    sel: ['#v-einstellungen [onclick="kurzcodeBlatt()"]'], mussSel: true, t: "⚙️ Auf dem Handy: Code holen",
+    x: "Auf dem Handy öffnest du die Einstellungen und dort App-Installation. Tippe auf Code für ein anderes Gerät.",
+    live: async (L) => { await L.tipp('#v-einstellungen [onclick="kurzcodeBlatt()"]'); await L.warte(250); rgSim(simCodeBlatt(), "ueber"); RG.ziel = document.querySelector('#rgSim [data-s="code"]'); rgLage(); } },
+  { v: "start", vor: rgSimNeu(simCodeBlatt, "ueber"), sel: ['#rgSim [data-s="code"]'], t: "🔢 Dein Code",
+    x: "Die App zeigt dir einen 6-stelligen Code. Er gilt eine Viertelstunde und nur einmal – und ist genauso persönlich wie dein Link. Ist er abgelaufen, holst du dir mit Neuer Code einfach einen frischen." },
+  { v: "start", vor: rgSimNeu(() => simTablet(simAnmeldung("tablet")), "tablet"), sel: ['#rgSim [data-s="code"]'], t: "🌐 Auf dem anderen Gerät",
+    x: () => `Auf dem Tablet oder PC öffnest du den Browser und gibst oben die Adresse der App ein: ${simAdr()}. Es erscheint die Seite Willkommen mit Mit Code anmelden. Dort tippst du die 6 Ziffern ein – nach der sechsten meldet sich die App von selbst an.`,
+    live: async (L) => { await rgSimCodeTippen(L); rgSim(simTablet(`<div class="sim-seite">${simApp()}</div>`), "tablet"); L.ziel(); } },
+  { v: "start", vor: rgSimNeu(() => simPc(), "pc"), sel: ['#rgSim [data-s="plus"]'], puls: ['#rgSim [data-s="plus"]'], t: "💻 Am PC installieren",
+    x: "Am PC in Chrome oder Edge: Rechts in der Adresszeile erscheint ein kleines Installieren-Zeichen. Das klickst du an und dann Installieren. In Edge geht es auch über die drei Punkte, Apps, Diese Website als App installieren.",
+    live: async (L) => { await L.tipp('#rgSim [data-s="plus"]'); rgSim(simPc({ ueber: simPcDialog() }), "pc"); L.ziel(); await L.warte(1200); await L.tipp('#rgSim [data-s="ok"]'); await L.warte(250); rgSim(simHome(true, "pc"), "pc"); L.ziel(); } },
+  { v: "start", vor: rgSimNeu(() => simHome(true, "pc"), "pc"), sel: ['#rgSim [data-s="icon"]'], t: "🧑‍🍳 Kochmütze auf dem Desktop",
+    x: "Jetzt liegt die Kochmütze auf dem Desktop und im Startmenü. Am Tablet installierst du wie am Handy – das Video für deinen Browser zeigt es dir." },
+  { v: "start", vor: rgSimNeu(() => simTablet(simHome()), "tablet"), sel: ["#rgSim .sim-tablet"], t: "🍎 Beim iPad",
+    x: "Beim iPad gilt: Zuerst in Safari die Kochmütze auf den Home-Bildschirm legen und den Code erst dort eintippen – dann brauchst du nur einen Code." },
+];
+const RG_INST_CODES = [
+  { v: "start", vor: rgSimNeu(() => simAnmeldung("handy")), sel: ["#rgSim .sim-gesperrt"], t: "🔑 Link, Code und Co.",
+    x: "Rund um die Anmeldung gibt es ein paar Begriffe: Link, Code, Link verloren. Ich erkläre dir kurz, was was ist – damit nichts schiefgeht." },
+  { v: "start", vor: rgSimNeu(simWhatsApp), sel: ['#rgSim [data-s="link"]'], t: "🔗 Der persönliche Link",
+    x: "Der lange Link vom Admin ist dein dauerhafter Schlüssel zur App. Er gilt so lange, bis ein neuer Link für dich verschickt wird. Nicht weitergeben!" },
+  { v: "start", vor: rgSimNeu(simCodeBlatt, "ueber"), sel: ['#rgSim [data-s="code"]'], t: "🔢 Der 6-stellige Code",
+    x: "Der Code ist kurz und nur für den Moment: eine Viertelstunde lang und nur einmal. Du holst ihn dir selbst in der App – für ein weiteres Gerät oder für die App auf dem iPhone. Holst du einen neuen Code, gilt der alte nicht mehr." },
+  { v: "start", vor: rgSimNeu(() => simAnmeldung("handy")), sel: ['#rgSim [data-s="code"]'], t: "✅ Mit Code anmelden",
+    x: "Diese Seite zeigt ein Gerät, das noch nicht angemeldet ist. Bei Mit Code anmelden tippst du den Code ein." },
+  { v: "start", vor: rgSimNeu(() => simAnmeldung("handy")), sel: ['#rgSim [data-s="verloren"]'], t: "✉️ Link verloren?",
+    x: "Hast du deinen Link nicht mehr? Hier gibst du die E-Mail-Adresse ein, die im Club hinterlegt ist – dann kommt sofort ein neuer Link per Mail. Achtung: Der alte Link gilt danach nicht mehr. Geräte, die damit angemeldet waren, brauchen den neuen Link oder einen Code." },
+  { v: "start", vor: rgSimNeu(() => `${simStatus()}<div class="sim-seite hell"><div class="karte" data-s="mich"><b>💻 Auch am PC oder Tablet nutzen</b><p class="hinweis">Schick dir deinen Link selbst und öffne ihn am anderen Gerät.</p>
+      <div class="knoepfe"><span class="knopf klein">📧 Meinen eigenen Link mailen</span><span class="knopf klein">📤 Meinen Link an mich schicken</span><span class="knopf klein">📋 Meinen Link kopieren</span></div></div></div>`),
+    sel: ['#rgSim [data-s="mich"]'], t: "📤 Meinen Link an mich schicken",
+    x: "In den Einstellungen unter App-Installation kannst du dir deinen eigenen Link mailen, schicken oder kopieren – zum Beispiel, um ihn am PC zu öffnen. Dabei bleibt dein Link gleich, nichts wird ungültig." },
+  { v: "start", vor: rgSimNeu(() => simAnmeldung("handy")), sel: ['#rgSim [data-s="einfuegen"]'], t: "📋 Link einfügen",
+    x: "Öffnet sich die App auf dem iPhone nicht mit deinem Link? Dann den Link in der Mail oder in WhatsApp lange drücken, Kopieren wählen und hier einfügen." },
+  { v: "start", vor: rgSimNeu(() => simAnmeldung("handy", true)), sel: ['#rgSim [data-s="ungueltig"]'], t: "⚠️ Dieser Link gilt nicht mehr",
+    x: "Steht oben Dieser Link gilt nicht mehr, wurde inzwischen ein neuerer Link für dich verschickt. Nimm immer den neuesten – oder fordere bei Link verloren einen neuen an." },
+  { v: "start", vor: rgSimWeg, t: "✅ Kurz gesagt",
+    x: "Der Link ist dauerhaft, kommt vom Admin und wird nie weitergegeben. Der Code ist kurz, gilt eine Viertelstunde und ist für ein weiteres Gerät. Und bei Link verloren kommt ein neuer Link per Mail – der alte gilt dann nicht mehr." },
+];
+// nach der Einführung bis zum Ende: Browser wählen – nur dieses Video ansehen
+function rgInstWahl() {
+  if (RG.an) return;
+  const e = rgInstErkannt();
+  const f = dlgOeffnen(`<h3 style="margin-top:0">🧭 Welchen Browser nutzt du?</h3><p class="hinweis" style="margin:0 0 8px">Tippe deinen Browser an – dann zeige ich dir genau diese Schritte.</p>
+    <div class="rg-inst-wahl">${RG_INST_BROWSER.map((b) => `<button type="button" class="knopf${b.id === e ? " haupt" : ""}" data-v="${b.video}">${b.sym} ${b.n} <small>${b.wo}${b.id === e ? " · dein Gerät" : ""}</small></button>`).join("")}
+    <button type="button" class="knopf" data-v="inst_geraet">💻 Weiteres Gerät <small>Tablet oder PC mit Code</small></button></div>
+    <div class="knoepfe"><button type="button" class="knopf klein" data-zu="1">Schließen</button></div>`, () => f.remove());
+  f.querySelectorAll("[data-v]").forEach((k) => k.addEventListener("click", () => { f.remove(); rundgangStart(false, k.dataset.v); }));
+  f.querySelector("[data-zu]").onclick = () => f.remove();
+}
 const RUNDGAENGE = [
   { id: "warum", stand: "1", sym: "💡", t: "Warum diese App? – Zum Einstieg", u: "Was die App dir bringt – einfach erklärt (ca. 2 Min.)", st: () => RG_WARUM }, // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: als Erstes
+  // 2.276.0 KC-CLUB-VIDEO-INSTALL (Wunsch Hansi): Installieren – Einführung, je Browser ein Video, weitere Geräte, Link und Code
+  { id: "installieren", stand: "1", sym: "📲", t: "App installieren – so geht’s", u: "Persönlicher Link, Browser wählen, Kochmütze auf dem Startbildschirm (ca. 2 Min.)", st: () => RG_INST_START },
+  { id: "inst_chrome", stand: "1", sym: "🔵", t: "Installieren mit Chrome (Android)", u: "Drei Punkte, App installieren, Installieren (ca. 1 Min.)", st: () => RG_INST_CHROME },
+  { id: "inst_edge", stand: "1", sym: "🌊", t: "Installieren mit Edge (Android)", u: "Menü, Zum Telefon hinzufügen, Installieren (ca. 1 Min.)", st: () => RG_INST_EDGE },
+  { id: "inst_samsung", stand: "1", sym: "🟣", t: "Installieren mit Samsung Internet", u: "Menü, Seite hinzufügen zu, Startbildschirm (ca. 1 Min.)", st: () => RG_INST_SAMSUNG },
+  { id: "inst_safari", stand: "1", sym: "🧭", t: "Installieren auf iPhone und iPad (Safari)", u: "Teilen, Zum Home-Bildschirm, Code eingeben (ca. 2 Min.)", st: () => RG_INST_SAFARI },
+  { id: "inst_firefox", stand: "1", sym: "🦊", t: "Installieren mit Firefox (Android)", u: "Drei Punkte, Zum Startbildschirm hinzufügen (ca. 1 Min.)", st: () => RG_INST_FIREFOX },
+  { id: "inst_geraet", stand: "1", sym: "💻", t: "Weiteres Gerät: Tablet oder PC", u: "Mit dem 6-stelligen Code anmelden und installieren (ca. 2 Min.)", st: () => RG_INST_GERAET },
+  { id: "inst_codes", stand: "1", sym: "🔑", t: "Link, Code & Co. – die Unterschiede", u: "Persönlicher Link, Code, Link verloren, Link einfügen (ca. 2 Min.)", st: () => RG_INST_CODES },
   { id: "ueberblick", stand: "3", sym: "🗺️", t: "Rundgang: die App im Überblick", u: "Oberfläche, Knöpfe, Register und was die App kann (ca. 3 Min.)", st: () => RUNDGANG },
   { id: "einstellungen", stand: "2", sym: "⚙️", t: "Alle Einstellungen erklärt", u: "Was jede Einstellung bedeutet – mit Beispielen (ca. 6 Min.)", st: () => RG_EINSTELLUNGEN },
   { id: "oberflaeche", stand: "2", sym: "🎨", t: "Oberfläche nach Wunsch", u: "Kopf einrollen, Kacheln verschieben, verbergen, umdrehen, Zahlen, Register, Wischen (ca. 3 Min.)", st: () => RG_OBERFLAECHE }, // 2.258.0 KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE
@@ -2209,6 +2466,7 @@ function rgRollenAnsicht(ziel) {
 // keinem Thema steht (z. B. neu dazugekommen), landet unter „✨ Weitere“ – es geht keins verloren. Wenige Videos: eine Liste ohne Kacheln.
 const RG_THEMEN = [
   { id: "einstieg", sym: "🚀", t: "Einstieg", videos: ["warum", "ueberblick", "spezial", "hilfe", "schulung", "feedback"] },
+  { id: "installieren", sym: "📲", t: "App installieren", videos: ["installieren", "inst_chrome", "inst_edge", "inst_samsung", "inst_safari", "inst_firefox", "inst_geraet", "inst_codes"] }, // 2.276.0 KC-CLUB-VIDEO-INSTALL
   { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["zentrale", "sprache", "nachricht", "mitglieder", "pinnwand"] },
   { id: "termine", sym: "📅", t: "Termine & Dienst", videos: ["termin", "zusagen", "dienst"] },
   { id: "club", sym: "🗄️", t: "Club & Archiv", videos: ["fotos", "lesen", "rezepte", "aktionen", "archiv", "vorschlag", "helfen", "erstattung"] },
@@ -2602,6 +2860,7 @@ function rundgangEnde(still) {
   const bisEnde = !still && RG.frage, naechst = bisEnde ? (RG.liste || []).find((id) => RUNDGAENGE.some((x) => x.id === id && (!x.nur || x.nur()))) : null;
   const rest = naechst ? RG.liste.slice(RG.liste.indexOf(naechst) + 1) : [], von = RG.von; if (!bisEnde) RG.liste = []; // ✕ Beenden stoppt auch die Reihe
   const weiter = bisEnde && !naechst && RG.tour === "warum"; // 2.254.0: nach der Einleitung bis zum Ende → Rundgang anbieten
+  const browserWahl = bisEnde && !naechst && RG.tour === "installieren"; // 2.276.0 KC-CLUB-VIDEO-INSTALL: danach den eigenen Browser wählen
   RG.frage = false; rgStille(); try { RG.st[RG.vorI]?.nach?.(); } catch {} // offene Beispiele schließen, Aufgeklapptes zuklappen, Vorführung zurück
   for (const f of RG.zurueck.splice(0).reverse()) try { f(); } catch {}
   if (RG.an) rgDemo({}); RG.vorI = -1;
@@ -2611,6 +2870,7 @@ function rundgangEnde(still) {
   if (!still) { zeige(RG.von, true); scrollTo(0, 0); } // zurück, wo der Rundgang gestartet wurde
   rgHinweisZeigen();
   if (weiter) setTimeout(rgUeberblickAnbieten, 400);
+  if (browserWahl) setTimeout(rgInstWahl, 400);
   if (naechst) setTimeout(() => { if (RG.an) return; rundgangStart(false, naechst, rest); RG.von = von; }, 600); // KC-CLUB-VIDEO-THEMEN: nächstes angehaktes Video
 }
 async function rgUeberblickAnbieten() {
@@ -2783,7 +3043,7 @@ const HILFE = [
   { id: "rundgang", thema: "start", sym: "🎬", t: "Rundgang durch die App (mit Ton)", x: "Die App zeigt dir in etwa 3 Minuten, wie sie aussieht und was sie kann – die Stimme deines Handys erklärt dabei jede Station. Du musst nichts antippen; mit <b>⏸ Pause</b>, <b>◀ ▶</b> und <b>✕ Beenden</b> steuerst du. Starten: hier mit <b>👉 Zeig mir wo</b>, oben in <b>❓ Hilfe &amp; Tipps</b> oder unter <b>⚙️ Mehr</b>. Weitere <b>🎬 Erklär-Videos</b> (alle Einstellungen, Nachricht schreiben, Termin eintragen, Pinnwand, Vorschläge) im Register <b>Technik</b>. Kein Ton? Dann Lautstärke prüfen – der Text steht auch zum Lesen da.", zeig: () => rundgangStart() }, // KC-CLUB-RUNDGANG (2.241.0)
   { id: "register_ziehen", thema: "start", sym: "↔️", t: "Register umsortieren (Club, Meins, Technik …)", x: "Ein Register oben auf der Startseite <b>festhalten</b>, bis es sich hebt – dann nach links oder rechts ziehen und loslassen. Die App merkt sich deine Reihenfolge auf allen deinen Geräten. (Nur in der erweiterten Ansicht.)", zeig: () => zeige("start") },
   { id: "register_wischen", thema: "start", sym: "👆", t: "Zwischen den Registern wischen", x: "Auf der Startseite wischst du über die Kacheln nach <b>links oder rechts</b> und kommst zum nächsten Register. Die kleine Zahl am Register zeigt, wie viele Kacheln darin liegen – „8/10“ heißt: 2 sind ausgeblendet.", zeig: () => zeige("start") },
-  { id: "ansicht", thema: "start", sym: "🟢", t: "Einfache oder erweiterte Ansicht", x: "Die <b>einfache Ansicht</b> zeigt nur das Wichtigste mit großen Knöpfen, die <b>erweiterte</b> alle Funktionen mit Registern. Umschalten: ⚙️ Einstellungen → <b>🎨 Darstellung</b> → „🟢 Einfache Ansicht“ – oder ganz unten auf der Startseite. Zurück geht es mit „🔧 Mehr Funktionen anzeigen“.", zeig: () => einstiegHin(einfach() ? "einfach" : "darstellung") },
+  { id: "ansicht", thema: "start", sym: "🟢", t: "Einfache oder erweiterte Ansicht", x: "Die <b>einfache Ansicht</b> zeigt nur das Wichtigste mit großen Knöpfen, die <b>erweiterte</b> alle Funktionen mit Registern. Umschalten: ⚙️ Einstellungen → <b>🎨 Darstellung</b> → „🟢 Einfache Ansicht“ – oder ganz unten auf der Startseite. Zurück geht es mit „🔧 Erweiterte Ansicht“.", zeig: () => einstiegHin(einfach() ? "einfach" : "darstellung") },
   { id: "infofeld", thema: "start", sym: "🪧", t: "Das farbige Info-Feld oben", x: "Oben auf der Startseite blätterst du mit <b>‹ ›</b> (oder Wischen im Feld) durch den nächsten Termin, das Wetter und Neues für dich. Ob das Feld beim Start erscheint, stellst du unter ⚙️ → Darstellung → „🪧 Info-Feld oben beim Start“ ein.", zeig: () => einstiegHin("darstellung", "setInfoStart") },
   { id: "zurueck", thema: "start", sym: "‹", t: "„Zurück“ bleibt in der App", x: "Die Zurück-Taste deines Handys oder der Pfeil <b>‹</b> oben links geht eine Ansicht zurück – die App schließt sich dabei nicht. Ist ein Fenster offen, schließt „Zurück“ zuerst nur das Fenster, deine Eingabe bleibt stehen." },
   { id: "frage_knopf", thema: "start", sym: "❓", t: "Das Fragezeichen unten rechts", x: "Das runde <b>„?“</b> neben der Lupe öffnet in jedem Bereich gleich die passende Hilfe. Stört es dich? <b>Lange darauf drücken</b> blendet es aus. Zurück holst du es unter ⚙️ Einstellungen → <b>„❓ Fragezeichen unten rechts“</b>.", zeig: () => einstiegHin(einfach() ? "einfach" : "ansagen", einfach() ? "setHzFrageE" : "setHzFrage"), seit: "2.23.5" },
@@ -10344,7 +10604,7 @@ function einrichtenGeraet() {
   // „Installieren“ nicht; der Assistent zeigt dann zuerst „Im richtigen Browser öffnen“
   const inapp = /; wv\)|FBAN|FBAV|Instagram|Line\/|GSA\//.test(ua);
   if (/iPhone|iPod/.test(ua) || ipad) return { ios: true, ipad, inapp, name: ipad ? "iPad" : "iPhone", browser: /CriOS/.test(ua) ? "chrome" : /FxiOS/.test(ua) ? "firefox" : /EdgiOS/.test(ua) ? "edge" : "safari" };
-  if (/Android/.test(ua)) return { android: true, inapp, name: "Android-Handy", browser: /SamsungBrowser/.test(ua) ? "samsung" : /Firefox/.test(ua) ? "firefox" : "chrome" };
+  if (/Android/.test(ua)) return { android: true, inapp, name: "Android-Handy", browser: /SamsungBrowser/.test(ua) ? "samsung" : /Firefox/.test(ua) ? "firefox" : /EdgA\//.test(ua) ? "edge" : "chrome" }; // 2.276.0: Edge (Android) erkennen
   return { pc: true, name: "PC", browser: /Edg\//.test(ua) ? "edge" : /Firefox/.test(ua) ? "firefox" : "chrome" };
 }
 // kleines Bild des Browsers: Leiste oben oder unten, das gesuchte Zeichen leuchtet
@@ -10398,9 +10658,10 @@ async function einrichtenAssistent() {
     ${sofort ? `<button class="knopf haupt" style="width:100%;font-size:1.1rem" onclick="document.getElementById('erBlatt').remove();installieren()">📲 Jetzt installieren – ein Tipp genügt</button><p class="hinweis" style="text-align:center">oder Schritt für Schritt:</p>` : ""}
     <ol class="er-schritte">${schritte.map((x) => `<li><b>${x.t}</b><div>${x.x}</div>${x.bild || ""}</li>`).join("")}</ol>
     ${g.ios ? "" : '<p class="hinweis" style="font-size:.85rem">Fragt die installierte App nach einem Code: hier unten „🔢 Code anzeigen“ tippen.</p>'}
-    <div class="knoepfe">${g.ios ? "" : '<button class="knopf" data-code="1">🔢 Code anzeigen</button>'}<button class="knopf haupt" data-zu="1">Fertig</button></div>`);
+    <div class="knoepfe"><button class="knopf" data-video="1">🎬 Als Video zeigen</button>${g.ios ? "" : '<button class="knopf" data-code="1">🔢 Code anzeigen</button>'}<button class="knopf haupt" data-zu="1">Fertig</button></div>`);
   f.querySelector("[data-zu]").onclick = () => f.remove();
   f.querySelector("[data-code]")?.addEventListener("click", () => { f.remove(); kurzcodeBlatt(); });
+  f.querySelector("[data-video]")?.addEventListener("click", () => { f.remove(); rundgangStart(false, RG_INST_BROWSER.find((b) => b.id === rgInstErkannt())?.video || "installieren"); }); // 2.276.0 KC-CLUB-VIDEO-INSTALL
   if (g.ios) try { const r = await kurzcodeHolen(); if ($("erCode")) { $("erCode").textContent = r.schoen; $("erCodeInfo").textContent = `gilt ${r.minuten} Minuten · nur einmal – kommst du zu spät, hier einfach nochmal öffnen`; } }
     catch (e) { if ($("erCodeInfo")) $("erCodeInfo").textContent = "⚠️ " + e.message; }
 }
@@ -25076,7 +25337,7 @@ function druckAnleitung() {
       <div class="anl-kacheln"><span>📅 Termine</span><span>💬 Nachrichten</span><span>📌 Pinnwand</span><span>🗓️ Mein Dienst</span><span>👥 Mitglieder</span><span>📚 Meine Dokumente</span></div>`)
     + `<ul class="anl-tipps">
       <li><b>Nachrichten aufs Handy oder per E-Mail?</b> Unten ${k("⚙️ Mehr")} → „Wie möchtest du Neuigkeiten bekommen?“</li>
-      <li><b>Alle Funktionen sehen?</b> Ganz unten auf der Startseite ${k("🔧 Mehr Funktionen anzeigen")} – zurück jederzeit mit ${k("🟢 Einfache Ansicht")}.</li>
+      <li><b>Alle Funktionen sehen?</b> Ganz unten auf der Startseite ${k("🔧 Erweiterte Ansicht")} – zurück jederzeit mit ${k("🟢 Einfache Ansicht")}.</li>
       <li><b>Diese Anleitung wiederfinden?</b> In der App unter ${k("📚 Meine Dokumente")}.</li>
       <li><b>Hilfe?</b> Einfach ${adminName()} fragen – oder in der App über ${k("💭 Feedback")} schreiben.</li></ul>`;
   return { titel: "Köcheclub-App in 3 Schritten", unter: "Kurzanleitung für den leichten Start", html };

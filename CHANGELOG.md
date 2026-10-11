@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.276.0 – 2026-10-11 – KC-CLUB-VIDEO-INSTALL: Erklär-Videos zum Installieren + Knopf „Erweiterte Ansicht“
+Neues Video-Thema „📲 App installieren“: Einführung (persönlicher Link vom Admin per WhatsApp oder E-Mail – nicht weitergeben), danach Browser wählen; je ein Video für Chrome, Edge, Samsung Internet, Safari (iPhone/iPad) und Firefox mit nachgebauten Original-Bildschirmen und Menüpunkten bis zur Kochmütze auf dem Startbildschirm; „Weiteres Gerät“ (Tablet, PC mit 6-stelligem Code) und „Link, Code & Co.“ (Unterschiede, Link verloren, Link einfügen). Einrichtungs-Assistent und Einstellungen bieten die Videos an. Der Knopf unten auf der Startseite heißt jetzt wie oben „🔧 Erweiterte Ansicht“.
+
 ## 2.275.0 – 2026-10-11 – KC-CLUB-VIDEO-ZAHLEN-2: Rundgang erklärt die Zahlen an Registern und Kacheln
 Auch der Rundgang „die App im Überblick“ erklärt jetzt die Zahl hinten am Register (10 von 12 = 10 sichtbar, 2 ausgeblendet) und die Zahlen auf den Kacheln (ungelesene Nachrichten, offene Termine, offene Zettel) – die Zahlen leuchten dabei auf.
 
