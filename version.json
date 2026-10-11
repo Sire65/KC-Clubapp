@@ -1,11 +1,22 @@
 {
-  "version": "2.253.0",
+  "version": "2.254.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🧠 Admin: Liste „Was Twinkey gelernt hat“ – doppelte oder veraltete Antworten mit einem Tipp vergessen"
+    "💡 Neues Erklär-Video „Warum diese App?“ – zum Einstieg, wird als Erstes angeboten",
+    "🎲 Erklär-Video Spiele: Spiel aussuchen, gegen Computer oder Mitglieder",
+    "🗄️ Erklär-Video Archiv & Clubchronik: Mein Ordner, Chronik, Clubleben, Inhaltsverzeichnis"
   ],
   "verlauf": [
+    {
+      "version": "2.254.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "💡 Neues Erklär-Video „Warum diese App?“ – zum Einstieg, wird als Erstes angeboten",
+        "🎲 Erklär-Video Spiele: Spiel aussuchen, gegen Computer oder Mitglieder",
+        "🗄️ Erklär-Video Archiv & Clubchronik: Mein Ordner, Chronik, Clubleben, Inhaltsverzeichnis"
+      ]
+    },
     {
       "version": "2.253.0",
       "datum": "2026-10-11",

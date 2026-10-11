@@ -5655,6 +5655,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/SOS\.suche = ""; SOS\.offen = null; sosZeigen\(\); sosLaden\(\);/.test(neu) && /if \(n < 16\) setTimeout\(\(\) => rgTreffenZeigen\(n \+ 1\), 250\)/.test(neu), "SOS wie sosStart gefüllt; Termin-Info wartet auf die Liste");
 }
 
+// 2.254.0 KC-CLUB-ERKLAERVIDEOS-4 (Wunsch Hansi): Spiele, Archiv und „Warum diese App?“ (als Erstes angeboten) – nur zeigen, Stand zurück
+{
+  const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-4"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR"));
+  const r = html.slice(html.indexOf("const RUNDGAENGE = ["), html.indexOf("];", html.indexOf("const RUNDGAENGE = [")));
+  assert.ok(b.length > 2000 && /const RUNDGAENGE = \[\n  \{ id: "warum", stand: "\d+",[^\n]*st: \(\) => RG_WARUM \}/.test(html) && /\{ id: "spiele", stand: "\d+",[^\n]*RG_SPIELE \}/.test(r) && /\{ id: "archiv", stand: "\d+",[^\n]*RG_ARCHIV \}/.test(r), "Einleitung zuerst, Spiele und Archiv registriert");
+  assert.ok(!/api\(|spPcZug\(|spHerausfordern\(|spHerausfordernBlatt\(\)|(?<!")arOrdnerOeffnen\(|arNeuesJahr\(\)|ivAnsicht\(\)|sicherheitPruefen\(|dwOeffnen\(/.test(b), "Videos senden, spielen, öffnen und speichern nichts (nur Knöpfe zeigen)");
+  assert.ok(/RG\.zurueck\.push\(\(\) => \{ const a = RG\.spAlt;/.test(b) && /RG\.zurueck\.push\(\(\) => \{ const a = RG\.arAlt;/.test(b) && /RG\.zurueck\.push\(\(\) => register\(alt\)\)/.test(b), "Spiel-, Archiv- und Register-Stand zurück");
+  assert.ok(/function rgHinweisLos\(\) \{ rundgangStart\(false, "warum"\); \}/.test(html) && /if \(tour\.id === "warum" && !rgErledigt\(\)\) rgHinweisErledigt\("angesehen"\);/.test(html), "Startseite bietet die Einleitung an");
+  assert.ok(/const weiter = !still && RG\.frage && RG\.tour === "warum";/.test(html) && /if \(weiter\) setTimeout\(rgUeberblickAnbieten, 400\);/.test(html) && /rundgangStart\(false, "ueberblick"\)/.test(html), "nach der Einleitung den Rundgang anbieten");
+  assert.ok(/nur: \(\) => !einfach\(\), vor: \(\) => rgRegister\("mein"\), sel: \[rgKachel\("mein_dienst"\)\], mussSel: true/.test(b) && /nur: \(\) => einfach\(\), sel: \[rgKachel\("meindienst"\)\], mussSel: true/.test(b), "Dienstplan je Ansicht an der richtigen Kachel");
+  assert.ok(/"f:spielen": \["spiele"\], "f:archiv": \["archiv"\]/.test(html), "Twinkey bietet die neuen Videos an");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

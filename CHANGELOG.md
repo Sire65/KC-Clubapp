@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.254.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-4: Erklär-Videos „Warum diese App?“ (als Erstes), Spiele und Archiv
+Einleitungs-Video „💡 Warum diese App?“: motivierend und einfach – alles an einem Ort (Nachrichten, Termine, Fotos, Aktionen, Dienstwünsche mit Twinkey), einfache Bedienung, viel Hilfe, Datensicherheit; steht als Erstes in der Liste, die Startseite bietet es an, danach wird der Rundgang angeboten. Neue Videos „🎲 Spiele“ (Spiel aussuchen, gegen Computer oder Mitglieder) und „🗄️ Archiv & Clubchronik“; Twinkey bietet sie bei passenden Fragen an. Gesagt wird nur, was im Bild zu sehen ist; nichts wird gespielt, gesendet oder angelegt, Spiel- und Archiv-Stand werden zurückgestellt.
+
 ## 2.253.0 – 2026-10-11 – KC-CLUB-TWINKEY-VERGESSEN: gelernte Antworten wieder vergessen (Wunsch Hansi)
 - Anlass: Die Antwort an Wilfried („Kochbild“) wurde mit „Twinkey merkt sich das“ gesendet – Twinkey hätte allen „Hallo Wilfried …“ gezeigt (vorher von Hand in der Datenbank zurückgenommen).
 - In „📥 Fragen an Twinkey“ (nur Admin) jetzt die Liste „🧠 Was Twinkey gelernt hat“: Frage, Anfang der Antwort, „🗑️ Vergessen“ mit Rückfrage. Neue Server-Aktion twinkey_vergessen (nur Admin, protokolliert) setzt nur „gemerkt“ zurück – die fragende Person behält ihre Antwort unter „📬 Deine Fragen“.

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.253.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.254.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1367,7 +1367,7 @@ const RUNDGANG = [
   { v: "einstellungen", sel: ["#v-einstellungen .kopf2", "#v-einstellungen"], t: "⚙️ Mehr", x: "Unter Mehr findest du die Einstellungen: Benachrichtigungen, Töne, Farben und große Schrift. Hier kannst du auch diesen Rundgang jederzeit wieder starten." },
   { v: "start", sel: ["#raster"], t: "✨ Und noch viel mehr", x: "Außerdem gibt es das Fotoalbum, das Archiv mit der Clubchronik, die Protokolle, Helfen und Leihen, die Erstattung von Auslagen, Spiele wie Schach, Bauernskat und Mensch ärgere dich nicht – und den SOS-Bereich für den Notfall." },
   { v: "start", vor: () => { if (!einfach() && reg !== "programme") { const alt = reg; register("programme"); RG.zurueck.push(() => register(alt)); } }, // KC-CLUB-ERKLAERVIDEOS (2.244.0)
-    sel: ['#raster .kachel[data-id="erklaer"]', "#hzFrage"], t: "🎬 Weitere Erklär-Videos", x: () => "Es gibt noch mehr Erklär-Videos – zu den Einstellungen, zum Schreiben, zu Terminen, Pinnwand, Fotos, Mitgliedern, Erstattung, Hilfe, Notfall – und wie du dir eine Koch-Figur als Bild aussuchst. " + (einfach() ? "Du findest sie in Hilfe und Tipps – über das Fragezeichen unten rechts – und unter Mehr." : "Du findest sie im Register Technik unter Erklär-Videos – und in Hilfe und Tipps.") },
+    sel: ['#raster .kachel[data-id="erklaer"]', "#hzFrage"], t: "🎬 Weitere Erklär-Videos", x: () => "Es gibt noch mehr Erklär-Videos – zu den Einstellungen, zum Schreiben, zu Terminen, Pinnwand, Fotos, Mitgliedern, Erstattung, Hilfe, Notfall, Spielen und zum Archiv – und wie du dir eine Koch-Figur als Bild aussuchst. " + (einfach() ? "Du findest sie in Hilfe und Tipps – über das Fragezeichen unten rechts – und unter Mehr." : "Du findest sie im Register Technik unter Erklär-Videos – und in Hilfe und Tipps.") },
   { v: "start", sel: ["#hzFrage", "#suLupe"], t: "❓ Hilfe", x: "Und wenn du mal nicht weiterweißt: Das Fragezeichen unten rechts öffnet die Hilfe zum Bereich, die Lupe findet jede Funktion. Oder du fragst Twinkey – einfach tippen oder sprechen." },
   { v: "start", t: "🎉 Fertig", x: "Das war der Rundgang. Probier einfach alles aus – kaputt machen kannst du nichts. Viel Spaß mit der Köcheclub-App!" },
 ];
@@ -1545,6 +1545,78 @@ const RG_HELFEN = [
   { v: "helfen", sel: ["#hlInhalt"], t: "🙋 Mitmachen", x: "Bei einer Bitte um Hilfe tippst du einfach an, dass du kommst – wer gefragt hat, bekommt Bescheid." },
   { v: "helfen", t: "✅ Fertig", x: "So hilft man sich im Club gegenseitig." },
 ];
+// KC-CLUB-ERKLAERVIDEOS-4 (2.254.0, Wunsch Hansi „Videos für Spiele und Archiv – Erklärung und Bild müssen genau übereinstimmen; dazu ein
+// Einleitungs-Video ‚Warum diese App‘, motivierend und einfach, als Erstes anbieten“). Gesagt wird nur, was im Bild gerade zu sehen ist.
+// Nur zeigen: kein Spielzug, keine Herausforderung, kein Ordner wird angelegt; Spiel-, Archiv- und Register-Stand werden am Ende zurückgestellt.
+const rgRegister = (r) => { if (!einfach() && reg !== r) { const alt = reg; register(r); RG.zurueck.push(() => register(alt)); } };
+const rgKachel = (id) => `#raster .kachel[data-id="${id}"]`;
+const RG_WARUM = [
+  { v: "start", t: "👋 Warum diese App?", x: "Schön, dass du da bist! In zwei Minuten erzähle ich dir, warum es diese App gibt – und was du davon hast. Du musst nichts antippen, ich blättere selbst weiter." },
+  { v: "start", sel: ["#raster"], t: "🏠 Alles an einem Ort", x: "Alles, was unseren Köcheclub betrifft, steckt jetzt in einem einzigen Programm – immer dabei auf deinem Handy. Kein Suchen mehr in Zetteln, E-Mails und vielen Gruppen. Jede Kachel ist ein Bereich des Clubs." },
+  { v: "nachrichten", sel: ["#v-nachrichten .kopf2"], t: "💬 Nachrichten", x: "Hier schreibst du den Mitgliedern – einzeln oder in Gruppen, mit Fotos und Sprachnachrichten. Fast wie bei WhatsApp – aber nur unter uns im Club." },
+  { v: "termine", sel: ["#v-termine .tr-kachel", "#v-termine .kopf2"], t: "📅 Termine", x: "Alle Clubtermine auf einen Blick. Mit einem Tipp sagst du zu oder ab – und die App erinnert dich rechtzeitig." },
+  { v: "fotos", sel: ["#v-fotos .kopf2"], t: "📷 Fotos", x: "Die schönsten Momente aus dem Clubleben – im Fotoalbum für alle Mitglieder. Eigene Fotos lädst du mit einem Tipp dazu." },
+  { v: "aktionen", sel: ["#aktionListe .aktkachel", "#v-aktionen .kopf2"], t: "🧳 Aktionen", x: "Unsere Ausflüge und Reisen: wann es losgeht, alle Einzelheiten – und ob du dabei bist." },
+  { v: "start", nur: () => !einfach(), vor: () => rgRegister("mein"), sel: [rgKachel("mein_dienst")], mussSel: true, puls: [rgKachel("mein_dienst")], t: "🗓️ Dienstplan",
+    x: "Deine Dienstwünsche gibst du direkt in der App ein – hier unter Mein Dienst. Auf Wunsch führt dich Twinkey, unser Assistent, Tag für Tag durch. Und du siehst hier auch deine nächsten Dienste." },
+  { v: "start", nur: () => einfach(), sel: [rgKachel("meindienst")], mussSel: true, t: "🗓️ Dienstplan", x: "Unter Mein Dienstplan siehst du deine Dienste. Deine Dienstwünsche gibst du in der erweiterten Ansicht unter Mein Dienst ein – auf Wunsch führt dich Twinkey, unser Assistent, Tag für Tag durch." },
+  { v: "start", sel: [".ansichtname.ein", ".ansichtname.erw"], t: "👍 Ganz einfach", x: "Alles ist so gebaut, dass es leicht geht: große Knöpfe und klare Wege. Wer mag, nimmt die einfache Ansicht mit wenigen großen Kacheln – hier schaltest du um. Schrift und Farben stellst du dir in den Einstellungen so ein, wie es dir gefällt." },
+  { v: "start", sel: ["#hzFrage", "#suLupe"], puls: ["#hzFrage", "#suLupe"], t: "❓ Viel Hilfe", x: "Und du bist nie allein: Das Fragezeichen erklärt jeden Bereich, die Lupe findet jede Funktion, Twinkey beantwortet deine Fragen – und es gibt Erklär-Videos wie dieses." },
+  { v: "start", nur: () => !einfach(), vor: () => rgRegister("programme"), sel: [rgKachel("sicherheit")], t: "🔒 Deine Daten sind sicher",
+    x: () => "Deine Daten sind geschützt: Die Verbindung ist verschlüsselt, gespeichert wird verschlüsselt, und jeder sieht nur, was er sehen darf. Deinen eigenen Archiv-Ordner siehst nur du."
+      + (rgSichtbar(document.querySelector(rgKachel("sicherheit"))) ? " Mit dem Sicherheits-Check hier im Register Technik prüfst du das jederzeit selbst." : "") },
+  { v: "start", nur: () => einfach(), t: "🔒 Deine Daten sind sicher", x: "Deine Daten sind geschützt: Die Verbindung ist verschlüsselt, gespeichert wird verschlüsselt, und jeder sieht nur, was er sehen darf. Deinen eigenen Archiv-Ordner siehst nur du." },
+  { v: "start", t: "🎉 Los geht's", x: "Probier einfach alles aus – kaputt machen kannst du nichts. Gleich danach kann ich dir im Rundgang zeigen, wie die App aufgebaut ist. Viel Freude mit unserer Köcheclub-App!" },
+];
+// Spiele: Übersicht → Tic-Tac-Toe als Beispiel (gegen den Computer, ohne Zug) → gegen Mitglieder (ohne Herausforderung) → Stand zurück
+function rgSpielAuf(art, tab) {
+  if (!RG.spAlt) { RG.spAlt = { art: SP.art, tab: SP.tab, offen: SP.offen, pause: SP.pause };
+    RG.zurueck.push(() => { const a = RG.spAlt; RG.spAlt = null; if (!a) return; SP.art = a.art; SP.tab = a.tab; SP.offen = a.offen; SP.pause = a.pause; if (aktuelleAnsicht === "spiele") spZeigen(); }); }
+  SP.tab = tab || "pc"; SP.offen = null;
+  if (!art) { SP.art = null; spZeigen(); return; }
+  spArtWahl(art); if (SP.tab === "mg") spLaden(true).then(rgNeuZielen); // Liste kommt vom Server – danach den Knopf zeigen
+}
+function rgNeuZielen() { if (!RG.an || RG.frage) return; const s = RG.st[RG.i]; RG.ziel = rgZiel(s) || RG.ziel; rgHin(); rgLage(); rgPulsStart(s); }
+const rgSpielNamen = () => [...document.querySelectorAll("#spInhalt .sp-kachel b")].map((b) => b.textContent.trim());
+const RG_SPIELE = [
+  { v: "spiele", vor: () => rgSpielAuf(null), sel: ["#spInhalt .sp-kacheln"], puls: ["#spInhalt .sp-kachel"], t: "🎲 Spiele – Köcheclub Edition",
+    x: () => { const n = rgSpielNamen(); return `Hier suchst du dir ein Spiel aus${n.length > 1 ? ": " + n.slice(0, -1).join(", ") + " und " + n[n.length - 1] : ""}. Antippen öffnet das Spiel.`; } },
+  { v: "spiele", vor: () => rgSpielAuf(null), sel: ['#spInhalt .sp-kachel[onclick="spArtWahl(\'ttt\')"]'], mussSel: true, t: "👆 Ein Spiel öffnen", x: "Als Beispiel öffne ich Tic-Tac-Toe." },
+  { v: "spiele", vor: () => rgSpielAuf("ttt", "pc"), sel: ["#spTabs"], puls: ["#spTabs button"], t: "🤖 Gegen wen?", x: "Oben wählst du: gegen den Computer – oder gegen Mitglieder aus dem Club." },
+  { v: "spiele", vor: () => rgSpielAuf("ttt", "pc"), sel: ["#spInhalt .sp-karte"], puls: ["#spInhalt .sp-wahl button"], mussSel: true, t: "⚙️ Wie schwer?",
+    x: "Gegen den Computer stellst du ein: die Feldgröße, wie stark der Computer spielt – leicht, mittel oder schwer – und wer anfängt." },
+  { v: "spiele", vor: () => rgSpielAuf("ttt", "pc"), sel: ["#spInhalt .sp-brett"], mussSel: true, t: "🍅 Spielen", x: "Dann tippst du einfach auf ein freies Feld. Wer zuerst drei in einer Reihe hat, gewinnt – waagerecht, senkrecht oder schräg." },
+  { v: "spiele", vor: () => rgSpielAuf("ttt", "pc"), sel: ["#spInhalt .sp-leiste"], puls: [rgOn("spPcNeu("), rgOn("spPausieren(")], mussSel: true, t: "⏸ Neu oder Pause",
+    x: "Mit Neues Spiel fängst du von vorn an. Mit Pause hältst du an – mit Weiter geht es später weiter." },
+  { v: "spiele", vor: () => rgSpielAuf("ttt", "mg"), sel: [rgOn("spHerausfordernBlatt("), '#spTabs button[data-t="mg"]'], puls: [rgOn("spHerausfordernBlatt(")], t: "👥 Gegen Mitglieder",
+    x: "Unter Gegen Mitglieder forderst du jemanden aus dem Club heraus. Ihr zieht abwechselnd – und du bekommst Bescheid, wenn du dran bist. Hier fordere ich niemanden heraus." },
+  { v: "spiele", vor: () => rgSpielAuf(null), sel: ["#v-spiele .kopf2 .zurueck"], t: "✅ Fertig", x: "Mit dem Pfeil oben links kommst du aus jedem Spiel zurück zur Übersicht. Viel Spaß beim Spielen!" },
+];
+// Archiv: Regal ohne Filter zeigen; einen Clubleben-Ordner öffnen (ohne Verlaufseintrag); Filter, Ordner und Register am Ende zurück
+function rgArchivAuf(ordner) {
+  if (!RG.arAlt) { RG.arAlt = { ordner: AR.ordner, register: AR.register, korb: AR.korb, suche: AR.suche, jahr: AR.jahr, art: AR.art };
+    RG.zurueck.push(() => { const a = RG.arAlt; RG.arAlt = null; if (!a) return; Object.assign(AR, a); if (aktuelleAnsicht === "archiv") arZeigen(); }); }
+  Object.assign(AR, { ordner: ordner || null, register: "", korb: false, suche: "", jahr: "", art: "" });
+  if (Array.isArray(AR.daten?.ordner)) try { arZeigen(); } catch (e) { console.warn("rundgang archiv", e); } // wie arLaden: unvollständige Antwort nicht abstürzen lassen
+}
+const rgArchivWarten = (n = 0) => { if (!RG.an || aktuelleAnsicht !== "archiv") return; if (!Array.isArray(AR.daten?.ordner)) { if (n < 16) setTimeout(() => rgArchivWarten(n + 1), 250); return; }
+  rgArchivAuf(RG.st[RG.i]?.arOrdner?.()); setTimeout(() => { if (!RG.an) return; RG.ziel = rgZiel(RG.st[RG.i]) || RG.ziel; rgHin(); rgLage(); rgPulsStart(RG.st[RG.i]); }, 120); };
+const rgArAbschnitt = (wort) => { const h = [...document.querySelectorAll("#arListe .abschnitt h3")].find((x) => x.textContent.includes(wort)); return h?.closest(".abschnitt")?.nextElementSibling; };
+const rgArClubleben = () => { const j = [...new Set((AR.daten?.auto || []).map((x) => arJahr(x.datum)))].sort().pop(); return j ? "auto:" + j : null; };
+const RG_ARCHIV = [
+  { v: "archiv", vor: () => rgArchivWarten(), sel: ["#arInhalt .ar-filter"], puls: ["#arSuche", "#arInhalt .ar-filter select", '#arInhalt .ar-chips .chip[onclick^="AR.art=\'auto\'"]'], t: "🗄️ Das Archiv",
+    x: "Das Archiv ist das Regal unseres Clubs. Oben suchst du nach einem Wort, wählst ein Jahr – oder tippst auf eine Art, zum Beispiel Clubleben." },
+  { v: "archiv", vor: () => rgArchivWarten(), sel: [() => rgArAbschnitt("Mein Ordner"), "#arListe .ar-pers"], puls: [rgOn("arNeuesJahr(")], mussSel: true, t: "👤 Mein Ordner",
+    x: () => (AR.daten?.ordner || []).some((o) => o.eigen) ? "Oben im Regal steht dein eigener Ordner. Den siehst nur du – auch der Admin nicht. Mit Plus weiteres Jahr legst du einen neuen Jahrgang an."
+      : "Oben im Regal ist Platz für deinen eigenen Ordner – mit Plus weiteres Jahr legst du ihn an. Den siehst nur du, auch der Admin nicht." },
+  { v: "archiv", vor: () => rgArchivWarten(), sel: [() => rgArAbschnitt("Clubchronik")], mussSel: true, t: "📖 Die Clubchronik", x: "Die Clubchronik ist ein Ordner für alle Jahre – die Geschichte unseres Clubs." },
+  { v: "archiv", vor: () => rgArchivWarten(), sel: ['#arListe button.ordner[onclick^="arOrdnerOeffnen(\'auto:"]'], mussSel: true, t: "🤖 Clubleben",
+    x: "Clubleben füllt sich von selbst: Was vorbei ist – Termine, Protokolle, Abstimmungen, Aktionen und mehr – landet hier, nach Jahren geordnet." },
+  { v: "archiv", arOrdner: rgArClubleben, vor: () => rgArchivWarten(), sel: ["#arInhalt .ar-register"], puls: ["#arInhalt .ar-register button", "#arInhalt .ar-blaettern"], mussSel: true, t: "📂 Ein Ordner",
+    x: "Tippst du einen Ordner an, öffnet er sich – mit Registern wie ein echter Ordner. Mit Blättern liest du ihn Seite für Seite wie ein Buch." },
+  { v: "archiv", vor: () => rgArchivWarten(), sel: [rgOn("ivAnsicht(")], puls: [rgOn("ivAnsicht(")], t: "🗂️ Inhaltsverzeichnis", x: "Mit Inhaltsverzeichnis siehst du alles auf einen Blick – und kannst es auch ausdrucken." },
+  { v: "archiv", vor: () => rgArchivWarten(), t: "✅ Fertig", x: "So findest du alles wieder – von heute bis zu den ersten Tagen des Clubs." },
+];
 // KC-CLUB-ERKLAERVIDEOS-FIGUR (2.248.0, Wunsch Hansi „Erklär-Videos, wie man sich eine Figur zuordnet und bearbeitet“):
 // Koch-Figur aussuchen (Mein Bild) und eigene Figur im Baukasten zusammenstellen. Vorgeführt wird nur – nichts wird gespeichert;
 // die Fenster gehen am Ende wieder zu. Foto, Baukasten und Jacken-Schalter erscheinen nur, wenn sie für das Mitglied freigegeben sind.
@@ -1589,6 +1661,7 @@ const RG_FIGUR_BAU = [
   { v: "start", vor: () => rgAvAuf(), t: "✏️ Später ändern", x: "Ändern kannst du deine Figur jederzeit: Mein Bild öffnen, deine eigene Figur antippen und auf Bearbeiten. Viel Spaß beim Zusammenstellen!" },
 ];
 const RUNDGAENGE = [
+  { id: "warum", stand: "1", sym: "💡", t: "Warum diese App? – Zum Einstieg", u: "Was die App dir bringt – einfach erklärt (ca. 2 Min.)", st: () => RG_WARUM }, // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: als Erstes
   { id: "ueberblick", stand: "1", sym: "🗺️", t: "Überblick: die App in 3 Minuten", u: "Oberfläche, Knöpfe, Register und was die App kann", st: () => RUNDGANG },
   { id: "einstellungen", stand: "1", sym: "⚙️", t: "Alle Einstellungen erklärt", u: "Was jede Einstellung bedeutet – mit Beispielen (ca. 6 Min.)", st: () => RG_EINSTELLUNGEN },
   { id: "nachricht", stand: "1", sym: "💬", t: "Neue Nachricht schreiben", u: "Empfänger wählen, schreiben, senden (ca. 1 Min.)", st: () => RG_NACHRICHT },
@@ -1601,6 +1674,8 @@ const RUNDGAENGE = [
   { id: "hilfe", stand: "1", sym: "❓", t: "Hilfe, Suche & Twinkey", u: "So findest du jede Antwort (ca. 1 Min.)", st: () => RG_HILFE },
   { id: "sos", stand: "1", sym: "🆘", t: "SOS – Notfall", u: "Notrufe, Standort, Notfallpass (ca. 1 Min.)", st: () => RG_SOS },
   { id: "helfen", stand: "1", sym: "🤝", t: "Helfen & Leihen", u: "Hilfe, Ausleihen, Börse (ca. 1 Min.)", st: () => RG_HELFEN },
+  { id: "spiele", stand: "1", sym: "🎲", t: "Spiele", u: "Spiel aussuchen, gegen Computer oder Mitglieder (ca. 1 Min.)", st: () => RG_SPIELE },
+  { id: "archiv", stand: "1", sym: "🗄️", t: "Archiv & Clubchronik", u: "Mein Ordner, Chronik, Clubleben, Inhaltsverzeichnis (ca. 1 Min.)", st: () => RG_ARCHIV },
   { id: "vorschlag", stand: "1", sym: "🗳️", t: "Vorschlag einreichen", u: "Thema oder Spende vorschlagen (ca. 1 Min.)", st: () => RG_VORSCHLAG },
   { id: "figur", stand: "1", sym: "🧑‍🍳", t: "Koch-Figur als Bild aussuchen", u: "Mein Bild: Figur antippen, übernehmen (ca. 1 Min.)", st: () => RG_FIGUR, nur: () => frei("avatar") }, // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR
   { id: "figurbau", stand: "1", sym: "🧩", t: "Eigene Figur zusammenstellen", u: "Haare, Mütze, Gesicht, Brille, Kochjacke – und später bearbeiten (ca. 2 Min.)", st: () => RG_FIGUR_BAU, nur: () => frei("avatar") && frei("avatar_baukasten") },
@@ -1639,6 +1714,7 @@ function rundgangStart(mitKnopf, id = "ueberblick") {
   rgHinweisZeigen(); // Hinweis-Karte auf der Startseite während eines Videos weg
   if ((tour.ziel || "alle") !== "admin" && reg === "admin") { register("verein"); RG.zurueck.push(() => register("admin")); }
   if (tour.id === "ueberblick" && !rgErledigt()) rgHinweisErledigt("angesehen"); // KC-CLUB-RUNDGANG-HINWEIS: wer ihn einmal gestartet hat, wird nicht mehr gefragt
+  if (tour.id === "warum" && !rgErledigt()) rgHinweisErledigt("angesehen"); // 2.254.0: die Einleitung zählt genauso
   RG.i = 0; RG.pause = !!mitKnopf; RG.ton = "speechSynthesis" in window; document.body.classList.add("rg-an");
   document.body.insertAdjacentHTML("beforeend", `<div class="rg-schicht" id="rgSchicht" role="dialog" aria-modal="true" aria-label="${esc(tour.t)}"><div class="rg-loch" id="rgLoch"></div>
     <div class="rg-tafel" id="rgTafel"><div class="rg-oben"><b id="rgTitel"></b><span class="rg-nr" id="rgNr"></span></div><p id="rgText"></p><div class="rg-balken"><i id="rgBalken"></i></div>
@@ -1660,8 +1736,8 @@ function rgHinweisZeigen() {
   const zeigen = !!(INIT && ICH && !RG.an && !rgErledigt() && spaeter !== heuteIso());
   if (!zeigen) { b.innerHTML = ""; return; }
   if (b.firstElementChild) return;
-  b.innerHTML = `<div class="karte rg-hinweis" role="note"><div class="rg-h-kopf"><span class="rg-h-sym" aria-hidden="true">🎬</span><div><b>Neu: Rundgang durch die App</b>
-    <div class="hinweis">In 3 Minuten zeigt und erzählt dir die App, was sie alles kann – mit Ton.</div></div></div>
+  b.innerHTML = `<div class="karte rg-hinweis" role="note"><div class="rg-h-kopf"><span class="rg-h-sym" aria-hidden="true">🎬</span><div><b>Neu: Warum diese App? – kurz erklärt</b>
+    <div class="hinweis">In 2 Minuten erzählt dir die App mit Ton, was sie dir bringt – danach auf Wunsch der Rundgang.</div></div></div>
     <div class="knoepfe"><button class="knopf haupt klein" onclick="rgHinweisLos()">▶ Jetzt ansehen</button><button class="knopf klein" onclick="rgHinweisSpaeter()">Später</button><button class="knopf klein" onclick="rgHinweisErledigt('nein')">Nein, danke</button></div></div>`;
 }
 async function rgHinweisErledigt(wie) {
@@ -1671,7 +1747,7 @@ async function rgHinweisErledigt(wie) {
   if (wie === "nein") melde("🎬 Alles klar – den Rundgang findest du jederzeit in ❓ Hilfe & Tipps");
 }
 function rgHinweisSpaeter() { try { localStorage.setItem(RG_SPAETER, heuteIso()); } catch {} rgHinweisZeigen(); melde("🎬 Ich frage morgen nochmal – oder jederzeit in ❓ Hilfe & Tipps"); }
-function rgHinweisLos() { rundgangStart(); }
+function rgHinweisLos() { rundgangStart(false, "warum"); } // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: zuerst die Einleitung
 function rgStille() { rgPulsStop(); clearTimeout(RG.uhr); RG.lauf++; try { if (RG.ton) speechSynthesis.cancel(); } catch {} }
 function rgZeigen() {
   if (!RG.an || RG.frage) return; // Bewertungs-Karte am Ende bleibt stehen
@@ -1785,6 +1861,7 @@ function rundgangPause() {
 }
 function rundgangEnde(still) {
   if (!RG.an && !$("rgSchicht")) return;
+  const weiter = !still && RG.frage && RG.tour === "warum"; // 2.254.0: nach der Einleitung bis zum Ende → Rundgang anbieten
   RG.frage = false; rgStille(); try { RG.st[RG.vorI]?.nach?.(); } catch {} // offene Beispiele schließen, Aufgeklapptes zuklappen, Vorführung zurück
   for (const f of RG.zurueck.splice(0).reverse()) try { f(); } catch {}
   if (RG.an) rgDemo({}); RG.vorI = -1;
@@ -1793,6 +1870,12 @@ function rundgangEnde(still) {
   removeEventListener("resize", rgLage); removeEventListener("scroll", rgLage, true);
   if (!still) { zeige(RG.von, true); scrollTo(0, 0); } // zurück, wo der Rundgang gestartet wurde
   rgHinweisZeigen();
+  if (weiter) setTimeout(rgUeberblickAnbieten, 400);
+}
+async function rgUeberblickAnbieten() {
+  if (RG.an) return;
+  if (await frage("🗺️ Möchtest du jetzt den Rundgang sehen?\nIn 3 Minuten zeige ich dir, wie die App aufgebaut ist – mit Ton.", { ja: "▶ Ja, zeigen", nein: "Später" })) rundgangStart(false, "ueberblick");
+  else melde("🎬 Den Rundgang findest du jederzeit unter Erklär-Videos");
 }
 
 // ---------- KC-CLUB-TIPP (1.6.0, Wunsch Hansi): Tipp des Tages beim Öffnen – höchstens einer je Tag ----------
@@ -5649,7 +5732,8 @@ async function twFrageStart(vorgabe = "") {
 // Neue Videos hier einfach dem passenden Eintrag (f: Twinkeys Fragen, h: Hilfe-Zentrum) zuordnen.
 const TW_VIDEOS = { "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
   "f:nachricht": ["nachricht"], "f:termin-neu": ["termin"], "f:zettel": ["pinnwand"], "f:vorschlag": ["vorschlag"], "f:zusagen": ["zusagen"],
-  "f:foto-album": ["fotos"], "f:geld": ["erstattung"], "f:notfall": ["sos"], "f:hilfe-suchen": ["helfen"], "f:leihen": ["helfen"], "f:anrufen": ["mitglieder"], "f:online": ["mitglieder"] };
+  "f:foto-album": ["fotos"], "f:geld": ["erstattung"], "f:notfall": ["sos"], "f:hilfe-suchen": ["helfen"], "f:leihen": ["helfen"], "f:anrufen": ["mitglieder"], "f:online": ["mitglieder"],
+  "f:spielen": ["spiele"], "f:archiv": ["archiv"] }; // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4
 const TW_HILFETEXT = { "f:mein-bild": "h:mein_bild", "f:figur-bauen": "h:mein_bild" };
 function twVideosHtml(e) {
   const v = (TW_VIDEOS[e.id] || []).map((id) => RUNDGAENGE.find((r) => r.id === id && (!r.nur || r.nur()))).filter(Boolean);
