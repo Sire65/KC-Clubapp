@@ -1,12 +1,18 @@
 {
-  "version": "2.251.0",
+  "version": "2.252.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🎬 7 neue Erklär-Videos: Mitglieder & Anrufen, Zu- und absagen, Fotoalbum, Erstattung, Hilfe & Twinkey, SOS, Helfen & Leihen",
-    "✨ In den Videos pulsiert jetzt der Knopf, über den gerade gesprochen wird"
+    "🧑‍🍳 Twinkey kennt jetzt „Kochbild“, Avatar & Co. – und bietet bei vielen Antworten das passende Erklär-Video an"
   ],
   "verlauf": [
+    {
+      "version": "2.252.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🧑‍🍳 Twinkey kennt jetzt „Kochbild“, Avatar & Co. – und bietet bei vielen Antworten das passende Erklär-Video an"
+      ]
+    },
     {
       "version": "2.251.0",
       "datum": "2026-10-11",

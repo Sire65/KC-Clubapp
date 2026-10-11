@@ -8298,3 +8298,13 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/const JZB_BLUEHT = 150;/.test(html) && /if \(J\.pt >= 50\) jzbPhase\("schmelzen"\);/.test(html), "längere Blüte, Schneemann steht länger");
 }
 
+// 2.252.0 KC-CLUB-TWINKEY-BILD + -VIDEOS (Fund Hansi: Wilfried fragte „Kochbild“, Twinkey kannte es nicht)
+{
+  assert.ok(/\["avatar", "kochbild", "profilbild", "profilfoto", "benutzerbild", "kochfigur", "figur", "figuren", "selfie", "baukasten"\]/.test(html), "Wörter fürs eigene Bild");
+  assert.ok(/\{ id: "mein-bild", [^\n]*nur: \(\) => frei\("avatar"\),/.test(html) && /\{ id: "figur-bauen", [^\n]*nur: \(\) => frei\("avatar"\) && frei\("avatar_baukasten"\),/.test(html) && /\.\.\.TW_FAQ\.filter\(\(e\) => !e\.nur \|\| e\.nur\(\)\)/.test(html), "Antworten nur mit Freigabe");
+  assert.ok(/RUNDGAENGE\.find\(\(r\) => r\.id === id && \(!r\.nur \|\| r\.nur\(\)\)\)/.test(html) && /VORLESE_KNOPF\}<\/div>\$\{twVideosHtml\(e\)\}/.test(html), "Twinkey bietet nur sichtbare Erklär-Videos an");
+  const ids = new Set([...html.matchAll(/\{ id: "([a-z]+)", stand: "/g)].map((m) => m[1]));
+  const tv = html.match(/const TW_VIDEOS = (\{[\s\S]*?\});/)[1];
+  for (const [, v] of tv.matchAll(/"([a-z]+)"(?=[,\]])/g)) assert.ok(ids.has(v), `TW_VIDEOS nennt unbekanntes Video ${v}`);
+}
+

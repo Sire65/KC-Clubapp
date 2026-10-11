@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.251.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.252.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5522,7 +5522,8 @@ const TW_SYN = [["termin", "verabredung", "treffen", "datum", "verabreden", "aus
   ["erstattung", "geld", "fahrtkosten", "auslage", "kosten", "zurueck", "beleg", "quittung"], ["ausleihen", "leihen", "borgen", "pavillon", "reservieren"], ["boerse", "verkaufen", "verschenken", "biete"], ["suche", "suchen", "finden"],
   ["tipp", "tipps", "hilfe", "erklaerung", "anleitung", "handbuch", "bedienungsanleitung"], ["stumm", "ruhe", "stoeren", "ruhezeit", "nachts"], ["vorschlag", "vorschlaege", "idee", "abstimmen", "abstimmung"],
   ["anschrift", "adresse", "umgezogen", "umzug", "wohnung"], ["version", "update", "aktualisieren", "neu", "neuigkeiten"], ["fehler", "problem", "kaputt", "geht", "haengt", "absturz"],
-  ["daten", "datenschutz", "privat", "sicher", "sicherheit", "privatsphaere"], ["kosten", "kostet", "gratis", "kostenlos", "bezahlen"], ["profil", "meine", "angaben", "kleidung", "groesse", "kochjacke"]];
+  ["daten", "datenschutz", "privat", "sicher", "sicherheit", "privatsphaere"], ["kosten", "kostet", "gratis", "kostenlos", "bezahlen"], ["profil", "meine", "angaben", "kleidung", "groesse", "kochjacke"],
+  ["avatar", "kochbild", "profilbild", "profilfoto", "benutzerbild", "kochfigur", "figur", "figuren", "selfie", "baukasten"]]; // 2.252.0 Fund Hansi: Wilfried fragte „Kochbild“
 // Twinkeys eigene Fragen und Antworten (Wunsch Hansi: „mehr Fragen und Antworten“) – kurz, mit Sprung an die richtige Stelle
 const TW_FAQ = [
   { id: "nachricht", sym: "💬", t: "Wie schreibe ich jemandem eine Nachricht?", x: "Tippe auf <b>💬 Nachrichten</b> und dann auf <b>„＋ Neu“</b>. Wähle das Mitglied aus, schreib deinen Text und tippe auf Senden. Schneller geht es bei <b>👥 Mitglieder</b>: bei der Person auf die Sprechblase <b>💬</b> tippen.", los: () => zeige("nachrichten") },
@@ -5560,6 +5561,11 @@ const TW_FAQ = [
   { id: "ruhe", sym: "🌙", t: "Wie stelle ich ein, dass mich nachts nichts stört?", x: "Unter <b>⚙️ Einstellungen</b> bei <b>„Nicht stören“</b> die Ruhezeit einschalten (z. B. 22–7 Uhr). In der Zeit kommt kein Push – was du verpasst, bekommst du danach gesammelt.", los: () => zeige("einstellungen") },
   { id: "feedback", sym: "💭", t: "Wie melde ich einen Fehler oder einen Wunsch?", x: "Unter <b>💭 Feedback</b> aufschreiben, was stört oder fehlt – es geht direkt an den Admin.", los: () => zeige("feedback") },
   { id: "mitglied-fragen", sym: "👥", t: "Kann ich auch andere Mitglieder etwas fragen?", x: "Ja – bei <b>🧑‍🍳 Frag Twinkey</b> auf <b>„👥 Lieber ein Mitglied fragen“</b> tippen. Frage schreiben (oder 🎤 sprechen), <b>alle</b> oder einzelne Mitglieder anhaken und wählen, wie die Frage ankommt: 📱 Club-App, 🔔 Push oder ✉️ E-Mail. Die Antworten siehst du bei Twinkey unter <b>„👥 Deine Fragen an Mitglieder“</b>. Wirst du selbst gefragt, antwortest du dort unter <b>„❓ Fragen an dich“</b> – oder tippst „🤷 Ich weiß es nicht“, „🔎 Ich recherchiere“ oder „🚫 Bitte nicht mehr fragen“.", los: () => mfFormular() },
+  // 2.252.0 KC-CLUB-TWINKEY-BILD (Fund Hansi: Wilfried fragte „Kochbild“ – Twinkey kannte es nicht): eigenes Bild / Koch-Figur
+  { id: "mein-bild", sym: "🧑‍🍳", t: "Wie bekomme ich ein Kochbild (Koch-Figur) statt meiner Buchstaben?", nur: () => frei("avatar"),
+    x: "Im Register <b>Meins</b> auf <b>„🧑‍🍳 Mein Bild“</b> tippen. Eine Koch-Figur antippen – oben siehst du sie groß – und <b>„✅ Übernehmen“</b>. Dein Bild erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Mit <b>„Kein Bild“</b> hast du wieder deine Buchstaben.", los: () => avWahl() },
+  { id: "figur-bauen", sym: "🧩", t: "Wie stelle ich meine Koch-Figur selbst zusammen oder ändere sie?", nur: () => frei("avatar") && frei("avatar_baukasten"),
+    x: "In <b>„🧑‍🍳 Mein Bild“</b> auf <b>„🧩 Selbst zusammenstellen“</b> tippen – oder erst eine Figur antippen und dann <b>„✏️ Bearbeiten“</b>. Teil für Teil wählen: Koch oder Köchin, Haare, Kopfbedeckung, Bart, Gesicht, Brille, Kochjacke, Hintergrund. Oben siehst du alles sofort. Zum Schluss <b>„💾 Speichern“</b>.", los: () => avBauen() },
   { id: "ueber-twinkey", sym: "🧑‍🍳", t: "Wer ist Twinkey?", x: "Ich bin Twinkey, der Helfer der Köcheclub-App – früher waren auch viele von uns Küchenchefs. Frag mich in deinen Worten. Weiß ich etwas nicht, recherchiere ich und du bekommst die Antwort später." },
 ];
 const twNorm = (t) => String(t || "").toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z0-9 ]+/g, " ");
@@ -5576,7 +5582,7 @@ let TW = { wissen: null, meine: [], offen: null, mf: { aus: false, anMich: [], m
 const twTextHtml = (t) => esc(t).replace(/\n/g, "<br>");
 function twEintraege() { // Hilfen + Twinkeys Fragen + Gelerntes (w:) – alles in einer Liste
   const gelernt = (TW.wissen || []).map((w) => ({ id: "w:" + w.id, thema: "twinkey", sym: "🧑‍🍳", t: w.frage, x: twTextHtml(w.antwort), los: null, gelernt: true }));
-  return [...gelernt, ...TW_FAQ.map((e) => ({ id: "f:" + e.id, thema: "twinkey", sym: e.sym, t: e.t, x: e.x, los: e.los || null })), ...hzEintraege()];
+  return [...gelernt, ...TW_FAQ.filter((e) => !e.nur || e.nur()).map((e) => ({ id: "f:" + e.id, thema: "twinkey", sym: e.sym, t: e.t, x: e.x, los: e.los || null })), ...hzEintraege()];
 }
 function twIndex() {
   if (TW_INDEX) return TW_INDEX;
@@ -5638,6 +5644,22 @@ async function twFrageStart(vorgabe = "") {
   twMeineZeigen(); twAdminKnopf(); mfZeigen();
   if (($("twFrage")?.value || "").trim()) twAntworten();
 }
+// KC-CLUB-TWINKEY-VIDEOS (2.252.0, Wunsch Hansi „Du kannst es im Hilfetext nachlesen. Aber es gibt auch Erklär-Videos. Was möchtest du dir
+// ansehen?“): Antwort-Eintrag → passende Erklär-Videos (Registry RUNDGAENGE, nur die für das Mitglied sichtbaren) und der ausführliche Hilfetext.
+// Neue Videos hier einfach dem passenden Eintrag (f: Twinkeys Fragen, h: Hilfe-Zentrum) zuordnen.
+const TW_VIDEOS = { "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
+  "f:nachricht": ["nachricht"], "f:termin-neu": ["termin"], "f:zettel": ["pinnwand"], "f:vorschlag": ["vorschlag"], "f:zusagen": ["zusagen"],
+  "f:foto-album": ["fotos"], "f:geld": ["erstattung"], "f:notfall": ["sos"], "f:hilfe-suchen": ["helfen"], "f:leihen": ["helfen"], "f:anrufen": ["mitglieder"], "f:online": ["mitglieder"] };
+const TW_HILFETEXT = { "f:mein-bild": "h:mein_bild", "f:figur-bauen": "h:mein_bild" };
+function twVideosHtml(e) {
+  const v = (TW_VIDEOS[e.id] || []).map((id) => RUNDGAENGE.find((r) => r.id === id && (!r.nur || r.nur()))).filter(Boolean);
+  const h = TW_HILFETEXT[e.id] && hzEintraege().some((x) => x.id === TW_HILFETEXT[e.id]) ? TW_HILFETEXT[e.id] : null;
+  if (!v.length) return "";
+  return `<div class="tw-videos"><p style="margin:8px 0 6px">📖 Du kannst es ${h ? "im Hilfetext" : "hier oben"} nachlesen. Es gibt aber auch ${v.length === 1 ? "ein Erklär-Video" : "Erklär-Videos"} mit Ton. <b>Was möchtest du dir ansehen?</b></p>
+    <div class="tw-video-knoepfe">${h ? `<button type="button" class="knopf" onclick="twHilfetext('${h}')">📖 Hilfetext lesen</button>` : ""}${v.map((r) => `<button type="button" class="knopf" onclick="twVideo('${r.id}')">🎬 ${esc(r.t)}</button>`).join("")}</div></div>`;
+}
+function twVideo(id) { $("twBlatt")?.remove(); rundgangStart(false, id); }
+function twHilfetext(id) { $("twBlatt")?.remove(); hzZuEintrag(id); }
 function twAntworten(wahl, gefragt = false) {
   const fr = ($("twFrage")?.value || "").trim(), z = $("twAntwort"); if (!z) return;
   if (twNorm(fr).replace(/\s/g, "").length < 4) { z.innerHTML = ""; return; }
@@ -5650,7 +5672,7 @@ function twAntworten(wahl, gefragt = false) {
   }
   const e = best.e, andere = t.filter((x) => x !== best).slice(0, 3), bew = /^[hte]:/.test(e.id) ? hzBewHtml(e.id) : "";
   z.innerHTML = `<div class="karte kc-antwort vorlese-karte"><div class="kc-chef">🧑‍🍳 ${e.gelernt ? "Das weiß ich inzwischen:" : "Das geht so:"}</div><h3 style="margin:4px 0">${e.sym || "💡"} ${esc(e.t)}</h3><p style="margin:0 0 8px">${e.x}</p>
-      <div class="knoepfe">${e.los ? `<button class="knopf haupt" onclick="twZeig('${e.id}')">👉 Zeig es mir</button>` : ""}${VORLESE_KNOPF}</div>${bew}
+      <div class="knoepfe">${e.los ? `<button class="knopf haupt" onclick="twZeig('${e.id}')">👉 Zeig es mir</button>` : ""}${VORLESE_KNOPF}</div>${twVideosHtml(e)}${bew}
       <button type="button" class="tw-nicht" onclick="twNichtGefunden()">🙋 Das beantwortet meine Frage nicht</button></div>
     ${andere.length ? `<div class="kc-andere"><b>Oder meintest du:</b>${andere.map((x) => `<button class="ti-zeile" onclick="twAntworten('${x.e.id}')">${x.e.sym || "💡"} <span>${esc(x.e.t)}</span><b>›</b></button>`).join("")}</div>` : ""}`;
 }

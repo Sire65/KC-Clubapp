@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.252.0 – 2026-10-11 – KC-CLUB-TWINKEY-BILD + KC-CLUB-TWINKEY-VIDEOS (Fund Hansi: Wilfried fragte „Kochbild“)
+- Twinkey versteht Kochbild, Avatar, Profilbild, Profilfoto, Koch-Figur, Figur, Selfie, Baukasten und antwortet mit zwei neuen Einträgen: „Wie bekomme ich ein Kochbild (Koch-Figur) statt meiner Buchstaben?“ und „Wie stelle ich meine Koch-Figur selbst zusammen oder ändere sie?“ (nur, wenn Mein Bild bzw. der Baukasten für das Mitglied freigegeben ist).
+- Gibt es zur Antwort ein Erklär-Video, bietet Twinkey es an: „Du kannst es im Hilfetext nachlesen. Es gibt aber auch Erklär-Videos mit Ton. Was möchtest du dir ansehen?“ – 📖 Hilfetext lesen oder 🎬 Video starten. Zuordnung an einer Stelle (TW_VIDEOS): Bild, Nachricht, Termin, Pinnwand, Vorschlag, Zusagen, Fotoalbum, Erstattung, SOS, Helfen & Leihen, Mitglieder. Es werden nur Videos angeboten, die das Mitglied sehen darf.
+
 ## 2.251.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-PULS: erwähnte Knöpfe pulsieren + 7 neue Erklär-Videos
 - Erwähnte Knöpfe, Felder und Register pulsieren nacheinander (Leuchten + leicht größer; ohne Bewegung bei „weniger Bewegung“) – in allen Videos, ohne Liste pulst das erklärte Element.
 - Neue Videos: Mitglieder/anklopfen/anrufen, Zu- und absagen, Fotoalbum, Erstattung, Hilfe/Suche/Twinkey, SOS, Helfen & Leihen. Nur gezeigt – nichts wird angerufen, gesendet, hochgeladen oder gespeichert.
