@@ -8088,3 +8088,14 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/const RT_GRENZE = 2000000/.test(server) && /await rtZaehlerWarnen\(\)\.catch/.test(server) && /`club-rt-kontingent:\$\{monat\}:\$\{stufe\[0\]\}`/.test(server), "Warnung je Stufe einmal im Monat");
   assert.ok(/if \(s\.art === "alarm"\) \{ neuLaden\(\); return; \}/.test(html) && /\["rt", "⚡", "Direkte Leitung", "ueb"\]/.test(html) && /function rtKontingent\(\)/.test(html), "App: Alarm sofort, Lage-Kachel, Kontingent");
 }
+
+// 2.231.0 KC-CLUB-LIVE-TERMIN (Wunsch Hansi): Live-Abstimmung über den nächsten Sitzungstermin – auf dem vorhandenen Terminfindungs-Kern
+{
+  const m = lies("supabase/migrations/20261011_kc_club_v2231_live_termin.sql");
+  assert.ok(/add column if not exists live boolean not null default false/.test(m) && /'livetermin'/.test(m) && /after insert or update or delete on public\.kc_club_terminumfrage_antworten/.test(m), "Live-Modus + Signal");
+  assert.ok(/case "live_termin_start": \{\s+nurVorstand\(ich\);/.test(server) && /while \(new Date\(Date\.UTC\(ny, nm - 1, tag\)\)\.getUTCDay\(\) !== 5\) tag--;/.test(server), "Clubsprecher startet, Vorschlag letzter Freitag");
+  assert.ok(/async function liveTerminKalender\(ich: Ich, beginn: string\)/.test(server) && /kc_club_privattermine|privatListe\(ich, von, bis\)/.test(server) && /eq\("person_id", ich\.person_id\)\.eq\("work_date", tag\)/.test(server), "Blick nur in den eigenen Kalender");
+  assert.ok(/namen: leiter \?/.test(server), "Namen nur für die Leitung");
+  assert.ok(/api\("terminumfrage_festlegen", \{ id: d\.id, option_id: d\.option\.id \}/.test(html) && /api\("terminumfrage_antwort", \{ option_id: d\.option\.id/.test(html), "vorhandene Kerne für Antwort und Festlegen");
+  assert.ok(/Soll ich den Termin in deinen Kalender eintragen\?/.test(html) && /inKalender\(t\.id\)/.test(html) && /if \(s\.art === "livetermin"\) \{ ltHolen\(\); return; \}/.test(html), "Kalender-Frage, direkte Leitung");
+}

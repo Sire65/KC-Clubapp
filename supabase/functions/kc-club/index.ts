@@ -44,7 +44,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.230.0";
+const SERVER_VERSION = "2.231.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -3763,6 +3763,65 @@ async function mitfahrtBezugTitel(art: string, id: string) {
   }
   const a: any = (await aktionenRoh()).liste.find((x: any) => String(x.id) === id);
   return a ? txt(a.activity, 200) : null;
+}
+
+// ---------- KC-CLUB-LIVE-TERMIN (2.231.0, Wunsch Hansi): Live-Abstimmung über den nächsten Sitzungstermin ----------
+// Am Ende der Sitzung startet der Clubsprecher (Vorstand/Admin) eine Live-Abstimmung – Vorschlag aus dem Kalender: letzter Freitag
+// des nächsten Monats, Uhrzeit/Ort wie beim letzten Köcheclub-Treffen. Alle mit offener App bekommen ein Fenster mit dem Termin,
+// einem Blick in ihren Club-App-Kalender (Treffen, eigene Termine, Dienste) und „✅ Ich kann / ❔ Unter Vorbehalt / ❌ Ich kann nicht“.
+// Der Sprecher sieht das Ergebnis live und legt fest (vorhandener Kern terminumfrage_festlegen: Termin + Zusagen) oder schlägt eine
+// Alternative vor. Nach dem Festlegen fragt jede App: „In deinen Kalender eintragen?“. Läuft höchstens LIVE_TERMIN_STD Stunden.
+const LIVE_TERMIN_STD = 3;
+async function liveTerminAktiv() {
+  const { data } = await db.from("kc_club_terminumfragen").select("*").eq("live", true).gte("erstellt_am", new Date(Date.now() - LIVE_TERMIN_STD * 3600000).toISOString())
+    .order("erstellt_am", { ascending: false }).limit(1).maybeSingle();
+  return data ?? null;
+}
+// Blick in den eigenen Club-App-Kalender am Vorschlagstag (nur eigene Daten): Club-Termine, private Termine, eigene Dienste
+async function liveTerminKalender(ich: Ich, beginn: string) {
+  const tag = berlinTag(new Date(beginn)), [y, m, d] = tag.split("-").map(Number);
+  const von = berlinZuUtc(y, m, d, 0, 0).toISOString(), bis = berlinZuUtc(y, m, d + 1, 0, 0).toISOString();
+  const [{ data: tr }, priv, { data: di }] = await Promise.all([
+    db.from("kc_club_treffen").select("titel,beginn,ganztaegig").eq("status", "geplant").gte("beginn", von).lt("beginn", bis).order("beginn").limit(10),
+    privatListe(ich, von, bis).catch(() => [] as any[]),
+    db.from("kc_dp_plan_published").select("start_time,end_time,area").eq("org_id", ORG).eq("status", "published").eq("person_id", ich.person_id).eq("work_date", tag),
+  ]);
+  const zeit = (b: string, g?: boolean) => (g ? "ganztägig" : new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(b)) + " Uhr");
+  return [
+    ...(tr ?? []).map((t: any) => ({ art: "club", text: `📅 ${txt(t.titel, 80)} (${zeit(t.beginn, t.ganztaegig)})` })),
+    ...priv.filter((x: any) => x.beginn >= von && x.beginn < bis).map((x: any) => ({ art: "privat", text: `🔒 ${txt(x.titel, 80)} (${zeit(x.beginn, x.ganztaegig)})` })),
+    ...(di ?? []).map((x: any) => ({ art: "dienst", text: `🗓️ Dienst ${String(x.start_time).slice(0, 5)}–${String(x.end_time).slice(0, 5)} Uhr${x.area ? " · " + txt(x.area, 40) : ""}` })),
+  ];
+}
+// Vorschlag „aus dem Kalender“: letzter Freitag des nächsten Monats, Uhrzeit + Ort wie beim letzten Köcheclub-Treffen
+async function liveTerminVorschlag() {
+  const { data: letzt } = await db.from("kc_club_treffen").select("beginn,ort,titel").eq("art", "treffen").lte("beginn", new Date(Date.now() + 60 * 86400000).toISOString())
+    .order("beginn", { ascending: false }).limit(1).maybeSingle();
+  const hm = letzt ? new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(letzt.beginn)) : "19:00";
+  const h = berlinTag(new Date()), j = +h.slice(0, 4), mo = +h.slice(5, 7);
+  const ny = mo === 12 ? j + 1 : j, nm = mo === 12 ? 1 : mo + 1; // nächster Monat
+  let tag = new Date(Date.UTC(ny, nm, 0)).getUTCDate(); while (new Date(Date.UTC(ny, nm - 1, tag)).getUTCDay() !== 5) tag--;
+  const [hh, mm] = hm.split(":").map(Number);
+  return { beginn: berlinZuUtc(ny, nm, tag, hh, mm).toISOString(), ort: letzt?.ort ?? null, titel: "Köcheclub-Treffen" };
+}
+async function liveTerminStand(ich: Ich, u: any) {
+  const { data: opt } = await db.from("kc_club_terminumfrage_optionen").select("id,beginn").eq("umfrage_id", u.id).order("reihenfolge");
+  const o = (opt ?? []).find((x: any) => x.id === u.live_option) ?? (opt ?? [])[(opt ?? []).length - 1];
+  const { data: ant } = o ? await db.from("kc_club_terminumfrage_antworten").select("person_id,antwort").eq("option_id", o.id) : { data: [] as any[] };
+  const leiter = ich.vorstand || u.erstellt_von === ich.person_id;
+  const leute = leiter ? await personen((ant ?? []).map((x: any) => x.person_id)) : new Map();
+  const liste = (w: string) => (ant ?? []).filter((x: any) => x.antwort === w);
+  let treffen: any = null;
+  if (u.status === "festgelegt" && u.festgelegt_treffen_id) {
+    const { data: t } = await db.from("kc_club_treffen").select("id,titel,beginn,ende,ort,beschreibung,ganztaegig").eq("id", u.festgelegt_treffen_id).maybeSingle();
+    treffen = t ?? null;
+  }
+  return { id: u.id, status: u.status, titel: u.titel, ort: u.ort, stand: u.geaendert_am, leiter, von: vorname((await personen([u.erstellt_von])).get(u.erstellt_von)) || "",
+    option: o ? { id: o.id, beginn: o.beginn } : null, alternativen: Math.max(0, (opt ?? []).length - 1),
+    zahlen: { ja: liste("ja").length, vielleicht: liste("vielleicht").length, nein: liste("nein").length },
+    namen: leiter ? Object.fromEntries(["ja", "vielleicht", "nein"].map((w) => [w, liste(w).map((x: any) => vorname(leute.get(x.person_id)) || x.person_id).sort()])) : null,
+    meine: (ant ?? []).find((x: any) => x.person_id === ich.person_id)?.antwort ?? null,
+    kalender: o && u.status === "offen" ? await liveTerminKalender(ich, o.beginn).catch(() => null) : null, treffen };
 }
 
 // ---------- Terminfindung (KC-CLUB-TERMINFINDUNG) ----------
@@ -8657,7 +8716,8 @@ Köcheclub-App`,
         const klopfbar = await anklopfenErlaubtMap([...on]);
         const leute = await personen([...on, ...(ss ? [ss.von] : []), ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von), ...(spAn ?? []).map((x: any) => x.von), ...(vf ? [vf.von] : [])]);
         const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
-        return json({ zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
+        const liveT = await liveTerminAktiv().catch(() => null); // KC-CLUB-LIVE-TERMIN (2.231.0): auch ohne direkte Leitung bemerken
+        return json({ liveTermin: liveT ? { id: liveT.id, stand: liveT.geaendert_am } : null, zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
           klopfAntworten: (anMich ?? []).length ? Object.entries(KLOPF_ANTWORTEN).map(([id, text]) => ({ id, text })) : undefined,
           antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null })),
           anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })),
@@ -9943,6 +10003,49 @@ Köcheclub Werne`,
         if (z.person_id !== ich.person_id && !ich.vorstand) throw new Fehler("Abnehmen darf nur, wer den Zettel angeheftet hat.", 403);
         await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: ich.person_id }).eq("id", z.id);
         await protokoll(ich.person_id, "pinnwand_abgenommen", { zettel: z.id, fremd: z.person_id !== ich.person_id });
+        return json({ ok: true });
+      }
+
+      // ----- KC-CLUB-LIVE-TERMIN (2.231.0): Live-Abstimmung über den nächsten Sitzungstermin -----
+      case "live_termin_vorschlag": { nurVorstand(ich); return json(await liveTerminVorschlag()); }
+      case "live_termin_start": {
+        nurVorstand(ich);
+        const beginn = new Date(String(p.beginn || ""));
+        if (isNaN(beginn.getTime()) || beginn.getTime() < Date.now()) throw new Fehler("Bitte einen Termin in der Zukunft wählen.");
+        // höchstens eine Live-Abstimmung: ältere offene beenden
+        await db.from("kc_club_terminumfragen").update({ live: false, status: "beendet", geaendert_am: jetzt() }).eq("live", true).eq("status", "offen");
+        const { data: u, error } = await db.from("kc_club_terminumfragen").insert({ titel: txt(p.titel, 120) || "Köcheclub-Treffen", ort: txt(p.ort, 200) || null,
+          beschreibung: txt(p.beschreibung, 2000) || null, art: "treffen", erstellt_von: ich.person_id, live: false }).select().single();
+        if (error || !u) throw new Fehler("Live-Abstimmung konnte nicht gestartet werden.", 500);
+        const { data: o } = await db.from("kc_club_terminumfrage_optionen").insert({ umfrage_id: u.id, beginn: beginn.toISOString(), reihenfolge: 0 }).select("id").single();
+        await db.from("kc_club_terminumfragen").update({ live: true, live_option: o?.id ?? null, geaendert_am: jetzt() }).eq("id", u.id); // erst jetzt live → Signal samt Vorschlag
+        await protokoll(ich.person_id, "live_termin_gestartet", { umfrage: u.id, beginn: beginn.toISOString() });
+        return json({ ok: true, id: u.id });
+      }
+      case "live_termin_alternative": {
+        const u = await liveTerminAktiv();
+        if (!u || u.status !== "offen") throw new Fehler("Es läuft gerade keine Live-Abstimmung.", 404);
+        if (!ich.vorstand && u.erstellt_von !== ich.person_id) throw new Fehler("Das darf nur, wer die Abstimmung gestartet hat.", 403);
+        const beginn = new Date(String(p.beginn || ""));
+        if (isNaN(beginn.getTime()) || beginn.getTime() < Date.now()) throw new Fehler("Bitte einen Termin in der Zukunft wählen.");
+        const { count } = await db.from("kc_club_terminumfrage_optionen").select("id", { count: "exact", head: true }).eq("umfrage_id", u.id);
+        if ((count ?? 0) >= 10) throw new Fehler("Höchstens 10 Vorschläge je Abstimmung.");
+        const { data: o } = await db.from("kc_club_terminumfrage_optionen").insert({ umfrage_id: u.id, beginn: beginn.toISOString(), reihenfolge: count ?? 1 }).select("id").single();
+        await db.from("kc_club_terminumfragen").update({ live_option: o?.id ?? null, ...(p.ort !== undefined ? { ort: txt(p.ort, 200) || null } : {}), geaendert_am: jetzt() }).eq("id", u.id);
+        await protokoll(ich.person_id, "live_termin_alternative", { umfrage: u.id, beginn: beginn.toISOString() });
+        return json({ ok: true });
+      }
+      case "live_termin_holen": {
+        const u = await liveTerminAktiv();
+        if (!u || u.status === "beendet") return json({ live: null });
+        return json({ live: await liveTerminStand(ich, u) });
+      }
+      case "live_termin_ende": {
+        const u = await liveTerminAktiv();
+        if (!u) return json({ ok: true });
+        if (!ich.vorstand && u.erstellt_von !== ich.person_id) throw new Fehler("Das darf nur, wer die Abstimmung gestartet hat.", 403);
+        await db.from("kc_club_terminumfragen").update({ live: false, ...(u.status === "offen" ? { status: "beendet" } : {}), geaendert_am: jetzt() }).eq("id", u.id);
+        await protokoll(ich.person_id, "live_termin_beendet", { umfrage: u.id, status: u.status });
         return json({ ok: true });
       }
 

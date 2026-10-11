@@ -2290,6 +2290,16 @@
   .dg-jacke { display: flex; gap: 12px; align-items: center; margin: 10px 0; padding: 10px; border: 2px solid #741521; border-radius: 12px; font-size: 1.05rem; }
   .dg-farbe { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 2px solid #555; }
   .dg-wetter { margin: 8px 0 0; padding: 10px; border-radius: 12px; background: #e8f1fb; color: #13293d; } .dg-wetter > div { margin-top: 4px; }
+  /* KC-CLUB-LIVE-TERMIN (2.231.0) */
+  .lt-kopf { display: inline-block; background: #c62828; color: #fff; font-weight: 800; border-radius: 999px; padding: 3px 12px; font-size: .85rem; animation: ltPuls 1.6s ease-in-out infinite; }
+  @keyframes ltPuls { 50% { opacity: .55; } } @media (prefers-reduced-motion: reduce) { .lt-kopf { animation: none; } }
+  .lt-termin { font-size: 1.25rem; font-weight: 800; margin: 6px 0 10px; line-height: 1.3; }
+  .lt-kal { padding: 8px 10px; border-radius: 10px; background: #e7f4ea; color: #1d4d2c; margin: 0 0 10px; } .lt-kal-warn { background: #fff4d6; color: #5b4300; } .lt-kal > div { margin-top: 3px; }
+  .lt-wahl .knopf { font-size: 1.1rem; padding: 12px; }
+  .lt-zahlen { display: flex; gap: 14px; justify-content: center; font-size: 1.2rem; font-weight: 800; margin: 10px 0 4px; }
+  .lt-namen { font-size: .9rem; margin: 6px 0; } .lt-namen > div { margin-top: 3px; }
+  .lt-leiter { border-top: 2px solid var(--linie, #ddd); margin-top: 10px; padding-top: 8px; }
+  .lt-startknopf { width: 100%; text-align: center; margin: 0 0 10px; border: 2px solid #c62828; font-weight: 800; }
   .dlg-kopf { margin: 0 0 6px; font-size: 1.15rem; white-space: pre-line; }
   .dlg-text { margin: 0 0 10px; white-space: pre-line; }
   .dlg-knoepfe { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
@@ -4016,6 +4026,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.230.0" data-v="2.230.0"></script>
+<script src="app.js?v=2.231.0" data-v="2.231.0"></script>
 </body>
 </html>

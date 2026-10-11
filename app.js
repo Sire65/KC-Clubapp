@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.230.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.231.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -3644,6 +3644,7 @@ async function onlinePing() {
     if ($("setOnline")) $("setOnline").checked = r.zeigen;
     onlineLeisteZeigen(); if (INIT) heroZeigen();
     spielLive(r.spielAnfragen); // KC-CLUB-SPIEL-LIVE
+    if ((r.liveTermin?.stand || null) !== (LT.stand || null) || (r.liveTermin && !LT.d)) ltHolen(); // KC-CLUB-LIVE-TERMIN: ohne direkte Leitung beim Abgleich
     if (r.vorfuehren) vfAnfrage(r.vorfuehren); // KC-CLUB-VORFUEHREN
     if (r.schnappschuss) ssAnfrage(r.schnappschuss); // KC-CLUB-SCHNAPPSCHUSS (2.102.0)
     if (aktuelleAnsicht === "buero" && !PUSH_AKTIV && Date.now() - BNN.zuletzt > 55000) buNeuPruefen(); /* KC-CLUB-BUERO-NEU-NACHRICHT: ohne Push selbst nachsehen */
@@ -3760,6 +3761,7 @@ function rtSignal(s) {
   if (s.art === "alarm") { neuLaden(); return; } // Notfall-Meldung → init → alarmPruefen() zeigt sie groß in Rot
   if (s.art === "gelesen") { if (s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } return; }
   if (s.art === "online") { onlinePing(); return; }
+  if (s.art === "livetermin") { ltHolen(); return; } // KC-CLUB-LIVE-TERMIN (2.231.0)
   if (s.art === "pinnwand") { clearTimeout(RT.pw); RT.pw = setTimeout(() => { pwLive(); if (aktuelleAnsicht === "pinnwand") pwLaden(); }, 800); return; }
   if (s.art === "termin" || s.art === "abstimmung") {
     clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500); // Zusagen/offene Abstimmungen auf der Startseite
@@ -20040,6 +20042,7 @@ function termineNeuWahl() {
   neuWahlFenster("＋ Neu bei Termine", [
     { sym: "📅", t: ICH?.vorstand ? "Termin eintragen" : "Privater Termin", u: ICH?.vorstand ? "Sitzung, Veranstaltung – oder mit Häkchen „Privat“ nur für dich" : "nur für dich sichtbar", los: () => neuTermin() },
     { sym: "📨", t: "Terminanfrage", u: "Einzelne, mehrere oder eine Gruppe fragen – Ja / Vielleicht / Nein", los: () => taForm() },
+    ...(ICH?.vorstand ? [{ sym: "🔴", t: "Live-Abstimmung nächster Termin", u: "Auf der Sitzung: alle mit offener App stimmen sofort ab", los: () => ltStartForm() }] : []), // KC-CLUB-LIVE-TERMIN
     ...(ICH?.vorstand ? [{ sym: "🗓️", t: "Terminfindung", u: "Mehrere Termine zur Auswahl – alle stimmen ab", los: () => umfrageForm() }] : []),
   ]);
 }
@@ -21389,7 +21392,7 @@ async function terminfindungLaden() {
     const { umfragen } = await api("terminumfragen_liste");
     UMFRAGEN = umfragen.filter((u) => u.status === "offen");
     // 1.46.0: als Klappbereich mit Pfeil und Schloss (wie überall)
-    $("terminfindung").innerHTML = UMFRAGEN.length ? `<details class="karte tm-klappe" data-klappe="tm_umfragen" data-ohne-unten open><summary>🗓️ Terminfindung <span class="marke">${UMFRAGEN.length}</span></summary>${UMFRAGEN.map(umfrageKarte).join("")}</details>` : "";
+    $("terminfindung").innerHTML = (ICH?.vorstand ? `<button class="knopf lt-startknopf" onclick="ltStartForm()">🔴 Live-Abstimmung: nächster Termin</button>` : "") /* KC-CLUB-LIVE-TERMIN */ + (UMFRAGEN.length ? `<details class="karte tm-klappe" data-klappe="tm_umfragen" data-ohne-unten open><summary>🗓️ Terminfindung <span class="marke">${UMFRAGEN.length}</span></summary>${UMFRAGEN.map(umfrageKarte).join("")}</details>` : "");
     klappenMerken($("terminfindung"));
   } catch (e) { meldeFehler(e); }
 }
@@ -21426,6 +21429,100 @@ async function umfrageFestlegen(id, optionId) {
 async function umfrageLoeschen(id) {
   if (!(await frage("Diese Terminfindung endgültig löschen? Alle Antworten gehen mit verloren. Eine Sicherung bleibt im Änderungsprotokoll."))) return;
   try { await api("terminumfrage_loeschen", { id }); melde("🗑️ Gelöscht"); terminfindungLaden(); neuLaden(); } catch (e) { meldeFehler(e); }
+}
+// ---------- KC-CLUB-LIVE-TERMIN (2.231.0, Wunsch Hansi): Live-Abstimmung über den nächsten Sitzungstermin ----------
+// Clubsprecher (bzw. Kassenwart/Admin) startet am Ende der Sitzung („＋ Neu“ bei Termine oder Knopf über der Terminfindung). Vorschlag aus dem
+// Kalender (Server: letzter Freitag im nächsten Monat, Zeit/Ort wie zuletzt). Alle mit offener App bekommen sofort ein Fenster (direkte
+// Leitung, sonst beim nächsten Online-Abgleich): Termin, Blick in den eigenen Club-App-Kalender, ✅ Ich kann · ❔ Unter Vorbehalt ·
+// ❌ Ich kann nicht. Der Sprecher sieht das Ergebnis live, legt fest (vorhandener Kern: Termin + Zusagen) oder schlägt eine Alternative
+// vor. Nach dem Festlegen fragt jede App einmal: „In deinen Kalender eintragen?“ (Handy-Kalender, Google, Outlook – vorhandene Wege).
+const LT = { stand: null, option: null, zu: null, fest: (() => { try { return localStorage.getItem("kc_club_lt_fest") || ""; } catch { return ""; } })(), laeuft: false, nochmal: false, d: null };
+const ltAntw = { ja: "✅ Ich kann", vielleicht: "❔ Unter Vorbehalt", nein: "❌ Ich kann nicht" };
+const ltWann = (iso) => `${new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(iso))}, ${fZeit.format(new Date(iso))} Uhr`;
+async function ltStartForm() {
+  let v; try { v = await api("live_termin_vorschlag", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  blattAuf("ltStartBlatt", `<h3 style="margin-top:0">🔴 Live-Abstimmung: nächster Termin</h3>
+    <p class="hinweis" style="margin-top:0">Alle, die gerade die Club-App offen haben, bekommen sofort ein Fenster und stimmen ab. Vorschlag aus dem Kalender: <b>letzter Freitag im nächsten Monat</b>, Uhrzeit und Ort wie beim letzten Treffen.</p>
+    <label class="feld">Titel<input id="ltTitel" maxlength="120" value="${esc(v.titel || "Köcheclub-Treffen")}"></label>
+    <div class="zwei"><label class="feld">Datum<input type="date" id="ltDatum" value="${esc(berlinIso(v.beginn))}"></label><label class="feld">Uhrzeit<input type="time" id="ltZeit" value="${esc(fZeit.format(new Date(v.beginn)))}"></label></div>
+    <label class="feld">Ort<input id="ltOrt" maxlength="200" value="${esc(v.ort || "")}" placeholder="z. B. Vereinsheim"></label>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" onclick="einmal(this, ltStarten)">🔴 Live-Abstimmung starten</button>
+      <button class="knopf" style="text-align:center" onclick="$('ltStartBlatt').remove()">Abbrechen</button></div>`);
+}
+const ltZeitpunkt = (d, z) => (d ? new Date(`${d}T${z || "18:00"}:00`).toISOString() : null);
+async function ltStarten() {
+  const beginn = ltZeitpunkt($("ltDatum")?.value, $("ltZeit")?.value); if (!beginn) return melde("Bitte ein Datum wählen.", true);
+  try { await api("live_termin_start", { beginn, titel: $("ltTitel").value, ort: $("ltOrt").value }, { warten: true }); $("ltStartBlatt")?.remove(); LT.zu = null; melde("🔴 Live-Abstimmung läuft – alle mit offener App sehen sie jetzt"); ltHolen(); }
+  catch (e) { meldeFehler(e); }
+}
+async function ltHolen() {
+  if (!ICH || document.body.classList.contains("im-notbetrieb")) return;
+  if (LT.laeuft) { LT.nochmal = true; return; } LT.laeuft = true;
+  try { const r = await api("live_termin_holen", {}, { still: true }); LT.d = r.live; LT.stand = r.live?.stand || null; ltZeigen(); }
+  catch {} finally { LT.laeuft = false; if (LT.nochmal) { LT.nochmal = false; ltHolen(); } }
+}
+function ltZeigen() {
+  const d = LT.d;
+  if (!d) { $("ltBlatt")?.remove(); return; }
+  if (d.status === "festgelegt") { $("ltBlatt")?.remove(); return ltFestgelegt(d); }
+  if (d.status !== "offen" || !d.option) { $("ltBlatt")?.remove(); return; }
+  if (LT.zu === d.option.id && !$("ltBlatt")) return; // selbst zugemacht – erst bei neuem Vorschlag wieder öffnen
+  const z = d.zahlen, k = (w) => `<button class="knopf${d.meine === w ? " haupt" : ""}" style="text-align:center" onclick="ltAntwort('${w}')">${ltAntw[w]}${d.meine === w ? " ✔" : ""}</button>`;
+  const kal = d.kalender == null ? `<p class="hinweis">❔ Dein Kalender konnte gerade nicht geprüft werden.</p>`
+    : d.kalender.length ? `<div class="lt-kal lt-kal-warn"><b>📒 In deinem Kalender an diesem Tag:</b>${d.kalender.map((x) => `<div>${esc(x.text)}</div>`).join("")}</div>`
+    : `<div class="lt-kal"><b>📒 Dein Kalender:</b> an diesem Tag ist nichts eingetragen ✅</div>`;
+  const namen = d.namen ? `<div class="lt-namen">${["ja", "vielleicht", "nein"].map((w) => `<div><b>${ltAntw[w]}</b>: ${esc(d.namen[w].join(", ") || "–")}</div>`).join("")}</div>` : "";
+  const leiter = d.leiter ? `<div class="lt-leiter"><b>Für dich als Leitung:</b>
+      <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+        <button class="knopf haupt" style="text-align:center" onclick="einmal(this, ltAnnehmen)">📅 Termin annehmen</button>
+        <details><summary class="knopf" style="text-align:center">🔁 Alternative vorschlagen</summary>
+          <div class="zwei" style="margin-top:6px"><label class="feld">Datum<input type="date" id="ltAltDatum" value="${esc(berlinIso(d.option.beginn))}"></label><label class="feld">Uhrzeit<input type="time" id="ltAltZeit" value="${esc(fZeit.format(new Date(d.option.beginn)))}"></label></div>
+          <button class="knopf haupt" style="width:100%;text-align:center" onclick="einmal(this, ltAlternative)">🔁 Diesen Termin zur Abstimmung stellen</button></details>
+        <button class="knopf klein" style="text-align:center" onclick="einmal(this, ltBeenden)">⏹ Abstimmung beenden</button></div></div>` : "";
+  const html = `<div class="lt-kopf">🔴 LIVE · Abstimmung${d.von ? ` von ${esc(d.von)}` : ""}</div>
+    <h3 style="margin:6px 0 2px">${esc(d.titel)}</h3>
+    <div class="lt-termin">${esc(ltWann(d.option.beginn))}${d.ort ? `<br><small>📍 ${esc(d.ort)}</small>` : ""}${d.alternativen ? `<br><small>🔁 Alternativvorschlag</small>` : ""}</div>
+    ${kal}
+    <div class="knoepfe lt-wahl" style="flex-direction:column;align-items:stretch">${k("ja")}${k("vielleicht")}${k("nein")}</div>
+    <div class="lt-zahlen"><span>✅ ${z.ja}</span><span>❔ ${z.vielleicht}</span><span>❌ ${z.nein}</span></div>
+    ${namen}${leiter}
+    <button class="knopf klein" style="width:100%;text-align:center;margin-top:8px" onclick="LT.zu='${esc(d.option.id)}';$('ltBlatt').remove()">Fenster schließen</button>`;
+  const f = $("ltBlatt");
+  if (f && LT.option === d.option.id) { f.querySelector(".blatt-innen").innerHTML = html; return; } // nur auffrischen (Zahlen, Auswahl)
+  LT.option = d.option.id;
+  const neu = blattAuf("ltBlatt", html); neu.onclick = (e) => { if (e.target === neu) { LT.zu = d.option.id; neu.remove(); } };
+  if (!d.meine) { try { navigator.vibrate?.([120, 80, 120]); } catch {} }
+}
+async function ltAntwort(w) {
+  const d = LT.d; if (!d?.option) return;
+  try { await api("terminumfrage_antwort", { option_id: d.option.id, antwort: d.meine === w ? "" : w }); ltHolen(); } catch (e) { meldeFehler(e); }
+}
+async function ltAnnehmen() {
+  const d = LT.d; if (!d?.option) return;
+  if (!(await frage(`📅 „${d.titel}“ am ${ltWann(d.option.beginn)} festlegen?\n\nDer Termin wird im Kalender angelegt, alle bekommen die Einladung. Wer „Ich kann“ getippt hat, ist schon zugesagt; „unter Vorbehalt“ = vielleicht.`, { ja: "📅 Festlegen", nein: "Zurück" }))) return;
+  try { await api("terminumfrage_festlegen", { id: d.id, option_id: d.option.id }, { warten: true }); melde("📅 Termin steht – alle werden gefragt, ob er in ihren Kalender soll"); ltHolen(); if (typeof treffenLaden === "function") treffenLaden(); }
+  catch (e) { meldeFehler(e); }
+}
+async function ltAlternative() {
+  const beginn = ltZeitpunkt($("ltAltDatum")?.value, $("ltAltZeit")?.value); if (!beginn) return melde("Bitte ein Datum wählen.", true);
+  try { await api("live_termin_alternative", { beginn }, { warten: true }); melde("🔁 Neuer Vorschlag ist bei allen"); ltHolen(); } catch (e) { meldeFehler(e); }
+}
+async function ltBeenden() {
+  if (!(await frage("Live-Abstimmung beenden, ohne einen Termin festzulegen?", { ja: "⏹ Beenden", nein: "Zurück" }))) return;
+  try { await api("live_termin_ende", {}, { warten: true }); $("ltBlatt")?.remove(); melde("⏹ Live-Abstimmung beendet"); } catch (e) { meldeFehler(e); }
+}
+// nach dem Festlegen: jede App fragt einmal „In deinen Kalender eintragen?“ (auch wer erst später öffnet – höchstens 3 Std.)
+function ltFestgelegt(d) {
+  const t = d.treffen; if (!t || LT.fest === t.id) return;
+  LT.fest = t.id; try { localStorage.setItem("kc_club_lt_fest", t.id); } catch {}
+  TREFFEN_IDX.set(t.id, t);
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">📅 Der nächste Termin steht!</h3>
+    <div class="lt-termin">${esc(t.titel)}<br>${esc(ltWann(t.beginn))}${t.ort ? `<br><small>📍 ${esc(t.ort)}</small>` : ""}</div>
+    <p class="dlg-text">Soll ich den Termin in deinen Kalender eintragen?</p>
+    <div class="dlg-knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" data-ja>📲 Ja, in meinen Kalender</button><button class="knopf" data-nein>Nein, danke</button></div>`, () => f.remove());
+  f.querySelector("[data-ja]").onclick = () => { f.remove(); inKalender(t.id); };
+  f.querySelector("[data-nein]").onclick = () => f.remove();
+  try { navigator.vibrate?.(80); } catch {}
 }
 let tuArt = "treffen";
 const tuReihe = () => `<div class="zwei tuReihe"><label class="feld">Datum<input type="date" class="tuDatum"></label><label class="feld">Uhrzeit<input type="time" class="tuZeit" value="18:00"></label></div>`;

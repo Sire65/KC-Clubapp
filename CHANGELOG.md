@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.231.0 – 2026-10-11 – Live-Abstimmung über den nächsten Sitzungstermin
+KC-CLUB-LIVE-TERMIN: Am Ende der Sitzung startet der Clubsprecher „🔴 Live-Abstimmung: nächster Termin“ (bei Termine). Vorschlag aus dem Kalender: letzter Freitag im nächsten Monat, Uhrzeit und Ort wie beim letzten Treffen (änderbar). Alle mit offener App bekommen sofort ein Fenster: Termin, Blick in den eigenen Club-App-Kalender (Termine, eigene Einträge, Dienste) und ✅ Ich kann · ❔ Unter Vorbehalt · ❌ Ich kann nicht. Der Sprecher sieht das Ergebnis live mit Namen, kann den Termin annehmen (legt ihn an, Zusagen werden übernommen) oder eine Alternative zur Abstimmung stellen. Nach dem Annehmen fragt jedes Handy: „Soll ich den Termin in deinen Kalender eintragen?“ (Handy-Kalender, Google, Outlook). Läuft über die direkte Leitung.
+
 ## 2.230.0 – 2026-10-11 – Sparbremse, Alarm und weitere Bereiche an der direkten Leitung
 KC-CLUB-RT-SPARBREMSE: Die Datenbank zählt die Signale der direkten Leitung je Monat (kostenlos: 2 Mio.). Ab 70 % gehen „schreibt gerade“, Live-Bild, Online, Pinnwand, Termine und Abstimmungen wieder über das normale Nachfragen, ab 95 % nur noch Alarm – es entstehen nie Kosten. Admin: Warnung per Push bei 50/70/95 %, neue Lage-Kachel „⚡ Direkte Leitung“ mit Verbrauch. Neu an der Leitung: 🚨 Alarm/Notfall-Meldung sofort, ✓✓ Gelesen-Haken, 🟢 wer online kommt, 📌 Pinnwand, 📅 Termin-Zusagen und 🗳️ Abstimmungen (geheime Stimmen ohne Signal).
 
