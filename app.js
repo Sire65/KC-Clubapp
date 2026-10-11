@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.256.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.257.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5971,7 +5971,7 @@ async function twOffenStart() {
       <label class="hinweis">Frage <small>(für Twinkeys Wissen gern allgemein formulieren)</small><input class="tw-f" maxlength="300" value="${esc(x.frage)}"></label>
       <label class="hinweis">Antwort<textarea class="tw-a" data-diktat rows="4" maxlength="2000" placeholder="Deine Antwort …"></textarea></label>
       <div class="hl-chips">${TW_WEGE.map(([k, t]) => `<button type="button" class="chip${k !== "email" ? " an" : ""}" data-weg="${k}" aria-pressed="${k !== "email"}">${k !== "email" ? "☑️" : "⬜"} ${t}</button>`).join("")}</div>
-      <button type="button" class="chip an tw-wissen" aria-pressed="true">☑️ 🧠 Twinkey merkt sich das (für alle)</button>
+      <button type="button" class="chip tw-wissen" aria-pressed="false">⬜ 🧠 Twinkey merkt sich das (für alle)</button><small class="hinweis" style="display:block;margin:2px 0 6px">Nur anhaken, wenn die Antwort für alle passt – nicht bei persönlichen Antworten wie „Hallo Wilfried …“.</small><!-- 2.257.0 KC-CLUB-TWINKEY-MERKEN-AUS (Wunsch Hansi): Standard aus -->
       <div class="knoepfe"><button type="button" class="knopf haupt" data-tw="senden">📤 Antwort senden</button><button type="button" class="knopf" data-tw="weg">🗑️ Verwerfen</button></div></div>`).join("")
       : `<p>🎉 Keine offenen Fragen.</p>`}
     <div id="twBeantwortet"></div><div id="twGelernt"></div>

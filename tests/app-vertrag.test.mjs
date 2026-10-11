@@ -8346,3 +8346,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/!v \? "❔ Ergebnis unbekannt"/.test(html) && /<div id="twBeantwortet"><\/div>/.test(html), "Liste im Admin-Fenster; unbekannt nie als ✅ (Regel 11)");
 }
 
+// 2.257.0 KC-CLUB-TWINKEY-MERKEN-AUS (Wunsch Hansi): „Twinkey merkt sich das“ ist beim Beantworten aus – nur bewusst anhaken
+{
+  assert.ok(/<button type="button" class="chip tw-wissen" aria-pressed="false">⬜ 🧠 Twinkey merkt sich das/.test(html) && !/class="chip an tw-wissen"/.test(html), "Merken standardmäßig aus");
+}
+
