@@ -5680,6 +5680,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.rgl-kacheln \{ display: grid;/.test(seite) && /\.rgl-fuss \{ position: sticky;/.test(seite), "Kacheln und Abspiel-Knopf immer sichtbar");
 }
 
+// 2.258.0 KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE (Wunsch Hansi): Oberfläche nach Wunsch – alles nur vorgeführt, nichts gespeichert
+{
+  const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR"));
+  assert.ok(b.length > 3000 && /\{ id: "oberflaeche", stand: "\d+",[^\n]*st: \(\) => RG_OBERFLAECHE \}/.test(html) && /videos: \["einstellungen", "oberflaeche", "figur", "figurbau"\]/.test(html), "Video registriert, im Thema „Ich & meine App“");
+  const code = b.replace(/\/\/[^\n]*/g, "").replace(/'[^'\n]*'/g, "''"); // ohne Kommentare und Knopf-Wähler ('[onclick^="kaBearbeiten(false)"]')
+  assert.ok(!/kaSpeichern\(|kaBearbeiten\(|api\(|localStorage\.setItem|kopfRollo\(|kaSichtbar\(|kaStandard\(\)|einstellung_setzen/.test(code), "nichts speichern: Kopf, Anordnen, Ausblenden und Register nur auf dem Bildschirm");
+  for (const z of ["#kopfPfeilHalb", "#kopfPfeil", "#heroInfo .ipfeil", ".kstrg button", ".kweg", ".kachel.bearb.aus", "#kaAusHinweis", "kr-hinten", "#register", ".wischhinweis"]) assert.ok(b.includes(z), `zeigt ${z}`);
+  assert.ok(/RG\.zurueck\.push\(\(\) => \{ const a = RG\.kopfAlt;/.test(b) && /RG\.zurueck\.push\(\(\) => rgAusDemo\(false\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => rgRegisterTausch\(false\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => rgDrehen\(false\)\)/.test(b) && /if \(a !== null && a !== INFO_I\) infoGehe\(a, -1\)/.test(b), "alles wird zurückgestellt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

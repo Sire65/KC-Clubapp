@@ -1,11 +1,18 @@
 {
-  "version": "2.257.0",
+  "version": "2.258.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🧠 Twinkey merkt sich Antworten nur noch, wenn der Admin es ausdrücklich anhakt"
+    "🎨 Neues Erklär-Video „Oberfläche nach Wunsch“: Kopf einrollen, Kacheln verschieben, verbergen und umdrehen, Register anordnen, wischen"
   ],
   "verlauf": [
+    {
+      "version": "2.258.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🎨 Neues Erklär-Video „Oberfläche nach Wunsch“: Kopf einrollen, Kacheln verschieben, verbergen und umdrehen, Register anordnen, wischen"
+      ]
+    },
     {
       "version": "2.257.0",
       "datum": "2026-10-11",

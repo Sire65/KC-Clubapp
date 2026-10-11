@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.257.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.258.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1617,6 +1617,80 @@ const RG_ARCHIV = [
   { v: "archiv", vor: () => rgArchivWarten(), sel: [rgOn("ivAnsicht(")], puls: [rgOn("ivAnsicht(")], t: "🗂️ Inhaltsverzeichnis", x: "Mit Inhaltsverzeichnis siehst du alles auf einen Blick – und kannst es auch ausdrucken." },
   { v: "archiv", vor: () => rgArchivWarten(), t: "✅ Fertig", x: "So findest du alles wieder – von heute bis zu den ersten Tagen des Clubs." },
 ];
+// KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE (2.258.0, Wunsch Hansi „Video, wie ich die Oberfläche anpassen kann: die beiden Pfeile oben, Pfeile rechts/links,
+// Kacheln verschieben, verbergen, umdrehen, verborgene anzeigen, Register anordnen, Wischen“). Alles wird nur vorgeführt und NICHT gespeichert:
+// Kopf, Info-Feld, Anordnen, ausgeblendete Kachel, Register-Reihenfolge und umgedrehte Kachel werden am Ende genau zurückgestellt.
+function rgKopf(stand) {
+  if (!RG.kopfAlt) { RG.kopfAlt = kopfRolloStand(); RG.zurueck.push(() => { const a = RG.kopfAlt; RG.kopfAlt = null; if (a) kopfRolloSetzen(a); }); }
+  kopfRolloSetzen(stand || RG.kopfAlt); scrollTo(0, 0);
+}
+function rgInfo(schritt) {
+  if (RG.infoAlt === undefined || RG.infoAlt === null) { RG.infoAlt = INFO_I; RG.zurueck.push(() => { const a = RG.infoAlt; RG.infoAlt = null; if (a !== null && a !== INFO_I) infoGehe(a, -1); }); }
+  if (schritt) infoBlaettern(schritt);
+}
+function rgAnordnen(an) { // „Anordnen“ ohne Speichern ein- und ausschalten (kaBearbeiten(false) würde speichern)
+  if (an && !kaBearb) { if (!RG.anordnenZurueck) { RG.anordnenZurueck = true; RG.zurueck.push(() => { RG.anordnenZurueck = false; rgAnordnen(false); }); } kaBearb = true; kaFrisch = null; KA_NUR_AUS = false; $("kachelLeiste").classList.remove("versteckt"); registerZeigen(); kachelnZeigen(); }
+  else if (!an && kaBearb) { kaBearb = false; kaFrisch = null; $("kachelLeiste").classList.add("versteckt"); registerZeigen(); kachelnZeigen(); }
+}
+function rgAusDemo(an) { // eine Kachel nur auf dem Bildschirm ausblenden (KA wird nicht gespeichert) – am Ende wieder da
+  if (an && !RG.ausId) { const k = kacheln(reg).filter((x) => !x.bald).pop(); if (!k) return; RG.ausId = k.id; KA.aus = [...KA.aus, k.id];
+    RG.zurueck.push(() => rgAusDemo(false)); }
+  else if (!an && RG.ausId) { const id = RG.ausId; RG.ausId = null; KA.aus = KA.aus.filter((x) => x !== id); KA_NUR_AUS = false; }
+  registerZeigen(); kachelnZeigen();
+}
+function rgRegisterTausch(an) { // Register-Reihenfolge nur zeigen: die ersten beiden getauscht, nicht gespeichert
+  if (an && !RG.regAlt) { RG.regAlt = { reihe: KA.register }; const r = REGISTER.map((x) => x[0]); [r[0], r[1]] = [r[1], r[0]]; KA.register = r; RG.zurueck.push(() => rgRegisterTausch(false)); }
+  else if (!an && RG.regAlt) { KA.register = RG.regAlt.reihe; RG.regAlt = null; }
+  registerZeigen();
+}
+const rgDrehKachel = () => [...document.querySelectorAll("#raster > .kachel")].find((k) => krAktionen(k.dataset.id).length && rgSichtbar(k));
+function rgDrehen(an) {
+  const offen = document.querySelector("#raster > .kachel.kr-hinten");
+  if (!an) { if (offen) krUmdrehen(offen, true); return; }
+  if (offen) return; const k = rgDrehKachel(); if (!k) return;
+  krUmdrehen(k); RG.zurueck.push(() => rgDrehen(false));
+  setTimeout(() => { clearTimeout(KR.zu); RG.ziel = document.querySelector("#raster > .kachel.kr-hinten") || RG.ziel; rgLage(); }, 300); // bleibt offen, solange erzählt wird
+}
+const rgRegName = (i) => REGISTER[i]?.[1] || "";
+const RG_OBERFLAECHE = [
+  { v: "start", vor: () => { rgKopf("offen"); if (!einfach() && !RG.regStart) { RG.regStart = reg; RG.zurueck.push(() => { const a = RG.regStart; RG.regStart = null; if (a && reg !== a) register(a); }); } }, t: "🎨 Deine Wunsch-Oberfläche", x: "So gestaltest du dir die Startseite selbst – ganz nach deinen Bedürfnissen. Ich zeige dir alles nur; gespeichert wird nichts, und am Ende ist alles wieder wie vorher." },
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#kopfPfeilHalb", "#kopfPfeil"], puls: ["#kopfPfeilHalb", "#kopfPfeil"], t: "⌃ Die beiden Pfeile oben",
+    x: "Ganz oben siehst du zwei Pfeile. Damit rollst du den farbigen Kopf ein wie eine Jalousie – dann ist mehr Platz für die Kacheln." },
+  { v: "start", vor: () => rgKopf("halb"), sel: ["#v-start .hero"], puls: ["#kopfPfeilHalb"], t: "⌃ Halb einrollen", x: "Der linke Pfeil mit einem Haken rollt den Kopf halb ein: Die Zeile mit deinem Status bleibt stehen." },
+  { v: "start", vor: () => rgKopf("ganz"), sel: ["#v-start .hero"], puls: ["#kopfPfeil"], t: "⌃⌃ Ganz einrollen", x: "Der rechte Pfeil mit zwei Haken rollt ihn ganz ein – nur die oberste Zeile bleibt. Nochmal antippen rollt ihn wieder aus." },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("offen"); rgInfo(); }, sel: ["#heroInfo"], puls: ["#heroInfo .ipfeil"], mussSel: true, t: "‹ › Pfeile links und rechts",
+    x: "Im farbigen Info-Feld blätterst du mit den Pfeilen links und rechts – oder mit dem Finger wischen – durch den nächsten Termin, das Wetter und Neues für dich." },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("offen"); rgInfo(1); }, sel: ["#heroInfo"], puls: ["#heroInfo .ipfeil.rechts"], mussSel: true, t: "👉 Weitergeblättert", x: "So – ein Feld weiter. Mit dem linken Pfeil geht es wieder zurück." },
+  { v: "start", nur: () => einfach(), sel: [".ansichtname.ein"], puls: [".ansichtname.ein"], t: "🔀 Erweiterte Ansicht",
+    x: "Die meisten Möglichkeiten gibt es in der erweiterten Ansicht: Register, Kacheln ausblenden und umdrehen, Wischen. Hier schaltest du um – danach zeigt dir dieses Video noch einmal alles." },
+  { v: "start", nur: () => einfach(), vor: () => rgAnordnen(true), sel: ["#raster"], puls: ["#raster .kstrg button:not([disabled])"], mussSel: true, t: "↕️ Kacheln anordnen",
+    x: "In der einfachen Ansicht kannst du die Reihenfolge ändern: Kachel lange drücken – dann schiebst du sie mit den Pfeilen nach oben oder unten. Mit Fertig ist es gespeichert." },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(false); }, sel: ["#raster .kachel"], t: "👆 Lange drücken",
+    x: "Jetzt zu den Kacheln. Drückst du eine Kachel lange – gut eine halbe Sekunde –, öffnet sich das Anordnen, und die Kachel hängt an deinem Finger." },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(true); }, sel: ["#raster .kachel.bearb .kstrg"], puls: ["#raster .kachel.bearb:not(.aus) .kstrg button:not([disabled])"], mussSel: true, t: "◀ ▲ ▼ ▶ Verschieben",
+    x: "Zieh die Kachel an ihren neuen Platz und lass los. Oder du tippst die Pfeile an: nach links, oben, unten oder rechts – Schritt für Schritt." },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(true); }, sel: ["#raster .kachel.bearb .kweg"], puls: ["#raster .kachel.bearb .kweg"], mussSel: true, t: "✕ Verbergen",
+    x: "Oben an jeder Kachel ist ein Kreuz. Damit verbirgst du eine Kachel, die du nicht brauchst. Deine Daten bleiben dabei erhalten." },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(true); rgAusDemo(true); }, sel: ["#raster .kachel.bearb.aus"], puls: ["#raster .kachel.bearb.aus .ein"], mussSel: true, t: "🙈 Verborgene Kachel",
+    x: () => `So sieht eine verborgene Kachel beim Anordnen aus – hier zum Beispiel ${kaSortiert(reg).find((k) => k.id === RG.ausId)?.t || "diese"}: blass an ihrem Platz. Mit Einblenden kommt sie zurück.` },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAusDemo(true); }, sel: ["#kachelLeiste"], puls: ['#kachelLeiste [onclick^="kaBearbeiten(false)"]', '#kachelLeiste [onclick^="kaStandard"]'], mussSel: true, t: "✅ Fertig",
+    x: "Bist du zufrieden, tippst du auf Fertig – dann merkt sich die App deine Startseite, auch auf deinen anderen Geräten. Mit Standard ist alles wieder wie am Anfang." },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(false); rgAusDemo(true); }, sel: ["#kaAusHinweis"], puls: ["#kaAusHinweis button"], mussSel: true, t: "👀 Verborgene anzeigen",
+    x: "Unter den Kacheln siehst du, ob welche verborgen sind. Nur verborgene zeigen holt sie kurz zum Benutzen hervor. Mit dem anderen Knopf kannst du sie wieder einblenden." },
+  { v: "start", nur: () => !einfach() && krAn(), vor: () => { rgKopf("ganz"); rgAusDemo(false); rgDrehen(true); }, sel: ["#raster > .kachel.kr-hinten", () => rgDrehKachel()], t: "🔄 Kachel umdrehen",
+    x: () => { const k = document.querySelector("#raster > .kachel.kr-hinten") || rgDrehKachel(), a = k ? krAktionen(k.dataset.id).map((x) => x[1]) : [];
+      return `Tippst du zweimal schnell auf eine Kachel, dreht sie sich um. Hinten stehen Abkürzungen${a.length ? " – hier: " + a.join(", ") : ""}. Mit dem Pfeil oder nach ein paar Sekunden dreht sie sich zurück.`; } },
+  { v: "start", nur: () => !einfach(), vor: () => { rgDrehen(false); rgKopf("ganz"); }, sel: ["#register"], puls: ["#register button"], mussSel: true, t: "🗂️ Register anordnen",
+    x: "Die Register oben – Club, Meins, Technik – kannst du auch anordnen: ein Register festhalten, bis es sich hebt, dann nach links oder rechts ziehen und loslassen." },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgRegisterTausch(true); }, sel: ["#register"], mussSel: true, t: "↔️ Neue Reihenfolge",
+    x: () => `So sieht es danach aus: ${rgRegName(0)} steht jetzt vorne, ${rgRegName(1)} dahinter. Die App merkt sich deine Reihenfolge.` },
+  { v: "start", nur: () => !einfach(), vor: () => { rgRegisterTausch(false); rgKopf("ganz"); rgRegister(REGISTER[0][0]); }, sel: [".wischhinweis", "#raster"], puls: [".wischhinweis"], t: "👆 Wischen",
+    x: "Und am schnellsten wechselst du die Register mit dem Finger: Wisch über die Kacheln nach links oder rechts." },
+  { v: "start", nur: () => !einfach() && REGISTER.length > 1, vor: () => { rgKopf("ganz"); if (reg !== REGISTER[1][0]) register(REGISTER[1][0], 1); }, sel: ["#register button.an"], t: "➡️ Nächstes Register",
+    x: () => `Nach links gewischt – schon bist du im nächsten Register: ${rgRegName(1)}. Wischst du nach rechts, geht es zurück.` },
+  { v: "start", vor: () => { rgKopf(); rgAnordnen(false); }, t: "✅ Fertig", x: () => einfach() ? "Das war's: Kopf einrollen und Kacheln anordnen. In der erweiterten Ansicht kannst du noch viel mehr – schau dir das Video dort noch einmal an. Probier es einfach aus!"
+    : "Das war's: Kopf einrollen, blättern, Kacheln verschieben, verbergen und umdrehen, Register anordnen und wischen. So gestaltest du dir deine Wunsch-Oberfläche – probier es einfach aus!" },
+];
 // KC-CLUB-ERKLAERVIDEOS-FIGUR (2.248.0, Wunsch Hansi „Erklär-Videos, wie man sich eine Figur zuordnet und bearbeitet“):
 // Koch-Figur aussuchen (Mein Bild) und eigene Figur im Baukasten zusammenstellen. Vorgeführt wird nur – nichts wird gespeichert;
 // die Fenster gehen am Ende wieder zu. Foto, Baukasten und Jacken-Schalter erscheinen nur, wenn sie für das Mitglied freigegeben sind.
@@ -1664,6 +1738,7 @@ const RUNDGAENGE = [
   { id: "warum", stand: "1", sym: "💡", t: "Warum diese App? – Zum Einstieg", u: "Was die App dir bringt – einfach erklärt (ca. 2 Min.)", st: () => RG_WARUM }, // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: als Erstes
   { id: "ueberblick", stand: "1", sym: "🗺️", t: "Überblick: die App in 3 Minuten", u: "Oberfläche, Knöpfe, Register und was die App kann", st: () => RUNDGANG },
   { id: "einstellungen", stand: "1", sym: "⚙️", t: "Alle Einstellungen erklärt", u: "Was jede Einstellung bedeutet – mit Beispielen (ca. 6 Min.)", st: () => RG_EINSTELLUNGEN },
+  { id: "oberflaeche", stand: "1", sym: "🎨", t: "Oberfläche nach Wunsch", u: "Kopf einrollen, Kacheln verschieben, verbergen, umdrehen, Register, Wischen (ca. 3 Min.)", st: () => RG_OBERFLAECHE }, // 2.258.0 KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE
   { id: "nachricht", stand: "1", sym: "💬", t: "Neue Nachricht schreiben", u: "Empfänger wählen, schreiben, senden (ca. 1 Min.)", st: () => RG_NACHRICHT },
   { id: "termin", stand: "1", sym: "📅", t: "Termin eintragen", u: "Privater Termin, Wiederholen, Erinnerung (ca. 2 Min.)", st: () => RG_TERMIN },
   { id: "pinnwand", stand: "1", sym: "📌", t: "Zettel an die Pinnwand", u: "Schreiben, wichtig, für wen, anheften (ca. 1 Min.)", st: () => RG_PINNWAND },
@@ -1697,7 +1772,7 @@ const RG_THEMEN = [
   { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["nachricht", "mitglieder", "pinnwand"] },
   { id: "termine", sym: "📅", t: "Termine", videos: ["termin", "zusagen"] },
   { id: "club", sym: "🗄️", t: "Club & Archiv", videos: ["fotos", "archiv", "vorschlag", "helfen", "erstattung"] },
-  { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["einstellungen", "figur", "figurbau"] },
+  { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["einstellungen", "oberflaeche", "figur", "figurbau"] },
   { id: "freizeit", sym: "🎲", t: "Spiele & Notfall", videos: ["spiele", "sos"] },
   { id: "leitung", sym: "🗂️", t: "Für die Clubleitung", videos: ["leitung"] },
   { id: "admin", sym: "🛠️", t: "Für Admins", videos: ["admin"] },

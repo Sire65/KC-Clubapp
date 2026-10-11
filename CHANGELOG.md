@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.258.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE: Erklär-Video „Oberfläche nach Wunsch“
+Neues Erklär-Video (Thema „Ich & meine App“): die beiden Pfeile oben (Kopf halb/ganz einrollen), ‹ › im Info-Feld, Kacheln lange drücken und verschieben (◀ ▲ ▼ ▶), mit ✕ verbergen, verborgene Kachel und 👁️ Einblenden, „Nur ausgeblendete zeigen“, Kachel per Doppeltipp umdrehen, Register festhalten und ziehen, zwischen Registern wischen. Alles wird echt vorgeführt, aber nichts gespeichert – am Ende ist die Startseite genau wie vorher. In der einfachen Ansicht: Kopf-Pfeile, Kacheln anordnen und der Weg zur erweiterten Ansicht.
+
 ## 2.257.0 – 2026-10-11 – KC-CLUB-TWINKEY-MERKEN-AUS: „Twinkey merkt sich das“ standardmäßig aus (Wunsch Hansi)
 - Anlass: Die persönliche Antwort an Wilfried („Hallo Wilfried …“) landete in Twinkeys Wissen, weil der Haken von selbst an war. Jetzt ist er aus und wird nur bewusst angehakt; kurzer Hinweis darunter.
 
