@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.266.0 – 2026-10-11 – KC-CLUB-VIDEO-GESEHEN: 👁 wie oft angesehen und ✅ in der Video-Liste; alle Videos geprüft und gestrafft (Wunsch Hansi)
+In der Liste der Erklär-Videos steht bei jedem Video ein Auge mit der Zahl, wie oft du es bis zum Ende angesehen hast, und ein grüner Haken, wenn du es schon gesehen hast; auf den Themen-Kacheln steht „✓ 2 von 3 angesehen“. Gespeichert beim Server (auf allen deinen Geräten gleich) und als Rückfall auf dem Gerät. Alle 22 Videos geprüft: Einstellungen und Rundgang gestrafft (weniger Aufzählungen), Hinweis auf die Videos nach Themen statt veralteter Liste, „Tippe deine Frage“, „Neu:“ beim Countdown-Häkchen entfernt, Büro-Regal kürzer; im Video Effekte & Wetter steht der Nikolaus-Stiefel nicht mehr beim Sommer. Überarbeitete Videos (Rundgang, Einstellungen) zählen bei der Bewertung neu.
+
 ## 2.265.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-EFFEKTE: Erklär-Video „Effekte & Wetter“ (Wunsch Hansi)
 - Live mit dem Finger: Kacheln schweben herein (Jalousie, Kartenstapel, Umdrehen) · Herbst mit Laubschicht und Igel · Wind oder Twinkey mit Besen (mit Spruch) · Winter mit Schneemann · Frühling · Sommer mit Sonnenblume und Twinkey mit Gießkanne (im Zeitraffer vorgespult).
 - Wo eingestellt wird: Einstellungen → Effekte (Jahreszeiten im Kopf + Vorschau, Kachel- und Sende-Effekt, Hauptschalter „Animierte Knöpfe“).

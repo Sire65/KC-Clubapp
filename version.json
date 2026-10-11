@@ -1,11 +1,20 @@
 {
-  "version": "2.265.0",
+  "version": "2.266.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "✨ Neues Erklär-Video „Effekte & Wetter“: Kacheln, Jahreszeiten im Kopf mit Twinkey, Wetter-Tage antippen und lange festhalten – und wo man alles abschaltet"
+    "👁 Erklär-Videos: Auge mit der Zahl, wie oft du ein Video angesehen hast – und ✅ grüner Haken, wenn schon gesehen",
+    "🎬 Alle Videos geprüft: Einstellungen und Rundgang kürzer und klarer"
   ],
   "verlauf": [
+    {
+      "version": "2.266.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "👁 Erklär-Videos: Auge mit der Zahl, wie oft du ein Video angesehen hast – und ✅ grüner Haken, wenn schon gesehen",
+        "🎬 Alle Videos geprüft: Einstellungen und Rundgang kürzer und klarer"
+      ]
+    },
     {
       "version": "2.265.0",
       "datum": "2026-10-11",

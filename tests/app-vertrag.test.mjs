@@ -5726,6 +5726,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const unten = innerHeight - t\.offsetHeight - 12;/.test(html) && /y \+ h > unten/.test(html), "Tafel verdeckt nie das Ziel");
 }
 
+// 2.266.0 KC-CLUB-VIDEO-GESEHEN (Wunsch Hansi): 👁 Anzahl und ✅ je Video; Videos geprüft und gestrafft
+{
+  assert.ok(/videos: \(w\) => Object\.fromEntries\(/.test(server) && /\/\^\[a-z\]\{2,24\}\$\/\.test\(id\)/.test(server) && /Math\.min\(9999,/.test(server), "Server: Einstellung „videos“ nur mit Video-IDs und Zahlen");
+  assert.ok(/if \(!RG\.frage && RG\.tour\) rgGesehenZaehlen\(RG\.tour\);/.test(html) && /await einstSpeichern\("videos", g\)/.test(html) && /localStorage\.setItem\(RG_GESEHEN_LS/.test(html), "gezählt am Ende, gespeichert beim Server und auf dem Gerät");
+  assert.ok(/n = Math\.max\(Number\(a\.n\) \|\| 0, Number\(b\.n\) \|\| 0\)/.test(html), "Gerät und Server zusammengeführt – keine Zahl geht verloren");
+  assert.ok(/\$\{rgGesehenHtml\(r\.id\)\}/.test(html) && /class="rgl-haken-gruen"/.test(html) && /von \$\{x\.liste\.length\} angesehen/.test(html), "Auge mit Zahl und grüner Haken in der Liste, Stand auf den Themen-Kacheln");
+  assert.ok(/\.rgl-haken-gruen \{/.test(seite), "Haken grün");
+  assert.ok(!/Tipp deine Frage/.test(html) && !/Neu: Mit dem Häkchen Auf der Startseite/.test(html), "Sprache geglättet");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
