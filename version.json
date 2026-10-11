@@ -1,11 +1,18 @@
 {
-  "version": "2.288.0",
+  "version": "2.289.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🐌 Netz langsam: alle 3 Schnecken ziehen jetzt eine Schleimspur – unregelmäßig und silbrig glänzend"
+    "🗓️ Dienstplan-Papiere mit QR-Code: DP2 erkennt sie beim Einlesen"
   ],
   "verlauf": [
+    {
+      "version": "2.289.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🗓️ Dienstplan-Papiere mit QR-Code: DP2 erkennt sie beim Einlesen"
+      ]
+    },
     {
       "version": "2.288.0",
       "datum": "2026-10-11",

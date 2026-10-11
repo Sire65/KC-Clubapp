@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.289.0 – 2026-10-11 – KC-DP-PLANERPAPIERE-QR: DP2 Build 267 übernommen
+Planer-Papiere in DP2 (Leerplan, Papierplanung, persönlicher Dienstplan) tragen jetzt einen QR-Code; DP2 erkennt sie beim Einlesen und meldet veraltete Dienstpläne. In der Club-App: DP2-Bausteine (PDF, Dokument-QR) auf Build 267.
+
 ## 2.288.0 – 2026-10-11 – KC-CLUB-SCHLEIMSPUR: Schleimspur unter allen drei Schnecken, unregelmäßig und silbrig
 Wunsch Hansi: Die Spur hängt jetzt am Schnecken-Trupp (wandert mit) und beginnt schon unter der ersten Schnecke – auch die erste und zweite hinterlassen sichtbar Schleim. Form über eine unregelmäßige Maske (dicker/dünner, kleine Tröpfchen), Farbe Silber, das nach hinten blasser wird, darüber laufen helle Glanzpunkte. Ohne Animation (Bewegung reduzieren) bleibt die Spur wie bisher aus.
 
