@@ -5612,7 +5612,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/const RUNDGAENGE = \[/.test(html) && ["ueberblick", "einstellungen", "nachricht", "termin", "pinnwand", "vorschlag"].every((id) => html.includes(`{ id: "${id}", sym:`)), "Registry mit 6 Videos");
   assert.ok(/\{ id: "erklaer", sym: "🎬", t: "Erklär-Videos"[^}]*aktion: "erklaerVideos\(\)" \}/.test(html) && /t: "🎬 Weitere Erklär-Videos"/.test(html), "Kachel in Technik + Hinweis im Überblick");
-  assert.ok(/demo: \{ design: "kuechengruen" \}/.test(html) && /demo: \{ nacht: true \}/.test(html) && /demo: \{ gross: true \}/.test(html), "Beispiele: Farbe, Nacht, große Schrift");
+  assert.ok(/(demo: |rgDemo\()\{ design: "kuechengruen" \}/.test(html) && /(demo: |rgDemo\()\{ nacht: true \}/.test(html) && /(demo: |rgDemo\()\{ gross: true \}/.test(html), "Beispiele: Farbe, Nacht, große Schrift (2.261.0: live nach dem Antippen)");
   assert.ok(/if \(window\.__rgDsAlt\) \{ window\.__rgDsAlt = neu; return; \}/.test(html) && /w\.dataset\.rgGross === "1"/.test(html) && !/designSpeichern\(\)[^\n]*KC-CLUB-ERKLAERVIDEOS/.test(html), "Vorführung nur anzeigen, nie speichern; Server überschreibt sie nicht");
   assert.ok(/for \(const f of RG\.zurueck\.splice\(0\)\.reverse\(\)\) try \{ f\(\); \} catch \{\}/.test(html) && /RG\.st\[RG\.vorI\]\?\.nach\?\.\(\)/.test(html), "beim Ende alles zurück (aufgeklappt, Beispiele, Formulare)");
   assert.ok(!/RG_(NACHRICHT|TERMIN|PINNWAND|VORSCHLAG)[\s\S]{0,6000}(pwAnheften|privatSpeichern|vorschlagSpeichern|senden)\(/.test(html.slice(html.indexOf("const RG_NACHRICHT"), html.indexOf("const RUNDGAENGE"))), "Videos senden/speichern nie etwas");
@@ -5687,13 +5687,26 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const code = b.replace(/\/\/[^\n]*/g, "").replace(/'[^'\n]*'/g, "''"); // ohne Kommentare und Knopf-Wähler ('[onclick^="kaBearbeiten(false)"]')
   assert.ok(!/kaSpeichern\(|kaBearbeiten\(|api\(|localStorage\.setItem|kopfRollo\(|kaSichtbar\(|kaStandard\(\)|einstellung_setzen/.test(code), "nichts speichern: Kopf, Anordnen, Ausblenden und Register nur auf dem Bildschirm");
   for (const z of ["#kopfPfeilHalb", "#kopfPfeil", "#heroInfo .ipfeil", ".kstrg button", ".kweg", ".kachel.bearb.aus", "#kaAusHinweis", "kr-hinten", "#register", ".wischhinweis"]) assert.ok(b.includes(z), `zeigt ${z}`);
-  assert.ok(/RG\.zurueck\.push\(\(\) => \{ const a = RG\.kopfAlt;/.test(b) && /RG\.zurueck\.push\(\(\) => rgAusDemo\(false\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => rgRegisterTausch\(false\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => rgDrehen\(false\)\)/.test(b) && /if \(a !== null && a !== INFO_I\) infoGehe\(a, -1\)/.test(b), "alles wird zurückgestellt");
+  assert.ok(/RG\.zurueck\.push\(\(\) => \{ const a = RG\.kopfAlt;/.test(b) && /RG\.zurueck\.push\(\(\) => rgAusDemo\(false\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => rgRegisterTausch\(false\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => \{ RG\.drehZurueck = false; rgDrehen\(false\); \}\)/.test(b) /* 2.261.0: nur einmal gemerkt */ && /RG\.zurueck\.push\(\(\) => \{ if \(RG\.reihAlt\) \{ KA\.reihenfolge = RG\.reihAlt\.r;/.test(b) && /if \(a !== null && a !== INFO_I\) infoGehe\(a, -1\)/.test(b), "alles wird zurückgestellt");
 }
 
 // 2.260.0 KC-CLUB-SUCHE-KOCHBILD (Fund Hansi: „Kochbild“ im Suchfeld nicht gefunden): Hilfe-Suche, Lupe und Twinkey kennen das Wort
 {
   assert.ok(/\{ id: "mein_bild", thema: "darstellung", sym: "🧑‍🍳", t: "Ein Bild statt Buchstaben \(Kochbild, Profilbild\)", nur: \(\) => frei\("avatar"\), x: "[^"]*Kochbild/.test(html), "Hilfetext nennt Kochbild/Profilbild, nur wenn Mein Bild freigegeben");
   assert.ok(/\.\.\.\(frei\("avatar"\) \? \[\["🧑‍🍳", "Mein Bild \(Kochbild, Koch-Figur\)", "kochbild profilbild[^"]*", \(\) => avWahl\(\)\]\] : \[\]\)/.test(html), "Lupe findet Mein Bild unter Kochbild – nur mit Freigabe");
+}
+
+// 2.261.0 KC-CLUB-VIDEO-LIVE (Wunsch Hansi „Aktionen live zeigen – bei allen Videos“): Zeigefinger tippt, drückt, zieht, wischt – dann passiert es
+{
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-VIDEO-LIVE"), html.indexOf("function rundgangStart("));
+  assert.ok(/async function rgFtipp\(el, tok, art = ""\)/.test(b) && /async function rgFziehen\(el, ziel, tok\)/.test(b) && /async function rgFwischen\(el, tok, richtung = 1\)/.test(b), "Finger: tippen (auch doppelt/lang), ziehen mit Abbild, wischen");
+  assert.ok(!/api\(|\.click\(\)|dispatchEvent/.test(b), "der Finger löst nichts Echtes aus – keine Klicks, keine Server-Aufrufe");
+  assert.ok(/if \(RG\.vorI !== RG\.i && s\.tippVor && RG\.tippI !== RG\.i && !RG\.pause && \(RG\.richtung \|\| 1\) > 0/.test(html) && /rgVorTippen\(s, tok\)/.test(html), "tippVor: erst antippen, dann Station aufbauen (nur vorwärts, nicht in der Pause)");
+  assert.ok(/if \(lauf === RG\.lauf && RG\.an && !RG\.pause && RG\.liveLaeuft\) \{ RG\.nachLive = weiter; return; \}/.test(html), "Weiterblättern wartet auf die Vorführung");
+  assert.ok(/RG\.liveTok\+\+; RG\.liveLaeuft = false; RG\.nachLive = null; RG\.tippLaeuft = false; rgFingerWeg\(\);/.test(html), "jeder Stationswechsel, Pause und Ende bricht die Vorführung ab");
+  for (const q of ['tippVor: "#v-nachrichten .kopf2 .knopf.haupt"', 'tippVor: "#neuTreffenKnopf"', 'tippVor: "#pwNeuKnopf"', 'tippVor: "#vorschlagNeuKnopf"', "tippVor: '#spTabs button[data-t=\"mg\"]'", "tippVor: '#raster .kachel[data-id=\"avatar\"]'"]) assert.ok(html.includes(q), `Finger tippt: ${q}`);
+  assert.ok(/await L\.ziehen\("#register button:nth-child\(1\)", "#register button:nth-child\(2\)"\)\) rgRegisterTausch\(true\)/.test(html) && /await L\.tipp\(\(\) => k, "doppelt"\); rgDrehen\(true\)/.test(html) && /await L\.wischen\("#raster", 1\); register\(b, 1\)/.test(html), "Oberfläche: Register ziehen, Kachel umdrehen, wischen – live");
+  assert.ok(/\.rg-finger \{ position: fixed;[^}]*z-index: 9003/.test(seite) && /\.rg-tippring \{/.test(seite) && /\.rg-geist \{/.test(seite), "Finger, Tipp-Kreis und Abbild über der Video-Schicht");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

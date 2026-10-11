@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.261.0 – 2026-10-11 – KC-CLUB-VIDEO-LIVE: Erklär-Videos zeigen die Aktionen live – ein Finger tippt, drückt, zieht und wischt
+Wunsch Hansi: Erklärt war es gut, aber man sah es nicht. Jetzt macht ein Zeigefinger jede Aktion vor, und sie passiert sichtbar: Kopf halb/ganz einrollen und wieder aus, im Info-Feld weiter- und zurückblättern, Kachel lange drücken → Anordnen, Kachel ziehen und loslassen, mit ▶/◀ verschieben, ✕ verbergen, 👁️ einblenden, Fertig, „Nur ausgeblendete zeigen“, Kachel doppelt antippen → dreht sich um und mit ↩ zurück, Register festhalten und ziehen, über die Kacheln wischen → nächstes Register. In den anderen Videos tippt der Finger erst „＋ Neu“, die Kachel, das Spiel, den Ordner, den Termin, die Leiste unten oder die Farbe an – dann öffnet bzw. ändert sich die Ansicht (Ursache → Wirkung). Weiterblättern wartet, bis die Vorführung fertig ist. Alles nur vorgeführt: nichts wird gespeichert oder gesendet, am Ende ist alles wie vorher.
+
 ## 2.260.0 – 2026-10-11 – KC-CLUB-SUCHE-KOCHBILD: „Kochbild“ wird in Hilfe-Suche, Lupe und Twinkey gefunden (Fund Hansi)
 Die Hilfe-Suche und die Lupe suchen nach genauen Wörtern – „Kochbild“ stand nirgends. Jetzt heißt der Hilfetext „Ein Bild statt Buchstaben (Kochbild, Profilbild)“, und die Lupe kennt „Mein Bild“ unter Kochbild, Profilbild, Profilfoto, Avatar, Koch-Figur. Beides nur, wenn „Mein Bild“ für das Mitglied freigegeben ist (sonst würde die Hilfe etwas erklären, das man nicht sieht).
 

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.260.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.261.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1360,11 +1360,11 @@ const RUNDGANG = [
   { v: "start", sel: ["#register"], puls: ['#register [data-r="verein"]', '#register [data-r="mein"]', '#register [data-r="programme"]'], mussSel: true, t: "🗂️ Die Register", x: "In der erweiterten Ansicht sortieren Register die Kacheln: Club – alles rund um den Verein. Meins – deine eigenen Sachen wie Dokumente, Erstattung und deine Daten. Technik – Programme, Sicherheits-Check und Hilfe." },
   { v: "start", sel: ["#raster"], t: "🔲 Die Kacheln", x: "Jede Kachel öffnet einen Bereich. Eine Zahl in der Ecke zeigt, was neu ist. Hältst du eine Kachel lange gedrückt, kannst du die Kacheln umsortieren." },
   { v: "start", sel: ["#fuss"], puls: ["#fuss button"], t: "⬇️ Die Leiste unten", x: "Die Leiste unten ist immer da: Start, Termine, Nachrichten, Mitglieder und Mehr. Damit kommst du von überall mit einem Tipp zurück." },
-  { v: "nachrichten", sel: ["#v-nachrichten .kopf2", "#v-nachrichten"], t: "💬 Nachrichten", x: "Nachrichten: Hier schreibst du anderen Mitgliedern – einzeln oder in Gruppen, fast wie bei WhatsApp. Mit Plus Neu beginnst du eine Unterhaltung. Du kannst Fotos und Sprachnachrichten schicken oder mit dem Mikrofon diktieren, statt zu tippen." },
-  { v: "termine", sel: ["#v-termine .umschalter", "#v-termine .kopf2"], t: "📅 Termine", x: "Termine: alle Clubtermine als Liste, als Kalender oder als To-do. Mit Ich komme, Vielleicht oder Kann nicht antwortest du. Danach kannst du eine Mitfahrt suchen oder anbieten." },
+  { v: "nachrichten", tippVor: `#fuss [onclick="zeige('nachrichten')"]`, sel: ["#v-nachrichten .kopf2", "#v-nachrichten"], t: "💬 Nachrichten", x: "Nachrichten: Hier schreibst du anderen Mitgliedern – einzeln oder in Gruppen, fast wie bei WhatsApp. Mit Plus Neu beginnst du eine Unterhaltung. Du kannst Fotos und Sprachnachrichten schicken oder mit dem Mikrofon diktieren, statt zu tippen." },
+  { v: "termine", tippVor: `#fuss [onclick="zeige('termine')"]`, sel: ["#v-termine .umschalter", "#v-termine .kopf2"], t: "📅 Termine", x: "Termine: alle Clubtermine als Liste, als Kalender oder als To-do. Mit Ich komme, Vielleicht oder Kann nicht antwortest du. Danach kannst du eine Mitfahrt suchen oder anbieten." },
   { v: "pinnwand", sel: ["#v-pinnwand .kopf2", "#v-pinnwand"], t: "📌 Pinnwand", x: "Die Pinnwand ist das schwarze Brett des Clubs. Mit Plus Zettel hängst du etwas für alle auf – Glückwünsche, Hinweise oder eine Bitte um Hilfe. Auf Zettel antwortest du mit einem Emoji." },
-  { v: "mitglieder", sel: ["#v-mitglieder .mg-kachel.mg-online", "#v-mitglieder .mg-kachel", "#v-mitglieder .kopf2"], t: "👥 Mitglieder", x: "Mitglieder: alle aktiven Clubmitglieder. Ein grüner Punkt heißt: gerade in der App. Du kannst direkt schreiben, anklopfen – und Mitglieder, die gerade online sind, über die App anrufen, auf Wunsch auch mit Bild." },
-  { v: "einstellungen", sel: ["#v-einstellungen .kopf2", "#v-einstellungen"], t: "⚙️ Mehr", x: "Unter Mehr findest du die Einstellungen: Benachrichtigungen, Töne, Farben und große Schrift. Hier kannst du auch diesen Rundgang jederzeit wieder starten." },
+  { v: "mitglieder", tippVor: `#fuss [onclick="zeige('mitglieder')"]`, sel: ["#v-mitglieder .mg-kachel.mg-online", "#v-mitglieder .mg-kachel", "#v-mitglieder .kopf2"], t: "👥 Mitglieder", x: "Mitglieder: alle aktiven Clubmitglieder. Ein grüner Punkt heißt: gerade in der App. Du kannst direkt schreiben, anklopfen – und Mitglieder, die gerade online sind, über die App anrufen, auf Wunsch auch mit Bild." },
+  { v: "einstellungen", tippVor: `#fuss [onclick="zeige('einstellungen')"]`, sel: ["#v-einstellungen .kopf2", "#v-einstellungen"], t: "⚙️ Mehr", x: "Unter Mehr findest du die Einstellungen: Benachrichtigungen, Töne, Farben und große Schrift. Hier kannst du auch diesen Rundgang jederzeit wieder starten." },
   { v: "start", sel: ["#raster"], t: "✨ Und noch viel mehr", x: "Außerdem gibt es das Fotoalbum, das Archiv mit der Clubchronik, die Protokolle, Helfen und Leihen, die Erstattung von Auslagen, Spiele wie Schach, Bauernskat und Mensch ärgere dich nicht – und den SOS-Bereich für den Notfall." },
   { v: "start", vor: () => { if (!einfach() && reg !== "programme") { const alt = reg; register("programme"); RG.zurueck.push(() => register(alt)); } }, // KC-CLUB-ERKLAERVIDEOS (2.244.0)
     sel: ['#raster .kachel[data-id="erklaer"]', "#hzFrage"], t: "🎬 Weitere Erklär-Videos", x: () => "Es gibt noch mehr Erklär-Videos – zu den Einstellungen, zum Schreiben, zu Terminen, Pinnwand, Fotos, Mitgliedern, Erstattung, Hilfe, Notfall, Spielen und zum Archiv – und wie du dir eine Koch-Figur als Bild aussuchst. " + (einfach() ? "Du findest sie in Hilfe und Tipps – über das Fragezeichen unten rechts – und unter Mehr." : "Du findest sie im Register Technik unter Erklär-Videos – und in Hilfe und Tipps.") },
@@ -1399,10 +1399,10 @@ const RG_EINSTELLUNGEN = [
   { v: "einstellungen", sel: ["#v-einstellungen .kopf2"], t: "⚙️ Alle Einstellungen", x: "In diesem Video zeige ich dir alle Einstellungen der App und was sie bedeuten. Du findest sie unten über Mehr. Jeder Bereich klappt mit einem Tipp auf die Überschrift auf und zu; mit dem Schloss bleibt er so. Keine Sorge: Ich verstelle nichts – alles bleibt, wie du es eingestellt hast." },
   { v: "einstellungen", sel: [rgKlappe("einfach")], mussSel: true, vor: () => rgAuf("einfach"), t: "⚙️ Das Wichtigste", x: "In der einfachen Ansicht steht alles Wichtige in einem Bereich: wie du Neuigkeiten bekommst – aufs Handy, per E-Mail oder beides. Nicht stören, damit nachts kein Push kommt. Deine Lieblingsfarbe, große Schrift, das Fragezeichen für die Hilfe – und der Knopf, mit dem du alle Funktionen einschaltest." },
   { v: "einstellungen", sel: [rgKlappe("benachrichtigung")], mussSel: true, vor: () => rgAuf("benachrichtigung"), t: "🔔 Benachrichtigungen", x: "Benachrichtigungen: Push auf diesem Handy schaltet die Mitteilungen ein – auch wenn die App zu ist. Der Warnton klingt kurz, wenn die App offen ist und eine Nachricht kommt. Bei Nicht stören legst du eine Ruhezeit fest: Dann kommt kein Push, Anrufe kommen trotzdem durch, danach eine Sammelmeldung. Und wenn dich jemand mit @ direkt anspricht, wirst du auf Wunsch trotzdem benachrichtigt." },
-  { v: "einstellungen", sel: ["#designWahl", "#designWahlE"], mussSel: true, vor: () => rgAuf("darstellung", "einfach"), demo: { design: "kuechengruen" }, t: "🎨 Farbe – so sieht's aus", x: "Unter Darstellung wählst du das Farbdesign. Schau mal: Ich stelle zum Ausprobieren Küchengrün ein. So sieht deine App jetzt aus! Es gibt viele weitere Farben, auch ausgefallene. Keine Sorge – gleich ist deine Farbe wieder da." },
+  { v: "einstellungen", sel: ["#designWahl", "#designWahlE"], mussSel: true, vor: () => rgAuf("darstellung", "einfach"), live: async (L) => { await L.warte(1800); await L.tipp(rgSichtbarer(`[onclick="designWaehlen('kuechengruen')"]`)); rgDemo({ design: "kuechengruen" }); }, t: "🎨 Farbe – so sieht's aus", x: "Unter Darstellung wählst du das Farbdesign. Schau mal: Ich stelle zum Ausprobieren Küchengrün ein. So sieht deine App jetzt aus! Es gibt viele weitere Farben, auch ausgefallene. Keine Sorge – gleich ist deine Farbe wieder da." },
   { v: "start", sel: ["#v-start .hero"], demo: { design: "kuechengruen" }, t: "🎨 Die Startseite in Küchengrün", x: "Und so sieht die Startseite in Küchengrün aus. Antippen genügt – die App färbt sich sofort um und merkt sich deine Wahl auf allen deinen Geräten." },
-  { v: "einstellungen", sel: ["#modusWahl"], mussSel: true, vor: () => rgAuf("darstellung"), demo: { nacht: true }, t: "🌗 Tag und Nacht", x: "Tag und Nacht: Automatisch wechselt die App nach Sonnenstand. Oder immer hell, oder immer dunkel. So sieht der Nachtmodus aus – angenehm am Abend. Umschalten geht auch oben auf der Startseite mit dem Mond." },
-  { v: "einstellungen", sel: [rgFeld("setGross"), rgFeld("setGrossE")], mussSel: true, vor: () => rgAuf("darstellung", "einfach"), demo: { gross: true }, t: "🔠 Große Schrift", x: "Große Schrift macht alle Texte und Knöpfe größer – so wie jetzt. Gut, wenn man ohne Brille liest." },
+  { v: "einstellungen", sel: ["#modusWahl"], mussSel: true, vor: () => rgAuf("darstellung"), live: async (L) => { await L.warte(3500); await L.tipp('#modusWahl [data-m="nacht"]'); rgDemo({ nacht: true }); }, t: "🌗 Tag und Nacht", x: "Tag und Nacht: Automatisch wechselt die App nach Sonnenstand. Oder immer hell, oder immer dunkel. So sieht der Nachtmodus aus – angenehm am Abend. Umschalten geht auch oben auf der Startseite mit dem Mond." },
+  { v: "einstellungen", sel: [rgFeld("setGross"), rgFeld("setGrossE")], mussSel: true, vor: () => rgAuf("darstellung", "einfach"), live: async (L) => { await L.tipp(rgSichtbarer("#setGross, #setGrossE")); rgDemo({ gross: true }); }, t: "🔠 Große Schrift", x: "Große Schrift macht alle Texte und Knöpfe größer – so wie jetzt. Gut, wenn man ohne Brille liest." },
   { v: "einstellungen", sel: [rgKlappe("darstellung")], mussSel: true, vor: () => rgAuf("darstellung"), t: "🎨 Weiteres zur Darstellung", x: "Außerdem in der Darstellung: Chat-Farben ändern deine Sprechblasen und den Hintergrund in allen Chats. Der Sparmodus hilft bei schwachem Netz oder älteren Handys – dann ist alles ruhiger. Und das Warte-Bild ist das, was beim Laden erscheint." },
   { v: "einstellungen", sel: [rgKlappe("effekte")], mussSel: true, vor: () => rgAuf("effekte"), t: "✨ Effekte", x: "Effekte machen die App lebendig: animierte Knöpfe, Jahreszeiten im Kopf – Herbstlaub, Schnee, Feuerwerk. Ein Effekt beim Wechsel der Register, ein Effekt beim Senden – Papierflieger, Brieftaube oder Postauto. Kacheln umdrehen mit Doppeltipp für Schnellaktionen – und der Reißwolf beim Löschen. Alles einzeln abschaltbar." },
   { v: "einstellungen", sel: [rgKlappe("ansagen")], mussSel: true, vor: () => rgAuf("ansagen"), t: "🗣️ Tipps & Hilfe", x: "Ansagen, Töne und Tipps, Teil eins – die Hilfen: Tipp des Tages. Beim Öffnen zeigen, was neu ist. Das Fragezeichen unten rechts. Unterstützung: Viel Hilfe schaltet alles auf einmal ein. Die Schritt-Unterstützung zeigt mit rotem Rahmen, was als Nächstes kommt, und liest es auf Wunsch vor. Und die Einweisung erklärt jeden Bereich beim ersten Öffnen." },
@@ -1417,21 +1417,21 @@ const RG_EINSTELLUNGEN = [
 ];
 const RG_NACHRICHT = [
   { v: "nachrichten", sel: ["#v-nachrichten .kopf2 .knopf.haupt"], t: "💬 Neue Nachricht", x: "So schreibst du eine neue Nachricht: In Nachrichten tippst du oben rechts auf Plus Neu." },
-  { v: "neu", vor: () => { empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; $("empfSuche").value = "";
+  { v: "neu", tippVor: "#v-nachrichten .kopf2 .knopf.haupt", vor: () => { empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; $("empfSuche").value = "";
       (MITGLIEDER ? Promise.resolve() : mitgliederHolen()).then(() => empfListe()).catch(() => {}); neuGruppenZeigen("neuGruppen", true); },
     sel: ["#empfWahlBereich"], puls: ["#schnellEmpf", "#empfSuche", "#neuGruppen .knopf"], t: "👤 An wen?", x: "Jetzt wählst du, an wen die Nachricht geht. Oben die Schnellwahl: alle, die gerade online sind, alle Mitglieder oder ein Amt wie den Clubsprecher. Darunter suchst du einen Namen – zum Beispiel Anne – und hakst ihn an; auch mehrere gehen. Deine Gruppen stehen ganz oben – antippen, und du schreibst direkt hinein." },
   { v: "neu", sel: [rgFeld("neuBetreff")], puls: ["#neuBetreff", rgOn("neuWeiter()")], t: "✏️ Betreff", x: "Ein Betreff ist freiwillig – praktisch bei Gruppen. Dann tippst du auf Weiter zum Schreiben." },
-  { v: "neu", vor: () => { $("eingabe").classList.remove("versteckt"); RG.zurueck.push(() => { if (aktuelleAnsicht !== "chat") $("eingabe").classList.add("versteckt"); }); },
+  { v: "neu", tippVor: rgOn("neuWeiter()"), vor: () => { $("eingabe").classList.remove("versteckt"); RG.zurueck.push(() => { if (aktuelleAnsicht !== "chat") $("eingabe").classList.add("versteckt"); }); },
     sel: ["#eingabe"], puls: ["#eingabe textarea", '#eingabe [title="Senden"]', '#eingabe [title="Anlage"]', '#eingabe [title^="Mikrofon"]', '#eingabe [title="Emoji einfügen"]', '#eingabe [title^="Wie benachrichtigen"]', '#eingabe [title^="Wichtig"]', '#eingabe [title^="Nachricht löscht"]', '#eingabe [title="Mit WhatsApp senden"]'], t: "⌨️ Schreiben und senden", x: "Unten schreibst du deine Nachricht, der Pfeil sendet sie. Darunter: die Büroklammer für Fotos und Dateien, das Mikrofon für eine Sprachnachricht oder zum Diktieren, Emojis, die Glocke – wie benachrichtigt wird, zum Beispiel per Push oder E-Mail –, das Ausrufezeichen für eine wichtige Nachricht und die Sanduhr für eine Nachricht, die sich selbst löscht. Mit WA geht sie auch über WhatsApp." },
   { v: "nachrichten", sel: ["#v-nachrichten .kom-leiste"], puls: ["#v-nachrichten .kom-leiste .knopf"], t: "👥 Gruppe & mehr", x: "Mit Gruppe legst du eine eigene Gruppe an, zum Beispiel fürs Küchenteam. Gemerkt zeigt Nachrichten, die du dir mit dem Stern gemerkt hast. Und Test schickt dir selbst eine Probe – so prüfst du, ob Push und E-Mail ankommen." },
   { v: "nachrichten", t: "✅ Fertig", x: "Das war's: Plus Neu, Empfänger wählen, schreiben, senden. Probier es aus – zum Beispiel mit einer Nachricht an dich selbst über Test." },
 ];
 const RG_TERMIN = [
   { v: "termine", sel: ["#neuTreffenKnopf"], t: "📅 Neuer Termin", x: "So trägst du einen Termin ein: In Termine tippst du oben rechts auf Plus Neu." },
-  { v: "termine", vor: () => { neuWahlFenster("＋ Neu bei Termine", [{ sym: "📅", t: "Privater Termin", u: "nur für dich sichtbar", los: () => {} },
+  { v: "termine", tippVor: "#neuTreffenKnopf", vor: () => { neuWahlFenster("＋ Neu bei Termine", [{ sym: "📅", t: "Privater Termin", u: "nur für dich sichtbar", los: () => {} },
       { sym: "📨", t: "Terminanfrage", u: "Einzelne, mehrere oder eine Gruppe fragen – Ja / Vielleicht / Nein", los: () => {} }]); $("neuWahlBlatt")?.classList.add("rg-zeigen"); RG.zurueck.push(() => $("neuWahlBlatt")?.remove()); },
     nach: () => $("neuWahlBlatt")?.remove(), sel: ["#neuWahlBlatt .wahl"], t: "📋 Was möchtest du?", x: "Jetzt wählst du: Ein privater Termin – den siehst nur du. Oder eine Terminanfrage: Damit fragst du einzelne Mitglieder oder eine Gruppe, ob sie Zeit haben – sie antworten mit Ja, Vielleicht oder Nein." },
-  { v: "termine", vor: () => { if (!$("ptTitel")) { privatForm({ titel: "Zahnarzt", _datum: rgDatum(5), _zeit: "10:30" }); RG.zurueck.push(() => $("treffenForm")?.classList.add("versteckt")); } },
+  { v: "termine", tippVor: "#neuWahlBlatt .wahl button", vor: () => { if (!$("ptTitel")) { privatForm({ titel: "Zahnarzt", _datum: rgDatum(5), _zeit: "10:30" }); RG.zurueck.push(() => $("treffenForm")?.classList.add("versteckt")); } },
     sel: ["#treffenForm"], puls: ["#ptTitel", "#ptDatum", "#ptZeit", "#ptBisDatum", "#ptGanz", "#ptOrt", "#ptNotiz"], t: "✏️ Das Formular", x: "Im Formular trägst du ein: den Titel – zum Beispiel Zahnarzt –, Datum und Uhrzeit, auf Wunsch bis wann, oder ganztägig. Dazu Ort und eine Notiz, wenn du magst." },
   { v: "termine", vor: () => { if (!$("ptTitel")) privatForm({ titel: "Zahnarzt", _datum: rgDatum(5), _zeit: "10:30" }); }, sel: [rgFeld("ptWdh")], t: "🔁 Wiederholen", x: "Bei Wiederholen wählst du zum Beispiel jede Woche oder jeden Monat – dann trägst du den Termin nur einmal ein." },
   { v: "termine", vor: () => { if (!$("ptTitel")) privatForm({ titel: "Zahnarzt", _datum: rgDatum(5), _zeit: "10:30" }); if ($("ptStart")) $("ptStart").checked = true; }, sel: [rgFeld("ptStart")], t: "📌 Auf der Startseite", x: "Neu: Mit dem Häkchen Auf der Startseite läuft der Termin oben im Countdown mit – zum Beispiel: noch 5 Tage bis zum Zahnarzt." },
@@ -1441,7 +1441,7 @@ const RG_TERMIN = [
 ];
 const RG_PINNWAND = [
   { v: "pinnwand", sel: ["#pwNeuKnopf"], t: "📌 Zettel anhängen", x: "So hängst du einen Zettel an die Pinnwand: oben rechts auf Plus Zettel tippen." },
-  { v: "pinnwand", vor: () => { if ($("pwForm").classList.contains("versteckt")) { pwForm(true); $("pwText").blur(); RG.zurueck.push(() => { $("pwText").value = ""; pwForm(false); }); } $("pwText").value = "Wer hilft am Samstag beim Aufbau? 🙂"; pwZaehlen(); },
+  { v: "pinnwand", tippVor: "#pwNeuKnopf", vor: () => { if ($("pwForm").classList.contains("versteckt")) { pwForm(true); $("pwText").blur(); RG.zurueck.push(() => { $("pwText").value = ""; pwForm(false); }); } $("pwText").value = "Wer hilft am Samstag beim Aufbau? 🙂"; pwZaehlen(); },
     sel: [rgFeld("pwText")], puls: ["#pwText", "#pwZaehler", () => $("pwText")?.closest(".feld")?.querySelector(".diktat-feld")], t: "✏️ Kurze Nachricht", x: "Schreib eine kurze Nachricht – höchstens 200 Zeichen, zum Beispiel: Wer hilft am Samstag beim Aufbau? Mit dem Mikrofon kannst du auch diktieren." },
   { v: "pinnwand", sel: ["#pwWichtig"], puls: ["#pwWichtig button"], t: "❗ Wie wichtig?", x: "Normal oder Hoch: Ein wichtiger Zettel erscheint bei allen beim Öffnen der App." },
   { v: "pinnwand", sel: ["#pwFuer"], puls: ["#pwFuer button"], t: "👥 Für wen?", x: "Für wen ist der Zettel? Nur für dich – als Merkzettel –, für alle, oder für bestimmte Mitglieder, die du auswählst." },
@@ -1451,7 +1451,7 @@ const RG_PINNWAND = [
 ];
 const RG_VORSCHLAG = [
   { v: "vorschlaege", sel: ["#vorschlagNeuKnopf"], t: "🗳️ Vorschlag einreichen", x: "Du hast eine Idee für den Club? In Vorschläge tippst du oben rechts auf Plus Neu." },
-  { v: "vorschlaege", vor: () => { vorschlagForm("thema"); $("vfTitel").value = "Grillabend im Mai"; RG.zurueck.push(() => $("vorschlagForm")?.classList.add("versteckt")); },
+  { v: "vorschlaege", tippVor: "#vorschlagNeuKnopf", vor: () => { vorschlagForm("thema"); $("vfTitel").value = "Grillabend im Mai"; RG.zurueck.push(() => $("vorschlagForm")?.classList.add("versteckt")); },
     sel: ["#vorschlagForm .artwahl"], puls: ["#vorschlagForm .artwahl button"], t: "💡 Was für ein Vorschlag?", x: "Zuerst wählst du die Art: ein Thema für die Sitzung oder ein Spendenprojekt." },
   { v: "vorschlaege", vor: () => { if ($("vfTitel") && !$("vfTitel").value) $("vfTitel").value = "Grillabend im Mai"; }, sel: [rgFeld("vfTitel")], puls: ["#vfTitel", "#vfBeschr"], t: "✏️ Thema", x: "Dann das Thema, zum Beispiel Grillabend im Mai – und wenn du magst, eine Beschreibung darunter." },
   { v: "vorschlaege", sel: [rgFeld("vfTreffen")], t: "📅 Für welchen Termin?", x: "Hier wählst du, auf welcher Sitzung darüber gesprochen werden soll – oder allgemein." },
@@ -1504,7 +1504,7 @@ const RG_MITGLIEDER = [
 ];
 const RG_ZUSAGEN = [
   { v: "termine", sel: ["#v-termine .tr-kachel", "#v-termine .kopf2"], t: "📅 Ein Termin", x: "In Termine stehen alle Clubtermine. Tippst du einen Termin an, öffnen sich alle Einzelheiten." },
-  { v: "termine", vor: () => rgTreffenZeigen(), sel: ["#treffenInfo .antworten", "#treffenInfo"], puls: ["#treffenInfo .antworten button"], t: "✅ Zu- oder absagen", x: "Hier antwortest du: Ich komme, Vielleicht oder Kann nicht. Nochmal antippen nimmt die Antwort zurück. Solange du nicht geantwortet hast, blinkt der Hinweis auf der Startseite." },
+  { v: "termine", tippVor: "#v-termine .tr-kachel", vor: () => rgTreffenZeigen(), sel: ["#treffenInfo .antworten", "#treffenInfo"], puls: ["#treffenInfo .antworten button"], t: "✅ Zu- oder absagen", x: "Hier antwortest du: Ich komme, Vielleicht oder Kann nicht. Nochmal antippen nimmt die Antwort zurück. Solange du nicht geantwortet hast, blinkt der Hinweis auf der Startseite." },
   { v: "termine", vor: () => rgTreffenZeigen(), sel: [rgOn("mfSuchenFragen", ".knoepfe")], puls: [rgOn("mfSuchenFragen"), rgOn("mitfahrtAnbieten")], t: "🚗 Mitfahren", x: "Du suchst eine Mitfahrgelegenheit – oder bietest eine an. Wer passt, bekommt Bescheid." },
   { v: "termine", vor: () => rgTreffenZeigen(), sel: [rgOn("inKalender(")], t: "📲 In den Kalender", x: "Mit In meinen Kalender kommt der Termin in den Kalender deines Handys." },
   { v: "termine", vor: () => $("treffenInfo")?.remove(), sel: [() => $("v-termine")?.querySelector(".zk")], t: "🗓️ Liste, Kalender, To-do", x: "Oben wechselst du die Ansicht: Liste, Kalender oder To-do. Im Kalender siehst du den ganzen Monat auf einen Blick." },
@@ -1512,7 +1512,7 @@ const RG_ZUSAGEN = [
 ];
 const RG_FOTOS = [
   { v: "fotos", sel: ["#v-fotos .kopf2 .knopf.haupt"], t: "📷 Fotoalbum", x: "Im Fotoalbum stehen die Bilder aus dem Clubleben. Mit Plus Neu lädst du eigene Fotos hoch." },
-  { v: "fotos", vor: () => { if ($("fotoForm").classList.contains("versteckt")) { fotoForm(); RG.zurueck.push(() => $("fotoForm")?.classList.add("versteckt")); } }, sel: ["#fotoForm"],
+  { v: "fotos", tippVor: "#v-fotos .kopf2 .knopf.haupt", vor: () => { if ($("fotoForm").classList.contains("versteckt")) { fotoForm(); RG.zurueck.push(() => $("fotoForm")?.classList.add("versteckt")); } }, sel: ["#fotoForm"],
     puls: [rgOn("faGalerie"), () => [...document.querySelectorAll("#fotoForm .knoepfe .knopf.haupt")][1], "#faThema", "#faAnlass"], t: "🖼️ Fotos hinzufügen", x: "Du wählst Bilder aus der Galerie oder machst sie gleich mit der Kamera. Dazu ein Thema und, wenn du magst, den Anlass – dann Hochladen. Hier lade ich nichts hoch." },
   { v: "fotos", vor: () => $("fotoForm")?.classList.add("versteckt"), sel: ["#fotoFilter", "#fotoListe"], puls: ["#fotoFilter select", rgOn("faWaehlen(")], t: "🔎 Suchen & Alben", x: "Oben filterst du nach Thema, Jahr oder Anlass. Mit Auswählen hakst du Bilder an und legst sie in ein eigenes Album – zum Beispiel Weihnachtsmarkt." },
   { v: "fotos", t: "✅ Fertig", x: "Ein Foto antippen zeigt es groß – dort kannst du blättern, es teilen oder speichern." },
@@ -1553,8 +1553,8 @@ const rgKachel = (id) => `#raster .kachel[data-id="${id}"]`;
 const RG_WARUM = [
   { v: "start", t: "👋 Warum diese App?", x: "Schön, dass du da bist! In zwei Minuten erzähle ich dir, warum es diese App gibt – und was du davon hast. Du musst nichts antippen, ich blättere selbst weiter." },
   { v: "start", sel: ["#raster"], t: "🏠 Alles an einem Ort", x: "Alles, was unseren Köcheclub betrifft, steckt jetzt in einem einzigen Programm – immer dabei auf deinem Handy. Kein Suchen mehr in Zetteln, E-Mails und vielen Gruppen. Jede Kachel ist ein Bereich des Clubs." },
-  { v: "nachrichten", sel: ["#v-nachrichten .kopf2"], t: "💬 Nachrichten", x: "Hier schreibst du den Mitgliedern – einzeln oder in Gruppen, mit Fotos und Sprachnachrichten. Fast wie bei WhatsApp – aber nur unter uns im Club." },
-  { v: "termine", sel: ["#v-termine .tr-kachel", "#v-termine .kopf2"], t: "📅 Termine", x: "Alle Clubtermine auf einen Blick. Mit einem Tipp sagst du zu oder ab – und die App erinnert dich rechtzeitig." },
+  { v: "nachrichten", tippVor: `#fuss [onclick="zeige('nachrichten')"]`, sel: ["#v-nachrichten .kopf2"], t: "💬 Nachrichten", x: "Hier schreibst du den Mitgliedern – einzeln oder in Gruppen, mit Fotos und Sprachnachrichten. Fast wie bei WhatsApp – aber nur unter uns im Club." },
+  { v: "termine", tippVor: `#fuss [onclick="zeige('termine')"]`, sel: ["#v-termine .tr-kachel", "#v-termine .kopf2"], t: "📅 Termine", x: "Alle Clubtermine auf einen Blick. Mit einem Tipp sagst du zu oder ab – und die App erinnert dich rechtzeitig." },
   { v: "fotos", sel: ["#v-fotos .kopf2"], t: "📷 Fotos", x: "Die schönsten Momente aus dem Clubleben – im Fotoalbum für alle Mitglieder. Eigene Fotos lädst du mit einem Tipp dazu." },
   { v: "aktionen", sel: ["#aktionListe .aktkachel", "#v-aktionen .kopf2"], t: "🧳 Aktionen", x: "Unsere Ausflüge und Reisen: wann es losgeht, alle Einzelheiten – und ob du dabei bist." },
   { v: "start", nur: () => !einfach(), vor: () => rgRegister("mein"), sel: [rgKachel("mein_dienst")], mussSel: true, puls: [rgKachel("mein_dienst")], t: "🗓️ Dienstplan",
@@ -1582,13 +1582,13 @@ const RG_SPIELE = [
   { v: "spiele", vor: () => rgSpielAuf(null), sel: ["#spInhalt .sp-kacheln"], puls: ["#spInhalt .sp-kachel"], t: "🎲 Spiele – Köcheclub Edition",
     x: () => { const n = rgSpielNamen(); return `Hier suchst du dir ein Spiel aus${n.length > 1 ? ": " + n.slice(0, -1).join(", ") + " und " + n[n.length - 1] : ""}. Antippen öffnet das Spiel.`; } },
   { v: "spiele", vor: () => rgSpielAuf(null), sel: ['#spInhalt .sp-kachel[onclick="spArtWahl(\'ttt\')"]'], mussSel: true, t: "👆 Ein Spiel öffnen", x: "Als Beispiel öffne ich Tic-Tac-Toe." },
-  { v: "spiele", vor: () => rgSpielAuf("ttt", "pc"), sel: ["#spTabs"], puls: ["#spTabs button"], t: "🤖 Gegen wen?", x: "Oben wählst du: gegen den Computer – oder gegen Mitglieder aus dem Club." },
+  { v: "spiele", tippVor: '#spInhalt .sp-kachel[onclick="spArtWahl(\'ttt\')"]', vor: () => rgSpielAuf("ttt", "pc"), sel: ["#spTabs"], puls: ["#spTabs button"], t: "🤖 Gegen wen?", x: "Oben wählst du: gegen den Computer – oder gegen Mitglieder aus dem Club." },
   { v: "spiele", vor: () => rgSpielAuf("ttt", "pc"), sel: ["#spInhalt .sp-karte"], puls: ["#spInhalt .sp-wahl button"], mussSel: true, t: "⚙️ Wie schwer?",
     x: "Gegen den Computer stellst du ein: die Feldgröße, wie stark der Computer spielt – leicht, mittel oder schwer – und wer anfängt." },
   { v: "spiele", vor: () => rgSpielAuf("ttt", "pc"), sel: ["#spInhalt .sp-brett"], mussSel: true, t: "🍅 Spielen", x: "Dann tippst du einfach auf ein freies Feld. Wer zuerst drei in einer Reihe hat, gewinnt – waagerecht, senkrecht oder schräg." },
   { v: "spiele", vor: () => rgSpielAuf("ttt", "pc"), sel: ["#spInhalt .sp-leiste"], puls: [rgOn("spPcNeu("), rgOn("spPausieren(")], mussSel: true, t: "⏸ Neu oder Pause",
     x: "Mit Neues Spiel fängst du von vorn an. Mit Pause hältst du an – mit Weiter geht es später weiter." },
-  { v: "spiele", vor: () => rgSpielAuf("ttt", "mg"), sel: [rgOn("spHerausfordernBlatt("), '#spTabs button[data-t="mg"]'], puls: [rgOn("spHerausfordernBlatt(")], t: "👥 Gegen Mitglieder",
+  { v: "spiele", tippVor: '#spTabs button[data-t="mg"]', vor: () => rgSpielAuf("ttt", "mg"), sel: [rgOn("spHerausfordernBlatt("), '#spTabs button[data-t="mg"]'], puls: [rgOn("spHerausfordernBlatt(")], t: "👥 Gegen Mitglieder",
     x: "Unter Gegen Mitglieder forderst du jemanden aus dem Club heraus. Ihr zieht abwechselnd – und du bekommst Bescheid, wenn du dran bist. Hier fordere ich niemanden heraus." },
   { v: "spiele", vor: () => rgSpielAuf(null), sel: ["#v-spiele .kopf2 .zurueck"], t: "✅ Fertig", x: "Mit dem Pfeil oben links kommst du aus jedem Spiel zurück zur Übersicht. Viel Spaß beim Spielen!" },
 ];
@@ -1604,7 +1604,8 @@ const rgArchivWarten = (n = 0) => { if (!RG.an || aktuelleAnsicht !== "archiv") 
 const rgArAbschnitt = (wort) => { const h = [...document.querySelectorAll("#arListe .abschnitt h3")].find((x) => x.textContent.includes(wort)); return h?.closest(".abschnitt")?.nextElementSibling; };
 const rgArClubleben = () => { const j = [...new Set((AR.daten?.auto || []).map((x) => arJahr(x.datum)))].sort().pop(); return j ? "auto:" + j : null; };
 const RG_ARCHIV = [
-  { v: "archiv", vor: () => rgArchivWarten(), sel: ["#arInhalt .ar-filter"], puls: ["#arSuche", "#arInhalt .ar-filter select", '#arInhalt .ar-chips .chip[onclick^="AR.art=\'auto\'"]'], t: "🗄️ Das Archiv",
+  { v: "archiv", vor: () => rgArchivWarten(), live: async (L) => { await L.warte(3500); await L.tipp(`#arInhalt .ar-chips .chip[onclick^="AR.art='auto'"]`); AR.art = "auto"; arZeigen(); await L.warte(2000);
+      await L.tipp(`#arInhalt .ar-chips .chip[onclick^="AR.art=''"]`); AR.art = ""; arZeigen(); }, sel: ["#arInhalt .ar-filter"], puls: ["#arSuche", "#arInhalt .ar-filter select", '#arInhalt .ar-chips .chip[onclick^="AR.art=\'auto\'"]'], t: "🗄️ Das Archiv",
     x: "Das Archiv ist das Regal unseres Clubs. Oben suchst du nach einem Wort, wählst ein Jahr – oder tippst auf eine Art, zum Beispiel Clubleben." },
   { v: "archiv", vor: () => rgArchivWarten(), sel: [() => rgArAbschnitt("Mein Ordner"), "#arListe .ar-pers"], puls: [rgOn("arNeuesJahr(")], mussSel: true, t: "👤 Mein Ordner",
     x: () => (AR.daten?.ordner || []).some((o) => o.eigen) ? "Oben im Regal steht dein eigener Ordner. Den siehst nur du – auch der Admin nicht. Mit Plus weiteres Jahr legst du einen neuen Jahrgang an."
@@ -1612,7 +1613,7 @@ const RG_ARCHIV = [
   { v: "archiv", vor: () => rgArchivWarten(), sel: [() => rgArAbschnitt("Clubchronik")], mussSel: true, t: "📖 Die Clubchronik", x: "Die Clubchronik ist ein Ordner für alle Jahre – die Geschichte unseres Clubs." },
   { v: "archiv", vor: () => rgArchivWarten(), sel: ['#arListe button.ordner[onclick^="arOrdnerOeffnen(\'auto:"]'], mussSel: true, t: "🤖 Clubleben",
     x: "Clubleben füllt sich von selbst: Was vorbei ist – Termine, Protokolle, Abstimmungen, Aktionen und mehr – landet hier, nach Jahren geordnet." },
-  { v: "archiv", arOrdner: rgArClubleben, vor: () => rgArchivWarten(), sel: ["#arInhalt .ar-register"], puls: ["#arInhalt .ar-register button", "#arInhalt .ar-blaettern"], mussSel: true, t: "📂 Ein Ordner",
+  { v: "archiv", arOrdner: rgArClubleben, tippVor: () => rgArClubleben() && document.querySelector(`#arListe button.ordner[onclick="arOrdnerOeffnen('${rgArClubleben()}')"]`), vor: () => rgArchivWarten(), sel: ["#arInhalt .ar-register"], puls: ["#arInhalt .ar-register button", "#arInhalt .ar-blaettern"], mussSel: true, t: "📂 Ein Ordner",
     x: "Tippst du einen Ordner an, öffnet er sich – mit Registern wie ein echter Ordner. Mit Blättern liest du ihn Seite für Seite wie ein Buch." },
   { v: "archiv", vor: () => rgArchivWarten(), sel: [rgOn("ivAnsicht(")], puls: [rgOn("ivAnsicht(")], t: "🗂️ Inhaltsverzeichnis", x: "Mit Inhaltsverzeichnis siehst du alles auf einen Blick – und kannst es auch ausdrucken." },
   { v: "archiv", vor: () => rgArchivWarten(), t: "✅ Fertig", x: "So findest du alles wieder – von heute bis zu den ersten Tagen des Clubs." },
@@ -1633,7 +1634,7 @@ function rgAnordnen(an) { // „Anordnen“ ohne Speichern ein- und ausschalten 
   else if (!an && kaBearb) { kaBearb = false; kaFrisch = null; $("kachelLeiste").classList.add("versteckt"); registerZeigen(); kachelnZeigen(); }
 }
 function rgAusDemo(an) { // eine Kachel nur auf dem Bildschirm ausblenden (KA wird nicht gespeichert) – am Ende wieder da
-  if (an && !RG.ausId) { const k = kacheln(reg).filter((x) => !x.bald).pop(); if (!k) return; RG.ausId = k.id; KA.aus = [...KA.aus, k.id];
+  if (an && !RG.ausId) { const id = rgAusKandidat(); if (!id) return; RG.ausId = id; KA.aus = [...KA.aus, id];
     RG.zurueck.push(() => rgAusDemo(false)); }
   else if (!an && RG.ausId) { const id = RG.ausId; RG.ausId = null; KA.aus = KA.aus.filter((x) => x !== id); KA_NUR_AUS = false; }
   registerZeigen(); kachelnZeigen();
@@ -1648,46 +1649,68 @@ function rgDrehen(an) {
   const offen = document.querySelector("#raster > .kachel.kr-hinten");
   if (!an) { if (offen) krUmdrehen(offen, true); return; }
   if (offen) return; const k = rgDrehKachel(); if (!k) return;
-  krUmdrehen(k); RG.zurueck.push(() => rgDrehen(false));
+  krUmdrehen(k); if (!RG.drehZurueck) { RG.drehZurueck = true; RG.zurueck.push(() => { RG.drehZurueck = false; rgDrehen(false); }); }
   setTimeout(() => { clearTimeout(KR.zu); RG.ziel = document.querySelector("#raster > .kachel.kr-hinten") || RG.ziel; rgLage(); }, 300); // bleibt offen, solange erzählt wird
 }
 const rgRegName = (i) => REGISTER[i]?.[1] || "";
+function rgKaSchieben(id, d) { // wie kaSchieben, aber nur auf dem Bildschirm (nicht gespeichert); Reihenfolge am Ende zurück
+  if (!RG.reihAlt) { RG.reihAlt = { r: JSON.parse(JSON.stringify(KA.reihenfolge || {})) }; RG.zurueck.push(() => { if (RG.reihAlt) { KA.reihenfolge = RG.reihAlt.r; RG.reihAlt = null; kaFrisch = null; kachelnZeigen(); } }); }
+  const liste = kaListe().map((k) => k.id), i = liste.indexOf(id), j = i + d;
+  if (i < 0 || j < 0 || j >= liste.length) return;
+  [liste[i], liste[j]] = [liste[j], liste[i]];
+  KA.reihenfolge = { ...KA.reihenfolge, [kaSchluessel()]: liste }; kaFrisch = id; kachelnZeigen();
+}
+const rgKa = (i) => document.querySelectorAll("#raster > .kachel")[i] || null;
+const rgKaId = (i) => rgKa(i)?.dataset.id || "";
+const rgAusKandidat = () => kacheln(reg).filter((x) => !x.bald).pop()?.id || "";
 const RG_OBERFLAECHE = [
-  { v: "start", vor: () => { rgKopf("offen"); if (!einfach() && !RG.regStart) { RG.regStart = reg; RG.zurueck.push(() => { const a = RG.regStart; RG.regStart = null; if (a && reg !== a) register(a); }); } }, t: "🎨 Deine Wunsch-Oberfläche", x: "So gestaltest du dir die Startseite selbst – ganz nach deinen Bedürfnissen. Ich zeige dir alles nur; gespeichert wird nichts, und am Ende ist alles wieder wie vorher." },
+  { v: "start", vor: () => { rgKopf("offen"); rgAnordnen(false); if (!einfach() && !RG.regStart) { RG.regStart = reg; RG.zurueck.push(() => { const a = RG.regStart; RG.regStart = null; if (a && reg !== a) register(a); }); } }, t: "🎨 Deine Wunsch-Oberfläche",
+    x: "So gestaltest du dir die Startseite selbst – ganz nach deinen Bedürfnissen. Ich mache dir alles vor; gespeichert wird nichts, und am Ende ist alles wieder wie vorher." },
   { v: "start", vor: () => rgKopf("offen"), sel: ["#kopfPfeilHalb", "#kopfPfeil"], puls: ["#kopfPfeilHalb", "#kopfPfeil"], t: "⌃ Die beiden Pfeile oben",
     x: "Ganz oben siehst du zwei Pfeile. Damit rollst du den farbigen Kopf ein wie eine Jalousie – dann ist mehr Platz für die Kacheln." },
-  { v: "start", vor: () => rgKopf("halb"), sel: ["#v-start .hero"], puls: ["#kopfPfeilHalb"], t: "⌃ Halb einrollen", x: "Der linke Pfeil mit einem Haken rollt den Kopf halb ein: Die Zeile mit deinem Status bleibt stehen." },
-  { v: "start", vor: () => rgKopf("ganz"), sel: ["#v-start .hero"], puls: ["#kopfPfeil"], t: "⌃⌃ Ganz einrollen", x: "Der rechte Pfeil mit zwei Haken rollt ihn ganz ein – nur die oberste Zeile bleibt. Nochmal antippen rollt ihn wieder aus." },
-  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("offen"); rgInfo(); }, sel: ["#heroInfo"], puls: ["#heroInfo .ipfeil"], mussSel: true, t: "‹ › Pfeile links und rechts",
-    x: "Im farbigen Info-Feld blätterst du mit den Pfeilen links und rechts – oder mit dem Finger wischen – durch den nächsten Termin, das Wetter und Neues für dich." },
-  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("offen"); rgInfo(1); }, sel: ["#heroInfo"], puls: ["#heroInfo .ipfeil.rechts"], mussSel: true, t: "👉 Weitergeblättert", x: "So – ein Feld weiter. Mit dem linken Pfeil geht es wieder zurück." },
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#v-start .hero"], t: "⌃ Halb einrollen", x: "Ich tippe auf den linken Pfeil: Der Kopf rollt halb ein – die Zeile mit deinem Status bleibt stehen.",
+    live: async (L) => { await L.tipp("#kopfPfeilHalb"); await kopfRolloFahren("halb"); } },
+  { v: "start", vor: () => rgKopf("halb"), sel: ["#v-start .hero"], t: "⌃⌃ Ganz einrollen", x: "Jetzt der rechte Pfeil: Der Kopf rollt ganz ein, nur die oberste Zeile bleibt. Nochmal antippen – und er rollt wieder aus.",
+    live: async (L) => { await L.tipp("#kopfPfeil"); await kopfRolloFahren("ganz"); await L.warte(1800); await L.tipp("#kopfPfeil"); await kopfRolloFahren("offen"); } },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("offen"); rgInfo(); }, sel: ["#heroInfo"], mussSel: true, t: "‹ › Pfeile links und rechts",
+    x: "Im farbigen Info-Feld blätterst du mit den Pfeilen links und rechts durch den nächsten Termin, das Wetter und Neues für dich. Ich blättere einmal weiter – und wieder zurück.",
+    live: async (L) => { await L.tipp("#heroInfo .ipfeil.rechts"); rgInfo(1); await L.warte(2200); await L.tipp("#heroInfo .ipfeil.links"); rgInfo(-1); } },
   { v: "start", nur: () => einfach(), sel: [".ansichtname.ein"], puls: [".ansichtname.ein"], t: "🔀 Erweiterte Ansicht",
-    x: "Die meisten Möglichkeiten gibt es in der erweiterten Ansicht: Register, Kacheln ausblenden und umdrehen, Wischen. Hier schaltest du um – danach zeigt dir dieses Video noch einmal alles." },
-  { v: "start", nur: () => einfach(), vor: () => rgAnordnen(true), sel: ["#raster"], puls: ["#raster .kstrg button:not([disabled])"], mussSel: true, t: "↕️ Kacheln anordnen",
-    x: "In der einfachen Ansicht kannst du die Reihenfolge ändern: Kachel lange drücken – dann schiebst du sie mit den Pfeilen nach oben oder unten. Mit Fertig ist es gespeichert." },
-  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(false); }, sel: ["#raster .kachel"], t: "👆 Lange drücken",
-    x: "Jetzt zu den Kacheln. Drückst du eine Kachel lange – gut eine halbe Sekunde –, öffnet sich das Anordnen, und die Kachel hängt an deinem Finger." },
-  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(true); }, sel: ["#raster .kachel.bearb .kstrg"], puls: ["#raster .kachel.bearb:not(.aus) .kstrg button:not([disabled])"], mussSel: true, t: "◀ ▲ ▼ ▶ Verschieben",
-    x: "Zieh die Kachel an ihren neuen Platz und lass los. Oder du tippst die Pfeile an: nach links, oben, unten oder rechts – Schritt für Schritt." },
-  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(true); }, sel: ["#raster .kachel.bearb .kweg"], puls: ["#raster .kachel.bearb .kweg"], mussSel: true, t: "✕ Verbergen",
-    x: "Oben an jeder Kachel ist ein Kreuz. Damit verbirgst du eine Kachel, die du nicht brauchst. Deine Daten bleiben dabei erhalten." },
-  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(true); rgAusDemo(true); }, sel: ["#raster .kachel.bearb.aus"], puls: ["#raster .kachel.bearb.aus .ein"], mussSel: true, t: "🙈 Verborgene Kachel",
-    x: () => `So sieht eine verborgene Kachel beim Anordnen aus – hier zum Beispiel ${kaSortiert(reg).find((k) => k.id === RG.ausId)?.t || "diese"}: blass an ihrem Platz. Mit Einblenden kommt sie zurück.` },
-  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAusDemo(true); }, sel: ["#kachelLeiste"], puls: ['#kachelLeiste [onclick^="kaBearbeiten(false)"]', '#kachelLeiste [onclick^="kaStandard"]'], mussSel: true, t: "✅ Fertig",
-    x: "Bist du zufrieden, tippst du auf Fertig – dann merkt sich die App deine Startseite, auch auf deinen anderen Geräten. Mit Standard ist alles wieder wie am Anfang." },
-  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(false); rgAusDemo(true); }, sel: ["#kaAusHinweis"], puls: ["#kaAusHinweis button"], mussSel: true, t: "👀 Verborgene anzeigen",
-    x: "Unter den Kacheln siehst du, ob welche verborgen sind. Nur verborgene zeigen holt sie kurz zum Benutzen hervor. Mit dem anderen Knopf kannst du sie wieder einblenden." },
-  { v: "start", nur: () => !einfach() && krAn(), vor: () => { rgKopf("ganz"); rgAusDemo(false); rgDrehen(true); }, sel: ["#raster > .kachel.kr-hinten", () => rgDrehKachel()], t: "🔄 Kachel umdrehen",
+    x: "Die meisten Möglichkeiten gibt es in der erweiterten Ansicht: Register, Kacheln verbergen und umdrehen, Wischen. Hier schaltest du um – danach zeigt dir dieses Video noch einmal alles." },
+  { v: "start", nur: () => einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(false); }, sel: ["#raster"], mussSel: true, t: "↕️ Kacheln anordnen",
+    x: "In der einfachen Ansicht änderst du die Reihenfolge so: Kachel lange drücken – dann schiebst du sie mit den Pfeilen nach unten oder oben. Mit Fertig ist es gespeichert.",
+    live: async (L) => { const id = rgKaId(0); await L.tipp(() => rgKa(0), "lang"); rgAnordnen(true); await L.warte(700);
+      await L.tipp(`#raster .kachel.bearb[data-id="${id}"] .kstrg button[onclick$=",1)"]`); rgKaSchieben(id, 1); await L.warte(1500);
+      await L.tipp(`#raster .kachel.bearb[data-id="${id}"] .kstrg button[onclick$=",-1)"]`); rgKaSchieben(id, -1); } },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(false); }, sel: ["#raster"], t: "👆 Lange drücken",
+    x: "Jetzt zu den Kacheln. Ich drücke eine Kachel lange – gut eine halbe Sekunde. Schon öffnet sich das Anordnen: Jede Kachel bekommt Pfeile und ein Kreuz.",
+    live: async (L) => { await L.tipp(() => rgKa(0), "lang"); rgAnordnen(true); } },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(true); }, sel: ["#raster"], mussSel: true, t: "✋ Verschieben",
+    x: "Eine Kachel festhalten, an den neuen Platz ziehen und loslassen – so. Oder du tippst die Pfeile an: links, oben, unten oder rechts. Mit dem Pfeil schiebe ich sie wieder zurück.",
+    live: async (L) => { const id = rgKaId(0); if (await L.ziehen(() => rgKa(0), () => rgKa(1))) rgKaSchieben(id, 1); await L.warte(1500);
+      await L.tipp(`#raster .kachel.bearb[data-id="${id}"] .kstrg button[title="nach links"]`); rgKaSchieben(id, -1); } },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(true); rgAusDemo(false); }, sel: ["#raster .kachel.bearb.aus", () => document.querySelector(`#raster .kachel.bearb[data-id="${rgAusKandidat()}"]`)], mussSel: true, t: "✕ Verbergen",
+    x: () => `Oben an jeder Kachel ist ein Kreuz. Ich tippe es bei ${kaSortiert(reg).find((k) => k.id === rgAusKandidat())?.t || "dieser Kachel"} an: Die Kachel ist jetzt verborgen und steht blass an ihrem Platz. Deine Daten bleiben erhalten.`,
+    live: async (L) => { await L.tipp(`#raster .kachel.bearb[data-id="${rgAusKandidat()}"] .kweg`); rgAusDemo(true); } },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(true); rgAusDemo(true); }, sel: ["#raster .kachel.bearb.aus"], mussSel: true, t: "👁️ Einblenden",
+    x: "Mit Einblenden holst du sie zurück – schon ist sie wieder da.",
+    live: async (L) => { await L.tipp("#raster .kachel.bearb.aus .ein"); rgAusDemo(false); } },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAusDemo(false); rgAnordnen(true); }, sel: ["#kachelLeiste"], puls: ['#kachelLeiste [onclick^="kaStandard"]'], mussSel: true, t: "✅ Fertig",
+    x: "Bist du zufrieden, tippst du auf Fertig – dann merkt sich die App deine Startseite, auch auf deinen anderen Geräten. Mit Standard ist alles wieder wie am Anfang.",
+    live: async (L) => { await L.warte(2500); await L.tipp('#kachelLeiste [onclick^="kaBearbeiten(false)"]'); rgAnordnen(false); } },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(false); rgAusDemo(true); }, sel: ["#kaAusHinweis"], mussSel: true, t: "👀 Verborgene anzeigen",
+    x: "Sind Kacheln verborgen, steht das unter den Kacheln. Mit Nur ausgeblendete zeigen holst du sie zum Benutzen hervor – und mit dem Knopf verschwinden sie wieder.",
+    live: async (L) => { await L.tipp("#kaAusHinweis .ka-nuraus"); kaNurAus(true); L.ziel(); await L.warte(2200); await L.tipp("#kaAusHinweis .ka-nuraus.an"); kaNurAus(false); } },
+  { v: "start", nur: () => !einfach() && krAn(), vor: () => { rgKopf("ganz"); rgAusDemo(false); rgDrehen(false); }, sel: ["#raster > .kachel.kr-hinten", () => rgDrehKachel()], t: "🔄 Kachel umdrehen",
     x: () => { const k = document.querySelector("#raster > .kachel.kr-hinten") || rgDrehKachel(), a = k ? krAktionen(k.dataset.id).map((x) => x[1]) : [];
-      return `Tippst du zweimal schnell auf eine Kachel, dreht sie sich um. Hinten stehen Abkürzungen${a.length ? " – hier: " + a.join(", ") : ""}. Mit dem Pfeil oder nach ein paar Sekunden dreht sie sich zurück.`; } },
-  { v: "start", nur: () => !einfach(), vor: () => { rgDrehen(false); rgKopf("ganz"); }, sel: ["#register"], puls: ["#register button"], mussSel: true, t: "🗂️ Register anordnen",
-    x: "Die Register oben – Club, Meins, Technik – kannst du auch anordnen: ein Register festhalten, bis es sich hebt, dann nach links oder rechts ziehen und loslassen." },
-  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgRegisterTausch(true); }, sel: ["#register"], mussSel: true, t: "↔️ Neue Reihenfolge",
-    x: () => `So sieht es danach aus: ${rgRegName(0)} steht jetzt vorne, ${rgRegName(1)} dahinter. Die App merkt sich deine Reihenfolge.` },
-  { v: "start", nur: () => !einfach(), vor: () => { rgRegisterTausch(false); rgKopf("ganz"); rgRegister(REGISTER[0][0]); }, sel: [".wischhinweis", "#raster"], puls: [".wischhinweis"], t: "👆 Wischen",
-    x: "Und am schnellsten wechselst du die Register mit dem Finger: Wisch über die Kacheln nach links oder rechts." },
-  { v: "start", nur: () => !einfach() && REGISTER.length > 1, vor: () => { rgKopf("ganz"); if (reg !== REGISTER[1][0]) register(REGISTER[1][0], 1); }, sel: ["#register button.an"], t: "➡️ Nächstes Register",
-    x: () => `Nach links gewischt – schon bist du im nächsten Register: ${rgRegName(1)}. Wischst du nach rechts, geht es zurück.` },
+      return `Ich tippe zweimal schnell auf eine Kachel – sie dreht sich um. Hinten stehen Abkürzungen${a.length ? ": " + a.join(", ") : ""}. Mit dem Pfeil oben dreht sie sich zurück.`; },
+    live: async (L) => { const k = rgDrehKachel(); if (!k) return; await L.tipp(() => k, "doppelt"); rgDrehen(true); await L.warte(3200); await L.tipp("#raster > .kachel.kr-hinten .kr-zurueck"); rgDrehen(false); } },
+  { v: "start", nur: () => !einfach() && REGISTER.length > 1, vor: () => { rgDrehen(false); rgKopf("ganz"); rgRegisterTausch(false); }, sel: ["#register"], mussSel: true, t: "🗂️ Register anordnen",
+    x: () => `Die Register oben kannst du auch anordnen: ein Register festhalten, bis es sich hebt, zur Seite ziehen und loslassen. Ich ziehe ${rgRegName(0)} hinter ${rgRegName(1)} – jetzt steht ${rgRegName(1)} vorne. Die App merkt sich deine Reihenfolge.`,
+    live: async (L) => { if (await L.ziehen("#register button:nth-child(1)", "#register button:nth-child(2)")) rgRegisterTausch(true); } },
+  { v: "start", nur: () => !einfach() && REGISTER.length > 1, vor: () => { rgRegisterTausch(false); rgKopf("ganz"); rgRegister(REGISTER[0][0]); }, sel: ["#raster"], puls: [".wischhinweis", "#register button.an"], t: "👆 Wischen",
+    x: () => `Am schnellsten wechselst du die Register mit dem Finger: Ich wische über die Kacheln nach links – schon bin ich in ${rgRegName(1)}. Nach rechts gewischt geht es zurück zu ${rgRegName(0)}.`,
+    live: async (L) => { const a = REGISTER[0][0], b = REGISTER[1][0]; await L.wischen("#raster", 1); register(b, 1); await L.warte(2000); await L.wischen("#raster", -1); register(a, -1); } },
   { v: "start", vor: () => { rgKopf(); rgAnordnen(false); }, t: "✅ Fertig", x: () => einfach() ? "Das war's: Kopf einrollen und Kacheln anordnen. In der erweiterten Ansicht kannst du noch viel mehr – schau dir das Video dort noch einmal an. Probier es einfach aus!"
     : "Das war's: Kopf einrollen, blättern, Kacheln verschieben, verbergen und umdrehen, Register anordnen und wischen. So gestaltest du dir deine Wunsch-Oberfläche – probier es einfach aus!" },
 ];
@@ -1711,8 +1734,8 @@ const RG_FIGUR = [
   { v: "start", nur: () => !einfach(), vor: () => { if (!einfach() && reg !== "mein") { const alt = reg; register("mein"); RG.zurueck.push(() => register(alt)); } },
     sel: ['#raster .kachel[data-id="avatar"]'], mussSel: true, t: "🧑‍🍳 Mein Bild", x: "So bekommst du ein Bild statt deiner Buchstaben: Im Register Meins tippst du auf die Kachel Mein Bild." },
   { v: "start", nur: () => einfach(), t: "🧑‍🍳 Mein Bild", x: "Die Kachel Mein Bild findest du in der erweiterten Ansicht im Register Meins. Ich öffne sie dir jetzt." },
-  { v: "start", vor: () => rgAvAuf(), sel: ["#avBlatt .av-raster"], t: "👩‍🍳 Köchinnen und Köche", x: "Hier siehst du alle Koch-Figuren: oben die Köchinnen, darunter die Köche. Ganz unten bei Kein Bild bleiben es deine Buchstaben." },
-  { v: "start", vor: () => rgAvAuf("w03"), sel: ["#avWahlVorschau"], t: "👆 Figur antippen", x: "Tippe eine Figur an, zum Beispiel diese Köchin. Oben siehst du sie dann groß. Tippst du auf das große Bild, siehst du sie noch größer." },
+  { v: "start", tippVor: '#raster .kachel[data-id="avatar"]', vor: () => rgAvAuf(), sel: ["#avBlatt .av-raster"], t: "👩‍🍳 Köchinnen und Köche", x: "Hier siehst du alle Koch-Figuren: oben die Köchinnen, darunter die Köche. Ganz unten bei Kein Bild bleiben es deine Buchstaben." },
+  { v: "start", tippVor: '#avBlatt .av-raster button[aria-label="Figur w03"]', vor: () => rgAvAuf("w03"), sel: ["#avWahlVorschau"], t: "👆 Figur antippen", x: "Tippe eine Figur an, zum Beispiel diese Köchin. Oben siehst du sie dann groß. Tippst du auf das große Bild, siehst du sie noch größer." },
   { v: "start", vor: () => rgAvAuf("w03"), sel: ["#avWahlVorschau .av-vorschau-knoepfe"], t: "✅ Übernehmen", x: "Gefällt sie dir, tippst du auf Übernehmen – dann ist sie dein Bild. Alle sehen es bei den Mitgliedern, im Chat und bei Wer ist online. Mit Bearbeiten veränderst du sie vorher noch. Hier übernehme ich nichts." },
   { v: "start", nur: () => frei("avatar_baukasten"), vor: () => rgAvAuf(), sel: ["#avWahlVorschau .av-vorschau-rechts .knopf.haupt"], mussSel: true, t: "🧩 Ganz eigene Figur", x: "Mit Selbst zusammenstellen baust du dir eine ganz eigene Figur – Haare, Bart, Brille, Mütze, Kochjacke und vieles mehr. Wie das geht, zeigt das Video Eigene Figur zusammenstellen." },
   { v: "start", nur: () => frei("avatar_baukasten"), vor: () => rgAvAuf(), sel: ["#avJackeAuto"], mussSel: true, t: "🔄 Kochjacke wechselt", x: "Hast du schon ein Bild, kannst du hier einschalten, dass deine Kochjacke jeden Tag eine andere Farbe hat – von Montag bis Sonntag." },
@@ -1757,6 +1780,11 @@ const RUNDGAENGE = [
   { id: "leitung", stand: "1", ziel: "leitung", sym: "🗂️", t: "Für die Clubleitung: Büro & mehr", u: "Büro, Termine für alle, Abstimmung, eigene Einstellungen – nur für die Clubleitung", st: () => RG_LEITUNG, nur: () => !!(ICH?.buero || ICH?.vorstand) },
   { id: "admin", stand: "1", ziel: "admin", sym: "🛠️", t: "Für Admins: Leitstand", u: "Admin-Register, Lämpchen, Admin-Einstellungen – nur für Admins", st: () => RG_ADMIN, nur: () => !!ICH?.admin },
 ];
+// KC-CLUB-VIDEO-LIVE: Stationen, die einen Einstellungs-Bereich aufklappen, tippen vorher dessen Überschrift an (nur wenn er zu und zu sehen ist)
+for (const liste of [RG_EINSTELLUNGEN, RG_LEITUNG, RG_ADMIN]) for (const x of liste) {
+  const m = typeof x.sel?.[0] === "string" && /details\[data-klappe="([^"]+)"\]$/.exec(x.sel[0]);
+  if (m && !x.tippVor) x.tippVor = () => { const d = document.querySelector(rgKlappe(m[1])); return d && !d.open ? d.querySelector(":scope > summary") : null; };
+}
 // Während eines Videos nur zeigen, was zur Zielgruppe passt: für alle ohne Admin- und Leitungs-Elemente, für die Leitung ohne Admin-Elemente
 function rgRollenAnsicht(ziel) {
   const b = document.body, an = !!ziel;
@@ -1841,10 +1869,97 @@ function rgDemo(d = {}) {
   if (d.design || d.nacht) { const alt = window.__rgDsAlt = window.__rgDsAlt || DS; DS = { ...alt, design: d.design || alt.design, modus: d.nacht ? "nacht" : alt.modus }; anwendenDesign(); }
   else { if (window.__rgDsAlt) { DS = window.__rgDsAlt; window.__rgDsAlt = null; } anwendenDesign(); }
 }
-const RG = { an: false, i: 0, pause: false, uhr: 0, lauf: 0, ziel: null, ton: false, von: "start", richtung: 1, wach: null, tour: "ueberblick", st: [], zurueck: [], vorI: -1, liste: [] };
+const RG = { an: false, i: 0, pause: false, uhr: 0, lauf: 0, ziel: null, ton: false, von: "start", richtung: 1, wach: null, tour: "ueberblick", st: [], zurueck: [], vorI: -1, liste: [], liveTok: 0, liveI: -1, tippI: -1 };
 const rgSichtbar = (e) => { if (!e?.isConnected || e.closest(".versteckt")) return false; const r = e.getBoundingClientRect(); return r.height > 0 && r.width > 0 && getComputedStyle(e).visibility !== "hidden"; }; // auch feste Elemente (Leiste unten, ?)
 const rgZiel = (s) => (s.sel || []).flatMap((q) => { try { return typeof q === "function" ? [q()].filter(Boolean) : [...document.querySelectorAll(q)]; } catch { return []; } }).find(rgSichtbar) || null;
 const rgText = (s) => (typeof s.x === "function" ? s.x() : s.x);
+// ---------- KC-CLUB-VIDEO-LIVE (2.261.0, Wunsch Hansi „Aktionen live zeigen – Kachel umdrehen, Register verschieben usw. – bei allen Videos“) ----------
+// Ein Zeigefinger macht vor, was erklärt wird: hinfahren, tippen (Kreis), doppelt tippen, lange drücken, ziehen (mit Abbild), wischen.
+// Station: tippVor = Wähler/Funktion → der Finger tippt das Element in der alten Ansicht an, DANN baut sich die Station auf (Ursache → Wirkung);
+// live = async (L) => { … } läuft während der Erzählung (L.tipp, L.ziehen, L.wischen, L.warte); das Weiterblättern wartet, bis sie fertig ist.
+// Nur Vorführung: ausgelöst werden ausschließlich die Vorführ-Funktionen des Videos (nichts gespeichert). Abbruch bei jedem Stationswechsel.
+const RG_ABBRUCH = Symbol("rg-abbruch");
+const rgFwarte = (ms, tok) => new Promise((ok, nein) => setTimeout(() => (tok === RG.liveTok && RG.an ? ok() : nein(RG_ABBRUCH)), ms));
+function rgFinger() {
+  let f = $("rgFinger");
+  if (!f) { document.body.insertAdjacentHTML("beforeend", '<div id="rgFinger" class="rg-finger" aria-hidden="true"><span>👆</span></div>'); f = $("rgFinger"); RGF.x = innerWidth * 0.7; RGF.y = innerHeight + 40; f.style.transform = `translate(${RGF.x}px,${RGF.y}px)`; }
+  f.classList.add("an"); return f;
+}
+const RGF = { x: 0, y: 0 };
+function rgFingerWeg() { $("rgFinger")?.classList.remove("an"); $("rgGeist")?.remove(); document.querySelectorAll(".rg-gedrueckt").forEach((e) => e.classList.remove("rg-gedrueckt")); }
+async function rgFzu(x, y, ms, tok) {
+  const f = rgFinger(), von = `translate(${RGF.x}px,${RGF.y}px)`, nach = `translate(${x}px,${y}px)`;
+  RGF.x = x; RGF.y = y; f.style.transform = nach;
+  try { f.animate([{ transform: von }, { transform: nach }], { duration: ms, easing: "cubic-bezier(.4,.1,.2,1)" }); } catch {}
+  await rgFwarte(ms, tok);
+}
+async function rgFpunkt(el, tok) { // Element ins Bild holen und seine Mitte liefern
+  if (!rgSichtbar(el)) throw RG_ABBRUCH;
+  if (!rgImBild(el)) { el.scrollIntoView({ block: "center", behavior: "instant" }); rgLage(); await rgFwarte(250, tok); }
+  const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, r };
+}
+function rgFring(x, y, gross) {
+  const k = document.createElement("div"); k.className = "rg-tippring"; k.style.left = x + "px"; k.style.top = y + "px"; document.body.appendChild(k);
+  try { k.animate([{ transform: "translate(-50%,-50%) scale(.2)", opacity: .95 }, { transform: `translate(-50%,-50%) scale(${gross ? 3 : 2})`, opacity: 0 }], { duration: gross ? 900 : 520, easing: "ease-out" }); } catch {}
+  setTimeout(() => k.remove(), gross ? 950 : 600);
+}
+function rgFdruck(an) { const f = $("rgFinger"); f?.classList.toggle("drueckt", !!an); }
+// tippen: einfach, doppelt oder lang (Element zeigt sich gedrückt)
+async function rgFtipp(el, tok, art = "") {
+  const p = await rgFpunkt(el, tok); await rgFzu(p.x, p.y, 650, tok); await rgFwarte(150, tok);
+  const mal = art === "doppelt" ? 2 : 1;
+  for (let i = 0; i < mal; i++) {
+    rgFdruck(true); el.classList.add("rg-gedrueckt"); rgFring(p.x, p.y, art === "lang");
+    await rgFwarte(art === "lang" ? 800 : 140, tok); rgFdruck(false); el.classList.remove("rg-gedrueckt"); if (i < mal - 1) await rgFwarte(110, tok);
+  }
+  await rgFwarte(200, tok);
+}
+// ziehen: lange drücken, Abbild hängt am Finger, zum Ziel tragen, loslassen
+async function rgFziehen(el, ziel, tok) {
+  const a = await rgFpunkt(el, tok), b = ziel.getBoundingClientRect ? ziel.getBoundingClientRect() : ziel;
+  await rgFzu(a.x, a.y, 650, tok); rgFdruck(true); rgFring(a.x, a.y, true); el.classList.add("rg-gedrueckt"); await rgFwarte(700, tok);
+  const g = el.cloneNode(true); g.id = "rgGeist"; g.removeAttribute("onclick"); g.querySelectorAll("[id], svg").forEach((x) => (x.tagName.toLowerCase() === "svg" ? x.remove() : x.removeAttribute("id")));
+  const cs = getComputedStyle(el); // Abbild sieht aus wie das Original, auch wo das Aussehen am Elternteil hängt (z. B. #register button)
+  for (const k of ["background", "color", "font", "borderRadius", "border", "padding", "display", "flexDirection", "alignItems", "justifyContent", "gap", "boxSizing", "textAlign", "whiteSpace", "lineHeight"]) g.style[k] = cs[k];
+  g.className += " rg-geist"; Object.assign(g.style, { left: a.r.left + "px", top: a.r.top + "px", width: a.r.width + "px", height: a.r.height + "px" }); document.body.appendChild(g);
+  el.classList.remove("rg-gedrueckt"); el.classList.add("rg-zieht-weg");
+  const bx = b.left + b.width / 2, by = b.top + b.height / 2, dx = bx - a.x, dy = by - a.y;
+  try { g.animate([{ transform: "translate(0,0) scale(1.06) rotate(-2deg)" }, { transform: `translate(${dx}px,${dy}px) scale(1.06) rotate(2deg)` }], { duration: 1100, easing: "ease-in-out", fill: "forwards" }); } catch {}
+  await rgFzu(bx, by, 1100, tok); rgFdruck(false); await rgFwarte(120, tok);
+  g.remove(); el.classList.remove("rg-zieht-weg");
+}
+// wischen: über das Element von rechts nach links (richtung 1) oder umgekehrt
+async function rgFwischen(el, tok, richtung = 1) {
+  const p = await rgFpunkt(el, tok), w = Math.min(p.r.width, innerWidth) * 0.32, x0 = p.x + w * richtung, x1 = p.x - w * richtung, y = Math.min(p.y, innerHeight * 0.55);
+  await rgFzu(x0, y, 600, tok); rgFdruck(true); await rgFwarte(120, tok);
+  const spur = document.createElement("div"); spur.className = "rg-wischspur"; Object.assign(spur.style, { left: Math.min(x0, x1) + "px", top: y + "px", width: Math.abs(x1 - x0) + "px" }); document.body.appendChild(spur);
+  try { spur.animate([{ transform: `scaleX(0)`, transformOrigin: richtung > 0 ? "right" : "left", opacity: .9 }, { transform: "scaleX(1)", transformOrigin: richtung > 0 ? "right" : "left", opacity: 0 }], { duration: 700, easing: "ease-out" }); } catch {}
+  setTimeout(() => spur.remove(), 750);
+  await rgFzu(x1, y, 550, tok); rgFdruck(false); await rgFwarte(150, tok);
+}
+const rgSichtbarer = (q) => () => [...document.querySelectorAll(q)].find(rgSichtbar) || null; // erstes sichtbares (z. B. Darstellung oder „Das Wichtigste“)
+const rgFel = (q) => { try { const e = typeof q === "function" ? q() : document.querySelector(q); return e && rgSichtbar(e) ? e : null; } catch { return null; } };
+// Werkzeugkasten für live-Stationen
+const rgL = (tok) => ({
+  tipp: async (q, art) => { const e = rgFel(q); if (e) await rgFtipp(e, tok, art); return e; },
+  ziehen: async (q, z) => { const e = rgFel(q), t = typeof z === "string" || typeof z === "function" ? rgFel(z) : z; if (e && t) await rgFziehen(e, t, tok); return !!(e && t); },
+  wischen: async (q, r) => { const e = rgFel(q); if (e) await rgFwischen(e, tok, r); return e; },
+  warte: (ms) => rgFwarte(ms, tok),
+  ziel: () => rgNeuZielen(),
+});
+// Ursache → Wirkung: in der alten Ansicht das Element antippen, dann die Station aufbauen
+async function rgVorTippen(s, tok) {
+  const q = typeof s.tippVor === "function" ? s.tippVor() : s.tippVor, e = q && (typeof q === "string" ? rgFel(q) : rgSichtbar(q) ? q : null);
+  if (!e) return;
+  RG.ziel = e; rgHin(); rgLage(); await rgFwarte(350, tok);
+  await rgFtipp(e, tok, s.tippArt || "");
+}
+async function rgLiveStart(s, tok) {
+  RG.liveLaeuft = true;
+  try { await s.live(rgL(tok)); if (tok === RG.liveTok) rgNeuZielen(); }
+  catch (e) { if (e !== RG_ABBRUCH) console.warn("rundgang live", e); }
+  finally { if (tok === RG.liveTok) { RG.liveLaeuft = false; setTimeout(() => { if (tok === RG.liveTok) rgFingerWeg(); }, 900); const f = RG.nachLive; RG.nachLive = null; f?.(); } }
+}
 function rundgangStart(mitKnopf, id = "ueberblick", liste = []) {
   rundgangEnde(true); einwKarteWeg(); vorlesenStopp();
   RG.liste = Array.isArray(liste) ? liste.slice() : []; // KC-CLUB-VIDEO-THEMEN: danach noch abzuspielen
@@ -1889,13 +2004,20 @@ async function rgHinweisErledigt(wie) {
 }
 function rgHinweisSpaeter() { try { localStorage.setItem(RG_SPAETER, heuteIso()); } catch {} rgHinweisZeigen(); melde("🎬 Ich frage morgen nochmal – oder jederzeit in ❓ Hilfe & Tipps"); }
 function rgHinweisLos() { rundgangStart(false, "warum"); } // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: zuerst die Einleitung
-function rgStille() { rgPulsStop(); clearTimeout(RG.uhr); RG.lauf++; try { if (RG.ton) speechSynthesis.cancel(); } catch {} }
+function rgStille() { rgPulsStop(); clearTimeout(RG.uhr); RG.lauf++; RG.liveTok++; RG.liveLaeuft = false; RG.nachLive = null; RG.tippLaeuft = false; rgFingerWeg(); try { if (RG.ton) speechSynthesis.cancel(); } catch {} }
 function rgZeigen() {
   if (!RG.an || RG.frage) return; // Bewertungs-Karte am Ende bleibt stehen
   rgStille();
   const s = RG.st[RG.i], n = RG.st.length;
+  // KC-CLUB-VIDEO-LIVE: erst in der alten Ansicht antippen (Finger), dann die Station aufbauen – nur vorwärts und nicht im Pausen-Stand
+  if (RG.vorI !== RG.i && s.tippVor && RG.tippI !== RG.i && !RG.pause && (RG.richtung || 1) > 0 && (!s.nur || s.nur())) {
+    RG.tippI = RG.i; const tok = RG.liveTok; RG.tippLaeuft = true;
+    $("rgTitel").textContent = s.t; $("rgNr").textContent = `${RG.i + 1} / ${n}`; $("rgText").textContent = "👆 …"; $("rgPause").textContent = "⏸ Pause";
+    rgVorTippen(s, tok).catch((e) => { if (e !== RG_ABBRUCH) console.warn("rundgang tippen", e); }).finally(() => { if (tok === RG.liveTok && RG.an && RG.tippLaeuft) { RG.tippLaeuft = false; rgZeigen(); } });
+    return;
+  }
   if (RG.vorI !== RG.i) { // Station wechselt: vorige aufräumen, neue vorbereiten (nur einmal – nicht beim Fortsetzen nach Pause)
-    const alt = RG.st[RG.vorI]; RG.vorI = RG.i; try { alt?.nach?.(); } catch {}
+    const alt = RG.st[RG.vorI]; RG.vorI = RG.i; RG.liveI = -1; try { alt?.nach?.(); } catch {}
     if (s.v !== aktuelleAnsicht) zeige(s.v, true); // ohne neue Verlaufs-Einträge – „Zurück“ bleibt wie vorher
     if (!s.nur || s.nur()) try { s.vor?.(); } catch (e) { console.warn("rundgang vor", e); }
     rgDemo(s.demo);
@@ -1911,6 +2033,7 @@ function rgZeigen() {
     rgLage(); }, ms);
   setTimeout(() => { if (RG.an && RG.st[RG.i] === s && !rgSichtbar(RG.ziel)) { RG.ziel = rgZiel(s); rgHin(); rgLage(); } }, 350); // Inhalt kommt evtl. erst nach dem Laden
   if (!RG.pause) rgSprechen(rgText(s));
+  if (s.live && !RG.pause && RG.liveI !== RG.i) { RG.liveI = RG.i; const tok = RG.liveTok; RG.liveLaeuft = true; setTimeout(() => { if (tok === RG.liveTok && RG.an) rgLiveStart(s, tok); }, 700); } // KC-CLUB-VIDEO-LIVE
 }
 const rgImBild = (e) => { const r = e.getBoundingClientRect(); return r.top >= 0 && (r.bottom <= innerHeight || r.height > innerHeight * 0.45); };
 // hohe Bereiche (z. B. aufgeklappte Einstellungen) oben anfangen, kleine in die Mitte holen
@@ -1922,7 +2045,8 @@ function rgHin() { const e = RG.ziel; if (!e) return scrollTo(0, 0);
 function rgSprechen(text) {
   // Mindestzeit: Handys ohne deutsche Stimme melden „fertig“ oft sofort – dann bleibt der Text trotzdem lange genug zum Lesen stehen
   const lauf = RG.lauf, saetze = text.match(/[^.!?]+[.!?]*/g) || [text], lesezeit = 2500 + text.split(/\s+/).length * 420, frueh = Date.now() + lesezeit * 0.75;
-  const weiter = () => { if (lauf === RG.lauf && RG.an && !RG.pause) { clearTimeout(RG.uhr); RG.uhr = setTimeout(() => rundgangSchritt(1, true), Math.max(1200, frueh - Date.now())); } };
+  const weiter = () => { if (lauf === RG.lauf && RG.an && !RG.pause && RG.liveLaeuft) { RG.nachLive = weiter; return; } // erst die Live-Vorführung zu Ende
+    if (lauf === RG.lauf && RG.an && !RG.pause) { clearTimeout(RG.uhr); RG.uhr = setTimeout(() => rundgangSchritt(1, true), Math.max(1200, frueh - Date.now())); } };
   if (!RG.ton) return weiter();
   RG.uhr = setTimeout(weiter, lesezeit * 1.8); // Sicherheitsnetz
   try {
