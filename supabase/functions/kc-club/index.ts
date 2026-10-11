@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.238.0";
+const SERVER_VERSION = "2.240.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4526,6 +4526,27 @@ async function gastgeberStandLauf() {
     await protokoll(null, "gastgeber_stand", { treffen: t.id, stufe, ja: ja.length, vielleicht: vl.length, nein: nein.length, offen: offen.length, gastgeber: t.gastgeber_person_id, leitung: leitung.length });
   }
 }
+// KC-CLUB-ANTWORT-ERINNERUNG-2T (2.240.0, Wunsch Hansi): 2 Tage (48 Std.) vor einem Köcheclub-Treffen eine Push-Erinnerung an alle,
+// die noch nicht zu- oder abgesagt haben („vielleicht“ zählt nicht) – passend zum rot blinkenden Hinweis in der App. Einmal je Treffen.
+async function antwortErinnerung2T() {
+  const jetztMs = Date.now();
+  const { data: ts } = await db.from("kc_club_treffen").select("id,titel,beginn,ort").eq("status", "geplant").eq("art", "treffen")
+    .gt("beginn", new Date(jetztMs + 6 * 3600000).toISOString()).lte("beginn", new Date(jetztMs + 48 * 3600000).toISOString());
+  for (const t of ts ?? []) {
+    const { data: schon } = await db.from("kc_club_protokoll").select("id").eq("aktion", "treffen_erinnerung_2t").eq("details->>treffen", t.id).limit(1);
+    if (schon?.length) continue;
+    const { data: an } = await db.from("kc_club_teilnahme").select("person_id,antwort").eq("treffen_id", t.id).in("antwort", ["ja", "nein"]);
+    const klar = new Set((an ?? []).map((x: any) => x.person_id));
+    const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => !klar.has(id));
+    await protokoll(null, "treffen_erinnerung_2t", { treffen: t.id, empfaenger: ziel.length }); // erst merken, dann senden – nie doppelt
+    if (!ziel.length) continue;
+    await sendenGewaehlt("club_erinnerung", ziel, ["push"], {
+      titel: "🔴 Bitte zu- oder absagen", kurz: `${t.titel} am ${wann(t.beginn)}${t.ort ? " – " + t.ort : ""}: Kommst du?`,
+      betreff: `Köcheclub Werne – bitte zu- oder absagen: ${t.titel}, ${wann(t.beginn)}`,
+      text: `Hallo,\n\nin 2 Tagen ist unser Treffen „${t.titel}“ (${wann(t.beginn, true)}${t.ort ? ", " + t.ort : ""}).\n\nBitte kurz zu- oder absagen: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+      url: APP_URL + "#termine" }, `club-antwort-2t:${t.id}`).catch((e) => console.error("antwort 2t", String(e)));
+  }
+}
 async function rtZaehlerWarnen() {
   const monat = berlinTag(new Date()).slice(0, 7);
   const { data } = await db.from("kc_club_rt_zaehler").select("anzahl,gewarnt").eq("monat", monat).maybeSingle();
@@ -5095,6 +5116,7 @@ Deno.serve(async (req) => {
       await dienstGrussSenden().catch((e) => console.error("dienst gruss", String(e))); // KC-CLUB-DIENST-GRUSS (2.224.0)
       await rtZaehlerWarnen().catch((e) => console.error("rt zaehler", String(e))); // KC-CLUB-RT-SPARBREMSE (2.230.0)
       await gastgeberStandLauf().catch((e) => console.error("gastgeber stand", String(e))); // KC-CLUB-GASTGEBER-STAND (2.238.0)
+      await antwortErinnerung2T().catch((e) => console.error("antwort 2t", String(e))); // KC-CLUB-ANTWORT-ERINNERUNG-2T (2.240.0)
       await archivKopieLauf().catch((e) => archivKopieStand("fehler", String((e as any)?.message || e), {})); // KC-CLUB-ARCHIV-KOPIE (2.232.0): nur nachts 2–5 Uhr
       await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
       await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)

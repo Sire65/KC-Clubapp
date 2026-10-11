@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.240.0 – 2026-10-11 – KC-CLUB-ANTWORT-ERINNERUNG-2T: Push-Erinnerung 2 Tage vor dem Treffen an alle ohne Zu-/Absage
+- Server (Zeitplaner): 48 Std. vor einem Köcheclub-Treffen einmal Push „🔴 Bitte zu- oder absagen“ an alle aktiven Mitglieder ohne ja/nein (vielleicht zählt nicht). Einmal je Treffen (Protokoll treffen_erinnerung_2t).
+
 ## 2.239.0 – 2026-10-11 – Zu-/Absage blinkt vor der Sitzung
 KC-CLUB-ANTWORT-BLINKEN: Wer noch nicht zu- oder abgesagt hat, sieht oben im Treffen-Feld „❔ Bitte zu- oder absagen“ ab 5 Tagen vor der Köcheclub-Sitzung gelb blinkend und ab 2 Tagen vorher rot dauerblinkend – bis zur Zu- oder Absage („vielleicht“ zählt nicht).
 

@@ -5575,6 +5575,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/object_path: pfad, file_name: name,/.test(server), "angezeigter Name bleibt der echte");
 }
 
+// 2.240.0 KC-CLUB-ANTWORT-ERINNERUNG-2T (Wunsch Hansi): 2 Tage vorher Push an alle ohne Zu-/Absage, einmal je Treffen
+{
+  assert.ok(/await antwortErinnerung2T\(\)\.catch/.test(server) && /lte\("beginn", new Date\(jetztMs \+ 48 \* 3600000\)/.test(server), "im Zeitplaner, 48 Std. vorher");
+  assert.ok(/\.in\("antwort", \["ja", "nein"\]\)/.test(server) && /filter\(\(id\) => !klar\.has\(id\)\)/.test(server), "nur wer noch nicht zu- oder abgesagt hat");
+  assert.ok(/protokoll\(null, "treffen_erinnerung_2t"[\s\S]{0,200}sendenGewaehlt\("club_erinnerung", ziel, \["push"\]/.test(server) && /eq\("aktion", "treffen_erinnerung_2t"\)\.eq\("details->>treffen", t\.id\)/.test(server), "erst merken, dann senden – nie doppelt");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

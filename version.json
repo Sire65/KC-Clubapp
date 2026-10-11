@@ -1,11 +1,18 @@
 {
-  "version": "2.239.0",
+  "version": "2.240.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🔧 Kleine Systemverbesserungen"
+    "🔴 Push-Erinnerung 2 Tage vor dem Treffen, wenn du noch nicht zu- oder abgesagt hast"
   ],
   "verlauf": [
+    {
+      "version": "2.240.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🔴 Push-Erinnerung 2 Tage vor dem Treffen, wenn du noch nicht zu- oder abgesagt hast"
+      ]
+    },
     {
       "version": "2.239.0",
       "datum": "2026-10-07",
