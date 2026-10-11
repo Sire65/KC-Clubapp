@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.235.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.236.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11147,7 +11147,7 @@ function adminProgrammFarbe(p) {
 // Neon-Spiegel/Backup: pausiert = gelb (nie grün), zu alt = rot, unbekannt = grau
 const BACKUP_OK_STD = 26, BACKUP_WARN_STD = 72;
 function adminSpiegelFarben(sp) {
-  if (!sp) return { neon: ["grau", "Zustand unbekannt"], backup: ["grau", "Zustand unbekannt"], abdeckung: ["grau", "unbekannt"], watchdog: ["grau", "unbekannt"], archiv: ["grau", "Zustand unbekannt"] };
+  if (!sp) return { neon: ["grau", "Zustand unbekannt"], backup: ["grau", "Zustand unbekannt"], abdeckung: ["grau", "unbekannt"], watchdog: ["grau", "unbekannt"], archiv: ["grau", "Zustand unbekannt"], fra: ["grau", "Zustand unbekannt"] };
   const std = (iso) => (iso ? (Date.now() - new Date(iso)) / 3600000 : Infinity), datum = (iso) => fKurz.format(new Date(iso));
   const pauseText = sp.pause ? `pausiert seit ${datum(sp.pause.zeit)}` : "ausgeschaltet";
   const bis = sp.compute?.bis && new Date(sp.compute.bis) > new Date() ? ` · Neon-Wartung bis ${datum(sp.compute.bis)}` : "";
@@ -11165,7 +11165,13 @@ function adminSpiegelFarben(sp) {
   const archiv = !ak ? ["grau", "noch nie gelaufen"] : akStd > ARCHIV_KOPIE_ALT_STD ? ["grau", `keine Meldung seit ${seitText(ak.zeit)}`]
     : ak.status === "fehler" ? ["rot", `Fehler · ${ak.text || ""} · ${seitText(ak.zeit)}`]
     : [ak.status === "ok" && !ak.offen ? "gruen" : "gelb", `${ak.dateien} Dateien · ${mb(ak.bytes)}${ak.offen ? ` · ${ak.offen} noch offen` : ""}${ak.status === "warnung" ? " · " + (ak.text || "") : ""} · ${seitText(ak.zeit)}`];
-  return { neon, backup, abdeckung, watchdog, archiv };
+  // KC-CLUB-FRA-SICHERUNG (2.236.0): nächtliche Komplett-Sicherung nach Frankfurt – älter als 26 Std. → grau (nie als OK)
+  const fr = sp.fra, frStd = fr ? std(fr.zeit) : Infinity;
+  const fra = !fr ? ["grau", "noch nie gelaufen"] : frStd > ARCHIV_KOPIE_ALT_STD ? ["grau", `keine Meldung seit ${seitText(fr.zeit)}`]
+    : fr.status === "fehler" ? ["rot", `Fehler · ${fr.text || ""} · ${seitText(fr.zeit)}`]
+    : fr.status === "laeuft" ? ["gelb", `${fr.text || "läuft"} · ${seitText(fr.zeit)}`]
+    : [fr.status === "ok" ? "gruen" : "gelb", `${fr.tabellen} Tabellen · ${fr.zeilen.toLocaleString("de-DE")} Zeilen · ${mb(fr.bytes)} · zurückgelesen ${fr.geprueft}/${fr.teile} · ${seitText(fr.zeit)}`];
+  return { neon, backup, abdeckung, watchdog, archiv, fra };
 }
 const ARCHIV_KOPIE_ALT_STD = 26;
 // stand/altStd (0.54.0): Messzeitpunkt – älter als altStd Stunden → graue Lampe und „⚠️ veraltet“ (UNKNOWN/alt nie als OK)
@@ -11187,7 +11193,7 @@ function infoAdmin() {
       ${zeile(sf, "Server", `v${r.server.version} · Datenbank ${r.server.dbMs} ms`)}
       ${zeile(cf, "Kommunikation", c.text)}
       ${r.programme.map((p) => { const [f, t] = adminProgrammFarbe(p); return zeile(f, p.name, t); }).join("")}
-      ${(() => { const sf2 = adminSpiegelFarben(r.spiegel); return zeile(sf2.neon[0], "Neon-Spiegel", sf2.neon[1]) + zeile(sf2.backup[0], "Backup", sf2.backup[1]) + zeile(sf2.archiv[0], "Archiv-Kopie", sf2.archiv[1]) + zeile(sf2.watchdog[0], "Watchdog", sf2.watchdog[1]) + zeile(sf2.abdeckung[0], "Abdeckung", sf2.abdeckung[1]); })()}
+      ${(() => { const sf2 = adminSpiegelFarben(r.spiegel); return zeile(sf2.neon[0], "Neon-Spiegel", sf2.neon[1]) + zeile(sf2.backup[0], "Backup", sf2.backup[1]) + zeile(sf2.archiv[0], "Archiv-Kopie", sf2.archiv[1]) + zeile(sf2.fra[0], "Sicherung Frankfurt", sf2.fra[1]) + zeile(sf2.watchdog[0], "Watchdog", sf2.watchdog[1]) + zeile(sf2.abdeckung[0], "Abdeckung", sf2.abdeckung[1]); })()}
       ${zeile(r.wartung?.an ? "gelb" : "gruen", "Wartung", r.wartung?.an ? "an" + (r.wartung.hinweis ? " – " + r.wartung.hinweis : "") : "aus")}
     </div>
     ${adminBalken("🗄️ Datenbank", r.datenbank.bytes, r.datenbank.grenze, r.datenbank.warnPct, r.datenbank.kritPct)}
@@ -11453,7 +11459,9 @@ function adBlatt(id) {
         ${sf ? adZeile(adAlt() ? "grau" : sf.neon[0], "Neon-Spiegel", sf.neon[1]) + adZeile(adAlt() ? "grau" : sf.backup[0], "Tägliche Sicherung (Neon)", sf.backup[1]) + adZeile(adAlt() ? "grau" : sf.watchdog[0], "Watchdog", sf.watchdog[1]) + adZeile(adAlt() ? "grau" : sf.abdeckung[0], "Abdeckung", sf.abdeckung[1]) : adZeile("grau", "Spiegel", "unbekannt")}
         ${r?.spiegel?.backup?.restoreTest ? adZeile("keine", "Letzter Wiederherstellungs-Test", seitText(r.spiegel.backup.restoreTest) + " · bestanden") : ""}
         ${adZeile(adZustand("b2")[0], "B2-Backup (Backup-PC)", adZustand("b2")[1])}
+        ${sf ? adZeile(adAlt() ? "grau" : sf.fra[0], "Komplett-Sicherung (Neon Frankfurt)", sf.fra[1]) : ""}
         ${sf ? adZeile(adAlt() ? "grau" : sf.archiv[0], "Archiv-Kopie (Neon Frankfurt)", sf.archiv[1]) : ""}
+        ${r?.spiegel?.fra?.bytes ? adminBalken("🗄️ Sicherung Frankfurt (letzter Tag)", r.spiegel.fra.bytes, r.spiegel.fra.grenze, 80, 95, r.spiegel.fra.zeit, ARCHIV_KOPIE_ALT_STD) : ""}
         ${r?.spiegel?.archiv ? adminBalken("🗂️ Archiv-Kopie", r.spiegel.archiv.bytes, r.spiegel.archiv.grenze, 80, 95, r.spiegel.archiv.zeit, ARCHIV_KOPIE_ALT_STD) : ""}
         ${r?.spiegel?.archiv?.teile ? `<p class="hinweis" style="margin:0">Archiv-Kopie in Frankfurt: Archiv ${r.spiegel.archiv.teile.archiv?.dateien ?? 0} Dateien (${mb(r.spiegel.archiv.teile.archiv?.bytes ?? 0)}) · Handbücher &amp; Schulungsunterlagen ${r.spiegel.archiv.teile.dokumente?.dateien ?? 0} PDFs (${mb(r.spiegel.archiv.teile.dokumente?.bytes ?? 0)}). Läuft jede Nacht von 2 bis 5 Uhr.</p>` : ""}
         ${r?.spiegel?.groesse?.bytes ? adminBalken("🪞 Neon-Speicher", r.spiegel.groesse.bytes, r.spiegel.groesse.grenze || 1024 * 1048576, r.datenbank.warnPct, r.datenbank.kritPct, r.spiegel.groesse.zeit) : ""}

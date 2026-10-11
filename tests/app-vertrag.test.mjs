@@ -8135,3 +8135,15 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/name = \$\{NEUSTART_VAULT\}/.test(server) && !/sbp_[A-Za-z0-9]{20}/.test(server + programm), "Schlüssel nur im Tresor, nie im Code");
   assert.ok(/apiRoh\("notfall_neustart", \{ modus: "neustart", bestaetigt: true \}\)/.test(html) && /Ich prüfe alle 15 Sekunden/.test(html), "App: bestätigen, dann nachprüfen");
 }
+
+// 2.236.0 KC-CLUB-FRA-SICHERUNG (Wunsch Hansi): tägliche Komplett-Sicherung nach Neon Frankfurt + Rücklese-Test, Admin-Lampe
+{
+  const m = lies("supabase/migrations/20261011_kc_club_v2236_fra_sicherung.sql");
+  assert.ok(/revoke all on public\.kc_club_fra_sicherung from anon, authenticated;/.test(m) && /cron\.schedule\('kc-club-fra-sicherung', '\*\/2 1-3 \* \* \*'/.test(m), "nur Server, nachts alle 2 Min.");
+  assert.ok(/if \(a === "fra_sicherung"\) \{[^\n]*\n\s+const \{ data: geheim \} = await db\.rpc\("kc_communication_get_server_secret", \{ p_name: "kc_club_cron_secret" \}\);/.test(server), "nur mit Zeitplaner-Geheimnis");
+  assert.ok(/ctid >= '\(\$\{Number\(t\.block_von\)\},0\)'::tid/.test(server) && /const fraName = \(t: string\) => \/\^\[a-z0-9_\]\{1,63\}\$\/\.test\(t\)/.test(server), "Blockbereiche, nur sichere Tabellennamen");
+  assert.ok(/if \(\(await hexSha256\(gz\)\) !== t\.sha256\) throw new Error\("Prüfsumme weicht ab"\);/.test(server) && /daten\.length !== Number\(t\.zeilen\)/.test(server), "Rücklese-Test: Prüfsumme + Zeilenzahl");
+  assert.ok(/FRA_BEHALTEN_TAGE = 14/.test(server) && /tag < grenze/.test(server), "14 Tage aufbewahren");
+  assert.ok(/const fra = !fr \? \["grau", "noch nie gelaufen"\] : frStd > ARCHIV_KOPIE_ALT_STD \? \["grau"/.test(html) && /"Sicherung Frankfurt", sf2\.fra\[1\]/.test(html), "Lampe: unbekannt/alt nie als OK");
+  assert.ok(/neu\("versprechen", \{ text: String\(r && r\.message \|\| r\), stapel:/.test(seite), "Hintergrundfehler mit Fundstelle melden");
+}

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.236.0 – 2026-10-11 – Komplett-Sicherung nach Frankfurt
+KC-CLUB-FRA-SICHERUNG: Jede Nacht sichert der Server alle Tabellen der Supabase-Datenbank als gepackte Dateien in den Neon-Dateispeicher Frankfurt (große Tabellen in Blöcken, Prüfsumme je Datei, Inhaltsverzeichnis mit Spalten), liest danach jede Datei zurück und zählt die Zeilen (Rücklese-Test). 14 Tagesstände, ältere werden gelöscht. Admin-Zentrale: Lampe „Sicherung Frankfurt“ + Füllstand; bei Fehler Push an den Admin. Außerdem melden Hintergrundfehler der App jetzt die Fundstelle mit.
+
 ## 2.235.0 – 2026-10-11 – Neustart-Knopf für Supabase
 KC-CLUB-NOTFALL-NEUSTART: Admin → Supabase → „Projekt neu starten“ prüft die Datenbank-Schnittstelle und startet Supabase nach Bestätigung direkt aus der App neu – auch wenn die Schnittstelle hängt (Admin-Prüfung über den direkten Datenbank-Weg). Danach prüft die App alle 15 Sekunden, bis alles wieder läuft. Schlüssel einmalig in der App hinterlegen (nur im Server-Tresor). Der Schnittstellen-Wächter nutzt denselben Weg ohne GitHub-Secret. Sperre 20 Min., Protokoll.
 

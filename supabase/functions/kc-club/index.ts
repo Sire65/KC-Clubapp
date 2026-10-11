@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.235.0";
+const SERVER_VERSION = "2.236.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1984,7 +1984,7 @@ const NEON_GRENZE = 1024 * 1024 * 1024; // Neon kostenlos: 1 GB Speicher je Proj
 // Neon-Spiegel und Backup (0.48.0): liest nur die Protokolle des KC-Spiegels (kc_db_mirror_*, kc_neon_compute_policy) – steuert nichts
 async function adminSpiegel() {
   const letzter = (typ: string) => db.from("kc_db_mirror_runs").select("started_at,message").eq("run_type", typ).eq("status", "ok").order("started_at", { ascending: false }).limit(1).maybeSingle();
-  const [{ data: pol }, { data: compute }, { data: snap }, { data: backup }, { data: restore }, { data: pause }, { data: abdeckung }, { data: wd }, { data: ng }, { data: ak }] = await Promise.all([
+  const [{ data: pol }, { data: compute }, { data: snap }, { data: backup }, { data: restore }, { data: pause }, { data: abdeckung }, { data: wd }, { data: ng }, { data: ak }, { data: fs }] = await Promise.all([
     db.from("kc_db_mirror_policies").select("name,mode,target,enabled,lag_threshold_sec,updated_at"),
     db.from("kc_neon_compute_policy").select("mode,maintenance_until,updated_at").eq("id", "primary").maybeSingle(),
     letzter("snapshot"), letzter("backup"), letzter("restore_test"),
@@ -1994,6 +1994,7 @@ async function adminSpiegel() {
     // KC-CLUB-NEON-GROESSE (0.54.0): misst der Spiegel-Worker nebenbei, wenn er ohnehin mit Neon verbunden ist (keine Extra-Rechenzeit)
     db.from("kc_db_mirror_runs").select("started_at,metrics").eq("run_type", "neon_groesse").eq("status", "ok").order("started_at", { ascending: false }).limit(1).maybeSingle(),
     db.from("kc_club_archiv_kopie_stand").select("zeit,status,text,metrics").eq("id", 1).maybeSingle(), // KC-CLUB-ARCHIV-KOPIE (2.232.0)
+    db.from("kc_club_fra_sicherung_stand").select("lauf,zeit,status,text,metrics").eq("id", 1).maybeSingle(), // KC-CLUB-FRA-SICHERUNG (2.236.0)
   ]);
   const p = pol ?? [], neon = p.filter((x: any) => x.target === "neon" && x.mode !== "realtime"), bk = p.filter((x: any) => x.mode === "backup");
   const aktivLag = neon.filter((x: any) => x.enabled).map((x: any) => Number(x.lag_threshold_sec) || 720);
@@ -2008,6 +2009,7 @@ async function adminSpiegel() {
     watchdog: wd ? { zeit: wd.started_at, status: wd.status, text: wd.message } : null,
     groesse: ng ? { bytes: Number(ng.metrics?.bytes) || null, zeit: ng.started_at, grenze: NEON_GRENZE } : null,
     archiv: ak ? { zeit: ak.zeit, status: ak.status, text: ak.text, dateien: Number(ak.metrics?.dateien) || 0, bytes: Number(ak.metrics?.bytes) || 0, offen: Number(ak.metrics?.offen) || 0, grenze: ARCHIV_KOPIE_GRENZE, teile: ak.metrics?.archiv ? { archiv: ak.metrics.archiv, dokumente: ak.metrics.dokumente } : null } : null,
+    fra: fs ? { lauf: fs.lauf, zeit: fs.zeit, status: fs.status, text: fs.text, tabellen: Number(fs.metrics?.tabellen) || 0, bytes: Number(fs.metrics?.bytes) || 0, zeilen: Number(fs.metrics?.zeilen) || 0, geprueft: Number(fs.metrics?.geprueft) || 0, teile: Number(fs.metrics?.teile) || 0, grenze: FRA_GRENZE } : null,
     pause: pause && /paus/i.test(pause.action) ? { zeit: pause.happened_at, text: pause.detail } : null,
   };
 } // kostenloser Supabase-Tarif (falls der System-Check keinen Wert liefert)
@@ -2604,13 +2606,148 @@ async function dokumenteKopieLauf(s3: AwsClient, url: (k: string) => string, feh
   }
   return { kopiert, offen: Math.max(0, offen.length - kopiert) };
 }
-async function archivKopieLauf(erzwingen = false) {
-  if (!erzwingen) { const h = berlinStunde(new Date()); if (h < 2 || h >= 5) return null; }
+// Zugang zum Neon-Dateispeicher Frankfurt (Vault kc_club_archiv_kopie) – gemeinsam für Archiv-Kopie und Frankfurt-Sicherung
+async function neonDateispeicher() {
   const { data: roh } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_archiv_kopie" });
   let z: any = null; try { z = roh ? JSON.parse(String(roh)) : null; } catch { z = null; }
-  if (!z?.endpoint || !z?.bucket || !z?.key || !z?.secret) { await archivKopieStand("fehler", "Zugang zum Neon-Dateispeicher fehlt", {}); return { ok: false }; }
+  if (!z?.endpoint || !z?.bucket || !z?.key || !z?.secret) return null;
   const s3 = new AwsClient({ accessKeyId: z.key, secretAccessKey: z.secret, region: z.region || "eu-central-1", service: "s3" });
-  const url = (k: string) => `${String(z.endpoint).replace(/\/$/, "")}/${encodeURIComponent(z.bucket)}/${k.split("/").map(encodeURIComponent).join("/")}`;
+  const basis = `${String(z.endpoint).replace(/\/$/, "")}/${encodeURIComponent(z.bucket)}`;
+  const url = (k: string) => `${basis}/${k.split("/").map(encodeURIComponent).join("/")}`;
+  return { s3, url, basis };
+}
+const hexSha256 = async (b: Uint8Array) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", b))].map((x) => x.toString(16).padStart(2, "0")).join("");
+
+// ---------- KC-CLUB-FRA-SICHERUNG (2.236.0, Wunsch Hansi 11.10.2026) ----------
+// Tägliche Komplett-Sicherung aller Tabellen (Schema public) als gepacktes JSON nach Neon Frankfurt: datenbank/<Tag>/<tabelle>[.teilNNN].json.gz
+// + manifest.json (Teile, Zeilen, Prüfsummen, Spalten je Tabelle). Danach Rücklese-Test (jede Datei zurückholen, Prüfsumme + entpacken
+// + Zeilen zählen). 14 Tagesstände; ältere werden gelöscht. Der Zeitplaner ruft nachts alle 2 Min. einen Schritt (CPU-Grenze der
+// Edge Function: je Schritt höchstens FRA_SCHRITT_BYTES Rohdaten). Gelesen wird über den direkten Datenbank-Weg (nicht die Schnittstelle).
+// Große Tabellen werden in Blockbereichen (ctid) gesichert – stabil auch während Änderungen. Status: kc_club_fra_sicherung_stand.
+const FRA_BEHALTEN_TAGE = 14, FRA_BLOECKE = 400, FRA_SCHRITT_BYTES = 12 * 1024 * 1024, FRA_SCHRITT_MS = 25000, FRA_VERSUCHE = 3, FRA_GRENZE = 5 * 1024 * 1024 * 1024;
+async function fraStand(lauf: string, status: string, text: string, metrics: Record<string, unknown>) {
+  const { error } = await db.from("kc_club_fra_sicherung_stand").upsert({ id: 1, lauf, zeit: jetzt(), status, text: txt(text, 300), metrics });
+  if (error) console.error("fra stand", error.message);
+}
+async function fraGzip(b: Uint8Array) { return new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer()); }
+async function fraGunzip(b: Uint8Array) { return new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer()); }
+const fraName = (t: string) => /^[a-z0-9_]{1,63}$/.test(t) ? t : null;
+async function fraSchritt(jetztErzwingen = false) {
+  const t0 = Date.now(), lauf = berlinTag(new Date()), sql = direktSql();
+  const nz = await neonDateispeicher();
+  if (!nz) { await fraStand(lauf, "fehler", "Zugang zum Neon-Dateispeicher fehlt", {}); return { ok: false }; }
+  const { s3, url, basis } = nz;
+  // 1) Lauf des Tages anlegen: alle Tabellen, große in Blockbereiche geteilt
+  const [{ n: vorhanden }] = await sql`select count(*)::int as n from public.kc_club_fra_sicherung where lauf = ${lauf}`;
+  if (!vorhanden) {
+    const tabs = await sql`select c.relname as t, greatest(c.relpages, 0)::bigint as seiten from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind = 'r' order by 1`;
+    const zeilen: any[] = [];
+    for (const r of tabs) {
+      if (!fraName(r.t)) continue;
+      const seiten = Number(r.seiten) || 0;
+      if (seiten <= FRA_BLOECKE * 1.5) { zeilen.push({ lauf, tabelle: r.t, teil: 0, block_von: null, block_bis: null }); continue; }
+      const teile = Math.ceil(seiten / FRA_BLOECKE);
+      for (let i = 0; i < teile; i++) zeilen.push({ lauf, tabelle: r.t, teil: i, block_von: i * FRA_BLOECKE, block_bis: i === teile - 1 ? null : (i + 1) * FRA_BLOECKE });
+    }
+    for (let i = 0; i < zeilen.length; i += 200) await sql`insert into public.kc_club_fra_sicherung ${sql(zeilen.slice(i, i + 200), "lauf", "tabelle", "teil", "block_von", "block_bis")} on conflict do nothing`;
+    await fraStand(lauf, "laeuft", `Sicherung gestartet: ${tabs.length} Tabellen`, { teile: zeilen.length });
+  }
+  let roh = 0;
+  // 2) Teile sichern (abholen, packen, Prüfsumme, nach Frankfurt)
+  while (Date.now() - t0 < FRA_SCHRITT_MS && roh < FRA_SCHRITT_BYTES) {
+    const [t] = await sql`update public.kc_club_fra_sicherung f set status = 'laeuft', zeit = now(), versuche = f.versuche + 1
+      where (f.lauf, f.tabelle, f.teil) = (select lauf, tabelle, teil from public.kc_club_fra_sicherung where lauf = ${lauf}
+        and (status = 'offen' or (status = 'laeuft' and zeit < now() - interval '5 minutes') or (status = 'fehler' and versuche < ${FRA_VERSUCHE}))
+        order by tabelle, teil limit 1 for update skip locked)
+      returning f.tabelle, f.teil, f.block_von, f.block_bis`;
+    if (!t) break;
+    try {
+      const name = fraName(t.tabelle); if (!name) throw new Error("ungültiger Tabellenname");
+      const bed = t.block_von == null ? "" : t.block_bis == null ? `where ctid >= '(${Number(t.block_von)},0)'::tid` : `where ctid >= '(${Number(t.block_von)},0)'::tid and ctid < '(${Number(t.block_bis)},0)'::tid`;
+      const [r] = await sql.unsafe(`select count(*)::bigint as n, coalesce(json_agg(x), '[]'::json)::text as j from (select * from public."${name}" ${bed}) x`);
+      const rohB = new TextEncoder().encode(r.j), gz = await fraGzip(rohB), sha = await hexSha256(gz);
+      const schluessel = `datenbank/${lauf}/${name}${t.block_von == null ? "" : `.teil${String(t.teil).padStart(3, "0")}`}.json.gz`;
+      const p = await s3.fetch(url(schluessel), { method: "PUT", body: gz, headers: { "content-type": "application/gzip", "x-amz-meta-sha256": sha, "x-amz-meta-zeilen": String(r.n) } });
+      await p.body?.cancel();
+      if (!p.ok) throw new Error(`Neon antwortet ${p.status}`);
+      await sql`update public.kc_club_fra_sicherung set status = 'ok', zeilen = ${Number(r.n)}, bytes = ${gz.length}, roh_bytes = ${rohB.length}, sha256 = ${sha}, schluessel = ${schluessel}, fehler = null, zeit = now()
+        where lauf = ${lauf} and tabelle = ${t.tabelle} and teil = ${t.teil}`;
+      roh += rohB.length;
+    } catch (e) {
+      await sql`update public.kc_club_fra_sicherung set status = 'fehler', fehler = ${txt(String((e as any)?.message || e), 200)}, zeit = now() where lauf = ${lauf} and tabelle = ${t.tabelle} and teil = ${t.teil}`;
+    }
+  }
+  // 3) Rücklese-Test, sobald nichts mehr offen ist: Datei holen, Prüfsumme, entpacken, Zeilen zählen
+  const [{ offen }] = await sql`select count(*)::int as offen from public.kc_club_fra_sicherung where lauf = ${lauf} and (status in ('offen', 'laeuft') or (status = 'fehler' and versuche < ${FRA_VERSUCHE}))`;
+  if (!offen) {
+    while (Date.now() - t0 < FRA_SCHRITT_MS && roh < FRA_SCHRITT_BYTES) {
+      const [t] = await sql`select tabelle, teil, schluessel, sha256, zeilen, roh_bytes from public.kc_club_fra_sicherung where lauf = ${lauf} and status = 'ok' order by tabelle, teil limit 1`;
+      if (!t) break;
+      let ok = false, grund = "";
+      try {
+        const r = await s3.fetch(url(t.schluessel));
+        if (!r.ok) throw new Error(`Neon antwortet ${r.status}`);
+        const gz = new Uint8Array(await r.arrayBuffer());
+        if ((await hexSha256(gz)) !== t.sha256) throw new Error("Prüfsumme weicht ab");
+        const daten = JSON.parse(new TextDecoder().decode(await fraGunzip(gz)));
+        if (!Array.isArray(daten) || daten.length !== Number(t.zeilen)) throw new Error("Zeilenzahl weicht ab");
+        ok = true; roh += Number(t.roh_bytes) || 0;
+      } catch (e) { grund = txt(String((e as any)?.message || e), 200); roh += 1024 * 1024; }
+      await sql`update public.kc_club_fra_sicherung set status = ${ok ? "geprueft" : "fehler"}, versuche = ${ok ? 0 : FRA_VERSUCHE}, fehler = ${ok ? null : "Rücklese-Test: " + grund}, zeit = now()
+        where lauf = ${lauf} and tabelle = ${t.tabelle} and teil = ${t.teil}`;
+    }
+  }
+  // 4) Stand + Abschluss (Inhaltsverzeichnis, alte Tage löschen)
+  const [m] = await sql`select count(*)::int as teile, count(distinct tabelle)::int as tabellen, count(*) filter (where status = 'geprueft')::int as geprueft,
+      count(*) filter (where status = 'fehler' and versuche >= ${FRA_VERSUCHE})::int as fehler, count(*) filter (where status in ('offen', 'laeuft', 'ok') or (status = 'fehler' and versuche < ${FRA_VERSUCHE}))::int as rest,
+      coalesce(sum(zeilen), 0)::bigint as zeilen, coalesce(sum(bytes), 0)::bigint as bytes, coalesce(sum(roh_bytes), 0)::bigint as roh_bytes, min(zeit) as start, max(zeit) as ende
+    from public.kc_club_fra_sicherung where lauf = ${lauf}`;
+  const metrics: Record<string, unknown> = { lauf, tabellen: m.tabellen, teile: m.teile, geprueft: m.geprueft, fehler: m.fehler, rest: m.rest, zeilen: Number(m.zeilen), bytes: Number(m.bytes), roh_bytes: Number(m.roh_bytes), grenze: FRA_GRENZE };
+  if (m.rest) {
+    const spaet = new Date().getUTCHours() === 3 && new Date().getUTCMinutes() >= 50; // letzte Schritte des Zeitplaner-Fensters (bis 03:58 UTC)
+    await fraStand(lauf, spaet ? "fehler" : "laeuft", spaet ? `Nicht fertig geworden: ${m.rest} von ${m.teile} Teilen offen` : `läuft: ${m.teile - m.rest} von ${m.teile} Teilen`, metrics);
+    if (spaet) await fraAlarm(lauf, `Die Frankfurt-Sicherung ist heute nicht fertig geworden (${m.rest} von ${m.teile} Teilen offen).`);
+    return { ok: true, rest: m.rest };
+  }
+  const [st] = await sql`select lauf, status from public.kc_club_fra_sicherung_stand where id = 1`;
+  if (st?.lauf === lauf && (st.status === "ok" || st.status === "warnung" || st.status === "fehler") && !jetztErzwingen) return { ok: true, fertig: true };
+  // Inhaltsverzeichnis mit Spalten je Tabelle (für die Wiederherstellung)
+  const teile = await sql`select tabelle, teil, schluessel, zeilen, bytes, sha256, status, fehler from public.kc_club_fra_sicherung where lauf = ${lauf} order by tabelle, teil`;
+  const spalten = await sql`select table_name as t, json_agg(json_build_object('name', column_name, 'typ', data_type, 'null', is_nullable) order by ordinal_position) as s from information_schema.columns where table_schema = 'public' group by table_name`;
+  const manifest = { art: "kc-club-fra-sicherung", lauf, erstellt: jetzt(), quelle: PROJEKT_REF, teile, spalten: Object.fromEntries(spalten.map((x: any) => [x.t, x.s])) };
+  const mb = new TextEncoder().encode(JSON.stringify(manifest));
+  const mp = await s3.fetch(url(`datenbank/${lauf}/manifest.json`), { method: "PUT", body: mb, headers: { "content-type": "application/json" } }); await mp.body?.cancel();
+  // alte Tage löschen (Dateien + Verzeichnis)
+  const grenze = berlinTag(new Date(Date.now() - FRA_BEHALTEN_TAGE * 86400000));
+  let geloescht = 0, weiter = "";
+  for (let runde = 0; runde < 20; runde++) {
+    const l = await s3.fetch(`${basis}?list-type=2&prefix=datenbank/${weiter ? `&continuation-token=${encodeURIComponent(weiter)}` : ""}`);
+    const x = await l.text(); if (!l.ok) break;
+    for (const k of [...x.matchAll(/<Key>([^<]+)<\/Key>/g)].map((a) => a[1])) {
+      const tag = k.split("/")[1] || "";
+      if (/^\d{4}-\d{2}-\d{2}$/.test(tag) && tag < grenze) { const d = await s3.fetch(url(k), { method: "DELETE" }); await d.body?.cancel(); geloescht++; }
+    }
+    weiter = x.match(/<NextContinuationToken>([^<]+)<\/NextContinuationToken>/)?.[1] || ""; if (!weiter) break;
+  }
+  await sql`delete from public.kc_club_fra_sicherung where lauf < ${grenze}`;
+  const status = m.fehler ? (m.geprueft ? "warnung" : "fehler") : mp.ok ? "ok" : "warnung";
+  const text = m.fehler ? `${m.fehler} von ${m.teile} Teilen fehlerhaft` : mp.ok ? `${m.tabellen} Tabellen gesichert und zurückgelesen` : "Inhaltsverzeichnis nicht gespeichert";
+  await fraStand(lauf, status, text, { ...metrics, geloescht, dauer_min: Math.round((Date.parse(m.ende) - Date.parse(m.start)) / 60000) });
+  if (status !== "ok") await fraAlarm(lauf, `Die Frankfurt-Sicherung meldet: ${text}.`);
+  await protokoll(null, "fra_sicherung", { lauf, status, ...metrics });
+  return { ok: status !== "fehler", fertig: true };
+}
+async function fraAlarm(lauf: string, satz: string) {
+  const ziel = await adminIds(); if (!ziel.length) return;
+  await sendenGewaehlt("club_nachricht", ziel, ["push"], { titel: "🗄️ Frankfurt-Sicherung: bitte prüfen", kurz: satz, betreff: "Köcheclub-App: Frankfurt-Sicherung",
+    text: `Hallo,\n\n${satz}\n\nDie Daten bei Supabase sind davon nicht betroffen. Admin-Zentrale → Backups zeigt Einzelheiten.`, url: APP_URL }, `club-fra-sicherung:${lauf}`).catch((e) => console.error("fra alarm", String(e)));
+}
+
+async function archivKopieLauf(erzwingen = false) {
+  if (!erzwingen) { const h = berlinStunde(new Date()); if (h < 2 || h >= 5) return null; }
+  const nz = await neonDateispeicher();
+  if (!nz) { await archivKopieStand("fehler", "Zugang zum Neon-Dateispeicher fehlt", {}); return { ok: false }; }
+  const { s3, url } = nz;
   const [{ data: doks, error: de }, { data: kopien, error: ke }] = await Promise.all([
     db.from("kc_club_archiv_dokumente").select("id,attachment_id,geloescht_am").not("attachment_id", "is", null),
     db.from("kc_club_archiv_kopie").select("dokument_id,attachment_id,schluessel,groesse"),
@@ -4863,6 +5000,11 @@ Deno.serve(async (req) => {
   const a = String(p?.action || "");
   try {
     // ----- KC-CLUB-NOTBETRIEB (1.52.0): Notfall-Paket bauen und beim Ersatz-Server ablegen (Zeitplaner, alle 15 Min.) -----
+    if (a === "fra_sicherung") { // KC-CLUB-FRA-SICHERUNG (2.236.0): Schritt der nächtlichen Frankfurt-Sicherung (nur Zeitplaner)
+      const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
+      if (!geheim || !gleichZeit(p.cronSecret, geheim)) return json({ error: "Kein Zugang" }, 401);
+      return json(await fraSchritt(p.erzwingen === true).catch((e) => ({ ok: false, fehler: txt(String((e as any)?.message || e), 200) })));
+    }
     if (a === "notfall_neustart") return await notfallNeustart(req, p); // KC-CLUB-NOTFALL-NEUSTART (2.235.0): vor der normalen Anmeldung
     if (a === "notpaket") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
