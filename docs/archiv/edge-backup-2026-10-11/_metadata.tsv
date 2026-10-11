@@ -1,0 +1,16 @@
+slug	id	version	verify_jwt	status	ezbr_sha256
+kc-dp-password-reset-temp	dd0ec752-d259-4424-a5ff-df7f679f0928	10	true	ACTIVE	778bcf9367ca08e33229685c1e541f4491da2e9ba16f6036699e3860f3abd724
+kc-dp-handtest-once	27e8e82a-c8fb-4f64-b2e0-7e1bda9a6ba3	8	true	ACTIVE	76f295fda3d978fb86b9eac0e657be7f036606cc903fd7cdaa6fb362fbb41353
+kc-dp-hourly-push-test	7c513d61-3fbc-4286-beb2-00b6028d4197	8	true	ACTIVE	2e69a1bf405a041275f78cc622aadb4dcd259ec9f35a054086bf50166cdd91cb
+kc-dp-push-test	69270f3c-2b2b-4e9d-b409-cdbfdb33cbbc	6	false	ACTIVE	7a731fc16f2c69020033a758198fb82daa0653ec4a66634459484b710b000e5a
+kc-dp-pilot-admin-resend-once	f3a0072f-e271-4db2-ab2f-062c6101888c	9	false	ACTIVE	b28ae23f4ba91415eb3a36c6167f30eac55384fe48a96d7ca99ae568a0a52e83
+kc-dp-admin-history-push-once	3028d470-22eb-4ea5-bd77-3bc54b2f240d	6	false	ACTIVE	1c3fec3b07dbf450bd7a8fed8e7288d8d7cedd761f23794fbba1a9c481d3344d
+kc-communication-email-test-once	df1ad11e-0c39-4e19-a057-288124e1059a	7	true	ACTIVE	9df314507afe07787d06395e2283e348ee726ed2e6f5364aed1e3f8770541535
+kc-communication-push-test-register	16c94f1b-9f50-45cd-a070-5ecd2e5740a6	8	true	ACTIVE	fc3292ab57c59ab594f7a6eacdc7cba21f35d92c6cee457974359d2e04673bcd
+kc-communication-push-test-static-setup	9ecebbaf-bf09-457e-ad78-168848a9312f	6	true	ACTIVE	eb70056078dbb05520b4c7ce13329893ba923be7b4ddedec451102a5ae42119b
+kc-money-butler-confirmation-test-once	55f66556-a644-4e24-867c-b32cac5724c5	5	false	ACTIVE	aba35726742dabc6a9452a7e2f9e9fe35331ac7b6e0586b510c6688cc4c80290
+kc-admin-push-once-gruss-reinhilde	8e72f64d-8be0-476c-97a9-158d5d8d715f	3	false	ACTIVE	f26e20f550f474323a48d3575cdd07ac84449cab0f52475b90cccff145ff24b3
+kc-admin-push-once-gruss-winnie	f7403ce9-46db-4a04-bac6-98c051570122	3	false	ACTIVE	4f73be36956b2a563ad5bc1eb3f06a68b41ec12817b79b86ab259944751c1629
+kc-admin-push-once-android-test	f74697e7-5ba1-436a-abb5-c04c2d122ba6	3	false	ACTIVE	31b370ee22434b4fb33954ea96277dd62e5e06b02520f8741f8b8d6a036b2db5
+kc-klaus-push-once-test	c1f37f2e-4bdf-4467-be47-b29333ee2af8	7	false	ACTIVE	a456504de680c5404aad0ba0796d44cfb28c6033b521344eed76fbef57005849
+kc-club-wunschbogen-mail-once	3472ed70-dad5-4091-9695-bb0dd798d785	2	true	ACTIVE	b24f5ec041dc95473261a16314b52c988a950f28eabde6ca0f89bbb89c536281

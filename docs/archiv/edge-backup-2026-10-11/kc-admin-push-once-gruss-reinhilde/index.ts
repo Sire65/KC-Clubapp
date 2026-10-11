@@ -1,0 +1,2 @@
+const json=(b:any,s=410)=>new Response(JSON.stringify(b),{status:s,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+Deno.serve(async()=>json({ok:false,error:'ONE_TIME_ENDPOINT_CLOSED',message:'Einmaliger Gruß-Push abgeschlossen.'},410));

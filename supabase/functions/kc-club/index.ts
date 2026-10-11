@@ -44,7 +44,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.224.0";
+const SERVER_VERSION = "2.225.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2938,6 +2938,28 @@ const SUCHE_BEREICHE = ["mitglieder", "nachrichten", "termine", "pinnwand", "pro
 const suchNorm = (t: unknown) => String(t ?? "").toLowerCase().replace(/[äöüéèêàáâëïçñ]/g, (c) => ({ ä: "a", ö: "o", ü: "u", é: "e", è: "e", ê: "e", à: "a", á: "a", â: "a", ë: "e", ï: "i", ç: "c", ñ: "n" } as Record<string, string>)[c])
   .replace(/ß/g, "ss").replace(/ae/g, "a").replace(/oe/g, "o").replace(/ue/g, "u");
 const suchPasst = (woerter: string[], ...felder: unknown[]) => { const n = suchNorm(felder.filter(Boolean).join(" ")); return woerter.every((w) => n.includes(suchNorm(w))); };
+// KC-CLUB-SUCHE-UNSCHARF (2.225.0, Wunsch Hansi): Tippfehler verzeihen – „Würdemann“ findet Wördemann, „Wilfried“ findet Willfried.
+// Je Suchwort (ab 4 Buchstaben) reicht ein Wort im Text, das sich um höchstens 1 Buchstaben unterscheidet (ab 8 Buchstaben: 2);
+// verglichen wird auch mit dem Wortanfang („Würd“ → Wördemann). Ohne Erweiterung in der Datenbank, gleiche Regel wie in der App (suUnscharf).
+function suchAbstand(a: string, b: string, max: number) {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let v = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const n = [i]; let kl = i;
+    for (let j = 1; j <= b.length; j++) { n[j] = Math.min(v[j] + 1, n[j - 1] + 1, v[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); kl = Math.min(kl, n[j]); }
+    if (kl > max) return max + 1; v = n;
+  }
+  return v[b.length];
+}
+const suchToleranz = (w: string) => (w.length >= 8 ? 2 : w.length >= 4 ? 1 : 0);
+function suchWortAehnlich(w: string, t: string) {
+  const tol = suchToleranz(w); if (!tol || t.length < 3) return false;
+  return suchAbstand(w, t, tol) <= tol || (t.length > w.length && suchAbstand(w, t.slice(0, w.length), tol) <= tol);
+}
+const suchPasstUnscharf = (woerter: string[], ...felder: unknown[]) => {
+  const n = suchNorm(felder.filter(Boolean).join(" ")), toks = n.split(/[^a-z0-9ß]+/).filter(Boolean);
+  return woerter.every((w) => { const x = suchNorm(w); return n.includes(x) || toks.some((t) => suchWortAehnlich(x, t)); });
+};
 function suchTag(v: unknown, plus = 0) {
   const d = archivDatum(v); if (!d) return null;
   const [y, m, t] = d.split("-").map(Number);
@@ -10752,11 +10774,13 @@ Köcheclub Werne`,
                 const aemter = am.get(m.person_id) ?? [];
                 if (suchPasst(woerter, m.display_name, m.preferred_name, ...aemter))
                   treffer.push({ bereich: "mitglieder", id: m.person_id, titel: m.display_name, inhalt: aemter.join(" · "), datum: null, autor: null, extra: {}, rang: suchNorm(m.display_name).startsWith(suchNorm(woerter[0])) ? 5 : 3 });
+                else if (!p.genau && suchPasstUnscharf(woerter, m.display_name, m.preferred_name, ...aemter)) // KC-CLUB-SUCHE-UNSCHARF
+                  treffer.push({ bereich: "mitglieder", id: m.person_id, titel: m.display_name, inhalt: ["≈ ähnlich geschrieben", ...aemter].join(" · "), datum: null, autor: null, extra: { aehnlich: true }, rang: 1 });
               }
             }
             if (bereiche.includes("aktionen") && !autor) {
               const { liste } = await aktionenRoh();
-              for (const a of liste) if (imZeitraum(a.dateFrom) && suchPasst(woerter, a.activity, a.organizer, a.mobility, typeof a.description === "string" ? a.description : ""))
+              for (const a of liste) if (imZeitraum(a.dateFrom) && (p.genau ? suchPasst : suchPasstUnscharf)(woerter, a.activity, a.organizer, a.mobility, typeof a.description === "string" ? a.description : ""))
                 treffer.push({ bereich: "aktionen", id: String(a.id), titel: txt(a.activity, 200) || "Aktion", inhalt: [txt(a.organizer, 120), a.dateTo && a.dateTo !== a.dateFrom ? "bis " + a.dateTo : ""].filter(Boolean).join(" · "), datum: a.dateFrom, autor: null, extra: {}, rang: 2 });
             }
             if (bereiche.includes("nachrichten") && !autor) {
@@ -10768,7 +10792,7 @@ Köcheclub Werne`,
               const gm = new Map((gr ?? []).map((g: any) => [g.thread_id, g]));
               for (const t of th ?? []) {
                 const g: any = gm.get(t.id);
-                if (imZeitraum(t.updated_at) && suchPasst(woerter, g?.name || t.subject))
+                if (imZeitraum(t.updated_at) && (p.genau ? suchPasst : suchPasstUnscharf)(woerter, g?.name || t.subject))
                   treffer.push({ bereich: "nachrichten", id: "u:" + t.id, titel: g ? `${g.symbol} ${g.name}` : t.subject || "Unterhaltung", inhalt: g ? "Gruppe" : "Unterhaltung", datum: t.updated_at, autor: null, extra: { thread: t.id, unterhaltung: true }, rang: 4 });
               }
             }
@@ -10787,7 +10811,15 @@ Köcheclub Werne`,
           return { bereich: b, mehr: liste.length > zeigen || liste.length >= grenze, treffer: liste.slice(0, zeigen).map((t) => ({
             id: t.id, titel: txt(t.titel, 160) || "–", text: txt(t.inhalt, 600), datum: t.datum, von: t.autor ? leute.get(t.autor)?.display_name || null : null, extra: t.extra ?? {} })) };
         }).filter((g) => g.treffer.length);
-        return json({ bereiche: gruppen });
+        // KC-CLUB-SUCHE-UNSCHARF: nichts gefunden → „Meintest du …?“ aus Namen der Mitglieder (nur ein Vorschlag, die App sucht damit neu)
+        let vorschlag: string | null = null;
+        if (!gruppen.length && !p.genau && woerter.length === 1 && suchNorm(woerter[0]).length >= 4) {
+          const w = suchNorm(woerter[0]), worte = new Map<string, string>();
+          for (const m of await aktiveMitglieder()) for (const x of String(m.display_name || "").split(/\s+/)) if (x.length >= 3) worte.set(suchNorm(x), x);
+          let best = 99;
+          for (const [n, orig] of worte) { const d = suchAbstand(w, n, 2); if (d <= 2 && d < best && n !== w) { best = d; vorschlag = orig; } }
+        }
+        return json({ bereiche: gruppen, vorschlag });
       }
 
       // ----- Archiv (KC-CLUB-ARCHIV, 1.2.0) -----

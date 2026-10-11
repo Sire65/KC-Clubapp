@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.225.0 – 2026-10-11 – Suche verzeiht Tippfehler
+KC-CLUB-SUCHE-UNSCHARF: Die Suche findet auch bei Tippfehlern – „Würdemann“ findet Wördemann, „Wilfried“ findet Willfried, auch nur der Wortanfang („Würd“). Gilt für die große Suche (Mitglieder, Aktionen, Chats/Gruppen, App-Funktionen), das Hilfe-Zentrum und die Mitglieder-Auswahl (Telefon, Kontakt teilen, SOS). Erst kommen genaue Treffer; ähnliche nur, wenn es keine genauen gibt. Findet die Suche nichts: „🔎 Meintest du …?“.
+
 ## 2.224.0 – 2026-10-10 – Dienst-Gruß mit Kochjacke und Wetter · Checkliste „Nicht mehr erinnern“
 KC-CLUB-DIENST-GRUSS: Wer heute Dienst hat, bekommt beim Start ein Fenster „Ich wünsche dir einen angenehmen Dienst heute!“ mit Schicht, Kochjacke (Weihnachtsmarkt: Freitag, Samstag, Sonntag rot – sonst weiß) und Kleidungs-Hinweisen aus dem Wetter (Kälte → Handschuhe und Mütze, Regen → Schirm, Schnee, Wind). Während des Weihnachtsmarkts zusätzlich morgens eine Push; die Erinnerung am Vorabend nennt die Kochjacke. Reise-Checkliste: Wahl „🔕 Nicht mehr erinnern“.
 

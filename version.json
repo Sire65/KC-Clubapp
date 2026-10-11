@@ -1,49 +1,56 @@
 {
-  "version": "2.224.0",
-  "datum": "2026-10-10",
+  "version": "2.225.0",
+  "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
     "🔧 Kleine Systemverbesserungen"
   ],
   "verlauf": [
     {
+      "version": "2.225.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🔧 Kleine Systemverbesserungen"
+      ]
+    },
+    {
       "version": "2.224.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.223.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.222.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.221.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.220.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.219.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🧑‍🍳 Fang den Koch jetzt auch gegen Mitglieder – mit Terminanfrage",
         "👑 Doppelkopf gegen Mitglieder: ihr zwei + zwei Computer-Köche"
@@ -51,28 +58,28 @@
     },
     {
       "version": "2.218.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.217.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.216.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.215.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🎲 Alle Spiele mit derselben Knopfleiste: Neues Spiel, Abbrechen, Töne, Ansage – ordentlich im Raster",
         "🔔 Töne jetzt in allen Spielen (Würfel, Karten, Quiz, Sieg) – ein Schalter für alle"
@@ -80,14 +87,14 @@
     },
     {
       "version": "2.214.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.213.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🃏 Fang den Koch: Aktionskarten auf die Hand (Turbo, Abkürzung, Klauen, Gas zu …)",
         "📦 Knappe Vorräte – Stationen werden leer, im Büro nachbestellen",
@@ -96,434 +103,434 @@
     },
     {
       "version": "2.212.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.211.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.210.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.209.1",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.209.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.208.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.207.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.206.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.205.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.204.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.203.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.202.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.201.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.200.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.199.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.198.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.197.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.196.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.195.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.194.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.193.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.192.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.191.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.190.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.189.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.188.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.187.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.186.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.185.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.184.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.183.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.182.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.181.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.180.0",
-      "datum": "2026-10-10",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.179.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.178.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.177.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.176.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.175.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.174.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.173.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.172.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.171.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.170.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.169.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.168.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.167.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.166.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.165.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.164.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.163.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.162.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.161.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.160.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.159.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.158.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.157.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.156.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.155.1",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.155.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.154.1",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🧮 Schnellanleitung Bilderrechner Version 4.2: Reklamation mit Bildern und Anzahl, geparkte Bons verbinden, halbe Portion, Gutschein-Teilzahlung"
       ]
     },
     {
       "version": "2.154.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🧑‍🍳 Fang den Koch ganz neu: Küchenrallye gegen Twinkey – Zutaten holen, kochen, am Pass klingeln",
         "❗ Ereigniskarten, Stoppuhr in Küchenminuten, Punkte für Tempo und Sorgfalt"
@@ -531,217 +538,217 @@
     },
     {
       "version": "2.153.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.152.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.151.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.150.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.149.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.148.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.147.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.146.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.145.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.144.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.143.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.142.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.141.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "♟️ Schach: Beim Schieben der Figuren bewegt sich die Seite nicht mehr mit"
       ]
     },
     {
       "version": "2.140.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.139.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.138.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.137.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.136.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.135.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.134.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.133.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.132.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.131.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.130.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.129.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.128.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.127.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.126.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.125.0",
-      "datum": "2026-10-09",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.124.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.123.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "♟️ Schach: klassische Figuren in Elfenbein und Schwarz auf grauem Brett, Beschriftung außen",
         "🧑‍🍳 Twinkey spricht mit Männerstimme – einstellbar: 🔇 Stumm, 🗣️ Nur Twinkey oder 🔊 Twinkey + Züge",
@@ -750,35 +757,35 @@
     },
     {
       "version": "2.122.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.121.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.120.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.119.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "💬 Chat: Bei langsamem Netz stauen sich die „schreibt …“-Meldungen nicht mehr – Chat und Senden bleiben flott"
       ]
     },
     {
       "version": "2.118.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🧑‍🍳 Twinkey hat beim Schach viele neue Sprüche – beim Schlagen, im Schach, beim Gewinnen und Verlieren",
         "📼 Schach: Partien werden aufgezeichnet – unter „Meine Partien“ Zug für Zug nachspielen"
@@ -786,7 +793,7 @@
     },
     {
       "version": "2.116.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "♟️ Schach macht mehr Spaß: Figuren schieben, klare Figuren, ruhiges Brett – während der Partie ist das Brett größer",
         "🧑‍🍳 Twinkey spielt mit – mit Sprüchen, Rochade-Hinweisen und 💡 Tipp"
@@ -794,798 +801,798 @@
     },
     {
       "version": "2.114.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.113.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.112.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.111.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.110.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.109.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.108.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.107.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.106.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.105.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.104.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.103.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.102.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.101.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.100.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.99.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.98.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.97.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.96.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.95.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.94.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.93.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.92.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.91.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.90.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.89.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.88.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.87.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.86.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.85.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.84.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.83.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.82.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.81.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.80.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.79.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.78.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.77.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.76.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.75.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.74.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.73.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.72.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.71.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.70.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.69.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.68.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.67.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.66.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.65.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.64.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.63.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.62.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.61.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.60.1",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.60.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.59.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.58.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.57.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.56.1",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.56.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.55.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.54.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.53.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.52.1",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.52.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.51.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.50.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.49.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.48.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.47.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.46.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.45.1",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.45.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.44.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.43.1",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.43.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.42.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.41.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.40.1",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.40.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.39.1",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.39.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.38.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.37.1",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.37.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.36.0",
-      "datum": "2026-10-08",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.35.0",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.34.0",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.33.0",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.32.0",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.31.0",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.30.1",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.30.0",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.29.0",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.28.1",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.28.0",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.27.2",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.27.1",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.27.0",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.26.0",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.25.12",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.25.11",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.25.10",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.25.9",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.25.8",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.25.7",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "↻ Admin: „Wege der Mitglieder“ mit Aktualisieren-Knopf oben rechts"
       ]
     },
     {
       "version": "2.25.6",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "↻ Mitglieder: Aktualisieren-Knopf oben rechts – wie auf der Startseite"
       ]
     },
     {
       "version": "2.25.5",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "📋 Anwesenheitstafel: unter dem Namen „online seit 14:32“ bzw. „zuletzt online heute um 18:05“"
       ]
     },
     {
       "version": "2.25.4",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "💶 Erstattung: „Fahrten aus Besuchen übernehmen“ – Besuche mit km als Fahrtkosten an den Kassenwart schicken, ohne doppelt abzurechnen"
       ]
     },
     {
       "version": "2.25.3",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🖨️ Besuche: km-Abrechnung zum Ausdrucken – je Einsatz ID, Datum, Zeit, Personen, Grund, km; Gesamtzeile, Antragsteller, Datum und Unterschrift"
       ]
     },
     {
       "version": "2.25.2",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "✅ Schulungen: Erinnerung und Danksagung zählen jetzt auch, wenn sie über den Club-Chat oder per Mail rausgingen; „nicht zugestellt“ ist nie ✅, ◐ = nur ein Teil erreicht"
       ]
     },
     {
       "version": "2.25.1",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "✅ Schulungen: bei jeder Einladung sieht man, was raus ist – Einladung, Bestätigung, Erinnerung, Danksagung; antippen zeigt wann und wie verschickt"
       ]
     },
     {
       "version": "2.25.0",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔪 Küchenterror: 100 neue Fragen (jetzt 290)",
         "🔀 Küchenterror: jede Partie beginnt mit anderen Fragen – Bekanntes kommt erst wieder, wenn der Rest durch ist"
@@ -1593,21 +1600,21 @@
     },
     {
       "version": "2.24.19",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.18",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.17",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🧹 Kopfzeile aufgeräumt: oben Kochmütze mit Versionsnummer, Name und Gruß, rechts 🌙 und ↻ – darunter eine Statusleiste mit Status, Lämpchen, Herz und Brille"
       ]
@@ -1620,371 +1627,371 @@
     },
     {
       "version": "2.24.15",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.14",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.13",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.12",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.11",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.10",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.9",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.8",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.7",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.6",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.5",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.4",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.3",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.2",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.1",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.24.0",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.99",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.98",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.97",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.96",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.95",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.94",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.93",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.92",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.91",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.90",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.89",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.88",
-      "datum": "2026-10-06",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.87",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.86",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.85",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.84",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.83",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.82",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.81",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.80",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.79",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.78",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.77",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.76",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.75",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.74",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.73",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.72",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.71",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.70",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.69",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.68",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.67",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.66",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.65",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.64",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]
     },
     {
       "version": "2.23.63",
-      "datum": "2026-10-05",
+      "datum": "2026-10-11",
       "neu": [
         "🔧 Kleine Systemverbesserungen"
       ]

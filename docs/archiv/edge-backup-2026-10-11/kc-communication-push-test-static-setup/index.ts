@@ -1,0 +1,1 @@
+Deno.serve(()=>new Response(JSON.stringify({ok:false,error:'STATIC_SETUP_CLOSED'}),{status:410,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}}));

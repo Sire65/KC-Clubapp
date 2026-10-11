@@ -1,0 +1,2 @@
+const json=(b:any,s=410)=>new Response(JSON.stringify(b),{status:s,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+Deno.serve(async()=>json({ok:false,error:'TEST_ENDPOINT_CLOSED',message:'Einmaliger Money-Butler-Bestätigungstest abgeschlossen.'},410));

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.224.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.225.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -3161,8 +3161,10 @@ function hzZeigen() {
     + themen.map((t) => `<button class="${HZ.thema === t.id && !HZ.q ? "an" : ""}" onclick="hzThema('${t.id}')">${t.nr} ${t.sym} ${esc(t.t)}${anz(t.es.length)}</button>`).join("");
   let html;
   if (HZ.q && suNorm(HZ.q).trim().length >= 2) {
-    const w = suNorm(HZ.q).split(/\s+/).filter(Boolean), treffer = alle.filter((e) => { const th = HILFE_THEMEN.find((x) => x.id === e.thema); const s = suNorm(`${e.t} ${e.x.replace(/<[^>]+>/g, " ")} ${th?.t || ""}`); return w.every((x) => s.includes(x)); })
+    const w = suNorm(HZ.q).split(/\s+/).filter(Boolean), genau = alle.filter((e) => { const th = HILFE_THEMEN.find((x) => x.id === e.thema); const s = suNorm(`${e.t} ${e.x.replace(/<[^>]+>/g, " ")} ${th?.t || ""}`); return w.every((x) => s.includes(x)); })
       .map((e, i) => ({ e, i, titel: w.every((x) => suNorm(e.t).includes(x)) })).sort((a, b) => b.titel - a.titel || a.i - b.i).map((x) => x.e); // Treffer im Titel zuerst
+    // KC-CLUB-SUCHE-UNSCHARF (2.225.0): nichts genau gefunden → ähnlich geschriebene Wörter (Tippfehler)
+    const treffer = genau.length ? genau : alle.filter((e) => suUnscharf(HZ.q, `${e.t} ${e.x.replace(/<[^>]+>/g, " ")}`));
     html = `<p class="hinweis" style="margin:0 2px 6px">${treffer.length ? `${treffer.length} Treffer für „${esc(HZ.q)}“` : `Nichts gefunden für „${esc(HZ.q)}“ – versuch ein anderes Wort oder schau ins <a href="#" onclick="hzThema(null);return false">📖 Inhalt</a>.`}</p>` + treffer.map((e) => hzKarte(e, nr[e.id], true)).join("");
   } else if (HZ.sicht) {
     const ids = HZ_SICHT_HILFEN[HZ.sicht] || [], es = ids.map((id) => alle.find((e) => e.id === id)).filter(Boolean), kap = themen.find((t) => t.id === HZ_SICHT_THEMA[HZ.sicht]);
@@ -14862,8 +14864,8 @@ async function buPersonWahl(titel, sym, weiter, oben = "") {
     <input id="buTelSuche" type="search" placeholder="🔍 Name …" autocomplete="off" style="width:100%;margin-bottom:8px">
     <div id="buTelListe" class="bu-telliste"></div><div class="knoepfe"><button class="knopf" data-zu="1">Abbrechen</button></div>`);
   f.querySelector("[data-zu]").onclick = () => f.remove();
-  const liste = () => { const q = suNorm($("buTelSuche").value || "");
-    $("buTelListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || suNorm(m.name).includes(q))).sort((a, b) => a.name.localeCompare(b.name))
+  const liste = () => { const q = $("buTelSuche").value || "";
+    $("buTelListe").innerHTML = suFiltern(MITGLIEDER.filter((m) => m.person_id !== ICH.person_id), q, (m) => m.name).sort((a, b) => a.name.localeCompare(b.name))
       .map((m) => `<button class="bu-telzeile" data-p="${m.person_id}"><span class="zpunkt ${ONL.ids?.has(m.person_id) ? "on" : ""}"></span><b>${esc(m.name)}</b><span class="pfeil">${sym}</span></button>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
     $("buTelListe").querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => weiter(b.dataset.p))); };
   $("buTelSuche").oninput = liste; liste();
@@ -17244,8 +17246,8 @@ async function kontaktWahl() {
   kontaktListe();
 }
 function kontaktListe() {
-  const q = suNorm($("kwSuche")?.value || "");
-  $("kwListe").innerHTML = MITGLIEDER.filter((m) => !q || suNorm(m.name).includes(q)).map((m) => `<button class="gm-zeile" onclick="kontaktSenden('${m.person_id}')">👤 ${esc(m.name)}</button>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
+  const q = $("kwSuche")?.value || "";
+  $("kwListe").innerHTML = suFiltern(MITGLIEDER, q, (m) => m.name).map((m) => `<button class="gm-zeile" onclick="kontaktSenden('${m.person_id}')">👤 ${esc(m.name)}</button>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
 }
 async function kontaktSenden(pid) {
   try { await api("nachricht_senden", { id: chatId, kontakt: pid, wege: ["push", "email"].filter((w) => ZW[w]) });
@@ -17824,7 +17826,7 @@ function sosZeigen() {
   if (!d) kontakte = '<p class="hinweis">Kontakte werden geladen …</p>';
   else if (d.fehler) kontakte = `<div class="karte hinweis">⚠️ ${esc(d.fehler)}</div>`;
   else {
-    const q = suNorm(SOS.suche), liste = d.mitglieder.filter((m) => !m.selbst && (!q || suNorm(m.name).includes(q)));
+    const q = suNorm(SOS.suche), liste = suFiltern(d.mitglieder.filter((m) => !m.selbst), SOS.suche || "", (m) => m.name); // 2.225.0: Tippfehler verzeihen
     const leitung = d.mitglieder.filter((m) => m.leitung && !m.selbst);
     const zeile = (m) => {
       const offen = SOS.offen === m.id, k = m.kontakt || {}, hat = k.handy || k.festnetz || k.mail;
@@ -24854,6 +24856,29 @@ function suEinstellung(id) {
 // gleiche Vereinheitlichung wie auf dem Server (ä=a=ae, ß=ss)
 const suNorm = (t) => String(t ?? "").toLowerCase().replace(/[äöüéèêàáâëïçñ]/g, (c) => ({ ä: "a", ö: "o", ü: "u", é: "e", è: "e", ê: "e", à: "a", á: "a", â: "a", ë: "e", ï: "i", ç: "c", ñ: "n" })[c])
   .replace(/ß/g, "ss").replace(/ae/g, "a").replace(/oe/g, "o").replace(/ue/g, "u");
+// KC-CLUB-SUCHE-UNSCHARF (2.225.0, Wunsch Hansi): Tippfehler verzeihen – gleiche Regel wie auf dem Server (suchPasstUnscharf):
+// je Suchwort ab 4 Buchstaben darf 1 Buchstabe abweichen (ab 8: 2), auch am Wortanfang („Würd“ → Wördemann, „Wilfried“ → Willfried).
+function suAbstand(a, b, max) {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let v = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const n = [i]; let kl = i;
+    for (let j = 1; j <= b.length; j++) { n[j] = Math.min(v[j] + 1, n[j - 1] + 1, v[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); kl = Math.min(kl, n[j]); }
+    if (kl > max) return max + 1; v = n;
+  }
+  return v[b.length];
+}
+function suWortAehnlich(w, t) {
+  const tol = w.length >= 8 ? 2 : w.length >= 4 ? 1 : 0; if (!tol || t.length < 3) return false;
+  return suAbstand(w, t, tol) <= tol || (t.length > w.length && suAbstand(w, t.slice(0, w.length), tol) <= tol);
+}
+// true, wenn jedes Wort aus q (genau oder ähnlich) im Text vorkommt
+function suUnscharf(q, text) {
+  const n = suNorm(text), toks = n.split(/[^a-z0-9ß]+/).filter(Boolean);
+  return suNorm(q).split(/\s+/).filter(Boolean).every((w) => n.includes(w) || toks.some((t) => suWortAehnlich(w, t)));
+}
+// Liste filtern: erst genaue Treffer; nur wenn es keine gibt, die ähnlich geschriebenen
+const suFiltern = (liste, q, text) => { const n = suNorm(q).trim(); if (!n) return liste; const g = liste.filter((x) => suNorm(text(x)).includes(n)); return g.length ? g : liste.filter((x) => suUnscharf(q, text(x))); };
 function suWoerter() { return SU.genau ? [SU.q.trim()] : SU.q.trim().split(/\s+/).filter(Boolean); }
 // Treffer im Text markieren (Umlaut-tolerant)
 function suMuster() { return suMusterFuer(suWoerter()); }
@@ -24916,7 +24941,7 @@ async function suJetzt() {
   try {
     const r = server.length ? await api("suche", { q, schnell: !SU.filter, bereiche: server, genau: SU.genau, anhang: SU.anhang, autor: SU.autor || undefined, von: z.von, bis: z.bis, sortierung: SU.sortierung }) : { bereiche: [] };
     if (nr !== SU.nr) return; // inzwischen weitergetippt
-    SU.ergebnis = r.bereiche; SU.fehler = null; suLetzteMerken(q);
+    SU.ergebnis = r.bereiche; SU.vorschlag = r.vorschlag || null; SU.fehler = null; suLetzteMerken(q);
   } catch (e) { if (nr !== SU.nr) return; SU.ergebnis = []; SU.fehler = e.message; }
   $("suErgebnis").classList.remove("laedt"); suZeigen();
 }
@@ -24961,7 +24986,8 @@ function suZuruecksetzen() { Object.assign(SU, { bereiche: Object.keys(SU_BEREIC
 function suAppTreffer() {
   if (!SU.bereiche.includes("app") || SU.anhang || SU.autor || SU.zeitraum) return [];
   const w = suWoerter().map(suNorm);
-  return suAppListe().filter((a) => { const n = suNorm(a.t + " " + a.w); return w.every((x) => n.includes(x)); });
+  const genau = suAppListe().filter((a) => { const n = suNorm(a.t + " " + a.w); return w.every((x) => n.includes(x)); });
+  return genau.length || SU.genau ? genau : suAppListe().filter((a) => suUnscharf(SU.q, a.t + " " + a.w)); // KC-CLUB-SUCHE-UNSCHARF
 }
 let SU_APP = [];
 function suZeigen() {
@@ -24978,7 +25004,7 @@ function suZeigen() {
   const gruppen = [...SU.ergebnis, ...(SU_APP.length ? [{ bereich: "app", treffer: SU_APP.slice(0, SU.filter ? 30 : 4).map((a, i) => ({ id: String(i), titel: a.t, text: "", app: true, sym: a.sym })), mehr: !SU.filter && SU_APP.length > 4 }] : [])];
   if (SU.reiter && !gruppen.some((g) => g.bereich === SU.reiter)) SU.reiter = "";
   const summe = gruppen.reduce((s, g) => s + g.treffer.length, 0);
-  if (!summe) { ziel.innerHTML = `<p class="hinweis su-tipp">${SU.fehler ? "⚠️ " + esc(SU.fehler) : `Nichts gefunden für „${esc(q)}“.${suFilterAktiv() ? " Vielleicht sind Filter gesetzt – <button class=\"knopf klein\" onclick=\"suZuruecksetzen()\">↺ zurücksetzen</button>" : " Tipp: weniger oder andere Wörter versuchen."}`}</p>`; return; }
+  if (!summe) { ziel.innerHTML = `<p class="hinweis su-tipp">${SU.fehler ? "⚠️ " + esc(SU.fehler) : `Nichts gefunden für „${esc(q)}“.${SU.vorschlag ? ` <button class="knopf klein" onclick='sucheAuf(${esc(JSON.stringify(SU.vorschlag))})'>🔎 Meintest du „${esc(SU.vorschlag)}“?</button>` : ""}${suFilterAktiv() ? " Vielleicht sind Filter gesetzt – <button class=\"knopf klein\" onclick=\"suZuruecksetzen()\">↺ zurücksetzen</button>" : " Tipp: weniger oder andere Wörter versuchen."}`}</p>`; return; }
   const reiter = SU.filter && gruppen.length > 1 ? `<div class="su-reiter">${[["", "Alle", summe], ...gruppen.map((g) => [g.bereich, SU_BEREICHE[g.bereich][0], g.treffer.length + (g.mehr ? "+" : "")])].map(([b, t, n]) => `<button class="${SU.reiter === b ? "an" : ""}" onclick="SU.reiter='${b}';suZeigen()">${t} <small>${n}</small></button>`).join("")}</div>` : "";
   ziel.innerHTML = reiter + gruppen.filter((g) => !SU.filter || !SU.reiter || g.bereich === SU.reiter).map((g) => {
     const [sym, t] = SU_BEREICHE[g.bereich];

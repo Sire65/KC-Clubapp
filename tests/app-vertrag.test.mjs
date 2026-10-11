@@ -8030,3 +8030,15 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/function dgPruefen\(/.test(html) && /setTimeout\(\(\) => dgPruefen\(\), 2500\)/.test(html) && /ich wünsche dir einen angenehmen Dienst heute!/.test(html) && /h === "#dienstgruss"/.test(html), "Fenster beim Start");
   assert.ok(/aus: r\?\.aus === true/.test(server) && /if \(r\?\.aus\) continue;/.test(server) && /'aus'\)">🔕 Nicht mehr erinnern/.test(html) && /!st\.aus &&/.test(html), "Checkliste: nicht mehr erinnern");
 }
+
+// 2.225.0 KC-CLUB-SUCHE-UNSCHARF (Wunsch Hansi): Tippfehler verzeihen – App und Server mit derselben Regel, erst genau, dann ähnlich
+{
+  assert.ok(/function suchAbstand\(/.test(server) && /const suchPasstUnscharf = /.test(server) && /extra: \{ aehnlich: true \}, rang: 1/.test(server) && /return json\(\{ bereiche: gruppen, vorschlag \}\)/.test(server), "Server: ähnliche Namen + „Meintest du“");
+  assert.ok(/function suUnscharf\(q, text\)/.test(html) && /const suFiltern = /.test(html) && /Meintest du „\$\{esc\(SU\.vorschlag\)\}“\?/.test(html), "App: gleiche Regel, Vorschlag-Knopf");
+  // Verhalten der App-Regel
+  const i = html.indexOf("const suNorm = "), code = html.slice(i, html.indexOf("\nfunction suWoerter", i));
+  const f = new Function(code + "; return { suUnscharf, suFiltern };")();
+  for (const [q, t, soll] of [["Würdemann", "Peter Wördemann", true], ["Wilfried", "Willfried Wittwer", true], ["Würd", "Wördemann", true], ["Hans", "Klaus Zander", false], ["Koch", "Kurt Bach", false]])
+    assert.strictEqual(f.suUnscharf(q, t), soll, `${q} → ${t}`);
+  assert.deepStrictEqual(f.suFiltern([{ n: "Zander" }, { n: "Zandler" }], "Zander", (m) => m.n), [{ n: "Zander" }], "genaue Treffer zuerst, ähnliche nur ohne genaue");
+}

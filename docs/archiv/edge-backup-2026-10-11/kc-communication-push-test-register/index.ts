@@ -1,0 +1,2 @@
+const json=(body:unknown,status=410)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+Deno.serve(async(_req:Request)=>json({ok:false,error:'TEST_ENDPOINT_CLOSED',message:'Der einmalige KC-Communication Push-Test ist geschlossen.'},410));
