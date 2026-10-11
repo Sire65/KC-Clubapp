@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.279.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.280.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12487,6 +12487,11 @@ function jzbFxSchritt(dt) {
   for (const p of J.fx) {
     if (p.liegt && !W) { p.y = J.h - 2; p.a = (p.a ?? 1) - dt * p.blass; if (p.a <= 0) p.weg = true; continue; }
     if (p.typ === "funke") { p.a -= dt * 1.1; p.x += p.vx * dt; p.y += p.vy * dt; if (p.a <= 0) p.weg = true; continue; }
+    if (p.typ === "schmelz") { // rinnt am Schneemann herunter, wird schneller, wackelt leicht – unten läuft er in die Pfütze
+      p.v = Math.min(70, p.v + 40 * dt); p.y += p.v * dt; p.spur = Math.min(10 * J.k, p.spur + p.v * dt * .5); p.x = p.x0 + Math.sin(p.y * .25 + p.ph) * .6 * J.k;
+      if (p.y >= J.h - 2) { p.y = J.h - 2; p.a -= dt * 2.5; p.spur = Math.max(0, p.spur - 30 * dt); if (p.a <= 0) p.weg = true; }
+      continue;
+    }
     if (p.typ === "schal") { // liegt, bis die Windfront kommt – dann wirbelt er hoch, tanzt mit den Flocken und fliegt davon
       if (!W || (!p.los && !jzbHinterFront(p.x))) { if (!p.los) p.y = J.h - 3; else p.x += (p.vx || 60) * dt; if (p.x < -60 || p.x > J.w + 60) p.weg = true; continue; }
       if (!p.los) { p.los = true; p.vy = -jzbZ(150, 200); p.vx = W.dir * 40; // hochgewirbelt – mit einer Handvoll Schnee
@@ -12556,6 +12561,7 @@ function jzbWinter(dt) {
   } else if (J.phase === "besuch") {
     if (!J.besuch && B.every((v) => v < .3) && !J.fx.length) { if ((J.spawn -= dt) < -1.5) jzbLaufEnde(); }
   } else if (J.phase === "schmelzen") {
+    jzbSchmelzTropfen(dt);
     if (J.pt >= JZB_SONNE + JZB_SCHMELZ) { // nur der Schal bleibt liegen – der Wind nimmt ihn mit
       const m = J.mann; J.mann = null; if (m) J.fx.push({ typ: "schal", x: m.x, y: J.h - 3, vx: 0, vy: 0, rot: 0, t: 0, a: 1 });
       jzbWindStart(6); if (m) J.wind.dir = m.x < J.w / 2 ? 1 : -1; // Wind weht zur freien Seite – der Schal fliegt quer über den Kopf
@@ -12594,6 +12600,13 @@ function jzbSonneMalen(c) {
   c.restore();
 }
 // fliegender bzw. liegender Schal: weinrotes Band mit Goldstreifen und Fransen
+function jzbTropfenMalen(c, p) { // blauer Wassertropfen mit heller Spur und Glanzpunkt
+  const s = p.s;
+  if (p.spur > .5) { const g = c.createLinearGradient(p.x, p.y - p.spur, p.x, p.y); g.addColorStop(0, "rgba(140,200,255,0)"); g.addColorStop(1, "rgba(120,190,255,.7)");
+    c.strokeStyle = g; c.lineWidth = s * .9; c.lineCap = "round"; c.beginPath(); c.moveTo(p.x, p.y - p.spur); c.lineTo(p.x, p.y); c.stroke(); }
+  c.fillStyle = "#4aa3f0"; c.beginPath(); c.moveTo(p.x, p.y - s * 2.2); c.quadraticCurveTo(p.x + s * 1.1, p.y - s * .2, p.x, p.y + s); c.quadraticCurveTo(p.x - s * 1.1, p.y - s * .2, p.x, p.y - s * 2.2); c.fill();
+  c.fillStyle = "rgba(255,255,255,.85)"; c.beginPath(); c.arc(p.x - s * .3, p.y - s * .3, s * .3, 0, 7); c.fill();
+}
 function jzbSchalMalen(c, x, y, rot, t, flug) {
   const k = JZB.k, L = 42 * k, w = 3.1 * k, n = 14, pts = [];
   for (let i = 0; i <= n; i++) { const u = i / n; pts.push([(u - .5) * L, Math.sin(u * 6.5 + t * (flug ? 9 : 0)) * (flug ? 3.6 : .9) * k]); }
@@ -12606,6 +12619,16 @@ function jzbSchalMalen(c, x, y, rot, t, flug) {
   c.strokeStyle = "#8e1b2b"; c.lineWidth = .8 * k;
   for (const e of [0, n]) { const [px, py] = pts[e], sg = e ? 1 : -1; for (let f = -1; f <= 1; f++) { c.beginPath(); c.moveTo(px, py + f * w * .6); c.lineTo(px + sg * 2.6 * k, py + f * w * .9); c.stroke(); } }
   c.restore();
+}
+// 💧 2.280.0 (Wunsch Hansi „beim Schmelzen ein paar blaue Wassertropfen fließen lassen“): Tropfen lösen sich am Rand der Kugeln,
+// rinnen mit einer kurzen Wasserspur am Schneemann herunter und laufen in die Pfütze
+function jzbSchmelzTropfen(dt) {
+  const J = JZB, m = J.mann, k = J.k, s = jzbEase((J.pt - JZB_SONNE) / JZB_SCHMELZ); if (!m || s <= 0 || s > .95) return;
+  if ((J.tropfUhr = (J.tropfUhr || 0) - dt) > 0) return; J.tropfUhr = jzbZ(.04, .11);
+  const gy = J.h - 1, kug = [[15, .9 * 15], [11, .9 * 15 + .78 * 15 + .82 * 11], [8.5, .9 * 15 + .78 * 15 + .82 * 11 + .78 * 11 + .85 * 8.5]]; // Radius, Höhe der Mitte (wie beim Malen)
+  const [r, h] = kug[Math.random() < .5 ? 0 : Math.random() < .65 ? 1 : 2], seite = Math.random() < .5 ? -1 : 1, a = jzbZ(-.5, .35);
+  const x = m.x + seite * Math.cos(a) * r * k * (1 + .3 * s), y = gy - (h + Math.sin(a) * r) * k * (1 - .92 * s);
+  J.fx.push({ typ: "schmelz", x, y, x0: x, v: jzbZ(8, 18), s: jzbZ(1.8, 2.7) * k, spur: 0, a: 1, ph: jzbZ(0, 6.3) });
 }
 function jzbSchneemannStart() {
   const J = JZB, links = Math.floor(J.lauf / 3) % 2 === 0, r = 24 * J.k;
@@ -12696,6 +12719,7 @@ function jzbMalen() {
     else if (p.typ === "bluete" || p.typ === "bluetenblatt") { c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.fillStyle = p.farbe; c.beginPath(); c.ellipse(0, 0, p.s, p.s * (p.typ === "bluete" ? .7 : .35), 0, 0, 7); c.fill(); c.restore(); }
     else if (p.typ === "funke") jzbStern(c, p.x, p.y, p.s, p.farbe);
     else if (p.typ === "schal") jzbSchalMalen(c, p.x, p.y, p.rot, p.t, !!p.los);
+    else if (p.typ === "schmelz") jzbTropfenMalen(c, p);
     else if (p.typ === "wasser") { c.fillStyle = "rgba(120,190,255,.95)"; c.beginPath(); c.ellipse(p.x, p.y, 1.1, 1.8, 0, 0, 7); c.fill(); }
   }
   c.globalAlpha = 1;

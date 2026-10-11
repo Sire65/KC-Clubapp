@@ -5824,6 +5824,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(e\.dataset\.mass === mass\) return;/.test(html), "nur bei geänderter Breite oder Länge neu zeichnen");
   assert.ok(/\.jz-eis \.jz-tropfen \{ fill: #dff3ff; opacity: 0; animation: jzTropfen 4s ease-in infinite both; \}/.test(html), "Tropfen erst sichtbar, wenn sie fallen");
 }
+// 2.280.0 KC-CLUB-SCHMELZTROPFEN (Wunsch Hansi): beim Schmelzen rinnen blaue Wassertropfen am Schneemann herunter in die Pfütze
+{
+  assert.ok(/function jzbSchmelzTropfen\(dt\)/.test(html) && /jzbSchmelzTropfen\(dt\);\n    if \(J\.pt >= JZB_SONNE \+ JZB_SCHMELZ\)/.test(html), "Tropfen nur während des Schmelzens");
+  assert.ok(/if \(p\.typ === "schmelz"\)/.test(html) && /function jzbTropfenMalen\(c, p\)/.test(html) && /c\.fillStyle = "#4aa3f0"/.test(html), "blauer Tropfen mit Spur, rinnt nach unten");
+  assert.ok(/if \(p\.y >= J\.h - 2\) \{ p\.y = J\.h - 2; p\.a -= dt \* 2\.5;/.test(html), "unten läuft er in die Pfütze und vergeht – der Lauf endet sicher");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

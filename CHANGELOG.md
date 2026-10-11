@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.280.0 – 2026-10-11 – KC-CLUB-SCHMELZTROPFEN: Wassertropfen beim Schmelzen des Schneemanns
+Wenn die Sonne den Schneemann schmelzen lässt, lösen sich blaue Wassertropfen am Rand der Kugeln und rinnen mit einer kurzen Wasserspur an ihm herunter in die Pfütze – wie beim echten Schmelzen.
+
 ## 2.279.0 – 2026-10-11 – KC-CLUB-EISZAPFEN-3: Eiszapfen realitätsnah – auch am PC
 Eiszapfen werden in echten Pixeln gezeichnet statt in die Breite gezogen: am breiten PC-Bildschirm mehr Zapfen statt breiter Dreiecke. Jeder Zapfen leicht schief mit Verdickung, rundem Ende, Eis-Verlauf, Glanzkante und Kontur; oben ein unregelmäßiger Eisrand; Tropfen erscheinen nur, wenn sie fallen.
 

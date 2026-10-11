@@ -1,11 +1,18 @@
 {
-  "version": "2.279.0",
+  "version": "2.280.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "❄️ Eiszapfen realitätsnah – auch am PC-Bildschirm"
+    "💧 Beim Schmelzen rinnen blaue Wassertropfen am Schneemann herunter"
   ],
   "verlauf": [
+    {
+      "version": "2.280.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "💧 Beim Schmelzen rinnen blaue Wassertropfen am Schneemann herunter"
+      ]
+    },
     {
       "version": "2.279.0",
       "datum": "2026-10-11",
