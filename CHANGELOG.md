@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.245.1 – 2026-10-11 – Erklär-Videos: Ziel bleibt im Bild (Rollkartei)
+- Fund Hansi: Im Video „Neue Nachricht“ scrollte die Chat-Rollkartei die Seite nach unten – „＋ Neu“ war nicht zu sehen. Das Video holt das erklärte Element jetzt wieder ins Bild, wenn die Seite danach noch scrollt (gilt für alle Videos). Text zur Empfänger-Auswahl an die Bildschirm-Knöpfe angepasst. Geprüft: alle 8 Videos, beide Ansichten, alle Rollkarteien an.
+
 ## 2.245.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-ROLLEN: Videos ohne Admin-/Leitungs-Inhalte, eigene Videos für Clubleitung und Admin
 - Videos für alle erwähnen und zeigen keine Admin- oder Leitungs-Funktionen mehr (während des Videos ausgeblendet: Admin-Register/-Kacheln/-Einstellungen, Lämpchen, Herz, Brille, Büro-Kachel, Leitungs-Einstellungen).
 - Neu „Für die Clubleitung: Büro & mehr“ (Büro mit Regal, Schreibtisch, Eingang, Schreiben, Telefon/Post/Drucker; Termine für alle, Abstimmung, Leitungs-Einstellungen) und „Für Admins: Leitstand“ – nur für die jeweilige Rolle sichtbar.

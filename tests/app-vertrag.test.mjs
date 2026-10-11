@@ -5629,6 +5629,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/body\.rg-ohne-admin #adminBereich, body\.rg-ohne-admin #register \[data-r="admin"\], body\.rg-ohne-admin #raster \.kachel\.ad/.test(seite) && /body\.rg-ohne-leitung #leitungStart, body\.rg-ohne-leitung #raster \.kachel\[data-id="buero"\]/.test(seite), "ausgeblendet: Admin-Register, -Kacheln, -Einstellungen, Büro, Leitungs-Einstellungen");
 }
 
+// 2.245.1 (Fund Hansi: Nachrichten-Video mit Rollkartei – „＋ Neu“ oben nicht zu sehen, Bild passte nicht zum Text)
+{
+  assert.ok(/if \(ms > 60 && RG\.an && RG\.st\[RG\.i\] === s && RG\.ziel && !rgImBild\(RG\.ziel\)\) rgHin\(\);/.test(html) && /const rgImBild = \(e\) =>/.test(html), "Ziel wird wieder ins Bild geholt, wenn die Seite danach noch scrollt");
+  assert.ok(/Oben die Schnellwahl: alle, die gerade online sind, alle Mitglieder oder ein Amt/.test(html), "Text passt zur Empfänger-Auswahl");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

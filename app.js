@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.245.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.245.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1406,7 +1406,7 @@ const RG_NACHRICHT = [
   { v: "nachrichten", sel: ["#v-nachrichten .kopf2 .knopf.haupt"], t: "💬 Neue Nachricht", x: "So schreibst du eine neue Nachricht: In Nachrichten tippst du oben rechts auf Plus Neu." },
   { v: "neu", vor: () => { empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; $("empfSuche").value = "";
       (MITGLIEDER ? Promise.resolve() : mitgliederHolen()).then(() => empfListe()).catch(() => {}); neuGruppenZeigen("neuGruppen", true); },
-    sel: ["#empfWahlBereich"], t: "👤 An wen?", x: "Jetzt wählst du, an wen die Nachricht geht: Namen antippen – oder oben im Feld suchen, zum Beispiel Anne. Du kannst auch mehrere auswählen. Deine Gruppen stehen ganz oben – antippen, und du schreibst direkt hinein." },
+    sel: ["#empfWahlBereich"], t: "👤 An wen?", x: "Jetzt wählst du, an wen die Nachricht geht. Oben die Schnellwahl: alle, die gerade online sind, alle Mitglieder oder ein Amt wie den Clubsprecher. Darunter suchst du einen Namen – zum Beispiel Anne – und hakst ihn an; auch mehrere gehen. Deine Gruppen stehen ganz oben – antippen, und du schreibst direkt hinein." },
   { v: "neu", sel: [rgFeld("neuBetreff")], t: "✏️ Betreff", x: "Ein Betreff ist freiwillig – praktisch bei Gruppen. Dann tippst du auf Weiter zum Schreiben." },
   { v: "neu", vor: () => { $("eingabe").classList.remove("versteckt"); RG.zurueck.push(() => { if (aktuelleAnsicht !== "chat") $("eingabe").classList.add("versteckt"); }); },
     sel: ["#eingabe"], t: "⌨️ Schreiben und senden", x: "Unten schreibst du deine Nachricht, der Pfeil sendet sie. Darunter: die Büroklammer für Fotos und Dateien, das Mikrofon für eine Sprachnachricht oder zum Diktieren, Emojis, die Glocke – wie benachrichtigt wird, zum Beispiel per Push oder E-Mail –, das Ausrufezeichen für eine wichtige Nachricht und die Sanduhr für eine Nachricht, die sich selbst löscht. Mit WA geht sie auch über WhatsApp." },
@@ -1564,10 +1564,14 @@ function rgZeigen() {
   $("rgTitel").textContent = s.t; $("rgText").textContent = rgText(s); $("rgNr").textContent = `${RG.i + 1} / ${n}`;
   $("rgBalken").style.width = `${((RG.i + 1) / n) * 100}%`;
   $("rgPause").textContent = RG.pause ? (RG.i === 0 ? "▶ Los geht's" : "▶ Weiter") : "⏸ Pause";
-  for (const ms of [60, 450, 1000]) setTimeout(rgLage, ms); // Kartei-Blättern und Laden verschieben das Ziel noch
+  for (const ms of [60, 450, 1000]) setTimeout(() => { // Kartei-Blättern und Laden verschieben das Ziel noch
+    // 2.245.1 (Fund Hansi: Chats als Rollkartei scrollen beim Öffnen zur Kartei – „＋ Neu“ oben war nicht zu sehen): Ziel wieder ins Bild holen
+    if (ms > 60 && RG.an && RG.st[RG.i] === s && RG.ziel && !rgImBild(RG.ziel)) rgHin();
+    rgLage(); }, ms);
   setTimeout(() => { if (RG.an && RG.st[RG.i] === s && !rgSichtbar(RG.ziel)) { RG.ziel = rgZiel(s); rgHin(); rgLage(); } }, 350); // Inhalt kommt evtl. erst nach dem Laden
   if (!RG.pause) rgSprechen(rgText(s));
 }
+const rgImBild = (e) => { const r = e.getBoundingClientRect(); return r.top >= 0 && (r.bottom <= innerHeight || r.height > innerHeight * 0.45); };
 // hohe Bereiche (z. B. aufgeklappte Einstellungen) oben anfangen, kleine in die Mitte holen
 function rgHin() { const e = RG.ziel; if (!e) return scrollTo(0, 0);
   const z = RK.einst; if (z?.an && z.karten.some((k) => k.contains(e))) return rkZu(z, e); // Einstellungen als Rollkartei: zur richtigen Karte blättern

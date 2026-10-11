@@ -1,11 +1,18 @@
 {
-  "version": "2.245.0",
+  "version": "2.245.1",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🎬 Erklär-Videos überarbeitet – für die Clubleitung gibt es jetzt ein eigenes Video zum Büro"
+    "🎬 Erklär-Video „Neue Nachricht“ verbessert – zeigt jetzt immer die richtige Stelle"
   ],
   "verlauf": [
+    {
+      "version": "2.245.1",
+      "datum": "2026-10-11",
+      "neu": [
+        "🎬 Erklär-Video „Neue Nachricht“ verbessert – zeigt jetzt immer die richtige Stelle"
+      ]
+    },
     {
       "version": "2.245.0",
       "datum": "2026-10-11",
