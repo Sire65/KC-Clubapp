@@ -1,0 +1,7 @@
+geld=4
+abgleich=1
+dienstplan=1
+inhalt=0
+fremd=null
+manager_kanal=richtig
+getrennt=true
