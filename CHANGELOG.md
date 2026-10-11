@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.263.0 – 2026-10-11 – KC-CLUB-JAHRESZEIT-BUEHNE: läuft auch bei „Bewegung reduzieren“ (Fund Hansi)
+- Fund Hansi „Blätter bleiben immer noch nicht liegen“: Ursache war nicht der Boden, sondern die Handy-Einstellung „Bewegung reduzieren“ (Hansis Handy meldet sie, vgl. Jalousie 2.161.0). Dann lief nur die alte Emoji-Deko (Blätter fallen durch, kein Liegen, kein Wind, kein Twinkey). Nachgestellt im Browser: mit „Bewegung reduzieren“ 0 liegende Blätter, ohne 20 nach 40 s.
+- Die Bühne läuft jetzt immer; abschalten weiter mit „🍂 Jahreszeiten im Kopf“ (oder „✨ Animierte Knöpfe“ aus / Sparmodus).
+
 ## 2.262.0 – 2026-10-11 – KC-CLUB-VIDEO-LIVE-2: Kachel dreht sich im Video sichtbar um (Pinnwand), Register-Verschieben gut zu sehen (Fund Hansi)
 Umdrehen: Bei „Bewegung reduzieren“ am Handy schaltet die App ihre Dreh-Animation ab – im Video wechselte die Kachel deshalb blitzartig. Jetzt dreht das Video die Kachel mit einer eigenen, langsamen Drehung: im Register Club die Kachel Pinnwand doppelt antippen, sie dreht sich bis zur Kante und zeigt die Rückseite (Neuer Zettel, Pinnwand), dann tippt der Finger auf „Pinnwand“ und die Pinnwand öffnet sich. Register: Club wird festgehalten, hebt sich, wandert Stück für Stück nach rechts, Meins und Technik rücken sichtbar nach links, Club landet am Ende; im nächsten Schritt rücken sie sichtbar zurück. Der Text nennt nur die sichtbaren Register. Außerdem bewegte sich das Abbild beim Ziehen (Kachel/Register) nicht mit – behoben. Nichts wird gespeichert.
 

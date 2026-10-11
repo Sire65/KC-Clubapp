@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.262.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.263.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11594,8 +11594,11 @@ function jahreszeitKopf() {
   h.querySelector(".jz-schicht")?.remove(); h.querySelector(".jz-sprech")?.remove(); h.classList.remove("jz-boden"); jzbStop();
   if (!fxAn() || !einst("jahreszeit", true)) return;
   // 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE: Herbst, Advent/Winter, Frühling und Sommer mit Boden (Laub, Schnee, Gras, Sonnenblume) – Silvester bleibt Feuerwerk
-  const ruhig = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches, jetzt = JZB.vorschau || jahreszeitArt();
-  if (!ruhig && JZB_ARTEN.includes(jetzt) && jzbStart(h, jetzt)) return;
+  // 2.263.0 (Fund Hansi „Blätter bleiben immer noch nicht liegen“): sein Handy meldet „Bewegung reduzieren“ (wie schon bei der Jalousie, 2.161.0) –
+  // dann lief bisher nur die alte Emoji-Deko, bei der nichts liegen bleibt. Die Bühne ist ruhig und lässt sich mit „🍂 Jahreszeiten im Kopf“ abschalten,
+  // sie läuft deshalb auch bei „Bewegung reduzieren“.
+  const jetzt = JZB.vorschau || jahreszeitArt();
+  if (JZB_ARTEN.includes(jetzt) && jzbStart(h, jetzt)) return;
   const art = jetzt, teile = JZ_TEILE[art], n = art === "sommer" ? 3 : art === "silvester" ? 9 : 11;
   const s = document.createElement("div"); s.className = `jz-schicht jz-${art}`; s.setAttribute("aria-hidden", "true");
   s.innerHTML = Array.from({ length: n }, (_, i) => `<i style="--x:${(i * 97 + 13) % 100};--v:${(i * 37) % 11};--d:${(art === "silvester" ? 2.4 : 7) + ((i * 53) % 9) * 0.7}s;--s:${0.6 + ((i * 29) % 7) / 10}">${teile[i % teile.length]}</i>`).join("");

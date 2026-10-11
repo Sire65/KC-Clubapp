@@ -1,12 +1,18 @@
 {
-  "version": "2.262.0",
+  "version": "2.263.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🔄 Video „Oberfläche“: Die Kachel Pinnwand dreht sich sichtbar um, dann öffnet sich die Pinnwand",
-    "🗂️ Register verschieben: Club wird hochgehoben und nach rechts gezogen – die anderen rücken sichtbar nach"
+    "🍂 Laub bleibt jetzt auch auf Handys mit „Bewegung reduzieren“ unten liegen – mit Wind und Twinkey"
   ],
   "verlauf": [
+    {
+      "version": "2.263.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🍂 Laub bleibt jetzt auch auf Handys mit „Bewegung reduzieren“ unten liegen – mit Wind und Twinkey"
+      ]
+    },
     {
       "version": "2.262.0",
       "datum": "2026-10-11",
