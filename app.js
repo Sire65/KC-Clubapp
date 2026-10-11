@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.249.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.250.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11070,6 +11070,7 @@ function jahreszeitUmschalten(an) { einstellung("jahreszeit", an); jahreszeitKop
 // Ein <canvas> im Kopf; zeichnet nur, wenn die Startseite im Bild und die App im Vordergrund ist. Aus bei „✨ Animierte Knöpfe“ aus,
 // Sparmodus oder „Bewegung reduzieren“ (dann wie bisher). Tippen geht durch (pointer-events: none). Lauf-Zähler je Gerät (kc_club_jzLauf).
 const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer"];
+const JZB_BLUEHT = 150; // 2.250.0 (Fund Hansi „Sonnenblume nur kurz“): Blumen/Sonnenblume blühen 2½ Min., bevor der Wind kommt
 const JZB_SP = 3, JZB_RAND = 16; // Bodenspalten in px; nichts in den runden Ecken ablegen
 const JZB_LAUB = ["#e0802a", "#c8432b", "#e8b23a", "#a85a2a", "#d96a1f", "#b33a2a", "#cf9a2b"];
 const JZB_GRUEN = ["#5d9b35", "#6fae3e", "#4f8a2b", "#7cbd4a"];
@@ -11112,7 +11113,7 @@ function jzbGroesse() {
   const breiter = JZB.w && Math.abs(w - JZB.w) > 8;
   cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); JZB.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const alt = JZB.boden; JZB.boden = Array.from({ length: Math.ceil(w / JZB_SP) + 1 }, (_, i) => alt[i] || 0);
-  Object.assign(JZB, { w, h, dpr, k: Math.max(.55, Math.min(1, h / 230)) });
+  Object.assign(JZB, { w, h, dpr, k: h >= 150 ? 1 : Math.max(.55, h / 150) });
   if (breiter && JZB.halme.length) jzbPflanzen(); // Handy gedreht: Beet neu verteilen (gleich weit gewachsen)
   if (breiter && JZB.eier.length) jzbEierVerstecken();
   if (!JZB.raf) jzbMalen();
@@ -11137,7 +11138,7 @@ function jzbLaufEnde() {
   jzbPhase("anfang");
 }
 // Windstoß: abwechselnd von links (dir 1) und von rechts (dir -1); die Front zieht über den Kopf und nimmt mit, was liegt
-function jzbWindStart(dauer = 3.4) {
+function jzbWindStart(dauer = 4.2) {
   const J = JZB; J.wind = { dir: J.lauf % 2 ? -1 : 1, t: 0, dauer, st: 0, front: 0, striche: [], naechster: 0 };
   for (const f of J.flug) J.fx.push({ ...f, vx: 0, vy: f.vy || 20, a: 1 }); J.flug = [];
   jzbPhase("wind");
@@ -11146,8 +11147,8 @@ function jzbWindSchritt(dt) {
   const J = JZB, W = J.wind; if (!W) return;
   W.t += dt; W.st = Math.sin(Math.PI * Math.min(1, W.t / W.dauer));
   if (W.t < W.dauer * .85 && (W.naechster -= dt) <= 0) {
-    W.naechster = jzbZ(.05, .15);
-    W.striche.push({ x: W.dir > 0 ? -130 : J.w + 130, y: jzbZ(J.h * .08, J.h - 6), l: jzbZ(40, 120), v: jzbZ(420, 640), a: jzbZ(.22, .5), ph: jzbZ(0, 6) });
+    W.naechster = jzbZ(.03, .09); // 2.250.0 (Fund Hansi „Windstoß nicht gesehen“): mehr, längere und kräftigere Striche
+    W.striche.push({ x: W.dir > 0 ? -160 : J.w + 160, y: jzbZ(J.h * .08, J.h - 6), l: jzbZ(60, 160), v: jzbZ(420, 640), a: jzbZ(.4, .75), ph: jzbZ(0, 6) });
   }
   for (const s of W.striche) s.x += W.dir * s.v * dt;
   W.striche = W.striche.filter((s) => s.x > -220 && s.x < J.w + 220);
@@ -11170,7 +11171,7 @@ function jzbFallen(dt) {
     b.y += b.vy * dt * (b.typ === "blatt" ? .65 + .35 * Math.abs(Math.cos(b.ph)) : 1);
     const boden = J.h - jzbBodenH(b.x);
     if (b.typ === "blatt" && b.y + b.s * .3 >= boden) {
-      if (jzbImFeld(b.x)) { J.liegt.push({ x: b.x, y: boden - b.s * .2, rot: jzbZ(-.5, .5) + (Math.random() < .5 ? 0 : Math.PI), s: b.s, farbe: b.farbe, form: b.form }); jzbAufhaeufen(b.x, b.s * .16, 3); }
+      if (jzbImFeld(b.x)) { J.liegt.push({ x: b.x, yb: J.h - boden + b.s * .2, rot: jzbZ(-.5, .5) + (Math.random() < .5 ? 0 : Math.PI), s: b.s, farbe: b.farbe, form: b.form }); jzbAufhaeufen(b.x, b.s * .16, 3); }
       b.weg = true;
     } else if (b.typ === "flocke" && b.y + b.r >= boden) {
       if (jzbImFeld(b.x)) jzbAufhaeufen(b.x, b.r * 1.25, 2);
@@ -11184,6 +11185,7 @@ function jzbFallen(dt) {
 function jzbFxSchritt(dt) {
   const J = JZB, W = J.wind, zug = W ? W.dir * 300 * W.st : 0;
   for (const p of J.fx) {
+    if (p.liegt && !W) { p.y = J.h - 2; p.a = (p.a ?? 1) - dt * p.blass; if (p.a <= 0) p.weg = true; continue; }
     if (p.typ === "funke") { p.a -= dt * 1.1; p.x += p.vx * dt; p.y += p.vy * dt; if (p.a <= 0) p.weg = true; continue; }
     p.vx = (p.vx || 0) + zug * dt; p.vx *= 1 - .35 * dt;
     p.vy = (p.vy || 0) + (W ? 70 - 90 * W.st : 40) * dt;
@@ -11209,11 +11211,11 @@ function jzbHerbst(dt) {
   const J = JZB;
   if (J.phase === "fallen") {
     if ((J.spawn -= dt) <= 0 && J.flug.length < 12) { J.spawn = jzbZ(.45, 1.1); J.flug.push(jzbNeuesTeil("blatt")); }
-    if (J.liegt.length >= Math.max(16, Math.round(J.w / 13))) jzbWindStart();
+    if (J.liegt.length >= Math.max(22, Math.round(J.w / 10))) jzbWindStart(); // 2.250.0: etwas mehr Laub, bevor der Wind kommt
   } else if (J.phase === "wind") {
     const W = J.wind;
     for (const b of J.liegt) if (jzbHinterFront(b.x + W.dir * jzbZ(0, 30))) {
-      J.fx.push({ typ: "blatt", x: b.x, y: b.y, s: b.s, farbe: b.farbe, form: b.form, rot: b.rot, vr: jzbZ(-9, 9), vx: W.dir * jzbZ(120, 250), vy: -jzbZ(40, 130), ph: jzbZ(0, 6.3), fq: jzbZ(1, 2) });
+      J.fx.push({ typ: "blatt", x: b.x, y: J.h - b.yb, s: b.s, farbe: b.farbe, form: b.form, rot: b.rot, vr: jzbZ(-10, 10), vx: W.dir * jzbZ(150, 280), vy: -jzbZ(70, 190), ph: jzbZ(0, 6.3), fq: jzbZ(1, 2) });
       b.weg = true;
     }
     J.liegt = J.liegt.filter((b) => !b.weg);
@@ -11235,7 +11237,7 @@ function jzbWinter(dt) {
     if (J.lauf % 3 === 2) jzbSchneemannStart(); else jzbWindStart();
   } else if (J.phase === "bauen" || J.phase === "stehen") {
     if (J.phase === "bauen") { for (let i = 0; i < n; i++) B[i] -= B[i] * .07 * dt; if (J.pt >= 8) { jzbPhase("stehen"); jzbFunken(); } } // Schnee wird zum Schneemann gerollt
-    else { for (let i = 0; i < n; i++) B[i] = Math.min(B[i], 9 * J.k); if (J.pt >= 32) jzbPhase("schmelzen"); }
+    else { for (let i = 0; i < n; i++) B[i] = Math.min(B[i], 9 * J.k); if (J.pt >= 50) jzbPhase("schmelzen"); }
   } else if (J.phase === "schmelzen") {
     if (J.pt >= 5) { J.mann = null; jzbWindStart(); }
   } else if (J.phase === "wind") {
@@ -11281,14 +11283,14 @@ function jzbBeet(dt) {
       if (typeof istNacht === "function" && istNacht()) for (let i = 0; i < 7; i++) J.gaeste.push({ typ: "gluehwurm", x: jzbZ(20, J.w - 20), y: jzbZ(J.h * .35, J.h - 12), vx: jzbZ(-12, 12), vy: jzbZ(-8, 8), ph: jzbZ(0, 6.3) });
       else J.gaeste.push({ typ: "biene", t: 0, b: 0 });
     }
-    if (sommer && J.pt > 50) for (const f of J.blumen) { // Spätsommer: die Blütenblätter fallen eins nach dem anderen
-      const soll = Math.floor((J.pt - 50 - f.t0 * .3) * 2.6);
+    if (sommer && J.pt > JZB_BLUEHT) for (const f of J.blumen) { // Spätsommer: die Blütenblätter fallen eins nach dem anderen
+      const soll = Math.floor((J.pt - JZB_BLUEHT - f.t0 * .3) * 2.6);
       while (f.ab.length < Math.min(16, soll)) {
         const i = jzbBlattNr(f), kopf = jzbSonnenKopf(f), a = i / 16 * Math.PI * 2 + .1, rr = 12 * f.s;
         f.ab.push(i); J.fx.push({ typ: "bluetenblatt", x: kopf.x + Math.cos(a) * rr, y: kopf.y + Math.sin(a) * rr, s: 4.5 * f.s, rot: a, vr: jzbZ(-3, 3), vx: jzbZ(-10, 10), vy: jzbZ(5, 15), farbe: i % 2 ? "#f2b705" : "#f7c51e" });
       }
     }
-    if (J.pt >= (sommer ? 58 : 60)) {
+    if (J.pt >= JZB_BLUEHT + (sommer ? 8 : 0)) {
       J.gaeste = J.gaeste.filter((g) => g.typ !== "biene" && g.typ !== "gluehwurm"); J.hase = false;
       if (!sommer) for (const f of J.blumen) for (let i = 0; i < 5; i++) J.fx.push({ typ: "bluetenblatt", x: f.x, y: J.h - f.z, s: 2.6 * J.k, rot: jzbZ(0, 6.3), vr: jzbZ(-6, 6), vx: 0, vy: -jzbZ(10, 40), farbe: f.typ === "tulpe" ? f.farbe : f.typ === "krokus" ? "#b58ae6" : f.typ === "loewenzahn" ? "#ffd23f" : "#ffffff" });
       jzbWindStart(3.6);
@@ -11321,7 +11323,7 @@ function jzbMalen() {
   jzbExtrasHinten(c); // Ostereier – das Gras wächst darüber
   if (J.saison === "fruehling" || J.saison === "sommer") jzbBeetMalen(c);
   if (J.saison === "winter") jzbSchneeMalen(c);
-  for (const b of J.liegt) { const w = b.wackel ? Math.sin(J.T * 30) * .5 * b.wackel : 0; jzbBlatt(c, b.x, b.y - Math.abs(w) * 3, b.s, b.rot + w, 1, .55, b.farbe, b.form); } // raschelt beim Igel
+  for (const b of J.liegt) { const w = b.wackel ? Math.sin(J.T * 30) * .5 * b.wackel : 0; jzbBlatt(c, b.x, J.h - b.yb - Math.abs(w) * 3, b.s, b.rot + w, 1, .55, b.farbe, b.form); } // raschelt beim Igel
   jzbExtrasBoden(c);
   if (J.mann) jzbSchneemannMalen(c);
   for (const g of J.gaeste) jzbGastMalen(c, g);
@@ -11338,8 +11340,8 @@ function jzbMalen() {
   jzbRegenMalen(c);
   const W = J.wind;
   if (W) {
-    c.lineCap = "round"; c.lineWidth = 1.4;
-    for (const s of W.striche) {
+    c.lineCap = "round";
+    for (const s of W.striche) { c.lineWidth = s.a > .6 ? 2.4 : 1.7;
       c.strokeStyle = `rgba(255,255,255,${s.a})`; c.beginPath(); c.moveTo(s.x, s.y);
       c.quadraticCurveTo(s.x - W.dir * s.l * .5, s.y - 7 * Math.sin(J.T * 6 + s.ph), s.x - W.dir * s.l, s.y + 2); c.stroke();
     }

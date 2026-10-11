@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.250.0 – 2026-10-11 – KC-CLUB-JAHRESZEIT-BUEHNE: Laub bleibt liegen, Windstoß sichtbar, längere Blüte (Fund Hansi)
+- Fund Hansi „Blätter bleiben unten nicht liegen, Windstoß nicht gesehen“: Wechselt das Infofeld die Karte, ändert der Kopf seine Höhe – liegendes Laub blieb an der alten Stelle hängen (mitten im Bild oder unsichtbar unter dem Rand). Liegendes Laub und gelandete Blütenblätter merken sich jetzt ihren Abstand zum Boden und bleiben immer unten.
+- Figuren (Schneemann, Sonnenblume, Topf …) ändern ihre Größe nicht mehr mit jeder Infofeld-Höhe, nur bei eingerolltem Kopf werden sie kleiner.
+- Windstoß deutlicher: mehr, längere und kräftigere Windstriche, etwas länger, die Blätter wirbeln höher.
+- Fund Hansi „Sonnenblume nur kurz“: Blumen und Sonnenblume blühen jetzt 2½ Minuten, der Schneemann steht 50 Sekunden.
+
 ## 2.249.0 – 2026-10-11 – KC-CLUB-JAHRESZEIT-EXTRAS: Besonderes auf der Kopf-Bühne (Wunsch Hansi)
 - 🥾 Nikolaus (6.12.): gefüllter Stiefel (Mandarine, Schoko-Nikolaus, Zuckerstange, Nüsse) steht im Schnee.
 - ☔ Regen: nur wenn die Wetterdaten frisch sind und es gerade regnet (Niesel, Regen, Gewitter) – Tropfen, Pfützen mit Ringen, ab und zu läuft ein gelber Schirm mit Gummistiefeln vorbei. Kein zusätzlicher Wetter-Abruf; alte Daten zeigen keinen Regen.

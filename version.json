@@ -1,11 +1,18 @@
 {
-  "version": "2.249.0",
+  "version": "2.250.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🥾 Kopf-Extras: Nikolaus-Stiefel am 6.12., Regen mit Pfützen und Schirm (wenn es wirklich regnet), dampfender Kochtopf am Treffen-Tag, Ostereier zum Suchen, Igel im Herbstlaub"
+    "🍂 Jahreszeiten im Kopf verbessert: Laub und Schnee bleiben jetzt sicher unten liegen, der Windstoß ist deutlich zu sehen, Blumen und Sonnenblume blühen länger"
   ],
   "verlauf": [
+    {
+      "version": "2.250.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🍂 Jahreszeiten im Kopf verbessert: Laub und Schnee bleiben jetzt sicher unten liegen, der Windstoß ist deutlich zu sehen, Blumen und Sonnenblume blühen länger"
+      ]
+    },
     {
       "version": "2.249.0",
       "datum": "2026-10-11",

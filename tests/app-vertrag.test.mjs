@@ -8282,3 +8282,10 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/jahreszeitVorschau\('fruehling', 'ostern'\)/.test(seite) && /jahreszeitVorschau\('', 'regen'\)/.test(seite), "Vorschau der Extras");
 }
 
+// 2.250.0 Fund Hansi „Blätter bleiben unten nicht liegen, Windstoß nicht gesehen, Sonnenblume nur kurz“
+{
+  assert.ok(/J\.liegt\.push\(\{ x: b\.x, yb: J\.h - boden \+ b\.s \* \.2,/.test(html) && /jzbBlatt\(c, b\.x, J\.h - b\.yb - Math\.abs\(w\) \* 3,/.test(html) && !/J\.liegt\.push\(\{ x: b\.x, y: /.test(html), "liegendes Laub hält Abstand zum Boden (Kopfhöhe wechselt mit dem Infofeld)");
+  assert.ok(/k: h >= 150 \? 1 : Math\.max\(\.55, h \/ 150\)/.test(html), "Größe springt nicht mit der Infofeld-Höhe");
+  assert.ok(/const JZB_BLUEHT = 150;/.test(html) && /if \(J\.pt >= 50\) jzbPhase\("schmelzen"\);/.test(html), "längere Blüte, Schneemann steht länger");
+}
+
