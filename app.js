@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.246.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.247.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11005,14 +11005,474 @@ function jahreszeitArt(d = new Date()) {
 const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"] };
 function jahreszeitKopf() {
   const h = document.querySelector("#v-start .hero"); if (!h) return;
-  h.querySelector(".jz-schicht")?.remove();
+  h.querySelector(".jz-schicht")?.remove(); jzbStop();
   if (!fxAn() || !einst("jahreszeit", true)) return;
-  const art = jahreszeitArt(), teile = JZ_TEILE[art], n = art === "sommer" ? 3 : art === "silvester" ? 9 : 11;
+  // 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE: Herbst, Advent/Winter, Frühling und Sommer mit Boden (Laub, Schnee, Gras, Sonnenblume) – Silvester bleibt Feuerwerk
+  const ruhig = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches, jetzt = JZB.vorschau || jahreszeitArt();
+  if (!ruhig && JZB_ARTEN.includes(jetzt) && jzbStart(h, jetzt)) return;
+  const art = jetzt, teile = JZ_TEILE[art], n = art === "sommer" ? 3 : art === "silvester" ? 9 : 11;
   const s = document.createElement("div"); s.className = `jz-schicht jz-${art}`; s.setAttribute("aria-hidden", "true");
   s.innerHTML = Array.from({ length: n }, (_, i) => `<i style="--x:${(i * 97 + 13) % 100};--v:${(i * 37) % 11};--d:${(art === "silvester" ? 2.4 : 7) + ((i * 53) % 9) * 0.7}s;--s:${0.6 + ((i * 29) % 7) / 10}">${teile[i % teile.length]}</i>`).join("");
   h.prepend(s);
 }
 function jahreszeitUmschalten(an) { einstellung("jahreszeit", an); jahreszeitKopf(); }
+// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0, Wunsch Hansi): Jahreszeiten im Kopf mit Boden ----------
+// 🍂 Herbst: Laub fällt und bleibt unten liegen; liegt genug, kommt ein Windstoß (abwechselnd von links und von rechts) und weht es weg.
+// ❄️ Winter/Advent: Schnee bleibt liegen und wird weggeweht – jeder 3. Lauf wird daraus ein lachender Schneemann
+//    (mit Kochmütze und weinrotem Schal, im Advent mit Weihnachtsmütze), der nach einer Weile schmilzt.
+// 🌱 Frühling: Gras wächst mit den ersten Blumen, Blüten schweben herab, Schmetterlinge – jeder 3. Lauf hoppelt ein Osterhase vorbei.
+// 🌻 Sommer: eine Sonnenblume wächst (jeder 3. Lauf drei), eine Biene besucht sie – abends Glühwürmchen. Am Ende fallen die Blütenblätter, Windstoß.
+// Ein <canvas> im Kopf; zeichnet nur, wenn die Startseite im Bild und die App im Vordergrund ist. Aus bei „✨ Animierte Knöpfe“ aus,
+// Sparmodus oder „Bewegung reduzieren“ (dann wie bisher). Tippen geht durch (pointer-events: none). Lauf-Zähler je Gerät (kc_club_jzLauf).
+const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer"];
+const JZB_SP = 3, JZB_RAND = 16; // Bodenspalten in px; nichts in den runden Ecken ablegen
+const JZB_LAUB = ["#e0802a", "#c8432b", "#e8b23a", "#a85a2a", "#d96a1f", "#b33a2a", "#cf9a2b"];
+const JZB_GRUEN = ["#5d9b35", "#6fae3e", "#4f8a2b", "#7cbd4a"];
+const JZB_EMOJI = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+const JZB = { lauf: 0, vorschau: "" };
+const jzbZ = (a, b) => a + Math.random() * (b - a);
+const jzbW = (l) => l[Math.floor(Math.random() * l.length)];
+const jzbEase = (x) => x <= 0 ? 0 : x >= 1 ? 1 : 1 - Math.pow(1 - x, 3);
+const jzbHopp = (x) => x <= 0 ? 0 : x >= 1 ? 1 : 1 + 2.7 * Math.pow(x - 1, 3) + 1.7 * Math.pow(x - 1, 2); // leicht überschwingend
+const jzbBodenH = (x) => JZB.boden[Math.max(0, Math.min(JZB.boden.length - 1, Math.round(x / JZB_SP)))] || 0;
+const jzbImFeld = (x) => x > JZB_RAND && x < JZB.w - JZB_RAND;
+function jzbLaufLesen() { try { return +localStorage.getItem("kc_club_jzLauf") || 0; } catch { return 0; } }
+function jzbAufhaeufen(x, menge, breite) {
+  const i0 = Math.round(x / JZB_SP);
+  for (let d = -breite; d <= breite; d++) { const i = i0 + d; if (i >= 0 && i < JZB.boden.length) JZB.boden[i] += menge * (1 - Math.abs(d) / (breite + 1)); }
+}
+function jzbStart(h, art) {
+  const cv = document.createElement("canvas"), ctx = cv.getContext && cv.getContext("2d");
+  if (!ctx || typeof ResizeObserver === "undefined") return false;
+  const s = document.createElement("div"); s.className = `jz-schicht jz-buehne jz-${art}`; s.setAttribute("aria-hidden", "true");
+  s.appendChild(cv); h.prepend(s);
+  const saison = art === "advent" ? "winter" : art;
+  Object.assign(JZB, { s, cv, ctx, art, saison, w: 0, h: 0, dpr: 0, k: 1, T: 0, pt: 0, letzt: 0, imBild: true, pruef: 0, spawn: 0,
+    flug: [], liegt: [], fx: [], boden: [], wind: null, mann: null, halme: [], blumen: [], gaeste: [], welk: 0, phase: "anfang" });
+  // Vorschau im Winter: gleich der Schneemann-Lauf, damit man ihn nicht erst nach zwei Windstößen sieht
+  JZB.lauf = JZB.vorschau ? (saison === "winter" ? 2 : 0) : jzbLaufLesen();
+  JZB.ro = new ResizeObserver(jzbGroesse); JZB.ro.observe(s);
+  if (typeof IntersectionObserver !== "undefined") { JZB.io = new IntersectionObserver((e) => { JZB.imBild = e[e.length - 1].isIntersecting; jzbWeiter(); }); JZB.io.observe(s); }
+  if (!JZB.horcht) { JZB.horcht = true; document.addEventListener("visibilitychange", jzbWeiter); }
+  jzbGroesse(); jzbWeiter();
+  return true;
+}
+function jzbStop() { if (JZB.raf) cancelAnimationFrame(JZB.raf); JZB.raf = 0; JZB.ro?.disconnect(); JZB.io?.disconnect(); JZB.ro = JZB.io = JZB.cv = null; }
+function jzbGroesse() {
+  const { s, cv } = JZB; if (!cv) return;
+  const w = s.clientWidth, h = s.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (!w || !h || (w === JZB.w && h === JZB.h && dpr === JZB.dpr)) return;
+  const breiter = JZB.w && Math.abs(w - JZB.w) > 8;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); JZB.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const alt = JZB.boden; JZB.boden = Array.from({ length: Math.ceil(w / JZB_SP) + 1 }, (_, i) => alt[i] || 0);
+  Object.assign(JZB, { w, h, dpr, k: Math.max(.55, Math.min(1, h / 230)) });
+  if (breiter && JZB.halme.length) jzbPflanzen(); // Handy gedreht: Beet neu verteilen (gleich weit gewachsen)
+  if (!JZB.raf) jzbMalen();
+}
+function jzbWeiter() {
+  if (JZB.raf || !JZB.cv) return;
+  if (document.hidden || !JZB.imBild) { JZB.letzt = 0; return; }
+  JZB.raf = requestAnimationFrame(jzbBild);
+}
+function jzbBild(ts) {
+  JZB.raf = 0;
+  if (!JZB.cv?.isConnected) return jzbStop();
+  const dt = JZB.letzt ? Math.min(.05, (ts - JZB.letzt) / 1000) : .016; JZB.letzt = ts;
+  if ((JZB.pruef += dt) > 1) { JZB.pruef = 0; if (!fxAn() || !einst("jahreszeit", true)) return jahreszeitKopf(); }
+  if (JZB.w) { JZB.T += dt; JZB.pt += dt; jzbSchritt(dt); jzbMalen(); }
+  jzbWeiter();
+}
+function jzbPhase(p) { JZB.phase = p; JZB.pt = 0; }
+function jzbLaufEnde() {
+  const J = JZB; J.lauf++; if (!J.vorschau) try { localStorage.setItem("kc_club_jzLauf", String(J.lauf)); } catch {}
+  J.boden.fill(0); J.liegt = []; J.mann = null; J.wind = null; J.welk = 0; J.halme = []; J.blumen = []; J.gaeste = J.gaeste.filter((g) => g.typ === "falter");
+  jzbPhase("anfang");
+}
+// Windstoß: abwechselnd von links (dir 1) und von rechts (dir -1); die Front zieht über den Kopf und nimmt mit, was liegt
+function jzbWindStart(dauer = 3.4) {
+  const J = JZB; J.wind = { dir: J.lauf % 2 ? -1 : 1, t: 0, dauer, st: 0, front: 0, striche: [], naechster: 0 };
+  for (const f of J.flug) J.fx.push({ ...f, vx: 0, vy: f.vy || 20, a: 1 }); J.flug = [];
+  jzbPhase("wind");
+}
+function jzbWindSchritt(dt) {
+  const J = JZB, W = J.wind; if (!W) return;
+  W.t += dt; W.st = Math.sin(Math.PI * Math.min(1, W.t / W.dauer));
+  if (W.t < W.dauer * .85 && (W.naechster -= dt) <= 0) {
+    W.naechster = jzbZ(.05, .15);
+    W.striche.push({ x: W.dir > 0 ? -130 : J.w + 130, y: jzbZ(J.h * .08, J.h - 6), l: jzbZ(40, 120), v: jzbZ(420, 640), a: jzbZ(.22, .5), ph: jzbZ(0, 6) });
+  }
+  for (const s of W.striche) s.x += W.dir * s.v * dt;
+  W.striche = W.striche.filter((s) => s.x > -220 && s.x < J.w + 220);
+  const weg = Math.min(1.2, W.t / (W.dauer * .7)) * (J.w + 80) - 40; W.front = W.dir > 0 ? weg : J.w - weg;
+}
+const jzbHinterFront = (x) => { const W = JZB.wind; return !!W && (W.dir > 0 ? x < W.front : x > W.front); };
+const jzbWindVorbei = () => { const W = JZB.wind; return !W || (W.t >= W.dauer && !W.striche.length); };
+
+function jzbNeuesTeil(typ) {
+  const J = JZB;
+  if (typ === "blatt") return { typ, x: jzbZ(0, J.w), y: -12, vy: jzbZ(16, 28), s: jzbZ(6, 9.5) * (.75 + .25 * J.k), rot: jzbZ(0, 6.3), vr: jzbZ(-1.6, 1.6), ph: jzbZ(0, 6.3), fq: jzbZ(.9, 1.7), amp: jzbZ(14, 28), farbe: jzbW(JZB_LAUB), form: Math.random() < .45 ? 1 : 0 };
+  if (typ === "flocke") { const r = jzbZ(1, 2.6); return { typ, x: jzbZ(-10, J.w + 10), y: -4, r, vy: 12 + r * 9, ph: jzbZ(0, 6.3), fq: jzbZ(.8, 1.8), amp: jzbZ(5, 12) }; }
+  return { typ: "bluete", x: jzbZ(0, J.w), y: -6, s: jzbZ(2.2, 3.4), vy: jzbZ(13, 20), rot: jzbZ(0, 6.3), vr: jzbZ(-2, 2), ph: jzbZ(0, 6.3), fq: jzbZ(.8, 1.4), amp: jzbZ(10, 20), farbe: jzbW(["#f9c6d6", "#ffe3ec", "#ffffff"]), a: 1 };
+}
+// Fallende Teile: Blätter bleiben liegen (stapeln sich), Flocken werden zur Schneedecke, Blüten vergehen im Gras
+function jzbFallen(dt) {
+  const J = JZB;
+  for (const b of J.flug) {
+    b.ph += dt * b.fq; b.x += Math.sin(b.ph) * b.amp * dt; if (b.vr) b.rot += b.vr * dt;
+    b.y += b.vy * dt * (b.typ === "blatt" ? .65 + .35 * Math.abs(Math.cos(b.ph)) : 1);
+    const boden = J.h - jzbBodenH(b.x);
+    if (b.typ === "blatt" && b.y + b.s * .3 >= boden) {
+      if (jzbImFeld(b.x)) { J.liegt.push({ x: b.x, y: boden - b.s * .2, rot: jzbZ(-.5, .5) + (Math.random() < .5 ? 0 : Math.PI), s: b.s, farbe: b.farbe, form: b.form }); jzbAufhaeufen(b.x, b.s * .16, 3); }
+      b.weg = true;
+    } else if (b.typ === "flocke" && b.y + b.r >= boden) {
+      if (jzbImFeld(b.x)) jzbAufhaeufen(b.x, b.r * 1.25, 2);
+      b.weg = true;
+    } else if (b.typ === "bluete" && b.y > J.h - 8 * J.k) { b.a -= dt * 1.2; if (b.a <= 0) b.weg = true; }
+    if (b.y > J.h + 12) b.weg = true;
+  }
+  J.flug = J.flug.filter((b) => !b.weg);
+}
+// Fortgewehtes, Funken, abfallende Blütenblätter
+function jzbFxSchritt(dt) {
+  const J = JZB, W = J.wind, zug = W ? W.dir * 300 * W.st : 0;
+  for (const p of J.fx) {
+    if (p.typ === "funke") { p.a -= dt * 1.1; p.x += p.vx * dt; p.y += p.vy * dt; if (p.a <= 0) p.weg = true; continue; }
+    p.vx = (p.vx || 0) + zug * dt; p.vx *= 1 - .35 * dt;
+    p.vy = (p.vy || 0) + (W ? 70 - 90 * W.st : 40) * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt; if (p.vr) p.rot += p.vr * dt; if (p.ph !== undefined) p.ph += dt * (p.fq || 1) * 3;
+    if (p.blass) p.a = (p.a ?? 1) - dt * p.blass;
+    const boden = J.h - 2;
+    if (p.y > boden && !W) { p.y = boden; p.vx = 0; p.vy = 0; p.liegt = true; p.blass = p.blass || .25; }
+    if (p.x < -50 || p.x > J.w + 50 || p.y > J.h + 30 || (p.a ?? 1) <= 0) p.weg = true;
+  }
+  J.fx = J.fx.filter((p) => !p.weg);
+}
+function jzbSchritt(dt) {
+  const J = JZB, S = J.saison;
+  if (J.phase === "anfang") { if (S === "fruehling" || S === "sommer") jzbPflanzen(); jzbPhase(S === "fruehling" || S === "sommer" ? "wachsen" : "fallen"); }
+  jzbWindSchritt(dt);
+  if (S === "herbst") jzbHerbst(dt);
+  else if (S === "winter") jzbWinter(dt);
+  else jzbBeet(dt);
+  jzbFallen(dt); jzbFxSchritt(dt); jzbGaeste(dt);
+}
+// 🍂 Herbst
+function jzbHerbst(dt) {
+  const J = JZB;
+  if (J.phase === "fallen") {
+    if ((J.spawn -= dt) <= 0 && J.flug.length < 12) { J.spawn = jzbZ(.45, 1.1); J.flug.push(jzbNeuesTeil("blatt")); }
+    if (J.liegt.length >= Math.max(16, Math.round(J.w / 13))) jzbWindStart();
+  } else if (J.phase === "wind") {
+    const W = J.wind;
+    for (const b of J.liegt) if (jzbHinterFront(b.x + W.dir * jzbZ(0, 30))) {
+      J.fx.push({ typ: "blatt", x: b.x, y: b.y, s: b.s, farbe: b.farbe, form: b.form, rot: b.rot, vr: jzbZ(-9, 9), vx: W.dir * jzbZ(120, 250), vy: -jzbZ(40, 130), ph: jzbZ(0, 6.3), fq: jzbZ(1, 2) });
+      b.weg = true;
+    }
+    J.liegt = J.liegt.filter((b) => !b.weg);
+    J.boden.forEach((v, i) => { if (v && jzbHinterFront(i * JZB_SP)) J.boden[i] = 0; });
+    if (jzbWindVorbei() && !J.liegt.length && !J.fx.length) { if ((J.spawn -= dt) < -1.5) jzbLaufEnde(); }
+  }
+}
+// ❄️ Winter: Schneedecke, Windstoß – oder jeder 3. Lauf ein Schneemann
+function jzbWinter(dt) {
+  const J = JZB, B = J.boden, n = B.length;
+  const schneit = J.phase === "fallen" || J.phase === "bauen" || (J.phase === "stehen" && J.pt > 6);
+  if (schneit && (J.spawn -= dt) <= 0 && J.flug.length < (J.phase === "fallen" ? 50 : 22)) { J.spawn = J.phase === "fallen" ? jzbZ(.07, .18) : jzbZ(.2, .45); J.flug.push(jzbNeuesTeil("flocke")); }
+  if ((J.glatt = (J.glatt || 0) + dt) > .1) { // Schnee rutscht ein wenig – weiche Verwehungen statt Zacken
+    J.glatt = 0;
+    for (let i = 1; i < n - 1; i++) { const d = B[i] - (B[i - 1] + B[i + 1]) / 2; if (d > 1.2) { B[i] -= d * .3; B[i - 1] += d * .15; B[i + 1] += d * .15; } }
+  }
+  const innen = B.slice(Math.ceil(JZB_RAND / JZB_SP), Math.floor((J.w - JZB_RAND) / JZB_SP)), schnitt = innen.reduce((a, b) => a + b, 0) / Math.max(1, innen.length);
+  if (J.phase === "fallen" && schnitt >= 9 * J.k) {
+    if (J.lauf % 3 === 2) jzbSchneemannStart(); else jzbWindStart();
+  } else if (J.phase === "bauen" || J.phase === "stehen") {
+    if (J.phase === "bauen") { for (let i = 0; i < n; i++) B[i] -= B[i] * .07 * dt; if (J.pt >= 8) { jzbPhase("stehen"); jzbFunken(); } } // Schnee wird zum Schneemann gerollt
+    else { for (let i = 0; i < n; i++) B[i] = Math.min(B[i], 9 * J.k); if (J.pt >= 32) jzbPhase("schmelzen"); }
+  } else if (J.phase === "schmelzen") {
+    if (J.pt >= 5) { J.mann = null; jzbWindStart(); }
+  } else if (J.phase === "wind") {
+    const W = J.wind;
+    for (let i = 0; i < n; i++) if (B[i] > .05 && jzbHinterFront(i * JZB_SP)) {
+      const ab = Math.min(B[i], 70 * dt); B[i] -= ab;
+      if (J.fx.length < 170 && Math.random() < ab * .45) J.fx.push({ typ: "flocke", x: i * JZB_SP, y: J.h - B[i] - 1, r: jzbZ(.8, 2.2), vx: W.dir * jzbZ(160, 320), vy: -jzbZ(15, 80), a: 1 });
+    }
+    if (jzbWindVorbei() && B.every((v) => v < .3) && !J.fx.length) { if ((J.spawn -= dt) < -1.5) jzbLaufEnde(); }
+  }
+}
+function jzbSchneemannStart() {
+  const J = JZB, links = Math.floor(J.lauf / 3) % 2 === 0, r = 24 * J.k;
+  J.mann = { x: links ? JZB_RAND + r + 8 : J.w - JZB_RAND - r - 8, blick: links ? 1 : -1, muetze: J.art === "advent" ? "weihnacht" : "koch" };
+  jzbPhase("bauen");
+}
+function jzbFunken() {
+  const J = JZB, m = J.mann; if (!m) return;
+  for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; J.fx.push({ typ: "funke", x: m.x + Math.cos(a) * 10, y: J.h - 52 * J.k + Math.sin(a) * 10, vx: Math.cos(a) * jzbZ(25, 55), vy: Math.sin(a) * jzbZ(25, 55), s: jzbZ(2, 3.5), a: 1, farbe: i % 2 ? "#fff6c2" : "#ffffff" }); }
+}
+// 🌱 Frühling / 🌻 Sommer: Beet anlegen
+function jzbPflanzen() {
+  const J = JZB, k = J.k, sommer = J.saison === "sommer";
+  J.halme = [];
+  for (let x = JZB_RAND - 6; x < J.w - JZB_RAND + 6; x += jzbZ(2.6, 4.2))
+    J.halme.push({ x, z: (sommer ? jzbZ(4, 10) : jzbZ(5, 14)) * k, v: jzbZ(0, 7), f: sommer ? jzbW(["#7aa83a", "#8db63c", "#a3b84a", "#6f9e35"]) : jzbW(JZB_GRUEN), n: jzbZ(-.25, .25), b: jzbZ(1.3, 2.1) });
+  if (sommer) {
+    const drei = J.lauf % 3 === 2, hoch = Math.max(28, Math.min(105, J.h * .52));
+    const plaetze = drei ? [[.64, .78], [.78, 1], [.91, .62]] : [[.84, 1]];
+    J.blumen = plaetze.map(([p, f], i) => ({ typ: "sonnenblume", x: Math.min(J.w - 30, J.w * p), H: hoch * f, s: (.8 + .2 * f) * k, t0: i * 1.5, ab: [] }));
+  } else {
+    const n = Math.max(4, Math.round(J.w / 48)), arten = ["gaensebluemchen", "tulpe", "krokus", "loewenzahn"];
+    J.blumen = Array.from({ length: n }, (_, i) => ({ typ: arten[(i + J.lauf) % arten.length], x: JZB_RAND + 10 + (i + jzbZ(.15, .85)) * (J.w - 2 * JZB_RAND - 20) / n, z: jzbZ(12, 24) * k, t0: 7 + jzbZ(0, 12), farbe: jzbW(["#e63946", "#ff7aa2", "#f4a261", "#ffd166"]) }));
+  }
+}
+function jzbBeet(dt) {
+  const J = JZB, sommer = J.saison === "sommer";
+  if (J.phase === "wachsen") {
+    if (!sommer && (J.spawn -= dt) <= 0 && J.flug.length < 6) { J.spawn = jzbZ(1.2, 2.8); J.flug.push(jzbNeuesTeil("bluete")); }
+    if (!J.gaeste.some((g) => g.typ === "falter") && J.pt > 10 && Math.random() < dt / 14) J.gaeste.push(jzbFalter());
+    if (!sommer && J.lauf % 3 === 2 && J.pt > 16 && !J.hase) { J.hase = true; J.gaeste.push({ typ: "hase", x: J.w + 24, t: 0 }); }
+    if (sommer && J.pt > 15 && !J.gaeste.some((g) => g.typ === "biene" || g.typ === "gluehwurm")) {
+      if (typeof istNacht === "function" && istNacht()) for (let i = 0; i < 7; i++) J.gaeste.push({ typ: "gluehwurm", x: jzbZ(20, J.w - 20), y: jzbZ(J.h * .35, J.h - 12), vx: jzbZ(-12, 12), vy: jzbZ(-8, 8), ph: jzbZ(0, 6.3) });
+      else J.gaeste.push({ typ: "biene", t: 0, b: 0 });
+    }
+    if (sommer && J.pt > 50) for (const f of J.blumen) { // Spätsommer: die Blütenblätter fallen eins nach dem anderen
+      const soll = Math.floor((J.pt - 50 - f.t0 * .3) * 2.6);
+      while (f.ab.length < Math.min(16, soll)) {
+        const i = jzbBlattNr(f), kopf = jzbSonnenKopf(f), a = i / 16 * Math.PI * 2 + .1, rr = 12 * f.s;
+        f.ab.push(i); J.fx.push({ typ: "bluetenblatt", x: kopf.x + Math.cos(a) * rr, y: kopf.y + Math.sin(a) * rr, s: 4.5 * f.s, rot: a, vr: jzbZ(-3, 3), vx: jzbZ(-10, 10), vy: jzbZ(5, 15), farbe: i % 2 ? "#f2b705" : "#f7c51e" });
+      }
+    }
+    if (J.pt >= (sommer ? 58 : 60)) {
+      J.gaeste = J.gaeste.filter((g) => g.typ !== "biene" && g.typ !== "gluehwurm"); J.hase = false;
+      if (!sommer) for (const f of J.blumen) for (let i = 0; i < 5; i++) J.fx.push({ typ: "bluetenblatt", x: f.x, y: J.h - f.z, s: 2.6 * J.k, rot: jzbZ(0, 6.3), vr: jzbZ(-6, 6), vx: 0, vy: -jzbZ(10, 40), farbe: f.typ === "tulpe" ? f.farbe : f.typ === "krokus" ? "#b58ae6" : f.typ === "loewenzahn" ? "#ffd23f" : "#ffffff" });
+      jzbWindStart(3.6);
+    }
+  } else if (J.phase === "wind") {
+    J.welk = jzbEase(J.wind.t / J.wind.dauer);
+    if (jzbWindVorbei() && !J.fx.length) { if ((J.spawn -= dt) < -1.2) jzbLaufEnde(); }
+  }
+}
+function jzbBlattNr(f) { for (;;) { const i = Math.floor(Math.random() * 16); if (!f.ab.includes(i)) return i; } }
+function jzbFalter() {
+  const J = JZB, dir = Math.random() < .5 ? 1 : -1;
+  return { typ: "falter", dir, x: dir > 0 ? -16 : J.w + 16, y0: jzbZ(J.h * .25, J.h * .75), t: 0, v: jzbZ(26, 40), farbe: jzbW([["#f6c445", "#e09f1f"], ["#ff8fb1", "#e0577f"], ["#8ecae6", "#3a8fc0"], ["#ffffff", "#c9c9c9"]]) };
+}
+function jzbGaeste(dt) {
+  const J = JZB;
+  for (const g of J.gaeste) {
+    g.t = (g.t || 0) + dt;
+    if (g.typ === "falter") { g.x += g.dir * g.v * dt; g.y = g.y0 + Math.sin(g.t * 1.7) * 12 + Math.sin(g.t * 4.3) * 4; if (g.x < -30 || g.x > J.w + 30) g.weg = true; }
+    else if (g.typ === "hase") { const z = g.t % .8; if (z < .55) g.x -= 70 * J.k * dt; g.y = J.h - 1 - (z < .55 ? Math.sin(z / .55 * Math.PI) * 15 * J.k : 0); if (g.x < -30) g.weg = true; }
+    else if (g.typ === "gluehwurm") { g.ph += dt; g.vx += jzbZ(-20, 20) * dt; g.vy += jzbZ(-20, 20) * dt; g.vx *= .98; g.vy *= .98; g.x = Math.max(8, Math.min(J.w - 8, g.x + g.vx * dt)); g.y = Math.max(J.h * .2, Math.min(J.h - 8, g.y + g.vy * dt)); }
+  }
+  J.gaeste = J.gaeste.filter((g) => !g.weg);
+}
+
+// ---------- Zeichnen ----------
+function jzbMalen() {
+  const J = JZB, c = J.ctx; if (!c || !J.w) return;
+  c.clearRect(0, 0, J.w, J.h);
+  if (J.saison === "fruehling" || J.saison === "sommer") jzbBeetMalen(c);
+  if (J.saison === "winter") jzbSchneeMalen(c);
+  for (const b of J.liegt) jzbBlatt(c, b.x, b.y, b.s, b.rot, 1, .55, b.farbe, b.form);
+  if (J.mann) jzbSchneemannMalen(c);
+  for (const g of J.gaeste) jzbGastMalen(c, g);
+  const flocken = [];
+  for (const p of [...J.flug, ...J.fx]) {
+    c.globalAlpha = Math.max(0, Math.min(1, p.a ?? 1));
+    if (p.typ === "flocke") { if (p.a === undefined || p.a >= 1) flocken.push(p); else { c.fillStyle = "#fff"; c.beginPath(); c.arc(p.x, p.y, p.r, 0, 7); c.fill(); } }
+    else if (p.typ === "blatt") jzbBlatt(c, p.x, p.y, p.s, p.rot, p.liegt ? 1 : Math.cos(p.ph * 1.3), p.liegt ? .55 : 1, p.farbe, p.form);
+    else if (p.typ === "bluete" || p.typ === "bluetenblatt") { c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.fillStyle = p.farbe; c.beginPath(); c.ellipse(0, 0, p.s, p.s * (p.typ === "bluete" ? .7 : .35), 0, 0, 7); c.fill(); c.restore(); }
+    else if (p.typ === "funke") jzbStern(c, p.x, p.y, p.s, p.farbe);
+  }
+  c.globalAlpha = 1;
+  if (flocken.length) { c.fillStyle = "rgba(255,255,255,.92)"; c.beginPath(); for (const f of flocken) { c.moveTo(f.x + f.r, f.y); c.arc(f.x, f.y, f.r, 0, 7); } c.fill(); }
+  const W = J.wind;
+  if (W) {
+    c.lineCap = "round"; c.lineWidth = 1.4;
+    for (const s of W.striche) {
+      c.strokeStyle = `rgba(255,255,255,${s.a})`; c.beginPath(); c.moveTo(s.x, s.y);
+      c.quadraticCurveTo(s.x - W.dir * s.l * .5, s.y - 7 * Math.sin(J.T * 6 + s.ph), s.x - W.dir * s.l, s.y + 2); c.stroke();
+    }
+  }
+}
+function jzbBlatt(c, x, y, s, rot, sx, sy, farbe, form) {
+  c.save(); c.translate(x, y); c.scale(1, sy); c.rotate(rot); c.scale(Math.abs(sx) < .15 ? .15 * Math.sign(sx || 1) : sx, 1);
+  c.fillStyle = farbe; c.beginPath();
+  if (form) for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? s * .5 : s; c.lineTo(Math.cos(a) * r, Math.sin(a) * r); } // Ahorn
+  else { c.moveTo(-s, 0); c.quadraticCurveTo(0, -s * .8, s, 0); c.quadraticCurveTo(0, s * .8, -s, 0); }
+  c.closePath(); c.fill();
+  c.strokeStyle = "rgba(90,40,10,.45)"; c.lineWidth = .8; c.beginPath();
+  if (form) { c.moveTo(0, s * 1.05); c.lineTo(0, -s * .6); } else { c.moveTo(-s * 1.3, 0); c.lineTo(s * .7, 0); }
+  c.stroke(); c.restore();
+}
+function jzbStern(c, x, y, s, farbe) {
+  c.fillStyle = farbe; c.beginPath();
+  for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, r = i % 2 ? s * .35 : s; c.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); }
+  c.closePath(); c.fill();
+}
+function jzbSchneeMalen(c) {
+  const J = JZB, B = J.boden; if (!B.some((v) => v > .3)) return;
+  c.beginPath(); c.moveTo(0, J.h + 2);
+  B.forEach((v, i) => c.lineTo(i * JZB_SP, J.h - v));
+  c.lineTo(J.w, J.h + 2); c.closePath();
+  const g = c.createLinearGradient(0, J.h - 16, 0, J.h); g.addColorStop(0, "#ffffff"); g.addColorStop(1, "#d3e1f0");
+  c.fillStyle = g; c.fill(); c.strokeStyle = "rgba(190,210,235,.7)"; c.lineWidth = 1; c.stroke();
+}
+function jzbKugel(c, x, y, r) {
+  if (r <= .3) return;
+  const g = c.createRadialGradient(x - r * .35, y - r * .4, r * .1, x, y, r);
+  g.addColorStop(0, "#ffffff"); g.addColorStop(.7, "#f1f5fa"); g.addColorStop(1, "#c9d7e6");
+  c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+}
+// ⛄ Der Schneemann: drei Kugeln rollen sich zusammen, dann Gesicht (lachend), Karottennase, Knöpfe, Arme, weinroter Schal, Mütze
+function jzbSchneemannMalen(c) {
+  const J = JZB, m = J.mann, k = J.k, t = J.pt, ph = J.phase, x = m.x, gy = J.h - 1 - Math.min(jzbBodenH(x), 6 * k) * .5;
+  const bau = ph === "bauen" ? t : 99, g1 = jzbEase(bau / 2.2), g2 = jzbEase((bau - 2.2) / 1.8), g3 = jzbEase((bau - 4) / 1.6);
+  const teil = (i) => jzbHopp((bau - 5.6 - i * .3) / .5);
+  const schmelz = ph === "schmelzen" ? jzbEase(t / 5) : 0, lachen = ph === "stehen" && t % 4 < 1.3;
+  const r1 = 15 * k * g1, r2 = 11 * k * g2, r3 = 8.5 * k * g3;
+  const y1 = gy - r1 * .9, y2 = y1 - r1 * .78 - r2 * .82, hy = y2 - r2 * .78 - r3 * .85 + (lachen ? Math.sin(J.T * 18) * .8 : 0);
+  c.save();
+  if (schmelz) { // Pfütze und zusammensackender Schneemann
+    c.fillStyle = `rgba(200,225,255,${.55 * (1 - schmelz * .6)})`; c.beginPath(); c.ellipse(x, gy, 15 * k * (1 + .7 * schmelz), 2.6 * k, 0, 0, 7); c.fill();
+    c.translate(x, gy); c.scale(1 + .3 * schmelz, 1 - .92 * schmelz); c.translate(-x, -gy); c.globalAlpha = 1 - schmelz * .5;
+  }
+  c.lineCap = "round"; c.strokeStyle = "#6b4a2b";
+  const arm = (seite, winkel, a) => { // Stockarme mit zwei Zweigen
+    if (a <= 0) return; const sx = x + seite * r2 * .8, sy = y2 - r2 * .15, l = 15 * k * a, ex = sx + Math.cos(winkel) * l, ey = sy + Math.sin(winkel) * l;
+    c.lineWidth = 1.8 * k; c.beginPath(); c.moveTo(sx, sy); c.lineTo(ex, ey);
+    for (const d of [-.6, .6]) { c.moveTo(ex - Math.cos(winkel) * l * .2, ey - Math.sin(winkel) * l * .2); c.lineTo(ex + Math.cos(winkel + d) * l * .28, ey + Math.sin(winkel + d) * l * .28); }
+    c.stroke();
+  };
+  if (g3 >= 1) { const winken = ph === "stehen" ? Math.sin(J.T * 5) * .35 : 0; arm(-m.blick, m.blick > 0 ? Math.PI + .45 : -.45, teil(4)); arm(m.blick, (m.blick > 0 ? -.55 : Math.PI + .55) + winken * m.blick, teil(4)); }
+  jzbKugel(c, x, y1, r1); jzbKugel(c, x, y2, r2);
+  c.fillStyle = "#2b2b2b"; const kn = teil(3);
+  if (kn > 0) for (const [kx, ky] of [[x, y2 - r2 * .25], [x, y2 + r2 * .3], [x, y1 - r1 * .4]]) { c.beginPath(); c.arc(kx, ky, 1.6 * k * kn, 0, 7); c.fill(); }
+  jzbKugel(c, x, hy, r3);
+  if (g3 >= 1) {
+    const sc = teil(5), hals = y2 - r2 * .8; // Schal in Clubfarbe Weinrot mit Goldstreifen
+    if (sc > 0) {
+      c.fillStyle = "#8e1b2b"; c.beginPath(); c.ellipse(x, hals, r2 * .85 * sc, 3 * k * sc, 0, 0, 7); c.fill();
+      const ex = x - m.blick * r2 * .35, wehen = (J.wind ? J.wind.dir * J.wind.st : Math.sin(J.T * 1.3) * .15) * .4;
+      c.save(); c.translate(ex, hals); c.rotate(wehen); c.fillRect(-2.2 * k, 0, 4.4 * k, 11 * k * sc);
+      c.fillStyle = "#d4a017"; for (const f of [.35, .65]) c.fillRect(-2.2 * k, 11 * k * sc * f, 4.4 * k, 1.2 * k); c.restore();
+    }
+    const au = teil(0);
+    if (au > 0) { // lachende Augen (∩ ∩) und rote Bäckchen
+      c.strokeStyle = "#2b2b2b"; c.lineWidth = 1.5 * k * au;
+      for (const s of [-1, 1]) { c.beginPath(); c.arc(x + s * r3 * .36, hy - r3 * .15, r3 * .17, Math.PI * 1.1, Math.PI * 1.9); c.stroke(); }
+      c.fillStyle = `rgba(255,110,130,${.45 * au})`; for (const s of [-1, 1]) { c.beginPath(); c.arc(x + s * r3 * .58, hy + r3 * .14, r3 * .16, 0, 7); c.fill(); }
+    }
+    const mu = teil(2);
+    if (mu > 0) { // weit offener, lachender Mund mit Zunge
+      const mw = r3 * .44 * mu, mh = r3 * .36 * mu * (lachen ? .7 + .3 * Math.abs(Math.sin(J.T * 14)) : .85), my = hy + r3 * .3;
+      c.fillStyle = "#7a1426"; c.beginPath(); c.moveTo(x - mw, my); c.ellipse(x, my, mw, mh, 0, 0, Math.PI); c.closePath(); c.fill();
+      c.save(); c.clip(); c.fillStyle = "#e8707e"; c.beginPath(); c.ellipse(x, my + mh * .95, mw * .55, mh * .5, 0, 0, 7); c.fill(); c.restore();
+    }
+    const na = teil(1);
+    if (na > 0) { c.fillStyle = "#f08a24"; c.beginPath(); c.moveTo(x + m.blick * r3 * .05, hy - r3 * .08); c.lineTo(x + m.blick * (r3 * .1 + r3 * .95 * na), hy + r3 * .02); c.lineTo(x + m.blick * r3 * .05, hy + r3 * .14); c.closePath(); c.fill(); }
+    const hu = teil(6);
+    if (hu > 0) {
+      c.save(); c.translate(x, hy - r3 * .82); c.scale(hu * k, hu * k);
+      if (m.muetze === "weihnacht") { // Weihnachtsmütze
+        c.fillStyle = "#c62828"; c.beginPath(); c.moveTo(-8, 0); c.quadraticCurveTo(-2, -14, 9 * m.blick, -11); c.quadraticCurveTo(4, -5, 8, 0); c.closePath(); c.fill();
+        c.fillStyle = "#fff"; c.beginPath(); c.ellipse(0, 0, 9, 2.6, 0, 0, 7); c.fill(); c.beginPath(); c.arc(9 * m.blick, -11, 2.6, 0, 7); c.fill();
+      } else { // Kochmütze – es ist ja der Köcheclub
+        c.fillStyle = "#ffffff"; c.strokeStyle = "rgba(0,0,0,.14)"; c.lineWidth = .8;
+        c.beginPath(); c.rect(-6, -5, 12, 5); c.fill(); c.stroke();
+        for (const [px, py, pr] of [[-5, -8, 4.6], [5, -8, 4.6], [0, -11, 5.8]]) { c.beginPath(); c.arc(px, py, pr, 0, 7); c.fill(); c.stroke(); }
+        c.fillRect(-5.4, -7, 10.8, 3);
+      }
+      c.restore();
+    }
+  }
+  c.restore();
+}
+function jzbHalmWinkel(x, n) { const W = JZB.wind; return n + Math.sin(JZB.T * 1.5 + x * .045) * .1 + (W ? W.dir * W.st * .7 : 0); }
+function jzbBeetMalen(c) {
+  const J = JZB, t = J.phase === "wachsen" ? J.pt : 99, welk = 1 - J.welk, k = J.k;
+  c.lineCap = "round";
+  for (const g of J.halme) {
+    const hz = g.z * jzbEase((t - g.v) / 9) * welk; if (hz < .5) continue;
+    const a = jzbHalmWinkel(g.x, g.n);
+    c.strokeStyle = g.f; c.lineWidth = g.b; c.beginPath(); c.moveTo(g.x, J.h + 1);
+    c.quadraticCurveTo(g.x + Math.sin(a) * hz * .2, J.h - hz * .55, g.x + Math.sin(a) * hz, J.h - Math.cos(a) * hz); c.stroke();
+  }
+  for (const f of J.blumen) {
+    if (f.typ === "sonnenblume") { jzbSonnenblume(c, f, t, welk); continue; }
+    const hz = f.z * jzbEase((t - f.t0) / 2.2) * welk; if (hz < .5) continue;
+    const a = jzbHalmWinkel(f.x, 0) * .7, tx = f.x + Math.sin(a) * hz, ty = J.h - Math.cos(a) * hz;
+    c.strokeStyle = "#4f8a2b"; c.lineWidth = 1.4 * k; c.beginPath(); c.moveTo(f.x, J.h + 1); c.quadraticCurveTo(f.x + Math.sin(a) * hz * .3, J.h - hz * .5, tx, ty); c.stroke();
+    const bl = jzbHopp((t - f.t0 - 2) / 1.2) * welk; if (bl <= 0) continue;
+    c.save(); c.translate(tx, ty); c.rotate(a * .6); c.scale(bl * k, bl * k);
+    if (f.typ === "gaensebluemchen" || f.typ === "loewenzahn") {
+      const lz = f.typ === "loewenzahn", n = lz ? 16 : 10;
+      c.fillStyle = lz ? "#ffd23f" : "#ffffff";
+      for (let i = 0; i < n; i++) { c.save(); c.translate(0, -2); c.rotate(i / n * Math.PI * 2); c.beginPath(); c.ellipse(lz ? 2.6 : 3, 0, lz ? 2.4 : 2.6, lz ? .7 : 1.1, 0, 0, 7); c.fill(); c.restore(); }
+      c.fillStyle = lz ? "#f2a900" : "#ffcf33"; c.beginPath(); c.arc(0, -2, lz ? 1.8 : 1.6, 0, 7); c.fill();
+    } else { // Tulpe / Krokus: Kelch
+      const krokus = f.typ === "krokus", br = krokus ? 2.9 : 3.8;
+      c.fillStyle = krokus ? "#9b6bd6" : f.farbe; c.beginPath(); c.moveTo(-br, -6); c.quadraticCurveTo(-br - .2, 0, 0, 0); c.quadraticCurveTo(br + .2, 0, br, -6);
+      c.lineTo(br * .6, -3.6); c.lineTo(br * .32, -7.4); c.lineTo(0, -4.2); c.lineTo(-br * .32, -7.4); c.lineTo(-br * .6, -3.6); c.closePath(); c.fill();
+      c.strokeStyle = krokus ? "rgba(255,255,255,.7)" : "rgba(0,0,0,.15)"; c.lineWidth = .6; c.beginPath(); c.moveTo(0, -.5); c.lineTo(0, -4); c.stroke();
+    }
+    c.restore();
+  }
+}
+function jzbSonnenKopf(f) {
+  const J = JZB, t = J.phase === "wachsen" ? J.pt : 99, hz = f.H * jzbEase((t - f.t0) / 9) * (1 - J.welk), a = jzbHalmWinkel(f.x, 0) * .35;
+  return { x: f.x + Math.sin(a) * hz, y: J.h - Math.cos(a) * hz, hz, a };
+}
+// 🌻 Sonnenblume: Stiel wächst, zwei Blätter, Knospe – dann geht die Blüte auf und wiegt sich leicht
+function jzbSonnenblume(c, f, t, welk) {
+  const J = JZB, s = f.s, { x: kx, y: ky, hz, a } = jzbSonnenKopf(f); if (hz < .5) return;
+  c.strokeStyle = "#4f8a2b"; c.lineWidth = 2.6 * s; c.beginPath(); c.moveTo(f.x, J.h + 1); c.quadraticCurveTo(f.x + Math.sin(a) * hz * .3 + 2, J.h - hz * .5, kx, ky); c.stroke();
+  for (const [anteil, seite] of [[.35, -1], [.6, 1]]) {
+    const gr = jzbEase((hz / f.H - anteil) * 6) * welk; if (gr <= 0) continue;
+    const bx = f.x + (kx - f.x) * anteil, by = J.h - hz * anteil, L = 9 * s * gr;
+    c.save(); c.translate(bx, by); c.rotate(seite * -.9 + a); c.fillStyle = "#5c9a33"; c.beginPath(); c.ellipse(seite * L * .85, 0, L, L * .42, 0, 0, 7); c.fill();
+    c.strokeStyle = "rgba(30,70,20,.5)"; c.lineWidth = .7; c.beginPath(); c.moveTo(0, 0); c.lineTo(seite * L * 1.6, 0); c.stroke(); c.restore();
+  }
+  const auf = jzbHopp((t - f.t0 - 9) / 2.5) * welk, rk = 6 * s;
+  c.save(); c.translate(kx, ky); c.scale(.86 + .14 * Math.cos(J.T * .35 + f.x), 1);
+  if (auf <= 0) { c.fillStyle = "#5c9a33"; c.beginPath(); c.arc(0, 0, 3.2 * s * jzbEase((t - f.t0 - 6) / 3), 0, 7); c.fill(); c.restore(); return; }
+  for (let i = 0; i < 16; i++) {
+    if (f.ab.includes(i)) continue;
+    const w = i / 16 * Math.PI * 2 + .1, pl = 9 * s * auf;
+    c.save(); c.rotate(w); c.fillStyle = i % 2 ? "#f2b705" : "#f7c51e"; c.beginPath(); c.ellipse(rk + pl * .5, 0, pl * .5, pl * .19, 0, 0, 7); c.fill(); c.restore();
+  }
+  const g = c.createRadialGradient(-rk * .3, -rk * .3, rk * .1, 0, 0, rk); g.addColorStop(0, "#7a5230"); g.addColorStop(1, "#3b2412");
+  c.fillStyle = g; c.beginPath(); c.arc(0, 0, rk * Math.max(.4, auf), 0, 7); c.fill();
+  c.fillStyle = "rgba(200,150,80,.55)";
+  for (let i = 0; i < 13; i++) { const w = i * 2.4, r = Math.sqrt(i / 13) * rk * .8 * auf; c.beginPath(); c.arc(Math.cos(w) * r, Math.sin(w) * r, .7 * s, 0, 7); c.fill(); }
+  c.restore();
+}
+function jzbGastMalen(c, g) {
+  const J = JZB, k = J.k;
+  if (g.typ === "falter") {
+    const f = .15 + .85 * Math.abs(Math.sin(g.t * 13));
+    c.save(); c.translate(g.x, g.y); c.scale(k, k);
+    for (const s of [-1, 1]) { c.save(); c.scale(s * f, 1); c.fillStyle = g.farbe[0]; c.beginPath(); c.ellipse(3.6, -2.4, 3.6, 3, -.4, 0, 7); c.fill(); c.fillStyle = g.farbe[1]; c.beginPath(); c.ellipse(2.6, 2.2, 2.4, 2, .4, 0, 7); c.fill(); c.restore(); }
+    c.strokeStyle = "#3a2a1a"; c.lineWidth = 1.3; c.beginPath(); c.moveTo(0, -4); c.lineTo(0, 4); c.stroke(); c.restore();
+  } else if (g.typ === "hase" || g.typ === "biene") {
+    let x = g.x, y = g.y, gr = 20 * k, spiegel = 1;
+    if (g.typ === "biene") { // fliegt Achten um die (erste) Sonnenblume
+      const f = J.blumen[0]; if (!f) return; const kopf = jzbSonnenKopf(f), r = 20 * f.s;
+      x = kopf.x + Math.cos(g.t * 1.3) * r + Math.sin(g.t * 3.1) * 3; y = kopf.y + Math.sin(g.t * 2.6) * r * .55;
+      spiegel = -Math.sin(g.t * 1.3) > 0 ? -1 : 1; gr = 12 * k;
+    }
+    c.save(); c.translate(x, y); c.scale(spiegel, 1); c.font = `${gr}px ${JZB_EMOJI}`; c.textAlign = "center"; c.textBaseline = g.typ === "hase" ? "bottom" : "middle"; c.fillText(g.typ === "hase" ? "🐇" : "🐝", 0, 0); c.restore();
+  } else if (g.typ === "gluehwurm") {
+    const a = .35 + .65 * Math.abs(Math.sin(g.ph * 1.6)), r = 6 * k, gr = c.createRadialGradient(g.x, g.y, 0, g.x, g.y, r);
+    gr.addColorStop(0, `rgba(240,255,150,${a})`); gr.addColorStop(1, "rgba(200,255,100,0)"); c.fillStyle = gr; c.beginPath(); c.arc(g.x, g.y, r, 0, 7); c.fill();
+  }
+}
+// Vorschau aus den Einstellungen: eine Jahreszeit sofort im Kopf zeigen (bis „Heute“ oder Neustart der App)
+function jahreszeitVorschau(art) {
+  if (!fxAn()) return melde("Effekte sind aus – „✨ Animierte Knöpfe“ einschalten (und Sparmodus aus).", true);
+  if (!einst("jahreszeit", true)) return melde("„🍂 Jahreszeiten im Kopf“ ist aus – erst einschalten.", true);
+  JZB.vorschau = art === "heute" ? "" : art;
+  zeige("start"); setTimeout(jahreszeitKopf, 350);
+}
 // ---------- KC-CLUB-KONFETTI (2.169.0): nur zu besonderen Anlässen – Spiel gewonnen, eigener Geburtstag ----------
 const KONFETTI_FARBEN = ["#7b1e2b", "#a8364a", "#efe3d1", "#d4a017", "#ffffff", "#c9a26b"]; // Weinrot + Beige + Gold (CD)
 function konfetti(x, y, menge = 90) {

@@ -8252,3 +8252,14 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/offenAntwort = t\.meine !== "ja" && t\.meine !== "nein"/.test(html) && /stdBis <= 48 \? " antwort-blinken rot" : stdBis <= 120 \? " antwort-blinken gelb"/.test(html), "Stufen 5 Tage gelb / 2 Tage rot, nur ohne Antwort");
   assert.ok(/\.antwort-blinken\.gelb \{[^}]*animation: antwortGelb/.test(seite) && /\.antwort-blinken\.rot \{[^}]*animation: antwortRot/.test(seite), "Blink-Stile");
 }
+
+// 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE (Wunsch Hansi): Laub/Schnee bleibt liegen, Windstoß abwechselnd, jeder 3. Lauf Schneemann, Gras/Blumen, Sonnenblume
+{
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE"), html.indexOf("// ---------- KC-CLUB-KONFETTI (2.169.0)"));
+  assert.ok(b.length > 1000, "Bühne vorhanden");
+  assert.ok(/if \(!ruhig && JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
+  assert.ok(/J\.wind = \{ dir: J\.lauf % 2 \? -1 : 1/.test(b), "Windstoß abwechselnd von links und rechts");
+  assert.ok(/if \(J\.lauf % 3 === 2\) jzbSchneemannStart\(\); else jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (Advent mit Weihnachtsmütze)");
+  assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!fxAn\(\) \|\| !einst\("jahreszeit", true\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");
+  assert.ok(/\.jz-buehne canvas \{ position: absolute; inset: 0;/.test(seite) && /jahreszeitVorschau\('winter'\)/.test(seite), "Canvas im Kopf, Vorschau in den Einstellungen");
+}

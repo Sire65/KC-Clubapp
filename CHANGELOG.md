@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.247.0 – 2026-10-11 – KC-CLUB-JAHRESZEIT-BUEHNE: Jahreszeiten im Kopf mit Boden (Wunsch Hansi)
+- 🍂 Herbst: Laub fällt oben und bleibt unten im Kopf liegen; liegt genug, kommt ein Windstoß – abwechselnd von links und von rechts – und weht es weg.
+- ❄️ Winter/Advent: Schnee bildet unten eine Decke und wird ebenso weggeweht. Jeder 3. Lauf wird daraus ein lachender Schneemann (Kochmütze, weinroter Schal mit Goldstreifen; im Advent Weihnachtsmütze), der winkt, lacht und nach einer halben Minute schmilzt.
+- 🌱 Frühling: Gras wächst mit den ersten Blumen (Gänseblümchen, Tulpe, Krokus, Löwenzahn), Blüten schweben herab, Schmetterlinge; jeder 3. Lauf hoppelt ein Osterhase vorbei. 🌻 Sommer: eine Sonnenblume wächst (jeder 3. Lauf drei) mit Biene, abends Glühwürmchen; im Spätsommer fallen die Blütenblätter, dann Windstoß.
+- Silvester bleibt Feuerwerk. Vorschau je Jahreszeit unter ⚙️ → ✨ Effekte. Zeichnet nur, wenn die Startseite sichtbar ist (hinter Text und Infofeld); aus bei „✨ Animierte Knöpfe“ aus, Sparmodus oder „Bewegung reduzieren“. Tippen geht durch.
+
 ## 2.246.0 – 2026-10-11 – KC-CLUB-VIDEO-BEWERTUNG: 👍/👎 am Ende der Erklär-Videos + Auswertung; Video-Ziel bleibt im Bild
 - Am Ende jedes Erklär-Videos: „Hat dir das Video gefallen?“ und „Hilft es dir weiter?“ mit 👍/👎 (Abschicken/Überspringen). Server speichert je Mitglied, Video und Fassung (DB kc_club_video_bewertung).
 - Admin: Erklär-Videos → 📊 Auswertung (nur Zahlen): 🟢 gut ab 80 % 👍, 🟡 beobachten, 🔴 überarbeiten unter 60 %, ⚪ unter 3 Stimmen. Überarbeitete Videos (stand hochzählen) zählen neu.

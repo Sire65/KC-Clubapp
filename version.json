@@ -1,12 +1,18 @@
 {
-  "version": "2.246.0",
+  "version": "2.247.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🎬 Am Ende jedes Erklär-Videos kannst du mit 👍 oder 👎 sagen, ob es dir gefallen und geholfen hat",
-    "🎬 Video „Neue Nachricht“ zeigt jetzt die richtige Stelle"
+    "🍂 Jahreszeiten im Kopf: Herbstlaub bleibt liegen, bis ein Windstoß es wegweht – Schnee ebenso, jedes 3. Mal mit lachendem Schneemann; Gras und Blumen im Frühling, Sonnenblume im Sommer"
   ],
   "verlauf": [
+    {
+      "version": "2.247.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🍂 Jahreszeiten im Kopf: Herbstlaub bleibt liegen, bis ein Windstoß es wegweht – Schnee ebenso, jedes 3. Mal mit lachendem Schneemann; Gras und Blumen im Frühling, Sonnenblume im Sommer"
+      ]
+    },
     {
       "version": "2.246.0",
       "datum": "2026-10-11",
