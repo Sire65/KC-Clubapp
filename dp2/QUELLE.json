@@ -1,9 +1,9 @@
 {
   "hinweis": "Unverändert aus KC DP2 übernommen – NICHT hier bearbeiten. Änderungen in DP2 machen und neu übernehmen (tools/dp2-twinkey-uebernehmen.mjs).",
   "repository": "Sire65/dp3",
-  "commit": "6972df3a5d1bcd587abe14047f2c15fd87274de3",
-  "commitDatum": "2026-10-11T18:23:57+00:00",
-  "dp2Version": "0.20.0-build264",
+  "commit": "252f22f07a8ddf08208bf21d7a6ef8c3f4486438",
+  "commitDatum": "2026-10-11T18:31:42+00:00",
+  "dp2Version": "0.20.0-build265",
   "vorlage": "twinkey-test.html (ohne twinkey-test-data.js, twinkey-test-boot.js)",
   "reihenfolge": [
     "src/ui/app.css",
@@ -178,7 +178,7 @@
     "src/core/personalized-forms.js": "85760065a6cddd2bcdb378e849170d010f54f2b0754d87ba5664b9366f6b23d8",
     "src/ui/wish-print.css": "6caece8316b8e4d5a48d27d68d2b8b04c0d180f4f0b3b558152aa527d3852085",
     "src/ui/wish-print.js": "7f3f6ffa65702167bc1541d4b7b0dbc87db9c6ef85317c510ff12fabbe5886b2",
-    "src/adapters/pdf.js": "84ab8652abe75d7f21a3f83e371571e61bba09595c1e7d3e65a35bc80b7628f5",
+    "src/adapters/pdf.js": "ff22648e74265556c8a6838a910b7bfc8af05225d85a1c987d69ec34c113d199",
     "src/ui/original-brand.js": "b060622790f7e74f20b9007253db4d59572db78673be3fc89c795924569b1d1a",
     "assets/kc-login-startbild-v01917.webp": "f85a7e0c7996a9585524ef7b3a9e233e0cb6a75008d832194b18119af31a4220",
     "assets/kc-login-startbild.webp": "c2e250d35eba2a098cd27af353820c56e8da305998321573a1119579e077dee9",

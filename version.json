@@ -1,11 +1,18 @@
 {
-  "version": "2.284.0",
+  "version": "2.285.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "📅 Weihnachtsmarkt: erster Freitag (04.12.) Regelzeit jetzt 10:00–23:00 (DP2 Build 264)"
+    "🖨️ Wunschbogen lesbarer: größere Tageszeilen, Kästchen mittig (DP2 Build 265)"
   ],
   "verlauf": [
+    {
+      "version": "2.285.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🖨️ Wunschbogen lesbarer: größere Tageszeilen, Kästchen mittig (DP2 Build 265)"
+      ]
+    },
     {
       "version": "2.284.0",
       "datum": "2026-10-11",
