@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.236.2 – 2026-10-11 – Frankfurt-Sicherung zeilengenau
+KC-CLUB-FRA-SICHERUNG: Der erste Lauf (11.10.) sicherte 288 von 289 Teilen; ein Stück der System-Check-Messwerte war ausgepackt bis 34 MB groß und brach den Server ab. Große Tabellen werden jetzt zeilengenau nach echter Textgröße in Teile von höchstens 3 MB zerlegt; ein Teil, der dreimal abbricht, wird als Fehler gemeldet statt endlos wiederholt; die Meldung nennt gesichert/zurückgelesen statt „offen“.
+
 ## 2.236.1 – 2026-10-11 – Frankfurt-Sicherung schonender
 KC-CLUB-FRA-SICHERUNG: Große Tabellen werden nach ihrer echten Größe (inkl. ausgelagerter Daten) in Teile von höchstens 3 MB zerlegt und je Schritt höchstens 8 MB verarbeitet – die 35-MB-Tabelle der System-Check-Messwerte hatte am 11.10. um 05:42 den Server kurz ausgebremst. Fortschrittsanzeige: gesichert / zurückgelesen.
 

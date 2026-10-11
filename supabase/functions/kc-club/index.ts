@@ -2631,14 +2631,9 @@ async function fraStand(lauf: string, status: string, text: string, metrics: Rec
 }
 async function fraGzip(b: Uint8Array) { return new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer()); }
 async function fraGunzip(b: Uint8Array) { return new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer()); }
-// Blockbereiche einer Tabelle: [von, bis] (null, null = ganze Tabelle; letzter Bereich offen bis zum Ende)
-function fraTeile(seiten: number, gesamt: number): [number | null, number | null][] {
-  const n = Math.max(Math.ceil(seiten / FRA_BLOECKE), Math.ceil(gesamt / FRA_TEIL_BYTES), 1);
-  if (n <= 1 || seiten < 2) return [[null, null]];
-  const je = Math.max(1, Math.ceil(seiten / n)), teile: [number | null, number | null][] = [];
-  for (let von = 0; von < seiten; von += je) teile.push([von, von + je >= seiten ? null : von + je]);
-  return teile;
-}
+// Zeilenadresse (ctid „(Block,Zeile)“) als Zahl: Block × 65536 + Zeile – block_von/block_bis speichern diese Codes
+const fraTidCode = (c: string) => { const m = /^\((\d+),(\d+)\)$/.exec(String(c)); return m ? Number(m[1]) * 65536 + Number(m[2]) : 0; };
+const fraTid = (code: number) => `'(${Math.floor(code / 65536)},${code % 65536})'::tid`;
 const fraName = (t: string) => /^[a-z0-9_]{1,63}$/.test(t) ? t : null;
 async function fraSchritt(jetztErzwingen = false) {
   const t0 = Date.now(), lauf = berlinTag(new Date()), sql = direktSql();
@@ -2653,24 +2648,34 @@ async function fraSchritt(jetztErzwingen = false) {
     const zeilen: any[] = [];
     for (const r of tabs) {
       if (!fraName(r.t)) continue;
-      const zl = fraTeile(Number(r.seiten) || 0, Number(r.gesamt) || 0);
-      zl.forEach(([von, bis], i) => zeilen.push({ lauf, tabelle: r.t, teil: i, block_von: von, block_bis: bis }));
+      // klein: ganze Tabelle. Groß: zeilengenau nach echter Textgröße (ausgelagerte Daten werden beim Sichern viel größer als auf der Platte)
+      if (Number(r.gesamt) <= FRA_TEIL_BYTES * 1.5 || Number(r.seiten) < 1) { zeilen.push({ lauf, tabelle: r.t, teil: 0, block_von: null, block_bis: null }); continue; }
+      const liste = await sql.unsafe(`select ctid::text as c, octet_length(row_to_json(x)::text)::bigint as l from public."${r.t}" x order by ctid`);
+      let von = 0, summe = 0, teil = 0;
+      for (const z of liste) {
+        const code = fraTidCode(z.c), l = Number(z.l) || 0;
+        if (summe > 0 && summe + l > FRA_TEIL_BYTES) { zeilen.push({ lauf, tabelle: r.t, teil: teil++, block_von: von, block_bis: code }); von = code; summe = 0; }
+        summe += l;
+      }
+      zeilen.push({ lauf, tabelle: r.t, teil, block_von: von, block_bis: null });
     }
     for (let i = 0; i < zeilen.length; i += 200) await sql`insert into public.kc_club_fra_sicherung ${sql(zeilen.slice(i, i + 200), "lauf", "tabelle", "teil", "block_von", "block_bis")} on conflict do nothing`;
     await fraStand(lauf, "laeuft", `Sicherung gestartet: ${tabs.length} Tabellen`, { teile: zeilen.length });
   }
   let roh = 0;
   // 2) Teile sichern (abholen, packen, Prüfsumme, nach Frankfurt)
+  // Teil, bei dem der Server dreimal mitten im Sichern abgebrochen ist (zu groß o. Ä.): als Fehler melden statt endlos wiederholen
+  await sql`update public.kc_club_fra_sicherung set status = 'fehler', fehler = 'Abbruch beim Sichern (Teil zu groß?)' where lauf = ${lauf} and status = 'laeuft' and zeit < now() - interval '5 minutes' and versuche >= ${FRA_VERSUCHE}`;
   while (Date.now() - t0 < FRA_SCHRITT_MS && roh < FRA_SCHRITT_BYTES) {
     const [t] = await sql`update public.kc_club_fra_sicherung f set status = 'laeuft', zeit = now(), versuche = f.versuche + 1
       where (f.lauf, f.tabelle, f.teil) = (select lauf, tabelle, teil from public.kc_club_fra_sicherung where lauf = ${lauf}
-        and (status = 'offen' or (status = 'laeuft' and zeit < now() - interval '5 minutes') or (status = 'fehler' and versuche < ${FRA_VERSUCHE}))
+        and (status = 'offen' or (status = 'laeuft' and zeit < now() - interval '5 minutes' and versuche < ${FRA_VERSUCHE}) or (status = 'fehler' and versuche < ${FRA_VERSUCHE}))
         order by tabelle, teil limit 1 for update skip locked)
       returning f.tabelle, f.teil, f.block_von, f.block_bis`;
     if (!t) break;
     try {
       const name = fraName(t.tabelle); if (!name) throw new Error("ungültiger Tabellenname");
-      const bed = t.block_von == null ? "" : t.block_bis == null ? `where ctid >= '(${Number(t.block_von)},0)'::tid` : `where ctid >= '(${Number(t.block_von)},0)'::tid and ctid < '(${Number(t.block_bis)},0)'::tid`;
+      const bed = t.block_von == null ? "" : t.block_bis == null ? `where ctid >= ${fraTid(Number(t.block_von))}` : `where ctid >= ${fraTid(Number(t.block_von))} and ctid < ${fraTid(Number(t.block_bis))}`;
       const [r] = await sql.unsafe(`select count(*)::bigint as n, coalesce(json_agg(x), '[]'::json)::text as j from (select * from public."${name}" ${bed}) x`);
       const rohB = new TextEncoder().encode(r.j), gz = await fraGzip(rohB), sha = await hexSha256(gz);
       const schluessel = `datenbank/${lauf}/${name}${t.block_von == null ? "" : `.teil${String(t.teil).padStart(3, "0")}`}.json.gz`;
@@ -2713,8 +2718,8 @@ async function fraSchritt(jetztErzwingen = false) {
   if (m.rest) {
     const spaet = new Date().getUTCHours() === 3 && new Date().getUTCMinutes() >= 50; // letzte Schritte des Zeitplaner-Fensters (bis 03:58 UTC)
     const [{ gesichert }] = await sql`select count(*) filter (where status in ('ok', 'geprueft'))::int as gesichert from public.kc_club_fra_sicherung where lauf = ${lauf}`;
-    await fraStand(lauf, spaet ? "fehler" : "laeuft", spaet ? `Nicht fertig geworden: ${m.rest} von ${m.teile} Teilen offen` : `läuft: ${gesichert} von ${m.teile} Teilen gesichert, ${m.geprueft} zurückgelesen`, metrics);
-    if (spaet) await fraAlarm(lauf, `Die Frankfurt-Sicherung ist heute nicht fertig geworden (${m.rest} von ${m.teile} Teilen offen).`);
+    await fraStand(lauf, spaet ? "fehler" : "laeuft", spaet ? `Nicht fertig geworden: ${gesichert} von ${m.teile} Teilen gesichert, ${m.geprueft} zurückgelesen` : `läuft: ${gesichert} von ${m.teile} Teilen gesichert, ${m.geprueft} zurückgelesen`, metrics);
+    if (spaet) await fraAlarm(lauf, `Die Frankfurt-Sicherung ist heute nicht fertig geworden (${gesichert} von ${m.teile} Teilen gesichert, ${m.geprueft} zurückgelesen).`);
     return { ok: true, rest: m.rest };
   }
   const [st] = await sql`select lauf, status from public.kc_club_fra_sicherung_stand where id = 1`;

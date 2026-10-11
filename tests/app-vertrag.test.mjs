@@ -8141,7 +8141,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const m = lies("supabase/migrations/20261011_kc_club_v2236_fra_sicherung.sql");
   assert.ok(/revoke all on public\.kc_club_fra_sicherung from anon, authenticated;/.test(m) && /cron\.schedule\('kc-club-fra-sicherung', '\*\/2 1-3 \* \* \*'/.test(m), "nur Server, nachts alle 2 Min.");
   assert.ok(/if \(a === "fra_sicherung"\) \{[^\n]*\n\s+const \{ data: geheim \} = await db\.rpc\("kc_communication_get_server_secret", \{ p_name: "kc_club_cron_secret" \}\);/.test(server), "nur mit Zeitplaner-Geheimnis");
-  assert.ok(/ctid >= '\(\$\{Number\(t\.block_von\)\},0\)'::tid/.test(server) && /const fraName = \(t: string\) => \/\^\[a-z0-9_\]\{1,63\}\$\/\.test\(t\)/.test(server), "Blockbereiche, nur sichere Tabellennamen");
+  assert.ok(/where ctid >= \$\{fraTid\(Number\(t\.block_von\)\)\}/.test(server) && /const fraName = \(t: string\) => \/\^\[a-z0-9_\]\{1,63\}\$\/\.test\(t\)/.test(server), "Blockbereiche, nur sichere Tabellennamen");
   assert.ok(/if \(\(await hexSha256\(gz\)\) !== t\.sha256\) throw new Error\("Prüfsumme weicht ab"\);/.test(server) && /daten\.length !== Number\(t\.zeilen\)/.test(server), "Rücklese-Test: Prüfsumme + Zeilenzahl");
   assert.ok(/FRA_BEHALTEN_TAGE = 14/.test(server) && /tag < grenze/.test(server), "14 Tage aufbewahren");
   assert.ok(/const fra = !fr \? \["grau", "noch nie gelaufen"\] : frStd > ARCHIV_KOPIE_ALT_STD \? \["grau"/.test(html) && /"Sicherung Frankfurt", sf2\.fra\[1\]/.test(html), "Lampe: unbekannt/alt nie als OK");
@@ -8150,5 +8150,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.236.1 KC-CLUB-FRA-SICHERUNG: Teile nach echter Größe (inkl. ausgelagerter Daten) – 35-MB-Tabelle bremste den Server
 {
-  assert.ok(/pg_total_relation_size\(c\.oid\)::bigint as gesamt/.test(server) && /Math\.ceil\(gesamt \/ FRA_TEIL_BYTES\)/.test(server) && /FRA_TEIL_BYTES = 3 \* 1024 \* 1024, FRA_SCHRITT_BYTES = 8 \* 1024 \* 1024/.test(server), "kleine Teile, gedrosselte Schritte");
+  assert.ok(/pg_total_relation_size\(c\.oid\)::bigint as gesamt/.test(server) && /Number\(r\.gesamt\) <= FRA_TEIL_BYTES \* 1\.5/.test(server) && /FRA_TEIL_BYTES = 3 \* 1024 \* 1024, FRA_SCHRITT_BYTES = 8 \* 1024 \* 1024/.test(server), "kleine Teile, gedrosselte Schritte");
+}
+
+// 2.236.2 KC-CLUB-FRA-SICHERUNG: zeilengenaue Teile (ausgelagerte Daten sind entpackt ~3× größer), Abbrüche nicht endlos wiederholen
+{
+  assert.ok(/octet_length\(row_to_json\(x\)::text\)::bigint as l from public\."\$\{r\.t\}" x order by ctid/.test(server) && /const fraTidCode = /.test(server), "zeilengenau nach Textgröße");
+  assert.ok(/status = 'laeuft' and zeit < now\(\) - interval '5 minutes' and versuche >= \$\{FRA_VERSUCHE\}/.test(server), "Abbruch nach 3 Versuchen als Fehler");
+  assert.ok(!/\$\{m\.rest\} von \$\{m\.teile\} Teilen offen/.test(server), "ehrliche Fortschrittsmeldung");
 }
