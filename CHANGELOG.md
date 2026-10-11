@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.241.0 – 2026-10-11 – KC-CLUB-RUNDGANG: vertonter Rundgang durch die App
+- 17 Stationen (Kopf, Status, Infofeld, Ansichten, Register, Kacheln, Leiste unten, Nachrichten, Termine, Pinnwand, Mitglieder, Mehr, Überblick, Hilfe): echtes Element hervorgehoben, Rest abgedunkelt, Sprachausgabe des Handys liest vor, blättert selbst weiter. Pause, ◀ ▶, Beenden; App währenddessen gesperrt, Bildschirm bleibt an, beim Verlassen Pause.
+- Start: ⚙️ Mehr (einfache + erweiterte Ansicht), oben in ❓ Hilfe & Tipps, Hilfe-Eintrag „Zeig mir wo“, Link …#rundgang zum Weitergeben.
+
 ## 2.240.0 – 2026-10-11 – KC-CLUB-ANTWORT-ERINNERUNG-2T: Push-Erinnerung 2 Tage vor dem Treffen an alle ohne Zu-/Absage
 - Server (Zeitplaner): 48 Std. vor einem Köcheclub-Treffen einmal Push „🔴 Bitte zu- oder absagen“ an alle aktiven Mitglieder ohne ja/nein (vielleicht zählt nicht). Einmal je Treffen (Protokoll treffen_erinnerung_2t).
 

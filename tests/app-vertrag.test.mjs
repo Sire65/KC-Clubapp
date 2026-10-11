@@ -5582,6 +5582,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/protokoll\(null, "treffen_erinnerung_2t"[\s\S]{0,200}sendenGewaehlt\("club_erinnerung", ziel, \["push"\]/.test(server) && /eq\("aktion", "treffen_erinnerung_2t"\)\.eq\("details->>treffen", t\.id\)/.test(server), "erst merken, dann senden – nie doppelt");
 }
 
+// 2.241.0 KC-CLUB-RUNDGANG (Wunsch Hansi): vertonter Rundgang durch die App – Hervorheben, Vorlesen, selbst weiterblättern
+{
+  assert.ok(/const RUNDGANG = \[/.test(html) && ["nachrichten", "termine", "pinnwand", "mitglieder", "einstellungen"].every((v) => html.includes(`{ v: "${v}", sel:`)), "Stationen: Oberfläche + Nachrichten, Termine, Pinnwand, Mitglieder, Mehr");
+  assert.ok(/zeige\(s\.v, true\)/.test(html) && /if \(RG\.an\) rundgangEnde\(true\)/.test(html), "kein neuer Verlaufseintrag, Zurück beendet");
+  assert.ok(/lesezeit \* 0\.75/.test(html) && /lesezeit \* 1\.8/.test(html), "Mindest-Lesezeit + Sicherheitsnetz, falls das Handy kein „fertig“ meldet");
+  assert.ok(/navigator\.wakeLock\?\.request\("screen"\)/.test(html.slice(html.indexOf("KC-CLUB-RUNDGANG"))) && /if \(RG\.an\) return false; \/\/ KC-CLUB-RUNDGANG/.test(html), "Bildschirm bleibt an, keine Einweisungs-Karten dazwischen");
+  assert.ok((seite.match(/onclick="rundgangStart\(\)"/g) || []).length >= 3 && /body\.rg-an \.blatt \{ display: none !important; \}/.test(seite) && /h === "#rundgang"/.test(html), "Start in Mehr (beide Ansichten), Hilfe und per Link; Fenster warten");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

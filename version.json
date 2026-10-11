@@ -1,11 +1,18 @@
 {
-  "version": "2.240.0",
+  "version": "2.241.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🔴 Push-Erinnerung 2 Tage vor dem Treffen, wenn du noch nicht zu- oder abgesagt hast"
+    "🎬 Rundgang durch die App mit Ton – unter ⚙️ Mehr oder ❓ Hilfe & Tipps: die App zeigt und erzählt in 3 Minuten, was sie kann"
   ],
   "verlauf": [
+    {
+      "version": "2.241.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🎬 Rundgang durch die App mit Ton – unter ⚙️ Mehr oder ❓ Hilfe & Tipps: die App zeigt und erzählt in 3 Minuten, was sie kann"
+      ]
+    },
     {
       "version": "2.240.0",
       "datum": "2026-10-11",

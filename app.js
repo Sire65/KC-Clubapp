@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.240.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.241.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1317,6 +1317,7 @@ function einwTagMerken(v) { const g = einwGezeigt(), t = heuteIso(), l = g[v] ||
 function einwOffen(v) {
   const st = einwStand(), e = EINWEISUNG.find((x) => x.id === v), tage = einwGezeigt()[v] || [];
   if (tage.length >= EINW_TAGE && !tage.includes(heuteIso())) return false;
+  if (RG.an) return false; // KC-CLUB-RUNDGANG: keine Einweisungs-Karten während des Rundgangs
   return !!(INIT && ICH && st.an && e && !st.gesehen?.[v] && (!e.nur || e.nur()));
 }
 function einwKarteWeg() { const k = document.querySelectorAll(".einw-karte"); if (k.length) { vorlesenStopp(); k.forEach((x) => x.remove()); } }
@@ -1341,6 +1342,100 @@ async function einwAlleAus() { einwKarteWeg(); if (await einwSpeichern({ an: fal
 async function einwSchalter(an) { if (await einwSpeichern({ an })) melde(an ? "🎓 Einweisungen sind an" : "🎓 Einweisungen sind aus"); }
 async function einwZuruecksetzen() { try { localStorage.removeItem(EINW_GEZEIGT); } catch {} if (await einwSpeichern({ an: true, gesehen: {} })) { einwSchalterZeigen(); einwZeigen(aktuelleAnsicht); melde("🎓 Alle Einweisungen kommen beim nächsten Öffnen der Bereiche wieder"); } }
 function einwSchalterZeigen() { if ($("setEinw")) $("setEinw").checked = einwStand().an; }
+
+// ---------- KC-CLUB-RUNDGANG (2.241.0, Wunsch Hansi): vertonter Rundgang durch die App – jeder spielt ihn auf seinem Handy ab ----------
+// Zeigt nacheinander die echten Bereiche, hebt das Erklärte hervor (Rest abgedunkelt) und liest einen kurzen Text mit der
+// Sprachausgabe des Handys vor (kostenlos, nichts geht nach außen). Blättert selbst weiter; Pause, Zurück, Weiter, Beenden.
+// Während des Rundgangs ist die App gesperrt (nichts wird versehentlich angetippt). Stationen = Registry RUNDGANG:
+// v = Ansicht (zeige), sel = Kandidaten (das erste sichtbare wird hervorgehoben; keins sichtbar → nur Text; mussSel → Station auslassen).
+const RUNDGANG = [
+  { v: "start", t: "👋 Willkommen", x: "Willkommen zum Rundgang durch die Köcheclub-App! In etwa drei Minuten zeige ich dir, wie die App aussieht und was sie alles kann. Du musst nichts antippen – ich blättere selbst weiter. Mit Pause hältst du an." },
+  { v: "start", sel: [".hero .kopfzeile"], t: "🧑‍🍳 Der Kopf", x: "Ganz oben der Kopf der App. Die Kochmütze führt zur Internetseite des Clubs, darunter steht die Version. Rechts schaltest du zwischen hellen und dunklen Farben um oder frischst die App auf." },
+  { v: "start", sel: ["#statusChip"], t: "🟢 Dein Status", x: "Hier stellst du deinen Status ein – zum Beispiel verfügbar oder im Urlaub. Die anderen Mitglieder sehen ihn bei deinem Namen." },
+  { v: "start", sel: ["#heroInfo .ifeld-treffen > :first-child", "#heroInfo"], t: "📅 Der nächste Termin", x: "Im farbigen Infofeld steht das Wichtigste: der nächste Termin – und ob du schon zu- oder abgesagt hast. Fehlt deine Antwort noch, blinkt der Hinweis: fünf Tage vorher gelb, zwei Tage vorher rot." },
+  { v: "start", sel: ["#heroInfo .kacheln3", "#heroInfo"], t: "🔢 Drei kleine Felder", x: "Darunter drei kleine Felder: deine neuen Nachrichten, wie viele Mitglieder gerade in der App sind, und wie lange es noch bis zum nächsten Treffen ist. Antippen öffnet den passenden Bereich. Mit den Pfeilen blätterst du durch weitere Infos." },
+  { v: "start", sel: [".ansichtname.ein", ".ansichtname.erw"], t: "🔀 Zwei Ansichten", x: "Die App gibt es in zwei Ansichten: die einfache Ansicht mit wenigen großen Knöpfen – und die erweiterte Ansicht mit allen Funktionen. Hier schaltest du jederzeit um." },
+  { v: "start", sel: ["#register"], mussSel: true, t: "🗂️ Die Register", x: "In der erweiterten Ansicht sortieren Register die Kacheln: Club – alles rund um den Verein. Meins – deine eigenen Sachen wie Dokumente, Erstattung und deine Daten. Technik – Programme, Sicherheits-Check und Hilfe." },
+  { v: "start", sel: ["#raster"], t: "🔲 Die Kacheln", x: "Jede Kachel öffnet einen Bereich. Eine Zahl in der Ecke zeigt, was neu ist. Hältst du eine Kachel lange gedrückt, kannst du die Kacheln umsortieren." },
+  { v: "start", sel: ["#fuss"], t: "⬇️ Die Leiste unten", x: "Die Leiste unten ist immer da: Start, Termine, Nachrichten, Mitglieder und Mehr. Damit kommst du von überall mit einem Tipp zurück." },
+  { v: "nachrichten", sel: ["#v-nachrichten .kopf2", "#v-nachrichten"], t: "💬 Nachrichten", x: "Nachrichten: Hier schreibst du anderen Mitgliedern – einzeln oder in Gruppen, fast wie bei WhatsApp. Mit Plus Neu beginnst du eine Unterhaltung. Du kannst Fotos und Sprachnachrichten schicken oder mit dem Mikrofon diktieren, statt zu tippen." },
+  { v: "termine", sel: ["#v-termine .umschalter", "#v-termine .kopf2"], t: "📅 Termine", x: "Termine: alle Clubtermine als Liste, als Kalender oder als To-do. Mit Ich komme, Vielleicht oder Kann nicht antwortest du. Danach kannst du eine Mitfahrt suchen oder anbieten." },
+  { v: "pinnwand", sel: ["#v-pinnwand .kopf2", "#v-pinnwand"], t: "📌 Pinnwand", x: "Die Pinnwand ist das schwarze Brett des Clubs. Mit Plus Zettel hängst du etwas für alle auf – Glückwünsche, Hinweise oder eine Bitte um Hilfe. Auf Zettel antwortest du mit einem Emoji." },
+  { v: "mitglieder", sel: ["#v-mitglieder .mg-kachel.mg-online", "#v-mitglieder .mg-kachel", "#v-mitglieder .kopf2"], t: "👥 Mitglieder", x: "Mitglieder: alle aktiven Clubmitglieder. Ein grüner Punkt heißt: gerade in der App. Du kannst direkt schreiben, anklopfen – und Mitglieder, die gerade online sind, über die App anrufen, auf Wunsch auch mit Bild." },
+  { v: "einstellungen", sel: ["#v-einstellungen .kopf2", "#v-einstellungen"], t: "⚙️ Mehr", x: "Unter Mehr findest du die Einstellungen: Benachrichtigungen, Töne, Farben und große Schrift. Hier kannst du auch diesen Rundgang jederzeit wieder starten." },
+  { v: "start", sel: ["#raster"], t: "✨ Und noch viel mehr", x: "Außerdem gibt es das Fotoalbum, das Archiv mit der Clubchronik, die Protokolle, Helfen und Leihen, die Erstattung von Auslagen, Spiele wie Schach, Bauernskat und Mensch ärgere dich nicht – und den SOS-Bereich für den Notfall." },
+  { v: "start", sel: ["#hzFrage", "#suLupe"], t: "❓ Hilfe", x: "Und wenn du mal nicht weiterweißt: Das Fragezeichen unten rechts öffnet die Hilfe zum Bereich, die Lupe findet jede Funktion. Oder du fragst Twinkey – einfach tippen oder sprechen." },
+  { v: "start", t: "🎉 Fertig", x: "Das war der Rundgang. Probier einfach alles aus – kaputt machen kannst du nichts. Viel Spaß mit der Köcheclub-App!" },
+];
+const RG = { an: false, i: 0, pause: false, uhr: 0, lauf: 0, ziel: null, ton: false, von: "start", richtung: 1, wach: null };
+const rgSichtbar = (e) => { if (!e?.isConnected || e.closest(".versteckt")) return false; const r = e.getBoundingClientRect(); return r.height > 0 && r.width > 0 && getComputedStyle(e).visibility !== "hidden"; }; // auch feste Elemente (Leiste unten, ?)
+const rgZiel = (s) => (s.sel || []).flatMap((q) => [...document.querySelectorAll(q)]).find(rgSichtbar) || null;
+function rundgangStart(mitKnopf) {
+  rundgangEnde(true); einwKarteWeg(); vorlesenStopp();
+  RG.von = aktuelleAnsicht === "chat" ? "nachrichten" : aktuelleAnsicht; RG.an = true; RG.i = 0; RG.pause = !!mitKnopf; RG.ton = "speechSynthesis" in window; document.body.classList.add("rg-an");
+  document.body.insertAdjacentHTML("beforeend", `<div class="rg-schicht" id="rgSchicht" role="dialog" aria-modal="true" aria-label="Rundgang durch die App"><div class="rg-loch" id="rgLoch"></div>
+    <div class="rg-tafel" id="rgTafel"><div class="rg-oben"><b id="rgTitel"></b><span class="rg-nr" id="rgNr"></span></div><p id="rgText"></p><div class="rg-balken"><i id="rgBalken"></i></div>
+    <div class="rg-knoepfe"><button type="button" class="knopf klein" onclick="rundgangSchritt(-1)" aria-label="Zurück">◀</button><button type="button" class="knopf haupt klein" id="rgPause" onclick="rundgangPause()"></button><button type="button" class="knopf klein" onclick="rundgangSchritt(1)" aria-label="Weiter">▶</button><button type="button" class="knopf klein" onclick="rundgangEnde()">✕ Beenden</button></div></div></div>`);
+  addEventListener("resize", rgLage); addEventListener("scroll", rgLage, true);
+  rgWach();
+  rgZeigen();
+}
+// Bildschirm bleibt an, solange der Rundgang läuft (sonst geht er nach 30 Sek. ohne Tippen aus); nach dem Zurückkehren in die App neu holen
+async function rgWach() { if (!RG.an || document.hidden) return; try { RG.wach?.release?.(); RG.wach = await navigator.wakeLock?.request("screen"); } catch {} }
+document.addEventListener("visibilitychange", () => { if (!RG.an) return; if (document.hidden) { RG.pause = true; rgStille(); } else { rgWach(); rgZeigen(); } });
+function rgStille() { clearTimeout(RG.uhr); RG.lauf++; try { if (RG.ton) speechSynthesis.cancel(); } catch {} }
+function rgZeigen() {
+  if (!RG.an) return;
+  rgStille();
+  let s = RUNDGANG[RG.i];
+  if (s.v !== aktuelleAnsicht) zeige(s.v, true); // ohne neue Verlaufs-Einträge – „Zurück“ bleibt wie vorher
+  if (s.mussSel && !rgZiel(s)) { RG.i += RG.richtung || 1; if (RG.i < 0 || RG.i >= RUNDGANG.length) return RG.i < 0 ? (RG.i = 0, rgZeigen()) : rundgangEnde(); return rgZeigen(); }
+  RG.ziel = rgZiel(s);
+  if (RG.ziel) RG.ziel.scrollIntoView({ block: "center", behavior: "instant" }); else scrollTo(0, 0);
+  $("rgTitel").textContent = s.t; $("rgText").textContent = s.x; $("rgNr").textContent = `${RG.i + 1} / ${RUNDGANG.length}`;
+  $("rgBalken").style.width = `${((RG.i + 1) / RUNDGANG.length) * 100}%`;
+  $("rgPause").textContent = RG.pause ? (RG.i === 0 ? "▶ Los geht's" : "▶ Weiter") : "⏸ Pause";
+  setTimeout(rgLage, 60);
+  if (!RG.pause) rgSprechen(s.x);
+}
+// Text satzweise vorlesen (lange Texte brechen auf manchen Handys sonst ab); danach kurz warten und weiterblättern.
+// Ohne Sprachausgabe oder wenn das Handy kein „fertig“ meldet: Lesezeit nach Wortzahl.
+function rgSprechen(text) {
+  // Mindestzeit: Handys ohne deutsche Stimme melden „fertig“ oft sofort – dann bleibt der Text trotzdem lange genug zum Lesen stehen
+  const lauf = RG.lauf, saetze = text.match(/[^.!?]+[.!?]*/g) || [text], lesezeit = 2500 + text.split(/\s+/).length * 420, frueh = Date.now() + lesezeit * 0.75;
+  const weiter = () => { if (lauf === RG.lauf && RG.an && !RG.pause) { clearTimeout(RG.uhr); RG.uhr = setTimeout(() => rundgangSchritt(1, true), Math.max(1200, frueh - Date.now())); } };
+  if (!RG.ton) return weiter();
+  RG.uhr = setTimeout(weiter, lesezeit * 1.8); // Sicherheitsnetz
+  try {
+    saetze.forEach((x, n) => { const u = sprechAusgabe(x.trim()); if (n === saetze.length - 1) { u.onend = weiter; u.onerror = (e) => { if (e?.error !== "interrupted" && e?.error !== "canceled") weiter(); }; } speechSynthesis.speak(u); });
+  } catch { weiter(); }
+}
+function rgLage() {
+  const l = $("rgLoch"), t = $("rgTafel"); if (!l || !t) return;
+  const r = RG.ziel && rgSichtbar(RG.ziel) ? RG.ziel.getBoundingClientRect() : null;
+  if (!r) { l.style.cssText = `left:50%;top:50%;width:0;height:0`; t.classList.remove("rg-oben-an"); return; }
+  const p = 6, x = Math.max(4, r.left - p), y = Math.max(4, r.top - p), w = Math.min(innerWidth - 8, r.width + 2 * p), h = Math.min(innerHeight - 8, r.height + 2 * p);
+  l.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px`;
+  t.classList.toggle("rg-oben-an", y + h / 2 > innerHeight * 0.55); // Ziel unten → Tafel oben
+}
+function rundgangSchritt(d, auto) {
+  if (!RG.an) return;
+  if (!auto) RG.pause = false;
+  const n = RG.i + d; RG.richtung = d;
+  if (n >= RUNDGANG.length) return rundgangEnde();
+  RG.i = Math.max(0, n); rgZeigen();
+}
+function rundgangPause() {
+  if (!RG.an) return;
+  RG.pause = !RG.pause;
+  if (RG.pause) { rgStille(); $("rgPause").textContent = "▶ Weiter"; } else rgZeigen();
+}
+function rundgangEnde(still) {
+  if (!RG.an && !$("rgSchicht")) return;
+  rgStille(); RG.an = false; RG.ziel = null; try { RG.wach?.release?.(); } catch {} RG.wach = null; $("rgSchicht")?.remove(); document.body.classList.remove("rg-an");
+  removeEventListener("resize", rgLage); removeEventListener("scroll", rgLage, true);
+  if (!still) { zeige(RG.von, true); scrollTo(0, 0); } // zurück, wo der Rundgang gestartet wurde
+}
 
 // ---------- KC-CLUB-TIPP (1.6.0, Wunsch Hansi): Tipp des Tages beim Öffnen – höchstens einer je Tag ----------
 // Registry TIPPS: neue Tipps einfach hier ergänzen (nur: wann der Tipp passt; testen: führt direkt hin).
@@ -1502,6 +1597,7 @@ const HILFE = [
   // 🏠 Startseite & Bedienung
   { id: "kachel_lang", thema: "start", sym: "🧩", t: "Startseite aufräumen: Kacheln verschieben", x: "Du möchtest deinen Bildschirm aufräumen oder umorganisieren? Drück auf der Startseite eine Kachel <b>lange</b> (gut eine halbe Sekunde) – dann öffnet sich „Anordnen“ und die Kachel hängt an deinem Finger. Zieh sie an den neuen Platz und lass los. Mit ◀ ▶ ▲ ▼ geht es auch Schritt für Schritt. Fertig? „✅ Fertig“ tippen.", zeig: () => { zeige("start"); kaBearbeiten(true); } },
   { id: "kachel_aus", thema: "start", sym: "🙈", t: "Kacheln ausblenden und wieder holen", x: "Beim Anordnen hat jede Kachel oben ein <b>✕</b> – damit blendest du sie aus, deine Daten bleiben erhalten. Ausgeblendete Kacheln stehen blass dazwischen und kommen mit <b>👁️ Einblenden</b> zurück. Unter den Kacheln steht außerdem „🙈 … ausgeblendete Kacheln – anzeigen“. (Nur in der erweiterten Ansicht.)", zeig: () => { zeige("start"); kaBearbeiten(true); } },
+  { id: "rundgang", thema: "start", sym: "🎬", t: "Rundgang durch die App (mit Ton)", x: "Die App zeigt dir in etwa 3 Minuten, wie sie aussieht und was sie kann – die Stimme deines Handys erklärt dabei jede Station. Du musst nichts antippen; mit <b>⏸ Pause</b>, <b>◀ ▶</b> und <b>✕ Beenden</b> steuerst du. Starten: hier mit <b>👉 Zeig mir wo</b>, oben in <b>❓ Hilfe &amp; Tipps</b> oder unter <b>⚙️ Mehr</b>. Kein Ton? Dann Lautstärke prüfen – der Text steht auch zum Lesen da.", zeig: () => rundgangStart() }, // KC-CLUB-RUNDGANG (2.241.0)
   { id: "register_ziehen", thema: "start", sym: "↔️", t: "Register umsortieren (Club, Meins, Technik …)", x: "Ein Register oben auf der Startseite <b>festhalten</b>, bis es sich hebt – dann nach links oder rechts ziehen und loslassen. Die App merkt sich deine Reihenfolge auf allen deinen Geräten. (Nur in der erweiterten Ansicht.)", zeig: () => zeige("start") },
   { id: "register_wischen", thema: "start", sym: "👆", t: "Zwischen den Registern wischen", x: "Auf der Startseite wischst du über die Kacheln nach <b>links oder rechts</b> und kommst zum nächsten Register. Die kleine Zahl am Register zeigt, wie viele Kacheln darin liegen – „8/10“ heißt: 2 sind ausgeblendet.", zeig: () => zeige("start") },
   { id: "ansicht", thema: "start", sym: "🟢", t: "Einfache oder erweiterte Ansicht", x: "Die <b>einfache Ansicht</b> zeigt nur das Wichtigste mit großen Knöpfen, die <b>erweiterte</b> alle Funktionen mit Registern. Umschalten: ⚙️ Einstellungen → <b>🎨 Darstellung</b> → „🟢 Einfache Ansicht“ – oder ganz unten auf der Startseite. Zurück geht es mit „🔧 Mehr Funktionen anzeigen“.", zeig: () => einstiegHin(einfach() ? "einfach" : "darstellung") },
@@ -13055,6 +13151,7 @@ function hashSprung(h) {
     else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
+    else if (h === "#rundgang") rundgangStart(true); // KC-CLUB-RUNDGANG (2.241.0): Link zum Weitergeben – startet mit „▶ Los geht's“ (Ton braucht einen Tipp)
     else if (h === "#anruf") anrufZurueck(); // KC-CLUB-ANRUF-ANZEIGE (2.237.0): aus der Mitteilung in der Statusleiste
     else if (h === "#dienstgruss") dgZeigen(true); // KC-CLUB-DIENST-GRUSS (2.224.0): aus der Push am Morgen
     else if (h.startsWith("#reisecheckliste=")) rcOeffnen(decodeURIComponent(h.slice(17))); // KC-CLUB-REISE-CHECKLISTE (2.223.0): Erinnerung 2 Tage vorher
@@ -13998,6 +14095,7 @@ let letztesZurueck = 0;
 // Ansicht wieder“): ‹ geht im Verlauf zurück, wenn es eine vorige App-Ansicht gibt (Tiefe im Verlaufseintrag), sonst zur Zielansicht
 function zurueck(ziel) { if ((history.state?.tiefe || 0) > 1) history.back(); else zeige(ziel || "start"); }
 window.addEventListener("popstate", (e) => {
+  if (RG.an) rundgangEnde(true); // KC-CLUB-RUNDGANG: „Zurück“ beendet den Rundgang
   if (BL.zurueck) { BL.zurueck = false; return; } // KC-CLUB-BLAETTERN: mit ✕ geschlossen
   if (BL.offen) { blZu(true); return; } // „Zurück“ schließt zuerst das Blättern
   // Fotoalbum: „Zurück“ schließt zuerst nur die Großansicht
