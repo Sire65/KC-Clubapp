@@ -3117,6 +3117,14 @@
   .p-privat { background: #5b7fa6; } .ktag.privat { outline: 2px dashed #5b7fa6; outline-offset: -2px; }
   .pt-privat { background: rgba(91,127,166,.14); border-radius: 10px; padding: 10px 12px !important; margin-bottom: 6px; }
   .pt-karte { border-left: 6px solid #5b7fa6; }
+/* KC-CLUB-ANRUF-ANZEIGE (2.237.0): Gespräch in der Kopfzeile + Verkleinern-Knopf im Anrufbildschirm */
+.ruf-chip { margin-left: 6px; border: 0; border-radius: 999px; padding: 4px 10px; font: inherit; font-weight: 700; font-variant-numeric: tabular-nums;
+  background: #c0392b; color: #fff; animation: rufPuls 1.2s ease-in-out infinite; cursor: pointer; }
+.ruf-chip.verbunden { background: #1e8e3e; animation-duration: 2.4s; }
+@keyframes rufPuls { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, .45); } 50% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); } }
+.anruf .anruf-klein { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 12px; width: 44px; height: 44px; border-radius: 50%;
+  border: 0; background: rgba(255, 255, 255, .18); color: #fff; font-size: 1.6rem; line-height: 1; cursor: pointer; z-index: 2; }
+@media (prefers-reduced-motion: reduce) { .ruf-chip { animation: none; } }
 </style>
 </head>
 <body>
@@ -3162,7 +3170,7 @@
         </div>
       </div>
       <div class="statusleiste">
-        <button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button>
+        <button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button><button class="ruf-chip versteckt" id="rufChip" title="Laufendes Gespräch – antippen zum Zurückkehren" onclick="anrufZurueck()"></button>
         <span class="sl-luecke"></span>
         <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led grau" id="ledComm"></i><i class="led daten" id="ledDaten"></i><i class="led-trenner" aria-hidden="true"></i><i class="led grau led-online" id="ledOnline" role="button" tabindex="0" title="Wer ist gerade online?" aria-label="Wer ist gerade online?" onclick="event.stopPropagation();onlineBlatt()"></i><i class="led grau led-rt versteckt" id="ledRt" role="button" tabindex="0" title="Direkte Leitung (Realtime)" aria-label="Direkte Leitung (Realtime)" onclick="event.stopPropagation();rtBlatt()"></i></button>
         <span class="sl-extra"><button class="herz" id="herzKnopf" title="Lebenszeichen – antippen: die letzten 15" aria-label="Lebenszeichen, antippen für die letzten 15" onclick="herzListe()">♥</button><button id="sparZeichen" class="spar-zeichen" title="Sparmodus an – antippen für Infos" aria-label="Sparmodus an" onclick="sparInfo()">🐢</button><button id="inkoKnopf" title="Inkognito – antippen zum Umschalten" aria-label="Inkognito umschalten" aria-pressed="false" onclick="inkognitoSetzen(!inkognitoAn())">🕶️</button></span>
@@ -3839,6 +3847,7 @@
 <div class="warten versteckt" id="warten" aria-live="polite"><div class="muetze"><img src="kc-kochmuetze-weiss.webp" alt=""></div><b id="wartenText">Einen Moment …</b></div>
 <!-- KC-CLUB-ANRUF (Test): Anruf-Bildschirm -->
 <div class="anruf versteckt" id="anrufSchirm">
+  <button class="anruf-klein" title="Verkleinern – das Gespräch läuft weiter" aria-label="Verkleinern" onclick="anrufKlein()">⌄</button><!-- KC-CLUB-ANRUF-ANZEIGE (2.237.0) -->
   <div class="gross" id="anrufBild">?</div>
   <h2 id="anrufName"></h2>
   <div class="zustand" id="anrufZustand"></div>
@@ -4026,6 +4035,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.236.2" data-v="2.236.2"></script>
+<script src="app.js?v=2.237.0" data-v="2.237.0"></script>
 </body>
 </html>

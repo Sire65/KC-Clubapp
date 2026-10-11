@@ -8159,3 +8159,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/status = 'laeuft' and zeit < now\(\) - interval '5 minutes' and versuche >= \$\{FRA_VERSUCHE\}/.test(server), "Abbruch nach 3 Versuchen als Fehler");
   assert.ok(!/\$\{m\.rest\} von \$\{m\.teile\} Teilen offen/.test(server), "ehrliche Fortschrittsmeldung");
 }
+
+// 2.237.0 KC-CLUB-ANRUF-ANZEIGE (Wunsch Hansi): laufendes Gespräch in der App-Kopfzeile und in der Statusleiste des Handys
+{
+  assert.ok(/id="rufChip"[^>]*onclick="anrufZurueck\(\)"/.test(seite) && /class="anruf-klein"[^>]*onclick="anrufKlein\(\)"/.test(seite), "Kopfzeilen-Symbol + Verkleinern");
+  assert.ok(/badge: video \? "badge-video\.png" : "badge-anruf\.png"/.test(html) && /tag: RUF_TAG, renotify: false, silent: true/.test(html), "stille Mitteilung mit Telefon-/Kamera-Symbol");
+  assert.ok(/if \(!RUF\) \{[\s\S]{0,200}rufMeldungWeg\(\)/.test(html) && /setInterval\(rufAnzeige, 1000\)/.test(html), "endet mit dem Gespräch");
+  assert.ok(/"badge-anruf\.png", "badge-video\.png"\]/.test(lies("sw.js")) && fs.existsSync(new URL("../badge-anruf.png", import.meta.url)) && fs.existsSync(new URL("../badge-video.png", import.meta.url)), "Symbole vorhanden und zwischengespeichert");
+  assert.ok(/else if \(h === "#anruf"\) anrufZurueck\(\);/.test(html), "Mitteilung führt zurück ins Gespräch");
+}

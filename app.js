@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.236.2"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.237.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -4255,6 +4255,41 @@ function klang(art) {
 }
 function klangAus() { if (RUF?.klang) { clearInterval(RUF.klang.t); try { RUF.klang.ctx.close(); } catch {} RUF.klang = null; } try { navigator.vibrate?.(0); } catch {} }
 function anrufZustand(t) { $("anrufZustand").textContent = t; }
+// ---------- KC-CLUB-ANRUF-ANZEIGE (2.237.0, Wunsch Hansi): laufendes Gespräch in der Kopfzeile der App und in der Statusleiste des Handys ----------
+// App: 📞/🎥 mit Gesprächsdauer neben dem Status (antippen = zurück ins Gespräch); „⌄ Verkleinern“ im Anrufbildschirm, damit man
+// während des Gesprächs in der App weiterblättern kann. Handy: dauerhafte, stille Mitteilung mit Telefon-/Kamera-Symbol in der
+// Statusleiste („Gespräch mit … seit 14:05 Uhr – antippen zum Zurückkehren“), nur solange verbunden; endet mit dem Gespräch.
+// Wächter im Sekundentakt statt Einzel-Haken an allen Anrufwegen (Anrufen, Annehmen, Konferenz, Vorführen, Zweitanruf).
+const RUF_TAG = "kc-anruf";
+let RUF_ANZ = { stand: "", meldung: "" };
+function rufDauer() { if (!RUF?.start) return ""; const s = Math.floor((Date.now() - RUF.start) / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
+function rufAnzeige() {
+  const c = $("rufChip"); if (!c) return;
+  if (!RUF) {
+    if (RUF_ANZ.stand) { c.classList.add("versteckt"); c.textContent = ""; RUF_ANZ.stand = ""; }
+    if (RUF_ANZ.meldung) { RUF_ANZ.meldung = ""; rufMeldungWeg(); }
+    return;
+  }
+  const video = RUF.art === "video" || !!RUF.strom?.getVideoTracks?.().length, sym = video ? "🎥" : "📞";
+  const text = RUF.verbunden ? `${sym} ${rufDauer()}` : `${sym} ${RUF.rolle === "rufer" ? "ruft …" : "klingelt"}`;
+  if (RUF_ANZ.stand !== text) { c.textContent = text; c.classList.remove("versteckt"); c.classList.toggle("verbunden", !!RUF.verbunden); RUF_ANZ.stand = text; }
+  const g = RUF.gegen?.vorname || RUF.gegen?.name || "", m = RUF.verbunden ? `${video ? "v" : "t"}|${g}|${RUF.start}|${RUF.konf ? 1 : 0}` : "";
+  if (m !== RUF_ANZ.meldung) { RUF_ANZ.meldung = m; if (m) rufMeldung(video, g); else rufMeldungWeg(); }
+}
+async function rufMeldung(video, name) {
+  try {
+    if (!("Notification" in window) || Notification.permission !== "granted" || !navigator.serviceWorker) return;
+    const reg = await navigator.serviceWorker.ready, seit = new Date(RUF?.start || Date.now()).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+    await reg.showNotification(`${video ? "🎥 Videoanruf" : "📞 Anruf"}${RUF?.konf ? " (Konferenz)" : name ? " mit " + name : ""}`, {
+      body: `Läuft seit ${seit} Uhr – antippen, um zum Gespräch zurückzukehren`, tag: RUF_TAG, renotify: false, silent: true, requireInteraction: true,
+      icon: "icon-192.png", badge: video ? "badge-video.png" : "badge-anruf.png", data: { url: "./#anruf" } });
+  } catch {}
+}
+async function rufMeldungWeg() { try { const reg = await navigator.serviceWorker?.ready; (await reg?.getNotifications({ tag: RUF_TAG }) || []).forEach((n) => n.close()); } catch {} }
+function anrufKlein() { if (!RUF) return; $("anrufSchirm").classList.add("versteckt"); melde(`${RUF.art === "video" ? "🎥" : "📞"} Das Gespräch läuft weiter – oben antippen, um zurückzukehren`); }
+function anrufZurueck() { if (!RUF) return rufAnzeige(); if (RUF.vf) return vfLeiste?.(); $("anrufSchirm").classList.remove("versteckt"); }
+setInterval(rufAnzeige, 1000);
+window.addEventListener("pagehide", () => { if (RUF_ANZ.meldung) rufMeldungWeg(); }); // App wird geschlossen → keine verwaiste Mitteilung
 function anrufSchirm(gegen) {
   $("anrufBild").textContent = initialen(gegen.name || gegen.vorname); $("anrufName").textContent = gegen.name || gegen.vorname;
   if (!RUF?.vf) $("anrufSchirm").classList.remove("versteckt"); // KC-CLUB-VORFUEHREN-TON: Bedienung steht dann in der Vorführ-Leiste
@@ -13016,6 +13051,7 @@ function hashSprung(h) {
     else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
+    else if (h === "#anruf") anrufZurueck(); // KC-CLUB-ANRUF-ANZEIGE (2.237.0): aus der Mitteilung in der Statusleiste
     else if (h === "#dienstgruss") dgZeigen(true); // KC-CLUB-DIENST-GRUSS (2.224.0): aus der Push am Morgen
     else if (h.startsWith("#reisecheckliste=")) rcOeffnen(decodeURIComponent(h.slice(17))); // KC-CLUB-REISE-CHECKLISTE (2.223.0): Erinnerung 2 Tage vorher
     else if (h === "#boerse" || h.startsWith("#boerse=")) { BO.oeffnen = h.slice(8) || null; hlStart("boerse"); } // KC-CLUB-BOERSE

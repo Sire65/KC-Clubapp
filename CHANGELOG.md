@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.237.0 – 2026-10-11 – Gespräch in Kopfzeile und Statusleiste
+KC-CLUB-ANRUF-ANZEIGE: Während eines App-Anrufs steht oben in der App 📞 bzw. 🎥 mit Gesprächsdauer (antippen = zurück ins Gespräch); im Anrufbildschirm gibt es „⌄ Verkleinern“, um während des Gesprächs in der App weiterzublättern. In der Statusleiste des Handys erscheint ein Telefon- bzw. Kamera-Symbol mit stiller Mitteilung „Anruf mit … – läuft seit … Uhr“, die mit dem Gespräch verschwindet.
+
 ## 2.236.2 – 2026-10-11 – Frankfurt-Sicherung zeilengenau
 KC-CLUB-FRA-SICHERUNG: Der erste Lauf (11.10.) sicherte 288 von 289 Teilen; ein Stück der System-Check-Messwerte war ausgepackt bis 34 MB groß und brach den Server ab. Große Tabellen werden jetzt zeilengenau nach echter Textgröße in Teile von höchstens 3 MB zerlegt; ein Teil, der dreimal abbricht, wird als Fehler gemeldet statt endlos wiederholt; die Meldung nennt gesichert/zurückgelesen statt „offen“.
 
