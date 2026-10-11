@@ -7205,9 +7205,9 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 
 // 4xx. 2.126.0: Drei wandernde Schnecken im Langsam-Modus (KC-CLUB-SCHNECKEN-WANDERN, Wunsch Hansi)
 {
-  assert.ok(/<span class="sn-zug"><i style="--n:0">🐌<\/i><i style="--n:1">🐌<\/i><i style="--n:2">🐌<\/i><\/span><\/button>/.test(programm), "drei Schnecken (2.195.0: als Trupp)");
+  assert.ok(/<span class="sn-zug"><span class="sn-spur" aria-hidden="true"><\/span><i style="--n:0">🐌<\/i><i style="--n:1">🐌<\/i><i style="--n:2">🐌<\/i><\/span><\/button>/.test(programm), "drei Schnecken (2.195.0: als Trupp)");
   assert.ok(/\.schnecke \{ position: fixed;[^}]*pointer-events: none; \}/.test(seite) && /\.schnecke \.sn-zug \{[^}]*pointer-events: auto;[^}]*animation: snZug 32s linear infinite; \}/.test(seite), "Streifen lässt Tipps durch, Schnecken wandern gemeinsam");
-  assert.ok(/@keyframes snZug \{ from \{ transform: translateX\(0\); \} to \{ transform: translateX\(calc\(-100vw - 110px\)\); \} \}/.test(seite) && /@keyframes snSpur/.test(seite), "von rechts nach links, mit Schleimspur");
+  assert.ok(/@keyframes snZug \{ from \{ transform: translateX\(0\); \} to \{ transform: translateX\(calc\(-100vw - 110px\)\); \} \}/.test(seite) && /@keyframes snGlanz/.test(seite), "von rechts nach links, mit Schleimspur");
   // 2.171.0 (Hansi: „Schnecken laufen immer noch nicht“): Handy-Einstellung „weniger Bewegung“ hält sie nicht mehr an – nur „✨ Animierte Knöpfe“ aus
   assert.ok(!/html\.spar \.schnecke i \{ animation: none/.test(seite) && !/prefers-reduced-motion: reduce\) \{ \.schnecke i \{ animation: none;/.test(seite) && /:root\.ohne-anim \.schnecke i \{ animation: none;/.test(seite), "still nur bei ausgeschalteten Animationen der App");
   assert.ok(/\.schnecke i \{[^}]*animation: schneckeKriechen 1\.6s ease-in-out infinite;/.test(seite) && /@keyframes schneckeKriechen/.test(seite), "Schnecken kriechen beim Wandern");
@@ -7971,7 +7971,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.195.0 KC-CLUB-SCHNECKE-TRUPP (Wunsch Hansi: die 3 bleiben zusammen, wandern gemeinsam von rechts nach links mit Schleimspur; alles weg, wenn das Netz wieder gut ist)
 {
   const idx = lies("index.html");
-  assert.ok(/<span class="sn-spur" aria-hidden="true"><\/span><span class="sn-zug">/.test(html) && /\.schnecke \.sn-spur \{[^}]*animation: snSpur 32s linear infinite;/.test(idx) && /\.schnecke\.versteckt \{ display: none; \}/.test(idx), "Trupp + Spur in einem Streifen – verschwindet gemeinsam");
+  assert.ok(/<span class="sn-zug"><span class="sn-spur" aria-hidden="true"><\/span>/.test(html) && /\.schnecke \.sn-spur \{[^}]*mask: url\("data:image\/svg\+xml,/.test(idx) && /\.schnecke\.versteckt \{ display: none; \}/.test(idx), "Trupp + Spur in einem Streifen – verschwindet gemeinsam");
 }
 
 // 2.196.0 KC-CLUB-TASTATUR-EINGABE (Fund Hansi: lange Nachricht nicht durchscrollbar, alte Nachrichten schoben sich rein)
@@ -8615,4 +8615,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/Date\.now\(\) - \(WF_ZULETZT\[k\] \|\| 0\) < 30 \* 60000/.test(html), "je Chat höchstens alle 30 Min.");
   assert.ok(/const wege = notfall \|\| wichtig \? \["push", "email"\]/.test(server) && /vars\.wichtigkeit === "hoch" \? \{ priority: "high" \}/.test(server), "Hoch: Push + E-Mail, Priorität an den Communicator");
   assert.ok(/await wichtigUngelesenMelden\(\)/.test(server) && /await protokoll\(null, "wichtig_ungelesen"[^\n]*\n\s*if \(!offen\.length\) continue;/.test(server), "24-Std.-Hinweis einmal (erst merken, dann senden)");
+}
+
+// 2.288.0 KC-CLUB-SCHLEIMSPUR (Wunsch Hansi): Spur wandert mit dem Trupp, beginnt unter der ersten Schnecke, unregelmäßig und silbern
+{
+  assert.ok(/\.schnecke \.sn-spur \{ position: absolute; top: 14px; left: 8px;[^}]*z-index: -1;/.test(seite), "Spur hängt am Trupp, unter der ersten Schnecke, hinter den Schnecken");
+  assert.ok(/-webkit-mask: url\("data:image\/svg\+xml,[^"]+"\) 0 0 \/ 140px 9px repeat-x; mask: url/.test(seite), "unregelmäßige Form über Maske (auch alte Handys mit -webkit-)");
+  assert.ok(/\.schnecke \.sn-spur::after \{[^}]*animation: snGlanz/.test(seite) && /:root\.ohne-anim \.schnecke \.sn-spur \{ display: none; \}/.test(seite), "Glanz läuft, ohne Animation keine Spur");
 }

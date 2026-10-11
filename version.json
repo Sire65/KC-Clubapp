@@ -1,13 +1,18 @@
 {
-  "version": "2.287.0",
+  "version": "2.288.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🚦 Ampel je Empfänger: ✉️ Gesendet → 📬 Angekommen → 👀 Gelesen → ✅ Beantwortet (Nachricht antippen → ℹ️ Infos, und bei 🎓 Schulungen je Einladung)",
-    "❗ Vor dem Senden fragt die App „📝 Normal oder ❗ Hoch?“ (⚙️ → 🔔 Benachrichtigungen, abschaltbar)",
-    "❗ Hoch geht immer per Push UND E-Mail raus – nach 24 Std. ungelesen bekommst du Bescheid"
+    "🐌 Netz langsam: alle 3 Schnecken ziehen jetzt eine Schleimspur – unregelmäßig und silbrig glänzend"
   ],
   "verlauf": [
+    {
+      "version": "2.288.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🐌 Netz langsam: alle 3 Schnecken ziehen jetzt eine Schleimspur – unregelmäßig und silbrig glänzend"
+      ]
+    },
     {
       "version": "2.287.0",
       "datum": "2026-10-11",

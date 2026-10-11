@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.288.0 – 2026-10-11 – KC-CLUB-SCHLEIMSPUR: Schleimspur unter allen drei Schnecken, unregelmäßig und silbrig
+Wunsch Hansi: Die Spur hängt jetzt am Schnecken-Trupp (wandert mit) und beginnt schon unter der ersten Schnecke – auch die erste und zweite hinterlassen sichtbar Schleim. Form über eine unregelmäßige Maske (dicker/dünner, kleine Tröpfchen), Farbe Silber, das nach hinten blasser wird, darüber laufen helle Glanzpunkte. Ohne Animation (Bewegung reduzieren) bleibt die Spur wie bisher aus.
+
 ## 2.287.0 – 2026-10-11 – KC-CLUB-AMPEL + KC-CLUB-WICHTIGKEIT: Zustell-Ampel und Wichtigkeit normal/hoch
 Wunsch Hansi („nachvollziehen, ob er sie bekommen und gelesen hat“; „immer fragen, ob Wichtigkeit normal oder hoch“). Je Empfänger eine Ampel ✉️ Gesendet → 📬 Angekommen → 👀 Gelesen → ✅ Beantwortet – in den ℹ️ Infos einer Nachricht (Absender/Admin) und bei 🎓 Schulungen je Einladung (Gesendet, Angekommen, Link geöffnet, Geantwortet). Grün nur mit echter Rückmeldung (Push angezeigt/geöffnet, Mail-Anbieter, Club-App seitdem geöffnet, gelesen, Antwort); web.de meldet keine Zustellung, das wird ehrlich als grau gezeigt. Vor dem Senden fragt die App „📝 Normal / ❗ Hoch“ (je Chat höchstens alle 30 Min.; Schalter unter ⚙️ → 🔔 Benachrichtigungen, Standard an für den Admin). ❗ Hoch geht wie der Notfall immer per Push und E-Mail raus, wird an den Communicator als Priorität „high“ übergeben (Notfall „critical“) und meldet dem Absender nach 24 Std. einmal, wer noch nicht gelesen hat (Wartung, Protokoll „wichtig_ungelesen“).
 
