@@ -789,6 +789,12 @@
   .rgl-fuss { position: sticky; bottom: -1px; display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0 2px; margin-top: 10px; background: var(--karte); border-top: 1px solid var(--linie); }
   .rgl-fuss .knopf.haupt { flex: 1 1 100%; }
   .rg-naechst { margin: 8px 0 0; }
+  /* KC-CLUB-JAHRESZEIT-AUTOMATIK (2.273.0): kurze Eiszapfen unter der LED-Leiste – höchstens 9 px, nichts wird verdeckt, Tippen geht durch */
+  .statusleiste.jz-eis-an { position: relative; }
+  .jz-eis { position: absolute; left: 12px; width: calc(100% - 24px); top: calc(100% - 1px); height: 9px; pointer-events: none; z-index: 1; overflow: visible; filter: drop-shadow(0 1px 1px rgba(0,40,80,.25)); }
+  .jz-eis .jz-tropfen { fill: #dff3ff; animation: jzTropfen 4s ease-in infinite; }
+  @keyframes jzTropfen { 0%, 70% { transform: translateY(0); opacity: 0; } 75% { opacity: .9; } 100% { transform: translateY(4px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .jz-eis .jz-tropfen { animation: none; opacity: 0; } }
   /* KC-CLUB-START-HINWEIS (2.268.0): drei Knöpfe untereinander – lange Beschriftung gut lesbar */
   .dlg-knoepfe.sh-knoepfe { display: flex; flex-direction: column; gap: 8px; } .dlg-knoepfe.sh-knoepfe .knopf { width: 100%; text-align: center; white-space: normal; }
   /* KC-CLUB-VIDEO-GESEHEN (2.266.0): 👁 Anzahl, grüner Haken, wenn schon angesehen */
@@ -3739,7 +3745,8 @@
     <details class="karte" data-klappe="effekte">
       <summary>✨ Effekte</summary>
       <div class="schalter"><div><b>✨ Animierte Knöpfe</b><div class="hinweis">Kacheln zoomen kurz beim Antippen, Reiter und „＋ Neu“ leuchten auf – aus: alles ruhig</div></div><input type="checkbox" id="setAnimiert" onchange="einstellung('animiert', this.checked)"></div> <!-- 2.24.1 (Wunsch Hansi) -->
-      <div class="schalter"><div><b>🍂 Jahreszeiten im Kopf</b><div class="hinweis">Herbstlaub bleibt unten liegen, bis ein Windstoß es wegweht – Schnee ebenso, jedes 3. Mal wird ein lachender Schneemann daraus. Im Frühling wachsen Gras und Blumen, im Sommer eine Sonnenblume. Feuerwerk zu Silvester.</div></div><input type="checkbox" id="setJahreszeit" onchange="jahreszeitUmschalten(this.checked)"></div> <!-- 2.172.0 KC-CLUB-EFFEKTE-2, 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE -->
+      <div class="schalter"><div><b>🍂 Jahreszeiten im Kopf</b><div class="hinweis">Herbstlaub bleibt unten liegen, bis ein Windstoß es wegweht – Schnee ebenso, jedes 3. Mal wird ein lachender Schneemann daraus. Im Frühling wachsen Gras und Blumen, im Sommer eine Sonnenblume. Feuerwerk zu Silvester.</div></div><input type="checkbox" id="setJahreszeit" onchange="jahreszeitUmschalten(this.checked)"></div>
+      <div class="schalter" style="display:block"><div><b>📅 Welche Jahreszeit?</b><div class="hinweis" id="jzWahlInfo"></div></div><div class="reg-effekt-wahl" id="jzWahl"></div></div> <!-- 2.273.0 KC-CLUB-JAHRESZEIT-AUTOMATIK --> <!-- 2.172.0 KC-CLUB-EFFEKTE-2, 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE -->
       <div class="schalter" style="display:block"><div class="hinweis">Vorschau im Kopf der Startseite:</div><div class="reg-effekt-wahl"><button type="button" class="chip" onclick="jahreszeitVorschau('herbst')">🍂 Herbst</button><button type="button" class="chip" onclick="jahreszeitVorschau('winter')">⛄ Winter</button><button type="button" class="chip" onclick="jahreszeitVorschau('fruehling')">🌱 Frühling</button><button type="button" class="chip" onclick="jahreszeitVorschau('sommer')">🌻 Sommer</button><button type="button" class="chip" onclick="jahreszeitVorschau('heute')">📅 Heute</button></div>
         <div class="hinweis" style="margin-top:6px">Extras: Nikolaus-Stiefel am 6.12., Regen mit Pfützen (nur wenn es wirklich regnet), Kochtopf am Treffen-Tag, Ostereier zum Suchen, Igel im Herbst</div><div class="reg-effekt-wahl"><button type="button" class="chip" onclick="jahreszeitVorschau('advent', 'nikolaus')">🥾 Nikolaus</button><button type="button" class="chip" onclick="jahreszeitVorschau('', 'regen')">☔ Regen</button><button type="button" class="chip" onclick="jahreszeitVorschau('', 'topf')">🍲 Treffen</button><button type="button" class="chip" onclick="jahreszeitVorschau('fruehling', 'ostern')">🥚 Ostern</button><button type="button" class="chip" onclick="jahreszeitVorschau('herbst', 'igel')">🦔 Igel</button><button type="button" class="chip" onclick="jahreszeitVorschau('herbst', 'twinkey')">🧹 Twinkey fegt</button></div></div>
       <!-- KC-CLUB-REGISTER-EFFEKTE (2.169.0, Wunsch Hansi) -->
@@ -4131,6 +4138,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.272.0" data-v="2.272.0"></script>
+<script src="app.js?v=2.273.0" data-v="2.273.0"></script>
 </body>
 </html>

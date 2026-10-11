@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.272.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.273.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -623,7 +623,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
 }
 function designWahlZeigen() {
@@ -11991,15 +11991,53 @@ function zahlenHochzaehlen(wurzel, sel, schluessel) {
 const gbHeute = (pid) => (INIT?.geburtstageHeute || []).some((g) => g.person_id === pid);
 const gbKerze = (pid) => gbHeute(pid) ? '<span class="gb-kerze" title="Hat heute Geburtstag 🎂" aria-label="hat heute Geburtstag"><span class="gb-torte">🎂</span><i class="gb-flamme"></i></span>' : "";
 // 6) ❄️ Jahreszeiten im Kopf: Herbstlaub, Schnee im Advent und Winter, Feuerwerk zu Silvester, Blüten im Frühling, Schmetterlinge im Sommer
+// KC-CLUB-JAHRESZEIT-AUTOMATIK (2.273.0, Wunsch Hansi „Jahreszeiten nach offiziellem Standard – Frühlings-, Sommer-, Herbst-, Winteranfang“):
+// die astronomischen Anfänge (Tag-und-Nacht-Gleiche, Sonnenwende) auf die Minute nach Meeus – bisher galten feste Tage und für Sommer
+// und Winter der Monatsanfang (1.6./1.12.). Advent und Silvester bleiben besondere Zeiten.
+var JZ_LETZTE = { art: null, eis: null }; // var: jahreszeitKopf kann schon beim Laden laufen
+function jzAnfaenge(jahr) {
+  const Y = (jahr - 2000) / 1000, jd = (a, b, c, d, e) => a + b * Y + c * Y * Y + d * Y ** 3 + e * Y ** 4, zeit = (x) => new Date((x - 2440587.5) * 86400000);
+  return { fruehling: zeit(jd(2451623.80984, 365242.37404, 0.05169, -0.00411, -0.00057)), sommer: zeit(jd(2451716.56767, 365241.62603, 0.00325, 0.00888, -0.00030)),
+    herbst: zeit(jd(2451810.21715, 365242.01767, -0.11575, 0.00337, 0.00078)), winter: zeit(jd(2451900.05952, 365242.74049, -0.06223, -0.00823, 0.00032)) };
+}
 function jahreszeitArt(d = new Date()) {
-  const m = d.getMonth() + 1, t = d.getDate();
+  const m = d.getMonth() + 1, t = d.getDate(), a = jzAnfaenge(d.getFullYear());
   const weih = new Date(d.getFullYear(), 11, 25), advent1 = new Date(weih); advent1.setDate(25 - ((weih.getDay() || 7)) - 21); // 4 Sonntage vor dem 25.12.
   if ((m === 12 && t === 31) || (m === 1 && t === 1)) return "silvester";
   if (d >= advent1 && (m === 11 || (m === 12 && t <= 30))) return "advent";
-  if (m === 12 || m <= 2 || (m === 3 && t < 20)) return "winter";
-  if (m <= 5) return "fruehling";
-  if (m < 9 || (m === 9 && t < 22)) return "sommer";
+  if (d >= a.winter || d < a.fruehling) return "winter";
+  if (d < a.sommer) return "fruehling";
+  if (d < a.herbst) return "sommer";
   return "herbst";
+}
+// Wahl je Gerät: „auto“ (Standard) stellt sich von selbst um; sonst eine feste Jahreszeit
+const JZ_WAHL = [["auto", "🔄 Automatik"], ["fruehling", "🌱 Frühling"], ["sommer", "🌻 Sommer"], ["herbst", "🍂 Herbst"], ["winter", "⛄ Winter"]];
+const jzWahl = () => { try { const w = localStorage.getItem("kc_club_jzWahl"); return JZ_WAHL.some(([k]) => k === w) ? w : "auto"; } catch { return "auto"; } };
+const jahreszeitAktuell = (d = new Date()) => (jzWahl() === "auto" ? jahreszeitArt(d) : jzWahl());
+function jzWahlSetzen(w) { try { localStorage.setItem("kc_club_jzWahl", w); } catch {} JZB.vorschau = null; jzWahlZeigen(); jahreszeitKopf(); melde(w === "auto" ? "🔄 Automatik: die Jahreszeit stellt sich von selbst um" : `${JZ_WAHL.find(([k]) => k === w)[1]} fest eingestellt`); }
+function jzWahlZeigen() {
+  const z = $("jzWahl"); if (!z) return;
+  const w = jzWahl(), a = jzAnfaenge(new Date().getFullYear()), tag = (x) => `${x.getDate()}.${x.getMonth() + 1}.`;
+  z.innerHTML = JZ_WAHL.map(([k, t]) => `<button type="button" class="chip${w === k ? " an" : ""}" onclick="jzWahlSetzen('${k}')">${t}</button>`).join("");
+  $("jzWahlInfo").textContent = w === "auto" ? `Automatik nach Kalender: Frühlingsanfang ${tag(a.fruehling)}, Sommeranfang ${tag(a.sommer)}, Herbstanfang ${tag(a.herbst)}, Winteranfang ${tag(a.winter)} – dazu Advent und Silvester.` : "Fest eingestellt – mit 🔄 Automatik stellt sich der Kopf wieder von selbst um.";
+}
+// ❄️ Eiszapfen (2.273.0, Wunsch Hansi): im tiefen Winter hängen kurze Eiszapfen an der Leiste mit den LEDs – höchstens 9 px, damit nichts verdeckt wird.
+// Tiefer Winter: Winter fest gewählt oder als Vorschau, sonst Winteranfang bis Ende Februar – und an jedem Wintertag (auch Advent/Silvester), an dem
+// das frische Wetter Frost meldet (veraltete Wetterdaten zählen nicht).
+function jzTieferWinter(art) {
+  if (!["winter", "advent", "silvester"].includes(art)) return false;
+  if (JZB.vorschau === "winter" || jzWahl() === "winter") return true;
+  try { const r = WET?.r, j = r?.daten?.jetzt, frisch = !!j && !!r.stand && Date.now() - new Date(r.stand) <= WETTER_VERALTET_MIN * 60000;
+    if (frisch && Number.isFinite(+j.temp) && +j.temp <= 0) return true; } catch {} // Wetter noch nicht geladen
+  const d = new Date(); return art === "winter" && d.getMonth() + 1 !== 3;
+}
+function jzEiszapfen(h, art) {
+  const leiste = h.querySelector(".statusleiste"); leiste?.querySelector(".jz-eis")?.remove(); leiste?.classList.remove("jz-eis-an");
+  if (!leiste || einfach() || !fxAn() || !einst("jahreszeit", true) || !jzTieferWinter(art)) return;
+  const n = 16, zapfen = Array.from({ length: n }, (_, i) => { const x = 3 + (i * 94) / (n - 1), l = 3 + ((i * 53 + 7) % 7), b = 1.1 + ((i * 31) % 5) / 6;
+    return `<path d="M${(x - b).toFixed(2)} 0 L${(x + b).toFixed(2)} 0 L${x.toFixed(2)} ${l} Z"/>${i % 5 === 2 ? `<circle class="jz-tropfen" cx="${x.toFixed(2)}" cy="${l + 0.6}" r=".55" style="animation-delay:${(i * 0.7) % 4}s"/>` : ""}`; }).join("");
+  leiste.classList.add("jz-eis-an");
+  leiste.insertAdjacentHTML("beforeend", `<svg class="jz-eis" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="jzEisVerlauf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="1"/><stop offset="1" stop-color="#a9dcff" stop-opacity=".75"/></linearGradient></defs><rect x="0" y="0" width="100" height="1.2" rx=".6" fill="#ffffff" opacity=".85"/><g fill="url(#jzEisVerlauf)">${zapfen}</g></svg>`);
 }
 const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"] };
 function jahreszeitKopf() {
@@ -12010,7 +12048,8 @@ function jahreszeitKopf() {
   // 2.263.0 (Fund Hansi „Blätter bleiben immer noch nicht liegen“): sein Handy meldet „Bewegung reduzieren“ (wie schon bei der Jalousie, 2.161.0) –
   // dann lief bisher nur die alte Emoji-Deko, bei der nichts liegen bleibt. Die Bühne ist ruhig und lässt sich mit „🍂 Jahreszeiten im Kopf“ abschalten,
   // sie läuft deshalb auch bei „Bewegung reduzieren“.
-  const jetzt = JZB.vorschau || jahreszeitArt();
+  const jetzt = JZB.vorschau || jahreszeitAktuell(); JZ_LETZTE.art = jetzt;
+  jzEiszapfen(h, jetzt); // KC-CLUB-JAHRESZEIT-AUTOMATIK (2.273.0)
   if (JZB_ARTEN.includes(jetzt) && jzbStart(h, jetzt)) return;
   const art = jetzt, teile = JZ_TEILE[art], n = art === "sommer" ? 3 : art === "silvester" ? 9 : 11;
   const s = document.createElement("div"); s.className = `jz-schicht jz-${art}`; s.setAttribute("aria-hidden", "true");
@@ -12018,6 +12057,9 @@ function jahreszeitKopf() {
   h.prepend(s);
 }
 function jahreszeitUmschalten(an) { einstellung("jahreszeit", an); jahreszeitKopf(); }
+// Automatik: wechselt die Jahreszeit (z. B. um Mitternacht oder genau zum Winteranfang), stellt sich der Kopf von selbst um – und Frost lässt Eiszapfen wachsen
+setInterval(() => { try { const h = document.querySelector("#v-start .hero"); if (!h || JZB.vorschau) return; const art = jahreszeitAktuell(), eis = jzTieferWinter(art);
+  if (art !== JZ_LETZTE.art) jahreszeitKopf(); else if (eis !== JZ_LETZTE.eis) jzEiszapfen(h, art); JZ_LETZTE.eis = eis; } catch {} }, 60000);
 // ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0, Wunsch Hansi): Jahreszeiten im Kopf mit Boden ----------
 // 🍂 Herbst: Laub fällt und bleibt unten liegen; liegt genug, kommt ein Windstoß (abwechselnd von links und von rechts) und weht es weg.
 // ❄️ Winter/Advent: Schnee bleibt liegen und wird weggeweht – jeder 3. Lauf wird daraus ein lachender Schneemann

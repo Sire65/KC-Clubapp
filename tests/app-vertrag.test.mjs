@@ -5751,6 +5751,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(wahl !== "spaeter"\) erledigt\(\);/.test(html) && /\(\) => zu\("spaeter"\)\)/.test(html), "Später (und Wegtippen) fragt beim nächsten Start nochmal; Ansehen und Keinen Hinweis mehr beenden den Hinweis");
 }
 
+// 2.273.0 KC-CLUB-JAHRESZEIT-AUTOMATIK (Wunsch Hansi): Jahreszeiten nach offiziellem Kalender (Automatik) + kurze Eiszapfen an der LED-Leiste im tiefen Winter
+{
+  assert.ok(/function jzAnfaenge\(jahr\)/.test(html) && /2451623\.80984/.test(html) && /2451900\.05952/.test(html), "astronomische Anfänge nach Meeus (Tag-und-Nacht-Gleiche, Sonnenwende)");
+  assert.ok(/if \(d >= a\.winter \|\| d < a\.fruehling\) return "winter";/.test(html), "Winter ab Winteranfang bis Frühlingsanfang");
+  assert.ok(/\["auto", "🔄 Automatik"\]/.test(html) && /: "auto"; \} catch \{ return "auto"; \}/.test(html), "Automatik ist Standard, unbekannte Wahl fällt auf Automatik");
+  assert.ok(/const jetzt = JZB\.vorschau \|\| jahreszeitAktuell\(\);/.test(html), "Kopf nutzt Wahl bzw. Automatik");
+  assert.ok(/if \(art !== JZ_LETZTE\.art\) jahreszeitKopf\(\);/.test(html) && /\}, 60000\);/.test(html), "Automatik stellt den Kopf von selbst um (jede Minute geprüft)");
+  assert.ok(/id="jzWahl"/.test(html) && /id="jzWahlInfo"/.test(html), "Auswahl in den Einstellungen");
+  assert.ok(/\.jz-eis \{[^}]*height:\s*9px/.test(html) && /pointer-events:\s*none/.test(html), "Eiszapfen höchstens 9 px, nicht anklickbar");
+  assert.ok(/einfach\(\) \|\| !fxAn\(\) \|\| !einst\("jahreszeit", true\) \|\| !jzTieferWinter\(art\)/.test(html), "keine Eiszapfen in der einfachen Ansicht, ohne Effekte oder Jahreszeiten");
+  assert.ok(/Date\.now\(\) - new Date\(r\.stand\) <= WETTER_VERALTET_MIN \* 60000/.test(html), "Frost nur aus frischen Wetterdaten");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

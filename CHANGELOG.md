@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.273.0 – 2026-10-11 – KC-CLUB-JAHRESZEIT-AUTOMATIK: Jahreszeiten-Automatik nach Kalender, Eiszapfen im tiefen Winter
+Neue Wahl „📅 Welche Jahreszeit?“ in den Einstellungen: 🔄 Automatik (Standard) stellt die Kopfleiste nach den offiziellen Anfängen (Frühling, Sommer, Herbst, Winter – astronomisch auf die Minute) von selbst um, oder eine feste Jahreszeit. Im tiefen Winter (Winteranfang bis Februar, an Frosttagen laut frischem Wetter oder bei fester Wahl Winter) hängen kurze Eiszapfen (höchstens 9 px) an der LED-Leiste.
+
 ## 2.272.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-8: Versteckte Helfer, Kommunikationszentrale, Sprachsteuerung (Wunsch Hansi)
 - 🔎 „Versteckte Helfer“: Kochmütze (Internetseite, kommt noch), Tag/Nacht mit A/T/N (Nacht nur vorgeführt), Kopf halb/ganz einrollen, ‹ › und « » im Info-Feld, die gelben Pünktchen, im Kopf wischen, Lämpchen mit Verbindungs-Anzeige, 🐌 Schnecke und 🐢 Schildkröte, das Wort „Schnellzugriff“, Kacheln lange drücken/verschieben/umdrehen, Register anordnen und wischen, „Mehr Funktionen anzeigen“, Lupe, 👆 „Was kann ich antippen?“, Fragezeichen lange drücken, Schnellstart einrichten. Stationen aus „Oberfläche nach Wunsch“ werden wiederverwendet (bleiben gleich).
 - 📡 „Kommunikationszentrale“: Anzeige mit Uhr/online/neu/Push und Ticker, an wen, Pult (Anrufen, Video, Anklopfen, Sprache, Chat, Standort, Termin), zusätzliche Wege, Schnellnachricht mit Rückmeldung.

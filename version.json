@@ -1,11 +1,20 @@
 {
-  "version": "2.272.0",
+  "version": "2.273.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🎬 Drei neue Erklär-Videos: Versteckte Helfer, Kommunikationszentrale und Sprachsteuerung komplett"
+    "🔄 Jahreszeiten-Automatik nach offiziellem Kalender (Frühlings-, Sommer-, Herbst-, Winteranfang)",
+    "❄️ Kurze Eiszapfen an der LED-Leiste im tiefen Winter"
   ],
   "verlauf": [
+    {
+      "version": "2.273.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🔄 Jahreszeiten-Automatik nach offiziellem Kalender (Frühlings-, Sommer-, Herbst-, Winteranfang)",
+        "❄️ Kurze Eiszapfen an der LED-Leiste im tiefen Winter"
+      ]
+    },
     {
       "version": "2.272.0",
       "datum": "2026-10-11",
