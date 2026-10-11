@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.248.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-FIGUR: Erklär-Videos zur Koch-Figur (Wunsch Hansi)
+- 🧑‍🍳 „Koch-Figur als Bild aussuchen“: Meins → Mein Bild, Köchinnen/Köche, Figur antippen (große Vorschau), Übernehmen/Bearbeiten, Kochjacke täglich wechselnd, eigenes Foto (nur wenn freigegeben).
+- 🧩 „Eigene Figur zusammenstellen“: Selbst zusammenstellen oder Bearbeiten, Vorschau und Zufall, dann Teil für Teil mit Vorführung an einer Beispiel-Figur (Koch/Köchin, Haare, Kopfbedeckung, Bart, Gesicht, Brille, Kochjacke, Hintergrund/Halstuch), ⓘ Anzahl, Speichern – und wie man die Figur später ändert.
+- Nur vorgeführt, nichts wird gespeichert; Fenster gehen am Ende wieder zu. Sichtbar nur, wenn „Mein Bild“ (bzw. der Baukasten) für das Mitglied freigegeben ist. Bewertung 👍/👎 wie bei den anderen Videos.
+
 ## 2.247.0 – 2026-10-11 – KC-CLUB-JAHRESZEIT-BUEHNE: Jahreszeiten im Kopf mit Boden (Wunsch Hansi)
 - 🍂 Herbst: Laub fällt oben und bleibt unten im Kopf liegen; liegt genug, kommt ein Windstoß – abwechselnd von links und von rechts – und weht es weg.
 - ❄️ Winter/Advent: Schnee bildet unten eine Decke und wird ebenso weggeweht. Jeder 3. Lauf wird daraus ein lachender Schneemann (Kochmütze, weinroter Schal mit Goldstreifen; im Advent Weihnachtsmütze), der winkt, lacht und nach einer halben Minute schmilzt.

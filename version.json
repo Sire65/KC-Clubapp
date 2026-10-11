@@ -1,11 +1,18 @@
 {
-  "version": "2.247.0",
+  "version": "2.248.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🍂 Jahreszeiten im Kopf: Herbstlaub bleibt liegen, bis ein Windstoß es wegweht – Schnee ebenso, jedes 3. Mal mit lachendem Schneemann; Gras und Blumen im Frühling, Sonnenblume im Sommer"
+    "🎬 Neue Erklär-Videos: Koch-Figur als Bild aussuchen und eigene Figur zusammenstellen und bearbeiten (Technik → Erklär-Videos)"
   ],
   "verlauf": [
+    {
+      "version": "2.248.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🎬 Neue Erklär-Videos: Koch-Figur als Bild aussuchen und eigene Figur zusammenstellen und bearbeiten (Technik → Erklär-Videos)"
+      ]
+    },
     {
       "version": "2.247.0",
       "datum": "2026-10-11",

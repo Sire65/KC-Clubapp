@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.247.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.248.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1367,7 +1367,7 @@ const RUNDGANG = [
   { v: "einstellungen", sel: ["#v-einstellungen .kopf2", "#v-einstellungen"], t: "⚙️ Mehr", x: "Unter Mehr findest du die Einstellungen: Benachrichtigungen, Töne, Farben und große Schrift. Hier kannst du auch diesen Rundgang jederzeit wieder starten." },
   { v: "start", sel: ["#raster"], t: "✨ Und noch viel mehr", x: "Außerdem gibt es das Fotoalbum, das Archiv mit der Clubchronik, die Protokolle, Helfen und Leihen, die Erstattung von Auslagen, Spiele wie Schach, Bauernskat und Mensch ärgere dich nicht – und den SOS-Bereich für den Notfall." },
   { v: "start", vor: () => { if (!einfach() && reg !== "programme") { const alt = reg; register("programme"); RG.zurueck.push(() => register(alt)); } }, // KC-CLUB-ERKLAERVIDEOS (2.244.0)
-    sel: ['#raster .kachel[data-id="erklaer"]'], t: "🎬 Weitere Erklär-Videos", x: "Es gibt noch mehr Erklär-Videos: alle Einstellungen mit Beispielen, wie du eine Nachricht schreibst, einen Termin einträgst, einen Zettel an die Pinnwand hängst und einen Vorschlag einreichst. Du findest sie im Register Technik unter Erklär-Videos – und in Hilfe und Tipps." },
+    sel: ['#raster .kachel[data-id="erklaer"]'], t: "🎬 Weitere Erklär-Videos", x: "Es gibt noch mehr Erklär-Videos: alle Einstellungen mit Beispielen, wie du eine Nachricht schreibst, einen Termin einträgst, einen Zettel an die Pinnwand hängst, einen Vorschlag einreichst und dir eine Koch-Figur als Bild aussuchst. Du findest sie im Register Technik unter Erklär-Videos – und in Hilfe und Tipps." },
   { v: "start", sel: ["#hzFrage", "#suLupe"], t: "❓ Hilfe", x: "Und wenn du mal nicht weiterweißt: Das Fragezeichen unten rechts öffnet die Hilfe zum Bereich, die Lupe findet jede Funktion. Oder du fragst Twinkey – einfach tippen oder sprechen." },
   { v: "start", t: "🎉 Fertig", x: "Das war der Rundgang. Probier einfach alles aus – kaputt machen kannst du nichts. Viel Spaß mit der Köcheclub-App!" },
 ];
@@ -1474,6 +1474,49 @@ const RG_ADMIN = [
   { v: "einstellungen", sel: ["#adminBereich"], mussSel: true, vor: () => rgAuf("admin"), t: "⚙️ Admin-Einstellungen", x: "In den Einstellungen gibt es den Bereich Admin-Einstellungen: Erinnerung an alte Zettel an der Pinnwand, Schnellantworten für Anrufe, Tipps nach und nach für den Einstieg, der Kilometer-Satz für Erstattungen und Ort und Wetter-App." },
   { v: "einstellungen", t: "✅ Fertig", x: "Das war das Admin-Video. Das Admin-Register und diese Einstellungen sehen nur Admins – in den Videos für alle Mitglieder kommen sie nicht vor." },
 ];
+// KC-CLUB-ERKLAERVIDEOS-FIGUR (2.248.0, Wunsch Hansi „Erklär-Videos, wie man sich eine Figur zuordnet und bearbeitet“):
+// Koch-Figur aussuchen (Mein Bild) und eigene Figur im Baukasten zusammenstellen. Vorgeführt wird nur – nichts wird gespeichert;
+// die Fenster gehen am Ende wieder zu. Foto, Baukasten und Jacken-Schalter erscheinen nur, wenn sie für das Mitglied freigegeben sind.
+function rgAvAuf(wahl) { // „Mein Bild“ öffnen (und auf Wunsch eine Figur zeigen, ohne sie zu übernehmen)
+  $("avbBlatt")?.remove();
+  if (!$("avBlatt")) { avWahl(); RG.zurueck.push(() => $("avBlatt")?.remove()); }
+  $("avBlatt")?.classList.add("rg-zeigen");
+  if (wahl !== undefined && AVW.wahl !== wahl) avWaehlen(wahl, document.querySelector(`#avBlatt .av-raster button[aria-label="Figur ${wahl}"]`));
+}
+function rgAvbAuf(teile) { // Baukasten mit einer Beispiel-Figur öffnen; teile = { Teil-Nr: Wert } wird vorgeführt (oben sofort sichtbar)
+  $("avBlatt")?.remove();
+  if (!$("avbBlatt")) { avBauen("m05"); RG.zurueck.push(() => $("avbBlatt")?.remove()); }
+  $("avbBlatt")?.classList.add("rg-zeigen");
+  if (teile && AVB) { for (const [i, w] of Object.entries(teile)) AVB[i] = w; avbZeigen(); }
+}
+const rgAvTeil = (n) => `#avbInhalt [data-teil="${n}"]`;
+const RG_FIGUR = [
+  { v: "start", nur: () => !einfach(), vor: () => { if (!einfach() && reg !== "mein") { const alt = reg; register("mein"); RG.zurueck.push(() => register(alt)); } },
+    sel: ['#raster .kachel[data-id="avatar"]'], mussSel: true, t: "🧑‍🍳 Mein Bild", x: "So bekommst du ein Bild statt deiner Buchstaben: Im Register Meins tippst du auf die Kachel Mein Bild." },
+  { v: "start", nur: () => einfach(), t: "🧑‍🍳 Mein Bild", x: "Die Kachel Mein Bild findest du in der erweiterten Ansicht im Register Meins. Ich öffne sie dir jetzt." },
+  { v: "start", vor: () => rgAvAuf(), sel: ["#avBlatt .av-raster"], t: "👩‍🍳 Köchinnen und Köche", x: "Hier siehst du alle Koch-Figuren: oben die Köchinnen, darunter die Köche. Ganz unten bei Kein Bild bleiben es deine Buchstaben." },
+  { v: "start", vor: () => rgAvAuf("w03"), sel: ["#avWahlVorschau"], t: "👆 Figur antippen", x: "Tippe eine Figur an, zum Beispiel diese Köchin. Oben siehst du sie dann groß. Tippst du auf das große Bild, siehst du sie noch größer." },
+  { v: "start", vor: () => rgAvAuf("w03"), sel: ["#avWahlVorschau .av-vorschau-knoepfe"], t: "✅ Übernehmen", x: "Gefällt sie dir, tippst du auf Übernehmen – dann ist sie dein Bild. Alle sehen es bei den Mitgliedern, im Chat und bei Wer ist online. Mit Bearbeiten veränderst du sie vorher noch. Hier übernehme ich nichts." },
+  { v: "start", nur: () => frei("avatar_baukasten"), vor: () => rgAvAuf(), sel: ["#avWahlVorschau .av-vorschau-rechts .knopf.haupt"], mussSel: true, t: "🧩 Ganz eigene Figur", x: "Mit Selbst zusammenstellen baust du dir eine ganz eigene Figur – Haare, Bart, Brille, Mütze, Kochjacke und vieles mehr. Wie das geht, zeigt das Video Eigene Figur zusammenstellen." },
+  { v: "start", nur: () => frei("avatar_baukasten"), vor: () => rgAvAuf(), sel: ["#avJackeAuto"], mussSel: true, t: "🔄 Kochjacke wechselt", x: "Hast du schon ein Bild, kannst du hier einschalten, dass deine Kochjacke jeden Tag eine andere Farbe hat – von Montag bis Sonntag." },
+  { v: "start", nur: () => frei("avatar_foto"), vor: () => rgAvAuf(), sel: ["#avWahlVorschau .av-vorschau-rechts"], mussSel: true, t: "📷 Eigenes Foto", x: "Lieber ein Foto? Rechts neben dem Bild machst du ein Selfie, nimmst ein Foto aus der Galerie oder eine Datei." },
+  { v: "start", vor: () => rgAvAuf(), t: "✅ Fertig", x: "Das war's: Mein Bild öffnen, Figur antippen, übernehmen. Dein Bild kannst du jederzeit wieder ändern – oder mit Kein Bild zu deinen Buchstaben zurück." },
+];
+const RG_FIGUR_BAU = [
+  { v: "start", vor: () => rgAvAuf(), sel: ["#avWahlVorschau .av-vorschau-rechts .knopf.haupt"], t: "🧩 Selbst zusammenstellen", x: "So stellst du dir eine eigene Figur zusammen: In Mein Bild tippst du auf Selbst zusammenstellen. Oder du tippst erst eine fertige Figur an und dann auf Bearbeiten – dann fängst du mit ihr an." },
+  { v: "start", vor: () => rgAvbAuf(), sel: ["#avbInhalt > div:first-child"], t: "👀 Oben die Vorschau", x: "Oben siehst du deine Figur groß. Jede Änderung siehst du dort sofort. Mit Zufall würfelt die App dir eine Figur als Anfang." },
+  { v: "start", vor: () => rgAvbAuf({ 8: 0 }), sel: [rgAvTeil(8)], t: "👨‍🍳 Koch oder Köchin", x: "Darunter wählst du Teil für Teil – einfach antippen. Zuerst: Koch oder Köchin." },
+  { v: "start", vor: () => rgAvbAuf({ 1: 4 }), sel: [rgAvTeil(1), rgAvTeil(0)], t: "💇 Haut und Haare", x: "Dann Hautton, Kopfform, Frisur und Haarfarbe – hier zum Beispiel Locken." },
+  { v: "start", vor: () => rgAvbAuf({ 3: 11, 16: 3 }), sel: [rgAvTeil(3)], t: "🧢 Auf dem Kopf", x: "Was trägst du auf dem Kopf? Kochmütze, hohe Chefmütze, Kappe, Kopftuch – oder nichts. Darunter wählst du Farbe und Muster dazu." },
+  { v: "start", vor: () => rgAvbAuf({ 8: 0, 4: 2 }), sel: [rgAvTeil(4)], t: "🧔 Bart", x: "Beim Koch gibt es auch Bärte – zum Beispiel einen Schnurrbart." },
+  { v: "start", vor: () => rgAvbAuf({ 9: 1, 11: 1 }), sel: [rgAvTeil(9), rgAvTeil(11)], t: "🙂 Das Gesicht", x: "Fürs Gesicht wählst du Augen, Augenfarbe, Nase, Ohren, Augenbrauen, Mund und Wangen – hier lachende Augen und ein breites Lachen." },
+  { v: "start", vor: () => rgAvbAuf({ 5: 1, 13: 2 }), sel: [rgAvTeil(5)], t: "👓 Brille", x: "Eine Brille? Rund, eckig, Sonnenbrille und viele mehr – dazu Farbe und auf Wunsch etwas Glitzer." },
+  { v: "start", vor: () => rgAvbAuf({ 14: 3 }), sel: [rgAvTeil(14)], t: "🧥 Kochjacke", x: "Die Kochjacke: Farbe, Muster, Kragen und Knöpfe – hier weinrot wie unser Club. Mit täglich wechselnd hat sie jeden Tag eine andere Farbe." },
+  { v: "start", vor: () => rgAvbAuf({ 6: 1, 7: 1 }), sel: [rgAvTeil(6), rgAvTeil(7)], t: "🎨 Hintergrund & Halstuch", x: "Zum Schluss Hintergrund und Halstuch." },
+  { v: "start", vor: () => rgAvbAuf(), sel: ["#avbBlatt .av-info-knopf"], mussSel: true, t: "ⓘ Wie viele Figuren?", x: "Der kleine i-Knopf oben verrät, wie viele verschiedene Figuren möglich sind – es sind unvorstellbar viele. Deine ist also einzigartig." },
+  { v: "start", vor: () => rgAvbAuf(), sel: ["#avbInhalt .bs-fuss"], t: "💾 Speichern", x: "Fertig? Ganz unten tippst du auf Speichern – dann ist die Figur dein Bild. Mit Abbrechen bleibt alles, wie es war. Hier speichere ich nichts." },
+  { v: "start", vor: () => rgAvAuf(), t: "✏️ Später ändern", x: "Ändern kannst du deine Figur jederzeit: Mein Bild öffnen, deine eigene Figur antippen und auf Bearbeiten. Viel Spaß beim Zusammenstellen!" },
+];
 const RUNDGAENGE = [
   { id: "ueberblick", stand: "1", sym: "🗺️", t: "Überblick: die App in 3 Minuten", u: "Oberfläche, Knöpfe, Register und was die App kann", st: () => RUNDGANG },
   { id: "einstellungen", stand: "1", sym: "⚙️", t: "Alle Einstellungen erklärt", u: "Was jede Einstellung bedeutet – mit Beispielen (ca. 6 Min.)", st: () => RG_EINSTELLUNGEN },
@@ -1481,6 +1524,8 @@ const RUNDGAENGE = [
   { id: "termin", stand: "1", sym: "📅", t: "Termin eintragen", u: "Privater Termin, Wiederholen, Erinnerung (ca. 2 Min.)", st: () => RG_TERMIN },
   { id: "pinnwand", stand: "1", sym: "📌", t: "Zettel an die Pinnwand", u: "Schreiben, wichtig, für wen, anheften (ca. 1 Min.)", st: () => RG_PINNWAND },
   { id: "vorschlag", stand: "1", sym: "🗳️", t: "Vorschlag einreichen", u: "Thema oder Spende vorschlagen (ca. 1 Min.)", st: () => RG_VORSCHLAG },
+  { id: "figur", stand: "1", sym: "🧑‍🍳", t: "Koch-Figur als Bild aussuchen", u: "Mein Bild: Figur antippen, übernehmen (ca. 1 Min.)", st: () => RG_FIGUR, nur: () => frei("avatar") }, // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR
+  { id: "figurbau", stand: "1", sym: "🧩", t: "Eigene Figur zusammenstellen", u: "Haare, Mütze, Gesicht, Brille, Kochjacke – und später bearbeiten (ca. 2 Min.)", st: () => RG_FIGUR_BAU, nur: () => frei("avatar") && frei("avatar_baukasten") },
   { id: "leitung", stand: "1", ziel: "leitung", sym: "🗂️", t: "Für die Clubleitung: Büro & mehr", u: "Büro, Termine für alle, Abstimmung, eigene Einstellungen – nur für die Clubleitung", st: () => RG_LEITUNG, nur: () => !!(ICH?.buero || ICH?.vorstand) },
   { id: "admin", stand: "1", ziel: "admin", sym: "🛠️", t: "Für Admins: Leitstand", u: "Admin-Register, Lämpchen, Admin-Einstellungen – nur für Admins", st: () => RG_ADMIN, nur: () => !!ICH?.admin },
 ];

@@ -5641,7 +5641,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/api\("video_bewerten", \{ video: tour\.id, stand: tour\.stand,/.test(html) && /catch \(e\) \{ knopf\.disabled = false; meldeFehler\(e\); \}/.test(html), "senden mit Fassung; Fehler sichtbar (Regel 11)");
   assert.ok(/case "video_bewerten": \{/.test(server) && /onConflict: "video,stand,person_id"/.test(server) && /case "video_auswertung": \{\s*nurAdmin\(ich\);/.test(server) && /return json\(\{ videos: \[\.\.\.m\.values\(\)\] \}\); \/\/ nur Zahlen – keine Namen/.test(server), "Server: eine Bewertung je Person/Video/Fassung, Auswertung nur Admin, ohne Namen");
   assert.ok(/if \(!z\.anzahl \|\| z\.anzahl < RG_MIN_STIMMEN \|\| !alle\) return \["grau"/.test(html) && /q < 0\.6 \? \["rot", "🔴 überarbeiten"\]/.test(html), "unbekannt = grau, nie gut; schlecht = überarbeiten");
-  assert.ok(/ICH\?\.admin \? \[\{ sym: "📊", t: "Auswertung der Videos"/.test(html) && (html.match(/\{ id: "[a-z]+", stand: "1",/g) || []).length === 8, "Auswertung nur für den Admin; jede Fassung gezählt");
+  assert.ok(/ICH\?\.admin \? \[\{ sym: "📊", t: "Auswertung der Videos"/.test(html) && (html.match(/\{ id: "[a-z]+", stand: "1",/g) || []).length === 10, "Auswertung nur für den Admin; jede Fassung gezählt (2.248.0: 10 Videos)");
   assert.ok(/if \(r && !RG\.an\) scrollTo\(/.test(html) && /if \(Date\.now\(\) - \(RG\.seit \|\| 0\) < 6000/.test(html), "Fund Hansi: Chat-Kartei scrollt im Video nicht weg; Ziel wird zurückgeholt");
   assert.ok(fs.existsSync(new URL("../supabase/migrations/20261011_kc_club_v2246_video_bewertung.sql", import.meta.url)), "Migration");
 }
@@ -8263,3 +8263,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!fxAn\(\) \|\| !einst\("jahreszeit", true\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");
   assert.ok(/\.jz-buehne canvas \{ position: absolute; inset: 0;/.test(seite) && /jahreszeitVorschau\('winter'\)/.test(seite), "Canvas im Kopf, Vorschau in den Einstellungen");
 }
+
+// 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR (Wunsch Hansi): Videos zur Koch-Figur – nur vorführen, nie speichern, nur wenn freigegeben
+{
+  const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR"), html.indexOf("const RUNDGAENGE = ["));
+  assert.ok(/\{ id: "figur", [^\n]*st: \(\) => RG_FIGUR, nur: \(\) => frei\("avatar"\) \}/.test(html) && /\{ id: "figurbau", [^\n]*st: \(\) => RG_FIGUR_BAU, nur: \(\) => frei\("avatar"\) && frei\("avatar_baukasten"\) \}/.test(html), "beide Videos registriert, nur mit Freigabe");
+  assert.ok(!/avSetzen|avJackeAuto\(|einstellung_setzen|api\(/.test(b), "Videos speichern nichts");
+  assert.ok(/RG\.zurueck\.push\(\(\) => \$\("avBlatt"\)\?\.remove\(\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => \$\("avbBlatt"\)\?\.remove\(\)\)/.test(b) && (b.match(/classList\.add\("rg-zeigen"\)/g) || []).length === 2, "Fenster sichtbar während des Videos, danach zu");
+}
+
