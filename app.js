@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.277.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.278.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12309,7 +12309,7 @@ function jzEiszapfen(h, art) {
   // leicht gewellt mit Glanzkante; immer gleich (fester Zufall), damit nichts springt. Höchstens 22 px – das Infofeld darunter bleibt frei.
   const zf = (i) => { const v = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); }, teile = [];
   for (let x = 2.5, i = 0; x < 97.5; i++) {
-    const l = Math.min(21, 1.6 + Math.pow(zf(i), 2.2) * 15 + (i % 7 === 3 ? 6 : 0)), b = .45 + l * .045 + zf(i + 50) * .35, X = (v) => v.toFixed(2);
+    const l = Math.min(21, 3.5 + Math.pow(zf(i), 1.3) * 12 + (i % 5 === 2 ? 6 : 0)) /* 2.278.0: insgesamt länger, jeder 5. lang */, b = .45 + l * .045 + zf(i + 50) * .35, X = (v) => v.toFixed(2);
     teile.push(`<path d="M${X(x - b)} 0 Q${X(x - b * .5)} ${X(l * .45)} ${X(x - b * .12)} ${X(l * .86)} Q${X(x)} ${X(l * 1.02)} ${X(x + b * .12)} ${X(l * .86)} Q${X(x + b * .6)} ${X(l * .4)} ${X(x + b)} 0 Z"/>`
       + (l > 7 ? `<path class="jz-glanz" d="M${X(x - b * .45)} 1 Q${X(x - b * .3)} ${X(l * .4)} ${X(x - b * .08)} ${X(l * .75)}"/>` : "")
       + (l > 12 && i % 2 ? `<circle class="jz-tropfen" cx="${X(x)}" cy="${X(l + .7)}" r=".6" style="animation-delay:${X((i * .9) % 5)}s"/>` : ""));
@@ -12318,7 +12318,20 @@ function jzEiszapfen(h, art) {
   const zapfen = teile.join("");
   leiste.classList.add("jz-eis-an");
   leiste.insertAdjacentHTML("beforeend", `<svg class="jz-eis" viewBox="0 0 100 22" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="jzEisVerlauf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="1"/><stop offset=".55" stop-color="#d9f0ff" stop-opacity=".95"/><stop offset="1" stop-color="#9fd4ff" stop-opacity=".7"/></linearGradient></defs><rect x="0" y="0" width="100" height="1.4" rx=".7" fill="#ffffff" opacity=".9"/><g fill="url(#jzEisVerlauf)">${zapfen}</g></svg>`);
+  requestAnimationFrame(jzEisLaenge);
 }
+// 2.278.0 (Wunsch Hansi „noch länger – die Spitzen sollen gerade in das Feld darunter reichen“): die Länge richtet sich nach dem echten
+// Abstand bis zum Infofeld – die längsten Spitzen ragen 6 px hinein. Fehlt das Feld (z. B. Kopf eingerollt), bleibt es bei 22 px.
+function jzEisLaenge() {
+  const e = document.querySelector("#v-start .statusleiste .jz-eis"); if (!e) return;
+  const l = e.parentElement.getBoundingClientRect(), f = document.querySelector("#v-start #heroInfo"), r = f && rgSichtbar(f) ? f.getBoundingClientRect() : null;
+  const luecke = r && r.top > l.bottom ? r.top - l.bottom : 0;
+  // längsten Zapfen messen und das Bild so strecken, dass genau seine Spitze 6 px ins Feld ragt
+  const oben = e.getBoundingClientRect().top, h0 = e.getBoundingClientRect().height || 22;
+  const tief = Math.max(...[...e.querySelectorAll("path:not(.jz-glanz)")].map((x) => x.getBoundingClientRect().bottom)) - oben;
+  e.style.height = `${Math.round(Math.max(22, Math.min(48, luecke ? (luecke + 6) * h0 / Math.max(1, tief) : 22)))}px`;
+}
+addEventListener("resize", () => requestAnimationFrame(jzEisLaenge));
 const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"] };
 function jahreszeitKopf() {
   const h = document.querySelector("#v-start .hero"); if (!h) return;
@@ -12339,7 +12352,7 @@ function jahreszeitKopf() {
 function jahreszeitUmschalten(an) { einstellung("jahreszeit", an); jahreszeitKopf(); }
 // Automatik: wechselt die Jahreszeit (z. B. um Mitternacht oder genau zum Winteranfang), stellt sich der Kopf von selbst um – und Frost lässt Eiszapfen wachsen
 setInterval(() => { try { const h = document.querySelector("#v-start .hero"); if (!h || JZB.vorschau) return; const art = jahreszeitAktuell(), eis = jzTieferWinter(art);
-  if (art !== JZ_LETZTE.art) jahreszeitKopf(); else if (eis !== JZ_LETZTE.eis) jzEiszapfen(h, art); JZ_LETZTE.eis = eis; } catch {} }, 60000);
+  if (art !== JZ_LETZTE.art) jahreszeitKopf(); else if (eis !== JZ_LETZTE.eis) jzEiszapfen(h, art); else jzEisLaenge(); JZ_LETZTE.eis = eis; } catch {} }, 60000);
 // ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0, Wunsch Hansi): Jahreszeiten im Kopf mit Boden ----------
 // 🍂 Herbst: Laub fällt und bleibt unten liegen; liegt genug, kommt ein Windstoß (abwechselnd von links und von rechts) und weht es weg.
 // ❄️ Winter/Advent: Schnee bleibt liegen und wird weggeweht – jeder 3. Lauf wird daraus ein lachender Schneemann
@@ -13320,7 +13333,7 @@ let infoLetztes = "";
 const KOPF_ROLLO = "kc_club_kopf_eingerollt", ROLLO_FAHRT_MS = 1400, ROLLO_KLAPP_MS = 320, ROLLO_VERSATZ_MS = 22;
 const ROLLO_RANG = { offen: 0, halb: 1, ganz: 2 };
 const kopfRolloStand = () => { const h = document.querySelector("#v-start .hero"); return h?.classList.contains("eingerollt") ? "ganz" : h?.classList.contains("halb-eingerollt") ? "halb" : "offen"; };
-function kopfRolloKlassen(h, stand) { h.classList.toggle("eingerollt", stand === "ganz"); h.classList.toggle("halb-eingerollt", stand === "halb"); }
+function kopfRolloKlassen(h, stand) { h.classList.toggle("eingerollt", stand === "ganz"); h.classList.toggle("halb-eingerollt", stand === "halb"); requestAnimationFrame(jzEisLaenge); } // 2.278.0: Eiszapfen-Länge neu messen
 function kopfRolloSetzen(stand) {
   if (stand === true) stand = "ganz"; else if (!stand) stand = "offen";
   const h = document.querySelector("#v-start .hero"); if (!h) return;

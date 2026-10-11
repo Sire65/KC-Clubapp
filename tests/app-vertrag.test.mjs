@@ -5804,11 +5804,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/typ: "flocke", x: p\.x \+ jzbZ\(-14, 14\)/.test(html), "Schal wirbelt mit Schnee hoch");
   assert.ok(/p\.vx = W\.dir \* Math\.min\(110, Math\.max\(50, Math\.abs\(p\.vx\)\)\)/.test(html), "Schal bleibt nie hängen – verlässt das Bild sicher");
   assert.ok(/J\.sonne = null; J\.wind = null;/.test(html), "Sonne verschwindet mit dem Lauf");
-  assert.ok(/viewBox="0 0 100 22"/.test(html) && /\.jz-eis \{[^}]*height: 22px/.test(html) && /Math\.pow\(zf\(i\), 2\.2\)/.test(html), "Eiszapfen länger und unterschiedlich (höchstens 22 px)");
+  assert.ok(/viewBox="0 0 100 22"/.test(html) && /\.jz-eis \{[^}]*height: 22px/.test(html) && /Math\.pow\(zf\(i\), 1\.3\)/.test(html), "Eiszapfen länger und unterschiedlich (Grundhöhe 22 px, 2.278.0 bis ins Infofeld gestreckt)");
 }
 // 2.277.1: Vertragstest „Schneemann steht 50 s“ an die Sonne angepasst (Verhalten unverändert: nach 50 s beginnt das Schmelzen)
 {
   assert.ok(/if \(J\.pt >= 50\) \{ jzbSonneStart\(\); jzbPhase\("schmelzen"\); \}/.test(html), "Schneemann steht weiter 50 s");
+}
+// 2.278.0 KC-CLUB-EISZAPFEN-2 (Wunsch Hansi „noch länger – die Spitzen sollen gerade in das Feld darunter reichen“)
+{
+  assert.ok(/function jzEisLaenge\(\)/.test(html) && /e\.style\.height = `\$\{Math\.round\(Math\.max\(22, Math\.min\(48, luecke \? \(luecke \+ 6\) \* h0 \/ Math\.max\(1, tief\) : 22\)\)\)\}px`;/.test(html), "längste Spitze ragt 6 px ins Infofeld, höchstens 48 px");
+  assert.ok(/requestAnimationFrame\(jzEisLaenge\)/.test(html) && /addEventListener\("resize", \(\) => requestAnimationFrame\(jzEisLaenge\)\)/.test(html), "neu gemessen bei Kopf-Rollo und Größenänderung");
+  assert.ok(/i % 5 === 2 \? 6 : 0/.test(html), "jeder fünfte Zapfen lang");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
