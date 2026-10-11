@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.246.0 – 2026-10-11 – KC-CLUB-VIDEO-BEWERTUNG: 👍/👎 am Ende der Erklär-Videos + Auswertung; Video-Ziel bleibt im Bild
+- Am Ende jedes Erklär-Videos: „Hat dir das Video gefallen?“ und „Hilft es dir weiter?“ mit 👍/👎 (Abschicken/Überspringen). Server speichert je Mitglied, Video und Fassung (DB kc_club_video_bewertung).
+- Admin: Erklär-Videos → 📊 Auswertung (nur Zahlen): 🟢 gut ab 80 % 👍, 🟡 beobachten, 🔴 überarbeiten unter 60 %, ⚪ unter 3 Stimmen. Überarbeitete Videos (stand hochzählen) zählen neu.
+- Fund Hansi (Bildschirmfoto): Nachrichten-Video – bei langsamem Server scrollte die Chat-Rollkartei nach, „＋ Neu“ lag außerhalb, Rahmen am Rand. Kartei scrollt im Video nicht mehr, Ziel wird 6 s lang im Bild gehalten, kein Rahmen am Rand.
+
 ## 2.245.1 – 2026-10-11 – Erklär-Videos: Ziel bleibt im Bild (Rollkartei)
 - Fund Hansi: Im Video „Neue Nachricht“ scrollte die Chat-Rollkartei die Seite nach unten – „＋ Neu“ war nicht zu sehen. Das Video holt das erklärte Element jetzt wieder ins Bild, wenn die Seite danach noch scrollt (gilt für alle Videos). Text zur Empfänger-Auswahl an die Bildschirm-Knöpfe angepasst. Geprüft: alle 8 Videos, beide Ansichten, alle Rollkarteien an.
 

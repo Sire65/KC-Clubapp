@@ -5623,7 +5623,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const allg = html.slice(html.indexOf("const RG_EINSTELLUNGEN"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-ROLLEN"));
   assert.ok(allg.length > 1000 && !/Admin|admin\(|Büro(?!klammer)|buero|Für die Clubleitung|leitung_start|termineNeuWahl\(\)|vorschlagForm\("abstimmung"\)/.test(allg), "allgemeine Videos erwähnen/zeigen keine Admin- oder Leitungs-Funktionen");
-  assert.ok(/\{ id: "leitung", ziel: "leitung",[^\n]*nur: \(\) => !!\(ICH\?\.buero \|\| ICH\?\.vorstand\) \}/.test(html) && /\{ id: "admin", ziel: "admin",[^\n]*nur: \(\) => !!ICH\?\.admin \}/.test(html), "eigene Videos nur für die jeweilige Rolle");
+  assert.ok(/\{ id: "leitung", (?:stand: "[^"]+", )?ziel: "leitung",[^\n]*nur: \(\) => !!\(ICH\?\.buero \|\| ICH\?\.vorstand\) \}/.test(html) && /\{ id: "admin", (?:stand: "[^"]+", )?ziel: "admin",[^\n]*nur: \(\) => !!ICH\?\.admin \}/.test(html), "eigene Videos nur für die jeweilige Rolle");
   assert.ok(/RUNDGAENGE\.filter\(\(r\) => !r\.nur \|\| r\.nur\(\)\)/.test(html) && /RUNDGAENGE\.find\(\(x\) => x\.id === id && \(!x\.nur \|\| x\.nur\(\)\)\)/.test(html), "Liste und Link zeigen nur Erlaubtes");
   assert.ok(/b\.classList\.toggle\("ist-admin", !!ICH\?\.admin && \(!an \|\| ziel === "admin"\)\)/.test(html) && /if \(document\.body\.classList\.contains\("rg-ohne-admin"\)\) document\.body\.classList\.remove\("ist-admin"\);/.test(html), "Admin-Elemente im Video für alle aus – auch nach dem Neuladen");
   assert.ok(/body\.rg-ohne-admin #adminBereich, body\.rg-ohne-admin #register \[data-r="admin"\], body\.rg-ohne-admin #raster \.kachel\.ad/.test(seite) && /body\.rg-ohne-leitung #leitungStart, body\.rg-ohne-leitung #raster \.kachel\[data-id="buero"\]/.test(seite), "ausgeblendet: Admin-Register, -Kacheln, -Einstellungen, Büro, Leitungs-Einstellungen");
@@ -5633,6 +5633,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/if \(ms > 60 && RG\.an && RG\.st\[RG\.i\] === s && RG\.ziel && !rgImBild\(RG\.ziel\)\) rgHin\(\);/.test(html) && /const rgImBild = \(e\) =>/.test(html), "Ziel wird wieder ins Bild geholt, wenn die Seite danach noch scrollt");
   assert.ok(/Oben die Schnellwahl: alle, die gerade online sind, alle Mitglieder oder ein Amt/.test(html), "Text passt zur Empfänger-Auswahl");
+}
+
+// 2.246.0 KC-CLUB-VIDEO-BEWERTUNG (Wunsch Hansi): 👍/👎 am Ende jedes Erklär-Videos + Auswertung für den Admin; Ziel bleibt im Bild (langsamer Server)
+{
+  assert.ok(/if \(n >= RG\.st\.length\) return RG\.frage \? null : rgFrage\(\);/.test(html) && /Hat dir das Video gefallen\?/.test(html) && /Hilft es dir weiter\?/.test(html), "am Ende zwei Fragen mit Daumen");
+  assert.ok(/api\("video_bewerten", \{ video: tour\.id, stand: tour\.stand,/.test(html) && /catch \(e\) \{ knopf\.disabled = false; meldeFehler\(e\); \}/.test(html), "senden mit Fassung; Fehler sichtbar (Regel 11)");
+  assert.ok(/case "video_bewerten": \{/.test(server) && /onConflict: "video,stand,person_id"/.test(server) && /case "video_auswertung": \{\s*nurAdmin\(ich\);/.test(server) && /return json\(\{ videos: \[\.\.\.m\.values\(\)\] \}\); \/\/ nur Zahlen – keine Namen/.test(server), "Server: eine Bewertung je Person/Video/Fassung, Auswertung nur Admin, ohne Namen");
+  assert.ok(/if \(!z\.anzahl \|\| z\.anzahl < RG_MIN_STIMMEN \|\| !alle\) return \["grau"/.test(html) && /q < 0\.6 \? \["rot", "🔴 überarbeiten"\]/.test(html), "unbekannt = grau, nie gut; schlecht = überarbeiten");
+  assert.ok(/ICH\?\.admin \? \[\{ sym: "📊", t: "Auswertung der Videos"/.test(html) && (html.match(/\{ id: "[a-z]+", stand: "1",/g) || []).length === 8, "Auswertung nur für den Admin; jede Fassung gezählt");
+  assert.ok(/if \(r && !RG\.an\) scrollTo\(/.test(html) && /if \(Date\.now\(\) - \(RG\.seit \|\| 0\) < 6000/.test(html), "Fund Hansi: Chat-Kartei scrollt im Video nicht weg; Ziel wird zurückgeholt");
+  assert.ok(fs.existsSync(new URL("../supabase/migrations/20261011_kc_club_v2246_video_bewertung.sql", import.meta.url)), "Migration");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

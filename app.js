@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.245.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.246.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1475,14 +1475,14 @@ const RG_ADMIN = [
   { v: "einstellungen", t: "✅ Fertig", x: "Das war das Admin-Video. Das Admin-Register und diese Einstellungen sehen nur Admins – in den Videos für alle Mitglieder kommen sie nicht vor." },
 ];
 const RUNDGAENGE = [
-  { id: "ueberblick", sym: "🗺️", t: "Überblick: die App in 3 Minuten", u: "Oberfläche, Knöpfe, Register und was die App kann", st: () => RUNDGANG },
-  { id: "einstellungen", sym: "⚙️", t: "Alle Einstellungen erklärt", u: "Was jede Einstellung bedeutet – mit Beispielen (ca. 6 Min.)", st: () => RG_EINSTELLUNGEN },
-  { id: "nachricht", sym: "💬", t: "Neue Nachricht schreiben", u: "Empfänger wählen, schreiben, senden (ca. 1 Min.)", st: () => RG_NACHRICHT },
-  { id: "termin", sym: "📅", t: "Termin eintragen", u: "Privater Termin, Wiederholen, Erinnerung (ca. 2 Min.)", st: () => RG_TERMIN },
-  { id: "pinnwand", sym: "📌", t: "Zettel an die Pinnwand", u: "Schreiben, wichtig, für wen, anheften (ca. 1 Min.)", st: () => RG_PINNWAND },
-  { id: "vorschlag", sym: "🗳️", t: "Vorschlag einreichen", u: "Thema oder Spende vorschlagen (ca. 1 Min.)", st: () => RG_VORSCHLAG },
-  { id: "leitung", ziel: "leitung", sym: "🗂️", t: "Für die Clubleitung: Büro & mehr", u: "Büro, Termine für alle, Abstimmung, eigene Einstellungen – nur für die Clubleitung", st: () => RG_LEITUNG, nur: () => !!(ICH?.buero || ICH?.vorstand) },
-  { id: "admin", ziel: "admin", sym: "🛠️", t: "Für Admins: Leitstand", u: "Admin-Register, Lämpchen, Admin-Einstellungen – nur für Admins", st: () => RG_ADMIN, nur: () => !!ICH?.admin },
+  { id: "ueberblick", stand: "1", sym: "🗺️", t: "Überblick: die App in 3 Minuten", u: "Oberfläche, Knöpfe, Register und was die App kann", st: () => RUNDGANG },
+  { id: "einstellungen", stand: "1", sym: "⚙️", t: "Alle Einstellungen erklärt", u: "Was jede Einstellung bedeutet – mit Beispielen (ca. 6 Min.)", st: () => RG_EINSTELLUNGEN },
+  { id: "nachricht", stand: "1", sym: "💬", t: "Neue Nachricht schreiben", u: "Empfänger wählen, schreiben, senden (ca. 1 Min.)", st: () => RG_NACHRICHT },
+  { id: "termin", stand: "1", sym: "📅", t: "Termin eintragen", u: "Privater Termin, Wiederholen, Erinnerung (ca. 2 Min.)", st: () => RG_TERMIN },
+  { id: "pinnwand", stand: "1", sym: "📌", t: "Zettel an die Pinnwand", u: "Schreiben, wichtig, für wen, anheften (ca. 1 Min.)", st: () => RG_PINNWAND },
+  { id: "vorschlag", stand: "1", sym: "🗳️", t: "Vorschlag einreichen", u: "Thema oder Spende vorschlagen (ca. 1 Min.)", st: () => RG_VORSCHLAG },
+  { id: "leitung", stand: "1", ziel: "leitung", sym: "🗂️", t: "Für die Clubleitung: Büro & mehr", u: "Büro, Termine für alle, Abstimmung, eigene Einstellungen – nur für die Clubleitung", st: () => RG_LEITUNG, nur: () => !!(ICH?.buero || ICH?.vorstand) },
+  { id: "admin", stand: "1", ziel: "admin", sym: "🛠️", t: "Für Admins: Leitstand", u: "Admin-Register, Lämpchen, Admin-Einstellungen – nur für Admins", st: () => RG_ADMIN, nur: () => !!ICH?.admin },
 ];
 // Während eines Videos nur zeigen, was zur Zielgruppe passt: für alle ohne Admin- und Leitungs-Elemente, für die Leitung ohne Admin-Elemente
 function rgRollenAnsicht(ziel) {
@@ -1492,7 +1492,8 @@ function rgRollenAnsicht(ziel) {
   try { if (RK.einst?.an) rkAufbauen(RK.einst); } catch {} // Rollkartei der Einstellungen ohne ausgeblendete Karten neu legen
 }
 function erklaerVideos() {
-  neuWahlFenster("🎬 Erklär-Videos – mit Ton", RUNDGAENGE.filter((r) => !r.nur || r.nur()).map((r) => ({ sym: r.sym, t: r.t, u: r.u, los: () => rundgangStart(false, r.id) })));
+  neuWahlFenster("🎬 Erklär-Videos – mit Ton", [...RUNDGAENGE.filter((r) => !r.nur || r.nur()).map((r) => ({ sym: r.sym, t: r.t, u: r.u, los: () => rundgangStart(false, r.id) })),
+    ...(ICH?.admin ? [{ sym: "📊", t: "Auswertung der Videos", u: "👍/👎 je Video – welche überarbeitet werden müssen (nur Admin)", los: () => rgAuswertung() }] : [])]);
   $("neuWahlBlatt")?.querySelector(".einw-karte")?.remove(); // „Etwas Neues anlegen“ passt hier nicht
 }
 // Vorführung (demo) einer Station: nur anzeigen, nie speichern; alles, was die Station nicht vorführt, wird zurückgestellt
@@ -1509,7 +1510,7 @@ const rgText = (s) => (typeof s.x === "function" ? s.x() : s.x);
 function rundgangStart(mitKnopf, id = "ueberblick") {
   rundgangEnde(true); einwKarteWeg(); vorlesenStopp();
   const tour = RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur())) || RUNDGAENGE[0];
-  RG.tour = tour.id; RG.st = tour.st(); RG.zurueck = []; RG.vorI = -1; RG.richtung = 1;
+  RG.tour = tour.id; RG.st = tour.st(); RG.zurueck = []; RG.vorI = -1; RG.richtung = 1; RG.frage = false;
   RG.von = aktuelleAnsicht === "chat" ? "nachrichten" : aktuelleAnsicht; RG.an = true;
   rgRollenAnsicht(tour.ziel || "alle");
   rgHinweisZeigen(); // Hinweis-Karte auf der Startseite während eines Videos weg
@@ -1550,7 +1551,7 @@ function rgHinweisSpaeter() { try { localStorage.setItem(RG_SPAETER, heuteIso())
 function rgHinweisLos() { rundgangStart(); }
 function rgStille() { clearTimeout(RG.uhr); RG.lauf++; try { if (RG.ton) speechSynthesis.cancel(); } catch {} }
 function rgZeigen() {
-  if (!RG.an) return;
+  if (!RG.an || RG.frage) return; // Bewertungs-Karte am Ende bleibt stehen
   rgStille();
   const s = RG.st[RG.i], n = RG.st.length;
   if (RG.vorI !== RG.i) { // Station wechselt: vorige aufräumen, neue vorbereiten (nur einmal – nicht beim Fortsetzen nach Pause)
@@ -1560,11 +1561,11 @@ function rgZeigen() {
     rgDemo(s.demo);
   }
   if ((s.nur && !s.nur()) || (s.mussSel && !rgZiel(s))) { RG.i += RG.richtung || 1; if (RG.i < 0 || RG.i >= n) return RG.i < 0 ? (RG.i = 0, rgZeigen()) : rundgangEnde(); return rgZeigen(); }
-  RG.ziel = rgZiel(s); rgHin();
+  RG.ziel = rgZiel(s); rgHin(); RG.seit = Date.now();
   $("rgTitel").textContent = s.t; $("rgText").textContent = rgText(s); $("rgNr").textContent = `${RG.i + 1} / ${n}`;
   $("rgBalken").style.width = `${((RG.i + 1) / n) * 100}%`;
   $("rgPause").textContent = RG.pause ? (RG.i === 0 ? "▶ Los geht's" : "▶ Weiter") : "⏸ Pause";
-  for (const ms of [60, 450, 1000]) setTimeout(() => { // Kartei-Blättern und Laden verschieben das Ziel noch
+  for (const ms of [60, 450, 1000, 2000, 3500, 5500]) setTimeout(() => { // Kartei-Blättern und Laden verschieben das Ziel noch
     // 2.245.1 (Fund Hansi: Chats als Rollkartei scrollen beim Öffnen zur Kartei – „＋ Neu“ oben war nicht zu sehen): Ziel wieder ins Bild holen
     if (ms > 60 && RG.an && RG.st[RG.i] === s && RG.ziel && !rgImBild(RG.ziel)) rgHin();
     rgLage(); }, ms);
@@ -1590,9 +1591,15 @@ function rgSprechen(text) {
 }
 function rgLage() {
   const l = $("rgLoch"), t = $("rgTafel"); if (!l || !t) return;
-  const r = RG.ziel && rgSichtbar(RG.ziel) ? RG.ziel.getBoundingClientRect() : null;
-  if (!r) { l.style.cssText = `left:50%;top:50%;width:0;height:0`; t.classList.remove("rg-oben-an"); return; }
-  const p = 6, x = Math.max(4, r.left - p), y = Math.max(4, r.top - p), w = Math.min(innerWidth - 8, r.width + 2 * p), h = Math.min(innerHeight - 8, r.height + 2 * p);
+  let r = RG.ziel && rgSichtbar(RG.ziel) ? RG.ziel.getBoundingClientRect() : null;
+  // 2.246.0 (Fund Hansi, Bildschirmfoto: Rahmen oben am Rand, „＋ Neu“ nicht zu sehen): Seite hat sich nachträglich verschoben (z. B. Daten
+  // vom Server geladen) → Ziel in den ersten 6 Sekunden der Station zurückholen; liegt es trotzdem außerhalb, keinen Rahmen am Rand zeichnen
+  if (r && !rgImBild(RG.ziel)) {
+    if (Date.now() - (RG.seit || 0) < 6000 && Date.now() - (RG.holt || 0) > 400) { RG.holt = Date.now(); rgHin(); requestAnimationFrame(rgLage); return; }
+    if (r.bottom < 8 || r.top > innerHeight - 8) r = null;
+  }
+  if (!r) { l.style.cssText = `left:50%;top:50%;width:0;height:0;outline-width:0`; t.classList.remove("rg-oben-an"); return; }
+  const p = 6, x = Math.max(4, r.left - p), y = Math.max(4, r.top - p), w = Math.min(innerWidth - 4, r.right + p) - x, h = Math.min(innerHeight - 4, r.bottom + p) - y; // nur der sichtbare Teil
   l.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px`;
   t.classList.toggle("rg-oben-an", r.height < innerHeight * 0.45 && y + h / 2 > innerHeight * 0.55); // kleines Ziel unten → Tafel oben
 }
@@ -1600,8 +1607,53 @@ function rundgangSchritt(d, auto) {
   if (!RG.an) return;
   if (!auto) RG.pause = false;
   const n = RG.i + d; RG.richtung = d;
-  if (n >= RG.st.length) return rundgangEnde();
+  if (n >= RG.st.length) return RG.frage ? null : rgFrage(); // KC-CLUB-VIDEO-BEWERTUNG: am Ende 👍/👎
   RG.i = Math.max(0, n); rgZeigen();
+}
+// ---------- KC-CLUB-VIDEO-BEWERTUNG (2.246.0, Wunsch Hansi): am Ende „Gefallen?“ und „Hilft es dir weiter?“ mit 👍/👎 ----------
+// Bewertung je Mitglied, Video und Fassung (RUNDGAENGE[].stand) auf dem Server; Auswertung nur für den Admin (nur Zahlen).
+const RG_BEW = { gefallen: null, hilft: null };
+function rgFrage() {
+  rgStille(); RG.frage = true; RG.pause = true; RG.ziel = null; rgLage(); RG_BEW.gefallen = RG_BEW.hilft = null;
+  try { RG.st[RG.vorI]?.nach?.(); } catch {} RG.vorI = -1; // letzte Station aufräumen, Ansicht bleibt
+  const zeile = (k, frage) => `<div class="rg-frage"><span>${frage}</span><span class="rg-daumen" data-k="${k}"><button type="button" data-w="1" onclick="rgDaumen('${k}', true)" aria-label="Daumen hoch">👍</button><button type="button" data-w="0" onclick="rgDaumen('${k}', false)" aria-label="Daumen runter">👎</button></span></div>`;
+  $("rgTafel").innerHTML = `<div class="rg-oben"><b>🎬 Wie war das Video?</b></div>${zeile("gefallen", "Hat dir das Video gefallen?")}${zeile("hilft", "Hilft es dir weiter?")}
+    <div class="rg-knoepfe rg-knoepfe2"><button type="button" class="knopf haupt klein" id="rgBewSenden" onclick="rgBewertungSenden(this)" disabled>✔ Abschicken</button><button type="button" class="knopf klein" onclick="rundgangEnde()">Überspringen</button></div>`;
+  $("rgTafel").classList.remove("rg-oben-an");
+  if (RG.ton) try { speechSynthesis.speak(sprechAusgabe("Hat dir das Video gefallen? Und hilft es dir weiter? Tippe auf Daumen hoch oder Daumen runter.")); } catch {}
+}
+function rgDaumen(k, wert) {
+  RG_BEW[k] = RG_BEW[k] === wert ? null : wert; // nochmal antippen nimmt es zurück
+  document.querySelectorAll(`#rgTafel .rg-daumen[data-k="${k}"] button`).forEach((b) => b.classList.toggle("an", RG_BEW[k] !== null && (b.dataset.w === "1") === RG_BEW[k]));
+  $("rgBewSenden").disabled = RG_BEW.gefallen === null && RG_BEW.hilft === null;
+}
+async function rgBewertungSenden(knopf) {
+  const tour = RUNDGAENGE.find((x) => x.id === RG.tour); if (!tour) return rundgangEnde();
+  knopf.disabled = true;
+  try { await api("video_bewerten", { video: tour.id, stand: tour.stand, gefallen: RG_BEW.gefallen, hilft: RG_BEW.hilft }); rundgangEnde(); melde("🎬 Danke für deine Bewertung!"); }
+  catch (e) { knopf.disabled = false; meldeFehler(e); } // Regel 11: nicht still als „gespeichert“ melden
+}
+// Auswertung für den Admin: je Video (aktuelle Fassung) Anzahl, 👍-Anteil „gefallen“ und „hilft“; wenig Zustimmung → überarbeiten
+const RG_MIN_STIMMEN = 3;
+function rgUrteil(z) {
+  const plus = z.gefallen_ja + z.hilft_ja, alle = plus + z.gefallen_nein + z.hilft_nein;
+  if (!z.anzahl || z.anzahl < RG_MIN_STIMMEN || !alle) return ["grau", `⚪ zu wenig Stimmen (${z.anzahl || 0} von mind. ${RG_MIN_STIMMEN})`];
+  const q = plus / alle; return q < 0.6 ? ["rot", "🔴 überarbeiten"] : q < 0.8 ? ["gelb", "🟡 beobachten"] : ["gruen", "🟢 gut"];
+}
+async function rgAuswertung() {
+  const f = blattAuf("rgAuswBlatt", `<h3 style="margin-top:0">📊 Auswertung der Erklär-Videos</h3><p class="hinweis">Wird geladen …</p>`);
+  let d; try { d = await api("video_auswertung", {}, { warten: true }); }
+  catch (e) { f.querySelector(".blatt-innen").innerHTML = `<h3 style="margin-top:0">📊 Auswertung der Erklär-Videos</h3><p class="hinweis">⚠️ ${esc(fehlerText(e, "Gerade nicht abrufbar"))}</p><div class="knoepfe"><button class="knopf" onclick="$('rgAuswBlatt').remove()">Schließen</button></div>`; return; }
+  const pz = (ja, nein) => ja + nein ? `${Math.round((ja / (ja + nein)) * 100)} % 👍 <small>(${ja}/${ja + nein})</small>` : "–";
+  const zeilen = RUNDGAENGE.map((t) => {
+    const z = (d.videos || []).find((x) => x.video === t.id && x.stand === t.stand) || { anzahl: 0, gefallen_ja: 0, gefallen_nein: 0, hilft_ja: 0, hilft_nein: 0 };
+    const alt = (d.videos || []).filter((x) => x.video === t.id && x.stand !== t.stand).reduce((s, x) => s + x.anzahl, 0), [farbe, urteil] = rgUrteil(z);
+    return `<div class="rg-ausw rg-${farbe}"><div class="rg-ausw-kopf"><b>${t.sym} ${esc(t.t)}</b><span>${urteil}</span></div>
+      <div class="rg-ausw-zahlen"><span>Bewertungen: <b>${z.anzahl}</b></span><span>Gefallen: ${pz(z.gefallen_ja, z.gefallen_nein)}</span><span>Hilft weiter: ${pz(z.hilft_ja, z.hilft_nein)}</span></div>
+      ${alt ? `<div class="hinweis">Fassung ${esc(t.stand)} · ${alt} Bewertung${alt === 1 ? "" : "en"} zu früheren Fassungen nicht mitgezählt</div>` : ""}</div>`; }).join("");
+  f.querySelector(".blatt-innen").innerHTML = `<h3 style="margin-top:0">📊 Auswertung der Erklär-Videos</h3>
+    <p class="hinweis" style="margin-top:0">Nur Zahlen, keine Namen. Ab ${RG_MIN_STIMMEN} Bewertungen: 🟢 gut (ab 80 % 👍) · 🟡 beobachten · 🔴 überarbeiten (unter 60 %). Wird ein Video überarbeitet, zählt es neu.</p>
+    ${zeilen}<div class="knoepfe"><button class="knopf" onclick="$('rgAuswBlatt').remove()">Schließen</button></div>`;
 }
 function rundgangPause() {
   if (!RG.an) return;
@@ -1610,7 +1662,7 @@ function rundgangPause() {
 }
 function rundgangEnde(still) {
   if (!RG.an && !$("rgSchicht")) return;
-  rgStille(); try { RG.st[RG.vorI]?.nach?.(); } catch {} // offene Beispiele schließen, Aufgeklapptes zuklappen, Vorführung zurück
+  RG.frage = false; rgStille(); try { RG.st[RG.vorI]?.nach?.(); } catch {} // offene Beispiele schließen, Aufgeklapptes zuklappen, Vorführung zurück
   for (const f of RG.zurueck.splice(0).reverse()) try { f(); } catch {}
   if (RG.an) rgDemo({}); RG.vorI = -1;
   RG.an = false; RG.ziel = null; try { RG.wach?.release?.(); } catch {} RG.wach = null; $("rgSchicht")?.remove(); document.body.classList.remove("rg-an");
@@ -17262,7 +17314,7 @@ async function uhkLaden(karte) {
 function uhkZeigen(karte, html) { const v = karte.querySelector('[data-teil="verlauf"]'); if (v) { v.innerHTML = html; v.scrollTop = v.scrollHeight; } }
 function uhKarteiAn() {
   const erst = !RK.chats?.w?.isConnected;
-  if (erst) requestAnimationFrame(() => { const r = $("uhKartei")?.querySelector(".rk-reiter"); if (r) scrollTo({ top: Math.max(0, r.getBoundingClientRect().top + scrollY - 6) }); if (RK.chats) rkMasse(RK.chats); });
+  if (erst) requestAnimationFrame(() => { const r = $("uhKartei")?.querySelector(".rk-reiter"); if (r && !RG.an) scrollTo({ top: Math.max(0, r.getBoundingClientRect().top + scrollY - 6) }); if (RK.chats) rkMasse(RK.chats); });
   rkIn($("uhKartei"), "chats", { id: (d) => d.dataset.id,
     tabSym: (d) => d.querySelector("summary .avatar")?.outerHTML || "💬",
     tabText: (d) => (d.querySelector("summary > span")?.textContent || "").split(/[ ,]/)[0],

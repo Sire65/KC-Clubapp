@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.243.0";
+const SERVER_VERSION = "2.246.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -8574,6 +8574,29 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
       // ----- KC-CLUB-NUTZUNG (0.99.0): Statistik OHNE Namen – nur Tag + Bereich + Anzahl. Wer meldet, wird NICHT gespeichert
       // (kein protokoll(), keine Person, kein Gerät). Nur bekannte Bereiche, gedeckelt gegen Ausreißer.
+      // ----- KC-CLUB-VIDEO-BEWERTUNG (2.246.0, Wunsch Hansi): 👍/👎 am Ende der Erklär-Videos – je Mitglied, Video und Fassung eine Bewertung -----
+      case "video_bewerten": {
+        const video = String(p.video || ""), stand = String(p.stand || "");
+        if (!/^[a-z0-9_-]{2,30}$/.test(video) || !/^[0-9a-z.]{1,12}$/.test(stand)) throw new Fehler("Unbekanntes Video.");
+        const ja = (v: unknown) => (v === true ? true : v === false ? false : null);
+        const gefallen = ja(p.gefallen), hilft = ja(p.hilft);
+        if (gefallen === null && hilft === null) throw new Fehler("Bitte 👍 oder 👎 antippen.");
+        const { error } = await db.from("kc_club_video_bewertung").upsert({ video, stand, person_id: ich.person_id, gefallen, hilft, zeit: jetzt() }, { onConflict: "video,stand,person_id" });
+        if (error) throw new Fehler("Bewertung konnte nicht gespeichert werden.", 500);
+        return json({ ok: true });
+      }
+      case "video_auswertung": {
+        nurAdmin(ich);
+        const { data, error } = await db.from("kc_club_video_bewertung").select("video,stand,gefallen,hilft,zeit").order("zeit", { ascending: false }).limit(5000);
+        if (error) throw new Fehler("Auswertung gerade nicht abrufbar.", 500);
+        const m = new Map<string, any>();
+        for (const r of data ?? []) {
+          const k = `${r.video}|${r.stand}`, z = m.get(k) || { video: r.video, stand: r.stand, anzahl: 0, gefallen_ja: 0, gefallen_nein: 0, hilft_ja: 0, hilft_nein: 0, zuletzt: r.zeit };
+          z.anzahl++; if (r.gefallen === true) z.gefallen_ja++; if (r.gefallen === false) z.gefallen_nein++; if (r.hilft === true) z.hilft_ja++; if (r.hilft === false) z.hilft_nein++;
+          m.set(k, z);
+        }
+        return json({ videos: [...m.values()] }); // nur Zahlen – keine Namen
+      }
       case "nutzung_melden": {
         if (await ichInProbe(ich)) return json({ ok: true, probe: true }); // KC-CLUB-PROBEPHASE: Probe zählt nicht in der Nutzung
         const z = (p.zaehler && typeof p.zaehler === "object") ? p.zaehler : {};
