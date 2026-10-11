@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.244.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS: Erklär-Videos mit Ton (Teil 2)
+- Mehrere Rundgänge (Registry RUNDGAENGE): Überblick, Alle Einstellungen erklärt (mit Vorführung: Küchengrün, Nachtmodus, große Schrift – nur angezeigt, nie gespeichert), Neue Nachricht, Termin eintragen, Zettel an die Pinnwand, Vorschlag einreichen. Formulare mit Beispiel, nichts wird gesendet/gespeichert; beim Ende alles zurück.
+- Neue Kachel Technik → 🎬 Erklär-Videos; Hinweis im Überblick; Auswahl auch in ❓ Hilfe & Tipps und ⚙️ Mehr; Link #rundgang=<id>. Rollkartei blättert mit.
+
 ## 2.243.0 – 2026-10-11 – KC-CLUB-RUNDGANG-HINWEIS: Hinweis auf den Rundgang auf der Startseite
 - Einmalige Karte unter dem Infofeld: ▶ Jetzt ansehen / Später (morgen wieder) / Nein, danke. Erledigt wird geräteübergreifend gemerkt (Einstellung rundgang), auch wenn der Rundgang anderswo gestartet wurde.
 

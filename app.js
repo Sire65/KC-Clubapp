@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.243.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.244.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -609,7 +609,7 @@ const designAktuell = () => DESIGNS.find((d) => d.id === DS.design) || DESIGNS[0
 function anwendenDesign() {
   const nacht = istNacht(), f = designAktuell()[nacht ? "nacht" : "tag"], w = document.documentElement;
   w.classList.toggle("dunkel", nacht);
-  w.classList.toggle("gross", einst("gross", false));
+  w.classList.toggle("gross", einst("gross", false) || w.dataset.rgGross === "1"); // KC-CLUB-ERKLAERVIDEOS: Vorführung „Große Schrift“
   w.classList.toggle("ohne-anim", !einst("animiert", true)); // 2.24.1: „✨ Animierte Knöpfe“ (Standard an)
   // eigener Kopf-Verlauf (Disko, Regenbogen) – sonst der Standard-Verlauf aus hero1/rot/rot2/hero4
   const dv = designAktuell(); if (dv.verlauf) w.style.setProperty("--heroverlauf", dv.verlauf[nacht ? "nacht" : "tag"]); else w.style.removeProperty("--heroverlauf");
@@ -660,6 +660,7 @@ function designStandard() { DS = { design: "klassik", modus: "auto" }; designSpe
 function designUebernehmen(wert) { // vom Server (init) – eine gerade eben getroffene Auswahl auf diesem Handy hat Vorrang
   if (!wert || typeof wert !== "object" || Date.now() - dsGeaendert < 10000) return;
   const neu = { design: DESIGNS.some((d) => d.id === wert.design) ? wert.design : "klassik", modus: ["auto", "tag", "nacht"].includes(wert.modus) ? wert.modus : "auto" };
+  if (window.__rgDsAlt) { window.__rgDsAlt = neu; return; } // KC-CLUB-ERKLAERVIDEOS: Farb-Vorführung läuft – Server-Stand gilt danach
   if (neu.design === DS.design && neu.modus === DS.modus) return;
   DS = neu; try { localStorage.setItem("kc_club_design", JSON.stringify(DS)); } catch {} anwendenDesign(); lichtSensorStarten();
 }
@@ -1365,18 +1366,117 @@ const RUNDGANG = [
   { v: "mitglieder", sel: ["#v-mitglieder .mg-kachel.mg-online", "#v-mitglieder .mg-kachel", "#v-mitglieder .kopf2"], t: "👥 Mitglieder", x: "Mitglieder: alle aktiven Clubmitglieder. Ein grüner Punkt heißt: gerade in der App. Du kannst direkt schreiben, anklopfen – und Mitglieder, die gerade online sind, über die App anrufen, auf Wunsch auch mit Bild." },
   { v: "einstellungen", sel: ["#v-einstellungen .kopf2", "#v-einstellungen"], t: "⚙️ Mehr", x: "Unter Mehr findest du die Einstellungen: Benachrichtigungen, Töne, Farben und große Schrift. Hier kannst du auch diesen Rundgang jederzeit wieder starten." },
   { v: "start", sel: ["#raster"], t: "✨ Und noch viel mehr", x: "Außerdem gibt es das Fotoalbum, das Archiv mit der Clubchronik, die Protokolle, Helfen und Leihen, die Erstattung von Auslagen, Spiele wie Schach, Bauernskat und Mensch ärgere dich nicht – und den SOS-Bereich für den Notfall." },
+  { v: "start", vor: () => { if (!einfach() && reg !== "programme") { const alt = reg; register("programme"); RG.zurueck.push(() => register(alt)); } }, // KC-CLUB-ERKLAERVIDEOS (2.244.0)
+    sel: ['#raster .kachel[data-id="erklaer"]'], t: "🎬 Weitere Erklär-Videos", x: "Es gibt noch mehr Erklär-Videos: alle Einstellungen mit Beispielen, wie du eine Nachricht schreibst, einen Termin einträgst, einen Zettel an die Pinnwand hängst und einen Vorschlag einreichst. Du findest sie im Register Technik unter Erklär-Videos – und in Hilfe und Tipps." },
   { v: "start", sel: ["#hzFrage", "#suLupe"], t: "❓ Hilfe", x: "Und wenn du mal nicht weiterweißt: Das Fragezeichen unten rechts öffnet die Hilfe zum Bereich, die Lupe findet jede Funktion. Oder du fragst Twinkey – einfach tippen oder sprechen." },
   { v: "start", t: "🎉 Fertig", x: "Das war der Rundgang. Probier einfach alles aus – kaputt machen kannst du nichts. Viel Spaß mit der Köcheclub-App!" },
 ];
-const RG = { an: false, i: 0, pause: false, uhr: 0, lauf: 0, ziel: null, ton: false, von: "start", richtung: 1, wach: null };
+// ---------- KC-CLUB-ERKLAERVIDEOS (2.244.0, Wunsch Hansi „Teil 2: einzelne Möglichkeiten genau erklären – zuerst alle Einstellungen,
+// dann Nachricht schreiben, Termin eintragen, Zettel anhängen, Vorschlag einreichen; Beispiele zeigen, z. B. ‚so sieht deine App jetzt aus‘“) ----------
+// Registry RUNDGAENGE: jeder Eintrag ist ein „Erklär-Video“ (Rundgang mit Ton). Neue Videos = neuer Eintrag. Stationen wie RUNDGANG, dazu:
+//   vor()  – vorbereiten (z. B. Bereich aufklappen, Formular mit Beispiel öffnen); nach() – wieder schließen (immer, auch bei ✕ Beenden)
+//   demo   – vorübergehend zeigen, nichts speichern: { design: "kuechengruen" } / { nacht: true } / { gross: true }
+//   sel    – CSS-Wähler oder Funktion, die das Element liefert. Es wird NIE etwas gesendet oder gespeichert.
+const rgFeld = (id) => () => $(id)?.closest(".feld, .schalter, label") || $(id);
+const rgKlappe = (name) => `#v-einstellungen details[data-klappe="${name}"]`;
+// Bereich aufklappen und beim Ende wieder in den alten Zustand bringen (auch das gemerkte Auf/Zu)
+function rgAuf(...namen) { for (const n of namen) { const d = document.querySelector(rgKlappe(n)); if (!d || d.open) continue; d.open = true; RG.zurueck.push(() => { d.open = false; }); } }
+const rgDatum = (n) => tagPlus(heuteIso(), n);
+const RG_EINSTELLUNGEN = [
+  { v: "einstellungen", sel: ["#v-einstellungen .kopf2"], t: "⚙️ Alle Einstellungen", x: "In diesem Video zeige ich dir alle Einstellungen der App und was sie bedeuten. Du findest sie unten über Mehr. Jeder Bereich klappt mit einem Tipp auf die Überschrift auf und zu; mit dem Schloss bleibt er so. Keine Sorge: Ich verstelle nichts – alles bleibt, wie du es eingestellt hast." },
+  { v: "einstellungen", sel: [rgKlappe("einfach")], mussSel: true, vor: () => rgAuf("einfach"), t: "⚙️ Das Wichtigste", x: "In der einfachen Ansicht steht alles Wichtige in einem Bereich: wie du Neuigkeiten bekommst – aufs Handy, per E-Mail oder beides. Nicht stören, damit nachts kein Push kommt. Deine Lieblingsfarbe, große Schrift, das Fragezeichen für die Hilfe – und der Knopf, mit dem du alle Funktionen einschaltest." },
+  { v: "einstellungen", sel: [rgKlappe("benachrichtigung")], mussSel: true, vor: () => rgAuf("benachrichtigung"), t: "🔔 Benachrichtigungen", x: "Benachrichtigungen: Push auf diesem Handy schaltet die Mitteilungen ein – auch wenn die App zu ist. Der Warnton klingt kurz, wenn die App offen ist und eine Nachricht kommt. Bei Nicht stören legst du eine Ruhezeit fest: Dann kommt kein Push, Anrufe kommen trotzdem durch, danach eine Sammelmeldung. Und wenn dich jemand mit @ direkt anspricht, wirst du auf Wunsch trotzdem benachrichtigt." },
+  { v: "einstellungen", sel: ["#designWahl", "#designWahlE"], mussSel: true, vor: () => rgAuf("darstellung", "einfach"), demo: { design: "kuechengruen" }, t: "🎨 Farbe – so sieht's aus", x: "Unter Darstellung wählst du das Farbdesign. Schau mal: Ich stelle zum Ausprobieren Küchengrün ein. So sieht deine App jetzt aus! Es gibt viele weitere Farben, auch ausgefallene. Keine Sorge – gleich ist deine Farbe wieder da." },
+  { v: "start", sel: ["#v-start .hero"], demo: { design: "kuechengruen" }, t: "🎨 Die Startseite in Küchengrün", x: "Und so sieht die Startseite in Küchengrün aus. Antippen genügt – die App färbt sich sofort um und merkt sich deine Wahl auf allen deinen Geräten." },
+  { v: "einstellungen", sel: ["#modusWahl"], mussSel: true, vor: () => rgAuf("darstellung"), demo: { nacht: true }, t: "🌗 Tag und Nacht", x: "Tag und Nacht: Automatisch wechselt die App nach Sonnenstand. Oder immer hell, oder immer dunkel. So sieht der Nachtmodus aus – angenehm am Abend. Umschalten geht auch oben auf der Startseite mit dem Mond." },
+  { v: "einstellungen", sel: [rgFeld("setGross"), rgFeld("setGrossE")], mussSel: true, vor: () => rgAuf("darstellung", "einfach"), demo: { gross: true }, t: "🔠 Große Schrift", x: "Große Schrift macht alle Texte und Knöpfe größer – so wie jetzt. Gut, wenn man ohne Brille liest." },
+  { v: "einstellungen", sel: [rgKlappe("darstellung")], mussSel: true, vor: () => rgAuf("darstellung"), t: "🎨 Weiteres zur Darstellung", x: "Außerdem in der Darstellung: Chat-Farben ändern deine Sprechblasen und den Hintergrund in allen Chats. Der Sparmodus hilft bei schwachem Netz oder älteren Handys – dann ist alles ruhiger. Und das Warte-Bild ist das, was beim Laden erscheint." },
+  { v: "einstellungen", sel: [rgKlappe("effekte")], mussSel: true, vor: () => rgAuf("effekte"), t: "✨ Effekte", x: "Effekte machen die App lebendig: animierte Knöpfe, Jahreszeiten im Kopf – Herbstlaub, Schnee, Feuerwerk. Ein Effekt beim Wechsel der Register, ein Effekt beim Senden – Papierflieger, Brieftaube oder Postauto. Kacheln umdrehen mit Doppeltipp für Schnellaktionen – und der Reißwolf beim Löschen. Alles einzeln abschaltbar." },
+  { v: "einstellungen", sel: [rgKlappe("ansagen")], mussSel: true, vor: () => rgAuf("ansagen"), t: "🗣️ Tipps & Hilfe", x: "Ansagen, Töne und Tipps, Teil eins – die Hilfen: Tipp des Tages. Beim Öffnen zeigen, was neu ist. Das Fragezeichen unten rechts. Unterstützung: Viel Hilfe schaltet alles auf einmal ein. Die Schritt-Unterstützung zeigt mit rotem Rahmen, was als Nächstes kommt, und liest es auf Wunsch vor. Und die Einweisung erklärt jeden Bereich beim ersten Öffnen." },
+  { v: "einstellungen", sel: [rgKlappe("ansagen")], mussSel: true, vor: () => rgAuf("ansagen"), t: "🎙️ Sprache & Ansagen", x: "Teil zwei – Sprache: Mit der Sprachsteuerung sagst du, was du tun möchtest, zum Beispiel Nachricht an Klaus. Beim Sprach-Training lernt die App deine Aussprache. Das Handy kann ansagen, wer online kommt. Tippfehler werden rot unterstrichen. Das Mikrofon im Chat nimmt Sprachnachrichten auf oder schreibt mit. Und neue Nachrichten kann das Handy vorlesen." },
+  { v: "einstellungen", sel: [rgKlappe("privat")], mussSel: true, vor: () => rgAuf("privat"), t: "🔒 Privatsphäre – was andere sehen", x: "Privatsphäre, Teil eins: Ob andere deinen Geburtstag sehen – nur Tag und Monat. Ob die Clubleitung bei runden Geburtstagen dein Alter sehen darf. Ob andere sehen, wann du zuletzt da warst – und ob du gerade online bist. Wichtig: Wer das ausschaltet, sieht es auch bei den anderen nicht." },
+  { v: "einstellungen", sel: [rgKlappe("privat")], mussSel: true, vor: () => rgAuf("privat"), t: "🔒 Privatsphäre – Spiele & Kontakt", x: "Teil zwei: Ob andere dich zu Spielen herausfordern dürfen, und ob die Spiel-Einladung beim Start kommt. Ob andere bei dir anklopfen dürfen. Ob andere live sehen, was du gerade tippst. Und welche Kontaktdaten andere Mitglieder sehen: Handynummer, Festnetz, E-Mail, Adresse und dein Notfallkontakt." },
+  { v: "einstellungen", sel: [rgKlappe("handykalender")], mussSel: true, vor: () => rgAuf("handykalender"), t: "📲 Termine im Handy-Kalender", x: "Termine im Handy-Kalender: Einmal verbinden – dann stehen alle Sitzungen, Veranstaltungen, Aktionen und freigegebenen Geburtstage automatisch in deinem normalen Kalender und bleiben aktuell." },
+  { v: "einstellungen", sel: [rgKlappe("schnellstart")], mussSel: true, vor: () => rgAuf("schnellstart"), t: "⚡ Schnellstart", x: "Schnellstart: eine große Kachel auf der Startseite mit bis zu acht Symbolen – ein Tipp, und es geht sofort los. Du bestimmst, welche Symbole darauf sind." },
+  { v: "einstellungen", sel: [rgKlappe("startseite")], mussSel: true, vor: () => rgAuf("startseite"), t: "🧩 Startseite & Ansicht", x: "Startseite und Ansicht: Die Rollkartei blättert lange Listen wie Karteikarten. Beim Countdown oben wählst du, was mitläuft – auch als Fallblatt-Uhr. Das Info-Feld bestimmt, welche Karte zuerst erscheint. Du wechselst zwischen einfacher und erweiterter Ansicht, ordnest die Kacheln, wählst, wie Mitglieder angezeigt werden – und ob Feiertage im Kalender stehen." },
+  { v: "einstellungen", sel: [rgKlappe("leitung_start")], mussSel: true, vor: () => rgAuf("leitung_start"), t: "🗂️ Für die Clubleitung", x: "Für die Clubleitung: eine Tages-Übersicht beim Start mit Eingang, Aufgaben, Geburtstagen und nächster Sitzung – und ein Hinweis, wenn viel im Eingangskorb liegt." },
+  { v: "einstellungen", sel: [rgKlappe("install")], mussSel: true, vor: () => rgAuf("install"), t: "📲 App-Installation", x: "Hier steht Schritt für Schritt, wie du die App richtig installierst – auf Android, iPhone, Tablet oder PC." },
+  { v: "einstellungen", t: "✅ Fertig", x: "Das waren alle Einstellungen. Deine eigenen Einstellungen sind unverändert – probier in Ruhe aus, was dir gefällt. Weitere Erklär-Videos findest du im Register Technik und in Hilfe und Tipps." },
+];
+const RG_NACHRICHT = [
+  { v: "nachrichten", sel: ["#v-nachrichten .kopf2 .knopf.haupt"], t: "💬 Neue Nachricht", x: "So schreibst du eine neue Nachricht: In Nachrichten tippst du oben rechts auf Plus Neu." },
+  { v: "neu", vor: () => { empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; $("empfSuche").value = "";
+      (MITGLIEDER ? Promise.resolve() : mitgliederHolen()).then(() => empfListe()).catch(() => {}); neuGruppenZeigen("neuGruppen", true); },
+    sel: ["#empfWahlBereich"], t: "👤 An wen?", x: "Jetzt wählst du, an wen die Nachricht geht: Namen antippen – oder oben im Feld suchen, zum Beispiel Anne. Du kannst auch mehrere auswählen. Deine Gruppen stehen ganz oben – antippen, und du schreibst direkt hinein." },
+  { v: "neu", sel: [rgFeld("neuBetreff")], t: "✏️ Betreff", x: "Ein Betreff ist freiwillig – praktisch bei Gruppen. Dann tippst du auf Weiter zum Schreiben." },
+  { v: "neu", vor: () => { $("eingabe").classList.remove("versteckt"); RG.zurueck.push(() => { if (aktuelleAnsicht !== "chat") $("eingabe").classList.add("versteckt"); }); },
+    sel: ["#eingabe"], t: "⌨️ Schreiben und senden", x: "Unten schreibst du deine Nachricht, der Pfeil sendet sie. Darunter: die Büroklammer für Fotos und Dateien, das Mikrofon für eine Sprachnachricht oder zum Diktieren, Emojis, die Glocke – wie benachrichtigt wird, zum Beispiel per Push oder E-Mail –, das Ausrufezeichen für eine wichtige Nachricht und die Sanduhr für eine Nachricht, die sich selbst löscht. Mit WA geht sie auch über WhatsApp." },
+  { v: "nachrichten", sel: ["#v-nachrichten .kom-leiste"], t: "👥 Gruppe & mehr", x: "Mit Gruppe legst du eine eigene Gruppe an, zum Beispiel fürs Küchenteam. Gemerkt zeigt Nachrichten, die du dir mit dem Stern gemerkt hast. Und Test schickt dir selbst eine Probe – so prüfst du, ob Push und E-Mail ankommen." },
+  { v: "nachrichten", t: "✅ Fertig", x: "Das war's: Plus Neu, Empfänger wählen, schreiben, senden. Probier es aus – zum Beispiel mit einer Nachricht an dich selbst über Test." },
+];
+const RG_TERMIN = [
+  { v: "termine", sel: ["#neuTreffenKnopf"], t: "📅 Neuer Termin", x: "So trägst du einen Termin ein: In Termine tippst du oben rechts auf Plus Neu." },
+  { v: "termine", vor: () => { termineNeuWahl(); $("neuWahlBlatt")?.classList.add("rg-zeigen"); RG.zurueck.push(() => $("neuWahlBlatt")?.remove()); },
+    nach: () => $("neuWahlBlatt")?.remove(), sel: ["#neuWahlBlatt .wahl"], t: "📋 Was möchtest du?", x: "Jetzt wählst du: Ein privater Termin – den siehst nur du. Oder eine Terminanfrage: Damit fragst du einzelne Mitglieder oder eine Gruppe, ob sie Zeit haben – sie antworten mit Ja, Vielleicht oder Nein." },
+  { v: "termine", vor: () => { if (!$("ptTitel")) { privatForm({ titel: "Zahnarzt", _datum: rgDatum(5), _zeit: "10:30" }); RG.zurueck.push(() => $("treffenForm")?.classList.add("versteckt")); } },
+    sel: ["#treffenForm"], t: "✏️ Das Formular", x: "Im Formular trägst du ein: den Titel – zum Beispiel Zahnarzt –, Datum und Uhrzeit, auf Wunsch bis wann, oder ganztägig. Dazu Ort und eine Notiz, wenn du magst." },
+  { v: "termine", vor: () => { if (!$("ptTitel")) privatForm({ titel: "Zahnarzt", _datum: rgDatum(5), _zeit: "10:30" }); }, sel: [rgFeld("ptWdh")], t: "🔁 Wiederholen", x: "Bei Wiederholen wählst du zum Beispiel jede Woche oder jeden Monat – dann trägst du den Termin nur einmal ein." },
+  { v: "termine", vor: () => { if (!$("ptTitel")) privatForm({ titel: "Zahnarzt", _datum: rgDatum(5), _zeit: "10:30" }); if ($("ptStart")) $("ptStart").checked = true; }, sel: [rgFeld("ptStart")], t: "📌 Auf der Startseite", x: "Neu: Mit dem Häkchen Auf der Startseite läuft der Termin oben im Countdown mit – zum Beispiel: noch 5 Tage bis zum Zahnarzt." },
+  { v: "termine", vor: () => { if (!$("ptTitel")) privatForm({ titel: "Zahnarzt", _datum: rgDatum(5), _zeit: "10:30" }); }, sel: [rgFeld("ptErinnerung")], t: "⏰ Erinnerung", x: "Bei Erinnerung wählst du, wann dich das Handy vorher erinnert – zum Beispiel einen Tag vorher. Zum Schluss tippst du auf Speichern. Hier speichere ich nichts – das Beispiel verschwindet gleich wieder." },
+  { v: "termine", vor: () => $("treffenForm")?.classList.add("versteckt"), sel: ["#v-termine .antworten", "#v-termine .umschalter"], t: "✅ Zu- und absagen", x: "Bei Club-Terminen antwortest du mit Ich komme, Vielleicht oder Kann nicht. Nochmal antippen nimmt die Antwort zurück. Oben wechselst du zwischen Liste, Kalender und To-do." },
+  { v: "termine", t: "✅ Fertig", x: "So einfach ist das: Plus Neu, ausfüllen, speichern. Deine privaten Termine siehst nur du." },
+];
+const RG_PINNWAND = [
+  { v: "pinnwand", sel: ["#pwNeuKnopf"], t: "📌 Zettel anhängen", x: "So hängst du einen Zettel an die Pinnwand: oben rechts auf Plus Zettel tippen." },
+  { v: "pinnwand", vor: () => { if ($("pwForm").classList.contains("versteckt")) { pwForm(true); $("pwText").blur(); RG.zurueck.push(() => { $("pwText").value = ""; pwForm(false); }); } $("pwText").value = "Wer hilft am Samstag beim Aufbau? 🙂"; pwZaehlen(); },
+    sel: [rgFeld("pwText")], t: "✏️ Kurze Nachricht", x: "Schreib eine kurze Nachricht – höchstens 200 Zeichen, zum Beispiel: Wer hilft am Samstag beim Aufbau? Mit dem Mikrofon kannst du auch diktieren." },
+  { v: "pinnwand", sel: ["#pwWichtig"], t: "❗ Wie wichtig?", x: "Normal oder Hoch: Ein wichtiger Zettel erscheint bei allen beim Öffnen der App." },
+  { v: "pinnwand", sel: ["#pwFuer"], t: "👥 Für wen?", x: "Für wen ist der Zettel? Nur für dich – als Merkzettel –, für alle, oder für bestimmte Mitglieder, die du auswählst." },
+  { v: "pinnwand", sel: ["#pwAntwZeile"], t: "✍️ Antworten erlauben", x: "Und ob andere direkt auf deinen Zettel antworten können." },
+  { v: "pinnwand", sel: ["#pwSpeichernKnopf"], t: "📌 Anheften", x: "Mit Anheften hängt der Zettel an der Pinnwand. Ich hefte hier nichts an – das Beispiel verschwindet gleich wieder." },
+  { v: "pinnwand", vor: () => { $("pwText").value = ""; pwForm(false); }, t: "✅ Fertig", x: "Auf die Zettel der anderen antwortest du mit einem Emoji. Probier es aus – zum Beispiel mit einem Merkzettel nur für dich." },
+];
+const RG_VORSCHLAG = [
+  { v: "vorschlaege", sel: ["#vorschlagNeuKnopf"], t: "🗳️ Vorschlag einreichen", x: "Du hast eine Idee für den Club? In Vorschläge tippst du oben rechts auf Plus Neu." },
+  { v: "vorschlaege", vor: () => { vorschlagForm("thema"); $("vfTitel").value = "Grillabend im Mai"; RG.zurueck.push(() => $("vorschlagForm")?.classList.add("versteckt")); },
+    sel: ["#vorschlagForm .artwahl"], t: "💡 Was für ein Vorschlag?", x: () => "Zuerst wählst du die Art: ein Thema für die Sitzung oder ein Spendenprojekt" + (ICH?.vorstand ? " – als Clubleitung auch eine Abstimmung." : ".") },
+  { v: "vorschlaege", vor: () => { if ($("vfTitel") && !$("vfTitel").value) $("vfTitel").value = "Grillabend im Mai"; }, sel: [rgFeld("vfTitel")], t: "✏️ Thema", x: "Dann das Thema, zum Beispiel Grillabend im Mai – und wenn du magst, eine Beschreibung darunter." },
+  { v: "vorschlaege", sel: [rgFeld("vfTreffen")], t: "📅 Für welchen Termin?", x: "Hier wählst du, auf welcher Sitzung darüber gesprochen werden soll – oder allgemein." },
+  { v: "vorschlaege", sel: [rgFeld("vfInfo")], t: "📨 Abschicken", x: "Clubsprecher und Kassenwart bekommen Bescheid. Mit Vorschlagen schickst du ihn ab – ich schicke hier nichts ab." },
+  { v: "vorschlaege", nur: () => !!ICH?.vorstand, vor: () => vorschlagForm("abstimmung"), sel: ["#vorschlagForm"], t: "🗳️ Abstimmung", x: "Bei einer Abstimmung gibst du eine Frage und die Antworten ein – auf Wunsch geheim und mit Frist – und wählst, wer abstimmen darf: alle, eine Gruppe oder eine Auswahl." },
+  { v: "vorschlaege", vor: () => $("vorschlagForm")?.classList.add("versteckt"), t: "✅ Fertig", x: "Die anderen sehen deinen Vorschlag und können abstimmen. So einfach bringst du deine Ideen in den Club." },
+];
+const RUNDGAENGE = [
+  { id: "ueberblick", sym: "🗺️", t: "Überblick: die App in 3 Minuten", u: "Oberfläche, Knöpfe, Register und was die App kann", st: () => RUNDGANG },
+  { id: "einstellungen", sym: "⚙️", t: "Alle Einstellungen erklärt", u: "Was jede Einstellung bedeutet – mit Beispielen (ca. 6 Min.)", st: () => RG_EINSTELLUNGEN },
+  { id: "nachricht", sym: "💬", t: "Neue Nachricht schreiben", u: "Empfänger wählen, schreiben, senden (ca. 1 Min.)", st: () => RG_NACHRICHT },
+  { id: "termin", sym: "📅", t: "Termin eintragen", u: "Privater Termin, Wiederholen, Erinnerung (ca. 2 Min.)", st: () => RG_TERMIN },
+  { id: "pinnwand", sym: "📌", t: "Zettel an die Pinnwand", u: "Schreiben, wichtig, für wen, anheften (ca. 1 Min.)", st: () => RG_PINNWAND },
+  { id: "vorschlag", sym: "🗳️", t: "Vorschlag einreichen", u: "Thema oder Spende vorschlagen (ca. 1 Min.)", st: () => RG_VORSCHLAG },
+];
+function erklaerVideos() {
+  neuWahlFenster("🎬 Erklär-Videos – mit Ton", RUNDGAENGE.map((r) => ({ sym: r.sym, t: r.t, u: r.u, los: () => rundgangStart(false, r.id) })));
+  $("neuWahlBlatt")?.querySelector(".einw-karte")?.remove(); // „Etwas Neues anlegen“ passt hier nicht
+}
+// Vorführung (demo) einer Station: nur anzeigen, nie speichern; alles, was die Station nicht vorführt, wird zurückgestellt
+function rgDemo(d = {}) {
+  const w = document.documentElement;
+  if (d.gross) w.dataset.rgGross = "1"; else delete w.dataset.rgGross;
+  if (d.design || d.nacht) { const alt = window.__rgDsAlt = window.__rgDsAlt || DS; DS = { ...alt, design: d.design || alt.design, modus: d.nacht ? "nacht" : alt.modus }; anwendenDesign(); }
+  else { if (window.__rgDsAlt) { DS = window.__rgDsAlt; window.__rgDsAlt = null; } anwendenDesign(); }
+}
+const RG = { an: false, i: 0, pause: false, uhr: 0, lauf: 0, ziel: null, ton: false, von: "start", richtung: 1, wach: null, tour: "ueberblick", st: [], zurueck: [], vorI: -1 };
 const rgSichtbar = (e) => { if (!e?.isConnected || e.closest(".versteckt")) return false; const r = e.getBoundingClientRect(); return r.height > 0 && r.width > 0 && getComputedStyle(e).visibility !== "hidden"; }; // auch feste Elemente (Leiste unten, ?)
-const rgZiel = (s) => (s.sel || []).flatMap((q) => [...document.querySelectorAll(q)]).find(rgSichtbar) || null;
-function rundgangStart(mitKnopf) {
+const rgZiel = (s) => (s.sel || []).flatMap((q) => { try { return typeof q === "function" ? [q()].filter(Boolean) : [...document.querySelectorAll(q)]; } catch { return []; } }).find(rgSichtbar) || null;
+const rgText = (s) => (typeof s.x === "function" ? s.x() : s.x);
+function rundgangStart(mitKnopf, id = "ueberblick") {
   rundgangEnde(true); einwKarteWeg(); vorlesenStopp();
+  const tour = RUNDGAENGE.find((x) => x.id === id) || RUNDGAENGE[0];
+  RG.tour = tour.id; RG.st = tour.st(); RG.zurueck = []; RG.vorI = -1; RG.richtung = 1;
   RG.von = aktuelleAnsicht === "chat" ? "nachrichten" : aktuelleAnsicht; RG.an = true;
-  if (!rgErledigt()) rgHinweisErledigt("angesehen"); // KC-CLUB-RUNDGANG-HINWEIS: wer ihn einmal gestartet hat, wird nicht mehr gefragt
+  if (tour.id === "ueberblick" && !rgErledigt()) rgHinweisErledigt("angesehen"); // KC-CLUB-RUNDGANG-HINWEIS: wer ihn einmal gestartet hat, wird nicht mehr gefragt
   RG.i = 0; RG.pause = !!mitKnopf; RG.ton = "speechSynthesis" in window; document.body.classList.add("rg-an");
-  document.body.insertAdjacentHTML("beforeend", `<div class="rg-schicht" id="rgSchicht" role="dialog" aria-modal="true" aria-label="Rundgang durch die App"><div class="rg-loch" id="rgLoch"></div>
+  document.body.insertAdjacentHTML("beforeend", `<div class="rg-schicht" id="rgSchicht" role="dialog" aria-modal="true" aria-label="${esc(tour.t)}"><div class="rg-loch" id="rgLoch"></div>
     <div class="rg-tafel" id="rgTafel"><div class="rg-oben"><b id="rgTitel"></b><span class="rg-nr" id="rgNr"></span></div><p id="rgText"></p><div class="rg-balken"><i id="rgBalken"></i></div>
     <div class="rg-knoepfe"><button type="button" class="knopf klein" onclick="rundgangSchritt(-1)" aria-label="Zurück">◀</button><button type="button" class="knopf haupt klein" id="rgPause" onclick="rundgangPause()"></button><button type="button" class="knopf klein" onclick="rundgangSchritt(1)" aria-label="Weiter">▶</button><button type="button" class="knopf klein" onclick="rundgangEnde()">✕ Beenden</button></div></div></div>`);
   addEventListener("resize", rgLage); addEventListener("scroll", rgLage, true);
@@ -1412,17 +1512,26 @@ function rgStille() { clearTimeout(RG.uhr); RG.lauf++; try { if (RG.ton) speechS
 function rgZeigen() {
   if (!RG.an) return;
   rgStille();
-  let s = RUNDGANG[RG.i];
-  if (s.v !== aktuelleAnsicht) zeige(s.v, true); // ohne neue Verlaufs-Einträge – „Zurück“ bleibt wie vorher
-  if (s.mussSel && !rgZiel(s)) { RG.i += RG.richtung || 1; if (RG.i < 0 || RG.i >= RUNDGANG.length) return RG.i < 0 ? (RG.i = 0, rgZeigen()) : rundgangEnde(); return rgZeigen(); }
-  RG.ziel = rgZiel(s);
-  if (RG.ziel) RG.ziel.scrollIntoView({ block: "center", behavior: "instant" }); else scrollTo(0, 0);
-  $("rgTitel").textContent = s.t; $("rgText").textContent = s.x; $("rgNr").textContent = `${RG.i + 1} / ${RUNDGANG.length}`;
-  $("rgBalken").style.width = `${((RG.i + 1) / RUNDGANG.length) * 100}%`;
+  const s = RG.st[RG.i], n = RG.st.length;
+  if (RG.vorI !== RG.i) { // Station wechselt: vorige aufräumen, neue vorbereiten (nur einmal – nicht beim Fortsetzen nach Pause)
+    const alt = RG.st[RG.vorI]; RG.vorI = RG.i; try { alt?.nach?.(); } catch {}
+    if (s.v !== aktuelleAnsicht) zeige(s.v, true); // ohne neue Verlaufs-Einträge – „Zurück“ bleibt wie vorher
+    if (!s.nur || s.nur()) try { s.vor?.(); } catch (e) { console.warn("rundgang vor", e); }
+    rgDemo(s.demo);
+  }
+  if ((s.nur && !s.nur()) || (s.mussSel && !rgZiel(s))) { RG.i += RG.richtung || 1; if (RG.i < 0 || RG.i >= n) return RG.i < 0 ? (RG.i = 0, rgZeigen()) : rundgangEnde(); return rgZeigen(); }
+  RG.ziel = rgZiel(s); rgHin();
+  $("rgTitel").textContent = s.t; $("rgText").textContent = rgText(s); $("rgNr").textContent = `${RG.i + 1} / ${n}`;
+  $("rgBalken").style.width = `${((RG.i + 1) / n) * 100}%`;
   $("rgPause").textContent = RG.pause ? (RG.i === 0 ? "▶ Los geht's" : "▶ Weiter") : "⏸ Pause";
-  setTimeout(rgLage, 60);
-  if (!RG.pause) rgSprechen(s.x);
+  for (const ms of [60, 450, 1000]) setTimeout(rgLage, ms); // Kartei-Blättern und Laden verschieben das Ziel noch
+  setTimeout(() => { if (RG.an && RG.st[RG.i] === s && !rgSichtbar(RG.ziel)) { RG.ziel = rgZiel(s); rgHin(); rgLage(); } }, 350); // Inhalt kommt evtl. erst nach dem Laden
+  if (!RG.pause) rgSprechen(rgText(s));
 }
+// hohe Bereiche (z. B. aufgeklappte Einstellungen) oben anfangen, kleine in die Mitte holen
+function rgHin() { const e = RG.ziel; if (!e) return scrollTo(0, 0);
+  const z = RK.einst; if (z?.an && z.karten.some((k) => k.contains(e))) return rkZu(z, e); // Einstellungen als Rollkartei: zur richtigen Karte blättern
+  e.scrollIntoView({ block: e.getBoundingClientRect().height > innerHeight * 0.45 ? "start" : "center", behavior: "instant" }); }
 // Text satzweise vorlesen (lange Texte brechen auf manchen Handys sonst ab); danach kurz warten und weiterblättern.
 // Ohne Sprachausgabe oder wenn das Handy kein „fertig“ meldet: Lesezeit nach Wortzahl.
 function rgSprechen(text) {
@@ -1441,13 +1550,13 @@ function rgLage() {
   if (!r) { l.style.cssText = `left:50%;top:50%;width:0;height:0`; t.classList.remove("rg-oben-an"); return; }
   const p = 6, x = Math.max(4, r.left - p), y = Math.max(4, r.top - p), w = Math.min(innerWidth - 8, r.width + 2 * p), h = Math.min(innerHeight - 8, r.height + 2 * p);
   l.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px`;
-  t.classList.toggle("rg-oben-an", y + h / 2 > innerHeight * 0.55); // Ziel unten → Tafel oben
+  t.classList.toggle("rg-oben-an", r.height < innerHeight * 0.45 && y + h / 2 > innerHeight * 0.55); // kleines Ziel unten → Tafel oben
 }
 function rundgangSchritt(d, auto) {
   if (!RG.an) return;
   if (!auto) RG.pause = false;
   const n = RG.i + d; RG.richtung = d;
-  if (n >= RUNDGANG.length) return rundgangEnde();
+  if (n >= RG.st.length) return rundgangEnde();
   RG.i = Math.max(0, n); rgZeigen();
 }
 function rundgangPause() {
@@ -1457,10 +1566,13 @@ function rundgangPause() {
 }
 function rundgangEnde(still) {
   if (!RG.an && !$("rgSchicht")) return;
-  rgStille(); RG.an = false; RG.ziel = null; try { RG.wach?.release?.(); } catch {} RG.wach = null; $("rgSchicht")?.remove(); document.body.classList.remove("rg-an");
+  rgStille(); try { RG.st[RG.vorI]?.nach?.(); } catch {} // offene Beispiele schließen, Aufgeklapptes zuklappen, Vorführung zurück
+  for (const f of RG.zurueck.splice(0).reverse()) try { f(); } catch {}
+  if (RG.an) rgDemo({}); RG.vorI = -1;
+  RG.an = false; RG.ziel = null; try { RG.wach?.release?.(); } catch {} RG.wach = null; $("rgSchicht")?.remove(); document.body.classList.remove("rg-an");
   removeEventListener("resize", rgLage); removeEventListener("scroll", rgLage, true);
-  if (!still) { zeige(RG.von, true); scrollTo(0, 0); }
-  rgHinweisZeigen(); // zurück, wo der Rundgang gestartet wurde
+  if (!still) { zeige(RG.von, true); scrollTo(0, 0); } // zurück, wo der Rundgang gestartet wurde
+  rgHinweisZeigen();
 }
 
 // ---------- KC-CLUB-TIPP (1.6.0, Wunsch Hansi): Tipp des Tages beim Öffnen – höchstens einer je Tag ----------
@@ -1623,7 +1735,8 @@ const HILFE = [
   // 🏠 Startseite & Bedienung
   { id: "kachel_lang", thema: "start", sym: "🧩", t: "Startseite aufräumen: Kacheln verschieben", x: "Du möchtest deinen Bildschirm aufräumen oder umorganisieren? Drück auf der Startseite eine Kachel <b>lange</b> (gut eine halbe Sekunde) – dann öffnet sich „Anordnen“ und die Kachel hängt an deinem Finger. Zieh sie an den neuen Platz und lass los. Mit ◀ ▶ ▲ ▼ geht es auch Schritt für Schritt. Fertig? „✅ Fertig“ tippen.", zeig: () => { zeige("start"); kaBearbeiten(true); } },
   { id: "kachel_aus", thema: "start", sym: "🙈", t: "Kacheln ausblenden und wieder holen", x: "Beim Anordnen hat jede Kachel oben ein <b>✕</b> – damit blendest du sie aus, deine Daten bleiben erhalten. Ausgeblendete Kacheln stehen blass dazwischen und kommen mit <b>👁️ Einblenden</b> zurück. Unter den Kacheln steht außerdem „🙈 … ausgeblendete Kacheln – anzeigen“. (Nur in der erweiterten Ansicht.)", zeig: () => { zeige("start"); kaBearbeiten(true); } },
-  { id: "rundgang", thema: "start", sym: "🎬", t: "Rundgang durch die App (mit Ton)", x: "Die App zeigt dir in etwa 3 Minuten, wie sie aussieht und was sie kann – die Stimme deines Handys erklärt dabei jede Station. Du musst nichts antippen; mit <b>⏸ Pause</b>, <b>◀ ▶</b> und <b>✕ Beenden</b> steuerst du. Starten: hier mit <b>👉 Zeig mir wo</b>, oben in <b>❓ Hilfe &amp; Tipps</b> oder unter <b>⚙️ Mehr</b>. Kein Ton? Dann Lautstärke prüfen – der Text steht auch zum Lesen da.", zeig: () => rundgangStart() }, // KC-CLUB-RUNDGANG (2.241.0)
+  { id: "erklaervideos", thema: "start", sym: "🎬", t: "Erklär-Videos mit Ton", x: "Kurze Rundgänge mit Ton, die dir Schritt für Schritt zeigen, wie etwas geht: <b>alle Einstellungen</b> mit Beispielen (z. B. wie die App in einer anderen Farbe aussieht), <b>Nachricht schreiben</b>, <b>Termin eintragen</b>, <b>Zettel an die Pinnwand</b> und <b>Vorschlag einreichen</b>. Dabei wird nichts gespeichert oder gesendet, und alles bleibt, wie du es eingestellt hast. Zu finden im Register <b>Technik → 🎬 Erklär-Videos</b>, oben in <b>❓ Hilfe &amp; Tipps</b> und unter <b>⚙️ Mehr</b>.", zeig: () => erklaerVideos() }, // KC-CLUB-ERKLAERVIDEOS (2.244.0)
+  { id: "rundgang", thema: "start", sym: "🎬", t: "Rundgang durch die App (mit Ton)", x: "Die App zeigt dir in etwa 3 Minuten, wie sie aussieht und was sie kann – die Stimme deines Handys erklärt dabei jede Station. Du musst nichts antippen; mit <b>⏸ Pause</b>, <b>◀ ▶</b> und <b>✕ Beenden</b> steuerst du. Starten: hier mit <b>👉 Zeig mir wo</b>, oben in <b>❓ Hilfe &amp; Tipps</b> oder unter <b>⚙️ Mehr</b>. Weitere <b>🎬 Erklär-Videos</b> (alle Einstellungen, Nachricht schreiben, Termin eintragen, Pinnwand, Vorschläge) im Register <b>Technik</b>. Kein Ton? Dann Lautstärke prüfen – der Text steht auch zum Lesen da.", zeig: () => rundgangStart() }, // KC-CLUB-RUNDGANG (2.241.0)
   { id: "register_ziehen", thema: "start", sym: "↔️", t: "Register umsortieren (Club, Meins, Technik …)", x: "Ein Register oben auf der Startseite <b>festhalten</b>, bis es sich hebt – dann nach links oder rechts ziehen und loslassen. Die App merkt sich deine Reihenfolge auf allen deinen Geräten. (Nur in der erweiterten Ansicht.)", zeig: () => zeige("start") },
   { id: "register_wischen", thema: "start", sym: "👆", t: "Zwischen den Registern wischen", x: "Auf der Startseite wischst du über die Kacheln nach <b>links oder rechts</b> und kommst zum nächsten Register. Die kleine Zahl am Register zeigt, wie viele Kacheln darin liegen – „8/10“ heißt: 2 sind ausgeblendet.", zeig: () => zeige("start") },
   { id: "ansicht", thema: "start", sym: "🟢", t: "Einfache oder erweiterte Ansicht", x: "Die <b>einfache Ansicht</b> zeigt nur das Wichtigste mit großen Knöpfen, die <b>erweiterte</b> alle Funktionen mit Registern. Umschalten: ⚙️ Einstellungen → <b>🎨 Darstellung</b> → „🟢 Einfache Ansicht“ – oder ganz unten auf der Startseite. Zurück geht es mit „🔧 Mehr Funktionen anzeigen“.", zeig: () => einstiegHin(einfach() ? "einfach" : "darstellung") },
@@ -10298,6 +10411,7 @@ const KACHELN = {
     { id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check", u: "Läuft alles sicher? Jetzt prüfen", aktion: "sicherheitStart()" },    // KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise nach Themen (Zahl = neue Hilfen seit dem letzten Besuch)
     { id: "hilfezentrum", sym: "❓", t: "Hilfe & Tipps", u: () => `${hzAnzahl()} Hilfen nach Themen`, aktion: "hzStart()", zahl: () => hzNeuZahl() },
     { id: "twinkey", sym: "🧑‍🍳", t: "Frag Twinkey", u: "Frage tippen oder 🎤 sprechen", aktion: "twFrageStart()" }, // 2.23.49 KC-CLUB-TWINKEY (früher „Frag den Küchenchef“)
+    { id: "erklaer", sym: "🎬", t: "Erklär-Videos", u: "Rundgänge mit Ton – Schritt für Schritt", aktion: "erklaerVideos()" }, // KC-CLUB-ERKLAERVIDEOS (2.244.0)
   ],
   // KC-CLUB-ADMIN-REGISTER (2.20.0, Wunsch Hansi): Register „Admin“ – nur Admin/Vertretung; kleine Kacheln (3 je Reihe) mit Lämpchen,
   // Antippen öffnet ein Blatt mit Einzelheiten, Grafik und den Werkzeugen für genau diese Stelle (siehe AD_KACHELN weiter unten)
@@ -13177,7 +13291,7 @@ function hashSprung(h) {
     else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
-    else if (h === "#rundgang") rundgangStart(true); // KC-CLUB-RUNDGANG (2.241.0): Link zum Weitergeben – startet mit „▶ Los geht's“ (Ton braucht einen Tipp)
+    else if (h === "#rundgang" || h.startsWith("#rundgang=")) rundgangStart(true, h.slice(10) || "ueberblick"); // KC-CLUB-RUNDGANG (2.241.0): Link zum Weitergeben – startet mit „▶ Los geht's“ (Ton braucht einen Tipp)
     else if (h === "#anruf") anrufZurueck(); // KC-CLUB-ANRUF-ANZEIGE (2.237.0): aus der Mitteilung in der Statusleiste
     else if (h === "#dienstgruss") dgZeigen(true); // KC-CLUB-DIENST-GRUSS (2.224.0): aus der Push am Morgen
     else if (h.startsWith("#reisecheckliste=")) rcOeffnen(decodeURIComponent(h.slice(17))); // KC-CLUB-REISE-CHECKLISTE (2.223.0): Erinnerung 2 Tage vorher

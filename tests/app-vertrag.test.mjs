@@ -5588,7 +5588,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/zeige\(s\.v, true\)/.test(html) && /if \(RG\.an\) rundgangEnde\(true\)/.test(html), "kein neuer Verlaufseintrag, Zurück beendet");
   assert.ok(/lesezeit \* 0\.75/.test(html) && /lesezeit \* 1\.8/.test(html), "Mindest-Lesezeit + Sicherheitsnetz, falls das Handy kein „fertig“ meldet");
   assert.ok(/navigator\.wakeLock\?\.request\("screen"\)/.test(html.slice(html.indexOf("KC-CLUB-RUNDGANG"))) && /if \(RG\.an\) return false; \/\/ KC-CLUB-RUNDGANG/.test(html), "Bildschirm bleibt an, keine Einweisungs-Karten dazwischen");
-  assert.ok((seite.match(/onclick="rundgangStart\(\)"/g) || []).length >= 3 && /body\.rg-an \.blatt \{ display: none !important; \}/.test(seite) && /h === "#rundgang"/.test(html), "Start in Mehr (beide Ansichten), Hilfe und per Link; Fenster warten");
+  assert.ok((seite.match(/onclick="(?:rundgangStart|erklaerVideos)\(\)"/g) || []).length >= 3 && /body\.rg-an \.blatt:not\(\.rg-zeigen\) \{ display: none !important; \}/.test(seite) && /h === "#rundgang" \|\| h\.startsWith\("#rundgang="\)/.test(html), "Start in Mehr (beide Ansichten), Hilfe und per Link; Fenster warten");
 }
 
 // 2.242.0 KC-CLUB-PRIVAT-STARTSEITE (Wunsch Hansi): privater Termin mit Häkchen „📌 Auf der Startseite“ läuft im Countdown (Fallblatt) mit
@@ -5604,8 +5604,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/id="rgHinweis"/.test(seite) && /if \(v === "start"\) rgHinweisZeigen\(\);/.test(html), "Karte auf der Startseite");
   assert.ok(/onclick="rgHinweisLos\(\)"/.test(html) && /onclick="rgHinweisSpaeter\(\)"/.test(html) && /onclick="rgHinweisErledigt\('nein'\)"/.test(html), "drei Knöpfe");
-  assert.ok(/if \(!rgErledigt\(\)\) rgHinweisErledigt\("angesehen"\)/.test(html) && /einstSpeichern\("rundgang", w\)/.test(html) && /rundgang: \(w\) => \(\{ erledigt:/.test(server), "geräteübergreifend gemerkt, auch wenn der Rundgang woanders gestartet wurde");
+  assert.ok(/if \(tour\.id === "ueberblick" && !rgErledigt\(\)\) rgHinweisErledigt\("angesehen"\)/.test(html) && /einstSpeichern\("rundgang", w\)/.test(html) && /rundgang: \(w\) => \(\{ erledigt:/.test(server), "geräteübergreifend gemerkt, auch wenn der Rundgang woanders gestartet wurde");
   assert.ok(/spaeter !== heuteIso\(\)/.test(html) && /INIT\.einstellungen\.rundgang = vorher/.test(html), "Später = morgen wieder; Speicherfehler → alter Stand (Regel 11)");
+}
+
+// 2.244.0 KC-CLUB-ERKLAERVIDEOS (Wunsch Hansi): Erklär-Videos (Rundgänge mit Ton) – Einstellungen mit Beispielen, Nachricht, Termin, Pinnwand, Vorschlag
+{
+  assert.ok(/const RUNDGAENGE = \[/.test(html) && ["ueberblick", "einstellungen", "nachricht", "termin", "pinnwand", "vorschlag"].every((id) => html.includes(`{ id: "${id}", sym:`)), "Registry mit 6 Videos");
+  assert.ok(/\{ id: "erklaer", sym: "🎬", t: "Erklär-Videos"[^}]*aktion: "erklaerVideos\(\)" \}/.test(html) && /t: "🎬 Weitere Erklär-Videos"/.test(html), "Kachel in Technik + Hinweis im Überblick");
+  assert.ok(/demo: \{ design: "kuechengruen" \}/.test(html) && /demo: \{ nacht: true \}/.test(html) && /demo: \{ gross: true \}/.test(html), "Beispiele: Farbe, Nacht, große Schrift");
+  assert.ok(/if \(window\.__rgDsAlt\) \{ window\.__rgDsAlt = neu; return; \}/.test(html) && /w\.dataset\.rgGross === "1"/.test(html) && !/designSpeichern\(\)[^\n]*KC-CLUB-ERKLAERVIDEOS/.test(html), "Vorführung nur anzeigen, nie speichern; Server überschreibt sie nicht");
+  assert.ok(/for \(const f of RG\.zurueck\.splice\(0\)\.reverse\(\)\) try \{ f\(\); \} catch \{\}/.test(html) && /RG\.st\[RG\.vorI\]\?\.nach\?\.\(\)/.test(html), "beim Ende alles zurück (aufgeklappt, Beispiele, Formulare)");
+  assert.ok(!/RG_(NACHRICHT|TERMIN|PINNWAND|VORSCHLAG)[\s\S]{0,6000}(pwAnheften|privatSpeichern|vorschlagSpeichern|senden)\(/.test(html.slice(html.indexOf("const RG_NACHRICHT"), html.indexOf("const RUNDGAENGE"))), "Videos senden/speichern nie etwas");
+  assert.ok(/return rkZu\(z, e\)/.test(html) && /nur: \(\) => !!ICH\?\.vorstand, vor: \(\) => vorschlagForm\("abstimmung"\)/.test(html), "Rollkartei blättert mit; Abstimmung nur für die Clubleitung");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

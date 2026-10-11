@@ -757,7 +757,7 @@
   .rg-h-sym { font-size: 2rem; line-height: 1; }
   .rg-hinweis .knoepfe { margin-top: 10px; flex-wrap: wrap; }
   body.rg-an .hz-frage, body.rg-an .su-klein { z-index: 8999; }
-  body.rg-an .blatt { display: none !important; } /* Fenster, die während des Rundgangs aufgehen, warten bis danach */
+  body.rg-an .blatt:not(.rg-zeigen) { display: none !important; } /* Fenster, die während des Rundgangs aufgehen, warten bis danach (außer vorgeführte) */
   .einw-karte .einw-kopf { font-size: .8rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--textGruen); }
   .einw-karte h3 { margin: 4px 0 6px; } .einw-karte p { margin: 0 0 10px; line-height: 1.45; }
   /* KC-CLUB-INKOGNITO (2.3.0) */
@@ -3444,7 +3444,7 @@
   <section id="v-hilfezentrum" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="hzZurueck()" aria-label="Zurück">‹</button><h2>❓ Hilfe &amp; Tipps</h2><button type="button" class="druckknopf" title="Hilfe drucken / als PDF speichern" aria-label="Hilfe drucken oder als PDF speichern" onclick="druckStarten('hilfe')"></button></div>
     <!-- 2.23.2 (Wunsch Hansi): Suchfeld deutlicher – eigene Karte mit Überschrift, kräftigem Rand und Lupe -->
-    <button type="button" class="knopf rg-start-knopf" onclick="rundgangStart()">🎬 Rundgang durch die App – mit Ton, ca. 3 Min.</button><!-- KC-CLUB-RUNDGANG (2.241.0) -->
+    <button type="button" class="knopf rg-start-knopf" onclick="erklaerVideos()">🎬 Erklär-Videos mit Ton – Rundgang, Einstellungen, Nachricht, Termin …</button><!-- KC-CLUB-RUNDGANG (2.241.0) -->
     <button type="button" class="knopf haupt tw-chef-knopf" onclick="twFrageStart()">🧑‍🍳 Frag Twinkey – einfach fragen oder 🎤 sprechen</button><!-- 2.23.49 KC-CLUB-TWINKEY (früher Küchenchef) -->
     <label class="hz-suchfeld" for="hzSuche"><span class="hz-such-titel">🔍 Wonach suchst du?</span>
       <span class="such-zeile"><input type="search" id="hzSuche" data-diktat="einmal" class="hz-suche" placeholder="Hier tippen – z. B. „Farbe“ oder „Ton“" oninput="hzSuchen(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();hzSucheKnopf()}" autocomplete="off" enterkeyhint="search"><button type="button" class="knopf haupt such-knopf" onclick="hzSucheKnopf()">🔍 Suchen</button></span></label><!-- 2.23.56 KC-CLUB-SUCHEN-KNOPF -->
@@ -3555,6 +3555,7 @@
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Ausschalten zeigt alle Funktionen – du kannst jederzeit zurück.</div></div><button class="knopf klein" onclick="ansichtSetzen('erweitert')">🔧 Alle Funktionen</button></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
       <div class="schalter"><div><b>🎬 Rundgang durch die App</b><div class="hinweis">Die App zeigt und erzählt dir in 3 Minuten, was sie kann – mit Ton</div></div><button class="knopf klein" onclick="rundgangStart()">▶ Starten</button></div> <!-- KC-CLUB-RUNDGANG (2.241.0) -->
+      <div class="schalter"><div><b>🎬 Weitere Erklär-Videos</b><div class="hinweis">Alle Einstellungen erklärt, Nachricht schreiben, Termin eintragen, Pinnwand, Vorschläge</div></div><button class="knopf klein" onclick="erklaerVideos()">Auswählen</button></div> <!-- KC-CLUB-ERKLAERVIDEOS (2.244.0) -->
       <div class="schalter"><div><b>👨‍🍳 Über die App</b><div class="hinweis">Wer die Club-App gebaut hat</div></div><button class="knopf klein" onclick="entwicklerZeigen()">Ansehen</button></div>
       <div class="schalter"><div><b>💭 Feedback</b><div class="hinweis">Was gefällt dir, was ist zu kompliziert? Schreib es <span class="admin-name">Hansi</span>.</div></div><button class="knopf klein" onclick="zeige('feedback')">Schreiben</button></div>
     </details>
@@ -3701,6 +3702,7 @@
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Nur das Wichtigste mit großen Knöpfen – jederzeit umschaltbar</div></div><button class="knopf klein" onclick="ansichtSetzen('einfach')">Einschalten</button></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
       <div class="schalter"><div><b>🎬 Rundgang durch die App</b><div class="hinweis">Die App zeigt und erzählt dir in 3 Minuten, was sie kann – mit Ton</div></div><button class="knopf klein" onclick="rundgangStart()">▶ Starten</button></div> <!-- KC-CLUB-RUNDGANG (2.241.0) -->
+      <div class="schalter"><div><b>🎬 Weitere Erklär-Videos</b><div class="hinweis">Alle Einstellungen erklärt, Nachricht schreiben, Termin eintragen, Pinnwand, Vorschläge</div></div><button class="knopf klein" onclick="erklaerVideos()">Auswählen</button></div> <!-- KC-CLUB-ERKLAERVIDEOS (2.244.0) -->
       <div class="schalter"><div><b>🧩 Startseite anordnen</b><div class="hinweis">Kacheln verschieben oder ausblenden – oder auf der Startseite eine Kachel lange drücken</div></div><button class="knopf klein" onclick="zeige('start');kaBearbeiten(true)">Anordnen</button></div>
       <!-- KC-CLUB-MG-KACHELN (1.45.0, Wunsch Hansi): jeder wählt selbst, wie die Mitglieder angezeigt werden (je Gerät) -->
       <div style="margin-top:8px"><b>🔲 Kacheln auf der Startseite</b> <span class="hinweis">(erweiterte Ansicht, gilt für dieses Gerät)</span></div>
@@ -4066,6 +4068,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.243.0" data-v="2.243.0"></script>
+<script src="app.js?v=2.244.0" data-v="2.244.0"></script>
 </body>
 </html>

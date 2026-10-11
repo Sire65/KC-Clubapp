@@ -1,11 +1,18 @@
 {
-  "version": "2.243.0",
+  "version": "2.244.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🎬 Neu: Rundgang durch die App – auf der Startseite antippen und in 3 Minuten alles gezeigt und erzählt bekommen"
+    "🎬 Neu: Erklär-Videos mit Ton – alle Einstellungen mit Beispielen, Nachricht schreiben, Termin eintragen, Pinnwand und Vorschläge (Technik → Erklär-Videos)"
   ],
   "verlauf": [
+    {
+      "version": "2.244.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🎬 Neu: Erklär-Videos mit Ton – alle Einstellungen mit Beispielen, Nachricht schreiben, Termin eintragen, Pinnwand und Vorschläge (Technik → Erklär-Videos)"
+      ]
+    },
     {
       "version": "2.243.0",
       "datum": "2026-10-11",
