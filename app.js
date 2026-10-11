@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.285.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.286.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11430,9 +11430,14 @@ function druckBestaetigung() {
   const b = BEST; if (!b) throw new Error("Bitte die Bestätigung erneut öffnen.");
   if (b.art === "erstattung") { ERS.antraege = [b.antrag, ...(ERS.antraege || []).filter((x) => x.id !== b.antrag.id)]; return druckErstattung({ antrag: b.antrag.id }); }
   const sp = [["available", "Kann"], ["preferred", "Am liebsten"], ["if_needed", "Wenn nötig"], ["unavailable", "Kann nicht"]];
-  const zelle = "padding:1.6mm 2mm;border:.2mm solid #999;vertical-align:top;font-size:3.4mm";
-  const html = `${b.hinweis ? `<p style="margin:0 0 3mm;padding:2.5mm 3mm;border:.3mm solid #741521;border-radius:1.5mm;background:#fbf4ef;font-size:3.6mm">${esc(b.hinweis)}</p>` : ""}<p style="margin:0 0 3mm;font-size:3.6mm"><b>${esc(b.name)}</b> · Stand ${esc(b.stand)} · ${b.tage.length} Tag${b.tage.length === 1 ? "" : "e"}${b.uebernommen ? " · ✅ in den Dienstplan übernommen" : ""}</p>
-    <table style="width:100%;border-collapse:collapse"><thead><tr><th style="${zelle};background:#f1e7e2;width:24mm">Tag</th>${sp.map(([, t]) => `<th style="${zelle};background:#f1e7e2">${t}</th>`).join("")}<th style="${zelle};background:#f1e7e2">Bereitschaft</th></tr></thead>
+  const zelle = "padding:1.8mm 2mm;border:.2mm solid #999;vertical-align:middle;font-size:4mm"; // 2.286.0: Tageszeilen größer, senkrecht mittig (wie DP2-Bögen)
+  // 2.286.0 KC-DP-FORMULARE-EINHEITLICH (Wunsch Hansi „alle Formulare personalisiert mit QR-Code, der in DP2 eingelesen werden kann“):
+  // oben rechts derselbe Profil-QR wie auf DP2s Wunschbögen (Schema KCDP-FORM-PROFILE-1, Mitglieds-ID) mit Dokumentart club-bestaetigung-v1 –
+  // DP2 erkennt Person und Art und lehnt das Einlesen als Wunschbogen ab (es ist eine Bestätigung). Ohne QR-Baustein: Hinweis statt stillem Fehlen.
+  const pid = ICH?.person_id || "", qr = (() => { if (!pid || !window.qrcode) return ""; try { const q = qrcode(0, "M"); q.addData(JSON.stringify({ schema: "KCDP-FORM-PROFILE-1", profileId: pid, periodId: "", kind: "club-bestaetigung-v1" })); q.make(); return q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); } catch { return ""; } })();
+  const qrKasten = `<div style="float:right;width:30mm;margin:0 0 2mm 4mm;text-align:center;font-size:2.6mm">${qr ? `<div style="border:.3mm solid #999;padding:1mm;background:#fff">${qr}</div><b>${esc(pid)}</b>` : `<div style="border:.3mm dashed #c00;padding:2mm;color:#c00">QR-Code konnte nicht erzeugt werden</div>`}</div>`;
+  const html = `${qrKasten}${b.hinweis ? `<p style="margin:0 0 3mm;padding:2.5mm 3mm;border:.3mm solid #741521;border-radius:1.5mm;background:#fbf4ef;font-size:3.6mm">${esc(b.hinweis)}</p>` : ""}<p style="margin:0 0 3mm;font-size:3.6mm"><b>${esc(b.name)}</b> · Stand ${esc(b.stand)} · ${b.tage.length} Tag${b.tage.length === 1 ? "" : "e"}${b.uebernommen ? " · ✅ in den Dienstplan übernommen" : ""}</p>
+    <table style="width:100%;border-collapse:collapse;clear:both"><thead><tr><th style="${zelle};background:#f1e7e2;width:24mm">Tag</th>${sp.map(([, t]) => `<th style="${zelle};background:#f1e7e2">${t}</th>`).join("")}<th style="${zelle};background:#f1e7e2">Bereitschaft</th></tr></thead>
     <tbody>${b.tage.map((t) => `<tr><td style="${zelle};font-weight:700;white-space:nowrap">${esc(t.tag)}</td>${sp.map(([k]) => `<td style="${zelle}${k === "unavailable" && t.spalten[k].length ? ";background:#fbe9ea" : k === "preferred" && t.spalten[k].length ? ";background:#e8f4ea" : ""}">${t.spalten[k].map(esc).join("<br>") || "–"}</td>`).join("")}<td style="${zelle}">${esc(t.bereitschaft || "–")}</td></tr>`).join("")}</tbody></table>
     <p style="margin:3mm 0 0;font-size:3mm;color:#555">Zeiten in Uhr · Buchstabe = Bereich · ${b.freigabe ? "Kollegen dürfen die Zeiten sehen" : "nur für die Planung sichtbar"} · Änderungen jederzeit in der App, solange die Wunschphase läuft.</p>`;
   return { titel: `Meine Dienstwünsche – ${b.veranstaltung}`, unter: "Bestätigung meiner Eingaben", html, quer: true, fuss: "Bestätigung aus der Köcheclub-App" };
@@ -25593,7 +25598,7 @@ const DRUCKARTEN = {
   dokument: { bauen: () => dokDruckSeite() }, // KC-CLUB-DOK-ANZEIGE (1.62.0): PDF-Seiten randlos auf A4
   wunschbogen: { bauen: () => wbDruckSeite() },
   dienstuebersicht: { bauen: () => druckDienstUebersicht() }, // KC-CLUB-DIENST-UEBERSICHT (2.23.39): A4 quer // KC-CLUB-WUNSCHBOGEN (2.23.28): leerer persönlicher Bogen, randlos A4 quer
-  bestaetigung: { bauen: () => druckBestaetigung() },
+  bestaetigung: { bauen: async () => { try { await qrLaden(); } catch {} return druckBestaetigung(); } }, // 2.286.0: QR-Baustein vorher laden
   verbindung: { bauen: () => druckVerbindung() }, // KC-CLUB-VERBINDUNG-MELDEN (2.23.76)
   chat: { bauen: () => druckChat() }, // 2.23.80: ganzer Chat
   meinedaten: { bauen: () => druckMeineDaten() }, // KC-CLUB-MEINE-DATEN (2.23.82)

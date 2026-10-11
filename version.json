@@ -1,11 +1,20 @@
 {
-  "version": "2.285.0",
+  "version": "2.286.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🖨️ Wunschbogen lesbarer: größere Tageszeilen, Kästchen mittig (DP2 Build 265)"
+    "🧾 Alle Wunsch-Formulare einheitlich: Name + QR-Code, den DP2 sicher einliest (DP2 Build 266)",
+    "🖨️ Bestätigung „Meine Dienstwünsche“ mit QR-Code und größeren Tageszeilen"
   ],
   "verlauf": [
+    {
+      "version": "2.286.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🧾 Alle Wunsch-Formulare einheitlich: Name + QR-Code, den DP2 sicher einliest (DP2 Build 266)",
+        "🖨️ Bestätigung „Meine Dienstwünsche“ mit QR-Code und größeren Tageszeilen"
+      ]
+    },
     {
       "version": "2.285.0",
       "datum": "2026-10-11",

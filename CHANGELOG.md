@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.286.0 – 2026-10-11 – KC-DP-FORMULARE-EINHEITLICH: Wunsch-Formulare einheitlich mit DP2-QR
+DP2 Build 266 übernommen: Jeder QR auf den Wunsch-Formularen trägt jetzt auch die Dokumentart; DP2 ordnet Bögen aus der Club-App sicher über die Mitglieds-ID zu, nimmt nur ausfüllbare Wunschbögen an und meldet einen fremden Zeitraum. Bereitschaft mit mittigen Kästchen und großen Zellen, ausgefüllte Zeiten groß, ☒ als Kästchen mit Kreuz. Die Bestätigung „Meine Dienstwünsche“ hat jetzt oben rechts denselben DP2-QR mit Mitglieds-ID und größere Tageszeilen.
+
 ## 2.285.0 – 2026-10-11 – KC-CLUB-DP2-265: Wunschbogen lesbarer
 DP2 Build 265 übernommen: Im gedruckten Wunschbogen (Persönliche Verfügbarkeitsmatrix) stehen Datum, Tag/Bereich und Rahmenzeit größer und mittig, die Kästchen für Sperrtag und Nur wenn nötig stehen mittig in ihren Zellen.
 
