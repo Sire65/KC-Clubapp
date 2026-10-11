@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.255.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.256.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1689,10 +1689,75 @@ function rgRollenAnsicht(ziel) {
   b.classList.toggle("ist-admin", !!ICH?.admin && (!an || ziel === "admin")); // Admin-Lämpchen, Herz, Brille nur im Admin-Video
   try { if (RK.einst?.an) rkAufbauen(RK.einst); } catch {} // Rollkartei der Einstellungen ohne ausgeblendete Karten neu legen
 }
-function erklaerVideos() {
-  neuWahlFenster("🎬 Erklär-Videos – mit Ton", [...RUNDGAENGE.filter((r) => !r.nur || r.nur()).map((r) => ({ sym: r.sym, t: r.t, u: r.u, los: () => rundgangStart(false, r.id) })),
-    ...(ICH?.admin ? [{ sym: "📊", t: "Auswertung der Videos", u: "👍/👎 je Video – welche überarbeitet werden müssen (nur Admin)", los: () => rgAuswertung() }] : [])]);
-  $("neuWahlBlatt")?.querySelector(".einw-karte")?.remove(); // „Etwas Neues anlegen“ passt hier nicht
+// KC-CLUB-VIDEO-THEMEN (2.256.0, Wunsch Hansi „bei vielen Videos in Themen-Kacheln unterteilen, auf der Kachel anzeigen, wie viele es gibt;
+// Kästchen zum Anhaken – alle angehakten automatisch nacheinander abspielen“). Registry RG_THEMEN: Video-IDs je Thema; ein Video, das in
+// keinem Thema steht (z. B. neu dazugekommen), landet unter „✨ Weitere“ – es geht keins verloren. Wenige Videos: eine Liste ohne Kacheln.
+const RG_THEMEN = [
+  { id: "einstieg", sym: "🚀", t: "Einstieg", videos: ["warum", "ueberblick", "hilfe"] },
+  { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["nachricht", "mitglieder", "pinnwand"] },
+  { id: "termine", sym: "📅", t: "Termine", videos: ["termin", "zusagen"] },
+  { id: "club", sym: "🗄️", t: "Club & Archiv", videos: ["fotos", "archiv", "vorschlag", "helfen", "erstattung"] },
+  { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["einstellungen", "figur", "figurbau"] },
+  { id: "freizeit", sym: "🎲", t: "Spiele & Notfall", videos: ["spiele", "sos"] },
+  { id: "leitung", sym: "🗂️", t: "Für die Clubleitung", videos: ["leitung"] },
+  { id: "admin", sym: "🛠️", t: "Für Admins", videos: ["admin"] },
+];
+const RG_THEMEN_AB = 9; // ab so vielen sichtbaren Videos: Themen-Kacheln statt einer langen Liste
+const RGL = { thema: null, wahl: new Set() };
+const rgSichtbareVideos = () => RUNDGAENGE.filter((r) => !r.nur || r.nur());
+function rgThemenListe() {
+  const da = rgSichtbareVideos(), bekannt = new Set(RG_THEMEN.flatMap((t) => t.videos));
+  const themen = RG_THEMEN.map((t) => ({ ...t, liste: t.videos.map((id) => da.find((r) => r.id === id)).filter(Boolean) }));
+  themen.push({ id: "weitere", sym: "✨", t: "Weitere", liste: da.filter((r) => !bekannt.has(r.id)) });
+  return themen.filter((t) => t.liste.length);
+}
+function erklaerVideos(thema) {
+  RGL.thema = thema === undefined ? null : thema;
+  const f = $("rgListeBlatt") || blattAuf("rgListeBlatt", `<div id="rgListe"></div>`);
+  f.classList.add("rgl-blatt"); rgListeZeigen();
+}
+function rgListeZeigen() {
+  const z = $("rgListe"); if (!z) return;
+  const da = rgSichtbareVideos(), themen = rgThemenListe(), mitKacheln = da.length >= RG_THEMEN_AB;
+  for (const id of [...RGL.wahl]) if (!da.some((r) => r.id === id)) RGL.wahl.delete(id);
+  const t = mitKacheln && RGL.thema ? themen.find((x) => x.id === RGL.thema) : null;
+  if (mitKacheln && RGL.thema && !t) RGL.thema = null;
+  const zeile = (r) => { const an = RGL.wahl.has(r.id);
+    return `<div class="rgl-zeile${an ? " an" : ""}"><label class="rgl-haken"><input type="checkbox" ${an ? "checked" : ""} onchange="rgWahl('${r.id}', this.checked)" aria-label="${esc(r.t)} anhaken">
+      <span class="rgl-sym" aria-hidden="true">${r.sym}</span><span><b>${esc(r.t)}</b><small>${esc(r.u)}</small></span></label>
+      <button type="button" class="knopf klein" onclick="rgListeAbspielen(['${r.id}'])" aria-label="${esc(r.t)} jetzt abspielen">▶</button></div>`; };
+  const n = RGL.wahl.size;
+  let inhalt;
+  if (mitKacheln && !t) {
+    inhalt = `<p class="hinweis" style="margin:0 0 10px">Tippe ein Thema an. Hake die Videos an, die du sehen möchtest – sie laufen dann nacheinander.</p>
+      <div class="rgl-kacheln">${themen.map((x) => { const gew = x.liste.filter((r) => RGL.wahl.has(r.id)).length;
+        return `<button type="button" class="rgl-kachel" onclick="erklaerVideos('${x.id}')"><span class="rgl-ksym" aria-hidden="true">${x.sym}</span><b>${esc(x.t)}</b>
+          <small>${x.liste.length} ${x.liste.length === 1 ? "Video" : "Videos"}</small>${gew ? `<span class="rgl-zahl" aria-label="${gew} angehakt">✓ ${gew}</span>` : ""}</button>`; }).join("")}</div>
+      <button type="button" class="knopf klein" style="margin-top:10px" onclick="rgWahlAlle(${da.every((r) => RGL.wahl.has(r.id)) ? "false" : "true"})">${da.every((r) => RGL.wahl.has(r.id)) ? "☐ Alle abwählen" : `☑️ Alle ${da.length} Videos anhaken`}</button>`;
+  } else {
+    const liste = t ? t.liste : da, alleAn = liste.every((r) => RGL.wahl.has(r.id));
+    inhalt = `${t ? `<button type="button" class="knopf klein" onclick="erklaerVideos(null)">‹ Alle Themen</button><h4 style="margin:10px 0 4px">${t.sym} ${esc(t.t)} · ${t.liste.length} ${t.liste.length === 1 ? "Video" : "Videos"}</h4>` : ""}
+      ${liste.length > 1 ? `<button type="button" class="knopf klein" onclick="rgWahlAlle(${alleAn ? "false" : "true"})">${alleAn ? "☐ Alle abwählen" : "☑️ Alle anhaken"}</button>` : ""}
+      <div class="rgl-liste">${liste.map(zeile).join("")}</div>`;
+  }
+  z.innerHTML = `<h3 style="margin-top:0">🎬 Erklär-Videos – mit Ton</h3>${inhalt}
+    <div class="rgl-fuss"><button type="button" class="knopf haupt" ${n ? "" : "disabled"} onclick="rgListeAbspielen()">▶ ${n ? `${n} angehakte${n === 1 ? "s Video" : " Videos"} nacheinander abspielen` : "Erst Videos anhaken"}</button>
+      ${n ? `<button type="button" class="knopf klein" onclick="RGL.wahl.clear();rgListeZeigen()">✕ Häkchen weg</button>` : ""}
+      ${ICH?.admin ? `<button type="button" class="knopf klein" onclick="$('rgListeBlatt').remove();rgAuswertung()">📊 Auswertung der Videos</button>` : ""}
+      <button type="button" class="knopf klein" onclick="$('rgListeBlatt').remove()">Schließen</button></div>`;
+}
+function rgWahl(id, an) { if (an) RGL.wahl.add(id); else RGL.wahl.delete(id); rgListeZeigen(); }
+function rgWahlAlle(an) {
+  const t = RGL.thema ? rgThemenListe().find((x) => x.id === RGL.thema) : null;
+  for (const r of t ? t.liste : rgSichtbareVideos()) if (an) RGL.wahl.add(r.id); else RGL.wahl.delete(r.id);
+  rgListeZeigen();
+}
+// Reihenfolge wie in den Themen (Einstieg zuerst), nicht wie angetippt
+function rgListeAbspielen(ids) {
+  const reihe = rgThemenListe().flatMap((t) => t.liste.map((r) => r.id)), wahl = ids || reihe.filter((id) => RGL.wahl.has(id));
+  if (!wahl.length) return;
+  $("rgListeBlatt")?.remove(); if (!ids) RGL.wahl.clear();
+  rundgangStart(false, wahl[0], wahl.slice(1));
 }
 // Vorführung (demo) einer Station: nur anzeigen, nie speichern; alles, was die Station nicht vorführt, wird zurückgestellt
 function rgDemo(d = {}) {
@@ -1701,12 +1766,13 @@ function rgDemo(d = {}) {
   if (d.design || d.nacht) { const alt = window.__rgDsAlt = window.__rgDsAlt || DS; DS = { ...alt, design: d.design || alt.design, modus: d.nacht ? "nacht" : alt.modus }; anwendenDesign(); }
   else { if (window.__rgDsAlt) { DS = window.__rgDsAlt; window.__rgDsAlt = null; } anwendenDesign(); }
 }
-const RG = { an: false, i: 0, pause: false, uhr: 0, lauf: 0, ziel: null, ton: false, von: "start", richtung: 1, wach: null, tour: "ueberblick", st: [], zurueck: [], vorI: -1 };
+const RG = { an: false, i: 0, pause: false, uhr: 0, lauf: 0, ziel: null, ton: false, von: "start", richtung: 1, wach: null, tour: "ueberblick", st: [], zurueck: [], vorI: -1, liste: [] };
 const rgSichtbar = (e) => { if (!e?.isConnected || e.closest(".versteckt")) return false; const r = e.getBoundingClientRect(); return r.height > 0 && r.width > 0 && getComputedStyle(e).visibility !== "hidden"; }; // auch feste Elemente (Leiste unten, ?)
 const rgZiel = (s) => (s.sel || []).flatMap((q) => { try { return typeof q === "function" ? [q()].filter(Boolean) : [...document.querySelectorAll(q)]; } catch { return []; } }).find(rgSichtbar) || null;
 const rgText = (s) => (typeof s.x === "function" ? s.x() : s.x);
-function rundgangStart(mitKnopf, id = "ueberblick") {
+function rundgangStart(mitKnopf, id = "ueberblick", liste = []) {
   rundgangEnde(true); einwKarteWeg(); vorlesenStopp();
+  RG.liste = Array.isArray(liste) ? liste.slice() : []; // KC-CLUB-VIDEO-THEMEN: danach noch abzuspielen
   const tour = RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur())) || RUNDGAENGE[0];
   RG.tour = tour.id; RG.st = tour.st(); RG.zurueck = []; RG.vorI = -1; RG.richtung = 1; RG.frage = false;
   RG.von = aktuelleAnsicht === "chat" ? "nachrichten" : aktuelleAnsicht; RG.an = true;
@@ -1817,9 +1883,13 @@ function rgFrage() {
   try { RG.st[RG.vorI]?.nach?.(); } catch {} RG.vorI = -1; // letzte Station aufräumen, Ansicht bleibt
   const zeile = (k, frage) => `<div class="rg-frage"><span>${frage}</span><span class="rg-daumen" data-k="${k}"><button type="button" data-w="1" onclick="rgDaumen('${k}', true)" aria-label="Daumen hoch">👍</button><button type="button" data-w="0" onclick="rgDaumen('${k}', false)" aria-label="Daumen runter">👎</button></span></div>`;
   $("rgTafel").innerHTML = `<div class="rg-oben"><b>🎬 Wie war das Video?</b></div>${zeile("gefallen", "Hat dir das Video gefallen?")}${zeile("hilft", "Hilft es dir weiter?")}
-    <div class="rg-knoepfe rg-knoepfe2"><button type="button" class="knopf haupt klein" id="rgBewSenden" onclick="rgBewertungSenden(this)" disabled>✔ Abschicken</button><button type="button" class="knopf klein" onclick="rundgangEnde()">Überspringen</button></div>`;
+    ${rgNaechstesHtml()}<div class="rg-knoepfe rg-knoepfe2"><button type="button" class="knopf haupt klein" id="rgBewSenden" onclick="rgBewertungSenden(this)" disabled>✔ Abschicken</button><button type="button" class="knopf klein" onclick="rundgangEnde()">Überspringen</button></div>`;
   $("rgTafel").classList.remove("rg-oben-an");
   if (RG.ton) try { speechSynthesis.speak(sprechAusgabe("Hat dir das Video gefallen? Und hilft es dir weiter? Tippe auf Daumen hoch oder Daumen runter.")); } catch {}
+}
+function rgNaechstesHtml() { // KC-CLUB-VIDEO-THEMEN: in einer Reihe sagen, was danach kommt
+  const da = (RG.liste || []).map((id) => RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur()))).filter(Boolean);
+  return da.length ? `<p class="hinweis rg-naechst">Danach: ${da[0].sym} <b>${esc(da[0].t)}</b>${da.length > 1 ? ` · noch ${da.length} Videos` : ""} – nach dem Abschicken oder Überspringen geht es weiter.</p>` : "";
 }
 function rgDaumen(k, wert) {
   RG_BEW[k] = RG_BEW[k] === wert ? null : wert; // nochmal antippen nimmt es zurück
@@ -1861,7 +1931,9 @@ function rundgangPause() {
 }
 function rundgangEnde(still) {
   if (!RG.an && !$("rgSchicht")) return;
-  const weiter = !still && RG.frage && RG.tour === "warum"; // 2.254.0: nach der Einleitung bis zum Ende → Rundgang anbieten
+  const bisEnde = !still && RG.frage, naechst = bisEnde ? (RG.liste || []).find((id) => RUNDGAENGE.some((x) => x.id === id && (!x.nur || x.nur()))) : null;
+  const rest = naechst ? RG.liste.slice(RG.liste.indexOf(naechst) + 1) : [], von = RG.von; if (!bisEnde) RG.liste = []; // ✕ Beenden stoppt auch die Reihe
+  const weiter = bisEnde && !naechst && RG.tour === "warum"; // 2.254.0: nach der Einleitung bis zum Ende → Rundgang anbieten
   RG.frage = false; rgStille(); try { RG.st[RG.vorI]?.nach?.(); } catch {} // offene Beispiele schließen, Aufgeklapptes zuklappen, Vorführung zurück
   for (const f of RG.zurueck.splice(0).reverse()) try { f(); } catch {}
   if (RG.an) rgDemo({}); RG.vorI = -1;
@@ -1871,6 +1943,7 @@ function rundgangEnde(still) {
   if (!still) { zeige(RG.von, true); scrollTo(0, 0); } // zurück, wo der Rundgang gestartet wurde
   rgHinweisZeigen();
   if (weiter) setTimeout(rgUeberblickAnbieten, 400);
+  if (naechst) setTimeout(() => { if (RG.an) return; rundgangStart(false, naechst, rest); RG.von = von; }, 600); // KC-CLUB-VIDEO-THEMEN: nächstes angehaktes Video
 }
 async function rgUeberblickAnbieten() {
   if (RG.an) return;

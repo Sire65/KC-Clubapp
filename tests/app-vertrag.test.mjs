@@ -5641,7 +5641,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/api\("video_bewerten", \{ video: tour\.id, stand: tour\.stand,/.test(html) && /catch \(e\) \{ knopf\.disabled = false; meldeFehler\(e\); \}/.test(html), "senden mit Fassung; Fehler sichtbar (Regel 11)");
   assert.ok(/case "video_bewerten": \{/.test(server) && /onConflict: "video,stand,person_id"/.test(server) && /case "video_auswertung": \{\s*nurAdmin\(ich\);/.test(server) && /return json\(\{ videos: \[\.\.\.m\.values\(\)\] \}\); \/\/ nur Zahlen – keine Namen/.test(server), "Server: eine Bewertung je Person/Video/Fassung, Auswertung nur Admin, ohne Namen");
   assert.ok(/if \(!z\.anzahl \|\| z\.anzahl < RG_MIN_STIMMEN \|\| !alle\) return \["grau"/.test(html) && /q < 0\.6 \? \["rot", "🔴 überarbeiten"\]/.test(html), "unbekannt = grau, nie gut; schlecht = überarbeiten");
-  assert.ok(/ICH\?\.admin \? \[\{ sym: "📊", t: "Auswertung der Videos"/.test(html) && (() => { const r = html.slice(html.indexOf("const RUNDGAENGE = ["), html.indexOf("];", html.indexOf("const RUNDGAENGE = ["))); const alle = (r.match(/\{ id: "[a-z]+",/g) || []).length; return alle >= 17 && (r.match(/\{ id: "[a-z]+", stand: "\d+",/g) || []).length === alle; })(), "Auswertung nur für den Admin; jedes Video hat eine Fassung (2.251.0: 17 Videos)");
+  assert.ok(/ICH\?\.admin \? `<button type="button" class="knopf klein" onclick="\$\(\x27rgListeBlatt\x27\)\.remove\(\);rgAuswertung\(\)">📊 Auswertung der Videos/.test(html) /* 2.256.0: Knopf im Themen-Fenster */ && (() => { const r = html.slice(html.indexOf("const RUNDGAENGE = ["), html.indexOf("];", html.indexOf("const RUNDGAENGE = ["))); const alle = (r.match(/\{ id: "[a-z]+",/g) || []).length; return alle >= 17 && (r.match(/\{ id: "[a-z]+", stand: "\d+",/g) || []).length === alle; })(), "Auswertung nur für den Admin; jedes Video hat eine Fassung (2.251.0: 17 Videos)");
   assert.ok(/if \(r && !RG\.an\) scrollTo\(/.test(html) && /if \(Date\.now\(\) - \(RG\.seit \|\| 0\) < 6000/.test(html), "Fund Hansi: Chat-Kartei scrollt im Video nicht weg; Ziel wird zurückgeholt");
   assert.ok(fs.existsSync(new URL("../supabase/migrations/20261011_kc_club_v2246_video_bewertung.sql", import.meta.url)), "Migration");
 }
@@ -5663,9 +5663,21 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(!/api\(|spPcZug\(|spHerausfordern\(|spHerausfordernBlatt\(\)|(?<!")arOrdnerOeffnen\(|arNeuesJahr\(\)|ivAnsicht\(\)|sicherheitPruefen\(|dwOeffnen\(/.test(b), "Videos senden, spielen, öffnen und speichern nichts (nur Knöpfe zeigen)");
   assert.ok(/RG\.zurueck\.push\(\(\) => \{ const a = RG\.spAlt;/.test(b) && /RG\.zurueck\.push\(\(\) => \{ const a = RG\.arAlt;/.test(b) && /RG\.zurueck\.push\(\(\) => register\(alt\)\)/.test(b), "Spiel-, Archiv- und Register-Stand zurück");
   assert.ok(/function rgHinweisLos\(\) \{ rundgangStart\(false, "warum"\); \}/.test(html) && /if \(tour\.id === "warum" && !rgErledigt\(\)\) rgHinweisErledigt\("angesehen"\);/.test(html), "Startseite bietet die Einleitung an");
-  assert.ok(/const weiter = !still && RG\.frage && RG\.tour === "warum";/.test(html) && /if \(weiter\) setTimeout\(rgUeberblickAnbieten, 400\);/.test(html) && /rundgangStart\(false, "ueberblick"\)/.test(html), "nach der Einleitung den Rundgang anbieten");
+  assert.ok(/const weiter = bisEnde && !naechst && RG\.tour === "warum";/.test(html) /* 2.256.0: nur am Ende einer Reihe */ && /if \(weiter\) setTimeout\(rgUeberblickAnbieten, 400\);/.test(html) && /rundgangStart\(false, "ueberblick"\)/.test(html), "nach der Einleitung den Rundgang anbieten");
   assert.ok(/nur: \(\) => !einfach\(\), vor: \(\) => rgRegister\("mein"\), sel: \[rgKachel\("mein_dienst"\)\], mussSel: true/.test(b) && /nur: \(\) => einfach\(\), sel: \[rgKachel\("meindienst"\)\], mussSel: true/.test(b), "Dienstplan je Ansicht an der richtigen Kachel");
   assert.ok(/"f:spielen": \["spiele"\], "f:archiv": \["archiv"\]/.test(html), "Twinkey bietet die neuen Videos an");
+}
+
+// 2.256.0 KC-CLUB-VIDEO-THEMEN (Wunsch Hansi): viele Videos in Themen-Kacheln mit Anzahl; Häkchen; angehakte nacheinander abspielen
+{
+  const b = html.slice(html.indexOf("// KC-CLUB-VIDEO-THEMEN (2.256.0"), html.indexOf("// Vorführung (demo) einer Station"));
+  assert.ok(/const RG_THEMEN = \[/.test(b) && /themen\.push\(\{ id: "weitere", sym: "✨", t: "Weitere", liste: da\.filter\(\(r\) => !bekannt\.has\(r\.id\)\) \}\)/.test(b) && /return themen\.filter\(\(t\) => t\.liste\.length\);/.test(b), "Registry der Themen; kein Video geht verloren, leere Themen fehlen");
+  assert.ok(/const rgSichtbareVideos = \(\) => RUNDGAENGE\.filter\(\(r\) => !r\.nur \|\| r\.nur\(\)\);/.test(b) && /mitKacheln = da\.length >= RG_THEMEN_AB/.test(b), "nur sichtbare Videos (Rollen), Kacheln erst bei vielen");
+  assert.ok(/\$\{x\.liste\.length\} \$\{x\.liste\.length === 1 \? "Video" : "Videos"\}/.test(b) && /type="checkbox"[^>]*onchange="rgWahl\(/.test(b), "Anzahl auf der Kachel, Kästchen zum Anhaken");
+  assert.ok(/rundgangStart\(false, wahl\[0\], wahl\.slice\(1\)\)/.test(b) && /RG\.liste = Array\.isArray\(liste\) \? liste\.slice\(\) : \[\];/.test(html), "angehakte nacheinander");
+  assert.ok(/if \(!bisEnde\) RG\.liste = \[\]; \/\/ ✕ Beenden stoppt auch die Reihe/.test(html) && /if \(naechst\) setTimeout\(\(\) => \{ if \(RG\.an\) return; rundgangStart\(false, naechst, rest\);/.test(html), "nach jedem Video das nächste, ✕ Beenden stoppt alles");
+  assert.ok(/const weiter = bisEnde && !naechst && RG\.tour === "warum";/.test(html) && /\$\{rgNaechstesHtml\(\)\}<div class="rg-knoepfe rg-knoepfe2">/.test(html), "Bewertung bleibt je Video, sagt was danach kommt");
+  assert.ok(/\.rgl-kacheln \{ display: grid;/.test(seite) && /\.rgl-fuss \{ position: sticky;/.test(seite), "Kacheln und Abspiel-Knopf immer sichtbar");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

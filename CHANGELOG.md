@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.256.0 – 2026-10-11 – KC-CLUB-VIDEO-THEMEN: Erklär-Videos in Themen-Kacheln, anhaken und nacheinander abspielen
+Bei vielen Videos zeigt das Fenster Themen-Kacheln (Einstieg, Schreiben & Kontakt, Termine, Club & Archiv, Ich & meine App, Spiele & Notfall; Clubleitung und Admin nur für sie) mit der Anzahl der Videos und wie viele angehakt sind. In jedem Thema Kästchen zum Anhaken, „Alle anhaken“ und ▶ für ein einzelnes Video; unten „▶ angehakte Videos nacheinander abspielen“. Nach jedem Video kommt wie bisher die 👍/👎-Frage mit „Danach: …“, dann startet das nächste; ✕ Beenden stoppt die ganze Reihe. Videos ohne Thema landen unter „✨ Weitere“.
+
 ## 2.255.0 – 2026-10-11 – KC-CLUB-TWINKEY-BEANTWORTET: gesendete Twinkey-Antworten nachsehen + Kopie (Wunsch Hansi)
 - Anlass: „Hat Wilfried die Push bekommen? Wo sehe ich das? Normal bekomme ich immer eine Kopie.“
 - In „📥 Fragen an Twinkey“ (nur Admin) der Bereich „📤 Beantwortet“: die letzten 30 Antworten mit Name, Zeit, Frage, vollem Antworttext, Weg und Ergebnis (🔔 Push / ✉️ E-Mail: ✅ gesendet, ⚠️ Fehler, ❔ unbekannt) und 📱 Club-App: 👀 gelesen / ⏳ noch nicht gelesen. Versandergebnis aus dem Protokoll.

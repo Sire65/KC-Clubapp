@@ -1,11 +1,20 @@
 {
-  "version": "2.255.0",
+  "version": "2.256.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "📤 Admin: Twinkey-Antworten unter „Beantwortet“ nachsehen – Text, Push/E-Mail-Ergebnis, gelesen – und Kopie per E-Mail"
+    "🎬 Erklär-Videos nach Themen: Kacheln mit Anzahl der Videos",
+    "☑️ Videos anhaken – alle angehakten laufen automatisch nacheinander"
   ],
   "verlauf": [
+    {
+      "version": "2.256.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🎬 Erklär-Videos nach Themen: Kacheln mit Anzahl der Videos",
+        "☑️ Videos anhaken – alle angehakten laufen automatisch nacheinander"
+      ]
+    },
     {
       "version": "2.255.0",
       "datum": "2026-10-11",
