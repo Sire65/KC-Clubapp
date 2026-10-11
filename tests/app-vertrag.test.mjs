@@ -8272,3 +8272,13 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/RG\.zurueck\.push\(\(\) => \$\("avBlatt"\)\?\.remove\(\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => \$\("avbBlatt"\)\?\.remove\(\)\)/.test(b) && (b.match(/classList\.add\("rg-zeigen"\)/g) || []).length === 2, "Fenster sichtbar während des Videos, danach zu");
 }
 
+// 2.249.0 KC-CLUB-JAHRESZEIT-EXTRAS (Wunsch Hansi): Nikolaus, Regen, Kochtopf, Ostereier, Igel – Regen nur aus frischen Wetterdaten
+{
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-EXTRAS"), html.indexOf("// Vorschau aus den Einstellungen: eine Jahreszeit sofort im Kopf zeigen"));
+  assert.ok(b.length > 1000, "Extras vorhanden");
+  assert.ok(/Date\.now\(\) - new Date\(r\.stand\) <= WETTER_VERALTET_MIN \* 60000 && \["regen", "niesel", "gewitter"\]\.includes/.test(b) && !/wetterLaden\(|api\(/.test(b), "Regen nur bei frischen Daten, kein eigener Abruf (Regel 11)");
+  assert.ok(/x\.nikolaus = heute\.slice\(5\) === "12-06"/.test(b) && /n === "Karfreitag"/.test(b) && /heute <= tagPlus\(kf, 3\)/.test(b) && /isoBerlin\(beginn\) === heute && Date\.now\(\) < \+beginn \+ 5 \* 3600000/.test(b), "Nikolaus 6.12., Ostern Karfreitag–Ostermontag, Topf am Treffen-Tag");
+  assert.ok(/e\.target\.closest\("button, a, input, select, textarea, \[onclick\], \[role=button\]"\)\) return;/.test(b), "Ostereier-Tippen nimmt Knöpfen nichts weg");
+  assert.ok(/jahreszeitVorschau\('fruehling', 'ostern'\)/.test(seite) && /jahreszeitVorschau\('', 'regen'\)/.test(seite), "Vorschau der Extras");
+}
+

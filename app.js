@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.248.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.249.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11093,7 +11093,9 @@ function jzbStart(h, art) {
   s.appendChild(cv); h.prepend(s);
   const saison = art === "advent" ? "winter" : art;
   Object.assign(JZB, { s, cv, ctx, art, saison, w: 0, h: 0, dpr: 0, k: 1, T: 0, pt: 0, letzt: 0, imBild: true, pruef: 0, spawn: 0,
-    flug: [], liegt: [], fx: [], boden: [], wind: null, mann: null, halme: [], blumen: [], gaeste: [], welk: 0, phase: "anfang" });
+    flug: [], liegt: [], fx: [], boden: [], wind: null, mann: null, halme: [], blumen: [], gaeste: [], welk: 0, phase: "anfang",
+    ext: {}, extraPruef: 0, eier: [], igel: null, igelUhr: undefined, schirm: null, schirmUhr: undefined, tropfen: [], pfuetzen: null, regenSpawn: 0 }); // 2.249.0 KC-CLUB-JAHRESZEIT-EXTRAS
+  if (!h.dataset.jzKlick) { h.dataset.jzKlick = "1"; h.addEventListener("click", jzbEiAntippen); } // Ostereier antippen
   // Vorschau im Winter: gleich der Schneemann-Lauf, damit man ihn nicht erst nach zwei Windstößen sieht
   JZB.lauf = JZB.vorschau ? (saison === "winter" ? 2 : 0) : jzbLaufLesen();
   JZB.ro = new ResizeObserver(jzbGroesse); JZB.ro.observe(s);
@@ -11112,6 +11114,7 @@ function jzbGroesse() {
   const alt = JZB.boden; JZB.boden = Array.from({ length: Math.ceil(w / JZB_SP) + 1 }, (_, i) => alt[i] || 0);
   Object.assign(JZB, { w, h, dpr, k: Math.max(.55, Math.min(1, h / 230)) });
   if (breiter && JZB.halme.length) jzbPflanzen(); // Handy gedreht: Beet neu verteilen (gleich weit gewachsen)
+  if (breiter && JZB.eier.length) jzbEierVerstecken();
   if (!JZB.raf) jzbMalen();
 }
 function jzbWeiter() {
@@ -11124,7 +11127,7 @@ function jzbBild(ts) {
   if (!JZB.cv?.isConnected) return jzbStop();
   const dt = JZB.letzt ? Math.min(.05, (ts - JZB.letzt) / 1000) : .016; JZB.letzt = ts;
   if ((JZB.pruef += dt) > 1) { JZB.pruef = 0; if (!fxAn() || !einst("jahreszeit", true)) return jahreszeitKopf(); }
-  if (JZB.w) { JZB.T += dt; JZB.pt += dt; jzbSchritt(dt); jzbMalen(); }
+  if (JZB.w) { if ((JZB.extraPruef -= dt) <= 0) { JZB.extraPruef = 30; jzbExtrasBestimmen(); } JZB.T += dt; JZB.pt += dt; jzbSchritt(dt); jzbMalen(); }
   jzbWeiter();
 }
 function jzbPhase(p) { JZB.phase = p; JZB.pt = 0; }
@@ -11199,7 +11202,7 @@ function jzbSchritt(dt) {
   if (S === "herbst") jzbHerbst(dt);
   else if (S === "winter") jzbWinter(dt);
   else jzbBeet(dt);
-  jzbFallen(dt); jzbFxSchritt(dt); jzbGaeste(dt);
+  jzbFallen(dt); jzbFxSchritt(dt); jzbGaeste(dt); jzbExtrasSchritt(dt);
 }
 // 🍂 Herbst
 function jzbHerbst(dt) {
@@ -11315,9 +11318,11 @@ function jzbGaeste(dt) {
 function jzbMalen() {
   const J = JZB, c = J.ctx; if (!c || !J.w) return;
   c.clearRect(0, 0, J.w, J.h);
+  jzbExtrasHinten(c); // Ostereier – das Gras wächst darüber
   if (J.saison === "fruehling" || J.saison === "sommer") jzbBeetMalen(c);
   if (J.saison === "winter") jzbSchneeMalen(c);
-  for (const b of J.liegt) jzbBlatt(c, b.x, b.y, b.s, b.rot, 1, .55, b.farbe, b.form);
+  for (const b of J.liegt) { const w = b.wackel ? Math.sin(J.T * 30) * .5 * b.wackel : 0; jzbBlatt(c, b.x, b.y - Math.abs(w) * 3, b.s, b.rot + w, 1, .55, b.farbe, b.form); } // raschelt beim Igel
+  jzbExtrasBoden(c);
   if (J.mann) jzbSchneemannMalen(c);
   for (const g of J.gaeste) jzbGastMalen(c, g);
   const flocken = [];
@@ -11330,6 +11335,7 @@ function jzbMalen() {
   }
   c.globalAlpha = 1;
   if (flocken.length) { c.fillStyle = "rgba(255,255,255,.92)"; c.beginPath(); for (const f of flocken) { c.moveTo(f.x + f.r, f.y); c.arc(f.x, f.y, f.r, 0, 7); } c.fill(); }
+  jzbRegenMalen(c);
   const W = J.wind;
   if (W) {
     c.lineCap = "round"; c.lineWidth = 1.4;
@@ -11511,11 +11517,160 @@ function jzbGastMalen(c, g) {
     gr.addColorStop(0, `rgba(240,255,150,${a})`); gr.addColorStop(1, "rgba(200,255,100,0)"); c.fillStyle = gr; c.beginPath(); c.arc(g.x, g.y, r, 0, 7); c.fill();
   }
 }
+// ---------- KC-CLUB-JAHRESZEIT-EXTRAS (2.249.0, Wunsch Hansi „baue noch die weiteren Ideen“): Besonderes auf der Kopf-Bühne ----------
+// 🥾 Nikolaus (6.12.): ein gefüllter Stiefel steht unten. ☔ Regen – nur wenn die Wetterdaten frisch sind und es wirklich regnet (Regel 11:
+// kein Regen aus alten Daten, kein zusätzlicher Wetter-Abruf): Tropfen, Pfützen mit Ringen, ab und zu läuft ein gelber Schirm vorbei.
+// 🍲 Heute ist Treffen: ein dampfender Kochtopf (bis 5 Std. nach Beginn). 🥚 Ostern (Karfreitag bis Ostermontag): bunte Eier im Gras –
+// antippen, dann schlüpft ein Küken. 🦔 Herbst: ab und zu raschelt ein Igel durchs Laub. Vorschau je Extra unter ⚙️ → ✨ Effekte.
+const JZB_EXTRAS = { nikolaus: "advent", regen: "", topf: "", ostern: "fruehling", igel: "herbst" }; // Extra → Jahreszeit der Vorschau ("" = die jetzige)
+function jzbExtrasBestimmen() {
+  const J = JZB, heute = heuteIso(), x = { igel: J.saison === "herbst" };
+  x.nikolaus = heute.slice(5) === "12-06" && J.saison === "winter";
+  const kf = Object.entries(feiertageNRW(+heute.slice(0, 4))).find(([, n]) => n === "Karfreitag")?.[0];
+  x.ostern = !!kf && heute >= kf && heute <= tagPlus(kf, 3) && J.saison === "fruehling";
+  const tr = INIT?.naechstesTreffen, beginn = tr ? new Date(tr.beginn) : null;
+  x.topf = !!beginn && isoBerlin(beginn) === heute && Date.now() < +beginn + 5 * 3600000;
+  const r = WET.r, j = r?.daten?.jetzt;
+  x.regen = !!j && !!r.stand && Date.now() - new Date(r.stand) <= WETTER_VERALTET_MIN * 60000 && ["regen", "niesel", "gewitter"].includes(wetterArt(j.code).szene);
+  if (J.extra) x[J.extra] = true;
+  J.ext = x;
+  if (x.ostern && !J.eier?.length) jzbEierVerstecken();
+  if (x.igel && J.igelUhr === undefined) J.igelUhr = J.extra === "igel" ? 4 : jzbZ(25, 60);
+}
+function jzbEierVerstecken() {
+  const J = JZB, n = 5, farben = [["#e63946", "#ffd166"], ["#4cc9f0", "#ffffff"], ["#b5179e", "#f9c6d6"], ["#ffb703", "#2a9d8f"], ["#80b918", "#ffffff"], ["#7b2cbf", "#ffd166"]];
+  J.eier = Array.from({ length: n }, (_, i) => ({ x: JZB_RAND + 14 + (i + jzbZ(.2, .8)) * (J.w - 2 * JZB_RAND - 28) / n, f: farben[(i + J.lauf) % farben.length], kipp: jzbZ(-.35, .35), muster: i % 3, gef: false, t: 0 }));
+}
+function jzbEiAntippen(e) { // Ostereier finden: Tippen auf den Kopf (nicht auf Knöpfe) prüft, ob ein Ei getroffen wurde
+  const J = JZB; if (!J.ext?.ostern || !J.eier?.length || !J.cv || e.target.closest("button, a, input, select, textarea, [onclick], [role=button]")) return;
+  const r = J.s.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, k = J.k;
+  const ei = J.eier.find((v) => !v.gef && Math.hypot(x - v.x, y - (J.h - 7 * k)) < 18); if (!ei) return;
+  ei.gef = true; ei.t = 0;
+  for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; J.fx.push({ typ: "funke", x: ei.x + Math.cos(a) * 6, y: J.h - 10 * k + Math.sin(a) * 6, vx: Math.cos(a) * 45, vy: Math.sin(a) * 45 - 20, s: jzbZ(2, 3.4), a: 1, farbe: i % 2 ? ei.f[0] : "#fff6c2" }); }
+  const rest = J.eier.filter((v) => !v.gef).length;
+  melde(rest ? `🥚 Ei gefunden! Noch ${rest} versteckt.` : "🐣 Alle Ostereier gefunden – frohe Ostern!");
+}
+function jzbExtrasSchritt(dt) {
+  const J = JZB, X = J.ext || {}, W = J.wind;
+  if (X.regen) { // Tropfen fallen schräg, landen in Pfützen
+    if (!J.pfuetzen) J.pfuetzen = [.18, .43, .7, .9].map((p) => ({ x: J.w * p + jzbZ(-12, 12), r: 0, ringe: [] }));
+    J.regenSpawn = (J.regenSpawn || 0) - dt;
+    while (J.regenSpawn < 0) { J.regenSpawn += .022; (J.tropfen = J.tropfen || []).push({ x: jzbZ(-20, J.w + 10), y: -10, v: jzbZ(260, 340) }); }
+    for (const t of J.tropfen) {
+      t.x += (W ? W.dir * 160 * W.st : 40) * dt; t.y += t.v * dt;
+      if (t.y >= J.h - 2) { t.weg = true; const p = J.pfuetzen.find((q) => Math.abs(q.x - t.x) < q.r * .9 + 3); if (p && p.ringe.length < 6) p.ringe.push({ x: t.x, a: 0 }); }
+    }
+    J.tropfen = J.tropfen.filter((t) => !t.weg);
+    for (const p of J.pfuetzen) { p.r = Math.min(18 * J.k, p.r + dt * .9); for (const g of p.ringe) g.a += dt * 1.6; p.ringe = p.ringe.filter((g) => g.a < 1); }
+    if ((J.schirmUhr = (J.schirmUhr ?? (J.extra === "regen" ? 2 : jzbZ(8, 20))) - dt) <= 0 && !J.schirm) { const dir = Math.random() < .5 ? 1 : -1; J.schirm = { dir, x: dir > 0 ? -30 : J.w + 30, t: 0 }; }
+  } else if (J.tropfen?.length || J.pfuetzen) { J.tropfen = []; J.pfuetzen = J.pfuetzen?.map((p) => ({ ...p, r: p.r - dt * 3 })).filter((p) => p.r > 0) || null; if (!J.pfuetzen?.length) J.pfuetzen = null; }
+  if (J.schirm) { const s = J.schirm; s.t += dt; s.x += s.dir * 34 * J.k * dt; if (s.x < -40 || s.x > J.w + 40) { J.schirm = null; J.schirmUhr = jzbZ(25, 50); } }
+  if (X.igel && !J.igel && (J.igelUhr -= dt) <= 0) { const dir = Math.random() < .5 ? 1 : -1; J.igel = { dir, x: dir > 0 ? -20 : J.w + 20, t: 0, halt: jzbZ(.35, .65) }; }
+  if (J.igel) {
+    const g = J.igel, mitte = g.dir > 0 ? g.x / J.w : 1 - g.x / J.w;
+    g.t += dt; const steht = mitte > g.halt && mitte < g.halt + .02 && g.schnuff === undefined ? (g.schnuff = 1.8, true) : g.schnuff > 0;
+    if (steht) g.schnuff -= dt; else g.x += g.dir * 16 * J.k * dt;
+    for (const b of J.liegt) if (Math.abs(b.x - g.x) < 9 * J.k) b.wackel = 1; // es raschelt
+    if (g.x < -30 || g.x > J.w + 30) { J.igel = null; J.igelUhr = jzbZ(35, 75); }
+  }
+  for (const b of J.liegt) if (b.wackel) b.wackel = Math.max(0, b.wackel - dt * 1.5);
+  for (const e of J.eier || []) if (e.gef) e.t += dt;
+}
+function jzbExtrasHinten(c) { // vor dem Gras: Ostereier (das Gras wächst darüber)
+  const J = JZB, k = J.k;
+  if (!J.ext?.ostern) return;
+  for (const e of J.eier || []) {
+    const y = J.h - 7 * k - (e.gef ? Math.min(1, e.t * 3) * 6 * k : 0);
+    c.save(); c.translate(e.x, y); c.rotate(e.kipp * (e.gef ? 0 : 1));
+    if (e.gef && e.t > .35) { c.font = `${17 * k}px ${JZB_EMOJI}`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("🐣", 0, 0); c.restore(); continue; }
+    c.fillStyle = e.f[0]; c.beginPath(); c.ellipse(0, 0, 5.2 * k, 7 * k, 0, 0, 7); c.fill();
+    c.save(); c.clip(); c.fillStyle = e.f[1];
+    if (e.muster === 0) for (const yy of [-2.5, 1.5]) c.fillRect(-6 * k, yy * k, 12 * k, 1.6 * k);
+    else if (e.muster === 1) for (const [xx, yy] of [[-2, -3], [2, -1], [-1.5, 2], [2.2, 3]]) { c.beginPath(); c.arc(xx * k, yy * k, 1.1 * k, 0, 7); c.fill(); }
+    else { c.beginPath(); for (let i = -6; i <= 6; i += 3) c.lineTo(i * k, (i / 3) % 2 ? -1 * k : 1 * k); c.lineWidth = 1.3 * k; c.strokeStyle = e.f[1]; c.stroke(); }
+    c.restore(); c.fillStyle = "rgba(255,255,255,.45)"; c.beginPath(); c.ellipse(-1.8 * k, -3 * k, 1.3 * k, 2 * k, -.4, 0, 7); c.fill(); c.restore();
+  }
+}
+function jzbExtrasBoden(c) { // Pfützen, Stiefel, Kochtopf, Igel, Schirm
+  const J = JZB, k = J.k, X = J.ext || {};
+  for (const p of J.pfuetzen || []) {
+    if (p.r <= 0) continue;
+    c.fillStyle = "rgba(170,200,235,.42)"; c.beginPath(); c.ellipse(p.x, J.h - 1.5, p.r, p.r * .2, 0, 0, 7); c.fill();
+    c.strokeStyle = "rgba(255,255,255,.55)"; c.lineWidth = .8;
+    for (const g of p.ringe) { c.globalAlpha = 1 - g.a; c.beginPath(); c.ellipse(g.x, J.h - 1.5, 2 + g.a * 8, (2 + g.a * 8) * .25, 0, 0, 7); c.stroke(); } c.globalAlpha = 1;
+  }
+  if (X.nikolaus) jzbStiefel(c, J.w * .6, J.h - 1, k);
+  if (X.topf) jzbTopf(c, Math.max(J.w * .3, 90 * k), J.h - 1, k);
+  if (J.igel) jzbIgel(c, J.igel, k);
+  if (J.schirm) jzbSchirm(c, J.schirm, k);
+}
+function jzbStiefel(c, x, y, k) { // 🥾 gefüllter Nikolaus-Stiefel
+  c.save(); c.translate(x, y); c.scale(k, k);
+  c.strokeStyle = "#c62828"; c.lineWidth = 2.2; c.lineCap = "round"; c.beginPath(); c.moveTo(4, -26); c.lineTo(4, -34); c.arc(8, -34, 4, Math.PI, 0); c.stroke(); // Zuckerstange
+  c.strokeStyle = "#fff"; c.lineWidth = .9; c.setLineDash([1.6, 2]); c.beginPath(); c.moveTo(4, -26); c.lineTo(4, -34); c.arc(8, -34, 4, Math.PI, 0); c.stroke(); c.setLineDash([]);
+  c.fillStyle = "#f28c28"; c.beginPath(); c.arc(-4, -28, 4.6, 0, 7); c.fill(); c.fillStyle = "#3a7d2c"; c.beginPath(); c.ellipse(-3, -32.4, 1.6, .8, -.5, 0, 7); c.fill(); // Mandarine
+  c.fillStyle = "#c62828"; c.beginPath(); c.moveTo(-1, -24); c.lineTo(1.5, -36); c.lineTo(4, -24); c.closePath(); c.fill(); c.fillStyle = "#f6d7b0"; c.beginPath(); c.arc(1.5, -30, 1.3, 0, 7); c.fill(); // Schoko-Nikolaus
+  c.fillStyle = "#8d5a2b"; c.beginPath(); c.arc(-8, -25, 2.4, 0, 7); c.arc(8.5, -25.5, 2.2, 0, 7); c.fill(); // Nüsse
+  const g = c.createLinearGradient(-10, 0, 10, 0); g.addColorStop(0, "#3b2314"); g.addColorStop(.5, "#6d4126"); g.addColorStop(1, "#3b2314");
+  c.fillStyle = g; c.beginPath(); c.moveTo(-9, -24); c.lineTo(-9, -6); c.quadraticCurveTo(-9, 0, -3, 0); c.lineTo(15, 0); c.quadraticCurveTo(18, 0, 17, -4); c.quadraticCurveTo(15, -8, 7, -9); c.lineTo(7, -24); c.closePath(); c.fill();
+  c.fillStyle = "#1e120a"; c.fillRect(-9, -1.6, 26, 1.6); c.fillStyle = "rgba(255,255,255,.25)"; c.fillRect(-6, -21, 2, 12); // Sohle, Glanz
+  c.fillStyle = "#ffffff"; c.beginPath(); c.ellipse(-1, -24, 9.5, 2.8, 0, 0, 7); c.fill(); // Fellrand
+  c.restore();
+}
+function jzbTopf(c, x, y, k) { // 🍲 dampfender Kochtopf – heute ist Treffen
+  const T = JZB.T, blubb = Math.max(0, Math.sin(T * 7)) * (Math.sin(T * .9) > .3 ? 1 : 0);
+  c.save(); c.translate(x, y); c.scale(k, k);
+  for (let i = 0; i < 3; i++) { // Dampf
+    const p = ((T * .35 + i / 3) % 1), yy = -24 - p * 30;
+    c.strokeStyle = `rgba(255,255,255,${.55 * (1 - p)})`; c.lineWidth = 2.4 - p; c.lineCap = "round"; c.beginPath();
+    for (let s = 0; s <= 8; s++) { const sy = yy + s * 1.6, sx = (i - 1) * 6 + Math.sin(T * 2 + s * .7 + i) * 2.5 * (1 + p); s ? c.lineTo(sx, sy) : c.moveTo(sx, sy); } c.stroke();
+  }
+  const g = c.createLinearGradient(-15, 0, 15, 0); g.addColorStop(0, "#8e959c"); g.addColorStop(.35, "#eef1f4"); g.addColorStop(1, "#7d848b");
+  c.fillStyle = "#5f666d"; c.beginPath(); c.ellipse(-16, -12, 3, 2, 0, 0, 7); c.ellipse(16, -12, 3, 2, 0, 0, 7); c.fill(); // Griffe
+  c.fillStyle = g; c.beginPath(); c.moveTo(-14, -18); c.lineTo(-14, -3); c.quadraticCurveTo(-14, 0, -10, 0); c.lineTo(10, 0); c.quadraticCurveTo(14, 0, 14, -3); c.lineTo(14, -18); c.closePath(); c.fill();
+  c.fillStyle = "#8e1b2b"; c.fillRect(-14, -11, 28, 3.2); c.fillStyle = "#d4a017"; c.font = "bold 4px sans-serif"; c.textAlign = "center"; c.fillText("KC", 0, -4); // weinrotes Band, KC
+  c.save(); c.translate(0, -18 - blubb * 1.6); c.rotate(blubb * .06);
+  c.fillStyle = "#c9ced3"; c.beginPath(); c.ellipse(0, 0, 15.5, 3, 0, Math.PI, 0); c.fill(); c.fillStyle = "#5f666d"; c.beginPath(); c.ellipse(0, -3.2, 2.6, 1.6, 0, 0, 7); c.fill(); c.restore(); // Deckel klappert
+  c.restore();
+}
+function jzbIgel(c, g, k) { // 🦔 Igel mit Stacheln, Schnäuzchen und trippelnden Füßen
+  const y = JZB.h - 1, lauf = g.schnuff > 0 ? 0 : Math.sin(g.t * 14);
+  c.save(); c.translate(g.x, y); c.scale(g.dir * k, k);
+  c.fillStyle = "#2b1d14"; for (const fx of [-4, 4]) { c.beginPath(); c.ellipse(fx + (fx > 0 ? lauf : -lauf) * 1.5, -1, 2, 1.2, 0, 0, 7); c.fill(); }
+  c.fillStyle = "#4e342e"; c.beginPath();
+  for (let i = 0; i <= 16; i++) { const a = Math.PI + i / 16 * Math.PI, r = i % 2 ? 9.5 : 12.5; c.lineTo(Math.cos(a) * r * 1.15 - 1, -2 + Math.sin(a) * r); } c.closePath(); c.fill();
+  c.fillStyle = "#6d4c41"; c.beginPath(); c.ellipse(-1, -4, 10, 6, 0, Math.PI, 0); c.fill();
+  const schnupf = g.schnuff > 0 ? Math.sin(g.t * 22) * .6 : 0;
+  c.fillStyle = "#d7b899"; c.beginPath(); c.moveTo(7, -9); c.quadraticCurveTo(13, -6, 16 + schnupf, -3.5); c.quadraticCurveTo(12, -1, 7, -2); c.closePath(); c.fill();
+  c.fillStyle = "#111"; c.beginPath(); c.arc(16.2 + schnupf, -3.6, 1.2, 0, 7); c.fill(); c.beginPath(); c.arc(10.5, -6.2, .9, 0, 7); c.fill();
+  c.restore();
+}
+function jzbSchirm(c, s, k) { // ☔ gelber Regenschirm läuft vorbei (mit Gummistiefeln)
+  const y = JZB.h - 1, schritt = Math.sin(s.t * 9), wipp = Math.abs(schritt) * 1.2;
+  c.save(); c.translate(s.x, y); c.scale(k, k);
+  c.strokeStyle = "#2b2b2b"; c.lineWidth = 1.6; c.lineCap = "round";
+  for (const [b, v] of [[-2, schritt], [2, -schritt]]) { c.beginPath(); c.moveTo(b, -12); c.lineTo(b + v * 2.5, -3); c.stroke(); c.fillStyle = "#f2c200"; c.beginPath(); c.ellipse(b + v * 2.5 + 1, -1.8, 2.4, 1.8, 0, 0, 7); c.fill(); }
+  c.fillStyle = "#24476b"; c.beginPath(); c.ellipse(0, -16, 4.5, 6, 0, 0, 7); c.fill(); // Mantel
+  c.translate(0, -wipp); c.strokeStyle = "#d4a017"; c.lineWidth = 1.2; c.beginPath(); c.moveTo(0, -17); c.lineTo(0, -34); c.stroke();
+  c.fillStyle = "#f6c445"; c.beginPath(); c.moveTo(-17, -32); // gelb – Weinrot verschwände im Kopf
+  c.quadraticCurveTo(0, -52, 17, -32); for (let i = 0; i < 5; i++) { const x1 = 17 - i * 6.8, x2 = x1 - 6.8; c.quadraticCurveTo((x1 + x2) / 2, -35.5, x2, -32); } // gewellter Rand
+  c.closePath(); c.fill();
+  c.strokeStyle = "rgba(255,255,255,.85)"; c.lineWidth = 1.1; for (const xx of [-10, 0, 10]) { c.beginPath(); c.moveTo(0, -44); c.quadraticCurveTo(xx * .6, -40, xx, -33); c.stroke(); } // Speichen
+  c.fillStyle = "#fff"; c.beginPath(); c.arc(0, -44, 1.3, 0, 7); c.fill();
+  c.restore();
+}
+function jzbRegenMalen(c) {
+  const J = JZB; if (!J.tropfen?.length) return;
+  const W = J.wind, sx = (W ? W.dir * 160 * W.st : 40) / 300;
+  c.strokeStyle = "rgba(205,228,255,.7)"; c.lineWidth = 1.1; c.beginPath();
+  for (const t of J.tropfen) { c.moveTo(t.x, t.y); c.lineTo(t.x - sx * 12, t.y - 12); } c.stroke();
+}
 // Vorschau aus den Einstellungen: eine Jahreszeit sofort im Kopf zeigen (bis „Heute“ oder Neustart der App)
-function jahreszeitVorschau(art) {
+function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, topf, ostern, igel
   if (!fxAn()) return melde("Effekte sind aus – „✨ Animierte Knöpfe“ einschalten (und Sparmodus aus).", true);
   if (!einst("jahreszeit", true)) return melde("„🍂 Jahreszeiten im Kopf“ ist aus – erst einschalten.", true);
-  JZB.vorschau = art === "heute" ? "" : art;
+  if (art === "heute") JZB.vorschau = ""; else if (art) JZB.vorschau = art;
+  JZB.extra = extra || "";
   zeige("start"); setTimeout(jahreszeitKopf, 350);
 }
 // ---------- KC-CLUB-KONFETTI (2.169.0): nur zu besonderen Anlässen – Spiel gewonnen, eigener Geburtstag ----------

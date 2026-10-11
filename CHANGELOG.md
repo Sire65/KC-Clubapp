@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.249.0 – 2026-10-11 – KC-CLUB-JAHRESZEIT-EXTRAS: Besonderes auf der Kopf-Bühne (Wunsch Hansi)
+- 🥾 Nikolaus (6.12.): gefüllter Stiefel (Mandarine, Schoko-Nikolaus, Zuckerstange, Nüsse) steht im Schnee.
+- ☔ Regen: nur wenn die Wetterdaten frisch sind und es gerade regnet (Niesel, Regen, Gewitter) – Tropfen, Pfützen mit Ringen, ab und zu läuft ein gelber Schirm mit Gummistiefeln vorbei. Kein zusätzlicher Wetter-Abruf; alte Daten zeigen keinen Regen.
+- 🍲 Heute ist Treffen: dampfender Kochtopf mit klapperndem Deckel und weinrotem KC-Band (bis 5 Std. nach Beginn).
+- 🥚 Ostern (Karfreitag bis Ostermontag): 5 bunte Eier im Frühlingsgras – antippen, dann schlüpft ein Küken; Meldung, wie viele noch versteckt sind.
+- 🦔 Herbst: ab und zu läuft ein Igel durchs Laub, bleibt kurz schnuppernd stehen, das Laub raschelt.
+- Vorschau je Extra unter ⚙️ → ✨ Effekte.
+
 ## 2.248.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-FIGUR: Erklär-Videos zur Koch-Figur (Wunsch Hansi)
 - 🧑‍🍳 „Koch-Figur als Bild aussuchen“: Meins → Mein Bild, Köchinnen/Köche, Figur antippen (große Vorschau), Übernehmen/Bearbeiten, Kochjacke täglich wechselnd, eigenes Foto (nur wenn freigegeben).
 - 🧩 „Eigene Figur zusammenstellen“: Selbst zusammenstellen oder Bearbeiten, Vorschau und Zufall, dann Teil für Teil mit Vorführung an einer Beispiel-Figur (Koch/Köchin, Haare, Kopfbedeckung, Bart, Gesicht, Brille, Kochjacke, Hintergrund/Halstuch), ⓘ Anzahl, Speichern – und wie man die Figur später ändert.

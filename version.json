@@ -1,11 +1,18 @@
 {
-  "version": "2.248.0",
+  "version": "2.249.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🎬 Neue Erklär-Videos: Koch-Figur als Bild aussuchen und eigene Figur zusammenstellen und bearbeiten (Technik → Erklär-Videos)"
+    "🥾 Kopf-Extras: Nikolaus-Stiefel am 6.12., Regen mit Pfützen und Schirm (wenn es wirklich regnet), dampfender Kochtopf am Treffen-Tag, Ostereier zum Suchen, Igel im Herbstlaub"
   ],
   "verlauf": [
+    {
+      "version": "2.249.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🥾 Kopf-Extras: Nikolaus-Stiefel am 6.12., Regen mit Pfützen und Schirm (wenn es wirklich regnet), dampfender Kochtopf am Treffen-Tag, Ostereier zum Suchen, Igel im Herbstlaub"
+      ]
+    },
     {
       "version": "2.248.0",
       "datum": "2026-10-11",
