@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.271.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.272.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1770,7 +1770,7 @@ const RG_OBERFLAECHE = [
 // geöffnete Fenster gehen am Ende wieder zu, das Register wird zurückgestellt.
 function rgReg(r) { if (!einfach() && reg !== r) { const alt = reg; register(r); RG.zurueck.push(() => { if (reg !== alt) register(alt); }); } }
 function rgBlatt(id, oeffnen) { // dynamisches Fenster (blattAuf) für das Video öffnen – am Ende wieder zu
-  for (const x of ["mdBlatt", "mdatBlatt", "aeBlatt", "rzBlatt", "smBlatt", "fiBlatt", "studioBlatt"]) if (x !== id && $(x)) fensterZu($(x)); // 2.271.0: fensterZu – Fenster mit eigenem Schließen
+  for (const x of ["mdBlatt", "mdatBlatt", "aeBlatt", "rzBlatt", "smBlatt", "fiBlatt", "studioBlatt", "sbListeBlatt", "sbtBlatt"]) if (x !== id && $(x)) fensterZu($(x)); // 2.271.0: fensterZu – Fenster mit eigenem Schließen
   if (!$(id)) { oeffnen(); RG.zurueck.push(() => { if ($(id)) fensterZu($(id)); }); }
   $(id)?.classList.add("rg-zeigen");
 }
@@ -1931,6 +1931,116 @@ const RG_TECHNIK = [
     x: "Unter Freigegebene Programme stehen weitere Programme des Clubs – zum Beispiel die Kassen-Schulung. Antippen öffnet sie in einem neuen Fenster." },
   { v: "programme", t: "✅ Fertig", x: "Das war die Technik. Läuft mal etwas nicht rund, hilft oft schon: App ganz schließen und neu öffnen – oder frag Twinkey." },
 ];
+// KC-CLUB-ERKLAERVIDEOS-8 (2.272.0, Wunsch Hansi): Spezial-Video „Versteckte Helfer“ (Sonderfunktionen, die man leicht übersieht),
+// „Kommunikationszentrale“ und „Sprachsteuerung komplett“. Nur vorgeführt: nichts gespeichert, gesendet, angerufen oder eingeschaltet;
+// Kopf, Info-Feld, Nacht-Vorschau, „Was kann ich antippen?“ und geöffnete Fenster werden am Ende zurückgestellt.
+const rgOb = (titel, n = 0) => RG_OBERFLAECHE.filter((s) => s.t === titel)[n] || null; // Stationen aus „Oberfläche nach Wunsch“ wiederverwenden
+function rgInfoKarte(id) { rgInfo(); const i = INFO_FELDER.findIndex((f) => f.id === id); if (i >= 0 && INFO_I !== i) infoGehe(i); }
+function rgKlick(an) { // „👆 Was kann ich antippen?“ nur vorführen – am Ende aus
+  if (an && !RG.klickZurueck) { RG.klickZurueck = true; RG.zurueck.push(() => { RG.klickZurueck = false; if (document.body.classList.contains("klick-zeigen")) klickZeigen(false); }); }
+  if (document.body.classList.contains("klick-zeigen") !== !!an) klickZeigen(!!an);
+}
+function rgFest(id, an) { // festes Fenster (z. B. Verbindung) für das Video zeigen bzw. schließen
+  const f = $(id); if (!f) return;
+  if (an && !RG["fest_" + id]) { RG["fest_" + id] = true; RG.zurueck.push(() => { RG["fest_" + id] = false; f.classList.add("versteckt"); f.classList.remove("rg-zeigen"); }); }
+  if (an) f.classList.add("rg-zeigen"); else { f.classList.add("versteckt"); f.classList.remove("rg-zeigen"); }
+}
+const RG_SPEZIAL = [
+  { v: "start", vor: () => { rgKopf("offen"); rgKlick(false); }, t: "🔎 Versteckte Helfer",
+    x: "In der App stecken viele kleine Helfer, die man leicht übersieht. Ich zeige sie dir der Reihe nach. Alles ist nur ein Angebot – nichts davon musst du benutzen." },
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#v-start .kopflogo .logo"], puls: ["#v-start .kopflogo .logo"], t: "👨‍🍳 Die Kochmütze",
+    x: "Die Kochmütze oben links führt zur Internetseite des Köcheclubs. Die gibt es zurzeit noch nicht – sobald sie fertig ist, kommst du hier mit einem Tipp hin.", live: async (L) => { await L.tipp("#v-start .kopflogo .logo"); } },
+  { v: "start", nur: () => !einfach(), vor: () => rgKopf("offen"), sel: ["#modusKnopf"], puls: ["#modusKnopf"], t: "🌙 Tag und Nacht",
+    x: "Rechts oben der Mond- und Sonnen-Knopf: Jeder Tipp schaltet reihum. A heißt Automatik – abends wird die App von selbst dunkel. T heißt immer Tag, N immer Nacht. Das kleine Schild am Knopf zeigt, was gerade gilt." },
+  { v: "start", nur: () => !einfach(), vor: () => rgKopf("offen"), demo: { nacht: true }, sel: ["#v-start .hero"], t: "🌙 So sieht Nacht aus",
+    x: "So sieht die App bei Nacht aus – angenehm für die Augen im Dunkeln. Ich schalte gleich wieder zurück; deine Einstellung bleibt, wie sie ist.", live: async (L) => { await L.tipp("#modusKnopf"); } },
+  rgOb("⌃ Halb einrollen"), rgOb("⌃⌃ Ganz einrollen"), rgOb("‹ › Pfeile links und rechts"),
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("offen"); rgInfo(); }, sel: ["#heroInfo"], mussSel: true, t: "« » Ganz an den Anfang oder ans Ende",
+    x: "Unter den einfachen Pfeilen sitzt jeweils ein Doppelpfeil. Damit springst du sofort zur ersten oder zur letzten Karte im Info-Feld.",
+    live: async (L) => { await L.tipp("#heroInfo .ipfeil.rechts.sprung"); infoSpringen(1); L.ziel(); await L.warte(2000); await L.tipp("#heroInfo .ipfeil.links.sprung"); infoSpringen(-1); L.ziel(); } },
+  { v: "start", vor: () => { rgKopf("offen"); rgInfo(); }, sel: ["#infoPunkte"], mussSel: true, t: "🟡 Die Pünktchen darunter",
+    x: "Unter dem Info-Feld stehen kleine Pünktchen. Das gelbe zeigt, wo du gerade bist. Tippst du ein anderes an, springst du direkt zu dieser Karte.",
+    live: async (L) => { await L.tipp("#infoPunkte .ipunkt:nth-child(2)"); infoGehe(1); L.ziel(); await L.warte(1500); await L.tipp("#infoPunkte .ipunkt:nth-child(1)"); infoGehe(0); } },
+  { v: "start", vor: () => { rgKopf("offen"); rgInfo(); }, sel: ["#heroInfo"], mussSel: true, t: "👆 Im Kopf wischen",
+    x: "Statt der Pfeile kannst du auch einfach über das Info-Feld wischen – nach links für die nächste Karte, nach rechts für die vorige.",
+    live: async (L) => { await L.wischen("#heroInfo", 1); rgInfo(1); L.ziel(); await L.warte(1500); await L.wischen("#heroInfo", -1); rgInfo(-1); } },
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#leds", "#v-start .statusleiste"], mussSel: true, t: "💡 Das Lämpchen",
+    x: "In der Statusleiste zeigt ein Lämpchen, ob die App Verbindung hat – grün heißt alles gut. Antippen öffnet die Anzeige mit einem kurzen Test.",
+    live: async (L) => { await L.tipp("#leds"); if (!ICH?.admin) { vbEinfachZeigen(); $("verbindungBlatt").classList.remove("versteckt"); rgFest("verbindungBlatt", true); L.ziel(); } },
+    nach: () => rgFest("verbindungBlatt", false) },
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#sparZeichen", "#v-start .statusleiste"], t: "🐌 🐢 Kleine Zeichen",
+    x: "Manchmal tauchen oben kleine Tiere auf. Eine Schnecke heißt: Das Netz ist gerade langsam – bitte etwas Geduld und nicht mehrfach tippen. Eine Schildkröte heißt: Der Sparmodus ist an, die App spart Akku. Antippen erklärt beides." },
+  { v: "start", nur: () => !einfach(), vor: () => rgKopf("ganz"), sel: [".sz-link"], puls: [".sz-link"], t: "⚡ Das Wort „Schnellzugriff“",
+    x: "Das Wort Schnellzugriff über den Kacheln ist selbst ein Knopf: Antippen zeigt oben im Info-Feld deine Schnellstart-Symbole – ein Tipp, und es geht sofort los.",
+    live: async (L) => { await L.tipp(".sz-link"); rgKopf("offen"); rgInfoKarte("schnellstart"); L.ziel(); } },
+  rgOb("👆 Lange drücken"), rgOb("✋ Verschieben"), rgOb("✅ Fertig", 0), rgOb("🔄 Kachel umdrehen"), rgOb("🗂️ Register anordnen"), rgOb("👆 Wischen"),
+  { v: "start", vor: () => { rgKopf("ganz"); rgDrehen(false); }, sel: ["#ansichtKnopf", ".ansichtname"], puls: ["#ansichtKnopf"], t: "🔧 Mehr Funktionen",
+    x: "Ganz unten auf der Startseite wechselst du mit Mehr Funktionen anzeigen in die erweiterte Ansicht – und genauso wieder zurück zur einfachen. Oben neben Schnellzugriff steht, welche Ansicht gerade gilt; antippen wechselt ebenfalls." },
+  { v: "start", vor: () => { rgKopf("ganz"); rgKlick(false); }, sel: ["#suLupe"], puls: ["#suLupe"], t: "🔍 Die Lupe",
+    x: "Die Lupe unten rechts findet alles: Nachrichten, Termine, Archiv, Pinnwand – schon ab zwei Buchstaben. Mit Filter suchst du gezielter.", live: async (L) => { await L.tipp("#suLupe"); } },
+  { v: "start", vor: () => rgKlick(false), sel: ["#klickZeigenKnopf"], puls: ["#klickZeigenKnopf"], t: "👆 Was kann ich antippen?",
+    x: "Die Hand über dem Fragezeichen zeigt dir alles, was man antippen kann – es wird rot umrandet. Antippen funktioniert dabei ganz normal. Nochmal auf die Hand, und es ist wieder aus.",
+    live: async (L) => { await L.tipp("#klickZeigenKnopf"); rgKlick(true); await L.warte(3500); await L.tipp("#klickZeigenKnopf"); rgKlick(false); } },
+  { v: "start", vor: () => rgKlick(false), sel: ["#hzFrage"], puls: ["#hzFrage"], t: "❓ Das Fragezeichen",
+    x: "Das Fragezeichen öffnet die Hilfe genau zu dem Bereich, in dem du gerade bist. Stört es dich, hältst du es lange fest – dann kannst du es ausblenden und in den Einstellungen jederzeit zurückholen.",
+    live: async (L) => { await L.tipp("#hzFrage", "lang"); } },
+  { v: "einstellungen", vor: () => rgAuf("schnellstart"), tippVor: () => { const d = document.querySelector(rgKlappe("schnellstart")); return d && !d.open ? d.querySelector(":scope > summary") : null; },
+    sel: [rgKlappe("schnellstart")], mussSel: true, t: "⚙️ Schnellstart einrichten",
+    x: "Welche Symbole im Schnellstart stehen, bestimmst du in den Einstellungen unter Schnellstart: bis zu acht antippen – die Reihenfolge ist die Reihenfolge des Antippens. Nochmal tippen entfernt eins wieder." },
+  { v: "start", vor: () => { rgKopf("offen"); rgKlick(false); }, t: "✅ Fertig",
+    x: "Das waren die versteckten Helfer. Noch mehr gibt es in den Videos Kommunikationszentrale, Sprachsteuerung und Effekte und Wetter. Und denk dran: Alles nur Möglichkeiten – nutze, was dir gefällt." },
+].filter(Boolean);
+function rgZe(an) { // Kommunikationszentrale zeigen; Auswahl und Text nur vorgeführt, am Ende wie vorher
+  if (an && !RG.zeAlt) { RG.zeAlt = JSON.parse(JSON.stringify({ personen: ZE.personen, gruppe: ZE.gruppe, text: ZE.text, wege: ZE.wege }));
+    RG.zurueck.push(() => { const a = RG.zeAlt; RG.zeAlt = null; Object.assign(ZE, a); if (INFO_FELDER[INFO_I]?.id === "zentrale") heroZeigen(0); }); }
+  rgKopf("offen"); rgInfoKarte("zentrale");
+}
+const rgZeAn = () => INFO_FELDER.some((f) => f.id === "zentrale");
+const RG_ZENTRALE = [
+  { v: "start", nur: () => !rgZeAn(), t: "📡 Kommunikationszentrale",
+    x: "Die Kommunikationszentrale ist eine Karte im Info-Feld oben. Ist sie bei dir ausgeblendet, holst du sie in den Einstellungen unter Startseite und Ansicht, beim Info-Feld, zurück." }, // ohne Zentrale-Karte: nur Hinweis (am Anfang, damit das Video mit 👍/👎 endet)
+  { v: "start", nur: rgZeAn, vor: () => rgZe(true), sel: ["#heroInfo .zdisplay", "#heroInfo"], mussSel: true, t: "📡 Die Kommunikationszentrale",
+    x: "Im farbigen Info-Feld oben gibt es eine Karte nur fürs Schreiben und Anrufen: die Kommunikationszentrale. Oben die Uhr, wie viele gerade online sind, wie viele Nachrichten neu sind und ob Push an ist. Darunter läuft ein Ticker mit den letzten Nachrichten." },
+  { v: "start", nur: rgZeAn, vor: () => rgZe(true), sel: ["#heroInfo .zwer"], mussSel: true, t: "👥 An wen?",
+    x: "Zuerst wählst du, an wen: an alle, an alle, die gerade online sind, oder mit Auswahl an bestimmte Mitglieder. Darunter steht, wer gerade gewählt ist.",
+    live: async (L) => { await L.tipp("#heroInfo .zwer .zchip:nth-child(2)"); await L.warte(900); await L.tipp("#heroInfo .zwer .zchip:nth-child(4)"); } },
+  { v: "start", nur: rgZeAn, vor: () => rgZe(true), sel: ["#heroInfo .zpult"], mussSel: true, t: "🎛️ Das Pult",
+    x: "Mit dem Pult rufst du an oder startest einen Videoanruf, klopfst an, schickst eine Sprachnachricht oder schreibst im Chat. Dazu teilst du deinen Standort oder fragst einen Termin an. Anrufen, Video und Anklopfen gehen mit genau einer Person – Video und Anklopfen nur, wenn sie gerade online ist. Graue Knöpfe sagen dir beim Antippen, warum." },
+  { v: "start", nur: rgZeAn, vor: () => rgZe(true), sel: ["#heroInfo .zwege"], mussSel: true, t: "🔔 Zusätzlich",
+    x: "Soll die Nachricht zusätzlich als Push, per E-Mail oder über WhatsApp ankommen, tippst du das hier an." },
+  { v: "start", nur: rgZeAn, vor: () => rgZe(true), sel: ["#heroInfo .zsenden"], mussSel: true, t: "📨 Schnell eine Nachricht",
+    x: "Ganz unten schreibst du eine kurze Nachricht, zum Beispiel: Bin in zehn Minuten da. Mit dem Brief-Knopf geht sie raus – hier sende ich nichts. Danach zeigt dir die Zentrale, ob sie angekommen und geöffnet ist.",
+    live: async (L) => { await L.tipp("#zeText"); const e = $("zeText"); if (e) { e.value = "Bin in zehn Minuten da"; ZE.text = e.value; } await L.warte(1200); await L.tipp("#heroInfo .zsendknopf"); } },
+  { v: "start", nur: rgZeAn, vor: () => rgZe(true), t: "✅ Fertig",
+    x: "So erreichst du alle schnell, ohne erst in die Nachrichten zu gehen. Zur Zentrale kommst du jederzeit, indem du im Info-Feld oben weiterblätterst." },
+];
+const RG_SPRACHE = [
+  { v: "start", vor: () => rgKopf("offen"), t: "🎙️ Die App hört aufs Wort",
+    x: "Mit der Sprachsteuerung sagst du der App, was sie tun soll – zum Beispiel: Nachricht an Klaus, Nächster Termin oder Startseite. Zugehört wird nur, wenn du auf das Mikrofon tippst. Und gesendet wird nie von selbst – das tust immer du." },
+  { v: "einstellungen", vor: () => rgAuf("ansagen"), tippVor: () => { const d = document.querySelector(rgKlappe("ansagen")); return d && !d.open ? d.querySelector(":scope > summary") : null; },
+    sel: [() => $("setSprache")?.closest(".schalter") || null], puls: ["#setSprache"], mussSel: true, t: "⚙️ Einschalten",
+    x: "Eingeschaltet wird sie in den Einstellungen unter Sprache und Ansagen: Sprachsteuerung anhaken. Dein Handy wandelt das Gesprochene in Text um." },
+  { v: "start", nur: () => sbAn(), vor: () => rgKopf("offen"), sel: ["#sbKnopf"], puls: ["#sbKnopf"], mussSel: true, t: "🎙️ Das Mikrofon unten links",
+    x: "Ist sie an, sitzt unten links ein Mikrofon. Antippen, dann erscheint Ich höre zu – und du sagst, was du möchtest.", live: async (L) => { await L.tipp("#sbKnopf"); } },
+  { v: "start", nur: () => !sbAn(), vor: () => rgKopf("offen"), t: "🎙️ Das Mikrofon unten links",
+    x: "Ist sie an, sitzt unten links ein Mikrofon. Antippen, dann erscheint Ich höre zu – und du sagst, was du möchtest." },
+  { v: "start", nur: () => sbAn(), vor: () => rgKopf("offen"), sel: ["#sbKnopf"], mussSel: true, t: "✋ Lange drücken",
+    x: "Hältst du das Mikrofon lange gedrückt, fragt die App, ob du die Sprachsteuerung ausschalten möchtest. Kurz tippen hört wie immer zu.", live: async (L) => { await L.tipp("#sbKnopf", "lang"); } },
+  { v: "einstellungen", vor: () => { rgAuf("ansagen"); rgBlatt("sbListeBlatt", sbListe); }, sel: ["#sbListeInhalt", "#sbListeBlatt .blatt-innen"], mussSel: true, t: "📋 Alle Befehle",
+    x: "Was du sagen kannst, steht in der Liste aller Sprachbefehle – oben mit Suche. Antippen führt den Befehl gleich aus, als hättest du ihn gesagt. Über diese Liste schaltest du das Mikrofon auch stumm und wieder an." },
+  { v: "einstellungen", vor: () => { rgAuf("ansagen"); rgBlatt("sbListeBlatt", sbListe); }, sel: [() => [...document.querySelectorAll("#sbListeInhalt .sb-befehl")].find((b) => /Nachricht an Klaus“/.test(b.textContent)), "#sbListeInhalt"], t: "✍️ Nachricht an Klaus – und weiter diktieren",
+    x: "Sagst du Nachricht an Klaus, öffnet die App den Chat mit Klaus und fragt: Soll ich das Diktieren gleich einschalten? Sagst du ja, sprichst du einfach weiter – dein Text erscheint im Feld. Abschicken tust du selbst. Sagst du gleich Nachricht an Klaus: Bin gleich da, steht der Text schon drin." },
+  { v: "einstellungen", vor: () => { rgAuf("ansagen"); rgBlatt("sbListeBlatt", sbListe); }, sel: ["#sbListeInhalt"], t: "💡 Noch mehr Befehle",
+    x: "Ein paar Beispiele: Nächster Termin sagt den Termin an. Ich komme zum Clubabend sagt zu – die App fragt vorher. Lies mir die neuen Nachrichten vor. Was steht auf der Pinnwand? Ruf Klaus an. Zettel an die Pinnwand. Und Startseite bringt dich immer zurück, wenn du nicht weiterweißt." },
+  { v: "einstellungen", vor: () => { rgAuf("ansagen"); rgBlatt("sbtBlatt", sbtStart); }, sel: ["#sbtBlatt .sbt-wahl", "#sbtBlatt .blatt-innen"], mussSel: true, t: "🎓 Sprach-Training",
+    x: "Beim Sprach-Training lernt die App deine Aussprache: Du siehst einen Satz, tippst aufs Mikrofon und sprichst ihn nach. Kurz-Training, deine Namen oder alles. Ausgeführt wird dabei nichts, und gespeichert werden nur kurze Texte, keine Tonaufnahmen." },
+  { v: "einstellungen", vor: () => { $("sbtBlatt") && fensterZu($("sbtBlatt")); rgAuf("ansagen"); }, sel: [() => $("setSprache")?.closest(".schalter") || null], t: "🧠 Die App lernt dazu",
+    x: "Kennt die App einen Satz nicht, fragt sie, was du meinst – und merkt sich deine Antwort. In der Befehlsliste stehen diese Sätze unter Von dir beigebracht; mit Vergessen nimmst du einen wieder heraus." },
+  { v: "start", vor: () => rgKopf("offen"), t: "🎤 Diktieren überall",
+    x: "Und unabhängig davon: Überall, wo im Eingabefeld ein Mikrofon steht, kannst du statt zu tippen einfach sprechen – im Chat, an der Pinnwand, bei der Suche oder bei Twinkey." },
+  { v: "start", vor: () => rgKopf("offen"), t: "✅ Fertig",
+    x: "Das war die Sprachsteuerung. Probier es aus: Mikrofon antippen und Startseite sagen. Gefällt sie dir nicht, schaltest du sie in den Einstellungen einfach wieder aus." },
+];
 // KC-CLUB-ERKLAERVIDEOS-EFFEKTE (2.265.0, Wunsch Hansi „Erklär-Video mit den Spezial-Effekten: Kacheln einschweben, Herbst mit Igel, Laub, Besen,
 // Schnee, Frühling und Sommer – kurz zeigen, wo und wie man sie einstellt; dazu die Wetter-Kacheln: antippen und lange festhalten. Darauf
 // hinweisen, dass das nur Möglichkeiten sind, die man jederzeit wieder abschalten kann“). Nur vorgeführt: Jahreszeit-Vorschau, gewählter
@@ -2063,6 +2173,9 @@ const RUNDGAENGE = [
   { id: "fit", stand: "1", sym: "🏋️", t: "Fit bleiben", u: "Übungen mit Twinkey – Stufe, Dauer, Auswertung (ca. 1 Min.)", st: () => RG_FIT, nur: () => frei("fitness") },
   { id: "studio", stand: "1", sym: "🎬", t: "Studio: live zeigen", u: "Einem Mitglied die eigene App live zeigen (ca. 1 Min.)", st: () => RG_STUDIO, nur: () => !!studioStufe() },
   { id: "technik", stand: "1", sym: "🔧", t: "Technik: Update & Sicherheit", u: "Version, Sicherheits-Check, Test an mich, Programme (ca. 2 Min.)", st: () => RG_TECHNIK },
+  { id: "spezial", stand: "1", sym: "🔎", t: "Versteckte Helfer", u: "Kochmütze, Tag/Nacht, Pfeile, Pünktchen, Wischen, Lämpchen, Schnellzugriff, Kacheln, Lupe, Hand, Fragezeichen (ca. 5 Min.)", st: () => RG_SPEZIAL }, // 2.272.0 KC-CLUB-ERKLAERVIDEOS-8
+  { id: "zentrale", stand: "1", sym: "📡", t: "Kommunikationszentrale", u: "Im Kopf: an wen, Pult, Anrufen, Anklopfen, Schnellnachricht (ca. 2 Min.)", st: () => RG_ZENTRALE },
+  { id: "sprache", stand: "1", sym: "🎙️", t: "Sprachsteuerung komplett", u: "Einschalten, Mikrofon, alle Befehle, weiter diktieren, Training (ca. 3 Min.)", st: () => RG_SPRACHE },
   { id: "effekte", stand: "1", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 3 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
   { id: "figur", stand: "1", sym: "🧑‍🍳", t: "Koch-Figur als Bild aussuchen", u: "Mein Bild: Figur antippen, übernehmen (ca. 1 Min.)", st: () => RG_FIGUR, nur: () => frei("avatar") }, // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR
   { id: "figurbau", stand: "1", sym: "🧩", t: "Eigene Figur zusammenstellen", u: "Haare, Mütze, Gesicht, Brille, Kochjacke – und später bearbeiten (ca. 2 Min.)", st: () => RG_FIGUR_BAU, nur: () => frei("avatar") && frei("avatar_baukasten") },
@@ -2085,8 +2198,8 @@ function rgRollenAnsicht(ziel) {
 // Kästchen zum Anhaken – alle angehakten automatisch nacheinander abspielen“). Registry RG_THEMEN: Video-IDs je Thema; ein Video, das in
 // keinem Thema steht (z. B. neu dazugekommen), landet unter „✨ Weitere“ – es geht keins verloren. Wenige Videos: eine Liste ohne Kacheln.
 const RG_THEMEN = [
-  { id: "einstieg", sym: "🚀", t: "Einstieg", videos: ["warum", "ueberblick", "hilfe", "schulung", "feedback"] },
-  { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["nachricht", "mitglieder", "pinnwand"] },
+  { id: "einstieg", sym: "🚀", t: "Einstieg", videos: ["warum", "ueberblick", "spezial", "hilfe", "schulung", "feedback"] },
+  { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["zentrale", "sprache", "nachricht", "mitglieder", "pinnwand"] },
   { id: "termine", sym: "📅", t: "Termine & Dienst", videos: ["termin", "zusagen", "dienst"] },
   { id: "club", sym: "🗄️", t: "Club & Archiv", videos: ["fotos", "lesen", "rezepte", "aktionen", "archiv", "vorschlag", "helfen", "erstattung"] },
   { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["status", "meinedaten", "einstellungen", "oberflaeche", "effekte", "figur", "figurbau", "technik", "studio"] },
@@ -6348,8 +6461,8 @@ async function twFrageStart(vorgabe = "") {
 // KC-CLUB-TWINKEY-VIDEOS (2.252.0, Wunsch Hansi „Du kannst es im Hilfetext nachlesen. Aber es gibt auch Erklär-Videos. Was möchtest du dir
 // ansehen?“): Antwort-Eintrag → passende Erklär-Videos (Registry RUNDGAENGE, nur die für das Mitglied sichtbaren) und der ausführliche Hilfetext.
 // Neue Videos hier einfach dem passenden Eintrag (f: Twinkeys Fragen, h: Hilfe-Zentrum) zuordnen.
-const TW_VIDEOS = { "h:wetter": ["effekte"], "f:update": ["technik"], "f:feedback": ["feedback"], "f:dienstwunsch": ["dienst"], "f:dienstplan": ["dienst"], "f:status": ["status"], "f:protokoll": ["lesen"], "f:handbuch": ["lesen"], "f:adresse": ["meinedaten"], "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
-  "f:nachricht": ["nachricht"], "f:termin-neu": ["termin"], "f:zettel": ["pinnwand"], "f:vorschlag": ["vorschlag"], "f:zusagen": ["zusagen"],
+const TW_VIDEOS = { "h:wetter": ["effekte"], "f:diktieren": ["sprache"], "h:infofeld": ["spezial"], "h:modus_knopf": ["spezial"], "h:frage_knopf": ["spezial"], "h:schnecke": ["spezial"], "f:update": ["technik"], "f:feedback": ["feedback"], "f:dienstwunsch": ["dienst"], "f:dienstplan": ["dienst"], "f:status": ["status"], "f:protokoll": ["lesen"], "f:handbuch": ["lesen"], "f:adresse": ["meinedaten"], "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
+  "f:nachricht": ["nachricht", "zentrale", "sprache"], "f:termin-neu": ["termin"], "f:zettel": ["pinnwand"], "f:vorschlag": ["vorschlag"], "f:zusagen": ["zusagen"],
   "f:foto-album": ["fotos"], "f:geld": ["erstattung"], "f:notfall": ["sos"], "f:hilfe-suchen": ["helfen"], "f:leihen": ["helfen"], "f:anrufen": ["mitglieder"], "f:online": ["mitglieder"],
   "f:spielen": ["spiele"], "f:archiv": ["archiv"] }; // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4
 const TW_HILFETEXT = { "f:mein-bild": "h:mein_bild", "f:figur-bauen": "h:mein_bild" };

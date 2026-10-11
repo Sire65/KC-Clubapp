@@ -8469,3 +8469,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/RG\.zurueck\.push\(\(\) => \{ if \(\$\(id\)\) fensterZu\(\$\(id\)\); \}\)/.test(html), "Fenster schließen mit eigenem Schließen (Training/Studio)");
 }
 
+// 2.272.0 KC-CLUB-ERKLAERVIDEOS-8 (Wunsch Hansi): Versteckte Helfer, Kommunikationszentrale, Sprachsteuerung – nur vorgeführt
+{
+  const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-8"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-EFFEKTE"));
+  for (const [id, st] of [["spezial", "RG_SPEZIAL"], ["zentrale", "RG_ZENTRALE"], ["sprache", "RG_SPRACHE"]]) assert.ok(new RegExp(`\\{ id: "${id}", stand: "1", [^\\n]*st: \\(\\) => ${st} \\}`).test(html), `Video ${id} registriert`);
+  assert.ok(!/[;{(]\s*(await )?(zeSenden|zeAnrufen|anrufen|anklopfen|sbHoeren|sbSchalter|sbStumm|sbtLos|dunkelUmschalten|webseite|sucheAuf|hzFrageSchalter|ansichtWechseln|ansichtSetzen)\(|\bapi\(/.test(b), "nichts gesendet, angerufen, eingeschaltet oder umgestellt");
+  assert.ok(/RG\.zurueck\.push\(\(\) => \{ const a = RG\.zeAlt; RG\.zeAlt = null; Object\.assign\(ZE, a\);/.test(b) && /klickZeigen\(false\)/.test(b), "Zentrale-Auswahl und Klick-Anzeige zurück");
+  assert.ok(!/rgSchalter\(/.test(b), "keine erst später definierte Hilfe (sonst bricht die App beim Laden ab)");
+}
+

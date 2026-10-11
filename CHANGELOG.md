@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.272.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-8: Versteckte Helfer, Kommunikationszentrale, Sprachsteuerung (Wunsch Hansi)
+- 🔎 „Versteckte Helfer“: Kochmütze (Internetseite, kommt noch), Tag/Nacht mit A/T/N (Nacht nur vorgeführt), Kopf halb/ganz einrollen, ‹ › und « » im Info-Feld, die gelben Pünktchen, im Kopf wischen, Lämpchen mit Verbindungs-Anzeige, 🐌 Schnecke und 🐢 Schildkröte, das Wort „Schnellzugriff“, Kacheln lange drücken/verschieben/umdrehen, Register anordnen und wischen, „Mehr Funktionen anzeigen“, Lupe, 👆 „Was kann ich antippen?“, Fragezeichen lange drücken, Schnellstart einrichten. Stationen aus „Oberfläche nach Wunsch“ werden wiederverwendet (bleiben gleich).
+- 📡 „Kommunikationszentrale“: Anzeige mit Uhr/online/neu/Push und Ticker, an wen, Pult (Anrufen, Video, Anklopfen, Sprache, Chat, Standort, Termin), zusätzliche Wege, Schnellnachricht mit Rückmeldung.
+- 🎙️ „Sprachsteuerung komplett“: einschalten, Mikrofon unten links, lange drücken = ausschalten, Liste aller Befehle (antippen = ausführen, stumm), „Nachricht an Klaus“ mit anschließendem Diktieren, weitere Befehle, Sprach-Training, Lernen/Vergessen, Diktieren in allen Feldern.
+- Nur vorgeführt: nichts gespeichert, gesendet, angerufen oder eingeschaltet; Auswahl der Zentrale, Nacht-Vorschau, „Was kann ich antippen?“ und Fenster am Ende zurück.
+
 ## 2.271.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-7: die restlichen Erklär-Videos (Wunsch Hansi)
 - 🧳 „Aktionen & Reisen“: Liste, Einzelheiten (Reiseverlauf, Teilnehmer, Preis, Veranstalter), Reise-Checkliste, Fotos.
 - 🏋️ „Fit bleiben“ (nur mit Freigabe): Gesundheitshinweis, Stufe und Dauer, Ansage, „Los geht's“, Auswertung.
