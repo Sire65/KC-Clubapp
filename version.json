@@ -1,11 +1,18 @@
 {
-  "version": "2.233.0",
+  "version": "2.233.1",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🔧 Kleine Systemverbesserungen"
+    "📖 Schnellanleitung Bilderrechner Version 4.3: neue Kombi-Bilder"
   ],
   "verlauf": [
+    {
+      "version": "2.233.1",
+      "datum": "2026-10-11",
+      "neu": [
+        "📖 Schnellanleitung Bilderrechner Version 4.3: neue Kombi-Bilder"
+      ]
+    },
     {
       "version": "2.233.0",
       "datum": "2026-10-07",

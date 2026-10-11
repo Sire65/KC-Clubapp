@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.233.1 – 2026-10-11 – Schnellanleitung Bilderrechner Version 4.3
+KC-CLUB-DOKUMENTE: „Schnellanleitung Bilderrechner“ zeigt jetzt die Kurzanleitung **Version 4.3** (`dokumente/Kurzanleitung_Bilderrechner_V4.3.pdf`, 33 Seiten). Neu: Kombi-Kacheln halb Getränk, halb Essen (bei „Grünkohl-Wurst“ die Wurst gut sichtbar), jede Kombi nur einmal; Seite 12 „Sammelbestellung“ neu aus der laufenden Kasse fotografiert (aktuelle Warengruppen-Reihenfolge, neue Kombi-Bilder). Version 4.2 bleibt als Datei unverändert (Regel 17). Die Archiv-Kopie (2.233.0) nimmt die neue Datei von selbst mit.
+
 ## 2.233.0 – 2026-10-11 – Handbücher und Schulungsunterlagen in der Archiv-Kopie
 KC-CLUB-ARCHIV-KOPIE Stufe 2: Auch die PDF-Handbücher der Club-App (dokumente/) und alle PDFs aus dem Kasse-Paket (Kassen-Training Karteikarten/Übungsliste, Hüttenblatt, Scanner-Testblatt) kommen nachts in den Neon-Dateispeicher Frankfurt; neue PDFs kommen von selbst mit. Prüfung mit der Git-Prüfsumme. Persönliche Ordner werden weiter mitgesichert (Entscheidung Hansi). Admin-Zentrale zeigt die Aufteilung.
 

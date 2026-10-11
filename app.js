@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.233.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.233.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -9925,7 +9925,7 @@ const DOKUMENTE = [
   { id: "bedienung-club-app-v9", sym: "📖", t: "Bedienungsanleitung Club-App", u: "Version 9 · alles erklärt, mit Bildern · 63 Seiten", datei: "dokumente/Koecheclub-App_Anleitung_V9.pdf", neuBis: "2026-12-31" }, // 2.110.0: ersetzt V8 (KC-CLUB-ANLEITUNG-V9)
   // KC-CLUB-VERTRETUNG (2.2.0): Betriebsanleitung für die Admin-Vertretung + Notfall-Umschlag (ohne Zugangsdaten) – nur für Admins sichtbar
   { id: "vertretung", sym: "🛡️", t: "Vertretung des Admins", u: "Betriebsanleitung + Notfall-Umschlag zum Ausfüllen", datei: "dokumente/Vertretung_Admin_V1.pdf", nur: () => !!ICH?.admin },
-  { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Kurzanleitung V4.2 · 33 Seiten", datei: "dokumente/Kurzanleitung_Bilderrechner_V4.2.pdf" }, // 2.154.1: ersetzt V4.1 (Reklamation mit Bildern, Parken verbinden, halbe Portion, Gutschein-Teilzahlung)
+  { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Kurzanleitung V4.3 · 33 Seiten", datei: "dokumente/Kurzanleitung_Bilderrechner_V4.3.pdf" }, // 2.233.1: ersetzt V4.2 (Kombi-Bilder halb Getränk/halb Essen, jede Kombi nur einmal, Sammelbestellung neu fotografiert) – V4.2 bleibt als Datei · 2.154.1: ersetzt V4.1 (Reklamation mit Bildern, Parken verbinden, halbe Portion, Gutschein-Teilzahlung)
 ];
 // Gesamtprüfung 3 (2.23.84): lange zusammengesetzte Wörter auf schmalen Kacheln an der richtigen Stelle trennen (weiches Trennzeichen)
 const kachelTrennen = (t) => String(t).replace(/(\p{L}{4,})(anleitung|rechner|schulung|übersicht|programme|einstellungen|verwaltung)/giu, "$1\u00AD$2");
