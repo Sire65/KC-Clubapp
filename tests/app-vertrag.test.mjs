@@ -8061,3 +8061,10 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/led\.classList\.toggle\("versteckt", !ICH\?\.admin\); if \(!ICH\?\.admin\) return;/.test(html), "nur Admin");
   assert.ok(/Date\.now\(\) - \(RT\.letzte \|\| 0\) > RT_TOT_MS/.test(html) && /RT_STILL_MS = 70000, RT_TOT_MS = 90000/.test(html), "veraltet ≠ OK, stumme Leitung wird neu aufgebaut");
 }
+
+// 2.228.0 KC-CLUB-REALTIME-SPIELE (Wunsch Hansi): Spiele an der direkten Leitung – Zug sofort, Takt nur noch zur Sicherheit
+{
+  const m = lies("supabase/migrations/20261011_kc_club_v2228_realtime_spiele.sql");
+  assert.ok(/elsif tg_table_name = 'kc_club_spiele' then\s+perform public\.kc_club_rt_klingeln\(array_remove\(array\[new\.von, new\.an\], null\), 'spiel', new\.id\)/.test(m) && /after insert or update on public\.kc_club_spiele/.test(m), "Signal an beide Spieler");
+  assert.ok(/if \(s\.art === "spiel"\) \{ if \(SP\?\.offen\?\.id && s\.thread === SP\.offen\.id\) spNachsehen\(true\)/.test(html) && /async function spNachsehen\(sofort\)/.test(html) && /if \(rtAn\(\) && !SP\.offen\.uhr\?\.laeuft && SPT_TAKT\.n % 10\) return;/.test(html), "App: sofort holen, sonst seltener");
+}

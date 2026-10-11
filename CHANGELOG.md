@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.228.0 – 2026-10-11 – Spiele an der direkten Leitung
+KC-CLUB-REALTIME-SPIELE: Schach, Bauernskat, Mensch ärgere dich nicht, Tic-Tac-Toe & Co. hängen jetzt an der direkten Leitung – der Zug des Gegners, neue Herausforderungen, Annahme und Aufgabe kommen sofort statt im 3-Sekunden-Takt. Steht die Leitung, fragt das Spiel nur noch alle 30 s zur Sicherheit nach (bei laufender Schachuhr wie bisher).
+
 ## 2.227.0 – 2026-10-11 – LED für die direkte Leitung
 KC-CLUB-REALTIME-LED: Neue LED oben (nur Admin) zeigt die direkte Leitung: 🟢 steht – Neues kommt sofort, 🟡 wird aufgebaut oder antwortet nicht, 🔴 unterbrochen (die App fragt solange selbst nach), 🔵 pausiert (Hintergrund/Notbetrieb), ⚪ nicht verfügbar. Antippen zeigt Stand, Anzahl der Signale und „🔄 Neu verbinden“. Antwortet die Leitung 90 s nicht, baut die App sie selbst neu auf.
 

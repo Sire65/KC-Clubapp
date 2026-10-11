@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.227.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.228.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -3749,6 +3749,8 @@ function rtNachholen() { onlinePing(); if (chatId && aktuelleAnsicht === "chat" 
 function rtSignal(s) {
   RT.signale++;
   if (s.art === "klopfen" || s.art === "anruf") { onlinePing(); if (RUF?.id) anrufPruefen(); return; }
+  // KC-CLUB-REALTIME-SPIELE (2.228.0): Zug/Herausforderung/Aufgabe – offenes Spiel sofort holen, sonst Einladungen/„du bist dran“ auffrischen
+  if (s.art === "spiel") { if (SP?.offen?.id && s.thread === SP.offen.id) spNachsehen(true); else { onlinePing(); if (aktuelleAnsicht === "spiele" && !SP?.offen) spLaden(true); } return; }
   if ((s.art === "chat" || s.art === "tippt") && s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) {
     chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; });
   }
@@ -5772,10 +5774,13 @@ function spSpielZeigen() {
 // KC-CLUB-SPARTAKT (2.23.9): Ich bin dran → der andere kann kaum etwas ändern, nur alle 15 s nachsehen. Er ist dran → alle 3 s,
 // nach 2 Minuten ohne Zug alle 9 s (jede Änderung setzt wieder auf schnell).
 const SPT_TAKT = { n: 0, ruhig: 0 };
-async function spNachsehen() {
+async function spNachsehen(sofort) {
   if (!SP.offen || aktuelleAnsicht !== "spiele" || document.hidden || KTM.frage || KTM.aufl) return; // 2.14.0: nie mitten in eine Quizfrage
-  SPT_TAKT.n++; SPT_TAKT.ruhig++;
-  if (SP.offen.ichDran ? SPT_TAKT.n % 5 : SPT_TAKT.ruhig > 40 && !SP.offen.uhr?.laeuft && SPT_TAKT.n % 3) return; // 2.23.38: läuft eine Schachuhr, bleibt es schnell
+  if (sofort !== true) { // sofort = Signal über die direkte Leitung (KC-CLUB-REALTIME-SPIELE) – sonst der Takt
+    SPT_TAKT.n++; SPT_TAKT.ruhig++;
+    if (rtAn() && !SP.offen.uhr?.laeuft && SPT_TAKT.n % 10) return; // Leitung steht: Züge melden sich selbst – nur alle 30 s zur Sicherheit
+    if (SP.offen.ichDran ? SPT_TAKT.n % 5 : SPT_TAKT.ruhig > 40 && !SP.offen.uhr?.laeuft && SPT_TAKT.n % 3) return; // 2.23.38: läuft eine Schachuhr, bleibt es schnell
+  }
   try { const r = await api("spiel_holen", { id: SP.offen.id }); if (r.spiel.zuege !== SP.offen.zuege || r.spiel.status !== SP.offen.status) { SPT_TAKT.ruhig = 0; const warDran = SP.offen.ichDran; SP.offen = r.spiel; spZeigen(); if (!warDran && r.spiel.ichDran) try { navigator.vibrate?.(40); } catch {} } } catch {}
 }
 async function spZug(i) {
