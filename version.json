@@ -1,11 +1,18 @@
 {
-  "version": "2.241.0",
+  "version": "2.242.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🎬 Rundgang durch die App mit Ton – unter ⚙️ Mehr oder ❓ Hilfe & Tipps: die App zeigt und erzählt in 3 Minuten, was sie kann"
+    "📌 Private Termine auf die Startseite: beim Eintragen „Auf der Startseite“ anhaken – dann zählt der Countdown oben mit"
   ],
   "verlauf": [
+    {
+      "version": "2.242.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "📌 Private Termine auf die Startseite: beim Eintragen „Auf der Startseite“ anhaken – dann zählt der Countdown oben mit"
+      ]
+    },
     {
       "version": "2.241.0",
       "datum": "2026-10-11",

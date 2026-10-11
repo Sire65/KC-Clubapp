@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.241.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.242.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -13328,6 +13328,8 @@ const CD_ARTEN = [ // [Schlüssel, Bezeichnung in den Einstellungen, Einträge l
   // 2.208.0 (Wunsch Hansi „x Tage bis Weihnachtsmarkt“): aus den Club-Terminen (Veranstaltung „Weihnachtsmarkt“, ohne Auf-/Abbau);
   // während er läuft: „läuft!“. Weitere Club-Veranstaltungen = weiterer Eintrag in CD_VERANSTALTUNGEN.
   ["markt", "🎄 Weihnachtsmarkt (Club-Termin)", () => cdVeranstaltung(CD_VERANSTALTUNGEN.markt)],
+  // 2.242.0 KC-CLUB-PRIVAT-STARTSEITE (Wunsch Hansi): private Termine mit Häkchen „📌 Auf der Startseite“ (bis zu 5, Reihe = nächster Termin)
+  ["privat", "📌 Meine privaten Termine mit Häkchen „Auf der Startseite“", cdPrivat],
   ["weihnachten", "🎄 Weihnachten (ab Oktober)", () => { const h = heuteIso(), t = cdTageBis(h.slice(0, 4) + "-12-24"); const m = +h.slice(5, 7);
     return m >= 10 && t >= -2 ? [{ id: "x", zahl: t <= 0 ? "Frohes Fest!" : cdNoch(t), text: "🎄 Weih\u00ADnachten", los: () => zeige("termine") }] : []; }],
   ["silvester", "🎆 Silvester (im Dezember)", () => { const h = heuteIso(), t = cdTageBis(h.slice(0, 4) + "-12-31");
@@ -13338,6 +13340,11 @@ const CD_ARTEN = [ // [Schlüssel, Bezeichnung in den Einstellungen, Einträge l
     return t >= 0 && t <= 14 ? { id: "m" + g.person_id, t, zahl: cdNoch(t), text: `🎂 Geb. ${g.vorname || g.name}`, los: () => mitgliedOeffnen(g.person_id) } : null; }).filter(Boolean).sort((a, b) => a.t - b.t).slice(0, 3)],
 ];
 const CD_VERANSTALTUNGEN = { markt: { re: /weihnachtsmarkt/i, ohne: /aufbau|abbau|nachbereitung|vorbereitung/i, text: "🎄 Weih\u00ADnachts\u00ADmarkt", vorlauf: 120 } };
+function cdPrivat() {
+  return (CD.daten?.privat || []).map((p) => { const tag = berlinIso(p.beginn), t = cdTageBis(tag); if (t < 0) return null;
+    const zahl = t === 0 && !p.ganztaegig ? (Date.parse(p.beginn) < Date.now() ? "Jetzt" : fZeit.format(new Date(p.beginn))) : cdNoch(t); // heute: Uhrzeit (Fallblatt 13:42)
+    return { id: "p" + p.id, zahl, text: "📌 " + ([...p.titel].length > 22 ? [...p.titel].slice(0, 21).join("") + "…" : p.titel), los: () => zeige("termine") }; }).filter(Boolean);
+}
 function cdVeranstaltung(v) {
   const t = (CD.daten?.veranstaltungen || []).find((x) => v.re.test(x.titel) && !v.ohne.test(x.titel)); if (!t) return [];
   const von = berlinIso(t.beginn), bis = t.ende ? berlinIso(t.ende) : von, h = heuteIso(), tage = cdTageBis(von);
@@ -13348,8 +13355,10 @@ const cdNur = () => einst("cd_nur", false);
 const cdArtAn = (k) => einst("cd_" + k, true);
 function cdListe(bisTreffen) {
   const t = INIT?.naechstesTreffen, l = [{ id: "t", zahl: String(bisTreffen).replace(/^in (\d+) Tagen$/, "$1 Tage"), text: "📅 Club\u00ADtreffen", los: () => zumTreffen() }]; // 2.203.0: kurz „Clubtreffen · 23 Tage“
-  if (cdNur()) return l;
-  if (t && Math.ceil((new Date(t.beginn) - Date.now()) / 86400000) <= 2) return l; // Treffen steht kurz bevor → nichts anderes zeigen
+  if (cdNur() || (t && Math.ceil((new Date(t.beginn) - Date.now()) / 86400000) <= 2)) { // nur Treffen (bzw. Treffen steht kurz bevor) …
+    if (cdArtAn("privat")) try { l.push(...cdPrivat()); } catch {} // … aber selbst angehakte private Termine laufen immer mit
+    return l;
+  }
   for (const [k, , f] of CD_ARTEN) if (cdArtAn(k)) try { l.push(...f().filter(Boolean)); } catch {}
   return l;
 }
@@ -13408,8 +13417,8 @@ function cdStil(stil) { try { localStorage.setItem("kc_club_cd_stil", stil); } c
 function cdTippen() { const l = cdListe(CD.bisTreffen || ""); (l[CD.i] || l[0]).los(); }
 function cdStart() {
   if (!CD.uhr) CD.uhr = setInterval(cdWeiter, CD_TAKT_MS);
-  if (!cdNur() && !CD.laedt && Date.now() - CD.stand > CD_NEU_MS) { CD.laedt = true;
-    setTimeout(() => api("countdowns", {}, { still: true }).then((r) => { CD.daten = { reisen: r.reisen || [], geburtstage: r.geburtstage || [], veranstaltungen: r.veranstaltungen || [] }; CD.stand = Date.now(); try { localStorage.setItem("kc_club_cd", JSON.stringify(CD.daten)); } catch {} cdFrisch(); })
+  if (!CD.laedt && Date.now() - CD.stand > CD_NEU_MS) { CD.laedt = true; // 2.242.0: auch bei „Nur Clubtreffen“ (angehakte private Termine)
+    setTimeout(() => api("countdowns", {}, { still: true }).then((r) => { CD.daten = { reisen: r.reisen || [], geburtstage: r.geburtstage || [], veranstaltungen: r.veranstaltungen || [], privat: r.privat || [] }; CD.stand = Date.now(); try { localStorage.setItem("kc_club_cd", JSON.stringify(CD.daten)); } catch {} cdFrisch(); })
       .catch(() => { CD.stand = Date.now() - CD_NEU_MS + 600000; }).finally(() => { CD.laedt = false; }), 4000); } // nach dem Start, nicht mittendrin
 }
 function cdWeiter() {
@@ -20180,6 +20189,7 @@ function privatForm(x, vorkommen) {
     <label class="feld">Notiz (freiwillig)<textarea id="ptNotiz" rows="2" maxlength="1000">${esc(x.notiz || "")}</textarea></label>
     ${wdhFelder("pt", x.wiederholung, x.wiederholung_bis, false)}
     ${x.wiederholung && x.wiederholung !== "keine" ? `<p class="hinweis" style="margin:0">🔁 Das ist eine Terminreihe – Änderungen gelten für alle Termine der Reihe.</p>` : ""}
+    <label class="schalter"><span><b>📌 Auf der Startseite</b> – oben im Countdown mitlaufen lassen („noch 5 Tage“)</span><input type="checkbox" id="ptStart" ${x.startseite ? "checked" : ""}></label><!-- KC-CLUB-PRIVAT-STARTSEITE (2.242.0) -->
     <label class="feld">⏰ Erinnerung<select id="ptErinnerung">${PT_ERINNERUNG.map(([m, t]) => `<option value="${m}" ${Number(x.erinnerung_min || 0) === m ? "selected" : ""}>${t}</option>`).join("")}</select></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => privatSpeichern('${x.id || ""}'))">Speichern</button>
       ${x.id ? `<button class="knopf" onclick="privatLoeschen('${x.id}', ${x.wiederholung && x.wiederholung !== "keine" ? "true" : "false"})">🗑️ Löschen</button>` : ""}
@@ -20197,8 +20207,9 @@ async function privatSpeichern(id) {
   if (ende && ende < beginn) return melde("Das Ende liegt vor dem Beginn.", true);
   try {
     await api("privattermin_speichern", { id: id || undefined, titel, beginn, ende, ganztaegig: ganz, ort: $("ptOrt").value.trim(), notiz: $("ptNotiz").value.trim(), erinnerung_min: Number($("ptErinnerung").value),
-      wiederholung: $("ptWdh").value, wiederholung_bis: $("ptWdh").value !== "keine" ? $("ptWdhBis").value || null : null });
-    $("treffenForm").classList.add("versteckt"); melde("🔒 Privater Termin gespeichert – nur du siehst ihn"); treffenLaden();
+      wiederholung: $("ptWdh").value, wiederholung_bis: $("ptWdh").value !== "keine" ? $("ptWdhBis").value || null : null, startseite: $("ptStart").checked });
+    $("treffenForm").classList.add("versteckt"); melde($("ptStart").checked ? "🔒 Gespeichert – 📌 läuft oben auf der Startseite mit" : "🔒 Privater Termin gespeichert – nur du siehst ihn"); treffenLaden();
+    CD.stand = 0; // KC-CLUB-PRIVAT-STARTSEITE: Countdown gleich neu holen
   } catch (e) { meldeFehler(e); }
 }
 async function privatLoeschen(id, reihe) {

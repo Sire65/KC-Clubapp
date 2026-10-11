@@ -5591,6 +5591,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok((seite.match(/onclick="rundgangStart\(\)"/g) || []).length >= 3 && /body\.rg-an \.blatt \{ display: none !important; \}/.test(seite) && /h === "#rundgang"/.test(html), "Start in Mehr (beide Ansichten), Hilfe und per Link; Fenster warten");
 }
 
+// 2.242.0 KC-CLUB-PRIVAT-STARTSEITE (Wunsch Hansi): privater Termin mit Häkchen „📌 Auf der Startseite“ läuft im Countdown (Fallblatt) mit
+{
+  assert.ok(/id="ptStart"/.test(html) && /startseite: \$\("ptStart"\)\.checked/.test(html) && /startseite: !!p\.startseite/.test(server), "Häkchen im Formular, Server speichert");
+  assert.ok(/\["privat", "📌 Meine privaten Termine/.test(html) && /privat: r\.privat \|\| \[\]/.test(html) && /return json\(\{ reisen, geburtstage, veranstaltungen, privat \}\)/.test(server), "Countdown-Registry + Server liefert nur eigene");
+  assert.ok(/t\.startseite && !privGesehen\.has\(t\.id\)/.test(server) && /privatListe\(ich,/.test(server.slice(server.indexOf('case "countdowns"'))), "nur angehakte, Reihe = nächster Termin, nur eigene (privatListe)");
+  assert.ok(/selbst angehakte private Termine laufen immer mit/.test(html), "auch bei „Nur Clubtreffen“");
+  assert.ok(fs.existsSync(new URL("../supabase/migrations/20261011_kc_club_v2242_privat_startseite.sql", import.meta.url)), "Migration");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -7744,8 +7753,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.202.0 KC-CLUB-COUNTDOWN (Wunsch Hansi: Termin-Kachel oben wechselt – Treffen, Reisen (nur dabei), Weihnachten, Silvester, Geburtstage)
 {
   assert.ok(/const CD_ARTEN = \[/.test(html) && ["reise", "weihnachten", "silvester", "meingeb", "mggeb"].every((k) => new RegExp(`\\["${k}", "`).test(html)), "Countdown-Registry fehlt");
-  assert.ok(/if \(cdNur\(\)\) return l;/.test(html) && /<b>📌 Standard: nur nächstes Clubtreffen<\/b>/.test(html), "Standard = nur nächstes Clubtreffen");
-  assert.ok(/Math\.ceil\(\(new Date\(t\.beginn\) - Date\.now\(\)\) \/ 86400000\) <= 2\) return l;/.test(html), "Treffen in ≤ 2 Tagen bleibt stehen");
+  assert.ok(/if \(cdNur\(\) \|\| \(t && /.test(html) && /return l;\n  \}\n  for \(const \[k, , f\] of CD_ARTEN\)/.test(html) && /<b>📌 Standard: nur nächstes Clubtreffen<\/b>/.test(html), "Standard = nur nächstes Clubtreffen");
+  assert.ok(/Math\.ceil\(\(new Date\(t\.beginn\) - Date\.now\(\)\) \/ 86400000\) <= 2\)\) \{ \/\/ nur Treffen[^\n]*\n    if \(cdArtAn\("privat"\)\) try \{ l\.push\(\.\.\.cdPrivat\(\)\); \} catch \{\}[^\n]*\n    return l;/.test(html), "Treffen in ≤ 2 Tagen bleibt stehen (2.242.0: nur angehakte private Termine dazu)");
   assert.ok(/id="cdKachel"/.test(html) && /id="cdWahl"/.test(html) && /cdEinstellungenZeigen\(\);(?: try \{ schalterZeilen\(\$\("v-einstellungen"\)\); \} catch \{\})? tippSchalterZeigen\(\)/.test(html), "Kachel/Einstellungen fehlen");
   assert.ok(/case "countdowns": \{/.test(server) && /a\.dabei && String\(a\.bis \|\| a\.von\) >= heute/.test(server), "Server: nur eigene Reisen");
 }
@@ -7785,7 +7794,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.208.0 (Wunsch Hansi: „x Tage bis Weihnachtsmarkt“) – aus den Club-Terminen, Auf-/Abbau zählen nicht
 {
   assert.ok(/\["markt", "🎄 Weihnachtsmarkt \(Club-Termin\)", \(\) => cdVeranstaltung\(CD_VERANSTALTUNGEN\.markt\)\]/.test(html) && /ohne: \/aufbau\|abbau\|nachbereitung\|vorbereitung\/i/.test(html), "Weihnachtsmarkt-Countdown");
-  assert.ok(/\.eq\("art", "veranstaltung"\)\.eq\("status", "geplant"\)/.test(server) && /return json\(\{ reisen, geburtstage, veranstaltungen \}\);/.test(server), "Server liefert Veranstaltungen");
+  assert.ok(/\.eq\("art", "veranstaltung"\)\.eq\("status", "geplant"\)/.test(server) && /return json\(\{ reisen, geburtstage, veranstaltungen(?:, privat)? \}\);/.test(server), "Server liefert Veranstaltungen");
 }
 
 // 2.209.0 Gesamtprüfung 5 – Korrekturen

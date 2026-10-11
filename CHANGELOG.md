@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.242.0 – 2026-10-11 – KC-CLUB-PRIVAT-STARTSEITE: private Termine auf der Startseite (Countdown/Fallblatt)
+- Privater Termin: neues Häkchen „📌 Auf der Startseite“ → der Termin läuft oben in der Countdown-Kachel mit (noch x Tage, am Tag selbst die Uhrzeit), auch bei „Nur Clubtreffen“. Bis zu 5, bei Reihen der nächste Termin. DB: kc_club_privattermine.startseite (Standard aus).
+
 ## 2.241.0 – 2026-10-11 – KC-CLUB-RUNDGANG: vertonter Rundgang durch die App
 - 17 Stationen (Kopf, Status, Infofeld, Ansichten, Register, Kacheln, Leiste unten, Nachrichten, Termine, Pinnwand, Mitglieder, Mehr, Überblick, Hilfe): echtes Element hervorgehoben, Rest abgedunkelt, Sprachausgabe des Handys liest vor, blättert selbst weiter. Pause, ◀ ▶, Beenden; App währenddessen gesperrt, Bildschirm bleibt an, beim Verlassen Pause.
 - Start: ⚙️ Mehr (einfache + erweiterte Ansicht), oben in ❓ Hilfe & Tipps, Hilfe-Eintrag „Zeig mir wo“, Link …#rundgang zum Weitergeben.

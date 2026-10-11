@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.240.0";
+const SERVER_VERSION = "2.242.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4999,7 +4999,7 @@ function wiederholungen(beginnIso: string, regel: string, von: Date, bis: Date, 
 
 // KC-CLUB-PRIVATTERMIN (1.0.0): persönliche Einträge – immer nur die eigenen (person_id = ich)
 async function privatListe(ich: Ich, von: string, bis?: string) {
-  const felder = "id,titel,beginn,ende,ganztaegig,ort,notiz,erinnerung_min,wiederholung,wiederholung_bis,ausnahmen";
+  const felder = "id,titel,beginn,ende,ganztaegig,ort,notiz,erinnerung_min,wiederholung,wiederholung_bis,ausnahmen,startseite";
   const bisD = bis ? new Date(bis) : new Date(Date.now() + 500 * 86400000);
   let q = db.from("kc_club_privattermine").select(felder).eq("person_id", ich.person_id).eq("wiederholung", "keine").gte("beginn", von).order("beginn").limit(300);
   if (bis) q = q.lte("beginn", bis);
@@ -8339,7 +8339,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (wBis && wBis < berlinTag(beginn)) throw new Fehler("„Wiederholen bis“ liegt vor dem ersten Termin.");
         const zeile = { titel, beginn: beginn.toISOString(), ende: ende ? ende.toISOString() : null, ganztaegig: !!p.ganztaegig, ort: txt(p.ort, 200) || null,
           notiz: txt(p.notiz, 1000) || null, erinnerung_min: erinnerung, erinnert_am: null, erinnert_bis: null, geaendert_am: jetzt(),
-          wiederholung, wiederholung_bis: wiederholung === "keine" ? null : wBis };
+          wiederholung, wiederholung_bis: wiederholung === "keine" ? null : wBis, startseite: !!p.startseite }; // KC-CLUB-PRIVAT-STARTSEITE (2.242.0)
         let id = String(p.id || "");
         if (id) {
           const { data } = await db.from("kc_club_privattermine").update(zeile).eq("id", id).eq("person_id", ich.person_id).select("id");
@@ -10674,13 +10674,18 @@ Köcheclub Werne`,
       case "countdowns": {
         const heute = berlinTag(new Date());
         const jetztIso = new Date().toISOString(), bisIso = new Date(Date.now() + 150 * 86400000).toISOString();
-        const [akt, geburtstage, { data: vst }] = await Promise.all([aktionenLesen(ich), geburtstageSichtbar(ich),
+        const [akt, geburtstage, { data: vst }, priv] = await Promise.all([aktionenLesen(ich), geburtstageSichtbar(ich),
           // 2.208.0 (Wunsch Hansi „x Tage bis Weihnachtsmarkt“): kommende Club-Veranstaltungen (nur Titel + Zeitraum) – die App wählt aus
           db.from("kc_club_treffen").select("id,titel,beginn,ende").eq("art", "veranstaltung").eq("status", "geplant").lt("beginn", bisIso)
-            .or(`ende.gte.${jetztIso},and(ende.is.null,beginn.gte.${jetztIso})`).order("beginn").limit(40)]);
+            .or(`ende.gte.${jetztIso},and(ende.is.null,beginn.gte.${jetztIso})`).order("beginn").limit(40),
+          // 2.242.0 KC-CLUB-PRIVAT-STARTSEITE (Wunsch Hansi): eigene private Termine mit Häkchen „Auf der Startseite“ – ab heute 0 Uhr
+          privatListe(ich, new Date(`${heute}T00:00:00Z`).toISOString(), bisIso).catch(() => [])]);
+        const privGesehen = new Set<string>(); // Reihe: nur der nächste Termin
+        const privat = (priv as any[]).filter((t: any) => t.startseite && !privGesehen.has(t.id) && privGesehen.add(t.id))
+          .slice(0, 5).map((t: any) => ({ id: t.id, titel: txt(t.titel, 120), beginn: t.beginn, ganztaegig: !!t.ganztaegig }));
         const reisen = (akt.aktionen as any[]).filter((a: any) => a.dabei && String(a.bis || a.von) >= heute).map((a: any) => ({ id: a.id, titel: a.titel, veranstalter: a.veranstalter ?? null, von: a.von, bis: a.bis }));
         const veranstaltungen = (vst ?? []).map((t: any) => ({ id: t.id, titel: txt(t.titel, 120), beginn: t.beginn, ende: t.ende ?? null }));
-        return json({ reisen, geburtstage, veranstaltungen });
+        return json({ reisen, geburtstage, veranstaltungen, privat });
       }
 
       // ----- Sitzungsprotokolle (KC-CLUB-PROTOKOLLE) -----
