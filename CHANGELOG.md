@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.229.0 – 2026-10-11 – Bildschirm zeigen an der direkten Leitung
+KC-CLUB-REALTIME-VORFUEHREN: „📺 Live zeigen“ und „🔴 Mitschauen“ hängen jetzt an der direkten Leitung – jedes neue Bild meldet sich sofort beim Zuschauer (statt Nachfragen alle 0,8 s), Änderungen gehen beim Zeigenden schneller raus (alle 0,4 statt 0,7 s). Über die Leitung kommt nur das Signal, das Bild selbst weiter sicher über den Server. Ohne Leitung wie bisher.
+
 ## 2.228.0 – 2026-10-11 – Spiele an der direkten Leitung
 KC-CLUB-REALTIME-SPIELE: Schach, Bauernskat, Mensch ärgere dich nicht, Tic-Tac-Toe & Co. hängen jetzt an der direkten Leitung – der Zug des Gegners, neue Herausforderungen, Annahme und Aufgabe kommen sofort statt im 3-Sekunden-Takt. Steht die Leitung, fragt das Spiel nur noch alle 30 s zur Sicherheit nach (bei laufender Schachuhr wie bisher).
 

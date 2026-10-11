@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.228.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.229.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -3750,6 +3750,9 @@ function rtSignal(s) {
   RT.signale++;
   if (s.art === "klopfen" || s.art === "anruf") { onlinePing(); if (RUF?.id) anrufPruefen(); return; }
   // KC-CLUB-REALTIME-SPIELE (2.228.0): Zug/Herausforderung/Aufgabe – offenes Spiel sofort holen, sonst Einladungen/„du bist dran“ auffrischen
+  // KC-CLUB-REALTIME-VORFUEHREN (2.229.0): neues Live-Bild / Status → Zuschauer holt sofort; Zeigender prüft gleich den Stand
+  if (s.art === "vorfuehren") { if (VF.rolle === "schaut") vfHolen(true); else if (VF.rolle === "zeigt") { if (VF.status !== "laeuft") { SPG.ping = 0; spgSenderTakt(); } } /* eigene Bilder lösen kein Extra-Senden aus */ else onlinePing(); return; }
+  if (s.art === "mitschauen") { if (SS.id) ssHolen(true); else onlinePing(); return; }
   if (s.art === "spiel") { if (SP?.offen?.id && s.thread === SP.offen.id) spNachsehen(true); else { onlinePing(); if (aktuelleAnsicht === "spiele" && !SP?.offen) spLaden(true); } return; }
   if ((s.art === "chat" || s.art === "tippt") && s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) {
     chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; });
@@ -11833,15 +11836,19 @@ function vfSchirm() {
   if ($("spgSchirm")) return;
   document.body.insertAdjacentHTML("beforeend", `<div id="spgSchirm" class="spg-schirm" role="dialog" aria-modal="true" aria-label="Live-Bild"><div class="st-buehne spg-voll" id="spgSchirmBuehne"><div class="st-leer"><span class="st-gross">📺</span>Gleich kommt das Bild …</div></div></div>`);
 }
-async function vfHolen() {
-  if (VF.rolle !== "schaut" || VF.laeuft) return; VF.laeuft = true;
+async function vfHolen(sofort) {
+  if (VF.rolle !== "schaut") return;
+  if (VF.laeuft) { if (sofort === true) VF.nochmal = true; return; } // Signal während einer Abfrage → gleich danach noch einmal
+  // KC-CLUB-REALTIME-VORFUEHREN (2.229.0): steht die direkte Leitung, meldet sich jedes neue Bild selbst – der Takt nur zur Sicherheit
+  if (sofort !== true && rtAn() && (VF.tn = (VF.tn || 0) + 1) % 4) return;
+  VF.laeuft = true;
   try {
     const r = await api("vorfuehren_holen", { id: VF.id, seit: VF.seit, fseit: VF.fseit }, { still: true });
     if (r.frame) { VF.fseit = r.frame.n; await spgZeigen($("spgSchirmBuehne"), r.frame); }
     if ("zeiger" in r) vfZeigerMalen(r.zeiger);
     for (const e of r.ev || []) { VF.seit = Math.max(VF.seit, e.n); if (!VF.fseit) try { vfNachspielen(e); } catch {} } // ältere Vorführ-Art (ohne Live-Bild)
     if (r.status !== "laeuft") { melde(`📺 ${VF.gegen} hat die Vorführung beendet.`); vfAufraeumen(); }
-  } catch {} finally { VF.laeuft = false; }
+  } catch {} finally { VF.laeuft = false; if (VF.nochmal) { VF.nochmal = false; vfHolen(true); } }
 }
 function vfNachspielen(e) {
   if (e.art === "ansicht" && e.v && e.v !== aktuelleAnsicht && document.getElementById("v-" + e.v)) { document.querySelectorAll(".blatt[data-dyn]").forEach((b) => b.id !== "vfLeiste" && b.remove()); zeige(e.v); }
@@ -25453,7 +25460,9 @@ function ssAbbrechen(still) {
   SS.id = null; if (STD.modus === "mitschauen" || STD.modus === "foto") stSetzen(STD.modus, STD.status === "live" || STD.status === "wartet" ? "beendet" : STD.status, { frame: null });
   if (!still) melde("⏹ Beendet");
 }
-async function ssHolen() {
+async function ssHolen(sofort) {
+  if (SS.laeuft && sofort === true) { SS.nochmal = true; return; }
+  if (sofort !== true && rtAn() && SS.id && $("studioBlatt") && (SS.tn = (SS.tn || 0) + 1) % 3) return; // KC-CLUB-REALTIME-VORFUEHREN: Takt nur zur Sicherheit
   if (!SS.id || !$("studioBlatt")) { if (SS.id) api("schnappschuss_ende", { an: SS.an, id: SS.id }).catch(() => {}); clearInterval(SS.uhr); SS.id = null; return; } // Studio zu → Mitschauen beenden
   // 2.122.0 KC-CLUB-SS-TAKT: nur eine Abfrage gleichzeitig; späte Antworten zu einer beendeten Sitzung oder alte Bilder verwerfen
   if (SS.laeuft) return; SS.laeuft = true; const id = SS.id;
@@ -25470,7 +25479,7 @@ async function ssHolen() {
     if (r.status === "bild") { clearInterval(SS.uhr); SS.id = null; stFotoNeu(r.bild); return stSetzen("foto", "bild"); }
     if (r.status === "beendet" && SS.seit) { clearInterval(SS.uhr); SS.id = null; return stSetzen("mitschauen", "beendet", { frame: null }); }
     if (["abgelehnt", "keine_antwort", "vorbei", "abgeholt", "beendet"].includes(r.status) || Date.now() > SS.bis + 10000 && !SS.seit) { clearInterval(SS.uhr); SS.id = null; return stSetzen(STD.modus, r.status === "abgelehnt" ? "abgelehnt" : "keine_antwort"); }
-  } catch {} finally { SS.laeuft = false; }
+  } catch {} finally { SS.laeuft = false; if (SS.nochmal) { SS.nochmal = false; ssHolen(true); } }
 }
 let stLetztesBild = "";
 // Speichern über das Teilen-Menü (iPhone/iPad: „Bild sichern“ → Fotos), sonst als Download (2.135.0 KC-CLUB-SS-SPEICHERN)
@@ -25561,7 +25570,7 @@ function spgSenderStart(senden, privat) {
   spgSenderStopp(); Object.assign(SPG, { an: true, privat: !!privat, vorhang: false, schmutzig: true, letzt: "", tipp: null, senden, ping: 0, vorhangGesendet: false });
   SPG.beob = new MutationObserver(spgSchmutz); SPG.beob.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
   addEventListener("scroll", spgSchmutz, { capture: true, passive: true }); addEventListener("input", spgSchmutz, true); addEventListener("resize", spgSchmutz); document.addEventListener("pointerdown", spgTippen, true);
-  SPG.uhr = setInterval(spgSenderTakt, 700); spgSenderTakt();
+  SPG.uhr = setInterval(spgSenderTakt, 400); spgSenderTakt(); // 2.229.0: 400 statt 700 ms – Änderungen gehen schneller raus
 }
 function spgSenderStopp() {
   SPG.an = false; SPG.mehr = null; clearInterval(SPG.uhr); SPG.beob?.disconnect(); SPG.beob = null;

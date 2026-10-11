@@ -6805,8 +6805,8 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   // KC-CLUB-SPRUNG-START: lokale Variable verdeckt function sprung() nicht mehr
   assert.ok(/const startSprung = location\.hash; START_HASH = startSprung;/.test(programm) && /const h = startSprung;/.test(programm) && !/const sprung = location\.hash/.test(programm) && /^function sprung\(id\)/m.test(programm), "#zu=-Links");
   // KC-CLUB-SS-TAKT
-  const ss = programm.slice(programm.indexOf("async function ssHolen()"), programm.indexOf("function ssSpeichern()"));
-  assert.ok(/if \(SS\.laeuft\) return; SS\.laeuft = true; const id = SS\.id;/.test(ss) && /if \(SS\.id !== id\) return;/.test(ss) && /!\(r\.n <= SS\.seit\)/.test(ss) && /finally \{ SS\.laeuft = false; \}/.test(ss), "Mitschauen: eine Abfrage, alte Antworten verwerfen");
+  const ss = programm.slice(programm.indexOf("async function ssHolen("), programm.indexOf("function ssSpeichern()"));
+  assert.ok(/if \(SS\.laeuft\) return; SS\.laeuft = true; const id = SS\.id;/.test(ss) && /if \(SS\.id !== id\) return;/.test(ss) && /!\(r\.n <= SS\.seit\)/.test(ss) && /finally \{ SS\.laeuft = false;( if \(SS\.nochmal\)[^}]*\})? \}/.test(ss), "Mitschauen: eine Abfrage, alte Antworten verwerfen");
   // KC-CLUB-ONLINE-FRISCH
   assert.ok(/MITGLIEDER = r\.mitglieder; MITGLIEDER_STAND = Date\.now\(\);/.test(programm) && /return !!m\?\.online && Date\.now\(\) - MITGLIEDER_STAND < 3 \* 60 \* 1000; \}/.test(programm), "online nie aus altem Stand");
   // KC-CLUB-LADE-FRAGE-FRIST
@@ -7024,7 +7024,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/geheim = typ === "password" \|\| typ === "hidden" \|\| SPG_GEHEIM\.test/.test(sg) && /"••••"/.test(sg), "PIN-/Passwortfelder nie übertragen");
   assert.ok(/\{ sel: "#v-chat", t: "Unterhaltung" \}/.test(sg) && /\{ sel: "#v-buero", t: "Büro" \}/.test(sg) && /const priv = privat && SPG_PRIVAT\.find/.test(sg), "beim Zeigen: Chats/Büro verdeckt (Registry)");
   assert.ok(/spgSenderStart\(vfSenden, true\);/.test(programm) && /spgSenderStart\(mlSenden, false\);/.test(programm), "Zeigen = mit Verdecken; Mitschauen = was das Mitglied freigibt");
-  assert.ok(/if \(!SPG\.schmutzig && !\(SPG\.vorhang && !SPG\.vorhangGesendet\) && !SPG\.mehr\?\.\(\) && jetzt - SPG\.ping < 4000\) return;/.test(sg) && /SPG\.uhr = setInterval\(spgSenderTakt, 700\)/.test(sg), "nur bei Änderung, höchstens alle 0,7 s");
+  assert.ok(/if \(!SPG\.schmutzig && !\(SPG\.vorhang && !SPG\.vorhangGesendet\) && !SPG\.mehr\?\.\(\) && jetzt - SPG\.ping < 4000\) return;/.test(sg) && /SPG\.uhr = setInterval\(spgSenderTakt, (700|400)\)/.test(sg), "nur bei Änderung, höchstens alle 0,7 s (ab 2.229.0: 0,4 s)");
   assert.ok(/function vfVorhang\(\)/.test(programm) && /if \(SPG\.vorhang\) \{ if \(!SPG\.vorhangGesendet\) f = \{ vorhang: true \}; \}/.test(sg), "🙈 Vorhang");
   assert.ok(/const SPG_NIE_ID = new Set\(\["studioBlatt", "vfLeiste", "ssLiveLeiste", "spgSchirm"(, "vfZeigerFlaeche")?\]\)/.test(sg), "Studio selbst und Leisten nie im Bild");
   assert.ok(!/await fetch\(/.test(sg), "keine neuen Netzwege");
@@ -8067,4 +8067,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const m = lies("supabase/migrations/20261011_kc_club_v2228_realtime_spiele.sql");
   assert.ok(/elsif tg_table_name = 'kc_club_spiele' then\s+perform public\.kc_club_rt_klingeln\(array_remove\(array\[new\.von, new\.an\], null\), 'spiel', new\.id\)/.test(m) && /after insert or update on public\.kc_club_spiele/.test(m), "Signal an beide Spieler");
   assert.ok(/if \(s\.art === "spiel"\) \{ if \(SP\?\.offen\?\.id && s\.thread === SP\.offen\.id\) spNachsehen\(true\)/.test(html) && /async function spNachsehen\(sofort\)/.test(html) && /if \(rtAn\(\) && !SP\.offen\.uhr\?\.laeuft && SPT_TAKT\.n % 10\) return;/.test(html), "App: sofort holen, sonst seltener");
+}
+
+// 2.229.0 KC-CLUB-REALTIME-VORFUEHREN (Wunsch Hansi): Bildschirm zeigen / Mitschauen an der direkten Leitung
+{
+  const m = lies("supabase/migrations/20261011_kc_club_v2229_realtime_vorfuehren.sql");
+  assert.ok(/when \(new\.schluessel in \('vorfuehren', 'schnappschuss'\)\)/.test(m) && /array_remove\(array\[new\.person_id, new\.wert->>'von'\], null\)/.test(m) && !/frame|bild/.test(m.slice(m.indexOf("perform"), m.indexOf("exception"))), "nur Signal an beide Seiten, nur zwei Schlüssel");
+  assert.ok(/async function vfHolen\(sofort\)/.test(html) && /if \(s\.art === "vorfuehren"\) \{ if \(VF\.rolle === "schaut"\) vfHolen\(true\)/.test(html) && /if \(s\.art === "mitschauen"\) \{ if \(SS\.id\) ssHolen\(true\)/.test(html), "Zuschauer holt sofort");
+  assert.ok(/VF\.nochmal = true/.test(html) && /SS\.nochmal = true/.test(html) && /if \(VF\.status !== "laeuft"\) \{ SPG\.ping = 0; spgSenderTakt\(\); \}/.test(html), "kein verpasstes Bild, keine Echo-Sendungen");
 }
