@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.261.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.262.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1639,16 +1639,58 @@ function rgAusDemo(an) { // eine Kachel nur auf dem Bildschirm ausblenden (KA wi
   else if (!an && RG.ausId) { const id = RG.ausId; RG.ausId = null; KA.aus = KA.aus.filter((x) => x !== id); KA_NUR_AUS = false; }
   registerZeigen(); kachelnZeigen();
 }
-function rgRegisterTausch(an) { // Register-Reihenfolge nur zeigen: die ersten beiden getauscht, nicht gespeichert
-  if (an && !RG.regAlt) { RG.regAlt = { reihe: KA.register }; const r = REGISTER.map((x) => x[0]); [r[0], r[1]] = [r[1], r[0]]; KA.register = r; RG.zurueck.push(() => rgRegisterTausch(false)); }
-  else if (!an && RG.regAlt) { KA.register = RG.regAlt.reihe; RG.regAlt = null; }
-  registerZeigen();
+function rgRegisterTausch(an) { // Register-Reihenfolge zurück (an = false); Vorführen geht über rgRegisterReihe – nie gespeichert
+  if (an) return;
+  if (RG.regAlt) { const alt = RG.regAlt.reihe; RG.regAlt = null; rgRegisterFlip(() => { KA.register = alt; registerZeigen(); }); }
+  else registerZeigen();
+}
+// KC-CLUB-VIDEO-LIVE-2 (2.262.0, Fund Hansi „das Verschieben der 3 Register wird nicht gut gezeigt“): die anderen Register rücken sichtbar nach
+function rgRegisterFlip(aendern) {
+  const vor = new Map([...document.querySelectorAll("#register button")].map((b) => [b.dataset.r, b.getBoundingClientRect().left]));
+  aendern();
+  for (const b of document.querySelectorAll("#register button")) { const x = vor.get(b.dataset.r); if (x === undefined) continue; const dx = x - b.getBoundingClientRect().left;
+    if (dx) try { b.animate([{ transform: `translateX(${dx}px)` }, { transform: "translateX(0)" }], { duration: 420, easing: "cubic-bezier(.3,.1,.2,1)" }); } catch {} }
+}
+function rgRegisterReihe(reihe) {
+  if (!RG.regAlt) { RG.regAlt = { reihe: KA.register }; RG.zurueck.push(() => rgRegisterTausch(false)); }
+  rgRegisterFlip(() => { KA.register = reihe; registerZeigen(); });
+}
+// Register festhalten, Abbild hebt sich, Stück für Stück nach rechts ziehen – bei jedem Register, das es überquert, rückt das andere nach links
+const rgRegSichtbar = () => [...document.querySelectorAll("#register button")].filter(rgSichtbar);
+const rgRegNamen = () => rgRegSichtbar().map((b) => REGISTER.find((x) => x[0] === b.dataset.r)?.[1] || b.dataset.r);
+async function rgFregisterZiehen(tok) {
+  const r = rgRegSichtbar()[0]?.dataset.r, knopf = () => document.querySelector(`#register button[data-r="${r}"]`), n = rgRegSichtbar().length; if (!r || n < 2) return;
+  const a = await rgFpunkt(knopf(), tok); await rgFzu(a.x, a.y, 650, tok); rgFdruck(true); rgFring(a.x, a.y, true); knopf().classList.add("rg-gedrueckt"); await rgFwarte(800, tok);
+  const el = knopf(), g = el.cloneNode(true); g.id = "rgGeist"; g.removeAttribute("onclick"); g.querySelectorAll("svg").forEach((x) => x.remove());
+  const cs = getComputedStyle(el); for (const k of ["background", "color", "font", "borderRadius", "border", "padding", "display", "alignItems", "justifyContent", "gap", "boxSizing", "textAlign", "whiteSpace", "lineHeight"]) g.style[k] = cs[k];
+  g.classList.remove("rg-gedrueckt", "rg-puls", "zieht", "rg-zieht-weg", "an"); g.classList.add("an"); g.className += " rg-geist"; Object.assign(g.style, { left: a.r.left + "px", top: a.r.top + "px", width: a.r.width + "px", height: a.r.height + "px", transform: "scale(1.12) rotate(-3deg)" }); document.body.appendChild(g);
+  el.classList.remove("rg-gedrueckt"); let gx = 0;
+  const geistZu = async (x, ms) => { const von = gx; gx = x - a.x; try { g.animate([{ transform: `translateX(${von}px) scale(1.12) rotate(-3deg)` }, { transform: `translateX(${gx}px) scale(1.12) rotate(-3deg)` }], { duration: ms, easing: "ease-in-out", fill: "forwards" }); } catch {} await rgFzu(x, a.y, ms, tok); };
+  for (let k = 1; k < n; k++) {
+    knopf()?.classList.add("rg-zieht-weg");
+    const sicht = rgRegSichtbar(), ziel = sicht[k]?.getBoundingClientRect(); if (!ziel) break;
+    await geistZu(ziel.left + ziel.width / 2, 900);
+    const nach = sicht[k].dataset.r, reihe = [...document.querySelectorAll("#register button")].map((b) => b.dataset.r).filter((x) => x !== r); reihe.splice(reihe.indexOf(nach) + 1, 0, r);
+    rgRegisterReihe(reihe); knopf()?.classList.add("rg-zieht-weg"); await rgFwarte(450, tok);
+  }
+  rgFdruck(false); await rgFwarte(150, tok); g.remove(); knopf()?.classList.remove("rg-zieht-weg");
+  const b = knopf(); b?.classList.add("zieht"); await rgFwarte(500, tok); b?.classList.remove("zieht");
 }
 const rgDrehKachel = () => [...document.querySelectorAll("#raster > .kachel")].find((k) => krAktionen(k.dataset.id).length && rgSichtbar(k));
-function rgDrehen(an) {
+const rgPinnwandKachel = () => { const k = document.querySelector('#raster > .kachel[data-id="pinnwand"]'); return k && rgSichtbar(k) && krAktionen("pinnwand").length ? k : rgDrehKachel(); };
+async function rgFdrehen(id, tok, zurueck) { // sichtbar drehen: bis zur Kante, Inhalt wechseln, wieder nach vorn (eigene Animation, unabhängig von der Handy-Einstellung)
+  const q = () => document.querySelector(`#raster > .kachel[data-id="${id}"]`); let el = q(); if (!el) return;
+  let h; try { h = el.animate([{ transform: "perspective(600px) rotateY(0deg)" }, { transform: "perspective(600px) rotateY(90deg)" }], { duration: 450, easing: "ease-in", fill: "forwards" }); } catch {}
+  await rgFwarte(460, tok);
+  if (zurueck) rgDrehen(false); else rgDrehen(true, el);
+  await rgFwarte(220, tok); try { h?.cancel(); } catch {} el = q();
+  try { el?.animate([{ transform: "perspective(600px) rotateY(-90deg)" }, { transform: "perspective(600px) rotateY(0deg)" }], { duration: 450, easing: "ease-out" }); } catch {}
+  await rgFwarte(470, tok);
+}
+function rgDrehen(an, kachel) {
   const offen = document.querySelector("#raster > .kachel.kr-hinten");
   if (!an) { if (offen) krUmdrehen(offen, true); return; }
-  if (offen) return; const k = rgDrehKachel(); if (!k) return;
+  if (offen) return; const k = kachel || rgDrehKachel(); if (!k) return;
   krUmdrehen(k); if (!RG.drehZurueck) { RG.drehZurueck = true; RG.zurueck.push(() => { RG.drehZurueck = false; rgDrehen(false); }); }
   setTimeout(() => { clearTimeout(KR.zu); RG.ziel = document.querySelector("#raster > .kachel.kr-hinten") || RG.ziel; rgLage(); }, 300); // bleibt offen, solange erzählt wird
 }
@@ -1701,16 +1743,20 @@ const RG_OBERFLAECHE = [
   { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(false); rgAusDemo(true); }, sel: ["#kaAusHinweis"], mussSel: true, t: "👀 Verborgene anzeigen",
     x: "Sind Kacheln verborgen, steht das unter den Kacheln. Mit Nur ausgeblendete zeigen holst du sie zum Benutzen hervor – und mit dem Knopf verschwinden sie wieder.",
     live: async (L) => { await L.tipp("#kaAusHinweis .ka-nuraus"); kaNurAus(true); L.ziel(); await L.warte(2200); await L.tipp("#kaAusHinweis .ka-nuraus.an"); kaNurAus(false); } },
-  { v: "start", nur: () => !einfach() && krAn(), vor: () => { rgKopf("ganz"); rgAusDemo(false); rgDrehen(false); }, sel: ["#raster > .kachel.kr-hinten", () => rgDrehKachel()], t: "🔄 Kachel umdrehen",
-    x: () => { const k = document.querySelector("#raster > .kachel.kr-hinten") || rgDrehKachel(), a = k ? krAktionen(k.dataset.id).map((x) => x[1]) : [];
-      return `Ich tippe zweimal schnell auf eine Kachel – sie dreht sich um. Hinten stehen Abkürzungen${a.length ? ": " + a.join(", ") : ""}. Mit dem Pfeil oben dreht sie sich zurück.`; },
-    live: async (L) => { const k = rgDrehKachel(); if (!k) return; await L.tipp(() => k, "doppelt"); rgDrehen(true); await L.warte(3200); await L.tipp("#raster > .kachel.kr-hinten .kr-zurueck"); rgDrehen(false); } },
+  { v: "start", nur: () => !einfach() && krAn(), vor: () => { rgKopf("ganz"); rgAusDemo(false); rgDrehen(false); if (REGISTER.some(([x]) => x === "verein")) rgRegister("verein"); },
+    sel: ["#raster > .kachel.kr-hinten", () => rgPinnwandKachel(), "#v-pinnwand .kopf2"], t: "🔄 Kachel umdrehen",
+    x: () => { const k = rgPinnwandKachel(), a = k ? krAktionen(k.dataset.id).map((x) => x[1]) : [], name = kaSortiert(reg).find((x) => x.id === k?.dataset.id)?.t || "eine Kachel";
+      return `Hier im Register Club tippe ich zweimal schnell auf ${name === "Pinnwand" ? "die Kachel Pinnwand" : name} – sie dreht sich um. Hinten stehen Abkürzungen${a.length ? ": " + a.join(" und ") : ""}. Ich tippe auf ${a[a.length - 1] || "eine davon"} – und schon ist sie offen.`; },
+    live: async (L) => { const k = rgPinnwandKachel(); if (!k) return; const id = k.dataset.id, akt = krAktionen(id), letzte = akt.length - 1;
+      await L.tipp(() => k, "doppelt"); await rgFdrehen(id, RG.liveTok); L.ziel(); await L.warte(2600);
+      await L.tipp(`#raster > .kachel.kr-hinten [data-kr="${letzte}"]`); rgDrehen(false); try { akt[letzte]?.[2](); } catch {} await L.warte(300); L.ziel(); await L.warte(2200); } },
   { v: "start", nur: () => !einfach() && REGISTER.length > 1, vor: () => { rgDrehen(false); rgKopf("ganz"); rgRegisterTausch(false); }, sel: ["#register"], mussSel: true, t: "🗂️ Register anordnen",
-    x: () => `Die Register oben kannst du auch anordnen: ein Register festhalten, bis es sich hebt, zur Seite ziehen und loslassen. Ich ziehe ${rgRegName(0)} hinter ${rgRegName(1)} – jetzt steht ${rgRegName(1)} vorne. Die App merkt sich deine Reihenfolge.`,
-    live: async (L) => { if (await L.ziehen("#register button:nth-child(1)", "#register button:nth-child(2)")) rgRegisterTausch(true); } },
-  { v: "start", nur: () => !einfach() && REGISTER.length > 1, vor: () => { rgRegisterTausch(false); rgKopf("ganz"); rgRegister(REGISTER[0][0]); }, sel: ["#raster"], puls: [".wischhinweis", "#register button.an"], t: "👆 Wischen",
-    x: () => `Am schnellsten wechselst du die Register mit dem Finger: Ich wische über die Kacheln nach links – schon bin ich in ${rgRegName(1)}. Nach rechts gewischt geht es zurück zu ${rgRegName(0)}.`,
-    live: async (L) => { const a = REGISTER[0][0], b = REGISTER[1][0]; await L.wischen("#raster", 1); register(b, 1); await L.warte(2000); await L.wischen("#raster", -1); register(a, -1); } },
+    x: () => { const n = rgRegNamen(), neu = [...n.slice(1), n[0]];
+      return `Die Register oben kannst du selbst anordnen. Ich halte ${n[0]} fest, bis es sich hebt, und ziehe es nach rechts – ${n.length > 2 ? `${n.slice(1).join(" und ")} rücken` : `${n[1]} rückt`} dabei nach links. Loslassen – jetzt ist die Reihenfolge ${neu.join(", ")}. Die App merkt sich das.`; },
+    live: async () => { await rgFregisterZiehen(RG.liveTok); } },
+  { v: "start", nur: () => !einfach() && REGISTER.length > 1, vor: () => { rgRegisterTausch(false); rgKopf("ganz"); rgRegister(rgRegSichtbar()[0]?.dataset.r || REGISTER[0][0]); }, sel: ["#raster"], puls: [".wischhinweis", "#register button.an"], t: "👆 Wischen",
+    x: () => { const n = rgRegNamen(); return `Am schnellsten wechselst du die Register mit dem Finger: Ich wische über die Kacheln nach links – schon bin ich in ${n[1]}. Nach rechts gewischt geht es zurück zu ${n[0]}.`; },
+    live: async (L) => { const v = rgRegSichtbar().map((x) => x.dataset.r), a = v[0], b = v[1]; if (!b) return; await L.wischen("#raster", 1); register(b, 1); await L.warte(2000); await L.wischen("#raster", -1); register(a, -1); } },
   { v: "start", vor: () => { rgKopf(); rgAnordnen(false); }, t: "✅ Fertig", x: () => einfach() ? "Das war's: Kopf einrollen und Kacheln anordnen. In der erweiterten Ansicht kannst du noch viel mehr – schau dir das Video dort noch einmal an. Probier es einfach aus!"
     : "Das war's: Kopf einrollen, blättern, Kacheln verschieben, verbergen und umdrehen, Register anordnen und wischen. So gestaltest du dir deine Wunsch-Oberfläche – probier es einfach aus!" },
 ];
@@ -1921,7 +1967,7 @@ async function rgFziehen(el, ziel, tok) {
   const g = el.cloneNode(true); g.id = "rgGeist"; g.removeAttribute("onclick"); g.querySelectorAll("[id], svg").forEach((x) => (x.tagName.toLowerCase() === "svg" ? x.remove() : x.removeAttribute("id")));
   const cs = getComputedStyle(el); // Abbild sieht aus wie das Original, auch wo das Aussehen am Elternteil hängt (z. B. #register button)
   for (const k of ["background", "color", "font", "borderRadius", "border", "padding", "display", "flexDirection", "alignItems", "justifyContent", "gap", "boxSizing", "textAlign", "whiteSpace", "lineHeight"]) g.style[k] = cs[k];
-  g.className += " rg-geist"; Object.assign(g.style, { left: a.r.left + "px", top: a.r.top + "px", width: a.r.width + "px", height: a.r.height + "px" }); document.body.appendChild(g);
+  g.classList.remove("rg-gedrueckt", "rg-puls", "zieht", "rg-zieht-weg"); g.className += " rg-geist"; Object.assign(g.style, { left: a.r.left + "px", top: a.r.top + "px", width: a.r.width + "px", height: a.r.height + "px" }); document.body.appendChild(g);
   el.classList.remove("rg-gedrueckt"); el.classList.add("rg-zieht-weg");
   const bx = b.left + b.width / 2, by = b.top + b.height / 2, dx = bx - a.x, dy = by - a.y;
   try { g.animate([{ transform: "translate(0,0) scale(1.06) rotate(-2deg)" }, { transform: `translate(${dx}px,${dy}px) scale(1.06) rotate(2deg)` }], { duration: 1100, easing: "ease-in-out", fill: "forwards" }); } catch {}

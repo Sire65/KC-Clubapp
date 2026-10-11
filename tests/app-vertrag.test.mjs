@@ -5705,8 +5705,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(lauf === RG\.lauf && RG\.an && !RG\.pause && RG\.liveLaeuft\) \{ RG\.nachLive = weiter; return; \}/.test(html), "Weiterblättern wartet auf die Vorführung");
   assert.ok(/RG\.liveTok\+\+; RG\.liveLaeuft = false; RG\.nachLive = null; RG\.tippLaeuft = false; rgFingerWeg\(\);/.test(html), "jeder Stationswechsel, Pause und Ende bricht die Vorführung ab");
   for (const q of ['tippVor: "#v-nachrichten .kopf2 .knopf.haupt"', 'tippVor: "#neuTreffenKnopf"', 'tippVor: "#pwNeuKnopf"', 'tippVor: "#vorschlagNeuKnopf"', "tippVor: '#spTabs button[data-t=\"mg\"]'", "tippVor: '#raster .kachel[data-id=\"avatar\"]'"]) assert.ok(html.includes(q), `Finger tippt: ${q}`);
-  assert.ok(/await L\.ziehen\("#register button:nth-child\(1\)", "#register button:nth-child\(2\)"\)\) rgRegisterTausch\(true\)/.test(html) && /await L\.tipp\(\(\) => k, "doppelt"\); rgDrehen\(true\)/.test(html) && /await L\.wischen\("#raster", 1\); register\(b, 1\)/.test(html), "Oberfläche: Register ziehen, Kachel umdrehen, wischen – live");
+  assert.ok(/live: async \(\) => \{ await rgFregisterZiehen\(RG\.liveTok\); \}/.test(html) /* 2.262.0 */ && /await L\.tipp\(\(\) => k, "doppelt"\); await rgFdrehen\(id, RG\.liveTok\)/.test(html) && /await L\.wischen\("#raster", 1\); register\(b, 1\)/.test(html), "Oberfläche: Register ziehen, Kachel umdrehen, wischen – live");
   assert.ok(/\.rg-finger \{ position: fixed;[^}]*z-index: 9003/.test(seite) && /\.rg-tippring \{/.test(seite) && /\.rg-geist \{/.test(seite), "Finger, Tipp-Kreis und Abbild über der Video-Schicht");
+}
+
+// 2.262.0 KC-CLUB-VIDEO-LIVE-2 (Fund Hansi: Kachel dreht sich im Video nicht sichtbar; Verschieben der Register schlecht zu sehen)
+{
+  const b = html.slice(html.indexOf("function rgRegisterTausch("), html.indexOf("const RG_OBERFLAECHE = ["));
+  assert.ok(/async function rgFdrehen\(id, tok, zurueck\)/.test(b) && /rotateY\(90deg\)/.test(b) && /rotateY\(-90deg\)/.test(b), "eigene, langsame Drehung – sichtbar auch bei „Bewegung reduzieren“");
+  assert.ok(/const rgPinnwandKachel = \(\) => \{ const k = document\.querySelector\('#raster > \.kachel\[data-id="pinnwand"\]'\)/.test(b) && /rgRegister\("verein"\)/.test(html) && /akt\[letzte\]\?\.\[2\]\(\)/.test(html), "Register Club: Pinnwand umdrehen und hinten „Pinnwand“ öffnen");
+  assert.ok(/function rgRegisterFlip\(aendern\)/.test(b) && /async function rgFregisterZiehen\(tok\)/.test(b) && /const rgRegSichtbar = \(\) =>/.test(b), "Register: hochheben, Stück für Stück ziehen, die anderen rücken sichtbar nach – nur sichtbare Register");
+  assert.ok(/g\.classList\.remove\("rg-gedrueckt", "rg-puls", "zieht", "rg-zieht-weg"/.test(html), "Abbild ohne „gedrückt“-Klasse (sonst bewegt es sich nicht)");
+  assert.ok(!/kaSpeichern\(|api\(/.test(b), "nichts gespeichert");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

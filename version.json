@@ -1,12 +1,20 @@
 {
-  "version": "2.261.0",
+  "version": "2.262.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "👆 Erklär-Videos zeigen jetzt alles live: Ein Finger tippt, drückt, zieht und wischt – und du siehst, was passiert",
-    "🎨 Video „Oberfläche nach Wunsch“: Kachel umdrehen, verschieben, verbergen, Register ziehen und Wischen live vorgeführt"
+    "🔄 Video „Oberfläche“: Die Kachel Pinnwand dreht sich sichtbar um, dann öffnet sich die Pinnwand",
+    "🗂️ Register verschieben: Club wird hochgehoben und nach rechts gezogen – die anderen rücken sichtbar nach"
   ],
   "verlauf": [
+    {
+      "version": "2.262.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🔄 Video „Oberfläche“: Die Kachel Pinnwand dreht sich sichtbar um, dann öffnet sich die Pinnwand",
+        "🗂️ Register verschieben: Club wird hochgehoben und nach rechts gezogen – die anderen rücken sichtbar nach"
+      ]
+    },
     {
       "version": "2.261.0",
       "datum": "2026-10-11",
