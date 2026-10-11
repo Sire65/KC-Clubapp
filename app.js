@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.273.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.274.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1743,6 +1743,16 @@ const RG_OBERFLAECHE = [
   { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(false); rgAusDemo(true); }, sel: ["#kaAusHinweis"], mussSel: true, t: "👀 Verborgene anzeigen",
     x: "Sind Kacheln verborgen, steht das unter den Kacheln. Mit Nur ausgeblendete zeigen holst du sie zum Benutzen hervor – und mit dem Knopf verschwinden sie wieder.",
     live: async (L) => { await L.tipp("#kaAusHinweis .ka-nuraus"); kaNurAus(true); L.ziel(); await L.warte(2200); await L.tipp("#kaAusHinweis .ka-nuraus.an"); kaNurAus(false); } },
+  // 2.274.0 KC-CLUB-VIDEO-ZAHLEN (Wunsch Hansi): die Zahlen hinten am Register (z. B. 10/12) und auf den Kacheln erklären.
+  // Gesprochen wird „10 von 12“ – „10/12“ läsen manche Stimmen als Datum vor.
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(false); kaNurAus(false); rgAusDemo(true); }, sel: ["#register button.an"], puls: ["#register button.an .anz"], mussSel: true, t: "🔢 Die Zahl am Register",
+    x: () => { const b = document.querySelector("#register button.an"), m = b?.querySelector(".anz")?.textContent.match(/^(\d+)\/(\d+)$/), name = REGISTER.find(([r]) => r === b?.dataset.r)?.[1] || "dem Register", weg = m ? m[2] - m[1] : 0;
+      return (m ? `Hinten an ${name} steht jetzt eine Zahl mit Schrägstrich: ${m[1]} von ${m[2]}. Das heißt: ${m[1]} Kacheln sind sichtbar, ${weg} ${weg === 1 ? "ist" : "sind"} ausgeblendet. `
+        : "Hinten an jedem Register steht eine Zahl – so viele Kacheln sind darin. ") + "Steht dort zum Beispiel 10 von 12, sind 10 Kacheln sichtbar und 2 ausgeblendet. Die ausgeblendeten kannst du jederzeit wieder einblenden – so wie eben gezeigt. Steht nur eine Zahl da, ist nichts ausgeblendet."; } },
+  { v: "start", vor: () => { rgKopf("ganz"); rgAnordnen(false); rgAusDemo(false); if (!einfach() && REGISTER.some(([x]) => x === "verein")) rgRegister("verein"); },
+    sel: [() => document.querySelector("#raster .kachel[data-id] > .zahl")?.parentElement || null, "#raster"], puls: ["#raster .kachel[data-id] > .zahl"], t: "🔴 Zahlen auf den Kacheln",
+    x: () => { const n = document.querySelectorAll("#raster .kachel[data-id] > .zahl").length;
+      return `Auf manchen Kacheln steht eine Zahl. Sie zeigt dir, was auf dich wartet – zum Beispiel ungelesene Nachrichten, Termine, auf die du noch nicht geantwortet hast, oder offene Zettel an der Pinnwand. ${n ? "Ich lasse die Zahlen gerade aufleuchten. " : "Gerade wartet hier nichts auf dich – deshalb siehst du keine Zahl. "}Hast du alles angesehen, wird die Zahl kleiner und verschwindet.`; } },
   { v: "start", nur: () => !einfach() && krAn(), vor: () => { rgKopf("ganz"); rgAusDemo(false); rgDrehen(false); if (REGISTER.some(([x]) => x === "verein")) rgRegister("verein"); },
     sel: ["#raster > .kachel.kr-hinten", () => rgPinnwandKachel(), "#v-pinnwand .kopf2"], t: "🔄 Kachel umdrehen",
     x: () => { const k = rgPinnwandKachel(), a = k ? krAktionen(k.dataset.id).map((x) => x[1]) : [], name = kaSortiert(reg).find((x) => x.id === k?.dataset.id)?.t || "eine Kachel";
@@ -1763,7 +1773,7 @@ const RG_OBERFLAECHE = [
     live: async (L) => { await L.warte(1500); if (!einfach() && REGISTER.some(([r]) => r === "mein")) { if (reg !== "mein") { await L.tipp('#register button[data-r="mein"]'); rgRegister("mein"); await L.warte(900); L.ziel(); await L.warte(400); } await L.tipp(rgKachel("einstellungen")); }
       else await L.tipp(`#fuss [onclick="zeige('einstellungen')"]`); zeige("einstellungen", true); scrollTo(0, 0); L.ziel(); await L.warte(2500); } },
   { v: "start", vor: () => { rgKopf(); rgAnordnen(false); }, t: "✅ Fertig", x: () => einfach() ? "Das war's: Kopf einrollen und Kacheln anordnen. In der erweiterten Ansicht kannst du noch viel mehr – schau dir das Video dort noch einmal an. Probier es einfach aus!"
-    : "Das war's: Kopf einrollen, blättern, Kacheln verschieben, verbergen und umdrehen, Register anordnen und wischen. So gestaltest du dir deine Wunsch-Oberfläche – probier es einfach aus!" },
+    : "Das war's: Kopf einrollen, blättern, Kacheln verschieben, verbergen und umdrehen, die Zahlen verstehen, Register anordnen und wischen. So gestaltest du dir deine Wunsch-Oberfläche – probier es einfach aus!" },
 ];
 // KC-CLUB-ERKLAERVIDEOS-5 (2.269.0, Wunsch Hansi „prüfen, ob noch Schulungsvideos fehlen, und weiter erstellen“): Mein Dienst & Dienstplan,
 // Mein Status, Protokolle & Dokumente, Meine Daten & Änderungen melden. Nur vorgeführt – nichts gespeichert, gemeldet oder als gelesen markiert;
@@ -2148,7 +2158,7 @@ const RUNDGAENGE = [
   { id: "warum", stand: "1", sym: "💡", t: "Warum diese App? – Zum Einstieg", u: "Was die App dir bringt – einfach erklärt (ca. 2 Min.)", st: () => RG_WARUM }, // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: als Erstes
   { id: "ueberblick", stand: "2", sym: "🗺️", t: "Rundgang: die App im Überblick", u: "Oberfläche, Knöpfe, Register und was die App kann (ca. 3 Min.)", st: () => RUNDGANG },
   { id: "einstellungen", stand: "2", sym: "⚙️", t: "Alle Einstellungen erklärt", u: "Was jede Einstellung bedeutet – mit Beispielen (ca. 6 Min.)", st: () => RG_EINSTELLUNGEN },
-  { id: "oberflaeche", stand: "1", sym: "🎨", t: "Oberfläche nach Wunsch", u: "Kopf einrollen, Kacheln verschieben, verbergen, umdrehen, Register, Wischen (ca. 3 Min.)", st: () => RG_OBERFLAECHE }, // 2.258.0 KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE
+  { id: "oberflaeche", stand: "2", sym: "🎨", t: "Oberfläche nach Wunsch", u: "Kopf einrollen, Kacheln verschieben, verbergen, umdrehen, Zahlen, Register, Wischen (ca. 3 Min.)", st: () => RG_OBERFLAECHE }, // 2.258.0 KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE
   { id: "nachricht", stand: "1", sym: "💬", t: "Neue Nachricht schreiben", u: "Empfänger wählen, schreiben, senden (ca. 1 Min.)", st: () => RG_NACHRICHT },
   { id: "termin", stand: "1", sym: "📅", t: "Termin eintragen", u: "Privater Termin, Wiederholen, Erinnerung (ca. 2 Min.)", st: () => RG_TERMIN },
   { id: "pinnwand", stand: "1", sym: "📌", t: "Zettel an die Pinnwand", u: "Schreiben, wichtig, für wen, anheften (ca. 1 Min.)", st: () => RG_PINNWAND },

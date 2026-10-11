@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.274.0 – 2026-10-11 – KC-CLUB-VIDEO-ZAHLEN: Video erklärt die Zahlen an Registern und Kacheln
+Im Erklär-Video „Oberfläche nach Wunsch“ zwei neue Schritte: die Zahl hinten am Register (z. B. 10/12 = 10 Kacheln sichtbar, 2 ausgeblendet – wieder einblendbar) und die Zahlen auf den Kacheln (ungelesene Nachrichten, offene Termine, offene Zettel an der Pinnwand) – live mit aufleuchtender Zahl.
+
 ## 2.273.0 – 2026-10-11 – KC-CLUB-JAHRESZEIT-AUTOMATIK: Jahreszeiten-Automatik nach Kalender, Eiszapfen im tiefen Winter
 Neue Wahl „📅 Welche Jahreszeit?“ in den Einstellungen: 🔄 Automatik (Standard) stellt die Kopfleiste nach den offiziellen Anfängen (Frühling, Sommer, Herbst, Winter – astronomisch auf die Minute) von selbst um, oder eine feste Jahreszeit. Im tiefen Winter (Winteranfang bis Februar, an Frosttagen laut frischem Wetter oder bei fester Wahl Winter) hängen kurze Eiszapfen (höchstens 9 px) an der LED-Leiste.
 

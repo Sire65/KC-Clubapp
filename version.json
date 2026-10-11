@@ -1,12 +1,18 @@
 {
-  "version": "2.273.0",
+  "version": "2.274.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🔄 Jahreszeiten-Automatik nach offiziellem Kalender (Frühlings-, Sommer-, Herbst-, Winteranfang)",
-    "❄️ Kurze Eiszapfen an der LED-Leiste im tiefen Winter"
+    "🔢 Erklär-Video „Oberfläche nach Wunsch“: was die Zahlen an Registern (z. B. 10/12) und auf den Kacheln bedeuten"
   ],
   "verlauf": [
+    {
+      "version": "2.274.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🔢 Erklär-Video „Oberfläche nach Wunsch“: was die Zahlen an Registern (z. B. 10/12) und auf den Kacheln bedeuten"
+      ]
+    },
     {
       "version": "2.273.0",
       "datum": "2026-10-11",

@@ -5763,6 +5763,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/einfach\(\) \|\| !fxAn\(\) \|\| !einst\("jahreszeit", true\) \|\| !jzTieferWinter\(art\)/.test(html), "keine Eiszapfen in der einfachen Ansicht, ohne Effekte oder Jahreszeiten");
   assert.ok(/Date\.now\(\) - new Date\(r\.stand\) <= WETTER_VERALTET_MIN \* 60000/.test(html), "Frost nur aus frischen Wetterdaten");
 }
+// 2.274.0 KC-CLUB-VIDEO-ZAHLEN (Wunsch Hansi): Video „Oberfläche nach Wunsch“ erklärt die Zahl am Register (10/12 = 10 sichtbar, 2 ausgeblendet) und die Zahlen auf den Kacheln
+{
+  assert.ok(/t: "🔢 Die Zahl am Register"/.test(html) && /Steht dort zum Beispiel 10 von 12, sind 10 Kacheln sichtbar und 2 ausgeblendet/.test(html), "Register-Zahl erklärt");
+  assert.ok(/puls: \["#register button\.an \.anz"\]/.test(html) && /rgAusDemo\(true\); \}, sel: \["#register button\.an"\]/.test(html), "live: eine Kachel ist ausgeblendet, die Zahl leuchtet auf");
+  assert.ok(/t: "🔴 Zahlen auf den Kacheln"/.test(html) && /ungelesene Nachrichten, Termine, auf die du noch nicht geantwortet hast, oder offene Zettel an der Pinnwand/.test(html), "Kachel-Zahlen erklärt");
+  assert.ok(/id: "oberflaeche", stand: "2"/.test(html), "Video-Stand erhöht");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
