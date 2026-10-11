@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.290.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.291.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1955,6 +1955,11 @@ function rgFest(id, an) { // festes Fenster (z. B. Verbindung) für das Video ze
   if (an && !RG["fest_" + id]) { RG["fest_" + id] = true; RG.zurueck.push(() => { RG["fest_" + id] = false; f.classList.add("versteckt"); f.classList.remove("rg-zeigen"); }); }
   if (an) f.classList.add("rg-zeigen"); else { f.classList.add("versteckt"); f.classList.remove("rg-zeigen"); }
 }
+function rgKachelDemo(stufe) { // nur vorgeführt: Kachelgröße am Raster zeigen (stufe null = wieder wie eingestellt); gespeichert wird nichts
+  if (stufe && !RG.kachelDemo) RG.zurueck.push(() => { RG.kachelDemo = null; try { kachelnZeigen(); } catch (e) { /* nur Anzeige */ } });
+  RG.kachelDemo = stufe || null; // kachelnZeigen() nimmt während des Videos diese Größe statt der gespeicherten
+  try { kachelnZeigen(); } catch (e) { /* nur Anzeige */ }
+}
 const RG_SPEZIAL = [
   { v: "start", vor: () => { rgKopf("offen"); rgKlick(false); }, t: "🔎 Versteckte Helfer",
     x: "In der App stecken viele kleine Helfer, die man leicht übersieht. Ich zeige sie dir der Reihe nach. Alles ist nur ein Angebot – nichts davon musst du benutzen." },
@@ -1984,6 +1989,16 @@ const RG_SPEZIAL = [
     x: "Das Wort Schnellzugriff über den Kacheln ist selbst ein Knopf: Antippen zeigt oben im Info-Feld deine Schnellstart-Symbole – ein Tipp, und es geht sofort los.",
     live: async (L) => { await L.tipp(".sz-link"); rgKopf("offen"); rgInfoKarte("schnellstart"); L.ziel(); } },
   rgOb("👆 Lange drücken"), rgOb("✋ Verschieben"), rgOb("✅ Fertig", 0), rgOb("🔄 Kachel umdrehen"), rgOb("🗂️ Register anordnen"), rgOb("👆 Wischen"),
+  // 2.291.0 KC-CLUB-VIDEO-KACHELGROESSE (Wunsch Hansi): Kachelgröße 3 × 3 / 4 × 4 – Einstellung zeigen, dann auf der Startseite vorführen
+  { v: "einstellungen", nur: () => !einfach(), vor: () => rgAuf("darstellung"), tippVor: () => { const d = document.querySelector(rgKlappe("darstellung")); return d && !d.open ? d.querySelector(":scope > summary") : null; },
+    sel: ["#kachelGroesseWahl"], mussSel: true, puls: ['#kachelGroesseWahl [data-g="klein"]', '#kachelGroesseWahl [data-g="mini"]'], t: "🔲 Kacheln: 2, 3 oder 4 nebeneinander",
+    x: "Wie groß die Kacheln auf der Startseite sind, stellst du in den Einstellungen unter Darstellung ein: Normal – zwei nebeneinander, Klein – drei nebeneinander, also 3 mal 3, oder Sehr klein – vier nebeneinander, also 4 mal 4. So passen mehr Kacheln auf einen Blick. Das gilt in der erweiterten Ansicht und nur für dieses Gerät.",
+    live: async (L) => { await L.tipp('#kachelGroesseWahl [data-g="klein"]'); await L.warte(1500); await L.tipp('#kachelGroesseWahl [data-g="mini"]'); } },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgKachelDemo("klein"); }, sel: ["#raster"], mussSel: true, t: "▦ So sieht 3 × 3 aus",
+    x: "Mit Klein stehen drei Kacheln nebeneinander – mit Symbol, Name und einer kurzen Zeile darunter." },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgKachelDemo("mini"); }, sel: ["#raster"], mussSel: true, t: "▪ So sieht 4 × 4 aus",
+    x: "Mit Sehr klein stehen vier nebeneinander – nur noch Symbol und Name. Per Sprache geht es auch: Kachelgröße 4 mal 4. Ich stelle gleich zurück, deine Einstellung bleibt, wie sie ist.",
+    nach: () => rgKachelDemo(null) },
   { v: "start", vor: () => { rgKopf("ganz"); rgDrehen(false); }, sel: ["#ansichtKnopf", ".ansichtname"], puls: ["#ansichtKnopf"], t: "🔧 Erweiterte Ansicht",
     x: "Ganz unten auf der Startseite steht der Knopf Erweiterte Ansicht – damit siehst du alle Funktionen. Zurück geht es genauso mit Einfache Ansicht. Oben neben Schnellzugriff steht, welche Ansicht gerade gilt; antippen wechselt ebenfalls." },
   { v: "start", vor: () => { rgKopf("ganz"); rgKlick(false); }, sel: ["#suLupe"], puls: ["#suLupe"], t: "🔍 Die Lupe",
@@ -2440,7 +2455,7 @@ const RUNDGAENGE = [
   { id: "fit", stand: "1", sym: "🏋️", t: "Fit bleiben", u: "Übungen mit Twinkey – Stufe, Dauer, Auswertung (ca. 1 Min.)", st: () => RG_FIT, nur: () => frei("fitness") },
   { id: "studio", stand: "1", sym: "🎬", t: "Studio: live zeigen", u: "Einem Mitglied die eigene App live zeigen (ca. 1 Min.)", st: () => RG_STUDIO, nur: () => !!studioStufe() },
   { id: "technik", stand: "1", sym: "🔧", t: "Technik: Update & Sicherheit", u: "Version, Sicherheits-Check, Test an mich, Programme (ca. 2 Min.)", st: () => RG_TECHNIK },
-  { id: "spezial", stand: "1", sym: "🔎", t: "Versteckte Helfer", u: "Kochmütze, Tag/Nacht, Pfeile, Pünktchen, Wischen, Lämpchen, Schnellzugriff, Kacheln, Lupe, Hand, Fragezeichen (ca. 5 Min.)", st: () => RG_SPEZIAL }, // 2.272.0 KC-CLUB-ERKLAERVIDEOS-8
+  { id: "spezial", stand: "1", sym: "🔎", t: "Versteckte Helfer", u: "Kochmütze, Tag/Nacht, Pfeile, Pünktchen, Wischen, Lämpchen, Schnellzugriff, Kacheln, 3 × 3 / 4 × 4, Lupe, Hand, Fragezeichen (ca. 5 Min.)", st: () => RG_SPEZIAL }, // 2.272.0 KC-CLUB-ERKLAERVIDEOS-8
   { id: "zentrale", stand: "1", sym: "📡", t: "Kommunikationszentrale", u: "Im Kopf: an wen, Pult, Anrufen, Anklopfen, Schnellnachricht (ca. 2 Min.)", st: () => RG_ZENTRALE },
   { id: "sprache", stand: "1", sym: "🎙️", t: "Sprachsteuerung komplett", u: "Einschalten, Mikrofon, alle Befehle, weiter diktieren, Training (ca. 3 Min.)", st: () => RG_SPRACHE },
   { id: "effekte", stand: "1", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 3 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
@@ -13447,8 +13462,9 @@ function kachelnZeigen() {
   if (ZIEHEN) return; // nicht neu zeichnen, während eine Kachel am Finger hängt
   if (KR.offen && document.querySelector("#raster > .kachel.kr-hinten")) return; // 2.54.0: Rückseite bleibt, bis sie zurückdreht
   $("raster").classList.toggle("ad-raster", reg === "admin" && !einfach()); // KC-CLUB-ADMIN-REGISTER: kleinere Kacheln, 3 je Reihe
-  $("raster").classList.toggle("klein3", reg !== "admin" && !einfach() && kachelKlein()); // KC-CLUB-KACHEL-KLEIN (2.23.87): auf Wunsch überall 3 je Reihe
-  $("raster").classList.toggle("klein4", reg !== "admin" && !einfach() && kachelStufe() === "mini"); // KC-CLUB-KACHEL-MINI (2.54.0): 4 je Reihe
+  const kStufe = (RG.an && RG.kachelDemo) || kachelStufe(); // 2.291.0 KC-CLUB-VIDEO-KACHELGROESSE: im Erklärvideo die vorgeführte Größe
+  $("raster").classList.toggle("klein3", reg !== "admin" && !einfach() && kStufe !== "normal"); // KC-CLUB-KACHEL-KLEIN (2.23.87): auf Wunsch überall 3 je Reihe
+  $("raster").classList.toggle("klein4", reg !== "admin" && !einfach() && kStufe === "mini"); // KC-CLUB-KACHEL-MINI (2.54.0): 4 je Reihe
   if (kaBearb) {
     $("kaAusHinweis").innerHTML = "";
     if (einfach()) { // einfache Ansicht: untereinander, nur ▲ / ▼ (kein Ausblenden)

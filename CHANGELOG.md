@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.291.0 – 2026-10-11 – KC-CLUB-VIDEO-KACHELGROESSE: Kachelgröße 3 × 3 / 4 × 4 im Video „Versteckte Helfer“
+Wunsch Hansi: Drei neue Stationen nach dem Kachel-Anordnen – Einstellung unter ⚙️ → Darstellung → „Kacheln auf der Startseite“ (Finger tippt Klein und Sehr klein an), dann auf der Startseite vorgeführt: 3 nebeneinander, 4 nebeneinander, mit Hinweis auf den Sprachbefehl. Nur vorgeführt – die eigene Kachelgröße bleibt; während des Videos nimmt kachelnZeigen() die vorgeführte Größe, am Ende wieder die gespeicherte.
+
 ## 2.290.0 – 2026-10-11 – KC-CLUB-SCHLEIMSPUR-2: Schleimspur bleibt liegen
 Wunsch Hansi: Die Spur wanderte mit dem Trupp mit. Jetzt steht sie fest im Streifen (rechts verankert, auch das unregelmäßige Muster) und wächst im Takt der Schnecken bis unter die erste nach. Die Glanzpunkte funkeln an Ort und Stelle statt zu wandern.
 

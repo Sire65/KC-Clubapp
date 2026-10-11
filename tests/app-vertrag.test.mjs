@@ -8632,3 +8632,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/-webkit-mask: url\("data:image\/svg\+xml,[^"]+"\) right 0 \/ 140px 9px repeat-x; mask: url/.test(seite), "unregelmäßige Form über Maske (auch alte Handys mit -webkit-)");
   assert.ok(/\.schnecke \.sn-spur::after \{[^}]*animation: snGlanz/.test(seite) && /:root\.ohne-anim \.schnecke \.sn-spur \{ display: none; \}/.test(seite), "Glanz läuft, ohne Animation keine Spur");
 }
+
+// 2.291.0 KC-CLUB-VIDEO-KACHELGROESSE (Wunsch Hansi): Video „Versteckte Helfer“ zeigt Kachelgröße 3 × 3 / 4 × 4 – nur vorgeführt
+{
+  const b = html.slice(html.indexOf("function rgKachelDemo("), html.indexOf("function rgZe("));
+  assert.ok(/t: "🔲 Kacheln: 2, 3 oder 4 nebeneinander"/.test(b) && /sel: \["#kachelGroesseWahl"\], mussSel: true/.test(b), "Einstellung wird gezeigt");
+  assert.ok(/rgKachelDemo\("klein"\)/.test(b) && /rgKachelDemo\("mini"\)/.test(b) && /nach: \(\) => rgKachelDemo\(null\)/.test(b), "3 × 3 und 4 × 4 vorgeführt, danach zurück");
+  assert.ok(!/kachelGroesse\(|localStorage/.test(b), "nichts gespeichert – die eigene Einstellung bleibt");
+  assert.ok(/const kStufe = \(RG\.an && RG\.kachelDemo\) \|\| kachelStufe\(\);/.test(html) && /RG\.zurueck\.push\(\(\) => \{ RG\.kachelDemo = null;/.test(b), "nur während des Videos, am Ende sicher zurück");
+}
