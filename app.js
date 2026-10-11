@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.280.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.281.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12328,14 +12328,36 @@ function jzEisLaenge() {
     const L = rr * s, b = 1.4 + L * .085 + zf(i + 50) * 1.3, d = (zf(i + 200) - .5) * b * .7, P = (fx, fy) => `${X(x + fx * b + d * fy)} ${X(fy * L)}`; // d: Spitze leicht schief
     return `<path class="jz-zapfen" d="M${X(x - b)} 0 C${P(-1.05, .22)} ${P(-.55, .48)} ${P(-.36, .6)} C${P(-.44, .7)} ${P(-.16, .82)} ${P(-.07, .94)} Q${P(0, 1.03)} ${P(.08, .94)} C${P(.2, .8)} ${P(.5, .68)} ${P(.4, .6)} C${P(.62, .47)} ${P(1.05, .22)} ${X(x + b)} 0 Z"/>`
       + (L > 9 ? `<path class="jz-glanz" d="M${P(-.5, .06)} Q${P(-.42, .38)} ${P(-.16, .74)}"/>` : "")
-      + (L > lmax * .6 && i % 2 ? `<circle class="jz-tropfen" cx="${X(x + d)}" cy="${X(L + .4)}" r="1.1" style="animation-delay:${X((i * .9) % 5)}s"/>` : "");
+      ;
   }).join("");
+  e._spitzen = roh.map(({ x, i, r: rr }) => { const L = rr * s, b = 1.4 + L * .085 + zf(i + 50) * 1.3; return [x + (zf(i + 200) - .5) * b * .7, L]; }).filter(([, L]) => L > lmax * .45); // 2.281.0: für die Tropfen
   let rand = "M0 -1"; for (let x = 0, i = 0; x < W; i++) { const n = Math.min(W, x + 5 + zf(i + 300) * 7); rand += ` Q${X((x + n) / 2)} ${X(2 + zf(i + 400) * 3)} ${X(n)} ${X(.8 + zf(i + 500))}`; x = n; }
   e.setAttribute("viewBox", `0 0 ${W} ${H}`); e.style.height = `${H}px`;
   e.innerHTML = `<defs><linearGradient id="jzEisVerlauf" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity=".97"/><stop offset=".4" stop-color="#eaf7ff" stop-opacity=".92"/><stop offset=".8" stop-color="#b9e2ff" stop-opacity=".82"/><stop offset="1" stop-color="#93ccf3" stop-opacity=".72"/></linearGradient></defs>
     <g fill="url(#jzEisVerlauf)">${zapfen}</g><path class="jz-rand" d="${rand} L${W} -1 Z"/>`;
 }
 addEventListener("resize", () => requestAnimationFrame(jzEisLaenge));
+// 💧 2.281.0 (Wunsch Hansi „ab und an ein leicht blauer Wassertropfen von verschiedenen Eiszapfen – nicht zu oft, sonst stört es“):
+// höchstens ein Tropfen alle 7–16 s, jedes Mal an einem anderen längeren Zapfen; er wächst an der Spitze, löst sich und fällt kurz.
+// Nur sichtbar, bewegungsarm-Einstellung des Geräts wird beachtet; ein einziger Takt für die ganze App.
+(function jzTropfTakt() {
+  setTimeout(() => {
+    try {
+      const e = document.querySelector("#v-start .statusleiste .jz-eis"), sp = e?._spitzen;
+      if (sp?.length && !document.hidden && rgSichtbar(e) && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        let n = Math.floor(Math.random() * sp.length); if (n === e._letzter) n = (n + 1) % sp.length; e._letzter = n;
+        const [x, L] = sp[n], t = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        t.setAttribute("class", "jz-tropfen"); t.setAttribute("d", `M${x.toFixed(1)} ${(L - 3.4).toFixed(1)} q2.5 3.6 0 5.5 q-2.5 -1.9 0 -5.5 z`); e.appendChild(t);
+        const a = t.animate([{ transform: "translateY(0) scale(.3)", opacity: 0 }, { transform: "translateY(1px) scale(1)", opacity: .95, offset: .45 },
+          { transform: "translateY(2px) scale(1)", opacity: .95, offset: .6 }, { transform: "translateY(34px) scale(1)", opacity: 0 }],
+          { duration: 2600, easing: "cubic-bezier(.5,0,.9,.6)" });
+        t.style.transformBox = "fill-box"; t.style.transformOrigin = "50% 0";
+        a.onfinish = () => t.remove(); a.oncancel = () => t.remove();
+      }
+    } catch {}
+    jzTropfTakt();
+  }, 7000 + Math.random() * 9000);
+})();
 const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"] };
 function jahreszeitKopf() {
   const h = document.querySelector("#v-start .hero"); if (!h) return;

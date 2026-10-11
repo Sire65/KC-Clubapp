@@ -1,11 +1,18 @@
 {
-  "version": "2.280.0",
+  "version": "2.281.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "💧 Beim Schmelzen rinnen blaue Wassertropfen am Schneemann herunter"
+    "💧 Ab und an tropft ein leicht blauer Wassertropfen von den Eiszapfen"
   ],
   "verlauf": [
+    {
+      "version": "2.281.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "💧 Ab und an tropft ein leicht blauer Wassertropfen von den Eiszapfen"
+      ]
+    },
     {
       "version": "2.280.0",
       "datum": "2026-10-11",

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.281.0 – 2026-10-11 – KC-CLUB-EIS-TROPFEN: ab und an ein Tropfen von den Eiszapfen
+Von den Eiszapfen tropft nur noch ab und an ein leicht blauer Wassertropfen – höchstens einer alle 7 bis 16 Sekunden, jedes Mal an einem anderen längeren Zapfen: er wächst an der Spitze, löst sich und fällt kurz. Bei bewegungsarmer Einstellung des Geräts keine Tropfen.
+
 ## 2.280.0 – 2026-10-11 – KC-CLUB-SCHMELZTROPFEN: Wassertropfen beim Schmelzen des Schneemanns
 Wenn die Sonne den Schneemann schmelzen lässt, lösen sich blaue Wassertropfen am Rand der Kugeln und rinnen mit einer kurzen Wasserspur an ihm herunter in die Pfütze – wie beim echten Schmelzen.
 

@@ -5822,13 +5822,21 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/x \+= 4 \+ zf\(i \+ 100\) \* 8;/.test(html), "Zapfen-Abstand in Pixeln – breiter Bildschirm = mehr Zapfen");
   assert.ok(/class="jz-zapfen" d="M\$\{X\(x - b\)\} 0 C/.test(html) && /class="jz-rand"/.test(html), "geschwungene Zapfen mit Eisrand");
   assert.ok(/if \(e\.dataset\.mass === mass\) return;/.test(html), "nur bei geänderter Breite oder Länge neu zeichnen");
-  assert.ok(/\.jz-eis \.jz-tropfen \{ fill: #dff3ff; opacity: 0; animation: jzTropfen 4s ease-in infinite both; \}/.test(html), "Tropfen erst sichtbar, wenn sie fallen");
+  assert.ok(/\.jz-eis \.jz-tropfen \{ fill: #a6d8ff;[^}]*opacity: 0; \}/.test(html), "Tropfen erst sichtbar, wenn sie fallen (2.281.0: Takt statt Dauerschleife)");
 }
 // 2.280.0 KC-CLUB-SCHMELZTROPFEN (Wunsch Hansi): beim Schmelzen rinnen blaue Wassertropfen am Schneemann herunter in die Pfütze
 {
   assert.ok(/function jzbSchmelzTropfen\(dt\)/.test(html) && /jzbSchmelzTropfen\(dt\);\n    if \(J\.pt >= JZB_SONNE \+ JZB_SCHMELZ\)/.test(html), "Tropfen nur während des Schmelzens");
   assert.ok(/if \(p\.typ === "schmelz"\)/.test(html) && /function jzbTropfenMalen\(c, p\)/.test(html) && /c\.fillStyle = "#4aa3f0"/.test(html), "blauer Tropfen mit Spur, rinnt nach unten");
   assert.ok(/if \(p\.y >= J\.h - 2\) \{ p\.y = J\.h - 2; p\.a -= dt \* 2\.5;/.test(html), "unten läuft er in die Pfütze und vergeht – der Lauf endet sicher");
+}
+// 2.281.0 KC-CLUB-EIS-TROPFEN (Wunsch Hansi): ab und an ein leicht blauer Tropfen von verschiedenen Eiszapfen – nicht zu oft
+{
+  assert.ok(/\(function jzTropfTakt\(\) \{/.test(html) && /\}, 7000 \+ Math\.random\(\) \* 9000\);/.test(html), "höchstens ein Tropfen alle 7–16 s");
+  assert.ok(/if \(n === e\._letzter\) n = \(n \+ 1\) % sp\.length; e\._letzter = n;/.test(html), "jedes Mal ein anderer Zapfen");
+  assert.ok(/!document\.hidden && rgSichtbar\(e\) && !matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.matches/.test(html), "nur sichtbar und nicht bei bewegungsarmer Einstellung");
+  assert.ok(/a\.onfinish = \(\) => t\.remove\(\);/.test(html), "Tropfen räumt sich selbst weg");
+  assert.ok(!/class="jz-tropfen" cx=/.test(html) && !/@keyframes jzTropfen/.test(html), "keine Dauer-Tropfen an jedem Zapfen mehr");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
