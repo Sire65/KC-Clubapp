@@ -1,12 +1,18 @@
 {
-  "version": "2.283.0",
+  "version": "2.284.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🧣 Kinder mit bunten Mützen und andersfarbigen Schals",
-    "💧 Öfter Tropfen von den langen Eiszapfen – unten wächst die Pfütze"
+    "📅 Weihnachtsmarkt: erster Freitag (04.12.) Regelzeit jetzt 10:00–23:00 (DP2 Build 264)"
   ],
   "verlauf": [
+    {
+      "version": "2.284.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "📅 Weihnachtsmarkt: erster Freitag (04.12.) Regelzeit jetzt 10:00–23:00 (DP2 Build 264)"
+      ]
+    },
     {
       "version": "2.283.0",
       "datum": "2026-10-11",

@@ -1,9 +1,9 @@
 {
   "hinweis": "Unverändert aus KC DP2 übernommen – NICHT hier bearbeiten. Änderungen in DP2 machen und neu übernehmen (tools/dp2-twinkey-uebernehmen.mjs).",
   "repository": "Sire65/dp3",
-  "commit": "ceefe07ca34bff70aca7d98a97e13e7a6443647b",
-  "commitDatum": "2026-10-07T10:51:23+02:00",
-  "dp2Version": "0.20.0-build263",
+  "commit": "6972df3a5d1bcd587abe14047f2c15fd87274de3",
+  "commitDatum": "2026-10-11T18:23:57+00:00",
+  "dp2Version": "0.20.0-build264",
   "vorlage": "twinkey-test.html (ohne twinkey-test-data.js, twinkey-test-boot.js)",
   "reihenfolge": [
     "src/ui/app.css",
@@ -154,7 +154,7 @@
     "src/ui/wish-demand.css": "13353c4227d7c9fa45df05013872e77979d00f16237541a411f4f59615a9df70",
     "src/ui/original-brand.css": "d29f668ea025d1faef6bf75a8e30541457f9b1576c45c920fcd2058f0caee9c1",
     "src/ui/fold-sections.css": "a976db1cba67d702f887c2d4d04e4b7cac495078b9269fa4e5737856613eb9bc",
-    "src/core/model.js": "08d249c656d008805fac87f7368b0ed51eabaf623ac07fc6746b4a9b499bb416",
+    "src/core/model.js": "f2cebda0f15e4e116dae3382d84e437db6bc975e7e912860170f3cea964058d9",
     "src/core/auth.js": "d04dab8b66efb62f9ac7d9e1da071e2eed88f1a0ee14f9135da41a78d6c39a65",
     "src/core/planning.js": "e9cc3732c85ec65d992e79b806be8a4ab791b0106ecb1ff1a21dc6e8e40686ab",
     "src/core/workflow.js": "c847ab923e52ae1c895061d94630270d7c6a3416aa3d417b92a16a6f5fffb2c9",

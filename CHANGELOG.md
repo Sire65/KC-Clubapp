@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.284.0 – 2026-10-11 – KC-CLUB-DP2-264: Regelzeit erster Markt-Freitag 10:00
+DP2 Build 264 übernommen: Der erste Weihnachtsmarkt-Freitag (04.12.) hat die Regelzeit 10:00–23:00 statt 11:00–23:00 – im Twinkey, im Wunschbogen und in DP2. Alle übrigen Regelzeiten (Aufbau 08–18, Sa/So/Di/Fr 11–23, Mo/Mi/Do 13–23) entsprachen bereits der Vorgabe.
+
 ## 2.283.0 – 2026-10-11 – KC-CLUB-WINTER-KINDER-2: bunte Mützen und Schals, öfter Tropfen von den langen Zapfen
 Jedes Kind trägt eine andere, kräftige Farbkombination – Mütze und Schal immer verschiedenfarbig (z. B. gelbe Mütze und grüner Schal), in einer Gruppe nie doppelt. Die Eiszapfen tropfen öfter (alle 3½–8 Sekunden), nur von den langen Zapfen und nie dreimal vom selben – unten wächst die Pfütze.
 
