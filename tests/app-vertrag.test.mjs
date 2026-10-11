@@ -8175,3 +8175,9 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/sendenGewaehlt\("club_erinnerung", \[t\.gastgeber_person_id\], \["push", "email"\]/.test(server) && /const leitung = \(await leitungIds\(\)\)\.filter\(\(id\) => id !== t\.gastgeber_person_id\)/.test(server), "Push + E-Mail an Gastgeber/in und Clubleitung, ohne Doppel");
   assert.ok(/eq\("aktion", "gastgeber_stand"\)\.eq\("details->>treffen", t\.id\)\.eq\("details->>stufe", stufe\)/.test(server), "jede Stufe nur einmal");
 }
+
+// 2.239.0 KC-CLUB-ANTWORT-BLINKEN (Wunsch Hansi): ohne Zu-/Absage 5 Tage vorher gelb, 2 Tage vorher rot dauerblinkend
+{
+  assert.ok(/offenAntwort = t\.meine !== "ja" && t\.meine !== "nein"/.test(html) && /stdBis <= 48 \? " antwort-blinken rot" : stdBis <= 120 \? " antwort-blinken gelb"/.test(html), "Stufen 5 Tage gelb / 2 Tage rot, nur ohne Antwort");
+  assert.ok(/\.antwort-blinken\.gelb \{[^}]*animation: antwortGelb/.test(seite) && /\.antwort-blinken\.rot \{[^}]*animation: antwortRot/.test(seite), "Blink-Stile");
+}

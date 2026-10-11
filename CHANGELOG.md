@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.239.0 – 2026-10-11 – Zu-/Absage blinkt vor der Sitzung
+KC-CLUB-ANTWORT-BLINKEN: Wer noch nicht zu- oder abgesagt hat, sieht oben im Treffen-Feld „❔ Bitte zu- oder absagen“ ab 5 Tagen vor der Köcheclub-Sitzung gelb blinkend und ab 2 Tagen vorher rot dauerblinkend – bis zur Zu- oder Absage („vielleicht“ zählt nicht).
+
 ## 2.238.0 – 2026-10-11 – Anmeldestand für Gastgeber und Clubleitung
 KC-CLUB-GASTGEBER-STAND: Wer bei einem Treffen als Gastgeber/in eingetragen ist (z. B. Anne beim Treffen in der Hütte), bekommt am Vorabend ab 18 Uhr und 2 Stunden vor Beginn Push und E-Mail mit dem Anmeldestand: Zusagen mit Namen, vielleicht, Absagen, noch offen, Hinweise der Teilnehmenden und „Bitte plane für … Personen“. Die Clubleitung bekommt denselben Stand.
 

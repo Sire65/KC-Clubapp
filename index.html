@@ -3117,6 +3117,13 @@
   .p-privat { background: #5b7fa6; } .ktag.privat { outline: 2px dashed #5b7fa6; outline-offset: -2px; }
   .pt-privat { background: rgba(91,127,166,.14); border-radius: 10px; padding: 10px 12px !important; margin-bottom: 6px; }
   .pt-karte { border-left: 6px solid #5b7fa6; }
+/* KC-CLUB-ANTWORT-BLINKEN (2.239.0): noch nicht zu-/abgesagt – 5 Tage vorher gelb blinkend, 2 Tage vorher rot dauerblinkend */
+.antwort-blinken { border-radius: 8px; padding: 1px 6px; }
+.antwort-blinken.gelb { background: #f6c400; color: #3a2a00; animation: antwortGelb 1.6s ease-in-out infinite; }
+.antwort-blinken.rot { background: #d11f1f; color: #fff; animation: antwortRot .9s steps(2, jump-none) infinite; }
+@keyframes antwortGelb { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+@keyframes antwortRot { 0% { opacity: 1; } 100% { opacity: .15; } }
+@media (prefers-reduced-motion: reduce) { .antwort-blinken.gelb, .antwort-blinken.rot { animation: none; } }
 /* KC-CLUB-ANRUF-ANZEIGE (2.237.0): Gespräch in der Kopfzeile + Verkleinern-Knopf im Anrufbildschirm */
 .ruf-chip { margin-left: 6px; border: 0; border-radius: 999px; padding: 4px 10px; font: inherit; font-weight: 700; font-variant-numeric: tabular-nums;
   background: #c0392b; color: #fff; animation: rufPuls 1.2s ease-in-out infinite; cursor: pointer; }
@@ -4035,6 +4042,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.238.0" data-v="2.238.0"></script>
+<script src="app.js?v=2.239.0" data-v="2.239.0"></script>
 </body>
 </html>

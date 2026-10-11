@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.238.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.239.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -13030,7 +13030,11 @@ function infoTreffen() {
     const meine = { ja: "✅ Ich komme", nein: "❌ Abgesagt", vielleicht: "❓ Vielleicht" }[t.meine] || "❔ Bitte zu- oder absagen";
     // 2.102.0 KC-CLUB-TERMIN-ANTEIL (Wunsch Hansi): „✅ 3/18 angemeldet“ = 3 von 18 Mitgliedern haben schon zugesagt
     const alle = Number(INIT?.mitgliederAnzahl) || 0, gesamtTxt = alle ? `✅ <b>${t.ja}/${alle}</b> angemeldet` : `✅ ${t.ja} Zusagen`;
-    kopf = `<h2>${esc(t.titel)}</h2><div class="unter">${esc(wann(t.beginn))}${ort ? " · " + esc(ort) : ""}</div><div class="unter"><b>${meine}</b> · ${gesamtTxt}</div>`;
+    // 2.239.0 KC-CLUB-ANTWORT-BLINKEN (Wunsch Hansi): noch nicht zu- oder abgesagt → ab 5 Tagen vorher gelb blinkend, ab 2 Tagen rot dauerblinkend
+    // („vielleicht“ zählt nicht als Antwort). Die Kopfzeile wird beim Laden/Takt neu gezeichnet, die Stufe wandert also von selbst mit.
+    const stdBis = (new Date(t.beginn) - Date.now()) / 3600000, offenAntwort = t.meine !== "ja" && t.meine !== "nein";
+    const blinken = offenAntwort && stdBis > 0 ? (stdBis <= 48 ? " antwort-blinken rot" : stdBis <= 120 ? " antwort-blinken gelb" : "") : "";
+    kopf = `<h2>${esc(t.titel)}</h2><div class="unter">${esc(wann(t.beginn))}${ort ? " · " + esc(ort) : ""}</div><div class="unter"><b class="antwort-zeile${blinken}">${meine}</b> · ${gesamtTxt}</div>`;
     bisTreffen = tage <= 0 ? "Heute" : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
     frist = fristStufe(tage);
   } else kopf = `<h2>Kein Termin geplant</h2><div class="unter">Sobald ein Köcheclub-Termin ansteht, siehst du es hier.</div>`;
