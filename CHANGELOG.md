@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.265.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-EFFEKTE: Erklär-Video „Effekte & Wetter“ (Wunsch Hansi)
+- Live mit dem Finger: Kacheln schweben herein (Jalousie, Kartenstapel, Umdrehen) · Herbst mit Laubschicht und Igel · Wind oder Twinkey mit Besen (mit Spruch) · Winter mit Schneemann · Frühling · Sommer mit Sonnenblume und Twinkey mit Gießkanne (im Zeitraffer vorgespult).
+- Wo eingestellt wird: Einstellungen → Effekte (Jahreszeiten im Kopf + Vorschau, Kachel- und Sende-Effekt, Hauptschalter „Animierte Knöpfe“).
+- Wetter im Info-Feld: Tages-Kacheln, kurz antippen = Wetter dieses Tages, lange festhalten = alle Einzelheiten.
+- Durchgehend der Hinweis: alles nur Möglichkeiten, jederzeit wieder abschaltbar. Nichts wird gespeichert; Jahreszeit, Wetter-Tag und Wetter-Fenster am Ende zurück. Thema „Ich & meine App“; Twinkey bietet das Video beim Wetter an.
+
 ## 2.264.0 – 2026-10-11 – Video „Oberfläche nach Wunsch“: Hinweis auf weitere Einstellungen (Wunsch Hansi)
 Kurz vor Schluss: Es gibt noch viele weitere Möglichkeiten, die Oberfläche anzupassen – mit anderen Farben oder Spezialeffekten. Die Einstellungen findest du im Register Meins unter Einstellungen (einfache Ansicht: unten unter Mehr); dort ist noch sehr viel individuell einstellbar. Probier es gerne aus und stell es nach deinen Vorlieben und Bedürfnissen ein. Zu den Einstellungen gibt es auch eigene Erklär-Videos. Live: der Finger tippt auf Meins und auf Einstellungen, die Einstellungen öffnen sich. Außerdem weicht die Erklär-Tafel in allen Videos nach oben aus, sobald sie das gezeigte Element verdecken würde.
 

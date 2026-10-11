@@ -5683,7 +5683,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.258.0 KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE (Wunsch Hansi): Oberfläche nach Wunsch – alles nur vorgeführt, nichts gespeichert
 {
   const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR"));
-  assert.ok(b.length > 3000 && /\{ id: "oberflaeche", stand: "\d+",[^\n]*st: \(\) => RG_OBERFLAECHE \}/.test(html) && /videos: \["einstellungen", "oberflaeche", "figur", "figurbau"\]/.test(html), "Video registriert, im Thema „Ich & meine App“");
+  assert.ok(b.length > 3000 && /\{ id: "oberflaeche", stand: "\d+",[^\n]*st: \(\) => RG_OBERFLAECHE \}/.test(html) && /videos: \["einstellungen", "oberflaeche", ("effekte", )?"figur", "figurbau"\]/.test(html), "Video registriert, im Thema „Ich & meine App“ (2.265.0: + Effekte)");
   const code = b.replace(/\/\/[^\n]*/g, "").replace(/'[^'\n]*'/g, "''"); // ohne Kommentare und Knopf-Wähler ('[onclick^="kaBearbeiten(false)"]')
   assert.ok(!/kaSpeichern\(|kaBearbeiten\(|api\(|localStorage\.setItem|kopfRollo\(|kaSichtbar\(|kaStandard\(\)|einstellung_setzen/.test(code), "nichts speichern: Kopf, Anordnen, Ausblenden und Register nur auf dem Bildschirm");
   for (const z of ["#kopfPfeilHalb", "#kopfPfeil", "#heroInfo .ipfeil", ".kstrg button", ".kweg", ".kachel.bearb.aus", "#kaAusHinweis", "kr-hinten", "#register", ".wischhinweis"]) assert.ok(b.includes(z), `zeigt ${z}`);
@@ -8408,5 +8408,15 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const k = html.slice(html.indexOf("function jahreszeitKopf()"), html.indexOf("function jahreszeitUmschalten("));
   assert.ok(!/prefers-reduced-motion/.test(k) && /if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(k), "Bühne auch bei „Bewegung reduzieren“");
+}
+
+// 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE (Wunsch Hansi): Effekte & Wetter – nur vorgeführt, jederzeit abschaltbar
+{
+  const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-EFFEKTE"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR (2.248.0"));
+  assert.ok(/\{ id: "effekte", stand: "1", [^\n]*st: \(\) => RG_EFFEKTE \}/.test(html) && /videos: \["einstellungen", "oberflaeche", "effekte",/.test(html), "Video registriert und im Thema");
+  assert.ok(/regEffekt\(1, art\)/.test(b) && /rgJz\("herbst", "igel"/.test(b) && /rgJz\("herbst", "twinkey"/.test(b) && /rgJz\("winter"/.test(b) && /rgJz\("fruehling"/.test(b) && /rgJz\("sommer"/.test(b), "alle Effekte gezeigt");
+  assert.ok(/wetterTagWahl\(1\)/.test(b) && /L\.tipp\("#infoFeld \.wtag:nth-child\(2\)", "lang"\); wetterTagDetails\(1\)/.test(b), "Wetter: antippen und lange festhalten");
+  assert.ok(!/einstellung\(|api\(|einstSpeichern/.test(b) && /JZB\.vorschau = alt\[0\]; JZB\.extra = alt\[1\]; jahreszeitKopf\(\)/.test(b) && /if \(WET\.tag\) \{ WET\.tag = 0; heroZeigen\(0\); \}/.test(b), "nichts gespeichert, alles zurückgestellt");
+  assert.ok((b.match(/jederzeit wieder/g) || []).length >= 2, "Hinweis: nur Möglichkeiten, jederzeit abschaltbar");
 }
 

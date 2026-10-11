@@ -1,12 +1,18 @@
 {
-  "version": "2.264.0",
+  "version": "2.265.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🎨 Video „Oberfläche nach Wunsch“: am Ende der Weg zu den vielen weiteren Einstellungen (Farben, Effekte) – live gezeigt",
-    "🎬 Die Erklär-Tafel verdeckt in den Videos nie mehr das, was gerade gezeigt wird"
+    "✨ Neues Erklär-Video „Effekte & Wetter“: Kacheln, Jahreszeiten im Kopf mit Twinkey, Wetter-Tage antippen und lange festhalten – und wo man alles abschaltet"
   ],
   "verlauf": [
+    {
+      "version": "2.265.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "✨ Neues Erklär-Video „Effekte & Wetter“: Kacheln, Jahreszeiten im Kopf mit Twinkey, Wetter-Tage antippen und lange festhalten – und wo man alles abschaltet"
+      ]
+    },
     {
       "version": "2.264.0",
       "datum": "2026-10-11",

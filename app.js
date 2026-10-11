@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.264.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.265.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1765,6 +1765,66 @@ const RG_OBERFLAECHE = [
   { v: "start", vor: () => { rgKopf(); rgAnordnen(false); }, t: "✅ Fertig", x: () => einfach() ? "Das war's: Kopf einrollen und Kacheln anordnen. In der erweiterten Ansicht kannst du noch viel mehr – schau dir das Video dort noch einmal an. Probier es einfach aus!"
     : "Das war's: Kopf einrollen, blättern, Kacheln verschieben, verbergen und umdrehen, Register anordnen und wischen. So gestaltest du dir deine Wunsch-Oberfläche – probier es einfach aus!" },
 ];
+// KC-CLUB-ERKLAERVIDEOS-EFFEKTE (2.265.0, Wunsch Hansi „Erklär-Video mit den Spezial-Effekten: Kacheln einschweben, Herbst mit Igel, Laub, Besen,
+// Schnee, Frühling und Sommer – kurz zeigen, wo und wie man sie einstellt; dazu die Wetter-Kacheln: antippen und lange festhalten. Darauf
+// hinweisen, dass das nur Möglichkeiten sind, die man jederzeit wieder abschalten kann“). Nur vorgeführt: Jahreszeit-Vorschau, gewählter
+// Wetter-Tag und Wetter-Fenster werden am Ende zurückgestellt; Einstellungen bleiben unverändert.
+function rgJz(art, extra, bis, maxSek = 90) { // Jahreszeit im Kopf zeigen und im Zeitraffer bis zur gewünschten Stelle vorspulen
+  if (!RG.jzZurueck) { const alt = [JZB.vorschau, JZB.extra]; RG.jzZurueck = true; RG.zurueck.push(() => { RG.jzZurueck = false; JZB.vorschau = alt[0]; JZB.extra = alt[1]; jahreszeitKopf(); }); }
+  JZB.vorschau = art; JZB.extra = extra || ""; jahreszeitKopf();
+  if (!JZB.cv) return; jzbGroesse();
+  for (let i = 0; i < maxSek * 20 && !(bis && JZB.w && bis(JZB)); i++) {
+    if ((JZB.extraPruef -= .05) <= 0) { JZB.extraPruef = 30; jzbExtrasBestimmen(); }
+    JZB.T += .05; JZB.pt += .05; jzbSchritt(.05);
+  }
+  jzbMalen();
+}
+const rgJzAn = () => fxAn() && einst("jahreszeit", true);
+const rgSchalter = (id) => () => $(id)?.closest(".schalter") || null;
+function rgWetterFeld() { // Info-Feld auf das Wetter blättern (am Ende zurück) – Tag „heute“
+  rgInfo(); const i = INFO_FELDER.findIndex((f) => f.id === "wetter");
+  if (!RG.wetterZurueck) { RG.wetterZurueck = true; RG.zurueck.push(() => { RG.wetterZurueck = false; $("wetterBlatt")?.classList.add("versteckt"); $("wetterBlatt")?.classList.remove("rg-zeigen"); if (WET.tag) { WET.tag = 0; heroZeigen(0); } }); }
+  if (i >= 0 && INFO_I !== i) infoGehe(i);
+}
+const RG_EFFEKTE = [
+  { v: "start", vor: () => rgKopf("offen"), t: "✨ Effekte & Wetter",
+    x: "Die App kann ein bisschen zaubern: Kacheln schweben herein, oben im Kopf zeigt sich die Jahreszeit, und das Wetter verrät dir mehr, als man denkt. Das sind alles nur Möglichkeiten – gefällt dir etwas nicht, schaltest du es jederzeit wieder ab. Ich zeige dir auch, wo." },
+  { v: "start", nur: () => !einfach() && fxAn(), vor: () => rgKopf("ganz"), sel: ["#register", "#raster"], t: "🪟 Kacheln schweben herein",
+    x: "Wechselst du oben zwischen Club, Meins und Technik, schweben die Kacheln herein. Als Jalousie, als Kartenstapel – oder sie drehen sich um. Ich zeige dir alle drei.",
+    live: async (L) => { for (const art of ["jalousie", "karten", "drehen"]) { await L.tipp(`#register button[data-r="${reg}"]`); regEffekt(1, art); await L.warte(1500); } } },
+  { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("herbst", "igel", (J) => J.liegt.length >= 14); JZB.igelUhr = 1.5; }, sel: ["#v-start .hero"], t: "🍂 Herbst im Kopf",
+    x: "Oben im Kopf zeigt sich die Jahreszeit. Im Herbst fallen bunte Blätter und bleiben unten als Laubschicht liegen. Und ab und zu raschelt ein Igel durchs Laub." },
+  { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("herbst", "twinkey", (J) => J.phase === "besuch", 180); if (JZB.cv && JZB.phase === "fallen") jzbBesuchStart("fegen"); }, sel: ["#v-start .hero"], t: "🧹 Wind oder Twinkey",
+    x: "Liegt genug Laub, kommt ein Windstoß – mal von links, mal von rechts – und weht es weg. Oder Twinkey kommt mit dem Besen vorbei, fegt und sagt einen Spruch. Schau mal." },
+  { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("winter", "", (J) => J.phase === "stehen", 150); }, sel: ["#v-start .hero"], t: "⛄ Winter",
+    x: "Im Winter fällt Schnee und bleibt liegen. Jedes dritte Mal wird daraus ein lachender Schneemann – mit Kochmütze und weinrotem Schal, im Advent mit Weihnachtsmütze. Sonst kommt der Wind, oder Twinkey schippt den Schnee beiseite." },
+  { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("fruehling", "", (J) => J.pt > 26); }, sel: ["#v-start .hero"], t: "🌱 Frühling",
+    x: "Im Frühling wächst Gras mit den ersten Blumen, Blüten schweben herab und Schmetterlinge fliegen vorbei. Zu Ostern liegen bunte Eier im Gras – tippst du eins an, schlüpft ein Küken." },
+  { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("sommer", "", (J) => !!J.besuch && J.besuch.x > 0 && J.besuch.x < J.w); }, sel: ["#v-start .hero"], t: "🌻 Sommer",
+    x: "Im Sommer wächst eine Sonnenblume, und Twinkey kommt mit der Gießkanne. Am Nikolaustag steht ein Stiefel da, am Treffen-Tag dampft ein Kochtopf, und regnet es wirklich, gibt es Pfützen." },
+  { v: "einstellungen", vor: () => rgAuf("effekte"), tippVor: () => { const d = document.querySelector(rgKlappe("effekte")); return d && !d.open ? d.querySelector(":scope > summary") : null; },
+    sel: [rgKlappe("effekte")], mussSel: true, t: "⚙️ Wo stelle ich das ein?",
+    x: "Eingestellt wird das alles in den Einstellungen, im Bereich Effekte. Ein Tipp auf die Überschrift klappt ihn auf." },
+  { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("setJahreszeit")], puls: ["#setJahreszeit"], mussSel: true, t: "🍂 Jahreszeiten im Kopf",
+    x: "Hier schaltest du die Jahreszeiten im Kopf ein oder aus. Haken raus – und der Kopf ist wieder ruhig. Darunter kannst du dir jede Jahreszeit und die Extras als Vorschau ansehen.",
+    live: async (L) => { await L.tipp("#setJahreszeit"); await L.warte(900); await L.tipp(() => [...document.querySelectorAll(`${rgKlappe("effekte")} .chip`)].find((c) => /Herbst/.test(c.textContent))); } },
+  { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("regEffektWahl"), "#regEffektWahl"], mussSel: true, t: "🪟 Kacheln und Senden",
+    x: "Hier wählst du, wie die Kacheln hereinschweben – Jalousie, Kartenstapel, Umdrehen, Zufall – oder Aus. Darunter der Effekt beim Senden: Papierflieger, Brieftaube oder Postauto.",
+    live: async (L) => { await L.tipp(() => [...document.querySelectorAll("#regEffektWahl .chip")].find((c) => /Aus/.test(c.textContent))); } },
+  { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("setAnimiert")], puls: ["#setAnimiert"], mussSel: true, t: "✨ Der Hauptschalter",
+    x: "Ganz oben der Hauptschalter: Animierte Knöpfe. Ist er aus, ist alles ruhig – auch die Jahreszeiten und alle Effekte. Nichts davon ist Pflicht, und du kannst alles jederzeit wieder einschalten." },
+  { v: "start", nur: () => INFO_FELDER.some((f) => f.id === "wetter"), vor: () => { rgKopf("offen"); rgWetterFeld(); }, sel: ["#infoFeld .wtage", "#heroInfo"], mussSel: true, t: "🌦️ Das Wetter im Info-Feld",
+    x: "Jetzt das Wetter. Im farbigen Info-Feld oben blätterst du zum Wetter: groß das Wetter von jetzt, darunter die nächsten Tage als kleine Kacheln. Sie lassen sich zur Seite wischen." },
+  { v: "start", nur: () => INFO_FELDER.some((f) => f.id === "wetter"), vor: () => { rgKopf("offen"); rgWetterFeld(); }, sel: ["#infoFeld .wtage"], mussSel: true, t: "👆 Einen Tag antippen",
+    x: "Tippst du einen Tag kurz an, zeigt das große Feld oben das Wetter für diesen Tag – mit passender Animation. Tippst du wieder auf heute, siehst du das Wetter von jetzt.",
+    live: async (L) => { await L.tipp("#infoFeld .wtag:nth-child(2)"); wetterTagWahl(1); L.ziel(); await L.warte(2600); await L.tipp("#infoFeld .wtag:nth-child(1)"); wetterTagWahl(0); L.ziel(); } },
+  { v: "start", nur: () => INFO_FELDER.some((f) => f.id === "wetter"), vor: () => { rgKopf("offen"); rgWetterFeld(); }, nach: () => { $("wetterBlatt")?.classList.add("versteckt"); $("wetterBlatt")?.classList.remove("rg-zeigen"); },
+    sel: ["#wetterBlatt:not(.versteckt) .blatt-innen", "#infoFeld .wtage"], mussSel: true, t: "✋ Lange festhalten",
+    x: "Hältst du einen Tag lange fest, öffnen sich alle Einzelheiten: Höchst- und Tiefstwerte, Regen, Wind und Böen, Sonnenstunden, Sonnenauf- und -untergang, der UV-Index und der Verlauf über den Tag.",
+    live: async (L) => { await L.tipp("#infoFeld .wtag:nth-child(2)", "lang"); wetterTagDetails(1); $("wetterBlatt")?.classList.add("rg-zeigen"); L.ziel(); } },
+  { v: "start", vor: () => rgKopf("offen"), t: "✅ Alles nur Möglichkeiten",
+    x: "Das waren die Effekte und das Wetter. Denk dran: Das sind alles nur Möglichkeiten. Gefällt dir etwas nicht, schaltest du es in den Einstellungen unter Effekte einfach ab – und jederzeit wieder ein." },
+];
 // KC-CLUB-ERKLAERVIDEOS-FIGUR (2.248.0, Wunsch Hansi „Erklär-Videos, wie man sich eine Figur zuordnet und bearbeitet“):
 // Koch-Figur aussuchen (Mein Bild) und eigene Figur im Baukasten zusammenstellen. Vorgeführt wird nur – nichts wird gespeichert;
 // die Fenster gehen am Ende wieder zu. Foto, Baukasten und Jacken-Schalter erscheinen nur, wenn sie für das Mitglied freigegeben sind.
@@ -1826,6 +1886,7 @@ const RUNDGAENGE = [
   { id: "spiele", stand: "1", sym: "🎲", t: "Spiele", u: "Spiel aussuchen, gegen Computer oder Mitglieder (ca. 1 Min.)", st: () => RG_SPIELE },
   { id: "archiv", stand: "1", sym: "🗄️", t: "Archiv & Clubchronik", u: "Mein Ordner, Chronik, Clubleben, Inhaltsverzeichnis (ca. 1 Min.)", st: () => RG_ARCHIV },
   { id: "vorschlag", stand: "1", sym: "🗳️", t: "Vorschlag einreichen", u: "Thema oder Spende vorschlagen (ca. 1 Min.)", st: () => RG_VORSCHLAG },
+  { id: "effekte", stand: "1", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 3 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
   { id: "figur", stand: "1", sym: "🧑‍🍳", t: "Koch-Figur als Bild aussuchen", u: "Mein Bild: Figur antippen, übernehmen (ca. 1 Min.)", st: () => RG_FIGUR, nur: () => frei("avatar") }, // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR
   { id: "figurbau", stand: "1", sym: "🧩", t: "Eigene Figur zusammenstellen", u: "Haare, Mütze, Gesicht, Brille, Kochjacke – und später bearbeiten (ca. 2 Min.)", st: () => RG_FIGUR_BAU, nur: () => frei("avatar") && frei("avatar_baukasten") },
   { id: "leitung", stand: "1", ziel: "leitung", sym: "🗂️", t: "Für die Clubleitung: Büro & mehr", u: "Büro, Termine für alle, Abstimmung, eigene Einstellungen – nur für die Clubleitung", st: () => RG_LEITUNG, nur: () => !!(ICH?.buero || ICH?.vorstand) },
@@ -1851,7 +1912,7 @@ const RG_THEMEN = [
   { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["nachricht", "mitglieder", "pinnwand"] },
   { id: "termine", sym: "📅", t: "Termine", videos: ["termin", "zusagen"] },
   { id: "club", sym: "🗄️", t: "Club & Archiv", videos: ["fotos", "archiv", "vorschlag", "helfen", "erstattung"] },
-  { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["einstellungen", "oberflaeche", "figur", "figurbau"] },
+  { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["einstellungen", "oberflaeche", "effekte", "figur", "figurbau"] },
   { id: "freizeit", sym: "🎲", t: "Spiele & Notfall", videos: ["spiele", "sos"] },
   { id: "leitung", sym: "🗂️", t: "Für die Clubleitung", videos: ["leitung"] },
   { id: "admin", sym: "🛠️", t: "Für Admins", videos: ["admin"] },
@@ -6055,7 +6116,7 @@ async function twFrageStart(vorgabe = "") {
 // KC-CLUB-TWINKEY-VIDEOS (2.252.0, Wunsch Hansi „Du kannst es im Hilfetext nachlesen. Aber es gibt auch Erklär-Videos. Was möchtest du dir
 // ansehen?“): Antwort-Eintrag → passende Erklär-Videos (Registry RUNDGAENGE, nur die für das Mitglied sichtbaren) und der ausführliche Hilfetext.
 // Neue Videos hier einfach dem passenden Eintrag (f: Twinkeys Fragen, h: Hilfe-Zentrum) zuordnen.
-const TW_VIDEOS = { "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
+const TW_VIDEOS = { "h:wetter": ["effekte"], "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
   "f:nachricht": ["nachricht"], "f:termin-neu": ["termin"], "f:zettel": ["pinnwand"], "f:vorschlag": ["vorschlag"], "f:zusagen": ["zusagen"],
   "f:foto-album": ["fotos"], "f:geld": ["erstattung"], "f:notfall": ["sos"], "f:hilfe-suchen": ["helfen"], "f:leihen": ["helfen"], "f:anrufen": ["mitglieder"], "f:online": ["mitglieder"],
   "f:spielen": ["spiele"], "f:archiv": ["archiv"] }; // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4
