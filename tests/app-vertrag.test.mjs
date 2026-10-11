@@ -5641,9 +5641,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/api\("video_bewerten", \{ video: tour\.id, stand: tour\.stand,/.test(html) && /catch \(e\) \{ knopf\.disabled = false; meldeFehler\(e\); \}/.test(html), "senden mit Fassung; Fehler sichtbar (Regel 11)");
   assert.ok(/case "video_bewerten": \{/.test(server) && /onConflict: "video,stand,person_id"/.test(server) && /case "video_auswertung": \{\s*nurAdmin\(ich\);/.test(server) && /return json\(\{ videos: \[\.\.\.m\.values\(\)\] \}\); \/\/ nur Zahlen – keine Namen/.test(server), "Server: eine Bewertung je Person/Video/Fassung, Auswertung nur Admin, ohne Namen");
   assert.ok(/if \(!z\.anzahl \|\| z\.anzahl < RG_MIN_STIMMEN \|\| !alle\) return \["grau"/.test(html) && /q < 0\.6 \? \["rot", "🔴 überarbeiten"\]/.test(html), "unbekannt = grau, nie gut; schlecht = überarbeiten");
-  assert.ok(/ICH\?\.admin \? \[\{ sym: "📊", t: "Auswertung der Videos"/.test(html) && (html.match(/\{ id: "[a-z]+", stand: "1",/g) || []).length === 10, "Auswertung nur für den Admin; jede Fassung gezählt (2.248.0: 10 Videos)");
+  assert.ok(/ICH\?\.admin \? \[\{ sym: "📊", t: "Auswertung der Videos"/.test(html) && (() => { const r = html.slice(html.indexOf("const RUNDGAENGE = ["), html.indexOf("];", html.indexOf("const RUNDGAENGE = ["))); const alle = (r.match(/\{ id: "[a-z]+",/g) || []).length; return alle >= 17 && (r.match(/\{ id: "[a-z]+", stand: "\d+",/g) || []).length === alle; })(), "Auswertung nur für den Admin; jedes Video hat eine Fassung (2.251.0: 17 Videos)");
   assert.ok(/if \(r && !RG\.an\) scrollTo\(/.test(html) && /if \(Date\.now\(\) - \(RG\.seit \|\| 0\) < 6000/.test(html), "Fund Hansi: Chat-Kartei scrollt im Video nicht weg; Ziel wird zurückgeholt");
   assert.ok(fs.existsSync(new URL("../supabase/migrations/20261011_kc_club_v2246_video_bewertung.sql", import.meta.url)), "Migration");
+}
+
+// 2.251.0 KC-CLUB-ERKLAERVIDEOS-PULS + -3 (Wunsch Hansi): erwähnte Knöpfe/Felder pulsieren; 7 weitere Videos
+{
+  assert.ok(/function rgPulsStart\(s\)/.test(html) && /function rgStille\(\) \{ rgPulsStop\(\);/.test(html) && /\.rg-puls \{ animation: rgPuls/.test(seite) && /prefers-reduced-motion: reduce\) \{ \.rg-puls/.test(seite), "Puls nacheinander, stoppt beim Weiterblättern, ruhige Variante ohne Bewegung");
+  assert.ok(["mitglieder", "zusagen", "fotos", "erstattung", "hilfe", "sos", "helfen"].every((id) => new RegExp(`\\{ id: "${id}", stand: "1", sym:`).test(html)), "7 neue Videos registriert");
+  const neu = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-3"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR"));
+  assert.ok(neu.length > 2000 && !/api\(|anrufen\(|anklopfen\(|erstattungSenden\(|sosAnrufen\(|faHochladen|einstellung_setzen/.test(neu.replace(/rgOn\("[^"]*"\)/g, "")), "neue Videos rufen nicht an, senden/speichern/laden nichts hoch");
+  assert.ok(/SOS\.suche = ""; SOS\.offen = null; sosZeigen\(\); sosLaden\(\);/.test(neu) && /if \(n < 16\) setTimeout\(\(\) => rgTreffenZeigen\(n \+ 1\), 250\)/.test(neu), "SOS wie sosStart gefüllt; Termin-Info wartet auf die Liste");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

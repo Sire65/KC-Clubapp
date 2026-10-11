@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.251.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-PULS: erwähnte Knöpfe pulsieren + 7 neue Erklär-Videos
+- Erwähnte Knöpfe, Felder und Register pulsieren nacheinander (Leuchten + leicht größer; ohne Bewegung bei „weniger Bewegung“) – in allen Videos, ohne Liste pulst das erklärte Element.
+- Neue Videos: Mitglieder/anklopfen/anrufen, Zu- und absagen, Fotoalbum, Erstattung, Hilfe/Suche/Twinkey, SOS, Helfen & Leihen. Nur gezeigt – nichts wird angerufen, gesendet, hochgeladen oder gespeichert.
+- SOS-Video füllt die Seite wie sosStart (nur lesend); Termin-Info wartet auf die Terminliste. Avatar-Videos aus 2.248.0 (andere Sitzung) übernommen, kein doppeltes Video.
+
 ## 2.250.0 – 2026-10-11 – KC-CLUB-JAHRESZEIT-BUEHNE: Laub bleibt liegen, Windstoß sichtbar, längere Blüte (Fund Hansi)
 - Fund Hansi „Blätter bleiben unten nicht liegen, Windstoß nicht gesehen“: Wechselt das Infofeld die Karte, ändert der Kopf seine Höhe – liegendes Laub blieb an der alten Stelle hängen (mitten im Bild oder unsichtbar unter dem Rand). Liegendes Laub und gelandete Blütenblätter merken sich jetzt ihren Abstand zum Boden und bleiben immer unten.
 - Figuren (Schneemann, Sonnenblume, Topf …) ändern ihre Größe nicht mehr mit jeder Infofeld-Höhe, nur bei eingerolltem Kopf werden sie kleiner.

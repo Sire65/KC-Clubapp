@@ -1,11 +1,20 @@
 {
-  "version": "2.250.0",
+  "version": "2.251.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🍂 Jahreszeiten im Kopf verbessert: Laub und Schnee bleiben jetzt sicher unten liegen, der Windstoß ist deutlich zu sehen, Blumen und Sonnenblume blühen länger"
+    "🎬 7 neue Erklär-Videos: Mitglieder & Anrufen, Zu- und absagen, Fotoalbum, Erstattung, Hilfe & Twinkey, SOS, Helfen & Leihen",
+    "✨ In den Videos pulsiert jetzt der Knopf, über den gerade gesprochen wird"
   ],
   "verlauf": [
+    {
+      "version": "2.251.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🎬 7 neue Erklär-Videos: Mitglieder & Anrufen, Zu- und absagen, Fotoalbum, Erstattung, Hilfe & Twinkey, SOS, Helfen & Leihen",
+        "✨ In den Videos pulsiert jetzt der Knopf, über den gerade gesprochen wird"
+      ]
+    },
     {
       "version": "2.250.0",
       "datum": "2026-10-11",

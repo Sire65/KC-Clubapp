@@ -752,6 +752,10 @@
   .rg-balken i { display: block; height: 100%; background: var(--rot, #7a1f2b); transition: width .4s; }
   .rg-knoepfe { display: grid; grid-template-columns: auto 1fr auto auto; gap: 6px; }
   .rg-start-knopf { width: 100%; margin-bottom: 8px; }
+  /* KC-CLUB-ERKLAERVIDEOS-PULS (2.247.0): erwähnter Knopf/Feld pulsiert */
+  .rg-puls { animation: rgPuls 1.1s ease-in-out 2; position: relative; z-index: 2; border-radius: 10px; }
+  @keyframes rgPuls { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(242, 201, 76, 0); } 50% { transform: scale(1.12); box-shadow: 0 0 0 4px #f2c94c, 0 0 18px 6px rgba(242, 201, 76, .7); } }
+  @media (prefers-reduced-motion: reduce) { .rg-puls { animation: none; outline: 3px solid #f2c94c; outline-offset: 2px; } }
   /* KC-CLUB-VIDEO-BEWERTUNG (2.246.0) */
   .rg-frage { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 10px 0; font-size: 1.05em; }
   .rg-daumen { display: flex; gap: 8px; flex-shrink: 0; }
@@ -4084,6 +4088,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.250.0" data-v="2.250.0"></script>
+<script src="app.js?v=2.251.0" data-v="2.251.0"></script>
 </body>
 </html>
