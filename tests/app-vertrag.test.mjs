@@ -5719,6 +5719,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(!/kaSpeichern\(|api\(/.test(b), "nichts gespeichert");
 }
 
+// 2.264.0 (Wunsch Hansi): Video „Oberfläche“ – kurz vor Schluss Hinweis auf die vielen weiteren Einstellungen, live Meins → Einstellungen
+{
+  assert.ok(/t: "⚙️ Noch viel mehr Möglichkeiten"/.test(html) && /Farben oder Spezialeffekten/.test(html) && /im Register Meins unter Einstellungen/.test(html) && /Zu den Einstellungen gibt es auch eigene Erklär-Videos/.test(html), "Hinweis-Station mit Hansis Text");
+  assert.ok(/await L\.tipp\('#register button\[data-r="mein"\]'\); rgRegister\("mein"\)/.test(html) && /await L\.tipp\(rgKachel\("einstellungen"\)\)/.test(html) && /zeige\("einstellungen", true\)/.test(html), "live: Meins antippen, Einstellungen antippen, Einstellungen öffnen sich (einfache Ansicht: über „Mehr“)");
+  assert.ok(/const unten = innerHeight - t\.offsetHeight - 12;/.test(html) && /y \+ h > unten/.test(html), "Tafel verdeckt nie das Ziel");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

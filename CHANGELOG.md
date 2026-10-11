@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.264.0 – 2026-10-11 – Video „Oberfläche nach Wunsch“: Hinweis auf weitere Einstellungen (Wunsch Hansi)
+Kurz vor Schluss: Es gibt noch viele weitere Möglichkeiten, die Oberfläche anzupassen – mit anderen Farben oder Spezialeffekten. Die Einstellungen findest du im Register Meins unter Einstellungen (einfache Ansicht: unten unter Mehr); dort ist noch sehr viel individuell einstellbar. Probier es gerne aus und stell es nach deinen Vorlieben und Bedürfnissen ein. Zu den Einstellungen gibt es auch eigene Erklär-Videos. Live: der Finger tippt auf Meins und auf Einstellungen, die Einstellungen öffnen sich. Außerdem weicht die Erklär-Tafel in allen Videos nach oben aus, sobald sie das gezeigte Element verdecken würde.
+
 ## 2.263.0 – 2026-10-11 – KC-CLUB-JAHRESZEIT-BUEHNE: läuft auch bei „Bewegung reduzieren“ (Fund Hansi)
 - Fund Hansi „Blätter bleiben immer noch nicht liegen“: Ursache war nicht der Boden, sondern die Handy-Einstellung „Bewegung reduzieren“ (Hansis Handy meldet sie, vgl. Jalousie 2.161.0). Dann lief nur die alte Emoji-Deko (Blätter fallen durch, kein Liegen, kein Wind, kein Twinkey). Nachgestellt im Browser: mit „Bewegung reduzieren“ 0 liegende Blätter, ohne 20 nach 40 s.
 - Die Bühne läuft jetzt immer; abschalten weiter mit „🍂 Jahreszeiten im Kopf“ (oder „✨ Animierte Knöpfe“ aus / Sparmodus).

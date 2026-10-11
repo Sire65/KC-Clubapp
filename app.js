@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.263.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.264.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1757,6 +1757,11 @@ const RG_OBERFLAECHE = [
   { v: "start", nur: () => !einfach() && REGISTER.length > 1, vor: () => { rgRegisterTausch(false); rgKopf("ganz"); rgRegister(rgRegSichtbar()[0]?.dataset.r || REGISTER[0][0]); }, sel: ["#raster"], puls: [".wischhinweis", "#register button.an"], t: "👆 Wischen",
     x: () => { const n = rgRegNamen(); return `Am schnellsten wechselst du die Register mit dem Finger: Ich wische über die Kacheln nach links – schon bin ich in ${n[1]}. Nach rechts gewischt geht es zurück zu ${n[0]}.`; },
     live: async (L) => { const v = rgRegSichtbar().map((x) => x.dataset.r), a = v[0], b = v[1]; if (!b) return; await L.wischen("#raster", 1); register(b, 1); await L.warte(2000); await L.wischen("#raster", -1); register(a, -1); } },
+  // 2.264.0 KC-CLUB-VIDEO-LIVE-3 (Wunsch Hansi): kurz vor Schluss auf die vielen weiteren Einstellungen hinweisen – live: Meins → Einstellungen antippen
+  { v: "start", vor: () => { rgKopf("offen"); rgAnordnen(false); rgRegisterTausch(false); }, sel: [() => (aktuelleAnsicht === "einstellungen" ? document.querySelector("#v-einstellungen .kopf2") : null), rgKachel("einstellungen"), '#register button[data-r="mein"]', `#fuss [onclick="zeige('einstellungen')"]`], t: "⚙️ Noch viel mehr Möglichkeiten",
+    x: () => `Es gibt noch viele weitere Möglichkeiten, deine Oberfläche anzupassen – zum Beispiel mit anderen Farben oder Spezialeffekten. Die Einstellungen findest du ${einfach() || !REGISTER.some(([r]) => r === "mein") ? "unten unter Mehr" : "im Register Meins unter Einstellungen"}. Dort ist noch sehr viel individuell einstellbar. Probier es gerne aus und stell alles nach deinen Vorlieben und Bedürfnissen ein. Zu den Einstellungen gibt es auch eigene Erklär-Videos.`,
+    live: async (L) => { await L.warte(1500); if (!einfach() && REGISTER.some(([r]) => r === "mein")) { if (reg !== "mein") { await L.tipp('#register button[data-r="mein"]'); rgRegister("mein"); await L.warte(900); L.ziel(); await L.warte(400); } await L.tipp(rgKachel("einstellungen")); }
+      else await L.tipp(`#fuss [onclick="zeige('einstellungen')"]`); zeige("einstellungen", true); scrollTo(0, 0); L.ziel(); await L.warte(2500); } },
   { v: "start", vor: () => { rgKopf(); rgAnordnen(false); }, t: "✅ Fertig", x: () => einfach() ? "Das war's: Kopf einrollen und Kacheln anordnen. In der erweiterten Ansicht kannst du noch viel mehr – schau dir das Video dort noch einmal an. Probier es einfach aus!"
     : "Das war's: Kopf einrollen, blättern, Kacheln verschieben, verbergen und umdrehen, Register anordnen und wischen. So gestaltest du dir deine Wunsch-Oberfläche – probier es einfach aus!" },
 ];
@@ -1941,7 +1946,8 @@ async function rgFzu(x, y, ms, tok) {
 }
 async function rgFpunkt(el, tok) { // Element ins Bild holen und seine Mitte liefern
   if (!rgSichtbar(el)) throw RG_ABBRUCH;
-  if (!rgImBild(el)) { el.scrollIntoView({ block: "center", behavior: "instant" }); rgLage(); await rgFwarte(250, tok); }
+  if (!rgImBild(el)) { el.scrollIntoView({ block: "center", behavior: "instant" }); await rgFwarte(250, tok); }
+  rgLage(); // Tafel aus dem Weg (Ziel kann sich seit dem Hinblättern verschoben haben)
   const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, r };
 }
 function rgFring(x, y, gross) {
@@ -2111,7 +2117,8 @@ function rgLage() {
   if (!r) { l.style.cssText = `left:50%;top:50%;width:0;height:0;outline-width:0`; t.classList.remove("rg-oben-an"); return; }
   const p = 6, x = Math.max(4, r.left - p), y = Math.max(4, r.top - p), w = Math.min(innerWidth - 4, r.right + p) - x, h = Math.min(innerHeight - 4, r.bottom + p) - y; // nur der sichtbare Teil
   l.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px`;
-  t.classList.toggle("rg-oben-an", r.height < innerHeight * 0.45 && y + h / 2 > innerHeight * 0.55); // kleines Ziel unten → Tafel oben
+  const unten = innerHeight - t.offsetHeight - 12; // 2.264.0: Oberkante der Tafel, wenn sie unten steht – nie das Ziel verdecken
+  t.classList.toggle("rg-oben-an", r.height < innerHeight * 0.45 && (y + h / 2 > innerHeight * 0.55 || y + h > unten)); // kleines Ziel unten → Tafel oben
 }
 function rundgangSchritt(d, auto) {
   if (!RG.an) return;

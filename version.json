@@ -1,11 +1,20 @@
 {
-  "version": "2.263.0",
+  "version": "2.264.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🍂 Laub bleibt jetzt auch auf Handys mit „Bewegung reduzieren“ unten liegen – mit Wind und Twinkey"
+    "🎨 Video „Oberfläche nach Wunsch“: am Ende der Weg zu den vielen weiteren Einstellungen (Farben, Effekte) – live gezeigt",
+    "🎬 Die Erklär-Tafel verdeckt in den Videos nie mehr das, was gerade gezeigt wird"
   ],
   "verlauf": [
+    {
+      "version": "2.264.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🎨 Video „Oberfläche nach Wunsch“: am Ende der Weg zu den vielen weiteren Einstellungen (Farben, Effekte) – live gezeigt",
+        "🎬 Die Erklär-Tafel verdeckt in den Videos nie mehr das, was gerade gezeigt wird"
+      ]
+    },
     {
       "version": "2.263.0",
       "datum": "2026-10-11",
