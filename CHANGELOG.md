@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.230.0 – 2026-10-11 – Sparbremse, Alarm und weitere Bereiche an der direkten Leitung
+KC-CLUB-RT-SPARBREMSE: Die Datenbank zählt die Signale der direkten Leitung je Monat (kostenlos: 2 Mio.). Ab 70 % gehen „schreibt gerade“, Live-Bild, Online, Pinnwand, Termine und Abstimmungen wieder über das normale Nachfragen, ab 95 % nur noch Alarm – es entstehen nie Kosten. Admin: Warnung per Push bei 50/70/95 %, neue Lage-Kachel „⚡ Direkte Leitung“ mit Verbrauch. Neu an der Leitung: 🚨 Alarm/Notfall-Meldung sofort, ✓✓ Gelesen-Haken, 🟢 wer online kommt, 📌 Pinnwand, 📅 Termin-Zusagen und 🗳️ Abstimmungen (geheime Stimmen ohne Signal).
+
 ## 2.229.0 – 2026-10-11 – Bildschirm zeigen an der direkten Leitung
 KC-CLUB-REALTIME-VORFUEHREN: „📺 Live zeigen“ und „🔴 Mitschauen“ hängen jetzt an der direkten Leitung – jedes neue Bild meldet sich sofort beim Zuschauer (statt Nachfragen alle 0,8 s), Änderungen gehen beim Zeigenden schneller raus (alle 0,4 statt 0,7 s). Über die Leitung kommt nur das Signal, das Bild selbst weiter sicher über den Server. Ohne Leitung wie bisher.
 

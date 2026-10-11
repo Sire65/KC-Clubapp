@@ -44,7 +44,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.226.0";
+const SERVER_VERSION = "2.230.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4071,6 +4071,27 @@ async function dienstGrussSenden() {
   }
   await protokoll(null, "dienst_gruss_gesendet", { tag, veranstaltung: v.titel, anzahl: offen.length });
 }
+// ---------- KC-CLUB-RT-SPARBREMSE (2.230.0, Wunsch Hansi „was, wenn es mehr Aufrufe werden als kostenlos enthalten?“) ----------
+// Supabase Realtime kostenlos: 2 Mio. Signale je Monat. Die Datenbank zählt mit (kc_club_rt_zaehler) und bremst selbst: ab 70 % keine
+// „teuren“ Signale (tippt, Live-Bild, online, Pinnwand, Termine, Abstimmungen), ab 95 % nur noch Alarm (kc_club_rt_klingeln).
+// Hier nur die Warnung an den Admin – je Stufe einmal im Monat (Push). Die App fragt bei gebremsten Signalen wie früher selbst nach.
+const RT_GRENZE = 2000000, RT_STUFEN: [number, string][] = [[50, "Hälfte erreicht – alles läuft normal weiter"], [70, "Sparbremse aktiv: „schreibt gerade“, Live-Bild, Online, Pinnwand, Termine und Abstimmungen kommen wieder über das normale Nachfragen"], [95, "nur noch Alarm über die direkte Leitung – alles andere über das normale Nachfragen"]];
+async function rtZaehlerWarnen() {
+  const monat = berlinTag(new Date()).slice(0, 7);
+  const { data } = await db.from("kc_club_rt_zaehler").select("anzahl,gewarnt").eq("monat", monat).maybeSingle();
+  if (!data) return;
+  const pct = (Number(data.anzahl) / RT_GRENZE) * 100, gewarnt = { ...(data.gewarnt || {}) };
+  const stufe = [...RT_STUFEN].reverse().find(([p]) => pct >= p && !gewarnt[String(p)]);
+  if (!stufe) return;
+  const ziel = await adminIds(); if (!ziel.length) return;
+  await sendenGewaehlt("club_nachricht", ziel, ["push"], { titel: `⚡ Direkte Leitung: ${Math.round(pct)} % des Gratis-Kontingents`,
+    kurz: stufe[1], betreff: "Köcheclub-App: Kontingent der direkten Leitung",
+    text: `Hallo,\n\ndiesen Monat sind ${Number(data.anzahl).toLocaleString("de-DE")} von ${RT_GRENZE.toLocaleString("de-DE")} kostenlosen Signalen der direkten Leitung verbraucht (${Math.round(pct)} %).\n${stufe[1]}.\n\nEs entstehen keine Kosten. Am Monatsanfang beginnt die Zählung neu.`,
+    url: APP_URL }, `club-rt-kontingent:${monat}:${stufe[0]}`).catch((e) => console.error("rt warnen", String(e)));
+  for (const [p] of RT_STUFEN) if (pct >= p) gewarnt[String(p)] = jetzt();
+  await db.from("kc_club_rt_zaehler").update({ gewarnt }).eq("monat", monat);
+  await protokoll(null, "rt_kontingent_warnung", { monat, anzahl: data.anzahl, prozent: Math.round(pct) });
+}
 // KC-CLUB-REISE-CHECKLISTE (2.223.0, Wunsch Hansi „Erinnerung 2 Tage vorher“): ab 9 Uhr, 2 Tage vor einer Kreuzfahrt, jede/r
 // Teilnehmende, deren Checkliste noch nicht ganz abgehakt ist (oder die sie noch nie geöffnet haben), einmal Push/E-Mail.
 // „Schon erinnert“ merkt sich nur der Server (eigener Schlüssel, die App kann ihn nicht setzen) – kein doppelter Versand.
@@ -4616,6 +4637,7 @@ Deno.serve(async (req) => {
       await schulungNachfrageErinnern().catch((e) => console.error("schulung nachfrage", String(e))); // KC-CLUB-SCHULUNG-NACHFRAGE (2.35.0)
       await reiseChecklisteErinnern().catch((e) => console.error("reise checkliste", String(e))); // KC-CLUB-REISE-CHECKLISTE (2.223.0)
       await dienstGrussSenden().catch((e) => console.error("dienst gruss", String(e))); // KC-CLUB-DIENST-GRUSS (2.224.0)
+      await rtZaehlerWarnen().catch((e) => console.error("rt zaehler", String(e))); // KC-CLUB-RT-SPARBREMSE (2.230.0)
       await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
       await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
       await geburtstagZettelAbnehmen().catch((e) => console.error("geburtstag zettel ab", String(e))); // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0)
@@ -5190,6 +5212,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // die Kachel „Neue Nachr.“ blinkt rot/orange. Fehler hier stören den Start nie (dann ohne Mahnung, Zahl bleibt ehrlich).
         // KC-CLUB-REALTIME (2.226.0): eigener, nicht erratbarer Signal-Kanal (HMAC in der Datenbank) – Fehler → App fragt wie früher nach
         const pRtKanal = Promise.resolve(db.rpc("kc_club_rt_kanal", { p_person: ich.person_id })).then((r: any) => (typeof r.data === "string" ? r.data : null)).catch(() => null);
+        // KC-CLUB-RT-SPARBREMSE (2.230.0): Admin sieht, wie viel vom kostenlosen Monats-Kontingent verbraucht ist
+        const pRtZaehler = ich.admin ? Promise.resolve(db.from("kc_club_rt_zaehler").select("anzahl,geaendert_am").eq("monat", berlinTag(new Date()).slice(0, 7)).maybeSingle())
+          .then((r: any) => (r.error ? null : { anzahl: Number(r.data?.anzahl || 0), grenze: RT_GRENZE, stand: r.data?.geaendert_am ?? null })).catch(() => null) : Promise.resolve(undefined);
         const pMahnung = (async () => {
           const grenze = new Date(Date.now() - MAHNUNG_TAGE * 86400000).toISOString();
           const listen = await Promise.all(zahlen.filter((z) => z.n > 0).slice(0, 40).map(async ({ t }) => {
@@ -5252,7 +5277,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await pWillkommen;
         zt.ende = Date.now() - t0Anfrage;
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
-        return json({ meinGeburtstag, alarm, kz, studio, sosFuerAlle: await pSos, spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ meinGeburtstag, alarm, kz, studio, sosFuerAlle: await pSos, spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)

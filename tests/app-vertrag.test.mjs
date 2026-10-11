@@ -3746,7 +3746,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 359. 2.23.9: Spar-Takt (KC-CLUB-SPARTAKT) – weniger Server-Aufrufe, damit die kostenlose Grenze sicher hält
 {
   assert.ok(/if \(chatTakt\.laeuft \|\| document\.hidden\) return;/.test(html), "Chat im Hintergrund nicht nachfragen");
-  assert.ok(/const frisch = Date\.now\(\) - CHAT_AKTIV < 90000, ruhig = (rtAn\(\) \? 30 : )?PUSH_AKTIV \? 10 : 6;/.test(html) && /CHAT\?\.tippt\?\.length \|\| \(jemandDa && ONL\.takt % \((rtAn\(\) \? 5 : )?frisch \? 2 : 4\) === 0\)/.test(html), "Tippen bleibt sofort, sonst seltener"); // 2.226.0: mit Realtime noch seltener
+  assert.ok(/const frisch = Date\.now\(\) - CHAT_AKTIV < 90000, ruhig = (rtAn\(\) \? 30 : )?PUSH_AKTIV \? 10 : 6;/.test(html) && /CHAT\?\.tippt\?\.length \|\| \(jemandDa && ONL\.takt % \((rtAn\(\) \? 1?5 : )?frisch \? 2 : 4\) === 0\)/.test(html), "Tippen bleibt sofort, sonst seltener"); // 2.226.0: mit Realtime noch seltener
   assert.ok(/NA\.idStand = idStand; CHAT_AKTIV = Date\.now\(\);/.test(html), "neue Nachricht → wieder schnell");
   assert.ok(/if \(SP\.offen\.ichDran \? SPT_TAKT\.n % 5 : SPT_TAKT\.ruhig > 40 && !SP\.offen\.uhr\?\.laeuft && SPT_TAKT\.n % 3\) return;/.test(html) && /SPT_TAKT\.ruhig = 0; const warDran/.test(html), "Spiele-Takt");
   assert.ok(!/function aeErledigt/.test(html), "alter Knopf „Im KC Manager eingetragen“ entfernt");
@@ -8075,4 +8075,16 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/when \(new\.schluessel in \('vorfuehren', 'schnappschuss'\)\)/.test(m) && /array_remove\(array\[new\.person_id, new\.wert->>'von'\], null\)/.test(m) && !/frame|bild/.test(m.slice(m.indexOf("perform"), m.indexOf("exception"))), "nur Signal an beide Seiten, nur zwei Schlüssel");
   assert.ok(/async function vfHolen\(sofort\)/.test(html) && /if \(s\.art === "vorfuehren"\) \{ if \(VF\.rolle === "schaut"\) vfHolen\(true\)/.test(html) && /if \(s\.art === "mitschauen"\) \{ if \(SS\.id\) ssHolen\(true\)/.test(html), "Zuschauer holt sofort");
   assert.ok(/VF\.nochmal = true/.test(html) && /SS\.nochmal = true/.test(html) && /if \(VF\.status !== "laeuft"\) \{ SPG\.ping = 0; spgSenderTakt\(\); \}/.test(html), "kein verpasstes Bild, keine Echo-Sendungen");
+}
+
+// 2.230.0 KC-CLUB-RT-SPARBREMSE + Alarm/SOS, Gelesen, Online, Pinnwand, Termine, Abstimmungen an der direkten Leitung (Wunsch Hansi)
+{
+  const m = lies("supabase/migrations/20261011_kc_club_v2230_realtime_sparbremse.sql"), t = lies("supabase/migrations/20261011_kc_club_v2230b_realtime_trigger.sql");
+  assert.ok(/if p_art <> 'alarm' and v_n >= 1900000 then return; end if;/.test(m) && /p_art in \('tippt', 'vorfuehren', 'mitschauen', 'online', 'pinnwand', 'termin', 'abstimmung'\) and v_n >= 1400000 then return;/.test(m), "Bremse: 70 % teure Signale, 95 % nur Alarm");
+  assert.ok(/'\^\\s\*🚨\\s\*NOTFALL' then 'alarm'/.test(m), "Notfall-Meldung = Alarm-Signal");
+  assert.ok(/m\.sender_person_id <> new\.person_id\s+and m\.created_at > coalesce\(old\.last_read_at/.test(m), "Gelesen nur bei wirklich gelesenen fremden Nachrichten (kein Hin und Her)");
+  assert.ok(/\(new\.wert->>'seit'\) is distinct from \(old\.wert->>'seit'\)/.test(m) && /e\.wert->>'zeigen' = 'false'/.test(m) && /e\.schluessel = 'inkognito'/.test(m), "Online nur bei neuer Sitzung, nie bei verborgen/inkognito");
+  assert.ok(!/kc_club_geheime_stimmen/.test(t) && /kc_club_rt_stimme after insert or update on public\.kc_club_stimmen/.test(t), "geheime Stimmen ohne Signal");
+  assert.ok(/const RT_GRENZE = 2000000/.test(server) && /await rtZaehlerWarnen\(\)\.catch/.test(server) && /`club-rt-kontingent:\$\{monat\}:\$\{stufe\[0\]\}`/.test(server), "Warnung je Stufe einmal im Monat");
+  assert.ok(/if \(s\.art === "alarm"\) \{ neuLaden\(\); return; \}/.test(html) && /\["rt", "⚡", "Direkte Leitung", "ueb"\]/.test(html) && /function rtKontingent\(\)/.test(html), "App: Alarm sofort, Lage-Kachel, Kontingent");
 }

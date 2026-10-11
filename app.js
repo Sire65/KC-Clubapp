@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.229.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.230.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -3730,6 +3730,13 @@ function rtLedZeigen() {
   led.className = "led led-rt " + farbe; led.title = text; led.setAttribute("aria-label", text);
 }
 setInterval(rtLedZeigen, 3000);
+// KC-CLUB-RT-SPARBREMSE (2.230.0): Verbrauch des kostenlosen Monats-Kontingents (nur Admin, Zahl vom Server)
+function rtKontingent() {
+  const z = INIT?.rtZaehler; if (!z) return null;
+  const pct = z.grenze ? (z.anzahl / z.grenze) * 100 : 0;
+  return { ...z, pct, farbe: pct >= 95 ? "rot" : pct >= 70 ? "gelb" : "gruen", text: `${z.anzahl.toLocaleString("de-DE")} von ${(z.grenze / 1e6).toLocaleString("de-DE")} Mio. Signalen (${pct < 1 && pct > 0 ? "unter 1" : Math.round(pct)} %)${pct >= 95 ? " · nur noch Alarm" : pct >= 70 ? " · Sparbremse aktiv" : ""}` };
+}
+function rtKontingentZeile() { const k = rtKontingent(); return k ? `<tr><td>Gratis-Kontingent diesen Monat</td><td><i class="led ${k.farbe}"></i> ${esc(k.text)}</td></tr>` : ""; }
 function rtBlatt() {
   const [farbe, text] = rtZustand(), zu = () => f.remove();
   const f = dlgOeffnen(`<h3 class="dlg-kopf">⚡ Direkte Leitung (Realtime)</h3>
@@ -3737,6 +3744,7 @@ function rtBlatt() {
     <table class="vb-tabelle">
       <tr><td>Signale seit App-Start</td><td>${RT.signale}</td></tr>
       <tr><td>Letzte Antwort der Leitung</td><td>${RT.letzte ? fZeit.format(new Date(RT.letzte)) + " Uhr" : "–"}</td></tr>
+      ${rtKontingentZeile()}
     </table>
     <p class="hinweis" style="margin:8px 0">🟢 steht – Neues kommt sofort<br>🟡 wird aufgebaut oder antwortet nicht<br>🔴 unterbrochen – die App fragt solange selbst nach<br>🔵 pausiert (Hintergrund, Notbetrieb)<br>⚪ nicht verfügbar</p>
     <div class="dlg-knoepfe"><button class="knopf" data-neu>🔄 Neu verbinden</button><button class="knopf haupt" data-zu>Schließen</button></div>`, zu);
@@ -3748,6 +3756,16 @@ function rtTrennen() { RT.zu = true; clearTimeout(RT.neu); clearInterval(RT.herz
 function rtNachholen() { onlinePing(); if (chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } }
 function rtSignal(s) {
   RT.signale++;
+  // KC-CLUB-RT-SPARBREMSE + weitere Bereiche (2.230.0): Alarm sofort (ohne Pause), Gelesen-Haken, Online, Pinnwand, Termine, Abstimmungen
+  if (s.art === "alarm") { neuLaden(); return; } // Notfall-Meldung → init → alarmPruefen() zeigt sie groß in Rot
+  if (s.art === "gelesen") { if (s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } return; }
+  if (s.art === "online") { onlinePing(); return; }
+  if (s.art === "pinnwand") { clearTimeout(RT.pw); RT.pw = setTimeout(() => { pwLive(); if (aktuelleAnsicht === "pinnwand") pwLaden(); }, 800); return; }
+  if (s.art === "termin" || s.art === "abstimmung") {
+    clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500); // Zusagen/offene Abstimmungen auf der Startseite
+    if (s.art === "abstimmung" && aktuelleAnsicht === "vorschlaege") { clearTimeout(RT.vs); RT.vs = setTimeout(vorschlaegeLaden, 800); }
+    return;
+  }
   if (s.art === "klopfen" || s.art === "anruf") { onlinePing(); if (RUF?.id) anrufPruefen(); return; }
   // KC-CLUB-REALTIME-SPIELE (2.228.0): Zug/Herausforderung/Aufgabe – offenes Spiel sofort holen, sonst Einladungen/„du bist dran“ auffrischen
   // KC-CLUB-REALTIME-VORFUEHREN (2.229.0): neues Live-Bild / Status → Zuschauer holt sofort; Zeigender prüft gleich den Stand
@@ -4069,7 +4087,7 @@ function chatTakt() {
   if (chatTakt.laeuft || document.hidden) return;
   const jemandDa = (CHAT?.teilnehmer || []).some((t) => t.person_id !== ICH?.person_id && ONL.ids.has(t.person_id));
   const frisch = Date.now() - CHAT_AKTIV < 90000, ruhig = rtAn() ? 30 : PUSH_AKTIV ? 10 : 6; // KC-CLUB-REALTIME: neue Nachrichten melden sich selbst – nur noch alle 60 s zur Sicherheit
-  if (!(CHAT?.tippt?.length || (jemandDa && ONL.takt % (rtAn() ? 5 : frisch ? 2 : 4) === 0) || ONL.takt % ruhig === 0)) return; // Realtime: „gelesen“-Haken weiter alle 10 s
+  if (!(CHAT?.tippt?.length || (jemandDa && ONL.takt % (rtAn() ? 15 : frisch ? 2 : 4) === 0) || ONL.takt % ruhig === 0)) return; // Realtime: „gelesen“-Haken kommen per Signal (2.230.0) – Nachfragen nur alle 30 s
   chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; });
 }
 // KC-CLUB-TIPPT (0.54.0): beim Tippen höchstens alle 3 s „ich schreibe“ melden, Feld leer → sofort aus.
@@ -11278,6 +11296,10 @@ function adZustand(id) {
   const m = r?.mitglieder, c = r?.communicator, sf = r ? adminSpiegelFarben(r.spiegel) : null;
   const kanal = (k) => ({ ok: "gruen", stoerung: "rot", aus: "grau" }[k?.zustand] || "grau");
   switch (id) {
+    // KC-CLUB-RT-SPARBREMSE (2.230.0): Leitung + Kontingent in der Lage (rot nur bei 95 %; Leitung weg = gelb, die App fragt dann selbst nach)
+    case "rt": { const k = rtKontingent(), [lf] = rtZustand();
+      if (!k) return ["grau", "Stand unbekannt"];
+      return [k.farbe === "rot" ? "rot" : k.farbe === "gelb" || lf === "rot" || lf === "gelb" ? "gelb" : "gruen", `${k.pct < 1 && k.pct > 0 ? "unter 1" : Math.round(k.pct)} % Kontingent · Leitung ${{ gruen: "steht", gelb: "baut auf", rot: "unterbrochen", blau: "pausiert", grau: "aus" }[lf]}`]; }
     case "server": return !r ? gemessen() : gemessen(!r.server.ok ? ["rot", "Datenbank antwortet nicht"] : [r.server.dbMs > 1500 ? "gelb" : "gruen", `v${r.server.version} · ${r.server.dbMs} ms`]);
     case "supabase": {
       if (!r) return gemessen();
@@ -11318,13 +11340,13 @@ function adZustand(id) {
   }
   return ["keine", ""];
 }
-const AD_UEBERWACHT = ["server", "supabase", "neon", "backup", "b2", "not", "comm", "mail", "push", "kasse", "programme"];
+const AD_UEBERWACHT = ["server", "supabase", "neon", "backup", "b2", "not", "comm", "mail", "push", "kasse", "programme", "rt"];
 // Kacheln: Gruppe (Farbstreifen oben) + Lämpchen rechts oben; Dienste-Kacheln öffnen ihre Direktsprünge
 const AD_KACHELN = [
   ["alarm", "🚨", "Alarm an alle", "not"], ["lage", "📊", "Lage", "ueb"], ["notfall", "🧯", "Notfall", "not"], ["server", "🖥️", "Server", "ueb"], ["supabase", "🗄️", "Supabase", "ueb"],
   ["neon", "🪞", "Neon-Spiegel", "ueb"], ["backup", "🛟", "Backups", "ueb"], ["b2", "💾", "B2-Backup", "ueb"], ["not", "🚑", "Notbetrieb", "ueb"],
   ["comm", "📨", "Communicator", "dienst"], ["mail", "✉️", "Mail · Brevo", "dienst"], ["push", "🔔", "Push", "dienst"], ["kasse", "🧾", "Kasse · Gateway", "dienst"],
-  ["programme", "💻", "KC-Programme", "dienst"], ["versionen", "📱", "Versionen", "app"], ["fehler", "🩺", "Fehler", "app"], ["nutzung", "👥", "Nutzung", "app"],
+  ["programme", "💻", "KC-Programme", "dienst"], ["rt", "⚡", "Direkte Leitung", "ueb"], ["versionen", "📱", "Versionen", "app"], ["fehler", "🩺", "Fehler", "app"], ["nutzung", "👥", "Nutzung", "app"],
   ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["freigaben", "🚦", "Freigaben", "app"], ["inkognito", "🕶️", "Inkognito", "app"], ["stadt", "🏙️", "Stadt-Termine", "app"],
   ...Object.entries(AD_DIENSTE).map(([k, d]) => ["l-" + k, d.sym, d.t, "link"]),
 ];
@@ -11357,6 +11379,7 @@ const adLinks = (k) => { const d = AD_DIENSTE[k]; return `<details class="karte 
 function adBlatt(id) {
   if (id === "alarm") return notfallMeldung(); // KC-CLUB-NOTFALL-MELDUNG
   if (id === "stadt") return stadtTermine(); // KC-CLUB-STADT-TERMINE
+  if (id === "rt") return rtBlatt(); // KC-CLUB-RT-SPARBREMSE (2.230.0)
   AD.offen = id;
   const r = adLage(), z = adZustand(id), m = r?.mitglieder, c = r?.communicator, e = AD.ext;
   const kopf = (sym, t) => `<h3 style="margin:0">${sym} ${esc(t)}</h3><p class="hinweis" style="margin:0">${r ? `Stand ${esc(zeitKurz(r.zeit))} Uhr${adAlt() ? " · ⚠️ veraltet" : ""}` : "Noch keine Daten"}${e.zeit ? ` · Prüfung ${esc(fZeit.format(new Date(e.zeit)))} Uhr` : ""}</p>`;
