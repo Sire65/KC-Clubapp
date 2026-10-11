@@ -1,5 +1,5 @@
 {
-  "version": "2.277.0",
+  "version": "2.277.1",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
@@ -7,6 +7,14 @@
     "❄️ Eiszapfen länger und unterschiedlich wie am Dach"
   ],
   "verlauf": [
+    {
+      "version": "2.277.1",
+      "datum": "2026-10-11",
+      "neu": [
+        "☀️ Die Sonne lässt den Schneemann schmelzen – sein Schal fliegt mit dem Wind davon",
+        "❄️ Eiszapfen länger und unterschiedlich wie am Dach"
+      ]
+    },
     {
       "version": "2.277.0",
       "datum": "2026-10-11",

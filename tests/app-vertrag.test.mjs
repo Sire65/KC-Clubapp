@@ -5806,6 +5806,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/J\.sonne = null; J\.wind = null;/.test(html), "Sonne verschwindet mit dem Lauf");
   assert.ok(/viewBox="0 0 100 22"/.test(html) && /\.jz-eis \{[^}]*height: 22px/.test(html) && /Math\.pow\(zf\(i\), 2\.2\)/.test(html), "Eiszapfen länger und unterschiedlich (höchstens 22 px)");
 }
+// 2.277.1: Vertragstest „Schneemann steht 50 s“ an die Sonne angepasst (Verhalten unverändert: nach 50 s beginnt das Schmelzen)
+{
+  assert.ok(/if \(J\.pt >= 50\) \{ jzbSonneStart\(\); jzbPhase\("schmelzen"\); \}/.test(html), "Schneemann steht weiter 50 s");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -8446,7 +8450,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/J\.liegt\.push\(\{ x: b\.x, yb: J\.h - boden \+ b\.s \* \.5,/.test(html) && /jzbBlatt\(c, b\.x, J\.h - b\.yb - Math\.abs\(w\) \* 3,/.test(html) && !/J\.liegt\.push\(\{ x: b\.x, y: /.test(html), "liegendes Laub hält Abstand zum Boden (Kopfhöhe wechselt mit dem Infofeld)");
   assert.ok(/k: h >= 150 \? 1 : Math\.max\(\.55, h \/ 150\)/.test(html), "Größe springt nicht mit der Infofeld-Höhe");
-  assert.ok(/const JZB_BLUEHT = 150;/.test(html) && /if \(J\.pt >= 50\) jzbPhase\("schmelzen"\);/.test(html), "längere Blüte, Schneemann steht länger");
+  assert.ok(/const JZB_BLUEHT = 150;/.test(html) && /if \(J\.pt >= 50\) (\{ jzbSonneStart\(\); )?jzbPhase\("schmelzen"\);/.test(html), "längere Blüte, Schneemann steht länger");
 }
 
 // 2.252.0 KC-CLUB-TWINKEY-BILD + -VIDEOS (Fund Hansi: Wilfried fragte „Kochbild“, Twinkey kannte es nicht)

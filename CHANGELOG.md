@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.277.1 – 2026-10-11 – Testvertrag an die Schneemann-Sonne angepasst
+Nur Prüfung: der ältere Test „Schneemann steht 50 s“ kennt jetzt die Sonne – das Verhalten der App ist unverändert.
+
 ## 2.277.0 – 2026-10-11 – KC-CLUB-SCHNEEMANN-SONNE: Sonne lässt den Schneemann schmelzen, Schal fliegt davon · Eiszapfen länger
 Nach einer Weile geht von links eine strahlende Sonne auf und steigt ein Stück über den Schneemann – er schmilzt, nur sein weinroter Schal bleibt liegen; der Wind wirbelt ihn dann mit dem Schnee durch die Luft davon. Eiszapfen an der Leiste mit den Lämpchen sind jetzt länger und unterschiedlich wie am Dach (viele kurze, einige lange, höchstens 22 px – das Infofeld bleibt frei).
 
