@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.269.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-5: vier neue Erklär-Videos (Wunsch Hansi „prüfen, ob noch Videos fehlen“)
+- Abgleich Kacheln ↔ Videos: ohne Video waren u. a. Dienst, Status, Protokolle/Dokumente, Meine Daten, Aktionen, Rezeptbuch, Fit bleiben, Schulung, Studio, Feedback, Update/Sicherheit/Programme.
+- Neu: 🗓️ „Mein Dienst & Dienstplan“ (Wunsch → Soll → Ist, Wünsche mit Twinkey, Wochen blättern, Zeiten vergleichen), 🟢 „Mein Status“ (Urlaub mit Bis-Datum und Hinweis), 📄 „Protokolle & Dokumente“ (Liste, Ansicht, Filter, Anleitungen), 🔐 „Meine Daten & Änderungen“ (Übersicht, Änderung melden).
+- Nur vorgeführt: nichts gespeichert, gemeldet oder als gelesen markiert; Fenster und Register am Ende zurück. Themen: Termine & Dienst, Club & Archiv, Ich & meine App; Twinkey bietet die Videos bei passenden Fragen an.
+
 ## 2.268.0 – 2026-10-11 – KC-CLUB-START-HINWEIS-2: Start-Hinweis mit drei Knöpfen – Ansehen, Später, Keinen Hinweis mehr (Wunsch Hansi)
 Der Hinweis auf ungelesene Nachrichten hat jetzt drei Knöpfe: „💬 Ansehen“ öffnet die Nachrichten, „⏰ Später“ fragt beim nächsten Start noch einmal (die Nachrichten-Kachel leuchtet kurz auf), „🔕 Keinen Hinweis mehr auf diese Nachrichten“ beendet den Hinweis. Knöpfe untereinander, gut lesbar.
 

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.268.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.269.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1765,6 +1765,78 @@ const RG_OBERFLAECHE = [
   { v: "start", vor: () => { rgKopf(); rgAnordnen(false); }, t: "✅ Fertig", x: () => einfach() ? "Das war's: Kopf einrollen und Kacheln anordnen. In der erweiterten Ansicht kannst du noch viel mehr – schau dir das Video dort noch einmal an. Probier es einfach aus!"
     : "Das war's: Kopf einrollen, blättern, Kacheln verschieben, verbergen und umdrehen, Register anordnen und wischen. So gestaltest du dir deine Wunsch-Oberfläche – probier es einfach aus!" },
 ];
+// KC-CLUB-ERKLAERVIDEOS-5 (2.269.0, Wunsch Hansi „prüfen, ob noch Schulungsvideos fehlen, und weiter erstellen“): Mein Dienst & Dienstplan,
+// Mein Status, Protokolle & Dokumente, Meine Daten & Änderungen melden. Nur vorgeführt – nichts gespeichert, gemeldet oder als gelesen markiert;
+// geöffnete Fenster gehen am Ende wieder zu, das Register wird zurückgestellt.
+function rgReg(r) { if (!einfach() && reg !== r) { const alt = reg; register(r); RG.zurueck.push(() => { if (reg !== alt) register(alt); }); } }
+function rgBlatt(id, oeffnen) { // dynamisches Fenster (blattAuf) für das Video öffnen – am Ende wieder zu
+  for (const x of ["mdBlatt", "mdatBlatt", "aeBlatt"]) if (x !== id) $(x)?.remove();
+  if (!$(id)) { oeffnen(); RG.zurueck.push(() => $(id)?.remove()); }
+  $(id)?.classList.add("rg-zeigen");
+}
+function rgStatus(wahl) { // festes Fenster „Mein Status“ zeigen, auf Wunsch mit Beispiel – nie speichern
+  if (!RG.stZurueck) { RG.stZurueck = true; RG.zurueck.push(() => { RG.stZurueck = false; $("statusBlatt").classList.add("versteckt"); $("statusBlatt").classList.remove("rg-zeigen"); }); }
+  if ($("statusBlatt").classList.contains("versteckt")) statusBlatt();
+  $("statusBlatt").classList.add("rg-zeigen");
+  if (wahl) { statusWahl = wahl; statusBlatt2(); $("stBis").value = rgDatum(7); $("stHinweis").value = "Ab Montag bin ich wieder da"; }
+}
+const rgStatusZu = () => { $("statusBlatt")?.classList.add("versteckt"); $("statusBlatt")?.classList.remove("rg-zeigen"); };
+const RG_DIENST = [
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgReg("mein"); }, sel: ['#raster .kachel[data-id="mein_dienst"]'], mussSel: true, t: "🗓️ Mein Dienst",
+    x: "Alles zu deinem Dienst – zum Beispiel am Weihnachtsmarkt – findest du im Register Meins unter Mein Dienst.", live: async (L) => { await L.tipp('#raster .kachel[data-id="mein_dienst"]'); } },
+  { v: "start", nur: () => einfach(), vor: () => rgKopf("ganz"), sel: ['#raster .kachel[data-id="meindienst"]', '#raster .kachel[data-id="dienstwunsch"]'], t: "🗓️ Dein Dienst",
+    x: "In der einfachen Ansicht findest du deinen Dienstplan und die Dienstwünsche direkt als Kacheln auf der Startseite." },
+  { v: "start", nur: () => !einfach(), vor: () => rgBlatt("mdBlatt", mdStart), sel: ["#mdBlatt .blatt-innen"], t: "1️⃣ 2️⃣ 3️⃣ In drei Schritten",
+    x: "Hier steht alles auf einen Blick, in drei Schritten: Erst gibst du deine Wünsche ab. Dann plant der Planer den Dienstplan. Und am Ende zählt, was du wirklich gearbeitet hast." },
+  { v: "start", nur: () => !einfach(), vor: () => rgBlatt("mdBlatt", mdStart), sel: ["#mdInhalt > .karte:nth-of-type(1)", "#mdBlatt"], t: "📝 Wünsche eintragen",
+    x: "Mit Wünsche eintragen öffnet sich Twinkey und fragt dich Tag für Tag: Wann kannst du, wann lieber nicht? Zum Schluss bekommst du eine Bestätigung. Hier trage ich nichts ein.",
+    live: async (L) => { await L.tipp("#mdInhalt > .karte:nth-of-type(1) .knopf.haupt"); } },
+  { v: "start", nur: () => !einfach(), vor: () => rgBlatt("mdBlatt", mdStart), sel: ["#mdInhalt > .karte:nth-of-type(2)", "#mdBlatt"], t: "📅 Deine nächsten Dienste",
+    x: "Darunter stehen deine nächsten Dienste, sobald der Planer sie veröffentlicht hat. Und ganz unten, was du gearbeitet hast – die Zeiten kommen von der Stempeluhr." },
+  { v: "dienste", vor: () => { $("mdBlatt")?.remove(); }, sel: ["#v-dienste .dpnav"], t: "🗓️ Der Dienstplan",
+    x: "Im Dienstplan blätterst du mit Woche vor und Woche zurück. Heute springt wieder zur aktuellen Woche.",
+    live: async (L) => { await L.tipp("#v-dienste .dpnav .knopf:last-child"); dpWoche(1); await L.warte(1800); await L.tipp("#v-dienste .dpnav .knopf:first-child"); dpWoche(-1); } },
+  { v: "dienste", sel: ["#dpPersonen"], t: "👥 Zeiten vergleichen",
+    x: "Oben tippst du Namen an, um Dienstzeiten zu vergleichen – gold heißt: gleichzeitig im Dienst. Andere sehen deine Zeiten nur, wenn du das ganz unten erlaubst." },
+  { v: "dienste", t: "✅ Fertig", x: "Das war's: Wünsche abgeben, Dienstplan ansehen, Zeiten vergleichen. Fragen zum Dienst? Frag einfach Twinkey." },
+];
+const RG_STATUS = [
+  { v: "start", vor: () => { rgKopf("offen"); rgStatusZu(); }, sel: ["#statusChip"], puls: ["#statusChip"], t: "🟢 Dein Status",
+    x: "Oben im Kopf steht dein Status – zum Beispiel verfügbar. So sehen die anderen, ob du gerade erreichbar bist. Antippen, und du kannst ihn ändern.",
+    live: async (L) => { await L.tipp("#statusChip"); rgStatus(); L.ziel(); } },
+  { v: "start", vor: () => rgStatus(), sel: ["#statusBlatt .liste"], t: "📋 Was passt gerade?",
+    x: "Wähle, was gerade passt: verfügbar, beschäftigt, im Urlaub, krank oder nicht erreichbar." },
+  { v: "start", vor: () => rgStatus("urlaub"), sel: ["#stExtra", "#statusBlatt .liste"], t: "🏖️ Zum Beispiel Urlaub",
+    x: "Bei Urlaub gibst du auf Wunsch ein, bis wann – und einen kurzen Hinweis, zum Beispiel: Ab Montag bin ich wieder da. Die anderen sehen das bei deinem Namen.",
+    live: async (L) => { await L.tipp(() => [...document.querySelectorAll("#statusBlatt .liste .knopf")].find((b) => /Urlaub/.test(b.textContent))); } },
+  { v: "start", vor: () => rgStatus("urlaub"), sel: ['#statusBlatt [onclick="statusSpeichern()"]'], t: "💾 Speichern",
+    x: "Mit Speichern ist dein Status gesetzt. Hier speichere ich nichts – dein Status bleibt, wie er ist." },
+  { v: "start", vor: () => rgStatusZu(), sel: ["#statusChip"], t: "✅ Fertig",
+    x: "Ist der Urlaub vorbei, stellst du einfach wieder verfügbar ein. Das geht auch unter Meins, Kachel Mein Status." },
+];
+const RG_LESEN = [
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgReg("verein"); }, sel: ['#raster .kachel[data-id="protokolle"]'], mussSel: true, t: "📄 Protokolle",
+    x: "Die Protokolle der Clubsitzungen findest du im Register Club unter Protokolle.", live: async (L) => { await L.tipp('#raster .kachel[data-id="protokolle"]'); } },
+  { v: "protokolle", sel: ["#protokollListe"], t: "📄 Nachlesen",
+    x: "Hier stehen alle Protokolle. Neue sind markiert, bis du sie geöffnet hast. Antippen öffnet ein Protokoll – zum Lesen und Drucken. Hier öffne ich keins." },
+  { v: "protokolle", sel: ["#prFilterKnopf", "#prAnsichtKnopf"], puls: ["#prAnsichtKnopf", "#prFilterKnopf"], t: "🔎 Ansicht und Filter",
+    x: "Oben wechselst du zwischen Liste und Kacheln. Mit dem Filter suchst du nach Jahr, Monat, Ort oder Protokollführer. Ältere Protokolle stehen auch im Archiv." },
+  { v: "dokumente", sel: ["#dokRaster"], t: "📚 Meine Dokumente",
+    x: "Unter Meine Dokumente liegen Anleitungen – zum Beispiel die Bedienungsanleitung der App. Antippen, ansehen, drucken oder teilen. Mit dem Pfeil oben links geht es zurück." },
+  { v: "dokumente", t: "✅ Fertig", x: "Protokolle zum Nachlesen, Anleitungen zum Ausdrucken – alles an einem Ort, und nichts geht verloren." },
+];
+const RG_DATEN = [
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgReg("mein"); }, sel: ['#raster .kachel[data-id="meinedaten"]'], mussSel: true, t: "🔐 Meine Daten",
+    x: "Was der Club über dich gespeichert hat, siehst du im Register Meins unter Meine Daten.", live: async (L) => { await L.tipp('#raster .kachel[data-id="meinedaten"]'); } },
+  { v: "start", vor: () => rgBlatt("mdatBlatt", mdatStart), sel: ["#mdatBlatt .blatt-innen"], t: "👀 Alles auf einen Blick",
+    x: "Hier steht alles, was über dich gespeichert ist – nur du siehst diese Übersicht. Du kannst sie drucken oder als Datei sichern." },
+  { v: "start", vor: () => rgBlatt("mdatBlatt", mdatStart), sel: ["#mdatInhalt .na-pfeil-knoepfe"], t: "✏️ Stimmt etwas nicht?",
+    x: "Hat sich etwas geändert, tippst du auf Änderung melden.", live: async (L) => { await L.tipp("#mdatInhalt .na-pfeil-knoepfe .knopf.haupt"); rgBlatt("aeBlatt", aeStart); L.ziel(); } },
+  { v: "start", vor: () => rgBlatt("aeBlatt", aeStart), sel: ["#aeBlatt .ae-wahl", "#aeBlatt .blatt-innen"], t: "📮 Was hat sich geändert?",
+    x: "Tippe an, was sich geändert hat – zum Beispiel Anschrift, Telefon, E-Mail oder Kleidergröße. Die Meldung geht automatisch an die Richtigen im Club. Hier melde ich nichts." },
+  { v: "start", vor: () => rgBlatt("aeBlatt", aeStart), t: "✅ Fertig",
+    x: "Unter Meine letzten Meldungen siehst du, was daraus geworden ist. Hast du Rückfragen, schreibst du direkt dem, der deine Meldung bearbeitet." },
+];
 // KC-CLUB-ERKLAERVIDEOS-EFFEKTE (2.265.0, Wunsch Hansi „Erklär-Video mit den Spezial-Effekten: Kacheln einschweben, Herbst mit Igel, Laub, Besen,
 // Schnee, Frühling und Sommer – kurz zeigen, wo und wie man sie einstellt; dazu die Wetter-Kacheln: antippen und lange festhalten. Darauf
 // hinweisen, dass das nur Möglichkeiten sind, die man jederzeit wieder abschalten kann“). Nur vorgeführt: Jahreszeit-Vorschau, gewählter
@@ -1886,6 +1958,10 @@ const RUNDGAENGE = [
   { id: "spiele", stand: "1", sym: "🎲", t: "Spiele", u: "Spiel aussuchen, gegen Computer oder Mitglieder (ca. 1 Min.)", st: () => RG_SPIELE },
   { id: "archiv", stand: "1", sym: "🗄️", t: "Archiv & Clubchronik", u: "Mein Ordner, Chronik, Clubleben, Inhaltsverzeichnis (ca. 1 Min.)", st: () => RG_ARCHIV },
   { id: "vorschlag", stand: "1", sym: "🗳️", t: "Vorschlag einreichen", u: "Thema oder Spende vorschlagen (ca. 1 Min.)", st: () => RG_VORSCHLAG },
+  { id: "dienst", stand: "1", sym: "🗓️", t: "Mein Dienst & Dienstplan", u: "Wünsche, Sollplan, gearbeitete Zeiten, Wochenplan (ca. 2 Min.)", st: () => RG_DIENST }, // 2.269.0 KC-CLUB-ERKLAERVIDEOS-5
+  { id: "status", stand: "1", sym: "🟢", t: "Mein Status", u: "Verfügbar, Urlaub, krank – mit Hinweis (ca. 1 Min.)", st: () => RG_STATUS },
+  { id: "lesen", stand: "1", sym: "📄", t: "Protokolle & Dokumente", u: "Nachlesen, filtern, Anleitungen drucken (ca. 1 Min.)", st: () => RG_LESEN },
+  { id: "meinedaten", stand: "1", sym: "🔐", t: "Meine Daten & Änderungen", u: "Was gespeichert ist – und neue Anschrift & Co. melden (ca. 1 Min.)", st: () => RG_DATEN },
   { id: "effekte", stand: "1", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 3 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
   { id: "figur", stand: "1", sym: "🧑‍🍳", t: "Koch-Figur als Bild aussuchen", u: "Mein Bild: Figur antippen, übernehmen (ca. 1 Min.)", st: () => RG_FIGUR, nur: () => frei("avatar") }, // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR
   { id: "figurbau", stand: "1", sym: "🧩", t: "Eigene Figur zusammenstellen", u: "Haare, Mütze, Gesicht, Brille, Kochjacke – und später bearbeiten (ca. 2 Min.)", st: () => RG_FIGUR_BAU, nur: () => frei("avatar") && frei("avatar_baukasten") },
@@ -1910,9 +1986,9 @@ function rgRollenAnsicht(ziel) {
 const RG_THEMEN = [
   { id: "einstieg", sym: "🚀", t: "Einstieg", videos: ["warum", "ueberblick", "hilfe"] },
   { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["nachricht", "mitglieder", "pinnwand"] },
-  { id: "termine", sym: "📅", t: "Termine", videos: ["termin", "zusagen"] },
-  { id: "club", sym: "🗄️", t: "Club & Archiv", videos: ["fotos", "archiv", "vorschlag", "helfen", "erstattung"] },
-  { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["einstellungen", "oberflaeche", "effekte", "figur", "figurbau"] },
+  { id: "termine", sym: "📅", t: "Termine & Dienst", videos: ["termin", "zusagen", "dienst"] },
+  { id: "club", sym: "🗄️", t: "Club & Archiv", videos: ["fotos", "lesen", "archiv", "vorschlag", "helfen", "erstattung"] },
+  { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["status", "meinedaten", "einstellungen", "oberflaeche", "effekte", "figur", "figurbau"] },
   { id: "freizeit", sym: "🎲", t: "Spiele & Notfall", videos: ["spiele", "sos"] },
   { id: "leitung", sym: "🗂️", t: "Für die Clubleitung", videos: ["leitung"] },
   { id: "admin", sym: "🛠️", t: "Für Admins", videos: ["admin"] },
@@ -6171,7 +6247,7 @@ async function twFrageStart(vorgabe = "") {
 // KC-CLUB-TWINKEY-VIDEOS (2.252.0, Wunsch Hansi „Du kannst es im Hilfetext nachlesen. Aber es gibt auch Erklär-Videos. Was möchtest du dir
 // ansehen?“): Antwort-Eintrag → passende Erklär-Videos (Registry RUNDGAENGE, nur die für das Mitglied sichtbaren) und der ausführliche Hilfetext.
 // Neue Videos hier einfach dem passenden Eintrag (f: Twinkeys Fragen, h: Hilfe-Zentrum) zuordnen.
-const TW_VIDEOS = { "h:wetter": ["effekte"], "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
+const TW_VIDEOS = { "h:wetter": ["effekte"], "f:dienstwunsch": ["dienst"], "f:dienstplan": ["dienst"], "f:status": ["status"], "f:protokoll": ["lesen"], "f:handbuch": ["lesen"], "f:adresse": ["meinedaten"], "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
   "f:nachricht": ["nachricht"], "f:termin-neu": ["termin"], "f:zettel": ["pinnwand"], "f:vorschlag": ["vorschlag"], "f:zusagen": ["zusagen"],
   "f:foto-album": ["fotos"], "f:geld": ["erstattung"], "f:notfall": ["sos"], "f:hilfe-suchen": ["helfen"], "f:leihen": ["helfen"], "f:anrufen": ["mitglieder"], "f:online": ["mitglieder"],
   "f:spielen": ["spiele"], "f:archiv": ["archiv"] }; // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4

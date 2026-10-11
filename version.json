@@ -1,11 +1,18 @@
 {
-  "version": "2.268.0",
+  "version": "2.269.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "💬 Hinweis auf ungelesene Nachrichten: Ansehen, Später oder Keinen Hinweis mehr"
+    "🎬 Vier neue Erklär-Videos: Mein Dienst & Dienstplan, Mein Status, Protokolle & Dokumente, Meine Daten & Änderungen"
   ],
   "verlauf": [
+    {
+      "version": "2.269.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🎬 Vier neue Erklär-Videos: Mein Dienst & Dienstplan, Mein Status, Protokolle & Dokumente, Meine Daten & Änderungen"
+      ]
+    },
     {
       "version": "2.268.0",
       "datum": "2026-10-11",
