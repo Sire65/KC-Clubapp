@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.238.0 – 2026-10-11 – Anmeldestand für Gastgeber und Clubleitung
+KC-CLUB-GASTGEBER-STAND: Wer bei einem Treffen als Gastgeber/in eingetragen ist (z. B. Anne beim Treffen in der Hütte), bekommt am Vorabend ab 18 Uhr und 2 Stunden vor Beginn Push und E-Mail mit dem Anmeldestand: Zusagen mit Namen, vielleicht, Absagen, noch offen, Hinweise der Teilnehmenden und „Bitte plane für … Personen“. Die Clubleitung bekommt denselben Stand.
+
 ## 2.237.0 – 2026-10-11 – Gespräch in Kopfzeile und Statusleiste
 KC-CLUB-ANRUF-ANZEIGE: Während eines App-Anrufs steht oben in der App 📞 bzw. 🎥 mit Gesprächsdauer (antippen = zurück ins Gespräch); im Anrufbildschirm gibt es „⌄ Verkleinern“, um während des Gesprächs in der App weiterzublättern. In der Statusleiste des Handys erscheint ein Telefon- bzw. Kamera-Symbol mit stiller Mitteilung „Anruf mit … – läuft seit … Uhr“, die mit dem Gespräch verschwindet.
 

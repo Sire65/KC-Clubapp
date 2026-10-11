@@ -8168,3 +8168,10 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/"badge-anruf\.png", "badge-video\.png"\]/.test(lies("sw.js")) && fs.existsSync(new URL("../badge-anruf.png", import.meta.url)) && fs.existsSync(new URL("../badge-video.png", import.meta.url)), "Symbole vorhanden und zwischengespeichert");
   assert.ok(/else if \(h === "#anruf"\) anrufZurueck\(\);/.test(html), "Mitteilung führt zurück ins Gespräch");
 }
+
+// 2.238.0 KC-CLUB-GASTGEBER-STAND (Wunsch Hansi): Gastgeber/in + Clubleitung bekommen am Vorabend und 2 Std. vorher den Anmeldestand
+{
+  assert.ok(/await gastgeberStandLauf\(\)\.catch/.test(server) && /bis > 0 && bis <= 2 \* 3600000 \? "2std" : heuteAbend && berlinTag\(new Date\(t\.beginn\)\) === morgen \? "vorabend"/.test(server), "Vorabend ab 18 Uhr + 2 Std. vorher, im Zeitplaner");
+  assert.ok(/sendenGewaehlt\("club_erinnerung", \[t\.gastgeber_person_id\], \["push", "email"\]/.test(server) && /const leitung = \(await leitungIds\(\)\)\.filter\(\(id\) => id !== t\.gastgeber_person_id\)/.test(server), "Push + E-Mail an Gastgeber/in und Clubleitung, ohne Doppel");
+  assert.ok(/eq\("aktion", "gastgeber_stand"\)\.eq\("details->>treffen", t\.id\)\.eq\("details->>stufe", stufe\)/.test(server), "jede Stufe nur einmal");
+}

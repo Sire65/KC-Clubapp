@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.236.0";
+const SERVER_VERSION = "2.238.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4485,6 +4485,47 @@ async function dienstGrussSenden() {
 // „teuren“ Signale (tippt, Live-Bild, online, Pinnwand, Termine, Abstimmungen), ab 95 % nur noch Alarm (kc_club_rt_klingeln).
 // Hier nur die Warnung an den Admin – je Stufe einmal im Monat (Push). Die App fragt bei gebremsten Signalen wie früher selbst nach.
 const RT_GRENZE = 2000000, RT_STUFEN: [number, string][] = [[50, "Hälfte erreicht – alles läuft normal weiter"], [70, "Sparbremse aktiv: „schreibt gerade“, Live-Bild, Online, Pinnwand, Termine und Abstimmungen kommen wieder über das normale Nachfragen"], [95, "nur noch Alarm über die direkte Leitung – alles andere über das normale Nachfragen"]];
+// KC-CLUB-GASTGEBER-STAND (2.238.0, Wunsch Hansi): Wer bei einem Treffen als Gastgeber/in eingetragen ist (z. B. Anne), bekommt
+// am Vorabend (ab 18 Uhr) und 2 Stunden vor Beginn Push + E-Mail mit dem Anmeldestand (Zusagen mit Namen, vielleicht, Absagen, offen,
+// Notizen wie „bringe Gast mit“) – die Clubleitung (Vorstand + Admin) bekommt dasselbe. Jede Stufe nur einmal (Merker im Protokoll).
+async function gastgeberStandLauf() {
+  const jetztMs = Date.now(), heuteAbend = berlinStunde(new Date()) >= 18, morgen = berlinTag(new Date(jetztMs + 86400000));
+  const { data: ts } = await db.from("kc_club_treffen").select("id,titel,beginn,ort,gastgeber_person_id").eq("status", "geplant").eq("art", "treffen")
+    .gte("beginn", new Date(jetztMs).toISOString()).lte("beginn", new Date(jetztMs + 2 * 86400000).toISOString());
+  for (const t of ts ?? []) {
+    const bis = Date.parse(t.beginn) - jetztMs;
+    const stufe = bis > 0 && bis <= 2 * 3600000 ? "2std" : heuteAbend && berlinTag(new Date(t.beginn)) === morgen ? "vorabend" : null;
+    if (!stufe) continue;
+    const { data: schon } = await db.from("kc_club_protokoll").select("id").eq("aktion", "gastgeber_stand").eq("details->>treffen", t.id).eq("details->>stufe", stufe).limit(1);
+    if (schon?.length) continue;
+    const [{ data: an }, mitglieder] = await Promise.all([db.from("kc_club_teilnahme").select("person_id,antwort,notiz").eq("treffen_id", t.id), aktiveMitglieder()]);
+    const pm = await personen([...new Set([...(an ?? []).map((x: any) => x.person_id), ...(t.gastgeber_person_id ? [t.gastgeber_person_id] : [])])]);
+    const name = (id: string) => { const x = pm.get(id); return x ? x.display_name || vorname(x) : id; };
+    const gruppe = (a: string) => (an ?? []).filter((x: any) => x.antwort === a);
+    const ja = gruppe("ja"), vl = gruppe("vielleicht"), nein = gruppe("nein");
+    const geantwortet = new Set((an ?? []).map((x: any) => x.person_id)), offen = mitglieder.filter((m) => !geantwortet.has(m.person_id));
+    const notizen = (an ?? []).filter((x: any) => x.notiz && x.antwort !== "nein").map((x: any) => `• ${name(x.person_id)}: ${x.notiz}`);
+    const liste = (l: any[]) => l.map((x) => name(x.person_id)).sort((a, b) => a.localeCompare(b, "de")).join(", ");
+    const g = t.gastgeber_person_id ? pm.get(t.gastgeber_person_id) : null;
+    const wo = t.ort || (g ? `bei ${vorname(g)}` : "");
+    const wannText = stufe === "2std" ? `in 2 Stunden (${fZeit.format(new Date(t.beginn))} Uhr)` : `morgen, ${wann(t.beginn, true)}`;
+    const zahl = `✅ ${ja.length} Zusage${ja.length === 1 ? "" : "n"}${vl.length ? ` · ❔ ${vl.length} vielleicht` : ""} · ❌ ${nein.length} Absage${nein.length === 1 ? "" : "n"} · ⏳ ${offen.length} noch offen`;
+    const text = (fuerGast: boolean) => `Hallo,\n\n${fuerGast ? `du bist Gastgeberin/Gastgeber beim Treffen „${t.titel}“ – ` : `Stand der Anmeldungen für „${t.titel}“ – `}${wannText}${wo ? ", " + wo : ""}.\n\n${zahl}\n\n`
+      + (ja.length ? `Zugesagt: ${liste(ja)}\n` : "Noch keine Zusagen.\n") + (vl.length ? `Vielleicht: ${liste(vl)}\n` : "") + (nein.length ? `Abgesagt: ${liste(nein)}\n` : "")
+      + (notizen.length ? `\nHinweise:\n${notizen.join("\n")}\n` : "")
+      + (fuerGast ? `\nBitte plane für ${ja.length}${vl.length ? ` bis ${ja.length + vl.length}` : ""} Personen.\n` : "")
+      + `\nAktueller Stand jederzeit in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`;
+    const kurz = `${t.titel} ${stufe === "2std" ? "in 2 Std." : "morgen"}: ${ja.length} Zusagen${vl.length ? `, ${vl.length} vielleicht` : ""}, ${offen.length} offen`;
+    const leitung = (await leitungIds()).filter((id) => id !== t.gastgeber_person_id);
+    if (t.gastgeber_person_id) await sendenGewaehlt("club_erinnerung", [t.gastgeber_person_id], ["push", "email"], {
+      titel: `🏠 ${stufe === "2std" ? "Gleich" : "Morgen"} bei dir: ${ja.length} Zusagen`, kurz, betreff: `Köcheclub Werne – Anmeldestand: ${t.titel}, ${wann(t.beginn)}`,
+      text: text(true), url: APP_URL + "#termine" }, `club-gastgeber-stand:${t.id}:${stufe}`).catch((e) => console.error("gastgeber stand", String(e)));
+    if (leitung.length) await sendenGewaehlt("club_erinnerung", leitung, ["push", "email"], {
+      titel: `📋 Anmeldestand ${t.titel}: ${ja.length} Zusagen`, kurz, betreff: `Köcheclub Werne – Anmeldestand (Clubleitung): ${t.titel}, ${wann(t.beginn)}`,
+      text: text(false), url: APP_URL + "#termine" }, `club-gastgeber-stand-leitung:${t.id}:${stufe}`).catch((e) => console.error("gastgeber stand leitung", String(e)));
+    await protokoll(null, "gastgeber_stand", { treffen: t.id, stufe, ja: ja.length, vielleicht: vl.length, nein: nein.length, offen: offen.length, gastgeber: t.gastgeber_person_id, leitung: leitung.length });
+  }
+}
 async function rtZaehlerWarnen() {
   const monat = berlinTag(new Date()).slice(0, 7);
   const { data } = await db.from("kc_club_rt_zaehler").select("anzahl,gewarnt").eq("monat", monat).maybeSingle();
@@ -5053,6 +5094,7 @@ Deno.serve(async (req) => {
       await reiseChecklisteErinnern().catch((e) => console.error("reise checkliste", String(e))); // KC-CLUB-REISE-CHECKLISTE (2.223.0)
       await dienstGrussSenden().catch((e) => console.error("dienst gruss", String(e))); // KC-CLUB-DIENST-GRUSS (2.224.0)
       await rtZaehlerWarnen().catch((e) => console.error("rt zaehler", String(e))); // KC-CLUB-RT-SPARBREMSE (2.230.0)
+      await gastgeberStandLauf().catch((e) => console.error("gastgeber stand", String(e))); // KC-CLUB-GASTGEBER-STAND (2.238.0)
       await archivKopieLauf().catch((e) => archivKopieStand("fehler", String((e as any)?.message || e), {})); // KC-CLUB-ARCHIV-KOPIE (2.232.0): nur nachts 2–5 Uhr
       await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
       await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
