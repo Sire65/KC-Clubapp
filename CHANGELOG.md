@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.268.0 – 2026-10-11 – KC-CLUB-START-HINWEIS-2: Start-Hinweis mit drei Knöpfen – Ansehen, Später, Keinen Hinweis mehr (Wunsch Hansi)
+Der Hinweis auf ungelesene Nachrichten hat jetzt drei Knöpfe: „💬 Ansehen“ öffnet die Nachrichten, „⏰ Später“ fragt beim nächsten Start noch einmal (die Nachrichten-Kachel leuchtet kurz auf), „🔕 Keinen Hinweis mehr auf diese Nachrichten“ beendet den Hinweis. Knöpfe untereinander, gut lesbar.
+
 ## 2.267.0 – 2026-10-11 – KC-CLUB-START-HINWEIS: einmaliger Hinweis beim nächsten Start auf ungelesene Nachrichten (Wunsch Hansi)
 Der Admin kann bei einem Mitglied einen Start-Hinweis setzen (Einstellung start_hinweis, Art „ungelesen“). Beim nächsten Start – nachdem andere Start-Fenster zu sind – kommt einmal: „Hallo <Vorname>, du hast <n> ungelesene Nachrichten. Möchtest du sie jetzt anschauen, dann tippe doch <Lage> auf die Nachrichten-Kachel – oder gleich hier auf ‚💬 Jetzt ansehen‘.“ Zahl und Lage der Kachel sind echt (erweiterte Ansicht: Register Club). „Später“ zeigt die Kachel kurz hervorgehoben. Danach erledigt; hat das Mitglied inzwischen alles gelesen, wird still erledigt. Für Willfried gesetzt (6 ungelesene Nachrichten in 5 Chats).
 

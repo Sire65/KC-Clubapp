@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.267.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.268.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2211,9 +2211,16 @@ async function startHinweisPruefen() {
   if (!n) return erledigt();
   if (!einfach() && reg !== "verein" && REGISTER.some(([r]) => r === "verein") && kacheln("verein").some((k) => k.id === "kommunikation")) register("verein");
   const lage = startNachrichtenLage();
-  const ja = await frage(`Hallo ${ICH.vorname},\ndu hast ${n === 1 ? "eine ungelesene Nachricht" : `${n} ungelesene Nachrichten`}. Möchtest du sie jetzt anschauen, dann tippe doch ${lage} auf die Nachrichten-Kachel – oder gleich hier auf „💬 Jetzt ansehen“.`, { ja: "💬 Jetzt ansehen", nein: "Später" });
-  erledigt();
-  if (ja) return zeige("nachrichten");
+  // 2.268.0 KC-CLUB-START-HINWEIS-2 (Wunsch Hansi): drei Knöpfe – Ansehen, Später (beim nächsten Start nochmal), Keinen Hinweis mehr auf diese Nachrichten
+  const wahl = await new Promise((fertig) => {
+    let f; const zu = (w) => { f?.remove(); fertig(w); };
+    f = dlgOeffnen(`<h3 class="dlg-kopf">Hallo ${esc(ICH.vorname)},</h3><p class="dlg-text">du hast ${n === 1 ? "eine ungelesene Nachricht" : `${n} ungelesene Nachrichten`}. Möchtest du sie jetzt anschauen, dann tippe doch ${esc(lage)} auf die Nachrichten-Kachel – oder gleich hier auf „💬 Ansehen“.</p>
+      <div class="dlg-knoepfe sh-knoepfe"><button class="knopf haupt" data-w="an">💬 Ansehen</button><button class="knopf" data-w="spaeter">⏰ Später</button><button class="knopf" data-w="nie">🔕 Keinen Hinweis mehr auf diese Nachrichten</button></div>`, () => zu("spaeter"));
+    f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => zu(b.dataset.w)));
+  });
+  if (wahl !== "spaeter") erledigt(); // „Später“: beim nächsten Start fragt die App noch einmal
+  if (wahl === "an") return zeige("nachrichten");
+  if (wahl === "nie") return melde("🔕 Gut – kein Hinweis mehr auf diese Nachrichten.");
   const k = document.querySelector('#raster .kachel[data-id="kommunikation"]'); // „Später“: die Kachel kurz zeigen
   if (k) { k.scrollIntoView({ block: "center", behavior: "smooth" }); k.classList.add("hervor"); setTimeout(() => k.classList.remove("hervor"), 4000); }
 }

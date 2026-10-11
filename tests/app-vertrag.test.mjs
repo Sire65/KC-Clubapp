@@ -5741,8 +5741,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/start_hinweis: \(w\) => \(\{ art: \["ungelesen"\]\.includes\(String\(w\?\.art\)\)/.test(server), "Server: Einstellung start_hinweis nur mit bekannter Art und Datum");
   assert.ok(/if \(!h \|\| h\.erledigt \|\| h\.art !== "ungelesen" \|\| !ICH\) return;/.test(html) && /const n = Number\(INIT\?\.ungelesen\) \|\| 0/.test(html) && /if \(!n\) return erledigt\(\);/.test(html), "nur einmal, echte Zahl, ohne Ungelesenes still erledigt");
   assert.ok(/if \(document\.querySelector\("\.blatt:not\(\.versteckt\), \.dlg, #rgSchicht"\) \|\| aktuelleAnsicht !== "start"\)/.test(html), "erst wenn kein anderes Fenster offen ist");
-  assert.ok(/Hallo \$\{ICH\.vorname\},\\ndu hast/.test(html) && /tippe doch \$\{lage\} auf die Nachrichten-Kachel/.test(html) && /const lage = startNachrichtenLage\(\);/.test(html), "Hansis Text mit Vorname, Zahl und echter Lage der Kachel");
+  assert.ok(/Hallo \$\{esc\(ICH\.vorname\)\},<\/h3><p class="dlg-text">du hast/.test(html) /* 2.268.0: eigenes Fenster */ && /tippe doch \$\{esc\(lage\)\} auf die Nachrichten-Kachel/.test(html) && /const lage = startNachrichtenLage\(\);/.test(html), "Hansis Text mit Vorname, Zahl und echter Lage der Kachel");
   assert.ok(!/KC-P-M0006|Willfried|Wilfried/.test(html.slice(html.indexOf("// ---------- KC-CLUB-START-HINWEIS"), html.indexOf("// KC-CLUB-VIDEO-GESEHEN"))), "keine Person fest im Programm");
+}
+
+// 2.268.0 KC-CLUB-START-HINWEIS-2 (Wunsch Hansi): drei Knöpfe – Ansehen, Später, Keinen Hinweis mehr auf diese Nachrichten
+{
+  assert.ok(/data-w="an">💬 Ansehen<\/button><button class="knopf" data-w="spaeter">⏰ Später<\/button><button class="knopf" data-w="nie">🔕 Keinen Hinweis mehr auf diese Nachrichten<\/button>/.test(html), "drei Knöpfe");
+  assert.ok(/if \(wahl !== "spaeter"\) erledigt\(\);/.test(html) && /\(\) => zu\("spaeter"\)\)/.test(html), "Später (und Wegtippen) fragt beim nächsten Start nochmal; Ansehen und Keinen Hinweis mehr beenden den Hinweis");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

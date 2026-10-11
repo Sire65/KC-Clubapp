@@ -1,11 +1,18 @@
 {
-  "version": "2.267.0",
+  "version": "2.268.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "💬 Freundlicher Hinweis beim Start, wenn ungelesene Nachrichten warten – mit „Jetzt ansehen“"
+    "💬 Hinweis auf ungelesene Nachrichten: Ansehen, Später oder Keinen Hinweis mehr"
   ],
   "verlauf": [
+    {
+      "version": "2.268.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "💬 Hinweis auf ungelesene Nachrichten: Ansehen, Später oder Keinen Hinweis mehr"
+      ]
+    },
     {
       "version": "2.267.0",
       "datum": "2026-10-11",
