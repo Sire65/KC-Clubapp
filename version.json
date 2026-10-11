@@ -1,12 +1,20 @@
 {
-  "version": "2.282.0",
+  "version": "2.283.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🛷 Im Winter: Kinder auf dem Schlitten und eine Schneeballschlacht",
-    "💧 Deutlichere Tropfen von den Eiszapfen – unten bildet sich eine Pfütze"
+    "🧣 Kinder mit bunten Mützen und andersfarbigen Schals",
+    "💧 Öfter Tropfen von den langen Eiszapfen – unten wächst die Pfütze"
   ],
   "verlauf": [
+    {
+      "version": "2.283.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🧣 Kinder mit bunten Mützen und andersfarbigen Schals",
+        "💧 Öfter Tropfen von den langen Eiszapfen – unten wächst die Pfütze"
+      ]
+    },
     {
       "version": "2.282.0",
       "datum": "2026-10-11",

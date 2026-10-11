@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.283.0 – 2026-10-11 – KC-CLUB-WINTER-KINDER-2: bunte Mützen und Schals, öfter Tropfen von den langen Zapfen
+Jedes Kind trägt eine andere, kräftige Farbkombination – Mütze und Schal immer verschiedenfarbig (z. B. gelbe Mütze und grüner Schal), in einer Gruppe nie doppelt. Die Eiszapfen tropfen öfter (alle 3½–8 Sekunden), nur von den langen Zapfen und nie dreimal vom selben – unten wächst die Pfütze.
+
 ## 2.282.0 – 2026-10-11 – KC-CLUB-WINTER-KINDER: Schlitten, Schneeballschlacht, Eistropfen mit Pfütze
 Im Winter sausen ab und zu zwei Kinder mit Bommelmützen auf dem Schlitten vorbei – die Schals wehen nach hinten, einmal von links, beim nächsten Mal von rechts. Abwechselnd dazu machen ein paar Kinder eine Schneeballschlacht (Würfe im Bogen, Schnee stäubt beim Treffer). Die Tropfen von den Eiszapfen sind deutlicher und fallen bis auf den Boden – dort bildet sich langsam eine blaue Pfütze.
 

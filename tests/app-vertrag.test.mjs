@@ -5832,8 +5832,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.281.0 KC-CLUB-EIS-TROPFEN (Wunsch Hansi): ab und an ein leicht blauer Tropfen von verschiedenen Eiszapfen – nicht zu oft
 {
-  assert.ok(/\(function jzTropfTakt\(\) \{/.test(html) && /\}, 7000 \+ Math\.random\(\) \* 9000\);/.test(html), "höchstens ein Tropfen alle 7–16 s");
-  assert.ok(/if \(n === e\._letzter\) n = \(n \+ 1\) % sp\.length; e\._letzter = n;/.test(html), "jedes Mal ein anderer Zapfen");
+  assert.ok(/\(function jzTropfTakt\(\) \{/.test(html) && /\}, 3500 \+ Math\.random\(\) \* 4500\);/.test(html), "höchstens ein Tropfen alle 3½–8 s (2.283.0 öfter)");
+  assert.ok(/e\._zuletzt = \[n, \.\.\.zuletzt\]\.slice\(0, 3\);/.test(html), "jedes Mal ein anderer Zapfen (2.283.0: nie einer der letzten drei)");
   assert.ok(/!document\.hidden && rgSichtbar\(e\) && !matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.matches/.test(html), "nur sichtbar und nicht bei bewegungsarmer Einstellung");
   assert.ok(/a\.oncancel = \(\) => t\.remove\(\);/.test(html) && /b\.onfinish = b\.oncancel = \(\) => t\.remove\(\);/.test(html), "Tropfen räumt sich selbst weg (2.282.0: auch nach dem Übergeben an die Bühne)");
   assert.ok(!/class="jz-tropfen" cx=/.test(html) && !/@keyframes jzTropfen/.test(html), "keine Dauer-Tropfen an jedem Zapfen mehr");
@@ -5846,6 +5846,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function jzbKind\(c, f, sitzt, opt = \{\}\)/.test(html) && /\/\/ Bommelmütze/.test(html) && /\/\/ Schal: um den Hals, zwei Enden flattern nach hinten/.test(html), "Kinder mit Bommelmütze und wehendem Schal");
   assert.ok(/function jzbBallspielStart\(\)/.test(html) && /c\.wurf = \.35; S\.baelle\.push/.test(html), "Schneeballschlacht mit Würfen im Bogen");
   assert.ok(/J\.kinderArt = J\.kinderArt === "schlitten" \? "ball" : "schlitten"/.test(html) && /if \(jzbSchneeMittel\(\) < 3 \* k \|\| J\.phase === "wind" \|\| J\.phase === "schmelzen"\) J\.kinderUhr = 5;/.test(html), "nur bei Schnee, abwechselnd, nie beides zugleich");
+}
+// 2.283.0 KC-CLUB-WINTER-KINDER-2 (Wunsch Hansi): Mütze und Schal je Kind verschiedenfarbig, Tropfen öfter und nur von den langen Zapfen
+{
+  assert.ok(/const jzbKindFarben = \(n\) =>/.test(html) && /f: jzbKindFarben\(2\)/.test(html) && /const farben = jzbKindFarben\(plaetze\.length\);/.test(html), "jedes Kind andere Farben");
+  const farben = [...html.matchAll(/\["(#[0-9a-f]{6})", "(#[0-9a-f]{6})", "(#[0-9a-f]{6})"\]/g)].filter((m) => html.indexOf(m[0]) > html.indexOf("const JZB_KIND_FARBEN"));
+  assert.ok(farben.length >= 8 && farben.slice(0, 8).every((m) => m[2] !== m[3]), "Mütze und Schal nie gleichfarbig");
+  assert.ok(/\.filter\(\(\[, L\]\) => L > lmax \* \.72\);/.test(html), "Tropfen nur von den langen Zapfen");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

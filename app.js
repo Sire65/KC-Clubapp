@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.282.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.283.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12330,7 +12330,7 @@ function jzEisLaenge() {
       + (L > 9 ? `<path class="jz-glanz" d="M${P(-.5, .06)} Q${P(-.42, .38)} ${P(-.16, .74)}"/>` : "")
       ;
   }).join("");
-  e._spitzen = roh.map(({ x, i, r: rr }) => { const L = rr * s, b = 1.4 + L * .085 + zf(i + 50) * 1.3; return [x + (zf(i + 200) - .5) * b * .7, L]; }).filter(([, L]) => L > lmax * .45); // 2.281.0: für die Tropfen
+  e._spitzen = roh.map(({ x, i, r: rr }) => { const L = rr * s, b = 1.4 + L * .085 + zf(i + 50) * 1.3; return [x + (zf(i + 200) - .5) * b * .7, L]; }).filter(([, L]) => L > lmax * .72); // 2.281.0: für die Tropfen – 2.283.0: nur die langen Zapfen
   let rand = "M0 -1"; for (let x = 0, i = 0; x < W; i++) { const n = Math.min(W, x + 5 + zf(i + 300) * 7); rand += ` Q${X((x + n) / 2)} ${X(2 + zf(i + 400) * 3)} ${X(n)} ${X(.8 + zf(i + 500))}`; x = n; }
   e.setAttribute("viewBox", `0 0 ${W} ${H}`); e.style.height = `${H}px`;
   e.innerHTML = `<defs><linearGradient id="jzEisVerlauf" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity=".97"/><stop offset=".4" stop-color="#eaf7ff" stop-opacity=".92"/><stop offset=".8" stop-color="#b9e2ff" stop-opacity=".82"/><stop offset="1" stop-color="#93ccf3" stop-opacity=".72"/></linearGradient></defs>
@@ -12338,14 +12338,15 @@ function jzEisLaenge() {
 }
 addEventListener("resize", () => requestAnimationFrame(jzEisLaenge));
 // 💧 2.281.0 (Wunsch Hansi „ab und an ein leicht blauer Wassertropfen von verschiedenen Eiszapfen – nicht zu oft, sonst stört es“):
-// höchstens ein Tropfen alle 7–16 s (2.282.0: deutlicher, fällt bis unten – dort bildet sich langsam eine Pfütze), jedes Mal an einem anderen längeren Zapfen; er wächst an der Spitze, löst sich und fällt kurz.
+// höchstens ein Tropfen alle 7–16 s – 2.283.0: alle 3½–8 s, nur von den langen Zapfen (2.282.0: deutlicher, fällt bis unten – dort bildet sich langsam eine Pfütze), jedes Mal an einem anderen längeren Zapfen; er wächst an der Spitze, löst sich und fällt kurz.
 // Nur sichtbar, bewegungsarm-Einstellung des Geräts wird beachtet; ein einziger Takt für die ganze App.
 (function jzTropfTakt() {
   setTimeout(() => {
     try {
       const e = document.querySelector("#v-start .statusleiste .jz-eis"), sp = e?._spitzen;
       if (sp?.length && !document.hidden && rgSichtbar(e) && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        let n = Math.floor(Math.random() * sp.length); if (n === e._letzter) n = (n + 1) % sp.length; e._letzter = n;
+        const zuletzt = e._zuletzt || []; let n = Math.floor(Math.random() * sp.length); // 2.283.0: nie einer der letzten drei Zapfen
+        for (let v = 0; v < sp.length && zuletzt.includes(n) && sp.length > 3; v++) n = (n + 1) % sp.length; e._zuletzt = [n, ...zuletzt].slice(0, 3);
         const [x, L] = sp[n], t = document.createElementNS("http://www.w3.org/2000/svg", "path");
         t.setAttribute("class", "jz-tropfen"); t.setAttribute("d", `M${x.toFixed(1)} ${(L - 4.5).toFixed(1)} q3.4 5 0 7.6 q-3.4 -2.6 0 -7.6 z`); e.appendChild(t); // 2.282.0: deutlicher
         t.style.transformBox = "fill-box"; t.style.transformOrigin = "50% 0";
@@ -12359,7 +12360,7 @@ addEventListener("resize", () => requestAnimationFrame(jzEisLaenge));
       }
     } catch {}
     jzTropfTakt();
-  }, 7000 + Math.random() * 9000);
+  }, 3500 + Math.random() * 4500); // 2.283.0: etwas öfter (alle 3½–8 s)
 })();
 const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"] };
 function jahreszeitKopf() {
@@ -12975,7 +12976,11 @@ function jzbEiAntippen(e) { // Ostereier finden: Tippen auf den Kopf (nicht auf 
 // ---------- KC-CLUB-WINTER-KINDER (2.282.0, Wunsch Hansi): Eistropfen bilden unten eine Pfütze · zwei Kinder auf dem Schlitten
 // (Bommelmützen, Schals wehen nach hinten; abwechselnd von links und von rechts) · ein paar Kinder machen eine Schneeballschlacht ----------
 // Nur Winter und nur, wenn Schnee liegt; Schlitten und Schneeballschlacht wechseln sich ab, nie beides zugleich.
-const JZB_KIND_FARBEN = [["#d83a3a", "#f2c230", "#2e8b57"], ["#2f6fd6", "#e8732a", "#f2f2f2"], ["#7a3fb5", "#38b2ac", "#f2c230"], ["#2e8b57", "#d83a3a", "#ffffff"]]; // Jacke, Mütze, Schal
+// Jacke, Mütze, Schal – 2.283.0 (Wunsch Hansi „Mütze und Schal verschiedenfarbig, z. B. grüner Schal und gelbe Mütze – jedes Kind anders“):
+// kräftige, gut unterscheidbare Kombinationen; in einer Gruppe trägt nie ein Kind dieselben Farben wie ein anderes
+const JZB_KIND_FARBEN = [["#2f6fd6", "#ffd21f", "#1f9d4c"], ["#d83a3a", "#1fb5d6", "#ff8c1a"], ["#1f9d4c", "#ff4fa3", "#ffd21f"], ["#7a3fb5", "#ff8c1a", "#29c46a"],
+  ["#f2c230", "#d83a3a", "#2f6fd6"], ["#e8732a", "#7a3fb5", "#38d1c0"], ["#2a9d8f", "#ffffff", "#e63946"], ["#5b4cc4", "#9be564", "#ff5c8a"]];
+const jzbKindFarben = (n) => { const l = JZB_KIND_FARBEN.slice(); for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [l[i], l[j]] = [l[j], l[i]]; } return l.slice(0, n); };
 const jzbSchneeMittel = () => { const J = JZB, B = J.boden, a = Math.ceil(JZB_RAND / JZB_SP), e = Math.floor((J.w - JZB_RAND) / JZB_SP), t = B.slice(a, e); return t.reduce((s, v) => s + v, 0) / Math.max(1, t.length); };
 const jzbGrund = (x) => JZB.h - jzbBodenH(x) - 1;
 // 💧 Eistropfen aus der Leiste: fällt auf den Boden, dort wächst langsam eine Pfütze (und trocknet sehr langsam wieder)
@@ -13004,7 +13009,7 @@ function jzbWinterKinder(dt) {
     if (jzbSchneeMittel() < 3 * k || J.phase === "wind" || J.phase === "schmelzen") J.kinderUhr = 5;
     else if ((J.kinderArt = J.kinderArt === "schlitten" ? "ball" : "schlitten") === "schlitten") {
       const dir = J.schlittenDir = J.schlittenDir === 1 ? -1 : 1; // einmal von links, beim nächsten Mal von rechts
-      J.schlitten = { dir, x: dir > 0 ? -40 * k : J.w + 40 * k, t: 0, f: [jzbW(JZB_KIND_FARBEN), jzbW(JZB_KIND_FARBEN)] };
+      J.schlitten = { dir, x: dir > 0 ? -40 * k : J.w + 40 * k, t: 0, f: jzbKindFarben(2) };
     } else jzbBallspielStart();
   }
   if (J.schlitten) {
@@ -13017,7 +13022,8 @@ function jzbWinterKinder(dt) {
 function jzbBallspielStart() {
   const J = JZB, k = J.k, m = J.mann, links = m && m.x < J.w / 2, rechts = m && m.x >= J.w / 2;
   const plaetze = [[links ? .3 : .16, 1], [links ? .42 : .3, 1], [rechts ? .7 : .84, -1]].concat(J.w > 520 ? [[rechts ? .58 : .7, -1]] : []);
-  J.ballspiel = { t: 0, baelle: [], kinder: plaetze.map(([p, blick], i) => ({ ziel: J.w * p, x: blick > 0 ? -20 * k - i * 14 * k : J.w + 20 * k + i * 14 * k, blick, f: jzbW(JZB_KIND_FARBEN), uhr: jzbZ(.8, 2), wurf: 0, treffer: 0 })) };
+  const farben = jzbKindFarben(plaetze.length);
+  J.ballspiel = { t: 0, baelle: [], kinder: plaetze.map(([p, blick], i) => ({ ziel: J.w * p, x: blick > 0 ? -20 * k - i * 14 * k : J.w + 20 * k + i * 14 * k, blick, f: farben[i], uhr: jzbZ(.8, 2), wurf: 0, treffer: 0 })) };
 }
 function jzbBallspielSchritt(dt) {
   const J = JZB, k = J.k, S = J.ballspiel, g = 260 * k; S.t += dt;
