@@ -1,11 +1,18 @@
 {
-  "version": "2.252.0",
+  "version": "2.253.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🧑‍🍳 Twinkey kennt jetzt „Kochbild“, Avatar & Co. – und bietet bei vielen Antworten das passende Erklär-Video an"
+    "🧠 Admin: Liste „Was Twinkey gelernt hat“ – doppelte oder veraltete Antworten mit einem Tipp vergessen"
   ],
   "verlauf": [
+    {
+      "version": "2.253.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🧠 Admin: Liste „Was Twinkey gelernt hat“ – doppelte oder veraltete Antworten mit einem Tipp vergessen"
+      ]
+    },
     {
       "version": "2.252.0",
       "datum": "2026-10-11",

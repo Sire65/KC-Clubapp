@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.253.0 – 2026-10-11 – KC-CLUB-TWINKEY-VERGESSEN: gelernte Antworten wieder vergessen (Wunsch Hansi)
+- Anlass: Die Antwort an Wilfried („Kochbild“) wurde mit „Twinkey merkt sich das“ gesendet – Twinkey hätte allen „Hallo Wilfried …“ gezeigt (vorher von Hand in der Datenbank zurückgenommen).
+- In „📥 Fragen an Twinkey“ (nur Admin) jetzt die Liste „🧠 Was Twinkey gelernt hat“: Frage, Anfang der Antwort, „🗑️ Vergessen“ mit Rückfrage. Neue Server-Aktion twinkey_vergessen (nur Admin, protokolliert) setzt nur „gemerkt“ zurück – die fragende Person behält ihre Antwort unter „📬 Deine Fragen“.
+
 ## 2.252.0 – 2026-10-11 – KC-CLUB-TWINKEY-BILD + KC-CLUB-TWINKEY-VIDEOS (Fund Hansi: Wilfried fragte „Kochbild“)
 - Twinkey versteht Kochbild, Avatar, Profilbild, Profilfoto, Koch-Figur, Figur, Selfie, Baukasten und antwortet mit zwei neuen Einträgen: „Wie bekomme ich ein Kochbild (Koch-Figur) statt meiner Buchstaben?“ und „Wie stelle ich meine Koch-Figur selbst zusammen oder ändere sie?“ (nur, wenn Mein Bild bzw. der Baukasten für das Mitglied freigegeben ist).
 - Gibt es zur Antwort ein Erklär-Video, bietet Twinkey es an: „Du kannst es im Hilfetext nachlesen. Es gibt aber auch Erklär-Videos mit Ton. Was möchtest du dir ansehen?“ – 📖 Hilfetext lesen oder 🎬 Video starten. Zuordnung an einer Stelle (TW_VIDEOS): Bild, Nachricht, Termin, Pinnwand, Vorschlag, Zusagen, Fotoalbum, Erstattung, SOS, Helfen & Leihen, Mitglieder. Es werden nur Videos angeboten, die das Mitglied sehen darf.

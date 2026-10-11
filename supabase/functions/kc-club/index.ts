@@ -7290,6 +7290,16 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await protokoll(ich.person_id, "twinkey_verworfen", { frage_id: p.id });
         return json({ ok: true });
       }
+      // 2.253.0 KC-CLUB-TWINKEY-VERGESSEN (Wunsch Hansi): gemerkte Antwort aus Twinkeys Wissen nehmen – die Frage und die Antwort an die
+      // fragende Person bleiben erhalten (nur wissen = false), protokolliert; wieder merken = Frage erneut beantworten lassen
+      case "twinkey_vergessen": {
+        nurAdmin(ich);
+        const { data: upd } = await db.from("kc_club_twinkey_fragen").update({ wissen: false })
+          .eq("id", String(p.id || "")).eq("status", "beantwortet").eq("wissen", true).select("id,frage");
+        if (!upd?.length) throw new Fehler("Eintrag nicht gefunden oder schon vergessen.", 404);
+        await protokoll(ich.person_id, "twinkey_vergessen", { frage_id: upd[0].id, frage: upd[0].frage });
+        return json({ ok: true });
+      }
       case "twinkey_gelesen": {
         await db.from("kc_club_twinkey_fragen").update({ gelesen: true }).eq("von", ich.person_id).eq("status", "beantwortet").eq("gelesen", false);
         return json({ ok: true });

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.252.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.253.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5817,9 +5817,32 @@ async function twOffenStart() {
       <button type="button" class="chip an tw-wissen" aria-pressed="true">☑️ 🧠 Twinkey merkt sich das (für alle)</button>
       <div class="knoepfe"><button type="button" class="knopf haupt" data-tw="senden">📤 Antwort senden</button><button type="button" class="knopf" data-tw="weg">🗑️ Verwerfen</button></div></div>`).join("")
       : `<p>🎉 Keine offenen Fragen.</p>`}
+    <div id="twGelernt"></div>
     <button class="knopf" onclick="$('twOffenBlatt').remove()">Schließen</button>`);
+  twGelerntZeigen();
   document.querySelectorAll("#twOffenBlatt .chip").forEach((c) => (c.onclick = () => { const an = !c.classList.contains("an"); c.classList.toggle("an", an); c.setAttribute("aria-pressed", an); c.textContent = (an ? "☑️" : "⬜") + c.textContent.slice(c.textContent.indexOf(" ")); }));
   document.querySelectorAll("#twOffenBlatt [data-tw]").forEach((b) => (b.onclick = () => twOffenAktion(b.closest(".tw-offen"), b.dataset.tw, b)));
+}
+// KC-CLUB-TWINKEY-VERGESSEN (2.253.0, Wunsch Hansi nach „Kochbild“ doppelt gemerkt): Liste „🧠 Was Twinkey gelernt hat“ mit „Vergessen“.
+// Vergessen nimmt die Antwort nur aus Twinkeys Wissen – die fragende Person behält ihre Antwort unter „📬 Deine Fragen“.
+function twGelerntZeigen() {
+  const z = $("twGelernt"); if (!z || !ICH?.admin) return;
+  const w = TW.wissen || [];
+  z.innerHTML = `<details class="karte tw-gelernt"${w.length && w.length <= 5 ? " open" : ""}><summary><b>🧠 Was Twinkey gelernt hat (${w.length})</b></summary>
+    <p class="hinweis" style="margin:4px 0 8px">Diese Antworten zeigt Twinkey allen – vor seinen eigenen. Doppelt, veraltet oder an eine Person gerichtet? Dann <b>🗑️ Vergessen</b>. Die fragende Person behält ihre Antwort.</p>
+    ${w.length ? w.map((x) => `<div class="tw-gelernt-eintrag"><b>${esc(x.frage)}</b><div class="hinweis">${twTextHtml(String(x.antwort || "").slice(0, 220))}${String(x.antwort || "").length > 220 ? " …" : ""}</div>
+      <button type="button" class="knopf klein" onclick="twVergessen('${esc(x.id)}', this)">🗑️ Vergessen</button></div>`).join("") : '<p class="hinweis" style="margin:0">Twinkey hat noch nichts gelernt.</p>'}</details>`;
+}
+async function twVergessen(id, knopf) {
+  const x = (TW.wissen || []).find((w) => w.id === id); if (!x) return;
+  if (!(await frage(`Twinkey soll das vergessen?
+
+„${x.frage}“
+
+Twinkey zeigt diese Antwort dann niemandem mehr. Die fragende Person behält ihre Antwort.`, { ja: "🗑️ Vergessen" }))) return;
+  knopf.disabled = true;
+  try { await api("twinkey_vergessen", { id }); TW.wissen = TW.wissen.filter((w) => w.id !== id); TW_INDEX = null; lsSetzen(TW_DATEN_KEY, JSON.stringify(TW.wissen)); twGelerntZeigen(); melde("🧠 Twinkey hat das vergessen."); }
+  catch (e) { knopf.disabled = false; meldeFehler(e); } // Regel 11: nicht still als erledigt melden
 }
 async function twOffenAktion(k, was, knopf) {
   if (!k) return; const id = k.dataset.id;

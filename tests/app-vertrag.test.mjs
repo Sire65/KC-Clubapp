@@ -8308,3 +8308,9 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   for (const [, v] of tv.matchAll(/"([a-z]+)"(?=[,\]])/g)) assert.ok(ids.has(v), `TW_VIDEOS nennt unbekanntes Video ${v}`);
 }
 
+// 2.253.0 KC-CLUB-TWINKEY-VERGESSEN (Wunsch Hansi): gelernte Antworten wieder vergessen – nur Admin, nur „gemerkt“ zurücksetzen
+{
+  assert.ok(/case "twinkey_vergessen": \{\s*nurAdmin\(ich\);/.test(server) && /update\(\{ wissen: false \}\)/.test(server) && /protokoll\(ich\.person_id, "twinkey_vergessen"/.test(server), "Server: nur Admin, setzt nur wissen zurück, protokolliert");
+  assert.ok(/<div id="twGelernt"><\/div>/.test(html) && /api\("twinkey_vergessen", \{ id \}\)/.test(html) && /catch \(e\) \{ knopf\.disabled = false; meldeFehler\(e\); \}/.test(html), "Liste im Admin-Fenster, Fehler sichtbar");
+}
+
