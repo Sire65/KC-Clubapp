@@ -5770,6 +5770,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/t: "🔴 Zahlen auf den Kacheln"/.test(html) && /ungelesene Nachrichten, Termine, auf die du noch nicht geantwortet hast, oder offene Zettel an der Pinnwand/.test(html), "Kachel-Zahlen erklärt");
   assert.ok(/id: "oberflaeche", stand: "2"/.test(html), "Video-Stand erhöht");
 }
+// 2.275.0 KC-CLUB-VIDEO-ZAHLEN-2 (Fund Hansi „nix von den Zahlen gesehen“): auch der Rundgang „die App im Überblick“ erklärt die Zahlen an Registern und Kacheln
+{
+  assert.ok(/Hinten am Register steht, wie viele Kacheln darin sind\. Steht dort zum Beispiel 10 von 12/.test(html), "Rundgang: Register-Zahl");
+  assert.ok(/puls: \["#raster \.kachel\[data-id\] > \.zahl"\], t: "🔲 Die Kacheln"/.test(html) && /oben in der Ecke eine Zahl: Sie zeigt, was auf dich wartet/.test(html), "Rundgang: Kachel-Zahlen leuchten auf und werden erklärt");
+  assert.ok(/id: "ueberblick", stand: "3"/.test(html), "Rundgang-Stand erhöht");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

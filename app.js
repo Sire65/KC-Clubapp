@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.274.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.275.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1357,8 +1357,8 @@ const RUNDGANG = [
   { v: "start", sel: ["#heroInfo .ifeld-treffen > :first-child", "#heroInfo"], t: "📅 Der nächste Termin", x: "Im farbigen Infofeld steht das Wichtigste: der nächste Termin – und ob du schon zu- oder abgesagt hast. Fehlt deine Antwort noch, blinkt der Hinweis: fünf Tage vorher gelb, zwei Tage vorher rot." },
   { v: "start", sel: ["#heroInfo .kacheln3", "#heroInfo"], puls: ["#heroInfo .kacheln3 > .mini"], t: "🔢 Drei kleine Felder", x: "Darunter drei kleine Felder: deine neuen Nachrichten, wie viele Mitglieder gerade in der App sind, und wie lange es noch bis zum nächsten Treffen ist. Antippen öffnet den passenden Bereich. Mit den Pfeilen blätterst du durch weitere Infos." },
   { v: "start", sel: [".ansichtname.ein", ".ansichtname.erw"], t: "🔀 Zwei Ansichten", x: "Die App gibt es in zwei Ansichten: die einfache Ansicht mit wenigen großen Knöpfen – und die erweiterte Ansicht mit allen Funktionen. Hier schaltest du jederzeit um." },
-  { v: "start", sel: ["#register"], puls: ['#register [data-r="verein"]', '#register [data-r="mein"]', '#register [data-r="programme"]'], mussSel: true, t: "🗂️ Die Register", x: "In der erweiterten Ansicht sortieren Register die Kacheln: Club – alles rund um den Verein. Meins – deine eigenen Sachen wie Dokumente, Erstattung und deine Daten. Technik – Programme, Sicherheits-Check und Hilfe." },
-  { v: "start", sel: ["#raster"], t: "🔲 Die Kacheln", x: "Jede Kachel öffnet einen Bereich. Eine Zahl in der Ecke zeigt, was neu ist. Hältst du eine Kachel lange gedrückt, kannst du die Kacheln umsortieren." },
+  { v: "start", sel: ["#register"], puls: ['#register [data-r="verein"]', '#register [data-r="mein"]', '#register [data-r="programme"]'], mussSel: true, t: "🗂️ Die Register", x: "In der erweiterten Ansicht sortieren Register die Kacheln: Club – alles rund um den Verein. Meins – deine eigenen Sachen wie Dokumente, Erstattung und deine Daten. Technik – Programme, Sicherheits-Check und Hilfe. Hinten am Register steht, wie viele Kacheln darin sind. Steht dort zum Beispiel 10 von 12, sind 10 Kacheln sichtbar und 2 ausgeblendet – die kannst du jederzeit wieder einblenden." },
+  { v: "start", sel: ["#raster"], puls: ["#raster .kachel[data-id] > .zahl"], t: "🔲 Die Kacheln", x: "Jede Kachel öffnet einen Bereich. Auf manchen Kacheln steht oben in der Ecke eine Zahl: Sie zeigt, was auf dich wartet – zum Beispiel ungelesene Nachrichten, Termine, auf die du noch nicht geantwortet hast, oder offene Zettel an der Pinnwand. Hast du alles angesehen, verschwindet die Zahl. Hältst du eine Kachel lange gedrückt, kannst du die Kacheln umsortieren." }, // 2.275.0 KC-CLUB-VIDEO-ZAHLEN-2
   { v: "start", sel: ["#fuss"], puls: ["#fuss button"], t: "⬇️ Die Leiste unten", x: "Die Leiste unten ist immer da: Start, Termine, Nachrichten, Mitglieder und Mehr. Damit kommst du von überall mit einem Tipp zurück." },
   { v: "nachrichten", tippVor: `#fuss [onclick="zeige('nachrichten')"]`, sel: ["#v-nachrichten .kopf2", "#v-nachrichten"], t: "💬 Nachrichten", x: "Nachrichten: Hier schreibst du anderen Mitgliedern – einzeln oder in Gruppen, mit Fotos und Sprachnachrichten. Mit Plus Neu beginnst du eine Unterhaltung." },
   { v: "termine", tippVor: `#fuss [onclick="zeige('termine')"]`, sel: ["#v-termine .umschalter", "#v-termine .kopf2"], t: "📅 Termine", x: "Termine: alle Clubtermine als Liste, als Kalender oder als To-do. Mit Ich komme, Vielleicht oder Kann nicht antwortest du. Danach kannst du eine Mitfahrt suchen oder anbieten." },
@@ -2156,7 +2156,7 @@ const RG_FIGUR_BAU = [
 ];
 const RUNDGAENGE = [
   { id: "warum", stand: "1", sym: "💡", t: "Warum diese App? – Zum Einstieg", u: "Was die App dir bringt – einfach erklärt (ca. 2 Min.)", st: () => RG_WARUM }, // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: als Erstes
-  { id: "ueberblick", stand: "2", sym: "🗺️", t: "Rundgang: die App im Überblick", u: "Oberfläche, Knöpfe, Register und was die App kann (ca. 3 Min.)", st: () => RUNDGANG },
+  { id: "ueberblick", stand: "3", sym: "🗺️", t: "Rundgang: die App im Überblick", u: "Oberfläche, Knöpfe, Register und was die App kann (ca. 3 Min.)", st: () => RUNDGANG },
   { id: "einstellungen", stand: "2", sym: "⚙️", t: "Alle Einstellungen erklärt", u: "Was jede Einstellung bedeutet – mit Beispielen (ca. 6 Min.)", st: () => RG_EINSTELLUNGEN },
   { id: "oberflaeche", stand: "2", sym: "🎨", t: "Oberfläche nach Wunsch", u: "Kopf einrollen, Kacheln verschieben, verbergen, umdrehen, Zahlen, Register, Wischen (ca. 3 Min.)", st: () => RG_OBERFLAECHE }, // 2.258.0 KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE
   { id: "nachricht", stand: "1", sym: "💬", t: "Neue Nachricht schreiben", u: "Empfänger wählen, schreiben, senden (ca. 1 Min.)", st: () => RG_NACHRICHT },

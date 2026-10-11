@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.275.0 – 2026-10-11 – KC-CLUB-VIDEO-ZAHLEN-2: Rundgang erklärt die Zahlen an Registern und Kacheln
+Auch der Rundgang „die App im Überblick“ erklärt jetzt die Zahl hinten am Register (10 von 12 = 10 sichtbar, 2 ausgeblendet) und die Zahlen auf den Kacheln (ungelesene Nachrichten, offene Termine, offene Zettel) – die Zahlen leuchten dabei auf.
+
 ## 2.274.0 – 2026-10-11 – KC-CLUB-VIDEO-ZAHLEN: Video erklärt die Zahlen an Registern und Kacheln
 Im Erklär-Video „Oberfläche nach Wunsch“ zwei neue Schritte: die Zahl hinten am Register (z. B. 10/12 = 10 Kacheln sichtbar, 2 ausgeblendet – wieder einblendbar) und die Zahlen auf den Kacheln (ungelesene Nachrichten, offene Termine, offene Zettel an der Pinnwand) – live mit aufleuchtender Zahl.
 

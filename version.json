@@ -1,11 +1,18 @@
 {
-  "version": "2.274.0",
+  "version": "2.275.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🔢 Erklär-Video „Oberfläche nach Wunsch“: was die Zahlen an Registern (z. B. 10/12) und auf den Kacheln bedeuten"
+    "🔢 Auch der Rundgang „die App im Überblick“ erklärt die Zahlen an Registern und Kacheln"
   ],
   "verlauf": [
+    {
+      "version": "2.275.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🔢 Auch der Rundgang „die App im Überblick“ erklärt die Zahlen an Registern und Kacheln"
+      ]
+    },
     {
       "version": "2.274.0",
       "datum": "2026-10-11",
