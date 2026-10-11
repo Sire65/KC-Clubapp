@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.233.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.234.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -9304,8 +9304,11 @@ async function notZurueckPruefen() {
   if (!NOT.an) return;
   if (NOT.grund === "probe") return; // Probe endet nur von Hand
   if (NOT.grund === "hand") { const k = await notKonfig(true); if (k?.modus === "an") return; }
-  try { await apiRoh("ping"); if (++NOT.ok >= 2) notAus("✅ Die Club-App ist wieder normal verbunden"); } catch { NOT.ok = 0; }
+  // KC-CLUB-NOT-ZURUECK-SCHNELL (2.234.0, nach dem Ausfall 11.10.): erste gute Antwort → nach 5 Sek. gleich bestätigen statt 1 Min. warten
+  try { await apiRoh("ping"); if (++NOT.ok >= 2) notAus("✅ Die Club-App ist wieder normal verbunden"); else setTimeout(notZurueckPruefen, 5000); } catch { NOT.ok = 0; }
 }
+// Zurück in die App (Handy war gesperrt, App im Hintergrund – dort ruhen die Zeitgeber): sofort prüfen, ob der Server wieder da ist
+if (typeof document !== "undefined") document.addEventListener("visibilitychange", () => { if (!document.hidden && NOT.an) notZurueckPruefen(); });
 // ---------- KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0, Wunsch Hansi): im Notbetrieb schreiben ----------
 // Nachricht (bestehender Chat), Zu-/Absage, Status und Pinnwand-Zettel nimmt der Ersatz-Server an und legt sie in seinen
 // Eingang. Die App merkt sich, was wartet (Anzeige ⏳ im Chat, Zahl im orangen Band). Zurück im Normalbetrieb bittet sie den

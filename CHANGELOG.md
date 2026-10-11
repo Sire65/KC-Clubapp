@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.234.0 – 2026-10-11 – Schnittstellen-Wächter nach dem Ausfall
+KC-CLUB-SCHNITTSTELLEN-WAECHTER: Nach dem Ausfall der Datenbank-Schnittstelle am 11.10. (04:21–04:46) prüft ein GitHub-Wächter alle 5 Minuten von außen und startet das Supabase-Projekt bei einem Hänger automatisch neu (Bremse 2/Stunde, E-Mail an Hansi). Pflicht-Prüfung nach jeder Datenbank-Änderung (tools/schnittstelle-pruefen.sh). App verlässt den Notbetrieb schneller und ohne Neuöffnen. Bericht: docs/STOERUNG_SCHNITTSTELLE.md.
+
 ## 2.233.1 – 2026-10-11 – Schnellanleitung Bilderrechner Version 4.3
 KC-CLUB-DOKUMENTE: „Schnellanleitung Bilderrechner“ zeigt jetzt die Kurzanleitung **Version 4.3** (`dokumente/Kurzanleitung_Bilderrechner_V4.3.pdf`, 33 Seiten). Neu: Kombi-Kacheln halb Getränk, halb Essen (bei „Grünkohl-Wurst“ die Wurst gut sichtbar), jede Kombi nur einmal; Seite 12 „Sammelbestellung“ neu aus der laufenden Kasse fotografiert (aktuelle Warengruppen-Reihenfolge, neue Kombi-Bilder). Version 4.2 bleibt als Datei unverändert (Regel 17). Die Archiv-Kopie (2.233.0) nimmt die neue Datei von selbst mit.
 

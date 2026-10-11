@@ -8117,3 +8117,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/\{ paket: "Sire65\/KC-Clubapp", muster: \/\^dokumente\\\/\[\^\/\]\+\\\.pdf\$\/i \}/.test(server) && /\{ paket: "Sire65\/Kasse", muster: \/\\\.pdf\$\/i \}/.test(server), "Quellen-Register: Handbücher + Kasse-PDFs");
   assert.ok(/if \(\(await gitBlobSha\(inhalt\)\) !== d\.sha\) throw new Error\("Prüfsumme weicht ab"\);/.test(server) && /const dk = await dokumenteKopieLauf\(s3, url, fehler\);/.test(server), "Git-Prüfsumme, im Nachtlauf");
 }
+
+// 2.234.0 KC-CLUB-SCHNITTSTELLEN-WAECHTER (Auftrag Hansi nach dem Ausfall 11.10. 04:21–04:46)
+{
+  const w = lies(".github/workflows/schnittstellen-waechter.yml");
+  assert.ok(/cron: "\*\/5 \* \* \* \*"/.test(w) && /for i in 1 2 3; do/.test(w) && /if ! eingang; then/.test(w), "alle 5 Min., 3 Prüfungen, kein Neustart bei Netzstörung");
+  assert.ok(/\/v1\/projects\/\$PROJEKT\/restart/.test(w) && /secrets\.SUPABASE_NEUSTART_TOKEN/.test(w) && /-ge 2 \]; then/.test(w), "Neustart nur mit Secret, Bremse 2 je Stunde");
+  assert.ok(/else setTimeout\(notZurueckPruefen, 5000\);/.test(html) && /if \(!document\.hidden && NOT\.an\) notZurueckPruefen\(\);/.test(html), "App verlässt den Notbetrieb ohne Neuöffnen");
+}

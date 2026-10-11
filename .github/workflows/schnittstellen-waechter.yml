@@ -1,0 +1,70 @@
+# KC-CLUB-SCHNITTSTELLEN-WAECHTER (11.10.2026, Auftrag Hansi nach dem Ausfall 04:21–04:46 Uhr):
+# Am 11.10. blieb die Datenbank-Schnittstelle von Supabase (PostgREST) nach einer Datenbank-Änderung stehen. Die Datenbank lief,
+# aber kein Server kam mehr an die Daten → Club-App im Notbetrieb, bis Hansi das Projekt im Dashboard neu gestartet hat.
+# Dieser Wächter prüft alle 5 Minuten von außen:
+#   1. Antwortet der Supabase-Eingang (Auth-Gesundheit)?  → Nein: Netz-/Anbieterstörung, NICHT neu starten (hilft nicht).
+#   2. Antwortet die Datenbank-Schnittstelle (eine Anfrage, die die Datenbank braucht) in unter 10 Sekunden?
+# Nur wenn 1 = ja und 2 dreimal hintereinander (über ~80 Sek.) = nein, gilt die Schnittstelle als hängend. Dann:
+#   - mit Secret SUPABASE_NEUSTART_TOKEN: Projekt automatisch neu starten (Supabase-Verwaltungsschnittstelle) und warten,
+#     bis die Schnittstelle wieder antwortet. Bremse: höchstens 2 Neustarts je Stunde (sonst nur Alarm – dann stimmt etwas anderes nicht).
+#   - ohne Secret: nur Alarm.
+# Alarm = der Lauf endet rot → GitHub schickt Hansi eine E-Mail. Ein grüner Lauf heißt: alles in Ordnung.
+# Kostenlos: öffentliches Repository, Läufe < 1 Min. (im Störfall bis ~10 Min.). Der Schlüssel steht nur in den GitHub-Secrets.
+name: Schnittstellen-Wächter
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      neustart_erzwingen:
+        description: "ja = Projekt sofort neu starten (nur im Notfall)"
+        required: false
+        default: "nein"
+concurrency:
+  group: schnittstellen-waechter
+  cancel-in-progress: false
+permissions:
+  actions: read
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PROJEKT: ptblnpiroqftcvlsrhac
+      KEY: sb_publishable_SqXIeGN-clcZ4gjmpLdSww_4DLfyy24 # öffentlicher Schlüssel (steht ohnehin in der App)
+      NEUSTART_TOKEN: ${{ secrets.SUPABASE_NEUSTART_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Schnittstelle prüfen und bei Bedarf neu starten
+        run: |
+          URL="https://$PROJEKT.supabase.co"
+          # gesund = Antwort (auch 401/403/404) in < 10 s; 000/5xx/zu langsam = krank
+          rest() { r=$(curl -s -o /dev/null -w "%{http_code} %{time_total}" --max-time 12 "$URL/rest/v1/kc_club_tippen?limit=1" -H "apikey: $KEY" || true); echo "$r"; }
+          gesund() { set -- $1; case "$1" in 200|401|403|404) awk -v t="$2" 'BEGIN{exit !(t<10)}';; *) return 1;; esac; }
+          eingang() { c=$(curl -s -o /dev/null -w "%{http_code}" --max-time 12 "$URL/auth/v1/health" -H "apikey: $KEY" || true); [ "$c" = "200" ]; }
+          neustart() {
+            if [ -z "$NEUSTART_TOKEN" ]; then echo "::error::Kein SUPABASE_NEUSTART_TOKEN – automatischer Neustart nicht möglich. Bitte im Supabase-Dashboard neu starten."; return 1; fi
+            # Bremse: höchstens 2 Neustarts je Stunde (rote Läufe dieses Wächters in den letzten 60 Min.)
+            seit=$(date -u -d '-60 min' +%Y-%m-%dT%H:%M:%SZ)
+            rot=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/schnittstellen-waechter.yml/runs?status=failure&created=>$seit" --jq '.total_count' 2>/dev/null || echo 0)
+            if [ "${rot:-0}" -ge 2 ]; then echo "::error::Schon $rot Störungen in der letzten Stunde – kein weiterer automatischer Neustart. Bitte Claude Bescheid geben."; return 1; fi
+            s=$(curl -s --max-time 20 "https://api.supabase.com/v1/projects/$PROJEKT" -H "Authorization: Bearer $NEUSTART_TOKEN" | jq -r '.status // "?"')
+            echo "Projektstatus vor dem Neustart: $s"
+            if [ "$s" != "ACTIVE_HEALTHY" ]; then echo "::error::Projekt ist gerade nicht im Normalzustand ($s) – kein Neustart."; return 1; fi
+            c=$(curl -s -o neustart.txt -w "%{http_code}" --max-time 60 -X POST "https://api.supabase.com/v1/projects/$PROJEKT/restart" -H "Authorization: Bearer $NEUSTART_TOKEN" || true)
+            echo "Neustart angefordert: HTTP $c $(head -c 200 neustart.txt)"
+            case "$c" in 200|201|202) ;; *) echo "::error::Neustart abgelehnt (HTTP $c) – Schlüssel prüfen oder im Dashboard neu starten."; return 1;; esac
+            for i in $(seq 1 30); do sleep 20; r=$(rest); echo "  $(date -u +%H:%M:%S) $r"; if gesund "$r"; then echo "::warning::Schnittstelle hing – automatisch neu gestartet, läuft wieder."; return 0; fi; done
+            echo "::error::Nach dem Neustart antwortet die Schnittstelle noch nicht."; return 1
+          }
+          if [ "${{ github.event.inputs.neustart_erzwingen }}" = "ja" ]; then echo "Neustart von Hand angefordert."; neustart; exit 1; fi
+          fehl=0
+          for i in 1 2 3; do
+            r=$(rest); echo "Prüfung $i: $r"
+            if gesund "$r"; then echo "Schnittstelle antwortet – alles in Ordnung."; exit 0; fi
+            fehl=$((fehl+1)); [ $i -lt 3 ] && sleep 40
+          done
+          if ! eingang; then echo "::warning::Auch der Supabase-Eingang antwortet nicht – Netz- oder Anbieterstörung, Neustart hilft nicht. Die App läuft im Notbetrieb."; exit 1; fi
+          echo "::error::Datenbank-Schnittstelle hängt (3× keine Antwort, Eingang ok)."
+          neustart || true
+          exit 1 # Lauf rot → E-Mail an Hansi (auch wenn der Neustart geklappt hat: er soll Bescheid wissen)
