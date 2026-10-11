@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.289.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.290.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11126,7 +11126,7 @@ function schneckePruefen() {
 }
 function schneckeZeigen() {
   let z = document.getElementById("schnecke");
-  if (!z && document.body) { document.body.insertAdjacentHTML("beforeend", `<button type="button" id="schnecke" class="schnecke versteckt" title="Netz gerade langsam – antippen für Infos" aria-label="Netz gerade langsam" onclick="schneckeInfo()"><span class="sn-zug"><span class="sn-spur" aria-hidden="true"></span><i style="--n:0">🐌</i><i style="--n:1">🐌</i><i style="--n:2">🐌</i></span></button>`); /* 2.195.0: die 3 als Trupp mit Schleimspur; 2.288.0: Spur wandert mit, beginnt unter der ersten */ z = document.getElementById("schnecke"); }
+  if (!z && document.body) { document.body.insertAdjacentHTML("beforeend", `<button type="button" id="schnecke" class="schnecke versteckt" title="Netz gerade langsam – antippen für Infos" aria-label="Netz gerade langsam" onclick="schneckeInfo()"><span class="sn-spur" aria-hidden="true"></span><span class="sn-zug"><i style="--n:0">🐌</i><i style="--n:1">🐌</i><i style="--n:2">🐌</i></span></button>`); /* 2.195.0: die 3 als Trupp mit Schleimspur; 2.288.0/2.290.0: Spur bleibt liegen, wächst bis unter die erste */ z = document.getElementById("schnecke"); }
   if (z) z.classList.toggle("versteckt", !SCHNECKE.an);
   try { document.documentElement.classList.toggle("netz-langsam", SCHNECKE.an); } catch {}
 }

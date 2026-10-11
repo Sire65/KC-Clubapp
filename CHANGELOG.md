@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.290.0 – 2026-10-11 – KC-CLUB-SCHLEIMSPUR-2: Schleimspur bleibt liegen
+Wunsch Hansi: Die Spur wanderte mit dem Trupp mit. Jetzt steht sie fest im Streifen (rechts verankert, auch das unregelmäßige Muster) und wächst im Takt der Schnecken bis unter die erste nach. Die Glanzpunkte funkeln an Ort und Stelle statt zu wandern.
+
 ## 2.289.0 – 2026-10-11 – KC-DP-PLANERPAPIERE-QR: DP2 Build 267 übernommen
 Planer-Papiere in DP2 (Leerplan, Papierplanung, persönlicher Dienstplan) tragen jetzt einen QR-Code; DP2 erkennt sie beim Einlesen und meldet veraltete Dienstpläne. In der Club-App: DP2-Bausteine (PDF, Dokument-QR) auf Build 267.
 

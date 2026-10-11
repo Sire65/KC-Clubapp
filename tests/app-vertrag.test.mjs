@@ -7213,7 +7213,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 
 // 4xx. 2.126.0: Drei wandernde Schnecken im Langsam-Modus (KC-CLUB-SCHNECKEN-WANDERN, Wunsch Hansi)
 {
-  assert.ok(/<span class="sn-zug"><span class="sn-spur" aria-hidden="true"><\/span><i style="--n:0">🐌<\/i><i style="--n:1">🐌<\/i><i style="--n:2">🐌<\/i><\/span><\/button>/.test(programm), "drei Schnecken (2.195.0: als Trupp)");
+  assert.ok(/<span class="sn-spur" aria-hidden="true"><\/span><span class="sn-zug"><i style="--n:0">🐌<\/i><i style="--n:1">🐌<\/i><i style="--n:2">🐌<\/i><\/span><\/button>/.test(programm), "drei Schnecken (2.195.0: als Trupp)");
   assert.ok(/\.schnecke \{ position: fixed;[^}]*pointer-events: none; \}/.test(seite) && /\.schnecke \.sn-zug \{[^}]*pointer-events: auto;[^}]*animation: snZug 32s linear infinite; \}/.test(seite), "Streifen lässt Tipps durch, Schnecken wandern gemeinsam");
   assert.ok(/@keyframes snZug \{ from \{ transform: translateX\(0\); \} to \{ transform: translateX\(calc\(-100vw - 110px\)\); \} \}/.test(seite) && /@keyframes snGlanz/.test(seite), "von rechts nach links, mit Schleimspur");
   // 2.171.0 (Hansi: „Schnecken laufen immer noch nicht“): Handy-Einstellung „weniger Bewegung“ hält sie nicht mehr an – nur „✨ Animierte Knöpfe“ aus
@@ -7979,7 +7979,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.195.0 KC-CLUB-SCHNECKE-TRUPP (Wunsch Hansi: die 3 bleiben zusammen, wandern gemeinsam von rechts nach links mit Schleimspur; alles weg, wenn das Netz wieder gut ist)
 {
   const idx = lies("index.html");
-  assert.ok(/<span class="sn-zug"><span class="sn-spur" aria-hidden="true"><\/span>/.test(html) && /\.schnecke \.sn-spur \{[^}]*mask: url\("data:image\/svg\+xml,/.test(idx) && /\.schnecke\.versteckt \{ display: none; \}/.test(idx), "Trupp + Spur in einem Streifen – verschwindet gemeinsam");
+  assert.ok(/<span class="sn-spur" aria-hidden="true"><\/span><span class="sn-zug">/.test(html) && /\.schnecke \.sn-spur \{[^}]*mask: url\("data:image\/svg\+xml,/.test(idx) && /\.schnecke\.versteckt \{ display: none; \}/.test(idx), "Trupp + Spur in einem Streifen – verschwindet gemeinsam");
 }
 
 // 2.196.0 KC-CLUB-TASTATUR-EINGABE (Fund Hansi: lange Nachricht nicht durchscrollbar, alte Nachrichten schoben sich rein)
@@ -8627,7 +8627,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.288.0 KC-CLUB-SCHLEIMSPUR (Wunsch Hansi): Spur wandert mit dem Trupp, beginnt unter der ersten Schnecke, unregelmäßig und silbern
 {
-  assert.ok(/\.schnecke \.sn-spur \{ position: absolute; top: 14px; left: 8px;[^}]*z-index: -1;/.test(seite), "Spur hängt am Trupp, unter der ersten Schnecke, hinter den Schnecken");
-  assert.ok(/-webkit-mask: url\("data:image\/svg\+xml,[^"]+"\) 0 0 \/ 140px 9px repeat-x; mask: url/.test(seite), "unregelmäßige Form über Maske (auch alte Handys mit -webkit-)");
+  assert.ok(/\.schnecke \.sn-spur \{ position: absolute; top: 16px; right: 0; width: 0;[^}]*animation: snSpur 32s linear infinite;/.test(seite) && /@keyframes snSpur \{ from \{ width: 0; \} to \{ width: calc\(100vw \+ 102px\); \} \}/.test(seite), "2.290.0: Spur bleibt liegen und wächst im Takt des Trupps");
+  assert.ok(!/"\) 0 0 \/ 140px 9px/.test(seite) && /@keyframes snGlanz \{ from \{ opacity/.test(seite), "Muster und Glanz rechts verankert – nichts wandert mit");
+  assert.ok(/-webkit-mask: url\("data:image\/svg\+xml,[^"]+"\) right 0 \/ 140px 9px repeat-x; mask: url/.test(seite), "unregelmäßige Form über Maske (auch alte Handys mit -webkit-)");
   assert.ok(/\.schnecke \.sn-spur::after \{[^}]*animation: snGlanz/.test(seite) && /:root\.ohne-anim \.schnecke \.sn-spur \{ display: none; \}/.test(seite), "Glanz läuft, ohne Animation keine Spur");
 }

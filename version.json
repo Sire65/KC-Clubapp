@@ -1,11 +1,18 @@
 {
-  "version": "2.289.0",
+  "version": "2.290.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🗓️ Dienstplan-Papiere mit QR-Code: DP2 erkennt sie beim Einlesen"
+    "🐌 Die Schleimspur bleibt jetzt liegen, wo die Schnecken sie hinterlassen – sie wandert nicht mehr mit"
   ],
   "verlauf": [
+    {
+      "version": "2.290.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🐌 Die Schleimspur bleibt jetzt liegen, wo die Schnecken sie hinterlassen – sie wandert nicht mehr mit"
+      ]
+    },
     {
       "version": "2.289.0",
       "datum": "2026-10-11",
