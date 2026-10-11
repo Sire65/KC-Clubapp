@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.242.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.243.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1322,6 +1322,7 @@ function einwOffen(v) {
 }
 function einwKarteWeg() { const k = document.querySelectorAll(".einw-karte"); if (k.length) { vorlesenStopp(); k.forEach((x) => x.remove()); } }
 function einwZeigen(v) {
+  if (v === "start") rgHinweisZeigen(); // KC-CLUB-RUNDGANG-HINWEIS (2.243.0)
   const sek = $("v-" + v);
   if (sek && einwOffen(v) && sek.querySelector(`:scope > .einw-karte[data-v="${v}"]`)) return; // schon da – nicht neu bauen
   einwKarteWeg();
@@ -1372,7 +1373,9 @@ const rgSichtbar = (e) => { if (!e?.isConnected || e.closest(".versteckt")) retu
 const rgZiel = (s) => (s.sel || []).flatMap((q) => [...document.querySelectorAll(q)]).find(rgSichtbar) || null;
 function rundgangStart(mitKnopf) {
   rundgangEnde(true); einwKarteWeg(); vorlesenStopp();
-  RG.von = aktuelleAnsicht === "chat" ? "nachrichten" : aktuelleAnsicht; RG.an = true; RG.i = 0; RG.pause = !!mitKnopf; RG.ton = "speechSynthesis" in window; document.body.classList.add("rg-an");
+  RG.von = aktuelleAnsicht === "chat" ? "nachrichten" : aktuelleAnsicht; RG.an = true;
+  if (!rgErledigt()) rgHinweisErledigt("angesehen"); // KC-CLUB-RUNDGANG-HINWEIS: wer ihn einmal gestartet hat, wird nicht mehr gefragt
+  RG.i = 0; RG.pause = !!mitKnopf; RG.ton = "speechSynthesis" in window; document.body.classList.add("rg-an");
   document.body.insertAdjacentHTML("beforeend", `<div class="rg-schicht" id="rgSchicht" role="dialog" aria-modal="true" aria-label="Rundgang durch die App"><div class="rg-loch" id="rgLoch"></div>
     <div class="rg-tafel" id="rgTafel"><div class="rg-oben"><b id="rgTitel"></b><span class="rg-nr" id="rgNr"></span></div><p id="rgText"></p><div class="rg-balken"><i id="rgBalken"></i></div>
     <div class="rg-knoepfe"><button type="button" class="knopf klein" onclick="rundgangSchritt(-1)" aria-label="Zurück">◀</button><button type="button" class="knopf haupt klein" id="rgPause" onclick="rundgangPause()"></button><button type="button" class="knopf klein" onclick="rundgangSchritt(1)" aria-label="Weiter">▶</button><button type="button" class="knopf klein" onclick="rundgangEnde()">✕ Beenden</button></div></div></div>`);
@@ -1383,6 +1386,28 @@ function rundgangStart(mitKnopf) {
 // Bildschirm bleibt an, solange der Rundgang läuft (sonst geht er nach 30 Sek. ohne Tippen aus); nach dem Zurückkehren in die App neu holen
 async function rgWach() { if (!RG.an || document.hidden) return; try { RG.wach?.release?.(); RG.wach = await navigator.wakeLock?.request("screen"); } catch {} }
 document.addEventListener("visibilitychange", () => { if (!RG.an) return; if (document.hidden) { RG.pause = true; rgStille(); } else { rgWach(); rgZeigen(); } });
+// KC-CLUB-RUNDGANG-HINWEIS (2.243.0, Wunsch Hansi): einmal auf der Startseite anbieten – „▶ Jetzt ansehen“, „Später“ (morgen wieder),
+// „Nein, danke“ (nie wieder). Erledigt wird geräteübergreifend gemerkt (Server-Einstellung „rundgang“), „Später“ nur auf diesem Gerät.
+const RG_SPAETER = "kc_club_rg_spaeter";
+const rgErledigt = () => !!INIT?.einstellungen?.rundgang?.erledigt;
+function rgHinweisZeigen() {
+  const b = $("rgHinweis"); if (!b) return;
+  let spaeter = ""; try { spaeter = localStorage.getItem(RG_SPAETER) || ""; } catch {}
+  const zeigen = !!(INIT && ICH && !RG.an && !rgErledigt() && spaeter !== heuteIso());
+  if (!zeigen) { b.innerHTML = ""; return; }
+  if (b.firstElementChild) return;
+  b.innerHTML = `<div class="karte rg-hinweis" role="note"><div class="rg-h-kopf"><span class="rg-h-sym" aria-hidden="true">🎬</span><div><b>Neu: Rundgang durch die App</b>
+    <div class="hinweis">In 3 Minuten zeigt und erzählt dir die App, was sie alles kann – mit Ton.</div></div></div>
+    <div class="knoepfe"><button class="knopf haupt klein" onclick="rgHinweisLos()">▶ Jetzt ansehen</button><button class="knopf klein" onclick="rgHinweisSpaeter()">Später</button><button class="knopf klein" onclick="rgHinweisErledigt('nein')">Nein, danke</button></div></div>`;
+}
+async function rgHinweisErledigt(wie) {
+  if (!INIT) return; const vorher = INIT.einstellungen?.rundgang, w = { erledigt: new Date().toISOString(), wie };
+  INIT.einstellungen = { ...(INIT.einstellungen || {}), rundgang: w }; rgHinweisZeigen();
+  try { await einstSpeichern("rundgang", w); } catch (e) { INIT.einstellungen.rundgang = vorher; rgHinweisZeigen(); if (wie === "nein") meldeFehler(e); } // Regel 11: nicht still „gespeichert“
+  if (wie === "nein") melde("🎬 Alles klar – den Rundgang findest du jederzeit in ❓ Hilfe & Tipps");
+}
+function rgHinweisSpaeter() { try { localStorage.setItem(RG_SPAETER, heuteIso()); } catch {} rgHinweisZeigen(); melde("🎬 Ich frage morgen nochmal – oder jederzeit in ❓ Hilfe & Tipps"); }
+function rgHinweisLos() { rundgangStart(); }
 function rgStille() { clearTimeout(RG.uhr); RG.lauf++; try { if (RG.ton) speechSynthesis.cancel(); } catch {} }
 function rgZeigen() {
   if (!RG.an) return;
@@ -1434,7 +1459,8 @@ function rundgangEnde(still) {
   if (!RG.an && !$("rgSchicht")) return;
   rgStille(); RG.an = false; RG.ziel = null; try { RG.wach?.release?.(); } catch {} RG.wach = null; $("rgSchicht")?.remove(); document.body.classList.remove("rg-an");
   removeEventListener("resize", rgLage); removeEventListener("scroll", rgLage, true);
-  if (!still) { zeige(RG.von, true); scrollTo(0, 0); } // zurück, wo der Rundgang gestartet wurde
+  if (!still) { zeige(RG.von, true); scrollTo(0, 0); }
+  rgHinweisZeigen(); // zurück, wo der Rundgang gestartet wurde
 }
 
 // ---------- KC-CLUB-TIPP (1.6.0, Wunsch Hansi): Tipp des Tages beim Öffnen – höchstens einer je Tag ----------

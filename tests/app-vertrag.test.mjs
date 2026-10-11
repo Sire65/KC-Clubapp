@@ -5600,6 +5600,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(fs.existsSync(new URL("../supabase/migrations/20261011_kc_club_v2242_privat_startseite.sql", import.meta.url)), "Migration");
 }
 
+// 2.243.0 KC-CLUB-RUNDGANG-HINWEIS (Wunsch Hansi): einmaliger Hinweis auf der Startseite – Jetzt ansehen / Später / Nein, danke
+{
+  assert.ok(/id="rgHinweis"/.test(seite) && /if \(v === "start"\) rgHinweisZeigen\(\);/.test(html), "Karte auf der Startseite");
+  assert.ok(/onclick="rgHinweisLos\(\)"/.test(html) && /onclick="rgHinweisSpaeter\(\)"/.test(html) && /onclick="rgHinweisErledigt\('nein'\)"/.test(html), "drei Knöpfe");
+  assert.ok(/if \(!rgErledigt\(\)\) rgHinweisErledigt\("angesehen"\)/.test(html) && /einstSpeichern\("rundgang", w\)/.test(html) && /rundgang: \(w\) => \(\{ erledigt:/.test(server), "geräteübergreifend gemerkt, auch wenn der Rundgang woanders gestartet wurde");
+  assert.ok(/spaeter !== heuteIso\(\)/.test(html) && /INIT\.einstellungen\.rundgang = vorher/.test(html), "Später = morgen wieder; Speicherfehler → alter Stand (Regel 11)");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

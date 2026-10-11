@@ -1,11 +1,18 @@
 {
-  "version": "2.242.0",
+  "version": "2.243.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "📌 Private Termine auf die Startseite: beim Eintragen „Auf der Startseite“ anhaken – dann zählt der Countdown oben mit"
+    "🎬 Neu: Rundgang durch die App – auf der Startseite antippen und in 3 Minuten alles gezeigt und erzählt bekommen"
   ],
   "verlauf": [
+    {
+      "version": "2.243.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🎬 Neu: Rundgang durch die App – auf der Startseite antippen und in 3 Minuten alles gezeigt und erzählt bekommen"
+      ]
+    },
     {
       "version": "2.242.0",
       "datum": "2026-10-11",

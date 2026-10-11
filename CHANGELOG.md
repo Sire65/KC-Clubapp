@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.243.0 – 2026-10-11 – KC-CLUB-RUNDGANG-HINWEIS: Hinweis auf den Rundgang auf der Startseite
+- Einmalige Karte unter dem Infofeld: ▶ Jetzt ansehen / Später (morgen wieder) / Nein, danke. Erledigt wird geräteübergreifend gemerkt (Einstellung rundgang), auch wenn der Rundgang anderswo gestartet wurde.
+
 ## 2.242.0 – 2026-10-11 – KC-CLUB-PRIVAT-STARTSEITE: private Termine auf der Startseite (Countdown/Fallblatt)
 - Privater Termin: neues Häkchen „📌 Auf der Startseite“ → der Termin läuft oben in der Countdown-Kachel mit (noch x Tage, am Tag selbst die Uhrzeit), auch bei „Nur Clubtreffen“. Bis zu 5, bei Reihen der nächste Termin. DB: kc_club_privattermine.startseite (Standard aus).
 
