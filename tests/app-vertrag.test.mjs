@@ -5759,7 +5759,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const jetzt = JZB\.vorschau \|\| jahreszeitAktuell\(\);/.test(html), "Kopf nutzt Wahl bzw. Automatik");
   assert.ok(/if \(art !== JZ_LETZTE\.art\) jahreszeitKopf\(\);/.test(html) && /\}, 60000\);/.test(html), "Automatik stellt den Kopf von selbst um (jede Minute geprüft)");
   assert.ok(/id="jzWahl"/.test(html) && /id="jzWahlInfo"/.test(html), "Auswahl in den Einstellungen");
-  assert.ok(/\.jz-eis \{[^}]*height:\s*9px/.test(html) && /pointer-events:\s*none/.test(html), "Eiszapfen höchstens 9 px, nicht anklickbar");
+  assert.ok(/\.jz-eis \{[^}]*height:\s*22px/.test(html) && /pointer-events:\s*none/.test(html), "Eiszapfen höchstens 22 px (2.277.0 länger), nicht anklickbar");
   assert.ok(/einfach\(\) \|\| !fxAn\(\) \|\| !einst\("jahreszeit", true\) \|\| !jzTieferWinter\(art\)/.test(html), "keine Eiszapfen in der einfachen Ansicht, ohne Effekte oder Jahreszeiten");
   assert.ok(/Date\.now\(\) - new Date\(r\.stand\) <= WETTER_VERALTET_MIN \* 60000/.test(html), "Frost nur aus frischen Wetterdaten");
 }
@@ -5794,6 +5794,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const RG_INST_CODE = "482 913"; \/\/ nur ein Beispiel/.test(html) && !/kurzcode_erzeugen[^\n]*rgSim/.test(html), "Video holt keinen echten Code");
   assert.ok(/data-video="1">🎬 Als Video zeigen/.test(html) && /onclick="erklaerVideos\('installieren'\)">🎬 Videos zum Installieren/.test(html), "Assistent und Einstellungen bieten die Videos an");
   assert.ok(/\/EdgA\\\/\/\.test\(ua\) \? "edge"/.test(html), "Edge auf Android wird erkannt");
+}
+// 2.277.0 KC-CLUB-SCHNEEMANN-SONNE + Eiszapfen länger (Wunsch Hansi): Sonne von links lässt den Schneemann schmelzen, der Schal bleibt und fliegt mit dem Wind davon
+{
+  assert.ok(/const JZB_SONNE = [\d.]+, JZB_SCHMELZ = [\d.]+;/.test(html) && /function jzbSonneStart\(\)/.test(html) && /function jzbSonneMalen\(c\)/.test(html), "Sonne geht auf, dann Schmelzen");
+  assert.ok(/if \(J\.pt >= 50\) \{ jzbSonneStart\(\); jzbPhase\("schmelzen"\); \}/.test(html), "nach einer Weile kommt die Sonne");
+  assert.ok(/const x = -30 \* k \+ \(S\.zx \+ 30 \* k\) \* ein/.test(html), "Sonne kommt von links");
+  assert.ok(/J\.fx\.push\(\{ typ: "schal"/.test(html) && /function jzbSchalMalen\(/.test(html) && /p\.typ === "schal"/.test(html), "nur der Schal bleibt und fliegt mit dem Wind");
+  assert.ok(/typ: "flocke", x: p\.x \+ jzbZ\(-14, 14\)/.test(html), "Schal wirbelt mit Schnee hoch");
+  assert.ok(/p\.vx = W\.dir \* Math\.min\(110, Math\.max\(50, Math\.abs\(p\.vx\)\)\)/.test(html), "Schal bleibt nie hängen – verlässt das Bild sicher");
+  assert.ok(/J\.sonne = null; J\.wind = null;/.test(html), "Sonne verschwindet mit dem Lauf");
+  assert.ok(/viewBox="0 0 100 22"/.test(html) && /\.jz-eis \{[^}]*height: 22px/.test(html) && /Math\.pow\(zf\(i\), 2\.2\)/.test(html), "Eiszapfen länger und unterschiedlich (höchstens 22 px)");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

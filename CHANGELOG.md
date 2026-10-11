@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.277.0 – 2026-10-11 – KC-CLUB-SCHNEEMANN-SONNE: Sonne lässt den Schneemann schmelzen, Schal fliegt davon · Eiszapfen länger
+Nach einer Weile geht von links eine strahlende Sonne auf und steigt ein Stück über den Schneemann – er schmilzt, nur sein weinroter Schal bleibt liegen; der Wind wirbelt ihn dann mit dem Schnee durch die Luft davon. Eiszapfen an der Leiste mit den Lämpchen sind jetzt länger und unterschiedlich wie am Dach (viele kurze, einige lange, höchstens 22 px – das Infofeld bleibt frei).
+
 ## 2.276.0 – 2026-10-11 – KC-CLUB-VIDEO-INSTALL: Erklär-Videos zum Installieren + Knopf „Erweiterte Ansicht“
 Neues Video-Thema „📲 App installieren“: Einführung (persönlicher Link vom Admin per WhatsApp oder E-Mail – nicht weitergeben), danach Browser wählen; je ein Video für Chrome, Edge, Samsung Internet, Safari (iPhone/iPad) und Firefox mit nachgebauten Original-Bildschirmen und Menüpunkten bis zur Kochmütze auf dem Startbildschirm; „Weiteres Gerät“ (Tablet, PC mit 6-stelligem Code) und „Link, Code & Co.“ (Unterschiede, Link verloren, Link einfügen). Einrichtungs-Assistent und Einstellungen bieten die Videos an. Der Knopf unten auf der Startseite heißt jetzt wie oben „🔧 Erweiterte Ansicht“.
 
