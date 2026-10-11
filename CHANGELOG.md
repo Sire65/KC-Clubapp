@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.232.0 – 2026-10-11 – Archiv-Kopie in Neon Frankfurt
+KC-CLUB-ARCHIV-KOPIE: Jede Nacht (2–5 Uhr) legt der Server von neuen und geänderten Archiv-Dateien eine zweite Kopie im Neon-Dateispeicher in Frankfurt ab (eigenes kostenloses Projekt „KC Archiv Kopie“, 5 GB, privat; Zugang nur im Vault). Prüfsumme wird verglichen; gelöschte Dokumente verschwinden 30 Tage nach dem Löschen auch aus der Kopie. Admin-Zentrale: Lampe „Archiv-Kopie“ (grau bei unbekannt oder älter als 26 Std.) und Füllstand-Balken.
+
 ## 2.231.1 – 2026-10-11 – Neon-Füllstand rechnet mit 1 GB
 KC-CLUB-NEON-GROESSE: Neon hat das kostenlose Kontingent am 02.10.2026 auf 1 GB je Projekt verdoppelt; Admin-Zentrale (Balken, Übersicht, Speicher) rechnet jetzt mit 1 GB statt 0,5 GB.
 

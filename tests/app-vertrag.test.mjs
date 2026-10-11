@@ -8099,3 +8099,13 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/api\("terminumfrage_festlegen", \{ id: d\.id, option_id: d\.option\.id \}/.test(html) && /api\("terminumfrage_antwort", \{ option_id: d\.option\.id/.test(html), "vorhandene Kerne für Antwort und Festlegen");
   assert.ok(/Soll ich den Termin in deinen Kalender eintragen\?/.test(html) && /inKalender\(t\.id\)/.test(html) && /if \(s\.art === "livetermin"\) \{ ltHolen\(\); return; \}/.test(html), "Kalender-Frage, direkte Leitung");
 }
+
+// 2.232.0 KC-CLUB-ARCHIV-KOPIE (Wunsch Hansi): zweite Kopie der Archiv-Dateien im Neon-Dateispeicher Frankfurt
+{
+  const m = lies("supabase/migrations/20261011_kc_club_v2232_archiv_kopie.sql");
+  assert.ok(/enable row level security;\nrevoke all on public\.kc_club_archiv_kopie from anon, authenticated;/.test(m) && /revoke all on public\.kc_club_archiv_kopie_stand from anon, authenticated;/.test(m), "nur Server-Zugriff");
+  assert.ok(/kc_communication_get_server_secret", \{ p_name: "kc_club_archiv_kopie" \}/.test(server) && !/nsk_live_|nak_live_/.test(server + programm + m), "Zugang nur im Vault, nie im Code");
+  assert.ok(/if \(h < 2 \|\| h >= 5\) return null;/.test(server) && /await archivKopieLauf\(\)\.catch/.test(server), "nur nachts im Zeitplaner");
+  assert.ok(/if \(a\.sha256 && a\.sha256 !== hash\) throw new Error\("Prüfsumme weicht ab"\);/.test(server) && /ARCHIV_KOPIE_NACHLAUF_TAGE = 30/.test(server), "Prüfsumme, gelöschte erst nach 30 Tagen weg");
+  assert.ok(/const archiv = !ak \? \["grau", "noch nie gelaufen"\] : akStd > ARCHIV_KOPIE_ALT_STD \? \["grau"/.test(html) && /"Archiv-Kopie", sf2\.archiv\[1\]/.test(html), "Lampe: unbekannt/alt nie als OK");
+}

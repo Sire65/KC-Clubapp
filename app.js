@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.231.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.232.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11144,7 +11144,7 @@ function adminProgrammFarbe(p) {
 // Neon-Spiegel/Backup: pausiert = gelb (nie grün), zu alt = rot, unbekannt = grau
 const BACKUP_OK_STD = 26, BACKUP_WARN_STD = 72;
 function adminSpiegelFarben(sp) {
-  if (!sp) return { neon: ["grau", "Zustand unbekannt"], backup: ["grau", "Zustand unbekannt"], abdeckung: ["grau", "unbekannt"], watchdog: ["grau", "unbekannt"] };
+  if (!sp) return { neon: ["grau", "Zustand unbekannt"], backup: ["grau", "Zustand unbekannt"], abdeckung: ["grau", "unbekannt"], watchdog: ["grau", "unbekannt"], archiv: ["grau", "Zustand unbekannt"] };
   const std = (iso) => (iso ? (Date.now() - new Date(iso)) / 3600000 : Infinity), datum = (iso) => fKurz.format(new Date(iso));
   const pauseText = sp.pause ? `pausiert seit ${datum(sp.pause.zeit)}` : "ausgeschaltet";
   const bis = sp.compute?.bis && new Date(sp.compute.bis) > new Date() ? ` · Neon-Wartung bis ${datum(sp.compute.bis)}` : "";
@@ -11157,8 +11157,14 @@ function adminSpiegelFarben(sp) {
   const ab = sp.abdeckung, abdeckung = !ab ? ["grau", "unbekannt"] : ab.ohne === 0 ? ["gruen", `alle ${ab.tabellen} Tabellen erfasst`] : ["gelb", `${ab.ohne} von ${ab.tabellen} Tabellen ohne Spiegel-Regel`];
   const w = sp.watchdog, wm = w ? (Date.now() - new Date(w.zeit)) / 60000 : Infinity;
   const watchdog = !w ? ["grau", "noch nie gelaufen"] : wm > 90 ? ["grau", `keine Meldung seit ${seitText(w.zeit)}`] : [w.status === "ok" ? "gruen" : "gelb", `${w.status === "ok" ? "passt auf" : "meldet Probleme"} · ${seitText(w.zeit)}`];
-  return { neon, backup, abdeckung, watchdog };
+  // KC-CLUB-ARCHIV-KOPIE (2.232.0): zweite Kopie der Archiv-Dateien in Neon Frankfurt – läuft nachts; älter als 26 Std. → grau (nie als OK)
+  const ak = sp.archiv, akStd = ak ? std(ak.zeit) : Infinity;
+  const archiv = !ak ? ["grau", "noch nie gelaufen"] : akStd > ARCHIV_KOPIE_ALT_STD ? ["grau", `keine Meldung seit ${seitText(ak.zeit)}`]
+    : ak.status === "fehler" ? ["rot", `Fehler · ${ak.text || ""} · ${seitText(ak.zeit)}`]
+    : [ak.status === "ok" && !ak.offen ? "gruen" : "gelb", `${ak.dateien} Dateien · ${mb(ak.bytes)}${ak.offen ? ` · ${ak.offen} noch offen` : ""}${ak.status === "warnung" ? " · " + (ak.text || "") : ""} · ${seitText(ak.zeit)}`];
+  return { neon, backup, abdeckung, watchdog, archiv };
 }
+const ARCHIV_KOPIE_ALT_STD = 26;
 // stand/altStd (0.54.0): Messzeitpunkt – älter als altStd Stunden → graue Lampe und „⚠️ veraltet“ (UNKNOWN/alt nie als OK)
 function adminBalken(titel, belegt, grenze, warn, krit, stand = null, altStd = 13) {
   if (belegt == null) return `<div class="abalken">${lampe("grau")}<span>${titel}: unbekannt</span></div>`;
@@ -11178,7 +11184,7 @@ function infoAdmin() {
       ${zeile(sf, "Server", `v${r.server.version} · Datenbank ${r.server.dbMs} ms`)}
       ${zeile(cf, "Kommunikation", c.text)}
       ${r.programme.map((p) => { const [f, t] = adminProgrammFarbe(p); return zeile(f, p.name, t); }).join("")}
-      ${(() => { const sf2 = adminSpiegelFarben(r.spiegel); return zeile(sf2.neon[0], "Neon-Spiegel", sf2.neon[1]) + zeile(sf2.backup[0], "Backup", sf2.backup[1]) + zeile(sf2.watchdog[0], "Watchdog", sf2.watchdog[1]) + zeile(sf2.abdeckung[0], "Abdeckung", sf2.abdeckung[1]); })()}
+      ${(() => { const sf2 = adminSpiegelFarben(r.spiegel); return zeile(sf2.neon[0], "Neon-Spiegel", sf2.neon[1]) + zeile(sf2.backup[0], "Backup", sf2.backup[1]) + zeile(sf2.archiv[0], "Archiv-Kopie", sf2.archiv[1]) + zeile(sf2.watchdog[0], "Watchdog", sf2.watchdog[1]) + zeile(sf2.abdeckung[0], "Abdeckung", sf2.abdeckung[1]); })()}
       ${zeile(r.wartung?.an ? "gelb" : "gruen", "Wartung", r.wartung?.an ? "an" + (r.wartung.hinweis ? " – " + r.wartung.hinweis : "") : "aus")}
     </div>
     ${adminBalken("🗄️ Datenbank", r.datenbank.bytes, r.datenbank.grenze, r.datenbank.warnPct, r.datenbank.kritPct)}
@@ -11444,6 +11450,8 @@ function adBlatt(id) {
         ${sf ? adZeile(adAlt() ? "grau" : sf.neon[0], "Neon-Spiegel", sf.neon[1]) + adZeile(adAlt() ? "grau" : sf.backup[0], "Tägliche Sicherung (Neon)", sf.backup[1]) + adZeile(adAlt() ? "grau" : sf.watchdog[0], "Watchdog", sf.watchdog[1]) + adZeile(adAlt() ? "grau" : sf.abdeckung[0], "Abdeckung", sf.abdeckung[1]) : adZeile("grau", "Spiegel", "unbekannt")}
         ${r?.spiegel?.backup?.restoreTest ? adZeile("keine", "Letzter Wiederherstellungs-Test", seitText(r.spiegel.backup.restoreTest) + " · bestanden") : ""}
         ${adZeile(adZustand("b2")[0], "B2-Backup (Backup-PC)", adZustand("b2")[1])}
+        ${sf ? adZeile(adAlt() ? "grau" : sf.archiv[0], "Archiv-Kopie (Neon Frankfurt)", sf.archiv[1]) : ""}
+        ${r?.spiegel?.archiv ? adminBalken("🗂️ Archiv-Kopie", r.spiegel.archiv.bytes, r.spiegel.archiv.grenze, 80, 95, r.spiegel.archiv.zeit, ARCHIV_KOPIE_ALT_STD) : ""}
         ${r?.spiegel?.groesse?.bytes ? adminBalken("🪞 Neon-Speicher", r.spiegel.groesse.bytes, r.spiegel.groesse.grenze || 1024 * 1048576, r.datenbank.warnPct, r.datenbank.kritPct, r.spiegel.groesse.zeit) : ""}
         <p class="hinweis" style="margin:0">Der Spiegel läuft alle 6 Stunden von selbst; fällt der Anstoß aus, springt stündlich der Spiegel-Wächter (GitHub) ein.</p>
         <div class="knoepfe">${adKnopf("🪞 Jetzt spiegeln – nur im Notfall", "adminSpiegeln()")}${adKnopf("📋 Alle Einzelheiten", "adminBlatt()")}</div>${adLinks("neon")}${adLinks("github")}`;

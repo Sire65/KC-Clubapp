@@ -15,6 +15,7 @@
 //           KC-CLUB-GRUPPEN, KC-CLUB-ZUSTELLWAHL (0.23.0)
 //           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0), KC-CLUB-WETTER-TAGE (0.46.0), KC-CLUB-ADMINLAGE (0.47.0), KC-CLUB-ADMIN-SPIEGEL (0.48.0/0.49.0), KC-CLUB-TODO-MEHRERE (0.52.0), KC-CLUB-DRUCK + KC-CLUB-AUFGABEN-MEHRERE (0.53.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { AwsClient } from "npm:aws4fetch@1.0.20"; // KC-CLUB-ARCHIV-KOPIE (2.232.0): S3-Signatur für den Neon-Dateispeicher (MIT, kostenlos)
 // @ts-ignore: chess.js bringt keine Typdatei mit (in Deno ohne Bedeutung)
 import { Chess } from "./chess.js"; // KC-CLUB-SCHACH (2.8.0): chess.js 1.4.0 (BSD-2-Clause, Jeff Hlywa) – Zugprüfung, keine Kosten
 // @ts-ignore: reine JS-Datei ohne Typen
@@ -44,7 +45,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.231.0";
+const SERVER_VERSION = "2.232.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1981,7 +1982,7 @@ const NEON_GRENZE = 1024 * 1024 * 1024; // Neon kostenlos: 1 GB Speicher je Proj
 // Neon-Spiegel und Backup (0.48.0): liest nur die Protokolle des KC-Spiegels (kc_db_mirror_*, kc_neon_compute_policy) – steuert nichts
 async function adminSpiegel() {
   const letzter = (typ: string) => db.from("kc_db_mirror_runs").select("started_at,message").eq("run_type", typ).eq("status", "ok").order("started_at", { ascending: false }).limit(1).maybeSingle();
-  const [{ data: pol }, { data: compute }, { data: snap }, { data: backup }, { data: restore }, { data: pause }, { data: abdeckung }, { data: wd }, { data: ng }] = await Promise.all([
+  const [{ data: pol }, { data: compute }, { data: snap }, { data: backup }, { data: restore }, { data: pause }, { data: abdeckung }, { data: wd }, { data: ng }, { data: ak }] = await Promise.all([
     db.from("kc_db_mirror_policies").select("name,mode,target,enabled,lag_threshold_sec,updated_at"),
     db.from("kc_neon_compute_policy").select("mode,maintenance_until,updated_at").eq("id", "primary").maybeSingle(),
     letzter("snapshot"), letzter("backup"), letzter("restore_test"),
@@ -1990,6 +1991,7 @@ async function adminSpiegel() {
     db.from("kc_db_mirror_runs").select("started_at,status,message").eq("run_type", "watchdog").order("started_at", { ascending: false }).limit(1).maybeSingle(),
     // KC-CLUB-NEON-GROESSE (0.54.0): misst der Spiegel-Worker nebenbei, wenn er ohnehin mit Neon verbunden ist (keine Extra-Rechenzeit)
     db.from("kc_db_mirror_runs").select("started_at,metrics").eq("run_type", "neon_groesse").eq("status", "ok").order("started_at", { ascending: false }).limit(1).maybeSingle(),
+    db.from("kc_club_archiv_kopie_stand").select("zeit,status,text,metrics").eq("id", 1).maybeSingle(), // KC-CLUB-ARCHIV-KOPIE (2.232.0)
   ]);
   const p = pol ?? [], neon = p.filter((x: any) => x.target === "neon" && x.mode !== "realtime"), bk = p.filter((x: any) => x.mode === "backup");
   const aktivLag = neon.filter((x: any) => x.enabled).map((x: any) => Number(x.lag_threshold_sec) || 720);
@@ -2003,6 +2005,7 @@ async function adminSpiegel() {
     abdeckung: abdeckung ? { tabellen: abdeckung.tabellen, ohne: abdeckung.ohne_regel, liste: abdeckung.liste } : null,
     watchdog: wd ? { zeit: wd.started_at, status: wd.status, text: wd.message } : null,
     groesse: ng ? { bytes: Number(ng.metrics?.bytes) || null, zeit: ng.started_at, grenze: NEON_GRENZE } : null,
+    archiv: ak ? { zeit: ak.zeit, status: ak.status, text: ak.text, dateien: Number(ak.metrics?.dateien) || 0, bytes: Number(ak.metrics?.bytes) || 0, offen: Number(ak.metrics?.offen) || 0, grenze: ARCHIV_KOPIE_GRENZE } : null,
     pause: pause && /paus/i.test(pause.action) ? { zeit: pause.happened_at, text: pause.detail } : null,
   };
 } // kostenloser Supabase-Tarif (falls der System-Check keinen Wert liefert)
@@ -2466,6 +2469,77 @@ function treffenText(t: any, gastgeber: string, anlass: "neu" | "geaendert" | "a
       .filter((z, i, a) => !(z === "" && a[i - 1] === "")).join("\n"),
     url: APP_URL + "#termine",
   };
+}
+
+// ---------- KC-CLUB-ARCHIV-KOPIE (2.232.0, Wunsch Hansi 11.10.2026) ----------
+// Zweite Kopie aller Archiv-Dateien im Neon-Dateispeicher Frankfurt (Projekt „KC Archiv Kopie“, Fach „kc-archiv“, privat, 5 GB gratis).
+// Zugang nur im Vault (kc_club_archiv_kopie: endpoint, region, bucket, key, secret) – nie im Browser, Repository oder Protokoll.
+// Läuft im Zeitplaner („wartung“) nur nachts 2–5 Uhr; je Lauf höchstens ARCHIV_KOPIE_JE_LAUF Dateien bzw. ARCHIV_KOPIE_MAX_BYTES.
+// Gelöschte Dokumente bleiben noch ARCHIV_KOPIE_NACHLAUF_TAGE in der Kopie (Papierkorb), dann wird die Kopie entfernt.
+const ARCHIV_KOPIE_GRENZE = 5 * 1024 * 1024 * 1024, ARCHIV_KOPIE_JE_LAUF = 25, ARCHIV_KOPIE_MAX_BYTES = 60 * 1024 * 1024, ARCHIV_KOPIE_NACHLAUF_TAGE = 30;
+const archivKopieSchluessel = (dokId: string, attId: string) => `archiv/${dokId}/${attId}`;
+async function archivKopieStand(status: "ok" | "warnung" | "fehler", text: string, metrics: Record<string, unknown>) {
+  const { error } = await db.from("kc_club_archiv_kopie_stand").upsert({ id: 1, zeit: jetzt(), status, text: txt(text, 300), metrics });
+  if (error) console.error("archiv kopie stand", error.message);
+}
+async function archivKopieLauf(erzwingen = false) {
+  if (!erzwingen) { const h = berlinStunde(new Date()); if (h < 2 || h >= 5) return null; }
+  const { data: roh } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_archiv_kopie" });
+  let z: any = null; try { z = roh ? JSON.parse(String(roh)) : null; } catch { z = null; }
+  if (!z?.endpoint || !z?.bucket || !z?.key || !z?.secret) { await archivKopieStand("fehler", "Zugang zum Neon-Dateispeicher fehlt", {}); return { ok: false }; }
+  const s3 = new AwsClient({ accessKeyId: z.key, secretAccessKey: z.secret, region: z.region || "eu-central-1", service: "s3" });
+  const url = (k: string) => `${String(z.endpoint).replace(/\/$/, "")}/${encodeURIComponent(z.bucket)}/${k.split("/").map(encodeURIComponent).join("/")}`;
+  const [{ data: doks, error: de }, { data: kopien, error: ke }] = await Promise.all([
+    db.from("kc_club_archiv_dokumente").select("id,attachment_id,geloescht_am").not("attachment_id", "is", null),
+    db.from("kc_club_archiv_kopie").select("dokument_id,attachment_id,schluessel,groesse"),
+  ]);
+  if (de || ke) { await archivKopieStand("fehler", "Archiv-Verzeichnis nicht lesbar", {}); return { ok: false }; }
+  const kopie = new Map((kopien ?? []).map((k: any) => [k.dokument_id, k]));
+  const dokMap = new Map((doks ?? []).map((d: any) => [d.id, d]));
+  const grenzeWeg = Date.now() - ARCHIV_KOPIE_NACHLAUF_TAGE * 86400000;
+  const offen = (doks ?? []).filter((d: any) => !d.geloescht_am && kopie.get(d.id)?.attachment_id !== d.attachment_id);
+  const weg = (kopien ?? []).filter((k: any) => { const d: any = dokMap.get(k.dokument_id); return !d || (d.geloescht_am && new Date(d.geloescht_am).getTime() < grenzeWeg); });
+  let kopiert = 0, entfernt = 0, bytes = 0; const fehler: string[] = [];
+  // 1) neue/geänderte Dokumente kopieren (Prüfsumme wird mit der Anlage verglichen)
+  const atts = offen.length ? (await db.from("kc_communication_attachments").select("id,bucket,object_path,mime_type,size_bytes,sha256").in("id", offen.slice(0, ARCHIV_KOPIE_JE_LAUF).map((d: any) => d.attachment_id))).data ?? [] : [];
+  const attMap = new Map(atts.map((a: any) => [a.id, a]));
+  for (const d of offen.slice(0, ARCHIV_KOPIE_JE_LAUF)) {
+    const a: any = attMap.get(d.attachment_id);
+    if (!a) { fehler.push("Anlage fehlt"); continue; }
+    if (bytes + (Number(a.size_bytes) || 0) > ARCHIV_KOPIE_MAX_BYTES && kopiert > 0) break; // Rest beim nächsten Lauf
+    try {
+      const { data: blob, error } = await db.storage.from(a.bucket).download(a.object_path);
+      if (error || !blob) throw new Error("Datei nicht lesbar");
+      const inhalt = new Uint8Array(await blob.arrayBuffer());
+      const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", inhalt))].map((x) => x.toString(16).padStart(2, "0")).join("");
+      if (a.sha256 && a.sha256 !== hash) throw new Error("Prüfsumme weicht ab");
+      const schluessel = archivKopieSchluessel(d.id, d.attachment_id);
+      const r = await s3.fetch(url(schluessel), { method: "PUT", body: inhalt, headers: { "content-type": a.mime_type || "application/octet-stream", "x-amz-meta-sha256": hash } });
+      if (!r.ok) throw new Error(`Neon antwortet ${r.status}`);
+      await r.body?.cancel();
+      const alt: any = kopie.get(d.id);
+      if (alt && alt.schluessel !== schluessel) { const x = await s3.fetch(url(alt.schluessel), { method: "DELETE" }); await x.body?.cancel(); } // ersetzte Datei
+      const { error: ue } = await db.from("kc_club_archiv_kopie").upsert({ dokument_id: d.id, attachment_id: d.attachment_id, schluessel, groesse: inhalt.length, sha256: hash, kopiert_am: jetzt() });
+      if (ue) throw new Error("Verzeichnis nicht gespeichert");
+      kopiert++; bytes += inhalt.length;
+    } catch (e) { fehler.push(txt(String((e as any)?.message || e), 80)); }
+  }
+  // 2) endgültig gelöschte Dokumente nach der Nachlaufzeit aus der Kopie entfernen
+  for (const k of weg.slice(0, ARCHIV_KOPIE_JE_LAUF)) {
+    try {
+      const r = await s3.fetch(url(k.schluessel), { method: "DELETE" });
+      await r.body?.cancel();
+      if (!r.ok && r.status !== 404) throw new Error(`Neon antwortet ${r.status}`);
+      await db.from("kc_club_archiv_kopie").delete().eq("dokument_id", k.dokument_id);
+      entfernt++;
+    } catch (e) { fehler.push(txt(String((e as any)?.message || e), 80)); }
+  }
+  const { data: alle } = await db.from("kc_club_archiv_kopie").select("groesse");
+  const metrics = { kopiert, entfernt, offen: Math.max(0, offen.length - kopiert), dateien: (alle ?? []).length,
+    bytes: (alle ?? []).reduce((s: number, x: any) => s + (Number(x.groesse) || 0), 0), fehler: fehler.length };
+  const status = fehler.length && !kopiert && !entfernt ? "fehler" : fehler.length ? "warnung" : "ok";
+  await archivKopieStand(status, fehler.length ? `${fehler.length} Fehler: ${[...new Set(fehler)].join(", ")}` : "in Ordnung", metrics);
+  return { ok: status !== "fehler", ...metrics };
 }
 
 // ---------- Archiv (KC-CLUB-ARCHIV, 1.2.0) ----------
@@ -4697,6 +4771,7 @@ Deno.serve(async (req) => {
       await reiseChecklisteErinnern().catch((e) => console.error("reise checkliste", String(e))); // KC-CLUB-REISE-CHECKLISTE (2.223.0)
       await dienstGrussSenden().catch((e) => console.error("dienst gruss", String(e))); // KC-CLUB-DIENST-GRUSS (2.224.0)
       await rtZaehlerWarnen().catch((e) => console.error("rt zaehler", String(e))); // KC-CLUB-RT-SPARBREMSE (2.230.0)
+      await archivKopieLauf().catch((e) => archivKopieStand("fehler", String((e as any)?.message || e), {})); // KC-CLUB-ARCHIV-KOPIE (2.232.0): nur nachts 2–5 Uhr
       await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
       await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
       await geburtstagZettelAbnehmen().catch((e) => console.error("geburtstag zettel ab", String(e))); // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0)
