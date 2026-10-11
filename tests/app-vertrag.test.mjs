@@ -8147,3 +8147,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/const fra = !fr \? \["grau", "noch nie gelaufen"\] : frStd > ARCHIV_KOPIE_ALT_STD \? \["grau"/.test(html) && /"Sicherung Frankfurt", sf2\.fra\[1\]/.test(html), "Lampe: unbekannt/alt nie als OK");
   assert.ok(/neu\("versprechen", \{ text: String\(r && r\.message \|\| r\), stapel:/.test(seite), "Hintergrundfehler mit Fundstelle melden");
 }
+
+// 2.236.1 KC-CLUB-FRA-SICHERUNG: Teile nach echter Größe (inkl. ausgelagerter Daten) – 35-MB-Tabelle bremste den Server
+{
+  assert.ok(/pg_total_relation_size\(c\.oid\)::bigint as gesamt/.test(server) && /Math\.ceil\(gesamt \/ FRA_TEIL_BYTES\)/.test(server) && /FRA_TEIL_BYTES = 3 \* 1024 \* 1024, FRA_SCHRITT_BYTES = 8 \* 1024 \* 1024/.test(server), "kleine Teile, gedrosselte Schritte");
+}

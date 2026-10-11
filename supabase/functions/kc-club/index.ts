@@ -2624,13 +2624,21 @@ const hexSha256 = async (b: Uint8Array) => [...new Uint8Array(await crypto.subtl
 // + Zeilen zählen). 14 Tagesstände; ältere werden gelöscht. Der Zeitplaner ruft nachts alle 2 Min. einen Schritt (CPU-Grenze der
 // Edge Function: je Schritt höchstens FRA_SCHRITT_BYTES Rohdaten). Gelesen wird über den direkten Datenbank-Weg (nicht die Schnittstelle).
 // Große Tabellen werden in Blockbereichen (ctid) gesichert – stabil auch während Änderungen. Status: kc_club_fra_sicherung_stand.
-const FRA_BEHALTEN_TAGE = 14, FRA_BLOECKE = 400, FRA_SCHRITT_BYTES = 12 * 1024 * 1024, FRA_SCHRITT_MS = 25000, FRA_VERSUCHE = 3, FRA_GRENZE = 5 * 1024 * 1024 * 1024;
+const FRA_BEHALTEN_TAGE = 14, FRA_BLOECKE = 400, FRA_TEIL_BYTES = 3 * 1024 * 1024, FRA_SCHRITT_BYTES = 8 * 1024 * 1024, FRA_SCHRITT_MS = 25000, FRA_VERSUCHE = 3, FRA_GRENZE = 5 * 1024 * 1024 * 1024;
 async function fraStand(lauf: string, status: string, text: string, metrics: Record<string, unknown>) {
   const { error } = await db.from("kc_club_fra_sicherung_stand").upsert({ id: 1, lauf, zeit: jetzt(), status, text: txt(text, 300), metrics });
   if (error) console.error("fra stand", error.message);
 }
 async function fraGzip(b: Uint8Array) { return new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer()); }
 async function fraGunzip(b: Uint8Array) { return new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer()); }
+// Blockbereiche einer Tabelle: [von, bis] (null, null = ganze Tabelle; letzter Bereich offen bis zum Ende)
+function fraTeile(seiten: number, gesamt: number): [number | null, number | null][] {
+  const n = Math.max(Math.ceil(seiten / FRA_BLOECKE), Math.ceil(gesamt / FRA_TEIL_BYTES), 1);
+  if (n <= 1 || seiten < 2) return [[null, null]];
+  const je = Math.max(1, Math.ceil(seiten / n)), teile: [number | null, number | null][] = [];
+  for (let von = 0; von < seiten; von += je) teile.push([von, von + je >= seiten ? null : von + je]);
+  return teile;
+}
 const fraName = (t: string) => /^[a-z0-9_]{1,63}$/.test(t) ? t : null;
 async function fraSchritt(jetztErzwingen = false) {
   const t0 = Date.now(), lauf = berlinTag(new Date()), sql = direktSql();
@@ -2640,14 +2648,13 @@ async function fraSchritt(jetztErzwingen = false) {
   // 1) Lauf des Tages anlegen: alle Tabellen, große in Blockbereiche geteilt
   const [{ n: vorhanden }] = await sql`select count(*)::int as n from public.kc_club_fra_sicherung where lauf = ${lauf}`;
   if (!vorhanden) {
-    const tabs = await sql`select c.relname as t, greatest(c.relpages, 0)::bigint as seiten from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind = 'r' order by 1`;
+    // Teile nach echter Größe (inkl. ausgelagerter Daten/TOAST): höchstens FRA_TEIL_BYTES je Teil, aufgeteilt in Blockbereiche
+    const tabs = await sql`select c.relname as t, (pg_relation_size(c.oid) / 8192)::bigint as seiten, pg_total_relation_size(c.oid)::bigint as gesamt from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind = 'r' order by 1`;
     const zeilen: any[] = [];
     for (const r of tabs) {
       if (!fraName(r.t)) continue;
-      const seiten = Number(r.seiten) || 0;
-      if (seiten <= FRA_BLOECKE * 1.5) { zeilen.push({ lauf, tabelle: r.t, teil: 0, block_von: null, block_bis: null }); continue; }
-      const teile = Math.ceil(seiten / FRA_BLOECKE);
-      for (let i = 0; i < teile; i++) zeilen.push({ lauf, tabelle: r.t, teil: i, block_von: i * FRA_BLOECKE, block_bis: i === teile - 1 ? null : (i + 1) * FRA_BLOECKE });
+      const zl = fraTeile(Number(r.seiten) || 0, Number(r.gesamt) || 0);
+      zl.forEach(([von, bis], i) => zeilen.push({ lauf, tabelle: r.t, teil: i, block_von: von, block_bis: bis }));
     }
     for (let i = 0; i < zeilen.length; i += 200) await sql`insert into public.kc_club_fra_sicherung ${sql(zeilen.slice(i, i + 200), "lauf", "tabelle", "teil", "block_von", "block_bis")} on conflict do nothing`;
     await fraStand(lauf, "laeuft", `Sicherung gestartet: ${tabs.length} Tabellen`, { teile: zeilen.length });
@@ -2705,7 +2712,8 @@ async function fraSchritt(jetztErzwingen = false) {
   const metrics: Record<string, unknown> = { lauf, tabellen: m.tabellen, teile: m.teile, geprueft: m.geprueft, fehler: m.fehler, rest: m.rest, zeilen: Number(m.zeilen), bytes: Number(m.bytes), roh_bytes: Number(m.roh_bytes), grenze: FRA_GRENZE };
   if (m.rest) {
     const spaet = new Date().getUTCHours() === 3 && new Date().getUTCMinutes() >= 50; // letzte Schritte des Zeitplaner-Fensters (bis 03:58 UTC)
-    await fraStand(lauf, spaet ? "fehler" : "laeuft", spaet ? `Nicht fertig geworden: ${m.rest} von ${m.teile} Teilen offen` : `läuft: ${m.teile - m.rest} von ${m.teile} Teilen`, metrics);
+    const [{ gesichert }] = await sql`select count(*) filter (where status in ('ok', 'geprueft'))::int as gesichert from public.kc_club_fra_sicherung where lauf = ${lauf}`;
+    await fraStand(lauf, spaet ? "fehler" : "laeuft", spaet ? `Nicht fertig geworden: ${m.rest} von ${m.teile} Teilen offen` : `läuft: ${gesichert} von ${m.teile} Teilen gesichert, ${m.geprueft} zurückgelesen`, metrics);
     if (spaet) await fraAlarm(lauf, `Die Frankfurt-Sicherung ist heute nicht fertig geworden (${m.rest} von ${m.teile} Teilen offen).`);
     return { ok: true, rest: m.rest };
   }

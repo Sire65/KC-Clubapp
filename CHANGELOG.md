@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.236.1 – 2026-10-11 – Frankfurt-Sicherung schonender
+KC-CLUB-FRA-SICHERUNG: Große Tabellen werden nach ihrer echten Größe (inkl. ausgelagerter Daten) in Teile von höchstens 3 MB zerlegt und je Schritt höchstens 8 MB verarbeitet – die 35-MB-Tabelle der System-Check-Messwerte hatte am 11.10. um 05:42 den Server kurz ausgebremst. Fortschrittsanzeige: gesichert / zurückgelesen.
+
 ## 2.236.0 – 2026-10-11 – Komplett-Sicherung nach Frankfurt
 KC-CLUB-FRA-SICHERUNG: Jede Nacht sichert der Server alle Tabellen der Supabase-Datenbank als gepackte Dateien in den Neon-Dateispeicher Frankfurt (große Tabellen in Blöcken, Prüfsumme je Datei, Inhaltsverzeichnis mit Spalten), liest danach jede Datei zurück und zählt die Zeilen (Rücklese-Test). 14 Tagesstände, ältere werden gelöscht. Admin-Zentrale: Lampe „Sicherung Frankfurt“ + Füllstand; bei Fehler Push an den Admin. Außerdem melden Hintergrundfehler der App jetzt die Fundstelle mit.
 

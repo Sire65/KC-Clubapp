@@ -1,11 +1,18 @@
 {
-  "version": "2.236.0",
+  "version": "2.236.1",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
     "🔧 Kleine Systemverbesserungen"
   ],
   "verlauf": [
+    {
+      "version": "2.236.1",
+      "datum": "2026-10-07",
+      "neu": [
+        "🔧 Kleine Systemverbesserungen"
+      ]
+    },
     {
       "version": "2.236.0",
       "datum": "2026-10-07",
