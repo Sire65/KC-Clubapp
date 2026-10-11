@@ -8074,7 +8074,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.221.0 KC-CLUB-VORGANG-KOPIE (Wunsch Hansi): Admin bekommt bei jedem Vorgang eine Kopie-Mail mit Empfänger und Versandergebnis – nie bei privaten Chats
 {
-  assert.ok(/const VORGANG_KOPIE = \/\^club-\(aenderung\|erstattung\|bestaetigung\|dw-\|wunschbogen\|zugang\|leihe\)\//.test(server), "nur Vorgänge, keine Chats/Spiele");
+  assert.ok(/const VORGANG_KOPIE = \/\^club-\(aenderung\|erstattung\|bestaetigung\|dw-\|wunschbogen\|zugang\|leihe(\|twinkey-antwort)?\)\//.test(server) && !/const VORGANG_KOPIE = [^\n]*(chat|nachricht|spiel|reaktion)/.test(server), "nur Vorgänge (2.255.0: + Twinkey-Antworten), keine Chats/Spiele");
   assert.ok(/if \(VORGANG_KOPIE\.test\(korrelation\) && !korrelation\.endsWith\(":kopie"\)\) await vorgangKopie\(/.test(server), "zentral im Versand, keine Endlosschleife");
   assert.ok(/async function vorgangKopie\([\s\S]{0,1600}Ergebnis: \$\{stand\}/.test(server) && /korrelation\.replace\(\/:\(ruhe\|push\)\$\/, ""\) \+ ":kopie"/.test(server), "Empfänger + Ergebnis, eine Kopie je Vorgang");
   assert.ok(!/ist jetzt eingetragen \(\$\{prog\}\)/.test(server), "kein Programmvermerk im Text an das Mitglied");
@@ -8325,5 +8325,12 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/case "twinkey_vergessen": \{\s*nurAdmin\(ich\);/.test(server) && /update\(\{ wissen: false \}\)/.test(server) && /protokoll\(ich\.person_id, "twinkey_vergessen"/.test(server), "Server: nur Admin, setzt nur wissen zurück, protokolliert");
   assert.ok(/<div id="twGelernt"><\/div>/.test(html) && /api\("twinkey_vergessen", \{ id \}\)/.test(html) && /catch \(e\) \{ knopf\.disabled = false; meldeFehler\(e\); \}/.test(html), "Liste im Admin-Fenster, Fehler sichtbar");
+}
+
+// 2.255.0 KC-CLUB-TWINKEY-BEANTWORTET (Wunsch Hansi): gesendete Antworten nachsehen + Kopie an den Admin
+{
+  assert.ok(/const VORGANG_KOPIE = \/\^club-\([^)]*\|twinkey-antwort\)\//.test(server) && /if \(!wege\.length\) await vorgangKopie\("club_nachricht", \[f\.von\], vars, `club-twinkey-antwort:\$\{f\.id\}`, \{ gesendet: 0, fehler: 0 \}, true\)/.test(server), "Kopie an den Admin – auch bei nur Club-App");
+  assert.ok(/let beantwortet: any\[\] \| null = null;\s*if \(ich\.admin\) \{/.test(server), "Beantwortet nur für den Admin");
+  assert.ok(/!v \? "❔ Ergebnis unbekannt"/.test(html) && /<div id="twBeantwortet"><\/div>/.test(html), "Liste im Admin-Fenster; unbekannt nie als ✅ (Regel 11)");
 }
 

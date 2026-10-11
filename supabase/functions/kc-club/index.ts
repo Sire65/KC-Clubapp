@@ -220,13 +220,14 @@ async function routerSendenRoh(eventKey: string, personIds: string[], vars: Reco
 // dass alles gelaufen ist und geklappt hat“): bei jeder Benachrichtigung zu einem Vorgang (Änderungsmeldung, Erstattung, Dienstwunsch,
 // Zugang/Link, Leihen) bekommt der Admin eine eigene Kopie-Mail – mit Empfänger und Versandergebnis. Auch wenn das Mitglied nur Push bekam.
 // Private Chats, Spiele, Reaktionen usw. bekommen KEINE Kopie. Je Vorgang höchstens eine Kopie (gleiche Kennung → der Versanddienst entdoppelt).
-const VORGANG_KOPIE = /^club-(aenderung|erstattung|bestaetigung|dw-|wunschbogen|zugang|leihe)/;
-async function vorgangKopie(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, erg: { gesendet: number; fehler: number }) {
+// 2.255.0 KC-CLUB-TWINKEY-BEANTWORTET (Wunsch Hansi „sende mir eine Kopie, damit ich weiß, wie der Text gelautet hat“): + Twinkey-Antworten
+const VORGANG_KOPIE = /^club-(aenderung|erstattung|bestaetigung|dw-|wunschbogen|zugang|leihe|twinkey-antwort)/;
+async function vorgangKopie(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, erg: { gesendet: number; fehler: number }, nurApp = false) {
   const adm = (await adminIds()).filter((a) => !personIds.includes(a));
   if (!adm.length || !personIds.length) return;
   const leute = await personen(personIds), namen = personIds.map((id) => leute.get(id)?.display_name || id).join(", ");
-  const weg = /_push$/.test(eventKey) ? "Push" : /_mail$/.test(eventKey) ? "E-Mail" : "Push + E-Mail";
-  const stand = erg.fehler ? `⚠️ ${erg.gesendet} zugestellt, ${erg.fehler} NICHT zugestellt` : erg.gesendet ? `✅ zugestellt (${erg.gesendet})` : "⚠️ nichts zugestellt (kein Empfangsweg)";
+  const weg = nurApp ? "nur Club-App" : /_push$/.test(eventKey) ? "Push" : /_mail$/.test(eventKey) ? "E-Mail" : "Push + E-Mail";
+  const stand = nurApp ? "📱 liegt in der Club-App bereit (Hinweis beim nächsten Öffnen)" : erg.fehler ? `⚠️ ${erg.gesendet} zugestellt, ${erg.fehler} NICHT zugestellt` : erg.gesendet ? `✅ zugestellt (${erg.gesendet})` : "⚠️ nichts zugestellt (kein Empfangsweg)";
   const betreff = String(vars.betreff ?? vars.titel ?? "Benachrichtigung");
   await routerSendenRoh("club_nachricht_mail", adm, { ...vars, titel: `📋 Kopie: ${String(vars.titel ?? betreff)}`, betreff: `📋 Kopie: ${betreff}`, kurz: `Kopie an dich: ${namen}`,
     text: `Kopie für dich als Admin\nAn: ${namen}\nWeg: ${weg}\nErgebnis: ${stand}\n\n────────────────────\n\n${String(vars.text ?? vars.kurz ?? "")}` },
@@ -7237,7 +7238,18 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const pm = await personen((o ?? []).map((x: any) => x.von));
           offen = (o ?? []).map((x: any) => ({ id: x.id, frage: x.frage, erstellt_am: x.erstellt_am, von: x.von, name: pm.get(x.von)?.display_name || "Mitglied" }));
         }
-        return json({ wissen: w ?? [], meine: m ?? [], offen, ...(await mfDaten(ich)) }); // + KC-CLUB-MITGLIEDER-FRAGEN
+        // 2.255.0 KC-CLUB-TWINKEY-BEANTWORTET (Wunsch Hansi „hat Wilfried die Push bekommen? Wo sehe ich das?“): die letzten 30 Antworten mit
+        // Wegen, Versandergebnis (aus dem Protokoll) und ob die Person sie in der App gelesen hat – nur für den Admin
+        let beantwortet: any[] | null = null;
+        if (ich.admin) {
+          const { data: b } = await db.from("kc_club_twinkey_fragen").select("id,von,frage,antwort,kanaele,wissen,gelesen,beantwortet_am").eq("status", "beantwortet").order("beantwortet_am", { ascending: false }).limit(30);
+          const ids = (b ?? []).map((x: any) => x.id), pm = await personen((b ?? []).map((x: any) => x.von));
+          const { data: pr } = ids.length ? await db.from("kc_club_protokoll").select("details").eq("aktion", "twinkey_antwort").in("details->>frage_id", ids) : { data: [] };
+          const vs = new Map((pr ?? []).map((x: any) => [x.details?.frage_id, x.details?.versand ?? null]));
+          beantwortet = (b ?? []).map((x: any) => ({ id: x.id, name: pm.get(x.von)?.display_name || "Mitglied", frage: x.frage, antwort: x.antwort, kanaele: x.kanaele ?? [], wissen: !!x.wissen,
+            gelesen: !!x.gelesen, beantwortet_am: x.beantwortet_am, versand: vs.get(x.id) ?? null }));
+        }
+        return json({ wissen: w ?? [], meine: m ?? [], offen, beantwortet, ...(await mfDaten(ich)) }); // + KC-CLUB-MITGLIEDER-FRAGEN
       }
       case "twinkey_frage": {
         const frage = txt(p.frage, 300).replace(/\s+/g, " ");
@@ -7274,11 +7286,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (error) throw new Fehler("Die Antwort konnte nicht gespeichert werden.", 500);
         if (!upd?.length) throw new Fehler("Diese Frage ist schon erledigt.", 409);
         const wege = kanaele.filter((k) => k !== "app");
-        const versand = wege.length ? await sendenGewaehlt("club_nachricht", [f.von], wege, {
-          titel: "🧑‍🍳 Twinkey hat eine Antwort für dich", kurz: `Deine Frage: ${f.frage}`.slice(0, 120),
+        const vars = { titel: "🧑‍🍳 Twinkey hat eine Antwort für dich", kurz: `Deine Frage: ${f.frage}`.slice(0, 120),
           betreff: "Köcheclub Werne – Twinkey hat eine Antwort für dich",
           text: `Hallo,\n\ndu hattest Twinkey gefragt:\n„${f.frage}“\n\nDie Antwort:\n${antwort}\n\nViele Grüße\nKöcheclub Werne`,
-          url: APP_URL + "#twinkey" }, `club-twinkey-antwort:${f.id}`).catch(() => null) : { gesendet: 0 };
+          url: APP_URL + "#twinkey" };
+        const versand = wege.length ? await sendenGewaehlt("club_nachricht", [f.von], wege, vars, `club-twinkey-antwort:${f.id}`).catch(() => null) : { gesendet: 0 };
+        // 2.255.0: Kopie an den Admin kommt bei Push/E-Mail über die Vorgangs-Kopie – bei „nur Club-App“ hier ausdrücklich
+        if (!wege.length) await vorgangKopie("club_nachricht", [f.von], vars, `club-twinkey-antwort:${f.id}`, { gesendet: 0, fehler: 0 }, true).catch((e) => console.error("vorgangKopie", String(e)));
         await protokoll(ich.person_id, "twinkey_antwort", { frage_id: f.id, an: f.von, kanaele, wissen, versand });
         return json({ ok: true, versand, kanaele });
       }

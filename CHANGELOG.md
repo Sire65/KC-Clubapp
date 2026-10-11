@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.255.0 – 2026-10-11 – KC-CLUB-TWINKEY-BEANTWORTET: gesendete Twinkey-Antworten nachsehen + Kopie (Wunsch Hansi)
+- Anlass: „Hat Wilfried die Push bekommen? Wo sehe ich das? Normal bekomme ich immer eine Kopie.“
+- In „📥 Fragen an Twinkey“ (nur Admin) der Bereich „📤 Beantwortet“: die letzten 30 Antworten mit Name, Zeit, Frage, vollem Antworttext, Weg und Ergebnis (🔔 Push / ✉️ E-Mail: ✅ gesendet, ⚠️ Fehler, ❔ unbekannt) und 📱 Club-App: 👀 gelesen / ⏳ noch nicht gelesen. Versandergebnis aus dem Protokoll.
+- Twinkey-Antworten gehören jetzt zur Vorgangs-Kopie: der Admin bekommt eine Kopie-Mail mit Empfänger, Weg, Ergebnis und dem Text – auch bei „nur Club-App“.
+
 ## 2.254.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-4: Erklär-Videos „Warum diese App?“ (als Erstes), Spiele und Archiv
 Einleitungs-Video „💡 Warum diese App?“: motivierend und einfach – alles an einem Ort (Nachrichten, Termine, Fotos, Aktionen, Dienstwünsche mit Twinkey), einfache Bedienung, viel Hilfe, Datensicherheit; steht als Erstes in der Liste, die Startseite bietet es an, danach wird der Rundgang angeboten. Neue Videos „🎲 Spiele“ (Spiel aussuchen, gegen Computer oder Mitglieder) und „🗄️ Archiv & Clubchronik“; Twinkey bietet sie bei passenden Fragen an. Gesagt wird nur, was im Bild zu sehen ist; nichts wird gespielt, gesendet oder angelegt, Spiel- und Archiv-Stand werden zurückgestellt.
 

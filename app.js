@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.254.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.255.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5708,7 +5708,7 @@ async function twLaden(still = false) { // Gelerntes vom Server (offline: zuletz
   if (!TW.wissen) { try { const w = JSON.parse(localStorage.getItem(TW_DATEN_KEY) || "null"); if (Array.isArray(w)) { TW.wissen = w; TW_INDEX = null; } } catch {} }
   try {
     const d = await api("twinkey_daten", {}, { still });
-    TW = { wissen: d?.wissen || [], meine: d?.meine || [], offen: d?.offen || null, mf: { aus: !!d?.mfAus, anMich: d?.mfAnMich || [], meine: d?.mfMeine || [] } }; TW_INDEX = null;
+    TW = { wissen: d?.wissen || [], meine: d?.meine || [], offen: d?.offen || null, beantwortet: d?.beantwortet || null, mf: { aus: !!d?.mfAus, anMich: d?.mfAnMich || [], meine: d?.mfMeine || [] } }; TW_INDEX = null;
     lsSetzen(TW_DATEN_KEY, JSON.stringify(TW.wissen));
   } catch {}
 }
@@ -5901,11 +5901,27 @@ async function twOffenStart() {
       <button type="button" class="chip an tw-wissen" aria-pressed="true">☑️ 🧠 Twinkey merkt sich das (für alle)</button>
       <div class="knoepfe"><button type="button" class="knopf haupt" data-tw="senden">📤 Antwort senden</button><button type="button" class="knopf" data-tw="weg">🗑️ Verwerfen</button></div></div>`).join("")
       : `<p>🎉 Keine offenen Fragen.</p>`}
-    <div id="twGelernt"></div>
+    <div id="twBeantwortet"></div><div id="twGelernt"></div>
     <button class="knopf" onclick="$('twOffenBlatt').remove()">Schließen</button>`);
-  twGelerntZeigen();
+  twBeantwortetZeigen(); twGelerntZeigen();
   document.querySelectorAll("#twOffenBlatt .chip").forEach((c) => (c.onclick = () => { const an = !c.classList.contains("an"); c.classList.toggle("an", an); c.setAttribute("aria-pressed", an); c.textContent = (an ? "☑️" : "⬜") + c.textContent.slice(c.textContent.indexOf(" ")); }));
   document.querySelectorAll("#twOffenBlatt [data-tw]").forEach((b) => (b.onclick = () => twOffenAktion(b.closest(".tw-offen"), b.dataset.tw, b)));
+}
+// KC-CLUB-TWINKEY-BEANTWORTET (2.255.0, Wunsch Hansi „hat Wilfried die Push bekommen? Wo sehe ich das?“): die letzten 30 Antworten –
+// Text, Wege, Versandergebnis, in der App gelesen. Unbekannt bleibt unbekannt (Regel 11): ohne Versand-Eintrag „Ergebnis unbekannt“, nie ✅.
+function twBeantwortetZeigen() {
+  const z = $("twBeantwortet"); if (!z || !ICH?.admin) return;
+  const b = TW.beantwortet || [];
+  const wegTxt = (x) => {
+    const v = x.versand, raus = (x.kanaele || []).filter((k) => k !== "app"), t = [];
+    if (raus.length) t.push(`${raus.map((k) => k === "push" ? "🔔 Push" : "✉️ E-Mail").join(" + ")}: ${!v ? "❔ Ergebnis unbekannt" : v.fehler ? `⚠️ ${v.gesendet || 0} gesendet, ${v.fehler} Fehler` : v.gesendet ? "✅ gesendet" : "⚠️ nichts gesendet (kein Empfangsweg)"}`);
+    if ((x.kanaele || []).includes("app")) t.push(`📱 Club-App: ${x.gelesen ? "👀 gelesen" : "⏳ noch nicht gelesen"}`);
+    return t.join(" · ");
+  };
+  z.innerHTML = `<details class="karte tw-gelernt"><summary><b>📤 Beantwortet (${b.length})</b></summary>
+    <p class="hinweis" style="margin:4px 0 8px">Deine letzten Antworten: wer gefragt hat, was du geschrieben hast, wie sie rausging und ob sie gelesen wurde. Eine Kopie bekommst du außerdem per E-Mail.</p>
+    ${b.length ? b.map((x) => `<div class="tw-gelernt-eintrag"><div><b>${esc(x.name)}</b> <small class="hinweis">${esc(zeitKurz(x.beantwortet_am))}${x.wissen ? " · 🧠 gemerkt" : ""}</small></div>
+      <div><small class="hinweis">Frage:</small> ${esc(x.frage)}</div><div class="tw-antwort-text">${twTextHtml(x.antwort || "")}</div><small>${wegTxt(x)}</small></div>`).join("") : '<p class="hinweis" style="margin:0">Noch keine Antworten.</p>'}</details>`;
 }
 // KC-CLUB-TWINKEY-VERGESSEN (2.253.0, Wunsch Hansi nach „Kochbild“ doppelt gemerkt): Liste „🧠 Was Twinkey gelernt hat“ mit „Vergessen“.
 // Vergessen nimmt die Antwort nur aus Twinkeys Wissen – die fragende Person behält ihre Antwort unter „📬 Deine Fragen“.
