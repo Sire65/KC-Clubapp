@@ -5822,7 +5822,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/x \+= 4 \+ zf\(i \+ 100\) \* 8;/.test(html), "Zapfen-Abstand in Pixeln – breiter Bildschirm = mehr Zapfen");
   assert.ok(/class="jz-zapfen" d="M\$\{X\(x - b\)\} 0 C/.test(html) && /class="jz-rand"/.test(html), "geschwungene Zapfen mit Eisrand");
   assert.ok(/if \(e\.dataset\.mass === mass\) return;/.test(html), "nur bei geänderter Breite oder Länge neu zeichnen");
-  assert.ok(/\.jz-eis \.jz-tropfen \{ fill: #a6d8ff;[^}]*opacity: 0; \}/.test(html), "Tropfen erst sichtbar, wenn sie fallen (2.281.0: Takt statt Dauerschleife)");
+  assert.ok(/\.jz-eis \.jz-tropfen \{ fill: #6fb9f4;[^}]*opacity: 0; \}/.test(html), "Tropfen erst sichtbar, wenn sie fallen (2.281.0: Takt statt Dauerschleife)");
 }
 // 2.280.0 KC-CLUB-SCHMELZTROPFEN (Wunsch Hansi): beim Schmelzen rinnen blaue Wassertropfen am Schneemann herunter in die Pfütze
 {
@@ -5835,8 +5835,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\(function jzTropfTakt\(\) \{/.test(html) && /\}, 7000 \+ Math\.random\(\) \* 9000\);/.test(html), "höchstens ein Tropfen alle 7–16 s");
   assert.ok(/if \(n === e\._letzter\) n = \(n \+ 1\) % sp\.length; e\._letzter = n;/.test(html), "jedes Mal ein anderer Zapfen");
   assert.ok(/!document\.hidden && rgSichtbar\(e\) && !matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.matches/.test(html), "nur sichtbar und nicht bei bewegungsarmer Einstellung");
-  assert.ok(/a\.onfinish = \(\) => t\.remove\(\);/.test(html), "Tropfen räumt sich selbst weg");
+  assert.ok(/a\.oncancel = \(\) => t\.remove\(\);/.test(html) && /b\.onfinish = b\.oncancel = \(\) => t\.remove\(\);/.test(html), "Tropfen räumt sich selbst weg (2.282.0: auch nach dem Übergeben an die Bühne)");
   assert.ok(!/class="jz-tropfen" cx=/.test(html) && !/@keyframes jzTropfen/.test(html), "keine Dauer-Tropfen an jedem Zapfen mehr");
+}
+// 2.282.0 KC-CLUB-WINTER-KINDER (Wunsch Hansi): Eistropfen deutlicher + Pfütze, Schlitten-Kinder abwechselnd von links/rechts, Schneeballschlacht
+{
+  assert.ok(/function jzbEisTropfen\(sx, sy\)/.test(html) && /if \(jzbEisTropfen\(r\.left \+ r\.width \/ 2, r\.top \+ r\.height \/ 2\)\) return t\.remove\(\);/.test(html), "Tropfen fällt in der Bühne bis zum Boden");
+  assert.ok(/p\.r = Math\.min\(22 \* k, p\.r \+ 1\.6 \* k\)/.test(html) && /p\.r -= dt \* \.04 \* k;/.test(html), "Pfütze wächst langsam (begrenzt) und trocknet sehr langsam");
+  assert.ok(/const dir = J\.schlittenDir = J\.schlittenDir === 1 \? -1 : 1;/.test(html), "Schlitten abwechselnd von links und von rechts");
+  assert.ok(/function jzbKind\(c, f, sitzt, opt = \{\}\)/.test(html) && /\/\/ Bommelmütze/.test(html) && /\/\/ Schal: um den Hals, zwei Enden flattern nach hinten/.test(html), "Kinder mit Bommelmütze und wehendem Schal");
+  assert.ok(/function jzbBallspielStart\(\)/.test(html) && /c\.wurf = \.35; S\.baelle\.push/.test(html), "Schneeballschlacht mit Würfen im Bogen");
+  assert.ok(/J\.kinderArt = J\.kinderArt === "schlitten" \? "ball" : "schlitten"/.test(html) && /if \(jzbSchneeMittel\(\) < 3 \* k \|\| J\.phase === "wind" \|\| J\.phase === "schmelzen"\) J\.kinderUhr = 5;/.test(html), "nur bei Schnee, abwechselnd, nie beides zugleich");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

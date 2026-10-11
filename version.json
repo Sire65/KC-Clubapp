@@ -1,11 +1,20 @@
 {
-  "version": "2.281.0",
+  "version": "2.282.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "💧 Ab und an tropft ein leicht blauer Wassertropfen von den Eiszapfen"
+    "🛷 Im Winter: Kinder auf dem Schlitten und eine Schneeballschlacht",
+    "💧 Deutlichere Tropfen von den Eiszapfen – unten bildet sich eine Pfütze"
   ],
   "verlauf": [
+    {
+      "version": "2.282.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🛷 Im Winter: Kinder auf dem Schlitten und eine Schneeballschlacht",
+        "💧 Deutlichere Tropfen von den Eiszapfen – unten bildet sich eine Pfütze"
+      ]
+    },
     {
       "version": "2.281.0",
       "datum": "2026-10-11",

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.281.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.282.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2083,7 +2083,7 @@ const RG_EFFEKTE = [
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("herbst", "twinkey", (J) => J.phase === "besuch", 180); if (JZB.cv && JZB.phase === "fallen") jzbBesuchStart("fegen"); }, sel: ["#v-start .hero"], t: "🧹 Wind oder Twinkey",
     x: "Liegt genug Laub, kommt ein Windstoß – mal von links, mal von rechts – und weht es weg. Oder Twinkey kommt mit dem Besen vorbei, fegt und sagt einen Spruch. Schau mal." },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("winter", "", (J) => J.phase === "stehen", 150); }, sel: ["#v-start .hero"], t: "⛄ Winter",
-    x: "Im Winter fällt Schnee und bleibt liegen. Jedes dritte Mal wird daraus ein lachender Schneemann – mit Kochmütze und weinrotem Schal, im Advent mit Weihnachtsmütze. Nach einer Weile geht links die Sonne auf und er schmilzt – nur sein Schal bleibt liegen, bis ihn der Wind mit dem Schnee davonwirbelt. Sonst kommt gleich der Wind, oder Twinkey schippt den Schnee beiseite. Im tiefen Winter hängen dazu Eiszapfen an der Leiste mit den Lämpchen." },
+    x: "Im Winter fällt Schnee und bleibt liegen. Jedes dritte Mal wird daraus ein lachender Schneemann – mit Kochmütze und weinrotem Schal, im Advent mit Weihnachtsmütze. Nach einer Weile geht links die Sonne auf und er schmilzt – Wassertropfen rinnen herunter, nur sein Schal bleibt liegen, bis ihn der Wind mit dem Schnee davonwirbelt. Sonst kommt gleich der Wind, oder Twinkey schippt den Schnee beiseite. Ab und zu sausen zwei Kinder mit Bommelmützen auf dem Schlitten vorbei, oder ein paar Kinder machen eine Schneeballschlacht. Im tiefen Winter hängen dazu Eiszapfen an der Leiste mit den Lämpchen – ab und an tropft es, und unten bildet sich langsam eine Pfütze." },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("fruehling", "", (J) => J.pt > 26); }, sel: ["#v-start .hero"], t: "🌱 Frühling",
     x: "Im Frühling wächst Gras mit den ersten Blumen, Blüten schweben herab und Schmetterlinge fliegen vorbei. Zu Ostern liegen bunte Eier im Gras – tippst du eins an, schlüpft ein Küken." },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("sommer", "", (J) => !!J.besuch && J.besuch.x > 0 && J.besuch.x < J.w); }, sel: ["#v-start .hero"], t: "🌻 Sommer",
@@ -12338,7 +12338,7 @@ function jzEisLaenge() {
 }
 addEventListener("resize", () => requestAnimationFrame(jzEisLaenge));
 // 💧 2.281.0 (Wunsch Hansi „ab und an ein leicht blauer Wassertropfen von verschiedenen Eiszapfen – nicht zu oft, sonst stört es“):
-// höchstens ein Tropfen alle 7–16 s, jedes Mal an einem anderen längeren Zapfen; er wächst an der Spitze, löst sich und fällt kurz.
+// höchstens ein Tropfen alle 7–16 s (2.282.0: deutlicher, fällt bis unten – dort bildet sich langsam eine Pfütze), jedes Mal an einem anderen längeren Zapfen; er wächst an der Spitze, löst sich und fällt kurz.
 // Nur sichtbar, bewegungsarm-Einstellung des Geräts wird beachtet; ein einziger Takt für die ganze App.
 (function jzTropfTakt() {
   setTimeout(() => {
@@ -12347,12 +12347,15 @@ addEventListener("resize", () => requestAnimationFrame(jzEisLaenge));
       if (sp?.length && !document.hidden && rgSichtbar(e) && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
         let n = Math.floor(Math.random() * sp.length); if (n === e._letzter) n = (n + 1) % sp.length; e._letzter = n;
         const [x, L] = sp[n], t = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        t.setAttribute("class", "jz-tropfen"); t.setAttribute("d", `M${x.toFixed(1)} ${(L - 3.4).toFixed(1)} q2.5 3.6 0 5.5 q-2.5 -1.9 0 -5.5 z`); e.appendChild(t);
-        const a = t.animate([{ transform: "translateY(0) scale(.3)", opacity: 0 }, { transform: "translateY(1px) scale(1)", opacity: .95, offset: .45 },
-          { transform: "translateY(2px) scale(1)", opacity: .95, offset: .6 }, { transform: "translateY(34px) scale(1)", opacity: 0 }],
-          { duration: 2600, easing: "cubic-bezier(.5,0,.9,.6)" });
+        t.setAttribute("class", "jz-tropfen"); t.setAttribute("d", `M${x.toFixed(1)} ${(L - 4.5).toFixed(1)} q3.4 5 0 7.6 q-3.4 -2.6 0 -7.6 z`); e.appendChild(t); // 2.282.0: deutlicher
         t.style.transformBox = "fill-box"; t.style.transformOrigin = "50% 0";
-        a.onfinish = () => t.remove(); a.oncancel = () => t.remove();
+        const a = t.animate([{ transform: "scale(.25)", opacity: 0 }, { transform: "scale(1)", opacity: .95, offset: .6 }, { transform: "translateY(1px) scale(1,1.08)", opacity: .95 }], { duration: 1500, easing: "ease-out" });
+        a.onfinish = () => { // gelöst: in der Jahreszeiten-Bühne bis zum Boden fallen (dort wächst die Pfütze) – ohne Bühne nur ein kurzes Stück
+          const r = t.getBoundingClientRect(); if (jzbEisTropfen(r.left + r.width / 2, r.top + r.height / 2)) return t.remove();
+          const b = t.animate([{ transform: "translateY(1px)", opacity: .95 }, { transform: "translateY(40px)", opacity: 0 }], { duration: 900, easing: "ease-in" });
+          b.onfinish = b.oncancel = () => t.remove();
+        };
+        a.oncancel = () => t.remove();
       }
     } catch {}
     jzTropfTakt();
@@ -12969,8 +12972,142 @@ function jzbEiAntippen(e) { // Ostereier finden: Tippen auf den Kopf (nicht auf 
   const rest = J.eier.filter((v) => !v.gef).length;
   melde(rest ? `🥚 Ei gefunden! Noch ${rest} versteckt.` : "🐣 Alle Ostereier gefunden – frohe Ostern!");
 }
+// ---------- KC-CLUB-WINTER-KINDER (2.282.0, Wunsch Hansi): Eistropfen bilden unten eine Pfütze · zwei Kinder auf dem Schlitten
+// (Bommelmützen, Schals wehen nach hinten; abwechselnd von links und von rechts) · ein paar Kinder machen eine Schneeballschlacht ----------
+// Nur Winter und nur, wenn Schnee liegt; Schlitten und Schneeballschlacht wechseln sich ab, nie beides zugleich.
+const JZB_KIND_FARBEN = [["#d83a3a", "#f2c230", "#2e8b57"], ["#2f6fd6", "#e8732a", "#f2f2f2"], ["#7a3fb5", "#38b2ac", "#f2c230"], ["#2e8b57", "#d83a3a", "#ffffff"]]; // Jacke, Mütze, Schal
+const jzbSchneeMittel = () => { const J = JZB, B = J.boden, a = Math.ceil(JZB_RAND / JZB_SP), e = Math.floor((J.w - JZB_RAND) / JZB_SP), t = B.slice(a, e); return t.reduce((s, v) => s + v, 0) / Math.max(1, t.length); };
+const jzbGrund = (x) => JZB.h - jzbBodenH(x) - 1;
+// 💧 Eistropfen aus der Leiste: fällt auf den Boden, dort wächst langsam eine Pfütze (und trocknet sehr langsam wieder)
+function jzbEisTropfen(sx, sy) {
+  const J = JZB; if (!J.cv || J.saison !== "winter") return false;
+  const r = J.cv.getBoundingClientRect(); if (!r.width) return false;
+  (J.eisTropfen = J.eisTropfen || []).push({ x: (sx - r.left) * J.w / r.width, y: (sy - r.top) * J.h / r.height, v: 0, s: 2.4 * J.k, spur: 0 });
+  return true;
+}
+function jzbWinterKinder(dt) {
+  const J = JZB, k = J.k;
+  for (const t of J.eisTropfen || []) {
+    t.v = Math.min(260, t.v + 520 * dt); t.y += t.v * dt; t.spur = Math.min(12 * k, t.spur + t.v * dt * .4);
+    if (t.y >= jzbGrund(t.x)) {
+      t.weg = true; const P = (J.eisPfuetzen = J.eisPfuetzen || []), p = P.find((q) => Math.abs(q.x - t.x) < q.r + 6 * k);
+      if (p) { p.r = Math.min(22 * k, p.r + 1.6 * k); p.ringe.push(0); } else P.push({ x: t.x, r: 4 * k, ringe: [0] });
+      for (let i = 0; i < 4; i++) J.fx.push({ typ: "wasser", x: t.x, y: jzbGrund(t.x) - 1, vx: jzbZ(-30, 30), vy: -jzbZ(30, 60), a: 1, blass: 2.5 });
+    }
+  }
+  if (J.eisTropfen) J.eisTropfen = J.eisTropfen.filter((t) => !t.weg);
+  for (const p of J.eisPfuetzen || []) { p.r -= dt * .04 * k; p.ringe = p.ringe.map((g) => g + dt * 1.4).filter((g) => g < 1); } // trocknet ganz langsam
+  if (J.eisPfuetzen) J.eisPfuetzen = J.eisPfuetzen.filter((p) => p.r > .5);
+  if (J.saison !== "winter") return;
+  // wann kommen die Kinder? – erst wenn Schnee liegt; abwechselnd Schlitten / Schneeballschlacht
+  if (!J.schlitten && !J.ballspiel && (J.kinderUhr = (J.kinderUhr ?? (J.vorschau ? 4 : jzbZ(15, 30))) - dt) <= 0) {
+    if (jzbSchneeMittel() < 3 * k || J.phase === "wind" || J.phase === "schmelzen") J.kinderUhr = 5;
+    else if ((J.kinderArt = J.kinderArt === "schlitten" ? "ball" : "schlitten") === "schlitten") {
+      const dir = J.schlittenDir = J.schlittenDir === 1 ? -1 : 1; // einmal von links, beim nächsten Mal von rechts
+      J.schlitten = { dir, x: dir > 0 ? -40 * k : J.w + 40 * k, t: 0, f: [jzbW(JZB_KIND_FARBEN), jzbW(JZB_KIND_FARBEN)] };
+    } else jzbBallspielStart();
+  }
+  if (J.schlitten) {
+    const s = J.schlitten; s.t += dt; s.x += s.dir * 78 * k * dt;
+    if (Math.random() < dt * 14) J.fx.push({ typ: "flocke", x: s.x - s.dir * 18 * k, y: jzbGrund(s.x) - 2, r: jzbZ(.8, 1.8), vx: -s.dir * jzbZ(20, 60), vy: -jzbZ(20, 50), a: 1, blass: 1.2 }); // Schneestaub
+    if (s.x < -60 * k || s.x > J.w + 60 * k) { J.schlitten = null; J.kinderUhr = jzbZ(45, 90); }
+  }
+  if (J.ballspiel) jzbBallspielSchritt(dt);
+}
+function jzbBallspielStart() {
+  const J = JZB, k = J.k, m = J.mann, links = m && m.x < J.w / 2, rechts = m && m.x >= J.w / 2;
+  const plaetze = [[links ? .3 : .16, 1], [links ? .42 : .3, 1], [rechts ? .7 : .84, -1]].concat(J.w > 520 ? [[rechts ? .58 : .7, -1]] : []);
+  J.ballspiel = { t: 0, baelle: [], kinder: plaetze.map(([p, blick], i) => ({ ziel: J.w * p, x: blick > 0 ? -20 * k - i * 14 * k : J.w + 20 * k + i * 14 * k, blick, f: jzbW(JZB_KIND_FARBEN), uhr: jzbZ(.8, 2), wurf: 0, treffer: 0 })) };
+}
+function jzbBallspielSchritt(dt) {
+  const J = JZB, k = J.k, S = J.ballspiel, g = 260 * k; S.t += dt;
+  const geht = S.t > 16;
+  for (const c of S.kinder) {
+    c.wurf = Math.max(0, c.wurf - dt); c.treffer = Math.max(0, c.treffer - dt);
+    const soll = geht ? (c.blick > 0 ? -40 * k : J.w + 40 * k) : c.ziel, d = soll - c.x;
+    c.laeuft = Math.abs(d) > 1; if (c.laeuft) c.x += Math.sign(d) * Math.min(Math.abs(d), (geht ? 95 : 55) * k * dt);
+    if (!geht && !c.laeuft && (c.uhr -= dt) <= 0) { // werfen: im Bogen auf ein Kind der anderen Seite – nicht jeder Wurf trifft
+      const geg = S.kinder.filter((o) => o.blick !== c.blick && !o.laeuft); c.uhr = jzbZ(1.3, 2.6); if (!geg.length) continue;
+      const o = jzbW(geg), T = jzbZ(.8, 1.1), tx = o.x + (Math.random() < .6 ? 0 : jzbZ(-14, 14) * k), x0 = c.x + c.blick * 5 * k, y0 = jzbGrund(c.x) - 22 * k, ty = jzbGrund(tx) - 14 * k;
+      c.wurf = .35; S.baelle.push({ x: x0, y: y0, vx: (tx - x0) / T, vy: (ty - y0) / T - .5 * g * T, ziel: o, tx });
+    }
+  }
+  for (const b of S.baelle) {
+    b.vy += g * dt; b.x += b.vx * dt; b.y += b.vy * dt;
+    const o = b.ziel, triff = Math.abs(b.x - o.x) < 5 * k && b.y > jzbGrund(o.x) - 26 * k && b.y < jzbGrund(o.x) - 4 * k;
+    if (triff || b.y >= jzbGrund(b.x)) { b.weg = true; if (triff) o.treffer = .45;
+      for (let i = 0; i < 9; i++) J.fx.push({ typ: "flocke", x: b.x, y: b.y, r: jzbZ(.7, 1.8), vx: jzbZ(-60, 60), vy: -jzbZ(10, 70), a: 1, blass: 1.6 }); } // Schnee stäubt
+  }
+  S.baelle = S.baelle.filter((b) => !b.weg);
+  if (geht && S.kinder.every((c) => c.x < -30 * k || c.x > J.w + 30 * k)) { J.ballspiel = null; J.kinderUhr = jzbZ(45, 90); }
+}
+// Kind von der Seite: f = [Jacke, Mütze, Schal]; sitzt (Schlitten) oder steht; Schal weht nach hinten
+function jzbKind(c, f, sitzt, opt = {}) {
+  const T = JZB.T, wehen = opt.wehen ?? .3, ph = opt.ph || 0;
+  c.lineCap = "round"; c.lineJoin = "round";
+  if (sitzt) { c.strokeStyle = "#2b3550"; c.lineWidth = 3; c.beginPath(); c.moveTo(0, -6); c.lineTo(7, -5); c.lineTo(9, -2); c.stroke(); } // Beine nach vorn
+  else { const s = opt.laeuft ? Math.sin(T * 14 + ph) * 3 : 0; c.strokeStyle = "#2b3550"; c.lineWidth = 2.6; c.beginPath(); c.moveTo(-1.5, -8); c.lineTo(-1.5 - s, 0); c.moveTo(1.5, -8); c.lineTo(1.5 + s, 0); c.stroke(); }
+  const ky = sitzt ? -6 : -8; // Jacke
+  c.fillStyle = f[0]; c.beginPath(); c.ellipse(0, ky - 6, 4.6, 6.4, 0, 0, 7); c.fill();
+  c.strokeStyle = f[0]; c.lineWidth = 2.4; c.beginPath(); // Arme
+  if (opt.wurf) { c.moveTo(1, ky - 9); c.lineTo(-3, ky - 17); } else if (opt.arm === "vor") { c.moveTo(1, ky - 8); c.lineTo(8, ky - 6); } else { c.moveTo(1, ky - 8); c.lineTo(4, ky - 3); }
+  c.stroke();
+  const hy = ky - 15; // Kopf
+  c.fillStyle = "#f6cba6"; c.beginPath(); c.arc(0, hy, 4.4, 0, 7); c.fill();
+  c.fillStyle = "#3a2a1a"; c.beginPath(); c.arc(2.2, hy - .4, .6, 0, 7); c.fill();
+  c.strokeStyle = "#a0523a"; c.lineWidth = .7; c.beginPath(); c.arc(2, hy + 1.3, 1.2, .2, Math.PI * .8); c.stroke(); // Lächeln
+  c.fillStyle = "rgba(255,120,120,.5)"; c.beginPath(); c.arc(2.6, hy + 1.2, 1, 0, 7); c.fill();
+  // Bommelmütze: Kappe mit Bündchen, Bommel hüpft und neigt sich nach hinten
+  c.fillStyle = f[1]; c.beginPath(); c.moveTo(-4.8, hy - .8); c.quadraticCurveTo(-4.6, hy - 7.2, .4, hy - 7.2); c.quadraticCurveTo(4.8, hy - 6.4, 4.8, hy - .8); c.closePath(); c.fill();
+  c.fillStyle = "rgba(255,255,255,.55)"; c.fillRect(-4.8, hy - 2.2, 9.6, 1.4);
+  const bx = -2.6 - wehen * 2.4, by = hy - 8 + Math.sin(T * 9 + ph) * .5;
+  c.fillStyle = f[1]; c.beginPath(); c.arc(bx, by, 2, 0, 7); c.fill(); c.fillStyle = "rgba(255,255,255,.45)"; c.beginPath(); c.arc(bx - .5, by - .6, .8, 0, 7); c.fill();
+  // Schal: um den Hals, zwei Enden flattern nach hinten (je schneller, desto waagrechter)
+  const sy = hy + 4.6; c.fillStyle = f[2]; c.beginPath(); c.ellipse(0, sy, 4, 1.6, 0, 0, 7); c.fill();
+  c.strokeStyle = f[2]; c.lineWidth = 2;
+  for (const [l, v] of [[9, 0], [7, 1.7]]) { c.beginPath(); c.moveTo(-2.6, sy);
+    for (let i = 1; i <= 4; i++) { const u = i / 4; c.lineTo(-2.6 - u * l * (.35 + wehen), sy + u * l * (1 - wehen) * .9 + Math.sin(T * 12 + ph + v + u * 4) * wehen * 2.2 * u); }
+    c.stroke(); }
+}
+function jzbSchlittenMalen(c, s, k) {
+  const x = s.x, y = jzbGrund(x) + 1, hops = Math.abs(Math.sin(s.t * 7)) * .8;
+  c.save(); c.translate(x, y - hops); c.scale(s.dir * k * 1.2, k * 1.2);
+  c.strokeStyle = "#7a4a22"; c.lineWidth = 1.6; c.lineCap = "round"; // Kufen mit hochgebogener Spitze
+  for (const z of [0, 1.2]) { c.beginPath(); c.moveTo(-20, -1 - z); c.lineTo(13, -1 - z); c.quadraticCurveTo(20, -1 - z, 19, -7 - z); c.stroke(); }
+  c.strokeStyle = "#7a4a22"; c.lineWidth = 1.2; for (const sx of [-15, -3, 9]) { c.beginPath(); c.moveTo(sx, -1); c.lineTo(sx, -5); c.stroke(); }
+  c.fillStyle = "#c08447"; c.fillRect(-19, -6.4, 30, 2.6); c.fillStyle = "rgba(255,255,255,.18)"; c.fillRect(-19, -6.4, 30, .8);
+  c.strokeStyle = "#a3492f"; c.lineWidth = .8; c.beginPath(); c.moveTo(18, -7); c.quadraticCurveTo(14, -12, 9, -13); c.stroke(); // Zugseil
+  c.save(); c.translate(-9, -5); jzbKind(c, s.f[1], true, { wehen: .85, ph: 1.3, arm: "vor" }); c.restore(); // hinten
+  c.save(); c.translate(4, -5); jzbKind(c, s.f[0], true, { wehen: .85, arm: "vor" }); c.restore(); // vorn hält das Seil
+  c.restore();
+}
+function jzbBallspielMalen(c, S, k) {
+  for (const [i, ki] of S.kinder.entries()) {
+    const zuck = ki.treffer ? Math.sin(ki.treffer * 40) * 1.5 : 0;
+    c.save(); c.translate(ki.x + zuck, jzbGrund(ki.x) + 1); c.scale(ki.blick * k * 1.15, k * 1.15); c.rotate(ki.treffer ? -.15 : 0);
+    jzbKind(c, ki.f, false, { wehen: ki.laeuft ? .55 : .2, ph: i * 1.7, wurf: ki.wurf > 0, laeuft: ki.laeuft });
+    c.restore();
+  }
+  c.fillStyle = "#ffffff"; c.strokeStyle = "rgba(160,190,220,.8)"; c.lineWidth = .6;
+  for (const b of S.baelle) { c.beginPath(); c.arc(b.x, b.y, 2.3 * k, 0, 7); c.fill(); c.stroke(); }
+}
+function jzbWinterKinderMalen(c) {
+  const J = JZB, k = J.k;
+  for (const p of J.eisPfuetzen || []) { // Pfütze auf dem Schnee bzw. Boden – blau schimmernd, mit Ringen, wenn ein Tropfen fällt
+    const y = jzbGrund(p.x) + .5;
+    c.fillStyle = "rgba(95,165,235,.55)"; c.beginPath(); c.ellipse(p.x, y, p.r, Math.max(1.4 * k, p.r * .22), 0, 0, 7); c.fill();
+    c.fillStyle = "rgba(255,255,255,.5)"; c.beginPath(); c.ellipse(p.x - p.r * .3, y - p.r * .06, p.r * .32, Math.max(.5, p.r * .05), 0, 0, 7); c.fill();
+    c.strokeStyle = "rgba(255,255,255,.7)"; c.lineWidth = .8;
+    for (const g of p.ringe) { c.globalAlpha = 1 - g; c.beginPath(); c.ellipse(p.x, y, 2 + g * p.r * .8, (2 + g * p.r * .8) * .22, 0, 0, 7); c.stroke(); }
+    c.globalAlpha = 1;
+  }
+  for (const t of J.eisTropfen || []) jzbTropfenMalen(c, t);
+  if (J.schlitten) jzbSchlittenMalen(c, J.schlitten, k);
+  if (J.ballspiel) jzbBallspielMalen(c, J.ballspiel, k);
+}
 function jzbExtrasSchritt(dt) {
   const J = JZB, X = J.ext || {}, W = J.wind;
+  jzbWinterKinder(dt); // 2.282.0 KC-CLUB-WINTER-KINDER
   if (X.regen) { // Tropfen fallen schräg, landen in Pfützen
     if (!J.pfuetzen) J.pfuetzen = [.18, .43, .7, .9].map((p) => ({ x: J.w * p + jzbZ(-12, 12), r: 0, ringe: [] }));
     J.regenSpawn = (J.regenSpawn || 0) - dt;
@@ -13022,6 +13159,7 @@ function jzbExtrasBoden(c) { // Pfützen, Stiefel, Kochtopf, Igel, Schirm
   if (X.topf) jzbTopf(c, Math.max(J.w * .3, 90 * k), J.h - 1, k);
   if (J.igel) jzbIgel(c, J.igel, k);
   if (J.schirm) jzbSchirm(c, J.schirm, k);
+  jzbWinterKinderMalen(c); // 2.282.0
 }
 function jzbStiefel(c, x, y, k) { // 🥾 gefüllter Nikolaus-Stiefel
   c.save(); c.translate(x, y); c.scale(k, k);

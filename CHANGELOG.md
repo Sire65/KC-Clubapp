@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.282.0 – 2026-10-11 – KC-CLUB-WINTER-KINDER: Schlitten, Schneeballschlacht, Eistropfen mit Pfütze
+Im Winter sausen ab und zu zwei Kinder mit Bommelmützen auf dem Schlitten vorbei – die Schals wehen nach hinten, einmal von links, beim nächsten Mal von rechts. Abwechselnd dazu machen ein paar Kinder eine Schneeballschlacht (Würfe im Bogen, Schnee stäubt beim Treffer). Die Tropfen von den Eiszapfen sind deutlicher und fallen bis auf den Boden – dort bildet sich langsam eine blaue Pfütze.
+
 ## 2.281.0 – 2026-10-11 – KC-CLUB-EIS-TROPFEN: ab und an ein Tropfen von den Eiszapfen
 Von den Eiszapfen tropft nur noch ab und an ein leicht blauer Wassertropfen – höchstens einer alle 7 bis 16 Sekunden, jedes Mal an einem anderen längeren Zapfen: er wächst an der Spitze, löst sich und fällt kurz. Bei bewegungsarmer Einstellung des Geräts keine Tropfen.
 
