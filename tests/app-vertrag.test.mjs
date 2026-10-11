@@ -3500,7 +3500,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
     assert.ok(ad.includes(`["${k}", `), "Kachel fehlt: " + k);
   for (const d of ["supabase", "neon", "cloudflare", "github", "b2", "brevo", "kicc"]) assert.ok(new RegExp(`\\n  ${d}: \\{ sym:`).test(ad), "Direktsprung fehlt: " + d);
   assert.ok(!/(sb_secret_|service_role|SUPABASE_ACCESS_TOKEN|apikey|Bearer )/i.test(ad), "keine Schlüssel im Admin-Register");
-  assert.ok(/rel="noopener"/.test(ad) && /async function adNeustart\(\) \{\s*const z = adZustand\("supabase"\);\s*if \(!\(await frage\(/.test(ad), "Neustart nur nach Rückfrage, Verwaltung in neuem Fenster");
+  assert.ok(/rel="noopener"/.test(ad) && /async function adNeustartJetzt\(\) \{\s*if \(!\(await frage\(/.test(ad) && /function adNeustartVerwaltung\(\) \{[^\n]*"noopener"\)/.test(ad), "Neustart nur nach Rückfrage (2.235.0: echter Neustart), Verwaltung in neuem Fenster");
   assert.ok(/case "admin_eingriff": \{\s*nurAdmin\(ich\);[\s\S]{0,200}\["neustart_geoeffnet"[^\]]*\]\.includes\(art\)[\s\S]{0,200}protokoll\(ich\.person_id, "admin_eingriff"/.test(server), "Eingriff nur Admin, feste Arten, protokolliert");
   assert.ok(/b2: b2 \?\? null/.test(server) && /from\("kc_backup_machine_telemetry"\)\.select\(/.test(server), "B2-Stand nur lesend in admin_lage");
   assert.ok(/#raster\.ad-raster \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/.test(html) && /\.register\.vier \{ grid-template-columns: repeat\(4/.test(html), "3 Kacheln je Reihe, 4 Register in einer Reihe");
@@ -8122,6 +8122,16 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const w = lies(".github/workflows/schnittstellen-waechter.yml");
   assert.ok(/cron: "\*\/5 \* \* \* \*"/.test(w) && /for i in 1 2 3; do/.test(w) && /if ! eingang; then/.test(w), "alle 5 Min., 3 Prüfungen, kein Neustart bei Netzstörung");
-  assert.ok(/\/v1\/projects\/\$PROJEKT\/restart/.test(w) && /secrets\.SUPABASE_NEUSTART_TOKEN/.test(w) && /-ge 2 \]; then/.test(w), "Neustart nur mit Secret, Bremse 2 je Stunde");
+  assert.ok(/audience=kc-neustart/.test(w) && /"action":"notfall_neustart","modus":"neustart"/.test(w) && /-ge 2 \]; then/.test(w) && !/secrets\./.test(w), "Neustart über den Club-Server mit GitHub-Ausweis, kein Secret, Bremse 2 je Stunde");
   assert.ok(/else setTimeout\(notZurueckPruefen, 5000\);/.test(html) && /if \(!document\.hidden && NOT\.an\) notZurueckPruefen\(\);/.test(html), "App verlässt den Notbetrieb ohne Neuöffnen");
+}
+
+// 2.235.0 KC-CLUB-NOTFALL-NEUSTART (Wunsch Hansi): Neustart-Knopf in Admin → Supabase, geht auch bei hängender Schnittstelle
+{
+  assert.ok(/if \(a === "notfall_neustart"\) return await notfallNeustart\(req, p\);[^\n]*\n    if \(a === "notpaket"\) \{/.test(server), "läuft vor der normalen Anmeldung");
+  assert.ok(/select public\.kc_club_anmeldung\(\$\{await sha256\(token\)\}, \$\{null\}\) as a/.test(server) && /a\?\.rollen\?\.ist_admin/.test(server), "Admin-Prüfung über den direkten Datenbank-Weg");
+  assert.ok(/p\.workflow_ref === "Sire65\/KC-Clubapp\/\.github\/workflows\/schnittstellen-waechter\.yml@refs\/heads\/main"/.test(server) && /if \(waechter && vorher\.ok\) return json/.test(server), "Wächter nur mit GitHub-Ausweis und nur im echten Störfall");
+  assert.ok(/if \(admin && p\?\.bestaetigt !== true\)/.test(server) && /NEUSTART_SPERRE_MIN = 20/.test(server) && /st\.status !== "ACTIVE_HEALTHY"/.test(server) && /schritt: r\?\.ok \? "angefordert" : "abgelehnt"/.test(server), "Bestätigung, Sperre, Zustandsprüfung, Protokoll");
+  assert.ok(/name = \$\{NEUSTART_VAULT\}/.test(server) && !/sbp_[A-Za-z0-9]{20}/.test(server + programm), "Schlüssel nur im Tresor, nie im Code");
+  assert.ok(/apiRoh\("notfall_neustart", \{ modus: "neustart", bestaetigt: true \}\)/.test(html) && /Ich prüfe alle 15 Sekunden/.test(html), "App: bestätigen, dann nachprüfen");
 }

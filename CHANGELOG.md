@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.235.0 – 2026-10-11 – Neustart-Knopf für Supabase
+KC-CLUB-NOTFALL-NEUSTART: Admin → Supabase → „Projekt neu starten“ prüft die Datenbank-Schnittstelle und startet Supabase nach Bestätigung direkt aus der App neu – auch wenn die Schnittstelle hängt (Admin-Prüfung über den direkten Datenbank-Weg). Danach prüft die App alle 15 Sekunden, bis alles wieder läuft. Schlüssel einmalig in der App hinterlegen (nur im Server-Tresor). Der Schnittstellen-Wächter nutzt denselben Weg ohne GitHub-Secret. Sperre 20 Min., Protokoll.
+
 ## 2.234.0 – 2026-10-11 – Schnittstellen-Wächter nach dem Ausfall
 KC-CLUB-SCHNITTSTELLEN-WAECHTER: Nach dem Ausfall der Datenbank-Schnittstelle am 11.10. (04:21–04:46) prüft ein GitHub-Wächter alle 5 Minuten von außen und startet das Supabase-Projekt bei einem Hänger automatisch neu (Bremse 2/Stunde, E-Mail an Hansi). Pflicht-Prüfung nach jeder Datenbank-Änderung (tools/schnittstelle-pruefen.sh). App verlässt den Notbetrieb schneller und ohne Neuöffnen. Bericht: docs/STOERUNG_SCHNITTSTELLE.md.
 

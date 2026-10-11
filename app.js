@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.234.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.235.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12500,11 +12500,45 @@ async function wbSenden(knopf) {
 }
 const kanalF = (k) => ({ ok: "gruen", stoerung: "rot", aus: "grau" }[k?.zustand] || "grau");
 // Neustart: nur über die Supabase-Verwaltung (Anmeldung dort) – vorher sagen, was passiert (kritische Aktion)
+// KC-CLUB-NOTFALL-NEUSTART (2.235.0, Wunsch Hansi nach dem Ausfall 11.10.): Supabase mit einem Knopf neu starten – geht auch,
+// wenn die Datenbank-Schnittstelle hängt (Server prüft den Admin dann über den direkten Datenbank-Weg). Ablauf (AGENTS 10):
+// Zustand prüfen → Auswirkung zeigen → bestätigen → Neustart → Nachprüfen bis die Schnittstelle wieder antwortet. Ohne Schlüssel:
+// Schlüssel einmalig hinterlegen (liegt dann nur im Server-Tresor, nie in der App) oder Supabase-Verwaltung öffnen wie bisher.
 async function adNeustart() {
-  const z = adZustand("supabase");
-  if (!(await frage(`Supabase-Projekt neu starten?\n\nJetzt: ${z[1]}\n\n• Alle Daten bleiben erhalten.\n• Die App ist 3–5 Minuten nicht erreichbar (der Notbetrieb springt ein).\n• Sinnvoll, wenn die Diagnose länger als 30 Minuten „Datenbank rot“ zeigt.\n\nEs öffnet sich die Supabase-Verwaltung: dort „Restart project“ antippen und bestätigen.`, { ja: "🔄 Weiter zur Verwaltung" }))) return;
-  api("admin_eingriff", { art: "neustart_geoeffnet" }).catch(() => {});
-  window.open(AD_SB + "/settings/general", "_blank", "noopener");
+  blattAuf("neustartBlatt", `<h3 style="margin:0">🔄 Supabase neu starten</h3><div id="nsInhalt"><p class="hinweis">Zustand wird geprüft …</p></div>`);
+  let r; try { r = await apiRoh("notfall_neustart", { modus: "pruefen" }); } catch (e) { r = null; $("nsInhalt").innerHTML = `<p>⚠️ Der Club-Server antwortet gerade gar nicht (${esc(e.message || "")}). Dann hilft nur die Supabase-Verwaltung.</p><div class="knoepfe">${adKnopf("🌐 Supabase-Verwaltung öffnen", "adNeustartVerwaltung()")}</div>`; return; }
+  const s = r.schnittstelle, f = s.ok ? "gruen" : "rot";
+  $("nsInhalt").innerHTML = `${adZeile(f, "Datenbank-Schnittstelle", s.ok ? `antwortet (${s.ms} ms)` : "hängt – keine Antwort")}
+    ${adZeile(r.schluessel ? "gruen" : "grau", "Neustart-Schlüssel", r.schluessel ? "hinterlegt" : "noch nicht hinterlegt")}
+    ${r.letzter ? adZeile("keine", "Letzter Neustart", seitText(r.letzter)) : ""}
+    ${r.schluessel ? `<p class="hinweis" style="margin:6px 0">${s.ok ? "Die Schnittstelle läuft – ein Neustart ist gerade nicht nötig." : "Ein Neustart behebt den Hänger meist in 1–3 Minuten."}</p>
+      <div class="knoepfe">${adKnopf("🔄 Jetzt neu starten", "adNeustartJetzt()", !s.ok)}</div>`
+    : `<div class="ps-schritt"><b>🔑 Einmalig: Neustart-Schlüssel hinterlegen</b>
+      <p class="hinweis" style="margin:0">1. <a href="https://supabase.com/dashboard/account/tokens" target="_blank" rel="noopener">Supabase → Access Tokens</a> öffnen → „Generate new token“, Name „kc-neustart“, nur dieses Projekt.<br>2. Den Schlüssel (beginnt mit <b>sbp_</b>) kopieren und hier einfügen. Er liegt danach nur im Server-Tresor.</p>
+      <input id="nsSchluessel" type="password" autocomplete="off" placeholder="sbp_…" style="width:100%">
+      <div class="knoepfe">${adKnopf("💾 Schlüssel prüfen und speichern", "adNeustartSchluessel(this)", true)}</div></div>`}
+    <div class="knoepfe">${adKnopf("🌐 Supabase-Verwaltung öffnen", "adNeustartVerwaltung()")}</div>`;
+}
+function adNeustartVerwaltung() { api("admin_eingriff", { art: "neustart_geoeffnet" }).catch(() => {}); window.open(AD_SB + "/settings/general", "_blank", "noopener"); }
+async function adNeustartSchluessel(knopf) {
+  const v = ($("nsSchluessel")?.value || "").trim(); if (!v) return melde("Bitte den Schlüssel einfügen.", true);
+  knopf.disabled = true;
+  try { await apiRoh("notfall_neustart", { modus: "schluessel", schluessel: v }); melde("✅ Schlüssel geprüft und gespeichert"); adNeustart(); }
+  catch (e) { melde(e.message || "Speichern ging nicht", true); knopf.disabled = false; }
+}
+async function adNeustartJetzt() {
+  if (!(await frage("Supabase jetzt neu starten?\n\n• Alle Daten bleiben erhalten.\n• Die App ist 1–3 Minuten nicht erreichbar (der Notbetrieb springt ein).\n• Wird im Protokoll vermerkt.", { ja: "🔄 Neu starten" }))) return;
+  let r; try { r = await apiRoh("notfall_neustart", { modus: "neustart", bestaetigt: true }); } catch (e) { return melde(e.message || "Neustart ging nicht", true); }
+  $("nsInhalt").innerHTML = `<p>⏳ ${esc(r.text || "Neustart läuft …")}</p><p class="hinweis" id="nsWarten">Ich prüfe alle 15 Sekunden, ob alles wieder läuft.</p>`;
+  const start = Date.now();
+  await new Promise((ok) => setTimeout(ok, 30000));
+  while (Date.now() - start < 6 * 60000 && $("neustartBlatt")) {
+    let s = null; try { s = (await apiRoh("notfall_neustart", { modus: "pruefen" })).schnittstelle; } catch {}
+    if (s?.ok) { $("nsInhalt").innerHTML = `<p>✅ Supabase läuft wieder (Schnittstelle antwortet in ${s.ms} ms).</p>`; melde("✅ Supabase läuft wieder"); if (NOT.an) notZurueckPruefen(); return; }
+    if ($("nsWarten")) $("nsWarten").textContent = `Noch nicht wieder da – ich prüfe weiter (${Math.round((Date.now() - start) / 1000)} s) …`;
+    await new Promise((ok) => setTimeout(ok, 15000));
+  }
+  if ($("nsInhalt")) $("nsInhalt").innerHTML = `<p>⚠️ Nach 6 Minuten antwortet die Schnittstelle noch nicht. Bitte Claude Bescheid geben.</p><div class="knoepfe">${adKnopf("🌐 Supabase-Verwaltung öffnen", "adNeustartVerwaltung()")}</div>`;
 }
 // ---------- KC-CLUB-NOTFALL-MELDUNG (2.21.0, Wunsch Hansi): Alarmstufe Rot – nur Admin/Vertretung ----------
 // Schreiben → „Jetzt an alle senden“ → einmal bestätigen. Geht an alle aktiven Mitglieder in die Unterhaltung „🚨 Notfall-Meldungen“,

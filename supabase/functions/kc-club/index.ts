@@ -16,6 +16,8 @@
 //           KC-CLUB-DESIGN (0.24.0), KC-CLUB-PINNWAND (0.25.0), KC-CLUB-KACHELN-ZIEHEN (0.26.0), KC-CLUB-FEEDBACK-NEU (0.27.1), KC-CLUB-BEGRUESSUNG (0.28.0), KC-CLUB-ONLINE (0.29.0), KC-CLUB-ANRUF (0.31.0), KC-CLUB-VIDEO (0.32.0), KC-CLUB-QUITTUNG (0.34.0), KC-CLUB-TODO + KC-CLUB-REGISTER-ZIEHEN (0.36.0), KC-CLUB-SPRACHE + KC-CLUB-TODO-ZUSTAENDIG (0.37.0), KC-CLUB-ERSTATTUNG (0.38.0), KC-CLUB-KMSATZ (0.39.0), KC-CLUB-FEEDBACK-DAUERHAFT (0.40.0), KC-CLUB-INFOFELD + KC-CLUB-WETTER (0.42.0), KC-CLUB-INFOFELD-DEMNAECHST/-FOTOS (0.43.0), KC-CLUB-ZENTRALE (0.44.0), KC-CLUB-FOTO-META (0.45.0), KC-CLUB-WETTER-TAGE (0.46.0), KC-CLUB-ADMINLAGE (0.47.0), KC-CLUB-ADMIN-SPIEGEL (0.48.0/0.49.0), KC-CLUB-TODO-MEHRERE (0.52.0), KC-CLUB-DRUCK + KC-CLUB-AUFGABEN-MEHRERE (0.53.0)
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { AwsClient } from "npm:aws4fetch@1.0.20"; // KC-CLUB-ARCHIV-KOPIE (2.232.0): S3-Signatur für den Neon-Dateispeicher (MIT, kostenlos)
+import postgres from "npm:postgres@3.4.5"; // KC-CLUB-NOTFALL-NEUSTART (2.235.0): direkter Datenbank-Weg, wenn die Schnittstelle hängt
+import { createRemoteJWKSet, jwtVerify } from "npm:jose@5.9.6"; // KC-CLUB-NOTFALL-NEUSTART: GitHub-Wächter weist sich mit signiertem Token aus
 // @ts-ignore: chess.js bringt keine Typdatei mit (in Deno ohne Bedeutung)
 import { Chess } from "./chess.js"; // KC-CLUB-SCHACH (2.8.0): chess.js 1.4.0 (BSD-2-Clause, Jeff Hlywa) – Zugprüfung, keine Kosten
 // @ts-ignore: reine JS-Datei ohne Typen
@@ -45,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.233.0";
+const SERVER_VERSION = "2.235.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2471,6 +2473,82 @@ function treffenText(t: any, gastgeber: string, anlass: "neu" | "geaendert" | "a
   };
 }
 
+// ---------- KC-CLUB-NOTFALL-NEUSTART (2.235.0, Wunsch Hansi nach dem Ausfall 11.10. 04:21–04:46) ----------
+// Hängt die Datenbank-Schnittstelle (PostgREST), kommt kein normaler Aufruf mehr an die Daten – auch nicht die Anmeldung.
+// Darum läuft diese Aktion VOR der normalen Anmeldung und nur über den direkten Datenbank-Weg (SUPABASE_DB_URL):
+//   - Admin (persönlicher Link, geprüft mit kc_club_anmeldung direkt in der Datenbank) oder
+//   - der GitHub-Schnittstellen-Wächter (von GitHub signiertes Token, nur dieser Ablauf auf main; darf nur neu starten, wenn es wirklich hängt).
+// Neustart über die Supabase-Verwaltungsschnittstelle mit dem Schlüssel aus dem Vault (kc_supabase_neustart_token, nie im Browser).
+// Kritische Aktion (AGENTS 10): Prüfen → Auswirkung zeigen → Bestätigung → Ausführen → Nachprüfen (App) → Protokoll. Sperre 20 Min.
+const NEUSTART_VAULT = "kc_supabase_neustart_token", NEUSTART_SPERRE_MIN = 20, PROJEKT_REF = SUPA.replace(/^https:\/\//, "").split(".")[0];
+const GH_OIDC = "https://token.actions.githubusercontent.com";
+const GH_JWKS = createRemoteJWKSet(new URL(GH_OIDC + "/.well-known/jwks"));
+let DIREKT: ReturnType<typeof postgres> | null = null;
+const direktSql = () => DIREKT ??= postgres(Deno.env.get("SUPABASE_DB_URL")!, { max: 1, prepare: false, connect_timeout: 10, idle_timeout: 20 });
+async function neustartWaechter(req: Request) {
+  const t = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+  if (!t.startsWith("ey")) return false;
+  try {
+    const { payload: p } = await jwtVerify(t, GH_JWKS, { issuer: GH_OIDC, audience: "kc-neustart", maxTokenAge: "10m" });
+    return p.repository === "Sire65/KC-Clubapp" && p.ref === "refs/heads/main" && p.workflow_ref === "Sire65/KC-Clubapp/.github/workflows/schnittstellen-waechter.yml@refs/heads/main";
+  } catch { return false; }
+}
+async function neustartAdmin(req: Request) {
+  const token = req.headers.get("x-club-token") ?? "";
+  if (!/^[0-9a-f]{32,96}$/.test(token)) return null;
+  const [z] = await direktSql()`select public.kc_club_anmeldung(${await sha256(token)}, ${null}) as a`;
+  const a: any = z?.a;
+  return a?.person?.active && a?.rollen?.ist_admin ? { person_id: String(a.person.person_id), name: String(a.person.display_name || "") } : null;
+}
+async function schnittstelleTesten() {
+  const t0 = Date.now();
+  try {
+    const r = await fetch(`${SUPA}/rest/v1/kc_club_tippen?select=person_id&limit=1`, { headers: { apikey: SERVICE, authorization: `Bearer ${SERVICE}` }, signal: AbortSignal.timeout(8000) });
+    await r.body?.cancel();
+    return { ok: r.status < 500, ms: Date.now() - t0 };
+  } catch { return { ok: false, ms: Date.now() - t0 }; }
+}
+async function neustartProtokoll(person: string | null, details: Record<string, unknown>) {
+  try { await direktSql()`insert into public.kc_club_protokoll (person_id, aktion, details) values (${person}, 'notfall_neustart', ${direktSql().json(details as any)})`; }
+  catch (e) { console.error("neustart protokoll", String(e)); }
+}
+async function notfallNeustart(req: Request, p: any) {
+  const waechter = await neustartWaechter(req), admin = waechter ? null : await neustartAdmin(req).catch(() => null);
+  if (!waechter && !admin) return json({ error: "Nur für den Admin." }, 403);
+  const modus = String(p?.modus || "pruefen");
+  const [sch] = await direktSql()`select decrypted_secret as s from vault.decrypted_secrets where name = ${NEUSTART_VAULT} limit 1`;
+  const schluessel = String(sch?.s || "");
+  const [lz] = await direktSql()`select zeit, details from public.kc_club_protokoll where aktion = 'notfall_neustart' and details->>'schritt' = 'angefordert' order by zeit desc limit 1`;
+  const letzter = lz?.zeit ? new Date(lz.zeit).toISOString() : null;
+  if (modus === "pruefen") return json({ ok: true, schnittstelle: await schnittstelleTesten(), schluessel: !!schluessel, letzter });
+  if (modus === "schluessel") {
+    if (!admin) return json({ error: "Nur für den Admin." }, 403);
+    const neu = String(p?.schluessel || "").trim();
+    if (!/^sbp_[A-Za-z0-9_]{20,200}$/.test(neu)) return json({ error: "Das sieht nicht wie ein Supabase-Schlüssel aus (beginnt mit „sbp_“)." }, 400);
+    const r = await fetch(`https://api.supabase.com/v1/projects/${PROJEKT_REF}`, { headers: { authorization: `Bearer ${neu}` }, signal: AbortSignal.timeout(15000) }).catch(() => null);
+    await r?.body?.cancel();
+    if (!r?.ok) return json({ error: `Supabase lehnt den Schlüssel ab (${r?.status ?? "keine Antwort"}). Bitte Projekt und Rechte prüfen.` }, 400);
+    const [v] = await direktSql()`select id from vault.secrets where name = ${NEUSTART_VAULT} limit 1`;
+    if (v?.id) await direktSql()`select vault.update_secret(${v.id}, ${neu})`;
+    else await direktSql()`select vault.create_secret(${neu}, ${NEUSTART_VAULT}, 'KC-CLUB-NOTFALL-NEUSTART: Supabase-Verwaltungsschlüssel (nur Neustart dieses Projekts)')`;
+    await neustartProtokoll(admin.person_id, { schritt: "schluessel_hinterlegt" });
+    return json({ ok: true });
+  }
+  if (modus !== "neustart") return json({ error: "Unbekannt" }, 400);
+  if (admin && p?.bestaetigt !== true) return json({ error: "Bitte bestätigen." }, 400);
+  if (!schluessel) return json({ error: "Kein Neustart-Schlüssel hinterlegt.", ohneSchluessel: true }, 409);
+  const vorher = await schnittstelleTesten();
+  if (waechter && vorher.ok) return json({ ok: false, text: "Schnittstelle antwortet – kein Neustart." }); // Wächter nur im echten Störfall
+  if (letzter && Date.now() - Date.parse(letzter) < NEUSTART_SPERRE_MIN * 60000) return json({ error: `Vor weniger als ${NEUSTART_SPERRE_MIN} Minuten wurde schon neu gestartet – bitte abwarten.` }, 429);
+  const st = await fetch(`https://api.supabase.com/v1/projects/${PROJEKT_REF}`, { headers: { authorization: `Bearer ${schluessel}` }, signal: AbortSignal.timeout(15000) }).then((r) => r.ok ? r.json() : null).catch(() => null);
+  if (st?.status && st.status !== "ACTIVE_HEALTHY") return json({ error: `Supabase ist gerade nicht im Normalzustand (${st.status}) – kein Neustart.` }, 409);
+  const r = await fetch(`https://api.supabase.com/v1/projects/${PROJEKT_REF}/restart`, { method: "POST", headers: { authorization: `Bearer ${schluessel}` }, signal: AbortSignal.timeout(30000) }).catch(() => null);
+  await r?.body?.cancel();
+  await neustartProtokoll(admin?.person_id ?? null, { schritt: r?.ok ? "angefordert" : "abgelehnt", wer: waechter ? "waechter" : "admin", http: r?.status ?? 0, schnittstelle_vorher: vorher });
+  if (!r?.ok) return json({ error: `Supabase hat den Neustart abgelehnt (${r?.status ?? "keine Antwort"}).` }, 502);
+  return json({ ok: true, text: "Neustart läuft – dauert 1 bis 3 Minuten." });
+}
+
 // ---------- KC-CLUB-ARCHIV-KOPIE (2.232.0, Wunsch Hansi 11.10.2026) ----------
 // Zweite Kopie aller Archiv-Dateien im Neon-Dateispeicher Frankfurt (Projekt „KC Archiv Kopie“, Fach „kc-archiv“, privat, 5 GB gratis).
 // Zugang nur im Vault (kc_club_archiv_kopie: endpoint, region, bucket, key, secret) – nie im Browser, Repository oder Protokoll.
@@ -4785,6 +4863,7 @@ Deno.serve(async (req) => {
   const a = String(p?.action || "");
   try {
     // ----- KC-CLUB-NOTBETRIEB (1.52.0): Notfall-Paket bauen und beim Ersatz-Server ablegen (Zeitplaner, alle 15 Min.) -----
+    if (a === "notfall_neustart") return await notfallNeustart(req, p); // KC-CLUB-NOTFALL-NEUSTART (2.235.0): vor der normalen Anmeldung
     if (a === "notpaket") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
       if (!geheim || !gleichZeit(p.cronSecret, geheim)) return json({ error: "Kein Zugang" }, 401);

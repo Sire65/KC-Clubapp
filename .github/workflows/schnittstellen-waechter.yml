@@ -5,11 +5,11 @@
 #   1. Antwortet der Supabase-Eingang (Auth-Gesundheit)?  → Nein: Netz-/Anbieterstörung, NICHT neu starten (hilft nicht).
 #   2. Antwortet die Datenbank-Schnittstelle (eine Anfrage, die die Datenbank braucht) in unter 10 Sekunden?
 # Nur wenn 1 = ja und 2 dreimal hintereinander (über ~80 Sek.) = nein, gilt die Schnittstelle als hängend. Dann:
-#   - mit Secret SUPABASE_NEUSTART_TOKEN: Projekt automatisch neu starten (Supabase-Verwaltungsschnittstelle) und warten,
-#     bis die Schnittstelle wieder antwortet. Bremse: höchstens 2 Neustarts je Stunde (sonst nur Alarm – dann stimmt etwas anderes nicht).
-#   - ohne Secret: nur Alarm.
+#   - der Club-Server (Aktion notfall_neustart, 2.235.0) startet das Projekt neu – Ausweis ist ein von GitHub signiertes Token
+#     (kein Secret nötig); den Supabase-Schlüssel hat nur der Server-Tresor (einmal in der App hinterlegt: Admin → Supabase).
+#     Bremse: höchstens 2 Störungs-Läufe je Stunde, Server-Sperre 20 Min. Ohne hinterlegten Schlüssel: nur Alarm.
 # Alarm = der Lauf endet rot → GitHub schickt Hansi eine E-Mail. Ein grüner Lauf heißt: alles in Ordnung.
-# Kostenlos: öffentliches Repository, Läufe < 1 Min. (im Störfall bis ~10 Min.). Der Schlüssel steht nur in den GitHub-Secrets.
+# Kostenlos: öffentliches Repository, Läufe < 1 Min. (im Störfall bis ~10 Min.). Kein Schlüssel im Repository oder bei GitHub.
 name: Schnittstellen-Wächter
 on:
   schedule:
@@ -25,6 +25,7 @@ concurrency:
   cancel-in-progress: false
 permissions:
   actions: read
+  id-token: write
 jobs:
   pruefen:
     runs-on: ubuntu-latest
@@ -32,7 +33,6 @@ jobs:
     env:
       PROJEKT: ptblnpiroqftcvlsrhac
       KEY: sb_publishable_SqXIeGN-clcZ4gjmpLdSww_4DLfyy24 # öffentlicher Schlüssel (steht ohnehin in der App)
-      NEUSTART_TOKEN: ${{ secrets.SUPABASE_NEUSTART_TOKEN }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Schnittstelle prüfen und bei Bedarf neu starten
@@ -43,17 +43,16 @@ jobs:
           gesund() { set -- $1; case "$1" in 200|401|403|404) awk -v t="$2" 'BEGIN{exit !(t<10)}';; *) return 1;; esac; }
           eingang() { c=$(curl -s -o /dev/null -w "%{http_code}" --max-time 12 "$URL/auth/v1/health" -H "apikey: $KEY" || true); [ "$c" = "200" ]; }
           neustart() {
-            if [ -z "$NEUSTART_TOKEN" ]; then echo "::error::Kein SUPABASE_NEUSTART_TOKEN – automatischer Neustart nicht möglich. Bitte im Supabase-Dashboard neu starten."; return 1; fi
-            # Bremse: höchstens 2 Neustarts je Stunde (rote Läufe dieses Wächters in den letzten 60 Min.)
+            # Bremse: höchstens 2 Störungs-Läufe je Stunde (rote Läufe dieses Wächters in den letzten 60 Min.); der Server sperrt zusätzlich 20 Min.
             seit=$(date -u -d '-60 min' +%Y-%m-%dT%H:%M:%SZ)
             rot=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/schnittstellen-waechter.yml/runs?status=failure&created=>$seit" --jq '.total_count' 2>/dev/null || echo 0)
             if [ "${rot:-0}" -ge 2 ]; then echo "::error::Schon $rot Störungen in der letzten Stunde – kein weiterer automatischer Neustart. Bitte Claude Bescheid geben."; return 1; fi
-            s=$(curl -s --max-time 20 "https://api.supabase.com/v1/projects/$PROJEKT" -H "Authorization: Bearer $NEUSTART_TOKEN" | jq -r '.status // "?"')
-            echo "Projektstatus vor dem Neustart: $s"
-            if [ "$s" != "ACTIVE_HEALTHY" ]; then echo "::error::Projekt ist gerade nicht im Normalzustand ($s) – kein Neustart."; return 1; fi
-            c=$(curl -s -o neustart.txt -w "%{http_code}" --max-time 60 -X POST "https://api.supabase.com/v1/projects/$PROJEKT/restart" -H "Authorization: Bearer $NEUSTART_TOKEN" || true)
-            echo "Neustart angefordert: HTTP $c $(head -c 200 neustart.txt)"
-            case "$c" in 200|201|202) ;; *) echo "::error::Neustart abgelehnt (HTTP $c) – Schlüssel prüfen oder im Dashboard neu starten."; return 1;; esac
+            # Ausweis: von GitHub signiertes Token (kein Geheimnis im Repository); der Club-Server prüft es und startet nur, wenn es wirklich hängt.
+            oidc=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=kc-neustart" | jq -r .value)
+            c=$(curl -s -o neustart.json -w "%{http_code}" --max-time 90 -X POST "$URL/functions/v1/kc-club" -H "content-type: application/json" \
+              -H "Authorization: Bearer $oidc" -d '{"action":"notfall_neustart","modus":"neustart"}' || true)
+            echo "Neustart angefordert: HTTP $c $(head -c 300 neustart.json)"
+            if [ "$c" != "200" ] || ! jq -e '.ok == true' neustart.json >/dev/null; then echo "::error::Neustart nicht ausgelöst – bitte in der App (Admin → Supabase → Projekt neu starten) oder im Supabase-Dashboard neu starten."; return 1; fi
             for i in $(seq 1 30); do sleep 20; r=$(rest); echo "  $(date -u +%H:%M:%S) $r"; if gesund "$r"; then echo "::warning::Schnittstelle hing – automatisch neu gestartet, läuft wieder."; return 0; fi; done
             echo "::error::Nach dem Neustart antwortet die Schnittstelle noch nicht."; return 1
           }
