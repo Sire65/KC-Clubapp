@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.270.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-6: Rezeptbuch, Meine Schulung, Feedback (Wunsch Hansi)
+- 📖 „Rezeptbuch“ (nur mit Freigabe): suchen, Arten, Rezept aufschlagen, Portionen umrechnen (live auf 10), Zutaten abhaken, Einkaufsliste/Drucken/Teilen, eigenes Rezept.
+- 🎓 „Meine Schulung“: Einladung, Termin aussuchen (bei mir / bei Hansi), eigenen Termin vorschlagen, Zusammenfassung im Archiv.
+- 💭 „Feedback geben“: drei Schritte antippen, Ideen/Mitteilung, ohne Namen, später ändern.
+- Nur vorgeführt: nichts angelegt, gewählt oder geschickt; Fenster und Feedback-Schritt am Ende zurück. Themen: Club & Archiv, Einstieg; Twinkey bietet „Feedback“ an.
+
 ## 2.269.0 – 2026-10-11 – KC-CLUB-ERKLAERVIDEOS-5: vier neue Erklär-Videos (Wunsch Hansi „prüfen, ob noch Videos fehlen“)
 - Abgleich Kacheln ↔ Videos: ohne Video waren u. a. Dienst, Status, Protokolle/Dokumente, Meine Daten, Aktionen, Rezeptbuch, Fit bleiben, Schulung, Studio, Feedback, Update/Sicherheit/Programme.
 - Neu: 🗓️ „Mein Dienst & Dienstplan“ (Wunsch → Soll → Ist, Wünsche mit Twinkey, Wochen blättern, Zeiten vergleichen), 🟢 „Mein Status“ (Urlaub mit Bis-Datum und Hinweis), 📄 „Protokolle & Dokumente“ (Liste, Ansicht, Filter, Anleitungen), 🔐 „Meine Daten & Änderungen“ (Übersicht, Änderung melden).

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.269.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.270.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1770,7 +1770,7 @@ const RG_OBERFLAECHE = [
 // geöffnete Fenster gehen am Ende wieder zu, das Register wird zurückgestellt.
 function rgReg(r) { if (!einfach() && reg !== r) { const alt = reg; register(r); RG.zurueck.push(() => { if (reg !== alt) register(alt); }); } }
 function rgBlatt(id, oeffnen) { // dynamisches Fenster (blattAuf) für das Video öffnen – am Ende wieder zu
-  for (const x of ["mdBlatt", "mdatBlatt", "aeBlatt"]) if (x !== id) $(x)?.remove();
+  for (const x of ["mdBlatt", "mdatBlatt", "aeBlatt", "rzBlatt", "smBlatt"]) if (x !== id) $(x)?.remove();
   if (!$(id)) { oeffnen(); RG.zurueck.push(() => $(id)?.remove()); }
   $(id)?.classList.add("rg-zeigen");
 }
@@ -1836,6 +1836,53 @@ const RG_DATEN = [
     x: "Tippe an, was sich geändert hat – zum Beispiel Anschrift, Telefon, E-Mail oder Kleidergröße. Die Meldung geht automatisch an die Richtigen im Club. Hier melde ich nichts." },
   { v: "start", vor: () => rgBlatt("aeBlatt", aeStart), t: "✅ Fertig",
     x: "Unter Meine letzten Meldungen siehst du, was daraus geworden ist. Hast du Rückfragen, schreibst du direkt dem, der deine Meldung bearbeitet." },
+];
+// KC-CLUB-ERKLAERVIDEOS-6 (2.270.0, Wunsch Hansi „weiter mit Rezeptbuch, Schulung und Feedback“). Nur vorgeführt: kein Rezept angelegt,
+// keine Portionen gemerkt, kein Schulungstermin gewählt, kein Feedback geschickt; Fenster und Feedback-Schritt am Ende zurück.
+function rgRezept(an) { // Rezeptbuch öffnen; an = erstes Rezept aufschlagen (Portionen nur angezeigt, nicht gespeichert)
+  rgBlatt("rzBlatt", rzStart);
+  if (an) { const id = RZ.liste?.[0]?.id; if (id && RZ.offen !== id) rzZeigen(id); } else if (RZ.offen && $("rzInhalt")) rzListeZeigen();
+}
+function rgFeedback(schritt) { // Feedback-Schritt nur anzeigen (Antworten bleiben, wie sie sind) – am Ende zurück
+  if (typeof FB === "undefined" || !FB || !$("feedbackInhalt")) return;
+  if (RG.fbAlt === undefined || RG.fbAlt === null) { RG.fbAlt = FB.schritt; RG.zurueck.push(() => { if (FB && RG.fbAlt !== null) { FB.schritt = RG.fbAlt; if ($("feedbackInhalt")) fbZeigen(); } RG.fbAlt = null; }); }
+  if (FB.schritt !== schritt) { FB.schritt = schritt; fbZeigen(); }
+}
+const RG_REZEPTE = [
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgReg("verein"); }, sel: ['#raster .kachel[data-id="rezepte"]'], mussSel: true, t: "📖 Das Club-Rezeptbuch",
+    x: "Im Register Club findest du das Rezeptbuch – die Rezepte aus dem Köcheclub, zum Nachkochen und Teilen.", live: async (L) => { await L.tipp('#raster .kachel[data-id="rezepte"]'); } },
+  { v: "start", vor: () => rgRezept(false), sel: ["#rzInhalt .rz-liste", "#rzBlatt .blatt-innen"], t: "🔍 Suchen und stöbern",
+    x: "Oben suchst du nach einem Rezept oder einer Zutat – zum Beispiel Kürbis. Mit den Knöpfen darunter wählst du eine Art, etwa Vorspeisen oder Desserts." },
+  { v: "start", vor: () => rgRezept(true), sel: ["#rzInhalt .ps-schritt", "#rzBlatt .blatt-innen"], mussSel: true, t: "🍽️ Für wie viele?",
+    x: "Ein Rezept antippen – schon steht es da. Bei Portionen stellst du ein, für wie viele du kochst: Die Mengen rechnen sich von selbst um. Ich stelle einmal auf zehn.",
+    live: async (L) => { const r = RZ.liste?.[0]; await L.tipp(() => [...document.querySelectorAll("#rzInhalt .hl-chips .chip")].find((c) => c.textContent.trim() === "10")); if (r && RZ.offen === r.id) { RZ.port = 10; rzZeigen(r.id); } } },
+  { v: "start", vor: () => rgRezept(true), sel: ["#rzInhalt .ps-schritt:nth-of-type(2)", "#rzBlatt .blatt-innen"], mussSel: true, t: "🧺 Zutaten abhaken",
+    x: "Beim Kochen tippst du jede Zutat an, die du schon hast – sie wird durchgestrichen. Darunter steht die Zubereitung." },
+  { v: "start", vor: () => rgRezept(true), sel: ["#rzInhalt .na-pfeil-knoepfe:last-child", "#rzBlatt .blatt-innen"], mussSel: true, t: "🛒 Einkaufsliste, Drucken, Teilen",
+    x: "Mit Einkaufsliste kommen die Zutaten auf deinen Einkaufszettel. Du kannst das Rezept auch drucken oder per WhatsApp teilen." },
+  { v: "start", vor: () => rgRezept(false), sel: ['#rzInhalt [onclick="rzForm()"]', "#rzBlatt .blatt-innen"], t: "＋ Eigenes Rezept",
+    x: "Und mit Neues Rezept trägst du dein eigenes ein – mit Foto, Zutaten und Zubereitung. Dann haben alle im Club etwas davon. Hier lege ich nichts an." },
+];
+const RG_SCHULUNG = [
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgReg("mein"); }, sel: ['#raster .kachel[data-id="schulungen"]'], mussSel: true, t: "🎓 Meine Schulung",
+    x: "Hansi zeigt dir die App gern persönlich. Unter Meins, Kachel Meine Schulung, findest du deine Einladung.", live: async (L) => { await L.tipp('#raster .kachel[data-id="schulungen"]'); } },
+  { v: "start", vor: () => rgBlatt("smBlatt", smStart), sel: ["#smInhalt", "#smBlatt .blatt-innen"], t: "📅 Termin aussuchen",
+    x: "Lädt Hansi dich ein, stehen hier freie Termine. Du suchst dir einen aus – bei dir zu Hause oder bei Hansi. Wer zuerst wählt, bekommt den Termin. Hier wähle ich nichts." },
+  { v: "start", vor: () => rgBlatt("smBlatt", smStart), sel: ["#smInhalt", "#smBlatt .blatt-innen"], t: "💬 Kein Termin passt?",
+    x: "Passt keiner, tippst du auf Kein Termin passt und schlägst selbst einen vor. Hansi bestätigt deinen Termin, und du bekommst Bescheid." },
+  { v: "start", vor: () => rgBlatt("smBlatt", smStart), sel: ['#smBlatt .tw-nicht', "#smBlatt .blatt-innen"], t: "📄 Zusammenfassung",
+    x: "Nach der Schulung bekommst du eine Zusammenfassung zum Nachlesen. Du findest sie hier unten – und im Archiv." },
+];
+const RG_FEEDBACK = [
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgReg("verein"); }, sel: ['#raster .kachel[data-id="feedback"]'], mussSel: true, t: "💭 Deine Meinung zählt",
+    x: "Was gefällt dir, was stört, was fehlt? Im Register Club unter Feedback sagst du es Hansi – das hilft, die App besser zu machen.", live: async (L) => { await L.tipp('#raster .kachel[data-id="feedback"]'); } },
+  { v: "feedback", vor: () => rgFeedback(1), sel: ["#feedbackInhalt", "#v-feedback"], t: "👆 Einfach antippen",
+    x: "In drei kurzen Schritten tippst du deine Antworten an. Alles ist freiwillig – du kannst auch Fragen auslassen.", live: async (L) => { await L.warte(500); rgFeedback(1); L.ziel(); } }, // Fragen kommen evtl. erst vom Server
+  { v: "feedback", vor: () => rgFeedback(3), sel: ["#fbIdee", "#fbMitteilung", "#feedbackInhalt"], t: "💡 Ideen und Wünsche",
+    x: "Im letzten Schritt schreibst du deine Ideen oder eine Mitteilung an Hansi – gern auch mit dem Mikrofon gesprochen.", live: async (L) => { await L.warte(500); rgFeedback(3); L.ziel(); } },
+  { v: "feedback", vor: () => rgFeedback(3), sel: [() => $("fbAnonym")?.closest("label") || $("fbAnonym"), "#feedbackInhalt"], t: "🕶️ Auch ohne Namen",
+    x: "Möchtest du lieber unerkannt bleiben, hakst du ohne Namen an. Mit Absenden ist es bei Hansi – und du kannst deine Antworten später jederzeit ändern. Hier schicke ich nichts.", live: async (L) => { await L.warte(500); rgFeedback(3); L.ziel(); } },
+  { v: "feedback", t: "✅ Danke!", x: "Jede Rückmeldung hilft. Was schon umgesetzt wurde, siehst du auch hier im Feedback." },
 ];
 // KC-CLUB-ERKLAERVIDEOS-EFFEKTE (2.265.0, Wunsch Hansi „Erklär-Video mit den Spezial-Effekten: Kacheln einschweben, Herbst mit Igel, Laub, Besen,
 // Schnee, Frühling und Sommer – kurz zeigen, wo und wie man sie einstellt; dazu die Wetter-Kacheln: antippen und lange festhalten. Darauf
@@ -1962,6 +2009,9 @@ const RUNDGAENGE = [
   { id: "status", stand: "1", sym: "🟢", t: "Mein Status", u: "Verfügbar, Urlaub, krank – mit Hinweis (ca. 1 Min.)", st: () => RG_STATUS },
   { id: "lesen", stand: "1", sym: "📄", t: "Protokolle & Dokumente", u: "Nachlesen, filtern, Anleitungen drucken (ca. 1 Min.)", st: () => RG_LESEN },
   { id: "meinedaten", stand: "1", sym: "🔐", t: "Meine Daten & Änderungen", u: "Was gespeichert ist – und neue Anschrift & Co. melden (ca. 1 Min.)", st: () => RG_DATEN },
+  { id: "rezepte", stand: "1", sym: "📖", t: "Rezeptbuch", u: "Suchen, Portionen umrechnen, Einkaufsliste, eigenes Rezept (ca. 1 Min.)", st: () => RG_REZEPTE, nur: () => frei("rezepte") }, // 2.270.0 KC-CLUB-ERKLAERVIDEOS-6
+  { id: "schulung", stand: "1", sym: "🎓", t: "Meine Schulung", u: "Termin mit Hansi aussuchen, Zusammenfassung (ca. 1 Min.)", st: () => RG_SCHULUNG },
+  { id: "feedback", stand: "1", sym: "💭", t: "Feedback geben", u: "Antippen, Ideen schreiben, auch ohne Namen (ca. 1 Min.)", st: () => RG_FEEDBACK },
   { id: "effekte", stand: "1", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 3 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
   { id: "figur", stand: "1", sym: "🧑‍🍳", t: "Koch-Figur als Bild aussuchen", u: "Mein Bild: Figur antippen, übernehmen (ca. 1 Min.)", st: () => RG_FIGUR, nur: () => frei("avatar") }, // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR
   { id: "figurbau", stand: "1", sym: "🧩", t: "Eigene Figur zusammenstellen", u: "Haare, Mütze, Gesicht, Brille, Kochjacke – und später bearbeiten (ca. 2 Min.)", st: () => RG_FIGUR_BAU, nur: () => frei("avatar") && frei("avatar_baukasten") },
@@ -1984,10 +2034,10 @@ function rgRollenAnsicht(ziel) {
 // Kästchen zum Anhaken – alle angehakten automatisch nacheinander abspielen“). Registry RG_THEMEN: Video-IDs je Thema; ein Video, das in
 // keinem Thema steht (z. B. neu dazugekommen), landet unter „✨ Weitere“ – es geht keins verloren. Wenige Videos: eine Liste ohne Kacheln.
 const RG_THEMEN = [
-  { id: "einstieg", sym: "🚀", t: "Einstieg", videos: ["warum", "ueberblick", "hilfe"] },
+  { id: "einstieg", sym: "🚀", t: "Einstieg", videos: ["warum", "ueberblick", "hilfe", "schulung", "feedback"] },
   { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["nachricht", "mitglieder", "pinnwand"] },
   { id: "termine", sym: "📅", t: "Termine & Dienst", videos: ["termin", "zusagen", "dienst"] },
-  { id: "club", sym: "🗄️", t: "Club & Archiv", videos: ["fotos", "lesen", "archiv", "vorschlag", "helfen", "erstattung"] },
+  { id: "club", sym: "🗄️", t: "Club & Archiv", videos: ["fotos", "lesen", "rezepte", "archiv", "vorschlag", "helfen", "erstattung"] },
   { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["status", "meinedaten", "einstellungen", "oberflaeche", "effekte", "figur", "figurbau"] },
   { id: "freizeit", sym: "🎲", t: "Spiele & Notfall", videos: ["spiele", "sos"] },
   { id: "leitung", sym: "🗂️", t: "Für die Clubleitung", videos: ["leitung"] },
@@ -6247,7 +6297,7 @@ async function twFrageStart(vorgabe = "") {
 // KC-CLUB-TWINKEY-VIDEOS (2.252.0, Wunsch Hansi „Du kannst es im Hilfetext nachlesen. Aber es gibt auch Erklär-Videos. Was möchtest du dir
 // ansehen?“): Antwort-Eintrag → passende Erklär-Videos (Registry RUNDGAENGE, nur die für das Mitglied sichtbaren) und der ausführliche Hilfetext.
 // Neue Videos hier einfach dem passenden Eintrag (f: Twinkeys Fragen, h: Hilfe-Zentrum) zuordnen.
-const TW_VIDEOS = { "h:wetter": ["effekte"], "f:dienstwunsch": ["dienst"], "f:dienstplan": ["dienst"], "f:status": ["status"], "f:protokoll": ["lesen"], "f:handbuch": ["lesen"], "f:adresse": ["meinedaten"], "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
+const TW_VIDEOS = { "h:wetter": ["effekte"], "f:feedback": ["feedback"], "f:dienstwunsch": ["dienst"], "f:dienstplan": ["dienst"], "f:status": ["status"], "f:protokoll": ["lesen"], "f:handbuch": ["lesen"], "f:adresse": ["meinedaten"], "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
   "f:nachricht": ["nachricht"], "f:termin-neu": ["termin"], "f:zettel": ["pinnwand"], "f:vorschlag": ["vorschlag"], "f:zusagen": ["zusagen"],
   "f:foto-album": ["fotos"], "f:geld": ["erstattung"], "f:notfall": ["sos"], "f:hilfe-suchen": ["helfen"], "f:leihen": ["helfen"], "f:anrufen": ["mitglieder"], "f:online": ["mitglieder"],
   "f:spielen": ["spiele"], "f:archiv": ["archiv"] }; // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4

@@ -1,11 +1,18 @@
 {
-  "version": "2.269.0",
+  "version": "2.270.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "🎬 Vier neue Erklär-Videos: Mein Dienst & Dienstplan, Mein Status, Protokolle & Dokumente, Meine Daten & Änderungen"
+    "🎬 Drei neue Erklär-Videos: Rezeptbuch, Meine Schulung, Feedback geben"
   ],
   "verlauf": [
+    {
+      "version": "2.270.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "🎬 Drei neue Erklär-Videos: Rezeptbuch, Meine Schulung, Feedback geben"
+      ]
+    },
     {
       "version": "2.269.0",
       "datum": "2026-10-11",

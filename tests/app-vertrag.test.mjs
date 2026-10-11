@@ -8453,3 +8453,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/RG\.zurueck\.push\(\(\) => \$\(id\)\?\.remove\(\)\)/.test(b) && /\$\("statusBlatt"\)\.classList\.add\("versteckt"\); \$\("statusBlatt"\)\.classList\.remove\("rg-zeigen"\)/.test(b), "Fenster am Ende zu");
 }
 
+// 2.270.0 KC-CLUB-ERKLAERVIDEOS-6 (Wunsch Hansi): Rezeptbuch, Schulung, Feedback – nur vorgeführt
+{
+  const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-6"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-EFFEKTE"));
+  assert.ok(/\{ id: "rezepte", stand: "1", [^\n]*st: \(\) => RG_REZEPTE, nur: \(\) => frei\("rezepte"\) \}/.test(html) && /\{ id: "schulung", stand: "1", [^\n]*RG_SCHULUNG \}/.test(html) && /\{ id: "feedback", stand: "1", [^\n]*RG_FEEDBACK \}/.test(html), "drei Videos registriert, Rezeptbuch nur mit Freigabe");
+  assert.ok(!/[;{(]\s*(await )?(fbSenden|smWaehlen|smAbsagen|rzSpeichern|rzEinkauf|rzLoeschen)\(|\bapi\(/.test(b), "nichts geschickt, gewählt oder angelegt");
+  assert.ok(/FB\.schritt = RG\.fbAlt/.test(b), "Feedback-Schritt am Ende zurück");
+}
+
