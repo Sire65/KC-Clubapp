@@ -1,12 +1,18 @@
 {
-  "version": "2.266.0",
+  "version": "2.267.0",
   "datum": "2026-10-11",
   "stufe": "RC",
   "neu": [
-    "👁 Erklär-Videos: Auge mit der Zahl, wie oft du ein Video angesehen hast – und ✅ grüner Haken, wenn schon gesehen",
-    "🎬 Alle Videos geprüft: Einstellungen und Rundgang kürzer und klarer"
+    "💬 Freundlicher Hinweis beim Start, wenn ungelesene Nachrichten warten – mit „Jetzt ansehen“"
   ],
   "verlauf": [
+    {
+      "version": "2.267.0",
+      "datum": "2026-10-11",
+      "neu": [
+        "💬 Freundlicher Hinweis beim Start, wenn ungelesene Nachrichten warten – mit „Jetzt ansehen“"
+      ]
+    },
     {
       "version": "2.266.0",
       "datum": "2026-10-11",

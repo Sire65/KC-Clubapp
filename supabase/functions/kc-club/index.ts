@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.266.0";
+const SERVER_VERSION = "2.267.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1053,6 +1053,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   spiel_einladung: (w) => ({ an: w?.an !== false }),
   // KC-CLUB-EINWEISUNG (2.4.0): Erklärkarte beim ersten Öffnen eines Bereichs – an/aus (Standard an) + welche schon gesehen
   // KC-CLUB-RUNDGANG-HINWEIS (2.243.0, Wunsch Hansi): Startseiten-Hinweis auf den Rundgang – erledigt (angesehen/„Nein, danke“) seit wann
+  // KC-CLUB-START-HINWEIS (2.267.0, Wunsch Hansi): einmaliger Hinweis beim nächsten Start (vom Admin gesetzt); das Mitglied setzt nur „erledigt“
+  start_hinweis: (w) => ({ art: ["ungelesen"].includes(String(w?.art)) ? String(w.art) : null, erledigt: w?.erledigt && !isNaN(Date.parse(String(w.erledigt))) ? new Date(String(w.erledigt)).toISOString() : null }),
   // KC-CLUB-VIDEO-GESEHEN (2.266.0, Wunsch Hansi): je Erklär-Video, wie oft bis zum Ende angesehen und wann zuletzt – nur Zahlen, höchstens 80 Videos
   videos: (w) => Object.fromEntries(Object.entries(w && typeof w === "object" && !Array.isArray(w) ? w : {}).filter(([id]) => /^[a-z]{2,24}$/.test(id)).slice(0, 80)
     .map(([id, v]: [string, any]) => [id, { n: Math.max(0, Math.min(9999, Math.floor(Number(v?.n) || 0))), z: v?.z && !isNaN(Date.parse(String(v.z))) ? new Date(String(v.z)).toISOString() : null }])),

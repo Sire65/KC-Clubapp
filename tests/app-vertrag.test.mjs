@@ -5736,6 +5736,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(!/Tipp deine Frage/.test(html) && !/Neu: Mit dem Häkchen Auf der Startseite/.test(html), "Sprache geglättet");
 }
 
+// 2.267.0 KC-CLUB-START-HINWEIS (Wunsch Hansi): einmaliger Hinweis beim nächsten Start auf ungelesene Nachrichten – vom Admin je Mitglied gesetzt
+{
+  assert.ok(/start_hinweis: \(w\) => \(\{ art: \["ungelesen"\]\.includes\(String\(w\?\.art\)\)/.test(server), "Server: Einstellung start_hinweis nur mit bekannter Art und Datum");
+  assert.ok(/if \(!h \|\| h\.erledigt \|\| h\.art !== "ungelesen" \|\| !ICH\) return;/.test(html) && /const n = Number\(INIT\?\.ungelesen\) \|\| 0/.test(html) && /if \(!n\) return erledigt\(\);/.test(html), "nur einmal, echte Zahl, ohne Ungelesenes still erledigt");
+  assert.ok(/if \(document\.querySelector\("\.blatt:not\(\.versteckt\), \.dlg, #rgSchicht"\) \|\| aktuelleAnsicht !== "start"\)/.test(html), "erst wenn kein anderes Fenster offen ist");
+  assert.ok(/Hallo \$\{ICH\.vorname\},\\ndu hast/.test(html) && /tippe doch \$\{lage\} auf die Nachrichten-Kachel/.test(html) && /const lage = startNachrichtenLage\(\);/.test(html), "Hansis Text mit Vorname, Zahl und echter Lage der Kachel");
+  assert.ok(!/KC-P-M0006|Willfried|Wilfried/.test(html.slice(html.indexOf("// ---------- KC-CLUB-START-HINWEIS"), html.indexOf("// KC-CLUB-VIDEO-GESEHEN"))), "keine Person fest im Programm");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

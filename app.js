@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.266.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.267.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2192,6 +2192,31 @@ function rundgangSchritt(d, auto) {
 // ---------- KC-CLUB-VIDEO-BEWERTUNG (2.246.0, Wunsch Hansi): am Ende „Gefallen?“ und „Hilft es dir weiter?“ mit 👍/👎 ----------
 // Bewertung je Mitglied, Video und Fassung (RUNDGAENGE[].stand) auf dem Server; Auswertung nur für den Admin (nur Zahlen).
 const RG_BEW = { gefallen: null, hilft: null };
+// ---------- KC-CLUB-START-HINWEIS (2.267.0, Wunsch Hansi: ein Mitglied beim nächsten Start auf ungelesene Nachrichten hinweisen) ----------
+// Allgemein, nichts fest verdrahtet: Der Admin setzt beim Mitglied die Einstellung „start_hinweis“ = { art: "ungelesen" }. Beim nächsten Start
+// (nach den anderen Start-Fenstern) kommt einmal: „Hallo <Vorname>, du hast <n> ungelesene Nachrichten …“ – mit der echten Zahl und der echten
+// Lage der Nachrichten-Kachel. Danach „erledigt“. Ohne ungelesene Nachrichten wird nur still erledigt.
+const SH_START = { geprueft: false, versuche: 0 };
+function startNachrichtenLage() {
+  const k = document.querySelector('#raster .kachel[data-id="kommunikation"]');
+  if (!k || !rgSichtbar(k) || aktuelleAnsicht !== "start") return einfach() ? "auf der Startseite" : "im Register Club";
+  const r = k.getBoundingClientRect(), raster = $("raster").getBoundingClientRect(), mitte = raster.left + raster.width / 2;
+  const reihe = [...document.querySelectorAll("#raster > .kachel")].filter(rgSichtbar).findIndex((x) => x === k) < kaSpalten() ? "oben " : "";
+  return `${reihe}${r.left + r.width / 2 < mitte ? "links" : "rechts"} auf der Startseite`;
+}
+async function startHinweisPruefen() {
+  const h = INIT?.einstellungen?.start_hinweis; if (!h || h.erledigt || h.art !== "ungelesen" || !ICH) return;
+  if (document.querySelector(".blatt:not(.versteckt), .dlg, #rgSchicht") || aktuelleAnsicht !== "start") { if (++SH_START.versuche < 20) setTimeout(startHinweisPruefen, 3000); return; } // erst wenn nichts anderes offen ist
+  const n = Number(INIT?.ungelesen) || 0, erledigt = () => einstSpeichern("start_hinweis", { art: h.art, erledigt: new Date().toISOString() }).then(() => { INIT.einstellungen.start_hinweis = { ...h, erledigt: new Date().toISOString() }; }).catch((e) => console.warn("start_hinweis", e));
+  if (!n) return erledigt();
+  if (!einfach() && reg !== "verein" && REGISTER.some(([r]) => r === "verein") && kacheln("verein").some((k) => k.id === "kommunikation")) register("verein");
+  const lage = startNachrichtenLage();
+  const ja = await frage(`Hallo ${ICH.vorname},\ndu hast ${n === 1 ? "eine ungelesene Nachricht" : `${n} ungelesene Nachrichten`}. Möchtest du sie jetzt anschauen, dann tippe doch ${lage} auf die Nachrichten-Kachel – oder gleich hier auf „💬 Jetzt ansehen“.`, { ja: "💬 Jetzt ansehen", nein: "Später" });
+  erledigt();
+  if (ja) return zeige("nachrichten");
+  const k = document.querySelector('#raster .kachel[data-id="kommunikation"]'); // „Später“: die Kachel kurz zeigen
+  if (k) { k.scrollIntoView({ block: "center", behavior: "smooth" }); k.classList.add("hervor"); setTimeout(() => k.classList.remove("hervor"), 4000); }
+}
 // KC-CLUB-VIDEO-GESEHEN (2.266.0, Wunsch Hansi „an jedes Video ein Auge mit der Zahl, wie oft schon angesehen, und einen grünen Haken, wenn schon angesehen“):
 // gezählt wird, wenn ein Video bis zum Ende läuft (Bewertungs-Karte). Gespeichert beim Server (Einstellung „videos“, alle Geräte) und als
 // Rückfall auf dem Gerät; zusammengeführt wird mit dem größeren Wert, damit nie eine Zahl verloren geht.
@@ -15388,6 +15413,7 @@ async function neuLadenRoh(vonHand) {
     if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); herzStarten(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
+    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); } // KC-CLUB-START-HINWEIS
     if (!begruesst) ustPruefen(); // KC-CLUB-UNTERSTUETZUNG (2.85.0): einmal fragen, wie viel Hilfe gewünscht ist
     designUebernehmen(INIT.einstellungen?.design); infoFelderAktualisieren(); infoStartUebernehmen(INIT.einstellungen?.infofeld); ansichtInfo();
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
