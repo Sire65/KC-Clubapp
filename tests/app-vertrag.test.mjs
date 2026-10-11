@@ -8054,3 +8054,10 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/RT_KEY = "sb_publishable_/.test(html) && !/service_role|SERVICE_ROLE/.test(html.slice(html.indexOf("KC-CLUB-REALTIME (2.226.0"), html.indexOf("KC-CLUB-REALTIME (2.226.0") + 5000)), "nur öffentlicher Browser-Schlüssel");
   assert.ok(/function rtSpaeter\(\)[\s\S]{0,200}RT\.warte \* 2, RT_WARTE_MAX_MS/.test(html) && /PUSH_AKTIV \|\| rtAn\(\) \? 60000 : 15000/.test(html) && /rtNachholen\(\)/.test(html), "Ausfall: Neuverbinden mit Pause, sonst alter Takt; Lücke nachholen");
 }
+
+// 2.227.0 KC-CLUB-REALTIME-LED (Wunsch Hansi): eigene LED für die direkte Leitung – grün/gelb/rot/blau/grau, nur Admin, stumm → neu aufbauen
+{
+  assert.ok(/id="ledRt"/.test(lies("index.html")) && /function rtZustand\(\)/.test(html) && /\["gruen", "Direkte Leitung steht/.test(html) && /\["gelb", "Direkte Leitung antwortet nicht/.test(html) && /\["rot", `Direkte Leitung unterbrochen/.test(html) && /\["blau", "Direkte Leitung pausiert/.test(html) && /\["grau", "Direkte Leitung nicht verfügbar/.test(html), "fünf Farben");
+  assert.ok(/led\.classList\.toggle\("versteckt", !ICH\?\.admin\); if \(!ICH\?\.admin\) return;/.test(html), "nur Admin");
+  assert.ok(/Date\.now\(\) - \(RT\.letzte \|\| 0\) > RT_TOT_MS/.test(html) && /RT_STILL_MS = 70000, RT_TOT_MS = 90000/.test(html), "veraltet ≠ OK, stumme Leitung wird neu aufgebaut");
+}

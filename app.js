@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.226.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.227.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -3700,13 +3700,49 @@ function rtVerbinden() {
   };
   ws.onmessage = (e) => {
     let d; try { d = JSON.parse(e.data); } catch { return; }
-    if (d.event === "phx_reply" && d.topic === "realtime:" + kanal && d.payload?.status === "ok" && !RT.ok) { RT.ok = true; RT.warte = 1000; onlineTakt(); rtNachholen(); }
+    RT.letzte = Date.now(); // jede Antwort (auch auf den Herzschlag) zeigt: Leitung lebt
+    if (d.event === "phx_reply" && d.topic === "realtime:" + kanal && d.payload?.status === "ok" && !RT.ok) { RT.ok = true; RT.warte = 1000; onlineTakt(); rtNachholen(); rtLedZeigen(); }
     else if (d.event === "broadcast" && d.payload?.event === "neu") rtSignal(d.payload.payload || {});
   };
-  ws.onclose = () => { if (RT.ws !== ws) return; const war = RT.ok; RT.ok = false; RT.ws = null; clearInterval(RT.herz); if (war) onlineTakt(); if (!RT.zu) rtSpaeter(); };
+  ws.onclose = () => { if (RT.ws !== ws) return; const war = RT.ok; RT.ok = false; RT.ws = null; clearInterval(RT.herz); if (war) onlineTakt(); if (!RT.zu) rtSpaeter(); rtLedZeigen(); };
   ws.onerror = () => {};
 }
-function rtSpaeter() { clearTimeout(RT.neu); RT.neu = setTimeout(rtVerbinden, RT.warte); RT.warte = Math.min(RT.warte * 2, RT_WARTE_MAX_MS); }
+function rtSpaeter() { clearTimeout(RT.neu); RT.naechster = Date.now() + RT.warte; RT.neu = setTimeout(rtVerbinden, RT.warte); RT.warte = Math.min(RT.warte * 2, RT_WARTE_MAX_MS); }
+// ---- KC-CLUB-REALTIME-LED (2.227.0, Wunsch Hansi „weitere LED, wenn Realtime scharf ist – blau, grau, gelb, grün, rot“), nur Admin ----
+// grün = Leitung steht (Antwort < 70 s) · gelb = wird aufgebaut bzw. antwortet nicht mehr (Regel 11: veraltet ≠ OK)
+// rot = unterbrochen, neuer Versuch läuft – die App fragt solange selbst nach · blau = bewusst pausiert (Hintergrund, Notbetrieb)
+// grau = nicht verfügbar (kein Kanal vom Server / Gerät kann keine Leitung). Antwortet sie > 90 s nicht, wird sie neu aufgebaut.
+const RT_STILL_MS = 70000, RT_TOT_MS = 90000;
+function rtZustand() {
+  if (!INIT?.rtKanal || typeof WebSocket === "undefined") return ["grau", "Direkte Leitung nicht verfügbar – die App fragt selbst nach"];
+  if (document.body.classList.contains("im-notbetrieb")) return ["blau", "Direkte Leitung pausiert (Notbetrieb)"];
+  if (document.hidden) return ["blau", "Direkte Leitung pausiert (App im Hintergrund)"];
+  if (RT.ok) return Date.now() - (RT.letzte || 0) < RT_STILL_MS ? ["gruen", "Direkte Leitung steht – Neues kommt sofort"] : ["gelb", "Direkte Leitung antwortet nicht – wird geprüft"];
+  if (RT.ws && RT.ws.readyState <= 1) return ["gelb", "Direkte Leitung wird aufgebaut …"];
+  const s = RT.naechster ? Math.max(0, Math.round((RT.naechster - Date.now()) / 1000)) : null;
+  return ["rot", `Direkte Leitung unterbrochen${s != null ? ` – neuer Versuch in ${s} s` : ""}; die App fragt solange selbst nach`];
+}
+function rtLedZeigen() {
+  const led = $("ledRt"); if (!led) return;
+  led.classList.toggle("versteckt", !ICH?.admin); if (!ICH?.admin) return; // Mitglieder: keine Technik-Lampe (KC-CLUB-KOPF-EINFACH)
+  if (RT.ok && Date.now() - (RT.letzte || 0) > RT_TOT_MS && !document.hidden) { try { RT.ws?.close(); } catch {} } // stumm → neu aufbauen
+  const [farbe, text] = rtZustand();
+  led.className = "led led-rt " + farbe; led.title = text; led.setAttribute("aria-label", text);
+}
+setInterval(rtLedZeigen, 3000);
+function rtBlatt() {
+  const [farbe, text] = rtZustand(), zu = () => f.remove();
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">⚡ Direkte Leitung (Realtime)</h3>
+    <div class="vb-status"><i class="led ${farbe}"></i><b>${esc(text)}</b></div>
+    <table class="vb-tabelle">
+      <tr><td>Signale seit App-Start</td><td>${RT.signale}</td></tr>
+      <tr><td>Letzte Antwort der Leitung</td><td>${RT.letzte ? fZeit.format(new Date(RT.letzte)) + " Uhr" : "–"}</td></tr>
+    </table>
+    <p class="hinweis" style="margin:8px 0">🟢 steht – Neues kommt sofort<br>🟡 wird aufgebaut oder antwortet nicht<br>🔴 unterbrochen – die App fragt solange selbst nach<br>🔵 pausiert (Hintergrund, Notbetrieb)<br>⚪ nicht verfügbar</p>
+    <div class="dlg-knoepfe"><button class="knopf" data-neu>🔄 Neu verbinden</button><button class="knopf haupt" data-zu>Schließen</button></div>`, zu);
+  f.querySelector("[data-zu]").onclick = zu;
+  f.querySelector("[data-neu]").onclick = () => { RT.warte = 1000; rtTrennen(); rtVerbinden(); zu(); setTimeout(rtLedZeigen, 1500); };
+}
 function rtTrennen() { RT.zu = true; clearTimeout(RT.neu); clearInterval(RT.herz); const ws = RT.ws; RT.ws = null; RT.ok = false; try { ws?.close(); } catch {} }
 // nach dem (Wieder-)Verbinden einmal nachsehen, damit in der Lücke nichts verloren geht
 function rtNachholen() { onlinePing(); if (chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } }

@@ -3154,7 +3154,7 @@
       <div class="statusleiste">
         <button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button>
         <span class="sl-luecke"></span>
-        <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led grau" id="ledComm"></i><i class="led daten" id="ledDaten"></i><i class="led-trenner" aria-hidden="true"></i><i class="led grau led-online" id="ledOnline" role="button" tabindex="0" title="Wer ist gerade online?" aria-label="Wer ist gerade online?" onclick="event.stopPropagation();onlineBlatt()"></i></button>
+        <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led grau" id="ledComm"></i><i class="led daten" id="ledDaten"></i><i class="led-trenner" aria-hidden="true"></i><i class="led grau led-online" id="ledOnline" role="button" tabindex="0" title="Wer ist gerade online?" aria-label="Wer ist gerade online?" onclick="event.stopPropagation();onlineBlatt()"></i><i class="led grau led-rt versteckt" id="ledRt" role="button" tabindex="0" title="Direkte Leitung (Realtime)" aria-label="Direkte Leitung (Realtime)" onclick="event.stopPropagation();rtBlatt()"></i></button>
         <span class="sl-extra"><button class="herz" id="herzKnopf" title="Lebenszeichen – antippen: die letzten 15" aria-label="Lebenszeichen, antippen für die letzten 15" onclick="herzListe()">♥</button><button id="sparZeichen" class="spar-zeichen" title="Sparmodus an – antippen für Infos" aria-label="Sparmodus an" onclick="sparInfo()">🐢</button><button id="inkoKnopf" title="Inkognito – antippen zum Umschalten" aria-label="Inkognito umschalten" aria-pressed="false" onclick="inkognitoSetzen(!inkognitoAn())">🕶️</button></span>
       </div>
       <div class="info" id="heroInfo"><h2>Einen Moment …</h2><div class="unter">Daten werden geladen.</div></div>
@@ -4016,6 +4016,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.226.0" data-v="2.226.0"></script>
+<script src="app.js?v=2.227.0" data-v="2.227.0"></script>
 </body>
 </html>

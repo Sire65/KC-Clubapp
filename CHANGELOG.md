@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.227.0 – 2026-10-11 – LED für die direkte Leitung
+KC-CLUB-REALTIME-LED: Neue LED oben (nur Admin) zeigt die direkte Leitung: 🟢 steht – Neues kommt sofort, 🟡 wird aufgebaut oder antwortet nicht, 🔴 unterbrochen (die App fragt solange selbst nach), 🔵 pausiert (Hintergrund/Notbetrieb), ⚪ nicht verfügbar. Antippen zeigt Stand, Anzahl der Signale und „🔄 Neu verbinden“. Antwortet die Leitung 90 s nicht, baut die App sie selbst neu auf.
+
 ## 2.226.0 – 2026-10-11 – Direkte Leitung (Realtime) für Chat, Anklopfen und Anrufe
 KC-CLUB-REALTIME: Die App hält eine direkte Leitung zum Server (Supabase Realtime, kostenlos). Neue Nachrichten, „schreibt gerade“, Anklopfen und Anrufe kommen sofort statt im Abfrage-Takt – das spart Akku und Server-Aufrufe. Über die Leitung kommt nur ein Signal („es gibt Neues“), nie Text oder Namen; der Inhalt kommt wie bisher sicher über den Server. Fällt die Leitung aus, fragt die App wie früher selbst nach und verbindet sich von allein neu.
 
