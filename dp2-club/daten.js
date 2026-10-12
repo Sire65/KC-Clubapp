@@ -59,6 +59,8 @@
   K.wishes = [...(D.meine?.entries || []).map((e, i) => alsWunsch(ich, e, i, "CLUB")), ...(D.kollegen || []).flatMap((k) => (k.entries || []).map((e, i) => alsWunsch(k.personId, e, i, "CLUB-K")))];
   K.memberUxData = { assistantStandby: { [ich]: Object.fromEntries(Object.entries(D.meine?.standby || {}).map(([t, b]) => [t, ordnen(kopie(b))])) } };
   if (typeof D.meine?.share_with_colleagues === "boolean") K.memberUxData.colleagueSharing = { [ich]: { allow: D.meine.share_with_colleagues } };
+  // 2.312.0 KC-DP-BEREITSCHAFT-GENERELL (DP2 Build 268): einmalige Startfrage „generell Bereitschaft?“ – Nein = keine Tagesfrage
+  if (typeof D.meine?.standby_general === "boolean") K.memberUxData.standbyGeneral = { [ich]: { allow: D.meine.standby_general } };
   K.planSharing = kopie(D.teilen || []);
 
   // --- Eigener Sollplan (von DP2 veröffentlicht) ---
@@ -75,6 +77,7 @@
       .sort((a, b) => a.date.localeCompare(b.date) || a.start - b.start || a.wishType.localeCompare(b.wishType)),
     standby: K.memberUxData?.assistantStandby?.[ich] || {},
     teilen: typeof K.memberUxData?.colleagueSharing?.[ich]?.allow === "boolean" ? K.memberUxData.colleagueSharing[ich].allow : null,
+    bereitschaftGenerell: typeof K.memberUxData?.standbyGeneral?.[ich]?.allow === "boolean" ? K.memberUxData.standbyGeneral[ich].allow : null,
   });
   let zuletzt = JSON.stringify(stand()), laeuft = null, nochmal = false;
   async function senden() {

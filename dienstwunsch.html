@@ -10,6 +10,8 @@
      liegen UNVERÄNDERT in dp2/ (Nachweis dp2/QUELLE.json). Nur Daten (dp2-club/daten.js) und Start (dp2-club/start.js)
      kommen aus der Club-App: Tage/Kernzeit von DP2, eigener Wunschstand aus dem Wunsch-Eingang (Supabase). -->
 <style>.ux-userchip{display:none!important}
+/* 2.312.0 KC-CLUB-DW-KOMPAKT: DP2-Kopfzeile („KC DP2 · Weihnachtsmarkt“) wird in der Club-App nicht gebraucht – der Club-Kopf steht darüber */
+.ux-topbar{display:none!important}
 #dwLaden{position:fixed;inset:0;display:grid;place-items:center;font:600 1.05rem system-ui,sans-serif;color:#5a2a1c;background:#fff8ee;z-index:99;text-align:center;padding:24px}
 /* 1.40.0 (Hinweis Hansi „keine drehende Kochmütze“): die weiße Mütze war auf Hellbeige fast unsichtbar –
    jetzt wie in der Club-App: weiße Mütze auf dunkelrotem Kreis, der sich dreht */
@@ -25,6 +27,6 @@
 <body>
 <div id="dwLaden" role="status"><div><div class="muetze"><img src="../kc-kochmuetze-weiss.webp" alt=""></div>Twinkey wird geladen …</div></div>
 <div id="kcdpUxRoot"></div>
-<script src="../dp2-club/lader.js?v=2.311.0"></script>
+<script src="../dp2-club/lader.js?v=2.312.0"></script>
 </body>
 </html>

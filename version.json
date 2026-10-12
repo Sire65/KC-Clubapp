@@ -1,15 +1,22 @@
 {
-  "version": "2.311.0",
+  "version": "2.312.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🥁 Deckel-Klatschen: die Deckel treffen sich vor der Brust – genau dann klingt das Becken",
-    "🪵 Nudelholz: beide Hände an den Griffen, kräftig vor und zurück",
-    "✊ Fäuste machen: Arme vor, Hände weit auf – zurück und fest zur Faust",
-    "🧻 Ab und zu wischt Twinkey sich vor dem Ausschütteln die Stirn",
-    "😄 Neue Sprüche: Beinstulpen von Nena, Möhren schon geschält"
+    "📝 Dienstwünsche: oben nur noch eine Reihe – die Frage steht gleich oben",
+    "🟧 „Nur wenn nötig“ bei der Kann-Zeit gut sichtbar, bei der Wunschzeit kein graues Kästchen mehr",
+    "🛟 Neu am Anfang: generell bereit für Bereitschaft? Bei Nein keine tägliche Frage mehr"
   ],
   "verlauf": [
+    {
+      "version": "2.312.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "📝 Dienstwünsche: oben nur noch eine Reihe – die Frage steht gleich oben",
+        "🟧 „Nur wenn nötig“ bei der Kann-Zeit gut sichtbar, bei der Wunschzeit kein graues Kästchen mehr",
+        "🛟 Neu am Anfang: generell bereit für Bereitschaft? Bei Nein keine tägliche Frage mehr"
+      ]
+    },
     {
       "version": "2.311.0",
       "datum": "2026-10-12",

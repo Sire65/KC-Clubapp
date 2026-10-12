@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.312.0 – 2026-10-12 – Dienstwünsche: mehr Platz, Bereitschaft einmal fragen
+Die Dienstwunsch-Eingabe ist auf dem Handy kompakter: oben nur noch eine Reihe Knöpfe, der Sperrzeit-Tipp ist zugeklappt, die doppelte DP2-Kopfzeile ist weg – die Frage steht gleich oben. „Nur wenn nötig“ ist bei der Kann-Zeit ein auffälliges oranges Feld mit Erklärung, bei der Wunschzeit ist das ausgegraute Kästchen weg. Neu am Anfang: „Bist du generell bereit, auch Bereitschaftsdienste zu übernehmen?“ – bei Nein kommt die Bereitschaftsfrage nicht mehr an jedem Tag.
+
 ## 2.311.0 – 2026-10-12 – Twinkey: Becken, Nudelholz und Schweißtuch
 Beim Deckel-Klatschen treffen sich die Topfdeckel jetzt genau vor der Brust – und genau dann klingt das Becken. Das Nudelholz wird mit beiden Händen an den Griffen kräftig vor- und zurückgerollt, bei „Fäuste machen“ streckt Twinkey die Arme vor und öffnet die Hände weit. Ab und zu wischt er sich vor dem Ausschütteln mit dem Schweißtuch die Stirn, und er hat neue Sprüche (Beinstulpen von Nena, Möhren schon geschält).
 

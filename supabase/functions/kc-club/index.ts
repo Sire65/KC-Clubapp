@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.301.0";
+const SERVER_VERSION = "2.312.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -7807,7 +7807,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_dp_wish_phase_settings").select("status,close_at,deadline_date").eq("org_id", ORG).eq("project_id", DW.projekt).maybeSingle(),
           db.from("kc_dp_days_published").select("work_date,day_type,day_start,day_end,core_start,core_end,pre_open_minutes,demand,program,label,published_at")
             .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "published").order("work_date"),
-          db.from("kc_dp_wish_inbox").select("revision,status,entries,standby,comment,share_with_colleagues,submitted_at,taken_at,result")
+          db.from("kc_dp_wish_inbox").select("revision,status,entries,standby,comment,share_with_colleagues,standby_general,submitted_at,taken_at,result")
             .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).eq("source", "club_app").maybeSingle(),
           db.from("kc_dp_wish_inbox").select("person_id,entries").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("share_with_colleagues", true).neq("person_id", ich.person_id),
           db.from("kc_dp_plan_sharing").select("person_id,plan_kind,allow_view,allow_copy").eq("org_id", ORG),
@@ -7860,9 +7860,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           standby[tag] = bereitschaft(b);
         }
         const teilen = typeof p.teilen === "boolean" ? p.teilen : null;
+        const bereitGenerell = typeof p.bereitschaftGenerell === "boolean" ? p.bereitschaftGenerell : null; // 2.312.0 KC-DP-BEREITSCHAFT-GENERELL
         const { data: alt } = await db.from("kc_dp_wish_inbox").select("id,revision").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).eq("source", "club_app").maybeSingle();
         const zeile = { org_id: ORG, event_id: DW.veranstaltung, person_id: ich.person_id, source: "club_app", status: "offen", entries, standby,
-          comment: txt(p.comment, 500) || null, share_with_colleagues: teilen, submitted_at: jetzt(), updated_at: jetzt() };
+          comment: txt(p.comment, 500) || null, share_with_colleagues: teilen, standby_general: bereitGenerell, submitted_at: jetzt(), updated_at: jetzt() };
         const r = alt ? await db.from("kc_dp_wish_inbox").update({ ...zeile, revision: alt.revision + 1 }).eq("id", alt.id).select("revision").single()
           : await db.from("kc_dp_wish_inbox").insert({ ...zeile, revision: 1 }).select("revision").single();
         if (r.error) throw new Fehler("Wünsche konnten nicht gespeichert werden.", 500);

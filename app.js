@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.311.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.312.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -3170,7 +3170,7 @@ const HILFE = [
   { id: "merken", thema: "nachrichten", sym: "⭐", t: "Eine Nachricht für später merken", x: "Manchmal liest man etwas und möchte es später schnell wiederfinden. Tipp die Nachricht an und wähle <b>„⭐ Merken“</b>. Alles Gemerkte liegt in 💬 Nachrichten oben unter <b>„⭐ Gemerkt“</b> – diese Liste siehst nur du.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "chat_abstimmung", thema: "nachrichten", sym: "📊", t: "Schnell mal abstimmen", x: "Grillen oder Pizza? Freitag oder Samstag? Über <b>📎</b> unter dem Schreibfeld → <b>„📊 Abstimmung“</b> stellst du eine Frage mit 2 bis 8 Antworten. Alle sehen gleich, wie es gerade steht.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "entwickler", thema: "technik", sym: "👨‍🍳", t: "Wer hat die Club-App gebaut?", x: "Die Club-App hat <b>Hans-Joachim Koch</b> entwickelt und gestaltet – Koch, Küchenmeister und Gründungsmitglied des Köcheclubs. Mehr über ihn mit Foto: <b>⚙️ Einstellungen → ℹ️ App-Info → „👨‍🍳 Über den Entwickler“</b>.", zeig: () => entwicklerZeigen(), seit: "2.23.32" },
-  { id: "wunschbogen", thema: "termine", sym: "🖨️", t: "Leeren Wunschbogen drucken oder mailen", x: "Unter <b>📝 Dienstwünsche</b> oben auf <b>„🖨️ Leerer Bogen“</b> tippen. Du bekommst deinen persönlichen Bogen mit Namen und oben rechts einem QR-Code mit deiner Mitglieds-ID. <b>🖨️ Drucken</b> – oder ohne Drucker <b>✉️ Per E-Mail an mich</b>, dann kommt er als PDF in dein Postfach. Von Hand ausfüllen und die Zeiten danach mit Twinkey eintragen.", zeig: () => wbStart(), seit: "2.23.28" },
+  { id: "wunschbogen", thema: "termine", sym: "🖨️", t: "Leeren Wunschbogen drucken oder mailen", x: "Unter <b>📝 Dienstwünsche</b> oben auf <b>„🖨️ Bogen“</b> tippen. Du bekommst deinen persönlichen Bogen mit Namen und oben rechts einem QR-Code mit deiner Mitglieds-ID. <b>🖨️ Drucken</b> – oder ohne Drucker <b>✉️ Per E-Mail an mich</b>, dann kommt er als PDF in dein Postfach. Von Hand ausfüllen und die Zeiten danach mit Twinkey eintragen.", zeig: () => wbStart(), seit: "2.23.28" },
   { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste einmal auf einen Chat tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
@@ -11564,13 +11564,14 @@ function dwOeffnen() {
   if (document.getElementById("dwFenster")) return;
   const f = document.createElement("div"); f.id = "dwFenster"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true"); f.setAttribute("aria-label", "Dienstwünsche");
   f.style.cssText = "position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;background:#fff8ee";
-  // 2.23.29 (Hansi: „Drucker-Symbol reingequetscht“): Kopf in zwei geordneten Reihen – oben Zurück + Titel, darunter die zwei Aktionen
+  // 2.23.29 (Hansi: „Drucker-Symbol reingequetscht“): geordnete Knöpfe. 2.312.0 KC-CLUB-DW-KOMPAKT (Hansi nach der Eingabe mit Christina:
+  // „man muss den Bildschirm runterschieben, weil oben zu viele Sachen stehen“): alles in EINER Reihe, der Sperrzeit-Tipp ist zugeklappt
   f.innerHTML = `<div class="dw-kopf"><div class="dw-reihe">
-    <button class="knopf klein" data-k="zu">← Zurück zur Club-App</button><b class="dw-titel">📝 Dienstwünsche</b></div><div class="dw-reihe dw-aktionen">
-    <button class="knopf klein" data-k="bogen" title="Leeren persönlichen Wunschbogen mit QR-Code drucken oder per E-Mail schicken">🖨️ Leerer Bogen</button>
-    <button class="knopf haupt klein" data-k="fertig" title="Aufstellung als Bestätigung per App-Nachricht und E-Mail">✅ Fertig – Bestätigung</button></div>
-    <p class="dw-tipp">💡 <b>Sperrzeit nur, wenn du innerhalb deiner Kann-Zeit kurz weg musst.</b> Beispiel: Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr.
-      Außerhalb der Kann-Zeit bist du automatisch frei.</p></div>
+    <button class="knopf klein" data-k="zu" aria-label="Zurück zur Club-App">← Zurück</button><b class="dw-titel">📝 Dienstwünsche</b>
+    <button class="knopf klein" data-k="bogen" title="Leeren persönlichen Wunschbogen mit QR-Code drucken oder per E-Mail schicken" aria-label="Leerer Bogen">🖨️ Bogen</button>
+    <button class="knopf haupt klein" data-k="fertig" title="Aufstellung als Bestätigung per App-Nachricht und E-Mail">✅ Fertig</button></div>
+    <details class="dw-tipp"><summary>💡 Tipp: Wann eine Sperrzeit?</summary><b>Sperrzeit nur, wenn du innerhalb deiner Kann-Zeit kurz weg musst.</b> Beispiel: Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr.
+      Außerhalb der Kann-Zeit bist du automatisch frei.</details></div>
     <div style="flex:1;position:relative;display:flex">
       <!-- 1.40.0: drehende Mütze schon, während die Twinkey-Seite selbst noch lädt (danach zeigt die Seite ihre eigene) -->
       <div class="warten an" style="position:absolute;left:50%;top:42%;z-index:0"><div class="muetze"><img src="kc-kochmuetze-weiss.webp" alt=""></div><b>Twinkey wird geladen …</b></div>
