@@ -1,11 +1,20 @@
 {
-  "version": "2.299.2",
+  "version": "2.299.3",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "👋 Bühne: Twinkey begrüßt zum Start kurz – „Hallo! Lass uns ein bisschen Bewegung in den Alltag einbauen. Mach nur so viel, wie dir guttut. Los geht’s!“"
+    "🥁 Bühne: Beim Topf-Trommeln klingt der Topf mit – jeder Kochlöffel-Schlag im Takt der Musik",
+    "🥇 Beim Deckel-Klatschen scheppern die Topfdeckel wie Becken im Orchester – genau auf 2 und 4"
   ],
   "verlauf": [
+    {
+      "version": "2.299.3",
+      "datum": "2026-10-12",
+      "neu": [
+        "🥁 Bühne: Beim Topf-Trommeln klingt der Topf mit – jeder Kochlöffel-Schlag im Takt der Musik",
+        "🥇 Beim Deckel-Klatschen scheppern die Topfdeckel wie Becken im Orchester – genau auf 2 und 4"
+      ]
+    },
     {
       "version": "2.299.2",
       "datum": "2026-10-12",

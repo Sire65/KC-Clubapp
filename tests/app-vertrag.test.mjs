@@ -8756,3 +8756,11 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/const BW_BEGRUESSUNG = "Hallo! Lass uns ein bisschen Bewegung in den Alltag einbauen\. Mach nur so viel, wie dir guttut\. Los geht’s!";/.test(b), "Begrüßungstext");
   assert.ok(/bwSag\(`\$\{BW_BEGRUESSUNG\} Als Erstes: /.test(b) && /BW\.lauf\.rest = BW_BEREIT \+ 6;/.test(b), "Begrüßung zum Start, erste Vorbereitung länger");
 }
+
+// 2.299.3 KC-CLUB-BUEHNE-GERAEUSCHE (Wunsch Hansi): Topf-Trommeln und Deckel-Becken klingen im Takt
+{
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  assert.ok(/if \(u\?\.a === "trommeln" && im % 2 === 0\) bwTopf\(t, im % 4 === 0\);/.test(b) && /function bwTopf\(t, betont\)/.test(b), "Topf klingt auf jede Achtel");
+  assert.ok(/if \(u\?\.a === "klatschen" && u\.p === "deckel" && \(im === 4 \|\| im === 12\)\) bwBecken\(t\);/.test(b) && /function bwBecken\(t\)/.test(b), "Deckel wie Becken auf 2 und 4");
+  assert.ok(/L\.phase === "uebung" && !L\.pause/.test(b), "nur während der Übung");
+}

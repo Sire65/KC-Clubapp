@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.299.2"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.299.3"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -13101,6 +13101,20 @@ function bwMusikSchritt(s, t) {
   if (voll && im % 4 === 2) akk.forEach((m) => bwTon("square", bwHz(m), t, .14, .035, 2400)); // Akkord-Stöße auf dem Off-Beat
   if (voll && takt % 4 < 2) { const n = BWM_HOOK[(takt % 2) * 16 + im]; if (n) bwTon("square", bwHz(n), t, .22, .06, 3200, true); } // Hook-Melodie mit Echo
   if (voll && takt % 4 >= 2 && im % 2 === 0) bwTon("triangle", bwHz(akk[(im / 2) % 3] + 24), t, .1, .03, 0, true); // Glitzer-Arpeggio
+  // 2.299.3 (Wunsch Hansi): Küchen-Geräusche passend zur Bewegung – genau auf dem Takt, auf dem Twinkey schlägt
+  const L = BW.lauf, u = L && L.phase === "uebung" && !L.pause ? L.plan[L.i] : null;
+  if (u?.a === "trommeln" && im % 2 === 0) bwTopf(t, im % 4 === 0); // Kochlöffel abwechselnd links/rechts auf jede Achtel
+  if (u?.a === "klatschen" && u.p === "deckel" && (im === 4 || im === 12)) bwBecken(t); // Deckel zusammen auf 2 und 4
+}
+function bwTopf(t, betont) { // Kochlöffel auf Metalltopf: kurzer Anschlag, blecherne (unharmonische) Obertöne, dumpfer Bauch
+  const l = betont ? 1 : .7;
+  bwRauschen(t, .05, .32 * l, 2600, "bandpass");
+  [[330, .16], [527, .1], [811, .07], [1243, .04]].forEach(([hz, v]) => bwTon("triangle", hz, t, .26, v * l));
+  const o = bwTon("sine", 190, t, .14, .45 * l); o.frequency.exponentialRampToValueAtTime(95, t + .12);
+}
+function bwBecken(t) { // zwei Topfdeckel wie Orchester-Becken: heller Krach mit langem Nachklingen
+  bwRauschen(t, 1.3, .42, 4200, "highpass"); bwRauschen(t, .5, .3, 7500, "bandpass"); bwRauschen(t, .03, .4, 1800, "bandpass");
+  [[1480, .035], [2231, .03], [3170, .025], [4405, .02]].forEach(([hz, v]) => bwTon("square", hz, t, .7, v, 0, true));
 }
 // ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0, Wunsch Hansi): Jahreszeiten im Kopf mit Boden ----------
 // 🍂 Herbst: Laub fällt und bleibt unten liegen; liegt genug, kommt ein Windstoß (abwechselnd von links und von rechts) und weht es weg.

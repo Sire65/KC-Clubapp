@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.299.3 – 2026-10-12 – KC-CLUB-BUEHNE-GERAEUSCHE
+Wunsch Hansi. Topf-Trommeln: zu jedem Kochlöffel-Schlag ein blecherner Topfklang (kurzer Anschlag, unharmonische Metall-Obertöne, dumpfer Bauch), auf jede Achtel abwechselnd links/rechts – genau dann, wenn Twinkeys Löffel unten ist; auf dem Schlag etwas kräftiger. Deckel-Klatschen: wenn die Deckel zusammenkommen (auf 2 und 4), ein Becken-Krach wie im Orchester mit langem Nachklingen. Die Geräusche gehören zur Musik (folgen dem Musik-Regler, schweigen bei Pause oder ausgeschalteter Musik).
+
 ## 2.299.2 – 2026-10-12 – KC-CLUB-BUEHNE-BEGRUESSUNG
 Wunsch Hansi. Kurze Anfangsrede beim Start der Bühne: „Hallo! Lass uns ein bisschen Bewegung in den Alltag einbauen. Mach nur so viel, wie dir guttut. Los geht’s!“ – danach „Als Erstes: …“ mit der Erklärung der ersten Übung. Die Begrüßung steht in der Sprechblase; die erste Vorbereitung dauert dafür 6 Sekunden länger.
 
