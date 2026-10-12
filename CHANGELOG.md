@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.323.0 – 2026-10-12 – Themen: Weihnachten, Indian Summer & Co.
+Neu unter ⚙️ → Darstellung → 🎭 Themen: Ein Tipp stellt Farben, das Bild im Kopf der Startseite und den Effekt beim Senden passend ein – Köcheclub klassisch, Frühling, Sommer, Herbst, Indian Summer (leuchtend rotes und goldenes Laub), Winter, Weihnachten und Silvester. „Nach Kalender“ wechselt das Thema von selbst. Einzelnes lässt sich trotzdem ändern. Der Admin kann ein Club-Thema für alle festlegen; jedes Mitglied kann es für sich abschalten.
+
 ## 2.322.0 – 2026-10-12 – Eisstücke fallen jetzt auch bei dir
 Auf Handys mit der Einstellung „Bewegung reduzieren“ fiel bisher weder ein Wassertropfen noch ein Eisstück von den Eiszapfen. Jetzt läuft das wie das übrige Winterbild. Das erste Eisstück fällt gleich nach dem Öffnen, danach etwa jedes zweite Mal statt eines Tropfens – und es ist etwas größer.
 

@@ -5891,7 +5891,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6057,6 +6057,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/if \(sp\?\.length && !document\.hidden && rgSichtbar\(e\) && !SPAR\?\.an\) \{/.test(html), "Takt läuft wie die Bühne (nicht an „Bewegung reduzieren“ gebunden)");
   assert.ok(/if \(!J\.eisErster\) return \(J\.eisErster = true\);/.test(html) && /Math\.random\(\) < \(J\.vorschau \? \.7 : \.5\)/.test(html), "erstes Eisstück sofort, danach etwa jedes zweite Mal");
+}
+// 2.323.0 KC-CLUB-THEMEN (Wunsch Hansi): fertige Themen-Pakete (Farbe + Jahreszeiten-Bild + Sende-Effekt), Kalender-Automatik, Club-Thema für alle
+{
+  for (const id of ["klassik", "fruehling", "sommer", "herbst", "indian", "winter", "weihnachten", "silvester"]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", name: "[^"]+", design: "[a-z]+", jz: "[a-z]+", effekt: "[a-z]+"`).test(html), `Thema ${id}`);
+  assert.ok(/const THEMA_KAL = \(d = new Date\(\)\) => \{ const a = jahreszeitArt\(d\); return a === "advent" \? "weihnachten" : a === "herbst" && d\.getMonth\(\) === 9 \? "indian" : a; \};/.test(html), "Kalender: Advent = Weihnachten, Oktober = Indian Summer");
+  assert.ok(/return w === "auto" \|\| THEMEN\.some\(\(t\) => t\.id === w\) \? w : "aus";/.test(html), "Standard „aus“ – alles wie bisher");
+  assert.ok(/const c = clubThemaId\(\); if \(c && themaClubFolgen\(\)\)/.test(html) && /function themaClubSetzen\(an\)/.test(html), "Club-Thema geht vor, jeder kann es abschalten");
+  assert.ok(/const designAktuell = \(\) => DESIGNS\.find\(\(d\) => d\.id === dsEff\(\)\)/.test(html) && /const t = themaWert\("jz"\); if \(t\) return t;/.test(html) && /const t = themaWert\("effekt"\); if \(t\) return t;/.test(html), "Thema wirkt auf Farbe, Jahreszeit, Sende-Effekt");
+  assert.ok(/if \(themaEigenSetzen\("design", id\)\)/.test(html) && /if \(!themaEigenSetzen\("jz", w\)\)/.test(html) && /if \(!themaEigenSetzen\("effekt", w\)\)/.test(html), "einzeln änderbar, nur fürs laufende Thema");
+  assert.ok(/farbe: jzbW\(themaWert\("laub"\) \|\| JZB_LAUB\)/.test(html), "Indian Summer: leuchtendes Laub");
+  assert.ok(/case "club_thema_setzen": \{\s*nurAdmin\(ich\);/.test(server) && /pThema = konfigZeile\("thema"\)/.test(server) && /clubThema: await pThema,/.test(server), "Server: Club-Thema nur Admin, beim Start mitgeliefert");
+  assert.ok(/id="themaWahl"/.test(lies("index.html")) && /\.themawahl \{ display: grid;/.test(lies("index.html")), "Auswahl in der Darstellung");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

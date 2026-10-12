@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.322.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.323.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -605,7 +605,65 @@ function lichtSensorStarten() {
     lichtSensor.start();
   } catch { lichtSensor = null; }
 }
-const designAktuell = () => DESIGNS.find((d) => d.id === DS.design) || DESIGNS[0];
+// ---------- 2.323.0 KC-CLUB-THEMEN (Wunsch Hansi „fertige Themen wie Weihnachten, Herbst, Indian Summer …“): ein Thema ist ein Paket aus
+// Farbdesign + Jahreszeiten-Bild + Sende-Effekt (später auch Schrift). Neues Thema = neuer Eintrag hier (Registry), sonst nichts.
+// Wahl je Gerät: „aus“ (Standard – alles wie bisher), „auto“ (nach Kalender) oder ein festes Thema. Der Admin kann ein Club-Thema für alle
+// vorgeben (kc_club_konfig „thema“); jedes Mitglied kann es für sich abschalten. Ändert man bei aktivem Thema einzeln Farbe, Jahreszeit oder
+// Effekt, gilt das nur, solange dieses Thema läuft (beim nächsten Thema zählt wieder das Paket). Status-/Warnfarben bleiben immer gleich,
+// Gedrucktes immer im Köcheclub-Design.
+const THEMEN = [
+  { id: "klassik", sym: "🏛️", name: "Köcheclub klassisch", design: "klassik", jz: "auto", effekt: "wechsel" },
+  { id: "fruehling", sym: "🌱", name: "Frühling", design: "kirschbluete", jz: "fruehling", effekt: "taube" },
+  { id: "sommer", sym: "🌻", name: "Sommer", design: "toskana", jz: "sommer", effekt: "flieger" },
+  { id: "herbst", sym: "🍂", name: "Herbst", design: "ocker", jz: "herbst", effekt: "flieger" },
+  { id: "indian", sym: "🍁", name: "Indian Summer", design: "glut", jz: "herbst", effekt: "taube",
+    laub: ["#d7261e", "#ff6a13", "#ffb300", "#b5121b", "#ff8f1f", "#e8c21a", "#8e1b10", "#f04e23"] }, // leuchtendes Rot, Orange, Gold
+  { id: "winter", sym: "⛄", name: "Winter", design: "nordsee", jz: "winter", effekt: "postauto" },
+  { id: "weihnachten", sym: "🎄", name: "Weihnachten", design: "weinberg", jz: "advent", effekt: "taube" },
+  { id: "silvester", sym: "🎆", name: "Silvester", design: "disko", jz: "silvester", effekt: "flieger" },
+];
+const THEMA_KAL = (d = new Date()) => { const a = jahreszeitArt(d); return a === "advent" ? "weihnachten" : a === "herbst" && d.getMonth() === 9 ? "indian" : a; }; // Oktober = Indian Summer
+const themaWahl = () => { try { const w = localStorage.getItem("kc_club_thema"); return w === "auto" || THEMEN.some((t) => t.id === w) ? w : "aus"; } catch { return "aus"; } };
+const themaClubFolgen = () => { try { return localStorage.getItem("kc_club_thema_club") !== "0"; } catch { return true; } };
+const clubThemaId = () => { const w = INIT ? INIT.clubThema : (() => { try { return JSON.parse(localStorage.getItem("kc_club_clubThema") || "null"); } catch { return null; } })(); return w?.id || null; };
+function aktivesThema() {
+  const c = clubThemaId(); if (c && themaClubFolgen()) { const t = THEMEN.find((x) => x.id === (c === "auto" ? THEMA_KAL() : c)); if (t) return { ...t, quelle: "club" }; }
+  const w = themaWahl(); if (w === "aus") return null;
+  const t = THEMEN.find((x) => x.id === (w === "auto" ? THEMA_KAL() : w)); return t ? { ...t, quelle: w === "auto" ? "kalender" : "fest" } : null;
+}
+const themaEigen = () => { try { return JSON.parse(localStorage.getItem("kc_club_thema_eigen") || "{}") || {}; } catch { return {}; } };
+function themaWert(k) { const t = aktivesThema(); if (!t) return undefined; const e = themaEigen(); return e.id === t.id && e[k] !== undefined ? e[k] : t[k]; }
+function themaEigenSetzen(k, v) { const t = aktivesThema(); if (!t) return false; const e = themaEigen(); try { localStorage.setItem("kc_club_thema_eigen", JSON.stringify({ ...(e.id === t.id ? e : {}), id: t.id, [k]: v })); } catch {} return true; }
+function themaAnwenden() { // alles neu zeichnen, was vom Thema abhängt
+  try { anwendenDesign(); } catch {} try { designWahlZeigen(); } catch {} try { jzWahlZeigen(); } catch {} try { sendeEffektZeigen(); } catch {}
+  try { if (!JZB.vorschau) jahreszeitKopf(); } catch {}
+}
+function themaSetzen(w) {
+  try { localStorage.setItem("kc_club_thema", w); localStorage.removeItem("kc_club_thema_eigen"); } catch {}
+  themaAnwenden(); const t = THEMEN.find((x) => x.id === w);
+  melde(w === "aus" ? "🎨 Kein Thema – deine eigenen Einstellungen gelten" : w === "auto" ? `🔄 Themen nach Kalender – gerade: ${THEMEN.find((x) => x.id === THEMA_KAL())?.name || ""}` : `${t?.sym || ""} Thema „${t?.name || w}“`);
+  if (clubThemaId() && themaClubFolgen()) melde("🏛️ Hinweis: Gerade gilt das Club-Thema – abschalten unter „Club-Thema übernehmen“", true);
+}
+function themaClubSetzen(an) { try { localStorage.setItem("kc_club_thema_club", an ? "1" : "0"); localStorage.removeItem("kc_club_thema_eigen"); } catch {} themaAnwenden(); melde(an ? "🏛️ Club-Thema übernommen" : "🏛️ Club-Thema abgeschaltet – deine Wahl gilt"); }
+async function themaFuerAlle(id) { // nur Admin
+  try { const r = await api("club_thema_setzen", { id }); INIT.clubThema = r.thema || null; try { localStorage.setItem("kc_club_clubThema", JSON.stringify(INIT.clubThema)); } catch {}
+    themaAnwenden(); melde(id ? `🏛️ Club-Thema für alle: ${id === "auto" ? "nach Kalender" : THEMEN.find((t) => t.id === id)?.name}` : "🏛️ Club-Thema aufgehoben – jeder hat wieder seine eigene Wahl"); }
+  catch (e) { meldeFehler(e); }
+}
+function themaWahlZeigen() {
+  const z = $("themaWahl"); if (!z) return;
+  const w = themaWahl(), akt = aktivesThema(), nacht = istNacht();
+  const farbe = (t) => { const d = DESIGNS.find((x) => x.id === t.design) || DESIGNS[0], f = d[nacht ? "nacht" : "tag"]; return d.verlauf ? d.verlauf[nacht ? "nacht" : "tag"] : `linear-gradient(135deg,${f.hero1},${f.rot},${f.hero4})`; };
+  const knopf = (id, sym, name, bg) => `<button type="button" class="thema-k${w === id ? " an" : ""}" onclick="themaSetzen('${id}')"><span class="thema-f" style="background:${bg}">${sym}</span><span>${esc(name)}${w === id ? " ✓" : ""}</span></button>`;
+  z.innerHTML = knopf("aus", "🚫", "Kein Thema", "var(--karte2)") + knopf("auto", "🔄", "Nach Kalender", "linear-gradient(90deg,#f2a7c3,#e8b23a,#e0802a,#9fd3f0)")
+    + THEMEN.map((t) => knopf(t.id, t.sym, t.name, farbe(t))).join("");
+  const c = clubThemaId(), ct = c && (c === "auto" ? { sym: "🔄", name: "nach Kalender" } : THEMEN.find((t) => t.id === c));
+  $("themaInfo").innerHTML = akt ? `Gerade: <b>${akt.sym} ${esc(akt.name)}</b>${akt.quelle === "club" ? " – Club-Thema" : akt.quelle === "kalender" ? " – nach Kalender" : ""}. Farbe, Jahreszeit und Sende-Effekt kannst du trotzdem einzeln ändern.` : "Kein Thema – es gelten deine eigenen Einstellungen.";
+  $("themaClub").innerHTML = (ct ? `<div class="schalter"><div><b>🏛️ Club-Thema übernehmen</b><div class="hinweis">${esc(INIT?.clubThema?.von || "Der Admin")} hat für alle <b>${ct.sym} ${esc(ct.name)}</b> eingestellt.</div></div><input type="checkbox" ${themaClubFolgen() ? "checked" : ""} onchange="themaClubSetzen(this.checked)"></div>` : "")
+    + (ICH?.admin ? `<details class="ds-mehr"><summary>🏛️ Club-Thema für alle festlegen (Admin)</summary><div class="reg-effekt-wahl" style="margin-top:6px">${[["auto", "🔄 Nach Kalender"], ...THEMEN.map((t) => [t.id, `${t.sym} ${t.name}`])].map(([id, t]) => `<button type="button" class="chip${c === id ? " an" : ""}" onclick="themaFuerAlle('${id}')">${esc(t)}</button>`).join("")}</div>${c ? '<button type="button" class="knopf klein" style="margin-top:6px" onclick="themaFuerAlle(null)">✖ Club-Thema aufheben</button>' : ""}<div class="hinweis" style="margin-top:4px">Gilt sofort für alle, die „Club-Thema übernehmen“ nicht abgeschaltet haben.</div></details>` : "");
+}
+const dsEff = () => themaWert("design") ?? DS.design;
+const designAktuell = () => DESIGNS.find((d) => d.id === dsEff()) || DESIGNS[0];
 function anwendenDesign() {
   const nacht = istNacht(), f = designAktuell()[nacht ? "nacht" : "tag"], w = document.documentElement;
   w.classList.toggle("dunkel", nacht);
@@ -628,19 +686,20 @@ function anwendenDesign() {
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
 }
 function designWahlZeigen() {
+  try { themaWahlZeigen(); } catch {} // 2.323.0 KC-CLUB-THEMEN
   if (!$("designWahl")) return;
   queueMicrotask(() => { if ($("designWahlE")) $("designWahlE").innerHTML = $("designWahl").innerHTML;
     for (const [q, z, k, kz] of [["designWahlMehr", "designWahlMehrE", "designMehrKlappe", "designMehrKlappeE"], ["designWahlBunt", "designWahlBuntE", "designBuntKlappe", "designBuntKlappeE"]])
       if ($(z) && $(q)) { $(z).innerHTML = $(q).innerHTML; if ($(k).open) $(kz).open = true; } }); // gleiche Farbwahl in „Das Wichtigste“
   const nacht = istNacht();
   const knopf = (d) => { const f = d[nacht ? "nacht" : "tag"];
-    return `<button class="${d.id === DS.design ? "an" : ""}" onclick="designWaehlen('${d.id}')"><span class="vorschau" style="background:${f.bg}">`
+    return `<button class="${d.id === dsEff() ? "an" : ""}" onclick="designWaehlen('${d.id}')"><span class="vorschau" style="background:${f.bg}">`
       + `<i style="left:0;right:0;top:0;height:24px;border-radius:0;background:${d.verlauf ? d.verlauf[nacht ? "nacht" : "tag"] : `linear-gradient(135deg,${f.hero1},${f.rot},${f.hero4})`}"></i>`
       + `<i style="left:8px;top:30px;width:44px;height:22px;background:${f.karte};border:1px solid ${f.linie}"></i><i style="left:58px;top:30px;width:44px;height:22px;background:${f.rot}"></i><i style="right:8px;top:34px;width:14px;height:14px;border-radius:50%;background:${f.gold}"></i>`
-      + `</span>${d.id === DS.design ? "✓ " : ""}${esc(d.name)}</button>`; };
+      + `</span>${d.id === dsEff() ? "✓ " : ""}${esc(d.name)}</button>`; };
   $("designWahl").innerHTML = DESIGNS.filter((d) => !d.mehr).map(knopf).join("");
   // 1.76.0: weitere Schemen in eigener Klappzone; ist eins davon gewählt, steht die Zone offen
-  const zone = (liste, w, z, k) => { if (!$(w)) return; $(w).innerHTML = liste.map(knopf).join(""); $(z).textContent = `(${liste.length})`; if (liste.some((d) => d.id === DS.design)) $(k).open = true; };
+  const zone = (liste, w, z, k) => { if (!$(w)) return; $(w).innerHTML = liste.map(knopf).join(""); $(z).textContent = `(${liste.length})`; if (liste.some((d) => d.id === dsEff())) $(k).open = true; };
   zone(DESIGNS.filter((d) => d.mehr && !d.bunt), "designWahlMehr", "designMehrZahl", "designMehrKlappe");
   zone(DESIGNS.filter((d) => d.bunt), "designWahlBunt", "designBuntZahl", "designBuntKlappe"); // 1.78.0: ausgefallene Schemen
   document.querySelectorAll("#modusWahl button").forEach((b) => b.classList.toggle("an", b.dataset.m === DS.modus));
@@ -655,7 +714,7 @@ function designSpeichern() {
   clearTimeout(dsTimer);
   dsTimer = setTimeout(() => { if (KEY) api("einstellung_setzen", { schluessel: "design", wert: DS }).catch((e) => melde("Design nur auf diesem Handy gespeichert: " + e.message, true)); }, 800);
 }
-function designWaehlen(id) { DS = { ...DS, design: id }; designSpeichern(); }
+function designWaehlen(id) { if (themaEigenSetzen("design", id)) { anwendenDesign(); designWahlZeigen(); return; } DS = { ...DS, design: id }; designSpeichern(); } // 2.323.0: bei aktivem Thema nur fürs Thema
 function modusWaehlen(m) { DS = { ...DS, modus: m }; designSpeichern(); }
 function designStandard() { DS = { design: "klassik", modus: "auto" }; designSpeichern(); melde("↺ Standard: Köcheclub Klassik, Tag/Nacht automatisch"); }
 function designUebernehmen(wert) { // vom Server (init) – eine gerade eben getroffene Auswahl auf diesem Handy hat Vorrang
@@ -3140,6 +3199,7 @@ const HILFE = [
   // 🎨 Aussehen & Darstellung
   { id: "farbe", thema: "darstellung", sym: "🎨", t: "Die Farbe der App ändern", x: "Du kannst die Farbe einstellen: ⚙️ Einstellungen → Register <b>🎨 Darstellung</b> → „🎨 Farbdesign“. Unter „Weitere Farbschemen“ und „✨ Ausgefallene Farbschemen“ gibt es noch mehr. Antippen – die App färbt sich sofort um.", zeig: hzDesign },
   { id: "nacht", thema: "darstellung", sym: "🌗", t: "Tag- und Nachtmodus", x: "⚙️ → Darstellung → „🌗 Tag- und Nachtmodus“: <b>🔄 Automatisch</b> (folgt deinem Handy), <b>☀️ Immer Tag</b> oder <b>🌙 Immer Nacht</b>. Nachts ist der dunkle Modus angenehmer für die Augen.", zeig: () => einstiegHin("darstellung", "modusWahl") },
+  { id: "themen", thema: "darstellung", sym: "🎭", t: "Themen: Weihnachten, Herbst, Indian Summer …", x: "Mit einem Tipp auf ein Thema (⚙️ → <b>🎨 Darstellung</b> → <b>🎭 Themen</b>) stellst du Farben, das Bild im Kopf der Startseite und den Effekt beim Senden passend ein – z. B. 🎄 Weihnachten, 🍁 Indian Summer oder ❄️ Winter. „🔄 Nach Kalender“ wechselt das Thema von selbst. Einzelnes kannst du danach trotzdem ändern. Hat der Admin ein Club-Thema für alle eingestellt, kannst du es dort für dich abschalten." },
   { id: "schrift", thema: "darstellung", sym: "🔠", t: "Größere Schrift", x: "Ist dir die Schrift zu klein? ⚙️ → Darstellung → „🔠 Große Schrift“ einschalten – alles wird etwas größer.", zeig: () => einstiegHin("darstellung", "setGross") },
   { id: "mitglieder_ansicht", thema: "darstellung", sym: "👥", t: "Mitglieder als Kacheln, Liste oder Tafel", x: "Ob du die Mitglieder als <b>🔲 Kacheln</b>, als <b>☰ Liste</b> oder als <b>📋 Anwesenheitstafel</b> siehst, wählst du unter ⚙️ → Darstellung oder direkt oben bei den Mitgliedern.", zeig: () => einstiegHin("darstellung", "mgAnsichtWahl") },
   { id: "feiertage", thema: "darstellung", sym: "🇩🇪", t: "Feiertage im Kalender", x: "Die Feiertage in NRW kannst du im Club-Kalender ein- oder ausblenden: ⚙️ → Darstellung → „🇩🇪 Feiertage NRW im Kalender“.", zeig: () => einstiegHin("darstellung", "setFeiertage") },
@@ -12198,7 +12258,7 @@ const fxAn = () => einst("animiert", true) && !SPAR?.an && typeof document !== "
 // 2.176.0 (Wunsch Hansi „als drittes ein gelbes Postauto – und wenn als wichtig markiert ein Auto mit Blaulicht“)
 const SENDE_EFFEKTE = [["flieger", "✈️ Papierflieger"], ["taube", "🕊️ Brieftaube"], ["postauto", "🚐 Postauto"], ["wechsel", "🔀 Abwechselnd"], ["aus", "🚫 Aus"]];
 const SENDE_REIHE = ["flieger", "taube", "postauto"];
-const sendeEffektWahl = () => { try { const w = localStorage.getItem("kc_club_sendeEffekt"); return SENDE_EFFEKTE.some(([k]) => k === w) ? w : "wechsel"; } catch { return "wechsel"; } };
+const sendeEffektWahl = () => { const t = themaWert("effekt"); if (t) return t; try { const w = localStorage.getItem("kc_club_sendeEffekt"); return SENDE_EFFEKTE.some(([k]) => k === w) ? w : "wechsel"; } catch { return "wechsel"; } };
 let SENDE_FX_N = 0;
 const FLIEGER_SVG = (g) => `<svg viewBox="0 0 120 120" width="${g}" height="${g}" style="transform:scaleX(-1)">
     <g stroke="#fff" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" fill="#fff"><path d="M10 72 108 14 70 108 56 78Z"/></g>
@@ -12404,7 +12464,7 @@ async function ankunftEffekt(el, art) {
     }
   } finally { fertig(); }
 }
-function sendeEffektSetzen(w) { try { localStorage.setItem("kc_club_sendeEffekt", w); } catch {} sendeEffektZeigen(); sendeEffektMelden(); melde(SENDE_EFFEKTE.find(([k]) => k === w)?.[1] || w); }
+function sendeEffektSetzen(w) { if (!themaEigenSetzen("effekt", w)) try { localStorage.setItem("kc_club_sendeEffekt", w); } catch {} sendeEffektZeigen(); sendeEffektMelden(); melde(SENDE_EFFEKTE.find(([k]) => k === w)?.[1] || w); }
 function sendeEffektZeigen() {
   const z = $("sendeEffektWahl"); if (!z) return; const w = sendeEffektWahl();
   z.innerHTML = SENDE_EFFEKTE.map(([k, t]) => `<button type="button" class="chip${k === w ? " an" : ""}" aria-pressed="${k === w}" onclick="sendeEffektSetzen('${k}')">${t}</button>`).join("");
@@ -12464,9 +12524,9 @@ function jahreszeitArt(d = new Date()) {
 }
 // Wahl je Gerät: „auto“ (Standard) stellt sich von selbst um; sonst eine feste Jahreszeit
 const JZ_WAHL = [["auto", "🔄 Automatik"], ["fruehling", "🌱 Frühling"], ["sommer", "🌻 Sommer"], ["herbst", "🍂 Herbst"], ["winter", "⛄ Winter"]];
-const jzWahl = () => { try { const w = localStorage.getItem("kc_club_jzWahl"); return JZ_WAHL.some(([k]) => k === w) ? w : "auto"; } catch { return "auto"; } };
+const jzWahl = () => { const t = themaWert("jz"); if (t) return t; try { const w = localStorage.getItem("kc_club_jzWahl"); return JZ_WAHL.some(([k]) => k === w) ? w : "auto"; } catch { return "auto"; } }; // 2.323.0: Thema zuerst (auch advent/silvester)
 const jahreszeitAktuell = (d = new Date()) => (jzWahl() === "auto" ? jahreszeitArt(d) : jzWahl());
-function jzWahlSetzen(w) { try { localStorage.setItem("kc_club_jzWahl", w); } catch {} JZB.vorschau = null; jzWahlZeigen(); jahreszeitKopf(); melde(w === "auto" ? "🔄 Automatik: die Jahreszeit stellt sich von selbst um" : `${JZ_WAHL.find(([k]) => k === w)[1]} fest eingestellt`); }
+function jzWahlSetzen(w) { if (!themaEigenSetzen("jz", w)) try { localStorage.setItem("kc_club_jzWahl", w); } catch {} JZB.vorschau = null; jzWahlZeigen(); jahreszeitKopf(); melde(w === "auto" ? "🔄 Automatik: die Jahreszeit stellt sich von selbst um" : `${JZ_WAHL.find(([k]) => k === w)[1]} fest eingestellt`); }
 function jzWahlZeigen() {
   const z = $("jzWahl"); if (!z) return;
   const w = jzWahl(), a = jzAnfaenge(new Date().getFullYear()), tag = (x) => `${x.getDate()}.${x.getMonth() + 1}.`;
@@ -13974,7 +14034,7 @@ const jzbWindVorbei = () => { const W = JZB.wind; return !W || (W.t >= W.dauer &
 
 function jzbNeuesTeil(typ) {
   const J = JZB;
-  if (typ === "blatt") return { typ, x: jzbZ(0, J.w), y: -12, vy: jzbZ(16, 28), s: jzbZ(6, 9.5) * (.75 + .25 * J.k), rot: jzbZ(0, 6.3), vr: jzbZ(-1.6, 1.6), ph: jzbZ(0, 6.3), fq: jzbZ(.9, 1.7), amp: jzbZ(14, 28), farbe: jzbW(JZB_LAUB), form: Math.random() < .45 ? 1 : 0 };
+  if (typ === "blatt") return { typ, x: jzbZ(0, J.w), y: -12, vy: jzbZ(16, 28), s: jzbZ(6, 9.5) * (.75 + .25 * J.k), rot: jzbZ(0, 6.3), vr: jzbZ(-1.6, 1.6), ph: jzbZ(0, 6.3), fq: jzbZ(.9, 1.7), amp: jzbZ(14, 28), farbe: jzbW(themaWert("laub") || JZB_LAUB), form: Math.random() < .45 ? 1 : 0 }; // 2.323.0: Indian Summer leuchtet
   if (typ === "flocke") { const r = jzbZ(1, 2.6); return { typ, x: jzbZ(-10, J.w + 10), y: -4, r, vy: 12 + r * 9, ph: jzbZ(0, 6.3), fq: jzbZ(.8, 1.8), amp: jzbZ(5, 12) }; }
   return { typ: "bluete", x: jzbZ(0, J.w), y: -6, s: jzbZ(2.2, 3.4), vy: jzbZ(13, 20), rot: jzbZ(0, 6.3), vr: jzbZ(-2, 2), ph: jzbZ(0, 6.3), fq: jzbZ(.8, 1.4), amp: jzbZ(10, 20), farbe: jzbW(["#f9c6d6", "#ffe3ec", "#ffffff"]), a: 1 };
 }
@@ -18120,6 +18180,7 @@ async function neuLadenRoh(vonHand) {
     $("ichName").textContent = ICH.name + (ICH.aemter?.length ? ` (${ICH.aemter.join(", ")})` : ICH.admin ? " (Admin)" : "");
     $("neuTreffenKnopf").classList.remove("versteckt"); // KC-CLUB-PRIVATTERMIN: „＋ Neu“ für alle (Mitglieder: privat)
     heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
+    try { const alt = localStorage.getItem("kc_club_clubThema"), neu = JSON.stringify(INIT.clubThema || null); if (alt !== neu) { localStorage.setItem("kc_club_clubThema", neu); themaAnwenden(); } } catch {} // 2.323.0 KC-CLUB-THEMEN
     rtVerbinden(); // KC-CLUB-REALTIME (2.226.0): Leitung aufbauen bzw. halten
     if (!PUSH_PRUEF.lief) { PUSH_PRUEF.lief = true; setTimeout(() => pushPruefen().catch(() => {}), 6000); } // 2.321.0 KC-CLUB-PUSH-WIEDER (einmal je Start, nicht im Startweg)
     if (vonHand) { melde("Aktualisiert"); updatePruefen(false); }

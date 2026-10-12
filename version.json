@@ -1,12 +1,22 @@
 {
-  "version": "2.322.0",
+  "version": "2.323.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "❄️ Eisstücke und Tropfen fallen jetzt auch bei „Bewegung reduzieren“",
-    "❄️ Das erste Eisstück fällt gleich nach dem Öffnen – und ist größer"
+    "🎭 Neu: Themen – ein Tipp stellt Farben, Jahreszeiten-Bild und Sende-Effekt passend ein",
+    "🍁 Indian Summer, 🎄 Weihnachten, 🎆 Silvester, ⛄ Winter und mehr – oder „Nach Kalender“",
+    "🏛️ Club-Thema für alle (Admin) – jeder kann es für sich abschalten"
   ],
   "verlauf": [
+    {
+      "version": "2.323.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🎭 Neu: Themen – ein Tipp stellt Farben, Jahreszeiten-Bild und Sende-Effekt passend ein",
+        "🍁 Indian Summer, 🎄 Weihnachten, 🎆 Silvester, ⛄ Winter und mehr – oder „Nach Kalender“",
+        "🏛️ Club-Thema für alle (Admin) – jeder kann es für sich abschalten"
+      ]
+    },
     {
       "version": "2.322.0",
       "datum": "2026-10-12",
