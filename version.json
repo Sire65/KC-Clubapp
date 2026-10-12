@@ -1,12 +1,20 @@
 {
-  "version": "2.325.0",
+  "version": "2.326.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "📧 Bestätigung der Dienstwünsche geht jetzt immer in CC an Clubsprecher und Kassenwart (Klaus und Dieter) und in BCC an den Admin",
-    "📥 Im Eingang (Dienstzeiten eines Mitglieds) neuer Knopf „📧 Bestätigung an … schicken“ – die Clubleitung kann die Bestätigung selbst auslösen"
+    "✅ Dienstwünsche: „Fertig“ ist jetzt Pflicht – wer etwas eingetragen hat, kommt beim Zurückgehen nur mit „✅ Fertig“ (Bestätigung per E-Mail) oder „Abbrechen“ (zurück zur Eingabe) weiter",
+    "🎉 Am Ende (alle Tage eingetragen): „✅ Fertig – Bestätigung mit Zusammenfassung per E-Mail“ oder „Abbrechen“ – Fertig schickt die Bestätigung und schließt ab"
   ],
   "verlauf": [
+    {
+      "version": "2.326.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "✅ Dienstwünsche: „Fertig“ ist jetzt Pflicht – wer etwas eingetragen hat, kommt beim Zurückgehen nur mit „✅ Fertig“ (Bestätigung per E-Mail) oder „Abbrechen“ (zurück zur Eingabe) weiter",
+        "🎉 Am Ende (alle Tage eingetragen): „✅ Fertig – Bestätigung mit Zusammenfassung per E-Mail“ oder „Abbrechen“ – Fertig schickt die Bestätigung und schließt ab"
+      ]
+    },
     {
       "version": "2.325.0",
       "datum": "2026-10-12",

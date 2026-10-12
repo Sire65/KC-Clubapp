@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.325.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.326.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11665,16 +11665,20 @@ async function dwBestaetigen(kurz) {
 }
 function dwFertigLeiste(tage) { // alle Tage eingetragen → deutlich anklickbar am Ende der Eingabe
   const f = document.getElementById("dwFenster"); if (!f || DWB.bestaetigt || document.getElementById("dwFertigLeiste")) return;
-  f.insertAdjacentHTML("beforeend", `<div class="dw-fertig-leiste" id="dwFertigLeiste" role="region" aria-label="Bestätigung anfordern"><div>🎉 <b>Alle ${tage} Tage eingetragen – danke!</b><br><small>Möchtest du eine Bestätigung mit der Zusammenfassung deiner Eingaben?</small></div>
-    <button type="button" class="knopf haupt" data-k="mail">📧 Bestätigung mit Zusammenfassung per E-Mail anfordern</button><button type="button" class="knopf klein" data-k="spaeter">Später</button></div>`);
+  f.insertAdjacentHTML("beforeend", `<div class="dw-fertig-leiste" id="dwFertigLeiste" role="region" aria-label="Bestätigung anfordern"><div>🎉 <b>Alle ${tage} Tage eingetragen – danke!</b><br><small>Schließe bitte mit <b>✅ Fertig</b> ab – du bekommst die Bestätigung mit der Zusammenfassung per E-Mail. Mit Abbrechen änderst du vorher noch etwas.</small></div>
+    <button type="button" class="knopf haupt" data-k="mail">✅ Fertig – Bestätigung mit Zusammenfassung per E-Mail</button><button type="button" class="knopf klein" data-k="spaeter">Abbrechen</button></div>`);
   const l = document.getElementById("dwFertigLeiste");
-  l.querySelector('[data-k="mail"]').onclick = (e) => einmal(e.currentTarget, () => dwBestaetigen(true));
-  l.querySelector('[data-k="spaeter"]').onclick = () => l.remove();
+  l.querySelector('[data-k="mail"]').onclick = (e) => einmal(e.currentTarget, async () => { if (await dwBestaetigen(true)) dwSchliessen(); });
+  l.querySelector('[data-k="spaeter"]').onclick = () => l.remove(); // weiter eintragen – beim Zurückgehen kommt die Pflicht-Frage
 }
-async function dwZurueck() { // beim Verlassen nachfragen, wenn gespeichert, aber noch keine Bestätigung angefordert
+// 2.326.0 KC-CLUB-DW-FERTIG-PFLICHT (Wunsch Hansi „der Fertig-Knopf ist Pflicht, sonst geht es an der Stelle nicht weiter – Fertig und Abbrechen
+// anbieten“): Wer etwas gespeichert und noch nicht mit „Fertig“ abgeschlossen hat, kommt nur über „✅ Fertig“ (Bestätigung per E-Mail) hinaus;
+// „Abbrechen“ führt zurück in die Eingabe. Klappt der Versand nicht (z. B. Netz), darf man danach trotzdem gehen – niemand bleibt gefangen.
+async function dwZurueck() {
   if (DWB.geaendert && !DWB.bestaetigt && document.getElementById("dwFenster")) {
-    DWB.geaendert = false;
-    if (await frage("📧 Bestätigung mit Zusammenfassung per E-Mail anfordern?\n\nDu bekommst alle deine Eingaben noch einmal per E-Mail – mit dem Hinweis, dass es deine Wunschplanung ist (noch nicht der fertige Dienstplan).", { ja: "📧 Ja, bitte schicken", nein: "Nein, danke" })) await dwBestaetigen(true);
+    const ja = await frage("✅ Bitte mit „Fertig“ abschließen\n\nDeine Eingaben sind gespeichert. Mit Fertig schließt du ab und bekommst die Bestätigung mit der Zusammenfassung per E-Mail – mit dem Hinweis, dass es deine Wunschplanung ist (noch nicht der fertige Dienstplan).\n\nMit Abbrechen gehst du zurück zur Eingabe.", { ja: "✅ Fertig", nein: "Abbrechen", gefahr: false });
+    if (!ja) return; // zurück in die Eingabe
+    if (!await dwBestaetigen(true)) { DWB.geaendert = false; return; } // Versand ging nicht: Fehler steht da, beim nächsten Zurück darf man gehen
   }
   dwSchliessen();
 }

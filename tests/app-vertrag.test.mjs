@@ -9078,7 +9078,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/danke, dass du deine Dienstplanung per App gemacht hast\. Deine Angaben sind angekommen und werden in das Dienstplan-Programm DP2 übernommen\./.test(srv), "Dank");
   assert.ok(/Es handelt sich um deine Wunschplanung – das ist noch nicht der fertige, freigegebene Sollplan\./.test(srv) && /Liebe Grüße\\nKöcheclub Werne/.test(srv), "Hinweis und Gruß");
   assert.ok(/postMessage\(\{ art: "dw-alle-tage", tage: tage\.length \}/.test(dat) && /alleTagePruefen\(s\.entries\)/.test(dat), "alle Tage → Meldung an die Club-App");
-  assert.ok(/e\.data\?\.art === "dw-alle-tage"\) return dwFertigLeiste/.test(html) && /📧 Bestätigung mit Zusammenfassung per E-Mail anfordern<\/button>/.test(html), "Leiste am Ende");
+  assert.ok(/e\.data\?\.art === "dw-alle-tage"\) return dwFertigLeiste/.test(html) && /✅ Fertig – Bestätigung mit Zusammenfassung per E-Mail<\/button>/.test(html) /* 2.326.0: Fertig-Pflicht */, "Leiste am Ende");
   assert.ok(/onclick = dwZurueck/.test(html) && /e\.data === "dienstwunsch-zu"\) dwZurueck\(\)/.test(html) && /DWB\.geaendert && !DWB\.bestaetigt/.test(html), "Nachfrage beim Zurück");
   assert.ok(/\.dw-kopf \{ grid-template-columns: minmax\(0, 1fr\); \}/.test(html), "Kopfreihe passt aufs Handy");
 }
@@ -9092,4 +9092,12 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   const ad = srv.slice(srv.indexOf('case "dw_bestaetigung_senden": {'), srv.indexOf('case "hilfe_bewerten": {'));
   assert.ok(/nurLeitung\(ich\);/.test(ad) && /dwZeile\(/.test(ad), "nur Leitung");
   assert.ok(/data-fn="ekDwBestaetigung\('\$\{d\.id\}'\)">📧 Bestätigung an/.test(html) && /api\("dw_bestaetigung_senden", \{ id \}/.test(html), "Knopf im Eingang");
+}
+
+// 2.326.0 KC-CLUB-DW-FERTIG-PFLICHT: ohne „Fertig“ kommt man nach Änderungen nicht aus der Eingabe – nur Fertig oder Abbrechen
+{
+  const z = html.slice(html.indexOf("async function dwZurueck()"), html.indexOf("async function bestaetigungZeigen"));
+  assert.ok(/\{ ja: "✅ Fertig", nein: "Abbrechen", gefahr: false \}/.test(z) && /if \(!ja\) return; \/\/ zurück in die Eingabe/.test(z), "Fertig oder Abbrechen");
+  assert.ok(/if \(!await dwBestaetigen\(true\)\) \{ DWB\.geaendert = false; return; \}/.test(z) && !/Nein, danke/.test(z), "kein Weg ohne Fertig, außer der Versand scheitert");
+  assert.ok(/if \(await dwBestaetigen\(true\)\) dwSchliessen\(\);/.test(html) && />Abbrechen<\/button><\/div>`\);/.test(html), "Leiste: Fertig schließt ab");
 }

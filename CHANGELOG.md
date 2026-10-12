@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.326.0 – 2026-10-12 – KC-CLUB-DW-FERTIG-PFLICHT
+Wunsch Hansi („der Fertig-Knopf soll Pflicht sein, sonst geht es an der Stelle nicht weiter – Fertig und Abbrechen anbieten“). Wer in den Dienstwünschen etwas gespeichert und noch nicht abgeschlossen hat, bekommt beim „← Zurück“ (auch beim Zurück aus Twinkey selbst) nur „✅ Fertig“ oder „Abbrechen“: Fertig schickt die Bestätigung mit Zusammenfassung per E-Mail (CC/BCC wie 2.325.0) und schließt das Fenster, Abbrechen führt zurück in die Eingabe. „Nein, danke“ gibt es nicht mehr. Ausnahme, damit niemand festsitzt: Schlägt der Versand fehl (Netz), steht der Fehler da und das nächste Zurück schließt. Die Leiste „Alle Tage eingetragen“ bietet ebenso „✅ Fertig – Bestätigung mit Zusammenfassung per E-Mail“ oder „Abbrechen“ (statt „Später“).
+
 ## 2.325.0 – 2026-10-12 – KC-CLUB-DW-BESTAETIGUNG-KOPIE
 Wunsch Hansi („bei Frank die Anrede Lieber eintragen, ihm und seiner Frau Christina die Bestätigung senden – immer mich in BCC und Klaus und Dieter in CC“). Gemeinsamer Versand dwBestaetigungSenden für „✅ Fertig“/„📧 Bestätigung anfordern“ des Mitglieds und den neuen Leitungs-Knopf: E-Mail + App-Nachricht an das Mitglied, CC an die Ämter Clubsprecher und Kassenwart (kc_club_rollen – heute Klaus und Dieter Zander), BCC an die Admins (Hansi). Die bisherige getrennte Vorgang-Kopie entfällt dafür (Kennung club-dwbest, kein Doppel). Neu im Eingang → Dienstzeiten eines Mitglieds: „📧 Bestätigung an … schicken“ (nur Clubleitung, höchstens 1× je 2 Min. je Mitglied; Protokoll mit „durch“). Anrede in kc_besuche_anrede: Frank „Lieber“, Christina „Liebe“.
 
