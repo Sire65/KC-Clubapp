@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.313.0 – 2026-10-12 – KC-CLUB-BUEHNE-KARTON + KC-CLUB-BUEHNE-ABWECHSLUNG
+Wunsch Hansi. Neue Übung „📦 Karton-Steigen“ (Stehen) bzw. „Karton aus dem Lager“ (Küche): Twinkey von der Seite, vor ihm ein Pappkarton – erst der eine Fuß drauf und wieder runter, dann der andere (8 Schläge), Arme schwingen gegengleich; Spruch „So kriegen wir das Fett weg!“. Abwechslung: Bisher kamen immer dieselben ersten Übungen in derselben Reihenfolge – jetzt zufällig gemischt, die Übungen der letzten Runde (je Modus, auf diesem Gerät gemerkt) kommen erst, wenn alle anderen dran waren, und nie zweimal dieselbe Bewegung hintereinander. Neue Übungen: Ans Gewürzregal, Zum Vorratsschrank, Topf aus dem Unterschrank (Küche), Ins Oberregal greifen und Teig ausrollen (Sitzen). Schlusswort nach dem Sport (gesprochen und auf der Abschluss-Seite): „Nach dieser Plackerei habe ich mir einen Eierpunsch und eine Portion Grünkohl mit doppelt Mettwurst am Köcheclub-Stand verdient. Die kochen dort extra warm!“
+
 ## 2.312.0 – 2026-10-12 – Dienstwünsche: mehr Platz, Bereitschaft einmal fragen
 Die Dienstwunsch-Eingabe ist auf dem Handy kompakter: oben nur noch eine Reihe Knöpfe, der Sperrzeit-Tipp ist zugeklappt, die doppelte DP2-Kopfzeile ist weg – die Frage steht gleich oben. „Nur wenn nötig“ ist bei der Kann-Zeit ein auffälliges oranges Feld mit Erklärung, bei der Wunschzeit ist das ausgegraute Kästchen weg. Neu am Anfang: „Bist du generell bereit, auch Bereitschaftsdienste zu übernehmen?“ – bei Nein kommt die Bereitschaftsfrage nicht mehr an jedem Tag.
 

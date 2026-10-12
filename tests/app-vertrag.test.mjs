@@ -8964,3 +8964,10 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/let FP_ADMIN = \{ tage: 2, person: "", info: false \}/.test(html) && /Info-Einträge ausgeblendet/.test(html) && /FP_ADMIN\.info=!FP_ADMIN\.info;fpAdmin\(\)/.test(html), "Anzeige: Info erst auf Wunsch");
   assert.ok(/if \(API_LESEN\.test\(action\) && !zweiterVersuch && r\.ok && !j\) \{ vbEnde\(true/.test(html), "Lesen bei Server-Aussetzer still wiederholen");
 }
+
+// KC-CLUB-BUEHNE-KARTON + ABWECHSLUNG (Wunsch Hansi): Karton-Steigen, jedes Mal andere Übungen, Schlusswort
+{
+  assert.ok(/\{ id: "karton", t: "Karton-Steigen", g: "stehen", a: "karton", profil: 1,[^\n]*"So kriegen wir das Fett weg!"/.test(html) && /\$\{a === "karton" \? BW_KARTON : ""\}/.test(html) && /\.bw-profil\.bw-p-karton \.p-bein\.vorn \.p-ob \{ animation: bwPKartonOb /.test(html), "Karton-Steigen mit Karton und Bewegung");
+  assert.ok(/esLies\("bw_zuletzt_" \+ modus/.test(html) && /u\.a !== plan\[plan\.length - 1\]\?\.a/.test(html) && /Math\.random\(\)/.test(html.slice(html.indexOf("function bwPlan("), html.indexOf("const bwSchlag ="))), "zufällig, letzte Runde zuletzt, nie dieselbe Bewegung hintereinander");
+  assert.ok(/const BW_SCHLUSS = "Nach dieser Plackerei habe ich mir einen Eierpunsch und eine Portion Grünkohl mit doppelt Mettwurst am Köcheclub-Stand verdient\./.test(html) && /\$\{BW_SCHLUSS\}`\)/.test(html), "Schlusswort");
+}

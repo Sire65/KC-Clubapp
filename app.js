@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.312.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.313.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12941,6 +12941,14 @@ const BW_UEBUNGEN = [
   { id: "nudelholz", t: "Nudelholz rollen", g: "kueche", a: "rollen", ding: "nudel", sitz: 1, h: "Arme nach vorn und den Teig kräftig ausrollen.", c: ["Der Pizzateig wird hauchdünn!", "Vor – und zurück!"] },
   { id: "pfanne", t: "Pfanne schwenken", g: "kueche", a: "pfanne", p: "pfanne", ding: "pfannkuchen", sitz: 1, h: "Pfanne vor dir und den Pfannkuchen hochwerfen – aus dem Handgelenk!", w: "Und jetzt die andere Hand!", c: ["Hopp – und gefangen!", "Wie ein Sternekoch!"] },
   { id: "tuch", t: "Geschirrtuch-Dehnung", g: "kueche", a: "hochhalten", p: "tuch", h: "Geschirrtuch mit beiden Händen hoch über den Kopf und lang machen.", c: ["Ganz lang machen – und atmen!", "Herrlich, das tut gut!"] },
+  // 2.313.0 KC-CLUB-BUEHNE-KARTON (Wunsch Hansi „mehr verschiedene Übungen, damit man jedes Mal andere macht“)
+  { id: "karton", t: "Karton-Steigen", g: "stehen", a: "karton", profil: 1, h: "Einen stabilen Karton vor dich auf den Boden: einen Fuß drauf, wieder runter – dann der andere Fuß. Wer mag, hält sich an der Stuhllehne fest.", c: ["So kriegen wir das Fett weg!", "Fuß drauf – und runter!"] },
+  { id: "kartonkueche", t: "Karton aus dem Lager", g: "kueche", a: "karton", profil: 1, h: "Ein Karton vom Lieferanten steht auf dem Boden: abwechselnd einen Fuß draufstellen und wieder runter.", c: ["So kriegen wir das Fett weg!", "Wie die Treppe ins Lager – nur kürzer!"] },
+  { id: "gewuerzregal", t: "Ans Gewürzregal", g: "kueche", a: "zehen", h: "Auf die Zehenspitzen – oben steht das Gewürz. Langsam hoch und wieder runter.", c: ["Ganz oben steht der Muskat!", "Hoch – und sanft runter!"] },
+  { id: "vorratsschrank", t: "Zum Vorratsschrank", g: "kueche", a: "marsch", h: "Auf der Stelle gehen, als läufst du zum Vorratsschrank – Knie hoch, Arme schwingen.", c: ["Mehl holen – Tempo!", "Knie hoch, wir haben Hunger!"] },
+  { id: "unterschrank", t: "Topf aus dem Unterschrank", g: "kueche", a: "knie", h: "Hände an die Arbeitsplatte oder Stuhllehne, Po nach hinten – als holst du den großen Topf von unten.", c: ["Der Bräter ist ganz hinten – runter!", "Nur so tief, wie es guttut!"] },
+  { id: "oberregal", t: "Ins Oberregal greifen", g: "sitzen", a: "strecken", sitz: 1, h: "Im Sitzen abwechselnd einen Arm weit nach oben – oben stehen die Teller.", c: ["Ganz lang machen!", "Links – und rechts!"] },
+  { id: "teigsitz", t: "Teig ausrollen", g: "sitzen", a: "rollen", ding: "nudel", sitz: 1, h: "Im Sitzen beide Arme nach vorn und den Teig kräftig ausrollen.", c: ["Der Strudelteig muss dünn werden!", "Vor – und zurück!"] },
 ];
 const BW_MODI = [["sitzen", "🪑 Im Sitzen"], ["stehen", "🧍 Im Stehen"], ["kueche", "🥄 Küchenhelfer"]];
 const BW_DAUER = [5, 10, 15];
@@ -13048,6 +13056,8 @@ function bwFigurSeite(a, b, ph, farbe) {
   return `<svg class="bw-figur bw-seite bw-s-${a}" viewBox="0 0 120 170" style="--b:${b || .5}s;--ph:${ph || 0}s;--jacke:${fj};--stulpe:${fs};--band:${fb}" role="img" aria-label="Twinkey von der Seite: aufstehen und hinsetzen">
     ${stuhl}${schuh(67, true)}${bein(true)}${bein(false)}${schuh(70, false)}</svg>`;
 }
+// 2.313.0 KC-CLUB-BUEHNE-KARTON: Pappkarton vor Twinkey auf dem Boden (Profil) – der Fuß landet genau oben drauf
+const BW_KARTON = `<g class="bw-karton"><rect x="76" y="139" width="32" height="13" rx="1.2" fill="#c8955a" stroke="#8a5a2b" stroke-width=".8"/><rect x="76" y="139" width="32" height="2.4" fill="#b07c45"/><rect x="88" y="139" width="8" height="13" fill="#e8d2a6" opacity=".75"/><path d="M80 146 h4 M80 148.5 h6" stroke="#8a5a2b" stroke-width=".7"/></g>`;
 // 2.304.0: Twinkey stehend im Profil – Beine hängen an der Hüfte (Oberschenkel → Unterschenkel → Fuß), damit Schritte nach vorn/hinten sichtbar sind
 function bwFigurProfil(a, b, ph, farbe) {
   const [fj, fs, fb] = BW_FARBEN[((farbe || 0) % BW_FARBEN.length + BW_FARBEN.length) % BW_FARBEN.length], o = (x, y) => `style="transform-origin:${x}px ${y}px"`;
@@ -13060,13 +13070,23 @@ function bwFigurProfil(a, b, ph, farbe) {
       <circle cx="66.5" cy="39" r="1.5" class="bw-auge"/><path d="M65 46.5 Q68.5 48.5 70.5 46" class="bw-mund"/><circle cx="65.5" cy="44" r="2" fill="#f4a3a3" opacity=".55"/>
       <path d="M49.5 41 Q49 29 61 29 Q70 29.5 72 35 Q62 33 53 37 Q51 42 49.5 41Z" fill="#6b4226"/><rect x="49.6" y="33.6" width="23" height="5" rx="2.4" class="bw-band" transform="rotate(-6 61 36)"/><path d="M50 35 l-6 -3 l1 4 z M50 37 l-6 2 l3 2 z" class="bw-band"/></g></g>`;
   return `<svg class="bw-figur bw-profil bw-p-${a}" viewBox="0 0 120 170" style="--b:${b || .5}s;--ph:${ph || 0}s;--jacke:${fj};--stulpe:${fs};--band:${fb}" role="img" aria-label="Twinkey von der Seite: Schritte">
-    <g class="p-ganz" ${o(60, 150)}>${arm("hinten")}${bein("hinten")}${oben}${bein("vorn")}${arm("vorn")}</g></svg>`;
+    ${a === "karton" ? BW_KARTON : ""}<g class="p-ganz" ${o(60, 150)}>${arm("hinten")}${bein("hinten")}${oben}${bein("vorn")}${arm("vorn")}</g></svg>`;
 }
 // 2.308.0: Hula-Hoop-Reifen in zwei Hälften – hintere Hälfte hinter dem Körper, vordere davor; bunte Streifen laufen (Drehung)
 const bwHoop = (H, vorn) => `<g class="bw-hoop ${vorn ? "vorn" : "hinten"}" style="transform-origin:60px ${H - 6}px"><path d="M29 ${H - 6} A31 8 0 0 ${vorn ? 0 : 1} 91 ${H - 6}" fill="none" stroke="#ff4fa3" stroke-width="3.4" stroke-linecap="round"/><path class="bw-hoop-streifen" d="M29 ${H - 6} A31 8 0 0 ${vorn ? 0 : 1} 91 ${H - 6}" fill="none" stroke="#ffe14d" stroke-width="3.4" stroke-dasharray="5 7"/></g>`;
+// 2.313.0 (Wunsch Hansi „jedes Mal andere Übungen“): zufällige Reihenfolge; was beim letzten Mal dran war, kommt zuletzt;
+// nie zweimal dieselbe Bewegung direkt hintereinander. Gemerkt wird nur auf diesem Gerät.
 function bwPlan(modus, dauer) {
-  const passt = BW_UEBUNGEN.filter((u) => u.g === modus), n = Math.max(4, Math.round((dauer * 60) / (BW_SEK + BW_SCHUETTELN + BW_BEREIT))), plan = [];
-  for (let i = 0; i < n; i++) plan.push(passt[i % passt.length]);
+  const passt = BW_UEBUNGEN.filter((u) => u.g === modus), n = Math.max(4, Math.round((dauer * 60) / (BW_SEK + BW_SCHUETTELN + BW_BEREIT)));
+  let zuletzt = []; try { zuletzt = JSON.parse(esLies("bw_zuletzt_" + modus, "[]")); } catch (e) { zuletzt = []; }
+  const misch = (l) => { const a = l.slice(); for (let i = a.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [a[i], a[k]] = [a[k], a[i]]; } return a; };
+  const plan = []; let vorrat = [];
+  while (plan.length < n) {
+    if (!vorrat.length) vorrat = [...misch(passt.filter((u) => !zuletzt.includes(u.id))), ...misch(passt.filter((u) => zuletzt.includes(u.id)))];
+    const k = Math.max(0, vorrat.findIndex((u) => u.a !== plan[plan.length - 1]?.a));
+    plan.push(vorrat.splice(k, 1)[0]);
+  }
+  esSchreib("bw_zuletzt_" + modus, JSON.stringify(plan.map((u) => u.id)));
   return plan;
 }
 const bwSchlag = () => 60 / (BW_TEMPO[bwWahl().modus] || 116);
@@ -13224,13 +13244,15 @@ function bwStopp(zeigen) {
   if (BW.lauf) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } }
   BW.lauf = null; BW.hoeren = null; BW.vorher = null; BWM.stueck = null; BW.blase = ""; if (zeigen && $("hrFlaeche")?.classList.contains("hr-buehne")) esBuehneZeigen($("hrFlaeche")); // 2.302.0: auch „Nur Musik“
 }
+// 2.313.0 (Wunsch Hansi): Twinkeys Schlusswort nach dem Sport
+const BW_SCHLUSS = "Nach dieser Plackerei habe ich mir einen Eierpunsch und eine Portion Grünkohl mit doppelt Mettwurst am Köcheclub-Stand verdient. Die kochen dort extra warm!";
 function bwFertig() {
   const L = BW.lauf; if (!L) return; const sek = L.sek, n = L.plan.length; bwStopp(false);
-  if (bwWahl().ansage) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwSprechen("Geschafft! Das war super – Applaus für dich! Bis zum nächsten Mal auf der Bühne!"); }
+  if (bwWahl().ansage) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwSprechen(`Geschafft! Das war super – Applaus für dich! ${BW_SCHLUSS}`); }
   const f = $("hrFlaeche"); if (!f) return;
   f.innerHTML = `<div class="bw-buehne an"><div class="bw-licht"></div><div class="bw-vorhang links schliesst"></div><div class="bw-vorhang rechts schliesst"></div><div class="bw-boden"></div>
     <div class="bw-mitte">${bwFigur("jubel", 0, "", 0, bwSchlag(), 0, n)}</div><div class="bw-applaus" aria-hidden="true">👏 🎉 👏</div>
-    <div class="bw-wahl"><div class="bw-titel">🏅 Geschafft – Applaus für dich!</div><div class="bw-tipp" style="position:static">${n} Übungen · ${Math.floor(sek / 60)} Min. ${sek % 60} s Bewegung</div>
+    <div class="bw-wahl"><div class="bw-titel">🏅 Geschafft – Applaus für dich!</div><div class="bw-tipp" style="position:static">🍲 ${esc(BW_SCHLUSS)}</div><div class="bw-tipp" style="position:static">${n} Übungen · ${Math.floor(sek / 60)} Min. ${sek % 60} s Bewegung</div>
       <button type="button" class="es-k es-haupt bw-los" onclick="esBuehneZeigen($('hrFlaeche'))">🔁 Nochmal</button></div></div>`;
 }
 // ----- 2.298.0 KC-CLUB-BUEHNE-LAUTSTAERKE (Wunsch Hansi): Regler rechts für die Musik – Keil unten dünn, nach oben (lauter) dicker -----

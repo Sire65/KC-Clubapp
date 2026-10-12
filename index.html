@@ -2905,6 +2905,18 @@
   @keyframes bwPVzArm2 { 0%, 50%, 75%, 100% { transform: rotate(0deg); } 62.5% { transform: rotate(26deg); } 87.5% { transform: rotate(-38deg); } }
   .bw-profil.bw-p-vorzurueck .p-bein.vorn .p-ob { animation: bwPVzOb calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; } .bw-profil.bw-p-vorzurueck .p-bein.hinten .p-ob { animation: bwPVzOb2 calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
   .bw-profil.bw-p-vorzurueck .p-arm.vorn { animation: bwPVzArm calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; } .bw-profil.bw-p-vorzurueck .p-arm.hinten { animation: bwPVzArm2 calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
+  /* 2.313.0 KC-CLUB-BUEHNE-KARTON: Fuß auf den Karton – runter – anderer Fuß (8 Schläge), Arme schwingen gegengleich */
+  @keyframes bwPKartonOb { 0%, 3%, 30%, 100% { transform: rotate(0deg); } 11%, 22% { transform: rotate(-64deg); } }
+  @keyframes bwPKartonOb2 { 0%, 53%, 80%, 100% { transform: rotate(0deg); } 61%, 72% { transform: rotate(-64deg); } }
+  @keyframes bwPKartonUb { 0%, 3%, 30%, 100% { transform: rotate(0deg); } 11%, 22% { transform: rotate(64deg); } }
+  @keyframes bwPKartonUb2 { 0%, 53%, 80%, 100% { transform: rotate(0deg); } 61%, 72% { transform: rotate(64deg); } }
+  @keyframes bwPKartonArm { 0%, 3%, 30%, 53%, 80%, 100% { transform: rotate(0deg); } 11%, 22% { transform: rotate(24deg); } 61%, 72% { transform: rotate(-34deg); } }
+  @keyframes bwPKartonArm2 { 0%, 3%, 30%, 53%, 80%, 100% { transform: rotate(0deg); } 11%, 22% { transform: rotate(-34deg); } 61%, 72% { transform: rotate(24deg); } }
+  @keyframes bwPKartonOben { 0%, 30%, 50%, 80%, 100% { transform: rotate(0deg); } 11%, 22%, 61%, 72% { transform: rotate(4deg); } }
+  .bw-profil.bw-p-karton .p-bein.vorn .p-ob { animation: bwPKartonOb calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; } .bw-profil.bw-p-karton .p-bein.hinten .p-ob { animation: bwPKartonOb2 calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
+  .bw-profil.bw-p-karton .p-bein.vorn .p-ub { animation: bwPKartonUb calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; } .bw-profil.bw-p-karton .p-bein.hinten .p-ub { animation: bwPKartonUb2 calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
+  .bw-profil.bw-p-karton .p-arm.vorn { animation: bwPKartonArm calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; } .bw-profil.bw-p-karton .p-arm.hinten { animation: bwPKartonArm2 calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
+  .bw-profil.bw-p-karton .p-oben { animation: bwPKartonOben calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
   /* 2.302.0 KC-CLUB-BUEHNE-MUSIK: Stückliste über der Leiste („Nur Musik hören“) */
   .bw-liste { position: absolute; left: 8px; right: 60px; top: 72px; z-index: 4; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 4px; max-height: 34%; overflow-y: auto; }
   .bw-liste .es-k { font-size: .8rem; padding: 4px 8px; min-height: 0; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(0,0,0,.45); }
@@ -4839,6 +4851,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.312.0" data-v="2.312.0"></script>
+<script src="app.js?v=2.313.0" data-v="2.313.0"></script>
 </body>
 </html>
