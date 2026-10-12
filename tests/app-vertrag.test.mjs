@@ -5933,6 +5933,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.bw-figur\.bw-a-steptouch \.bw-oaL \{ animation: bwKlatschenOa/.test(css) && /\.bw-figur\.bw-a-steptouch \{ animation: bwSeitRoot/.test(css), "Seit-Tipp nutzt vorhandene Schritt- und Klatsch-Bewegung");
 }
 
+// 2.305.0 KC-CLUB-START-VORDERSEITE (Fund Hansi „auf der Bühne komme ich nicht unten auf Start“): 🏠 Start dreht den Kopf zurück, Bühne hört auf
+{
+  const b = html.slice(html.indexOf("async function startKnopf()"), html.indexOf("function sbSchalter("));
+  assert.ok(/try \{ if \(ES\.offen\) await esDrehen\(false\); \} catch \{\}/.test(b), "Start → Vorderseite");
+  assert.ok(/\} else esStop\(\);\n\}/.test(html) && /function esStop\(\) \{[^\n]*if \(BW\.lauf \|\| BW\.hoeren \|\| BWM\.laeuft\) bwStopp\(\); \}/.test(html), "Zurückdrehen stoppt Training und Musik");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

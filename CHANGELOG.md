@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.305.0 – 2026-10-12 – KC-CLUB-START-VORDERSEITE: Start führt von der Bühne zurück
+Auf der Rückseite (Bühne, Uhr, Tafel …) tat ein Tipp auf 🏠 Start nichts – der Kopf blieb umgedreht. Jetzt dreht Start den Kopf zurück auf die Vorderseite; Training, Musik und Ansage hören dabei auf.
+
 ## 2.304.0 – 2026-10-12 – KC-CLUB-BUEHNE-BEWEGUNG-3: sechs neue Übungen im Stehen
 Nach Recherche (Seniorentanz, Line-Dance-Grundschritte, Sturzprophylaxe): Fuß nach hinten tippen und abwechselnd, vor und zurück (beides von der Seite gezeigt), Tanzschritt Seit-Tipp mit Klatschen, Hampelmann ohne Hüpfen, Fersen zum Po, Arme kreisen im Stehen. Kleine Schritte, Hinweis auf Festhalten am Stuhl.
 

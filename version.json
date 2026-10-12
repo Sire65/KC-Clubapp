@@ -1,11 +1,18 @@
 {
-  "version": "2.304.0",
+  "version": "2.305.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "💃 Bühne: Fuß nach hinten, vor und zurück, Tanzschritt, Hampelmann ohne Hüpfen, Fersen zum Po, Arme kreisen"
+    "🏠 Start bringt dich von der Bühne (Rückseite) zurück zur Startseite"
   ],
   "verlauf": [
+    {
+      "version": "2.305.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🏠 Start bringt dich von der Bühne (Rückseite) zurück zur Startseite"
+      ]
+    },
     {
       "version": "2.304.0",
       "datum": "2026-10-12",
