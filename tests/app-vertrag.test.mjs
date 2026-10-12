@@ -8647,7 +8647,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
   assert.ok(b.length > 5000, "Baustein vorhanden");
   assert.ok(/if \(!hinten && d < -35\) return esDrehen\(true\);/.test(b) && /if \(t - ES\.tipp < 450\) \{ ES\.tipp = 0; esDrehen\(false\); \}/.test(b), "nach links ziehen dreht um, Doppeltipp dreht zurück");
-  assert.ok(/const ES_TABS = \[\["dia", "🖼️", "Diashow"\], \["tafel", "🖍️", "Tafel"\], \["uhr", "🕰️", "Uhr"\]\];/.test(b), "drei Rückseiten");
+  assert.ok(/const ES_TABS = \[\["dia", "🖼️", "Diashow"\], \["tafel", "🖍️", "Tafel"\], \["uhr", "🕰️", "Uhr"\](, \["buehne", "🎭", "Bühne"\])?\];/.test(b), "Rückseiten (2.293.0: + Bühne)");
   assert.ok(/api\("fotos_liste", album \? \{ album_id: album \} : \{\}\)/.test(b) && /api\("foto_oeffnen", \{ id: foto\.id \}\)/.test(b), "Diashow nur lesend aus dem Fotoalbum");
   assert.ok(!/api\("(foto_hochladen|archiv_hochladen|nachricht_senden|einstellung_setzen)"/.test(b), "nichts wird ungefragt gespeichert oder gesendet");
   assert.ok(/TEILEN = \{ text: "", dateien: \[d\] \}; return teilenChatWahl\(\);/.test(b) && /archivAblageFragen\("skizze", \{/.test(b) && /skizze: \{ sym: "🖍️", register: \["Fotos", "Sonstiges"\]/.test(html), "Skizze als Nachricht (man drückt selbst ➤) oder ins Archiv");
@@ -8655,5 +8655,20 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/const esSichtbar = \(\) => ES\.offen && aktuelleAnsicht === "start" && !document\.hidden;/.test(b) && /if \(esSichtbar\(\)\) esUhrTick\(\)/.test(b), "Uhr/Diashow laufen nur, wenn man sie sieht");
   assert.ok(/id="setEselsohr" checked onchange="eselsohrSchalter\(this\.checked\)"/.test(html) && /if \(!document\.getElementById\("eselsohr"\)\) esEinsetzen\(\);/.test(html), "abschaltbar, wird am Kopf eingesetzt");
   assert.ok(/\.eselsohr \{ position: absolute; right: 0; bottom: 0;[^}]*touch-action: none;/.test(html) && /\.hero-rueck \{ position: relative; height: min\(74vh, 660px\);/.test(html), "Eselsohr unten rechts, große Rückseite");
+  assert.ok(!/\|\|=|\?\?=/.test(b), "keine Kurzschreibweisen, die alte Handys nicht kennen");
+}
+
+// 2.293.0 KC-CLUB-BEWEGUNGSBUEHNE (Wunsch Hansi): 🎭 Bühne auf der Rückseite – Twinkey mit Schweißstirnband, Übungen mit Musik und Trainer-Ansagen
+{
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-BEWEGUNGSBUEHNE (2.293.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  assert.ok(b.length > 4000 && /\["buehne", "🎭", "Bühne"\]/.test(html) && /else if \(k === "buehne"\) esBuehneZeigen\(f\);/.test(html), "vierter Reiter Bühne");
+  assert.ok(/\.replace\(\/<g class="fi-muetze">\[\\s\\S\]\*\?<\\\/g>\/, band\)/.test(b), "Schweißstirnband statt Kochmütze");
+  for (const g of ["sitzen", "stehen", "kueche"]) assert.ok(new RegExp(`g: "${g}"`).test(b), "Übungen " + g);
+  for (const h of ["schneebesen", "loeffel", "nudelholz", "flasche", "deckel", "tuch"]) assert.ok(new RegExp(`\\b${h}: \\(x, y\\) =>`).test(b), "Küchenhelfer " + h);
+  assert.ok(/L\.rest === 3 \? "Noch 3" : L\.rest === 2 \? "noch 2" : "noch 1"/.test(b) && /"Und jetzt ausschütteln!"/.test(b) && /bwSag\(u\.w \|\| BW_LOB/.test(b), "Trainer-Ansagen: Seitenwechsel/Lob, noch 3-2-1, ausschütteln");
+  assert.ok(/if \(!esSichtbar\(\)\) \{ if \(!L\.pause\) \{ L\.pause = true; bwMusik\(false\);/.test(b) && /if \(BW\.lauf \|\| BWM\.laeuft\) bwStopp\(\);/.test(html), "nur sichtbar – sonst Pause; Umdrehen/Reiterwechsel stoppt Musik und Ansage");
+  assert.ok(/window\.AudioContext \|\| window\.webkitAudioContext/.test(b) && !/new Audio\(|\.mp3|https?:\/\//.test(b), "Musik im Handy erzeugt – keine Datei, kein Internet");
+  assert.ok(!/\bapi\(/.test(b), "nichts wird gespeichert oder gesendet");
+  assert.ok(/fiLs\(FI_HINWEIS_KEY, false\)/.test(b), "Gesundheitshinweis wie bei Fit bleiben");
   assert.ok(!/\|\|=|\?\?=/.test(b), "keine Kurzschreibweisen, die alte Handys nicht kennen");
 }

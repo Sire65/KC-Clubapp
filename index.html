@@ -2773,6 +2773,60 @@
   .kl-zeit small { font-size: .3em; opacity: .7; margin-left: .2em; }
   .kl-datum { font-size: calc(var(--g) * .36); opacity: .85; text-align: center; padding: 0 10px; }
   :root.ohne-anim .es-dia-bild { transition: none; } :root.ohne-anim .es-dia-bild.zoom { animation: none; }
+  /* KC-CLUB-BEWEGUNGSBUEHNE (2.293.0): Bühne mit rotem Glitzervorhang, Scheinwerfer, Holzboden – Twinkey mit Schweißstirnband */
+  .bw-buehne { position: absolute; inset: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 0%, #3a1f2a, #120a0e 70%); color: #fff; }
+  .bw-licht { position: absolute; left: 50%; top: -10%; width: 90%; height: 95%; transform: translateX(-50%); background: radial-gradient(ellipse at 50% 100%, rgba(255,236,170,.35), rgba(255,236,170,0) 62%); pointer-events: none; }
+  .bw-boden { position: absolute; left: 0; right: 0; bottom: 0; height: 26%; background: repeating-linear-gradient(90deg, #7a4b26 0 38px, #6a3f1f 38px 40px), linear-gradient(#8a5a32, #5a3517); background-blend-mode: multiply; box-shadow: inset 0 8px 14px rgba(0,0,0,.45); }
+  .bw-vorhang { position: absolute; top: 0; bottom: 0; width: 52%; z-index: 3; pointer-events: none; transition: transform 1.6s cubic-bezier(.6,.05,.3,1);
+    background: radial-gradient(circle at 20% 30%, rgba(255,255,255,.55) 0 1px, transparent 1.5px) 0 0 / 23px 29px, radial-gradient(circle at 70% 60%, rgba(255,215,120,.6) 0 1px, transparent 1.6px) 0 0 / 31px 37px,
+      repeating-linear-gradient(90deg, #7d0f1d 0 10px, #b51f30 14px, #8e1424 22px, #6b0b17 28px); box-shadow: inset 0 -30px 40px rgba(0,0,0,.4); animation: bwGlitzer 3s linear infinite; }
+  .bw-vorhang.links { left: 0; transform-origin: left; } .bw-vorhang.rechts { right: 0; transform-origin: right; }
+  .bw-vorhang.halb.links { transform: translateX(-72%); } .bw-vorhang.halb.rechts { transform: translateX(72%); }
+  .bw-vorhang.offen.links { transform: translateX(-88%); } .bw-vorhang.offen.rechts { transform: translateX(88%); }
+  .bw-vorhang.oeffnet.links { animation: bwAufL 1.8s ease forwards, bwGlitzer 3s linear infinite; } .bw-vorhang.oeffnet.rechts { animation: bwAufR 1.8s ease forwards, bwGlitzer 3s linear infinite; }
+  .bw-vorhang.schliesst.links { animation: bwZuL 2.4s ease 1.2s forwards, bwGlitzer 3s linear infinite; transform: translateX(-88%); } .bw-vorhang.schliesst.rechts { animation: bwZuR 2.4s ease 1.2s forwards, bwGlitzer 3s linear infinite; transform: translateX(88%); }
+  @keyframes bwAufL { from { transform: translateX(0); } to { transform: translateX(-88%); } } @keyframes bwAufR { from { transform: translateX(0); } to { transform: translateX(88%); } }
+  @keyframes bwZuL { to { transform: translateX(-58%); } } @keyframes bwZuR { to { transform: translateX(58%); } }
+  @keyframes bwGlitzer { 50% { filter: brightness(1.12); } }
+  .bw-mitte { position: absolute; left: 0; right: 0; bottom: 10%; top: 26%; display: flex; justify-content: center; align-items: flex-end; z-index: 1; }
+  .bw-buehne:not(.an) .bw-mitte { top: 4%; bottom: 46%; }
+  .bw-mitte .fi-figur { width: auto; height: 100%; max-height: 300px; margin: 0; filter: drop-shadow(0 8px 6px rgba(0,0,0,.45)); }
+  .bw-kopf { position: absolute; left: 10px; right: 10px; top: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; z-index: 4; }
+  .bw-kopf small { display: block; opacity: .8; font-size: .78rem; } .bw-kopf b { font-size: 1.15rem; line-height: 1.2; text-shadow: 0 2px 4px #000; }
+  .bw-zahl { font: 800 2.6rem/1 system-ui, sans-serif; min-width: 1.6em; text-align: center; background: rgba(0,0,0,.45); border-radius: 14px; padding: 4px 8px; font-variant-numeric: tabular-nums; }
+  .bw-zahl.knapp { color: #ffd43b; animation: bwPuls .5s ease-in-out infinite alternate; } @keyframes bwPuls { to { transform: scale(1.12); } }
+  .bw-balken-bahn { position: absolute; left: 10px; right: 10px; top: 66px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.18); z-index: 4; } .bw-balken { height: 100%; width: 0; border-radius: 3px; background: #ffd43b; transition: width 1s linear; }
+  .bw-tipp { position: absolute; left: 10px; right: 10px; bottom: 58px; text-align: center; font-size: .92rem; z-index: 4; text-shadow: 0 1px 3px #000; }
+  .bw-wahl { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 5; display: flex; flex-direction: column; gap: 6px; align-items: center; padding: 8px; border-radius: 14px; background: rgba(0,0,0,.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+  .bw-titel { font-weight: 800; font-size: 1.05rem; } .bw-reihe { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .bw-hinweis { font-size: .85rem; text-align: center; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .bw-los { font-size: 1rem; padding: 0 18px; height: 40px; }
+  .bw-applaus { position: absolute; top: 16%; left: 0; right: 0; text-align: center; font-size: 2rem; z-index: 4; animation: bwPuls .6s ease-in-out infinite alternate; }
+  .bw-buehne.angehalten .fi-figur * { animation-play-state: paused !important; }
+  .bw-figur .bw-schweiss { animation: bwSchweiss 3.5s ease-in infinite; } @keyframes bwSchweiss { 0%, 55% { opacity: 0; transform: translateY(0); } 65% { opacity: 1; } 100% { opacity: 0; transform: translateY(9px); } }
+  /* neue Bewegungen (Arm links: + = nach außen, Arm rechts: − = nach außen) */
+  .fi-a-winken .fi-armR { animation: bwWinken 1s ease-in-out infinite; } @keyframes bwWinken { 0%, 100% { transform: rotate(-150deg); } 50% { transform: rotate(-120deg); } }
+  .fi-a-seitheben .fi-armL { animation: bwHebL 2.6s ease-in-out infinite; } .fi-a-seitheben .fi-armR { animation: bwHebR 2.6s ease-in-out infinite; }
+  @keyframes bwHebL { 0%, 100% { transform: rotate(5deg); } 45%, 55% { transform: rotate(85deg); } } @keyframes bwHebR { 0%, 100% { transform: rotate(-5deg); } 45%, 55% { transform: rotate(-85deg); } }
+  .fi-a-hochdruecken .fi-armL { animation: bwDrueckL 2.4s ease-in-out infinite; } .fi-a-hochdruecken .fi-armR { animation: bwDrueckR 2.4s ease-in-out infinite; }
+  @keyframes bwDrueckL { 0%, 100% { transform: rotate(60deg); } 45%, 55% { transform: rotate(165deg); } } @keyframes bwDrueckR { 0%, 100% { transform: rotate(-60deg); } 45%, 55% { transform: rotate(-165deg); } }
+  .fi-a-klatschen .fi-armL { animation: bwKlatschL 1s ease-in-out infinite; } .fi-a-klatschen .fi-armR { animation: bwKlatschR 1s ease-in-out infinite; }
+  @keyframes bwKlatschL { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(-48deg); } } @keyframes bwKlatschR { 0%, 100% { transform: rotate(10deg); } 50% { transform: rotate(48deg); } }
+  .fi-a-trommeln .fi-armL { animation: bwTromL .56s ease-in-out infinite; } .fi-a-trommeln .fi-armR { animation: bwTromR .56s ease-in-out infinite .28s; }
+  @keyframes bwTromL { 0%, 100% { transform: rotate(-28deg); } 50% { transform: rotate(-62deg); } } @keyframes bwTromR { 0%, 100% { transform: rotate(28deg); } 50% { transform: rotate(62deg); } }
+  .fi-a-ruehren .fi-armR { animation: bwRuehr 1.4s linear infinite; } .fi-a-ruehren .fi-armL { transform: rotate(-25deg); }
+  @keyframes bwRuehr { 0% { transform: rotate(30deg) translate(0, 0); } 25% { transform: rotate(42deg) translate(3px, -3px); } 50% { transform: rotate(34deg) translate(0, -6px); } 75% { transform: rotate(22deg) translate(-3px, -3px); } 100% { transform: rotate(30deg) translate(0, 0); } }
+  .fi-a-seitbeuge .fi-armL { transform: rotate(160deg); } .fi-a-seitbeuge .fi-armR { transform: rotate(-160deg); } .fi-a-seitbeuge .fi-oben { animation: bwBeuge 3.6s ease-in-out infinite; }
+  @keyframes bwBeuge { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-11deg); } 75% { transform: rotate(11deg); } }
+  .fi-a-rollen .fi-armL { animation: bwRollL 1.6s ease-in-out infinite; } .fi-a-rollen .fi-armR { animation: bwRollR 1.6s ease-in-out infinite; }
+  @keyframes bwRollL { 0%, 100% { transform: rotate(-38deg) translateY(0); } 50% { transform: rotate(-30deg) translateY(5px); } } @keyframes bwRollR { 0%, 100% { transform: rotate(38deg) translateY(0); } 50% { transform: rotate(30deg) translateY(5px); } }
+  .fi-a-hochhalten .fi-armL { transform: rotate(165deg); } .fi-a-hochhalten .fi-armR { transform: rotate(-165deg); } .fi-a-hochhalten .fi-oben { animation: bwBeuge 4.4s ease-in-out infinite; }
+  .fi-a-schuetteln { animation: bwSchuett .28s linear infinite; } .fi-a-schuetteln .fi-armL { animation: bwWackL .22s linear infinite; } .fi-a-schuetteln .fi-armR { animation: bwWackR .22s linear infinite; }
+  @keyframes bwSchuett { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+  @keyframes bwWackL { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(18deg); } } @keyframes bwWackR { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(-18deg); } }
+  .fi-a-jubel .fi-armL { animation: bwJubelL .7s ease-in-out infinite; } .fi-a-jubel .fi-armR { animation: bwJubelR .7s ease-in-out infinite; } .fi-a-jubel { animation: fiZehen 1.4s ease-in-out infinite; }
+  @keyframes bwJubelL { 0%, 100% { transform: rotate(150deg); } 50% { transform: rotate(170deg); } } @keyframes bwJubelR { 0%, 100% { transform: rotate(-150deg); } 50% { transform: rotate(-170deg); } }
+  :root.ohne-anim .bw-vorhang { transition: none; animation: none !important; } :root.ohne-anim .bw-vorhang.oeffnet.links, :root.ohne-anim .bw-vorhang.schliesst.links { transform: translateX(-88%); } :root.ohne-anim .bw-vorhang.oeffnet.rechts, :root.ohne-anim .bw-vorhang.schliesst.rechts { transform: translateX(88%); }
   /* KC-CLUB-SCHNECKE: 🐌 oben in der Mitte, auf jeder Seite, solange das Netz langsam ist */
   /* 2.126.0 KC-CLUB-SCHNECKEN-WANDERN (Wunsch Hansi): im Langsam-Modus wandern oben 3 Schnecken von rechts nach links.
      Der Streifen selbst lässt Tipps durch (pointer-events: none) – nur die Schnecken sind antippbar (Info). */
@@ -4301,6 +4355,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.292.0" data-v="2.292.0"></script>
+<script src="app.js?v=2.293.0" data-v="2.293.0"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.292.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.293.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1994,7 +1994,7 @@ const RG_SPEZIAL = [
     live: async (L) => { await L.wischen("#eselsohr", 1); } },
   { v: "start", nur: () => esAn(), vor: () => { rgKopf("offen"); if (!RG.esZurueck) { RG.esZurueck = true; RG.zurueck.push(() => { RG.esZurueck = false; esDrehen(false, true); }); } esDrehen(true, true).then(() => esTab("uhr")); },
     sel: ["#heroRueck"], mussSel: true, t: "🕰️ Die Rückseite",
-    x: "Auf der Rückseite ist viel Platz: eine Diashow mit den Fotos aus dem Fotoalbum, eine Tafel zum Skizzieren mit Kreide, Schwamm und Speichern – und eine große Uhr in vier Stilen. Doppelt aufs Eselsohr tippen dreht den Kopf zurück.",
+    x: "Auf der Rückseite ist viel Platz: eine Diashow mit den Fotos aus dem Fotoalbum, eine Tafel zum Skizzieren mit Kreide, Schwamm und Speichern, eine große Uhr in vier Stilen – und die Bühne, auf der Twinkey mit Musik Bewegungsübungen vormacht. Doppelt aufs Eselsohr tippen dreht den Kopf zurück.",
     live: async (L) => { await L.tipp('#heroRueck [data-tab="tafel"]'); esTab("tafel"); L.ziel(); await L.warte(2000); await L.tipp('#heroRueck [data-tab="dia"]'); esTab("dia"); L.ziel(); await L.warte(2000); await L.tipp("#heroRueck .eselsohr", "doppelt"); },
     nach: () => esDrehen(false, true) },
   rgOb("👆 Lange drücken"), rgOb("✋ Verschieben"), rgOb("✅ Fertig", 0), rgOb("🔄 Kachel umdrehen"), rgOb("🗂️ Register anordnen"), rgOb("👆 Wischen"),
@@ -3213,7 +3213,7 @@ const HILFE = [
   { id: "sprungknopf", thema: "nachrichten", sym: "🔘", t: "Einen Knopf in die Nachricht setzen", x: "Willst du jemanden direkt an eine Stelle der App schicken? Unter dem Schreibfeld auf <b>📎</b> → <b>„🔘 Knopf zu einer App-Stelle“</b> und das Ziel wählen, z. B. „Mein Bild wählen“. In der Nachricht erscheint ein Knopf – antippen, und man ist dort.", zeig: () => zeige("nachrichten"), seit: "2.23.97" },
   { id: "was_neu", thema: "nachrichten", sym: "👋", t: "Was ist neu? Gleich beim Öffnen", x: "Öffnest du die App und es gibt Neues, zeigt sie dir kurz, wie viele <b>neue Nachrichten</b> (in deinen Chats und in Gruppen) und <b>Pinnwand-Einträge</b> da sind und ob <b>Spiele</b> auf dich warten – mit Knopf direkt dorthin. Abschalten: im Fenster selbst mit „🔕 Diese Meldung ausschalten“ oder unter ⚙️ Einstellungen → 🗣️ Ansagen, Töne &amp; Tipps → „👋 Beim Öffnen zeigen, was neu ist“.", zeig: () => einstiegHin("ansagen", "setWasNeu"), seit: "2.24.12" },
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „🎨 Darstellung“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("darstellung", "setAnimiert"), seit: "2.24.1" },
-  { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am Kopf ist eine Ecke umgeknickt. <b>Nach links ziehen</b> – der Kopf dreht sich um: <b>🖼️ Diashow</b> mit euren Fotos, <b>🖍️ Tafel</b> zum Skizzieren (Kreidefarben, Stiftdicken, Schwamm; ins Archiv oder als Nachricht) und <b>🕰️ große Uhr</b> (Digital grün, Fallblatt, Bahnhofsuhr, Groß & klar). <b>Doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“.", zeig: () => zeige("start"), seit: "2.292.0" },
+  { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am Kopf ist eine Ecke umgeknickt. <b>Nach links ziehen</b> – der Kopf dreht sich um: <b>🖼️ Diashow</b> mit euren Fotos, <b>🖍️ Tafel</b> zum Skizzieren (Kreidefarben, Stiftdicken, Schwamm; ins Archiv oder als Nachricht) <b>🕰️ große Uhr</b> (Digital grün, Fallblatt, Bahnhofsuhr, Groß & klar) und <b>🎭 Bühne</b>: Twinkey mit Schweißstirnband macht mit Musik Übungen vor – im Sitzen, im Stehen oder mit Küchenhelfern. <b>Doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“.", zeig: () => zeige("start"), seit: "2.292.0" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
   // 2.110.0 (Wunsch Hansi „Hilfetexte und Handbuch anpassen“): Hilfen zu den Neuerungen seit Anleitung V8 (2.96.0)
   { id: "schnecke", thema: "technik", sym: "🐌", t: "Was bedeutet die Schnecke oben?", x: "Erscheint oben in der Mitte eine kleine <b>🐌</b>, ist das Netz gerade langsam – die App misst das selbst an den Antwortzeiten. Alles funktioniert weiter, dauert aber länger: bitte etwas Geduld und <b>nicht mehrfach tippen</b>. Antippen erklärt es kurz. Ist das Netz wieder schnell, verschwindet die Schnecke von selbst.", seit: "2.106.0" },
@@ -12420,7 +12420,7 @@ setInterval(() => { try { const h = document.querySelector("#v-start .hero"); if
 // Gespeichert oder verschickt wird nur, wenn man es selbst antippt. Abschaltbar: ⚙️ → „🧩 Startseite & Ansicht“.
 const ES = { offen: false, timer: 0, tipp: 0, dia: { fotos: null, alben: [], i: 0, laeuft: true, urls: new Map(), seite: 0, laedt: false },
   tafel: { striche: null, farbe: "#f4f1e6", dicke: 2, werkzeug: "stift", zeichnet: null }, uhr: { letzte: "", fbDatum: false } };
-const ES_TABS = [["dia", "🖼️", "Diashow"], ["tafel", "🖍️", "Tafel"], ["uhr", "🕰️", "Uhr"]];
+const ES_TABS = [["dia", "🖼️", "Diashow"], ["tafel", "🖍️", "Tafel"], ["uhr", "🕰️", "Uhr"], ["buehne", "🎭", "Bühne"]]; // 2.293.0: + Bühne für Bewegung
 const ES_FARBEN = [["#f4f1e6", "Kreide weiß"], ["#ffe066", "Gelb"], ["#ff8787", "Rot"], ["#74c0fc", "Blau"], ["#8ce99a", "Grün"], ["#ffa94d", "Orange"], ["#e599f7", "Lila"]];
 const ES_DICKEN = [[3, "fein"], [7, "mittel"], [14, "dick"]];
 const ES_UHREN = [["digital", "🟩 Digital", "Digital grün"], ["fallblatt", "🔢 Fallblatt", "Fallblatt mit Datum"], ["bahnhof", "🚉 Bahnhof", "Bahnhofsuhr"], ["klar", "🔠 Klar", "Groß & klar"]];
@@ -12473,14 +12473,14 @@ function esRueckHtml() {
     <div class="hr-flaeche" id="hrFlaeche"></div>
     <button type="button" class="eselsohr hinten" title="Doppelt tippen (oder nach rechts ziehen): Kopf zurückdrehen" aria-label="Kopf zurückdrehen"></button></div>`;
 }
-function esStop() { clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; }
+function esStop() { clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (BW.lauf || BWM.laeuft) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
 function esTab(k) {
   if (!ES_TABS.some(([x]) => x === k)) k = "uhr";
   esSchreib("tab", k); esStop();
   document.querySelectorAll("#heroRueck .hr-tab").forEach((b) => { b.classList.toggle("an", b.dataset.tab === k); b.setAttribute("aria-selected", String(b.dataset.tab === k)); });
   const f = $("hrFlaeche"); if (!f) return;
   f.className = "hr-flaeche hr-" + k;
-  if (k === "dia") esDiaZeigen(f); else if (k === "tafel") esTafelZeigen(f); else esUhrZeigen(f);
+  if (k === "dia") esDiaZeigen(f); else if (k === "tafel") esTafelZeigen(f); else if (k === "buehne") esBuehneZeigen(f); else esUhrZeigen(f);
 }
 const esSichtbar = () => ES.offen && aktuelleAnsicht === "start" && !document.hidden;
 
@@ -12674,6 +12674,190 @@ function esFallblatt(el, oben, unten) { // jede Klappe dreht nur, wenn sich ihr 
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && ES.offen && $("esUhr")) { ES.uhr.letzte = ""; esUhrTick(); } });
 addEventListener("resize", () => { if (ES.offen && $("esUhr")) { ES.uhr.letzte = ""; esUhrTick(); } });
+// ---------- KC-CLUB-BEWEGUNGSBUEHNE (2.293.0, Wunsch Hansi): 🎭 Bühne für Bewegung auf der Rückseite des Kopfes ----------
+// Twinkey (mit Schweißstirnband statt Kochmütze) turnt auf der Bühne vor – im Sitzen, im Stehen oder mit Küchenhelfern (großer Schneebesen,
+// Kochlöffel, Nudelholz, Wasserflaschen, Topfdeckel, Geschirrtuch). Dazu Musik (im Handy erzeugt, keine Datei, kein Internet) und Ansagen
+// wie beim Fitnesstrainer: „Und los!“, „Jetzt andersherum!“, „noch 3, noch 2, noch 1 – und ausschütteln!“.
+// Nur auf diesem Gerät, nichts wird gespeichert oder gesendet. Läuft nur, solange man die Bühne sieht (sonst automatisch Pause).
+// Übungs-Registry: neue Übung = neuer Eintrag (Bewegung „a“ = CSS-Klasse fi-a-…, Küchenhelfer „p“ = BW_HELFER).
+const BW_UEBUNGEN = [
+  { id: "armkreis", t: "Arme kreisen", g: "sitzen", a: "armkreis", sitz: 1, h: "Arme zur Seite und große Kreise machen.", w: "Und jetzt andersherum!" },
+  { id: "schulter", t: "Schultern hochziehen", g: "sitzen", a: "schulter", sitz: 1, h: "Schultern hoch zu den Ohren – und locker fallen lassen." },
+  { id: "sitzmarsch", t: "Marschieren im Sitzen", g: "sitzen", a: "marsch", sitz: 1, h: "Knie abwechselnd anheben, Arme schwingen mit." },
+  { id: "faeuste", t: "Fäuste machen", g: "sitzen", a: "kneten", sitz: 1, h: "Arme nach vorn, Hände fest zur Faust – und weit auf." },
+  { id: "beine", t: "Beine strecken", g: "sitzen", a: "bein", sitz: 1, h: "Abwechselnd ein Bein lang machen, Fußspitze zu dir ziehen." },
+  { id: "seitheben", t: "Arme seitlich heben", g: "sitzen", a: "seitheben", sitz: 1, h: "Arme seitlich bis auf Schulterhöhe – und langsam wieder runter." },
+  { id: "marsch", t: "Auf der Stelle gehen", g: "stehen", a: "marsch", h: "Knie heben, Arme schwingen. Wer mag, hält sich an der Stuhllehne fest." },
+  { id: "seit", t: "Seitschritt", g: "stehen", a: "seit", h: "Ein Schritt zur Seite und zurück – locker in den Knien.", w: "Und jetzt zur anderen Seite!" },
+  { id: "knie", t: "Kniebeuge am Stuhl", g: "stehen", a: "knie", h: "Hände an die Lehne, Po nach hinten – nur so tief, wie es angenehm ist." },
+  { id: "zehen", t: "Auf die Zehen", g: "stehen", a: "zehen", h: "Langsam hoch auf die Zehen – und wieder runter." },
+  { id: "strecken", t: "Nach oben strecken", g: "stehen", a: "strecken", h: "Abwechselnd einen Arm weit nach oben – als holst du den großen Topf vom Regal." },
+  { id: "rumpf", t: "Oberkörper drehen", g: "stehen", a: "rumpf", h: "Aufrecht bleiben und ruhig nach links und rechts drehen." },
+  { id: "ruehren", t: "Großen Teig rühren", g: "kueche", a: "ruehren", p: "schneebesen", sitz: 1, h: "Mit dem großen Schneebesen kräftig im Kreis rühren.", w: "Und jetzt die andere Richtung!" },
+  { id: "besenhoch", t: "Schneebesen in die Luft", g: "kueche", a: "hochdruecken", p: "schneebesen2", sitz: 1, h: "Schneebesen mit beiden Händen nach oben drücken – und wieder runter." },
+  { id: "trommeln", t: "Topf-Trommeln", g: "kueche", a: "trommeln", p: "loeffel2", topf: 1, sitz: 1, h: "Mit zwei Kochlöffeln auf den Topf trommeln – schön im Takt!" },
+  { id: "seitbeuge", t: "Kochlöffel zur Seite", g: "kueche", a: "seitbeuge", p: "loeffel2", h: "Kochlöffel über den Kopf und sanft zur Seite neigen.", w: "Und jetzt zur anderen Seite!" },
+  { id: "flaschen", t: "Wasserflaschen heben", g: "kueche", a: "seitheben", p: "flaschen", sitz: 1, h: "In jeder Hand eine Flasche – Arme seitlich heben und senken." },
+  { id: "deckel", t: "Deckel-Klatschen", g: "kueche", a: "klatschen", p: "deckel", sitz: 1, h: "Zwei Topfdeckel vor der Brust zusammen – wie ein Becken!" },
+  { id: "nudelholz", t: "Nudelholz rollen", g: "kueche", a: "rollen", p: "nudelholz", sitz: 1, h: "Arme nach vorn und den Teig kräftig ausrollen." },
+  { id: "tuch", t: "Geschirrtuch-Dehnung", g: "kueche", a: "hochhalten", p: "tuch", h: "Geschirrtuch mit beiden Händen hoch über den Kopf und lang machen." },
+];
+const BW_MODI = [["sitzen", "🪑 Im Sitzen"], ["stehen", "🧍 Im Stehen"], ["kueche", "🥄 Küchenhelfer"]];
+const BW_DAUER = [5, 10, 15];
+const BW_LOB = ["Super machst du das!", "Schön weiteratmen!", "Bleib schön locker!", "Klasse, weiter so!", "Sieht toll aus!", "Gleich geschafft!", "Prima, im eigenen Tempo!"];
+const BW_SEK = 30, BW_SCHUETTELN = 6, BW_BEREIT = 5;
+const BW = { lauf: null, takt: 0, wach: null };
+const bwWahl = () => { try { return { modus: "sitzen", dauer: 5, musik: true, ansage: true, ...JSON.parse(esLies("bw", "{}")) }; } catch (e) { return { modus: "sitzen", dauer: 5, musik: true, ansage: true }; } };
+function bwWahlSetzen(teil, still) { esSchreib("bw", JSON.stringify({ ...bwWahl(), ...teil })); if (!still && !BW.lauf) esBuehneZeigen($("hrFlaeche")); }
+// Küchenhelfer in der Hand (gezeichnet relativ zur Hand, Arm hängt nach unten – beim Heben dreht der Helfer mit)
+const BW_HELFER = {
+  schneebesen: (x, y) => `<g class="bw-helfer"><rect x="${x - 1.4}" y="${y - 3}" width="2.8" height="13" rx="1.2" fill="#6c757d"/><ellipse cx="${x}" cy="${y + 19}" rx="5.5" ry="9.5" fill="none" stroke="#ced4da" stroke-width="1.2"/><ellipse cx="${x}" cy="${y + 19}" rx="2.6" ry="9.5" fill="none" stroke="#adb5bd" stroke-width="1"/></g>`,
+  loeffel: (x, y) => `<g class="bw-helfer"><rect x="${x - 1.3}" y="${y - 4}" width="2.6" height="21" rx="1.2" fill="#c8964a"/><ellipse cx="${x}" cy="${y + 20}" rx="4" ry="6" fill="#b07d3a"/></g>`,
+  flasche: (x, y) => `<g class="bw-helfer"><rect x="${x - 1.6}" y="${y - 4}" width="3.2" height="3" fill="#1c7ed6"/><rect x="${x - 3.2}" y="${y - 1.5}" width="6.4" height="15" rx="2.2" fill="#74c0fc" opacity=".92"/><rect x="${x - 3.2}" y="${y + 5}" width="6.4" height="3.5" fill="#fff" opacity=".8"/></g>`,
+  deckel: (x, y) => `<g class="bw-helfer"><ellipse cx="${x}" cy="${y + 4}" rx="10" ry="3.4" fill="#ced4da" stroke="#868e96" stroke-width=".8"/><circle cx="${x}" cy="${y + .8}" r="1.8" fill="#495057"/></g>`,
+  nudelholz: (x, y) => `<g class="bw-helfer"><rect x="${x - 15}" y="${y - 2.6}" width="30" height="5.2" rx="2.6" fill="#e0b070"/><rect x="${x - 21}" y="${y - 1.4}" width="6" height="2.8" rx="1.4" fill="#a8743a"/><rect x="${x + 15}" y="${y - 1.4}" width="6" height="2.8" rx="1.4" fill="#a8743a"/></g>`,
+  tuch: (x, y) => `<g class="bw-helfer"><rect x="${x - 6}" y="${y}" width="12" height="22" rx="1" fill="#fff" stroke="#dee2e6" stroke-width=".6"/><rect x="${x - 6}" y="${y + 4}" width="12" height="2" fill="#e03131"/><rect x="${x - 6}" y="${y + 16}" width="12" height="2" fill="#e03131"/></g>`,
+};
+function bwFigur(a, sitz, p, topf) {
+  const yH = sitz ? 98 : 88, links = { schneebesen2: "schneebesen", loeffel2: "loeffel", flaschen: "flasche", deckel: "deckel" }[p] || "", rechts = { schneebesen: "schneebesen", schneebesen2: "schneebesen", loeffel2: "loeffel", flaschen: "flasche", deckel: "deckel", nudelholz: "nudelholz", tuch: "tuch" }[p] || "";
+  const ky = sitz ? 42 : 32; // Kopfmitte
+  const band = `<g class="bw-stirn"><path d="M48.5 ${ky - 4} Q49 ${ky - 13.5} 60 ${ky - 13.5} Q71 ${ky - 13.5} 71.5 ${ky - 4} Q60 ${ky - 9} 48.5 ${ky - 4}Z" fill="#6b4226"/>
+    <rect x="47.6" y="${ky - 7.5}" width="24.8" height="5" rx="2.4" fill="#e03131"/><rect x="47.6" y="${ky - 5.6}" width="24.8" height="1.2" fill="#fff" opacity=".9"/>
+    <path d="M72 ${ky - 6} l6 -3 l-1 4 z M72 ${ky - 4} l6 2 l-3 2 z" fill="#c92a2a"/><path class="bw-schweiss" d="M47 ${ky - 1} q-1.6 3 0 4.2 q1.6 -1.2 0 -4.2z" fill="#a5d8ff"/></g>`;
+  let s = fiFigur(a, sitz).replace(/<g class="fi-muetze">[\s\S]*?<\/g>/, band).replace('class="fi-figur ', 'class="fi-figur bw-figur ');
+  if (rechts) s = s.replace('<g class="fi-armR">', `<g class="fi-armR">${BW_HELFER[rechts](79, yH)}`);
+  if (links) s = s.replace('<g class="fi-armL">', `<g class="fi-armL">${BW_HELFER[links](41, yH)}`);
+  if (topf) { const ty = sitz ? 100 : 90; s = s.replace(/<\/svg>$/, `<g class="bw-topf"><rect x="43" y="${ty}" width="34" height="17" rx="3" fill="#868e96"/><rect x="41" y="${ty - 2}" width="38" height="4" rx="2" fill="#adb5bd"/><rect x="35" y="${ty + 3}" width="8" height="3" rx="1.5" fill="#495057"/><rect x="77" y="${ty + 3}" width="8" height="3" rx="1.5" fill="#495057"/></g></svg>`); }
+  return s;
+}
+function bwPlan(modus, dauer) {
+  const passt = BW_UEBUNGEN.filter((u) => u.g === modus), n = Math.max(4, Math.round((dauer * 60) / (BW_SEK + BW_SCHUETTELN + BW_BEREIT))), plan = [];
+  for (let i = 0; i < n; i++) plan.push(passt[i % passt.length]);
+  return plan;
+}
+// ----- Bühne zeigen (Auswahl) -----
+function esBuehneZeigen(f) {
+  if (!f) return;
+  if (BW.lauf) return bwLaufZeigen();
+  const w = bwWahl(), hinweis = !fiLs(FI_HINWEIS_KEY, false), vorne = { sitzen: ["ruhe", 1, ""], stehen: ["ruhe", 0, ""], kueche: ["ruhe", 1, "schneebesen"] }[w.modus];
+  f.innerHTML = `<div class="bw-buehne"><div class="bw-licht"></div><div class="bw-vorhang links halb"></div><div class="bw-vorhang rechts halb"></div><div class="bw-boden"></div>
+    <div class="bw-mitte">${bwFigur("winken", vorne[1], vorne[2])}</div>
+    <div class="bw-wahl">
+      <div class="bw-titel">🎭 Bühne frei für Bewegung!</div>
+      ${hinweis ? `<div class="bw-hinweis">🩺 Mach nur so viel, wie es dir angenehm ist. Bei Schmerzen, Schwindel oder Atemnot sofort aufhören.<button type="button" class="es-k es-haupt" onclick="fiLsSetzen(FI_HINWEIS_KEY, true);esBuehneZeigen($('hrFlaeche'))">👍 Verstanden</button></div>` : ""}
+      <div class="bw-reihe">${BW_MODI.map(([k, t]) => `<button type="button" class="es-k${w.modus === k ? " an" : ""}" onclick="bwWahlSetzen({modus:'${k}'})">${t}</button>`).join("")}</div>
+      <div class="bw-reihe">${BW_DAUER.map((d) => `<button type="button" class="es-k${w.dauer === d ? " an" : ""}" onclick="bwWahlSetzen({dauer:${d}})">${d} Min.</button>`).join("")}
+        <button type="button" class="es-k${w.musik ? " an" : ""}" onclick="bwWahlSetzen({musik:${!w.musik}})" aria-label="Musik ${w.musik ? "aus" : "an"}">${w.musik ? "🎵 Musik" : "🔇 Musik"}</button>
+        <button type="button" class="es-k${w.ansage ? " an" : ""}" onclick="bwWahlSetzen({ansage:${!w.ansage}})" aria-label="Ansage ${w.ansage ? "aus" : "an"}">${w.ansage ? "🔊 Ansage" : "🔈 Ansage"}</button></div>
+      <button type="button" class="es-k es-haupt bw-los" ${hinweis ? "disabled" : ""} onclick="bwLos()">▶️ Vorhang auf!</button></div></div>`;
+}
+// ----- Training -----
+async function bwLos() {
+  const w = bwWahl(), plan = bwPlan(w.modus, w.dauer);
+  BW.lauf = { plan, i: 0, phase: "bereit", rest: BW_BEREIT, pause: false, musik: w.musik, ansage: w.ansage, sek: 0, lob: 0 };
+  try { BW.wach = await navigator.wakeLock?.request("screen"); } catch (e) { BW.wach = null; }
+  bwLaufZeigen(true); bwSag(`Vorhang auf! Wir starten mit: ${plan[0].t}. ${plan[0].h}`);
+  if (w.musik) bwMusik(true);
+  clearInterval(BW.takt); BW.takt = setInterval(bwTick, 1000);
+}
+function bwSag(t, sofort) { const L = BW.lauf; if (!L?.ansage) return; try { if (sofort) speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } sprechen(t); }
+function bwTick() {
+  const L = BW.lauf; if (!L) return clearInterval(BW.takt);
+  if (!$("bwLauf")) return bwStopp();
+  if (!esSichtbar()) { if (!L.pause) { L.pause = true; bwMusik(false); bwLaufZeigen(); } return; } // nicht zu sehen → Pause
+  if (L.pause) return;
+  L.rest--;
+  const u = L.plan[L.i];
+  if (L.phase === "uebung") {
+    L.sek++;
+    const halb = Math.floor(BW_SEK / 2);
+    if (L.rest === halb) bwSag(u.w || BW_LOB[L.lob++ % BW_LOB.length]);
+    else if (L.rest === 10 && !u.w) bwSag("Noch 10 Sekunden!");
+    else if (L.rest >= 1 && L.rest <= 3) bwSag(L.rest === 3 ? "Noch 3" : L.rest === 2 ? "noch 2" : "noch 1", true);
+  }
+  if (L.rest > 0) return bwZahl();
+  if (L.phase === "bereit") { L.phase = "uebung"; L.rest = BW_SEK; bwSag("Und los!", true); }
+  else if (L.phase === "uebung") { L.phase = "schuetteln"; L.rest = BW_SCHUETTELN; bwSag(L.i >= L.plan.length - 1 ? "Und ausschütteln! Geschafft!" : "Und jetzt ausschütteln!", true); }
+  else if (L.phase === "schuetteln") {
+    if (L.i >= L.plan.length - 1) return bwFertig();
+    L.i++; L.phase = "bereit"; L.rest = BW_BEREIT; const n = L.plan[L.i]; bwSag(`Als Nächstes: ${n.t}. ${n.h}`);
+  }
+  bwLaufZeigen();
+}
+function bwZahl() { const L = BW.lauf, z = $("bwZahl"); if (!L || !z) return; z.textContent = L.rest; z.classList.toggle("knapp", L.phase === "uebung" && L.rest <= 3);
+  const b = $("bwBalken"); if (b) { const ges = L.phase === "uebung" ? BW_SEK : L.phase === "schuetteln" ? BW_SCHUETTELN : BW_BEREIT; b.style.width = `${Math.max(0, 100 - (L.rest / ges) * 100)}%`; } }
+function bwLaufZeigen(vorhangAuf) {
+  const L = BW.lauf, f = $("hrFlaeche"); if (!L || !f) return;
+  const u = L.plan[L.i], anim = L.phase === "uebung" ? u.a : L.phase === "schuetteln" ? "schuetteln" : "ruhe", sitz = bwWahl().modus !== "stehen" && !!u.sitz;
+  const text = L.phase === "bereit" ? "Gleich:" : L.phase === "schuetteln" ? "Ausschütteln!" : "Jetzt:";
+  f.innerHTML = `<div class="bw-buehne an${L.pause ? " angehalten" : ""}" id="bwLauf"><div class="bw-licht"></div><div class="bw-vorhang links${vorhangAuf ? " oeffnet" : " offen"}"></div><div class="bw-vorhang rechts${vorhangAuf ? " oeffnet" : " offen"}"></div><div class="bw-boden"></div>
+    <div class="bw-kopf"><div><small>${text} · Übung ${L.i + 1} von ${L.plan.length}</small><b>${esc(L.phase === "schuetteln" ? "Arme und Beine locker ausschütteln" : u.t)}</b></div><div class="bw-zahl" id="bwZahl">${L.rest}</div></div>
+    <div class="bw-balken-bahn"><div class="bw-balken" id="bwBalken"></div></div>
+    <div class="bw-mitte">${bwFigur(anim, sitz, L.phase === "schuetteln" ? "" : u.p, L.phase !== "schuetteln" && u.topf)}</div>
+    <div class="bw-tipp">${esc(L.phase === "schuetteln" ? "Gut gemacht! 👏" : u.h)}</div>
+    <div class="es-leiste"><button type="button" class="es-k es-haupt" onclick="bwPause()">${L.pause ? "▶︎ Weiter" : "⏸ Pause"}</button><button type="button" class="es-k" onclick="bwWeiter()" aria-label="Übung überspringen">⏭</button>
+      <button type="button" class="es-k${L.musik ? " an" : ""}" onclick="bwMusikSchalten()" aria-label="Musik an oder aus">${L.musik ? "🎵" : "🔇"}</button><button type="button" class="es-k${L.ansage ? " an" : ""}" onclick="bwAnsageSchalten()" aria-label="Ansage an oder aus">${L.ansage ? "🔊" : "🔈"}</button>
+      <button type="button" class="es-k" onclick="bwStopp(true)">✖ Ende</button></div></div>`;
+  bwZahl();
+}
+function bwPause() { const L = BW.lauf; if (!L) return; L.pause = !L.pause; try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwMusik(!L.pause && L.musik); bwLaufZeigen(); }
+function bwWeiter() { const L = BW.lauf; if (!L) return; L.pause = false; if (L.phase === "uebung") L.phase = "schuetteln"; L.rest = 1; bwTick(); }
+function bwMusikSchalten() { const L = BW.lauf; if (!L) return; L.musik = !L.musik; bwWahlSetzen({ musik: L.musik }, true); bwMusik(L.musik && !L.pause); bwLaufZeigen(); }
+function bwAnsageSchalten() { const L = BW.lauf; if (!L) return; L.ansage = !L.ansage; bwWahlSetzen({ ansage: L.ansage }, true); if (!L.ansage) try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwLaufZeigen(); }
+function bwStopp(zeigen) {
+  clearInterval(BW.takt); BW.takt = 0; bwMusik(false); try { BW.wach?.release(); } catch (e) { /* ohne Wachhalten */ } BW.wach = null;
+  if (BW.lauf) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } }
+  BW.lauf = null; if (zeigen && $("hrFlaeche")?.classList.contains("hr-buehne")) esBuehneZeigen($("hrFlaeche"));
+}
+function bwFertig() {
+  const L = BW.lauf; if (!L) return; const sek = L.sek, n = L.plan.length; bwStopp(false);
+  bwSag2("Geschafft! Super gemacht – Applaus!");
+  const f = $("hrFlaeche"); if (!f) return;
+  f.innerHTML = `<div class="bw-buehne an"><div class="bw-licht"></div><div class="bw-vorhang links schliesst"></div><div class="bw-vorhang rechts schliesst"></div><div class="bw-boden"></div>
+    <div class="bw-mitte">${bwFigur("jubel", 0, "")}</div><div class="bw-applaus" aria-hidden="true">👏 🎉 👏</div>
+    <div class="bw-wahl"><div class="bw-titel">🏅 Geschafft – super gemacht!</div><div class="bw-tipp" style="position:static">${n} Übungen · ${Math.floor(sek / 60)} Min. ${sek % 60} s Bewegung</div>
+      <button type="button" class="es-k es-haupt bw-los" onclick="esBuehneZeigen($('hrFlaeche'))">🔁 Nochmal</button></div></div>`;
+}
+function bwSag2(t) { if (bwWahl().ansage) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } sprechen(t); } }
+// ----- Musik: im Handy erzeugt (Web Audio) – lockerer Pop-Takt, 108 Schläge/Min., leiser, solange Twinkey spricht -----
+const BWM = { ctx: null, aus: null, laeuft: false, zeit: 0, schritt: 0, timer: 0, rauschen: null };
+const BWM_AKKORDE = [[48, 52, 55], [43, 47, 50], [45, 48, 52], [41, 45, 48]]; // C – G – Am – F
+const bwHz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+function bwMusik(an) {
+  if (!an) { BWM.laeuft = false; clearInterval(BWM.timer); BWM.timer = 0; try { BWM.aus?.gain.setTargetAtTime(0, BWM.ctx.currentTime, .05); } catch (e) { /* ohne Ton */ } return; }
+  try {
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+    if (!BWM.ctx) { BWM.ctx = new C(); BWM.aus = BWM.ctx.createGain(); BWM.aus.connect(BWM.ctx.destination);
+      const n = BWM.ctx.sampleRate * .5, buf = BWM.ctx.createBuffer(1, n, BWM.ctx.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; BWM.rauschen = buf; }
+    BWM.ctx.resume?.(); BWM.aus.gain.setTargetAtTime(.16, BWM.ctx.currentTime, .1);
+    if (BWM.laeuft) return; BWM.laeuft = true; BWM.zeit = BWM.ctx.currentTime + .1; BWM.schritt = 0;
+    BWM.timer = setInterval(bwMusikPlanen, 60);
+  } catch (e) { BWM.laeuft = false; }
+}
+function bwMusikPlanen() {
+  const c = BWM.ctx; if (!c || !BWM.laeuft) return;
+  try { BWM.aus.gain.setTargetAtTime(speechSynthesis?.speaking ? .06 : .16, c.currentTime, .15); } catch (e) { /* ohne Sprache */ }
+  const sech = 60 / 108 / 4;
+  while (BWM.zeit < c.currentTime + .25) { bwMusikSchritt(BWM.schritt, BWM.zeit); BWM.zeit += sech; BWM.schritt = (BWM.schritt + 1) % 64; }
+}
+function bwTon(typ, hz, t, dauer, laut, ziel) {
+  const c = BWM.ctx, o = c.createOscillator(), g = c.createGain(); o.type = typ; o.frequency.setValueAtTime(hz, t);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(laut, t + .008); g.gain.exponentialRampToValueAtTime(.0005, t + dauer);
+  o.connect(g); g.connect(ziel || BWM.aus); o.start(t); o.stop(t + dauer + .02); return o;
+}
+function bwRauschen(t, dauer, laut, filterHz, art) {
+  const c = BWM.ctx, q = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); q.buffer = BWM.rauschen; f.type = art; f.frequency.value = filterHz;
+  g.gain.setValueAtTime(laut, t); g.gain.exponentialRampToValueAtTime(.0005, t + dauer); q.connect(f); f.connect(g); g.connect(BWM.aus); q.start(t); q.stop(t + dauer + .02);
+}
+function bwMusikSchritt(s, t) {
+  const im = s % 16, akk = BWM_AKKORDE[Math.floor(s / 16)];
+  if (im % 4 === 0) { const o = bwTon("sine", 130, t, .22, .9); o.frequency.exponentialRampToValueAtTime(42, t + .16); } // Bass-Trommel
+  if (im % 4 === 2) bwRauschen(t, .045, .18, 7000, "highpass"); // Hi-Hat
+  if (im === 4 || im === 12) bwRauschen(t, .14, .32, 1600, "bandpass"); // Klatschen
+  if ([0, 3, 6, 8, 11, 14].includes(im)) bwTon("triangle", bwHz(akk[0] - 12), t, .2, .35); // Bass
+  if (im === 2 || im === 10) akk.forEach((m) => bwTon("triangle", bwHz(m + 12), t, .26, .06)); // Akkord
+  if (im % 2 === 0 && s % 32 < 16) bwTon("sine", bwHz(akk[(im / 2) % 3] + 24), t, .12, .035); // Glitzer-Melodie
+}
 // ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0, Wunsch Hansi): Jahreszeiten im Kopf mit Boden ----------
 // 🍂 Herbst: Laub fällt und bleibt unten liegen; liegt genug, kommt ein Windstoß (abwechselnd von links und von rechts) und weht es weg.
 // ❄️ Winter/Advent: Schnee bleibt liegen und wird weggeweht – jeder 3. Lauf wird daraus ein lachender Schneemann

@@ -1,13 +1,22 @@
 {
-  "version": "2.292.0",
+  "version": "2.293.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "📄 Neu: Eselsohr unten rechts am Kopf – nach links ziehen, der Kopf dreht sich um",
-    "🖼️ Diashow mit euren Fotos · 🖍️ Tafel mit Kreide, Schwamm, ins Archiv oder als Nachricht · 🕰️ große Uhr (Digital grün, Fallblatt, Bahnhofsuhr, Groß & klar)",
-    "↩︎ Doppelt aufs Eselsohr tippen dreht zurück"
+    "🎭 Neu auf der Rückseite des Kopfes: die Bühne für Bewegung – Vorhang auf!",
+    "🤸 Twinkey mit Schweißstirnband macht vor: im Sitzen, im Stehen oder mit Küchenhelfern (Schneebesen, Kochlöffel, Nudelholz, Flaschen, Topfdeckel, Geschirrtuch)",
+    "🎵 Mit Musik und Trainer-Ansagen: „Jetzt andersherum!“ – „noch 3, noch 2, noch 1 – und ausschütteln!“"
   ],
   "verlauf": [
+    {
+      "version": "2.293.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🎭 Neu auf der Rückseite des Kopfes: die Bühne für Bewegung – Vorhang auf!",
+        "🤸 Twinkey mit Schweißstirnband macht vor: im Sitzen, im Stehen oder mit Küchenhelfern (Schneebesen, Kochlöffel, Nudelholz, Flaschen, Topfdeckel, Geschirrtuch)",
+        "🎵 Mit Musik und Trainer-Ansagen: „Jetzt andersherum!“ – „noch 3, noch 2, noch 1 – und ausschütteln!“"
+      ]
+    },
     {
       "version": "2.292.0",
       "datum": "2026-10-12",
