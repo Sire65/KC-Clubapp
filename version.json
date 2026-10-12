@@ -1,12 +1,18 @@
 {
-  "version": "2.307.0",
+  "version": "2.308.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🎸 Bühne: Musikrichtungen als Kacheln – Disco, Reggae, Funky, Rock, Ballade, Latin, Schlager",
-    "💬 Twinkey hat neue Sprüche – motivierend und mit Augenzwinkern"
+    "⭕ Bühne: Hula-Hoop mit echtem Reifen und Seilspringen"
   ],
   "verlauf": [
+    {
+      "version": "2.308.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "⭕ Bühne: Hula-Hoop mit echtem Reifen und Seilspringen"
+      ]
+    },
     {
       "version": "2.307.0",
       "datum": "2026-10-12",

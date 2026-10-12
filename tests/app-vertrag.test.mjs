@@ -5963,6 +5963,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/"Die Waage wird morgen staunen!"/.test(html) && /"Dein Körper sagt gerade Danke!"/.test(html), "neue Sprüche");
 }
 
+// 2.308.0 KC-CLUB-BUEHNE-REIFEN-SEIL (Wunsch Hansi): echter Hula-Hoop-Reifen und Seilspringen
+{
+  assert.ok(/\{ id: "hulahoop", t: "Hula-Hoop mit Reifen", g: "stehen", a: "hulahoop", a2: "hulahoop2", ding: "hoop"/.test(html) && /\{ id: "seilspringen", t: "Seilspringen", g: "stehen", a: "seilspringen", ding: "seil"/.test(html), "zwei neue Übungen");
+  assert.ok(/\$\{ding === "hoop" \? bwHoop\(H, 0\) : ""\}\$\{rumpf\}/.test(html) && /\$\{ding === "hoop" \? bwHoop\(H, 1\) : ""\}/.test(html), "Reifen hinten hinter dem Körper, vorne davor");
+  const css = lies("index.html");
+  for (const k of ["bwHoopReifen", "bwHoopHuefte", "bwHoopStreifen", "bwSeil"]) assert.ok(css.includes(`@keyframes ${k} `), `Bewegung ${k}`);
+  assert.ok(/\.bw-a-seilspringen \.bw-ganz \{ animation: bwHuepfGanz var\(--b\)/.test(css) && /48% \{ transform: scale\(1, -1\); \}/.test(css), "Seil unter den Füßen, wenn Twinkey oben ist");
+  assert.ok(/\.bw-a-hulahoop2 \.bw-hoop \{ animation: bwHoopReifen [^}]*reverse; \}/.test(css), "zweite Hälfte andersherum");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

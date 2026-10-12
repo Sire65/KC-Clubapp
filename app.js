@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.307.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.308.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12909,6 +12909,9 @@ const BW_UEBUNGEN = [
   { id: "knie", t: "Kniebeuge am Stuhl", g: "stehen", a: "knie", h: "Hände an die Lehne, Po nach hinten – nur so tief, wie es angenehm ist.", c: ["Als ob du dich setzen willst – und hoch!", "Nur so tief, wie es guttut!"] },
   { id: "zehen", t: "Auf die Zehen", g: "stehen", a: "zehen", h: "Langsam hoch auf die Zehen – und wieder runter.", c: ["Ans oberste Regal – hoch!", "Und sanft wieder runter!"] },
   { id: "hampel", t: "Hampelmann ohne Hüpfen", g: "stehen", a: "hampel", h: "Ein Bein zur Seite tippen und dabei die Arme über den Kopf – zurück, und die andere Seite. Ohne zu hüpfen!", c: ["Hampelmann für Genießer – ganz ohne Springen!", "Arme hoch – wie bei einem Tor!"] },
+  // 2.308.0 KC-CLUB-BUEHNE-REIFEN-SEIL (Wunsch Hansi): echter Hula-Hoop-Reifen (kreist um die Hüfte, hinten verdeckt) und Seilspringen
+  { id: "hulahoop", t: "Hula-Hoop mit Reifen", g: "stehen", a: "hulahoop", a2: "hulahoop2", ding: "hoop", h: "Arme hoch und den Reifen mit kleinen Hüftbewegungen kreisen lassen – ohne Reifen geht es genauso.", w: "Und jetzt andersherum kreisen!", c: ["Der Reifen fliegt – und du bist der Star!", "Locker aus der Hüfte – vor und zurück!"] },
+  { id: "seilspringen", t: "Seilspringen", g: "stehen", a: "seilspringen", ding: "seil", h: "Ganz kleine Sprünge im Takt – wer mag, wippt nur auf den Fußballen und kreist die Hände wie mit einem Seil.", c: ["Hopp – und hopp – wie auf dem Schulhof!", "Ganz leicht landen, schön in den Knien federn!"] },
   { id: "anfersen", t: "Fersen zum Po", g: "stehen", a: "anfersen", h: "Abwechselnd eine Ferse Richtung Po heben – die Arme ziehen dabei nach unten.", c: ["Ferse hoch – und runter!", "Locker im Takt bleiben!"] },
   { id: "armkreisst", t: "Arme kreisen", g: "stehen", a: "armkreis", h: "Arme zur Seite und große Kreise machen – Füße fest auf dem Boden.", w: "Und jetzt andersherum!", c: ["Große Kreise – wie ein Windrad!", "Die Schultern werden schön warm!"] },
   { id: "stuhlrunde", t: "Um den Stuhl laufen", g: "stehen", a: "marsch", weg: "stuhl", h: "Einmal gemütlich um den Stuhl herumgehen – im Takt der Musik.", c: ["Reise nach Jerusalem – nur ohne Drängeln!", "Schön gleichmäßig weitergehen!"] },
@@ -12999,11 +13002,12 @@ function bwFigur(a, sitz, p, ding, b, ph, farbe) {
   const dingSvg = ding === "topf" ? `<g class="bw-ding"><rect x="43" y="${H - 1}" width="34" height="17" rx="3" fill="#868e96"/><rect x="41" y="${H - 3}" width="38" height="4" rx="2" fill="#adb5bd"/><rect x="35" y="${H + 2}" width="8" height="3" rx="1.5" fill="#495057"/><rect x="77" y="${H + 2}" width="8" height="3" rx="1.5" fill="#495057"/></g>`
     : ding === "schuessel" ? `<g class="bw-ding"><path d="M37 ${H - 7} L83 ${H - 7} Q82 ${H + 25} 60 ${H + 27} Q38 ${H + 25} 37 ${H - 7}Z" fill="#f1f3f5" stroke="#adb5bd" stroke-width=".8"/><path d="M40 ${H + 4} Q60 ${H + 8} 80 ${H + 4}" fill="none" stroke="#74c0fc" stroke-width="2" opacity=".7"/><ellipse cx="60" cy="${H - 7}" rx="23" ry="3.8" fill="#ffe8a3"/></g>`
     : ding === "nudel" ? `<g class="bw-ding" style="transform-origin:60px ${S + 34}px">${BW_HELFER.nudelholz(60, S + 34)}</g>`
+    : ding === "seil" ? `<g class="bw-seil" style="transform-origin:60px 95px"><path d="M30 95 Q60 -59 90 95" fill="none" stroke="#f5f0e6" stroke-width="2.2" stroke-linecap="round"/></g><rect x="26" y="90" width="7" height="11" rx="2.5" fill="#e03131"/><rect x="87" y="90" width="7" height="11" rx="2.5" fill="#e03131"/>`
     : ding === "reifen" ? `<g class="bw-ding" style="transform-origin:60px ${H - 4}px"><ellipse cx="60" cy="${H - 4}" rx="27" ry="6" fill="none" stroke="#ff4fa3" stroke-width="3"/><path d="M33 ${H - 4} a27 6 0 0 0 54 0" fill="none" stroke="#ffe14d" stroke-width="3" stroke-dasharray="6 6"/></g>`
     : "";
   return `<svg class="bw-figur bw-a-${a}${sitz ? " bw-sitz" : ""}" viewBox="0 0 120 170" style="--b:${b || .5}s;--ph:${ph || 0}s;--jacke:${fj};--stulpe:${fs};--band:${fb}" role="img" aria-label="Twinkey macht es vor" ${o(60, 152)}>
     ${stuhl}<g class="bw-ganz" ${o(60, 152)}><g class="bw-beine">${bein("L", 54)}${bein("R", 66)}</g>
-    <g class="bw-oben" ${o(60, H)}>${rumpf}${kopf}${ding === "nudel" || ding === "reifen" ? dingSvg : ""}${arm("L", 45, links)}${arm("R", 75, rechts)}</g></g>${ding && ding !== "nudel" && ding !== "reifen" ? dingSvg : ""}</svg>`;
+    <g class="bw-oben" ${o(60, H)}>${ding === "hoop" ? bwHoop(H, 0) : ""}${rumpf}${kopf}${ding === "nudel" || ding === "reifen" ? dingSvg : ""}${ding === "hoop" ? bwHoop(H, 1) : ""}${arm("L", 45, links)}${arm("R", 75, rechts)}${ding === "seil" ? dingSvg : ""}</g></g>${ding && !["nudel", "reifen", "hoop", "seil"].includes(ding) ? dingSvg : ""}</svg>`;
 }
 // ----- 2.303.0 KC-CLUB-BUEHNE-BEWEGUNG-2: Figur passend zur Übung – Seitenansicht (Aufstehen) oder auf einem Weg (Kreis, um den Stuhl) -----
 function bwBuehneFigur(u, phase, anim, sitz, farbe) {
@@ -13044,6 +13048,8 @@ function bwFigurProfil(a, b, ph, farbe) {
   return `<svg class="bw-figur bw-profil bw-p-${a}" viewBox="0 0 120 170" style="--b:${b || .5}s;--ph:${ph || 0}s;--jacke:${fj};--stulpe:${fs};--band:${fb}" role="img" aria-label="Twinkey von der Seite: Schritte">
     <g class="p-ganz" ${o(60, 150)}>${arm("hinten")}${bein("hinten")}${oben}${bein("vorn")}${arm("vorn")}</g></svg>`;
 }
+// 2.308.0: Hula-Hoop-Reifen in zwei Hälften – hintere Hälfte hinter dem Körper, vordere davor; bunte Streifen laufen (Drehung)
+const bwHoop = (H, vorn) => `<g class="bw-hoop ${vorn ? "vorn" : "hinten"}" style="transform-origin:60px ${H - 6}px"><path d="M29 ${H - 6} A31 8 0 0 ${vorn ? 0 : 1} 91 ${H - 6}" fill="none" stroke="#ff4fa3" stroke-width="3.4" stroke-linecap="round"/><path class="bw-hoop-streifen" d="M29 ${H - 6} A31 8 0 0 ${vorn ? 0 : 1} 91 ${H - 6}" fill="none" stroke="#ffe14d" stroke-width="3.4" stroke-dasharray="5 7"/></g>`;
 function bwPlan(modus, dauer) {
   const passt = BW_UEBUNGEN.filter((u) => u.g === modus), n = Math.max(4, Math.round((dauer * 60) / (BW_SEK + BW_SCHUETTELN + BW_BEREIT))), plan = [];
   for (let i = 0; i < n; i++) plan.push(passt[i % passt.length]);

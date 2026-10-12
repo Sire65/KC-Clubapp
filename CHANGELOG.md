@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.308.0 – 2026-10-12 – KC-CLUB-BUEHNE-REIFEN-SEIL: Hula-Hoop mit Reifen und Seilspringen
+Zwei neue Übungen im Stehen: Hula-Hoop mit echtem Reifen (kreist um die Hüfte, hintere Hälfte hinter dem Körper, bunte Streifen drehen mit, Arme hoch; zur Hälfte andersherum) und Seilspringen (kleine Sprünge im Takt, das Seil schwingt über den Kopf und unter den Füßen durch). Der bisherige „Hula-Hoop in der Küche“ bleibt.
+
 ## 2.307.0 – 2026-10-12 – KC-CLUB-BUEHNE-RICHTUNGEN: Musikrichtungen als Kacheln, 12 neue Lieder, mehr Sprüche
 „Nur Musik hören“: oben Kacheln je Musikrichtung (Disco, Reggae, Funky, Rock, Ballade, Latin, Schlager & Polka), darunter die Lieder der Richtung; weiter geht es innerhalb der Richtung. Neu: Ska-Kartoffel, Funky Fritteuse, Soul-Suppe, Pfannen-Rock, Küchen-Highway, Rock'n'Roll im Kühlhaus, Kerzenschein am Herd, Abschied vom Weihnachtsmarkt, Cha-Cha-Champignon, Bossa am Backofen, Walzer im Weinkeller, Schunkel-Schlager. Training: 12 neue motivierende Sätze und 12 neue Augenzwinker-Sprüche; „Küchenband“ wird englisch („Bänd“) gesprochen.
 
