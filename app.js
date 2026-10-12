@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.295.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.296.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12575,7 +12575,7 @@ function esZfZeigen(f, art) {
       <span class="es-gruppe">${cfg.dicken.map(([w, n], i) => `<button type="button" class="es-dicke" data-i="${i}" title="Stift ${n}" aria-label="Stift ${n}" onclick="esZfDicke('${art}',${i})"><i style="--w:${w}px"></i></button>`).join("")}
         <button type="button" class="es-k es-schwamm" id="esRadier" title="${flip ? "Radierer" : "Schwamm"}" aria-label="${flip ? "Radierer" : "Schwamm"}" onclick="esZfWerkzeug('${art}','radier')">🧽</button>
         <button type="button" class="es-k" title="Letzten Strich zurück" aria-label="Rückgängig" onclick="esZfZurueck('${art}')">↶</button></span>
-      <span class="es-gruppe">${flip ? `<button type="button" class="es-k" id="esFlipZurueck" title="Voriges Blatt nach vorn holen" aria-label="Voriges Blatt" onclick="esFlipBlaettern(-1)">⤵</button><button type="button" class="es-k" title="Blatt nach hinten umklappen" onclick="esFlipBlaettern(1)">⤴ Umblättern</button><button type="button" class="es-k" title="Blatt abreißen" aria-label="Blatt abreißen" onclick="esFlipAbreissen()">✂️</button>`
+      <span class="es-gruppe">${flip ? `<button type="button" class="es-k" id="esFlipZurueck" title="Voriges Blatt nach vorn holen" aria-label="Voriges Blatt" onclick="esFlipBlaettern(-1)">⤵</button><button type="button" class="es-k" title="Blatt nach hinten umklappen" onclick="esFlipBlaettern(1)">⤴ Umblättern</button><button type="button" class="es-k" title="Blatt abreißen" aria-label="Blatt abreißen" onclick="esFlipAbreissen()">✂️</button><button type="button" class="es-k" id="esFlipMuster" title="Papier: blanko, kariert oder liniert – antippen schaltet weiter" onclick="esFlipMusterWeiter()">${ES_FLIP_MUSTER.find(([k]) => k === esFlipMuster())[1]}</button>`
         : `<button type="button" class="es-k" title="Alles abwischen" aria-label="Alles abwischen" onclick="esTafelAbwischen()">🧹</button>`}
         <button type="button" class="es-k es-haupt" title="Speichern oder verschicken" onclick="esZfTeilen('${art}')">📤 Sichern</button></span></div></div>`;
   const c = $(cfg.id);
@@ -12585,7 +12585,7 @@ function esZfZeigen(f, art) {
   c.addEventListener("pointermove", (e) => { const s = z.zeichnet; if (!s) return; e.preventDefault();
     for (const ev of e.getCoalescedEvents ? e.getCoalescedEvents() : [e]) s.p.push(esZfPunkt(c, ev));
     esZfStrich(c.getContext("2d"), s, c, Math.max(0, s.p.length - 6), art); });
-  const fertig = () => { if (!z.zeichnet) return; z.zeichnet = null; esZfMerken(art); };
+  const fertig = () => { if (!z.zeichnet) return; const war = z.zeichnet; z.zeichnet = null; esZfMerken(art); if (flip && war.s) esZfMalen(art); }; // Flipchart: Linien unter dem Radierer wieder zeigen
   c.addEventListener("pointerup", fertig); c.addEventListener("pointercancel", fertig); c.addEventListener("pointerleave", fertig);
   esZfGroesse(art); esZfLeiste(art);
   if (!z.ro && window.ResizeObserver) z.ro = new ResizeObserver(() => { if ($(cfg.id)) esZfGroesse(art); });
@@ -12604,16 +12604,38 @@ function esTafelGrund(g, c) {
   const v = g.createRadialGradient(c.width / 2, c.height / 2, Math.min(c.width, c.height) * .2, c.width / 2, c.height / 2, Math.max(c.width, c.height) * .75);
   v.addColorStop(0, "rgba(255,255,255,.05)"); v.addColorStop(1, "rgba(0,0,0,.28)"); g.fillStyle = v; g.fillRect(0, 0, c.width, c.height); g.restore();
 }
-function esFlipGrund(g, c) { g.save(); g.globalAlpha = 1; g.shadowBlur = 0; g.fillStyle = ES_PAPIER; g.fillRect(0, 0, c.width, c.height); g.restore(); }
+// 2.296.0 KC-CLUB-FLIPCHART-MUSTER (Wunsch Hansi): ▢ blanko → ▦ kariert → ☰ liniert – ein Knopf schaltet weiter; Linien leicht grau
+const ES_FLIP_MUSTER = [["blanko", "▢ Blanko"], ["kariert", "▦ Kariert"], ["liniert", "☰ Liniert"]];
+const esFlipMuster = () => { const m = esLies("flipmuster", "blanko"); return ES_FLIP_MUSTER.some(([k]) => k === m) ? m : "blanko"; };
+function esFlipMusterWeiter() {
+  const i = ES_FLIP_MUSTER.findIndex(([k]) => k === esFlipMuster()), n = ES_FLIP_MUSTER[(i + 1) % ES_FLIP_MUSTER.length];
+  esSchreib("flipmuster", n[0]); const b = $("esFlipMuster"); if (b) b.textContent = n[1]; esZfMalen("flip");
+}
+function esFlipGrund(g, c) {
+  g.save(); g.globalAlpha = 1; g.shadowBlur = 0; g.fillStyle = ES_PAPIER; g.fillRect(0, 0, c.width, c.height);
+  const m = esFlipMuster(); if (m !== "blanko") {
+    g.strokeStyle = "rgba(110,120,130,.26)"; g.lineWidth = Math.max(1, c.width / 420); g.beginPath();
+    const st = m === "kariert" ? c.width / 22 : c.width / 13;
+    for (let y = m === "kariert" ? st : st * 1.3; y < c.height; y += st) { g.moveTo(0, Math.round(y) + .5); g.lineTo(c.width, Math.round(y) + .5); }
+    if (m === "kariert") for (let x = st; x < c.width; x += st) { g.moveTo(Math.round(x) + .5, 0); g.lineTo(Math.round(x) + .5, c.height); }
+    g.stroke();
+  }
+  g.restore();
+}
 function esZfMalen(art, c, striche) { // ohne c/striche: das sichtbare Blatt neu zeichnen
   c = c || $(ES_ZF[art].id); if (!c) return; const g = c.getContext("2d");
-  (art === "flip" ? esFlipGrund : esTafelGrund)(g, c); for (const s of striche || esZfStriche(art)) esZfStrich(g, s, c, 0, art);
+  (art === "flip" ? esFlipGrund : esTafelGrund)(g, c);
+  if (art === "flip") { // Striche auf eigener Ebene: der Radierer nimmt nur Striche weg, die Karos/Linien bleiben
+    const e = ES.flipEbene || (ES.flipEbene = document.createElement("canvas")); e.width = c.width; e.height = c.height; const eg = e.getContext("2d");
+    for (const s of striche || esZfStriche(art)) esZfStrich(eg, s, e, 0, art, true); g.drawImage(e, 0, 0);
+  } else for (const s of striche || esZfStriche(art)) esZfStrich(g, s, c, 0, art);
   if (art === "flip" && !striche) esFlipNr();
 }
-function esZfStrich(g, s, c, ab, art) {
+function esZfStrich(g, s, c, ab, art, ebene) {
   const W = c.width, H = c.height, b = Math.max(1, s.w * W), cfg = ES_ZF[art || "tafel"];
   g.save(); g.lineCap = "round"; g.lineJoin = "round"; g.lineWidth = b;
-  if (s.s) { g.strokeStyle = cfg.radier; g.shadowBlur = 0; } else { g.strokeStyle = s.c; if (cfg.kreide) { g.shadowColor = s.c; g.shadowBlur = Math.min(4, b * .35); g.globalAlpha = .93; } }
+  if (s.s && ebene) { g.globalCompositeOperation = "destination-out"; g.strokeStyle = "#000"; }
+  else if (s.s) { g.strokeStyle = cfg.radier; g.shadowBlur = 0; } else { g.strokeStyle = s.c; if (cfg.kreide) { g.shadowColor = s.c; g.shadowBlur = Math.min(4, b * .35); g.globalAlpha = .93; } }
   const p = s.p; g.beginPath();
   if (p.length === 1) { g.fillStyle = g.strokeStyle; g.arc(p[0][0] * W, p[0][1] * H, b / 2, 0, Math.PI * 2); g.fill(); g.restore(); return; }
   g.moveTo(p[ab][0] * W, p[ab][1] * H);
@@ -12810,33 +12832,37 @@ const BW_HELFER = {
   tuch: (x, y) => `<g class="bw-helfer"><rect x="${x - 6}" y="${y}" width="12" height="22" rx="1" fill="#fff" stroke="#dee2e6" stroke-width=".6"/><rect x="${x - 6}" y="${y + 4}" width="12" height="2" fill="#e03131"/><rect x="${x - 6}" y="${y + 16}" width="12" height="2" fill="#e03131"/></g>`,
 };
 // Rote Turnschuhe mit weißer Sohle und drei weißen Streifen
+const bwStulpe = (x) => `<g class="bw-stulpe"><rect x="${x - 5.8}" y="134" width="11.6" height="13" rx="3.5"/><path d="M${x - 5} 137.5 h10 M${x - 5} 141 h10 M${x - 5} 144.5 h10" stroke="rgba(0,0,0,.18)" stroke-width=".8"/></g>`;
 const bwSchuh = (x, y) => `<g class="bw-schuh"><path d="M${x - 8.5} ${y + 3} Q${x - 9} ${y - 3.5} ${x - 3} ${y - 4.2} L${x + 3} ${y - 4.2} Q${x + 9} ${y - 3.5} ${x + 8.5} ${y + 3} Z" fill="#e03131"/>
   <rect x="${x - 9.2}" y="${y + 1.6}" width="18.4" height="2.9" rx="1.4" fill="#fff"/><path d="M${x - 6} ${y - 2.6} l2.4 3.8 M${x - 2.6} ${y - 3.4} l2.4 3.8 M${x + .8} ${y - 3.4} l2.4 3.8" stroke="#fff" stroke-width="1.15" stroke-linecap="round"/>
   <circle cx="${x}" cy="${y - 3.3}" r=".7" fill="#fff"/></g>`;
 // Twinkey als Gliederpuppe: Schulter → Ellbogen → Hand, Hüfte → Knie → Fuß (je Gelenk eine Gruppe mit eigenem Drehpunkt)
-function bwFigur(a, sitz, p, ding, b, ph) {
-  const dy = sitz ? 12 : 0, S = 56 + dy, H = 101 + dy, ky = S - 20;
+// 2.296.0 KC-CLUB-BUEHNE-80ER (Wunsch Hansi): Kleidung im Stil der 80er – Neon-Kochjacke, bunte Stulpen, Schweißbänder; bei jeder Übung andere Farben
+const BW_FARBEN = [["#ff4fa3", "#2ee6d6", "#ffe14d"], ["#2ee6d6", "#ff4fa3", "#7c4dff"], ["#7c4dff", "#ffe14d", "#ff4fa3"], ["#ffe14d", "#7c4dff", "#2ee6d6"],
+  ["#ff8a00", "#00c2ff", "#ff4fa3"], ["#39d353", "#ff4fa3", "#ffe14d"], ["#00c2ff", "#ff8a00", "#39d353"], ["#ff4fa3", "#ffe14d", "#00c2ff"]]; // [Jacke, Stulpen, Bänder]
+function bwFigur(a, sitz, p, ding, b, ph, farbe) {
+  const dy = sitz ? 12 : 0, S = 56 + dy, H = 101 + dy, ky = S - 20, [fj, fs, fb] = BW_FARBEN[((farbe || 0) % BW_FARBEN.length + BW_FARBEN.length) % BW_FARBEN.length];
   const links = { schneebesen2: "schneebesen", loeffel2: "loeffel", flaschen: "flasche", deckel: "deckel" }[p] || "";
   const rechts = { schneebesen: "schneebesen", schneebesen2: "schneebesen", loeffel2: "loeffel", flaschen: "flasche", deckel: "deckel", nudelholz: "nudelholz", tuch: "tuch" }[p] || "";
   const o = (x, y) => `style="transform-origin:${x}px ${y}px"`;
   const arm = (s, x, helfer) => `<g class="bw-oa${s}" ${o(x, S + 1)}><rect x="${x - 4}" y="${S - 2}" width="8" height="25" rx="4" class="bw-jacke"/>
-      <g class="bw-ua${s}" ${o(x, S + 21)}><rect x="${x - 3.5}" y="${S + 19}" width="7" height="21" rx="3.5" class="bw-jacke"/>${helfer ? BW_HELFER[helfer](x, S + 42) : ""}<circle cx="${x}" cy="${S + 42}" r="4.7" class="bw-haut bw-hand"/></g></g>`;
+      <g class="bw-ua${s}" ${o(x, S + 21)}><rect x="${x - 3.5}" y="${S + 19}" width="7" height="21" rx="3.5" class="bw-jacke"/><rect x="${x - 4.3}" y="${S + 34}" width="8.6" height="4.6" rx="2" class="bw-band"/>${helfer ? BW_HELFER[helfer](x, S + 42) : ""}<circle cx="${x}" cy="${S + 42}" r="4.7" class="bw-haut bw-hand"/></g></g>`;
   const bein = (s, x) => sitz
-    ? `<g class="bw-ob${s}" ${o(x, H)}><rect x="${x - 5.5}" y="${H - 2}" width="11" height="12" rx="5" class="bw-hose"/><g class="bw-ub${s}" ${o(x, H + 8)}><rect x="${x - 4.5}" y="${H + 6}" width="9" height="${143 - H}" rx="4.5" class="bw-hose"/>${bwSchuh(x, 151)}</g></g>`
-    : `<g class="bw-ob${s}" ${o(x, H)}><rect x="${x - 5}" y="${H - 2}" width="10" height="26" rx="5" class="bw-hose"/><g class="bw-ub${s}" ${o(x, H + 22)}><rect x="${x - 4.5}" y="${H + 20}" width="9" height="${143 - H - 20}" rx="4.5" class="bw-hose"/>${bwSchuh(x, 151)}</g></g>`;
+    ? `<g class="bw-ob${s}" ${o(x, H)}><rect x="${x - 5.5}" y="${H - 2}" width="11" height="12" rx="5" class="bw-hose"/><g class="bw-ub${s}" ${o(x, H + 8)}><rect x="${x - 4.5}" y="${H + 6}" width="9" height="${143 - H}" rx="4.5" class="bw-hose"/>${bwStulpe(x)}${bwSchuh(x, 151)}</g></g>`
+    : `<g class="bw-ob${s}" ${o(x, H)}><rect x="${x - 5}" y="${H - 2}" width="10" height="26" rx="5" class="bw-hose"/><g class="bw-ub${s}" ${o(x, H + 22)}><rect x="${x - 4.5}" y="${H + 20}" width="9" height="${143 - H - 20}" rx="4.5" class="bw-hose"/>${bwStulpe(x)}${bwSchuh(x, 151)}</g></g>`;
   const stuhl = sitz ? `<g class="bw-stuhl"><rect x="33" y="${S + 4}" width="54" height="8" rx="3"/><rect x="31" y="${H}" width="58" height="7" rx="2"/><rect x="34" y="${H + 7}" width="5" height="${156 - H - 7}"/><rect x="81" y="${H + 7}" width="5" height="${156 - H - 7}"/></g>` : "";
   const kopf = `<g class="bw-kopf" ${o(60, S - 9)}><rect x="56" y="${S - 13}" width="8" height="10" class="bw-haut"/><circle cx="60" cy="${ky}" r="12" class="bw-haut"/>
       <circle cx="55.6" cy="${ky - 1}" r="1.5" class="bw-auge"/><circle cx="64.4" cy="${ky - 1}" r="1.5" class="bw-auge"/><path d="M54.5 ${ky + 4} Q60 ${ky + 8.5} 65.5 ${ky + 4}" class="bw-mund"/>
       <circle cx="52.5" cy="${ky + 3}" r="2" fill="#f4a3a3" opacity=".55"/><circle cx="67.5" cy="${ky + 3}" r="2" fill="#f4a3a3" opacity=".55"/>
       <path d="M48.5 ${ky - 4} Q49 ${ky - 13.5} 60 ${ky - 13.5} Q71 ${ky - 13.5} 71.5 ${ky - 4} Q60 ${ky - 9} 48.5 ${ky - 4}Z" fill="#6b4226"/>
-      <rect x="47.6" y="${ky - 7.5}" width="24.8" height="5" rx="2.4" fill="#e03131"/><rect x="47.6" y="${ky - 5.6}" width="24.8" height="1.2" fill="#fff" opacity=".9"/>
-      <path d="M72 ${ky - 6} l6 -3 l-1 4 z M72 ${ky - 4} l6 2 l-3 2 z" fill="#c92a2a"/><path class="bw-schweiss" d="M47 ${ky - 1} q-1.6 3 0 4.2 q1.6 -1.2 0 -4.2z" fill="#a5d8ff"/></g>`;
+      <rect x="47.6" y="${ky - 7.5}" width="24.8" height="5" rx="2.4" class="bw-band"/><rect x="47.6" y="${ky - 5.6}" width="24.8" height="1.2" fill="#fff" opacity=".9"/>
+      <path d="M72 ${ky - 6} l6 -3 l-1 4 z M72 ${ky - 4} l6 2 l-3 2 z" class="bw-band"/><path class="bw-schweiss" d="M47 ${ky - 1} q-1.6 3 0 4.2 q1.6 -1.2 0 -4.2z" fill="#a5d8ff"/></g>`;
   const rumpf = `<path d="M44 ${S - 2} Q60 ${S - 8} 76 ${S - 2} L78 ${H + 1} L42 ${H + 1} Z" class="bw-jacke"/>${[[56, 10], [64, 10], [56, 22], [64, 22]].map(([x, y]) => `<circle cx="${x}" cy="${S + y}" r="1.6" class="bw-knopf"/>`).join("")}`;
   // Dinge vor dem Bauch: Topf (Trommeln), Rührschüssel, Nudelholz mit beiden Händen (rollt mit – .bw-ding)
   const dingSvg = ding === "topf" ? `<g class="bw-ding"><rect x="43" y="${H - 1}" width="34" height="17" rx="3" fill="#868e96"/><rect x="41" y="${H - 3}" width="38" height="4" rx="2" fill="#adb5bd"/><rect x="35" y="${H + 2}" width="8" height="3" rx="1.5" fill="#495057"/><rect x="77" y="${H + 2}" width="8" height="3" rx="1.5" fill="#495057"/></g>`
     : ding === "schuessel" ? `<g class="bw-ding"><path d="M37 ${H - 7} L83 ${H - 7} Q82 ${H + 25} 60 ${H + 27} Q38 ${H + 25} 37 ${H - 7}Z" fill="#f1f3f5" stroke="#adb5bd" stroke-width=".8"/><path d="M40 ${H + 4} Q60 ${H + 8} 80 ${H + 4}" fill="none" stroke="#74c0fc" stroke-width="2" opacity=".7"/><ellipse cx="60" cy="${H - 7}" rx="23" ry="3.8" fill="#ffe8a3"/></g>`
     : ding === "nudel" ? `<g class="bw-ding" style="transform-origin:60px ${S + 34}px">${BW_HELFER.nudelholz(60, S + 34)}</g>` : "";
-  return `<svg class="bw-figur bw-a-${a}${sitz ? " bw-sitz" : ""}" viewBox="0 0 120 170" style="--b:${b || .5}s;--ph:${ph || 0}s" role="img" aria-label="Twinkey macht es vor" ${o(60, 152)}>
+  return `<svg class="bw-figur bw-a-${a}${sitz ? " bw-sitz" : ""}" viewBox="0 0 120 170" style="--b:${b || .5}s;--ph:${ph || 0}s;--jacke:${fj};--stulpe:${fs};--band:${fb}" role="img" aria-label="Twinkey macht es vor" ${o(60, 152)}>
     ${stuhl}<g class="bw-ganz" ${o(60, 152)}><g class="bw-beine">${bein("L", 54)}${bein("R", 66)}</g>
     <g class="bw-oben" ${o(60, H)}>${rumpf}${kopf}${ding === "nudel" ? dingSvg : ""}${arm("L", 45, links)}${arm("R", 75, rechts)}</g></g>${ding && ding !== "nudel" ? dingSvg : ""}</svg>`;
 }
@@ -12869,40 +12895,50 @@ function esBuehneZeigen(f) {
 // ----- Training -----
 async function bwLos() {
   const w = bwWahl(), plan = bwPlan(w.modus, w.dauer);
-  BW.lauf = { plan, i: 0, phase: "bereit", rest: BW_BEREIT, pause: false, musik: w.musik, ansage: w.ansage, sek: 0, lob: Math.floor(Math.random() * BW_LOB.length), sprueche: 0 };
+  BW.lauf = { plan, i: 0, phase: "bereit", rest: BW_BEREIT, pause: false, musik: w.musik, ansage: w.ansage, sek: 0, lob: Math.floor(Math.random() * BW_LOB.length), sprueche: 0, farbe: Math.floor(Math.random() * BW_FARBEN.length), warte: 0, gezaehlt: false };
   try { BW.wach = await navigator.wakeLock?.request("screen"); } catch (e) { BW.wach = null; }
   if (w.musik) bwMusik(true);
   BWM.stufe = 1; bwLaufZeigen(true); bwSag(`Vorhang auf! Schön, dass du da bist! Wir starten mit: ${plan[0].t}. ${plan[0].h}`, false, `Vorhang auf! Wir starten mit: ${plan[0].t}`);
   clearInterval(BW.takt); BW.takt = setInterval(bwTick, 1000);
 }
-function bwSag(t, sofort, blase) { // blase: kürzerer Text für die Sprechblase (sonst der gesprochene)
-  const L = BW.lauf, z = $("bwSprech"); BW.sprechZeit = Date.now(); BW.blase = blase || t;
+// 2.296.0 (Wunsch Hansi „beim Abzählen wird der Text vom Erklären abgeschnitten“): Ansagen schneiden sich nicht mehr gegenseitig ab.
+// sofort = darf Laufendes unterbrechen (nur „noch 3/2/1“ und „ausschütteln“); „nebenbei“ = nur sprechen, wenn gerade niemand spricht.
+const bwSpricht = () => { try { return !!(speechSynthesis.speaking || speechSynthesis.pending); } catch (e) { return false; } };
+function bwSag(t, sofort, blase, nebenbei) { // blase: kürzerer Text für die Sprechblase (sonst der gesprochene)
+  const L = BW.lauf; if (nebenbei && L?.ansage && bwSpricht()) return;
+  const z = $("bwSprech"); BW.sprechZeit = Date.now(); BW.blase = blase || t;
   if (z) { z.textContent = BW.blase; z.classList.remove("an"); void z.offsetWidth; z.classList.add("an"); }
   if (!L?.ansage) return; try { if (sofort) speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } sprechen(t);
 }
+const BW_KURZ = ["Super!", "Weiter so!", "Stark!", "Klasse!", "Jawoll!", "Prima!"];
 const bwZufall = (liste, L) => liste[(L.sprueche++ + L.i) % liste.length];
 function bwTick() {
   const L = BW.lauf; if (!L) return clearInterval(BW.takt);
   if (!$("bwLauf")) return bwStopp();
   if (!esSichtbar()) { if (!L.pause) { L.pause = true; bwMusik(false); bwLaufZeigen(); } return; } // nicht zu sehen → Pause
   if (L.pause) return;
-  L.rest--;
   const u = L.plan[L.i];
-  if (L.phase === "bereit" && L.rest === 3) { bwSag("Und fünf, sechs, sieben, acht!", true); BWM.riser = true; }
-  if (L.phase === "uebung") {
+  // Einzählen erst, wenn die Erklärung fertig ist: solange Twinkey noch spricht, wartet der Zähler (höchstens 10 s)
+  if (L.phase === "bereit" && L.rest <= 4 && !L.gezaehlt) {
+    if (L.ansage && bwSpricht() && L.warte < 10) { L.warte++; return bwZahl(); }
+    L.gezaehlt = true; L.rest = 4; bwSag("Und fünf, sechs, sieben, acht!", false); BWM.riser = true; return bwZahl();
+  }
+  L.rest--;
+  if (L.phase === "uebung") { // Sprüche gleichmäßig verteilt: 27 · 21 · 15 · 10 · 6 · 3-2-1
     L.sek++;
-    if (L.rest === 24) bwSag(u.c?.[0] || BW_LOB[L.lob++ % BW_LOB.length]);
-    else if (L.rest === 19) bwSag(BW_LOB[L.lob++ % BW_LOB.length]);
-    else if (L.rest === 15) bwSag(u.w || u.c?.[1] || BW_LOB[L.lob++ % BW_LOB.length]);
-    else if (L.rest === 10) bwSag(bwZufall(BW_ENDSPURT, L));
+    if (L.rest === 27) bwSag(u.c?.[0] || BW_LOB[L.lob++ % BW_LOB.length], false, "", true);
+    else if (L.rest === 21) bwSag(BW_LOB[L.lob++ % BW_LOB.length], false, "", true);
+    else if (L.rest === 15) bwSag(u.w || u.c?.[1] || BW_LOB[L.lob++ % BW_LOB.length], false, "", !u.w);
+    else if (L.rest === 10) bwSag(bwZufall(BW_ENDSPURT, L), false, "", true);
+    else if (L.rest === 6) bwSag(bwZufall(BW_KURZ, L), false, "", true);
     else if (L.rest >= 1 && L.rest <= 3) bwSag(L.rest === 3 ? "Noch 3" : L.rest === 2 ? "noch 2" : "noch 1", true);
   }
   if (L.rest > 0) return bwZahl();
-  if (L.phase === "bereit") { L.phase = "uebung"; L.rest = BW_SEK; BWM.stufe = 2; BWM.becken = true; bwSag("Los geht’s!", true); }
+  if (L.phase === "bereit") { L.phase = "uebung"; L.rest = BW_SEK; BWM.stufe = 2; BWM.becken = true; bwSag("Los geht’s!", false); }
   else if (L.phase === "uebung") { L.phase = "schuetteln"; L.rest = BW_SCHUETTELN; BWM.stufe = 1; bwSag(L.i >= L.plan.length - 1 ? "Und ausschütteln! Geschafft!" : bwZufall(BW_SCHUETTELN_SAG, L), true); }
   else if (L.phase === "schuetteln") {
     if (L.i >= L.plan.length - 1) return bwFertig();
-    L.i++; L.phase = "bereit"; L.rest = BW_BEREIT; const n = L.plan[L.i];
+    L.i++; L.phase = "bereit"; L.rest = BW_BEREIT; L.warte = 0; L.gezaehlt = false; const n = L.plan[L.i];
     const extra = L.i === Math.floor(L.plan.length / 2) ? "Halbzeit – du bist spitze! " : L.i % 3 === 0 ? "Trinken nicht vergessen! " : "";
     bwSag(`${extra}Als Nächstes: ${n.t}. ${n.h}`, false, `${extra}Als Nächstes: ${n.t}`);
   }
@@ -12918,7 +12954,7 @@ function bwLaufZeigen(vorhangAuf) {
     <div class="bw-kopf"><div><small>${text} · Übung ${L.i + 1} von ${L.plan.length}</small><b>${esc(L.phase === "schuetteln" ? "Arme und Beine locker ausschütteln" : u.t)}</b></div><div class="bw-zahl" id="bwZahl">${L.rest}</div></div>
     <div class="bw-balken-bahn"><div class="bw-balken" id="bwBalken"></div></div>
     <div class="bw-sprech" id="bwSprech" aria-live="polite">${esc(alt)}</div>
-    <div class="bw-mitte">${bwFigur(anim, sitz, L.phase === "schuetteln" ? "" : u.p, L.phase === "schuetteln" ? "" : u.ding, bwSchlag(), bwPhase())}</div>
+    <div class="bw-mitte">${bwFigur(anim, sitz, L.phase === "schuetteln" ? "" : u.p, L.phase === "schuetteln" ? "" : u.ding, bwSchlag(), bwPhase(), L.farbe + L.i)}</div>
     <div class="bw-tipp">${esc(L.phase === "schuetteln" ? "Gut gemacht! 👏" : u.h)}</div>
     <div class="es-leiste"><button type="button" class="es-k es-haupt" onclick="bwPause()">${L.pause ? "▶︎ Weiter" : "⏸ Pause"}</button><button type="button" class="es-k" onclick="bwWeiter()" aria-label="Übung überspringen">⏭</button>
       <button type="button" class="es-k${L.musik ? " an" : ""}" onclick="bwMusikSchalten()" aria-label="Musik an oder aus">${L.musik ? "🎵" : "🔇"}</button><button type="button" class="es-k${L.ansage ? " an" : ""}" onclick="bwAnsageSchalten()" aria-label="Ansage an oder aus">${L.ansage ? "🔊" : "🔈"}</button>
@@ -12940,7 +12976,7 @@ function bwFertig() {
   if (bwWahl().ansage) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } sprechen("Geschafft! Das war super – Applaus für dich! Bis zum nächsten Mal auf der Bühne!"); }
   const f = $("hrFlaeche"); if (!f) return;
   f.innerHTML = `<div class="bw-buehne an"><div class="bw-licht"></div><div class="bw-vorhang links schliesst"></div><div class="bw-vorhang rechts schliesst"></div><div class="bw-boden"></div>
-    <div class="bw-mitte">${bwFigur("jubel", 0, "", 0, bwSchlag())}</div><div class="bw-applaus" aria-hidden="true">👏 🎉 👏</div>
+    <div class="bw-mitte">${bwFigur("jubel", 0, "", 0, bwSchlag(), 0, n)}</div><div class="bw-applaus" aria-hidden="true">👏 🎉 👏</div>
     <div class="bw-wahl"><div class="bw-titel">🏅 Geschafft – Applaus für dich!</div><div class="bw-tipp" style="position:static">${n} Übungen · ${Math.floor(sek / 60)} Min. ${sek % 60} s Bewegung</div>
       <button type="button" class="es-k es-haupt bw-los" onclick="esBuehneZeigen($('hrFlaeche'))">🔁 Nochmal</button></div></div>`;
 }
@@ -12951,25 +12987,28 @@ const BWM = { ctx: null, aus: null, hall: null, laeuft: false, zeit: 0, schritt:
 const BWM_AKKORDE = [[57, 60, 64], [53, 57, 60], [55, 60, 64], [55, 59, 62]]; // Am – F – C – G
 const BWM_BASS = [45, 41, 48, 43];
 const BWM_HOOK = { 0: 76, 3: 74, 6: 72, 8: 69, 10: 72, 12: 74, 16: 79, 19: 76, 22: 74, 24: 72, 26: 74, 28: 76, 30: 72 }; // 2 Takte, A-Moll-Pentatonik
+const BWM_LAUT = .42, BWM_LEISE = .09;
 const bwHz = (m) => 440 * Math.pow(2, (m - 69) / 12);
 function bwMusik(an) {
   if (!an) { BWM.laeuft = false; clearInterval(BWM.timer); BWM.timer = 0; try { BWM.aus?.gain.setTargetAtTime(0, BWM.ctx.currentTime, .05); } catch (e) { /* ohne Ton */ } return; }
   try {
     const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
     if (!BWM.ctx) {
-      BWM.ctx = new C(); BWM.aus = BWM.ctx.createGain(); BWM.aus.connect(BWM.ctx.destination);
+      // 2.296.0 (Wunsch Hansi „Musik lauter, beim Sprechen absenken“): lauter, mit Kompressor (kein Übersteuern); beim Sprechen deutlich leiser
+      BWM.ctx = new C(); BWM.aus = BWM.ctx.createGain(); const komp = BWM.ctx.createDynamicsCompressor(); komp.threshold.value = -14; komp.ratio.value = 4; komp.attack.value = .01; komp.release.value = .2;
+      BWM.aus.connect(komp); komp.connect(BWM.ctx.destination);
       BWM.hall = BWM.ctx.createDelay(1); BWM.hall.delayTime.value = .375; const fb = BWM.ctx.createGain(); fb.gain.value = .28; const hg = BWM.ctx.createGain(); hg.gain.value = .35;
       BWM.hall.connect(fb); fb.connect(BWM.hall); BWM.hall.connect(hg); hg.connect(BWM.aus);
       const n = BWM.ctx.sampleRate, buf = BWM.ctx.createBuffer(1, n, BWM.ctx.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; BWM.rauschen = buf;
     }
-    BWM.ctx.resume?.(); BWM.aus.gain.setTargetAtTime(.17, BWM.ctx.currentTime, .1);
+    BWM.ctx.resume?.(); BWM.aus.gain.setTargetAtTime(BWM_LAUT, BWM.ctx.currentTime, .1);
     if (BWM.laeuft) return; BWM.laeuft = true; BWM.zeit = BWM.ctx.currentTime + .1; BWM.start = BWM.zeit; BWM.schritt = 0;
     BWM.timer = setInterval(bwMusikPlanen, 50);
   } catch (e) { BWM.laeuft = false; }
 }
 function bwMusikPlanen() {
   const c = BWM.ctx; if (!c || !BWM.laeuft) return;
-  try { BWM.aus.gain.setTargetAtTime(speechSynthesis?.speaking ? .07 : .17, c.currentTime, .12); } catch (e) { /* ohne Sprache */ }
+  try { const spricht = bwSpricht(); BWM.aus.gain.setTargetAtTime(spricht ? BWM_LEISE : BWM_LAUT, c.currentTime, spricht ? .04 : .35); } catch (e) { /* ohne Sprache */ } // schnell runter, sanft wieder hoch
   const sech = bwSchlag() / 4;
   if (BWM.riser) { BWM.riser = false; bwRiser(c.currentTime + .05, 2.6); }
   if (BWM.becken) { BWM.becken = false; bwRauschen(c.currentTime + .02, 1.4, .3, 5000, "highpass"); }

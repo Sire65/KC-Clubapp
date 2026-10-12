@@ -1,13 +1,22 @@
 {
-  "version": "2.295.0",
+  "version": "2.296.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "📄 Eselsohr kleiner – doppelt tippen öffnet, nochmal doppelt tippen schließt",
-    "📋 Neu auf der Rückseite: Flipchart zum Skizzieren – Blatt voll? Umblättern, zurückblättern, abreißen, als Nachricht senden oder ins Archiv",
-    "🖼️ Rückseite nutzt jetzt den ganzen Bildschirm, Reiter gleichmäßig nebeneinander, Fotos fast im Vollbild (antippen blendet die Leiste aus)"
+    "📋 Flipchart: ein Knopf schaltet das Papier um – blanko, kariert, liniert (Linien hellgrau, der Radierer lässt sie stehen)",
+    "🎵 Bühne: Musik lauter und beim Sprechen deutlich leiser · nichts wird mehr abgeschnitten – das Einzählen wartet, bis Twinkey fertig erklärt hat · Sprüche gleichmäßig verteilt",
+    "🕺 Twinkey im 80er-Look: Neon-Kochjacke, bunte Stulpen und Schweißbänder – bei jeder Übung andere Farben"
   ],
   "verlauf": [
+    {
+      "version": "2.296.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "📋 Flipchart: ein Knopf schaltet das Papier um – blanko, kariert, liniert (Linien hellgrau, der Radierer lässt sie stehen)",
+        "🎵 Bühne: Musik lauter und beim Sprechen deutlich leiser · nichts wird mehr abgeschnitten – das Einzählen wartet, bis Twinkey fertig erklärt hat · Sprüche gleichmäßig verteilt",
+        "🕺 Twinkey im 80er-Look: Neon-Kochjacke, bunte Stulpen und Schweißbänder – bei jeder Übung andere Farben"
+      ]
+    },
     {
       "version": "2.295.0",
       "datum": "2026-10-12",

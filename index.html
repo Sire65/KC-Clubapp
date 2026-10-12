@@ -2806,8 +2806,8 @@
   /* 2.294.0 KC-CLUB-BEWEGUNGSBUEHNE-2: Twinkey als Gliederpuppe (Schulter/Ellbogen/Hüfte/Knie), rote Turnschuhe, Bewegung im Takt (--b = Schlag, --ph = Versatz) */
   .bw-figur { overflow: visible; }
   .bw-figur * { transform-box: view-box; }
-  .bw-figur .bw-jacke { fill: #fff; stroke: #c9c2b6; stroke-width: .9; } .bw-figur .bw-haut { fill: #ecc19c; } .bw-figur .bw-hose { fill: #2a2a2a; }
-  .bw-figur .bw-auge { fill: #2b1d14; } .bw-figur .bw-mund { fill: none; stroke: #8a3b2e; stroke-width: 1.4; stroke-linecap: round; } .bw-figur .bw-knopf { fill: #741521; } .bw-figur .bw-stuhl { fill: #a0784e; }
+  .bw-figur .bw-jacke { fill: var(--jacke, #fff); stroke: rgba(0,0,0,.22); stroke-width: .9; } .bw-figur .bw-band { fill: var(--band, #e03131); } .bw-figur .bw-stulpe rect { fill: var(--stulpe, #2ee6d6); } .bw-figur .bw-haut { fill: #ecc19c; } .bw-figur .bw-hose { fill: #2d1f3d; }
+  .bw-figur .bw-auge { fill: #2b1d14; } .bw-figur .bw-mund { fill: none; stroke: #8a3b2e; stroke-width: 1.4; stroke-linecap: round; } .bw-figur .bw-knopf { fill: var(--band, #741521); } .bw-figur .bw-stuhl { fill: #a0784e; }
   .bw-figur .bw-hand { transform-box: fill-box; transform-origin: center; }
   .bw-figur .bw-ganz { animation: bwBob var(--b) ease-in-out var(--ph, 0s) infinite; } @keyframes bwBob { 0%, 100% { transform: translateY(1.4px); } 50% { transform: translateY(0); } }
   .bw-figur .bw-kopf { animation: bwNick var(--b) ease-in-out calc(var(--ph, 0s) + var(--b) * .18) infinite; } @keyframes bwNick { 0%, 100% { transform: rotate(2deg); } 50% { transform: rotate(-1deg); } }
@@ -4607,6 +4607,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.295.0" data-v="2.295.0"></script>
+<script src="app.js?v=2.296.0" data-v="2.296.0"></script>
 </body>
 </html>

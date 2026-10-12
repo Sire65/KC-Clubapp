@@ -8680,7 +8680,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/const bwSchuh = /.test(b) && /stroke="#fff" stroke-width="1\.15"/.test(b), "rote Turnschuhe mit drei weißen Streifen");
   for (const a of ["armkreis", "schulter", "marsch", "kneten", "bein", "seitheben", "hochdruecken", "klatschen", "trommeln", "ruehren", "seitbeuge", "rollen", "hochhalten", "strecken", "seit", "knie", "zehen", "rumpf", "nacken", "schuetteln", "jubel", "winken", "ruhe"])
     assert.ok(new RegExp(`\\.bw-figur\\.bw-a-${a}[ {]`).test(html), "Bewegung " + a);
-  assert.ok(/animation: bw\w+ calc\(var\(--b\) \* [\d.]+\)/.test(html) && /style="--b:\$\{b \|\| \.5\}s;--ph:\$\{ph \|\| 0\}s"/.test(b) && /function bwPhase\(\)/.test(b), "Bewegung im Takt der Musik (Dauer in Schlägen, Start auf dem Schlag)");
+  assert.ok(/animation: bw\w+ calc\(var\(--b\) \* [\d.]+\)/.test(html) && /style="--b:\$\{b \|\| \.5\}s;--ph:\$\{ph \|\| 0\}s/.test(b) && /function bwPhase\(\)/.test(b), "Bewegung im Takt der Musik (Dauer in Schlägen, Start auf dem Schlag)");
   assert.ok(/const BW_TEMPO = \{ sitzen: 112, stehen: 120, kueche: 116 \}/.test(b), "Tempo wie in Seniorenkursen");
   assert.ok(/BWM_HOOK/.test(b) && /function bwRiser\(/.test(b) && /BWM\.becken = true/.test(b) && /fill = takt === 7/.test(b), "Musik: Hook, Riser, Becken, Fill");
   assert.ok(/"Und fünf, sechs, sieben, acht!"/.test(b) && BW_LOB_ANZAHL(b) >= 12 && /c: \[/.test(b) && /id="bwSprech"/.test(b), "Einzählen, viele Sprüche, eigene je Übung, Sprechblase");
@@ -8698,4 +8698,16 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/function esHoehe\(scrollen\)/.test(b) && /innerHeight - Math\.max\(6, r\.getBoundingClientRect\(\)\.top\) - fh - 10/.test(b) && /grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/.test(html), "Rückseite bis zur Fußleiste, Reiter gleichmäßig nebeneinander");
   assert.ok(/classList\.toggle\('ohne-leiste'\)/.test(b) && /id="esDiaHinter"/.test(b), "Diashow fast im Vollbild: Leiste ausblendbar, weicher Hintergrund");
   assert.ok(!/\|\|=|\?\?=/.test(b), "alte Handys");
+}
+
+// 2.296.0 KC-CLUB-FLIPCHART-MUSTER + KC-CLUB-BUEHNE-80ER (Wunsch Hansi): Papier blanko/kariert/liniert; Musik lauter und beim Sprechen leiser;
+// Ansagen schneiden sich nicht mehr ab; Sprüche gleichmäßig verteilt; 80er-Kleidung mit wechselnden Farben
+{
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  assert.ok(/const ES_FLIP_MUSTER = \[\["blanko", "▢ Blanko"\], \["kariert", "▦ Kariert"\], \["liniert", "☰ Liniert"\]\];/.test(b) && /onclick="esFlipMusterWeiter\(\)"/.test(b), "ein Knopf schaltet blanko → kariert → liniert");
+  assert.ok(/globalCompositeOperation = "destination-out"/.test(b), "Radierer nimmt nur Striche weg – Linien bleiben");
+  assert.ok(/const BWM_LAUT = \.42, BWM_LEISE = \.09;/.test(b) && /createDynamicsCompressor\(\)/.test(b), "Musik lauter (mit Kompressor), beim Sprechen deutlich leiser");
+  assert.ok(/if \(L\.ansage && bwSpricht\(\) && L\.warte < 10\) \{ L\.warte\+\+; return bwZahl\(\); \}/.test(b), "Einzählen wartet, bis die Erklärung fertig ist");
+  assert.ok(/L\.rest === 27\)[\s\S]{0,200}L\.rest === 21\)[\s\S]{0,200}L\.rest === 15\)[\s\S]{0,200}L\.rest === 10\)[\s\S]{0,120}L\.rest === 6\)/.test(b), "Sprüche gleichmäßig verteilt");
+  assert.ok(/const BW_FARBEN = \[/.test(b) && /const bwStulpe = /.test(b) && /class="bw-band"/.test(b) && /L\.farbe \+ L\.i\)/.test(b), "80er: Neon-Jacke, Stulpen, Schweißbänder – je Übung andere Farben");
 }
