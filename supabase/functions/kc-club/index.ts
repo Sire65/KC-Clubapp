@@ -7692,10 +7692,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (count) throw new Fehler("Die Bestätigung ist gerade erst verschickt worden – bitte kurz warten.", 429);
         const zeilen = a.tage.map((t: any) => `${t.tag}:\n${t.zeilen.map((z: string) => "   " + z).join("\n")}`).join("\n\n");
         const url = `${APP_URL}#bestaetigung=dienstwunsch`;
-        const text = `Hallo ${ich.vorname},\n\n${a.hinweis}\n\nDeine Dienstwünsche (Stand ${a.stand}):\n\n${zeilen}\n\n────────────\n${a.tage.length} Tag${a.tage.length === 1 ? "" : "e"} · ${a.freigabe ? "Kollegen dürfen deine Zeiten sehen" : "nur für die Planung sichtbar"}\n\nDie Aufstellung zum Ansehen, Drucken oder als PDF:\n${url}\n\nÄnderungen sind jederzeit möglich, solange die Wunschphase läuft.\n\nViele Grüße\nKöcheclub-App`;
+        // 2.324.0 KC-CLUB-DW-BESTAETIGUNG-MAIL (Wortlaut Hansi): „Lieber Frank, danke, dass du deine Dienstplanung per App gemacht hast …“ –
+        // Anrede „Lieber/Liebe“ aus kc_besuche_anrede, sonst „Hallo“; deutlicher Hinweis: Wunschplanung, noch nicht der freigegebene Sollplan
+        const { data: anr } = await db.from("kc_besuche_anrede").select("anrede").eq("person_id", ich.person_id).maybeSingle();
+        const text = `${anr?.anrede === "Lieber" || anr?.anrede === "Liebe" ? anr.anrede : "Hallo"} ${ich.vorname},\n\ndanke, dass du deine Dienstplanung per App gemacht hast. Deine Angaben sind angekommen und werden in das Dienstplan-Programm DP2 übernommen.\n\n⚠️ Bitte beachte: Es handelt sich um deine Wunschplanung – das ist noch nicht der fertige, freigegebene Sollplan. Der fertige Dienstplan wird sicherlich bald veröffentlicht.\n\nDeine Angaben für den ${DW.name} (Stand ${a.stand}):\n\n${zeilen}\n\n────────────\n${a.tage.length} Tag${a.tage.length === 1 ? "" : "e"} · ${a.freigabe ? "Kollegen dürfen deine Zeiten sehen" : "nur für die Planung sichtbar"}\n\nDie Aufstellung zum Ansehen, Drucken oder als PDF:\n${url}\n\nÄnderungen sind jederzeit möglich, solange die Wunschphase läuft.\n\nLiebe Grüße\nKöcheclub Werne`;
         const versand = await routerSenden("club_nachricht_beide", [ich.person_id], {
-          titel: "✅ Deine Dienstwünsche sind gespeichert", kurz: `${a.tage.length} Tage · Stand ${a.stand} – 📄 Aufstellung öffnen`,
-          betreff: `Köcheclub Werne – Bestätigung deiner Dienstwünsche (${DW.name})`, text, url,
+          titel: "✅ Deine Dienstwünsche sind angekommen", kurz: `${a.tage.length} Tage · Stand ${a.stand} · Wunschplanung, noch nicht der fertige Dienstplan – 📄 Aufstellung öffnen`,
+          betreff: `Köcheclub Werne – Bestätigung deiner Dienstplanung (${DW.name}) – Wunschplanung`, text, url,
         }, `club-bestaetigung-dw:${ich.person_id}:${a.revision}:${Date.now()}`);
         await protokoll(ich.person_id, "dienstwunsch_bestaetigt", { revision: a.revision, tage: a.tage.length, versand });
         return json({ ok: true, ...versand });

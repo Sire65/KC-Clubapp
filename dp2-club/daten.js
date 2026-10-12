@@ -87,7 +87,15 @@
     zuletzt = j;
     try { parent !== window && parent.postMessage("dienstwunsch-gespeichert", location.origin); } catch {}
     sperrePruefen(s.entries);
+    alleTagePruefen(s.entries);
     return true;
+  }
+  // 2.324.0 KC-CLUB-DW-BESTAETIGUNG-MAIL: sind alle Tage eingetragen, bietet die Club-App die Bestätigung per E-Mail an (einmal je Sitzung)
+  let alleGemeldet = false;
+  function alleTagePruefen(eintraege) {
+    const da = new Set(eintraege.map((e) => e.date)), tage = (K.days || []).map((d) => d.date);
+    if (alleGemeldet || !tage.length || !tage.every((t) => da.has(t))) return;
+    alleGemeldet = true; try { parent !== window && parent.postMessage({ art: "dw-alle-tage", tage: tage.length }, location.origin); } catch {}
   }
   // KC-CLUB-SPERRZEIT-PRUEFUNG (2.23.75, Fund Hansi): Nach jedem gespeicherten Tag prüfen, ob eine Sperrzeit außerhalb der Kann-Zeit
   // liegt (z. B. Kann 10–14, Sperre 14–22). Das ist unnötig – außerhalb der Kann-Zeit plant DP2 ohnehin nicht. Nur ein Hinweis an die

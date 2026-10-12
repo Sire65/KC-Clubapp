@@ -2845,7 +2845,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 248. 1.69.3: Hinweis „deine Wünsche – Abstimmung erfolgt noch“ in Bestätigung, Aufstellung und Archiv
 {
   assert.ok(/const DW_HINWEIS = \(name: string\) => `Vielen Dank für die Übermittlung deiner Dienstzeiten für den \$\{name\}\. Bitte beachte, dass es sich um deine Wünsche handelt – eine Abstimmung mit allen Clubmitgliedern erfolgt noch\.`;/.test(server), "Wortlaut");
-  assert.ok(/hinweis: DW_HINWEIS\(DW\.name\)/.test(server) && /\$\{a\.hinweis\}\\n\\nDeine Dienstwünsche/.test(server) && /\$\{auf\.hinweis\}/.test(server) && /\$\{b\.hinweis \?/.test(html), "an allen drei Stellen");
+  assert.ok(/hinweis: DW_HINWEIS\(DW\.name\)/.test(server) && /Es handelt sich um deine Wunschplanung/.test(server) /* 2.324.0: Mail mit Hansis neuem Wortlaut */ && /\$\{auf\.hinweis\}/.test(server) && /\$\{b\.hinweis \?/.test(html), "an allen drei Stellen");
 }
 
 // 249. 1.70.0: Tippfehler rot unterstreichen (KC-CLUB-RECHTSCHREIBUNG)
@@ -9069,4 +9069,15 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/J\.skiUhr = J\.extra === "raupe" \? 4 : jzbZ\(120, 200\)/.test(html), "Skifahrer ein paar Minuten nach der Raupe");
   assert.ok(/arm\(aH, false\)/.test(html) && /const hand = arm\(aV, true\)/.test(html) && /ausholen: !ki\.wurf/.test(html), "Kinder mit Armen und Ausholen");
   assert.ok(/raupe: null, raupeUhr: undefined, ski: null, skiUhr: null, rillen: null/.test(html), "zurückgesetzt beim Neustart");
+}
+
+// 2.324.0 KC-CLUB-DW-BESTAETIGUNG-MAIL: Bestätigung am Ende der Eingabe anklickbar, Wunschplanungs-Hinweis in der E-Mail
+{
+  const srv = lies("supabase/functions/kc-club/index.ts"), dat = lies("dp2-club/daten.js");
+  assert.ok(/danke, dass du deine Dienstplanung per App gemacht hast\. Deine Angaben sind angekommen und werden in das Dienstplan-Programm DP2 übernommen\./.test(srv), "Dank");
+  assert.ok(/Es handelt sich um deine Wunschplanung – das ist noch nicht der fertige, freigegebene Sollplan\./.test(srv) && /Liebe Grüße\\nKöcheclub Werne/.test(srv), "Hinweis und Gruß");
+  assert.ok(/postMessage\(\{ art: "dw-alle-tage", tage: tage\.length \}/.test(dat) && /alleTagePruefen\(s\.entries\)/.test(dat), "alle Tage → Meldung an die Club-App");
+  assert.ok(/e\.data\?\.art === "dw-alle-tage"\) return dwFertigLeiste/.test(html) && /📧 Bestätigung mit Zusammenfassung per E-Mail anfordern<\/button>/.test(html), "Leiste am Ende");
+  assert.ok(/onclick = dwZurueck/.test(html) && /e\.data === "dienstwunsch-zu"\) dwZurueck\(\)/.test(html) && /DWB\.geaendert && !DWB\.bestaetigt/.test(html), "Nachfrage beim Zurück");
+  assert.ok(/\.dw-kopf \{ grid-template-columns: minmax\(0, 1fr\); \}/.test(html), "Kopfreihe passt aufs Handy");
 }

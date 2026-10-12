@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.323.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.324.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11647,14 +11647,36 @@ async function statusSpeichern() {
 // Dienstwünsche: „✅ Fertig – Bestätigung“ → App-Nachricht + E-Mail mit der Aufstellung; Link #bestaetigung=… öffnet sie als
 // A4-Blatt (Querformat) über den Druck-Kern – ansehen, drucken, als PDF speichern. Erstattung: Bestätigung kommt beim Senden.
 let BEST = null;
-async function dwBestaetigen() {
+// 2.324.0 KC-CLUB-DW-BESTAETIGUNG-MAIL (Wunsch Hansi nach Franks Eingabe – er hatte keine Bestätigung angefordert): am Ende der
+// Eingabe anklickbar „📧 Bestätigung mit Zusammenfassung per E-Mail anfordern“ – wenn alle Tage eingetragen sind (Leiste unten im
+// Fenster) und beim Zurückgehen, wenn in dieser Sitzung etwas gespeichert und noch keine Bestätigung angefordert wurde.
+const DWB = { geaendert: false, bestaetigt: false };
+async function dwBestaetigen(kurz) {
   try { await api("eingaben_bestaetigen", { art: "dienstwunsch" }, { warten: true }); }
-  catch (e) { return meldeFehler(e); }
-  melde("✅ Bestätigung ist unterwegs – als App-Nachricht und per E-Mail");
+  catch (e) { meldeFehler(e); return false; }
+  DWB.bestaetigt = true; DWB.geaendert = false; document.getElementById("dwFertigLeiste")?.remove();
+  melde("📧 Bestätigung ist unterwegs – per E-Mail und als App-Nachricht");
+  if (kurz) { await frage("📧 Die Bestätigung mit der Zusammenfassung deiner Eingaben ist unterwegs – schau gleich in dein E-Mail-Postfach (auch im Spam-Ordner).\n\nDenk dran: Das ist deine Wunschplanung, noch nicht der fertige, freigegebene Dienstplan.", { ja: "👍 OK", nein: "Schließen" }); return true; }
   if (await frage("🗄️ Die Aufstellung auch in deinen Archiv-Ordner legen?\nDann findest du sie später unter Archiv → Mein Ordner → Dienstplan.", { ja: "🗄️ Ja, ablegen", nein: "Nein" })) {
     try { await api("eingaben_ablegen", { art: "dienstwunsch" }, { warten: true }); melde("🗄️ In deinem Archiv-Ordner abgelegt (Register Dienstplan)"); } catch (e) { meldeFehler(e); }
   }
   if (await frage("✅ Deine Dienstwünsche sind gespeichert.\nDie Aufstellung bekommst du als App-Nachricht und per E-Mail.\n\nAufstellung jetzt ansehen?", { ja: "📄 Ansehen", nein: "Später" })) bestaetigungZeigen("dienstwunsch");
+  return true;
+}
+function dwFertigLeiste(tage) { // alle Tage eingetragen → deutlich anklickbar am Ende der Eingabe
+  const f = document.getElementById("dwFenster"); if (!f || DWB.bestaetigt || document.getElementById("dwFertigLeiste")) return;
+  f.insertAdjacentHTML("beforeend", `<div class="dw-fertig-leiste" id="dwFertigLeiste" role="region" aria-label="Bestätigung anfordern"><div>🎉 <b>Alle ${tage} Tage eingetragen – danke!</b><br><small>Möchtest du eine Bestätigung mit der Zusammenfassung deiner Eingaben?</small></div>
+    <button type="button" class="knopf haupt" data-k="mail">📧 Bestätigung mit Zusammenfassung per E-Mail anfordern</button><button type="button" class="knopf klein" data-k="spaeter">Später</button></div>`);
+  const l = document.getElementById("dwFertigLeiste");
+  l.querySelector('[data-k="mail"]').onclick = (e) => einmal(e.currentTarget, () => dwBestaetigen(true));
+  l.querySelector('[data-k="spaeter"]').onclick = () => l.remove();
+}
+async function dwZurueck() { // beim Verlassen nachfragen, wenn gespeichert, aber noch keine Bestätigung angefordert
+  if (DWB.geaendert && !DWB.bestaetigt && document.getElementById("dwFenster")) {
+    DWB.geaendert = false;
+    if (await frage("📧 Bestätigung mit Zusammenfassung per E-Mail anfordern?\n\nDu bekommst alle deine Eingaben noch einmal per E-Mail – mit dem Hinweis, dass es deine Wunschplanung ist (noch nicht der fertige Dienstplan).", { ja: "📧 Ja, bitte schicken", nein: "Nein, danke" })) await dwBestaetigen(true);
+  }
+  dwSchliessen();
 }
 async function bestaetigungZeigen(was) {
   const [art, id] = String(was || "").split(":");
@@ -11686,15 +11708,15 @@ function dwOeffnen() {
   f.innerHTML = `<div class="dw-kopf"><div class="dw-reihe">
     <button class="knopf klein" data-k="zu" aria-label="Zurück zur Club-App">← Zurück</button><b class="dw-titel">📝 Dienstwünsche</b>
     <button class="knopf klein" data-k="bogen" title="Leeren persönlichen Wunschbogen mit QR-Code drucken oder per E-Mail schicken" aria-label="Leerer Bogen">🖨️ Bogen</button>
-    <button class="knopf haupt klein" data-k="fertig" title="Aufstellung als Bestätigung per App-Nachricht und E-Mail">✅ Fertig</button></div>
+    <button class="knopf haupt klein" data-k="fertig" title="Bestätigung mit Zusammenfassung deiner Eingaben per E-Mail anfordern" aria-label="Fertig – Bestätigung per E-Mail anfordern">✅ Fertig</button></div>
     <details class="dw-tipp"><summary>💡 Tipp: Wann eine Sperrzeit?</summary><b>Sperrzeit nur, wenn du innerhalb deiner Kann-Zeit kurz weg musst.</b> Beispiel: Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr.
       Außerhalb der Kann-Zeit bist du automatisch frei.</details></div>
     <div style="flex:1;position:relative;display:flex">
       <!-- 1.40.0: drehende Mütze schon, während die Twinkey-Seite selbst noch lädt (danach zeigt die Seite ihre eigene) -->
       <div class="warten an" style="position:absolute;left:50%;top:42%;z-index:0"><div class="muetze"><img src="kc-kochmuetze-weiss.webp" alt=""></div><b>Twinkey wird geladen …</b></div>
       <iframe title="Dienstwünsche mit Twinkey" src="dienstwunsch.html?v=${APP_VERSION}" style="flex:1;border:0;width:100%;background:transparent;position:relative;z-index:1" allow="autoplay" onload="this.previousElementSibling?.remove();this.style.background='#fff8ee'"></iframe></div>`;
-  f.querySelector('[data-k="zu"]').onclick = dwSchliessen;
-  f.querySelector('[data-k="fertig"]').onclick = (e) => einmal(e.currentTarget, dwBestaetigen);
+  f.querySelector('[data-k="zu"]').onclick = dwZurueck; DWB.geaendert = false; DWB.bestaetigt = false;
+  f.querySelector('[data-k="fertig"]').onclick = (e) => einmal(e.currentTarget, () => dwBestaetigen());
   f.querySelector('[data-k="bogen"]').onclick = () => wbStart();
   document.body.appendChild(f); document.body.style.overflow = "hidden";
 }
@@ -11789,8 +11811,9 @@ window.addEventListener("message", (e) => {
   if (e.origin !== location.origin || !document.getElementById("dwFenster")) return;
   if (String(e.data?.art || "").startsWith("wunschbogen")) return wbAntwort(e.data);
   if (e.data?.art === "dw-sperre") return dwSperreHinweis(e.data.funde);
-  if (e.data === "dienstwunsch-zu") dwSchliessen();
-  else if (e.data === "dienstwunsch-gespeichert") melde("✓ Dienstwünsche gespeichert – DP2 übernimmt sie");
+  if (e.data?.art === "dw-alle-tage") return dwFertigLeiste(Number(e.data.tage) || 0);
+  if (e.data === "dienstwunsch-zu") dwZurueck();
+  else if (e.data === "dienstwunsch-gespeichert") { DWB.geaendert = true; DWB.bestaetigt = false; melde("✓ Dienstwünsche gespeichert – DP2 übernimmt sie"); }
 });
 
 // ---------- KC-CLUB-DOKUMENTE (0.73.0): „Meine Dokumente“ – Unterkacheln je Anleitung (PDF unter dokumente/) ----------
