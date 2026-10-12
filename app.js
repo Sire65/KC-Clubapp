@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.303.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.304.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12886,9 +12886,16 @@ const BW_UEBUNGEN = [
   { id: "huepfen", t: "Kleine Hüpfer", g: "stehen", a: "huepfen", h: "Ganz kleine Hüpfer im Takt – wer mag, wippt nur auf den Fußballen.", c: ["Hopp, hopp – wie Popcorn in der Pfanne!", "Ganz locker in den Knien landen!"] },
   { id: "storch", t: "Der Storch", g: "stehen", a: "storch", a2: "storch2", h: "Auf einem Bein stehen, das andere Knie im Takt hoch und runter – der Fuß bleibt in der Luft. Wer mag, hält sich am Stuhl fest.", w: "Und jetzt das andere Bein!", c: ["Wie ein Storch auf der Wiese!", "Fuß bleibt oben – nicht absetzen!"] },
   { id: "seit", t: "Seitschritt", g: "stehen", a: "seit", h: "Ein Schritt zur Seite und zurück – locker in den Knien.", w: "Und jetzt zur anderen Seite!", c: ["Wie in der engen Küche – ausweichen!", "Schön locker in den Knien!"] },
+  // 2.304.0 KC-CLUB-BUEHNE-BEWEGUNG-3 (Wunsch Hansi nach Recherche: Seniorentanz/Line-Dance-Grundschritte, Sturzprophylaxe – kleine Schritte, Stuhl zum Festhalten)
+  { id: "ruecktipp", t: "Fuß nach hinten", g: "stehen", a: "ruecktipp", profil: 1, h: "Einen Fuß nach hinten tippen und zurück – dann der andere. Arme schieben dabei nach vorn. Wer mag, hält sich am Stuhl fest.", c: ["Hinten antippen – und zurück!", "Schön aufrecht bleiben!"] },
+  { id: "steptouch", t: "Tanzschritt: Seit-Tipp", g: "stehen", a: "steptouch", h: "Schritt zur Seite, den anderen Fuß dazutippen und klatschen – dann zur anderen Seite.", c: ["Wie beim Tanztee – Schritt, tipp, klatsch!", "Und rüber – und klatsch!"] },
+  { id: "vorzurueck", t: "Vor und zurück", g: "stehen", a: "vorzurueck", profil: 1, h: "Abwechselnd: ein Fuß tippt vorn, dann hinten – dann das andere Bein. Arme schwingen gegengleich mit.", c: ["Vor – und zurück – wie ein Pendel!", "Schön im Takt der Musik!"] },
   { id: "kreis", t: "Im Kreis gehen", g: "stehen", a: "marsch", weg: "kreis", h: "Im Takt eine kleine Runde gehen – Knie hoch, Arme schwingen mit.", w: "Und jetzt die Runde andersherum!", c: ["Eine Runde durch die Küche!", "Schön im Takt – links, rechts!"] },
   { id: "knie", t: "Kniebeuge am Stuhl", g: "stehen", a: "knie", h: "Hände an die Lehne, Po nach hinten – nur so tief, wie es angenehm ist.", c: ["Als ob du dich setzen willst – und hoch!", "Nur so tief, wie es guttut!"] },
   { id: "zehen", t: "Auf die Zehen", g: "stehen", a: "zehen", h: "Langsam hoch auf die Zehen – und wieder runter.", c: ["Ans oberste Regal – hoch!", "Und sanft wieder runter!"] },
+  { id: "hampel", t: "Hampelmann ohne Hüpfen", g: "stehen", a: "hampel", h: "Ein Bein zur Seite tippen und dabei die Arme über den Kopf – zurück, und die andere Seite. Ohne zu hüpfen!", c: ["Hampelmann für Genießer – ganz ohne Springen!", "Arme hoch – wie bei einem Tor!"] },
+  { id: "anfersen", t: "Fersen zum Po", g: "stehen", a: "anfersen", h: "Abwechselnd eine Ferse Richtung Po heben – die Arme ziehen dabei nach unten.", c: ["Ferse hoch – und runter!", "Locker im Takt bleiben!"] },
+  { id: "armkreisst", t: "Arme kreisen", g: "stehen", a: "armkreis", h: "Arme zur Seite und große Kreise machen – Füße fest auf dem Boden.", w: "Und jetzt andersherum!", c: ["Große Kreise – wie ein Windrad!", "Die Schultern werden schön warm!"] },
   { id: "stuhlrunde", t: "Um den Stuhl laufen", g: "stehen", a: "marsch", weg: "stuhl", h: "Einmal gemütlich um den Stuhl herumgehen – im Takt der Musik.", c: ["Reise nach Jerusalem – nur ohne Drängeln!", "Schön gleichmäßig weitergehen!"] },
   { id: "aufstehst", t: "Aufstehen und hinsetzen", g: "stehen", a: "aufstehen", seite: 1, h: "Vom Stuhl aufstehen und langsam wieder hinsetzen – Arme lang nach vorn. Stuhl an die Wand stellen!", c: ["Hoch – und ganz langsam wieder runter!", "Die Beine machen die Arbeit!"] },
   { id: "strecken", t: "Nach oben strecken", g: "stehen", a: "strecken", h: "Abwechselnd einen Arm weit nach oben – als holst du den großen Topf vom Regal.", c: ["Ganz lang machen – nach den Sternen greifen!", "Links – und rechts – schön lang!"] },
@@ -12978,6 +12985,7 @@ function bwFigur(a, sitz, p, ding, b, ph, farbe) {
 function bwBuehneFigur(u, phase, anim, sitz, farbe) {
   const uebt = phase === "uebung", b = bwSchlag(), ph = bwPhase();
   if (u.seite && phase !== "schuetteln") return bwFigurSeite(uebt ? anim : "ruhe", b, ph, farbe); // Vorbereiten: sitzt schon seitlich auf dem Stuhl
+  if (u.profil && phase !== "schuetteln") return bwFigurProfil(uebt ? anim : "ruhe", b, ph, farbe); // 2.304.0: stehend von der Seite (Schritte vor/zurück)
   const fig = bwFigur(anim, sitz, phase === "schuetteln" ? "" : u.p, phase === "schuetteln" ? "" : u.ding, b, ph, farbe);
   if (!uebt || !u.weg) return fig;
   const stuhl = u.weg === "stuhl" ? `<svg class="bw-weg-stuhlbild" viewBox="0 0 60 80" aria-hidden="true"><rect x="6" y="2" width="48" height="30" rx="4" fill="#8a6440"/><rect x="10" y="6" width="40" height="22" rx="3" fill="#a0784e"/><rect x="2" y="40" width="56" height="9" rx="3" fill="#b88a5a"/><rect x="5" y="32" width="5" height="46" fill="#7a5634"/><rect x="50" y="32" width="5" height="46" fill="#7a5634"/><rect x="13" y="49" width="4" height="29" fill="#6b4a2c"/><rect x="43" y="49" width="4" height="29" fill="#6b4a2c"/></svg>` : "";
@@ -12997,6 +13005,20 @@ function bwFigurSeite(a, b, ph, farbe) {
   const stuhl = `<g class="bw-stuhl"><rect x="27" y="84" width="5" height="70" rx="2"/><rect x="27" y="128" width="35" height="6" rx="2"/><rect x="56" y="134" width="4.5" height="20"/><rect x="29" y="134" width="4.5" height="20"/></g>`;
   return `<svg class="bw-figur bw-seite bw-s-${a}" viewBox="0 0 120 170" style="--b:${b || .5}s;--ph:${ph || 0}s;--jacke:${fj};--stulpe:${fs};--band:${fb}" role="img" aria-label="Twinkey von der Seite: aufstehen und hinsetzen">
     ${stuhl}${schuh(67, true)}${bein(true)}${bein(false)}${schuh(70, false)}</svg>`;
+}
+// 2.304.0: Twinkey stehend im Profil – Beine hängen an der Hüfte (Oberschenkel → Unterschenkel → Fuß), damit Schritte nach vorn/hinten sichtbar sind
+function bwFigurProfil(a, b, ph, farbe) {
+  const [fj, fs, fb] = BW_FARBEN[((farbe || 0) % BW_FARBEN.length + BW_FARBEN.length) % BW_FARBEN.length], o = (x, y) => `style="transform-origin:${x}px ${y}px"`;
+  const bein = (k) => `<g class="p-bein ${k}"><g class="p-ob" ${o(60, 99)}><rect x="54.5" y="96" width="11" height="31" rx="5.5" class="bw-hose"/>
+      <g class="p-ub" ${o(60, 124)}><rect x="55.5" y="122" width="9" height="28" rx="4.5" class="bw-hose"/><rect x="54.6" y="137" width="10.8" height="12" rx="3.4" class="s-stulpe"/>
+        <path d="M54 150 Q54 143.5 60 143.5 L66 144.5 Q73 146 73 150.5 Z" fill="#e03131"/><rect x="53.5" y="149.6" width="20" height="3" rx="1.4" fill="#fff"/><path d="M59 145 l2 3.6 M62.4 145 l2 3.6 M65.8 145.4 l2 3.4" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></g></g></g>`;
+  const arm = (k) => `<g class="p-arm ${k}" ${o(60, 61)}><rect x="55.6" y="58" width="8.8" height="20" rx="4.4" class="bw-jacke"/><rect x="56" y="74" width="8" height="18" rx="4" class="bw-jacke"/><rect x="55.4" y="86" width="9.2" height="4.4" rx="2" class="bw-band"/><circle cx="60" cy="94" r="4.6" class="bw-haut"/></g>`;
+  const oben = `<g class="p-oben" ${o(60, 98)}><path d="M50 100 Q48 78 52 60 Q60 54 69 60 Q73 78 71 100 Z" class="bw-jacke"/>${[66, 74, 82, 90].map((y) => `<circle cx="68.4" cy="${y}" r="1.3" class="bw-knopf"/>`).join("")}
+      <rect x="56.5" y="49" width="8" height="9" class="bw-haut"/><g class="bw-kopf" ${o(61, 50)}><circle cx="61" cy="41" r="11.5" class="bw-haut"/><circle cx="72.2" cy="42.5" r="2.6" class="bw-haut"/>
+      <circle cx="66.5" cy="39" r="1.5" class="bw-auge"/><path d="M65 46.5 Q68.5 48.5 70.5 46" class="bw-mund"/><circle cx="65.5" cy="44" r="2" fill="#f4a3a3" opacity=".55"/>
+      <path d="M49.5 41 Q49 29 61 29 Q70 29.5 72 35 Q62 33 53 37 Q51 42 49.5 41Z" fill="#6b4226"/><rect x="49.6" y="33.6" width="23" height="5" rx="2.4" class="bw-band" transform="rotate(-6 61 36)"/><path d="M50 35 l-6 -3 l1 4 z M50 37 l-6 2 l3 2 z" class="bw-band"/></g></g>`;
+  return `<svg class="bw-figur bw-profil bw-p-${a}" viewBox="0 0 120 170" style="--b:${b || .5}s;--ph:${ph || 0}s;--jacke:${fj};--stulpe:${fs};--band:${fb}" role="img" aria-label="Twinkey von der Seite: Schritte">
+    <g class="p-ganz" ${o(60, 150)}>${arm("hinten")}${bein("hinten")}${oben}${bein("vorn")}${arm("vorn")}</g></svg>`;
 }
 function bwPlan(modus, dauer) {
   const passt = BW_UEBUNGEN.filter((u) => u.g === modus), n = Math.max(4, Math.round((dauer * 60) / (BW_SEK + BW_SCHUETTELN + BW_BEREIT))), plan = [];

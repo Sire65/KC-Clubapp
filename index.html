@@ -2835,6 +2835,39 @@
   .bw-seite.bw-s-aufstehen .s-ok { animation: bwSeiteOk calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
   .bw-seite.bw-s-aufstehen .s-arm { animation: bwSeiteArm calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
   @media (prefers-reduced-motion: reduce) { .bw-weg-fig { animation: none !important; } }
+  /* 2.304.0 KC-CLUB-BUEHNE-BEWEGUNG-3: Seit-Tipp (Tanzschritt), Hampelmann ohne Hüpfen, Fersen zum Po; im Profil: Fuß nach hinten, vor und zurück */
+  .bw-figur.bw-a-steptouch { animation: bwSeitRoot calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-steptouch .bw-obL { animation: bwSeitObl calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-steptouch .bw-obR { animation: bwSeitObr calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-steptouch .bw-oaL { animation: bwKlatschenOa calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-steptouch .bw-oaR { animation: bwKlatschenOaR calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-steptouch .bw-uaL { animation: bwKlatschenUa calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-steptouch .bw-uaR { animation: bwKlatschenUaR calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwHampelObL { 0%, 50%, 100% { transform: rotate(0deg); } 25% { transform: rotate(15deg); } }
+  @keyframes bwHampelObR { 0%, 50%, 100% { transform: rotate(0deg); } 75% { transform: rotate(-15deg); } }
+  @keyframes bwHampelOa { 0%, 50%, 100% { transform: rotate(8deg); } 25%, 75% { transform: rotate(158deg); } }
+  @keyframes bwHampelOaR { 0%, 50%, 100% { transform: rotate(-8deg); } 25%, 75% { transform: rotate(-158deg); } }
+  .bw-figur.bw-a-hampel .bw-obL { animation: bwHampelObL calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-hampel .bw-obR { animation: bwHampelObR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-hampel .bw-oaL { animation: bwHampelOa calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-hampel .bw-oaR { animation: bwHampelOaR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwAnfersenUbL { 0%, 50%, 100% { transform: scale(1, 1); } 25% { transform: scale(1, .42); } }
+  @keyframes bwAnfersenUbR { 0%, 50%, 100% { transform: scale(1, 1); } 75% { transform: scale(1, .42); } }
+  @keyframes bwAnfersenOa { 0%, 50%, 100% { transform: rotate(40deg); } 25%, 75% { transform: rotate(14deg); } }
+  @keyframes bwAnfersenOaR { 0%, 50%, 100% { transform: rotate(-40deg); } 25%, 75% { transform: rotate(-14deg); } }
+  .bw-figur.bw-a-anfersen .bw-ubL { animation: bwAnfersenUbL calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-anfersen .bw-ubR { animation: bwAnfersenUbR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-anfersen .bw-oaL { animation: bwAnfersenOa calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-anfersen .bw-oaR { animation: bwAnfersenOaR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  .bw-profil .p-bein.hinten, .bw-profil .p-arm.hinten { filter: brightness(.72); } .bw-profil .s-stulpe { fill: var(--stulpe, #2ee6d6); }
+  @keyframes bwPRueckOb { 0%, 30%, 100% { transform: rotate(0deg); } 10%, 20% { transform: rotate(26deg); } }
+  @keyframes bwPRueckOb2 { 0%, 50%, 80%, 100% { transform: rotate(0deg); } 60%, 70% { transform: rotate(26deg); } }
+  @keyframes bwPRueckUb { 0%, 30%, 100% { transform: rotate(0deg); } 10%, 20% { transform: rotate(-14deg); } }
+  @keyframes bwPRueckUb2 { 0%, 50%, 80%, 100% { transform: rotate(0deg); } 60%, 70% { transform: rotate(-14deg); } }
+  @keyframes bwPRueckArm { 0%, 30%, 50%, 80%, 100% { transform: rotate(0deg); } 10%, 20%, 60%, 70% { transform: rotate(-62deg); } }
+  @keyframes bwPRueckOben { 0%, 30%, 50%, 80%, 100% { transform: rotate(0deg); } 10%, 20%, 60%, 70% { transform: rotate(4deg); } }
+  .bw-profil.bw-p-ruecktipp .p-bein.vorn .p-ob { animation: bwPRueckOb calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; } .bw-profil.bw-p-ruecktipp .p-bein.hinten .p-ob { animation: bwPRueckOb2 calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
+  .bw-profil.bw-p-ruecktipp .p-bein.vorn .p-ub { animation: bwPRueckUb calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; } .bw-profil.bw-p-ruecktipp .p-bein.hinten .p-ub { animation: bwPRueckUb2 calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
+  .bw-profil.bw-p-ruecktipp .p-arm { animation: bwPRueckArm calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; } .bw-profil.bw-p-ruecktipp .p-oben { animation: bwPRueckOben calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwPVzOb { 0%, 25%, 50%, 100% { transform: rotate(0deg); } 12.5% { transform: rotate(-24deg); } 37.5% { transform: rotate(24deg); } }
+  @keyframes bwPVzOb2 { 0%, 50%, 75%, 100% { transform: rotate(0deg); } 62.5% { transform: rotate(-24deg); } 87.5% { transform: rotate(24deg); } }
+  @keyframes bwPVzArm { 0%, 25%, 50%, 100% { transform: rotate(0deg); } 12.5% { transform: rotate(26deg); } 37.5% { transform: rotate(-38deg); } }
+  @keyframes bwPVzArm2 { 0%, 50%, 75%, 100% { transform: rotate(0deg); } 62.5% { transform: rotate(26deg); } 87.5% { transform: rotate(-38deg); } }
+  .bw-profil.bw-p-vorzurueck .p-bein.vorn .p-ob { animation: bwPVzOb calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; } .bw-profil.bw-p-vorzurueck .p-bein.hinten .p-ob { animation: bwPVzOb2 calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
+  .bw-profil.bw-p-vorzurueck .p-arm.vorn { animation: bwPVzArm calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; } .bw-profil.bw-p-vorzurueck .p-arm.hinten { animation: bwPVzArm2 calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
   /* 2.302.0 KC-CLUB-BUEHNE-MUSIK: Stückliste über der Leiste („Nur Musik hören“) */
   .bw-liste { position: absolute; left: 8px; right: 60px; top: 72px; z-index: 4; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 4px; max-height: 34%; overflow-y: auto; }
   .bw-liste .es-k { font-size: .8rem; padding: 4px 8px; min-height: 0; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(0,0,0,.45); }
@@ -4726,6 +4759,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.303.0" data-v="2.303.0"></script>
+<script src="app.js?v=2.304.0" data-v="2.304.0"></script>
 </body>
 </html>

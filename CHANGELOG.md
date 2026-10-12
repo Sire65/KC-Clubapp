@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.304.0 – 2026-10-12 – KC-CLUB-BUEHNE-BEWEGUNG-3: sechs neue Übungen im Stehen
+Nach Recherche (Seniorentanz, Line-Dance-Grundschritte, Sturzprophylaxe): Fuß nach hinten tippen und abwechselnd, vor und zurück (beides von der Seite gezeigt), Tanzschritt Seit-Tipp mit Klatschen, Hampelmann ohne Hüpfen, Fersen zum Po, Arme kreisen im Stehen. Kleine Schritte, Hinweis auf Festhalten am Stuhl.
+
 ## 2.303.0 – 2026-10-12 – KC-CLUB-BUEHNE-BEWEGUNG-2 + KC-CLUB-BUEHNE-DISCO: neue Übungen und Disco-Stücke
 Twinkey kann jetzt: kleine Hüpfer, den Storch (ein Bein in der Luft, zur Hälfte Seitenwechsel), im Kreis gehen, um den Stuhl laufen (dahinter verdeckt) und – von der Seite gezeigt – mit ausgestreckten Armen aufstehen und hinsetzen (im Sitzen und im Stehen). Vier neue Disco-Stücke (Spiegelkugel-Fieber, Nachtschicht-Boogie, Samstagnacht im Kochclub, Euro-Disco Knödel); beim Training wechselt das Disco-Stück jedes Mal, im Tempo der Übungen. Die neuen Stehen-Übungen sind zwischen die bisherigen gereiht, damit sie schon in 5 Min. vorkommen.
 

@@ -1,12 +1,18 @@
 {
-  "version": "2.303.0",
+  "version": "2.304.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🤸 Twinkey: Hüpfen, Storch, im Kreis, um den Stuhl, Aufstehen von der Seite",
-    "🪩 Vier neue Disco-Stücke – beim Training jedes Mal ein anderes"
+    "💃 Bühne: Fuß nach hinten, vor und zurück, Tanzschritt, Hampelmann ohne Hüpfen, Fersen zum Po, Arme kreisen"
   ],
   "verlauf": [
+    {
+      "version": "2.304.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "💃 Bühne: Fuß nach hinten, vor und zurück, Tanzschritt, Hampelmann ohne Hüpfen, Fersen zum Po, Arme kreisen"
+      ]
+    },
     {
       "version": "2.303.0",
       "datum": "2026-10-12",

@@ -5924,6 +5924,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function bwKuechenTakt\(im, t\)/.test(html) && (html.match(/bwKuechenTakt\(im, t\); \} \}/g) || []).length === 4, "Küchengeräusche auch in den neuen Stücken");
 }
 
+// 2.304.0 KC-CLUB-BUEHNE-BEWEGUNG-3 (Wunsch Hansi nach Recherche): Fuß nach hinten, Seit-Tipp (Tanzschritt), vor und zurück, Hampelmann ohne Hüpfen, Fersen zum Po, Arme kreisen im Stehen
+{
+  for (const id of ["ruecktipp", "steptouch", "vorzurueck", "hampel", "anfersen", "armkreisst"]) assert.ok(new RegExp(`\\{ id: "${id}", t: "[^"]+", g: "stehen"`).test(html), `Übung ${id}`);
+  assert.ok(/function bwFigurProfil\(a, b, ph, farbe\)/.test(html) && /if \(u\.profil && phase !== "schuetteln"\) return bwFigurProfil\(/.test(html), "Profil-Figur für Schritte vor/zurück");
+  const css = lies("index.html");
+  for (const k of ["bwHampelObL", "bwAnfersenUbL", "bwPRueckOb", "bwPRueckOb2", "bwPVzOb", "bwPVzOb2", "bwPVzArm"]) assert.ok(css.includes(`@keyframes ${k} `), `Bewegung ${k}`);
+  assert.ok(/\.bw-figur\.bw-a-steptouch \.bw-oaL \{ animation: bwKlatschenOa/.test(css) && /\.bw-figur\.bw-a-steptouch \{ animation: bwSeitRoot/.test(css), "Seit-Tipp nutzt vorhandene Schritt- und Klatsch-Bewegung");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
