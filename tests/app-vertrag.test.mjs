@@ -5822,7 +5822,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/x \+= 4 \+ zf\(i \+ 100\) \* 8;/.test(html), "Zapfen-Abstand in Pixeln – breiter Bildschirm = mehr Zapfen");
   assert.ok(/class="jz-zapfen" d="M\$\{X\(x - b\)\} 0 C/.test(html) && /class="jz-rand"/.test(html), "geschwungene Zapfen mit Eisrand");
   assert.ok(/if \(e\.dataset\.mass === mass\) return;/.test(html), "nur bei geänderter Breite oder Länge neu zeichnen");
-  assert.ok(/\.jz-eis \.jz-tropfen \{ fill: #6fb9f4;[^}]*opacity: 0; \}/.test(html), "Tropfen erst sichtbar, wenn sie fallen (2.281.0: Takt statt Dauerschleife)");
+  assert.ok(/\.jz-eis \.jz-tropfen(, \.jz-eis \.jz-eisstueck)? \{ fill: #6fb9f4;[^}]*opacity: 0; \}/.test(html), "Tropfen erst sichtbar, wenn sie fallen (2.281.0: Takt statt Dauerschleife)");
 }
 // 2.280.0 KC-CLUB-SCHMELZTROPFEN (Wunsch Hansi): beim Schmelzen rinnen blaue Wassertropfen am Schneemann herunter in die Pfütze
 {
@@ -5840,7 +5840,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.282.0 KC-CLUB-WINTER-KINDER (Wunsch Hansi): Eistropfen deutlicher + Pfütze, Schlitten-Kinder abwechselnd von links/rechts, Schneeballschlacht
 {
-  assert.ok(/function jzbEisTropfen\(sx, sy\)/.test(html) && /if \(jzbEisTropfen\(r\.left \+ r\.width \/ 2, r\.top \+ r\.height \/ 2\)\) return t\.remove\(\);/.test(html), "Tropfen fällt in der Bühne bis zum Boden");
+  assert.ok(/function jzbEisTropfen\(sx, sy\)/.test(html) && /if \((jzbEisTropfen|\(eis \? jzbEisStueck : jzbEisTropfen\))\(r\.left \+ r\.width \/ 2, r\.top \+ r\.height \/ 2\)\) return t\.remove\(\);/.test(html), "Tropfen fällt in der Bühne bis zum Boden");
   assert.ok(/p\.r = Math\.min\(22 \* k, p\.r \+ 1\.6 \* k\)/.test(html) && /p\.r -= dt \* \.04 \* k;/.test(html), "Pfütze wächst langsam (begrenzt) und trocknet sehr langsam");
   assert.ok(/const dir = J\.schlittenDir = J\.schlittenDir === 1 \? -1 : 1;/.test(html), "Schlitten abwechselnd von links und von rechts");
   assert.ok(/function jzbKind\(c, f, sitzt, opt = \{\}\)/.test(html) && /\/\/ Bommelmütze/.test(html) && /\/\/ Schal: um den Hals, zwei Enden flattern nach hinten/.test(html), "Kinder mit Bommelmütze und wehendem Schal");
@@ -5891,7 +5891,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6023,6 +6023,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const bereitGenerell = typeof p\.bereitschaftGenerell === "boolean" \? p\.bereitschaftGenerell : null;/.test(server) && /standby_general: bereitGenerell/.test(server) && /share_with_colleagues,standby_general,submitted_at/.test(server), "Server speichert/liefert standby_general");
   const mig = lies("supabase/migrations/20261012_kc_dp_bereitschaft_generell.sql");
   assert.ok(/add column if not exists standby_general boolean/.test(mig) && /'standbyGeneral', i\.standby_general/.test(mig) && /revoke all on function public\.kc_dp_wish_inbox_pending\(text, text\) from public, anon;/.test(mig), "DB: Spalte + DP2-Abholung");
+}
+// 2.319.0 KC-CLUB-ONLINE-ANSAGE-NACHHOLEN (Fund Hansi „Christina online, keine Ansage“) + KC-CLUB-EISNAME (Wunsch Hansi: Name aus Glitzer-Eis, schmilzt bei der Sonne)
+{
+  assert.ok(/const seitMap = new Map<string, number>\(\);/.test(server) && /\.eq\("schluessel", "online_seit"\)\.in\("person_id", \[\.\.\.on\]\)/.test(server) && /\.\.\.\(seitMap\.has\(id\) \? \{ seitSek: seitMap\.get\(id\) \} : \{\}\)/.test(server), "Server: seit wann online (Sekunden)");
+  assert.ok(/: andere\.filter\(\(x\) => Number\.isFinite\(x\.seitSek\) && x\.seitSek \* 1000 < ANSAGE_FRISCH_MS && jetzt - \(OA\.gesehen\.get\(x\.person_id\) \|\| 0\) >= ANSAGE_PAUSE_MS\);/.test(html), "nach Pause: nur wer in den letzten 3 Min. kam");
+  assert.ok(/function jzbEisNameWill\(\)/.test(html) && /Math\.random\(\) < \(J\.vorschau \? \.7 : \.35\)/.test(html) && /if \(eis\) \{ let g = 0; for \(let i = 1; i < sp\.length; i\+\+\) if \(sp\[i\]\[1\] > sp\[g\]\[1\]\) g = i; n = g; \}/.test(html), "ab und an, vom größten Zapfen");
+  assert.ok(/\(eis \? jzbEisStueck : jzbEisTropfen\)\(/.test(html) && /function jzbEisStueck\(sx, sy\)/.test(html), "Eisstück fällt in die Bühne");
+  assert.ok(/N\.gelandet\[N\.n\] = J\.T; N\.n\+\+;/.test(html) && /const jzbEisNameText = \(\) => String\(ICH\?\.vorname/.test(html), "Buchstabe für Buchstabe der angemeldete Name");
+  assert.ok(/if \(N && N\.n && \(J\.sonne \|\| N\.schmelz > 0\)\)/.test(html) && /J\.eisName = null; J\.eisStueck = null;/.test(html), "Sonne lässt den Namen schmelzen, danach von vorn");
+  assert.ok(/jzbEisNameSchritt\(dt\); \/\/ 2\.319\.0/.test(html) && /jzbEisNameMalen\(c\); \/\/ 2\.319\.0/.test(html) && /\.jz-eis \.jz-eisstueck \{/.test(lies("index.html")), "eingebunden + Stil");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

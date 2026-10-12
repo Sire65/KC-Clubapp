@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.318.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.319.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -4845,7 +4845,10 @@ const OA = { vorher: null, zuletzt: 0, gesehen: new Map(), gesagt: new Map(), na
 function onlineAnsagen(liste) {
   const jetzt = Date.now(), andere = (liste || []).filter((x) => x.person_id !== ICH?.person_id);
   // nur echte Neuankömmlinge: vorige Liste ist frisch (sonst nach langer Pause nicht alle auf einmal) und Person war ≥ 10 Min. weg
-  const neu = OA.vorher && jetzt - OA.zuletzt < ANSAGE_FRISCH_MS ? andere.filter((x) => !OA.vorher.has(x.person_id) && jetzt - (OA.gesehen.get(x.person_id) || 0) >= ANSAGE_PAUSE_MS) : [];
+  const neu = OA.vorher && jetzt - OA.zuletzt < ANSAGE_FRISCH_MS ? andere.filter((x) => !OA.vorher.has(x.person_id) && jetzt - (OA.gesehen.get(x.person_id) || 0) >= ANSAGE_PAUSE_MS)
+    // 2.319.0 KC-CLUB-ONLINE-ANSAGE-NACHHOLEN (Fund Hansi „Christina kam online, als meine App gerade zu war – keine Ansage“): nach einer Pause (oder beim Start)
+    // trotzdem ansagen, wer laut Server erst in den letzten 3 Min. online gekommen ist – nie alle, die schon länger da sind
+    : andere.filter((x) => Number.isFinite(x.seitSek) && x.seitSek * 1000 < ANSAGE_FRISCH_MS && jetzt - (OA.gesehen.get(x.person_id) || 0) >= ANSAGE_PAUSE_MS);
   for (const x of andere) OA.gesehen.set(x.person_id, jetzt);
   // KC-CLUB-VERLASSEN (1.88.0): wer in der letzten (frischen) Liste war und jetzt fehlt, hat die App verlassen
   const weg = OA.vorher && jetzt - OA.zuletzt < ANSAGE_FRISCH_MS ? [...OA.vorher].filter((id) => !andere.some((x) => x.person_id === id)) : [];
@@ -12524,12 +12527,14 @@ addEventListener("resize", () => requestAnimationFrame(jzEisLaenge));
       if (sp?.length && !document.hidden && rgSichtbar(e) && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
         const zuletzt = e._zuletzt || []; let n = Math.floor(Math.random() * sp.length); // 2.283.0: nie einer der letzten drei Zapfen
         for (let v = 0; v < sp.length && zuletzt.includes(n) && sp.length > 3; v++) n = (n + 1) % sp.length; e._zuletzt = [n, ...zuletzt].slice(0, 3);
+        const eis = jzbEisNameWill(); if (eis) { let g = 0; for (let i = 1; i < sp.length; i++) if (sp[i][1] > sp[g][1]) g = i; n = g; } // 2.319.0 KC-CLUB-EISNAME: vom größten Zapfen
         const [x, L] = sp[n], t = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        t.setAttribute("class", "jz-tropfen"); t.setAttribute("d", `M${x.toFixed(1)} ${(L - 4.5).toFixed(1)} q3.4 5 0 7.6 q-3.4 -2.6 0 -7.6 z`); e.appendChild(t); // 2.282.0: deutlicher
+        t.setAttribute("class", eis ? "jz-eisstueck" : "jz-tropfen");
+        t.setAttribute("d", eis ? `M${x.toFixed(1)} ${(L - 5).toFixed(1)} l2.8 4 l-.9 5 l-1.9 1.2 l-1.9 -1.6 l-.6 -4.6 z` : `M${x.toFixed(1)} ${(L - 4.5).toFixed(1)} q3.4 5 0 7.6 q-3.4 -2.6 0 -7.6 z`); e.appendChild(t); // 2.282.0: deutlicher
         t.style.transformBox = "fill-box"; t.style.transformOrigin = "50% 0";
         const a = t.animate([{ transform: "scale(.25)", opacity: 0 }, { transform: "scale(1)", opacity: .95, offset: .6 }, { transform: "translateY(1px) scale(1,1.08)", opacity: .95 }], { duration: 1500, easing: "ease-out" });
         a.onfinish = () => { // gelöst: in der Jahreszeiten-Bühne bis zum Boden fallen (dort wächst die Pfütze) – ohne Bühne nur ein kurzes Stück
-          const r = t.getBoundingClientRect(); if (jzbEisTropfen(r.left + r.width / 2, r.top + r.height / 2)) return t.remove();
+          const r = t.getBoundingClientRect(); if ((eis ? jzbEisStueck : jzbEisTropfen)(r.left + r.width / 2, r.top + r.height / 2)) return t.remove();
           const b = t.animate([{ transform: "translateY(1px)", opacity: .95 }, { transform: "translateY(40px)", opacity: 0 }], { duration: 900, easing: "ease-in" });
           b.onfinish = b.oncancel = () => t.remove();
         };
@@ -14470,8 +14475,82 @@ function jzbEisTropfen(sx, sy) {
   (J.eisTropfen = J.eisTropfen || []).push({ x: (sx - r.left) * J.w / r.width, y: (sy - r.top) * J.h / r.height, v: 0, s: 2.4 * J.k, spur: 0 });
   return true;
 }
+// ❄️ 2.319.0 KC-CLUB-EISNAME (Wunsch Hansi „ab und an fällt vom größeren Eiszapfen etwas taumelnd herunter – unten wird daraus der erste
+// Buchstabe des angemeldeten Users aus Glitzer-Eis, und immer so weiter, bis der ganze Name fertig ist; bei der Sonne vom Schneemann schmilzt der Name“).
+// Nur im Winter auf der Bühne, der Name bleibt nur auf diesem Gerät (nichts geht an den Server). Höchstens ein Stück gleichzeitig.
+const jzbEisNameText = () => String(ICH?.vorname || String(ICH?.name || "").split(" ")[0] || "").trim().slice(0, 12);
+function jzbEisNameWill() {
+  const J = JZB, txt = jzbEisNameText(); if (!J.cv || J.saison !== "winter" || !txt || J.eisStueck || J.sonne) return false;
+  const N = J.eisName; if (N && (N.schmelz > 0 || N.n >= [...N.text].length)) return false;
+  return Math.random() < (J.vorschau ? .7 : .35); // „ab und an“ – etwa jedes dritte Mal statt eines Tropfens
+}
+function jzbEisStueck(sx, sy) {
+  const J = JZB; if (!J.cv || J.saison !== "winter") return false;
+  const r = J.cv.getBoundingClientRect(); if (!r.width) return false;
+  if (!J.eisName || J.eisName.text !== jzbEisNameText()) J.eisName = { text: jzbEisNameText(), n: 0, gelandet: [], schmelz: 0 };
+  const x = (sx - r.left) * J.w / r.width, y = (sy - r.top) * J.h / r.height;
+  J.eisStueck = { x0: x, x, y, y0: y, v: 0, t: 0, rot: 0, vr: jzbZ(3, 6) * (Math.random() < .5 ? -1 : 1), ph: jzbZ(0, 6) };
+  return true;
+}
+function jzbEisNameLage() { // Mitte jedes Buchstabens (zentriert), Schriftgröße passend zur Bühne
+  const J = JZB, N = J.eisName, c = J.ctx, fs = Math.round(Math.min(20 * J.k, J.h * .32)), z = [...N.text];
+  c.save(); c.font = `800 ${fs}px "Segoe UI", Roboto, Arial, sans-serif`; const b = z.map((ch) => c.measureText(ch).width + 1.5 * J.k); c.restore();
+  const ges = b.reduce((a, v) => a + v, 0); let x = Math.max(JZB_RAND, (J.w - ges) / 2);
+  const pos = b.map((w) => { const m = x + w / 2; x += w; return m; });
+  return { fs, z, pos, y: pos.reduce((a, v) => a + jzbGrund(v), 0) / Math.max(1, pos.length) + 1 }; // gemeinsame Grundlinie (Mittel der Schneehöhe) – steht im Schnee
+}
+function jzbEisNameSchritt(dt) {
+  const J = JZB, N = J.eisName, S = J.eisStueck, k = J.k;
+  if (S && N) {
+    const L = jzbEisNameLage(), zx = L.pos[Math.min(N.n, L.pos.length - 1)], boden = L.y - L.fs * .45;
+    S.t += dt; S.v = Math.min(95 * k, S.v + 140 * k * dt); S.y += S.v * dt; // langsamer als ein Tropfen: es taumelt
+    const p = Math.min(1, (S.y - S.y0) / Math.max(1, boden - S.y0));
+    S.x = S.x0 + (zx - S.x0) * jzbEase(p) + Math.sin(S.t * 5 + S.ph) * 7 * k * (1 - p); S.rot += (S.vr + Math.sin(S.t * 3) * 4) * dt;
+    if (S.y >= boden) { // gelandet → der nächste Buchstabe entsteht mit Glitzer
+      J.eisStueck = null; N.gelandet[N.n] = J.T; N.n++;
+      for (let i = 0; i < 10; i++) J.fx.push({ typ: "flocke", x: zx, y: boden, r: jzbZ(.6, 1.6), vx: jzbZ(-45, 45), vy: -jzbZ(20, 70), a: 1, blass: 1.6 });
+    }
+  }
+  if (N && N.n && (J.sonne || N.schmelz > 0)) { // ☀️ die Sonne vom Schneemann lässt den Namen schmelzen
+    if (!J.sonne || J.sonne.t > JZB_SONNE * .6) N.schmelz = Math.min(1, N.schmelz + dt / 5);
+    if (Math.random() < dt * 6) { const L = jzbEisNameLage(), i = Math.floor(Math.random() * N.n); J.fx.push({ typ: "wasser", x: L.pos[i] + jzbZ(-4, 4) * k, y: L.y - 2, vx: jzbZ(-12, 12), vy: -jzbZ(5, 20), a: 1, blass: 2 }); }
+    if (N.schmelz >= 1) { // fertig geschmolzen: eine kleine Pfütze bleibt, dann geht es von vorn los
+      const L = jzbEisNameLage(), mx = (L.pos[0] + L.pos[N.n - 1]) / 2; (J.eisPfuetzen = J.eisPfuetzen || []).push({ x: mx, r: Math.min(22 * k, 8 * k + N.n * 1.5 * k), ringe: [0] });
+      J.eisName = null; J.eisStueck = null;
+    }
+  }
+}
+function jzbEisNameMalen(c) {
+  const J = JZB, N = J.eisName, S = J.eisStueck, k = J.k; if (!N) return;
+  if (N.n) {
+    const L = jzbEisNameLage(), m = N.schmelz || 0;
+    c.save(); c.font = `800 ${L.fs}px "Segoe UI", Roboto, Arial, sans-serif`; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.lineJoin = "round";
+    for (let i = 0; i < N.n; i++) {
+      const x = L.pos[i], y = L.y, neu = Math.min(1, (J.T - (N.gelandet[i] ?? -9)) / .35), sc = (.4 + .6 * jzbEase(neu)) * (1 + (neu < 1 ? .15 * Math.sin(neu * Math.PI) : 0));
+      c.save(); c.translate(x, y); c.scale(sc * (1 + m * .35), sc * (1 - m * .85)); c.globalAlpha = 1 - m * .55;
+      const g = c.createLinearGradient(0, -L.fs, 0, 0); g.addColorStop(0, "#ffffff"); g.addColorStop(.45, "#d9f1ff"); g.addColorStop(1, "#86c8f4");
+      c.strokeStyle = "rgba(40,110,180,.75)"; c.lineWidth = 2 * k; c.strokeText(L.z[i], 0, 0);
+      c.fillStyle = g; c.fillText(L.z[i], 0, 0);
+      c.restore();
+      if (m < .6) for (let f = 0; f < 2; f++) { // Glitzer: kleine funkelnde Sterne auf dem Eis
+        const a = Math.max(0, Math.sin(J.T * 3.2 + i * 2.3 + f * 1.7)), sx = x + (f ? .22 : -.18) * L.fs, sy = y - (f ? .62 : .3) * L.fs, l = (1.2 + a * 2.2) * k;
+        if (a < .15) continue; c.strokeStyle = `rgba(255,255,255,${a})`; c.lineWidth = .9 * k;
+        c.beginPath(); c.moveTo(sx - l, sy); c.lineTo(sx + l, sy); c.moveTo(sx, sy - l); c.lineTo(sx, sy + l); c.stroke();
+      }
+    }
+    c.restore();
+  }
+  if (S) { // das fallende, taumelnde Eisstück
+    c.save(); c.translate(S.x, S.y); c.rotate(S.rot); c.scale(k, k);
+    c.fillStyle = "#e6f6ff"; c.strokeStyle = "rgba(60,140,210,.9)"; c.lineWidth = .9;
+    c.beginPath(); c.moveTo(0, -5); c.lineTo(3.2, -1); c.lineTo(2, 4); c.lineTo(-1.2, 5); c.lineTo(-3.2, 0); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = "rgba(255,255,255,.95)"; c.beginPath(); c.arc(-.8, -1.6, 1, 0, 7); c.fill();
+    c.restore();
+  }
+}
 function jzbWinterKinder(dt) {
   const J = JZB, k = J.k;
+  jzbEisNameSchritt(dt); // 2.319.0 KC-CLUB-EISNAME
   for (const t of J.eisTropfen || []) {
     t.v = Math.min(260, t.v + 520 * dt); t.y += t.v * dt; t.spur = Math.min(12 * k, t.spur + t.v * dt * .4);
     if (t.y >= jzbGrund(t.x)) {
@@ -14601,6 +14680,7 @@ function jzbWinterKinderMalen(c) {
     c.globalAlpha = 1;
   }
   for (const t of J.eisTropfen || []) jzbTropfenMalen(c, t);
+  jzbEisNameMalen(c); // 2.319.0 KC-CLUB-EISNAME
   if (J.schlitten) jzbSchlittenMalen(c, J.schlitten, k);
   if (J.ballspiel) jzbBallspielMalen(c, J.ballspiel, k);
   jzbPisteMalen(c);

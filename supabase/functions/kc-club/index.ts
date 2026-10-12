@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.312.0";
+const SERVER_VERSION = "2.319.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -9311,10 +9311,15 @@ Köcheclub-App`,
         }
         on.delete(ich.person_id);
         const klopfbar = await anklopfenErlaubtMap([...on]);
+        // 2.319.0 KC-CLUB-ONLINE-ANSAGE-NACHHOLEN (Fund Hansi „Christina online, keine Ansage“): seit wann jemand ohne Pause online ist (Sekunden,
+        // vom Server gerechnet – keine Uhrenabweichung) – die App sagt beim Zurückkommen an, wer in den letzten 3 Min. dazugekommen ist
+        const seitMap = new Map<string, number>();
+        if (on.size) { const { data: os } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "online_seit").in("person_id", [...on]);
+          for (const x of os ?? []) { const t = Date.parse((x as any).wert?.seit || ""); if (t > 0) seitMap.set((x as any).person_id, Math.max(0, Math.round((Date.now() - t) / 1000))); } }
         const leute = await personen([...on, ...(ss ? [ss.von] : []), ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von), ...(spAn ?? []).map((x: any) => x.von), ...(vf ? [vf.von] : [])]);
         const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
         const liveT = await liveTerminAktiv().catch(() => null); // KC-CLUB-LIVE-TERMIN (2.231.0): auch ohne direkte Leitung bemerken
-        return json({ fensterAnders, liveTermin: liveT ? { id: liveT.id, stand: liveT.geaendert_am } : null, zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
+        return json({ fensterAnders, liveTermin: liveT ? { id: liveT.id, stand: liveT.geaendert_am } : null, zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false, ...(seitMap.has(id) ? { seitSek: seitMap.get(id) } : {}) })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
           klopfAntworten: (anMich ?? []).length ? Object.entries(KLOPF_ANTWORTEN).map(([id, text]) => ({ id, text })) : undefined,
           antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null })),
           anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })),

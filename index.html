@@ -862,7 +862,8 @@
   /* KC-CLUB-JAHRESZEIT-AUTOMATIK (2.273.0): kurze Eiszapfen unter der LED-Leiste – höchstens 9 px, nichts wird verdeckt, Tippen geht durch */
   .statusleiste.jz-eis-an { position: relative; }
   .jz-eis { position: absolute; left: 12px; width: calc(100% - 24px); top: calc(100% - 1px); height: 22px; pointer-events: none; z-index: 1; overflow: visible; filter: drop-shadow(0 1px 1px rgba(0,40,80,.25)); }
-  .jz-eis .jz-tropfen { fill: #6fb9f4; stroke: rgba(255,255,255,.9); stroke-width: .8; opacity: 0; } /* 2.281.0: ab und an ein leicht blauer Tropfen (Takt in app.js) */
+  .jz-eis .jz-tropfen, .jz-eis .jz-eisstueck { fill: #6fb9f4; stroke: rgba(255,255,255,.9); stroke-width: .8; opacity: 0; }
+  .jz-eis .jz-eisstueck { fill: #eaf8ff; stroke: rgba(60,140,210,.9); } /* 2.319.0 KC-CLUB-EISNAME: Eisstück löst sich vom größten Zapfen */ /* 2.281.0: ab und an ein leicht blauer Tropfen (Takt in app.js) */
   .jz-eis .jz-glanz { fill: none; stroke: #fff; stroke-width: 1.1; stroke-linecap: round; opacity: .85; }
   .jz-eis .jz-zapfen { stroke: rgba(120, 180, 230, .55); stroke-width: .6; }
   .jz-eis .jz-rand { fill: #fbfdff; opacity: .95; } /* 2.279.0: unregelmäßiger Eisrand oben */
@@ -4883,6 +4884,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.318.0" data-v="2.318.0"></script>
+<script src="app.js?v=2.319.0" data-v="2.319.0"></script>
 </body>
 </html>

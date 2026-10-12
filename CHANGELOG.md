@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.319.0 – 2026-10-12 – Online-Ansage nachholen, Name aus Glitzer-Eis
+Kommt jemand online, während deine App gerade zu ist, sagt sie beim Zurückkommen trotzdem an, wer in den letzten 3 Minuten dazugekommen ist. Im Winter fällt ab und an vom größten Eiszapfen ein Eisstück taumelnd herunter – unten wird daraus Buchstabe für Buchstabe dein Vorname aus Glitzer-Eis. Kommt die Sonne zum Schneemann, schmilzt der Name, und es geht von vorn los.
+
 ## 2.318.0 – 2026-10-12 – KC-CLUB-WINTER-PISTE
 Wunsch Hansi („im Winter-Design ab und an eine Schneeraupe, die die Schneehügel glättet; ein paar Minuten später 2 Skifahrer, die in verschiedenfarbigen Anzügen vorbeiwedeln; die Kinder bei der Schneeballschlacht haben keine Arme“). Schneeraupe (Pistenraupe): rot, Fahrerhaus mit Fahrer, Kette mit Laufrollen, gelbe Rundumleuchte blinkt, vorn das Schild, hinten die Fräse. Sie fährt (abwechselnd von links/rechts) über den Kopf, trägt Hügel ab und füllt Mulden auf die mittlere Schneehöhe auf (vor dem Schild stäubt Schnee); dahinter bleibt ein Rillenmuster, das in 2 Minuten verblasst. Kommt nur, wenn Schnee liegt und nichts anderes läuft (keine Kinder, kein Twinkey, kein Schneemann), etwa alle 5–8 Minuten. 2–3½ Minuten nach der Raupe wedeln zwei Skifahrer (Anzug mit Streifen, Helm, Skibrille, Stöcke; je zwei andere Farben aus 8 Kombinationen) mit Schwüngen und Schneespritzern vorbei. Die Kinder der Schneeballschlacht (und auf dem Schlitten) haben jetzt zwei sichtbare Arme mit dunklem Rand und Fäustlingen; vor dem Wurf holen sie mit dem Schneeball in der Hand weit nach hinten aus und schleudern ihn nach vorn – der Ball fliegt aus der Hand los.
 

@@ -1,13 +1,22 @@
 {
-  "version": "2.318.0",
+  "version": "2.319.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🚜 Winter-Design: Ab und an fährt eine rote Schneeraupe mit Blinklicht vorbei, glättet die Schneehügel und hinterlässt ein Rillenmuster",
-    "⛷️ Ein paar Minuten später wedeln zwei Skifahrer in verschiedenfarbigen Anzügen über die frische Piste",
-    "❄️ Die Kinder bei der Schneeballschlacht haben jetzt richtige Arme – sie holen mit dem Schneeball aus und werfen"
+    "🗣️ Online-Ansage wird nachgeholt, wenn jemand kam, während deine App zu war",
+    "❄️ Winter: vom großen Eiszapfen fällt ab und an Eis – daraus entsteht dein Name aus Glitzer-Eis",
+    "☀️ Kommt die Sonne zum Schneemann, schmilzt der Name"
   ],
   "verlauf": [
+    {
+      "version": "2.319.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🗣️ Online-Ansage wird nachgeholt, wenn jemand kam, während deine App zu war",
+        "❄️ Winter: vom großen Eiszapfen fällt ab und an Eis – daraus entsteht dein Name aus Glitzer-Eis",
+        "☀️ Kommt die Sonne zum Schneemann, schmilzt der Name"
+      ]
+    },
     {
       "version": "2.318.0",
       "datum": "2026-10-12",
