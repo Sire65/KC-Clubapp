@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.317.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.318.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2156,7 +2156,7 @@ const RG_EFFEKTE = [
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("herbst", "twinkey", (J) => J.phase === "besuch", 180); if (JZB.cv && JZB.phase === "fallen") jzbBesuchStart("fegen"); }, sel: ["#v-start .hero"], t: "🧹 Wind oder Twinkey",
     x: "Liegt genug Laub, kommt ein Windstoß – mal von links, mal von rechts – und weht es weg. Oder Twinkey kommt mit dem Besen vorbei, fegt und sagt einen Spruch. Schau mal." },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("winter", "", (J) => J.phase === "stehen", 150); }, sel: ["#v-start .hero"], t: "⛄ Winter",
-    x: "Im Winter fällt Schnee und bleibt liegen. Jedes dritte Mal wird daraus ein lachender Schneemann – mit Kochmütze und weinrotem Schal, im Advent mit Weihnachtsmütze. Nach einer Weile geht links die Sonne auf und er schmilzt – Wassertropfen rinnen herunter, nur sein Schal bleibt liegen, bis ihn der Wind mit dem Schnee davonwirbelt. Sonst kommt gleich der Wind, oder Twinkey schippt den Schnee beiseite. Ab und zu sausen zwei Kinder mit Bommelmützen auf dem Schlitten vorbei, oder ein paar Kinder machen eine Schneeballschlacht. Im tiefen Winter hängen dazu Eiszapfen an der Leiste mit den Lämpchen – ab und an tropft es, und unten bildet sich langsam eine Pfütze." },
+    x: "Im Winter fällt Schnee und bleibt liegen. Jedes dritte Mal wird daraus ein lachender Schneemann – mit Kochmütze und weinrotem Schal, im Advent mit Weihnachtsmütze. Nach einer Weile geht links die Sonne auf und er schmilzt – Wassertropfen rinnen herunter, nur sein Schal bleibt liegen, bis ihn der Wind mit dem Schnee davonwirbelt. Sonst kommt gleich der Wind, oder Twinkey schippt den Schnee beiseite. Ab und zu sausen zwei Kinder mit Bommelmützen auf dem Schlitten vorbei, oder ein paar Kinder machen eine Schneeballschlacht und werfen sich Schneebälle zu. Ab und an glättet eine rote Schneeraupe mit Blinklicht die Schneehügel, und ein paar Minuten später wedeln zwei Skifahrer in bunten Anzügen über die frische Piste. Im tiefen Winter hängen dazu Eiszapfen an der Leiste mit den Lämpchen – ab und an tropft es, und unten bildet sich langsam eine Pfütze." },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("fruehling", "", (J) => J.pt > 26); }, sel: ["#v-start .hero"], t: "🌱 Frühling",
     x: "Im Frühling wächst Gras mit den ersten Blumen, Blüten schweben herab und Schmetterlinge fliegen vorbei. Zu Ostern liegen bunte Eier im Gras – tippst du eins an, schlüpft ein Küken." },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("sommer", "", (J) => !!J.besuch && J.besuch.x > 0 && J.besuch.x < J.w); }, sel: ["#v-start .hero"], t: "🌻 Sommer",
@@ -13901,7 +13901,7 @@ function jzbStart(h, art) {
   const saison = art === "advent" ? "winter" : art;
   Object.assign(JZB, { s, cv, ctx, art, saison, w: 0, h: 0, dpr: 0, k: 1, T: 0, pt: 0, letzt: 0, imBild: true, pruef: 0, spawn: 0,
     flug: [], liegt: [], fx: [], boden: [], wind: null, mann: null, halme: [], blumen: [], gaeste: [], welk: 0, phase: "anfang",
-    blase: sb, besuch: null, gegossen: false, ext: {}, extraPruef: 0, eier: [], igel: null, igelUhr: undefined, schirm: null, schirmUhr: undefined, tropfen: [], pfuetzen: null, regenSpawn: 0 }); // 2.249.0 KC-CLUB-JAHRESZEIT-EXTRAS
+    blase: sb, besuch: null, gegossen: false, ext: {}, extraPruef: 0, eier: [], igel: null, igelUhr: undefined, schirm: null, schirmUhr: undefined, tropfen: [], pfuetzen: null, regenSpawn: 0, raupe: null, raupeUhr: undefined, ski: null, skiUhr: null, rillen: null }); // 2.249.0 KC-CLUB-JAHRESZEIT-EXTRAS
   if (!h.dataset.jzKlick) { h.dataset.jzKlick = "1"; h.addEventListener("click", jzbEiAntippen); } // Ostereier antippen
   // Vorschau im Winter: gleich der Schneemann-Lauf, damit man ihn nicht erst nach zwei Windstößen sieht
   JZB.lauf = JZB.vorschau ? (JZB.extra === "twinkey" ? 1 : saison === "winter" ? 2 : 0) : jzbLaufLesen(); // Vorschau „🧹 Twinkey“: gleich sein Lauf
@@ -14485,7 +14485,8 @@ function jzbWinterKinder(dt) {
   if (J.eisPfuetzen) J.eisPfuetzen = J.eisPfuetzen.filter((p) => p.r > .5);
   if (J.saison !== "winter") return;
   // wann kommen die Kinder? – erst wenn Schnee liegt; abwechselnd Schlitten / Schneeballschlacht
-  if (!J.schlitten && !J.ballspiel && (J.kinderUhr = (J.kinderUhr ?? (J.vorschau ? 4 : jzbZ(15, 30))) - dt) <= 0) {
+  jzbPiste(dt); // 2.318.0 KC-CLUB-WINTER-PISTE
+  if (!J.schlitten && !J.ballspiel && !J.raupe && !J.ski && (J.kinderUhr = (J.kinderUhr ?? (J.vorschau ? 4 : jzbZ(15, 30))) - dt) <= 0) {
     if (jzbSchneeMittel() < 3 * k || J.phase === "wind" || J.phase === "schmelzen") J.kinderUhr = 5;
     else if ((J.kinderArt = J.kinderArt === "schlitten" ? "ball" : "schlitten") === "schlitten") {
       const dir = J.schlittenDir = J.schlittenDir === 1 ? -1 : 1; // einmal von links, beim nächsten Mal von rechts
@@ -14507,14 +14508,14 @@ function jzbBallspielStart() {
 }
 function jzbBallspielSchritt(dt) {
   const J = JZB, k = J.k, S = J.ballspiel, g = 260 * k; S.t += dt;
-  const geht = S.t > 16;
+  const geht = S.geht = S.t > 16;
   for (const c of S.kinder) {
     c.wurf = Math.max(0, c.wurf - dt); c.treffer = Math.max(0, c.treffer - dt);
     const soll = geht ? (c.blick > 0 ? -40 * k : J.w + 40 * k) : c.ziel, d = soll - c.x;
     c.laeuft = Math.abs(d) > 1; if (c.laeuft) c.x += Math.sign(d) * Math.min(Math.abs(d), (geht ? 95 : 55) * k * dt);
     if (!geht && !c.laeuft && (c.uhr -= dt) <= 0) { // werfen: im Bogen auf ein Kind der anderen Seite – nicht jeder Wurf trifft
       const geg = S.kinder.filter((o) => o.blick !== c.blick && !o.laeuft); c.uhr = jzbZ(1.3, 2.6); if (!geg.length) continue;
-      const o = jzbW(geg), T = jzbZ(.8, 1.1), tx = o.x + (Math.random() < .6 ? 0 : jzbZ(-14, 14) * k), x0 = c.x + c.blick * 5 * k, y0 = jzbGrund(c.x) - 22 * k, ty = jzbGrund(tx) - 14 * k;
+      const o = jzbW(geg), T = jzbZ(.8, 1.1), tx = o.x + (Math.random() < .6 ? 0 : jzbZ(-14, 14) * k), x0 = c.x + c.blick * 3 * k, y0 = jzbGrund(c.x) - 30 * k, ty = jzbGrund(tx) - 14 * k;
       c.wurf = .35; S.baelle.push({ x: x0, y: y0, vx: (tx - x0) / T, vy: (ty - y0) / T - .5 * g * T, ziel: o, tx });
     }
   }
@@ -14534,10 +14535,21 @@ function jzbKind(c, f, sitzt, opt = {}) {
   if (sitzt) { c.strokeStyle = "#2b3550"; c.lineWidth = 3; c.beginPath(); c.moveTo(0, -6); c.lineTo(7, -5); c.lineTo(9, -2); c.stroke(); } // Beine nach vorn
   else { const s = opt.laeuft ? Math.sin(T * 14 + ph) * 3 : 0; c.strokeStyle = "#2b3550"; c.lineWidth = 2.6; c.beginPath(); c.moveTo(-1.5, -8); c.lineTo(-1.5 - s, 0); c.moveTo(1.5, -8); c.lineTo(1.5 + s, 0); c.stroke(); }
   const ky = sitzt ? -6 : -8; // Jacke
+  // 2.318.0 (Fund Hansi „die Kinder bei der Schneeballschlacht haben keine Arme“): die Arme lagen in Jackenfarbe auf der Jacke – jetzt
+  // zwei richtige Arme mit dunklem Rand und Fäustlingen; beim Werfen holt der vordere Arm mit dem Schneeball weit nach hinten aus und schleudert nach vorn
+  const arm = (a, vorn) => { const sx = vorn ? 1 : -1, sy = ky - 9.5, L = 7.2, ex = sx + Math.sin(a) * L, ey = sy + Math.cos(a) * L, mx = sx + Math.sin(a) * L * .5 + (vorn ? .6 : -.4), my = sy + Math.cos(a) * L * .5;
+    c.strokeStyle = "rgba(20,25,40,.55)"; c.lineWidth = 3.6; c.beginPath(); c.moveTo(sx, sy); c.quadraticCurveTo(mx, my, ex, ey); c.stroke();
+    c.strokeStyle = f[0]; c.lineWidth = 2.5; c.beginPath(); c.moveTo(sx, sy); c.quadraticCurveTo(mx, my, ex, ey); c.stroke();
+    c.fillStyle = f[2]; c.beginPath(); c.arc(ex, ey, 1.6, 0, 7); c.fill(); return [ex, ey]; };
+  const sw = opt.laeuft ? Math.sin(T * 14 + (opt.ph || 0)) * .6 : 0;
+  let aV = opt.arm === "vor" ? 1.45 : .35 + sw, aH = opt.arm === "vor" ? 1.25 : -.2 - sw;
+  if (opt.ausholen) { aV = .35 - opt.ausholen * 2.75; aH = -.2 + opt.ausholen * .9; } // Ball in der Hand, Arm weit nach hinten oben
+  if (opt.wurf) { const p = jzbEase(opt.wurf); aV = -2.4 + p * 4.1; aH = .7 - p * 1.1; } // Wurf: von hinten oben schnell nach vorn
+  arm(aH, false); // hinterer Arm (hinter der Jacke)
   c.fillStyle = f[0]; c.beginPath(); c.ellipse(0, ky - 6, 4.6, 6.4, 0, 0, 7); c.fill();
-  c.strokeStyle = f[0]; c.lineWidth = 2.4; c.beginPath(); // Arme
-  if (opt.wurf) { c.moveTo(1, ky - 9); c.lineTo(-3, ky - 17); } else if (opt.arm === "vor") { c.moveTo(1, ky - 8); c.lineTo(8, ky - 6); } else { c.moveTo(1, ky - 8); c.lineTo(4, ky - 3); }
-  c.stroke();
+  c.fillStyle = "rgba(0,0,0,.12)"; c.beginPath(); c.ellipse(-1.4, ky - 5, 2.4, 5.4, 0, 0, 7); c.fill(); // etwas Schatten, damit der vordere Arm sich abhebt
+  const hand = arm(aV, true);
+  if (opt.ausholen) { c.fillStyle = "#ffffff"; c.strokeStyle = "rgba(160,190,220,.9)"; c.lineWidth = .6; c.beginPath(); c.arc(hand[0], hand[1] - 1.2, 2, 0, 7); c.fill(); c.stroke(); }
   const hy = ky - 15; // Kopf
   c.fillStyle = "#f6cba6"; c.beginPath(); c.arc(0, hy, 4.4, 0, 7); c.fill();
   c.fillStyle = "#3a2a1a"; c.beginPath(); c.arc(2.2, hy - .4, .6, 0, 7); c.fill();
@@ -14571,7 +14583,8 @@ function jzbBallspielMalen(c, S, k) {
   for (const [i, ki] of S.kinder.entries()) {
     const zuck = ki.treffer ? Math.sin(ki.treffer * 40) * 1.5 : 0;
     c.save(); c.translate(ki.x + zuck, jzbGrund(ki.x) + 1); c.scale(ki.blick * k * 1.15, k * 1.15); c.rotate(ki.treffer ? -.15 : 0);
-    jzbKind(c, ki.f, false, { wehen: ki.laeuft ? .55 : .2, ph: i * 1.7, wurf: ki.wurf > 0, laeuft: ki.laeuft });
+    jzbKind(c, ki.f, false, { wehen: ki.laeuft ? .55 : .2, ph: i * 1.7, wurf: ki.wurf > 0 ? 1 - ki.wurf / .35 : 0, laeuft: ki.laeuft,
+      ausholen: !ki.wurf && !ki.laeuft && !S.geht && ki.uhr < .55 ? Math.min(1, (.55 - ki.uhr) / .3) : 0 });
     c.restore();
   }
   c.fillStyle = "#ffffff"; c.strokeStyle = "rgba(160,190,220,.8)"; c.lineWidth = .6;
@@ -14590,6 +14603,109 @@ function jzbWinterKinderMalen(c) {
   for (const t of J.eisTropfen || []) jzbTropfenMalen(c, t);
   if (J.schlitten) jzbSchlittenMalen(c, J.schlitten, k);
   if (J.ballspiel) jzbBallspielMalen(c, J.ballspiel, k);
+  jzbPisteMalen(c);
+}
+// ---------- KC-CLUB-WINTER-PISTE (2.318.0, Wunsch Hansi): ab und an fährt eine Schneeraupe (Pistenraupe) vorbei und glättet die
+// Schneehügel – vorn schiebt das Schild den Schnee glatt, hinten zieht die Fräse ein Rillenmuster. Ein paar Minuten später wedeln zwei
+// Skifahrer in verschiedenfarbigen Anzügen über die frisch präparierte Piste. Nur Winter, nur wenn Schnee liegt, nie zugleich mit den Kindern.
+const JZB_SKI_FARBEN = [["#e63946", "#ffffff"], ["#1d6fe0", "#ffd21f"], ["#2bb24c", "#ff4fa3"], ["#ffb703", "#1d3557"], ["#9b2fd6", "#38d1c0"], ["#ff6f1a", "#2f6fd6"], ["#ff4fa3", "#ffffff"], ["#14a3a3", "#ffd166"]];
+const jzbPisteFrei = () => { const J = JZB; return !J.schlitten && !J.ballspiel && !J.besuch && !J.mann && (J.phase === "fallen" || J.phase === "stehen") && jzbSchneeMittel() >= 3 * J.k; };
+function jzbPiste(dt) {
+  const J = JZB, k = J.k, B = J.boden;
+  if (J.rillen) { J.rillen.t += dt; if (J.rillen.t > 120 || J.phase === "wind" || J.phase === "besuch") J.rillen = null; }
+  if (!J.raupe && !J.ski) {
+    if ((J.raupeUhr = (J.raupeUhr ?? (J.extra === "raupe" ? 2 : jzbZ(60, 150))) - dt) <= 0) {
+      if (!jzbPisteFrei()) J.raupeUhr = 6;
+      else { const dir = J.raupeDir = J.raupeDir === 1 ? -1 : 1; J.raupe = { dir, x: dir > 0 ? -70 * k : J.w + 70 * k, t: 0, eben: jzbSchneeMittel() }; J.rillen = null; }
+    }
+    if (J.skiUhr !== undefined && J.skiUhr !== null && (J.skiUhr -= dt) <= 0) {
+      if (jzbSchneeMittel() < 3 * k || J.schlitten || J.ballspiel || J.besuch || J.phase === "wind" || J.phase === "schmelzen") J.skiUhr = 8;
+      else { const dir = Math.random() < .5 ? 1 : -1, f = JZB_SKI_FARBEN.slice().sort(() => Math.random() - .5).slice(0, 2); J.skiUhr = null;
+        J.ski = { dir, t: 0, fahrer: f.map((farbe, i) => ({ x: dir > 0 ? -30 * k - i * 70 * k : J.w + 30 * k + i * 70 * k, f: farbe, ph: i * 1.9 })) }; }
+    }
+  }
+  if (J.raupe) {
+    const R = J.raupe; R.t += dt; R.x += R.dir * 42 * k * dt;
+    const vorn = R.x + R.dir * 34 * k, hinten = R.x - R.dir * 30 * k, a = Math.min(vorn, hinten), b = Math.max(vorn, hinten);
+    for (let i = Math.max(0, Math.floor(a / JZB_SP)); i <= Math.min(B.length - 1, Math.ceil(b / JZB_SP)); i++) {
+      const d = B[i] - R.eben; if (Math.abs(d) < .05) continue; B[i] -= d * Math.min(1, dt * 6); // Hügel abtragen, Mulden auffüllen
+      if (d > 1.5 * k && J.fx.length < 170 && Math.random() < dt * 8) J.fx.push({ typ: "flocke", x: i * JZB_SP, y: J.h - B[i] - 2, r: jzbZ(.8, 1.8), vx: R.dir * jzbZ(30, 80), vy: -jzbZ(20, 60), a: 1, blass: 1.4 }); // Schnee vor dem Schild
+    }
+    const rx = R.x - R.dir * 32 * k; if (jzbImFeld(rx)) { if (!J.rillen) J.rillen = { von: rx, bis: rx, t: 0 }; J.rillen.von = Math.min(J.rillen.von, rx); J.rillen.bis = Math.max(J.rillen.bis, rx); }
+    if (R.x < -90 * k || R.x > J.w + 90 * k) { J.raupe = null; J.raupeUhr = jzbZ(300, 480); J.skiUhr = J.extra === "raupe" ? 4 : jzbZ(120, 200); } // „ein paar Minuten später“: die Skifahrer
+  }
+  if (J.ski) {
+    const S = J.ski; S.t += dt;
+    for (const f of S.fahrer) {
+      f.x += S.dir * 105 * k * dt; f.dreh = Math.sin(S.t * 5.2 + f.ph); // wedeln: Schwung links, Schwung rechts
+      if (Math.abs(f.dreh) > .85 && J.fx.length < 170 && Math.random() < dt * 30) J.fx.push({ typ: "flocke", x: f.x - S.dir * 6 * k, y: jzbGrund(f.x) - 1, r: jzbZ(.7, 1.6), vx: -S.dir * jzbZ(20, 60) + f.dreh * 25, vy: -jzbZ(25, 70), a: 1, blass: 1.6 }); // Schnee spritzt in der Kurve
+    }
+    if (S.fahrer.every((f) => f.x < -60 * k || f.x > J.w + 60 * k)) J.ski = null;
+  }
+}
+function jzbRaupeMalen(c, R, k) {
+  const J = JZB, y = J.h - R.eben, wipp = Math.sin(R.t * 9) * .3;
+  c.save(); c.translate(R.x, y + 1 + wipp); c.scale(R.dir * k, k); c.lineJoin = "round"; c.lineCap = "round";
+  // Kette mit Laufrollen
+  c.fillStyle = "#2b2f38"; c.beginPath(); c.roundRect(-26, -9, 52, 9, 4.5); c.fill();
+  c.fillStyle = "#59606e"; for (const rx of [-21, -12, -3, 6, 15, 21]) { c.beginPath(); c.arc(rx, -4.5, 2.6, 0, 7); c.fill(); }
+  c.strokeStyle = "#454b57"; c.lineWidth = .8; const lauf = (R.t * 42) % 4;
+  for (let gx = -24 + lauf; gx < 25; gx += 4) { c.beginPath(); c.moveTo(gx, -9); c.lineTo(gx, -8); c.moveTo(gx, -.8); c.lineTo(gx, 0); c.stroke(); }
+  // Aufbau (rot) mit Motorhaube vorn
+  c.fillStyle = "#d62828"; c.beginPath(); c.moveTo(-24, -9); c.lineTo(-24, -17); c.lineTo(10, -17); c.lineTo(22, -14); c.lineTo(24, -9); c.closePath(); c.fill();
+  c.fillStyle = "rgba(255,255,255,.18)"; c.fillRect(-24, -17, 46, 1.4);
+  // Fahrerhaus mit Fenstern
+  c.fillStyle = "#c01f1f"; c.beginPath(); c.moveTo(-14, -17); c.lineTo(-13, -30); c.lineTo(4, -30); c.lineTo(10, -17); c.closePath(); c.fill();
+  c.fillStyle = "#bfe3ff"; c.beginPath(); c.moveTo(-11, -19); c.lineTo(-10.5, -28); c.lineTo(-3, -28); c.lineTo(-3, -19); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(-1, -19); c.lineTo(-1, -28); c.lineTo(3, -28); c.lineTo(7.4, -19); c.closePath(); c.fill();
+  c.fillStyle = "rgba(255,255,255,.55)"; c.fillRect(-9.5, -27, 1.2, 6);
+  c.fillStyle = "#f6cba6"; c.beginPath(); c.arc(1.6, -24.5, 1.8, 0, 7); c.fill(); c.fillStyle = "#1d3557"; c.fillRect(-.2, -27, 3.6, 1.2); // Fahrer mit Mütze
+  // Rundumleuchte (blinkt)
+  const an = Math.sin(R.t * 12) > 0; c.fillStyle = an ? "#ffb000" : "#a86a00"; c.beginPath(); c.roundRect(-6, -33, 4, 3, 1); c.fill();
+  if (an) { c.fillStyle = "rgba(255,176,0,.28)"; c.beginPath(); c.arc(-4, -31.5, 7, 0, 7); c.fill(); }
+  // Schild vorn (gewölbt) und Fräse hinten
+  c.fillStyle = "#e9edf2"; c.strokeStyle = "#8a96a8"; c.lineWidth = .8; c.beginPath(); c.moveTo(28, -13); c.quadraticCurveTo(33, -7, 30, 0); c.lineTo(34, 0); c.quadraticCurveTo(37, -7, 32, -14); c.closePath(); c.fill(); c.stroke();
+  c.strokeStyle = "#5b6272"; c.lineWidth = 1.6; c.beginPath(); c.moveTo(24, -11); c.lineTo(29, -10); c.stroke();
+  c.fillStyle = "#3d4350"; c.beginPath(); c.roundRect(-36, -7, 9, 6, 2); c.fill(); c.strokeStyle = "#3d4350"; c.lineWidth = 1.4; c.beginPath(); c.moveTo(-27, -5); c.lineTo(-24, -6); c.stroke();
+  c.strokeStyle = "#c9d2de"; c.lineWidth = .6; for (let fx = -35; fx < -28; fx += 1.6) { c.beginPath(); c.moveTo(fx, -1); c.lineTo(fx, .8); c.stroke(); }
+  c.restore();
+}
+function jzbSkiMalen(c, f, dir, k) {
+  const J = JZB, y = jzbGrund(f.x) + 1, d = f.dreh || 0, kipp = d * .22, hoch = Math.abs(d) * 1.2;
+  c.save(); c.translate(f.x, y - hoch); c.scale(dir * k * 1.15, k * 1.15); c.lineCap = "round"; c.lineJoin = "round";
+  // Skier (vorne hochgebogen), leicht schräg im Schwung
+  c.save(); c.rotate(d * .06); c.strokeStyle = f.f[0]; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-13, 0); c.lineTo(11, 0); c.quadraticCurveTo(15, 0, 15, -3); c.stroke();
+  c.strokeStyle = "rgba(0,0,0,.35)"; c.lineWidth = .6; c.beginPath(); c.moveTo(-13, .9); c.lineTo(12, .9); c.stroke(); c.restore();
+  c.rotate(kipp); // ganzer Körper legt sich in die Kurve
+  // Beine gebeugt (Hosen etwas dunkler), Skischuhe
+  c.strokeStyle = "#20263a"; c.lineWidth = 3; c.beginPath(); c.moveTo(-1, -1); c.lineTo(3, -7); c.lineTo(-1, -13); c.stroke();
+  c.strokeStyle = f.f[0]; c.lineWidth = 3.1; c.beginPath(); c.moveTo(1, -1); c.lineTo(5, -7); c.lineTo(1, -13); c.stroke();
+  c.fillStyle = "#20263a"; c.fillRect(-2.5, -2.4, 5, 2.4);
+  // Oberkörper nach vorn gebeugt im Anzug
+  c.fillStyle = f.f[0]; c.beginPath(); c.ellipse(2, -18, 4.4, 6.8, .45, 0, 7); c.fill();
+  c.fillStyle = f.f[1]; c.beginPath(); c.ellipse(3.2, -18.6, 1.1, 5, .45, 0, 7); c.fill(); // Streifen
+  // Arme mit Stöcken – Stockeinsatz wechselt mit dem Schwung
+  const st = d > 0 ? 1 : -1;
+  for (const [vorn, sign] of [[false, -1], [true, 1]]) {
+    const hx = 8 + (vorn ? 2 : 0) + (st === sign ? 2 : -1), hy = -16;
+    c.strokeStyle = vorn ? f.f[0] : "rgba(0,0,0,.35)"; c.lineWidth = 2.2; c.beginPath(); c.moveTo(3, -22); c.lineTo(hx, hy); c.stroke();
+    c.strokeStyle = "#9aa3b0"; c.lineWidth = .8; c.beginPath(); c.moveTo(hx, hy); c.lineTo(hx - 6 - (st === sign ? -3 : 3), 1); c.stroke();
+    c.fillStyle = "#20263a"; c.beginPath(); c.arc(hx, hy, 1.3, 0, 7); c.fill();
+  }
+  // Kopf mit Helm und Skibrille
+  c.fillStyle = "#f6cba6"; c.beginPath(); c.arc(7, -27, 3.8, 0, 7); c.fill();
+  c.fillStyle = f.f[1]; c.beginPath(); c.arc(6.6, -28, 4.2, Math.PI * 1.02, Math.PI * 2.05); c.fill();
+  c.fillStyle = "#ff9f1c"; c.beginPath(); c.roundRect(7.2, -28.2, 3.8, 2, 1); c.fill(); c.fillStyle = "rgba(255,255,255,.6)"; c.fillRect(8, -27.9, 1.2, .7);
+  c.restore();
+}
+function jzbPisteMalen(c) {
+  const J = JZB, k = J.k;
+  if (J.rillen) { // Rillenmuster der Fräse, verblasst langsam
+    const R = J.rillen; c.strokeStyle = `rgba(150,180,215,${.55 * Math.max(0, 1 - R.t / 120)})`; c.lineWidth = .9;
+    for (let x = Math.max(JZB_RAND, R.von); x < Math.min(J.w - JZB_RAND, R.bis); x += 3.2 * k) { const y = jzbGrund(x) + 1; c.beginPath(); c.moveTo(x, y + .5); c.lineTo(x, y + Math.min(4 * k, jzbBodenH(x) * .6)); c.stroke(); }
+  }
+  if (J.raupe) jzbRaupeMalen(c, J.raupe, k);
+  if (J.ski) for (const f of J.ski.fahrer) jzbSkiMalen(c, f, J.ski.dir, k);
 }
 function jzbExtrasSchritt(dt) {
   const J = JZB, X = J.ext || {}, W = J.wind;

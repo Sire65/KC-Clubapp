@@ -9015,3 +9015,12 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/body\.bw-training \.hz-frage, body\.bw-training \.hz-klick, body\.bw-training \.sb-knopf, body\.bw-training \.su-klein \{ display: none !important; \}/.test(html), "Knöpfe aus im Training");
   assert.ok(/if \(!L \|\| !f\) return; bwTrainingKnoepfe\(true\);/.test(html) && /BW\.blase = ""; bwTrainingKnoepfe\(false\);/.test(html), "an/aus");
 }
+
+// 2.318.0 KC-CLUB-WINTER-PISTE: Schneeraupe, Skifahrer, Kinder mit Armen
+{
+  assert.ok(/function jzbPiste\(dt\)/.test(html) && /function jzbRaupeMalen\(/.test(html) && /function jzbSkiMalen\(/.test(html) && /jzbPisteMalen\(c\);/.test(html), "Raupe und Skifahrer");
+  assert.ok(/!J\.schlitten && !J\.ballspiel && !J\.raupe && !J\.ski && \(J\.kinderUhr/.test(html), "Kinder nicht zugleich mit der Piste");
+  assert.ok(/J\.skiUhr = J\.extra === "raupe" \? 4 : jzbZ\(120, 200\)/.test(html), "Skifahrer ein paar Minuten nach der Raupe");
+  assert.ok(/arm\(aH, false\)/.test(html) && /const hand = arm\(aV, true\)/.test(html) && /ausholen: !ki\.wurf/.test(html), "Kinder mit Armen und Ausholen");
+  assert.ok(/raupe: null, raupeUhr: undefined, ski: null, skiUhr: null, rillen: null/.test(html), "zurückgesetzt beim Neustart");
+}
