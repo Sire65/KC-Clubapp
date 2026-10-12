@@ -8641,3 +8641,19 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(!/kachelGroesse\(|localStorage/.test(b), "nichts gespeichert – die eigene Einstellung bleibt");
   assert.ok(/const kStufe = \(RG\.an && RG\.kachelDemo\) \|\| kachelStufe\(\);/.test(html) && /RG\.zurueck\.push\(\(\) => \{ RG\.kachelDemo = null;/.test(b), "nur während des Videos, am Ende sicher zurück");
 }
+
+// 2.292.0 KC-CLUB-ESELSOHR (Wunsch Hansi): Eselsohr am Kopf – Rückseite mit Diashow, Tafel, großer Uhr; Doppeltipp dreht zurück
+{
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  assert.ok(b.length > 5000, "Baustein vorhanden");
+  assert.ok(/if \(!hinten && d < -35\) return esDrehen\(true\);/.test(b) && /if \(t - ES\.tipp < 450\) \{ ES\.tipp = 0; esDrehen\(false\); \}/.test(b), "nach links ziehen dreht um, Doppeltipp dreht zurück");
+  assert.ok(/const ES_TABS = \[\["dia", "🖼️", "Diashow"\], \["tafel", "🖍️", "Tafel"\], \["uhr", "🕰️", "Uhr"\]\];/.test(b), "drei Rückseiten");
+  assert.ok(/api\("fotos_liste", album \? \{ album_id: album \} : \{\}\)/.test(b) && /api\("foto_oeffnen", \{ id: foto\.id \}\)/.test(b), "Diashow nur lesend aus dem Fotoalbum");
+  assert.ok(!/api\("(foto_hochladen|archiv_hochladen|nachricht_senden|einstellung_setzen)"/.test(b), "nichts wird ungefragt gespeichert oder gesendet");
+  assert.ok(/TEILEN = \{ text: "", dateien: \[d\] \}; return teilenChatWahl\(\);/.test(b) && /archivAblageFragen\("skizze", \{/.test(b) && /skizze: \{ sym: "🖍️", register: \["Fotos", "Sonstiges"\]/.test(html), "Skizze als Nachricht (man drückt selbst ➤) oder ins Archiv");
+  assert.ok(/const ES_UHREN = \[\["digital"[^\n]*\["fallblatt"[^\n]*\["bahnhof"[^\n]*\["klar"/.test(b) && /const datumZeit = \+z\[2\] % 15 >= 10;/.test(b), "vier Uhren, Fallblatt abwechselnd mit Datum");
+  assert.ok(/const esSichtbar = \(\) => ES\.offen && aktuelleAnsicht === "start" && !document\.hidden;/.test(b) && /if \(esSichtbar\(\)\) esUhrTick\(\)/.test(b), "Uhr/Diashow laufen nur, wenn man sie sieht");
+  assert.ok(/id="setEselsohr" checked onchange="eselsohrSchalter\(this\.checked\)"/.test(html) && /if \(!document\.getElementById\("eselsohr"\)\) esEinsetzen\(\);/.test(html), "abschaltbar, wird am Kopf eingesetzt");
+  assert.ok(/\.eselsohr \{ position: absolute; right: 0; bottom: 0;[^}]*touch-action: none;/.test(html) && /\.hero-rueck \{ position: relative; height: min\(74vh, 660px\);/.test(html), "Eselsohr unten rechts, große Rückseite");
+  assert.ok(!/\|\|=|\?\?=/.test(b), "keine Kurzschreibweisen, die alte Handys nicht kennen");
+}

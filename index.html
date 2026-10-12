@@ -2697,6 +2697,82 @@
   .lade-hilfe div { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
   .lade-hilfe button { flex: 1 1 auto; min-height: 44px; border-radius: 12px; font: inherit; font-weight: 700; cursor: pointer; padding: 8px 14px; }
   .lade-hilfe .lh-ja { background: var(--rot, #7b1e23); color: #fff; border: 0; } .lade-hilfe .lh-nein { background: transparent; color: inherit; border: 1px solid #c9a37a; }
+  /* KC-CLUB-ESELSOHR (2.292.0, Wunsch Hansi): Eselsohr unten rechts am Kopf – nach links ziehen dreht den Kopf um; Rückseite mit Diashow, Tafel, Uhr */
+  .eselsohr { position: absolute; right: 0; bottom: 0; width: calc(38px + var(--zug, 0px)); height: calc(38px + var(--zug, 0px)); padding: 0; border: 0; margin: 0; z-index: 6;
+    border-bottom-right-radius: 26px; cursor: grab; touch-action: none; -webkit-tap-highlight-color: transparent;
+    background: linear-gradient(to top left, var(--bg) 0 49%, rgba(0,0,0,.25) 49.5%, #fbf6ec 51%, #e9dcc6 72%, #cdbb9c 100%);
+    filter: drop-shadow(-2px -2px 3px rgba(0,0,0,.35)); transition: width .12s, height .12s; }
+  .eselsohr:active { cursor: grabbing; }
+  .eselsohr.hinten { background: linear-gradient(to top left, var(--bg) 0 49%, rgba(0,0,0,.25) 49.5%, var(--rot2) 51%, var(--rot) 75%, var(--hero1) 100%); }
+  .eselsohr.wink { animation: esWink .7s ease-in-out; }
+  @keyframes esWink { 30% { width: 58px; height: 58px; } 60% { width: 44px; height: 44px; } }
+  .es-weg { animation: esWeg .26s ease-in forwards; transform-origin: 50% 50%; }
+  .es-her { animation: esHer .32s ease-out; transform-origin: 50% 50%; }
+  @keyframes esWeg { to { transform: perspective(1100px) rotateY(88deg); opacity: .6; } }
+  @keyframes esHer { from { transform: perspective(1100px) rotateY(-88deg); opacity: .6; } }
+  .hero-rueck { position: relative; height: min(74vh, 660px); min-height: 360px; display: flex; flex-direction: column; gap: 8px; padding: 10px 10px 14px; border-radius: 26px;
+    background: linear-gradient(160deg, var(--karte2), var(--karte)); border: 1px solid var(--linie); box-shadow: 0 12px 30px var(--heroschatten); color: var(--text); }
+  .hr-tabs { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .hr-tab { border: 1px solid var(--linie); background: var(--karte); color: var(--text); border-radius: 999px; padding: 7px 12px; font-weight: 700; font-size: .92rem; cursor: pointer; }
+  .hr-tab.an { background: var(--rot); color: #fff; border-color: var(--rot); }
+  .hr-zurueck-hinweis { margin-left: auto; font-size: .75rem; color: var(--grau); padding-right: 30px; }
+  .hr-flaeche { position: relative; flex: 1; min-height: 0; border-radius: 18px; overflow: hidden; background: #111; }
+  .es-leiste { position: absolute; left: 6px; right: 6px; bottom: 6px; display: flex; flex-wrap: wrap; gap: 5px 8px; justify-content: center; align-items: center; z-index: 2;
+    padding: 6px; border-radius: 14px; background: rgba(0,0,0,.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  .es-gruppe { display: inline-flex; gap: 5px; align-items: center; }
+  .es-k { border: 0; border-radius: 10px; min-width: 34px; height: 34px; padding: 0 8px; background: rgba(255,255,255,.14); color: #fff; font-weight: 700; font-size: .9rem; cursor: pointer; }
+  .es-k.an, .es-k.es-haupt { background: var(--rot); }
+  .es-leiste select { height: 36px; border-radius: 10px; border: 0; padding: 0 8px; max-width: 46%; background: rgba(255,255,255,.9); color: #222; font-weight: 600; }
+  /* Diashow */
+  .es-dia { position: absolute; inset: 0; background: #000; }
+  .es-dia-bild { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 1.2s ease; }
+  .es-dia-bild.an { opacity: 1; }
+  .es-dia-bild.zoom { animation: esZoom 8s ease-out forwards; }
+  @keyframes esZoom { from { transform: scale(1); } to { transform: scale(1.07); } }
+  .es-dia-text { position: absolute; left: 10px; right: 10px; top: 8px; color: #fff; font-size: .85rem; text-shadow: 0 1px 3px #000; z-index: 2; }
+  /* Tafel */
+  .es-tafel { position: absolute; inset: 0; background: #264536; }
+  .es-tafel canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+  .es-tafel-rand { position: absolute; inset: 0; pointer-events: none; border: 7px solid #8a5a32; border-radius: 18px; box-shadow: inset 0 0 0 2px #5e3a1d, inset 0 0 18px rgba(0,0,0,.45); }
+  .es-farbe { width: 25px; height: 25px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); background: var(--c); cursor: pointer; padding: 0; }
+  .es-farbe.an { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.35); transform: scale(1.12); }
+  .es-dicke { width: 32px; height: 32px; border-radius: 10px; border: 0; background: rgba(255,255,255,.14); display: inline-grid; place-items: center; cursor: pointer; padding: 0; }
+  .es-dicke i { display: block; width: var(--w); height: var(--w); border-radius: 50%; background: #fff; }
+  .es-dicke.an { background: var(--rot); }
+  .es-schwamm-flug { position: absolute; font-size: 44px; transform: translate(-50%, -50%) rotate(-12deg); pointer-events: none; z-index: 3; filter: drop-shadow(0 3px 4px rgba(0,0,0,.5)); }
+  /* Uhr */
+  .es-uhr { position: absolute; inset: 0; padding-bottom: 54px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--g, 40px) * .25); --g: 40px; }
+  .es-uhr-digital { background: radial-gradient(ellipse at center, #0b130d, #000); }
+  .seg-zeile { display: flex; align-items: flex-end; gap: calc(var(--g) * .18); }
+  .seg-z { position: relative; width: calc(var(--g) * .95); height: calc(var(--g) * 1.75); }
+  .seg { position: absolute; background: #0f2a17; border-radius: 99px; }
+  .seg.an { background: #39ff6a; box-shadow: 0 0 calc(var(--g) * .12) #39ff6a, 0 0 calc(var(--g) * .3) rgba(57,255,106,.45); }
+  .seg.a, .seg.d, .seg.g { left: 12%; right: 12%; height: 11%; } .seg.a { top: 0; } .seg.g { top: 44.5%; } .seg.d { bottom: 0; }
+  .seg.b, .seg.c, .seg.e, .seg.f { width: 15%; height: 42%; } .seg.b { right: 0; top: 5%; } .seg.c { right: 0; bottom: 5%; } .seg.f { left: 0; top: 5%; } .seg.e { left: 0; bottom: 5%; }
+  .seg-punkt { display: flex; flex-direction: column; gap: calc(var(--g) * .45); padding-bottom: calc(var(--g) * .4); }
+  .seg-punkt i { width: calc(var(--g) * .17); height: calc(var(--g) * .17); border-radius: 50%; background: #39ff6a; box-shadow: 0 0 calc(var(--g) * .15) #39ff6a; }
+  .seg-punkt.aus i { background: #0f2a17; box-shadow: none; }
+  .seg-sek { color: #39ff6a; font: 700 calc(var(--g) * .55) ui-monospace, "Courier New", monospace; text-shadow: 0 0 8px rgba(57,255,106,.7); margin-left: calc(var(--g) * .1); }
+  .seg-datum { color: #39ff6a; font: 700 calc(var(--g) * .3) ui-monospace, "Courier New", monospace; letter-spacing: .12em; text-shadow: 0 0 8px rgba(57,255,106,.6); }
+  .es-uhr-fallblatt { background: linear-gradient(#1b1b1d, #0d0d0e); }
+  .fb-zeile { display: flex; gap: calc(var(--g) * .07); }
+  .fb { position: relative; display: inline-grid; place-items: center; perspective: 300px; background: linear-gradient(#2c2c2f 0 49%, #000 49% 51%, #262629 51%); border-radius: calc(var(--g) * .1);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 2px 4px rgba(0,0,0,.6); color: #f2f2ee; font-weight: 800; font-family: "Helvetica Neue", Arial, sans-serif; }
+  .fb b { display: block; font-weight: 800; }
+  .fb-oben .fb { width: calc(var(--g) * .55); height: calc(var(--g) * .8); font-size: calc(var(--g) * .55); }
+  .fb-unten .fb { width: calc(var(--g) * 1.15); height: calc(var(--g) * 1.75); font-size: calc(var(--g) * 1.35); }
+  .fb.leer b { opacity: 0; }
+  .fb.klapp b { animation: esKlapp .38s ease-in; }
+  @keyframes esKlapp { 0% { transform: rotateX(80deg); opacity: .2; } 60% { transform: rotateX(-12deg); opacity: 1; } 100% { transform: none; } }
+  .es-uhr-bahnhof { background: #e9e9e4; }
+  .bh-svg { width: min(86%, calc(var(--g) * 5.4)); height: auto; max-height: 82%; }
+  .bh-rand { fill: #2b2b2b; } .bh-blatt { fill: #fff; } .bh-strich, .bh-zeiger { fill: #111; } .bh-sek { fill: #d0021b; } .bh-mitte { fill: #111; }
+  .bh-datum { color: #222; font-weight: 700; font-size: calc(var(--g) * .3); }
+  .es-uhr-klar { background: #101010; color: #fff; }
+  .kl-zeit { font: 800 calc(var(--g) * 2) system-ui, sans-serif; letter-spacing: .02em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .kl-zeit small { font-size: .3em; opacity: .7; margin-left: .2em; }
+  .kl-datum { font-size: calc(var(--g) * .36); opacity: .85; text-align: center; padding: 0 10px; }
+  :root.ohne-anim .es-dia-bild { transition: none; } :root.ohne-anim .es-dia-bild.zoom { animation: none; }
   /* KC-CLUB-SCHNECKE: 🐌 oben in der Mitte, auf jeder Seite, solange das Netz langsam ist */
   /* 2.126.0 KC-CLUB-SCHNECKEN-WANDERN (Wunsch Hansi): im Langsam-Modus wandern oben 3 Schnecken von rechts nach links.
      Der Streifen selbst lässt Tipps durch (pointer-events: none) – nur die Schnecken sind antippbar (Info). */
@@ -3845,6 +3921,8 @@
     </details>
     <details class="karte" data-klappe="startseite">
       <summary>🧩 Startseite &amp; Ansicht</summary>
+      <!-- KC-CLUB-ESELSOHR (2.292.0) -->
+      <div class="schalter"><div><b>📄 Eselsohr am Kopf</b><div class="hinweis">Unten rechts am Kopf nach links ziehen – der Kopf dreht sich um: 🖼️ Diashow, 🖍️ Tafel, 🕰️ große Uhr. Doppelt aufs Eselsohr tippen dreht zurück.</div></div><input type="checkbox" id="setEselsohr" checked onchange="eselsohrSchalter(this.checked)"></div>
       <!-- KC-CLUB-ROLLKARTEI-WAHL (2.184.0, Wunsch Hansi): jeder entscheidet selbst – je Liste, gilt für dieses Gerät -->
       <div class="schalter" style="display:block"><div><b>🗂️ Rollkartei</b><div class="hinweis">Lange Listen wie eine Karteikarten-Rolle durchblättern (antippen, wischen, endlos). Aus: die gewohnte Liste. Gilt für dieses Gerät.</div></div>
         <div class="schalter" style="margin:6px 0 0"><div>⚙️ Einstellungen</div><input type="checkbox" id="setRkEinst" onchange="rkSchalten('einst', this.checked)"></div>
@@ -4223,6 +4301,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.291.0" data-v="2.291.0"></script>
+<script src="app.js?v=2.292.0" data-v="2.292.0"></script>
 </body>
 </html>

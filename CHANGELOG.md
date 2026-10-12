@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.292.0 – 2026-10-12 – KC-CLUB-ESELSOHR: Kopf umdrehen – Diashow, Tafel, große Uhr
+Wunsch Hansi: Unten rechts am Kopf ein Eselsohr. Nach links ziehen dreht den ganzen Kopf um (3D-Drehung, ohne Animation sofort); die Rückseite ist eine große Fläche mit drei Reitern: 🖼️ Diashow (Fotos aus dem Fotoalbum, alle oder ein Album, überblendet und langsam gezoomt, ◀ ⏸ ▶; große Fassung wird nachgeladen), 🖍️ Tafel (Kreidefarben, drei Stiftdicken, 🧽 Schwamm zum Wischen, ↶ zurück, 🧹 alles abwischen mit Schwamm-Animation; 📤 Sichern: als Nachricht – gleicher Weg wie Teilen, man drückt selbst ➤ – oder ins Archiv mit Ordner-Vorschlag; die Tafel bleibt auf dem Gerät gemerkt) und 🕰️ große Uhr (Digital grün als 7-Segment, Fallblatt mit abwechselnd Uhrzeit und Datum, Bahnhofsuhr, Groß & klar – Stil wird gemerkt). Doppelt aufs Eselsohr tippen (oder nach rechts ziehen) dreht zurück. Uhr und Diashow laufen nur, solange man sie sieht. Abschaltbar unter ⚙️ → „🧩 Startseite & Ansicht“; neu im Video „Versteckte Helfer“ und im Hilfe-Zentrum.
+
 ## 2.291.0 – 2026-10-11 – KC-CLUB-VIDEO-KACHELGROESSE: Kachelgröße 3 × 3 / 4 × 4 im Video „Versteckte Helfer“
 Wunsch Hansi: Drei neue Stationen nach dem Kachel-Anordnen – Einstellung unter ⚙️ → Darstellung → „Kacheln auf der Startseite“ (Finger tippt Klein und Sehr klein an), dann auf der Startseite vorgeführt: 3 nebeneinander, 4 nebeneinander, mit Hinweis auf den Sprachbefehl. Nur vorgeführt – die eigene Kachelgröße bleibt; während des Videos nimmt kachelnZeigen() die vorgeführte Größe, am Ende wieder die gespeicherte.
 

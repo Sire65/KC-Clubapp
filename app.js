@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.291.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.292.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -623,7 +623,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
 }
 function designWahlZeigen() {
@@ -1988,6 +1988,15 @@ const RG_SPEZIAL = [
   { v: "start", nur: () => !einfach(), vor: () => rgKopf("ganz"), sel: [".sz-link"], puls: [".sz-link"], t: "⚡ Das Wort „Schnellzugriff“",
     x: "Das Wort Schnellzugriff über den Kacheln ist selbst ein Knopf: Antippen zeigt oben im Info-Feld deine Schnellstart-Symbole – ein Tipp, und es geht sofort los.",
     live: async (L) => { await L.tipp(".sz-link"); rgKopf("offen"); rgInfoKarte("schnellstart"); L.ziel(); } },
+  // 2.292.0 KC-CLUB-ESELSOHR: Eselsohr zeigen, Rückseite vorführen (danach wieder vorne)
+  { v: "start", nur: () => esAn(), vor: () => { rgKopf("offen"); esEinsetzen(); }, sel: ["#eselsohr"], mussSel: true, puls: ["#eselsohr"], t: "📄 Das Eselsohr",
+    x: "Unten rechts am Kopf ist eine Ecke umgeknickt – das Eselsohr. Ziehst du es mit dem Finger nach links, dreht sich der ganze Kopf um wie ein Blatt Papier.",
+    live: async (L) => { await L.wischen("#eselsohr", 1); } },
+  { v: "start", nur: () => esAn(), vor: () => { rgKopf("offen"); if (!RG.esZurueck) { RG.esZurueck = true; RG.zurueck.push(() => { RG.esZurueck = false; esDrehen(false, true); }); } esDrehen(true, true).then(() => esTab("uhr")); },
+    sel: ["#heroRueck"], mussSel: true, t: "🕰️ Die Rückseite",
+    x: "Auf der Rückseite ist viel Platz: eine Diashow mit den Fotos aus dem Fotoalbum, eine Tafel zum Skizzieren mit Kreide, Schwamm und Speichern – und eine große Uhr in vier Stilen. Doppelt aufs Eselsohr tippen dreht den Kopf zurück.",
+    live: async (L) => { await L.tipp('#heroRueck [data-tab="tafel"]'); esTab("tafel"); L.ziel(); await L.warte(2000); await L.tipp('#heroRueck [data-tab="dia"]'); esTab("dia"); L.ziel(); await L.warte(2000); await L.tipp("#heroRueck .eselsohr", "doppelt"); },
+    nach: () => esDrehen(false, true) },
   rgOb("👆 Lange drücken"), rgOb("✋ Verschieben"), rgOb("✅ Fertig", 0), rgOb("🔄 Kachel umdrehen"), rgOb("🗂️ Register anordnen"), rgOb("👆 Wischen"),
   // 2.291.0 KC-CLUB-VIDEO-KACHELGROESSE (Wunsch Hansi): Kachelgröße 3 × 3 / 4 × 4 – Einstellung zeigen, dann auf der Startseite vorführen
   { v: "einstellungen", nur: () => !einfach(), vor: () => rgAuf("darstellung"), tippVor: () => { const d = document.querySelector(rgKlappe("darstellung")); return d && !d.open ? d.querySelector(":scope > summary") : null; },
@@ -2455,7 +2464,7 @@ const RUNDGAENGE = [
   { id: "fit", stand: "1", sym: "🏋️", t: "Fit bleiben", u: "Übungen mit Twinkey – Stufe, Dauer, Auswertung (ca. 1 Min.)", st: () => RG_FIT, nur: () => frei("fitness") },
   { id: "studio", stand: "1", sym: "🎬", t: "Studio: live zeigen", u: "Einem Mitglied die eigene App live zeigen (ca. 1 Min.)", st: () => RG_STUDIO, nur: () => !!studioStufe() },
   { id: "technik", stand: "1", sym: "🔧", t: "Technik: Update & Sicherheit", u: "Version, Sicherheits-Check, Test an mich, Programme (ca. 2 Min.)", st: () => RG_TECHNIK },
-  { id: "spezial", stand: "1", sym: "🔎", t: "Versteckte Helfer", u: "Kochmütze, Tag/Nacht, Pfeile, Pünktchen, Wischen, Lämpchen, Schnellzugriff, Kacheln, 3 × 3 / 4 × 4, Lupe, Hand, Fragezeichen (ca. 5 Min.)", st: () => RG_SPEZIAL }, // 2.272.0 KC-CLUB-ERKLAERVIDEOS-8
+  { id: "spezial", stand: "1", sym: "🔎", t: "Versteckte Helfer", u: "Kochmütze, Tag/Nacht, Pfeile, Pünktchen, Wischen, Lämpchen, Schnellzugriff, Eselsohr, Kacheln, 3 × 3 / 4 × 4, Lupe, Hand, Fragezeichen (ca. 5 Min.)", st: () => RG_SPEZIAL }, // 2.272.0 KC-CLUB-ERKLAERVIDEOS-8
   { id: "zentrale", stand: "1", sym: "📡", t: "Kommunikationszentrale", u: "Im Kopf: an wen, Pult, Anrufen, Anklopfen, Schnellnachricht (ca. 2 Min.)", st: () => RG_ZENTRALE },
   { id: "sprache", stand: "1", sym: "🎙️", t: "Sprachsteuerung komplett", u: "Einschalten, Mikrofon, alle Befehle, weiter diktieren, Training (ca. 3 Min.)", st: () => RG_SPRACHE },
   { id: "effekte", stand: "1", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 3 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
@@ -3204,6 +3213,7 @@ const HILFE = [
   { id: "sprungknopf", thema: "nachrichten", sym: "🔘", t: "Einen Knopf in die Nachricht setzen", x: "Willst du jemanden direkt an eine Stelle der App schicken? Unter dem Schreibfeld auf <b>📎</b> → <b>„🔘 Knopf zu einer App-Stelle“</b> und das Ziel wählen, z. B. „Mein Bild wählen“. In der Nachricht erscheint ein Knopf – antippen, und man ist dort.", zeig: () => zeige("nachrichten"), seit: "2.23.97" },
   { id: "was_neu", thema: "nachrichten", sym: "👋", t: "Was ist neu? Gleich beim Öffnen", x: "Öffnest du die App und es gibt Neues, zeigt sie dir kurz, wie viele <b>neue Nachrichten</b> (in deinen Chats und in Gruppen) und <b>Pinnwand-Einträge</b> da sind und ob <b>Spiele</b> auf dich warten – mit Knopf direkt dorthin. Abschalten: im Fenster selbst mit „🔕 Diese Meldung ausschalten“ oder unter ⚙️ Einstellungen → 🗣️ Ansagen, Töne &amp; Tipps → „👋 Beim Öffnen zeigen, was neu ist“.", zeig: () => einstiegHin("ansagen", "setWasNeu"), seit: "2.24.12" },
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „🎨 Darstellung“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("darstellung", "setAnimiert"), seit: "2.24.1" },
+  { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am Kopf ist eine Ecke umgeknickt. <b>Nach links ziehen</b> – der Kopf dreht sich um: <b>🖼️ Diashow</b> mit euren Fotos, <b>🖍️ Tafel</b> zum Skizzieren (Kreidefarben, Stiftdicken, Schwamm; ins Archiv oder als Nachricht) und <b>🕰️ große Uhr</b> (Digital grün, Fallblatt, Bahnhofsuhr, Groß & klar). <b>Doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“.", zeig: () => zeige("start"), seit: "2.292.0" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
   // 2.110.0 (Wunsch Hansi „Hilfetexte und Handbuch anpassen“): Hilfen zu den Neuerungen seit Anleitung V8 (2.96.0)
   { id: "schnecke", thema: "technik", sym: "🐌", t: "Was bedeutet die Schnecke oben?", x: "Erscheint oben in der Mitte eine kleine <b>🐌</b>, ist das Netz gerade langsam – die App misst das selbst an den Antwortzeiten. Alles funktioniert weiter, dauert aber länger: bitte etwas Geduld und <b>nicht mehrfach tippen</b>. Antippen erklärt es kurz. Ist das Netz wieder schnell, verschwindet die Schnecke von selbst.", seit: "2.106.0" },
@@ -12403,6 +12413,267 @@ function jahreszeitUmschalten(an) { einstellung("jahreszeit", an); jahreszeitKop
 // Automatik: wechselt die Jahreszeit (z. B. um Mitternacht oder genau zum Winteranfang), stellt sich der Kopf von selbst um – und Frost lässt Eiszapfen wachsen
 setInterval(() => { try { const h = document.querySelector("#v-start .hero"); if (!h || JZB.vorschau) return; const art = jahreszeitAktuell(), eis = jzTieferWinter(art);
   if (art !== JZ_LETZTE.art) jahreszeitKopf(); else if (eis !== JZ_LETZTE.eis) jzEiszapfen(h, art); else jzEisLaenge(); JZ_LETZTE.eis = eis; } catch {} }, 60000);
+// ---------- KC-CLUB-ESELSOHR (2.292.0, Wunsch Hansi): unten rechts am Kopf ein Eselsohr – nach links ziehen dreht den Kopf um ----------
+// Die Rückseite ist eine große Fläche mit 🖼️ Diashow (Fotoalbum), 🖍️ Tafel (Skizze mit Stiften, Farben und Schwamm – auf Wunsch ins
+// Archiv oder als Nachricht) und 🕰️ großer Uhr (Digital grün, Fallblatt mit abwechselnd Datum, Bahnhofsuhr, Groß & klar).
+// Doppeltipp aufs Eselsohr (oder nach rechts ziehen) dreht zurück. Alles nur Anzeige auf diesem Gerät; die Tafel bleibt hier gemerkt.
+// Gespeichert oder verschickt wird nur, wenn man es selbst antippt. Abschaltbar: ⚙️ → „🧩 Startseite & Ansicht“.
+const ES = { offen: false, timer: 0, tipp: 0, dia: { fotos: null, alben: [], i: 0, laeuft: true, urls: new Map(), seite: 0, laedt: false },
+  tafel: { striche: null, farbe: "#f4f1e6", dicke: 2, werkzeug: "stift", zeichnet: null }, uhr: { letzte: "", fbDatum: false } };
+const ES_TABS = [["dia", "🖼️", "Diashow"], ["tafel", "🖍️", "Tafel"], ["uhr", "🕰️", "Uhr"]];
+const ES_FARBEN = [["#f4f1e6", "Kreide weiß"], ["#ffe066", "Gelb"], ["#ff8787", "Rot"], ["#74c0fc", "Blau"], ["#8ce99a", "Grün"], ["#ffa94d", "Orange"], ["#e599f7", "Lila"]];
+const ES_DICKEN = [[3, "fein"], [7, "mittel"], [14, "dick"]];
+const ES_UHREN = [["digital", "🟩 Digital", "Digital grün"], ["fallblatt", "🔢 Fallblatt", "Fallblatt mit Datum"], ["bahnhof", "🚉 Bahnhof", "Bahnhofsuhr"], ["klar", "🔠 Klar", "Groß & klar"]];
+const ES_TAFEL_GRUND = "#264536", ES_SCHWAMM = "rgba(49,80,64,.93)";
+function esLies(k, d) { try { const v = localStorage.getItem("kc_club_es_" + k); return v === null ? d : v; } catch (e) { return d; } }
+function esSchreib(k, v) { try { localStorage.setItem("kc_club_es_" + k, v); } catch (e) { /* nur Komfort – ohne Speicher geht es auch */ } }
+const esAn = () => esLies("an", "1") === "1";
+const esOhneAnim = () => document.documentElement.classList.contains("ohne-anim");
+function eselsohrSchalter(an) { esSchreib("an", an ? "1" : "0"); esEinsetzen(); melde(an ? "📄 Eselsohr ist da – unten rechts am Kopf nach links ziehen" : "Eselsohr ausgeblendet"); }
+function esEinsetzen() {
+  const h = document.querySelector("#v-start .hero"); if (!h) return;
+  let o = document.getElementById("eselsohr");
+  if (!esAn()) { o?.remove(); if (ES.offen) esDrehen(false, true); return; }
+  if (o) return;
+  h.insertAdjacentHTML("beforeend", `<button type="button" class="eselsohr" id="eselsohr" title="Eselsohr – nach links ziehen: Kopf umdrehen (Diashow, Tafel, große Uhr)" aria-label="Kopf umdrehen: Diashow, Tafel, große Uhr"></button>`);
+  esZiehen(h.lastElementChild, false);
+}
+// Ziehen am Eselsohr: vorne nach links (umdrehen), hinten nach rechts (zurück). Kurzes Antippen vorne: kleiner Wink; hinten: Doppeltipp = zurück.
+function esZiehen(o, hinten) {
+  let x0 = null, dx = 0;
+  o.addEventListener("pointerdown", (e) => { x0 = e.clientX; dx = 0; try { o.setPointerCapture(e.pointerId); } catch (er) { /* alte Browser */ } e.stopPropagation(); });
+  o.addEventListener("pointermove", (e) => { if (x0 === null) return; dx = e.clientX - x0; const z = hinten ? Math.max(0, dx) : Math.max(0, -dx); o.style.setProperty("--zug", Math.min(70, z / 2) + "px"); e.stopPropagation(); });
+  const los = (e) => { if (x0 === null) return; const d = dx; x0 = null; o.style.removeProperty("--zug"); e.stopPropagation();
+    if (!hinten && d < -35) return esDrehen(true);
+    if (hinten && d > 35) return esDrehen(false);
+    if (Math.abs(d) > 8) return;
+    if (hinten) { const t = Date.now(); if (t - ES.tipp < 450) { ES.tipp = 0; esDrehen(false); } else { ES.tipp = t; melde("↩︎ Doppelt aufs Eselsohr tippen – dann dreht sich der Kopf zurück"); } }
+    else { o.classList.remove("wink"); void o.offsetWidth; o.classList.add("wink"); melde("📄 Eselsohr nach links ziehen – dann dreht sich der Kopf um: Diashow, Tafel und große Uhr"); } };
+  o.addEventListener("pointerup", los); o.addEventListener("pointercancel", () => { x0 = null; o.style.removeProperty("--zug"); });
+  o.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); esDrehen(!hinten); } }); // Tastatur: direkt drehen
+  o.addEventListener("dblclick", (e) => { e.preventDefault(); if (hinten && ES.offen) esDrehen(false); });
+}
+async function esDrehen(an, sofort) {
+  const h = document.querySelector("#v-start .hero"); if (!h || ES.offen === an || ES.dreht) return;
+  let r = document.getElementById("heroRueck");
+  if (an && !r) { h.insertAdjacentHTML("afterend", esRueckHtml()); r = h.nextElementSibling; esZiehen(r.querySelector(".eselsohr"), true); }
+  if (!r) return;
+  ES.dreht = true; ES.offen = an;
+  const weg = an ? h : r, her = an ? r : h, ohne = sofort || esOhneAnim();
+  if (!ohne) { weg.classList.add("es-weg"); await new Promise((ok) => setTimeout(ok, 260)); weg.classList.remove("es-weg"); }
+  weg.classList.add("versteckt"); her.classList.remove("versteckt");
+  if (!ohne) { her.classList.add("es-her"); setTimeout(() => her.classList.remove("es-her"), 320); }
+  ES.dreht = false;
+  if (an) { esTab(esLies("tab", "uhr")); spur?.("eselsohr", null); } else esStop();
+}
+function esRueckHtml() {
+  return `<div class="hero-rueck versteckt" id="heroRueck" role="region" aria-label="Rückseite des Kopfes">
+    <div class="hr-tabs" role="tablist">${ES_TABS.map(([k, s, t]) => `<button type="button" role="tab" class="hr-tab" data-tab="${k}" onclick="esTab('${k}')">${s} ${t}</button>`).join("")}
+      <span class="hr-zurueck-hinweis" aria-hidden="true">↩︎ Eselsohr 2× tippen</span></div>
+    <div class="hr-flaeche" id="hrFlaeche"></div>
+    <button type="button" class="eselsohr hinten" title="Doppelt tippen (oder nach rechts ziehen): Kopf zurückdrehen" aria-label="Kopf zurückdrehen"></button></div>`;
+}
+function esStop() { clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; }
+function esTab(k) {
+  if (!ES_TABS.some(([x]) => x === k)) k = "uhr";
+  esSchreib("tab", k); esStop();
+  document.querySelectorAll("#heroRueck .hr-tab").forEach((b) => { b.classList.toggle("an", b.dataset.tab === k); b.setAttribute("aria-selected", String(b.dataset.tab === k)); });
+  const f = $("hrFlaeche"); if (!f) return;
+  f.className = "hr-flaeche hr-" + k;
+  if (k === "dia") esDiaZeigen(f); else if (k === "tafel") esTafelZeigen(f); else esUhrZeigen(f);
+}
+const esSichtbar = () => ES.offen && aktuelleAnsicht === "start" && !document.hidden;
+
+// ----- 🖼️ Diashow: Fotos aus dem Fotoalbum (alle oder ein Album), sanft überblendet, langsam gezoomt -----
+async function esDiaZeigen(f) {
+  const d = ES.dia;
+  f.innerHTML = `<div class="es-dia"><img class="es-dia-bild" alt=""><img class="es-dia-bild" alt=""><div class="es-dia-text" id="esDiaText">Fotos werden geladen …</div>
+    <div class="es-leiste es-dia-leiste"><select id="esDiaAlbum" aria-label="Welche Fotos?" onchange="esDiaAlbum(this.value)"><option value="">📷 Alle Fotos</option></select>
+      <button type="button" class="es-k" onclick="esDiaSchritt(-1)" aria-label="Voriges Foto">◀</button><button type="button" class="es-k" id="esDiaPause" onclick="esDiaPause()" aria-label="Pause">⏸</button><button type="button" class="es-k" onclick="esDiaSchritt(1)" aria-label="Nächstes Foto">▶</button></div></div>`;
+  if (!d.fotos && !d.laedt) await esDiaLaden(esLies("album", ""));
+  esDiaAlbenZeigen();
+  if (!d.fotos?.length) { $("esDiaText").textContent = d.fehler ? "⚠️ " + d.fehler : "Noch keine Fotos im Fotoalbum."; return; }
+  esDiaBild(d.i, true); esDiaTakt();
+}
+async function esDiaLaden(album) {
+  const d = ES.dia; d.laedt = true; d.fehler = "";
+  try { const r = await api("fotos_liste", album ? { album_id: album } : {}); d.fotos = (r.fotos || []).filter((x) => x.vorschau); d.alben = r.alben || []; d.album = album; d.i = 0; d.urls.clear(); }
+  catch (e) { d.fotos = []; d.fehler = e.message || "Fotos gerade nicht erreichbar"; }
+  d.laedt = false;
+}
+function esDiaAlbenZeigen() {
+  const s = $("esDiaAlbum"); if (!s) return;
+  s.innerHTML = `<option value="">📷 Alle Fotos</option>` + ES.dia.alben.map((a) => `<option value="${esc(a.id)}"${a.id === ES.dia.album ? " selected" : ""}>📸 ${esc(a.name || a.titel || "Album")}</option>`).join("");
+  $("esDiaPause").textContent = ES.dia.laeuft ? "⏸" : "▶︎";
+}
+async function esDiaAlbum(id) { esSchreib("album", id); esStop(); await esDiaLaden(id); if (ES.offen && $("hrFlaeche")?.classList.contains("hr-dia")) esTab("dia"); }
+async function esDiaUrl(foto) { // große Fassung nachladen (einmal je Foto), sonst die Vorschau
+  const d = ES.dia; if (d.urls.has(foto.id)) return d.urls.get(foto.id);
+  try { const r = await api("foto_oeffnen", { id: foto.id }); d.urls.set(foto.id, r.url); return r.url; } catch (e) { return foto.vorschau; }
+}
+async function esDiaBild(i, sofort) {
+  const d = ES.dia, n = d.fotos?.length || 0; if (!n) return;
+  d.i = ((i % n) + n) % n; const foto = d.fotos[d.i], tok = ++d.seite;
+  const bilder = document.querySelectorAll("#hrFlaeche .es-dia-bild"); if (bilder.length < 2) return;
+  const neu = [...bilder].find((b) => !b.classList.contains("an")) || bilder[0], alt = [...bilder].find((b) => b !== neu);
+  neu.onload = () => { if (tok !== d.seite) return; neu.classList.remove("zoom"); void neu.offsetWidth; neu.classList.add("an", "zoom"); alt?.classList.remove("an"); };
+  neu.src = foto.vorschau; // sofort die Vorschau, dann die große Fassung
+  const t = $("esDiaText"); if (t) t.textContent = [foto.thema, foto.datum ? fTagDe(foto.datum) : "", foto.von?.name ? "📷 " + foto.von.name : ""].filter(Boolean).join(" · ") + `  (${d.i + 1}/${n})`;
+  const gross = await esDiaUrl(foto); if (tok === d.seite && gross && gross !== foto.vorschau) { const v = new Image(); v.onload = () => { if (tok === d.seite) neu.src = gross; }; v.src = gross; }
+  if (n > 1) esDiaUrl(d.fotos[(d.i + 1) % n]); // das nächste schon vorbereiten
+  if (sofort) neu.classList.add("an");
+}
+function esDiaTakt() { esStop(); if (!ES.dia.laeuft) return; ES.timer = setInterval(() => { if (!esSichtbar()) return; esDiaBild(ES.dia.i + 1); }, 6500); }
+function esDiaSchritt(r) { esDiaBild(ES.dia.i + r); esDiaTakt(); }
+function esDiaPause() { ES.dia.laeuft = !ES.dia.laeuft; $("esDiaPause").textContent = ES.dia.laeuft ? "⏸" : "▶︎"; esDiaTakt(); melde(ES.dia.laeuft ? "▶︎ Diashow läuft" : "⏸ Diashow angehalten"); }
+
+// ----- 🖍️ Tafel: mit dem Finger skizzieren – Kreidefarben, drei Stiftdicken, Schwamm zum Wischen, „Alles abwischen“ -----
+// Striche werden als Linien gemerkt (auf diesem Gerät) – so passt das Bild auch nach dem Drehen des Handys, und ↶ nimmt den letzten zurück.
+function esTafelStriche() { const t = ES.tafel; if (!t.striche) { try { t.striche = JSON.parse(esLies("tafel", "[]")) || []; } catch (e) { t.striche = []; } } return t.striche; }
+function esTafelMerken() { const s = esTafelStriche(); let n = 0; for (const x of s) n += x.p.length; if (n < 30000) esSchreib("tafel", JSON.stringify(s)); }
+function esTafelZeigen(f) {
+  const t = ES.tafel;
+  f.innerHTML = `<div class="es-tafel"><canvas id="esTafel" aria-label="Tafel zum Zeichnen"></canvas><div class="es-tafel-rand"></div>
+    <div class="es-leiste es-tafel-leiste">
+      <span class="es-gruppe">${ES_FARBEN.map(([c, n]) => `<button type="button" class="es-farbe" data-c="${c}" style="--c:${c}" title="${n}" aria-label="Farbe ${n}" onclick="esTafelFarbe('${c}')"></button>`).join("")}</span>
+      <span class="es-gruppe">${ES_DICKEN.map(([w, n], i) => `<button type="button" class="es-dicke" data-i="${i}" title="Stift ${n}" aria-label="Stift ${n}" onclick="esTafelDicke(${i})"><i style="--w:${w}px"></i></button>`).join("")}
+        <button type="button" class="es-k es-schwamm" id="esSchwamm" title="Schwamm – mit dem Finger wischen" aria-label="Schwamm" onclick="esTafelWerkzeug('schwamm')">🧽</button></span>
+      <span class="es-gruppe"><button type="button" class="es-k" title="Letzten Strich zurück" aria-label="Rückgängig" onclick="esTafelZurueck()">↶</button>
+        <button type="button" class="es-k" title="Alles abwischen" aria-label="Alles abwischen" onclick="esTafelAbwischen()">🧹</button>
+        <button type="button" class="es-k es-haupt" title="Speichern oder verschicken" onclick="esTafelTeilen()">📤 Sichern</button></span></div></div>`;
+  const c = $("esTafel");
+  c.addEventListener("pointerdown", (e) => { e.preventDefault(); try { c.setPointerCapture(e.pointerId); } catch (er) { /* alte Browser */ }
+    const p = esTafelPunkt(e), s = t.werkzeug === "schwamm" ? { s: 1, w: 34 / Math.max(1, c.clientWidth), p: [p] } : { c: t.farbe, w: ES_DICKEN[t.dicke][0] / Math.max(1, c.clientWidth), p: [p] };
+    esTafelStriche().push(s); t.zeichnet = s; esTafelStrich(c.getContext("2d"), s, c, 0); });
+  c.addEventListener("pointermove", (e) => { const s = t.zeichnet; if (!s) return; e.preventDefault();
+    for (const ev of e.getCoalescedEvents ? e.getCoalescedEvents() : [e]) s.p.push(esTafelPunkt(ev));
+    esTafelStrich(c.getContext("2d"), s, c, Math.max(0, s.p.length - 6)); });
+  const fertig = () => { if (!t.zeichnet) return; t.zeichnet = null; esTafelMerken(); };
+  c.addEventListener("pointerup", fertig); c.addEventListener("pointercancel", fertig); c.addEventListener("pointerleave", fertig);
+  esTafelGroesse(); esTafelLeiste();
+  if (!ES.tafel.ro && window.ResizeObserver) { ES.tafel.ro = new ResizeObserver(() => { if ($("esTafel")) esTafelGroesse(); }); }
+  ES.tafel.ro?.observe(c);
+}
+function esTafelPunkt(e) { const c = $("esTafel"), r = c.getBoundingClientRect(); return [Math.round(((e.clientX - r.left) / Math.max(1, r.width)) * 10000) / 10000, Math.round(((e.clientY - r.top) / Math.max(1, r.height)) * 10000) / 10000]; }
+function esTafelGroesse() {
+  const c = $("esTafel"); if (!c) return; const dpr = Math.min(2.5, window.devicePixelRatio || 1);
+  const w = Math.max(1, Math.round(c.clientWidth * dpr)), h = Math.max(1, Math.round(c.clientHeight * dpr));
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+  esTafelMalen();
+}
+function esTafelGrund(g, c) {
+  g.save(); g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.shadowBlur = 0; g.fillStyle = ES_TAFEL_GRUND; g.fillRect(0, 0, c.width, c.height);
+  const v = g.createRadialGradient(c.width / 2, c.height / 2, Math.min(c.width, c.height) * .2, c.width / 2, c.height / 2, Math.max(c.width, c.height) * .75);
+  v.addColorStop(0, "rgba(255,255,255,.05)"); v.addColorStop(1, "rgba(0,0,0,.28)"); g.fillStyle = v; g.fillRect(0, 0, c.width, c.height); g.restore();
+}
+function esTafelMalen() { const c = $("esTafel"); if (!c) return; const g = c.getContext("2d"); esTafelGrund(g, c); for (const s of esTafelStriche()) esTafelStrich(g, s, c, 0); }
+function esTafelStrich(g, s, c, ab) {
+  const W = c.width, H = c.height, b = Math.max(1, s.w * W);
+  g.save(); g.lineCap = "round"; g.lineJoin = "round"; g.lineWidth = b;
+  if (s.s) { g.strokeStyle = ES_SCHWAMM; g.shadowBlur = 0; } else { g.strokeStyle = s.c; g.shadowColor = s.c; g.shadowBlur = Math.min(4, b * .35); g.globalAlpha = .93; }
+  const p = s.p; g.beginPath();
+  if (p.length === 1) { g.fillStyle = g.strokeStyle; g.arc(p[0][0] * W, p[0][1] * H, b / 2, 0, Math.PI * 2); g.fill(); g.restore(); return; }
+  g.moveTo(p[ab][0] * W, p[ab][1] * H);
+  for (let i = ab + 1; i < p.length; i++) { const m = [(p[i - 1][0] + p[i][0]) / 2, (p[i - 1][1] + p[i][1]) / 2]; g.quadraticCurveTo(p[i - 1][0] * W, p[i - 1][1] * H, m[0] * W, m[1] * H); }
+  g.lineTo(p[p.length - 1][0] * W, p[p.length - 1][1] * H); g.stroke(); g.restore();
+}
+function esTafelLeiste() {
+  const t = ES.tafel;
+  document.querySelectorAll("#hrFlaeche .es-farbe").forEach((b) => b.classList.toggle("an", t.werkzeug === "stift" && b.dataset.c === t.farbe));
+  document.querySelectorAll("#hrFlaeche .es-dicke").forEach((b) => b.classList.toggle("an", t.werkzeug === "stift" && Number(b.dataset.i) === t.dicke));
+  $("esSchwamm")?.classList.toggle("an", t.werkzeug === "schwamm");
+}
+function esTafelFarbe(c) { ES.tafel.farbe = c; ES.tafel.werkzeug = "stift"; esTafelLeiste(); }
+function esTafelDicke(i) { ES.tafel.dicke = i; ES.tafel.werkzeug = "stift"; esTafelLeiste(); }
+function esTafelWerkzeug(w) { ES.tafel.werkzeug = ES.tafel.werkzeug === w ? "stift" : w; esTafelLeiste(); if (ES.tafel.werkzeug === "schwamm") melde("🧽 Schwamm – mit dem Finger über die Tafel wischen"); }
+function esTafelZurueck() { const s = esTafelStriche(); if (!s.length) return melde("Die Tafel ist schon leer."); s.pop(); esTafelMerken(); esTafelMalen(); }
+async function esTafelAbwischen() {
+  const s = esTafelStriche(), c = $("esTafel"); if (!c) return;
+  if (!s.length) return melde("Die Tafel ist schon sauber. ✨");
+  if (!esOhneAnim()) { // der Schwamm fährt im Zickzack über die Tafel und nimmt alles mit
+    const f = c.parentElement, sw = document.createElement("span"); sw.className = "es-schwamm-flug"; sw.textContent = "🧽"; f.appendChild(sw);
+    const g = c.getContext("2d"), bahn = [], reihen = Math.max(3, Math.min(9, Math.ceil(c.height / Math.max(1, c.width) / .2)));
+    for (let r = 0; r <= reihen; r++) { const y = (r + .5) / (reihen + 1); bahn.push(r % 2 ? [1.02, y] : [-.02, y], r % 2 ? [-.02, y] : [1.02, y]); }
+    const dauer = 1400, t0 = performance.now(), wisch = { s: 1, w: .26, p: [] };
+    await new Promise((fertig) => { const schritt = (jetzt) => {
+      const q = Math.min(1, (jetzt - t0) / dauer), pos = q * (bahn.length - 1), i = Math.min(bahn.length - 2, Math.floor(pos)), u = pos - i;
+      const x = bahn[i][0] + (bahn[i + 1][0] - bahn[i][0]) * u, y = bahn[i][1] + (bahn[i + 1][1] - bahn[i][1]) * u;
+      wisch.p.push([x, y]); esTafelStrich(g, wisch, c, Math.max(0, wisch.p.length - 3));
+      sw.style.left = (x * 100) + "%"; sw.style.top = (y * 100) + "%";
+      if (q < 1) requestAnimationFrame(schritt); else fertig(); }; requestAnimationFrame(schritt); });
+    sw.remove();
+  }
+  ES.tafel.striche = []; esTafelMerken(); esTafelMalen(); melde("🧽 Alles abgewischt");
+}
+async function esTafelDatei() {
+  const c = $("esTafel"); if (!c) return null;
+  const blob = await new Promise((ok) => c.toBlob(ok, "image/png")); if (!blob) return null;
+  const hm = new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Berlin" }).format(new Date()).replace(":", ""), name = `Skizze-${heuteIso()}-${hm}.png`;
+  try { return new File([blob], name, { type: "image/png" }); } catch (e) { blob.name = name; return blob; } // sehr alte Browser: Blob mit Namen
+}
+function esTafelTeilen() {
+  if (!esTafelStriche().length) return melde("Die Tafel ist noch leer – erst etwas skizzieren. 🖍️");
+  blattAuf("esTafelBlatt", `<h3 style="margin-top:0">📤 Skizze sichern</h3><p class="hinweis" style="margin:0 0 8px">Die Tafel bleibt danach, wie sie ist.</p>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      <button class="knopf haupt" onclick="esTafelNach('chat')">💬 Als Nachricht senden</button>
+      <button class="knopf" onclick="esTafelNach('archiv')">🗄️ Im Archiv speichern</button>
+      <button class="knopf" onclick="$('esTafelBlatt').remove()">Abbrechen</button></div>`);
+}
+async function esTafelNach(wohin) {
+  $("esTafelBlatt")?.remove();
+  const d = await esTafelDatei(); if (!d) return melde("Das Bild konnte gerade nicht erstellt werden – bitte nochmal versuchen.", true);
+  if (wohin === "chat") { TEILEN = { text: "", dateien: [d] }; return teilenChatWahl(); } // gleicher Weg wie „Teilen → Köcheclub“: Chat wählen, man drückt selbst ➤
+  const heute = heuteIso(), titel = `Skizze vom ${heute.split("-").reverse().join(".")}`;
+  const ok = await archivAblageFragen("skizze", { titel, datum: heute, hinweis: "von der Tafel (Rückseite des Kopfes)", frage: "Wohin mit der Skizze?", ja: "Im Archiv ablegen", nein: "Abbrechen",
+    dateien: async () => [{ titel, name: d.name, mime: "image/png", blob: d }] });
+  if (!ok) melde("Das Archiv ist gerade nicht erreichbar (oder es gibt noch keinen eigenen Archiv-Ordner) – bitte später nochmal oder als Nachricht senden.", true);
+}
+
+// ----- 🕰️ Große Uhr: Digital grün, Fallblatt (abwechselnd Uhrzeit und Datum), Bahnhofsuhr, Groß & klar -----
+const ES_SEG = { 0: "abcdef", 1: "bc", 2: "abdeg", 3: "abcdg", 4: "bcfg", 5: "acdfg", 6: "acdefg", 7: "abc", 8: "abcdefg", 9: "abcdfg" };
+const esTagName = (d) => d.toLocaleDateString("de-DE", { weekday: "long", timeZone: "Europe/Berlin" });
+function esUhrZeigen(f) {
+  const stil = esLies("uhr", "digital");
+  f.innerHTML = `<div class="es-uhr es-uhr-${stil}" id="esUhr"></div>
+    <div class="es-leiste es-uhr-leiste">${ES_UHREN.map(([k, t, lang]) => `<button type="button" class="es-k${k === stil ? " an" : ""}" title="${lang}" aria-label="Uhr: ${lang}" onclick="esUhrStil('${k}')">${t}</button>`).join("")}</div>`;
+  ES.uhr.letzte = ""; ES.uhr.fb = null; esUhrTick(); esStop(); ES.timer = setInterval(() => { if (esSichtbar()) esUhrTick(); }, 250);
+}
+function esUhrStil(k) { esSchreib("uhr", k); esUhrZeigen($("hrFlaeche")); }
+function esUhrTick() {
+  const el = $("esUhr"); if (!el) return esStop();
+  const d = new Date(), z = new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23", timeZone: "Europe/Berlin" }).format(d).split(":");
+  const stil = esLies("uhr", "digital"), datum = d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" });
+  const schluessel = stil + z.join("") + (stil === "bahnhof" ? Math.floor(d.getMilliseconds() / 250) : "");
+  if (schluessel === ES.uhr.letzte) return; ES.uhr.letzte = schluessel;
+  const groesse = Math.max(10, Math.min(el.clientWidth / 7.5, el.clientHeight / 2.4)); el.style.setProperty("--g", groesse + "px");
+  if (stil === "digital") {
+    const ziffer = (n) => `<span class="seg-z">${"abcdefg".split("").map((s) => `<i class="seg ${s}${ES_SEG[n].includes(s) ? " an" : ""}"></i>`).join("")}</span>`;
+    el.innerHTML = `<div class="seg-zeile">${ziffer(+z[0][0])}${ziffer(+z[0][1])}<span class="seg-punkt${+z[2] % 2 ? " aus" : ""}"><i></i><i></i></span>${ziffer(+z[1][0])}${ziffer(+z[1][1])}<span class="seg-sek">${z[2]}</span></div>
+      <div class="seg-datum">${esc(esTagName(d).toUpperCase())} · ${esc(datum)}</div>`;
+  } else if (stil === "fallblatt") {
+    const datumZeit = +z[2] % 15 >= 10; // alle 15 Sekunden: 10 s Uhrzeit, 5 s Datum
+    const oben = datumZeit ? esTagName(d).toUpperCase() : "UHRZEIT", unten = datumZeit ? datum.slice(0, 5) : `${z[0]}:${z[1]}`;
+    esFallblatt(el, (oben + "         ").slice(0, 10), unten);
+  } else if (stil === "bahnhof") {
+    const s = +z[2] + Math.min(1, d.getMilliseconds() / 900), m = +z[1] + +z[2] / 60, h = (+z[0] % 12) + m / 60;
+    if (!el.querySelector("svg")) el.innerHTML = `<svg viewBox="-110 -110 220 220" class="bh-svg" role="img" aria-label="Bahnhofsuhr"><circle r="104" class="bh-rand"/><circle r="98" class="bh-blatt"/>
+      ${Array.from({ length: 60 }, (_, i) => `<rect x="${i % 5 ? -1.2 : -3.2}" y="-94" width="${i % 5 ? 2.4 : 6.4}" height="${i % 5 ? 7 : 20}" transform="rotate(${i * 6})" class="bh-strich"/>`).join("")}
+      <rect id="bhH" x="-5" y="-56" width="10" height="70" class="bh-zeiger"/><rect id="bhM" x="-3.6" y="-86" width="7.2" height="102" class="bh-zeiger"/>
+      <g id="bhS"><rect x="-1.3" y="-64" width="2.6" height="92" class="bh-sek"/><circle cy="-62" r="9" class="bh-sek"/></g><circle r="3" class="bh-mitte"/></svg><div class="bh-datum" id="bhDatum"></div>`;
+    el.querySelector("#bhH").setAttribute("transform", `rotate(${h * 30})`); el.querySelector("#bhM").setAttribute("transform", `rotate(${m * 6})`); el.querySelector("#bhS").setAttribute("transform", `rotate(${s * 6})`);
+    el.querySelector("#bhDatum").textContent = `${esTagName(d)}, ${datum}`;
+  } else {
+    el.innerHTML = `<div class="kl-zeit">${z[0]}:${z[1]}<small>${z[2]}</small></div><div class="kl-datum">${esc(d.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Berlin" }))}</div>`;
+  }
+}
+function esFallblatt(el, oben, unten) { // jede Klappe dreht nur, wenn sich ihr Zeichen ändert
+  if (!el.querySelector(".fb-zeile")) el.innerHTML = `<div class="fb-zeile fb-oben">${"x".repeat(10).split("").map(() => '<span class="fb"><b></b></span>').join("")}</div><div class="fb-zeile fb-unten">${"x".repeat(5).split("").map(() => '<span class="fb"><b></b></span>').join("")}</div>`;
+  const setze = (zeile, text) => [...el.querySelectorAll(zeile + " .fb")].forEach((k, i) => { const ch = text[i] || " ", b = k.firstElementChild; if (b.textContent === ch) return;
+    b.textContent = ch; if (!esOhneAnim()) { k.classList.remove("klapp"); void k.offsetWidth; k.classList.add("klapp"); } k.classList.toggle("leer", ch === " "); });
+  setze(".fb-oben", oben); setze(".fb-unten", unten);
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && ES.offen && $("esUhr")) { ES.uhr.letzte = ""; esUhrTick(); } });
+addEventListener("resize", () => { if (ES.offen && $("esUhr")) { ES.uhr.letzte = ""; esUhrTick(); } });
 // ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0, Wunsch Hansi): Jahreszeiten im Kopf mit Boden ----------
 // 🍂 Herbst: Laub fällt und bleibt unten liegen; liegt genug, kommt ein Windstoß (abwechselnd von links und von rechts) und weht es weg.
 // ❄️ Winter/Advent: Schnee bleibt liegen und wird weggeweht – jeder 3. Lauf wird daraus ein lachender Schneemann
@@ -13622,6 +13893,7 @@ function heroZeigen(richtung) {
   $("infoPunkte").innerHTML = INFO_FELDER.map((x, i) => `<button class="ipunkt${i === INFO_I ? " an" : ""}" aria-label="${esc(x.t)}" title="${esc(x.t)}" onclick="infoGehe(${i})"></button>`).join("");
   zahlenHochzaehlen($("heroInfo"), ".mini > b:not(.mini-zeile)", (el) => "h:" + (el.parentElement.querySelector("span")?.textContent || "").slice(0, 20)); // 2.172.0 KC-CLUB-EFFEKTE-2
   if (!document.querySelector("#v-start .hero .jz-schicht")) jahreszeitKopf();
+  if (!document.getElementById("eselsohr")) esEinsetzen(); // KC-CLUB-ESELSOHR (2.292.0)
   if (f.id === "wetter") { wetterSzene(); if (!WET.laedt && Date.now() - WET.geholt > WETTER_NEU_MIN * 60000) wetterLaden(erzwingen); }
   if (f.laden) infoDatenLaden(f, erzwingen);
   if (f.id === "zentrale") zeUhr();
@@ -27525,7 +27797,8 @@ const ARCHIV_ABLAGE_ARTEN = {
   nachricht: { sym: "💬", register: ["Chats", "Sonstiges"], stichworte: "Nachricht" }, // 2.23.80: einzelne Nachricht über den Pfeil
   foto: { sym: "📷", register: ["Fotos", "Sonstiges"], stichworte: "Foto" },
   protokoll: { sym: "📝", register: ["Protokolle", "Sonstiges"], stichworte: "Protokoll" },
-  geteilt: { sym: "📥", register: ["Chats", "Sonstiges"], stichworte: "geteilt" }, // 1.22.0: über „Teilen → Köcheclub“ (z. B. WhatsApp-Export)
+  geteilt: { sym: "📥", register: ["Chats", "Sonstiges"], stichworte: "geteilt" },
+  skizze: { sym: "🖍️", register: ["Fotos", "Sonstiges"], stichworte: "Skizze" }, // 2.292.0 KC-CLUB-ESELSOHR: Skizze von der Tafel // 1.22.0: über „Teilen → Köcheclub“ (z. B. WhatsApp-Export)
   eingelesen: { sym: "📄", register: ["Sonstiges"], stichworte: "eingelesen" }, // 2.101.0 KC-CLUB-BUERO-EINLESEN
 };
 // Dateitypen, die das Archiv annimmt (gleiche Liste wie ARCHIV_DATEITYPEN im Server) – anderes (z. B. Sprachnachrichten) wird übersprungen

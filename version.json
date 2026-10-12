@@ -1,11 +1,22 @@
 {
-  "version": "2.291.0",
-  "datum": "2026-10-11",
+  "version": "2.292.0",
+  "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🎬 Video „Versteckte Helfer“: zeigt jetzt, wie du die Kacheln auf 3 × 3 oder 4 × 4 stellst (⚙️ → Darstellung)"
+    "📄 Neu: Eselsohr unten rechts am Kopf – nach links ziehen, der Kopf dreht sich um",
+    "🖼️ Diashow mit euren Fotos · 🖍️ Tafel mit Kreide, Schwamm, ins Archiv oder als Nachricht · 🕰️ große Uhr (Digital grün, Fallblatt, Bahnhofsuhr, Groß & klar)",
+    "↩︎ Doppelt aufs Eselsohr tippen dreht zurück"
   ],
   "verlauf": [
+    {
+      "version": "2.292.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "📄 Neu: Eselsohr unten rechts am Kopf – nach links ziehen, der Kopf dreht sich um",
+        "🖼️ Diashow mit euren Fotos · 🖍️ Tafel mit Kreide, Schwamm, ins Archiv oder als Nachricht · 🕰️ große Uhr (Digital grün, Fallblatt, Bahnhofsuhr, Groß & klar)",
+        "↩︎ Doppelt aufs Eselsohr tippen dreht zurück"
+      ]
+    },
     {
       "version": "2.291.0",
       "datum": "2026-10-11",
