@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.299.3"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.299.4"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12825,7 +12825,8 @@ const BW_TEMPO = { sitzen: 112, stehen: 120, kueche: 116 }; // Schläge/Min. (Se
 const BW_LOB = ["Super machst du das!", "Spitze – weiter so!", "Schön weiteratmen – ein und aus!", "Lächeln nicht vergessen!", "Du bist heute der Star auf der Bühne!",
   "Das sieht richtig sportlich aus!", "Mit Schwung – die Küche rockt!", "Wer rastet, der rostet – wer rührt, der glänzt!", "Prima, ganz in deinem Tempo!",
   "Spürst du, wie es warm wird?", "Toll – ich bin stolz auf dich!", "Und weiter – du schaffst das!", "Schultern locker, schön aufrecht!", "Bravo! Das macht Spaß, oder?",
-  "Besser als jede Bratkartoffel!", "Jawoll – so sieht Bewegung aus!"];
+  "Besser als jede Bratkartoffel!", "Jawoll – so sieht Bewegung aus!", "Klasse – genau so!", "Tip top – das sitzt!",
+  "Weiter so und nicht aufgeben – die neue Kochjacke soll doch passen!"];
 // 2.299.0 (Wunsch Hansi): Sprüche mit Augenzwinkern – bei jeder Übung einer (nach 9 Sekunden)
 const BW_FRECH = ["Hättest du nicht so viel am Pudding genascht, bräuchten wir das jetzt nicht machen!", "Nächstes Mal weniger Nudeln – dann schwingen die Hüften auch besser mit!",
   "Alles, was du isst, muss ich zum Glück nicht auf meinen Hüften tragen!", "Wer heimlich vom Teig nascht, rührt jetzt doppelt!", "Die Sahnetorte von gestern winkt gerade zum Abschied!",
@@ -12929,14 +12930,23 @@ async function bwLos() {
 const bwSpricht = () => { try { return !!(speechSynthesis.speaking || speechSynthesis.pending); } catch (e) { return false; } };
 function bwSag(t, sofort, blase, nebenbei) { // blase: kürzerer Text für die Sprechblase (sonst der gesprochene)
   const L = BW.lauf; if (nebenbei && L?.ansage && bwSpricht()) return;
+  if (L) L.lobZuletzt = [...bwLobWorte(t), ...(L.lobZuletzt || [])].slice(0, 5); // gerade benutzte Lobwörter merken
   const z = $("bwSprech"); BW.sprechZeit = Date.now(); BW.blase = blase || t;
   if (z) { z.textContent = BW.blase; z.classList.remove("an"); void z.offsetWidth; z.classList.add("an"); }
   if (!L?.ansage) return; try { if (sofort) speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwSprechen(t);
 }
 // 2.297.0 (Wunsch Hansi „Musik noch lauter, die Stimme ist zu dominant“): Twinkey spricht auf der Bühne etwas leiser
 function bwSprechen(t) { try { if (!("speechSynthesis" in window) || bwStimmeStumm()) return; const u = sprechAusgabe(t); u.volume = bwLautWert("stimme"); speechSynthesis.speak(u); } catch (e) { /* ohne Sprache */ } }
-const BW_KURZ = ["Super!", "Weiter so!", "Stark!", "Spitze!", "Jawoll!", "Prima!"];
-const bwZufall = (liste, L) => liste[(L.sprueche++ + L.i) % liste.length];
+const BW_KURZ = ["Super!", "Klasse!", "Weiter so!", "Prima!", "Tip top!", "Spitze!", "Jawoll!", "Stark!", "Nicht aufgeben!"];
+// 2.299.4 (Wunsch Hansi „prima kommt zu kurz hintereinander“): Lobwörter wechseln sich ab – ein Wort kommt erst wieder, wenn 5 andere dran waren
+const BW_LOBWORTE = ["Prima", "Klasse", "Super", "Spitze", "Tip top", "Toll", "Bravo", "Jawoll", "Stark"];
+const bwLobWorte = (t) => BW_LOBWORTE.filter((w) => String(t).toLowerCase().includes(w.toLowerCase()));
+function bwNimm(liste, L, zaehler) { // nächster Spruch der Reihe, der kein gerade benutztes Lobwort enthält
+  const start = L[zaehler] || 0, frei = (t) => !bwLobWorte(t).some((w) => (L.lobZuletzt || []).includes(w));
+  for (let k = 0; k < liste.length; k++) { const t = liste[(start + k) % liste.length]; if (frei(t)) { L[zaehler] = start + k + 1; return t; } }
+  L[zaehler] = start + 1; return liste[start % liste.length];
+}
+const bwZufall = (liste, L) => bwNimm(liste, L, "sprueche");
 function bwTick() {
   const L = BW.lauf; if (!L) return clearInterval(BW.takt);
   if (!$("bwLauf")) return bwStopp();
@@ -12951,9 +12961,9 @@ function bwTick() {
   L.rest--;
   if (L.phase === "uebung") { // Sprüche gleichmäßig verteilt: 27 · 21 · 15 · 10 · 6 · 3-2-1
     L.sek++;
-    if (L.rest === 27) bwSag(u.c?.[0] || BW_LOB[L.lob++ % BW_LOB.length], false, "", true);
+    if (L.rest === 27) bwSag(u.c?.[0] || bwNimm(BW_LOB, L, "lob"), false, "", true);
     else if (L.rest === 21) bwSag(BW_FRECH[(L.lob + L.i) % BW_FRECH.length], false, "", true);
-    else if (L.rest === 15) bwSag(u.w || u.c?.[1] || BW_LOB[L.lob++ % BW_LOB.length], false, "", !u.w);
+    else if (L.rest === 15) bwSag(u.w || u.c?.[1] || bwNimm(BW_LOB, L, "lob"), false, "", !u.w);
     else if (L.rest === 10) bwSag(bwZufall(BW_ENDSPURT, L), false, "", true);
     else if (L.rest === 6) bwSag(bwZufall(BW_KURZ, L), false, "", true);
     else if (L.rest >= 1 && L.rest <= 3) bwSag(L.rest === 3 ? "Noch 3" : L.rest === 2 ? "noch 2" : "noch 1", true);

@@ -8745,7 +8745,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/if \(!\("speechSynthesis" in window\) \|\| bwStimmeStumm\(\)\) return;/.test(b) && /function bwLautStumm\(art\)/.test(b) && /closest\?\.\("\.bw-laut-sym\.unten"\)\) return bwLautStumm\(art\);/.test(b), "unten tippen: stumm, nochmal: wieder an");
   assert.ok(/else if \(!p\) \{ try \{ speechSynthesis\.cancel\(\); \}/.test(b), "beim Stummschalten verstummt Twinkey sofort");
   const sprueche = b.slice(b.indexOf("const BW_LOB = ["), b.indexOf("function bwTick()"));
-  assert.ok(!/Klasse/.test(sprueche), "kein „Klasse“ mehr in den Sprüchen");
+  // 2.299.4: „Klasse“ wieder erlaubt – aber im Wechsel (siehe unten)
   assert.ok(/const BW_FRECH = \[[^\]]*Pudding genascht[^\]]*weniger Nudeln[^\]]*auf meinen Hüften/.test(b) && /L\.rest === 21\) bwSag\(BW_FRECH\[/.test(b), "Sprüche mit Augenzwinkern bei jeder Übung");
   assert.ok(!/\|\|=|\?\?=/.test(b), "alte Handys");
 }
@@ -8763,4 +8763,13 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/if \(u\?\.a === "trommeln" && im % 2 === 0\) bwTopf\(t, im % 4 === 0\);/.test(b) && /function bwTopf\(t, betont\)/.test(b), "Topf klingt auf jede Achtel");
   assert.ok(/if \(u\?\.a === "klatschen" && u\.p === "deckel" && \(im === 4 \|\| im === 12\)\) bwBecken\(t\);/.test(b) && /function bwBecken\(t\)/.test(b), "Deckel wie Becken auf 2 und 4");
   assert.ok(/L\.phase === "uebung" && !L\.pause/.test(b), "nur während der Übung");
+}
+
+// 2.299.4 KC-CLUB-BUEHNE-LOB (Wunsch Hansi): Lobwörter wechseln sich ab; Klasse, Super, Tip top, „nicht aufgeben – die neue Kochjacke soll doch passen“
+{
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  assert.ok(/const BW_LOBWORTE = \["Prima", "Klasse", "Super", "Spitze", "Tip top"/.test(b) && /function bwNimm\(liste, L, zaehler\)/.test(b), "Lobwörter im Wechsel");
+  assert.ok(/L\.lobZuletzt = \[\.\.\.bwLobWorte\(t\), \.\.\.\(L\.lobZuletzt \|\| \[\]\)\]\.slice\(0, 5\);/.test(b), "die letzten 5 Lobwörter werden gemerkt");
+  assert.ok(/bwNimm\(BW_LOB, L, "lob"\)/.test(b) && /const bwZufall = \(liste, L\) => bwNimm\(liste, L, "sprueche"\);/.test(b), "alle Sprüche laufen über die Auswahl");
+  assert.ok(/"Weiter so und nicht aufgeben – die neue Kochjacke soll doch passen!"/.test(b) && /"Tip top!"/.test(b) && /"Klasse!"/.test(b), "neue Anfeuerungen");
 }

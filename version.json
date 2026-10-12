@@ -1,12 +1,20 @@
 {
-  "version": "2.299.3",
+  "version": "2.299.4",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🥁 Bühne: Beim Topf-Trommeln klingt der Topf mit – jeder Kochlöffel-Schlag im Takt der Musik",
-    "🥇 Beim Deckel-Klatschen scheppern die Topfdeckel wie Becken im Orchester – genau auf 2 und 4"
+    "👏 Bühne: Lob wechselt sich ab – Prima, Klasse, Super, Tip top, Spitze, Jawoll … ein Wort kommt erst wieder, wenn fünf andere dran waren",
+    "💪 Neu: „Weiter so und nicht aufgeben – die neue Kochjacke soll doch passen!“"
   ],
   "verlauf": [
+    {
+      "version": "2.299.4",
+      "datum": "2026-10-12",
+      "neu": [
+        "👏 Bühne: Lob wechselt sich ab – Prima, Klasse, Super, Tip top, Spitze, Jawoll … ein Wort kommt erst wieder, wenn fünf andere dran waren",
+        "💪 Neu: „Weiter so und nicht aufgeben – die neue Kochjacke soll doch passen!“"
+      ]
+    },
     {
       "version": "2.299.3",
       "datum": "2026-10-12",

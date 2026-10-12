@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.299.4 – 2026-10-12 – KC-CLUB-BUEHNE-LOB
+Wunsch Hansi („prima kommt zu kurz hintereinander“). Lobwörter (Prima, Klasse, Super, Spitze, Tip top, Toll, Bravo, Jawoll, Stark) werden gemerkt: Ein Wort kommt erst wieder, wenn fünf andere dran waren – das gilt für Lob, kurze Anfeuerungen, Endspurt- und Ausschüttel-Sprüche. „Klasse“ ist wieder dabei (im Wechsel), dazu „Tip top“, „Nicht aufgeben!“ und „Weiter so und nicht aufgeben – die neue Kochjacke soll doch passen!“.
+
 ## 2.299.3 – 2026-10-12 – KC-CLUB-BUEHNE-GERAEUSCHE
 Wunsch Hansi. Topf-Trommeln: zu jedem Kochlöffel-Schlag ein blecherner Topfklang (kurzer Anschlag, unharmonische Metall-Obertöne, dumpfer Bauch), auf jede Achtel abwechselnd links/rechts – genau dann, wenn Twinkeys Löffel unten ist; auf dem Schlag etwas kräftiger. Deckel-Klatschen: wenn die Deckel zusammenkommen (auf 2 und 4), ein Becken-Krach wie im Orchester mit langem Nachklingen. Die Geräusche gehören zur Musik (folgen dem Musik-Regler, schweigen bei Pause oder ausgeschalteter Musik).
 
