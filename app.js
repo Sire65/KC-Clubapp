@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.335.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.336.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14800,14 +14800,8 @@ function jzbFestMalen(c) {
 // ---- 🎡 Sim-Jü ----
 function jzbKirmesMalen(c, F) {
   const J = JZB, k = J.k, T = J.T, R = Math.max(22, Math.min(50, J.h * .34)) * Math.max(.8, k), cx = J.w - R - 40, cy = J.h - R - 13 * k;
-  // Lichterkette oben
-  c.strokeStyle = "rgba(60,40,30,.55)"; c.lineWidth = 1; c.beginPath(); for (let x = JZB_RAND; x <= J.w - JZB_RAND; x += 4) c.lineTo(x, jzbKetteY(x, 5, 9 * k)); c.stroke();
+  // 2.336.0 (Wunsch Hansi „ganz oben nichts – keine Wimpel usw.“): die Lichterkette hängt jetzt als Deko an der Leiste (KC-CLUB-DEKO)
   const takt = Math.floor(T * 3.5);
-  for (let i = 0, x = JZB_RAND + 6; x < J.w - JZB_RAND - 3; i++, x += 15 * Math.max(.8, k)) {
-    const y = jzbKetteY(x, 5, 9 * k) + 3, an = (i + takt) % 3 !== 0, f = JZB_FEST_BUNT[i % 5];
-    if (an) { const g = c.createRadialGradient(x, y, 0, x, y, 7 * k); g.addColorStop(0, f + "aa"); g.addColorStop(1, f + "00"); c.fillStyle = g; c.beginPath(); c.arc(x, y, 7 * k, 0, 7); c.fill(); }
-    c.fillStyle = an ? f : "rgba(120,110,100,.7)"; c.beginPath(); c.ellipse(x, y, 2 * k, 2.8 * k, 0, 0, 7); c.fill();
-  }
   // Luftballons
   for (const b of F.ballons) {
     c.strokeStyle = "rgba(80,80,80,.6)"; c.lineWidth = .8; c.beginPath(); c.moveTo(b.x, b.y + 9 * k); c.quadraticCurveTo(b.x + Math.sin(b.ph * 2) * 4, b.y + 17 * k, b.x, b.y + 25 * k); c.stroke();
@@ -14857,13 +14851,7 @@ function jzbKrugMalen(c, x, yb, k, fuell, kipp, spiegel) { // 🍺 Maßkrug aus 
 }
 function jzbWiesnMalen(c, F) {
   const J = JZB, k = J.k, T = J.T;
-  // blau-weiße Wimpelkette
-  c.strokeStyle = "rgba(60,60,60,.5)"; c.lineWidth = 1; c.beginPath(); for (let x = JZB_RAND; x <= J.w - JZB_RAND; x += 4) c.lineTo(x, jzbKetteY(x, 4, 8 * k)); c.stroke();
-  for (let i = 0, x = JZB_RAND + 3; x < J.w - JZB_RAND - 8; i++, x += 12 * Math.max(.8, k)) {
-    const y = jzbKetteY(x, 4, 8 * k), w = 10 * Math.max(.8, k), fl = Math.sin(T * 3 + i * .7) * 1.5 * k;
-    c.fillStyle = i % 2 ? "#ffffff" : "#1f6fd1"; c.beginPath(); c.moveTo(x, y); c.lineTo(x + w, jzbKetteY(x + w, 4, 8 * k)); c.lineTo(x + w / 2 + fl, y + 12 * k); c.closePath(); c.fill();
-    if (i % 2) { c.fillStyle = "rgba(31,111,209,.5)"; c.beginPath(); c.moveTo(x + w / 2 + fl * .5, y + 2.5 * k); c.lineTo(x + w * .62 + fl * .5, y + 5 * k); c.lineTo(x + w / 2 + fl * .5, y + 7.5 * k); c.lineTo(x + w * .38 + fl * .5, y + 5 * k); c.fill(); }
-  }
+  // 2.336.0 (Wunsch Hansi): keine Wimpelkette mehr oben – die blau-weißen Wimpel hängen als Deko an der Leiste (KC-CLUB-DEKO)
   // Lebkuchenherz und Brezn am Pfosten unten links
   const f = jzbWiesnFass(), sy = jzbStangeY(); jzbPfostenMalen(c, JZB_RAND + 3, sy, JZB_RAND + 72 * k); jzbHerzMalen(c, JZB_RAND + 25 * k, sy, k, F.t); jzbBreznMalen(c, JZB_RAND + 60 * k, sy, k);
   // Fass auf dem Bock, Zapfhahn, Krug füllt sich
@@ -14970,10 +14958,7 @@ function jzbKamelleMalen(c, m, k) {
 }
 function jzbKarnevalMalen(c, F) {
   const J = JZB, k = J.k, T = J.T;
-  for (let i = 0, x = JZB_RAND + 10; x < J.w - JZB_RAND; i++, x += 34 * Math.max(.8, k)) { // Luftschlangen hängen vom oberen Rand
-    const L = (16 + (i * 7) % 13) * k, sw = Math.sin(T * 1.2 + i) * 2 * k; c.strokeStyle = JZB_FEST_BUNT[i % 6]; c.lineWidth = 1.6 * k; c.beginPath();
-    for (let u = 0; u <= 1.001; u += .04) { const px = x + Math.sin(u * 14 + i) * 3.2 * k + sw * u, py = 1 + u * L; u ? c.lineTo(px, py) : c.moveTo(px, py); } c.stroke();
-  }
+  // 2.336.0 (Wunsch Hansi „ganz oben nichts“): keine Luftschlangen mehr vom oberen Rand – die bunten Wimpel hängen als Deko an der Leiste
   const blatt = (p) => { c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.scale(p.ph === undefined ? 1 : Math.max(.15, Math.abs(Math.cos(p.ph))), 1); c.fillStyle = p.farbe; c.fillRect(-p.w * k / 2, -p.w * k * .35, p.w * k, p.w * k * .7); c.restore(); };
   for (const p of F.liegt) blatt(p);
   for (const m of F.kamelle) jzbKamelleMalen(c, m, k);

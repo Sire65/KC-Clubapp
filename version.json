@@ -1,12 +1,18 @@
 {
-  "version": "2.335.0",
+  "version": "2.336.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🎏 Deko an der Leiste mit den Lämpchen: Wimpelkette, Lichterkette oder Laternen – automatisch passend zur Jahreszeit (Herbst Laternen, Advent warmweiße Lichter, Oktoberfest blau-weiße Wimpel, Silvester goldene Lichter …)",
-    "⚙️ Wählbar unter ⚙️ → 🍂 Jahreszeiten → „🎏 Deko an der Leiste“: Automatisch, Wimpel, Lichterkette, Laternen oder Aus"
+    "🧹 Oben im Kopf hängt nichts mehr (keine Wimpel, Lichterkette oder Luftschlangen bei Oktoberfest, Sim-Jü und Karneval) – die Deko hängt jetzt nur noch an der Leiste"
   ],
   "verlauf": [
+    {
+      "version": "2.336.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🧹 Oben im Kopf hängt nichts mehr (keine Wimpel, Lichterkette oder Luftschlangen bei Oktoberfest, Sim-Jü und Karneval) – die Deko hängt jetzt nur noch an der Leiste"
+      ]
+    },
     {
       "version": "2.335.0",
       "datum": "2026-10-12",

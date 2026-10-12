@@ -9183,3 +9183,8 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/id="jzDekoWahl"/.test(html) && /jzDekoWahlZeigen\(\); \$\("setFeiertage"\)/.test(html), "Wahl in den Einstellungen");
   assert.ok(/\.spar \.jz-deko \.fk, \.ohne-anim \.jz-deko \.fk \{ animation: none; \}/.test(html) && /\.jz-deko \{[^}]*pointer-events: none;/.test(html), "ruhig im Sparmodus, Tippen geht durch");
 }
+
+// 2.336.0 KC-CLUB-DEKO-OBEN-FREI: oben im Kopf keine Girlanden mehr
+{
+  assert.ok(!/jzbKetteY\(x, 5, 9 \* k\)/.test(html) && !/jzbKetteY\(x, 4, 8 \* k\)/.test(html) && !/Luftschlangen hängen vom oberen Rand/.test(html), "keine Lichterkette, Wimpel, Luftschlangen oben");
+}

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.336.0 – 2026-10-12 – KC-CLUB-DEKO-OBEN-FREI
+Wunsch Hansi („dafür soll ganz oben nichts hin – Wimpel usw.“). Die Kopf-Bühnen der Themen malen oben keine Girlanden mehr: Sim-Jü ohne Lichterkette, Oktoberfest ohne blau-weiße Wimpelkette, Karneval ohne Luftschlangen vom oberen Rand. Diese Deko hängt seit 2.335.0 an der Leiste (KC-CLUB-DEKO: Sim-Jü bunte Lichter, Oktoberfest blau-weiße Wimpel, Karneval bunte Wimpel). Riesenrad, Fass, Wagen, Konfetti usw. bleiben.
+
 ## 2.335.0 – 2026-10-12 – KC-CLUB-DEKO
 Wunsch Hansi („Deko: Wimpel, Lichterkette usw. – an die Stelle, wo du auch die Eiszapfen hängen hast“). Unter der Leiste mit den Lämpchen hängt eine Girlande in Bögen (Bogenzahl nach Breite): 🎏 Wimpel (Dreiecke mit Glanzkante), 💡 Lichterkette (Birnen mit Fassung und Schein, jede dritte funkelt sanft – im Sparmodus/bei ruhigen Knöpfen nicht) oder 🏮 Laternen (runde Papierlaternen mit Rippen, innen leuchtend, Quaste). Automatisch nach Jahreszeit/Thema: Herbst Laternen in Laubfarben, Advent warmweiße Lichter, Silvester goldene Lichter, Sommer bunte Wimpel, Frühling Pastell-Wimpel, Oktoberfest blau-weiße Wimpel, Karneval bunte Wimpel, Sim-Jü bunte Lichter, Karibik bunte Laternen, Halloween orange-lila Lichter; im tiefen Winter hängen dort die Eiszapfen. Wahl je Gerät unter ⚙️ → 🍂 Jahreszeiten: Automatisch / Wimpel / Lichterkette / Laternen / Aus. Stilles SVG-Bild (kein Akkuverbrauch), auch im Sparmodus und in der einfachen Ansicht; Tippen geht hindurch.
 
