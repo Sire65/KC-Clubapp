@@ -5904,7 +5904,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(BW\.hoeren\) bwStopp\(false\); BWM\.stueck = bwTrainingsStueck\(w\.modus\); BWM\.gesamt = 0;/.test(html), "Training: Disco-Stück im Tempo der Übungen (2.303.0)");
   assert.ok(/BW\.lauf = null; BW\.hoeren = null; (BW\.vorher = null; )?BWM\.stueck = null;/.test(html) && /if \(BW\.lauf \|\| BW\.hoeren \|\| BWM\.laeuft\) bwStopp\(\); \}/.test(html), "Ende/Ansicht verlassen stoppt auch die Musik");
   assert.ok(/if \(!esSichtbar\(\)\) \{ if \(!H\.pause\) \{ H\.pause = true; bwMusik\(false\);/.test(html), "nicht zu sehen → Pause");
-  assert.ok(/if \(takt >= ges\) \{ bwmStueck\((H\.i \+ 1|bwmNachbar\(H\.i, 1\))\);/.test(html) && /const bwmTakte = \(s\) => Math\.max\(32,/.test(html), "nach ca. 2½ Min. das nächste Stück");
+  assert.ok(/if \(takt >= ges\) \{ bwmStueck\((H\.i \+ 1|bwmNachbar\(H\.i, 1\))\);/.test(html) && /const bwmTakte = \(s\) => (s\.takte \|\| )?Math\.max\(32,/.test(html), "nach ca. 2½ Min. das nächste Stück");
   assert.ok(/\{ id: "es_musik", thema: "toene", sym: "🎶"/.test(html), "Hilfe-Eintrag");
 }
 
@@ -8992,4 +8992,13 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/new BroadcastChannel\("kc_club_fenster"\)/.test(html) && /function zweiFensterMelden\(\)/.test(html) && /function fensterSchlafen\(selbst\)/.test(html) && /fensterStart\(\); \/\/ KC-CLUB-ZWEI-FENSTER/.test(html), "gleicher Browser: Funkkanal, Meldung, anderes Fenster schläft");
   assert.ok(/await api\("online", \{ fenster: fensterKennung\(\) \}\)/.test(html) && /if \(r\.fensterAnders\) zweiBrowserMelden\(r\.fensterAnders\)/.test(html) && /data-w="anderes">📲 Das ist ein anderes Gerät/.test(html), "anderer Browser: Meldung mit „anderes Gerät“");
   assert.ok(/async function fensterAbgleich\(ich: Ich, f: any, req: Request\)/.test(srv) && /x\.n === netz && x\.s === sy && t - Number\(x\.t\) < FENSTER_SEK \* 1000/.test(srv) && /return json\(\{ fensterAnders, /.test(srv), "Server: gleiche Person, gleiches Netz, gleiches System, andere Kennung");
+}
+
+// KC-CLUB-SONG (Wunsch Hansi): Club-Song mit Melodie und Karaoke
+{
+  const b = html.slice(html.indexOf("const KS_AKK"), html.indexOf("// Musikrichtungen als Kacheln"));
+  const { KS_TEXT, ksSilben } = new Function(b.slice(b.indexOf("const KS_HOOK"), b.indexOf("const KS_REF_AKK")) + "; return { KS_TEXT, ksSilben };")();
+  for (const [teil, zeilen] of Object.entries(KS_TEXT)) zeilen.forEach((z, i) => assert.equal(ksSilben(z[0]).length, z[1].length, `${teil} Zeile ${i + 1}: je Silbe ein Ton`));
+  assert.ok(/\{ id: "clubsong", t: "Seit einundneunzig", stil: "Club-Song", sym: "🎤", bpm: 124/.test(html) && /\["club", "🎤", "Club-Song", \["Club-Song"\]\]/.test(html) && /onclick="bwClubSong\(\)">🎤 Club-Song/.test(html), "Lied, Kachel und Knopf");
+  assert.ok(/\["ref", KS_REF_AKK, "ref", 2\]/.test(b) && /id="bwKaraoke"/.test(html) && /function ksKaraoke\(\)/.test(b), "Rückung im Schluss-Refrain, Karaoke");
 }

@@ -1,12 +1,20 @@
 {
-  "version": "2.315.0",
+  "version": "2.316.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🪟 Doppelt geöffnet? Ist die Club-App im selben Browser in zwei Fenstern/Tabs offen, kommt eine Meldung: „Hier weitermachen“ legt das andere Fenster schlafen, oder dieses schließen",
-    "📱 Zwei Browser auf demselben Gerät (z. B. Chrome und Firefox): die App merkt es und bittet, den anderen Browser zu schließen – „Das ist ein anderes Gerät“ schaltet die Meldung dafür ab"
+    "🎤 Unser Club-Song „Seit einundneunzig (Köcheclub Werne)“ auf der Bühne: Disco-Fox-Schlager mit Melodie, Refrain zum Mitsingen und Karaoke-Text – Twinkey tanzt dazu",
+    "🎶 Neue Musik-Kachel „Club-Song“, Knopf „🎤 Club-Song“ in der Bühnen-Auswahl, auch über die 🔍 Lupe zu finden"
   ],
   "verlauf": [
+    {
+      "version": "2.316.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🎤 Unser Club-Song „Seit einundneunzig (Köcheclub Werne)“ auf der Bühne: Disco-Fox-Schlager mit Melodie, Refrain zum Mitsingen und Karaoke-Text – Twinkey tanzt dazu",
+        "🎶 Neue Musik-Kachel „Club-Song“, Knopf „🎤 Club-Song“ in der Bühnen-Auswahl, auch über die 🔍 Lupe zu finden"
+      ]
+    },
     {
       "version": "2.315.0",
       "datum": "2026-10-12",

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.315.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.316.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -13256,7 +13256,7 @@ function esBuehneZeigen(f) {
       <div class="bw-reihe">${BW_DAUER.map((d) => `<button type="button" class="es-k${w.dauer === d ? " an" : ""}" onclick="bwWahlSetzen({dauer:${d}})">${d} Min.</button>`).join("")}
         <button type="button" class="es-k${w.musik ? " an" : ""}" onclick="bwWahlSetzen({musik:${!w.musik}})" aria-label="Musik ${w.musik ? "aus" : "an"}">${w.musik ? "🎵 Musik" : "🔇 Musik"}</button>
         <button type="button" class="es-k${w.ansage ? " an" : ""}" onclick="bwWahlSetzen({ansage:${!w.ansage}})" aria-label="Ansage ${w.ansage ? "aus" : "an"}">${w.ansage ? "🔊 Ansage" : "🔈 Ansage"}</button></div>
-      <div class="bw-reihe"><button type="button" class="es-k es-haupt bw-los" ${hinweis ? "disabled" : ""} onclick="bwVorher()">▶️ Vorhang auf!</button><button type="button" class="es-k bw-hoeren-los" onclick="bwHoeren()">🎶 Nur Musik hören</button></div></div></div>`; // 2.302.0 KC-CLUB-BUEHNE-MUSIK
+      <div class="bw-reihe"><button type="button" class="es-k es-haupt bw-los" ${hinweis ? "disabled" : ""} onclick="bwVorher()">▶️ Vorhang auf!</button><button type="button" class="es-k bw-hoeren-los" onclick="bwClubSong()">🎤 Club-Song</button><button type="button" class="es-k bw-hoeren-los" onclick="bwHoeren()">🎶 Nur Musik hören</button></div></div></div>`; // 2.302.0 KC-CLUB-BUEHNE-MUSIK
 }
 // ----- 2.309.0 KC-CLUB-BUEHNE-BEREIT (Wunsch Hansi „vorher ansagen: lege dir bereit …“; „mit Weiter eine Übung überspringen“) -----
 // Vor dem Start zeigt und sagt Twinkey, was für DIESEN Durchgang gebraucht wird (aus den Übungen abgeleitet: Hand-Helfer p, Dinge ding, bedarf).
@@ -13659,9 +13659,87 @@ const BW_STUECKE = [
     spiel(g, t) { const im = g % 16, takt = Math.floor(g / 16), akk = [[60, 64, 67], [57, 60, 64], [57, 60, 65], [55, 59, 62]][takt % 4], root = [36, 45, 41, 43][takt % 4];
       bwmDisco(im, t, true, takt); if (im % 2 === 0) bwmBass(root + (im % 4 === 2 ? 7 : 0), t, .16, .3, 800); if (im === 0) bwmAkk(akk, t, 1.9, .02, "sawtooth", 2600, true); if (im % 4 === 2) bwmAkk(akk, t, .08, .022, "square", 2400);
       if (takt >= 2) { const n = bwmMel({ 0: 79, 2: 77, 4: 76, 6: 74, 8: 76, 12: 72, 16: 72, 18: 74, 20: 76, 24: 77, 28: 76 }, { 0: 74, 2: 76, 4: 77, 8: 79, 12: 81, 16: 79, 20: 77, 24: 76, 28: 74 }, takt, im); if (n) { bwTon("square", bwHz(n), t, .24, .045, 3000, true); bwTon("triangle", bwHz(n + 12), t, .2, .015); } } } },
+  // 2.316.0 KC-CLUB-SONG (Wunsch Hansi „Köcheclub-Song mit Text und Melodie im Helene-Fischer-Stil“): feste Liedfolge, Gesangsmelodie + Karaoke-Text
+  { id: "clubsong", t: "Seit einundneunzig", stil: "Club-Song", sym: "🎤", bpm: 124, takte: 0, tanz: ["klatschen", "seit", "jubel", "schulter"],
+    spiel(g, t) { ksSpiel(g, t); } },
 ];
+// ----- 2.316.0 KC-CLUB-SONG „Seit einundneunzig (Köcheclub Werne)“ – Text: Hansi & Claude, nach der Clubchronik (Mai 1991 Gaststätte Ickorn,
+// seit 1995 Weihnachtsmarkt, Erlöse für soziale Zwecke). Disco-Fox (124 BPM) wie bei Helene Fischer: Bass-Trommel auf jeden Schlag, Oktav-Bass,
+// Streicher-Fläche, Klatschen auf 2 und 4, Becken zum Refrain, im Schluss-Refrain einen Ganzton höher (Rückung). Jede Textzeile = 2 Takte;
+// die Silben liegen auf Achteln, die letzte wird gehalten. Die Gesangsstimme ist ein Synthesizer – Twinkey tanzt, der Text läuft als Karaoke mit.
+const KS_AKK = { C: [[60, 64, 67], 36], G: [[59, 62, 67], 43], Am: [[57, 60, 64], 45], F: [[57, 60, 65], 41], Em: [[59, 64, 67], 40], Dm: [[57, 62, 65], 38] };
+const KS_HOOK = [67, 67, 69, 72, 72, 72, 71, 69, 67, 64]; // „Seit ein-und-neun-zig – Kö-che-club Wer-ne“: hoch zur „neun“, dann runter
+// Schreibweise: Leerzeichen trennt Wörter, „-“ trennt Silben (jede Silbe bekommt einen Ton). Satzzeichen hängen an der Silbe.
+const KS_TEXT = {
+  s1: [["Im Mai ein-und-neun-zig, beim Ick-orn am Tisch,", [64, 64, 64, 62, 64, 67, 65, 64, 62, 64, 60]],
+    ["da sa-ßen ein paar Kö-che – die I-dee war noch frisch.", [62, 62, 64, 65, 65, 67, 65, 64, 64, 62, 60, 62, 64]],
+    ["Vom Kran-ken-haus, vom Al-ten-heim, mit Herz und mit Hand,", [64, 64, 64, 67, 67, 69, 69, 67, 65, 67, 65, 64, 62]],
+    ["und kei-ner von uns ahn-te, was da gra-de ent-stand.", [60, 62, 64, 64, 65, 67, 67, 65, 64, 62, 64, 62, 60]]],
+  s2: [["Dann kam fünf-und-neun-zig, der Weih-nachts-markt rief,", [64, 64, 64, 62, 64, 67, 65, 64, 62, 64, 60]],
+    ["es duf-te-te nach Grün-kohl, und der Glüh-wein, der lief.", [62, 62, 64, 65, 65, 67, 65, 64, 64, 62, 60, 62, 64]],
+    ["Am Frei-tag in Rot und un-ter der Wo-che in Weiß,", [64, 64, 64, 67, 67, 69, 69, 67, 65, 67, 65, 64, 62]],
+    ["und was wir ver-die-nen, das ge-ben wir wei-ter – mit Fleiß.", [60, 62, 64, 64, 64, 65, 67, 67, 65, 64, 62, 64, 62, 60]]],
+  pre: [["Ein Löf-fel, ein Topf und ein Traum –", [65, 65, 64, 65, 67, 69, 67, 72]],
+    ["wer hät-te das ge-dacht? Man glaubt es kaum …", [65, 65, 64, 65, 67, 69, 72, 71, 69, 71]]],
+  ref: [["Seit ein-und-neun-zig – Kö-che-club Wer-ne!", KS_HOOK, true],
+    ["Wir ko-chen mit Herz, und das tun wir so ger-ne!", [64, 65, 67, 69, 69, 72, 72, 69, 67, 65, 67, 65]],
+    ["Ob Grün-kohl, ob Punsch, ob die Ja-cke rot o-der weiß –", [67, 67, 69, 72, 72, 71, 69, 71, 72, 74, 72, 71, 72]],
+    ["wir rüh-ren zu-sam-men, das ist un-ser Preis!", [69, 69, 69, 67, 65, 65, 67, 69, 71, 72, 74]],
+    ["Seit ein-und-neun-zig – da brennt un-ser Herd,", KS_HOOK, true],
+    ["weil Freund-schaft und Ko-chen für im-mer ge-hört!", [65, 65, 67, 69, 69, 72, 71, 69, 67, 64, 60]]],
+  bridge: [["Man-che sind ge-gan-gen, doch sie sind noch da-bei,", [69, 69, 67, 65, 65, 64, 64, 65, 67, 69, 67, 65]],
+    ["in je-dem Re-zept und in je-der Fei-e-rei.", [64, 64, 65, 67, 67, 64, 64, 65, 67, 69, 67, 64]],
+    ["Und kommt mal ein Neu-er, dann rü-cken wir zu-samm' –", [69, 69, 69, 72, 72, 69, 67, 69, 71, 72, 74, 72]],
+    ["ein Platz an der Ta-fel ist im-mer noch frei – na komm!", [72, 72, 71, 69, 71, 72, 74, 72, 71, 69, 71, 74, 76]]],
+};
+// Zeile → Silben (mit Leerzeichen am Wortende, für die Anzeige); „–“ und „…“ hängen am vorigen Wort
+const ksSilben = (zeile) => zeile.replace(/ ([–…])/g, "\u00a0$1").split(" ").flatMap((w) => { const t = w.split("-"); t[t.length - 1] += " "; return t; });
+const KS_REF_AKK = ["C", "G", "Am", "F", "C", "G", "F", "G", "C", "G", "F", "C"];
+const KS_ABLAUF = [["intro", ["C", "G", "Am", "F"], null, 0], ["s1", ["Am", "F", "C", "G", "Am", "F", "C", "G"], "s1", 0], ["pre", ["F", "G", "F", "G"], "pre", 0],
+  ["ref", KS_REF_AKK, "ref", 0], ["s2", ["Am", "F", "C", "G", "Am", "F", "C", "G"], "s2", 0], ["pre", ["F", "G", "F", "G"], "pre", 0], ["ref", KS_REF_AKK, "ref", 0],
+  ["bridge", ["F", "G", "Em", "Am", "F", "G", "Dm", "G"], "bridge", 0], ["ref", KS_REF_AKK, "ref", 2], ["ref", KS_REF_AKK, "ref", 2], ["outro", ["C", "C"], null, 2]];
+const KS_TAKTE = KS_ABLAUF.flatMap(([teil, akk, text, hoch], a) => akk.map((name, k) => {
+  const z = text && k % 2 === 0 ? KS_TEXT[text][k / 2] : null;
+  return { teil, name, hoch, neu: k === 0, abschnitt: a, letzter: k === akk.length - 1, zeile: z ? { silben: ksSilben(z[0]), noten: z[1], klatsch: !!z[2] } : null };
+}));
+BW_STUECKE.find((x) => x.id === "clubsong").takte = KS_TAKTE.length;
+function ksSpiel(g, t) {
+  const im = g % 16, b = Math.floor(g / 16), T = KS_TAKTE[b]; if (!T) return; // Liedende: Stille, dann geht es zum nächsten Stück
+  const [akk0, root] = KS_AKK[T.name], tr = T.hoch, akk = akk0.map((m) => m + tr), sanft = T.teil === "bridge" || T.teil === "intro" && b < 2;
+  if (T.teil === "outro") { if (b === KS_TAKTE.length - 2 && im === 0) { bwmAkk(akk, t, 3.2, .03, "sawtooth", 2400, true); bwmBass(root + tr, t, 2.4, .35, 500); bwmKick(t, 1); bwRauschen(t, 2.2, .3, 5000, "highpass"); } return; }
+  bwmDisco(im, t, !sanft, b); // Disco-Fox: Bass-Trommel auf jeden Schlag, offene Hi-Hat auf dem Nachschlag, Klatschen auf 2 und 4
+  if (im % 2 === 0) bwmBass(root + tr + (im % 4 === 2 ? 12 : 0), t, .15, .3, 800); // Oktav-Bass
+  if (im === 0) bwmAkk(akk, t, 1.9, sanft ? .014 : .02, "sawtooth", 2600, true); // Streicher-Fläche
+  if (!sanft && im % 4 === 2) bwmAkk(akk, t, .08, .02, "square", 2400); // Akkord-Stoß auf dem Nachschlag
+  if (T.neu && im === 0 && T.teil === "ref") bwRauschen(t, 1.6, .28, 5000, "highpass"); // Becken zum Refrain
+  if (T.letzter && (T.teil === "pre" || T.teil === "bridge" || T.teil === "ref" && KS_TAKTE[b + 1]?.hoch !== T.hoch) && im >= 8 && im % 2 === 0) bwmSnare(t, .12 + (im - 8) * .04); // Wirbel vor dem Refrain / der Rückung
+  if (T.teil === "intro" && im === 0 && b % 2 === 0) ksSingen(b === 0 ? KS_TEXT.ref[0] : KS_TEXT.ref[5], t, 0, true); // Intro: die Melodie vom Refrain, ohne Text
+  if (T.zeile && im === 0) ksSingen(T.zeile, t, tr, false, b);
+}
+const KS = { zeilen: [] }; // gesungene Zeilen (mit Zeiten) für die Karaoke-Anzeige
+function ksSingen(z, t, tr, nurMelodie, takt) {
+  const silben = Array.isArray(z) ? ksSilben(z[0]) : z.silben, noten = Array.isArray(z) ? z[1] : z.noten, n = silben.length, sech = bwmSchlag() / 4, zeiten = [];
+  for (let k = 0; k < n; k++) {
+    const st = k * 2, dauer = (k === n - 1 ? Math.max(4, 30 - st) : 2) * sech * .92, hz = bwHz(noten[Math.min(k, noten.length - 1)] + tr), tt = t + st * sech; zeiten.push(tt);
+    bwTon("sawtooth", hz, tt, dauer, nurMelodie ? .03 : .04, 2000, true); bwTon("sine", hz, tt, dauer, nurMelodie ? .05 : .07); bwTon("triangle", hz * 2, tt, dauer * .6, .01); // „Stimme“: warm, mit Hall
+  }
+  if (!nurMelodie && (z.klatsch || (Array.isArray(z) && z[2]))) [24, 26].forEach((st) => bwmSnare(t + st * sech, .38)); // 👏👏 nach „Köcheclub Werne!“
+  if (!nurMelodie) { KS.zeilen.push({ silben, zeiten, ende: t + 32 * sech, takt }); KS.zeilen = KS.zeilen.slice(-4); }
+}
+function ksNaechsteZeile(takt) { for (let b = takt + 1; b < KS_TAKTE.length; b++) if (KS_TAKTE[b].zeile) return KS_TAKTE[b].zeile.silben.join("").trim(); return ""; }
+function ksKaraoke() { // Text zum Mitsingen: die laufende Zeile, gesungene Silben leuchten, darunter die nächste
+  const k = $("bwKaraoke"); if (!k) { clearInterval(KS.uhr); KS.uhr = 0; return; }
+  if (!BWM.ctx || BWM.stueck?.id !== "clubsong") return;
+  const jetzt = BWM.ctx.currentTime, z = [...KS.zeilen].reverse().find((x) => x.zeiten[0] - .35 <= jetzt && jetzt < x.ende + .2);
+  const b = Math.floor((BWM.gesamt || 0) / 16), naechste = z ? ksNaechsteZeile(z.takt) : (KS_TAKTE.slice(0, b + 1).some((x) => x.zeile) ? "" : ksNaechsteZeile(-1));
+  const zeile = z ? z.silben.map((s, i) => `<span class="${jetzt >= z.zeiten[i] ? (i === z.silben.length - 1 || jetzt < (z.zeiten[i + 1] || 9e9) ? "jetzt" : "war") : ""}">${esc(s)}</span>`).join("")
+    : `<span class="bw-k-warte">${b >= KS_TAKTE.length - 2 ? "👏 Applaus für den Köcheclub!" : "🎤 Gleich geht’s los – sing mit!"}</span>`;
+  const html = `<div class="bw-k-zeile">${zeile}</div>${naechste ? `<div class="bw-k-naechste">${esc(naechste)}</div>` : ""}`;
+  if (k.innerHTML !== html) k.innerHTML = html;
+}
+function bwClubSong() { bwWahlSetzen({ stueck: "clubsong" }, true); bwHoeren(); } // 🎤 direkt aus der Bühnen-Auswahl
 // Musikrichtungen als Kacheln (Stil → Richtung); Reihenfolge = Kacheln
-const BW_RICHTUNGEN = [["disco", "🪩", "Disco", ["Disco"]], ["reggae", "🌴", "Reggae", ["Reggae", "Ska"]], ["funk", "🕺", "Funky", ["Funk", "Soul"]], ["rock", "🎸", "Rock", ["Rock", "Rock'n'Roll"]],
+const BW_RICHTUNGEN = [["club", "🎤", "Club-Song", ["Club-Song"]], ["disco", "🪩", "Disco", ["Disco"]], ["reggae", "🌴", "Reggae", ["Reggae", "Ska"]], ["funk", "🕺", "Funky", ["Funk", "Soul"]], ["rock", "🎸", "Rock", ["Rock", "Rock'n'Roll"]],
   ["ballade", "🌅", "Ballade", ["Ballade"]], ["latin", "💃", "Latin", ["Samba", "Cha-Cha-Cha", "Bossa Nova"]], ["volk", "🍺", "Schlager & Polka", ["Polka", "Walzer", "Schlager"]]];
 const bwmRichtung = (s) => (BW_RICHTUNGEN.find((r) => r[3].includes(s?.stil)) || BW_RICHTUNGEN[0])[0];
 const bwmImRichtung = (gr) => BW_STUECKE.map((x, k) => [x, k]).filter(([x]) => bwmRichtung(x) === gr).map(([, k]) => k);
@@ -13733,9 +13811,9 @@ function bwTrainingsStueck(modus) { // Disco-Stücke reihum; das erste ist die b
   const s = disco[i]; return s?.spiel ? { ...s, bpm: BW_TEMPO[modus] || 116 } : null;
 }
 const bwmSchlag = () => BWM.stueck ? 60 / BWM.stueck.bpm : bwSchlag();
-const bwmTakte = (s) => Math.max(32, Math.round(150 / (240 / s.bpm) / 8) * 8); // ca. 2½ Min., ganze 8-Takt-Blöcke
+const bwmTakte = (s) => s.takte || Math.max(32, Math.round(150 / (240 / s.bpm) / 8) * 8); // ca. 2½ Min., ganze 8-Takt-Blöcke
 function bwmStueck(i) { // Stück wechseln, laufende Musik übernimmt nahtlos (kurze Atempause)
-  const n = BW_STUECKE.length; i = ((i % n) + n) % n; const s = BW_STUECKE[i]; BWM.stueck = s; BWM.gesamt = 0; BWM.schritt = 0; BWM.stufe = 2;
+  const n = BW_STUECKE.length; i = ((i % n) + n) % n; const s = BW_STUECKE[i]; BWM.stueck = s; BWM.gesamt = 0; BWM.schritt = 0; BWM.stufe = 2; KS.zeilen = [];
   if (BW.hoeren) { BW.hoeren.i = i; BW.hoeren.tanz = 0; } bwWahlSetzen({ stueck: s.id }, true);
   if (BWM.ctx && BWM.laeuft) { BWM.zeit = Math.max(BWM.zeit, BWM.ctx.currentTime + .1) + .35; BWM.start = BWM.zeit; }
 }
@@ -13763,11 +13841,14 @@ function bwHoerZeigen(vorhangAuf) {
     <div class="bw-kopf"><div><small>🎶 Nur Musik · ${esc(s.stil)} · Lied ${bwmImRichtung(gr).indexOf(H.i) + 1} von ${bwmImRichtung(gr).length}</small><b>${s.sym} ${esc(s.t)}</b></div></div>
     <div class="bw-balken-bahn"><div class="bw-balken" id="bwBalken" style="width:${Math.min(100, takt / ges * 100)}%"></div></div>
     <div class="bw-mitte">${bwFigur(H.pause ? "ruhe" : tanz, 0, "", 0, bwmSchlag(), H.pause ? 0 : bwPhase(), H.farbe + H.i)}</div>
+    ${s.id === "clubsong" ? '<div class="bw-karaoke" id="bwKaraoke" aria-live="off"></div>' : ""}
     <div class="bw-liste"><div class="bw-richtungen" role="group" aria-label="Musikrichtung">${BW_RICHTUNGEN.map(([k, sym, name]) => `<button type="button" class="es-k bw-richtung${k === gr ? " an" : ""}" onclick="bwHoerRichtung('${k}')" aria-pressed="${k === gr}"><span>${sym}</span>${esc(name)}</button>`).join("")}</div>
       <div class="bw-titel-liste" role="list">${bwmImRichtung(gr).map((k) => { const x = BW_STUECKE[k]; return `<button type="button" role="listitem" class="es-k${k === H.i ? " an" : ""}" onclick="bwHoerWahl(${k})" aria-label="${esc(x.t)} (${esc(x.stil)}) abspielen">${x.sym} ${esc(x.t)}</button>`; }).join("")}</div></div>${bwLautRegler("musik")}
     <div class="es-leiste"><button type="button" class="es-k" onclick="bwHoerWahl(bwmNachbar(${H.i}, -1))" aria-label="Voriges Lied">⏮</button><button type="button" class="es-k es-haupt" onclick="bwHoerPause()">${H.pause ? "▶︎ Weiter" : "⏸ Pause"}</button><button type="button" class="es-k" onclick="bwHoerWahl(bwmNachbar(${H.i}, 1))" aria-label="Nächstes Lied">⏭</button>
       <button type="button" class="es-k" onclick="bwStopp(true)">✖ Ende</button></div></div>`;
+  ksKaraokeStart(); // 2.316.0 KC-CLUB-SONG
 }
+function ksKaraokeStart() { if (BW_STUECKE[BW.hoeren?.i]?.id === "clubsong" && !KS.uhr) { KS.uhr = setInterval(ksKaraoke, 90); } ksKaraoke(); }
 function bwHoerWahl(i) { const H = BW.hoeren; if (!H) return; bwmStueck(i); if (H.pause) { H.pause = false; bwMusik(true); } bwHoerZeigen(); }
 function bwHoerRichtung(gr) { const l = bwmImRichtung(gr); if (l.length) bwHoerWahl(l[0]); } // Kachel: erstes Lied der Richtung spielt
 function bwHoerPause() { const H = BW.hoeren; if (!H) return; H.pause = !H.pause; bwMusik(!H.pause); bwHoerZeigen(); }
@@ -29231,6 +29312,7 @@ function suAppListe() {
     ["📋", "Flipchart (umblättern, kariert, liniert)", "flipchart flip skizze zeichnen malen marker umblättern kariert liniert blanko papier", () => esOeffnen("flip")],
     ["🕰️", "Große Uhr", "uhr uhrzeit große uhr bahnhofsuhr fallblatt digital datum", () => esOeffnen("uhr")],
     ["🎭", "Bühne: Bewegung mit Twinkey", "bühne buehne bewegung turnen gymnastik sport übungen musik twinkey küche sitzen stehen", () => esOeffnen("buehne")],
+    ["🎤", "Club-Song „Seit einundneunzig“ (Karaoke)", "club song lied hymne singen karaoke seit einundneunzig 1991 köcheclub werne schlager", () => { esOeffnen("buehne"); setTimeout(() => { if (ES.offen) bwClubSong(); }, 900); }], // 2.316.0
     ["🪞", "Spiegel (Kamera, Pausbäckchen)", "spiegel kamera selfie pausbäckchen pausbacken dick gesicht", () => esOeffnen("spiegel")], // 2.314.0
     ["🎭", "Einladung zur Bewegung beim Start", "einladung bewegung start fragen bewegungseinheit sport frage", () => suEinstellung("setBwEinladung")],
     ["🎚️", "Bühne: Musik / Stimme lauter oder leiser", "lautstärke lauter leiser regler musik stimme stumm bühne", () => esOeffnen("buehne")],
