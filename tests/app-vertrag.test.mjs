@@ -4224,7 +4224,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const g = server.slice(server.indexOf('case "schulung_hinweis"'), server.indexOf('case "schulung_meine"'));
   assert.ok(/nurAdmin\(ich\);/.test(g) && /schulungStand\(ich, seit\)/.test(g), "nur Admin, nur lesend");
-  assert.ok(/\(kz as any\)\.schulung = await schulungStand\(ich, null\)\.then\(\(x\) => x\.wartet\.length\)\.catch\(\(\) => null\)/.test(server) && /KZ_KACHELN\.schulung_admin = \(\) => kzZahl\("schulung"\)/.test(html), "Zahl auf der Kachel, Fehler → keine Zahl");
+  assert.ok(/ich\.admin \? schulungStand\(ich, null\)\.then\(\(x\) => x\.wartet\.length\)\.catch\(\(\) => null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server) && /* 2.301.0: parallel gestartet */ /KZ_KACHELN\.schulung_admin = \(\) => kzZahl\("schulung"\)/.test(html), "Zahl auf der Kachel, Fehler → keine Zahl");
   const k = html.slice(html.indexOf("// KC-CLUB-SCHULUNG-HINWEIS (2.23.68, Wunsch Hansi): beim Start"), html.indexOf("// KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52"));
   for (const x of ["Wartet auf dich", "📅 Steht an", "Neu seit dem letzten Mal", "👀 Jetzt ansehen", "⏰ Später", "🌙 Heute nicht mehr"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
   assert.ok(/if \(!ICH\?\.admin \|\| document\.querySelector\("\.blatt:not\(\.versteckt\)"\)\) return;/.test(k) && /scHinweisPruefen\(\), 9000/.test(html), "nur Admin, nicht über offenen Fenstern");
@@ -5886,6 +5886,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.doc-qr\[data-kc-qr\]/.test(lies("dp2/src/adapters/pdf.js")), "PDF zeichnet den Papier-QR je Seite");
 }
 
+// 2.301.0 KC-CLUB-SCHNECKE-NETZ + KC-CLUB-SCHNECKE-START (Wunsch Hansi „warum kommen ab und an die Schnecken“): Schnecke nur bei langsamem Netz, Admin-Start schneller
+{
+  assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
+  assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
+  assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
+  assert.ok(/const SERVER_VERSION = "2\.301\.0"/.test(server), "Serverversion erhöht");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -6599,7 +6607,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 {
   assert.ok(/e\.w = x\.w; je\.set\(x\.p, e\);/.test(server) && /zuletzt: e\.w \}\)\)/.test(server), "Server liefert den letzten Schritt je Person (nur die Art)");
   assert.ok(/🟢 Gerade in der App/.test(programm) && /ist bei <b>\$\{esc\(was\(x\.zuletzt\) \|\| "\?"\)\}<\/b>/.test(programm) && /"👉 jetzt" : "zuletzt"/.test(programm), "Übersicht: wer ist gerade wo");
-  assert.ok(/const SERVER_VERSION = "2\.(8[1-9]|9\d|[12]\d\d)\.0"/.test(server));
+  assert.ok(/const SERVER_VERSION = "2\.(8[1-9]|9\d|[1-9]\d\d)\.0"/.test(server));
 }
 
 // 4xx. 2.82.0: Schritt-Hilfe für Mitglieder, Helfen & Leihen (Hilfe suchen, Börse) und Fotos (KC-CLUB-SCHRITT-HILFE, Wunsch Hansi)
@@ -6864,7 +6872,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 // 4xx. 2.106.0: Schnecke bei langsamem Netz überall (KC-CLUB-SCHNECKE) + Twinkey hängt nicht mehr (KC-CLUB-TWINKEY-FRIST)
 {
   assert.ok(/const SCHNECKE_LANGSAM_MS = 2500, SCHNECKE_SCHNELL_MS = 1500, SCHNECKE_ALTER_MS = 120000;/.test(programm), "Grenzen");
-  assert.ok(/try \{ if \(r\.ok && API_LESEN\.test\(action\) && !SCHNECKE_NICHT\.has\(action\)\) schneckeMessen\(performance\.now\(\) - t0\);/.test(programm), "nur Lese-Anfragen messen");
+  assert.ok(/try \{ if \(r\.ok && API_LESEN\.test\(action\) && !SCHNECKE_NICHT\.has\(action\)\) \{ const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - /.test(programm), "nur Lese-Anfragen messen (2.301.0: nur Netzzeit)");
   assert.ok(/vbEnde\(false, 0, "Server antwortet nicht"\); try \{ if \(navigator\.onLine\) schneckeMessen\(zeitMs\);/.test(programm), "Zeitüberschreitung zählt");
   assert.ok(/if \(!navigator\.onLine\) an = false;/.test(programm), "offline = rote LED, keine Schnecke");
   assert.ok(/jetzt - m\.t < SCHNECKE_ALTER_MS/.test(programm), "alte Messungen zählen nicht");
@@ -7677,7 +7685,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 }
 // 2.157.0 KC-CLUB-START-PARALLEL-3 / KC-CLUB-START-MESSUNG: Server-Teilzeiten in der Startmessung, Kachel-Zahlen-Ketten gleichzeitig
 {
-  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 18000); // 2.223.0: +Mahnung
+  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 19000); // 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel
   assert.ok(/const mess = <T,>\(n: string, x: PromiseLike<T>\)/.test(ini) && /srvT: zt,/.test(ini), "init misst Teilzeiten und liefert srvT");
   for (const n of ['mess("tr",', 'mess("teil",', 'mess("mg",', "kz: pKz", "comm: pComm", "rest: pRest", "auf: pAufgaben", "tf: pTermin"]) assert.ok(ini.includes(n), `Teilzeit ${n} gemessen`);
   assert.ok(/zt\.zl = Date\.now\(\) - t0Anfrage/.test(ini) && /zt\.ende = Date\.now\(\) - t0Anfrage/.test(ini), "Zählen und Ende gemessen");

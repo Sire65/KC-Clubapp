@@ -1,14 +1,20 @@
 {
-  "version": "2.300.0",
+  "version": "2.301.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🎬 Neues Erklär-Video „📄 Die Rückseite: Eselsohr“ – Diashow, Tafel, Flipchart, große Uhr und Bühne mit Twinkey, Regler für Musik und Stimme (unter „👤 Ich & meine App“)",
-    "❓ Hilfetexte zur Rückseite neu: je ein Text für Diashow, Tafel & Flipchart, große Uhr, Bühne und die Lautstärke-Regler – mit Knopf direkt dorthin",
-    "🔍 Lupe und 🧑‍🍳 Twinkey finden jetzt auch Eselsohr, Diashow, Tafel, Flipchart, große Uhr, Bühne, Bewegung und Lautstärke – und springen direkt auf die Rückseite",
-    "💡 Neuer Tipp des Tages: „Dreh doch mal den Kopf um!“"
+    "🐌 Die Schnecke kommt nur noch bei wirklich langsamem Netz",
+    "⚡ Start für Admins etwas schneller"
   ],
   "verlauf": [
+    {
+      "version": "2.301.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🐌 Die Schnecke kommt nur noch bei wirklich langsamem Netz",
+        "⚡ Start für Admins etwas schneller"
+      ]
+    },
     {
       "version": "2.300.0",
       "datum": "2026-10-12",

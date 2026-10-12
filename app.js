@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.300.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.301.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11173,7 +11173,9 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
     if (mitRegion && navigator.onLine) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(true, performance.now() - t0, ""); return apiRoh(action, daten, zweiterVersuch, abbruch); } // Region weg → Standardweg
     vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw Object.assign(new Error(navigator.onLine ? "Keine Verbindung zum Server – bitte gleich nochmal versuchen." : "Keine Internetverbindung."), { leitung: navigator.onLine }); }
   const j = await r.json().catch(() => null);
-  try { if (r.ok && API_LESEN.test(action) && !SCHNECKE_NICHT.has(action)) schneckeMessen(performance.now() - t0); } catch {} // KC-CLUB-SCHNECKE: nur Lesen (Schreiben darf länger dauern)
+  // KC-CLUB-SCHNECKE: nur Lesen (Schreiben darf länger dauern). 2.301.0 KC-CLUB-SCHNECKE-NETZ: meldet der Server seine eigene Rechenzeit (srvMs, z. B. beim Start),
+  // zählt nur die Zeit im Netz – die Schnecke heißt „Netz langsam“, nicht „Server rechnet“ (Fall Hansi: Admin-Start 1–2,3 s Serverzeit → Schnecke ohne langsames Netz)
+  try { if (r.ok && API_LESEN.test(action) && !SCHNECKE_NICHT.has(action)) { const srv = Number(j?.srvMs); schneckeMessen(Math.max(0, performance.now() - t0 - (Number.isFinite(srv) && srv > 0 ? srv : 0))); } } catch {}
   // Region gestört → Standardweg. 1.97.0: LED-Zähler ausgleichen; Schreib-Aktionen NICHT still wiederholen (sonst evtl. doppelt gespeichert)
   if (mitRegion && r.status >= 502 && r.status <= 504 && !j?.error) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(false, performance.now() - t0, "Region gestört " + r.status); if (API_LESEN.test(action)) return apiRoh(action, daten, zweiterVersuch, abbruch); }
   if (r.status === 503 && !j?.error && !zweiterVersuch) { vbEnde(true, performance.now() - t0, ""); await new Promise((ok) => setTimeout(ok, AUSSETZER_PAUSE_MS)); return apiRoh(action, daten, true, abbruch); }

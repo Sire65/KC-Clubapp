@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.267.0";
+const SERVER_VERSION = "2.301.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4369,6 +4369,10 @@ async function schulungStand(ich: Ich, seit: string | null) {
   const ids = [...new Set((vb ?? []).map((b: any) => b.einladung_id))];
   const { data: ve } = ids.length ? await db.from("kc_termin_einladungen").select("id,person_ids,ist_test").in("id", ids) : { data: [] as any[] };
   const { data: vs } = (vb ?? []).length ? await db.from("kc_termin_slots").select("id,beginn").in("id", (vb ?? []).map((b: any) => b.slot_id)) : { data: [] as any[] };
+  // 2.301.0 KC-CLUB-SCHNECKE-START: die drei unabhängigen Lesungen sofort mitstarten (vorher nacheinander am Ende); Fehler wirken wie bisher beim await
+  const jetztMs = Date.now(), pProtFehlt = schulungProtokollFehlt(), pNachfrage = schulungNachfrageFaellig(),
+    pBald = schulungenListe(ich, new Date(jetztMs).toISOString(), new Date(jetztMs + 2 * 86400000).toISOString());
+  for (const x of [pProtFehlt, pNachfrage, pBald]) x.catch(() => {}); // nur „behandelt“ markieren – kein unbehandelter Fehler, falls vorher etwas abbricht
   let neu: any[] = [];
   if (seit) {
     const { data: pr } = await db.from("kc_termin_protokoll").select("zeit,aktion,einladung_id,details").in("wer", ["mitglied", "system"]).in("aktion", SCHULUNG_NEU)
@@ -4384,10 +4388,9 @@ async function schulungStand(ich: Ich, seit: string | null) {
     ...(vb ?? []).filter((b: any) => alleE.get(b.einladung_id) && !alleE.get(b.einladung_id).ist_test)
       .map((b: any) => ({ art: "gewaehlt", namen: namen(alleE.get(b.einladung_id)), beginn: (vs ?? []).find((s: any) => s.id === b.slot_id)?.beginn || null })),
     ...(ei ?? []).map((e: any) => ({ art: e.status, namen: namen(e), beginn: null })),
-    ...(await schulungProtokollFehlt()).map((x: any) => ({ art: "protokoll", namen: x.namen, beginn: x.beginn })), // 2.23.69
-    ...(await schulungNachfrageFaellig()).map((b: any) => ({ art: "nachfrage", namen: b.mitglied, beginn: b.datum + "T12:00:00Z", besuch_id: b.besuch_id }))]; // 2.35.0
-  const jetztMs = Date.now();
-  const bald = (await schulungenListe(ich, new Date(jetztMs).toISOString(), new Date(jetztMs + 2 * 86400000).toISOString())).filter((x: any) => x.status === "bestaetigt")
+    ...(await pProtFehlt).map((x: any) => ({ art: "protokoll", namen: x.namen, beginn: x.beginn })), // 2.23.69
+    ...(await pNachfrage).map((b: any) => ({ art: "nachfrage", namen: b.mitglied, beginn: b.datum + "T12:00:00Z", besuch_id: b.besuch_id }))]; // 2.35.0
+  const bald = (await pBald).filter((x: any) => x.status === "bestaetigt")
     .map((x: any) => ({ beginn: x.beginn, ende: x.ende, namen: x.namen.join(" & "), art: x.art }));
   return { wartet, bald, neu: neu.filter((x) => !alleE.get(x.einladung_id)?.ist_test).map((x) => ({ zeit: x.zeit, aktion: x.aktion, namen: (x.details?.namen as string) || namen(alleE.get(x.einladung_id)) })) };
 }
@@ -5669,9 +5672,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const pKf = Promise.resolve(db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", ich.person_id).like("bereich", "kontakt_%"));
         const pSpiele = Promise.resolve(db.from("kc_club_spiele").select("id", { count: "exact", head: true })
           .or(`and(status.eq.laeuft,dran.eq.${ich.person_id}),and(status.eq.angefragt,an.eq.${ich.person_id})`));
+        // 🎓 Schulungen: was auf den Admin wartet – KC-CLUB-SCHULUNG-HINWEIS (2.23.68); Fehler → keine Zahl.
+        // 2.301.0 KC-CLUB-SCHNECKE-START: gleichzeitig mit den Kachelzahlen statt danach (war beim Admin-Start der letzte, längste Schritt „kz“)
+        const pSchulungZahl = ich.admin ? schulungStand(ich, null).then((x) => x.wartet.length).catch(() => null) : Promise.resolve(null);
         const pKz = kachelZahlen(ich, p).catch(() => null).then(async (kz) => {
-          // 🎓 Schulungen: was auf den Admin wartet – KC-CLUB-SCHULUNG-HINWEIS (2.23.68); Fehler → keine Zahl
-          if (kz && ich.admin) (kz as any).schulung = await schulungStand(ich, null).then((x) => x.wartet.length).catch(() => null);
+          if (kz && ich.admin) (kz as any).schulung = await pSchulungZahl;
           return kz;
         });
         const pComm = communicatorStatus(ich).catch(() => null), pSos = sosFuerAlle(), pAdmin = adminVorname();
