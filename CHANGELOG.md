@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.310.0 – 2026-10-12 – Twinkey bewegt sich echter
+Twinkey rührt jetzt richtig: Beim Teig führt er den Schneebesen in großen Kreisen durch die Schüssel und hält sie mit der anderen Hand fest. Bei der Suppe hält er einen großen Kochlöffel mit beiden Händen und rührt große Kreise im Topf. Beim Oberkörper-Drehen wandern die Fäuste weit nach links und rechts, der Kopf schaut mit. Und wenn er „Jetzt andersherum!“ sagt, kreist er auch wirklich andersherum.
+
 ## 2.309.0 – 2026-10-12 – KC-CLUB-BUEHNE-BEREIT: „Lege dir bereit“, Weiter überspringt, Luftballon und Hanteln
 Nach „Vorhang auf!“ zeigt und sagt Twinkey zuerst, was für diesen Durchgang bereitliegen soll (Stuhl, Springseil, 2 Wasserflaschen als Hanteln, Luftballon, Schneebesen, Kochlöffel … – aus den geplanten Übungen); dann „Alles bereit – los!“. Vor jeder Übung sagt er, was man in die Hand nimmt. Fehlt etwas: „⏭ Weiter“ überspringt die Übung – jetzt auch schon in der Vorbereitung (vorher startete sie dann sofort). Neue Übungen: Luftballon hochtippen (Sitzen/Stehen), Hanteln über den Kopf (Sitzen), Hanteln seitlich heben (Stehen) mit Wasserflaschen.
 

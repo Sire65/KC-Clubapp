@@ -5911,7 +5911,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.303.0 KC-CLUB-BUEHNE-BEWEGUNG-2 + KC-CLUB-BUEHNE-DISCO (Wunsch Hansi): hüpfen, Storch, im Kreis, um den Stuhl, Aufstehen von der Seite; vier neue Disco-Stücke
 {
   for (const id of ["huepfen", "storch", "kreis", "stuhlrunde", "aufstehst", "aufstehen"]) assert.ok(new RegExp(`\\{ id: "${id}", t: "[^"]+", g: "(stehen|sitzen)"`).test(html), `Übung ${id}`);
-  assert.ok(/\{ id: "storch", [^\n]*a: "storch", a2: "storch2"/.test(html) && /if \(u\.a2 && L\.rest === Math\.floor\(BW_SEK \/ 2\)\) bwLaufZeigen\(\);/.test(html), "Storch: zur Hälfte das andere Bein");
+  assert.ok(/\{ id: "storch", [^\n]*a: "storch", a2: "storch2"/.test(html) && /if \(\(u\.a2 \|\| u\.um\) && L\.rest === Math\.floor\(BW_SEK \/ 2\)\) bwLaufZeigen\(\);/.test(html), "Storch: zur Hälfte das andere Bein");
   assert.ok(/function bwFigurSeite\(a, b, ph, farbe\)/.test(html) && /if \(u\.seite && phase !== "schuetteln"\) return bwFigurSeite\(/.test(html), "Aufstehen von der Seite");
   assert.ok(/<div class="bw-weg bw-weg-\$\{u\.weg\}"/.test(html) && /class="bw-weg-stuhlbild"/.test(html), "Weg im Kreis / um den Stuhl");
   const css = lies("index.html");
@@ -5986,6 +5986,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(lies("index.html").includes("@keyframes bwBallon "), "Ballon-Bewegung");
 }
 
+// 2.310.0 KC-CLUB-BUEHNE-ECHT (Wunsch Hansi „Twinkey rührt nicht richtig“): Rühren, Suppe und Oberkörper-Drehen als echte Bewegungsbahnen
+{
+  const css = lies("index.html");
+  for (const k of ["bwRuehren2ROa", "bwRuehren2RUa", "bwRuehren2RGegen", "bwSuppe2LOa", "bwSuppe2RUa", "bwSuppe2RGegen", "bwRumpf2LOa", "bwRumpf2RUa", "bwRumpfKopf"]) assert.ok(css.includes(`@keyframes ${k} `), `Bewegungsbahn ${k}`);
+  assert.ok(!/@keyframes bwRumpfOben /.test(css), "Oberkörper kippt nicht mehr seitlich (war Seitbeuge statt Drehen)");
+  assert.ok(/\.bw-a-ruehren \.bw-uaR \.bw-helfer \{ animation: bwRuehren2RGegen /.test(css) && /\.bw-a-suppe \.bw-uaR \.bw-helfer \{ animation: bwSuppe2RGegen /.test(css), "Schneebesen/Kelle bleiben senkrecht");
+  assert.ok(/\.bw-figur\.bw-um \.bw-oaL,[^{]*\{ animation-direction: reverse; \}/.test(css), "andersherum wirklich andersherum");
+  assert.equal((html.match(/`<g class="bw-helfer" style="transform-origin:\$\{x\}px \$\{y\}px">/g) || []).length, 7, "Helfer drehen um den Handpunkt");
+  for (const id of ["suppe", "suppest"]) assert.ok(new RegExp(`\\{ id: "${id}", [^}]*a: "suppe", p: "loeffel", ding: "topf", um: 1,`).test(html), `${id}: Kochlöffel in der Hand, dreht um`);
+  for (const id of ["armkreis", "armkreisst", "hula", "ruehren"]) assert.ok(new RegExp(`\\{ id: "${id}", [^}]* um: 1,`).test(html), `${id} dreht in der zweiten Hälfte um`);
+  assert.ok(/if \(\(u\.a2 \|\| u\.um\) && L\.rest === Math\.floor\(BW_SEK \/ 2\)\) bwLaufZeigen\(\);/.test(html) && /if \(u\.um && L\.phase === "uebung" && L\.rest <= BW_SEK \/ 2\) f\.querySelector\("\.bw-figur"\)\?\.classList\.add\("bw-um"\);/.test(html), "Umdrehen zur Hälfte");
+  assert.ok(/\(u\.ding !== "topf" \|\| u\.g === "kueche"\)/.test(html), "Topf nur bei Küchen-Übungen auf der Bereitlegen-Liste");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

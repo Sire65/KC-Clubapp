@@ -1,13 +1,24 @@
 {
-  "version": "2.309.0",
+  "version": "2.310.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🧺 Bühne: Twinkey sagt vorher, was du bereitlegen sollst",
-    "⏭ Weiter überspringt eine Übung",
-    "🎈 Neu: Luftballon hochtippen und Hanteln mit Wasserflaschen"
+    "🥄 Twinkey rührt richtig: Schneebesen in großen Kreisen durch die Schüssel, die andere Hand hält sie fest",
+    "🍲 Suppe: großer Kochlöffel mit beiden Händen, große Kreise im Topf",
+    "🔄 Oberkörper drehen: Fäuste wandern weit nach links und rechts, der Kopf schaut mit",
+    "↩️ „Jetzt andersherum!“ – Twinkey kreist dann auch wirklich andersherum"
   ],
   "verlauf": [
+    {
+      "version": "2.310.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🥄 Twinkey rührt richtig: Schneebesen in großen Kreisen durch die Schüssel, die andere Hand hält sie fest",
+        "🍲 Suppe: großer Kochlöffel mit beiden Händen, große Kreise im Topf",
+        "🔄 Oberkörper drehen: Fäuste wandern weit nach links und rechts, der Kopf schaut mit",
+        "↩️ „Jetzt andersherum!“ – Twinkey kreist dann auch wirklich andersherum"
+      ]
+    },
     {
       "version": "2.309.0",
       "datum": "2026-10-12",

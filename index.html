@@ -3045,12 +3045,16 @@
   .bw-figur.bw-a-trommeln .bw-uaL { animation: bwTrommelnUa calc(var(--b) * 1) ease-in-out var(--ph, 0s) infinite; }
   @keyframes bwTrommelnUaR { 0% { transform: rotate(52deg); } 35% { transform: rotate(102deg); } 60% { transform: rotate(96deg); } 100% { transform: rotate(52deg); } }
   .bw-figur.bw-a-trommeln .bw-uaR { animation: bwTrommelnUaR calc(var(--b) * 1) ease-in-out calc(var(--ph, 0s) + var(--b) * 0.5) infinite; }
-  .bw-figur.bw-a-ruehren .bw-oaL { transform: rotate(-14deg); animation: none; }
-  .bw-figur.bw-a-ruehren .bw-uaL { transform: rotate(-58deg); animation: none; }
-  @keyframes bwRuehrenOar { 0% { transform: rotate(4deg); } 25% { transform: rotate(8deg); } 50% { transform: rotate(11deg); } 75% { transform: rotate(7deg); } 100% { transform: rotate(4deg); } }
-  .bw-figur.bw-a-ruehren .bw-oaR { animation: bwRuehrenOar calc(var(--b) * 2) linear var(--ph, 0s) infinite; }
-  @keyframes bwRuehrenUar { 0% { transform: rotate(20deg); } 25% { transform: rotate(30deg); } 50% { transform: rotate(38deg); } 75% { transform: rotate(28deg); } 100% { transform: rotate(20deg); } }
-  .bw-figur.bw-a-ruehren .bw-uaR { animation: bwRuehrenUar calc(var(--b) * 2) linear var(--ph, 0s) infinite; }
+  /* 2.310.0 KC-CLUB-BUEHNE-ECHT: Rühren als echte Kreisbahn – die rechte Hand führt den Schneebesen im Kreis durch die Schüssel
+     (Gelenkwinkel aus der Handbahn berechnet), der Schneebesen bleibt senkrecht im Teig; die linke Hand hält die Schüssel am Rand. */
+  .bw-figur.bw-a-ruehren .bw-oaL { transform: rotate(34deg); animation: none; }
+  .bw-figur.bw-a-ruehren .bw-uaL { transform: rotate(-48deg); animation: none; }
+  @keyframes bwRuehren2ROa { 0% { transform: rotate(-51.6deg); } 6.25% { transform: rotate(-47.9deg); } 12.5% { transform: rotate(-40.8deg); } 18.75% { transform: rotate(-31.2deg); } 25% { transform: rotate(-20.6deg); } 31.25% { transform: rotate(-10.2deg); } 37.5% { transform: rotate(-1.5deg); } 43.75% { transform: rotate(4.3deg); } 50% { transform: rotate(6.0deg); } 56.25% { transform: rotate(3.6deg); } 62.5% { transform: rotate(-2.7deg); } 68.75% { transform: rotate(-12.0deg); } 75% { transform: rotate(-23.5deg); } 81.25% { transform: rotate(-35.5deg); } 87.5% { transform: rotate(-45.4deg); } 93.75% { transform: rotate(-51.0deg); } 100% { transform: rotate(-51.6deg); } }
+  @keyframes bwRuehren2RUa { 0% { transform: rotate(114.5deg); } 6.25% { transform: rotate(110.3deg); } 12.5% { transform: rotate(105.5deg); } 18.75% { transform: rotate(99.8deg); } 25% { transform: rotate(93.2deg); } 31.25% { transform: rotate(86.2deg); } 37.5% { transform: rotate(80.2deg); } 43.75% { transform: rotate(77.0deg); } 50% { transform: rotate(78.2deg); } 56.25% { transform: rotate(84.0deg); } 62.5% { transform: rotate(92.9deg); } 68.75% { transform: rotate(102.9deg); } 75% { transform: rotate(111.7deg); } 81.25% { transform: rotate(117.4deg); } 87.5% { transform: rotate(119.3deg); } 93.75% { transform: rotate(117.8deg); } 100% { transform: rotate(114.5deg); } }
+  @keyframes bwRuehren2RGegen { 0% { transform: rotate(-62.8deg); } 6.25% { transform: rotate(-62.4deg); } 12.5% { transform: rotate(-64.7deg); } 18.75% { transform: rotate(-68.6deg); } 25% { transform: rotate(-72.6deg); } 31.25% { transform: rotate(-76.0deg); } 37.5% { transform: rotate(-78.7deg); } 43.75% { transform: rotate(-81.2deg); } 50% { transform: rotate(-84.2deg); } 56.25% { transform: rotate(-87.6deg); } 62.5% { transform: rotate(-90.3deg); } 68.75% { transform: rotate(-90.9deg); } 75% { transform: rotate(-88.2deg); } 81.25% { transform: rotate(-81.9deg); } 87.5% { transform: rotate(-73.9deg); } 93.75% { transform: rotate(-66.8deg); } 100% { transform: rotate(-62.8deg); } }
+  .bw-figur.bw-a-ruehren .bw-oaR { animation: bwRuehren2ROa calc(var(--b) * 2) linear var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-ruehren .bw-uaR { animation: bwRuehren2RUa calc(var(--b) * 2) linear var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-ruehren .bw-uaR .bw-helfer { animation: bwRuehren2RGegen calc(var(--b) * 2) linear var(--ph, 0s) infinite; }
   @keyframes bwSeitbeugeOben { 0% { transform: rotate(0deg); } 25% { transform: rotate(-11deg); } 50% { transform: rotate(0deg); } 75% { transform: rotate(11deg); } 100% { transform: rotate(0deg); } }
   .bw-figur.bw-a-seitbeuge .bw-oben { animation: bwSeitbeugeOben calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
   .bw-figur.bw-a-seitbeuge .bw-oaL { transform: rotate(160deg); animation: none; }
@@ -3131,14 +3135,18 @@
   .bw-figur.bw-a-zehen .bw-uaL { animation: bwZehenUa calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
   @keyframes bwZehenUaR { 0% { transform: rotate(6deg); } 45% { transform: rotate(14deg); } 65% { transform: rotate(2deg); } 100% { transform: rotate(6deg); } }
   .bw-figur.bw-a-zehen .bw-uaR { animation: bwZehenUaR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  @keyframes bwRumpfOben { 0% { transform: rotate(0deg); } 25% { transform: rotate(-8deg); } 50% { transform: rotate(0deg); } 75% { transform: rotate(8deg); } 100% { transform: rotate(0deg); } }
-  .bw-figur.bw-a-rumpf .bw-oben { animation: bwRumpfOben calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-rumpf .bw-oaL { transform: rotate(26deg); animation: none; }
-  .bw-figur.bw-a-rumpf .bw-oaR { transform: rotate(-26deg); animation: none; }
-  @keyframes bwRumpfUa { 0% { transform: rotate(-104deg); } 25% { transform: rotate(-110deg); } 75% { transform: rotate(-98deg); } 100% { transform: rotate(-104deg); } }
-  .bw-figur.bw-a-rumpf .bw-uaL { animation: bwRumpfUa calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
-  @keyframes bwRumpfUaR { 0% { transform: rotate(104deg); } 25% { transform: rotate(110deg); } 75% { transform: rotate(98deg); } 100% { transform: rotate(104deg); } }
-  .bw-figur.bw-a-rumpf .bw-uaR { animation: bwRumpfUaR calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
+  /* 2.310.0 KC-CLUB-BUEHNE-ECHT: Oberkörper drehen – die Fäuste vor der Brust wandern weit nach links und rechts, der Kopf schaut mit
+     (vorher kippte der ganze Oberkörper seitlich – das sah aus wie Seitbeugen). */
+  @keyframes bwRumpf2LOa { 0% { transform: rotate(26.0deg); } 6.25% { transform: rotate(8.0deg); } 12.5% { transform: rotate(-7.1deg); } 18.75% { transform: rotate(-17.9deg); } 25% { transform: rotate(-22.0deg); } 31.25% { transform: rotate(-17.9deg); } 37.5% { transform: rotate(-7.1deg); } 43.75% { transform: rotate(8.0deg); } 50% { transform: rotate(26.0deg); } 56.25% { transform: rotate(43.7deg); } 62.5% { transform: rotate(57.3deg); } 68.75% { transform: rotate(64.9deg); } 75% { transform: rotate(67.2deg); } 81.25% { transform: rotate(64.9deg); } 87.5% { transform: rotate(57.3deg); } 93.75% { transform: rotate(43.7deg); } 100% { transform: rotate(26.0deg); } }
+  @keyframes bwRumpf2LUa { 0% { transform: rotate(-107.7deg); } 6.25% { transform: rotate(-92.6deg); } 12.5% { transform: rotate(-75.9deg); } 18.75% { transform: rotate(-61.7deg); } 25% { transform: rotate(-55.8deg); } 31.25% { transform: rotate(-61.7deg); } 37.5% { transform: rotate(-75.9deg); } 43.75% { transform: rotate(-92.6deg); } 50% { transform: rotate(-107.7deg); } 56.25% { transform: rotate(-113.3deg); } 62.5% { transform: rotate(-113.7deg); } 68.75% { transform: rotate(-111.7deg); } 75% { transform: rotate(-110.6deg); } 81.25% { transform: rotate(-111.7deg); } 87.5% { transform: rotate(-113.7deg); } 93.75% { transform: rotate(-113.3deg); } 100% { transform: rotate(-107.7deg); } }
+  @keyframes bwRumpf2ROa { 0% { transform: rotate(-26.0deg); } 6.25% { transform: rotate(-43.7deg); } 12.5% { transform: rotate(-57.3deg); } 18.75% { transform: rotate(-64.9deg); } 25% { transform: rotate(-67.2deg); } 31.25% { transform: rotate(-64.9deg); } 37.5% { transform: rotate(-57.3deg); } 43.75% { transform: rotate(-43.7deg); } 50% { transform: rotate(-26.0deg); } 56.25% { transform: rotate(-8.0deg); } 62.5% { transform: rotate(7.1deg); } 68.75% { transform: rotate(17.9deg); } 75% { transform: rotate(22.0deg); } 81.25% { transform: rotate(17.9deg); } 87.5% { transform: rotate(7.1deg); } 93.75% { transform: rotate(-8.0deg); } 100% { transform: rotate(-26.0deg); } }
+  @keyframes bwRumpf2RUa { 0% { transform: rotate(107.7deg); } 6.25% { transform: rotate(113.3deg); } 12.5% { transform: rotate(113.7deg); } 18.75% { transform: rotate(111.7deg); } 25% { transform: rotate(110.6deg); } 31.25% { transform: rotate(111.7deg); } 37.5% { transform: rotate(113.7deg); } 43.75% { transform: rotate(113.3deg); } 50% { transform: rotate(107.7deg); } 56.25% { transform: rotate(92.6deg); } 62.5% { transform: rotate(75.9deg); } 68.75% { transform: rotate(61.7deg); } 75% { transform: rotate(55.8deg); } 81.25% { transform: rotate(61.7deg); } 87.5% { transform: rotate(75.9deg); } 93.75% { transform: rotate(92.6deg); } 100% { transform: rotate(107.7deg); } }
+  .bw-figur.bw-a-rumpf .bw-oaL { animation: bwRumpf2LOa calc(var(--b) * 8) linear var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-rumpf .bw-uaL { animation: bwRumpf2LUa calc(var(--b) * 8) linear var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-rumpf .bw-oaR { animation: bwRumpf2ROa calc(var(--b) * 8) linear var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-rumpf .bw-uaR { animation: bwRumpf2RUa calc(var(--b) * 8) linear var(--ph, 0s) infinite; }
+  @keyframes bwRumpfKopf { 0% { transform: none; } 25% { transform: translate(2.6px, 0px); } 50% { transform: none; } 75% { transform: translate(-2.6px, 0px); } 100% { transform: none; } }
+  .bw-figur.bw-a-rumpf .bw-kopf { animation: bwRumpfKopf calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
   @keyframes bwNackenKopf { 0% { transform: scale(1, 1); } 25% { transform: translate(-3px, 0px) scale(0.84, 1); } 50% { transform: scale(1, 1); } 75% { transform: translate(3px, 0px) scale(0.84, 1); } 100% { transform: scale(1, 1); } }
   .bw-figur.bw-a-nacken .bw-kopf { animation: bwNackenKopf calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
   .bw-figur.bw-a-nacken .bw-oaL { transform: rotate(4deg); animation: none; }
@@ -3159,14 +3167,20 @@
   .bw-figur.bw-a-nackenstark .bw-kopf { animation: bwNackenstarkKopf calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
   @keyframes bwNackenstarkOben { 0% { transform: scale(1, 1); } 40% { transform: scale(1, 1.01); } 100% { transform: scale(1, 1); } }
   .bw-figur.bw-a-nackenstark .bw-oben { animation: bwNackenstarkOben calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  @keyframes bwSuppeOa { 0% { transform: rotate(-18deg); } 25% { transform: rotate(-26deg); } 50% { transform: rotate(-18deg); } 75% { transform: rotate(-10deg); } 100% { transform: rotate(-18deg); } }
-  .bw-figur.bw-a-suppe .bw-oaL { animation: bwSuppeOa calc(var(--b) * 4) linear var(--ph, 0s) infinite; }
-  @keyframes bwSuppeOaR { 0% { transform: rotate(18deg); } 25% { transform: rotate(26deg); } 50% { transform: rotate(18deg); } 75% { transform: rotate(10deg); } 100% { transform: rotate(18deg); } }
-  .bw-figur.bw-a-suppe .bw-oaR { animation: bwSuppeOaR calc(var(--b) * 4) linear var(--ph, 0s) infinite; }
-  @keyframes bwSuppeUa { 0% { transform: rotate(-48deg); } 25% { transform: rotate(-60deg); } 50% { transform: rotate(-72deg); } 75% { transform: rotate(-60deg); } 100% { transform: rotate(-48deg); } }
-  .bw-figur.bw-a-suppe .bw-uaL { animation: bwSuppeUa calc(var(--b) * 4) linear var(--ph, 0s) infinite; }
-  @keyframes bwSuppeUaR { 0% { transform: rotate(48deg); } 25% { transform: rotate(60deg); } 50% { transform: rotate(72deg); } 75% { transform: rotate(60deg); } 100% { transform: rotate(48deg); } }
-  .bw-figur.bw-a-suppe .bw-uaR { animation: bwSuppeUaR calc(var(--b) * 4) linear var(--ph, 0s) infinite; }
+  /* 2.310.0 KC-CLUB-BUEHNE-ECHT: Suppe umrühren – beide Hände am großen Schöpflöffel, gemeinsam große Kreise über dem Topf;
+     der Löffel bleibt senkrecht im Topf (Gegendrehung um den Handpunkt). */
+  @keyframes bwSuppe2LOa { 0% { transform: rotate(-13.0deg); } 6.25% { transform: rotate(-11.7deg); } 12.5% { transform: rotate(-5.5deg); } 18.75% { transform: rotate(4.4deg); } 25% { transform: rotate(16.2deg); } 31.25% { transform: rotate(28.3deg); } 37.5% { transform: rotate(39.3deg); } 43.75% { transform: rotate(48.2deg); } 50% { transform: rotate(53.7deg); } 56.25% { transform: rotate(54.5deg); } 62.5% { transform: rotate(49.2deg); } 68.75% { transform: rotate(37.9deg); } 75% { transform: rotate(23.5deg); } 81.25% { transform: rotate(9.8deg); } 87.5% { transform: rotate(-1.4deg); } 93.75% { transform: rotate(-9.3deg); } 100% { transform: rotate(-13.0deg); } }
+  @keyframes bwSuppe2LUa { 0% { transform: rotate(-64.6deg); } 6.25% { transform: rotate(-60.7deg); } 12.5% { transform: rotate(-63.2deg); } 18.75% { transform: rotate(-70.0deg); } 25% { transform: rotate(-78.4deg); } 31.25% { transform: rotate(-86.7deg); } 37.5% { transform: rotate(-94.3deg); } 43.75% { transform: rotate(-101.4deg); } 50% { transform: rotate(-108.3deg); } 56.25% { transform: rotate(-114.6deg); } 62.5% { transform: rotate(-118.6deg); } 68.75% { transform: rotate(-118.0deg); } 75% { transform: rotate(-111.7deg); } 81.25% { transform: rotate(-100.7deg); } 87.5% { transform: rotate(-87.3deg); } 93.75% { transform: rotate(-74.3deg); } 100% { transform: rotate(-64.6deg); } }
+  @keyframes bwSuppe2ROa { 0% { transform: rotate(-48.3deg); } 6.25% { transform: rotate(-42.7deg); } 12.5% { transform: rotate(-34.0deg); } 18.75% { transform: rotate(-23.2deg); } 25% { transform: rotate(-11.4deg); } 31.25% { transform: rotate(0.3deg); } 37.5% { transform: rotate(10.1deg); } 43.75% { transform: rotate(15.8deg); } 50% { transform: rotate(15.9deg); } 56.25% { transform: rotate(11.0deg); } 62.5% { transform: rotate(2.2deg); } 68.75% { transform: rotate(-9.3deg); } 75% { transform: rotate(-22.6deg); } 81.25% { transform: rotate(-35.7deg); } 87.5% { transform: rotate(-45.4deg); } 93.75% { transform: rotate(-49.6deg); } 100% { transform: rotate(-48.3deg); } }
+  @keyframes bwSuppe2RUa { 0% { transform: rotate(97.6deg); } 6.25% { transform: rotate(90.1deg); } 12.5% { transform: rotate(82.4deg); } 18.75% { transform: rotate(74.1deg); } 25% { transform: rotate(65.2deg); } 31.25% { transform: rotate(56.1deg); } 37.5% { transform: rotate(48.8deg); } 43.75% { transform: rotate(46.8deg); } 50% { transform: rotate(52.4deg); } 56.25% { transform: rotate(64.0deg); } 62.5% { transform: rotate(78.2deg); } 68.75% { transform: rotate(92.1deg); } 75% { transform: rotate(102.9deg); } 81.25% { transform: rotate(108.7deg); } 87.5% { transform: rotate(108.8deg); } 93.75% { transform: rotate(104.3deg); } 100% { transform: rotate(97.6deg); } }
+  @keyframes bwSuppe2RGegen { 0% { transform: rotate(-49.3deg); } 6.25% { transform: rotate(-47.4deg); } 12.5% { transform: rotate(-48.4deg); } 18.75% { transform: rotate(-50.9deg); } 25% { transform: rotate(-53.8deg); } 31.25% { transform: rotate(-56.4deg); } 37.5% { transform: rotate(-58.9deg); } 43.75% { transform: rotate(-62.6deg); } 50% { transform: rotate(-68.3deg); } 56.25% { transform: rotate(-75.0deg); } 62.5% { transform: rotate(-80.5deg); } 68.75% { transform: rotate(-82.8deg); } 75% { transform: rotate(-80.3deg); } 81.25% { transform: rotate(-73.0deg); } 87.5% { transform: rotate(-63.3deg); } 93.75% { transform: rotate(-54.7deg); } 100% { transform: rotate(-49.3deg); } }
+  .bw-figur.bw-a-suppe .bw-oaL { animation: bwSuppe2LOa calc(var(--b) * 4) linear var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-suppe .bw-uaL { animation: bwSuppe2LUa calc(var(--b) * 4) linear var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-suppe .bw-oaR { animation: bwSuppe2ROa calc(var(--b) * 4) linear var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-suppe .bw-uaR { animation: bwSuppe2RUa calc(var(--b) * 4) linear var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-suppe .bw-uaR .bw-helfer { animation: bwSuppe2RGegen calc(var(--b) * 4) linear var(--ph, 0s) infinite; }
+  /* „Und jetzt andersherum!“ – Übungen mit um:1 kreisen in der zweiten Hälfte wirklich andersherum */
+  .bw-figur.bw-um .bw-oaL, .bw-figur.bw-um .bw-oaR, .bw-figur.bw-um .bw-uaL, .bw-figur.bw-um .bw-uaR, .bw-figur.bw-um .bw-helfer, .bw-figur.bw-um .bw-oben { animation-direction: reverse; }
   @keyframes bwTreppeOb { 0% { transform: none; } 25% { transform: translate(0px, -16px); } 50% { transform: none; } 100% { transform: none; } }
   .bw-figur.bw-a-treppe .bw-obL { animation: bwTreppeOb calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; }
   @keyframes bwTreppeObR { 0% { transform: none; } 25% { transform: translate(0px, -16px); } 50% { transform: none; } 100% { transform: none; } }
@@ -4794,6 +4808,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.309.0" data-v="2.309.0"></script>
+<script src="app.js?v=2.310.0" data-v="2.310.0"></script>
 </body>
 </html>
