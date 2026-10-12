@@ -1,11 +1,18 @@
 {
-  "version": "2.308.0",
+  "version": "2.308.1",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "⭕ Bühne: Hula-Hoop mit echtem Reifen und Seilspringen"
+    "🙏 Danke-Mail nach einer Schulung: jetzt mit „Vielen Dank für deine Zeit und dein tolles Mitmachen!“"
   ],
   "verlauf": [
+    {
+      "version": "2.308.1",
+      "datum": "2026-10-12",
+      "neu": [
+        "🙏 Danke-Mail nach einer Schulung: jetzt mit „Vielen Dank für deine Zeit und dein tolles Mitmachen!“"
+      ]
+    },
     {
       "version": "2.308.0",
       "datum": "2026-10-12",

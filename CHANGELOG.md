@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.308.1 – 2026-10-12 – KC-CLUB-BESUCH-DANKE
+Wunsch Hansi. Die Zusammenfassung nach einer Schulung (Push + Mail, Kopie im Archiv-Ordner) dankt jetzt auch ausdrücklich: „Vielen Dank für deine Zeit und dein tolles Mitmachen!“ (bei mehreren: „eure Zeit und euer tolles Mitmachen“).
+
 ## 2.308.0 – 2026-10-12 – KC-CLUB-BUEHNE-REIFEN-SEIL: Hula-Hoop mit Reifen und Seilspringen
 Zwei neue Übungen im Stehen: Hula-Hoop mit echtem Reifen (kreist um die Hüfte, hintere Hälfte hinter dem Körper, bunte Streifen drehen mit, Arme hoch; zur Hälfte andersherum) und Seilspringen (kleine Sprünge im Takt, das Seil schwingt über den Kopf und unter den Füßen durch). Der bisherige „Hula-Hoop in der Küche“ bleibt.
 

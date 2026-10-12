@@ -4702,7 +4702,7 @@ function besuchMail(b: any, leute: { person_id: string; vorname: string; anrede:
     ? leute.map((l, i) => (i === 0 ? l.anrede! : l.anrede!.toLowerCase()) + " " + l.vorname).join(", ") + ","
     : `Hallo ${aufzaehlenUnd(leute.map((l) => l.vorname)) || "zusammen"},`;
   const thema = String(b.schulung_thema || "").trim();
-  const abs = [`ich danke ${w.dir}, dass ${w.du} ${b.besuchsart === "bei_hansi" ? `zu mir gekommen ${w.bist}` : `mich empfangen ${w.hast}`}. Es war eine angenehme Atmosphäre und mir hat es Spaß gemacht, ${w.dich} in ${thema || "unsere Programme"} einzuführen. Ich hoffe, ${w.dir} hat es auch gefallen.`];
+  const abs = [`ich danke ${w.dir}, dass ${w.du} ${b.besuchsart === "bei_hansi" ? `zu mir gekommen ${w.bist}` : `mich empfangen ${w.hast}`}. Es war eine angenehme Atmosphäre und mir hat es Spaß gemacht, ${w.dich} in ${thema || "unsere Programme"} einzuführen. Ich hoffe, ${w.dir} hat es auch gefallen. Vielen Dank für ${mehr ? "eure" : "deine"} Zeit und ${mehr ? "euer" : "dein"} tolles Mitmachen!`]; // 2.308.1 (Wunsch Hansi)
   const pk = besuchPunkte(b);
   if (pk.length || b.vereinbarungen) abs.push("Im Anschluss haben wir noch ein paar Punkte besprochen. Deren Auswertung steht weiter unten.");
   const geraete = (b.installiert_auf ?? []).map((g: string) => BESUCH_GERAETE[g]).filter(Boolean);

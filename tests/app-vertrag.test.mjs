@@ -8875,3 +8875,9 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/function esOeffnen\(tab\) \{\n  if \(!esAn\(\)\) \{[^\n]*suEinstellung\("setEselsohr"\)/.test(html), "ausgeblendet → zur Einstellung");
   assert.ok(/\{ id: "eselsohr_rueckseite", thema: "start"/.test(html), "Tipp des Tages");
 }
+
+// 2.308.1 KC-CLUB-BESUCH-DANKE (Wunsch Hansi): Dank für Zeit und Mitmachen in der Schulungs-Zusammenfassung
+{
+  const srv = lies("supabase/functions/kc-club/index.ts");
+  assert.ok(/Vielen Dank für \$\{mehr \? "eure" : "deine"\} Zeit und \$\{mehr \? "euer" : "dein"\} tolles Mitmachen!/.test(srv), "Dank für Zeit und Mitmachen");
+}
