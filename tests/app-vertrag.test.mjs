@@ -8923,3 +8923,9 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   const netz = fs.readFileSync(new URL("20261012_kc_data_api_freigaben.sql", ordner), "utf8");
   assert.ok(/create event trigger kc_neue_objekte_freigeben on ddl_command_end/.test(netz) && /to service_role/.test(netz), "Sicherheitsnetz in der Datenbank beschrieben");
 }
+
+// 2.310.1 KC-CLUB-AUFWACHEN + Fehlerprotokoll-Funde
+{
+  assert.ok(/if \(API_LESEN\.test\(action\) && !zweiterVersuch && navigator\.onLine\) \{ vbEnde\(true, performance\.now\(\) - t0, ""\); await new Promise\(\(ok\) => setTimeout\(ok, AUSSETZER_PAUSE_MS \* 2\)\); return apiRoh\(action, daten, true, abbruch\); \}/.test(html), "Lesen nach Netzfehler einmal still wiederholen");
+  assert.ok(/const q = Math\.min\(1, Math\.max\(0, \(jetzt - t0\) \/ dauer\)\)/.test(html), "Wisch-Animation: Fortschritt nie negativ");
+}

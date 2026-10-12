@@ -1,14 +1,20 @@
 {
-  "version": "2.310.0",
+  "version": "2.310.1",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🥄 Twinkey rührt richtig: Schneebesen in großen Kreisen durch die Schüssel, die andere Hand hält sie fest",
-    "🍲 Suppe: großer Kochlöffel mit beiden Händen, große Kreise im Topf",
-    "🔄 Oberkörper drehen: Fäuste wandern weit nach links und rechts, der Kopf schaut mit",
-    "↩️ „Jetzt andersherum!“ – Twinkey kreist dann auch wirklich andersherum"
+    "🔌 Nach dem Aufwachen des Handys: Hintergrund-Abrufe warten kurz, bis das Netz bereit ist – keine falschen „Keine Verbindung“-Fehler mehr",
+    "🧽 Tafel abwischen: seltener Absturz der Wisch-Animation behoben"
   ],
   "verlauf": [
+    {
+      "version": "2.310.1",
+      "datum": "2026-10-12",
+      "neu": [
+        "🔌 Nach dem Aufwachen des Handys: Hintergrund-Abrufe warten kurz, bis das Netz bereit ist – keine falschen „Keine Verbindung“-Fehler mehr",
+        "🧽 Tafel abwischen: seltener Absturz der Wisch-Animation behoben"
+      ]
+    },
     {
       "version": "2.310.0",
       "datum": "2026-10-12",

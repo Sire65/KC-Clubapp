@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.310.1 – 2026-10-12 – KC-CLUB-AUFWACHEN + Fehlerprotokoll-Funde
+Aus dem Club-Fehlerprotokoll (Wunsch Hansi „Check das mal“). 1) „Keine Verbindung zum Server“ bei terminanfragen_liste/init, obwohl online: Kommt das Handy aus dem Ruhezustand, fragt die App nach 2,5 s im Hintergrund – das Netz ist dann oft noch nicht bereit (Preflight kam an, die Anfrage nicht). Lese-Anfragen werden bei einem solchen Netzfehler jetzt nach 1,6 s einmal still wiederholt (Schreiben nie). 2) Skriptfehler „Cannot read properties of undefined (reading '0')“ in esTafelAbwischen: Die Bildzeit von requestAnimationFrame kann vor dem Startzeitpunkt liegen → negativer Fortschritt → bahn[-1]; jetzt auf 0 begrenzt (ebenso beim Zahlen-Hochzählen).
+
 ## 2.310.0 – 2026-10-12 – Twinkey bewegt sich echter
 Twinkey rührt jetzt richtig: Beim Teig führt er den Schneebesen in großen Kreisen durch die Schüssel und hält sie mit der anderen Hand fest. Bei der Suppe hält er einen großen Kochlöffel mit beiden Händen und rührt große Kreise im Topf. Beim Oberkörper-Drehen wandern die Fäuste weit nach links und rechts, der Kopf schaut mit. Und wenn er „Jetzt andersherum!“ sagt, kreist er auch wirklich andersherum.
 

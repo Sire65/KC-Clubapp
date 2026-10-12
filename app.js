@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.310.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.310.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11187,6 +11187,9 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   catch (fe) { if (abbruch?.aborted) { VB.laufend = Math.max(0, VB.laufend - 1); vbDatenLed(); throw Object.assign(new Error("Abgebrochen."), { abgebrochen: true }); } // KC-CLUB-LADE-SICHERHEIT
     if (fe?.name === "TimeoutError" || fe?.name === "AbortError") { vbEnde(false, 0, "Server antwortet nicht"); try { if (navigator.onLine) schneckeMessen(zeitMs); } catch {} /* KC-CLUB-SCHNECKE: nur Anzeige, darf api() nie stören */ throw Object.assign(new Error(API_LESEN.test(action) ? "Der Server antwortet gerade nicht – bitte gleich nochmal versuchen." : "Der Server antwortet gerade nicht – bitte kurz prüfen, ob es angekommen ist, bevor du es nochmal sendest."), { leitung: true, zeit: true }); }
     if (mitRegion && navigator.onLine) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(true, performance.now() - t0, ""); return apiRoh(action, daten, zweiterVersuch, abbruch); } // Region weg → Standardweg
+    // KC-CLUB-AUFWACHEN (Fehlerprotokoll 12.10.2026): kommt das Handy aus dem Ruhezustand, ist das Netz oft noch nicht bereit („Failed to fetch“,
+    // obwohl online) – Lese-Anfragen nach kurzer Pause einmal still wiederholen, statt einen Fehler zu melden
+    if (API_LESEN.test(action) && !zweiterVersuch && navigator.onLine) { vbEnde(true, performance.now() - t0, ""); await new Promise((ok) => setTimeout(ok, AUSSETZER_PAUSE_MS * 2)); return apiRoh(action, daten, true, abbruch); }
     vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw Object.assign(new Error(navigator.onLine ? "Keine Verbindung zum Server – bitte gleich nochmal versuchen." : "Keine Internetverbindung."), { leitung: navigator.onLine }); }
   const j = await r.json().catch(() => null);
   // KC-CLUB-SCHNECKE: nur Lesen (Schreiben darf länger dauern). 2.301.0 KC-CLUB-SCHNECKE-NETZ: meldet der Server seine eigene Rechenzeit (srvMs, z. B. beim Start),
@@ -12371,7 +12374,7 @@ function zahlenHochzaehlen(wurzel, sel, schluessel) {
     const alt = ZAHL_ALT.has(k) ? ZAHL_ALT.get(k) : 0; ZAHL_ALT.set(k, neu);
     if (!fxAn() || neu <= alt) return;
     const t0 = performance.now(), dauer = Math.min(900, 380 + (neu - alt) * 60);
-    const schritt = (t) => { const p = Math.min(1, (t - t0) / dauer), e = 1 - Math.pow(1 - p, 3); if (!el.isConnected) return; el.textContent = String(Math.round(alt + (neu - alt) * e)); if (p < 1) requestAnimationFrame(schritt); };
+    const schritt = (t) => { const p = Math.min(1, Math.max(0, (t - t0) / dauer)), e = 1 - Math.pow(1 - p, 3); if (!el.isConnected) return; el.textContent = String(Math.round(alt + (neu - alt) * e)); if (p < 1) requestAnimationFrame(schritt); };
     el.textContent = String(alt); requestAnimationFrame(schritt);
     el.animate([{ scale: "1" }, { scale: "1.35" }, { scale: "1" }], { duration: dauer + 200, easing: "ease-out" });
   });
@@ -12757,7 +12760,7 @@ async function esTafelAbwischen() {
     for (let r = 0; r <= reihen; r++) { const y = (r + .5) / (reihen + 1); bahn.push(r % 2 ? [1.02, y] : [-.02, y], r % 2 ? [-.02, y] : [1.02, y]); }
     const dauer = 1400, t0 = performance.now(), wisch = { s: 1, w: .26, p: [] };
     await new Promise((fertig) => { const schritt = (jetzt) => {
-      const q = Math.min(1, (jetzt - t0) / dauer), pos = q * (bahn.length - 1), i = Math.min(bahn.length - 2, Math.floor(pos)), u = pos - i;
+      const q = Math.min(1, Math.max(0, (jetzt - t0) / dauer)), pos = q * (bahn.length - 1), i = Math.min(bahn.length - 2, Math.floor(pos)), u = pos - i;
       const x = bahn[i][0] + (bahn[i + 1][0] - bahn[i][0]) * u, y = bahn[i][1] + (bahn[i + 1][1] - bahn[i][1]) * u;
       wisch.p.push([x, y]); esTafelStrich(g, wisch, c, Math.max(0, wisch.p.length - 3));
       sw.style.left = (x * 100) + "%"; sw.style.top = (y * 100) + "%";
