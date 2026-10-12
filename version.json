@@ -1,13 +1,22 @@
 {
-  "version": "2.313.0",
+  "version": "2.314.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "📦 Neue Übung „Karton-Steigen“: Fuß auf den Karton, wieder runter, dann der andere Fuß – „So kriegen wir das Fett weg!“ (auch als „Karton aus dem Lager“ in der Küche)",
-    "🔀 Jedes Mal andere Übungen: zufällige Reihenfolge, was beim letzten Mal dran war, kommt zuletzt; neu dazu Gewürzregal, Vorratsschrank, Topf aus dem Unterschrank, Oberregal und Teig ausrollen im Sitzen",
-    "🍲 Twinkeys Schlusswort: „Nach dieser Plackerei habe ich mir einen Eierpunsch und eine Portion Grünkohl mit doppelt Mettwurst am Köcheclub-Stand verdient …“"
+    "🎭 Twinkey lädt beim Start ein: „Hallo …, heute Lust auf eine Bewegungseinheit mit mir?“ – Ja (direkt zur Bühne), Später, Heute nicht, Nicht mehr fragen",
+    "🪞 Neu auf der Rückseite: der Spiegel – Kamerabild wie in einem großen Spiegel, auf Wunsch mit Pausbäckchen; Twinkey meint: „Wir sollten mal wieder eine Bewegungseinheit machen!“",
+    "💪 Neue Übungen aus der Recherche (Stuhl- und Seniorengymnastik): Liegestütz an der Arbeitsplatte, Wasserflaschen seitlich heben, Zum Salzstreuer greifen, Applaus für den Koch, Brotteig kneten – und viele neue Sprüche"
   ],
   "verlauf": [
+    {
+      "version": "2.314.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🎭 Twinkey lädt beim Start ein: „Hallo …, heute Lust auf eine Bewegungseinheit mit mir?“ – Ja (direkt zur Bühne), Später, Heute nicht, Nicht mehr fragen",
+        "🪞 Neu auf der Rückseite: der Spiegel – Kamerabild wie in einem großen Spiegel, auf Wunsch mit Pausbäckchen; Twinkey meint: „Wir sollten mal wieder eine Bewegungseinheit machen!“",
+        "💪 Neue Übungen aus der Recherche (Stuhl- und Seniorengymnastik): Liegestütz an der Arbeitsplatte, Wasserflaschen seitlich heben, Zum Salzstreuer greifen, Applaus für den Koch, Brotteig kneten – und viele neue Sprüche"
+      ]
+    },
     {
       "version": "2.313.0",
       "datum": "2026-10-12",

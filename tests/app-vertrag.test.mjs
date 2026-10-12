@@ -8971,3 +8971,12 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/esLies\("bw_zuletzt_" \+ modus/.test(html) && /u\.a !== plan\[plan\.length - 1\]\?\.a/.test(html) && /Math\.random\(\)/.test(html.slice(html.indexOf("function bwPlan("), html.indexOf("const bwSchlag ="))), "zufällig, letzte Runde zuletzt, nie dieselbe Bewegung hintereinander");
   assert.ok(/const BW_SCHLUSS = "Nach dieser Plackerei habe ich mir einen Eierpunsch und eine Portion Grünkohl mit doppelt Mettwurst am Köcheclub-Stand verdient\./.test(html) && /\$\{BW_SCHLUSS\}`\)/.test(html), "Schlusswort");
 }
+
+// KC-CLUB-BEWEGUNG-EINLADUNG + KC-CLUB-SPIEGEL + KC-CLUB-BUEHNE-RECHERCHE (Wunsch Hansi)
+{
+  assert.ok(/function bwEinladungPruefen\(versuch = 0\)/.test(html) && /st\.aus \|\| !esAn\(\)/.test(html) && /st\.tag === heuteIso\(\)/.test(html) && /setTimeout\(\(\) => bwEinladungPruefen\(\), 15000\)/.test(html), "Einladung beim Start, höchstens einmal am Tag");
+  assert.ok(/data-w="ja"[\s\S]{0,200}data-w="spaeter"[\s\S]{0,200}data-w="nein"[\s\S]{0,200}data-w="aus"/.test(html) && /if \(w === "ja"\) \{ bwEinSetzen\(\{ tag: heuteIso\(\) \}\); esOeffnen\("buehne"\); \}/.test(html) && /id="setBwEinladung"/.test(html), "Ja / Später / Heute nicht / Nicht mehr fragen – Ja führt zur Bühne");
+  assert.ok(/\["spiegel", "🪞", "Spiegel"\]\]/.test(html) && /onclick="esSpiegelAn\(\)"/.test(html) && /function esSpiegelAus\(zeigen\)/.test(html) && /function esStop\(\) \{ esSpiegelAus\(\);/.test(html), "Spiegel: Kamera nur nach Antippen, aus beim Verlassen");
+  assert.ok(/if \(document\.hidden && ES_SPIEGEL\.stream\) esSpiegelAus\(true\)/.test(html) && !/esSpiegel[\s\S]{0,4000}\bapi\(/.test(html.slice(html.indexOf("const ES_SPIEGEL"), html.indexOf("// ----- 🖼️ Diashow"))), "Spiegel: nichts gesendet, im Hintergrund aus");
+  assert.ok(/\{ id: "wandstuetz", t: "Liegestütz an der Arbeitsplatte"/.test(html) && /\.bw-profil\.bw-p-liegestuetz \.p-ganz \{ animation: bwPLiegeGanz/.test(html) && /"Schweiß ist nur Fett, das weint!"/.test(html), "neue Übungen und Sprüche");
+}

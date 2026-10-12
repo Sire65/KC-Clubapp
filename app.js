@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.313.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.314.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -625,6 +625,7 @@ function anwendenDesign() {
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
   jzWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
+  try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
 }
 function designWahlZeigen() {
   if (!$("designWahl")) return;
@@ -2051,8 +2052,8 @@ function rgUhrVorfuehren(L) { // alle vier Uhren kurz zeigen, danach wieder die 
 const RG_RUECKSEITE = [
   { v: "start", vor: () => { rgKopf("offen"); esEinsetzen(); }, sel: ["#eselsohr"], mussSel: true, puls: ["#eselsohr"], t: "📄 Das Eselsohr",
     x: "Unten rechts im grünen Kopf ist eine kleine Ecke umgeknickt – das Eselsohr. Tippst du doppelt darauf, dreht sich der ganze Kopf um wie ein Blatt Papier. Nach links ziehen geht auch. Auf der Rückseite warten fünf Dinge auf dich." },
-  { v: "start", vor: () => rgRueck("uhr"), sel: ["#heroRueck .hr-tabs"], mussSel: true, t: "🗂️ Fünf Reiter",
-    x: "Oben stehen fünf Reiter nebeneinander: Diashow, Tafel, Flipchart, Uhr und Bühne. Ein Tipp wechselt dorthin. Die Rückseite nutzt den ganzen Bildschirm bis zur Leiste unten.",
+  { v: "start", vor: () => rgRueck("uhr"), sel: ["#heroRueck .hr-tabs"], mussSel: true, t: "🗂️ Sechs Reiter",
+    x: "Oben stehen sechs Reiter nebeneinander: Diashow, Tafel, Flipchart, Uhr, Bühne und Spiegel. Ein Tipp wechselt dorthin. Die Rückseite nutzt den ganzen Bildschirm bis zur Leiste unten.",
     live: async (L) => { await L.tipp('#heroRueck [data-tab="dia"]'); esTab("dia"); L.ziel(); } },
   { v: "start", vor: () => rgRueck("dia"), sel: [".es-dia-leiste", "#hrFlaeche"], mussSel: true, t: "🖼️ Diashow",
     x: "Die Diashow zeigt die Fotos aus dem Fotoalbum – sanft überblendet. Unten wählst du ein Album, blätterst vor und zurück oder hältst an. Tippst du aufs Foto, verschwinden Leiste und Text – fast wie im Vollbild. Mit dem Vollbild-Knopf wird es ganz groß." },
@@ -2072,6 +2073,8 @@ const RG_RUECKSEITE = [
     x: "Rechts regelst du die Musik, links Twinkeys Stimme: nach oben ziehen wird lauter, nach unten leiser. Tippst du unten auf das Symbol, ist es sofort stumm – nochmal tippen, und es ist wieder da. Die App merkt sich beides." },
   { v: "start", vor: () => rgBuehneVorfuehren(), sel: ["#bwLauf .es-leiste"], mussSel: true, t: "⏸ Pause & Ende",
     x: "Unten hältst du an, springst zur nächsten Übung, schaltest Musik oder Ansage ganz ab oder beendest das Training. Wechselst du die Ansicht, macht die Bühne von selbst Pause." },
+  { v: "start", vor: () => rgRueck("spiegel"), sel: [".es-spiegel-rahmen", "#hrFlaeche"], mussSel: true, t: "🪞 Spiegel", // 2.314.0 – die Kamera wird im Video nicht eingeschaltet
+    x: "Der Spiegel zeigt dich selbst über die Kamera – auf Wunsch mit Pausbäckchen. Dann meint Twinkey: Wir sollten mal wieder eine Bewegungseinheit machen! Die Kamera läuft nur, wenn du sie antippst, und das Bild bleibt auf deinem Gerät." },
   { v: "start", vor: () => rgRueck(null), sel: ["#heroRueck .eselsohr"], mussSel: true, puls: ["#heroRueck .eselsohr"], t: "↩️ Zurückdrehen",
     x: "Zum Schluss tippst du wieder doppelt aufs Eselsohr – dann dreht sich der Kopf zurück. Wer das Eselsohr nicht braucht, blendet es in den Einstellungen unter Startseite und Ansicht aus.",
     live: async (L) => { await L.tipp("#heroRueck .eselsohr", "doppelt"); }, nach: () => { BW.lauf = null; esDrehen(false, true); } },
@@ -2511,7 +2514,7 @@ const RUNDGAENGE = [
   { id: "studio", stand: "1", sym: "🎬", t: "Studio: live zeigen", u: "Einem Mitglied die eigene App live zeigen (ca. 1 Min.)", st: () => RG_STUDIO, nur: () => !!studioStufe() },
   { id: "technik", stand: "1", sym: "🔧", t: "Technik: Update & Sicherheit", u: "Version, Sicherheits-Check, Test an mich, Programme (ca. 2 Min.)", st: () => RG_TECHNIK },
   { id: "spezial", stand: "1", sym: "🔎", t: "Versteckte Helfer", u: "Kochmütze, Tag/Nacht, Pfeile, Pünktchen, Wischen, Lämpchen, Schnellzugriff, Eselsohr, Kacheln, 3 × 3 / 4 × 4, Lupe, Hand, Fragezeichen (ca. 5 Min.)", st: () => RG_SPEZIAL }, // 2.272.0 KC-CLUB-ERKLAERVIDEOS-8
-  { id: "rueckseite", stand: "1", sym: "📄", t: "Die Rückseite: Eselsohr", u: "Diashow, Tafel, Flipchart, große Uhr und Bühne mit Twinkey – Regler für Musik und Stimme (ca. 3 Min.)", st: () => RG_RUECKSEITE, nur: () => esAn() }, // 2.300.0
+  { id: "rueckseite", stand: "1", sym: "📄", t: "Die Rückseite: Eselsohr", u: "Diashow, Tafel, Flipchart, große Uhr, Bühne mit Twinkey und Spiegel – Regler für Musik und Stimme (ca. 3 Min.)", st: () => RG_RUECKSEITE, nur: () => esAn() }, // 2.300.0
   { id: "zentrale", stand: "1", sym: "📡", t: "Kommunikationszentrale", u: "Im Kopf: an wen, Pult, Anrufen, Anklopfen, Schnellnachricht (ca. 2 Min.)", st: () => RG_ZENTRALE },
   { id: "sprache", stand: "1", sym: "🎙️", t: "Sprachsteuerung komplett", u: "Einschalten, Mikrofon, alle Befehle, weiter diktieren, Training (ca. 3 Min.)", st: () => RG_SPRACHE },
   { id: "effekte", stand: "1", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 3 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
@@ -3264,13 +3267,16 @@ const HILFE = [
   { id: "sprungknopf", thema: "nachrichten", sym: "🔘", t: "Einen Knopf in die Nachricht setzen", x: "Willst du jemanden direkt an eine Stelle der App schicken? Unter dem Schreibfeld auf <b>📎</b> → <b>„🔘 Knopf zu einer App-Stelle“</b> und das Ziel wählen, z. B. „Mein Bild wählen“. In der Nachricht erscheint ein Knopf – antippen, und man ist dort.", zeig: () => zeige("nachrichten"), seit: "2.23.97" },
   { id: "was_neu", thema: "nachrichten", sym: "👋", t: "Was ist neu? Gleich beim Öffnen", x: "Öffnest du die App und es gibt Neues, zeigt sie dir kurz, wie viele <b>neue Nachrichten</b> (in deinen Chats und in Gruppen) und <b>Pinnwand-Einträge</b> da sind und ob <b>Spiele</b> auf dich warten – mit Knopf direkt dorthin. Abschalten: im Fenster selbst mit „🔕 Diese Meldung ausschalten“ oder unter ⚙️ Einstellungen → 🗣️ Ansagen, Töne &amp; Tipps → „👋 Beim Öffnen zeigen, was neu ist“.", zeig: () => einstiegHin("ansagen", "setWasNeu"), seit: "2.24.12" },
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „🎨 Darstellung“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("darstellung", "setAnimiert"), seit: "2.24.1" },
-  { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am grünen Kopf ist eine kleine Ecke umgeknickt. <b>Doppelt tippen</b> (oder nach links ziehen) – der Kopf dreht sich um wie ein Blatt Papier. Auf der Rückseite oben fünf Reiter: <b>🖼️ Diashow</b>, <b>🖍️ Tafel</b>, <b>📋 Flipchart</b>, <b>🕰️ Uhr</b> und <b>🎭 Bühne</b>. Sie nutzt den ganzen Bildschirm bis zur Leiste unten. <b>Nochmal doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „📄 Eselsohr am Kopf“. Alles zum Ansehen: Erklär-Video <b>„📄 Die Rückseite: Eselsohr“</b>.", zeig: () => esOeffnen(null), seit: "2.292.0" },
+  { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am grünen Kopf ist eine kleine Ecke umgeknickt. <b>Doppelt tippen</b> (oder nach links ziehen) – der Kopf dreht sich um wie ein Blatt Papier. Auf der Rückseite oben sechs Reiter: <b>🖼️ Diashow</b>, <b>🖍️ Tafel</b>, <b>📋 Flipchart</b>, <b>🕰️ Uhr</b>, <b>🎭 Bühne</b> und <b>🪞 Spiegel</b>. Sie nutzt den ganzen Bildschirm bis zur Leiste unten. <b>Nochmal doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „📄 Eselsohr am Kopf“. Alles zum Ansehen: Erklär-Video <b>„📄 Die Rückseite: Eselsohr“</b>.", zeig: () => esOeffnen(null), seit: "2.292.0" },
   // 2.300.0 KC-CLUB-RUECKSEITE-HILFE (Wunsch Hansi „Hilfetexte anpassen“): je ein Text für jeden Reiter der Rückseite
   { id: "es_dia", thema: "start", sym: "🖼️", t: "Rückseite: Diashow", x: "Die <b>🖼️ Diashow</b> zeigt die Fotos aus dem 📷 Fotoalbum, sanft überblendet. Unten: Album wählen, ◀ ▶ blättern, ⏸ anhalten, ⛶ Vollbild. <b>Aufs Foto tippen</b> blendet Leiste und Text aus (nochmal tippen holt sie zurück). Querformat-Fotos stehen auf einem weichen Hintergrund statt schwarzer Balken.", zeig: () => esOeffnen("dia"), seit: "2.300.0" },
   { id: "es_tafel", thema: "start", sym: "🖍️", t: "Rückseite: Tafel & Flipchart", x: "Zum Skizzieren mit dem Finger. <b>🖍️ Tafel</b>: Kreide in sieben Farben, drei Dicken, 🧽 Schwamm, 🧹 alles abwischen, ↶ letzten Strich zurück. <b>📋 Flipchart</b>: Marker, Radierer, <b>„⤴ Umblättern“</b> klappt das volle Blatt nach hinten, ⤵ holt das vorige zurück, ✂️ reißt ein Blatt ab; ein Knopf schaltet das Papier <b>blanko → kariert → liniert</b>. Mit <b>„📤 Sichern“</b> kommt die Skizze ins 🗄️ Archiv oder als Nachricht zu jemandem.", zeig: () => esOeffnen("flip"), seit: "2.300.0" },
   { id: "es_uhr", thema: "start", sym: "🕰️", t: "Rückseite: große Uhr", x: "Die <b>🕰️ große Uhr</b> gibt es in vier Stilen: <b>🟩 Digital</b> (grün), <b>🔢 Fallblatt</b> mit Datum, <b>🚉 Bahnhofsuhr</b> und <b>🔠 Groß &amp; klar</b>. Den Stil unten antippen – die App merkt ihn sich.", zeig: () => esOeffnen("uhr"), seit: "2.300.0" },
   { id: "es_buehne", thema: "start", sym: "🎭", t: "Rückseite: Bühne für Bewegung", x: "Auf der <b>🎭 Bühne</b> macht Twinkey Übungen vor – mit Musik und Ansagen wie beim Fitnesstrainer. Wähle <b>im Sitzen</b>, <b>im Stehen</b> oder <b>mit Küchenhelfern</b> (Schneebesen, Kochlöffel, Topf, Pfanne …), die Dauer, Musik und Ansage – dann <b>„▶️ Vorhang auf!“</b>. Twinkey begrüßt dich, zählt ein, feuert an und sagt „noch 3, 2, 1 – und ausschütteln“. Unten: ⏸ Pause, ⏭ nächste Übung, 🎵 Musik, 🔊 Ansage, ✖ Ende. <b>Mach nur so viel, wie dir guttut</b> – bei Schmerzen, Schwindel oder Atemnot sofort aufhören.", zeig: () => esOeffnen("buehne"), seit: "2.300.0" },
   { id: "es_musik", thema: "toene", sym: "🎶", t: "Bühne: nur Musik hören", x: "Nur zuhören statt turnen: Auf der <b>🎭 Bühne</b> (Kopf umdrehen über das Eselsohr) gibt es neben „Vorhang auf!“ den Knopf <b>„🎶 Nur Musik hören“</b>. Dann tanzt Twinkey nur und es läuft Musik – ohne Übungen und ohne Ansage. Oben wählst du per Kachel die <b>Musikrichtung</b>: 🪩 Disco, 🌴 Reggae, 🕺 Funky, 🎸 Rock, 🌅 Ballade, 💃 Latin oder 🍺 Schlager &amp; Polka – darunter stehen die Lieder dieser Richtung. Jedes Lied läuft etwa 2½ Minuten, dann kommt das nächste derselben Richtung. ⏮ ⏭ blättern, ⏸ hält an. Rechts der Regler für die Lautstärke. Die Musik entsteht im Handy – kein Internet nötig.", zeig: () => esOeffnen("buehne"), seit: "2.307.0" },
+  // 2.314.0 KC-CLUB-SPIEGEL + KC-CLUB-BEWEGUNG-EINLADUNG
+  { id: "es_spiegel", thema: "start", sym: "🪞", t: "Rückseite: Spiegel", x: "Unter <b>🪞 Spiegel</b> siehst du dich über die Kamera wie in einem großen Spiegel – mit <b>„🐹 Pausbäckchen“</b> etwas runder (umschalten auf „🙂 Normal“). Twinkey meint dann: Wir sollten mal wieder eine Bewegungseinheit machen – <b>„🎭 Zur Bühne“</b> bringt dich direkt hin. Die Kamera läuft <b>nur nach „📷 Kamera an“</b> und nur, solange der Spiegel zu sehen ist; das Bild bleibt auf deinem Gerät – nichts wird gespeichert oder verschickt.", zeig: () => esOeffnen("spiegel"), seit: "2.314.0" },
+  { id: "bw_einladung", thema: "start", sym: "🎭", t: "Twinkey lädt zur Bewegung ein", x: "Beim Öffnen der App fragt Twinkey höchstens einmal am Tag: <i>„Heute Lust auf eine Bewegungseinheit mit mir?“</i> <b>„💪 Ja“</b> führt direkt zur Bühne, <b>„⏰ Später“</b> fragt in etwa 2 Stunden wieder, <b>„🙂 Heute nicht“</b> erst morgen, <b>„🔕 Nicht mehr fragen“</b> schaltet es ab. Wieder einschalten: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „🎭 Twinkey lädt zur Bewegung ein“.", zeig: () => einstiegHin("startseite", "setBwEinladung"), seit: "2.314.0" },
   { id: "es_regler", thema: "toene", sym: "🎚️", t: "Bühne: Musik und Stimme lauter oder leiser", x: "Während Twinkey turnt, stehen zwei Regler am Rand: <b>rechts die Musik</b> 🎵, <b>links Twinkeys Stimme</b> 🗣️. Nach oben ziehen = lauter (der Keil wird dicker), nach unten = leiser. <b>Unten aufs Symbol tippen</b> macht sofort stumm (🔇 bzw. 🤐) – nochmal tippen holt die vorige Lautstärke zurück. Die App merkt sich beides. Ist alles zu leise, auch die Lautstärke am Handy prüfen.", zeig: () => esOeffnen("buehne"), seit: "2.300.0" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
   // 2.110.0 (Wunsch Hansi „Hilfetexte und Handbuch anpassen“): Hilfen zu den Neuerungen seit Anleitung V8 (2.96.0)
@@ -6753,12 +6759,14 @@ const TW_FAQ = [
   { id: "figur-bauen", sym: "🧩", t: "Wie stelle ich meine Koch-Figur selbst zusammen oder ändere sie?", nur: () => frei("avatar") && frei("avatar_baukasten"),
     x: "In <b>„🧑‍🍳 Mein Bild“</b> auf <b>„🧩 Selbst zusammenstellen“</b> tippen – oder erst eine Figur antippen und dann <b>„✏️ Bearbeiten“</b>. Teil für Teil wählen: Koch oder Köchin, Haare, Kopfbedeckung, Bart, Gesicht, Brille, Kochjacke, Hintergrund. Oben siehst du alles sofort. Zum Schluss <b>„💾 Speichern“</b>.", los: () => avBauen() },
   // 2.300.0 KC-CLUB-RUECKSEITE-HILFE: Fragen zur Rückseite (Eselsohr)
-  { id: "eselsohr", sym: "📄", t: "Was ist das Eselsohr am Kopf?", nur: () => esAn(), x: "Die umgeknickte Ecke unten rechts am grünen Kopf. <b>Doppelt tippen</b> – der Kopf dreht sich um: 🖼️ Diashow, 🖍️ Tafel, 📋 Flipchart, 🕰️ Uhr und 🎭 Bühne. Nochmal doppelt tippen dreht zurück.", los: () => esOeffnen(null) },
+  { id: "eselsohr", sym: "📄", t: "Was ist das Eselsohr am Kopf?", nur: () => esAn(), x: "Die umgeknickte Ecke unten rechts am grünen Kopf. <b>Doppelt tippen</b> – der Kopf dreht sich um: 🖼️ Diashow, 🖍️ Tafel, 📋 Flipchart, 🕰️ Uhr, 🎭 Bühne und 🪞 Spiegel. Nochmal doppelt tippen dreht zurück.", los: () => esOeffnen(null) },
   { id: "skizze", sym: "📋", t: "Wo kann ich etwas skizzieren oder aufmalen?", x: "Auf der Rückseite des Kopfes: <b>🖍️ Tafel</b> oder <b>📋 Flipchart</b> (umblättern, kariert oder liniert). Mit <b>„📤 Sichern“</b> ins Archiv oder als Nachricht.", los: () => esOeffnen("flip") },
   { id: "buehne", sym: "🎭", t: "Wie mache ich mit Twinkey Bewegung zu Musik?", x: "Kopf umdrehen (doppelt aufs Eselsohr) → <b>🎭 Bühne</b>: im Sitzen, im Stehen oder mit Küchenhelfern wählen, Dauer einstellen, <b>„▶️ Vorhang auf!“</b>. Twinkey turnt vor und feuert dich an.", los: () => esOeffnen("buehne") },
   { id: "buehne-laut", sym: "🎚️", t: "Die Musik oder Twinkeys Stimme ist zu laut oder zu leise", x: "Auf der Bühne: <b>rechts</b> der Regler für die Musik, <b>links</b> für die Stimme – hochziehen = lauter, runter = leiser. Unten aufs Symbol tippen = stumm, nochmal = wieder an.", los: () => esOeffnen("buehne") },
   { id: "grosse-uhr", sym: "🕰️", t: "Gibt es eine große Uhr?", x: "Ja – auf der Rückseite des Kopfes unter <b>🕰️ Uhr</b>: digital grün, Fallblatt mit Datum, Bahnhofsuhr oder groß &amp; klar.", los: () => esOeffnen("uhr") },
   { id: "diashow", sym: "🖼️", t: "Kann ich die Fotos als Diashow ansehen?", x: "Ja – Kopf umdrehen (doppelt aufs Eselsohr) → <b>🖼️ Diashow</b>. Album wählen, aufs Foto tippen blendet alles andere aus.", los: () => esOeffnen("dia") },
+  { id: "spiegel", sym: "🪞", t: "Gibt es einen Spiegel mit Kamera?", x: "Ja – Kopf umdrehen (doppelt aufs Eselsohr) → <b>🪞 Spiegel</b> → <b>„📷 Kamera an“</b>. Mit „🐹 Pausbäckchen“ wird’s lustig. Nichts wird gespeichert oder verschickt.", los: () => esOeffnen("spiegel") }, // 2.314.0
+  { id: "einladung", sym: "🎭", t: "Wie schalte ich die Frage nach der Bewegungseinheit ab?", x: "Im Fenster <b>„🔕 Nicht mehr fragen“</b> tippen – oder unter ⚙️ → „🧩 Startseite &amp; Ansicht“ den Schalter <b>„🎭 Twinkey lädt zur Bewegung ein“</b> ausschalten.", los: () => suEinstellung("setBwEinladung") },
   { id: "ueber-twinkey", sym: "🧑‍🍳", t: "Wer ist Twinkey?", x: "Ich bin Twinkey, der Helfer der Köcheclub-App – früher waren auch viele von uns Küchenchefs. Frag mich in deinen Worten. Weiß ich etwas nicht, recherchiere ich und du bekommst die Antwort später." },
 ];
 const twNorm = (t) => String(t || "").toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z0-9 ]+/g, " ");
@@ -6844,7 +6852,7 @@ const TW_VIDEOS = { "h:wetter": ["effekte"], "f:diktieren": ["sprache"], "h:info
   "f:nachricht": ["nachricht", "zentrale", "sprache"], "f:termin-neu": ["termin"], "f:zettel": ["pinnwand"], "f:vorschlag": ["vorschlag"], "f:zusagen": ["zusagen"],
   "f:foto-album": ["fotos"], "f:geld": ["erstattung"], "f:notfall": ["sos"], "f:hilfe-suchen": ["helfen"], "f:leihen": ["helfen"], "f:anrufen": ["mitglieder"], "f:online": ["mitglieder"],
   "f:spielen": ["spiele"], "f:archiv": ["archiv"],
-  "f:eselsohr": ["rueckseite"], "f:skizze": ["rueckseite"], "f:buehne": ["rueckseite"], "f:buehne-laut": ["rueckseite"], "f:grosse-uhr": ["rueckseite"], "f:diashow": ["rueckseite"], // 2.300.0
+  "f:eselsohr": ["rueckseite"], "f:skizze": ["rueckseite"], "f:buehne": ["rueckseite"], "f:buehne-laut": ["rueckseite"], "f:grosse-uhr": ["rueckseite"], "f:diashow": ["rueckseite"], "f:spiegel": ["rueckseite"], "h:es_spiegel": ["rueckseite"], // 2.300.0 · 2.314.0
   "h:eselsohr": ["rueckseite"], "h:es_dia": ["rueckseite"], "h:es_tafel": ["rueckseite"], "h:es_uhr": ["rueckseite"], "h:es_buehne": ["rueckseite"], "h:es_regler": ["rueckseite"] }; // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4
 const TW_HILFETEXT = { "f:mein-bild": "h:mein_bild", "f:figur-bauen": "h:mein_bild" };
 function twVideosHtml(e) {
@@ -12514,7 +12522,7 @@ setInterval(() => { try { const h = document.querySelector("#v-start .hero"); if
 // Gespeichert oder verschickt wird nur, wenn man es selbst antippt. Abschaltbar: ⚙️ → „🧩 Startseite & Ansicht“.
 const ES = { offen: false, timer: 0, tipp: 0, dia: { fotos: null, alben: [], i: 0, laeuft: true, urls: new Map(), seite: 0, laedt: false },
   tafel: { striche: null, farbe: "#f4f1e6", dicke: 2, werkzeug: "stift", zeichnet: null }, uhr: { letzte: "", fbDatum: false } };
-const ES_TABS = [["dia", "🖼️", "Diashow"], ["tafel", "🖍️", "Tafel"], ["flip", "📋", "Flipchart"], ["uhr", "🕰️", "Uhr"], ["buehne", "🎭", "Bühne"]]; // 2.293.0: + Bühne · 2.295.0: + Flipchart
+const ES_TABS = [["dia", "🖼️", "Diashow"], ["tafel", "🖍️", "Tafel"], ["flip", "📋", "Flipchart"], ["uhr", "🕰️", "Uhr"], ["buehne", "🎭", "Bühne"], ["spiegel", "🪞", "Spiegel"]]; // 2.293.0: + Bühne · 2.295.0: + Flipchart · 2.314.0: + Spiegel
 const ES_FARBEN = [["#f4f1e6", "Kreide weiß"], ["#ffe066", "Gelb"], ["#ff8787", "Rot"], ["#74c0fc", "Blau"], ["#8ce99a", "Grün"], ["#ffa94d", "Orange"], ["#e599f7", "Lila"]];
 const ES_DICKEN = [[3, "fein"], [7, "mittel"], [14, "dick"]];
 const ES_UHREN = [["digital", "🟩 Digital", "Digital grün"], ["fallblatt", "🔢 Fallblatt", "Fallblatt mit Datum"], ["bahnhof", "🚉 Bahnhof", "Bahnhofsuhr"], ["klar", "🔠 Klar", "Groß & klar"]];
@@ -12529,13 +12537,34 @@ function esOeffnen(tab) {
   zeige("start");
   setTimeout(() => { esEinsetzen(); Promise.resolve(ES.offen ? null : esDrehen(true)).then(() => { if (tab) esTab(tab); else esHoehe(true); }); }, 250);
 }
+// ----- 2.314.0 KC-CLUB-BEWEGUNG-EINLADUNG (Wunsch Hansi „beim Start fragen: Hallo Christina, heute Lust auf eine Bewegungseinheit mit mir?“) -----
+// Ja → sofort auf die Bühne. Später → frühestens in 2 Stunden wieder. Heute nicht → erst morgen. Nicht mehr fragen → aus
+// (wieder an unter ⚙️ → „🧩 Startseite & Ansicht“). Höchstens einmal am Tag; nie über einem offenen Fenster. Gemerkt je Gerät.
+const BW_EIN_SPAETER_MS = 2 * 3600 * 1000;
+const bwEinStand = () => { try { return { aus: false, tag: "", spaeter: 0, ...JSON.parse(esLies("einladung", "{}")) }; } catch (e) { return { aus: false, tag: "", spaeter: 0 }; } };
+const bwEinSetzen = (t) => esSchreib("einladung", JSON.stringify({ ...bwEinStand(), ...t }));
+function bwEinladungPruefen(versuch = 0) {
+  const st = bwEinStand();
+  if (!ICH || st.aus || !esAn() || ES.offen || BW.lauf || st.tag === heuteIso() || Date.now() < (st.spaeter || 0) || $("bwEinBlatt")) return;
+  if (document.hidden || aktuelleAnsicht !== "start" || document.querySelector(".blatt:not(.versteckt)") || RG?.an) { if (versuch < 8) setTimeout(() => bwEinladungPruefen(versuch + 1), 12000); return; }
+  const name = ICH.vorname || String(ICH.name || "").split(" ")[0] || "";
+  const f = blattAuf("bwEinBlatt", `<div class="bw-ein"><div class="bw-ein-figur">${bwFigur("winken", 0, "", 0, .5, 0, new Date().getDate())}</div>
+    <h3 style="margin:4px 0">Hallo${name ? " " + esc(name) : ""}! 👋</h3><p style="margin:0 0 10px">Heute Lust auf eine kleine <b>Bewegungseinheit</b> mit mir? Ein paar Minuten mit Musik – im Sitzen, im Stehen oder mit Küchenhelfern.</p>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button type="button" class="knopf haupt" data-w="ja">💪 Ja, los geht's!</button>
+      <button type="button" class="knopf" data-w="spaeter">⏰ Später</button><button type="button" class="knopf" data-w="nein">🙂 Heute nicht</button><button type="button" class="knopf klein" data-w="aus">🔕 Nicht mehr fragen</button></div></div>`);
+  f.querySelectorAll("[data-w]").forEach((b) => b.onclick = () => { const w = b.dataset.w; f.remove();
+    if (w === "ja") { bwEinSetzen({ tag: heuteIso() }); esOeffnen("buehne"); }
+    else if (w === "spaeter") { bwEinSetzen({ spaeter: Date.now() + BW_EIN_SPAETER_MS }); melde("⏰ Gut – ich frage dich später nochmal."); }
+    else if (w === "nein") { bwEinSetzen({ tag: heuteIso() }); melde("🙂 Alles klar – vielleicht morgen!"); }
+    else { bwEinSetzen({ aus: true }); try { $("setBwEinladung").checked = false; } catch (e) { /* Einstellungen noch nicht offen */ } melde("🔕 Ich frage nicht mehr. Wieder einschalten: ⚙️ → „🧩 Startseite & Ansicht“."); } });
+}
 function eselsohrSchalter(an) { esSchreib("an", an ? "1" : "0"); esEinsetzen(); melde(an ? "📄 Eselsohr ist da – unten rechts am Kopf doppelt tippen" : "Eselsohr ausgeblendet"); }
 function esEinsetzen() {
   const h = document.querySelector("#v-start .hero"); if (!h) return;
   let o = document.getElementById("eselsohr");
   if (!esAn()) { o?.remove(); if (ES.offen) esDrehen(false, true); return; }
   if (o) return;
-  h.insertAdjacentHTML("beforeend", `<button type="button" class="eselsohr" id="eselsohr" title="Eselsohr – doppelt tippen (oder nach links ziehen): Kopf umdrehen" aria-label="Kopf umdrehen: Diashow, Tafel, Flipchart, Uhr, Bühne"></button>`);
+  h.insertAdjacentHTML("beforeend", `<button type="button" class="eselsohr" id="eselsohr" title="Eselsohr – doppelt tippen (oder nach links ziehen): Kopf umdrehen" aria-label="Kopf umdrehen: Diashow, Tafel, Flipchart, Uhr, Bühne, Spiegel"></button>`);
   esZiehen(h.lastElementChild, false);
 }
 // Ziehen am Eselsohr: vorne nach links (umdrehen), hinten nach rechts (zurück). Kurzes Antippen vorne: kleiner Wink; hinten: Doppeltipp = zurück.
@@ -12551,7 +12580,7 @@ function esZiehen(o, hinten) {
     const t = Date.now(); if (t - ES.tipp < 450) { ES.tipp = 0; esDrehen(!hinten); return; } ES.tipp = t;
     clearTimeout(ES.tippHinweis); ES.tippHinweis = setTimeout(() => { if (!ES.tipp || Date.now() - ES.tipp < 440) return;
       if (hinten) melde("↩︎ Doppelt aufs Eselsohr tippen – dann dreht sich der Kopf zurück");
-      else { o.classList.remove("wink"); void o.offsetWidth; o.classList.add("wink"); melde("📄 Doppelt aufs Eselsohr tippen – dann dreht sich der Kopf um: Diashow, Tafel, Flipchart, Uhr und Bühne"); } }, 480); };
+      else { o.classList.remove("wink"); void o.offsetWidth; o.classList.add("wink"); melde("📄 Doppelt aufs Eselsohr tippen – dann dreht sich der Kopf um: Diashow, Tafel, Flipchart, Uhr, Bühne und Spiegel"); } }, 480); };
   o.addEventListener("pointerup", los); o.addEventListener("pointercancel", () => { x0 = null; o.style.removeProperty("--zug"); });
   o.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); esDrehen(!hinten); } }); // Tastatur: direkt drehen
   o.addEventListener("dblclick", (e) => { e.preventDefault(); }); // Doppeltipp läuft über pointerup (Handy und PC gleich)
@@ -12583,16 +12612,73 @@ function esHoehe(scrollen) {
   r.style.height = Math.max(360, Math.round(innerHeight - Math.max(6, r.getBoundingClientRect().top) - fh - 10)) + "px";
 }
 addEventListener("resize", () => { if (ES.offen) esHoehe(false); });
-function esStop() { clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (BW.lauf || BW.hoeren || BWM.laeuft) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
+function esStop() { esSpiegelAus(); clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (BW.lauf || BW.hoeren || BWM.laeuft) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
 function esTab(k) {
   if (!ES_TABS.some(([x]) => x === k)) k = "uhr";
   esSchreib("tab", k); esStop();
   document.querySelectorAll("#heroRueck .hr-tab").forEach((b) => { b.classList.toggle("an", b.dataset.tab === k); b.setAttribute("aria-selected", String(b.dataset.tab === k)); });
   const f = $("hrFlaeche"); if (!f) return;
   f.className = "hr-flaeche hr-" + k;
-  if (k === "dia") esDiaZeigen(f); else if (k === "tafel") esTafelZeigen(f); else if (k === "flip") esFlipZeigen(f); else if (k === "buehne") esBuehneZeigen(f); else esUhrZeigen(f);
+  if (k === "dia") esDiaZeigen(f); else if (k === "tafel") esTafelZeigen(f); else if (k === "flip") esFlipZeigen(f); else if (k === "buehne") esBuehneZeigen(f); else if (k === "spiegel") esSpiegelZeigen(f); else esUhrZeigen(f);
 }
 const esSichtbar = () => ES.offen && aktuelleAnsicht === "start" && !document.hidden;
+
+// ----- 🪞 2.314.0 KC-CLUB-SPIEGEL (Wunsch Hansi „die Fläche wie einen großen Spiegel, Kamerabild von sich selbst – etwas dicker, mit Pausbäckchen“) -----
+// Die Kamera läuft nur nach Antippen und nur, solange der Spiegel zu sehen ist. Das Bild bleibt im Gerät: nichts wird gespeichert oder gesendet.
+// Pausbäckchen: jedes Bild wird über eine einmal berechnete Verzerrungs-Tabelle gezogen (breiter + Wangen aufgeblasen) – schnell genug fürs Handy.
+const ES_SPIEGEL = { stream: null, video: null, raf: 0, karte: null, w: 0, h: 0, dick: true, klein: null };
+function esSpiegelZeigen(f) {
+  esSpiegelAus();
+  f.innerHTML = `<div class="es-spiegel"><div class="es-spiegel-rahmen"><canvas id="esSpiegelBild" aria-label="Spiegel"></canvas>
+      <div class="es-spiegel-start" id="esSpiegelStart"><div class="es-spiegel-glanz"></div><b>🪞 Spieglein, Spieglein …</b><span>Tippe auf „Kamera an“ – dann siehst du dich hier wie in einem Spiegel. Das Bild bleibt nur auf deinem Gerät, nichts wird gespeichert oder verschickt.</span>
+        <button type="button" class="es-k es-haupt" onclick="esSpiegelAn()">📷 Kamera an</button></div>
+      <div class="es-spiegel-blase versteckt" id="esSpiegelBlase">Na, wir sollten mal wieder mit Twinkey eine Bewegungseinheit machen! 😉</div></div>
+    <div class="es-leiste"><button type="button" class="es-k" id="esSpiegelDick" onclick="esSpiegelDick()">${ES_SPIEGEL.dick ? "🐹 Pausbäckchen" : "🙂 Normal"}</button>
+      <button type="button" class="es-k es-haupt" onclick="esTab('buehne')">🎭 Zur Bühne</button><button type="button" class="es-k" onclick="esSpiegelAus(true)">📷 Aus</button></div></div>`;
+}
+async function esSpiegelAn() {
+  const v = document.createElement("video"); v.muted = true; v.playsInline = true; v.setAttribute("playsinline", "");
+  try { ES_SPIEGEL.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, audio: false }); }
+  catch (e) { return melde(e?.name === "NotAllowedError" ? "📷 Die Kamera ist nicht erlaubt – bitte in den Einstellungen des Handys für diese App freigeben." : "📷 Die Kamera lässt sich auf diesem Gerät nicht öffnen."); }
+  if (!$("esSpiegelBild")) return esSpiegelAus(); // inzwischen weggetippt
+  v.srcObject = ES_SPIEGEL.stream; ES_SPIEGEL.video = v; try { await v.play(); } catch (e) { /* manche Geräte starten erst mit dem ersten Bild */ }
+  $("esSpiegelStart")?.classList.add("versteckt");
+  setTimeout(() => $("esSpiegelBlase")?.classList.remove("versteckt"), 1800);
+  const male = () => { ES_SPIEGEL.raf = requestAnimationFrame(male); esSpiegelBild(); }; male();
+}
+function esSpiegelKarte(w, h) { // für jeden Zielpunkt: woher im Kamerabild (gespiegelt, breiter, Wangen aufgeblasen)
+  const k = new Int32Array(w * h), wangen = [[.33, .6], [.67, .6]], r = w * .26;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    let sx = w / 2 + (x - w / 2) / 1.16, sy = y; // etwas breiter
+    for (const [cx0, cy0] of wangen) { const cx = cx0 * w, cy = cy0 * h, dx = sx - cx, dy = sy - cy, d = Math.hypot(dx, dy);
+      if (d < r && d > 0) { const f = Math.pow(d / r, .45); sx = cx + dx * f; sy = cy + dy * f; } } // Pausbacke: Mitte vergrößert
+    const qx = Math.min(w - 1, Math.max(0, Math.round(w - 1 - sx))), qy = Math.min(h - 1, Math.max(0, Math.round(sy))); // gespiegelt wie ein Spiegel
+    k[y * w + x] = qy * w + qx;
+  }
+  return k;
+}
+function esSpiegelBild() {
+  const v = ES_SPIEGEL.video, c = $("esSpiegelBild"); if (!v || !c) return esSpiegelAus(); if (!esSichtbar()) return; if (!v.videoWidth) return;
+  const w = 240, h = Math.round(w * v.videoHeight / v.videoWidth); // klein rechnen, groß zeigen
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h; ES_SPIEGEL.karte = null; }
+  if (!ES_SPIEGEL.klein) ES_SPIEGEL.klein = document.createElement("canvas");
+  const q = ES_SPIEGEL.klein; if (q.width !== w || q.height !== h) { q.width = w; q.height = h; }
+  const qg = q.getContext("2d", { willReadFrequently: true }); qg.drawImage(v, 0, 0, w, h);
+  const g = c.getContext("2d");
+  if (!ES_SPIEGEL.dick) { g.save(); g.translate(w, 0); g.scale(-1, 1); g.drawImage(q, 0, 0); g.restore(); return; }
+  if (!ES_SPIEGEL.karte || ES_SPIEGEL.w !== w || ES_SPIEGEL.h !== h) { ES_SPIEGEL.karte = esSpiegelKarte(w, h); ES_SPIEGEL.w = w; ES_SPIEGEL.h = h; }
+  const ein = new Uint32Array(qg.getImageData(0, 0, w, h).data.buffer), aus = g.createImageData(w, h), a32 = new Uint32Array(aus.data.buffer), k = ES_SPIEGEL.karte;
+  for (let i = 0; i < k.length; i++) a32[i] = ein[k[i]];
+  g.putImageData(aus, 0, 0);
+}
+function esSpiegelDick() { ES_SPIEGEL.dick = !ES_SPIEGEL.dick; const b = $("esSpiegelDick"); if (b) b.textContent = ES_SPIEGEL.dick ? "🐹 Pausbäckchen" : "🙂 Normal"; }
+function esSpiegelAus(zeigen) {
+  cancelAnimationFrame(ES_SPIEGEL.raf); ES_SPIEGEL.raf = 0;
+  try { ES_SPIEGEL.stream?.getTracks().forEach((t) => t.stop()); } catch (e) { /* schon aus */ }
+  ES_SPIEGEL.stream = null; if (ES_SPIEGEL.video) ES_SPIEGEL.video.srcObject = null; ES_SPIEGEL.video = null;
+  if (zeigen && $("esSpiegelBild")) esSpiegelZeigen($("hrFlaeche"));
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden && ES_SPIEGEL.stream) esSpiegelAus(true); }); // Handy weggelegt → Kamera sofort aus
 
 // ----- 🖼️ Diashow: Fotos aus dem Fotoalbum (alle oder ein Album), sanft überblendet, langsam gezoomt -----
 async function esDiaZeigen(f) {
@@ -12949,6 +13035,13 @@ const BW_UEBUNGEN = [
   { id: "unterschrank", t: "Topf aus dem Unterschrank", g: "kueche", a: "knie", h: "Hände an die Arbeitsplatte oder Stuhllehne, Po nach hinten – als holst du den großen Topf von unten.", c: ["Der Bräter ist ganz hinten – runter!", "Nur so tief, wie es guttut!"] },
   { id: "oberregal", t: "Ins Oberregal greifen", g: "sitzen", a: "strecken", sitz: 1, h: "Im Sitzen abwechselnd einen Arm weit nach oben – oben stehen die Teller.", c: ["Ganz lang machen!", "Links – und rechts!"] },
   { id: "teigsitz", t: "Teig ausrollen", g: "sitzen", a: "rollen", ding: "nudel", sitz: 1, h: "Im Sitzen beide Arme nach vorn und den Teig kräftig ausrollen.", c: ["Der Strudelteig muss dünn werden!", "Vor – und zurück!"] },
+  // 2.314.0 KC-CLUB-BUEHNE-RECHERCHE (Wunsch Hansi „im Internet recherchieren, welche Übungen wir noch einbauen können“ – Stuhlgymnastik/Seniorengymnastik)
+  { id: "salzstreuer", t: "Zum Salzstreuer greifen", g: "sitzen", a: "seitbeuge", sitz: 1, h: "Im Sitzen seitlich neigen, als greifst du nach dem Salzstreuer – dann die andere Seite.", c: ["Salz rechts – Pfeffer links!", "Schön lang machen!"] },
+  { id: "flaschensitz", t: "Wasserflaschen seitlich heben", g: "sitzen", a: "seitheben", p: "flaschen", sitz: 1, h: "In jeder Hand eine kleine Wasserflasche: Arme seitlich bis knapp unter Schulterhöhe heben und langsam senken.", c: ["Wie ein Adler über der Küche!", "Hoch – und langsam runter!"] },
+  { id: "applaus", t: "Applaus für den Koch", g: "sitzen", a: "klatschen", sitz: 1, h: "Kräftig in die Hände klatschen – im Takt der Musik.", c: ["Applaus, Applaus!", "Der Koch verbeugt sich schon!"] },
+  { id: "wandstuetz", t: "Liegestütz an der Arbeitsplatte", g: "stehen", a: "liegestuetz", profil: 1, h: "Hände auf eine feste Arbeitsplatte oder Tischkante, ein Schritt zurück – Körper gerade nach vorn neigen und wieder wegdrücken.", c: ["Stark wie ein Bäcker!", "Rücken schön gerade!"] },
+  { id: "arbeitsplatte", t: "Arbeitsplatten-Liegestütz", g: "kueche", a: "liegestuetz", profil: 1, h: "Hände an die Arbeitsplatte, Körper gerade halten, nach vorn neigen – und wieder hoch drücken.", c: ["So kriegen wir das Fett weg!", "Die Arbeitsplatte hält – du auch!"] },
+  { id: "brotteig", t: "Brotteig kneten", g: "kueche", a: "kneten", sitz: 1, h: "Fäuste machen und kräftig kneten – der Brotteig muss geschmeidig werden.", c: ["Kneten, kneten, kneten!", "Das wird ein Bauernbrot!"] },
 ];
 const BW_MODI = [["sitzen", "🪑 Im Sitzen"], ["stehen", "🧍 Im Stehen"], ["kueche", "🥄 Küchenhelfer"]];
 const BW_DAUER = [5, 10, 15];
@@ -12961,7 +13054,8 @@ const BW_LOB = ["Super machst du das!", "Spitze – weiter so!", "Schön weitera
   // 2.307.0 KC-CLUB-BUEHNE-SPRUECHE (Wunsch Hansi): mehr Motivation
   "Jede Bewegung zählt – und du bist mittendrin!", "Dein Körper sagt gerade Danke!", "Du wirst mit jeder Runde besser!", "Atmen nicht vergessen – ganz ruhig weiter!",
   "Das Herz freut sich über jede Minute!", "Du hältst prima mit – wie ein echter Profi!", "Schritt für Schritt – genau richtig so!", "Heute bist du schneller als die Nudeln im Topf!",
-  "Gemeinsam schaffen wir das!", "Was du heute bewegst, trägt dich morgen!", "Du machst das richtig gut – ich sehe das genau!", "Aufrecht, locker und mit einem Lächeln – perfekt!"];
+  "Gemeinsam schaffen wir das!", "Was du heute bewegst, trägt dich morgen!", "Du machst das richtig gut – ich sehe das genau!", "Aufrecht, locker und mit einem Lächeln – perfekt!",
+  "Lieber langsam als gar nicht – genau richtig!", "Bleib dran – das sieht schon richtig gut aus!", "Tu heute etwas, worauf du morgen stolz bist!"]; // 2.314.0
 // 2.299.0 (Wunsch Hansi): Sprüche mit Augenzwinkern – bei jeder Übung einer (nach 9 Sekunden)
 const BW_FRECH = ["Hättest du nicht so viel am Pudding genascht, bräuchten wir das jetzt nicht machen!", "Wie gefallen dir meine Beinstulpen? Die habe ich mir von Nena ausgeliehen!",
   "Ich lade dich gerne mal zum Essen ein – die Möhren habe ich schon geschält. Sonst gibt’s nichts!", "Nächstes Mal weniger Nudeln – dann schwingen die Hüften auch besser mit!",
@@ -12974,8 +13068,13 @@ const BW_FRECH = ["Hättest du nicht so viel am Pudding genascht, bräuchten wir
   "Wer jetzt aufhört, muss nachher den Abwasch machen!", "Das Sofa hat angerufen – es vermisst dich. Sag ihm, es muss noch warten!", "Mein Bauch heißt nicht Bauch – das ist mein Vorrat für den Winter!",
   "Sport ist Mord? Nein – Sport ist Pudding-Abbau!", "Wer schwitzt, braucht nachher eine Extraportion Nachtisch – kleiner Scherz!", "Die Schürze sitzt schon wieder lockerer, oder?",
   "Tanzen wie keiner zuschaut – nur ich, und ich verrate nichts!", "Die Waage wird morgen staunen!", "Bewegung ist wie Würzen – ein bisschen mehr geht immer!",
-  "Wenn das der Chefkoch sehen könnte – der würde glatt mitturnen!", "Kein Rezept ohne Zutaten, kein Muskel ohne Training!", "Die Küchenband spielt nur für dich – also zeig, was du kannst!"];
-const BW_ENDSPURT = ["Noch 10 Sekunden – gib nochmal alles!", "Endspurt – noch 10!", "Die letzten 10 – du schaffst das!", "Noch 10 – zeig, was du kannst!"];
+  "Wenn das der Chefkoch sehen könnte – der würde glatt mitturnen!", "Kein Rezept ohne Zutaten, kein Muskel ohne Training!", "Die Küchenband spielt nur für dich – also zeig, was du kannst!",
+  // 2.314.0 (Recherche Fitness-Sprüche, Wunsch Hansi): noch mehr Augenzwinkern
+  "Ich trainiere nur, damit ich nachher mehr essen kann!", "Schweiß ist nur Fett, das weint!", "Muskelkater ist der Beweis, dass wir fleißig waren!",
+  "Wer jetzt schwitzt, spart sich die Sauna!", "Jede Wiederholung – ein Löffel Sahne weniger!", "Mein Sixpack versteckt sich noch unter dem Sonntagsbraten!",
+  "Lieber jetzt schwitzen als nachher die Hose weiter machen!", "Wir verbrennen gerade mehr Kalorien als der Herd auf Stufe neun!", "Der Gürtel bekommt bald ein neues Loch – nach innen!",
+  "So kriegen wir das Fett weg!"];
+const BW_ENDSPURT = ["Noch 10 – gleich gibt’s Applaus!", "Noch 10 Sekunden – gib nochmal alles!", "Endspurt – noch 10!", "Die letzten 10 – du schaffst das!", "Noch 10 – zeig, was du kannst!"];
 const BW_SCHUETTELN_SAG = ["Und jetzt ausschütteln!", "Super! Locker ausschütteln!", "Prima! Arme und Beine ausschütteln!", "Geschafft – und schön ausschütteln!"];
 const BW_SEK = 30, BW_SCHUETTELN = 6, BW_BEREIT = 7;
 const BW = { lauf: null, takt: 0, wach: null };
@@ -13058,6 +13157,8 @@ function bwFigurSeite(a, b, ph, farbe) {
 }
 // 2.313.0 KC-CLUB-BUEHNE-KARTON: Pappkarton vor Twinkey auf dem Boden (Profil) – der Fuß landet genau oben drauf
 const BW_KARTON = `<g class="bw-karton"><rect x="76" y="139" width="32" height="13" rx="1.2" fill="#c8955a" stroke="#8a5a2b" stroke-width=".8"/><rect x="76" y="139" width="32" height="2.4" fill="#b07c45"/><rect x="88" y="139" width="8" height="13" fill="#e8d2a6" opacity=".75"/><path d="M80 146 h4 M80 148.5 h6" stroke="#8a5a2b" stroke-width=".7"/></g>`;
+// 2.314.0: Arbeitsplatte vor Twinkey (Liegestütz) – die Hände liegen vorn auf der Kante
+const BW_PLATTE = `<g class="bw-platte"><rect x="88" y="90" width="34" height="62" rx="1.5" fill="#a47148"/><rect x="85" y="86" width="37" height="6" rx="1.5" fill="#d9b382"/><rect x="92" y="98" width="26" height="20" rx="2" fill="#8b5e3c"/><circle cx="105" cy="108" r="1.4" fill="#e9ecef"/></g>`;
 // 2.304.0: Twinkey stehend im Profil – Beine hängen an der Hüfte (Oberschenkel → Unterschenkel → Fuß), damit Schritte nach vorn/hinten sichtbar sind
 function bwFigurProfil(a, b, ph, farbe) {
   const [fj, fs, fb] = BW_FARBEN[((farbe || 0) % BW_FARBEN.length + BW_FARBEN.length) % BW_FARBEN.length], o = (x, y) => `style="transform-origin:${x}px ${y}px"`;
@@ -13070,7 +13171,7 @@ function bwFigurProfil(a, b, ph, farbe) {
       <circle cx="66.5" cy="39" r="1.5" class="bw-auge"/><path d="M65 46.5 Q68.5 48.5 70.5 46" class="bw-mund"/><circle cx="65.5" cy="44" r="2" fill="#f4a3a3" opacity=".55"/>
       <path d="M49.5 41 Q49 29 61 29 Q70 29.5 72 35 Q62 33 53 37 Q51 42 49.5 41Z" fill="#6b4226"/><rect x="49.6" y="33.6" width="23" height="5" rx="2.4" class="bw-band" transform="rotate(-6 61 36)"/><path d="M50 35 l-6 -3 l1 4 z M50 37 l-6 2 l3 2 z" class="bw-band"/></g></g>`;
   return `<svg class="bw-figur bw-profil bw-p-${a}" viewBox="0 0 120 170" style="--b:${b || .5}s;--ph:${ph || 0}s;--jacke:${fj};--stulpe:${fs};--band:${fb}" role="img" aria-label="Twinkey von der Seite: Schritte">
-    ${a === "karton" ? BW_KARTON : ""}<g class="p-ganz" ${o(60, 150)}>${arm("hinten")}${bein("hinten")}${oben}${bein("vorn")}${arm("vorn")}</g></svg>`;
+    ${a === "karton" ? BW_KARTON : ""}<g class="p-ganz" ${o(60, 150)}>${arm("hinten")}${bein("hinten")}${oben}${bein("vorn")}${arm("vorn")}</g>${a === "liegestuetz" ? BW_PLATTE : ""}</svg>`;
 }
 // 2.308.0: Hula-Hoop-Reifen in zwei Hälften – hintere Hälfte hinter dem Körper, vordere davor; bunte Streifen laufen (Drehung)
 const bwHoop = (H, vorn) => `<g class="bw-hoop ${vorn ? "vorn" : "hinten"}" style="transform-origin:60px ${H - 6}px"><path d="M29 ${H - 6} A31 8 0 0 ${vorn ? 0 : 1} 91 ${H - 6}" fill="none" stroke="#ff4fa3" stroke-width="3.4" stroke-linecap="round"/><path class="bw-hoop-streifen" d="M29 ${H - 6} A31 8 0 0 ${vorn ? 0 : 1} 91 ${H - 6}" fill="none" stroke="#ffe14d" stroke-width="3.4" stroke-dasharray="5 7"/></g>`;
@@ -29084,6 +29185,8 @@ function suAppListe() {
     ["📋", "Flipchart (umblättern, kariert, liniert)", "flipchart flip skizze zeichnen malen marker umblättern kariert liniert blanko papier", () => esOeffnen("flip")],
     ["🕰️", "Große Uhr", "uhr uhrzeit große uhr bahnhofsuhr fallblatt digital datum", () => esOeffnen("uhr")],
     ["🎭", "Bühne: Bewegung mit Twinkey", "bühne buehne bewegung turnen gymnastik sport übungen musik twinkey küche sitzen stehen", () => esOeffnen("buehne")],
+    ["🪞", "Spiegel (Kamera, Pausbäckchen)", "spiegel kamera selfie pausbäckchen pausbacken dick gesicht", () => esOeffnen("spiegel")], // 2.314.0
+    ["🎭", "Einladung zur Bewegung beim Start", "einladung bewegung start fragen bewegungseinheit sport frage", () => suEinstellung("setBwEinladung")],
     ["🎚️", "Bühne: Musik / Stimme lauter oder leiser", "lautstärke lauter leiser regler musik stimme stumm bühne", () => esOeffnen("buehne")],
     ["🆘", "Wo bin ich? (SOS)", "wo bin ich adresse standort notfall sos", () => sosStart()], ["🪪", "Mein Notfallpass", "notfallpass allergien medikamente blutgruppe notfall", () => { sosStart(); nfpBearbeiten(); }],
   ].map(([sym, t, w, fn]) => ({ sym, t, w, fn }));
@@ -30195,6 +30298,7 @@ async function fpAdmin(tage) {
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
     if (!h || h === "#") setTimeout(() => ekHinweisPruefen(), 3000); // KC-CLUB-EINGANG-HINWEIS: viel im Eingangskorb?
     if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
+    if (!h || h === "#") setTimeout(() => bwEinladungPruefen(), 15000); // 2.314.0 KC-CLUB-BEWEGUNG-EINLADUNG
     if (!h || h === "#") setTimeout(() => scHinweisPruefen(), 9000); // KC-CLUB-SCHULUNG-HINWEIS (2.23.68): Admin
     if (!h || h === "#") setTimeout(() => smHinweisPruefen(), 7000); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62): offene Schulungs-Einladung? // KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52): neue Terminanfrage?
     if (!h || h === "#") setTimeout(() => twAntwortPruefen(), 6000); // KC-CLUB-TWINKEY-FRAGEN: Antwort „in der Club-App“
