@@ -8980,3 +8980,8 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/if \(document\.hidden && ES_SPIEGEL\.stream\) esSpiegelAus\(true\)/.test(html) && !/esSpiegel[\s\S]{0,4000}\bapi\(/.test(html.slice(html.indexOf("const ES_SPIEGEL"), html.indexOf("// ----- 🖼️ Diashow"))), "Spiegel: nichts gesendet, im Hintergrund aus");
   assert.ok(/\{ id: "wandstuetz", t: "Liegestütz an der Arbeitsplatte"/.test(html) && /\.bw-profil\.bw-p-liegestuetz \.p-ganz \{ animation: bwPLiegeGanz/.test(html) && /"Schweiß ist nur Fett, das weint!"/.test(html), "neue Übungen und Sprüche");
 }
+
+// KC-CLUB-VORFUEHREN-HINTERGRUND: Zuschauer im Hintergrund fragt nicht nach
+{
+  assert.ok(/async function vfHolen\(sofort\) \{\n  if \(VF\.rolle !== "schaut"\) return;\n  if \(document\.hidden && sofort !== true\) return;/.test(html), "Vorführung: kein Abfragen im Hintergrund");
+}

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.314.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.314.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15889,6 +15889,7 @@ function vfSchirm() {
 }
 async function vfHolen(sofort) {
   if (VF.rolle !== "schaut") return;
+  if (document.hidden && sofort !== true) return; // 2.314.1 KC-CLUB-VORFUEHREN-HINTERGRUND: Fenster im Hintergrund (z. B. zweiter Browser) fragt nicht mit – Fund 10.10.: zwei Browser je 0,8 s
   if (VF.laeuft) { if (sofort === true) VF.nochmal = true; return; } // Signal während einer Abfrage → gleich danach noch einmal
   // KC-CLUB-REALTIME-VORFUEHREN (2.229.0): steht die direkte Leitung, meldet sich jedes neue Bild selbst – der Takt nur zur Sicherheit
   if (sofort !== true && rtAn() && (VF.tn = (VF.tn || 0) + 1) % 4) return;

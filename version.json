@@ -1,13 +1,18 @@
 {
-  "version": "2.314.0",
+  "version": "2.314.1",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🎭 Twinkey lädt beim Start ein: „Hallo …, heute Lust auf eine Bewegungseinheit mit mir?“ – Ja (direkt zur Bühne), Später, Heute nicht, Nicht mehr fragen",
-    "🪞 Neu auf der Rückseite: der Spiegel – Kamerabild wie in einem großen Spiegel, auf Wunsch mit Pausbäckchen; Twinkey meint: „Wir sollten mal wieder eine Bewegungseinheit machen!“",
-    "💪 Neue Übungen aus der Recherche (Stuhl- und Seniorengymnastik): Liegestütz an der Arbeitsplatte, Wasserflaschen seitlich heben, Zum Salzstreuer greifen, Applaus für den Koch, Brotteig kneten – und viele neue Sprüche"
+    "📺 Live-Vorführung: Zuschauer-Fenster im Hintergrund (z. B. ein zweiter Browser) fragen nicht mehr ständig beim Server nach – weniger Last, schnellere App"
   ],
   "verlauf": [
+    {
+      "version": "2.314.1",
+      "datum": "2026-10-12",
+      "neu": [
+        "📺 Live-Vorführung: Zuschauer-Fenster im Hintergrund (z. B. ein zweiter Browser) fragen nicht mehr ständig beim Server nach – weniger Last, schnellere App"
+      ]
+    },
     {
       "version": "2.314.0",
       "datum": "2026-10-12",
