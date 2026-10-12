@@ -2818,7 +2818,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const me = server.slice(server.indexOf('case "meine_eingaben"'), server.indexOf('case "dienstwunsch_laden"'));
   assert.ok(/\.eq\("person_id", ich\.person_id\)/.test(me) && /dienstwunschAufstellung\(ich\)/.test(me), "nur eigene Eingaben");
-  assert.ok(/routerSenden\("club_nachricht_beide", \[ich\.person_id\]/.test(me) && /aktion", "dienstwunsch_bestaetigt"\)\.gte\("zeit", new Date\(Date\.now\(\) - 120_000\)/.test(me), "App + Mail nur an mich, höchstens 1× je 2 Min.");
+  const dwb = server.slice(server.indexOf("async function dwBestaetigungSenden"), server.indexOf("async function dienstwunschAufstellung")); // 2.325.0: gemeinsamer Versand
+  assert.ok(/dwBestaetigungSenden\(ich\.person_id, ich\.vorname, null\)/.test(me) && /routerSenden\("club_nachricht_beide", \[pid\]/.test(dwb) && /aktion", "dienstwunsch_bestaetigt"\)\.gte\("zeit", new Date\(Date\.now\(\) - 120_000\)/.test(dwb), "App + Mail nur an mich, höchstens 1× je 2 Min.");
   assert.ok(/const url = `\$\{APP_URL\}#bestaetigung=erstattung:\$\{a\.id\}`/.test(server) && /routerSenden\("club_nachricht_push", \[ich\.person_id\], erstattungBestaetigung\(/.test(server), "Erstattung: App-Nachricht an den Antragsteller");
   assert.ok(/data-k="fertig"[^>]*>✅ Fertig( – Bestätigung)?<\/button>/.test(html) && /bestaetigung: \{ bauen: (async )?\(\) => (druckBestaetigung\(\)|\{ try \{ await qrLaden\(\); \} catch \{\} return druckBestaetigung\(\); \}) \}/.test(html) && /h\.startsWith\("#bestaetigung="\)/.test(html), "Knopf, Druckart, Link");
   assert.ok(/quer: true, fuss: "Bestätigung aus der Köcheclub-App"/.test(html) && /return druckErstattung\(\{ antrag: b\.antrag\.id \}\)/.test(html), "Querformat / vorhandener Antrags-Ausdruck");
@@ -9080,4 +9081,15 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/e\.data\?\.art === "dw-alle-tage"\) return dwFertigLeiste/.test(html) && /📧 Bestätigung mit Zusammenfassung per E-Mail anfordern<\/button>/.test(html), "Leiste am Ende");
   assert.ok(/onclick = dwZurueck/.test(html) && /e\.data === "dienstwunsch-zu"\) dwZurueck\(\)/.test(html) && /DWB\.geaendert && !DWB\.bestaetigt/.test(html), "Nachfrage beim Zurück");
   assert.ok(/\.dw-kopf \{ grid-template-columns: minmax\(0, 1fr\); \}/.test(html), "Kopfreihe passt aufs Handy");
+}
+
+// 2.325.0 KC-CLUB-DW-BESTAETIGUNG-KOPIE: Bestätigung mit CC Clubsprecher + Kassenwart und BCC Admin; Leitung kann sie aus dem Eingang schicken
+{
+  const srv = lies("supabase/functions/kc-club/index.ts");
+  const dwb = srv.slice(srv.indexOf("async function dwBestaetigungSenden"), srv.indexOf("async function dienstwunschAufstellung"));
+  assert.ok(/const DW_BEST_CC_AEMTER = \["Clubsprecher", "Kassenwart"\]/.test(srv) && /overlaps\("aemter", DW_BEST_CC_AEMTER\)/.test(dwb) && /const bcc = \(await adminIds\(\)\)/.test(dwb) && /\{ cc, bcc \}\);/.test(dwb), "CC und BCC");
+  assert.ok(/`club-dwbest:\$\{pid\}/.test(dwb) && !/^club-dwbest/.test("") && !/dwbest/.test(srv.match(/const VORGANG_KOPIE = [^\n]*/)[0]), "keine doppelte Vorgang-Kopie");
+  const ad = srv.slice(srv.indexOf('case "dw_bestaetigung_senden": {'), srv.indexOf('case "hilfe_bewerten": {'));
+  assert.ok(/nurLeitung\(ich\);/.test(ad) && /dwZeile\(/.test(ad), "nur Leitung");
+  assert.ok(/data-fn="ekDwBestaetigung\('\$\{d\.id\}'\)">📧 Bestätigung an/.test(html) && /api\("dw_bestaetigung_senden", \{ id \}/.test(html), "Knopf im Eingang");
 }

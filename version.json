@@ -1,14 +1,20 @@
 {
-  "version": "2.324.0",
+  "version": "2.325.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "📧 Dienstwünsche: Am Ende der Eingabe (alle Tage eingetragen) erscheint „📧 Bestätigung mit Zusammenfassung per E-Mail anfordern“ – ein Tipp, und die E-Mail mit allen Eingaben ist unterwegs",
-    "🔙 Beim Zurückgehen fragt die App nach, ob du die Bestätigung per E-Mail haben möchtest (wenn du etwas eingetragen und noch keine angefordert hast)",
-    "✉️ Neuer E-Mail-Text: Dank für die Dienstplanung per App, Hinweis „Wunschplanung – noch nicht der fertige, freigegebene Sollplan“, Grüße vom Köcheclub Werne",
-    "📱 Die Knopfreihe oben bei den Dienstwünschen passt jetzt aufs Handy („✅ Fertig“ war abgeschnitten)"
+    "📧 Bestätigung der Dienstwünsche geht jetzt immer in CC an Clubsprecher und Kassenwart (Klaus und Dieter) und in BCC an den Admin",
+    "📥 Im Eingang (Dienstzeiten eines Mitglieds) neuer Knopf „📧 Bestätigung an … schicken“ – die Clubleitung kann die Bestätigung selbst auslösen"
   ],
   "verlauf": [
+    {
+      "version": "2.325.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "📧 Bestätigung der Dienstwünsche geht jetzt immer in CC an Clubsprecher und Kassenwart (Klaus und Dieter) und in BCC an den Admin",
+        "📥 Im Eingang (Dienstzeiten eines Mitglieds) neuer Knopf „📧 Bestätigung an … schicken“ – die Clubleitung kann die Bestätigung selbst auslösen"
+      ]
+    },
     {
       "version": "2.324.0",
       "datum": "2026-10-12",

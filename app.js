@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.324.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.325.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -20119,9 +20119,15 @@ async function ekDienstInfo(id) {
     <p class="hinweis">${esc(d.veranstaltung)} · Stand ${esc(d.stand)} · Fassung ${esc(String(d.revision))}${d.uebernommen ? " · ✅ im Dienstplan übernommen" : " · noch nicht im Dienstplan"}</p>
     ${d.tage.length ? `<div class="karte" style="padding:6px 12px">${d.tage.map((t) => `<div class="zeile"><b>${esc(t.tag)}</b>${t.zeilen.map((z) => `<br><small>${esc(z)}</small>`).join("")}</div>`).join("")}</div>` : '<p class="hinweis">Keine Zeiten eingetragen.</p>'}
     ${d.comment ? `<p>💬 ${esc(d.comment)}</p>` : ""}<p class="hinweis">Eingeplant wird im Dienstplan-Programm (DP2).</p>
-    <div style="display:grid;gap:8px"><button class="knopf haupt" data-fn="ekKenntnis('dienstwunsch','${d.id}')">👁️ Zur Kenntnis genommen</button>
+    <div style="display:grid;gap:8px">${d.tage.length ? `<button class="knopf" data-fn="ekDwBestaetigung('${d.id}')">📧 Bestätigung an ${esc(d.name)} schicken</button>` : ""}<button class="knopf haupt" data-fn="ekKenntnis('dienstwunsch','${d.id}')">👁️ Zur Kenntnis genommen</button>
       <button class="knopf" data-fn="ekAblage('dienstwunsch','${d.id}')">🗄️ Ablegen …</button><button class="knopf" data-fn="">Schließen</button></div>`);
   f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.fn) new Function(b.dataset.fn)(); }));
+}
+// 2.325.0 KC-CLUB-DW-BESTAETIGUNG-KOPIE (Wunsch Hansi): Bestätigung mit Zusammenfassung an das Mitglied – CC Clubsprecher + Kassenwart, BCC Admin
+async function ekDwBestaetigung(id) {
+  if (!await frage("📧 Bestätigung mit Zusammenfassung schicken?\nDas Mitglied bekommt alle Eingaben per E-Mail und App-Nachricht – mit dem Hinweis „Wunschplanung, noch nicht der fertige Dienstplan“. In CC: Clubsprecher und Kassenwart, in BCC: du.", { ja: "📧 Schicken", nein: "Abbrechen" })) return;
+  try { const r = await api("dw_bestaetigung_senden", { id }, { warten: true }); melde(r.gesendet ? `📧 Bestätigung an ${r.name} verschickt (${r.cc} in CC, ${r.bcc} in BCC)` : `⚠️ Bestätigung an ${r.name} konnte nicht zugestellt werden`); }
+  catch (e) { meldeFehler(e); }
 }
 const EK_WAHL_KEY = (art) => "kc_club_ek_ablage_" + art;
 async function ekAblage(art, id, frage) {

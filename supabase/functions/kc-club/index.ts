@@ -1998,6 +1998,30 @@ async function dwZuletztErinnert() {
 const DW_HINWEIS = (name: string) => `Vielen Dank für die Übermittlung deiner Dienstzeiten für den ${name}. Bitte beachte, dass es sich um deine Wünsche handelt – eine Abstimmung mit allen Clubmitgliedern erfolgt noch.`;
 const DW_ART: Record<string, string> = { available: "Kann", preferred: "Am liebsten", if_needed: "Wenn nötig", unavailable: "Kann nicht" };
 const DW_ZONE: Record<string, string> = { V: "Bereich V", H: "Bereich H", B: "Bereich B", Z: "Bereich Z" };
+// KC-CLUB-BESTAETIGUNG (1.69.0) / KC-CLUB-DW-BESTAETIGUNG-MAIL (2.324.0) / KC-CLUB-DW-BESTAETIGUNG-KOPIE (2.325.0, Wunsch Hansi „immer mich in
+// BCC setzen und Klaus und Dieter in CC“): Bestätigung der Dienstwünsche an das Mitglied – Mail in CC an Clubsprecher und Kassenwart
+// (Ämter aus kc_club_rollen, heute Klaus und Dieter), BCC an die Admins (Hansi). Statt der getrennten Vorgang-Kopie (Kennung club-dwbest).
+const DW_BEST_CC_AEMTER = ["Clubsprecher", "Kassenwart"];
+async function dwBestaetigungSenden(pid: string, vn: string, durch: string | null) {
+  const a = await dienstwunschAufstellung({ person_id: pid, name: vn } as Ich);
+  if (!a.tage.length) throw new Fehler("Es sind noch keine Dienstwünsche gespeichert.", 409);
+  const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", pid).eq("aktion", "dienstwunsch_bestaetigt").gte("zeit", new Date(Date.now() - 120_000).toISOString());
+  if (count) throw new Fehler("Die Bestätigung ist gerade erst verschickt worden – bitte kurz warten.", 429);
+  const zeilen = a.tage.map((t: any) => `${t.tag}:\n${t.zeilen.map((z: string) => "   " + z).join("\n")}`).join("\n\n");
+  const url = `${APP_URL}#bestaetigung=dienstwunsch`;
+  // 2.324.0 (Wortlaut Hansi): Anrede „Lieber/Liebe“ aus kc_besuche_anrede, sonst „Hallo“; Hinweis: Wunschplanung, noch nicht der freigegebene Sollplan
+  const { data: anr } = await db.from("kc_besuche_anrede").select("anrede").eq("person_id", pid).maybeSingle();
+  const text = `${anr?.anrede === "Lieber" || anr?.anrede === "Liebe" ? anr.anrede : "Hallo"} ${vn},\n\ndanke, dass du deine Dienstplanung per App gemacht hast. Deine Angaben sind angekommen und werden in das Dienstplan-Programm DP2 übernommen.\n\n⚠️ Bitte beachte: Es handelt sich um deine Wunschplanung – das ist noch nicht der fertige, freigegebene Sollplan. Der fertige Dienstplan wird sicherlich bald veröffentlicht.\n\nDeine Angaben für den ${DW.name} (Stand ${a.stand}):\n\n${zeilen}\n\n────────────\n${a.tage.length} Tag${a.tage.length === 1 ? "" : "e"} · ${a.freigabe ? "Kollegen dürfen deine Zeiten sehen" : "nur für die Planung sichtbar"}\n\nDie Aufstellung zum Ansehen, Drucken oder als PDF:\n${url}\n\nÄnderungen sind jederzeit möglich, solange die Wunschphase läuft.\n\nLiebe Grüße\nKöcheclub Werne`;
+  const { data: ro } = await db.from("kc_club_rollen").select("person_id").overlaps("aemter", DW_BEST_CC_AEMTER);
+  const cc = [...new Set((ro ?? []).map((r: any) => String(r.person_id)))].filter((x) => x !== pid);
+  const bcc = (await adminIds()).filter((x) => x !== pid && !cc.includes(x));
+  const versand = await routerSenden("club_nachricht_beide", [pid], {
+    titel: "✅ Deine Dienstwünsche sind angekommen", kurz: `${a.tage.length} Tage · Stand ${a.stand} · Wunschplanung, noch nicht der fertige Dienstplan – 📄 Aufstellung öffnen`,
+    betreff: `Köcheclub Werne – Bestätigung deiner Dienstplanung (${DW.name}) – Wunschplanung`, text, url,
+  }, `club-dwbest:${pid}:${a.revision}:${Date.now()}`, { cc, bcc });
+  await protokoll(pid, "dienstwunsch_bestaetigt", { revision: a.revision, tage: a.tage.length, versand, cc, bcc, ...(durch ? { durch } : {}) });
+  return { ...versand, tage: a.tage.length, cc: cc.length, bcc: bcc.length };
+}
 async function dienstwunschAufstellung(ich: Ich) {
   const { data: m } = await db.from("kc_dp_wish_inbox").select("revision,status,entries,standby,share_with_colleagues,submitted_at,taken_at")
     .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).eq("source", "club_app").maybeSingle();
@@ -7686,22 +7710,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
       case "eingaben_bestaetigen": {
         // nur Dienstwünsche (Erstattung bestätigt sich beim Senden selbst); höchstens 1× je 2 Minuten
-        const a = await dienstwunschAufstellung(ich);
-        if (!a.tage.length) throw new Fehler("Es sind noch keine Dienstwünsche gespeichert.", 409);
-        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "dienstwunsch_bestaetigt").gte("zeit", new Date(Date.now() - 120_000).toISOString());
-        if (count) throw new Fehler("Die Bestätigung ist gerade erst verschickt worden – bitte kurz warten.", 429);
-        const zeilen = a.tage.map((t: any) => `${t.tag}:\n${t.zeilen.map((z: string) => "   " + z).join("\n")}`).join("\n\n");
-        const url = `${APP_URL}#bestaetigung=dienstwunsch`;
-        // 2.324.0 KC-CLUB-DW-BESTAETIGUNG-MAIL (Wortlaut Hansi): „Lieber Frank, danke, dass du deine Dienstplanung per App gemacht hast …“ –
-        // Anrede „Lieber/Liebe“ aus kc_besuche_anrede, sonst „Hallo“; deutlicher Hinweis: Wunschplanung, noch nicht der freigegebene Sollplan
-        const { data: anr } = await db.from("kc_besuche_anrede").select("anrede").eq("person_id", ich.person_id).maybeSingle();
-        const text = `${anr?.anrede === "Lieber" || anr?.anrede === "Liebe" ? anr.anrede : "Hallo"} ${ich.vorname},\n\ndanke, dass du deine Dienstplanung per App gemacht hast. Deine Angaben sind angekommen und werden in das Dienstplan-Programm DP2 übernommen.\n\n⚠️ Bitte beachte: Es handelt sich um deine Wunschplanung – das ist noch nicht der fertige, freigegebene Sollplan. Der fertige Dienstplan wird sicherlich bald veröffentlicht.\n\nDeine Angaben für den ${DW.name} (Stand ${a.stand}):\n\n${zeilen}\n\n────────────\n${a.tage.length} Tag${a.tage.length === 1 ? "" : "e"} · ${a.freigabe ? "Kollegen dürfen deine Zeiten sehen" : "nur für die Planung sichtbar"}\n\nDie Aufstellung zum Ansehen, Drucken oder als PDF:\n${url}\n\nÄnderungen sind jederzeit möglich, solange die Wunschphase läuft.\n\nLiebe Grüße\nKöcheclub Werne`;
-        const versand = await routerSenden("club_nachricht_beide", [ich.person_id], {
-          titel: "✅ Deine Dienstwünsche sind angekommen", kurz: `${a.tage.length} Tage · Stand ${a.stand} · Wunschplanung, noch nicht der fertige Dienstplan – 📄 Aufstellung öffnen`,
-          betreff: `Köcheclub Werne – Bestätigung deiner Dienstplanung (${DW.name}) – Wunschplanung`, text, url,
-        }, `club-bestaetigung-dw:${ich.person_id}:${a.revision}:${Date.now()}`);
-        await protokoll(ich.person_id, "dienstwunsch_bestaetigt", { revision: a.revision, tage: a.tage.length, versand });
-        return json({ ok: true, ...versand });
+        return json({ ok: true, ...(await dwBestaetigungSenden(ich.person_id, ich.vorname, null)) });
+      }
+      case "dw_bestaetigung_senden": {
+        // 2.325.0 KC-CLUB-DW-BESTAETIGUNG-KOPIE (Wunsch Hansi): die Leitung schickt einem Mitglied seine Bestätigung aus dem Eingang
+        nurLeitung(ich);
+        const m = await dwZeile(String(p.id || "")); if (!m) throw new Fehler("Nicht gefunden.", 404);
+        const per = (await personen([m.person_id])).get(m.person_id);
+        const v = await dwBestaetigungSenden(m.person_id, vorname(per) || m.person_id, ich.person_id);
+        return json({ ok: true, name: per?.display_name || m.person_id, ...v });
       }
 
       case "hilfe_bewerten": {
