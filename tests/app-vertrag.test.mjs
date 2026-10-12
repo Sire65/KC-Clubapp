@@ -5999,6 +5999,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(\(u\.a2 \|\| u\.um\) && L\.rest === Math\.floor\(BW_SEK \/ 2\)\) bwLaufZeigen\(\);/.test(html) && /if \(u\.um && L\.phase === "uebung" && L\.rest <= BW_SEK \/ 2\) f\.querySelector\("\.bw-figur"\)\?\.classList\.add\("bw-um"\);/.test(html), "Umdrehen zur Hälfte");
   assert.ok(/\(u\.ding !== "topf" \|\| u\.g === "kueche"\)/.test(html), "Topf nur bei Küchen-Übungen auf der Bereitlegen-Liste");
 }
+// 2.311.0 KC-CLUB-BUEHNE-ECHT-2 (Wunsch Hansi): Becken treffen sich vor der Brust (Klang genau dann), Nudelholz/Fäuste echter, ab und zu Stirn abwischen, neue Sprüche
+{
+  const css = lies("index.html");
+  for (const k of ["bwKlatsch2LOa", "bwKlatsch2RUa", "bwBecken2LOa", "bwBecken2LGegen", "bwBecken2RGegen", "bwRollen2LOa", "bwRollen2Ding", "bwFaust2LOa", "bwFaust2Hand", "bwStirnROa", "bwStirnRGegen"]) assert.ok(css.includes(`@keyframes ${k} `), `Bewegungsbahn ${k}`);
+  assert.ok(/\.bw-a-becken \.bw-uaL \.bw-helfer \{ animation: bwBecken2LGegen /.test(css) && /\.bw-a-becken \.bw-uaR \.bw-helfer \{ animation: bwBecken2RGegen /.test(css), "Deckel stehen senkrecht wie Becken");
+  assert.ok(/\{ id: "deckel", t: "Deckel-Klatschen", g: "kueche", a: "becken", p: "deckel",/.test(html) && /if \(u\?\.a === "becken" && \(im === 4 \|\| im === 12\)\) bwBecken\(t\);/.test(html), "Beckenklang auf 2 und 4 = Treffpunkt bei 50 % der 2-Schlag-Bewegung");
+  assert.ok(/\.bw-a-kneten \.bw-hand \{ animation: bwFaust2Hand /.test(css) && !/\.bw-handL/.test(css), "Faust: Hand wird wirklich klein/groß (alte Klasse bw-handL gab es nie)");
+  assert.ok(/@keyframes bwKlatschenOa /.test(css) && /\.bw-a-steptouch \.bw-oaL \{ animation: bwKlatschenOa /.test(css), "Step-Touch behält seinen Armschwung");
+  assert.ok(/L\.wisch = L\.i % 3 === 1 && L\.i < L\.plan\.length - 1;/.test(html) && /Puh! Erst mal den Schweiß abwischen/.test(html), "nicht jedes Mal: jede dritte Übung, nicht am Ende");
+  assert.ok(/L\.phase === "schuetteln" \? \(L\.wisch && L\.rest > 3 \? "stirn" : "schuetteln"\)/.test(html) && /if \(L\.phase === "schuetteln" && L\.wisch && L\.rest === 3\) bwLaufZeigen\(\);/.test(html) && /anim === "stirn" \? "tuch" : ""/.test(html), "erst Stirn mit Tuch, dann ausschütteln");
+  assert.ok(html.includes("Wie gefallen dir meine Beinstulpen? Die habe ich mir von Nena ausgeliehen!") && html.includes("die Möhren habe ich schon geschält. Sonst gibt’s nichts!"), "neue Sprüche");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -8874,7 +8886,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 {
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
   assert.ok(/if \(u\?\.a === "trommeln" && im % 2 === 0\) bwTopf\(t, im % 4 === 0\);/.test(b) && /function bwTopf\(t, betont\)/.test(b), "Topf klingt auf jede Achtel");
-  assert.ok(/if \(u\?\.a === "klatschen" && u\.p === "deckel" && \(im === 4 \|\| im === 12\)\) bwBecken\(t\);/.test(b) && /function bwBecken\(t\)/.test(b), "Deckel wie Becken auf 2 und 4");
+  assert.ok(/if \(u\?\.a === "becken" && \(im === 4 \|\| im === 12\)\) bwBecken\(t\);/.test(b) && /function bwBecken\(t\)/.test(b), "Deckel wie Becken auf 2 und 4");
   assert.ok(/L\.phase === "uebung" && !L\.pause/.test(b), "nur während der Übung");
 }
 

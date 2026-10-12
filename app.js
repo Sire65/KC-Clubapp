@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.310.2"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.311.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12936,7 +12936,7 @@ const BW_UEBUNGEN = [
   { id: "trommeln", t: "Topf-Trommeln", g: "kueche", a: "trommeln", p: "loeffel2", ding: "topf", sitz: 1, h: "Mit zwei Kochlöffeln auf den Topf trommeln – schön im Takt!", c: ["Im Takt der Musik – bumm, bumm!", "Die Küchenband legt los!"] },
   { id: "seitbeuge", t: "Kochlöffel zur Seite", g: "kueche", a: "seitbeuge", p: "loeffel2", h: "Kochlöffel über den Kopf und sanft zur Seite neigen.", w: "Und jetzt zur anderen Seite!", c: ["Wie ein Baum im Wind!", "Schön lang machen an der Seite!"] },
   { id: "flaschen", t: "Wasserflaschen heben", g: "kueche", a: "seitheben", p: "flaschen", sitz: 1, h: "In jeder Hand eine Flasche – Arme seitlich heben und senken.", c: ["Unsere Hanteln aus der Küche!", "Langsam und kontrolliert!"] },
-  { id: "deckel", t: "Deckel-Klatschen", g: "kueche", a: "klatschen", p: "deckel", sitz: 1, h: "Zwei Topfdeckel vor der Brust zusammen – wie ein Becken!", c: ["Tschingderassabum!", "Klatsch – auf den Schlag!"] },
+  { id: "deckel", t: "Deckel-Klatschen", g: "kueche", a: "becken", p: "deckel", sitz: 1, h: "Zwei Topfdeckel vor der Brust zusammen – wie ein Becken!", c: ["Tschingderassabum!", "Klatsch – auf den Schlag!"] },
   { id: "nudelholz", t: "Nudelholz rollen", g: "kueche", a: "rollen", ding: "nudel", sitz: 1, h: "Arme nach vorn und den Teig kräftig ausrollen.", c: ["Der Pizzateig wird hauchdünn!", "Vor – und zurück!"] },
   { id: "pfanne", t: "Pfanne schwenken", g: "kueche", a: "pfanne", p: "pfanne", ding: "pfannkuchen", sitz: 1, h: "Pfanne vor dir und den Pfannkuchen hochwerfen – aus dem Handgelenk!", w: "Und jetzt die andere Hand!", c: ["Hopp – und gefangen!", "Wie ein Sternekoch!"] },
   { id: "tuch", t: "Geschirrtuch-Dehnung", g: "kueche", a: "hochhalten", p: "tuch", h: "Geschirrtuch mit beiden Händen hoch über den Kopf und lang machen.", c: ["Ganz lang machen – und atmen!", "Herrlich, das tut gut!"] },
@@ -12954,7 +12954,8 @@ const BW_LOB = ["Super machst du das!", "Spitze – weiter so!", "Schön weitera
   "Das Herz freut sich über jede Minute!", "Du hältst prima mit – wie ein echter Profi!", "Schritt für Schritt – genau richtig so!", "Heute bist du schneller als die Nudeln im Topf!",
   "Gemeinsam schaffen wir das!", "Was du heute bewegst, trägt dich morgen!", "Du machst das richtig gut – ich sehe das genau!", "Aufrecht, locker und mit einem Lächeln – perfekt!"];
 // 2.299.0 (Wunsch Hansi): Sprüche mit Augenzwinkern – bei jeder Übung einer (nach 9 Sekunden)
-const BW_FRECH = ["Hättest du nicht so viel am Pudding genascht, bräuchten wir das jetzt nicht machen!", "Nächstes Mal weniger Nudeln – dann schwingen die Hüften auch besser mit!",
+const BW_FRECH = ["Hättest du nicht so viel am Pudding genascht, bräuchten wir das jetzt nicht machen!", "Wie gefallen dir meine Beinstulpen? Die habe ich mir von Nena ausgeliehen!",
+  "Ich lade dich gerne mal zum Essen ein – die Möhren habe ich schon geschält. Sonst gibt’s nichts!", "Nächstes Mal weniger Nudeln – dann schwingen die Hüften auch besser mit!",
   "Alles, was du isst, muss ich zum Glück nicht auf meinen Hüften tragen!", "Wer heimlich vom Teig nascht, rührt jetzt doppelt!", "Die Sahnetorte von gestern winkt gerade zum Abschied!",
   "Jede Bewegung – ein Gummibärchen weniger auf den Hüften!", "Die Bratwurst von gestern läuft gerade wieder weg!", "Wer beim Abschmecken nicht spart, muss beim Turnen ran!",
   "Kalorien sind kleine Tierchen, die nachts die Kleider enger nähen – die jagen wir jetzt!", "Der Kühlschrank kann warten – erst wird geturnt!",
@@ -13026,7 +13027,7 @@ function bwBuehneFigur(u, phase, anim, sitz, farbe) {
   const uebt = phase === "uebung", b = bwSchlag(), ph = bwPhase();
   if (u.seite && phase !== "schuetteln") return bwFigurSeite(uebt ? anim : "ruhe", b, ph, farbe); // Vorbereiten: sitzt schon seitlich auf dem Stuhl
   if (u.profil && phase !== "schuetteln") return bwFigurProfil(uebt ? anim : "ruhe", b, ph, farbe); // 2.304.0: stehend von der Seite (Schritte vor/zurück)
-  const fig = bwFigur(anim, sitz, phase === "schuetteln" ? "" : u.p, phase === "schuetteln" ? "" : u.ding, b, ph, farbe);
+  const fig = bwFigur(anim, sitz, phase === "schuetteln" ? (anim === "stirn" ? "tuch" : "") : u.p, phase === "schuetteln" ? "" : u.ding, b, ph, farbe);
   if (!uebt || !u.weg) return fig;
   const stuhl = u.weg === "stuhl" ? `<svg class="bw-weg-stuhlbild" viewBox="0 0 60 80" aria-hidden="true"><rect x="6" y="2" width="48" height="30" rx="4" fill="#8a6440"/><rect x="10" y="6" width="40" height="22" rx="3" fill="#a0784e"/><rect x="2" y="40" width="56" height="9" rx="3" fill="#b88a5a"/><rect x="5" y="32" width="5" height="46" fill="#7a5634"/><rect x="50" y="32" width="5" height="46" fill="#7a5634"/><rect x="13" y="49" width="4" height="29" fill="#6b4a2c"/><rect x="43" y="49" width="4" height="29" fill="#6b4a2c"/></svg>` : "";
   return `<div class="bw-weg bw-weg-${u.weg}" style="--b:${b}s;--ph:${ph}s">${stuhl}<div class="bw-weg-fig">${fig}</div></div>`;
@@ -13176,9 +13177,13 @@ function bwTick() {
     else if (L.rest === 6) bwSag(bwZufall(BW_KURZ, L), false, "", true);
     else if (L.rest >= 1 && L.rest <= 3) bwSag(L.rest === 3 ? "Noch 3" : L.rest === 2 ? "noch 2" : "noch 1", true);
   }
+  if (L.phase === "schuetteln" && L.wisch && L.rest === 3) bwLaufZeigen(); // 2.311.0: Stirn ist trocken – jetzt ausschütteln
   if (L.rest > 0) return bwZahl();
   if (L.phase === "bereit") { L.phase = "uebung"; L.rest = BW_SEK; BWM.stufe = 2; BWM.becken = true; bwSag("Los geht’s!", false); }
-  else if (L.phase === "uebung") { L.phase = "schuetteln"; L.rest = BW_SCHUETTELN; BWM.stufe = 1; bwSag(L.i >= L.plan.length - 1 ? "Und ausschütteln! Geschafft!" : bwZufall(BW_SCHUETTELN_SAG, L), true); }
+  else if (L.phase === "uebung") { // 2.311.0 KC-CLUB-BUEHNE-STIRN: ab und zu (jede dritte Übung) erst mit dem Schweißtuch die Stirn abwischen
+    L.phase = "schuetteln"; L.rest = BW_SCHUETTELN; BWM.stufe = 1; L.wisch = L.i % 3 === 1 && L.i < L.plan.length - 1;
+    bwSag(L.i >= L.plan.length - 1 ? "Und ausschütteln! Geschafft!" : L.wisch ? "Puh! Erst mal den Schweiß abwischen – und dann ausschütteln!" : bwZufall(BW_SCHUETTELN_SAG, L), true);
+  }
   else if (L.phase === "schuetteln") {
     if (L.i >= L.plan.length - 1) return bwFertig();
     L.i++; L.phase = "bereit"; L.rest = BW_BEREIT; L.warte = 0; L.gezaehlt = false; const n = L.plan[L.i];
@@ -13192,7 +13197,7 @@ function bwZahl() { const L = BW.lauf, z = $("bwZahl"); if (!L || !z) return; z.
   const b = $("bwBalken"); if (b) { const ges = L.phase === "uebung" ? BW_SEK : L.phase === "schuetteln" ? BW_SCHUETTELN : BW_BEREIT; b.style.width = `${Math.max(0, 100 - (L.rest / ges) * 100)}%`; } }
 function bwLaufZeigen(vorhangAuf) {
   const L = BW.lauf, f = $("hrFlaeche"); if (!L || !f) return;
-  const u = L.plan[L.i], anim = L.phase === "uebung" ? (u.a2 && L.rest <= BW_SEK / 2 ? u.a2 : u.a) : L.phase === "schuetteln" ? "schuetteln" : "ruhe", sitz = bwWahl().modus !== "stehen" && !!u.sitz; // 2.303.0: a2 = zweite Hälfte (anderes Bein)
+  const u = L.plan[L.i], anim = L.phase === "uebung" ? (u.a2 && L.rest <= BW_SEK / 2 ? u.a2 : u.a) : L.phase === "schuetteln" ? (L.wisch && L.rest > 3 ? "stirn" : "schuetteln") : "ruhe", sitz = bwWahl().modus !== "stehen" && !!u.sitz; // 2.303.0: a2 = zweite Hälfte (anderes Bein)
   const text = L.phase === "bereit" ? "Gleich:" : L.phase === "schuetteln" ? "Ausschütteln!" : "Jetzt:", alt = BW.blase || "";
   f.innerHTML = `<div class="bw-buehne an${L.pause ? " angehalten" : ""}" id="bwLauf"><div class="bw-licht"></div><div class="bw-vorhang links${vorhangAuf ? " oeffnet" : " offen"}"></div><div class="bw-vorhang rechts${vorhangAuf ? " oeffnet" : " offen"}"></div><div class="bw-boden"></div>
     <div class="bw-kopf"><div><small>${text} · Übung ${L.i + 1} von ${L.plan.length}</small><b>${esc(L.phase === "schuetteln" ? "Arme und Beine locker ausschütteln" : u.t)}</b></div><div class="bw-zahl" id="bwZahl">${L.rest}</div></div>
@@ -13328,7 +13333,7 @@ function bwMusikSchritt(s, t) {
 function bwKuechenTakt(im, t) { // 2.299.3 (Wunsch Hansi): Küchen-Geräusche passend zur Bewegung – genau auf dem Takt, auf dem Twinkey schlägt (2.303.0: eigener Baustein)
   const L = BW.lauf, u = L && L.phase === "uebung" && !L.pause ? L.plan[L.i] : null;
   if (u?.a === "trommeln" && im % 2 === 0) bwTopf(t, im % 4 === 0); // Kochlöffel abwechselnd links/rechts auf jede Achtel
-  if (u?.a === "klatschen" && u.p === "deckel" && (im === 4 || im === 12)) bwBecken(t); // Deckel zusammen auf 2 und 4
+  if (u?.a === "becken" && (im === 4 || im === 12)) bwBecken(t); // Deckel zusammen auf 2 und 4 – 2.311.0: genau dann treffen sich die Deckel vor der Brust
 }
 function bwTopf(t, betont) { // Kochlöffel auf Metalltopf: kurzer Anschlag, blecherne (unharmonische) Obertöne, dumpfer Bauch
   const l = betont ? 1 : .7;

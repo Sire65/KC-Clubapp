@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.311.0 – 2026-10-12 – Twinkey: Becken, Nudelholz und Schweißtuch
+Beim Deckel-Klatschen treffen sich die Topfdeckel jetzt genau vor der Brust – und genau dann klingt das Becken. Das Nudelholz wird mit beiden Händen an den Griffen kräftig vor- und zurückgerollt, bei „Fäuste machen“ streckt Twinkey die Arme vor und öffnet die Hände weit. Ab und zu wischt er sich vor dem Ausschütteln mit dem Schweißtuch die Stirn, und er hat neue Sprüche (Beinstulpen von Nena, Möhren schon geschält).
+
 ## 2.310.2 – 2026-10-12 – KC-CLUB-FP-RUHIG
 Wunsch Hansi („Info statt Fehler anzeigen und alles optimieren, damit so etwas nicht zu oft vorkommt“). Anzeige: Im 🩺 Fehlerprotokoll sind ⚪ Info-Einträge (Startzeit, Gerät & Browser, alte Version, Updates, App geöffnet) ausgeblendet – je Person steht „⚪ n Info-Einträge ausgeblendet“, der Knopf „⚪ Info zeigen“ holt sie zurück. update_selbst/update_start zählen jetzt als Info (bisher 🟡 Hinweis) und haben verständliche Namen. Weniger Einträge: (1) Server speichert dieselbe Meldung (gleiche Art + Zeitstempel) nur einmal – nach einem Update schickte die neue Seite nach, was die alte schon gesendet hatte. (2) Suchmaschinen-Roboter (z. B. BitsExplorerBot) werden weder im Gerät noch auf dem Server mitgeschrieben. (3) „Handy offline“ höchstens einmal je 5 Minuten statt für jede einzelne Anfrage (iPad: 11 Einträge in 2 s). Stabiler: Lese-Anfragen wiederholen sich auch bei kaputter Antwort (Server startet gerade neu, z. B. beim Hochladen) einmal still.
 
