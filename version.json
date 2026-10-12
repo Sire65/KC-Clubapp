@@ -1,13 +1,20 @@
 {
-  "version": "2.321.0",
+  "version": "2.322.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🔔 Benachrichtigungen richten sich nach einem Verlust von selbst wieder ein",
-    "🔔 Fehlt die Erlaubnis, fragt die App deutlich „Jetzt wieder einschalten“",
-    "👋 Beim Anklopfen siehst du, wenn das Gegenüber gerade keine Benachrichtigungen bekommt"
+    "❄️ Eisstücke und Tropfen fallen jetzt auch bei „Bewegung reduzieren“",
+    "❄️ Das erste Eisstück fällt gleich nach dem Öffnen – und ist größer"
   ],
   "verlauf": [
+    {
+      "version": "2.322.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "❄️ Eisstücke und Tropfen fallen jetzt auch bei „Bewegung reduzieren“",
+        "❄️ Das erste Eisstück fällt gleich nach dem Öffnen – und ist größer"
+      ]
+    },
     {
       "version": "2.321.0",
       "datum": "2026-10-12",

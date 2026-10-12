@@ -5834,7 +5834,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/\(function jzTropfTakt\(\) \{/.test(html) && /\}, 3500 \+ Math\.random\(\) \* 4500\);/.test(html), "höchstens ein Tropfen alle 3½–8 s (2.283.0 öfter)");
   assert.ok(/e\._zuletzt = \[n, \.\.\.zuletzt\]\.slice\(0, 3\);/.test(html), "jedes Mal ein anderer Zapfen (2.283.0: nie einer der letzten drei)");
-  assert.ok(/!document\.hidden && rgSichtbar\(e\) && !matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.matches/.test(html), "nur sichtbar und nicht bei bewegungsarmer Einstellung");
+  assert.ok(/!document\.hidden && rgSichtbar\(e\) && !SPAR\?\.an\) \{/.test(html), "nur sichtbar, nicht im Sparmodus (ab 2.322.0 auch bei „Bewegung reduzieren“, wie die Bühne)");
   assert.ok(/a\.oncancel = \(\) => t\.remove\(\);/.test(html) && /b\.onfinish = b\.oncancel = \(\) => t\.remove\(\);/.test(html), "Tropfen räumt sich selbst weg (2.282.0: auch nach dem Übergeben an die Bühne)");
   assert.ok(!/class="jz-tropfen" cx=/.test(html) && !/@keyframes jzTropfen/.test(html), "keine Dauer-Tropfen an jedem Zapfen mehr");
 }
@@ -6028,7 +6028,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/const seitMap = new Map<string, number>\(\);/.test(server) && /\.eq\("schluessel", "online_seit"\)\.in\("person_id", \[\.\.\.on\]\)/.test(server) && /\.\.\.\(seitMap\.has\(id\) \? \{ seitSek: seitMap\.get\(id\) \} : \{\}\)/.test(server), "Server: seit wann online (Sekunden)");
   assert.ok(/: andere\.filter\(\(x\) => Number\.isFinite\(x\.seitSek\) && x\.seitSek \* 1000 < ANSAGE_FRISCH_MS && jetzt - \(OA\.gesehen\.get\(x\.person_id\) \|\| 0\) >= ANSAGE_PAUSE_MS\);/.test(html), "nach Pause: nur wer in den letzten 3 Min. kam");
-  assert.ok(/function jzbEisNameWill\(\)/.test(html) && /Math\.random\(\) < \(J\.vorschau \? \.7 : \.35\)/.test(html) && /if \(eis\) \{ let g = 0; for \(let i = 1; i < sp\.length; i\+\+\) if \(sp\[i\]\[1\] > sp\[g\]\[1\]\) g = i; n = g; \}/.test(html), "ab und an, vom größten Zapfen");
+  assert.ok(/function jzbEisNameWill\(\)/.test(html) && /Math\.random\(\) < \(J\.vorschau \? \.7 : \.(35|5)\)/.test(html) && /if \(eis\) \{ let g = 0; for \(let i = 1; i < sp\.length; i\+\+\) if \(sp\[i\]\[1\] > sp\[g\]\[1\]\) g = i; n = g; \}/.test(html), "ab und an, vom größten Zapfen");
   assert.ok(/\(eis \? jzbEisStueck : jzbEisTropfen\)\(/.test(html) && /function jzbEisStueck\(sx, sy\)/.test(html), "Eisstück fällt in die Bühne");
   assert.ok(/N\.gelandet\[N\.n\] = J\.T; N\.n\+\+;/.test(html) && /const jzbEisNameText = \(\) => String\(ICH\?\.vorname/.test(html), "Buchstabe für Buchstabe der angemeldete Name");
   assert.ok(/if \(N && N\.n && \(J\.sonne \|\| N\.schmelz > 0\)\)/.test(html) && /J\.eisName = null; J\.eisStueck = null;/.test(html), "Sonne lässt den Namen schmelzen, danach von vorn");
@@ -6052,6 +6052,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!PUSH_PRUEF\.lief\) \{ PUSH_PRUEF\.lief = true; setTimeout\(\(\) => pushPruefen\(\)\.catch\(\(\) => \{\}\), 6000\); \}/.test(html), "einmal je Start, nicht im Startweg");
   assert.ok(/const ohnePush = !abo\?\.length && !imApp\.has\(an\);/.test(server) && /if \(zug\?\.length && abo\?\.length\) versand = await routerSenden\("club_nachricht_push"/.test(server) && /return json\(\{ ok: true, id: k\.id, push: versand\.gesendet > 0, ohnePush \}\);/.test(server), "Anklopfen: ehrliche Rückmeldung ohne Push-Zugang");
   assert.ok(/klopfWartenStart\(r\.id, pid, name, r\.ohnePush\)/.test(html) && /hat auf dem Handy gerade keine Benachrichtigungen an/.test(html), "Hinweis im Anklopf-Fenster");
+}
+// 2.322.0 KC-CLUB-EIS-TAKT (Fund Hansi „noch keinen fallenden Eiszapfen gesehen“): Tropfen-/Eis-Takt auch bei „Bewegung reduzieren“, erstes Stück sofort
+{
+  assert.ok(/if \(sp\?\.length && !document\.hidden && rgSichtbar\(e\) && !SPAR\?\.an\) \{/.test(html), "Takt läuft wie die Bühne (nicht an „Bewegung reduzieren“ gebunden)");
+  assert.ok(/if \(!J\.eisErster\) return \(J\.eisErster = true\);/.test(html) && /Math\.random\(\) < \(J\.vorschau \? \.7 : \.5\)/.test(html), "erstes Eisstück sofort, danach etwa jedes zweite Mal");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

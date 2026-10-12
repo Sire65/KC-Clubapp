@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.322.0 – 2026-10-12 – Eisstücke fallen jetzt auch bei dir
+Auf Handys mit der Einstellung „Bewegung reduzieren“ fiel bisher weder ein Wassertropfen noch ein Eisstück von den Eiszapfen. Jetzt läuft das wie das übrige Winterbild. Das erste Eisstück fällt gleich nach dem Öffnen, danach etwa jedes zweite Mal statt eines Tropfens – und es ist etwas größer.
+
 ## 2.321.0 – 2026-10-12 – Benachrichtigungen reparieren sich selbst
 Verliert ein Handy die Erlaubnis für Benachrichtigungen (z. B. nach Neuinstallation oder wenn das Handy aufräumt), richtet die App den Zugang beim nächsten Start von selbst neu ein – oder fragt deutlich „Jetzt wieder einschalten“, wenn das Handy erst gefragt werden muss. Wer anklopft, sieht jetzt, wenn das Gegenüber gerade keine Benachrichtigungen bekommen kann.
 

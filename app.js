@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.321.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.322.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12525,13 +12525,16 @@ addEventListener("resize", () => requestAnimationFrame(jzEisLaenge));
   setTimeout(() => {
     try {
       const e = document.querySelector("#v-start .statusleiste .jz-eis"), sp = e?._spitzen;
-      if (sp?.length && !document.hidden && rgSichtbar(e) && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // 2.322.0 KC-CLUB-EIS-TAKT (Fund Hansi „noch keinen fallenden Eiszapfen gesehen“): sein Handy meldet „Bewegung reduzieren“ – dann lief dieser Takt nie
+      // (keine Tropfen, kein Eisstück), obwohl die Jahreszeiten-Bühne seit 2.263.0 bewusst trotzdem läuft. Jetzt wie die Bühne: abschaltbar über
+      // „🍂 Jahreszeiten im Kopf“ bzw. Sparmodus, nicht über die Geräte-Einstellung.
+      if (sp?.length && !document.hidden && rgSichtbar(e) && !SPAR?.an) {
         const zuletzt = e._zuletzt || []; let n = Math.floor(Math.random() * sp.length); // 2.283.0: nie einer der letzten drei Zapfen
         for (let v = 0; v < sp.length && zuletzt.includes(n) && sp.length > 3; v++) n = (n + 1) % sp.length; e._zuletzt = [n, ...zuletzt].slice(0, 3);
         const eis = jzbEisNameWill(); if (eis) { let g = 0; for (let i = 1; i < sp.length; i++) if (sp[i][1] > sp[g][1]) g = i; n = g; } // 2.319.0 KC-CLUB-EISNAME: vom größten Zapfen
         const [x, L] = sp[n], t = document.createElementNS("http://www.w3.org/2000/svg", "path");
         t.setAttribute("class", eis ? "jz-eisstueck" : "jz-tropfen");
-        t.setAttribute("d", eis ? `M${x.toFixed(1)} ${(L - 5).toFixed(1)} l2.8 4 l-.9 5 l-1.9 1.2 l-1.9 -1.6 l-.6 -4.6 z` : `M${x.toFixed(1)} ${(L - 4.5).toFixed(1)} q3.4 5 0 7.6 q-3.4 -2.6 0 -7.6 z`); e.appendChild(t); // 2.282.0: deutlicher
+        t.setAttribute("d", eis ? `M${x.toFixed(1)} ${(L - 6).toFixed(1)} l4.2 6 l-1.3 7.5 l-2.9 1.8 l-2.9 -2.4 l-.9 -6.9 z` : `M${x.toFixed(1)} ${(L - 4.5).toFixed(1)} q3.4 5 0 7.6 q-3.4 -2.6 0 -7.6 z`); e.appendChild(t); // 2.282.0: deutlicher
         t.style.transformBox = "fill-box"; t.style.transformOrigin = "50% 0";
         const a = t.animate([{ transform: "scale(.25)", opacity: 0 }, { transform: "scale(1)", opacity: .95, offset: .6 }, { transform: "translateY(1px) scale(1,1.08)", opacity: .95 }], { duration: 1500, easing: "ease-out" });
         a.onfinish = () => { // gelöst: in der Jahreszeiten-Bühne bis zum Boden fallen (dort wächst die Pfütze) – ohne Bühne nur ein kurzes Stück
@@ -14485,7 +14488,8 @@ const jzbEisNameText = () => String(ICH?.vorname || String(ICH?.name || "").spli
 function jzbEisNameWill() {
   const J = JZB, txt = jzbEisNameText(); if (!J.cv || J.saison !== "winter" || !txt || J.eisStueck || J.sonne) return false;
   const N = J.eisName; if (N && (N.schmelz > 0 || N.n >= [...N.text].length)) return false;
-  return Math.random() < (J.vorschau ? .7 : .35); // „ab und an“ – etwa jedes dritte Mal statt eines Tropfens
+  if (!J.eisErster) return (J.eisErster = true); // 2.322.0: das erste Stück gleich beim ersten Mal – man soll es auch sehen
+  return Math.random() < (J.vorschau ? .7 : .5); // „ab und an“ – etwa jedes zweite Mal statt eines Tropfens
 }
 function jzbEisStueck(sx, sy) {
   const J = JZB; if (!J.cv || J.saison !== "winter") return false;
@@ -14544,7 +14548,7 @@ function jzbEisNameMalen(c) {
     c.restore();
   }
   if (S) { // das fallende, taumelnde Eisstück
-    c.save(); c.translate(S.x, S.y); c.rotate(S.rot); c.scale(k, k);
+    c.save(); c.translate(S.x, S.y); c.rotate(S.rot); c.scale(1.6 * k, 1.6 * k); // 2.322.0: größer, damit man es fallen sieht
     c.fillStyle = "#e6f6ff"; c.strokeStyle = "rgba(60,140,210,.9)"; c.lineWidth = .9;
     c.beginPath(); c.moveTo(0, -5); c.lineTo(3.2, -1); c.lineTo(2, 4); c.lineTo(-1.2, 5); c.lineTo(-3.2, 0); c.closePath(); c.fill(); c.stroke();
     c.fillStyle = "rgba(255,255,255,.95)"; c.beginPath(); c.arc(-.8, -1.6, 1, 0, 7); c.fill();
