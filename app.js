@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.294.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.295.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1990,11 +1990,11 @@ const RG_SPEZIAL = [
     live: async (L) => { await L.tipp(".sz-link"); rgKopf("offen"); rgInfoKarte("schnellstart"); L.ziel(); } },
   // 2.292.0 KC-CLUB-ESELSOHR: Eselsohr zeigen, Rückseite vorführen (danach wieder vorne)
   { v: "start", nur: () => esAn(), vor: () => { rgKopf("offen"); esEinsetzen(); }, sel: ["#eselsohr"], mussSel: true, puls: ["#eselsohr"], t: "📄 Das Eselsohr",
-    x: "Unten rechts am Kopf ist eine Ecke umgeknickt – das Eselsohr. Ziehst du es mit dem Finger nach links, dreht sich der ganze Kopf um wie ein Blatt Papier.",
+    x: "Unten rechts am Kopf ist eine Ecke umgeknickt – das Eselsohr. Tippst du doppelt darauf, dreht sich der ganze Kopf um wie ein Blatt Papier. Nach links ziehen geht auch.",
     live: async (L) => { await L.wischen("#eselsohr", 1); } },
   { v: "start", nur: () => esAn(), vor: () => { rgKopf("offen"); if (!RG.esZurueck) { RG.esZurueck = true; RG.zurueck.push(() => { RG.esZurueck = false; esDrehen(false, true); }); } esDrehen(true, true).then(() => esTab("uhr")); },
     sel: ["#heroRueck"], mussSel: true, t: "🕰️ Die Rückseite",
-    x: "Auf der Rückseite ist viel Platz: eine Diashow mit den Fotos aus dem Fotoalbum, eine Tafel zum Skizzieren mit Kreide, Schwamm und Speichern, eine große Uhr in vier Stilen – und die Bühne, auf der Twinkey mit Musik Bewegungsübungen vormacht. Doppelt aufs Eselsohr tippen dreht den Kopf zurück.",
+    x: "Auf der Rückseite ist viel Platz: eine Diashow mit den Fotos aus dem Fotoalbum, eine Tafel und ein Flipchart zum Skizzieren – mit Umblättern, Speichern und Verschicken –, eine große Uhr in vier Stilen und die Bühne, auf der Twinkey mit Musik Bewegungsübungen vormacht. Doppelt aufs Eselsohr tippen dreht den Kopf zurück.",
     live: async (L) => { await L.tipp('#heroRueck [data-tab="tafel"]'); esTab("tafel"); L.ziel(); await L.warte(2000); await L.tipp('#heroRueck [data-tab="dia"]'); esTab("dia"); L.ziel(); await L.warte(2000); await L.tipp("#heroRueck .eselsohr", "doppelt"); },
     nach: () => esDrehen(false, true) },
   rgOb("👆 Lange drücken"), rgOb("✋ Verschieben"), rgOb("✅ Fertig", 0), rgOb("🔄 Kachel umdrehen"), rgOb("🗂️ Register anordnen"), rgOb("👆 Wischen"),
@@ -3213,7 +3213,7 @@ const HILFE = [
   { id: "sprungknopf", thema: "nachrichten", sym: "🔘", t: "Einen Knopf in die Nachricht setzen", x: "Willst du jemanden direkt an eine Stelle der App schicken? Unter dem Schreibfeld auf <b>📎</b> → <b>„🔘 Knopf zu einer App-Stelle“</b> und das Ziel wählen, z. B. „Mein Bild wählen“. In der Nachricht erscheint ein Knopf – antippen, und man ist dort.", zeig: () => zeige("nachrichten"), seit: "2.23.97" },
   { id: "was_neu", thema: "nachrichten", sym: "👋", t: "Was ist neu? Gleich beim Öffnen", x: "Öffnest du die App und es gibt Neues, zeigt sie dir kurz, wie viele <b>neue Nachrichten</b> (in deinen Chats und in Gruppen) und <b>Pinnwand-Einträge</b> da sind und ob <b>Spiele</b> auf dich warten – mit Knopf direkt dorthin. Abschalten: im Fenster selbst mit „🔕 Diese Meldung ausschalten“ oder unter ⚙️ Einstellungen → 🗣️ Ansagen, Töne &amp; Tipps → „👋 Beim Öffnen zeigen, was neu ist“.", zeig: () => einstiegHin("ansagen", "setWasNeu"), seit: "2.24.12" },
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „🎨 Darstellung“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("darstellung", "setAnimiert"), seit: "2.24.1" },
-  { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am Kopf ist eine Ecke umgeknickt. <b>Nach links ziehen</b> – der Kopf dreht sich um: <b>🖼️ Diashow</b> mit euren Fotos, <b>🖍️ Tafel</b> zum Skizzieren (Kreidefarben, Stiftdicken, Schwamm; ins Archiv oder als Nachricht) <b>🕰️ große Uhr</b> (Digital grün, Fallblatt, Bahnhofsuhr, Groß & klar) und <b>🎭 Bühne</b>: Twinkey mit Schweißstirnband macht mit Musik Übungen vor – im Sitzen, im Stehen oder mit Küchenhelfern. <b>Doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“.", zeig: () => zeige("start"), seit: "2.292.0" },
+  { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am Kopf ist eine Ecke umgeknickt. <b>Doppelt tippen</b> (oder nach links ziehen) – der Kopf dreht sich um: <b>🖼️ Diashow</b> mit euren Fotos, <b>🖍️ Tafel</b> und <b>📋 Flipchart</b> zum Skizzieren (Farben, Stiftdicken, Radierer; Flipchart-Blätter umblättern; ins Archiv oder als Nachricht), <b>🕰️ große Uhr</b> (Digital grün, Fallblatt, Bahnhofsuhr, Groß & klar) und <b>🎭 Bühne</b>: Twinkey mit Schweißstirnband macht mit Musik Übungen vor – im Sitzen, im Stehen oder mit Küchenhelfern. <b>Doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“.", zeig: () => zeige("start"), seit: "2.292.0" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
   // 2.110.0 (Wunsch Hansi „Hilfetexte und Handbuch anpassen“): Hilfen zu den Neuerungen seit Anleitung V8 (2.96.0)
   { id: "schnecke", thema: "technik", sym: "🐌", t: "Was bedeutet die Schnecke oben?", x: "Erscheint oben in der Mitte eine kleine <b>🐌</b>, ist das Netz gerade langsam – die App misst das selbst an den Antwortzeiten. Alles funktioniert weiter, dauert aber länger: bitte etwas Geduld und <b>nicht mehrfach tippen</b>. Antippen erklärt es kurz. Ist das Netz wieder schnell, verschwindet die Schnecke von selbst.", seit: "2.106.0" },
@@ -12420,7 +12420,7 @@ setInterval(() => { try { const h = document.querySelector("#v-start .hero"); if
 // Gespeichert oder verschickt wird nur, wenn man es selbst antippt. Abschaltbar: ⚙️ → „🧩 Startseite & Ansicht“.
 const ES = { offen: false, timer: 0, tipp: 0, dia: { fotos: null, alben: [], i: 0, laeuft: true, urls: new Map(), seite: 0, laedt: false },
   tafel: { striche: null, farbe: "#f4f1e6", dicke: 2, werkzeug: "stift", zeichnet: null }, uhr: { letzte: "", fbDatum: false } };
-const ES_TABS = [["dia", "🖼️", "Diashow"], ["tafel", "🖍️", "Tafel"], ["uhr", "🕰️", "Uhr"], ["buehne", "🎭", "Bühne"]]; // 2.293.0: + Bühne für Bewegung
+const ES_TABS = [["dia", "🖼️", "Diashow"], ["tafel", "🖍️", "Tafel"], ["flip", "📋", "Flipchart"], ["uhr", "🕰️", "Uhr"], ["buehne", "🎭", "Bühne"]]; // 2.293.0: + Bühne · 2.295.0: + Flipchart
 const ES_FARBEN = [["#f4f1e6", "Kreide weiß"], ["#ffe066", "Gelb"], ["#ff8787", "Rot"], ["#74c0fc", "Blau"], ["#8ce99a", "Grün"], ["#ffa94d", "Orange"], ["#e599f7", "Lila"]];
 const ES_DICKEN = [[3, "fein"], [7, "mittel"], [14, "dick"]];
 const ES_UHREN = [["digital", "🟩 Digital", "Digital grün"], ["fallblatt", "🔢 Fallblatt", "Fallblatt mit Datum"], ["bahnhof", "🚉 Bahnhof", "Bahnhofsuhr"], ["klar", "🔠 Klar", "Groß & klar"]];
@@ -12429,13 +12429,13 @@ function esLies(k, d) { try { const v = localStorage.getItem("kc_club_es_" + k);
 function esSchreib(k, v) { try { localStorage.setItem("kc_club_es_" + k, v); } catch (e) { /* nur Komfort – ohne Speicher geht es auch */ } }
 const esAn = () => esLies("an", "1") === "1";
 const esOhneAnim = () => document.documentElement.classList.contains("ohne-anim");
-function eselsohrSchalter(an) { esSchreib("an", an ? "1" : "0"); esEinsetzen(); melde(an ? "📄 Eselsohr ist da – unten rechts am Kopf nach links ziehen" : "Eselsohr ausgeblendet"); }
+function eselsohrSchalter(an) { esSchreib("an", an ? "1" : "0"); esEinsetzen(); melde(an ? "📄 Eselsohr ist da – unten rechts am Kopf doppelt tippen" : "Eselsohr ausgeblendet"); }
 function esEinsetzen() {
   const h = document.querySelector("#v-start .hero"); if (!h) return;
   let o = document.getElementById("eselsohr");
   if (!esAn()) { o?.remove(); if (ES.offen) esDrehen(false, true); return; }
   if (o) return;
-  h.insertAdjacentHTML("beforeend", `<button type="button" class="eselsohr" id="eselsohr" title="Eselsohr – nach links ziehen: Kopf umdrehen (Diashow, Tafel, große Uhr)" aria-label="Kopf umdrehen: Diashow, Tafel, große Uhr"></button>`);
+  h.insertAdjacentHTML("beforeend", `<button type="button" class="eselsohr" id="eselsohr" title="Eselsohr – doppelt tippen (oder nach links ziehen): Kopf umdrehen" aria-label="Kopf umdrehen: Diashow, Tafel, Flipchart, Uhr, Bühne"></button>`);
   esZiehen(h.lastElementChild, false);
 }
 // Ziehen am Eselsohr: vorne nach links (umdrehen), hinten nach rechts (zurück). Kurzes Antippen vorne: kleiner Wink; hinten: Doppeltipp = zurück.
@@ -12447,11 +12447,14 @@ function esZiehen(o, hinten) {
     if (!hinten && d < -35) return esDrehen(true);
     if (hinten && d > 35) return esDrehen(false);
     if (Math.abs(d) > 8) return;
-    if (hinten) { const t = Date.now(); if (t - ES.tipp < 450) { ES.tipp = 0; esDrehen(false); } else { ES.tipp = t; melde("↩︎ Doppelt aufs Eselsohr tippen – dann dreht sich der Kopf zurück"); } }
-    else { o.classList.remove("wink"); void o.offsetWidth; o.classList.add("wink"); melde("📄 Eselsohr nach links ziehen – dann dreht sich der Kopf um: Diashow, Tafel und große Uhr"); } };
+    // 2.295.0 (Wunsch Hansi): Doppeltipp öffnet und schließt – vorne wie hinten; ein einzelner Tipp erklärt es nur
+    const t = Date.now(); if (t - ES.tipp < 450) { ES.tipp = 0; esDrehen(!hinten); return; } ES.tipp = t;
+    clearTimeout(ES.tippHinweis); ES.tippHinweis = setTimeout(() => { if (!ES.tipp || Date.now() - ES.tipp < 440) return;
+      if (hinten) melde("↩︎ Doppelt aufs Eselsohr tippen – dann dreht sich der Kopf zurück");
+      else { o.classList.remove("wink"); void o.offsetWidth; o.classList.add("wink"); melde("📄 Doppelt aufs Eselsohr tippen – dann dreht sich der Kopf um: Diashow, Tafel, Flipchart, Uhr und Bühne"); } }, 480); };
   o.addEventListener("pointerup", los); o.addEventListener("pointercancel", () => { x0 = null; o.style.removeProperty("--zug"); });
   o.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); esDrehen(!hinten); } }); // Tastatur: direkt drehen
-  o.addEventListener("dblclick", (e) => { e.preventDefault(); if (hinten && ES.offen) esDrehen(false); });
+  o.addEventListener("dblclick", (e) => { e.preventDefault(); }); // Doppeltipp läuft über pointerup (Handy und PC gleich)
 }
 async function esDrehen(an, sofort) {
   const h = document.querySelector("#v-start .hero"); if (!h || ES.offen === an || ES.dreht) return;
@@ -12464,15 +12467,22 @@ async function esDrehen(an, sofort) {
   weg.classList.add("versteckt"); her.classList.remove("versteckt");
   if (!ohne) { her.classList.add("es-her"); setTimeout(() => her.classList.remove("es-her"), 320); }
   ES.dreht = false;
-  if (an) { esTab(esLies("tab", "uhr")); spur?.("eselsohr", null); } else esStop();
+  if (an) { esHoehe(true); esTab(esLies("tab", "uhr")); spur?.("eselsohr", null); } else esStop();
 }
 function esRueckHtml() {
   return `<div class="hero-rueck versteckt" id="heroRueck" role="region" aria-label="Rückseite des Kopfes">
-    <div class="hr-tabs" role="tablist">${ES_TABS.map(([k, s, t]) => `<button type="button" role="tab" class="hr-tab" data-tab="${k}" onclick="esTab('${k}')">${s} ${t}</button>`).join("")}
-      <span class="hr-zurueck-hinweis" aria-hidden="true">↩︎ Eselsohr 2× tippen</span></div>
+    <div class="hr-tabs" role="tablist" title="Doppelt aufs Eselsohr tippen: Kopf zurückdrehen">${ES_TABS.map(([k, s, t]) => `<button type="button" role="tab" class="hr-tab" data-tab="${k}" onclick="esTab('${k}')"><b aria-hidden="true">${s}</b><span>${t}</span></button>`).join("")}</div>
     <div class="hr-flaeche" id="hrFlaeche"></div>
     <button type="button" class="eselsohr hinten" title="Doppelt tippen (oder nach rechts ziehen): Kopf zurückdrehen" aria-label="Kopf zurückdrehen"></button></div>`;
 }
+// 2.295.0: Rückseite so hoch, dass sie den Bildschirm bis zur Fußleiste ausnutzt (Kopf dafür oben an den Rand)
+function esHoehe(scrollen) {
+  const r = $("heroRueck"); if (!r || r.classList.contains("versteckt")) return;
+  if (scrollen) { const oben = r.getBoundingClientRect().top + scrollY - 6; if (Math.abs(scrollY - oben) > 2) scrollTo({ top: Math.max(0, oben) }); }
+  const fuss = $("fuss"), fh = fuss && getComputedStyle(fuss).display !== "none" && getComputedStyle(fuss).position === "fixed" ? fuss.getBoundingClientRect().height : 0;
+  r.style.height = Math.max(360, Math.round(innerHeight - Math.max(6, r.getBoundingClientRect().top) - fh - 10)) + "px";
+}
+addEventListener("resize", () => { if (ES.offen) esHoehe(false); });
 function esStop() { clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (BW.lauf || BWM.laeuft) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
 function esTab(k) {
   if (!ES_TABS.some(([x]) => x === k)) k = "uhr";
@@ -12480,16 +12490,16 @@ function esTab(k) {
   document.querySelectorAll("#heroRueck .hr-tab").forEach((b) => { b.classList.toggle("an", b.dataset.tab === k); b.setAttribute("aria-selected", String(b.dataset.tab === k)); });
   const f = $("hrFlaeche"); if (!f) return;
   f.className = "hr-flaeche hr-" + k;
-  if (k === "dia") esDiaZeigen(f); else if (k === "tafel") esTafelZeigen(f); else if (k === "buehne") esBuehneZeigen(f); else esUhrZeigen(f);
+  if (k === "dia") esDiaZeigen(f); else if (k === "tafel") esTafelZeigen(f); else if (k === "flip") esFlipZeigen(f); else if (k === "buehne") esBuehneZeigen(f); else esUhrZeigen(f);
 }
 const esSichtbar = () => ES.offen && aktuelleAnsicht === "start" && !document.hidden;
 
 // ----- 🖼️ Diashow: Fotos aus dem Fotoalbum (alle oder ein Album), sanft überblendet, langsam gezoomt -----
 async function esDiaZeigen(f) {
   const d = ES.dia;
-  f.innerHTML = `<div class="es-dia"><img class="es-dia-bild" alt=""><img class="es-dia-bild" alt=""><div class="es-dia-text" id="esDiaText">Fotos werden geladen …</div>
-    <div class="es-leiste es-dia-leiste"><select id="esDiaAlbum" aria-label="Welche Fotos?" onchange="esDiaAlbum(this.value)"><option value="">📷 Alle Fotos</option></select>
-      <button type="button" class="es-k" onclick="esDiaSchritt(-1)" aria-label="Voriges Foto">◀</button><button type="button" class="es-k" id="esDiaPause" onclick="esDiaPause()" aria-label="Pause">⏸</button><button type="button" class="es-k" onclick="esDiaSchritt(1)" aria-label="Nächstes Foto">▶</button></div></div>`;
+  f.innerHTML = `<div class="es-dia" onclick="if (event.target.tagName === 'IMG' || event.target === this || event.target.id === 'esDiaHinter') this.classList.toggle('ohne-leiste')"><div class="es-dia-hinter" id="esDiaHinter"></div><img class="es-dia-bild" alt=""><img class="es-dia-bild" alt=""><div class="es-dia-text" id="esDiaText">Fotos werden geladen …</div>
+    <div class="es-leiste es-dia-leiste"><select id="esDiaAlbum" aria-label="Welche Fotos?" onchange="esDiaAlbum(this.value)"><option value="">📷 Alle</option></select>
+      <button type="button" class="es-k" onclick="esDiaSchritt(-1)" aria-label="Voriges Foto">◀</button><button type="button" class="es-k" id="esDiaPause" onclick="esDiaPause()" aria-label="Pause">⏸</button><button type="button" class="es-k" onclick="esDiaSchritt(1)" aria-label="Nächstes Foto">▶</button>${document.fullscreenEnabled ? '<button type="button" class="es-k" onclick="esDiaVollbild()" aria-label="Vollbild">⛶</button>' : ""}</div></div>`;
   if (!d.fotos && !d.laedt) await esDiaLaden(esLies("album", ""));
   esDiaAlbenZeigen();
   if (!d.fotos?.length) { $("esDiaText").textContent = d.fehler ? "⚠️ " + d.fehler : "Noch keine Fotos im Fotoalbum."; return; }
@@ -12503,7 +12513,7 @@ async function esDiaLaden(album) {
 }
 function esDiaAlbenZeigen() {
   const s = $("esDiaAlbum"); if (!s) return;
-  s.innerHTML = `<option value="">📷 Alle Fotos</option>` + ES.dia.alben.map((a) => `<option value="${esc(a.id)}"${a.id === ES.dia.album ? " selected" : ""}>📸 ${esc(a.name || a.titel || "Album")}</option>`).join("");
+  s.innerHTML = `<option value="">📷 Alle</option>` + ES.dia.alben.map((a) => `<option value="${esc(a.id)}"${a.id === ES.dia.album ? " selected" : ""}>📸 ${esc(a.name || a.titel || "Album")}</option>`).join("");
   $("esDiaPause").textContent = ES.dia.laeuft ? "⏸" : "▶︎";
 }
 async function esDiaAlbum(id) { esSchreib("album", id); esStop(); await esDiaLaden(id); if (ES.offen && $("hrFlaeche")?.classList.contains("hr-dia")) esTab("dia"); }
@@ -12518,75 +12528,110 @@ async function esDiaBild(i, sofort) {
   const neu = [...bilder].find((b) => !b.classList.contains("an")) || bilder[0], alt = [...bilder].find((b) => b !== neu);
   neu.onload = () => { if (tok !== d.seite) return; neu.classList.remove("zoom"); void neu.offsetWidth; neu.classList.add("an", "zoom"); alt?.classList.remove("an"); };
   neu.src = foto.vorschau; // sofort die Vorschau, dann die große Fassung
+  const hi = $("esDiaHinter"); if (hi) hi.style.backgroundImage = `url("${foto.vorschau}")`; // 2.295.0: weichgezeichneter Hintergrund statt schwarzer Balken
   const t = $("esDiaText"); if (t) t.textContent = [foto.thema, foto.datum ? fTagDe(foto.datum) : "", foto.von?.name ? "📷 " + foto.von.name : ""].filter(Boolean).join(" · ") + `  (${d.i + 1}/${n})`;
   const gross = await esDiaUrl(foto); if (tok === d.seite && gross && gross !== foto.vorschau) { const v = new Image(); v.onload = () => { if (tok === d.seite) neu.src = gross; }; v.src = gross; }
   if (n > 1) esDiaUrl(d.fotos[(d.i + 1) % n]); // das nächste schon vorbereiten
   if (sofort) neu.classList.add("an");
 }
+// 2.295.0: Foto antippen blendet Leiste und Text aus (fast Vollbild); ⛶ schaltet echtes Vollbild, wo das Handy es kann
+function esDiaVollbild() { const f = $("hrFlaeche"); try { if (document.fullscreenElement) document.exitFullscreen(); else f?.requestFullscreen?.(); } catch (e) { /* ohne Vollbild */ } }
 function esDiaTakt() { esStop(); if (!ES.dia.laeuft) return; ES.timer = setInterval(() => { if (!esSichtbar()) return; esDiaBild(ES.dia.i + 1); }, 6500); }
 function esDiaSchritt(r) { esDiaBild(ES.dia.i + r); esDiaTakt(); }
 function esDiaPause() { ES.dia.laeuft = !ES.dia.laeuft; $("esDiaPause").textContent = ES.dia.laeuft ? "⏸" : "▶︎"; esDiaTakt(); melde(ES.dia.laeuft ? "▶︎ Diashow läuft" : "⏸ Diashow angehalten"); }
 
-// ----- 🖍️ Tafel: mit dem Finger skizzieren – Kreidefarben, drei Stiftdicken, Schwamm zum Wischen, „Alles abwischen“ -----
-// Striche werden als Linien gemerkt (auf diesem Gerät) – so passt das Bild auch nach dem Drehen des Handys, und ↶ nimmt den letzten zurück.
-function esTafelStriche() { const t = ES.tafel; if (!t.striche) { try { t.striche = JSON.parse(esLies("tafel", "[]")) || []; } catch (e) { t.striche = []; } } return t.striche; }
-function esTafelMerken() { const s = esTafelStriche(); let n = 0; for (const x of s) n += x.p.length; if (n < 30000) esSchreib("tafel", JSON.stringify(s)); }
-function esTafelZeigen(f) {
-  const t = ES.tafel;
-  f.innerHTML = `<div class="es-tafel"><canvas id="esTafel" aria-label="Tafel zum Zeichnen"></canvas><div class="es-tafel-rand"></div>
-    <div class="es-leiste es-tafel-leiste">
-      <span class="es-gruppe">${ES_FARBEN.map(([c, n]) => `<button type="button" class="es-farbe" data-c="${c}" style="--c:${c}" title="${n}" aria-label="Farbe ${n}" onclick="esTafelFarbe('${c}')"></button>`).join("")}</span>
-      <span class="es-gruppe">${ES_DICKEN.map(([w, n], i) => `<button type="button" class="es-dicke" data-i="${i}" title="Stift ${n}" aria-label="Stift ${n}" onclick="esTafelDicke(${i})"><i style="--w:${w}px"></i></button>`).join("")}
-        <button type="button" class="es-k es-schwamm" id="esSchwamm" title="Schwamm – mit dem Finger wischen" aria-label="Schwamm" onclick="esTafelWerkzeug('schwamm')">🧽</button></span>
-      <span class="es-gruppe"><button type="button" class="es-k" title="Letzten Strich zurück" aria-label="Rückgängig" onclick="esTafelZurueck()">↶</button>
-        <button type="button" class="es-k" title="Alles abwischen" aria-label="Alles abwischen" onclick="esTafelAbwischen()">🧹</button>
-        <button type="button" class="es-k es-haupt" title="Speichern oder verschicken" onclick="esTafelTeilen()">📤 Sichern</button></span></div></div>`;
-  const c = $("esTafel");
-  c.addEventListener("pointerdown", (e) => { e.preventDefault(); try { c.setPointerCapture(e.pointerId); } catch (er) { /* alte Browser */ }
-    const p = esTafelPunkt(e), s = t.werkzeug === "schwamm" ? { s: 1, w: 34 / Math.max(1, c.clientWidth), p: [p] } : { c: t.farbe, w: ES_DICKEN[t.dicke][0] / Math.max(1, c.clientWidth), p: [p] };
-    esTafelStriche().push(s); t.zeichnet = s; esTafelStrich(c.getContext("2d"), s, c, 0); });
-  c.addEventListener("pointermove", (e) => { const s = t.zeichnet; if (!s) return; e.preventDefault();
-    for (const ev of e.getCoalescedEvents ? e.getCoalescedEvents() : [e]) s.p.push(esTafelPunkt(ev));
-    esTafelStrich(c.getContext("2d"), s, c, Math.max(0, s.p.length - 6)); });
-  const fertig = () => { if (!t.zeichnet) return; t.zeichnet = null; esTafelMerken(); };
-  c.addEventListener("pointerup", fertig); c.addEventListener("pointercancel", fertig); c.addEventListener("pointerleave", fertig);
-  esTafelGroesse(); esTafelLeiste();
-  if (!ES.tafel.ro && window.ResizeObserver) { ES.tafel.ro = new ResizeObserver(() => { if ($("esTafel")) esTafelGroesse(); }); }
-  ES.tafel.ro?.observe(c);
+// ----- 🖍️ Tafel und 📋 Flipchart: mit dem Finger skizzieren (gemeinsamer Zeichen-Kern) -----
+// Striche werden als Linien gemerkt (0…1, auf diesem Gerät) – so passt das Bild auch nach dem Drehen des Handys, und ↶ nimmt den letzten zurück.
+// Tafel: Kreidefarben, drei Stiftdicken, 🧽 Schwamm, 🧹 alles abwischen (Schwamm fährt im Zickzack).
+// 2.295.0 KC-CLUB-FLIPCHART (Wunsch Hansi „großes Flipboard zum Skizzieren; ist das Blatt voll, nach hinten klappen – auch speichern, versenden“):
+// weißes Papier am Ständer, Marker, Radierer; „⤴ Umblättern“ klappt das Blatt nach hinten über die Leiste (neues oder nächstes Blatt),
+// „⤵ Zurück“ holt das vorige wieder nach vorn, „✂️ Abreißen“ entfernt ein Blatt. 📤 Sichern gilt immer für das sichtbare Blatt.
+const ES_MARKER = [["#212529", "Schwarz"], ["#1c7ed6", "Blau"], ["#e03131", "Rot"], ["#2f9e44", "Grün"], ["#f08c00", "Orange"], ["#7048e8", "Lila"]];
+const ES_MARKER_DICKEN = [[3, "fein"], [6, "mittel"], [12, "dick"]];
+const ES_PAPIER = "#fcfbf7";
+ES.flip = { blaetter: null, i: 0, farbe: "#212529", dicke: 1, werkzeug: "stift", zeichnet: null };
+const ES_ZF = {
+  tafel: { id: "esTafel", farben: ES_FARBEN, dicken: ES_DICKEN, radier: ES_SCHWAMM, radierW: 34, kreide: true, name: "Skizze", radierName: "Schwamm – mit dem Finger über die Tafel wischen" },
+  flip: { id: "esFlip", farben: ES_MARKER, dicken: ES_MARKER_DICKEN, radier: ES_PAPIER, radierW: 26, kreide: false, name: "Flipchart", radierName: "Radierer – mit dem Finger über das Blatt wischen" },
+};
+const esZ = (art) => art === "flip" ? ES.flip : ES.tafel;
+function esFlipLaden() { const f = ES.flip; if (f.blaetter) return; try { const d = JSON.parse(esLies("flip", "null")); f.blaetter = Array.isArray(d?.b) && d.b.length ? d.b : [[]]; f.i = Math.min(Math.max(0, d?.i || 0), f.blaetter.length - 1); } catch (e) { f.blaetter = [[]]; f.i = 0; } }
+function esZfStriche(art) {
+  if (art === "flip") { esFlipLaden(); return ES.flip.blaetter[ES.flip.i]; }
+  const t = ES.tafel; if (!t.striche) { try { t.striche = JSON.parse(esLies("tafel", "[]")) || []; } catch (e) { t.striche = []; } } return t.striche;
 }
-function esTafelPunkt(e) { const c = $("esTafel"), r = c.getBoundingClientRect(); return [Math.round(((e.clientX - r.left) / Math.max(1, r.width)) * 10000) / 10000, Math.round(((e.clientY - r.top) / Math.max(1, r.height)) * 10000) / 10000]; }
-function esTafelGroesse() {
-  const c = $("esTafel"); if (!c) return; const dpr = Math.min(2.5, window.devicePixelRatio || 1);
+function esZfMerken(art) {
+  if (art === "flip") { const f = ES.flip; let n = 0; for (const b of f.blaetter) for (const x of b) n += x.p.length; if (n < 60000) esSchreib("flip", JSON.stringify({ b: f.blaetter, i: f.i })); return; }
+  const s = esZfStriche("tafel"); let n = 0; for (const x of s) n += x.p.length; if (n < 30000) esSchreib("tafel", JSON.stringify(s));
+}
+const esTafelStriche = () => esZfStriche("tafel"), esTafelMerken = () => esZfMerken("tafel");
+function esZfZeigen(f, art) {
+  const z = esZ(art), cfg = ES_ZF[art], flip = art === "flip";
+  if (flip) esFlipLaden();
+  f.innerHTML = `<div class="es-zf es-${art}"><div class="es-zf-papier">${flip ? '<div class="es-flip-stapel"></div>' : ""}<canvas id="${cfg.id}" aria-label="${flip ? "Flipchart" : "Tafel"} zum Zeichnen"></canvas>
+    ${flip ? '<div class="es-flip-leiste-oben"><i></i><i></i></div><div class="es-flip-nr" id="esFlipNr"></div>' : '<div class="es-tafel-rand"></div>'}</div>
+    <div class="es-leiste es-zf-leiste">
+      <span class="es-gruppe">${cfg.farben.map(([c, n]) => `<button type="button" class="es-farbe" data-c="${c}" style="--c:${c}" title="${n}" aria-label="Farbe ${n}" onclick="esZfFarbe('${art}','${c}')"></button>`).join("")}</span>
+      <span class="es-gruppe">${cfg.dicken.map(([w, n], i) => `<button type="button" class="es-dicke" data-i="${i}" title="Stift ${n}" aria-label="Stift ${n}" onclick="esZfDicke('${art}',${i})"><i style="--w:${w}px"></i></button>`).join("")}
+        <button type="button" class="es-k es-schwamm" id="esRadier" title="${flip ? "Radierer" : "Schwamm"}" aria-label="${flip ? "Radierer" : "Schwamm"}" onclick="esZfWerkzeug('${art}','radier')">🧽</button>
+        <button type="button" class="es-k" title="Letzten Strich zurück" aria-label="Rückgängig" onclick="esZfZurueck('${art}')">↶</button></span>
+      <span class="es-gruppe">${flip ? `<button type="button" class="es-k" id="esFlipZurueck" title="Voriges Blatt nach vorn holen" aria-label="Voriges Blatt" onclick="esFlipBlaettern(-1)">⤵</button><button type="button" class="es-k" title="Blatt nach hinten umklappen" onclick="esFlipBlaettern(1)">⤴ Umblättern</button><button type="button" class="es-k" title="Blatt abreißen" aria-label="Blatt abreißen" onclick="esFlipAbreissen()">✂️</button>`
+        : `<button type="button" class="es-k" title="Alles abwischen" aria-label="Alles abwischen" onclick="esTafelAbwischen()">🧹</button>`}
+        <button type="button" class="es-k es-haupt" title="Speichern oder verschicken" onclick="esZfTeilen('${art}')">📤 Sichern</button></span></div></div>`;
+  const c = $(cfg.id);
+  c.addEventListener("pointerdown", (e) => { e.preventDefault(); try { c.setPointerCapture(e.pointerId); } catch (er) { /* alte Browser */ }
+    const p = esZfPunkt(c, e), s = z.werkzeug === "radier" ? { s: 1, w: cfg.radierW / Math.max(1, c.clientWidth), p: [p] } : { c: z.farbe, w: cfg.dicken[z.dicke][0] / Math.max(1, c.clientWidth), p: [p] };
+    esZfStriche(art).push(s); z.zeichnet = s; esZfStrich(c.getContext("2d"), s, c, 0, art); });
+  c.addEventListener("pointermove", (e) => { const s = z.zeichnet; if (!s) return; e.preventDefault();
+    for (const ev of e.getCoalescedEvents ? e.getCoalescedEvents() : [e]) s.p.push(esZfPunkt(c, ev));
+    esZfStrich(c.getContext("2d"), s, c, Math.max(0, s.p.length - 6), art); });
+  const fertig = () => { if (!z.zeichnet) return; z.zeichnet = null; esZfMerken(art); };
+  c.addEventListener("pointerup", fertig); c.addEventListener("pointercancel", fertig); c.addEventListener("pointerleave", fertig);
+  esZfGroesse(art); esZfLeiste(art);
+  if (!z.ro && window.ResizeObserver) z.ro = new ResizeObserver(() => { if ($(cfg.id)) esZfGroesse(art); });
+  z.ro?.observe(c);
+}
+const esTafelZeigen = (f) => esZfZeigen(f, "tafel"), esFlipZeigen = (f) => esZfZeigen(f, "flip");
+function esZfPunkt(c, e) { const r = c.getBoundingClientRect(); return [Math.round(((e.clientX - r.left) / Math.max(1, r.width)) * 10000) / 10000, Math.round(((e.clientY - r.top) / Math.max(1, r.height)) * 10000) / 10000]; }
+function esZfGroesse(art) {
+  const c = $(ES_ZF[art].id); if (!c) return; const dpr = Math.min(2.5, window.devicePixelRatio || 1);
   const w = Math.max(1, Math.round(c.clientWidth * dpr)), h = Math.max(1, Math.round(c.clientHeight * dpr));
   if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
-  esTafelMalen();
+  esZfMalen(art);
 }
 function esTafelGrund(g, c) {
   g.save(); g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.shadowBlur = 0; g.fillStyle = ES_TAFEL_GRUND; g.fillRect(0, 0, c.width, c.height);
   const v = g.createRadialGradient(c.width / 2, c.height / 2, Math.min(c.width, c.height) * .2, c.width / 2, c.height / 2, Math.max(c.width, c.height) * .75);
   v.addColorStop(0, "rgba(255,255,255,.05)"); v.addColorStop(1, "rgba(0,0,0,.28)"); g.fillStyle = v; g.fillRect(0, 0, c.width, c.height); g.restore();
 }
-function esTafelMalen() { const c = $("esTafel"); if (!c) return; const g = c.getContext("2d"); esTafelGrund(g, c); for (const s of esTafelStriche()) esTafelStrich(g, s, c, 0); }
-function esTafelStrich(g, s, c, ab) {
-  const W = c.width, H = c.height, b = Math.max(1, s.w * W);
+function esFlipGrund(g, c) { g.save(); g.globalAlpha = 1; g.shadowBlur = 0; g.fillStyle = ES_PAPIER; g.fillRect(0, 0, c.width, c.height); g.restore(); }
+function esZfMalen(art, c, striche) { // ohne c/striche: das sichtbare Blatt neu zeichnen
+  c = c || $(ES_ZF[art].id); if (!c) return; const g = c.getContext("2d");
+  (art === "flip" ? esFlipGrund : esTafelGrund)(g, c); for (const s of striche || esZfStriche(art)) esZfStrich(g, s, c, 0, art);
+  if (art === "flip" && !striche) esFlipNr();
+}
+function esZfStrich(g, s, c, ab, art) {
+  const W = c.width, H = c.height, b = Math.max(1, s.w * W), cfg = ES_ZF[art || "tafel"];
   g.save(); g.lineCap = "round"; g.lineJoin = "round"; g.lineWidth = b;
-  if (s.s) { g.strokeStyle = ES_SCHWAMM; g.shadowBlur = 0; } else { g.strokeStyle = s.c; g.shadowColor = s.c; g.shadowBlur = Math.min(4, b * .35); g.globalAlpha = .93; }
+  if (s.s) { g.strokeStyle = cfg.radier; g.shadowBlur = 0; } else { g.strokeStyle = s.c; if (cfg.kreide) { g.shadowColor = s.c; g.shadowBlur = Math.min(4, b * .35); g.globalAlpha = .93; } }
   const p = s.p; g.beginPath();
   if (p.length === 1) { g.fillStyle = g.strokeStyle; g.arc(p[0][0] * W, p[0][1] * H, b / 2, 0, Math.PI * 2); g.fill(); g.restore(); return; }
   g.moveTo(p[ab][0] * W, p[ab][1] * H);
   for (let i = ab + 1; i < p.length; i++) { const m = [(p[i - 1][0] + p[i][0]) / 2, (p[i - 1][1] + p[i][1]) / 2]; g.quadraticCurveTo(p[i - 1][0] * W, p[i - 1][1] * H, m[0] * W, m[1] * H); }
   g.lineTo(p[p.length - 1][0] * W, p[p.length - 1][1] * H); g.stroke(); g.restore();
 }
-function esTafelLeiste() {
-  const t = ES.tafel;
-  document.querySelectorAll("#hrFlaeche .es-farbe").forEach((b) => b.classList.toggle("an", t.werkzeug === "stift" && b.dataset.c === t.farbe));
-  document.querySelectorAll("#hrFlaeche .es-dicke").forEach((b) => b.classList.toggle("an", t.werkzeug === "stift" && Number(b.dataset.i) === t.dicke));
-  $("esSchwamm")?.classList.toggle("an", t.werkzeug === "schwamm");
+const esTafelStrich = (g, s, c, ab) => esZfStrich(g, s, c, ab, "tafel"), esTafelMalen = () => esZfMalen("tafel");
+function esZfLeiste(art) {
+  const z = esZ(art);
+  document.querySelectorAll("#hrFlaeche .es-farbe").forEach((b) => b.classList.toggle("an", z.werkzeug === "stift" && b.dataset.c === z.farbe));
+  document.querySelectorAll("#hrFlaeche .es-dicke").forEach((b) => b.classList.toggle("an", z.werkzeug === "stift" && Number(b.dataset.i) === z.dicke));
+  $("esRadier")?.classList.toggle("an", z.werkzeug === "radier");
 }
-function esTafelFarbe(c) { ES.tafel.farbe = c; ES.tafel.werkzeug = "stift"; esTafelLeiste(); }
-function esTafelDicke(i) { ES.tafel.dicke = i; ES.tafel.werkzeug = "stift"; esTafelLeiste(); }
-function esTafelWerkzeug(w) { ES.tafel.werkzeug = ES.tafel.werkzeug === w ? "stift" : w; esTafelLeiste(); if (ES.tafel.werkzeug === "schwamm") melde("🧽 Schwamm – mit dem Finger über die Tafel wischen"); }
-function esTafelZurueck() { const s = esTafelStriche(); if (!s.length) return melde("Die Tafel ist schon leer."); s.pop(); esTafelMerken(); esTafelMalen(); }
+function esZfFarbe(art, c) { const z = esZ(art); z.farbe = c; z.werkzeug = "stift"; esZfLeiste(art); }
+function esZfDicke(art, i) { const z = esZ(art); z.dicke = i; z.werkzeug = "stift"; esZfLeiste(art); }
+function esZfWerkzeug(art, w) { const z = esZ(art); z.werkzeug = z.werkzeug === w ? "stift" : w; esZfLeiste(art); if (z.werkzeug === "radier") melde("🧽 " + ES_ZF[art].radierName); }
+function esZfZurueck(art) { const s = esZfStriche(art); if (!s.length) return melde(art === "flip" ? "Das Blatt ist schon leer." : "Die Tafel ist schon leer."); s.pop(); esZfMerken(art); esZfMalen(art); }
+const esTafelFarbe = (c) => esZfFarbe("tafel", c), esTafelDicke = (i) => esZfDicke("tafel", i), esTafelWerkzeug = (w) => esZfWerkzeug("tafel", w === "schwamm" ? "radier" : w), esTafelZurueck = () => esZfZurueck("tafel");
 async function esTafelAbwischen() {
   const s = esTafelStriche(), c = $("esTafel"); if (!c) return;
   if (!s.length) return melde("Die Tafel ist schon sauber. ✨");
@@ -12605,26 +12650,61 @@ async function esTafelAbwischen() {
   }
   ES.tafel.striche = []; esTafelMerken(); esTafelMalen(); melde("🧽 Alles abgewischt");
 }
-async function esTafelDatei() {
-  const c = $("esTafel"); if (!c) return null;
+// ----- 📋 Flipchart: umblättern (nach hinten über die Leiste), zurückblättern, abreißen -----
+function esFlipNr() { const f = ES.flip, n = $("esFlipNr"); if (n) n.textContent = `Blatt ${f.i + 1} von ${f.blaetter.length}`; const z = $("esFlipZurueck"); if (z) z.disabled = f.i === 0; }
+function esFlipBild(striche) { // ein Blatt als Bild (für die Klapp-Animation)
+  const c = $("esFlip"), t = document.createElement("canvas"); t.width = c.width; t.height = c.height; esZfMalen("flip", t, striche); return t.toDataURL("image/png");
+}
+async function esFlipKlappen(bild, richtung) { // richtung 1: Blatt klappt nach hinten weg · -1: voriges Blatt klappt nach vorn
+  const c = $("esFlip"); if (!c || esOhneAnim()) return;
+  const k = document.createElement("div"); k.className = "es-flip-klapp " + (richtung > 0 ? "weg" : "her"); k.style.backgroundImage = `url(${bild})`;
+  k.style.left = c.offsetLeft + "px"; k.style.top = c.offsetTop + "px"; k.style.width = c.offsetWidth + "px"; k.style.height = c.offsetHeight + "px";
+  c.parentElement.appendChild(k); await new Promise((ok) => setTimeout(ok, 720)); k.remove();
+}
+async function esFlipBlaettern(r) {
+  const f = ES.flip; esFlipLaden(); if (f.dreht) return;
+  if (r > 0) {
+    if (!esZfStriche("flip").length) return melde("Das Blatt ist noch leer – erst etwas skizzieren. ✏️");
+    const bild = $("esFlip").toDataURL("image/png"); f.i++; if (f.i >= f.blaetter.length) f.blaetter.push([]);
+    esZfMerken("flip"); esZfMalen("flip"); f.dreht = true; await esFlipKlappen(bild, 1); f.dreht = false;
+    melde(f.blaetter[f.i].length ? `📋 Blatt ${f.i + 1}` : "📋 Neues Blatt – das alte ist nach hinten geklappt");
+  } else {
+    if (f.i === 0) return melde("Das ist das erste Blatt.");
+    const bild = esFlipBild(f.blaetter[f.i - 1]); f.dreht = true; await esFlipKlappen(bild, -1); f.dreht = false;
+    f.i--; esZfMerken("flip"); esZfMalen("flip");
+  }
+}
+async function esFlipAbreissen() {
+  const f = ES.flip; esFlipLaden();
+  if (!(await frage(`Blatt ${f.i + 1} abreißen?\n\nEs ist danach weg. Vorher sichern? Dann „Abbrechen“ und 📤 Sichern tippen.`, { ja: "✂️ Abreißen", nein: "Abbrechen" }))) return;
+  const c = $("esFlip");
+  if (c && !esOhneAnim()) { const k = document.createElement("div"); k.className = "es-flip-klapp ab"; k.style.backgroundImage = `url(${c.toDataURL("image/png")})`;
+    k.style.left = c.offsetLeft + "px"; k.style.top = c.offsetTop + "px"; k.style.width = c.offsetWidth + "px"; k.style.height = c.offsetHeight + "px"; c.parentElement.appendChild(k); setTimeout(() => k.remove(), 900); }
+  f.blaetter.splice(f.i, 1); if (!f.blaetter.length) f.blaetter.push([]); f.i = Math.min(f.i, f.blaetter.length - 1);
+  esZfMerken("flip"); esZfMalen("flip"); melde("✂️ Blatt abgerissen");
+}
+// ----- 📤 Sichern: das sichtbare Blatt als Bild – als Nachricht oder ins Archiv -----
+async function esTafelDatei(art) {
+  const cfg = ES_ZF[art || "tafel"], c = $(cfg.id); if (!c) return null;
   const blob = await new Promise((ok) => c.toBlob(ok, "image/png")); if (!blob) return null;
-  const hm = new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Berlin" }).format(new Date()).replace(":", ""), name = `Skizze-${heuteIso()}-${hm}.png`;
+  const hm = new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Europe/Berlin" }).format(new Date()).replace(":", ""), name = `${cfg.name}-${heuteIso()}-${hm}.png`;
   try { return new File([blob], name, { type: "image/png" }); } catch (e) { blob.name = name; return blob; } // sehr alte Browser: Blob mit Namen
 }
-function esTafelTeilen() {
-  if (!esTafelStriche().length) return melde("Die Tafel ist noch leer – erst etwas skizzieren. 🖍️");
-  blattAuf("esTafelBlatt", `<h3 style="margin-top:0">📤 Skizze sichern</h3><p class="hinweis" style="margin:0 0 8px">Die Tafel bleibt danach, wie sie ist.</p>
+function esZfTeilen(art) {
+  if (!esZfStriche(art).length) return melde(art === "flip" ? "Das Blatt ist noch leer – erst etwas skizzieren. ✏️" : "Die Tafel ist noch leer – erst etwas skizzieren. 🖍️");
+  blattAuf("esTafelBlatt", `<h3 style="margin-top:0">📤 ${art === "flip" ? "Flipchart-Blatt" : "Skizze"} sichern</h3><p class="hinweis" style="margin:0 0 8px">${art === "flip" ? "Gesichert wird das Blatt, das du gerade siehst." : "Die Tafel bleibt danach, wie sie ist."}</p>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">
-      <button class="knopf haupt" onclick="esTafelNach('chat')">💬 Als Nachricht senden</button>
-      <button class="knopf" onclick="esTafelNach('archiv')">🗄️ Im Archiv speichern</button>
+      <button class="knopf haupt" onclick="esTafelNach('chat','${art}')">💬 Als Nachricht senden</button>
+      <button class="knopf" onclick="esTafelNach('archiv','${art}')">🗄️ Im Archiv speichern</button>
       <button class="knopf" onclick="$('esTafelBlatt').remove()">Abbrechen</button></div>`);
 }
-async function esTafelNach(wohin) {
-  $("esTafelBlatt")?.remove();
-  const d = await esTafelDatei(); if (!d) return melde("Das Bild konnte gerade nicht erstellt werden – bitte nochmal versuchen.", true);
+const esTafelTeilen = () => esZfTeilen("tafel");
+async function esTafelNach(wohin, art) {
+  art = art || "tafel"; $("esTafelBlatt")?.remove();
+  const d = await esTafelDatei(art); if (!d) return melde("Das Bild konnte gerade nicht erstellt werden – bitte nochmal versuchen.", true);
   if (wohin === "chat") { TEILEN = { text: "", dateien: [d] }; return teilenChatWahl(); } // gleicher Weg wie „Teilen → Köcheclub“: Chat wählen, man drückt selbst ➤
-  const heute = heuteIso(), titel = `Skizze vom ${heute.split("-").reverse().join(".")}`;
-  const ok = await archivAblageFragen("skizze", { titel, datum: heute, hinweis: "von der Tafel (Rückseite des Kopfes)", frage: "Wohin mit der Skizze?", ja: "Im Archiv ablegen", nein: "Abbrechen",
+  const heute = heuteIso(), titel = `${art === "flip" ? `Flipchart (Blatt ${ES.flip.i + 1})` : "Skizze"} vom ${heute.split("-").reverse().join(".")}`;
+  const ok = await archivAblageFragen("skizze", { titel, datum: heute, hinweis: art === "flip" ? "vom Flipchart (Rückseite des Kopfes)" : "von der Tafel (Rückseite des Kopfes)", frage: "Wohin mit der Skizze?", ja: "Im Archiv ablegen", nein: "Abbrechen",
     dateien: async () => [{ titel, name: d.name, mime: "image/png", blob: d }] });
   if (!ok) melde("Das Archiv ist gerade nicht erreichbar (oder es gibt noch keinen eigenen Archiv-Ordner) – bitte später nochmal oder als Nachricht senden.", true);
 }

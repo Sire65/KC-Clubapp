@@ -8646,8 +8646,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
   assert.ok(b.length > 5000, "Baustein vorhanden");
-  assert.ok(/if \(!hinten && d < -35\) return esDrehen\(true\);/.test(b) && /if \(t - ES\.tipp < 450\) \{ ES\.tipp = 0; esDrehen\(false\); \}/.test(b), "nach links ziehen dreht um, Doppeltipp dreht zurück");
-  assert.ok(/const ES_TABS = \[\["dia", "🖼️", "Diashow"\], \["tafel", "🖍️", "Tafel"\], \["uhr", "🕰️", "Uhr"\](, \["buehne", "🎭", "Bühne"\])?\];/.test(b), "Rückseiten (2.293.0: + Bühne)");
+  assert.ok(/if \(!hinten && d < -35\) return esDrehen\(true\);/.test(b) && /if \(t - ES\.tipp < 450\) \{ ES\.tipp = 0; esDrehen\(!hinten\); return; \}/.test(b), "nach links ziehen dreht um, Doppeltipp öffnet und schließt (2.295.0)");
+  assert.ok(/const ES_TABS = \[\["dia", "🖼️", "Diashow"\], \["tafel", "🖍️", "Tafel"\], \["uhr", "🕰️", "Uhr"\](, \["buehne", "🎭", "Bühne"\])?\];/.test(b) || /\["flip", "📋", "Flipchart"\]/.test(b), "Rückseiten (2.293.0: + Bühne, 2.295.0: + Flipchart)");
   assert.ok(/api\("fotos_liste", album \? \{ album_id: album \} : \{\}\)/.test(b) && /api\("foto_oeffnen", \{ id: foto\.id \}\)/.test(b), "Diashow nur lesend aus dem Fotoalbum");
   assert.ok(!/api\("(foto_hochladen|archiv_hochladen|nachricht_senden|einstellung_setzen)"/.test(b), "nichts wird ungefragt gespeichert oder gesendet");
   assert.ok(/TEILEN = \{ text: "", dateien: \[d\] \}; return teilenChatWahl\(\);/.test(b) && /archivAblageFragen\("skizze", \{/.test(b) && /skizze: \{ sym: "🖍️", register: \["Fotos", "Sonstiges"\]/.test(html), "Skizze als Nachricht (man drückt selbst ➤) oder ins Archiv");
@@ -8687,3 +8687,15 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(!/\bapi\(/.test(b) && !/\|\|=|\?\?=/.test(b), "nichts gesendet, alte Handys");
 }
 function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); return m ? (m[1].match(/"/g) || []).length / 2 : 0; }
+
+// 2.295.0 KC-CLUB-FLIPCHART + KC-CLUB-ESELSOHR-2 (Wunsch Hansi): Eselsohr kleiner, Doppeltipp öffnet/schließt; Flipchart mit Umblättern; Rückseite bis zur Fußleiste
+{
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-BEWEGUNGSBUEHNE (2.293.0"));
+  assert.ok(/\.eselsohr \{ position: absolute; right: 0; bottom: 0; width: calc\(28px/.test(html) && /\.eselsohr::after \{ content: ""; position: absolute; inset: -8px; \}/.test(html), "Eselsohr kleiner, Tippfläche bleibt groß");
+  assert.ok(/\["flip", "📋", "Flipchart"\]/.test(b) && /else if \(k === "flip"\) esFlipZeigen\(f\);/.test(b), "Reiter Flipchart");
+  assert.ok(/async function esFlipBlaettern\(r\)/.test(b) && /f\.i\+\+; if \(f\.i >= f\.blaetter\.length\) f\.blaetter\.push\(\[\]\);/.test(b) && /async function esFlipAbreissen\(\)/.test(b) && /@keyframes esKlappWeg/.test(html), "Umblättern nach hinten, zurück, abreißen");
+  assert.ok(/function esZfTeilen\(art\)/.test(b) && /esTafelNach\('chat','\$\{art\}'\)/.test(b) && /TEILEN = \{ text: "", dateien: \[d\] \}; return teilenChatWahl\(\);/.test(b), "Flipchart-Blatt als Nachricht oder ins Archiv");
+  assert.ok(/function esHoehe\(scrollen\)/.test(b) && /innerHeight - Math\.max\(6, r\.getBoundingClientRect\(\)\.top\) - fh - 10/.test(b) && /grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/.test(html), "Rückseite bis zur Fußleiste, Reiter gleichmäßig nebeneinander");
+  assert.ok(/classList\.toggle\('ohne-leiste'\)/.test(b) && /id="esDiaHinter"/.test(b), "Diashow fast im Vollbild: Leiste ausblendbar, weicher Hintergrund");
+  assert.ok(!/\|\|=|\?\?=/.test(b), "alte Handys");
+}

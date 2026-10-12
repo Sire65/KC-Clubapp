@@ -1,13 +1,22 @@
 {
-  "version": "2.294.0",
+  "version": "2.295.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🤸 Bühne: Twinkey bewegt sich jetzt natürlich – mit Ellbogen und Knien, im Takt der Musik, mit Nachschwingen",
-    "👟 Rote Turnschuhe mit weißen Streifen · 🥣 Rührschüssel, Topf und Nudelholz mit beiden Händen",
-    "🎵 Neue Musik zum Mitmachen (Melodie, Disco-Bass, Trommelwirbel, Becken auf „Los!“) und viele neue Sprüche – mit Einzählen „fünf, sechs, sieben, acht“ und Sprechblase"
+    "📄 Eselsohr kleiner – doppelt tippen öffnet, nochmal doppelt tippen schließt",
+    "📋 Neu auf der Rückseite: Flipchart zum Skizzieren – Blatt voll? Umblättern, zurückblättern, abreißen, als Nachricht senden oder ins Archiv",
+    "🖼️ Rückseite nutzt jetzt den ganzen Bildschirm, Reiter gleichmäßig nebeneinander, Fotos fast im Vollbild (antippen blendet die Leiste aus)"
   ],
   "verlauf": [
+    {
+      "version": "2.295.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "📄 Eselsohr kleiner – doppelt tippen öffnet, nochmal doppelt tippen schließt",
+        "📋 Neu auf der Rückseite: Flipchart zum Skizzieren – Blatt voll? Umblättern, zurückblättern, abreißen, als Nachricht senden oder ins Archiv",
+        "🖼️ Rückseite nutzt jetzt den ganzen Bildschirm, Reiter gleichmäßig nebeneinander, Fotos fast im Vollbild (antippen blendet die Leiste aus)"
+      ]
+    },
     {
       "version": "2.294.0",
       "datum": "2026-10-12",
