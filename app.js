@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.299.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.299.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12831,7 +12831,8 @@ const BW_FRECH = ["Hättest du nicht so viel am Pudding genascht, bräuchten wir
   "Alles, was du isst, muss ich zum Glück nicht auf meinen Hüften tragen!", "Wer heimlich vom Teig nascht, rührt jetzt doppelt!", "Die Sahnetorte von gestern winkt gerade zum Abschied!",
   "Jede Bewegung – ein Gummibärchen weniger auf den Hüften!", "Die Bratwurst von gestern läuft gerade wieder weg!", "Wer beim Abschmecken nicht spart, muss beim Turnen ran!",
   "Kalorien sind kleine Tierchen, die nachts die Kleider enger nähen – die jagen wir jetzt!", "Der Kühlschrank kann warten – erst wird geturnt!",
-  "Das zweite Stück Kuchen war lecker, oder? Na also – weiter geht’s!", "So schnell war die Schwarzwälder Kirschtorte noch nie verbrannt!"];
+  "Das zweite Stück Kuchen war lecker, oder? Na also – weiter geht’s!", "So schnell war die Schwarzwälder Kirschtorte noch nie verbrannt!",
+  "Ich bin ja nicht zu dick – ich bin nur zu klein für mein Gewicht!"];
 const BW_ENDSPURT = ["Noch 10 Sekunden – gib nochmal alles!", "Endspurt – noch 10!", "Die letzten 10 – du schaffst das!", "Noch 10 – zeig, was du kannst!"];
 const BW_SCHUETTELN_SAG = ["Und jetzt ausschütteln!", "Super! Locker ausschütteln!", "Prima! Arme und Beine ausschütteln!", "Geschafft – und schön ausschütteln!"];
 const BW_SEK = 30, BW_SCHUETTELN = 6, BW_BEREIT = 7;

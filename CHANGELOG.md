@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.299.1 – 2026-10-12 – KC-CLUB-BUEHNE-STIMME (Spruch)
+Wunsch Hansi. Neuer Spruch mit Augenzwinkern für Twinkey: „Ich bin ja nicht zu dick – ich bin nur zu klein für mein Gewicht!“
+
 ## 2.299.0 – 2026-10-12 – KC-CLUB-BUEHNE-STIMME
 Wunsch Hansi. Auf der laufenden Bühne links ein zweiter Keil-Regler für Twinkeys Stimme (grün; oben 📣, unten 🗣️) – gleiche Bedienung wie der Musik-Regler rechts. Unten aufs Symbol tippen schaltet stumm (🤐, rot hinterlegt, Twinkey verstummt sofort), nochmal tippen holt die vorige Lautstärke zurück; das gilt auch für die Musik (🎵 → 🔇). Beide Einstellungen werden gemerkt; die Sprechblase zeigt den Text weiterhin. „Klasse“ aus den Sprüchen genommen (jetzt „Spitze“/„Prima“). Neue Sprüche mit Augenzwinkern, bei jeder Übung einer: „Hättest du nicht so viel am Pudding genascht, bräuchten wir das jetzt nicht machen!“, „Nächstes Mal weniger Nudeln – dann schwingen die Hüften auch besser mit!“, „Alles, was du isst, muss ich zum Glück nicht auf meinen Hüften tragen!“ und neun weitere. Sprechblase schmaler, damit sie die Regler nicht verdeckt.
 
