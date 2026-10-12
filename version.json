@@ -1,11 +1,28 @@
 {
-  "version": "2.336.0",
+  "version": "2.337.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🧹 Oben im Kopf hängt nichts mehr (keine Wimpel, Lichterkette oder Luftschlangen bei Oktoberfest, Sim-Jü und Karneval) – die Deko hängt jetzt nur noch an der Leiste"
+    "🔎 Gesamtprüfung: viele kleine Fehler behoben",
+    "🧭 Hilfe führt jetzt immer an die richtige Stelle in den Einstellungen",
+    "🔋 Weniger Akku: laufende Rahmen und Lämpchen halten an, wenn du nichts tippst",
+    "⚠️ Termine, Dienstpläne, Erstattung und Fotos zeigen bei Netzproblemen „🔄 Nochmal laden“ statt einer leeren Seite",
+    "🚪 Neu: „Von diesem Gerät abmelden“ (⚙️ → Privatsphäre) – z. B. wenn du ein Handy weitergibst",
+    "🗑️ Einheitlicher: Rückfrage vor dem Löschen, gleiche Zurück-Knöpfe, „✓ Erledigt“"
   ],
   "verlauf": [
+    {
+      "version": "2.337.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🔎 Gesamtprüfung: viele kleine Fehler behoben",
+        "🧭 Hilfe führt jetzt immer an die richtige Stelle in den Einstellungen",
+        "🔋 Weniger Akku: laufende Rahmen und Lämpchen halten an, wenn du nichts tippst",
+        "⚠️ Termine, Dienstpläne, Erstattung und Fotos zeigen bei Netzproblemen „🔄 Nochmal laden“ statt einer leeren Seite",
+        "🚪 Neu: „Von diesem Gerät abmelden“ (⚙️ → Privatsphäre) – z. B. wenn du ein Handy weitergibst",
+        "🗑️ Einheitlicher: Rückfrage vor dem Löschen, gleiche Zurück-Knöpfe, „✓ Erledigt“"
+      ]
+    },
     {
       "version": "2.336.0",
       "datum": "2026-10-12",

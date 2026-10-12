@@ -4497,7 +4497,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 
 // 441. 2.23.90: Tipp des Tages – Kacheln verkleinern geht nur in der erweiterten Ansicht (Wunsch Hansi)
 {
-  assert.ok(/\{ id: "kacheln_klein", thema: "darstellung"[^\n]*erweiterten Ansicht[^\n]*zeig: \(\) => einstiegHin\("darstellung", "kachelGroesseWahl"\), seit: "2\.23\.90" \}/.test(html), "Tipp mit Sprung zur Einstellung");
+  assert.ok(/\{ id: "kacheln_klein", thema: "darstellung"[^\n]*erweiterten Ansicht[^\n]*zeig: \(\) => einstiegHin\("(?:darstellung|startseite)", "kachelGroesseWahl"\), seit: "2\.23\.90" \}/.test(html), "Tipp mit Sprung zur Einstellung");
 }
 
 // 442. 2.23.91: „＋ Neu“ oben pulsiert beim Betreten der Seite 3× mit hellem Rand (KC-CLUB-NEU-PULS, Wunsch Hansi)
@@ -6015,7 +6015,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.312.0 KC-CLUB-DW-KOMPAKT + KC-DP-BEREITSCHAFT-GENERELL (Wunsch Hansi nach der Eingabe mit Christina): Kopf in einer Reihe,
 // DP2-Kopfzeile ausgeblendet, „Nur wenn nötig“ auffällig (DP2 Build 268), Startfrage „Bereitschaft generell“ – gespeichert im Wunsch-Eingang
 {
-  assert.ok(/data-k="zu" aria-label="Zurück zur Club-App">← Zurück<\/button>/.test(html) && /aria-label="Leerer Bogen">🖨️ Bogen<\/button>/.test(html) && />✅ Fertig<\/button><\/div>/.test(html), "Kopf: eine Reihe");
+  assert.ok(/data-k="zu" aria-label="Zurück zur Club-App">[←‹] Zurück<\/button>/.test(html) && /aria-label="Leerer Bogen">🖨️ Bogen<\/button>/.test(html) && />✅ Fertig<\/button><\/div>/.test(html), "Kopf: eine Reihe");
   assert.ok(/<details class="dw-tipp"><summary>💡 Tipp: Wann eine Sperrzeit\?<\/summary>/.test(html), "Sperrzeit-Tipp zugeklappt");
   assert.ok(/\.ux-topbar\{display:none!important\}/.test(lies("dienstwunsch.html")), "DP2-Kopfzeile in der Club-App ausgeblendet");
   const q = JSON.parse(lies("dp2/QUELLE.json")); assert.ok(Number(q.dp2Version.split("build")[1]) >= 268 && q.reihenfolge.includes("src/ui/member-compact.css"), "DP2 Build 268 übernommen");
@@ -6109,6 +6109,30 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/:root\[data-thema-schrift\] #v-start \.gruss #begruessung \{ font-family: var\(--thema-schrift\)/.test(lies("index.html")) && !/data-thema-schrift\][^{]*marke-klein/.test(lies("index.html")), "nur die Begrüßung – Schriftzug Köcheclub Werne bleibt im CD");
   assert.ok(/id="themaSchriftAn"[^>]*onchange="themaSchriftSetzen\(this\.checked\)"/.test(lies("index.html")) && /localStorage\.getItem\("kc_club_thema_schrift"\) !== "0"/.test(html), "je Gerät abschaltbar");
   assert.ok(/try \{ themaSchriftAnwenden\(\); \} catch \{\} \/\/ 2\.333\.0/.test(html), "beim Anwenden des Designs mit gesetzt");
+}
+// 2.337.0 KC-CLUB-TUEV-4 (Gesamtprüfung Hansi „App auf Herz und Nieren prüfen“): Hilfe-Wege, Fehler, Akku, Abmelden
+{
+  // jeder Sprung „einstiegHin(Bereich, Feld)“ und jedes Sprachziel zeigt auf den Bereich, in dem das Feld wirklich steht
+  const seiteH = lies("index.html");
+  const klappeVon = (id) => { const p = seiteH.indexOf(`id="${id}"`); if (p < 0) return null; const st = []; const re = /<details\b[^>]*>|<\/details>/g; let m;
+    while ((m = re.exec(seiteH)) && m.index < p) { if (m[0][1] === "/") st.pop(); else st.push((m[0].match(/data-klappe="([^"]+)"/) || [])[1] || null); }
+    for (let i = st.length - 1; i >= 0; i--) if (st[i]) return st[i]; return null; };
+  const paare = [...programm.matchAll(/einstiegHin\("([a-z_]+)", "([A-Za-z0-9_]+)"\)/g), ...programm.matchAll(/klappe: "([a-z_]+)", id: "([A-Za-z0-9_]+)"/g)];
+  assert.ok(paare.length > 20, "Sprünge gefunden");
+  for (const [, k, id] of paare) { const w = klappeVon(id); assert.ok(!w || w === k, `Hilfe-/Sprachsprung zu ${id}: steht in „${w}“, nicht in „${k}“`); }
+  assert.ok(!/Darstellung → „🪧 Info-Feld|Darstellung → „🇩🇪 Feiertage|„🎨 Darstellung“ → <b>„✨ Animierte|„🎨 Darstellung“<\/b> → <b>„🔲 Kacheln/.test(programm), "keine alten Wege in den Hilfetexten");
+  for (const id of ["push_selbst", "ansage_nachholen", "zwei_fenster", "dw_fertig", "jahreszeit_kopf", "abmelden"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "[a-z]+"`).test(programm), `Hilfe-Eintrag ${id}`);
+  // Fehler
+  assert.ok(/J\.gaeste = J\.gaeste\.filter\(\(g\) => g\.typ === "falter" \|\| g\.typ === "osterhase"\);/.test(programm), "Osterhase legt seine Eier zu Ende");
+  const fz = new Function(programm.match(/function osterSonntag\(jahr\) \{[\s\S]*?\n\}/)[0] + programm.match(/function themaFestZeit\(d = new Date\(\)\) \{[\s\S]*?\n\}/)[0] + "; return themaFestZeit;")();
+  assert.equal(fz(new Date(2028, 9, 31)), "halloween", "Halloween geht vor Sim-Jü"); assert.equal(fz(new Date(2028, 9, 30)), "simjue");
+  assert.ok(/function bfEnde\(\) \{ const a = \$\("bfAusloeser"\); a\?\._ab\?\.abort\(\);/.test(programm) && /\}, nur\);\n  window\.addEventListener\("pointerup"/.test(programm), "Bildschirmfoto-Knopf räumt seine Fenster-Listener ab");
+  assert.ok(/new ResizeObserver\(\(\) => jzDekoMalen\(\)\)\.observe\(leiste\.querySelector\("\.jz-deko"\)\)/.test(programm), "Deko malt, sobald die Startseite sichtbar ist");
+  assert.ok(/const sf = alt \? "grau" :/.test(programm) && /const cf = alt \? "grau" :/.test(programm), "alter Admin-Bericht: Lampen grau statt grün (Regel 11)");
+  // Akku
+  assert.ok(/classList\.toggle\("kc-ruhe", jzbAkkuKnapp \|\| Date\.now\(\) - jzbBedient > JZB_RUHE_MS\)/.test(programm) && /:root\.kc-ruhe \.ameisen rect,[^{]*\{ animation-play-state: paused; \}/.test(seiteH), "Endlos-Animationen halten in Ruhe an");
+  // Abmelden
+  assert.ok(/async function geraetAbmelden\(\) \{\s*if \(!\(await frage\(/.test(programm) && /\/\^\(kc_club_\|kc_buero_\|kc-clubapp\\\.\|kcclub\)\//.test(programm) && /onclick="geraetAbmelden\(\)"/.test(seiteH), "Von diesem Gerät abmelden – nur nach Rückfrage, nur Club-Daten");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

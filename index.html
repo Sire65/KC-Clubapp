@@ -1302,6 +1302,7 @@
   .mini.mini-neu .ameisen { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; border-radius: inherit; }
   .mini.mini-neu .ameisen rect { fill: none; stroke: #ff9800; stroke-width: 6; stroke-dasharray: 9 6; animation: ameisenLauf 1s linear infinite; }
   @keyframes ameisenLauf { to { stroke-dashoffset: -15; } }
+  :root.kc-ruhe .ameisen rect, :root.kc-ruhe .inko-ameisen rect, :root.kc-ruhe .reg-rahmen rect, :root.kc-ruhe .uh-rahmen rect, :root.kc-ruhe #ledOnline, :root.kc-ruhe .k-online, :root.kc-ruhe .neu-da, :root.kc-ruhe .neu-puls { animation-play-state: paused; } /* 2.337.0 KC-CLUB-AKKU-2: in Ruhe stehen die Endlos-Animationen */
   @media (prefers-reduced-motion: reduce) { .mini.mini-neu .ameisen rect { animation-duration: 3s; } }
   /* KC-CLUB-FRIST-AMEISEN (1.53.6): Feld „Nächster Termin“ – Ameisenstraße je nach Tagen bis zum Termin:
      ≤ 5 Tage hellgrün langsam, ≤ 3 Tage orange, ≤ 1 Tag (morgen/heute) rot und schneller */
@@ -1686,7 +1687,7 @@
   .mini-kacheln { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 0 0 10px; }
   .mini-kachel { background: var(--karte); color: var(--text); border: 2px solid transparent; border-radius: 16px; padding: 10px; box-shadow: var(--schatten); text-align: left; cursor: pointer; display: grid; gap: 3px; align-content: start; font: inherit; min-width: 0; }
   .mini-kachel .mk-sym { font-size: 1.6rem; line-height: 1.1; }
-  .mini-kachel .mk-titel { font-weight: 800; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  .mini-kachel .mk-titel { font-weight: 800; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; -webkit-hyphens: auto; hyphens: auto; } /* 2.337.0: Trennung nach Silben statt mitten im Wort */
   .mini-kachel .mk-unter { font-size: .82rem; color: var(--grau); line-height: 1.25; overflow-wrap: anywhere; }
   /* KC-CLUB-PROBEPHASE (2.51.0) */
   .pr-karte.pr-an { border-left: 4px solid #6b7fb3; }
@@ -4480,6 +4481,7 @@
       <label class="feld">Name<input id="nfName" maxlength="120" placeholder="z. B. Maria Muster"></label>
       <div class="zwei"><label class="feld">Telefon<input id="nfTel" maxlength="40" inputmode="tel"></label><label class="feld">Beziehung<input id="nfBez" maxlength="60" placeholder="z. B. Ehefrau"></label></div>
       <div class="knoepfe"><button class="knopf klein" onclick="einmal(this, notfallSpeichern)">💾 Notfallkontakt speichern</button></div>
+      <div class="schalter" style="margin-top:12px"><div><b>🚪 Von diesem Gerät abmelden</b><div class="hinweis">Zum Beispiel, wenn du das Handy weitergibst: löscht deinen Zugang und alle Club-Daten auf diesem Gerät. Auf deinen anderen Geräten bleibt alles; wieder anmelden geht mit deinem Zugangslink.</div></div><button type="button" class="knopf klein" onclick="geraetAbmelden()">Abmelden</button></div> <!-- 2.337.0 KC-CLUB-ABMELDEN -->
     </details>
     <details class="karte" data-klappe="handykalender">
       <summary>📲 Termine im Handy-Kalender</summary>
@@ -4910,6 +4912,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.336.0" data-v="2.336.0"></script>
+<script src="app.js?v=2.337.0" data-v="2.337.0"></script>
 </body>
 </html>
