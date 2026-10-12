@@ -6062,7 +6062,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.323.0 KC-CLUB-THEMEN (Wunsch Hansi): fertige Themen-Pakete (Farbe + Jahreszeiten-Bild + Sende-Effekt), Kalender-Automatik, Club-Thema für alle
 {
   for (const id of ["klassik", "fruehling", "sommer", "herbst", "indian", "winter", "weihnachten", "silvester"]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", name: "[^"]+", design: "[a-z]+", jz: "[a-z]+", effekt: "[a-z]+"`).test(html), `Thema ${id}`);
-  assert.ok(/const THEMA_KAL = \(d = new Date\(\)\) => \{ const a = jahreszeitArt\(d\); return a === "advent" \? "weihnachten" : a === "herbst" && d\.getMonth\(\) === 9 \? "indian" : a; \};/.test(html), "Kalender: Advent = Weihnachten, Oktober = Indian Summer");
+  assert.ok(/const THEMA_KAL = \(d = new Date\(\)\) => \{ (?:const f = themaFestZeit\(d\); if \(f\) return f; )?const a = jahreszeitArt\(d\); return a === "advent" \? "weihnachten" : a === "herbst" && d\.getMonth\(\) === 9 \? "indian" : a; \};/.test(html), "Kalender: Advent = Weihnachten, Oktober = Indian Summer");
   assert.ok(/return w === "auto" \|\| THEMEN\.some\(\(t\) => t\.id === w\) \? w : "aus";/.test(html), "Standard „aus“ – alles wie bisher");
   assert.ok(/const c = clubThemaId\(\); if \(c && themaClubFolgen\(\)\)/.test(html) && /function themaClubSetzen\(an\)/.test(html), "Club-Thema geht vor, jeder kann es abschalten");
   assert.ok(/const designAktuell = \(\) => DESIGNS\.find\(\(d\) => d\.id === dsEff\(\)\)/.test(html) && /const t = themaWert\("jz"\); if \(t\) return t;/.test(html) && /const t = themaWert\("effekt"\); if \(t\) return t;/.test(html), "Thema wirkt auf Farbe, Jahreszeit, Sende-Effekt");
@@ -6070,6 +6070,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/farbe: jzbW\(themaWert\("laub"\) \|\| JZB_LAUB\)/.test(html), "Indian Summer: leuchtendes Laub");
   assert.ok(/case "club_thema_setzen": \{\s*nurAdmin\(ich\);/.test(server) && /pThema = konfigZeile\("thema"\)/.test(server) && /clubThema: await pThema,/.test(server), "Server: Club-Thema nur Admin, beim Start mitgeliefert");
   assert.ok(/id="themaWahl"/.test(lies("index.html")) && /\.themawahl \{ display: grid;/.test(lies("index.html")), "Auswahl in der Darstellung");
+}
+// 2.331.0 KC-CLUB-THEMEN-BUEHNE (Wunsch Hansi „Sim-Jü, Oktoberfest, Karibik“): eigene Bühnenbilder für Themen + Fest-Kalender
+{
+  for (const [id, jz] of [["simjue", "kirmes"], ["oktoberfest", "wiesn"], ["karibik", "karibik"]]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", name: "[^"]+", design: "[a-z]+", jz: "${jz}", effekt: "[a-z]+"`).test(html), `Thema ${id}`);
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"kirmes", "wiesn", "karibik"\]/.test(html) && /const JZB_FESTE = \["kirmes", "wiesn", "karibik"\];/.test(html), "Fest-Bühnen eingetragen");
+  assert.ok(/else if \(JZB_FESTE\.includes\(S\)\) jzbFest\(dt\);/.test(html) && /if \(J\.fest\) jzbFestMalen\(c\);/.test(html), "Bühne rechnet und zeichnet die Feste");
+  assert.ok(/if \(F\.t >= JZB_FEST_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(html), "Lauf endet und beginnt neu");
+  assert.ok(/function jzbHerzMalen\(c, x, y0, k, t\) \{[^\n]*\n\s*const J = JZB, name = jzbEisNameText\(\)/.test(html) && /const name = jzbEisNameText\(\), nx = J\.w \* \.74/.test(html), "Vorname auf dem Lebkuchenherz und im Sand");
+  assert.ok(/function themaFestZeit\(d = new Date\(\)\)/.test(html) && /const THEMA_KAL = \(d = new Date\(\)\) => \{ const f = themaFestZeit\(d\); if \(f\) return f;/.test(html), "Kalender: Oktoberfest und Sim-Jü");
+  const fz = new Function(html.match(/function themaFestZeit\(d = new Date\(\)\) \{[\s\S]*?\n\}/)[0] + "; return themaFestZeit;")();
+  assert.equal(fz(new Date(2026, 9, 24)), "simjue"); assert.equal(fz(new Date(2026, 9, 27)), "simjue"); assert.equal(fz(new Date(2026, 9, 28)), null); assert.equal(fz(new Date(2026, 9, 23)), null);
+  assert.equal(fz(new Date(2026, 8, 19)), "oktoberfest"); assert.equal(fz(new Date(2026, 9, 4)), "oktoberfest"); assert.equal(fz(new Date(2026, 8, 18)), null); assert.equal(fz(new Date(2026, 9, 5)), null);
+  assert.ok(/jahreszeitVorschau\('kirmes'\)/.test(lies("index.html")) && /jahreszeitVorschau\('wiesn'\)/.test(lies("index.html")) && /jahreszeitVorschau\('karibik'\)/.test(lies("index.html")), "Vorschau-Knöpfe");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -8682,7 +8695,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE"), html.indexOf("// ---------- KC-CLUB-KONFETTI (2.169.0)"));
   assert.ok(b.length > 1000, "Bühne vorhanden");
-  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
+  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik")?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
   assert.ok(/J\.wind = \{ dir: \(J\.lauf >> 1\) % 2 \? -1 : 1/.test(b), "Windstoß abwechselnd von links und rechts (2.259.0: über die Wind-Läufe, dazwischen Twinkey)");
   assert.ok(/if \(J\.lauf % 3 === 2\) (jzbSchneemannStart|\(Math\.floor\(J\.lauf \/ 3\) % 2 \? jzbIgluStart : jzbSchneemannStart\))\(\); else (if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else )?jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (ab 2.320.0 abwechselnd mit dem Iglu; Advent mit Weihnachtsmütze)");
   assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!fxAn\(\) \|\| !einst\("jahreszeit", true\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");

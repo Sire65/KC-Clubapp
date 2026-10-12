@@ -1,11 +1,24 @@
 {
-  "version": "2.330.0",
+  "version": "2.331.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🐢 Sind die Effekte aus, sagt die App jetzt den echten Grund (z. B. „Sparmodus hat sich eingeschaltet, weil die letzten Starts langsam waren“) und schaltet mit einem Tipp wieder ein – die Vorschau läuft danach gleich weiter"
+    "🎡 Neues Thema Sim-Jü: Lichterkette, Riesenrad, Luftballons, Lebkuchenherz mit deinem Namen und Feuerwerk",
+    "🥨 Neues Thema Oktoberfest: Fass wird angezapft („O'zapft is!“), Maßkrüge stoßen an",
+    "🌴 Neues Thema Karibik: Meer, Palme, Segelboot, dein Name im Sand – und Sonnenuntergang",
+    "🔄 „Nach Kalender“ kennt jetzt Oktoberfest und die Sim-Jü-Woche"
   ],
   "verlauf": [
+    {
+      "version": "2.331.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🎡 Neues Thema Sim-Jü: Lichterkette, Riesenrad, Luftballons, Lebkuchenherz mit deinem Namen und Feuerwerk",
+        "🥨 Neues Thema Oktoberfest: Fass wird angezapft („O'zapft is!“), Maßkrüge stoßen an",
+        "🌴 Neues Thema Karibik: Meer, Palme, Segelboot, dein Name im Sand – und Sonnenuntergang",
+        "🔄 „Nach Kalender“ kennt jetzt Oktoberfest und die Sim-Jü-Woche"
+      ]
+    },
     {
       "version": "2.330.0",
       "datum": "2026-10-12",

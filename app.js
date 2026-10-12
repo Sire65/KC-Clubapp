@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.330.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.331.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -615,14 +615,27 @@ const THEMEN = [
   { id: "klassik", sym: "🏛️", name: "Köcheclub klassisch", design: "klassik", jz: "auto", effekt: "wechsel" },
   { id: "fruehling", sym: "🌱", name: "Frühling", design: "kirschbluete", jz: "fruehling", effekt: "taube" },
   { id: "sommer", sym: "🌻", name: "Sommer", design: "toskana", jz: "sommer", effekt: "flieger" },
+  { id: "karibik", sym: "🌴", name: "Karibik", design: "lagune", jz: "karibik", effekt: "taube" }, // 2.331.0 KC-CLUB-THEMEN-BUEHNE
+  { id: "oktoberfest", sym: "🥨", name: "Oktoberfest", design: "nordsee", jz: "wiesn", effekt: "postauto" },
   { id: "herbst", sym: "🍂", name: "Herbst", design: "ocker", jz: "herbst", effekt: "flieger" },
   { id: "indian", sym: "🍁", name: "Indian Summer", design: "glut", jz: "herbst", effekt: "taube",
     laub: ["#d7261e", "#ff6a13", "#ffb300", "#b5121b", "#ff8f1f", "#e8c21a", "#8e1b10", "#f04e23"] }, // leuchtendes Rot, Orange, Gold
+  { id: "simjue", sym: "🎡", name: "Sim-Jü", design: "regenbogen", jz: "kirmes", effekt: "flieger" },
   { id: "winter", sym: "⛄", name: "Winter", design: "nordsee", jz: "winter", effekt: "postauto" },
   { id: "weihnachten", sym: "🎄", name: "Weihnachten", design: "weinberg", jz: "advent", effekt: "taube" },
   { id: "silvester", sym: "🎆", name: "Silvester", design: "disko", jz: "silvester", effekt: "flieger" },
 ];
-const THEMA_KAL = (d = new Date()) => { const a = jahreszeitArt(d); return a === "advent" ? "weihnachten" : a === "herbst" && d.getMonth() === 9 ? "indian" : a; }; // Oktober = Indian Summer
+// 2.331.0: Feste nach Kalender – Oktoberfest (Samstag nach dem 15.9. bis 1. Oktobersonntag, mindestens bis 3.10.) und Sim-Jü in Werne
+// (Samstag bis Dienstag um Simon und Juda, 28.10. – der Dienstag, der dem 28.10. am nächsten liegt; 2026: 24.–27.10.)
+function themaFestZeit(d = new Date()) {
+  const y = d.getFullYear(), tag = new Date(y, d.getMonth(), d.getDate());
+  const ws = new Date(y, 8, 16); ws.setDate(16 + (6 - ws.getDay() + 7) % 7);
+  const we = new Date(y, 9, 1); we.setDate(1 + (7 - we.getDay()) % 7); if (we.getDate() < 3) we.setDate(3);
+  if (tag >= ws && tag <= we) return "oktoberfest";
+  const off = (2 - new Date(y, 9, 28).getDay() + 7) % 7, di = new Date(y, 9, 28 + (off > 3 ? off - 7 : off)), sa = new Date(y, 9, di.getDate() - 3);
+  return tag >= sa && tag <= di ? "simjue" : null;
+}
+const THEMA_KAL = (d = new Date()) => { const f = themaFestZeit(d); if (f) return f; const a = jahreszeitArt(d); return a === "advent" ? "weihnachten" : a === "herbst" && d.getMonth() === 9 ? "indian" : a; }; // Oktober = Indian Summer
 const themaWahl = () => { try { const w = localStorage.getItem("kc_club_thema"); return w === "auto" || THEMEN.some((t) => t.id === w) ? w : "aus"; } catch { return "aus"; } };
 const themaClubFolgen = () => { try { return localStorage.getItem("kc_club_thema_club") !== "0"; } catch { return true; } };
 const clubThemaId = () => { const w = INIT ? INIT.clubThema : (() => { try { return JSON.parse(localStorage.getItem("kc_club_clubThema") || "null"); } catch { return null; } })(); return w?.id || null; };
@@ -3199,7 +3212,7 @@ const HILFE = [
   // 🎨 Aussehen & Darstellung
   { id: "farbe", thema: "darstellung", sym: "🎨", t: "Die Farbe der App ändern", x: "Du kannst die Farbe einstellen: ⚙️ Einstellungen → Register <b>🎨 Darstellung</b> → „🎨 Farbdesign“. Unter „Weitere Farbschemen“ und „✨ Ausgefallene Farbschemen“ gibt es noch mehr. Antippen – die App färbt sich sofort um.", zeig: hzDesign },
   { id: "nacht", thema: "darstellung", sym: "🌗", t: "Tag- und Nachtmodus", x: "⚙️ → Darstellung → „🌗 Tag- und Nachtmodus“: <b>🔄 Automatisch</b> (folgt deinem Handy), <b>☀️ Immer Tag</b> oder <b>🌙 Immer Nacht</b>. Nachts ist der dunkle Modus angenehmer für die Augen.", zeig: () => einstiegHin("darstellung", "modusWahl") },
-  { id: "themen", thema: "darstellung", sym: "🎭", t: "Themen: Weihnachten, Herbst, Indian Summer …", x: "Mit einem Tipp auf ein Thema (⚙️ → <b>🎨 Darstellung</b> → <b>🎭 Themen</b>) stellst du Farben, das Bild im Kopf der Startseite und den Effekt beim Senden passend ein – z. B. 🎄 Weihnachten, 🍁 Indian Summer oder ❄️ Winter. „🔄 Nach Kalender“ wechselt das Thema von selbst. Einzelnes kannst du danach trotzdem ändern. Hat der Admin ein Club-Thema für alle eingestellt, kannst du es dort für dich abschalten." },
+  { id: "themen", thema: "darstellung", sym: "🎭", t: "Themen: Weihnachten, Herbst, Indian Summer …", x: "Mit einem Tipp auf ein Thema (⚙️ → <b>🎨 Darstellung</b> → <b>🎭 Themen</b>) stellst du Farben, das Bild im Kopf der Startseite und den Effekt beim Senden passend ein – z. B. 🎄 Weihnachten, 🍁 Indian Summer, 🎡 Sim-Jü, 🥨 Oktoberfest oder 🌴 Karibik – mit eigenem Bild im Kopf. „🔄 Nach Kalender“ wechselt das Thema von selbst (auch zum Oktoberfest und zur Sim-Jü-Woche). Einzelnes kannst du danach trotzdem ändern. Hat der Admin ein Club-Thema für alle eingestellt, kannst du es dort für dich abschalten." },
   { id: "schrift", thema: "darstellung", sym: "🔠", t: "Größere Schrift", x: "Ist dir die Schrift zu klein? ⚙️ → Darstellung → „🔠 Große Schrift“ einschalten – alles wird etwas größer.", zeig: () => einstiegHin("darstellung", "setGross") },
   { id: "mitglieder_ansicht", thema: "darstellung", sym: "👥", t: "Mitglieder als Kacheln, Liste oder Tafel", x: "Ob du die Mitglieder als <b>🔲 Kacheln</b>, als <b>☰ Liste</b> oder als <b>📋 Anwesenheitstafel</b> siehst, wählst du unter ⚙️ → Darstellung oder direkt oben bei den Mitgliedern.", zeig: () => einstiegHin("darstellung", "mgAnsichtWahl") },
   { id: "feiertage", thema: "darstellung", sym: "🇩🇪", t: "Feiertage im Kalender", x: "Die Feiertage in NRW kannst du im Club-Kalender ein- oder ausblenden: ⚙️ → Darstellung → „🇩🇪 Feiertage NRW im Kalender“.", zeig: () => einstiegHin("darstellung", "setFeiertage") },
@@ -13994,7 +14007,7 @@ function bwHoerPause() { const H = BW.hoeren; if (!H) return; H.pause = !H.pause
 // 🌻 Sommer: eine Sonnenblume wächst (jeder 3. Lauf drei), eine Biene besucht sie – abends Glühwürmchen. Am Ende fallen die Blütenblätter, Windstoß.
 // Ein <canvas> im Kopf; zeichnet nur, wenn die Startseite im Bild und die App im Vordergrund ist. Aus bei „✨ Animierte Knöpfe“ aus,
 // Sparmodus oder „Bewegung reduzieren“ (dann wie bisher). Tippen geht durch (pointer-events: none). Lauf-Zähler je Gerät (kc_club_jzLauf).
-const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer"];
+const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik"]; // 2.331.0: + Themen-Bühnen
 const JZB_BLUEHT = 150; // 2.250.0 (Fund Hansi „Sonnenblume nur kurz“): Blumen/Sonnenblume blühen 2½ Min., bevor der Wind kommt
 const JZB_SP = 3, JZB_RAND = 22; // 2.259.0: 22 statt 16 – nichts in die runden Ecken (Radius 26) // Bodenspalten in px; nichts in den runden Ecken ablegen
 const JZB_LAUB = ["#e0802a", "#c8432b", "#e8b23a", "#a85a2a", "#d96a1f", "#b33a2a", "#cf9a2b"];
@@ -14024,7 +14037,7 @@ function jzbStart(h, art) {
   const saison = art === "advent" ? "winter" : art;
   Object.assign(JZB, { s, cv, ctx, art, saison, w: 0, h: 0, dpr: 0, k: 1, T: 0, pt: 0, letzt: 0, imBild: true, pruef: 0, spawn: 0,
     flug: [], liegt: [], fx: [], boden: [], wind: null, mann: null, halme: [], blumen: [], gaeste: [], welk: 0, phase: "anfang",
-    blase: sb, besuch: null, gegossen: false, ext: {}, extraPruef: 0, eier: [], igel: null, igelUhr: undefined, schirm: null, schirmUhr: undefined, tropfen: [], pfuetzen: null, regenSpawn: 0, blaeser: null, eicheln: null, hoernchen: null, hoernchenUhr: undefined, nussName: null, nussErster: false, raupe: null, raupeUhr: undefined, ski: null, skiUhr: null, rillen: null }); // 2.249.0 KC-CLUB-JAHRESZEIT-EXTRAS
+    blase: sb, besuch: null, gegossen: false, ext: {}, extraPruef: 0, eier: [], igel: null, igelUhr: undefined, schirm: null, schirmUhr: undefined, tropfen: [], pfuetzen: null, regenSpawn: 0, blaeser: null, eicheln: null, hoernchen: null, hoernchenUhr: undefined, nussName: null, nussErster: false, raupe: null, raupeUhr: undefined, ski: null, skiUhr: null, rillen: null, fest: null }); // 2.249.0 KC-CLUB-JAHRESZEIT-EXTRAS
   if (!h.dataset.jzKlick) { h.dataset.jzKlick = "1"; h.addEventListener("click", jzbEiAntippen); } // Ostereier antippen
   // Vorschau im Winter: gleich der Schneemann-Lauf, damit man ihn nicht erst nach zwei Windstößen sieht
   JZB.lauf = JZB.vorschau ? (JZB.extra === "twinkey" ? 1 : saison === "winter" ? 2 : 0) : jzbLaufLesen(); // Vorschau „🧹 Twinkey“: gleich sein Lauf
@@ -14145,10 +14158,12 @@ function jzbFxSchritt(dt) {
 }
 function jzbSchritt(dt) {
   const J = JZB, S = J.saison;
-  if (J.phase === "anfang") { if (S === "fruehling" || S === "sommer") jzbPflanzen(); jzbPhase(S === "fruehling" || S === "sommer" ? "wachsen" : "fallen"); }
+  if (J.phase === "anfang" && JZB_FESTE.includes(S)) { jzbFestStart(); jzbPhase("fest"); } // 2.331.0 KC-CLUB-THEMEN-BUEHNE
+  else if (J.phase === "anfang") { if (S === "fruehling" || S === "sommer") jzbPflanzen(); jzbPhase(S === "fruehling" || S === "sommer" ? "wachsen" : "fallen"); }
   jzbWindSchritt(dt);
   if (S === "herbst") jzbHerbst(dt);
   else if (S === "winter") jzbWinter(dt);
+  else if (JZB_FESTE.includes(S)) jzbFest(dt);
   else jzbBeet(dt);
   jzbFallen(dt); jzbFxSchritt(dt); jzbGaeste(dt); jzbExtrasSchritt(dt); jzbBesuchSchritt(dt);
 }
@@ -14337,6 +14352,7 @@ function jzbMalen() {
   const J = JZB, c = J.ctx; if (!c || !J.w) return;
   c.clearRect(0, 0, J.w, J.h);
   jzbExtrasHinten(c); // Ostereier – das Gras wächst darüber
+  if (J.fest) jzbFestMalen(c); // 2.331.0 KC-CLUB-THEMEN-BUEHNE
   if (J.saison === "winter") jzbSonneMalen(c); // 2.277.0: hinter Schnee und Schneemann
   if (J.saison === "fruehling" || J.saison === "sommer") jzbBeetMalen(c);
   if (J.saison === "winter") jzbSchneeMalen(c);
@@ -14548,6 +14564,253 @@ function jzbGastMalen(c, g) {
     const a = .35 + .65 * Math.abs(Math.sin(g.ph * 1.6)), r = 6 * k, gr = c.createRadialGradient(g.x, g.y, 0, g.x, g.y, r);
     gr.addColorStop(0, `rgba(240,255,150,${a})`); gr.addColorStop(1, "rgba(200,255,100,0)"); c.fillStyle = gr; c.beginPath(); c.arc(g.x, g.y, r, 0, 7); c.fill();
   }
+}
+// ---------- 2.331.0 KC-CLUB-THEMEN-BUEHNE (Wunsch Hansi „neue Bühnenbilder für die Themen: Sim-Jü, Oktoberfest, Karibik“) ----------
+// Eigene Szenen der Kopf-Bühne für Themen (über ein Thema, „Nach Kalender“ oder die Vorschau – die Jahreszeiten-Automatik bleibt wie sie ist).
+// Ein Lauf dauert rund zwei Minuten: Aufbau → Szene → Höhepunkt → Ausblenden → nächster Lauf.
+// 🎡 Sim-Jü: Lichterkette, Riesenrad mit Gondeln, Luftballons, Lebkuchenherz mit dem eigenen Vornamen, zum Schluss Feuerwerk.
+// 🥨 Oktoberfest: blau-weiße Wimpel, Brezn, Fass wird angezapft („O'zapft is!“), zwei Maßkrüge stoßen an („Prost!“), Lebkuchenherz mit Namen.
+// 🌴 Karibik: Meer mit Wellen, Strand und Palme (ab und zu fällt eine Kokosnuss), Segelboot, Papagei oder springender Fisch, der Vorname
+// wird in den Sand geschrieben – eine Welle holt ihn; zum Schluss Sonnenuntergang. Alles nur Bild, nichts wird gespeichert oder gesendet.
+const JZB_FESTE = ["kirmes", "wiesn", "karibik"];
+const JZB_FEST_DAUER = 120; // Sekunden je Lauf
+const JZB_FEST_BUNT = ["#ff4d6d", "#ffd23f", "#3ec1ff", "#7bed6f", "#c77dff", "#ff9f1c", "#ffffff"];
+function jzbFestStart() {
+  JZB.fest = { t: 0, a: 0, raketen: [], raketUhr: 0, ballons: [], ballonUhr: jzbZ(2, 5), spritzer: [], schild: -1, boot: null, bootUhr: jzbZ(2, 6),
+    gast: null, gastUhr: jzbZ(8, 14), nuss: null, nussUhr: jzbZ(18, 30), welle: -1, prost: [] };
+}
+function jzbFest(dt) {
+  const J = JZB, k = J.k;
+  if (J.phase === "anfang" || !J.fest) { jzbFestStart(); jzbPhase("fest"); }
+  const F = J.fest; F.t += dt;
+  F.a = Math.min(1, F.t / 2.5, Math.max(0, (JZB_FEST_DAUER - F.t) / 4));
+  if (F.t >= JZB_FEST_DAUER) { J.fest = null; return jzbLaufEnde(); }
+  for (const s of F.spritzer) { s.vy += 260 * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.a -= dt * 1.3; }
+  F.spritzer = F.spritzer.filter((s) => s.a > 0 && s.y < J.h + 4);
+  if (J.saison === "kirmes") {
+    if ((F.ballonUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 15) { F.ballonUhr = jzbZ(5, 11); F.ballons.push({ x: jzbZ(J.w * .1, J.w * .7), y: J.h + 20 * k, v: jzbZ(18, 28) * k, ph: jzbZ(0, 6), farbe: jzbW(JZB_FEST_BUNT.slice(0, 6)) }); }
+    for (const b of F.ballons) { b.y -= b.v * dt; b.ph += dt; b.x += Math.sin(b.ph * 1.3) * 8 * dt; }
+    F.ballons = F.ballons.filter((b) => b.y > -40 * k);
+    // 🎆 Feuerwerk zum Schluss (am Sim-Jü-Montag gibt es das echte)
+    if (F.t > JZB_FEST_DAUER - 30 && F.t < JZB_FEST_DAUER - 7 && (F.raketUhr -= dt) <= 0) { F.raketUhr = jzbZ(.45, 1.1);
+      F.raketen.push({ x: jzbZ(J.w * .3, J.w - 30), y: J.h, ziel: jzbZ(J.h * .12, J.h * .42), v: jzbZ(120, 160) * Math.max(.7, k), farbe: jzbW(JZB_FEST_BUNT) }); }
+    for (const r of F.raketen) {
+      r.y -= r.v * dt; r.x += Math.sin(r.y * .08) * 6 * dt;
+      if (r.y <= r.ziel) { r.weg = true; const n = 22, zwei = Math.random() < .4 ? jzbW(JZB_FEST_BUNT) : r.farbe;
+        for (let i = 0; i < n; i++) { const w = i / n * Math.PI * 2, v = jzbZ(35, 70) * Math.max(.7, k);
+          J.fx.push({ typ: "funke", x: r.x, y: r.y, vx: Math.cos(w) * v, vy: Math.sin(w) * v, s: jzbZ(1.8, 3.2), a: 1, farbe: i % 2 ? r.farbe : zwei }); } }
+    }
+    F.raketen = F.raketen.filter((r) => !r.weg);
+  } else if (J.saison === "wiesn") {
+    if (F.schild < 0 && F.t > 24) F.schild = 0; if (F.schild >= 0) F.schild += dt;
+    if (F.t > 19 && F.t < 25 && Math.random() < dt * 6) { const f = jzbWiesnFass(); F.spritzer.push({ x: f.kx + jzbZ(-6, 6) * k, y: f.ky - 22 * k, vx: jzbZ(-25, 25), vy: jzbZ(-40, -10), a: 1, r: jzbZ(1.2, 2.2) * k, schaum: true }); }
+    for (const z of [[46, 60], [82, 96]]) if (F.t > z[0] && F.t < z[1] && !F.prost.includes(z[0])) { F.prost.push(z[0]); F.krug = { t: 0, klirr: false }; }
+    if (F.krug) { const K = F.krug; K.t += dt;
+      if (!K.klirr && K.t > 2.4) { K.klirr = true; const m = jzbWiesnKrugMitte();
+        for (let i = 0; i < 14; i++) F.spritzer.push({ x: m + jzbZ(-4, 4), y: J.h - 26 * k, vx: jzbZ(-60, 60), vy: jzbZ(-120, -50), a: 1, r: jzbZ(1, 2.3) * k, schaum: i % 3 > 0 }); }
+      if (K.t > 7) F.krug = null; }
+  } else { // 🌴 Karibik
+    if (!F.boot && (F.bootUhr -= dt) <= 0) { const dir = J.lauf % 2 ? -1 : 1; F.boot = { dir, x: dir > 0 ? -40 * k : J.w + 40 * k }; }
+    if (F.boot) { F.boot.x += F.boot.dir * 13 * k * dt; if (F.boot.x < -60 * k || F.boot.x > J.w + 60 * k) { F.boot = null; F.bootUhr = jzbZ(15, 30); } }
+    if (!F.gast && (F.gastUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 10) {
+      F.gast = Math.random() < .55 ? { typ: "papagei", dir: Math.random() < .5 ? 1 : -1, t: 0, y0: jzbZ(J.h * .25, J.h * .55) } : { typ: "fisch", x: jzbZ(J.w * .1, J.w * .5), t: 0, dir: Math.random() < .5 ? 1 : -1 }; }
+    if (F.gast) { const g = F.gast; g.t += dt; if (g.typ === "papagei" ? g.t > (J.w + 80) / (55 * k) : g.t > 1.6) { F.gast = null; F.gastUhr = jzbZ(10, 20); } }
+    if (!F.nuss && (F.nussUhr -= dt) <= 0) { const p = jzbPalme(); F.nuss = { x: p.kx + 4 * k, y: p.ky + 4 * k, vx: -jzbZ(8, 20) * k, vy: 0, lieg: 0 }; }
+    if (F.nuss) { const n = F.nuss, boden = jzbKaribikSand(n.x) - 3.5 * k;
+      if (n.lieg) { n.lieg += dt; n.x += n.vx * dt; n.vx *= 1 - 2 * dt; if (n.lieg > 7) { F.nuss = null; F.nussUhr = jzbZ(25, 45); } }
+      else { n.vy += 300 * dt; n.x += n.vx * dt; n.y += n.vy * dt; if (n.y >= boden) { n.y = boden; if (n.vy > 60) n.vy = -n.vy * .35; else { n.lieg = .01; n.vx = -14 * k; } } }
+      if (n.lieg) n.y = jzbKaribikSand(n.x) - 3.5 * k; }
+    if (F.welle < 0 && F.t > 72) F.welle = 0; if (F.welle >= 0 && F.welle < 6) F.welle += dt;
+  }
+}
+// ---- gemeinsame Teile ----
+function jzbKetteY(x, y0, hang) { // Girlande in zwei Bögen über die Breite
+  const J = JZB, a = JZB_RAND, b = J.w - JZB_RAND, m = (a + b) / 2, l = x < m ? a : m, r = x < m ? m : b, u = (x - l) / (r - l);
+  return y0 + Math.sin(u * Math.PI) * hang;
+}
+function jzbHerzMalen(c, x, y0, k, t) { // 🧡 Lebkuchenherz mit Zuckerguss und dem eigenen Vornamen – hängt am Band und schaukelt
+  const J = JZB, name = jzbEisNameText() || "Köcheclub", b = 16 * k, w = Math.sin(J.T * 1.4 + 1) * .07;
+  c.save(); c.translate(x, y0); c.rotate(w);
+  c.strokeStyle = "#c0392b"; c.lineWidth = 1.4 * k; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 4 * k); c.stroke();
+  c.translate(0, 4 * k + b * .2);
+  const herz = () => { c.beginPath(); c.moveTo(0, b * .3); c.bezierCurveTo(-b * .1, b * .05, -b * 1.05, -b * .05, -b * .95, -b * .62);
+    c.bezierCurveTo(-b * .85, -b * 1.12, -b * .15, -b * 1.05, 0, -b * .62); c.bezierCurveTo(b * .15, -b * 1.05, b * .85, -b * 1.12, b * .95, -b * .62);
+    c.bezierCurveTo(b * 1.05, -b * .05, b * .1, b * .05, 0, b * .3); c.closePath(); };
+  c.translate(0, b * .95); c.scale(1.18, 1.05);
+  herz(); const g = c.createLinearGradient(0, -b, 0, b * .4); g.addColorStop(0, "#b8743a"); g.addColorStop(1, "#7a4319"); c.fillStyle = g; c.fill();
+  c.setLineDash([1.6 * k, 2.2 * k]); c.lineCap = "round"; c.strokeStyle = "#fff"; c.lineWidth = 1.6 * k; c.save(); c.scale(.86, .86); c.translate(0, -b * .05); herz(); c.stroke(); c.restore(); c.setLineDash([]);
+  c.fillStyle = "#ff8fb1"; for (const s of [-1, 1]) { c.beginPath(); c.arc(s * b * .55, -b * .62, 1.8 * k, 0, 7); c.fill(); }
+  let fs = 8.5 * k; c.font = `700 ${fs}px "Comic Sans MS","Segoe Print",cursive,sans-serif`; const tw = c.measureText(name).width;
+  if (tw > b * 1.35) { fs *= b * 1.35 / tw; c.font = `700 ${fs}px "Comic Sans MS","Segoe Print",cursive,sans-serif`; }
+  c.textAlign = "center"; c.textBaseline = "middle"; c.lineWidth = 2 * k; c.strokeStyle = "rgba(122,67,25,.9)"; c.strokeText(name, 0, -b * .38); c.fillStyle = "#fffaf0"; c.fillText(name, 0, -b * .38);
+  c.restore(); void t;
+}
+function jzbPfostenMalen(c, x, y, x1) { // Holzpfosten mit Querlatte unten links (dort ist unter dem Infofeld Platz) – daran hängen Herz und Brezn
+  const J = JZB, k = J.k; c.fillStyle = "#7a4e26"; c.fillRect(x - 1.6 * k, y - 2 * k, 3.2 * k, J.h - y + 2 * k); c.fillRect(x - 1.6 * k, y - 2 * k, x1 - x, 2.6 * k);
+  c.fillStyle = "#5a3818"; c.beginPath(); c.arc(x, y - 2 * k, 2 * k, 0, 7); c.fill();
+}
+const jzbStangeY = () => JZB.h - 37 * JZB.k;
+function jzbBreznMalen(c, bx, by, k) {
+  const bw = Math.sin(JZB.T * 1.6) * .1;
+  c.save(); c.translate(bx, by); c.rotate(bw); c.strokeStyle = "#c0392b"; c.lineWidth = 1.2 * k; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 5 * k); c.stroke();
+  c.translate(0, 15 * k); c.scale(.9, .9); c.strokeStyle = "#8a4a16"; c.lineWidth = 3.4 * k; c.lineCap = "round"; c.beginPath();
+  c.moveTo(-3 * k, -9 * k); c.bezierCurveTo(-14 * k, -11 * k, -15 * k, 6 * k, -4 * k, 6 * k); c.bezierCurveTo(3 * k, 6 * k, 3 * k, -2 * k, 0, -2 * k);
+  c.bezierCurveTo(-3 * k, -2 * k, -3 * k, 6 * k, 4 * k, 6 * k); c.bezierCurveTo(15 * k, 6 * k, 14 * k, -11 * k, 3 * k, -9 * k); c.stroke();
+  c.fillStyle = "#fff"; for (let i = 0; i < 9; i++) c.fillRect(-11 * k + (i * 2.7 % 22) * k, -6 * k + (i * 5 % 11) * k, 1, 1); c.restore();
+}
+function jzbSpritzerMalen(c, F) {
+  for (const s of F.spritzer) { c.globalAlpha = Math.max(0, s.a) * F.a; c.fillStyle = s.schaum ? "#fffdf2" : "#f2b632"; c.beginPath(); c.arc(s.x, s.y, s.r, 0, 7); c.fill(); }
+  c.globalAlpha = F.a;
+}
+function jzbFestMalen(c) {
+  const J = JZB, F = J.fest; if (!F) return;
+  c.save(); c.globalAlpha = F.a;
+  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else jzbKaribikMalen(c, F);
+  c.restore();
+}
+// ---- 🎡 Sim-Jü ----
+function jzbKirmesMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T, R = Math.max(22, Math.min(50, J.h * .34)) * Math.max(.8, k), cx = J.w - R - 40, cy = J.h - R - 13 * k;
+  // Lichterkette oben
+  c.strokeStyle = "rgba(60,40,30,.55)"; c.lineWidth = 1; c.beginPath(); for (let x = JZB_RAND; x <= J.w - JZB_RAND; x += 4) c.lineTo(x, jzbKetteY(x, 5, 9 * k)); c.stroke();
+  const takt = Math.floor(T * 3.5);
+  for (let i = 0, x = JZB_RAND + 6; x < J.w - JZB_RAND - 3; i++, x += 15 * Math.max(.8, k)) {
+    const y = jzbKetteY(x, 5, 9 * k) + 3, an = (i + takt) % 3 !== 0, f = JZB_FEST_BUNT[i % 5];
+    if (an) { const g = c.createRadialGradient(x, y, 0, x, y, 7 * k); g.addColorStop(0, f + "aa"); g.addColorStop(1, f + "00"); c.fillStyle = g; c.beginPath(); c.arc(x, y, 7 * k, 0, 7); c.fill(); }
+    c.fillStyle = an ? f : "rgba(120,110,100,.7)"; c.beginPath(); c.ellipse(x, y, 2 * k, 2.8 * k, 0, 0, 7); c.fill();
+  }
+  // Luftballons
+  for (const b of F.ballons) {
+    c.strokeStyle = "rgba(80,80,80,.6)"; c.lineWidth = .8; c.beginPath(); c.moveTo(b.x, b.y + 9 * k); c.quadraticCurveTo(b.x + Math.sin(b.ph * 2) * 4, b.y + 17 * k, b.x, b.y + 25 * k); c.stroke();
+    c.fillStyle = b.farbe; c.beginPath(); c.ellipse(b.x, b.y, 6.5 * k, 8.5 * k, Math.sin(b.ph) * .1, 0, 7); c.fill();
+    c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.ellipse(b.x - 2.2 * k, b.y - 3 * k, 1.5 * k, 2.4 * k, -.4, 0, 7); c.fill();
+    c.fillStyle = b.farbe; c.beginPath(); c.moveTo(b.x, b.y + 8 * k); c.lineTo(b.x - 1.6 * k, b.y + 10.5 * k); c.lineTo(b.x + 1.6 * k, b.y + 10.5 * k); c.fill();
+  }
+  // Lebkuchenherz links neben dem Riesenrad an der Lichterkette
+  const sy = jzbStangeY(); jzbPfostenMalen(c, JZB_RAND + 3, sy, JZB_RAND + 50 * k); jzbHerzMalen(c, JZB_RAND + 28 * k, sy, k, F.t);
+  // Riesenrad
+  c.strokeStyle = "#5b6472"; c.lineWidth = 2.6 * k; c.lineCap = "round";
+  c.beginPath(); c.moveTo(cx - R * .62, J.h - 2); c.lineTo(cx, cy); c.lineTo(cx + R * .62, J.h - 2); c.stroke();
+  c.lineWidth = 1.4 * k; c.beginPath(); c.moveTo(cx - R * .34, cy + R * .55); c.lineTo(cx + R * .34, cy + R * .55); c.stroke();
+  const th = T * .22, n = 8;
+  c.strokeStyle = "rgba(235,235,245,.9)"; c.lineWidth = 1.1 * k;
+  for (let i = 0; i < n * 2; i++) { const a = th + i / (n * 2) * Math.PI * 2; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); c.stroke(); }
+  c.strokeStyle = "#e9edf5"; c.lineWidth = 2.2 * k; c.beginPath(); c.arc(cx, cy, R, 0, 7); c.stroke();
+  c.lineWidth = 1 * k; c.beginPath(); c.arc(cx, cy, R * .82, 0, 7); c.stroke();
+  for (let i = 0; i < 24; i++) { const a = th + i / 24 * Math.PI * 2, an = (i + takt) % 2 === 0; c.fillStyle = an ? "#fff3a0" : "rgba(255,200,120,.45)"; c.beginPath(); c.arc(cx + Math.cos(a) * R, cy + Math.sin(a) * R, (an ? 1.6 : 1.1) * k, 0, 7); c.fill(); }
+  for (let i = 0; i < n; i++) { // Gondeln hängen immer senkrecht und pendeln leicht
+    const a = th + i / n * Math.PI * 2, gx = cx + Math.cos(a) * R, gy = cy + Math.sin(a) * R, p = Math.sin(T * 1.7 + i) * .08, gw = 9 * k, gh = 7 * k;
+    c.save(); c.translate(gx, gy); c.rotate(p);
+    c.strokeStyle = "#cfd5e0"; c.lineWidth = 1; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 3 * k); c.stroke();
+    c.fillStyle = JZB_FEST_BUNT[i % 6]; c.beginPath(); c.moveTo(-gw / 2, 3 * k); c.lineTo(gw / 2, 3 * k); c.lineTo(gw * .4, 3 * k + gh); c.lineTo(-gw * .4, 3 * k + gh); c.closePath(); c.fill();
+    c.fillStyle = "rgba(255,255,255,.5)"; c.fillRect(-gw * .3, 4 * k, gw * .6, 2 * k);
+    c.restore();
+  }
+  c.fillStyle = "#ffd23f"; c.beginPath(); c.arc(cx, cy, 3 * k, 0, 7); c.fill();
+  // Raketen mit Leuchtspur (die Funken zeichnet die Bühne)
+  for (const r of F.raketen) { c.strokeStyle = "rgba(255,230,160,.8)"; c.lineWidth = 1.6; c.beginPath(); c.moveTo(r.x, r.y); c.lineTo(r.x, r.y + 12 * k); c.stroke(); c.fillStyle = "#fff"; c.beginPath(); c.arc(r.x, r.y, 1.6, 0, 7); c.fill(); }
+}
+// ---- 🥨 Oktoberfest ----
+function jzbWiesnFass() { const J = JZB, k = J.k, r = Math.max(13, Math.min(22, J.h * .15)) * Math.max(.8, k), fx = J.w - r * 1.6 - 46; return { fx, fy: J.h - 2 - 10 * k - r, r, kx: fx - r * 1.55, ky: J.h - 2 }; }
+const jzbWiesnKrugMitte = () => JZB.w * .5;
+function jzbKrugMalen(c, x, yb, k, fuell, kipp, spiegel) { // 🍺 Maßkrug aus Glas mit Henkel, Bier und Schaumkrone
+  const w = 13 * k, h = 20 * k;
+  c.save(); c.translate(x, yb); c.rotate(kipp); c.scale(spiegel, 1);
+  c.strokeStyle = "rgba(230,240,245,.95)"; c.lineWidth = 2.4 * k; c.beginPath(); c.moveTo(w / 2, -h * .78); c.quadraticCurveTo(w / 2 + 8 * k, -h * .7, w / 2 + 6.5 * k, -h * .4); c.quadraticCurveTo(w / 2 + 5 * k, -h * .22, w / 2, -h * .22); c.stroke();
+  if (fuell > 0) { const bh = (h - 2.5 * k) * fuell, g = c.createLinearGradient(0, -bh, 0, 0); g.addColorStop(0, "#f7c548"); g.addColorStop(1, "#d98a12");
+    c.fillStyle = g; c.fillRect(-w / 2 + 1, -bh - 1.5 * k, w - 2, bh); c.fillStyle = "rgba(255,255,255,.55)"; for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(-w * .2 + i * 2.6 * k, -bh * (.3 + (i % 2) * .3) - 1.5 * k, .7 * k, 0, 7); c.fill(); }
+    if (fuell > .55) { c.fillStyle = "#fffdf2"; c.beginPath(); const fy = -bh - 1.5 * k; c.moveTo(-w / 2 - 1, fy + 2 * k);
+      for (let i = 0; i <= 4; i++) c.arc(-w / 2 + i * w / 4, fy - .5 * k, 2.4 * k, Math.PI, 0); c.lineTo(w / 2 + 1, fy + 2 * k); c.closePath(); c.fill(); } }
+  c.fillStyle = "rgba(220,235,245,.28)"; c.strokeStyle = "rgba(235,245,250,.95)"; c.lineWidth = 1.3 * k; c.beginPath(); c.rect(-w / 2, -h, w, h - 1.5 * k); c.fill(); c.stroke();
+  c.fillStyle = "rgba(235,245,250,.9)"; c.fillRect(-w / 2 - .5, -1.6 * k, w + 1, 1.8 * k);
+  c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = .8; for (let r = 0; r < 3; r++) for (let s = 0; s < 3; s++) { c.beginPath(); c.arc(-w * .28 + s * w * .28, -h * .75 + r * h * .25, 1.6 * k, 0, 7); c.stroke(); }
+  c.restore();
+}
+function jzbWiesnMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T;
+  // blau-weiße Wimpelkette
+  c.strokeStyle = "rgba(60,60,60,.5)"; c.lineWidth = 1; c.beginPath(); for (let x = JZB_RAND; x <= J.w - JZB_RAND; x += 4) c.lineTo(x, jzbKetteY(x, 4, 8 * k)); c.stroke();
+  for (let i = 0, x = JZB_RAND + 3; x < J.w - JZB_RAND - 8; i++, x += 12 * Math.max(.8, k)) {
+    const y = jzbKetteY(x, 4, 8 * k), w = 10 * Math.max(.8, k), fl = Math.sin(T * 3 + i * .7) * 1.5 * k;
+    c.fillStyle = i % 2 ? "#ffffff" : "#1f6fd1"; c.beginPath(); c.moveTo(x, y); c.lineTo(x + w, jzbKetteY(x + w, 4, 8 * k)); c.lineTo(x + w / 2 + fl, y + 12 * k); c.closePath(); c.fill();
+    if (i % 2) { c.fillStyle = "rgba(31,111,209,.5)"; c.beginPath(); c.moveTo(x + w / 2 + fl * .5, y + 2.5 * k); c.lineTo(x + w * .62 + fl * .5, y + 5 * k); c.lineTo(x + w / 2 + fl * .5, y + 7.5 * k); c.lineTo(x + w * .38 + fl * .5, y + 5 * k); c.fill(); }
+  }
+  // Lebkuchenherz und Brezn am Pfosten unten links
+  const f = jzbWiesnFass(), sy = jzbStangeY(); jzbPfostenMalen(c, JZB_RAND + 3, sy, JZB_RAND + 72 * k); jzbHerzMalen(c, JZB_RAND + 25 * k, sy, k, F.t); jzbBreznMalen(c, JZB_RAND + 60 * k, sy, k);
+  // Fass auf dem Bock, Zapfhahn, Krug füllt sich
+  c.fillStyle = "#6b4423"; c.fillRect(f.fx - f.r * 1.1, f.fy + f.r * .7, 3 * k, J.h - f.fy - f.r * .7); c.fillRect(f.fx + f.r * 1.1 - 3 * k, f.fy + f.r * .7, 3 * k, J.h - f.fy - f.r * .7);
+  const g = c.createLinearGradient(0, f.fy - f.r, 0, f.fy + f.r); g.addColorStop(0, "#c08a4e"); g.addColorStop(.5, "#9a6431"); g.addColorStop(1, "#6e4220");
+  c.fillStyle = g; c.beginPath(); c.ellipse(f.fx, f.fy, f.r * 1.3, f.r, 0, 0, 7); c.fill();
+  c.strokeStyle = "#3d3d3d"; c.lineWidth = 2 * k; for (const s of [-.75, .75]) { c.beginPath(); c.ellipse(f.fx + s * f.r * 1.3 * .82, f.fy, f.r * .16, f.r * .97, 0, 0, 7); c.stroke(); }
+  c.fillStyle = "#a87240"; c.beginPath(); c.ellipse(f.fx - f.r * 1.3, f.fy, f.r * .28, f.r, 0, 0, 7); c.fill(); c.strokeStyle = "#3d3d3d"; c.lineWidth = 1.4 * k; c.stroke();
+  c.fillStyle = "#c9c9c9"; c.fillRect(f.fx - f.r * 1.55, f.fy - 2 * k, f.r * .3, 3.4 * k); c.fillRect(f.kx - 1.5 * k, f.fy - 2 * k, 3 * k, 7 * k);
+  const fuell = jzbEase((F.t - 4) / 16);
+  if (F.t > 4 && F.t < 21) { c.strokeStyle = "rgba(242,182,50,.95)"; c.lineWidth = 2 * k; c.beginPath(); c.moveTo(f.kx, f.fy + 5 * k); c.lineTo(f.kx + Math.sin(T * 20) * .4, f.ky - 20 * k * Math.max(.1, fuell)); c.stroke(); }
+  jzbKrugMalen(c, f.kx, f.ky, k, fuell, 0, 1);
+  if (F.schild >= 0 && F.schild < 10) { // Holzschild „O'zapft is!“
+    const s = jzbHopp(F.schild / .7) * Math.min(1, (10 - F.schild) / .6), sx = f.fx - f.r * .2, sy = f.fy - f.r - 16 * k;
+    c.save(); c.translate(sx, sy); c.scale(s, s); c.rotate(-.06); c.fillStyle = "#8b5a2b"; c.strokeStyle = "#5a3818"; c.lineWidth = 1.5; c.beginPath(); if (c.roundRect) c.roundRect(-34 * k, -9 * k, 68 * k, 18 * k, 4 * k); else c.rect(-34 * k, -9 * k, 68 * k, 18 * k); c.fill(); c.stroke();
+    c.font = `700 ${10 * k}px Georgia,serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#fff4d6"; c.fillText("O'zapft is!", 0, .5 * k); c.restore();
+  }
+  if (F.krug) { // zwei Maßkrüge kommen von links und rechts und stoßen an
+    const K = F.krug, m = jzbWiesnKrugMitte(), weg = K.t < 2.4 ? 1 - jzbEase(K.t / 2.4) : K.t < 4.6 ? 0 : jzbEase((K.t - 4.6) / 2.4), d = 9 * k + weg * (J.w * .3);
+    const kipp = K.t > 2 && K.t < 3.2 ? Math.sin((K.t - 2) / 1.2 * Math.PI) * .22 : 0;
+    jzbKrugMalen(c, m - d, J.h - 2, k, 1, kipp, 1); jzbKrugMalen(c, m + d, J.h - 2, k, 1, -kipp, -1);
+    if (K.t > 2.4 && K.t < 4.8) { const a = Math.min(1, (K.t - 2.4) * 3, (4.8 - K.t) * 3); c.save(); c.globalAlpha *= a; c.font = `700 ${12 * k}px Georgia,serif`; c.textAlign = "center"; c.lineWidth = 3; c.strokeStyle = "rgba(0,0,0,.45)"; c.strokeText("Prost!", m, J.h - 32 * k); c.fillStyle = "#ffe08a"; c.fillText("Prost!", m, J.h - 32 * k); c.restore(); }
+  }
+  jzbSpritzerMalen(c, F);
+}
+// ---- 🌴 Karibik ----
+const jzbKaribikHorizont = () => JZB.h - 30 * JZB.k;
+function jzbKaribikSand(x) { const J = JZB, a = J.w * .55; if (x < a) return J.h + 20; const u = Math.min(1, (x - a) / (J.w * .2)); return J.h - 3 - jzbEase(u) * 16 * J.k; }
+function jzbPalme() { const J = JZB, k = J.k, H = Math.max(36, Math.min(80, J.h * .5)) * Math.max(.8, k), px = J.w * .8, py = jzbKaribikSand(px) + 2, bieg = Math.sin(J.T * .7) * 3 * k; return { px, py, H, kx: px + H * .2 + bieg, ky: py - H }; }
+function jzbKaribikMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T, H0 = jzbKaribikHorizont(), abend = jzbEase((F.t - (JZB_FEST_DAUER - 28)) / 20);
+  // Sonne – zum Schluss geht sie unter und färbt sich rot
+  const sx = J.w * .5, sy = J.h * .355 + abend * (H0 - J.h * .355), sr = 13 * k * (1 + abend * .25);
+  const gl = c.createRadialGradient(sx, sy, sr * .5, sx, sy, sr * 2.6); gl.addColorStop(0, abend > .3 ? "rgba(255,140,60,.55)" : "rgba(255,230,120,.5)"); gl.addColorStop(1, "rgba(255,200,80,0)");
+  c.fillStyle = gl; c.beginPath(); c.arc(sx, sy, sr * 2.6, 0, 7); c.fill();
+  c.save(); c.beginPath(); c.rect(0, 0, J.w, H0); c.clip(); c.fillStyle = abend > 0 ? `rgb(255,${Math.round(214 - 110 * abend)},${Math.round(80 - 40 * abend)})` : "#ffd650"; c.beginPath(); c.arc(sx, sy, sr, 0, 7); c.fill(); c.restore();
+  if (abend > 0) { const g = c.createLinearGradient(0, H0 - J.h * .5, 0, H0); g.addColorStop(0, "rgba(255,120,60,0)"); g.addColorStop(1, `rgba(255,110,50,${.22 * abend})`); c.fillStyle = g; c.fillRect(0, H0 - J.h * .5, J.w, J.h * .5); }
+  // Meer mit Wellen und Glitzer
+  const mg = c.createLinearGradient(0, H0, 0, J.h); mg.addColorStop(0, "#1fb5c9"); mg.addColorStop(1, "#0e8aa8"); c.fillStyle = mg;
+  c.beginPath(); c.moveTo(0, J.h); for (let x = 0; x <= J.w; x += 6) c.lineTo(x, H0 + Math.sin(x * .05 + T * 1.6) * 1.2 * k); c.lineTo(J.w, J.h); c.fill();
+  c.strokeStyle = "rgba(255,255,255,.55)"; c.lineWidth = 1.2;
+  for (let r = 0; r < 2; r++) { c.beginPath(); for (let x = 0; x <= J.w * .62; x += 5) { const y = H0 + (6 + r * 6) * k + Math.sin(x * .06 - T * (2 + r) + r) * 1.6 * k; x ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); }
+  if (abend > 0) { c.fillStyle = `rgba(255,170,90,${.6 * abend})`; for (let i = 0; i < 5; i++) c.fillRect(sx - (10 - i * 1.5) * k, H0 + 2 * k + i * 3 * k, (20 - i * 3) * k, 1.3 * k); }
+  // Segelboot
+  if (F.boot) { const b = F.boot, by = H0 + 2 * k + Math.sin(T * 2) * 1.2 * k; c.save(); c.translate(b.x, by); c.scale(b.dir * k, k); c.rotate(Math.sin(T * 1.5) * .05);
+    c.fillStyle = "#7a3e1d"; c.beginPath(); c.moveTo(-14, 0); c.lineTo(14, 0); c.lineTo(10, 5); c.lineTo(-11, 5); c.closePath(); c.fill();
+    c.strokeStyle = "#5a3a20"; c.lineWidth = 1.2; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -26); c.stroke();
+    c.fillStyle = "#ffffff"; c.beginPath(); c.moveTo(1, -25); c.lineTo(13, -3); c.lineTo(1, -3); c.fill(); c.fillStyle = "#ff6b4a"; c.beginPath(); c.moveTo(-1, -22); c.lineTo(-11, -3); c.lineTo(-1, -3); c.fill(); c.restore(); }
+  // Strand mit Namen im Sand – die große Welle holt ihn
+  const a = J.w * .55; c.fillStyle = "#f3d9a4"; c.beginPath(); c.moveTo(a, J.h + 1); for (let x = a; x <= J.w; x += 4) c.lineTo(x, jzbKaribikSand(x)); c.lineTo(J.w, J.h + 1); c.fill();
+  const name = jzbEisNameText(), nx = J.w * .74, ny = J.h - 6 * k, buchst = Math.floor(Math.max(0, F.t - 8) / .7), weg = F.welle < 0 ? 0 : Math.min(1, F.welle / 2.5);
+  if (name && buchst > 0 && weg < 1) { c.save(); c.globalAlpha *= 1 - weg; c.font = `italic 600 ${9.5 * k}px "Segoe Print","Comic Sans MS",cursive,sans-serif`; c.textAlign = "left"; c.textBaseline = "middle";
+    const t = name.slice(0, buchst), w = c.measureText(name).width; c.fillStyle = "rgba(140,95,45,.75)"; c.fillText(t, nx - w / 2, ny); c.restore(); }
+  if (F.welle >= 0 && F.welle < 6) { const p = F.welle < 2.5 ? jzbEase(F.welle / 2.5) : 1 - jzbEase((F.welle - 2.5) / 3.5), vx = a + p * (J.w * .32);
+    c.fillStyle = "rgba(60,200,215,.75)"; c.beginPath(); c.moveTo(a - 4, J.h + 1); for (let x = a - 4; x <= vx; x += 4) c.lineTo(x, Math.max(jzbKaribikSand(x), J.h - 9 * k) - 2 * k + Math.sin(x * .2 + T * 4) * k); c.lineTo(vx, J.h + 1); c.fill();
+    c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 1.6 * k; c.beginPath(); c.arc(vx, J.h - 6 * k, 3 * k, -1.6, 1.2); c.stroke(); }
+  c.font = `${13 * k}px ${JZB_EMOJI}`; c.textAlign = "center"; c.textBaseline = "bottom"; c.fillText("🍹", J.w * .64, jzbKaribikSand(J.w * .64) + 2);
+  // Palme
+  const P = jzbPalme(); c.strokeStyle = "#8a6239"; c.lineCap = "round";
+  for (let i = 0; i < 10; i++) { const u0 = i / 10, u1 = (i + 1) / 10, pt = (u) => [P.px + (P.kx - P.px) * u * u, P.py + (P.ky - P.py) * u]; const [x0, y0] = pt(u0), [x1, y1] = pt(u1);
+    c.lineWidth = (5.5 - u0 * 2.5) * k; c.strokeStyle = i % 2 ? "#8a6239" : "#9c7246"; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); }
+  const wedel = [[-2.6, 1], [-2.0, 1.1], [-1.3, .9], [-.4, .7], [.5, .9], [1.1, 1.05], [-3.0, .8]];
+  for (const [w0, l0] of wedel) { const sw = Math.sin(T * 1.3 + w0) * .08, w = w0 + sw, L = 30 * k * l0, ex = P.kx + Math.cos(w) * L, ey = P.ky + Math.sin(w) * L * .55 + L * .35;
+    const mx = P.kx + Math.cos(w) * L * .55, my = P.ky + Math.sin(w) * L * .55 - 6 * k;
+    c.strokeStyle = "#2e8b3e"; c.lineWidth = 1.8 * k; c.beginPath(); c.moveTo(P.kx, P.ky); c.quadraticCurveTo(mx, my, ex, ey); c.stroke();
+    c.strokeStyle = "#3fae4f"; c.lineWidth = 1.1 * k;
+    for (let j = 1; j < 9; j++) { const u = j / 9, qx = (1 - u) * (1 - u) * P.kx + 2 * (1 - u) * u * mx + u * u * ex, qy = (1 - u) * (1 - u) * P.ky + 2 * (1 - u) * u * my + u * u * ey, ll = (1 - u * .6) * 6 * k;
+      c.beginPath(); c.moveTo(qx, qy); c.lineTo(qx + Math.cos(w + 1.9) * ll, qy + Math.sin(w + 1.9) * ll + 2 * k); c.moveTo(qx, qy); c.lineTo(qx + Math.cos(w - 1.2) * ll, qy + Math.abs(Math.sin(w - 1.2)) * ll + 2 * k); c.stroke(); } }
+  c.fillStyle = "#6b4423"; for (const [dx, dy] of [[-3, 3], [2.5, 4], [0, 6.5]]) { if (F.nuss && dx === 2.5) continue; c.beginPath(); c.arc(P.kx + dx * k, P.ky + dy * k, 3.4 * k, 0, 7); c.fill(); }
+  if (F.nuss) { c.fillStyle = "#6b4423"; c.beginPath(); c.arc(F.nuss.x, F.nuss.y, 3.4 * k, 0, 7); c.fill(); }
+  // Papagei oder springender Fisch
+  const g = F.gast; if (g) { c.save(); c.font = `${(g.typ === "papagei" ? 17 : 13) * k}px ${JZB_EMOJI}`; c.textAlign = "center"; c.textBaseline = "middle";
+    if (g.typ === "papagei") { const x = g.dir > 0 ? -30 + g.t * 55 * k : J.w + 30 - g.t * 55 * k, y = g.y0 + Math.sin(g.t * 3) * 6 * k; c.translate(x, y); c.scale(-g.dir, 1); c.fillText("🦜", 0, 0); }
+    else { const u = g.t / 1.6, x = g.x + g.dir * u * 40 * k, y = H0 + 6 * k - Math.sin(u * Math.PI) * 24 * k; c.translate(x, y); c.scale(-g.dir, 1); c.rotate(-g.dir * (u - .5) * 1.6 * -1); c.fillText("🐠", 0, 0); }
+    c.restore(); }
+  void F;
 }
 // ---------- KC-CLUB-JAHRESZEIT-EXTRAS (2.249.0, Wunsch Hansi „baue noch die weiteren Ideen“): Besonderes auf der Kopf-Bühne ----------
 // 🥾 Nikolaus (6.12.): ein gefüllter Stiefel steht unten. ☔ Regen – nur wenn die Wetterdaten frisch sind und es wirklich regnet (Regel 11:
