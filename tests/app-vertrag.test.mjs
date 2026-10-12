@@ -5940,6 +5940,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\} else esStop\(\);\n\}/.test(html) && /function esStop\(\) \{[^\n]*if \(BW\.lauf \|\| BW\.hoeren \|\| BWM\.laeuft\) bwStopp\(\); \}/.test(html), "Zurückdrehen stoppt Training und Musik");
 }
 
+// 2.306.0 KC-CLUB-SPRACHE-HAENGT (Fund Hansi „ich kann das Reden nicht mehr hören, obwohl Ansage an ist“): hängende/angehaltene Sprachausgabe wieder in Gang setzen
+{
+  assert.ok(/function sprachFrei\(\) \{ try \{ const s = speechSynthesis; if \(sprachHaengt\(\)\) s\.cancel\(\); if \(s\.paused\) s\.resume\(\); \} catch \{\} \}/.test(html), "hängt → leeren, Pause → weiter");
+  assert.ok(/Date\.now\(\) - SPRACH\.zuletzt > 30000/.test(html) && /for \(const e of \["start", "end", "error", "boundary"\]\) u\.addEventListener\(e, \(\) => \{ SPRACH\.zuletzt = Date\.now\(\); \}\);/.test(html), "Lebenszeichen der Sprache werden gemerkt");
+  assert.ok(/function sprechAusgabe\(text\) \{\n  sprachFrei\(\); SPRACH\.zuletzt = Date\.now\(\);/.test(html), "vor jedem Satz geprüft");
+  assert.ok(/&& !sprachHaengt\(\); \} catch \(e\) \{ return false; \} \};/.test(html), "hängende Sprache blockiert die Bühne nicht");
+  assert.ok(/try \{ speechSynthesis\.cancel\(\); speechSynthesis\.resume\(\); \} catch \(e\) \{ \/\* ohne Sprache \*\/ \} \/\/ 2\.306\.0/.test(html), "Training startet die Sprache frisch");
+  assert.ok(/if \(!document\.hidden\) try \{ if \(speechSynthesis\.paused\) speechSynthesis\.resume\(\); \} catch \{\}/.test(html), "zurück in der App: weiter");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

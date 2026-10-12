@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.306.0 – 2026-10-12 – KC-CLUB-SPRACHE-HAENGT: Twinkey spricht wieder
+Chrome auf Android lässt die Sprachausgabe nach einem Ansichts- oder App-Wechsel manchmal auf Pause stehen oder dauerhaft „beschäftigt“ – dann war Twinkey trotz eingeschalteter Ansage stumm. Jetzt wird die Sprache vor jedem Satz geprüft und wieder in Gang gesetzt; jedes Training startet sie frisch; beim Zurückkehren in die App läuft sie weiter. Gilt für alle Vorlese-Stellen, die über die gemeinsame Sprachausgabe laufen.
+
 ## 2.305.0 – 2026-10-12 – KC-CLUB-START-VORDERSEITE: Start führt von der Bühne zurück
 Auf der Rückseite (Bühne, Uhr, Tafel …) tat ein Tipp auf 🏠 Start nichts – der Kopf blieb umgedreht. Jetzt dreht Start den Kopf zurück auf die Vorderseite; Training, Musik und Ansage hören dabei auf.
 

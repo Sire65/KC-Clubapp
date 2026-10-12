@@ -1,11 +1,18 @@
 {
-  "version": "2.305.0",
+  "version": "2.306.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🏠 Start bringt dich von der Bühne (Rückseite) zurück zur Startseite"
+    "🗣️ Twinkey spricht wieder – hängende Sprachausgabe wird von selbst gelöst"
   ],
   "verlauf": [
+    {
+      "version": "2.306.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🗣️ Twinkey spricht wieder – hängende Sprachausgabe wird von selbst gelöst"
+      ]
+    },
     {
       "version": "2.305.0",
       "datum": "2026-10-12",

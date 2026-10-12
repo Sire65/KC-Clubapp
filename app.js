@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.305.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.306.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -4920,7 +4920,19 @@ function deStimme() {
   return alle.find((v) => v.voiceURI === wahl) || [...alle].sort((a, b) => stimmeWert(b) - stimmeWert(a))[0];
 }
 try { speechSynthesis.getVoices(); speechSynthesis.addEventListener?.("voiceschanged", () => { if ($("setStimme")) stimmeWahlZeigen(); }); } catch {}
-function sprechAusgabe(text) { const u = new SpeechSynthesisUtterance(text); u.lang = "de-DE"; const st = deStimme(); if (st) { u.voice = st; u.lang = st.lang; } return u; }
+// 2.306.0 KC-CLUB-SPRACHE-HAENGT (Fund Hansi „ich kann das Reden nicht mehr hören, obwohl Ansage an ist“): Chrome auf Android lässt die Sprachausgabe
+// nach einem Ansichts-/App-Wechsel gern auf „Pause“ stehen oder meldet dauerhaft „spricht“ – dann bleibt jeder neue Satz stumm in der Warteschlange.
+// sprachFrei() setzt sie vor jedem Satz wieder in Gang: Pause → weiter; „spricht“ ohne jedes Lebenszeichen seit 30 s → hängt → leeren.
+const SPRACH = { zuletzt: 0 };
+const sprachHaengt = () => { try { return (speechSynthesis.speaking || speechSynthesis.pending) && Date.now() - SPRACH.zuletzt > 30000; } catch { return false; } };
+function sprachFrei() { try { const s = speechSynthesis; if (sprachHaengt()) s.cancel(); if (s.paused) s.resume(); } catch {} }
+if (typeof document !== "undefined" && document.addEventListener) document.addEventListener("visibilitychange", () => { if (!document.hidden) try { if (speechSynthesis.paused) speechSynthesis.resume(); } catch {} }); // zurück in der App: angehaltene Sprache weiter
+function sprechAusgabe(text) {
+  sprachFrei(); SPRACH.zuletzt = Date.now();
+  const u = new SpeechSynthesisUtterance(text); u.lang = "de-DE"; const st = deStimme(); if (st) { u.voice = st; u.lang = st.lang; }
+  for (const e of ["start", "end", "error", "boundary"]) u.addEventListener(e, () => { SPRACH.zuletzt = Date.now(); });
+  return u;
+}
 function sprechen(text) {
   try { if (!("speechSynthesis" in window)) return; speechSynthesis.speak(sprechAusgabe(text)); } catch {}
 }
@@ -13054,6 +13066,7 @@ function esBuehneZeigen(f) {
 const BW_BEGRUESSUNG = "Hallo! Lass uns ein bisschen Bewegung in den Alltag einbauen. Mach nur so viel, wie dir guttut. Los geht’s!";
 async function bwLos() {
   const w = bwWahl(), plan = bwPlan(w.modus, w.dauer);
+  try { speechSynthesis.cancel(); speechSynthesis.resume(); } catch (e) { /* ohne Sprache */ } // 2.306.0: Sprachausgabe frisch starten (hing sie, blieb Twinkey stumm)
   if (BW.hoeren) bwStopp(false); BWM.stueck = bwTrainingsStueck(w.modus); BWM.gesamt = 0; // 2.303.0: jedes Training ein anderes Disco-Stück (im Tempo der Übungen)
   BW.lauf = { plan, i: 0, phase: "bereit", rest: BW_BEREIT, pause: false, musik: w.musik, ansage: w.ansage, sek: 0, lob: Math.floor(Math.random() * BW_LOB.length), sprueche: 0, farbe: Math.floor(Math.random() * BW_FARBEN.length), warte: 0, gezaehlt: false };
   try { BW.wach = await navigator.wakeLock?.request("screen"); } catch (e) { BW.wach = null; }
@@ -13065,7 +13078,7 @@ async function bwLos() {
 }
 // 2.296.0 (Wunsch Hansi „beim Abzählen wird der Text vom Erklären abgeschnitten“): Ansagen schneiden sich nicht mehr gegenseitig ab.
 // sofort = darf Laufendes unterbrechen (nur „noch 3/2/1“ und „ausschütteln“); „nebenbei“ = nur sprechen, wenn gerade niemand spricht.
-const bwSpricht = () => { try { return !!(speechSynthesis.speaking || speechSynthesis.pending); } catch (e) { return false; } };
+const bwSpricht = () => { try { return !!(speechSynthesis.speaking || speechSynthesis.pending) && !sprachHaengt(); } catch (e) { return false; } }; // 2.306.0: hängende Sprache zählt nicht als „spricht“
 function bwSag(t, sofort, blase, nebenbei) { // blase: kürzerer Text für die Sprechblase (sonst der gesprochene)
   const L = BW.lauf; if (nebenbei && L?.ansage && bwSpricht()) return;
   if (L) L.lobZuletzt = [...bwLobWorte(t), ...(L.lobZuletzt || [])].slice(0, 5); // gerade benutzte Lobwörter merken
