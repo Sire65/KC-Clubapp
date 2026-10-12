@@ -6074,15 +6074,28 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.331.0 KC-CLUB-THEMEN-BUEHNE (Wunsch Hansi „Sim-Jü, Oktoberfest, Karibik“): eigene Bühnenbilder für Themen + Fest-Kalender
 {
   for (const [id, jz] of [["simjue", "kirmes"], ["oktoberfest", "wiesn"], ["karibik", "karibik"]]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", name: "[^"]+", design: "[a-z]+", jz: "${jz}", effekt: "[a-z]+"`).test(html), `Thema ${id}`);
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"kirmes", "wiesn", "karibik"\]/.test(html) && /const JZB_FESTE = \["kirmes", "wiesn", "karibik"\];/.test(html), "Fest-Bühnen eingetragen");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"kirmes", "wiesn", "karibik"[^\]]*\]/.test(html) && /const JZB_FESTE = \["kirmes", "wiesn", "karibik"[^\]]*\];/.test(html), "Fest-Bühnen eingetragen");
   assert.ok(/else if \(JZB_FESTE\.includes\(S\)\) jzbFest\(dt\);/.test(html) && /if \(J\.fest\) jzbFestMalen\(c\);/.test(html), "Bühne rechnet und zeichnet die Feste");
   assert.ok(/if \(F\.t >= JZB_FEST_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(html), "Lauf endet und beginnt neu");
   assert.ok(/function jzbHerzMalen\(c, x, y0, k, t\) \{[^\n]*\n\s*const J = JZB, name = jzbEisNameText\(\)/.test(html) && /const name = jzbEisNameText\(\), nx = J\.w \* \.74/.test(html), "Vorname auf dem Lebkuchenherz und im Sand");
   assert.ok(/function themaFestZeit\(d = new Date\(\)\)/.test(html) && /const THEMA_KAL = \(d = new Date\(\)\) => \{ const f = themaFestZeit\(d\); if \(f\) return f;/.test(html), "Kalender: Oktoberfest und Sim-Jü");
-  const fz = new Function(html.match(/function themaFestZeit\(d = new Date\(\)\) \{[\s\S]*?\n\}/)[0] + "; return themaFestZeit;")();
+  const fz = new Function((html.match(/function osterSonntag\(jahr\) \{[\s\S]*?\n\}/)?.[0] || "") + html.match(/function themaFestZeit\(d = new Date\(\)\) \{[\s\S]*?\n\}/)[0] + "; return themaFestZeit;")();
   assert.equal(fz(new Date(2026, 9, 24)), "simjue"); assert.equal(fz(new Date(2026, 9, 27)), "simjue"); assert.equal(fz(new Date(2026, 9, 28)), null); assert.equal(fz(new Date(2026, 9, 23)), null);
   assert.equal(fz(new Date(2026, 8, 19)), "oktoberfest"); assert.equal(fz(new Date(2026, 9, 4)), "oktoberfest"); assert.equal(fz(new Date(2026, 8, 18)), null); assert.equal(fz(new Date(2026, 9, 5)), null);
   assert.ok(/jahreszeitVorschau\('kirmes'\)/.test(lies("index.html")) && /jahreszeitVorschau\('wiesn'\)/.test(lies("index.html")) && /jahreszeitVorschau\('karibik'\)/.test(lies("index.html")), "Vorschau-Knöpfe");
+}
+// 2.332.0 KC-CLUB-THEMEN-BUEHNE-2 (Wunsch Hansi „weitere Themen: Ostern, Karneval und Halloween“)
+{
+  for (const [id, jz] of [["ostern", "fruehling"], ["karneval", "karneval"], ["halloween", "halloween"]]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", name: "[^"]+", design: "[a-z]+", jz: "${jz}", effekt: "[a-z]+"`).test(html), `Thema ${id}`);
+  assert.ok(/const JZB_FESTE = \["kirmes", "wiesn", "karibik", "karneval", "halloween"\];/.test(html) && /else if \(J\.saison === "karneval"\) jzbKarnevalMalen\(c, F\); else if \(J\.saison === "halloween"\) jzbHalloweenMalen\(c, F\);/.test(html), "Karneval und Halloween auf der Bühne");
+  assert.ok(/const txt = name \? `Helau, \$\{name\}!` : "Helau!";/.test(html) && /const txt = name \? `Buuuh, \$\{name\}!` : "Buuuh!";/.test(html), "Vorname auf dem Wagen und beim Gespenst");
+  assert.ok(/if \(te === "ostern" && J\.saison === "fruehling"\) x\.ostern = true;/.test(html) && /J\.gaeste\.push\(\{ typ: "osterhase", x: J\.w \+ 24, t: 0 \}\)/.test(html) && /if \(e\.da === false && hase\) continue;/.test(html) && /!v\.gef && v\.da !== false/.test(html), "Ostern: Osterhase legt die Eier, erst dann sicht- und findbar");
+  assert.ok(/function osterSonntag\(jahr\)/.test(html) && /const ostern = osterSonntag\(jahr\);/.test(html), "eine Osterformel für Feiertage und Themen");
+  const fz = new Function(html.match(/function osterSonntag\(jahr\) \{[\s\S]*?\n\}/)[0] + html.match(/function themaFestZeit\(d = new Date\(\)\) \{[\s\S]*?\n\}/)[0] + "; return themaFestZeit;")();
+  assert.equal(fz(new Date(2026, 1, 12)), "karneval"); assert.equal(fz(new Date(2026, 1, 17)), "karneval"); assert.equal(fz(new Date(2026, 1, 18)), null); assert.equal(fz(new Date(2026, 10, 11)), "karneval");
+  assert.equal(fz(new Date(2026, 2, 29)), "ostern"); assert.equal(fz(new Date(2026, 3, 6)), "ostern"); assert.equal(fz(new Date(2026, 3, 7)), null);
+  assert.equal(fz(new Date(2026, 9, 31)), "halloween"); assert.equal(fz(new Date(2026, 9, 30)), null);
+  assert.ok(/jahreszeitVorschau\('karneval'\)/.test(lies("index.html")) && /jahreszeitVorschau\('halloween'\)/.test(lies("index.html")), "Vorschau-Knöpfe");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -8695,7 +8708,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE"), html.indexOf("// ---------- KC-CLUB-KONFETTI (2.169.0)"));
   assert.ok(b.length > 1000, "Bühne vorhanden");
-  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik")?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
+  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween")?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
   assert.ok(/J\.wind = \{ dir: \(J\.lauf >> 1\) % 2 \? -1 : 1/.test(b), "Windstoß abwechselnd von links und rechts (2.259.0: über die Wind-Läufe, dazwischen Twinkey)");
   assert.ok(/if \(J\.lauf % 3 === 2\) (jzbSchneemannStart|\(Math\.floor\(J\.lauf \/ 3\) % 2 \? jzbIgluStart : jzbSchneemannStart\))\(\); else (if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else )?jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (ab 2.320.0 abwechselnd mit dem Iglu; Advent mit Weihnachtsmütze)");
   assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!fxAn\(\) \|\| !einst\("jahreszeit", true\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");

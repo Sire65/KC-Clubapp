@@ -1,14 +1,24 @@
 {
-  "version": "2.331.0",
+  "version": "2.332.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🎡 Neues Thema Sim-Jü: Lichterkette, Riesenrad, Luftballons, Lebkuchenherz mit deinem Namen und Feuerwerk",
-    "🥨 Neues Thema Oktoberfest: Fass wird angezapft („O'zapft is!“), Maßkrüge stoßen an",
-    "🌴 Neues Thema Karibik: Meer, Palme, Segelboot, dein Name im Sand – und Sonnenuntergang",
-    "🔄 „Nach Kalender“ kennt jetzt Oktoberfest und die Sim-Jü-Woche"
+    "🐣 Neues Thema Ostern: der Osterhase hoppelt herein und legt bunte Eier zum Suchen",
+    "🎭 Neues Thema Karneval: Luftschlangen, Konfetti, Karnevalswagen mit „Helau“ und deinem Namen, Kamelle",
+    "🎃 Neues Thema Halloween: Kürbisse, Fledermäuse, Spinne – und ein Gespenst ruft deinen Namen",
+    "🔄 „Nach Kalender“ kennt jetzt auch Karneval, Ostern und Halloween"
   ],
   "verlauf": [
+    {
+      "version": "2.332.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🐣 Neues Thema Ostern: der Osterhase hoppelt herein und legt bunte Eier zum Suchen",
+        "🎭 Neues Thema Karneval: Luftschlangen, Konfetti, Karnevalswagen mit „Helau“ und deinem Namen, Kamelle",
+        "🎃 Neues Thema Halloween: Kürbisse, Fledermäuse, Spinne – und ein Gespenst ruft deinen Namen",
+        "🔄 „Nach Kalender“ kennt jetzt auch Karneval, Ostern und Halloween"
+      ]
+    },
     {
       "version": "2.331.0",
       "datum": "2026-10-12",

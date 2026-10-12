@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.331.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.332.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -613,13 +613,16 @@ function lichtSensorStarten() {
 // Gedrucktes immer im Köcheclub-Design.
 const THEMEN = [
   { id: "klassik", sym: "🏛️", name: "Köcheclub klassisch", design: "klassik", jz: "auto", effekt: "wechsel" },
+  { id: "karneval", sym: "🎭", name: "Karneval", design: "retro", jz: "karneval", effekt: "flieger" }, // 2.332.0
   { id: "fruehling", sym: "🌱", name: "Frühling", design: "kirschbluete", jz: "fruehling", effekt: "taube" },
+  { id: "ostern", sym: "🐣", name: "Ostern", design: "salbei", jz: "fruehling", effekt: "taube", extra: "ostern" }, // 2.332.0: Osterhase legt Eier zum Suchen
   { id: "sommer", sym: "🌻", name: "Sommer", design: "toskana", jz: "sommer", effekt: "flieger" },
   { id: "karibik", sym: "🌴", name: "Karibik", design: "lagune", jz: "karibik", effekt: "taube" }, // 2.331.0 KC-CLUB-THEMEN-BUEHNE
   { id: "oktoberfest", sym: "🥨", name: "Oktoberfest", design: "nordsee", jz: "wiesn", effekt: "postauto" },
   { id: "herbst", sym: "🍂", name: "Herbst", design: "ocker", jz: "herbst", effekt: "flieger" },
   { id: "indian", sym: "🍁", name: "Indian Summer", design: "glut", jz: "herbst", effekt: "taube",
     laub: ["#d7261e", "#ff6a13", "#ffb300", "#b5121b", "#ff8f1f", "#e8c21a", "#8e1b10", "#f04e23"] }, // leuchtendes Rot, Orange, Gold
+  { id: "halloween", sym: "🎃", name: "Halloween", design: "sonnenuntergang", jz: "halloween", effekt: "taube" }, // 2.332.0
   { id: "simjue", sym: "🎡", name: "Sim-Jü", design: "regenbogen", jz: "kirmes", effekt: "flieger" },
   { id: "winter", sym: "⛄", name: "Winter", design: "nordsee", jz: "winter", effekt: "postauto" },
   { id: "weihnachten", sym: "🎄", name: "Weihnachten", design: "weinberg", jz: "advent", effekt: "taube" },
@@ -633,7 +636,13 @@ function themaFestZeit(d = new Date()) {
   const we = new Date(y, 9, 1); we.setDate(1 + (7 - we.getDay()) % 7); if (we.getDate() < 3) we.setDate(3);
   if (tag >= ws && tag <= we) return "oktoberfest";
   const off = (2 - new Date(y, 9, 28).getDay() + 7) % 7, di = new Date(y, 9, 28 + (off > 3 ? off - 7 : off)), sa = new Date(y, 9, di.getDate() - 3);
-  return tag >= sa && tag <= di ? "simjue" : null;
+  if (tag >= sa && tag <= di) return "simjue";
+  // 2.332.0: Ostern (Palmsonntag bis Ostermontag), Karneval (Weiberfastnacht bis Veilchendienstag und am 11.11.), Halloween (31.10.)
+  const o = osterSonntag(y), bis = Math.round((tag - new Date(y, +o.slice(5, 7) - 1, +o.slice(8, 10))) / 86400000);
+  if (bis >= -7 && bis <= 1) return "ostern";
+  if ((bis >= -52 && bis <= -47) || (d.getMonth() === 10 && d.getDate() === 11)) return "karneval";
+  if (d.getMonth() === 9 && d.getDate() === 31) return "halloween";
+  return null;
 }
 const THEMA_KAL = (d = new Date()) => { const f = themaFestZeit(d); if (f) return f; const a = jahreszeitArt(d); return a === "advent" ? "weihnachten" : a === "herbst" && d.getMonth() === 9 ? "indian" : a; }; // Oktober = Indian Summer
 const themaWahl = () => { try { const w = localStorage.getItem("kc_club_thema"); return w === "auto" || THEMEN.some((t) => t.id === w) ? w : "aus"; } catch { return "aus"; } };
@@ -3212,7 +3221,7 @@ const HILFE = [
   // 🎨 Aussehen & Darstellung
   { id: "farbe", thema: "darstellung", sym: "🎨", t: "Die Farbe der App ändern", x: "Du kannst die Farbe einstellen: ⚙️ Einstellungen → Register <b>🎨 Darstellung</b> → „🎨 Farbdesign“. Unter „Weitere Farbschemen“ und „✨ Ausgefallene Farbschemen“ gibt es noch mehr. Antippen – die App färbt sich sofort um.", zeig: hzDesign },
   { id: "nacht", thema: "darstellung", sym: "🌗", t: "Tag- und Nachtmodus", x: "⚙️ → Darstellung → „🌗 Tag- und Nachtmodus“: <b>🔄 Automatisch</b> (folgt deinem Handy), <b>☀️ Immer Tag</b> oder <b>🌙 Immer Nacht</b>. Nachts ist der dunkle Modus angenehmer für die Augen.", zeig: () => einstiegHin("darstellung", "modusWahl") },
-  { id: "themen", thema: "darstellung", sym: "🎭", t: "Themen: Weihnachten, Herbst, Indian Summer …", x: "Mit einem Tipp auf ein Thema (⚙️ → <b>🎨 Darstellung</b> → <b>🎭 Themen</b>) stellst du Farben, das Bild im Kopf der Startseite und den Effekt beim Senden passend ein – z. B. 🎄 Weihnachten, 🍁 Indian Summer, 🎡 Sim-Jü, 🥨 Oktoberfest oder 🌴 Karibik – mit eigenem Bild im Kopf. „🔄 Nach Kalender“ wechselt das Thema von selbst (auch zum Oktoberfest und zur Sim-Jü-Woche). Einzelnes kannst du danach trotzdem ändern. Hat der Admin ein Club-Thema für alle eingestellt, kannst du es dort für dich abschalten." },
+  { id: "themen", thema: "darstellung", sym: "🎭", t: "Themen: Weihnachten, Herbst, Indian Summer …", x: "Mit einem Tipp auf ein Thema (⚙️ → <b>🎨 Darstellung</b> → <b>🎭 Themen</b>) stellst du Farben, das Bild im Kopf der Startseite und den Effekt beim Senden passend ein – z. B. 🎄 Weihnachten, 🍁 Indian Summer, 🎡 Sim-Jü, 🥨 Oktoberfest, 🌴 Karibik, 🐣 Ostern, 🎭 Karneval oder 🎃 Halloween – mit eigenem Bild im Kopf. „🔄 Nach Kalender“ wechselt das Thema von selbst (auch zu Karneval, Ostern, Oktoberfest, Sim-Jü und Halloween). Einzelnes kannst du danach trotzdem ändern. Hat der Admin ein Club-Thema für alle eingestellt, kannst du es dort für dich abschalten." },
   { id: "schrift", thema: "darstellung", sym: "🔠", t: "Größere Schrift", x: "Ist dir die Schrift zu klein? ⚙️ → Darstellung → „🔠 Große Schrift“ einschalten – alles wird etwas größer.", zeig: () => einstiegHin("darstellung", "setGross") },
   { id: "mitglieder_ansicht", thema: "darstellung", sym: "👥", t: "Mitglieder als Kacheln, Liste oder Tafel", x: "Ob du die Mitglieder als <b>🔲 Kacheln</b>, als <b>☰ Liste</b> oder als <b>📋 Anwesenheitstafel</b> siehst, wählst du unter ⚙️ → Darstellung oder direkt oben bei den Mitgliedern.", zeig: () => einstiegHin("darstellung", "mgAnsichtWahl") },
   { id: "feiertage", thema: "darstellung", sym: "🇩🇪", t: "Feiertage im Kalender", x: "Die Feiertage in NRW kannst du im Club-Kalender ein- oder ausblenden: ⚙️ → Darstellung → „🇩🇪 Feiertage NRW im Kalender“.", zeig: () => einstiegHin("darstellung", "setFeiertage") },
@@ -14007,7 +14016,7 @@ function bwHoerPause() { const H = BW.hoeren; if (!H) return; H.pause = !H.pause
 // 🌻 Sommer: eine Sonnenblume wächst (jeder 3. Lauf drei), eine Biene besucht sie – abends Glühwürmchen. Am Ende fallen die Blütenblätter, Windstoß.
 // Ein <canvas> im Kopf; zeichnet nur, wenn die Startseite im Bild und die App im Vordergrund ist. Aus bei „✨ Animierte Knöpfe“ aus,
 // Sparmodus oder „Bewegung reduzieren“ (dann wie bisher). Tippen geht durch (pointer-events: none). Lauf-Zähler je Gerät (kc_club_jzLauf).
-const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik"]; // 2.331.0: + Themen-Bühnen
+const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween"]; // 2.331.0: + Themen-Bühnen
 const JZB_BLUEHT = 150; // 2.250.0 (Fund Hansi „Sonnenblume nur kurz“): Blumen/Sonnenblume blühen 2½ Min., bevor der Wind kommt
 const JZB_SP = 3, JZB_RAND = 22; // 2.259.0: 22 statt 16 – nichts in die runden Ecken (Radius 26) // Bodenspalten in px; nichts in den runden Ecken ablegen
 const JZB_LAUB = ["#e0802a", "#c8432b", "#e8b23a", "#a85a2a", "#d96a1f", "#b33a2a", "#cf9a2b"];
@@ -14341,6 +14350,8 @@ function jzbGaeste(dt) {
   for (const g of J.gaeste) {
     g.t = (g.t || 0) + dt;
     if (g.typ === "falter") { g.x += g.dir * g.v * dt; g.y = g.y0 + Math.sin(g.t * 1.7) * 12 + Math.sin(g.t * 4.3) * 4; if (g.x < -30 || g.x > J.w + 30) g.weg = true; }
+    else if (g.typ === "osterhase") { const z = g.t % 1; if (z < .55) g.x -= 42 * J.k * dt; g.y = J.h - 1 - (z < .55 ? Math.sin(z / .55 * Math.PI) * 11 * J.k : 0);
+      for (const e of J.eier || []) if (e.da === false && g.x < e.x) e.da = true; if (g.x < -30) { g.weg = true; for (const e of J.eier || []) e.da = true; } }
     else if (g.typ === "hase") { const z = g.t % .8; if (z < .55) g.x -= 70 * J.k * dt; g.y = J.h - 1 - (z < .55 ? Math.sin(z / .55 * Math.PI) * 15 * J.k : 0); if (g.x < -30) g.weg = true; }
     else if (g.typ === "gluehwurm") { g.ph += dt; g.vx += jzbZ(-20, 20) * dt; g.vy += jzbZ(-20, 20) * dt; g.vx *= .98; g.vy *= .98; g.x = Math.max(8, Math.min(J.w - 8, g.x + g.vx * dt)); g.y = Math.max(J.h * .2, Math.min(J.h - 8, g.y + g.vy * dt)); }
   }
@@ -14552,14 +14563,14 @@ function jzbGastMalen(c, g) {
     c.save(); c.translate(g.x, g.y); c.scale(k, k);
     for (const s of [-1, 1]) { c.save(); c.scale(s * f, 1); c.fillStyle = g.farbe[0]; c.beginPath(); c.ellipse(3.6, -2.4, 3.6, 3, -.4, 0, 7); c.fill(); c.fillStyle = g.farbe[1]; c.beginPath(); c.ellipse(2.6, 2.2, 2.4, 2, .4, 0, 7); c.fill(); c.restore(); }
     c.strokeStyle = "#3a2a1a"; c.lineWidth = 1.3; c.beginPath(); c.moveTo(0, -4); c.lineTo(0, 4); c.stroke(); c.restore();
-  } else if (g.typ === "hase" || g.typ === "biene") {
+  } else if (g.typ === "hase" || g.typ === "biene" || g.typ === "osterhase") {
     let x = g.x, y = g.y, gr = 20 * k, spiegel = 1;
     if (g.typ === "biene") { // fliegt Achten um die (erste) Sonnenblume
       const f = J.blumen[0]; if (!f) return; const kopf = jzbSonnenKopf(f), r = 20 * f.s;
       x = kopf.x + Math.cos(g.t * 1.3) * r + Math.sin(g.t * 3.1) * 3; y = kopf.y + Math.sin(g.t * 2.6) * r * .55;
       spiegel = -Math.sin(g.t * 1.3) > 0 ? -1 : 1; gr = 12 * k;
     }
-    c.save(); c.translate(x, y); c.scale(spiegel, 1); c.font = `${gr}px ${JZB_EMOJI}`; c.textAlign = "center"; c.textBaseline = g.typ === "hase" ? "bottom" : "middle"; c.fillText(g.typ === "hase" ? "🐇" : "🐝", 0, 0); c.restore();
+    c.save(); c.translate(x, y); c.scale(spiegel, 1); c.font = `${gr}px ${JZB_EMOJI}`; c.textAlign = "center"; c.textBaseline = g.typ !== "biene" ? "bottom" : "middle"; c.fillText(g.typ !== "biene" ? "🐇" : "🐝", 0, 0); if (g.typ === "osterhase") { c.font = `${11 * k}px ${JZB_EMOJI}`; c.fillText("🧺", 9 * k, -2 * k); } c.restore();
   } else if (g.typ === "gluehwurm") {
     const a = .35 + .65 * Math.abs(Math.sin(g.ph * 1.6)), r = 6 * k, gr = c.createRadialGradient(g.x, g.y, 0, g.x, g.y, r);
     gr.addColorStop(0, `rgba(240,255,150,${a})`); gr.addColorStop(1, "rgba(200,255,100,0)"); c.fillStyle = gr; c.beginPath(); c.arc(g.x, g.y, r, 0, 7); c.fill();
@@ -14572,12 +14583,13 @@ function jzbGastMalen(c, g) {
 // 🥨 Oktoberfest: blau-weiße Wimpel, Brezn, Fass wird angezapft („O'zapft is!“), zwei Maßkrüge stoßen an („Prost!“), Lebkuchenherz mit Namen.
 // 🌴 Karibik: Meer mit Wellen, Strand und Palme (ab und zu fällt eine Kokosnuss), Segelboot, Papagei oder springender Fisch, der Vorname
 // wird in den Sand geschrieben – eine Welle holt ihn; zum Schluss Sonnenuntergang. Alles nur Bild, nichts wird gespeichert oder gesendet.
-const JZB_FESTE = ["kirmes", "wiesn", "karibik"];
+const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween"]; // 2.332.0: + Karneval, Halloween
 const JZB_FEST_DAUER = 120; // Sekunden je Lauf
 const JZB_FEST_BUNT = ["#ff4d6d", "#ffd23f", "#3ec1ff", "#7bed6f", "#c77dff", "#ff9f1c", "#ffffff"];
 function jzbFestStart() {
   JZB.fest = { t: 0, a: 0, raketen: [], raketUhr: 0, ballons: [], ballonUhr: jzbZ(2, 5), spritzer: [], schild: -1, boot: null, bootUhr: jzbZ(2, 6),
-    gast: null, gastUhr: jzbZ(8, 14), nuss: null, nussUhr: jzbZ(18, 30), welle: -1, prost: [] };
+    gast: null, gastUhr: jzbZ(8, 14), nuss: null, nussUhr: jzbZ(18, 30), welle: -1, prost: [],
+    konfetti: [], liegt: [], kamelle: [], wagen: null, wagenUhr: jzbZ(3, 6), kanone: false, fleder: [], flederUhr: jzbZ(1, 4), geist: null, geistUhr: jzbZ(5, 9) }; // 2.332.0
 }
 function jzbFest(dt) {
   const J = JZB, k = J.k;
@@ -14609,7 +14621,9 @@ function jzbFest(dt) {
       if (!K.klirr && K.t > 2.4) { K.klirr = true; const m = jzbWiesnKrugMitte();
         for (let i = 0; i < 14; i++) F.spritzer.push({ x: m + jzbZ(-4, 4), y: J.h - 26 * k, vx: jzbZ(-60, 60), vy: jzbZ(-120, -50), a: 1, r: jzbZ(1, 2.3) * k, schaum: i % 3 > 0 }); }
       if (K.t > 7) F.krug = null; }
-  } else { // 🌴 Karibik
+  } else if (J.saison === "karneval") jzbKarnevalSchritt(F, dt);
+  else if (J.saison === "halloween") jzbHalloweenSchritt(F, dt);
+  else { // 🌴 Karibik
     if (!F.boot && (F.bootUhr -= dt) <= 0) { const dir = J.lauf % 2 ? -1 : 1; F.boot = { dir, x: dir > 0 ? -40 * k : J.w + 40 * k }; }
     if (F.boot) { F.boot.x += F.boot.dir * 13 * k * dt; if (F.boot.x < -60 * k || F.boot.x > J.w + 60 * k) { F.boot = null; F.bootUhr = jzbZ(15, 30); } }
     if (!F.gast && (F.gastUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 10) {
@@ -14665,7 +14679,7 @@ function jzbSpritzerMalen(c, F) {
 function jzbFestMalen(c) {
   const J = JZB, F = J.fest; if (!F) return;
   c.save(); c.globalAlpha = F.a;
-  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else jzbKaribikMalen(c, F);
+  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else jzbKaribikMalen(c, F);
   c.restore();
 }
 // ---- 🎡 Sim-Jü ----
@@ -14812,6 +14826,113 @@ function jzbKaribikMalen(c, F) {
     c.restore(); }
   void F;
 }
+// ---- 🎭 Karneval (2.332.0 KC-CLUB-THEMEN-BUEHNE-2): Luftschlangen, Konfetti-Regen (bleibt liegen), Karnevalswagen mit „Helau, <Vorname>!“,
+// der Jeck wirft Kamelle; zum Schluss zwei Konfetti-Kanonen ----
+const jzbKonfettiNeu = (x, y, vx, vy) => ({ x, y, vx, vy, rot: jzbZ(0, 6.3), vr: jzbZ(-6, 6), ph: jzbZ(0, 6.3), fq: jzbZ(5, 10), farbe: jzbW(JZB_FEST_BUNT.slice(0, 6)), w: jzbZ(2.2, 3.6) });
+function jzbKarnevalSchritt(F, dt) {
+  const J = JZB, k = J.k;
+  if (F.t < JZB_FEST_DAUER - 6) { F.kSpawn = (F.kSpawn || 0) - dt; while (F.kSpawn < 0) { F.kSpawn += .17; F.konfetti.push(jzbKonfettiNeu(jzbZ(0, J.w), -6, 0, jzbZ(14, 26))); } }
+  if (!F.kanone && F.t > JZB_FEST_DAUER - 18) { F.kanone = true; // Konfetti-Kanonen links und rechts
+    for (const s of [1, -1]) for (let i = 0; i < 60; i++) F.konfetti.push(jzbKonfettiNeu(s > 0 ? JZB_RAND : J.w - JZB_RAND, J.h - 4, s * jzbZ(40, 170), -jzbZ(140, 260))); }
+  for (const p of F.konfetti) {
+    p.vy = Math.min(p.vy + 140 * dt, 30); p.vx *= 1 - 1.4 * dt; p.ph += dt * p.fq;
+    p.x += p.vx * dt + Math.sin(p.ph * .4) * 9 * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+    if (p.y >= J.h - 2 && p.vy > 0) { p.weg = true; if (jzbImFeld(p.x)) { F.liegt.push({ x: p.x, y: J.h - jzbZ(1, 3), rot: p.rot, farbe: p.farbe, w: p.w }); if (F.liegt.length > 180) F.liegt.shift(); } }
+  }
+  F.konfetti = F.konfetti.filter((p) => !p.weg && p.x > -20 && p.x < J.w + 20);
+  if (!F.wagen && (F.wagenUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 25) { const dir = (J.lauf + F.prost.length) % 2 ? -1 : 1; F.prost.push(1); F.wagen = { dir, x: dir > 0 ? -70 * k : J.w + 70 * k, t: 0, wurf: 1 }; }
+  if (F.wagen) { const W = F.wagen; W.t += dt; W.x += W.dir * 20 * k * dt;
+    if ((W.wurf -= dt) <= 0 && W.x > 0 && W.x < J.w) { W.wurf = jzbZ(.9, 2); F.kamelle.push({ x: W.x - W.dir * 8 * k, y: J.h - 34 * k, vx: jzbZ(-50, 50), vy: -jzbZ(70, 120), rot: 0, farbe: jzbW(JZB_FEST_BUNT.slice(0, 6)), lieg: 0 }); }
+    if (W.x < -80 * k || W.x > J.w + 80 * k) { F.wagen = null; F.wagenUhr = jzbZ(18, 30); } }
+  for (const m of F.kamelle) { if (m.lieg) { m.lieg += dt; continue; } m.vy += 230 * dt; m.x += m.vx * dt; m.y += m.vy * dt; m.rot += 8 * dt; if (m.y >= J.h - 3) { m.y = J.h - 3; m.lieg = .01; } }
+  F.kamelle = F.kamelle.filter((m) => m.lieg < 9);
+}
+function jzbKamelleMalen(c, m, k) {
+  c.save(); c.translate(m.x, m.y); c.rotate(m.rot); c.globalAlpha *= Math.min(1, (9 - m.lieg) / 1.5); c.fillStyle = m.farbe;
+  c.beginPath(); c.ellipse(0, 0, 2.6 * k, 1.8 * k, 0, 0, 7); c.fill();
+  for (const s of [-1, 1]) { c.beginPath(); c.moveTo(s * 2.2 * k, 0); c.lineTo(s * 4.6 * k, -1.8 * k); c.lineTo(s * 4.6 * k, 1.8 * k); c.closePath(); c.fill(); }
+  c.fillStyle = "rgba(255,255,255,.6)"; c.fillRect(-.6 * k, -1.6 * k, 1.2 * k, 3.2 * k); c.restore();
+}
+function jzbKarnevalMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T;
+  for (let i = 0, x = JZB_RAND + 10; x < J.w - JZB_RAND; i++, x += 34 * Math.max(.8, k)) { // Luftschlangen hängen vom oberen Rand
+    const L = (16 + (i * 7) % 13) * k, sw = Math.sin(T * 1.2 + i) * 2 * k; c.strokeStyle = JZB_FEST_BUNT[i % 6]; c.lineWidth = 1.6 * k; c.beginPath();
+    for (let u = 0; u <= 1.001; u += .04) { const px = x + Math.sin(u * 14 + i) * 3.2 * k + sw * u, py = 1 + u * L; u ? c.lineTo(px, py) : c.moveTo(px, py); } c.stroke();
+  }
+  const blatt = (p) => { c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.scale(p.ph === undefined ? 1 : Math.max(.15, Math.abs(Math.cos(p.ph))), 1); c.fillStyle = p.farbe; c.fillRect(-p.w * k / 2, -p.w * k * .35, p.w * k, p.w * k * .7); c.restore(); };
+  for (const p of F.liegt) blatt(p);
+  for (const m of F.kamelle) jzbKamelleMalen(c, m, k);
+  const W = F.wagen;
+  if (W) { // Karnevalswagen mit Fransen, Banner und Jeck
+    const b = 46 * k, yb = J.h - 2, hop = Math.abs(Math.sin(W.t * 6)) * .8 * k, name = jzbEisNameText();
+    c.save(); c.translate(W.x, yb - hop);
+    for (const s of [-1, 1]) { const rx = s * b * .62; c.fillStyle = "#2b2b2b"; c.beginPath(); c.arc(rx, -4.5 * k + hop, 4.5 * k, 0, 7); c.fill(); c.strokeStyle = "#bbb"; c.lineWidth = 1;
+      for (let q = 0; q < 3; q++) { const a = W.t * 4 * W.dir + q * 2.1; c.beginPath(); c.moveTo(rx, -4.5 * k + hop); c.lineTo(rx + Math.cos(a) * 4 * k, -4.5 * k + hop + Math.sin(a) * 4 * k); c.stroke(); } }
+    c.fillStyle = "#d62f6b"; c.fillRect(-b, -21 * k, 2 * b, 13 * k);
+    for (let i = 0; i < 16; i++) { c.fillStyle = JZB_FEST_BUNT[i % 6]; c.beginPath(); const x0 = -b + i * b / 8; c.moveTo(x0, -8 * k); c.lineTo(x0 + b / 8, -8 * k); c.lineTo(x0 + b / 16, -4 * k + Math.sin(W.t * 8 + i) * .8 * k); c.fill(); }
+    c.fillStyle = "#ffd23f"; c.fillRect(-b, -22.5 * k, 2 * b, 2 * k);
+    let fs = 8.5 * k; const txt = name ? `Helau, ${name}!` : "Helau!"; c.font = `800 ${fs}px "Trebuchet MS",sans-serif`; const tw = c.measureText(txt).width; if (tw > b * 1.85) { fs *= b * 1.85 / tw; c.font = `800 ${fs}px "Trebuchet MS",sans-serif`; }
+    c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#fff"; c.fillText(txt, 0, -14.5 * k);
+    c.font = `${19 * k}px ${JZB_EMOJI}`; c.textBaseline = "bottom"; c.fillText("🤡", -b * .4, -21 * k); c.fillText("🥳", b * .35, -21 * k);
+    if (W.t % 4 < 1.4) { c.font = `800 ${11 * k}px "Trebuchet MS",sans-serif`; c.lineWidth = 3; c.strokeStyle = "rgba(0,0,0,.45)"; c.strokeText("Helau!", -b * .4, -42 * k); c.fillStyle = "#ffe14d"; c.fillText("Helau!", -b * .4, -42 * k); }
+    c.restore();
+  }
+  for (const p of F.konfetti) blatt(p);
+}
+// ---- 🎃 Halloween: Mond, Spinnennetz mit Spinne, leuchtende Kürbisse, Fledermäuse, ein Gespenst ruft „Buuuh, <Vorname>!“ ----
+function jzbHalloweenSchritt(F, dt) {
+  const J = JZB, k = J.k, schwarm = !F.kanone && F.t > JZB_FEST_DAUER - 20;
+  if (schwarm) F.kanone = true;
+  if ((F.flederUhr -= dt) <= 0 || schwarm) { F.flederUhr = jzbZ(6, 13); const dir = Math.random() < .5 ? 1 : -1, n = schwarm ? 12 : 1 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < n; i++) F.fleder.push({ dir, x: dir > 0 ? -20 - i * jzbZ(10, 25) : J.w + 20 + i * jzbZ(10, 25), y0: jzbZ(J.h * .15, J.h * .6), v: jzbZ(45, 70) * k, ph: jzbZ(0, 6), s: jzbZ(.8, 1.2) }); }
+  for (const f of F.fleder) { f.x += f.dir * f.v * dt; f.ph += dt; }
+  F.fleder = F.fleder.filter((f) => (f.dir > 0 ? f.x < J.w + 80 : f.x > -80));
+  if (!F.geist && (F.geistUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 10) F.geist = { t: 0 };
+  if (F.geist && (F.geist.t += dt) > 7) { F.geist = null; F.geistUhr = jzbZ(14, 24); }
+}
+function jzbKuerbis(c, x, yb, r, k, i) {
+  const J = JZB, fl = .75 + .25 * Math.sin(J.T * 13 + i * 2) * Math.sin(J.T * 7.3 + i), cy = yb - r * .82;
+  const gl = c.createRadialGradient(x, cy, r * .3, x, cy, r * 2.2); gl.addColorStop(0, `rgba(255,170,40,${.35 * fl})`); gl.addColorStop(1, "rgba(255,140,20,0)"); c.fillStyle = gl; c.beginPath(); c.arc(x, cy, r * 2.2, 0, 7); c.fill();
+  const g = c.createRadialGradient(x - r * .3, cy - r * .3, r * .2, x, cy, r * 1.2); g.addColorStop(0, "#ffa23a"); g.addColorStop(1, "#c9530a"); c.fillStyle = g;
+  for (const [dx, w] of [[-.45, .62], [.45, .62], [0, .7]]) { c.beginPath(); c.ellipse(x + dx * r, cy, r * w, r * .82, 0, 0, 7); c.fill(); }
+  c.strokeStyle = "rgba(120,50,0,.35)"; c.lineWidth = 1; for (const dx of [-.35, .35]) { c.beginPath(); c.ellipse(x + dx * r, cy, r * .3, r * .78, 0, 0, 7); c.stroke(); }
+  c.fillStyle = "#4e6b2a"; c.fillRect(x - r * .1, cy - r * 1.02, r * .2, r * .3);
+  c.fillStyle = `rgba(255,${Math.round(200 + 40 * fl)},70,${.8 + .2 * fl})`;
+  for (const s of [-1, 1]) { c.beginPath(); c.moveTo(x + s * r * .45, cy - r * .32); c.lineTo(x + s * r * .2, cy - r * .02); c.lineTo(x + s * r * .62, cy - r * .02); c.fill(); }
+  c.beginPath(); c.moveTo(x - r * .6, cy + r * .22); for (let j = 0; j <= 6; j++) c.lineTo(x - r * .6 + j * r * .2, cy + r * (j % 2 ? .32 : .22)); c.lineTo(x + r * .5, cy + r * .5); c.lineTo(x - r * .5, cy + r * .5); c.closePath(); c.fill(); void k;
+}
+function jzbFlederMalen(c, f, k) {
+  const y = f.y0 + Math.sin(f.ph * 2.3) * 9 * k, fl = Math.sin(f.ph * 16), s = 7 * k * f.s;
+  c.save(); c.translate(f.x, y); c.scale(f.dir, 1); c.fillStyle = "#1d1222";
+  c.beginPath(); c.ellipse(0, 0, s * .32, s * .45, 0, 0, 7); c.fill(); c.beginPath(); c.arc(s * .1, -s * .45, s * .22, 0, 7); c.fill();
+  c.beginPath(); c.moveTo(s * .02, -s * .62); c.lineTo(s * .1, -s * .82); c.lineTo(s * .2, -s * .6); c.fill();
+  for (const sd of [-1, 1]) { c.beginPath(); c.moveTo(0, -s * .1); c.lineTo(sd * s * 1.5, -s * .4 - fl * s * .7); c.lineTo(sd * s * 1.25, s * .05 - fl * s * .3); c.lineTo(sd * s * .9, -s * .05); c.lineTo(sd * s * .6, s * .2); c.lineTo(sd * s * .3, s * .05); c.closePath(); c.fill(); }
+  c.restore();
+}
+function jzbHalloweenMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T, mx = J.w * .5, my = J.h * .355, mr = 12 * k;
+  const gl = c.createRadialGradient(mx, my, mr * .6, mx, my, mr * 3); gl.addColorStop(0, "rgba(220,235,255,.45)"); gl.addColorStop(1, "rgba(200,220,255,0)"); c.fillStyle = gl; c.beginPath(); c.arc(mx, my, mr * 3, 0, 7); c.fill();
+  c.fillStyle = "#fff4cf"; c.beginPath(); c.arc(mx, my, mr, 0, 7); c.fill(); c.fillStyle = "rgba(200,180,120,.45)";
+  for (const [dx, dy, r] of [[-.35, -.2, .22], [.3, .25, .16], [.1, -.45, .12], [-.1, .4, .1]]) { c.beginPath(); c.arc(mx + dx * mr, my + dy * mr, r * mr, 0, 7); c.fill(); }
+  const nx = J.w - JZB_RAND + 4, ny = 2, R = 34 * k; c.strokeStyle = "rgba(255,255,255,.45)"; c.lineWidth = .7; // Spinnennetz oben rechts
+  const sp = 6, a0 = Math.PI / 2, a1 = Math.PI; for (let i = 0; i <= sp; i++) { const a = a0 + (a1 - a0) * i / sp; c.beginPath(); c.moveTo(nx, ny); c.lineTo(nx + Math.cos(a) * R, ny + Math.sin(a) * R); c.stroke(); }
+  for (const f of [.3, .55, .8]) { c.beginPath(); for (let i = 0; i <= sp; i++) { const a = a0 + (a1 - a0) * i / sp, r = R * f * (i % 2 ? .93 : 1); i ? c.lineTo(nx + Math.cos(a) * r, ny + Math.sin(a) * r) : c.moveTo(nx + Math.cos(a) * r, ny + Math.sin(a) * r); } c.stroke(); }
+  const sx = nx - R * .45, sy0 = ny + R * .45, lang = Math.max(0, Math.sin(F.t * Math.PI * 2 / 16)) * J.h * .32, sy = sy0 + lang; // Spinne seilt sich ab
+  c.beginPath(); c.moveTo(sx, sy0); c.lineTo(sx, sy); c.stroke(); c.fillStyle = "#151015"; c.strokeStyle = "#151015"; c.lineWidth = 1;
+  for (let i = 0; i < 4; i++) for (const s of [-1, 1]) { const w = Math.sin(T * 6 + i) * .6 * k; c.beginPath(); c.moveTo(sx, sy + 3 * k); c.lineTo(sx + s * 4.5 * k, sy + (i - 1) * 2 * k + w); c.lineTo(sx + s * 6 * k, sy + (i - .5) * 2.6 * k); c.stroke(); }
+  c.beginPath(); c.arc(sx, sy + 3 * k, 3 * k, 0, 7); c.fill(); c.beginPath(); c.arc(sx, sy + .5 * k, 1.8 * k, 0, 7); c.fill();
+  const ks = [[JZB_RAND + 16 * k, 10], [JZB_RAND + 38 * k, 6.5], [J.w - 70 * k, 12.5], [J.w - 48 * k, 7]];
+  ks.forEach(([x, r], i) => jzbKuerbis(c, x, J.h - 1, r * k, k, i));
+  const G = F.geist;
+  if (G) { // Gespenst steigt hinter dem großen Kürbis auf, schwebt, ruft und verblasst
+    const name = jzbEisNameText(), auf = jzbEase(G.t / 1.5), a = Math.min(1, G.t * 2, Math.max(0, (7 - G.t) / 1)), gx = J.w - 70 * k - 22 * k * auf + Math.sin(G.t * 1.6) * 4 * k, gy = J.h - 14 * k - auf * 26 * k + Math.sin(G.t * 2.4) * 2 * k, s = 13 * k;
+    c.save(); c.globalAlpha *= a; c.fillStyle = "rgba(250,250,255,.93)"; c.beginPath(); c.moveTo(gx - s * .7, gy + s * .9); c.lineTo(gx - s * .7, gy - s * .1); c.arc(gx, gy - s * .1, s * .7, Math.PI, 0); c.lineTo(gx + s * .7, gy + s * .9);
+    for (let i = 0; i < 4; i++) { const x0 = gx + s * .7 - (i + .5) * s * .35; c.quadraticCurveTo(x0, gy + s * (i % 2 ? .65 : 1.15) + Math.sin(T * 6 + i) * 1.5, gx + s * .7 - (i + 1) * s * .35, gy + s * .9); } c.fill();
+    c.fillStyle = "#1a1a2a"; for (const d of [-.25, .25]) { c.beginPath(); c.ellipse(gx + d * s, gy - s * .25, s * .1, s * .16, 0, 0, 7); c.fill(); } c.beginPath(); c.ellipse(gx, gy + s * .12, s * .12, s * .17, 0, 0, 7); c.fill();
+    if (G.t > 1.8 && G.t < 5.8) { const txt = name ? `Buuuh, ${name}!` : "Buuuh!"; c.font = `800 ${11 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "right"; c.textBaseline = "middle"; c.lineWidth = 3; c.strokeStyle = "rgba(20,10,30,.7)"; c.strokeText(txt, gx - s, gy - s * .9); c.fillStyle = "#fff"; c.fillText(txt, gx - s, gy - s * .9); }
+    c.restore(); }
+  for (const f of F.fleder) jzbFlederMalen(c, f, k);
+}
 // ---------- KC-CLUB-JAHRESZEIT-EXTRAS (2.249.0, Wunsch Hansi „baue noch die weiteren Ideen“): Besonderes auf der Kopf-Bühne ----------
 // 🥾 Nikolaus (6.12.): ein gefüllter Stiefel steht unten. ☔ Regen – nur wenn die Wetterdaten frisch sind und es wirklich regnet (Regel 11:
 // kein Regen aus alten Daten, kein zusätzlicher Wetter-Abruf): Tropfen, Pfützen mit Ringen, ab und zu läuft ein gelber Schirm vorbei.
@@ -14828,18 +14949,20 @@ function jzbExtrasBestimmen() {
   const r = WET.r, j = r?.daten?.jetzt;
   x.regen = !!j && !!r.stand && Date.now() - new Date(r.stand) <= WETTER_VERALTET_MIN * 60000 && ["regen", "niesel", "gewitter"].includes(wetterArt(j.code).szene);
   if (J.extra) x[J.extra] = true;
+  const te = !J.vorschau && themaWert("extra"); if (te === "ostern" && J.saison === "fruehling") x.ostern = true; // 2.332.0: Thema 🐣 Ostern – Eier die ganze Zeit
   J.ext = x;
   if (x.ostern && !J.eier?.length) jzbEierVerstecken();
   if (x.igel && J.igelUhr === undefined) J.igelUhr = J.extra === "igel" ? 4 : jzbZ(25, 60);
 }
-function jzbEierVerstecken() {
+function jzbEierVerstecken() { // 2.332.0 (Wunsch Hansi „Thema Ostern“): der Osterhase hoppelt mit dem Korb herein und legt die Eier
   const J = JZB, n = 5, farben = [["#e63946", "#ffd166"], ["#4cc9f0", "#ffffff"], ["#b5179e", "#f9c6d6"], ["#ffb703", "#2a9d8f"], ["#80b918", "#ffffff"], ["#7b2cbf", "#ffd166"]];
   J.eier = Array.from({ length: n }, (_, i) => ({ x: JZB_RAND + 14 + (i + jzbZ(.2, .8)) * (J.w - 2 * JZB_RAND - 28) / n, f: farben[(i + J.lauf) % farben.length], kipp: jzbZ(-.35, .35), muster: i % 3, gef: false, t: 0 }));
+  if (!J.gaeste.some((g) => g.typ === "osterhase")) { for (const e of J.eier) e.da = false; J.gaeste.push({ typ: "osterhase", x: J.w + 24, t: 0 }); }
 }
 function jzbEiAntippen(e) { // Ostereier finden: Tippen auf den Kopf (nicht auf Knöpfe) prüft, ob ein Ei getroffen wurde
   const J = JZB; if (!J.ext?.ostern || !J.eier?.length || !J.cv || e.target.closest("button, a, input, select, textarea, [onclick], [role=button]")) return;
   const r = J.s.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, k = J.k;
-  const ei = J.eier.find((v) => !v.gef && Math.hypot(x - v.x, y - (J.h - 7 * k)) < 18); if (!ei) return;
+  const ei = J.eier.find((v) => !v.gef && v.da !== false && Math.hypot(x - v.x, y - (J.h - 7 * k)) < 18); if (!ei) return;
   ei.gef = true; ei.t = 0;
   for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; J.fx.push({ typ: "funke", x: ei.x + Math.cos(a) * 6, y: J.h - 10 * k + Math.sin(a) * 6, vx: Math.cos(a) * 45, vy: Math.sin(a) * 45 - 20, s: jzbZ(2, 3.4), a: 1, farbe: i % 2 ? ei.f[0] : "#fff6c2" }); }
   const rest = J.eier.filter((v) => !v.gef).length;
@@ -15509,7 +15632,9 @@ function jzbExtrasHinten(c) { // vor dem Gras: Ostereier (das Gras wächst darü
   const J = JZB, k = J.k;
   jzbEichelnMalen(c); // 2.328.0: Eicheln liegen unter dem Laub
   if (!J.ext?.ostern) return;
+  const hase = J.gaeste.some((g) => g.typ === "osterhase");
   for (const e of J.eier || []) {
+    if (e.da === false && hase) continue; // noch nicht gelegt
     const y = J.h - 7 * k - (e.gef ? Math.min(1, e.t * 3) * 6 * k : 0);
     c.save(); c.translate(e.x, y); c.rotate(e.kipp * (e.gef ? 0 : 1));
     if (e.gef && e.t > .35) { c.font = `${17 * k}px ${JZB_EMOJI}`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("🐣", 0, 0); c.restore(); continue; }
@@ -19084,12 +19209,15 @@ async function kalLaden() {
 // Einträge je Tag (YYYY-MM-DD) zusammenstellen
 // Gesetzliche Feiertage NRW – für jedes Jahr berechnet (Ostern nach der Gauß'schen Osterformel), ohne Server
 const FEIERTAGE_CACHE = {};
-function feiertageNRW(jahr) {
-  if (FEIERTAGE_CACHE[jahr]) return FEIERTAGE_CACHE[jahr];
+function osterSonntag(jahr) { // Gaußsche Osterformel – ISO-Datum (2.332.0: eigene Funktion, auch für die Themen nach Kalender)
   const a = jahr % 19, b = Math.floor(jahr / 100), c = jahr % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
   const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
   const monat = Math.floor((h + l - 7 * m + 114) / 31), tag = ((h + l - 7 * m + 114) % 31) + 1;
-  const ostern = `${jahr}-${String(monat).padStart(2, "0")}-${String(tag).padStart(2, "0")}`;
+  return `${jahr}-${String(monat).padStart(2, "0")}-${String(tag).padStart(2, "0")}`;
+}
+function feiertageNRW(jahr) {
+  if (FEIERTAGE_CACHE[jahr]) return FEIERTAGE_CACHE[jahr];
+  const ostern = osterSonntag(jahr);
   const liste = [
     [`${jahr}-01-01`, "Neujahr"], [tagPlus(ostern, -2), "Karfreitag"], [tagPlus(ostern, 1), "Ostermontag"], [`${jahr}-05-01`, "Tag der Arbeit"],
     [tagPlus(ostern, 39), "Christi Himmelfahrt"], [tagPlus(ostern, 50), "Pfingstmontag"], [tagPlus(ostern, 60), "Fronleichnam"],

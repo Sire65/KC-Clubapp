@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.332.0 – 2026-10-12 – KC-CLUB-THEMEN-BUEHNE-2: Ostern, Karneval, Halloween
+Drei weitere Themen: 🐣 Ostern (Osterhase hoppelt mit Korb herein und legt die Eier – erst dann findbar; das gilt auch für die Ostereier an Ostern), 🎭 Karneval (Luftschlangen, Konfetti bleibt liegen, Wagen mit „Helau, <Vorname>!“, Kamelle, Konfetti-Kanonen), 🎃 Halloween (Mond, Spinnennetz mit Spinne, leuchtende Kürbisse, Fledermäuse, Gespenst „Buuuh, <Vorname>!“). Nach Kalender: Karneval (Weiberfastnacht–Veilchendienstag, 11.11.), Ostern (Palmsonntag–Ostermontag), Halloween (31.10.). Osterformel als gemeinsame Funktion osterSonntag().
+
 ## 2.331.0 – 2026-10-12 – KC-CLUB-THEMEN-BUEHNE: neue Bühnenbilder Sim-Jü, Oktoberfest, Karibik
 Drei neue Themen mit eigenem Bild im Kopf: 🎡 Sim-Jü (Lichterkette, Riesenrad, Luftballons, Lebkuchenherz mit Vornamen, Feuerwerk), 🥨 Oktoberfest (Wimpel, Brezn, Fass anzapfen „O'zapft is!“, Maßkrüge „Prost!“), 🌴 Karibik (Meer, Palme mit Kokosnuss, Segelboot, Papagei/Fisch, Name im Sand, Sonnenuntergang). Nach Kalender: Oktoberfest (Samstag nach dem 15.9. bis 1. Oktobersonntag) und Sim-Jü (Samstag–Dienstag um den 28.10.). Vorschau unter ✨ Effekte.
 
