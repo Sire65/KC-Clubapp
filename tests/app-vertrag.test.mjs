@@ -8894,3 +8894,19 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   const srv = lies("supabase/functions/kc-club/index.ts");
   assert.ok(/Vielen Dank für \$\{mehr \? "eure" : "deine"\} Zeit und \$\{mehr \? "euer" : "dein"\} tolles Mitmachen!/.test(srv), "Dank für Zeit und Mitmachen");
 }
+
+// KC-DATA-API-FREIGABEN (12.10.2026): ab 30.10.2026 gibt Supabase neue Tabellen nicht mehr automatisch frei –
+// jede Migration ab 20261012, die eine Tabelle in public anlegt, muss service_role ausdrücklich freigeben (sonst „permission denied“ in den Server-Funktionen)
+{
+  const ordner = new URL("../supabase/migrations/", import.meta.url);
+  const dateien = fs.readdirSync(ordner).filter((f) => f.endsWith(".sql") && f.slice(0, 8) >= "20261012").sort();
+  for (const f of dateien) {
+    const sql = fs.readFileSync(new URL(f, ordner), "utf8").replace(/--[^\n]*/g, "");
+    for (const m of sql.matchAll(/create\s+(?:unlogged\s+)?table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?"?([a-z0-9_]+)"?\s*\(/gi)) {
+      const t = m[1];
+      assert.ok(new RegExp(`grant\\s+[^;]*\\bon\\s+(?:table\\s+)?(?:public\\.)?"?${t}"?\\s+to\\s+[^;]*\\bservice_role\\b`, "i").test(sql), `${f}: Tabelle ${t} braucht „grant … on public.${t} to service_role;“ (Supabase-Änderung 30.10.2026)`);
+    }
+  }
+  const netz = fs.readFileSync(new URL("20261012_kc_data_api_freigaben.sql", ordner), "utf8");
+  assert.ok(/create event trigger kc_neue_objekte_freigeben on ddl_command_end/.test(netz) && /to service_role/.test(netz), "Sicherheitsnetz in der Datenbank beschrieben");
+}

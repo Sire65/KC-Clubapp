@@ -34,6 +34,9 @@ Die Freigaben des Dienstplans selbst (`kc_dp_plan_sharing`: Kann/Wunsch/Bereitsc
 - `index.html` – komplette App (ohne Build-Schritt), `sw.js` – Service Worker (Cache, Push, Badge), `manifest.webmanifest`, `version.json`
 - `supabase/functions/kc-club/index.ts` – Server (Edge Function `kc-club`, verify_jwt aus, eigener Token-Zugang)
 - `supabase/migrations/` – Tabellen `kc_club_*` (RLS an, Zugriff nur über die Edge Function)
+  - **Ab 30.10.2026 (Supabase-Änderung):** neue Tabellen sind nicht mehr automatisch freigegeben. Jede Migration, die eine Tabelle in `public` anlegt,
+    schreibt die Freigabe selbst dazu: `grant select, insert, update, delete on public.<tabelle> to service_role;` (anon/authenticated nur, wenn wirklich nötig, und nur mit RLS).
+    Der Vertragstest prüft das für alle Migrationen ab `20261012`. Sicherheitsnetz in der Datenbank: Ereignis-Trigger `kc_neue_objekte_freigeben` (siehe `20261012_kc_data_api_freigaben.sql`).
 - Nutzt vorhandene KC-Kerne: `kc_core_people`, KC Communicator (Threads, Nachrichten, Anlagen, Router mit Push → Mail über web.de), `kc_member_push_subscriptions`
 - Zeitplaner: pg_cron `kc-club-wartung-15min` → `action: "wartung"` (Geheimnis im Vault `kc_club_cron_secret`)
 
