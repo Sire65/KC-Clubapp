@@ -8773,3 +8773,18 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/bwNimm\(BW_LOB, L, "lob"\)/.test(b) && /const bwZufall = \(liste, L\) => bwNimm\(liste, L, "sprueche"\);/.test(b), "alle Sprüche laufen über die Auswahl");
   assert.ok(/"Weiter so und nicht aufgeben – die neue Kochjacke soll doch passen!"/.test(b) && /"Tip top!"/.test(b) && /"Klasse!"/.test(b), "neue Anfeuerungen");
 }
+
+// 2.300.0 KC-CLUB-VIDEO-RUECKSEITE + KC-CLUB-RUECKSEITE-HILFE (Wunsch Hansi): eigenes Video, Hilfetexte, Lupe, Twinkey, Tipp
+{
+  const b = html.slice(html.indexOf("// ---------- 2.300.0 KC-CLUB-VIDEO-RUECKSEITE"), html.indexOf("const RG_ZENTRALE = ["));
+  assert.ok(/\{ id: "rueckseite", stand: "1", [^\n]*st: \(\) => RG_RUECKSEITE, nur: \(\) => esAn\(\) \}/.test(html) && /videos: \[[^\]]*"effekte", "rueckseite"/.test(html), "Video registriert und im Thema");
+  for (const t of ["dia", "tafel", "flip", "uhr", "buehne"]) assert.ok(new RegExp(`rgRueck\\("${t}"\\)`).test(b), `Station ${t}`);
+  assert.ok(/#bwLaut_musik/.test(b) && /#bwLaut_stimme/.test(b) && /"#heroRueck \.eselsohr", "doppelt"/.test(b), "Regler und Zurückdrehen gezeigt");
+  assert.ok(!/\bapi\(|bwLos\(|bwMusik\(true|esZfTeilen\(|esFlipMusterWeiter\(|esUhrStil\(|bwWahlSetzen\(/.test(b), "nichts gestartet, gespeichert oder verschickt");
+  assert.ok(/BW\.lauf = null; \}/.test(b) && /finally \{ esSchreib\("uhr", alt\);/.test(b), "Bühne nur als Bild, eigene Uhr zurück");
+  for (const id of ["es_dia", "es_tafel", "es_uhr", "es_buehne", "es_regler"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "[a-z]+"[^\\n]*zeig: \\(\\) => esOeffnen\\(`).test(html), `Hilfe ${id}`);
+  for (const id of ["eselsohr", "skizze", "buehne", "buehne-laut", "grosse-uhr", "diashow"]) assert.ok(new RegExp(`\\{ id: "${id}", sym: [^\\n]*los: \\(\\) => esOeffnen\\(`).test(html) && html.includes(`"f:${id}": ["rueckseite"]`), `Twinkey ${id}`);
+  assert.ok((html.match(/\(\) => esOeffnen\("(dia|tafel|flip|uhr|buehne)"\)\],/g) || []).length >= 6, "Lupe springt auf die Rückseite");
+  assert.ok(/function esOeffnen\(tab\) \{\n  if \(!esAn\(\)\) \{[^\n]*suEinstellung\("setEselsohr"\)/.test(html), "ausgeblendet → zur Einstellung");
+  assert.ok(/\{ id: "eselsohr_rueckseite", thema: "start"/.test(html), "Tipp des Tages");
+}

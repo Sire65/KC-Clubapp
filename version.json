@@ -1,12 +1,24 @@
 {
-  "version": "2.299.4",
+  "version": "2.300.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "👏 Bühne: Lob wechselt sich ab – Prima, Klasse, Super, Tip top, Spitze, Jawoll … ein Wort kommt erst wieder, wenn fünf andere dran waren",
-    "💪 Neu: „Weiter so und nicht aufgeben – die neue Kochjacke soll doch passen!“"
+    "🎬 Neues Erklär-Video „📄 Die Rückseite: Eselsohr“ – Diashow, Tafel, Flipchart, große Uhr und Bühne mit Twinkey, Regler für Musik und Stimme (unter „👤 Ich & meine App“)",
+    "❓ Hilfetexte zur Rückseite neu: je ein Text für Diashow, Tafel & Flipchart, große Uhr, Bühne und die Lautstärke-Regler – mit Knopf direkt dorthin",
+    "🔍 Lupe und 🧑‍🍳 Twinkey finden jetzt auch Eselsohr, Diashow, Tafel, Flipchart, große Uhr, Bühne, Bewegung und Lautstärke – und springen direkt auf die Rückseite",
+    "💡 Neuer Tipp des Tages: „Dreh doch mal den Kopf um!“"
   ],
   "verlauf": [
+    {
+      "version": "2.300.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🎬 Neues Erklär-Video „📄 Die Rückseite: Eselsohr“ – Diashow, Tafel, Flipchart, große Uhr und Bühne mit Twinkey, Regler für Musik und Stimme (unter „👤 Ich & meine App“)",
+        "❓ Hilfetexte zur Rückseite neu: je ein Text für Diashow, Tafel & Flipchart, große Uhr, Bühne und die Lautstärke-Regler – mit Knopf direkt dorthin",
+        "🔍 Lupe und 🧑‍🍳 Twinkey finden jetzt auch Eselsohr, Diashow, Tafel, Flipchart, große Uhr, Bühne, Bewegung und Lautstärke – und springen direkt auf die Rückseite",
+        "💡 Neuer Tipp des Tages: „Dreh doch mal den Kopf um!“"
+      ]
+    },
     {
       "version": "2.299.4",
       "datum": "2026-10-12",
