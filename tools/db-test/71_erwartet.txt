@@ -1,0 +1,6 @@
+anon=null
+fremd=null
+anzahl_gleich_aktiv=t
+codes_format_ok=t
+nur_vier_felder=t
+doppelte_codes=0
