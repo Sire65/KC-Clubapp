@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.293.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.294.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12677,39 +12677,50 @@ addEventListener("resize", () => { if (ES.offen && $("esUhr")) { ES.uhr.letzte =
 // ---------- KC-CLUB-BEWEGUNGSBUEHNE (2.293.0, Wunsch Hansi): 🎭 Bühne für Bewegung auf der Rückseite des Kopfes ----------
 // Twinkey (mit Schweißstirnband statt Kochmütze) turnt auf der Bühne vor – im Sitzen, im Stehen oder mit Küchenhelfern (großer Schneebesen,
 // Kochlöffel, Nudelholz, Wasserflaschen, Topfdeckel, Geschirrtuch). Dazu Musik (im Handy erzeugt, keine Datei, kein Internet) und Ansagen
-// wie beim Fitnesstrainer: „Und los!“, „Jetzt andersherum!“, „noch 3, noch 2, noch 1 – und ausschütteln!“.
-// Nur auf diesem Gerät, nichts wird gespeichert oder gesendet. Läuft nur, solange man die Bühne sieht (sonst automatisch Pause).
-// Übungs-Registry: neue Übung = neuer Eintrag (Bewegung „a“ = CSS-Klasse fi-a-…, Küchenhelfer „p“ = BW_HELFER).
+// wie beim Fitnesstrainer. Nur auf diesem Gerät, nichts wird gespeichert oder gesendet. Läuft nur, solange man die Bühne sieht.
+// 2.294.0 KC-CLUB-BEWEGUNGSBUEHNE-2 (Wunsch Hansi „Bewegungen natürlicher, rote Turnschuhe mit Streifen, bessere Musik, mehr Sprüche“):
+// eigene Figur mit Schulter, Ellbogen, Hüfte und Knie (Gelenke bewegen sich leicht versetzt, schwingen nach, der Körper wippt im Takt);
+// Bewegungen laufen im Takt der Musik (Dauer in Schlägen, --b) und starten auf dem Schlag (--ph). Musik: Pop-Arrangement mit Hook-Melodie,
+// Disco-Bass, Akkorden, Fill alle 8 Takte, Riser vor dem Start und Becken auf „Los!“; Tempo nach den Empfehlungen für Seniorenkurse
+// (um 120 Schläge/Min., im Sitzen etwas ruhiger). Ansagen: Einzählen „fünf, sechs, sieben, acht“, je Übung eigene Sprüche, Lob, Endspurt,
+// „noch 3, noch 2, noch 1“, ausschütteln – der gesprochene Satz steht zusätzlich als Sprechblase da (auch ohne Ton lesbar).
+// Übungs-Registry: neue Übung = neuer Eintrag (Bewegung „a“ = CSS-Klasse bw-a-…, Küchenhelfer „p“ = BW_HELFER, eigene Sprüche „c“).
 const BW_UEBUNGEN = [
-  { id: "armkreis", t: "Arme kreisen", g: "sitzen", a: "armkreis", sitz: 1, h: "Arme zur Seite und große Kreise machen.", w: "Und jetzt andersherum!" },
-  { id: "schulter", t: "Schultern hochziehen", g: "sitzen", a: "schulter", sitz: 1, h: "Schultern hoch zu den Ohren – und locker fallen lassen." },
-  { id: "sitzmarsch", t: "Marschieren im Sitzen", g: "sitzen", a: "marsch", sitz: 1, h: "Knie abwechselnd anheben, Arme schwingen mit." },
-  { id: "faeuste", t: "Fäuste machen", g: "sitzen", a: "kneten", sitz: 1, h: "Arme nach vorn, Hände fest zur Faust – und weit auf." },
-  { id: "beine", t: "Beine strecken", g: "sitzen", a: "bein", sitz: 1, h: "Abwechselnd ein Bein lang machen, Fußspitze zu dir ziehen." },
-  { id: "seitheben", t: "Arme seitlich heben", g: "sitzen", a: "seitheben", sitz: 1, h: "Arme seitlich bis auf Schulterhöhe – und langsam wieder runter." },
-  { id: "marsch", t: "Auf der Stelle gehen", g: "stehen", a: "marsch", h: "Knie heben, Arme schwingen. Wer mag, hält sich an der Stuhllehne fest." },
-  { id: "seit", t: "Seitschritt", g: "stehen", a: "seit", h: "Ein Schritt zur Seite und zurück – locker in den Knien.", w: "Und jetzt zur anderen Seite!" },
-  { id: "knie", t: "Kniebeuge am Stuhl", g: "stehen", a: "knie", h: "Hände an die Lehne, Po nach hinten – nur so tief, wie es angenehm ist." },
-  { id: "zehen", t: "Auf die Zehen", g: "stehen", a: "zehen", h: "Langsam hoch auf die Zehen – und wieder runter." },
-  { id: "strecken", t: "Nach oben strecken", g: "stehen", a: "strecken", h: "Abwechselnd einen Arm weit nach oben – als holst du den großen Topf vom Regal." },
-  { id: "rumpf", t: "Oberkörper drehen", g: "stehen", a: "rumpf", h: "Aufrecht bleiben und ruhig nach links und rechts drehen." },
-  { id: "ruehren", t: "Großen Teig rühren", g: "kueche", a: "ruehren", p: "schneebesen", sitz: 1, h: "Mit dem großen Schneebesen kräftig im Kreis rühren.", w: "Und jetzt die andere Richtung!" },
-  { id: "besenhoch", t: "Schneebesen in die Luft", g: "kueche", a: "hochdruecken", p: "schneebesen2", sitz: 1, h: "Schneebesen mit beiden Händen nach oben drücken – und wieder runter." },
-  { id: "trommeln", t: "Topf-Trommeln", g: "kueche", a: "trommeln", p: "loeffel2", topf: 1, sitz: 1, h: "Mit zwei Kochlöffeln auf den Topf trommeln – schön im Takt!" },
-  { id: "seitbeuge", t: "Kochlöffel zur Seite", g: "kueche", a: "seitbeuge", p: "loeffel2", h: "Kochlöffel über den Kopf und sanft zur Seite neigen.", w: "Und jetzt zur anderen Seite!" },
-  { id: "flaschen", t: "Wasserflaschen heben", g: "kueche", a: "seitheben", p: "flaschen", sitz: 1, h: "In jeder Hand eine Flasche – Arme seitlich heben und senken." },
-  { id: "deckel", t: "Deckel-Klatschen", g: "kueche", a: "klatschen", p: "deckel", sitz: 1, h: "Zwei Topfdeckel vor der Brust zusammen – wie ein Becken!" },
-  { id: "nudelholz", t: "Nudelholz rollen", g: "kueche", a: "rollen", p: "nudelholz", sitz: 1, h: "Arme nach vorn und den Teig kräftig ausrollen." },
-  { id: "tuch", t: "Geschirrtuch-Dehnung", g: "kueche", a: "hochhalten", p: "tuch", h: "Geschirrtuch mit beiden Händen hoch über den Kopf und lang machen." },
+  { id: "armkreis", t: "Arme kreisen", g: "sitzen", a: "armkreis", sitz: 1, h: "Arme zur Seite und große Kreise machen.", w: "Und jetzt andersherum!", c: ["Große Kreise – wie ein Windrad!", "Schön groß, die Schultern werden warm!"] },
+  { id: "schulter", t: "Schultern hochziehen", g: "sitzen", a: "schulter", sitz: 1, h: "Schultern hoch zu den Ohren – und locker fallen lassen.", c: ["Hoch – und fallen lassen. Herrlich!", "Alle Sorgen von den Schultern!"] },
+  { id: "sitzmarsch", t: "Marschieren im Sitzen", g: "sitzen", a: "marsch", sitz: 1, h: "Knie abwechselnd anheben, Arme schwingen mit.", c: ["Wir marschieren zum Wochenmarkt!", "Knie hoch – und die Arme schwingen mit!"] },
+  { id: "faeuste", t: "Fäuste machen", g: "sitzen", a: "kneten", sitz: 1, h: "Arme nach vorn, Hände fest zur Faust – und weit auf.", c: ["Fest zu – und weit auf!", "Wie beim Teigkneten – kräftig!"] },
+  { id: "beine", t: "Beine strecken", g: "sitzen", a: "bein", sitz: 1, h: "Abwechselnd ein Bein lang machen, Fußspitze zu dir ziehen.", c: ["Bein lang – Fußspitze zu dir!", "Schön abwechseln – links, rechts!"] },
+  { id: "seitheben", t: "Arme seitlich heben", g: "sitzen", a: "seitheben", sitz: 1, h: "Arme seitlich bis auf Schulterhöhe – und langsam wieder runter.", c: ["Fliegen wie ein Adler!", "Langsam runter – nicht fallen lassen!"] },
+  { id: "marsch", t: "Auf der Stelle gehen", g: "stehen", a: "marsch", h: "Knie heben, Arme schwingen. Wer mag, hält sich an der Stuhllehne fest.", c: ["Wir gehen zum Kühlhaus – Tempo!", "Knie hoch, Arme mit!"] },
+  { id: "seit", t: "Seitschritt", g: "stehen", a: "seit", h: "Ein Schritt zur Seite und zurück – locker in den Knien.", w: "Und jetzt zur anderen Seite!", c: ["Wie in der engen Küche – ausweichen!", "Schön locker in den Knien!"] },
+  { id: "knie", t: "Kniebeuge am Stuhl", g: "stehen", a: "knie", h: "Hände an die Lehne, Po nach hinten – nur so tief, wie es angenehm ist.", c: ["Als ob du dich setzen willst – und hoch!", "Nur so tief, wie es guttut!"] },
+  { id: "zehen", t: "Auf die Zehen", g: "stehen", a: "zehen", h: "Langsam hoch auf die Zehen – und wieder runter.", c: ["Ans oberste Regal – hoch!", "Und sanft wieder runter!"] },
+  { id: "strecken", t: "Nach oben strecken", g: "stehen", a: "strecken", h: "Abwechselnd einen Arm weit nach oben – als holst du den großen Topf vom Regal.", c: ["Ganz lang machen – nach den Sternen greifen!", "Links – und rechts – schön lang!"] },
+  { id: "rumpf", t: "Oberkörper drehen", g: "stehen", a: "rumpf", h: "Aufrecht bleiben und ruhig nach links und rechts drehen.", c: ["Zum Kollegen am Nachbarposten schauen!", "Ruhig drehen, schön aufrecht!"] },
+  { id: "ruehren", t: "Großen Teig rühren", g: "kueche", a: "ruehren", p: "schneebesen", ding: "schuessel", sitz: 1, h: "Mit dem großen Schneebesen kräftig im Kreis rühren.", w: "Und jetzt die andere Richtung!", c: ["Kräftig rühren – der Teig wird fluffig!", "Das wird der beste Kuchen der Welt!"] },
+  { id: "besenhoch", t: "Schneebesen in die Luft", g: "kueche", a: "hochdruecken", p: "schneebesen2", sitz: 1, h: "Schneebesen mit beiden Händen nach oben drücken – und wieder runter.", c: ["Hoch damit – wie ein Pokal!", "Und runter bis zu den Schultern!"] },
+  { id: "trommeln", t: "Topf-Trommeln", g: "kueche", a: "trommeln", p: "loeffel2", ding: "topf", sitz: 1, h: "Mit zwei Kochlöffeln auf den Topf trommeln – schön im Takt!", c: ["Im Takt der Musik – bumm, bumm!", "Die Küchenband legt los!"] },
+  { id: "seitbeuge", t: "Kochlöffel zur Seite", g: "kueche", a: "seitbeuge", p: "loeffel2", h: "Kochlöffel über den Kopf und sanft zur Seite neigen.", w: "Und jetzt zur anderen Seite!", c: ["Wie ein Baum im Wind!", "Schön lang machen an der Seite!"] },
+  { id: "flaschen", t: "Wasserflaschen heben", g: "kueche", a: "seitheben", p: "flaschen", sitz: 1, h: "In jeder Hand eine Flasche – Arme seitlich heben und senken.", c: ["Unsere Hanteln aus der Küche!", "Langsam und kontrolliert!"] },
+  { id: "deckel", t: "Deckel-Klatschen", g: "kueche", a: "klatschen", p: "deckel", sitz: 1, h: "Zwei Topfdeckel vor der Brust zusammen – wie ein Becken!", c: ["Tschingderassabum!", "Klatsch – auf den Schlag!"] },
+  { id: "nudelholz", t: "Nudelholz rollen", g: "kueche", a: "rollen", ding: "nudel", sitz: 1, h: "Arme nach vorn und den Teig kräftig ausrollen.", c: ["Der Pizzateig wird hauchdünn!", "Vor – und zurück!"] },
+  { id: "tuch", t: "Geschirrtuch-Dehnung", g: "kueche", a: "hochhalten", p: "tuch", h: "Geschirrtuch mit beiden Händen hoch über den Kopf und lang machen.", c: ["Ganz lang machen – und atmen!", "Herrlich, das tut gut!"] },
 ];
 const BW_MODI = [["sitzen", "🪑 Im Sitzen"], ["stehen", "🧍 Im Stehen"], ["kueche", "🥄 Küchenhelfer"]];
 const BW_DAUER = [5, 10, 15];
-const BW_LOB = ["Super machst du das!", "Schön weiteratmen!", "Bleib schön locker!", "Klasse, weiter so!", "Sieht toll aus!", "Gleich geschafft!", "Prima, im eigenen Tempo!"];
-const BW_SEK = 30, BW_SCHUETTELN = 6, BW_BEREIT = 5;
+const BW_TEMPO = { sitzen: 112, stehen: 120, kueche: 116 }; // Schläge/Min. (Seniorenkurse um 120, im Sitzen ruhiger)
+const BW_LOB = ["Super machst du das!", "Klasse – weiter so!", "Schön weiteratmen – ein und aus!", "Lächeln nicht vergessen!", "Du bist heute der Star auf der Bühne!",
+  "Das sieht richtig sportlich aus!", "Mit Schwung – die Küche rockt!", "Wer rastet, der rostet – wer rührt, der glänzt!", "Prima, ganz in deinem Tempo!",
+  "Spürst du, wie es warm wird?", "Toll – ich bin stolz auf dich!", "Und weiter – du schaffst das!", "Schultern locker, schön aufrecht!", "Bravo! Das macht Spaß, oder?",
+  "Besser als jede Bratkartoffel!", "Jawoll – so sieht Bewegung aus!"];
+const BW_ENDSPURT = ["Noch 10 Sekunden – gib nochmal alles!", "Endspurt – noch 10!", "Die letzten 10 – du schaffst das!", "Noch 10 – zeig, was du kannst!"];
+const BW_SCHUETTELN_SAG = ["Und jetzt ausschütteln!", "Super! Locker ausschütteln!", "Klasse! Arme und Beine ausschütteln!", "Geschafft – und schön ausschütteln!"];
+const BW_SEK = 30, BW_SCHUETTELN = 6, BW_BEREIT = 7;
 const BW = { lauf: null, takt: 0, wach: null };
 const bwWahl = () => { try { return { modus: "sitzen", dauer: 5, musik: true, ansage: true, ...JSON.parse(esLies("bw", "{}")) }; } catch (e) { return { modus: "sitzen", dauer: 5, musik: true, ansage: true }; } };
 function bwWahlSetzen(teil, still) { esSchreib("bw", JSON.stringify({ ...bwWahl(), ...teil })); if (!still && !BW.lauf) esBuehneZeigen($("hrFlaeche")); }
-// Küchenhelfer in der Hand (gezeichnet relativ zur Hand, Arm hängt nach unten – beim Heben dreht der Helfer mit)
+// Küchenhelfer in der Hand (relativ zur Hand gezeichnet; der Unterarm hängt nach unten – beim Heben dreht der Helfer mit)
 const BW_HELFER = {
   schneebesen: (x, y) => `<g class="bw-helfer"><rect x="${x - 1.4}" y="${y - 3}" width="2.8" height="13" rx="1.2" fill="#6c757d"/><ellipse cx="${x}" cy="${y + 19}" rx="5.5" ry="9.5" fill="none" stroke="#ced4da" stroke-width="1.2"/><ellipse cx="${x}" cy="${y + 19}" rx="2.6" ry="9.5" fill="none" stroke="#adb5bd" stroke-width="1"/></g>`,
   loeffel: (x, y) => `<g class="bw-helfer"><rect x="${x - 1.3}" y="${y - 4}" width="2.6" height="21" rx="1.2" fill="#c8964a"/><ellipse cx="${x}" cy="${y + 20}" rx="4" ry="6" fill="#b07d3a"/></g>`,
@@ -12718,30 +12729,54 @@ const BW_HELFER = {
   nudelholz: (x, y) => `<g class="bw-helfer"><rect x="${x - 15}" y="${y - 2.6}" width="30" height="5.2" rx="2.6" fill="#e0b070"/><rect x="${x - 21}" y="${y - 1.4}" width="6" height="2.8" rx="1.4" fill="#a8743a"/><rect x="${x + 15}" y="${y - 1.4}" width="6" height="2.8" rx="1.4" fill="#a8743a"/></g>`,
   tuch: (x, y) => `<g class="bw-helfer"><rect x="${x - 6}" y="${y}" width="12" height="22" rx="1" fill="#fff" stroke="#dee2e6" stroke-width=".6"/><rect x="${x - 6}" y="${y + 4}" width="12" height="2" fill="#e03131"/><rect x="${x - 6}" y="${y + 16}" width="12" height="2" fill="#e03131"/></g>`,
 };
-function bwFigur(a, sitz, p, topf) {
-  const yH = sitz ? 98 : 88, links = { schneebesen2: "schneebesen", loeffel2: "loeffel", flaschen: "flasche", deckel: "deckel" }[p] || "", rechts = { schneebesen: "schneebesen", schneebesen2: "schneebesen", loeffel2: "loeffel", flaschen: "flasche", deckel: "deckel", nudelholz: "nudelholz", tuch: "tuch" }[p] || "";
-  const ky = sitz ? 42 : 32; // Kopfmitte
-  const band = `<g class="bw-stirn"><path d="M48.5 ${ky - 4} Q49 ${ky - 13.5} 60 ${ky - 13.5} Q71 ${ky - 13.5} 71.5 ${ky - 4} Q60 ${ky - 9} 48.5 ${ky - 4}Z" fill="#6b4226"/>
-    <rect x="47.6" y="${ky - 7.5}" width="24.8" height="5" rx="2.4" fill="#e03131"/><rect x="47.6" y="${ky - 5.6}" width="24.8" height="1.2" fill="#fff" opacity=".9"/>
-    <path d="M72 ${ky - 6} l6 -3 l-1 4 z M72 ${ky - 4} l6 2 l-3 2 z" fill="#c92a2a"/><path class="bw-schweiss" d="M47 ${ky - 1} q-1.6 3 0 4.2 q1.6 -1.2 0 -4.2z" fill="#a5d8ff"/></g>`;
-  let s = fiFigur(a, sitz).replace(/<g class="fi-muetze">[\s\S]*?<\/g>/, band).replace('class="fi-figur ', 'class="fi-figur bw-figur ');
-  if (rechts) s = s.replace('<g class="fi-armR">', `<g class="fi-armR">${BW_HELFER[rechts](79, yH)}`);
-  if (links) s = s.replace('<g class="fi-armL">', `<g class="fi-armL">${BW_HELFER[links](41, yH)}`);
-  if (topf) { const ty = sitz ? 100 : 90; s = s.replace(/<\/svg>$/, `<g class="bw-topf"><rect x="43" y="${ty}" width="34" height="17" rx="3" fill="#868e96"/><rect x="41" y="${ty - 2}" width="38" height="4" rx="2" fill="#adb5bd"/><rect x="35" y="${ty + 3}" width="8" height="3" rx="1.5" fill="#495057"/><rect x="77" y="${ty + 3}" width="8" height="3" rx="1.5" fill="#495057"/></g></svg>`); }
-  return s;
+// Rote Turnschuhe mit weißer Sohle und drei weißen Streifen
+const bwSchuh = (x, y) => `<g class="bw-schuh"><path d="M${x - 8.5} ${y + 3} Q${x - 9} ${y - 3.5} ${x - 3} ${y - 4.2} L${x + 3} ${y - 4.2} Q${x + 9} ${y - 3.5} ${x + 8.5} ${y + 3} Z" fill="#e03131"/>
+  <rect x="${x - 9.2}" y="${y + 1.6}" width="18.4" height="2.9" rx="1.4" fill="#fff"/><path d="M${x - 6} ${y - 2.6} l2.4 3.8 M${x - 2.6} ${y - 3.4} l2.4 3.8 M${x + .8} ${y - 3.4} l2.4 3.8" stroke="#fff" stroke-width="1.15" stroke-linecap="round"/>
+  <circle cx="${x}" cy="${y - 3.3}" r=".7" fill="#fff"/></g>`;
+// Twinkey als Gliederpuppe: Schulter → Ellbogen → Hand, Hüfte → Knie → Fuß (je Gelenk eine Gruppe mit eigenem Drehpunkt)
+function bwFigur(a, sitz, p, ding, b, ph) {
+  const dy = sitz ? 12 : 0, S = 56 + dy, H = 101 + dy, ky = S - 20;
+  const links = { schneebesen2: "schneebesen", loeffel2: "loeffel", flaschen: "flasche", deckel: "deckel" }[p] || "";
+  const rechts = { schneebesen: "schneebesen", schneebesen2: "schneebesen", loeffel2: "loeffel", flaschen: "flasche", deckel: "deckel", nudelholz: "nudelholz", tuch: "tuch" }[p] || "";
+  const o = (x, y) => `style="transform-origin:${x}px ${y}px"`;
+  const arm = (s, x, helfer) => `<g class="bw-oa${s}" ${o(x, S + 1)}><rect x="${x - 4}" y="${S - 2}" width="8" height="25" rx="4" class="bw-jacke"/>
+      <g class="bw-ua${s}" ${o(x, S + 21)}><rect x="${x - 3.5}" y="${S + 19}" width="7" height="21" rx="3.5" class="bw-jacke"/>${helfer ? BW_HELFER[helfer](x, S + 42) : ""}<circle cx="${x}" cy="${S + 42}" r="4.7" class="bw-haut bw-hand"/></g></g>`;
+  const bein = (s, x) => sitz
+    ? `<g class="bw-ob${s}" ${o(x, H)}><rect x="${x - 5.5}" y="${H - 2}" width="11" height="12" rx="5" class="bw-hose"/><g class="bw-ub${s}" ${o(x, H + 8)}><rect x="${x - 4.5}" y="${H + 6}" width="9" height="${143 - H}" rx="4.5" class="bw-hose"/>${bwSchuh(x, 151)}</g></g>`
+    : `<g class="bw-ob${s}" ${o(x, H)}><rect x="${x - 5}" y="${H - 2}" width="10" height="26" rx="5" class="bw-hose"/><g class="bw-ub${s}" ${o(x, H + 22)}><rect x="${x - 4.5}" y="${H + 20}" width="9" height="${143 - H - 20}" rx="4.5" class="bw-hose"/>${bwSchuh(x, 151)}</g></g>`;
+  const stuhl = sitz ? `<g class="bw-stuhl"><rect x="33" y="${S + 4}" width="54" height="8" rx="3"/><rect x="31" y="${H}" width="58" height="7" rx="2"/><rect x="34" y="${H + 7}" width="5" height="${156 - H - 7}"/><rect x="81" y="${H + 7}" width="5" height="${156 - H - 7}"/></g>` : "";
+  const kopf = `<g class="bw-kopf" ${o(60, S - 9)}><rect x="56" y="${S - 13}" width="8" height="10" class="bw-haut"/><circle cx="60" cy="${ky}" r="12" class="bw-haut"/>
+      <circle cx="55.6" cy="${ky - 1}" r="1.5" class="bw-auge"/><circle cx="64.4" cy="${ky - 1}" r="1.5" class="bw-auge"/><path d="M54.5 ${ky + 4} Q60 ${ky + 8.5} 65.5 ${ky + 4}" class="bw-mund"/>
+      <circle cx="52.5" cy="${ky + 3}" r="2" fill="#f4a3a3" opacity=".55"/><circle cx="67.5" cy="${ky + 3}" r="2" fill="#f4a3a3" opacity=".55"/>
+      <path d="M48.5 ${ky - 4} Q49 ${ky - 13.5} 60 ${ky - 13.5} Q71 ${ky - 13.5} 71.5 ${ky - 4} Q60 ${ky - 9} 48.5 ${ky - 4}Z" fill="#6b4226"/>
+      <rect x="47.6" y="${ky - 7.5}" width="24.8" height="5" rx="2.4" fill="#e03131"/><rect x="47.6" y="${ky - 5.6}" width="24.8" height="1.2" fill="#fff" opacity=".9"/>
+      <path d="M72 ${ky - 6} l6 -3 l-1 4 z M72 ${ky - 4} l6 2 l-3 2 z" fill="#c92a2a"/><path class="bw-schweiss" d="M47 ${ky - 1} q-1.6 3 0 4.2 q1.6 -1.2 0 -4.2z" fill="#a5d8ff"/></g>`;
+  const rumpf = `<path d="M44 ${S - 2} Q60 ${S - 8} 76 ${S - 2} L78 ${H + 1} L42 ${H + 1} Z" class="bw-jacke"/>${[[56, 10], [64, 10], [56, 22], [64, 22]].map(([x, y]) => `<circle cx="${x}" cy="${S + y}" r="1.6" class="bw-knopf"/>`).join("")}`;
+  // Dinge vor dem Bauch: Topf (Trommeln), Rührschüssel, Nudelholz mit beiden Händen (rollt mit – .bw-ding)
+  const dingSvg = ding === "topf" ? `<g class="bw-ding"><rect x="43" y="${H - 1}" width="34" height="17" rx="3" fill="#868e96"/><rect x="41" y="${H - 3}" width="38" height="4" rx="2" fill="#adb5bd"/><rect x="35" y="${H + 2}" width="8" height="3" rx="1.5" fill="#495057"/><rect x="77" y="${H + 2}" width="8" height="3" rx="1.5" fill="#495057"/></g>`
+    : ding === "schuessel" ? `<g class="bw-ding"><path d="M37 ${H - 7} L83 ${H - 7} Q82 ${H + 25} 60 ${H + 27} Q38 ${H + 25} 37 ${H - 7}Z" fill="#f1f3f5" stroke="#adb5bd" stroke-width=".8"/><path d="M40 ${H + 4} Q60 ${H + 8} 80 ${H + 4}" fill="none" stroke="#74c0fc" stroke-width="2" opacity=".7"/><ellipse cx="60" cy="${H - 7}" rx="23" ry="3.8" fill="#ffe8a3"/></g>`
+    : ding === "nudel" ? `<g class="bw-ding" style="transform-origin:60px ${S + 34}px">${BW_HELFER.nudelholz(60, S + 34)}</g>` : "";
+  return `<svg class="bw-figur bw-a-${a}${sitz ? " bw-sitz" : ""}" viewBox="0 0 120 170" style="--b:${b || .5}s;--ph:${ph || 0}s" role="img" aria-label="Twinkey macht es vor" ${o(60, 152)}>
+    ${stuhl}<g class="bw-ganz" ${o(60, 152)}><g class="bw-beine">${bein("L", 54)}${bein("R", 66)}</g>
+    <g class="bw-oben" ${o(60, H)}>${rumpf}${kopf}${ding === "nudel" ? dingSvg : ""}${arm("L", 45, links)}${arm("R", 75, rechts)}</g></g>${ding && ding !== "nudel" ? dingSvg : ""}</svg>`;
 }
 function bwPlan(modus, dauer) {
   const passt = BW_UEBUNGEN.filter((u) => u.g === modus), n = Math.max(4, Math.round((dauer * 60) / (BW_SEK + BW_SCHUETTELN + BW_BEREIT))), plan = [];
   for (let i = 0; i < n; i++) plan.push(passt[i % passt.length]);
   return plan;
 }
+const bwSchlag = () => 60 / (BW_TEMPO[bwWahl().modus] || 116);
+function bwPhase() { // Bewegung startet auf dem Schlag der Musik: Versatz innerhalb von 8 Schlägen
+  const b = bwSchlag(); if (!BWM.ctx || !BWM.laeuft) return 0;
+  const seit = BWM.ctx.currentTime - BWM.start; return -(((seit % (8 * b)) + 8 * b) % (8 * b));
+}
 // ----- Bühne zeigen (Auswahl) -----
 function esBuehneZeigen(f) {
   if (!f) return;
   if (BW.lauf) return bwLaufZeigen();
-  const w = bwWahl(), hinweis = !fiLs(FI_HINWEIS_KEY, false), vorne = { sitzen: ["ruhe", 1, ""], stehen: ["ruhe", 0, ""], kueche: ["ruhe", 1, "schneebesen"] }[w.modus];
+  const w = bwWahl(), hinweis = !fiLs(FI_HINWEIS_KEY, false), vorne = { sitzen: [1, ""], stehen: [0, ""], kueche: [1, "schneebesen"] }[w.modus];
   f.innerHTML = `<div class="bw-buehne"><div class="bw-licht"></div><div class="bw-vorhang links halb"></div><div class="bw-vorhang rechts halb"></div><div class="bw-boden"></div>
-    <div class="bw-mitte">${bwFigur("winken", vorne[1], vorne[2])}</div>
+    <div class="bw-mitte">${bwFigur("winken", vorne[0], vorne[1], 0, bwSchlag())}</div>
     <div class="bw-wahl">
       <div class="bw-titel">🎭 Bühne frei für Bewegung!</div>
       ${hinweis ? `<div class="bw-hinweis">🩺 Mach nur so viel, wie es dir angenehm ist. Bei Schmerzen, Schwindel oder Atemnot sofort aufhören.<button type="button" class="es-k es-haupt" onclick="fiLsSetzen(FI_HINWEIS_KEY, true);esBuehneZeigen($('hrFlaeche'))">👍 Verstanden</button></div>` : ""}
@@ -12754,13 +12789,18 @@ function esBuehneZeigen(f) {
 // ----- Training -----
 async function bwLos() {
   const w = bwWahl(), plan = bwPlan(w.modus, w.dauer);
-  BW.lauf = { plan, i: 0, phase: "bereit", rest: BW_BEREIT, pause: false, musik: w.musik, ansage: w.ansage, sek: 0, lob: 0 };
+  BW.lauf = { plan, i: 0, phase: "bereit", rest: BW_BEREIT, pause: false, musik: w.musik, ansage: w.ansage, sek: 0, lob: Math.floor(Math.random() * BW_LOB.length), sprueche: 0 };
   try { BW.wach = await navigator.wakeLock?.request("screen"); } catch (e) { BW.wach = null; }
-  bwLaufZeigen(true); bwSag(`Vorhang auf! Wir starten mit: ${plan[0].t}. ${plan[0].h}`);
   if (w.musik) bwMusik(true);
+  BWM.stufe = 1; bwLaufZeigen(true); bwSag(`Vorhang auf! Schön, dass du da bist! Wir starten mit: ${plan[0].t}. ${plan[0].h}`, false, `Vorhang auf! Wir starten mit: ${plan[0].t}`);
   clearInterval(BW.takt); BW.takt = setInterval(bwTick, 1000);
 }
-function bwSag(t, sofort) { const L = BW.lauf; if (!L?.ansage) return; try { if (sofort) speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } sprechen(t); }
+function bwSag(t, sofort, blase) { // blase: kürzerer Text für die Sprechblase (sonst der gesprochene)
+  const L = BW.lauf, z = $("bwSprech"); BW.sprechZeit = Date.now(); BW.blase = blase || t;
+  if (z) { z.textContent = BW.blase; z.classList.remove("an"); void z.offsetWidth; z.classList.add("an"); }
+  if (!L?.ansage) return; try { if (sofort) speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } sprechen(t);
+}
+const bwZufall = (liste, L) => liste[(L.sprueche++ + L.i) % liste.length];
 function bwTick() {
   const L = BW.lauf; if (!L) return clearInterval(BW.takt);
   if (!$("bwLauf")) return bwStopp();
@@ -12768,19 +12808,23 @@ function bwTick() {
   if (L.pause) return;
   L.rest--;
   const u = L.plan[L.i];
+  if (L.phase === "bereit" && L.rest === 3) { bwSag("Und fünf, sechs, sieben, acht!", true); BWM.riser = true; }
   if (L.phase === "uebung") {
     L.sek++;
-    const halb = Math.floor(BW_SEK / 2);
-    if (L.rest === halb) bwSag(u.w || BW_LOB[L.lob++ % BW_LOB.length]);
-    else if (L.rest === 10 && !u.w) bwSag("Noch 10 Sekunden!");
+    if (L.rest === 24) bwSag(u.c?.[0] || BW_LOB[L.lob++ % BW_LOB.length]);
+    else if (L.rest === 19) bwSag(BW_LOB[L.lob++ % BW_LOB.length]);
+    else if (L.rest === 15) bwSag(u.w || u.c?.[1] || BW_LOB[L.lob++ % BW_LOB.length]);
+    else if (L.rest === 10) bwSag(bwZufall(BW_ENDSPURT, L));
     else if (L.rest >= 1 && L.rest <= 3) bwSag(L.rest === 3 ? "Noch 3" : L.rest === 2 ? "noch 2" : "noch 1", true);
   }
   if (L.rest > 0) return bwZahl();
-  if (L.phase === "bereit") { L.phase = "uebung"; L.rest = BW_SEK; bwSag("Und los!", true); }
-  else if (L.phase === "uebung") { L.phase = "schuetteln"; L.rest = BW_SCHUETTELN; bwSag(L.i >= L.plan.length - 1 ? "Und ausschütteln! Geschafft!" : "Und jetzt ausschütteln!", true); }
+  if (L.phase === "bereit") { L.phase = "uebung"; L.rest = BW_SEK; BWM.stufe = 2; BWM.becken = true; bwSag("Los geht’s!", true); }
+  else if (L.phase === "uebung") { L.phase = "schuetteln"; L.rest = BW_SCHUETTELN; BWM.stufe = 1; bwSag(L.i >= L.plan.length - 1 ? "Und ausschütteln! Geschafft!" : bwZufall(BW_SCHUETTELN_SAG, L), true); }
   else if (L.phase === "schuetteln") {
     if (L.i >= L.plan.length - 1) return bwFertig();
-    L.i++; L.phase = "bereit"; L.rest = BW_BEREIT; const n = L.plan[L.i]; bwSag(`Als Nächstes: ${n.t}. ${n.h}`);
+    L.i++; L.phase = "bereit"; L.rest = BW_BEREIT; const n = L.plan[L.i];
+    const extra = L.i === Math.floor(L.plan.length / 2) ? "Halbzeit – du bist spitze! " : L.i % 3 === 0 ? "Trinken nicht vergessen! " : "";
+    bwSag(`${extra}Als Nächstes: ${n.t}. ${n.h}`, false, `${extra}Als Nächstes: ${n.t}`);
   }
   bwLaufZeigen();
 }
@@ -12789,15 +12833,17 @@ function bwZahl() { const L = BW.lauf, z = $("bwZahl"); if (!L || !z) return; z.
 function bwLaufZeigen(vorhangAuf) {
   const L = BW.lauf, f = $("hrFlaeche"); if (!L || !f) return;
   const u = L.plan[L.i], anim = L.phase === "uebung" ? u.a : L.phase === "schuetteln" ? "schuetteln" : "ruhe", sitz = bwWahl().modus !== "stehen" && !!u.sitz;
-  const text = L.phase === "bereit" ? "Gleich:" : L.phase === "schuetteln" ? "Ausschütteln!" : "Jetzt:";
+  const text = L.phase === "bereit" ? "Gleich:" : L.phase === "schuetteln" ? "Ausschütteln!" : "Jetzt:", alt = BW.blase || "";
   f.innerHTML = `<div class="bw-buehne an${L.pause ? " angehalten" : ""}" id="bwLauf"><div class="bw-licht"></div><div class="bw-vorhang links${vorhangAuf ? " oeffnet" : " offen"}"></div><div class="bw-vorhang rechts${vorhangAuf ? " oeffnet" : " offen"}"></div><div class="bw-boden"></div>
     <div class="bw-kopf"><div><small>${text} · Übung ${L.i + 1} von ${L.plan.length}</small><b>${esc(L.phase === "schuetteln" ? "Arme und Beine locker ausschütteln" : u.t)}</b></div><div class="bw-zahl" id="bwZahl">${L.rest}</div></div>
     <div class="bw-balken-bahn"><div class="bw-balken" id="bwBalken"></div></div>
-    <div class="bw-mitte">${bwFigur(anim, sitz, L.phase === "schuetteln" ? "" : u.p, L.phase !== "schuetteln" && u.topf)}</div>
+    <div class="bw-sprech" id="bwSprech" aria-live="polite">${esc(alt)}</div>
+    <div class="bw-mitte">${bwFigur(anim, sitz, L.phase === "schuetteln" ? "" : u.p, L.phase === "schuetteln" ? "" : u.ding, bwSchlag(), bwPhase())}</div>
     <div class="bw-tipp">${esc(L.phase === "schuetteln" ? "Gut gemacht! 👏" : u.h)}</div>
     <div class="es-leiste"><button type="button" class="es-k es-haupt" onclick="bwPause()">${L.pause ? "▶︎ Weiter" : "⏸ Pause"}</button><button type="button" class="es-k" onclick="bwWeiter()" aria-label="Übung überspringen">⏭</button>
       <button type="button" class="es-k${L.musik ? " an" : ""}" onclick="bwMusikSchalten()" aria-label="Musik an oder aus">${L.musik ? "🎵" : "🔇"}</button><button type="button" class="es-k${L.ansage ? " an" : ""}" onclick="bwAnsageSchalten()" aria-label="Ansage an oder aus">${L.ansage ? "🔊" : "🔈"}</button>
       <button type="button" class="es-k" onclick="bwStopp(true)">✖ Ende</button></div></div>`;
+  if (alt && Date.now() - (BW.sprechZeit || 0) < 4000) $("bwSprech").classList.add("an"); // gerade Gesagtes bleibt lesbar
   bwZahl();
 }
 function bwPause() { const L = BW.lauf; if (!L) return; L.pause = !L.pause; try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwMusik(!L.pause && L.musik); bwLaufZeigen(); }
@@ -12807,56 +12853,74 @@ function bwAnsageSchalten() { const L = BW.lauf; if (!L) return; L.ansage = !L.a
 function bwStopp(zeigen) {
   clearInterval(BW.takt); BW.takt = 0; bwMusik(false); try { BW.wach?.release(); } catch (e) { /* ohne Wachhalten */ } BW.wach = null;
   if (BW.lauf) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } }
-  BW.lauf = null; if (zeigen && $("hrFlaeche")?.classList.contains("hr-buehne")) esBuehneZeigen($("hrFlaeche"));
+  BW.lauf = null; BW.blase = ""; if (zeigen && $("hrFlaeche")?.classList.contains("hr-buehne")) esBuehneZeigen($("hrFlaeche"));
 }
 function bwFertig() {
   const L = BW.lauf; if (!L) return; const sek = L.sek, n = L.plan.length; bwStopp(false);
-  bwSag2("Geschafft! Super gemacht – Applaus!");
+  if (bwWahl().ansage) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } sprechen("Geschafft! Das war super – Applaus für dich! Bis zum nächsten Mal auf der Bühne!"); }
   const f = $("hrFlaeche"); if (!f) return;
   f.innerHTML = `<div class="bw-buehne an"><div class="bw-licht"></div><div class="bw-vorhang links schliesst"></div><div class="bw-vorhang rechts schliesst"></div><div class="bw-boden"></div>
-    <div class="bw-mitte">${bwFigur("jubel", 0, "")}</div><div class="bw-applaus" aria-hidden="true">👏 🎉 👏</div>
-    <div class="bw-wahl"><div class="bw-titel">🏅 Geschafft – super gemacht!</div><div class="bw-tipp" style="position:static">${n} Übungen · ${Math.floor(sek / 60)} Min. ${sek % 60} s Bewegung</div>
+    <div class="bw-mitte">${bwFigur("jubel", 0, "", 0, bwSchlag())}</div><div class="bw-applaus" aria-hidden="true">👏 🎉 👏</div>
+    <div class="bw-wahl"><div class="bw-titel">🏅 Geschafft – Applaus für dich!</div><div class="bw-tipp" style="position:static">${n} Übungen · ${Math.floor(sek / 60)} Min. ${sek % 60} s Bewegung</div>
       <button type="button" class="es-k es-haupt bw-los" onclick="esBuehneZeigen($('hrFlaeche'))">🔁 Nochmal</button></div></div>`;
 }
-function bwSag2(t) { if (bwWahl().ansage) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } sprechen(t); } }
-// ----- Musik: im Handy erzeugt (Web Audio) – lockerer Pop-Takt, 108 Schläge/Min., leiser, solange Twinkey spricht -----
-const BWM = { ctx: null, aus: null, laeuft: false, zeit: 0, schritt: 0, timer: 0, rauschen: null };
-const BWM_AKKORDE = [[48, 52, 55], [43, 47, 50], [45, 48, 52], [41, 45, 48]]; // C – G – Am – F
+// ----- Musik: im Handy erzeugt (Web Audio) – Pop/Disco-Arrangement, leiser, solange Twinkey spricht -----
+// Stufe 1 (Vorbereiten/Ausschütteln): Bass-Trommel, Hi-Hats, Disco-Bass, Flächen. Stufe 2 (Übung): + Klatschen, Akkord-Stöße, Hook-Melodie mit Echo.
+// Alle 8 Takte ein Trommelwirbel; vor dem Start ein Riser, auf „Los!“ ein Becken.
+const BWM = { ctx: null, aus: null, hall: null, laeuft: false, zeit: 0, schritt: 0, timer: 0, rauschen: null, start: 0, stufe: 1, riser: false, becken: false };
+const BWM_AKKORDE = [[57, 60, 64], [53, 57, 60], [55, 60, 64], [55, 59, 62]]; // Am – F – C – G
+const BWM_BASS = [45, 41, 48, 43];
+const BWM_HOOK = { 0: 76, 3: 74, 6: 72, 8: 69, 10: 72, 12: 74, 16: 79, 19: 76, 22: 74, 24: 72, 26: 74, 28: 76, 30: 72 }; // 2 Takte, A-Moll-Pentatonik
 const bwHz = (m) => 440 * Math.pow(2, (m - 69) / 12);
 function bwMusik(an) {
   if (!an) { BWM.laeuft = false; clearInterval(BWM.timer); BWM.timer = 0; try { BWM.aus?.gain.setTargetAtTime(0, BWM.ctx.currentTime, .05); } catch (e) { /* ohne Ton */ } return; }
   try {
     const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
-    if (!BWM.ctx) { BWM.ctx = new C(); BWM.aus = BWM.ctx.createGain(); BWM.aus.connect(BWM.ctx.destination);
-      const n = BWM.ctx.sampleRate * .5, buf = BWM.ctx.createBuffer(1, n, BWM.ctx.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; BWM.rauschen = buf; }
-    BWM.ctx.resume?.(); BWM.aus.gain.setTargetAtTime(.16, BWM.ctx.currentTime, .1);
-    if (BWM.laeuft) return; BWM.laeuft = true; BWM.zeit = BWM.ctx.currentTime + .1; BWM.schritt = 0;
-    BWM.timer = setInterval(bwMusikPlanen, 60);
+    if (!BWM.ctx) {
+      BWM.ctx = new C(); BWM.aus = BWM.ctx.createGain(); BWM.aus.connect(BWM.ctx.destination);
+      BWM.hall = BWM.ctx.createDelay(1); BWM.hall.delayTime.value = .375; const fb = BWM.ctx.createGain(); fb.gain.value = .28; const hg = BWM.ctx.createGain(); hg.gain.value = .35;
+      BWM.hall.connect(fb); fb.connect(BWM.hall); BWM.hall.connect(hg); hg.connect(BWM.aus);
+      const n = BWM.ctx.sampleRate, buf = BWM.ctx.createBuffer(1, n, BWM.ctx.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; BWM.rauschen = buf;
+    }
+    BWM.ctx.resume?.(); BWM.aus.gain.setTargetAtTime(.17, BWM.ctx.currentTime, .1);
+    if (BWM.laeuft) return; BWM.laeuft = true; BWM.zeit = BWM.ctx.currentTime + .1; BWM.start = BWM.zeit; BWM.schritt = 0;
+    BWM.timer = setInterval(bwMusikPlanen, 50);
   } catch (e) { BWM.laeuft = false; }
 }
 function bwMusikPlanen() {
   const c = BWM.ctx; if (!c || !BWM.laeuft) return;
-  try { BWM.aus.gain.setTargetAtTime(speechSynthesis?.speaking ? .06 : .16, c.currentTime, .15); } catch (e) { /* ohne Sprache */ }
-  const sech = 60 / 108 / 4;
-  while (BWM.zeit < c.currentTime + .25) { bwMusikSchritt(BWM.schritt, BWM.zeit); BWM.zeit += sech; BWM.schritt = (BWM.schritt + 1) % 64; }
+  try { BWM.aus.gain.setTargetAtTime(speechSynthesis?.speaking ? .07 : .17, c.currentTime, .12); } catch (e) { /* ohne Sprache */ }
+  const sech = bwSchlag() / 4;
+  if (BWM.riser) { BWM.riser = false; bwRiser(c.currentTime + .05, 2.6); }
+  if (BWM.becken) { BWM.becken = false; bwRauschen(c.currentTime + .02, 1.4, .3, 5000, "highpass"); }
+  while (BWM.zeit < c.currentTime + .25) { bwMusikSchritt(BWM.schritt, BWM.zeit); BWM.zeit += sech; BWM.schritt = (BWM.schritt + 1) % 128; }
 }
-function bwTon(typ, hz, t, dauer, laut, ziel) {
+function bwTon(typ, hz, t, dauer, laut, filterHz, hall) {
   const c = BWM.ctx, o = c.createOscillator(), g = c.createGain(); o.type = typ; o.frequency.setValueAtTime(hz, t);
   g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(laut, t + .008); g.gain.exponentialRampToValueAtTime(.0005, t + dauer);
-  o.connect(g); g.connect(ziel || BWM.aus); o.start(t); o.stop(t + dauer + .02); return o;
+  let kette = o; if (filterHz) { const f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = filterHz; o.connect(f); kette = f; }
+  kette.connect(g); g.connect(BWM.aus); if (hall) g.connect(BWM.hall); o.start(t); o.stop(t + dauer + .02); return o;
 }
 function bwRauschen(t, dauer, laut, filterHz, art) {
   const c = BWM.ctx, q = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); q.buffer = BWM.rauschen; f.type = art; f.frequency.value = filterHz;
   g.gain.setValueAtTime(laut, t); g.gain.exponentialRampToValueAtTime(.0005, t + dauer); q.connect(f); f.connect(g); g.connect(BWM.aus); q.start(t); q.stop(t + dauer + .02);
 }
+function bwRiser(t, dauer) { // Rauschen, das ansteigt – Spannung vor „Los!“
+  const c = BWM.ctx, q = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); q.buffer = BWM.rauschen; q.loop = true; f.type = "bandpass"; f.Q.value = 3;
+  f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(6000, t + dauer); g.gain.setValueAtTime(.0005, t); g.gain.exponentialRampToValueAtTime(.18, t + dauer); g.gain.linearRampToValueAtTime(0, t + dauer + .05);
+  q.connect(f); f.connect(g); g.connect(BWM.aus); q.start(t); q.stop(t + dauer + .1);
+}
 function bwMusikSchritt(s, t) {
-  const im = s % 16, akk = BWM_AKKORDE[Math.floor(s / 16)];
-  if (im % 4 === 0) { const o = bwTon("sine", 130, t, .22, .9); o.frequency.exponentialRampToValueAtTime(42, t + .16); } // Bass-Trommel
-  if (im % 4 === 2) bwRauschen(t, .045, .18, 7000, "highpass"); // Hi-Hat
-  if (im === 4 || im === 12) bwRauschen(t, .14, .32, 1600, "bandpass"); // Klatschen
-  if ([0, 3, 6, 8, 11, 14].includes(im)) bwTon("triangle", bwHz(akk[0] - 12), t, .2, .35); // Bass
-  if (im === 2 || im === 10) akk.forEach((m) => bwTon("triangle", bwHz(m + 12), t, .26, .06)); // Akkord
-  if (im % 2 === 0 && s % 32 < 16) bwTon("sine", bwHz(akk[(im / 2) % 3] + 24), t, .12, .035); // Glitzer-Melodie
+  const im = s % 16, takt = Math.floor(s / 16), akk = BWM_AKKORDE[takt % 4], voll = BWM.stufe >= 2, fill = takt === 7 && im >= 8;
+  if (im % 4 === 0) { const o = bwTon("sine", 140, t, .26, 1); o.frequency.exponentialRampToValueAtTime(44, t + .18); } // Bass-Trommel auf jeden Schlag
+  bwRauschen(t, im % 4 === 2 ? .13 : .035, im % 4 === 2 ? .16 : .05, 8000, "highpass"); // Hi-Hats: 16tel, offen auf dem Off-Beat
+  if (voll && (im === 4 || im === 12)) { bwRauschen(t, .16, .4, 1500, "bandpass"); bwTon("triangle", 190, t, .09, .25); } // Klatschen auf 2 und 4
+  if (fill) bwRauschen(t, .08, .1 + (im - 8) * .04, 1800, "bandpass"); // Trommelwirbel am Ende von 8 Takten
+  if (im % 2 === 0) bwTon("sawtooth", bwHz(BWM_BASS[takt % 4] + (im % 4 === 2 ? 12 : 0)), t, .16, .22, 700); // Disco-Bass (Oktaven)
+  if (im === 0) akk.forEach((m) => bwTon("sawtooth", bwHz(m - 12), t, 1.7, .025, 900)); // Fläche
+  if (voll && im % 4 === 2) akk.forEach((m) => bwTon("square", bwHz(m), t, .14, .035, 2400)); // Akkord-Stöße auf dem Off-Beat
+  if (voll && takt % 4 < 2) { const n = BWM_HOOK[(takt % 2) * 16 + im]; if (n) bwTon("square", bwHz(n), t, .22, .06, 3200, true); } // Hook-Melodie mit Echo
+  if (voll && takt % 4 >= 2 && im % 2 === 0) bwTon("triangle", bwHz(akk[(im / 2) % 3] + 24), t, .1, .03, 0, true); // Glitzer-Arpeggio
 }
 // ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0, Wunsch Hansi): Jahreszeiten im Kopf mit Boden ----------
 // 🍂 Herbst: Laub fällt und bleibt unten liegen; liegt genug, kommt ein Windstoß (abwechselnd von links und von rechts) und weht es weg.

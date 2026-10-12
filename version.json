@@ -1,13 +1,22 @@
 {
-  "version": "2.293.0",
+  "version": "2.294.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🎭 Neu auf der Rückseite des Kopfes: die Bühne für Bewegung – Vorhang auf!",
-    "🤸 Twinkey mit Schweißstirnband macht vor: im Sitzen, im Stehen oder mit Küchenhelfern (Schneebesen, Kochlöffel, Nudelholz, Flaschen, Topfdeckel, Geschirrtuch)",
-    "🎵 Mit Musik und Trainer-Ansagen: „Jetzt andersherum!“ – „noch 3, noch 2, noch 1 – und ausschütteln!“"
+    "🤸 Bühne: Twinkey bewegt sich jetzt natürlich – mit Ellbogen und Knien, im Takt der Musik, mit Nachschwingen",
+    "👟 Rote Turnschuhe mit weißen Streifen · 🥣 Rührschüssel, Topf und Nudelholz mit beiden Händen",
+    "🎵 Neue Musik zum Mitmachen (Melodie, Disco-Bass, Trommelwirbel, Becken auf „Los!“) und viele neue Sprüche – mit Einzählen „fünf, sechs, sieben, acht“ und Sprechblase"
   ],
   "verlauf": [
+    {
+      "version": "2.294.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🤸 Bühne: Twinkey bewegt sich jetzt natürlich – mit Ellbogen und Knien, im Takt der Musik, mit Nachschwingen",
+        "👟 Rote Turnschuhe mit weißen Streifen · 🥣 Rührschüssel, Topf und Nudelholz mit beiden Händen",
+        "🎵 Neue Musik zum Mitmachen (Melodie, Disco-Bass, Trommelwirbel, Becken auf „Los!“) und viele neue Sprüche – mit Einzählen „fünf, sechs, sieben, acht“ und Sprechblase"
+      ]
+    },
     {
       "version": "2.293.0",
       "datum": "2026-10-12",

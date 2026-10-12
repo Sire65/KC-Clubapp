@@ -8662,13 +8662,28 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-BEWEGUNGSBUEHNE (2.293.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
   assert.ok(b.length > 4000 && /\["buehne", "🎭", "Bühne"\]/.test(html) && /else if \(k === "buehne"\) esBuehneZeigen\(f\);/.test(html), "vierter Reiter Bühne");
-  assert.ok(/\.replace\(\/<g class="fi-muetze">\[\\s\\S\]\*\?<\\\/g>\/, band\)/.test(b), "Schweißstirnband statt Kochmütze");
+  assert.ok(/fill="#e03131"\/>\s*<rect x="\$\{x - 9\.2\}"/.test(b) && /class="bw-schweiss"/.test(b) && !/fi-muetze/.test(b), "Schweißstirnband statt Kochmütze, rote Turnschuhe (2.294.0)");
   for (const g of ["sitzen", "stehen", "kueche"]) assert.ok(new RegExp(`g: "${g}"`).test(b), "Übungen " + g);
   for (const h of ["schneebesen", "loeffel", "nudelholz", "flasche", "deckel", "tuch"]) assert.ok(new RegExp(`\\b${h}: \\(x, y\\) =>`).test(b), "Küchenhelfer " + h);
-  assert.ok(/L\.rest === 3 \? "Noch 3" : L\.rest === 2 \? "noch 2" : "noch 1"/.test(b) && /"Und jetzt ausschütteln!"/.test(b) && /bwSag\(u\.w \|\| BW_LOB/.test(b), "Trainer-Ansagen: Seitenwechsel/Lob, noch 3-2-1, ausschütteln");
+  assert.ok(/L\.rest === 3 \? "Noch 3" : L\.rest === 2 \? "noch 2" : "noch 1"/.test(b) && /"Und jetzt ausschütteln!"/.test(b) && /bwSag\(u\.w \|\| (u\.c\?\.\[1\] \|\| )?BW_LOB/.test(b), "Trainer-Ansagen: Seitenwechsel/Lob, noch 3-2-1, ausschütteln");
   assert.ok(/if \(!esSichtbar\(\)\) \{ if \(!L\.pause\) \{ L\.pause = true; bwMusik\(false\);/.test(b) && /if \(BW\.lauf \|\| BWM\.laeuft\) bwStopp\(\);/.test(html), "nur sichtbar – sonst Pause; Umdrehen/Reiterwechsel stoppt Musik und Ansage");
   assert.ok(/window\.AudioContext \|\| window\.webkitAudioContext/.test(b) && !/new Audio\(|\.mp3|https?:\/\//.test(b), "Musik im Handy erzeugt – keine Datei, kein Internet");
   assert.ok(!/\bapi\(/.test(b), "nichts wird gespeichert oder gesendet");
   assert.ok(/fiLs\(FI_HINWEIS_KEY, false\)/.test(b), "Gesundheitshinweis wie bei Fit bleiben");
   assert.ok(!/\|\|=|\?\?=/.test(b), "keine Kurzschreibweisen, die alte Handys nicht kennen");
 }
+
+// 2.294.0 KC-CLUB-BEWEGUNGSBUEHNE-2 (Wunsch Hansi): natürlichere Bewegungen (Gelenke, im Takt), rote Turnschuhe mit Streifen, bessere Musik, mehr Sprüche
+{
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-BEWEGUNGSBUEHNE (2.293.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  assert.ok(/class="bw-oa\$\{s\}"[\s\S]{0,200}class="bw-ua\$\{s\}"/.test(b) && /class="bw-ob\$\{s\}"[\s\S]{0,200}class="bw-ub\$\{s\}"/.test(b), "Gliederpuppe: Schulter→Ellbogen, Hüfte→Knie");
+  assert.ok(/const bwSchuh = /.test(b) && /stroke="#fff" stroke-width="1\.15"/.test(b), "rote Turnschuhe mit drei weißen Streifen");
+  for (const a of ["armkreis", "schulter", "marsch", "kneten", "bein", "seitheben", "hochdruecken", "klatschen", "trommeln", "ruehren", "seitbeuge", "rollen", "hochhalten", "strecken", "seit", "knie", "zehen", "rumpf", "nacken", "schuetteln", "jubel", "winken", "ruhe"])
+    assert.ok(new RegExp(`\\.bw-figur\\.bw-a-${a}[ {]`).test(html), "Bewegung " + a);
+  assert.ok(/animation: bw\w+ calc\(var\(--b\) \* [\d.]+\)/.test(html) && /style="--b:\$\{b \|\| \.5\}s;--ph:\$\{ph \|\| 0\}s"/.test(b) && /function bwPhase\(\)/.test(b), "Bewegung im Takt der Musik (Dauer in Schlägen, Start auf dem Schlag)");
+  assert.ok(/const BW_TEMPO = \{ sitzen: 112, stehen: 120, kueche: 116 \}/.test(b), "Tempo wie in Seniorenkursen");
+  assert.ok(/BWM_HOOK/.test(b) && /function bwRiser\(/.test(b) && /BWM\.becken = true/.test(b) && /fill = takt === 7/.test(b), "Musik: Hook, Riser, Becken, Fill");
+  assert.ok(/"Und fünf, sechs, sieben, acht!"/.test(b) && BW_LOB_ANZAHL(b) >= 12 && /c: \[/.test(b) && /id="bwSprech"/.test(b), "Einzählen, viele Sprüche, eigene je Übung, Sprechblase");
+  assert.ok(!/\bapi\(/.test(b) && !/\|\|=|\?\?=/.test(b), "nichts gesendet, alte Handys");
+}
+function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); return m ? (m[1].match(/"/g) || []).length / 2 : 0; }
