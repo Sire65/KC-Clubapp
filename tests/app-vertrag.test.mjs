@@ -5826,7 +5826,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.280.0 KC-CLUB-SCHMELZTROPFEN (Wunsch Hansi): beim Schmelzen rinnen blaue Wassertropfen am Schneemann herunter in die Pfütze
 {
-  assert.ok(/function jzbSchmelzTropfen\(dt\)/.test(html) && /jzbSchmelzTropfen\(dt\);\n    if \(J\.pt >= JZB_SONNE \+ JZB_SCHMELZ\)/.test(html), "Tropfen nur während des Schmelzens");
+  assert.ok(/function jzbSchmelzTropfen\(dt\)/.test(html) && /jzbSchmelzTropfen\(dt\);\n    (if \(J\.pt >= JZB_SONNE \+ JZB_SCHMELZ && J\.iglu\)[^\n]*\n    else )?if \(J\.pt >= JZB_SONNE \+ JZB_SCHMELZ\)/.test(html), "Tropfen nur während des Schmelzens");
   assert.ok(/if \(p\.typ === "schmelz"\)/.test(html) && /function jzbTropfenMalen\(c, p\)/.test(html) && /c\.fillStyle = "#4aa3f0"/.test(html), "blauer Tropfen mit Spur, rinnt nach unten");
   assert.ok(/if \(p\.y >= J\.h - 2\) \{ p\.y = J\.h - 2; p\.a -= dt \* 2\.5;/.test(html), "unten läuft er in die Pfütze und vergeht – der Lauf endet sicher");
 }
@@ -5845,7 +5845,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const dir = J\.schlittenDir = J\.schlittenDir === 1 \? -1 : 1;/.test(html), "Schlitten abwechselnd von links und von rechts");
   assert.ok(/function jzbKind\(c, f, sitzt, opt = \{\}\)/.test(html) && /\/\/ Bommelmütze/.test(html) && /\/\/ Schal: um den Hals, zwei Enden flattern nach hinten/.test(html), "Kinder mit Bommelmütze und wehendem Schal");
   assert.ok(/function jzbBallspielStart\(\)/.test(html) && /c\.wurf = \.35; S\.baelle\.push/.test(html), "Schneeballschlacht mit Würfen im Bogen");
-  assert.ok(/J\.kinderArt = J\.kinderArt === "schlitten" \? "ball" : "schlitten"/.test(html) && /if \(jzbSchneeMittel\(\) < 3 \* k \|\| J\.phase === "wind" \|\| J\.phase === "schmelzen"\) J\.kinderUhr = 5;/.test(html), "nur bei Schnee, abwechselnd, nie beides zugleich");
+  assert.ok(/J\.kinderArt = J\.kinderArt === "schlitten" \? "ball" : (J\.kinderArt === "ball" \? "husky" : )?"schlitten"/.test(html) && /if \(jzbSchneeMittel\(\) < 3 \* k \|\| J\.phase === "wind" \|\| J\.phase === "schmelzen"\) J\.kinderUhr = 5;/.test(html), "nur bei Schnee, abwechselnd, nie beides zugleich");
 }
 // 2.283.0 KC-CLUB-WINTER-KINDER-2 (Wunsch Hansi): Mütze und Schal je Kind verschiedenfarbig, Tropfen öfter und nur von den langen Zapfen
 {
@@ -6033,6 +6033,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/N\.gelandet\[N\.n\] = J\.T; N\.n\+\+;/.test(html) && /const jzbEisNameText = \(\) => String\(ICH\?\.vorname/.test(html), "Buchstabe für Buchstabe der angemeldete Name");
   assert.ok(/if \(N && N\.n && \(J\.sonne \|\| N\.schmelz > 0\)\)/.test(html) && /J\.eisName = null; J\.eisStueck = null;/.test(html), "Sonne lässt den Namen schmelzen, danach von vorn");
   assert.ok(/jzbEisNameSchritt\(dt\); \/\/ 2\.319\.0/.test(html) && /jzbEisNameMalen\(c\); \/\/ 2\.319\.0/.test(html) && /\.jz-eis \.jz-eisstueck \{/.test(lies("index.html")), "eingebunden + Stil");
+}
+// 2.320.0 KC-CLUB-WINTER-IGLU + KC-CLUB-WINTER-HUSKY (Wunsch Hansi): Huskygespann ab und an, abwechselnd Schneemann / Iglu, Sonne lässt alles schmelzen
+{
+  assert.ok(/\(Math\.floor\(J\.lauf \/ 3\) % 2 \? jzbIgluStart : jzbSchneemannStart\)\(\)/.test(html), "abwechselnd Schneemann und Iglu");
+  assert.ok(/J\.kinderArt === "ball" \? "husky" : "schlitten"\) === "husky"\) jzbHuskyStart\(\);/.test(html) && /function jzbHuskyStart\(iglu\)/.test(html), "ab und an ein Hundegespann");
+  assert.ok(/if \(!H && t > 5\) jzbHuskyStart\(true\);/.test(html) && /H\.fahrer\.sichtbar = false; I\.drin\+\+;/.test(html), "Schlittenmann kommt heim und geht ins Iglu");
+  assert.ok(/m = J\.mann \|\| J\.iglu, k = J\.k; if \(!m\) return;/.test(html) && /if \(J\.pt >= JZB_SONNE \+ JZB_SCHMELZ && J\.iglu\)/.test(html), "Sonne auch über dem Iglu, Iglu schmilzt");
+  assert.ok(/H\.gast = true;/.test(html) && /H\.dir = I\.blick;/.test(html), "bei Sonne fahren beide davon");
+  assert.ok(/if \(J\.iglu\) jzbIgluMalen\(c\);/.test(html) && /jzbIgluLeuteMalen\(c\);/.test(html) && /J\.mann = null; J\.iglu = null; J\.sonne = null;/.test(html), "gemalt und beim Laufende aufgeräumt");
+  assert.ok(/!J\.mann && !J\.iglu && !J\.husky && \(J\.phase/.test(html), "Piste nicht gleichzeitig");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -8647,7 +8657,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(b.length > 1000, "Bühne vorhanden");
   assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
   assert.ok(/J\.wind = \{ dir: \(J\.lauf >> 1\) % 2 \? -1 : 1/.test(b), "Windstoß abwechselnd von links und rechts (2.259.0: über die Wind-Läufe, dazwischen Twinkey)");
-  assert.ok(/if \(J\.lauf % 3 === 2\) jzbSchneemannStart\(\); else (if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else )?jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (Advent mit Weihnachtsmütze)");
+  assert.ok(/if \(J\.lauf % 3 === 2\) (jzbSchneemannStart|\(Math\.floor\(J\.lauf \/ 3\) % 2 \? jzbIgluStart : jzbSchneemannStart\))\(\); else (if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else )?jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (ab 2.320.0 abwechselnd mit dem Iglu; Advent mit Weihnachtsmütze)");
   assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!fxAn\(\) \|\| !einst\("jahreszeit", true\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");
   assert.ok(/\.jz-buehne canvas \{ position: absolute; inset: 0;/.test(seite) && /jahreszeitVorschau\('winter'\)/.test(seite), "Canvas im Kopf, Vorschau in den Einstellungen");
 }
@@ -9029,7 +9039,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // 2.318.0 KC-CLUB-WINTER-PISTE: Schneeraupe, Skifahrer, Kinder mit Armen
 {
   assert.ok(/function jzbPiste\(dt\)/.test(html) && /function jzbRaupeMalen\(/.test(html) && /function jzbSkiMalen\(/.test(html) && /jzbPisteMalen\(c\);/.test(html), "Raupe und Skifahrer");
-  assert.ok(/!J\.schlitten && !J\.ballspiel && !J\.raupe && !J\.ski && \(J\.kinderUhr/.test(html), "Kinder nicht zugleich mit der Piste");
+  assert.ok(/!J\.schlitten && !J\.ballspiel && !J\.raupe && !J\.ski && (!J\.husky && !J\.iglu && )?\(J\.kinderUhr/.test(html), "Kinder nicht zugleich mit der Piste");
   assert.ok(/J\.skiUhr = J\.extra === "raupe" \? 4 : jzbZ\(120, 200\)/.test(html), "Skifahrer ein paar Minuten nach der Raupe");
   assert.ok(/arm\(aH, false\)/.test(html) && /const hand = arm\(aV, true\)/.test(html) && /ausholen: !ki\.wurf/.test(html), "Kinder mit Armen und Ausholen");
   assert.ok(/raupe: null, raupeUhr: undefined, ski: null, skiUhr: null, rillen: null/.test(html), "zurückgesetzt beim Neustart");

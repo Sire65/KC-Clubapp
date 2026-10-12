@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.320.0 – 2026-10-12 – Winter: Iglu, Eskimo und Huskies
+Ab und an fährt ein Hundeschlitten mit vier Huskies vorbei. Abwechselnd mit dem Schneemann baut ein Eskimo Block für Block ein Iglu und geht hinein; dann kommt der Schlittenmann mit seinen Huskies heim – er wohnt dort – und im Eingang geht Licht an. Kommt die Sonne, fahren beide mit dem Gespann davon, und das Iglu schmilzt – wie der Schneemann und der Eis-Name.
+
 ## 2.319.0 – 2026-10-12 – Online-Ansage nachholen, Name aus Glitzer-Eis
 Kommt jemand online, während deine App gerade zu ist, sagt sie beim Zurückkommen trotzdem an, wer in den letzten 3 Minuten dazugekommen ist. Im Winter fällt ab und an vom größten Eiszapfen ein Eisstück taumelnd herunter – unten wird daraus Buchstabe für Buchstabe dein Vorname aus Glitzer-Eis. Kommt die Sonne zum Schneemann, schmilzt der Name, und es geht von vorn los.
 

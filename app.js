@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.319.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.320.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2156,7 +2156,7 @@ const RG_EFFEKTE = [
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("herbst", "twinkey", (J) => J.phase === "besuch", 180); if (JZB.cv && JZB.phase === "fallen") jzbBesuchStart("fegen"); }, sel: ["#v-start .hero"], t: "🧹 Wind oder Twinkey",
     x: "Liegt genug Laub, kommt ein Windstoß – mal von links, mal von rechts – und weht es weg. Oder Twinkey kommt mit dem Besen vorbei, fegt und sagt einen Spruch. Schau mal." },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("winter", "", (J) => J.phase === "stehen", 150); }, sel: ["#v-start .hero"], t: "⛄ Winter",
-    x: "Im Winter fällt Schnee und bleibt liegen. Jedes dritte Mal wird daraus ein lachender Schneemann – mit Kochmütze und weinrotem Schal, im Advent mit Weihnachtsmütze. Nach einer Weile geht links die Sonne auf und er schmilzt – Wassertropfen rinnen herunter, nur sein Schal bleibt liegen, bis ihn der Wind mit dem Schnee davonwirbelt. Sonst kommt gleich der Wind, oder Twinkey schippt den Schnee beiseite. Ab und zu sausen zwei Kinder mit Bommelmützen auf dem Schlitten vorbei, oder ein paar Kinder machen eine Schneeballschlacht und werfen sich Schneebälle zu. Ab und an glättet eine rote Schneeraupe mit Blinklicht die Schneehügel, und ein paar Minuten später wedeln zwei Skifahrer in bunten Anzügen über die frische Piste. Im tiefen Winter hängen dazu Eiszapfen an der Leiste mit den Lämpchen – ab und an tropft es, und unten bildet sich langsam eine Pfütze." },
+    x: "Im Winter fällt Schnee und bleibt liegen. Jedes dritte Mal wird daraus ein lachender Schneemann – mit Kochmütze und weinrotem Schal, im Advent mit Weihnachtsmütze. Nach einer Weile geht links die Sonne auf und er schmilzt – Wassertropfen rinnen herunter, nur sein Schal bleibt liegen, bis ihn der Wind mit dem Schnee davonwirbelt. Abwechselnd mit dem Schneemann baut ein Eskimo Block für Block ein Iglu und geht hinein; dann kommt der Schlittenmann mit seinen Huskies heim – er wohnt dort. Kommt die Sonne, fahren beide mit dem Gespann davon, und das Iglu schmilzt. Sonst kommt gleich der Wind, oder Twinkey schippt den Schnee beiseite. Ab und zu fährt ein Hundeschlitten mit Huskies vorbei, oder es sausen zwei Kinder mit Bommelmützen auf dem Schlitten vorbei, oder ein paar Kinder machen eine Schneeballschlacht und werfen sich Schneebälle zu. Ab und an glättet eine rote Schneeraupe mit Blinklicht die Schneehügel, und ein paar Minuten später wedeln zwei Skifahrer in bunten Anzügen über die frische Piste. Im tiefen Winter hängen dazu Eiszapfen an der Leiste mit den Lämpchen – ab und an tropft es, und unten bildet sich langsam eine Pfütze." },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("fruehling", "", (J) => J.pt > 26); }, sel: ["#v-start .hero"], t: "🌱 Frühling",
     x: "Im Frühling wächst Gras mit den ersten Blumen, Blüten schweben herab und Schmetterlinge fliegen vorbei. Zu Ostern liegen bunte Eier im Gras – tippst du eins an, schlüpft ein Küken." },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("sommer", "", (J) => !!J.besuch && J.besuch.x > 0 && J.besuch.x < J.w); }, sel: ["#v-start .hero"], t: "🌻 Sommer",
@@ -13945,7 +13945,7 @@ function jzbBild(ts) {
 function jzbPhase(p) { JZB.phase = p; JZB.pt = 0; }
 function jzbLaufEnde() {
   const J = JZB; J.lauf++; if (!J.vorschau) try { localStorage.setItem("kc_club_jzLauf", String(J.lauf)); } catch {}
-  J.boden.fill(0); J.liegt = []; J.mann = null; J.sonne = null; J.wind = null; J.besuch = null; J.gegossen = false; J.welk = 0; J.halme = []; J.blumen = []; J.gaeste = J.gaeste.filter((g) => g.typ === "falter");
+  J.boden.fill(0); J.liegt = []; J.mann = null; J.iglu = null; J.sonne = null; J.wind = null; J.besuch = null; J.gegossen = false; J.welk = 0; J.halme = []; J.blumen = []; J.gaeste = J.gaeste.filter((g) => g.typ === "falter");
   jzbPhase("anfang");
 }
 // Windstoß: abwechselnd von links (dir 1) und von rechts (dir -1); die Front zieht über den Kopf und nimmt mit, was liegt
@@ -14065,7 +14065,7 @@ function jzbWinter(dt) {
   if (J.sonne) J.sonne.t += dt;
   const innen = B.slice(Math.ceil(JZB_RAND / JZB_SP), Math.floor((J.w - JZB_RAND) / JZB_SP)), schnitt = innen.reduce((a, b) => a + b, 0) / Math.max(1, innen.length);
   if (J.phase === "fallen" && schnitt >= 9 * J.k) {
-    if (J.lauf % 3 === 2) jzbSchneemannStart(); else if (J.lauf % 2) jzbBesuchStart("schippen"); else jzbWindStart();
+    if (J.lauf % 3 === 2) (Math.floor(J.lauf / 3) % 2 ? jzbIgluStart : jzbSchneemannStart)(); else if (J.lauf % 2) jzbBesuchStart("schippen"); else jzbWindStart(); // 2.320.0: abwechselnd Schneemann / Iglu
   } else if (J.phase === "bauen" || J.phase === "stehen") {
     if (J.phase === "bauen") { for (let i = 0; i < n; i++) B[i] -= B[i] * .07 * dt; if (J.pt >= 8) { jzbPhase("stehen"); jzbFunken(); } } // Schnee wird zum Schneemann gerollt
     else { for (let i = 0; i < n; i++) B[i] = Math.min(B[i], 9 * J.k); if (J.pt >= 50) { jzbSonneStart(); jzbPhase("schmelzen"); } }
@@ -14073,7 +14073,8 @@ function jzbWinter(dt) {
     if (!J.besuch && B.every((v) => v < .3) && !J.fx.length) { if ((J.spawn -= dt) < -1.5) jzbLaufEnde(); }
   } else if (J.phase === "schmelzen") {
     jzbSchmelzTropfen(dt);
-    if (J.pt >= JZB_SONNE + JZB_SCHMELZ) { // nur der Schal bleibt liegen – der Wind nimmt ihn mit
+    if (J.pt >= JZB_SONNE + JZB_SCHMELZ && J.iglu) { const I = J.iglu; J.iglu = null; jzbWindStart(6); J.wind.dir = I.x < J.w / 2 ? 1 : -1; } // 2.320.0: Iglu ist geschmolzen
+    else if (J.pt >= JZB_SONNE + JZB_SCHMELZ) { // nur der Schal bleibt liegen – der Wind nimmt ihn mit
       const m = J.mann; J.mann = null; if (m) J.fx.push({ typ: "schal", x: m.x, y: J.h - 3, vx: 0, vy: 0, rot: 0, t: 0, a: 1 });
       jzbWindStart(6); if (m) J.wind.dir = m.x < J.w / 2 ? 1 : -1; // Wind weht zur freien Seite – der Schal fliegt quer über den Kopf
     }
@@ -14090,7 +14091,7 @@ function jzbWinter(dt) {
 // Schneemann – er schmilzt, nur sein weinroter Schal bleibt liegen; der Wind wirbelt ihn dann mit dem Schnee davon.
 const JZB_SONNE = 2.6, JZB_SCHMELZ = 6.5; // Sekunden: Sonne geht auf, dann schmilzt der Schneemann
 function jzbSonneStart() {
-  const J = JZB, m = J.mann, k = J.k; if (!m) return;
+  const J = JZB, m = J.mann || J.iglu, k = J.k; if (!m) return; // 2.320.0: auch über dem Iglu
   J.sonne = { t: 0, zx: Math.max(18 * k, m.x - 26 * k), zy: Math.max(18 * k, J.h - 84 * k) };
 }
 function jzbSonneMalen(c) {
@@ -14142,7 +14143,7 @@ function jzbSchmelzTropfen(dt) {
   J.fx.push({ typ: "schmelz", x, y, x0: x, v: jzbZ(8, 18), s: jzbZ(1.8, 2.7) * k, spur: 0, a: 1, ph: jzbZ(0, 6.3) });
 }
 function jzbSchneemannStart() {
-  const J = JZB, links = Math.floor(J.lauf / 3) % 2 === 0, r = 24 * J.k;
+  const J = JZB, links = Math.floor(J.lauf / 6) % 2 === 0, r = 24 * J.k; // 2.320.0: /6 – Schneemann und Iglu wechseln sich ab, die Seite wechselt trotzdem
   J.mann = { x: links ? JZB_RAND + r + 8 : J.w - JZB_RAND - r - 8, blick: links ? 1 : -1, muetze: J.art === "advent" ? "weihnacht" : "koch" };
   jzbPhase("bauen");
 }
@@ -14218,6 +14219,7 @@ function jzbMalen() {
   if (J.saison === "fruehling" || J.saison === "sommer") jzbBeetMalen(c);
   if (J.saison === "winter") jzbSchneeMalen(c);
   for (const b of J.liegt) { const w = b.wackel ? Math.sin(J.T * 30) * .5 * b.wackel : 0; jzbBlatt(c, b.x, J.h - b.yb - Math.abs(w) * 3, b.s, b.rot + w, 1, .65, b.farbe, b.form); } // raschelt beim Igel
+  if (J.iglu) jzbIgluMalen(c); // 2.320.0 KC-CLUB-WINTER-IGLU – vor den Figuren (die laufen davor)
   jzbExtrasBoden(c);
   if (J.mann) jzbSchneemannMalen(c);
   jzbTwinkeyMalen(c);
@@ -14548,6 +14550,124 @@ function jzbEisNameMalen(c) {
     c.restore();
   }
 }
+// ---------- 2.320.0 KC-CLUB-WINTER-IGLU + KC-CLUB-WINTER-HUSKY (Wunsch Hansi): ab und an fährt ein Hundeschlitten mit Huskies vorbei.
+// Abwechselnd mit dem Schneemann baut ein Eskimo Block für Block ein Iglu und geht hinein; dann kommt der Schlittenmann mit seinen Huskies
+// heim – er wohnt dort – und geht auch hinein (Licht im Eingang). Kommt die Sonne, kommen beide heraus, fahren mit dem Gespann davon,
+// und das Iglu schmilzt (wie der Schneemann und der Eis-Name). Nur Winter, nur auf der Bühne, nichts geht an den Server. ----------
+const JZB_IGLU_R = 25, JZB_HUND_ABST = 15, JZB_HUNDE = 4;
+function jzbIgluStart() {
+  const J = JZB, k = J.k, links = Math.floor(J.lauf / 6) % 2 === 0, R = JZB_IGLU_R * k;
+  const x = links ? JZB_RAND + R + 6 : J.w - JZB_RAND - R - 6, blick = links ? 1 : -1;
+  J.iglu = { x, blick, R, eingang: x + blick * (R + 6 * k), drin: 0, licht: 0,
+    bauer: { x: x + blick * (R + 14 * k), dir: -blick, geht: 0, sichtbar: true, farbe: ["#b5651d", "#e8d9b5"] } };
+  jzbPhase("bauen");
+}
+function jzbHuskyStart(iglu) { // Gespann fährt quer durchs Bild – beim Iglu hält es an
+  const J = JZB, k = J.k, I = J.iglu, dir = iglu && I ? -I.blick : (J.huskyDir = J.huskyDir === 1 ? -1 : 1);
+  const vorne = (22 + (JZB_HUNDE - 1) * JZB_HUND_ABST + 8) * k; // Hunde liegen vor dem Schlitten
+  J.husky = { dir, x: dir > 0 ? -vorne - 30 * k : J.w + vorne + 30 * k, v: 92 * k, t: 0, halt: iglu && I ? I.eingang - I.blick * 0 + (-dir) * (vorne + 6 * k) : null, steht: false,
+    fahrer: { sichtbar: true, x: 0, geht: 0 }, gast: false, f: ["#2f6fd6", "#e8d9b5"] };
+}
+function jzbIgluSchritt(dt) {
+  const J = JZB, I = J.iglu, k = J.k; if (!I) return;
+  const B = I.bauer, ph = J.phase, t = J.pt, H = J.husky;
+  const gehe = (p, ziel, v) => { const d = ziel - p.x; if (Math.abs(d) < 1) { p.x = ziel; p.geht = 0; return true; } p.dir = Math.sign(d); p.x += Math.sign(d) * Math.min(Math.abs(d), v * dt); p.geht += dt; return false; };
+  if (ph === "stehen") {
+    if (B.sichtbar && t > 1 && gehe(B, I.eingang, 34 * k)) { B.sichtbar = false; I.drin++; } // Eskimo geht ins Iglu
+    if (!H && t > 5) jzbHuskyStart(true); // der Schlittenmann kommt heim
+    if (H && H.steht && H.fahrer.sichtbar && (H.steht += dt) > .8 && gehe(H.fahrer, I.eingang, 34 * k)) { H.fahrer.sichtbar = false; I.drin++; }
+  } else if (ph === "schmelzen") {
+    if (t > .4 && I.drin) { I.drin = 0; B.sichtbar = true; B.x = I.eingang; if (H) { H.fahrer.sichtbar = true; H.fahrer.x = I.eingang; } } // die Sonne lockt beide heraus
+    if (H && H.steht && !I.drin) {
+      const ok1 = !B.sichtbar || gehe(B, H.x, 34 * k), ok2 = gehe(H.fahrer, H.x, 34 * k);
+      if (ok1 && B.sichtbar) { B.sichtbar = false; H.gast = true; } // setzt sich in den Schlitten
+      if (ok2 && !B.sichtbar && t > 1.5) { H.steht = false; H.halt = null; H.dir = I.blick; H.t = 0; } // und los – vom schmelzenden Iglu weg
+    }
+  }
+  I.licht += ((I.drin ? 1 : 0) - I.licht) * Math.min(1, dt * 2);
+}
+function jzbHuskySchritt(dt) {
+  const J = JZB, H = J.husky, k = J.k; if (!H) return;
+  H.t += dt;
+  if (H.halt !== null && !H.steht) { // abbremsen bis zum Halt
+    const d = (H.halt - H.x) * H.dir; if (d <= 0) { H.x = H.halt; H.steht = .001; H.fahrer.x = H.x - H.dir * 11 * k; H.fahrer.dir = H.dir; } else H.x += H.dir * Math.min(d, Math.max(18 * k, Math.min(H.v, d * 1.6)) * dt);
+  } else if (!H.steht) H.x += H.dir * H.v * dt;
+  if (!H.steht && Math.random() < dt * 10) J.fx.push({ typ: "flocke", x: H.x - H.dir * 6 * k, y: jzbGrund(H.x) - 1, r: jzbZ(.7, 1.6), vx: -H.dir * jzbZ(15, 45), vy: -jzbZ(15, 40), a: 1, blass: 1.3 }); // Schneestaub
+  const vorne = (22 + (JZB_HUNDE - 1) * JZB_HUND_ABST + 8) * k;
+  if (!H.steht && (H.x < -vorne - 40 * k || H.x > J.w + vorne + 40 * k) && H.t > 1) { J.husky = null; J.kinderUhr = jzbZ(40, 80); }
+}
+function jzbFigurMalen(c, x, gy, dir, geht, f, k, arm) { // Eskimo / Schlittenmann im Pelz-Anorak mit Kapuze
+  const s = Math.sin(geht * 12) * (geht ? 2.2 : 0) * k;
+  c.save(); c.lineCap = "round";
+  c.strokeStyle = "#3b2a1e"; c.lineWidth = 3 * k; // Stiefel
+  c.beginPath(); c.moveTo(x - 2 * k, gy - 7 * k); c.lineTo(x - 2 * k + s, gy - 1); c.moveTo(x + 2 * k, gy - 7 * k); c.lineTo(x + 2 * k - s, gy - 1); c.stroke();
+  c.fillStyle = f[0]; c.beginPath(); c.moveTo(x - 6 * k, gy - 6 * k); c.quadraticCurveTo(x - 6.5 * k, gy - 19 * k, x, gy - 20 * k); c.quadraticCurveTo(x + 6.5 * k, gy - 19 * k, x + 6 * k, gy - 6 * k); c.closePath(); c.fill(); // Anorak
+  c.fillStyle = f[1]; c.fillRect(x - 6.2 * k, gy - 7.6 * k, 12.4 * k, 2.2 * k); // Pelzsaum
+  const ax = x + dir * 5 * k, ay = gy - 15 * k, aw = arm ?? .9; c.strokeStyle = f[0]; c.lineWidth = 2.8 * k; // Arm
+  c.beginPath(); c.moveTo(x + dir * 3 * k, ay); c.lineTo(ax + dir * Math.cos(aw) * 5 * k, ay + Math.sin(aw) * 5 * k); c.stroke();
+  c.fillStyle = f[1]; c.beginPath(); c.arc(x, gy - 23 * k, 5.6 * k, 0, 7); c.fill(); // Kapuze mit Pelz
+  c.fillStyle = "#e0a878"; c.beginPath(); c.arc(x + dir * .6 * k, gy - 23 * k, 3.6 * k, 0, 7); c.fill(); // Gesicht
+  c.fillStyle = "#2b2b2b"; c.beginPath(); c.arc(x + dir * 1.8 * k, gy - 23.6 * k, .55 * k, 0, 7); c.fill(); c.beginPath(); c.arc(x - dir * .4 * k, gy - 23.6 * k, .55 * k, 0, 7); c.fill();
+  c.strokeStyle = "#8a3b2b"; c.lineWidth = .7 * k; c.beginPath(); c.arc(x + dir * .7 * k, gy - 22.4 * k, 1.2 * k, .2, Math.PI - .2); c.stroke(); // Lächeln
+  c.restore();
+}
+function jzbHundMalen(c, x, gy, dir, lauf, k, liegt) { // Husky von der Seite: grau mit weißem Bauch, Spitzohren, Ringelschwanz
+  c.save(); c.translate(x, gy); c.scale(dir * k, k); c.lineCap = "round";
+  const p = lauf * 14, b = liegt ? 0 : Math.sin(p) * 1.2;
+  if (!liegt) { c.strokeStyle = "#5d6670"; c.lineWidth = 1.8; for (const [lx, o] of [[-4.5, 0], [-3, Math.PI], [3.5, Math.PI], [5, 0]]) { const w = Math.sin(p + o) * 2.6; c.beginPath(); c.moveTo(lx, -5 + b); c.lineTo(lx + w, -.5); c.stroke(); } }
+  const y = liegt ? -2.6 : -6.5 + b;
+  c.strokeStyle = "#5d6670"; c.lineWidth = 1.8; c.beginPath(); c.arc(-7.5, y - 2.5, 2.6, Math.PI * .4, Math.PI * 1.7 + (liegt ? Math.sin(JZB.T * 9) * .3 : 0)); c.stroke(); // Ringelschwanz
+  c.fillStyle = "#7f8a95"; c.beginPath(); c.ellipse(0, y, 7.5, 3.6, 0, 0, 7); c.fill();
+  c.fillStyle = "#f2f4f6"; c.beginPath(); c.ellipse(.5, y + 1.6, 5.2, 1.8, 0, 0, 7); c.fill();
+  const hx = 7.2, hy = y - (liegt ? 1.5 : 3.2); c.fillStyle = "#7f8a95"; c.beginPath(); c.arc(hx, hy, 3, 0, 7); c.fill(); // Kopf
+  c.beginPath(); c.moveTo(hx - 2, hy - 2); c.lineTo(hx - 1.2, hy - 5.4); c.lineTo(hx + .2, hy - 2.4); c.moveTo(hx + .4, hy - 2.4); c.lineTo(hx + 1.6, hy - 5.4); c.lineTo(hx + 2.4, hy - 1.8); c.fill(); // Ohren
+  c.fillStyle = "#f2f4f6"; c.beginPath(); c.ellipse(hx + 2.2, hy + 1, 2.2, 1.4, 0, 0, 7); c.fill(); // Schnauze hell
+  c.fillStyle = "#222"; c.beginPath(); c.arc(hx + 4.2, hy + .6, .7, 0, 7); c.fill(); c.beginPath(); c.arc(hx + 1, hy - .6, .55, 0, 7); c.fill(); // Nase, Auge
+  c.strokeStyle = "#c62828"; c.lineWidth = 1; c.beginPath(); c.moveTo(4.5, y - 3); c.lineTo(5, y + 3); c.stroke(); // Geschirr
+  c.restore();
+}
+function jzbGespannMalen(c, H) {
+  const J = JZB, k = J.k, d = H.dir, gy = jzbGrund(H.x) + .5, lauf = H.steht ? 0 : J.T;
+  const hund = (i) => H.x + d * (22 + i * JZB_HUND_ABST) * k;
+  c.save(); c.strokeStyle = "#8b5a2b"; c.lineWidth = .9 * k; c.beginPath(); c.moveTo(H.x + d * 8 * k, gy - 5 * k); c.lineTo(hund(JZB_HUNDE - 1), gy - 6 * k); c.stroke(); c.restore(); // Zugleine
+  for (let i = JZB_HUNDE - 1; i >= 0; i--) jzbHundMalen(c, hund(i), jzbGrund(hund(i)) + .5 + (i % 2 ? .8 : 0) * k, d, lauf + i * .37, k, !!H.steht);
+  c.save(); c.lineCap = "round"; c.strokeStyle = "#5a3a1c"; c.lineWidth = 1.4 * k; // Kufen mit hochgebogener Spitze
+  c.beginPath(); c.moveTo(H.x - d * 10 * k, gy - 1); c.lineTo(H.x + d * 8 * k, gy - 1); c.quadraticCurveTo(H.x + d * 12 * k, gy - 1, H.x + d * 11 * k, gy - 5 * k); c.stroke();
+  c.fillStyle = "#a8743a"; c.fillRect(Math.min(H.x - d * 8 * k, H.x + d * 7 * k), gy - 7 * k, 15 * k, 3.4 * k); // Ladefläche
+  c.strokeStyle = "#7a4f24"; c.beginPath(); c.moveTo(H.x - d * 9 * k, gy - 1); c.lineTo(H.x - d * 9 * k, gy - 15 * k); c.lineTo(H.x - d * 5 * k, gy - 15 * k); c.stroke(); // Haltebügel
+  c.restore();
+  if (H.gast) jzbFigurMalen(c, H.x + d * 2 * k, gy - 6 * k, d, 0, ["#b5651d", "#e8d9b5"], k * .85, -.4); // der Eskimo sitzt im Schlitten
+  if (H.fahrer.sichtbar && !H.steht) jzbFigurMalen(c, H.x - d * 11 * k, gy - 2 * k, d, 0, H.f, k, -.9); // Schlittenmann steht hinten auf den Kufen
+}
+function jzbIgluMalen(c) {
+  const J = JZB, I = J.iglu, k = J.k, x = I.x, gy = J.h - 1 - Math.min(jzbBodenH(x), 6 * k) * .5, R = I.R, Hh = 21 * k, reihen = 5;
+  const bau = J.phase === "bauen" ? Math.min(1, J.pt / 7.5) : 1, schmelz = J.phase === "schmelzen" ? jzbEase((J.pt - JZB_SONNE) / JZB_SCHMELZ) : 0;
+  c.save();
+  if (schmelz) { c.fillStyle = `rgba(200,225,255,${.55 * (1 - schmelz * .6)})`; c.beginPath(); c.ellipse(x, gy, R * (1 + .5 * schmelz), 3 * k, 0, 0, 7); c.fill();
+    c.translate(x, gy); c.scale(1 + .25 * schmelz, 1 - .9 * schmelz); c.translate(-x, -gy); c.globalAlpha = 1 - schmelz * .7; }
+  const fertig = Math.floor(bau * reihen + 1e-6), teil = bau * reihen - fertig, hoehe = Hh * Math.min(1, (fertig + teil) / reihen);
+  c.save(); c.beginPath(); c.rect(x - R - 20 * k, gy - hoehe, 2 * R + 40 * k, hoehe + 2); c.clip();
+  const g = c.createLinearGradient(x - R, gy - Hh, x + R, gy); g.addColorStop(0, "#ffffff"); g.addColorStop(.6, "#e6f2fb"); g.addColorStop(1, "#b9d6ef");
+  // Eingangstunnel
+  const ex = x + I.blick * R * .78; c.fillStyle = g; c.beginPath(); c.ellipse(ex + I.blick * 3 * k, gy, 9 * k, 10 * k, 0, Math.PI, 0); c.fill();
+  c.fillStyle = g; c.beginPath(); c.ellipse(x, gy, R, Hh, 0, Math.PI, 0); c.fill(); // Kuppel
+  c.strokeStyle = "rgba(120,160,200,.75)"; c.lineWidth = .8 * k;
+  for (let i = 1; i < reihen; i++) { const h = Hh * i / reihen, w = R * Math.sqrt(1 - (h / Hh) ** 2); c.beginPath(); c.moveTo(x - w, gy - h); c.lineTo(x + w, gy - h); c.stroke(); } // Blockreihen
+  for (let i = 0; i < reihen; i++) { const h0 = Hh * i / reihen, h1 = Hh * (i + 1) / reihen, w = R * Math.sqrt(1 - (h0 / Hh) ** 2), n = Math.max(2, Math.round(w / (7 * k)));
+    for (let j = 1; j < n * 2; j++) { const xx = x - w + (j + (i % 2 ? .5 : 0)) * w / n; if (Math.abs(xx - x) > R * Math.sqrt(1 - (h1 / Hh) ** 2) && i) continue; c.beginPath(); c.moveTo(xx, gy - h0); c.lineTo(xx, gy - h1); c.stroke(); } }
+  c.fillStyle = `rgba(${Math.round(55 + 200 * I.licht)},${Math.round(70 + 130 * I.licht)},${Math.round(90 + 0 * I.licht)},.92)`; // Eingang – mit Licht, wenn jemand drin ist
+  c.beginPath(); c.ellipse(ex + I.blick * 9 * k, gy, 4.2 * k, 6.5 * k, 0, Math.PI, 0); c.fill();
+  if (I.licht > .05) { const gl = c.createRadialGradient(ex + I.blick * 10 * k, gy - 3 * k, 1, ex + I.blick * 10 * k, gy - 3 * k, 14 * k); gl.addColorStop(0, `rgba(255,200,90,${.45 * I.licht})`); gl.addColorStop(1, "rgba(255,200,90,0)"); c.fillStyle = gl; c.beginPath(); c.arc(ex + I.blick * 10 * k, gy - 3 * k, 14 * k, 0, 7); c.fill(); }
+  c.restore();
+  if (J.phase === "bauen" && bau < 1) { const bx = x + I.blick * (R * .5) * (1 - 2 * ((fertig + teil) % 1)), by = gy - hoehe; c.fillStyle = "#f4f9fd"; c.strokeStyle = "rgba(120,160,200,.9)"; c.lineWidth = .7 * k; c.fillRect(bx - 3.5 * k, by - 2.8 * k, 7 * k, 3.6 * k); c.strokeRect(bx - 3.5 * k, by - 2.8 * k, 7 * k, 3.6 * k); } // Block wird gesetzt
+  c.restore();
+}
+function jzbIgluLeuteMalen(c) { // Eskimo am Iglu und das Gespann (vor dem Iglu)
+  const J = JZB, I = J.iglu, H = J.husky, k = J.k;
+  if (H) jzbGespannMalen(c, H);
+  if (I && I.bauer.sichtbar) { const B = I.bauer, bauen = J.phase === "bauen"; jzbFigurMalen(c, B.x, jzbGrund(B.x) + .5, B.dir, B.geht, B.farbe, k, bauen ? -.6 + Math.sin(J.T * 4) * .8 : .9); }
+  if (H && H.steht && H.fahrer.sichtbar) jzbFigurMalen(c, H.fahrer.x, jzbGrund(H.fahrer.x) + .5, H.fahrer.dir || H.dir, H.fahrer.geht, H.f, k);
+}
 function jzbWinterKinder(dt) {
   const J = JZB, k = J.k;
   jzbEisNameSchritt(dt); // 2.319.0 KC-CLUB-EISNAME
@@ -14565,9 +14685,11 @@ function jzbWinterKinder(dt) {
   if (J.saison !== "winter") return;
   // wann kommen die Kinder? – erst wenn Schnee liegt; abwechselnd Schlitten / Schneeballschlacht
   jzbPiste(dt); // 2.318.0 KC-CLUB-WINTER-PISTE
-  if (!J.schlitten && !J.ballspiel && !J.raupe && !J.ski && (J.kinderUhr = (J.kinderUhr ?? (J.vorschau ? 4 : jzbZ(15, 30))) - dt) <= 0) {
+  jzbIgluSchritt(dt); jzbHuskySchritt(dt); // 2.320.0 KC-CLUB-WINTER-IGLU / -HUSKY
+  if (!J.schlitten && !J.ballspiel && !J.raupe && !J.ski && !J.husky && !J.iglu && (J.kinderUhr = (J.kinderUhr ?? (J.vorschau ? 4 : jzbZ(15, 30))) - dt) <= 0) {
     if (jzbSchneeMittel() < 3 * k || J.phase === "wind" || J.phase === "schmelzen") J.kinderUhr = 5;
-    else if ((J.kinderArt = J.kinderArt === "schlitten" ? "ball" : "schlitten") === "schlitten") {
+    else if ((J.kinderArt = J.kinderArt === "schlitten" ? "ball" : J.kinderArt === "ball" ? "husky" : "schlitten") === "husky") jzbHuskyStart(); // 2.320.0: ab und an ein Hundegespann
+    else if (J.kinderArt === "schlitten") {
       const dir = J.schlittenDir = J.schlittenDir === 1 ? -1 : 1; // einmal von links, beim nächsten Mal von rechts
       J.schlitten = { dir, x: dir > 0 ? -40 * k : J.w + 40 * k, t: 0, f: jzbKindFarben(2) };
     } else jzbBallspielStart();
@@ -14681,6 +14803,7 @@ function jzbWinterKinderMalen(c) {
   }
   for (const t of J.eisTropfen || []) jzbTropfenMalen(c, t);
   jzbEisNameMalen(c); // 2.319.0 KC-CLUB-EISNAME
+  jzbIgluLeuteMalen(c); // 2.320.0
   if (J.schlitten) jzbSchlittenMalen(c, J.schlitten, k);
   if (J.ballspiel) jzbBallspielMalen(c, J.ballspiel, k);
   jzbPisteMalen(c);
@@ -14689,7 +14812,7 @@ function jzbWinterKinderMalen(c) {
 // Schneehügel – vorn schiebt das Schild den Schnee glatt, hinten zieht die Fräse ein Rillenmuster. Ein paar Minuten später wedeln zwei
 // Skifahrer in verschiedenfarbigen Anzügen über die frisch präparierte Piste. Nur Winter, nur wenn Schnee liegt, nie zugleich mit den Kindern.
 const JZB_SKI_FARBEN = [["#e63946", "#ffffff"], ["#1d6fe0", "#ffd21f"], ["#2bb24c", "#ff4fa3"], ["#ffb703", "#1d3557"], ["#9b2fd6", "#38d1c0"], ["#ff6f1a", "#2f6fd6"], ["#ff4fa3", "#ffffff"], ["#14a3a3", "#ffd166"]];
-const jzbPisteFrei = () => { const J = JZB; return !J.schlitten && !J.ballspiel && !J.besuch && !J.mann && (J.phase === "fallen" || J.phase === "stehen") && jzbSchneeMittel() >= 3 * J.k; };
+const jzbPisteFrei = () => { const J = JZB; return !J.schlitten && !J.ballspiel && !J.besuch && !J.mann && !J.iglu && !J.husky && (J.phase === "fallen" || J.phase === "stehen") && jzbSchneeMittel() >= 3 * J.k; };
 function jzbPiste(dt) {
   const J = JZB, k = J.k, B = J.boden;
   if (J.rillen) { J.rillen.t += dt; if (J.rillen.t > 120 || J.phase === "wind" || J.phase === "besuch") J.rillen = null; }
@@ -14699,7 +14822,7 @@ function jzbPiste(dt) {
       else { const dir = J.raupeDir = J.raupeDir === 1 ? -1 : 1; J.raupe = { dir, x: dir > 0 ? -70 * k : J.w + 70 * k, t: 0, eben: jzbSchneeMittel() }; J.rillen = null; }
     }
     if (J.skiUhr !== undefined && J.skiUhr !== null && (J.skiUhr -= dt) <= 0) {
-      if (jzbSchneeMittel() < 3 * k || J.schlitten || J.ballspiel || J.besuch || J.phase === "wind" || J.phase === "schmelzen") J.skiUhr = 8;
+      if (jzbSchneeMittel() < 3 * k || J.schlitten || J.ballspiel || J.besuch || J.husky || J.iglu || J.phase === "wind" || J.phase === "schmelzen") J.skiUhr = 8;
       else { const dir = Math.random() < .5 ? 1 : -1, f = JZB_SKI_FARBEN.slice().sort(() => Math.random() - .5).slice(0, 2); J.skiUhr = null;
         J.ski = { dir, t: 0, fahrer: f.map((farbe, i) => ({ x: dir > 0 ? -30 * k - i * 70 * k : J.w + 30 * k + i * 70 * k, f: farbe, ph: i * 1.9 })) }; }
     }

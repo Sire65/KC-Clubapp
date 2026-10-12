@@ -1,13 +1,22 @@
 {
-  "version": "2.319.0",
+  "version": "2.320.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🗣️ Online-Ansage wird nachgeholt, wenn jemand kam, während deine App zu war",
-    "❄️ Winter: vom großen Eiszapfen fällt ab und an Eis – daraus entsteht dein Name aus Glitzer-Eis",
-    "☀️ Kommt die Sonne zum Schneemann, schmilzt der Name"
+    "🐺 Winter: ab und an fährt ein Hundeschlitten mit Huskies vorbei",
+    "🧊 Abwechselnd mit dem Schneemann baut ein Eskimo ein Iglu – der Schlittenmann wohnt dort",
+    "☀️ Die Sonne lässt alles schmelzen – die beiden fahren mit dem Gespann davon"
   ],
   "verlauf": [
+    {
+      "version": "2.320.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🐺 Winter: ab und an fährt ein Hundeschlitten mit Huskies vorbei",
+        "🧊 Abwechselnd mit dem Schneemann baut ein Eskimo ein Iglu – der Schlittenmann wohnt dort",
+        "☀️ Die Sonne lässt alles schmelzen – die beiden fahren mit dem Gespann davon"
+      ]
+    },
     {
       "version": "2.319.0",
       "datum": "2026-10-12",
