@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.321.0 – 2026-10-12 – Benachrichtigungen reparieren sich selbst
+Verliert ein Handy die Erlaubnis für Benachrichtigungen (z. B. nach Neuinstallation oder wenn das Handy aufräumt), richtet die App den Zugang beim nächsten Start von selbst neu ein – oder fragt deutlich „Jetzt wieder einschalten“, wenn das Handy erst gefragt werden muss. Wer anklopft, sieht jetzt, wenn das Gegenüber gerade keine Benachrichtigungen bekommen kann.
+
 ## 2.320.0 – 2026-10-12 – Winter: Iglu, Eskimo und Huskies
 Ab und an fährt ein Hundeschlitten mit vier Huskies vorbei. Abwechselnd mit dem Schneemann baut ein Eskimo Block für Block ein Iglu und geht hinein; dann kommt der Schlittenmann mit seinen Huskies heim – er wohnt dort – und im Eingang geht Licht an. Kommt die Sonne, fahren beide mit dem Gespann davon, und das Iglu schmilzt – wie der Schneemann und der Eis-Name.
 

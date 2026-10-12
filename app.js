@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.320.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.321.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5526,16 +5526,16 @@ async function anklopfen(pid) {
   spur("anklopfen", pid); // KC-CLUB-SPUR
   try {
     const r = await api("anklopfen", { an: pid });
-    ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name);
+    ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush);
   } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-ANKLOPFEN-WARTEN (1.51.0, Wunsch Hansi): „👋 Klopfe gerade an bei X“ mit Sekunden-Uhr; nach 1 Minute fragen:
 // weiter anklopfen, auflegen oder eine Nachricht „Melde dich doch mal bei mir“ schicken. Antwortet X, schließt sich alles.
 const KLOPF_WARTEN_SEK = 60;
 let KW = null;
-function klopfWartenStart(id, pid, name) {
+function klopfWartenStart(id, pid, name, ohnePush) {
   klopfWartenEnde();
-  KW = { id, pid, name, bis: Date.now() + KLOPF_WARTEN_SEK * 1000, timer: null };
+  KW = { id, pid, name, ohnePush: !!ohnePush, bis: Date.now() + KLOPF_WARTEN_SEK * 1000, timer: null };
   const f = blattAuf("klopfWarten", `<div id="kwInhalt"></div>`); f.onclick = null; // nicht aus Versehen wegtippen
   klopfWartenZeichnen(); KW.timer = setInterval(klopfWartenZeichnen, 1000);
 }
@@ -5545,6 +5545,7 @@ function klopfWartenZeichnen() {
   if (el) el.innerHTML = `<div class="kw-knopf">👋 Klopfe gerade an bei ${esc(KW.name)} …</div>
     <div class="kw-uhr" aria-live="polite">${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, "0")}</div>
     <p class="hinweis" style="text-align:center;margin:0 0 10px">Warte auf Antwort – sobald ${esc(KW.name)} annimmt, geht der Chat auf.</p>
+    ${KW.ohnePush ? `<p class="hinweis" style="margin:0 0 10px;padding:8px 10px;border-radius:10px;background:#fff3d6;color:#5a4410">⚠️ <b>${esc(KW.name)}</b> hat auf dem Handy gerade keine Benachrichtigungen an – das Anklopfen sieht ${esc(KW.name)} erst, wenn die App offen ist. Schick lieber eine Nachricht.</p>` : ""}
     <button class="knopf" style="width:100%;text-align:center" onclick="klopfAuflegen()">📵 Auflegen</button>`;
   if (sek <= 0) { clearInterval(KW.timer); KW.timer = null; klopfWartenFrage(); }
 }
@@ -5560,7 +5561,7 @@ const klopfMeldeText = () => `Melde dich doch mal bei mir. Gruß ${ICH?.vorname 
 async function klopfWeiter() {
   if (!KW) return;
   const { pid, name } = KW;
-  try { const r = await api("anklopfen", { an: pid }); ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name); } catch (e) { meldeFehler(e); }
+  try { const r = await api("anklopfen", { an: pid }); ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush); } catch (e) { meldeFehler(e); }
 }
 async function klopfAuflegen(still) {
   if (!KW) return;
@@ -18116,6 +18117,7 @@ async function neuLadenRoh(vonHand) {
     $("neuTreffenKnopf").classList.remove("versteckt"); // KC-CLUB-PRIVATTERMIN: „＋ Neu“ für alle (Mitglieder: privat)
     heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
     rtVerbinden(); // KC-CLUB-REALTIME (2.226.0): Leitung aufbauen bzw. halten
+    if (!PUSH_PRUEF.lief) { PUSH_PRUEF.lief = true; setTimeout(() => pushPruefen().catch(() => {}), 6000); } // 2.321.0 KC-CLUB-PUSH-WIEDER (einmal je Start, nicht im Startweg)
     if (vonHand) { melde("Aktualisiert"); updatePruefen(false); }
     standMerken(); offlineStandZeigen(false); owSenden(); // KC-CLUB-OFFLINE (2.1.0)
     if (ICH) startBereitLoesen(); // KC-CLUB-START-BEREIT
@@ -28233,6 +28235,35 @@ async function pushEinschalten() {
     await api("push_anmelden", { subscription: sub.toJSON(), userAgent: navigator.userAgent });
     melde("Benachrichtigungen sind an 🔔"); pushStatusZeigen(); wichtigZeigen();
   } catch (e) { meldeFehler(e); }
+}
+// ---------- 2.321.0 KC-CLUB-PUSH-WIEDER (Fund Hansi „Christina bekommt auf einmal nichts mehr – mein Anklopfen kam nicht an, vorher lief es“):
+// Das Handy kann die Erlaubnis für Benachrichtigungen verlieren (z. B. App neu installiert, Browser-Daten gelöscht, Handy räumt auf) – dann meldet
+// der Push-Dienst „410 – Zugang ungültig“ und der Server legt den Zugang still. Bisher stand dazu nur eine leise Zeile unter „Wichtig“.
+// Jetzt prüft die App bei jedem Start einmal still nach:
+//  1) Erlaubnis da, aber der Zugang auf diesem Gerät fehlt oder ist beim Server tot → von selbst neu einrichten (Selbstheilung, ohne Frage).
+//  2) Erlaubnis weg, und früher lief Push, aber jetzt bekommt die Person auf KEINEM Gerät etwas → deutliches Fenster „wieder einschalten“
+//     (höchstens einmal am Tag; ist sie im Handy gesperrt, steht dort, wo man sie wieder erlaubt).
+const PUSH_PRUEF = { lief: false };
+async function pushPruefen() {
+  if (!KEY || !ICH || !pushMoeglich() || pushWeg() || !INIT?.vapidPublicKey) return;
+  const reg = await navigator.serviceWorker.ready; let sub = null; try { sub = await reg.pushManager.getSubscription(); } catch {}
+  const r = await api("push_pruefen", { endpoint: sub?.endpoint || "" });
+  if (Notification.permission === "granted") {
+    if (sub && r.diesesAktiv) return; // alles in Ordnung
+    if (sub && r.diesesBekannt) { try { await sub.unsubscribe(); } catch {} sub = null; } // vom Push-Dienst abgelehnt (410) → neu anlegen
+    sub = sub || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64url(INIT.vapidPublicKey) });
+    await api("push_anmelden", { subscription: sub.toJSON(), userAgent: navigator.userAgent, wieder: true });
+    pushStatusZeigen?.(); wichtigZeigen(); return;
+  }
+  if (!r.frueher || r.aktiv > 0) return; // nie Push gehabt (bewusst ohne) oder ein anderes Gerät bekommt ihn
+  const heute = heuteIso(); if (lsLesen("kc_club_push_wieder_gefragt") === heute) return; lsSetzen("kc_club_push_wieder_gefragt", heute);
+  const gesperrt = Notification.permission === "denied";
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">🔔 Deine Benachrichtigungen sind aus</h3>
+    <p class="dlg-text">Dein Handy hat die Benachrichtigungen für die Club-App verloren – das passiert z. B. nach einer Neuinstallation oder wenn das Handy aufräumt.
+    Darum bekommst du gerade <b>kein Anklopfen</b> und <b>keine Hinweise auf neue Nachrichten</b>, solange die App zu ist.</p>
+    ${gesperrt ? `<p class="dlg-text">Sie sind im Handy gesperrt. So erlaubst du sie wieder: <b>Handy-Einstellungen → Apps → Chrome (bzw. Club-App) → Benachrichtigungen → an</b>. Danach die App neu öffnen.</p>` : ""}
+    <div class="dlg-knoepfe">${gesperrt ? "" : '<button class="knopf haupt" data-w="an">🔔 Jetzt wieder einschalten</button>'}<button class="knopf" data-w="spaeter">Später</button></div>`, () => {});
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = async () => { f.remove(); if (b.dataset.w === "an") await pushEinschalten(); }));
 }
 async function pushUmschalten() {
   const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();

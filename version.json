@@ -1,13 +1,22 @@
 {
-  "version": "2.320.0",
+  "version": "2.321.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🐺 Winter: ab und an fährt ein Hundeschlitten mit Huskies vorbei",
-    "🧊 Abwechselnd mit dem Schneemann baut ein Eskimo ein Iglu – der Schlittenmann wohnt dort",
-    "☀️ Die Sonne lässt alles schmelzen – die beiden fahren mit dem Gespann davon"
+    "🔔 Benachrichtigungen richten sich nach einem Verlust von selbst wieder ein",
+    "🔔 Fehlt die Erlaubnis, fragt die App deutlich „Jetzt wieder einschalten“",
+    "👋 Beim Anklopfen siehst du, wenn das Gegenüber gerade keine Benachrichtigungen bekommt"
   ],
   "verlauf": [
+    {
+      "version": "2.321.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🔔 Benachrichtigungen richten sich nach einem Verlust von selbst wieder ein",
+        "🔔 Fehlt die Erlaubnis, fragt die App deutlich „Jetzt wieder einschalten“",
+        "👋 Beim Anklopfen siehst du, wenn das Gegenüber gerade keine Benachrichtigungen bekommt"
+      ]
+    },
     {
       "version": "2.320.0",
       "datum": "2026-10-12",

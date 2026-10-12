@@ -5891,7 +5891,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6043,6 +6043,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/H\.gast = true;/.test(html) && /H\.dir = I\.blick;/.test(html), "bei Sonne fahren beide davon");
   assert.ok(/if \(J\.iglu\) jzbIgluMalen\(c\);/.test(html) && /jzbIgluLeuteMalen\(c\);/.test(html) && /J\.mann = null; J\.iglu = null; J\.sonne = null;/.test(html), "gemalt und beim Laufende aufgeräumt");
   assert.ok(/!J\.mann && !J\.iglu && !J\.husky && \(J\.phase/.test(html), "Piste nicht gleichzeitig");
+}
+// 2.321.0 KC-CLUB-PUSH-WIEDER (Fund Hansi „Christina bekommt auf einmal nichts mehr, Anklopfen kam nicht an“): Selbstheilung + deutliches Wieder-Einschalten + Hinweis beim Anklopfen
+{
+  assert.ok(/case "push_pruefen": \{/.test(server) && /diesesBekannt: !!dies, diesesAktiv: !!dies\?\.active/.test(server), "Server: Stand der eigenen Push-Zugänge");
+  assert.ok(/if \(sub && r\.diesesBekannt\) \{ try \{ await sub\.unsubscribe\(\); \} catch \{\} sub = null; \}/.test(html) && /await api\("push_anmelden", \{ subscription: sub\.toJSON\(\), userAgent: navigator\.userAgent, wieder: true \}\);/.test(html), "Selbstheilung bei Erlaubnis, aber totem Zugang");
+  assert.ok(/if \(!r\.frueher \|\| r\.aktiv > 0\) return;/.test(html) && /lsSetzen\("kc_club_push_wieder_gefragt", heute\)/.test(html) && /🔔 Jetzt wieder einschalten/.test(html), "nur wenn früher Push lief und kein Gerät mehr – höchstens einmal am Tag");
+  assert.ok(/if \(!PUSH_PRUEF\.lief\) \{ PUSH_PRUEF\.lief = true; setTimeout\(\(\) => pushPruefen\(\)\.catch\(\(\) => \{\}\), 6000\); \}/.test(html), "einmal je Start, nicht im Startweg");
+  assert.ok(/const ohnePush = !abo\?\.length && !imApp\.has\(an\);/.test(server) && /if \(zug\?\.length && abo\?\.length\) versand = await routerSenden\("club_nachricht_push"/.test(server) && /return json\(\{ ok: true, id: k\.id, push: versand\.gesendet > 0, ohnePush \}\);/.test(server), "Anklopfen: ehrliche Rückmeldung ohne Push-Zugang");
+  assert.ok(/klopfWartenStart\(r\.id, pid, name, r\.ohnePush\)/.test(html) && /hat auf dem Handy gerade keine Benachrichtigungen an/.test(html), "Hinweis im Anklopf-Fenster");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

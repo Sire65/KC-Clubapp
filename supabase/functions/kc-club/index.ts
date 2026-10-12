@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.319.0";
+const SERVER_VERSION = "2.321.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -9516,12 +9516,16 @@ Köcheclub-App`,
         // Push (nur wer die App schon benutzt; keine Mail – Anklopfen ist nur jetzt sinnvoll)
         const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("person_id", an).eq("aktiv", true).not("zuletzt_gesehen", "is", null);
         let versand = { gesendet: 0, fehler: 0 };
-        if (zug?.length) versand = await routerSenden("club_nachricht_push", [an], {
+        // 2.321.0 KC-CLUB-PUSH-WIEDER: hat das Gegenüber gerade keinen gültigen Push-Zugang und ist nicht in der App, erfährt das der Anklopfende
+        // (bisher meldete der Versand „gesendet: 1“, weil der Router annahm – der Push-Dienst lehnte erst danach mit 410 ab)
+        const [{ data: abo }, imApp] = await Promise.all([db.from("kc_member_push_subscriptions").select("id").eq("person_id", an).eq("active", true).limit(1), geradeInDerApp([an])]);
+        const ohnePush = !abo?.length && !imApp.has(an);
+        if (zug?.length && abo?.length) versand = await routerSenden("club_nachricht_push", [an], {
           titel: `👋 ${ich.vorname} klopft an`, kurz: "Möchtest du das Gespräch annehmen? Hier antippen.",
           betreff: `${ich.vorname} klopft an`, text: `${ich.name} möchte kurz mit dir schreiben.`, url: `${APP_URL}#anklopfen=${k.id}`,
         }, `club-anklopfen:${k.id}`);
-        await protokoll(ich.person_id, "angeklopft", { an, versand });
-        return json({ ok: true, id: k.id, push: versand.gesendet > 0 });
+        await protokoll(ich.person_id, "angeklopft", { an, versand, ohnePush });
+        return json({ ok: true, id: k.id, push: versand.gesendet > 0, ohnePush });
       }
 
       // KC-CLUB-ANKLOPFEN-WARTEN (1.51.0): wer anklopft, legt auf → beim Gegenüber verschwindet die Frage
@@ -12502,8 +12506,14 @@ Köcheclub-App`,
           person_id: ich.person_id, endpoint: endpunkt, subscription: sub, user_agent: txt(p.userAgent, 400), quelle: "kc-clubapp", active: true, updated_at: jetzt(),
         }, { onConflict: "endpoint" });
         if (error) throw new Fehler("Push konnte nicht gespeichert werden.", 500);
-        await protokoll(ich.person_id, "push_angemeldet", {});
+        await protokoll(ich.person_id, "push_angemeldet", p.wieder ? { wieder: true } : {}); // 2.321.0: „wieder“ = Selbstheilung beim Start
         return json({ ok: true });
+      }
+      // 2.321.0 KC-CLUB-PUSH-WIEDER: Stand der eigenen Push-Zugänge (nur eigene) – ist der dieses Geräts noch gültig, lief früher schon Push?
+      case "push_pruefen": {
+        const { data } = await db.from("kc_member_push_subscriptions").select("endpoint,active").eq("person_id", ich.person_id);
+        const eigen = String(p.endpoint || ""), dies = eigen ? (data ?? []).find((x: any) => x.endpoint === eigen) : null;
+        return json({ aktiv: (data ?? []).filter((x: any) => x.active).length, frueher: (data ?? []).length > 0, diesesBekannt: !!dies, diesesAktiv: !!dies?.active });
       }
       // ----- KC-CLUB-GERAETE (0.98.0): welche Geräte bekommen meine Push-Meldungen? (nur eigene) -----
       case "geraete_liste": {
