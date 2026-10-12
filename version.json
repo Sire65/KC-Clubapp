@@ -1,12 +1,18 @@
 {
-  "version": "2.329.0",
+  "version": "2.330.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🐿️ Herbst-Design: Das Eichhörnchen bringt ab und an eine Nuss in der Backe und legt daraus Buchstabe für Buchstabe deinen Vornamen – aus lauter kleinen Eicheln und Haselnüssen",
-    "🌰 Ist der Name fertig, sitzt es stolz daneben – nach einer Weile holt es sich die Nüsse Buchstabe für Buchstabe wieder, und alles beginnt von vorn"
+    "🐢 Sind die Effekte aus, sagt die App jetzt den echten Grund (z. B. „Sparmodus hat sich eingeschaltet, weil die letzten Starts langsam waren“) und schaltet mit einem Tipp wieder ein – die Vorschau läuft danach gleich weiter"
   ],
   "verlauf": [
+    {
+      "version": "2.330.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🐢 Sind die Effekte aus, sagt die App jetzt den echten Grund (z. B. „Sparmodus hat sich eingeschaltet, weil die letzten Starts langsam waren“) und schaltet mit einem Tipp wieder ein – die Vorschau läuft danach gleich weiter"
+      ]
+    },
     {
       "version": "2.329.0",
       "datum": "2026-10-12",

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.329.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.330.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12276,10 +12276,24 @@ function regEffektZeigen() {
   const z = $("regEffektWahl"); if (!z) return; const w = regEffektWahl();
   z.innerHTML = REG_EFFEKTE.map(([k, t]) => `<button type="button" class="chip${k === w ? " an" : ""}" aria-pressed="${k === w}" onclick="regEffektSetzen('${k}')">${t}</button>`).join("");
 }
-function regEffektVorschau() { zeige("start"); setTimeout(() => { if (!regEffekt(1, regEffektWahl() === "aus" ? "jalousie" : undefined)) melde("Effekte sind aus – „✨ Animierte Knöpfe“ einschalten (und Sparmodus aus).", true); }, 350); }
+function regEffektVorschau() { zeige("start"); setTimeout(() => { if (!regEffekt(1, regEffektWahl() === "aus" ? "jalousie" : undefined)) { if (!fxAn()) fxAusHinweis(regEffektVorschau); else melde("Gerade geht das nicht – nicht in der einfachen Ansicht und nicht beim Kacheln-Bearbeiten.", true); } }, 350); }
 // ---------- KC-CLUB-EFFEKTE-2 (2.172.0, Wunsch Hansi: 1 Papierflieger, 3 Zettel anpinnen, 4 Zahlen zählen hoch, 6 Jahreszeiten, 8 Geburtstagskerze) ----------
 // Alle: kurz, nur transform/opacity, aus bei „✨ Animierte Knöpfe“ aus oder Sparmodus. Laufen nur, wenn etwas passiert (außer Jahreszeiten – sanft im Kopf).
 const fxAn = () => einst("animiert", true) && !SPAR?.an && typeof document !== "undefined" && !!document.body?.animate;
+// 2.330.0 KC-CLUB-EFFEKTE-GRUND (Fund Hansi: Vorschau „Herbst“ antippen → nur „Effekte sind aus – Animierte Knöpfe einschalten (und Sparmodus aus)“,
+// obwohl die Knöpfe an waren): Der Sparmodus hatte sich von selbst eingeschaltet. Jetzt sagt die App den echten Grund und bietet die Lösung
+// mit einem Tipp an – danach läuft die gewünschte Vorschau gleich weiter.
+async function fxAusHinweis(nochmal) {
+  if (!einst("animiert", true)) {
+    if (!await frage("✨ Effekte sind aus\n\n„Animierte Knöpfe“ ist ausgeschaltet – dann ruhen alle Effekte und die Jahreszeiten im Kopf.\n\nJetzt einschalten?", { ja: "✨ Einschalten", nein: "Abbrechen", gefahr: false })) return;
+    einstellung("animiert", true); if ($("setAnimiert")) $("setAnimiert").checked = true;
+  } else if (SPAR?.an) {
+    const auto = sparWahl() === "auto";
+    if (!await frage(`🐢 Der Sparmodus ist an\n\n${auto ? "Er hat sich von selbst eingeschaltet, weil " + SPAR.grund : "Du hast ihn eingeschaltet"}. Im Sparmodus ruhen alle Effekte und die Jahreszeiten im Kopf.\n\nSparmodus ausschalten? (Zurück auf Automatisch geht jederzeit unter ⚙️ → „🎨 Darstellung“.)`, { ja: "🐢 Sparmodus aus", nein: "Abbrechen", gefahr: false })) return;
+    sparSetzen("aus");
+  } else return melde("Dieser Browser kann die Effekte leider nicht zeigen – bitte Chrome, Safari oder Firefox aktualisieren.", true);
+  if (fxAn() && typeof nochmal === "function") setTimeout(nochmal, 200);
+}
 // 1) ✉️ Nachricht gesendet: ein Papierflieger (oder eine Brieftaube) startet am Senden-Knopf und fliegt davon
 // 2.175.0 (Wunsch Hansi „etwas in Schlangenlinien – oder eine weiße Brieftaube mit Kuvert im Schnabel“): Wahl je Gerät unter 🎨 Darstellung
 // 2.176.0 (Wunsch Hansi „als drittes ein gelbes Postauto – und wenn als wichtig markiert ein Auto mit Blaulicht“)
@@ -12497,11 +12511,11 @@ function sendeEffektZeigen() {
   z.innerHTML = SENDE_EFFEKTE.map(([k, t]) => `<button type="button" class="chip${k === w ? " an" : ""}" aria-pressed="${k === w}" onclick="sendeEffektSetzen('${k}')">${t}</button>`).join("");
 }
 function sendeEffektVorschau(knopf) {
-  if (!fxAn()) return melde("Effekte sind aus – „✨ Animierte Knöpfe“ einschalten (und Sparmodus aus).", true);
+  if (!fxAn()) return fxAusHinweis(() => sendeEffektVorschau(knopf));
   if (sendeEffektWahl() === "aus") return melde("Sende-Effekt ist aus – oben einen auswählen.", true);
   papierflieger(knopf, false);
 }
-function blaulichtVorschau(knopf) { if (!fxAn()) return melde("Effekte sind aus – „✨ Animierte Knöpfe“ einschalten (und Sparmodus aus).", true); if (sendeEffektWahl() === "aus") return melde("Sende-Effekt ist aus – oben einen auswählen.", true); papierflieger(knopf, true); }
+function blaulichtVorschau(knopf) { if (!fxAn()) return fxAusHinweis(() => blaulichtVorschau(knopf)); if (sendeEffektWahl() === "aus") return melde("Sende-Effekt ist aus – oben einen auswählen.", true); papierflieger(knopf, true); }
 // 3) 📌 neuer Pinnwand-Zettel: fällt leicht schräg herunter, setzt auf, die Nadel wird hineingedrückt
 function zettelAnpinnen(el) {
   if (!fxAn() || !el) return;
@@ -15394,7 +15408,7 @@ function jzbTwinkeyMalen(c) {
 }
 // Vorschau aus den Einstellungen: eine Jahreszeit sofort im Kopf zeigen (bis „Heute“ oder Neustart der App)
 function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, topf, ostern, igel
-  if (!fxAn()) return melde("Effekte sind aus – „✨ Animierte Knöpfe“ einschalten (und Sparmodus aus).", true);
+  if (!fxAn()) return fxAusHinweis(() => jahreszeitVorschau(art, extra));
   if (!einst("jahreszeit", true)) return melde("„🍂 Jahreszeiten im Kopf“ ist aus – erst einschalten.", true);
   if (art === "heute") JZB.vorschau = ""; else if (art) JZB.vorschau = art;
   JZB.extra = extra || "";

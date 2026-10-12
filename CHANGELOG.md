@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.330.0 – 2026-10-12 – KC-CLUB-EFFEKTE-GRUND
+Fund Hansi (Screenshot: Vorschau „Herbst“ antippen → nur „Effekte sind aus – ✨ Animierte Knöpfe einschalten (und Sparmodus aus)“, obwohl „Animierte Knöpfe“ an war). Ursache: Der Sparmodus hatte sich automatisch eingeschaltet (z. B. „die letzten Starts waren langsam“ – heute während des Postgres-Updates); im Sparmodus ruhen Effekte und Jahreszeiten. Neu: fxAusHinweis nennt den echten Grund und bietet die Lösung mit einem Tipp an – „✨ Einschalten“ (Animierte Knöpfe aus) oder „🐢 Sparmodus aus“ (mit Grund, wenn er sich selbst eingeschaltet hat; zurück auf Automatisch unter ⚙️ → 🎨 Darstellung) – danach läuft die gewünschte Vorschau gleich weiter. Gilt für Jahreszeiten-Vorschau, Sende-Effekt, Blaulicht und Kachel-Effekt.
+
 ## 2.329.0 – 2026-10-12 – KC-CLUB-NUSSNAME
 Wunsch Hansi (Herbst-Gegenstück zum Eis-Namen, Variante 2 „mit dem Eichhörnchen“). Das Eichhörnchen kommt mit voller Backe, legt die Nuss ab, und der nächste Buchstabe des Vornamens entsteht (Funkeln) – jeder Buchstabe aus vielen kleinen Eicheln und Haselnüssen (Rasterpunkte innerhalb der Buchstabenform, zwischengespeichert) auf dunklem Untergrund, damit er gut lesbar ist; die Nüsse purzeln von unten nach oben dazu. Solange der Name entsteht, kommt es öfter (alle 12–25 s, sonst 35–75 s; dazwischen frisst es weiter Nüsse vom Boden). Ist der Name fertig, hüpft es ans Ende und sitzt 4,5 s stolz daneben (Funkeln). Nach 2 Minuten holt es sich die Nüsse vom Ende her wieder, Buchstabe für Buchstabe, danach beginnt es von vorn. Nicht während der Laubbläser läuft. Nur Herbst, nur auf diesem Gerät. Hilfetext „🍂 Herbst im Kopf“ ergänzt.
 

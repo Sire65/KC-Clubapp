@@ -9122,3 +9122,9 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/H\.art === "bringen"/.test(html) && /H\.art === "holen"/.test(html) && /H\.phase = "stolz"/.test(html), "bringen, stolz, holen");
   assert.ok(/nussName: null, nussErster: false/.test(html), "beim Start zurückgesetzt");
 }
+
+// 2.330.0 KC-CLUB-EFFEKTE-GRUND: echter Grund + Lösung mit einem Tipp statt Sammelmeldung
+{
+  assert.ok(/async function fxAusHinweis\(nochmal\)/.test(html) && /sparSetzen\("aus"\)/.test(html) && /einstellung\("animiert", true\)/.test(html), "Grund und Lösung");
+  assert.ok(!/Effekte sind aus – „✨ Animierte Knöpfe“ einschalten \(und Sparmodus aus\)/.test(html) && /return fxAusHinweis\(\(\) => jahreszeitVorschau\(art, extra\)\)/.test(html), "alle Stellen umgestellt");
+}
