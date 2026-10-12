@@ -9002,3 +9002,16 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/\{ id: "clubsong", t: "Seit einundneunzig", stil: "Club-Song", sym: "🎤", bpm: 124/.test(html) && /\["club", "🎤", "Club-Song", \["Club-Song"\]\]/.test(html) && /onclick="bwClubSong\(\)">🎤 Club-Song/.test(html), "Lied, Kachel und Knopf");
   assert.ok(/\["ref", KS_REF_AKK, "ref", 2\]/.test(b) && /id="bwKaraoke"/.test(html) && /function ksKaraoke\(\)/.test(b), "Rückung im Schluss-Refrain, Karaoke");
 }
+
+// 2.317.0 KC-CLUB-BUEHNE-UHR: Trainingsuhr neben Twinkey, schwebende Knöpfe im Training aus
+{
+  const b = html.slice(html.indexOf("const bwUhrText"), html.indexOf("function bwZahl()"));
+  const BW_BEREIT = 7, BW_SEK = 30, BW_SCHUETTELN = 6;
+  const { bwUhrText, bwRestZeit } = new Function("BW_BEREIT", "BW_SEK", "BW_SCHUETTELN", b + "; return { bwUhrText, bwRestZeit };")(BW_BEREIT, BW_SEK, BW_SCHUETTELN);
+  assert.equal(bwUhrText(96), "1:36"); assert.equal(bwUhrText(5), "0:05");
+  assert.equal(bwRestZeit({ phase: "uebung", rest: 20, i: 1, plan: new Array(7) }), 20 + 6 + 5 * 43, "Restzeit");
+  assert.equal(bwRestZeit({ phase: "schuetteln", rest: 2, i: 6, plan: new Array(7) }), 2, "letzte Übung");
+  assert.ok(/id="bwUhrAb"/.test(html) && /id="bwUhrNoch"/.test(html) && /L\.zeit = \(L\.zeit \|\| 0\) \+ 1/.test(html), "Uhr und Zähler");
+  assert.ok(/body\.bw-training \.hz-frage, body\.bw-training \.hz-klick, body\.bw-training \.sb-knopf, body\.bw-training \.su-klein \{ display: none !important; \}/.test(html), "Knöpfe aus im Training");
+  assert.ok(/if \(!L \|\| !f\) return; bwTrainingKnoepfe\(true\);/.test(html) && /BW\.blase = ""; bwTrainingKnoepfe\(false\);/.test(html), "an/aus");
+}

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.316.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.317.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -13289,7 +13289,7 @@ async function bwLos() {
   const w = bwWahl(), plan = BW.vorher || bwPlan(w.modus, w.dauer); BW.vorher = null; // 2.309.0: derselbe Plan wie in der Bereitlegen-Liste
   try { speechSynthesis.cancel(); speechSynthesis.resume(); } catch (e) { /* ohne Sprache */ } // 2.306.0: Sprachausgabe frisch starten (hing sie, blieb Twinkey stumm)
   if (BW.hoeren) bwStopp(false); BWM.stueck = bwTrainingsStueck(w.modus); BWM.gesamt = 0; // 2.303.0: jedes Training ein anderes Disco-Stück (im Tempo der Übungen)
-  BW.lauf = { plan, i: 0, phase: "bereit", rest: BW_BEREIT, pause: false, musik: w.musik, ansage: w.ansage, sek: 0, lob: Math.floor(Math.random() * BW_LOB.length), sprueche: 0, farbe: Math.floor(Math.random() * BW_FARBEN.length), warte: 0, gezaehlt: false };
+  BW.lauf = { plan, i: 0, phase: "bereit", rest: BW_BEREIT, pause: false, musik: w.musik, ansage: w.ansage, sek: 0, lob: Math.floor(Math.random() * BW_LOB.length), sprueche: 0, farbe: Math.floor(Math.random() * BW_FARBEN.length), warte: 0, gezaehlt: false, zeit: 0 };
   try { BW.wach = await navigator.wakeLock?.request("screen"); } catch (e) { BW.wach = null; }
   if (w.musik) bwMusik(true);
   // 2.299.2 (Wunsch Hansi): kurze Begrüßung vorweg – die erste Vorbereitung dauert dafür etwas länger
@@ -13327,6 +13327,7 @@ function bwTick() {
   if (!$("bwLauf")) return bwStopp();
   if (!esSichtbar()) { if (!L.pause) { L.pause = true; bwMusik(false); bwLaufZeigen(); } return; } // nicht zu sehen → Pause
   if (L.pause) return;
+  L.zeit = (L.zeit || 0) + 1; // 2.317.0: Trainingsuhr (vergangene Zeit ohne Pausen)
   const u = L.plan[L.i];
   // Einzählen erst, wenn die Erklärung fertig ist: solange Twinkey noch spricht, wartet der Zähler (höchstens 10 s)
   if (L.phase === "bereit" && L.rest <= 4 && !L.gezaehlt) {
@@ -13360,10 +13361,17 @@ function bwTick() {
   }
   bwLaufZeigen();
 }
-function bwZahl() { const L = BW.lauf, z = $("bwZahl"); if (!L || !z) return; z.textContent = L.rest; z.classList.toggle("knapp", L.phase === "uebung" && L.rest <= 3);
+// 2.317.0 KC-CLUB-BUEHNE-UHR (Wunsch Hansi): große Uhr neben Twinkey – wie lange das Training schon läuft und wie lange noch
+const bwUhrText = (s) => { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+function bwRestZeit(L) { // noch übrige Sekunden: aktuelle Phase + restliche Phasen dieser Übung + alle folgenden Übungen
+  const je = BW_BEREIT + BW_SEK + BW_SCHUETTELN, danach = L.phase === "bereit" ? BW_SEK + BW_SCHUETTELN : L.phase === "uebung" ? BW_SCHUETTELN : 0;
+  return L.rest + danach + (L.plan.length - 1 - L.i) * je;
+}
+function bwUhr() { const L = BW.lauf; if (!L) return; const a = $("bwUhrAb"), n = $("bwUhrNoch"); if (a) a.textContent = bwUhrText(L.zeit || 0); if (n) n.textContent = bwUhrText(bwRestZeit(L)); }
+function bwZahl() { const L = BW.lauf, z = $("bwZahl"); if (!L || !z) return; z.textContent = L.rest; z.classList.toggle("knapp", L.phase === "uebung" && L.rest <= 3); bwUhr();
   const b = $("bwBalken"); if (b) { const ges = L.phase === "uebung" ? BW_SEK : L.phase === "schuetteln" ? BW_SCHUETTELN : BW_BEREIT; b.style.width = `${Math.max(0, 100 - (L.rest / ges) * 100)}%`; } }
 function bwLaufZeigen(vorhangAuf) {
-  const L = BW.lauf, f = $("hrFlaeche"); if (!L || !f) return;
+  const L = BW.lauf, f = $("hrFlaeche"); if (!L || !f) return; bwTrainingKnoepfe(true);
   const u = L.plan[L.i], anim = L.phase === "uebung" ? (u.a2 && L.rest <= BW_SEK / 2 ? u.a2 : u.a) : L.phase === "schuetteln" ? (L.wisch && L.rest > 3 ? "stirn" : "schuetteln") : "ruhe", sitz = bwWahl().modus !== "stehen" && !!u.sitz; // 2.303.0: a2 = zweite Hälfte (anderes Bein)
   const text = L.phase === "bereit" ? "Gleich:" : L.phase === "schuetteln" ? "Ausschütteln!" : "Jetzt:", alt = BW.blase || "";
   f.innerHTML = `<div class="bw-buehne an${L.pause ? " angehalten" : ""}" id="bwLauf"><div class="bw-licht"></div><div class="bw-vorhang links${vorhangAuf ? " oeffnet" : " offen"}"></div><div class="bw-vorhang rechts${vorhangAuf ? " oeffnet" : " offen"}"></div><div class="bw-boden"></div>
@@ -13371,6 +13379,7 @@ function bwLaufZeigen(vorhangAuf) {
     <div class="bw-balken-bahn"><div class="bw-balken" id="bwBalken"></div></div>
     <div class="bw-sprech" id="bwSprech" aria-live="polite">${esc(alt)}</div>
     <div class="bw-mitte">${bwBuehneFigur(u, L.phase, anim, sitz, L.farbe + L.i)}</div>
+    <div class="bw-uhr" aria-label="Trainingsuhr"><div><small>⏱ schon</small><b id="bwUhrAb">0:00</b></div><div class="noch"><small>⏳ noch</small><b id="bwUhrNoch">0:00</b></div></div>
     <div class="bw-tipp">${esc(L.phase === "schuetteln" ? "Gut gemacht! 👏" : u.h)}</div>${bwLautRegler("musik")}${bwLautRegler("stimme")}
     <div class="es-leiste"><button type="button" class="es-k es-haupt" onclick="bwPause()">${L.pause ? "▶︎ Weiter" : "⏸ Pause"}</button><button type="button" class="es-k" onclick="bwWeiter()" aria-label="Übung überspringen">⏭ Weiter</button>
       <button type="button" class="es-k${L.musik ? " an" : ""}" onclick="bwMusikSchalten()" aria-label="Musik an oder aus">${L.musik ? "🎵" : "🔇"}</button><button type="button" class="es-k${L.ansage ? " an" : ""}" onclick="bwAnsageSchalten()" aria-label="Ansage an oder aus">${L.ansage ? "🔊" : "🔈"}</button>
@@ -13379,6 +13388,8 @@ function bwLaufZeigen(vorhangAuf) {
   if (alt && Date.now() - (BW.sprechZeit || 0) < 4000) $("bwSprech").classList.add("an"); // gerade Gesagtes bleibt lesbar
   bwZahl();
 }
+// 2.317.0 (Wunsch Hansi „Lupe, ? und Mikro brauche ich beim Training nicht“): schwebende Knöpfe während des Trainings ausblenden
+function bwTrainingKnoepfe(an) { document.body.classList.toggle("bw-training", !!an); }
 function bwPause() { const L = BW.lauf; if (!L) return; L.pause = !L.pause; try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwMusik(!L.pause && L.musik); bwLaufZeigen(); }
 function bwWeiter() { // 2.309.0: auch in der Vorbereitung wird die kommende Übung ganz übersprungen (vorher startete sie dann sofort)
   const L = BW.lauf; if (!L) return; L.pause = false; L.phase = "schuetteln"; L.rest = 1; try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwTick();
@@ -13388,7 +13399,7 @@ function bwAnsageSchalten() { const L = BW.lauf; if (!L) return; L.ansage = !L.a
 function bwStopp(zeigen) {
   clearInterval(BW.takt); BW.takt = 0; bwMusik(false); try { BW.wach?.release(); } catch (e) { /* ohne Wachhalten */ } BW.wach = null;
   if (BW.lauf) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } }
-  BW.lauf = null; BW.hoeren = null; BW.vorher = null; BWM.stueck = null; BW.blase = ""; if (zeigen && $("hrFlaeche")?.classList.contains("hr-buehne")) esBuehneZeigen($("hrFlaeche")); // 2.302.0: auch „Nur Musik“
+  BW.lauf = null; BW.hoeren = null; BW.vorher = null; BWM.stueck = null; BW.blase = ""; bwTrainingKnoepfe(false); if (zeigen && $("hrFlaeche")?.classList.contains("hr-buehne")) esBuehneZeigen($("hrFlaeche")); // 2.302.0: auch „Nur Musik“
 }
 // 2.313.0 (Wunsch Hansi): Twinkeys Schlusswort nach dem Sport
 const BW_SCHLUSS = "Nach dieser Plackerei habe ich mir einen Eierpunsch und eine Portion Grünkohl mit doppelt Mettwurst am Köcheclub-Stand verdient. Die kochen dort extra warm!";
