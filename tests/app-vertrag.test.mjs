@@ -5814,7 +5814,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.278.0 KC-CLUB-EISZAPFEN-2 (Wunsch Hansi „noch länger – die Spitzen sollen gerade in das Feld darunter reichen“)
 {
   assert.ok(/function jzEisLaenge\(\)/.test(html) && /const lmax = Math\.round\(luecke \? Math\.max\(22, Math\.min\(46, luecke \+ 6\)\) : 22\)/.test(html), "längste Spitze ragt 6 px ins Infofeld, höchstens 46 px (2.279.0 in Pixeln)");
-  assert.ok(/requestAnimationFrame\(jzEisLaenge\)/.test(html) && /addEventListener\("resize", \(\) => requestAnimationFrame\(jzEisLaenge\)\)/.test(html), "neu gemessen bei Kopf-Rollo und Größenänderung");
+  assert.ok(/requestAnimationFrame\(jzEisLaenge\)/.test(html) && /addEventListener\("resize", \(\) => requestAnimationFrame\(\(\) => \{ jzEisLaenge\(\); jzDekoMalen\(\); \}\)\)/.test(html) /* 2.335.0: + Deko */, "neu gemessen bei Kopf-Rollo und Größenänderung");
   assert.ok(/i % 5 === 2 \? 6 : 0/.test(html), "jeder fünfte Zapfen lang");
 }
 // 2.279.0 KC-CLUB-EISZAPFEN-3 (Fund Hansi am PC-Monitor „einfach Dreiecke – realitätsnäher“): in echten Pixeln statt in die Breite gezogen
@@ -9174,4 +9174,12 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/dpr = Math\.min\(1\.5, window\.devicePixelRatio \|\| 1\)/.test(html) && /jzbAkkuKnapp = !b\.charging && b\.level < \.3/.test(html), "Auflösung und Akkustand");
   assert.ok(/function kaRandTakt\(an\)/.test(html) && !/^setInterval\(\(\) => \{ if \(!ZIEHEN\) return;/m.test(html), "Zieh-Takt nur beim Ziehen");
   assert.ok(/clearTimeout\(JZB\.warteUhr\)/.test(html.slice(html.indexOf("function jzbStop()"), html.indexOf("function jzbGroesse()"))), "Stopp räumt den Zeitgeber");
+}
+
+// 2.335.0 KC-CLUB-DEKO: Wimpel, Lichterkette, Laternen an der Leiste
+{
+  assert.ok(/function jzDeko\(h, art\)/.test(html) && /function jzDekoMalen\(\)/.test(html) && /jzDeko\(h, jetzt\); \/\/ 2\.335\.0 KC-CLUB-DEKO/.test(html), "Deko im Kopf");
+  assert.ok(/herbst: \["laternen", "herbst"\], advent: \["lichter", "warm"\]/.test(html) && /wiesn: \["wimpel", "bayern"\]/.test(html), "automatisch nach Jahreszeit");
+  assert.ok(/id="jzDekoWahl"/.test(html) && /jzDekoWahlZeigen\(\); \$\("setFeiertage"\)/.test(html), "Wahl in den Einstellungen");
+  assert.ok(/\.spar \.jz-deko \.fk, \.ohne-anim \.jz-deko \.fk \{ animation: none; \}/.test(html) && /\.jz-deko \{[^}]*pointer-events: none;/.test(html), "ruhig im Sparmodus, Tippen geht durch");
 }

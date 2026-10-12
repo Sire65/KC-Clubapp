@@ -867,6 +867,12 @@
   .jz-eis .jz-glanz { fill: none; stroke: #fff; stroke-width: 1.1; stroke-linecap: round; opacity: .85; }
   .jz-eis .jz-zapfen { stroke: rgba(120, 180, 230, .55); stroke-width: .6; }
   .jz-eis .jz-rand { fill: #fbfdff; opacity: .95; } /* 2.279.0: unregelmäßiger Eisrand oben */
+  /* 2.335.0 KC-CLUB-DEKO (Wunsch Hansi): Wimpel, Lichterkette oder Laternen an der Leiste – an derselben Stelle wie die Eiszapfen, Tippen geht durch */
+  .statusleiste.jz-deko-an { position: relative; }
+  .jz-deko { position: absolute; left: 6px; width: calc(100% - 12px); top: calc(100% - 3px); height: 24px; pointer-events: none; z-index: 2; overflow: visible; filter: drop-shadow(0 1px 1px rgba(0,0,0,.3)); }
+  .jz-deko .fk { animation: jzFunkel 2.6s ease-in-out infinite alternate; }
+  @keyframes jzFunkel { 0%, 40% { opacity: 1; } 100% { opacity: .35; } }
+  .spar .jz-deko .fk, .ohne-anim .jz-deko .fk { animation: none; }
   /* KC-CLUB-START-HINWEIS (2.268.0): drei Knöpfe untereinander – lange Beschriftung gut lesbar */
   .dlg-knoepfe.sh-knoepfe { display: flex; flex-direction: column; gap: 8px; } .dlg-knoepfe.sh-knoepfe .knopf { width: 100%; text-align: center; white-space: normal; }
   /* KC-CLUB-VIDEO-GESEHEN (2.266.0): 👁 Anzahl, grüner Haken, wenn schon angesehen */
@@ -4510,6 +4516,7 @@
       <div class="schalter" style="display:block"><div><b>📅 Welche Jahreszeit?</b><div class="hinweis" id="jzWahlInfo"></div></div><div class="reg-effekt-wahl" id="jzWahl"></div></div> <!-- 2.273.0 KC-CLUB-JAHRESZEIT-AUTOMATIK --> <!-- 2.172.0 KC-CLUB-EFFEKTE-2, 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE -->
       <div class="schalter" style="display:block"><div class="hinweis">Vorschau im Kopf der Startseite:</div><div class="reg-effekt-wahl"><button type="button" class="chip" onclick="jahreszeitVorschau('herbst')">🍂 Herbst</button><button type="button" class="chip" onclick="jahreszeitVorschau('winter')">⛄ Winter</button><button type="button" class="chip" onclick="jahreszeitVorschau('fruehling')">🌱 Frühling</button><button type="button" class="chip" onclick="jahreszeitVorschau('sommer')">🌻 Sommer</button><button type="button" class="chip" onclick="jahreszeitVorschau('kirmes')">🎡 Sim-Jü</button><button type="button" class="chip" onclick="jahreszeitVorschau('wiesn')">🥨 Oktoberfest</button><button type="button" class="chip" onclick="jahreszeitVorschau('karibik')">🌴 Karibik</button><button type="button" class="chip" onclick="jahreszeitVorschau('karneval')">🎭 Karneval</button><button type="button" class="chip" onclick="jahreszeitVorschau('halloween')">🎃 Halloween</button><button type="button" class="chip" onclick="jahreszeitVorschau('heute')">📅 Heute</button></div>
         <div class="hinweis" style="margin-top:6px">Extras: Nikolaus-Stiefel am 6.12., Regen mit Pfützen (nur wenn es wirklich regnet), Kochtopf am Treffen-Tag, Ostereier zum Suchen, Igel im Herbst</div><div class="reg-effekt-wahl"><button type="button" class="chip" onclick="jahreszeitVorschau('advent', 'nikolaus')">🥾 Nikolaus</button><button type="button" class="chip" onclick="jahreszeitVorschau('', 'regen')">☔ Regen</button><button type="button" class="chip" onclick="jahreszeitVorschau('', 'topf')">🍲 Treffen</button><button type="button" class="chip" onclick="jahreszeitVorschau('fruehling', 'ostern')">🥚 Ostern</button><button type="button" class="chip" onclick="jahreszeitVorschau('herbst', 'igel')">🦔 Igel</button><button type="button" class="chip" onclick="jahreszeitVorschau('herbst', 'twinkey')">🧹 Twinkey fegt</button></div></div>
+      <div class="schalter" style="display:block"><div><b>🎏 Deko an der Leiste</b><div class="hinweis" id="jzDekoInfo">Wimpel, Lichterkette oder Laternen hängen oben an der Leiste mit den Lämpchen – dort, wo im Winter die Eiszapfen hängen.</div></div><div class="reg-effekt-wahl" id="jzDekoWahl"></div></div> <!-- 2.335.0 KC-CLUB-DEKO -->
       <!-- KC-CLUB-REGISTER-EFFEKTE (2.169.0, Wunsch Hansi) -->
       <div class="schalter" style="display:block"><div><b>🎬 Effekt beim Register-Wechsel</b><div class="hinweis">Wenn du zwischen Club, Meins und Technik wechselst, erscheinen die Kacheln mit Effekt. Gilt für dieses Gerät.</div></div>
         <div class="reg-effekt-wahl" id="regEffektWahl"></div><button type="button" class="knopf klein" onclick="regEffektVorschau()">▶ Vorschau auf der Startseite</button></div>
@@ -4903,6 +4910,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.334.0" data-v="2.334.0"></script>
+<script src="app.js?v=2.335.0" data-v="2.335.0"></script>
 </body>
 </html>

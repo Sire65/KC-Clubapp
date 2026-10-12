@@ -1,11 +1,20 @@
 {
-  "version": "2.334.0",
+  "version": "2.335.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🔋 Weniger Akkuverbrauch: Das Jahreszeiten-Bild im Kopf wird nur noch halb so oft neu gemalt, nach 45 Sekunden ohne Bedienung noch seltener – und bei knappem Akku immer sparsam. Es sieht gleich aus."
+    "🎏 Deko an der Leiste mit den Lämpchen: Wimpelkette, Lichterkette oder Laternen – automatisch passend zur Jahreszeit (Herbst Laternen, Advent warmweiße Lichter, Oktoberfest blau-weiße Wimpel, Silvester goldene Lichter …)",
+    "⚙️ Wählbar unter ⚙️ → 🍂 Jahreszeiten → „🎏 Deko an der Leiste“: Automatisch, Wimpel, Lichterkette, Laternen oder Aus"
   ],
   "verlauf": [
+    {
+      "version": "2.335.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🎏 Deko an der Leiste mit den Lämpchen: Wimpelkette, Lichterkette oder Laternen – automatisch passend zur Jahreszeit (Herbst Laternen, Advent warmweiße Lichter, Oktoberfest blau-weiße Wimpel, Silvester goldene Lichter …)",
+        "⚙️ Wählbar unter ⚙️ → 🍂 Jahreszeiten → „🎏 Deko an der Leiste“: Automatisch, Wimpel, Lichterkette, Laternen oder Aus"
+      ]
+    },
     {
       "version": "2.334.0",
       "datum": "2026-10-12",

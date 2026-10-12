@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.334.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.335.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -730,7 +730,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -12643,6 +12643,80 @@ function jzEiszapfen(h, art) {
   leiste.insertAdjacentHTML("beforeend", '<svg class="jz-eis" aria-hidden="true"></svg>');
   requestAnimationFrame(jzEisLaenge);
 }
+// ---------- 2.335.0 KC-CLUB-DEKO (Wunsch Hansi „Deko: Wimpel, Lichterkette usw. – an die Stelle, wo die Eiszapfen hängen“) ----------
+// Unter der Leiste mit den Lämpchen hängt eine Girlande in Bögen: 🎏 Wimpel, 💡 Lichterkette (einige Birnen funkeln sanft) oder 🏮 Laternen.
+// Automatisch passend zu Jahreszeit bzw. Thema (z. B. Herbst = Laternen, Advent = warmweiße Lichter, Oktoberfest = blau-weiße Wimpel, Silvester
+// = goldene Lichter); im tiefen Winter hängen dort die Eiszapfen. Wahl je Gerät unter ⚙️ → 🍂 Jahreszeiten. Ein stilles Bild (SVG) – kostet
+// keinen Akku; nur das sanfte Funkeln ist eine Bildschirm-Animation (im Sparmodus aus). Tippen geht hindurch.
+const JZ_DEKO_WAHL = [["auto", "🔄 Automatisch"], ["wimpel", "🎏 Wimpel"], ["lichter", "💡 Lichterkette"], ["laternen", "🏮 Laternen"], ["aus", "🚫 Aus"]];
+const JZ_DEKO_FARBEN = { bunt: ["#e63946", "#ffb703", "#2a9d8f", "#3a86ff", "#ff6b9a", "#8ac926"], pastell: ["#f7a8c4", "#9fd3ff", "#fff3a0", "#b6f0b0", "#d9b8f7"],
+  bayern: ["#1f6fd1", "#ffffff"], herbst: ["#e85d04", "#ffba08", "#dc2f02", "#f48c06", "#9d0208"], karibik: ["#ff006e", "#ffbe0b", "#00bbf9", "#00f5d4", "#fb5607"],
+  warm: ["#ffd27a", "#fff0c2", "#ffc65c"], gold: ["#ffd700", "#fff1a8", "#f5c542", "#ffe680"], halloween: ["#ff7a00", "#9b4dca", "#ffae42", "#7b2cbf"] };
+const JZ_DEKO_AUTO = { herbst: ["laternen", "herbst"], advent: ["lichter", "warm"], silvester: ["lichter", "gold"], sommer: ["wimpel", "bunt"], fruehling: ["wimpel", "pastell"],
+  wiesn: ["wimpel", "bayern"], karneval: ["wimpel", "bunt"], kirmes: ["lichter", "bunt"], karibik: ["laternen", "karibik"], halloween: ["lichter", "halloween"] };
+const JZ_DEKO_STANDARD = { wimpel: "bunt", lichter: "warm", laternen: "herbst" };
+const jzDekoWahl = () => { try { const w = localStorage.getItem("kc_club_jzDeko"); return JZ_DEKO_WAHL.some(([k]) => k === w) ? w : "auto"; } catch { return "auto"; } };
+function jzDekoArt(art) { // → [Art, Farben] oder null
+  const w = jzDekoWahl(); if (w === "aus") return null;
+  const a = JZ_DEKO_AUTO[art] || null;
+  if (w === "auto") return a && !jzTieferWinter(art) ? a : null;
+  return [w, a && a[0] === w ? a[1] : JZ_DEKO_STANDARD[w]];
+}
+function jzDekoWeg(h) { const l = (h || document).querySelector("#v-start .statusleiste, .statusleiste"); l?.querySelector(".jz-deko")?.remove(); l?.classList.remove("jz-deko-an"); }
+function jzDeko(h, art) {
+  const leiste = h.querySelector(".statusleiste"); jzDekoWeg(h);
+  const d = jzDekoArt(art); if (!leiste || !d) return;
+  leiste.classList.add("jz-deko-an");
+  leiste.insertAdjacentHTML("beforeend", `<svg class="jz-deko" aria-hidden="true" data-art="${d[0]}" data-farben="${d[1]}"></svg>`);
+  requestAnimationFrame(jzDekoMalen);
+}
+function jzDekoMalen() {
+  const e = document.querySelector("#v-start .statusleiste .jz-deko"); if (!e) return;
+  const W = Math.round(e.getBoundingClientRect().width), art = e.dataset.art, F = JZ_DEKO_FARBEN[e.dataset.farben] || JZ_DEKO_FARBEN.bunt; if (W < 40) return;
+  const mass = `${W}|${art}|${e.dataset.farben}`; if (e.dataset.mass === mass) return; e.dataset.mass = mass;
+  const boegen = Math.max(2, Math.round(W / 130)), sp = W / boegen, durch = art === "laternen" ? 5 : 7, X = (v) => v.toFixed(1);
+  const y = (x) => { const f = (x % sp) / sp; return 1.5 + durch * 4 * f * (1 - f); }; // Girlande hängt in Bögen durch
+  const ab = (x) => (y(x + .5) - y(x - .5)); // Steigung → Neigung der Teile
+  let seil = ""; for (let b = 0; b < boegen; b++) seil += `M${X(b * sp)} 1.5 Q${X((b + .5) * sp)} ${X(1.5 + durch * 2)} ${X((b + 1) * sp)} 1.5 `;
+  let teile = "", H = 22;
+  if (art === "wimpel") {
+    let i = 0; for (let x = 7; x < W - 5; x += 13, i++) {
+      const c = F[i % F.length], a = Math.atan(ab(x)) * 57.3, x0 = x - 5.2, x1 = x + 5.2;
+      teile += `<path d="M${X(x0)} ${X(y(x0))} L${X(x1)} ${X(y(x1))} L${X(x)} ${X(y(x) + 12)} Z" fill="${c}" stroke="rgba(0,0,0,.18)" stroke-width=".5"/>`
+        + (F.length === 2 && c === "#ffffff" ? "" : `<path d="M${X(x0 + 1.4)} ${X(y(x0 + 1.4) + 1.2)} L${X(x - .4)} ${X(y(x) + 7)}" stroke="rgba(255,255,255,.45)" stroke-width=".9" stroke-linecap="round" fill="none" transform="rotate(${X(a * .2)} ${X(x)} ${X(y(x))})"/>`);
+    }
+    H = 22;
+  } else if (art === "lichter") {
+    let i = 0; for (let x = 8; x < W - 4; x += 15, i++) {
+      const c = F[i % F.length], k = (i % 2 ? 1 : -1) * 14 + Math.atan(ab(x)) * 57.3, yy = y(x);
+      teile += `<g transform="rotate(${X(k)} ${X(x)} ${X(yy)})"><circle cx="${X(x)}" cy="${X(yy + 6.5)}" r="5.5" fill="${c}" opacity=".28"/>`
+        + `<rect x="${X(x - 1.3)}" y="${X(yy + .3)}" width="2.6" height="2.6" rx=".6" fill="#2f3b2a"/>`
+        + `<ellipse class="${i % 3 === 1 ? "fk" : ""}" style="${i % 3 === 1 ? `animation-delay:-${(i * .7) % 2.6}s` : ""}" cx="${X(x)}" cy="${X(yy + 6.4)}" rx="2.3" ry="3.4" fill="${c}"/>`
+        + `<ellipse cx="${X(x - .7)}" cy="${X(yy + 5.4)}" rx=".7" ry="1.2" fill="#fff" opacity=".75"/></g>`;
+    }
+    H = 20;
+  } else { // Laternen: runde Papierlaternen mit Rippen, innen leuchtend
+    let i = 0; for (let x = sp / 4; x < W - 6; x += Math.max(34, sp / 2), i++) {
+      const c = F[i % F.length], yy = y(x), cy = yy + 10;
+      teile += `<line x1="${X(x)}" y1="${X(yy)}" x2="${X(x)}" y2="${X(cy - 6)}" stroke="#3a2a1a" stroke-width=".8"/>`
+        + `<ellipse cx="${X(x)}" cy="${X(cy)}" rx="7" ry="6" fill="url(#jzDekoGlut${i % F.length})"/>`
+        + `<path d="M${X(x - 3.5)} ${X(cy - 5.2)} Q${X(x - 5.2)} ${X(cy)} ${X(x - 3.5)} ${X(cy + 5.2)} M${X(x + 3.5)} ${X(cy - 5.2)} Q${X(x + 5.2)} ${X(cy)} ${X(x + 3.5)} ${X(cy + 5.2)} M${X(x)} ${X(cy - 6)} L${X(x)} ${X(cy + 6)}" stroke="rgba(0,0,0,.22)" stroke-width=".6" fill="none"/>`
+        + `<rect x="${X(x - 2.6)}" y="${X(cy - 7)}" width="5.2" height="1.8" rx=".5" fill="#2b2b2b"/><rect x="${X(x - 2.2)}" y="${X(cy + 5.4)}" width="4.4" height="1.6" rx=".5" fill="#2b2b2b"/>`
+        + `<line x1="${X(x)}" y1="${X(cy + 7)}" x2="${X(x)}" y2="${X(cy + 10)}" stroke="${c}" stroke-width="1"/>`;
+    }
+    H = 30;
+  }
+  const verlauf = art === "laternen" ? `<defs>${F.map((c, j) => `<radialGradient id="jzDekoGlut${j}" cx=".5" cy=".55" r=".6"><stop offset="0" stop-color="#fff6c8"/><stop offset=".45" stop-color="${c}"/><stop offset="1" stop-color="${c}" stop-opacity=".85"/></radialGradient>`).join("")}</defs>` : "";
+  e.setAttribute("viewBox", `0 0 ${W} ${H}`); e.style.height = `${H}px`;
+  e.innerHTML = `${verlauf}<path d="${seil}" fill="none" stroke="${art === "lichter" ? "#2f3b2a" : "rgba(60,40,25,.85)"}" stroke-width="${art === "lichter" ? 1 : .9}"/>${teile}`;
+}
+function jzDekoSetzen(w) { try { localStorage.setItem("kc_club_jzDeko", w); } catch {} jzDekoWahlZeigen(); jahreszeitKopf();
+  melde(w === "aus" ? "🚫 Keine Deko an der Leiste" : w === "auto" ? "🔄 Deko passend zur Jahreszeit" : `${JZ_DEKO_WAHL.find(([k]) => k === w)[1]} hängt jetzt an der Leiste`);
+  if (w !== "aus" && !einst("jahreszeit", true)) melde("„🍂 Jahreszeiten im Kopf“ ist aus – erst einschalten, dann hängt die Deko.", true); }
+function jzDekoWahlZeigen() {
+  const z = $("jzDekoWahl"); if (!z) return; const w = jzDekoWahl();
+  z.innerHTML = JZ_DEKO_WAHL.map(([k, t]) => `<button type="button" class="chip${w === k ? " an" : ""}" aria-pressed="${w === k}" onclick="jzDekoSetzen('${k}')">${t}</button>`).join("");
+}
 // 2.277.0 (Wunsch Hansi „länger und unterschiedlich wie Eiszapfen am Dach“): unregelmäßige Abstände, viele kurze, einige lange.
 // 2.278.0 („Spitzen gerade in das Feld darunter“): Länge nach dem echten Abstand bis zum Infofeld – die längsten ragen 6 px hinein,
 // ohne Feld (z. B. Kopf eingerollt) 22 px.
@@ -12670,7 +12744,7 @@ function jzEisLaenge() {
   e.innerHTML = `<defs><linearGradient id="jzEisVerlauf" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity=".97"/><stop offset=".4" stop-color="#eaf7ff" stop-opacity=".92"/><stop offset=".8" stop-color="#b9e2ff" stop-opacity=".82"/><stop offset="1" stop-color="#93ccf3" stop-opacity=".72"/></linearGradient></defs>
     <g fill="url(#jzEisVerlauf)">${zapfen}</g><path class="jz-rand" d="${rand} L${W} -1 Z"/>`;
 }
-addEventListener("resize", () => requestAnimationFrame(jzEisLaenge));
+addEventListener("resize", () => requestAnimationFrame(() => { jzEisLaenge(); jzDekoMalen(); }));
 // 💧 2.281.0 (Wunsch Hansi „ab und an ein leicht blauer Wassertropfen von verschiedenen Eiszapfen – nicht zu oft, sonst stört es“):
 // höchstens ein Tropfen alle 7–16 s – 2.283.0: alle 3½–8 s, nur von den langen Zapfen (2.282.0: deutlicher, fällt bis unten – dort bildet sich langsam eine Pfütze), jedes Mal an einem anderen längeren Zapfen; er wächst an der Spitze, löst sich und fällt kurz.
 // Nur sichtbar, bewegungsarm-Einstellung des Geräts wird beachtet; ein einziger Takt für die ganze App.
@@ -12704,14 +12778,15 @@ addEventListener("resize", () => requestAnimationFrame(jzEisLaenge));
 const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"] };
 function jahreszeitKopf() {
   const h = document.querySelector("#v-start .hero"); if (!h) return;
-  h.querySelector(".jz-schicht")?.remove(); h.querySelector(".jz-sprech")?.remove(); h.classList.remove("jz-boden"); jzbStop();
-  if (!fxAn() || !einst("jahreszeit", true)) return;
+  h.querySelector(".jz-schicht")?.remove(); h.querySelector(".jz-sprech")?.remove(); h.classList.remove("jz-boden"); jzbStop(); jzDekoWeg(h);
+  if (!fxAn() || !einst("jahreszeit", true)) { if (einst("jahreszeit", true)) jzDeko(h, JZB.vorschau || jahreszeitAktuell()); return; } // 2.335.0: die Deko ist ein stilles Bild – auch im Sparmodus
   // 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE: Herbst, Advent/Winter, Frühling und Sommer mit Boden (Laub, Schnee, Gras, Sonnenblume) – Silvester bleibt Feuerwerk
   // 2.263.0 (Fund Hansi „Blätter bleiben immer noch nicht liegen“): sein Handy meldet „Bewegung reduzieren“ (wie schon bei der Jalousie, 2.161.0) –
   // dann lief bisher nur die alte Emoji-Deko, bei der nichts liegen bleibt. Die Bühne ist ruhig und lässt sich mit „🍂 Jahreszeiten im Kopf“ abschalten,
   // sie läuft deshalb auch bei „Bewegung reduzieren“.
   const jetzt = JZB.vorschau || jahreszeitAktuell(); JZ_LETZTE.art = jetzt;
   jzEiszapfen(h, jetzt); // KC-CLUB-JAHRESZEIT-AUTOMATIK (2.273.0)
+  jzDeko(h, jetzt); // 2.335.0 KC-CLUB-DEKO
   if (JZB_ARTEN.includes(jetzt) && jzbStart(h, jetzt)) return;
   const art = jetzt, teile = JZ_TEILE[art], n = art === "sommer" ? 3 : art === "silvester" ? 9 : 11;
   const s = document.createElement("div"); s.className = `jz-schicht jz-${art}`; s.setAttribute("aria-hidden", "true");
