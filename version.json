@@ -1,11 +1,20 @@
 {
-  "version": "2.298.0",
+  "version": "2.299.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🎚️ Bühne: Lautstärkeregler für die Musik rechts – Keil unten dünn, nach oben dicker; hochziehen = lauter (bis gut 4-mal so laut wie bisher), wird gemerkt"
+    "🗣️ Bühne: Lautstärkeregler für Twinkeys Stimme links (Musik rechts) – unten aufs Symbol tippen macht die Stimme stumm, nochmal tippen wieder an",
+    "😄 Neue Sprüche mit Augenzwinkern („Hättest du nicht so viel am Pudding genascht …“, „Nächstes Mal weniger Nudeln …“) – bei jeder Übung einer; „Klasse“ kommt nicht mehr vor"
   ],
   "verlauf": [
+    {
+      "version": "2.299.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🗣️ Bühne: Lautstärkeregler für Twinkeys Stimme links (Musik rechts) – unten aufs Symbol tippen macht die Stimme stumm, nochmal tippen wieder an",
+        "😄 Neue Sprüche mit Augenzwinkern („Hättest du nicht so viel am Pudding genascht …“, „Nächstes Mal weniger Nudeln …“) – bei jeder Übung einer; „Klasse“ kommt nicht mehr vor"
+      ]
+    },
     {
       "version": "2.298.0",
       "datum": "2026-10-12",

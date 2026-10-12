@@ -8721,7 +8721,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
     assert.ok(new RegExp(`\\{ id: "${id}", t: "`).test(b), `Übung ${id} vorhanden`);
   }
   for (const a of ["suppe", "treppe", "kopfneigen", "nackenstark", "hula", "abwischen", "pfanne"]) assert.ok(new RegExp(`\\.bw-figur\\.bw-a-${a} \\.bw-`).test(html), `Bewegung ${a} vorhanden`);
-  assert.ok(/const BW_STIMME = \.\d+;/.test(b) && /u\.volume = BW_STIMME;/.test(b), "Stimme leiser als bisher");
+  assert.ok(/stimme: \.7 \};/.test(b) && /u\.volume = bwLautWert\("stimme"\);/.test(b), "Stimme leiser als bisher (2.299.0: über den Regler)");
   assert.ok(/const BWM_LAUT = \.75, BWM_LEISE = \.26;/.test(b), "Musik lauter, beim Sprechen nur leicht abgesenkt");
   assert.ok(!/\|\|=|\?\?=/.test(b), "alte Handys");
 }
@@ -8730,10 +8730,22 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // Lautstärke hinter dem Kompressor bis gut 4-fach, Begrenzer gegen Übersteuern; Einstellung wird gemerkt
 {
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
-  assert.ok(/\$\{bwLautRegler\(\)\}/.test(b) && /role="slider"/.test(b) && /aria-orientation="vertical"/.test(b), "Regler steht auf der laufenden Bühne");
+  assert.ok(/\$\{bwLautRegler\("musik"\)\}/.test(b) && /role="slider"/.test(b) && /aria-orientation="vertical"/.test(b), "Regler steht auf der laufenden Bühne");
   assert.ok(/points="13,100 17,100 30,0 0,0"/.test(b), "Keil: unten dünn, oben dick");
   assert.ok(/komp\.connect\(BWM\.voll\); BWM\.voll\.connect\(grenze\); grenze\.connect\(BWM\.ctx\.destination\);/.test(b) && /grenze\.ratio\.value = 20;/.test(b), "Lautstärke nach dem Kompressor, Begrenzer davor schützt");
-  assert.ok(/const bwLautGain = \(v\) => v <= \.02 \? 0 : \.15 \* Math\.pow\(30, v\);/.test(b) && /bwWahlSetzen\(\{ laut: /.test(b), "bis 4,5-fach, gemerkt");
+  assert.ok(/const bwLautGain = \(v\) => v <= \.02 \? 0 : \.15 \* Math\.pow\(30, v\);/.test(b) && /bwWahlSetzen\(\{ \[BW_LAUT_FELD\[art\]\]: /.test(b) && /musik: "laut"/.test(b), "bis 4,5-fach, gemerkt");
   assert.ok(/\.bw-laut \{[^}]*touch-action: none/.test(html), "Ziehen scrollt nicht die Seite");
+  assert.ok(!/\|\|=|\?\?=/.test(b), "alte Handys");
+}
+
+// 2.299.0 KC-CLUB-BUEHNE-STIMME (Wunsch Hansi): Regler links für die Stimme, unten tippen = stumm; seltener „Klasse“; Sprüche mit Augenzwinkern
+{
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  assert.ok(/\$\{bwLautRegler\("musik"\)\}\$\{bwLautRegler\("stimme"\)\}/.test(b) && /\.bw-laut\.stimme \{ right: auto; left: 8px; \}/.test(html), "Stimm-Regler links, Musik rechts");
+  assert.ok(/if \(!\("speechSynthesis" in window\) \|\| bwStimmeStumm\(\)\) return;/.test(b) && /function bwLautStumm\(art\)/.test(b) && /closest\?\.\("\.bw-laut-sym\.unten"\)\) return bwLautStumm\(art\);/.test(b), "unten tippen: stumm, nochmal: wieder an");
+  assert.ok(/else if \(!p\) \{ try \{ speechSynthesis\.cancel\(\); \}/.test(b), "beim Stummschalten verstummt Twinkey sofort");
+  const sprueche = b.slice(b.indexOf("const BW_LOB = ["), b.indexOf("function bwTick()"));
+  assert.ok(!/Klasse/.test(sprueche), "kein „Klasse“ mehr in den Sprüchen");
+  assert.ok(/const BW_FRECH = \[[^\]]*Pudding genascht[^\]]*weniger Nudeln[^\]]*auf meinen Hüften/.test(b) && /L\.rest === 21\) bwSag\(BW_FRECH\[/.test(b), "Sprüche mit Augenzwinkern bei jeder Übung");
   assert.ok(!/\|\|=|\?\?=/.test(b), "alte Handys");
 }

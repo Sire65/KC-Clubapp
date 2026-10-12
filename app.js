@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.298.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.299.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12822,12 +12822,18 @@ const BW_UEBUNGEN = [
 const BW_MODI = [["sitzen", "🪑 Im Sitzen"], ["stehen", "🧍 Im Stehen"], ["kueche", "🥄 Küchenhelfer"]];
 const BW_DAUER = [5, 10, 15];
 const BW_TEMPO = { sitzen: 112, stehen: 120, kueche: 116 }; // Schläge/Min. (Seniorenkurse um 120, im Sitzen ruhiger)
-const BW_LOB = ["Super machst du das!", "Klasse – weiter so!", "Schön weiteratmen – ein und aus!", "Lächeln nicht vergessen!", "Du bist heute der Star auf der Bühne!",
+const BW_LOB = ["Super machst du das!", "Spitze – weiter so!", "Schön weiteratmen – ein und aus!", "Lächeln nicht vergessen!", "Du bist heute der Star auf der Bühne!",
   "Das sieht richtig sportlich aus!", "Mit Schwung – die Küche rockt!", "Wer rastet, der rostet – wer rührt, der glänzt!", "Prima, ganz in deinem Tempo!",
   "Spürst du, wie es warm wird?", "Toll – ich bin stolz auf dich!", "Und weiter – du schaffst das!", "Schultern locker, schön aufrecht!", "Bravo! Das macht Spaß, oder?",
   "Besser als jede Bratkartoffel!", "Jawoll – so sieht Bewegung aus!"];
+// 2.299.0 (Wunsch Hansi): Sprüche mit Augenzwinkern – bei jeder Übung einer (nach 9 Sekunden)
+const BW_FRECH = ["Hättest du nicht so viel am Pudding genascht, bräuchten wir das jetzt nicht machen!", "Nächstes Mal weniger Nudeln – dann schwingen die Hüften auch besser mit!",
+  "Alles, was du isst, muss ich zum Glück nicht auf meinen Hüften tragen!", "Wer heimlich vom Teig nascht, rührt jetzt doppelt!", "Die Sahnetorte von gestern winkt gerade zum Abschied!",
+  "Jede Bewegung – ein Gummibärchen weniger auf den Hüften!", "Die Bratwurst von gestern läuft gerade wieder weg!", "Wer beim Abschmecken nicht spart, muss beim Turnen ran!",
+  "Kalorien sind kleine Tierchen, die nachts die Kleider enger nähen – die jagen wir jetzt!", "Der Kühlschrank kann warten – erst wird geturnt!",
+  "Das zweite Stück Kuchen war lecker, oder? Na also – weiter geht’s!", "So schnell war die Schwarzwälder Kirschtorte noch nie verbrannt!"];
 const BW_ENDSPURT = ["Noch 10 Sekunden – gib nochmal alles!", "Endspurt – noch 10!", "Die letzten 10 – du schaffst das!", "Noch 10 – zeig, was du kannst!"];
-const BW_SCHUETTELN_SAG = ["Und jetzt ausschütteln!", "Super! Locker ausschütteln!", "Klasse! Arme und Beine ausschütteln!", "Geschafft – und schön ausschütteln!"];
+const BW_SCHUETTELN_SAG = ["Und jetzt ausschütteln!", "Super! Locker ausschütteln!", "Prima! Arme und Beine ausschütteln!", "Geschafft – und schön ausschütteln!"];
 const BW_SEK = 30, BW_SCHUETTELN = 6, BW_BEREIT = 7;
 const BW = { lauf: null, takt: 0, wach: null };
 const bwWahl = () => { try { return { modus: "sitzen", dauer: 5, musik: true, ansage: true, ...JSON.parse(esLies("bw", "{}")) }; } catch (e) { return { modus: "sitzen", dauer: 5, musik: true, ansage: true }; } };
@@ -12924,9 +12930,8 @@ function bwSag(t, sofort, blase, nebenbei) { // blase: kürzerer Text für die S
   if (!L?.ansage) return; try { if (sofort) speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwSprechen(t);
 }
 // 2.297.0 (Wunsch Hansi „Musik noch lauter, die Stimme ist zu dominant“): Twinkey spricht auf der Bühne etwas leiser
-const BW_STIMME = .7;
-function bwSprechen(t) { try { if (!("speechSynthesis" in window)) return; const u = sprechAusgabe(t); u.volume = BW_STIMME; speechSynthesis.speak(u); } catch (e) { /* ohne Sprache */ } }
-const BW_KURZ = ["Super!", "Weiter so!", "Stark!", "Klasse!", "Jawoll!", "Prima!"];
+function bwSprechen(t) { try { if (!("speechSynthesis" in window) || bwStimmeStumm()) return; const u = sprechAusgabe(t); u.volume = bwLautWert("stimme"); speechSynthesis.speak(u); } catch (e) { /* ohne Sprache */ } }
+const BW_KURZ = ["Super!", "Weiter so!", "Stark!", "Spitze!", "Jawoll!", "Prima!"];
 const bwZufall = (liste, L) => liste[(L.sprueche++ + L.i) % liste.length];
 function bwTick() {
   const L = BW.lauf; if (!L) return clearInterval(BW.takt);
@@ -12943,7 +12948,7 @@ function bwTick() {
   if (L.phase === "uebung") { // Sprüche gleichmäßig verteilt: 27 · 21 · 15 · 10 · 6 · 3-2-1
     L.sek++;
     if (L.rest === 27) bwSag(u.c?.[0] || BW_LOB[L.lob++ % BW_LOB.length], false, "", true);
-    else if (L.rest === 21) bwSag(BW_LOB[L.lob++ % BW_LOB.length], false, "", true);
+    else if (L.rest === 21) bwSag(BW_FRECH[(L.lob + L.i) % BW_FRECH.length], false, "", true);
     else if (L.rest === 15) bwSag(u.w || u.c?.[1] || BW_LOB[L.lob++ % BW_LOB.length], false, "", !u.w);
     else if (L.rest === 10) bwSag(bwZufall(BW_ENDSPURT, L), false, "", true);
     else if (L.rest === 6) bwSag(bwZufall(BW_KURZ, L), false, "", true);
@@ -12971,7 +12976,7 @@ function bwLaufZeigen(vorhangAuf) {
     <div class="bw-balken-bahn"><div class="bw-balken" id="bwBalken"></div></div>
     <div class="bw-sprech" id="bwSprech" aria-live="polite">${esc(alt)}</div>
     <div class="bw-mitte">${bwFigur(anim, sitz, L.phase === "schuetteln" ? "" : u.p, L.phase === "schuetteln" ? "" : u.ding, bwSchlag(), bwPhase(), L.farbe + L.i)}</div>
-    <div class="bw-tipp">${esc(L.phase === "schuetteln" ? "Gut gemacht! 👏" : u.h)}</div>${bwLautRegler()}
+    <div class="bw-tipp">${esc(L.phase === "schuetteln" ? "Gut gemacht! 👏" : u.h)}</div>${bwLautRegler("musik")}${bwLautRegler("stimme")}
     <div class="es-leiste"><button type="button" class="es-k es-haupt" onclick="bwPause()">${L.pause ? "▶︎ Weiter" : "⏸ Pause"}</button><button type="button" class="es-k" onclick="bwWeiter()" aria-label="Übung überspringen">⏭</button>
       <button type="button" class="es-k${L.musik ? " an" : ""}" onclick="bwMusikSchalten()" aria-label="Musik an oder aus">${L.musik ? "🎵" : "🔇"}</button><button type="button" class="es-k${L.ansage ? " an" : ""}" onclick="bwAnsageSchalten()" aria-label="Ansage an oder aus">${L.ansage ? "🔊" : "🔈"}</button>
       <button type="button" class="es-k" onclick="bwStopp(true)">✖ Ende</button></div></div>`;
@@ -12997,29 +13002,39 @@ function bwFertig() {
       <button type="button" class="es-k es-haupt bw-los" onclick="esBuehneZeigen($('hrFlaeche'))">🔁 Nochmal</button></div></div>`;
 }
 // ----- 2.298.0 KC-CLUB-BUEHNE-LAUTSTAERKE (Wunsch Hansi): Regler rechts für die Musik – Keil unten dünn, nach oben (lauter) dicker -----
-const BW_LAUT_STANDARD = .8;
-const bwLautWert = () => { const v = typeof BW.laut === "number" ? BW.laut : Number(bwWahl().laut); return v >= 0 && v <= 1 ? v : BW_LAUT_STANDARD; };
+// 2.299.0 KC-CLUB-BUEHNE-STIMME (Wunsch Hansi): gleicher Regler links für Twinkeys Stimme; unten aufs Symbol tippen = stumm (nochmal = wieder an)
+const BW_LAUT_STANDARD = { musik: .8, stimme: .7 };
+const BW_LAUT_FELD = { musik: "laut", stimme: "stimme" }; // Name in den gemerkten Einstellungen
+const BW_LAUT_SYM = { musik: ["🔊", "🎵", "🔇"], stimme: ["📣", "🗣️", "🤐"] }; // oben, unten, unten bei stumm
+const bwLautWert = (art = "musik") => { const z = BW["laut_" + art], v = typeof z === "number" ? z : Number(bwWahl()[BW_LAUT_FELD[art]]); return v >= 0 && v <= 1 ? v : BW_LAUT_STANDARD[art]; };
 const bwLautGain = (v) => v <= .02 ? 0 : .15 * Math.pow(30, v); // 0 % stumm · 50 % ≈ 0,8 · 80 % ≈ 2,3 · 100 % = 4,5
+const bwStimmeStumm = () => bwLautWert("stimme") <= .02;
 function bwLautKeil(p) { const h = 2 + 13 * p / 100; return `${15 - 2},100 ${15 + 2},100 ${(15 + h).toFixed(1)},${100 - p} ${(15 - h).toFixed(1)},${100 - p}`; }
-function bwLautRegler() {
-  const p = Math.round(bwLautWert() * 100);
-  return `<div class="bw-laut" id="bwLaut" role="slider" tabindex="0" aria-label="Lautstärke der Musik" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p}" onpointerdown="bwLautGriff(event)" onkeydown="bwLautTaste(event)">
-    <span class="bw-laut-sym oben" aria-hidden="true">🔊</span><div class="bw-laut-feld"><svg viewBox="0 0 30 100" preserveAspectRatio="none" aria-hidden="true"><polygon points="13,100 17,100 30,0 0,0" class="bw-laut-bahn"/><polygon id="bwLautFuell" points="${bwLautKeil(p)}" class="bw-laut-fuell"/></svg><i class="bw-laut-knopf" id="bwLautKnopf" style="bottom:${p}%"></i></div><span class="bw-laut-sym" aria-hidden="true">🎵</span></div>`;
+function bwLautRegler(art = "musik") {
+  const p = Math.round(bwLautWert(art) * 100), [oben, unten, stumm] = BW_LAUT_SYM[art], name = art === "musik" ? "der Musik" : "der Stimme";
+  return `<div class="bw-laut ${art}" id="bwLaut_${art}" role="slider" tabindex="0" aria-label="Lautstärke ${name}" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p}" onpointerdown="bwLautGriff(event, '${art}')" onkeydown="bwLautTaste(event, '${art}')">
+    <span class="bw-laut-sym oben" aria-hidden="true">${oben}</span><div class="bw-laut-feld"><svg viewBox="0 0 30 100" preserveAspectRatio="none" aria-hidden="true"><polygon points="13,100 17,100 30,0 0,0" class="bw-laut-bahn"/><polygon id="bwLautFuell_${art}" points="${bwLautKeil(p)}" class="bw-laut-fuell"/></svg><i class="bw-laut-knopf" id="bwLautKnopf_${art}" style="bottom:${p}%"></i></div><button type="button" class="bw-laut-sym unten${p <= 2 ? " stumm" : ""}" id="bwLautStumm_${art}" data-sym="${unten}" data-stumm="${stumm}" aria-label="${name.replace("der ", "")} stumm oder wieder an">${p <= 2 ? stumm : unten}</button></div>`;
 }
-function bwLautSetzen(v, merken) {
-  v = Math.min(1, Math.max(0, v)); BW.laut = v; const p = Math.round(v * 100);
-  $("bwLautFuell")?.setAttribute("points", bwLautKeil(p)); const k = $("bwLautKnopf"); if (k) k.style.bottom = `${p}%`; $("bwLaut")?.setAttribute("aria-valuenow", p);
-  try { BWM.voll?.gain.setTargetAtTime(bwLautGain(v), BWM.ctx.currentTime, .05); } catch (e) { /* ohne Ton */ }
-  if (merken) bwWahlSetzen({ laut: Math.round(v * 100) / 100 }, true);
+function bwLautSetzen(v, merken, art = "musik") {
+  v = Math.min(1, Math.max(0, v)); if (v <= .02) v = 0; BW["laut_" + art] = v; const p = Math.round(v * 100);
+  $("bwLautFuell_" + art)?.setAttribute("points", bwLautKeil(p)); const k = $("bwLautKnopf_" + art); if (k) k.style.bottom = `${p}%`; $("bwLaut_" + art)?.setAttribute("aria-valuenow", p);
+  const s = $("bwLautStumm_" + art); if (s) { s.classList.toggle("stumm", !p); s.textContent = p ? s.dataset.sym : s.dataset.stumm; }
+  if (art === "musik") { try { BWM.voll?.gain.setTargetAtTime(bwLautGain(v), BWM.ctx.currentTime, .05); } catch (e) { /* ohne Ton */ } }
+  else if (!p) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } } // stumm: sofort still
+  if (merken) bwWahlSetzen({ [BW_LAUT_FELD[art]]: Math.round(v * 100) / 100 }, true);
 }
-function bwLautGriff(e) {
+function bwLautStumm(art) { // unten aufs Symbol tippen: stumm – nochmal tippen: zurück auf den vorigen Wert
+  const v = bwLautWert(art); if (v > 0) { BW["vorher_" + art] = v; bwLautSetzen(0, true, art); } else bwLautSetzen(BW["vorher_" + art] || BW_LAUT_STANDARD[art], true, art);
+}
+function bwLautGriff(e, art = "musik") {
   const el = e.currentTarget, feld = el.querySelector(".bw-laut-feld"); e.preventDefault(); e.stopPropagation();
+  if (e.target.closest?.(".bw-laut-sym.unten")) return bwLautStumm(art);
   try { el.setPointerCapture(e.pointerId); } catch (x) { /* ohne Fangen */ }
-  const setz = (ev) => { const r = feld.getBoundingClientRect(); bwLautSetzen(1 - (ev.clientY - r.top) / r.height); };
+  const setz = (ev) => { const r = feld.getBoundingClientRect(); bwLautSetzen(1 - (ev.clientY - r.top) / r.height, false, art); };
   setz(e); el.onpointermove = (ev) => { ev.stopPropagation(); setz(ev); };
-  el.onpointerup = el.onpointercancel = () => { el.onpointermove = null; el.onpointerup = el.onpointercancel = null; bwLautSetzen(bwLautWert(), true); };
+  el.onpointerup = el.onpointercancel = () => { el.onpointermove = null; el.onpointerup = el.onpointercancel = null; bwLautSetzen(bwLautWert(art), true, art); };
 }
-function bwLautTaste(e) { const d = e.key === "ArrowUp" || e.key === "ArrowRight" ? .05 : e.key === "ArrowDown" || e.key === "ArrowLeft" ? -.05 : 0; if (!d) return; e.preventDefault(); bwLautSetzen(bwLautWert() + d, true); }
+function bwLautTaste(e, art = "musik") { const d = e.key === "ArrowUp" || e.key === "ArrowRight" ? .05 : e.key === "ArrowDown" || e.key === "ArrowLeft" ? -.05 : 0; if (!d) return; e.preventDefault(); bwLautSetzen(bwLautWert(art) + d, true, art); }
 // ----- Musik: im Handy erzeugt (Web Audio) – Pop/Disco-Arrangement, leiser, solange Twinkey spricht -----
 // Stufe 1 (Vorbereiten/Ausschütteln): Bass-Trommel, Hi-Hats, Disco-Bass, Flächen. Stufe 2 (Übung): + Klatschen, Akkord-Stöße, Hook-Melodie mit Echo.
 // Alle 8 Takte ein Trommelwirbel; vor dem Start ein Riser, auf „Los!“ ein Becken.
@@ -13037,7 +13052,7 @@ function bwMusik(an) {
       // 2.296.0 (Wunsch Hansi „Musik lauter, beim Sprechen absenken“): lauter, mit Kompressor (kein Übersteuern); beim Sprechen deutlich leiser
       BWM.ctx = new C(); BWM.aus = BWM.ctx.createGain(); const komp = BWM.ctx.createDynamicsCompressor(); komp.threshold.value = -16; komp.ratio.value = 6; komp.attack.value = .01; komp.release.value = .2;
       // 2.298.0 (Wunsch Hansi „Musik immer noch zu leise“): hinter dem Kompressor die Lautstärke vom Regler (bis gut 4-fach), davor ein Begrenzer gegen Übersteuern
-      BWM.voll = BWM.ctx.createGain(); BWM.voll.gain.value = bwLautGain(bwLautWert()); const grenze = BWM.ctx.createDynamicsCompressor(); grenze.threshold.value = -2; grenze.knee.value = 0; grenze.ratio.value = 20; grenze.attack.value = .002; grenze.release.value = .1;
+      BWM.voll = BWM.ctx.createGain(); BWM.voll.gain.value = bwLautGain(bwLautWert("musik")); const grenze = BWM.ctx.createDynamicsCompressor(); grenze.threshold.value = -2; grenze.knee.value = 0; grenze.ratio.value = 20; grenze.attack.value = .002; grenze.release.value = .1;
       BWM.aus.connect(komp); komp.connect(BWM.voll); BWM.voll.connect(grenze); grenze.connect(BWM.ctx.destination);
       BWM.hall = BWM.ctx.createDelay(1); BWM.hall.delayTime.value = .375; const fb = BWM.ctx.createGain(); fb.gain.value = .28; const hg = BWM.ctx.createGain(); hg.gain.value = .35;
       BWM.hall.connect(fb); fb.connect(BWM.hall); BWM.hall.connect(hg); hg.connect(BWM.aus);

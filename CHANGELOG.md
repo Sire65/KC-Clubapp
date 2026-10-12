@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.299.0 – 2026-10-12 – KC-CLUB-BUEHNE-STIMME
+Wunsch Hansi. Auf der laufenden Bühne links ein zweiter Keil-Regler für Twinkeys Stimme (grün; oben 📣, unten 🗣️) – gleiche Bedienung wie der Musik-Regler rechts. Unten aufs Symbol tippen schaltet stumm (🤐, rot hinterlegt, Twinkey verstummt sofort), nochmal tippen holt die vorige Lautstärke zurück; das gilt auch für die Musik (🎵 → 🔇). Beide Einstellungen werden gemerkt; die Sprechblase zeigt den Text weiterhin. „Klasse“ aus den Sprüchen genommen (jetzt „Spitze“/„Prima“). Neue Sprüche mit Augenzwinkern, bei jeder Übung einer: „Hättest du nicht so viel am Pudding genascht, bräuchten wir das jetzt nicht machen!“, „Nächstes Mal weniger Nudeln – dann schwingen die Hüften auch besser mit!“, „Alles, was du isst, muss ich zum Glück nicht auf meinen Hüften tragen!“ und neun weitere. Sprechblase schmaler, damit sie die Regler nicht verdeckt.
+
 ## 2.298.0 – 2026-10-12 – KC-CLUB-BUEHNE-LAUTSTAERKE
 Wunsch Hansi („Musik immer noch zu leise“). Auf der laufenden Bühne rechts ein senkrechter Lautstärkeregler für die Musik: Keil, unten dünn (🎵) und nach oben dicker (🔊), gelb gefüllt bis zum weißen Griff; hochziehen = lauter, runter = leiser, ganz unten stumm; per Pfeiltasten bedienbar; die Einstellung wird gemerkt. Technik: Die Lautstärke sitzt jetzt hinter dem Kompressor (bisher hat der Kompressor die Musik wieder leiser gedrückt) und geht bis gut 4-fach (Standard 80 % ≈ 2,3-fach); ein Begrenzer davor verhindert Übersteuern. Die Absenkung beim Sprechen bleibt.
 

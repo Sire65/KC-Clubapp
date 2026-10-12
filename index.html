@@ -2813,13 +2813,15 @@
   .bw-figur .bw-kopf { animation: bwNick var(--b) ease-in-out calc(var(--ph, 0s) + var(--b) * .18) infinite; } @keyframes bwNick { 0%, 100% { transform: rotate(2deg); } 50% { transform: rotate(-1deg); } }
   .bw-figur .bw-schweiss { animation: bwSchweiss 3.5s ease-in infinite; } @keyframes bwSchweiss { 0%, 55% { opacity: 0; transform: translateY(0); } 65% { opacity: 1; } 100% { opacity: 0; transform: translateY(9px); } }
   .bw-buehne.angehalten .bw-figur, .bw-buehne.angehalten .bw-figur * { animation-play-state: paused !important; }
-  .bw-sprech { position: absolute; left: 50%; top: 82px; transform: translateX(-50%); max-width: 82%; z-index: 4; background: #fff; color: #222; border-radius: 16px; padding: 6px 12px; font-weight: 700; font-size: .95rem; text-align: center;
+  .bw-sprech { position: absolute; left: 50%; top: 82px; transform: translateX(-50%); max-width: calc(100% - 128px); z-index: 4; background: #fff; color: #222; border-radius: 16px; padding: 6px 12px; font-weight: 700; font-size: .95rem; text-align: center;
     box-shadow: 0 4px 12px rgba(0,0,0,.4); opacity: 0; pointer-events: none; }
   .bw-sprech:empty { display: none; }
-  .bw-laut { position: absolute; right: 8px; top: 92px; height: min(48%, 300px); width: 44px; z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 4px; touch-action: none; user-select: none; -webkit-user-select: none; cursor: ns-resize;
+  .bw-laut { position: absolute; right: 8px; left: auto; top: 92px; height: min(48%, 300px); width: 44px; z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 4px; touch-action: none; user-select: none; -webkit-user-select: none; cursor: ns-resize;
     background: rgba(0,0,0,.35); border-radius: 22px; padding: 6px 0; }
   .bw-laut:focus-visible { outline: 3px solid #ffd43b; outline-offset: 2px; }
-  .bw-laut-sym { font-size: 1rem; line-height: 1; } .bw-laut-sym.oben { font-size: 1.1rem; }
+  .bw-laut.stimme { right: auto; left: 8px; } .bw-laut.stimme .bw-laut-fuell { fill: #63e6be; }
+  .bw-laut-sym { font-size: 1rem; line-height: 1; } button.bw-laut-sym { background: none; border: 0; padding: 4px 6px; margin: -4px 0; color: inherit; font: inherit; font-size: 1.15rem; cursor: pointer; border-radius: 12px; }
+  button.bw-laut-sym.stumm { background: rgba(255,80,80,.35); } .bw-laut-sym.oben { font-size: 1.1rem; }
   .bw-laut-feld { position: relative; flex: 1; width: 28px; min-height: 60px; }
   .bw-laut-feld svg { position: absolute; inset: 0; width: 100%; height: 100%; }
   .bw-laut-bahn { fill: rgba(255,255,255,.22); } .bw-laut-fuell { fill: #ffd43b; }
@@ -4681,6 +4683,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.298.0" data-v="2.298.0"></script>
+<script src="app.js?v=2.299.0" data-v="2.299.0"></script>
 </body>
 </html>
