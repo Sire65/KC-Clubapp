@@ -9101,3 +9101,10 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/if \(!await dwBestaetigen\(true\)\) \{ DWB\.geaendert = false; return; \}/.test(z) && !/Nein, danke/.test(z), "kein Weg ohne Fertig, außer der Versand scheitert");
   assert.ok(/if \(await dwBestaetigen\(true\)\) dwSchliessen\(\);/.test(html) && />Abbrechen<\/button><\/div>`\);/.test(html), "Leiste: Fertig schließt ab");
 }
+
+// 2.327.0 KC-CLUB-ESELSOHR-BLINKEN: doppelt blinken in Signalfarbe; Update-Hinweis ohne BCC
+{
+  assert.ok(/\.eselsohr\.blink2::before \{ animation: esBlink2 1\.3s/.test(html) && /@keyframes esBlink2 \{ 0%, 34%, 70%, 100% \{ opacity: 0; \} 14%, 50% \{ opacity: 1; \} \}/.test(html), "zweimal aufleuchten");
+  assert.ok(/function esBlinken\(\)/.test(html) && /!esOhneAnim\(\) && !BW\.lauf && aktuelleAnsicht === "start"/.test(html) && /esBlinkenPlanen\(4000\);/.test(html), "Takt mit Rücksicht");
+  assert.ok(!/BCC an den Admin/.test(lies("version.json")), "Update-Hinweis ohne BCC");
+}

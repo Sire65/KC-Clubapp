@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.326.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.327.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12705,8 +12705,21 @@ function esEinsetzen() {
   let o = document.getElementById("eselsohr");
   if (!esAn()) { o?.remove(); if (ES.offen) esDrehen(false, true); return; }
   if (o) return;
+  esBlinkenPlanen(4000);
   h.insertAdjacentHTML("beforeend", `<button type="button" class="eselsohr" id="eselsohr" title="Eselsohr – doppelt tippen (oder nach links ziehen): Kopf umdrehen" aria-label="Kopf umdrehen: Diashow, Tafel, Flipchart, Uhr, Bühne, Spiegel"></button>`);
   esZiehen(h.lastElementChild, false);
+}
+// 2.327.0 KC-CLUB-ESELSOHR-BLINKEN (Wunsch Hansi „das Eselsohr soll zwischendurch kurz doppelt blinken, um zu zeigen: hier doppelt klicken –
+// in schöner Signalfarbe, damit es auffällt“): alle 35–60 s ein doppeltes Aufleuchten in Gelb-Orange (auch hinten zum Zurückdrehen).
+// Nicht bei „Bewegung reduzieren“, nicht im Hintergrund, nicht während des Trainings oder wenn die Startseite nicht zu sehen ist.
+function esBlinkenPlanen(ms) { clearTimeout(ES.blinkUhr); ES.blinkUhr = setTimeout(esBlinken, ms ?? 35000 + Math.random() * 25000); }
+function esBlinken() {
+  if (!document.getElementById("eselsohr")) return; // Eselsohr ausgeschaltet: kein Takt mehr (esEinsetzen startet ihn neu)
+  const o = (ES.offen && document.querySelector("#v-start .eselsohr.hinten")) || document.getElementById("eselsohr");
+  if (!document.hidden && !esOhneAnim() && !BW.lauf && aktuelleAnsicht === "start" && !o.style.getPropertyValue("--zug")) {
+    o.classList.remove("blink2"); void o.offsetWidth; o.classList.add("blink2"); setTimeout(() => o.classList.remove("blink2"), 1400);
+  }
+  esBlinkenPlanen();
 }
 // Ziehen am Eselsohr: vorne nach links (umdrehen), hinten nach rechts (zurück). Kurzes Antippen vorne: kleiner Wink; hinten: Doppeltipp = zurück.
 function esZiehen(o, hinten) {

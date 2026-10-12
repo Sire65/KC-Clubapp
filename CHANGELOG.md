@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.327.0 – 2026-10-12 – KC-CLUB-ESELSOHR-BLINKEN
+Wunsch Hansi („das Eselsohr soll zwischendurch kurz doppelt blinken, um zu zeigen: hier doppelt klicken – in schöner Signalfarbe, damit es auffällt“). 4 s nach dem Start und danach alle 35–60 s leuchtet die Ecke zweimal kurz in Gelb-Orange (#ffd400 → #ff5e00) mit leuchtendem Schein auf (1,3 s); ist der Kopf umgedreht, blinkt das Eselsohr der Rückseite. Nicht bei „Bewegung reduzieren“, nicht im Hintergrund, nicht während des Trainings, nicht beim Ziehen und nur auf der Startseite. Außerdem (Wunsch Hansi): im Update-Hinweis zu 2.325.0 steht nicht mehr, dass die Mail in BCC an den Admin geht (am Versand ändert sich nichts).
+
 ## 2.326.0 – 2026-10-12 – KC-CLUB-DW-FERTIG-PFLICHT
 Wunsch Hansi („der Fertig-Knopf soll Pflicht sein, sonst geht es an der Stelle nicht weiter – Fertig und Abbrechen anbieten“). Wer in den Dienstwünschen etwas gespeichert und noch nicht abgeschlossen hat, bekommt beim „← Zurück“ (auch beim Zurück aus Twinkey selbst) nur „✅ Fertig“ oder „Abbrechen“: Fertig schickt die Bestätigung mit Zusammenfassung per E-Mail (CC/BCC wie 2.325.0) und schließt das Fenster, Abbrechen führt zurück in die Eingabe. „Nein, danke“ gibt es nicht mehr. Ausnahme, damit niemand festsitzt: Schlägt der Versand fehl (Netz), steht der Fehler da und das nächste Zurück schließt. Die Leiste „Alle Tage eingetragen“ bietet ebenso „✅ Fertig – Bestätigung mit Zusammenfassung per E-Mail“ oder „Abbrechen“ (statt „Später“).
 

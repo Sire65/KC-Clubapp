@@ -1,12 +1,18 @@
 {
-  "version": "2.326.0",
+  "version": "2.327.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "✅ Dienstwünsche: „Fertig“ ist jetzt Pflicht – wer etwas eingetragen hat, kommt beim Zurückgehen nur mit „✅ Fertig“ (Bestätigung per E-Mail) oder „Abbrechen“ (zurück zur Eingabe) weiter",
-    "🎉 Am Ende (alle Tage eingetragen): „✅ Fertig – Bestätigung mit Zusammenfassung per E-Mail“ oder „Abbrechen“ – Fertig schickt die Bestätigung und schließt ab"
+    "📄 Das Eselsohr unten rechts am Kopf blinkt zwischendurch kurz doppelt in leuchtendem Gelb-Orange – als Zeichen: hier doppelt tippen"
   ],
   "verlauf": [
+    {
+      "version": "2.327.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "📄 Das Eselsohr unten rechts am Kopf blinkt zwischendurch kurz doppelt in leuchtendem Gelb-Orange – als Zeichen: hier doppelt tippen"
+      ]
+    },
     {
       "version": "2.326.0",
       "datum": "2026-10-12",
@@ -19,7 +25,7 @@
       "version": "2.325.0",
       "datum": "2026-10-12",
       "neu": [
-        "📧 Bestätigung der Dienstwünsche geht jetzt immer in CC an Clubsprecher und Kassenwart (Klaus und Dieter) und in BCC an den Admin",
+        "📧 Bestätigung der Dienstwünsche geht jetzt immer in CC an Clubsprecher und Kassenwart (Klaus und Dieter)",
         "📥 Im Eingang (Dienstzeiten eines Mitglieds) neuer Knopf „📧 Bestätigung an … schicken“ – die Clubleitung kann die Bestätigung selbst auslösen"
       ]
     },
