@@ -1,11 +1,20 @@
 {
-  "version": "2.306.0",
+  "version": "2.307.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🗣️ Twinkey spricht wieder – hängende Sprachausgabe wird von selbst gelöst"
+    "🎸 Bühne: Musikrichtungen als Kacheln – Disco, Reggae, Funky, Rock, Ballade, Latin, Schlager",
+    "💬 Twinkey hat neue Sprüche – motivierend und mit Augenzwinkern"
   ],
   "verlauf": [
+    {
+      "version": "2.307.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🎸 Bühne: Musikrichtungen als Kacheln – Disco, Reggae, Funky, Rock, Ballade, Latin, Schlager",
+        "💬 Twinkey hat neue Sprüche – motivierend und mit Augenzwinkern"
+      ]
+    },
     {
       "version": "2.306.0",
       "datum": "2026-10-12",

@@ -5897,14 +5897,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
 {
   const ids = [...html.matchAll(/\{ id: "(\w+)", t: "[^"]+", stil: "(\w+)", sym: "[^"]+", bpm: (\d+), tanz: \[/g)].map((m) => [m[1], m[2], +m[3]]);
-  assert.deepEqual(ids.map((x) => x[0]), ["disco", "disco2", "disco3", "disco4", "disco5", "reggae1", "reggae2", "funk", "samba", "ballade", "polka"], "elf Stücke (2.303.0: + vier Disco)");
-  assert.ok(ids.filter((x) => x[1] === "Reggae").length === 2 && ids.every((x) => x[2] >= 60 && x[2] <= 130), "zwei Reggae-Stücke, Tempo im Rahmen");
+  assert.ok(["disco", "disco2", "disco3", "disco4", "disco5", "reggae1", "reggae2", "funk", "samba", "ballade", "polka"].every((id, k) => ids[k]?.[0] === id), "bisherige Stücke vorne, gleiche Reihenfolge (2.307.0: + Richtungen)");
+  assert.ok(ids.filter((x) => x[1] === "Reggae").length === 2 && ids.every((x) => x[2] >= 60 && x[2] <= 170), "zwei Reggae-Stücke, Tempo im Rahmen (2.307.0: Rock'n'Roll/Walzer bis 170)");
   assert.ok(/onclick="bwHoeren\(\)">🎶 Nur Musik hören<\/button>/.test(html), "Knopf auf der Bühne");
   assert.ok(/if \(BWM\.stueck\?\.spiel\) BWM\.stueck\.spiel\(BWM\.gesamt, BWM\.zeit\); else bwMusikSchritt\(BWM\.schritt, BWM\.zeit\);/.test(html), "Trainingsmusik unverändert, Stücke über eigene Spielfunktion");
   assert.ok(/if \(BW\.hoeren\) bwStopp\(false\); BWM\.stueck = bwTrainingsStueck\(w\.modus\); BWM\.gesamt = 0;/.test(html), "Training: Disco-Stück im Tempo der Übungen (2.303.0)");
   assert.ok(/BW\.lauf = null; BW\.hoeren = null; BWM\.stueck = null;/.test(html) && /if \(BW\.lauf \|\| BW\.hoeren \|\| BWM\.laeuft\) bwStopp\(\); \}/.test(html), "Ende/Ansicht verlassen stoppt auch die Musik");
   assert.ok(/if \(!esSichtbar\(\)\) \{ if \(!H\.pause\) \{ H\.pause = true; bwMusik\(false\);/.test(html), "nicht zu sehen → Pause");
-  assert.ok(/if \(takt >= ges\) \{ bwmStueck\(H\.i \+ 1\);/.test(html) && /const bwmTakte = \(s\) => Math\.max\(32,/.test(html), "nach ca. 2½ Min. das nächste Stück");
+  assert.ok(/if \(takt >= ges\) \{ bwmStueck\((H\.i \+ 1|bwmNachbar\(H\.i, 1\))\);/.test(html) && /const bwmTakte = \(s\) => Math\.max\(32,/.test(html), "nach ca. 2½ Min. das nächste Stück");
   assert.ok(/\{ id: "es_musik", thema: "toene", sym: "🎶"/.test(html), "Hilfe-Eintrag");
 }
 
@@ -5948,6 +5948,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/&& !sprachHaengt\(\); \} catch \(e\) \{ return false; \} \};/.test(html), "hängende Sprache blockiert die Bühne nicht");
   assert.ok(/try \{ speechSynthesis\.cancel\(\); speechSynthesis\.resume\(\); \} catch \(e\) \{ \/\* ohne Sprache \*\/ \} \/\/ 2\.306\.0/.test(html), "Training startet die Sprache frisch");
   assert.ok(/if \(!document\.hidden\) try \{ if \(speechSynthesis\.paused\) speechSynthesis\.resume\(\); \} catch \{\}/.test(html), "zurück in der App: weiter");
+}
+
+// 2.307.0 KC-CLUB-BUEHNE-RICHTUNGEN + KC-CLUB-BUEHNE-SPRUECHE (Wunsch Hansi): Kacheln je Musikrichtung mit mehreren Liedern, mehr Sprüche, „Küchenband“ englisch
+{
+  const rich = html.slice(html.indexOf("const BW_RICHTUNGEN = ["), html.indexOf("const bwmRichtung ="));
+  for (const r of ["disco", "reggae", "funk", "rock", "ballade", "latin", "volk"]) assert.ok(rich.includes(`["${r}", `), `Kachel ${r}`);
+  const stile = [...html.matchAll(/\{ id: "[\w]+", t: "[^"]+", stil: "([^"]+)", sym:/g)].map((m) => m[1]);
+  const je = { Disco: ["Disco"], Reggae: ["Reggae", "Ska"], Funk: ["Funk", "Soul"], Rock: ["Rock", "Rock'n'Roll"], Ballade: ["Ballade"], Latin: ["Samba", "Cha-Cha-Cha", "Bossa Nova"], Volk: ["Polka", "Walzer", "Schlager"] };
+  for (const [n, l] of Object.entries(je)) assert.ok(stile.filter((s) => l.includes(s)).length >= 3, `mindestens 3 Lieder: ${n}`);
+  for (const f of ["bwmRock", "bwmBoogie", "bwmFunk", "bwmSka", "bwmBallade", "bwmLatin", "bwmWalzer"]) assert.ok(html.includes(`function ${f}(g, t`), `Baustein ${f}`);
+  assert.ok(/onclick="bwHoerRichtung\('\$\{k\}'\)"/.test(html) && /if \(takt >= ges\) \{ bwmStueck\(bwmNachbar\(H\.i, 1\)\);/.test(html), "Kachel wählt Richtung, weiter innerhalb der Richtung");
+  assert.ok(/const BW_AUSSPRACHE = \[\[\/\(Küchen\|Disco\|Rock\|Schlager\)-\?\[Bb\]a\?ä\?nd\\b\/g, "\$1-Bänd"\]/.test(html) && /function bwSprechen\(t\) \{ t = bwAussprache\(t\);/.test(html), "Küchenband wird „Küchen-Bänd“ gesprochen");
+  assert.ok(/"Die Waage wird morgen staunen!"/.test(html) && /"Dein Körper sagt gerade Danke!"/.test(html), "neue Sprüche");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

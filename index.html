@@ -2872,6 +2872,12 @@
   .bw-liste { position: absolute; left: 8px; right: 60px; top: 72px; z-index: 4; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 4px; max-height: 34%; overflow-y: auto; }
   .bw-liste .es-k { font-size: .8rem; padding: 4px 8px; min-height: 0; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(0,0,0,.45); }
   .bw-liste .es-k.an { background: #7b1622; }
+  /* 2.307.0 KC-CLUB-BUEHNE-RICHTUNGEN: Kacheln je Musikrichtung über den Liedern */
+  .bw-liste { display: flex; flex-direction: column; gap: 6px; }
+  .bw-richtungen { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .bw-liste .bw-richtung { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; height: auto; min-height: 48px; overflow: visible; padding: 4px 2px; font-size: .7rem; text-align: center; white-space: normal; line-height: 1.1; }
+  .bw-liste .bw-richtung span { font-size: 1.25rem; }
+  .bw-titel-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 4px; }
   .bw-hoeren-los { font-weight: 700; }
   .bw-tipp { position: absolute; left: 10px; right: 10px; bottom: 58px; text-align: center; font-size: .92rem; z-index: 4; text-shadow: 0 1px 3px #000; }
   .bw-wahl { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 5; display: flex; flex-direction: column; gap: 6px; align-items: center; padding: 8px; border-radius: 14px; background: rgba(0,0,0,.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
@@ -4759,6 +4765,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.306.0" data-v="2.306.0"></script>
+<script src="app.js?v=2.307.0" data-v="2.307.0"></script>
 </body>
 </html>
