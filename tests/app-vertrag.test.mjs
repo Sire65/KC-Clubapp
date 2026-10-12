@@ -5897,15 +5897,31 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
 {
   const ids = [...html.matchAll(/\{ id: "(\w+)", t: "[^"]+", stil: "(\w+)", sym: "[^"]+", bpm: (\d+), tanz: \[/g)].map((m) => [m[1], m[2], +m[3]]);
-  assert.deepEqual(ids.map((x) => x[0]), ["disco", "reggae1", "reggae2", "funk", "samba", "ballade", "polka"], "sieben Stücke");
+  assert.deepEqual(ids.map((x) => x[0]), ["disco", "disco2", "disco3", "disco4", "disco5", "reggae1", "reggae2", "funk", "samba", "ballade", "polka"], "elf Stücke (2.303.0: + vier Disco)");
   assert.ok(ids.filter((x) => x[1] === "Reggae").length === 2 && ids.every((x) => x[2] >= 60 && x[2] <= 130), "zwei Reggae-Stücke, Tempo im Rahmen");
   assert.ok(/onclick="bwHoeren\(\)">🎶 Nur Musik hören<\/button>/.test(html), "Knopf auf der Bühne");
   assert.ok(/if \(BWM\.stueck\?\.spiel\) BWM\.stueck\.spiel\(BWM\.gesamt, BWM\.zeit\); else bwMusikSchritt\(BWM\.schritt, BWM\.zeit\);/.test(html), "Trainingsmusik unverändert, Stücke über eigene Spielfunktion");
-  assert.ok(/if \(BW\.hoeren\) bwStopp\(false\); BWM\.stueck = null; \/\/ 2\.302\.0: Training immer mit der Trainingsmusik/.test(html), "Training immer mit Trainingsmusik");
+  assert.ok(/if \(BW\.hoeren\) bwStopp\(false\); BWM\.stueck = bwTrainingsStueck\(w\.modus\); BWM\.gesamt = 0;/.test(html), "Training: Disco-Stück im Tempo der Übungen (2.303.0)");
   assert.ok(/BW\.lauf = null; BW\.hoeren = null; BWM\.stueck = null;/.test(html) && /if \(BW\.lauf \|\| BW\.hoeren \|\| BWM\.laeuft\) bwStopp\(\); \}/.test(html), "Ende/Ansicht verlassen stoppt auch die Musik");
   assert.ok(/if \(!esSichtbar\(\)\) \{ if \(!H\.pause\) \{ H\.pause = true; bwMusik\(false\);/.test(html), "nicht zu sehen → Pause");
   assert.ok(/if \(takt >= ges\) \{ bwmStueck\(H\.i \+ 1\);/.test(html) && /const bwmTakte = \(s\) => Math\.max\(32,/.test(html), "nach ca. 2½ Min. das nächste Stück");
   assert.ok(/\{ id: "es_musik", thema: "toene", sym: "🎶"/.test(html), "Hilfe-Eintrag");
+}
+
+// 2.303.0 KC-CLUB-BUEHNE-BEWEGUNG-2 + KC-CLUB-BUEHNE-DISCO (Wunsch Hansi): hüpfen, Storch, im Kreis, um den Stuhl, Aufstehen von der Seite; vier neue Disco-Stücke
+{
+  for (const id of ["huepfen", "storch", "kreis", "stuhlrunde", "aufstehst", "aufstehen"]) assert.ok(new RegExp(`\\{ id: "${id}", t: "[^"]+", g: "(stehen|sitzen)"`).test(html), `Übung ${id}`);
+  assert.ok(/\{ id: "storch", [^\n]*a: "storch", a2: "storch2"/.test(html) && /if \(u\.a2 && L\.rest === Math\.floor\(BW_SEK \/ 2\)\) bwLaufZeigen\(\);/.test(html), "Storch: zur Hälfte das andere Bein");
+  assert.ok(/function bwFigurSeite\(a, b, ph, farbe\)/.test(html) && /if \(u\.seite && phase !== "schuetteln"\) return bwFigurSeite\(/.test(html), "Aufstehen von der Seite");
+  assert.ok(/<div class="bw-weg bw-weg-\$\{u\.weg\}"/.test(html) && /class="bw-weg-stuhlbild"/.test(html), "Weg im Kreis / um den Stuhl");
+  const css = lies("index.html");
+  for (const k of ["bwHuepfGanz", "bwStorchOb", "bwWegKreis", "bwWegStuhl", "bwSeiteOb", "bwSeiteArm"]) assert.ok(css.includes(`@keyframes ${k} `), `Bewegung ${k}`);
+  assert.ok(/\.bw-weg-stuhl \.bw-weg-fig \{ animation: bwWegStuhl/.test(css) && /z-index: 1; \} 50%/.test(css), "hinter dem Stuhl verdeckt, vorne davor");
+  assert.ok(/@media \(prefers-reduced-motion: reduce\) \{ \.bw-weg-fig \{ animation: none !important; \} \}/.test(css), "Bewegung reduzieren respektiert");
+  const disco = [...html.matchAll(/\{ id: "(disco\d?)", t: "[^"]+", stil: "Disco"/g)].map((m) => m[1]);
+  assert.deepEqual(disco, ["disco", "disco2", "disco3", "disco4", "disco5"], "fünf Disco-Stücke");
+  assert.ok(/function bwTrainingsStueck\(modus\)/.test(html) && /return s\?\.spiel \? \{ \.\.\.s, bpm: BW_TEMPO\[modus\] \|\| 116 \} : null;/.test(html), "Training: Disco reihum, Tempo der Übungen");
+  assert.ok(/function bwKuechenTakt\(im, t\)/.test(html) && (html.match(/bwKuechenTakt\(im, t\); \} \}/g) || []).length === 4, "Küchengeräusche auch in den neuen Stücken");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

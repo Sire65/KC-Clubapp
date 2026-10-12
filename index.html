@@ -2797,6 +2797,44 @@
   .bw-zahl { font: 800 2.6rem/1 system-ui, sans-serif; min-width: 1.6em; text-align: center; background: rgba(0,0,0,.45); border-radius: 14px; padding: 4px 8px; font-variant-numeric: tabular-nums; }
   .bw-zahl.knapp { color: #ffd43b; animation: bwPuls .5s ease-in-out infinite alternate; } @keyframes bwPuls { to { transform: scale(1.12); } }
   .bw-balken-bahn { position: absolute; left: 10px; right: 10px; top: 66px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.18); z-index: 4; } .bw-balken { height: 100%; width: 0; border-radius: 3px; background: #ffd43b; transition: width 1s linear; }
+  /* 2.303.0 KC-CLUB-BUEHNE-BEWEGUNG-2 (Wunsch Hansi): hüpfen, Storch, im Kreis, um den Stuhl, Aufstehen von der Seite – alles im Takt (--b = 1 Schlag) */
+  @keyframes bwHuepfGanz { 0% { transform: translateY(3px); } 18% { transform: translateY(3px); } 48% { transform: translateY(-15px); } 78% { transform: translateY(0); } 100% { transform: translateY(3px); } }
+  .bw-figur.bw-a-huepfen .bw-ganz { animation: bwHuepfGanz var(--b) cubic-bezier(.3, 0, .4, 1) var(--ph, 0s) infinite; }
+  @keyframes bwHuepfUb { 0%, 100% { transform: scale(1, .88); } 48% { transform: scale(1, 1); } 78% { transform: scale(1, .96); } }
+  .bw-figur.bw-a-huepfen .bw-ubL, .bw-figur.bw-a-huepfen .bw-ubR { animation: bwHuepfUb var(--b) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwHuepfOa { 0%, 100% { transform: rotate(18deg); } 48% { transform: rotate(58deg); } }
+  @keyframes bwHuepfOaR { 0%, 100% { transform: rotate(-18deg); } 48% { transform: rotate(-58deg); } }
+  .bw-figur.bw-a-huepfen .bw-oaL { animation: bwHuepfOa var(--b) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-huepfen .bw-oaR { animation: bwHuepfOaR var(--b) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwStorchOb { 0%, 100% { transform: translate(0, -5px); } 50% { transform: translate(0, -15px); } }
+  @keyframes bwStorchUb { 0%, 100% { transform: scale(1, .86); } 50% { transform: scale(1, .7); } }
+  @keyframes bwStorchOa { 0%, 100% { transform: rotate(66deg); } 50% { transform: rotate(74deg); } }
+  @keyframes bwStorchOaR { 0%, 100% { transform: rotate(-66deg); } 50% { transform: rotate(-74deg); } }
+  .bw-figur.bw-a-storch .bw-obL, .bw-figur.bw-a-storch2 .bw-obR { animation: bwStorchOb calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-storch .bw-ubL, .bw-figur.bw-a-storch2 .bw-ubR { animation: bwStorchUb calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-storch .bw-oaL, .bw-figur.bw-a-storch2 .bw-oaL { animation: bwStorchOa calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-storch .bw-oaR, .bw-figur.bw-a-storch2 .bw-oaR { animation: bwStorchOaR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-storch .bw-oben { transform: rotate(2deg); } .bw-figur.bw-a-storch2 .bw-oben { transform: rotate(-2deg); }
+  .bw-weg { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: flex-end; }
+  .bw-weg-fig { position: absolute; inset: 0; display: flex; justify-content: center; align-items: flex-end; transform-origin: 50% 100%; }
+  .bw-weg-kreis .bw-weg-fig { animation: bwWegKreis calc(var(--b) * 16) linear var(--ph, 0s) infinite; }
+  @keyframes bwWegKreis { 0% { transform: translate(0, 0) scale(1); } 12.5% { transform: translate(17%, -2%) scale(.96); } 25% { transform: translate(24%, -6%) scale(.88); } 37.5% { transform: translate(17%, -10%) scale(.8); }
+    50% { transform: translate(0, -12%) scale(.76); } 62.5% { transform: translate(-17%, -10%) scale(.8); } 75% { transform: translate(-24%, -6%) scale(.88); } 87.5% { transform: translate(-17%, -2%) scale(.96); } 100% { transform: translate(0, 0) scale(1); } }
+  .bw-weg-stuhlbild { position: absolute; left: 50%; bottom: 8%; height: 34%; transform: translateX(-50%); z-index: 2; filter: drop-shadow(0 6px 5px rgba(0,0,0,.4)); }
+  .bw-weg-stuhl .bw-weg-fig { animation: bwWegStuhl calc(var(--b) * 16) linear var(--ph, 0s) infinite; }
+  @keyframes bwWegStuhl { 0% { transform: translate(0, 0) scale(1); z-index: 3; } 12.5% { transform: translate(18%, -3%) scale(.94); z-index: 3; } 25% { transform: translate(24%, -8%) scale(.86); z-index: 3; }
+    30% { transform: translate(23%, -10%) scale(.83); z-index: 1; } 50% { transform: translate(0, -15%) scale(.72); z-index: 1; } 70% { transform: translate(-23%, -10%) scale(.83); z-index: 1; }
+    75% { transform: translate(-24%, -8%) scale(.86); z-index: 3; } 87.5% { transform: translate(-18%, -3%) scale(.94); z-index: 3; } 100% { transform: translate(0, 0) scale(1); z-index: 3; } }
+  .bw-seite .s-sb.hinten, .bw-seite .s-schuh.hinten { filter: brightness(.72); } .bw-seite .s-arm.hinten { filter: brightness(.72); } .bw-seite .s-stulpe { fill: var(--stulpe, #2ee6d6); }
+  .bw-seite .s-ob { transform: rotate(-90deg); } .bw-seite .s-ok { transform: rotate(90deg); } .bw-seite .s-arm { transform: rotate(-90deg); } /* Ruhe: sitzt, Arme nach vorn */
+  @keyframes bwSeiteSb { 0%, 15% { transform: rotate(0deg); } 35% { transform: rotate(12deg); } 50%, 62% { transform: rotate(0deg); } 78% { transform: rotate(12deg); } 90%, 100% { transform: rotate(0deg); } }
+  @keyframes bwSeiteOb { 0%, 15% { transform: rotate(-90deg); } 35% { transform: rotate(-45deg); } 50%, 62% { transform: rotate(0deg); } 78% { transform: rotate(-45deg); } 90%, 100% { transform: rotate(-90deg); } }
+  @keyframes bwSeiteOk { 0% { transform: rotate(90deg); } 15% { transform: rotate(115deg); } 35% { transform: rotate(70deg); } 50%, 62% { transform: rotate(0deg); } 78% { transform: rotate(70deg); } 90% { transform: rotate(112deg); } 100% { transform: rotate(90deg); } }
+  @keyframes bwSeiteArm { 0% { transform: rotate(-90deg); } 15% { transform: rotate(-115deg); } 35% { transform: rotate(-127deg); } 50%, 62% { transform: rotate(-90deg); } 78% { transform: rotate(-127deg); } 90% { transform: rotate(-112deg); } 100% { transform: rotate(-90deg); } }
+  .bw-seite.bw-s-aufstehen .s-sb { animation: bwSeiteSb calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
+  .bw-seite.bw-s-aufstehen .s-ob { animation: bwSeiteOb calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
+  .bw-seite.bw-s-aufstehen .s-ok { animation: bwSeiteOk calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
+  .bw-seite.bw-s-aufstehen .s-arm { animation: bwSeiteArm calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
+  @media (prefers-reduced-motion: reduce) { .bw-weg-fig { animation: none !important; } }
   /* 2.302.0 KC-CLUB-BUEHNE-MUSIK: Stückliste über der Leiste („Nur Musik hören“) */
   .bw-liste { position: absolute; left: 8px; right: 60px; top: 72px; z-index: 4; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 4px; max-height: 34%; overflow-y: auto; }
   .bw-liste .es-k { font-size: .8rem; padding: 4px 8px; min-height: 0; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(0,0,0,.45); }
@@ -4688,6 +4726,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.302.0" data-v="2.302.0"></script>
+<script src="app.js?v=2.303.0" data-v="2.303.0"></script>
 </body>
 </html>

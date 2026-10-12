@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.303.0 – 2026-10-12 – KC-CLUB-BUEHNE-BEWEGUNG-2 + KC-CLUB-BUEHNE-DISCO: neue Übungen und Disco-Stücke
+Twinkey kann jetzt: kleine Hüpfer, den Storch (ein Bein in der Luft, zur Hälfte Seitenwechsel), im Kreis gehen, um den Stuhl laufen (dahinter verdeckt) und – von der Seite gezeigt – mit ausgestreckten Armen aufstehen und hinsetzen (im Sitzen und im Stehen). Vier neue Disco-Stücke (Spiegelkugel-Fieber, Nachtschicht-Boogie, Samstagnacht im Kochclub, Euro-Disco Knödel); beim Training wechselt das Disco-Stück jedes Mal, im Tempo der Übungen. Die neuen Stehen-Übungen sind zwischen die bisherigen gereiht, damit sie schon in 5 Min. vorkommen.
+
 ## 2.302.0 – 2026-10-12 – KC-CLUB-BUEHNE-MUSIK: Nur Musik hören auf der Bühne, 7 Stücke
 Auf der Bühne neuer Knopf „🎶 Nur Musik hören“: Twinkey tanzt, es läuft nur Musik – ohne Übungen und Ansage. Sieben Stücke (Küchen-Disco, Reggae am Kochtopf, Sonnenschein-Reggae, Funky Schneebesen, Samba in der Pfanne, Abendrot-Ballade, Biergarten-Polka), je ca. 2½ Min., dann das nächste; antippen wählt, ⏮ ⏭ ⏸, Lautstärke-Regler. Im Handy erzeugt, kein Internet.
 

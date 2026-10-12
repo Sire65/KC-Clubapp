@@ -1,11 +1,20 @@
 {
-  "version": "2.302.0",
+  "version": "2.303.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🎶 Bühne: „Nur Musik hören“ – Twinkey tanzt zu 7 Stücken, auch Reggae"
+    "🤸 Twinkey: Hüpfen, Storch, im Kreis, um den Stuhl, Aufstehen von der Seite",
+    "🪩 Vier neue Disco-Stücke – beim Training jedes Mal ein anderes"
   ],
   "verlauf": [
+    {
+      "version": "2.303.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🤸 Twinkey: Hüpfen, Storch, im Kreis, um den Stuhl, Aufstehen von der Seite",
+        "🪩 Vier neue Disco-Stücke – beim Training jedes Mal ein anderes"
+      ]
+    },
     {
       "version": "2.302.0",
       "datum": "2026-10-12",

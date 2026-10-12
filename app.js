@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.302.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.303.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -3270,7 +3270,7 @@ const HILFE = [
   { id: "es_tafel", thema: "start", sym: "🖍️", t: "Rückseite: Tafel & Flipchart", x: "Zum Skizzieren mit dem Finger. <b>🖍️ Tafel</b>: Kreide in sieben Farben, drei Dicken, 🧽 Schwamm, 🧹 alles abwischen, ↶ letzten Strich zurück. <b>📋 Flipchart</b>: Marker, Radierer, <b>„⤴ Umblättern“</b> klappt das volle Blatt nach hinten, ⤵ holt das vorige zurück, ✂️ reißt ein Blatt ab; ein Knopf schaltet das Papier <b>blanko → kariert → liniert</b>. Mit <b>„📤 Sichern“</b> kommt die Skizze ins 🗄️ Archiv oder als Nachricht zu jemandem.", zeig: () => esOeffnen("flip"), seit: "2.300.0" },
   { id: "es_uhr", thema: "start", sym: "🕰️", t: "Rückseite: große Uhr", x: "Die <b>🕰️ große Uhr</b> gibt es in vier Stilen: <b>🟩 Digital</b> (grün), <b>🔢 Fallblatt</b> mit Datum, <b>🚉 Bahnhofsuhr</b> und <b>🔠 Groß &amp; klar</b>. Den Stil unten antippen – die App merkt ihn sich.", zeig: () => esOeffnen("uhr"), seit: "2.300.0" },
   { id: "es_buehne", thema: "start", sym: "🎭", t: "Rückseite: Bühne für Bewegung", x: "Auf der <b>🎭 Bühne</b> macht Twinkey Übungen vor – mit Musik und Ansagen wie beim Fitnesstrainer. Wähle <b>im Sitzen</b>, <b>im Stehen</b> oder <b>mit Küchenhelfern</b> (Schneebesen, Kochlöffel, Topf, Pfanne …), die Dauer, Musik und Ansage – dann <b>„▶️ Vorhang auf!“</b>. Twinkey begrüßt dich, zählt ein, feuert an und sagt „noch 3, 2, 1 – und ausschütteln“. Unten: ⏸ Pause, ⏭ nächste Übung, 🎵 Musik, 🔊 Ansage, ✖ Ende. <b>Mach nur so viel, wie dir guttut</b> – bei Schmerzen, Schwindel oder Atemnot sofort aufhören.", zeig: () => esOeffnen("buehne"), seit: "2.300.0" },
-  { id: "es_musik", thema: "toene", sym: "🎶", t: "Bühne: nur Musik hören", x: "Nur zuhören statt turnen: Auf der <b>🎭 Bühne</b> (Kopf umdrehen über das Eselsohr) gibt es neben „Vorhang auf!“ den Knopf <b>„🎶 Nur Musik hören“</b>. Dann tanzt Twinkey nur und es läuft Musik – ohne Übungen und ohne Ansage. Sieben Stücke: <b>Küchen-Disco</b>, zwei <b>Reggae</b>-Stücke, <b>Funk</b>, <b>Samba</b>, eine ruhige <b>Ballade</b> und eine <b>Biergarten-Polka</b>. Jedes läuft etwa 2½ Minuten, dann kommt das nächste. Ein Stück antippen spielt es sofort; ⏮ ⏭ blättern, ⏸ hält an. Rechts der Regler für die Lautstärke. Die Musik entsteht im Handy – kein Internet nötig.", zeig: () => esOeffnen("buehne"), seit: "2.302.0" },
+  { id: "es_musik", thema: "toene", sym: "🎶", t: "Bühne: nur Musik hören", x: "Nur zuhören statt turnen: Auf der <b>🎭 Bühne</b> (Kopf umdrehen über das Eselsohr) gibt es neben „Vorhang auf!“ den Knopf <b>„🎶 Nur Musik hören“</b>. Dann tanzt Twinkey nur und es läuft Musik – ohne Übungen und ohne Ansage. Elf Stücke: fünf <b>Disco</b>-Stücke (Küchen-Disco, Spiegelkugel-Fieber, Nachtschicht-Boogie, Samstagnacht im Kochclub, Euro-Disco Knödel), zwei <b>Reggae</b>-Stücke, <b>Funk</b>, <b>Samba</b>, eine ruhige <b>Ballade</b> und eine <b>Biergarten-Polka</b>. Jedes läuft etwa 2½ Minuten, dann kommt das nächste. Ein Stück antippen spielt es sofort; ⏮ ⏭ blättern, ⏸ hält an. Rechts der Regler für die Lautstärke. Die Musik entsteht im Handy – kein Internet nötig.", zeig: () => esOeffnen("buehne"), seit: "2.302.0" },
   { id: "es_regler", thema: "toene", sym: "🎚️", t: "Bühne: Musik und Stimme lauter oder leiser", x: "Während Twinkey turnt, stehen zwei Regler am Rand: <b>rechts die Musik</b> 🎵, <b>links Twinkeys Stimme</b> 🗣️. Nach oben ziehen = lauter (der Keil wird dicker), nach unten = leiser. <b>Unten aufs Symbol tippen</b> macht sofort stumm (🔇 bzw. 🤐) – nochmal tippen holt die vorige Lautstärke zurück. Die App merkt sich beides. Ist alles zu leise, auch die Lautstärke am Handy prüfen.", zeig: () => esOeffnen("buehne"), seit: "2.300.0" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
   // 2.110.0 (Wunsch Hansi „Hilfetexte und Handbuch anpassen“): Hilfen zu den Neuerungen seit Anleitung V8 (2.96.0)
@@ -12871,6 +12871,8 @@ const BW_UEBUNGEN = [
   { id: "schulter", t: "Schultern hochziehen", g: "sitzen", a: "schulter", sitz: 1, h: "Schultern hoch zu den Ohren – und locker fallen lassen.", c: ["Hoch – und fallen lassen. Herrlich!", "Alle Sorgen von den Schultern!"] },
   { id: "sitzmarsch", t: "Marschieren im Sitzen", g: "sitzen", a: "marsch", sitz: 1, h: "Knie abwechselnd anheben, Arme schwingen mit.", c: ["Wir marschieren zum Wochenmarkt!", "Knie hoch – und die Arme schwingen mit!"] },
   { id: "faeuste", t: "Fäuste machen", g: "sitzen", a: "kneten", sitz: 1, h: "Arme nach vorn, Hände fest zur Faust – und weit auf.", c: ["Fest zu – und weit auf!", "Wie beim Teigkneten – kräftig!"] },
+  // 2.303.0 KC-CLUB-BUEHNE-BEWEGUNG-2 (Wunsch Hansi): Hinsetzen und Aufstehen – Twinkey von der Seite, Arme lang nach vorn
+  { id: "aufstehen", t: "Aufstehen und hinsetzen", g: "sitzen", a: "aufstehen", seite: 1, sitz: 1, h: "Arme lang nach vorn, Oberkörper leicht vor – langsam aufstehen und langsam wieder hinsetzen. Stuhl an die Wand stellen!", c: ["Hoch – und ganz langsam wieder runter!", "Die Arme helfen beim Gleichgewicht!"] },
   { id: "beine", t: "Beine strecken", g: "sitzen", a: "bein", sitz: 1, h: "Abwechselnd ein Bein lang machen, Fußspitze zu dir ziehen.", c: ["Bein lang – Fußspitze zu dir!", "Schön abwechseln – links, rechts!"] },
   // 2.297.0 KC-CLUB-BUEHNE-KUECHE (Wunsch Hansi): mehr Übungen aus der Küche
   { id: "suppe", t: "Suppe umrühren", g: "sitzen", a: "suppe", ding: "topf", sitz: 1, h: "Beide Arme vor dir – große Kreise, als ob du im großen Suppentopf rührst.", w: "Und jetzt andersherum rühren!", c: ["Die Suppe darf nicht anbrennen!", "Schön große Kreise!"] },
@@ -12880,9 +12882,15 @@ const BW_UEBUNGEN = [
   { id: "abwischen", t: "Tisch abwischen", g: "sitzen", a: "abwischen", sitz: 1, h: "Mit der Hand große Bögen über den Tisch wischen – schön weit.", w: "Und jetzt die andere Hand!", c: ["Blitzblank soll er werden!", "Schön weit ausholen!"] },
   { id: "seitheben", t: "Arme seitlich heben", g: "sitzen", a: "seitheben", sitz: 1, h: "Arme seitlich bis auf Schulterhöhe – und langsam wieder runter.", c: ["Fliegen wie ein Adler!", "Langsam runter – nicht fallen lassen!"] },
   { id: "marsch", t: "Auf der Stelle gehen", g: "stehen", a: "marsch", h: "Knie heben, Arme schwingen. Wer mag, hält sich an der Stuhllehne fest.", c: ["Wir gehen zum Kühlhaus – Tempo!", "Knie hoch, Arme mit!"] },
+  // 2.303.0 KC-CLUB-BUEHNE-BEWEGUNG-2 (Wunsch Hansi): hüpfen, Storch, im Kreis gehen, um den Stuhl, Aufstehen von der Seite
+  { id: "huepfen", t: "Kleine Hüpfer", g: "stehen", a: "huepfen", h: "Ganz kleine Hüpfer im Takt – wer mag, wippt nur auf den Fußballen.", c: ["Hopp, hopp – wie Popcorn in der Pfanne!", "Ganz locker in den Knien landen!"] },
+  { id: "storch", t: "Der Storch", g: "stehen", a: "storch", a2: "storch2", h: "Auf einem Bein stehen, das andere Knie im Takt hoch und runter – der Fuß bleibt in der Luft. Wer mag, hält sich am Stuhl fest.", w: "Und jetzt das andere Bein!", c: ["Wie ein Storch auf der Wiese!", "Fuß bleibt oben – nicht absetzen!"] },
   { id: "seit", t: "Seitschritt", g: "stehen", a: "seit", h: "Ein Schritt zur Seite und zurück – locker in den Knien.", w: "Und jetzt zur anderen Seite!", c: ["Wie in der engen Küche – ausweichen!", "Schön locker in den Knien!"] },
+  { id: "kreis", t: "Im Kreis gehen", g: "stehen", a: "marsch", weg: "kreis", h: "Im Takt eine kleine Runde gehen – Knie hoch, Arme schwingen mit.", w: "Und jetzt die Runde andersherum!", c: ["Eine Runde durch die Küche!", "Schön im Takt – links, rechts!"] },
   { id: "knie", t: "Kniebeuge am Stuhl", g: "stehen", a: "knie", h: "Hände an die Lehne, Po nach hinten – nur so tief, wie es angenehm ist.", c: ["Als ob du dich setzen willst – und hoch!", "Nur so tief, wie es guttut!"] },
   { id: "zehen", t: "Auf die Zehen", g: "stehen", a: "zehen", h: "Langsam hoch auf die Zehen – und wieder runter.", c: ["Ans oberste Regal – hoch!", "Und sanft wieder runter!"] },
+  { id: "stuhlrunde", t: "Um den Stuhl laufen", g: "stehen", a: "marsch", weg: "stuhl", h: "Einmal gemütlich um den Stuhl herumgehen – im Takt der Musik.", c: ["Reise nach Jerusalem – nur ohne Drängeln!", "Schön gleichmäßig weitergehen!"] },
+  { id: "aufstehst", t: "Aufstehen und hinsetzen", g: "stehen", a: "aufstehen", seite: 1, h: "Vom Stuhl aufstehen und langsam wieder hinsetzen – Arme lang nach vorn. Stuhl an die Wand stellen!", c: ["Hoch – und ganz langsam wieder runter!", "Die Beine machen die Arbeit!"] },
   { id: "strecken", t: "Nach oben strecken", g: "stehen", a: "strecken", h: "Abwechselnd einen Arm weit nach oben – als holst du den großen Topf vom Regal.", c: ["Ganz lang machen – nach den Sternen greifen!", "Links – und rechts – schön lang!"] },
   { id: "treppe", t: "Treppe vom Lager hoch", g: "stehen", a: "treppe", h: "Knie hoch wie auf der Treppe vom Lager – die Arme schwingen mit. Wer mag, hält sich fest.", c: ["Hoch die Knie – Stufe für Stufe!", "Gleich sind wir oben!"] },
   { id: "hula", t: "Hula-Hoop in der Küche", g: "stehen", a: "hula", ding: "reifen", h: "Hände in die Hüften und das Becken kreisen lassen – wie mit dem Hula-Hoop-Reifen.", w: "Und jetzt andersherum kreisen!", c: ["Hula-Hoop in der Küche – herrlich!", "Locker aus der Hüfte!"] },
@@ -12966,6 +12974,30 @@ function bwFigur(a, sitz, p, ding, b, ph, farbe) {
     ${stuhl}<g class="bw-ganz" ${o(60, 152)}><g class="bw-beine">${bein("L", 54)}${bein("R", 66)}</g>
     <g class="bw-oben" ${o(60, H)}>${rumpf}${kopf}${ding === "nudel" || ding === "reifen" ? dingSvg : ""}${arm("L", 45, links)}${arm("R", 75, rechts)}</g></g>${ding && ding !== "nudel" && ding !== "reifen" ? dingSvg : ""}</svg>`;
 }
+// ----- 2.303.0 KC-CLUB-BUEHNE-BEWEGUNG-2: Figur passend zur Übung – Seitenansicht (Aufstehen) oder auf einem Weg (Kreis, um den Stuhl) -----
+function bwBuehneFigur(u, phase, anim, sitz, farbe) {
+  const uebt = phase === "uebung", b = bwSchlag(), ph = bwPhase();
+  if (u.seite && phase !== "schuetteln") return bwFigurSeite(uebt ? anim : "ruhe", b, ph, farbe); // Vorbereiten: sitzt schon seitlich auf dem Stuhl
+  const fig = bwFigur(anim, sitz, phase === "schuetteln" ? "" : u.p, phase === "schuetteln" ? "" : u.ding, b, ph, farbe);
+  if (!uebt || !u.weg) return fig;
+  const stuhl = u.weg === "stuhl" ? `<svg class="bw-weg-stuhlbild" viewBox="0 0 60 80" aria-hidden="true"><rect x="6" y="2" width="48" height="30" rx="4" fill="#8a6440"/><rect x="10" y="6" width="40" height="22" rx="3" fill="#a0784e"/><rect x="2" y="40" width="56" height="9" rx="3" fill="#b88a5a"/><rect x="5" y="32" width="5" height="46" fill="#7a5634"/><rect x="50" y="32" width="5" height="46" fill="#7a5634"/><rect x="13" y="49" width="4" height="29" fill="#6b4a2c"/><rect x="43" y="49" width="4" height="29" fill="#6b4a2c"/></svg>` : "";
+  return `<div class="bw-weg bw-weg-${u.weg}" style="--b:${b}s;--ph:${ph}s">${stuhl}<div class="bw-weg-fig">${fig}</div></div>`;
+}
+// Twinkey im Profil (Blick nach rechts), Glieder als Kette Fuß → Schienbein → Oberschenkel → Oberkörper → Arm; hinteres Bein/Arm dunkler dahinter
+function bwFigurSeite(a, b, ph, farbe) {
+  const [fj, fs, fb] = BW_FARBEN[((farbe || 0) % BW_FARBEN.length + BW_FARBEN.length) % BW_FARBEN.length], o = (x, y) => `style="transform-origin:${x}px ${y}px"`;
+  const arm = (hinten) => `<g class="s-arm${hinten ? " hinten" : ""}" ${o(70, 61)}><rect x="65.6" y="58" width="8.8" height="20" rx="4.4" class="bw-jacke"/><rect x="66" y="74" width="8" height="18" rx="4" class="bw-jacke"/><rect x="65.4" y="86" width="9.2" height="4.4" rx="2" class="bw-band"/><circle cx="70" cy="94" r="4.6" class="bw-haut"/></g>`;
+  const bein = (hinten) => `<g class="s-sb${hinten ? " hinten" : ""}" ${o(70, 150)}><rect x="65.5" y="122" width="9" height="28" rx="4.5" class="bw-hose"/><rect x="64.6" y="137" width="10.8" height="12" rx="3.4" class="s-stulpe"/>
+      <g class="s-ob" ${o(70, 124)}><rect x="64.5" y="96" width="11" height="31" rx="5.5" class="bw-hose"/>
+        <g class="s-ok" ${o(70, 98)}>${hinten ? "" : `${arm(true)}<path d="M60 100 Q58 78 62 60 Q70 54 79 60 Q83 78 81 100 Z" class="bw-jacke"/>${[66, 74, 82, 90].map((y) => `<circle cx="78.4" cy="${y}" r="1.3" class="bw-knopf"/>`).join("")}
+          <rect x="66.5" y="49" width="8" height="9" class="bw-haut"/><g class="bw-kopf" ${o(71, 50)}><circle cx="71" cy="41" r="11.5" class="bw-haut"/><circle cx="82.2" cy="42.5" r="2.6" class="bw-haut"/>
+          <circle cx="76.5" cy="39" r="1.5" class="bw-auge"/><path d="M75 46.5 Q78.5 48.5 80.5 46" class="bw-mund"/><circle cx="75.5" cy="44" r="2" fill="#f4a3a3" opacity=".55"/>
+          <path d="M59.5 41 Q59 29 71 29 Q80 29.5 82 35 Q72 33 63 37 Q61 42 59.5 41Z" fill="#6b4226"/><rect x="59.6" y="33.6" width="23" height="5" rx="2.4" class="bw-band" transform="rotate(-6 71 36)"/><path d="M60 35 l-6 -3 l1 4 z M60 37 l-6 2 l3 2 z" class="bw-band"/></g>${arm(false)}`}</g></g></g>`;
+  const schuh = (x, hinten) => `<g class="s-schuh${hinten ? " hinten" : ""}"><path d="M${x - 6} 150 Q${x - 6} 143.5 ${x} 143.5 L${x + 6} 144.5 Q${x + 13} 146 ${x + 13} 150.5 Z" fill="#e03131"/><rect x="${x - 6.5}" y="149.6" width="20" height="3" rx="1.4" fill="#fff"/><path d="M${x - 1} 145 l2 3.6 M${x + 2.4} 145 l2 3.6 M${x + 5.8} 145.4 l2 3.4" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></g>`;
+  const stuhl = `<g class="bw-stuhl"><rect x="27" y="84" width="5" height="70" rx="2"/><rect x="27" y="128" width="35" height="6" rx="2"/><rect x="56" y="134" width="4.5" height="20"/><rect x="29" y="134" width="4.5" height="20"/></g>`;
+  return `<svg class="bw-figur bw-seite bw-s-${a}" viewBox="0 0 120 170" style="--b:${b || .5}s;--ph:${ph || 0}s;--jacke:${fj};--stulpe:${fs};--band:${fb}" role="img" aria-label="Twinkey von der Seite: aufstehen und hinsetzen">
+    ${stuhl}${schuh(67, true)}${bein(true)}${bein(false)}${schuh(70, false)}</svg>`;
+}
 function bwPlan(modus, dauer) {
   const passt = BW_UEBUNGEN.filter((u) => u.g === modus), n = Math.max(4, Math.round((dauer * 60) / (BW_SEK + BW_SCHUETTELN + BW_BEREIT))), plan = [];
   for (let i = 0; i < n; i++) plan.push(passt[i % passt.length]);
@@ -12997,7 +13029,7 @@ function esBuehneZeigen(f) {
 const BW_BEGRUESSUNG = "Hallo! Lass uns ein bisschen Bewegung in den Alltag einbauen. Mach nur so viel, wie dir guttut. Los geht’s!";
 async function bwLos() {
   const w = bwWahl(), plan = bwPlan(w.modus, w.dauer);
-  if (BW.hoeren) bwStopp(false); BWM.stueck = null; // 2.302.0: Training immer mit der Trainingsmusik
+  if (BW.hoeren) bwStopp(false); BWM.stueck = bwTrainingsStueck(w.modus); BWM.gesamt = 0; // 2.303.0: jedes Training ein anderes Disco-Stück (im Tempo der Übungen)
   BW.lauf = { plan, i: 0, phase: "bereit", rest: BW_BEREIT, pause: false, musik: w.musik, ansage: w.ansage, sek: 0, lob: Math.floor(Math.random() * BW_LOB.length), sprueche: 0, farbe: Math.floor(Math.random() * BW_FARBEN.length), warte: 0, gezaehlt: false };
   try { BW.wach = await navigator.wakeLock?.request("screen"); } catch (e) { BW.wach = null; }
   if (w.musik) bwMusik(true);
@@ -13042,6 +13074,7 @@ function bwTick() {
   L.rest--;
   if (L.phase === "uebung") { // Sprüche gleichmäßig verteilt: 27 · 21 · 15 · 10 · 6 · 3-2-1
     L.sek++;
+    if (u.a2 && L.rest === Math.floor(BW_SEK / 2)) bwLaufZeigen(); // 2.303.0: Seitenwechsel (z. B. Storch: anderes Bein)
     if (L.rest === 27) bwSag(u.c?.[0] || bwNimm(BW_LOB, L, "lob"), false, "", true);
     else if (L.rest === 21) bwSag(BW_FRECH[(L.lob + L.i) % BW_FRECH.length], false, "", true);
     else if (L.rest === 15) bwSag(u.w || u.c?.[1] || bwNimm(BW_LOB, L, "lob"), false, "", !u.w);
@@ -13064,13 +13097,13 @@ function bwZahl() { const L = BW.lauf, z = $("bwZahl"); if (!L || !z) return; z.
   const b = $("bwBalken"); if (b) { const ges = L.phase === "uebung" ? BW_SEK : L.phase === "schuetteln" ? BW_SCHUETTELN : BW_BEREIT; b.style.width = `${Math.max(0, 100 - (L.rest / ges) * 100)}%`; } }
 function bwLaufZeigen(vorhangAuf) {
   const L = BW.lauf, f = $("hrFlaeche"); if (!L || !f) return;
-  const u = L.plan[L.i], anim = L.phase === "uebung" ? u.a : L.phase === "schuetteln" ? "schuetteln" : "ruhe", sitz = bwWahl().modus !== "stehen" && !!u.sitz;
+  const u = L.plan[L.i], anim = L.phase === "uebung" ? (u.a2 && L.rest <= BW_SEK / 2 ? u.a2 : u.a) : L.phase === "schuetteln" ? "schuetteln" : "ruhe", sitz = bwWahl().modus !== "stehen" && !!u.sitz; // 2.303.0: a2 = zweite Hälfte (anderes Bein)
   const text = L.phase === "bereit" ? "Gleich:" : L.phase === "schuetteln" ? "Ausschütteln!" : "Jetzt:", alt = BW.blase || "";
   f.innerHTML = `<div class="bw-buehne an${L.pause ? " angehalten" : ""}" id="bwLauf"><div class="bw-licht"></div><div class="bw-vorhang links${vorhangAuf ? " oeffnet" : " offen"}"></div><div class="bw-vorhang rechts${vorhangAuf ? " oeffnet" : " offen"}"></div><div class="bw-boden"></div>
     <div class="bw-kopf"><div><small>${text} · Übung ${L.i + 1} von ${L.plan.length}</small><b>${esc(L.phase === "schuetteln" ? "Arme und Beine locker ausschütteln" : u.t)}</b></div><div class="bw-zahl" id="bwZahl">${L.rest}</div></div>
     <div class="bw-balken-bahn"><div class="bw-balken" id="bwBalken"></div></div>
     <div class="bw-sprech" id="bwSprech" aria-live="polite">${esc(alt)}</div>
-    <div class="bw-mitte">${bwFigur(anim, sitz, L.phase === "schuetteln" ? "" : u.p, L.phase === "schuetteln" ? "" : u.ding, bwSchlag(), bwPhase(), L.farbe + L.i)}</div>
+    <div class="bw-mitte">${bwBuehneFigur(u, L.phase, anim, sitz, L.farbe + L.i)}</div>
     <div class="bw-tipp">${esc(L.phase === "schuetteln" ? "Gut gemacht! 👏" : u.h)}</div>${bwLautRegler("musik")}${bwLautRegler("stimme")}
     <div class="es-leiste"><button type="button" class="es-k es-haupt" onclick="bwPause()">${L.pause ? "▶︎ Weiter" : "⏸ Pause"}</button><button type="button" class="es-k" onclick="bwWeiter()" aria-label="Übung überspringen">⏭</button>
       <button type="button" class="es-k${L.musik ? " an" : ""}" onclick="bwMusikSchalten()" aria-label="Musik an oder aus">${L.musik ? "🎵" : "🔇"}</button><button type="button" class="es-k${L.ansage ? " an" : ""}" onclick="bwAnsageSchalten()" aria-label="Ansage an oder aus">${L.ansage ? "🔊" : "🔈"}</button>
@@ -13192,7 +13225,9 @@ function bwMusikSchritt(s, t) {
   if (voll && im % 4 === 2) akk.forEach((m) => bwTon("square", bwHz(m), t, .14, .035, 2400)); // Akkord-Stöße auf dem Off-Beat
   if (voll && takt % 4 < 2) { const n = BWM_HOOK[(takt % 2) * 16 + im]; if (n) bwTon("square", bwHz(n), t, .22, .06, 3200, true); } // Hook-Melodie mit Echo
   if (voll && takt % 4 >= 2 && im % 2 === 0) bwTon("triangle", bwHz(akk[(im / 2) % 3] + 24), t, .1, .03, 0, true); // Glitzer-Arpeggio
-  // 2.299.3 (Wunsch Hansi): Küchen-Geräusche passend zur Bewegung – genau auf dem Takt, auf dem Twinkey schlägt
+  bwKuechenTakt(im, t);
+}
+function bwKuechenTakt(im, t) { // 2.299.3 (Wunsch Hansi): Küchen-Geräusche passend zur Bewegung – genau auf dem Takt, auf dem Twinkey schlägt (2.303.0: eigener Baustein)
   const L = BW.lauf, u = L && L.phase === "uebung" && !L.pause ? L.plan[L.i] : null;
   if (u?.a === "trommeln" && im % 2 === 0) bwTopf(t, im % 4 === 0); // Kochlöffel abwechselnd links/rechts auf jede Achtel
   if (u?.a === "klatschen" && u.p === "deckel" && (im === 4 || im === 12)) bwBecken(t); // Deckel zusammen auf 2 und 4
@@ -13217,11 +13252,42 @@ const bwmRim = (t, v = .3) => { bwRauschen(t, .04, v, 3000, "bandpass"); bwTon("
 const bwmHat = (t, offen, v = .05) => bwRauschen(t, offen ? .13 : .035, offen ? v * 3 : v, 8000, "highpass");
 const bwmAkk = (akk, t, dauer, laut, typ = "square", filter = 2400, hall = false, okt = 0) => akk.forEach((m) => bwTon(typ, bwHz(m + okt), t, dauer, laut, filter, hall));
 const bwmBass = (m, t, dauer = .24, laut = .3, filter = 600) => { bwTon("sine", bwHz(m), t, dauer, laut * .9); bwTon("triangle", bwHz(m), t, dauer, laut * .5, filter); };
+function bwmDisco(im, t, voll, takt) { // Disco-Schlagzeug: Bass-Trommel auf jeden Schlag, offene Hi-Hat auf dem Nachschlag, Klatschen auf 2 und 4, Wirbel alle 8 Takte
+  if (im % 4 === 0) bwmKick(t, 1); bwmHat(t, im % 4 === 2, im % 4 === 2 ? .045 : .03);
+  if (voll && (im === 4 || im === 12)) { bwRauschen(t, .16, .4, 1500, "bandpass"); bwTon("triangle", 190, t, .09, .25); }
+  if (takt % 8 === 7 && im >= 8) bwRauschen(t, .08, .1 + (im - 8) * .04, 1800, "bandpass");
+}
 const bwmFill = (im, t) => { if (im >= 8 && im % 2 === 0) bwmSnare(t, .1 + (im - 8) * .035); };
 // Melodie: Schritt (0–31 über 2 Takte) → Ton; Teil A in Takt 0–1, Teil B in Takt 2–3 jedes 4-Takt-Blocks
 const bwmMel = (a, b, takt, im) => (takt % 4 < 2 ? a : b)[(takt % 2) * 16 + im];
 const BW_STUECKE = [
   { id: "disco", t: "Küchen-Disco", stil: "Disco", sym: "🪩", bpm: 116, tanz: ["klatschen", "marsch", "hula", "jubel"] }, // die Trainingsmusik
+  // 2.303.0 KC-CLUB-BUEHNE-DISCO (Wunsch Hansi „mehr Disco-Lieder in einem schönen Rhythmus“): vier weitere Disco-Stücke – laufen auch beim Training
+  // (dort im Tempo der Übungen). Stufe 1 (Vorbereiten/Ausschütteln) schlanker, Stufe 2 (Übung) voll. Four-on-the-floor, offene Hi-Hat auf dem Nachschlag.
+  { id: "disco2", t: "Spiegelkugel-Fieber", stil: "Disco", sym: "✨", bpm: 120, tanz: ["klatschen", "seit", "marsch", "jubel"],
+    spiel(g, t) { const im = g % 16, takt = Math.floor(g / 16), voll = BWM.stufe >= 2, akk = [[62, 65, 69, 72], [55, 59, 62, 65], [60, 64, 67, 71], [57, 60, 64, 67]][takt % 4], root = [38, 43, 36, 45][takt % 4];
+      bwmDisco(im, t, voll, takt); if (im % 2 === 0) bwmBass(root + (im % 4 === 2 ? 12 : 0), t, .15, .3, 800);
+      if (im === 0) bwmAkk(akk, t, 1.8, .018, "sawtooth", 3000, true); if (voll && (im === 6 || im === 14)) bwmAkk(akk, t, .12, .03, "square", 2600);
+      if (voll) { const n = bwmMel({ 0: 74, 2: 77, 4: 81, 6: 79, 8: 77, 10: 76, 12: 74, 14: 72, 16: 74, 20: 76, 22: 77, 24: 76, 28: 72 }, { 0: 69, 4: 72, 6: 74, 8: 76, 12: 79, 16: 77, 20: 76, 24: 74, 28: 72 }, takt, im); if (n) bwTon("square", bwHz(n), t, .2, .05, 3400, true); }
+      bwKuechenTakt(im, t); } },
+  { id: "disco3", t: "Nachtschicht-Boogie", stil: "Disco", sym: "🌙", bpm: 112, tanz: ["schulter", "klatschen", "hula", "marsch"],
+    spiel(g, t) { const im = g % 16, takt = Math.floor(g / 16), voll = BWM.stufe >= 2, am = takt % 4 < 2, akk = am ? [64, 67, 69, 72] : [62, 66, 69, 72, 76], root = am ? 45 : 50;
+      bwmDisco(im, t, voll, takt); const b = { 0: 0, 3: 12, 4: 0, 6: 10, 8: 0, 10: 12, 11: 7, 14: 10 }[im]; if (b !== undefined) bwmBass(root + b, t, .14, .34, 900);
+      if ([2, 6, 10, 14].includes(im)) bwmAkk(akk, t, .07, voll ? .03 : .02, "square", 2400); if (voll && (im === 3 || im === 11)) bwmAkk(akk, t, .05, .02, "square", 3000, false, 12);
+      if (voll && takt % 8 >= 4) { const n = bwmMel({ 0: 81, 3: 79, 6: 76, 8: 79, 10: 81, 12: 84, 16: 81, 19: 79, 22: 76, 24: 74, 28: 76 }, { 0: 76, 2: 79, 4: 81, 8: 79, 12: 76, 16: 74, 20: 72, 24: 69 }, takt, im); if (n) bwTon("sawtooth", bwHz(n), t, .18, .04, 2600, true); }
+      bwKuechenTakt(im, t); } },
+  { id: "disco4", t: "Samstagnacht im Kochclub", stil: "Disco", sym: "🕺", bpm: 124, tanz: ["jubel", "seit", "klatschen", "hula"],
+    spiel(g, t) { const im = g % 16, takt = Math.floor(g / 16), voll = BWM.stufe >= 2, akk = [[65, 68, 72], [58, 61, 65], [63, 67, 70], [56, 60, 63]][takt % 4], root = [41, 46, 39, 44][takt % 4];
+      bwmDisco(im, t, voll, takt); if (im % 2 === 0) bwmBass(root + (im % 4 === 2 ? 12 : 0), t, .14, .32, 850);
+      if (im % 4 === 2) bwmAkk(akk, t, .1, voll ? .035 : .022, "sawtooth", 2800); // Streicher-Stöße auf dem Nachschlag
+      if (voll) { const n = bwmMel({ 0: 84, 2: 82, 4: 80, 6: 79, 8: 77, 12: 75, 16: 77, 18: 79, 20: 80, 24: 79, 28: 75 }, { 0: 80, 4: 79, 6: 77, 8: 75, 12: 77, 16: 72, 20: 75, 24: 77 }, takt, im); if (n) { bwTon("sawtooth", bwHz(n), t, .22, .035, 3600, true); bwTon("sawtooth", bwHz(n) * 1.005, t, .22, .02, 3600); } }
+      bwKuechenTakt(im, t); } },
+  { id: "disco5", t: "Euro-Disco Knödel", stil: "Disco", sym: "🥟", bpm: 126, tanz: ["marsch", "jubel", "seit", "klatschen"],
+    spiel(g, t) { const im = g % 16, takt = Math.floor(g / 16), voll = BWM.stufe >= 2, akk = [[64, 67, 71], [60, 64, 67], [55, 59, 62], [62, 66, 69]][takt % 4], root = [40, 36, 43, 38][takt % 4];
+      bwmDisco(im, t, voll, takt); bwmBass(root + (im % 2 ? 12 : 0), t, .1, .2, 700 + (im % 4) * 150); // pumpender 16tel-Bass
+      if (voll || im % 2 === 0) bwTon("sawtooth", bwHz(akk[im % 3] + 12 + (im >= 8 ? 12 : 0)), t, .09, .017, 1800 + im * 120, true); // Arpeggio, Filter öffnet sich
+      if (voll && takt % 4 < 2) { const n = bwmMel({ 0: 79, 4: 78, 6: 76, 8: 74, 12: 76, 16: 79, 20: 83, 22: 81, 24: 79, 28: 78 }, { 0: 76, 4: 74, 8: 72, 12: 74, 16: 76 }, takt, im); if (n) bwTon("square", bwHz(n), t, .26, .05, 3000, true); }
+      bwKuechenTakt(im, t); } },
   { id: "reggae1", t: "Reggae am Kochtopf", stil: "Reggae", sym: "🌴", bpm: 76, tanz: ["seit", "schulter", "kopfneigen", "hula"],
     spiel(g, t) { // One Drop: Bass-Trommel + Rand nur auf der 3, Gitarren-Skank auf den Nachschlägen, Orgel-„Bubble“, Melodica
       const im = g % 16, takt = Math.floor(g / 16), akk = [[57, 60, 64], [57, 62, 66], [57, 60, 64], [55, 59, 64]][takt % 4], root = [45, 50, 45, 40][takt % 4], intro = takt < 2;
@@ -13286,6 +13352,10 @@ const BW_STUECKE = [
       if (takt % 8 === 7 && im >= 12) bwmSnare(t, .12);
     } },
 ];
+function bwTrainingsStueck(modus) { // Disco-Stücke reihum; das erste ist die bisherige Trainingsmusik (null = eingebaute Fassung mit Stufen und Küchengeräuschen)
+  const disco = BW_STUECKE.filter((x) => x.stil === "Disco"); let i = 0; try { i = (+esLies("bwDisco", "0") || 0) % disco.length; esSchreib("bwDisco", String(i + 1)); } catch (e) { i = 0; }
+  const s = disco[i]; return s?.spiel ? { ...s, bpm: BW_TEMPO[modus] || 116 } : null;
+}
 const bwmSchlag = () => BWM.stueck ? 60 / BWM.stueck.bpm : bwSchlag();
 const bwmTakte = (s) => Math.max(32, Math.round(150 / (240 / s.bpm) / 8) * 8); // ca. 2½ Min., ganze 8-Takt-Blöcke
 function bwmStueck(i) { // Stück wechseln, laufende Musik übernimmt nahtlos (kurze Atempause)
