@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.296.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.297.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12604,7 +12604,7 @@ function esTafelGrund(g, c) {
   const v = g.createRadialGradient(c.width / 2, c.height / 2, Math.min(c.width, c.height) * .2, c.width / 2, c.height / 2, Math.max(c.width, c.height) * .75);
   v.addColorStop(0, "rgba(255,255,255,.05)"); v.addColorStop(1, "rgba(0,0,0,.28)"); g.fillStyle = v; g.fillRect(0, 0, c.width, c.height); g.restore();
 }
-// 2.296.0 KC-CLUB-FLIPCHART-MUSTER (Wunsch Hansi): ▢ blanko → ▦ kariert → ☰ liniert – ein Knopf schaltet weiter; Linien leicht grau
+// 2.297.0 KC-CLUB-FLIPCHART-MUSTER (Wunsch Hansi): ▢ blanko → ▦ kariert → ☰ liniert – ein Knopf schaltet weiter; Linien leicht grau
 const ES_FLIP_MUSTER = [["blanko", "▢ Blanko"], ["kariert", "▦ Kariert"], ["liniert", "☰ Liniert"]];
 const esFlipMuster = () => { const m = esLies("flipmuster", "blanko"); return ES_FLIP_MUSTER.some(([k]) => k === m) ? m : "blanko"; };
 function esFlipMusterWeiter() {
@@ -12793,12 +12793,21 @@ const BW_UEBUNGEN = [
   { id: "sitzmarsch", t: "Marschieren im Sitzen", g: "sitzen", a: "marsch", sitz: 1, h: "Knie abwechselnd anheben, Arme schwingen mit.", c: ["Wir marschieren zum Wochenmarkt!", "Knie hoch – und die Arme schwingen mit!"] },
   { id: "faeuste", t: "Fäuste machen", g: "sitzen", a: "kneten", sitz: 1, h: "Arme nach vorn, Hände fest zur Faust – und weit auf.", c: ["Fest zu – und weit auf!", "Wie beim Teigkneten – kräftig!"] },
   { id: "beine", t: "Beine strecken", g: "sitzen", a: "bein", sitz: 1, h: "Abwechselnd ein Bein lang machen, Fußspitze zu dir ziehen.", c: ["Bein lang – Fußspitze zu dir!", "Schön abwechseln – links, rechts!"] },
+  // 2.297.0 KC-CLUB-BUEHNE-KUECHE (Wunsch Hansi): mehr Übungen aus der Küche
+  { id: "suppe", t: "Suppe umrühren", g: "sitzen", a: "suppe", ding: "topf", sitz: 1, h: "Beide Arme vor dir – große Kreise, als ob du im großen Suppentopf rührst.", w: "Und jetzt andersherum rühren!", c: ["Die Suppe darf nicht anbrennen!", "Schön große Kreise!"] },
+  { id: "kniehoch", t: "Treppe vom Lager hoch", g: "sitzen", a: "treppe", sitz: 1, h: "Abwechselnd die Knie hoch, als ob du die Treppe vom Lager hochsteigst.", c: ["Stufe für Stufe nach oben!", "Gleich sind wir oben im Lager!"] },
+  { id: "kopfneigen", t: "Kopf zur Seite neigen", g: "sitzen", a: "kopfneigen", sitz: 1, h: "Ohr langsam zur Schulter, halten – und zur anderen Seite. Schultern bleiben unten.", c: ["Ganz langsam – und halten.", "Schultern locker lassen!"] },
+  { id: "nackenstark", t: "Nacken stärken", g: "sitzen", a: "nackenstark", sitz: 1, h: "Hände an den Hinterkopf, Kopf sanft gegen die Hände drücken – halten – und lösen.", c: ["Sanft drücken – nicht ruckeln!", "Das macht den Nacken stark!"] },
+  { id: "abwischen", t: "Tisch abwischen", g: "sitzen", a: "abwischen", sitz: 1, h: "Mit der Hand große Bögen über den Tisch wischen – schön weit.", w: "Und jetzt die andere Hand!", c: ["Blitzblank soll er werden!", "Schön weit ausholen!"] },
   { id: "seitheben", t: "Arme seitlich heben", g: "sitzen", a: "seitheben", sitz: 1, h: "Arme seitlich bis auf Schulterhöhe – und langsam wieder runter.", c: ["Fliegen wie ein Adler!", "Langsam runter – nicht fallen lassen!"] },
   { id: "marsch", t: "Auf der Stelle gehen", g: "stehen", a: "marsch", h: "Knie heben, Arme schwingen. Wer mag, hält sich an der Stuhllehne fest.", c: ["Wir gehen zum Kühlhaus – Tempo!", "Knie hoch, Arme mit!"] },
   { id: "seit", t: "Seitschritt", g: "stehen", a: "seit", h: "Ein Schritt zur Seite und zurück – locker in den Knien.", w: "Und jetzt zur anderen Seite!", c: ["Wie in der engen Küche – ausweichen!", "Schön locker in den Knien!"] },
   { id: "knie", t: "Kniebeuge am Stuhl", g: "stehen", a: "knie", h: "Hände an die Lehne, Po nach hinten – nur so tief, wie es angenehm ist.", c: ["Als ob du dich setzen willst – und hoch!", "Nur so tief, wie es guttut!"] },
   { id: "zehen", t: "Auf die Zehen", g: "stehen", a: "zehen", h: "Langsam hoch auf die Zehen – und wieder runter.", c: ["Ans oberste Regal – hoch!", "Und sanft wieder runter!"] },
   { id: "strecken", t: "Nach oben strecken", g: "stehen", a: "strecken", h: "Abwechselnd einen Arm weit nach oben – als holst du den großen Topf vom Regal.", c: ["Ganz lang machen – nach den Sternen greifen!", "Links – und rechts – schön lang!"] },
+  { id: "treppe", t: "Treppe vom Lager hoch", g: "stehen", a: "treppe", h: "Knie hoch wie auf der Treppe vom Lager – die Arme schwingen mit. Wer mag, hält sich fest.", c: ["Hoch die Knie – Stufe für Stufe!", "Gleich sind wir oben!"] },
+  { id: "hula", t: "Hula-Hoop in der Küche", g: "stehen", a: "hula", ding: "reifen", h: "Hände in die Hüften und das Becken kreisen lassen – wie mit dem Hula-Hoop-Reifen.", w: "Und jetzt andersherum kreisen!", c: ["Hula-Hoop in der Küche – herrlich!", "Locker aus der Hüfte!"] },
+  { id: "suppest", t: "Suppe umrühren", g: "stehen", a: "suppe", ding: "topf", h: "Beide Arme vor dir – große Kreise im großen Suppentopf.", w: "Und jetzt andersherum rühren!", c: ["Die Suppe darf nicht anbrennen!", "Schön große Kreise!"] },
   { id: "rumpf", t: "Oberkörper drehen", g: "stehen", a: "rumpf", h: "Aufrecht bleiben und ruhig nach links und rechts drehen.", c: ["Zum Kollegen am Nachbarposten schauen!", "Ruhig drehen, schön aufrecht!"] },
   { id: "ruehren", t: "Großen Teig rühren", g: "kueche", a: "ruehren", p: "schneebesen", ding: "schuessel", sitz: 1, h: "Mit dem großen Schneebesen kräftig im Kreis rühren.", w: "Und jetzt die andere Richtung!", c: ["Kräftig rühren – der Teig wird fluffig!", "Das wird der beste Kuchen der Welt!"] },
   { id: "besenhoch", t: "Schneebesen in die Luft", g: "kueche", a: "hochdruecken", p: "schneebesen2", sitz: 1, h: "Schneebesen mit beiden Händen nach oben drücken – und wieder runter.", c: ["Hoch damit – wie ein Pokal!", "Und runter bis zu den Schultern!"] },
@@ -12807,6 +12816,7 @@ const BW_UEBUNGEN = [
   { id: "flaschen", t: "Wasserflaschen heben", g: "kueche", a: "seitheben", p: "flaschen", sitz: 1, h: "In jeder Hand eine Flasche – Arme seitlich heben und senken.", c: ["Unsere Hanteln aus der Küche!", "Langsam und kontrolliert!"] },
   { id: "deckel", t: "Deckel-Klatschen", g: "kueche", a: "klatschen", p: "deckel", sitz: 1, h: "Zwei Topfdeckel vor der Brust zusammen – wie ein Becken!", c: ["Tschingderassabum!", "Klatsch – auf den Schlag!"] },
   { id: "nudelholz", t: "Nudelholz rollen", g: "kueche", a: "rollen", ding: "nudel", sitz: 1, h: "Arme nach vorn und den Teig kräftig ausrollen.", c: ["Der Pizzateig wird hauchdünn!", "Vor – und zurück!"] },
+  { id: "pfanne", t: "Pfanne schwenken", g: "kueche", a: "pfanne", p: "pfanne", ding: "pfannkuchen", sitz: 1, h: "Pfanne vor dir und den Pfannkuchen hochwerfen – aus dem Handgelenk!", w: "Und jetzt die andere Hand!", c: ["Hopp – und gefangen!", "Wie ein Sternekoch!"] },
   { id: "tuch", t: "Geschirrtuch-Dehnung", g: "kueche", a: "hochhalten", p: "tuch", h: "Geschirrtuch mit beiden Händen hoch über den Kopf und lang machen.", c: ["Ganz lang machen – und atmen!", "Herrlich, das tut gut!"] },
 ];
 const BW_MODI = [["sitzen", "🪑 Im Sitzen"], ["stehen", "🧍 Im Stehen"], ["kueche", "🥄 Küchenhelfer"]];
@@ -12829,6 +12839,7 @@ const BW_HELFER = {
   flasche: (x, y) => `<g class="bw-helfer"><rect x="${x - 1.6}" y="${y - 4}" width="3.2" height="3" fill="#1c7ed6"/><rect x="${x - 3.2}" y="${y - 1.5}" width="6.4" height="15" rx="2.2" fill="#74c0fc" opacity=".92"/><rect x="${x - 3.2}" y="${y + 5}" width="6.4" height="3.5" fill="#fff" opacity=".8"/></g>`,
   deckel: (x, y) => `<g class="bw-helfer"><ellipse cx="${x}" cy="${y + 4}" rx="10" ry="3.4" fill="#ced4da" stroke="#868e96" stroke-width=".8"/><circle cx="${x}" cy="${y + .8}" r="1.8" fill="#495057"/></g>`,
   nudelholz: (x, y) => `<g class="bw-helfer"><rect x="${x - 15}" y="${y - 2.6}" width="30" height="5.2" rx="2.6" fill="#e0b070"/><rect x="${x - 21}" y="${y - 1.4}" width="6" height="2.8" rx="1.4" fill="#a8743a"/><rect x="${x + 15}" y="${y - 1.4}" width="6" height="2.8" rx="1.4" fill="#a8743a"/></g>`,
+  pfanne: (x, y) => `<g class="bw-helfer"><rect x="${x - 1.6}" y="${y - 3}" width="3.2" height="14" rx="1.4" fill="#5c3b1e"/><ellipse cx="${x}" cy="${y + 19}" rx="9.5" ry="9" fill="#343a40" stroke="#868e96" stroke-width="1"/><ellipse cx="${x}" cy="${y + 19}" rx="7" ry="6.6" fill="#495057"/><g class="bw-ding" style="transform-origin:${x}px ${y + 19}px"><ellipse cx="${x}" cy="${y + 19}" rx="5.6" ry="5.2" fill="#f2c46d" stroke="#d9a441" stroke-width=".8"/></g></g>`,
   tuch: (x, y) => `<g class="bw-helfer"><rect x="${x - 6}" y="${y}" width="12" height="22" rx="1" fill="#fff" stroke="#dee2e6" stroke-width=".6"/><rect x="${x - 6}" y="${y + 4}" width="12" height="2" fill="#e03131"/><rect x="${x - 6}" y="${y + 16}" width="12" height="2" fill="#e03131"/></g>`,
 };
 // Rote Turnschuhe mit weißer Sohle und drei weißen Streifen
@@ -12837,13 +12848,13 @@ const bwSchuh = (x, y) => `<g class="bw-schuh"><path d="M${x - 8.5} ${y + 3} Q${
   <rect x="${x - 9.2}" y="${y + 1.6}" width="18.4" height="2.9" rx="1.4" fill="#fff"/><path d="M${x - 6} ${y - 2.6} l2.4 3.8 M${x - 2.6} ${y - 3.4} l2.4 3.8 M${x + .8} ${y - 3.4} l2.4 3.8" stroke="#fff" stroke-width="1.15" stroke-linecap="round"/>
   <circle cx="${x}" cy="${y - 3.3}" r=".7" fill="#fff"/></g>`;
 // Twinkey als Gliederpuppe: Schulter → Ellbogen → Hand, Hüfte → Knie → Fuß (je Gelenk eine Gruppe mit eigenem Drehpunkt)
-// 2.296.0 KC-CLUB-BUEHNE-80ER (Wunsch Hansi): Kleidung im Stil der 80er – Neon-Kochjacke, bunte Stulpen, Schweißbänder; bei jeder Übung andere Farben
+// 2.297.0 KC-CLUB-BUEHNE-80ER (Wunsch Hansi): Kleidung im Stil der 80er – Neon-Kochjacke, bunte Stulpen, Schweißbänder; bei jeder Übung andere Farben
 const BW_FARBEN = [["#ff4fa3", "#2ee6d6", "#ffe14d"], ["#2ee6d6", "#ff4fa3", "#7c4dff"], ["#7c4dff", "#ffe14d", "#ff4fa3"], ["#ffe14d", "#7c4dff", "#2ee6d6"],
   ["#ff8a00", "#00c2ff", "#ff4fa3"], ["#39d353", "#ff4fa3", "#ffe14d"], ["#00c2ff", "#ff8a00", "#39d353"], ["#ff4fa3", "#ffe14d", "#00c2ff"]]; // [Jacke, Stulpen, Bänder]
 function bwFigur(a, sitz, p, ding, b, ph, farbe) {
   const dy = sitz ? 12 : 0, S = 56 + dy, H = 101 + dy, ky = S - 20, [fj, fs, fb] = BW_FARBEN[((farbe || 0) % BW_FARBEN.length + BW_FARBEN.length) % BW_FARBEN.length];
   const links = { schneebesen2: "schneebesen", loeffel2: "loeffel", flaschen: "flasche", deckel: "deckel" }[p] || "";
-  const rechts = { schneebesen: "schneebesen", schneebesen2: "schneebesen", loeffel2: "loeffel", flaschen: "flasche", deckel: "deckel", nudelholz: "nudelholz", tuch: "tuch" }[p] || "";
+  const rechts = { schneebesen: "schneebesen", schneebesen2: "schneebesen", loeffel2: "loeffel", flaschen: "flasche", deckel: "deckel", nudelholz: "nudelholz", tuch: "tuch", pfanne: "pfanne" }[p] || "";
   const o = (x, y) => `style="transform-origin:${x}px ${y}px"`;
   const arm = (s, x, helfer) => `<g class="bw-oa${s}" ${o(x, S + 1)}><rect x="${x - 4}" y="${S - 2}" width="8" height="25" rx="4" class="bw-jacke"/>
       <g class="bw-ua${s}" ${o(x, S + 21)}><rect x="${x - 3.5}" y="${S + 19}" width="7" height="21" rx="3.5" class="bw-jacke"/><rect x="${x - 4.3}" y="${S + 34}" width="8.6" height="4.6" rx="2" class="bw-band"/>${helfer ? BW_HELFER[helfer](x, S + 42) : ""}<circle cx="${x}" cy="${S + 42}" r="4.7" class="bw-haut bw-hand"/></g></g>`;
@@ -12857,14 +12868,16 @@ function bwFigur(a, sitz, p, ding, b, ph, farbe) {
       <path d="M48.5 ${ky - 4} Q49 ${ky - 13.5} 60 ${ky - 13.5} Q71 ${ky - 13.5} 71.5 ${ky - 4} Q60 ${ky - 9} 48.5 ${ky - 4}Z" fill="#6b4226"/>
       <rect x="47.6" y="${ky - 7.5}" width="24.8" height="5" rx="2.4" class="bw-band"/><rect x="47.6" y="${ky - 5.6}" width="24.8" height="1.2" fill="#fff" opacity=".9"/>
       <path d="M72 ${ky - 6} l6 -3 l-1 4 z M72 ${ky - 4} l6 2 l-3 2 z" class="bw-band"/><path class="bw-schweiss" d="M47 ${ky - 1} q-1.6 3 0 4.2 q1.6 -1.2 0 -4.2z" fill="#a5d8ff"/></g>`;
-  const rumpf = `<path d="M44 ${S - 2} Q60 ${S - 8} 76 ${S - 2} L78 ${H + 1} L42 ${H + 1} Z" class="bw-jacke"/>${[[56, 10], [64, 10], [56, 22], [64, 22]].map(([x, y]) => `<circle cx="${x}" cy="${S + y}" r="1.6" class="bw-knopf"/>`).join("")}`;
+  const rumpf = `<path d="M44 ${S - 2} Q60 ${S - 8} 76 ${S - 2} L78 ${H + 1} L42 ${H + 1} Z" class="bw-jacke"/>${[6, 14, 22, 30, 38].flatMap((y) => [[55.5, y], [64.5, y]]).map(([x, y]) => `<circle cx="${x}" cy="${S + y}" r="1.35" class="bw-knopf"/>`).join("")}`;
   // Dinge vor dem Bauch: Topf (Trommeln), Rührschüssel, Nudelholz mit beiden Händen (rollt mit – .bw-ding)
   const dingSvg = ding === "topf" ? `<g class="bw-ding"><rect x="43" y="${H - 1}" width="34" height="17" rx="3" fill="#868e96"/><rect x="41" y="${H - 3}" width="38" height="4" rx="2" fill="#adb5bd"/><rect x="35" y="${H + 2}" width="8" height="3" rx="1.5" fill="#495057"/><rect x="77" y="${H + 2}" width="8" height="3" rx="1.5" fill="#495057"/></g>`
     : ding === "schuessel" ? `<g class="bw-ding"><path d="M37 ${H - 7} L83 ${H - 7} Q82 ${H + 25} 60 ${H + 27} Q38 ${H + 25} 37 ${H - 7}Z" fill="#f1f3f5" stroke="#adb5bd" stroke-width=".8"/><path d="M40 ${H + 4} Q60 ${H + 8} 80 ${H + 4}" fill="none" stroke="#74c0fc" stroke-width="2" opacity=".7"/><ellipse cx="60" cy="${H - 7}" rx="23" ry="3.8" fill="#ffe8a3"/></g>`
-    : ding === "nudel" ? `<g class="bw-ding" style="transform-origin:60px ${S + 34}px">${BW_HELFER.nudelholz(60, S + 34)}</g>` : "";
+    : ding === "nudel" ? `<g class="bw-ding" style="transform-origin:60px ${S + 34}px">${BW_HELFER.nudelholz(60, S + 34)}</g>`
+    : ding === "reifen" ? `<g class="bw-ding" style="transform-origin:60px ${H - 4}px"><ellipse cx="60" cy="${H - 4}" rx="27" ry="6" fill="none" stroke="#ff4fa3" stroke-width="3"/><path d="M33 ${H - 4} a27 6 0 0 0 54 0" fill="none" stroke="#ffe14d" stroke-width="3" stroke-dasharray="6 6"/></g>`
+    : "";
   return `<svg class="bw-figur bw-a-${a}${sitz ? " bw-sitz" : ""}" viewBox="0 0 120 170" style="--b:${b || .5}s;--ph:${ph || 0}s;--jacke:${fj};--stulpe:${fs};--band:${fb}" role="img" aria-label="Twinkey macht es vor" ${o(60, 152)}>
     ${stuhl}<g class="bw-ganz" ${o(60, 152)}><g class="bw-beine">${bein("L", 54)}${bein("R", 66)}</g>
-    <g class="bw-oben" ${o(60, H)}>${rumpf}${kopf}${ding === "nudel" ? dingSvg : ""}${arm("L", 45, links)}${arm("R", 75, rechts)}</g></g>${ding && ding !== "nudel" ? dingSvg : ""}</svg>`;
+    <g class="bw-oben" ${o(60, H)}>${rumpf}${kopf}${ding === "nudel" || ding === "reifen" ? dingSvg : ""}${arm("L", 45, links)}${arm("R", 75, rechts)}</g></g>${ding && ding !== "nudel" && ding !== "reifen" ? dingSvg : ""}</svg>`;
 }
 function bwPlan(modus, dauer) {
   const passt = BW_UEBUNGEN.filter((u) => u.g === modus), n = Math.max(4, Math.round((dauer * 60) / (BW_SEK + BW_SCHUETTELN + BW_BEREIT))), plan = [];
@@ -12901,15 +12914,18 @@ async function bwLos() {
   BWM.stufe = 1; bwLaufZeigen(true); bwSag(`Vorhang auf! Schön, dass du da bist! Wir starten mit: ${plan[0].t}. ${plan[0].h}`, false, `Vorhang auf! Wir starten mit: ${plan[0].t}`);
   clearInterval(BW.takt); BW.takt = setInterval(bwTick, 1000);
 }
-// 2.296.0 (Wunsch Hansi „beim Abzählen wird der Text vom Erklären abgeschnitten“): Ansagen schneiden sich nicht mehr gegenseitig ab.
+// 2.297.0 (Wunsch Hansi „beim Abzählen wird der Text vom Erklären abgeschnitten“): Ansagen schneiden sich nicht mehr gegenseitig ab.
 // sofort = darf Laufendes unterbrechen (nur „noch 3/2/1“ und „ausschütteln“); „nebenbei“ = nur sprechen, wenn gerade niemand spricht.
 const bwSpricht = () => { try { return !!(speechSynthesis.speaking || speechSynthesis.pending); } catch (e) { return false; } };
 function bwSag(t, sofort, blase, nebenbei) { // blase: kürzerer Text für die Sprechblase (sonst der gesprochene)
   const L = BW.lauf; if (nebenbei && L?.ansage && bwSpricht()) return;
   const z = $("bwSprech"); BW.sprechZeit = Date.now(); BW.blase = blase || t;
   if (z) { z.textContent = BW.blase; z.classList.remove("an"); void z.offsetWidth; z.classList.add("an"); }
-  if (!L?.ansage) return; try { if (sofort) speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } sprechen(t);
+  if (!L?.ansage) return; try { if (sofort) speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwSprechen(t);
 }
+// 2.297.0 (Wunsch Hansi „Musik noch lauter, die Stimme ist zu dominant“): Twinkey spricht auf der Bühne etwas leiser
+const BW_STIMME = .7;
+function bwSprechen(t) { try { if (!("speechSynthesis" in window)) return; const u = sprechAusgabe(t); u.volume = BW_STIMME; speechSynthesis.speak(u); } catch (e) { /* ohne Sprache */ } }
 const BW_KURZ = ["Super!", "Weiter so!", "Stark!", "Klasse!", "Jawoll!", "Prima!"];
 const bwZufall = (liste, L) => liste[(L.sprueche++ + L.i) % liste.length];
 function bwTick() {
@@ -12973,7 +12989,7 @@ function bwStopp(zeigen) {
 }
 function bwFertig() {
   const L = BW.lauf; if (!L) return; const sek = L.sek, n = L.plan.length; bwStopp(false);
-  if (bwWahl().ansage) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } sprechen("Geschafft! Das war super – Applaus für dich! Bis zum nächsten Mal auf der Bühne!"); }
+  if (bwWahl().ansage) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwSprechen("Geschafft! Das war super – Applaus für dich! Bis zum nächsten Mal auf der Bühne!"); }
   const f = $("hrFlaeche"); if (!f) return;
   f.innerHTML = `<div class="bw-buehne an"><div class="bw-licht"></div><div class="bw-vorhang links schliesst"></div><div class="bw-vorhang rechts schliesst"></div><div class="bw-boden"></div>
     <div class="bw-mitte">${bwFigur("jubel", 0, "", 0, bwSchlag(), 0, n)}</div><div class="bw-applaus" aria-hidden="true">👏 🎉 👏</div>
@@ -12987,15 +13003,15 @@ const BWM = { ctx: null, aus: null, hall: null, laeuft: false, zeit: 0, schritt:
 const BWM_AKKORDE = [[57, 60, 64], [53, 57, 60], [55, 60, 64], [55, 59, 62]]; // Am – F – C – G
 const BWM_BASS = [45, 41, 48, 43];
 const BWM_HOOK = { 0: 76, 3: 74, 6: 72, 8: 69, 10: 72, 12: 74, 16: 79, 19: 76, 22: 74, 24: 72, 26: 74, 28: 76, 30: 72 }; // 2 Takte, A-Moll-Pentatonik
-const BWM_LAUT = .42, BWM_LEISE = .09;
+const BWM_LAUT = .75, BWM_LEISE = .26; // 2.297.0: lauter; beim Sprechen nur noch auf gut ein Drittel (Musik bleibt präsent)
 const bwHz = (m) => 440 * Math.pow(2, (m - 69) / 12);
 function bwMusik(an) {
   if (!an) { BWM.laeuft = false; clearInterval(BWM.timer); BWM.timer = 0; try { BWM.aus?.gain.setTargetAtTime(0, BWM.ctx.currentTime, .05); } catch (e) { /* ohne Ton */ } return; }
   try {
     const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
     if (!BWM.ctx) {
-      // 2.296.0 (Wunsch Hansi „Musik lauter, beim Sprechen absenken“): lauter, mit Kompressor (kein Übersteuern); beim Sprechen deutlich leiser
-      BWM.ctx = new C(); BWM.aus = BWM.ctx.createGain(); const komp = BWM.ctx.createDynamicsCompressor(); komp.threshold.value = -14; komp.ratio.value = 4; komp.attack.value = .01; komp.release.value = .2;
+      // 2.297.0 (Wunsch Hansi „Musik lauter, beim Sprechen absenken“): lauter, mit Kompressor (kein Übersteuern); beim Sprechen deutlich leiser
+      BWM.ctx = new C(); BWM.aus = BWM.ctx.createGain(); const komp = BWM.ctx.createDynamicsCompressor(); komp.threshold.value = -16; komp.ratio.value = 6; komp.attack.value = .01; komp.release.value = .2;
       BWM.aus.connect(komp); komp.connect(BWM.ctx.destination);
       BWM.hall = BWM.ctx.createDelay(1); BWM.hall.delayTime.value = .375; const fb = BWM.ctx.createGain(); fb.gain.value = .28; const hg = BWM.ctx.createGain(); hg.gain.value = .35;
       BWM.hall.connect(fb); fb.connect(BWM.hall); BWM.hall.connect(hg); hg.connect(BWM.aus);

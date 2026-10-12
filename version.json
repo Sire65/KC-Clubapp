@@ -1,13 +1,22 @@
 {
-  "version": "2.296.0",
+  "version": "2.297.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "📋 Flipchart: ein Knopf schaltet das Papier um – blanko, kariert, liniert (Linien hellgrau, der Radierer lässt sie stehen)",
-    "🎵 Bühne: Musik lauter und beim Sprechen deutlich leiser · nichts wird mehr abgeschnitten – das Einzählen wartet, bis Twinkey fertig erklärt hat · Sprüche gleichmäßig verteilt",
-    "🕺 Twinkey im 80er-Look: Neon-Kochjacke, bunte Stulpen und Schweißbänder – bei jeder Übung andere Farben"
+    "👨‍🍳 Twinkeys Kochjacke hat jetzt 10 Knöpfe (zwei Reihen à 5)",
+    "🍲 Neue Küchen-Übungen: Suppe rühren (beide Arme kreisen vor dem Topf), Treppe aus dem Lager (Knie hoch), Kopf zur Seite im Wechsel, Nacken stärken, Hula-Hoop in der Küche, Tisch abwischen, Pfanne schwenken mit Pfannkuchen",
+    "🎵 Bühne: Musik lauter, beim Sprechen nur noch leicht abgesenkt · Stimme leiser"
   ],
   "verlauf": [
+    {
+      "version": "2.297.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "👨‍🍳 Twinkeys Kochjacke hat jetzt 10 Knöpfe (zwei Reihen à 5)",
+        "🍲 Neue Küchen-Übungen: Suppe rühren (beide Arme kreisen vor dem Topf), Treppe aus dem Lager (Knie hoch), Kopf zur Seite im Wechsel, Nacken stärken, Hula-Hoop in der Küche, Tisch abwischen, Pfanne schwenken mit Pfannkuchen",
+        "🎵 Bühne: Musik lauter, beim Sprechen nur noch leicht abgesenkt · Stimme leiser"
+      ]
+    },
     {
       "version": "2.296.0",
       "datum": "2026-10-12",

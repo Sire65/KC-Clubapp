@@ -3018,12 +3018,78 @@
   .bw-figur.bw-a-rumpf .bw-uaL { animation: bwRumpfUa calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
   @keyframes bwRumpfUaR { 0% { transform: rotate(104deg); } 25% { transform: rotate(110deg); } 75% { transform: rotate(98deg); } 100% { transform: rotate(104deg); } }
   .bw-figur.bw-a-rumpf .bw-uaR { animation: bwRumpfUaR calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
-  @keyframes bwNackenKopf { 0% { transform: rotate(0deg); } 25% { transform: rotate(-18deg); } 50% { transform: rotate(0deg); } 75% { transform: rotate(18deg); } 100% { transform: rotate(0deg); } }
+  @keyframes bwNackenKopf { 0% { transform: scale(1, 1); } 25% { transform: translate(-3px, 0px) scale(0.84, 1); } 50% { transform: scale(1, 1); } 75% { transform: translate(3px, 0px) scale(0.84, 1); } 100% { transform: scale(1, 1); } }
   .bw-figur.bw-a-nacken .bw-kopf { animation: bwNackenKopf calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
   .bw-figur.bw-a-nacken .bw-oaL { transform: rotate(4deg); animation: none; }
   .bw-figur.bw-a-nacken .bw-oaR { transform: rotate(-4deg); animation: none; }
   .bw-figur.bw-a-nacken .bw-uaL { transform: rotate(-4deg); animation: none; }
   .bw-figur.bw-a-nacken .bw-uaR { transform: rotate(4deg); animation: none; }
+  @keyframes bwKopfneigenKopf { 0% { transform: rotate(0deg); } 20% { transform: rotate(-22deg); } 40% { transform: rotate(-22deg); } 50% { transform: rotate(0deg); } 70% { transform: rotate(22deg); } 90% { transform: rotate(22deg); } 100% { transform: rotate(0deg); } }
+  .bw-figur.bw-a-kopfneigen .bw-kopf { animation: bwKopfneigenKopf calc(var(--b) * 8) ease-in-out var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-kopfneigen .bw-oaL { transform: rotate(4deg); animation: none; }
+  .bw-figur.bw-a-kopfneigen .bw-oaR { transform: rotate(-4deg); animation: none; }
+  .bw-figur.bw-a-kopfneigen .bw-uaL { transform: rotate(-4deg); animation: none; }
+  .bw-figur.bw-a-kopfneigen .bw-uaR { transform: rotate(4deg); animation: none; }
+  .bw-figur.bw-a-nackenstark .bw-oaL { transform: rotate(140deg); animation: none; }
+  .bw-figur.bw-a-nackenstark .bw-oaR { transform: rotate(-140deg); animation: none; }
+  .bw-figur.bw-a-nackenstark .bw-uaL { transform: rotate(118deg); animation: none; }
+  .bw-figur.bw-a-nackenstark .bw-uaR { transform: rotate(-118deg); animation: none; }
+  @keyframes bwNackenstarkKopf { 0% { transform: none; } 40% { transform: translate(0px, -1.6px); } 60% { transform: translate(0px, -1.6px); } 100% { transform: none; } }
+  .bw-figur.bw-a-nackenstark .bw-kopf { animation: bwNackenstarkKopf calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwNackenstarkOben { 0% { transform: scale(1, 1); } 40% { transform: scale(1, 1.01); } 100% { transform: scale(1, 1); } }
+  .bw-figur.bw-a-nackenstark .bw-oben { animation: bwNackenstarkOben calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwSuppeOa { 0% { transform: rotate(-18deg); } 25% { transform: rotate(-26deg); } 50% { transform: rotate(-18deg); } 75% { transform: rotate(-10deg); } 100% { transform: rotate(-18deg); } }
+  .bw-figur.bw-a-suppe .bw-oaL { animation: bwSuppeOa calc(var(--b) * 4) linear var(--ph, 0s) infinite; }
+  @keyframes bwSuppeOaR { 0% { transform: rotate(18deg); } 25% { transform: rotate(26deg); } 50% { transform: rotate(18deg); } 75% { transform: rotate(10deg); } 100% { transform: rotate(18deg); } }
+  .bw-figur.bw-a-suppe .bw-oaR { animation: bwSuppeOaR calc(var(--b) * 4) linear var(--ph, 0s) infinite; }
+  @keyframes bwSuppeUa { 0% { transform: rotate(-48deg); } 25% { transform: rotate(-60deg); } 50% { transform: rotate(-72deg); } 75% { transform: rotate(-60deg); } 100% { transform: rotate(-48deg); } }
+  .bw-figur.bw-a-suppe .bw-uaL { animation: bwSuppeUa calc(var(--b) * 4) linear var(--ph, 0s) infinite; }
+  @keyframes bwSuppeUaR { 0% { transform: rotate(48deg); } 25% { transform: rotate(60deg); } 50% { transform: rotate(72deg); } 75% { transform: rotate(60deg); } 100% { transform: rotate(48deg); } }
+  .bw-figur.bw-a-suppe .bw-uaR { animation: bwSuppeUaR calc(var(--b) * 4) linear var(--ph, 0s) infinite; }
+  @keyframes bwTreppeOb { 0% { transform: none; } 25% { transform: translate(0px, -16px); } 50% { transform: none; } 100% { transform: none; } }
+  .bw-figur.bw-a-treppe .bw-obL { animation: bwTreppeOb calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwTreppeObR { 0% { transform: none; } 25% { transform: translate(0px, -16px); } 50% { transform: none; } 100% { transform: none; } }
+  .bw-figur.bw-a-treppe .bw-obR { animation: bwTreppeObR calc(var(--b) * 2) ease-in-out calc(var(--ph, 0s) + var(--b) * 1) infinite; }
+  @keyframes bwTreppeUb { 0% { transform: scale(1, 1); } 25% { transform: scale(1, 0.7); } 50% { transform: scale(1, 1); } 100% { transform: scale(1, 1); } }
+  .bw-figur.bw-a-treppe .bw-ubL { animation: bwTreppeUb calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwTreppeUbR { 0% { transform: scale(1, 1); } 25% { transform: scale(1, 0.7); } 50% { transform: scale(1, 1); } 100% { transform: scale(1, 1); } }
+  .bw-figur.bw-a-treppe .bw-ubR { animation: bwTreppeUbR calc(var(--b) * 2) ease-in-out calc(var(--ph, 0s) + var(--b) * 1) infinite; }
+  @keyframes bwTreppeOa { 0% { transform: rotate(22deg); } 50% { transform: rotate(-18deg); } 100% { transform: rotate(22deg); } }
+  .bw-figur.bw-a-treppe .bw-oaL { animation: bwTreppeOa calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwTreppeOaR { 0% { transform: rotate(-22deg); } 50% { transform: rotate(18deg); } 100% { transform: rotate(-22deg); } }
+  .bw-figur.bw-a-treppe .bw-oaR { animation: bwTreppeOaR calc(var(--b) * 2) ease-in-out calc(var(--ph, 0s) + var(--b) * 1) infinite; }
+  @keyframes bwTreppeUa { 0% { transform: rotate(-70deg); } 25% { transform: rotate(-86deg); } 50% { transform: rotate(-70deg); } 75% { transform: rotate(-58deg); } 100% { transform: rotate(-70deg); } }
+  .bw-figur.bw-a-treppe .bw-uaL { animation: bwTreppeUa calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwTreppeUaR { 0% { transform: rotate(70deg); } 25% { transform: rotate(86deg); } 50% { transform: rotate(70deg); } 75% { transform: rotate(58deg); } 100% { transform: rotate(70deg); } }
+  .bw-figur.bw-a-treppe .bw-uaR { animation: bwTreppeUaR calc(var(--b) * 2) ease-in-out calc(var(--ph, 0s) + var(--b) * 1) infinite; }
+  @keyframes bwTreppeGanz { 0% { transform: none; } 25% { transform: translate(0px, -4px); } 50% { transform: none; } 75% { transform: translate(0px, -4px); } 100% { transform: none; } }
+  .bw-figur.bw-a-treppe .bw-ganz { animation: bwTreppeGanz calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwHulaOben { 0% { transform: translate(-4px, 0px) rotate(-3deg); } 25% { transform: translate(0px, 2px); } 50% { transform: translate(4px, 0px) rotate(3deg); } 75% { transform: translate(0px, -2px); } 100% { transform: translate(-4px, 0px) rotate(-3deg); } }
+  .bw-figur.bw-a-hula .bw-oben { animation: bwHulaOben calc(var(--b) * 2) linear var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-hula .bw-oaL { transform: rotate(34deg); animation: none; }
+  .bw-figur.bw-a-hula .bw-oaR { transform: rotate(-34deg); animation: none; }
+  .bw-figur.bw-a-hula .bw-uaL { transform: rotate(-102deg); animation: none; }
+  .bw-figur.bw-a-hula .bw-uaR { transform: rotate(102deg); animation: none; }
+  @keyframes bwHulaDing { 0% { transform: rotate(-7deg); } 25% { transform: translate(0px, 1px); } 50% { transform: rotate(7deg); } 75% { transform: translate(0px, -1px); } 100% { transform: rotate(-7deg); } }
+  .bw-figur.bw-a-hula .bw-ding { animation: bwHulaDing calc(var(--b) * 2) linear var(--ph, 0s) infinite; }
+  @keyframes bwHulaGanz { 0% { transform: none; } 50% { transform: translate(0px, 1px); } 100% { transform: none; } }
+  .bw-figur.bw-a-hula .bw-ganz { animation: bwHulaGanz calc(var(--b) * 2) linear var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-abwischen .bw-oaL { transform: rotate(-8deg); animation: none; }
+  .bw-figur.bw-a-abwischen .bw-uaL { transform: rotate(-46deg); animation: none; }
+  @keyframes bwAbwischenOar { 0% { transform: rotate(6deg); } 50% { transform: rotate(34deg); } 100% { transform: rotate(6deg); } }
+  .bw-figur.bw-a-abwischen .bw-oaR { animation: bwAbwischenOar calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwAbwischenUar { 0% { transform: rotate(28deg); } 50% { transform: rotate(64deg); } 100% { transform: rotate(28deg); } }
+  .bw-figur.bw-a-abwischen .bw-uaR { animation: bwAbwischenUar calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwAbwischenOben { 0% { transform: rotate(0deg); } 50% { transform: rotate(-4deg); } 100% { transform: rotate(0deg); } }
+  .bw-figur.bw-a-abwischen .bw-oben { animation: bwAbwischenOben calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-pfanne .bw-oaL { transform: rotate(-6deg); animation: none; }
+  .bw-figur.bw-a-pfanne .bw-uaL { transform: rotate(-50deg); animation: none; }
+  @keyframes bwPfanneOar { 0% { transform: rotate(10deg); } 30% { transform: rotate(16deg); } 50% { transform: rotate(6deg); } 100% { transform: rotate(10deg); } }
+  .bw-figur.bw-a-pfanne .bw-oaR { animation: bwPfanneOar calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwPfanneUar { 0% { transform: rotate(70deg); } 30% { transform: rotate(96deg); } 50% { transform: rotate(62deg); } 100% { transform: rotate(70deg); } }
+  .bw-figur.bw-a-pfanne .bw-uaR { animation: bwPfanneUar calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; }
+  @keyframes bwPfanneDing { 0% { transform: none; } 25% { transform: rotate(90deg) scale(1.35, 1.35); } 40% { transform: rotate(180deg) scale(1.5, 1.5); } 55% { transform: none; } 100% { transform: none; } }
+  .bw-figur.bw-a-pfanne .bw-ding { animation: bwPfanneDing calc(var(--b) * 2) ease-in-out var(--ph, 0s) infinite; }
   @keyframes bwSchuettelnOa { 0% { transform: rotate(8deg); } 50% { transform: rotate(17deg); } 100% { transform: rotate(8deg); } }
   .bw-figur.bw-a-schuetteln .bw-oaL { animation: bwSchuettelnOa calc(var(--b) * 0.5) linear var(--ph, 0s) infinite; }
   @keyframes bwSchuettelnOaR { 0% { transform: rotate(-8deg); } 50% { transform: rotate(-17deg); } 100% { transform: rotate(-8deg); } }
@@ -4607,6 +4673,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.296.0" data-v="2.296.0"></script>
+<script src="app.js?v=2.297.0" data-v="2.297.0"></script>
 </body>
 </html>

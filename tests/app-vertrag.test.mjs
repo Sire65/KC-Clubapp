@@ -8706,8 +8706,22 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
   assert.ok(/const ES_FLIP_MUSTER = \[\["blanko", "▢ Blanko"\], \["kariert", "▦ Kariert"\], \["liniert", "☰ Liniert"\]\];/.test(b) && /onclick="esFlipMusterWeiter\(\)"/.test(b), "ein Knopf schaltet blanko → kariert → liniert");
   assert.ok(/globalCompositeOperation = "destination-out"/.test(b), "Radierer nimmt nur Striche weg – Linien bleiben");
-  assert.ok(/const BWM_LAUT = \.42, BWM_LEISE = \.09;/.test(b) && /createDynamicsCompressor\(\)/.test(b), "Musik lauter (mit Kompressor), beim Sprechen deutlich leiser");
+  assert.ok(/const BWM_LAUT = \.\d+, BWM_LEISE = \.\d+;/.test(b) && /createDynamicsCompressor\(\)/.test(b), "Musik lauter (mit Kompressor), beim Sprechen deutlich leiser");
   assert.ok(/if \(L\.ansage && bwSpricht\(\) && L\.warte < 10\) \{ L\.warte\+\+; return bwZahl\(\); \}/.test(b), "Einzählen wartet, bis die Erklärung fertig ist");
   assert.ok(/L\.rest === 27\)[\s\S]{0,200}L\.rest === 21\)[\s\S]{0,200}L\.rest === 15\)[\s\S]{0,200}L\.rest === 10\)[\s\S]{0,120}L\.rest === 6\)/.test(b), "Sprüche gleichmäßig verteilt");
   assert.ok(/const BW_FARBEN = \[/.test(b) && /const bwStulpe = /.test(b) && /class="bw-band"/.test(b) && /L\.farbe \+ L\.i\)/.test(b), "80er: Neon-Jacke, Stulpen, Schweißbänder – je Übung andere Farben");
+}
+
+// 2.297.0 KC-CLUB-BUEHNE-KUECHE-2 (Wunsch Hansi): Kochjacke mit 10 Knöpfen; neue Küchen-Übungen (Suppe rühren, Treppe aus dem Lager,
+// Kopf zur Seite, Nacken stärken, Hula-Hoop, Pfanne schwenken …); Musik lauter, Stimme leiser
+{
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  assert.ok(/\[6, 14, 22, 30, 38\]\.flatMap\(\(y\) => \[\[55\.5, y\], \[64\.5, y\]\]\)/.test(b) && /class="bw-knopf"/.test(b), "Kochjacke: zwei Reihen à 5 = 10 Knöpfe");
+  for (const id of ["suppe", "kniehoch", "kopfneigen", "nackenstark", "abwischen", "treppe", "hula", "suppest", "pfanne"]) {
+    assert.ok(new RegExp(`\\{ id: "${id}", t: "`).test(b), `Übung ${id} vorhanden`);
+  }
+  for (const a of ["suppe", "treppe", "kopfneigen", "nackenstark", "hula", "abwischen", "pfanne"]) assert.ok(new RegExp(`\\.bw-figur\\.bw-a-${a} \\.bw-`).test(html), `Bewegung ${a} vorhanden`);
+  assert.ok(/const BW_STIMME = \.\d+;/.test(b) && /u\.volume = BW_STIMME;/.test(b), "Stimme leiser als bisher");
+  assert.ok(/const BWM_LAUT = \.75, BWM_LEISE = \.26;/.test(b), "Musik lauter, beim Sprechen nur leicht abgesenkt");
+  assert.ok(!/\|\|=|\?\?=/.test(b), "alte Handys");
 }
