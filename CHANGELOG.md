@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.333.0 – 2026-10-12 – KC-CLUB-THEMEN-SCHRIFT: passende Schrift je Thema für die Begrüßung
+Themen bringen eine passende Schrift für die Begrüßung im Kopf mit: Fraktur (Oktoberfest), Grusel (Halloween), Comic (Karneval), Weihnachtsschrift, Pacifico (Karibik), Rye (Sim-Jü), Lobster (Sommer, Silvester), Dancing Script (Frühling, Ostern). Freie Schriften (OFL/Apache) im Ordner schriften/, nur bei Bedarf geladen, kein fremder Server. Der Schriftzug „Köcheclub Werne“ und alles Gedruckte bleiben im CD. Die Themen-Auswahl zeigt jeden Namen in seiner Schrift. Abschaltbar: ⚙️ → Themen → „✍️ Schrift des Themas“.
+
 ## 2.332.0 – 2026-10-12 – KC-CLUB-THEMEN-BUEHNE-2: Ostern, Karneval, Halloween
 Drei weitere Themen: 🐣 Ostern (Osterhase hoppelt mit Korb herein und legt die Eier – erst dann findbar; das gilt auch für die Ostereier an Ostern), 🎭 Karneval (Luftschlangen, Konfetti bleibt liegen, Wagen mit „Helau, <Vorname>!“, Kamelle, Konfetti-Kanonen), 🎃 Halloween (Mond, Spinnennetz mit Spinne, leuchtende Kürbisse, Fledermäuse, Gespenst „Buuuh, <Vorname>!“). Nach Kalender: Karneval (Weiberfastnacht–Veilchendienstag, 11.11.), Ostern (Palmsonntag–Ostermontag), Halloween (31.10.). Osterformel als gemeinsame Funktion osterSonntag().
 

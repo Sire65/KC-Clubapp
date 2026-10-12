@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.332.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.333.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -613,20 +613,20 @@ function lichtSensorStarten() {
 // Gedrucktes immer im Köcheclub-Design.
 const THEMEN = [
   { id: "klassik", sym: "🏛️", name: "Köcheclub klassisch", design: "klassik", jz: "auto", effekt: "wechsel" },
-  { id: "karneval", sym: "🎭", name: "Karneval", design: "retro", jz: "karneval", effekt: "flieger" }, // 2.332.0
-  { id: "fruehling", sym: "🌱", name: "Frühling", design: "kirschbluete", jz: "fruehling", effekt: "taube" },
-  { id: "ostern", sym: "🐣", name: "Ostern", design: "salbei", jz: "fruehling", effekt: "taube", extra: "ostern" }, // 2.332.0: Osterhase legt Eier zum Suchen
-  { id: "sommer", sym: "🌻", name: "Sommer", design: "toskana", jz: "sommer", effekt: "flieger" },
-  { id: "karibik", sym: "🌴", name: "Karibik", design: "lagune", jz: "karibik", effekt: "taube" }, // 2.331.0 KC-CLUB-THEMEN-BUEHNE
-  { id: "oktoberfest", sym: "🥨", name: "Oktoberfest", design: "nordsee", jz: "wiesn", effekt: "postauto" },
+  { id: "karneval", sym: "🎭", name: "Karneval", design: "retro", jz: "karneval", effekt: "flieger", schrift: "comic" }, // 2.332.0
+  { id: "fruehling", sym: "🌱", name: "Frühling", design: "kirschbluete", jz: "fruehling", effekt: "taube", schrift: "zart" },
+  { id: "ostern", sym: "🐣", name: "Ostern", design: "salbei", jz: "fruehling", effekt: "taube", schrift: "zart", extra: "ostern" }, // 2.332.0: Osterhase legt Eier zum Suchen
+  { id: "sommer", sym: "🌻", name: "Sommer", design: "toskana", jz: "sommer", effekt: "flieger", schrift: "schwung" },
+  { id: "karibik", sym: "🌴", name: "Karibik", design: "lagune", jz: "karibik", effekt: "taube", schrift: "strand" }, // 2.331.0 KC-CLUB-THEMEN-BUEHNE
+  { id: "oktoberfest", sym: "🥨", name: "Oktoberfest", design: "nordsee", jz: "wiesn", effekt: "postauto", schrift: "fraktur" },
   { id: "herbst", sym: "🍂", name: "Herbst", design: "ocker", jz: "herbst", effekt: "flieger" },
   { id: "indian", sym: "🍁", name: "Indian Summer", design: "glut", jz: "herbst", effekt: "taube",
     laub: ["#d7261e", "#ff6a13", "#ffb300", "#b5121b", "#ff8f1f", "#e8c21a", "#8e1b10", "#f04e23"] }, // leuchtendes Rot, Orange, Gold
-  { id: "halloween", sym: "🎃", name: "Halloween", design: "sonnenuntergang", jz: "halloween", effekt: "taube" }, // 2.332.0
-  { id: "simjue", sym: "🎡", name: "Sim-Jü", design: "regenbogen", jz: "kirmes", effekt: "flieger" },
+  { id: "halloween", sym: "🎃", name: "Halloween", design: "sonnenuntergang", jz: "halloween", effekt: "taube", schrift: "grusel" }, // 2.332.0
+  { id: "simjue", sym: "🎡", name: "Sim-Jü", design: "regenbogen", jz: "kirmes", effekt: "flieger", schrift: "kirmes" },
   { id: "winter", sym: "⛄", name: "Winter", design: "nordsee", jz: "winter", effekt: "postauto" },
-  { id: "weihnachten", sym: "🎄", name: "Weihnachten", design: "weinberg", jz: "advent", effekt: "taube" },
-  { id: "silvester", sym: "🎆", name: "Silvester", design: "disko", jz: "silvester", effekt: "flieger" },
+  { id: "weihnachten", sym: "🎄", name: "Weihnachten", design: "weinberg", jz: "advent", effekt: "taube", schrift: "weihnacht" },
+  { id: "silvester", sym: "🎆", name: "Silvester", design: "disko", jz: "silvester", effekt: "flieger", schrift: "schwung" },
 ];
 // 2.331.0: Feste nach Kalender – Oktoberfest (Samstag nach dem 15.9. bis 1. Oktobersonntag, mindestens bis 3.10.) und Sim-Jü in Werne
 // (Samstag bis Dienstag um Simon und Juda, 28.10. – der Dienstag, der dem 28.10. am nächsten liegt; 2026: 24.–27.10.)
@@ -644,6 +644,31 @@ function themaFestZeit(d = new Date()) {
   if (d.getMonth() === 9 && d.getDate() === 31) return "halloween";
   return null;
 }
+// 2.333.0 KC-CLUB-THEMEN-SCHRIFT (Wunsch Hansi „passende Schriftarten“): jedes Thema kann eine Schrift für die Begrüßung im Kopf mitbringen.
+// Freie Schriften im Ordner schriften/ (Lizenzen dort, kein fremder Server), geladen erst, wenn sie gebraucht werden. Der Schriftzug
+// „Köcheclub Werne“ und alles Gedruckte bleiben im Corporate Design. Je Gerät abschaltbar (⚙️ → Themen). Neue Schrift = Eintrag hier.
+const THEMA_SCHRIFTEN = {
+  weihnacht: { familie: "KC Weihnacht", datei: "mountains-of-christmas.woff2", gewicht: 700, gr: 1.15 },
+  grusel: { familie: "KC Grusel", datei: "creepster.woff2", gewicht: 400, gr: 1.1 },
+  comic: { familie: "KC Comic", datei: "bangers.woff2", gewicht: 400, gr: 1.12 },
+  kirmes: { familie: "KC Kirmes", datei: "rye.woff2", gewicht: 400, gr: .95 },
+  fraktur: { familie: "KC Fraktur", datei: "unifrakturmaguntia.woff2", gewicht: 400, gr: 1.18 },
+  strand: { familie: "KC Strand", datei: "pacifico.woff2", gewicht: 400, gr: 1 },
+  schwung: { familie: "KC Schwung", datei: "lobster.woff2", gewicht: 400, gr: 1.08 },
+  zart: { familie: "KC Zart", datei: "dancing-script.woff2", gewicht: 700, gr: 1.2 },
+};
+const themaSchriftAn = () => { try { return localStorage.getItem("kc_club_thema_schrift") !== "0"; } catch { return true; } };
+function themaSchriftLaden(id) { // einmal je Schrift; schlägt das Laden fehl (offline), bleibt die normale Schrift
+  const s = THEMA_SCHRIFTEN[id]; if (!s || s.laden || typeof FontFace === "undefined" || !document.fonts) return;
+  try { const f = new FontFace(s.familie, `url(schriften/${s.datei})`, { weight: String(s.gewicht), display: "swap" }); s.laden = f.load().then(() => document.fonts.add(f)).catch(() => { s.laden = null; }); } catch { s.laden = null; }
+}
+function themaSchriftAnwenden() {
+  const id = themaSchriftAn() ? themaWert("schrift") : null, s = id && THEMA_SCHRIFTEN[id], r = document.documentElement;
+  if (!s) { delete r.dataset.themaSchrift; return; }
+  themaSchriftLaden(id); r.dataset.themaSchrift = id;
+  r.style.setProperty("--thema-schrift", `"${s.familie}"`); r.style.setProperty("--thema-schrift-gewicht", s.gewicht); r.style.setProperty("--thema-schrift-gr", s.gr);
+}
+function themaSchriftSetzen(an) { try { localStorage.setItem("kc_club_thema_schrift", an ? "1" : "0"); } catch {} themaSchriftAnwenden(); melde(an ? "✍️ Begrüßung in der Schrift des Themas" : "✍️ Begrüßung wieder in der normalen Schrift"); }
 const THEMA_KAL = (d = new Date()) => { const f = themaFestZeit(d); if (f) return f; const a = jahreszeitArt(d); return a === "advent" ? "weihnachten" : a === "herbst" && d.getMonth() === 9 ? "indian" : a; }; // Oktober = Indian Summer
 const themaWahl = () => { try { const w = localStorage.getItem("kc_club_thema"); return w === "auto" || THEMEN.some((t) => t.id === w) ? w : "aus"; } catch { return "aus"; } };
 const themaClubFolgen = () => { try { return localStorage.getItem("kc_club_thema_club") !== "0"; } catch { return true; } };
@@ -676,9 +701,11 @@ function themaWahlZeigen() {
   const z = $("themaWahl"); if (!z) return;
   const w = themaWahl(), akt = aktivesThema(), nacht = istNacht();
   const farbe = (t) => { const d = DESIGNS.find((x) => x.id === t.design) || DESIGNS[0], f = d[nacht ? "nacht" : "tag"]; return d.verlauf ? d.verlauf[nacht ? "nacht" : "tag"] : `linear-gradient(135deg,${f.hero1},${f.rot},${f.hero4})`; };
-  const knopf = (id, sym, name, bg) => `<button type="button" class="thema-k${w === id ? " an" : ""}" onclick="themaSetzen('${id}')"><span class="thema-f" style="background:${bg}">${sym}</span><span>${esc(name)}${w === id ? " ✓" : ""}</span></button>`;
+  const sicht = !!z.offsetParent, sf = (t) => { const s = t.schrift && THEMA_SCHRIFTEN[t.schrift]; if (!s) return ""; if (sicht) themaSchriftLaden(t.schrift); /* nur laden, wenn die Auswahl offen ist */ return ` style="font-family:'${s.familie}',sans-serif;font-weight:${s.gewicht};font-size:${(.85 * s.gr).toFixed(2)}rem"`; }; // 2.333.0: Name in der Schrift des Themas
+  const knopf = (id, sym, name, bg, t = {}) => `<button type="button" class="thema-k${w === id ? " an" : ""}" onclick="themaSetzen('${id}')"><span class="thema-f" style="background:${bg}">${sym}</span><span${sf(t)}>${esc(name)}${w === id ? " ✓" : ""}</span></button>`;
   z.innerHTML = knopf("aus", "🚫", "Kein Thema", "var(--karte2)") + knopf("auto", "🔄", "Nach Kalender", "linear-gradient(90deg,#f2a7c3,#e8b23a,#e0802a,#9fd3f0)")
-    + THEMEN.map((t) => knopf(t.id, t.sym, t.name, farbe(t))).join("");
+    + THEMEN.map((t) => knopf(t.id, t.sym, t.name, farbe(t), t)).join("");
+  const sw = $("themaSchriftAn"); if (sw) sw.checked = themaSchriftAn();
   const c = clubThemaId(), ct = c && (c === "auto" ? { sym: "🔄", name: "nach Kalender" } : THEMEN.find((t) => t.id === c));
   $("themaInfo").innerHTML = akt ? `Gerade: <b>${akt.sym} ${esc(akt.name)}</b>${akt.quelle === "club" ? " – Club-Thema" : akt.quelle === "kalender" ? " – nach Kalender" : ""}. Farbe, Jahreszeit und Sende-Effekt kannst du trotzdem einzeln ändern.` : "Kein Thema – es gelten deine eigenen Einstellungen.";
   $("themaClub").innerHTML = (ct ? `<div class="schalter"><div><b>🏛️ Club-Thema übernehmen</b><div class="hinweis">${esc(INIT?.clubThema?.von || "Der Admin")} hat für alle <b>${ct.sym} ${esc(ct.name)}</b> eingestellt.</div></div><input type="checkbox" ${themaClubFolgen() ? "checked" : ""} onchange="themaClubSetzen(this.checked)"></div>` : "")
@@ -706,6 +733,7 @@ function anwendenDesign() {
   jzWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
+  try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
 }
 function designWahlZeigen() {
   try { themaWahlZeigen(); } catch {} // 2.323.0 KC-CLUB-THEMEN
@@ -3221,7 +3249,7 @@ const HILFE = [
   // 🎨 Aussehen & Darstellung
   { id: "farbe", thema: "darstellung", sym: "🎨", t: "Die Farbe der App ändern", x: "Du kannst die Farbe einstellen: ⚙️ Einstellungen → Register <b>🎨 Darstellung</b> → „🎨 Farbdesign“. Unter „Weitere Farbschemen“ und „✨ Ausgefallene Farbschemen“ gibt es noch mehr. Antippen – die App färbt sich sofort um.", zeig: hzDesign },
   { id: "nacht", thema: "darstellung", sym: "🌗", t: "Tag- und Nachtmodus", x: "⚙️ → Darstellung → „🌗 Tag- und Nachtmodus“: <b>🔄 Automatisch</b> (folgt deinem Handy), <b>☀️ Immer Tag</b> oder <b>🌙 Immer Nacht</b>. Nachts ist der dunkle Modus angenehmer für die Augen.", zeig: () => einstiegHin("darstellung", "modusWahl") },
-  { id: "themen", thema: "darstellung", sym: "🎭", t: "Themen: Weihnachten, Herbst, Indian Summer …", x: "Mit einem Tipp auf ein Thema (⚙️ → <b>🎨 Darstellung</b> → <b>🎭 Themen</b>) stellst du Farben, das Bild im Kopf der Startseite und den Effekt beim Senden passend ein – z. B. 🎄 Weihnachten, 🍁 Indian Summer, 🎡 Sim-Jü, 🥨 Oktoberfest, 🌴 Karibik, 🐣 Ostern, 🎭 Karneval oder 🎃 Halloween – mit eigenem Bild im Kopf. „🔄 Nach Kalender“ wechselt das Thema von selbst (auch zu Karneval, Ostern, Oktoberfest, Sim-Jü und Halloween). Einzelnes kannst du danach trotzdem ändern. Hat der Admin ein Club-Thema für alle eingestellt, kannst du es dort für dich abschalten." },
+  { id: "themen", thema: "darstellung", sym: "🎭", t: "Themen: Weihnachten, Herbst, Indian Summer …", x: "Mit einem Tipp auf ein Thema (⚙️ → <b>🎨 Darstellung</b> → <b>🎭 Themen</b>) stellst du Farben, das Bild im Kopf der Startseite und den Effekt beim Senden passend ein – z. B. 🎄 Weihnachten, 🍁 Indian Summer, 🎡 Sim-Jü, 🥨 Oktoberfest, 🌴 Karibik, 🐣 Ostern, 🎭 Karneval oder 🎃 Halloween – mit eigenem Bild im Kopf. „🔄 Nach Kalender“ wechselt das Thema von selbst (auch zu Karneval, Ostern, Oktoberfest, Sim-Jü und Halloween). Einzelnes kannst du danach trotzdem ändern. Viele Themen bringen auch eine passende Schrift für die Begrüßung mit – abschaltbar mit „✍️ Schrift des Themas“. Hat der Admin ein Club-Thema für alle eingestellt, kannst du es dort für dich abschalten." },
   { id: "schrift", thema: "darstellung", sym: "🔠", t: "Größere Schrift", x: "Ist dir die Schrift zu klein? ⚙️ → Darstellung → „🔠 Große Schrift“ einschalten – alles wird etwas größer.", zeig: () => einstiegHin("darstellung", "setGross") },
   { id: "mitglieder_ansicht", thema: "darstellung", sym: "👥", t: "Mitglieder als Kacheln, Liste oder Tafel", x: "Ob du die Mitglieder als <b>🔲 Kacheln</b>, als <b>☰ Liste</b> oder als <b>📋 Anwesenheitstafel</b> siehst, wählst du unter ⚙️ → Darstellung oder direkt oben bei den Mitgliedern.", zeig: () => einstiegHin("darstellung", "mgAnsichtWahl") },
   { id: "feiertage", thema: "darstellung", sym: "🇩🇪", t: "Feiertage im Kalender", x: "Die Feiertage in NRW kannst du im Club-Kalender ein- oder ausblenden: ⚙️ → Darstellung → „🇩🇪 Feiertage NRW im Kalender“.", zeig: () => einstiegHin("darstellung", "setFeiertage") },

@@ -1,14 +1,22 @@
 {
-  "version": "2.332.0",
+  "version": "2.333.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🐣 Neues Thema Ostern: der Osterhase hoppelt herein und legt bunte Eier zum Suchen",
-    "🎭 Neues Thema Karneval: Luftschlangen, Konfetti, Karnevalswagen mit „Helau“ und deinem Namen, Kamelle",
-    "🎃 Neues Thema Halloween: Kürbisse, Fledermäuse, Spinne – und ein Gespenst ruft deinen Namen",
-    "🔄 „Nach Kalender“ kennt jetzt auch Karneval, Ostern und Halloween"
+    "✍️ Passende Schrift zum Thema: die Begrüßung oben erscheint z. B. in Fraktur zum Oktoberfest, gruselig zu Halloween oder verspielt zu Ostern",
+    "🎭 In der Themen-Auswahl steht jeder Name in seiner Schrift",
+    "⚙️ Abschaltbar unter Themen → „✍️ Schrift des Themas“ – der Schriftzug „Köcheclub Werne“ bleibt immer gleich"
   ],
   "verlauf": [
+    {
+      "version": "2.333.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "✍️ Passende Schrift zum Thema: die Begrüßung oben erscheint z. B. in Fraktur zum Oktoberfest, gruselig zu Halloween oder verspielt zu Ostern",
+        "🎭 In der Themen-Auswahl steht jeder Name in seiner Schrift",
+        "⚙️ Abschaltbar unter Themen → „✍️ Schrift des Themas“ – der Schriftzug „Köcheclub Werne“ bleibt immer gleich"
+      ]
+    },
     {
       "version": "2.332.0",
       "datum": "2026-10-12",

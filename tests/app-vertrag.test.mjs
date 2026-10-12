@@ -6097,6 +6097,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal(fz(new Date(2026, 9, 31)), "halloween"); assert.equal(fz(new Date(2026, 9, 30)), null);
   assert.ok(/jahreszeitVorschau\('karneval'\)/.test(lies("index.html")) && /jahreszeitVorschau\('halloween'\)/.test(lies("index.html")), "Vorschau-Knöpfe");
 }
+// 2.333.0 KC-CLUB-THEMEN-SCHRIFT (Wunsch Hansi „passende Schriftarten“): freie Schriften im Repository, nur für die Begrüßung
+{
+  const sch = html.match(/const THEMA_SCHRIFTEN = \{([\s\S]*?)\n\};/)[1];
+  for (const [, id, datei] of sch.matchAll(/  ([a-z]+): \{ familie: "KC [^"]+", datei: "([a-z-]+\.woff2)", gewicht: \d+, gr: [\d.]+ \}/g)) {
+    assert.ok(fs.existsSync(new URL("../schriften/" + datei, import.meta.url)), `Schrift ${id}: Datei ${datei} liegt im Repository`);
+    const lic = datei.replace(".woff2", ""); assert.ok(fs.existsSync(new URL(`../schriften/${lic}-OFL.txt`, import.meta.url)) || fs.existsSync(new URL(`../schriften/${lic}-LICENSE.txt`, import.meta.url)), `Lizenz für ${datei}`);
+  }
+  for (const m of html.matchAll(/effekt: "[a-z]+"(?:, extra: "[a-z]+")?, schrift: "([a-z]+)"/g)) assert.ok(new RegExp(`  ${m[1]}: \\{ familie:`).test(sch), `Thema-Schrift ${m[1]} eingetragen`);
+  assert.ok(/new FontFace\(s\.familie, `url\(schriften\/\$\{s\.datei\}\)`/.test(html) && !/fonts\.googleapis|fonts\.gstatic/.test(html), "Schriften aus dem eigenen Ordner, kein fremder Server");
+  assert.ok(/:root\[data-thema-schrift\] #v-start \.gruss #begruessung \{ font-family: var\(--thema-schrift\)/.test(lies("index.html")) && !/data-thema-schrift\][^{]*marke-klein/.test(lies("index.html")), "nur die Begrüßung – Schriftzug Köcheclub Werne bleibt im CD");
+  assert.ok(/id="themaSchriftAn"[^>]*onchange="themaSchriftSetzen\(this\.checked\)"/.test(lies("index.html")) && /localStorage\.getItem\("kc_club_thema_schrift"\) !== "0"/.test(html), "je Gerät abschaltbar");
+  assert.ok(/try \{ themaSchriftAnwenden\(\); \} catch \{\} \/\/ 2\.333\.0/.test(html), "beim Anwenden des Designs mit gesetzt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

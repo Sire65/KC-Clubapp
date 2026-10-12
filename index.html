@@ -1798,6 +1798,7 @@
   .themawahl { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; margin: 6px 0 2px; } /* 2.323.0 KC-CLUB-THEMEN */
   .thema-k { display: grid; gap: 4px; justify-items: center; padding: 6px 4px 8px; border: 2px solid var(--linie); border-radius: 14px; background: var(--karte); color: var(--text); font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; text-align: center; min-height: 44px; }
   .thema-k.an { border-color: var(--rot); box-shadow: 0 0 0 2px var(--rot) inset; }
+  :root[data-thema-schrift] #v-start .gruss #begruessung { font-family: var(--thema-schrift), system-ui, sans-serif; font-weight: var(--thema-schrift-gewicht); font-size: calc(1em * var(--thema-schrift-gr)); letter-spacing: .01em; } /* 2.333.0 KC-CLUB-THEMEN-SCHRIFT – nur die Begrüßung */
   .thema-f { width: 100%; height: 34px; border-radius: 9px; display: grid; place-items: center; font-size: 1.35rem; }
   .dw-fertig-leiste { position: absolute; left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 12px 14px; border-radius: 16px; background: #fff; color: #2a1a12; border: 2px solid #7b1e23; box-shadow: 0 8px 28px rgba(0,0,0,.28); animation: dwLeisteRein .35s ease-out; }
   .dw-fertig-leiste > div { flex: 1 1 220px; } .dw-fertig-leiste .knopf { margin: 0; min-height: 48px; } .dw-fertig-leiste .knopf.haupt { flex: 1 1 260px; white-space: normal; } .dw-fertig-leiste [data-k="spaeter"] { background: #f1e7e2; color: #2a1a12; border: 1px solid #c9a37a; }
@@ -4493,6 +4494,7 @@
       <!-- 2.323.0 KC-CLUB-THEMEN -->
       <div><b>🎭 Themen</b><div class="hinweis">Ein Tipp stellt Farben, das Bild im Kopf der Startseite und den Effekt beim Senden passend ein</div></div>
       <div class="themawahl" id="themaWahl"></div><p class="hinweis" id="themaInfo" style="margin:4px 0 8px"></p><div id="themaClub"></div>
+      <div class="schalter"><div><b>✍️ Schrift des Themas</b><div class="hinweis">Die Begrüßung oben im Kopf erscheint in der passenden Schrift (z. B. Fraktur zum Oktoberfest) – der Schriftzug „Köcheclub Werne“ bleibt immer gleich</div></div><input type="checkbox" id="themaSchriftAn" checked onchange="themaSchriftSetzen(this.checked)"></div> <!-- 2.333.0 KC-CLUB-THEMEN-SCHRIFT -->
       <div><b>🎨 Farbdesign</b><div class="hinweis">Antippen – die App färbt sich sofort um</div></div>
       <div class="designwahl" id="designWahl"></div>
       <details class="ds-mehr" id="designMehrKlappe"><summary>🎨 Weitere Farbschemen <span class="hinweis" id="designMehrZahl"></span></summary><div class="designwahl" id="designWahlMehr"></div></details>
@@ -4901,6 +4903,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.332.0" data-v="2.332.0"></script>
+<script src="app.js?v=2.333.0" data-v="2.333.0"></script>
 </body>
 </html>
