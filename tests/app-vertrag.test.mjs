@@ -8665,7 +8665,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/fill="#e03131"\/>\s*<rect x="\$\{x - 9\.2\}"/.test(b) && /class="bw-schweiss"/.test(b) && !/fi-muetze/.test(b), "Schweißstirnband statt Kochmütze, rote Turnschuhe (2.294.0)");
   for (const g of ["sitzen", "stehen", "kueche"]) assert.ok(new RegExp(`g: "${g}"`).test(b), "Übungen " + g);
   for (const h of ["schneebesen", "loeffel", "nudelholz", "flasche", "deckel", "tuch"]) assert.ok(new RegExp(`\\b${h}: \\(x, y\\) =>`).test(b), "Küchenhelfer " + h);
-  assert.ok(/L\.rest === 3 \? "Noch 3" : L\.rest === 2 \? "noch 2" : "noch 1"/.test(b) && /"Und jetzt ausschütteln!"/.test(b) && /bwSag\(u\.w \|\| (u\.c\?\.\[1\] \|\| )?BW_LOB/.test(b), "Trainer-Ansagen: Seitenwechsel/Lob, noch 3-2-1, ausschütteln");
+  assert.ok(/L\.rest === 3 \? "Noch 3" : L\.rest === 2 \? "noch 2" : "noch 1"/.test(b) && /"Und jetzt ausschütteln!"/.test(b) && /bwSag\(u\.w \|\| (u\.c\?\.\[1\] \|\| )?(BW_LOB|bwNimm\(BW_LOB)/.test(b), "Trainer-Ansagen: Seitenwechsel/Lob, noch 3-2-1, ausschütteln");
   assert.ok(/if \(!esSichtbar\(\)\) \{ if \(!L\.pause\) \{ L\.pause = true; bwMusik\(false\);/.test(b) && /if \(BW\.lauf \|\| BWM\.laeuft\) bwStopp\(\);/.test(html), "nur sichtbar – sonst Pause; Umdrehen/Reiterwechsel stoppt Musik und Ansage");
   assert.ok(/window\.AudioContext \|\| window\.webkitAudioContext/.test(b) && !/new Audio\(|\.mp3|https?:\/\//.test(b), "Musik im Handy erzeugt – keine Datei, kein Internet");
   assert.ok(!/\bapi\(/.test(b), "nichts wird gespeichert oder gesendet");
