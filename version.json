@@ -1,12 +1,20 @@
 {
-  "version": "2.310.1",
+  "version": "2.310.2",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🔌 Nach dem Aufwachen des Handys: Hintergrund-Abrufe warten kurz, bis das Netz bereit ist – keine falschen „Keine Verbindung“-Fehler mehr",
-    "🧽 Tafel abwischen: seltener Absturz der Wisch-Animation behoben"
+    "🩺 Fehlerprotokoll aufgeräumt: ⚪ Info-Einträge (Messwerte, Updates, Gerät) sind ausgeblendet – nur echte Auffälligkeiten stehen oben, „⚪ Info zeigen“ holt den Rest",
+    "🔁 Weniger Fehlalarme: doppelte Meldungen nach Updates, Suchmaschinen-Roboter und Offline-Fluten werden nicht mehr mitgeschrieben; Abrufe wiederholen sich bei kurzen Server-Aussetzern still"
   ],
   "verlauf": [
+    {
+      "version": "2.310.2",
+      "datum": "2026-10-12",
+      "neu": [
+        "🩺 Fehlerprotokoll aufgeräumt: ⚪ Info-Einträge (Messwerte, Updates, Gerät) sind ausgeblendet – nur echte Auffälligkeiten stehen oben, „⚪ Info zeigen“ holt den Rest",
+        "🔁 Weniger Fehlalarme: doppelte Meldungen nach Updates, Suchmaschinen-Roboter und Offline-Fluten werden nicht mehr mitgeschrieben; Abrufe wiederholen sich bei kurzen Server-Aussetzern still"
+      ]
+    },
     {
       "version": "2.310.1",
       "datum": "2026-10-12",

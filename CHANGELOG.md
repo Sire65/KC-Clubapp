@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.310.2 – 2026-10-12 – KC-CLUB-FP-RUHIG
+Wunsch Hansi („Info statt Fehler anzeigen und alles optimieren, damit so etwas nicht zu oft vorkommt“). Anzeige: Im 🩺 Fehlerprotokoll sind ⚪ Info-Einträge (Startzeit, Gerät & Browser, alte Version, Updates, App geöffnet) ausgeblendet – je Person steht „⚪ n Info-Einträge ausgeblendet“, der Knopf „⚪ Info zeigen“ holt sie zurück. update_selbst/update_start zählen jetzt als Info (bisher 🟡 Hinweis) und haben verständliche Namen. Weniger Einträge: (1) Server speichert dieselbe Meldung (gleiche Art + Zeitstempel) nur einmal – nach einem Update schickte die neue Seite nach, was die alte schon gesendet hatte. (2) Suchmaschinen-Roboter (z. B. BitsExplorerBot) werden weder im Gerät noch auf dem Server mitgeschrieben. (3) „Handy offline“ höchstens einmal je 5 Minuten statt für jede einzelne Anfrage (iPad: 11 Einträge in 2 s). Stabiler: Lese-Anfragen wiederholen sich auch bei kaputter Antwort (Server startet gerade neu, z. B. beim Hochladen) einmal still.
+
 ## 2.310.1 – 2026-10-12 – KC-CLUB-AUFWACHEN + Fehlerprotokoll-Funde
 Aus dem Club-Fehlerprotokoll (Wunsch Hansi „Check das mal“). 1) „Keine Verbindung zum Server“ bei terminanfragen_liste/init, obwohl online: Kommt das Handy aus dem Ruhezustand, fragt die App nach 2,5 s im Hintergrund – das Netz ist dann oft noch nicht bereit (Preflight kam an, die Anfrage nicht). Lese-Anfragen werden bei einem solchen Netzfehler jetzt nach 1,6 s einmal still wiederholt (Schreiben nie). 2) Skriptfehler „Cannot read properties of undefined (reading '0')“ in esTafelAbwischen: Die Bildzeit von requestAnimationFrame kann vor dem Startzeitpunkt liegen → negativer Fortschritt → bahn[-1]; jetzt auf 0 begrenzt (ebenso beim Zahlen-Hochzählen).
 

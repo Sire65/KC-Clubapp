@@ -460,7 +460,8 @@ async function zuletztDaMap(ich: Ich, ids: string[]) {
 // „Script error.“ ohne Einzelheiten (Safari/fremde Skripte) ist nur ein Hinweis; Sicherheitsbericht nur mit Problemen schwer.
 const FP_FILTER = "aktion.like.fehler_%,aktion.eq.hilferuf,aktion.eq.diagnose_start,aktion.eq.zugang_angefordert";
 const FP_SCHWER = new Set(["hilferuf", "hilferuf_anonym", "start_kaputt"]);
-const FP_INFO = new Set(["alte_version", "update_getippt", "umgebung", "startzeit", "hinweis", "link_kopiert", "diagnose_start", "zugang_angefordert", "offline", "anonym_admin_benachrichtigt"]);
+const FP_INFO = new Set(["alte_version", "update_getippt", "umgebung", "startzeit", "hinweis", "link_kopiert", "diagnose_start", "zugang_angefordert", "offline", "anonym_admin_benachrichtigt",
+  "update_selbst", "update_start"]); // 2.310.2 KC-CLUB-FP-RUHIG: Updates sind Info, kein Fehler
 const FP_VOLL = 300; // ab so vielen Einträgen fragt die Tagesinfo, ob geleert werden soll
 const fpNurBrowser = (d: any) => /^Script error\.?$/i.test(String(d?.text ?? "").trim()) && !d?.datei && !Number(d?.zeile) && !String(d?.stapel ?? "").trim();
 function fpStufe(aktion: string, d: any): "schwer" | "hinweis" | "info" {
@@ -480,6 +481,19 @@ async function fpZaehlen() {
   }
   return z;
 }
+// 2.310.2 KC-CLUB-FP-RUHIG (Wunsch Hansi „optimieren, damit so etwas nicht zu oft vorkommt“): dieselbe Meldung (gleiche Art + Zeitstempel)
+// nur einmal speichern – beim Neuladen nach einem Update schickte die neue Seite nach, was die alte schon gesendet hatte (doppelte Einträge)
+async function fpNurNeue(liste: any[], eingrenzen: (q: any) => any) {
+  const zs = [...new Set(liste.map((e: any) => String(e?.z ?? "")).filter((z) => /^\d{4}-\d\d-\d\dT[\d:.]+Z$/.test(z)))];
+  let da = new Set<string>();
+  if (zs.length) {
+    const { data } = await eingrenzen(db.from("kc_club_protokoll").select("aktion,z:details->>z").gte("zeit", new Date(Date.now() - 86400000).toISOString()).in("details->>z", zs)).limit(500);
+    da = new Set((data ?? []).map((x: any) => String(x.aktion).replace(/^fehler_anonym_/, "").replace(/^fehler_/, "") + "|" + x.z));
+  }
+  const neu = new Set<string>();
+  return liste.filter((e: any) => { const k = fpArt(e?.art) + "|" + String(e?.z ?? ""); if (da.has(k) || neu.has(k)) return false; neu.add(k); return true; });
+}
+const FP_ROBOTER = /bot\b|bot\/|crawler|spider|crawl|slurp|headlesschrome|lighthouse|facebookexternalhit/i; // Suchmaschinen & Vorschau-Dienste sind keine Mitglieder
 async function fpUeberwachen() {
   const { data: letzte } = await db.from("kc_club_protokoll").select("zeit").eq("aktion", "fp_schwer_gemeldet").order("zeit", { ascending: false }).limit(1);
   const seit = letzte?.[0]?.zeit ?? new Date(Date.now() - 3600000).toISOString();
@@ -5557,7 +5571,8 @@ Köcheclub Werne`,
     // ----- KC-CLUB-FEHLERPROTOKOLL (0.93.0): Fehler VOR der Anmeldung (Link fehlt/ungültig) – anonym, mit Geräte-Kennung -----
     if (a === "fehler_anonym") {
       const geraet = txt(p.geraet, 40).replace(/[^A-Za-z0-9-]/g, "");
-      const liste = (Array.isArray(p.eintraege) ? p.eintraege : []).slice(0, FP_MAX_JE_SENDUNG);
+      if (FP_ROBOTER.test(req.headers.get("user-agent") || "")) return json({ ok: true, gespeichert: 0 }); // 2.310.2: Roboter nicht mitschreiben
+      const liste = await fpNurNeue((Array.isArray(p.eintraege) ? p.eintraege : []).slice(0, FP_MAX_JE_SENDUNG), (q: any) => q.eq("details->>geraet", geraet));
       if (!geraet || !liste.length) return json({ ok: true, gespeichert: 0 });
       const seit = new Date(Date.now() - 3600000).toISOString();
       const [{ count: gesamt }, { count: vomGeraet }] = await Promise.all([
@@ -6282,7 +6297,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
 
       // ----- KC-CLUB-FEHLERPROTOKOLL (0.93.0) -----
       case "fehler_melden": {
-        const liste = (Array.isArray(p.eintraege) ? p.eintraege : []).slice(0, FP_MAX_JE_SENDUNG);
+        const liste = await fpNurNeue((Array.isArray(p.eintraege) ? p.eintraege : []).slice(0, FP_MAX_JE_SENDUNG), (q: any) => q.eq("person_id", ich.person_id)); // 2.310.2: ohne Doppelte
         if (!liste.length) return json({ ok: true, gespeichert: 0 });
         const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).like("aktion", "fehler_%").gte("zeit", new Date(Date.now() - 3600000).toISOString());
         const platz = Math.max(0, Math.min(200 - (count ?? 0), liste.length));

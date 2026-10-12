@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.310.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.310.2"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11197,6 +11197,8 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   try { if (r.ok && API_LESEN.test(action) && !SCHNECKE_NICHT.has(action)) { const srv = Number(j?.srvMs); schneckeMessen(Math.max(0, performance.now() - t0 - (Number.isFinite(srv) && srv > 0 ? srv : 0))); } } catch {}
   // Region gestört → Standardweg. 1.97.0: LED-Zähler ausgleichen; Schreib-Aktionen NICHT still wiederholen (sonst evtl. doppelt gespeichert)
   if (mitRegion && r.status >= 502 && r.status <= 504 && !j?.error) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; vbEnde(false, performance.now() - t0, "Region gestört " + r.status); if (API_LESEN.test(action)) return apiRoh(action, daten, zweiterVersuch, abbruch); }
+  // 2.310.2 KC-CLUB-FP-RUHIG: Lesen bei kaputter Antwort (Server startet gerade neu, z. B. beim Hochladen) einmal still wiederholen (502 bleibt wie bisher)
+  if (API_LESEN.test(action) && !zweiterVersuch && r.ok && !j) { vbEnde(true, performance.now() - t0, ""); await new Promise((ok) => setTimeout(ok, AUSSETZER_PAUSE_MS * 2)); return apiRoh(action, daten, true, abbruch); }
   if (r.status === 503 && !j?.error && !zweiterVersuch) { vbEnde(true, performance.now() - t0, ""); await new Promise((ok) => setTimeout(ok, AUSSETZER_PAUSE_MS)); return apiRoh(action, daten, true, abbruch); }
   // Verbindungsfehler: Gateway (502–504) oder 5xx ohne Antwort des Programms; Fachfehler (z. B. 400/403) heißen „verbunden“
   const leitungKaputt = (r.status >= 502 && r.status <= 504) || (r.status >= 500 && !j);
@@ -30083,6 +30085,8 @@ const FP_ARTEN = {
   startzeit: ["⏱️", "Startzeit", "Abschnitte des Starts (nur Messung)"],
   alte_version: ["🕰️", "Alte App-Version", "„Jetzt aktualisieren“ wurde angeboten"],
   update_getippt: ["🔄", "Aktualisieren getippt", ""],
+  update_selbst: ["🔄", "App hat sich selbst aktualisiert", "neue Version geladen – nichts zu tun"], // 2.310.2
+  update_start: ["🔄", "Beim Start aktualisiert", "neue Version geladen – nichts zu tun"],
   umgebung: ["📱", "Gerät & Browser", ""],
   ohne_link: ["🔑", "Ohne persönlichen Link geöffnet", "Link neu schicken"],
   link_ungueltig: ["🔑", "Link ungültig", "neuen Link schicken"],
@@ -30095,7 +30099,7 @@ const FP_ARTEN = {
   zugang_angefordert: ["✉️", "Neuen Link angefordert", ""],
 };
 function fpArtVon(aktion) { return String(aktion).replace(/^fehler_anonym_/, "").replace(/^fehler_/, ""); }
-let FP_ADMIN = { tage: 2, person: "" };
+let FP_ADMIN = { tage: 2, person: "", info: false }; // 2.310.2 KC-CLUB-FP-RUHIG: ⚪ Info (Messwerte, Updates) erst auf Wunsch zeigen
 // KC-CLUB-FP-UEBERWACHUNG (1.58.0): Einstufung kommt vom Server (eine Regel), hier nur das Zeichen
 const FP_STUFE_ZEICHEN = { schwer: "🔴", hinweis: "🟡", info: "⚪" };
 async function fpLeeren(anzahl, schwer) {
@@ -30115,12 +30119,13 @@ async function fpAdmin(tage) {
     const info = [d.text, d.aktion ? "bei „" + d.aktion + "“" : "", d.browser, d.system, d.start ? "läuft als " + d.start : "", d.version ? "v" + d.version : "", d.datei ? d.datei + ":" + d.zeile : ""].filter(Boolean).join(" · ");
     return `<div class="fp-zeile${x.stufe === "schwer" || art === "hilferuf" ? " fp-rot" : ""}"><span class="hinweis">${esc(fKurz.format(new Date(x.zeit)) + " " + fZeit.format(new Date(x.zeit)))}</span> ${FP_STUFE_ZEICHEN[x.stufe] || ""} ${sym} <b>${esc(name)}</b>${info ? `<div class="hinweis">${esc(info)}</div>` : ""}${tun ? `<div class="hinweis" style="font-style:italic">→ ${esc(tun)}</div>` : ""}</div>`; };
   const karten = [...gruppen.entries()].map(([name, liste]) => { const probleme = liste.filter((x) => x.stufe ? x.stufe !== "info" : !nurStarts(x) && !/umgebung|hinweis|update_getippt|link_kopiert/.test(x.aktion));
-    return `<details class="karte innen"${probleme.length ? " open" : ""}><summary><b>${esc(name)}</b> – ${probleme.length ? `<span style="color:#c62828">${probleme.length} Auffälligkeit${probleme.length === 1 ? "" : "en"}</span>` : "✅ unauffällig"} · ${liste.filter(nurStarts).length}× geöffnet</summary>${liste.map(zeile).join("")}</details>`; }).join("");
+    const zeigen = FP_ADMIN.info ? liste : probleme, still = liste.length - zeigen.length;
+    return `<details class="karte innen"${probleme.length ? " open" : ""}><summary><b>${esc(name)}</b> – ${probleme.length ? `<span style="color:#c62828">${probleme.length} Auffälligkeit${probleme.length === 1 ? "" : "en"}</span>` : "✅ unauffällig"} · ${liste.filter(nurStarts).length}× geöffnet</summary>${zeigen.map(zeile).join("")}${still ? `<div class="hinweis" style="margin:4px 0">⚪ ${still} Info-Einträge ausgeblendet (Messwerte, Updates, Gerät)</div>` : ""}</details>`; }).join("");
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">🩺 Fehlerprotokoll</h3>
     <p class="hinweis" style="margin:0">Alles, was bei den Mitgliedern beim Starten oder Bedienen schiefging – mit Gerät, Browser und Version. Nur Technik, keine Inhalte.</p>
     ${r.gesamt ? `<div class="fp-gesamt"><span>Im Protokoll: <b>${r.gesamt.anzahl}</b> Einträge – 🔴 ${r.gesamt.schwer} schwerwiegend · 🟡 ${r.gesamt.hinweis} Hinweise · ⚪ ${r.gesamt.info} Info</span>${r.gesamt.anzahl ? `<button class="knopf klein" onclick="fpLeeren(${r.gesamt.anzahl}, ${r.gesamt.schwer})">🗑️ Protokoll leeren</button>` : ""}</div>
     <p class="hinweis" style="margin:0;font-size:.8rem">🔴 schwerwiegend = Push an dich · Ab ${r.voll || 300} Einträgen fragt die Tagesinfo, ob geleert werden soll.</p>` : ""}
-    <div class="knoepfe">${[1, 2, 7, 14].map((t) => `<button class="knopf klein${FP_ADMIN.tage === t ? " haupt" : ""}" onclick="fpAdmin(${t})">${t === 1 ? "24 Std." : t + " Tage"}</button>`).join("")}${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
+    <div class="knoepfe">${[1, 2, 7, 14].map((t) => `<button class="knopf klein${FP_ADMIN.tage === t ? " haupt" : ""}" onclick="fpAdmin(${t})">${t === 1 ? "24 Std." : t + " Tage"}</button>`).join("")}<button class="knopf klein${FP_ADMIN.info ? " haupt" : ""}" onclick="FP_ADMIN.info=!FP_ADMIN.info;fpAdmin()">${FP_ADMIN.info ? "⚪ Info ausblenden" : "⚪ Info zeigen"}</button>${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
     ${karten || '<p class="hinweis">Keine Einträge in diesem Zeitraum.</p>'}`;
   $("adminBlatt").classList.remove("versteckt");
 }

@@ -8929,3 +8929,13 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/if \(API_LESEN\.test\(action\) && !zweiterVersuch && navigator\.onLine\) \{ vbEnde\(true, performance\.now\(\) - t0, ""\); await new Promise\(\(ok\) => setTimeout\(ok, AUSSETZER_PAUSE_MS \* 2\)\); return apiRoh\(action, daten, true, abbruch\); \}/.test(html), "Lesen nach Netzfehler einmal still wiederholen");
   assert.ok(/const q = Math\.min\(1, Math\.max\(0, \(jetzt - t0\) \/ dauer\)\)/.test(html), "Wisch-Animation: Fortschritt nie negativ");
 }
+
+// KC-CLUB-FP-RUHIG (Wunsch Hansi): Info ausgeblendet, keine Doppelten, keine Roboter, Offline gebündelt, Lesen still wiederholt
+{
+  const srv = lies("supabase/functions/kc-club/index.ts");
+  assert.ok(/"update_selbst", "update_start"\]\);/.test(srv) && /async function fpNurNeue\(/.test(srv) && (srv.match(/await fpNurNeue\(/g) || []).length === 2, "Server: Updates sind Info, Doppelte nur einmal");
+  assert.ok(/if \(FP_ROBOTER\.test\(req\.headers\.get\("user-agent"\) \|\| ""\)\) return json\(\{ ok: true, gespeichert: 0 \}\);/.test(srv), "Server: Roboter nicht mitschreiben");
+  assert.ok(/var sig = art === "offline" \? "offline"/.test(html) && /art === "offline" \? 300000 : 30000/.test(html) && /crawler\|spider/.test(html), "Fehlerfänger: Offline gebündelt, Roboter still");
+  assert.ok(/let FP_ADMIN = \{ tage: 2, person: "", info: false \}/.test(html) && /Info-Einträge ausgeblendet/.test(html) && /FP_ADMIN\.info=!FP_ADMIN\.info;fpAdmin\(\)/.test(html), "Anzeige: Info erst auf Wunsch");
+  assert.ok(/if \(API_LESEN\.test\(action\) && !zweiterVersuch && r\.ok && !j\) \{ vbEnde\(true/.test(html), "Lesen bei Server-Aussetzer still wiederholen");
+}
