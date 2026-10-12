@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.333.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.334.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12195,7 +12195,7 @@ function kaZiehenStart(id, x, y) {
   document.body.appendChild(geist); el.classList.add("platzhalter");
   // Griffpunkt innerhalb der Kachel (falls die Seite nicht weit genug nachrücken konnte: Kachel mittig unter den Finger)
   const imBereich = (v, max) => (v >= 10 && v <= max - 10 ? v : max / 2);
-  ZIEHEN = { id, el, geist, dx: imBereich(x - r.left, r.width), dy: imBereich(y - r.top, r.height), x, y }; zogGerade = true;
+  ZIEHEN = { id, el, geist, dx: imBereich(x - r.left, r.width), dy: imBereich(y - r.top, r.height), x, y }; zogGerade = true; kaRandTakt(true);
   geist.style.left = x - ZIEHEN.dx + "px"; geist.style.top = y - ZIEHEN.dy + "px";
   try { navigator.vibrate?.(20); } catch {}
 }
@@ -12207,7 +12207,7 @@ function kaZiehenBewegen(x, y) {
   if (ziel) { const kids = [...$("raster").children], vor = kids.indexOf(z.el) > kids.indexOf(ziel); $("raster").insertBefore(z.el, vor ? ziel : ziel.nextSibling); }
 }
 function kaZiehenEnde() {
-  const z = ZIEHEN; ZIEHEN = null; if (!z) return;
+  const z = ZIEHEN; ZIEHEN = null; kaRandTakt(false); if (!z) return;
   z.geist.remove(); z.el.classList.remove("platzhalter");
   const neu = [...$("raster").children].map((k) => k.dataset.id).filter(Boolean);
   if (neu.join() !== kaListe().map((k) => k.id).join()) { KA.reihenfolge = { ...KA.reihenfolge, [kaSchluessel()]: neu }; kaSpeichern(); }
@@ -12215,7 +12215,9 @@ function kaZiehenEnde() {
   setTimeout(() => { zogGerade = false; }, 150);
 }
 // Rand erreicht → Seite läuft mit
-setInterval(() => { if (!ZIEHEN) return; const h = innerHeight, y = ZIEHEN.y; const d = y < 90 ? -12 : y > h - 140 ? 12 : 0; if (d) { scrollBy(0, d); kaZiehenBewegen(ZIEHEN.x, ZIEHEN.y); } }, 30);
+// 2.334.0 KC-CLUB-AKKU: der 30-ms-Takt läuft nur noch, solange eine Kachel gezogen wird (vorher immer – 33 Weckrufe je Sekunde)
+let kaRandUhr = 0;
+function kaRandTakt(an) { clearInterval(kaRandUhr); kaRandUhr = an ? setInterval(() => { if (!ZIEHEN) return kaRandTakt(false); const h = innerHeight, y = ZIEHEN.y; const d = y < 90 ? -12 : y > h - 140 ? 12 : 0; if (d) { scrollBy(0, d); kaZiehenBewegen(ZIEHEN.x, ZIEHEN.y); } }, 30) : 0; }
 (function kaZiehenEinrichten() {
   let t = null, x0 = 0, y0 = 0;
   document.addEventListener("pointerdown", (e) => {
@@ -14084,10 +14086,10 @@ function jzbStart(h, art) {
   jzbGroesse(); jzbWeiter();
   return true;
 }
-function jzbStop() { if (JZB.raf) cancelAnimationFrame(JZB.raf); JZB.raf = 0; JZB.ro?.disconnect(); JZB.io?.disconnect(); JZB.ro = JZB.io = JZB.cv = null; }
+function jzbStop() { if (JZB.raf) cancelAnimationFrame(JZB.raf); clearTimeout(JZB.warteUhr); JZB.raf = 0; JZB.ro?.disconnect(); JZB.io?.disconnect(); JZB.ro = JZB.io = JZB.cv = null; }
 function jzbGroesse() {
   const { s, cv } = JZB; if (!cv) return;
-  const w = s.clientWidth, h = s.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = s.clientWidth, h = s.clientHeight, dpr = Math.min(1.5, window.devicePixelRatio || 1); // 2.334.0: 1,5 statt 2 – knapp halb so viele Bildpunkte
   if (!w || !h || (w === JZB.w && h === JZB.h && dpr === JZB.dpr)) return;
   const breiter = JZB.w && Math.abs(w - JZB.w) > 8;
   cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); JZB.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -14102,13 +14104,23 @@ function jzbWeiter() {
   if (document.hidden || !JZB.imBild) { JZB.letzt = 0; return; }
   JZB.raf = requestAnimationFrame(jzbBild);
 }
+// 2.334.0 KC-CLUB-AKKU (Fund Hansi „Akku ruck, zuck leer – Handy meldet hohen Akkuverbrauch“): Das Jahreszeiten-Bild im Kopf wurde
+// 60× je Sekunde in voller Auflösung neu gemalt – auch wenn niemand hinsah. Jetzt höchstens 30 Bilder je Sekunde, nach 45 s ohne
+// Bedienung nur noch 12 (sieht gleich aus, die Bewegung rechnet mit der echten Zeit), Auflösung höchstens 1,5-fach.
+const JZB_FPS = 30, JZB_FPS_RUHE = 12, JZB_RUHE_MS = 45000;
+let jzbBedient = Date.now();
+["pointerdown", "keydown", "wheel"].forEach((t) => addEventListener(t, () => { jzbBedient = Date.now(); }, { passive: true, capture: true }));
+// Akku unter 30 % und nicht am Laden: immer die sparsame Bildrate (Chrome/Android meldet den Akkustand, sonst gilt das Übliche)
+let jzbAkkuKnapp = false;
+try { navigator.getBattery?.().then((b) => { const f = () => { jzbAkkuKnapp = !b.charging && b.level < .3; }; f(); b.addEventListener("levelchange", f); b.addEventListener("chargingchange", f); }).catch(() => {}); } catch {}
+const jzbFps = () => (JZB.vorschau || (!jzbAkkuKnapp && Date.now() - jzbBedient < JZB_RUHE_MS) ? JZB_FPS : JZB_FPS_RUHE);
 function jzbBild(ts) {
   JZB.raf = 0;
   if (!JZB.cv?.isConnected) return jzbStop();
-  const dt = JZB.letzt ? Math.min(.05, (ts - JZB.letzt) / 1000) : .016; JZB.letzt = ts;
+  const dt = JZB.letzt ? Math.min(.09, (ts - JZB.letzt) / 1000) : .016; JZB.letzt = ts;
   if ((JZB.pruef += dt) > 1) { JZB.pruef = 0; if (!fxAn() || !einst("jahreszeit", true)) return jahreszeitKopf(); }
   if (JZB.w) { if ((JZB.extraPruef -= dt) <= 0) { JZB.extraPruef = 30; jzbExtrasBestimmen(); } JZB.T += dt; JZB.pt += dt; jzbSchritt(dt); jzbMalen(); }
-  jzbWeiter();
+  JZB.raf = -1; clearTimeout(JZB.warteUhr); JZB.warteUhr = setTimeout(() => { JZB.raf = 0; jzbWeiter(); }, Math.max(0, 1000 / jzbFps() - 10)); // schlafen – das nächste Bild kommt mit dem nächsten Bildwechsel danach
 }
 function jzbPhase(p) { JZB.phase = p; JZB.pt = 0; }
 function jzbLaufEnde() {

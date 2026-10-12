@@ -9167,3 +9167,11 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/async function fxAusHinweis\(nochmal\)/.test(html) && /sparSetzen\("aus"\)/.test(html) && /einstellung\("animiert", true\)/.test(html), "Grund und Lösung");
   assert.ok(!/Effekte sind aus – „✨ Animierte Knöpfe“ einschalten \(und Sparmodus aus\)/.test(html) && /return fxAusHinweis\(\(\) => jahreszeitVorschau\(art, extra\)\)/.test(html), "alle Stellen umgestellt");
 }
+
+// 2.334.0 KC-CLUB-AKKU: Jahreszeiten-Bild gedrosselt, Zieh-Takt nur beim Ziehen
+{
+  assert.ok(/const JZB_FPS = 30, JZB_FPS_RUHE = 12, JZB_RUHE_MS = 45000;/.test(html) && /setTimeout\(\(\) => \{ JZB\.raf = 0; jzbWeiter\(\); \}, Math\.max\(0, 1000 \/ jzbFps\(\) - 10\)\)/.test(html), "höchstens 30 bzw. 12 Bilder/s");
+  assert.ok(/dpr = Math\.min\(1\.5, window\.devicePixelRatio \|\| 1\)/.test(html) && /jzbAkkuKnapp = !b\.charging && b\.level < \.3/.test(html), "Auflösung und Akkustand");
+  assert.ok(/function kaRandTakt\(an\)/.test(html) && !/^setInterval\(\(\) => \{ if \(!ZIEHEN\) return;/m.test(html), "Zieh-Takt nur beim Ziehen");
+  assert.ok(/clearTimeout\(JZB\.warteUhr\)/.test(html.slice(html.indexOf("function jzbStop()"), html.indexOf("function jzbGroesse()"))), "Stopp räumt den Zeitgeber");
+}

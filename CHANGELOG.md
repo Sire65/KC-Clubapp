@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.334.0 – 2026-10-12 – KC-CLUB-AKKU
+Fund Hansi („wenn ich die Club-App aufmache, ist ruck, zuck der Akku leer – das Handy meldet hohen Akkuverbrauch“). Messung (Startseite, Handy-Format, 10 s): Das Jahreszeiten-Bild im Kopf (Leinwand über den ganzen Kopf) wurde 60× je Sekunde in 2-facher Auflösung neu gemalt – das war der Hauptverbraucher; keine dauerhaften CSS-Animationen auf der Startseite, Netz-Abfragen selten (≈ 2/Min.). Neu: höchstens 30 Bilder/s (Bewegung rechnet mit der echten Zeit, sieht gleich aus), nach 45 s ohne Tippen/Tasten nur noch 12 Bilder/s, bei Akku unter 30 % und nicht am Laden immer 12 Bilder/s; zwischen zwei Bildern schläft die App (Zeitgeber statt Dauerschleife); Auflösung höchstens 1,5-fach (knapp halb so viele Bildpunkte). Gemessene Rechenzeit: 7,1 % → 4,3 % aktiv, 2,5 % in Ruhe; Bilder/s 60 → 30 bzw. 12. Außerdem lief ein 30-ms-Takt fürs Kachel-Ziehen immer (33 Weckrufe/s) – jetzt nur, solange eine Kachel gezogen wird. Im Hintergrund oder auf anderen Seiten ruht das Bild wie bisher ganz.
+
 ## 2.333.0 – 2026-10-12 – KC-CLUB-THEMEN-SCHRIFT: passende Schrift je Thema für die Begrüßung
 Themen bringen eine passende Schrift für die Begrüßung im Kopf mit: Fraktur (Oktoberfest), Grusel (Halloween), Comic (Karneval), Weihnachtsschrift, Pacifico (Karibik), Rye (Sim-Jü), Lobster (Sommer, Silvester), Dancing Script (Frühling, Ostern). Freie Schriften (OFL/Apache) im Ordner schriften/, nur bei Bedarf geladen, kein fremder Server. Der Schriftzug „Köcheclub Werne“ und alles Gedruckte bleiben im CD. Die Themen-Auswahl zeigt jeden Namen in seiner Schrift. Abschaltbar: ⚙️ → Themen → „✍️ Schrift des Themas“.
 
