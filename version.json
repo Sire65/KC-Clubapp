@@ -1,11 +1,20 @@
 {
-  "version": "2.327.0",
+  "version": "2.328.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "📄 Das Eselsohr unten rechts am Kopf blinkt zwischendurch kurz doppelt in leuchtendem Gelb-Orange – als Zeichen: hier doppelt tippen"
+    "🍂 Herbst-Design: Ist genug Laub zusammen, kommt jetzt auch ein Mann mit Laubbläser (Warnjacke, Gehörschutz) und pustet alles weg – im Wechsel mit Wind und Twinkeys Besen",
+    "🌰 Auf dem Boden liegen Eicheln und Haselnüsse – ab und an flitzt ein Eichhörnchen herbei, stopft sich eine dicke Nuss in die Backe und saust wieder davon"
   ],
   "verlauf": [
+    {
+      "version": "2.328.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🍂 Herbst-Design: Ist genug Laub zusammen, kommt jetzt auch ein Mann mit Laubbläser (Warnjacke, Gehörschutz) und pustet alles weg – im Wechsel mit Wind und Twinkeys Besen",
+        "🌰 Auf dem Boden liegen Eicheln und Haselnüsse – ab und an flitzt ein Eichhörnchen herbei, stopft sich eine dicke Nuss in die Backe und saust wieder davon"
+      ]
+    },
     {
       "version": "2.327.0",
       "datum": "2026-10-12",

@@ -8745,7 +8745,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.259.0 KC-CLUB-JAHRESZEIT-TWINKEY: eigener Boden (Fund Hansi „Blätter bleiben nicht liegen“), Twinkey fegt/schippt/gießt
 {
   assert.ok(/#v-start \.hero\.jz-boden:not\(\.eingerollt\):not\(\.halb-eingerollt\) \{ padding-bottom: 32px; \}/.test(seite) && /\.hero > \.jz-schicht\.jz-buehne \{ bottom: 3px; \}/.test(seite) && /h\.classList\.add\("jz-boden"\)/.test(html) && /h\.classList\.remove\("jz-boden"\)/.test(html), "eigener Bodenstreifen, wieder weg ohne Bühne");
-  assert.ok(/if \(J\.lauf % 2\) jzbBesuchStart\("fegen"\); else jzbWindStart\(\);/.test(html) && /else if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else jzbWindStart\(\);/.test(html) && /jzbBesuchStart\("giessen"\)/.test(html), "Wind oder Twinkey im Wechsel; gießen im Frühling/Sommer");
+  assert.ok(/if \(w === 1\) jzbBesuchStart\("fegen"\);[^\n]*else jzbWindStart\(\);/.test(html) /* 2.328.0: + Laubbläser */ && /else if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else jzbWindStart\(\);/.test(html) && /jzbBesuchStart\("giessen"\)/.test(html), "Wind oder Twinkey im Wechsel; gießen im Frühling/Sommer");
   assert.ok(/sb\.className = "jz-sprech"; sb\.setAttribute\("aria-hidden", "true"\)/.test(html) && /\.jz-sprech \{[^}]*pointer-events: none;/.test(seite), "Sprechblase stört keine Tipps");
 }
 
@@ -9107,4 +9107,11 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/\.eselsohr\.blink2::before \{ animation: esBlink2 1\.3s/.test(html) && /@keyframes esBlink2 \{ 0%, 34%, 70%, 100% \{ opacity: 0; \} 14%, 50% \{ opacity: 1; \} \}/.test(html), "zweimal aufleuchten");
   assert.ok(/function esBlinken\(\)/.test(html) && /!esOhneAnim\(\) && !BW\.lauf && aktuelleAnsicht === "start"/.test(html) && /esBlinkenPlanen\(4000\);/.test(html), "Takt mit Rücksicht");
   assert.ok(!/BCC an den Admin/.test(lies("version.json")), "Update-Hinweis ohne BCC");
+}
+
+// 2.328.0 KC-CLUB-HERBST-BLAESER + KC-CLUB-HERBST-HOERNCHEN
+{
+  assert.ok(/if \(w === 1\) jzbBesuchStart\("fegen"\); else if \(w === 2\) jzbBlaeserStart\(\); else jzbWindStart\(\);/.test(html) && /J\.phase === "blasen"/.test(html), "Laubbläser im Wechsel");
+  assert.ok(/function jzbBlaeserMalen\(/.test(html) && /function jzbHoernchenMalen\(/.test(html) && /function jzbEichelnMalen\(/.test(html) && /jzbHerbstTiere\(dt\);/.test(html), "Bläser, Eicheln, Eichhörnchen");
+  assert.ok(/blaeser: null, eicheln: null, hoernchen: null, hoernchenUhr: undefined/.test(html), "beim Start zurückgesetzt");
 }

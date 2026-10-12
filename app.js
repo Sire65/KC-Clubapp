@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.327.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.328.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2211,7 +2211,7 @@ const RG_EFFEKTE = [
     x: "Wechselst du oben zwischen Club, Meins und Technik, schweben die Kacheln herein. Als Jalousie, als Kartenstapel – oder sie drehen sich um. Ich zeige dir alle drei.",
     live: async (L) => { for (const art of ["jalousie", "karten", "drehen"]) { await L.tipp(`#register button[data-r="${reg}"]`); regEffekt(1, art); await L.warte(1500); } } },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("herbst", "igel", (J) => J.liegt.length >= 14); JZB.igelUhr = 1.5; }, sel: ["#v-start .hero"], t: "🍂 Herbst im Kopf",
-    x: "Oben im Kopf zeigt sich die Jahreszeit. Im Herbst fallen bunte Blätter und bleiben unten als Laubschicht liegen. Und ab und zu raschelt ein Igel durchs Laub." },
+    x: "Oben im Kopf zeigt sich die Jahreszeit. Im Herbst fallen bunte Blätter und bleiben unten als Laubschicht liegen. Und ab und zu raschelt ein Igel durchs Laub. Ist genug Laub zusammen, kommt der Wind, Twinkey mit dem Besen – oder ein Mann mit Laubbläser pustet alles weg. Zwischen den Blättern liegen Eicheln und Haselnüsse: Ab und an flitzt ein Eichhörnchen herbei, stopft sich eine dicke Nuss in die Backe und saust wieder davon." },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("herbst", "twinkey", (J) => J.phase === "besuch", 180); if (JZB.cv && JZB.phase === "fallen") jzbBesuchStart("fegen"); }, sel: ["#v-start .hero"], t: "🧹 Wind oder Twinkey",
     x: "Liegt genug Laub, kommt ein Windstoß – mal von links, mal von rechts – und weht es weg. Oder Twinkey kommt mit dem Besen vorbei, fegt und sagt einen Spruch. Schau mal." },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("winter", "", (J) => J.phase === "stehen", 150); }, sel: ["#v-start .hero"], t: "⛄ Winter",
@@ -14010,7 +14010,7 @@ function jzbStart(h, art) {
   const saison = art === "advent" ? "winter" : art;
   Object.assign(JZB, { s, cv, ctx, art, saison, w: 0, h: 0, dpr: 0, k: 1, T: 0, pt: 0, letzt: 0, imBild: true, pruef: 0, spawn: 0,
     flug: [], liegt: [], fx: [], boden: [], wind: null, mann: null, halme: [], blumen: [], gaeste: [], welk: 0, phase: "anfang",
-    blase: sb, besuch: null, gegossen: false, ext: {}, extraPruef: 0, eier: [], igel: null, igelUhr: undefined, schirm: null, schirmUhr: undefined, tropfen: [], pfuetzen: null, regenSpawn: 0, raupe: null, raupeUhr: undefined, ski: null, skiUhr: null, rillen: null }); // 2.249.0 KC-CLUB-JAHRESZEIT-EXTRAS
+    blase: sb, besuch: null, gegossen: false, ext: {}, extraPruef: 0, eier: [], igel: null, igelUhr: undefined, schirm: null, schirmUhr: undefined, tropfen: [], pfuetzen: null, regenSpawn: 0, blaeser: null, eicheln: null, hoernchen: null, hoernchenUhr: undefined, raupe: null, raupeUhr: undefined, ski: null, skiUhr: null, rillen: null }); // 2.249.0 KC-CLUB-JAHRESZEIT-EXTRAS
   if (!h.dataset.jzKlick) { h.dataset.jzKlick = "1"; h.addEventListener("click", jzbEiAntippen); } // Ostereier antippen
   // Vorschau im Winter: gleich der Schneemann-Lauf, damit man ihn nicht erst nach zwei Windstößen sieht
   JZB.lauf = JZB.vorschau ? (JZB.extra === "twinkey" ? 1 : saison === "winter" ? 2 : 0) : jzbLaufLesen(); // Vorschau „🧹 Twinkey“: gleich sein Lauf
@@ -14143,7 +14143,11 @@ function jzbHerbst(dt) {
   const J = JZB;
   if (J.phase === "fallen") {
     if ((J.spawn -= dt) <= 0 && J.flug.length < 12) { J.spawn = jzbZ(.45, 1.1); J.flug.push(jzbNeuesTeil("blatt")); }
-    if (J.liegt.length >= Math.max(22, Math.round(J.w / 10))) { if (J.lauf % 2) jzbBesuchStart("fegen"); else jzbWindStart(); } // 2.259.0: im Wechsel Wind / Twinkey mit Besen
+    if (J.liegt.length >= Math.max(22, Math.round(J.w / 10))) { // 2.259.0: im Wechsel Wind / Twinkey mit Besen · 2.328.0: + Mann mit Laubbläser
+      const w = J.extra === "blaeser" ? 2 : J.lauf % 3; if (w === 1) jzbBesuchStart("fegen"); else if (w === 2) jzbBlaeserStart(); else jzbWindStart(); }
+  } else if (J.phase === "blasen") {
+    if (!J.blaeser && J.liegt.length) jzbWindStart(); // falls doch noch etwas liegt: der Wind holt den Rest
+    else if (!J.blaeser && !J.liegt.length && !J.fx.length) { if ((J.spawn -= dt) < -1.5) jzbLaufEnde(); }
   } else if (J.phase === "besuch") {
     if (!J.besuch && !J.liegt.length && !J.fx.length) { if ((J.spawn -= dt) < -1.5) jzbLaufEnde(); }
   } else if (J.phase === "wind") {
@@ -15015,6 +15019,132 @@ function jzbPisteMalen(c) {
   if (J.raupe) jzbRaupeMalen(c, J.raupe, k);
   if (J.ski) for (const f of J.ski.fahrer) jzbSkiMalen(c, f, J.ski.dir, k);
 }
+// ---------- 2.328.0 KC-CLUB-HERBST-BLAESER + KC-CLUB-HERBST-HOERNCHEN (Wunsch Hansi): Ist der Laubhaufen groß genug, kommt (im Wechsel mit
+// Wind und Twinkeys Besen) ein Mann mit Laubbläser und pustet das Laub weg. Auf dem Boden liegen Eicheln und Haselnüsse; ab und an flitzt
+// ein Eichhörnchen herbei, stopft sich eine dicke Nuss in die Backe und saust wieder davon. Nur Herbst, nur Anzeige auf diesem Gerät. ----------
+function jzbBlaeserStart() {
+  const J = JZB, k = J.k, dir = (J.lauf >> 1) % 2 ? -1 : 1;
+  for (const f of J.flug) J.fx.push({ ...f, vx: dir * jzbZ(60, 140), vy: f.vy || 20, a: 1 }); J.flug = []; // was noch fällt, wird gleich mitgepustet
+  J.blaeser = { dir, x: dir > 0 ? -30 * k : J.w + 30 * k, t: 0, luft: [] };
+  jzbPhase("blasen");
+}
+function jzbBlaeserSchritt(dt) {
+  const J = JZB, B = J.blaeser, k = J.k; if (!B) return;
+  B.t += dt; const an = B.t > .6; B.x += B.dir * (an ? 34 : 50) * k * dt; // erst hereinlaufen, dann langsam pustend weiter
+  const d0 = B.x + B.dir * 14 * k, d1 = B.x + B.dir * 72 * k, lo = Math.min(d0, d1), hi = Math.max(d0, d1);
+  if (an) {
+    for (const b of J.liegt) if (b.x > lo && b.x < hi && Math.random() < dt * 9) { // Blätter wirbeln in Blasrichtung davon
+      J.fx.push({ typ: "blatt", x: b.x, y: J.h - b.yb, s: b.s, farbe: b.farbe, form: b.form, rot: b.rot, vr: jzbZ(-12, 12), vx: B.dir * jzbZ(190, 340), vy: -jzbZ(40, 170), ph: jzbZ(0, 6.3), fq: jzbZ(1, 2) });
+      b.weg = true;
+    }
+    J.liegt = J.liegt.filter((b) => !b.weg);
+    for (const p of J.fx) if (p.typ === "blatt" && p.liegt && p.x > lo && p.x < hi) { p.liegt = false; p.vx = B.dir * jzbZ(190, 300); p.vy = -jzbZ(40, 120); } // auch schon Hingefallenes
+    if (Math.random() < dt * 22) B.luft.push({ x: B.x + B.dir * 16 * k, y: J.h - 4 * k - jzbZ(0, 6) * k, l: jzbZ(10, 22) * k, a: .8 });
+  }
+  for (const l of B.luft) { l.x += B.dir * 260 * k * dt; l.a -= dt * 1.6; }
+  B.luft = B.luft.filter((l) => l.a > 0);
+  if (B.x < -60 * k || B.x > J.w + 60 * k) J.blaeser = null;
+}
+function jzbBlaeserMalen(c, B, k) { // Gärtner in Warnjacke mit Gehörschutz und Rückentrage-Laubbläser
+  const J = JZB, gy = J.h - 1, geht = B.t * 9, s = Math.sin(geht) * 2.4, brumm = Math.sin(B.t * 60) * .25;
+  c.save(); c.translate(B.x, gy); c.scale(B.dir * k * 1.1, k * 1.1); c.lineCap = "round"; c.lineJoin = "round";
+  c.strokeStyle = "rgba(255,255,255,.55)"; c.lineWidth = 1; // Luftstrom aus der Düse
+  for (const l of B.luft) { c.globalAlpha = Math.max(0, l.a); const lx = (l.x - B.x) / (B.dir * k * 1.1), ly = (l.y - gy) / (k * 1.1); c.beginPath(); c.moveTo(lx, ly); c.lineTo(lx + l.l / (k * 1.1), ly + 1); c.stroke(); }
+  c.globalAlpha = 1;
+  c.strokeStyle = "#2d3a4a"; c.lineWidth = 3.2; c.beginPath(); c.moveTo(-2, -12); c.lineTo(-2 + s, -1); c.moveTo(2, -12); c.lineTo(2 - s, -1); c.stroke(); // Hose
+  c.fillStyle = "#2b1d14"; c.fillRect(-4 + s, -1.6, 4.2, 1.8); c.fillRect(-.2 - s, -1.6, 4.2, 1.8); // Schuhe
+  c.fillStyle = "#4a4f57"; c.beginPath(); c.roundRect(-11, -26 + brumm, 7, 12, 2); c.fill(); // Bläser auf dem Rücken
+  c.fillStyle = "#ff7a00"; c.fillRect(-11, -22 + brumm, 7, 3); c.fillStyle = "#222"; c.beginPath(); c.arc(-7.5, -16 + brumm, 1.6, 0, 7); c.fill();
+  c.fillStyle = "#ff8c1a"; c.beginPath(); c.moveTo(-5, -12); c.quadraticCurveTo(-6, -26, 0, -27); c.quadraticCurveTo(6, -26, 5, -12); c.closePath(); c.fill(); // Warnjacke
+  c.fillStyle = "#e9f2f5"; c.fillRect(-5.4, -17, 10.6, 1.3); c.fillRect(-5.2, -21.5, 10.2, 1.1); // Reflexstreifen
+  c.strokeStyle = "#555b63"; c.lineWidth = 2.2; c.beginPath(); c.moveTo(-6, -15); c.quadraticCurveTo(2, -10, 10, -9); c.lineTo(17, -4); c.stroke(); // Schlauch + Rohr
+  c.strokeStyle = "#ff7a00"; c.lineWidth = 2.6; c.beginPath(); c.moveTo(9, -9.5); c.lineTo(17, -4); c.stroke(); c.fillStyle = "#333"; c.beginPath(); c.arc(17.4, -3.8, 1.4, 0, 7); c.fill(); // Düse
+  c.strokeStyle = "#ff8c1a"; c.lineWidth = 2.6; c.beginPath(); c.moveTo(2, -23); c.lineTo(9, -10); c.stroke(); // Arm am Rohr
+  c.fillStyle = "#f2c49b"; c.beginPath(); c.arc(9, -10, 1.5, 0, 7); c.fill();
+  c.fillStyle = "#f2c49b"; c.beginPath(); c.arc(1, -31, 4.4, 0, 7); c.fill(); // Kopf
+  c.fillStyle = "#2f6f3a"; c.beginPath(); c.arc(1, -32.2, 4.6, Math.PI * 1.05, Math.PI * 2); c.fill(); c.fillRect(1, -33, 6.5, 1.6); // Schirmmütze
+  c.fillStyle = "#e63946"; c.beginPath(); c.arc(-.4, -30.6, 2.2, 0, 7); c.fill(); c.strokeStyle = "#e63946"; c.lineWidth = 1; c.beginPath(); c.arc(1, -31, 5.2, Math.PI * 1.15, Math.PI * 1.75); c.stroke(); // Gehörschutz
+  c.fillStyle = "#2b2b2b"; c.beginPath(); c.arc(3.6, -31.6, .6, 0, 7); c.fill();
+  c.restore();
+}
+// 🌰 Eicheln und Haselnüsse – ein paar liegen immer da (unter dem Laub); ist eine weg, fällt später eine neue vom Baum
+function jzbEichelnPruefen(dt) {
+  const J = JZB, k = J.k;
+  if (!J.eicheln) { const n = Math.max(4, Math.min(7, Math.round(J.w / 70))); J.eicheln = Array.from({ length: n }, (_, i) => jzbEichelNeu(JZB_RAND + 20 * k + (i + jzbZ(.15, .85)) * (J.w - 2 * JZB_RAND - 40 * k) / n, i % 3 === 1, 0)); }
+  const frei = J.eicheln.filter((e) => !e.weg).length;
+  if (frei < 3 && (J.eichelUhr = (J.eichelUhr ?? jzbZ(20, 40)) - dt) <= 0) { J.eichelUhr = null; J.eicheln.push(jzbEichelNeu(jzbZ(JZB_RAND + 20 * k, J.w - JZB_RAND - 20 * k), Math.random() < .4, -J.h)); }
+  for (const e of J.eicheln) if (e.dy < 0) { e.v = (e.v || 0) + 300 * dt; e.dy = Math.min(0, e.dy + e.v * dt); if (!e.dy) { e.hopp = .25; for (let i = 0; i < 4; i++) J.fx.push({ typ: "funke", x: e.x, y: J.h - 3, vx: jzbZ(-25, 25), vy: -jzbZ(10, 30), s: 1.4, a: .8, farbe: "#c9a36b" }); } }
+  for (const e of J.eicheln) if (e.hopp) e.hopp = Math.max(0, e.hopp - dt);
+  J.eicheln = J.eicheln.filter((e) => !e.weg);
+}
+const jzbEichelNeu = (x, nuss, dy) => ({ x, nuss, dy, kipp: jzbZ(-.6, .6), v: 0, hopp: 0 });
+function jzbEichelMalen(c, x, y, nuss, kipp, k, gross = 1) {
+  c.save(); c.translate(x, y); c.rotate(kipp); c.scale(k * gross, k * gross);
+  if (nuss) { // Haselnuss: rund, glänzend braun mit heller Kappe unten
+    c.fillStyle = "#8a5a2b"; c.beginPath(); c.ellipse(0, -3.4, 3.4, 3.6, 0, 0, 7); c.fill();
+    c.fillStyle = "#d9b98a"; c.beginPath(); c.ellipse(0, -.6, 2.6, 1.2, 0, 0, 7); c.fill();
+    c.fillStyle = "rgba(255,255,255,.4)"; c.beginPath(); c.ellipse(-1.2, -4.6, .9, 1.4, -.4, 0, 7); c.fill();
+  } else { // Eichel: längliche Frucht mit genarbtem Hütchen und Stiel
+    c.fillStyle = "#b8862f"; c.beginPath(); c.ellipse(0, -3.2, 2.5, 3.4, 0, 0, 7); c.fill();
+    c.fillStyle = "#6b4a24"; c.beginPath(); c.ellipse(0, -5.6, 2.9, 1.7, 0, Math.PI, 0); c.fill(); c.fillRect(-2.9, -5.7, 5.8, 1);
+    c.strokeStyle = "#6b4a24"; c.lineWidth = .8; c.beginPath(); c.moveTo(0, -7); c.lineTo(.6, -8.4); c.stroke();
+    c.fillStyle = "rgba(255,255,255,.35)"; c.beginPath(); c.ellipse(-.9, -3, .6, 1.4, 0, 0, 7); c.fill();
+  }
+  c.restore();
+}
+function jzbEichelnMalen(c) {
+  const J = JZB; if (J.saison !== "herbst" || !J.eicheln) return;
+  for (const e of J.eicheln) jzbEichelMalen(c, e.x, J.h - 1 + e.dy - Math.sin((e.hopp || 0) * 12) * (e.hopp || 0) * 8, e.nuss, e.kipp + e.dy * .02, J.k, 1.4);
+}
+// 🐿️ Eichhörnchen: hüpft zur nächsten Nuss, stopft sie sich in die Backe und flitzt zurück
+function jzbHerbstTiere(dt) {
+  const J = JZB, k = J.k;
+  if (J.saison !== "herbst") { J.eicheln = null; J.hoernchen = null; J.blaeser = null; return; }
+  jzbBlaeserSchritt(dt); jzbEichelnPruefen(dt);
+  if (!J.hoernchen && (J.hoernchenUhr = (J.hoernchenUhr ?? (J.extra === "hoernchen" ? 3 : jzbZ(25, 55))) - dt) <= 0) {
+    const frei = J.eicheln.filter((e) => !e.dy && !e.reserviert);
+    if (!frei.length || J.blaeser) J.hoernchenUhr = 8;
+    else { const dir = Math.random() < .5 ? 1 : -1, start = dir > 0 ? -24 * k : J.w + 24 * k, ziel = frei.sort((a, b) => Math.abs(a.x - start) - Math.abs(b.x - start))[Math.min(frei.length - 1, Math.floor(Math.random() * 2))];
+      ziel.reserviert = true; J.hoernchen = { dir, x: start, start, t: 0, ziel, phase: "hin", backe: 0, nuss: ziel.nuss, halt: 0 }; }
+  }
+  const H = J.hoernchen; if (!H) return;
+  H.t += dt;
+  if (H.phase === "hin") {
+    const zx = H.ziel.x - H.dir * 9 * k; H.x += H.dir * 105 * k * dt;
+    if ((zx - H.x) * H.dir <= 0) { H.x = zx; H.phase = "nehmen"; H.halt = 0; }
+  } else if (H.phase === "nehmen") { // schnuppern, Nuss greifen, in die Backe – kauen
+    H.halt += dt;
+    if (H.halt > .7 && !H.ziel.weg) { H.ziel.weg = true; for (const b of J.liegt) if (Math.abs(b.x - H.x) < 14 * k) b.wackel = 1; }
+    if (H.halt > .7) H.backe = Math.min(1, H.backe + dt * 3);
+    if (H.halt > 1.9) { H.phase = "weg"; H.dir = H.x < J.w / 2 ? -1 : 1; } // zur näheren Seite davon
+  } else { H.x += H.dir * 135 * k * dt; if (H.x < -40 * k || H.x > J.w + 40 * k) { J.hoernchen = null; J.hoernchenUhr = jzbZ(35, 75); } }
+  if (H.phase !== "nehmen") for (const b of J.liegt) if (Math.abs(b.x - H.x) < 8 * k) b.wackel = 1; // raschelt durchs Laub
+}
+function jzbHoernchenMalen(c, H, k) {
+  const J = JZB, laeuft = H.phase !== "nehmen", sp = laeuft ? (H.t * 11) % (Math.PI * 2) : 0, hopp = laeuft ? Math.abs(Math.sin(sp)) * 4 : 0;
+  const bueck = H.phase === "nehmen" && H.halt < .9 ? Math.sin(Math.min(1, H.halt / .45) * Math.PI / 2) * .35 : 0, kau = H.phase === "nehmen" && H.halt > .9 ? Math.sin(H.t * 22) * .35 : 0;
+  c.save(); c.translate(H.x, J.h - 1 - hopp * k); c.scale(H.dir * k * 1.15, k * 1.15); c.lineCap = "round"; c.lineJoin = "round";
+  // buschiger Schwanz: geschwungen nach oben, weht beim Laufen
+  const sw = laeuft ? Math.sin(sp) * 2 : Math.sin(H.t * 3) * 1;
+  c.fillStyle = "#a9461d"; c.beginPath(); c.moveTo(-6, -5); c.bezierCurveTo(-16, -6, -18, -18 + sw, -11, -22 + sw); c.bezierCurveTo(-6, -25 + sw, -2, -20 + sw, -6, -16 + sw);
+  c.bezierCurveTo(-9, -13, -6, -9, -3, -8); c.closePath(); c.fill();
+  c.strokeStyle = "#d9763f"; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-8, -7); c.bezierCurveTo(-14, -9, -15, -17 + sw, -10, -20.5 + sw); c.stroke();
+  // Hinterbein, Körper, Bauch
+  const bein = laeuft ? Math.sin(sp) * 2.5 : 0;
+  c.fillStyle = "#8f3a17"; c.beginPath(); c.ellipse(-3 - bein, -3, 3.2, 2.6, 0, 0, 7); c.fill();
+  c.save(); c.rotate(bueck); c.fillStyle = "#b5562a"; c.beginPath(); c.ellipse(0, -7, 6.6, 4.4, -.25, 0, 7); c.fill();
+  c.fillStyle = "#f3dfc0"; c.beginPath(); c.ellipse(2.6, -5.2, 3, 2.3, -.3, 0, 7); c.fill();
+  c.strokeStyle = "#8f3a17"; c.lineWidth = 1.6; c.beginPath(); c.moveTo(4, -6); c.lineTo(5 + bein, -1.2); c.stroke(); // Vorderbein
+  // Kopf mit Ohr-Pinsel, Auge, Nase und (nach dem Fund) dicker Backe
+  c.fillStyle = "#b5562a"; c.beginPath(); c.ellipse(7, -11.5, 3.6, 3.2, .2, 0, 7); c.fill();
+  c.beginPath(); c.moveTo(5.2, -14); c.lineTo(5.6, -18); c.lineTo(7.2, -14.4); c.closePath(); c.fill();
+  c.strokeStyle = "#7a2f12"; c.lineWidth = .8; c.beginPath(); c.moveTo(5.6, -18); c.lineTo(5.2, -19.2); c.stroke();
+  if (H.backe > 0) { const r = 1 + H.backe * 3 + kau * .4; c.fillStyle = "#c86a3a"; c.beginPath(); c.arc(7.6, -10.2, r, 0, 7); c.fill(); c.fillStyle = "rgba(255,255,255,.25)"; c.beginPath(); c.arc(7, -11, r * .45, 0, 7); c.fill(); }
+  c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(8.2, -12.6, .75, 0, 7); c.fill(); c.beginPath(); c.arc(10.5, -11.4, .6, 0, 7); c.fill();
+  if (H.phase === "nehmen" && H.halt < .7 && !H.ziel.weg) { /* Nuss liegt noch am Boden – wird gerade beschnuppert */ }
+  else if (H.backe > 0 && H.backe < 1) jzbEichelMalen(c, 10.6, -9.6, H.nuss, .3, .55); // Nuss verschwindet im Mäulchen
+  c.restore(); c.restore();
+}
 function jzbExtrasSchritt(dt) {
   const J = JZB, X = J.ext || {}, W = J.wind;
   jzbWinterKinder(dt); // 2.282.0 KC-CLUB-WINTER-KINDER
@@ -15041,9 +15171,11 @@ function jzbExtrasSchritt(dt) {
   }
   for (const b of J.liegt) if (b.wackel) b.wackel = Math.max(0, b.wackel - dt * 1.5);
   for (const e of J.eier || []) if (e.gef) e.t += dt;
+  jzbHerbstTiere(dt); // 2.328.0 KC-CLUB-HERBST-BLAESER + KC-CLUB-HERBST-HOERNCHEN
 }
 function jzbExtrasHinten(c) { // vor dem Gras: Ostereier (das Gras wächst darüber)
   const J = JZB, k = J.k;
+  jzbEichelnMalen(c); // 2.328.0: Eicheln liegen unter dem Laub
   if (!J.ext?.ostern) return;
   for (const e of J.eier || []) {
     const y = J.h - 7 * k - (e.gef ? Math.min(1, e.t * 3) * 6 * k : 0);
@@ -15069,6 +15201,8 @@ function jzbExtrasBoden(c) { // Pfützen, Stiefel, Kochtopf, Igel, Schirm
   if (X.topf) jzbTopf(c, Math.max(J.w * .3, 90 * k), J.h - 1, k);
   if (J.igel) jzbIgel(c, J.igel, k);
   if (J.schirm) jzbSchirm(c, J.schirm, k);
+  if (J.hoernchen) jzbHoernchenMalen(c, J.hoernchen, k); // 2.328.0
+  if (J.blaeser) jzbBlaeserMalen(c, J.blaeser, k);
   jzbWinterKinderMalen(c); // 2.282.0
 }
 function jzbStiefel(c, x, y, k) { // 🥾 gefüllter Nikolaus-Stiefel
