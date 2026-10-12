@@ -1,11 +1,22 @@
 {
-  "version": "2.308.1",
+  "version": "2.309.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🙏 Danke-Mail nach einer Schulung: jetzt mit „Vielen Dank für deine Zeit und dein tolles Mitmachen!“"
+    "🧺 Bühne: Twinkey sagt vorher, was du bereitlegen sollst",
+    "⏭ Weiter überspringt eine Übung",
+    "🎈 Neu: Luftballon hochtippen und Hanteln mit Wasserflaschen"
   ],
   "verlauf": [
+    {
+      "version": "2.309.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🧺 Bühne: Twinkey sagt vorher, was du bereitlegen sollst",
+        "⏭ Weiter überspringt eine Übung",
+        "🎈 Neu: Luftballon hochtippen und Hanteln mit Wasserflaschen"
+      ]
+    },
     {
       "version": "2.308.1",
       "datum": "2026-10-12",

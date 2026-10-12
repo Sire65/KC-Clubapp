@@ -5902,7 +5902,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/onclick="bwHoeren\(\)">🎶 Nur Musik hören<\/button>/.test(html), "Knopf auf der Bühne");
   assert.ok(/if \(BWM\.stueck\?\.spiel\) BWM\.stueck\.spiel\(BWM\.gesamt, BWM\.zeit\); else bwMusikSchritt\(BWM\.schritt, BWM\.zeit\);/.test(html), "Trainingsmusik unverändert, Stücke über eigene Spielfunktion");
   assert.ok(/if \(BW\.hoeren\) bwStopp\(false\); BWM\.stueck = bwTrainingsStueck\(w\.modus\); BWM\.gesamt = 0;/.test(html), "Training: Disco-Stück im Tempo der Übungen (2.303.0)");
-  assert.ok(/BW\.lauf = null; BW\.hoeren = null; BWM\.stueck = null;/.test(html) && /if \(BW\.lauf \|\| BW\.hoeren \|\| BWM\.laeuft\) bwStopp\(\); \}/.test(html), "Ende/Ansicht verlassen stoppt auch die Musik");
+  assert.ok(/BW\.lauf = null; BW\.hoeren = null; (BW\.vorher = null; )?BWM\.stueck = null;/.test(html) && /if \(BW\.lauf \|\| BW\.hoeren \|\| BWM\.laeuft\) bwStopp\(\); \}/.test(html), "Ende/Ansicht verlassen stoppt auch die Musik");
   assert.ok(/if \(!esSichtbar\(\)\) \{ if \(!H\.pause\) \{ H\.pause = true; bwMusik\(false\);/.test(html), "nicht zu sehen → Pause");
   assert.ok(/if \(takt >= ges\) \{ bwmStueck\((H\.i \+ 1|bwmNachbar\(H\.i, 1\))\);/.test(html) && /const bwmTakte = \(s\) => Math\.max\(32,/.test(html), "nach ca. 2½ Min. das nächste Stück");
   assert.ok(/\{ id: "es_musik", thema: "toene", sym: "🎶"/.test(html), "Hilfe-Eintrag");
@@ -5971,6 +5971,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const k of ["bwHoopReifen", "bwHoopHuefte", "bwHoopStreifen", "bwSeil"]) assert.ok(css.includes(`@keyframes ${k} `), `Bewegung ${k}`);
   assert.ok(/\.bw-a-seilspringen \.bw-ganz \{ animation: bwHuepfGanz var\(--b\)/.test(css) && /48% \{ transform: scale\(1, -1\); \}/.test(css), "Seil unter den Füßen, wenn Twinkey oben ist");
   assert.ok(/\.bw-a-hulahoop2 \.bw-hoop \{ animation: bwHoopReifen [^}]*reverse; \}/.test(css), "zweite Hälfte andersherum");
+}
+
+// 2.309.0 KC-CLUB-BUEHNE-BEREIT (Wunsch Hansi): vorher ansagen „Lege dir bereit …“, mit ⏭ Weiter überspringen, Luftballon + Wasserflaschen-Hanteln
+{
+  assert.ok(/onclick="bwVorher\(\)">▶️ Vorhang auf!/.test(html) && /function bwVorher\(\)/.test(html) && /onclick="bwLos\(\)">▶️ Alles bereit – los!/.test(html), "erst Bereitlegen-Liste, dann Start");
+  assert.ok(/Lege dir bitte bereit: \$\{bwAufzaehlen\(/.test(html) && /dann überspringst du die Übung einfach mit Weiter/.test(html), "Twinkey sagt die Liste an");
+  assert.ok(/const alle = new Set\(\["stuhl", \.\.\.plan\.flatMap\(bwBedarf\)\]\)/.test(html), "Liste aus den Übungen des Durchgangs, Stuhl immer");
+  for (const k of ["stuhl", "seil", "flaschen", "ballon", "schneebesen2", "loeffel2"]) assert.ok(new RegExp(`\\b${k}: \\["`).test(html), `Ding ${k}`);
+  assert.ok(/plan = BW\.vorher \|\| bwPlan\(w\.modus, w\.dauer\); BW\.vorher = null;/.test(html), "gleicher Plan wie angesagt");
+  assert.ok(/L\.phase = "schuetteln"; L\.rest = 1; try \{ speechSynthesis\.cancel\(\); \}/.test(html) && />⏭ Weiter<\/button>/.test(html), "Weiter überspringt die Übung, auch in der Vorbereitung");
+  assert.ok(/Nimm \$\{bwAufzaehlen\(nimm\.map/.test(html), "vor jeder Übung: was man in die Hand nimmt");
+  for (const id of ["ballon", "ballonsitz", "hantelseit", "hantelsitz"]) assert.ok(new RegExp(`\\{ id: "${id}", t: `).test(html), `Übung ${id}`);
+  assert.ok(lies("index.html").includes("@keyframes bwBallon "), "Ballon-Bewegung");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

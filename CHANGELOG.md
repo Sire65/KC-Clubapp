@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.309.0 – 2026-10-12 – KC-CLUB-BUEHNE-BEREIT: „Lege dir bereit“, Weiter überspringt, Luftballon und Hanteln
+Nach „Vorhang auf!“ zeigt und sagt Twinkey zuerst, was für diesen Durchgang bereitliegen soll (Stuhl, Springseil, 2 Wasserflaschen als Hanteln, Luftballon, Schneebesen, Kochlöffel … – aus den geplanten Übungen); dann „Alles bereit – los!“. Vor jeder Übung sagt er, was man in die Hand nimmt. Fehlt etwas: „⏭ Weiter“ überspringt die Übung – jetzt auch schon in der Vorbereitung (vorher startete sie dann sofort). Neue Übungen: Luftballon hochtippen (Sitzen/Stehen), Hanteln über den Kopf (Sitzen), Hanteln seitlich heben (Stehen) mit Wasserflaschen.
+
 ## 2.308.1 – 2026-10-12 – KC-CLUB-BESUCH-DANKE
 Wunsch Hansi. Die Zusammenfassung nach einer Schulung (Push + Mail, Kopie im Archiv-Ordner) dankt jetzt auch ausdrücklich: „Vielen Dank für deine Zeit und dein tolles Mitmachen!“ (bei mehreren: „eure Zeit und euer tolles Mitmachen“).
 

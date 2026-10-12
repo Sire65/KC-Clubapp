@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.308.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.309.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12888,6 +12888,9 @@ const BW_UEBUNGEN = [
   { id: "faeuste", t: "Fäuste machen", g: "sitzen", a: "kneten", sitz: 1, h: "Arme nach vorn, Hände fest zur Faust – und weit auf.", c: ["Fest zu – und weit auf!", "Wie beim Teigkneten – kräftig!"] },
   // 2.303.0 KC-CLUB-BUEHNE-BEWEGUNG-2 (Wunsch Hansi): Hinsetzen und Aufstehen – Twinkey von der Seite, Arme lang nach vorn
   { id: "aufstehen", t: "Aufstehen und hinsetzen", g: "sitzen", a: "aufstehen", seite: 1, sitz: 1, h: "Arme lang nach vorn, Oberkörper leicht vor – langsam aufstehen und langsam wieder hinsetzen. Stuhl an die Wand stellen!", c: ["Hoch – und ganz langsam wieder runter!", "Die Arme helfen beim Gleichgewicht!"] },
+  // 2.309.0 KC-CLUB-BUEHNE-BEREIT (Wunsch Hansi): Übungen mit Luftballon und Wasserflaschen-Hanteln
+  { id: "ballonsitz", t: "Luftballon hochtippen", g: "sitzen", a: "ballon", ding: "ballon", sitz: 1, h: "Den Luftballon abwechselnd mit der linken und der rechten Hand nach oben tippen – nicht runterfallen lassen!", c: ["Hoch damit – der Ballon darf nicht landen!", "Links – und rechts – schön abwechseln!"] },
+  { id: "hantelsitz", t: "Hanteln über den Kopf", g: "sitzen", a: "hochdruecken", p: "flaschen", sitz: 1, h: "In jeder Hand eine Wasserflasche – nach oben drücken und langsam zurück bis zu den Schultern.", c: ["Unsere Hanteln aus der Küche!", "Hoch – und ganz langsam zurück!"] },
   { id: "beine", t: "Beine strecken", g: "sitzen", a: "bein", sitz: 1, h: "Abwechselnd ein Bein lang machen, Fußspitze zu dir ziehen.", c: ["Bein lang – Fußspitze zu dir!", "Schön abwechseln – links, rechts!"] },
   // 2.297.0 KC-CLUB-BUEHNE-KUECHE (Wunsch Hansi): mehr Übungen aus der Küche
   { id: "suppe", t: "Suppe umrühren", g: "sitzen", a: "suppe", ding: "topf", sitz: 1, h: "Beide Arme vor dir – große Kreise, als ob du im großen Suppentopf rührst.", w: "Und jetzt andersherum rühren!", c: ["Die Suppe darf nicht anbrennen!", "Schön große Kreise!"] },
@@ -12912,6 +12915,8 @@ const BW_UEBUNGEN = [
   // 2.308.0 KC-CLUB-BUEHNE-REIFEN-SEIL (Wunsch Hansi): echter Hula-Hoop-Reifen (kreist um die Hüfte, hinten verdeckt) und Seilspringen
   { id: "hulahoop", t: "Hula-Hoop mit Reifen", g: "stehen", a: "hulahoop", a2: "hulahoop2", ding: "hoop", h: "Arme hoch und den Reifen mit kleinen Hüftbewegungen kreisen lassen – ohne Reifen geht es genauso.", w: "Und jetzt andersherum kreisen!", c: ["Der Reifen fliegt – und du bist der Star!", "Locker aus der Hüfte – vor und zurück!"] },
   { id: "seilspringen", t: "Seilspringen", g: "stehen", a: "seilspringen", ding: "seil", h: "Ganz kleine Sprünge im Takt – wer mag, wippt nur auf den Fußballen und kreist die Hände wie mit einem Seil.", c: ["Hopp – und hopp – wie auf dem Schulhof!", "Ganz leicht landen, schön in den Knien federn!"] },
+  { id: "ballon", t: "Luftballon hochtippen", g: "stehen", a: "ballon", ding: "ballon", h: "Den Luftballon abwechselnd links und rechts nach oben tippen – er darf den Boden nicht berühren!", c: ["Wie beim Volleyball – nur sanfter!", "Augen auf den Ballon – und tipp!"] },
+  { id: "hantelseit", t: "Hanteln seitlich heben", g: "stehen", a: "seitheben", p: "flaschen", h: "In jeder Hand eine Wasserflasche – Arme seitlich bis Schulterhöhe heben und langsam senken.", c: ["Fliegen mit Gewicht – stark!", "Langsam runter – nicht fallen lassen!"] },
   { id: "anfersen", t: "Fersen zum Po", g: "stehen", a: "anfersen", h: "Abwechselnd eine Ferse Richtung Po heben – die Arme ziehen dabei nach unten.", c: ["Ferse hoch – und runter!", "Locker im Takt bleiben!"] },
   { id: "armkreisst", t: "Arme kreisen", g: "stehen", a: "armkreis", h: "Arme zur Seite und große Kreise machen – Füße fest auf dem Boden.", w: "Und jetzt andersherum!", c: ["Große Kreise – wie ein Windrad!", "Die Schultern werden schön warm!"] },
   { id: "stuhlrunde", t: "Um den Stuhl laufen", g: "stehen", a: "marsch", weg: "stuhl", h: "Einmal gemütlich um den Stuhl herumgehen – im Takt der Musik.", c: ["Reise nach Jerusalem – nur ohne Drängeln!", "Schön gleichmäßig weitergehen!"] },
@@ -13002,6 +13007,7 @@ function bwFigur(a, sitz, p, ding, b, ph, farbe) {
   const dingSvg = ding === "topf" ? `<g class="bw-ding"><rect x="43" y="${H - 1}" width="34" height="17" rx="3" fill="#868e96"/><rect x="41" y="${H - 3}" width="38" height="4" rx="2" fill="#adb5bd"/><rect x="35" y="${H + 2}" width="8" height="3" rx="1.5" fill="#495057"/><rect x="77" y="${H + 2}" width="8" height="3" rx="1.5" fill="#495057"/></g>`
     : ding === "schuessel" ? `<g class="bw-ding"><path d="M37 ${H - 7} L83 ${H - 7} Q82 ${H + 25} 60 ${H + 27} Q38 ${H + 25} 37 ${H - 7}Z" fill="#f1f3f5" stroke="#adb5bd" stroke-width=".8"/><path d="M40 ${H + 4} Q60 ${H + 8} 80 ${H + 4}" fill="none" stroke="#74c0fc" stroke-width="2" opacity=".7"/><ellipse cx="60" cy="${H - 7}" rx="23" ry="3.8" fill="#ffe8a3"/></g>`
     : ding === "nudel" ? `<g class="bw-ding" style="transform-origin:60px ${S + 34}px">${BW_HELFER.nudelholz(60, S + 34)}</g>`
+    : ding === "ballon" ? `<g class="bw-ballon"><path d="M60 22 q-1 6 1 10" fill="none" stroke="#adb5bd" stroke-width=".8"/><ellipse cx="60" cy="10" rx="9" ry="11" fill="#e03131"/><ellipse cx="57" cy="6" rx="2.6" ry="4" fill="#fff" opacity=".45"/><path d="M58.4 21 h3.2 l-1.6 2.2z" fill="#c92a2a"/></g>`
     : ding === "seil" ? `<g class="bw-seil" style="transform-origin:60px 95px"><path d="M30 95 Q60 -59 90 95" fill="none" stroke="#f5f0e6" stroke-width="2.2" stroke-linecap="round"/></g><rect x="26" y="90" width="7" height="11" rx="2.5" fill="#e03131"/><rect x="87" y="90" width="7" height="11" rx="2.5" fill="#e03131"/>`
     : ding === "reifen" ? `<g class="bw-ding" style="transform-origin:60px ${H - 4}px"><ellipse cx="60" cy="${H - 4}" rx="27" ry="6" fill="none" stroke="#ff4fa3" stroke-width="3"/><path d="M33 ${H - 4} a27 6 0 0 0 54 0" fill="none" stroke="#ffe14d" stroke-width="3" stroke-dasharray="6 6"/></g>`
     : "";
@@ -13065,6 +13071,7 @@ function esBuehneZeigen(f) {
   if (!f) return;
   if (BW.lauf) return bwLaufZeigen();
   if (BW.hoeren) return bwHoerZeigen(); // 2.302.0
+  if (BW.vorher) return bwVorher(); // 2.309.0: Bereitlegen-Liste bleibt beim Zurückkehren
   const w = bwWahl(), hinweis = !fiLs(FI_HINWEIS_KEY, false), vorne = { sitzen: [1, ""], stehen: [0, ""], kueche: [1, "schneebesen"] }[w.modus];
   f.innerHTML = `<div class="bw-buehne"><div class="bw-licht"></div><div class="bw-vorhang links halb"></div><div class="bw-vorhang rechts halb"></div><div class="bw-boden"></div>
     <div class="bw-mitte">${bwFigur("winken", vorne[0], vorne[1], 0, bwSchlag())}</div>
@@ -13075,12 +13082,37 @@ function esBuehneZeigen(f) {
       <div class="bw-reihe">${BW_DAUER.map((d) => `<button type="button" class="es-k${w.dauer === d ? " an" : ""}" onclick="bwWahlSetzen({dauer:${d}})">${d} Min.</button>`).join("")}
         <button type="button" class="es-k${w.musik ? " an" : ""}" onclick="bwWahlSetzen({musik:${!w.musik}})" aria-label="Musik ${w.musik ? "aus" : "an"}">${w.musik ? "🎵 Musik" : "🔇 Musik"}</button>
         <button type="button" class="es-k${w.ansage ? " an" : ""}" onclick="bwWahlSetzen({ansage:${!w.ansage}})" aria-label="Ansage ${w.ansage ? "aus" : "an"}">${w.ansage ? "🔊 Ansage" : "🔈 Ansage"}</button></div>
-      <div class="bw-reihe"><button type="button" class="es-k es-haupt bw-los" ${hinweis ? "disabled" : ""} onclick="bwLos()">▶️ Vorhang auf!</button><button type="button" class="es-k bw-hoeren-los" onclick="bwHoeren()">🎶 Nur Musik hören</button></div></div></div>`; // 2.302.0 KC-CLUB-BUEHNE-MUSIK
+      <div class="bw-reihe"><button type="button" class="es-k es-haupt bw-los" ${hinweis ? "disabled" : ""} onclick="bwVorher()">▶️ Vorhang auf!</button><button type="button" class="es-k bw-hoeren-los" onclick="bwHoeren()">🎶 Nur Musik hören</button></div></div></div>`; // 2.302.0 KC-CLUB-BUEHNE-MUSIK
+}
+// ----- 2.309.0 KC-CLUB-BUEHNE-BEREIT (Wunsch Hansi „vorher ansagen: lege dir bereit …“; „mit Weiter eine Übung überspringen“) -----
+// Vor dem Start zeigt und sagt Twinkey, was für DIESEN Durchgang gebraucht wird (aus den Übungen abgeleitet: Hand-Helfer p, Dinge ding, bedarf).
+// Fehlt etwas: die Übung mit „⏭ Weiter“ einfach überspringen – auch schon in der Vorbereitung.
+const BW_DINGE = { stuhl: ["🪑", "einen Stuhl"], seil: ["🪢", "ein Springseil"], flaschen: ["💧", "2 Wasserflaschen als Hanteln"], ballon: ["🎈", "einen Luftballon"],
+  schneebesen2: ["🥄", "2 Schneebesen"], schneebesen: ["🥄", "einen Schneebesen"], loeffel2: ["🥄", "2 Kochlöffel"], topf: ["🍲", "einen Topf"], deckel: ["🥘", "2 Topfdeckel"],
+  nudelholz: ["🪵", "ein Nudelholz"], pfanne: ["🍳", "eine Pfanne"], tuch: ["🧻", "ein Geschirrtuch"], schuessel: ["🥣", "eine Rührschüssel"], hoop: ["⭕", "einen Hula-Hoop-Reifen (wer hat)"] };
+const BW_DING_AUS = { nudel: "nudelholz", seil: "seil", ballon: "ballon", topf: "topf", schuessel: "schuessel", hoop: "hoop" }; // ding → Bedarf (Bühnen-Deko wie „reifen“ zählt nicht)
+function bwBedarf(u) { const l = [...(u.bedarf || [])]; if (BW_DINGE[u.p]) l.push(u.p); if (BW_DING_AUS[u.ding]) l.push(BW_DING_AUS[u.ding]); return [...new Set(l)]; }
+function bwBereitListe(plan) { // Stuhl immer (zum Sitzen bzw. Festhalten), Reihenfolge wie BW_DINGE; 2 Schneebesen ersetzen einen
+  const alle = new Set(["stuhl", ...plan.flatMap(bwBedarf)]); if (alle.has("schneebesen2")) alle.delete("schneebesen");
+  return Object.keys(BW_DINGE).filter((k) => alle.has(k));
+}
+const bwAufzaehlen = (l) => l.length < 2 ? l.join("") : `${l.slice(0, -1).join(", ")} und ${l[l.length - 1]}`;
+const bwNimmDinge = (u) => bwBedarf(u).map((k) => [BW_DINGE[k][0], BW_DINGE[k][1].replace(/ \(wer hat\)$/, "")]);
+function bwVorher() { // statt sofort zu starten: Bereitlegen-Liste zeigen und ansagen
+  const w = bwWahl(), plan = BW.vorher || bwPlan(w.modus, w.dauer), liste = bwBereitListe(plan), f = $("hrFlaeche"); if (!f) return;
+  const neu = !BW.vorher; BW.vorher = plan;
+  f.innerHTML = `<div class="bw-buehne"><div class="bw-licht"></div><div class="bw-vorhang links halb"></div><div class="bw-vorhang rechts halb"></div><div class="bw-boden"></div>
+    <div class="bw-mitte">${bwFigur("winken", 0, "", 0, bwSchlag())}</div>
+    <div class="bw-wahl bw-bereit"><div class="bw-titel">🧺 Lege dir bitte bereit:</div>
+      <ul class="bw-bereit-liste">${liste.map((k) => `<li><span>${BW_DINGE[k][0]}</span>${esc(BW_DINGE[k][1])}</li>`).join("")}</ul>
+      <p class="bw-bereit-tipp">Fehlt etwas? Kein Problem – die Übung dann mit <b>⏭ Weiter</b> einfach überspringen.</p>
+      <div class="bw-reihe"><button type="button" class="es-k es-haupt bw-los" onclick="bwLos()">▶️ Alles bereit – los!</button><button type="button" class="es-k" onclick="BW.vorher=null;esBuehneZeigen($('hrFlaeche'))">↩ Zurück</button></div></div></div>`;
+  if (neu && w.ansage) { try { speechSynthesis.cancel(); speechSynthesis.resume(); } catch (e) { /* ohne Sprache */ } bwSprechen(`Lege dir bitte bereit: ${bwAufzaehlen(liste.map((k) => BW_DINGE[k][1].replace(/ \(wer hat\)$/, ", wer einen hat")))}. Fehlt etwas? Kein Problem – dann überspringst du die Übung einfach mit Weiter.`); }
 }
 // ----- Training -----
 const BW_BEGRUESSUNG = "Hallo! Lass uns ein bisschen Bewegung in den Alltag einbauen. Mach nur so viel, wie dir guttut. Los geht’s!";
 async function bwLos() {
-  const w = bwWahl(), plan = bwPlan(w.modus, w.dauer);
+  const w = bwWahl(), plan = BW.vorher || bwPlan(w.modus, w.dauer); BW.vorher = null; // 2.309.0: derselbe Plan wie in der Bereitlegen-Liste
   try { speechSynthesis.cancel(); speechSynthesis.resume(); } catch (e) { /* ohne Sprache */ } // 2.306.0: Sprachausgabe frisch starten (hing sie, blieb Twinkey stumm)
   if (BW.hoeren) bwStopp(false); BWM.stueck = bwTrainingsStueck(w.modus); BWM.gesamt = 0; // 2.303.0: jedes Training ein anderes Disco-Stück (im Tempo der Übungen)
   BW.lauf = { plan, i: 0, phase: "bereit", rest: BW_BEREIT, pause: false, musik: w.musik, ansage: w.ansage, sek: 0, lob: Math.floor(Math.random() * BW_LOB.length), sprueche: 0, farbe: Math.floor(Math.random() * BW_FARBEN.length), warte: 0, gezaehlt: false };
@@ -13088,7 +13120,7 @@ async function bwLos() {
   if (w.musik) bwMusik(true);
   // 2.299.2 (Wunsch Hansi): kurze Begrüßung vorweg – die erste Vorbereitung dauert dafür etwas länger
   BW.lauf.rest = BW_BEREIT + 6;
-  BWM.stufe = 1; bwLaufZeigen(true); bwSag(`${BW_BEGRUESSUNG} Als Erstes: ${plan[0].t}. ${plan[0].h}`, false, BW_BEGRUESSUNG);
+  BWM.stufe = 1; bwLaufZeigen(true); const nimm0 = bwNimmDinge(plan[0]); bwSag(`${BW_BEGRUESSUNG} Als Erstes: ${plan[0].t}.${nimm0.length ? ` Nimm ${bwAufzaehlen(nimm0.map((x) => x[1]))}.` : ""} ${plan[0].h}`, false, BW_BEGRUESSUNG);
   clearInterval(BW.takt); BW.takt = setInterval(bwTick, 1000);
 }
 // 2.296.0 (Wunsch Hansi „beim Abzählen wird der Text vom Erklären abgeschnitten“): Ansagen schneiden sich nicht mehr gegenseitig ab.
@@ -13145,7 +13177,8 @@ function bwTick() {
     if (L.i >= L.plan.length - 1) return bwFertig();
     L.i++; L.phase = "bereit"; L.rest = BW_BEREIT; L.warte = 0; L.gezaehlt = false; const n = L.plan[L.i];
     const extra = L.i === Math.floor(L.plan.length / 2) ? "Halbzeit – du bist spitze! " : L.i % 3 === 0 ? "Trinken nicht vergessen! " : "";
-    bwSag(`${extra}Als Nächstes: ${n.t}. ${n.h}`, false, `${extra}Als Nächstes: ${n.t}`);
+    const nimm = bwNimmDinge(n); // 2.309.0: Twinkey sagt, was man dafür in die Hand nimmt
+    bwSag(`${extra}Als Nächstes: ${n.t}.${nimm.length ? ` Nimm ${bwAufzaehlen(nimm.map((x) => x[1]))}.` : ""} ${n.h}`, false, `${extra}Als Nächstes: ${n.t}${nimm.length ? ` ${nimm.map((x) => x[0]).join("")}` : ""}`);
   }
   bwLaufZeigen();
 }
@@ -13161,20 +13194,22 @@ function bwLaufZeigen(vorhangAuf) {
     <div class="bw-sprech" id="bwSprech" aria-live="polite">${esc(alt)}</div>
     <div class="bw-mitte">${bwBuehneFigur(u, L.phase, anim, sitz, L.farbe + L.i)}</div>
     <div class="bw-tipp">${esc(L.phase === "schuetteln" ? "Gut gemacht! 👏" : u.h)}</div>${bwLautRegler("musik")}${bwLautRegler("stimme")}
-    <div class="es-leiste"><button type="button" class="es-k es-haupt" onclick="bwPause()">${L.pause ? "▶︎ Weiter" : "⏸ Pause"}</button><button type="button" class="es-k" onclick="bwWeiter()" aria-label="Übung überspringen">⏭</button>
+    <div class="es-leiste"><button type="button" class="es-k es-haupt" onclick="bwPause()">${L.pause ? "▶︎ Weiter" : "⏸ Pause"}</button><button type="button" class="es-k" onclick="bwWeiter()" aria-label="Übung überspringen">⏭ Weiter</button>
       <button type="button" class="es-k${L.musik ? " an" : ""}" onclick="bwMusikSchalten()" aria-label="Musik an oder aus">${L.musik ? "🎵" : "🔇"}</button><button type="button" class="es-k${L.ansage ? " an" : ""}" onclick="bwAnsageSchalten()" aria-label="Ansage an oder aus">${L.ansage ? "🔊" : "🔈"}</button>
       <button type="button" class="es-k" onclick="bwStopp(true)">✖ Ende</button></div></div>`;
   if (alt && Date.now() - (BW.sprechZeit || 0) < 4000) $("bwSprech").classList.add("an"); // gerade Gesagtes bleibt lesbar
   bwZahl();
 }
 function bwPause() { const L = BW.lauf; if (!L) return; L.pause = !L.pause; try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwMusik(!L.pause && L.musik); bwLaufZeigen(); }
-function bwWeiter() { const L = BW.lauf; if (!L) return; L.pause = false; if (L.phase === "uebung") L.phase = "schuetteln"; L.rest = 1; bwTick(); }
+function bwWeiter() { // 2.309.0: auch in der Vorbereitung wird die kommende Übung ganz übersprungen (vorher startete sie dann sofort)
+  const L = BW.lauf; if (!L) return; L.pause = false; L.phase = "schuetteln"; L.rest = 1; try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwTick();
+}
 function bwMusikSchalten() { const L = BW.lauf; if (!L) return; L.musik = !L.musik; bwWahlSetzen({ musik: L.musik }, true); bwMusik(L.musik && !L.pause); bwLaufZeigen(); }
 function bwAnsageSchalten() { const L = BW.lauf; if (!L) return; L.ansage = !L.ansage; bwWahlSetzen({ ansage: L.ansage }, true); if (!L.ansage) try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwLaufZeigen(); }
 function bwStopp(zeigen) {
   clearInterval(BW.takt); BW.takt = 0; bwMusik(false); try { BW.wach?.release(); } catch (e) { /* ohne Wachhalten */ } BW.wach = null;
   if (BW.lauf) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } }
-  BW.lauf = null; BW.hoeren = null; BWM.stueck = null; BW.blase = ""; if (zeigen && $("hrFlaeche")?.classList.contains("hr-buehne")) esBuehneZeigen($("hrFlaeche")); // 2.302.0: auch „Nur Musik“
+  BW.lauf = null; BW.hoeren = null; BW.vorher = null; BWM.stueck = null; BW.blase = ""; if (zeigen && $("hrFlaeche")?.classList.contains("hr-buehne")) esBuehneZeigen($("hrFlaeche")); // 2.302.0: auch „Nur Musik“
 }
 function bwFertig() {
   const L = BW.lauf; if (!L) return; const sek = L.sek, n = L.plan.length; bwStopp(false);

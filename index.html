@@ -2848,6 +2848,17 @@
   .bw-figur.bw-a-hulahoop2 .bw-oben { animation: bwHoopHuefte var(--b) linear var(--ph, 0s) infinite reverse; }
   .bw-figur.bw-a-hulahoop2 .bw-oaL { transform: rotate(150deg); animation: none; } .bw-figur.bw-a-hulahoop2 .bw-oaR { transform: rotate(-150deg); animation: none; }
   .bw-figur.bw-a-hulahoop2 .bw-uaL { transform: rotate(-24deg); animation: none; } .bw-figur.bw-a-hulahoop2 .bw-uaR { transform: rotate(24deg); animation: none; } /* zweite Hälfte: andersherum */
+  /* 2.309.0 KC-CLUB-BUEHNE-BEREIT: Bereitlegen-Liste vor dem Start, Luftballon hochtippen */
+  .bw-bereit-tipp { margin: 0; font-size: .85rem; text-align: center; opacity: .9; }
+  .bw-wahl.bw-bereit { padding-right: 66px; } .bw-wahl.bw-bereit .bw-reihe { justify-content: flex-start; width: 100%; } /* frei für die schwebenden Hilfe-Knöpfe rechts unten */
+  .bw-bereit-liste { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: .84rem; line-height: 1.2; text-align: left; width: 100%; }
+  .bw-bereit-liste li { display: flex; align-items: center; gap: 6px; } .bw-bereit-liste span { font-size: 1.3rem; }
+  @keyframes bwBallon { 0% { transform: translate(-30px, -14px); } 25% { transform: translate(-34px, 4px); } 50% { transform: translate(30px, -14px); } 75% { transform: translate(34px, 4px); } 100% { transform: translate(-30px, -14px); } }
+  @keyframes bwBallonOa { 0%, 40%, 100% { transform: rotate(60deg); } 25% { transform: rotate(150deg); } }
+  @keyframes bwBallonOaR { 0%, 50%, 90%, 100% { transform: rotate(-60deg); } 75% { transform: rotate(-150deg); } }
+  .bw-figur.bw-a-ballon .bw-ballon { animation: bwBallon calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-ballon .bw-oaL { animation: bwBallonOa calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-ballon .bw-oaR { animation: bwBallonOaR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  .bw-figur.bw-a-ballon .bw-uaL { transform: rotate(-20deg); } .bw-figur.bw-a-ballon .bw-uaR { transform: rotate(20deg); }
   @keyframes bwSeil { 0% { transform: scale(1, 1); } 24% { transform: scale(1, .12); } 48% { transform: scale(1, -1); } 74% { transform: scale(1, .12); } 100% { transform: scale(1, 1); } }
   .bw-figur.bw-a-seilspringen .bw-seil { animation: bwSeil var(--b) linear var(--ph, 0s) infinite; }
   .bw-figur.bw-a-seilspringen .bw-ganz { animation: bwHuepfGanz var(--b) cubic-bezier(.3, 0, .4, 1) var(--ph, 0s) infinite; }
@@ -4783,6 +4794,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.308.1" data-v="2.308.1"></script>
+<script src="app.js?v=2.309.0" data-v="2.309.0"></script>
 </body>
 </html>
