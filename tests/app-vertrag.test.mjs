@@ -9115,3 +9115,10 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/function jzbBlaeserMalen\(/.test(html) && /function jzbHoernchenMalen\(/.test(html) && /function jzbEichelnMalen\(/.test(html) && /jzbHerbstTiere\(dt\);/.test(html), "Bläser, Eicheln, Eichhörnchen");
   assert.ok(/blaeser: null, eicheln: null, hoernchen: null, hoernchenUhr: undefined/.test(html), "beim Start zurückgesetzt");
 }
+
+// 2.329.0 KC-CLUB-NUSSNAME: Eichhörnchen legt den Vornamen aus Nüssen, sitzt stolz daneben, holt sie wieder
+{
+  assert.ok(/function jzbNussNameLage\(\)/.test(html) && /function jzbNussPunkte\(ch, fs, f\)/.test(html) && /jzbNussNameMalen\(c\); \/\/ 2\.329\.0/.test(html), "Name aus Nüssen");
+  assert.ok(/H\.art === "bringen"/.test(html) && /H\.art === "holen"/.test(html) && /H\.phase = "stolz"/.test(html), "bringen, stolz, holen");
+  assert.ok(/nussName: null, nussErster: false/.test(html), "beim Start zurückgesetzt");
+}

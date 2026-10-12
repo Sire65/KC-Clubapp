@@ -1,12 +1,20 @@
 {
-  "version": "2.328.0",
+  "version": "2.329.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🍂 Herbst-Design: Ist genug Laub zusammen, kommt jetzt auch ein Mann mit Laubbläser (Warnjacke, Gehörschutz) und pustet alles weg – im Wechsel mit Wind und Twinkeys Besen",
-    "🌰 Auf dem Boden liegen Eicheln und Haselnüsse – ab und an flitzt ein Eichhörnchen herbei, stopft sich eine dicke Nuss in die Backe und saust wieder davon"
+    "🐿️ Herbst-Design: Das Eichhörnchen bringt ab und an eine Nuss in der Backe und legt daraus Buchstabe für Buchstabe deinen Vornamen – aus lauter kleinen Eicheln und Haselnüssen",
+    "🌰 Ist der Name fertig, sitzt es stolz daneben – nach einer Weile holt es sich die Nüsse Buchstabe für Buchstabe wieder, und alles beginnt von vorn"
   ],
   "verlauf": [
+    {
+      "version": "2.329.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🐿️ Herbst-Design: Das Eichhörnchen bringt ab und an eine Nuss in der Backe und legt daraus Buchstabe für Buchstabe deinen Vornamen – aus lauter kleinen Eicheln und Haselnüssen",
+        "🌰 Ist der Name fertig, sitzt es stolz daneben – nach einer Weile holt es sich die Nüsse Buchstabe für Buchstabe wieder, und alles beginnt von vorn"
+      ]
+    },
     {
       "version": "2.328.0",
       "datum": "2026-10-12",

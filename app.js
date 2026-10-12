@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.328.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.329.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2211,7 +2211,7 @@ const RG_EFFEKTE = [
     x: "Wechselst du oben zwischen Club, Meins und Technik, schweben die Kacheln herein. Als Jalousie, als Kartenstapel – oder sie drehen sich um. Ich zeige dir alle drei.",
     live: async (L) => { for (const art of ["jalousie", "karten", "drehen"]) { await L.tipp(`#register button[data-r="${reg}"]`); regEffekt(1, art); await L.warte(1500); } } },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("herbst", "igel", (J) => J.liegt.length >= 14); JZB.igelUhr = 1.5; }, sel: ["#v-start .hero"], t: "🍂 Herbst im Kopf",
-    x: "Oben im Kopf zeigt sich die Jahreszeit. Im Herbst fallen bunte Blätter und bleiben unten als Laubschicht liegen. Und ab und zu raschelt ein Igel durchs Laub. Ist genug Laub zusammen, kommt der Wind, Twinkey mit dem Besen – oder ein Mann mit Laubbläser pustet alles weg. Zwischen den Blättern liegen Eicheln und Haselnüsse: Ab und an flitzt ein Eichhörnchen herbei, stopft sich eine dicke Nuss in die Backe und saust wieder davon." },
+    x: "Oben im Kopf zeigt sich die Jahreszeit. Im Herbst fallen bunte Blätter und bleiben unten als Laubschicht liegen. Und ab und zu raschelt ein Igel durchs Laub. Ist genug Laub zusammen, kommt der Wind, Twinkey mit dem Besen – oder ein Mann mit Laubbläser pustet alles weg. Zwischen den Blättern liegen Eicheln und Haselnüsse: Ab und an flitzt ein Eichhörnchen herbei, stopft sich eine dicke Nuss in die Backe und saust wieder davon. Manchmal bringt es eine Nuss und legt daraus Buchstabe für Buchstabe deinen Vornamen – ist er fertig, sitzt es stolz daneben, und später holt es sich die Nüsse wieder." },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("herbst", "twinkey", (J) => J.phase === "besuch", 180); if (JZB.cv && JZB.phase === "fallen") jzbBesuchStart("fegen"); }, sel: ["#v-start .hero"], t: "🧹 Wind oder Twinkey",
     x: "Liegt genug Laub, kommt ein Windstoß – mal von links, mal von rechts – und weht es weg. Oder Twinkey kommt mit dem Besen vorbei, fegt und sagt einen Spruch. Schau mal." },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("winter", "", (J) => J.phase === "stehen", 150); }, sel: ["#v-start .hero"], t: "⛄ Winter",
@@ -14010,7 +14010,7 @@ function jzbStart(h, art) {
   const saison = art === "advent" ? "winter" : art;
   Object.assign(JZB, { s, cv, ctx, art, saison, w: 0, h: 0, dpr: 0, k: 1, T: 0, pt: 0, letzt: 0, imBild: true, pruef: 0, spawn: 0,
     flug: [], liegt: [], fx: [], boden: [], wind: null, mann: null, halme: [], blumen: [], gaeste: [], welk: 0, phase: "anfang",
-    blase: sb, besuch: null, gegossen: false, ext: {}, extraPruef: 0, eier: [], igel: null, igelUhr: undefined, schirm: null, schirmUhr: undefined, tropfen: [], pfuetzen: null, regenSpawn: 0, blaeser: null, eicheln: null, hoernchen: null, hoernchenUhr: undefined, raupe: null, raupeUhr: undefined, ski: null, skiUhr: null, rillen: null }); // 2.249.0 KC-CLUB-JAHRESZEIT-EXTRAS
+    blase: sb, besuch: null, gegossen: false, ext: {}, extraPruef: 0, eier: [], igel: null, igelUhr: undefined, schirm: null, schirmUhr: undefined, tropfen: [], pfuetzen: null, regenSpawn: 0, blaeser: null, eicheln: null, hoernchen: null, hoernchenUhr: undefined, nussName: null, nussErster: false, raupe: null, raupeUhr: undefined, ski: null, skiUhr: null, rillen: null }); // 2.249.0 KC-CLUB-JAHRESZEIT-EXTRAS
   if (!h.dataset.jzKlick) { h.dataset.jzKlick = "1"; h.addEventListener("click", jzbEiAntippen); } // Ostereier antippen
   // Vorschau im Winter: gleich der Schneemann-Lauf, damit man ihn nicht erst nach zwei Windstößen sieht
   JZB.lauf = JZB.vorschau ? (JZB.extra === "twinkey" ? 1 : saison === "winter" ? 2 : 0) : jzbLaufLesen(); // Vorschau „🧹 Twinkey“: gleich sein Lauf
@@ -15097,31 +15097,87 @@ function jzbEichelnMalen(c) {
   for (const e of J.eicheln) jzbEichelMalen(c, e.x, J.h - 1 + e.dy - Math.sin((e.hopp || 0) * 12) * (e.hopp || 0) * 8, e.nuss, e.kipp + e.dy * .02, J.k, 1.4);
 }
 // 🐿️ Eichhörnchen: hüpft zur nächsten Nuss, stopft sie sich in die Backe und flitzt zurück
+// 2.329.0 KC-CLUB-NUSSNAME (Wunsch Hansi, Variante 2): wie im Winter der Name aus Eis – im Herbst bringt das Eichhörnchen ab und an eine Nuss
+// in der Backe und legt daraus den nächsten Buchstaben des Vornamens (jeder Buchstabe aus vielen kleinen Eicheln und Haselnüssen). Ist der Name
+// fertig, sitzt es stolz daneben. Nach einer Weile holt es sich die Nüsse Buchstabe für Buchstabe wieder (vom Ende her) – dann beginnt es von vorn.
+// Dazwischen frisst es weiter Nüsse vom Boden. Nur Herbst, nur auf diesem Gerät (nichts geht an den Server).
+function jzbNussNameLage() {
+  const J = JZB, N = J.nussName, c = J.ctx, fs = Math.round(Math.min(30 * J.k, J.h * .45)), z = [...N.text], f = `900 ${fs}px "Arial Black", "Segoe UI", Roboto, Arial, sans-serif`;
+  c.save(); c.font = f; const b = z.map((ch) => c.measureText(ch).width + 3 * J.k); c.restore();
+  const ges = b.reduce((a, v) => a + v, 0); let x = Math.max(JZB_RAND, (J.w - ges) / 2);
+  return { fs, f, z, pos: b.map((w) => { const m = x + w / 2; x += w; return m; }), y: J.h - 2 };
+}
+function jzbNussPunkte(ch, fs, f) { // Rasterpunkte innerhalb des Buchstabens – dort liegt je eine kleine Nuss (zwischengespeichert)
+  const J = JZB, key = `${ch}|${fs}`; J.nussPunkte = J.nussPunkte || new Map(); if (J.nussPunkte.has(key)) return J.nussPunkte.get(key);
+  const cv = document.createElement("canvas"), w = Math.ceil(fs * 1.4), h = Math.ceil(fs * 1.25), c = cv.getContext("2d"); cv.width = w; cv.height = h;
+  c.font = f; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillStyle = "#000"; c.fillText(ch, w / 2, h - fs * .12);
+  const d = c.getImageData(0, 0, w, h).data, st = Math.max(2.6, fs / 8.5), pk = [];
+  for (let y = st / 2; y < h; y += st) for (let x = st / 2 + ((Math.round(y / st) % 2) ? st / 2 : 0); x < w; x += st)
+    if (d[(Math.floor(y) * w + Math.floor(x)) * 4 + 3] > 120) pk.push([x - w / 2, y - (h - fs * .12), pk.length % 3 === 0, Math.sin(pk.length * 7.3) * .5]);
+  const r = { pk, st }; J.nussPunkte.set(key, r); return r;
+}
+function jzbNussNameMalen(c) {
+  const J = JZB, N = J.nussName; if (J.saison !== "herbst" || !N || !N.n) return;
+  const L = jzbNussNameLage();
+  for (let i = 0; i < N.n; i++) {
+    const { pk, st } = jzbNussPunkte(L.z[i], L.fs, L.f), neu = Math.min(1, (J.T - (N.gelandet[i] ?? -9)) / .4);
+    c.save(); c.font = L.f; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.globalAlpha = .5 * neu; c.fillStyle = "#4a2a10"; // dunkler Untergrund – damit man den Buchstaben gut lesen kann
+    c.fillText(L.z[i], L.pos[i], L.y - L.fs * .12 + st * .45); c.restore();
+    for (const [px, py, nuss, kipp] of pk) { const q = jzbEase(Math.min(1, neu * 1.6 - (py / -L.fs) * .6)); if (q <= 0) continue; // Nüsse purzeln von unten nach oben dazu
+      jzbEichelMalen(c, L.pos[i] + px, L.y + py + st * .45 - (1 - q) * 6 * J.k, nuss, kipp, 1, st / 6.2 * (.6 + .4 * q)); }
+  }
+}
 function jzbHerbstTiere(dt) {
   const J = JZB, k = J.k;
-  if (J.saison !== "herbst") { J.eicheln = null; J.hoernchen = null; J.blaeser = null; return; }
+  if (J.saison !== "herbst") { J.eicheln = null; J.hoernchen = null; J.blaeser = null; J.nussName = null; return; }
   jzbBlaeserSchritt(dt); jzbEichelnPruefen(dt);
-  if (!J.hoernchen && (J.hoernchenUhr = (J.hoernchenUhr ?? (J.extra === "hoernchen" ? 3 : jzbZ(25, 55))) - dt) <= 0) {
+  const txt = jzbEisNameText(); if (J.nussName && J.nussName.text !== txt) J.nussName = null;
+  if (!J.nussName && txt) J.nussName = { text: txt, n: 0, gelandet: [], fertig: null };
+  const N = J.nussName, laenge = N ? [...N.text].length : 0;
+  if (!J.hoernchen && (J.hoernchenUhr = (J.hoernchenUhr ?? (J.extra === "hoernchen" ? 3 : jzbZ(15, 35))) - dt) <= 0) {
+    let art = "essen";
+    if (N && N.n < laenge && !N.fertig) art = !J.nussErster || Math.random() < .7 ? "bringen" : "essen";
+    else if (N && N.fertig !== null && J.T - N.fertig > (J.vorschau ? 25 : 120)) art = "holen";
     const frei = J.eicheln.filter((e) => !e.dy && !e.reserviert);
-    if (!frei.length || J.blaeser) J.hoernchenUhr = 8;
-    else { const dir = Math.random() < .5 ? 1 : -1, start = dir > 0 ? -24 * k : J.w + 24 * k, ziel = frei.sort((a, b) => Math.abs(a.x - start) - Math.abs(b.x - start))[Math.min(frei.length - 1, Math.floor(Math.random() * 2))];
-      ziel.reserviert = true; J.hoernchen = { dir, x: start, start, t: 0, ziel, phase: "hin", backe: 0, nuss: ziel.nuss, halt: 0 }; }
+    if (J.blaeser || (art === "essen" && !frei.length)) J.hoernchenUhr = 8;
+    else {
+      const dir = Math.random() < .5 ? 1 : -1, start = dir > 0 ? -24 * k : J.w + 24 * k;
+      if (art === "essen") { const ziel = frei.sort((a, b) => Math.abs(a.x - start) - Math.abs(b.x - start))[Math.min(frei.length - 1, Math.floor(Math.random() * 2))];
+        ziel.reserviert = true; J.hoernchen = { art, dir, x: start, t: 0, ziel, zx: ziel.x - dir * 9 * k, phase: "hin", backe: 0, nuss: ziel.nuss, halt: 0 }; }
+      else { J.nussErster = true; const L = jzbNussNameLage(), i = art === "bringen" ? N.n : N.n - 1, zx = L.pos[i] - dir * (L.fs * .45 + 9 * k);
+        J.hoernchen = { art, dir, x: start, t: 0, i, zx, phase: "hin", backe: art === "bringen" ? 1 : 0, nuss: Math.random() < .5, halt: 0 }; }
+    }
   }
   const H = J.hoernchen; if (!H) return;
   H.t += dt;
   if (H.phase === "hin") {
-    const zx = H.ziel.x - H.dir * 9 * k; H.x += H.dir * 105 * k * dt;
-    if ((zx - H.x) * H.dir <= 0) { H.x = zx; H.phase = "nehmen"; H.halt = 0; }
-  } else if (H.phase === "nehmen") { // schnuppern, Nuss greifen, in die Backe – kauen
+    H.x += H.dir * 105 * k * dt;
+    if ((H.zx - H.x) * H.dir <= 0) { H.x = H.zx; H.phase = "nehmen"; H.halt = 0; }
+  } else if (H.phase === "nehmen") { // schnuppern, Nuss greifen/ablegen – kauen
     H.halt += dt;
-    if (H.halt > .7 && !H.ziel.weg) { H.ziel.weg = true; for (const b of J.liegt) if (Math.abs(b.x - H.x) < 14 * k) b.wackel = 1; }
-    if (H.halt > .7) H.backe = Math.min(1, H.backe + dt * 3);
-    if (H.halt > 1.9) { H.phase = "weg"; H.dir = H.x < J.w / 2 ? -1 : 1; } // zur näheren Seite davon
-  } else { H.x += H.dir * 135 * k * dt; if (H.x < -40 * k || H.x > J.w + 40 * k) { J.hoernchen = null; J.hoernchenUhr = jzbZ(35, 75); } }
-  if (H.phase !== "nehmen") for (const b of J.liegt) if (Math.abs(b.x - H.x) < 8 * k) b.wackel = 1; // raschelt durchs Laub
+    if (H.art === "essen") {
+      if (H.halt > .7 && !H.ziel.weg) { H.ziel.weg = true; for (const b of J.liegt) if (Math.abs(b.x - H.x) < 14 * k) b.wackel = 1; }
+      if (H.halt > .7) H.backe = Math.min(1, H.backe + dt * 3);
+    } else if (H.art === "bringen") {
+      if (H.halt > .3) H.backe = Math.max(0, H.backe - dt * 2.5);
+      if (H.halt > .6 && !H.fertig && N && N.n === H.i) { H.fertig = true; N.gelandet[N.n] = J.T; N.n++; // der nächste Buchstabe liegt da
+        const L = jzbNussNameLage(); for (let q = 0; q < 8; q++) J.fx.push({ typ: "funke", x: L.pos[H.i] + jzbZ(-8, 8) * k, y: L.y - jzbZ(0, L.fs), vx: jzbZ(-30, 30), vy: -jzbZ(10, 50), s: jzbZ(1.4, 2.4), a: 1, farbe: q % 2 ? "#ffd166" : "#fff6c2" });
+        if (N.n >= laenge) N.fertig = J.T; }
+    } else if (H.art === "holen") {
+      if (H.halt > .6 && !H.fertig && N && N.n === H.i + 1) { H.fertig = true; N.n--; if (!N.n) J.nussName = null; } // Buchstabe weg – Nüsse in die Backe
+      if (H.halt > .6) H.backe = Math.min(1, H.backe + dt * 3);
+    }
+    if (H.halt > 1.9) { if (H.art === "bringen" && N && N.fertig !== null && N.n >= laenge && !H.stolz) { const L = jzbNussNameLage(); H.phase = "zumEnde"; H.stolz = true; H.dir = 1; H.zx = L.pos[L.pos.length - 1] + L.fs * .5 + 16 * k; } else { H.phase = "weg"; H.dir = H.x < J.w / 2 ? -1 : 1; } } // zur näheren Seite davon
+  } else if (H.phase === "zumEnde") { // hüpft ans Ende des Namens …
+    H.x += H.dir * 70 * k * dt; if ((H.zx - H.x) * H.dir <= 0) { H.x = H.zx; H.dir = -1; H.phase = "stolz"; H.halt = 0; }
+  } else if (H.phase === "stolz") { // … und sitzt stolz neben seinem fertigen Werk
+    H.halt += dt; if (Math.random() < dt * 3) J.fx.push({ typ: "funke", x: H.x + jzbZ(-10, 10) * k, y: J.h - jzbZ(18, 30) * k, vx: 0, vy: -20, s: 2, a: 1, farbe: "#ffd166" });
+    if (H.halt > 4.5) { H.phase = "weg"; H.dir = H.x < J.w / 2 ? -1 : 1; }
+  } else { H.x += H.dir * 135 * k * dt; if (H.x < -40 * k || H.x > J.w + 40 * k) { const bau = J.nussName && !J.nussName.fertig; J.hoernchen = null; J.hoernchenUhr = bau ? jzbZ(12, 25) : jzbZ(35, 75); } }
+  if (H.phase !== "nehmen" && H.phase !== "stolz") for (const b of J.liegt) if (Math.abs(b.x - H.x) < 8 * k) b.wackel = 1; // raschelt durchs Laub
 }
 function jzbHoernchenMalen(c, H, k) {
-  const J = JZB, laeuft = H.phase !== "nehmen", sp = laeuft ? (H.t * 11) % (Math.PI * 2) : 0, hopp = laeuft ? Math.abs(Math.sin(sp)) * 4 : 0;
+  const J = JZB, laeuft = H.phase !== "nehmen" && H.phase !== "stolz", sp = laeuft ? (H.t * 11) % (Math.PI * 2) : 0, hopp = laeuft ? Math.abs(Math.sin(sp)) * 4 : 0;
   const bueck = H.phase === "nehmen" && H.halt < .9 ? Math.sin(Math.min(1, H.halt / .45) * Math.PI / 2) * .35 : 0, kau = H.phase === "nehmen" && H.halt > .9 ? Math.sin(H.t * 22) * .35 : 0;
   c.save(); c.translate(H.x, J.h - 1 - hopp * k); c.scale(H.dir * k * 1.15, k * 1.15); c.lineCap = "round"; c.lineJoin = "round";
   // buschiger Schwanz: geschwungen nach oben, weht beim Laufen
@@ -15141,8 +15197,7 @@ function jzbHoernchenMalen(c, H, k) {
   c.strokeStyle = "#7a2f12"; c.lineWidth = .8; c.beginPath(); c.moveTo(5.6, -18); c.lineTo(5.2, -19.2); c.stroke();
   if (H.backe > 0) { const r = 1 + H.backe * 3 + kau * .4; c.fillStyle = "#c86a3a"; c.beginPath(); c.arc(7.6, -10.2, r, 0, 7); c.fill(); c.fillStyle = "rgba(255,255,255,.25)"; c.beginPath(); c.arc(7, -11, r * .45, 0, 7); c.fill(); }
   c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(8.2, -12.6, .75, 0, 7); c.fill(); c.beginPath(); c.arc(10.5, -11.4, .6, 0, 7); c.fill();
-  if (H.phase === "nehmen" && H.halt < .7 && !H.ziel.weg) { /* Nuss liegt noch am Boden – wird gerade beschnuppert */ }
-  else if (H.backe > 0 && H.backe < 1) jzbEichelMalen(c, 10.6, -9.6, H.nuss, .3, .55); // Nuss verschwindet im Mäulchen
+  if (H.backe > 0 && H.backe < 1) jzbEichelMalen(c, 10.6, -9.6, H.nuss, .3, .55); // Nuss verschwindet im Mäulchen
   c.restore(); c.restore();
 }
 function jzbExtrasSchritt(dt) {
@@ -15201,6 +15256,7 @@ function jzbExtrasBoden(c) { // Pfützen, Stiefel, Kochtopf, Igel, Schirm
   if (X.topf) jzbTopf(c, Math.max(J.w * .3, 90 * k), J.h - 1, k);
   if (J.igel) jzbIgel(c, J.igel, k);
   if (J.schirm) jzbSchirm(c, J.schirm, k);
+  jzbNussNameMalen(c); // 2.329.0 KC-CLUB-NUSSNAME
   if (J.hoernchen) jzbHoernchenMalen(c, J.hoernchen, k); // 2.328.0
   if (J.blaeser) jzbBlaeserMalen(c, J.blaeser, k);
   jzbWinterKinderMalen(c); // 2.282.0
