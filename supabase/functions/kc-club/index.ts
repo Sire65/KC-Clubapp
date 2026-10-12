@@ -455,6 +455,23 @@ async function zuletztDaMap(ich: Ich, ids: string[]) {
   }
   return aus;
 }
+// ---------- KC-CLUB-ZWEI-BROWSER (Wunsch Hansi „abfangen, wenn das Programm 2× auf dem gleichen Gerät offen ist – in 2 verschiedenen Browsern“) ----------
+// Jede Browser-Kennung (G-…, je Browser eine) meldet sich mit dem Online-Abgleich. Gab es in den letzten 3 Minuten eine ANDERE Kennung derselben Person
+// im selben Netz (gleiche IP, nur als Prüfsumme) mit demselben System (z. B. „Android 10“), ist es sehr wahrscheinlich dasselbe Gerät in einem zweiten Browser.
+// Gespeichert wird nur Kennung, Browser-Name, System, Netz-Prüfsumme und Zeit – höchstens 6 Einträge je Person.
+const FENSTER_SEK = 180;
+async function fensterAbgleich(ich: Ich, f: any, req: Request) {
+  if (!f || typeof f !== "object" || ich.nurLesen) return null;
+  const i = txt(f.i, 40).replace(/[^A-Za-z0-9-]/g, ""), b = txt(f.b, 30), sy = txt(f.s, 30);
+  if (!i) return null;
+  const netz = (await sha256("kc-netz:" + (req.headers.get("x-forwarded-for") || "").split(",")[0].trim())).slice(0, 16), t = Date.now();
+  const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "fenster").maybeSingle();
+  const alt = (Array.isArray((data?.wert as any)?.liste) ? (data!.wert as any).liste : []).filter((x: any) => x && x.i !== i && t - Number(x.t) < 3600000);
+  const anders = alt.filter((x: any) => x.n === netz && x.s === sy && t - Number(x.t) < FENSTER_SEK * 1000).sort((x: any, y: any) => y.t - x.t)[0];
+  const liste = [{ i, b, s: sy, n: netz, t }, ...alt].slice(0, 6);
+  await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "fenster", wert: { liste }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+  return anders ? { i: anders.i, b: anders.b, vorSek: Math.round((t - Number(anders.t)) / 1000) } : null;
+}
 // ---------- KC-CLUB-FP-UEBERWACHUNG (1.58.0, Wunsch Hansi): Fehlerprotokoll einstufen, leeren, überwachen ----------
 // Eine Regel für die Einstufung (Server liefert sie der App mit): 🔴 schwer – sofort Push an den Admin; 🟡 Hinweis; ⚪ Info.
 // „Script error.“ ohne Einzelheiten (Safari/fremde Skripte) ist nur ein Hinweis; Sicherheitsbericht nur mit Problemen schwer.
@@ -9264,6 +9281,7 @@ Köcheclub-App`,
       // ----- Online & Anklopfen (KC-CLUB-ONLINE) -----
       case "online": {
         if (!ich.nurLesen) await onlineSeitMerken(ich.person_id).catch(() => null); // KC-CLUB-ONLINE-SEIT (2.25.5)
+        const fensterAnders = await fensterAbgleich(ich, p.fenster, req).catch(() => null); // KC-CLUB-ZWEI-BROWSER
         const zeigen = (await onlineZeigenMap([ich.person_id])).get(ich.person_id) !== false;
         const seit = new Date(Date.now() - ANKLOPFEN_SEK * 1000).toISOString();
         const [on, { data: anMich }, { data: vonMir }] = await Promise.all([
@@ -9296,7 +9314,7 @@ Köcheclub-App`,
         const leute = await personen([...on, ...(ss ? [ss.von] : []), ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von), ...(spAn ?? []).map((x: any) => x.von), ...(vf ? [vf.von] : [])]);
         const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
         const liveT = await liveTerminAktiv().catch(() => null); // KC-CLUB-LIVE-TERMIN (2.231.0): auch ohne direkte Leitung bemerken
-        return json({ liveTermin: liveT ? { id: liveT.id, stand: liveT.geaendert_am } : null, zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
+        return json({ fensterAnders, liveTermin: liveT ? { id: liveT.id, stand: liveT.geaendert_am } : null, zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
           klopfAntworten: (anMich ?? []).length ? Object.entries(KLOPF_ANTWORTEN).map(([id, text]) => ({ id, text })) : undefined,
           antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null })),
           anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })),

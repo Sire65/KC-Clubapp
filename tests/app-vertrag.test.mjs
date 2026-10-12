@@ -8985,3 +8985,11 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 {
   assert.ok(/async function vfHolen\(sofort\) \{\n  if \(VF\.rolle !== "schaut"\) return;\n  if \(document\.hidden && sofort !== true\) return;/.test(html), "Vorführung: kein Abfragen im Hintergrund");
 }
+
+// KC-CLUB-ZWEI-FENSTER + KC-CLUB-ZWEI-BROWSER (Wunsch Hansi)
+{
+  const srv = lies("supabase/functions/kc-club/index.ts");
+  assert.ok(/new BroadcastChannel\("kc_club_fenster"\)/.test(html) && /function zweiFensterMelden\(\)/.test(html) && /function fensterSchlafen\(selbst\)/.test(html) && /fensterStart\(\); \/\/ KC-CLUB-ZWEI-FENSTER/.test(html), "gleicher Browser: Funkkanal, Meldung, anderes Fenster schläft");
+  assert.ok(/await api\("online", \{ fenster: fensterKennung\(\) \}\)/.test(html) && /if \(r\.fensterAnders\) zweiBrowserMelden\(r\.fensterAnders\)/.test(html) && /data-w="anderes">📲 Das ist ein anderes Gerät/.test(html), "anderer Browser: Meldung mit „anderes Gerät“");
+  assert.ok(/async function fensterAbgleich\(ich: Ich, f: any, req: Request\)/.test(srv) && /x\.n === netz && x\.s === sy && t - Number\(x\.t\) < FENSTER_SEK \* 1000/.test(srv) && /return json\(\{ fensterAnders, /.test(srv), "Server: gleiche Person, gleiches Netz, gleiches System, andere Kennung");
+}

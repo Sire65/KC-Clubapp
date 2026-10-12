@@ -1,11 +1,20 @@
 {
-  "version": "2.314.1",
+  "version": "2.315.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "📺 Live-Vorführung: Zuschauer-Fenster im Hintergrund (z. B. ein zweiter Browser) fragen nicht mehr ständig beim Server nach – weniger Last, schnellere App"
+    "🪟 Doppelt geöffnet? Ist die Club-App im selben Browser in zwei Fenstern/Tabs offen, kommt eine Meldung: „Hier weitermachen“ legt das andere Fenster schlafen, oder dieses schließen",
+    "📱 Zwei Browser auf demselben Gerät (z. B. Chrome und Firefox): die App merkt es und bittet, den anderen Browser zu schließen – „Das ist ein anderes Gerät“ schaltet die Meldung dafür ab"
   ],
   "verlauf": [
+    {
+      "version": "2.315.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🪟 Doppelt geöffnet? Ist die Club-App im selben Browser in zwei Fenstern/Tabs offen, kommt eine Meldung: „Hier weitermachen“ legt das andere Fenster schlafen, oder dieses schließen",
+        "📱 Zwei Browser auf demselben Gerät (z. B. Chrome und Firefox): die App merkt es und bittet, den anderen Browser zu schließen – „Das ist ein anderes Gerät“ schaltet die Meldung dafür ab"
+      ]
+    },
     {
       "version": "2.314.1",
       "datum": "2026-10-12",

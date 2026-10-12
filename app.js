@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.314.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.315.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5275,10 +5275,55 @@ function tippSchalter(an) { tippSpeichern({ an, ...(an ? { zuletzt: null } : {})
 // Die App meldet sich alle 60 s beim Server (nur wenn sichtbar). Online = in den letzten 2½ Minuten da gewesen.
 let PUSH_AKTIV = false; // KC-CLUB-ANRUF-TAKT (0.80.0): dieses Gerät bekommt Push → Online-Takt darf langsamer sein
 let ONL = { zeigen: true, ids: new Set(), liste: [], erledigt: new Set(), wartet: null, timer: null, takt: 0 };
+// ---------- KC-CLUB-ZWEI-FENSTER + KC-CLUB-ZWEI-BROWSER (Wunsch Hansi „abfangen, wenn das Programm 2× auf dem gleichen Gerät geöffnet ist – im gleichen
+// Browser und in 2 verschiedenen; dann Meldung: das andere Fenster bzw. den anderen Browser schließen“) ----------
+// 1) Gleicher Browser, mehrere Fenster/Tabs: Funkkanal zwischen den Fenstern (BroadcastChannel, bleibt im Gerät). Das neue Fenster fragt „wer ist da?“;
+//    antwortet eines, kommt die Meldung. „Hier weitermachen“ legt das andere schlafen (es fragt nichts mehr beim Server ab), „Dieses Fenster schließen“ schließt.
+// 2) Anderer Browser auf demselben Gerät: kann kein Fenster sehen – der Server erkennt es am Online-Abgleich (gleiche Person, gleiches Netz, gleiches System,
+//    andere Browser-Kennung in den letzten 3 Min.). Ist es doch ein anderes Gerät (z. B. Tablet im selben WLAN): „Das ist ein anderes Gerät“ → nie wieder dafür.
+const fensterKennung = () => ({ i: window.KCFP?.geraet?.() || "", b: fpBrowser(), s: fpSystem() });
+const FENSTER = { id: Math.random().toString(36).slice(2, 10), kanal: null, schlaeft: false, gefragt: false };
+function fensterStart() {
+  if (!("BroadcastChannel" in window)) return;
+  try { FENSTER.kanal = new BroadcastChannel("kc_club_fenster"); } catch (e) { return; }
+  FENSTER.kanal.onmessage = (e) => { const m = e.data || {}; if (!m.typ || m.von === FENSTER.id) return;
+    if (m.typ === "hallo" && !FENSTER.schlaeft) FENSTER.kanal.postMessage({ typ: "da", von: FENSTER.id, an: m.von });
+    else if (m.typ === "da" && m.an === FENSTER.id && !FENSTER.gefragt) { FENSTER.gefragt = true; zweiFensterMelden(); }
+    else if (m.typ === "weg" && m.an !== FENSTER.id) fensterSchlafen(); };
+  FENSTER.kanal.postMessage({ typ: "hallo", von: FENSTER.id });
+}
+function zweiFensterMelden() {
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">🪟 Die Club-App ist schon offen</h3><p class="dlg-text">Die Club-App ist in diesem Browser noch in einem <b>anderen Fenster oder Tab</b> offen. Zwei Fenster gleichzeitig machen die App langsamer und können bei Nachrichten durcheinanderbringen.</p>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="hier">✅ Hier weitermachen</button><button class="knopf" data-w="zu">✖ Dieses Fenster schließen</button></div>`, () => {});
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove();
+    if (b.dataset.w === "hier") { FENSTER.kanal?.postMessage({ typ: "weg", von: FENSTER.id }); melde("👍 Das andere Fenster macht jetzt Pause – du kannst es schließen."); }
+    else { try { window.close(); } catch (e) { /* manche Browser erlauben das nicht */ } setTimeout(() => fensterSchlafen(true), 300); } }));
+}
+function fensterSchlafen(selbst) { // dieses Fenster legt sich schlafen: alle Abfragen aus, nur noch ein Hinweis mit „Hier weitermachen“
+  if (FENSTER.schlaeft) return; FENSTER.schlaeft = true;
+  try { esStop(); bwStopp?.(); } catch (e) { /* nichts offen */ }
+  const hoechste = setTimeout(() => {}, 0); for (let i = 1; i <= hoechste; i++) { clearTimeout(i); clearInterval(i); } // alle Takte (Chat, Online, Vorführung …) anhalten
+  try { FENSTER.kanal?.close(); } catch (e) { /* schon zu */ }
+  document.body.innerHTML = `<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;font:18px/1.45 system-ui,sans-serif;background:#f5eee3;color:#2b1d22">
+    <div style="font-size:3rem">🪟</div><h2 style="margin:0;color:#741521">${selbst ? "Bitte dieses Fenster schließen" : "Die Club-App ist jetzt in einem anderen Fenster offen"}</h2>
+    <p style="margin:0;max-width:30ch">${selbst ? "Dein Browser lässt sich von der App nicht selbst schließen – bitte oben das ✕ am Tab antippen." : "Dieses Fenster macht Pause und fragt nichts mehr ab. Du kannst es einfach schließen."}</p>
+    <button style="font-size:18px;padding:12px 18px;border-radius:12px;border:0;background:#741521;color:#fff" onclick="location.reload()">↻ Hier weitermachen</button></div>`;
+}
+const zweiBrowserGemerkt = () => { try { return JSON.parse(localStorage.getItem("kc_club_zwei_browser") || "{}"); } catch (e) { return {}; } };
+function zweiBrowserMelden(a) {
+  const g = zweiBrowserGemerkt(), w = g[a.i]; if (w === "anderes" || (w && Date.now() < Number(w)) || $("dlgZweiBrowser")) return;
+  const wo = a.b && a.b !== "unbekannt" ? `in <b>${esc(a.b)}</b>` : "in einem anderen Browser", wann = a.vorSek < 60 ? "gerade eben" : `vor ${Math.round(a.vorSek / 60)} Min.`;
+  const merken = (wert) => { try { localStorage.setItem("kc_club_zwei_browser", JSON.stringify({ ...zweiBrowserGemerkt(), [a.i]: wert })); } catch (e) { /* ohne Speicher fragt sie eben nochmal */ } };
+  const f = dlgOeffnen(`<div id="dlgZweiBrowser"></div><h3 class="dlg-kopf">📱 Die Club-App ist noch woanders offen</h3><p class="dlg-text">Die Club-App war ${wann} auf diesem Gerät auch ${wo} offen. Zwei Browser gleichzeitig machen die App langsamer und verbrauchen Akku und Daten.<br><b>Bitte ${a.b && a.b !== "unbekannt" ? esc(a.b) : "den anderen Browser"} schließen</b> und nur hier weitermachen.</p>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="ok">👍 Mach ich</button><button class="knopf" data-w="anderes">📲 Das ist ein anderes Gerät</button></div>`, () => { f.remove(); merken(String(Date.now() + 3600000)); });
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); merken(b.dataset.w === "anderes" ? "anderes" : String(Date.now() + 3600000));
+    if (b.dataset.w === "anderes") melde("👍 Alles klar – dafür frage ich nicht mehr."); }));
+}
 async function onlinePing() {
   if (!KEY || !ICH || document.hidden) return;
   try {
-    const r = await api("online");
+    const r = await api("online", { fenster: fensterKennung() });
+    if (r.fensterAnders) zweiBrowserMelden(r.fensterAnders); // KC-CLUB-ZWEI-BROWSER
     const vorher = [...ONL.ids].sort().join(); // KC-CLUB-ONLINE-EINE-QUELLE (2.24.18)
     ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id)); ONL.stand = Date.now();
     if (vorher !== [...ONL.ids].sort().join() && aktuelleAnsicht === "mitglieder" && MITGLIEDER) { try { mitgliederZeichnen(); } catch {} }
@@ -30300,6 +30345,7 @@ async function fpAdmin(tage) {
     if (!h || h === "#") setTimeout(() => ekHinweisPruefen(), 3000); // KC-CLUB-EINGANG-HINWEIS: viel im Eingangskorb?
     if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
     if (!h || h === "#") setTimeout(() => bwEinladungPruefen(), 15000); // 2.314.0 KC-CLUB-BEWEGUNG-EINLADUNG
+    fensterStart(); // KC-CLUB-ZWEI-FENSTER
     if (!h || h === "#") setTimeout(() => scHinweisPruefen(), 9000); // KC-CLUB-SCHULUNG-HINWEIS (2.23.68): Admin
     if (!h || h === "#") setTimeout(() => smHinweisPruefen(), 7000); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62): offene Schulungs-Einladung? // KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52): neue Terminanfrage?
     if (!h || h === "#") setTimeout(() => twAntwortPruefen(), 6000); // KC-CLUB-TWINKEY-FRAGEN: Antwort „in der Club-App“
