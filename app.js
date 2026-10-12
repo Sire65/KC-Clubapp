@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.297.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.298.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12604,7 +12604,7 @@ function esTafelGrund(g, c) {
   const v = g.createRadialGradient(c.width / 2, c.height / 2, Math.min(c.width, c.height) * .2, c.width / 2, c.height / 2, Math.max(c.width, c.height) * .75);
   v.addColorStop(0, "rgba(255,255,255,.05)"); v.addColorStop(1, "rgba(0,0,0,.28)"); g.fillStyle = v; g.fillRect(0, 0, c.width, c.height); g.restore();
 }
-// 2.297.0 KC-CLUB-FLIPCHART-MUSTER (Wunsch Hansi): ▢ blanko → ▦ kariert → ☰ liniert – ein Knopf schaltet weiter; Linien leicht grau
+// 2.296.0 KC-CLUB-FLIPCHART-MUSTER (Wunsch Hansi): ▢ blanko → ▦ kariert → ☰ liniert – ein Knopf schaltet weiter; Linien leicht grau
 const ES_FLIP_MUSTER = [["blanko", "▢ Blanko"], ["kariert", "▦ Kariert"], ["liniert", "☰ Liniert"]];
 const esFlipMuster = () => { const m = esLies("flipmuster", "blanko"); return ES_FLIP_MUSTER.some(([k]) => k === m) ? m : "blanko"; };
 function esFlipMusterWeiter() {
@@ -12848,7 +12848,7 @@ const bwSchuh = (x, y) => `<g class="bw-schuh"><path d="M${x - 8.5} ${y + 3} Q${
   <rect x="${x - 9.2}" y="${y + 1.6}" width="18.4" height="2.9" rx="1.4" fill="#fff"/><path d="M${x - 6} ${y - 2.6} l2.4 3.8 M${x - 2.6} ${y - 3.4} l2.4 3.8 M${x + .8} ${y - 3.4} l2.4 3.8" stroke="#fff" stroke-width="1.15" stroke-linecap="round"/>
   <circle cx="${x}" cy="${y - 3.3}" r=".7" fill="#fff"/></g>`;
 // Twinkey als Gliederpuppe: Schulter → Ellbogen → Hand, Hüfte → Knie → Fuß (je Gelenk eine Gruppe mit eigenem Drehpunkt)
-// 2.297.0 KC-CLUB-BUEHNE-80ER (Wunsch Hansi): Kleidung im Stil der 80er – Neon-Kochjacke, bunte Stulpen, Schweißbänder; bei jeder Übung andere Farben
+// 2.296.0 KC-CLUB-BUEHNE-80ER (Wunsch Hansi): Kleidung im Stil der 80er – Neon-Kochjacke, bunte Stulpen, Schweißbänder; bei jeder Übung andere Farben
 const BW_FARBEN = [["#ff4fa3", "#2ee6d6", "#ffe14d"], ["#2ee6d6", "#ff4fa3", "#7c4dff"], ["#7c4dff", "#ffe14d", "#ff4fa3"], ["#ffe14d", "#7c4dff", "#2ee6d6"],
   ["#ff8a00", "#00c2ff", "#ff4fa3"], ["#39d353", "#ff4fa3", "#ffe14d"], ["#00c2ff", "#ff8a00", "#39d353"], ["#ff4fa3", "#ffe14d", "#00c2ff"]]; // [Jacke, Stulpen, Bänder]
 function bwFigur(a, sitz, p, ding, b, ph, farbe) {
@@ -12914,7 +12914,7 @@ async function bwLos() {
   BWM.stufe = 1; bwLaufZeigen(true); bwSag(`Vorhang auf! Schön, dass du da bist! Wir starten mit: ${plan[0].t}. ${plan[0].h}`, false, `Vorhang auf! Wir starten mit: ${plan[0].t}`);
   clearInterval(BW.takt); BW.takt = setInterval(bwTick, 1000);
 }
-// 2.297.0 (Wunsch Hansi „beim Abzählen wird der Text vom Erklären abgeschnitten“): Ansagen schneiden sich nicht mehr gegenseitig ab.
+// 2.296.0 (Wunsch Hansi „beim Abzählen wird der Text vom Erklären abgeschnitten“): Ansagen schneiden sich nicht mehr gegenseitig ab.
 // sofort = darf Laufendes unterbrechen (nur „noch 3/2/1“ und „ausschütteln“); „nebenbei“ = nur sprechen, wenn gerade niemand spricht.
 const bwSpricht = () => { try { return !!(speechSynthesis.speaking || speechSynthesis.pending); } catch (e) { return false; } };
 function bwSag(t, sofort, blase, nebenbei) { // blase: kürzerer Text für die Sprechblase (sonst der gesprochene)
@@ -12971,7 +12971,7 @@ function bwLaufZeigen(vorhangAuf) {
     <div class="bw-balken-bahn"><div class="bw-balken" id="bwBalken"></div></div>
     <div class="bw-sprech" id="bwSprech" aria-live="polite">${esc(alt)}</div>
     <div class="bw-mitte">${bwFigur(anim, sitz, L.phase === "schuetteln" ? "" : u.p, L.phase === "schuetteln" ? "" : u.ding, bwSchlag(), bwPhase(), L.farbe + L.i)}</div>
-    <div class="bw-tipp">${esc(L.phase === "schuetteln" ? "Gut gemacht! 👏" : u.h)}</div>
+    <div class="bw-tipp">${esc(L.phase === "schuetteln" ? "Gut gemacht! 👏" : u.h)}</div>${bwLautRegler()}
     <div class="es-leiste"><button type="button" class="es-k es-haupt" onclick="bwPause()">${L.pause ? "▶︎ Weiter" : "⏸ Pause"}</button><button type="button" class="es-k" onclick="bwWeiter()" aria-label="Übung überspringen">⏭</button>
       <button type="button" class="es-k${L.musik ? " an" : ""}" onclick="bwMusikSchalten()" aria-label="Musik an oder aus">${L.musik ? "🎵" : "🔇"}</button><button type="button" class="es-k${L.ansage ? " an" : ""}" onclick="bwAnsageSchalten()" aria-label="Ansage an oder aus">${L.ansage ? "🔊" : "🔈"}</button>
       <button type="button" class="es-k" onclick="bwStopp(true)">✖ Ende</button></div></div>`;
@@ -12996,10 +12996,34 @@ function bwFertig() {
     <div class="bw-wahl"><div class="bw-titel">🏅 Geschafft – Applaus für dich!</div><div class="bw-tipp" style="position:static">${n} Übungen · ${Math.floor(sek / 60)} Min. ${sek % 60} s Bewegung</div>
       <button type="button" class="es-k es-haupt bw-los" onclick="esBuehneZeigen($('hrFlaeche'))">🔁 Nochmal</button></div></div>`;
 }
+// ----- 2.298.0 KC-CLUB-BUEHNE-LAUTSTAERKE (Wunsch Hansi): Regler rechts für die Musik – Keil unten dünn, nach oben (lauter) dicker -----
+const BW_LAUT_STANDARD = .8;
+const bwLautWert = () => { const v = typeof BW.laut === "number" ? BW.laut : Number(bwWahl().laut); return v >= 0 && v <= 1 ? v : BW_LAUT_STANDARD; };
+const bwLautGain = (v) => v <= .02 ? 0 : .15 * Math.pow(30, v); // 0 % stumm · 50 % ≈ 0,8 · 80 % ≈ 2,3 · 100 % = 4,5
+function bwLautKeil(p) { const h = 2 + 13 * p / 100; return `${15 - 2},100 ${15 + 2},100 ${(15 + h).toFixed(1)},${100 - p} ${(15 - h).toFixed(1)},${100 - p}`; }
+function bwLautRegler() {
+  const p = Math.round(bwLautWert() * 100);
+  return `<div class="bw-laut" id="bwLaut" role="slider" tabindex="0" aria-label="Lautstärke der Musik" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p}" onpointerdown="bwLautGriff(event)" onkeydown="bwLautTaste(event)">
+    <span class="bw-laut-sym oben" aria-hidden="true">🔊</span><div class="bw-laut-feld"><svg viewBox="0 0 30 100" preserveAspectRatio="none" aria-hidden="true"><polygon points="13,100 17,100 30,0 0,0" class="bw-laut-bahn"/><polygon id="bwLautFuell" points="${bwLautKeil(p)}" class="bw-laut-fuell"/></svg><i class="bw-laut-knopf" id="bwLautKnopf" style="bottom:${p}%"></i></div><span class="bw-laut-sym" aria-hidden="true">🎵</span></div>`;
+}
+function bwLautSetzen(v, merken) {
+  v = Math.min(1, Math.max(0, v)); BW.laut = v; const p = Math.round(v * 100);
+  $("bwLautFuell")?.setAttribute("points", bwLautKeil(p)); const k = $("bwLautKnopf"); if (k) k.style.bottom = `${p}%`; $("bwLaut")?.setAttribute("aria-valuenow", p);
+  try { BWM.voll?.gain.setTargetAtTime(bwLautGain(v), BWM.ctx.currentTime, .05); } catch (e) { /* ohne Ton */ }
+  if (merken) bwWahlSetzen({ laut: Math.round(v * 100) / 100 }, true);
+}
+function bwLautGriff(e) {
+  const el = e.currentTarget, feld = el.querySelector(".bw-laut-feld"); e.preventDefault(); e.stopPropagation();
+  try { el.setPointerCapture(e.pointerId); } catch (x) { /* ohne Fangen */ }
+  const setz = (ev) => { const r = feld.getBoundingClientRect(); bwLautSetzen(1 - (ev.clientY - r.top) / r.height); };
+  setz(e); el.onpointermove = (ev) => { ev.stopPropagation(); setz(ev); };
+  el.onpointerup = el.onpointercancel = () => { el.onpointermove = null; el.onpointerup = el.onpointercancel = null; bwLautSetzen(bwLautWert(), true); };
+}
+function bwLautTaste(e) { const d = e.key === "ArrowUp" || e.key === "ArrowRight" ? .05 : e.key === "ArrowDown" || e.key === "ArrowLeft" ? -.05 : 0; if (!d) return; e.preventDefault(); bwLautSetzen(bwLautWert() + d, true); }
 // ----- Musik: im Handy erzeugt (Web Audio) – Pop/Disco-Arrangement, leiser, solange Twinkey spricht -----
 // Stufe 1 (Vorbereiten/Ausschütteln): Bass-Trommel, Hi-Hats, Disco-Bass, Flächen. Stufe 2 (Übung): + Klatschen, Akkord-Stöße, Hook-Melodie mit Echo.
 // Alle 8 Takte ein Trommelwirbel; vor dem Start ein Riser, auf „Los!“ ein Becken.
-const BWM = { ctx: null, aus: null, hall: null, laeuft: false, zeit: 0, schritt: 0, timer: 0, rauschen: null, start: 0, stufe: 1, riser: false, becken: false };
+const BWM = { ctx: null, aus: null, voll: null, hall: null, laeuft: false, zeit: 0, schritt: 0, timer: 0, rauschen: null, start: 0, stufe: 1, riser: false, becken: false };
 const BWM_AKKORDE = [[57, 60, 64], [53, 57, 60], [55, 60, 64], [55, 59, 62]]; // Am – F – C – G
 const BWM_BASS = [45, 41, 48, 43];
 const BWM_HOOK = { 0: 76, 3: 74, 6: 72, 8: 69, 10: 72, 12: 74, 16: 79, 19: 76, 22: 74, 24: 72, 26: 74, 28: 76, 30: 72 }; // 2 Takte, A-Moll-Pentatonik
@@ -13010,9 +13034,11 @@ function bwMusik(an) {
   try {
     const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
     if (!BWM.ctx) {
-      // 2.297.0 (Wunsch Hansi „Musik lauter, beim Sprechen absenken“): lauter, mit Kompressor (kein Übersteuern); beim Sprechen deutlich leiser
+      // 2.296.0 (Wunsch Hansi „Musik lauter, beim Sprechen absenken“): lauter, mit Kompressor (kein Übersteuern); beim Sprechen deutlich leiser
       BWM.ctx = new C(); BWM.aus = BWM.ctx.createGain(); const komp = BWM.ctx.createDynamicsCompressor(); komp.threshold.value = -16; komp.ratio.value = 6; komp.attack.value = .01; komp.release.value = .2;
-      BWM.aus.connect(komp); komp.connect(BWM.ctx.destination);
+      // 2.298.0 (Wunsch Hansi „Musik immer noch zu leise“): hinter dem Kompressor die Lautstärke vom Regler (bis gut 4-fach), davor ein Begrenzer gegen Übersteuern
+      BWM.voll = BWM.ctx.createGain(); BWM.voll.gain.value = bwLautGain(bwLautWert()); const grenze = BWM.ctx.createDynamicsCompressor(); grenze.threshold.value = -2; grenze.knee.value = 0; grenze.ratio.value = 20; grenze.attack.value = .002; grenze.release.value = .1;
+      BWM.aus.connect(komp); komp.connect(BWM.voll); BWM.voll.connect(grenze); grenze.connect(BWM.ctx.destination);
       BWM.hall = BWM.ctx.createDelay(1); BWM.hall.delayTime.value = .375; const fb = BWM.ctx.createGain(); fb.gain.value = .28; const hg = BWM.ctx.createGain(); hg.gain.value = .35;
       BWM.hall.connect(fb); fb.connect(BWM.hall); BWM.hall.connect(hg); hg.connect(BWM.aus);
       const n = BWM.ctx.sampleRate, buf = BWM.ctx.createBuffer(1, n, BWM.ctx.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; BWM.rauschen = buf;

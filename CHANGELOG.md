@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.298.0 – 2026-10-12 – KC-CLUB-BUEHNE-LAUTSTAERKE
+Wunsch Hansi („Musik immer noch zu leise“). Auf der laufenden Bühne rechts ein senkrechter Lautstärkeregler für die Musik: Keil, unten dünn (🎵) und nach oben dicker (🔊), gelb gefüllt bis zum weißen Griff; hochziehen = lauter, runter = leiser, ganz unten stumm; per Pfeiltasten bedienbar; die Einstellung wird gemerkt. Technik: Die Lautstärke sitzt jetzt hinter dem Kompressor (bisher hat der Kompressor die Musik wieder leiser gedrückt) und geht bis gut 4-fach (Standard 80 % ≈ 2,3-fach); ein Begrenzer davor verhindert Übersteuern. Die Absenkung beim Sprechen bleibt.
+
 ## 2.297.0 – 2026-10-12 – KC-CLUB-BUEHNE-KUECHE-2
 Wunsch Hansi. Twinkeys Kochjacke hat jetzt 10 Knöpfe (zwei Reihen à 5). Neue Übungen aus der Küche: im Sitzen „Suppe rühren“ (beide Arme kreisen vor dem Topf), „Treppe aus dem Lager“ (Knie im Wechsel hoch), „Kopf zur Seite“ (abwechselnd links/rechts), „Nacken stärken“ (Hände am Hinterkopf, Kopf drückt dagegen), „Tisch abwischen“, „Pfanne schwenken“ (Pfannkuchen hüpft und dreht sich in der Pfanne); im Stehen „Treppe aus dem Lager“, „Hula-Hoop in der Küche“ (Rumpf kreisen mit Neon-Reifen) und „Suppe rühren“. Ton: Musik lauter (Kompressor -16 dB / 6:1), beim Sprechen nur noch auf etwa ein Drittel abgesenkt; Twinkeys Stimme leiser (70 %).
 

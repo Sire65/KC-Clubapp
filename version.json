@@ -1,13 +1,18 @@
 {
-  "version": "2.297.0",
+  "version": "2.298.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "👨‍🍳 Twinkeys Kochjacke hat jetzt 10 Knöpfe (zwei Reihen à 5)",
-    "🍲 Neue Küchen-Übungen: Suppe rühren (beide Arme kreisen vor dem Topf), Treppe aus dem Lager (Knie hoch), Kopf zur Seite im Wechsel, Nacken stärken, Hula-Hoop in der Küche, Tisch abwischen, Pfanne schwenken mit Pfannkuchen",
-    "🎵 Bühne: Musik lauter, beim Sprechen nur noch leicht abgesenkt · Stimme leiser"
+    "🎚️ Bühne: Lautstärkeregler für die Musik rechts – Keil unten dünn, nach oben dicker; hochziehen = lauter (bis gut 4-mal so laut wie bisher), wird gemerkt"
   ],
   "verlauf": [
+    {
+      "version": "2.298.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🎚️ Bühne: Lautstärkeregler für die Musik rechts – Keil unten dünn, nach oben dicker; hochziehen = lauter (bis gut 4-mal so laut wie bisher), wird gemerkt"
+      ]
+    },
     {
       "version": "2.297.0",
       "datum": "2026-10-12",

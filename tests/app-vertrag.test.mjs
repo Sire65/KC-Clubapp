@@ -8725,3 +8725,15 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/const BWM_LAUT = \.75, BWM_LEISE = \.26;/.test(b), "Musik lauter, beim Sprechen nur leicht abgesenkt");
   assert.ok(!/\|\|=|\?\?=/.test(b), "alte Handys");
 }
+
+// 2.298.0 KC-CLUB-BUEHNE-LAUTSTAERKE (Wunsch Hansi „Musik immer noch zu leise“): Regler rechts auf der Bühne – Keil unten dünn, oben dick;
+// Lautstärke hinter dem Kompressor bis gut 4-fach, Begrenzer gegen Übersteuern; Einstellung wird gemerkt
+{
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  assert.ok(/\$\{bwLautRegler\(\)\}/.test(b) && /role="slider"/.test(b) && /aria-orientation="vertical"/.test(b), "Regler steht auf der laufenden Bühne");
+  assert.ok(/points="13,100 17,100 30,0 0,0"/.test(b), "Keil: unten dünn, oben dick");
+  assert.ok(/komp\.connect\(BWM\.voll\); BWM\.voll\.connect\(grenze\); grenze\.connect\(BWM\.ctx\.destination\);/.test(b) && /grenze\.ratio\.value = 20;/.test(b), "Lautstärke nach dem Kompressor, Begrenzer davor schützt");
+  assert.ok(/const bwLautGain = \(v\) => v <= \.02 \? 0 : \.15 \* Math\.pow\(30, v\);/.test(b) && /bwWahlSetzen\(\{ laut: /.test(b), "bis 4,5-fach, gemerkt");
+  assert.ok(/\.bw-laut \{[^}]*touch-action: none/.test(html), "Ziehen scrollt nicht die Seite");
+  assert.ok(!/\|\|=|\?\?=/.test(b), "alte Handys");
+}
