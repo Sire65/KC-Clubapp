@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.299.2 – 2026-10-12 – KC-CLUB-BUEHNE-BEGRUESSUNG
+Wunsch Hansi. Kurze Anfangsrede beim Start der Bühne: „Hallo! Lass uns ein bisschen Bewegung in den Alltag einbauen. Mach nur so viel, wie dir guttut. Los geht’s!“ – danach „Als Erstes: …“ mit der Erklärung der ersten Übung. Die Begrüßung steht in der Sprechblase; die erste Vorbereitung dauert dafür 6 Sekunden länger.
+
 ## 2.299.1 – 2026-10-12 – KC-CLUB-BUEHNE-STIMME (Spruch)
 Wunsch Hansi. Neuer Spruch mit Augenzwinkern für Twinkey: „Ich bin ja nicht zu dick – ich bin nur zu klein für mein Gewicht!“
 

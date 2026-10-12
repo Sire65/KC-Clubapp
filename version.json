@@ -1,11 +1,18 @@
 {
-  "version": "2.299.1",
+  "version": "2.299.2",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "😄 Neuer Bühnen-Spruch: „Ich bin ja nicht zu dick – ich bin nur zu klein für mein Gewicht!“"
+    "👋 Bühne: Twinkey begrüßt zum Start kurz – „Hallo! Lass uns ein bisschen Bewegung in den Alltag einbauen. Mach nur so viel, wie dir guttut. Los geht’s!“"
   ],
   "verlauf": [
+    {
+      "version": "2.299.2",
+      "datum": "2026-10-12",
+      "neu": [
+        "👋 Bühne: Twinkey begrüßt zum Start kurz – „Hallo! Lass uns ein bisschen Bewegung in den Alltag einbauen. Mach nur so viel, wie dir guttut. Los geht’s!“"
+      ]
+    },
     {
       "version": "2.299.1",
       "datum": "2026-10-12",

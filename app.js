@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.299.1"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.299.2"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12913,12 +12913,15 @@ function esBuehneZeigen(f) {
       <button type="button" class="es-k es-haupt bw-los" ${hinweis ? "disabled" : ""} onclick="bwLos()">▶️ Vorhang auf!</button></div></div>`;
 }
 // ----- Training -----
+const BW_BEGRUESSUNG = "Hallo! Lass uns ein bisschen Bewegung in den Alltag einbauen. Mach nur so viel, wie dir guttut. Los geht’s!";
 async function bwLos() {
   const w = bwWahl(), plan = bwPlan(w.modus, w.dauer);
   BW.lauf = { plan, i: 0, phase: "bereit", rest: BW_BEREIT, pause: false, musik: w.musik, ansage: w.ansage, sek: 0, lob: Math.floor(Math.random() * BW_LOB.length), sprueche: 0, farbe: Math.floor(Math.random() * BW_FARBEN.length), warte: 0, gezaehlt: false };
   try { BW.wach = await navigator.wakeLock?.request("screen"); } catch (e) { BW.wach = null; }
   if (w.musik) bwMusik(true);
-  BWM.stufe = 1; bwLaufZeigen(true); bwSag(`Vorhang auf! Schön, dass du da bist! Wir starten mit: ${plan[0].t}. ${plan[0].h}`, false, `Vorhang auf! Wir starten mit: ${plan[0].t}`);
+  // 2.299.2 (Wunsch Hansi): kurze Begrüßung vorweg – die erste Vorbereitung dauert dafür etwas länger
+  BW.lauf.rest = BW_BEREIT + 6;
+  BWM.stufe = 1; bwLaufZeigen(true); bwSag(`${BW_BEGRUESSUNG} Als Erstes: ${plan[0].t}. ${plan[0].h}`, false, BW_BEGRUESSUNG);
   clearInterval(BW.takt); BW.takt = setInterval(bwTick, 1000);
 }
 // 2.296.0 (Wunsch Hansi „beim Abzählen wird der Text vom Erklären abgeschnitten“): Ansagen schneiden sich nicht mehr gegenseitig ab.

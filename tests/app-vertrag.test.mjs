@@ -8749,3 +8749,10 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/const BW_FRECH = \[[^\]]*Pudding genascht[^\]]*weniger Nudeln[^\]]*auf meinen Hüften/.test(b) && /L\.rest === 21\) bwSag\(BW_FRECH\[/.test(b), "Sprüche mit Augenzwinkern bei jeder Übung");
   assert.ok(!/\|\|=|\?\?=/.test(b), "alte Handys");
 }
+
+// 2.299.2 KC-CLUB-BUEHNE-BEGRUESSUNG (Wunsch Hansi): kurze Anfangsrede
+{
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  assert.ok(/const BW_BEGRUESSUNG = "Hallo! Lass uns ein bisschen Bewegung in den Alltag einbauen\. Mach nur so viel, wie dir guttut\. Los geht’s!";/.test(b), "Begrüßungstext");
+  assert.ok(/bwSag\(`\$\{BW_BEGRUESSUNG\} Als Erstes: /.test(b) && /BW\.lauf\.rest = BW_BEREIT \+ 6;/.test(b), "Begrüßung zum Start, erste Vorbereitung länger");
+}
