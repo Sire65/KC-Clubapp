@@ -1,12 +1,18 @@
 {
-  "version": "2.301.0",
+  "version": "2.302.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🐌 Die Schnecke kommt nur noch bei wirklich langsamem Netz",
-    "⚡ Start für Admins etwas schneller"
+    "🎶 Bühne: „Nur Musik hören“ – Twinkey tanzt zu 7 Stücken, auch Reggae"
   ],
   "verlauf": [
+    {
+      "version": "2.302.0",
+      "datum": "2026-10-12",
+      "neu": [
+        "🎶 Bühne: „Nur Musik hören“ – Twinkey tanzt zu 7 Stücken, auch Reggae"
+      ]
+    },
     {
       "version": "2.301.0",
       "datum": "2026-10-12",

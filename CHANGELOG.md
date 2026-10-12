@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.302.0 – 2026-10-12 – KC-CLUB-BUEHNE-MUSIK: Nur Musik hören auf der Bühne, 7 Stücke
+Auf der Bühne neuer Knopf „🎶 Nur Musik hören“: Twinkey tanzt, es läuft nur Musik – ohne Übungen und Ansage. Sieben Stücke (Küchen-Disco, Reggae am Kochtopf, Sonnenschein-Reggae, Funky Schneebesen, Samba in der Pfanne, Abendrot-Ballade, Biergarten-Polka), je ca. 2½ Min., dann das nächste; antippen wählt, ⏮ ⏭ ⏸, Lautstärke-Regler. Im Handy erzeugt, kein Internet.
+
 ## 2.301.0 – 2026-10-12 – KC-CLUB-SCHNECKE-NETZ: Schnecke nur bei langsamem Netz, Admin-Start schneller
 Die Schnecke zeigte sich auch bei gutem Netz, weil die Rechenzeit des Servers beim Start (beim Admin bis 2,3 s) mitgezählt wurde. Jetzt zählt nur die Zeit im Netz. Außerdem rechnet der Server beim Admin-Start die Schulungszahl gleichzeitig statt danach (spart 0,2–0,8 s).
 

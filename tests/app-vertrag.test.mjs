@@ -5894,6 +5894,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const SERVER_VERSION = "2\.301\.0"/.test(server), "Serverversion erhöht");
 }
 
+// 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
+{
+  const ids = [...html.matchAll(/\{ id: "(\w+)", t: "[^"]+", stil: "(\w+)", sym: "[^"]+", bpm: (\d+), tanz: \[/g)].map((m) => [m[1], m[2], +m[3]]);
+  assert.deepEqual(ids.map((x) => x[0]), ["disco", "reggae1", "reggae2", "funk", "samba", "ballade", "polka"], "sieben Stücke");
+  assert.ok(ids.filter((x) => x[1] === "Reggae").length === 2 && ids.every((x) => x[2] >= 60 && x[2] <= 130), "zwei Reggae-Stücke, Tempo im Rahmen");
+  assert.ok(/onclick="bwHoeren\(\)">🎶 Nur Musik hören<\/button>/.test(html), "Knopf auf der Bühne");
+  assert.ok(/if \(BWM\.stueck\?\.spiel\) BWM\.stueck\.spiel\(BWM\.gesamt, BWM\.zeit\); else bwMusikSchritt\(BWM\.schritt, BWM\.zeit\);/.test(html), "Trainingsmusik unverändert, Stücke über eigene Spielfunktion");
+  assert.ok(/if \(BW\.hoeren\) bwStopp\(false\); BWM\.stueck = null; \/\/ 2\.302\.0: Training immer mit der Trainingsmusik/.test(html), "Training immer mit Trainingsmusik");
+  assert.ok(/BW\.lauf = null; BW\.hoeren = null; BWM\.stueck = null;/.test(html) && /if \(BW\.lauf \|\| BW\.hoeren \|\| BWM\.laeuft\) bwStopp\(\); \}/.test(html), "Ende/Ansicht verlassen stoppt auch die Musik");
+  assert.ok(/if \(!esSichtbar\(\)\) \{ if \(!H\.pause\) \{ H\.pause = true; bwMusik\(false\);/.test(html), "nicht zu sehen → Pause");
+  assert.ok(/if \(takt >= ges\) \{ bwmStueck\(H\.i \+ 1\);/.test(html) && /const bwmTakte = \(s\) => Math\.max\(32,/.test(html), "nach ca. 2½ Min. das nächste Stück");
+  assert.ok(/\{ id: "es_musik", thema: "toene", sym: "🎶"/.test(html), "Hilfe-Eintrag");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -8674,7 +8688,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   for (const g of ["sitzen", "stehen", "kueche"]) assert.ok(new RegExp(`g: "${g}"`).test(b), "Übungen " + g);
   for (const h of ["schneebesen", "loeffel", "nudelholz", "flasche", "deckel", "tuch"]) assert.ok(new RegExp(`\\b${h}: \\(x, y\\) =>`).test(b), "Küchenhelfer " + h);
   assert.ok(/L\.rest === 3 \? "Noch 3" : L\.rest === 2 \? "noch 2" : "noch 1"/.test(b) && /"Und jetzt ausschütteln!"/.test(b) && /bwSag\(u\.w \|\| (u\.c\?\.\[1\] \|\| )?(BW_LOB|bwNimm\(BW_LOB)/.test(b), "Trainer-Ansagen: Seitenwechsel/Lob, noch 3-2-1, ausschütteln");
-  assert.ok(/if \(!esSichtbar\(\)\) \{ if \(!L\.pause\) \{ L\.pause = true; bwMusik\(false\);/.test(b) && /if \(BW\.lauf \|\| BWM\.laeuft\) bwStopp\(\);/.test(html), "nur sichtbar – sonst Pause; Umdrehen/Reiterwechsel stoppt Musik und Ansage");
+  assert.ok(/if \(!esSichtbar\(\)\) \{ if \(!L\.pause\) \{ L\.pause = true; bwMusik\(false\);/.test(b) && /if \(BW\.lauf (\|\| BW\.hoeren )?\|\| BWM\.laeuft\) bwStopp\(\);/.test(html), "nur sichtbar – sonst Pause; Umdrehen/Reiterwechsel stoppt Musik und Ansage");
   assert.ok(/window\.AudioContext \|\| window\.webkitAudioContext/.test(b) && !/new Audio\(|\.mp3|https?:\/\//.test(b), "Musik im Handy erzeugt – keine Datei, kein Internet");
   assert.ok(!/\bapi\(/.test(b), "nichts wird gespeichert oder gesendet");
   assert.ok(/fiLs\(FI_HINWEIS_KEY, false\)/.test(b), "Gesundheitshinweis wie bei Fit bleiben");

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.301.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.302.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -3270,6 +3270,7 @@ const HILFE = [
   { id: "es_tafel", thema: "start", sym: "🖍️", t: "Rückseite: Tafel & Flipchart", x: "Zum Skizzieren mit dem Finger. <b>🖍️ Tafel</b>: Kreide in sieben Farben, drei Dicken, 🧽 Schwamm, 🧹 alles abwischen, ↶ letzten Strich zurück. <b>📋 Flipchart</b>: Marker, Radierer, <b>„⤴ Umblättern“</b> klappt das volle Blatt nach hinten, ⤵ holt das vorige zurück, ✂️ reißt ein Blatt ab; ein Knopf schaltet das Papier <b>blanko → kariert → liniert</b>. Mit <b>„📤 Sichern“</b> kommt die Skizze ins 🗄️ Archiv oder als Nachricht zu jemandem.", zeig: () => esOeffnen("flip"), seit: "2.300.0" },
   { id: "es_uhr", thema: "start", sym: "🕰️", t: "Rückseite: große Uhr", x: "Die <b>🕰️ große Uhr</b> gibt es in vier Stilen: <b>🟩 Digital</b> (grün), <b>🔢 Fallblatt</b> mit Datum, <b>🚉 Bahnhofsuhr</b> und <b>🔠 Groß &amp; klar</b>. Den Stil unten antippen – die App merkt ihn sich.", zeig: () => esOeffnen("uhr"), seit: "2.300.0" },
   { id: "es_buehne", thema: "start", sym: "🎭", t: "Rückseite: Bühne für Bewegung", x: "Auf der <b>🎭 Bühne</b> macht Twinkey Übungen vor – mit Musik und Ansagen wie beim Fitnesstrainer. Wähle <b>im Sitzen</b>, <b>im Stehen</b> oder <b>mit Küchenhelfern</b> (Schneebesen, Kochlöffel, Topf, Pfanne …), die Dauer, Musik und Ansage – dann <b>„▶️ Vorhang auf!“</b>. Twinkey begrüßt dich, zählt ein, feuert an und sagt „noch 3, 2, 1 – und ausschütteln“. Unten: ⏸ Pause, ⏭ nächste Übung, 🎵 Musik, 🔊 Ansage, ✖ Ende. <b>Mach nur so viel, wie dir guttut</b> – bei Schmerzen, Schwindel oder Atemnot sofort aufhören.", zeig: () => esOeffnen("buehne"), seit: "2.300.0" },
+  { id: "es_musik", thema: "toene", sym: "🎶", t: "Bühne: nur Musik hören", x: "Nur zuhören statt turnen: Auf der <b>🎭 Bühne</b> (Kopf umdrehen über das Eselsohr) gibt es neben „Vorhang auf!“ den Knopf <b>„🎶 Nur Musik hören“</b>. Dann tanzt Twinkey nur und es läuft Musik – ohne Übungen und ohne Ansage. Sieben Stücke: <b>Küchen-Disco</b>, zwei <b>Reggae</b>-Stücke, <b>Funk</b>, <b>Samba</b>, eine ruhige <b>Ballade</b> und eine <b>Biergarten-Polka</b>. Jedes läuft etwa 2½ Minuten, dann kommt das nächste. Ein Stück antippen spielt es sofort; ⏮ ⏭ blättern, ⏸ hält an. Rechts der Regler für die Lautstärke. Die Musik entsteht im Handy – kein Internet nötig.", zeig: () => esOeffnen("buehne"), seit: "2.302.0" },
   { id: "es_regler", thema: "toene", sym: "🎚️", t: "Bühne: Musik und Stimme lauter oder leiser", x: "Während Twinkey turnt, stehen zwei Regler am Rand: <b>rechts die Musik</b> 🎵, <b>links Twinkeys Stimme</b> 🗣️. Nach oben ziehen = lauter (der Keil wird dicker), nach unten = leiser. <b>Unten aufs Symbol tippen</b> macht sofort stumm (🔇 bzw. 🤐) – nochmal tippen holt die vorige Lautstärke zurück. Die App merkt sich beides. Ist alles zu leise, auch die Lautstärke am Handy prüfen.", zeig: () => esOeffnen("buehne"), seit: "2.300.0" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🎨 Darstellung“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("darstellung", "kachelGroesseWahl"), seit: "2.23.90" },
   // 2.110.0 (Wunsch Hansi „Hilfetexte und Handbuch anpassen“): Hilfen zu den Neuerungen seit Anleitung V8 (2.96.0)
@@ -12561,7 +12562,7 @@ function esHoehe(scrollen) {
   r.style.height = Math.max(360, Math.round(innerHeight - Math.max(6, r.getBoundingClientRect().top) - fh - 10)) + "px";
 }
 addEventListener("resize", () => { if (ES.offen) esHoehe(false); });
-function esStop() { clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (BW.lauf || BWM.laeuft) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
+function esStop() { clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (BW.lauf || BW.hoeren || BWM.laeuft) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
 function esTab(k) {
   if (!ES_TABS.some(([x]) => x === k)) k = "uhr";
   esSchreib("tab", k); esStop();
@@ -12972,13 +12973,14 @@ function bwPlan(modus, dauer) {
 }
 const bwSchlag = () => 60 / (BW_TEMPO[bwWahl().modus] || 116);
 function bwPhase() { // Bewegung startet auf dem Schlag der Musik: Versatz innerhalb von 8 Schlägen
-  const b = bwSchlag(); if (!BWM.ctx || !BWM.laeuft) return 0;
+  const b = bwmSchlag(); if (!BWM.ctx || !BWM.laeuft) return 0;
   const seit = BWM.ctx.currentTime - BWM.start; return -(((seit % (8 * b)) + 8 * b) % (8 * b));
 }
 // ----- Bühne zeigen (Auswahl) -----
 function esBuehneZeigen(f) {
   if (!f) return;
   if (BW.lauf) return bwLaufZeigen();
+  if (BW.hoeren) return bwHoerZeigen(); // 2.302.0
   const w = bwWahl(), hinweis = !fiLs(FI_HINWEIS_KEY, false), vorne = { sitzen: [1, ""], stehen: [0, ""], kueche: [1, "schneebesen"] }[w.modus];
   f.innerHTML = `<div class="bw-buehne"><div class="bw-licht"></div><div class="bw-vorhang links halb"></div><div class="bw-vorhang rechts halb"></div><div class="bw-boden"></div>
     <div class="bw-mitte">${bwFigur("winken", vorne[0], vorne[1], 0, bwSchlag())}</div>
@@ -12989,12 +12991,13 @@ function esBuehneZeigen(f) {
       <div class="bw-reihe">${BW_DAUER.map((d) => `<button type="button" class="es-k${w.dauer === d ? " an" : ""}" onclick="bwWahlSetzen({dauer:${d}})">${d} Min.</button>`).join("")}
         <button type="button" class="es-k${w.musik ? " an" : ""}" onclick="bwWahlSetzen({musik:${!w.musik}})" aria-label="Musik ${w.musik ? "aus" : "an"}">${w.musik ? "🎵 Musik" : "🔇 Musik"}</button>
         <button type="button" class="es-k${w.ansage ? " an" : ""}" onclick="bwWahlSetzen({ansage:${!w.ansage}})" aria-label="Ansage ${w.ansage ? "aus" : "an"}">${w.ansage ? "🔊 Ansage" : "🔈 Ansage"}</button></div>
-      <button type="button" class="es-k es-haupt bw-los" ${hinweis ? "disabled" : ""} onclick="bwLos()">▶️ Vorhang auf!</button></div></div>`;
+      <div class="bw-reihe"><button type="button" class="es-k es-haupt bw-los" ${hinweis ? "disabled" : ""} onclick="bwLos()">▶️ Vorhang auf!</button><button type="button" class="es-k bw-hoeren-los" onclick="bwHoeren()">🎶 Nur Musik hören</button></div></div></div>`; // 2.302.0 KC-CLUB-BUEHNE-MUSIK
 }
 // ----- Training -----
 const BW_BEGRUESSUNG = "Hallo! Lass uns ein bisschen Bewegung in den Alltag einbauen. Mach nur so viel, wie dir guttut. Los geht’s!";
 async function bwLos() {
   const w = bwWahl(), plan = bwPlan(w.modus, w.dauer);
+  if (BW.hoeren) bwStopp(false); BWM.stueck = null; // 2.302.0: Training immer mit der Trainingsmusik
   BW.lauf = { plan, i: 0, phase: "bereit", rest: BW_BEREIT, pause: false, musik: w.musik, ansage: w.ansage, sek: 0, lob: Math.floor(Math.random() * BW_LOB.length), sprueche: 0, farbe: Math.floor(Math.random() * BW_FARBEN.length), warte: 0, gezaehlt: false };
   try { BW.wach = await navigator.wakeLock?.request("screen"); } catch (e) { BW.wach = null; }
   if (w.musik) bwMusik(true);
@@ -13082,7 +13085,7 @@ function bwAnsageSchalten() { const L = BW.lauf; if (!L) return; L.ansage = !L.a
 function bwStopp(zeigen) {
   clearInterval(BW.takt); BW.takt = 0; bwMusik(false); try { BW.wach?.release(); } catch (e) { /* ohne Wachhalten */ } BW.wach = null;
   if (BW.lauf) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } }
-  BW.lauf = null; BW.blase = ""; if (zeigen && $("hrFlaeche")?.classList.contains("hr-buehne")) esBuehneZeigen($("hrFlaeche"));
+  BW.lauf = null; BW.hoeren = null; BWM.stueck = null; BW.blase = ""; if (zeigen && $("hrFlaeche")?.classList.contains("hr-buehne")) esBuehneZeigen($("hrFlaeche")); // 2.302.0: auch „Nur Musik“
 }
 function bwFertig() {
   const L = BW.lauf; if (!L) return; const sek = L.sek, n = L.plan.length; bwStopp(false);
@@ -13130,7 +13133,7 @@ function bwLautTaste(e, art = "musik") { const d = e.key === "ArrowUp" || e.key 
 // ----- Musik: im Handy erzeugt (Web Audio) – Pop/Disco-Arrangement, leiser, solange Twinkey spricht -----
 // Stufe 1 (Vorbereiten/Ausschütteln): Bass-Trommel, Hi-Hats, Disco-Bass, Flächen. Stufe 2 (Übung): + Klatschen, Akkord-Stöße, Hook-Melodie mit Echo.
 // Alle 8 Takte ein Trommelwirbel; vor dem Start ein Riser, auf „Los!“ ein Becken.
-const BWM = { ctx: null, aus: null, voll: null, hall: null, laeuft: false, zeit: 0, schritt: 0, timer: 0, rauschen: null, start: 0, stufe: 1, riser: false, becken: false };
+const BWM = { ctx: null, aus: null, voll: null, hall: null, laeuft: false, zeit: 0, schritt: 0, timer: 0, rauschen: null, start: 0, stufe: 1, riser: false, becken: false, stueck: null, gesamt: 0 }; // 2.302.0: stueck = gewähltes Stück („Nur Musik“), null = Trainingsmusik
 const BWM_AKKORDE = [[57, 60, 64], [53, 57, 60], [55, 60, 64], [55, 59, 62]]; // Am – F – C – G
 const BWM_BASS = [45, 41, 48, 43];
 const BWM_HOOK = { 0: 76, 3: 74, 6: 72, 8: 69, 10: 72, 12: 74, 16: 79, 19: 76, 22: 74, 24: 72, 26: 74, 28: 76, 30: 72 }; // 2 Takte, A-Moll-Pentatonik
@@ -13158,10 +13161,10 @@ function bwMusik(an) {
 function bwMusikPlanen() {
   const c = BWM.ctx; if (!c || !BWM.laeuft) return;
   try { const spricht = bwSpricht(); BWM.aus.gain.setTargetAtTime(spricht ? BWM_LEISE : BWM_LAUT, c.currentTime, spricht ? .04 : .35); } catch (e) { /* ohne Sprache */ } // schnell runter, sanft wieder hoch
-  const sech = bwSchlag() / 4;
+  const sech = bwmSchlag() / 4; // 2.302.0: Tempo des gewählten Stücks
   if (BWM.riser) { BWM.riser = false; bwRiser(c.currentTime + .05, 2.6); }
   if (BWM.becken) { BWM.becken = false; bwRauschen(c.currentTime + .02, 1.4, .3, 5000, "highpass"); }
-  while (BWM.zeit < c.currentTime + .25) { bwMusikSchritt(BWM.schritt, BWM.zeit); BWM.zeit += sech; BWM.schritt = (BWM.schritt + 1) % 128; }
+  while (BWM.zeit < c.currentTime + .25) { if (BWM.stueck?.spiel) BWM.stueck.spiel(BWM.gesamt, BWM.zeit); else bwMusikSchritt(BWM.schritt, BWM.zeit); BWM.zeit += sech; BWM.schritt = (BWM.schritt + 1) % 128; BWM.gesamt = (BWM.gesamt || 0) + 1; }
 }
 function bwTon(typ, hz, t, dauer, laut, filterHz, hall) {
   const c = BWM.ctx, o = c.createOscillator(), g = c.createGain(); o.type = typ; o.frequency.setValueAtTime(hz, t);
@@ -13204,6 +13207,122 @@ function bwBecken(t) { // zwei Topfdeckel wie Orchester-Becken: heller Krach mit
   bwRauschen(t, 1.3, .42, 4200, "highpass"); bwRauschen(t, .5, .3, 7500, "bandpass"); bwRauschen(t, .03, .4, 1800, "bandpass");
   [[1480, .035], [2231, .03], [3170, .025], [4405, .02]].forEach(([hz, v]) => bwTon("square", hz, t, .7, v, 0, true));
 }
+// ----- 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“) -----
+// „🎶 Nur Musik hören“: Twinkey tanzt, die Stücke laufen nacheinander (je ca. 2½ Min.), antippen wählt ein Stück. Alles im Handy erzeugt
+// (Web Audio wie die Trainingsmusik – keine Datei, kein Internet, kostenlos). Gleicher Musik-Regler wie beim Training. Die Trainingsmusik
+// bleibt unverändert (BWM.stueck = null). Ansicht verlassen → Pause.
+const bwmKick = (t, v = 1) => { const o = bwTon("sine", 140, t, .26, v); o.frequency.exponentialRampToValueAtTime(44, t + .18); };
+const bwmSnare = (t, v = .35) => { bwRauschen(t, .16, v, 1500, "bandpass"); bwTon("triangle", 190, t, .09, v * .6); };
+const bwmRim = (t, v = .3) => { bwRauschen(t, .04, v, 3000, "bandpass"); bwTon("square", 820, t, .03, v * .12); };
+const bwmHat = (t, offen, v = .05) => bwRauschen(t, offen ? .13 : .035, offen ? v * 3 : v, 8000, "highpass");
+const bwmAkk = (akk, t, dauer, laut, typ = "square", filter = 2400, hall = false, okt = 0) => akk.forEach((m) => bwTon(typ, bwHz(m + okt), t, dauer, laut, filter, hall));
+const bwmBass = (m, t, dauer = .24, laut = .3, filter = 600) => { bwTon("sine", bwHz(m), t, dauer, laut * .9); bwTon("triangle", bwHz(m), t, dauer, laut * .5, filter); };
+const bwmFill = (im, t) => { if (im >= 8 && im % 2 === 0) bwmSnare(t, .1 + (im - 8) * .035); };
+// Melodie: Schritt (0–31 über 2 Takte) → Ton; Teil A in Takt 0–1, Teil B in Takt 2–3 jedes 4-Takt-Blocks
+const bwmMel = (a, b, takt, im) => (takt % 4 < 2 ? a : b)[(takt % 2) * 16 + im];
+const BW_STUECKE = [
+  { id: "disco", t: "Küchen-Disco", stil: "Disco", sym: "🪩", bpm: 116, tanz: ["klatschen", "marsch", "hula", "jubel"] }, // die Trainingsmusik
+  { id: "reggae1", t: "Reggae am Kochtopf", stil: "Reggae", sym: "🌴", bpm: 76, tanz: ["seit", "schulter", "kopfneigen", "hula"],
+    spiel(g, t) { // One Drop: Bass-Trommel + Rand nur auf der 3, Gitarren-Skank auf den Nachschlägen, Orgel-„Bubble“, Melodica
+      const im = g % 16, takt = Math.floor(g / 16), akk = [[57, 60, 64], [57, 62, 66], [57, 60, 64], [55, 59, 64]][takt % 4], root = [45, 50, 45, 40][takt % 4], intro = takt < 2;
+      if (im === 8) { bwmKick(t, .95); bwmRim(t, .32); }
+      if (im % 2 === 0) bwmHat(t, im === 14, .035);
+      if (im % 4 === 2) bwmAkk(akk, t, .1, .045, "square", 2000, true); // Skank
+      if (!intro && im % 4 === 3) bwmAkk(akk, t, .08, .022, "triangle", 1400, false, -12); // Bubble
+      const b = { 2: 0, 4: 0, 6: 7, 8: 10, 10: 12, 12: 10, 14: 7 }[im]; if (b !== undefined) bwmBass(root + b, t, .26, .34, 500);
+      if (!intro && takt % 8 < 6) { const n = bwmMel({ 0: 76, 2: 76, 4: 74, 6: 72, 8: 74, 12: 69, 16: 72, 18: 74, 20: 76, 22: 79, 24: 76, 28: 74 }, { 0: 72, 4: 74, 8: 72, 10: 69, 12: 67, 16: 69, 24: 69 }, takt, im); if (n) bwTon("sawtooth", bwHz(n), t, .36, .045, 1800, true); }
+      if (takt % 8 === 7) bwmFill(im, t);
+    } },
+  { id: "reggae2", t: "Sonnenschein-Reggae", stil: "Reggae", sym: "☀️", bpm: 84, tanz: ["schulter", "seit", "klatschen", "winken"],
+    spiel(g, t) { // Steppers: Bass-Trommel auf jeden Schlag, Rand auf 2 und 4, Skank, gepfiffene Melodie in G-Dur
+      const im = g % 16, takt = Math.floor(g / 16), akk = [[55, 59, 62], [60, 64, 67], [62, 66, 69], [60, 64, 67]][takt % 4], root = [43, 48, 50, 48][takt % 4], intro = takt < 2;
+      if (im % 4 === 0) bwmKick(t, .85); if (im === 4 || im === 12) bwmRim(t, .3);
+      if (im % 2 === 1) bwmHat(t, false, .03);
+      if (im % 4 === 2) bwmAkk(akk, t, .09, .045, "square", 2200, true);
+      if (!intro && im % 4 === 2) bwmAkk(akk, t + .06, .06, .02, "triangle", 1600, false, 12); // Doppel-Skank
+      const b = { 0: 0, 3: 0, 4: 7, 6: 12, 8: 0, 11: 4, 12: 7, 14: 9 }[im]; if (b !== undefined) bwmBass(root + b, t, .2, .32, 520);
+      if (!intro) { const n = bwmMel({ 0: 74, 2: 76, 4: 79, 8: 76, 10: 74, 12: 71, 16: 74, 20: 76, 22: 74, 24: 71, 28: 67 }, { 0: 71, 2: 74, 4: 76, 6: 74, 8: 71, 12: 69, 16: 67, 20: 71, 24: 74 }, takt, im); if (n) { bwTon("sine", bwHz(n + 12), t, .3, .06, 0, true); bwTon("sine", bwHz(n + 12) * 1.004, t, .3, .02); } }
+      if (takt % 8 === 7) bwmFill(im, t);
+    } },
+  { id: "funk", t: "Funky Schneebesen", stil: "Funk", sym: "🕺", bpm: 104, tanz: ["marsch", "klatschen", "schulter", "jubel"],
+    spiel(g, t) { // Funk: synkopierte Bass-Trommel, Ghost-Notes, 16tel-Hi-Hats, Slap-Bass, Clavinet, Bläser-Stöße
+      const im = g % 16, takt = Math.floor(g / 16), m7 = takt % 4 < 2, akk = m7 ? [64, 67, 71, 74] : [69, 73, 76, 79], root = m7 ? 40 : 45, intro = takt < 2;
+      if (im === 0 || im === 6 || im === 10) bwmKick(t, .95);
+      if (im === 4 || im === 12) bwmSnare(t, .4); if (im === 7 || im === 15) bwmSnare(t, .07);
+      bwmHat(t, im === 14, im % 2 ? .03 : .05);
+      const b = { 0: 0, 3: 12, 6: 0, 7: 10, 10: 7, 11: 10, 13: 12, 14: 3 }[im]; if (b !== undefined) { bwmBass(root + b, t, .14, .36, 900); if (b === 12) bwTon("square", bwHz(root + b), t, .05, .05, 2500); }
+      if (!intro && [2, 5, 8, 11, 14].includes(im)) bwmAkk(akk, t, .06, .025, "square", 3000);
+      if (!intro && takt % 4 === 3 && (im === 12 || im === 14)) bwmAkk(akk, t, .18, .04, "sawtooth", 2600, true, 12); // Bläser
+      if (!intro && takt % 8 >= 4) { const n = bwmMel({ 0: 71, 2: 74, 3: 76, 6: 74, 8: 71, 10: 69, 12: 67, 14: 64 }, { 0: 76, 3: 79, 6: 76, 8: 74, 12: 71 }, takt, im); if (n) bwTon("sawtooth", bwHz(n), t, .16, .045, 2200, true); }
+      if (takt % 8 === 7) bwmFill(im, t);
+    } },
+  { id: "samba", t: "Samba in der Pfanne", stil: "Samba", sym: "💃", bpm: 100, tanz: ["hula", "seit", "klatschen", "jubel"],
+    spiel(g, t) { // Samba: Surdo auf der 2 (schwer), Shaker, Agogo-Glocken, Gitarre synkopiert, Flöte
+      const im = g % 16, takt = Math.floor(g / 16), akk = [[60, 64, 67], [57, 60, 64], [62, 65, 69], [55, 59, 62, 65]][takt % 4], root = [48, 45, 50, 43][takt % 4], intro = takt < 1;
+      if (im === 4 || im === 12) { const o = bwTon("sine", 95, t, .4, 1); o.frequency.exponentialRampToValueAtTime(60, t + .3); } else if (im === 0 || im === 8) bwTon("sine", 85, t, .12, .45);
+      bwRauschen(t, .05, im % 4 === 3 ? .09 : .045, 6000, "highpass"); // Shaker
+      if ([0, 3, 6, 10, 12].includes(im)) bwTon("triangle", [0, 6, 12].includes(im) ? 1180 : 880, t, .12, .07);
+      if (!intro && [0, 3, 6, 10, 13].includes(im)) bwmAkk(akk, t, .12, .03, "triangle", 2600);
+      const b = { 0: 0, 6: 7, 8: 0, 12: 7, 14: 12 }[im]; if (b !== undefined) bwmBass(root + b, t, .22, .3, 600);
+      if (!intro && takt >= 2) { const n = bwmMel({ 0: 79, 2: 77, 4: 76, 6: 74, 8: 76, 12: 72, 16: 74, 18: 76, 20: 77, 22: 79, 24: 81, 28: 79 }, { 0: 76, 3: 77, 6: 76, 8: 74, 12: 72, 16: 71, 18: 72, 20: 74, 24: 72 }, takt, im); if (n) bwTon("sine", bwHz(n), t, .28, .07, 0, true); }
+      if (takt % 8 === 7 && im >= 8) bwTon("triangle", 1180, t, .05, .05);
+    } },
+  { id: "ballade", t: "Abendrot-Ballade", stil: "Ballade", sym: "🌅", bpm: 70, tanz: ["kopfneigen", "seit", "winken", "armkreis"],
+    spiel(g, t) { // ruhig: Klavier-Arpeggio mit Hall, warme Fläche, weiche Bass-Trommel, Besen, langsame Melodie
+      const im = g % 16, takt = Math.floor(g / 16), akk = [[65, 69, 72], [64, 67, 72], [62, 65, 69], [62, 65, 70]][takt % 4], root = [41, 36, 38, 34][takt % 4], intro = takt < 2;
+      if (im === 0) { bwmAkk(akk, t, 3, .02, "sawtooth", 700, false, -12); bwmBass(root, t, 1.4, .3, 400); } if (im === 8) bwmBass(root + 7, t, 1, .22, 400);
+      if (im % 2 === 0) bwTon("triangle", bwHz(akk[(im / 2) % 3] + (im >= 8 ? 12 : 0)), t, .9, .05, 0, true);
+      if (!intro && (im === 0 || im === 10)) bwmKick(t, .55); if (!intro && (im === 4 || im === 12)) bwRauschen(t, .22, .06, 2500, "bandpass");
+      if (!intro) { const n = bwmMel({ 0: 77, 4: 76, 8: 74, 12: 72, 16: 74, 24: 72 }, { 0: 72, 4: 74, 8: 76, 12: 77, 16: 79, 24: 77 }, takt, im); if (n) { bwTon("sine", bwHz(n), t, 1.1, .07, 0, true); bwTon("triangle", bwHz(n + 12), t, .6, .012); } }
+    } },
+  { id: "polka", t: "Biergarten-Polka", stil: "Polka", sym: "🍺", bpm: 120, tanz: ["marsch", "klatschen", "treppe", "jubel"],
+    spiel(g, t) { // Humpta: Bass auf dem Schlag (Grundton/Quinte im Wechsel), Akkord auf dem „ta“, Akkordeon-Melodie
+      const im = g % 16, takt = Math.floor(g / 16), c = takt % 4 === 0 || takt % 4 === 3, akk = c ? [60, 64, 67] : [55, 59, 62, 65], root = c ? 36 : 43, intro = takt < 1;
+      if (im % 4 === 0) { bwmBass(root + (im % 8 ? 7 : 0), t, .2, .38, 700); bwmKick(t, .5); }
+      if (im % 4 === 2) { bwmAkk(akk, t, .1, .035, "square", 2200); bwRauschen(t, .05, .08, 5000, "highpass"); }
+      if (!intro) { const n = bwmMel({ 0: 72, 2: 76, 4: 79, 6: 76, 8: 72, 10: 76, 12: 79, 14: 84, 16: 83, 18: 79, 20: 74, 22: 77, 24: 83, 26: 79, 28: 74, 30: 71 },
+        { 0: 74, 2: 77, 4: 83, 6: 79, 8: 74, 10: 77, 12: 79, 14: 77, 16: 76, 18: 79, 20: 84, 22: 79, 24: 72, 28: 72 }, takt, im);
+        if (n) { bwTon("square", bwHz(n), t, .2, .035, 2600); bwTon("square", bwHz(n) * 1.006, t, .2, .025, 2600); bwTon("square", bwHz(n - 12), t, .2, .015, 1800); } }
+      if (takt % 8 === 7 && im >= 12) bwmSnare(t, .12);
+    } },
+];
+const bwmSchlag = () => BWM.stueck ? 60 / BWM.stueck.bpm : bwSchlag();
+const bwmTakte = (s) => Math.max(32, Math.round(150 / (240 / s.bpm) / 8) * 8); // ca. 2½ Min., ganze 8-Takt-Blöcke
+function bwmStueck(i) { // Stück wechseln, laufende Musik übernimmt nahtlos (kurze Atempause)
+  const n = BW_STUECKE.length; i = ((i % n) + n) % n; const s = BW_STUECKE[i]; BWM.stueck = s; BWM.gesamt = 0; BWM.schritt = 0; BWM.stufe = 2;
+  if (BW.hoeren) { BW.hoeren.i = i; BW.hoeren.tanz = 0; } bwWahlSetzen({ stueck: s.id }, true);
+  if (BWM.ctx && BWM.laeuft) { BWM.zeit = Math.max(BWM.zeit, BWM.ctx.currentTime + .1) + .35; BWM.start = BWM.zeit; }
+}
+async function bwHoeren() {
+  bwStopp(false); const w = bwWahl(), i = Math.max(0, BW_STUECKE.findIndex((s) => s.id === w.stueck));
+  BW.hoeren = { i, pause: false, tanz: 0, farbe: Math.floor(Math.random() * BW_FARBEN.length) };
+  try { BW.wach = await navigator.wakeLock?.request("screen"); } catch (e) { BW.wach = null; }
+  bwMusik(true); bwmStueck(i); bwHoerZeigen(true);
+  clearInterval(BW.takt); BW.takt = setInterval(bwHoerTick, 1000);
+}
+function bwHoerTick() {
+  const H = BW.hoeren; if (!H) return clearInterval(BW.takt);
+  if (!$("bwHoer")) return bwStopp();
+  if (!esSichtbar()) { if (!H.pause) { H.pause = true; bwMusik(false); bwHoerZeigen(); } return; }
+  if (H.pause || !BWM.stueck) return;
+  const takt = Math.floor((BWM.gesamt || 0) / 16), ges = bwmTakte(BWM.stueck);
+  if (takt >= ges) { bwmStueck(H.i + 1); return bwHoerZeigen(); }
+  const tanz = Math.floor(takt / 8); if (tanz !== H.tanz) { H.tanz = tanz; return bwHoerZeigen(); } // alle 8 Takte ein anderer Tanzschritt
+  const b = $("bwBalken"); if (b) b.style.width = `${Math.min(100, takt / ges * 100)}%`;
+}
+function bwHoerZeigen(vorhangAuf) {
+  const H = BW.hoeren, f = $("hrFlaeche"); if (!H || !f) return;
+  const s = BW_STUECKE[H.i], tanz = s.tanz[H.tanz % s.tanz.length], takt = Math.floor((BWM.gesamt || 0) / 16), ges = bwmTakte(s);
+  f.innerHTML = `<div class="bw-buehne an bw-hoeren${H.pause ? " angehalten" : ""}" id="bwHoer"><div class="bw-licht"></div><div class="bw-vorhang links${vorhangAuf ? " oeffnet" : " offen"}"></div><div class="bw-vorhang rechts${vorhangAuf ? " oeffnet" : " offen"}"></div><div class="bw-boden"></div>
+    <div class="bw-kopf"><div><small>🎶 Nur Musik · Stück ${H.i + 1} von ${BW_STUECKE.length} · ${esc(s.stil)}</small><b>${s.sym} ${esc(s.t)}</b></div></div>
+    <div class="bw-balken-bahn"><div class="bw-balken" id="bwBalken" style="width:${Math.min(100, takt / ges * 100)}%"></div></div>
+    <div class="bw-mitte">${bwFigur(H.pause ? "ruhe" : tanz, 0, "", 0, bwmSchlag(), H.pause ? 0 : bwPhase(), H.farbe + H.i)}</div>
+    <div class="bw-liste" role="list">${BW_STUECKE.map((x, k) => `<button type="button" role="listitem" class="es-k${k === H.i ? " an" : ""}" onclick="bwHoerWahl(${k})" aria-label="${esc(x.t)} (${esc(x.stil)}) abspielen">${x.sym} ${esc(x.t)}</button>`).join("")}</div>${bwLautRegler("musik")}
+    <div class="es-leiste"><button type="button" class="es-k" onclick="bwHoerWahl(${H.i - 1})" aria-label="Voriges Stück">⏮</button><button type="button" class="es-k es-haupt" onclick="bwHoerPause()">${H.pause ? "▶︎ Weiter" : "⏸ Pause"}</button><button type="button" class="es-k" onclick="bwHoerWahl(${H.i + 1})" aria-label="Nächstes Stück">⏭</button>
+      <button type="button" class="es-k" onclick="bwStopp(true)">✖ Ende</button></div></div>`;
+}
+function bwHoerWahl(i) { const H = BW.hoeren; if (!H) return; bwmStueck(i); if (H.pause) { H.pause = false; bwMusik(true); } bwHoerZeigen(); }
+function bwHoerPause() { const H = BW.hoeren; if (!H) return; H.pause = !H.pause; bwMusik(!H.pause); bwHoerZeigen(); }
 // ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0, Wunsch Hansi): Jahreszeiten im Kopf mit Boden ----------
 // 🍂 Herbst: Laub fällt und bleibt unten liegen; liegt genug, kommt ein Windstoß (abwechselnd von links und von rechts) und weht es weg.
 // ❄️ Winter/Advent: Schnee bleibt liegen und wird weggeweht – jeder 3. Lauf wird daraus ein lachender Schneemann
