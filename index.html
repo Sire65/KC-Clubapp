@@ -1960,6 +1960,17 @@
   .eingabe .innen > #mikroKnopf.rund:not(#sendenKnopf) { background: #fff !important; border: 3px solid var(--rot3, var(--rot)) !important; font-size: 1.35rem !important; box-shadow: 0 0 0 2px var(--rot) inset, 0 1px 4px rgba(0,0,0,.25); }
   .eingabe .innen > .zustell-knopf.an { background: var(--rot) !important; border-color: var(--rot); color: #fff; }
   /* KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): ❗ an = Schreibfeld und Knopf orange; wichtige Nachrichten orange umrandet mit Marke */
+  .eingabe .innen > #expressKnopf.rund.an { background: #c0392b !important; border-color: #7b1e2b !important; color: #fff; box-shadow: 0 0 0 3px rgba(192,57,43,.35); } /* 2.362.0 KC-CLUB-EXPRESS */
+  textarea.express { border-color: #c0392b !important; box-shadow: 0 0 0 2px rgba(192,57,43,.3); }
+  .express-marke { display: inline-block; margin: 0 0 4px; padding: 1px 8px; border-radius: 999px; background: #c0392b; color: #fff; font-weight: 800; font-size: .78rem; letter-spacing: .03em; font-style: italic; }
+  .blase.eigen .express-marke { background: #fff; color: #c0392b; }
+  .express-quittung { font-size: .78rem; margin-top: 4px; opacity: .9; }
+  .express-quittung.warte { opacity: .65; }
+  .express-blatt .blatt-innen { border-top: 6px solid #c0392b; }
+  .express-kopf { font-size: 1.35rem; font-weight: 900; font-style: italic; color: #c0392b; letter-spacing: .03em; }
+  .express-best { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 2px 10px; padding: 10px 12px; margin: 0 0 10px; border-radius: 12px; background: var(--karte2); cursor: pointer; font-size: 1.05rem; }
+  .express-best input { width: 26px; height: 26px; grid-row: span 2; accent-color: #c0392b; }
+  .express-best small { grid-column: 2; color: var(--grau); font-size: .82rem; }
   .eingabe .innen > #wichtigKnopf.rund.an { background: #ff9800 !important; border-color: #e65100 !important; color: #fff; box-shadow: 0 0 0 3px rgba(255,152,0,.35); }
   .eingabe .innen > #text.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.25); }
   /* KC-CLUB-SELBSTLOESCHEN (2.148.0): ⏳ an = violett; neun gleich große Knöpfe passen auch auf schmale Handys (alle gleich breit) */
@@ -4777,6 +4788,8 @@
     <button class="rund zustell-knopf" title="Wie benachrichtigen? (Push, E-Mail, WhatsApp)" id="zustellKnopf" aria-expanded="false" onclick="zustellUmschalten()">🔔</button>
     <!-- KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): Nachricht mit „Wichtigkeit hoch“ – wird beim Empfänger farbig umrandet -->
     <button class="rund wichtig-knopf" title="Wichtig – Wichtigkeit hoch" aria-label="Als wichtig senden" aria-pressed="false" id="wichtigKnopf" onclick="wichtigUmschalten()">❗</button>
+    <!-- 2.362.0 KC-CLUB-EXPRESS (Wunsch Hansi): Express-Sendung per Rennwagen – kommt sofort an, beim Empfänger geht ein Fenster auf -->
+    <button class="rund express-knopf" title="Express-Sendung – kommt sofort an, auch nachts" aria-label="Als Express-Sendung senden" aria-pressed="false" id="expressKnopf" onclick="expressUmschalten()">🏎️</button>
     <!-- KC-CLUB-SELBSTLOESCHEN (2.148.0, Wunsch Hansi): ⏳ diese Nachricht löscht sich nach 1 Std / 24 Std / 7 Tagen selbst -->
     <button class="rund ablauf-knopf" title="Nachricht löscht sich selbst …" aria-label="Selbstlöschen für diese Nachricht" aria-pressed="false" id="ablaufKnopf" onclick="slWahl('nachricht')">⏳</button>
     <!-- KC-CLUB-SPAETER-SENDEN (2.362.0, Wunsch Hansi): Nachricht zu einer späteren Zeit senden – auch jeden Montag um 8 Uhr usw. -->

@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.362.0 – 2026-10-14 – ⏰ KC-CLUB-SPAETER-SENDEN: Nachrichten später senden, auch mit Wiederholung
+## 2.362.0 – 2026-10-13 – ⏰ Später senden, ↩️ Zurückholen, 🏎️ Express-Sendung, 🚴 neue Boten
 Anlass (Hansi): „Bau das zeitversetzte Senden ein – bedienerfreundlich, logisch, einfach … evtl. auch Wiederholungen, z. B. jeden Montag um 8.00 die gleiche Nachricht.“
 - Bedienung: ⏰ neben ⏳ unter dem Schreibfeld → Fenster „Wann soll die Nachricht ankommen?“: 1. Wann? (🌇 Heute Abend 18:00 – nur bis 17:45,
   🌅 Morgen früh 8:00, ☀️ Morgen Mittag 12:00, 📅 Andere Zeit … mit Tag/Uhrzeit) · 2. Wie oft? (Nur einmal, Jeden Tag, Werktags, Jeden <Wochentag>,
@@ -18,6 +18,14 @@ Anlass (Hansi): „Bau das zeitversetzte Senden ein – bedienerfreundlich, logi
   Nur eigene Textnachrichten ohne Anlage/Abstimmung/Kontakt/Notfall und nur, solange kein anderer Teilnehmer sie gelesen hat (Server prüft last_read_at;
   sonst „Zu spät – … schon gelesen“). Nachricht verschwindet für alle (Papierkorb-Sicherung wie Löschen), Realtime-Signal frischt offene Chats sofort auf;
   Text, ❗ und „Antwort auf“ kommen zurück ins Schreibfeld. Ehrlicher Hinweis: schon verschickte Push-Mitteilungen/E-Mails lassen sich nicht zurückholen.
+- 🏎️ KC-CLUB-EXPRESS (Wunsch Hansi „per Rennwagen – Express-Sendung, sofort zugestellt, beim Empfänger ploppt ein Fenster auf: Öffnen, Später, Nein;
+  Empfang bestätigen als Kästchen“; Hansis Wahl „durchbricht alles“): 🏎️-Knopf neben ❗ schaltet Express für die nächste Nachricht ein. Server: kc_club_express
+  (+ _antwort), Push + Mail immer, auch stummgeschaltet (stumm.clear), auch für gerade in der App Aktive, auch in der Ruhezeit (sendenGewaehlt opt.notfall – ohne
+  Änderung am Communicator), Wichtigkeit „hoch“, Titel „🏎️ EXPRESS – …“; höchstens 5 je Person/Tag. init liefert ungelesene Express-Sendungen (7 Tage, ohne
+  „Nein“/laufendes „Später“) → Fenster mit Rennwagen: 📬 Öffnen / ⏰ Später (30 Min.) / ✖ Nein + ☑ Empfang bestätigen (vorab an) → Absender bekommt Push
+  „📬 Express angekommen“ und sieht unter seiner Nachricht „📬 Empfang bestätigt: Klaus 10:42“. Blasen tragen „🏎️ EXPRESS“; Empfangs-Effekt = Rennwagen.
+- 🚴 KC-CLUB-BOTEN: neue Sende-Effekte 🚴 Postbote mit Fahrrad (Posttasche, Klingel-Vibration), 🍾 Flaschenpost (schaukelt auf Wellen), 🚀 Rakete (Flamme),
+  🎈 Luftballon (Brief an der Schnur) – unter ⚙️ → 🎨 Darstellung → Senden und in „Abwechselnd“; beim Empfänger je eigene Ankunft. Server kennt die neuen Arten.
 
 ## 2.361.0 – 2026-10-13 – 🔋 KC-CLUB-AKKU-6: Stromsauger Tonausgabe + Kopfbild steht in Ruhe
 Anlass (Hansi, Akku-Übersicht: Chrome 25 % in einer Stunde): „Unsere App scheint das Handy-Akku leer zu saugen – finde die Stromsauger.“

@@ -1,22 +1,26 @@
 {
   "version": "2.362.0",
-  "datum": "2026-10-14",
+  "datum": "2026-10-13",
   "stufe": "RC",
   "neu": [
     "⏰ Neu: Nachrichten später senden – Nachricht schreiben, unten auf ⏰ tippen, Zeit wählen (z. B. morgen früh 8 Uhr)",
     "🔁 Auch mit Wiederholung: jeden Tag, werktags, jeden Montag oder jeden Monat – z. B. jeden Montag um 8 Uhr die gleiche Erinnerung",
     "👀 Geplante Nachrichten stehen blass unten im Chat (nur du siehst sie) – antippen: jetzt senden, Zeit ändern oder löschen. Gesendet wird auch, wenn dein Handy aus ist",
-    "↩️ Neu: Nachricht zurückholen – solange sie noch niemand gelesen hat: Nachricht antippen (am PC rechte Maustaste) oder im ⓘ-Fenster → „Zurückholen und ändern“; sie steht dann wieder im Schreibfeld"
+    "↩️ Neu: Nachricht zurückholen – solange sie noch niemand gelesen hat: Nachricht antippen (am PC rechte Maustaste) oder im ⓘ-Fenster → „Zurückholen und ändern“; sie steht dann wieder im Schreibfeld",
+    "🏎️ Neu: Express-Sendung – unter dem Schreibfeld 🏎️ antippen: ein Rennwagen bringt die Nachricht sofort (auch bei stummem Chat und nachts). Beim Empfänger geht ein Fenster auf: Öffnen, Später oder Nein – mit Kästchen „Empfang bestätigen“",
+    "🚴 Neue Boten unter ⚙️ → 🎨 Darstellung → Senden: Postbote mit Fahrrad, Flaschenpost, Rakete und Luftballon (dazu wie bisher Papierflieger, Brieftaube, Postauto)"
   ],
   "verlauf": [
     {
       "version": "2.362.0",
-      "datum": "2026-10-14",
+      "datum": "2026-10-13",
       "neu": [
         "⏰ Neu: Nachrichten später senden – Nachricht schreiben, unten auf ⏰ tippen, Zeit wählen (z. B. morgen früh 8 Uhr)",
         "🔁 Auch mit Wiederholung: jeden Tag, werktags, jeden Montag oder jeden Monat – z. B. jeden Montag um 8 Uhr die gleiche Erinnerung",
         "👀 Geplante Nachrichten stehen blass unten im Chat (nur du siehst sie) – antippen: jetzt senden, Zeit ändern oder löschen. Gesendet wird auch, wenn dein Handy aus ist",
-        "↩️ Neu: Nachricht zurückholen – solange sie noch niemand gelesen hat: Nachricht antippen (am PC rechte Maustaste) oder im ⓘ-Fenster → „Zurückholen und ändern“; sie steht dann wieder im Schreibfeld"
+        "↩️ Neu: Nachricht zurückholen – solange sie noch niemand gelesen hat: Nachricht antippen (am PC rechte Maustaste) oder im ⓘ-Fenster → „Zurückholen und ändern“; sie steht dann wieder im Schreibfeld",
+        "🏎️ Neu: Express-Sendung – unter dem Schreibfeld 🏎️ antippen: ein Rennwagen bringt die Nachricht sofort (auch bei stummem Chat und nachts). Beim Empfänger geht ein Fenster auf: Öffnen, Später oder Nein – mit Kästchen „Empfang bestätigen“",
+        "🚴 Neue Boten unter ⚙️ → 🎨 Darstellung → Senden: Postbote mit Fahrrad, Flaschenpost, Rakete und Luftballon (dazu wie bisher Papierflieger, Brieftaube, Postauto)"
       ]
     },
     {

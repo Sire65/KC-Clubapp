@@ -2425,7 +2425,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const srv = lies("supabase/functions/kc-club/index.ts"), mig = lies("supabase/migrations/20261002_kc_club_v1530_wichtig.sql");
   assert.match(html, /id="wichtigKnopf" onclick="wichtigUmschalten\(\)">❗<\/button>/, "❗-Knopf unter dem Schreibfeld");
   assert.match(html, /\.\.\.\(WICHTIG \? \{ wichtig: true \} : \{\}\)/, "senden schickt wichtig nur wenn an");
-  assert.match(html, /wichtigUmschalten\(false\);( slZurueck\(\);)? \/\/ KC-CLUB-ENTWURF \/ -RUHIGE-EINGABE \/ -WICHTIG/, "nach dem Senden wieder normal");
+  assert.match(html, /wichtigUmschalten\(false\);( expressUmschalten\(false\);)?( slZurueck\(\);)? \/\/ KC-CLUB-ENTWURF \/ -RUHIGE-EINGABE \/ -WICHTIG/, "nach dem Senden wieder normal");
   assert.match(html, /\$\{m\.wichtig \? " wichtig" : ""\}/, "Blase bekommt Klasse wichtig");
   assert.match(html, /\.blase\.wichtig \{ border: 3px solid #ff9800/, "wichtige Nachricht orange umrandet");
   assert.match(html, /u\.wichtigNeu \? " wichtig-neu" : ""/, "Chat-Liste markiert ungelesene wichtige Nachricht");
@@ -2434,7 +2434,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(srv, /if \(we\) \{ await db\.from\("kc_communication_messages"\)\.delete\(\)\.eq\("id", m\.id\)/, "kein halber Zustand");
   assert.match(srv, /wichtig: wichtigIds\.has\(m\.id\)/, "Chat liefert wichtig");
   assert.match(srv, /wichtigNeu: m\.filter/, "Liste liefert wichtigNeu");
-  assert.match(srv, /titel: (notfall \? `🚨 NOTFALL(\$\{probe \? "-PROBE" : ""\})? – \$\{ich\.vorname\}` : )?wMarke \+ \(grp/, "Push-Titel mit ❗"); // 2.21.0: Notfall eigener Titel
+  assert.match(srv, /titel: (notfall \? `🚨 NOTFALL(\$\{probe \? "-PROBE" : ""\})? – \$\{ich\.vorname\}` : )?(express \? `🏎️ EXPRESS.+?` : )?wMarke \+ \(grp/, "Push-Titel mit ❗"); // 2.21.0: Notfall eigener Titel
   assert.match(mig, /references kc_communication_messages\(id\) on delete cascade/, "hängt an der Nachricht");
   assert.match(mig, /enable row level security/, "RLS an");
   assert.match(mig, /revoke all on kc_club_nachricht_wichtig from anon, authenticated/, "kein Direktzugriff");
@@ -3511,7 +3511,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const ns = server.slice(server.indexOf('case "nachricht_senden": {'), server.indexOf('case "privattermin_speichern"'));
   assert.ok(/if \(notfall\) \{\s*if \(!ich\.admin && !\(await sosFuerAlle\(\)\)\) throw new Fehler\("Notfall-Meldungen an alle darf nur der Admin senden\.", 403\);/.test(ns), "nur Admin");
   assert.ok(/\} else if \(NOTFALL_RE\.test\(text\)\) text = text\.replace\(NOTFALL_RE, ""\)/.test(ns), "Marke bei anderen entfernt");
-  assert.ok(/if \(notfall\) stumm\.clear\(\);/.test(ns) && /const wege = notfall (?:\|\| wichtig )?\? \["push", "email"\]/.test(ns) && /\{ notfall \}\);/.test(ns), "an alle, Push + Mail, auch stumm");
+  assert.ok(/if \(notfall( \|\| express)?\) stumm\.clear\(\);/.test(ns) && /const wege = notfall (?:\|\| wichtig )?(?:\|\| express )?\? \["push", "email"\]/.test(ns) && /\{ notfall(: notfall \|\| express)? \}\);/.test(ns), "an alle, Push + Mail, auch stumm");
   assert.ok(/if \(w\.includes\("push"\) && !opt\.notfall\)/.test(server), "auch in der Ruhezeit");
   assert.ok(/async function notfallUnterhaltung\(ich: Ich\)/.test(server) && /return json\(\{ (?:gedenken: await pGedenken, )?(?:meinGeburtstag, )?alarm, /.test(server), "eine Notfall-Unterhaltung, Alarm beim Start");
   assert.ok(/function notfallSenden\(\)[\s\S]{0,400}await frage\(/.test(html) && /api\("nachricht_senden", \{ notfall: true, text, empfaenger: \{ alle: true \} \}/.test(html), "einmal bestätigen, dann senden");
@@ -7710,7 +7710,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 // 2.138.0 KC-CLUB-PUSH-NUR-OFFLINE (Wunsch Hansi): bei normalen Nachrichten kein Push/keine Mail an Mitglieder, die gerade in der App sind
 {
   const f = server.slice(server.indexOf('case "nachricht_senden": {'), server.indexOf('// ----- KC-CLUB-PRIVATTERMIN'));
-  assert.ok(/const inApp = notfall \|\| wichtig \? new Set<string>\(\) : await geradeInDerApp\(/.test(f) && f.indexOf("const inApp") < f.indexOf('await sendenGewaehlt("club_nachricht", ziel, wege'), "vor dem Versand herausgenommen; Notfall und ❗ wichtig immer");
+  assert.ok(/const inApp = notfall \|\| wichtig (\|\| express )?\? new Set<string>\(\) : await geradeInDerApp\(/.test(f) && f.indexOf("const inApp") < f.indexOf('await sendenGewaehlt("club_nachricht", ziel, wege'), "vor dem Versand herausgenommen; Notfall und ❗ wichtig immer");
   assert.ok(f.indexOf('sendenGewaehlt("club_nachricht", erwaehnt') < f.indexOf("const inApp"), "@Erwähnung bleibt unverändert");
   assert.ok(/const IN_APP_SEK = 75;/.test(server) && /\.gte\("zuletzt_gesehen", new Date\(Date\.now\(\) - IN_APP_SEK \* 1000\)/.test(server), "nur wer die App gerade sichtbar offen hat");
   assert.ok(/catch\(\(\) => new Set<string>\(\)\)/.test(f), "im Zweifel (Fehler) lieber Push senden als verschlucken");
@@ -8178,8 +8178,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.176.0 KC-CLUB-SENDE-EFFEKT Postauto + Blaulicht (Wunsch Hansi)
 {
   const idx = lies("index.html");
-  assert.ok(/\["postauto", "🚐 Postauto"\]/.test(html) && /const SENDE_REIHE = \["flieger", "taube", "postauto"\];/.test(html), "Postauto als dritte Wahl, Abwechselnd über alle drei");
-  assert.ok(/const fxArt = \(wahl, wichtig, mid\) => wahl === "aus" \? null : wichtig \? "blaulicht" :/.test(html) && /function papierflieger\(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG, mid = null\)/.test(html), "❗ wichtig → Blaulicht");
+  assert.ok(/\["postauto", "🚐 Postauto"\]/.test(html) && /const SENDE_REIHE = \["flieger", "taube", "postauto"(, "[a-z]+")*\];/.test(html), "Postauto als dritte Wahl, Abwechselnd über alle drei");
+  assert.ok(/const fxArt = \(wahl, wichtig, mid(, express)?\) => wahl === "aus" \? null : (express \? "express" : )?wichtig \? "blaulicht" :/.test(html) && /function papierflieger\(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG, mid = null(, express = [^)]+)?\)/.test(html), "❗ wichtig → Blaulicht");
   assert.ok(/if \(wahl === "aus"\) return;/.test(html), "Aus bleibt aus – auch bei wichtig");
   assert.ok(/const POSTAUTO_SVG = /.test(html) && /const BLAULICHT_SVG = /.test(html) && /KÖCHECLUB-POST/.test(html) && !/Deutsche Post|POLIZEI/i.test(html.slice(html.indexOf("const POSTAUTO_SVG"), html.indexOf("function sendeFahrzeug"))), "neutral, kein fremdes Zeichen");
   assert.ok(/blaulichtVorschau\(this\)/.test(idx), "Vorschau „wichtig“");
@@ -8190,7 +8190,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/sende_effekt: \(w\) => \(\{ art: SENDE_EFFEKT_ARTEN\.includes\(w\?\.art\) \? w\.art : "wechsel" \}\)/.test(server), "Server merkt nur bekannte Kennungen");
   assert.ok(/\.eq\("schluessel", "sende_effekt"\)\.in\("person_id", \(tn \?\? \[\]\)\.map/.test(server) && /selbstloeschen: slStd\(slChat\?\.stunden\), sendeEffekte,/.test(server), "Unterhaltung liefert Effekte der Teilnehmer");
   assert.ok(/return json\(\{ ok: true, id: threadId, versand, mid: m\.id \}\);/.test(server), "Senden liefert Nachrichten-Kennung");
-  assert.ok(/const fxReihe = \(mid\) =>/.test(html) && /fxArt\(u\.sendeEffekte\?\.\[ziel\.vonId\], ziel\.wichtig, ziel\.id\)/.test(html), "gleicher Effekt bei Absender und Empfänger");
+  assert.ok(/const fxReihe = \(mid\) =>/.test(html) && /fxArt\(u\.sendeEffekte\?\.\[ziel\.vonId\], ziel\.wichtig, ziel\.id(, !!ziel\.express)?\)/.test(html), "gleicher Effekt bei Absender und Empfänger");
   assert.ok(/const neu = !erst && letzte\.id !== EMPF\.letzte;/.test(html) && /Date\.now\(\) - Date\.parse\(ziel\.zeit\) > \(neu \? 120000 : 7 \* 86400000\)\) return;/.test(html) && /sendeEffektWahl\(\) === "aus"/.test(html), "nur neue, frische Nachrichten, nicht beim Öffnen, abschaltbar");
   assert.ok(/empfangsEffekt\(u\); \/\/ 2\.177\.0/.test(html) && /sendeEffektMelden\(\); \/\/ 2\.177\.0/.test(html), "eingebunden in Chat-Laden und Start");
   assert.ok(/class="tb-brief"/.test(html) && /if \(brief\) brief\.style\.visibility = "hidden";/.test(html) && /\} finally \{ fertig\(\); \}/.test(html), "Taube lässt das Kuvert fallen, alles wird sicher weggeräumt");
@@ -8967,7 +8967,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/!inko\.has\(e\.person_id\)/.test(server) && /!inko\.has\(pid\)/.test(server), "Inkognito-Admin wird über „Club-App geöffnet“ nicht verraten");
   assert.ok(/await wichtigkeitFragen\(\); \/\/ KC-CLUB-WICHTIGKEIT-FRAGE/.test(html) && /id="setWichtigFrage" onchange="wichtigFrageSetzen\(this\.checked\)"/.test(html), "Frage vor dem Senden + Schalter");
   assert.ok(/Date\.now\(\) - \(WF_ZULETZT\[k\] \|\| 0\) < 30 \* 60000/.test(html), "je Chat höchstens alle 30 Min.");
-  assert.ok(/const wege = notfall \|\| wichtig \? \["push", "email"\]/.test(server) && /vars\.wichtigkeit === "hoch" \? \{ priority: "high" \}/.test(server), "Hoch: Push + E-Mail, Priorität an den Communicator");
+  assert.ok(/const wege = notfall \|\| wichtig (\|\| express )?\? \["push", "email"\]/.test(server) && /vars\.wichtigkeit === "hoch" \? \{ priority: "high" \}/.test(server), "Hoch: Push + E-Mail, Priorität an den Communicator");
   assert.ok(/await wichtigUngelesenMelden\(\)/.test(server) && /await protokoll\(null, "wichtig_ungelesen"[^\n]*\n\s*if \(!offen\.length\) continue;/.test(server), "24-Std.-Hinweis einmal (erst merken, dann senden)");
 }
 
@@ -9499,4 +9499,16 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/oncontextmenu="if\(!event\.target\.closest\('a,img,audio,video,input,textarea'\)\)\{event\.preventDefault\(\);nachrichtMenue/.test(html), "rechte Maustaste öffnet das Menü");
   assert.ok(/naZurueckMoeglich\(m\) \? `<button class="knopf" onclick="document\.getElementById\('naMenue'\)\.remove\(\);naZurueckholen/.test(html) && /r\.eigen && !gel && naZurueckMoeglich/.test(html), "im Menü und im Info-Fenster");
   assert.ok(/m\.haken !== "gelesen" && !m\.gelesenAlle && !\(m\.gelesenVon \|\| \[\]\)\.length/.test(html), "gelesene Nachrichten nicht anbieten");
+}
+
+// 2.362.0 KC-CLUB-EXPRESS + KC-CLUB-BOTEN
+{
+  assert.ok(/id="expressKnopf" onclick="expressUmschalten\(\)">🏎️<\/button>/.test(seite) && /\.\.\.\(EXPRESS \? \{ express: true \} : \{\}\)/.test(html), "🏎️-Knopf und Express beim Senden");
+  assert.ok(/if \(notfall \|\| express\) stumm\.clear\(\);/.test(server) && /\{ notfall: notfall \|\| express \}\);/.test(server) && /EXPRESS_MAX = 5/.test(server), "Express durchbricht Stumm/Ruhezeit, höchstens 5 am Tag");
+  assert.ok(server.includes('case "express_antwort": {') && /\["geoeffnet", "spaeter", "nein"\]/.test(server) && /📬 Express angekommen/.test(server), "Antwort + Empfangsbestätigung an den Absender");
+  assert.ok(/const express = await pExpress;/.test(server) && /async function expressOffen\(ich: Ich, zahlen: any\[\]\)/.test(server), "init liefert offene Express-Sendungen");
+  assert.ok(/alarmPruefen\(\); \/\* KC-CLUB-NOTFALL-MELDUNG \*\/ try \{ expressPruefen\(\); \} catch \{\}/.test(html) && /id="expBest" checked/.test(html) && /expressAntwort\('spaeter'\)/.test(html) && /expressAntwort\('nein'\)/.test(html), "Express-Fenster: Öffnen/Später/Nein + Empfang bestätigen");
+  for (const a of ["fahrrad", "flasche", "rakete", "ballon"]) assert.ok(html.includes(`["${a}", `) && server.includes(`"${a}"`), "Bote " + a);
+  const mig = lies("supabase/migrations/20261013_kc_club_v2362_express.sql");
+  assert.ok(/enable row level security/.test(mig) && /on delete cascade/.test(mig), "Express-Tabellen geschützt, hängen an der Nachricht");
 }

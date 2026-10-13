@@ -1048,7 +1048,7 @@ async function feedbackArchivieren(ich: Ich, grund: string, nurPerson: string | 
 const KA_ID = /^[a-z0-9_-]{1,30}$/;
 const kaIds = (v: unknown) => [...new Set((Array.isArray(v) ? v : []).filter((x) => typeof x === "string" && KA_ID.test(x)))].slice(0, 50) as string[];
 // KC-CLUB-EMPFANGS-EFFEKT (2.177.0): mit welchem Effekt meine Nachrichten beim Empfänger ankommen (Wahl unter 🎨 Darstellung)
-const SENDE_EFFEKT_ARTEN = ["flieger", "taube", "postauto", "wechsel", "aus"];
+const SENDE_EFFEKT_ARTEN = ["flieger", "taube", "postauto", "fahrrad", "flasche", "rakete", "ballon", "wechsel", "aus"]; // 2.362.0: + Fahrrad, Flaschenpost, Rakete, Ballon
 const MAHNUNG_TAGE = 5; // KC-CLUB-NACHRICHT-MAHNUNG (2.223.0): ab so vielen Tagen ungelesen blinkt die Nachrichten-Kachel
 const RC_EIGENE_MAX = 12; // KC-CLUB-REISE-CHECKLISTE (2.223.0): eigene Punkte je Reise
 const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
@@ -5137,6 +5137,25 @@ function wiederholungen(beginnIso: string, regel: string, von: Date, bis: Date, 
 // in kc_club_geplant und ruft „geplant_faellig“ nur, wenn etwas fällig ist. Gesendet wird genau wie von Hand (nachricht_senden im Namen des
 // Absenders – Push/Mail, stumm, Erwähnung, Selbstlöschen des Chats gelten wie immer). Wiederholungen rechnen ab der ersten Zeit (Berliner Uhr,
 // Sommer-/Winterzeit richtig); verpasste Termine (Server-Störung) werden einmal nachgeholt, nie gestapelt.
+const EXPRESS_MAX = 5, EXPRESS_SPAETER_MIN = 30; // 2.362.0 KC-CLUB-EXPRESS
+// 2.362.0 KC-CLUB-EXPRESS: ungelesene Express-Sendungen an mich (7 Tage), ohne „Nein“ und ohne laufendes „Später“ – für das Express-Fenster beim Start
+async function expressOffen(ich: Ich, zahlen: any[]): Promise<any[]> {
+  const offen = zahlen.filter((z) => z.n > 0); if (!offen.length) return [];
+  const { data: ex } = await db.from("kc_club_express").select("message_id,thread_id,absender,erstellt_am").in("thread_id", offen.map((z) => z.t.thread_id))
+    .neq("absender", ich.person_id).gte("erstellt_am", new Date(Date.now() - 7 * 86400000).toISOString()).order("erstellt_am").limit(20);
+  const exGelesenBis = new Map(offen.map((z) => [z.t.thread_id, z.t.last_read_at]));
+  const ungelesen = (ex ?? []).filter((x: any) => !exGelesenBis.get(x.thread_id) || x.erstellt_am > exGelesenBis.get(x.thread_id));
+  if (!ungelesen.length) return [];
+  const { data: ant } = await db.from("kc_club_express_antwort").select("message_id,antwort,spaeter_bis").eq("person_id", ich.person_id).in("message_id", ungelesen.map((x: any) => x.message_id));
+  const am = new Map((ant ?? []).map((a: any) => [a.message_id, a]));
+  const zeigen = ungelesen.filter((x: any) => { const a: any = am.get(x.message_id); return !a || (a.antwort === "spaeter" && (!a.spaeter_bis || a.spaeter_bis <= jetzt())); });
+  if (!zeigen.length) return [];
+  const [vonL, { data: th }, { data: gr }] = await Promise.all([personen(zeigen.map((x: any) => x.absender)),
+    db.from("kc_communication_threads").select("id,subject").in("id", zeigen.map((x: any) => x.thread_id)),
+    db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", zeigen.map((x: any) => x.thread_id))]);
+  return zeigen.map((x: any) => { const g: any = (gr ?? []).find((y: any) => y.thread_id === x.thread_id), t: any = (th ?? []).find((y: any) => y.id === x.thread_id);
+    return { id: x.message_id, thread: x.thread_id, von: vonL.get(x.absender)?.display_name || "?", zeit: x.erstellt_am, chat: g ? `${g.symbol} ${g.name}` : t?.subject || "" }; });
+}
 const GEPLANT_WDH = ["einmal", "taeglich", "werktags", "woechentlich", "monatlich"], GEPLANT_MAX = 25, GEPLANT_TAGE = 31;
 const GEPLANT_FELDER = "id,thread_id,text,wichtig,wege,senden_um,erste_um,wiederholung,anzahl,letzter_fehler";
 function geplantNaechstes(ersteUm: string, regel: string, nach: Date): string | null {
@@ -5921,6 +5940,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return nm && NOTFALL_RE.test(nm.body ?? "") ? { id: nm.id, thread: nt.id, text: String(nm.body).replace(NOTFALL_RE, ""), von: vorname((await personen([nm.sender_person_id])).get(nm.sender_person_id)) || "Admin", zeit: nm.created_at } : null;
         })();
         pNotfall.catch(() => {});
+        // 2.362.0 KC-CLUB-EXPRESS: ungelesene Express-Sendungen an mich (7 Tage) → App zeigt das Express-Fenster (Öffnen / Später / Nein)
+        const pExpress = expressOffen(ich, zahlen).catch((e) => { console.error("express", String(e)); return []; });
         const { data: grNeu, error: grFehler } = neuIds.length ? await db.from("kc_club_gruppen").select("thread_id").in("thread_id", neuIds) : { data: [] as any[], error: null };
         const grSet = new Set((grNeu ?? []).map((g: any) => g.thread_id));
         const ungelesenGruppen = grFehler ? null : zahlen.reduce((a: number, x: any) => a + (grSet.has(x.t.thread_id) ? x.n : 0), 0);
@@ -5960,7 +5981,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await pWillkommen;
         zt.ende = Date.now() - t0Anfrage;
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
-        return json({ meinGeburtstag, alarm, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        const express = await pExpress;
+        return json({ meinGeburtstag, alarm, express, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -8372,6 +8394,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_club_chat_kontakt").select("message_id,person_id").in("message_id", mids),
           db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", mids), // KC-CLUB-WICHTIG (1.53.0)
         ]) : [leer, leer, leer, leer, leer, leer];
+        // 2.362.0 KC-CLUB-EXPRESS: welche Nachrichten Express sind; der Absender sieht, wer den Empfang bestätigt hat
+        const { data: exRows } = mids.length ? await db.from("kc_club_express").select("message_id").in("message_id", mids) : leer;
+        const exIds = new Set((exRows ?? []).map((x: any) => x.message_id));
+        const { data: exAnt } = exIds.size ? await db.from("kc_club_express_antwort").select("message_id,person_id,bestaetigt_am").in("message_id", [...exIds]).not("bestaetigt_am", "is", null) : leer;
+        const exLeute = await personen((exAnt ?? []).map((x: any) => x.person_id));
+        const exQuittung = (mid: string) => (exAnt ?? []).filter((x: any) => x.message_id === mid).map((x: any) => ({ name: vorname(exLeute.get(x.person_id)) || "?", am: x.bestaetigt_am }));
         const wichtigIds = new Set((wicht ?? []).map((x: any) => x.message_id));
         const midSet = new Set(mids), pinIds = (pins ?? []).map((x: any) => x.message_id).filter((x: string) => midSet.has(x)).slice(0, 3);
         const gemSet = new Set((gem ?? []).map((x: any) => x.message_id));
@@ -8411,6 +8439,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             erwaehnt: erw.map((x: any) => x.person_id === ich.person_id ? "dich" : vorname(rkLeute.get(x.person_id)) || "?"), erwaehntMich: erw.some((x: any) => x.person_id === ich.person_id),
             bearbeitet: bearbMap.get(m.id) ?? null, loeschtAm: ablaufMap.get(m.id) ?? null,
             gemerkt: gemSet.has(m.id), angeheftet: pinIds.includes(m.id), umfrage: umfrageVon(m.id), kontakt: kontaktVon(m.id), wichtig: wichtigIds.has(m.id),
+            ...(exIds.has(m.id) ? { express: eigen ? { quittungen: exQuittung(m.id) } : true } : {}),
             ...(eigen && m.body !== "📎" && !(umf ?? []).some((x: any) => x.message_id === m.id) && !(kon ?? []).some((x: any) => x.message_id === m.id) && Date.now() - Date.parse(m.created_at) < BEARBEITEN_MIN * 60000 ? { bearbeitbarBis: new Date(Date.parse(m.created_at) + BEARBEITEN_MIN * 60000).toISOString() } : {}),
           };
         });
@@ -8470,6 +8499,27 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true });
       }
 
+      // ----- 2.362.0 KC-CLUB-EXPRESS: Antwort im Express-Fenster – geoeffnet / spaeter (30 Min.) / nein; „Empfang bestätigen“ meldet es dem Absender -----
+      case "express_antwort": {
+        const { data: ex } = await db.from("kc_club_express").select("message_id,thread_id,absender").eq("message_id", String(p.id || "")).maybeSingle();
+        if (!ex) throw new Fehler("Diese Express-Sendung gibt es nicht mehr.", 404);
+        await binTeilnehmer(ex.thread_id, ich.person_id);
+        if (ex.absender === ich.person_id) return json({ ok: true });
+        const antwort = ["geoeffnet", "spaeter", "nein"].includes(String(p.antwort)) ? String(p.antwort) : "geoeffnet";
+        const { data: alt } = await db.from("kc_club_express_antwort").select("bestaetigt_am").eq("message_id", ex.message_id).eq("person_id", ich.person_id).maybeSingle();
+        const neuBestaetigt = p.bestaetigen === true && !alt?.bestaetigt_am;
+        const { error } = await db.from("kc_club_express_antwort").upsert({ message_id: ex.message_id, person_id: ich.person_id, antwort, am: jetzt(),
+          spaeter_bis: antwort === "spaeter" ? new Date(Date.now() + EXPRESS_SPAETER_MIN * 60000).toISOString() : null,
+          bestaetigt_am: alt?.bestaetigt_am ?? (p.bestaetigen === true ? jetzt() : null) }, { onConflict: "message_id,person_id" });
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        if (neuBestaetigt) {
+          await sendenGewaehlt("club_nachricht", [ex.absender], ["push"], { titel: `📬 Express angekommen – ${ich.vorname}`, kurz: `${ich.vorname} hat den Empfang deiner Express-Sendung bestätigt`,
+            betreff: "Köcheclub Werne – Express-Sendung angekommen", text: `${ich.name} hat den Empfang deiner Express-Sendung bestätigt.`, url: `${APP_URL}#nachricht=${ex.thread_id}` }, `club-express-quittung:${ex.message_id}:${ich.person_id}`).catch(() => null);
+          await db.rpc("kc_club_rt_klingeln", { p_personen: [ex.absender], p_art: "chat", p_thread: ex.thread_id }).then(() => {}, () => {});
+        }
+        await protokoll(ich.person_id, "express_antwort", { nachricht: ex.message_id, antwort, bestaetigt: p.bestaetigen === true });
+        return json({ ok: true });
+      }
       // ----- KC-CLUB-SPAETER-SENDEN (2.362.0): planen/ändern, löschen, jetzt senden – immer nur die eigenen -----
       case "geplant_speichern": {
         const um = new Date(String(p.um || ""));
@@ -8547,6 +8597,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         } else if (NOTFALL_RE.test(text)) text = text.replace(NOTFALL_RE, "").trim() || "…";
         // KC-CLUB-WICHTIG (1.53.0): „Wichtigkeit hoch“ – nur für normale Nachrichten (nicht Abstimmung/Kontaktkarte)
         const wichtig = (!!p.wichtig || notfall) && !umfrage && !kontaktPid;
+        // 2.362.0 KC-CLUB-EXPRESS (Wunsch Hansi „per Rennwagen – Express-Sendung, wird sofort zugestellt, beim Empfänger ploppt ein Fenster auf“):
+        // durchbricht wie der Notfall Stummschaltung und Ruhezeit (Hansis Wahl „Durchbricht alles“); höchstens EXPRESS_MAX je Person und Tag
+        const express = !!p.express && !notfall && !umfrage && !kontaktPid;
+        if (express) {
+          const { count: ex } = await db.from("kc_club_express").select("message_id", { count: "exact", head: true }).eq("absender", ich.person_id).gte("erstellt_am", new Date(Date.now() - 86400000).toISOString());
+          if ((ex ?? 0) >= EXPRESS_MAX) throw new Fehler(`🏎️ Höchstens ${EXPRESS_MAX} Express-Sendungen am Tag – diese bitte normal senden.`, 429);
+        }
         let threadId = notfall && !probe ? await notfallUnterhaltung(ich) : String(p.id || ""), neu = false;
         if (threadId) await binTeilnehmer(threadId, ich.person_id);
         else {
@@ -8611,6 +8668,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             : await db.from("kc_club_chat_kontakt").insert({ message_id: m.id, person_id: kontaktPid });
           if (ze) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler(umfrage ? "Abstimmung konnte nicht gespeichert werden." : "Kontakt konnte nicht gesendet werden.", 500); }
         }
+        if (express) {
+          const { error: xe } = await db.from("kc_club_express").insert({ message_id: m.id, thread_id: threadId, absender: ich.person_id, erstellt_am: m.created_at });
+          if (xe) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler("Express-Sendung konnte nicht gespeichert werden – nicht gesendet.", 500); }
+        }
         if (wichtig) {
           const { error: we } = await db.from("kc_club_nachricht_wichtig").insert({ message_id: m.id, person_id: ich.person_id });
           if (we) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler("Wichtige Nachricht konnte nicht gespeichert werden.", 500); }
@@ -8642,7 +8703,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (count === 1) ziel.push(ich.person_id); // Test-Unterhaltung nur mit mir
         }
         // KC-CLUB-WICHTIGKEIT (2.287.0, Wunsch Hansi): ❗ Wichtigkeit hoch geht wie der Notfall immer per Push UND E-Mail raus
-        const wege = notfall || wichtig ? ["push", "email"] : zustellwege(p.wege);
+        const wege = notfall || wichtig || express ? ["push", "email"] : zustellwege(p.wege);
         const { data: grp } = await db.from("kc_club_gruppen").select("name,symbol").eq("thread_id", threadId).maybeSingle();
         // KC-CLUB-ERWAEHNUNG (0.97.0): @Erwähnte (nur Teilnehmer dieser Unterhaltung) bekommen eine eigene, deutliche Meldung –
         // immer aufs Handy (bzw. Mail, wenn sie die App noch nie geöffnet haben), statt der normalen Nachrichten-Meldung.
@@ -8662,17 +8723,17 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         // KC-CLUB-STUMM (1.9.0): wer diese Unterhaltung stummgeschaltet hat, bekommt keinen Push/keine Mail (@Erwähnung kommt trotzdem)
         const stumm = await stummFuer(ziel.filter((x: string) => x !== ich.person_id), threadId);
-        if (notfall) stumm.clear(); // KC-CLUB-NOTFALL-MELDUNG: Notfall erreicht auch stummgeschaltete Chats
+        if (notfall || express) stumm.clear(); // KC-CLUB-NOTFALL-MELDUNG: Notfall erreicht auch stummgeschaltete Chats · 2.362.0: Express ebenso
         for (let i = ziel.length - 1; i >= 0; i--) if (stumm.has(ziel[i])) ziel.splice(i, 1);
         // KC-CLUB-PUSH-NUR-OFFLINE (2.138.0): wer gerade in der App ist, bekommt bei normalen Nachrichten keinen Push/keine Mail – Notfall und ❗ wichtig weiter immer
-        const inApp = notfall || wichtig ? new Set<string>() : await geradeInDerApp(ziel.filter((x: string) => x !== ich.person_id)).catch(() => new Set<string>());
+        const inApp = notfall || wichtig || express ? new Set<string>() : await geradeInDerApp(ziel.filter((x: string) => x !== ich.person_id)).catch(() => new Set<string>());
         for (let i = ziel.length - 1; i >= 0; i--) if (inApp.has(ziel[i])) ziel.splice(i, 1);
         const versand = await sendenGewaehlt("club_nachricht", ziel, wege, {
-          titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : slHinweis ? slHinweis : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
+          titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : express ? `🏎️ EXPRESS – ${grp ? `${grp.symbol} ${grp.name}: ` : ""}${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : slHinweis ? slHinweis : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
           betreff: `${wMarke}Köcheclub Werne – ${wichtig ? "wichtige" : "neue"} Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${slHinweis || text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
-          url: `${APP_URL}#nachricht=${threadId}`, ...(notfall ? { wichtigkeit: "notfall" } : wichtig ? { wichtigkeit: "hoch" } : {}),
-        }, `club-nachricht:${m.id}`, { notfall });
+          url: `${APP_URL}#nachricht=${threadId}`, ...(notfall ? { wichtigkeit: "notfall" } : wichtig || express ? { wichtigkeit: "hoch" } : {}),
+        }, `club-nachricht:${m.id}`, { notfall: notfall || express }); // Express: auch in der Ruhezeit (wie Notfall)
         await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, selbstloeschen: slNachricht, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand, mid: m.id }); // mid: KC-CLUB-EMPFANGS-EFFEKT (2.177.0) – gleicher „Abwechselnd“-Effekt bei Absender und Empfänger
       }

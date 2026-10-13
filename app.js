@@ -4793,6 +4793,8 @@ const HILFE = [
   { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste einmal auf einen Chat tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
+  { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag, nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
+  { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → 🎨 Darstellung → Senden</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b> oder <b>Luftballon</b> – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen.", seit: "2.362.0" },
   { id: "zurueckholen", thema: "nachrichten", sym: "↩️", t: "Vertippt? Nachricht zurückholen", x: "Solange noch niemand deine Nachricht gelesen hat, kannst du sie <b>zurückholen</b>: Nachricht antippen (am PC: rechte Maustaste) oder im <b>ⓘ</b>-Fenster → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet für alle und steht wieder in deinem Schreibfeld – ändern und neu senden.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-ZURUECKHOLEN
   { id: "spaeter_senden", thema: "nachrichten", sym: "⏰", t: "Nachricht später senden – auch jeden Montag", x: "Nachricht schreiben, unten auf <b>⏰</b> tippen, Zeit wählen (z. B. <b>morgen früh 8 Uhr</b>) und wie oft (<b>einmal</b>, <b>jeden Tag</b>, <b>werktags</b>, <b>jeden Montag</b> …). Bis dahin steht sie blass unten im Chat – nur du siehst sie; antippen zum Ändern oder Löschen. Gesendet wird auch, wenn dein Handy aus ist.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-SPAETER-SENDEN
   { id: "weiterleiten", thema: "nachrichten", sym: "↪️", t: "Weitersagen leicht gemacht", x: "Soll jemand anderes eine Nachricht auch lesen? Antippen → <b>„↪️ Weiterleiten“</b> und die Person oder Unterhaltung aussuchen. Fertig.", seit: "2.23.1" },
@@ -13902,8 +13904,10 @@ async function fxAusHinweis(nochmal) {
 // 1) ✉️ Nachricht gesendet: ein Papierflieger (oder eine Brieftaube) startet am Senden-Knopf und fliegt davon
 // 2.175.0 (Wunsch Hansi „etwas in Schlangenlinien – oder eine weiße Brieftaube mit Kuvert im Schnabel“): Wahl je Gerät unter 🎨 Darstellung
 // 2.176.0 (Wunsch Hansi „als drittes ein gelbes Postauto – und wenn als wichtig markiert ein Auto mit Blaulicht“)
-const SENDE_EFFEKTE = [["flieger", "✈️ Papierflieger"], ["taube", "🕊️ Brieftaube"], ["postauto", "🚐 Postauto"], ["wechsel", "🔀 Abwechselnd"], ["aus", "🚫 Aus"]];
-const SENDE_REIHE = ["flieger", "taube", "postauto"];
+// 2.362.0 KC-CLUB-BOTEN (Wunsch Hansi „als Versand auch einen Postboten auf dem Fahrrad, Brieftaube, Papierflieger … auch unter Voreinstellungen“):
+// + 🚴 Postbote mit Fahrrad, 🍾 Flaschenpost, 🚀 Rakete, 🎈 Luftballon. 🏎️ Rennwagen = Express-Sendung (eigener Knopf, nicht wählbar als Standard).
+const SENDE_EFFEKTE = [["flieger", "✈️ Papierflieger"], ["taube", "🕊️ Brieftaube"], ["postauto", "🚐 Postauto"], ["fahrrad", "🚴 Postbote mit Fahrrad"], ["flasche", "🍾 Flaschenpost"], ["rakete", "🚀 Rakete"], ["ballon", "🎈 Luftballon"], ["wechsel", "🔀 Abwechselnd"], ["aus", "🚫 Aus"]];
+const SENDE_REIHE = ["flieger", "taube", "postauto", "fahrrad", "flasche", "rakete", "ballon"];
 const sendeEffektWahl = () => { const t = themaWert("effekt"); if (t) return t; try { const w = localStorage.getItem("kc_club_sendeEffekt"); return SENDE_EFFEKTE.some(([k]) => k === w) ? w : "wechsel"; } catch { return "wechsel"; } };
 let SENDE_FX_N = 0;
 const FLIEGER_SVG = (g) => `<svg viewBox="0 0 120 120" width="${g}" height="${g}" style="transform:scaleX(-1)">
@@ -13920,12 +13924,67 @@ const TAUBE_SVG = (g) => `<svg viewBox="0 0 140 120" width="${Math.round(g * 1.1
     <path d="M29 51 17 55 29 57Z" fill="#e8a33d" stroke="#b97a1e" stroke-width="1" stroke-linejoin="round"/>
     <g class="tb-brief" transform="rotate(-8 17 64)"><rect x="4" y="57" width="26" height="17" rx="2" fill="#f3e6cf" stroke="#7b1e2b" stroke-width="2"/><path d="M4 57 17 67 30 57" fill="none" stroke="#7b1e2b" stroke-width="2"/><circle cx="17" cy="67" r="2.6" fill="#7b1e2b"/></g>
     <g class="fl-vorn" fill="#fff" stroke="#9a948c" stroke-width="2" stroke-linejoin="round"><path d="M58 60C58 30 76 6 106 2 100 22 92 42 80 62Z"/><path d="M72 40 88 22M76 48 94 32" fill="none" stroke-width="1.5"/></g></svg>`;
-function papierflieger(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG, mid = null) {
+// 2.362.0 KC-CLUB-BOTEN: neue Boten (neutral, ohne Firmenzeichen; Club-Farben Weinrot/Beige). Fahrzeuge schauen nach links (Fahrtrichtung).
+const BRIEF_SVG = (x, y, w = 24, h = 16) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="#f3e6cf" stroke="#7b1e2b" stroke-width="2"/><path d="M${x} ${y} ${x + w / 2} ${y + h * 0.6} ${x + w} ${y}" fill="none" stroke="#7b1e2b" stroke-width="2"/>`;
+const VELO_RAD = (x) => `<g class="fz-rad"><circle cx="${x}" cy="90" r="21" fill="none" stroke="#222" stroke-width="5"/><path d="M${x} 69v42M${x - 21} 90h42M${x - 15} 75l30 30M${x + 15} 75l-30 30" stroke="#999" stroke-width="1.4"/><circle cx="${x}" cy="90" r="3" fill="#555"/></g>`;
+const FAHRRAD_SVG = (b) => `<svg viewBox="0 0 200 116" width="${b}" height="${Math.round(b * 0.58)}" overflow="visible">
+    ${VELO_RAD(42)}${VELO_RAD(152)}
+    <g fill="none" stroke="#7b1e2b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M42 90 60 46M60 46 120 52 152 90M85 90 120 52M85 90 60 46M85 90h-2"/></g>
+    <path d="M60 46 50 40M60 46 70 43" stroke="#333" stroke-width="4" stroke-linecap="round"/><circle cx="52" cy="38" r="4" fill="#e8b923" stroke="#8a6d00" stroke-width="1.5"/>
+    <path d="M110 48h20" stroke="#333" stroke-width="6" stroke-linecap="round"/>
+    <g stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M118 46 100 68 88 88" stroke="#1f3f6b" stroke-width="8"/><path d="M118 46 96 18" stroke="#1f4e8c" stroke-width="13"/><path d="M102 26 64 44" stroke="#1f4e8c" stroke-width="6"/></g>
+    <circle cx="92" cy="9" r="9" fill="#f2c9a0" stroke="#8a5a3a" stroke-width="1.5"/><path d="M82 6q10-13 20 0Z" fill="#1f4e8c"/><path d="M83 6h-9" stroke="#1f4e8c" stroke-width="3" stroke-linecap="round"/>
+    <rect x="118" y="24" width="36" height="26" rx="4" fill="#f5c400" stroke="#3b2a00" stroke-width="2"/>${BRIEF_SVG(125, 29, 22, 14)}</svg>`;
+const RENNWAGEN_SVG = (b) => `<svg viewBox="0 0 200 110" width="${b}" height="${Math.round(b * 0.55)}" overflow="visible">
+    <g class="fz-tempo" stroke="#bbb" stroke-width="3" stroke-linecap="round"><path d="M200 58h26M206 70h34M200 82h22"/></g>
+    <path d="M172 38h26v9h-8v22h-6V47h-12Z" fill="#3b0d14"/>
+    <path d="M10 80 32 70l46-4 16-14h36l12 13 42 2 8 15-182 4Z" fill="#c0392b" stroke="#3b0d14" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="2" y="82" width="36" height="6" rx="2" fill="#3b0d14"/>
+    <circle cx="112" cy="50" r="10" fill="#f5c400" stroke="#3b0d14" stroke-width="2"/><path d="M102 50h12" stroke="#222" stroke-width="4" stroke-linecap="round"/>
+    <text x="128" y="80" text-anchor="middle" font-size="12" font-weight="900" fill="#fff" font-family="sans-serif" font-style="italic">EXPRESS</text>
+    ${RAD(40)}${RAD(160)}<g class="fz-rauch" fill="#d6d1c8"><circle cx="198" cy="86" r="4"/><circle cx="208" cy="82" r="6"/><circle cx="220" cy="78" r="8"/></g></svg>`;
+const FLASCHE_SVG = (b) => `<svg viewBox="0 0 140 90" width="${b}" height="${Math.round(b * 0.64)}" overflow="visible">
+    <g transform="translate(140 0) scale(-1 1) rotate(-10 70 45)"><path d="M18 34h72q12 0 18 7h14v12h-14q-6 7-18 7H18q-8 0-8-13t8-13Z" fill="#9fd6c2" fill-opacity=".8" stroke="#2e6b5a" stroke-width="2.5"/>
+    <rect x="121" y="40" width="10" height="14" rx="2" fill="#a0723c" stroke="#5c3d17" stroke-width="1.5"/><rect x="26" y="40" width="54" height="14" rx="3" fill="#f3e6cf" stroke="#7b1e2b" stroke-width="1.5"/>
+    <path d="M32 47h42" stroke="#7b1e2b" stroke-width="1.2" stroke-dasharray="4 3"/><path d="M22 38q20-6 60-2" stroke="#fff" stroke-width="2" opacity=".6" fill="none"/></g>
+    <path d="M-6 78q10-8 20 0t20 0 20 0 20 0 20 0 20 0 20 0 20 0" fill="none" stroke="#3a8fd6" stroke-width="4" stroke-linecap="round"/></svg>`;
+const RAKETE_SVG = (h) => `<svg viewBox="0 0 80 160" width="${Math.round(h * 0.5)}" height="${h}" overflow="visible">
+    <g class="rk-flamme"><path d="M26 112q14 40 14 46 0-6 14-46Z" fill="#f5a623"/><path d="M32 112q8 24 8 30 0-6 8-30Z" fill="#ffe680"/></g>
+    <path d="M18 90 4 118h14ZM62 90l14 28H62Z" fill="#c0392b" stroke="#3b0d14" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M40 4q22 22 22 70v40H18V74q0-48 22-70Z" fill="#f3f3f3" stroke="#3b0d14" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M40 4q12 12 17 30H23q5-18 17-30Z" fill="#c0392b" stroke="#3b0d14" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="40" cy="56" r="9" fill="#cfe9f7" stroke="#3b0d14" stroke-width="2.5"/>${BRIEF_SVG(28, 76, 24, 16)}</svg>`;
+const BALLON_SVG = (h) => `<svg viewBox="0 0 90 170" width="${Math.round(h * 0.53)}" height="${h}" overflow="visible">
+    <path d="M45 89q-9 20 0 38t0 22" fill="none" stroke="#555" stroke-width="1.6"/>
+    <ellipse cx="45" cy="42" rx="34" ry="40" fill="#c0392b" stroke="#7b1e2b" stroke-width="2"/><ellipse cx="32" cy="27" rx="8" ry="13" fill="#fff" opacity=".35"/>
+    <path d="M40 81h10l-5 8Z" fill="#7b1e2b"/><g transform="rotate(-8 45 158)">${BRIEF_SVG(31, 149, 28, 18)}</g></svg>`;
+// Rakete/Ballon/Flaschenpost beim Absender: startet am Senden-Knopf – Rakete schießt hoch, Ballon schwebt pendelnd davon, Flasche schaukelt nach links
+function sendeFlug(r, art) {
+  const hoch = art !== "flasche", g = Math.round(Math.min(art === "rakete" ? 120 : 130, innerWidth * 0.3)), fb = Math.round(Math.min(150, innerWidth * 0.36));
+  const b = art === "flasche" ? fb : Math.round(g * (art === "rakete" ? 0.5 : 0.53)), h = art === "flasche" ? Math.round(fb * 0.64) : g;
+  const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
+  f.innerHTML = art === "rakete" ? RAKETE_SVG(g) : art === "ballon" ? BALLON_SVG(g) : FLASCHE_SVG(fb);
+  const links = hoch ? Math.max(0, Math.min(r.left + r.width / 2 - b / 2, innerWidth - b)) : Math.max(0, Math.min(r.right, innerWidth) - b - 6);
+  f.style.left = links + "px"; f.style.top = (hoch ? r.top - h * 0.8 : r.top - h - 2) + "px"; document.body.appendChild(f);
+  const N = 20, bild = [], weit = r.top + h + 40, dauer = art === "rakete" ? 1500 : art === "ballon" ? 3200 : 2800;
+  for (let i = 0; i <= N; i++) {
+    const t = i / N; let x = 0, y = 0, w = 0;
+    if (art === "rakete") { x = Math.sin(t * Math.PI * 8) * 3 * (1 - t); y = -weit * t * t; }
+    else if (art === "ballon") { x = Math.sin(t * Math.PI * 3) * 26; y = -weit * t; w = Math.sin(t * Math.PI * 3) * 9; }
+    else { x = -(links + b + 20) * t; y = Math.sin(t * Math.PI * 6) * 7; w = Math.sin(t * Math.PI * 6 + 1) * 9; }
+    bild.push({ transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${w.toFixed(1)}deg) scale(${i === 0 ? 0.5 : 1})`, opacity: i === 0 ? 0 : t > 0.92 ? (1 - t) * 12 : 1 });
+  }
+  f.animate(bild, { duration: dauer, easing: art === "rakete" ? "ease-in" : "linear", fill: "forwards" }).onfinish = () => f.remove();
+  f.querySelectorAll(".rk-flamme").forEach((x) => { x.style.transformBox = "fill-box"; x.style.transformOrigin = "top"; x.animate([{ transform: "scaleY(.7)" }, { transform: "scaleY(1.25)" }], { duration: 90, iterations: Infinity, direction: "alternate" }); });
+  setTimeout(() => f.remove(), dauer + 400);
+}
+function papierflieger(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG, mid = null, express = typeof EXPRESS !== "undefined" && !!EXPRESS) {
   if (!fxAn() || !von) return;
   const r = von.getBoundingClientRect(); if (!r.width) return;
   const wahl = sendeEffektWahl(); if (wahl === "aus") return;
-  const art = fxArt(wahl, wichtig, mid); if (!art) return; // ❗ wichtig → immer Blaulicht; „Abwechselnd“ nach Nachrichten-Kennung (2.177.0)
-  if (art === "postauto" || art === "blaulicht") return sendeFahrzeug(r, art);
+  const art = fxArt(wahl, wichtig, mid, express); if (!art) return; // ❗ wichtig → immer Blaulicht; 🏎️ Express → Rennwagen; „Abwechselnd“ nach Nachrichten-Kennung (2.177.0)
+  if (FZ_SVG[art]) return sendeFahrzeug(r, art);
+  if (art === "rakete" || art === "ballon" || art === "flasche") return sendeFlug(r, art);
   const g = Math.round(Math.min(130, innerWidth * 0.3));
   const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
   f.innerHTML = art === "taube" ? TAUBE_SVG(g) : FLIEGER_SVG(g);
@@ -13968,16 +14027,19 @@ const BLAULICHT_SVG = (b) => `<svg viewBox="0 0 200 110" width="${b}" height="${
     <rect x="12" y="64" width="176" height="10" fill="#7b1e2b"/><text x="100" y="86" text-anchor="middle" font-size="11" font-weight="800" fill="#7b1e2b" font-family="sans-serif">❗ WICHTIG</text>
     <rect x="70" y="18" width="46" height="9" rx="3" fill="#333"/><rect class="bl-a" x="72" y="16" width="20" height="9" rx="3" fill="#2f7bff"/><rect class="bl-b" x="94" y="16" width="20" height="9" rx="3" fill="#2f7bff"/>
     <rect x="10" y="64" width="7" height="7" rx="2" fill="#ffe680" stroke="#333" stroke-width="1.5"/>${RAD(46)}${RAD(156)}</svg>`;
+const FZ_SVG = { postauto: (b) => POSTAUTO_SVG(b), blaulicht: (b) => BLAULICHT_SVG(b), fahrrad: (b) => FAHRRAD_SVG(b), express: (b) => RENNWAGEN_SVG(b) }; // 2.362.0
 function sendeFahrzeug(r, art) {
-  const b = Math.round(Math.min(190, innerWidth * 0.42)), h = Math.round(b * 0.55);
+  const b = Math.round(Math.min(190, innerWidth * 0.42)), h = Math.round(b * (art === "fahrrad" ? 0.58 : 0.55));
   const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
-  f.innerHTML = art === "blaulicht" ? BLAULICHT_SVG(b) : POSTAUTO_SVG(b);
+  f.innerHTML = FZ_SVG[art](b);
   const links = Math.max(0, Math.min(r.right, innerWidth) - b - 6); // ganz im Bild starten, Heck am Senden-Knopf
   f.style.left = links + "px"; f.style.top = r.top - h - 4 + "px"; document.body.appendChild(f);
   const dx = -(links + b + 20), N = 18, bild = [{ transform: "translate(30px,0) scale(.4)", opacity: 0 }, { transform: "translate(0,0) rotate(3deg) scale(1)", opacity: 1, offset: 0.1 }];
   for (let i = 1; i <= N; i++) { const t = i / N, x = dx * (0.2 * t + 0.8 * t * t), y = -Math.abs(Math.sin(t * Math.PI * 7)) * 4; bild.push({ transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${(i < 4 ? 3 - i : 0)}deg)`, opacity: 1, offset: 0.1 + t * 0.9 }); }
-  const dauer = art === "blaulicht" ? 1900 : 2300;
+  const dauer = art === "express" ? 1200 : art === "blaulicht" ? 1900 : art === "fahrrad" ? 2900 : 2300;
   f.animate(bild, { duration: dauer, easing: "ease-in", fill: "forwards" }).onfinish = () => f.remove();
+  if (art === "fahrrad") try { navigator.vibrate?.([30, 60, 30]); } catch {} // „kling-kling“
+  f.querySelectorAll(".fz-tempo path").forEach((x, i) => x.animate([{ opacity: 0, transform: "translateX(0)" }, { opacity: 1 }, { opacity: 0, transform: "translateX(24px)" }], { duration: 300, iterations: Infinity, delay: i * 90 }));
   f.querySelectorAll(".fz-rad").forEach((rad) => { rad.style.transformBox = "fill-box"; rad.style.transformOrigin = "center"; rad.animate([{ transform: "rotate(0deg)" }, { transform: "rotate(-360deg)" }], { duration: 380, iterations: Infinity }); });
   f.querySelectorAll(".fz-rauch circle").forEach((c, i) => c.animate([{ opacity: 0, transform: "scale(.4)" }, { opacity: .8, transform: "scale(1)" }, { opacity: 0, transform: "scale(1.6) translate(8px,-6px)" }], { duration: 700, iterations: Infinity, delay: i * 180 }));
   if (art === "blaulicht") {
@@ -13992,7 +14054,7 @@ function sendeFahrzeug(r, art) {
 // Nachrichten-Kennung → Absender und Empfänger sehen dasselbe. ❗ wichtig → Blaulicht. Der Empfänger sieht es nur bei offener
 // Unterhaltung, frischer Nachricht, eigenen Effekten an (✨ Animierte Knöpfe, kein Sparmodus) und eigenem Sende-Effekt nicht „Aus“.
 const fxReihe = (mid) => { let h = 0; for (const c of String(mid)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return SENDE_REIHE[h % SENDE_REIHE.length]; };
-const fxArt = (wahl, wichtig, mid) => wahl === "aus" ? null : wichtig ? "blaulicht" : wahl === "wechsel" ? (mid ? fxReihe(mid) : SENDE_REIHE[SENDE_FX_N++ % SENDE_REIHE.length]) : SENDE_REIHE.includes(wahl) ? wahl : null;
+const fxArt = (wahl, wichtig, mid, express) => wahl === "aus" ? null : express ? "express" : wichtig ? "blaulicht" : wahl === "wechsel" ? (mid ? fxReihe(mid) : SENDE_REIHE[SENDE_FX_N++ % SENDE_REIHE.length]) : SENDE_REIHE.includes(wahl) ? wahl : null;
 function sendeEffektMelden() {
   const w = sendeEffektWahl(); if (!INIT?.einstellungen || INIT.einstellungen.sende_effekt?.art === w) return;
   api("einstellung_setzen", { schluessel: "sende_effekt", wert: { art: w } }).then(() => { INIT.einstellungen.sende_effekt = { art: w }; }).catch(() => {});
@@ -14007,7 +14069,7 @@ function empfangsEffekt(u) {
   // ungelesene Nachricht anderer ihren Effekt – genau die, zu der die App springt („⬇ Neue Nachrichten“). Höchstens 7 Tage alt.
   const ziel = neu ? letzte : erst && u.gelesenBis ? u.nachrichten.find((m) => !m.eigen && m.zeit > u.gelesenBis) : null;
   if (!ziel || document.hidden || !fxAn() || sendeEffektWahl() === "aus" || Date.now() - Date.parse(ziel.zeit) > (neu ? 120000 : 7 * 86400000)) return;
-  const art = fxArt(u.sendeEffekte?.[ziel.vonId], ziel.wichtig, ziel.id); if (!art) return;
+  const art = fxArt(u.sendeEffekte?.[ziel.vonId], ziel.wichtig, ziel.id, !!ziel.express); if (!art) return;
   setTimeout(() => { const el = document.getElementById("msg-" + ziel.id); if (el) ankunftEffekt(el, art).catch(() => {}); }, neu ? 450 : 750);
 }
 const fxWarte = (a) => new Promise((ok) => { a.onfinish = a.oncancel = () => ok(); });
@@ -14082,20 +14144,33 @@ async function ankunftEffekt(el, art) {
         fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1200);
         await fxWarte(f.animate([{ transform: "scale(1)", opacity: 1 }, { transform: "scale(.2) rotate(20deg)", opacity: 0 }], { duration: 420, easing: "ease-in", fill: "forwards" }));
       }
+    } else if (art === "rakete" || art === "ballon" || art === "flasche") {
+      // 2.362.0 KC-CLUB-BOTEN: Rakete landet über der Blase und startet wieder · Ballon schwebt herab und steigt wieder · Flasche schaukelt heran und weiter
+      const hoch = art !== "flasche", g = Math.round(Math.min(110, innerWidth * 0.26)), fb = Math.round(Math.min(130, innerWidth * 0.32));
+      const b = hoch ? Math.round(g * (art === "rakete" ? 0.5 : 0.53)) : fb, h = hoch ? g : Math.round(fb * 0.64);
+      const zx = Math.max(4, Math.min(innerWidth - b - 4, hoch ? r.left + r.width / 2 - b / 2 : r.right - b * 0.4)), zy = Math.max(4, hoch ? r.top - h * 0.95 : r.bottom - h * 0.7);
+      const f = fxEl(art === "rakete" ? RAKETE_SVG(g) : art === "ballon" ? BALLON_SVG(g) : FLASCHE_SVG(fb), zx, zy); weg.push(f);
+      const fl = [...f.querySelectorAll(".rk-flamme")].map((x) => { x.style.transformBox = "fill-box"; x.style.transformOrigin = "top"; return x.animate([{ transform: "scaleY(.7)" }, { transform: "scaleY(1.25)" }], { duration: 90, iterations: Infinity, direction: "alternate" }); });
+      const von = hoch ? `translate(${art === "ballon" ? 30 : 0}px, ${-(zy + h + 20)}px)` : `translate(${innerWidth - zx + 10}px, 0)`;
+      const hinBild = [{ transform: von }, ...(art === "flasche" ? [{ transform: `translate(${(innerWidth - zx) * 0.5}px, -6px) rotate(8deg)` }, { transform: "translate(0,6px) rotate(-6deg)", offset: 0.8 }] : art === "ballon" ? [{ transform: "translate(-24px, -40px) rotate(-8deg)", offset: 0.6 }] : []), { transform: "translate(0,0) rotate(0deg)" }];
+      await fxWarte(f.animate(hinBild, { duration: art === "rakete" ? 900 : art === "ballon" ? 1800 : 1600, easing: art === "rakete" ? "cubic-bezier(.2,.7,.3,1)" : "ease-out", fill: "forwards" }));
+      fl.forEach((a) => a.pause()); fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1200);
+      await new Promise((ok) => setTimeout(ok, 600)); fl.forEach((a) => a.play());
+      await fxWarte(f.animate([{ transform: "translate(0,0)" }, { transform: hoch ? `translate(${art === "ballon" ? -30 : 0}px, ${-(zy + h + 20)}px)` : `translate(${-(zx + b + 20)}px, 4px) rotate(-8deg)` }], { duration: art === "rakete" ? 900 : 1500, easing: "ease-in", fill: "forwards" }));
     } else {
-      // 🚐/🚨 fährt von rechts heran, bremst neben der Blase, liefert ab (Kuvert hüpft hinein / Blaulicht blinkt) und fährt links davon
-      const b = Math.round(Math.min(170, innerWidth * 0.38)), h = Math.round(b * 0.55);
+      // 🚐/🚨/🚴/🏎️ fährt von rechts heran, bremst neben der Blase, liefert ab (Kuvert hüpft hinein / Blaulicht blinkt) und fährt links davon
+      const b = Math.round(Math.min(170, innerWidth * 0.38)), h = Math.round(b * (art === "fahrrad" ? 0.58 : 0.55));
       const zx = Math.min(innerWidth - b - 6, Math.max(r.right - b * 0.35, 6)), zy = Math.min(innerHeight - h - 4, r.bottom - h * 0.75);
-      const f = fxEl(art === "blaulicht" ? BLAULICHT_SVG(b) : POSTAUTO_SVG(b), zx, zy); weg.push(f);
+      const f = fxEl((FZ_SVG[art] || FZ_SVG.postauto)(b), zx, zy); weg.push(f);
       const raeder = [...f.querySelectorAll(".fz-rad")].map((rad) => { rad.style.transformBox = "fill-box"; rad.style.transformOrigin = "center"; return rad.animate([{ transform: "rotate(0deg)" }, { transform: "rotate(-360deg)" }], { duration: 380, iterations: Infinity }); });
       if (art === "blaulicht") {
         f.querySelectorAll(".bl-a").forEach((x) => x.animate([{ opacity: 1 }, { opacity: 0.15 }], { duration: 160, iterations: Infinity, direction: "alternate" }));
         f.querySelectorAll(".bl-b").forEach((x) => x.animate([{ opacity: 0.15 }, { opacity: 1 }], { duration: 160, iterations: Infinity, direction: "alternate" }));
       }
       f.querySelectorAll(".fz-rauch circle").forEach((c, i) => c.animate([{ opacity: 0, transform: "scale(.4)" }, { opacity: .8, transform: "scale(1)" }, { opacity: 0, transform: "scale(1.6) translate(8px,-6px)" }], { duration: 700, iterations: Infinity, delay: i * 180 }));
-      await fxWarte(f.animate([{ transform: `translate(${innerWidth - zx + 10}px,0)` }, { transform: "translate(-6px,0) rotate(-3deg)", offset: 0.85 }, { transform: "translate(0,0) rotate(0deg)" }], { duration: art === "blaulicht" ? 900 : 1200, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" }));
+      await fxWarte(f.animate([{ transform: `translate(${innerWidth - zx + 10}px,0)` }, { transform: "translate(-6px,0) rotate(-3deg)", offset: 0.85 }, { transform: "translate(0,0) rotate(0deg)" }], { duration: art === "express" ? 600 : art === "blaulicht" ? 900 : art === "fahrrad" ? 1600 : 1200, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" }));
       raeder.forEach((a) => a.pause());
-      if (art === "postauto") {
+      if (art === "postauto" || art === "fahrrad") {
         const k = fxEl(`<svg viewBox="0 0 30 22" width="${Math.round(b * 0.22)}" height="${Math.round(b * 0.16)}"><rect x="2" y="2" width="26" height="17" rx="2" fill="#f3e6cf" stroke="#7b1e2b" stroke-width="2"/><path d="M2 2 15 12 28 2" fill="none" stroke="#7b1e2b" stroke-width="2"/><circle cx="15" cy="12" r="2.6" fill="#7b1e2b"/></svg>`, zx + b * 0.55, zy + h * 0.3); weg.push(k);
         const dx = r.left + r.width / 2 - (zx + b * 0.55), dy = r.top + Math.min(20, r.height / 2) - (zy + h * 0.3);
         await fxWarte(k.animate([{ transform: "translate(0,0) scale(.5)" }, { transform: `translate(${dx * 0.5}px, ${dy - 50}px) scale(1.2) rotate(-12deg)`, offset: 0.5 }, { transform: `translate(${dx}px, ${dy}px) scale(1) rotate(0deg)` }], { duration: 750, easing: "ease-in-out", fill: "forwards" }));
@@ -20877,7 +20952,7 @@ async function neuLadenRoh(vonHand) {
   try {
     const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
     INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
-    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ document.body.classList.toggle("sos-frei", !!INIT?.sosFuerAlle); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
+    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ document.body.classList.toggle("sos-frei", !!INIT?.sosFuerAlle); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     if ($("setWichtigFrage")) $("setWichtigFrage").checked = wichtigFrageAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0)
@@ -24504,7 +24579,7 @@ async function chatOeffnen(id, ausHistorie) {
   if (id !== chatId) { naAntwortWeg(); NA.erw.clear(); } // KC-CLUB-ANTWORT: Antwort/Erwähnung gehört zum vorigen Chat
   if (id !== chatId) ZW = { push: false, email: false, whatsapp: false };
   if (id !== chatId && CS.offen) chatSucheZu(); // KC-CLUB-CHATSUCHE: Suche gehört zum vorigen Chat
-  if (id !== chatId) { entwurfLaden(id); zustellUmschalten(false); wichtigUmschalten(false); } // KC-CLUB-ENTWURF / -RUHIGE-EINGABE (1.12.0) / -WICHTIG
+  if (id !== chatId) { entwurfLaden(id); zustellUmschalten(false); wichtigUmschalten(false); expressUmschalten(false); } // KC-CLUB-ENTWURF / -RUHIGE-EINGABE (1.12.0) / -WICHTIG
   NA.trennerChat = null; // KC-CLUB-NEU-LINIE: beim Öffnen neu bestimmen
   if (id !== chatId || aktuelleAnsicht !== "chat") spur("chat", id); // KC-CLUB-SPUR: welche Unterhaltung (ohne Inhalt)
   chatId = id; zeige("chat", ausHistorie); chatId = id;
@@ -24534,7 +24609,7 @@ async function chatLaden(scrollen) {
     $("chatAngeheftet").innerHTML = (u.angeheftet || []).map((a) => `<button class="pin-zeile" onclick="zuNachricht('${a.id}')">📌 <b>${esc(a.von)}:</b> ${esc(a.text)}</button>`).join(""); // KC-CLUB-ANHEFTEN
     tipptZeigen(u.tippt || [], u.entwurf || [], u.spricht || []); chatAbstand();
     if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
-    const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, m.haken, (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join(""),
+    const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, m.haken, m.express?.quittungen?.length, (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join(""),
       m.text, m.bearbeitet, m.gemerkt, m.angeheftet, m.umfrage?.optionen.map((o) => o.stimmen + (o.meine ? "*" : "")).join(","), m.loeschtAm ? slRest(m.loeschtAm) : ""])); // 1.12.0: auch Stimmen/Bearbeitungen anderer
     const idStand = u.nachrichten.map((m) => m.id).join(",");
     vorlesenNeue(u.nachrichten); // KC-CLUB-VORLESEN
@@ -24550,9 +24625,10 @@ async function chatLaden(scrollen) {
     }
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
     $("chat").innerHTML = u.nachrichten.map((m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
-      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}
+      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}
       ${m.anlagen.map((a) => a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
+      ${m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
       <div class="fuss">${m.loeschtAm ? `<span class="sl-marke" title="Löscht sich selbst – für alle">⏳ noch ${slRest(m.loeschtAm)}</span> ` : ""}${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button aria-label="Nachricht löschen" class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("") + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
@@ -26144,6 +26220,45 @@ async function wichtigkeitFragen() {
   WF_ZULETZT[k] = Date.now();
   if (hoch) wichtigUmschalten(true);
 }
+document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => { try { expressPruefen(); } catch {} }, 1200); }); // 2.362.0 KC-CLUB-EXPRESS
+// ---------- 2.362.0 KC-CLUB-EXPRESS (Wunsch Hansi „per Rennwagen – Express-Sendung, wird sofort zugestellt; beim Empfänger ploppt ein Fenster auf:
+// Öffnen, Später, Nein; Empfang bestätigen als Kästchen“) ----------
+// 🏎️ unter dem Schreibfeld schaltet Express für die nächste Nachricht ein. Express kommt wie ein Notfall durch (auch stummgeschaltet und nachts – Hansis
+// Wahl „Durchbricht alles“), höchstens 5 am Tag. Beim Empfänger: Rennwagen-Animation und ein Fenster beim Öffnen der App bzw. sofort, wenn sie offen ist.
+let EXPRESS = false;
+function expressUmschalten(an) {
+  const vorher = EXPRESS; EXPRESS = an ?? !EXPRESS;
+  const k = $("expressKnopf"), t = $("text");
+  k?.classList.toggle("an", EXPRESS); k?.setAttribute("aria-pressed", String(EXPRESS));
+  t?.classList.toggle("express", EXPRESS); if (t) t.placeholder = EXPRESS ? "🏎️ Express-Sendung schreiben …" : WICHTIG ? "❗ Wichtige Nachricht schreiben …" : "Nachricht schreiben …";
+  if (EXPRESS && !vorher && an === undefined) melde("🏎️ Express an: kommt sofort an – auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf. Nur für Eiliges!");
+}
+const EXP = { weg: new Set(), akt: null };
+function expressPruefen() {
+  const l = (INIT?.express || []).filter((x) => !EXP.weg.has(x.id));
+  if (!l.length || document.hidden || $("expressBlatt") || $("alarmBlatt") || RUF) return;
+  const x = l[0];
+  if (aktuelleAnsicht === "chat" && chatId === x.thread) return; // steht schon offen vor einem
+  EXP.akt = x;
+  try { navigator.vibrate?.([120, 60, 120, 60, 240]); } catch {}
+  blattAuf("expressBlatt", `<div class="express-kopf">🏎️ EXPRESS-SENDUNG</div>
+    <p style="margin:6px 0 2px">von <b>${esc(x.von)}</b>${x.chat ? ` · ${esc(x.chat)}` : ""}</p>
+    <p class="hinweis" style="margin:0 0 10px">${esc(gpWann(x.zeit).replace(" um ", ", ").replace(/^(\S+)/, (w) => w.charAt(0).toUpperCase() + w.slice(1)))}${l.length > 1 ? ` · noch ${l.length - 1} weitere` : ""}</p>
+    <label class="express-best"><input type="checkbox" id="expBest" checked><b>📬 Empfang bestätigen</b><small>${esc(x.von.split(" ")[0])} sieht dann, dass die Sendung angekommen ist</small></label>
+    <button class="knopf haupt" onclick="expressAntwort('geoeffnet')">📬 Öffnen</button>
+    <button class="knopf" onclick="expressAntwort('spaeter')">⏰ Später – in 30 Minuten nochmal</button>
+    <button class="knopf" onclick="expressAntwort('nein')">✖ Nein, jetzt nicht</button>`).classList.add("express-blatt");
+  if (fxAn()) setTimeout(() => { const k = document.querySelector("#expressBlatt .express-kopf"); if (k) sendeFahrzeug({ left: innerWidth, right: innerWidth + 20, top: k.getBoundingClientRect().top, width: 1 }, "express"); }, 150);
+}
+async function expressAntwort(antwort) {
+  const x = EXP.akt; if (!x) return;
+  const best = !!$("expBest")?.checked; $("expressBlatt")?.remove(); EXP.weg.add(x.id); EXP.akt = null;
+  if (antwort === "spaeter") setTimeout(() => EXP.weg.delete(x.id), 30 * 60000 + 5000);
+  api("express_antwort", { id: x.id, antwort, bestaetigen: best }).catch((e) => meldeFehler(e));
+  if (antwort === "geoeffnet") chatOeffnen(x.thread);
+  else melde(antwort === "spaeter" ? `⏰ Erinnerung in 30 Minuten${best ? " · Empfang bestätigt" : ""}` : `Ok – die Nachricht wartet im Chat${best ? " · Empfang bestätigt" : ""}`);
+  setTimeout(expressPruefen, 800);
+}
 function wichtigUmschalten(an) {
   WICHTIG = an ?? !WICHTIG;
   const k = $("wichtigKnopf"), t = $("text");
@@ -26228,13 +26343,14 @@ async function senden() {
     const daten = { text, anlagen: anlagen.filter((a) => a.id).map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]),
       ...(NA.antwort && chatId ? { antwort_auf: NA.antwort.id } : {}), ...(chatId ? { erwaehnt: naErwaehnteIds(text) } : {}), // KC-CLUB-ANTWORT / -ERWAEHNUNG
       ...(WICHTIG ? { wichtig: true } : {}), // KC-CLUB-WICHTIG
+      ...(EXPRESS ? { express: true } : {}), // 2.362.0 KC-CLUB-EXPRESS
       ...(EINMAL && anlagen.length === 1 ? { einmal: true } : {}), // KC-CLUB-EINMAL-FOTO
       ...(SL.std !== null && SL.chat === chatId ? { ablauf_std: SL.std } : {}) }; // KC-CLUB-SELBSTLOESCHEN: ⏳ nur diese Nachricht
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
-    if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN
+    if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); expressUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN
     $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; EINMAL = false; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
     spur(daten.anlagen.length ? "gesendet_anlage" : "gesendet", r?.id || chatId); // KC-CLUB-SPUR: nur „gesendet“ + Unterhaltung, nie der Text
     if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
