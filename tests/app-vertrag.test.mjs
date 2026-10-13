@@ -1103,7 +1103,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/club_pinnwand: "pinnwand"/.test(server) && /"geburtstage", "pinnwand"\]/.test(server) && /pinnwand: \{ push: true, email: false \}/.test(server), "Bereich Pinnwand fehlt");
   const mig = lies("supabase/migrations/20260929_kc_club_v58_pinnwand_push.sql");
   assert.ok(/'club_pinnwand','Club-App – Pinnwand \(nur Push\)', array\['push'\]/.test(mig) && /'pinnwand'\]\)\);/.test(mig), "Regeln/Bereich in der Datenbank fehlen");
-  assert.ok(/setInterval\(pwLive, PW_LIVE_MS\)/.test(html) && /api\("pinnwand_neu"\)/.test(html) && /"pinnwand_neu"(, "[a-z_]+")*\]\);/.test(html) && /\["pinnwand", "📌 Neue (Post-its|Zettel) an der Pinnwand"\]/.test(html), "App: Live-Abfrage/Einstellung fehlt");
+  assert.ok(/setInterval\((\(\) => pwLive\(true\)|pwLive), PW_LIVE_MS\)/.test(html) && /api\("pinnwand_neu"\)/.test(html) && /"pinnwand_neu"(, "[a-z_]+")*\]\);/.test(html) && /\["pinnwand", "📌 Neue (Post-its|Zettel) an der Pinnwand"\]/.test(html), "App: Live-Abfrage/Einstellung fehlt");
   assert.ok(/else if \(h === "#pinnwand"\) zeige\("pinnwand"\);/.test(html), "Push-Sprung zur Pinnwand fehlt");
 }
 
@@ -4773,7 +4773,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function grAlleOnline\(p\) \{ try \{ return p\.length > 0 && !!ONL\.stand && Date\.now\(\) - ONL\.stand < 3 \* 60 \* 1000 && p\.every\(\(x\) => ONL\.ids\.has\(x\)\)/.test(html), "LED nur bei frischen Daten und wirklich allen online (UNKNOWN nie grün)");
   assert.ok(/\.avatar\.uh-gruppe\.alle-online \.uh-led \{ display: block; \}/.test(html) && /\.avatar \.uh-led \{ display: none; position: absolute; right: -2px; bottom: -2px;/.test(html), "grüne LED unten rechts");
   assert.ok(/\.avatar \.uh-kette \{ position: absolute; left: -4px; bottom: -4px;/.test(html), "🔗 unten links");
-  assert.ok(/if \(vorher !== \[\.\.\.ONL\.ids\]\.sort\(\)\.join\(\)\) grOnlineAuffrischen\(\);/.test(html) && /setInterval\(grOnlineAuffrischen, 30000\)/.test(html), "LED folgt dem Online-Herzschlag");
+  assert.ok(/if \(vorher !== \[\.\.\.ONL\.ids\]\.sort\(\)\.join\(\)\) grOnlineAuffrischen\(\);/.test(html) && /setInterval\((\(\) => \{ if \(!document\.hidden\) grOnlineAuffrischen\(\); \}|grOnlineAuffrischen), 30000\)/.test(html), "LED folgt dem Online-Herzschlag");
 }
 
 // 2.25.9 KC-CLUB-KT-KNOEPFE
@@ -9302,7 +9302,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.334.0 KC-CLUB-AKKU: Jahreszeiten-Bild gedrosselt, Zieh-Takt nur beim Ziehen
 {
-  assert.ok(/const JZB_FPS = 30, JZB_FPS_RUHE = 12, JZB_RUHE_MS = 45000;/.test(html) && /setTimeout\(\(\) => \{ JZB\.raf = 0; jzbWeiter\(\); \}, Math\.max\(0, 1000 \/ jzbFps\(\) - 10\)\)/.test(html), "höchstens 30 bzw. 12 Bilder/s");
+  assert.ok(/const JZB_FPS = 30, JZB_FPS_RUHE = 12, JZB_RUHE_MS = 45000[,;]/.test(html) && /setTimeout\(\(\) => \{ JZB\.raf = 0; jzbWeiter\(\); \}, Math\.max\(0, 1000 \/ jzbFps\(\) - 10\)\)/.test(html), "höchstens 30 bzw. 12 Bilder/s");
   assert.ok(/dpr = Math\.min\(1\.5, window\.devicePixelRatio \|\| 1\)/.test(html) && /jzbAkkuKnapp = !b\.charging && b\.level < \.3/.test(html), "Auflösung und Akkustand");
   assert.ok(/function kaRandTakt\(an\)/.test(html) && !/^setInterval\(\(\) => \{ if \(!ZIEHEN\) return;/m.test(html), "Zieh-Takt nur beim Ziehen");
   assert.ok(/clearTimeout\(JZB\.warteUhr\)/.test(html.slice(html.indexOf("function jzbStop()"), html.indexOf("function jzbGroesse()"))), "Stopp räumt den Zeitgeber");
@@ -9462,4 +9462,12 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 {
   assert.ok(/RT\.hinterUhr = setTimeout\(\(\) => \{ if \(document\.hidden && RT\.ws\) rtTrennen\(\); \}, 60000\);/.test(html), "Leitung im Hintergrund nach 60 s zu");
   assert.ok(/!\(RT\.ok && Date\.now\(\) - NEU_ZULETZT < 180000\)\) neuLaden\(\);/.test(html) && /NEU_ZULETZT = Date\.now\(\);/.test(html), "Neuladen bei stehender Leitung höchstens alle 3 Min.");
+}
+
+// 2.360.0 KC-CLUB-AKKU-5: weniger Nachfragen und Malen in Ruhe
+{
+  assert.ok(/if \(takt === true && RT\.ok && Date\.now\(\) - PW_ZULETZT < 180000\) return;/.test(html) && /setInterval\(\(\) => pwLive\(true\), PW_LIVE_MS\)/.test(html), "Pinnwand-Takt mit Leitung alle 3 Min.");
+  assert.ok(/Date\.now\(\) - AD_ZULETZT >= 175000 && Date\.now\(\) - jzbBedient < 300000/.test(html), "Admin-Startseite seltener");
+  assert.ok(/JZB_FPS_SCHLAF = 6, JZB_SCHLAF_MS = 300000/.test(html) && /Date\.now\(\) - jzbBedient > JZB_SCHLAF_MS \? JZB_FPS_SCHLAF : JZB_FPS_RUHE/.test(html), "Kopfbild schläft nach 5 Min.");
+  assert.ok(/setInterval\(\(\) => \{ if \(!document\.hidden\) vbStatusLed\(\); \}, 5000\)/.test(html), "LEDs im Hintergrund still");
 }

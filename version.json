@@ -1,12 +1,24 @@
 {
-  "version": "2.359.0",
+  "version": "2.360.0",
   "datum": "2026-10-13",
   "stufe": "RC",
   "neu": [
-    "🔋 Im Hintergrund schließt die App nach 1 Minute die direkte Leitung zum Server – das Handy wird nicht mehr alle 25 Sekunden geweckt (Neues kommt per Push, beim Öffnen sofort frisch)",
-    "🔋 Steht die direkte Leitung, lädt die App die Startdaten nur noch alle 3 statt jede Minute neu – Neuigkeiten kommen trotzdem sofort"
+    "🔋 Pinnwand: Steht die direkte Leitung, fragt die App nur noch alle 3 Minuten nach neuen Zetteln (vorher alle 45 Sekunden) – neue Zettel kommen trotzdem sofort",
+    "🔋 Admin-Startseite holt ihre Zahlen nur noch alle 3 Minuten und nach 5 Minuten ohne Bedienung gar nicht mehr",
+    "🔋 Jahreszeiten-Bild im Kopf: nach 5 Minuten ohne Bedienung nur noch halb so viele Bilder je Sekunde",
+    "🔋 Anzeige-Lämpchen werden im Hintergrund nicht mehr neu gemalt"
   ],
   "verlauf": [
+    {
+      "version": "2.360.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🔋 Pinnwand: Steht die direkte Leitung, fragt die App nur noch alle 3 Minuten nach neuen Zetteln (vorher alle 45 Sekunden) – neue Zettel kommen trotzdem sofort",
+        "🔋 Admin-Startseite holt ihre Zahlen nur noch alle 3 Minuten und nach 5 Minuten ohne Bedienung gar nicht mehr",
+        "🔋 Jahreszeiten-Bild im Kopf: nach 5 Minuten ohne Bedienung nur noch halb so viele Bilder je Sekunde",
+        "🔋 Anzeige-Lämpchen werden im Hintergrund nicht mehr neu gemalt"
+      ]
+    },
     {
       "version": "2.359.0",
       "datum": "2026-10-13",

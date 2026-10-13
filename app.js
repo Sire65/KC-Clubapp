@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.359.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.360.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -851,8 +851,12 @@ async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pi
 // nichts als gesehen). Jeder Zettel wird nur einmal eingeblendet (gemerkt je Gerät, reine Komfortfunktion).
 const PW_LIVE_MS = 45000, PW_GEMELDET_MAX = 200;
 const PW_GEMELDET = new Set((() => { try { return JSON.parse(localStorage.getItem("kc_club_pw_gemeldet") || "[]"); } catch { return []; } })());
-async function pwLive() {
+let PW_ZULETZT = 0; // 2.360.0 KC-CLUB-AKKU-5
+async function pwLive(takt) {
   if (document.hidden || !ICH) return;
+  // 2.360.0 KC-CLUB-AKKU-5: steht die direkte Leitung, meldet sie neue Zettel sofort – der Takt fragt dann nur alle 3 Min. nach (vorher alle 45 s)
+  if (takt === true && RT.ok && Date.now() - PW_ZULETZT < 180000) return;
+  PW_ZULETZT = Date.now();
   let r; try { r = await api("pinnwand_neu"); } catch { return; }
   const neu = (r.neu || []).filter((z) => !PW_GEMELDET.has(z.id));
   if (!neu.length) return;
@@ -7015,7 +7019,7 @@ function rtLedZeigen() {
   const [farbe, text] = rtZustand();
   led.className = "led led-rt " + farbe; led.title = text; led.setAttribute("aria-label", text);
 }
-setInterval(rtLedZeigen, 3000);
+setInterval(() => { if (!document.hidden) rtLedZeigen(); }, 3000); // 2.360.0: im Hintergrund nichts malen
 // KC-CLUB-RT-SPARBREMSE (2.230.0): Verbrauch des kostenlosen Monats-Kontingents (nur Admin, Zahl vom Server)
 function rtKontingent() {
   const z = INIT?.rtZaehler; if (!z) return null;
@@ -7094,7 +7098,7 @@ function onlineLedZeigen() {
   const fu = $("fussOnline");
   if (fu) { fu.classList.toggle("versteckt", !an); fu.textContent = an ? String(n) : ""; fu.title = led.title; }
 }
-setInterval(onlineLedZeigen, 30000);
+setInterval(() => { if (!document.hidden) onlineLedZeigen(); }, 30000);
 function onlineLeisteZeigen() {
   onlineLedZeigen();
   const el = $("onlineLeiste"); if (!el) return;
@@ -12984,7 +12988,8 @@ try {
   }).observe({ type: "resource", buffered: false });
 } catch {}
 addEventListener("online", vbStatusLed); addEventListener("offline", vbStatusLed);
-setInterval(vbStatusLed, 5000);
+setInterval(() => { if (!document.hidden) vbStatusLed(); }, 5000); // 2.360.0: im Hintergrund nichts malen
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { vbStatusLed(); rtLedZeigen(); } });
 
 // Rundinstrument (Halbkreis): wert = null → „–“ (nicht gemessen), Zeiger ausgeblendet
 function rundinstrument(titel, wert, max, einheit, zonen, dezimal = 0) {
@@ -15908,7 +15913,7 @@ function jzbWeiter() {
 // 2.334.0 KC-CLUB-AKKU (Fund Hansi „Akku ruck, zuck leer – Handy meldet hohen Akkuverbrauch“): Das Jahreszeiten-Bild im Kopf wurde
 // 60× je Sekunde in voller Auflösung neu gemalt – auch wenn niemand hinsah. Jetzt höchstens 30 Bilder je Sekunde, nach 45 s ohne
 // Bedienung nur noch 12 (sieht gleich aus, die Bewegung rechnet mit der echten Zeit), Auflösung höchstens 1,5-fach.
-const JZB_FPS = 30, JZB_FPS_RUHE = 12, JZB_RUHE_MS = 45000;
+const JZB_FPS = 30, JZB_FPS_RUHE = 12, JZB_RUHE_MS = 45000, JZB_FPS_SCHLAF = 6, JZB_SCHLAF_MS = 300000; // 2.360.0: nach 5 Min. ohne Bedienung 6 Bilder/s
 let jzbBedient = Date.now();
 ["pointerdown", "keydown", "wheel"].forEach((t) => addEventListener(t, () => { jzbBedient = Date.now(); }, { passive: true, capture: true }));
 // Akku unter 30 % und nicht am Laden: immer die sparsame Bildrate (Chrome/Android meldet den Akkustand, sonst gilt das Übliche)
@@ -15921,7 +15926,7 @@ setInterval(() => { try { document.documentElement.classList.toggle("kc-ruhe", j
 addEventListener("pointerdown", () => document.documentElement.classList.remove("kc-ruhe"), { passive: true, capture: true });
 // 2.358.0 KC-CLUB-AKKU-3: eine Vorschau läuft nur noch 2 Minuten mit voller Bildrate (vorher dauerhaft), danach wie sonst sparsam;
 // nach 15 Minuten endet sie von selbst (vorher blieb sie bis „beenden“ oder Neustart – auch der Grund für Hansis 30 % Akku in kurzer Zeit)
-const jzbFps = () => ((JZB.vorschau && Date.now() - (JZB.vorschauSeit || 0) < 120000) || (!jzbAkkuKnapp && Date.now() - jzbBedient < JZB_RUHE_MS) ? JZB_FPS : JZB_FPS_RUHE);
+const jzbFps = () => ((JZB.vorschau && Date.now() - (JZB.vorschauSeit || 0) < 120000) || (!jzbAkkuKnapp && Date.now() - jzbBedient < JZB_RUHE_MS) ? JZB_FPS : Date.now() - jzbBedient > JZB_SCHLAF_MS ? JZB_FPS_SCHLAF : JZB_FPS_RUHE);
 setInterval(() => { try { if ((JZB.vorschau || JZB.extra) && JZB.vorschauSeit && Date.now() - JZB.vorschauSeit > 15 * 60000) { JZB.vorschauSeit = 0; // still beenden – ohne auf die Startseite zu springen
   JZB.vorschau = ""; JZB.extra = ""; JZB.eisName = null; JZB.eisStueck = null; JZB.nussName = null; if (aktuelleAnsicht === "start") jahreszeitKopf(); jzVorschauLeiste(); } } catch {} }, 30000);
 function jzbBild(ts) {
@@ -18401,7 +18406,9 @@ async function adLaden(erzwingen) {
   if (reg === "admin" && aktuelleAnsicht === "start" && !kaBearb) kachelnZeigen();
   if (AD.offen && document.getElementById("adBlatt")) adBlatt(AD.offen);
 }
-setInterval(() => { if (reg === "admin" && aktuelleAnsicht === "start" && !document.hidden) adLaden(); }, 60000);
+// 2.360.0 KC-CLUB-AKKU-5: Admin-Startseite holt ihre Zahlen (3 Abfragen) nur noch alle 3 Min. statt jede Minute – und nach 5 Min. ohne Bedienung gar nicht
+let AD_ZULETZT = 0;
+setInterval(() => { if (reg === "admin" && aktuelleAnsicht === "start" && !document.hidden && Date.now() - AD_ZULETZT >= 175000 && Date.now() - jzbBedient < 300000) { AD_ZULETZT = Date.now(); adLaden(); } }, 60000);
 const adStd = (iso) => (iso ? (Date.now() - new Date(iso)) / 3600000 : Infinity);
 const adGr = (b) => (b == null ? "unbekannt" : b < 1048576 ? Math.max(1, Math.round(b / 1024)) + " KB" : mb(b));
 const adPct = (b, g) => (b == null || !g ? null : (b / g) * 100);
@@ -24177,7 +24184,7 @@ function grOnlineAuffrischen() {
   document.querySelectorAll(".uh-gruppe[data-personen]").forEach((el) => { const p = el.dataset.personen ? el.dataset.personen.split(",") : [], alle = grAlleOnline(p);
     el.classList.toggle("alle-online", alle); el.title = "Feste Gruppe" + (alle ? " – alle gerade online" : ""); });
 }
-setInterval(grOnlineAuffrischen, 30000);
+setInterval(() => { if (!document.hidden) grOnlineAuffrischen(); }, 30000);
 const RUNDE_NEIN = "kc_club_runde_nein";
 const rundeSchluessel = (u) => (u?.teilnehmer || []).map((x) => x.person_id).sort().join("|");
 // Angebot im Chat: nur wer die Runde begonnen hat, ab 3 Personen, beim zweiten Mal (zweite eigene Nachricht hier oder eine weitere Runde
@@ -33584,7 +33591,7 @@ async function fpAdmin(tage) {
   setTimeout(stStart, 2500); // KC-CLUB-STANDORT
   document.addEventListener("visibilitychange", () => { updWeg(document.hidden); if (!document.hidden) { if (ST.eigen) stMelden(true); neuLaden(); updatePruefen(false).then(updateSelbst); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
   setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat" && !(RT.ok && Date.now() - NEU_ZULETZT < 180000)) neuLaden(); }, sparTakt(60000)); // KC-CLUB-SPARMODUS · 2.359.0: steht die direkte Leitung, nur alle 3 Min. (Neues kommt sofort über die Leitung)
-  setInterval(pwLive, PW_LIVE_MS); // KC-CLUB-PINNWAND-LIVE: auch im Chat
+  setInterval(() => pwLive(true), PW_LIVE_MS); // KC-CLUB-PINNWAND-LIVE: auch im Chat · 2.360.0: mit Leitung seltener
 })();
 // ---------- 2.355.0 KC-CLUB-KOCH-EMOJI (Fund Hansi „am PC sieht Twinkey beim Fegen anders aus: laufende Beine, ein Gesicht daneben und eine
 // Pfanne mit Spiegelei – so sieht auch die Kachel ‚Mein Bild‘ aus“) ----------

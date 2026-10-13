@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.360.0 – 2026-10-13 – 🔋 KC-CLUB-AKKU-5: weniger Nachfragen und Malen in Ruhe
+Anlass (Hansi): „Alles optimieren und stromsparend.“
+- Pinnwand-Takt (pwLive, 45 s): bei stehender Leitung (RT.ok) höchstens alle 3 Min. – neue Zettel meldet die Leitung ohnehin sofort (rtSignal „pinnwand“ ruft pwLive ohne Bremse).
+- Admin-Startseite (adLaden = 3 Abfragen): alle 3 statt jede Minute, nach 5 Min. ohne Bedienung gar nicht.
+- Jahreszeiten-Kopf: nach 5 Min. ohne Bedienung 6 statt 12 Bilder/s (JZB_FPS_SCHLAF).
+- rtLedZeigen (3 s), vbStatusLed (5 s), onlineLedZeigen/grOnlineAuffrischen (30 s): im Hintergrund kein Malen; beim Zurückkommen sofort frisch.
+- Unverändert (bewusst): Lebenszeichen 60 s (System Check), Online-Ping 60 s mit Leitung, Hänger-Wächter 1 s (billig).
+
 ## 2.359.0 – 2026-10-13 – 🔋 KC-CLUB-AKKU-4: Gesamtprüfung Leistung/Akku – Hintergrund-Leitung und Neuladen sparsamer
 Anlass (Hansi): „Prüfe alle Funktionen unserer App, ob da was optimiert werden muss.“
 Geprüft: Rechenzeit je Bereich in Ruhe (Browser): Start 2,5 %, alle anderen < 1 % · laufende Zeitgeber (21 in Ruhe, alle im Sekunden- bis Minutentakt, billig) · Server-Anfragen in Ruhe (online, spur, nutzung – gering) ·
