@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.358.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.359.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7065,6 +7065,12 @@ function rtSignal(s) {
   if (s.art === "chat") { clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500); } // Zähler/Kachel frisch (mehrere Signale = einmal)
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && INIT?.rtKanal && !RT.ok) { RT.warte = 1000; rtVerbinden(); } });
+// 2.359.0 KC-CLUB-AKKU-4: im Hintergrund nach 60 s die direkte Leitung schließen – ihr Herzschlag alle 25 s weckt sonst ständig das Funkmodul.
+// Neues kommt im Hintergrund per Push; beim Zurückkommen baut die Zeile darüber die Leitung sofort wieder auf (und die App lädt frisch).
+document.addEventListener("visibilitychange", () => {
+  clearTimeout(RT.hinterUhr);
+  if (document.hidden) RT.hinterUhr = setTimeout(() => { if (document.hidden && RT.ws) rtTrennen(); }, 60000);
+});
 // Takt: normal 60 s; während ich auf eine Antwort warte alle 4 s (höchstens 3 Minuten)
 function onlineTakt() {
   clearInterval(ONL.timer);
@@ -20809,7 +20815,9 @@ function wichtigZeigen() {
 // KC-CLUB-LADEN-EINMAL (1.97.0): läuft schon ein Laden, wird es mitbenutzt statt ein zweites zu starten (sonst konnte eine ältere
 // Antwort eine neuere überschreiben)
 let NEU_LADEN_LAUF = null, NEU_LADEN_FOLGE = null;
+let NEU_ZULETZT = 0; // 2.359.0 KC-CLUB-AKKU-4: wann zuletzt alles neu geladen wurde
 function neuLaden(vonHand) {
+  NEU_ZULETZT = Date.now();
   // 2.1.1: läuft schon eins, kommt GENAU EIN frisches Laden danach (wer gerade gespeichert hat, sieht sonst den alten Stand)
   if (NEU_LADEN_LAUF && !vonHand) return NEU_LADEN_FOLGE || (NEU_LADEN_FOLGE = NEU_LADEN_LAUF.catch(() => {}).then(() => { NEU_LADEN_FOLGE = null; return neuLaden(); }));
   const lauf = neuLadenRoh(vonHand).finally(() => { if (NEU_LADEN_LAUF === lauf) NEU_LADEN_LAUF = null; });
@@ -33575,7 +33583,7 @@ async function fpAdmin(tage) {
   setInterval(() => { if (!document.hidden && aktuelleAnsicht === "start" && !chatId) updatePruefen(false).then(updateSelbst); }, UPDATE_TAKT_MS);
   setTimeout(stStart, 2500); // KC-CLUB-STANDORT
   document.addEventListener("visibilitychange", () => { updWeg(document.hidden); if (!document.hidden) { if (ST.eigen) stMelden(true); neuLaden(); updatePruefen(false).then(updateSelbst); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
-  setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat") neuLaden(); }, sparTakt(60000)); // KC-CLUB-SPARMODUS
+  setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat" && !(RT.ok && Date.now() - NEU_ZULETZT < 180000)) neuLaden(); }, sparTakt(60000)); // KC-CLUB-SPARMODUS · 2.359.0: steht die direkte Leitung, nur alle 3 Min. (Neues kommt sofort über die Leitung)
   setInterval(pwLive, PW_LIVE_MS); // KC-CLUB-PINNWAND-LIVE: auch im Chat
 })();
 // ---------- 2.355.0 KC-CLUB-KOCH-EMOJI (Fund Hansi „am PC sieht Twinkey beim Fegen anders aus: laufende Beine, ein Gesicht daneben und eine

@@ -1,12 +1,20 @@
 {
-  "version": "2.358.0",
+  "version": "2.359.0",
   "datum": "2026-10-13",
   "stufe": "RC",
   "neu": [
-    "🔋 Akku: Ein pausiertes Erklär-Video hält den Bildschirm nicht mehr wach (nach 30 s darf er ausgehen, nach 10 Min Pause endet das Video)",
-    "🔋 Akku: Eine Jahreszeit-Vorschau läuft nur noch 2 Minuten mit voller Bildrate und endet nach 15 Minuten von selbst"
+    "🔋 Im Hintergrund schließt die App nach 1 Minute die direkte Leitung zum Server – das Handy wird nicht mehr alle 25 Sekunden geweckt (Neues kommt per Push, beim Öffnen sofort frisch)",
+    "🔋 Steht die direkte Leitung, lädt die App die Startdaten nur noch alle 3 statt jede Minute neu – Neuigkeiten kommen trotzdem sofort"
   ],
   "verlauf": [
+    {
+      "version": "2.359.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🔋 Im Hintergrund schließt die App nach 1 Minute die direkte Leitung zum Server – das Handy wird nicht mehr alle 25 Sekunden geweckt (Neues kommt per Push, beim Öffnen sofort frisch)",
+        "🔋 Steht die direkte Leitung, lädt die App die Startdaten nur noch alle 3 statt jede Minute neu – Neuigkeiten kommen trotzdem sofort"
+      ]
+    },
     {
       "version": "2.358.0",
       "datum": "2026-10-13",

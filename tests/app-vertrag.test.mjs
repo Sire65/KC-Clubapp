@@ -9457,3 +9457,9 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/if \(RG\.pauseSek >= 30 && RG\.wach\) \{ try \{ RG\.wach\.release\?\.\(\); \} catch \{\} RG\.wach = null; \}/.test(html) && /if \(RG\.pauseSek >= 600 && !\$\("rgsBlatt"\)\) rundgangEnde\(true\);/.test(html), "Video-Pause: Bildschirm frei, nach 10 Min Ende");
   assert.ok(/JZB\.vorschau && Date\.now\(\) - \(JZB\.vorschauSeit \|\| 0\) < 120000/.test(html) && /Date\.now\(\) - JZB\.vorschauSeit > 15 \* 60000/.test(html), "Vorschau: 2 Min volle Rate, 15 Min Ende");
 }
+
+// 2.359.0 KC-CLUB-AKKU-4: Hintergrund-Leitung schließen, Neuladen bei stehender Leitung seltener
+{
+  assert.ok(/RT\.hinterUhr = setTimeout\(\(\) => \{ if \(document\.hidden && RT\.ws\) rtTrennen\(\); \}, 60000\);/.test(html), "Leitung im Hintergrund nach 60 s zu");
+  assert.ok(/!\(RT\.ok && Date\.now\(\) - NEU_ZULETZT < 180000\)\) neuLaden\(\);/.test(html) && /NEU_ZULETZT = Date\.now\(\);/.test(html), "Neuladen bei stehender Leitung höchstens alle 3 Min.");
+}

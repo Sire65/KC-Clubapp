@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.359.0 – 2026-10-13 – 🔋 KC-CLUB-AKKU-4: Gesamtprüfung Leistung/Akku – Hintergrund-Leitung und Neuladen sparsamer
+Anlass (Hansi): „Prüfe alle Funktionen unserer App, ob da was optimiert werden muss.“
+Geprüft: Rechenzeit je Bereich in Ruhe (Browser): Start 2,5 %, alle anderen < 1 % · laufende Zeitgeber (21 in Ruhe, alle im Sekunden- bis Minutentakt, billig) · Server-Anfragen in Ruhe (online, spur, nutzung – gering) ·
+Start der Seite bei 4-fach gedrosselter CPU ≈ 0,9 s · Datenbank (pg_stat_statements: teuerste Abfrage im Mittel 23 ms; Advisor-Hinweise betreffen nur sehr große Datenmengen) · Startzeit im Feld: Server-„init“ heute ≈ 2,1 s statt 1,5 s – sehr wahrscheinlich Kaltstarts der Edge Function nach vielen Server-Updates an einem Tag.
+- Fund 1: Die Realtime-Leitung (WebSocket) blieb im Hintergrund offen, Herzschlag alle 25 s → weckt das Funkmodul. Jetzt: nach 60 s im Hintergrund rtTrennen(); beim Zurückkommen baut die vorhandene visibilitychange-Regel sie sofort wieder auf (und lädt frisch).
+- Fund 2: neuLaden() (komplettes init) jede Minute, auch wenn die Leitung steht und Neues ohnehin sofort meldet. Jetzt: bei stehender Leitung höchstens alle 3 Min.
+- Empfehlung: Server- und App-Updates bündeln (ein Update am Tag) – jedes Update lädt 3,7 MB neu und startet den Server kalt.
+
 ## 2.358.0 – 2026-10-13 – 🔋 KC-CLUB-AKKU-3: pausiertes Video und Jahreszeit-Vorschau sparen Akku
 Anlass (Hansi): „In kurzer Zeit 30 % Akku verloren. Liegt das an unserer App?“
 - Befund 1: Während eines Erklär-Videos hielt die App den Bildschirm wach (Wake Lock) – auch in der Pause (⏸, Stimmen-Auswahl, Verweis-Frage). Ein offen gelassenes, pausiertes Video ließ den Bildschirm nie ausgehen. Jetzt: nach 30 s Pause wird der Wake Lock freigegeben (beim Weiterspielen wieder geholt), nach 10 Min Pause endet das Video still.
