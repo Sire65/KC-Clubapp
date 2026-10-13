@@ -19,7 +19,7 @@ async function pruefeToken(token, env, jetzt = Date.now() / 1000, holeSchluessel
   const ok = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, b64url(teile[2]), new TextEncoder().encode(teile[0] + "." + teile[1]));
   if (!ok) return null;
   const erlaubt = String(env.ABLAEUFE || "").split(",").map((x) => x.trim()).filter(Boolean);
-  if (p.iss !== GITHUB || p.aud !== "kc-notfall-tresor" || !(p.exp > jetzt) || !(p.iat > jetzt - 600) || p.repository !== env.REPO || p.ref !== "refs/heads/main" || !erlaubt.includes(p.workflow_ref)) return null;
+  if (p.iss !== GITHUB || p.aud !== "kc-notfall-tresor" || !(p.exp > jetzt) || !(p.iat > jetzt - 600) || p.repository !== env.REPO || String(p.repository_id) !== String(env.REPO_ID) || String(p.repository_owner_id) !== String(env.OWNER_ID) || p.ref !== "refs/heads/main" || !erlaubt.includes(p.workflow_ref)) return null;
   return p;
 }
 async function holeJwks() {

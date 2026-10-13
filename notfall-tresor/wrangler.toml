@@ -8,4 +8,6 @@ workers_dev = true
 
 [vars]
 REPO = "Sire65/KC-Clubapp"
+REPO_ID = "1392489961"
+OWNER_ID = "297908448"
 ABLAEUFE = "Sire65/KC-Clubapp/.github/workflows/notfall-sicherung-lesen.yml@refs/heads/main"

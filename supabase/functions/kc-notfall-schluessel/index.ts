@@ -15,7 +15,7 @@ async function berechtigt(req: Request) {
   if (!t) return false;
   try {
     const { payload: p } = await jwtVerify(t, JWKS, { issuer: GITHUB, audience: "kc-notfall-schluessel", maxTokenAge: "10m" });
-    return p.repository === "Sire65/KC-Clubapp" && p.ref === "refs/heads/main" && p.workflow_ref === ABLAUF;
+    return p.repository === "Sire65/KC-Clubapp" && p.repository_id === "1392489961" && p.repository_owner_id === "297908448" && p.ref === "refs/heads/main" && p.workflow_ref === ABLAUF && ["workflow_dispatch", "schedule", "push"].includes(String(p.event_name));
   } catch { return false; }
 }
 

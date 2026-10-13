@@ -19,7 +19,7 @@ async function berechtigt(req: Request) {
   if (!t) return false;
   try {
     const { payload: p } = await jwtVerify(t, JWKS, { issuer: GITHUB, audience: "kc-db-einspielen", maxTokenAge: "10m" });
-    return p.repository === "Sire65/KC-Clubapp" && p.ref === "refs/heads/main" && p.workflow_ref === ABLAUF && p.event_name === "workflow_dispatch";
+    return p.repository === "Sire65/KC-Clubapp" && p.repository_id === "1392489961" && p.repository_owner_id === "297908448" && p.ref === "refs/heads/main" && p.workflow_ref === ABLAUF && p.event_name === "workflow_dispatch";
   } catch { return false; }
 }
 

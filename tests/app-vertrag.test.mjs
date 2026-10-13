@@ -4745,7 +4745,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const fn = lies("supabase/functions/kc-db-einspielen/index.ts"), auftrag = lies("supabase/functions/kc-db-einspielen/auftrag.ts"), wf = lies(".github/workflows/db-einspielen.yml");
   assert.ok(/export const AUFTRAG:[^=]*= null;/.test(auftrag), "Auftrag im Repository immer leer");
-  assert.ok(/audience: "kc-db-einspielen"/.test(fn) && /p\.repository === "Sire65\/KC-Clubapp" && p\.ref === "refs\/heads\/main" && p\.workflow_ref === ABLAUF && p\.event_name === "workflow_dispatch"/.test(fn), "nur der Ablauf auf main darf aufrufen");
+  assert.ok(/audience: "kc-db-einspielen"/.test(fn) && /p\.repository === "Sire65\/KC-Clubapp" && (p\.repository_id === "1392489961" && p\.repository_owner_id === "297908448" && )?p\.ref === "refs\/heads\/main" && p\.workflow_ref === ABLAUF && p\.event_name === "workflow_dispatch"/.test(fn), "nur der Ablauf auf main darf aufrufen");
   assert.ok(/if \(!\(await berechtigt\(req\)\)\) return antwort\(401/.test(fn) && /if \(!AUFTRAG\) return antwort\(410/.test(fn), "ohne Token 401, ohne Auftrag 410");
   assert.ok(/if \(!probe\.ok \|\| modus === "pruefen"\) return/.test(fn), "Einspielen nur nach grünem Probelauf");
   assert.ok(/^on:\n  workflow_dispatch:/m.test(wf) && !/^  push:/m.test(wf) && /Funktion entschärfen \(immer\)\n\s+if: \$\{\{ always\(\) \}\}/.test(wf), "nur von Hand, danach immer entschärfen");
@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6191,7 +6191,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/schedule:\s*\n\s*- cron: "\d+ \d+ 1 \* \*"/.test(e) && /"Fremder Aufruf: HTTP \$code \(erwartet 401\)"; \[ "\$code" = "401" \]/.test(e), "monatlicher Abgleich, Gegenprobe 401");
   assert.ok(/audience=kc-notfall-tresor/.test(w) && /echo "::add-mask::\$KC_BACKUP_KEY"; echo "::add-mask::\$KC_NEON_URL"/.test(w) && /id-token: write/.test(w), "Probe holt die Kopie per OIDC aus dem Tresor, maskiert");
   assert.ok(/p\.aud !== "kc-notfall-tresor"/.test(t) && /p\.ref !== "refs\/heads\/main"/.test(t) && /kopf\.alg !== "RS256"/.test(t) && /befuellt: !!\(env\.KC_BACKUP_KEY && env\.KC_NEON_URL\)/.test(t), "Tresor prüft Token streng, Status ohne Werte");
-  assert.ok(lies("tests/notfall-tresor.test.mjs").includes("13 Gegenproben") && lies(".github/workflows/tests.yml").includes("node tests/notfall-tresor.test.mjs"), "Tresor-Test läuft in den Tests mit");
+  assert.ok(lies("tests/notfall-tresor.test.mjs").includes("15 Gegenproben") && lies(".github/workflows/tests.yml").includes("node tests/notfall-tresor.test.mjs"), "Tresor-Test läuft in den Tests mit");
 }
 
 // 2.349.0 KC-CLUB-VERLAUF-FEHLALARM: kein Rot im Abschnitt des Messbeginns; einzelner Zeitüberlauf unter vielen Aufrufen bleibt grün (Säule sichtbar)
@@ -6207,6 +6207,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
     { von: t(150), dbN: 3, apiN: 2, netOk: 5, netFehler: 9, ms: 50 },  // überwiegend fehlgeschlagen → rot
     { von: t(180), dbN: 3, apiN: 2, netOk: 80, netFehler: 0, ms: 1800 } ] }; // langsam → gelb
   assert.deepEqual(fn(d).map((x) => x.f), ["leer", "gruen", "gelb", "rot", "rot", "rot", "gelb"], "Ampel im Verlauf");
+}
+
+// 2.350.0 KC-SICHERHEIT-ABGLEICH: GitHub-Ausweise zusätzlich an feste Repository-/Besitzer-Nummer gebunden; Trigger-Funktion nicht von außen aufrufbar
+{
+  for (const f of ["supabase/functions/kc-club/index.ts", "supabase/functions/kc-db-einspielen/index.ts", "supabase/functions/kc-notfall-schluessel/index.ts"])
+    assert.ok(lies(f).includes('p.repository_id === "1392489961" && p.repository_owner_id === "297908448"'), "Repository-Nummer geprüft: " + f);
+  assert.ok(/\["workflow_dispatch", "schedule", "push"\]\.includes\(String\(p\.event_name\)\)/.test(lies("supabase/functions/kc-notfall-schluessel/index.ts")), "Übergabe nur bei Hand-, Zeitplan- oder Push-Lauf");
+  assert.ok(/String\(p\.repository_id\) !== String\(env\.REPO_ID\)/.test(lies("notfall-tresor/worker.js")) && /REPO_ID = "1392489961"/.test(lies("notfall-tresor/wrangler.toml")), "Tresor prüft Repository-Nummer");
+  const m = lies("supabase/migrations/20261013_kc_sicherheit_trigger_rechte.sql");
+  assert.ok(/revoke all on function public\.kc_wm_umfrage_instant_notify\(\) from public, anon, authenticated;/.test(m), "Trigger-Funktion nicht über die Datenschnittstelle aufrufbar");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

@@ -1,11 +1,18 @@
 {
-  "version": "2.349.0",
+  "version": "2.350.0",
   "datum": "2026-10-13",
   "stufe": "RC",
   "neu": [
-    "🩺 Admin → Verlauf: kein falsches Rot mehr beim Messbeginn; einzelne Zeitüberläufe färben nicht gleich gelb"
+    "🛡️ Sicherheits-Abgleich: Zugänge im Hintergrund weiter abgesichert – an der Bedienung ändert sich nichts"
   ],
   "verlauf": [
+    {
+      "version": "2.350.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🛡️ Sicherheits-Abgleich: Zugänge im Hintergrund weiter abgesichert – an der Bedienung ändert sich nichts"
+      ]
+    },
     {
       "version": "2.349.0",
       "datum": "2026-10-13",
