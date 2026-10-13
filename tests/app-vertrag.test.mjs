@@ -9298,3 +9298,15 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   for (const t of ["🧑‍🍳 Unser Clubleben in einer App", "🧩 Einfacher und besser organisiert", "⏰ Die App denkt mit", "🎉 Spaß und Neugier", "❓ Viel Hilfe"]) assert.ok(w.includes(`t: "${t}"`), "Station " + t);
   assert.ok(/\{ id: "warum_app", thema: "bereiche", [^\n]*zeig: \(\) => rgListeAbspielen\(\["warum"\]\)/.test(html), "Hilfe-Eintrag startet das Video");
 }
+
+// KC-CORE-NOTFALL-LESEN (13.10.2026): verschlüsselte Neon-Sicherung ohne Supabase lesen – wöchentliche Probe, Wiederherstellen nur mit JA
+{
+  const s = lies("tools/notfall/sicherung-lesen.mjs"), w = lies(".github/workflows/notfall-sicherung-lesen.yml");
+  assert.ok(/name: "AES-GCM", iv: b64\(p\.iv\)/.test(s) && /crypto\.subtle\.digest\("SHA-256"/.test(s), "gleiche Entschlüsselung wie kc-db-backup-verify-v2");
+  assert.ok(/if \(!BESTAETIGT\) throw new Error\("Wiederherstellen nur mit bestaetigen = JA"\)/.test(s), "Wiederherstellen nur mit JA");
+  assert.ok(/"notfall_" \+ new Date\(\)/.test(s) && !/(insert into|create table|drop table|delete from|update) public\./i.test(s), "schreibt nie nach public");
+  assert.ok(!/(merke|console\.(log|error))\([^)]*\b(text|arr|klar|payload|GEHEIM|URL_NEON)\b(?!\.length)/.test(s.replace(/arr\.length/g, "")), "keine Inhalte oder Geheimnisse im öffentlichen Protokoll");
+  assert.ok(!/insert into kc_backup_verifications/.test(s), "Probe verdeckt nicht die Tagesprüfung im System Check (dort zählt nur der neueste Eintrag)");
+  assert.ok(/schedule:\s*\n\s*- cron: "\d+ \d+ \* \* 0"/.test(w) && /workflow_dispatch:/.test(w), "wöchentlich + von Hand");
+  assert.ok(/secrets\.KC_BACKUP_KEY/.test(w) && /secrets\.KC_NEON_URL/.test(w) && !/upload-artifact/.test(w) && /permissions:\s*\n\s*contents: read/.test(w), "Secrets, keine Artefakte, nur Leserecht");
+}

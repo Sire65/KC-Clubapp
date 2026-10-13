@@ -1,0 +1,50 @@
+# KC-CORE-NOTFALL-LESEN (13.10.2026, Wunsch Hansi): verschlüsselte Neon-Sicherungen OHNE Supabase lesen können.
+# Wöchentlich (Sonntag): eine zufällige Tabelle aus der jüngsten Sicherung entschlüsseln und gegen die Prüfsumme prüfen –
+# mit der HINTERLEGTEN Schlüsselkopie (GitHub-Secret KC_BACKUP_KEY), nicht mit dem Schlüssel aus dem Supabase-Tresor.
+# So ist bewiesen, dass die Daten auch lesbar sind, wenn Supabase ganz ausfällt.
+# Von Hand („Run workflow“): modus=probe (eine Tabelle, wählbar) oder modus=wiederherstellen (nur mit bestaetigen=JA):
+#   schreibt die entschlüsselten Zeilen in ein eigenes Schema notfall_JJJJMMTT auf Neon – public wird nie angefasst.
+# Inhalte werden NIE ins Protokoll geschrieben (Repository ist öffentlich) und es gibt keine Artefakte.
+# Fehlen die Secrets, meldet der Lauf „Noch nicht eingerichtet“ (grau, kein Fehler). Kostenlos (öffentliches Repo, < 2 Min.).
+name: Notfall – Sicherung lesen
+on:
+  schedule:
+    - cron: "17 4 * * 0"
+  workflow_dispatch:
+    inputs:
+      modus:
+        description: "probe (eine Tabelle prüfen) oder wiederherstellen (alle Tabellen nach notfall_JJJJMMTT)"
+        required: true
+        default: "probe"
+      tabelle:
+        description: "Tabelle (leer = zufällig bei probe, alle bei wiederherstellen)"
+        required: false
+        default: ""
+      bestaetigen:
+        description: "Für wiederherstellen: JA eintragen"
+        required: false
+        default: ""
+permissions:
+  contents: read
+concurrency:
+  group: notfall-sicherung-lesen
+  cancel-in-progress: false
+jobs:
+  lesen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Werkzeug holen
+        run: npm i --no-save --no-audit --no-fund postgres@3.4.5
+      - name: Sicherung lesen
+        env:
+          KC_NEON_URL: ${{ secrets.KC_NEON_URL }}
+          KC_BACKUP_KEY: ${{ secrets.KC_BACKUP_KEY }}
+          MODUS: ${{ github.event.inputs.modus || 'probe' }}
+          TABELLE: ${{ github.event.inputs.tabelle || '' }}
+          BESTAETIGEN: ${{ github.event.inputs.bestaetigen || '' }}
+        run: node tools/notfall/sicherung-lesen.mjs
