@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.339.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.340.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12931,7 +12931,10 @@ const esSichtbar = () => ES.offen && aktuelleAnsicht === "start" && !document.hi
 // 6 Antworten (1 richtig, 5 aus derselben Gruppe); falsch = −150 und es geht weiter. Wochen-Rätsel: alle bekommen dieselben 5 Bilder (aus der
 // Kalenderwoche errechnet), der erste Durchgang zählt für die Club-Bestenliste. Bilder: freie Fotos von Wikimedia Commons (Nachweis nach dem
 // Auflösen und unter „📜 Bildnachweise“, Lizenztexte in raetsel/) und eigene Fotos aus dem Club-Album (Admin wählt sie aus).
-const QZ_SEK = 30, QZ_STUFEN = [44, 30, 21, 14, 9, 6, 3, 1], QZ_START = 1000, QZ_FALSCH = 150, QZ_RUNDE = 5;
+const QZ_SEK = 30, QZ_STUFEN = [26, 18, 12, 8, 5, 3, 2, 1], QZ_START = 1000, QZ_FALSCH = 150, QZ_RUNDE = 5;
+// 2.340.0 (Fund Hansi „die Fotos sind zu lange unkenntlich – sonst hat man nie Chancen auf höhere Punkte“): feinere Pixel von Anfang an, die ersten Stufen
+// kommen schneller (Start der Stufen in Sekunden), nach 22 s ist das Bild scharf; Punkte fallen nur noch bis 250 statt bis 0 (+ Abzüge).
+const QZ_ZEITEN = [0, 2, 4.5, 7, 10, 13, 17, 22], QZ_ENDE = 250;
 const QZ_KAT = { werne: ["🏛️", "Werne"], kueche: ["🥕", "Küche"], club: ["📸", "Köcheclub"] };
 const QZ_LIZ = { "CC BY-SA 4.0": "https://creativecommons.org/licenses/by-sa/4.0/deed.de", "CC BY 4.0": "https://creativecommons.org/licenses/by/4.0/deed.de",
   "CC BY-SA 3.0": "https://creativecommons.org/licenses/by-sa/3.0/deed.de", "GFDL 1.2": "raetsel/GFDL-1.2.txt", "gemeinfrei": "" };
@@ -13033,7 +13036,7 @@ async function qzBild() {
   Object.assign(S, { t: 0, lauf: true, falsch: 0, stufe: -1, letzt: performance.now(), fertig: false });
   qzMalen(); clearInterval(QZ.uhr); QZ.uhr = setInterval(qzTakt, 100);
 }
-function qzPunkteJetzt(S) { return Math.max(0, Math.round(QZ_START * (1 - S.t / QZ_SEK) - S.falsch * QZ_FALSCH)); }
+function qzPunkteJetzt(S) { return Math.max(0, Math.round(QZ_START - (QZ_START - QZ_ENDE) * S.t / QZ_SEK - S.falsch * QZ_FALSCH)); }
 function qzTakt() {
   const S = QZ.spiel; if (!S || S.aus || !$("qzBild")) return qzStop();
   const jetzt = performance.now(), dt = (jetzt - S.letzt) / 1000; S.letzt = jetzt;
@@ -13045,7 +13048,7 @@ function qzTakt() {
 }
 function qzMalen() { // nur neu malen, wenn eine neue Schärfe-Stufe erreicht ist (spart Akku)
   const S = QZ.spiel, cv = $("qzBild"), B = S?.bilder[S.i]; if (!cv || !B?.m.img) return;
-  const st = S.fertig ? QZ_STUFEN.length - 1 : Math.min(QZ_STUFEN.length - 1, Math.floor(S.t / QZ_SEK * QZ_STUFEN.length)); if (st === S.stufe && cv.width) return; S.stufe = st;
+  const st = S.fertig ? QZ_STUFEN.length - 1 : Math.max(0, QZ_ZEITEN.findLastIndex((z) => S.t >= z)); if (st === S.stufe && cv.width) return; S.stufe = st;
   const box = cv.parentElement.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1), W = Math.max(50, Math.round(box.width * dpr)), H = Math.max(50, Math.round(box.height * dpr));
   if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
   const im = B.m.img, s = Math.min(W / im.width, H / im.height), w = im.width * s, h = im.height * s, x = (W - w) / 2, y = (H - h) / 2, c = cv.getContext("2d");

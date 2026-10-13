@@ -9234,7 +9234,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 {
   const srv = lies("supabase/functions/kc-club/index.ts");
   assert.ok(/\["raetsel", "🧩", "Rätsel"\]/.test(html) && /else if \(k === "raetsel"\) esRaetselZeigen\(f\);/.test(html) && /function esStop\(\) \{ esSpiegelAus\(\); qzStop\(\);/.test(html), "Reiter auf der Rückseite");
-  assert.ok(/const QZ_SEK = 30, QZ_STUFEN = \[44, 30, 21, 14, 9, 6, 3, 1\], QZ_START = 1000, QZ_FALSCH = 150, QZ_RUNDE = 5;/.test(html), "30 s, 8 Stufen, 1000 Punkte, −150");
+  assert.ok(/const QZ_SEK = 30, QZ_STUFEN = \[26, 18, 12, 8, 5, 3, 2, 1\], QZ_START = 1000, QZ_FALSCH = 150, QZ_RUNDE = 5;/.test(html) && /const QZ_ZEITEN = \[0, 2, 4\.5, 7, 10, 13, 17, 22\], QZ_ENDE = 250;/.test(html), "30 s, 8 Stufen (2.340.0: früher kenntlich), 1000 → 250 Punkte, −150");
   const motive = html.slice(html.indexOf("const QZ_MOTIVE = ["), html.indexOf("// Zusätzliche, gut klingende falsche"));
   assert.equal((motive.match(/", "werne", "/g) || []).length, 20, "20 Werne-Motive"); assert.equal((motive.match(/", "kueche", "/g) || []).length, 15, "15 Küchen-Motive");
   for (const [, id] of motive.matchAll(/\n  \["([a-z-]+)", "(?:werne|kueche)"/g)) assert.ok(fs.existsSync(new URL("../raetsel/" + id + ".webp", import.meta.url)), "Bild fehlt: " + id);

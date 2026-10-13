@@ -1,13 +1,18 @@
 {
-  "version": "2.339.0",
+  "version": "2.340.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🧩 Neues Spiel auf der Rückseite (Eselsohr → „🧩 Rätsel“): Wie gut kennst du Werne? Das Bild wird nach und nach schärfer – erkannt? Roten Buzzer drücken und aus 6 Tipps wählen",
-    "🏆 Wochen-Rätsel mit Club-Bestenliste: jede Woche 5 neue Bilder für alle – je früher erkannt, desto mehr Punkte, falsche Tipps kosten 150 Punkte",
-    "🏛️ 20 Motive aus Werne und 🥕 15 aus der Küche (freie Fotos von Wikimedia Commons) – der Admin kann eigene Fotos aus dem Club-Album dazunehmen"
+    "🧩 Rätsel: Die Bilder werden jetzt deutlich früher kenntlich (feinere Pixel von Anfang an, nach 22 Sekunden scharf) – und die Punkte fallen nur noch bis 250. So sind hohe Punktzahlen gut zu schaffen."
   ],
   "verlauf": [
+    {
+      "version": "2.340.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🧩 Rätsel: Die Bilder werden jetzt deutlich früher kenntlich (feinere Pixel von Anfang an, nach 22 Sekunden scharf) – und die Punkte fallen nur noch bis 250. So sind hohe Punktzahlen gut zu schaffen."
+      ]
+    },
     {
       "version": "2.339.0",
       "datum": "2026-10-13",
