@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.361.0 – 2026-10-13 – 🔋 KC-CLUB-AKKU-6: Stromsauger Tonausgabe + Kopfbild steht in Ruhe
+Anlass (Hansi, Akku-Übersicht: Chrome 25 % in einer Stunde): „Unsere App scheint das Handy-Akku leer zu saugen – finde die Stromsauger.“
+- Fund 1 (Tonausgabe): Die gemeinsamen AudioContexts (audio für ton()/Ständchen/Spiele, QZ.ac, rkAudio, RGP.ctx) wurden nie angehalten – nach dem
+  ersten Ton lief die Tonausgabe dauerhaft („running“, gemessen) → Audio-Chip/Mixer wach, kein Tiefschlaf, auch im Hintergrund.
+  Jetzt: AudioContext wird zentral umhüllt; jede Tonausgabe schläft 3 s nach dem letzten geplanten Ton ein (suspend) und wacht beim nächsten
+  start() von selbst auf. Ausgenommen: Kontexte mit Mikrofon/Medienstrom (Anruf, Sprachnachricht, Oszilloskop).
+- Fund 2 (Kopfbild): Auch 6–12 Bilder/s halten Grafikchip und Bildschirm-Pipeline wach. Nach 3 Min. ohne Bedienung steht das Bild
+  (JZB.steht), erste Bedienung startet es sofort. Gemessen: 2,03 % → 0,31 % Rechenlast. Ersetzt die 6-Bilder/s-Stufe aus 2.360.0.
+- Geprüft und in Ordnung: keine dauerhaften CSS-Animationen in Ruhe (0 laufend), Standort teilen nur auf Wunsch mit Ablauf, Chat-Takt mit Leitung 60 s.
+
 ## 2.360.0 – 2026-10-13 – 🔋 KC-CLUB-AKKU-5: weniger Nachfragen und Malen in Ruhe
 Anlass (Hansi): „Alles optimieren und stromsparend.“
 - Pinnwand-Takt (pwLive, 45 s): bei stehender Leitung (RT.ok) höchstens alle 3 Min. – neue Zettel meldet die Leitung ohnehin sofort (rtSignal „pinnwand“ ruft pwLive ohne Bremse).

@@ -9468,6 +9468,12 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 {
   assert.ok(/if \(takt === true && RT\.ok && Date\.now\(\) - PW_ZULETZT < 180000\) return;/.test(html) && /setInterval\(\(\) => pwLive\(true\), PW_LIVE_MS\)/.test(html), "Pinnwand-Takt mit Leitung alle 3 Min.");
   assert.ok(/Date\.now\(\) - AD_ZULETZT >= 175000 && Date\.now\(\) - jzbBedient < 300000/.test(html), "Admin-Startseite seltener");
-  assert.ok(/JZB_FPS_SCHLAF = 6, JZB_SCHLAF_MS = 300000/.test(html) && /Date\.now\(\) - jzbBedient > JZB_SCHLAF_MS \? JZB_FPS_SCHLAF : JZB_FPS_RUHE/.test(html), "Kopfbild schläft nach 5 Min.");
   assert.ok(/setInterval\(\(\) => \{ if \(!document\.hidden\) vbStatusLed\(\); \}, 5000\)/.test(html), "LEDs im Hintergrund still");
+}
+
+// 2.361.0 KC-CLUB-AKKU-6: Tonausgabe schläft ein, Kopfbild steht in Ruhe
+{
+  assert.ok(/window\.AudioContext = Neu;/.test(html) && /c\.__vonUns = true; c\.suspend\?\.\(\)/.test(html) && /K\.prototype\[m\] = function \(\.\.\.a\) \{ this\.__dauer = true;/.test(html), "Tonausgabe schläft nach 3 s ein, Mikrofon ausgenommen");
+  assert.ok(html.indexOf("window.AudioContext = Neu;") < html.indexOf("new (window.AudioContext || window.webkitAudioContext)()"), "Hülle vor der ersten Tonausgabe");
+  assert.ok(/JZB_STEHEN_MS = 180000/.test(html) && /if \(jzbStehen\(\)\) \{ JZB\.steht = true; return; \}/.test(html) && /if \(JZB\.steht\) \{ JZB\.steht = false; JZB\.letzt = 0; jzbWeiter\(\); \}/.test(html), "Kopfbild steht nach 3 Min., Antippen startet");
 }

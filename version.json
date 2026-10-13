@@ -1,14 +1,20 @@
 {
-  "version": "2.360.0",
+  "version": "2.361.0",
   "datum": "2026-10-13",
   "stufe": "RC",
   "neu": [
-    "🔋 Pinnwand: Steht die direkte Leitung, fragt die App nur noch alle 3 Minuten nach neuen Zetteln (vorher alle 45 Sekunden) – neue Zettel kommen trotzdem sofort",
-    "🔋 Admin-Startseite holt ihre Zahlen nur noch alle 3 Minuten und nach 5 Minuten ohne Bedienung gar nicht mehr",
-    "🔋 Jahreszeiten-Bild im Kopf: nach 5 Minuten ohne Bedienung nur noch halb so viele Bilder je Sekunde",
-    "🔋 Anzeige-Lämpchen werden im Hintergrund nicht mehr neu gemalt"
+    "🔋 Stromsauger gefunden: Nach dem ersten Signalton blieb die Tonausgabe dauerhaft an und hielt das Handy wach – jetzt schläft sie 3 Sekunden nach jedem Ton wieder ein",
+    "🔋 Das Jahreszeiten-Bild im Kopf bleibt nach 3 Minuten ohne Bedienung stehen (Rechenlast 0,3 % statt 2 %) – einmal antippen, dann läuft es weiter"
   ],
   "verlauf": [
+    {
+      "version": "2.361.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🔋 Stromsauger gefunden: Nach dem ersten Signalton blieb die Tonausgabe dauerhaft an und hielt das Handy wach – jetzt schläft sie 3 Sekunden nach jedem Ton wieder ein",
+        "🔋 Das Jahreszeiten-Bild im Kopf bleibt nach 3 Minuten ohne Bedienung stehen (Rechenlast 0,3 % statt 2 %) – einmal antippen, dann läuft es weiter"
+      ]
+    },
     {
       "version": "2.360.0",
       "datum": "2026-10-13",

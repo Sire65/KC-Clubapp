@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.360.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.361.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -20,6 +20,37 @@ function sparGrund() {
 }
 const SPAR = { grund: sparGrund() }; SPAR.an = !!SPAR.grund;
 const sparTakt = (ms) => (SPAR.an ? ms * 3 : ms);
+// 2.361.0 KC-CLUB-AKKU-6 (Hansi „unsere App saugt das Handy leer“): Fund – nach dem ersten Signalton (Zettel, Nachricht, Spiel, Quiz, Video-Stimme)
+// blieb die Tonausgabe des Browsers für immer eingeschaltet. Auf Android hält das den Audio-Chip wach und das Handy kommt nicht in den Tiefschlaf –
+// auch im Hintergrund. Jetzt: jede Tonausgabe der App schläft 3 s nach dem letzten Ton ein (auch im Hintergrund)
+// und wacht beim nächsten Ton von selbst wieder auf. Ausgenommen: Tonausgaben mit Mikrofon/Anruf (Sprachnachricht, Gespräch) – die regeln sich selbst.
+(() => {
+  try {
+    const K = window.AudioContext || window.webkitAudioContext; if (!K) return;
+    const alle = new Set(), zeitDa = (c) => { try { return c.currentTime; } catch { return 0; } };
+    const merke = (c, bis) => { c.__bis = Math.max(c.__bis || 0, bis); c.__zuletzt = Date.now(); if (c.state === "suspended" && c.__vonUns) { c.__vonUns = false; c.resume?.().catch?.(() => {}); } };
+    for (const N of [window.AudioScheduledSourceNode, window.AudioBufferSourceNode, window.OscillatorNode]) {
+      const pr = N?.prototype; if (!pr || pr.__kcAkku) continue; pr.__kcAkku = true;
+      const st = pr.start, sp = pr.stop;
+      if (st) pr.start = function (w = 0, ...r) { const c = this.context; if (c) merke(c, Math.max(w, zeitDa(c)) + (this.buffer?.duration || 0)); return st.call(this, w, ...r); };
+      if (sp) pr.stop = function (w = 0, ...r) { const c = this.context; if (c) merke(c, Math.max(w, zeitDa(c))); return sp.call(this, w, ...r); };
+    }
+    for (const m of ["createMediaStreamSource", "createMediaElementSource", "createMediaStreamDestination"]) {
+      const f = K.prototype[m]; if (f) K.prototype[m] = function (...a) { this.__dauer = true; return f.apply(this, a); };
+    }
+    const Neu = function (...a) { const c = new K(...a); alle.add(c); c.__zuletzt = Date.now(); return c; };
+    Neu.prototype = K.prototype; Object.setPrototypeOf(Neu, K);
+    window.AudioContext = Neu; if (window.webkitAudioContext) window.webkitAudioContext = Neu;
+    const einschlafen = (sofort) => { for (const c of alle) {
+      if (c.state === "closed") { alle.delete(c); continue; }
+      if (c.state !== "running" || c.__dauer) continue;
+      if (sofort || (zeitDa(c) > (c.__bis || 0) + 3 && Date.now() - (c.__zuletzt || 0) > 3000)) { c.__vonUns = true; c.suspend?.().catch?.(() => {}); }
+    } };
+    setInterval(() => { if (alle.size) einschlafen(false); }, 2000);
+    document.addEventListener("visibilitychange", () => { if (document.hidden) einschlafen(false); }); // Klingelton im Hintergrund bleibt (Pause < 3 s)
+    window.kcTonSchlaf = einschlafen;
+  } catch {}
+})();
 try { document.documentElement.classList.toggle("spar", SPAR.an); } catch {}
 function sparSetzen(w) {
   try { if (w === "auto") localStorage.removeItem(SPAR_KEY); else localStorage.setItem(SPAR_KEY, w); } catch {}
@@ -15913,7 +15944,7 @@ function jzbWeiter() {
 // 2.334.0 KC-CLUB-AKKU (Fund Hansi „Akku ruck, zuck leer – Handy meldet hohen Akkuverbrauch“): Das Jahreszeiten-Bild im Kopf wurde
 // 60× je Sekunde in voller Auflösung neu gemalt – auch wenn niemand hinsah. Jetzt höchstens 30 Bilder je Sekunde, nach 45 s ohne
 // Bedienung nur noch 12 (sieht gleich aus, die Bewegung rechnet mit der echten Zeit), Auflösung höchstens 1,5-fach.
-const JZB_FPS = 30, JZB_FPS_RUHE = 12, JZB_RUHE_MS = 45000, JZB_FPS_SCHLAF = 6, JZB_SCHLAF_MS = 300000; // 2.360.0: nach 5 Min. ohne Bedienung 6 Bilder/s
+const JZB_FPS = 30, JZB_FPS_RUHE = 12, JZB_RUHE_MS = 45000, JZB_STEHEN_MS = 180000; // 2.361.0: nach 3 Min. ohne Bedienung steht das Bild ganz still
 let jzbBedient = Date.now();
 ["pointerdown", "keydown", "wheel"].forEach((t) => addEventListener(t, () => { jzbBedient = Date.now(); }, { passive: true, capture: true }));
 // Akku unter 30 % und nicht am Laden: immer die sparsame Bildrate (Chrome/Android meldet den Akkustand, sonst gilt das Übliche)
@@ -15926,7 +15957,11 @@ setInterval(() => { try { document.documentElement.classList.toggle("kc-ruhe", j
 addEventListener("pointerdown", () => document.documentElement.classList.remove("kc-ruhe"), { passive: true, capture: true });
 // 2.358.0 KC-CLUB-AKKU-3: eine Vorschau läuft nur noch 2 Minuten mit voller Bildrate (vorher dauerhaft), danach wie sonst sparsam;
 // nach 15 Minuten endet sie von selbst (vorher blieb sie bis „beenden“ oder Neustart – auch der Grund für Hansis 30 % Akku in kurzer Zeit)
-const jzbFps = () => ((JZB.vorschau && Date.now() - (JZB.vorschauSeit || 0) < 120000) || (!jzbAkkuKnapp && Date.now() - jzbBedient < JZB_RUHE_MS) ? JZB_FPS : Date.now() - jzbBedient > JZB_SCHLAF_MS ? JZB_FPS_SCHLAF : JZB_FPS_RUHE);
+const jzbFps = () => ((JZB.vorschau && Date.now() - (JZB.vorschauSeit || 0) < 120000) || (!jzbAkkuKnapp && Date.now() - jzbBedient < JZB_RUHE_MS) ? JZB_FPS : JZB_FPS_RUHE);
+// 2.361.0 KC-CLUB-AKKU-6 (Hansi „unsere App saugt das Handy leer“): Auch 6–12 Bilder/s halten Grafikchip und Bildschirm-Elektronik dauernd wach.
+// Nach 3 Minuten ohne Bedienung bleibt das Kopfbild jetzt stehen (wie ein Foto); das erste Antippen/Wischen lässt es sofort weiterlaufen.
+const jzbStehen = () => !(JZB.vorschau && Date.now() - (JZB.vorschauSeit || 0) < 120000) && Date.now() - jzbBedient > JZB_STEHEN_MS;
+["pointerdown", "keydown", "wheel"].forEach((t) => addEventListener(t, () => { if (JZB.steht) { JZB.steht = false; JZB.letzt = 0; jzbWeiter(); } }, { passive: true }));
 setInterval(() => { try { if ((JZB.vorschau || JZB.extra) && JZB.vorschauSeit && Date.now() - JZB.vorschauSeit > 15 * 60000) { JZB.vorschauSeit = 0; // still beenden – ohne auf die Startseite zu springen
   JZB.vorschau = ""; JZB.extra = ""; JZB.eisName = null; JZB.eisStueck = null; JZB.nussName = null; if (aktuelleAnsicht === "start") jahreszeitKopf(); jzVorschauLeiste(); } } catch {} }, 30000);
 function jzbBild(ts) {
@@ -15935,6 +15970,7 @@ function jzbBild(ts) {
   const dt = JZB.letzt ? Math.min(.09, (ts - JZB.letzt) / 1000) : .016; JZB.letzt = ts;
   if ((JZB.pruef += dt) > 1) { JZB.pruef = 0; if (!fxAn() || !einst("jahreszeit", true)) return jahreszeitKopf(); }
   if (JZB.w) { if ((JZB.extraPruef -= dt) <= 0) { JZB.extraPruef = 30; jzbExtrasBestimmen(); } JZB.T += dt; JZB.pt += dt; jzbSchritt(dt); jzbMalen(); }
+  if (jzbStehen()) { JZB.steht = true; return; } // 2.361.0: steht still bis zur nächsten Bedienung
   JZB.raf = -1; clearTimeout(JZB.warteUhr); JZB.warteUhr = setTimeout(() => { JZB.raf = 0; jzbWeiter(); }, Math.max(0, 1000 / jzbFps() - 10)); // schlafen – das nächste Bild kommt mit dem nächsten Bildwechsel danach
 }
 function jzbPhase(p) { JZB.phase = p; JZB.pt = 0; }
