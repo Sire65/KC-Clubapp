@@ -1,12 +1,16 @@
 # Änderungen
 
-## 2.364.0 – 2026-10-14 – 🔋 KC-CLUB-AKKU-7: Eco-Gesamtprüfung aller Funktionen
+## 2.364.0 – 2026-10-14 – 🔍 Schrift-Zoom mit zwei Fingern + 🔋 Eco-Gesamtprüfung
 Anlass (Hansi): „Check nochmal, dass alle Funktionen Eco sind, ohne Akku leer zu saugen.“
 - Gemessen (Browser, alle 31 Ansichten, nach 4 Min. Ruhe, je 8 s): Rechenlast überall < 1 % (Start 0,82 %, Rest 0,04–0,65 %), 0 laufende Animationen,
   0 Bildwechsel/s; nach dem Rundgang zurück auf Start kein einziger zusätzlicher Zeitgeber (nichts „vergessen“).
 - Aktive Funktionen geprüft: Live-Zeigen (Sender 400 ms, Zuschauer 800 ms – beide im Hintergrund still), Schach-Uhr, Quiz, Rückseiten-Uhr, Countdown-Kachel,
   Fitness-Timer, Musik/Karaoke, Anruf/Konferenz – enden mit der Funktion bzw. pausieren im Hintergrund. Neue Funktionen (⏰, ↩️, 🏎️, Boten, 🎩) ohne Dauer-Last.
 - Einziger Fund: Mitschauen (ssHolen, 0,8–1,5 s) fragte auch im Hintergrund weiter → jetzt still im Hintergrund, beim Zurückkommen sofort frisch.
+- 🔍 KC-CLUB-SCHRIFT-ZOOM (Wunsch Hansi „Texte und Nachrichten auf dem Handy zoomen“): Zwei-Finger-Geste (auseinander = größer, zusammen = kleiner, 70–200 %)
+  ändert --zoom → html { font-size: calc(var(--fs) * var(--zoom)) } – die ganze App wächst mit (rem), kein seitliches Schieben, kein Seiten-Zoom (touchmove/gesture*
+  verhindert). Fotos, Videos, Canvas, Spielbretter, Video-Rundgang und Zeiger-Fläche behalten ihre Gesten. Doppeltipp mit zwei Fingern = 100 %. Untere Leiste wächst
+  höchstens +15 %. Gemerkt je Gerät (kc_club_schrift_zoom). ⚙️ → Darstellung (erweitert und einfach): „🔍 Schriftgröße“ mit A− / A+ / ↺ 100 %. Hilfe-Tipp.
 
 ## 2.363.0 – 2026-10-14 – 🎩 KC-CLUB-MUENCHHAUSEN: Baron Münchhausen als Bote
 Anlass (Hansi): „Auch noch Baron Münchhausen als Bote der Nachricht dazu.“

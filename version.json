@@ -3,6 +3,7 @@
   "datum": "2026-10-14",
   "stufe": "RC",
   "neu": [
+    "🔍 Neu: Schrift mit zwei Fingern größer ziehen – überall in der App, auch in den Nachrichten (zusammenschieben = kleiner, mit zwei Fingern doppelt tippen = wieder 100 %). Auch unter ⚙️ → Darstellung → „🔍 Schriftgröße“ mit A− / A+",
     "🔋 Mitschauen (jemand zeigt dir live seinen Bildschirm): im Hintergrund fragt die App nicht mehr sekündlich beim Server nach – beim Zurückkommen sofort aktuell"
   ],
   "verlauf": [
@@ -10,6 +11,7 @@
       "version": "2.364.0",
       "datum": "2026-10-14",
       "neu": [
+        "🔍 Neu: Schrift mit zwei Fingern größer ziehen – überall in der App, auch in den Nachrichten (zusammenschieben = kleiner, mit zwei Fingern doppelt tippen = wieder 100 %). Auch unter ⚙️ → Darstellung → „🔍 Schriftgröße“ mit A− / A+",
         "🔋 Mitschauen (jemand zeigt dir live seinen Bildschirm): im Hintergrund fragt die App nicht mehr sekündlich beim Server nach – beim Zurückkommen sofort aktuell"
       ]
     },

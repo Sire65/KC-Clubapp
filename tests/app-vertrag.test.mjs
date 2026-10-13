@@ -9524,3 +9524,11 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 {
   assert.ok(/async function ssHolen\(sofort\) \{\n  if \(document\.hidden && sofort !== true\) return;/.test(html) && /if \(!document\.hidden && SS\?\.id\) ssHolen\(true\);/.test(html), "Mitschauen fragt im Hintergrund nicht nach");
 }
+
+// 2.364.0 KC-CLUB-SCHRIFT-ZOOM: Zwei-Finger-Zoom der Schrift
+{
+  assert.ok(/html \{ font-size: calc\(var\(--fs\) \* var\(--zoom, 1\)\); \}/.test(seite), "Schrift rechnet mit --zoom");
+  assert.ok(/const szEigeneGeste = /.test(html) && /if \(e\.cancelable\) e\.preventDefault\(\); \/\/ kein Seiten-Zoom/.test(html) && /localStorage\.setItem\("kc_club_schrift_zoom"/.test(html), "Geste, kein Seiten-Zoom, gemerkt");
+  assert.ok((seite.match(/onclick="szAendern\(0\.1\)">A\+<\/button>/g) || []).length === 2, "A−/A+ in beiden Einstellungs-Ansichten");
+  assert.ok(/min\(var\(--zoom, 1\), 1\.15\)/.test(seite), "untere Leiste wächst nur maßvoll");
+}
