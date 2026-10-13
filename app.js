@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.348.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.349.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17006,17 +17006,19 @@ async function adVerlaufLaden(tage, erzwingen) {
   try { v.d = await api("admin_verlauf", { tage }); v.fehler = null; } catch (e) { v.fehler = e.message; v.zeit = Date.now() - 9 * 60000; }
 }
 // Farbe je Zeitabschnitt: leer = vor Messbeginn, jetzt = läuft noch ohne Messung, rot = keine Messung / Schnittstelle fehlt / Hintergrund-Aufrufe
-// überwiegend fehlgeschlagen, gelb = einzelne Fehler oder langsam (> 1,5 s), grün = gemessen und in Ordnung
+// überwiegend fehlgeschlagen, gelb = mehr als 2 % Fehler oder langsam (> 1,5 s), grün = gemessen und in Ordnung
 function adAbschnitte(d) {
   const lang = d.schrittMin * 60000, seit = d.seit ? new Date(d.seit).getTime() : Infinity, jetzt = Date.now();
   return d.abschnitte.map((b) => {
     const von = new Date(b.von).getTime(), bis = von + lang;
     let f;
+    const quote = b.netFehler ? b.netFehler / Math.max(1, (b.netOk || 0) + b.netFehler) : 0;
     if (bis <= seit) f = "leer";
+    else if (von < seit && !b.apiN) f = "leer"; // 2.349.0: Messbeginn mitten im Abschnitt – die Schnittstellen-Messung kam erst danach (kein Fehlalarm)
     else if (!b.dbN && !b.apiN) f = bis > jetzt ? "jetzt" : "rot";
     else if (!b.apiN && (bis <= jetzt || jetzt - von > 20 * 60000)) f = "rot";
     else if (b.netFehler && b.netFehler >= b.netOk) f = "rot";
-    else if (b.netFehler || (b.ms ?? 0) > 1500) f = "gelb";
+    else if (quote > 0.02 || (b.ms ?? 0) > 1500) f = "gelb"; // 2.349.0: gelb ab 2 % fehlgeschlagener Hintergrund-Aufrufe (ein einzelner Zeitüberlauf unter ~85 wird beim nächsten Lauf nachgeholt; Säule bleibt sichtbar)
     else f = "gruen";
     return { ...b, f };
   });

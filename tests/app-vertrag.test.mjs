@@ -6193,6 +6193,21 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/p\.aud !== "kc-notfall-tresor"/.test(t) && /p\.ref !== "refs\/heads\/main"/.test(t) && /kopf\.alg !== "RS256"/.test(t) && /befuellt: !!\(env\.KC_BACKUP_KEY && env\.KC_NEON_URL\)/.test(t), "Tresor prüft Token streng, Status ohne Werte");
   assert.ok(lies("tests/notfall-tresor.test.mjs").includes("13 Gegenproben") && lies(".github/workflows/tests.yml").includes("node tests/notfall-tresor.test.mjs"), "Tresor-Test läuft in den Tests mit");
 }
+
+// 2.349.0 KC-CLUB-VERLAUF-FEHLALARM: kein Rot im Abschnitt des Messbeginns; einzelner Zeitüberlauf unter vielen Aufrufen bleibt grün (Säule sichtbar)
+{
+  const fn = new Function(html.slice(html.indexOf("function adAbschnitte("), html.indexOf("const adVerfuegbar")) + "; return adAbschnitte;")();
+  const t = (min) => new Date(Date.UTC(2026, 9, 12, 5, 30) + min * 60000).toISOString();
+  const d = { schrittMin: 30, seit: t(26), abschnitte: [
+    { von: t(0), dbN: 1, apiN: 0, netOk: 29, netFehler: 0 },           // Messbeginn 07:56 mitten im Abschnitt, Schnittstelle erst ab 08:00
+    { von: t(30), dbN: 3, apiN: 2, netOk: 85, netFehler: 1, ms: 64 },  // ein Zeitüberlauf unter 86 Aufrufen
+    { von: t(60), dbN: 3, apiN: 2, netOk: 80, netFehler: 3, ms: 50 },  // 3,6 % → gelb
+    { von: t(90), dbN: 3, apiN: 0, netOk: 80, netFehler: 0 },          // Schnittstelle fehlt im ganzen Abschnitt → rot
+    { von: t(120), dbN: 0, apiN: 0 },                                   // gar keine Messung → rot
+    { von: t(150), dbN: 3, apiN: 2, netOk: 5, netFehler: 9, ms: 50 },  // überwiegend fehlgeschlagen → rot
+    { von: t(180), dbN: 3, apiN: 2, netOk: 80, netFehler: 0, ms: 1800 } ] }; // langsam → gelb
+  assert.deepEqual(fn(d).map((x) => x.f), ["leer", "gruen", "gelb", "rot", "rot", "rot", "gelb"], "Ampel im Verlauf");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
