@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.358.0 – 2026-10-13 – 🔋 KC-CLUB-AKKU-3: pausiertes Video und Jahreszeit-Vorschau sparen Akku
+Anlass (Hansi): „In kurzer Zeit 30 % Akku verloren. Liegt das an unserer App?“
+- Befund 1: Während eines Erklär-Videos hielt die App den Bildschirm wach (Wake Lock) – auch in der Pause (⏸, Stimmen-Auswahl, Verweis-Frage). Ein offen gelassenes, pausiertes Video ließ den Bildschirm nie ausgehen. Jetzt: nach 30 s Pause wird der Wake Lock freigegeben (beim Weiterspielen wieder geholt), nach 10 Min Pause endet das Video still.
+- Befund 2: Eine Jahreszeit-Vorschau (z. B. Nikolaus, Herbst) malte dauerhaft mit 30 Bildern/s, die Ruhe-Bildrate griff nicht. Jetzt volle Rate nur 2 Min nach dem Start, danach wie sonst; nach 15 Min endet die Vorschau still (ohne Ansichtswechsel). Messung (Browser, Startseite in Ruhe): ohne Vorschau ≈ 2 % CPU, Vorschau frisch ≈ 5 %, nach 2 Min ≈ 3 %.
+- Hilfe „Akku sparen mit der Club-App“ ergänzt.
+
 ## DB/Spiegel – 2026-10-13 (ohne App-Build) – 🛡️ KC-CORE-BACKUP-NEUE-TABELLEN: neue Tabellen erst nach dem ersten Spiegellauf sichern
 Anlass: System Check ROT um 11:42 – Restore-Lesetest scheiterte an der neuen Tabelle kc_club_video_stimmen („type … does not exist“): im Backup schon enthalten, im Neon-Spiegel erst nach dem nächsten regulären Spiegellauf. Keine Daten fehlten; nach dem Spiegellauf neu geprüft: 250/250 ok. Hansi: „Ja, bau das ein“.
 - kc_db_backup_daily(): eine Tabelle wird nur dann zurückgestellt, wenn ihre Regel in den letzten 24 h angelegt/geändert wurde UND sie in 2 Tagen noch keinen erfolgreichen Spiegellauf hatte. Bestehende Tabellen werden immer gesichert. Zurückgestellte stehen im Audit (backup_table_deferred) und im Dispatch-Eintrag (deferred).

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.357.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.358.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -4052,6 +4052,15 @@ function rundgangStart(mitKnopf, id = "ueberblick", liste = [], startI = 0) {
 // Bildschirm bleibt an, solange der Rundgang läuft (sonst geht er nach 30 Sek. ohne Tippen aus); nach dem Zurückkehren in die App neu holen
 async function rgWach() { if (!RG.an || document.hidden) return; try { RG.wach?.release?.(); RG.wach = await navigator.wakeLock?.request("screen"); } catch {} }
 document.addEventListener("visibilitychange", () => { if (!RG.an) return; if (document.hidden) { RG.pause = true; rgStille(); } else { rgWach(); rgZeigen(); } });
+// 2.358.0 KC-CLUB-AKKU-3 (Hansi „in kurzer Zeit 30 % Akku verloren“): Während eines Videos bleibt der Bildschirm an – auch in der Pause
+// (Stimmen-Auswahl, Verweis-Frage, ⏸). Jetzt: nach 30 s Pause darf der Bildschirm wieder ausgehen, nach 10 Minuten Pause endet das Video von selbst.
+setInterval(() => {
+  if (!RG.an) { RG.pauseSek = 0; return; }
+  if (!RG.pause) { RG.pauseSek = 0; if (!RG.wach && !document.hidden) rgWach(); return; }
+  RG.pauseSek = (RG.pauseSek || 0) + 15;
+  if (RG.pauseSek >= 30 && RG.wach) { try { RG.wach.release?.(); } catch {} RG.wach = null; }
+  if (RG.pauseSek >= 600 && !$("rgsBlatt")) rundgangEnde(true);
+}, 15000);
 // ---------- 2.348.0 KC-CLUB-VIDEO-STIMMEN (Wunsch Hansi „am Anfang verschiedene Stimmen für das Erklär-Video anbieten – eine Auswahl, falls eine
 // Stimme sich nicht gut anhört; in Supabase eine Tabelle mit Stimmen, die man bei Bedarf nachladen kann“) ----------
 // Die Stimmen selbst stecken im Handy/Browser (Web Speech) und lassen sich nicht aus dem Netz laden. Die Tabelle kc_club_video_stimmen (Aktion „stimmen“)
@@ -4853,7 +4862,7 @@ const HILFE = [
   { id: "kopf_besucher", thema: "darstellung", sym: "🐿️", t: "Wer kommt im Kopf zu Besuch?", x: "Das Jahreszeiten-Bild im Kopf lebt: Im <b>Herbst</b> pustet ein Mann mit Laubbläser das Laub weg, ein <b>Eichhörnchen</b> holt sich Nüsse – und legt manchmal deinen <b>Vornamen aus Nüssen</b> – bis der <b>Laubbläser</b> kommt und ihn mit dem Laub aufwirbelt. Im <b>Winter</b> fahren eine Schneeraupe, Skifahrer, Kinder auf dem Schlitten und ein Hundeschlitten vorbei, ein Eskimo baut ein Iglu, und vom Eiszapfen fällt Eis – daraus wird dein <b>Name aus Glitzer-Eis</b>; schiebt die <b>Schneeraupe</b> darüber, zerspringt er in Stücke. Danach entsteht der Name von vorn. Zu Festen (Sim-Jü, Oktoberfest, Karneval, Halloween, Ostern, Karibik) gibt es eigene Bilder über ein <b>🎭 Thema</b>. Alles nur auf deinem Gerät. Ansehen: ⚙️ → „✨ Effekte“ → Vorschau.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.329.0" },
   { id: "deko_leiste", thema: "darstellung", sym: "🎏", t: "Wimpel, Lichterkette oder Laternen", x: "An der Leiste mit den Lämpchen oben kann eine <b>Deko</b> hängen: 🎏 Wimpel, 💡 Lichterkette oder 🏮 Laternen. <b>🔄 Automatisch</b> passt sie zur Jahreszeit (Herbst Laternen, Advent warmweiße Lichter, Oktoberfest blau-weiße Wimpel …). Wählen oder ausschalten: ⚙️ → „✨ Effekte“ → <b>„🎏 Deko an der Leiste“</b>. Sie ist ein stilles Bild und kostet keinen Akku.", zeig: () => einstiegHin("effekte", "jzDekoWahl"), seit: "2.335.0" },
   { id: "sparmodus", thema: "technik", sym: "🐢", t: "Effekte laufen nicht? Der Sparmodus", x: "Bei schwachem Netz, „Datensparen“ oder zwei langsamen Starts schaltet sich der <b>🐢 Sparmodus</b> von selbst ein: dann ruhen Effekte und das Jahreszeiten-Bild. Tippst du eine Vorschau an, sagt die App den Grund und bietet <b>„🐢 Sparmodus aus“</b> an. Einstellen: ⚙️ → „🎨 Darstellung“ → <b>„🐢 Sparmodus“</b>: Automatisch, Immer an oder Aus.", zeig: () => suEinstellung("sparWahl"), seit: "2.330.0" },
-  { id: "akku", thema: "technik", sym: "🔋", t: "Akku sparen mit der Club-App", x: "Die App spart von selbst: Das Bild im Kopf malt höchstens 30 Bilder pro Sekunde, nach 45 Sekunden ohne Tippen nur noch 12 – und bei weniger als 30 % Akku immer sparsam. Im Hintergrund und auf anderen Seiten ruht es ganz. Noch sparsamer: ⚙️ → „🎨 Darstellung“ → <b>🐢 Sparmodus „An“</b> oder ⚙️ → „✨ Effekte“ → <b>„🍂 Jahreszeiten im Kopf“</b> aus.", zeig: () => suEinstellung("sparWahl"), seit: "2.334.0" },
+  { id: "akku", thema: "technik", sym: "🔋", t: "Akku sparen mit der Club-App", x: "Die App spart von selbst: Das Bild im Kopf malt höchstens 30 Bilder pro Sekunde, nach 45 Sekunden ohne Tippen nur noch 12 – und bei weniger als 30 % Akku immer sparsam. Im Hintergrund und auf anderen Seiten ruht es ganz. Noch sparsamer: ⚙️ → „🎨 Darstellung“ → <b>🐢 Sparmodus „An“</b> oder ⚙️ → „✨ Effekte“ → <b>„🍂 Jahreszeiten im Kopf“</b> aus. Läuft ein Erklär-Video in <b>Pause</b>, darf der Bildschirm nach 30 Sekunden wieder ausgehen; nach 10 Minuten Pause endet das Video von selbst. Eine <b>Jahreszeit-Vorschau</b> aus den Einstellungen läuft nur 2 Minuten mit voller Bildrate und endet nach 15 Minuten von selbst.", zeig: () => suEinstellung("sparWahl"), seit: "2.334.0" },
   { id: "anpassen", thema: "darstellung", sym: "🎨", t: "Meine App nach meinem Geschmack – alle Möglichkeiten", x: "So viel kannst du einstellen: <b>🎭 Thema</b> (Farben, Kopf-Bild, Sende-Effekt und Schrift mit einem Tipp – oder „Nach Kalender“), <b>🎨 Farbdesign</b>, <b>🌗 Tag und Nacht</b>, <b>🔠 große Schrift</b> (alles unter ⚙️ → „🎨 Darstellung“); <b>🍂 Jahreszeiten-Bild</b>, <b>🎏 Deko an der Leiste</b>, <b>🪟 Kachel- und Sende-Effekt</b>, <b>✨ ruhige oder lebendige Knöpfe</b> (⚙️ → „✨ Effekte“); <b>📄 Eselsohr</b>, Kacheln und Ansicht (⚙️ → „🧩 Startseite &amp; Ansicht“). Alles zeigt dir das Erklär-Video <b>„🎨 Meine App nach meinem Geschmack“</b>.", zeig: () => rgListeAbspielen(["anpassen"]), seit: "2.344.0" },
   { id: "bw_einladung", thema: "start", sym: "🎭", t: "Twinkey lädt zur Bewegung ein", x: "Beim Öffnen der App fragt Twinkey höchstens einmal am Tag: <i>„Heute Lust auf eine Bewegungseinheit mit mir?“</i> <b>„💪 Ja“</b> führt direkt zur Bühne, <b>„⏰ Später“</b> fragt in etwa 2 Stunden wieder, <b>„🙂 Heute nicht“</b> erst morgen, <b>„🔕 Nicht mehr fragen“</b> schaltet es ab. Wieder einschalten: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „🎭 Twinkey lädt zur Bewegung ein“.", zeig: () => einstiegHin("startseite", "setBwEinladung"), seit: "2.314.0" },
   { id: "es_regler", thema: "toene", sym: "🎚️", t: "Bühne: Musik und Stimme lauter oder leiser", x: "Während Twinkey turnt, stehen zwei Regler am Rand: <b>rechts die Musik</b> 🎵, <b>links Twinkeys Stimme</b> 🗣️. Nach oben ziehen = lauter (der Keil wird dicker), nach unten = leiser. <b>Unten aufs Symbol tippen</b> macht sofort stumm (🔇 bzw. 🤐) – nochmal tippen holt die vorige Lautstärke zurück. Die App merkt sich beides. Ist alles zu leise, auch die Lautstärke am Handy prüfen.", zeig: () => esOeffnen("buehne"), seit: "2.300.0" },
@@ -15904,7 +15913,11 @@ try { navigator.getBattery?.().then((b) => { const f = () => { jzbAkkuKnapp = !b
 // nur stehend. Beim ersten Antippen laufen sie sofort weiter.
 setInterval(() => { try { document.documentElement.classList.toggle("kc-ruhe", jzbAkkuKnapp || Date.now() - jzbBedient > JZB_RUHE_MS); } catch {} }, 5000);
 addEventListener("pointerdown", () => document.documentElement.classList.remove("kc-ruhe"), { passive: true, capture: true });
-const jzbFps = () => (JZB.vorschau || (!jzbAkkuKnapp && Date.now() - jzbBedient < JZB_RUHE_MS) ? JZB_FPS : JZB_FPS_RUHE);
+// 2.358.0 KC-CLUB-AKKU-3: eine Vorschau läuft nur noch 2 Minuten mit voller Bildrate (vorher dauerhaft), danach wie sonst sparsam;
+// nach 15 Minuten endet sie von selbst (vorher blieb sie bis „beenden“ oder Neustart – auch der Grund für Hansis 30 % Akku in kurzer Zeit)
+const jzbFps = () => ((JZB.vorschau && Date.now() - (JZB.vorschauSeit || 0) < 120000) || (!jzbAkkuKnapp && Date.now() - jzbBedient < JZB_RUHE_MS) ? JZB_FPS : JZB_FPS_RUHE);
+setInterval(() => { try { if ((JZB.vorschau || JZB.extra) && JZB.vorschauSeit && Date.now() - JZB.vorschauSeit > 15 * 60000) { JZB.vorschauSeit = 0; // still beenden – ohne auf die Startseite zu springen
+  JZB.vorschau = ""; JZB.extra = ""; JZB.eisName = null; JZB.eisStueck = null; JZB.nussName = null; if (aktuelleAnsicht === "start") jahreszeitKopf(); jzVorschauLeiste(); } } catch {} }, 30000);
 function jzbBild(ts) {
   JZB.raf = 0;
   if (!JZB.cv?.isConnected) return jzbStop();
@@ -17650,6 +17663,7 @@ function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, t
   if (!fxAn()) return fxAusHinweis(() => jahreszeitVorschau(art, extra));
   if (!einst("jahreszeit", true)) return melde("„🍂 Jahreszeiten im Kopf“ ist aus – erst einschalten.", true);
   if (art === "heute") JZB.vorschau = ""; else if (art) JZB.vorschau = art;
+  JZB.vorschauSeit = art === "heute" ? 0 : Date.now(); // 2.358.0 KC-CLUB-AKKU-3
   JZB.eisName = null; JZB.eisStueck = null; JZB.nussName = null; // 2.356.0 KC-CLUB-NAME-WEG: Vorschau gewechselt oder beendet → kein alter Name bleibt stehen
   JZB.extra = extra || "";
   zeige("start"); setTimeout(jahreszeitKopf, 350);

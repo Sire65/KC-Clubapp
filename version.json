@@ -1,11 +1,20 @@
 {
-  "version": "2.357.0",
+  "version": "2.358.0",
   "datum": "2026-10-13",
   "stufe": "RC",
   "neu": [
-    "🐌 Die Schnecken oben (langsames Netz) schauen am Windows-PC jetzt in die Richtung, in die sie kriechen"
+    "🔋 Akku: Ein pausiertes Erklär-Video hält den Bildschirm nicht mehr wach (nach 30 s darf er ausgehen, nach 10 Min Pause endet das Video)",
+    "🔋 Akku: Eine Jahreszeit-Vorschau läuft nur noch 2 Minuten mit voller Bildrate und endet nach 15 Minuten von selbst"
   ],
   "verlauf": [
+    {
+      "version": "2.358.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🔋 Akku: Ein pausiertes Erklär-Video hält den Bildschirm nicht mehr wach (nach 30 s darf er ausgehen, nach 10 Min Pause endet das Video)",
+        "🔋 Akku: Eine Jahreszeit-Vorschau läuft nur noch 2 Minuten mit voller Bildrate und endet nach 15 Minuten von selbst"
+      ]
+    },
     {
       "version": "2.357.0",
       "datum": "2026-10-13",

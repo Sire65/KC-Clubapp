@@ -9451,3 +9451,9 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 {
   assert.ok(/function schneckeRichtung\(\)/.test(html) && /schneckeZeigen\(\) \{\n  schneckeRichtung\(\);/.test(html) && /:root\.schnecke-spiegeln \.schnecke i \{ transform: scaleX\(-1\)/.test(seite), "Schnecke unter Windows gespiegelt");
 }
+
+// 2.358.0 KC-CLUB-AKKU-3: pausiertes Video gibt den Bildschirm frei, Vorschau nur 2 Min volle Rate und endet nach 15 Min
+{
+  assert.ok(/if \(RG\.pauseSek >= 30 && RG\.wach\) \{ try \{ RG\.wach\.release\?\.\(\); \} catch \{\} RG\.wach = null; \}/.test(html) && /if \(RG\.pauseSek >= 600 && !\$\("rgsBlatt"\)\) rundgangEnde\(true\);/.test(html), "Video-Pause: Bildschirm frei, nach 10 Min Ende");
+  assert.ok(/JZB\.vorschau && Date\.now\(\) - \(JZB\.vorschauSeit \|\| 0\) < 120000/.test(html) && /Date\.now\(\) - JZB\.vorschauSeit > 15 \* 60000/.test(html), "Vorschau: 2 Min volle Rate, 15 Min Ende");
+}
