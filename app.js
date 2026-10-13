@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.344.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.345.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1661,10 +1661,18 @@ const RG_HELFEN = [
 const rgRegister = (r) => { if (!einfach() && reg !== r) { const alt = reg; register(r); RG.zurueck.push(() => register(alt)); } };
 const rgKachel = (id) => `#raster .kachel[data-id="${id}"]`;
 const RG_WARUM = [
-  { v: "start", t: "👋 Warum diese App?", x: "Schön, dass du da bist! In zwei Minuten erzähle ich dir, warum es diese App gibt – und was du davon hast. Du musst nichts antippen, ich blättere selbst weiter." },
+  { v: "start", t: "👋 Warum diese App?", x: "Schön, dass du da bist! In drei Minuten erzähle ich dir, warum es diese App gibt – und was du davon hast. Du musst nichts antippen, ich blättere selbst weiter." },
+  // 2.345.0 (Wunsch Hansi „Warum diese App: das Clubleben anzeigen und organisieren – alles in einer App; vereinfachen, besser organisieren,
+  // Hilfestellung geben, aber auch Spaß machen und neugierig machen, was die App alles kann; sie erinnert an Termine u. v. m.“)
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#v-start .hero"], t: "🧑‍🍳 Unser Clubleben in einer App",
+    x: "Die App hat ein Ziel: unser Clubleben zeigen und organisieren – alles in einer einzigen App. Was gerade im Club los ist, wer dabei ist, was als Nächstes ansteht: Du siehst es hier auf einen Blick." },
   { v: "start", sel: ["#raster"], t: "🏠 Alles an einem Ort", x: "Alles, was unseren Köcheclub betrifft, steckt jetzt in einem einzigen Programm – immer dabei auf deinem Handy. Kein Suchen mehr in Zetteln, E-Mails und vielen Gruppen. Jede Kachel ist ein Bereich des Clubs." },
+  { v: "start", sel: ["#raster"], t: "🧩 Einfacher und besser organisiert",
+    x: "Die App soll vieles einfacher machen: Dienstwünsche statt Zettelwirtschaft, eine gemeinsame To-do-Liste, Erstattungen mit Foto vom Beleg, Fotos und Protokolle an einem Platz, das Archiv mit der Clubchronik. So weiß jeder Bescheid – und nichts geht verloren." },
   { v: "nachrichten", tippVor: `#fuss [onclick="zeige('nachrichten')"]`, sel: ["#v-nachrichten .kopf2"], t: "💬 Nachrichten", x: "Hier schreibst du den Mitgliedern – einzeln oder in Gruppen, mit Fotos und Sprachnachrichten. Fast wie bei WhatsApp – aber nur unter uns im Club." },
   { v: "termine", tippVor: `#fuss [onclick="zeige('termine')"]`, sel: ["#v-termine .tr-kachel", "#v-termine .kopf2"], t: "📅 Termine", x: "Alle Clubtermine auf einen Blick. Mit einem Tipp sagst du zu oder ab – und die App erinnert dich rechtzeitig." },
+  { v: "termine", sel: ["#v-termine .tr-kachel", "#v-termine .kopf2"], t: "⏰ Die App denkt mit",
+    x: "Die App erinnert dich: an Termine, an deine Dienste, an Geburtstage im Club und an Aufgaben aus der To-do-Liste. Neue Nachrichten und Wichtiges kommen als Benachrichtigung aufs Handy – auch wenn die App gerade zu ist. Und auf Wunsch landen die Clubtermine in deinem Handy-Kalender." },
   { v: "fotos", sel: ["#v-fotos .kopf2"], t: "📷 Fotos", x: "Die schönsten Momente aus dem Clubleben – im Fotoalbum für alle Mitglieder. Eigene Fotos lädst du mit einem Tipp dazu." },
   { v: "aktionen", sel: ["#aktionListe .aktkachel", "#v-aktionen .kopf2"], t: "🧳 Aktionen", x: "Unsere Ausflüge und Reisen: wann es losgeht, alle Einzelheiten – und ob du dabei bist." },
   { v: "start", nur: () => !einfach(), vor: () => rgRegister("mein"), sel: [rgKachel("mein_dienst")], mussSel: true, puls: [rgKachel("mein_dienst")], t: "🗓️ Dienstplan",
@@ -1676,6 +1684,8 @@ const RG_WARUM = [
     x: () => "Deine Daten sind geschützt: Die Verbindung ist verschlüsselt, gespeichert wird verschlüsselt, und jeder sieht nur, was er sehen darf. Deinen eigenen Archiv-Ordner siehst nur du."
       + (rgSichtbar(document.querySelector(rgKachel("sicherheit"))) ? " Mit dem Sicherheits-Check hier im Register Technik prüfst du das jederzeit selbst." : "") },
   { v: "start", nur: () => einfach(), t: "🔒 Deine Daten sind sicher", x: "Deine Daten sind geschützt: Die Verbindung ist verschlüsselt, gespeichert wird verschlüsselt, und jeder sieht nur, was er sehen darf. Deinen eigenen Archiv-Ordner siehst nur du." },
+  { v: "start", vor: () => { rgKopf("offen"); esEinsetzen(); }, sel: ["#v-start .eselsohr", "#v-start .hero"], puls: ["#v-start .eselsohr"], t: "🎉 Spaß und Neugier",
+    x: "Und die App soll Spaß machen und neugierig machen, was sie alles kann! Oben im Kopf zeigt sich die Jahreszeit mit kleinen Besuchern. Hinter dem Eselsohr warten die Bühne mit Twinkey zum Mitturnen, unser Club-Song zum Mitsingen, das Werne-Rätsel mit Bestenliste und vieles mehr. Dazu Spiele gegen andere Mitglieder – und Themen, mit denen du die App ganz nach deinem Geschmack gestaltest." },
   { v: "start", t: "🎉 Los geht's", x: "Probier einfach alles aus – kaputt machen kannst du nichts. Gleich danach kann ich dir im Rundgang zeigen, wie die App aufgebaut ist. Viel Freude mit unserer Köcheclub-App!" },
 ];
 // Spiele: Übersicht → Tic-Tac-Toe als Beispiel (gegen den Computer, ohne Zug) → gegen Mitglieder (ohne Herausforderung) → Stand zurück
@@ -2620,7 +2630,7 @@ function rgInstWahl() {
   f.querySelector("[data-zu]").onclick = () => f.remove();
 }
 const RUNDGAENGE = [
-  { id: "warum", stand: "1", sym: "💡", t: "Warum diese App? – Zum Einstieg", u: "Was die App dir bringt – einfach erklärt (ca. 2 Min.)", st: () => RG_WARUM }, // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: als Erstes
+  { id: "warum", stand: "1", sym: "💡", t: "Warum diese App? – Zum Einstieg", u: "Clubleben in einer App: vereinfachen, organisieren, erinnern, helfen – und Spaß (ca. 3 Min.)", st: () => RG_WARUM }, // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: als Erstes
   // 2.276.0 KC-CLUB-VIDEO-INSTALL (Wunsch Hansi): Installieren – Einführung, je Browser ein Video, weitere Geräte, Link und Code
   { id: "installieren", stand: "1", sym: "📲", t: "App installieren – so geht’s", u: "Persönlicher Link, Browser wählen, Kochmütze auf dem Startbildschirm (ca. 2 Min.)", st: () => RG_INST_START },
   { id: "inst_chrome", stand: "1", sym: "🔵", t: "Installieren mit Chrome (Android)", u: "Drei Punkte, App installieren, Installieren (ca. 1 Min.)", st: () => RG_INST_CHROME },
@@ -3255,6 +3265,7 @@ const hzTechnik = () => { zeige("start"); if (!einfach()) register("programme");
 const HILFE = [
   // 👋 Erste Schritte (2.23.3, Text von Hansi)
   { id: "willkommen", thema: "erste", sym: "👋", t: "Herzlich willkommen!", x: "Nach dem Installieren begrüßt dich die App. Schön, dass du dabei bist! Auf dieser Seite stehen die ersten Schritte, mit denen du gut in die Club-App startest.", seit: "2.23.3" },
+  { id: "warum_app", thema: "bereiche", sym: "💡", t: "Wozu gibt es die Club-App?", x: "Unser <b>Clubleben – alles in einer App</b>: Die App zeigt und organisiert Termine, Nachrichten, Fotos, Dienstplan, Archiv und mehr. Sie soll vieles <b>vereinfachen</b> und <b>besser organisieren</b>, sie <b>erinnert</b> dich an Termine, Dienste und Aufgaben, sie gibt <b>Hilfestellung</b> (❓, 🔍 Lupe, Twinkey, Erklär-Videos) – und sie soll <b>Spaß machen</b> und neugierig machen: Bühne, Rätsel, Spiele, Club-Song, Jahreszeiten und Themen. Alles in zwei, drei Minuten erklärt im Video <b>„💡 Warum diese App?“</b>.", zeig: () => rgListeAbspielen(["warum"]), seit: "2.345.0" },
   { id: "erst_einstellungen", thema: "erste", sym: "⚙️", t: "Zuerst: deine Einstellungen", x: "Am Anfang solltest du erst einmal deine Einstellungen vornehmen – hinter dem <b>Zahnrad ⚙️</b> (unten in der Leiste bei „Mehr“). Dort stellst du zum Beispiel Töne, Benachrichtigungen, Schriftgröße und Farben ganz nach deinem Geschmack ein.", zeig: () => zeige("einstellungen"), seit: "2.23.3" },
   { id: "erst_einfach", thema: "erste", sym: "🟢", t: "Mit der einfachen Ansicht beginnen", x: "Danach wählst du für den Anfang am besten die <b>einfache Ansicht</b> – nur das Wichtigste, mit großen Knöpfen. Zur erweiterten Ansicht kannst du jederzeit umschalten. Nach kurzer Zeit wirst du dich sicherlich gut zurechtfinden.", zeig: () => einstiegHin(einfach() ? "einfach" : "darstellung"), seit: "2.23.3" },
   { id: "erst_hilfetexte", thema: "erste", sym: "🎓", t: "Kurze Hilfetexte in jedem Bereich", x: "In jedem Bereich habe ich kurze Hilfetexte eingebaut, die dir den Einstieg erleichtern. Bei Bedarf kannst du sie dir auch <b>vorlesen lassen</b> – einfach auf „🔊 Vorlesen“ tippen. Hier im Hilfe-Zentrum findest du alles noch einmal zum Nachlesen.", seit: "2.23.3" },

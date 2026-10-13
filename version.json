@@ -1,12 +1,18 @@
 {
-  "version": "2.344.0",
+  "version": "2.345.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🎬 Neues Erklär-Video „🎨 Meine App nach meinem Geschmack“: alle Möglichkeiten an einem Ort – Themen, Farben, Tag/Nacht, Schrift, Jahreszeiten-Bild, Deko, Effekte, Sparmodus und Eselsohr",
-    "❓ Hilfe, 🔍 Lupe und Twinkey kennen jetzt auch die Neuheiten der letzten Tage: Rätsel, Club-Song, Trainingsuhr, Besuch im Kopf (Eichhörnchen, Schneeraupe, Iglu …), Deko an der Leiste, Sparmodus und Akku sparen"
+    "💡 Erklär-Video „Warum diese App?“ erweitert: Clubleben zeigen und organisieren – alles in einer App; einfacher und besser organisiert; die App erinnert dich an Termine, Dienste und Aufgaben; Hilfe an jeder Stelle – und Spaß und Neugier mit Bühne, Rätsel, Spielen und Themen"
   ],
   "verlauf": [
+    {
+      "version": "2.345.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "💡 Erklär-Video „Warum diese App?“ erweitert: Clubleben zeigen und organisieren – alles in einer App; einfacher und besser organisiert; die App erinnert dich an Termine, Dienste und Aufgaben; Hilfe an jeder Stelle – und Spaß und Neugier mit Bühne, Rätsel, Spielen und Themen"
+      ]
+    },
     {
       "version": "2.344.0",
       "datum": "2026-10-13",

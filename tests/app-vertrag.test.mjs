@@ -9283,3 +9283,10 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(!/live:/.test(v), "nur vorgeführt – nichts wird umgestellt");
   assert.ok(/rgRueck\("raetsel"\)/.test(html) && /t: "🗂️ Sieben Reiter"/.test(html), "Rückseiten-Video mit Rätsel");
 }
+
+// 2.345.0 KC-CLUB-VIDEO-WARUM-2: Warum diese App – Clubleben, organisieren, erinnern, Spaß
+{
+  const w = html.slice(html.indexOf("const RG_WARUM = ["), html.indexOf("// Spiele: Übersicht"));
+  for (const t of ["🧑‍🍳 Unser Clubleben in einer App", "🧩 Einfacher und besser organisiert", "⏰ Die App denkt mit", "🎉 Spaß und Neugier", "❓ Viel Hilfe"]) assert.ok(w.includes(`t: "${t}"`), "Station " + t);
+  assert.ok(/\{ id: "warum_app", thema: "bereiche", [^\n]*zeig: \(\) => rgListeAbspielen\(\["warum"\]\)/.test(html), "Hilfe-Eintrag startet das Video");
+}
