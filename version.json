@@ -1,11 +1,20 @@
 {
-  "version": "2.345.0",
-  "datum": "2026-10-12",
+  "version": "2.346.0",
+  "datum": "2026-10-13",
   "stufe": "RC",
   "neu": [
-    "💡 Erklär-Video „Warum diese App?“ erweitert: Clubleben zeigen und organisieren – alles in einer App; einfacher und besser organisiert; die App erinnert dich an Termine, Dienste und Aufgaben; Hilfe an jeder Stelle – und Spaß und Neugier mit Bühne, Rätsel, Spielen und Themen"
+    "🎬 Erklär-Videos: Bild und Text passen jetzt zusammen – erklärt die Stimme etwas im Kopf, rollt sich der Kopf vorher auf; nennt sie Kacheln (z. B. Fotoalbum, Archiv, SOS), kommt das passende Register nach vorn und die Kacheln leuchten auf",
+    "🎬 Verweise in den Videos: Gibt es zu einem Thema ein eigenes Video (z. B. Farben einstellen oder das Eselsohr), fragt das Video: ▶ Ja (danach geht es an derselben Stelle weiter), Nein, ⏰ Später (in der Video-Liste mit 📌 gemerkt und angehakt) oder 🔕 Nicht mehr fragen"
   ],
   "verlauf": [
+    {
+      "version": "2.346.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🎬 Erklär-Videos: Bild und Text passen jetzt zusammen – erklärt die Stimme etwas im Kopf, rollt sich der Kopf vorher auf; nennt sie Kacheln (z. B. Fotoalbum, Archiv, SOS), kommt das passende Register nach vorn und die Kacheln leuchten auf",
+        "🎬 Verweise in den Videos: Gibt es zu einem Thema ein eigenes Video (z. B. Farben einstellen oder das Eselsohr), fragt das Video: ▶ Ja (danach geht es an derselben Stelle weiter), Nein, ⏰ Später (in der Video-Liste mit 📌 gemerkt und angehakt) oder 🔕 Nicht mehr fragen"
+      ]
+    },
     {
       "version": "2.345.0",
       "datum": "2026-10-13",

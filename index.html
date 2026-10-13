@@ -765,6 +765,11 @@
   .rg-daumen button { font-size: 1.7rem; width: 58px; height: 52px; border-radius: 14px; border: 2px solid var(--linie); background: var(--karte2); cursor: pointer; }
   .rg-daumen button.an { border-color: var(--rot); background: var(--gelbbg, #fff3cd); transform: scale(1.06); }
   .rg-knoepfe2 { grid-template-columns: 1fr auto; margin-top: 6px; }
+  /* 2.346.0 KC-CLUB-VIDEO-VERWEIS: „Dazu gibt es ein eigenes Video – jetzt ansehen?“ */
+  .rg-verweis { margin: 0 0 10px; padding: 10px 12px; border-radius: 12px; background: var(--gruenbg, #e8f5e9); border: 1px solid var(--gruen, #2e7d32); display: grid; gap: 4px; }
+  .rg-verweis-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+  .rg-verweis-knoepfe .knopf { width: 100%; }
+  .rgl-verweis { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: .9em; color: var(--grau, #666); }
   /* KC-CLUB-VIDEO-LIVE (2.261.0): Zeigefinger macht die Aktionen vor – über der Video-Schicht; läuft auch bei „Bewegung reduzieren“ (ist der Inhalt) */
   .rg-finger { position: fixed; left: 0; top: 0; z-index: 9003; pointer-events: none; opacity: 0; transition: opacity .25s; will-change: transform; }
   /* 2.276.0 KC-CLUB-VIDEO-INSTALL: nachgebaute Browser- und Gerätebilder für die Installations-Videos (unter der Video-Tafel, nie antippbar) */
@@ -4956,6 +4961,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.345.0" data-v="2.345.0"></script>
+<script src="app.js?v=2.346.0" data-v="2.346.0"></script>
 </body>
 </html>

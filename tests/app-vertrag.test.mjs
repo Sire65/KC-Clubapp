@@ -9310,3 +9310,18 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/schedule:\s*\n\s*- cron: "\d+ \d+ \* \* 0"/.test(w) && /workflow_dispatch:/.test(w), "wöchentlich + von Hand");
   assert.ok(/secrets\.KC_BACKUP_KEY/.test(w) && /secrets\.KC_NEON_URL/.test(w) && !/upload-artifact/.test(w) && /permissions:\s*\n\s*contents: read/.test(w), "Secrets, keine Artefakte, nur Leserecht");
 }
+
+// 2.346.0 KC-CLUB-VIDEO-PASST + KC-CLUB-VIDEO-VERWEIS: Bild passt zum Text (Kopf auf, richtiges Register), Verweise auf eigene Videos
+{
+  assert.ok(/function rgAutoSicht\(s\)/.test(html) && /try \{ rgAutoSicht\(s\); \}/.test(html), "jede Station prüft Kopf und Register");
+  assert.ok(/imKopf\) \{ if \(ES\.offen\) esDrehen\(false, true\); if \(kopfRolloStand\(\) !== "offen"\) rgKopf\("offen"\); \}/.test(html), "Ziel im Kopf → Kopf aufrollen");
+  const u = html.slice(html.indexOf("const RUNDGANG = ["), html.indexOf("// ---------- KC-CLUB-ERKLAERVIDEOS (2.244.0"));
+  assert.ok(/kacheln: \["fotos", "archiv", "protokolle", "helfen", "spiele", "sos"\], t: "✨ Und noch viel mehr"/.test(u), "Und noch viel mehr zeigt die Club-Kacheln");
+  assert.ok(/kacheln: \["kommunikation", "termine", "pinnwand"\], video: "oberflaeche", puls: \["#raster \.kachel\[data-id\] > \.zahl"\], t: "🔲 Die Kacheln"/.test(u), "Kacheln-Station mit Kacheln und Verweis");
+  for (const id of ["anpassen", "rueckseite", "effekte", "einstellungen", "hilfe"]) assert.ok(html.includes(`video: "${id}"`), "Verweis auf " + id);
+  for (const w of ["▶ Ja", ">Nein<", "⏰ Später", "🔕 Nicht mehr fragen"]) assert.ok(html.includes(w), "Verweis-Knopf " + w);
+  assert.ok(/RG\.fortsetzen = \{ id: RG\.tour, i: RG\.i \+ 1/.test(html) && /rundgangStart\(false, fort\.id, fort\.liste, fort\.i\)/.test(html), "nach dem Verweis-Video geht es weiter");
+  assert.ok(/for \(const id of rgvSpaeter\(\)\) RGL\.wahl\.add\(id\)/.test(html) && /onchange="rgvAn\(this\.checked\)"/.test(html), "Später angehakt, Fragen wieder einschaltbar");
+  assert.ok(/\.rg-verweis \{/.test(lies("index.html")), "Stil für die Frage");
+  assert.ok(/\{ id: "video-verweis", sym: "🎬", t: "[^"]+\?", x: /.test(html), "Twinkey kennt die Frage");
+}
