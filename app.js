@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.361.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.362.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -3026,6 +3026,10 @@ const RG_CHATPROFI = [
     sel: ["#eingabe"], puls: ["#entwurfMarke", "#text"], t: "✏️ Angefangen, nicht gesendet", x: "Mitten im Schreiben klingelt es an der Tür? Kein Problem: Dein angefangener Text bleibt in diesem Chat auf deinem Handy liegen. Der Hinweis Entwurf, noch nicht gesendet, erinnert dich später daran." },
   { v: "chat", vor: () => { rgChatprofiAuf(); if (!$("rgCpWarte")) $("chat").insertAdjacentHTML("beforeend", '<div class="ow-warte" id="rgCpWarte"><div class="ow-blase">Bin im Keller und hole die Grillkohle.<small>⏳ wartet auf Netz – wird automatisch gesendet</small></div></div>'); },
     nach: () => $("rgCpWarte")?.remove(), sel: ["#rgCpWarte"], t: "📵 Schreiben ohne Netz", x: "Im Keller oder unterwegs kein Empfang? Schreib ruhig trotzdem. Die Nachricht zeigt wartet auf Netz und geht von ganz allein raus, sobald wieder Verbindung da ist." },
+  // 2.362.0 KC-CLUB-SPAETER-SENDEN: ⏰ später senden, auch mit Wiederholung
+  { v: "chat", vor: () => { rgChatprofiAuf(); if (!$("rgCpGeplant")) $("chat").insertAdjacentHTML("beforeend", '<div class="gp-warte" id="rgCpGeplant"><div class="gp-blase">Guten Morgen! Denkt an den Einkauf für Samstag.<small>⏰ wird gesendet Mo um 8:00 Uhr · 🔁 jeden Montag<br><i>Nur du siehst das – antippen zum Ändern</i></small></div></div>'); },
+    nach: () => $("rgCpGeplant")?.remove(), sel: ["#rgCpGeplant", "#spaeterKnopf"], puls: ["#spaeterKnopf"], t: "⏰ Später senden",
+    x: "Soll eine Nachricht erst später ankommen? Schreib sie wie immer und tippe dann unten auf den Wecker. Du wählst die Zeit, zum Beispiel morgen früh um acht, und wie oft: nur einmal oder zum Beispiel jeden Montag. Bis dahin steht sie blass unten im Chat – nur du siehst sie. Antippen, und du kannst sie gleich senden, die Zeit ändern oder löschen. Gesendet wird auch, wenn dein Handy aus ist." },
   { v: "chat", vor: () => rgChatprofiBlatt("chatBlatt"), nach: () => rgFest("chatBlatt", false), tippVor: "#chatMenueKnopf", sel: [() => $("chatBlatt")?.querySelector(".na-pfeil-knoepfe")],
     puls: [rgChatprofiKnopf("#chatBlatt .na-pfeil-knoepfe", "📋 Kopieren"), rgChatprofiKnopf("#chatBlatt .na-pfeil-knoepfe", "🖨️ Ausdrucken"), rgChatprofiKnopf("#chatBlatt", "🗄️ Chat in mein Archiv")],
     t: "🖨️ Den ganzen Chat", x: "Unter den drei Punkten steht auch Ganzer Chat: Kopieren, zum Beispiel für eine E-Mail, Ausdrucken und Chat in mein Archiv legen." },
@@ -4789,6 +4793,7 @@ const HILFE = [
   { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste einmal auf einen Chat tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
+  { id: "spaeter_senden", thema: "nachrichten", sym: "⏰", t: "Nachricht später senden – auch jeden Montag", x: "Nachricht schreiben, unten auf <b>⏰</b> tippen, Zeit wählen (z. B. <b>morgen früh 8 Uhr</b>) und wie oft (<b>einmal</b>, <b>jeden Tag</b>, <b>werktags</b>, <b>jeden Montag</b> …). Bis dahin steht sie blass unten im Chat – nur du siehst sie; antippen zum Ändern oder Löschen. Gesendet wird auch, wenn dein Handy aus ist.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-SPAETER-SENDEN
   { id: "weiterleiten", thema: "nachrichten", sym: "↪️", t: "Weitersagen leicht gemacht", x: "Soll jemand anderes eine Nachricht auch lesen? Antippen → <b>„↪️ Weiterleiten“</b> und die Person oder Unterhaltung aussuchen. Fertig.", seit: "2.23.1" },
   { id: "neue_linie", thema: "nachrichten", sym: "⬇️", t: "Wo hatte ich aufgehört?", x: "Öffnest du einen Chat, zeigt eine Linie <b>„Neue Nachrichten“</b>, ab wo es für dich Neues gibt. Hast du weit nach oben geblättert, bringt dich der Knopf <b>⬇️</b> mit einem Tipp wieder ans Ende.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "entwurf", thema: "nachrichten", sym: "✏️", t: "Angefangener Text geht nicht verloren", x: "Mitten im Schreiben klingelt es an der Tür? Kein Problem – dein halb geschriebener Text bleibt in diesem Chat auf deinem Handy liegen. Der Hinweis <b>„✏️ Entwurf – noch nicht gesendet“</b> erinnert dich später daran.", seit: "2.23.1" },
@@ -20974,6 +20979,111 @@ function owZeigen() {
   const l = owLesen().filter((x) => x.chat === chatId); if (!l.length) return;
   z.insertAdjacentHTML("beforeend", `<div class="ow-warte">${l.map((x) => `<div class="ow-blase">${esc(x.text)}<small>⏳ wartet auf Netz – wird automatisch gesendet</small></div>`).join("")}</div>`);
 }
+// ---------- KC-CLUB-SPAETER-SENDEN (2.362.0, Wunsch Hansi „zeitversetzt senden – bedienerfreundlich, logisch, einfach; auch Wiederholungen,
+// z. B. jeden Montag um 8 Uhr die gleiche Nachricht“) ----------
+// ⏰ neben ⏳: Nachricht schreiben → ⏰ → Zeit antippen (heute Abend / morgen früh / morgen Mittag / andere Zeit) → wie oft (einmal, täglich,
+// werktags, jeden <Wochentag>, jeden Monat) → „⏰ Planen“. Im Chat steht sie dann blass unten – nur für mich; antippen: jetzt senden, Zeit ändern,
+// löschen. Der Server sendet zur Zeit selbst (Handy darf aus sein). Nur Text in einem vorhandenen Chat (bewusst einfach).
+const GP_WTAG = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+const GP = { um: null, wdh: "einmal", eigene: false, aendern: null, text: "" };
+const gpUhr = (d) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
+function gpWann(iso) { // „heute 18:00“, „morgen 8:00“, „Mi 21.10. 8:00“
+  const d = new Date(iso), h = new Date(); h.setHours(0, 0, 0, 0);
+  const tage = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - h) / 86400000);
+  return (tage === 0 ? "heute" : tage === 1 ? "morgen" : tage === 2 ? "übermorgen" : `${GP_WTAG[d.getDay()].slice(0, 2)} ${d.getDate()}.${d.getMonth() + 1}.`) + " um " + gpUhr(d) + " Uhr";
+}
+function gpWdhText(w, iso) {
+  const d = iso ? new Date(iso) : null;
+  return w === "taeglich" ? "jeden Tag" : w === "werktags" ? "werktags (Mo–Fr)" : w === "woechentlich" ? `jeden ${d ? GP_WTAG[d.getDay()] : "Woche"}` : w === "monatlich" ? `jeden Monat am ${d ? d.getDate() + "." : ""}` : "einmal";
+}
+function gpVorschlaege() {
+  const jetzt = new Date(), morgen = (h) => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(h, 0, 0, 0); return d; };
+  const abend = new Date(); abend.setHours(18, 0, 0, 0);
+  return [...(abend - jetzt > 15 * 60000 ? [["🌇", "Heute Abend", abend]] : []), ["🌅", "Morgen früh", morgen(8)], ["☀️", "Morgen Mittag", morgen(12)]];
+}
+function spaeterWahl(geplant) {
+  emoUmschalten?.(false);
+  if (!geplant) {
+    const text = $("text").value.trim();
+    if (!chatId) return melde("⏰ Später senden geht in einem Chat, in dem schon geschrieben wurde. Bitte die erste Nachricht normal senden.", true);
+    if (anlagen.length) return melde("⏰ Fotos und Dateien können (noch) nicht später gesendet werden – nur Text.", true);
+    if (!text) return melde("⏰ Erst die Nachricht schreiben – dann auf ⏰ tippen und die Zeit wählen.");
+    Object.assign(GP, { um: null, wdh: "einmal", eigene: false, aendern: null, text });
+  } else Object.assign(GP, { um: new Date(geplant.um), wdh: geplant.wiederholung, eigene: true, aendern: geplant.id, text: geplant.text });
+  gpBlatt();
+}
+function gpBlatt() {
+  const v = gpVorschlaege(), gewaehlt = (d) => GP.um && !GP.eigene && Math.abs(GP.um - d) < 60000;
+  const lokal = (d) => d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` : "";
+  const wd = GP.um ? GP_WTAG[GP.um.getDay()] : "Wochentag";
+  const wdh = [["einmal", "Nur einmal"], ["taeglich", "Jeden Tag"], ["werktags", "Werktags (Mo–Fr)"], ["woechentlich", `Jeden ${wd}`], ["monatlich", `Jeden Monat am ${GP.um ? GP.um.getDate() + "." : "…"}`]];
+  const zusammen = GP.um ? `📤 Wird gesendet: <b>${esc(gpWann(GP.um.toISOString()))}</b>${GP.wdh !== "einmal" ? `<br>🔁 danach <b>${esc(gpWdhText(GP.wdh, GP.um.toISOString()))}</b>` : ""}` : "Bitte oben eine Zeit antippen.";
+  blattAuf("gpBlatt", `<h3 style="margin:0 0 4px">⏰ ${GP.aendern ? "Zeit ändern" : "Wann soll die Nachricht ankommen?"}</h3>
+    <div class="gp-vorschau">${esc(GP.text.length > 140 ? GP.text.slice(0, 140) + " …" : GP.text)}</div>
+    <div class="gp-titel">1. Wann?</div>
+    <div class="gp-wahl">${v.map(([sym, t, d], i) => `<button class="knopf${gewaehlt(d) ? " haupt" : ""}" onclick="gpZeit(${i})">${sym} ${t}<small>${esc(gpWann(d.toISOString()).replace(/^(heute|morgen) um /, ""))}</small></button>`).join("")}
+      <button class="knopf${GP.eigene ? " haupt" : ""}" onclick="gpEigene()">📅 Andere Zeit …</button></div>
+    <div class="gp-eigen${GP.eigene ? "" : " versteckt"}" id="gpEigen"><label>Tag <input type="date" id="gpTag" value="${lokal(GP.um)}" min="${lokal(new Date())}" onchange="gpEigeneGesetzt()"></label>
+      <label>Uhrzeit <input type="time" id="gpZeit" value="${GP.um ? `${String(GP.um.getHours()).padStart(2, "0")}:${String(GP.um.getMinutes()).padStart(2, "0")}` : "08:00"}" step="300" onchange="gpEigeneGesetzt()"></label></div>
+    <div class="gp-titel">2. Wie oft?</div>
+    <div class="gp-wahl gp-wdh">${wdh.map(([w, t]) => `<button class="knopf${GP.wdh === w ? " haupt" : ""}" onclick="gpWdh('${w}')">${w === "einmal" ? "1️⃣" : "🔁"} ${esc(t)}</button>`).join("")}</div>
+    <p class="gp-zusammen">${zusammen}</p>
+    <button class="knopf haupt gp-los" ${GP.um ? "" : "disabled"} onclick="gpPlanen()">⏰ ${GP.aendern ? "Speichern" : "Planen"}</button>
+    <button class="knopf" onclick="$('gpBlatt').remove()">Abbrechen</button>`);
+}
+function gpZeit(i) { const d = gpVorschlaege()[i]?.[2]; if (!d) return; GP.um = d; GP.eigene = false; gpBlatt(); }
+function gpEigene() { GP.eigene = true; if (!GP.um) { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(8, 0, 0, 0); GP.um = d; } gpBlatt(); setTimeout(() => $("gpTag")?.focus(), 50); }
+function gpEigeneGesetzt() {
+  const t = $("gpTag")?.value, z = $("gpZeit")?.value; if (!t || !z) return;
+  const [y, m, d] = t.split("-").map(Number), [h, mi] = z.split(":").map(Number);
+  GP.um = new Date(y, m - 1, d, h, mi, 0, 0); gpBlatt();
+}
+function gpWdh(w) { GP.wdh = w; gpBlatt(); }
+async function gpPlanen() {
+  if (!GP.um) return melde("Bitte zuerst eine Zeit antippen.", true);
+  if (GP.um - Date.now() < 60000) return melde("⏰ Diese Zeit ist schon vorbei – bitte eine spätere wählen.", true);
+  if (GP.wdh === "werktags" && [0, 6].includes(GP.um.getDay())) return melde("„Werktags“ geht nur, wenn der erste Termin von Montag bis Freitag ist.", true);
+  const knopf = document.querySelector("#gpBlatt .gp-los"); if (knopf) knopf.disabled = true;
+  try {
+    if (GP.aendern) await api("geplant_speichern", { geplant_id: GP.aendern, um: GP.um.toISOString(), wiederholung: GP.wdh }, { warten: true });
+    else {
+      await api("geplant_speichern", { id: chatId, text: GP.text, um: GP.um.toISOString(), wiederholung: GP.wdh, wege: ["push", "email"].filter((w) => ZW[w]), ...(WICHTIG ? { wichtig: true } : {}) }, { warten: true });
+      if ($("text").value.trim() === GP.text) { entwurfWeg(chatId); clearTimeout(entwurfTimer); $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); wichtigUmschalten(false); }
+      spur("geplant", chatId);
+    }
+    $("gpBlatt")?.remove();
+    melde(`⏰ ${GP.aendern ? "Geändert" : "Geplant"}: ${gpWann(GP.um.toISOString())}${GP.wdh !== "einmal" ? " – danach " + gpWdhText(GP.wdh, GP.um.toISOString()) : ""}`);
+    chatStand = ""; await chatLaden(true);
+  } catch (e) { if (knopf) knopf.disabled = false; meldeFehler(e); }
+}
+function gpZeigen() {
+  const z = $("chat"); if (!z || !chatId) return;
+  z.querySelector(".gp-warte")?.remove();
+  const l = (CHAT?.id === chatId && CHAT.geplant) || []; if (!l.length) return;
+  z.insertAdjacentHTML("beforeend", `<div class="gp-warte">${l.map((g) => `<button type="button" class="gp-blase" onclick="gpMenue('${esc(g.id)}')">${esc(g.text)}
+    <small>⏰ wird gesendet ${esc(gpWann(g.um))}${g.wiederholung !== "einmal" ? ` · 🔁 ${esc(gpWdhText(g.wiederholung, g.um))}` : ""}${g.fehler ? `<br>⚠️ Letztes Mal nicht gesendet: ${esc(g.fehler)}` : ""}<br><i>Nur du siehst das – antippen zum Ändern</i></small></button>`).join("")}</div>`);
+}
+function gpMenue(id) {
+  const g = (CHAT?.geplant || []).find((x) => x.id === id); if (!g) return;
+  const wdh = g.wiederholung !== "einmal";
+  blattAuf("gpMenue", `<h3 style="margin:0 0 4px">⏰ Geplante Nachricht</h3>
+    <div class="gp-vorschau">${esc(g.text.length > 200 ? g.text.slice(0, 200) + " …" : g.text)}</div>
+    <p class="hinweis" style="margin:0 0 10px">Wird gesendet: <b>${esc(gpWann(g.um))}</b>${wdh ? `<br>🔁 ${esc(gpWdhText(g.wiederholung, g.um))}${g.anzahl ? ` · schon ${g.anzahl}× gesendet` : ""}` : ""}</p>
+    <button class="knopf haupt" onclick="gpJetzt('${esc(g.id)}')">📤 Jetzt senden${wdh ? " (einmal extra)" : ""}</button>
+    <button class="knopf" onclick="$('gpMenue').remove();spaeterWahl((CHAT?.geplant||[]).find((x)=>x.id==='${esc(g.id)}'))">🕐 Zeit ändern</button>
+    <button class="knopf gefahr" onclick="gpLoeschen('${esc(g.id)}')">🗑️ ${wdh ? "Löschen (Wiederholung beenden)" : "Löschen"}</button>
+    <button class="knopf" onclick="$('gpMenue').remove()">Schließen</button>`);
+}
+async function gpJetzt(id) {
+  $("gpMenue")?.remove();
+  try { await api("geplant_jetzt", { id }, { warten: true }); melde("📤 Gesendet"); chatStand = ""; await chatLaden(true); } catch (e) { meldeFehler(e); }
+}
+async function gpLoeschen(id) {
+  const g = (CHAT?.geplant || []).find((x) => x.id === id);
+  if (!(await frage(g?.wiederholung !== "einmal" ? "🗑️ Geplante Nachricht löschen?\n\nSie wird dann nicht mehr wiederholt. Bereits gesendete bleiben im Chat." : "🗑️ Geplante Nachricht löschen?\n\nSie wird dann nicht gesendet.", { ja: "🗑️ Ja, löschen", nein: "Nein", gefahr: true }))) return;
+  $("gpMenue")?.remove();
+  try { await api("geplant_loeschen", { id }, { warten: true }); melde("🗑️ Geplante Nachricht gelöscht"); chatStand = ""; await chatLaden(false); } catch (e) { meldeFehler(e); }
+}
 function zaehlerZeigen() {
   const n = INIT?.ungelesen || 0, unsicher = !!INIT?.ungelesenUnsicher; // 2.1.1: einzelne Zahl nicht ladbar → „?“ statt still 0 (Regel 11)
   $("fussZaehler").textContent = unsicher ? (n ? n + "+" : "?") : n; $("fussZaehler").classList.toggle("versteckt", !n && !unsicher);
@@ -24408,7 +24518,7 @@ async function chatLaden(scrollen) {
   try {
     const fuer = chatId, u = await api("unterhaltung", { id: fuer });
     if (fuer !== chatId) return; // 1.97.0: inzwischen eine andere Unterhaltung geöffnet → alte Antwort verwerfen
-    CHAT = u; setTimeout(owZeigen, 0); slAnzeigen(); // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
+    CHAT = u; setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
     // KC-CLUB-CHAT-KOPF-BILD (2.24.19): Bild vorn (Person: Avatar/Kreis; Gruppe: Symbol mit 🔗; Runde: gestrichelt), Titel ohne doppeltes Symbol
     $("chatTitel").textContent = (u.gruppe ? u.gruppe.name : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");
@@ -32777,7 +32887,7 @@ setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
 const SPUR_WAS = { vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
-  mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
+  geplant: "⏰ Nachricht für später geplant", mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
   sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", sprache_ziel: "🎙️ Sprache: Seite geöffnet", sprache_gelernt: "🎙️ Sprache: neuen Befehl gelernt", sprache_liste: "📋 Liste der Sprachbefehle geöffnet", sprache_training: "🎓 Sprach-Training gestartet", unterstuetzung_viel: "🙋 Unterstützung: viel Hilfe gewählt", unterstuetzung_etwas: "👌 Unterstützung: ein bisschen Hilfe", unterstuetzung_keine: "😎 Unterstützung: keine", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
 const SPW = { tag: null, person: null, uhr: null };
 async function spurAdmin(tag, person) {

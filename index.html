@@ -178,6 +178,19 @@
   .ow-warte { display: grid; justify-items: end; gap: 6px; margin: 8px 0; }
   .ow-blase { max-width: 80%; background: var(--karte2); border: 1px dashed var(--grau); border-radius: 14px; padding: 8px 12px; white-space: pre-wrap; }
   .ow-blase small { display: block; color: var(--grau); font-size: .78rem; margin-top: 4px; }
+  /* 2.362.0 KC-CLUB-SPAETER-SENDEN */
+  .gp-warte { display: grid; justify-items: end; gap: 6px; margin: 8px 0; }
+  .gp-blase { max-width: 80%; text-align: left; font: inherit; color: inherit; background: var(--karte2); border: 1px dashed var(--grau); border-radius: 14px; padding: 8px 12px; white-space: pre-wrap; opacity: .8; cursor: pointer; }
+  .gp-blase small { display: block; color: var(--grau); font-size: .78rem; margin-top: 4px; white-space: normal; }
+  .gp-vorschau { background: var(--karte2); border-radius: 10px; padding: 8px 10px; margin: 6px 0 10px; white-space: pre-wrap; font-size: .95rem; max-height: 7em; overflow: hidden; }
+  .gp-titel { font-weight: 700; margin: 10px 0 6px; }
+  .gp-wahl { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .gp-wahl .knopf { text-align: center; margin: 0; }
+  .gp-wahl .knopf small { display: block; font-size: .8rem; opacity: .85; }
+  .gp-eigen { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .gp-eigen label { display: grid; gap: 4px; font-size: .9rem; }
+  .gp-eigen input { font-size: 1.05rem; padding: 6px 8px; }
+  .gp-zusammen { margin: 12px 0 8px; line-height: 1.5; }
   /* KC-CLUB-KOPF-EINFACH (2.1.0): Mitglieder ohne Technik-Lämpchen und Lebenszeichen-Herz (nur Admin) */
   body:not(.ist-admin) #ledComm, body:not(.ist-admin) #ledDaten, body:not(.ist-admin) #herzKnopf { display: none; }
   body:not(.ist-admin) #setInkognitoZeile, body:not(.ist-admin) #setInkoKnopfZeile, body:not(.ist-admin) #inkoKnopf, body.inko-knopf-aus #inkoKnopf { display: none; }
@@ -4766,6 +4779,8 @@
     <button class="rund wichtig-knopf" title="Wichtig – Wichtigkeit hoch" aria-label="Als wichtig senden" aria-pressed="false" id="wichtigKnopf" onclick="wichtigUmschalten()">❗</button>
     <!-- KC-CLUB-SELBSTLOESCHEN (2.148.0, Wunsch Hansi): ⏳ diese Nachricht löscht sich nach 1 Std / 24 Std / 7 Tagen selbst -->
     <button class="rund ablauf-knopf" title="Nachricht löscht sich selbst …" aria-label="Selbstlöschen für diese Nachricht" aria-pressed="false" id="ablaufKnopf" onclick="slWahl('nachricht')">⏳</button>
+    <!-- KC-CLUB-SPAETER-SENDEN (2.362.0, Wunsch Hansi): Nachricht zu einer späteren Zeit senden – auch jeden Montag um 8 Uhr usw. -->
+    <button class="rund spaeter-knopf" title="Später senden …" aria-label="Nachricht später senden" id="spaeterKnopf" onclick="spaeterWahl()">⏰</button>
     <textarea id="text" rows="2" spellcheck="true" lang="de" autocapitalize="sentences" autocorrect="on" placeholder="Nachricht schreiben …" onblur="emoStelleMerken('text')" onkeyup="emoStelleMerken('text')" onclick="emoStelleMerken('text')" oninput="emoStelleMerken('text');naErwPruefen();this.style.height='auto';this.style.height=this.scrollHeight+'px';tippenMelden();entwurfMerken();entwurfMarkeZeigen()"></textarea>
     <!-- KC-CLUB-EINGABE-LEEREN (2.148.0, Wunsch Hansi): rotes ✕ rechts im Schreibfeld – Text auf einmal löschen (nur sichtbar, wenn Text drinsteht) -->
     <button class="text-leeren versteckt" type="button" title="Text löschen" aria-label="Geschriebenen Text löschen" id="textLeerenKnopf" onclick="textLeeren()">✕</button>
@@ -4987,6 +5002,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.361.0" data-v="2.361.0"></script>
+<script src="app.js?v=2.362.0" data-v="2.362.0"></script>
 </body>
 </html>

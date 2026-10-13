@@ -1,5 +1,19 @@
 # Änderungen
 
+## 2.362.0 – 2026-10-14 – ⏰ KC-CLUB-SPAETER-SENDEN: Nachrichten später senden, auch mit Wiederholung
+Anlass (Hansi): „Bau das zeitversetzte Senden ein – bedienerfreundlich, logisch, einfach … evtl. auch Wiederholungen, z. B. jeden Montag um 8.00 die gleiche Nachricht.“
+- Bedienung: ⏰ neben ⏳ unter dem Schreibfeld → Fenster „Wann soll die Nachricht ankommen?“: 1. Wann? (🌇 Heute Abend 18:00 – nur bis 17:45,
+  🌅 Morgen früh 8:00, ☀️ Morgen Mittag 12:00, 📅 Andere Zeit … mit Tag/Uhrzeit) · 2. Wie oft? (Nur einmal, Jeden Tag, Werktags, Jeden <Wochentag>,
+  Jeden Monat am <Tag>.) · Zusammenfassung „Wird gesendet: morgen um 8:00 Uhr – danach jeden Mittwoch“ · ⏰ Planen.
+- Im Chat: blasse, gestrichelte Blase unten (nur für den Absender) mit Zeit und Wiederholung; antippen → 📤 Jetzt senden (bei Wiederholung „einmal extra“),
+  🕐 Zeit ändern, 🗑️ Löschen (Wiederholung beenden). Fehlschlag wird in der Blase angezeigt.
+- Bewusst einfach: nur Text, nur in einem vorhandenen Chat, höchstens 31 Tage im Voraus, höchstens 25 offene je Person; Notfall-Meldungen nie planbar.
+- Server: Tabelle kc_club_geplant (RLS an, nur service_role), Aktionen geplant_speichern/geplant_loeschen/geplant_jetzt, geplante Nachrichten des Chats in „unterhaltung“.
+  pg_cron „kc-club-geplant-minute“ ruft „geplant_faellig“ nur, wenn etwas fällig ist. Senden über nachricht_senden im Namen des Absenders (Push/Mail, stumm,
+  Selbstlöschen des Chats wie von Hand). Erst belegen (nächste Zeit bzw. fertig), dann senden → nie doppelt. Wiederholung rechnet ab der ersten Zeit in Berliner Zeit
+  (wiederholungen(), Sommer-/Winterzeit geprüft: Mo 8:00 bleibt 8:00 über den 25.10.); verpasste Termine einmal nachholen, nie stapeln.
+- Hilfe-Tipp „Nachricht später senden – auch jeden Montag“ und Station „⏰ Später senden“ im Chat-Erklärvideo.
+
 ## 2.361.0 – 2026-10-13 – 🔋 KC-CLUB-AKKU-6: Stromsauger Tonausgabe + Kopfbild steht in Ruhe
 Anlass (Hansi, Akku-Übersicht: Chrome 25 % in einer Stunde): „Unsere App scheint das Handy-Akku leer zu saugen – finde die Stromsauger.“
 - Fund 1 (Tonausgabe): Die gemeinsamen AudioContexts (audio für ton()/Ständchen/Spiele, QZ.ac, rkAudio, RGP.ctx) wurden nie angehalten – nach dem

@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -9476,4 +9476,16 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/window\.AudioContext = Neu;/.test(html) && /c\.__vonUns = true; c\.suspend\?\.\(\)/.test(html) && /K\.prototype\[m\] = function \(\.\.\.a\) \{ this\.__dauer = true;/.test(html), "Tonausgabe schläft nach 3 s ein, Mikrofon ausgenommen");
   assert.ok(html.indexOf("window.AudioContext = Neu;") < html.indexOf("new (window.AudioContext || window.webkitAudioContext)()"), "Hülle vor der ersten Tonausgabe");
   assert.ok(/JZB_STEHEN_MS = 180000/.test(html) && /if \(jzbStehen\(\)\) \{ JZB\.steht = true; return; \}/.test(html) && /if \(JZB\.steht\) \{ JZB\.steht = false; JZB\.letzt = 0; jzbWeiter\(\); \}/.test(html), "Kopfbild steht nach 3 Min., Antippen startet");
+}
+
+// 2.362.0 KC-CLUB-SPAETER-SENDEN: Nachrichten später senden, auch mit Wiederholung
+{
+  assert.ok(/id="spaeterKnopf" onclick="spaeterWahl\(\)">⏰<\/button>/.test(seite), "⏰-Knopf unter dem Schreibfeld");
+  assert.ok(/api\("geplant_speichern", \{ id: chatId, text: GP\.text, um: GP\.um\.toISOString\(\), wiederholung: GP\.wdh/.test(html) && /setTimeout\(gpZeigen, 0\)/.test(html), "App plant und zeigt geplante Nachrichten");
+  for (const a of ["geplant_speichern", "geplant_loeschen", "geplant_jetzt"]) assert.ok(server.includes(`case "${a}": {`), "Server-Aktion " + a);
+  assert.ok(/if \(a === "geplant_faellig"\) \{[\s\S]{0,300}gleichZeit\(p\.cronSecret, geheim\)/.test(server), "Zeitplaner-Aufruf nur mit Geheimnis");
+  assert.ok(/\.eq\("id", g\.id\)\.eq\("status", "offen"\)\.eq\("senden_um", g\.senden_um\)\.select\("id"\);\n    if \(!belegt\?\.length\) continue;/.test(server), "erst belegen, dann senden – nie doppelt");
+  assert.ok(/eq\("person_id", ich\.person_id\)/.test(server.slice(server.indexOf('case "geplant_loeschen"'), server.indexOf('case "geplant_jetzt"'))), "nur eigene löschen");
+  const mig = lies("supabase/migrations/20261014_kc_club_v2362_spaeter_senden.sql");
+  assert.ok(/enable row level security/.test(mig) && /where exists \(select 1 from public\.kc_club_geplant where status = 'offen' and senden_um <= now\(\)\)/.test(mig), "Tabelle geschützt, Zeitplaner ruft nur bei Fälligem");
 }

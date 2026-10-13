@@ -1,12 +1,22 @@
 {
-  "version": "2.361.0",
-  "datum": "2026-10-13",
+  "version": "2.362.0",
+  "datum": "2026-10-14",
   "stufe": "RC",
   "neu": [
-    "🔋 Stromsauger gefunden: Nach dem ersten Signalton blieb die Tonausgabe dauerhaft an und hielt das Handy wach – jetzt schläft sie 3 Sekunden nach jedem Ton wieder ein",
-    "🔋 Das Jahreszeiten-Bild im Kopf bleibt nach 3 Minuten ohne Bedienung stehen (Rechenlast 0,3 % statt 2 %) – einmal antippen, dann läuft es weiter"
+    "⏰ Neu: Nachrichten später senden – Nachricht schreiben, unten auf ⏰ tippen, Zeit wählen (z. B. morgen früh 8 Uhr)",
+    "🔁 Auch mit Wiederholung: jeden Tag, werktags, jeden Montag oder jeden Monat – z. B. jeden Montag um 8 Uhr die gleiche Erinnerung",
+    "👀 Geplante Nachrichten stehen blass unten im Chat (nur du siehst sie) – antippen: jetzt senden, Zeit ändern oder löschen. Gesendet wird auch, wenn dein Handy aus ist"
   ],
   "verlauf": [
+    {
+      "version": "2.362.0",
+      "datum": "2026-10-14",
+      "neu": [
+        "⏰ Neu: Nachrichten später senden – Nachricht schreiben, unten auf ⏰ tippen, Zeit wählen (z. B. morgen früh 8 Uhr)",
+        "🔁 Auch mit Wiederholung: jeden Tag, werktags, jeden Montag oder jeden Monat – z. B. jeden Montag um 8 Uhr die gleiche Erinnerung",
+        "👀 Geplante Nachrichten stehen blass unten im Chat (nur du siehst sie) – antippen: jetzt senden, Zeit ändern oder löschen. Gesendet wird auch, wenn dein Handy aus ist"
+      ]
+    },
     {
       "version": "2.361.0",
       "datum": "2026-10-13",
