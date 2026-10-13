@@ -9537,3 +9537,11 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 {
   assert.ok(/📢 Rundschreiben\$\{betreff\} \$\{von\} an alle \(\$\{tl\.length\} Personen, mit dabei\)/.test(server) && /💬 Zweier-Chat mit \$\{andere\[0\]/.test(server), "Rundschreiben/Zweier-Chat klar benannt");
 }
+
+// 14.10.2026 Regel Hansi: „Schreibe wieder nur ‚kleine Systemanpassung‘ beim Einspielen“ – der Update-Hinweis zählt keine Neuerungen auf
+// (Einzelheiten stehen nur im CHANGELOG). Gilt für jede neue Version.
+{
+  const vj = JSON.parse(lies("version.json"));
+  assert.deepEqual(vj.neu, ["Kleine Systemanpassung"], "version.json: neu = nur „Kleine Systemanpassung“");
+  assert.deepEqual(vj.verlauf[0].neu, ["Kleine Systemanpassung"], "version.json: neuester Verlauf = nur „Kleine Systemanpassung“");
+}
