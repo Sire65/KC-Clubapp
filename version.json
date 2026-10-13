@@ -1,11 +1,24 @@
 {
-  "version": "2.350.0",
+  "version": "2.351.0",
   "datum": "2026-10-13",
   "stufe": "RC",
   "neu": [
-    "🛡️ Sicherheits-Abgleich: Zugänge im Hintergrund weiter abgesichert – an der Bedienung ändert sich nichts"
+    "🎬 11 neue Erklär-Videos: Benachrichtigungen einrichten, Privatsphäre & Handy weitergeben, Wenn etwas nicht klappt, Chat für Fortgeschrittene, Gruppen anlegen, Termin ausmachen & Tag finden, die To-do-Liste, die einfache Ansicht, Rätsel & Bestenliste, Bühne/Musik/Club-Song und (für die Clubleitung) Büro im Alltag",
+    "🗣️ Stimme für die Erklär-Videos aussuchen: beim ersten Video oder jederzeit mit 🗣️ – mit Hörprobe und Tempo (langsamer/normal/schneller)",
+    "⬇️ Neue Stimmen zum Herunterladen (Thorsten, Kerstin, Eva, Ramona, Karlsson): ein Tipp lädt sie aufs Gerät – sie klingen auf jedem Handy gleich und sprechen danach auch ohne Netz",
+    "📖 Hilfe-Themen zeigen jetzt direkt den passenden Video-Knopf; Dienst- und Mitglieder-Video erweitert (Fertig-Pflicht, Wunschbogen, Anwesenheitstafel, Geburtstage)"
   ],
   "verlauf": [
+    {
+      "version": "2.351.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🎬 11 neue Erklär-Videos: Benachrichtigungen einrichten, Privatsphäre & Handy weitergeben, Wenn etwas nicht klappt, Chat für Fortgeschrittene, Gruppen anlegen, Termin ausmachen & Tag finden, die To-do-Liste, die einfache Ansicht, Rätsel & Bestenliste, Bühne/Musik/Club-Song und (für die Clubleitung) Büro im Alltag",
+        "🗣️ Stimme für die Erklär-Videos aussuchen: beim ersten Video oder jederzeit mit 🗣️ – mit Hörprobe und Tempo (langsamer/normal/schneller)",
+        "⬇️ Neue Stimmen zum Herunterladen (Thorsten, Kerstin, Eva, Ramona, Karlsson): ein Tipp lädt sie aufs Gerät – sie klingen auf jedem Handy gleich und sprechen danach auch ohne Netz",
+        "📖 Hilfe-Themen zeigen jetzt direkt den passenden Video-Knopf; Dienst- und Mitglieder-Video erweitert (Fertig-Pflicht, Wunschbogen, Anwesenheitstafel, Geburtstage)"
+      ]
+    },
     {
       "version": "2.350.0",
       "datum": "2026-10-13",

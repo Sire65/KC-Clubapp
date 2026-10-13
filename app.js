@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.350.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.351.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2165,6 +2165,7 @@ function rgBuehneVorfuehren() { // laufende Bühne nur zeigen: Küchen-Übung, R
   rgRueck("buehne"); { const plan = bwPlan("kueche", 5);
     BW.lauf = { plan, i: 0, phase: "uebung", rest: 18, pause: false, musik: false, ansage: false, sek: 0, lob: 0, sprueche: 0, farbe: 2, warte: 0 };
     BW.blase = "Hättest du nicht so viel am Pudding genascht, bräuchten wir das jetzt nicht machen!"; BW.sprechZeit = Date.now(); bwLaufZeigen(); BW.lauf = null; }
+  if (!RG.bwZurueck) { RG.bwZurueck = true; RG.zurueck.push(() => { RG.bwZurueck = false; bwTrainingKnoepfe(false); }); } // 2.348.0: Lupe, ? und Mikro nach dem Video wieder da
 }
 function rgUhrVorfuehren(L) { // alle vier Uhren kurz zeigen, danach wieder die eigene
   const alt = esLies("uhr", "digital"); let i = 0;
@@ -2679,6 +2680,18 @@ const RUNDGAENGE = [
   { id: "figurbau", stand: "1", sym: "🧩", t: "Eigene Figur zusammenstellen", u: "Haare, Mütze, Gesicht, Brille, Kochjacke – und später bearbeiten (ca. 2 Min.)", st: () => RG_FIGUR_BAU, nur: () => frei("avatar") && frei("avatar_baukasten") },
   { id: "leitung", stand: "1", ziel: "leitung", sym: "🗂️", t: "Für die Clubleitung: Büro & mehr", u: "Büro, Termine für alle, Abstimmung, eigene Einstellungen – nur für die Clubleitung", st: () => RG_LEITUNG, nur: () => !!(ICH?.buero || ICH?.vorstand) },
   { id: "admin", stand: "1", ziel: "admin", sym: "🛠️", t: "Für Admins: Leitstand", u: "Admin-Register, Lämpchen, Admin-Einstellungen – nur für Admins", st: () => RG_ADMIN, nur: () => !!ICH?.admin },
+  // 2.348.0 KC-CLUB-VIDEOS-NEU (Wunsch Hansi „für alle Themen Videos“)
+  { id: "push", stand: "1", sym: "🔔", t: "Benachrichtigungen richtig einrichten", u: "Push einschalten, je Bereich wählen, Test an mich, Meine Geräte, Anklopfton – und was tun, wenn nichts ankommt (ca. 4 Min.)", st: () => RG_PUSH }, // 2.348.0
+  { id: "privat", stand: "1", sym: "🔒", t: "Privatsphäre & Handy weitergeben", u: "Wer sieht was: online, zuletzt da, Tippen, Geburtstag, Kontakt – Abmelden, persönlicher Link, Link verloren, Meine Daten (ca. 4 Min.)", st: () => RG_PRIVAT }, // 2.348.0
+  { id: "probleme", stand: "1", sym: "🛠️", t: "Wenn etwas nicht klappt", u: "App neu öffnen, Update, Lämpchen, Schnecke, Laden dauert, zweimal offen, Mikrofon, Sicherheits-Check – und wann du Hansi fragst (ca. 4 Min.)", st: () => RG_PROBLEME }, // 2.348.0
+  { id: "chatprofi", stand: "1", sym: "💬", t: "Chat für Fortgeschrittene", u: "Antippen, Pfeil, Haken, Sprachtempo, Vorlesen, Abstimmung, Selbstlöschen, Entwurf, Archiv, ganzer Chat (ca. 5 Min.)", st: () => RG_CHATPROFI }, // 2.348.0
+  { id: "gruppen", stand: "1", sym: "👥", t: "Gruppen anlegen & verwalten", u: "Neue Gruppe, Name & Symbol, Mitglieder, Bereiche klappen, Gruppen-Admin, auflösen – und in Nachricht oder Terminanfrage nutzen (ca. 3 Min.)", st: () => RG_GRUPPEN }, // 2.348.0
+  { id: "terminfinden", stand: "1", sym: "📅", t: "Termin ausmachen & Tag finden", u: "Terminanfrage, Stand der Anfrage, Gegenvorschlag unter Vorbehalt, Terminfindung, Terminreihen (ca. 4 Min.)", st: () => RG_TERMINFINDEN }, // 2.348.0
+  { id: "todo", stand: "1", sym: "✅", t: "Die gemeinsame To-do-Liste", u: "Umschalter To-do, Aufgabe eintragen, verteilen, abhaken, Frist-Erinnerung, Aufgaben aus Protokollen (ca. 3 Min.)", st: () => RG_TODO }, // 2.348.0
+  { id: "einfach", stand: "1", sym: "👴", t: "Die einfache Ansicht", u: "Große Kacheln, die Leiste unten, das Fragezeichen – und wie du umschaltest (ca. 3 Min.)", st: () => RG_EINFACH }, // 2.348.0
+  { id: "raetsel", stand: "1", sym: "🧩", t: "Rätsel & Bestenliste", u: "Werne oder Küche, Bild wird schärfer, roter Buzzer, 6 Antworten, Punkte, Wochen-Rätsel und Club-Bestenliste (ca. 3 Min.)", st: () => RG_RAETSEL, nur: () => esAn() }, // 2.348.0
+  { id: "buehne", stand: "1", sym: "🎭", t: "Bühne, Musik & Club-Song", u: "Bereitlegen, Twinkey turnt vor, Trainingsuhr, Regler, nur Musik hören, Club-Song zum Mitsingen, Einladung zur Bewegung (ca. 4 Min.)", st: () => RG_BUEHNE, nur: () => esAn() }, // 2.348.0
+  { id: "buero", stand: "1", ziel: "leitung", sym: "🗂️", t: "Büro im Alltag", u: "Eingangskorb, Bestätigung für Dienstwünsche, ablegen, einlesen, E-Mail mit Anhang, Schilder-Druckerei – nur für die Clubleitung (ca. 4 Min.)", st: () => RG_BUERO, nur: () => !!(ICH?.buero || ICH?.vorstand) }, // 2.348.0
 ];
 // KC-CLUB-VIDEO-LIVE: Stationen, die einen Einstellungs-Bereich aufklappen, tippen vorher dessen Überschrift an (nur wenn er zu und zu sehen ist)
 for (const liste of [RG_EINSTELLUNGEN, RG_LEITUNG, RG_ADMIN]) for (const x of liste) {
@@ -2696,16 +2709,1122 @@ function rgRollenAnsicht(ziel) {
 // Kästchen zum Anhaken – alle angehakten automatisch nacheinander abspielen“). Registry RG_THEMEN: Video-IDs je Thema; ein Video, das in
 // keinem Thema steht (z. B. neu dazugekommen), landet unter „✨ Weitere“ – es geht keins verloren. Wenige Videos: eine Liste ohne Kacheln.
 const RG_THEMEN = [
-  { id: "einstieg", sym: "🚀", t: "Einstieg", videos: ["warum", "ueberblick", "spezial", "hilfe", "schulung", "feedback"] },
+  { id: "einstieg", sym: "🚀", t: "Einstieg", videos: ["warum", "ueberblick", "einfach", "spezial", "hilfe", "probleme", "schulung", "feedback"] },
   { id: "installieren", sym: "📲", t: "App installieren", videos: ["installieren", "inst_chrome", "inst_edge", "inst_samsung", "inst_safari", "inst_firefox", "inst_geraet", "inst_codes"] }, // 2.276.0 KC-CLUB-VIDEO-INSTALL
-  { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["zentrale", "sprache", "nachricht", "mitglieder", "pinnwand"] },
-  { id: "termine", sym: "📅", t: "Termine & Dienst", videos: ["termin", "zusagen", "dienst"] },
+  { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["zentrale", "sprache", "nachricht", "chatprofi", "gruppen", "mitglieder", "pinnwand"] },
+  { id: "termine", sym: "📅", t: "Termine & Dienst", videos: ["termin", "terminfinden", "zusagen", "todo", "dienst"] },
   { id: "club", sym: "🗄️", t: "Club & Archiv", videos: ["fotos", "lesen", "rezepte", "aktionen", "archiv", "vorschlag", "helfen", "erstattung"] },
-  { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["status", "meinedaten", "einstellungen", "oberflaeche", "effekte", "rueckseite", "anpassen", "figur", "figurbau", "technik", "studio"] },
-  { id: "freizeit", sym: "🎲", t: "Spiele, Fitness & Notfall", videos: ["spiele", "fit", "sos"] },
-  { id: "leitung", sym: "🗂️", t: "Für die Clubleitung", videos: ["leitung"] },
+  { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["status", "meinedaten", "push", "privat", "einstellungen", "oberflaeche", "effekte", "rueckseite", "anpassen", "figur", "figurbau", "technik", "studio"] },
+  { id: "freizeit", sym: "🎲", t: "Spiele, Fitness & Notfall", videos: ["spiele", "raetsel", "buehne", "fit", "sos"] },
+  { id: "leitung", sym: "🗂️", t: "Für die Clubleitung", videos: ["leitung", "buero"] },
   { id: "admin", sym: "🛠️", t: "Für Admins", videos: ["admin"] },
 ];
+// ---------- 2.348.0 KC-CLUB-VIDEO-PUSH (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
+// 2.348.0 KC-CLUB-VIDEO-PUSH (Wunsch Hansi „Benachrichtigungen richtig einrichten“): nur vorgeführt – Push wird nicht ein- oder ausgeschaltet,
+// kein Test geschickt, kein Häkchen gesetzt. „Meine Geräte“ liest nur die Liste; Fenster, Beispielbilder und Aufgeklapptes gehen am Ende wieder zu.
+const rgPushTipp = (n) => () => { const d = document.querySelector(rgKlappe(n)); return d && !d.open ? d.querySelector(":scope > summary") : null; }; // 2.348.0 KC-CLUB-VIDEO-PUSH
+function rgPushAuf(n) { // 2.348.0 KC-CLUB-VIDEO-PUSH: Bereich aufklappen; in der Rollkartei gleich die richtige Karte nach vorn (sonst überholen sich zwei Blätter-Läufe)
+  rgAuf(n); const z = RK.einst, d = document.querySelector(rgKlappe(n)), i = z?.an ? z.karten.indexOf(d) : -1;
+  if (i < 0) return;
+  if (RG.pushRkAlt == null) { RG.pushRkAlt = z.i; RG.zurueck.push(() => { const a = RG.pushRkAlt; RG.pushRkAlt = null; if (RK.einst?.an && a != null && RK.einst.i !== a) { RK.einst.i = a; rkStellen(RK.einst); } }); }
+  if (z.i !== i) { z.i = i; rkStellen(z); }
+}
+function rgPushGeraete(an) { // 2.348.0 KC-CLUB-VIDEO-PUSH: Fenster „Meine Geräte mit Push“ zeigen (nur lesen) – am Ende wieder zu
+  if (!an) { $("geFenster")?.remove(); return; }
+  if (!RG.pushGeZurueck) { RG.pushGeZurueck = true; RG.zurueck.push(() => { RG.pushGeZurueck = false; $("geFenster")?.remove(); }); }
+  if ($("geFenster")) { $("geFenster").classList.add("rg-zeigen"); return; }
+  const s = RG.st[RG.i];
+  geraeteBlatt().then(() => { const f = $("geFenster"); if (!f) return; if (!RG.an || RG.st[RG.i] !== s) return f.remove(); f.classList.add("rg-zeigen"); rgNeuZielen(); }).catch(() => {});
+}
+// Beispielbild des Fensters, das die App höchstens einmal am Tag zeigt, wenn das Handy die Erlaubnis verloren hat (Text wie in pushPruefen)
+const rgPushWiederBild = () => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin-top:0">🔔 Deine Benachrichtigungen sind aus</h3>
+  <p style="margin:0 0 8px">Dein Handy hat die Benachrichtigungen für die Club-App verloren – das passiert z. B. nach einer Neuinstallation oder wenn das Handy aufräumt.
+  Darum bekommst du gerade <b>kein Anklopfen</b> und <b>keine Hinweise auf neue Nachrichten</b>, solange die App zu ist.</p>
+  <div class="knoepfe"><span class="knopf haupt" data-s="an">🔔 Jetzt wieder einschalten</span><span class="knopf" data-s="spaeter">Später</span></div></div></div>`; // 2.348.0 KC-CLUB-VIDEO-PUSH
+const RG_PUSH = [
+  { v: "einstellungen", sel: ["#v-einstellungen .kopf2"], t: "👋 Benachrichtigungen",
+    x: "In diesem Video zeige ich dir, wie Nachrichten aus dem Club zuverlässig auf dein Handy kommen: Push einschalten, für jeden Bereich wählen, ausprobieren – und was du tust, wenn nichts ankommt. Keine Sorge: Ich schalte nichts um und verschicke nichts." },
+  // 1. Push einschalten – erweiterte Ansicht
+  { v: "einstellungen", nur: () => !einfach(), tippVor: rgPushTipp("benachrichtigung"), vor: () => rgPushAuf("benachrichtigung"), sel: [rgOn("pushUmschalten()", ".schalter")], mussSel: true,
+    puls: ["#pushKnopf", "#pushStatus"], t: "📲 Push auf diesem Handy",
+    x: "Das Wichtigste zuerst: Unter Mehr, Benachrichtigungen steht Push auf diesem Handy. Tippst du auf Einschalten, fragt dein Handy, ob die Club-App Benachrichtigungen schicken darf – das erlaubst du. Darunter steht dann Eingeschaltet." },
+  // 1. Push einschalten – einfache Ansicht
+  { v: "einstellungen", nur: () => einfach(), tippVor: rgPushTipp("einfach"), vor: () => rgPushAuf("einfach"), sel: ["#neuWahl"], mussSel: true, puls: ["#neuWahl .knopf"], t: "📲 Aufs Handy",
+    x: "In der einfachen Ansicht wählst du unter Das Wichtigste, wie du Neuigkeiten bekommst: Aufs Handy, Per E-Mail oder Beides. Bei Aufs Handy fragt dein Handy einmal, ob die Club-App Benachrichtigungen schicken darf – das erlaubst du." },
+  // 2. je Bereich
+  { v: "einstellungen", nur: () => !einfach(), vor: () => rgPushAuf("benachrichtigung"), sel: [() => document.querySelector(rgKlappe("benachrichtigung"))?.querySelector(".wahltabelle")], mussSel: true,
+    puls: [() => [...document.querySelectorAll(`${rgKlappe("benachrichtigung")} .wahltabelle th`)]], t: "📋 Für jeden Bereich",
+    x: "In der Tabelle legst du für jeden Bereich fest, ob du einen Push, eine E-Mail, beides oder nichts bekommst – zum Beispiel bei neuen Nachrichten, Sitzungen, der Erinnerung an deinen Dienst, Geburtstagen und neuen Zetteln an der Pinnwand. Ist nur Push angehakt und er kommt nicht an, schicken wir automatisch eine E-Mail." },
+  // 3. Nicht stören
+  { v: "einstellungen", vor: () => rgPushAuf(einfach() ? "einfach" : "benachrichtigung"), sel: [rgFeld("ruheAn"), rgFeld("ruheAnE")], mussSel: true,
+    puls: ["#ruheAn", "#ruheVon", "#ruheBis", "#ruheErw", "#ruheAnE"], t: "🌙 Nachts Ruhe",
+    x: () => einfach() ? "Mit Nicht stören kommt nachts kein Push – Anrufe kommen trotzdem durch, danach gibt es eine Sammelmeldung." : "Bei Nicht stören legst du eine Ruhezeit fest, zum Beispiel von 22 bis 7 Uhr. In dieser Zeit kommt kein Push – Anrufe kommen trotzdem durch, danach gibt es eine Sammelmeldung." },
+  // 4. Test an mich – Kachel nur zeigen
+  { v: "start", nur: () => !einfach(), vor: () => rgKopf("ganz"), sel: [rgKachel("test")], mussSel: true, kacheln: ["test"], t: "🧪 Test an mich",
+    x: "Ob alles ankommt, probierst du im Register Meins mit Test an mich aus: Es öffnet sich eine Unterhaltung nur mit dir, und mit dem Pfeil schickst du dir eine Probe – als Push oder E-Mail, so wie du es eingestellt hast. Danach kurz die App schließen, dann siehst du den Push. Hier schicke ich nichts." },
+  // 5. Meine Geräte
+  { v: "einstellungen", vor: () => rgPushAuf(einfach() ? "einfach" : "benachrichtigung"), sel: [rgOn("geraeteBlatt()", ".knoepfe")], mussSel: true,
+    puls: [rgOn("geraeteBlatt()"), rgOn("pushTest()")], t: "📱 Auf welchen Geräten?",
+    x: () => einfach() ? "Kommt auf dem Tablet nichts an? Meine Geräte zeigt, welche deiner Handys und Tablets Benachrichtigungen bekommen." : "Kommt auf dem Tablet nichts an? Meine Geräte zeigt, welche deiner Handys und Tablets Benachrichtigungen bekommen. Daneben schickt Test-Push senden eine Probe – hier schicke ich keine." },
+  { v: "einstellungen", vor: () => { rgPushAuf(einfach() ? "einfach" : "benachrichtigung"); rgPushGeraete(true); }, nach: () => rgPushGeraete(false),
+    sel: ["#geFenster .blatt-innen", rgOn("geraeteBlatt()", ".knoepfe")], t: "📱 Meine Geräte mit Push",
+    x: "Hier stehen alle Geräte, die deine Push-Meldungen bekommen – das Handy, das du gerade benutzt, ist mit dieses Gerät markiert. Fehlt eins, schalte auf diesem Gerät Push ein. Ein altes Handy kannst du hier entfernen." },
+  // 6. Anklopfton
+  { v: "einstellungen", tippVor: rgPushTipp("privat"), vor: () => rgPushAuf("privat"), sel: [rgFeld("setKlopfTon")], mussSel: true,
+    puls: ["#setKlopfTon", rgOn("klopfTonSpielen(")], t: "🔔 Der Anklopfton",
+    x: "Welcher Ton erklingt, wenn jemand bei dir anklopft – Holz-Klopfen, Ding-Dong, Gong oder Glöckchen –, suchst du dir unter Privatsphäre beim Anklopfton aus. Mit Testton hörst du ihn vorher." },
+  // 7. Ansagen bei offener App
+  { v: "einstellungen", tippVor: rgPushTipp("ansagen"), vor: () => rgPushAuf("ansagen"), sel: ["#setSprAnsZeile"], mussSel: true, puls: ["#setSprAnsZeile .knopf"], t: "🗣️ Ansagen bei offener App",
+    x: "Solange die App offen ist, kann dein Handy auch ansagen, was dich betrifft – zum Beispiel, wer gerade online kommt. Das wählst du unter Ansagen, Töne und Tipps bei Sprachansagen. Ist die App zu, kommt der normale Push mit Ton." },
+  // 8. Push repariert sich selbst
+  { v: "einstellungen", nur: () => !einfach(), vor: () => rgPushAuf("benachrichtigung"), sel: [rgOn("pushUmschalten()", ".schalter")], mussSel: true, puls: ["#pushStatus"], t: "🩹 Push repariert sich selbst",
+    x: "Ist der Push-Zugang auf deinem Gerät kaputt, obwohl das Handy Benachrichtigungen erlaubt, richtet die App ihn beim Öffnen von selbst neu ein. Du musst dafür nichts tun." },
+  { v: "einstellungen", vor: rgSimNeu(rgPushWiederBild, "ueber"), nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="an"]', '#rgSim [data-s="spaeter"]'], t: "🔔 Deine Benachrichtigungen sind aus",
+    x: "Hat das Handy die Erlaubnis verloren und du bekommst auf keinem Gerät mehr etwas, zeigt die App höchstens einmal am Tag dieses Fenster. Dann tippst du auf Jetzt wieder einschalten." },
+  // 9. Wenn nichts ankommt
+  { v: "einstellungen", nur: () => !einfach(), vor: () => rgPushAuf("benachrichtigung"), sel: [rgOn("pushUmschalten()", ".schalter")], mussSel: true, puls: ["#pushStatus"], t: "🤔 Es kommt nichts an",
+    x: "Kommt nichts an, schau zuerst hier. Steht unter Push auf diesem Handy Im Browser blockiert, hat das Handy die Benachrichtigungen gesperrt. Dann in den Handy-Einstellungen unter Apps, Chrome oder Club-App, Benachrichtigungen wieder einschalten und die App neu öffnen." },
+  { v: "einstellungen", nur: () => einfach(), vor: () => rgPushAuf("einfach"), sel: ["#neuWahl"], mussSel: true, puls: ["#neuWahl .knopf"], t: "🤔 Nichts kommt an",
+    x: "Kommt nichts an, schau zuerst hier, ob Aufs Handy oder Beides gewählt ist. Hat das Handy die Benachrichtigungen gesperrt, schaltest du sie in den Handy-Einstellungen unter Apps, Chrome oder Club-App, Benachrichtigungen wieder ein und öffnest die App neu." },
+  { v: "einstellungen", vor: () => rgPushAuf(einfach() ? "einfach" : "benachrichtigung"), sel: [rgFeld("ruheAn"), rgFeld("ruheAnE")], mussSel: true, puls: ["#ruheAn", "#ruheAnE"], t: "🌙 Gerade Ruhezeit?",
+    x: "Prüfe auch die Ruhezeit: Ist Nicht stören eingeschaltet, kommt in dieser Zeit kein Push, sondern danach eine Sammelmeldung. Und ist am Handy selbst Nicht stören oder ein Ruhemodus an, bleibt es ebenfalls still." },
+  { v: "einstellungen", tippVor: rgPushTipp("install"), vor: () => rgPushAuf("install"), sel: [rgKlappe("install")], mussSel: true, puls: [rgOn("einrichtenAssistent()")], video: "installieren", t: "📲 Ist die App installiert?",
+    x: "Auf dem iPhone geht Push nur, wenn die App auf dem Home-Bildschirm liegt. Wie du die App richtig installierst, steht hier unter App-Installation – Schritt für Schritt." },
+  { v: "einstellungen", t: "✅ Fertig",
+    x: () => (einfach() ? "Das war's: Aufs Handy wählen, Benachrichtigungen erlauben und bei Meine Geräte nachsehen." : "Das war's: Push auf diesem Handy einschalten, für jeden Bereich wählen, mit Test an mich ausprobieren und bei Meine Geräte nachsehen.") + ` Kommt trotzdem nichts an, frag Twinkey oder ${adminName()}.` },
+];
+
+// ---------- 2.348.0 KC-CLUB-VIDEO-PRIVAT (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
+// 2.348.0 KC-CLUB-VIDEO-PRIVAT (Wunsch Hansi „Privatsphäre & Handy weitergeben“): nur vorgeführt – kein Schalter umgelegt, nichts gespeichert,
+// nicht abgemeldet, kein Code geholt. Beispielbilder (Link, Anmeldeseite) und „Meine Daten“ gehen am Ende wieder weg, die Rollkartei steht wie vorher.
+function rgPrivatAuf(n) { // 2.348.0 KC-CLUB-VIDEO-PRIVAT: Bereich aufklappen; in der Rollkartei gleich die richtige Karte nach vorn (sonst überholen sich zwei Blätter-Läufe)
+  rgAuf(n); const z = RK.einst, d = document.querySelector(rgKlappe(n)), i = z?.an ? z.karten.indexOf(d) : -1;
+  if (i < 0) return;
+  if (RG.privatRkAlt == null) { RG.privatRkAlt = z.i; RG.zurueck.push(() => { const a = RG.privatRkAlt; RG.privatRkAlt = null; if (RK.einst?.an && a != null && RK.einst.i !== a) { RK.einst.i = a; rkStellen(RK.einst); } }); }
+  if (z.i !== i) { z.i = i; rkStellen(z); }
+}
+const rgPrivatTipp = (n) => () => { const d = document.querySelector(rgKlappe(n)); return d && !d.open ? d.querySelector(":scope > summary") : null; }; // 2.348.0 KC-CLUB-VIDEO-PRIVAT
+const rgPrivat = (felder) => ({ v: "einstellungen", vor: () => rgPrivatAuf("privat"), mussSel: true, ...felder }); // 2.348.0 KC-CLUB-VIDEO-PRIVAT: Station im Bereich Privatsphäre
+const RG_PRIVAT = [
+  { v: "einstellungen", sel: ["#v-einstellungen .kopf2"], t: "👋 Deine Privatsphäre",
+    x: "In diesem Video zeige ich dir, was andere Mitglieder von dir sehen und wie du das selbst bestimmst. Danach: was du tust, wenn du dein Handy weitergibst oder deinen Link verloren hast. Keine Sorge: Ich verstelle nichts." },
+  rgPrivat({ tippVor: rgPrivatTipp("privat"), sel: [rgKlappe("privat")], t: "🔒 Wo finde ich das?",
+    x: "Alles dazu steht unter Mehr, Einstellungen, Privatsphäre. Ich gehe die Schalter der Reihe nach mit dir durch." }),
+  rgPrivat({ sel: [rgFeld("setGeburtstag")], puls: ["#setGeburtstag", "#setRundGeburtstag"], t: "🎂 Mein Geburtstag",
+    x: "Mein Geburtstag anzeigen: Andere sehen dann nur Tag und Monat – im Kalender, in der Terminliste und unter Heute wichtig. Darunter erlaubst du, dass die Clubleitung bei runden Geburtstagen dein Alter sieht, damit der Club gratulieren kann." }),
+  rgPrivat({ sel: [rgFeld("setOnline")], puls: ["#setOnline"], t: "🟢 Bin ich online?",
+    x: "Anderen zeigen, wann ich online bin: Dann sehen andere einen grünen Punkt bei dir und können anklopfen. Schaltest du es aus, siehst du auch selbst nicht, wer online ist." }),
+  rgPrivat({ sel: [rgFeld("setZuletzt")], puls: ["#setZuletzt"], t: "🕒 Zuletzt da",
+    x: "Wie bei WhatsApp: Anderen zeigen, wann ich zuletzt da war – heute mit Uhrzeit, sonst nur grob, zum Beispiel gestern. Ausgeschaltet siehst du es auch bei den anderen nicht." }),
+  rgPrivat({ sel: [rgFeld("setAnklopfen")], puls: ["#setAnklopfen"], t: "👋 Anklopfen",
+    x: "Anklopfen erlauben: Andere dürfen bei dir anklopfen, wenn du online bist. Ist es aus, schreiben sie dir stattdessen eine Nachricht." }),
+  rgPrivat({ sel: [rgFeld("setLiveTippen")], puls: ["#setLiveTippen"], t: "👁️ Sieht man mein Tippen?",
+    x: "Sehen andere, was ich tippe? Nein – solange du es nicht willst. Andere sehen live, was ich tippe ist von Haus aus aus; dann sehen die anderen nur: schreibt." }),
+  rgPrivat({ sel: [rgFeld("setKontakt_mail")], puls: ["#setKontakt_handy", "#setKontakt_festnetz", "#setKontakt_mail", "#setKontakt_adresse", rgOn("mitgliedOeffnen(ICH.person_id)")], t: "📱 Meine Kontaktdaten",
+    x: "Darunter bestimmst du, was andere Mitglieder sehen: deine Handynummer, Festnetznummer, E-Mail-Adresse und Adresse. Mit So sehen mich die anderen prüfst du das Ergebnis." }),
+  rgPrivat({ sel: [rgFeld("nfName")], puls: ["#nfName", "#nfTel", "#nfBez"], t: "🆘 Mein Notfallkontakt",
+    x: "Beim Notfallkontakt trägst du eine andere Person ein, die im Notfall benachrichtigt werden soll – zum Beispiel deine Frau oder einen Nachbarn. Den sehen nur Clubsprecher, Kassenwart und Admin." }),
+  rgPrivat({ sel: [rgOn("geraetAbmelden()", ".schalter")], puls: [rgOn("geraetAbmelden()")], t: "🚪 Handy weitergeben",
+    x: "Gibst du ein Handy oder Tablet weiter, tippe vorher ganz unten bei Von diesem Gerät abmelden auf Abmelden. Dann sind dein Zugang und alle Club-Daten auf diesem Gerät gelöscht – auch Notfallpass und Entwürfe. Auf deinen anderen Geräten bleibt alles; hier tippe ich natürlich nicht." }),
+  { v: "einstellungen", vor: rgSimNeu(simWhatsApp), nach: rgSimWeg, sel: ['#rgSim [data-s="link"]'], mussSel: true, t: "🔗 Dein persönlicher Link",
+    x: () => `Die App öffnest du über deinen persönlichen Link – so wie hier im Beispiel. Gib ihn bitte nicht weiter: Wer ihn hat, ist in der App als du angemeldet. Neues Handy oder Link verloren? ${adminName()} erzeugt dir einen neuen.` },
+  { v: "einstellungen", vor: rgSimNeu(() => simAnmeldung("handy")), nach: rgSimWeg, sel: ['#rgSim [data-s="verloren"]'], mussSel: true, video: "inst_codes", t: "✉️ Link verloren?",
+    x: "Hast du deinen Link nicht mehr, hilft auf der Anmeldeseite Link verloren: E-Mail-Adresse eingeben, und ein neuer persönlicher Link kommt per Mail. Dein alter Link gilt danach nicht mehr." },
+  { v: "einstellungen", tippVor: rgPrivatTipp("install"), vor: () => rgPrivatAuf("install"), sel: [rgOn("kurzcodeBlatt()")], mussSel: true, puls: [rgOn("kurzcodeBlatt()")], t: "🔢 Zweites Gerät mit Code",
+    x: "Für ein zweites Gerät brauchst du keinen Link: Unter App-Installation holst du dir mit Code für ein anderes Gerät einen 6-stelligen Code und tippst ihn auf dem neuen Gerät ein. Hier hole ich keinen Code." },
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgReg("mein"); }, sel: [rgKachel("meinedaten")], mussSel: true, kacheln: ["meinedaten"], t: "🔐 Meine Daten",
+    x: "Was weiß die App über dich? Das zeigt die Kachel Meine Daten im Register Meins.", live: async (L) => { await L.tipp(rgKachel("meinedaten")); rgBlatt("mdatBlatt", mdatStart); L.ziel(); } },
+  { v: "start", vor: () => rgBlatt("mdatBlatt", mdatStart), sel: ["#mdatBlatt .blatt-innen"], video: "meinedaten", t: "👀 Alles auf einen Blick",
+    x: "Hier steht alles, was über dich gespeichert ist: deine Angaben, dein Zugang, deine Rechte und Benachrichtigungen. Nur du siehst diese Übersicht." },
+  { v: "start", vor: () => rgBlatt("mdatBlatt", mdatStart), nach: () => { if ($("mdatBlatt")) fensterZu($("mdatBlatt")); }, sel: ["#mdatInhalt .na-pfeil-knoepfe", "#mdatBlatt .blatt-innen"],
+    puls: ["#mdatInhalt .na-pfeil-knoepfe .knopf"], t: "🖨️ Drucken oder melden",
+    x: "Unten kannst du die Übersicht drucken oder als Datei sichern. Stimmt etwas nicht, tippst du auf Änderung melden – hier melde ich nichts." },
+  { v: "einstellungen", t: "✅ Fertig",
+    x: "Das war's: Unter Privatsphäre bestimmst du, was andere sehen. Vor dem Weitergeben eines Handys meldest du dich dort ab. Deinen Link gibst du nie weiter – und bei Link verloren kommt ein neuer per Mail." },
+];
+
+// ---------- 2.348.0 KC-CLUB-VIDEO-PROBLEME (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
+// 2.348.0 KC-CLUB-VIDEO-PROBLEME (Wunsch Hansi „Wenn etwas nicht klappt“): nur vorgeführt – kein Update, keine Prüfung, nichts gesendet oder gemeldet,
+// die App wird nicht geschlossen. Schnecke und Lade-Leiste werden nur gezeigt; Verbindungs-Fenster, Beispielbilder und Kopf stehen am Ende wie vorher.
+function rgProblemeAuf(n) { // 2.348.0 KC-CLUB-VIDEO-PROBLEME: Bereich aufklappen; in der Rollkartei gleich die richtige Karte nach vorn
+  rgAuf(n); const z = RK.einst, d = document.querySelector(rgKlappe(n)), i = z?.an ? z.karten.indexOf(d) : -1;
+  if (i < 0) return;
+  if (RG.problemeRkAlt == null) { RG.problemeRkAlt = z.i; RG.zurueck.push(() => { const a = RG.problemeRkAlt; RG.problemeRkAlt = null; if (RK.einst?.an && a != null && RK.einst.i !== a) { RK.einst.i = a; rkStellen(RK.einst); } }); }
+  if (z.i !== i) { z.i = i; rkStellen(z); }
+}
+function rgProblemeVb(an) { // 2.348.0 KC-CLUB-VIDEO-PROBLEME: Fenster „Verbindung“ (wie für Mitglieder) zeigen – es wird nichts geprüft oder gesendet
+  if (an) { vbEinfachZeigen(); $("verbindungBlatt").classList.remove("versteckt"); }
+  rgFest("verbindungBlatt", an);
+}
+function rgProblemeSchnecke(an) { // 2.348.0 KC-CLUB-VIDEO-PROBLEME: Schnecke oben nur zeigen (schon ein Stück im Bild); danach wieder so, wie die App gerade misst
+  const weg = () => { $("schnecke")?.querySelectorAll(".sn-zug, .sn-spur").forEach((e) => (e.style.animationDelay = "")); schneckeZeigen(); };
+  if (!an) return weg();
+  if (!RG.problemeSchnecke) { RG.problemeSchnecke = true; RG.zurueck.push(() => { RG.problemeSchnecke = false; weg(); }); }
+  schneckeZeigen(); const z = $("schnecke"); if (!z) return;
+  z.querySelectorAll(".sn-zug, .sn-spur").forEach((e) => (e.style.animationDelay = "-9s")); z.classList.remove("versteckt");
+}
+const RG_PROBLEME_LADE = { action: "rg_vorfuehrung", lesen: true, langsam: true, ab: new AbortController(), wunsch: "", timer: 0 }; // 2.348.0 KC-CLUB-VIDEO-PROBLEME: nur zum Zeigen
+function rgProblemeLade(an) { // 2.348.0 KC-CLUB-VIDEO-PROBLEME: Leiste „Laden dauert zu lange“ zeigen – es lädt nichts, nichts wird abgebrochen
+  if (an) {
+    if (!RG.problemeLade) { RG.problemeLade = true; RG.zurueck.push(() => { RG.problemeLade = false; LADE.laufe.delete(RG_PROBLEME_LADE); ladeZeigen(); }); }
+    RG_PROBLEME_LADE.ab = new AbortController(); LADE.laufe.add(RG_PROBLEME_LADE); LADE.zu = false;
+  } else LADE.laufe.delete(RG_PROBLEME_LADE);
+  ladeZeigen();
+}
+// Beispielbilder (Texte wie in zweiFensterMelden und mikroHilfe)
+const rgProblemeZweiBild = () => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin-top:0">🪟 Die Club-App ist schon offen</h3>
+  <p style="margin:0 0 8px">Die Club-App ist in diesem Browser noch in einem <b>anderen Fenster oder Tab</b> offen. Zwei Fenster gleichzeitig machen die App langsamer und können bei Nachrichten durcheinanderbringen.</p>
+  <div class="knoepfe"><span class="knopf haupt" data-s="hier">✅ Hier weitermachen</span><span class="knopf" data-s="zu">✖ Dieses Fenster schließen</span></div></div></div>`;
+const rgProblemeMikroBild = () => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin-top:0">🎙️ Mikrofon ist gesperrt</h3>
+  <p style="margin:0 0 8px">Die Köcheclub-App darf dein Mikrofon gerade nicht benutzen. Tippe auf <b>„🎙️ Jetzt freischalten“</b> und dann bei deinem Handy auf <b>„Zulassen“</b> bzw. <b>„Erlauben“</b> – danach geht es gleich weiter.</p>
+  <div style="display:grid;gap:8px"><span class="knopf haupt" data-s="frei">🎙️ Jetzt freischalten</span><span class="knopf" data-s="assistent">🧭 Schritt für Schritt helfen</span><span class="knopf" data-s="tippen">⌨️ Weiter tippen</span></div></div></div>`;
+const RG_PROBLEME = [
+  { v: "start", vor: () => rgKopf("offen"), t: "👋 Wenn etwas nicht klappt",
+    x: () => `Manchmal hängt die App, lädt lange oder das Mikrofon will nicht. In diesem Video zeige ich dir, was du selbst tun kannst – und wann du am besten ${adminName()} fragst. Ich tippe dabei nichts an.` },
+  { v: "start", vor: () => rgKopf("ganz"), sel: [rgOn("appSchliessen()")], mussSel: true, puls: [rgOn("appSchliessen()")], t: "🚪 Ganz schließen und neu öffnen",
+    x: "Hängt die App oder zeigt sie Altes? Dann zuerst die App ganz schließen und neu öffnen. Dafür gibt es ganz unten auf der Startseite den Knopf App schließen." },
+  { v: "start", nur: () => !einfach(), vor: () => rgKopf("ganz"), sel: [rgKachel("update")], mussSel: true, kacheln: ["update"], video: "technik", t: "🔄 Update holen",
+    x: "Hilft das nicht, tippe im Register Technik auf Update prüfen. Steht dort Neu, lädt die App die neue Version komplett und startet neu. Meist macht sie das auch von selbst." },
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#kopfVersion"], mussSel: true, puls: ["#kopfVersion"], t: "🔢 Welche Version habe ich?",
+    x: "Welche Version du hast, steht oben klein unter der Kochmütze. Antippen prüft ebenfalls, ob es etwas Neues gibt." },
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#leds", "#v-start .statusleiste"], mussSel: true, puls: ["#leds"], t: "🟢 Das Lämpchen oben",
+    x: "Oben im Kopf zeigt ein Lämpchen, ob die App Verbindung hat – grün heißt alles gut. Im Zweifel einfach antippen.",
+    live: async (L) => { await L.tipp("#leds"); rgProblemeVb(true); L.ziel(); }, nach: () => rgProblemeVb(false) },
+  { v: "start", vor: () => { rgKopf("offen"); rgProblemeVb(true); }, nach: () => rgProblemeVb(false), sel: ["#vbInhalt", "#verbindungBlatt .blatt-innen"], mussSel: true,
+    puls: ["#vbInhalt .vb-status", "#vbInhalt [onclick*='verbindungMelden']"], t: "📨 Ergebnis senden",
+    x: () => `Im Fenster steht zum Beispiel Verbindung in Ordnung. Hakt etwas, schickst du mit Ergebnis an ${adminName()} senden die Messwerte – nur Technik-Werte, keine Inhalte. Hier schicke ich nichts.` },
+  { v: "start", vor: () => { rgKopf("offen"); rgProblemeSchnecke(true); }, nach: () => rgProblemeSchnecke(false), sel: ["#schnecke"], mussSel: true, t: "🐌 Die Schnecke",
+    x: "Erscheint oben eine kleine Schnecke, ist das Netz gerade langsam. Alles funktioniert weiter, dauert aber länger: bitte etwas Geduld und nicht mehrfach tippen. Ist das Netz wieder schnell, verschwindet sie von selbst." },
+  { v: "start", vor: () => rgProblemeLade(true), nach: () => rgProblemeLade(false), sel: ["#ladeHilfe"], mussSel: true, puls: ["#ladeHilfe .lh-ja", "#ladeHilfe .lh-nein"], t: "⏳ Laden dauert zu lange",
+    x: "Dauert das Laden länger als 12 Sekunden, erscheint unten diese Leiste: Nochmal versuchen lädt neu, Abbrechen beendet das Warten. Beim Senden wird dagegen nie abgebrochen oder doppelt geschickt. Auch bei Twinkey kommt dann Nochmal versuchen." },
+  { v: "start", vor: rgSimNeu(rgProblemeZweiBild, "ueber"), nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="hier"]', '#rgSim [data-s="zu"]'], t: "🪟 Die App ist zweimal offen",
+    x: "Läuft die Club-App auf demselben Gerät zweimal, meldet sie das. Hier weitermachen legt das andere Fenster schlafen, Dieses Fenster schließen schließt dieses." },
+  { v: "start", vor: rgSimNeu(rgProblemeMikroBild, "ueber"), nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="frei"]', '#rgSim [data-s="assistent"]'], t: "🎤 Mikrofon klappt nicht",
+    x: "Klappt Diktieren oder die Sprachnachricht nicht, darf die App meist das Mikrofon nicht benutzen. Dann tippst du in diesem Fenster auf Jetzt freischalten und beim Handy auf Zulassen. Hilft das nicht, führt dich Schritt für Schritt helfen durch den Mikrofon-Assistenten." },
+  { v: "start", nur: () => !einfach(), vor: () => rgKopf("ganz"), sel: [rgKachel("sicherheit")], mussSel: true, kacheln: ["sicherheit"], t: "🛡️ Sicherheits-Check",
+    x: "Ein gutes Gefühl mit einem Tipp: Der Sicherheits-Check im Register Technik prüft, ob die App auf deinem Gerät sicher und richtig läuft. Grüne Haken heißen alles gut; sonst steht dabei, was zu tun ist. Hier starte ich keine Prüfung." },
+  { v: "einstellungen", nur: () => !einfach(), vor: () => rgProblemeAuf("app"), sel: [rgOn("fpProblemMelden()", ".knoepfe")], mussSel: true, puls: [rgOn("fpProblemMelden()"), rgOn("appInfoKopieren()")], t: "🙋 Problem melden",
+    x: () => `Bleibt das Problem, sag ${adminName()} Bescheid: Unter Mehr, App-Info tippst du auf Problem melden – ${adminName()} sieht dann automatisch, welches Handy, welcher Browser und welche Version du hast. Infos kopieren legt diese Angaben bereit, zum Einfügen in eine Nachricht.` },
+  { v: "einstellungen", nur: () => einfach(), vor: () => rgProblemeAuf("einfach"), sel: [rgOn("zeige('feedback')", ".schalter")], mussSel: true, puls: [rgOn("zeige('feedback')")], t: "🙋 Feedback schreiben",
+    x: () => `Bleibt das Problem, schreib ${adminName()} kurz, was passiert ist: unter Mehr bei Feedback auf Schreiben tippen.` },
+  { v: "start", vor: () => rgKopf("offen"), t: "✅ Fertig",
+    x: () => `Kurz gesagt: App ganz schließen und neu öffnen, Update holen, aufs Lämpchen schauen – und bei der Schnecke etwas Geduld haben. Hilft das alles nicht, frag Twinkey oder ${adminName()}.` },
+];
+
+// ---------- 2.348.0 KC-CLUB-VIDEO-CHATPROFI (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
+// 2.348.0 KC-CLUB-VIDEO-CHATPROFI: Beispiel-Chat nur auf dem Bildschirm. Die echte Chat-Anzeige (chatLaden) zeichnet ihn; dafür beantwortet
+// eine vorübergehende Weiche vor api() NUR Aufrufe für die Beispiel-Unterhaltung selbst (nichts davon geht an den Server). Alles andere läuft
+// unverändert durch. Am Ende (RG.zurueck) kommen api, Chat, Schreibfeld und Fenster in den alten Stand – gespeichert oder gesendet wird nichts.
+const RG_CP_ID = "rg-chatprofi-beispiel";
+function rgChatprofiDaten() {
+  const vor = (min) => new Date(Date.now() - min * 60000).toISOString(), ich = ICH?.person_id || "ich", ichName = ICH?.name || "Du";
+  const a = { von: "Anne Beispiel", vonId: "rg-cp-anne" }, k = { von: "Klaus Muster", vonId: "rg-cp-klaus" }, du = { von: ichName, vonId: ich, eigen: true };
+  const m = (n, wer, min, x = {}) => ({ id: "rg-cp-" + n, ...wer, eigen: !!wer.eigen, zeit: vor(min), text: "", anlagen: [], reaktionen: [], gelesenVon: [], ...x });
+  const nachrichten = [
+    m(1, a, 190, { text: "Hallo zusammen! Grillabend am Samstag um 18 Uhr bei mir im Garten.", angeheftet: true }),
+    m(2, k, 175, { text: "Wer bringt was mit?" }),
+    m(3, a, 160, { text: "📎", anlagen: [{ id: "rg-cp-sprache", name: "Sprachnachricht.webm", mime: "audio/webm" }] }),
+    m(4, k, 150, { text: "📊 Grillen oder Pizza?", umfrage: { frage: "Grillen oder Pizza?", mehrfach: false, gesamt: 3, optionen: [
+      { text: "Grillen", stimmen: 2, meine: true, namen: ["Du", "Anne"] }, { text: "Pizza", stimmen: 1, meine: false, namen: ["Klaus"] }] } }),
+    m(5, a, 120, { text: "Denkt bitte an Teller und Besteck!", gemerkt: true, reaktionen: [{ emoji: "👍", anzahl: 2, meine: true, namen: ["Du", "Klaus"] }] }),
+    m(6, k, 60, { text: "Code für das Gartentor: 4711", loeschtAm: new Date(Date.now() + 179 * 60000).toISOString() }),
+    m(7, du, 40, { text: "Super, ich bin dabei!", haken: "gelesen" }),
+    m(8, du, 30, { text: "Ich bringe Brot und Kräuterbutter mit.", haken: "angekommen", antwortAuf: { id: "rg-cp-2", von: "Klaus Muster", text: "Wer bringt was mit?" } }),
+    m(9, du, 5, { text: "Bitte gebt bis Donnerstag Bescheid, wer kommt!", haken: "gesendet", wichtig: true }),
+  ];
+  return { id: RG_CP_ID, betreff: "Grillabend", teilnehmer: [{ person_id: ich, name: ichName }, { person_id: a.vonId, name: a.von }, { person_id: k.vonId, name: k.von }],
+    nachrichten, angeheftet: [{ id: "rg-cp-1", von: "Anne Beispiel", text: nachrichten[0].text }], selbstloeschen: 0, gelesenBis: nachrichten[3].zeit, tippt: [], entwurf: [], spricht: [] };
+}
+function rgChatprofiAuf() {
+  if (RG.cpAn) { if (chatId !== RG_CP_ID || !$("msg-rg-cp-1")) { chatId = RG_CP_ID; chatStand = ""; NA.trennerChat = null; chatLaden(true).then(() => { if (RG.an && RG.cpAn) rgNeuZielen(); }); } return; }
+  RG.cpAn = true;
+  const alt = { api, CHAT, chatId, na: NA.nachrichten, text: $("text").value, empf: { ...EMPF }, vl: VL.chat, stand: chatStand, trenner: NA.trennerChat };
+  api = async (a, d = {}, o) => (d && (d.id === RG_CP_ID || d.chat === RG_CP_ID || String(d.id || "").startsWith("rg-cp-")) ? (a === "unterhaltung" ? rgChatprofiDaten() : {}) : alt.api(a, d, o));
+  RG.zurueck.push(() => {
+    RG.cpAn = false; api = alt.api; $("naMenue")?.remove(); $("chatBlatt").classList.add("versteckt"); $("anlageBlatt").classList.add("versteckt");
+    if (chatId === RG_CP_ID) chatId = alt.chatId; CHAT = alt.CHAT; NA.nachrichten = alt.na; chatStand = alt.stand; NA.trennerChat = alt.trenner; NA.trennerVor = null;
+    EMPF.chat = alt.empf.chat; EMPF.letzte = alt.empf.letzte; VL.chat = alt.vl;
+    $("chat").innerHTML = ""; $("chatAngeheftet").innerHTML = ""; $("text").value = alt.text; entwurfMarkeZeigen();
+  });
+  EMPF.chat = RG_CP_ID; EMPF.letzte = "rg-cp-6"; // kein Ankunfts-Effekt beim Zeichnen
+  chatId = RG_CP_ID; chatStand = ""; NA.trennerChat = null; chatLaden(true).then(() => { if (RG.an && RG.cpAn) rgNeuZielen(); });
+}
+const rgChatprofiBlase = (n) => () => $("msg-rg-cp-" + n);
+const rgChatprofiKnopf = (wurzel, anfang) => () => [...document.querySelectorAll(wurzel + " button")].find((b) => b.textContent.trim().startsWith(anfang) && rgSichtbar(b)) || null;
+function rgChatprofiMenue(id, pfeil) { // Menü an einer Nachricht nur zeigen – die Knöpfe tippt niemand an
+  rgChatprofiAuf(); (pfeil ? naPfeilMenue : nachrichtMenue)(id); $("naMenue")?.classList.add("rg-zeigen");
+}
+function rgChatprofiBlatt(id) { rgChatprofiAuf(); if (id === "chatBlatt") chatMenue(); else $(id).classList.remove("versteckt"); rgFest(id, true); }
+function rgChatprofiTempo() { // so sieht die Sprachnachricht nach „anhören“ aus: Player + Tempo-Knopf (spielt nichts ab)
+  const k = document.querySelector("#msg-rg-cp-3 .sprache > button"); if (!k) return;
+  const a = document.createElement("audio"); a.controls = true; a.preload = "none";
+  const t = document.createElement("button"); t.type = "button"; t.className = "tempo"; t.title = "Abspiel-Tempo"; t.textContent = String(sprachTempo()).replace(".", ",") + "×";
+  k.replaceWith(a); a.after(t);
+}
+function rgChatprofiTempoWeiter() { const t = document.querySelector("#msg-rg-cp-3 .tempo"); if (!t) return; const i = SPRACH_TEMPI.findIndex((x) => String(x).replace(".", ",") + "×" === t.textContent); t.textContent = String(SPRACH_TEMPI[(i + 1) % SPRACH_TEMPI.length]).replace(".", ",") + "×"; }
+const RG_CHATPROFI = [
+  { v: "chat", vor: rgChatprofiAuf, sel: ["#chatKopf"], t: "👋 Mehr aus dem Chat holen", x: "In diesem Video zeige ich dir an einem Beispiel-Chat, was du im Chat noch alles machen kannst: Nachrichten anheften, merken und weiterleiten, die Haken verstehen, abstimmen, vorlesen lassen und vieles mehr. Keine Sorge – der Chat ist nur ein Beispiel, ich sende und speichere nichts." },
+  { v: "chat", vor: rgChatprofiAuf, sel: ["#neuTrenner"], t: "⬇️ Wo hatte ich aufgehört?", x: "Öffnest du einen Chat, zeigt die Linie Neue Nachrichten, ab wo es für dich Neues gibt. Die App springt gleich dorthin." },
+  { v: "chat", vor: () => rgChatprofiMenue("rg-cp-2"), nach: () => $("naMenue")?.remove(), tippVor: "#msg-rg-cp-2 .txt", sel: ["#naMenue .na-menue"],
+    puls: ["#naMenue .na-schnell", rgChatprofiKnopf("#naMenue", "↩️ Antworten"), rgChatprofiKnopf("#naMenue", "📌 Oben anheften"), rgChatprofiKnopf("#naMenue", "⭐ Merken"), rgChatprofiKnopf("#naMenue", "📋 Kopieren")],
+    t: "👆 Nachricht antippen", x: "Tippst du eine Nachricht an, öffnet sich dieses Menü. Oben reagierst du schnell mit einem Bild, zum Beispiel Daumen hoch. Darunter: Antworten, Oben anheften, Merken und Kopieren – der Text liegt dann in der Zwischenablage, zum Beispiel für eine E-Mail." },
+  { v: "chat", vor: rgChatprofiAuf, sel: [rgChatprofiBlase(8)], puls: ["#msg-rg-cp-8 .zitat"], t: "↩️ Antworten mit Zitat", x: "Mit Antworten steht die Nachricht, auf die du dich beziehst, als Zitat oben in deiner Antwort. So weiß jeder sofort, worum es geht." },
+  { v: "chat", vor: rgChatprofiAuf, sel: ["#chatAngeheftet"], puls: ["#chatAngeheftet .pin-zeile"], t: "📌 Oben angeheftet", x: "Eine angeheftete Nachricht bleibt oben über dem Chat stehen und rutscht nicht weg – bis zu drei Stück. Antippen springt zur Nachricht." },
+  { v: "chat", vor: rgChatprofiAuf, sel: [rgChatprofiBlase(5)], puls: ['#msg-rg-cp-5 .fuss span[title="gemerkt"]', "#msg-rg-cp-5 .reaktionen"], t: "⭐ Gemerkt", x: "Eine gemerkte Nachricht bekommt einen Stern – so findest du sie später schnell wieder. Darunter siehst du auch die Reaktionen, hier zweimal Daumen hoch." },
+  { v: "chat", vor: () => rgChatprofiMenue("rg-cp-7", true), nach: () => $("naMenue")?.remove(), tippVor: "#msg-rg-cp-7 .na-pfeil", sel: ["#naMenue .na-menue"],
+    puls: [rgChatprofiKnopf("#naMenue", "↪️ Weiterleiten"), rgChatprofiKnopf("#naMenue", "📋 Kopieren"), rgChatprofiKnopf("#naMenue", "✂️ Ausschneiden"), rgChatprofiKnopf("#naMenue", "🗄️ Archivieren"), rgChatprofiKnopf("#naMenue", "❗ Wichtig"), rgChatprofiKnopf("#naMenue", "🗑️ Löschen")],
+    t: "➡️ Der kleine Pfeil", x: "Am kleinen Pfeil neben einer Nachricht gibt es noch mehr: Weiterleiten an eine andere Person oder Unterhaltung, Kopieren, Ausschneiden, Archivieren in deinen eigenen Archiv-Ordner und Löschen. Bei deinen eigenen Nachrichten kommt Wichtig dazu." },
+  { v: "chat", vor: rgChatprofiAuf, sel: [rgChatprofiBlase(9)], puls: ["#msg-rg-cp-9 .wichtig-marke", "#msg-rg-cp-9 .na-pfeil"], t: "❗ Nachträglich wichtig", x: "Vergessen, beim Senden das Ausrufezeichen anzutippen? Dann wählst du am Pfeil deiner Nachricht Wichtig. Sie bekommt den orangefarbenen Rahmen für alle im Chat – eine neue Benachrichtigung geht dabei nicht raus." },
+  { v: "chat", vor: rgChatprofiAuf, sel: [rgChatprofiBlase(9)], puls: ["#msg-rg-cp-9 .haken", "#msg-rg-cp-8 .haken", "#msg-rg-cp-7 .haken", "#msg-rg-cp-9 .na-info"], t: "✔️ Was die Haken bedeuten", x: "Die Haken an deinen Nachrichten: ein grauer Haken heißt gesendet, zwei graue Haken heißen auf dem Handy angekommen, zwei blaue Haken heißen gelesen. Ganz genau steht es unter dem kleinen i neben der Nachricht." },
+  { v: "chat", vor: () => { rgChatprofiAuf(); setTimeout(rgChatprofiTempo, 60); }, sel: [rgChatprofiBlase(3)], puls: ["#msg-rg-cp-3 .sprache"],
+    live: async (L) => { await L.warte(2500); await L.tipp("#msg-rg-cp-3 .tempo"); rgChatprofiTempoWeiter(); await L.warte(1500); await L.tipp("#msg-rg-cp-3 .tempo"); rgChatprofiTempoWeiter(); },
+    t: "⏩ Sprachnachricht schneller hören", x: "Lange Sprachnachrichten kannst du schneller hören: Der kleine Tempo-Knopf sitzt direkt an der Sprachnachricht. Einmal tippen für 1,5-fach, nochmal für doppelt so schnell. Deine Wahl merkt sich das Handy." },
+  { v: "chat", vor: () => rgChatprofiBlatt("chatBlatt"), nach: () => rgFest("chatBlatt", false), tippVor: "#chatMenueKnopf", sel: [rgChatprofiKnopf("#chatBlatt", "🔊 Vorlesen ab")],
+    puls: [rgChatprofiKnopf("#chatBlatt", "🔊 Vorlesen ab"), rgChatprofiKnopf("#chatBlatt", "🔊 Ganzen Chat")], t: "🔊 Chat vorlesen lassen", x: "Hände voll, zum Beispiel beim Kochen? Oben über die drei Punkte wählst du Vorlesen ab den neuen Nachrichten oder Ganzen Chat vorlesen. Das Handy liest vor, du hörst einfach zu." },
+  { v: "chat", vor: () => rgChatprofiBlatt("anlageBlatt"), nach: () => rgFest("anlageBlatt", false), tippVor: '#eingabe [title="Anlage"]', sel: ["#anlageBlatt .blatt-innen"],
+    puls: [rgChatprofiKnopf("#anlageBlatt", "📊 Abstimmung")], t: "📊 Schnell abstimmen", x: "Grillen oder Pizza? Unten unter dem Schreibfeld tippst du auf die Büroklammer und dann auf Abstimmung. Du stellst eine Frage mit zwei bis acht Antworten." },
+  { v: "chat", vor: rgChatprofiAuf, sel: [rgChatprofiBlase(4)], puls: ["#msg-rg-cp-4 .cu-opt"], t: "🗳️ Die Abstimmung im Chat", x: "So sieht die Abstimmung im Chat aus. Antippen genügt, und deine Stimme zählt. Alle sehen gleich, wie es gerade steht und wer was gewählt hat." },
+  { v: "chat", vor: () => rgChatprofiBlatt("chatBlatt"), nach: () => rgFest("chatBlatt", false), tippVor: "#chatMenueKnopf", sel: ["#chatSlKnopf"], t: "⏳ Selbstlöschen im ganzen Chat",
+    x: "Über die drei Punkte und Selbstlöschen stellst du ein, dass alle neuen Nachrichten in diesem Chat nach einer Stunde, 24 Stunden oder 7 Tagen verschwinden – bei allen." },
+  { v: "chat", vor: rgChatprofiAuf, sel: [rgChatprofiBlase(6)], puls: ["#msg-rg-cp-6 .sl-marke", "#ablaufKnopf"], t: "⏳ Nur eine Nachricht", x: "Nur für eine einzelne Nachricht tippst du beim Schreiben unten auf die Sanduhr. Solche Nachrichten zeigen, wie lange sie noch da sind – hier noch 3 Stunden. Push und E-Mail enthalten dann keinen Text." },
+  { v: "chat", vor: () => { rgChatprofiAuf(); $("text").value = "Ich bringe noch einen Nachtisch mit"; entwurfMarkeZeigen(); }, nach: () => { $("text").value = ""; entwurfMarkeZeigen(); },
+    sel: ["#eingabe"], puls: ["#entwurfMarke", "#text"], t: "✏️ Angefangen, nicht gesendet", x: "Mitten im Schreiben klingelt es an der Tür? Kein Problem: Dein angefangener Text bleibt in diesem Chat auf deinem Handy liegen. Der Hinweis Entwurf, noch nicht gesendet, erinnert dich später daran." },
+  { v: "chat", vor: () => { rgChatprofiAuf(); if (!$("rgCpWarte")) $("chat").insertAdjacentHTML("beforeend", '<div class="ow-warte" id="rgCpWarte"><div class="ow-blase">Bin im Keller und hole die Grillkohle.<small>⏳ wartet auf Netz – wird automatisch gesendet</small></div></div>'); },
+    nach: () => $("rgCpWarte")?.remove(), sel: ["#rgCpWarte"], t: "📵 Schreiben ohne Netz", x: "Im Keller oder unterwegs kein Empfang? Schreib ruhig trotzdem. Die Nachricht zeigt wartet auf Netz und geht von ganz allein raus, sobald wieder Verbindung da ist." },
+  { v: "chat", vor: () => rgChatprofiBlatt("chatBlatt"), nach: () => rgFest("chatBlatt", false), tippVor: "#chatMenueKnopf", sel: [() => $("chatBlatt")?.querySelector(".na-pfeil-knoepfe")],
+    puls: [rgChatprofiKnopf("#chatBlatt .na-pfeil-knoepfe", "📋 Kopieren"), rgChatprofiKnopf("#chatBlatt .na-pfeil-knoepfe", "🖨️ Ausdrucken"), rgChatprofiKnopf("#chatBlatt", "🗄️ Chat in mein Archiv")],
+    t: "🖨️ Den ganzen Chat", x: "Unter den drei Punkten steht auch Ganzer Chat: Kopieren, zum Beispiel für eine E-Mail, Ausdrucken und Chat in mein Archiv legen." },
+  { v: "chat", vor: () => rgChatprofiBlatt("chatBlatt"), nach: () => rgFest("chatBlatt", false), sel: ["#chatArchivKnopf"], puls: ["#chatArchivKnopf", "#chatKomplettKnopf"], t: "📦 Chat archivieren",
+    x: "Chat archivieren räumt ihn aus deiner Liste. Er bleibt dort, auch wenn jemand schreibt, und du kannst ihn jederzeit wieder aktivieren. Bei mir komplett löschen entfernt den Chat nur bei dir – die anderen behalten ihn." },
+  { v: "nachrichten", sel: [rgChatprofiKnopf("#v-nachrichten .kom-leiste", "⭐ Gemerkt")], t: "⭐ Alles Gemerkte", x: "Zurück in der Übersicht der Nachrichten: Unter Gemerkt findest du alle Nachrichten, die du dir gemerkt hast. Diese Liste siehst nur du." },
+  { v: "nachrichten", mussSel: true, sel: [".uh-archiv-zeile", ".uh-archiv-kopf"], t: "📦 Archivierte Chats", x: "Archivierte Chats stehen oben unter Archiviert. Dort tippst du einen Chat an und holst ihn mit Wieder aktivieren zurück." },
+  { v: "nachrichten", t: "✅ Fertig", x: "Das war der Chat für Fortgeschrittene: antippen für Antworten, Anheften und Merken, der Pfeil für Weiterleiten und Wichtig, die Haken, Sprachtempo, Vorlesen, Abstimmung, Selbstlöschen, Entwurf und die drei Punkte für den ganzen Chat. Probier es in Ruhe aus!" },
+];
+
+// ---------- 2.348.0 KC-CLUB-VIDEO-GRUPPEN (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
+// 2.348.0 KC-CLUB-VIDEO-GRUPPEN: zeigt das Formular „Neue Gruppe“ mit einem Beispiel (Küchenteam) und einen Beispiel-Gruppenchat – nur auf dem
+// Bildschirm. „Gruppe anlegen“, „Gruppe löschen“ usw. werden NIE angetippt; die Weiche vor api() beantwortet nur Aufrufe für den Beispiel-Chat
+// selbst. Am Ende (RG.zurueck) kommen Formular, Klapp-Stand, api, Chat und Terminanfrage in den alten Stand – angelegt oder gespeichert wird nichts.
+const RG_GR_ID = "rg-gruppen-beispiel";
+const rgGruppenAndere = () => (MITGLIEDER || []).filter((m) => m.person_id !== ICH?.person_id).slice(0, 2);
+const rgGruppenDemo = () => ({ id: RG_GR_ID, name: "Küchenteam", symbol: "👨‍🍳", anzahl: rgGruppenAndere().length + 1 });
+function rgGruppenForm(stufe) { // stufe 0: leer · 1: Name & Symbol · 2: + Mitglieder · 3: + Gruppen-Admin
+  if (!RG.grAn) {
+    RG.grAn = true;
+    const lies = (k) => { try { return localStorage.getItem("kc_club_" + k); } catch { return null; } };
+    const d = (n) => document.querySelector(`#v-gruppe details[data-klappe="${n}"]`);
+    const alt = { GR, name: $("grName").value, such: $("grSuche").value, titel: $("grTitel").textContent, knopf: $("grKnopf").textContent, vorh: $("grVorhanden").innerHTML,
+      offen: ["gr_name", "gr_wer"].map((n) => [n, d(n)?.open, lies("klappe_" + n)]) };
+    RG.zurueck.push(() => {
+      RG.grAn = false; GR = alt.GR; $("grName").value = alt.name; $("grSuche").value = alt.such; $("grTitel").textContent = alt.titel; $("grKnopf").textContent = alt.knopf; $("grVorhanden").innerHTML = alt.vorh;
+      $("grListe").innerHTML = ""; $("grGewaehlt").textContent = "nur du";
+      for (const [n, o] of alt.offen) if (d(n) && o !== undefined) d(n).open = o;
+      setTimeout(() => { for (const [n, , v] of alt.offen) try { v === null ? localStorage.removeItem("kc_club_klappe_" + n) : localStorage.setItem("kc_club_klappe_" + n, v); } catch {} }, 50); // Klapp-Stand wie vorher
+    });
+    $("grTitel").textContent = "👥 Neue Gruppe"; $("grKnopf").textContent = "👥 Gruppe anlegen"; $("grSuche").value = "";
+    for (const n of ["gr_name", "gr_wer"]) if (d(n)) d(n).open = true;
+    try { klappenMerken($("v-gruppe")); } catch {} // Pfeil und Schloss (sind beim Start schon da – nur zur Sicherheit)
+    rgGruppenListe("grVorhanden");
+  }
+  const los = () => {
+    const andere = rgGruppenAndere().map((m) => m.person_id);
+    GR = { id: null, name: "", symbol: stufe >= 1 ? "👨‍🍳" : "👥", personen: stufe >= 2 ? andere : [], vorher: [], ersteller: ICH.person_id, admins: stufe >= 3 ? andere.slice(-1) : [] };
+    $("grName").value = stufe >= 1 ? "Küchenteam" : ""; grSymbole(); grListe();
+  };
+  if (MITGLIEDER) los(); else mitgliederHolen().then(() => { if (RG.an && RG.grAn) { los(); rgNeuZielen(); } }).catch(() => {});
+}
+// „👥 Deine Gruppen“: die echten Gruppen – hat man noch keine, steht dort zum Zeigen das Beispiel (Knopf ohne Wirkung)
+function rgGruppenListe(ziel) {
+  neuGruppenZeigen(ziel, true).then(() => {
+    const z = $(ziel); if (!RG.an || !z || z.innerHTML.trim()) return rgNeuZielen();
+    const g = rgGruppenDemo();
+    z.innerHTML = `<details class="karte" data-klappe="gruppen_${ziel}" data-ohne-unten open data-rg-beispiel="1"><summary>👥 Deine Gruppen</summary><p class="hinweis" style="margin:0 0 6px">Antippen – du schreibst direkt in die Gruppe.</p>
+      <div class="knoepfe"><button class="knopf" type="button">${g.symbol} ${g.name} <small>· ${g.anzahl} Mitgl.</small></button></div>${ziel === "grVorhanden" ? '<p class="hinweis" style="margin:8px 0 0">Oder lege unten eine <b>weitere</b> Gruppe an.</p>' : ""}</details>`;
+    rgNeuZielen();
+  }).catch(() => {});
+}
+function rgGruppenChat() {
+  const daten = () => { const ich = ICH.person_id, andere = rgGruppenAndere().length ? rgGruppenAndere() : [{ person_id: "rg-gr-anne", name: "Anne Beispiel" }, { person_id: "rg-gr-klaus", name: "Klaus Muster" }];
+    return { id: RG_GR_ID, gruppe: { name: "Küchenteam", symbol: "👨‍🍳", erstellt_von: ich, admins: andere.slice(-1).map((m) => m.person_id), darfVerwalten: true },
+      teilnehmer: [{ person_id: ich, name: ICH.name }, ...andere.map((m) => ({ person_id: m.person_id, name: m.name }))], angeheftet: [], selbstloeschen: 0, tippt: [], entwurf: [], spricht: [],
+      nachrichten: [{ id: "rg-gr-1", eigen: true, von: ICH.name, vonId: ich, zeit: new Date(Date.now() - 600000).toISOString(), text: "Hallo Küchenteam! Schön, dass ihr dabei seid.", anlagen: [], reaktionen: [], gelesenVon: [], haken: "gesendet" }] }; };
+  if (!RG.grChat) {
+    RG.grChat = true;
+    const alt = { api, CHAT, chatId, na: NA.nachrichten, stand: chatStand, trenner: NA.trennerChat, empf: { ...EMPF }, vl: VL.chat };
+    api = async (a, d = {}, o) => (d && (d.id === RG_GR_ID || d.chat === RG_GR_ID) ? (a === "unterhaltung" ? daten() : {}) : alt.api(a, d, o));
+    RG.zurueck.push(() => {
+      RG.grChat = false; api = alt.api; $("chatBlatt").classList.add("versteckt");
+      if (chatId === RG_GR_ID) chatId = alt.chatId; CHAT = alt.CHAT; NA.nachrichten = alt.na; chatStand = alt.stand; NA.trennerChat = alt.trenner; NA.trennerVor = null;
+      EMPF.chat = alt.empf.chat; EMPF.letzte = alt.empf.letzte; VL.chat = alt.vl; $("chat").innerHTML = ""; $("chatAngeheftet").innerHTML = "";
+    });
+    EMPF.chat = RG_GR_ID; EMPF.letzte = null;
+  }
+  if (chatId !== RG_GR_ID || !$("msg-rg-gr-1")) { chatId = RG_GR_ID; chatStand = ""; NA.trennerChat = null; return chatLaden(true).then(() => { if (RG.an && RG.grChat) rgNeuZielen(); }); }
+  return Promise.resolve();
+}
+function rgGruppenMenue() { // mit Gruppen-Knöpfen ist das Menü höher als ein kleines Handy – fürs Video im Fenster blätterbar (danach wie vorher)
+  const i = $("chatBlatt").querySelector(".blatt-innen");
+  if (i && !RG.grBlatt) { RG.grBlatt = true; const alt = i.style.cssText; i.style.maxHeight = "88vh"; i.style.overflowY = "auto"; RG.zurueck.push(() => { RG.grBlatt = false; i.style.cssText = alt; i.scrollTop = 0; }); }
+  const p = rgGruppenChat(); const auf = () => { chatMenue(); rgFest("chatBlatt", true); }; if (CHAT?.id === RG_GR_ID) auf(); else p.then(() => { if (RG.an && RG.grChat) { auf(); rgNeuZielen(); } }); }
+function rgGruppenAnfrage() { // Formular „Terminanfrage“ nur zeigen, Gruppe vorgewählt – „Anfrage senden“ tippt niemand an
+  if (!RG.grTa) {
+    RG.grTa = true; const altGr = TA.gruppen;
+    RG.zurueck.push(() => { RG.grTa = false; const f = $("terminanfrageForm"); if (f) { f.classList.add("versteckt"); f.innerHTML = ""; } TA.wahl = { personen: [], gruppe: null }; if (TA.gruppen.some((g) => g.id === RG_GR_ID)) TA.gruppen = altGr; });
+  }
+  taForm().then(() => {
+    if (!RG.an || !RG.grTa || !$("taGruppen")) return;
+    if (!TA.gruppen.length) TA.gruppen = [rgGruppenDemo()];
+    TA.wahl = { personen: [], gruppe: TA.gruppen[0] }; taEmpfListe(); rgNeuZielen();
+  }).catch(() => {});
+}
+const rgGruppenKnopf = (wurzel, anfang) => () => [...document.querySelectorAll(wurzel + " button")].find((b) => b.textContent.trim().startsWith(anfang) && rgSichtbar(b)) || null;
+const rgGruppenSumm = (n) => `#v-gruppe details[data-klappe="${n}"] > summary`;
+const RG_GRUPPEN = [
+  { v: "nachrichten", sel: ["#v-nachrichten .kom-leiste"], t: "👋 Eigene Gruppen", x: "In diesem Video zeige ich dir, wie du eine eigene Gruppe anlegst – zum Beispiel fürs Küchenteam –, wer sie verwaltet, wie du sie nutzt und wieder auflöst. Keine Sorge: Ich lege nichts an und lösche nichts." },
+  { v: "nachrichten", sel: [rgGruppenKnopf("#v-nachrichten .kom-leiste", "👥 Gruppe")], t: "👥 Der Knopf Gruppe", x: "Los geht es in Nachrichten: Oben tippst du auf Gruppe." },
+  { v: "gruppe", tippVor: rgGruppenKnopf("#v-nachrichten .kom-leiste", "👥 Gruppe"), vor: () => rgGruppenForm(0), sel: ["#grVorhanden details", "#v-gruppe .kopf2"], t: "📋 Deine Gruppen",
+    x: "Das Fenster Neue Gruppe öffnet sich. Ganz oben stehen deine Gruppen – antippen, und du schreibst direkt hinein. Darunter legst du eine weitere Gruppe an." },
+  { v: "gruppe", vor: () => rgGruppenForm(1), sel: ['#v-gruppe details[data-klappe="gr_name"]'], puls: ["#grName", "#grSymbole button.an"], t: "✏️ Name und Symbol",
+    x: "Unter Name und Symbol gibst du der Gruppe einen Namen, zum Beispiel Küchenteam, und tippst ein passendes Symbol an." },
+  { v: "gruppe", vor: () => rgGruppenForm(2), sel: ['#v-gruppe details[data-klappe="gr_wer"]'], puls: ["#grSuche", () => [...document.querySelectorAll("#grListe input:checked")].map((i) => i.closest("label")), "#grGewaehlt"], t: "👤 Wer ist dabei?",
+    x: "Unter Wer ist dabei suchst du die Mitglieder, zum Beispiel mit einem Namen, und hakst sie an. Die kleinen Zeichen zeigen, ob jemand per Push, E-Mail oder WhatsApp erreichbar ist. Unten steht, wer dabei ist." },
+  { v: "gruppe", vor: () => rgGruppenForm(3), sel: [() => document.querySelector("#grListe .gr-krone.an")?.closest("label"), '#v-gruppe details[data-klappe="gr_wer"]'], puls: ["#grListe .gr-krone"], t: "👑 Gruppen-Admin bestimmen",
+    x: "Wer die Gruppe anlegt, ist ihr Gruppen-Admin. Tippst du neben einem Mitglied auf die Krone, darf es die Gruppe mit verwalten." },
+  { v: "gruppe", vor: () => rgGruppenForm(3), sel: ["#v-gruppe details[data-klappe=\"gr_name\"] > summary", "#v-gruppe .kopf2"], puls: [`${rgGruppenSumm("gr_name")} .pfeil`, `${rgGruppenSumm("gr_name")} .schloss`, `${rgGruppenSumm("gr_wer")} .pfeil`, `${rgGruppenSumm("gr_wer")} .schloss`],
+    live: async (L) => { const d = document.querySelector('#v-gruppe details[data-klappe="gr_name"]'); if (!d) return; await L.warte(1500); await L.tipp(`${rgGruppenSumm("gr_name")} .pfeil`); d.open = false; await L.warte(1800); await L.tipp(`${rgGruppenSumm("gr_name")} .pfeil`); d.open = true; },
+    t: "🔽 Bereiche auf- und zuklappen", x: "Jeder Bereich hat rechts einen Pfeil zum Auf- und Zuklappen – so behältst du den Überblick. Mit dem Schloss stellst du einen Bereich fest; er bleibt dann so, wie er ist, und die App merkt es sich." },
+  { v: "gruppe", vor: () => rgGruppenForm(3), sel: ["#grKnopf"], puls: ["#grKnopf", "#grGewaehlt"], t: "✅ Gruppe anlegen",
+    x: "Zum Schluss tippst du auf Gruppe anlegen. Die Mitglieder werden benachrichtigt, und der Gruppenchat öffnet sich. Hier lege ich natürlich nichts an." },
+  { v: "chat", vor: rgGruppenChat, sel: ["#chatKopf"], puls: ["#chatTitel", "#chatTeilnehmer"], t: "💬 Der Gruppenchat",
+    x: "So sieht ein Gruppenchat aus: Oben stehen Name und Symbol der Gruppe und wer dabei ist. Was du hier schreibst, bekommen alle in der Gruppe." },
+  { v: "chat", vor: rgGruppenMenue, nach: () => rgFest("chatBlatt", false), tippVor: "#chatMenueKnopf", sel: ["#chatGruppeInfo"], puls: ["#chatGruppeInfo", "#chatGruppeBearb", "#chatGruppeRaus"], t: "⋮ Gruppe verwalten",
+    x: "Oben unter den drei Punkten siehst du alle Mitglieder – die Krone zeigt die Gruppen-Admins. Mit Gruppe bearbeiten änderst du Name und Mitglieder und bestimmst weitere Admins. Mit Gruppe verlassen steigst du aus; hast du sie angelegt, wählst du vorher, wer sie weiterführt." },
+  { v: "chat", vor: rgGruppenMenue, nach: () => rgFest("chatBlatt", false), sel: ["#chatGruppeWeg"], t: "🗑️ Gruppe auflösen",
+    x: "Wird die Gruppe nicht mehr gebraucht, tippt ein Gruppen-Admin hier auf Gruppe löschen, für alle. Vorher fragt die App lieber noch einmal nach – und die anderen bekommen einen kurzen Hinweis." },
+  { v: "neu", vor: () => { if (MITGLIEDER) empfListe(); rgGruppenListe("neuGruppen"); }, sel: ["#neuGruppen details", "#empfWahlBereich"], puls: ["#neuGruppen .knoepfe .knopf"], t: "✉️ Gruppe in einer Nachricht",
+    x: "Bei einer neuen Nachricht stehen deine Gruppen ganz oben. Ein Tipp auf die Gruppe, und du schreibst direkt hinein." },
+  { v: "termine", vor: rgGruppenAnfrage, nach: () => { $("terminanfrageForm")?.classList.add("versteckt"); }, sel: ["#taGruppen", "#terminanfrageForm"], puls: [() => document.querySelector("#taGruppen .knopf.haupt"), "#taWer"], t: "📨 Gruppe in der Terminanfrage",
+    x: "Auch bei einer Terminanfrage unter Termine wählst du bei An wen deine Gruppe mit einem Tipp. Dann werden alle in der Gruppe gefragt und antworten mit Ja, Vielleicht oder Nein." },
+  { v: "nachrichten", t: "✅ Fertig", x: "Das war's: In Nachrichten auf Gruppe tippen, Name und Symbol, Mitglieder anhaken, auf Wunsch weitere Admins mit der Krone – und Gruppe anlegen. Verwalten und auflösen geht im Gruppenchat unter den drei Punkten." },
+];
+
+// ---------- 2.348.0 KC-CLUB-VIDEO-TERMINFINDEN (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
+// 2.348.0 KC-CLUB-VIDEO-TERMINFINDEN: Termin mit anderen ausmachen – vertieft das Video „Termin eintragen“ (RG_TERMIN), ohne es zu doppeln.
+// Alles nur gezeigt: Formulare mit Beispiel, Beispiel-Karten (inert, nicht antippbar) – es wird nichts gesendet, beantwortet oder gespeichert.
+// Am Ende ist alles wieder zu: Formulare versteckt, Beispiel-Karten und Fenster weg, Auswahl (TA.wahl, PT.vorkommen) und Termine-Ansicht wie vorher.
+
+// 2.348.0 KC-CLUB-VIDEO-TERMINFINDEN: Ziel neu suchen, wenn Inhalt erst nach dem Laden kommt (wie rgTreffenZeigen)
+const rgTerminfindenZielen = () => { if (!RG.an) return; const s = RG.st[RG.i]; RG.ziel = rgZiel(s) || RG.ziel; rgHin(); rgLage(); rgPulsStart(s); };
+// 2.348.0 KC-CLUB-VIDEO-TERMINFINDEN: Termine immer als Liste zeigen (in der To-do-Ansicht sind Anfragen und Terminfindung versteckt) – ohne zu speichern
+function rgTerminfindenListe() {
+  if (termineArt === "liste") return;
+  const alt = termineArt; termineArt = "liste"; treffenLaden();
+  RG.zurueck.push(() => { termineArt = alt; if (aktuelleAnsicht === "termine") treffenLaden(); });
+}
+// 2.348.0 KC-CLUB-VIDEO-TERMINFINDEN: eigener Kasten für Beispiel-Karten direkt vor einem Bereich (die echten Lader überschreiben ihn nicht)
+function rgTerminfindenKasten(id, vorId, html) {
+  let k = $(id);
+  if (!k) { const vor = $(vorId); if (!vor) return null; k = document.createElement("div"); k.id = id; k.inert = true; k.className = "rg-tf-beispiel"; vor.before(k); RG.zurueck.push(() => $(id)?.remove()); }
+  k.innerHTML = html; return k;
+}
+const rgTerminfindenZeit = (n, uhr) => taZeitpunkt(rgDatum(n), uhr);
+// 2.348.0 KC-CLUB-VIDEO-TERMINFINDEN: Beispiel – deine eigene Anfrage an vier Mitglieder mit verschiedenem Stand
+const rgTerminfindenMeine = () => ({
+  id: "rg-tf-meine", vonMir: true, status: "offen", anlass: "Einkauf für den Grillabend", beginn: rgTerminfindenZeit(4, "10:00"), ende: null, ort: "Parkplatz Markt", notiz: "",
+  frist: rgTerminfindenZeit(2, "23:59"), von: { name: ICH?.name || "", vorname: ICH?.vorname || "" }, erinnerung: null,
+  empfaenger: [
+    { person_id: "rg-tf-a", name: "Klaus", vorname: "Klaus", antwort: "ja" },
+    { person_id: "rg-tf-b", name: "Anne", vorname: "Anne", gelesen_am: new Date().toISOString() },
+    { person_id: "rg-tf-c", name: "Maria", vorname: "Maria", antwort: "vielleicht" },
+    { person_id: "rg-tf-d", name: "Peter", vorname: "Peter", vorschlag: { beginn: rgTerminfindenZeit(5, "10:00"), ende: null }, notiz: "vormittags geht es bei mir nicht" },
+  ],
+});
+// 2.348.0 KC-CLUB-VIDEO-TERMINFINDEN: Beispiel – eine Anfrage, die du bekommen hast
+const rgTerminfindenFremde = () => ({
+  id: "rg-tf-fremd", vonMir: false, status: "offen", anlass: "Kochen für das Sommerfest", beginn: rgTerminfindenZeit(6, "17:00"), ende: null, ort: "", notiz: "",
+  von: { name: "Klaus", vorname: "Klaus" }, meine: null, empfaenger: [{ person_id: ICH?.person_id || "ich", name: ICH?.name || "", vorname: ICH?.vorname || "" }],
+});
+function rgTerminfindenAnfragen(art) { // art: "meine" | "beide"
+  const karten = art === "beide" ? [rgTerminfindenMeine(), rgTerminfindenFremde()] : [rgTerminfindenMeine()];
+  const k = rgTerminfindenKasten("rgTfAnfragen", "terminanfragen", `<details class="karte tm-klappe" open><summary>📨 Terminanfragen – Beispiel</summary>${karten.map(taKarte).join("")}</details>`);
+  k?.querySelectorAll('.erin-zeile, .ta-kal-alt, [onclick^="taKalender"]').forEach((e) => e.remove()); // Beispiel kurz halten: Erinnerung/Handy-Kalender gehören nicht hierher
+}
+// 2.348.0 KC-CLUB-VIDEO-TERMINFINDEN: Terminfindung – die echte Klappe, sonst ein Beispiel
+function rgTerminfindenUmfrage() {
+  const echt = document.querySelector('#terminfindung details[data-klappe="tm_umfragen"]');
+  if (echt) { if (!echt.open) { echt.open = true; RG.zurueck.push(() => { echt.open = false; }); } return; }
+  const fr = rgDatum(10), tag = new Date(fr + "T12:00:00Z").getUTCDay(), bisFr = (5 - tag + 7) % 7; // nächster Freitag ab in 10 Tagen
+  const u = { id: "rg-tf-u", titel: "Grillabend im Sommer", von: "Klaus", antwortende: 3, frist: rgTerminfindenZeit(7, "23:59"), ort: "", beschreibung: "", darfFestlegen: false, darfLoeschen: false,
+    optionen: [
+      { id: "rg-tf-o1", beginn: rgTerminfindenZeit(10 + bisFr, "18:00"), ja: ["Klaus", "Anne"], vielleicht: ["Peter"], nein: [], meine: "ja" },
+      { id: "rg-tf-o2", beginn: rgTerminfindenZeit(11 + bisFr, "18:00"), ja: ["Anne"], vielleicht: [], nein: ["Klaus", "Peter"], meine: null },
+      { id: "rg-tf-o3", beginn: rgTerminfindenZeit(17 + bisFr, "18:00"), ja: ["Peter"], vielleicht: ["Klaus"], nein: ["Anne"], meine: null },
+    ] };
+  rgTerminfindenKasten("rgTfUmfrage", "terminfindung", `<details class="karte tm-klappe" data-rg-klappe="tm_umfragen" open><summary>🗓️ Terminfindung – Beispiel <span class="marke">1</span></summary>${umfrageKarte(u)}</details>`);
+}
+const rgTerminfindenUmfrageZiel = () => document.querySelector('#terminfindung details[data-klappe="tm_umfragen"]') || $("rgTfUmfrage")?.querySelector("details");
+// 2.348.0 KC-CLUB-VIDEO-TERMINFINDEN: Formular „Terminanfrage“ mit Beispiel öffnen (ohne Senden); zu: Formular versteckt, Auswahl leer
+function rgTerminfindenFormZu() { $("terminanfrageForm")?.classList.add("versteckt"); TA.wahl = { personen: [], gruppe: null }; }
+function rgTerminfindenForm() {
+  if (!RG.tfForm) { RG.tfForm = true; RG.zurueck.push(() => { RG.tfForm = false; rgTerminfindenFormZu(); }); }
+  if ($("taAnlass") && !$("terminanfrageForm").classList.contains("versteckt")) return;
+  $("neuWahlBlatt")?.remove();
+  taForm().then(() => {
+    if (!RG.an || !$("taAnlass")) return;
+    const andere = (MITGLIEDER || []).filter((m) => m.person_id !== ICH?.person_id);
+    if (andere[0]) taPerson(andere[0].person_id, true); // Beispiel: ein Mitglied angehakt – nur auf dem Bildschirm
+    if ($("taAnlassWahl")) { $("taAnlassWahl").value = "Einkauf"; comboWahl("taAnlass"); }
+    $("taDatum").value = rgDatum(4); $("taZeit").value = "10:00"; $("taFrist").value = rgDatum(2); $("taNotiz").value = "Bitte Einkaufstaschen mitbringen";
+    setTimeout(rgTerminfindenZielen, 120);
+  }).catch(() => {});
+}
+// 2.348.0 KC-CLUB-VIDEO-TERMINFINDEN: Fenster „Gegenvorschlag – Unter Vorbehalt“ mit Beispiel-Text (Senden wird nicht getippt)
+function rgTerminfindenVorbehalt() {
+  if ($("taVkBlatt")) return $("taVkBlatt").classList.add("rg-zeigen");
+  const a = rgTerminfindenMeine(); TA.liste.push(a);
+  try { taVorschlagBlatt(a.id, "rg-tf-d", "vorbehalt"); } finally { TA.liste = TA.liste.filter((x) => x.id !== a.id); }
+  const f = $("taVkBlatt"); if (!f) return;
+  f.classList.add("rg-zeigen"); $("taVkText").value = "falls ich rechtzeitig von der Arbeit wegkomme";
+  RG.zurueck.push(() => $("taVkBlatt")?.remove());
+}
+// 2.348.0 KC-CLUB-VIDEO-TERMINFINDEN: Beispiel-Formular für eine Terminreihe (privater Termin, jede Woche) – wird nicht gespeichert
+function rgTerminfindenReihe() {
+  if (!RG.tfReihe) { RG.tfReihe = true; RG.zurueck.push(() => { RG.tfReihe = false; $("treffenForm")?.classList.add("versteckt"); }); }
+  if ($("ptTitel") && !$("treffenForm").classList.contains("versteckt")) return;
+  const d = new Date(rgDatum(1) + "T12:00:00Z"), di = (2 - d.getUTCDay() + 7) % 7; // nächster Dienstag
+  privatForm({ titel: "Chorprobe", _datum: rgDatum(1 + di), _zeit: "19:00", wiederholung: "woechentlich" });
+}
+// 2.348.0 KC-CLUB-VIDEO-TERMINFINDEN: Rückfrage „nur diesen Termin oder die ganze Reihe?“ zeigen – gelöscht wird nichts
+function rgTerminfindenReiheLoeschen() {
+  if ($("ptLoeschFenster")) return $("ptLoeschFenster").classList.add("rg-zeigen");
+  const alt = PT.vorkommen; PT.vorkommen = $("ptDatum")?.value || rgDatum(7);
+  privatLoeschenReihe("rg-tf-reihe"); $("ptLoeschFenster")?.classList.add("rg-zeigen");
+  RG.zurueck.push(() => { $("ptLoeschFenster")?.remove(); PT.vorkommen = alt; });
+}
+const rgTerminfindenWahlKnopf = (re) => () => [...document.querySelectorAll("#neuWahlBlatt .wahl button")].find((b) => re.test(b.textContent)) || null;
+
+const RG_TERMINFINDEN = [
+  { v: "termine", vor: () => rgTerminfindenListe(), sel: ["#v-termine .kopf2"], t: "👋 Termin mit anderen ausmachen",
+    x: "In diesem Video zeige ich dir, wie du mit anderen einen Termin ausmachst: eine Terminanfrage stellen, sehen, wie sie steht, auf einen Gegenvorschlag antworten, einen Tag finden, der allen passt – und Termine, die immer wiederkommen. Keine Sorge: Ich sende und speichere nichts." },
+  { v: "termine", tippVor: "#neuTreffenKnopf", vor: () => { rgTerminfindenListe(); termineNeuWahl(); $("neuWahlBlatt")?.classList.add("rg-zeigen"); RG.zurueck.push(() => $("neuWahlBlatt")?.remove()); },
+    nach: () => $("neuWahlBlatt")?.remove(), sel: ["#neuWahlBlatt .wahl"], puls: [rgTerminfindenWahlKnopf(/Terminanfrage/)], t: "📨 Plus Neu, dann Terminanfrage",
+    x: "Oben rechts tippst du auf Plus Neu und wählst Terminanfrage. Damit fragst du einzelne Mitglieder, mehrere oder eine ganze Gruppe, ob sie Zeit haben – statt lange hin und her zu schreiben." },
+  { v: "termine", tippVor: rgTerminfindenWahlKnopf(/Terminanfrage/), vor: () => rgTerminfindenForm(), sel: [() => $("taGruppen")?.closest(".feld"), "#terminanfrageForm"],
+    puls: ["#taGruppen button", "#taSuche", "#taListe", "#taWer"], t: "👥 An wen?",
+    x: "Zuerst wählst du, wen du fragst: oben eine deiner Gruppen oder Alle – oder du suchst einen Namen und hakst ihn an, auch mehrere. Darunter steht, an wen die Anfrage geht." },
+  { v: "termine", vor: () => rgTerminfindenForm(), sel: [() => $("taDatum")?.closest(".zwei"), "#terminanfrageForm"],
+    puls: ["#taAnlassWahl", "#taDatum", "#taZeit", "#taBis"], t: "✏️ Anlass, Tag und Uhrzeit",
+    x: "Dann der Anlass – zum Beispiel Einkauf –, Datum und Uhrzeit, und auf Wunsch bis wann." },
+  { v: "termine", vor: () => rgTerminfindenForm(), sel: [() => $("taOrtWahl")?.closest(".feld"), "#terminanfrageForm"],
+    puls: ["#taFrist", "#taOrtWahl", "#taNotiz"], t: "⏳ Antwort bis, Ort und Notiz",
+    x: "Bei Antwort bis legst du fest, bis wann die anderen antworten sollen. Dazu der Ort und eine Notiz, wenn du magst – zum Beispiel: Bitte Einkaufstaschen mitbringen." },
+  { v: "termine", vor: () => rgTerminfindenForm(), sel: [rgOn("taSenden", ".knoepfe")], puls: [rgOn("taSenden"), () => $("terminanfrageForm")?.querySelector(".knoepfe .knopf:not(.haupt)")], t: "📨 Anfrage senden",
+    x: "Mit Anfrage senden geht sie los, und alle Gefragten bekommen Bescheid. Mit Abbrechen machst du das Formular wieder zu. Ich sende hier nichts – das Beispiel verschwindet gleich wieder." },
+  { v: "termine", vor: () => { rgTerminfindenFormZu(); rgTerminfindenAnfragen("meine"); }, sel: ["#ta-rg-tf-meine"],
+    puls: ["#rgTfAnfragen .ta-st", () => $("rgTfAnfragen")?.querySelector('[onclick^="taAbsagen"]')], t: "📊 Wie steht meine Anfrage?",
+    x: "Deine Anfrage steht dann oben in Termine – mit Anfrage an. Bei jedem steht der Stand: angefragt, gelesen, bestätigt, vielleicht oder abgelehnt. Kommt bis zur Frist keine Antwort, steht dort abgelaufen. Mit Absagen nimmst du die ganze Anfrage zurück." },
+  { v: "termine", vor: () => { rgTerminfindenFormZu(); rgTerminfindenAnfragen("beide"); }, sel: ["#ta-rg-tf-fremd"],
+    puls: ["#ta-rg-tf-fremd .ta-antw button", '#ta-rg-tf-fremd [onclick^="taGegenvorschlag"]'], t: "🙋 Wenn du gefragt wirst",
+    x: "Wirst du selbst angefragt, antwortest du mit Ja, Vielleicht oder Nein. Nochmal auf deine Antwort tippen nimmt sie zurück. Passt die Zeit nicht, tippst du auf Andere Zeit vorschlagen." },
+  { v: "termine", vor: () => { $("taVkBlatt")?.remove(); rgTerminfindenAnfragen("meine"); }, sel: ["#rgTfAnfragen .ta-vk", "#ta-rg-tf-meine"],
+    puls: ["#rgTfAnfragen .ta-vk button"], t: "🔄 Ein Gegenvorschlag",
+    x: "Schlägt dir jemand eine andere Zeit vor, steht bei ihm Gegenvorschlag mit der neuen Zeit. Du entscheidest: Neue Zeit annehmen, Unter Vorbehalt oder Passt nicht." },
+  { v: "termine", tippVor: () => $("rgTfAnfragen")?.querySelector('.ta-vk [onclick*="vorbehalt"]'), vor: () => { rgTerminfindenAnfragen("meine"); rgTerminfindenVorbehalt(); },
+    sel: ["#taVkWahl"], puls: ['#taVkWahl [data-w="vorbehalt"]'], t: "🤔 Unter Vorbehalt annehmen",
+    x: "Unter Vorbehalt heißt: Ja, die neue Zeit passt – aber es hängt noch an etwas." },
+  { v: "termine", vor: () => { rgTerminfindenAnfragen("meine"); rgTerminfindenVorbehalt(); }, nach: () => $("taVkBlatt")?.remove(), sel: ["#taVkLabel"], puls: ["#taVkText", "#taVkOk"], t: "✍️ Woran hängt es?",
+    x: "Schreib kurz dazu, woran es noch hängt – zum Beispiel: falls ich rechtzeitig von der Arbeit wegkomme. Mit Senden sieht der andere es sofort. Ich sende hier nichts." },
+  { v: "termine", vor: () => { $("taVkBlatt")?.remove(); $("rgTfAnfragen")?.remove(); rgTerminfindenUmfrage(); }, sel: [rgTerminfindenUmfrageZiel], puls: [() => rgTerminfindenUmfrageZiel()?.querySelector("summary")], t: "🗓️ Einen Tag finden, der allen passt",
+    x: () => (ICH?.vorstand
+      ? "Sucht ihr einen gemeinsamen Tag, schlägt die Clubleitung mehrere Termine zur Auswahl vor – wie du sie anlegst, zeigt das Video für die Clubleitung. Alle finden sie hier in Termine unter Terminfindung und kreuzen an, was bei ihnen geht."
+      : "Sucht ihr einen gemeinsamen Tag, schlägt die Clubleitung mehrere Termine zur Auswahl vor. Du findest sie hier in Termine unter Terminfindung.") },
+  { v: "termine", vor: () => rgTerminfindenUmfrage(), sel: [() => rgTerminfindenUmfrageZiel()?.querySelector(".karte .zeile"), rgTerminfindenUmfrageZiel],
+    puls: [() => [...(rgTerminfindenUmfrageZiel()?.querySelector(".karte .zeile")?.querySelectorAll("button") || [])], () => rgTerminfindenUmfrageZiel()?.querySelector(".marke.gruen")],
+    t: "✅ Ankreuzen, was passt",
+    x: "Bei jedem Termin tippst du an: Haken heißt passt, Fragezeichen vielleicht, Kreuz passt nicht. Nochmal antippen nimmt es zurück. Der Termin mit den meisten Stimmen ist als beste Wahl markiert." },
+  { v: "termine", vor: () => rgTerminfindenUmfrage(), sel: [() => rgTerminfindenUmfrageZiel()?.querySelector(".karte details > summary"), rgTerminfindenUmfrageZiel], t: "👥 Wer hat was angekreuzt?",
+    x: "Unter Wer hat was angekreuzt? siehst du alle Antworten. Am Ende legt die Clubleitung den Termin fest – wer passt angekreuzt hat, ist dann schon zugesagt." },
+  { v: "termine", vor: () => { $("rgTfUmfrage")?.remove(); rgTerminfindenReihe(); }, sel: [() => $("ptWdh")?.closest(".zwei"), "#treffenForm"], puls: ["#ptWdh", "#ptWdhBis"], video: "termin", t: "🔁 Termine, die immer wiederkommen",
+    x: "Kommt ein Termin immer wieder, wählst du beim privaten Termin unter Wiederholen zum Beispiel wöchentlich – oder täglich, werktags, alle 2 Wochen, monatlich oder jährlich. Bei bis legst du fest, wann die Reihe endet. Dann trägst du ihn nur einmal ein." },
+  { v: "termine", vor: () => rgTerminfindenReihe(), sel: [() => [...($("treffenForm")?.querySelectorAll("p.hinweis") || [])].find((p) => /Terminreihe/.test(p.textContent)), "#treffenForm"], t: "📝 Eine Reihe ändern",
+    x: "Bei einer Terminreihe gelten Änderungen für alle Termine der Reihe. Ich speichere hier nichts – das Beispiel verschwindet gleich wieder." },
+  { v: "termine", vor: () => { rgTerminfindenReihe(); rgTerminfindenReiheLoeschen(); }, nach: () => $("ptLoeschFenster")?.remove(), sel: ["#ptLoeschFenster .blatt-innen"],
+    puls: ["#ptLoeschFenster .blatt-innen .knopf"], t: "🗑️ Nur diesen Termin oder die ganze Reihe?",
+    x: "Löschst du später einen Termin aus einer Reihe, fragt die App: Nur den Termin an diesem Tag – oder die ganze Reihe. Mit Abbrechen bleibt alles, wie es ist. Ich lösche hier nichts." },
+  { v: "termine", vor: () => { $("ptLoeschFenster")?.remove(); $("treffenForm")?.classList.add("versteckt"); }, sel: ["#neuTreffenKnopf"], t: "✅ Fertig",
+    x: "Das war's: Mit Plus Neu und Terminanfrage fragst du andere, oben siehst du, wie die Anfrage steht, und auf einen Gegenvorschlag antwortest du mit Annehmen, Unter Vorbehalt oder Passt nicht. Bei der Terminfindung kreuzt du an, was passt – und Termine, die immer wiederkommen, trägst du nur einmal ein." },
+];
+
+// ---------- 2.348.0 KC-CLUB-VIDEO-TODO (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
+// 2.348.0 KC-CLUB-VIDEO-TODO: die gemeinsame To-do-Liste. Nur gezeigt: Beispieltext im Feld (nie „Eintragen“), Beispiel-Zeilen nur auf dem
+// Bildschirm (TODO.eintraege wird zurückgestellt), Häkchen-Fenster ohne „Fertig“, Beispiel-Aufgaben aus dem Protokoll (inert).
+// Am Ende: Feld leer, rote Umrandung weg, Fenster zu, Termine-Ansicht (termineArt) wie vorher, „Heute wichtig“ wie vorher.
+
+// 2.348.0 KC-CLUB-VIDEO-TODO: To-do-Ansicht zeigen, ohne die Wahl zu speichern (termineModus würde sie merken)
+function rgTodoAn() {
+  if (termineArt === "todo" && $("todoText")) return;
+  if (!RG.todoArt) { RG.todoArt = { alt: termineArt }; RG.zurueck.push(() => { const a = RG.todoArt?.alt; RG.todoArt = null; termineArt = a || "liste"; if (aktuelleAnsicht === "termine") treffenLaden(); }); }
+  termineArt = "todo"; treffenLaden();
+}
+// 2.348.0 KC-CLUB-VIDEO-TODO: Feld „Was ist zu tun?“ mit Beispieltext – NICHT eintragen; am Ende leer
+function rgTodoBeispiel(text = "Getränke einkaufen") {
+  rgTodoAn(); const f = $("todoText"); if (!f) return;
+  if (!RG.todoFeld) { RG.todoFeld = true; RG.zurueck.push(() => { RG.todoFeld = false; const t = $("todoText"); if (t) { t.value = ""; t.classList.remove("todo-leer"); } }); }
+  f.classList.remove("todo-leer"); f.value = text;
+}
+// 2.348.0 KC-CLUB-VIDEO-TODO: Beispiel-Zeilen in der Liste (nur Anzeige) – danach wieder die echte Liste
+function rgTodoZeilen() {
+  rgTodoAn();
+  if (!RG.todoAlt) { RG.todoAlt = { e: TODO.eintraege }; RG.zurueck.push(() => { const a = RG.todoAlt; RG.todoAlt = null; if (a) TODO.eintraege = a.e; if ($("todoTabelle")) todoZeigen(); }); }
+  const ich = ICH?.vorname || "du";
+  TODO.eintraege = [
+    { id: "rg-todo-1", text: "Getränke einkaufen", kategorie: "", fuer: "alle", faellig: rgDatum(3), zustaendige: [{ person_id: "rg-a", vorname: "Klaus" }], darfZuweisen: true, vonMir: true, von: ich },
+    { id: "rg-todo-2", text: "Tischdecken waschen", kategorie: "", fuer: "alle", faellig: rgDatum(-1), zustaendige: [{ person_id: ICH?.person_id || "ich", vorname: ich, ich: true }], darfZuweisen: false, vonMir: false, von: "Anne" },
+    { id: "rg-todo-3", text: "Kuchen bestellen", kategorie: "", fuer: "alle", faellig: null, zustaendige: [], darfZuweisen: true, vonMir: false, von: "Peter" },
+    { id: "rg-todo-4", text: "Grill reinigen", kategorie: "", fuer: "alle", faellig: null, zustaendige: [{ person_id: "rg-b", vorname: "Anne" }], erledigt: new Date().toISOString(), erledigtVon: "Anne", vonMir: false, von: "Anne" },
+  ];
+  todoZeigen(); $("todoTabelle")?.closest(".karte")?.setAttribute("data-rg-beispiel", "1");
+}
+// 2.348.0 KC-CLUB-VIDEO-TODO: Fenster „Wer soll es machen?“ zeigen – ohne „Fertig“; am Ende zu
+function rgTodoWer() {
+  if (!RG.todoWer) { RG.todoWer = true; RG.zurueck.push(() => { RG.todoWer = false; $("personenBlatt").classList.add("versteckt"); $("personenBlatt").classList.remove("rg-zeigen"); PW_AUSWAHL = null; }); }
+  $("personenBlatt").classList.add("rg-zeigen");
+  if (!$("personenBlatt").classList.contains("versteckt")) return;
+  todoWerWaehlen(null); // öffnet das Fenster (lädt die Mitglieder ggf. nach) – danach Ziel neu suchen
+  for (const ms of [150, 600, 1500]) setTimeout(() => { if (!RG.an || !$("personenBlatt") || $("personenBlatt").classList.contains("versteckt")) return; RG.ziel = rgZiel(RG.st[RG.i]) || RG.ziel; rgHin(); rgLage(); if (ms === 150) rgPulsStart(RG.st[RG.i]); }, ms);
+}
+const rgTodoWerZu = () => { $("personenBlatt")?.classList.add("versteckt"); $("personenBlatt")?.classList.remove("rg-zeigen"); PW_AUSWAHL = null; };
+// 2.348.0 KC-CLUB-VIDEO-TODO: Aufgaben aus dem Protokoll – die echte Klappe „Offene Aufgaben“, sonst ein Beispiel (inert)
+function rgTodoProtokoll() {
+  const echt = document.querySelector('#protokollListe details[data-klappe="pr_aufgaben"]');
+  if (echt) { if (!echt.open) { echt.open = true; RG.zurueck.push(() => { echt.open = false; }); } return; }
+  if ($("rgTodoPr")) return;
+  const vor = $("protokollListe"); if (!vor) return;
+  const k = document.createElement("div"); k.id = "rgTodoPr"; k.inert = true;
+  const a = { id: "rg-pr-1", text: "Angebot für den Weihnachtsmarkt einholen", name: ICH?.name || "", faellig: rgDatum(5), protokoll: { titel: "Sitzung – Beispiel" } };
+  k.innerHTML = `<details class="karte" open><summary>📌 Offene Aufgaben <span class="marke gelb">1</span> – Beispiel</summary>${aufgabeZeile(a, true, false)}</details>`;
+  vor.before(k); RG.zurueck.push(() => $("rgTodoPr")?.remove());
+}
+const rgTodoPrZiel = () => document.querySelector('#protokollListe details[data-klappe="pr_aufgaben"]') || $("rgTodoPr")?.querySelector("details");
+// 2.348.0 KC-CLUB-VIDEO-TODO: „Heute wichtig“ mit einer Beispiel-Aufgabe (nur, wenn keine eigene bald fällig ist) – danach wie vorher.
+// Die Startseite lädt beim Öffnen neu (neuLaden ersetzt INIT) – danach wird das Beispiel noch einmal eingesetzt.
+function rgTodoWichtig() {
+  if (!INIT) return;
+  const s = RG.st[RG.i];
+  const anwenden = () => {
+    if (!RG.an || !INIT || RG.todoWichtig?.init === INIT) return;
+    const in7 = tagPlus(heuteIso(), 7);
+    if ((INIT.meineAufgaben || []).some((x) => x.faellig && x.faellig <= in7)) return; // echte Aufgabe da → die zeigen
+    if (!RG.todoWichtig) RG.zurueck.push(rgTodoWichtigZu);
+    RG.todoWichtig = { init: INIT, alt: INIT.meineAufgaben };
+    INIT.meineAufgaben = [...(INIT.meineAufgaben || []), { id: "rg-pr-1", text: "Angebot für den Weihnachtsmarkt einholen", faellig: rgDatum(2) }];
+    wichtigZeigen(); $("wichtig").inert = true;
+  };
+  anwenden();
+  const lauf = NEU_LADEN_FOLGE || NEU_LADEN_LAUF;
+  if (lauf) lauf.catch(() => {}).then(() => setTimeout(() => { if (!RG.an || RG.st[RG.i] !== s) return; anwenden(); RG.ziel = rgZiel(s) || RG.ziel; rgHin(); rgLage(); rgPulsStart(s); }, 80));
+}
+function rgTodoWichtigZu() { // Beispiel-Aufgabe wieder weg (nach der Station und beim Ende; doppelt schadet nicht)
+  const a = RG.todoWichtig; if (!a) return; RG.todoWichtig = null;
+  if (a.init === INIT) INIT.meineAufgaben = a.alt;
+  $("wichtig").inert = false; if (INIT) wichtigZeigen();
+}
+const rgTodoWichtigZeile = () => [...document.querySelectorAll("#wichtig .zeile")].find((z) => z.querySelector('[onclick^="aufgabeErledigt"]')) || null;
+
+const RG_TODO = [
+  { v: "termine", sel: ["#v-termine .kopf2"], t: "👋 Die gemeinsame To-do-Liste",
+    x: "In diesem Video zeige ich dir die gemeinsame To-do-Liste: Aufgaben eintragen, verteilen und abhaken – zum Beispiel für Einkäufe oder Bestellungen. Und wo du deine Aufgaben aus den Protokollen findest. Ich trage nichts ein und hake nichts ab." },
+  { v: "termine", sel: ["#v-termine > .umschalter"], puls: ["#v-termine > .umschalter > .zk", '#v-termine > .umschalter [data-m="todo"]'], t: "🔀 Umschalten auf To-do",
+    x: "Die To-do-Liste findest du in Termine. Oben bei Ansicht schaltest du um: Jeder Tipp wechselt der Reihe nach zwischen Liste, Kalender und To-do. Lange drücken zeigt alle drei zur Auswahl." },
+  { v: "termine", tippVor: () => rgSichtbarer('#v-termine > .umschalter [data-m="todo"]')() || rgSichtbarer("#v-termine > .umschalter > .zk")(), vor: () => rgTodoBeispiel(), sel: ["#todoBereich .todoform"], puls: ["#todoText", "#todoKat", "#todoFaellig"], t: "✏️ Was ist zu tun?",
+    x: "Oben ins Feld Was ist zu tun? schreibst du die Aufgabe – zum Beispiel Getränke einkaufen. Darunter wählst du die Art der Aufgabe und, wenn du magst, das Datum, bis wann sie erledigt sein soll." },
+  { v: "termine", vor: () => { rgTodoWerZu(); rgTodoBeispiel(); }, sel: ["#todoWer"], t: "👉 Wer soll es machen?",
+    x: "Mit Wer soll es machen? verteilst du die Aufgabe. Wählst du niemanden, bleibt sie offen." },
+  { v: "termine", tippVor: "#todoWer", vor: () => { rgTodoBeispiel(); rgTodoWer(); }, nach: () => rgTodoWerZu(), sel: ["#personenBlatt .blatt-innen"], puls: ["#personenListe", "#personenZahl", '#personenBlatt [onclick="personenFertig()"]'], t: "☑️ Einen oder mehrere anhaken",
+    x: "Hier hakst du an, wer es machen soll – dich selbst oder andere, auch mehrere, bis zu zehn. Mit Fertig ist die Auswahl übernommen. Die Zuständigen bekommen Bescheid, sobald die Aufgabe eingetragen ist." },
+  { v: "termine", vor: () => { rgTodoWerZu(); rgTodoBeispiel(); }, sel: ["#todoFuer"], puls: ["#todoFuer button"], t: "👥 Nur für mich oder für alle",
+    x: "Bei Für wen tippst du um: Nur für mich – als eigener Merkzettel – oder Für alle, dann steht die Aufgabe auf der gemeinsamen Liste." },
+  { v: "termine", vor: () => rgTodoBeispiel(), sel: [rgOn("todoAnlegen()")], t: "➕ Eintragen",
+    x: "Mit Plus Eintragen kommt die Aufgabe auf die Liste. Ich trage hier nichts ein – das Beispiel verschwindet gleich wieder." },
+  { v: "termine", vor: () => rgTodoBeispiel(), sel: ["#todoText"], t: "🔴 Feld noch leer?",
+    live: async (L) => { await L.warte(600); const f = $("todoText"); if (f) f.value = ""; await L.warte(700); await L.tipp(rgOn("todoAnlegen()"));
+      const g = $("todoText"); if (g) { g.classList.remove("todo-leer"); void g.offsetWidth; g.classList.add("todo-leer"); } await L.warte(2600); L.ziel(); },
+    x: "Tippst du auf Plus Eintragen, solange das Feld noch leer ist, wird es rot umrandet – und du kannst gleich hineinschreiben." },
+  { v: "termine", vor: () => { rgTodoBeispiel(""); rgTodoZeilen(); }, sel: ["#todoTabelle"], puls: ["#todoTabelle tr:first-child input[type=checkbox]", () => $("todoErledigte")?.closest(".schalter")], t: "✔️ Abhaken",
+    x: "In der Liste steht jede Aufgabe mit einem Kästchen davor. Ist sie geschafft, setzt du einfach den Haken – alle sehen dann, wer sie wann erledigt hat. Mit Erledigte anzeigen siehst du auch die abgehakten." },
+  { v: "termine", vor: () => rgTodoZeilen(), sel: ["#todoTabelle"], puls: ["#todoTabelle .meta b", "#todoTabelle .meta a", "#todoFilter button"], t: "👉 Wer übernimmt was?",
+    x: "Bei jeder Aufgabe steht, wer zuständig ist – steht dort du, ist es deine. Ist noch niemand eingetragen, steht dort zuweisen. Oben bei Zeigen wechselst du der Reihe nach: Alle, nur was Mir zugeteilt ist, Meine eigenen oder die Für alle." },
+  { v: "termine", vor: () => rgTodoZeilen(), sel: ["#todoTabelle"], puls: ["#todoTabelle .meta span.spaet", "#todoTabelle .meta span[class='']"], t: "⏰ Erinnerung an die Frist",
+    x: "Hat eine Aufgabe ein Datum, steht dort fällig. Die App erinnert fünf Tage vorher und am Tag selbst – die Zuständigen, sonst den, der sie aufgeschrieben hat. Ist die Frist vorbei, steht dort überfällig. Deine Fristen siehst du auch im Kalender." },
+  { v: "protokolle", vor: () => rgTodoProtokoll(), sel: [rgTodoPrZiel], video: "lesen", t: "📌 Aufgaben aus dem Protokoll",
+    x: "Steht in einem Sitzungsprotokoll eine Aufgabe für dich, bekommst du Bescheid. In Protokolle steht sie oben unter Offene Aufgaben – mit dem Datum, bis wann sie erledigt sein soll." },
+  { v: "protokolle", vor: () => rgTodoProtokoll(), sel: [() => rgTodoPrZiel()?.querySelector(".zeile"), rgTodoPrZiel], puls: [() => rgTodoPrZiel()?.querySelector('.zeile [onclick^="aufgabeErledigt"]')], t: "☐ Als erledigt markieren",
+    x: "Ist die Aufgabe geschafft, tippst du auf das Kästchen davor – dann ist sie erledigt." },
+  { v: "start", vor: () => rgTodoWichtig(), nach: () => rgTodoWichtigZu(), sel: [rgTodoWichtigZeile, "#wichtig"], puls: [() => rgTodoWichtigZeile()?.querySelector('[onclick^="aufgabeErledigt"]')], t: "🏠 Auf der Startseite",
+    x: "Wird eine Aufgabe aus dem Protokoll bald fällig, steht sie auch auf der Startseite unter Heute wichtig – mit dem Knopf erledigt." },
+  { v: "termine", vor: () => rgTodoAn(), sel: ["#v-termine > .umschalter"], puls: ["#v-termine > .umschalter > .zk", '#v-termine > .umschalter [data-m="todo"]'], t: "✅ Fertig",
+    x: "Das war's: In Termine auf To-do umschalten, Aufgabe hineinschreiben, verteilen, eintragen – und abhaken, wenn sie geschafft ist. Aufgaben aus den Protokollen findest du in Protokolle unter Offene Aufgaben." },
+];
+
+// ---------- 2.348.0 KC-CLUB-VIDEO-EINFACH (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
+// 2.348.0 KC-CLUB-VIDEO-EINFACH (Wunsch Hansi „ruhiges, langsames Video über die einfache Ansicht – für Mitglieder, die wenig mit Handys machen“).
+// Die Ansicht wird NUR auf dem Bildschirm vorgeführt: ansichtSetzen() würde auf dem Server und im Gerät speichern – deshalb rgEinfachDemo().
+// Am Ende stellt RG.zurueck ANSICHT, die body-Klasse, Register, Kacheln und Info-Feld genau wie vorher wieder her.
+function rgEinfachAnwenden() { // wie ansichtAnwenden(), aber ohne Speichern und ohne „Anordnen“ zu beenden (kaBearbeiten(false) würde speichern)
+  document.body.classList.toggle("einfach", einfach());
+  if ($("ansichtKnopf")) $("ansichtKnopf").textContent = einfach() ? "🔧 Erweiterte Ansicht" : "🟢 Einfache Ansicht";
+  ansichtInfo();
+  if (INIT) { registerZeigen(); kachelnZeigen(); infoFelderAktualisieren(); heroZeigen(0); }
+  try { if (RK.einst?.an) rkAufbauen(RK.einst); } catch {} // Einstellungen als Rollkartei: Karten der jeweiligen Ansicht neu legen
+}
+function rgEinfachDemo(an) { // an = true: einfache Ansicht zeigen, an = false: erweiterte Ansicht zeigen – nie gespeichert
+  if (!RG.einfachAlt) {
+    const orig = ansichtUebernehmen;
+    RG.einfachAlt = { ansicht: ANSICHT, info: INFO_FELDER[INFO_I]?.id, infoI: INFO_I };
+    // Während des Videos lädt die App im Hintergrund neu (z. B. beim Wechsel zur Startseite) und würde die gespeicherte Ansicht
+    // wieder anwenden. Dann nur merken, welche Ansicht wirklich gilt – angezeigt bleibt die Vorführung; am Ende gilt genau diese.
+    ansichtUebernehmen = (w) => { if (!RG.einfachAlt) return orig(w); if (w?.gewaehlt) RG.einfachAlt.ansicht = w.art === "erweitert" ? "erweitert" : "einfach"; };
+    RG.zurueck.push(() => {
+      ansichtUebernehmen = orig;
+      const a = RG.einfachAlt; RG.einfachAlt = null; if (!a) return;
+      if (ANSICHT !== a.ansicht) { ANSICHT = a.ansicht; rgEinfachAnwenden(); }
+      const i = INFO_FELDER.findIndex((f) => f.id === a.info); INFO_I = i >= 0 ? i : a.infoI; heroZeigen(0);
+    });
+  }
+  const soll = an ? "einfach" : "erweitert";
+  if (ANSICHT !== soll || document.body.classList.contains("einfach") !== an) { ANSICHT = soll; rgEinfachAnwenden(); }
+}
+function rgEinfachRkZu(id) { // Einstellungen als Rollkartei: beim ersten Öffnen springt die Kartei nach dem Aufbauen auf Karte 1 – dann zur richtigen Karte nachblättern
+  for (const ms of [500, 1200]) setTimeout(() => { const e = $(id), z = RK.einst; if (RG.an && e && z?.an && z.karten[z.i] && !z.karten[z.i].contains(e)) rkZu(z, e); }, ms);
+}
+const RG_EINFACH = [
+  { v: "start", vor: () => { rgEinfachDemo(true); rgKopf("offen"); }, t: "👋 Die einfache Ansicht",
+    x: "Schön, dass du da bist. In diesem Video zeige ich dir in Ruhe die einfache Ansicht – mit wenigen, großen Knöpfen. Du musst nichts antippen, ich blättere langsam selbst weiter. Und keine Sorge: An deiner App verstelle ich nichts." },
+  { v: "start", vor: () => rgEinfachDemo(true), sel: [".ansichtname.ein"], mussSel: true, puls: [".ansichtname.ein"], t: "🟢 Daran erkennst du sie",
+    x: "Über den Kacheln steht in grüner Schrift: Einfache Ansicht. Daran erkennst du, dass sie gerade eingeschaltet ist." },
+  { v: "start", vor: () => { rgEinfachDemo(true); rgKopf("offen"); }, sel: ["#heroInfo .ifeld-treffen", "#heroInfo"], t: "📅 Oben: das nächste Treffen",
+    x: "Oben im farbigen Feld steht immer das nächste Treffen. Du musst nicht blättern. Steht ein Termin an, siehst du hier auch, ob du schon zu- oder abgesagt hast." },
+  { v: "start", vor: () => rgEinfachDemo(true), sel: [rgKachel("termine")], mussSel: true, puls: [rgKachel("termine")], video: "zusagen", t: "📅 Kachel Termine",
+    x: "Jetzt die großen Kacheln, eine nach der anderen. Termine: Hier stehen alle Clubtermine. Mit Ich komme, Vielleicht oder Kann nicht gibst du Bescheid." },
+  { v: "start", vor: () => rgEinfachDemo(true), sel: [rgKachel("kommunikation")], mussSel: true, puls: [rgKachel("kommunikation")], video: "nachricht", t: "💬 Kachel Nachrichten",
+    x: "Nachrichten: Hier liest du, was dir andere Mitglieder schreiben, und schreibst selbst zurück. Steht oben in der Ecke eine Zahl, wartet etwas Neues auf dich." },
+  { v: "start", vor: () => rgEinfachDemo(true), sel: [rgKachel("pinnwand")], mussSel: true, puls: [rgKachel("pinnwand")], t: "📌 Kachel Pinnwand",
+    x: "Die Pinnwand ist das schwarze Brett des Clubs. Dort hängen kurze Zettel für alle – Glückwünsche, Hinweise oder eine Bitte um Hilfe." },
+  { v: "start", vor: () => rgEinfachDemo(true), sel: [rgKachel("meindienst")], mussSel: true, puls: [rgKachel("meindienst")], t: "🗓️ Kachel Mein Dienst",
+    x: "Mein Dienst zeigt dir den Dienstplan – nur mit deinen eigenen Diensten. So siehst du gleich, wann du dran bist." },
+  { v: "start", vor: () => rgEinfachDemo(true), sel: [rgKachel("mitglieder")], mussSel: true, puls: [rgKachel("mitglieder")], t: "👥 Kachel Mitglieder",
+    x: "Mitglieder: alle aktiven Clubmitglieder. Ein grüner Punkt heißt: gerade in der App. Von dort aus schreibst du jemandem oder rufst an." },
+  { v: "start", vor: () => rgEinfachDemo(true), sel: [rgKachel("dokumente")], mussSel: true, puls: [rgKachel("dokumente")], t: "📚 Kachel Meine Dokumente",
+    x: "Meine Dokumente: Anleitungen und wichtige Unterlagen zum Lesen – zum Beispiel die Bedienungsanleitung der App. Du kannst sie auch drucken." },
+  { v: "start", vor: () => rgEinfachDemo(true), sel: [rgKachel("spiele")], mussSel: true, puls: [rgKachel("spiele")], t: "🎲 Kachel Spiele",
+    x: "Spiele: zum Beispiel Schach, Bauernskat oder Mensch ärgere dich nicht – gegen den Computer oder gegen andere Mitglieder." },
+  { v: "start", vor: () => rgEinfachDemo(true), sel: [rgKachel("sos")], mussSel: true, puls: [rgKachel("sos")], t: "🆘 Kachel SOS",
+    x: "Die rote Kachel SOS ist für den Notfall: Dort stehen die Notrufnummern zum direkten Anrufen, mit Wo bin ich siehst du deinen Standort, und darunter die Notfallkontakte." },
+  { v: "start", vor: () => rgEinfachDemo(true), sel: ["#fuss"], puls: ["#fuss button"], t: "⬇️ Die Leiste ganz unten",
+    x: "Ganz unten ist immer die Leiste: Start, Termine, Nachrichten, Mitglieder und Mehr. Mit Start kommst du von überall mit einem Tipp zurück zur Startseite." },
+  { v: "start", vor: () => rgEinfachDemo(true), sel: ["#hzFrage"], mussSel: true, puls: ["#hzFrage"], video: "hilfe", t: "❓ Das Fragezeichen",
+    x: "Unten rechts sitzt das runde Fragezeichen. Es öffnet die Hilfe zu genau dem Bereich, in dem du gerade bist. So bist du nie allein." },
+  { v: "einstellungen", tippVor: `#fuss [onclick="zeige('einstellungen')"]`, vor: () => { rgEinfachDemo(true); rgAuf("einfach"); }, sel: [rgKlappe("einfach")], mussSel: true, t: "⚙️ Unter Mehr: Das Wichtigste",
+    x: "Unter Mehr gibt es in der einfachen Ansicht nur einen Bereich: Das Wichtigste. Dort wählst du, wie du Neuigkeiten bekommst, deine Lieblingsfarbe, große Schrift und ob das Fragezeichen zu sehen ist." },
+  { v: "einstellungen", vor: () => { rgEinfachDemo(true); rgAuf("einfach"); }, sel: [rgOn("ansichtSetzen('erweitert')", ".schalter")], mussSel: true, puls: [rgOn("ansichtSetzen('erweitert')")], t: "🔧 Alle Funktionen einschalten",
+    x: "Möchtest du irgendwann mehr sehen, tippst du hier bei Einfache Ansicht auf Alle Funktionen. Dann bekommst du die erweiterte Ansicht. Ich tippe hier nicht – ich zeige es dir nur." },
+  { v: "start", vor: () => rgEinfachDemo(true), sel: ["#ansichtKnopf"], mussSel: true, puls: ["#ansichtKnopf"], t: "🔧 Oder ganz unten auf der Startseite",
+    x: "Das geht auch auf der Startseite: Ganz unten, unter den Kacheln, steht der Knopf Erweiterte Ansicht." },
+  { v: "start", vor: () => { rgEinfachDemo(false); rgKopf("offen"); }, sel: ["#register"], mussSel: true, puls: ['#register [data-r="verein"]', '#register [data-r="mein"]', '#register [data-r="programme"]'], video: "ueberblick", t: "🗂️ So sieht die erweiterte Ansicht aus",
+    x: "So sieht die erweiterte Ansicht aus: Oben stehen Register – Club, Meins und Technik –, darunter viele kleinere Kacheln mit allen Funktionen. Das zeige ich dir nur – bei dir bleibt alles, wie es war." },
+  { v: "start", vor: () => rgEinfachDemo(false), sel: [".ansichtname.erw", ".ansichtname.ein"], mussSel: true, puls: [".ansichtname.erw"], t: "🟢 Und wieder zurück",
+    x: "Zurück geht es genauso leicht: Über den Kacheln steht jetzt in roter Schrift Erweiterte Ansicht. Tippst du darauf, kommt die einfache Ansicht wieder.",
+    live: async (L) => { await L.warte(2500); await L.tipp(".ansichtname.erw"); rgEinfachDemo(true); L.ziel(); } },
+  { v: "einstellungen", vor: () => { rgEinfachDemo(false); rgAuf("startseite"); rgEinfachRkZu("setInfoStart"); }, sel: [rgOn("ansichtSetzen('einfach')", ".schalter")], mussSel: true, puls: [rgOn("ansichtSetzen('einfach')")], t: "⚙️ Zurück über Mehr",
+    x: "Oder unter Mehr, im Bereich Startseite und Ansicht: bei Einfache Ansicht auf Einschalten tippen. Deine Wahl gilt dann auf allen deinen Geräten." },
+  { v: "start", vor: () => { rgEinfachDemo(true); rgKopf("offen"); }, t: "✅ Fertig",
+    x: () => "Das war die einfache Ansicht: oben das nächste Treffen, darunter die großen Kacheln" + (hzFrageAus() ? " und unten die Leiste." : ", unten die Leiste und rechts das Fragezeichen.") + " Umschalten kannst du jederzeit – es geht dabei nichts verloren." },
+];
+
+// ---------- 2.348.0 KC-CLUB-VIDEO-RAETSEL (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
+// 2.348.0 KC-CLUB-VIDEO-RAETSEL (Wunsch Hansi „eigenes Video zum Rätsel auf der Rückseite – vom Eselsohr bis zur Bestenliste“).
+// Nur vorgeführt: Eine Übungsrunde „Werne“ wird angezeigt und eingefroren (keine Uhr, kein Ton, kein Konfetti); Buzzer, Tipps und Auflösung
+// werden nur nachgebildet. Übungsrunden tragen nie etwas ein (nur das Wochen-Rätsel – das wird im Video nicht gestartet). Am Ende: Runde weg,
+// gemerkter Reiter der Rückseite wie vorher, Kopf zurückgedreht (rgRueck).
+function rgQzAuf() {
+  if (RG.qzZurueck) return;
+  const tab = esLies("tab", null); RG.qzZurueck = true;
+  RG.zurueck.push(() => { RG.qzZurueck = false; RG.qzSoll = null; RG.qzWahlHtml = null; qzStop(); QZ.spiel = null;
+    if (tab === null) { try { localStorage.removeItem("kc_club_es_tab"); } catch {} } else esSchreib("tab", tab); });
+}
+function rgQzWahl() { // Auswahl: Wochen-Rätsel, Werne üben, Küche üben, Bestenliste … – einmal geladen, danach sofort wieder da (kein Warten auf den Server)
+  rgQzAuf(); const f = $("hrFlaeche");
+  if (ES.offen && RG.qzWahlHtml && f?.classList.contains("hr-raetsel")) { rgRueck(null); qzStop(); QZ.spiel = null; if (!$("qzWahl")?.querySelector(".qz-gross")) f.innerHTML = RG.qzWahlHtml; return; }
+  rgRueck("raetsel");
+  let n = 0; const merken = () => { if (!RG.an) return; if ($("qzWahl")?.querySelector(".qz-gross")) RG.qzWahlHtml = $("hrFlaeche").innerHTML; else if (n++ < 80) setTimeout(merken, 100); }; merken();
+}
+function rgQzSpiel(sek, art) { // Übungsrunde Werne zeigen: sek = so weit ist die Zeit gelaufen; art: "" | "tipps" | "falsch" | "richtig"
+  rgQzAuf(); RG.qzSoll = { sek, art: art || "" };
+  if (QZ.spiel?.rg && $("qzBild")) { rgRueck(null); return rgQzStellen(); }
+  rgRueck("raetsel"); qzStart("werne"); const S = QZ.spiel; if (!S) return; S.rg = true;
+  let n = 0; const warte = () => { if (QZ.spiel !== S || !RG.an) return; if (S.t === undefined && n++ < 60) return setTimeout(warte, 100); rgQzStellen(); }; warte();
+}
+function rgQzStellen() {
+  const S = QZ.spiel, s = RG.qzSoll; if (!S || !s || !$("qzBild") || S.t === undefined) return;
+  const B = S.bilder[S.i], falsch = B.tipps.find((a) => a !== B.m.a);
+  Object.assign(S, { lauf: false, fertig: false, t: s.sek, falsch: s.art === "falsch" ? 1 : 0, stufe: -1 }); B.weg = s.art === "falsch" ? [falsch] : [];
+  if (s.art === "richtig") S.fertig = true;
+  qzMalen();
+  const p = qzPunkteJetzt(S), r = 1 - S.t / QZ_SEK, b = $("qzBalken");
+  $("qzPunkte").textContent = p;
+  if (b) { b.style.width = s.art === "richtig" ? "0" : `${r * 100}%`; b.style.background = r > .5 ? "#2ecc71" : r > .2 ? "#f1c40f" : "#e74c3c"; }
+  const t = $("qzTipps"), l = $("qzLoesung"), u = $("qzUnten");
+  if (s.art === "tipps" || s.art === "falsch") {
+    t.innerHTML = `<div class="qz-frage">Was ist auf dem Bild?</div><div class="qz-tipp-gitter">${B.tipps.map((a) => `<button type="button" class="qz-tipp${B.weg.includes(a) ? " falsch" : ""}" disabled>${esc(a)}</button>`).join("")}</div>`;
+    t.classList.remove("versteckt");
+  } else t.classList.add("versteckt");
+  if (s.art === "richtig") {
+    l.innerHTML = `<div class="qz-ergebnis gut">🎉 Richtig! +${p} Punkte</div><b>${esc(B.m.a)}</b>${B.m.info ? `<span>${esc(B.m.info)}</span>` : ""}<small>Foto: ${esc(B.m.autor)}${B.m.liz ? " · " + esc(B.m.liz) + " · Wikimedia Commons" : ""}</small>`;
+    l.classList.remove("versteckt");
+    u.innerHTML = `<button type="button" class="es-k es-haupt qz-weiter" disabled>▶ Nächstes Bild</button><button type="button" class="es-k" disabled>✖ Ende</button>`;
+  } else {
+    l.classList.add("versteckt");
+    u.innerHTML = `<button type="button" class="qz-buzzer" id="qzBuzzer" aria-label="Buzzer – ich weiß es"${s.art ? " disabled" : ""}><span>BUZZ</span></button>`;
+  }
+}
+const RG_RAETSEL = [
+  { v: "start", vor: () => { rgKopf("offen"); esEinsetzen(); }, t: "👋 Wie gut kennst du Werne?",
+    x: "In diesem Video zeige ich dir das Rätsel: Ein Foto wird nach und nach schärfer – wer es früh erkennt, bekommt viele Punkte. Ich spiele hier nur zum Zeigen, es wird nichts eingetragen." },
+  { v: "start", vor: () => { rgKopf("offen"); esEinsetzen(); }, sel: ["#eselsohr"], mussSel: true, puls: ["#eselsohr"], video: "rueckseite", t: "📄 Über das Eselsohr",
+    x: "Das Rätsel steht auf der Rückseite des grünen Kopfes. Tipp doppelt auf das Eselsohr unten rechts – dann dreht sich der Kopf um.",
+    live: async (L) => { await L.warte(1500); await L.tipp("#eselsohr", "doppelt"); } },
+  { v: "start", vor: () => rgQzWahl(), sel: ['#heroRueck [data-tab="raetsel"]'], mussSel: true, puls: ['#heroRueck [data-tab="raetsel"]'], t: "🧩 Der Reiter Rätsel",
+    x: "Oben bei den Reitern tippst du auf Rätsel. Dann siehst du die Auswahl." },
+  { v: "start", vor: () => rgQzWahl(), sel: ["#qzWahl .qz-reihe", "#qzWahl"], mussSel: true, puls: [rgOn("qzStart('werne')"), rgOn("qzStart('kueche')")], t: "🏛️ Werne oder Küche",
+    x: "Zum Üben wählst du eine Gruppe: Werne üben – mit Bildern aus unserer Stadt – oder Küche üben. Eine Runde hat fünf Bilder. Üben kannst du, so oft du magst.",
+    live: async (L) => { await L.warte(5500); await L.tipp(rgOn("qzStart('werne')")); } },
+  { v: "start", vor: () => rgQzSpiel(0.5), sel: ["#hrFlaeche .qz-bildfeld"], mussSel: true, t: "🔍 Das Bild wird schärfer",
+    x: "Los geht es: Das Foto ist erst grob verpixelt und wird Stufe für Stufe schärfer. Nach gut zwanzig Sekunden ist es ganz scharf.",
+    live: async (L) => { for (const t of [2.5, 5, 7.5, 10.5, 13.5]) { await L.warte(1300); if (RG.qzSoll) { RG.qzSoll.sek = t; rgQzStellen(); } } } },
+  { v: "start", vor: () => rgQzSpiel(7.5), sel: ["#hrFlaeche .qz-spiel"], mussSel: true, puls: ["#qzPunkte", "#hrFlaeche .qz-balken"], t: "⏱️ Punkte und Zeitbalken",
+    x: "Oben in der Mitte stehen die Punkte: Sie beginnen bei tausend und werden mit der Zeit weniger, bis zweihundertfünfzig. Unten läuft der Zeitbalken – von Grün über Gelb nach Rot." },
+  { v: "start", vor: () => rgQzSpiel(7.5), sel: ["#qzBuzzer"], mussSel: true, puls: ["#qzBuzzer"], t: "🔴 Der rote Buzzer",
+    x: "Erkannt? Dann drück den roten Buzzer. Die Uhr bleibt sofort stehen.",
+    live: async (L) => { await L.warte(2200); await L.tipp("#qzBuzzer"); if (RG.qzSoll) { RG.qzSoll.art = "tipps"; rgQzStellen(); } } },
+  { v: "start", vor: () => rgQzSpiel(7.5, "tipps"), sel: ["#qzTipps"], mussSel: true, puls: ["#qzTipps .qz-tipp"], t: "🔢 Sechs Antworten",
+    x: "Jetzt erscheinen sechs Antworten. Tipp auf die richtige." },
+  { v: "start", vor: () => rgQzSpiel(7.5, "falsch"), sel: ["#hrFlaeche .qz-spiel"], mussSel: true, puls: ["#qzTipps .qz-tipp.falsch", "#qzPunkte"], t: "❌ Daneben getippt",
+    x: "Ist die Antwort falsch, wird sie durchgestrichen und kostet hundertfünfzig Punkte. Dann läuft das Bild weiter – und du kannst nochmal buzzern." },
+  { v: "start", vor: () => rgQzSpiel(7.5, "richtig"), sel: ["#qzLoesung"], mussSel: true, puls: ["#qzLoesung .qz-ergebnis", "#hrFlaeche .qz-weiter"], t: "🎉 Richtig erkannt",
+    x: "Richtig! Dann bekommst du die Punkte, das Foto wird ganz scharf, und darunter steht ein Satz dazu. Mit Nächstes Bild geht es weiter. Nach fünf Bildern siehst du dein Ergebnis." },
+  { v: "start", vor: () => rgQzWahl(), sel: [rgOn("qzStart('woche')"), "#qzWahl"], mussSel: true, puls: [rgOn("qzStart('woche')")], t: "🏆 Das Wochen-Rätsel",
+    x: "Ganz oben steht das Wochen-Rätsel: Alle im Club bekommen in dieser Woche dieselben fünf Bilder. Nur dein erster Durchgang zählt für die Club-Bestenliste – danach kannst du zum Üben nochmal spielen." },
+  { v: "start", tippVor: rgOn("qzBestenliste()"), vor: () => { rgQzWahl(); qzBestenliste(); }, sel: ["#hrFlaeche .qz-liste", "#hrFlaeche .qz-start"], mussSel: true, t: "🥇 Die Club-Bestenliste",
+    x: "Unter Bestenliste siehst du, wer diese Woche vorn liegt, und darunter die Gesamtwertung über alle Wochen. Dein eigener Name ist farbig hinterlegt." },
+  { v: "start", vor: () => rgQzWahl(), sel: [rgOn("qzNachweise()")], mussSel: true, puls: [rgOn("qzNachweise()")], t: "📜 Bildnachweise",
+    x: "Unter Bildnachweise steht, wer die Fotos gemacht hat. Es sind freie Fotos von Wikimedia Commons." },
+  { v: "start", nur: () => !ICH?.admin && QZ.eigene.length > 0, vor: () => rgQzWahl(), sel: [rgOn("qzStart('club')"), "#qzWahl"], mussSel: true, puls: [rgOn("qzStart('club')")], t: "📸 Fotos aus unserem Club",
+    x: "Gibt es auch den Knopf Köcheclub, dann raten alle mit Fotos aus unserem eigenen Fotoalbum. Die stellt der Admin für das Rätsel zusammen." },
+  { v: "start", nur: () => !!ICH?.admin, vor: () => rgQzWahl(), sel: [rgOn("qzEigeneVerwalten()")], mussSel: true, puls: [rgOn("qzEigeneVerwalten()")], t: "📸 Eigene Club-Fotos",
+    x: "Nur du als Admin siehst Eigene Bilder: Dort tippst du ein Foto aus dem Club-Album an und schreibst die Lösung dazu, auf Wunsch auch einen Satz. Dann raten alle unter Köcheclub mit. Entfernen geht mit dem Mülleimer – das Foto im Album bleibt." },
+  { v: "start", vor: () => rgQzWahl(), t: "✅ Fertig",
+    x: "Das war das Rätsel: Foto wird schärfer, roten Buzzer drücken, aus sechs Antworten wählen – je früher, desto mehr Punkte. Viel Spaß beim Raten – und viel Glück in der Bestenliste!" },
+];
+
+// ---------- 2.348.0 KC-CLUB-VIDEO-BUEHNE (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
+// 2.348.0 KC-CLUB-VIDEO-BUEHNE (Wunsch Hansi „eigenes Video zur Bühne – Training, Regler, Musik, Club-Song, Einladung“). Vertieft das Video
+// „Die Rückseite“ (RG_RUECKSEITE). Alles nur als Bild: keine Musik, keine Ansage von Twinkey, keine Uhr läuft (BW.lauf/BW.hoeren werden nur zum
+// Zeichnen gesetzt und gleich wieder geleert); Einladung und Karaoke-Zeile sind nachgebildet, Knöpfe darin ohne Wirkung. Die Wahl auf der Bühne
+// (Sitzen/Stehen, Dauer, Musik, Ansage) wird nicht verändert. Am Ende: Bühne gestoppt, Trainings-Modus aus, gemerkter Reiter wie vorher.
+function rgBwAuf() {
+  if (RG.bwZurueck) return;
+  const tab = esLies("tab", null); RG.bwZurueck = true;
+  RG.zurueck.push(() => { RG.bwZurueck = false; BW.vorher = null; BW.hoeren = null; BW.lauf = null; bwStopp(false); clearInterval(KS.uhr); KS.uhr = 0;
+    if (tab === null) { try { localStorage.removeItem("kc_club_es_tab"); } catch {} } else esSchreib("tab", tab); });
+}
+function rgBwWahl() { rgBwAuf(); BW.vorher = null; BW.hoeren = null; BW.lauf = null; bwTrainingKnoepfe(false); rgRueck("buehne"); } // Bühnen-Auswahl
+function rgBwBereit() { // „Lege dir bitte bereit“ – ohne Ansage (die kommt nur beim ersten Zeigen eines neuen Plans)
+  rgBwWahl(); const w = bwWahl(); BW.vorher = bwPlan(w.modus, w.dauer); bwVorher();
+}
+function rgBwLauf() { // laufendes Training nur zeigen: Übung, Uhr, Regler, Leiste – nichts läuft
+  rgBwAuf(); BW.hoeren = null; BW.vorher = null; rgRueck("buehne"); const plan = bwPlan("kueche", 10);
+  BW.lauf = { plan, i: 2, phase: "uebung", rest: 18, pause: false, musik: true, ansage: true, sek: 0, zeit: 95, lob: 0, sprueche: 0, farbe: 2, warte: 0 };
+  BW.blase = "Super machst du das!"; BW.sprechZeit = Date.now(); bwLaufZeigen(); BW.lauf = null;
+}
+function rgBwHoeren(id) { // „Nur Musik hören“ zeigen – ohne Musik; beim Club-Song eine Karaoke-Zeile aus dem echten Liedtext
+  rgBwAuf(); BW.lauf = null; BW.vorher = null; rgRueck("buehne");
+  const i = Math.max(0, BW_STUECKE.findIndex((s) => s.id === (id || "clubsong")));
+  BW.hoeren = { i, pause: false, tanz: 0, farbe: 1 }; bwHoerZeigen(); BW.hoeren = null; clearInterval(KS.uhr); KS.uhr = 0;
+  const k = $("bwKaraoke"), z = KS_TAKTE.filter((x) => x.zeile).map((x) => x.zeile.silben);
+  if (k && z.length) { const s = z[0], g = Math.min(s.length - 1, Math.max(1, Math.floor(s.length / 2)));
+    k.innerHTML = `<div class="bw-k-zeile">${s.map((x, n) => `<span class="${n < g ? "war" : n === g ? "jetzt" : ""}">${esc(x)}</span>`).join("")}</div>${z[1] ? `<div class="bw-k-naechste">${esc(z[1].join("").trim())}</div>` : ""}`; }
+}
+function rgBwEinladung() { // die Frage beim Öffnen der App nachgebildet (Knöpfe ohne Wirkung)
+  rgBlatt("bwEinBlatt", () => { const name = ICH?.vorname || "";
+    blattAuf("bwEinBlatt", `<div class="bw-ein"><div class="bw-ein-figur">${bwFigur("winken", 0, "", 0, .5, 0, new Date().getDate())}</div>
+      <h3 style="margin:4px 0">Hallo${name ? " " + esc(name) : ""}! 👋</h3><p style="margin:0 0 10px">Heute Lust auf eine kleine <b>Bewegungseinheit</b> mit mir? Ein paar Minuten mit Musik – im Sitzen, im Stehen oder mit Küchenhelfern.</p>
+      <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button type="button" class="knopf haupt">💪 Ja, los geht's!</button>
+      <button type="button" class="knopf">⏰ Später</button><button type="button" class="knopf">🙂 Heute nicht</button><button type="button" class="knopf klein">🔕 Nicht mehr fragen</button></div></div>`); });
+}
+function rgBwRkZu(id) { // Einstellungen als Rollkartei: beim ersten Öffnen springt die Kartei nach dem Aufbauen auf Karte 1 – dann zur richtigen Karte nachblättern
+  for (const ms of [500, 1200]) setTimeout(() => { const e = $(id), z = RK.einst; if (RG.an && e && z?.an && z.karten[z.i] && !z.karten[z.i].contains(e)) rkZu(z, e); }, ms);
+}
+const RG_BUEHNE = [
+  { v: "start", vor: () => { rgKopf("offen"); esEinsetzen(); }, t: "👋 Bühne frei!",
+    x: "In diesem Video zeige ich dir die Bühne genauer: Twinkey turnt mit dir, du kannst nur Musik hören oder unseren Club-Song mitsingen. Keine Sorge – hier läuft keine Musik, und ich verstelle nichts." },
+  { v: "start", vor: () => rgBwWahl(), sel: ['#heroRueck [data-tab="buehne"]'], mussSel: true, puls: ['#heroRueck [data-tab="buehne"]', "#heroRueck .eselsohr"], video: "rueckseite", t: "🎭 Der Reiter Bühne",
+    x: "Die Bühne steht auf der Rückseite des grünen Kopfes: doppelt aufs Eselsohr tippen, dann oben auf den Reiter Bühne." },
+  { v: "start", vor: () => rgBwWahl(), sel: ["#hrFlaeche .bw-wahl"], mussSel: true, puls: [() => [...document.querySelectorAll("#hrFlaeche .bw-wahl .bw-reihe")[0]?.children || []], () => $("hrFlaeche")?.querySelector(".bw-hinweis")], t: "🪑 Sitzen, Stehen oder Küchenhelfer",
+    x: () => (document.querySelector("#hrFlaeche .bw-hinweis") ? "Beim ersten Mal steht oben ein Hinweis: Mach nur so viel, wie dir guttut – mit Verstanden geht es weiter. " : "")
+      + "Dann wählst du: im Sitzen, im Stehen oder mit Küchenhelfern wie Schneebesen, Kochlöffel oder Pfanne." },
+  { v: "start", vor: () => rgBwWahl(), sel: ["#hrFlaeche .bw-wahl"], mussSel: true, puls: [() => [...document.querySelectorAll("#hrFlaeche .bw-wahl .bw-reihe")[1]?.children || []]], t: "⏲️ Dauer, Musik und Ansage",
+    x: "Darunter die Dauer – fünf, zehn oder fünfzehn Minuten – und ob Musik und Twinkeys Ansage dabei sein sollen. Die App merkt sich deine Wahl." },
+  { v: "start", tippVor: "#hrFlaeche .bw-los", vor: () => rgBwBereit(), sel: ["#hrFlaeche .bw-bereit"], mussSel: true, puls: ["#hrFlaeche .bw-bereit-liste", "#hrFlaeche .bw-bereit .bw-los"], t: "🧺 Erst bereitlegen",
+    x: "Mit Vorhang auf sagt Twinkey zuerst, was du bereitlegen sollst – zum Beispiel einen Stuhl. Fehlt etwas, überspringst du die Übung später einfach mit Weiter. Dann tippst du auf Alles bereit – los." },
+  { v: "start", tippVor: "#hrFlaeche .bw-bereit .bw-los", vor: () => rgBwLauf(), sel: ["#bwLauf .bw-kopf", "#bwLauf"], mussSel: true, puls: ["#bwZahl", "#bwSprech"], t: "🕺 Twinkey turnt vor",
+    x: "Jetzt turnt Twinkey vor. Oben steht die Übung, die große Zahl zählt die Sekunden herunter. Zwischendurch feuert er dich an – das steht dann in der Sprechblase." },
+  { v: "start", vor: () => rgBwLauf(), sel: ["#bwLauf .bw-uhr"], mussSel: true, puls: ["#bwUhrAb", "#bwUhrNoch"], t: "⏱️ Die Trainingsuhr",
+    x: "Neben Twinkey steht die Trainingsuhr: oben, wie lange du schon dabei bist, darunter, wie lange es noch geht. Lupe, Fragezeichen und Mikrofon sind während des Trainings ausgeblendet – damit nichts stört." },
+  { v: "start", vor: () => rgBwLauf(), sel: ["#bwLaut_musik", "#bwLaut_stimme"], mussSel: true, puls: ["#bwLaut_musik", "#bwLaut_stimme"], t: "🎚️ Lauter und leiser",
+    x: "Am Rand stehen zwei Regler: rechts die Musik, links Twinkeys Stimme. Nach oben ziehen wird lauter, der Keil wird dicker. Ein Tipp unten aufs Symbol macht sofort stumm, ein zweiter holt die Lautstärke zurück. Ist alles zu leise, prüf auch die Lautstärke am Handy." },
+  { v: "start", vor: () => rgBwLauf(), sel: ["#bwLauf .es-leiste"], mussSel: true, puls: ["#bwLauf .es-leiste button"], t: "⏸️ Pause, Weiter und Ende",
+    x: "Unten: Pause hält an. Weiter überspringt die Übung – praktisch, wenn ein Küchenhelfer fehlt. Mit der Note schaltest du die Musik ab, mit dem Lautsprecher die Ansage. Ende beendet das Training. Mach nur so viel, wie dir guttut – bei Schmerzen, Schwindel oder Atemnot sofort aufhören." },
+  { v: "start", vor: () => rgBwWahl(), sel: [rgOn("bwHoeren()")], mussSel: true, puls: [rgOn("bwHoeren()")], t: "🎶 Nur Musik hören",
+    x: "Lieber nur zuhören statt turnen? Dann tippst du auf Nur Musik hören. Twinkey tanzt dazu – ohne Übungen und ohne Ansage." },
+  { v: "start", tippVor: rgOn("bwHoeren()"), vor: () => rgBwHoeren("disco"), sel: ["#bwHoer .bw-liste"], mussSel: true, puls: ["#bwHoer .bw-richtung"], t: "🪩 Musikrichtung wählen",
+    x: "Oben wählst du per Kachel die Musikrichtung: den Club-Song, Disco, Reggae, Funky, Rock, Ballade, Latin oder Schlager und Polka. Darunter stehen die Lieder dieser Richtung." },
+  { v: "start", vor: () => rgBwHoeren("disco"), sel: ["#bwHoer .es-leiste"], mussSel: true, puls: ["#bwHoer .es-leiste button", "#bwLaut_musik"], t: "⏭️ Blättern und Lautstärke",
+    x: "Jedes Lied läuft etwa zweieinhalb Minuten, dann kommt das nächste derselben Richtung. Mit den Pfeilen blätterst du, Pause hält an, Ende hört auf. Rechts der Regler für die Lautstärke. Die Musik entsteht im Handy – Internet brauchst du dafür nicht." },
+  { v: "start", vor: () => rgBwWahl(), sel: [rgOn("bwClubSong()")], mussSel: true, puls: [rgOn("bwClubSong()")], t: "🎤 Unser Club-Song",
+    x: "Und dann gibt es noch unseren eigenen Club-Song zum Mitsingen. Dafür tippst du auf Club-Song." },
+  { v: "start", tippVor: rgOn("bwClubSong()"), vor: () => rgBwHoeren("clubsong"), sel: ["#bwKaraoke", "#bwHoer"], mussSel: true, puls: ["#bwKaraoke .jetzt", "#bwHoer .bw-kopf"], t: "✨ Mitsingen",
+    x: "Das Lied heißt Seit einundneunzig, Köcheclub Werne – ein Disco-Fox. Twinkey tanzt, der Text läuft mit, und die Silbe, die gerade gesungen wird, leuchtet golden. Darunter steht schon die nächste Zeile." },
+  { v: "start", vor: () => { rgBwWahl(); rgBwEinladung(); }, nach: () => $("bwEinBlatt") && fensterZu($("bwEinBlatt")), sel: ["#bwEinBlatt .bw-ein .knoepfe", "#bwEinBlatt"], mussSel: true, puls: ["#bwEinBlatt .knopf"], t: "💪 Twinkey lädt dich ein",
+    x: "Beim Öffnen der App fragt Twinkey höchstens einmal am Tag: Heute Lust auf eine Bewegungseinheit mit mir? Ja führt direkt zur Bühne. Später fragt in etwa zwei Stunden wieder, Heute nicht erst morgen – und Nicht mehr fragen schaltet es ab." },
+  { v: "einstellungen", vor: () => { $("bwEinBlatt") && fensterZu($("bwEinBlatt")); rgAuf("startseite"); rgBwRkZu("setBwEinladung"); }, sel: [rgSchalter("setBwEinladung")], mussSel: true, puls: ["#setBwEinladung"], t: "⚙️ Einladung wieder einschalten",
+    x: "Wieder einschalten kannst du die Einladung unter Mehr, im Bereich Startseite und Ansicht: Twinkey lädt zur Bewegung ein. Das gilt für dieses Gerät." },
+  { v: "start", vor: () => rgBwWahl(), t: "✅ Fertig",
+    x: "Das war die Bühne: bereitlegen, mit Twinkey turnen, Musik und Stimme regeln, nur Musik hören oder den Club-Song mitsingen. Viel Spaß – und mach nur so viel, wie dir guttut!" },
+];
+
+// ---------- 2.348.0 KC-CLUB-VIDEO-BUERO (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
+// 2.348.0 KC-CLUB-VIDEO-BUERO (Wunsch Hansi „Video Büro im Alltag – Eingangskorb, Bestätigungen per Knopf, einlesen, Mail mit Anhang, mehrere
+// Ordner, Sprache, Schilder“). Vertieft das Video „Für die Clubleitung“ (RG_LEITUNG). Es wird NICHTS gesendet, abgelegt oder gespeichert:
+// Gezeigt werden nur Fenster (Lesen vom Server ist erlaubt); die Video-Schicht fängt jedes Antippen ab. Die eingelesene Datei ist ein Beispiel
+// im Speicher (nie hochgeladen). Am Ende: alle Fenster zu, EINL/EMAIL/Schilder-Stand leer, Büro-Ansicht (Raum/Liste) und -Sicht wie vorher.
+const RG_BU_FENSTER = ["buEinBlatt", "ekDwBlatt", "ekAblageBlatt", "ekHinweisBlatt", "einlBlatt", "schBlatt", "buFuellerBlatt"];
+function rgBueroSicht(id) { // Fenster während des Videos zeigen (sonst warten Fenster bis nach dem Video) – auch wenn es erst nach dem Lesen aufgeht
+  let n = 0; const los = () => { $(id)?.classList.add("rg-zeigen"); if (RG.an && n++ < 40) setTimeout(los, 100); }; los(); // 4 s lang – manche Fenster werden nach dem Laden neu gezeichnet
+}
+function rgBueroZu(...ausser) { for (const id of RG_BU_FENSTER) if (!ausser.includes(id) && $(id)) fensterZu($(id)); }
+function rgBueroAuf() {
+  if (RG.buZurueck) return;
+  const alt = { ansicht: lsLesen(BU_ANSICHT), sicht: BU.sicht, ordner: BU.ordner }; RG.buZurueck = true;
+  RG.zurueck.push(() => {
+    RG.buZurueck = false; RG.buDw = null; RG.buAblage = null; rgBueroZu(); EINL = null; EMAIL = null;
+    Object.assign(SDR, { sicht: "start", d: null, id: null, name: "" });
+    if (alt.ansicht === null) { try { localStorage.removeItem(BU_ANSICHT); } catch {} } else lsSetzen(BU_ANSICHT, alt.ansicht);
+    BU.sicht = alt.sicht; BU.ordner = alt.ordner; if (aktuelleAnsicht === "buero") buZeigen();
+  });
+}
+function rgBueroRaum() { rgBueroAuf(); rgBueroZu(); if (!buRaumAn()) lsSetzen(BU_ANSICHT, "raum"); if (BU.sicht !== "start") { BU.sicht = "start"; buZeigen(); } else if (!$("buInhalt")?.querySelector(".bu-raum") && BU.start) buZeigen(); }
+function rgBueroEingang() { rgBueroAuf(); if (BU.sicht !== "eingang") { BU.sicht = "eingang"; buZeigen(); buEingangLaden(); } }
+const rgBueroDw = () => (BU_EIN.korb?.dienstwuensche || [])[0] || null; // erste Dienstzeiten im Eingangskorb (Beispiel fürs Video)
+function rgBueroVorab() { // Daten für die nächsten Fenster schon holen (nur lesen) – dann stehen sie sofort da
+  const d = rgBueroDw(); if (!d) return;
+  if (!RG.buDw || RG.buDw.id !== d.id) api("eingang_dienstwunsch", { id: d.id }).then((x) => { RG.buDw = x; }).catch(() => {});
+  if (!RG.buAblage) api("eingang_ablage_ziele", { art: "dienstwunsch", id: d.id }).then((x) => { RG.buAblage = x; }).catch(() => {});
+}
+function rgBueroMitVorab(fn) { // Fenster mit den vorab geholten Daten öffnen (ohne erneutes Warten auf den Server)
+  const a = api;
+  api = (x, d, o) => x === "eingang_dienstwunsch" && RG.buDw ? Promise.resolve(RG.buDw) : x === "eingang_ablage_ziele" && RG.buAblage ? Promise.resolve(RG.buAblage) : a(x, d, o);
+  try { fn(); } finally { api = a; }
+}
+function rgBueroPosten() { // Zeile „Dienstzeiten“ im Eingang antippen: das Auswahl-Fenster zeigen
+  rgBueroEingang(); rgBueroZu("buEinBlatt"); rgBueroVorab();
+  const d = rgBueroDw(), i = (BU_EIN.posten || []).findIndex((x) => d && x.auf === `ekDienstInfo('${d.id}')`);
+  if (i >= 0 && !$("buEinBlatt")) buEinPosten(i);
+  rgBueroSicht("buEinBlatt");
+}
+function rgBueroDwInfo() { rgBueroEingang(); rgBueroZu("ekDwBlatt"); const d = rgBueroDw(); if (d && !$("ekDwBlatt")) rgBueroMitVorab(() => ekDienstInfo(d.id)); rgBueroSicht("ekDwBlatt"); }
+function rgBueroAblage() { rgBueroEingang(); rgBueroZu("ekAblageBlatt"); const d = rgBueroDw(); if (d && !$("ekAblageBlatt")) rgBueroMitVorab(() => ekAblage("dienstwunsch", d.id, "Erledigt – wo soll es abgelegt werden?")); rgBueroSicht("ekAblageBlatt"); }
+function rgBueroHinweis() { // Hinweis beim Start nachgebildet – mit den Beispielzahlen aus der Hilfe; Knöpfe ohne Wirkung
+  rgBueroAuf(); rgBueroZu("ekHinweisBlatt"); if ($("ekHinweisBlatt")) return;
+  const l = [["📅", 5, "Dienstpläne"], ["💶", 1, "Kostenerstattung"], ["🙋", 1, "Hilfegesuch"]];
+  blattAuf("ekHinweisBlatt", `<h3 style="margin:0">📥 Im Eingangskorb liegen 7 Sachen</h3>
+    <p class="hinweis" style="margin:0">Für die Clubleitung. Antippen öffnet den Eingangskorb.</p>
+    <div class="ekh-liste">${l.map(([sym, n, t]) => `<button type="button" class="ti-zeile">${sym} <span><b>${n}</b> ${t}</span><b>›</b></button>`).join("")}</div>
+    <b>Möchtest du das jetzt bearbeiten?</b>
+    <button class="knopf haupt">✅ Ja, jetzt bearbeiten</button><button class="knopf">⏰ Später</button><button class="knopf">🌙 Heute nicht mehr</button>`);
+  rgBueroSicht("ekHinweisBlatt");
+}
+const rgBueroDatei = () => new File(["Beispiel"], "Spendenquittung.pdf", { type: "application/pdf" }); // nur im Speicher – wird nie hochgeladen
+function rgBueroEinlesen() { rgBueroAuf(); rgBueroZu("einlBlatt"); if ($("einlBlatt")?.querySelector(".einl-wahl")) return; const s = spur; spur = () => {}; try { buEinlesen(); } finally { spur = s; } rgBueroSicht("einlBlatt"); }
+function rgBueroWohin() { rgBueroAuf(); rgBueroZu("einlBlatt"); if (!$("einlBlatt")?.querySelector("[onclick='einlAblegen()']")) einlZiel([rgBueroDatei()], {}); rgBueroSicht("einlBlatt"); }
+function rgBueroMail() { rgBueroAuf(); rgBueroZu("einlBlatt"); if ($("einlBlatt")?.querySelector(".em-mail")) return; if (!EINL) EINL = { dateien: [rgBueroDatei()], korbId: null, titel: "Spendenquittung" }; einlPerMail(); rgBueroSicht("einlBlatt"); }
+function rgBueroSchilder(vorlage) {
+  rgBueroAuf(); rgBueroZu("schBlatt");
+  if (vorlage) { if (SDR.sicht !== "edit" || !$("schBlatt")) { if (!$("schBlatt")) schStart(); schVorlage(vorlage); } }
+  else if (!$("schBlatt") || SDR.sicht !== "start") schStart();
+  rgBueroSicht("schBlatt");
+}
+function rgBueroRkZu(id) { // Einstellungen als Rollkartei: nach dem Aufbauen zur richtigen Karte nachblättern
+  for (const ms of [500, 1200]) setTimeout(() => { const e = $(id), z = RK.einst; if (RG.an && e && z?.an && z.karten[z.i] && !z.karten[z.i].contains(e)) rkZu(z, e); }, ms);
+}
+const rgBueroL = () => !!(ICH?.vorstand || ICH?.admin);
+const RG_BUERO = [
+  { v: "buero", vor: () => rgBueroRaum(), sel: ["#v-buero .bu-gruss", "#buInhalt"], video: "leitung", t: "🗂️ Büro im Alltag",
+    x: "Dieses Video ist für die Clubleitung. Ich zeige dir, wie du im Büro den Alltag erledigst: den Eingangskorb, Bestätigungen für Dienstwünsche, Ablegen, Einlesen, E-Mail mit Anhang und die Schilder-Druckerei. Keine Sorge: Ich sende nichts und lege nichts ab." },
+  { v: "buero", nur: () => BSPR.geht, vor: () => rgBueroRaum(), sel: ["#buInhalt .bu-mikro"], mussSel: true, puls: ["#buInhalt .bu-mikro"], t: "🎙️ Sag mir, was du brauchst",
+    x: "Oben im Büro sitzt das Mikrofon: Sag mir, was du brauchst. Tipp darauf und sag zum Beispiel: Öffne Ordner Protokolle – oder Anrufen Erika. Das spart Tipperei, wenn es schnell gehen soll." },
+  { v: "buero", nur: () => !!ICH?.vorstand, vor: () => rgBueroRaum(), sel: ["#buInhalt .bu-korb"], mussSel: true, puls: ["#buInhalt .bu-korb", "#buInhalt .bu-zettel.blau"], t: "📥 Der Eingangskorb",
+    x: "Auf dem Schreibtisch steht der Eingangskorb. Daneben sagt dir der blaue Zettel Eingang, wie viele Sachen auf euch warten. Ein Tipp öffnet den Eingang." },
+  { v: "buero", nur: rgBueroL, tippVor: "#buInhalt .bu-korb", vor: () => { rgBueroEingang(); rgBueroVorab(); }, sel: ["#buInhalt .bu-ein-zeile", "#buInhalt .ek-kopf"], puls: ["#buInhalt .bu-ein-zeile"], t: "📋 Was im Eingang liegt",
+    x: "Im Eingang liegt alles, was für die Clubleitung neu hereinkommt: Erstattungen, Dienstzeiten, Vorschläge, Änderungsmeldungen, Ausleihen und mehr. Clubsprecher, Kassenwart und Admin bekommen dazu eine Meldung. Es bleibt hier, bis es erledigt ist." },
+  { v: "buero", nur: rgBueroL, vor: () => { rgBueroEingang(); rgBueroVorab(); }, sel: ["#buInhalt .ek-kopf"], mussSel: true, puls: ["#buInhalt .ek-kopf .pr-filter-knopf"], t: "🔽 Filter und Übersicht",
+    x: "Oben rechts zwei Knöpfe: Das Balkendiagramm zeigt alle Dienstzeiten als Übersicht – Name, Tage, Zeitbalken und Stunden –, zum Drucken und Ablegen. Mit dem Knopf daneben filterst du den Eingang nach Jahr, Monat, Art und Name." },
+  { v: "buero", nur: () => rgBueroL() && !!rgBueroDw(), tippVor: () => [...document.querySelectorAll("#buInhalt .bu-ein-zeile")].find((b) => /Dienstzeiten/.test(b.textContent)) || null,
+    vor: () => rgBueroPosten(), sel: ['#buEinBlatt .blatt-innen > div[style*="grid"]', "#buEinBlatt"], puls: ["#buEinBlatt .knopf"], t: "👆 Eine Sache antippen",
+    x: "Tippst du eine Sache an – zum Beispiel neue Dienstzeiten –, siehst du, was du tun kannst: Öffnen und bearbeiten, Zur Kenntnis genommen, Ablegen – oder gleich zum passenden Ordner." },
+  { v: "buero", nur: () => rgBueroL() && !!rgBueroDw(), tippVor: "#buEinBlatt .knopf.haupt", vor: () => rgBueroDwInfo(), sel: ['#ekDwBlatt [data-fn^="ekDwBestaetigung"]', "#ekDwBlatt .blatt-innen"],
+    puls: ['#ekDwBlatt [data-fn^="ekDwBestaetigung"]'], t: "📧 Bestätigung per Knopf",
+    x: "Mit Öffnen und bearbeiten siehst du die Dienstzeiten Tag für Tag. Darunter schickst du dem Mitglied mit einem Knopf die Bestätigung: Es bekommt alle Eingaben per E-Mail und App-Nachricht – mit dem Hinweis: Wunschplanung, noch nicht der fertige Dienstplan. In Kopie gehen Clubsprecher und Kassenwart, in Blindkopie du. Vorher fragt die App noch einmal nach." },
+  { v: "buero", nur: () => rgBueroL() && !!rgBueroDw(), vor: () => rgBueroDwInfo(), sel: ['#ekDwBlatt [data-fn^="ekKenntnis"]', "#ekDwBlatt .blatt-innen"], puls: ['#ekDwBlatt [data-fn^="ekKenntnis"]', '#ekDwBlatt [data-fn^="ekAblage"]'], t: "👁️ Zur Kenntnis genommen",
+    x: "Hast du alles gesehen, tippst du auf Zur Kenntnis genommen. Dann ist es erledigt. Ändert das Mitglied seine Zeiten, liegt es wieder im Eingang." },
+  { v: "buero", nur: () => rgBueroL() && !!rgBueroDw(), vor: () => rgBueroAblage(), sel: ["#ekAblageBlatt .ek-ordner", "#ekAblageBlatt label.schalter", "#ekAblageBlatt"], puls: ["#ekAblageBlatt label.schalter", "#ekAblageBlatt .ek-ordner", "#ekAblegenKnopf"], t: "🗄️ In mehrere Ordner ablegen",
+    x: "Danach fragt die App: Wo ablegen? Setz einfach Häkchen – mehrere gehen: im Ordner des Mitglieds, in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Ich lege hier nichts ab." },
+  { v: "start", nur: rgBueroL, vor: () => rgBueroHinweis(), nach: () => $("ekHinweisBlatt") && fensterZu($("ekHinweisBlatt")), sel: ["#ekHinweisBlatt .ekh-liste", "#ekHinweisBlatt"], mussSel: true, puls: ["#ekHinweisBlatt .ti-zeile", "#ekHinweisBlatt .knopf"], t: "🔔 Viel im Eingang?",
+    x: "Liegen mehr als fünf Sachen im Eingangskorb, zeigt dir die App beim Start eine kleine Liste – zum Beispiel fünf Dienstpläne, eine Kostenerstattung, ein Hilfegesuch. Eine Zeile öffnet den Eingangskorb gleich mit dieser Art. Darunter: Ja, jetzt bearbeiten, Später oder Heute nicht mehr." },
+  { v: "einstellungen", nur: rgBueroL, vor: () => { rgAuf("leitung_start"); rgBueroRkZu("leitungStart"); }, sel: [rgKlappe("leitung_start")], mussSel: true, t: "⚙️ Hinweis ausschalten",
+    x: "Ganz ausschalten – zusammen mit der Tages-Übersicht beim Start – kannst du das unter Mehr, im Bereich Clubleitung beim Start. Das gilt für dieses Gerät." },
+  { v: "buero", nur: () => buSchreiben(), vor: () => { rgBueroRaum(); rgBueroEinlesen(); }, sel: ["#einlBlatt .einl-wahl", "#einlBlatt"], mussSel: true, puls: ["#einlBlatt .einl-wahl > *", "#einlZiehen"], t: "📥 Dokumente einlesen",
+    x: "Mit Einlesen holst du Unterlagen ins Büro: Foto machen, Datei wählen, am PC einfach hineinziehen – oder unter Aus Eingangskorb oder Eingang etwas nehmen, zum Beispiel eine Erstattung oder eine Änderungsmeldung." },
+  { v: "buero", nur: () => buSchreiben(), vor: () => rgBueroWohin(), sel: ["#einlBlatt .knoepfe", "#einlBlatt"], mussSel: true, puls: ["#einlBlatt .knoepfe .knopf:not(:last-child)"], t: "📄 Wohin damit?",
+    x: "Danach fragt die App: Wohin damit? In einen Ordner ablegen – mit Vorschlag –, in den Eingangskorb, um es später zu erledigen, als Nachricht in der App oder per E-Mail mit Anhang." },
+  { v: "buero", nur: () => buSchreiben(), tippVor: rgOn("einlPerMail()"), vor: () => rgBueroMail(), sel: ["#emListe", "#einlBlatt"], puls: ["#emSuche", "#emListe .chip"], t: "📧 Per E-Mail mit Anhang",
+    x: "Bei Per E-Mail mit Anhang hängt die Datei schon dran. Bei jedem Namen tippst du An, CC – eine Kopie, die alle sehen – oder BCC – eine Blindkopie, die die anderen nicht sehen. Oben den Namen eintippen geht schneller." },
+  { v: "buero", nur: () => buSchreiben(), vor: () => rgBueroMail(), sel: ["#emSenden", "#einlBlatt"], puls: ["#emBetreff", "#emText", "#emKopie", "#emSenden"], t: "✉️ Betreff, Text und senden",
+    x: "Dann den Betreff prüfen, einen Text dazuschreiben – er kann auch leer bleiben –, Kopie an mich ankreuzen und auf Jetzt senden tippen. Ich sende hier nichts." },
+  { v: "buero", nur: () => buSchreiben(), vor: () => rgBueroMail(), sel: [rgOn("einlPerMailExtern()"), "#einlBlatt"], puls: [rgOn("einlPerMailExtern()")], t: "📤 Adresse außerhalb des Clubs",
+    x: "Soll die Mail an jemanden außerhalb des Clubs, nimmst du Anderes Mail-Programm – dann öffnet sich das Teilen-Menü deines Handys." },
+  { v: "buero", nur: () => schDarf(), vor: () => { rgBueroRaum(); rgBueroSchilder(); }, sel: ["#schBlatt .sdr-anlaesse", "#schBlatt"], mussSel: true, puls: ["#schBlatt .sdr-anlaesse .knopf"], t: "🪧 Die Schilder-Druckerei",
+    x: "Für Feste und Stände gibt es die Schilder-Druckerei – im Büro über den Füller bei Schild drucken. Zuerst wählst du den Anlass: Weihnachtsmarkt, Feste und Feiern, Kochabend und Kurs, Vereinsheim oder Allgemein." },
+  { v: "buero", nur: () => schDarf(), vor: () => rgBueroSchilder(), sel: ['#schBlatt [onclick="schVorlage(\'bar\')"]', "#schBlatt .sdr-vorlagen"], mussSel: true,
+    puls: ['#schBlatt [onclick="schVorlage(\'bar\')"]', '#schBlatt [onclick="schVorlage(\'parken\')"]', '#schBlatt [onclick="schVorlage(\'durchgang\')"]'], t: "📋 Eine Vorlage wählen",
+    x: "Dann tippst du eine Vorlage an – zum Beispiel Nur Barzahlung, Bitte nicht parken oder Durchgang bitte freihalten. Je nach Anlass gibt es viele weitere." },
+  { v: "buero", nur: () => schDarf(), tippVor: '#schBlatt [onclick="schVorlage(\'bar\')"]', vor: () => rgBueroSchilder("bar"), sel: ["#schBlatt .sdr-vorschau", "#schBlatt"], mussSel: true, t: "🪧 So sieht das Schild aus",
+    x: "Oben siehst du das Schild so, wie es gedruckt wird. Jede Änderung siehst du hier sofort." },
+  { v: "buero", nur: () => schDarf(), vor: () => rgBueroSchilder("bar"), sel: [() => $("schText")?.closest(".sdr-feld"), "#schBlatt"], mussSel: true, puls: ["#schTitel", "#schText", "#schBlatt .sdr-stil"], t: "✏️ Text ändern",
+    x: "Darunter änderst du die Überschrift und den Text. F, K und U machen fett, kursiv oder unterstrichen." },
+  { v: "buero", nur: () => schDarf(), vor: () => rgBueroSchilder("bar"), sel: ["#schBlatt .sdr-aussehen", "#schBlatt"], mussSel: true, puls: ["#schBlatt .sdr-aussehen > summary", "#schBlatt .sdr-aussehen > label"], t: "🎨 Das Aussehen",
+    x: "Unter Aussehen wählst du Format, Schrift, Farbe, Rahmen und ein Symbol." },
+  { v: "buero", nur: () => schDarf(), vor: () => rgBueroSchilder("bar"), sel: ["#schBlatt .sdr-leiste", "#schBlatt"], mussSel: true, puls: ["#schBlatt .sdr-leiste .knopf"], t: "🖨️ Drucken, Speichern, Senden",
+    x: "Unten: Drucken. Speichern hebt das Schild auf – nächstes Jahr öffnest du es wieder. Und Senden und Ablegen schickt es an Mitglieder, die es zuhause drucken – praktisch am Stand ohne Drucker –, per E-Mail oder in den Büro-Ordner. Hier speichere und sende ich nichts." },
+  { v: "buero", vor: () => rgBueroRaum(), t: "✅ Fertig",
+    x: "Das war das Büro im Alltag: Eingang ansehen, Bestätigung schicken, zur Kenntnis nehmen und in mehrere Ordner ablegen, Dokumente einlesen und per E-Mail verschicken – und Schilder drucken. Angezeigt wird immer nur, was du darfst." },
+];
+
+// ---------- 2.348.0 KC-CLUB-VIDEO-ERGAENZUNGEN (Wunsch Hansi „für alle Themen Videos“): Dienst + Mitglieder ----------
+// 2.348.0 KC-CLUB-VIDEO-ERGAENZUNGEN: zusätzliche Stationen für bestehende Videos. Je Objekt steht davor, NACH welcher vorhandenen
+// Station (Titel t) es eingefügt wird. Stehen zwei Ergänzungen hinter derselben Station, kommen sie in der hier stehenden Reihenfolge.
+// Nur gezeigt – es wird nichts gesendet, gespeichert oder bestätigt; alles wird am Ende zurückgestellt (RG.zurueck / nach()).
+
+// ---------- (a) RG_DIENST: Dienstwünsche mit „Fertig“ abschließen, leeren Wunschbogen drucken oder mailen ----------
+// 2.348.0 KC-CLUB-VIDEO-DIENST-2: Fenster „📝 Dienstwünsche“ nur als Rahmen zeigen – Twinkey (iframe) wird nicht geladen, damit nichts
+// spricht oder fragt; die Fertig-Leiste ist nur zu sehen (der Overlay fängt jedes Tippen ab). Am Ende: Fenster zu, DWB wie vorher.
+function rgDienstErgFenster() {
+  if (!$("dwFenster")) {
+    const alt = { ...DWB }; $("mdBlatt") && fensterZu($("mdBlatt"));
+    dwOeffnen(); const f = $("dwFenster"); f.querySelector("iframe")?.remove(); f.querySelector(".warten")?.remove(); f.inert = true;
+    RG.zurueck.push(() => { $("wbBlatt")?.remove(); dwSchliessen(); Object.assign(DWB, alt); });
+  }
+  return $("dwFenster");
+}
+function rgDienstErgZu() { if ($("dwFenster")) { $("wbBlatt")?.remove(); dwSchliessen(); } }
+function rgDienstErgLeiste() { rgDienstErgFenster(); if (!$("dwFertigLeiste")) { const b = DWB.bestaetigt; DWB.bestaetigt = false; dwFertigLeiste(14); DWB.bestaetigt = b; } }
+// 2.348.0 KC-CLUB-VIDEO-DIENST-2: Fenster „Dein leerer Wunschbogen“ zeigen (ohne echten Bogen – Vorschau-Hinweis statt PDF); WB wie vorher
+function rgDienstErgBogen() {
+  rgDienstErgFenster(); $("dwFertigLeiste")?.remove();
+  if ($("wbBlatt")) return $("wbBlatt").classList.add("rg-zeigen");
+  const alt = { pdf: WB.pdf, name: WB.name, bilder: WB.bilder, lauf: WB.lauf };
+  const p = wbAntwort({ art: "wunschbogen-fertig", bytes: new Uint8Array([0]), name: "Wunschbogen.pdf" });
+  const f = $("wbBlatt"); if (f) { f.classList.add("rg-zeigen"); f.inert = true; }
+  const hinweis = () => { if ($("wbSeiten")) $("wbSeiten").innerHTML = '<p class="hinweis">Hier erscheint die Vorschau deines Bogens.</p>'; };
+  hinweis(); Promise.resolve(p).catch(() => {}).finally(hinweis);
+  RG.zurueck.push(() => { $("wbBlatt")?.remove(); Object.assign(WB, alt); });
+}
+
+const RG_DIENST_ERG = [
+  // NACH: "📝 Wünsche eintragen"
+  { v: "start", vor: () => rgDienstErgFenster(), nach: () => { if (RG.richtung < 0) rgDienstErgZu(); }, sel: ["#dwFenster .dw-kopf"], puls: ['#dwFenster [data-k="fertig"]'], t: "✅ Mit Fertig abschließen",
+    x: "Bist du mit deinen Wünschen durch, tippst du oben rechts auf Fertig. Dann bekommst du eine Bestätigung mit der Zusammenfassung per E-Mail. Das ist deine Wunschplanung – noch nicht der fertige Dienstplan." },
+  // NACH: "📝 Wünsche eintragen" (direkt nach der vorigen Ergänzung)
+  { v: "start", vor: () => rgDienstErgLeiste(), sel: ["#dwFertigLeiste", "#dwFenster"], puls: ['#dwFertigLeiste [data-k="mail"]', '#dwFertigLeiste [data-k="spaeter"]'], t: "☝️ Fertig ist Pflicht",
+    x: "Sind alle Tage eingetragen, erscheint unten Fertig – damit schließt du ab. Mit Abbrechen änderst du vorher noch etwas." },
+  // NACH: "📝 Wünsche eintragen" (direkt nach der vorigen Ergänzung)
+  { v: "start", vor: () => { rgDienstErgFenster(); $("dwFertigLeiste")?.remove(); }, sel: ['#dwFenster [data-k="zu"]'], t: "↩️ Zurück ohne Fertig?",
+    x: "Gehst du mit Zurück hinaus, ohne abzuschließen, fragt die App nach: Fertig – oder Abbrechen, dann geht es zurück in die Eingabe. Klappt der Versand einmal nicht, zum Beispiel ohne Netz, kannst du trotzdem gehen." },
+  // NACH: "📝 Wünsche eintragen" (direkt nach der vorigen Ergänzung)
+  { v: "start", vor: () => { rgDienstErgFenster(); $("dwFertigLeiste")?.remove(); $("wbBlatt")?.remove(); }, sel: ['#dwFenster [data-k="bogen"]'], t: "🖨️ Leerer Wunschbogen",
+    x: "Lieber auf Papier? Oben mit Bogen bekommst du deinen persönlichen, leeren Wunschbogen – mit deinem Namen und oben rechts einem QR-Code mit deiner Mitglieds-ID." },
+  // NACH: "📝 Wünsche eintragen" (direkt nach der vorigen Ergänzung)
+  { v: "start", tippVor: '#dwFenster [data-k="bogen"]', vor: () => rgDienstErgBogen(), nach: () => rgDienstErgZu(), sel: ["#wbBlatt .wb-knoepfe", "#wbBlatt .blatt-innen"], puls: ["#wbDrucken", '#wbBlatt [onclick^="wbMailen"]'], t: "✉️ Drucken oder mailen",
+    x: "Mit Drucken druckst du ihn aus. Kein Drucker da? Dann tippst du auf Per E-Mail an mich – der Bogen kommt als PDF in dein Postfach. Danach von Hand ausfüllen und die Zeiten mit Twinkey eintragen. Ich schicke hier nichts." },
+];
+
+// ---------- (b) RG_MITGLIEDER: Wer ist online, Anwesenheitstafel, Geburtstagsgrüße ----------
+// 2.348.0 KC-CLUB-VIDEO-MITGLIEDER-2: Ansicht nur vorführen (mgAnsichtSetzen würde sie merken und melden) – danach wie vorher
+function rgMitgliederErgAnsicht(a) {
+  if (RG.mgAnsichtAlt === undefined || RG.mgAnsichtAlt === null) { RG.mgAnsichtAlt = MG_ANSICHT; RG.zurueck.push(() => rgMitgliederErgAnsicht(null)); }
+  const ziel = a || RG.mgAnsichtAlt; if (!a) RG.mgAnsichtAlt = null;
+  if (MG_ANSICHT === ziel) return;
+  MG_ANSICHT = ziel; mgAnsichtWahlZeigen(); if (MITGLIEDER && aktuelleAnsicht === "mitglieder") mitgliederZeichnen();
+}
+// 2.348.0 KC-CLUB-VIDEO-MITGLIEDER-2: Beispiel-Geburtstag – nur, wenn heute niemand Geburtstag hat; nur auf dem Bildschirm (INIT wird zurückgestellt).
+// Die Startseite lädt beim Öffnen neu (neuLaden ersetzt INIT) – danach wird das Beispiel noch einmal eingesetzt.
+function rgMitgliederErgGeburtstag() {
+  if (!INIT) return;
+  const s = RG.st[RG.i];
+  const anwenden = () => {
+    if (!RG.an || !INIT || RG.mgGb?.init === INIT) return;
+    if ((INIT.geburtstageHeute || []).some((g) => g.person_id !== ICH?.person_id)) return; // echter Geburtstag → den zeigen
+    const m = (MITGLIEDER || []).find((x) => x.person_id !== ICH?.person_id); if (!m) return;
+    if (!RG.mgGb) RG.zurueck.push(rgMitgliederErgGeburtstagZu);
+    RG.mgGb = { init: INIT, alt: INIT.geburtstageHeute };
+    INIT.geburtstageHeute = [...(INIT.geburtstageHeute || []), { person_id: m.person_id, name: m.name, vorname: m.vorname || String(m.name || "").split(" ")[0] }];
+    if (aktuelleAnsicht === "mitglieder") mitgliederZeichnen(); wichtigZeigen(); $("wichtig").inert = true;
+  };
+  anwenden();
+  const lauf = NEU_LADEN_FOLGE || NEU_LADEN_LAUF;
+  if (lauf) lauf.catch(() => {}).then(() => setTimeout(() => { if (!RG.an || RG.st[RG.i] !== s) return; anwenden(); RG.ziel = rgZiel(s) || RG.ziel; rgHin(); rgLage(); rgPulsStart(s); }, 80));
+}
+function rgMitgliederErgGeburtstagZu() { // Beispiel-Geburtstag wieder weg (nach der Station und beim Ende; doppelt schadet nicht)
+  const a = RG.mgGb; if (!a) return; RG.mgGb = null;
+  if (a.init === INIT) INIT.geburtstageHeute = a.alt;
+  $("wichtig").inert = false; if (INIT) wichtigZeigen(); if (aktuelleAnsicht === "mitglieder" && MITGLIEDER) mitgliederZeichnen();
+}
+const rgMitgliederErgKerze = () => [...document.querySelectorAll("#mitgliederListe .gb-kerze")].find(rgSichtbar)?.closest(".mg-kachel, .zeile, button, .rk-karte") || null;
+const rgMitgliederErgGratZeile = () => [...document.querySelectorAll("#wichtig .zeile")].find((z) => /gratulieren\(/.test(z.getAttribute("onclick") || "")) || null;
+
+const RG_MITGLIEDER_ERG = [
+  // NACH: "📞 Schreiben, anklopfen, anrufen"
+  { v: "mitglieder", vor: () => rgMitgliederErgAnsicht("kacheln"), sel: ["#mgFilter"], puls: ["#mgFilter > .zk", '#mgFilter [data-f="online"]', '#mgFilter [data-f="alle"]'], t: "🟢 Wer ist gerade online?",
+    x: "Oben bei Zeigen schaltest du zwischen Alle und Online um. Online zeigt nur, wer gerade in der App ist – die Zahl dahinter sagt, wie viele. Ein grüner Punkt heißt: gerade da – ein guter Moment für eine kurze Nachricht. Wer seine Online-Anzeige verbirgt, sieht auch die anderen nicht online." },
+  // NACH: "📞 Schreiben, anklopfen, anrufen" (direkt nach der vorigen Ergänzung)
+  { v: "mitglieder", tippVor: () => rgSichtbarer('#mgAnsichtOben [data-a="tafel"]')() || rgSichtbarer("#mgAnsichtOben > .zk")(), vor: () => rgMitgliederErgAnsicht("tafel"), nach: () => rgMitgliederErgAnsicht(null), sel: ["#mitgliederListe .mg-tafel", "#mitgliederListe"],
+    puls: ["#mgAnsichtOben > .zk", '#mgAnsichtOben [data-a="tafel"]', "#mitgliederListe .mg-tafel .mg-led"], t: "📋 Die Anwesenheitstafel",
+    x: "Oben bei Ansicht kannst du auch auf Anwesenheit umschalten. Die Anwesenheitstafel zeigt nur Namen und ein Lämpchen – wer online ist, steht oben. Einen Namen antippen öffnet das Mitglied; dort kannst du schreiben, anklopfen oder anrufen." },
+  // NACH: "🍳 Gruppen"
+  { v: "mitglieder", vor: () => { rgMitgliederErgAnsicht("kacheln"); rgMitgliederErgGeburtstag(); }, sel: [rgMitgliederErgKerze], mussSel: true, t: "🎂 Wer hat Geburtstag?",
+    x: "Hat jemand Geburtstag, steht bei seinem Namen eine kleine Torte mit Kerze – so wie hier als Beispiel. Deinen eigenen Geburtstag sehen die anderen nur, wenn du es in den Einstellungen unter Privatsphäre erlaubst." },
+  // NACH: "🍳 Gruppen" (direkt nach der vorigen Ergänzung)
+  { v: "start", vor: () => rgMitgliederErgGeburtstag(), nach: () => rgMitgliederErgGeburtstagZu(), sel: [rgMitgliederErgGratZeile], mussSel: true, puls: [() => rgMitgliederErgGratZeile()?.querySelector("button")], t: "💬 Gratulieren mit einem Tipp",
+    x: "Auf der Startseite steht es unter Heute wichtig. Ein Tipp auf Gratulieren öffnet den Chat mit dem Geburtstagskind – der Glückwunsch Alles Gute zum Geburtstag steht schon da, du musst nur noch senden." },
+];
+// Ergänzungen an der richtigen Stelle einsetzen (nach der Station mit diesem Titel; mehrere in der Reihenfolge der Liste)
+function rgMitErg(basis, erg, nach) { // setzt direkt in die Liste ein (die Registry bleibt unverändert)
+  const l = basis, gruppen = new Map();
+  erg.forEach((x, i) => { if (!gruppen.has(nach[i])) gruppen.set(nach[i], []); gruppen.get(nach[i]).push(x); });
+  for (const [titel, xs] of gruppen) { const j = l.findIndex((x) => x.t === titel); if (j >= 0) l.splice(j + 1, 0, ...xs); else l.push(...xs); }
+  return l;
+}
+rgMitErg(RG_DIENST, RG_DIENST_ERG, ["📝 Wünsche eintragen", "📝 Wünsche eintragen", "📝 Wünsche eintragen", "📝 Wünsche eintragen", "📝 Wünsche eintragen"]);
+rgMitErg(RG_MITGLIEDER, RG_MITGLIEDER_ERG, ["📞 Schreiben, anklopfen, anrufen", "📞 Schreiben, anklopfen, anrufen", "🍳 Gruppen", "🍳 Gruppen"]);
 const RG_THEMEN_AB = 9; // ab so vielen sichtbaren Videos: Themen-Kacheln statt einer langen Liste
 const RGL = { thema: null, wahl: new Set() };
 const rgSichtbareVideos = () => RUNDGAENGE.filter((r) => !r.nur || r.nur());
@@ -2750,6 +3869,7 @@ function rgListeZeigen() {
     <div class="rgl-fuss"><button type="button" class="knopf haupt" ${n ? "" : "disabled"} onclick="rgListeAbspielen()">▶ ${n ? `${n} angehakte${n === 1 ? "s Video" : " Videos"} nacheinander abspielen` : "Erst Videos anhaken"}</button>
       ${n ? `<button type="button" class="knopf klein" onclick="RGL.wahl.clear();rgListeZeigen()">✕ Häkchen weg</button>` : ""}
       ${ICH?.admin ? `<button type="button" class="knopf klein" onclick="$('rgListeBlatt').remove();rgAuswertung()">📊 Auswertung der Videos</button>` : ""}
+      <button type="button" class="knopf klein" onclick="stimmenWahl()">🗣️ Stimme &amp; Tempo</button>
       <button type="button" class="knopf klein" onclick="$('rgListeBlatt').remove()">Schließen</button></div>
     <label class="rgl-verweis"><input type="checkbox" ${rgvAus() ? "" : "checked"} onchange="rgvAn(this.checked)"> 🎬 In Videos fragen, wenn es zum Thema ein eigenes Video gibt</label>`;
 }
@@ -2897,11 +4017,12 @@ function rgVerweis(s) {
   $("rgText").insertAdjacentHTML("afterend", `<div class="rg-verweis" id="rgVerweis"><b>🎬 Dazu gibt es ein eigenes Video: ${v.sym} „${esc(v.t)}“.</b><span>Möchtest du es dir jetzt direkt ansehen?</span>
     <div class="rg-verweis-knoepfe"><button type="button" class="knopf haupt klein" onclick="rgVerweisWahl('ja','${id}')">▶ Ja</button><button type="button" class="knopf klein" onclick="rgVerweisWahl('nein','${id}')">Nein</button>
     <button type="button" class="knopf klein" onclick="rgVerweisWahl('spaeter','${id}')">⏰ Später</button><button type="button" class="knopf klein" onclick="rgVerweisWahl('aus','${id}')">🔕 Nicht mehr fragen</button></div></div>`);
-  if (RG.ton) try { speechSynthesis.speak(sprechAusgabe(`Dazu gibt es ein eigenes Video: ${v.t}. Möchtest du es dir jetzt direkt ansehen?`)); } catch {}
+  const frageText = `Dazu gibt es ein eigenes Video: ${v.t}. Möchtest du es dir jetzt direkt ansehen?`;
+  if (rgpAktiv()) rgpSprich(frageText).catch(() => {}); else if (RG.ton) try { speechSynthesis.speak(rgAusgabe(frageText)); } catch {}
   rgLage(); return true;
 }
 function rgVerweisWahl(w, id) {
-  $("rgVerweis")?.remove(); try { speechSynthesis.cancel(); } catch {}
+  $("rgVerweis")?.remove(); try { speechSynthesis.cancel(); } catch {} rgpStopp();
   if (w === "ja") { RG.fortsetzen = { id: RG.tour, i: RG.i + 1, liste: (RG.liste || []).slice(), von: RG.von }; const f = RG.fortsetzen; rundgangStart(false, id, []); RG.fortsetzen = f; return; }
   if (w === "spaeter") { rgvSpaeterSetzen([...rgvSpaeter(), id]); RGL.wahl.add(id); melde("📌 Gemerkt – unter 🎬 Erklär-Videos ist es schon angehakt."); }
   if (w === "aus") { try { localStorage.setItem(RGV.AUS, "1"); } catch {} melde("🔕 Gut – ich frage in den Videos nicht mehr nach. Wieder einschalten: unten in der Liste der Erklär-Videos."); }
@@ -2920,15 +4041,219 @@ function rundgangStart(mitKnopf, id = "ueberblick", liste = [], startI = 0) {
   if (tour.id === "warum" && !rgErledigt()) rgHinweisErledigt("angesehen"); // 2.254.0: die Einleitung zählt genauso
   RG.i = Math.max(0, Math.min(RG.st.length - 1, startI | 0)); RG.pause = !!mitKnopf; RG.ton = "speechSynthesis" in window; document.body.classList.add("rg-an");
   document.body.insertAdjacentHTML("beforeend", `<div class="rg-schicht" id="rgSchicht" role="dialog" aria-modal="true" aria-label="${esc(tour.t)}"><div class="rg-loch" id="rgLoch"></div>
-    <div class="rg-tafel" id="rgTafel"><div class="rg-oben"><b id="rgTitel"></b><span class="rg-nr" id="rgNr"></span></div><p id="rgText"></p><div class="rg-balken"><i id="rgBalken"></i></div>
+    <div class="rg-tafel" id="rgTafel"><div class="rg-oben"><b id="rgTitel"></b><span class="rg-oben-r"><button type="button" class="rg-stimme" onclick="stimmenWahl()" aria-label="Stimme und Tempo der Videos wählen" title="Stimme &amp; Tempo">🗣️</button><span class="rg-nr" id="rgNr"></span></span></div><p id="rgText"></p><div class="rg-balken"><i id="rgBalken"></i></div>
     <div class="rg-knoepfe"><button type="button" class="knopf klein" onclick="rundgangSchritt(-1)" aria-label="Zurück">◀</button><button type="button" class="knopf haupt klein" id="rgPause" onclick="rundgangPause()"></button><button type="button" class="knopf klein" onclick="rundgangSchritt(1)" aria-label="Weiter">▶</button><button type="button" class="knopf klein" onclick="rundgangEnde()">✕ Beenden</button></div></div></div>`);
   addEventListener("resize", rgLage); addEventListener("scroll", rgLage, true);
   rgWach();
   rgZeigen();
+  rgpCtx(); { const pid = rgpId(); if (pid && RGP.bereit !== pid) rgpLaden(pid).catch(() => {}); } // gewählte Download-Stimme startklar machen (aus dem Speicher)
+  if (!rgsGefragt() && (RG.ton || rgpKann())) stimmenWahl(true); // 2.348.0: beim ersten Video die Stimme aussuchen lassen
 }
 // Bildschirm bleibt an, solange der Rundgang läuft (sonst geht er nach 30 Sek. ohne Tippen aus); nach dem Zurückkehren in die App neu holen
 async function rgWach() { if (!RG.an || document.hidden) return; try { RG.wach?.release?.(); RG.wach = await navigator.wakeLock?.request("screen"); } catch {} }
 document.addEventListener("visibilitychange", () => { if (!RG.an) return; if (document.hidden) { RG.pause = true; rgStille(); } else { rgWach(); rgZeigen(); } });
+// ---------- 2.348.0 KC-CLUB-VIDEO-STIMMEN (Wunsch Hansi „am Anfang verschiedene Stimmen für das Erklär-Video anbieten – eine Auswahl, falls eine
+// Stimme sich nicht gut anhört; in Supabase eine Tabelle mit Stimmen, die man bei Bedarf nachladen kann“) ----------
+// Die Stimmen selbst stecken im Handy/Browser (Web Speech) und lassen sich nicht aus dem Netz laden. Die Tabelle kc_club_video_stimmen (Aktion „stimmen“)
+// liefert Erkennungsmuster für gute Stimmen je Gerät (Güte, Tempo, Tonhöhe) und Anleitungen, wie man bessere Stimmen ins Gerät lädt.
+// Geholt wird sie nur bei Bedarf (Auswahl öffnen) und 7 Tage gemerkt; ohne Netz gilt die eingebaute Grundliste.
+// Gewählt wird je Gerät: eigene Video-Stimme + Tempo (unabhängig von der Vorlese-Stimme in den Einstellungen). Gespeichert: nur localStorage.
+const RGS = { KEY: "kc_club_video_stimme", TEMPO: "kc_club_video_tempo", GEFRAGT: "kc_club_video_stimme_gefragt", TAB: "kc_club_stimmen_tab", tab: null, laedt: null, probe: 0 };
+const RGS_GRUND = () => [ // Grundliste, falls die Tabelle (noch) nicht geladen ist – gleich wie die Startzeilen in der Migration
+  { plattform: "alle", art: "stimme", muster: "(online|natural)", name: "Natürliche Online-Stimme", guete: 3, tempo: 1, hoehe: 1 },
+  { plattform: "alle", art: "stimme", muster: "premium|erweitert|enhanced", name: "Premium/Erweitert", guete: 3, tempo: 1, hoehe: 1 },
+  { plattform: "alle", art: "stimme", muster: "^google deutsch", name: "Google Deutsch", guete: 2, tempo: 1, hoehe: 1 },
+  { plattform: "alle", art: "stimme", muster: STIMME_SCHLECHT.source, name: "Spaßstimme", guete: 0, tempo: 1, hoehe: 1 },
+  { plattform: "alle", art: "download", datei: "de_DE-thorsten-medium", groesse_mb: 63, name: "Thorsten", geschlecht: "m", guete: 3, text: "Männerstimme, klar und natürlich – die beste freie deutsche Stimme", reihenfolge: 1 },
+  { plattform: "alle", art: "download", datei: "de_DE-kerstin-low", groesse_mb: 63, name: "Kerstin", geschlecht: "w", guete: 2, text: "Frauenstimme, freundlich", reihenfolge: 2 },
+  { plattform: "alle", art: "download", datei: "de_DE-eva_k-x_low", groesse_mb: 21, name: "Eva", geschlecht: "w", guete: 2, text: "Frauenstimme – klein und schnell geladen, etwas einfacher im Klang", reihenfolge: 3 },
+  { plattform: "alle", art: "download", datei: "de_DE-ramona-low", groesse_mb: 63, name: "Ramona", geschlecht: "w", guete: 2, text: "Frauenstimme, ruhig", reihenfolge: 4 },
+  { plattform: "alle", art: "download", datei: "de_DE-karlsson-low", groesse_mb: 63, name: "Karlsson", geschlecht: "m", guete: 2, text: "Männerstimme, tief", reihenfolge: 5 },
+];
+const RGS_TEMPI = [[0.8, "🐢 Langsamer"], [1, "Normal"], [1.15, "🐇 Schneller"]];
+function rgsPlattform() {
+  const u = navigator.userAgent || "";
+  return /iPhone|iPad|iPod/.test(u) || (/Macintosh/.test(u) && navigator.maxTouchPoints > 1) ? "ios" : /Android/.test(u) ? "android" : /Mac/.test(u) ? "mac" : /Windows/.test(u) ? "windows" : "alle";
+}
+function rgsTabelle() { // gemerkte Tabelle (≤ 7 Tage) oder Grundliste
+  if (RGS.tab) return RGS.tab;
+  try { const g = JSON.parse(localStorage.getItem(RGS.TAB) || "null"); if (g?.l?.length && Date.now() - g.z < 7 * 864e5) return (RGS.tab = g.l); } catch {}
+  return RGS_GRUND();
+}
+function rgsNachladen(neu) { // bei Bedarf vom Server holen
+  if (RGS.laedt) return RGS.laedt;
+  if (!neu && RGS.tab) return Promise.resolve(RGS.tab);
+  RGS.laedt = api("stimmen", {}).then((r) => { const l = (r?.stimmen || []).filter((x) => x && x.name); if (l.length) { RGS.tab = l; try { localStorage.setItem(RGS.TAB, JSON.stringify({ z: Date.now(), l })); } catch {} } return rgsTabelle(); })
+    .catch(() => rgsTabelle()).finally(() => { RGS.laedt = null; });
+  return RGS.laedt;
+}
+function rgsTreffer(v) { // passende Tabellenzeile für eine Gerätestimme (eigene Plattform zuerst)
+  const pf = rgsPlattform();
+  return rgsTabelle().filter((x) => x.art === "stimme" && x.muster && (x.plattform === "alle" || x.plattform === pf))
+    .sort((a, b) => (b.plattform === pf) - (a.plattform === pf) || (a.reihenfolge ?? 100) - (b.reihenfolge ?? 100))
+    .find((x) => { try { return new RegExp(x.muster, "i").test(v.name); } catch { return false; } }) || null;
+}
+const rgsGuete = (v) => { const t = rgsTreffer(v); return t ? Number(t.guete) : stimmeWert(v) >= 6 ? 3 : STIMME_SCHLECHT.test(v.name) ? 0 : 1; };
+const rgsWert = (v) => rgsGuete(v) * 10 + stimmeWert(v);
+const rgsSterne = (g) => ["🤪 Spaßstimme", "Standard", "⭐ Gut", "⭐⭐ Sehr gut"][g] || "Standard";
+const rgsName = (v) => String(v.name).replace(/^Microsoft\s+/i, "").replace(/\s+Online\s*\(Natural\)/i, " (natürlich)").replace(/\s*-\s*German.*$/i, "").replace(/\s*\(Deutsch[^)]*\)\)?$/i, "").trim() || v.name;
+function rgsStimmen() { return [...deStimmen()].sort((a, b) => rgsWert(b) - rgsWert(a)); }
+function rgsTempo() { try { const t = Number(localStorage.getItem(RGS.TEMPO)); return t >= 0.5 && t <= 1.5 ? t : 1; } catch { return 1; } }
+function rgsStimme() { // gewählte Video-Stimme, sonst die beste – nie eine Spaßstimme automatisch
+  const alle = rgsStimmen(); if (!alle.length) return null;
+  let w = ""; try { w = localStorage.getItem(RGS.KEY) || ""; } catch {}
+  return alle.find((v) => v.voiceURI === w) || alle.find((v) => rgsGuete(v) > 0) || deStimme();
+}
+function rgAusgabe(text) { // Satz für die Videos: eigene Stimme, Tempo und Tonhöhe
+  const u = sprechAusgabe(text), v = rgsStimme(); if (!v) return u;
+  const t = rgsTreffer(v); u.voice = v; u.lang = v.lang; u.rate = rgsTempo() * (Number(t?.tempo) || 1); u.pitch = Number(t?.hoehe) || 1;
+  return u;
+}
+const rgsGefragt = () => { try { return localStorage.getItem(RGS.GEFRAGT) === "1"; } catch { return true; } };
+function rgsProbe(uri) {
+  try { speechSynthesis.cancel(); } catch {} rgpStopp();
+  if (String(uri || rgsWahlWert()).startsWith("piper:")) return rgpProbe(String(uri || rgsWahlWert()).slice(6));
+  const alt = (() => { try { return localStorage.getItem(RGS.KEY); } catch { return null; } })();
+  try { if (uri) localStorage.setItem(RGS.KEY, uri); } catch {}
+  try { speechSynthesis.speak(rgAusgabe(`Hallo ${ICH?.vorname || ""}! So klinge ich in den Erklär-Videos der Köcheclub-App.`)); } catch {}
+  try { if (uri) { if (alt) localStorage.setItem(RGS.KEY, alt); else localStorage.removeItem(RGS.KEY); } } catch {}
+}
+const rgsWahlWert = () => { try { return localStorage.getItem(RGS.KEY) || ""; } catch { return ""; } };
+function rgsWahl(uri) {
+  try { uri ? localStorage.setItem(RGS.KEY, uri) : localStorage.removeItem(RGS.KEY); } catch {}
+  const pid = String(uri || "").startsWith("piper:") ? uri.slice(6) : null;
+  rgpCtx(); // Ton freischalten (iPhone: nur direkt nach einem Tipp)
+  if (pid && RGP.bereit !== pid) { rgpLaden(pid).then(() => { if (rgsWahlWert() === uri) rgsProbe(); }).catch(() => {}); rgsZeigen(); return; } // erst holen, dann Probe
+  rgsZeigen(); rgsProbe();
+}
+function rgsTempoWahl(t) { try { localStorage.setItem(RGS.TEMPO, String(t)); } catch {} rgsZeigen(); rgsProbe(); }
+// ---------- 2.348.0 KC-CLUB-VIDEO-STIMMEN-DOWNLOAD (Wunsch Hansi „User sucht sich eine Stimme aus und klickt sie an – die App holt sie
+// aus der DB und installiert sie je nach Browser“) ----------
+// Freie Piper-Stimmen rechnen im Browser selbst (stimmen/piper-worker.js: ONNX Runtime + eSpeak-Aussprache) – auf jedem Gerät und in jedem
+// Browser gleich. Welche angeboten werden, steht in der Tabelle (art „download“); die Dateien liegen neben der App unter stimmen/.
+// Ein Tipp auf die Stimme lädt sie einmal (Fortschritt in %), danach liegt sie im Browser-Speicher und klappt auch ohne Netz.
+// Probe vor dem Laden: kurze Hörprobe (stimmen/proben/…mp3). Gerechnet wird Satz für Satz – der nächste, während der vorige läuft.
+const RGP = { w: null, da: new Set(), bereit: null, laedt: null, prozent: 0, nr: 0, lauf: 0, quelle: null, ctx: null, warte: new Map(), probe: null, ok: null, schief: null };
+const rgpId = () => { const w = rgsWahlWert(); return w.startsWith("piper:") ? w.slice(6) : null; };
+const rgpListe = () => rgsTabelle().filter((x) => x.art === "download" && /^[\w-]{3,80}$/.test(x.datei || "")).sort((a, b) => (a.reihenfolge ?? 100) - (b.reihenfolge ?? 100));
+const rgpKann = () => typeof Worker !== "undefined" && typeof WebAssembly !== "undefined" && "caches" in window && !!(window.AudioContext || window.webkitAudioContext);
+const rgpAktiv = () => { const id = rgpId(); return !!id && RGP.bereit === id; };
+function rgpWorker() {
+  if (RGP.w) return RGP.w;
+  RGP.w = new Worker("stimmen/piper-worker.js");
+  RGP.w.onmessage = (e) => rgpNachricht(e.data || {});
+  RGP.w.onerror = () => rgpNachricht({ typ: "fehler", text: "Die Stimme konnte nicht starten" });
+  RGP.w.postMessage({ typ: "da" });
+  return RGP.w;
+}
+function rgpNachricht(d) {
+  if (d.typ === "da") { RGP.da = new Set(d.liste || []); rgsZeigen(); }
+  else if (d.typ === "fortschritt") { RGP.prozent = d.gesamt ? Math.min(99, Math.round((d.geladen * 100) / d.gesamt)) : 0; const el = $("rgpProzent"); if (el) el.textContent = `⏳ ${RGP.prozent} %`; }
+  else if (d.typ === "bereit") { RGP.bereit = d.id; RGP.laedt = null; RGP.da.add(d.id); const f = RGP.ok; RGP.ok = RGP.schief = null; f?.(); rgsZeigen(); }
+  else if (d.typ === "audio") { const w = RGP.warte.get(d.nr); RGP.warte.delete(d.nr); w?.ok(d); }
+  else if (d.typ === "fehler") {
+    if (d.nr != null) { const w = RGP.warte.get(d.nr); RGP.warte.delete(d.nr); w?.weg(new Error(d.text)); return; }
+    RGP.laedt = null; const f = RGP.schief; RGP.ok = RGP.schief = null; f?.(new Error(d.text));
+    melde(navigator.onLine === false ? "📶 Ohne Netz kann die Stimme nicht geladen werden – bitte im WLAN nochmal versuchen." : "⚠️ Die Stimme ließ sich nicht laden: " + d.text, true); rgsZeigen();
+  }
+}
+function rgpLaden(id) { // holen (oder aus dem Browser-Speicher) und startklar machen
+  if (RGP.bereit === id) return Promise.resolve();
+  if (RGP.laedt === id && RGP.ok) return new Promise((ok, schief) => { const a = RGP.ok, b = RGP.schief; RGP.ok = () => { a?.(); ok(); }; RGP.schief = (e) => { b?.(e); schief(e); }; });
+  try { navigator.storage?.persist?.(); } catch {} // Browser soll die Stimme nicht von selbst wegräumen
+  RGP.laedt = id; RGP.prozent = 0; RGP.bereit = null;
+  return new Promise((ok, schief) => { RGP.ok = ok; RGP.schief = schief; rgpWorker().postMessage({ typ: "laden", id }); });
+}
+function rgpWeg(id) {
+  rgpStopp(); if (RGP.bereit === id) RGP.bereit = null;
+  if (rgpId() === id) try { localStorage.removeItem(RGS.KEY); } catch {}
+  rgpWorker().postMessage({ typ: "weg", id }); melde("🗑️ Stimme entfernt – sie kann jederzeit wieder geladen werden.");
+}
+function rgpCtx() { // Ton-Ausgabe; auf dem iPhone nur nach einem Tipp freigeschaltet – deshalb bei jedem Tipp „wecken“
+  try { if (!RGP.ctx) RGP.ctx = new (window.AudioContext || window.webkitAudioContext)(); if (RGP.ctx.state === "suspended") RGP.ctx.resume(); } catch {}
+  return RGP.ctx;
+}
+function rgpRechnen(text) { const nr = ++RGP.nr; return new Promise((ok, weg) => { RGP.warte.set(nr, { ok, weg }); rgpWorker().postMessage({ typ: "sprich", nr, text, tempo: rgsTempo() }); }); }
+function rgpAbspielen(d) {
+  return new Promise((ok) => {
+    const ctx = rgpCtx(); if (!ctx || !d?.pcm?.length) return ok();
+    const b = ctx.createBuffer(1, d.pcm.length, d.rate); b.getChannelData(0).set(d.pcm);
+    const q = ctx.createBufferSource(); q.buffer = b; q.connect(ctx.destination); q.onended = () => { if (RGP.quelle === q) RGP.quelle = null; ok(); };
+    RGP.quelle = q; q.start();
+  });
+}
+async function rgpSprich(text) { // true = bis zum Ende gesprochen, false = unterbrochen
+  const lauf = ++RGP.lauf, saetze = (String(text).match(/[^.!?]+[.!?]*/g) || [String(text)]).map((x) => x.trim()).filter(Boolean);
+  if (!saetze.length) return true;
+  let naechst = rgpRechnen(saetze[0]);
+  for (let i = 0; i < saetze.length; i++) {
+    const d = await naechst; if (lauf !== RGP.lauf) return false;
+    naechst = i + 1 < saetze.length ? rgpRechnen(saetze[i + 1]) : null;
+    await rgpAbspielen(d); if (lauf !== RGP.lauf) return false;
+  }
+  return true;
+}
+function rgpStopp() {
+  RGP.lauf++; try { RGP.quelle?.stop(); } catch {} RGP.quelle = null;
+  try { RGP.probe?.pause(); } catch {} RGP.probe = null;
+  if (RGP.w) RGP.w.postMessage({ typ: "abbruch", bis: RGP.nr });
+  for (const [, w] of RGP.warte) w.ok(null); RGP.warte.clear();
+}
+function rgpProbe(id) {
+  rgpStopp();
+  if (RGP.bereit === id) { rgpCtx(); rgpSprich(`Hallo ${ICH?.vorname || ""}! So klinge ich in den Erklär-Videos der Köcheclub-App.`).catch(() => {}); return; }
+  try { RGP.probe = new Audio(`stimmen/proben/${id}.mp3`); RGP.probe.play().catch(() => melde("🔇 Die Hörprobe ließ sich nicht abspielen – ist der Ton an?")); } catch {}
+}
+function rgpZeilen() {
+  if (!rgpKann()) return "";
+  const l = rgpListe(); if (!l.length) return "";
+  const wahl = rgpId();
+  if (!RGP.w) rgpWorker(); // fragt, welche schon geladen sind
+  return `<h4 style="margin:12px 0 4px">⬇️ Stimmen zum Herunterladen</h4>
+    <p class="hinweis" style="margin:0 0 8px">Klingen auf jedem Handy und in jedem Browser gleich und funktionieren nach dem Laden auch ohne Netz. Antippen lädt die Stimme einmal herunter – am besten im WLAN.</p>
+    <div class="rgs-liste">${l.map((x) => { const id = x.datei, da = RGP.da.has(id), an = wahl === id, laedt = RGP.laedt === id, g = Number(x.guete) || 2;
+      return `<div class="rgs-zeile${an ? " an" : ""}"><button type="button" class="rgs-wahl" onclick="rgsWahl('piper:${id}')" aria-pressed="${an}">
+        <span aria-hidden="true">${an ? "🔘" : "⚪"}</span><span><b>${esc(x.name)}</b><small>${rgsSterne(g)}${x.geschlecht ? (x.geschlecht === "m" ? " · 👨" : " · 👩") : ""}${x.text ? " · " + esc(x.text) : ""}</small>
+        <small>${laedt ? `<span id="rgpProzent">⏳ ${RGP.prozent} %</span> – wird geladen …` : da ? "✓ geladen – klappt auch ohne Netz" : `⬇️ antippen zum Laden (${Number(x.groesse_mb) || "?"} MB${RGP.da.size ? "" : " + einmalig 29 MB für die Sprach-Technik"})`}</small></span></button>
+        <span class="rgs-knoepfe"><button type="button" class="knopf klein" onclick="rgpCtx();rgsProbe('piper:${id}')" aria-label="Probe hören: ${esc(x.name)}">▶ Probe</button>${da && !laedt ? `<button type="button" class="knopf klein" onclick="rgpWeg('${id}')" aria-label="${esc(x.name)} entfernen" title="Vom Gerät entfernen">🗑️</button>` : ""}</span></div>`; }).join("")}</div>
+    <h4 style="margin:12px 0 4px">📱 Stimmen deines Geräts</h4>`;
+}
+// Auswahl öffnen: beimStart = vor dem ersten Video (danach geht es los); sonst aus dem Video (🗣️) oder aus der Video-Liste
+function stimmenWahl(beimStart) {
+  RGS.beimStart = !!beimStart; RGS.alle = false;
+  if (RG.an && !RG.pause) { RG.pause = true; rgStille(); RG.warteStimme = true; $("rgPause").textContent = "▶ Weiter"; } // Video hält an, solange gewählt wird
+  const f = $("rgsBlatt") || blattAuf("rgsBlatt", `<div id="rgsInhalt"></div>`);
+  f.classList.add("rgs-blatt", "rg-zeigen"); f.onclick = (e) => { if (e.target === f) rgsFertig(); }; rgsZeigen();
+  rgsNachladen(true).then(() => rgsZeigen());
+}
+function rgsZeigen() {
+  const z = $("rgsInhalt"); if (!z) return;
+  const alle = rgsStimmen(), jetzt = rgsStimme(), tempo = rgsTempo(), pf = rgsPlattform();
+  let w = ""; try { w = localStorage.getItem(RGS.KEY) || ""; } catch {}
+  const gute = alle.filter((v) => rgsGuete(v) > 0), zeigen = RGS.alle ? alle : gute.slice(0, 6);
+  const hinweise = rgsTabelle().filter((x) => x.art === "hinweis" && (x.plattform === pf || x.plattform === "alle"));
+  const zeile = (v) => { const g = rgsGuete(v), t = rgsTreffer(v), an = !rgpId() && jetzt && v.voiceURI === jetzt.voiceURI, art = t?.geschlecht || stimmeArt(v);
+    return `<div class="rgs-zeile${an ? " an" : ""}"><button type="button" class="rgs-wahl" onclick="rgsWahl('${esc(v.voiceURI).replace(/'/g, "&#39;")}')" aria-pressed="${an}">
+      <span aria-hidden="true">${an ? "🔘" : "⚪"}</span><span><b>${esc(t && g > 1 && !/^Apple-Stimme|^Google-Sprach|^Samsung/.test(t.name) ? t.name : rgsName(v))}</b><small>${rgsSterne(g)}${art ? (art === "m" ? " · 👨" : " · 👩") : ""}${t?.text ? " · " + esc(t.text) : ""}</small></span></button>
+      <button type="button" class="knopf klein" onclick="rgsProbe('${esc(v.voiceURI).replace(/'/g, "&#39;")}')" aria-label="Probe hören: ${esc(v.name)}">▶ Probe</button></div>`; };
+  z.innerHTML = `<h3 style="margin-top:0">🗣️ Welche Stimme soll dir die Videos erklären?</h3>${rgpZeilen()}
+    ${alle.length ? `<p class="hinweis" style="margin:0 0 8px">Tippe auf <b>▶ Probe</b>, um eine Stimme zu hören. Gefällt sie dir, tippe auf ihren Namen.${w ? "" : " Ohne Auswahl nimmt die App die beste Stimme."}</p>
+      <div class="rgs-liste">${zeigen.map(zeile).join("")}</div>
+      ${alle.length > zeigen.length || RGS.alle ? `<button type="button" class="knopf klein" onclick="RGS.alle=!RGS.alle;rgsZeigen()">${RGS.alle ? "Nur die guten Stimmen" : `Alle ${alle.length} Stimmen zeigen`}</button>` : ""}
+      ${w ? `<button type="button" class="knopf klein" onclick="rgsWahl('')">↺ Automatisch (beste Gerätestimme)</button>` : ""}`
+      : `<p class="hinweis">Dieses Gerät hat ${"speechSynthesis" in window ? "noch keine deutsche Stimme geladen" : "keine Sprachausgabe"}. Die Videos laufen trotzdem – der Text steht zum Mitlesen da.</p>`}
+    <h4 style="margin:12px 0 6px">⏱️ Wie schnell soll sie sprechen?</h4>
+    <div class="rgs-tempo">${RGS_TEMPI.map(([t, n]) => `<button type="button" class="chip${Math.abs(t - tempo) < 0.01 ? " an" : ""}" onclick="rgsTempoWahl(${t})">${n}</button>`).join("")}</div>
+    ${hinweise.length ? `<details class="rgs-hinweis"><summary>💡 Klingt keine Stimme gut? So bekommst du bessere</summary>${hinweise.map((h) => `<p><b>${esc(h.name)}</b><br>${esc(h.text || "")}</p>`).join("")}</details>` : ""}
+    <div class="rgl-fuss"><button type="button" class="knopf haupt" onclick="rgsFertig()">${RGS.beimStart ? "▶ Mit dieser Stimme starten" : "✅ Fertig"}</button></div>`;
+}
+function rgsFertig() {
+  try { localStorage.setItem(RGS.GEFRAGT, "1"); speechSynthesis.cancel(); } catch {} rgpStopp();
+  $("rgsBlatt")?.remove();
+  RGS.beimStart = false;
+  if (RG.an && RG.warteStimme) { RG.warteStimme = false; RG.pause = false; rgZeigen(); } // weiter, wo das Video stand
+}
+try { speechSynthesis.addEventListener?.("voiceschanged", () => { if ($("rgsInhalt")) rgsZeigen(); }); } catch {}
 // KC-CLUB-RUNDGANG-HINWEIS (2.243.0, Wunsch Hansi): einmal auf der Startseite anbieten – „▶ Jetzt ansehen“, „Später“ (morgen wieder),
 // „Nein, danke“ (nie wieder). Erledigt wird geräteübergreifend gemerkt (Server-Einstellung „rundgang“), „Später“ nur auf diesem Gerät.
 const RG_SPAETER = "kc_club_rg_spaeter";
@@ -2951,7 +4276,7 @@ async function rgHinweisErledigt(wie) {
 }
 function rgHinweisSpaeter() { try { localStorage.setItem(RG_SPAETER, heuteIso()); } catch {} rgHinweisZeigen(); melde("🎬 Ich frage morgen nochmal – oder jederzeit in ❓ Hilfe & Tipps"); }
 function rgHinweisLos() { rundgangStart(false, "warum"); } // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: zuerst die Einleitung
-function rgStille() { rgPulsStop(); $("rgVerweis")?.remove(); clearTimeout(RG.uhr); RG.lauf++; RG.liveTok++; RG.liveLaeuft = false; RG.nachLive = null; RG.tippLaeuft = false; rgFingerWeg(); try { if (RG.ton) speechSynthesis.cancel(); } catch {} }
+function rgStille() { rgPulsStop(); $("rgVerweis")?.remove(); clearTimeout(RG.uhr); RG.lauf++; RG.liveTok++; RG.liveLaeuft = false; RG.nachLive = null; RG.tippLaeuft = false; rgFingerWeg(); try { if (RG.ton) speechSynthesis.cancel(); } catch {} rgpStopp(); }
 function rgZeigen() {
   if (!RG.an || RG.frage) return; // Bewertungs-Karte am Ende bleibt stehen
   rgStille();
@@ -2995,10 +4320,15 @@ function rgSprechen(text) {
   const lauf = RG.lauf, saetze = text.match(/[^.!?]+[.!?]*/g) || [text], lesezeit = 2500 + text.split(/\s+/).length * 420, frueh = Date.now() + lesezeit * 0.75;
   const weiter = () => { if (lauf === RG.lauf && RG.an && !RG.pause && RG.liveLaeuft) { RG.nachLive = weiter; return; } // erst die Live-Vorführung zu Ende
     if (lauf === RG.lauf && RG.an && !RG.pause) { clearTimeout(RG.uhr); RG.uhr = setTimeout(() => { if (!rgVerweis(RG.st[RG.i])) rundgangSchritt(1, true); }, Math.max(1200, frueh - Date.now())); } };
+  if (rgpAktiv()) { // 2.348.0: heruntergeladene Stimme spricht
+    RG.uhr = setTimeout(weiter, lesezeit * 3 + 8000); // Sicherheitsnetz (Rechnen dauert auf alten Handys etwas)
+    rgpSprich(text).then((fertig) => { if (fertig && lauf === RG.lauf) weiter(); }).catch(() => { if (lauf === RG.lauf) weiter(); });
+    return;
+  }
   if (!RG.ton) return weiter();
   RG.uhr = setTimeout(weiter, lesezeit * 1.8); // Sicherheitsnetz
   try {
-    saetze.forEach((x, n) => { const u = sprechAusgabe(x.trim()); if (n === saetze.length - 1) { u.onend = weiter; u.onerror = (e) => { if (e?.error !== "interrupted" && e?.error !== "canceled") weiter(); }; } speechSynthesis.speak(u); });
+    saetze.forEach((x, n) => { const u = rgAusgabe(x.trim()); if (n === saetze.length - 1) { u.onend = weiter; u.onerror = (e) => { if (e?.error !== "interrupted" && e?.error !== "canceled") weiter(); }; } speechSynthesis.speak(u); });
   } catch { weiter(); }
 }
 function rgLage() {
@@ -3324,6 +4654,7 @@ const HILFE = [
   { id: "kachel_lang", thema: "start", sym: "🧩", t: "Startseite aufräumen: Kacheln verschieben", x: "Du möchtest deinen Bildschirm aufräumen oder umorganisieren? Drück auf der Startseite eine Kachel <b>lange</b> (gut eine halbe Sekunde) – dann öffnet sich „Anordnen“ und die Kachel hängt an deinem Finger. Zieh sie an den neuen Platz und lass los. Mit ◀ ▶ ▲ ▼ geht es auch Schritt für Schritt. Fertig? „✅ Fertig“ tippen.", zeig: () => { zeige("start"); kaBearbeiten(true); } },
   { id: "kachel_aus", thema: "start", sym: "🙈", t: "Kacheln ausblenden und wieder holen", x: "Beim Anordnen hat jede Kachel oben ein <b>✕</b> – damit blendest du sie aus, deine Daten bleiben erhalten. Ausgeblendete Kacheln stehen blass dazwischen und kommen mit <b>👁️ Einblenden</b> zurück. Unter den Kacheln steht außerdem „🙈 … ausgeblendete Kacheln – anzeigen“. (Nur in der erweiterten Ansicht.)", zeig: () => { zeige("start"); kaBearbeiten(true); } },
   { id: "erklaervideos", thema: "start", sym: "🎬", t: "Erklär-Videos mit Ton", x: "Kurze Rundgänge mit Ton, die dir Schritt für Schritt zeigen, wie etwas geht: <b>alle Einstellungen</b> mit Beispielen (z. B. wie die App in einer anderen Farbe aussieht), <b>Nachricht schreiben</b>, <b>Termin eintragen</b>, <b>Zettel an die Pinnwand</b> und <b>Vorschlag einreichen</b>. Dabei wird nichts gespeichert oder gesendet, und alles bleibt, wie du es eingestellt hast. Zu finden im Register <b>Technik → 🎬 Erklär-Videos</b>, oben in <b>❓ Hilfe &amp; Tipps</b> und unter <b>⚙️ Mehr</b>. Gibt es zu einem Thema ein eigenes Video, fragt das Video nach: <b>▶ Ja</b> (danach geht es an derselben Stelle weiter), <b>Nein</b>, <b>⏰ Später</b> (in der Liste mit 📌 gemerkt und schon angehakt) oder <b>🔕 Nicht mehr fragen</b> – wieder einschalten unten in der Liste der Erklär-Videos.", zeig: () => erklaerVideos(), seit: "2.346.0" }, // KC-CLUB-ERKLAERVIDEOS (2.244.0), 2.346.0 KC-CLUB-VIDEO-VERWEIS
+  { id: "video_stimme", thema: "start", sym: "🗣️", t: "Stimme und Tempo der Erklär-Videos", x: "Beim ersten Erklär-Video fragt die App, <b>welche Stimme</b> dir die Videos erklären soll. Mit <b>▶ Probe</b> hörst du jede Stimme vorher, gute Stimmen haben Sterne. Ganz oben stehen <b>⬇️ Stimmen zum Herunterladen</b> (Thorsten, Kerstin, Eva, Ramona, Karlsson): einmal antippen lädt sie aufs Gerät (21 bis 63 MB, am besten im WLAN) – danach klingen sie auf jedem Handy gleich und sprechen auch ohne Netz. Mit 🗑️ entfernst du eine Stimme wieder. Dazu wählst du das <b>Tempo</b>: 🐢 Langsamer, Normal oder 🐇 Schneller. Ändern kannst du das jederzeit mit <b>🗣️</b> oben im laufenden Video oder unten in der Liste der Erklär-Videos. Klingt keine Stimme gut, steht dort auch, wie du eine <b>bessere Stimme ins Handy lädst</b> (iPhone, Android, PC). Die Liste der guten Stimmen pflegt Hansi auf dem Server – sie wird nur bei Bedarf geholt.", zeig: () => stimmenWahl(), seit: "2.348.0" }, // 2.348.0 KC-CLUB-VIDEO-STIMMEN
   { id: "rundgang", thema: "start", sym: "🎬", t: "Rundgang durch die App (mit Ton)", x: "Die App zeigt dir in etwa 3 Minuten, wie sie aussieht und was sie kann – die Stimme deines Handys erklärt dabei jede Station. Du musst nichts antippen; mit <b>⏸ Pause</b>, <b>◀ ▶</b> und <b>✕ Beenden</b> steuerst du. Starten: hier mit <b>👉 Zeig mir wo</b>, oben in <b>❓ Hilfe &amp; Tipps</b> oder unter <b>⚙️ Mehr</b>. Weitere <b>🎬 Erklär-Videos</b> (alle Einstellungen, Nachricht schreiben, Termin eintragen, Pinnwand, Vorschläge) im Register <b>Technik</b>. Kein Ton? Dann Lautstärke prüfen – der Text steht auch zum Lesen da.", zeig: () => rundgangStart() }, // KC-CLUB-RUNDGANG (2.241.0)
   { id: "register_ziehen", thema: "start", sym: "↔️", t: "Register umsortieren (Club, Meins, Technik …)", x: "Ein Register oben auf der Startseite <b>festhalten</b>, bis es sich hebt – dann nach links oder rechts ziehen und loslassen. Die App merkt sich deine Reihenfolge auf allen deinen Geräten. (Nur in der erweiterten Ansicht.)", zeig: () => zeige("start") },
   { id: "register_wischen", thema: "start", sym: "👆", t: "Zwischen den Registern wischen", x: "Auf der Startseite wischst du über die Kacheln nach <b>links oder rechts</b> und kommst zum nächsten Register. Die kleine Zahl am Register zeigt, wie viele Kacheln darin liegen – „8/10“ heißt: 2 sind ausgeblendet.", zeig: () => zeige("start") },
@@ -3401,7 +4732,7 @@ const HILFE = [
   { id: "wiederholen", thema: "termine", sym: "🔁", t: "Termine, die immer wiederkommen", x: "Jeden Dienstag Chorprobe? Beim Anlegen eines privaten Termins wählst du unter <b>„🔁 Wiederholen“</b> täglich, werktags, wöchentlich, alle 2 Wochen und mehr – dann trägst du ihn nur einmal ein.", zeig: () => zeige("termine"), seit: "2.23.1" },
   { id: "todo", thema: "termine", sym: "✅", t: "Gemeinsame To-do-Liste", x: "In den Terminen gibt es oben den Reiter <b>„✅ To-do“</b> – zum Beispiel für Einkäufe oder Bestellungen. Mit <b>„👉 Wer soll es machen?“</b> kannst du eine Aufgabe auch an mehrere Leute verteilen.", zeig: () => { termineArt = "todo"; zeige("termine"); }, seit: "2.23.1" },
   { id: "terminanfrage", thema: "termine", sym: "📨", t: "Mit jemandem einen Termin ausmachen", x: "Statt hin und her zu schreiben: Termine → <b>„＋ Neu“</b> → <b>Terminanfrage</b>. Tag, Uhrzeit und Anlass eintragen – der andere antwortet bequem mit Ja, Nein oder Vielleicht.", zeig: () => zeige("termine"), seit: "2.23.1" },
-  { id: "terminfindung", thema: "termine", sym: "🗓️", t: "Einen Tag finden, der allen passt", x: "Ihr sucht einen gemeinsamen Termin? Unter Termine → <b>„＋ Neu“</b> → <b>Terminfindung</b> schlägst du mehrere Tage vor, und jeder kreuzt an, was bei ihm geht.", zeig: () => zeige("termine"), seit: "2.23.1" },
+  { id: "terminfindung", thema: "termine", sym: "🗓️", t: "Einen Tag finden, der allen passt", x: "Ihr sucht einen gemeinsamen Termin? Die <b>Clubleitung</b> schlägt unter Termine → <b>„＋ Neu“</b> → <b>Terminfindung</b> mehrere Tage vor, und jeder kreuzt an, was bei ihm geht. Für deine eigenen Verabredungen nimmst du die <b>📨 Terminanfrage</b>.", zeig: () => zeige("termine"), seit: "2.23.1" }, // 2.348.0: Terminfindung legt nur die Clubleitung an (termineNeuWahl)
   { id: "kalender_blaettern", thema: "termine", sym: "📆", t: "Liste oder Kalender – wie du magst", x: "Oben in den Terminen schaltest du zwischen <b>Liste</b> und <b>Kalender</b> um; die App merkt sich deine Wahl. Im Kalender blätterst du mit <b>‹ ›</b> durch die Monate und mit <b>« »</b> durch die Jahre.", zeig: () => zeige("termine"), seit: "2.23.1" },
   { id: "drucken", thema: "termine", sym: "🖨️", t: "Termine auf Papier", x: "Lieber etwas zum Anheften am Kühlschrank? Das schmale <b>Druckersymbol</b> rechts in der Kopfzeile druckt Termine, Kalender oder To-dos – oder speichert sie als PDF.", zeig: () => zeige("termine"), seit: "2.23.1" },
   { id: "naechstes_treffen", thema: "termine", sym: "⏳", t: "Direkt zum nächsten Treffen", x: "Das Feld <b>„Nächster Termin“</b> oben auf der Startseite ist mehr als eine Anzeige: Antippen öffnet die Termine gleich beim nächsten Treffen.", zeig: () => zeige("start"), seit: "2.23.1" },
@@ -4971,7 +6302,12 @@ function hzZurueckZurHilfe() {
 function hzKarte(e, nr, themaZeigen) {
   const th = HILFE_THEMEN.find((x) => x.id === e.thema);
   return `<div class="karte hz-eintrag vorlese-karte" data-hz="${e.id}">${themaZeigen && th ? `<div class="hz-wo">Kapitel ${esc(nr.split(".")[0])} · ${th.sym} ${esc(th.t)}</div>` : ""}<h3><span class="hz-nr">${esc(nr)}</span><span>${e.sym} ${esc(e.t)}${hzIstNeu(e, HZ.vorher) ? ' <span class="hz-neu">neu</span>' : ""}</span></h3><p>${e.x}</p>
-    <div class="knoepfe">${e.los ? `<button class="knopf haupt klein" onclick="hzLos('${e.id}')">👉 Zeig mir wo</button>` : ""}${VORLESE_KNOPF}</div>${hzBewHtml(e.id)}</div>`;
+    <div class="knoepfe">${e.los ? `<button class="knopf haupt klein" onclick="hzLos('${e.id}')">👉 Zeig mir wo</button>` : ""}${hzVideoKnoepfe(e.id)}${VORLESE_KNOPF}</div>${hzBewHtml(e.id)}</div>`;
+}
+// 2.348.0 KC-CLUB-VIDEO-VERKNUEPFT: gibt es zum Hilfe-Thema ein Erklär-Video, steht der Knopf gleich darunter
+function hzVideoKnoepfe(id) {
+  const v = (TW_VIDEOS[id] || []).map((x) => RUNDGAENGE.find((r) => r.id === x && (!r.nur || r.nur()))).filter(Boolean);
+  return v.map((r) => `<button type="button" class="knopf klein" onclick="rundgangStart(false,'${r.id}')">🎬 Video: ${esc(r.t)}</button>`).join("");
 }
 // ---------- KC-CLUB-HILFE-BEWERTUNG (2.23.34, Wunsch Hansi): „Hat dir das weitergeholfen? 👍 / 👎“ unter jeder Hilfe ----------
 // Eigene Wahl merkt das Gerät (Anzeige), gespeichert wird auf dem Server (je Person + Hilfe eine Zeile). Bei 👎 freiwillig: was hat gefehlt?
@@ -6991,6 +8327,7 @@ const TW_SYN = [["termin", "verabredung", "treffen", "datum", "verabreden", "aus
 // Twinkeys eigene Fragen und Antworten (Wunsch Hansi: „mehr Fragen und Antworten“) – kurz, mit Sprung an die richtige Stelle
 const TW_FAQ = [
   // 2.344.0 KC-CLUB-HILFE-NACHTRAG: häufige Fragen zu den neuen Möglichkeiten
+  { id: "video-stimme", sym: "🗣️", t: "Die Stimme in den Videos klingt komisch – kann ich eine andere nehmen?", x: "Ja! Tippe im laufenden Video oben auf <b>🗣️</b> oder unten in der Liste der Erklär-Videos auf <b>🗣️ Stimme &amp; Tempo</b>. Mit <b>▶ Probe</b> hörst du jede Stimme, dann tippst du deine an. Besonders gut klingen die <b>⬇️ Stimmen zum Herunterladen</b> – ein Tipp lädt sie aufs Gerät. Auch das Tempo stellst du dort ein. Ist keine gut, steht dort, wie du eine bessere Stimme ins Handy lädst.", los: () => stimmenWahl() },
   { id: "video-verweis", sym: "🎬", t: "Das Video fragt nach einem anderen Video – was jetzt?", x: "Zu manchen Themen gibt es ein eigenes Erklär-Video, zum Beispiel zu Farben und Themen oder zum Eselsohr. Dann fragt das Video: <b>▶ Ja</b> spielt es sofort ab, danach geht es an derselben Stelle weiter. <b>Nein</b> läuft einfach weiter. <b>⏰ Später</b> merkt es dir mit 📌 – in der Liste der Erklär-Videos ist es schon angehakt. <b>🔕 Nicht mehr fragen</b> schaltet die Frage ab; wieder an geht es unten in der Liste der Erklär-Videos." },
   { id: "aussehen", sym: "🎨", t: "Wie passe ich das Aussehen der App an?", x: "Am schnellsten mit einem <b>🎭 Thema</b>: ⚙️ → „🎨 Darstellung“ → Themen – ein Tipp stellt Farben, Bild im Kopf, Sende-Effekt und Schrift passend ein. Einzeln geht es auch: Farbdesign, Tag/Nacht, große Schrift (Darstellung) sowie Jahreszeiten-Bild, Deko an der Leiste und Effekte (⚙️ → „✨ Effekte“). Das Erklär-Video „🎨 Meine App nach meinem Geschmack“ zeigt alles.", los: () => rgListeAbspielen(["anpassen"]) },
   { id: "kopf-ruhig", sym: "🍂", t: "Warum bewegt sich oben im Kopf nichts?", x: "Dann ist entweder <b>„🍂 Jahreszeiten im Kopf“</b> aus (⚙️ → „✨ Effekte“), <b>„✨ Animierte Knöpfe“</b> aus – oder der <b>🐢 Sparmodus</b> hat sich eingeschaltet (⚙️ → „🎨 Darstellung“). Tippst du in den Effekten eine Vorschau an, sagt die App dir den Grund und schaltet mit einem Tipp wieder ein.", los: () => einstiegHin("effekte", "jzWahl") },
@@ -7125,12 +8462,15 @@ async function twFrageStart(vorgabe = "") {
 // KC-CLUB-TWINKEY-VIDEOS (2.252.0, Wunsch Hansi „Du kannst es im Hilfetext nachlesen. Aber es gibt auch Erklär-Videos. Was möchtest du dir
 // ansehen?“): Antwort-Eintrag → passende Erklär-Videos (Registry RUNDGAENGE, nur die für das Mitglied sichtbaren) und der ausführliche Hilfetext.
 // Neue Videos hier einfach dem passenden Eintrag (f: Twinkeys Fragen, h: Hilfe-Zentrum) zuordnen.
-const TW_VIDEOS = { "h:anpassen": ["anpassen"], "h:themen": ["anpassen"], "h:farbe": ["anpassen"], "h:deko_leiste": ["anpassen"], "h:jahreszeit_kopf": ["anpassen", "effekte"], "h:kopf_besucher": ["anpassen"], "h:sparmodus": ["anpassen"], "h:raetsel": ["rueckseite"], "f:aussehen": ["anpassen"], "f:kopf-ruhig": ["anpassen"], "f:raetsel": ["rueckseite"], "h:wetter": ["effekte"], "f:diktieren": ["sprache"], "h:infofeld": ["spezial"], "h:modus_knopf": ["spezial"], "h:frage_knopf": ["spezial"], "h:schnecke": ["spezial"], "f:update": ["technik"], "f:feedback": ["feedback"], "f:dienstwunsch": ["dienst"], "f:dienstplan": ["dienst"], "f:status": ["status"], "f:protokoll": ["lesen"], "f:handbuch": ["lesen"], "f:adresse": ["meinedaten"], "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
+const TW_VIDEOS = { "h:anpassen": ["anpassen"], "h:themen": ["anpassen"], "h:farbe": ["anpassen"], "h:deko_leiste": ["anpassen"], "h:jahreszeit_kopf": ["anpassen", "effekte"], "h:kopf_besucher": ["anpassen"], "h:sparmodus": ["anpassen"], "h:raetsel": ["raetsel", "rueckseite"], "f:aussehen": ["anpassen"], "f:kopf-ruhig": ["anpassen"], "f:raetsel": ["rueckseite"], "h:wetter": ["effekte"], "f:diktieren": ["sprache"], "h:infofeld": ["spezial"], "h:modus_knopf": ["spezial"], "h:frage_knopf": ["einfach", "spezial"], "h:schnecke": ["probleme", "spezial"], "f:update": ["probleme", "technik"], "f:feedback": ["feedback"], "f:dienstwunsch": ["dienst"], "f:dienstplan": ["dienst"], "f:status": ["status"], "f:protokoll": ["lesen"], "f:handbuch": ["lesen"], "f:adresse": ["meinedaten"], "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
   "f:nachricht": ["nachricht", "zentrale", "sprache"], "f:termin-neu": ["termin"], "f:zettel": ["pinnwand"], "f:vorschlag": ["vorschlag"], "f:zusagen": ["zusagen"],
   "f:foto-album": ["fotos"], "f:geld": ["erstattung"], "f:notfall": ["sos"], "f:hilfe-suchen": ["helfen"], "f:leihen": ["helfen"], "f:anrufen": ["mitglieder"], "f:online": ["mitglieder"],
   "f:spielen": ["spiele"], "f:archiv": ["archiv"],
   "f:eselsohr": ["rueckseite"], "f:skizze": ["rueckseite"], "f:buehne": ["rueckseite"], "f:buehne-laut": ["rueckseite"], "f:grosse-uhr": ["rueckseite"], "f:diashow": ["rueckseite"], "f:spiegel": ["rueckseite"], "h:es_spiegel": ["rueckseite"], // 2.300.0 · 2.314.0
-  "h:eselsohr": ["rueckseite"], "h:es_dia": ["rueckseite"], "h:es_tafel": ["rueckseite"], "h:es_uhr": ["rueckseite"], "h:es_buehne": ["rueckseite"], "h:es_regler": ["rueckseite"] }; // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4
+  "h:eselsohr": ["rueckseite"], "h:es_dia": ["rueckseite"], "h:es_tafel": ["rueckseite"], "h:es_uhr": ["rueckseite"], "h:es_buehne": ["buehne", "rueckseite"], "h:es_regler": ["buehne", "rueckseite"],
+  // 2.348.0 KC-CLUB-VIDEO-VERKNUEPFT (Wunsch Hansi „alle Themen mit Videos“): Hilfe-Themen, zu denen es schon ein Video gibt
+  "h:status": ["status"], "h:erstattung": ["erstattung"], "h:feedback": ["feedback"], "h:daten_geaendert": ["meinedaten"], "h:meine_daten": ["privat", "meinedaten"], "h:aenderung_rueckfrage": ["meinedaten"], "h:wer_online": ["mitglieder"], "h:anruf_kachel": ["mitglieder"], "h:mitglieder_ansicht": ["mitglieder"], "h:bild_punkt": ["mitglieder"], "h:pinnwand_antwort": ["pinnwand"], "h:pinnwand_wichtig": ["pinnwand"], "h:pinnwand_alt": ["pinnwand"], "h:foto_details": ["fotos"], "h:foto_teilen": ["fotos"], "h:hilfe_anbieten": ["helfen"], "h:hilfe_veroeffentlichen": ["helfen"], "h:hilfe_absprache": ["helfen"], "h:vorschlag_unterstuetzen": ["vorschlag"], "h:spende": ["vorschlag"], "h:abstimmung_ziel": ["vorschlag"], "h:spiel_mitglieder": ["spiele"], "h:spiel_schach": ["spiele"], "h:spiel_pause": ["spiele"], "h:ttt_toene": ["spiele"], "h:spiele_fdk_dk_mg": ["spiele"], "h:spiele_leiste": ["spiele"], "h:aktionen_kacheln": ["aktionen"], "h:wo_bin_ich": ["sos"], "h:notfallkontakt": ["sos"], "h:notfallpass_sichern": ["sos"], "h:notfallkontakt_wer": ["sos"], "h:mein_dienst": ["dienst"], "h:dienst_erinnerung": ["dienst"], "h:dw_fertig": ["dienst"], "h:wunschbogen": ["dienst"], "h:meine_schulung": ["schulung"], "h:kalender_blaettern": ["zusagen"], "h:naechstes_treffen": ["zusagen"], "h:termin_zahl": ["zusagen"], "h:drucken": ["zusagen"], "h:wiederholen": ["terminfinden", "termin"], "h:kachel_lang": ["oberflaeche"], "h:kachel_aus": ["oberflaeche"], "h:register_ziehen": ["oberflaeche"], "h:register_wischen": ["oberflaeche"], "h:ansicht": ["einfach", "oberflaeche"], "h:rundgang": ["ueberblick"], "h:ueberblick": ["ueberblick"], "h:twinkey": ["hilfe"], "h:einstellung_suchen": ["hilfe"], "h:diktat_feld": ["sprache"], "h:sprache_einstellung": ["sprache"], "h:installieren": ["installieren"], "h:pc_tablet": ["inst_geraet"], "h:code_geraet": ["privat", "inst_codes", "inst_geraet"], "h:code_ipad": ["inst_safari", "inst_codes"], "h:update": ["probleme", "technik"], "h:version": ["probleme", "technik"], "h:sicherheitscheck": ["probleme", "technik"], "h:programme_frei": ["technik"], "h:nacht": ["anpassen"], "h:schrift": ["anpassen"], "h:animiert": ["anpassen"], "h:wetter_tage": ["effekte"], "h:protokoll_aufgaben": ["todo", "lesen"], "h:push": ["push"], "h:push_selbst": ["push"], "h:test_an_mich": ["push"], "h:meine_geraete": ["push"], "h:anklopfton": ["push"], "h:ansage_nachholen": ["push"], "h:ansage_verlassen": ["push"], "h:ruhe": ["push"], "f:ruhe": ["push"], "h:privatsphaere": ["privat"], "h:zugangslink": ["privat"], "h:live_tippen": ["privat"], "h:zuletzt_da": ["privat"], "h:link_verloren": ["privat"], "h:abmelden": ["privat"], "f:daten": ["privat"], "h:haengt": ["probleme"], "h:laden_dauert": ["probleme"], "h:zwei_fenster": ["probleme"], "h:verbindung": ["probleme"], "h:mikrofon": ["probleme"], "h:verbindung_senden": ["probleme"], "h:app_schliessen": ["probleme"], "h:twinkey_haengt": ["probleme"], "h:pfeil_menue": ["chatprofi"], "h:anheften": ["chatprofi"], "h:merken": ["chatprofi"], "h:weiterleiten": ["chatprofi"], "h:haken": ["chatprofi"], "h:sprachtempo": ["chatprofi"], "h:chat_vorlesen": ["chatprofi"], "h:chat_abstimmung": ["chatprofi"], "h:selbstloeschen": ["chatprofi"], "h:entwurf": ["chatprofi"], "h:ohne_netz": ["chatprofi"], "h:chat_archiv": ["chatprofi"], "h:chat_ganz": ["chatprofi"], "h:wichtig_nachtraeglich": ["chatprofi"], "h:kopieren": ["chatprofi"], "h:neue_linie": ["chatprofi"], "h:gruppe_bereiche": ["gruppen"], "h:gruppen_admin": ["gruppen"], "h:gruppe_loeschen": ["gruppen"], "h:terminanfrage": ["terminfinden"], "h:anfrage_status": ["terminfinden"], "h:anfrage_vorbehalt": ["terminfinden"], "h:terminfindung": ["terminfinden"], "h:todo": ["todo"], "h:erst_einfach": ["einfach"], "h:es_musik": ["buehne"], "h:club_song": ["buehne"], "h:bw_einladung": ["buehne"], "h:eingangskorb": ["buero"], "h:eingang_hinweis": ["buero"], "h:ablage_mehrere": ["buero"], "h:buero_sprache": ["buero"], "h:buero_einlesen": ["buero"], "h:buero_mail": ["buero"], "h:schilder": ["buero"],
+}; // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4
 const TW_HILFETEXT = { "f:mein-bild": "h:mein_bild", "f:figur-bauen": "h:mein_bild" };
 function twVideosHtml(e) {
   const v = (TW_VIDEOS[e.id] || []).map((id) => RUNDGAENGE.find((r) => r.id === id && (!r.nur || r.nur()))).filter(Boolean);
@@ -30960,6 +32300,7 @@ function suAppListe() {
     ["🪟", "Kachel- und Sende-Effekt (Jalousie, Papierflieger …)", "kachel effekt jalousie kartenstapel umdrehen senden papierflieger brieftaube postauto", ein("regEffektWahl")],
     ["🐢", "Sparmodus / Akku sparen", "sparmodus sparen akku batterie strom langsam netz datensparen", ein("sparWahl")],
     ["🎨", "Erklär-Video: Meine App nach meinem Geschmack", "anpassen einstellen aussehen geschmack video themen farben jahreszeiten deko schrift", () => rgListeAbspielen(["anpassen"])],
+    ["🗣️", "Videos: Stimme und Tempo wählen", "stimme video tempo langsam schneller vorlesen klingt komisch roboter sprecher erklär videos herunterladen thorsten kerstin eva ramona karlsson", () => stimmenWahl()], // 2.348.0
     ["🎬", "Videos: Nachfrage nach eigenem Video (ein/aus, Später-Liste)", "video verweis nachfrage später gemerkt nicht mehr fragen erklär videos liste eigenes video", () => erklaerVideos()], // 2.346.0
     ["⏱", "Trainingsuhr auf der Bühne", "uhr training trainingsuhr zeit schon noch bühne twinkey", () => esOeffnen("buehne")],
     ["📧", "Dienstwünsche: Bestätigung per E-Mail", "dienstwunsch dienstwünsche bestätigung e-mail mail fertig zusammenfassung", () => dwOeffnen()],

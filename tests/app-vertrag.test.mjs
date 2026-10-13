@@ -5650,7 +5650,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.251.0 KC-CLUB-ERKLAERVIDEOS-PULS + -3 (Wunsch Hansi): erwähnte Knöpfe/Felder pulsieren; 7 weitere Videos
 {
   assert.ok(/function rgPulsStart\(s\)/.test(html) && /function rgStille\(\) \{ rgPulsStop\(\);/.test(html) && /\.rg-puls \{ animation: rgPuls/.test(seite) && /prefers-reduced-motion: reduce\) \{ \.rg-puls/.test(seite), "Puls nacheinander, stoppt beim Weiterblättern, ruhige Variante ohne Bewegung");
-  assert.ok(["mitglieder", "zusagen", "fotos", "erstattung", "hilfe", "sos", "helfen"].every((id) => new RegExp(`\\{ id: "${id}", stand: "1", sym:`).test(html)), "7 neue Videos registriert");
+  assert.ok(["mitglieder", "zusagen", "fotos", "erstattung", "hilfe", "sos", "helfen"].every((id) => new RegExp(`\\{ id: "${id}", stand: "\\d+", sym:`).test(html)), "7 neue Videos registriert");
   const neu = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-3"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR"));
   assert.ok(neu.length > 2000 && !/api\(|anrufen\(|anklopfen\(|erstattungSenden\(|sosAnrufen\(|faHochladen|einstellung_setzen/.test(neu.replace(/rgOn\("[^"]*"\)/g, "")), "neue Videos rufen nicht an, senden/speichern/laden nichts hoch");
   assert.ok(/SOS\.suche = ""; SOS\.offen = null; sosZeigen\(\); sosLaden\(\);/.test(neu) && /if \(n < 16\) setTimeout\(\(\) => rgTreffenZeigen\(n \+ 1\), 250\)/.test(neu), "SOS wie sosStart gefüllt; Termin-Info wartet auf die Liste");
@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -9377,4 +9377,26 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/for \(const id of rgvSpaeter\(\)\) RGL\.wahl\.add\(id\)/.test(html) && /onchange="rgvAn\(this\.checked\)"/.test(html), "Später angehakt, Fragen wieder einschaltbar");
   assert.ok(/\.rg-verweis \{/.test(lies("index.html")), "Stil für die Frage");
   assert.ok(/\{ id: "video-verweis", sym: "🎬", t: "[^"]+\?", x: /.test(html), "Twinkey kennt die Frage");
+}
+
+// 2.351.0 KC-CLUB-VIDEOS-NEU + KC-CLUB-VIDEO-STIMMEN (+ -DOWNLOAD)
+{
+  for (const id of ["push", "privat", "probleme", "chatprofi", "gruppen", "terminfinden", "todo", "einfach", "raetsel", "buehne", "buero"]) {
+    assert.ok(new RegExp(`\\{ id: "${id}", stand: "1"[^\\n]*st: \\(\\) => RG_${id.toUpperCase()}`).test(html) && html.includes(`const RG_${id.toUpperCase()} = [`), "Video " + id);
+    assert.ok(new RegExp(`videos: \\[[^\\]]*"${id}"`).test(html), "Video " + id + " in den Themen");
+  }
+  assert.ok(/rgMitErg\(RG_DIENST, RG_DIENST_ERG,/.test(html) && /rgMitErg\(RG_MITGLIEDER, RG_MITGLIEDER_ERG,/.test(html), "Dienst/Mitglieder ergänzt");
+  assert.ok(/function hzVideoKnoepfe\(id\)/.test(html) && /"h:todo": \[[^\]]*"todo"/.test(html), "Hilfe zeigt Video-Knöpfe");
+  assert.ok(/function stimmenWahl\(beimStart\)/.test(html) && /class="rg-stimme" onclick="stimmenWahl\(\)"/.test(html) && /function rgAusgabe\(text\)/.test(html), "Stimmen-Auswahl");
+  assert.ok(/case "stimmen": \{/.test(server) && /from\("kc_club_video_stimmen"\)/.test(server), "Server liefert die Stimmen-Tabelle");
+  assert.ok(fs.existsSync(new URL("../supabase/migrations/20261013_kc_club_v2348_video_stimmen.sql", import.meta.url)), "Migration");
+  const w = lies("stimmen/piper-worker.js");
+  assert.ok(/importScripts\(LIB \+ "ort\.wasm\.min\.js", LIB \+ "piper_phonemize\.js"\)/.test(w) && /caches\.open\(CACHE\)/.test(w) && /function idsAusLauten\(j\)/.test(w), "Download-Stimmen: Arbeiter");
+  for (const f of ["de_DE-thorsten-medium", "de_DE-kerstin-low", "de_DE-eva_k-x_low", "de_DE-ramona-low", "de_DE-karlsson-low"]) {
+    assert.ok(fs.existsSync(new URL(`../stimmen/${f}.onnx`, import.meta.url)) && fs.existsSync(new URL(`../stimmen/${f}.onnx.json`, import.meta.url)) && fs.existsSync(new URL(`../stimmen/proben/${f}.mp3`, import.meta.url)), "Stimme " + f);
+    assert.ok(html.includes(`datei: "${f}"`), "Grundliste kennt " + f);
+  }
+  assert.ok(/if \(url\.pathname\.includes\("\/stimmen\/"\)\) return;/.test(lies("sw.js")), "Service Worker merkt Stimmen nicht doppelt");
+  assert.ok(/rgpAktiv\(\)\) \{ \/\/ 2\.348\.0: heruntergeladene Stimme spricht/.test(html) && /rgpStopp\(\); \}/.test(html), "Videos sprechen mit der Download-Stimme");
+  assert.ok(/#chatBlatt > \.blatt-innen \{ max-height: 88vh; overflow-y: auto; \}/.test(lies("index.html")), "⋮-Fenster scrollt");
 }

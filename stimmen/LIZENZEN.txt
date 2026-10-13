@@ -1,0 +1,18 @@
+Köcheclub-App – Download-Stimmen für die Erklär-Videos (KC-CLUB-VIDEO-STIMMEN-DOWNLOAD, 2.348.0)
+=====================================================================================
+
+Die Stimmen rechnen direkt im Browser des Mitglieds. Es wird nichts an einen fremden Dienst geschickt.
+
+Stimmen (Piper, https://github.com/rhasspy/piper – Modelle: https://huggingface.co/rhasspy/piper-voices, MIT-Lizenz)
+- de_DE-thorsten-medium  – Datensatz Thorsten-Voice (Thorsten Müller), CC0 – https://github.com/thorstenMueller/Thorsten-Voice
+- de_DE-kerstin-low      – Datensatz dataset-voice-kerstin, CC0 – https://github.com/rhasspy/dataset-voice-kerstin
+- de_DE-eva_k-x_low      – M-AILABS Speech Dataset – https://www.caito.de/2019/01/03/the-m-ailabs-speech-dataset/
+- de_DE-ramona-low       – M-AILABS Speech Dataset – https://www.caito.de/2019/01/03/the-m-ailabs-speech-dataset/
+- de_DE-karlsson-low     – M-AILABS Speech Dataset – https://www.caito.de/2019/01/03/the-m-ailabs-speech-dataset/
+  (Je Stimme liegt die Original-Modellkarte als *.MODEL_CARD.txt daneben.)
+
+Technik
+- lib/ort.wasm.min.js, lib/ort-wasm*.wasm – ONNX Runtime Web 1.18.0, © Microsoft Corporation, MIT-Lizenz
+- lib/piper_phonemize.* – Piper-Phonemize als WebAssembly (@diffusionstudio/piper-wasm 1.0.0), MIT-Lizenz;
+  enthält eSpeak NG-Sprachdaten (GPL-3.0, https://github.com/espeak-ng/espeak-ng)
+- proben/*.mp3 – kurze Hörproben, mit denselben Stimmen erzeugt

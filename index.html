@@ -749,6 +749,7 @@
     border: 2px solid var(--rot, #7a1f2b); border-radius: 18px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
   .rg-tafel.rg-oben-an { bottom: auto; top: calc(12px + env(safe-area-inset-top)); }
   .rg-oben { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 1.05em; }
+  .rg-oben-r { display: flex; align-items: center; gap: 2px; white-space: nowrap; }
   .rg-nr { font-size: .8em; opacity: .7; white-space: nowrap; }
   .rg-tafel p { margin: 6px 0 8px; line-height: 1.4; }
   .rg-balken { height: 4px; border-radius: 2px; background: rgba(0,0,0,.1); overflow: hidden; margin-bottom: 10px; }
@@ -769,6 +770,19 @@
   .rg-verweis { margin: 0 0 10px; padding: 10px 12px; border-radius: 12px; background: var(--gruenbg, #e8f5e9); border: 1px solid var(--gruen, #2e7d32); display: grid; gap: 4px; }
   .rg-verweis-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
   .rg-verweis-knoepfe .knopf { width: 100%; }
+  /* 2.348.0 KC-CLUB-VIDEO-STIMMEN: Stimmen-Auswahl für die Erklär-Videos – über der Video-Schicht */
+  .blatt.rgs-blatt { z-index: 9500; }
+  /* 2.348.0 (Fund beim Gruppen-Video): ⋮-Fenster im Gruppenchat war höher als das Handy – oberer Teil nicht erreichbar */
+  #chatBlatt > .blatt-innen { max-height: 88vh; overflow-y: auto; }
+  .rgs-liste { display: grid; gap: 6px; margin-bottom: 8px; }
+  .rgs-zeile { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; padding: 6px 8px; border: 1px solid var(--linie, #ddd); border-radius: 12px; }
+  .rgs-zeile.an { border-color: var(--gruen, #2e7d32); background: var(--gruenbg, #e8f5e9); }
+  .rgs-wahl { display: flex; gap: 8px; align-items: center; text-align: left; background: none; border: 0; padding: 4px; font: inherit; color: inherit; cursor: pointer; min-height: 44px; }
+  .rgs-wahl small { display: block; color: var(--grau, #666); }
+  .rgs-knoepfe { display: flex; flex-direction: column; gap: 4px; }
+  .rgs-tempo { display: flex; gap: 6px; flex-wrap: wrap; }
+  .rgs-hinweis { margin-top: 12px; } .rgs-hinweis p { margin: 8px 0; line-height: 1.4; }
+  .rg-stimme { background: none; border: 0; font-size: 1.1em; padding: 0 4px; cursor: pointer; min-width: 36px; min-height: 32px; }
   .rgl-verweis { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: .9em; color: var(--grau, #666); }
   /* KC-CLUB-VIDEO-LIVE (2.261.0): Zeigefinger macht die Aktionen vor – über der Video-Schicht; läuft auch bei „Bewegung reduzieren“ (ist der Inhalt) */
   .rg-finger { position: fixed; left: 0; top: 0; z-index: 9003; pointer-events: none; opacity: 0; transition: opacity .25s; will-change: transform; }
@@ -4961,6 +4975,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.350.0" data-v="2.350.0"></script>
+<script src="app.js?v=2.351.0" data-v="2.351.0"></script>
 </body>
 </html>
