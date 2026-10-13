@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.364.0 – 2026-10-14 – 🔋 KC-CLUB-AKKU-7: Eco-Gesamtprüfung aller Funktionen
+Anlass (Hansi): „Check nochmal, dass alle Funktionen Eco sind, ohne Akku leer zu saugen.“
+- Gemessen (Browser, alle 31 Ansichten, nach 4 Min. Ruhe, je 8 s): Rechenlast überall < 1 % (Start 0,82 %, Rest 0,04–0,65 %), 0 laufende Animationen,
+  0 Bildwechsel/s; nach dem Rundgang zurück auf Start kein einziger zusätzlicher Zeitgeber (nichts „vergessen“).
+- Aktive Funktionen geprüft: Live-Zeigen (Sender 400 ms, Zuschauer 800 ms – beide im Hintergrund still), Schach-Uhr, Quiz, Rückseiten-Uhr, Countdown-Kachel,
+  Fitness-Timer, Musik/Karaoke, Anruf/Konferenz – enden mit der Funktion bzw. pausieren im Hintergrund. Neue Funktionen (⏰, ↩️, 🏎️, Boten, 🎩) ohne Dauer-Last.
+- Einziger Fund: Mitschauen (ssHolen, 0,8–1,5 s) fragte auch im Hintergrund weiter → jetzt still im Hintergrund, beim Zurückkommen sofort frisch.
+
 ## 2.363.0 – 2026-10-14 – 🎩 KC-CLUB-MUENCHHAUSEN: Baron Münchhausen als Bote
 Anlass (Hansi): „Auch noch Baron Münchhausen als Bote der Nachricht dazu.“
 - Neuer Sende-Effekt „🎩 Baron Münchhausen“ (Ritt auf der Kanonenkugel: Dreispitz, roter Rock, weiße Perücke, Brief in der Hand). Absender: „BUMM!“-Wölkchen am

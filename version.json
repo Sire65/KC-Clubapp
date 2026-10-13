@@ -1,11 +1,18 @@
 {
-  "version": "2.363.0",
+  "version": "2.364.0",
   "datum": "2026-10-14",
   "stufe": "RC",
   "neu": [
-    "🎩 Neuer Bote: Baron Münchhausen – reitet auf der Kanonenkugel (mit „BUMM!“) und bringt deine Nachricht im hohen Bogen. Wählbar unter ⚙️ → 🎨 Darstellung → Senden"
+    "🔋 Mitschauen (jemand zeigt dir live seinen Bildschirm): im Hintergrund fragt die App nicht mehr sekündlich beim Server nach – beim Zurückkommen sofort aktuell"
   ],
   "verlauf": [
+    {
+      "version": "2.364.0",
+      "datum": "2026-10-14",
+      "neu": [
+        "🔋 Mitschauen (jemand zeigt dir live seinen Bildschirm): im Hintergrund fragt die App nicht mehr sekündlich beim Server nach – beim Zurückkommen sofort aktuell"
+      ]
+    },
     {
       "version": "2.363.0",
       "datum": "2026-10-14",

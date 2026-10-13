@@ -9519,3 +9519,8 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/function sendeMuenchhausen\(r\)/.test(html) && /BUMM!/.test(html) && /\} else if \(art === "muenchhausen"\) \{/.test(html), "Absender- und Empfänger-Animation");
   assert.ok(/"muenchhausen", "wechsel", "aus"\]/.test(server), "Server kennt die Art");
 }
+
+// 2.364.0 KC-CLUB-AKKU-7: Mitschauen im Hintergrund still
+{
+  assert.ok(/async function ssHolen\(sofort\) \{\n  if \(document\.hidden && sofort !== true\) return;/.test(html) && /if \(!document\.hidden && SS\?\.id\) ssHolen\(true\);/.test(html), "Mitschauen fragt im Hintergrund nicht nach");
+}

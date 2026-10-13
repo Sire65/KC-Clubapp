@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.363.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.364.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -26268,6 +26268,7 @@ async function wichtigkeitFragen() {
   if (hoch) wichtigUmschalten(true);
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => { try { expressPruefen(); } catch {} }, 1200); }); // 2.362.0 KC-CLUB-EXPRESS
+document.addEventListener("visibilitychange", () => { if (!document.hidden && SS?.id) ssHolen(true); }); // 2.364.0 KC-CLUB-AKKU-7: Mitschauen nach dem Zurückkommen sofort frisch
 // ---------- 2.362.0 KC-CLUB-EXPRESS (Wunsch Hansi „per Rennwagen – Express-Sendung, wird sofort zugestellt; beim Empfänger ploppt ein Fenster auf:
 // Öffnen, Später, Nein; Empfang bestätigen als Kästchen“) ----------
 // 🏎️ unter dem Schreibfeld schaltet Express für die nächste Nachricht ein. Express kommt wie ein Notfall durch (auch stummgeschaltet und nachts – Hansis
@@ -33325,6 +33326,7 @@ function ssAbbrechen(still) {
   if (!still) melde("⏹ Beendet");
 }
 async function ssHolen(sofort) {
+  if (document.hidden && sofort !== true) return; // 2.364.0 KC-CLUB-AKKU-7: im Hintergrund nicht alle 0,8–1,5 s beim Server nachfragen (wie Live-Zeigen seit 2.314.1)
   if (SS.laeuft && sofort === true) { SS.nochmal = true; return; }
   if (sofort !== true && rtAn() && SS.id && $("studioBlatt") && (SS.tn = (SS.tn || 0) + 1) % 3) return; // KC-CLUB-REALTIME-VORFUEHREN: Takt nur zur Sicherheit
   if (!SS.id || !$("studioBlatt")) { if (SS.id) api("schnappschuss_ende", { an: SS.an, id: SS.id }).catch(() => {}); clearInterval(SS.uhr); SS.id = null; return; } // Studio zu → Mitschauen beenden
