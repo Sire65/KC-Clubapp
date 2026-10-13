@@ -9271,3 +9271,15 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 {
   assert.ok(/id="todoText" maxlength="200" placeholder="Was ist zu tun\? z\. B\. Getränke einkaufen" autocomplete="off" enterkeyhint="done"/.test(html) && /feld\.classList\.add\("todo-leer"\); feld\.focus\(\);/.test(html), "leeres Feld markiert, Tastatur auf");
 }
+
+// 2.344.0 KC-CLUB-HILFE-NACHTRAG + KC-CLUB-VIDEO-ANPASSEN: Neuheiten in Hilfe, Lupe, Twinkey und Video
+{
+  for (const id of ["raetsel", "club_song", "kopf_besucher", "deko_leiste", "sparmodus", "akku", "anpassen"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "[a-z]+", sym: "[^"]+", t: "[^"]+", x: "[^"]+", zeig: `).test(html), "Hilfe: " + id);
+  for (const w of ["Thema wählen", "Deko an der Leiste", "Sparmodus / Akku sparen", "Erklär-Video: Meine App nach meinem Geschmack", "Trainingsuhr auf der Bühne", "Dienstwünsche: Bestätigung per E-Mail"]) assert.ok(html.includes(`"${w}`), "Lupe: " + w);
+  for (const id of ["aussehen", "kopf-ruhig", "raetsel"]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+\\?", x: `).test(html), "Twinkey: " + id);
+  assert.ok(/\{ id: "anpassen", stand: "1", sym: "🎨", t: "Meine App nach meinem Geschmack"[^\n]*st: \(\) => RG_ANPASSEN \}/.test(html) && /videos: \[[^\]]*"rueckseite", "anpassen"/.test(html), "Video registriert, im Thema Ich & meine App");
+  const v = html.slice(html.indexOf("const RG_ANPASSEN = ["), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR (2.248.0"));
+  for (const id of ["themaWahl", "themaSchriftAn", "designWahl", "modusWahl", "setGross", "setJahreszeit", "jzDekoWahl", "regEffektWahl", "setAnimiert", "sparWahl", "setEselsohr"]) { assert.ok(v.includes(id), "Station zeigt " + id); assert.ok(lies("index.html").includes(`id="${id}"`), "Feld da: " + id); }
+  assert.ok(!/live:/.test(v), "nur vorgeführt – nichts wird umgestellt");
+  assert.ok(/rgRueck\("raetsel"\)/.test(html) && /t: "🗂️ Sieben Reiter"/.test(html), "Rückseiten-Video mit Rätsel");
+}

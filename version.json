@@ -1,11 +1,20 @@
 {
-  "version": "2.343.0",
+  "version": "2.344.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "✅ To-do: Ist das Feld „Was ist zu tun?“ beim Eintragen noch leer, wird es rot umrandet und gleich zum Schreiben geöffnet – mit einem freundlichen Hinweis statt einer roten Fehlermeldung"
+    "🎬 Neues Erklär-Video „🎨 Meine App nach meinem Geschmack“: alle Möglichkeiten an einem Ort – Themen, Farben, Tag/Nacht, Schrift, Jahreszeiten-Bild, Deko, Effekte, Sparmodus und Eselsohr",
+    "❓ Hilfe, 🔍 Lupe und Twinkey kennen jetzt auch die Neuheiten der letzten Tage: Rätsel, Club-Song, Trainingsuhr, Besuch im Kopf (Eichhörnchen, Schneeraupe, Iglu …), Deko an der Leiste, Sparmodus und Akku sparen"
   ],
   "verlauf": [
+    {
+      "version": "2.344.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🎬 Neues Erklär-Video „🎨 Meine App nach meinem Geschmack“: alle Möglichkeiten an einem Ort – Themen, Farben, Tag/Nacht, Schrift, Jahreszeiten-Bild, Deko, Effekte, Sparmodus und Eselsohr",
+        "❓ Hilfe, 🔍 Lupe und Twinkey kennen jetzt auch die Neuheiten der letzten Tage: Rätsel, Club-Song, Trainingsuhr, Besuch im Kopf (Eichhörnchen, Schneeraupe, Iglu …), Deko an der Leiste, Sparmodus und Akku sparen"
+      ]
+    },
     {
       "version": "2.343.0",
       "datum": "2026-10-13",
