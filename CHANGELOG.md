@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.355.0 – 2026-10-13 – 🔲 KC-CLUB-KACHEL-ZULETZT · 🧑‍🍳 KC-CLUB-KOCH-EMOJI · 👁 KC-CLUB-VORSCHAU-ENDE
+Anlass (Hansi): „Die letzte gewählte Kachel soll einen leichten Rand haben und minimal vergrößern, bis eine andere gewählt wird – auch in einfacher Ansicht. In der PC-Version sieht Twinkey beim Fegen der Blätter anders aus: laufende Beine, ein Gesicht daneben und eine Pfanne mit Spiegelei … so sieht auch die Kachel ‚Mein Bild‘ aus. Und wenn ich in den Einstellungen z. B. Nikolaus-Stiefel wähle, wie bekomme ich ihn wieder weg?“
+- Kachel zuletzt: Tipp auf eine Kachel merkt ihre id (localStorage kc_club_kachel_zuletzt, je Gerät); kachelnZeigen markiert sie (.zuletzt: Ring in Weinrot, scale 1.025). Nicht beim Anordnen und nicht im Erklär-Video.
+- Koch-Emoji: 🧑‍🍳 ist ein ZWJ-Emoji (🧑 + 🍳); ältere Windows-PCs/Browser malen beide Teile nebeneinander. Beim Start Breitenmessung im Canvas; fällt sie durch, ersetzt ein MutationObserver 🧑‍🍳/👨‍🍳/👩‍🍳 in Texten durch Twemoji-Bilder (lib/emoji/, CC BY 4.0) – nicht in Eingabefeldern/Auswahllisten – und Twinkey im Kopf wird als Bild gemalt. Zum Testen erzwingbar mit localStorage kc_club_koch_bild = "1".
+- Vorschau-Ende: solange JZB.vorschau/extra gesetzt ist, steht auf der Startseite „👁 Vorschau: … · ✕ beenden“ (nur dort, nicht im Video); Chip in den Einstellungen heißt „📅 Heute (Vorschau beenden)“. Hilfe ergänzt.
+
 ## 2.354.0 – 2026-10-13 – 🔍 KC-CLUB-VIDEO-STIMMEN-SUCHE: Stimmen des Geräts selbst suchen und anzeigen
 Anlass (Hansi): „Wenn keine gewählt wird, erst mal die im Handy, Tablet oder PC vorhandene … kannst du eine Suchfunktion beim ersten Aufruf einschalten, die die vorhandenen Stimmen des jeweiligen Geräts selber sucht und mit anzeigt.“
 - rgsSuchen(): weckt die Sprachausgabe mit einem stummen Satz (Chrome/Android meldet Stimmen sonst erst nach dem ersten Sprechen), fragt bis zu 6 s nach, bis die Liste stabil ist; zeigt „🔍 Ich suche …“, dann „N gefunden, davon M mit guter Qualität“ bzw. „keine gefunden“ – mit „🔍 Nochmal suchen“. Läuft bei jedem Öffnen der Auswahl (beim ersten Video automatisch).

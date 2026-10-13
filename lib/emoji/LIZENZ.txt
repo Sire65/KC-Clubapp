@@ -1,0 +1,3 @@
+Koch-Emoji 🧑‍🍳 👨‍🍳 👩‍🍳 als Bild (nur für Geräte, die das Emoji nicht selbst malen können – KC-CLUB-KOCH-EMOJI, 2.355.0)
+Twemoji 15.1.0 (https://github.com/jdecked/twemoji) – Grafiken © Twitter, Inc. und weitere Mitwirkende, Lizenz CC BY 4.0
+(https://creativecommons.org/licenses/by/4.0/). Unverändert übernommen.

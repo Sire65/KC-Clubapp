@@ -9429,3 +9429,12 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/u\.volume = 0;/.test(html) && /Date\.now\(\) - start > 6000/.test(html), "weckt die Sprachausgabe, sucht höchstens 6 s");
   assert.ok(/Welche Stimme soll dir die Videos erklären\?<\/h3>\$\{kopfGeraet\}/.test(html) && /\$\{rgpZeilen\(\)\}\n    <h4 style="margin:12px 0 6px">⏱️/.test(html), "Gerätestimmen oben, Download darunter");
 }
+
+// 2.355.0 KC-CLUB-KACHEL-ZULETZT + KC-CLUB-KOCH-EMOJI + KC-CLUB-VORSCHAU-ENDE
+{
+  assert.ok(/kachelZuletztMarkieren\(\); \/\/ 2\.355\.0\n\}/.test(html) && /const KACHEL_ZULETZT = "kc_club_kachel_zuletzt";/.test(html) && /#raster \.kachel\.zuletzt \{[^}]*scale: 1\.025/.test(seite), "letzte Kachel markiert");
+  assert.ok(/function kochEmojiPruefen\(\)/.test(html) && /KOCH\.ok = !\(eins > 0 && ganz > eins \* 1\.4\)/.test(html) && /textarea, input, select, option/.test(html), "Koch-Emoji: Messung, Eingaben unberührt");
+  assert.ok(/!KOCH\.ok && KOCH\.bild\?\.complete/.test(html), "Twinkey im Kopf als Bild");
+  for (const c of ["1f9d1-200d-1f373", "1f468-200d-1f373", "1f469-200d-1f373"]) assert.ok(fs.existsSync(new URL(`../lib/emoji/${c}.svg`, import.meta.url)), "Twemoji " + c);
+  assert.ok(/function jzVorschauLeiste\(v = aktuelleAnsicht\)/.test(html) && /try \{ jzVorschauLeiste\(v\); \} catch \{\}/.test(html) && /📅 Heute \(Vorschau beenden\)/.test(seite), "Vorschau beenden");
+}

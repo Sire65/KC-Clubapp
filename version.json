@@ -1,11 +1,22 @@
 {
-  "version": "2.354.0",
+  "version": "2.355.0",
   "datum": "2026-10-13",
   "stufe": "RC",
   "neu": [
-    "🔍 Stimmen-Auswahl der Erklär-Videos sucht jetzt selbst alle Stimmen auf deinem Handy, Tablet oder PC und zeigt sie zuerst an (mit „Nochmal suchen“). Ohne Auswahl spricht die beste Stimme deines Geräts – Thorsten und Dii stehen darunter zum Herunterladen."
+    "🔲 Die zuletzt angetippte Kachel hat einen leichten Rand und ist minimal größer – bis du eine andere wählst (auch in der einfachen Ansicht)",
+    "🧑‍🍳 Am PC zerfiel Twinkey beim Laubfegen (und die Kachel „Mein Bild“) in Gesicht und Pfanne mit Spiegelei – Geräte, die das Koch-Zeichen nicht kennen, bekommen jetzt ein Bild",
+    "👁 Jahreszeit-Vorschau aus den Einstellungen (z. B. Nikolaus-Stiefel): unten auf der Startseite steht jetzt „✕ beenden“"
   ],
   "verlauf": [
+    {
+      "version": "2.355.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🔲 Die zuletzt angetippte Kachel hat einen leichten Rand und ist minimal größer – bis du eine andere wählst (auch in der einfachen Ansicht)",
+        "🧑‍🍳 Am PC zerfiel Twinkey beim Laubfegen (und die Kachel „Mein Bild“) in Gesicht und Pfanne mit Spiegelei – Geräte, die das Koch-Zeichen nicht kennen, bekommen jetzt ein Bild",
+        "👁 Jahreszeit-Vorschau aus den Einstellungen (z. B. Nikolaus-Stiefel): unten auf der Startseite steht jetzt „✕ beenden“"
+      ]
+    },
     {
       "version": "2.354.0",
       "datum": "2026-10-13",

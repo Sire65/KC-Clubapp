@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.354.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.355.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -4680,6 +4680,7 @@ const HILFE = [
   { id: "kachel_lang", thema: "start", sym: "🧩", t: "Startseite aufräumen: Kacheln verschieben", x: "Du möchtest deinen Bildschirm aufräumen oder umorganisieren? Drück auf der Startseite eine Kachel <b>lange</b> (gut eine halbe Sekunde) – dann öffnet sich „Anordnen“ und die Kachel hängt an deinem Finger. Zieh sie an den neuen Platz und lass los. Mit ◀ ▶ ▲ ▼ geht es auch Schritt für Schritt. Fertig? „✅ Fertig“ tippen.", zeig: () => { zeige("start"); kaBearbeiten(true); } },
   { id: "kachel_aus", thema: "start", sym: "🙈", t: "Kacheln ausblenden und wieder holen", x: "Beim Anordnen hat jede Kachel oben ein <b>✕</b> – damit blendest du sie aus, deine Daten bleiben erhalten. Ausgeblendete Kacheln stehen blass dazwischen und kommen mit <b>👁️ Einblenden</b> zurück. Unter den Kacheln steht außerdem „🙈 … ausgeblendete Kacheln – anzeigen“. (Nur in der erweiterten Ansicht.)", zeig: () => { zeige("start"); kaBearbeiten(true); } },
   { id: "erklaervideos", thema: "start", sym: "🎬", t: "Erklär-Videos mit Ton", x: "Kurze Rundgänge mit Ton, die dir Schritt für Schritt zeigen, wie etwas geht: <b>alle Einstellungen</b> mit Beispielen (z. B. wie die App in einer anderen Farbe aussieht), <b>Nachricht schreiben</b>, <b>Termin eintragen</b>, <b>Zettel an die Pinnwand</b> und <b>Vorschlag einreichen</b>. Dabei wird nichts gespeichert oder gesendet, und alles bleibt, wie du es eingestellt hast. Zu finden im Register <b>Technik → 🎬 Erklär-Videos</b>, oben in <b>❓ Hilfe &amp; Tipps</b> und unter <b>⚙️ Mehr</b>. Gibt es zu einem Thema ein eigenes Video, fragt das Video nach: <b>▶ Ja</b> (danach geht es an derselben Stelle weiter), <b>Nein</b>, <b>⏰ Später</b> (in der Liste mit 📌 gemerkt und schon angehakt) oder <b>🔕 Nicht mehr fragen</b> – wieder einschalten unten in der Liste der Erklär-Videos.", zeig: () => erklaerVideos(), seit: "2.346.0" }, // KC-CLUB-ERKLAERVIDEOS (2.244.0), 2.346.0 KC-CLUB-VIDEO-VERWEIS
+  { id: "kachel_zuletzt", thema: "start", sym: "🔲", t: "Welche Kachel hatte ich zuletzt?", x: "Die Kachel, die du zuletzt angetippt hast, hat einen <b>leichten Rand</b> und ist ein kleines bisschen größer – bis du eine andere antippst. So findest du schnell zurück. Das gilt auch in der einfachen Ansicht.", seit: "2.355.0" }, // 2.355.0
   { id: "video_stimme", thema: "start", sym: "🗣️", t: "Stimme und Tempo der Erklär-Videos", x: "Beim ersten Erklär-Video fragt die App, <b>welche Stimme</b> dir die Videos erklären soll – dabei <b>sucht sie selbst alle Stimmen auf deinem Gerät</b> und zeigt sie an (🔍 Nochmal suchen, falls noch keine da sind). Ohne Auswahl spricht die beste Stimme deines Geräts. Mit <b>▶ Probe</b> hörst du jede Stimme vorher, gute Stimmen haben Sterne. Ganz oben stehen die <b>⬇️ Stimmen zum Herunterladen</b> – <b>Thorsten</b> (Mann) und <b>Dii</b> (Frau): einmal antippen lädt sie aufs Gerät (je 63 MB, am besten im WLAN) – danach klingen sie auf jedem Handy gleich und sprechen auch ohne Netz. Mit 🗑️ entfernst du eine Stimme wieder. Dazu wählst du das <b>Tempo</b>: 🐢 Langsamer, Normal oder 🐇 Schneller. Ändern kannst du das jederzeit mit <b>🗣️</b> oben im laufenden Video oder unten in der Liste der Erklär-Videos. Klingt keine Stimme gut, steht dort auch, wie du eine <b>bessere Stimme ins Handy lädst</b> (iPhone, Android, PC). Die Liste der guten Stimmen pflegt Hansi auf dem Server – sie wird nur bei Bedarf geholt.", zeig: () => stimmenWahl(), seit: "2.348.0" }, // 2.348.0 KC-CLUB-VIDEO-STIMMEN
   { id: "rundgang", thema: "start", sym: "🎬", t: "Rundgang durch die App (mit Ton)", x: "Die App zeigt dir in etwa 3 Minuten, wie sie aussieht und was sie kann – die Stimme deines Handys erklärt dabei jede Station. Du musst nichts antippen; mit <b>⏸ Pause</b>, <b>◀ ▶</b> und <b>✕ Beenden</b> steuerst du. Starten: hier mit <b>👉 Zeig mir wo</b>, oben in <b>❓ Hilfe &amp; Tipps</b> oder unter <b>⚙️ Mehr</b>. Weitere <b>🎬 Erklär-Videos</b> (alle Einstellungen, Nachricht schreiben, Termin eintragen, Pinnwand, Vorschläge) im Register <b>Technik</b>. Kein Ton? Dann Lautstärke prüfen – der Text steht auch zum Lesen da.", zeig: () => rundgangStart() }, // KC-CLUB-RUNDGANG (2.241.0)
   { id: "register_ziehen", thema: "start", sym: "↔️", t: "Register umsortieren (Club, Meins, Technik …)", x: "Ein Register oben auf der Startseite <b>festhalten</b>, bis es sich hebt – dann nach links oder rechts ziehen und loslassen. Die App merkt sich deine Reihenfolge auf allen deinen Geräten. (Nur in der erweiterten Ansicht.)", zeig: () => zeige("start") },
@@ -4835,7 +4836,7 @@ const HILFE = [
   { id: "anfrage_vorbehalt", thema: "termine", sym: "🤔", t: "Gegenvorschlag unter Vorbehalt annehmen", x: "Schlägt dir jemand eine andere Zeit vor, kannst du <b>„✅ Neue Zeit annehmen“</b>, <b>„🤔 Unter Vorbehalt“</b> oder <b>„❌ Passt nicht“</b> wählen. Beim Vorbehalt schreibst du kurz dazu, woran es noch hängt – der andere sieht es sofort.", zeig: () => zeige("termine"), seit: "2.23.57" },
   { id: "sprungknopf", thema: "nachrichten", sym: "🔘", t: "Einen Knopf in die Nachricht setzen", x: "Willst du jemanden direkt an eine Stelle der App schicken? Unter dem Schreibfeld auf <b>📎</b> → <b>„🔘 Knopf zu einer App-Stelle“</b> und das Ziel wählen, z. B. „Mein Bild wählen“. In der Nachricht erscheint ein Knopf – antippen, und man ist dort.", zeig: () => zeige("nachrichten"), seit: "2.23.97" },
   { id: "was_neu", thema: "nachrichten", sym: "👋", t: "Was ist neu? Gleich beim Öffnen", x: "Öffnest du die App und es gibt Neues, zeigt sie dir kurz, wie viele <b>neue Nachrichten</b> (in deinen Chats und in Gruppen) und <b>Pinnwand-Einträge</b> da sind und ob <b>Spiele</b> auf dich warten – mit Knopf direkt dorthin. Abschalten: im Fenster selbst mit „🔕 Diese Meldung ausschalten“ oder unter ⚙️ Einstellungen → 🗣️ Ansagen, Töne &amp; Tipps → „👋 Beim Öffnen zeigen, was neu ist“.", zeig: () => einstiegHin("ansagen", "setWasNeu"), seit: "2.24.12" },
-  { id: "jahreszeit_kopf", thema: "darstellung", sym: "🍂", t: "Jahreszeiten-Bild und Deko im Kopf", x: "Im Kopf der Startseite wechselt das Bild <b>von selbst nach dem Kalender</b>: Frühling, Sommer, Herbst, Winter, Advent und Silvester – mit Laub, Schnee, Blumen und kleinen Besuchern. An der Leiste mit den Lämpchen kann eine <b>Deko</b> hängen (Wimpel, Lichterkette, Laternen). Fest einstellen oder ganz abschalten unter ⚙️ → <b>„✨ Effekte“</b>. Die Bühne spart Akku: nach einer Weile ohne Bedienung läuft sie langsamer.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.273.0" }, // 2.337.0 KC-CLUB-TUEV-4
+  { id: "jahreszeit_kopf", thema: "darstellung", sym: "🍂", t: "Jahreszeiten-Bild und Deko im Kopf", x: "Im Kopf der Startseite wechselt das Bild <b>von selbst nach dem Kalender</b>: Frühling, Sommer, Herbst, Winter, Advent und Silvester – mit Laub, Schnee, Blumen und kleinen Besuchern. An der Leiste mit den Lämpchen kann eine <b>Deko</b> hängen (Wimpel, Lichterkette, Laternen). Fest einstellen oder ganz abschalten unter ⚙️ → <b>„✨ Effekte“</b>. Die Bühne spart Akku: nach einer Weile ohne Bedienung läuft sie langsamer. Eine <b>Vorschau</b> aus den Einstellungen (z. B. Nikolaus-Stiefel) bleibt stehen, bis du unten auf der Startseite <b>„✕ beenden“</b> tippst (oder in den Einstellungen „📅 Heute“).", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.273.0" }, // 2.337.0 KC-CLUB-TUEV-4
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „✨ Effekte“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("effekte", "setAnimiert"), seit: "2.24.1" },
   { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am grünen Kopf ist eine kleine Ecke umgeknickt. <b>Doppelt tippen</b> (oder nach links ziehen) – der Kopf dreht sich um wie ein Blatt Papier. Auf der Rückseite oben sieben Reiter: <b>🖼️ Diashow</b>, <b>🖍️ Tafel</b>, <b>📋 Flipchart</b>, <b>🕰️ Uhr</b>, <b>🎭 Bühne</b>, <b>🪞 Spiegel</b> und <b>🧩 Rätsel</b>. Damit man das Eselsohr nicht übersieht, blinkt es ab und zu kurz gelb-orange. Sie nutzt den ganzen Bildschirm bis zur Leiste unten. <b>Nochmal doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „📄 Eselsohr am Kopf“. Alles zum Ansehen: Erklär-Video <b>„📄 Die Rückseite: Eselsohr“</b>.", zeig: () => esOeffnen(null), seit: "2.292.0" },
   // 2.300.0 KC-CLUB-RUECKSEITE-HILFE (Wunsch Hansi „Hilfetexte anpassen“): je ein Text für jeden Reiter der Rückseite
@@ -17596,7 +17597,9 @@ function jzbTwinkeyMalen(c) {
     c.strokeStyle = "#2e8b57"; c.lineWidth = 1.6 * k; c.beginPath(); c.moveTo(5 * k, 1 * k); c.lineTo(11 * k, -4 * k); c.stroke(); c.beginPath(); c.arc(0, -5 * k, 3 * k, Math.PI, 0); c.stroke();
     c.restore();
   }
-  c.font = `${26 * k}px ${JZB_EMOJI}`; c.textAlign = "center"; c.textBaseline = "bottom"; c.fillText("🧑‍🍳", x, y - 8 * k + (geht ? -Math.abs(schritt) * 1.2 * k : 0));
+  const kopfY = y - 8 * k + (geht ? -Math.abs(schritt) * 1.2 * k : 0);
+  if (!KOCH.ok && KOCH.bild?.complete && KOCH.bild.naturalWidth) { const g = 26 * k; c.drawImage(KOCH.bild, x - g / 2, kopfY - g * 1.02, g, g); } // 2.355.0: Gerät ohne Koch-Emoji
+  else { c.font = `${26 * k}px ${JZB_EMOJI}`; c.textAlign = "center"; c.textBaseline = "bottom"; c.fillText("🧑‍🍳", x, kopfY); }
   c.restore();
 }
 // Vorschau aus den Einstellungen: eine Jahreszeit sofort im Kopf zeigen (bis „Heute“ oder Neustart der App)
@@ -17606,6 +17609,18 @@ function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, t
   if (art === "heute") JZB.vorschau = ""; else if (art) JZB.vorschau = art;
   JZB.extra = extra || "";
   zeige("start"); setTimeout(jahreszeitKopf, 350);
+  jzVorschauLeiste(); // 2.355.0
+}
+// ---------- 2.355.0 KC-CLUB-VORSCHAU-ENDE (Fund Hansi „in den Einstellungen z. B. Nikolaus-Stiefel gewählt, wird angezeigt – wie bekomme ich ihn
+// wieder weg?“): solange eine Vorschau läuft, steht auf der Startseite ein Knopf „✕ Vorschau beenden“ (vorher nur „📅 Heute“ in den Einstellungen)
+const JZ_VORSCHAU_NAME = { nikolaus: "Nikolaus-Stiefel", regen: "Regen", topf: "Kochtopf am Treffen-Tag", ostern: "Ostereier", igel: "Igel", twinkey: "Twinkey fegt",
+  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", advent: "Advent" };
+function jzVorschauLeiste(v = aktuelleAnsicht) {
+  const an = !!(JZB.vorschau || JZB.extra) && v === "start" && !(typeof RG !== "undefined" && RG.an);
+  let b = $("jzVorschauAus");
+  if (!an) { b?.remove(); return; }
+  if (!b) { b = document.createElement("button"); b.type = "button"; b.id = "jzVorschauAus"; b.className = "jz-vorschau-aus"; b.onclick = () => { jahreszeitVorschau("heute"); melde("📅 Vorschau beendet – der Kopf zeigt wieder den heutigen Tag."); }; document.body.appendChild(b); }
+  b.innerHTML = `👁 Vorschau: <b>${esc(JZ_VORSCHAU_NAME[JZB.extra] || JZ_VORSCHAU_NAME[JZB.vorschau] || "Jahreszeit")}</b> · ✕ beenden`;
 }
 // ---------- KC-CLUB-KONFETTI (2.169.0): nur zu besonderen Anlässen – Spiel gewonnen, eigener Geburtstag ----------
 const KONFETTI_FARBEN = ["#7b1e2b", "#a8364a", "#efe3d1", "#d4a017", "#ffffff", "#c9a26b"]; // Weinrot + Beige + Gold (CD)
@@ -17778,7 +17793,21 @@ function kachelnZeigen() {
       <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(typeof k.u === "function" ? k.u() : k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}</button>`;
   }).join("");
   zahlenHochzaehlen($("raster"), ".kachel[data-id] > .zahl", (el) => "k:" + el.parentElement.dataset.id); // 2.172.0 KC-CLUB-EFFEKTE-2
+  kachelZuletztMarkieren(); // 2.355.0
 }
+// ---------- 2.355.0 KC-CLUB-KACHEL-ZULETZT (Wunsch Hansi „die letzte gewählte Kachel soll einen leichten Rand haben und minimal vergrößern,
+// bis eine andere gewählt wird – auch in der einfachen Ansicht“) ----------
+const KACHEL_ZULETZT = "kc_club_kachel_zuletzt";
+function kachelZuletztMarkieren() {
+  let id = ""; try { id = localStorage.getItem(KACHEL_ZULETZT) || ""; } catch {}
+  document.querySelectorAll("#raster .kachel.zuletzt").forEach((k) => { if (k.dataset.id !== id) k.classList.remove("zuletzt"); });
+  if (id) document.querySelector(`#raster .kachel[data-id="${CSS.escape(id)}"]`)?.classList.add("zuletzt");
+}
+document.addEventListener("click", (e) => {
+  const k = e.target.closest?.("#raster .kachel[data-id]"); if (!k || kaBearb || (typeof RG !== "undefined" && RG.an)) return;
+  try { localStorage.setItem(KACHEL_ZULETZT, k.dataset.id); } catch {}
+  kachelZuletztMarkieren();
+}, true);
 // ---------- KC-CLUB-INFOFELD (0.42.0): Info-Feld oben zum Blättern ----------
 // ‹ › antippen, im Feld wischen oder einen Punkt antippen. Felder kommen aus der Registry; die App merkt sich das zuletzt gezeigte.
 // Kein automatisches Weiterblättern (in Ruhe lesen). Neue Felder = neuer Eintrag hier.
@@ -20900,6 +20929,7 @@ function zeige(v, ausHistorie) {
   ["start", "dokumente", "dokansicht", "termine", "vorschlaege", "aktionen", "aktion", "fotos", "feedback", "gruppe", "mitglied", "protokolle", "protokoll", "dienste", "nachrichten", "chat", "neu", "mitglieder", "einstellungen", "pinnwand", "erstattung", "ueberblick", "programme", "standort", "archiv", "sos", "sicherheit", "helfen", "buero", "spiele", "hilfezentrum"].forEach((x) => $("v-" + x).classList.toggle("versteckt", x !== v));
   if (v !== "spiele") { clearInterval(SP.takt); SP.takt = null; } else spZeigen(); // KC-CLUB-SPIELE (2.7.0)
   einwZeigen(v); // KC-CLUB-EINWEISUNG (2.4.0)
+  try { jzVorschauLeiste(v); } catch {} // 2.355.0 KC-CLUB-VORSCHAU-ENDE: Knopf nur auf der Startseite
   hzFrageEinsetzen(v); // KC-CLUB-HILFEZENTRUM (2.23.4): „?“ unten rechts, passend zur Ansicht
   shBereich(v); // KC-CLUB-SCHRITT-HILFE (2.63.0)
   kzGesehen(v); // KC-CLUB-KACHEL-ZAHLEN (2.22.12): Fotoalbum/Dienstpläne geöffnet → Zahl weg
@@ -33489,4 +33519,51 @@ async function fpAdmin(tage) {
   document.addEventListener("visibilitychange", () => { updWeg(document.hidden); if (!document.hidden) { if (ST.eigen) stMelden(true); neuLaden(); updatePruefen(false).then(updateSelbst); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
   setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat") neuLaden(); }, sparTakt(60000)); // KC-CLUB-SPARMODUS
   setInterval(pwLive, PW_LIVE_MS); // KC-CLUB-PINNWAND-LIVE: auch im Chat
+})();
+// ---------- 2.355.0 KC-CLUB-KOCH-EMOJI (Fund Hansi „am PC sieht Twinkey beim Fegen anders aus: laufende Beine, ein Gesicht daneben und eine
+// Pfanne mit Spiegelei – so sieht auch die Kachel ‚Mein Bild‘ aus“) ----------
+// 🧑‍🍳 (Koch) ist ein zusammengesetztes Emoji (🧑 + 🍳). Ältere Windows-PCs und manche Browser kennen es nicht und zeigen beide Teile nebeneinander.
+// Die App misst beim Start, ob das Gerät es als EIN Zeichen malt. Wenn nicht: überall ein kleines Bild (Twemoji, CC BY 4.0, lib/emoji/) statt
+// der zwei Teile – in Kacheln, Texten und beim Twinkey im Kopf. Eingabefelder und Auswahllisten bleiben unberührt.
+const KOCH_EMO = { "🧑‍🍳": "1f9d1-200d-1f373", "👨‍🍳": "1f468-200d-1f373", "👩‍🍳": "1f469-200d-1f373" };
+const KOCH_RE = /🧑‍🍳|👨‍🍳|👩‍🍳/g;
+const KOCH = { ok: true, bild: null };
+function kochEmojiPruefen() {
+  let erzwingen = ""; try { erzwingen = localStorage.getItem("kc_club_koch_bild") || ""; } catch {}
+  if (erzwingen) return (KOCH.ok = erzwingen !== "1");
+  try {
+    const c = document.createElement("canvas").getContext("2d"); c.font = `40px ${JZB_EMOJI}`;
+    const ganz = c.measureText("🧑‍🍳").width, eins = c.measureText("🧑").width;
+    KOCH.ok = !(eins > 0 && ganz > eins * 1.4); // zwei Teile nebeneinander → fast doppelt so breit
+  } catch {}
+  return KOCH.ok;
+}
+const kochBildSrc = (m) => `lib/emoji/${KOCH_EMO[m] || KOCH_EMO["🧑‍🍳"]}.svg`;
+function kochErsetzen(wurzel) {
+  if (!wurzel || KOCH.ok) return;
+  const nimm = (n) => { const p = n.parentElement; return !p || p.closest("textarea, input, select, option, [contenteditable=''], [contenteditable='true'], script, style, title, svg, canvas, .emo-koch") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT; };
+  const liste = [];
+  if (wurzel.nodeType === 3) { KOCH_RE.lastIndex = 0; if (KOCH_RE.test(wurzel.data) && nimm(wurzel) === NodeFilter.FILTER_ACCEPT) liste.push(wurzel); }
+  else if (wurzel.nodeType === 1) {
+    const w = document.createTreeWalker(wurzel, NodeFilter.SHOW_TEXT, { acceptNode: (n) => { KOCH_RE.lastIndex = 0; return KOCH_RE.test(n.data) ? nimm(n) : NodeFilter.FILTER_REJECT; } });
+    while (w.nextNode()) liste.push(w.currentNode);
+  }
+  for (const n of liste) {
+    const f = document.createDocumentFragment(), t = n.data; let i = 0;
+    t.replace(KOCH_RE, (m, pos) => { if (pos > i) f.append(t.slice(i, pos)); const im = document.createElement("img"); im.className = "emo-koch"; im.alt = m; im.src = kochBildSrc(m); im.draggable = false; f.append(im); i = pos + m.length; return m; });
+    if (i < t.length) f.append(t.slice(i));
+    n.replaceWith(f);
+  }
+}
+(function kochStart() {
+  if (typeof document === "undefined" || !document.body || kochEmojiPruefen()) return;
+  document.documentElement.classList.add("koch-bild");
+  KOCH.bild = new Image(); KOCH.bild.src = kochBildSrc("🧑‍🍳"); // für Twinkey im Kopf (Canvas)
+  kochErsetzen(document.body);
+  let offen = new Set(), wartet = false;
+  new MutationObserver((ms) => {
+    for (const m of ms) { if (m.type === "characterData") offen.add(m.target); else for (const n of m.addedNodes) offen.add(n); }
+    if (wartet) return; wartet = true;
+    requestAnimationFrame(() => { wartet = false; const l = [...offen]; offen = new Set(); for (const n of l) if (n.isConnected) kochErsetzen(n); });
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
 })();
