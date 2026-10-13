@@ -865,7 +865,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/zeWahl\('alle'\)/.test(z) && /zeWahl\('online'\)/.test(z) && /zeWahl\('keiner'\)/.test(z) && /zeBlatt\(\)/.test(z), "Zentrale: Auswahl Alle/Online/Keiner/Auswahl fehlt");
   const zs = html.slice(html.indexOf("async function zeSenden"), html.indexOf("// Feld 4 (0.43.0)"));
   assert.ok(/api\("nachricht_senden"/.test(zs) && /n >= ZE_RUECKFRAGE_AB && !\(await frage/.test(zs), "Zentrale sendet nicht über den vorhandenen Weg oder ohne Rückfrage");
-  assert.ok(/\.ipfeil\.links \{ left: -17px; \}/.test(html) && /id="infoPunkte"/.test(html) && !/class="inav"/.test(html), "Pfeile nicht am Rahmen / Punkte nicht unter dem Feld");
+  assert.ok(/\.ipfeil\.links \{ left: -(?:17|21)px; \}/.test(html) && /id="infoPunkte"/.test(html) && !/class="inav"/.test(html), "Pfeile nicht am Rahmen / Punkte nicht unter dem Feld");
   assert.ok(/chip\("\*", "👥 Alle Mitglieder"\)/.test(html) && !/ICH\.vorstand \? chip\("\*"/.test(html), "„Alle Mitglieder“ nicht für alle");
 }
 
@@ -6134,6 +6134,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   // Abmelden
   assert.ok(/async function geraetAbmelden\(\) \{\s*if \(!\(await frage\(/.test(programm) && /\/\^\(kc_club_\|kc_buero_\|kc-clubapp\\\.\|kcclub\)\//.test(programm) && /onclick="geraetAbmelden\(\)"/.test(seiteH), "Von diesem Gerät abmelden – nur nach Rückfrage, nur Club-Daten");
 }
+// 2.338.0 KC-CLUB-TIPPFLAECHEN + KC-DATA-API-FREIGABEN-2 (Gesamtprüfung, Freigabe Hansi „1 und 2“)
+{
+  const seiteH = lies("index.html");
+  assert.ok(/\.ipfeil \{ position: absolute; top: 50%; z-index: 2; width: 40px; height: 40px; margin-top: -20px;/.test(seiteH) && /\.ipunkt \{ width: 26px; height: 34px;/.test(seiteH), "Info-Pfeile 40 px, Info-Punkte größere Tippfläche");
+  assert.ok(/\.mg-knoepfe \.knopf \{ padding: 6px 7px; min-width: 38px; min-height: 40px; \}/.test(seiteH) && /@media \(max-width: 480px\) \{ \.mg-knoepfe \{ display: grid; grid-template-columns: repeat\(2, 42px\);/.test(seiteH), "Mitglieder-Knöpfe mindestens 38×40, am Handy 2 × 2");
+  assert.ok(/\.eselsohr::after \{ content: ""; position: absolute; inset: -8px; \}/.test(seiteH), "Eselsohr behält die vergrößerte Tippfläche");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -9055,6 +9062,16 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
       assert.ok(new RegExp(`grant\\s+[^;]*\\bon\\s+(?:table\\s+)?(?:public\\.)?"?${t}"?\\s+to\\s+[^;]*\\bservice_role\\b`, "i").test(sql), `${f}: Tabelle ${t} braucht „grant … on public.${t} to service_role;“ (Supabase-Änderung 30.10.2026)`);
     }
   }
+  // KC-DATA-API-FREIGABEN-2 (13.10.2026): anon/authenticated bekommen neue Tabellen nicht mehr automatisch – wer RLS-Regeln für sie anlegt, muss sie ausdrücklich freigeben
+  for (const f of dateien) {
+    const sql = fs.readFileSync(new URL(f, ordner), "utf8").replace(/--[^\n]*/g, "");
+    for (const m of sql.matchAll(/create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?"?([a-z0-9_]+)"?\s*\(/gi)) for (const rolle of ["anon", "authenticated"]) {
+      if (!new RegExp(`create\\s+policy[^;]*\\bon\\s+(?:public\\.)?"?${m[1]}"?[^;]*\\bto\\s+[^;]*\\b${rolle}\\b`, "i").test(sql)) continue;
+      assert.ok(new RegExp(`grant\\s+[^;]*\\bon\\s+(?:table\\s+)?(?:public\\.)?"?${m[1]}"?\\s+to\\s+[^;]*\\b${rolle}\\b`, "i").test(sql), `${f}: Tabelle ${m[1]} hat Regeln für ${rolle}, braucht aber „grant … to ${rolle};“`);
+    }
+  }
+  const zu = fs.readFileSync(new URL("20261013_kc_data_api_freigaben_2.sql", ordner), "utf8");
+  assert.ok(/revoke select, insert, update, delete[^;]*on tables from anon, authenticated;/.test(zu) && /revoke usage, select, update on sequences from anon, authenticated;/.test(zu), "neue Tabellen nicht mehr automatisch offen");
   const netz = fs.readFileSync(new URL("20261012_kc_data_api_freigaben.sql", ordner), "utf8");
   assert.ok(/create event trigger kc_neue_objekte_freigeben on ddl_command_end/.test(netz) && /to service_role/.test(netz), "Sicherheitsnetz in der Datenbank beschrieben");
 }

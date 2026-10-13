@@ -1,16 +1,20 @@
 {
-  "version": "2.337.0",
+  "version": "2.338.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🔎 Gesamtprüfung: viele kleine Fehler behoben",
-    "🧭 Hilfe führt jetzt immer an die richtige Stelle in den Einstellungen",
-    "🔋 Weniger Akku: laufende Rahmen und Lämpchen halten an, wenn du nichts tippst",
-    "⚠️ Termine, Dienstpläne, Erstattung und Fotos zeigen bei Netzproblemen „🔄 Nochmal laden“ statt einer leeren Seite",
-    "🚪 Neu: „Von diesem Gerät abmelden“ (⚙️ → Privatsphäre) – z. B. wenn du ein Handy weitergibst",
-    "🗑️ Einheitlicher: Rückfrage vor dem Löschen, gleiche Zurück-Knöpfe, „✓ Erledigt“"
+    "👆 Größere Knöpfe: Pfeile und Punkte im Info-Feld und die Knöpfe 💬👋📞🎥 bei den Mitgliedern sind leichter zu treffen",
+    "🔒 Datenbank zusätzlich abgesichert (für dich ändert sich nichts)"
   ],
   "verlauf": [
+    {
+      "version": "2.338.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "👆 Größere Knöpfe: Pfeile und Punkte im Info-Feld und die Knöpfe 💬👋📞🎥 bei den Mitgliedern sind leichter zu treffen",
+        "🔒 Datenbank zusätzlich abgesichert (für dich ändert sich nichts)"
+      ]
+    },
     {
       "version": "2.337.0",
       "datum": "2026-10-13",
