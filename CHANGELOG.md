@@ -1,5 +1,8 @@
 # Änderungen
 
+## DB/Spiegel – 2026-10-13 (ohne App-Build) – 🛡️ KC-CORE-SPIEGEL-NACHHOLEN: Wächter holt verpasste Tabellen selbst nach
+Anlass: System-Check ROT um 09:30 – beim regulären Spiegellauf 08:10 fehlte kc_club_protokoll (ein Aufruf des Spiegel-Arbeiters brach nach 16 s mit 500 ab, 248/249 ok); ohne Eingriff wäre sie erst um 14:10 nachgezogen worden. Sofort von Hand nachgeholt (4.630/4.630 Zeilen, Prüfsumme gleich). Neu: kc_internal.kc_db_mirror_nachholen() (pg_cron kc-db-mirror-nachholen um :25 und :55) – Tabellen, die den jüngsten regulären Lauf (Welle mit mindestens der Hälfte aller Tabellen) verpasst haben, werden frühestens 15 Min. danach einzeln nachgeholt, höchstens 10 je Durchgang und 2 Versuche je Tabelle in 6 Std.; im Normalfall passiert nichts (Neon wird nicht zusätzlich geweckt). Trockenprobe: hätte um 08:40 genau kc_club_protokoll gewählt, jetzt keine. Rückweg in der Migration.
+
 ## 2.345.0 – 2026-10-13 – KC-CLUB-VIDEO-WARUM-2
 Wunsch Hansi („ins Video Warum diese App: Die App soll das Clubleben anzeigen und organisieren, alles in einer App; Dinge vereinfachen, besser organisieren, Hilfestellung geben, aber auch Spaß machen und neugierig machen, was die App alles kann; sie kann an Termine erinnern u. v. m.“). RG_WARUM: neue Stationen „🧑‍🍳 Unser Clubleben in einer App“ (Kopf), „🧩 Einfacher und besser organisiert“ (Dienstwünsche, To-do, Erstattung, Fotos, Protokolle, Archiv), „⏰ Die App denkt mit“ (Erinnerungen an Termine, Dienste, Geburtstage, Aufgaben; Benachrichtigungen; Handy-Kalender), „🎉 Spaß und Neugier“ (Jahreszeiten, Eselsohr mit Bühne, Club-Song, Rätsel; Spiele; Themen). Dauer ca. 3 Min. Neuer Hilfe-Eintrag „💡 Wozu gibt es die Club-App?“ (Bereiche kurz erklärt; Twinkey findet ihn) mit Start des Videos.
 

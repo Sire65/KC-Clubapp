@@ -6157,6 +6157,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/^<!doctype html>\n<html lang="de">\n<head>\n<meta charset="utf-8">\n<link rel="preconnect" href="https:\/\/ptblnpiroqftcvlsrhac\.supabase\.co" crossorigin>/.test(seiteH), "Verbindung zum Club-Server ganz am Anfang vorbereiten");
   assert.ok(/const \[ant, ges\] = ids\.length \? await Promise\.all\(\[/.test(server) && /const leih = pLeih \? \(\(await pLeih\)\.count \?\? 0\) : 0;/.test(server), "Hilfe-Zahl: Abfragen gleichzeitig, Ergebnis gleich");
 }
+// KC-CORE-SPIEGEL-NACHHOLEN (13.10.2026): Wächter holt verpasste Tabellen selbst nach – gebremst, nur nach regulärem Lauf
+{
+  const nh = lies("supabase/migrations/20261013_kc_db_mirror_nachholen.sql");
+  assert.ok(/create or replace function kc_internal\.kc_db_mirror_nachholen\(\)/.test(nh) && /revoke all on function kc_internal\.kc_db_mirror_nachholen\(\) from public, anon, authenticated;/.test(nh), "Funktion nur intern");
+  assert.ok(/where w\.n >= greatest\(20, \(select count\(\*\) from public\.kc_db_mirror_table_rules where mirror_enabled\) \/ 2\)/.test(nh), "regulärer Lauf = große Welle, einzelne Nachstöße zählen nicht");
+  assert.ok(/v_zyklus > now\(\) - interval '15 minutes'/.test(nh) && /limit 10/.test(nh) && /interval '6 hours'[\s\S]{0,80}< 2/.test(nh), "frühestens 15 Min. danach, höchstens 10 Tabellen, 2 Versuche in 6 Std.");
+  assert.ok(/perform public\.kc_db_mirror_dispatch\(v_tabellen\);/.test(nh) && /cron\.schedule\('kc-db-mirror-nachholen', '25,55 \* \* \* \*'/.test(nh), "vorhandener Spiegel-Weg, Zeitplan :25/:55");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
