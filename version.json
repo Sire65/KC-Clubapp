@@ -1,13 +1,18 @@
 {
-  "version": "2.356.0",
+  "version": "2.357.0",
   "datum": "2026-10-13",
   "stufe": "RC",
   "neu": [
-    "❄️ Dein Name aus Eis bleibt stehen, bis die Schneeraupe kommt – sie schiebt ihn weg, und er zerspringt in glitzernde Stücke",
-    "🍂 Dein Name aus Nüssen bleibt, bis der Laubbläser kommt – er wirbelt ihn mit Blättern und Nüssen auf",
-    "👁 Vorschau wechseln oder beenden räumt den Namen weg – nie mehr zwei Namen (Eis und Laub) gleichzeitig"
+    "🐌 Die Schnecken oben (langsames Netz) schauen am Windows-PC jetzt in die Richtung, in die sie kriechen"
   ],
   "verlauf": [
+    {
+      "version": "2.357.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🐌 Die Schnecken oben (langsames Netz) schauen am Windows-PC jetzt in die Richtung, in die sie kriechen"
+      ]
+    },
     {
       "version": "2.356.0",
       "datum": "2026-10-13",

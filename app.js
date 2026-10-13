@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.356.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.357.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12895,7 +12895,17 @@ function schneckePruefen() {
   else if (SCHNECKE.an && langsam >= 1) { an = true; grund = SCHNECKE.grund; } // nicht flackern: bleibt, bis es wirklich wieder schnell ist
   SCHNECKE.an = an; SCHNECKE.grund = grund; schneckeZeigen();
 }
+// 2.357.0 KC-CLUB-SCHNECKE-RICHTUNG (Fund Hansi „am PC laufen die Schnecken von rechts nach links, schauen aber in die falsche Richtung“):
+// 🐌 sieht je Gerät anders aus – Apple, Android und Linux (Noto) schauen nach links, die Windows-Schnecke (Segoe UI Emoji) nach rechts.
+// Die Schnecken kriechen nach links → nur unter Windows spiegeln. (Zum Prüfen: localStorage kc_club_schnecke_spiegeln = "1" / "0".)
+function schneckeRichtung() {
+  if (schneckeRichtung.fertig) return; schneckeRichtung.fertig = true;
+  let w = ""; try { w = localStorage.getItem("kc_club_schnecke_spiegeln") || ""; } catch {}
+  const win = /Windows/i.test(navigator.userAgentData?.platform || navigator.userAgent || "");
+  if (w ? w === "1" : win) document.documentElement.classList.add("schnecke-spiegeln");
+}
 function schneckeZeigen() {
+  schneckeRichtung();
   let z = document.getElementById("schnecke");
   if (!z && document.body) { document.body.insertAdjacentHTML("beforeend", `<button type="button" id="schnecke" class="schnecke versteckt" title="Netz gerade langsam – antippen für Infos" aria-label="Netz gerade langsam" onclick="schneckeInfo()"><span class="sn-spur" aria-hidden="true"></span><span class="sn-zug"><i style="--n:0">🐌</i><i style="--n:1">🐌</i><i style="--n:2">🐌</i></span></button>`); /* 2.195.0: die 3 als Trupp mit Schleimspur; 2.288.0/2.290.0: Spur bleibt liegen, wächst bis unter die erste */ z = document.getElementById("schnecke"); }
   if (z) z.classList.toggle("versteckt", !SCHNECKE.an);

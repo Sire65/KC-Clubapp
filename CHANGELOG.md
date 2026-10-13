@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.357.0 – 2026-10-13 – 🐌 KC-CLUB-SCHNECKE-RICHTUNG
+Anlass (Hansi): „Bei mir laufen die Schnecken gerade auf dem PC von rechts nach links, allerdings gucken die Schnecken in die falsche Richtung.“
+- Ursache: das Zeichen 🐌 sieht je Gerät anders aus – Apple, Android und Linux (Noto) schauen nach links, Windows (Segoe UI Emoji) nach rechts. Die Schnecken kriechen nach links.
+- Unter Windows bekommt :root die Klasse schnecke-spiegeln → .schnecke i { transform: scaleX(-1) } (das Kriechen nutzt die eigene scale-Eigenschaft und bleibt). Zum Prüfen: localStorage kc_club_schnecke_spiegeln = "1"/"0".
+
 ## 2.356.0 – 2026-10-13 – ❄️🍂 KC-CLUB-NAME-WEG: Schneeraupe und Laubbläser räumen den Namen weg
 Anlass (Hansi): „Ich habe doppelt meinen Namen Hansi aus Blättern und aus Eis. Wenn ich eine Sache beende, muss der Name auch weg sein. Ändere das Konzept: der Name soll weg sein, wenn die Schneeraupe ihn wegschiebt – dann zerspringt der Name in Stücke. Beim Herbstlaub soll das der Laubbläser sein – dann werden die Blätter aufgewirbelt.“
 - Ursache „doppelt“: der Eis-Name wurde beim Wechsel der Vorschau (Winter → Herbst) nie gelöscht und ohne Jahreszeit-Prüfung gemalt. Jetzt: nur im Winter, und jahreszeitVorschau() räumt Eis- und Nuss-Namen bei jedem Wechsel/Ende.

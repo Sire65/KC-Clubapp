@@ -9446,3 +9446,8 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/typ: "scherbe"/.test(html) && /if \(N && N\.n && J\.raupe\)/.test(html) && !/die Sonne vom Schneemann lässt den Namen schmelzen/.test(html), "Raupe statt Sonne");
   assert.ok(/typ: "nuss"/.test(html) && /jzbBlaeserStart\(\); \/\/ 2\.356\.0/.test(html) && !/art = "holen";/.test(html), "Laubbläser statt Eichhörnchen holt");
 }
+
+// 2.357.0 KC-CLUB-SCHNECKE-RICHTUNG: Windows-Schnecke in Laufrichtung spiegeln
+{
+  assert.ok(/function schneckeRichtung\(\)/.test(html) && /schneckeZeigen\(\) \{\n  schneckeRichtung\(\);/.test(html) && /:root\.schnecke-spiegeln \.schnecke i \{ transform: scaleX\(-1\)/.test(seite), "Schnecke unter Windows gespiegelt");
+}
