@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.351.0";
+const SERVER_VERSION = "2.352.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -12651,6 +12651,21 @@ Köcheclub-App`,
         if (!data?.length) throw new Fehler("Gerät nicht gefunden.", 404);
         await protokoll(ich.person_id, "geraet_entfernt", {});
         return json({ ok: true });
+      }
+      // 2.352.0 KC-CLUB-GERAETE-ABMELDEN (Sicherheits-Abgleich, Wunsch Hansi): Handy verloren/gestohlen? Neuer persönlicher Schlüssel nur für
+      // DIESES Gerät – alle anderen Geräte sind sofort abgemeldet (alter Schlüssel ungültig, offene Kurzcodes und vorgemerkte Mail-Links verfallen,
+      // Benachrichtigungen an andere Geräte aus). Wieder anmelden dort: neuer Code oder Link. Admin kann dasselbe mit „neuer Link“ (link_erzeugen).
+      case "andere_geraete_abmelden": {
+        const token = zufall(), endpunkt = txt(p.endpoint, 800);
+        const { data: z, error: ze } = await db.from("kc_club_zugang").update({ token_hash: await sha256(token), neu_token_hash: null, neu_bis: null }).eq("person_id", ich.person_id).eq("aktiv", true).select("person_id");
+        if (ze || !z?.length) throw new Fehler("Das hat gerade nicht geklappt – bitte gleich noch einmal versuchen.", 500);
+        anmeldungenVergessen();
+        await db.from("kc_club_kurzcodes").delete().eq("person_id", ich.person_id);
+        let q = db.from("kc_member_push_subscriptions").update({ active: false, updated_at: jetzt() }).eq("person_id", ich.person_id).eq("active", true);
+        if (endpunkt) q = q.neq("endpoint", endpunkt);
+        const { data: pw } = await q.select("id");
+        await protokoll(ich.person_id, "andere_geraete_abgemeldet", { benachrichtigungen_aus: pw?.length ?? 0 });
+        return json({ ok: true, k: token, benachrichtigungenAus: pw?.length ?? 0 });
       }
       case "push_abmelden": {
         await db.from("kc_member_push_subscriptions").update({ active: false, updated_at: jetzt() }).eq("person_id", ich.person_id).eq("endpoint", String(p.endpoint || ""));

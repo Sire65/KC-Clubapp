@@ -1,0 +1,76 @@
+# KC-CORE-NOTFALL-ZWEITKOPIE (13.10.2026, Sicherheits-Abgleich): wöchentlich eine zweite Kopie der neuesten VERSCHLÜSSELTEN
+# Tagessicherung bei Cloudflare ablegen (KV-Speicher „kc-notfall-zweitkopie“, kostenlos, 5 Wochen aufbewahrt).
+# Grund: Wer das Neon-Passwort hätte, könnte dort die Lösch-Sperre abschalten – an die Cloudflare-Kopie kommt er damit nicht.
+#   1. Schlüssel-Kopie + Neon-Zugang aus dem Notfall-Tresor holen (nur dieser Ablauf, GitHub-OIDC; Werte maskiert)
+#   2. neueste Sicherung packen (bleibt verschlüsselt) → in Teilen ≤ 20 MB bei Cloudflare ablegen
+#   3. zurücklesen, Prüfsumme vergleichen, eine Tabelle entschlüsseln (Beweis: Kopie ist lesbar)
+#   4. Kopien älter als die neuesten 5 löschen
+# Inhalte stehen nie im Protokoll, keine Artefakte. Der Schrittname „Zweitkopie prüfen“ ist Vertrag (Club-App Admin → Notfall).
+name: Notfall – Zweitkopie
+on:
+  schedule:
+    - cron: "41 5 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: notfall-zweitkopie
+  cancel-in-progress: false
+jobs:
+  kopie:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TRESOR: https://kc-notfall-tresor.ha-joko.workers.dev
+      SPEICHER: kc-notfall-zweitkopie
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Werkzeug holen
+        run: npm i --no-save --no-audit --no-fund postgres@3.4.5
+      - name: Zweitkopie anlegen
+        id: pack
+        run: |
+          set -e
+          token=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=kc-notfall-tresor" | jq -r .value)
+          code=$(curl -sS --max-time 30 -X POST "$TRESOR" -H "Authorization: Bearer $token" -o /tmp/t.json -w "%{http_code}" || true)
+          [ "$code" = "200" ] || { rm -f /tmp/t.json; echo "❌ Tresor gibt den Zugang nicht heraus (HTTP $code)"; exit 1; }
+          KC_BACKUP_KEY=$(jq -r .schluessel /tmp/t.json); KC_NEON_URL=$(jq -r .neon /tmp/t.json); rm -f /tmp/t.json
+          echo "::add-mask::$KC_BACKUP_KEY"; echo "::add-mask::$KC_NEON_URL"
+          echo "KC_BACKUP_KEY=$KC_BACKUP_KEY" >> "$GITHUB_ENV"
+          MODUS=packen KC_NEON_URL="$KC_NEON_URL" ZIEL=/tmp/zweitkopie.json.gz node tools/notfall/zweitkopie.mjs
+          base64 -w0 /tmp/zweitkopie.json.gz > /tmp/zk.b64
+          split -b 20000000 -d -a 2 /tmp/zk.b64 /tmp/zk-teil-
+          ls /tmp/zk-teil-* | wc -l | xargs -I{} echo "teile={}" >> "$GITHUB_OUTPUT"
+      - name: Bei Cloudflare ablegen
+        run: |
+          set -e
+          liste=$(npx -y wrangler@4 kv namespace list)
+          id=$(node -e 'const l=JSON.parse(process.argv[1]);const n=l.find(x=>x.title===process.env.SPEICHER);console.log(n?n.id:"")' "$liste")
+          if [ -z "$id" ]; then npx -y wrangler@4 kv namespace create "$SPEICHER" >/dev/null; liste=$(npx -y wrangler@4 kv namespace list); id=$(node -e 'const l=JSON.parse(process.argv[1]);console.log(l.find(x=>x.title===process.env.SPEICHER).id)' "$liste"); fi
+          echo "KV_ID=$id" >> "$GITHUB_ENV"
+          d="${{ steps.pack.outputs.datum }}"
+          for f in /tmp/zk-teil-*; do n=${f##*-}; npx -y wrangler@4 kv key put "kopie-$d-teil-$n" --path "$f" --namespace-id "$id" --remote >/dev/null; done
+          npx -y wrangler@4 kv key put "kopie-$d-info" "{\"teile\":${{ steps.pack.outputs.teile }},\"sha256\":\"${{ steps.pack.outputs.sha }}\"}" --namespace-id "$id" --remote >/dev/null
+          echo "Abgelegt: kopie-$d (${{ steps.pack.outputs.teile }} Teil/e)"
+      - name: Zweitkopie prüfen
+        run: |
+          set -e
+          d="${{ steps.pack.outputs.datum }}"; : > /tmp/zurueck.b64
+          for i in $(seq 0 $(( ${{ steps.pack.outputs.teile }} - 1 ))); do n=$(printf %02d $i); npx -y wrangler@4 kv key get "kopie-$d-teil-$n" --namespace-id "$KV_ID" --remote --text >> /tmp/zurueck.b64; done
+          base64 -d /tmp/zurueck.b64 > /tmp/zweitkopie-zurueck.json.gz
+          MODUS=pruefen DATEI=/tmp/zweitkopie-zurueck.json.gz SOLL_SHA="${{ steps.pack.outputs.sha }}" node tools/notfall/zweitkopie.mjs
+      - name: Alte Kopien aufräumen (die neuesten 5 bleiben)
+        run: |
+          keys=$(npx -y wrangler@4 kv key list --namespace-id "$KV_ID" --remote)
+          node -e '
+            const k=JSON.parse(process.argv[1]).map(x=>x.name);
+            const tage=[...new Set(k.map(n=>(n.match(/^kopie-(\d{4}-\d{2}-\d{2})-/)||[])[1]).filter(Boolean))].sort().reverse();
+            const weg=new Set(tage.slice(5)); console.log(k.filter(n=>weg.has((n.match(/^kopie-(\d{4}-\d{2}-\d{2})-/)||[])[1])).join("\n"));' "$keys" > /tmp/weg.txt
+          while read -r key; do [ -n "$key" ] && npx -y wrangler@4 kv key delete "$key" --namespace-id "$KV_ID" --remote >/dev/null && echo "gelöscht: $key"; done < /tmp/weg.txt
+          echo "Kopien vorhanden: $(echo "$keys" | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>console.log(new Set(JSON.parse(d).map(x=>(x.name.match(/^kopie-(\d{4}-\d{2}-\d{2})-/)||[])[1]).filter(Boolean)).size))')"

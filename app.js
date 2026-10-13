@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.351.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.352.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -4796,6 +4796,7 @@ const HILFE = [
   { id: "bild_gross", thema: "club", sym: "🔍", t: "Ein Bild groß ansehen", x: "Öffne bei <b>👥 Mitglieder</b> ein Mitglied – ganz oben steht sein Bild. Ein Tipp darauf zeigt es groß; noch ein Tipp schließt es wieder.", zeig: () => zeige("mitglieder"), seit: "2.23.89" },
   { id: "anruf_kachel", thema: "club", sym: "📞", t: "Anrufen direkt von der Mitglieder-Kachel", x: "Auf jeder Mitglieder-Kachel stehen <b>📞</b> (Anruf) und <b>🎥</b> (Videoanruf). Hell und antippbar sind sie nur, wenn das Mitglied gerade online ist – denn beide müssen die App offen haben.", zeig: () => zeige("mitglieder"), seit: "2.23.87" },
   { id: "abmelden", thema: "privat", sym: "🚪", t: "Von einem Gerät abmelden (Handy weitergeben)", x: "Gibst du ein Handy oder Tablet weiter, tippe vorher unter ⚙️ → <b>„🔒 Privatsphäre“</b> ganz unten auf <b>„🚪 Von diesem Gerät abmelden“</b>. Dann sind dein Zugang und alle Club-Daten auf diesem Gerät gelöscht – auch Notfallpass und Entwürfe. Auf deinen anderen Geräten bleibt alles; wieder anmelden geht mit deinem Zugangslink.", zeig: () => einstiegHin("privat"), seit: "2.337.0" }, // 2.337.0 KC-CLUB-ABMELDEN
+  { id: "handy_verloren", thema: "privat", sym: "🔒", t: "Handy verloren oder gestohlen – was tun?", x: "Auf einem anderen Gerät, auf dem die Club-App läuft, unter ⚙️ → <b>„🔒 Privatsphäre“</b> auf <b>„🔒 Alle anderen Geräte abmelden“</b> tippen. Dann ist die Club-App auf dem verlorenen Handy sofort abgemeldet und bekommt keine Benachrichtigungen mehr. Hast du kein anderes Gerät, sag der Clubleitung Bescheid: Ein neuer Link macht den alten sofort ungültig.", zeig: () => einstiegHin("privat"), seit: "2.352.0" }, // 2.352.0 KC-CLUB-GERAETE-ABMELDEN
   { id: "meine_daten", thema: "privat", sym: "🔐", t: "Meine Daten ansehen", x: "Was weiß die App über dich? Die Kachel <b>„🔐 Meine Daten“</b> (Register Meins) zeigt es: Angaben, Zugang, Rechte, Benachrichtigungen und wie viel du angelegt hast. Du kannst es ausdrucken oder als Datei sichern; stimmt etwas nicht, meldest du es gleich dort.", zeig: () => mdatStart(), seit: "2.23.82" },
   { id: "mein_dienst", thema: "termine", sym: "🗓️", t: "Mein Dienst: Wunsch, Plan und Zeiten", x: "Die Kachel <b>„🗓️ Mein Dienst“</b> (Meins, erweiterte Ansicht) zeigt alles an einer Stelle: <b>📝 Wunschplan</b> (abgegeben oder übernommen), <b>📅 Sollplan</b> (deine nächsten Dienste) und <b>⏱️ Istplan</b> (wann du wirklich da warst).", nur: () => !einfach(), zeig: () => mdStart(), seit: "2.23.74" },
   { id: "pfeil_menue", thema: "nachrichten", sym: "✂️", t: "Mehr am Pfeil einer Nachricht", x: "Der kleine Pfeil neben einer Nachricht bietet: ↪️ Weiterleiten, 📋 Kopieren, ✂️ Ausschneiden, 🗄️ ins eigene Archiv legen und 🗑️ Löschen. Bei eigenen Nachrichten kommt <b>❗ Wichtig</b> dazu.", zeig: () => zeige("nachrichten"), seit: "2.23.80" },
@@ -18195,7 +18196,8 @@ const AD_SB = `https://supabase.com/dashboard/project/${AD_REF}`, AD_GH = "https
 // KC-CORE-NOTFALL-LESEN (2.347.0): Werkzeuge „Daten zurückholen, wenn Supabase ausfällt“ – alles beim Anbieter, keine Schlüssel in der App
 const AD_NOTFALL = { ablauf: "notfall-sicherung-lesen.yml", einrichten: "notfall-einrichten.yml", schritt: "Sicherung lesen", repo: "Sire65/KC-Clubapp", maxTage: 8,
   neon: "https://console.neon.tech/app/projects/purple-hat-23047492",
-  anleitung: AD_GH + "/KC-Clubapp/blob/main/docs/NOTFALL_DATEN_ZURUECKHOLEN.md" };
+  anleitung: AD_GH + "/KC-Clubapp/blob/main/docs/NOTFALL_DATEN_ZURUECKHOLEN.md",
+  zweitkopie: "notfall-zweitkopie.yml", zweitSchritt: "Zweitkopie prüfen", zweitMaxTage: 9 }; // 2.352.0 KC-CORE-NOTFALL-ZWEITKOPIE
 // Direktsprünge je Dienst (Registry – neuer Dienst = neuer Eintrag); Anmeldung jeweils beim Anbieter
 const AD_DIENSTE = {
   supabase: { sym: "🗄️", t: "Supabase", links: [
@@ -18239,6 +18241,22 @@ async function adExternPruefen(erzwingen) {
 }
 // Ergebnis der Wochenprobe „Notfall – Sicherung lesen“: öffentliche GitHub-Schnittstelle (ohne Anmeldung, 60 Abrufe/Std. je Gerät → höchstens alle 30 Min.)
 // Lämpchen: grün = Schlüssel-Kopie hat entschlüsselt (≤ 8 Tage alt), rot = abgelehnt/abweichend, grau = nie gelaufen, nicht eingerichtet, veraltet oder nicht abrufbar
+// 2.352.0 KC-CORE-NOTFALL-ZWEITKOPIE: Ergebnis der wöchentlichen Zweitkopie bei Cloudflare (gleiche öffentliche Abfrage, höchstens alle 30 Min.)
+// grün nur bei erfolgreich zurückgelesener und entschlüsselter Kopie ≤ 9 Tage; rot bei Fehler; sonst grau
+async function adZweitLaden(erzwingen) {
+  if (!erzwingen && AD.zweit && Date.now() - AD.zweit.zeit < 30 * 60000) return;
+  const gh = (pfad) => fetch(`https://api.github.com/repos/${AD_NOTFALL.repo}/actions/${pfad}`, { headers: { Accept: "application/vnd.github+json" }, cache: "no-store", signal: zeitSignal(8000) })
+    .then((r) => { if (!r.ok) throw new Error("GitHub " + r.status); return r.json(); });
+  try {
+    const lauf = (await gh(`workflows/${AD_NOTFALL.zweitkopie}/runs?status=completed&per_page=1`)).workflow_runs?.[0];
+    if (!lauf) { AD.zweit = { zeit: Date.now(), f: "grau", kurz: "noch nie", text: "Die Zweitkopie wurde noch nie angelegt (montags automatisch)." }; return; }
+    const schritt = (await gh(`runs/${lauf.id}/jobs`)).jobs?.[0]?.steps?.find((x) => x.name === AD_NOTFALL.zweitSchritt);
+    const am = lauf.updated_at || lauf.created_at, tage = adStd(am) / 24, wann = `${fKurz.format(new Date(am))} ${fZeit.format(new Date(am))} Uhr`;
+    const ok = schritt?.conclusion === "success" && lauf.conclusion === "success";
+    AD.zweit = { zeit: Date.now(), url: lauf.html_url, ...(ok ? (tage <= AD_NOTFALL.zweitMaxTage ? { f: "gruen", kurz: "da ✓", text: `Am ${wann} abgelegt, zurückgelesen und entschlüsselt.` } : { f: "grau", kurz: "⚠️ veraltet", text: `Letzte Zweitkopie am ${wann} – älter als ${AD_NOTFALL.zweitMaxTage} Tage.` })
+      : lauf.conclusion === "failure" ? { f: "rot", kurz: "Fehler", text: `Zweitkopie am ${wann} fehlgeschlagen.` } : { f: "grau", kurz: "unklar", text: `Lauf am ${wann} ohne klares Ergebnis.` }) };
+  } catch (e) { AD.zweit = { zeit: Date.now() - 25 * 60000, f: "grau", kurz: "unbekannt", text: "⚠️ Ergebnis bei GitHub gerade nicht abrufbar." }; }
+}
 async function adProbeLaden(erzwingen) {
   if (!erzwingen && AD.probe && Date.now() - AD.probe.zeit < 30 * 60000) return;
   const gh = (pfad) => fetch(`https://api.github.com/repos/${AD_NOTFALL.repo}/actions/${pfad}`, { headers: { Accept: "application/vnd.github+json" }, cache: "no-store", signal: zeitSignal(8000) })
@@ -18428,6 +18446,8 @@ function adNotfallDaten() {
   return `<div style="display:grid;gap:8px;overflow-wrap:anywhere"><b>💾 Daten zurückholen, wenn Supabase ausfällt</b>
     ${adZeile(p ? p.f : "grau", "🔐 Wochenprobe", p ? p.kurz : "wird geprüft …")}
     ${p ? `<p class="hinweis" style="margin:0">${esc(p.text)}${p.url ? ` <a href="${esc(p.url)}" target="_blank" rel="noopener">Lauf ansehen ↗</a>` : ""}</p>` : ""}
+    ${adZeile(AD.zweit ? AD.zweit.f : "grau", "📦 Zweitkopie (Cloudflare)", AD.zweit ? AD.zweit.kurz : "wird geprüft …")}
+    ${AD.zweit ? `<p class="hinweis" style="margin:0">${esc(AD.zweit.text)} Sie liegt getrennt von Neon – das Datenbank-Passwort reicht nicht, um sie zu löschen.${AD.zweit.url ? ` <a href="${esc(AD.zweit.url)}" target="_blank" rel="noopener">Lauf ansehen ↗</a>` : ""}</p>` : ""}
     <p class="hinweis" style="margin:0">Täglich wird jede Tabelle verschlüsselt auf Neon gesichert und geprüft. Sonntags liest GitHub eine zufällige Tabelle mit der <b>Schlüssel-Kopie außerhalb von Supabase</b> zurück – so ist bewiesen, dass die Daten auch ohne Supabase lesbar sind.</p>
     <details class="karte innen" style="margin:0"><summary>🧭 Was tun, wenn …</summary><ol style="margin:6px 0 0;padding-left:20px;display:grid;gap:6px">
       <li><b>Supabase kurz weg</b> (Minuten/Stunden): Die App läuft im Notbetrieb – abwarten, nichts zurückholen.</li>
@@ -18438,7 +18458,7 @@ function adNotfallDaten() {
       <p style="margin:6px 0 0">Die Kopie des Sicherungsschlüssels liegt im <b>Cloudflare-Tresor</b> – außerhalb von Supabase. GitHub legt sie selbst dort ab und gleicht sie <b>jeden Monatsersten</b> mit Supabase ab. Nur der Ablauf „Notfall – Sicherung lesen“ bekommt sie heraus. Abtippen oder Kopieren ist nicht nötig.</p>
       <p class="hinweis" style="margin:6px 0 0">Lämpchen grau „nicht eingerichtet“ oder Schlüssel gewechselt? Einmal „Notfall einrichten“ starten (Run workflow) – danach „Probe jetzt starten“.</p>
       <div class="knoepfe" style="margin-top:6px">${link("⚙️ Notfall einrichten", AD_GH + "/KC-Clubapp/actions/workflows/" + AD_NOTFALL.einrichten)}</div></details>
-    <div class="knoepfe">${link("🧪 Probe jetzt starten", lauf, true)}${link("📖 Anleitung", AD_NOTFALL.anleitung)}${adKnopf("↻ Probe neu abfragen", "adProbeLaden(true).then(()=>adBlatt('notfall'))")}</div></div>`;
+    <div class="knoepfe">${link("🧪 Probe jetzt starten", lauf, true)}${link("📖 Anleitung", AD_NOTFALL.anleitung)}${adKnopf("↻ Neu abfragen", "Promise.all([adProbeLaden(true),adZweitLaden(true)]).then(()=>adBlatt('notfall'))")}</div></div>`;
 }
 function adBlatt(id) {
   if (id === "alarm") return notfallMeldung(); // KC-CLUB-NOTFALL-MELDUNG
@@ -18482,7 +18502,7 @@ function adBlatt(id) {
         <div class="knoepfe">${adKnopf("🪞 Spiegel jetzt anstoßen", "adminSpiegeln()")}${adKnopf("🧪 Notbetrieb-Probe (dieses Gerät)", "notProbeSetzen(!notProbe())")}${adKnopf("🧯 Ernstfall simulieren (dieses Gerät)", "notErnstfallSetzen(!notErnstfall())")}</div>
         ${adNotfallDaten()}
         ${adLinks("supabase")}`;
-      if (!AD.probe || Date.now() - AD.probe.zeit > 30 * 60000) adProbeLaden().then(() => { if (AD.offen === "notfall" && document.getElementById("adBlatt")) adBlatt("notfall"); });
+      if (!AD.probe || Date.now() - AD.probe.zeit > 30 * 60000 || !AD.zweit || Date.now() - AD.zweit.zeit > 30 * 60000) Promise.all([adProbeLaden(), adZweitLaden()]).then(() => { if (AD.offen === "notfall" && document.getElementById("adBlatt")) adBlatt("notfall"); });
       break;
     case "verlauf":
       if (!AD.verlauf[AD.vTage]) adVerlaufLaden(AD.vTage).then(() => { if (AD.offen === "verlauf") adBlatt("verlauf"); });
@@ -24400,6 +24420,18 @@ async function geraetAbmelden() {
   try { sessionStorage.clear(); } catch {}
   try { await caches.delete("kcclub-geteilt"); } catch {}
   location.replace(location.pathname);
+}
+// 2.352.0 KC-CLUB-GERAETE-ABMELDEN (Sicherheits-Abgleich): Handy verloren oder gestohlen? Dieses Gerät bekommt einen neuen Schlüssel,
+// alle anderen Geräte sind sofort abgemeldet und bekommen keine Benachrichtigungen mehr.
+async function andereGeraeteAbmelden() {
+  if (!(await frage("Alle anderen Geräte abmelden?\n\nZum Beispiel, wenn ein Handy verloren oder gestohlen ist: Nur DIESES Gerät bleibt angemeldet. Auf allen anderen Geräten ist die Club-App sofort gesperrt und bekommt keine Benachrichtigungen mehr. Dort wieder anmelden geht mit einem neuen Code (⚙️ → „🔢 Code für ein anderes Gerät“) oder Link.", { ja: "🔒 Andere abmelden", nein: "Abbrechen", gefahr: true }))) return;
+  let endpoint = ""; try { const r = await navigator.serviceWorker?.getRegistration?.(); endpoint = (await r?.pushManager?.getSubscription())?.endpoint || ""; } catch {}
+  try {
+    const r = await api("andere_geraete_abmelden", { endpoint }, { warten: true });
+    if (!r?.k) throw new Error("Das hat gerade nicht geklappt – bitte gleich noch einmal versuchen.");
+    KEY = r.k; try { localStorage.setItem("kc_club_key", r.k); } catch {}
+    melde("🔒 Alle anderen Geräte sind abgemeldet. Dieses Gerät bleibt angemeldet.");
+  } catch (e) { meldeFehler(e); }
 }
 function frage(text, opt = {}) {
   const d = dlgTeile(text), gefahr = opt.gefahr ?? /lösch|entfern|endgültig|leeren|verlassen|absagen|zurückziehen|beenden/i.test(String(text));
@@ -30775,7 +30807,7 @@ function druckEinrichtungskarte(k) {
 }
 async function linkTeilen(pid) {
   const m = MITGLIEDER.find((x) => x.person_id === pid);
-  if (m.app && !(await frage(`${m.name} hat schon einen Link. Neuen erzeugen? Der alte funktioniert dann nicht mehr.`))) return;
+  if (m.app && !(await frage(`${m.name} hat schon einen Link. Neuen erzeugen? Der alte funktioniert dann auf allen Geräten nicht mehr (richtig bei verlorenem Handy).`))) return;
   try {
     const { link } = await api("link_erzeugen", { person_id: pid });
     // 0.27.3: Anleitung wie unter ⚙️ → App-Installation (richtige App statt Verknüpfung)

@@ -74,12 +74,25 @@ Für den allergrößten Notfall (GitHub **und** Cloudflare weg) gibt es noch ein
 
 > Schlüssel und Verbindungsdaten **nie** in einen Chat, eine Mail oder ins Repository kopieren (AGENTS.md Regel 15).
 
+## Zweitkopie bei Cloudflare (getrennt von Neon)
+
+Auf Neon sind die Sicherungen gegen Ändern und Löschen gesperrt. Wer aber das Neon-Passwort hätte, könnte diese Sperre abschalten.
+Darum legt der GitHub-Ablauf **„Notfall – Zweitkopie“** jeden Montag um 05:41 UTC zusätzlich eine Kopie bei Cloudflare ab:
+
+- Die neueste Tagessicherung wird gepackt. Sie **bleibt verschlüsselt**.
+- Ablageort ist der KV-Speicher `kc-notfall-zweitkopie` (kostenlos).
+- Die neuesten 5 Kopien werden aufbewahrt.
+- Nach dem Ablegen liest der Ablauf die Kopie zurück, vergleicht die Prüfsumme und entschlüsselt eine Tabelle.
+- An die Kopie kommt man mit dem Neon-Passwort **nicht** heran.
+- In der Club-App zeigt Admin → 🧯 Notfall das Lämpchen „📦 Zweitkopie (Cloudflare)“.
+- Werkzeug: `tools/notfall/zweitkopie.mjs`, das in den Modi `packen` und `pruefen` läuft.
+
 ## Technik
 
 | Teil | Wert |
 |---|---|
 | Werkzeug | `tools/notfall/sicherung-lesen.mjs` (Node 20, Paket `postgres`) |
-| Abläufe | `.github/workflows/notfall-sicherung-lesen.yml` (Probe/Wiederherstellen), `.github/workflows/notfall-einrichten.yml` (Schlüssel-Kopie) |
+| Abläufe | `.github/workflows/notfall-sicherung-lesen.yml` (Probe/Wiederherstellen), `.github/workflows/notfall-einrichten.yml` (Schlüssel-Kopie), `.github/workflows/notfall-zweitkopie.yml` (Zweitkopie) |
 | Tresor | `notfall-tresor/` (Cloudflare Worker `kc-notfall-tresor`, kostenloser Tarif), Test `tests/notfall-tresor.test.mjs` |
 | Übergabe | `supabase/functions/kc-notfall-schluessel` (nur während „Notfall einrichten“ vorhanden) |
 | Entschlüsselung | wie `kc-db-backup-verify-v2`: AES-GCM, Schlüssel = SHA-256 des Geheimnisses, `payload = {iv, ciphertext}` in Base64 |

@@ -1078,7 +1078,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/db\.rpc\("kc_club_anmeldung", \{ p_hash: hash, p_version: version \}\)/.test(an) && /if \(!a\) throw new Fehler\("Kein Zugang/.test(an) && /if \(!p\?\.active\) throw/.test(an), "Datenbank-Prüfung beim Nachladen fehlt");
   const rpc = lies("supabase/migrations/20260929_kc_club_v57_anmeldung_rpc.sql");
   assert.ok(/where token_hash = p_hash and aktiv/.test(rpc) && /revoke all on function public\.kc_club_anmeldung\(text, text\) from public, anon, authenticated;/.test(rpc), "Anmelde-RPC prüft nicht aktiv / ist öffentlich");
-  assert.equal((server.match(/anmeldungenVergessen\(\);/g) || []).length, 6, "Zugang/Rollen/Büro-Rechte ändern leert den Speicher nicht"); // 1.96.0: +1 Übernahme des vorgemerkten Links; 2.51.0: +1 Probephase beenden
+  assert.equal((server.match(/anmeldungenVergessen\(\);/g) || []).length, 7, "Zugang/Rollen/Büro-Rechte ändern leert den Speicher nicht"); // 1.96.0: +1 Übernahme des vorgemerkten Links; 2.51.0: +1 Probephase beenden; 2.352.0: +1 andere Geräte abmelden
   assert.ok(/serverMs: Date\.now\(\) - t0Anfrage/.test(server) && /Server gesamt \$\{t\.srv\} ms/.test(html), "Server-Zeit im Verbindungstest fehlt");
   // Live-Tippen
   assert.ok(/live_tippen: \(w\) => \(\{ an: w\?\.an === true \}\)/.test(server), "Einstellung nicht standardmäßig aus");
@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6217,6 +6217,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/String\(p\.repository_id\) !== String\(env\.REPO_ID\)/.test(lies("notfall-tresor/worker.js")) && /REPO_ID = "1392489961"/.test(lies("notfall-tresor/wrangler.toml")), "Tresor prüft Repository-Nummer");
   const m = lies("supabase/migrations/20261013_kc_sicherheit_trigger_rechte.sql");
   assert.ok(/revoke all on function public\.kc_wm_umfrage_instant_notify\(\) from public, anon, authenticated;/.test(m), "Trigger-Funktion nicht über die Datenschnittstelle aufrufbar");
+}
+
+// 2.352.0 KC-CLUB-GERAETE-ABMELDEN + KC-CORE-NOTFALL-ZWEITKOPIE: Handy verloren → andere Geräte abmelden; zweite Sicherungskopie getrennt von Neon
+{
+  const c = server.slice(server.indexOf('case "andere_geraete_abmelden": {'), server.indexOf('case "push_abmelden": {'));
+  assert.ok(/update\(\{ token_hash: await sha256\(token\), neu_token_hash: null, neu_bis: null \}\)\.eq\("person_id", ich\.person_id\)/.test(c) && /anmeldungenVergessen\(\);/.test(c), "neuer Schlüssel nur für die eigene Person, alter sofort ungültig");
+  assert.ok(/kc_club_kurzcodes"\)\.delete\(\)\.eq\("person_id", ich\.person_id\)/.test(c) && /\.neq\("endpoint", endpunkt\)/.test(c), "offene Codes verfallen, Benachrichtigungen an andere Geräte aus");
+  assert.ok(/KEY = r\.k; try \{ localStorage\.setItem\("kc_club_key", r\.k\); \} catch \{\}/.test(html) && lies("index.html").includes('onclick="andereGeraeteAbmelden()"'), "dieses Gerät bleibt angemeldet; Knopf in der Privatsphäre");
+  assert.ok(/\{ id: "handy_verloren", thema: "privat"/.test(html), "Hilfe: Handy verloren");
+  const w = lies(".github/workflows/notfall-zweitkopie.yml"), z = lies("tools/notfall/zweitkopie.mjs");
+  assert.ok(/audience=kc-notfall-tresor/.test(w) && /echo "::add-mask::\$KC_BACKUP_KEY"; echo "::add-mask::\$KC_NEON_URL"/.test(w) && !/upload-artifact/.test(w), "Zugang aus dem Tresor, maskiert, keine Artefakte");
+  assert.ok(/- name: Zweitkopie prüfen\n/.test(w) && /SOLL_SHA=/.test(w) && /tage\.slice\(5\)/.test(w) && /--remote/.test(w), "zurücklesen + Prüfsumme + entschlüsseln; 5 Wochen aufbewahrt");
+  assert.ok(lies("notfall-tresor/wrangler.toml").includes("notfall-zweitkopie.yml@refs/heads/main") && !/console\.log\([^)]*payload/.test(z), "Tresor kennt den Ablauf; keine Inhalte im Protokoll");
+  assert.ok(html.includes('zweitkopie: "notfall-zweitkopie.yml", zweitSchritt: "Zweitkopie prüfen"') && /const ok = schritt\?\.conclusion === "success" && lauf\.conclusion === "success";/.test(html), "Admin → Notfall zeigt die Zweitkopie (grün nur bei Erfolg)");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
