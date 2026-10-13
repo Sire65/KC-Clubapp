@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.354.0 – 2026-10-13 – 🔍 KC-CLUB-VIDEO-STIMMEN-SUCHE: Stimmen des Geräts selbst suchen und anzeigen
+Anlass (Hansi): „Wenn keine gewählt wird, erst mal die im Handy, Tablet oder PC vorhandene … kannst du eine Suchfunktion beim ersten Aufruf einschalten, die die vorhandenen Stimmen des jeweiligen Geräts selber sucht und mit anzeigt.“
+- rgsSuchen(): weckt die Sprachausgabe mit einem stummen Satz (Chrome/Android meldet Stimmen sonst erst nach dem ersten Sprechen), fragt bis zu 6 s nach, bis die Liste stabil ist; zeigt „🔍 Ich suche …“, dann „N gefunden, davon M mit guter Qualität“ bzw. „keine gefunden“ – mit „🔍 Nochmal suchen“. Läuft bei jedem Öffnen der Auswahl (beim ersten Video automatisch).
+- Reihenfolge: zuerst „📱 Stimmen auf deinem Handy/iPhone/PC“ (Standard, ohne Auswahl die beste davon), darunter „⬇️ Oder eine bessere Stimme herunterladen“ (Thorsten, Dii).
+
 ## 2.353.0 – 2026-10-13 – 🗣️ KC-CLUB-VIDEO-STIMMEN-AUSWAHL: nur noch Thorsten und Dii
 Anlass (Hansi): „Die einzige Stimme ist Thorsten, die brauchbar ist, die anderen sind schrecklich, stottern … suche bessere raus.“ – 9 Kandidaten (Thorsten HD/Hörbuch/ruhig/fröhlich, Dii, Miro, Pavoque, Jarvis, 40 MLS-Sprecher) erzeugt, per Spracherkennung vorgeprüft und als Hörproben geschickt; Wahl Hansi: „Thorsten und Dii, die anderen weg“.
 - Kerstin, Eva, Ramona, Karlsson entfernt (Dateien, Hörproben, Grundliste; in kc_club_video_stimmen aktiv = false). Neu: Dii (Frau, OpenVoiceOS, CC BY-NC-ND 4.0 – nicht-gewerblich, unverändert, Namensnennung; stimmen/LIZENZEN.txt).

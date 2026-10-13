@@ -1,11 +1,18 @@
 {
-  "version": "2.353.0",
+  "version": "2.354.0",
   "datum": "2026-10-13",
   "stufe": "RC",
   "neu": [
-    "🗣️ Download-Stimmen für die Erklär-Videos aufgeräumt: nur noch die zwei guten – Thorsten (Mann) und neu Dii (Frau). Wer eine der alten Stimmen geladen hatte, bekommt automatisch Thorsten, die alte Stimme wird vom Handy entfernt."
+    "🔍 Stimmen-Auswahl der Erklär-Videos sucht jetzt selbst alle Stimmen auf deinem Handy, Tablet oder PC und zeigt sie zuerst an (mit „Nochmal suchen“). Ohne Auswahl spricht die beste Stimme deines Geräts – Thorsten und Dii stehen darunter zum Herunterladen."
   ],
   "verlauf": [
+    {
+      "version": "2.354.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🔍 Stimmen-Auswahl der Erklär-Videos sucht jetzt selbst alle Stimmen auf deinem Handy, Tablet oder PC und zeigt sie zuerst an (mit „Nochmal suchen“). Ohne Auswahl spricht die beste Stimme deines Geräts – Thorsten und Dii stehen darunter zum Herunterladen."
+      ]
+    },
     {
       "version": "2.353.0",
       "datum": "2026-10-13",

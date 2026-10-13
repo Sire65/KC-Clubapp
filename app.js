@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.353.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.354.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -4208,14 +4208,36 @@ function rgpZeilen() {
   const l = rgpListe(); if (!l.length) return "";
   const wahl = rgpId();
   if (!RGP.w) rgpWorker(); // fragt, welche schon geladen sind
-  return `<h4 style="margin:12px 0 4px">⬇️ Stimmen zum Herunterladen</h4>
-    <p class="hinweis" style="margin:0 0 8px">Klingen auf jedem Handy und in jedem Browser gleich und funktionieren nach dem Laden auch ohne Netz. Antippen lädt die Stimme einmal herunter – am besten im WLAN.</p>
+  return `<h4 style="margin:14px 0 4px">⬇️ Oder eine bessere Stimme herunterladen</h4>
+    <p class="hinweis" style="margin:0 0 8px">Klingt dir die Stimme deines Geräts nicht gut? Diese zwei klingen auf jedem Handy und in jedem Browser gleich und sprechen nach dem Laden auch ohne Netz. Antippen lädt die Stimme einmal herunter – am besten im WLAN.</p>
     <div class="rgs-liste">${l.map((x) => { const id = x.datei, da = RGP.da.has(id), an = wahl === id, laedt = RGP.laedt === id, g = Number(x.guete) || 2;
       return `<div class="rgs-zeile${an ? " an" : ""}"><button type="button" class="rgs-wahl" onclick="rgsWahl('piper:${id}')" aria-pressed="${an}">
         <span aria-hidden="true">${an ? "🔘" : "⚪"}</span><span><b>${esc(x.name)}</b><small>${rgsSterne(g)}${x.geschlecht ? (x.geschlecht === "m" ? " · 👨" : " · 👩") : ""}${x.text ? " · " + esc(x.text) : ""}</small>
         <small>${laedt ? `<span id="rgpProzent">⏳ ${RGP.prozent} %</span> – wird geladen …` : da ? "✓ geladen – klappt auch ohne Netz" : `⬇️ antippen zum Laden (${Number(x.groesse_mb) || "?"} MB${[...RGP.da].some((i) => !RGP_ALT.test(i)) ? "" : " + einmalig 29 MB für die Sprach-Technik"})`}</small></span></button>
         <span class="rgs-knoepfe"><button type="button" class="knopf klein" onclick="rgpCtx();rgsProbe('piper:${id}')" aria-label="Probe hören: ${esc(x.name)}">▶ Probe</button>${da && !laedt ? `<button type="button" class="knopf klein" onclick="rgpWeg('${id}')" aria-label="${esc(x.name)} entfernen" title="Vom Gerät entfernen">🗑️</button>` : ""}</span></div>`; }).join("")}</div>
-    <h4 style="margin:12px 0 4px">📱 Stimmen deines Geräts</h4>`;
+`;
+}
+// ---------- 2.354.0 KC-CLUB-VIDEO-STIMMEN-SUCHE (Wunsch Hansi „beim ersten Aufruf eine Suchfunktion einschalten, die die vorhandenen Stimmen
+// des jeweiligen Geräts selber sucht und mit anzeigt“) ----------
+// Handy, Tablet und PC melden ihre Stimmen oft erst nach einem Moment (Chrome/Android: erst nach dem ersten Sprechen). Die Suche weckt die
+// Sprachausgabe mit einem stummen Satz, fragt bis zu 6 Sekunden lang nach und zeigt dann, was gefunden wurde – mit „🔍 Nochmal suchen“.
+function rgsSuchen() {
+  if (!("speechSynthesis" in window)) { RGS.suche = { fertig: true, de: 0, alle: 0, gut: 0 }; return rgsZeigen(); }
+  const lauf = (RGS.sucheLauf = (RGS.sucheLauf || 0) + 1), start = Date.now(); let zuletzt = -1, gleichSeit = start;
+  RGS.suche = { laeuft: true };
+  try { const u = new SpeechSynthesisUtterance(" "); u.volume = 0; u.lang = "de-DE"; speechSynthesis.speak(u); } catch {} // weckt die Stimmen-Liste
+  rgsZeigen();
+  const schauen = () => {
+    if (lauf !== RGS.sucheLauf) return;
+    let alle = []; try { alle = speechSynthesis.getVoices() || []; } catch {}
+    if (alle.length !== zuletzt) { zuletzt = alle.length; gleichSeit = Date.now(); }
+    const fertig = (alle.length && Date.now() - gleichSeit > 800) || Date.now() - start > 6000;
+    if (!fertig) return void setTimeout(schauen, 250);
+    const de = deStimmen();
+    RGS.suche = { fertig: true, de: de.length, alle: alle.length, gut: de.filter((v) => rgsGuete(v) >= 2).length };
+    rgsZeigen();
+  };
+  setTimeout(schauen, 250);
 }
 // Auswahl öffnen: beimStart = vor dem ersten Video (danach geht es los); sonst aus dem Video (🗣️) oder aus der Video-Liste
 function stimmenWahl(beimStart) {
@@ -4223,6 +4245,7 @@ function stimmenWahl(beimStart) {
   if (RG.an && !RG.pause) { RG.pause = true; rgStille(); RG.warteStimme = true; $("rgPause").textContent = "▶ Weiter"; } // Video hält an, solange gewählt wird
   const f = $("rgsBlatt") || blattAuf("rgsBlatt", `<div id="rgsInhalt"></div>`);
   f.classList.add("rgs-blatt", "rg-zeigen"); f.onclick = (e) => { if (e.target === f) rgsFertig(); }; rgsZeigen();
+  rgsSuchen(); // 2.354.0: Stimmen des Geräts suchen
   rgsNachladen(true).then(() => rgsZeigen());
 }
 function rgsZeigen() {
@@ -4235,12 +4258,16 @@ function rgsZeigen() {
     return `<div class="rgs-zeile${an ? " an" : ""}"><button type="button" class="rgs-wahl" onclick="rgsWahl('${esc(v.voiceURI).replace(/'/g, "&#39;")}')" aria-pressed="${an}">
       <span aria-hidden="true">${an ? "🔘" : "⚪"}</span><span><b>${esc(t && g > 1 && !/^Apple-Stimme|^Google-Sprach|^Samsung/.test(t.name) ? t.name : rgsName(v))}</b><small>${rgsSterne(g)}${art ? (art === "m" ? " · 👨" : " · 👩") : ""}${t?.text ? " · " + esc(t.text) : ""}</small></span></button>
       <button type="button" class="knopf klein" onclick="rgsProbe('${esc(v.voiceURI).replace(/'/g, "&#39;")}')" aria-label="Probe hören: ${esc(v.name)}">▶ Probe</button></div>`; };
-  z.innerHTML = `<h3 style="margin-top:0">🗣️ Welche Stimme soll dir die Videos erklären?</h3>${rgpZeilen()}
-    ${alle.length ? `<p class="hinweis" style="margin:0 0 8px">Tippe auf <b>▶ Probe</b>, um eine Stimme zu hören. Gefällt sie dir, tippe auf ihren Namen.${w ? "" : " Ohne Auswahl nimmt die App die beste Stimme."}</p>
+  const su = RGS.suche || {}, sucht = !!su.laeuft;
+  const kopfGeraet = `<h4 style="margin:12px 0 4px">📱 Stimmen auf deinem ${({ ios: "iPhone/iPad", android: "Handy", mac: "Mac", windows: "PC" })[pf] || "Gerät"}${sucht ? "" : ` – ${alle.length ? `${alle.length} gefunden` : "keine gefunden"}`}</h4>
+    ${sucht ? `<p class="hinweis rgs-sucht" role="status">🔍 Ich suche die Stimmen auf deinem Gerät …</p>` : su.fertig ? `<p class="hinweis" style="margin:0 0 6px">${alle.length ? `🔍 Gefunden: <b>${alle.length} deutsche Stimme${alle.length === 1 ? "" : "n"}</b>${su.gut ? `, davon ${su.gut} mit guter Qualität` : ""}.` : `🔍 Auf diesem Gerät habe ich keine deutsche Stimme gefunden${su.alle ? ` (nur ${su.alle} in anderen Sprachen)` : ""}.${rgpKann() ? " Nimm am besten oben Thorsten oder Dii." : ""}`} <button type="button" class="knopf klein" onclick="rgsSuchen()">🔍 Nochmal suchen</button></p>` : ""}`;
+  z.innerHTML = `<h3 style="margin-top:0">🗣️ Welche Stimme soll dir die Videos erklären?</h3>${kopfGeraet}
+    ${sucht ? "" : alle.length ? `<p class="hinweis" style="margin:0 0 8px">Tippe auf <b>▶ Probe</b>, um eine Stimme zu hören. Gefällt sie dir, tippe auf ihren Namen.${w ? "" : " Ohne Auswahl spricht die beste Stimme deines Geräts."}</p>
       <div class="rgs-liste">${zeigen.map(zeile).join("")}</div>
       ${alle.length > zeigen.length || RGS.alle ? `<button type="button" class="knopf klein" onclick="RGS.alle=!RGS.alle;rgsZeigen()">${RGS.alle ? "Nur die guten Stimmen" : `Alle ${alle.length} Stimmen zeigen`}</button>` : ""}
       ${w ? `<button type="button" class="knopf klein" onclick="rgsWahl('')">↺ Automatisch (beste Gerätestimme)</button>` : ""}`
-      : `<p class="hinweis">Dieses Gerät hat ${"speechSynthesis" in window ? "noch keine deutsche Stimme geladen" : "keine Sprachausgabe"}. Die Videos laufen trotzdem – der Text steht zum Mitlesen da.</p>`}
+      : `<p class="hinweis">${"speechSynthesis" in window ? "" : "Dieser Browser hat keine Sprachausgabe. "}Die Videos laufen trotzdem – der Text steht zum Mitlesen da.</p>`}
+    ${rgpZeilen()}
     <h4 style="margin:12px 0 6px">⏱️ Wie schnell soll sie sprechen?</h4>
     <div class="rgs-tempo">${RGS_TEMPI.map(([t, n]) => `<button type="button" class="chip${Math.abs(t - tempo) < 0.01 ? " an" : ""}" onclick="rgsTempoWahl(${t})">${n}</button>`).join("")}</div>
     ${hinweise.length ? `<details class="rgs-hinweis"><summary>💡 Klingt keine Stimme gut? So bekommst du bessere</summary>${hinweise.map((h) => `<p><b>${esc(h.name)}</b><br>${esc(h.text || "")}</p>`).join("")}</details>` : ""}
@@ -4653,7 +4680,7 @@ const HILFE = [
   { id: "kachel_lang", thema: "start", sym: "🧩", t: "Startseite aufräumen: Kacheln verschieben", x: "Du möchtest deinen Bildschirm aufräumen oder umorganisieren? Drück auf der Startseite eine Kachel <b>lange</b> (gut eine halbe Sekunde) – dann öffnet sich „Anordnen“ und die Kachel hängt an deinem Finger. Zieh sie an den neuen Platz und lass los. Mit ◀ ▶ ▲ ▼ geht es auch Schritt für Schritt. Fertig? „✅ Fertig“ tippen.", zeig: () => { zeige("start"); kaBearbeiten(true); } },
   { id: "kachel_aus", thema: "start", sym: "🙈", t: "Kacheln ausblenden und wieder holen", x: "Beim Anordnen hat jede Kachel oben ein <b>✕</b> – damit blendest du sie aus, deine Daten bleiben erhalten. Ausgeblendete Kacheln stehen blass dazwischen und kommen mit <b>👁️ Einblenden</b> zurück. Unter den Kacheln steht außerdem „🙈 … ausgeblendete Kacheln – anzeigen“. (Nur in der erweiterten Ansicht.)", zeig: () => { zeige("start"); kaBearbeiten(true); } },
   { id: "erklaervideos", thema: "start", sym: "🎬", t: "Erklär-Videos mit Ton", x: "Kurze Rundgänge mit Ton, die dir Schritt für Schritt zeigen, wie etwas geht: <b>alle Einstellungen</b> mit Beispielen (z. B. wie die App in einer anderen Farbe aussieht), <b>Nachricht schreiben</b>, <b>Termin eintragen</b>, <b>Zettel an die Pinnwand</b> und <b>Vorschlag einreichen</b>. Dabei wird nichts gespeichert oder gesendet, und alles bleibt, wie du es eingestellt hast. Zu finden im Register <b>Technik → 🎬 Erklär-Videos</b>, oben in <b>❓ Hilfe &amp; Tipps</b> und unter <b>⚙️ Mehr</b>. Gibt es zu einem Thema ein eigenes Video, fragt das Video nach: <b>▶ Ja</b> (danach geht es an derselben Stelle weiter), <b>Nein</b>, <b>⏰ Später</b> (in der Liste mit 📌 gemerkt und schon angehakt) oder <b>🔕 Nicht mehr fragen</b> – wieder einschalten unten in der Liste der Erklär-Videos.", zeig: () => erklaerVideos(), seit: "2.346.0" }, // KC-CLUB-ERKLAERVIDEOS (2.244.0), 2.346.0 KC-CLUB-VIDEO-VERWEIS
-  { id: "video_stimme", thema: "start", sym: "🗣️", t: "Stimme und Tempo der Erklär-Videos", x: "Beim ersten Erklär-Video fragt die App, <b>welche Stimme</b> dir die Videos erklären soll. Mit <b>▶ Probe</b> hörst du jede Stimme vorher, gute Stimmen haben Sterne. Ganz oben stehen die <b>⬇️ Stimmen zum Herunterladen</b> – <b>Thorsten</b> (Mann) und <b>Dii</b> (Frau): einmal antippen lädt sie aufs Gerät (je 63 MB, am besten im WLAN) – danach klingen sie auf jedem Handy gleich und sprechen auch ohne Netz. Mit 🗑️ entfernst du eine Stimme wieder. Dazu wählst du das <b>Tempo</b>: 🐢 Langsamer, Normal oder 🐇 Schneller. Ändern kannst du das jederzeit mit <b>🗣️</b> oben im laufenden Video oder unten in der Liste der Erklär-Videos. Klingt keine Stimme gut, steht dort auch, wie du eine <b>bessere Stimme ins Handy lädst</b> (iPhone, Android, PC). Die Liste der guten Stimmen pflegt Hansi auf dem Server – sie wird nur bei Bedarf geholt.", zeig: () => stimmenWahl(), seit: "2.348.0" }, // 2.348.0 KC-CLUB-VIDEO-STIMMEN
+  { id: "video_stimme", thema: "start", sym: "🗣️", t: "Stimme und Tempo der Erklär-Videos", x: "Beim ersten Erklär-Video fragt die App, <b>welche Stimme</b> dir die Videos erklären soll – dabei <b>sucht sie selbst alle Stimmen auf deinem Gerät</b> und zeigt sie an (🔍 Nochmal suchen, falls noch keine da sind). Ohne Auswahl spricht die beste Stimme deines Geräts. Mit <b>▶ Probe</b> hörst du jede Stimme vorher, gute Stimmen haben Sterne. Ganz oben stehen die <b>⬇️ Stimmen zum Herunterladen</b> – <b>Thorsten</b> (Mann) und <b>Dii</b> (Frau): einmal antippen lädt sie aufs Gerät (je 63 MB, am besten im WLAN) – danach klingen sie auf jedem Handy gleich und sprechen auch ohne Netz. Mit 🗑️ entfernst du eine Stimme wieder. Dazu wählst du das <b>Tempo</b>: 🐢 Langsamer, Normal oder 🐇 Schneller. Ändern kannst du das jederzeit mit <b>🗣️</b> oben im laufenden Video oder unten in der Liste der Erklär-Videos. Klingt keine Stimme gut, steht dort auch, wie du eine <b>bessere Stimme ins Handy lädst</b> (iPhone, Android, PC). Die Liste der guten Stimmen pflegt Hansi auf dem Server – sie wird nur bei Bedarf geholt.", zeig: () => stimmenWahl(), seit: "2.348.0" }, // 2.348.0 KC-CLUB-VIDEO-STIMMEN
   { id: "rundgang", thema: "start", sym: "🎬", t: "Rundgang durch die App (mit Ton)", x: "Die App zeigt dir in etwa 3 Minuten, wie sie aussieht und was sie kann – die Stimme deines Handys erklärt dabei jede Station. Du musst nichts antippen; mit <b>⏸ Pause</b>, <b>◀ ▶</b> und <b>✕ Beenden</b> steuerst du. Starten: hier mit <b>👉 Zeig mir wo</b>, oben in <b>❓ Hilfe &amp; Tipps</b> oder unter <b>⚙️ Mehr</b>. Weitere <b>🎬 Erklär-Videos</b> (alle Einstellungen, Nachricht schreiben, Termin eintragen, Pinnwand, Vorschläge) im Register <b>Technik</b>. Kein Ton? Dann Lautstärke prüfen – der Text steht auch zum Lesen da.", zeig: () => rundgangStart() }, // KC-CLUB-RUNDGANG (2.241.0)
   { id: "register_ziehen", thema: "start", sym: "↔️", t: "Register umsortieren (Club, Meins, Technik …)", x: "Ein Register oben auf der Startseite <b>festhalten</b>, bis es sich hebt – dann nach links oder rechts ziehen und loslassen. Die App merkt sich deine Reihenfolge auf allen deinen Geräten. (Nur in der erweiterten Ansicht.)", zeig: () => zeige("start") },
   { id: "register_wischen", thema: "start", sym: "👆", t: "Zwischen den Registern wischen", x: "Auf der Startseite wischst du über die Kacheln nach <b>links oder rechts</b> und kommst zum nächsten Register. Die kleine Zahl am Register zeigt, wie viele Kacheln darin liegen – „8/10“ heißt: 2 sind ausgeblendet.", zeig: () => zeige("start") },

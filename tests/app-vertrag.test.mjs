@@ -9422,3 +9422,10 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/if \(RGP_ALT\.test\(id\)\) RGP\.w\?\.postMessage\(\{ typ: "weg", id \}\)/.test(html) && /!RGP_ALT\.test\(x\.datei\)/.test(html), "alte Stimmen werden geräumt und nicht mehr angeboten");
   assert.ok(/CC BY-NC-ND 4\.0/.test(lies("stimmen/LIZENZEN.txt")), "Lizenz Dii");
 }
+
+// 2.354.0 KC-CLUB-VIDEO-STIMMEN-SUCHE: beim Öffnen die Stimmen des Geräts suchen und anzeigen (Gerät zuerst, Download darunter)
+{
+  assert.ok(/function rgsSuchen\(\)/.test(html) && /rgsSuchen\(\); \/\/ 2\.354\.0/.test(html) && /onclick="rgsSuchen\(\)">🔍 Nochmal suchen/.test(html), "Suche beim Öffnen und auf Knopf");
+  assert.ok(/u\.volume = 0;/.test(html) && /Date\.now\(\) - start > 6000/.test(html), "weckt die Sprachausgabe, sucht höchstens 6 s");
+  assert.ok(/Welche Stimme soll dir die Videos erklären\?<\/h3>\$\{kopfGeraet\}/.test(html) && /\$\{rgpZeilen\(\)\}\n    <h4 style="margin:12px 0 6px">⏱️/.test(html), "Gerätestimmen oben, Download darunter");
+}
