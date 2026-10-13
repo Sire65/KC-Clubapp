@@ -1,11 +1,11 @@
 # KC-CORE-NOTFALL-LESEN (13.10.2026, Wunsch Hansi): verschlüsselte Neon-Sicherungen OHNE Supabase lesen können.
 # Wöchentlich (Sonntag): eine zufällige Tabelle aus der jüngsten Sicherung entschlüsseln und gegen die Prüfsumme prüfen –
-# mit der HINTERLEGTEN Schlüsselkopie (GitHub-Secret KC_BACKUP_KEY), nicht mit dem Schlüssel aus dem Supabase-Tresor.
+# mit der HINTERLEGTEN Schlüsselkopie (Cloudflare-Tresor kc-notfall-tresor, hilfsweise GitHub-Secret KC_BACKUP_KEY), nicht aus Supabase.
 # So ist bewiesen, dass die Daten auch lesbar sind, wenn Supabase ganz ausfällt.
 # Von Hand („Run workflow“): modus=probe (eine Tabelle, wählbar) oder modus=wiederherstellen (nur mit bestaetigen=JA):
 #   schreibt die entschlüsselten Zeilen in ein eigenes Schema notfall_JJJJMMTT auf Neon – public wird nie angefasst.
 # Inhalte werden NIE ins Protokoll geschrieben (Repository ist öffentlich) und es gibt keine Artefakte.
-# Fehlen die Secrets, meldet der Lauf „Noch nicht eingerichtet“ (grau, kein Fehler). Kostenlos (öffentliches Repo, < 2 Min.).
+# Fehlt die Schlüssel-Kopie, meldet der Lauf „Noch nicht eingerichtet“ (grau, kein Fehler). Kostenlos (öffentliches Repo, < 2 Min.).
 name: Notfall – Sicherung lesen
 on:
   schedule:
@@ -26,6 +26,7 @@ on:
         default: ""
 permissions:
   contents: read
+  id-token: write
 concurrency:
   group: notfall-sicherung-lesen
   cancel-in-progress: false
@@ -40,22 +41,38 @@ jobs:
           node-version: "20"
       - name: Werkzeug holen
         run: npm i --no-save --no-audit --no-fund postgres@3.4.5
+      # KC-CORE-NOTFALL-TRESOR: die Schlüssel-Kopie kommt aus dem Cloudflare-Tresor (befüllt vom Ablauf „Notfall einrichten“) –
+      # nur dieser Ablauf bekommt sie (GitHub-OIDC). Hilfsweise GitHub-Secrets, falls von Hand hinterlegt. Ohne beides: übersprungen (grau).
+      # Der Schrittname „Sicherung lesen“ ist Vertrag: die Club-App (Admin → Notfall) liest sein Ergebnis öffentlich bei GitHub
+      # (success = grün, failure = rot, skipped = grau „noch nicht eingerichtet“)
       - name: Einrichtung prüfen
         id: da
         env:
           KC_NEON_URL: ${{ secrets.KC_NEON_URL }}
           KC_BACKUP_KEY: ${{ secrets.KC_BACKUP_KEY }}
+          TRESOR: https://kc-notfall-tresor.ha-joko.workers.dev
         run: |
-          if [ -n "$KC_NEON_URL" ] && [ -n "$KC_BACKUP_KEY" ]; then echo "da=1" >> "$GITHUB_OUTPUT"
-          else echo "::notice::Noch nicht eingerichtet: GitHub-Secrets KC_NEON_URL und/oder KC_BACKUP_KEY fehlen (Anleitung: docs/NOTFALL_DATEN_ZURUECKHOLEN.md)."; fi
-      # Der Schrittname „Sicherung lesen“ ist Vertrag: die Club-App (Admin → Notfall) liest sein Ergebnis öffentlich bei GitHub
-      # (success = grün, failure = rot, skipped = grau „noch nicht eingerichtet“)
+          if [ -n "$KC_NEON_URL" ] && [ -n "$KC_BACKUP_KEY" ]; then echo "da=secrets" >> "$GITHUB_OUTPUT"; exit 0; fi
+          s=$(curl -s --max-time 20 "$TRESOR/status" || true)
+          if echo "$s" | grep -q '"befuellt":true'; then echo "da=tresor" >> "$GITHUB_OUTPUT"
+          else echo "::notice::Noch nicht eingerichtet: Schlüssel-Kopie fehlt – Ablauf „Notfall einrichten“ starten (Anleitung: docs/NOTFALL_DATEN_ZURUECKHOLEN.md)."; fi
       - name: Sicherung lesen
-        if: steps.da.outputs.da == '1'
+        if: steps.da.outputs.da != ''
         env:
           KC_NEON_URL: ${{ secrets.KC_NEON_URL }}
           KC_BACKUP_KEY: ${{ secrets.KC_BACKUP_KEY }}
+          QUELLE: ${{ steps.da.outputs.da }}
+          TRESOR: https://kc-notfall-tresor.ha-joko.workers.dev
           MODUS: ${{ github.event.inputs.modus || 'probe' }}
           TABELLE: ${{ github.event.inputs.tabelle || '' }}
           BESTAETIGEN: ${{ github.event.inputs.bestaetigen || '' }}
-        run: node tools/notfall/sicherung-lesen.mjs
+        run: |
+          if [ "$QUELLE" = "tresor" ]; then
+            token=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=kc-notfall-tresor" | jq -r .value)
+            code=$(curl -sS --max-time 30 -X POST "$TRESOR" -H "Authorization: Bearer $token" -o /tmp/t.json -w "%{http_code}" || true)
+            [ "$code" = "200" ] || { rm -f /tmp/t.json; echo "❌ Tresor gibt die Schlüssel-Kopie nicht heraus (HTTP $code)"; exit 1; }
+            KC_BACKUP_KEY=$(jq -r .schluessel /tmp/t.json); KC_NEON_URL=$(jq -r .neon /tmp/t.json); rm -f /tmp/t.json
+            echo "::add-mask::$KC_BACKUP_KEY"; echo "::add-mask::$KC_NEON_URL"; export KC_BACKUP_KEY KC_NEON_URL
+            echo "Schlüssel-Kopie aus dem Cloudflare-Tresor (unabhängig von Supabase)."
+          fi
+          node tools/notfall/sicherung-lesen.mjs

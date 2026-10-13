@@ -1,0 +1,11 @@
+# KC-CORE-NOTFALL-TRESOR (13.10.2026, Wunsch Hansi „nicht schon wieder alles manuell“): Schlüssel-Kopie AUSSERHALB von Supabase.
+# Hochladen und Befüllen nur über GitHub („Notfall einrichten“) – die Geheimnisse KC_BACKUP_KEY und KC_NEON_URL setzt der Ablauf
+# per „wrangler secret put“ (verschlüsselt bei Cloudflare, nie im Repository oder Protokoll). Kostenloser Tarif.
+name = "kc-notfall-tresor"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+[vars]
+REPO = "Sire65/KC-Clubapp"
+ABLAEUFE = "Sire65/KC-Clubapp/.github/workflows/notfall-sicherung-lesen.yml@refs/heads/main"

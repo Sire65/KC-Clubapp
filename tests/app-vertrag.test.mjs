@@ -6170,16 +6170,28 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const w = lies(".github/workflows/notfall-sicherung-lesen.yml");
   const schritt = (html.match(/schritt: "([^"]+)"/) || [])[1];
-  assert.ok(schritt && w.includes(`- name: ${schritt}\n        if: steps.da.outputs.da == '1'`), "App liest genau den Schritt, der bei fehlender Einrichtung übersprungen wird");
+  assert.ok(schritt && w.includes(`- name: ${schritt}\n        if: steps.da.outputs.da != ''`), "App liest genau den Schritt, der bei fehlender Einrichtung übersprungen wird");
   assert.ok(html.includes(`ablauf: "notfall-sicherung-lesen.yml"`), "Ablauf-Datei in der Registry");
   const f = html.slice(html.indexOf("async function adProbeLaden("), html.indexOf("async function adLaden("));
   assert.ok(/fetch\(`https:\/\/api\.github\.com\/repos\//.test(f) && !/Authorization|token/i.test(f), "öffentlich abgefragt, ohne Schlüssel");
   assert.ok(/tage <= AD_NOTFALL\.maxTage \? \{ f: "gruen"/.test(f) && /: \{ f: "grau", kurz: "⚠️ veraltet"/.test(f) && /k === "skipped" \? \{ f: "grau"/.test(f) && /catch \(e\) \{ AD\.probe = \{ [^}]*f: "grau"/.test(f), "grün nur bei frischer Erfolgsprobe – sonst grau/rot (UNKNOWN nie OK)");
   assert.ok(/AD\.probe && Date\.now\(\) - AD\.probe\.zeit < 30 \* 60000\) return;/.test(f), "höchstens alle 30 Min. bei GitHub");
   const d = html.slice(html.indexOf("function adNotfallDaten("), html.indexOf("function adBlatt("));
-  for (const t of ["Wiederherstellen starten", "Probe jetzt starten", "Supabase-Tresor", "GitHub-Secrets", "Neon SQL-Editor", "nie in Chat, Mail oder App"]) assert.ok(d.includes(t), "Notfall-Blatt: " + t);
+  for (const t of ["Wiederherstellen starten", "Probe jetzt starten", "Neon SQL-Editor", "Notfall einrichten"]) assert.ok(d.includes(t), "Notfall-Blatt: " + t); // 2.348.0: Schlüssel-Kopie automatisch statt von Hand
   assert.ok(!/<input|<textarea/.test(d), "kein Eingabefeld für Schlüssel");
   assert.ok(/\$\{adNotfallDaten\(\)\}/.test(html) && /case "notfall": return \["keine", "Fahrplan · Diagnose · Daten zurückholen"\]/.test(html), "im Notfall-Blatt eingebaut");
+}
+
+// 2.348.0 KC-CORE-NOTFALL-TRESOR: Schlüssel-Kopie automatisch im Cloudflare-Tresor (kein Abtippen); Übergabe nur per GitHub-OIDC
+{
+  const e = lies(".github/workflows/notfall-einrichten.yml"), w = lies(".github/workflows/notfall-sicherung-lesen.yml"), f = lies("supabase/functions/kc-notfall-schluessel/index.ts"), t = lies("notfall-tresor/worker.js");
+  assert.ok(/workflow_ref === ABLAUF/.test(f) && f.includes('"Sire65/KC-Clubapp/.github/workflows/notfall-einrichten.yml@refs/heads/main"') && /audience: "kc-notfall-schluessel"/.test(f), "Übergabe nur an „Notfall einrichten“ auf main");
+  assert.ok(/name: Übergabe-Funktion löschen \(immer\)\n\s*if: \$\{\{ always\(\) \}\}/.test(e) && /supabase functions delete kc-notfall-schluessel/.test(e), "Übergabe-Funktion wird immer wieder gelöscht");
+  assert.ok(/echo "::add-mask::\$k"; echo "::add-mask::\$n"/.test(e) && /printf %s "\$k" \| npx -y wrangler@4 secret put KC_BACKUP_KEY >\/dev\/null/.test(e) && !/echo "\$k"|echo "\$n"|cat \/tmp\/u\.json/.test(e), "Werte maskiert, nie ausgegeben");
+  assert.ok(/schedule:\s*\n\s*- cron: "\d+ \d+ 1 \* \*"/.test(e) && /"Fremder Aufruf: HTTP \$code \(erwartet 401\)"; \[ "\$code" = "401" \]/.test(e), "monatlicher Abgleich, Gegenprobe 401");
+  assert.ok(/audience=kc-notfall-tresor/.test(w) && /echo "::add-mask::\$KC_BACKUP_KEY"; echo "::add-mask::\$KC_NEON_URL"/.test(w) && /id-token: write/.test(w), "Probe holt die Kopie per OIDC aus dem Tresor, maskiert");
+  assert.ok(/p\.aud !== "kc-notfall-tresor"/.test(t) && /p\.ref !== "refs\/heads\/main"/.test(t) && /kopf\.alg !== "RS256"/.test(t) && /befuellt: !!\(env\.KC_BACKUP_KEY && env\.KC_NEON_URL\)/.test(t), "Tresor prüft Token streng, Status ohne Werte");
+  assert.ok(lies("tests/notfall-tresor.test.mjs").includes("13 Gegenproben") && lies(".github/workflows/tests.yml").includes("node tests/notfall-tresor.test.mjs"), "Tresor-Test läuft in den Tests mit");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

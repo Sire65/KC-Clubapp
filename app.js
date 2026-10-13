@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.347.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.348.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -16853,8 +16853,8 @@ const AD_ALT_MIN = 15, AD_EXT_MIN = 3, AD_B2_FREI = 10 * 1024 ** 3;
 const AD_REF = (API.match(/^https:\/\/([a-z0-9]+)\.supabase\.co/) || [])[1] || "";
 const AD_SB = `https://supabase.com/dashboard/project/${AD_REF}`, AD_GH = "https://github.com/Sire65";
 // KC-CORE-NOTFALL-LESEN (2.347.0): Werkzeuge „Daten zurückholen, wenn Supabase ausfällt“ – alles beim Anbieter, keine Schlüssel in der App
-const AD_NOTFALL = { ablauf: "notfall-sicherung-lesen.yml", schritt: "Sicherung lesen", repo: "Sire65/KC-Clubapp", maxTage: 8,
-  neon: "https://console.neon.tech/app/projects/purple-hat-23047492", tresor: AD_SB + "/integrations/vault/secrets",
+const AD_NOTFALL = { ablauf: "notfall-sicherung-lesen.yml", einrichten: "notfall-einrichten.yml", schritt: "Sicherung lesen", repo: "Sire65/KC-Clubapp", maxTage: 8,
+  neon: "https://console.neon.tech/app/projects/purple-hat-23047492",
   anleitung: AD_GH + "/KC-Clubapp/blob/main/docs/NOTFALL_DATEN_ZURUECKHOLEN.md" };
 // Direktsprünge je Dienst (Registry – neuer Dienst = neuer Eintrag); Anmeldung jeweils beim Anbieter
 const AD_DIENSTE = {
@@ -16873,6 +16873,7 @@ const AD_DIENSTE = {
   github: { sym: "🐙", t: "GitHub", links: [["⚙️", "Club-App: Abläufe (hochladen, Tests, Spiegel-Wächter)", AD_GH + "/KC-Clubapp/actions"],
     ["🪞", "Spiegel-Wächter von Hand starten", AD_GH + "/KC-Clubapp/actions/workflows/spiegel-waechter.yml"],
     ["🔐", "Notfall – Sicherung lesen (Probe / Wiederherstellen)", AD_GH + "/KC-Clubapp/actions/workflows/" + AD_NOTFALL.ablauf],
+    ["⚙️", "Notfall einrichten (Schlüssel-Kopie in den Cloudflare-Tresor)", AD_GH + "/KC-Clubapp/actions/workflows/" + AD_NOTFALL.einrichten],
     ["🔐", "Club-App: Geheimnisse (Secrets) anlegen", AD_GH + "/KC-Clubapp/settings/secrets/actions"],
     ["🧾", "Kasse (Repository)", AD_GH + "/kasse"], ["🛰️", "KICC (Repository)", AD_GH + "/KC-Infrastructure-Control-Center"],
     ["📨", "Communicator (Repository)", AD_GH + "/kc-communication"], ["🔑", "Persönliche Zugangsschlüssel", "https://github.com/settings/tokens"],
@@ -16910,7 +16911,7 @@ async function adProbeLaden(erzwingen) {
     const k = schritt?.conclusion || (lauf.conclusion === "success" ? "" : lauf.conclusion);
     AD.probe = { zeit: Date.now(), url: lauf.html_url, wann, ...(k === "success" ? (tage <= AD_NOTFALL.maxTage ? { f: "gruen", kurz: "lesbar ✓", text: `Schlüssel-Kopie hat am ${wann} entschlüsselt und die Prüfsumme bestätigt.` } : { f: "grau", kurz: "⚠️ veraltet", text: `Letzte gute Probe am ${wann} – älter als ${AD_NOTFALL.maxTage} Tage.` })
       : k === "failure" ? { f: "rot", kurz: "Fehler", text: `Probe am ${wann} fehlgeschlagen – Schlüssel-Kopie prüfen.` }
-      : k === "skipped" ? { f: "grau", kurz: "nicht eingerichtet", text: "Die Schlüssel-Kopie fehlt noch bei GitHub – siehe „Schlüssel-Kopie einrichten“." }
+      : k === "skipped" ? { f: "grau", kurz: "nicht eingerichtet", text: "Die Schlüssel-Kopie fehlt noch im Tresor – einmal „Notfall einrichten“ starten." }
       : { f: "grau", kurz: "unklar", text: `Lauf am ${wann} ohne klares Ergebnis (${k || "kein Ergebnis"}).` }) };
   } catch (e) { AD.probe = { zeit: Date.now() - 25 * 60000, f: "grau", kurz: "unbekannt", text: "⚠️ Ergebnis bei GitHub gerade nicht abrufbar." }; }
 }
@@ -17091,12 +17092,10 @@ function adNotfallDaten() {
       <li><b>Länger weg, etwas nachsehen:</b> Im Neon SQL-Editor den Spiegel direkt lesen (höchstens 6 Std. alt; bei Personen fehlen geschützte Angaben), z. B. <code>select * from kc_club_treffen limit 50;</code><br>${link("🧮 Neon SQL-Editor", AD_NOTFALL.neon + "/sql-editor")}</li>
       <li><b>Supabase verloren – alles zurückholen:</b> Ablauf öffnen → „Run workflow“ → modus <code>wiederherstellen</code>, bestaetigen <code>JA</code>. Die Daten stehen danach entschlüsselt auf Neon im Bereich <code>notfall_JJJJMMTT</code> (Spiegel bleibt unverändert); lesen z. B. mit <code>select zeile from notfall_20261013."kc_club_treffen";</code><br>${link("📥 Wiederherstellen starten", lauf)}</li>
       <li>Neue Datenbank daraus befüllen: nur mit Claude, Schritt für Schritt (Prüfen → Sicherung → Freigabe → Einspielen → Nachprüfen).</li></ol></details>
-    <details class="karte innen" style="margin:0"${p?.kurz === "nicht eingerichtet" ? " open" : ""}><summary>🔐 Schlüssel-Kopie einrichten (einmal, am PC)</summary><ol style="margin:6px 0 0;padding-left:20px;display:grid;gap:6px">
-      <li>Im Supabase-Tresor den Eintrag <code>kc_db_backup_key_v1</code> anzeigen und kopieren.<br>${link("🔑 Supabase-Tresor", AD_NOTFALL.tresor)}</li>
-      <li>Bei GitHub als Secret <code>KC_BACKUP_KEY</code> speichern – zusätzlich in den Passwort-Manager und den Notfall-Umschlag.<br>${link("🔐 GitHub-Secrets", AD_GH + "/KC-Clubapp/settings/secrets/actions")}</li>
-      <li>In der Neon-Konsole (KC Core Mirror → Connect) die Verbindungsadresse kopieren und als Secret <code>KC_NEON_URL</code> speichern.<br>${link("🪞 Neon-Konsole", AD_NOTFALL.neon)}</li>
-      <li>Ablauf einmal mit modus <code>probe</code> starten – grün = Kopie stimmt.</li></ol>
-      <p class="hinweis" style="margin:6px 0 0">⚠️ Schlüssel und Adresse nie in Chat, Mail oder App eintippen – nur direkt beim Anbieter.</p></details>
+    <details class="karte innen" style="margin:0"${p?.kurz === "nicht eingerichtet" ? " open" : ""}><summary>🔐 Schlüssel-Kopie (automatisch)</summary>
+      <p style="margin:6px 0 0">Die Kopie des Sicherungsschlüssels liegt im <b>Cloudflare-Tresor</b> – außerhalb von Supabase. GitHub legt sie selbst dort ab und gleicht sie <b>jeden Monatsersten</b> mit Supabase ab. Nur der Ablauf „Notfall – Sicherung lesen“ bekommt sie heraus. Abtippen oder Kopieren ist nicht nötig.</p>
+      <p class="hinweis" style="margin:6px 0 0">Lämpchen grau „nicht eingerichtet“ oder Schlüssel gewechselt? Einmal „Notfall einrichten“ starten (Run workflow) – danach „Probe jetzt starten“.</p>
+      <div class="knoepfe" style="margin-top:6px">${link("⚙️ Notfall einrichten", AD_GH + "/KC-Clubapp/actions/workflows/" + AD_NOTFALL.einrichten)}</div></details>
     <div class="knoepfe">${link("🧪 Probe jetzt starten", lauf, true)}${link("📖 Anleitung", AD_NOTFALL.anleitung)}${adKnopf("↻ Probe neu abfragen", "adProbeLaden(true).then(()=>adBlatt('notfall'))")}</div></div>`;
 }
 function adBlatt(id) {

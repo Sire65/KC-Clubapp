@@ -1,11 +1,18 @@
 {
-  "version": "2.347.0",
+  "version": "2.348.0",
   "datum": "2026-10-13",
   "stufe": "RC",
   "neu": [
-    "🧯 Admin → Notfall: neuer Abschnitt „Daten zurückholen, wenn Supabase ausfällt“ – Wochenprobe-Lämpchen, Fahrplan und Direktsprünge"
+    "🔐 Admin → Notfall: Schlüssel-Kopie für den Notfall wird jetzt automatisch sicher abgelegt – kein Abtippen mehr"
   ],
   "verlauf": [
+    {
+      "version": "2.348.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🔐 Admin → Notfall: Schlüssel-Kopie für den Notfall wird jetzt automatisch sicher abgelegt – kein Abtippen mehr"
+      ]
+    },
     {
       "version": "2.347.0",
       "datum": "2026-10-13",

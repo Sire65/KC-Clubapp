@@ -1,6 +1,6 @@
 # Notfall: Daten zurückholen, wenn Supabase ausfällt
 
-KC-CORE-NOTFALL-LESEN, Stand 13.10.2026
+KC-CORE-NOTFALL-LESEN + KC-CORE-NOTFALL-TRESOR, Stand 13.10.2026
 
 ## Wo liegen unsere Daten?
 
@@ -11,7 +11,7 @@ KC-CORE-NOTFALL-LESEN, Stand 13.10.2026
 | **Neon „KC Core Mirror“**: Tagessicherung | Täglich jede Tabelle **vollständig**. Verschlüsselt (AES-GCM) und unveränderlich, in `kc_backup_snapshots`. | **Nur mit dem Sicherungsschlüssel.** |
 
 Der Sicherungsschlüssel heißt im Supabase-Tresor (Vault) `kc_db_backup_key_v1`.
-Fällt Supabase ganz aus, ist auch der Tresor weg. Deshalb **muss eine Kopie des Schlüssels außerhalb von Supabase liegen**. Siehe „Einmal einrichten“.
+Fällt Supabase ganz aus, ist auch der Tresor weg. Deshalb liegt eine **Kopie des Schlüssels außerhalb von Supabase**: im **Cloudflare-Tresor** `kc-notfall-tresor`. Sie wird **automatisch** dort abgelegt, siehe „Schlüssel-Kopie (automatisch)“.
 
 ## Wer prüft, ob die Sicherung lesbar ist?
 
@@ -49,35 +49,39 @@ Der Stand ist höchstens 6 Stunden alt. Bei Personen-Tabellen fehlen geschützte
    - einzelne Felder: `select zeile->>'feldname' from notfall_20261013."kc_club_treffen";`
 4. Aus diesem Schema kann ein neues Supabase-Projekt befüllt werden. Das ist ein Schritt mit Analyse, Freigabe und Prüfung (AGENTS.md Regel 10).
 
-## Einmal einrichten (Hansi, am PC)
+## Schlüssel-Kopie (automatisch)
+
+Niemand muss den Schlüssel abtippen oder kopieren. Das erledigt der GitHub-Ablauf **„Notfall einrichten“**:
+
+1. Er lädt den Cloudflare-Tresor `kc-notfall-tresor` hoch.
+2. Bei Supabase lädt er kurz die Übergabe-Funktion `kc-notfall-schluessel` hoch.
+   - Sie gibt Schlüssel und Neon-Verbindung **nur an diesen Ablauf** heraus. Das prüft das von GitHub signierte Ausweis-Token (OIDC).
+3. Die Werte legt er verschlüsselt im Tresor ab (`wrangler secret put`).
+   - Im Protokoll sind sie unkenntlich gemacht, im Repository stehen sie nie.
+4. Danach löscht er die Übergabe-Funktion **immer** wieder.
+5. Zum Schluss prüft er: Ist der Tresor befüllt? Bekommt ein Fremder nichts (401)?
+
+Wann der Ablauf läuft:
+- von selbst **am 1. jedes Monats**, falls der Schlüssel je gewechselt wurde;
+- bei Änderungen am Tresor;
+- von Hand: Club-App → Admin → 🧯 Notfall → „⚙️ Notfall einrichten“ → Run workflow.
+
+Der Tresor gibt die Kopie **nur** an den Ablauf „Notfall – Sicherung lesen“ (Zweig main) heraus, ebenfalls über das GitHub-Ausweis-Token. Jeder andere Aufruf bekommt 401. Der Tresor läuft ohne Supabase.
+
+Wahlweise kann man die Kopie zusätzlich von Hand als GitHub-Secrets `KC_BACKUP_KEY` und `KC_NEON_URL` hinterlegen. Dann nimmt die Probe diese. Nötig ist das nicht.
+
+Für den allergrößten Notfall (GitHub **und** Cloudflare weg) gibt es noch einen Weg: den Schlüssel aus dem Supabase-Tresor (`kc_db_backup_key_v1`) einmal in den Passwort-Manager oder den versiegelten Notfall-Umschlag legen. Das ist freiwillig.
 
 > Schlüssel und Verbindungsdaten **nie** in einen Chat, eine Mail oder ins Repository kopieren (AGENTS.md Regel 15).
-
-1. **Schlüssel kopieren**
-   - Supabase-Dashboard → Projekt → **Project Settings → Vault** (oder Integrations → Vault).
-   - Bei `kc_db_backup_key_v1` auf „Reveal“ klicken und den Wert kopieren.
-2. **Schlüssel ablegen**
-   - GitHub → KC-Clubapp → **Settings → Secrets and variables → Actions → New repository secret**.
-   - Name `KC_BACKUP_KEY`, als Wert den Schlüssel einfügen.
-   - Zusätzlich in den **Passwort-Manager** und in den versiegelten **Notfall-Umschlag** legen.
-3. **Neon-Verbindung ablegen**
-   - Neon-Konsole → Projekt **KC Core Mirror** → **Connect**.
-   - Die Verbindungszeichenkette kopieren. Sie beginnt mit `postgresql://`.
-   - Als GitHub-Secret `KC_NEON_URL` speichern, auch in den Passwort-Manager.
-4. **Einmal testen**
-   - Actions → **Notfall – Sicherung lesen** → **Run workflow**, `modus` = `probe`.
-   - Grün ✅: Die Kopie stimmt.
-   - Rot „Entschlüsselung abgelehnt“: Der Schlüssel wurde falsch kopiert. Schritt 1 und 2 wiederholen.
-
-Solange die Secrets fehlen, meldet der wöchentliche Lauf „⚪ Noch nicht eingerichtet“. Das ist grau, kein Fehler.
-Wird der Schlüssel in Supabase je gewechselt, muss auch `KC_BACKUP_KEY` erneuert werden. Sonst meldet die nächste Wochenprobe Rot.
 
 ## Technik
 
 | Teil | Wert |
 |---|---|
 | Werkzeug | `tools/notfall/sicherung-lesen.mjs` (Node 20, Paket `postgres`) |
-| Ablauf | `.github/workflows/notfall-sicherung-lesen.yml` |
+| Abläufe | `.github/workflows/notfall-sicherung-lesen.yml` (Probe/Wiederherstellen), `.github/workflows/notfall-einrichten.yml` (Schlüssel-Kopie) |
+| Tresor | `notfall-tresor/` (Cloudflare Worker `kc-notfall-tresor`, kostenloser Tarif), Test `tests/notfall-tresor.test.mjs` |
+| Übergabe | `supabase/functions/kc-notfall-schluessel` (nur während „Notfall einrichten“ vorhanden) |
 | Entschlüsselung | wie `kc-db-backup-verify-v2`: AES-GCM, Schlüssel = SHA-256 des Geheimnisses, `payload = {iv, ciphertext}` in Base64 |
 | Prüfsumme | dieselbe Rechnung wie verify-v2 (`jsonb_populate_recordset` mit dem Tabellentyp des Spiegels) |
 | Rückweg | Ablauf löschen. Er verändert nichts außer dem Schema `notfall_*`, und das nur bei „wiederherstellen“. |

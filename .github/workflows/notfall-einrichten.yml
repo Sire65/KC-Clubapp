@@ -1,0 +1,76 @@
+# KC-CORE-NOTFALL-TRESOR (13.10.2026, Wunsch Hansi „nicht schon wieder alles manuell eintragen“):
+# legt die Schlüssel-Kopie AUTOMATISCH außerhalb von Supabase ab – im Cloudflare-Tresor „kc-notfall-tresor“.
+#   1. Tresor (Cloudflare Worker) hochladen
+#   2. Übergabe-Funktion kc-notfall-schluessel bei Supabase hochladen; sie gibt Schlüssel + Neon-Verbindung nur an DIESEN Ablauf
+#      (GitHub-OIDC-Token, kein Geheimnis im Repository)
+#   3. Werte maskieren und per „wrangler secret put“ in den Tresor legen (nie im Protokoll)
+#   4. IMMER: Übergabe-Funktion wieder löschen; prüfen, dass der Tresor Fremden nichts gibt (401)
+#   5. Gleich danach die Probe „Notfall – Sicherung lesen“ starten lassen (nächster Sonntag oder von Hand)
+# Läuft von Hand, bei Änderungen am Tresor und am 1. jedes Monats (falls der Schlüssel je gewechselt wurde). Kostenlos.
+name: Notfall einrichten
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 3 1 * *"
+  push:
+    branches: [main]
+    paths:
+      - "notfall-tresor/**"
+      - ".github/workflows/notfall-einrichten.yml"
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: notfall-einrichten
+  cancel-in-progress: false
+jobs:
+  einrichten:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJEKT: ptblnpiroqftcvlsrhac
+      TRESOR: https://kc-notfall-tresor.ha-joko.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tresor hochladen
+        working-directory: notfall-tresor
+        run: npx -y wrangler@4 deploy
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - name: Übergabe-Funktion hochladen
+        run: supabase functions deploy kc-notfall-schluessel --project-ref "$PROJEKT" --no-verify-jwt --use-api
+      - name: Schlüssel-Kopie in den Tresor legen
+        working-directory: notfall-tresor
+        run: |
+          set -e
+          sleep 15
+          token=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=kc-notfall-schluessel" | jq -r .value)
+          code=$(curl -sS -X POST "https://$PROJEKT.supabase.co/functions/v1/kc-notfall-schluessel" -H "Authorization: Bearer $token" -o /tmp/u.json -w "%{http_code}")
+          [ "$code" = "200" ] || { echo "Übergabe nicht erfolgreich (HTTP $code)"; rm -f /tmp/u.json; exit 1; }
+          k=$(jq -r .schluessel /tmp/u.json); n=$(jq -r .neon /tmp/u.json); rm -f /tmp/u.json
+          echo "::add-mask::$k"; echo "::add-mask::$n"
+          [ -n "$k" ] && [ "$k" != "null" ] && [ -n "$n" ] && [ "$n" != "null" ] || { echo "Werte leer"; exit 1; }
+          printf %s "$k" | npx -y wrangler@4 secret put KC_BACKUP_KEY >/dev/null
+          printf %s "$n" | npx -y wrangler@4 secret put KC_NEON_URL >/dev/null
+          echo "Schlüssel-Kopie liegt im Tresor (Werte nicht ausgegeben)."
+      - name: Übergabe-Funktion löschen (immer)
+        if: ${{ always() }}
+        run: |
+          supabase functions delete kc-notfall-schluessel --project-ref "$PROJEKT" || true
+          sleep 10
+          code=$(curl -sS -o /dev/null -w "%{http_code}" -X POST "https://$PROJEKT.supabase.co/functions/v1/kc-notfall-schluessel" || true)
+          echo "Übergabe-Funktion danach: HTTP $code (erwartet 404)"; [ "$code" = "404" ]
+      - name: Tresor prüfen (befüllt, gibt Fremden nichts)
+        run: |
+          url="$TRESOR"
+          for i in 1 2 3 4 5 6; do s=$(curl -s "$url/status" || true); echo "$s"; echo "$s" | grep -q '"befuellt":true' && break; sleep 10; done
+          echo "$s" | grep -q '"befuellt":true'
+          code=$(curl -sS -o /dev/null -w "%{http_code}" -X POST "$url" -H "Authorization: Bearer x.y.z")
+          echo "Fremder Aufruf: HTTP $code (erwartet 401)"; [ "$code" = "401" ]
