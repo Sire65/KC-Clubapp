@@ -9406,11 +9406,19 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(fs.existsSync(new URL("../supabase/migrations/20261013_kc_club_v2348_video_stimmen.sql", import.meta.url)), "Migration");
   const w = lies("stimmen/piper-worker.js");
   assert.ok(/importScripts\(LIB \+ "ort\.wasm\.min\.js", LIB \+ "piper_phonemize\.js"\)/.test(w) && /caches\.open\(CACHE\)/.test(w) && /function idsAusLauten\(j\)/.test(w), "Download-Stimmen: Arbeiter");
-  for (const f of ["de_DE-thorsten-medium", "de_DE-kerstin-low", "de_DE-eva_k-x_low", "de_DE-ramona-low", "de_DE-karlsson-low"]) {
+  for (const f of ["de_DE-thorsten-medium", "de_DE-dii-medium"]) { // 2.353.0: nur noch Thorsten und Dii
     assert.ok(fs.existsSync(new URL(`../stimmen/${f}.onnx`, import.meta.url)) && fs.existsSync(new URL(`../stimmen/${f}.onnx.json`, import.meta.url)) && fs.existsSync(new URL(`../stimmen/proben/${f}.mp3`, import.meta.url)), "Stimme " + f);
     assert.ok(html.includes(`datei: "${f}"`), "Grundliste kennt " + f);
   }
   assert.ok(/if \(url\.pathname\.includes\("\/stimmen\/"\)\) return;/.test(lies("sw.js")), "Service Worker merkt Stimmen nicht doppelt");
   assert.ok(/rgpAktiv\(\)\) \{ \/\/ 2\.348\.0: heruntergeladene Stimme spricht/.test(html) && /rgpStopp\(\); \}/.test(html), "Videos sprechen mit der Download-Stimme");
   assert.ok(/#chatBlatt > \.blatt-innen \{ max-height: 88vh; overflow-y: auto; \}/.test(lies("index.html")), "⋮-Fenster scrollt");
+}
+
+// 2.353.0 KC-CLUB-VIDEO-STIMMEN-AUSWAHL: nur Thorsten und Dii; alte Wahl → Thorsten, alte Dateien vom Gerät räumen
+{
+  for (const f of ["kerstin-low", "eva_k-x_low", "ramona-low", "karlsson-low"]) assert.ok(!fs.existsSync(new URL(`../stimmen/de_DE-${f}.onnx`, import.meta.url)) && !html.includes(`datei: "de_DE-${f}"`), "entfernt: " + f);
+  assert.ok(/const RGP_ALT = \/\^de_DE-\(kerstin-low\|eva_k-x_low\|ramona-low\|karlsson-low\)\$\//.test(html) && /localStorage\.setItem\(RGS\.KEY, "piper:de_DE-thorsten-medium"\)/.test(html), "alte Wahl wird zu Thorsten");
+  assert.ok(/if \(RGP_ALT\.test\(id\)\) RGP\.w\?\.postMessage\(\{ typ: "weg", id \}\)/.test(html) && /!RGP_ALT\.test\(x\.datei\)/.test(html), "alte Stimmen werden geräumt und nicht mehr angeboten");
+  assert.ok(/CC BY-NC-ND 4\.0/.test(lies("stimmen/LIZENZEN.txt")), "Lizenz Dii");
 }

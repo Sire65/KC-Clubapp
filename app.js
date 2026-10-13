@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.352.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.353.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -4064,11 +4064,8 @@ const RGS_GRUND = () => [ // Grundliste, falls die Tabelle (noch) nicht geladen 
   { plattform: "alle", art: "stimme", muster: "premium|erweitert|enhanced", name: "Premium/Erweitert", guete: 3, tempo: 1, hoehe: 1 },
   { plattform: "alle", art: "stimme", muster: "^google deutsch", name: "Google Deutsch", guete: 2, tempo: 1, hoehe: 1 },
   { plattform: "alle", art: "stimme", muster: STIMME_SCHLECHT.source, name: "Spaßstimme", guete: 0, tempo: 1, hoehe: 1 },
-  { plattform: "alle", art: "download", datei: "de_DE-thorsten-medium", groesse_mb: 63, name: "Thorsten", geschlecht: "m", guete: 3, text: "Männerstimme, klar und natürlich – die beste freie deutsche Stimme", reihenfolge: 1 },
-  { plattform: "alle", art: "download", datei: "de_DE-kerstin-low", groesse_mb: 63, name: "Kerstin", geschlecht: "w", guete: 2, text: "Frauenstimme, freundlich", reihenfolge: 2 },
-  { plattform: "alle", art: "download", datei: "de_DE-eva_k-x_low", groesse_mb: 21, name: "Eva", geschlecht: "w", guete: 2, text: "Frauenstimme – klein und schnell geladen, etwas einfacher im Klang", reihenfolge: 3 },
-  { plattform: "alle", art: "download", datei: "de_DE-ramona-low", groesse_mb: 63, name: "Ramona", geschlecht: "w", guete: 2, text: "Frauenstimme, ruhig", reihenfolge: 4 },
-  { plattform: "alle", art: "download", datei: "de_DE-karlsson-low", groesse_mb: 63, name: "Karlsson", geschlecht: "m", guete: 2, text: "Männerstimme, tief", reihenfolge: 5 },
+  { plattform: "alle", art: "download", datei: "de_DE-thorsten-medium", groesse_mb: 63, name: "Thorsten", geschlecht: "m", guete: 3, text: "Männerstimme, klar und natürlich", reihenfolge: 1 },
+  { plattform: "alle", art: "download", datei: "de_DE-dii-medium", groesse_mb: 63, name: "Dii", geschlecht: "w", guete: 3, text: "Frauenstimme, freundlich und klar", reihenfolge: 2 }, // 2.353.0: nur noch Thorsten und Dii (Wunsch Hansi)
 ];
 const RGS_TEMPI = [[0.8, "🐢 Langsamer"], [1, "Normal"], [1.15, "🐇 Schneller"]];
 function rgsPlattform() {
@@ -4134,8 +4131,10 @@ function rgsTempoWahl(t) { try { localStorage.setItem(RGS.TEMPO, String(t)); } c
 // Ein Tipp auf die Stimme lädt sie einmal (Fortschritt in %), danach liegt sie im Browser-Speicher und klappt auch ohne Netz.
 // Probe vor dem Laden: kurze Hörprobe (stimmen/proben/…mp3). Gerechnet wird Satz für Satz – der nächste, während der vorige läuft.
 const RGP = { w: null, da: new Set(), bereit: null, laedt: null, prozent: 0, nr: 0, lauf: 0, quelle: null, ctx: null, warte: new Map(), probe: null, ok: null, schief: null };
-const rgpId = () => { const w = rgsWahlWert(); return w.startsWith("piper:") ? w.slice(6) : null; };
-const rgpListe = () => rgsTabelle().filter((x) => x.art === "download" && /^[\w-]{3,80}$/.test(x.datei || "")).sort((a, b) => (a.reihenfolge ?? 100) - (b.reihenfolge ?? 100));
+const RGP_ALT = /^de_DE-(kerstin-low|eva_k-x_low|ramona-low|karlsson-low)$/; // 2.353.0: herausgenommen (Hansi: „schrecklich, stottern“) – wer sie gewählt hatte, bekommt Thorsten
+const rgpId = () => { const w = rgsWahlWert(); if (!w.startsWith("piper:")) return null; const id = w.slice(6);
+  if (RGP_ALT.test(id)) { try { localStorage.setItem(RGS.KEY, "piper:de_DE-thorsten-medium"); } catch {} return "de_DE-thorsten-medium"; } return id; };
+const rgpListe = () => rgsTabelle().filter((x) => x.art === "download" && /^[\w-]{3,80}$/.test(x.datei || "") && !RGP_ALT.test(x.datei)).sort((a, b) => (a.reihenfolge ?? 100) - (b.reihenfolge ?? 100));
 const rgpKann = () => typeof Worker !== "undefined" && typeof WebAssembly !== "undefined" && "caches" in window && !!(window.AudioContext || window.webkitAudioContext);
 const rgpAktiv = () => { const id = rgpId(); return !!id && RGP.bereit === id; };
 function rgpWorker() {
@@ -4147,7 +4146,7 @@ function rgpWorker() {
   return RGP.w;
 }
 function rgpNachricht(d) {
-  if (d.typ === "da") { RGP.da = new Set(d.liste || []); rgsZeigen(); }
+  if (d.typ === "da") { RGP.da = new Set(d.liste || []); for (const id of RGP.da) if (RGP_ALT.test(id)) RGP.w?.postMessage({ typ: "weg", id }); rgsZeigen(); } // alte Stimmen vom Gerät räumen
   else if (d.typ === "fortschritt") { RGP.prozent = d.gesamt ? Math.min(99, Math.round((d.geladen * 100) / d.gesamt)) : 0; const el = $("rgpProzent"); if (el) el.textContent = `⏳ ${RGP.prozent} %`; }
   else if (d.typ === "bereit") { RGP.bereit = d.id; RGP.laedt = null; RGP.da.add(d.id); const f = RGP.ok; RGP.ok = RGP.schief = null; f?.(); rgsZeigen(); }
   else if (d.typ === "audio") { const w = RGP.warte.get(d.nr); RGP.warte.delete(d.nr); w?.ok(d); }
@@ -4214,7 +4213,7 @@ function rgpZeilen() {
     <div class="rgs-liste">${l.map((x) => { const id = x.datei, da = RGP.da.has(id), an = wahl === id, laedt = RGP.laedt === id, g = Number(x.guete) || 2;
       return `<div class="rgs-zeile${an ? " an" : ""}"><button type="button" class="rgs-wahl" onclick="rgsWahl('piper:${id}')" aria-pressed="${an}">
         <span aria-hidden="true">${an ? "🔘" : "⚪"}</span><span><b>${esc(x.name)}</b><small>${rgsSterne(g)}${x.geschlecht ? (x.geschlecht === "m" ? " · 👨" : " · 👩") : ""}${x.text ? " · " + esc(x.text) : ""}</small>
-        <small>${laedt ? `<span id="rgpProzent">⏳ ${RGP.prozent} %</span> – wird geladen …` : da ? "✓ geladen – klappt auch ohne Netz" : `⬇️ antippen zum Laden (${Number(x.groesse_mb) || "?"} MB${RGP.da.size ? "" : " + einmalig 29 MB für die Sprach-Technik"})`}</small></span></button>
+        <small>${laedt ? `<span id="rgpProzent">⏳ ${RGP.prozent} %</span> – wird geladen …` : da ? "✓ geladen – klappt auch ohne Netz" : `⬇️ antippen zum Laden (${Number(x.groesse_mb) || "?"} MB${[...RGP.da].some((i) => !RGP_ALT.test(i)) ? "" : " + einmalig 29 MB für die Sprach-Technik"})`}</small></span></button>
         <span class="rgs-knoepfe"><button type="button" class="knopf klein" onclick="rgpCtx();rgsProbe('piper:${id}')" aria-label="Probe hören: ${esc(x.name)}">▶ Probe</button>${da && !laedt ? `<button type="button" class="knopf klein" onclick="rgpWeg('${id}')" aria-label="${esc(x.name)} entfernen" title="Vom Gerät entfernen">🗑️</button>` : ""}</span></div>`; }).join("")}</div>
     <h4 style="margin:12px 0 4px">📱 Stimmen deines Geräts</h4>`;
 }
@@ -4654,7 +4653,7 @@ const HILFE = [
   { id: "kachel_lang", thema: "start", sym: "🧩", t: "Startseite aufräumen: Kacheln verschieben", x: "Du möchtest deinen Bildschirm aufräumen oder umorganisieren? Drück auf der Startseite eine Kachel <b>lange</b> (gut eine halbe Sekunde) – dann öffnet sich „Anordnen“ und die Kachel hängt an deinem Finger. Zieh sie an den neuen Platz und lass los. Mit ◀ ▶ ▲ ▼ geht es auch Schritt für Schritt. Fertig? „✅ Fertig“ tippen.", zeig: () => { zeige("start"); kaBearbeiten(true); } },
   { id: "kachel_aus", thema: "start", sym: "🙈", t: "Kacheln ausblenden und wieder holen", x: "Beim Anordnen hat jede Kachel oben ein <b>✕</b> – damit blendest du sie aus, deine Daten bleiben erhalten. Ausgeblendete Kacheln stehen blass dazwischen und kommen mit <b>👁️ Einblenden</b> zurück. Unter den Kacheln steht außerdem „🙈 … ausgeblendete Kacheln – anzeigen“. (Nur in der erweiterten Ansicht.)", zeig: () => { zeige("start"); kaBearbeiten(true); } },
   { id: "erklaervideos", thema: "start", sym: "🎬", t: "Erklär-Videos mit Ton", x: "Kurze Rundgänge mit Ton, die dir Schritt für Schritt zeigen, wie etwas geht: <b>alle Einstellungen</b> mit Beispielen (z. B. wie die App in einer anderen Farbe aussieht), <b>Nachricht schreiben</b>, <b>Termin eintragen</b>, <b>Zettel an die Pinnwand</b> und <b>Vorschlag einreichen</b>. Dabei wird nichts gespeichert oder gesendet, und alles bleibt, wie du es eingestellt hast. Zu finden im Register <b>Technik → 🎬 Erklär-Videos</b>, oben in <b>❓ Hilfe &amp; Tipps</b> und unter <b>⚙️ Mehr</b>. Gibt es zu einem Thema ein eigenes Video, fragt das Video nach: <b>▶ Ja</b> (danach geht es an derselben Stelle weiter), <b>Nein</b>, <b>⏰ Später</b> (in der Liste mit 📌 gemerkt und schon angehakt) oder <b>🔕 Nicht mehr fragen</b> – wieder einschalten unten in der Liste der Erklär-Videos.", zeig: () => erklaerVideos(), seit: "2.346.0" }, // KC-CLUB-ERKLAERVIDEOS (2.244.0), 2.346.0 KC-CLUB-VIDEO-VERWEIS
-  { id: "video_stimme", thema: "start", sym: "🗣️", t: "Stimme und Tempo der Erklär-Videos", x: "Beim ersten Erklär-Video fragt die App, <b>welche Stimme</b> dir die Videos erklären soll. Mit <b>▶ Probe</b> hörst du jede Stimme vorher, gute Stimmen haben Sterne. Ganz oben stehen <b>⬇️ Stimmen zum Herunterladen</b> (Thorsten, Kerstin, Eva, Ramona, Karlsson): einmal antippen lädt sie aufs Gerät (21 bis 63 MB, am besten im WLAN) – danach klingen sie auf jedem Handy gleich und sprechen auch ohne Netz. Mit 🗑️ entfernst du eine Stimme wieder. Dazu wählst du das <b>Tempo</b>: 🐢 Langsamer, Normal oder 🐇 Schneller. Ändern kannst du das jederzeit mit <b>🗣️</b> oben im laufenden Video oder unten in der Liste der Erklär-Videos. Klingt keine Stimme gut, steht dort auch, wie du eine <b>bessere Stimme ins Handy lädst</b> (iPhone, Android, PC). Die Liste der guten Stimmen pflegt Hansi auf dem Server – sie wird nur bei Bedarf geholt.", zeig: () => stimmenWahl(), seit: "2.348.0" }, // 2.348.0 KC-CLUB-VIDEO-STIMMEN
+  { id: "video_stimme", thema: "start", sym: "🗣️", t: "Stimme und Tempo der Erklär-Videos", x: "Beim ersten Erklär-Video fragt die App, <b>welche Stimme</b> dir die Videos erklären soll. Mit <b>▶ Probe</b> hörst du jede Stimme vorher, gute Stimmen haben Sterne. Ganz oben stehen die <b>⬇️ Stimmen zum Herunterladen</b> – <b>Thorsten</b> (Mann) und <b>Dii</b> (Frau): einmal antippen lädt sie aufs Gerät (je 63 MB, am besten im WLAN) – danach klingen sie auf jedem Handy gleich und sprechen auch ohne Netz. Mit 🗑️ entfernst du eine Stimme wieder. Dazu wählst du das <b>Tempo</b>: 🐢 Langsamer, Normal oder 🐇 Schneller. Ändern kannst du das jederzeit mit <b>🗣️</b> oben im laufenden Video oder unten in der Liste der Erklär-Videos. Klingt keine Stimme gut, steht dort auch, wie du eine <b>bessere Stimme ins Handy lädst</b> (iPhone, Android, PC). Die Liste der guten Stimmen pflegt Hansi auf dem Server – sie wird nur bei Bedarf geholt.", zeig: () => stimmenWahl(), seit: "2.348.0" }, // 2.348.0 KC-CLUB-VIDEO-STIMMEN
   { id: "rundgang", thema: "start", sym: "🎬", t: "Rundgang durch die App (mit Ton)", x: "Die App zeigt dir in etwa 3 Minuten, wie sie aussieht und was sie kann – die Stimme deines Handys erklärt dabei jede Station. Du musst nichts antippen; mit <b>⏸ Pause</b>, <b>◀ ▶</b> und <b>✕ Beenden</b> steuerst du. Starten: hier mit <b>👉 Zeig mir wo</b>, oben in <b>❓ Hilfe &amp; Tipps</b> oder unter <b>⚙️ Mehr</b>. Weitere <b>🎬 Erklär-Videos</b> (alle Einstellungen, Nachricht schreiben, Termin eintragen, Pinnwand, Vorschläge) im Register <b>Technik</b>. Kein Ton? Dann Lautstärke prüfen – der Text steht auch zum Lesen da.", zeig: () => rundgangStart() }, // KC-CLUB-RUNDGANG (2.241.0)
   { id: "register_ziehen", thema: "start", sym: "↔️", t: "Register umsortieren (Club, Meins, Technik …)", x: "Ein Register oben auf der Startseite <b>festhalten</b>, bis es sich hebt – dann nach links oder rechts ziehen und loslassen. Die App merkt sich deine Reihenfolge auf allen deinen Geräten. (Nur in der erweiterten Ansicht.)", zeig: () => zeige("start") },
   { id: "register_wischen", thema: "start", sym: "👆", t: "Zwischen den Registern wischen", x: "Auf der Startseite wischst du über die Kacheln nach <b>links oder rechts</b> und kommst zum nächsten Register. Die kleine Zahl am Register zeigt, wie viele Kacheln darin liegen – „8/10“ heißt: 2 sind ausgeblendet.", zeig: () => zeige("start") },
@@ -32332,7 +32331,7 @@ function suAppListe() {
     ["🪟", "Kachel- und Sende-Effekt (Jalousie, Papierflieger …)", "kachel effekt jalousie kartenstapel umdrehen senden papierflieger brieftaube postauto", ein("regEffektWahl")],
     ["🐢", "Sparmodus / Akku sparen", "sparmodus sparen akku batterie strom langsam netz datensparen", ein("sparWahl")],
     ["🎨", "Erklär-Video: Meine App nach meinem Geschmack", "anpassen einstellen aussehen geschmack video themen farben jahreszeiten deko schrift", () => rgListeAbspielen(["anpassen"])],
-    ["🗣️", "Videos: Stimme und Tempo wählen", "stimme video tempo langsam schneller vorlesen klingt komisch roboter sprecher erklär videos herunterladen thorsten kerstin eva ramona karlsson", () => stimmenWahl()], // 2.348.0
+    ["🗣️", "Videos: Stimme und Tempo wählen", "stimme video tempo langsam schneller vorlesen klingt komisch roboter sprecher erklär videos herunterladen thorsten dii", () => stimmenWahl()], // 2.348.0
     ["🎬", "Videos: Nachfrage nach eigenem Video (ein/aus, Später-Liste)", "video verweis nachfrage später gemerkt nicht mehr fragen erklär videos liste eigenes video", () => erklaerVideos()], // 2.346.0
     ["⏱", "Trainingsuhr auf der Bühne", "uhr training trainingsuhr zeit schon noch bühne twinkey", () => esOeffnen("buehne")],
     ["📧", "Dienstwünsche: Bestätigung per E-Mail", "dienstwunsch dienstwünsche bestätigung e-mail mail fertig zusammenfassung", () => dwOeffnen()],

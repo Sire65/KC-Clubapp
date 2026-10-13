@@ -5,10 +5,8 @@ Die Stimmen rechnen direkt im Browser des Mitglieds. Es wird nichts an einen fre
 
 Stimmen (Piper, https://github.com/rhasspy/piper – Modelle: https://huggingface.co/rhasspy/piper-voices, MIT-Lizenz)
 - de_DE-thorsten-medium  – Datensatz Thorsten-Voice (Thorsten Müller), CC0 – https://github.com/thorstenMueller/Thorsten-Voice
-- de_DE-kerstin-low      – Datensatz dataset-voice-kerstin, CC0 – https://github.com/rhasspy/dataset-voice-kerstin
-- de_DE-eva_k-x_low      – M-AILABS Speech Dataset – https://www.caito.de/2019/01/03/the-m-ailabs-speech-dataset/
-- de_DE-ramona-low       – M-AILABS Speech Dataset – https://www.caito.de/2019/01/03/the-m-ailabs-speech-dataset/
-- de_DE-karlsson-low     – M-AILABS Speech Dataset – https://www.caito.de/2019/01/03/the-m-ailabs-speech-dataset/
+- de_DE-dii-medium       – „Dii“ von OpenVoiceOS (https://huggingface.co/OpenVoiceOS/pipertts_de-DE_dii), Lizenz CC BY-NC-ND 4.0:
+                           nur nicht-gewerblich, unverändert weitergegeben, Namensnennung OpenVoiceOS (Datei hier: dii_de-DE.onnx, umbenannt)
   (Je Stimme liegt die Original-Modellkarte als *.MODEL_CARD.txt daneben.)
 
 Technik
