@@ -1,5 +1,10 @@
 # Änderungen
 
+## DB/Spiegel – 2026-10-13 (ohne App-Build) – 🛡️ KC-CORE-BACKUP-NEUE-TABELLEN: neue Tabellen erst nach dem ersten Spiegellauf sichern
+Anlass: System Check ROT um 11:42 – Restore-Lesetest scheiterte an der neuen Tabelle kc_club_video_stimmen („type … does not exist“): im Backup schon enthalten, im Neon-Spiegel erst nach dem nächsten regulären Spiegellauf. Keine Daten fehlten; nach dem Spiegellauf neu geprüft: 250/250 ok. Hansi: „Ja, bau das ein“.
+- kc_db_backup_daily(): eine Tabelle wird nur dann zurückgestellt, wenn ihre Regel in den letzten 24 h angelegt/geändert wurde UND sie in 2 Tagen noch keinen erfolgreichen Spiegellauf hatte. Bestehende Tabellen werden immer gesichert. Zurückgestellte stehen im Audit (backup_table_deferred) und im Dispatch-Eintrag (deferred).
+- Vorab geprüft: heute 250 gesichert, 0 zurückgestellt (wie bisher). Migration 20261013_kc_core_backup_neue_tabellen_nach_spiegel.sql.
+
 ## 2.357.0 – 2026-10-13 – 🐌 KC-CLUB-SCHNECKE-RICHTUNG
 Anlass (Hansi): „Bei mir laufen die Schnecken gerade auf dem PC von rechts nach links, allerdings gucken die Schnecken in die falsche Richtung.“
 - Ursache: das Zeichen 🐌 sieht je Gerät anders aus – Apple, Android und Linux (Noto) schauen nach links, Windows (Segoe UI Emoji) nach rechts. Die Schnecken kriechen nach links.
