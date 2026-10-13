@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.362.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.363.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -4794,7 +4794,7 @@ const HILFE = [
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
   { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag, nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
-  { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → 🎨 Darstellung → Senden</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b> oder <b>Luftballon</b> – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen.", seit: "2.362.0" },
+  { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → 🎨 Darstellung → Senden</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b>, <b>Luftballon</b> oder <b>Baron Münchhausen</b> auf der Kanonenkugel – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen.", seit: "2.362.0" },
   { id: "zurueckholen", thema: "nachrichten", sym: "↩️", t: "Vertippt? Nachricht zurückholen", x: "Solange noch niemand deine Nachricht gelesen hat, kannst du sie <b>zurückholen</b>: Nachricht antippen (am PC: rechte Maustaste) oder im <b>ⓘ</b>-Fenster → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet für alle und steht wieder in deinem Schreibfeld – ändern und neu senden.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-ZURUECKHOLEN
   { id: "spaeter_senden", thema: "nachrichten", sym: "⏰", t: "Nachricht später senden – auch jeden Montag", x: "Nachricht schreiben, unten auf <b>⏰</b> tippen, Zeit wählen (z. B. <b>morgen früh 8 Uhr</b>) und wie oft (<b>einmal</b>, <b>jeden Tag</b>, <b>werktags</b>, <b>jeden Montag</b> …). Bis dahin steht sie blass unten im Chat – nur du siehst sie; antippen zum Ändern oder Löschen. Gesendet wird auch, wenn dein Handy aus ist.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-SPAETER-SENDEN
   { id: "weiterleiten", thema: "nachrichten", sym: "↪️", t: "Weitersagen leicht gemacht", x: "Soll jemand anderes eine Nachricht auch lesen? Antippen → <b>„↪️ Weiterleiten“</b> und die Person oder Unterhaltung aussuchen. Fertig.", seit: "2.23.1" },
@@ -13906,8 +13906,8 @@ async function fxAusHinweis(nochmal) {
 // 2.176.0 (Wunsch Hansi „als drittes ein gelbes Postauto – und wenn als wichtig markiert ein Auto mit Blaulicht“)
 // 2.362.0 KC-CLUB-BOTEN (Wunsch Hansi „als Versand auch einen Postboten auf dem Fahrrad, Brieftaube, Papierflieger … auch unter Voreinstellungen“):
 // + 🚴 Postbote mit Fahrrad, 🍾 Flaschenpost, 🚀 Rakete, 🎈 Luftballon. 🏎️ Rennwagen = Express-Sendung (eigener Knopf, nicht wählbar als Standard).
-const SENDE_EFFEKTE = [["flieger", "✈️ Papierflieger"], ["taube", "🕊️ Brieftaube"], ["postauto", "🚐 Postauto"], ["fahrrad", "🚴 Postbote mit Fahrrad"], ["flasche", "🍾 Flaschenpost"], ["rakete", "🚀 Rakete"], ["ballon", "🎈 Luftballon"], ["wechsel", "🔀 Abwechselnd"], ["aus", "🚫 Aus"]];
-const SENDE_REIHE = ["flieger", "taube", "postauto", "fahrrad", "flasche", "rakete", "ballon"];
+const SENDE_EFFEKTE = [["flieger", "✈️ Papierflieger"], ["taube", "🕊️ Brieftaube"], ["postauto", "🚐 Postauto"], ["fahrrad", "🚴 Postbote mit Fahrrad"], ["flasche", "🍾 Flaschenpost"], ["rakete", "🚀 Rakete"], ["ballon", "🎈 Luftballon"], ["muenchhausen", "🎩 Baron Münchhausen"], ["wechsel", "🔀 Abwechselnd"], ["aus", "🚫 Aus"]];
+const SENDE_REIHE = ["flieger", "taube", "postauto", "fahrrad", "flasche", "rakete", "ballon", "muenchhausen"]; // 2.363.0 + Münchhausen
 const sendeEffektWahl = () => { const t = themaWert("effekt"); if (t) return t; try { const w = localStorage.getItem("kc_club_sendeEffekt"); return SENDE_EFFEKTE.some(([k]) => k === w) ? w : "wechsel"; } catch { return "wechsel"; } };
 let SENDE_FX_N = 0;
 const FLIEGER_SVG = (g) => `<svg viewBox="0 0 120 120" width="${g}" height="${g}" style="transform:scaleX(-1)">
@@ -13958,8 +13958,41 @@ const BALLON_SVG = (h) => `<svg viewBox="0 0 90 170" width="${Math.round(h * 0.5
     <path d="M45 89q-9 20 0 38t0 22" fill="none" stroke="#555" stroke-width="1.6"/>
     <ellipse cx="45" cy="42" rx="34" ry="40" fill="#c0392b" stroke="#7b1e2b" stroke-width="2"/><ellipse cx="32" cy="27" rx="8" ry="13" fill="#fff" opacity=".35"/>
     <path d="M40 81h10l-5 8Z" fill="#7b1e2b"/><g transform="rotate(-8 45 158)">${BRIEF_SVG(31, 149, 28, 18)}</g></svg>`;
+// 2.363.0 KC-CLUB-MUENCHHAUSEN (Wunsch Hansi „auch noch Baron Münchhausen als Bote“): der Lügenbaron reitet auf der Kanonenkugel (Ritt auf der
+// Kanonenkugel), Dreispitz, roter Rock, weiße Perücke, Brief in der ausgestreckten Hand – fliegt nach links.
+const MUENCHHAUSEN_SVG = (h) => `<svg viewBox="0 0 150 130" width="${Math.round(h * 1.15)}" height="${h}" overflow="visible">
+    <g class="mh-rauch" fill="#cfcac2"><circle cx="102" cy="98" r="7"/><circle cx="118" cy="94" r="9"/><circle cx="136" cy="90" r="11"/></g>
+    <path d="M84 72q22 6 30-2-8 14-30 12Z" fill="#8f1a1a" stroke="#5a0f0f" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="72" cy="96" r="24" fill="#2b2b2b" stroke="#000" stroke-width="2"/><circle cx="64" cy="87" r="6" fill="#6a6a6a"/>
+    <path d="M70 84 52 104" stroke="#f3e6cf" stroke-width="8" stroke-linecap="round"/><path d="M52 104 44 112" stroke="#1a1a1a" stroke-width="10" stroke-linecap="round"/>
+    <path d="M62 82q-2-28 12-36l14 4q4 22-4 34Z" fill="#b22222" stroke="#5a0f0f" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M68 50l6 30" stroke="#d4a017" stroke-width="2" stroke-dasharray="2 4"/>
+    <path d="M72 54 50 42" stroke="#b22222" stroke-width="7" stroke-linecap="round"/><circle cx="48" cy="41" r="4.5" fill="#f2c9a0" stroke="#8a5a3a" stroke-width="1.2"/>
+    <g transform="rotate(-14 38 32)">${BRIEF_SVG(26, 24, 22, 14)}</g>
+    <circle cx="88" cy="34" r="6" fill="#f4f4f4" stroke="#bbb" stroke-width="1"/><circle cx="90" cy="42" r="5" fill="#f4f4f4" stroke="#bbb" stroke-width="1"/><path d="M92 44q8 4 6 12" stroke="#222" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle cx="80" cy="35" r="10" fill="#f2c9a0" stroke="#8a5a3a" stroke-width="1.5"/><circle cx="75" cy="32" r="1.6" fill="#222"/>
+    <path d="M70 39q4 3 7 0 3 3 7 0" fill="none" stroke="#5a3a1a" stroke-width="2" stroke-linecap="round"/>
+    <path d="M64 27 79 15l16 12-8-2-8 4-8-4Z" fill="#1a1a1a" stroke="#d4a017" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
 // Rakete/Ballon/Flaschenpost beim Absender: startet am Senden-Knopf – Rakete schießt hoch, Ballon schwebt pendelnd davon, Flasche schaukelt nach links
+// 🎩 Münchhausen: „Bumm“ am Senden-Knopf, dann reitet er auf der Kugel im hohen Bogen nach links aus dem Bild
+function sendeMuenchhausen(r) {
+  const h = Math.round(Math.min(110, innerWidth * 0.27)), b = Math.round(h * 1.15);
+  const links = Math.max(0, Math.min(r.right, innerWidth) - b), oben = r.top - h * 0.85;
+  const knall = document.createElement("div"); knall.className = "papierflieger"; knall.setAttribute("aria-hidden", "true");
+  knall.innerHTML = `<svg viewBox="0 0 80 60" width="80" height="60"><g fill="#e8e2d8" stroke="#b8b0a4" stroke-width="2"><circle cx="24" cy="34" r="14"/><circle cx="42" cy="26" r="17"/><circle cx="58" cy="36" r="13"/></g><text x="40" y="38" text-anchor="middle" font-size="15" font-weight="900" fill="#b22222" font-family="sans-serif">BUMM!</text></svg>`;
+  knall.style.left = Math.max(0, r.left + r.width / 2 - 40) + "px"; knall.style.top = r.top - 30 + "px"; document.body.appendChild(knall);
+  knall.animate([{ transform: "scale(.3)", opacity: 0 }, { transform: "scale(1.15)", opacity: 1, offset: 0.25 }, { transform: "scale(1.4) translateY(-10px)", opacity: 0 }], { duration: 900, easing: "ease-out", fill: "forwards" }).onfinish = () => knall.remove();
+  try { navigator.vibrate?.([70]); } catch {}
+  const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true"); f.innerHTML = MUENCHHAUSEN_SVG(h);
+  f.style.left = links + "px"; f.style.top = oben + "px"; document.body.appendChild(f);
+  const N = 22, bild = [], weg = links + b + 30, steig = Math.min(oben + h * 0.5, innerHeight * 0.45);
+  for (let i = 0; i <= N; i++) { const t = i / N; bild.push({ transform: `translate(${(-weg * t).toFixed(1)}px, ${(-steig * Math.sin(Math.PI * t * 0.85)).toFixed(1)}px) rotate(${(-12 + 22 * t).toFixed(1)}deg) scale(${i === 0 ? 0.4 : 1})`, opacity: i === 0 ? 0 : 1 }); }
+  f.animate(bild, { duration: 2300, easing: "linear", fill: "forwards", delay: 120 }).onfinish = () => f.remove();
+  f.querySelectorAll(".mh-rauch circle").forEach((c, i) => c.animate([{ opacity: 0, transform: "scale(.4)" }, { opacity: .85, transform: "scale(1)" }, { opacity: 0, transform: "scale(1.7) translate(10px,4px)" }], { duration: 600, iterations: Infinity, delay: i * 150 }));
+  setTimeout(() => { f.remove(); knall.remove(); }, 3000);
+}
 function sendeFlug(r, art) {
+  if (art === "muenchhausen") return sendeMuenchhausen(r);
   const hoch = art !== "flasche", g = Math.round(Math.min(art === "rakete" ? 120 : 130, innerWidth * 0.3)), fb = Math.round(Math.min(150, innerWidth * 0.36));
   const b = art === "flasche" ? fb : Math.round(g * (art === "rakete" ? 0.5 : 0.53)), h = art === "flasche" ? Math.round(fb * 0.64) : g;
   const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
@@ -13984,7 +14017,7 @@ function papierflieger(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTI
   const wahl = sendeEffektWahl(); if (wahl === "aus") return;
   const art = fxArt(wahl, wichtig, mid, express); if (!art) return; // ❗ wichtig → immer Blaulicht; 🏎️ Express → Rennwagen; „Abwechselnd“ nach Nachrichten-Kennung (2.177.0)
   if (FZ_SVG[art]) return sendeFahrzeug(r, art);
-  if (art === "rakete" || art === "ballon" || art === "flasche") return sendeFlug(r, art);
+  if (art === "rakete" || art === "ballon" || art === "flasche" || art === "muenchhausen") return sendeFlug(r, art);
   const g = Math.round(Math.min(130, innerWidth * 0.3));
   const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
   f.innerHTML = art === "taube" ? TAUBE_SVG(g) : FLIEGER_SVG(g);
@@ -14144,6 +14177,20 @@ async function ankunftEffekt(el, art) {
         fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1200);
         await fxWarte(f.animate([{ transform: "scale(1)", opacity: 1 }, { transform: "scale(.2) rotate(20deg)", opacity: 0 }], { duration: 420, easing: "ease-in", fill: "forwards" }));
       }
+    } else if (art === "muenchhausen") {
+      // 2.363.0: 🎩 kommt im Bogen von rechts oben angeflogen, „setzt auf“ über der Blase (Blase hüpft), lüftet kurz den Hut und fliegt links davon
+      const h = Math.round(Math.min(100, innerWidth * 0.25)), b = Math.round(h * 1.15);
+      const zx = Math.max(4, Math.min(innerWidth - b - 4, r.left + r.width / 2 - b / 2)), zy = Math.max(4, r.top - h * 0.9);
+      const f = fxEl(MUENCHHAUSEN_SVG(h), zx, zy); weg.push(f);
+      const rauch = [...f.querySelectorAll(".mh-rauch circle")].map((c, i) => c.animate([{ opacity: 0, transform: "scale(.4)" }, { opacity: .85, transform: "scale(1)" }, { opacity: 0, transform: "scale(1.7) translate(10px,4px)" }], { duration: 600, iterations: Infinity, delay: i * 150 }));
+      const dx = innerWidth - zx + 10, hoch = Math.min(zy + h, 220), hin = [];
+      for (let i = 0; i <= 12; i++) { const t = i / 12; hin.push({ transform: `translate(${(dx * (1 - t)).toFixed(1)}px, ${(-hoch * Math.sin(Math.PI * (1 - t) * 0.6)).toFixed(1)}px) rotate(${(-10 * (1 - t)).toFixed(1)}deg)` }); }
+      await fxWarte(f.animate(hin, { duration: 1300, easing: "ease-out", fill: "forwards" }));
+      rauch.forEach((a) => a.pause()); fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1200);
+      await fxWarte(f.animate([{ transform: "translate(0,0)" }, { transform: "translate(0,-8px) rotate(-4deg)" }, { transform: "translate(0,0)" }], { duration: 600, fill: "forwards" }));
+      rauch.forEach((a) => a.play());
+      const zurueckB = []; for (let i = 0; i <= 12; i++) { const t = i / 12; zurueckB.push({ transform: `translate(${(-(zx + b + 30) * t).toFixed(1)}px, ${(-hoch * Math.sin(Math.PI * t * 0.6)).toFixed(1)}px) rotate(${(10 * t).toFixed(1)}deg)` }); }
+      await fxWarte(f.animate(zurueckB, { duration: 1300, easing: "ease-in", fill: "forwards" }));
     } else if (art === "rakete" || art === "ballon" || art === "flasche") {
       // 2.362.0 KC-CLUB-BOTEN: Rakete landet über der Blase und startet wieder · Ballon schwebt herab und steigt wieder · Flasche schaukelt heran und weiter
       const hoch = art !== "flasche", g = Math.round(Math.min(110, innerWidth * 0.26)), fb = Math.round(Math.min(130, innerWidth * 0.32));

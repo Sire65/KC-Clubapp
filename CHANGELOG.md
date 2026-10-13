@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.363.0 – 2026-10-14 – 🎩 KC-CLUB-MUENCHHAUSEN: Baron Münchhausen als Bote
+Anlass (Hansi): „Auch noch Baron Münchhausen als Bote der Nachricht dazu.“
+- Neuer Sende-Effekt „🎩 Baron Münchhausen“ (Ritt auf der Kanonenkugel: Dreispitz, roter Rock, weiße Perücke, Brief in der Hand). Absender: „BUMM!“-Wölkchen am
+  Senden-Knopf, dann im hohen Bogen nach links hinaus. Empfänger: kommt im Bogen von rechts oben, setzt über der Blase auf (Blase hüpft), fliegt links davon.
+- Wählbar unter ⚙️ → 🎨 Darstellung → Senden, läuft bei „Abwechselnd“ mit; Server kennt die Art „muenchhausen“ (Einstellung sende_effekt).
+
 ## 2.362.0 – 2026-10-13 – ⏰ Später senden, ↩️ Zurückholen, 🏎️ Express-Sendung, 🚴 neue Boten
 Anlass (Hansi): „Bau das zeitversetzte Senden ein – bedienerfreundlich, logisch, einfach … evtl. auch Wiederholungen, z. B. jeden Montag um 8.00 die gleiche Nachricht.“
 - Bedienung: ⏰ neben ⏳ unter dem Schreibfeld → Fenster „Wann soll die Nachricht ankommen?“: 1. Wann? (🌇 Heute Abend 18:00 – nur bis 17:45,

@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -9511,4 +9511,11 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   for (const a of ["fahrrad", "flasche", "rakete", "ballon"]) assert.ok(html.includes(`["${a}", `) && server.includes(`"${a}"`), "Bote " + a);
   const mig = lies("supabase/migrations/20261013_kc_club_v2362_express.sql");
   assert.ok(/enable row level security/.test(mig) && /on delete cascade/.test(mig), "Express-Tabellen geschützt, hängen an der Nachricht");
+}
+
+// 2.363.0 KC-CLUB-MUENCHHAUSEN: Baron Münchhausen als Bote
+{
+  assert.ok(/\["muenchhausen", "🎩 Baron Münchhausen"\]/.test(html) && /const SENDE_REIHE = \[[^\]]*"muenchhausen"\]/.test(html), "wählbar und bei Abwechselnd dabei");
+  assert.ok(/function sendeMuenchhausen\(r\)/.test(html) && /BUMM!/.test(html) && /\} else if \(art === "muenchhausen"\) \{/.test(html), "Absender- und Empfänger-Animation");
+  assert.ok(/"muenchhausen", "wechsel", "aus"\]/.test(server), "Server kennt die Art");
 }
