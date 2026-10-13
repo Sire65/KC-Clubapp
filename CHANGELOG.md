@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.341.0 – 2026-10-13 – KC-CLUB-ADMIN-VERLAUF: Admin-Register Stufe 2 – Verlauf
+Admin-Register Stufe 2 (vorbereitet in 2.21.0, jetzt eingebaut, Wunsch Hansi): neue Kachel „📈 Verlauf“ – Erreichbarkeit als Kästchen-Band (grün/gelb/rot, grau = keine Messung), Antwortzeit der Datenbank als Linie, fehlgeschlagene Hintergrund-Aufrufe als Säulen, Datenbankgröße; wählbar 24 Std. / 7 / 30 Tage. Messung alle 10 Min. direkt in der Datenbank (pg_cron, auch wenn die Schnittstelle hängt) und alle 15 Min. über die Schnittstelle vom Club-Server – fehlt diese, wird der Abschnitt rot. Tabelle kc_club_messwerte: nur Zahlen, 35 Tage, nur Server-Zugriff, bewusst nicht gespiegelt. Der Neustart-über-GitHub-Teil von damals entfällt (ersetzt durch den Ein-Knopf-Neustart seit 2.235.0).
+
 ## 2.340.0 – 2026-10-13 – KC-CLUB-RAETSEL-FRUEHER
 Fund Hansi („die Fotos sind zu lange unkenntlich – etwas eher kenntlich machen, sonst hat man nie Chancen auf höhere Punkte“). Pixelblöcke jetzt 26 → 18 → 12 → 8 → 5 → 3 → 2 → scharf (vorher ab 44); die Stufen kommen am Anfang schneller (bei 0 / 2 / 4,5 / 7 / 10 / 13 / 17 / 22 s statt gleichmäßig alle 3,75 s) – nach 22 s ist das Bild scharf. Punkte fallen in 30 s von 1000 auf 250 (vorher auf 0); falsche Tipps weiter −150. Erkennen nach 5–7 s bringt so rund 850 Punkte.
 

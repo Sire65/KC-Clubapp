@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.340.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.341.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -16736,7 +16736,7 @@ function adminBlatt() {
 // Nur für Admin/Vertretung. Daten: admin_lage (Server, wie die Admin-Zentrale) + öffentliche Prüfungen ohne Schlüssel (Notbetrieb-Server,
 // Kassen-Gateway, Störungsseite des Anbieters). Keine Schlüssel/Passwörter in der App: Eingriffe beim Anbieter laufen über
 // Direktsprünge in dessen Verwaltung (Anmeldung dort wie gewohnt). Lämpchen: grün/gelb/rot gemessen, grau = unbekannt oder veraltet (nie grün).
-const AD = { ext: {}, extZeit: 0, laedt: false, offen: null };
+const AD = { ext: {}, extZeit: 0, laedt: false, offen: null, verlauf: {}, vTage: 1 }; // 2.341.0: + Verlauf
 const AD_ALT_MIN = 15, AD_EXT_MIN = 3, AD_B2_FREI = 10 * 1024 ** 3;
 const AD_REF = (API.match(/^https:\/\/([a-z0-9]+)\.supabase\.co/) || [])[1] || "";
 const AD_SB = `https://supabase.com/dashboard/project/${AD_REF}`, AD_GH = "https://github.com/Sire65";
@@ -16783,7 +16783,7 @@ async function adLaden(erzwingen) {
   const f = INFO_ALLE.find((x) => x.id === "admin");
   if (erzwingen && INFO_DATEN.admin) INFO_DATEN.admin.geholt = 0;
   AD.laedt = true;
-  try { await Promise.all([infoDatenLaden(f, true), adExternPruefen(erzwingen)]); } finally { AD.laedt = false; }
+  try { await Promise.all([infoDatenLaden(f, true), adExternPruefen(erzwingen), adVerlaufLaden(1, erzwingen)]); } finally { AD.laedt = false; }
   if (reg === "admin" && aktuelleAnsicht === "start" && !kaBearb) kachelnZeigen();
   if (AD.offen && document.getElementById("adBlatt")) adBlatt(AD.offen);
 }
@@ -16802,6 +16802,10 @@ function adZustand(id) {
     case "rt": { const k = rtKontingent(), [lf] = rtZustand();
       if (!k) return ["grau", "Stand unbekannt"];
       return [k.farbe === "rot" ? "rot" : k.farbe === "gelb" || lf === "rot" || lf === "gelb" ? "gelb" : "gruen", `${k.pct < 1 && k.pct > 0 ? "unter 1" : Math.round(k.pct)} % Kontingent · Leitung ${{ gruen: "steht", gelb: "baut auf", rot: "unterbrochen", blau: "pausiert", grau: "aus" }[lf]}`]; }
+    case "verlauf": { const v = AD.verlauf[1]?.d; if (!v) return ["grau", AD.verlauf[1]?.fehler ? "⚠️ nicht abrufbar" : "wird geladen …"]; // 2.341.0 KC-CLUB-ADMIN-VERLAUF
+      const fs = adAbschnitte(v).filter((x) => x.f !== "leer" && x.f !== "jetzt"), rot = fs.filter((x) => x.f === "rot").length, letzte = fs.slice(-1)[0];
+      if (!fs.length) return ["grau", "Messung startet gerade"];
+      return [letzte.f === "rot" ? "rot" : rot ? "gelb" : fs.some((x) => x.f === "gelb") ? "gelb" : "gruen", rot ? `24 Std.: ${rot}× gestört` : `24 Std.: ${adVerfuegbar(fs)} erreichbar`]; }
     case "server": return !r ? gemessen() : gemessen(!r.server.ok ? ["rot", "Datenbank antwortet nicht"] : [r.server.dbMs > 1500 ? "gelb" : "gruen", `v${r.server.version} · ${r.server.dbMs} ms`]);
     case "supabase": {
       if (!r) return gemessen();
@@ -16842,10 +16846,10 @@ function adZustand(id) {
   }
   return ["keine", ""];
 }
-const AD_UEBERWACHT = ["server", "supabase", "neon", "backup", "b2", "not", "comm", "mail", "push", "kasse", "programme", "rt"];
+const AD_UEBERWACHT = ["verlauf", "server", "supabase", "neon", "backup", "b2", "not", "comm", "mail", "push", "kasse", "programme", "rt"];
 // Kacheln: Gruppe (Farbstreifen oben) + Lämpchen rechts oben; Dienste-Kacheln öffnen ihre Direktsprünge
 const AD_KACHELN = [
-  ["alarm", "🚨", "Alarm an alle", "not"], ["lage", "📊", "Lage", "ueb"], ["notfall", "🧯", "Notfall", "not"], ["server", "🖥️", "Server", "ueb"], ["supabase", "🗄️", "Supabase", "ueb"],
+  ["alarm", "🚨", "Alarm an alle", "not"], ["lage", "📊", "Lage", "ueb"], ["notfall", "🧯", "Notfall", "not"], ["verlauf", "📈", "Verlauf", "ueb"], ["server", "🖥️", "Server", "ueb"], ["supabase", "🗄️", "Supabase", "ueb"],
   ["neon", "🪞", "Neon-Spiegel", "ueb"], ["backup", "🛟", "Backups", "ueb"], ["b2", "💾", "B2-Backup", "ueb"], ["not", "🚑", "Notbetrieb", "ueb"],
   ["comm", "📨", "Communicator", "dienst"], ["mail", "✉️", "Mail · Brevo", "dienst"], ["push", "🔔", "Push", "dienst"], ["kasse", "🧾", "Kasse · Gateway", "dienst"],
   ["programme", "💻", "KC-Programme", "dienst"], ["rt", "⚡", "Direkte Leitung", "ueb"], ["versionen", "📱", "Versionen", "app"], ["fehler", "🩺", "Fehler", "app"], ["nutzung", "👥", "Nutzung", "app"],
@@ -16855,6 +16859,66 @@ const AD_KACHELN = [
 KACHELN.admin = AD_KACHELN.map(([id, sym, t, gr]) => ({ id: "ad-" + id, sym, t, nur: () => !!ICH?.admin, aktion: `adBlatt('${id}')`,
   u: () => (gr === "link" ? "Direkt zur Verwaltung" : adZustand(id)[1]),
   klasse: () => `ad ad-${gr}${gr === "link" ? "" : " l-" + adZustand(id)[0]}` }));
+// ---------- 2.341.0 KC-CLUB-ADMIN-VERLAUF (Admin-Register Stufe 2, vorbereitet in 2.21.0, Wunsch Hansi): Verlauf aus kc_club_messwerte ----------
+// Messung in der Datenbank alle 10 Min. (pg_cron, ohne Datenschnittstelle: Größe, Verbindungen, Hintergrund-Aufrufe ok/fehlgeschlagen) und
+// über die Datenschnittstelle alle 15 Min. vom Club-Server (Antwortzeit). Fehlt die Schnittstellen-Messung → rot. Nie grün ohne Messung.
+async function adVerlaufLaden(tage, erzwingen) {
+  const v = AD.verlauf[tage] || (AD.verlauf[tage] = { d: null, zeit: 0, fehler: null });
+  if (!erzwingen && Date.now() - v.zeit < 10 * 60000) return;
+  v.zeit = Date.now();
+  try { v.d = await api("admin_verlauf", { tage }); v.fehler = null; } catch (e) { v.fehler = e.message; v.zeit = Date.now() - 9 * 60000; }
+}
+// Farbe je Zeitabschnitt: leer = vor Messbeginn, jetzt = läuft noch ohne Messung, rot = keine Messung / Schnittstelle fehlt / Hintergrund-Aufrufe
+// überwiegend fehlgeschlagen, gelb = einzelne Fehler oder langsam (> 1,5 s), grün = gemessen und in Ordnung
+function adAbschnitte(d) {
+  const lang = d.schrittMin * 60000, seit = d.seit ? new Date(d.seit).getTime() : Infinity, jetzt = Date.now();
+  return d.abschnitte.map((b) => {
+    const von = new Date(b.von).getTime(), bis = von + lang;
+    let f;
+    if (bis <= seit) f = "leer";
+    else if (!b.dbN && !b.apiN) f = bis > jetzt ? "jetzt" : "rot";
+    else if (!b.apiN && (bis <= jetzt || jetzt - von > 20 * 60000)) f = "rot";
+    else if (b.netFehler && b.netFehler >= b.netOk) f = "rot";
+    else if (b.netFehler || (b.ms ?? 0) > 1500) f = "gelb";
+    else f = "gruen";
+    return { ...b, f };
+  });
+}
+const adVerfuegbar = (fs) => { const n = fs.length; return n ? String(Math.round((fs.filter((x) => x.f !== "rot").length / n) * 1000) / 10).replace(".", ",") + " %" : "–"; };
+function adBand(abs) { // ein Kästchen je Zeitabschnitt
+  const w = 200 / abs.length, farbe = { gruen: AD_FARBE.gruen, gelb: AD_FARBE.gelb, rot: AD_FARBE.rot, leer: "#8883", jetzt: "#8885" };
+  return `<svg class="adband" viewBox="0 0 200 16" preserveAspectRatio="none" role="img" aria-label="Erreichbarkeit">${abs.map((b, i) =>
+    `<rect x="${(i * w + 0.3).toFixed(2)}" y="1" width="${Math.max(0.4, w - 0.6).toFixed(2)}" height="14" rx="1" fill="${farbe[b.f]}"><title>${esc(zeitKurz(b.von))}: ${{ gruen: "in Ordnung", gelb: "Fehler/langsam", rot: "gestört", leer: "noch keine Messung", jetzt: "läuft" }[b.f]}</title></rect>`).join("")}</svg>`;
+}
+function adLinie(werte, einheit, farbe = "#2e86de") { // Werte über die Zeit (null = Lücke)
+  const da = werte.filter((x) => x != null); if (!da.length) return '<p class="hinweis" style="margin:0">Noch keine Messwerte.</p>';
+  const max = Math.max(...da) * 1.1 || 1, h = 60, w = 200, n = Math.max(1, werte.length - 1);
+  const y = (v) => (h - (v / max) * (h - 6) + 2).toFixed(1), x = (i) => ((i / n) * w).toFixed(1);
+  const stuecke = []; let akt = [];
+  werte.forEach((v, i) => { if (v == null) { if (akt.length) stuecke.push(akt); akt = []; } else akt.push([x(i), y(v)]); });
+  if (akt.length) stuecke.push(akt);
+  return `<svg class="adlinie" viewBox="0 0 ${w} ${h + 4}" preserveAspectRatio="none" role="img" aria-label="Liniendiagramm"><line x1="0" y1="${h + 2}" x2="${w}" y2="${h + 2}" stroke="#8885" stroke-width=".5"/>
+    ${stuecke.map((s) => (s.length === 1 ? `<circle cx="${s[0][0]}" cy="${s[0][1]}" r="1.6" fill="${farbe}"/>` : `<polyline points="${s.map((q) => q.join(",")).join(" ")}" fill="none" stroke="${farbe}" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`)).join("")}</svg>
+    <div class="adachse"><span>max ${esc(String(Math.round(Math.max(...da))))} ${esc(einheit)}</span><span>Ø ${esc(String(Math.round(da.reduce((a, b) => a + b, 0) / da.length)))} ${esc(einheit)}</span></div>`;
+}
+function adZeitSaeulen(werte, farbe) {
+  const max = Math.max(1, ...werte.map((v) => v || 0)), w = 200 / werte.length, h = 40;
+  return `<svg class="adlinie" viewBox="0 0 200 ${h}" preserveAspectRatio="none" role="img" aria-label="Säulen">${werte.map((v, i) => v ? `<rect x="${(i * w + 0.3).toFixed(2)}" y="${(h - (v / max) * h).toFixed(1)}" width="${Math.max(0.4, w - 0.6).toFixed(2)}" height="${((v / max) * h).toFixed(1)}" fill="${farbe}"/>` : "").join("")}</svg>`;
+}
+function adVerlaufHtml(tage) {
+  const v = AD.verlauf[tage];
+  if (!v?.d) return `<p class="hinweis">${v?.fehler ? "⚠️ " + esc(v.fehler) : "Wird geladen …"}</p>`;
+  const d = v.d, abs = adAbschnitte(d), gemessen = abs.filter((x) => x.f !== "leer" && x.f !== "jetzt"), rot = gemessen.filter((x) => x.f === "rot").length;
+  const fmt = (iso) => (tage === 1 ? fZeit.format(new Date(iso)) : fKurz.format(new Date(iso)));
+  const schritt = d.schrittMin < 60 ? `${d.schrittMin} Min.` : d.schrittMin < 1440 ? `${d.schrittMin / 60} Std.` : "1 Tag";
+  return `<b>🟩 Erreichbarkeit</b> <span class="hinweis">(je Kästchen ${schritt})</span>${adBand(abs)}
+    <div class="adachse"><span>${esc(fmt(d.abschnitte[0].von))}</span><span>${gemessen.length ? `${adVerfuegbar(gemessen)} erreichbar${rot ? ` · ${rot}× gestört` : ""}` : "noch keine Messung"}</span><span>jetzt</span></div>
+    <b>⏱️ Antwortzeit der Datenbank</b>${adLinie(abs.map((x) => x.ms), "ms")}
+    <b>🔴 Fehlgeschlagene Hintergrund-Aufrufe</b>${abs.some((x) => x.netFehler) ? adZeitSaeulen(abs.map((x) => x.netFehler), AD_FARBE.rot) : '<p class="hinweis" style="margin:0">Keine Fehler in diesem Zeitraum. ✅</p>'}
+    ${tage > 1 ? `<b>🗄️ Größe der Datenbank</b>${adLinie(abs.map((x) => (x.bytes == null ? null : x.bytes / 1048576)), "MB", AD_FARBE.gelb)}` : ""}
+    ${d.seit ? `<p class="hinweis" style="margin:0">Messung seit ${esc(zeitKurz(d.seit))} · grau = noch keine Messung, rot = Datenbank oder Schnittstelle nicht erreichbar.</p>` : ""}`;
+}
+async function adVerlaufWahl(tage) { AD.vTage = tage; await adVerlaufLaden(tage); if (AD.offen === "verlauf") adBlatt("verlauf"); }
 // ---------- Grafiken (selbst gezeichnet, ohne fremde Bausteine) ----------
 const AD_FARBE = { gruen: "#27ae60", gelb: "#e6a800", rot: "#e74c3c", grau: "#9a9a9a" };
 const adFarbeFuer = (p, warn = 75, krit = 90) => (p == null ? "grau" : p >= krit ? "rot" : p >= warn ? "gelb" : "gruen");
@@ -16919,6 +16983,11 @@ function adBlatt(id) {
         <b>Weitere Notfall-Werkzeuge</b>
         <div class="knoepfe">${adKnopf("🪞 Spiegel jetzt anstoßen", "adminSpiegeln()")}${adKnopf("🧪 Notbetrieb-Probe (dieses Gerät)", "notProbeSetzen(!notProbe())")}${adKnopf("🧯 Ernstfall simulieren (dieses Gerät)", "notErnstfallSetzen(!notErnstfall())")}</div>
         ${adLinks("supabase")}`;
+      break;
+    case "verlauf":
+      if (!AD.verlauf[AD.vTage]) adVerlaufLaden(AD.vTage).then(() => { if (AD.offen === "verlauf") adBlatt("verlauf"); });
+      html = `${kopf("📈", "Verlauf")}<div class="knoepfe">${[[1, "24 Std."], [7, "7 Tage"], [30, "30 Tage"]].map(([t, n]) => `<button class="knopf klein${AD.vTage === t ? " haupt" : ""}" onclick="adVerlaufWahl(${t})">${n}</button>`).join("")}</div>
+        ${adVerlaufHtml(AD.vTage)}`;
       break;
     case "server":
       html = `${kopf("🖥️", "Club-Server")}${adZeile(z[0], "Zustand", z[1])}

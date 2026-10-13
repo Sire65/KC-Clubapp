@@ -1,11 +1,18 @@
 {
-  "version": "2.340.0",
+  "version": "2.341.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "🧩 Rätsel: Die Bilder werden jetzt deutlich früher kenntlich (feinere Pixel von Anfang an, nach 22 Sekunden scharf) – und die Punkte fallen nur noch bis 250. So sind hohe Punktzahlen gut zu schaffen."
+    "📈 Admin: neuer „Verlauf“ – Erreichbarkeit, Antwortzeit und Fehler der Datenbank über 24 Stunden, 7 oder 30 Tage"
   ],
   "verlauf": [
+    {
+      "version": "2.341.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "📈 Admin: neuer „Verlauf“ – Erreichbarkeit, Antwortzeit und Fehler der Datenbank über 24 Stunden, 7 oder 30 Tage"
+      ]
+    },
     {
       "version": "2.340.0",
       "datum": "2026-10-13",

@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.323.0";
+const SERVER_VERSION = "2.341.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5229,6 +5229,10 @@ Deno.serve(async (req) => {
     if (a === "wartung") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
       if (!geheim || !gleichZeit(p.cronSecret, geheim)) return json({ error: "Kein Zugang" }, 401);
+      // 2.341.0 KC-CLUB-ADMIN-VERLAUF (Stufe 2, vorbereitet in 2.21.0): Messpunkt „api“ – Antwortzeit der Datenbank über die Datenschnittstelle.
+      // Fehlt dieser Punkt, während die Messung in der Datenbank („db“, alle 10 Min. per pg_cron) weiterläuft → Schnittstelle/Server gestört.
+      { const t0 = Date.now(); const { error } = await db.from("kc_club_messwerte").select("id").limit(1);
+        if (!error) { const { error: e2 } = await db.from("kc_club_messwerte").insert({ quelle: "api", db_ms: Date.now() - t0 }); if (e2) console.error("messwert api", e2.message); } }
       // KC-CLUB-FP-UEBERWACHUNG (1.58.0): neue schwerwiegende Einträge im Fehlerprotokoll → Push an den Admin
       await fpUeberwachen().catch((e) => console.error("fp ueberwachung", String(e)));
       await postausgangLauf().catch((e) => console.error("postausgang", String(e))); // KC-CLUB-POSTAUSGANG (1.69.1)
@@ -12159,6 +12163,27 @@ Köcheclub-App`,
         if (!["neustart_geoeffnet", "notfall_whatsapp", "notfall_sms"].includes(art)) throw new Fehler("Unbekannter Eingriff.", 400);
         await protokoll(ich.person_id, "admin_eingriff", { art });
         return json({ ok: true });
+      }
+
+      // 2.341.0 KC-CLUB-ADMIN-VERLAUF: Verlauf der Messpunkte für die Grafiken im Admin-Register (24 Std. / 7 / 30 Tage), in Zeitabschnitte
+      // zusammengefasst; Abschnitt ohne Messung = null (die App zeigt ihn grau bzw. rot, nie grün – Regel 11)
+      case "admin_verlauf": {
+        nurAdmin(ich);
+        const tage = [1, 7, 30].includes(Number(p.tage)) ? Number(p.tage) : 1;
+        const schrittMin = tage === 1 ? 30 : tage === 7 ? 240 : 1440, n = Math.round((tage * 1440) / schrittMin);
+        const ende = Math.ceil(Date.now() / (schrittMin * 60000)) * schrittMin * 60000, start = ende - n * schrittMin * 60000;
+        const { data, error } = await db.from("kc_club_messwerte").select("zeit,quelle,db_bytes,verbindungen,net_ok,net_fehler,db_ms")
+          .gte("zeit", new Date(start).toISOString()).order("zeit").limit(12000);
+        if (error) throw new Fehler("Verlauf konnte nicht geladen werden.", 503);
+        const { data: erster } = await db.from("kc_club_messwerte").select("zeit").order("zeit").limit(1).maybeSingle();
+        const ab = Array.from({ length: n }, (_, i) => ({ von: new Date(start + i * schrittMin * 60000).toISOString(), dbN: 0, apiN: 0, netOk: 0, netFehler: 0, msSumme: 0, msMax: null as number | null, bytes: null as number | null, verb: null as number | null }));
+        for (const m of data ?? []) {
+          const i = Math.floor((new Date(m.zeit).getTime() - start) / (schrittMin * 60000)); const b = ab[i]; if (!b) continue;
+          if (m.quelle === "db") { b.dbN++; b.netOk += m.net_ok ?? 0; b.netFehler += m.net_fehler ?? 0; b.bytes = m.db_bytes ?? b.bytes; b.verb = Math.max(b.verb ?? 0, m.verbindungen ?? 0); }
+          else { b.apiN++; b.msSumme += m.db_ms ?? 0; b.msMax = Math.max(b.msMax ?? 0, m.db_ms ?? 0); }
+        }
+        return json({ tage, schrittMin, seit: erster?.zeit ?? null, zeit: jetzt(),
+          abschnitte: ab.map(({ msSumme, ...b }) => ({ ...b, ms: b.apiN ? Math.round(msSumme / b.apiN) : null })) });
       }
 
       // KC-CLUB-WOCHENBERICHT (2.23.81): Vorschau (nur ansehen) oder sofort senden – nur Admin

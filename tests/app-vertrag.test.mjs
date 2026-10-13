@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6140,6 +6140,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.ipfeil \{ position: absolute; top: 50%; z-index: 2; width: 40px; height: 40px; margin-top: -20px;/.test(seiteH) && /\.ipunkt \{ width: 26px; height: 34px;/.test(seiteH), "Info-Pfeile 40 px, Info-Punkte größere Tippfläche");
   assert.ok(/\.mg-knoepfe \.knopf \{ padding: 6px 7px; min-width: 38px; min-height: 40px; \}/.test(seiteH) && /@media \(max-width: 480px\) \{ \.mg-knoepfe \{ display: grid; grid-template-columns: repeat\(2, 42px\);/.test(seiteH), "Mitglieder-Knöpfe mindestens 38×40, am Handy 2 × 2");
   assert.ok(/\.eselsohr::after \{ content: ""; position: absolute; inset: -8px; \}/.test(seiteH), "Eselsohr behält die vergrößerte Tippfläche");
+}
+// 2.341.0 KC-CLUB-ADMIN-VERLAUF (Admin-Register Stufe 2, vorbereitet in 2.21.0, Wunsch Hansi „einbauen“)
+{
+  const mig = lies("supabase/migrations/20261013_kc_club_v2341_messwerte.sql");
+  assert.ok(/create table if not exists public\.kc_club_messwerte/.test(mig) && /enable row level security/.test(mig) && /revoke all on table public\.kc_club_messwerte from anon, authenticated;/.test(mig) && /grant select, insert, update, delete on public\.kc_club_messwerte to service_role;/.test(mig), "Messwerte: nur Server, ausdrücklich freigegeben");
+  assert.ok(/cron\.schedule\('kc-club-messung-10min', '\*\/10 \* \* \* \*'/.test(mig) && /interval '35 days'/.test(mig) && /mirror_enabled = false/.test(mig), "Messung alle 10 Min., 35 Tage, bewusst nicht gespiegelt (Abdeckung vollständig)");
+  assert.ok(/case "admin_verlauf": \{\s*nurAdmin\(ich\);/.test(server) && /insert\(\{ quelle: "api", db_ms: Date\.now\(\) - t0 \}\)/.test(server), "Server: Verlauf nur Admin, Schnittstellen-Messpunkt im Wartungslauf");
+  assert.ok(/\["verlauf", "📈", "Verlauf", "ueb"\]/.test(html) && /const AD_UEBERWACHT = \["verlauf",/.test(html), "Kachel „📈 Verlauf“ im Admin-Register, in der Lage überwacht");
+  assert.ok(/else if \(!b\.dbN && !b\.apiN\) f = bis > jetzt \? "jetzt" : "rot";/.test(html) && /if \(!v\) return \["grau", AD\.verlauf\[1\]\?\.fehler \? "⚠️ nicht abrufbar" : "wird geladen …"\]/.test(html), "ohne Messung nie grün (Regel 11)");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
