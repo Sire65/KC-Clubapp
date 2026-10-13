@@ -1,13 +1,22 @@
 {
-  "version": "2.355.0",
+  "version": "2.356.0",
   "datum": "2026-10-13",
   "stufe": "RC",
   "neu": [
-    "🔲 Die zuletzt angetippte Kachel hat einen leichten Rand und ist minimal größer – bis du eine andere wählst (auch in der einfachen Ansicht)",
-    "🧑‍🍳 Am PC zerfiel Twinkey beim Laubfegen (und die Kachel „Mein Bild“) in Gesicht und Pfanne mit Spiegelei – Geräte, die das Koch-Zeichen nicht kennen, bekommen jetzt ein Bild",
-    "👁 Jahreszeit-Vorschau aus den Einstellungen (z. B. Nikolaus-Stiefel): unten auf der Startseite steht jetzt „✕ beenden“"
+    "❄️ Dein Name aus Eis bleibt stehen, bis die Schneeraupe kommt – sie schiebt ihn weg, und er zerspringt in glitzernde Stücke",
+    "🍂 Dein Name aus Nüssen bleibt, bis der Laubbläser kommt – er wirbelt ihn mit Blättern und Nüssen auf",
+    "👁 Vorschau wechseln oder beenden räumt den Namen weg – nie mehr zwei Namen (Eis und Laub) gleichzeitig"
   ],
   "verlauf": [
+    {
+      "version": "2.356.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "❄️ Dein Name aus Eis bleibt stehen, bis die Schneeraupe kommt – sie schiebt ihn weg, und er zerspringt in glitzernde Stücke",
+        "🍂 Dein Name aus Nüssen bleibt, bis der Laubbläser kommt – er wirbelt ihn mit Blättern und Nüssen auf",
+        "👁 Vorschau wechseln oder beenden räumt den Namen weg – nie mehr zwei Namen (Eis und Laub) gleichzeitig"
+      ]
+    },
     {
       "version": "2.355.0",
       "datum": "2026-10-13",

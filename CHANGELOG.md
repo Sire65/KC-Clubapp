@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.356.0 – 2026-10-13 – ❄️🍂 KC-CLUB-NAME-WEG: Schneeraupe und Laubbläser räumen den Namen weg
+Anlass (Hansi): „Ich habe doppelt meinen Namen Hansi aus Blättern und aus Eis. Wenn ich eine Sache beende, muss der Name auch weg sein. Ändere das Konzept: der Name soll weg sein, wenn die Schneeraupe ihn wegschiebt – dann zerspringt der Name in Stücke. Beim Herbstlaub soll das der Laubbläser sein – dann werden die Blätter aufgewirbelt.“
+- Ursache „doppelt“: der Eis-Name wurde beim Wechsel der Vorschau (Winter → Herbst) nie gelöscht und ohne Jahreszeit-Prüfung gemalt. Jetzt: nur im Winter, und jahreszeitVorschau() räumt Eis- und Nuss-Namen bei jedem Wechsel/Ende.
+- Winter: Schmelzen durch die Sonne entfällt. Ist der Name fertig (75 s, Vorschau 15 s), kommt die Schneeraupe bald; ihr Schild lässt jeden Buchstaben in Eis-Scherben (neue fx „scherbe“) und Schnee zerspringen. Während die Raupe fährt, fällt kein neues Eisstück.
+- Herbst: das Eichhörnchen holt die Nüsse nicht mehr zurück; ist der Name fertig, kommt der Laubbläser und wirbelt jeden Buchstaben als Blätter und Nüsse (neue fx „nuss“) auf. Danach baut das Eichhörnchen den Namen neu.
+- Hilfe „Wer kommt im Kopf zu Besuch?“ und Video-Text angepasst.
+
 ## 2.355.0 – 2026-10-13 – 🔲 KC-CLUB-KACHEL-ZULETZT · 🧑‍🍳 KC-CLUB-KOCH-EMOJI · 👁 KC-CLUB-VORSCHAU-ENDE
 Anlass (Hansi): „Die letzte gewählte Kachel soll einen leichten Rand haben und minimal vergrößern, bis eine andere gewählt wird – auch in einfacher Ansicht. In der PC-Version sieht Twinkey beim Fegen der Blätter anders aus: laufende Beine, ein Gesicht daneben und eine Pfanne mit Spiegelei … so sieht auch die Kachel ‚Mein Bild‘ aus. Und wenn ich in den Einstellungen z. B. Nikolaus-Stiefel wähle, wie bekomme ich ihn wieder weg?“
 - Kachel zuletzt: Tipp auf eine Kachel merkt ihre id (localStorage kc_club_kachel_zuletzt, je Gerät); kachelnZeigen markiert sie (.zuletzt: Ring in Weinrot, scale 1.025). Nicht beim Anordnen und nicht im Erklär-Video.

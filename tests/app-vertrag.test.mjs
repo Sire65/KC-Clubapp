@@ -6032,7 +6032,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function jzbEisNameWill\(\)/.test(html) && /Math\.random\(\) < \(J\.vorschau \? \.7 : \.(35|5)\)/.test(html) && /if \(eis\) \{ let g = 0; for \(let i = 1; i < sp\.length; i\+\+\) if \(sp\[i\]\[1\] > sp\[g\]\[1\]\) g = i; n = g; \}/.test(html), "ab und an, vom größten Zapfen");
   assert.ok(/\(eis \? jzbEisStueck : jzbEisTropfen\)\(/.test(html) && /function jzbEisStueck\(sx, sy\)/.test(html), "Eisstück fällt in die Bühne");
   assert.ok(/N\.gelandet\[N\.n\] = J\.T; N\.n\+\+;/.test(html) && /const jzbEisNameText = \(\) => String\(ICH\?\.vorname/.test(html), "Buchstabe für Buchstabe der angemeldete Name");
-  assert.ok(/if \(N && N\.n && \(J\.sonne \|\| N\.schmelz > 0\)\)/.test(html) && /J\.eisName = null; J\.eisStueck = null;/.test(html), "Sonne lässt den Namen schmelzen, danach von vorn");
+  assert.ok(/if \(N && N\.n && J\.raupe\)/.test(html) && /J\.eisName = null; J\.eisStueck = null;/.test(html), "2.356.0: die Schneeraupe lässt den Namen zerspringen (statt Sonne), danach von vorn");
   assert.ok(/jzbEisNameSchritt\(dt\); \/\/ 2\.319\.0/.test(html) && /jzbEisNameMalen\(c\); \/\/ 2\.319\.0/.test(html) && /\.jz-eis \.jz-eisstueck \{/.test(lies("index.html")), "eingebunden + Stil");
 }
 // 2.320.0 KC-CLUB-WINTER-IGLU + KC-CLUB-WINTER-HUSKY (Wunsch Hansi): Huskygespann ab und an, abwechselnd Schneemann / Iglu, Sonne lässt alles schmelzen
@@ -9437,4 +9437,12 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/!KOCH\.ok && KOCH\.bild\?\.complete/.test(html), "Twinkey im Kopf als Bild");
   for (const c of ["1f9d1-200d-1f373", "1f468-200d-1f373", "1f469-200d-1f373"]) assert.ok(fs.existsSync(new URL(`../lib/emoji/${c}.svg`, import.meta.url)), "Twemoji " + c);
   assert.ok(/function jzVorschauLeiste\(v = aktuelleAnsicht\)/.test(html) && /try \{ jzVorschauLeiste\(v\); \} catch \{\}/.test(html) && /📅 Heute \(Vorschau beenden\)/.test(seite), "Vorschau beenden");
+}
+
+// 2.356.0 KC-CLUB-NAME-WEG: Raupe zerschlägt den Eis-Namen, Laubbläser wirbelt den Nuss-Namen auf, Vorschau räumt Namen weg
+{
+  assert.ok(/if \(JZB\.saison !== "winter"\) \{ JZB\.eisName = null; JZB\.eisStueck = null; return; \}/.test(html) && /if \(!N \|\| J\.saison !== "winter"\) return;/.test(html), "Eis-Name nur im Winter");
+  assert.ok(/JZB\.eisName = null; JZB\.eisStueck = null; JZB\.nussName = null; \/\/ 2\.356\.0/.test(html), "Vorschau räumt Namen weg");
+  assert.ok(/typ: "scherbe"/.test(html) && /if \(N && N\.n && J\.raupe\)/.test(html) && !/die Sonne vom Schneemann lässt den Namen schmelzen/.test(html), "Raupe statt Sonne");
+  assert.ok(/typ: "nuss"/.test(html) && /jzbBlaeserStart\(\); \/\/ 2\.356\.0/.test(html) && !/art = "holen";/.test(html), "Laubbläser statt Eichhörnchen holt");
 }

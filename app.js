@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.355.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.356.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2327,7 +2327,7 @@ const RG_ANPASSEN = [
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("setJahreszeit"), "#jzWahl"], mussSel: true, video: "effekte", t: "🍂 Das Bild der Jahreszeit",
     x: "Weiter im Bereich Effekte. Oben im Kopf zeigt sich die Jahreszeit – von selbst nach dem Kalender, oder fest eingestellt. Mit dem Haken schaltest du das Bild ganz ein oder aus. Darunter kannst du dir jede Jahreszeit als Vorschau ansehen." },
   { v: "start", nur: rgJzAn, vor: () => { rgKopf("offen"); rgJz("herbst", "hoernchen", (J) => !!J.hoernchen && J.hoernchen.phase === "hin", 240); }, sel: ["#v-start .hero"], t: "🐿️ Besuch im Kopf",
-    x: "So sieht das im Herbst aus: Laub fällt, ein Eichhörnchen holt sich Nüsse – und legt manchmal deinen Vornamen aus Nüssen. Im Winter fahren Schneeraupe und Skifahrer vorbei, und aus Eis entsteht dein Name. Das alles passiert nur auf deinem Gerät." },
+    x: "So sieht das im Herbst aus: Laub fällt, ein Eichhörnchen holt sich Nüsse – und legt manchmal deinen Vornamen aus Nüssen – bis der Laubbläser ihn aufwirbelt. Im Winter entsteht dein Name aus Eis, bis die Schneeraupe ihn wegschiebt und er zerspringt. Und Skifahrer wedeln vorbei. Das alles passiert nur auf deinem Gerät." },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("jzDekoWahl"), "#jzDekoWahl"], mussSel: true, t: "🎏 Deko an der Leiste",
     x: "An der Leiste mit den Lämpchen kann eine Deko hängen: Wimpel, Lichterkette oder Laternen. Automatisch passt sie zur Jahreszeit – im Herbst Laternen, im Advent warmweiße Lichter. Oder du wählst selbst, oder schaltest sie aus." },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("regEffektWahl"), "#regEffektWahl", "#sendeEffektWahl"], mussSel: true, t: "🪟 Kacheln und Senden",
@@ -4850,7 +4850,7 @@ const HILFE = [
   // 2.344.0 KC-CLUB-HILFE-NACHTRAG (Wunsch Hansi „alle letzten Änderungen in Hilfe, Lupe, Twinkey und Schulungsvideo“)
   { id: "raetsel", thema: "club", sym: "🧩", t: "Rätsel: Wie gut kennst du Werne?", x: "Auf der Rückseite (Eselsohr) unter <b>🧩 Rätsel</b>: Ein Foto wird nach und nach schärfer. Erkannt? Den <b>roten Buzzer</b> drücken und aus 6 Tipps wählen. Je früher, desto mehr Punkte (1000 bis 250); ein falscher Tipp kostet 150. <b>🏆 Wochen-Rätsel</b>: alle bekommen dieselben 5 Bilder, der erste Durchgang zählt für die <b>Club-Bestenliste</b>. Üben geht immer: <b>🏛️ Werne</b> oder <b>🥕 Küche</b>. Die Fotografen stehen unter „📜 Bildnachweise“.", zeig: () => esOeffnen("raetsel"), nur: () => esAn(), seit: "2.339.0" },
   { id: "club_song", thema: "toene", sym: "🎤", t: "Unser Club-Song zum Mitsingen", x: "Unser Club-Song zum Mitsingen steht auf der <b>🎭 Bühne</b> (Rückseite): <b>„Seit einundneunzig (Köcheclub Werne)“</b>, ein Disco-Fox mit Melodie und Karaoke-Text. Knopf <b>„🎤 Club-Song“</b> antippen: Twinkey tanzt, der Text läuft mit, die gesungene Silbe leuchtet gold. Auch unter „🎶 Nur Musik“ als Kachel „Club-Song“.", zeig: () => { esOeffnen("buehne"); setTimeout(() => { if (ES.offen) bwClubSong(); }, 900); }, nur: () => esAn(), seit: "2.316.0" },
-  { id: "kopf_besucher", thema: "darstellung", sym: "🐿️", t: "Wer kommt im Kopf zu Besuch?", x: "Das Jahreszeiten-Bild im Kopf lebt: Im <b>Herbst</b> pustet ein Mann mit Laubbläser das Laub weg, ein <b>Eichhörnchen</b> holt sich Nüsse – und legt manchmal deinen <b>Vornamen aus Nüssen</b>. Im <b>Winter</b> fahren eine Schneeraupe, Skifahrer, Kinder auf dem Schlitten und ein Hundeschlitten vorbei, ein Eskimo baut ein Iglu, und vom Eiszapfen fällt Eis – daraus wird dein <b>Name aus Glitzer-Eis</b>. Zu Festen (Sim-Jü, Oktoberfest, Karneval, Halloween, Ostern, Karibik) gibt es eigene Bilder über ein <b>🎭 Thema</b>. Alles nur auf deinem Gerät. Ansehen: ⚙️ → „✨ Effekte“ → Vorschau.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.329.0" },
+  { id: "kopf_besucher", thema: "darstellung", sym: "🐿️", t: "Wer kommt im Kopf zu Besuch?", x: "Das Jahreszeiten-Bild im Kopf lebt: Im <b>Herbst</b> pustet ein Mann mit Laubbläser das Laub weg, ein <b>Eichhörnchen</b> holt sich Nüsse – und legt manchmal deinen <b>Vornamen aus Nüssen</b> – bis der <b>Laubbläser</b> kommt und ihn mit dem Laub aufwirbelt. Im <b>Winter</b> fahren eine Schneeraupe, Skifahrer, Kinder auf dem Schlitten und ein Hundeschlitten vorbei, ein Eskimo baut ein Iglu, und vom Eiszapfen fällt Eis – daraus wird dein <b>Name aus Glitzer-Eis</b>; schiebt die <b>Schneeraupe</b> darüber, zerspringt er in Stücke. Danach entsteht der Name von vorn. Zu Festen (Sim-Jü, Oktoberfest, Karneval, Halloween, Ostern, Karibik) gibt es eigene Bilder über ein <b>🎭 Thema</b>. Alles nur auf deinem Gerät. Ansehen: ⚙️ → „✨ Effekte“ → Vorschau.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.329.0" },
   { id: "deko_leiste", thema: "darstellung", sym: "🎏", t: "Wimpel, Lichterkette oder Laternen", x: "An der Leiste mit den Lämpchen oben kann eine <b>Deko</b> hängen: 🎏 Wimpel, 💡 Lichterkette oder 🏮 Laternen. <b>🔄 Automatisch</b> passt sie zur Jahreszeit (Herbst Laternen, Advent warmweiße Lichter, Oktoberfest blau-weiße Wimpel …). Wählen oder ausschalten: ⚙️ → „✨ Effekte“ → <b>„🎏 Deko an der Leiste“</b>. Sie ist ein stilles Bild und kostet keinen Akku.", zeig: () => einstiegHin("effekte", "jzDekoWahl"), seit: "2.335.0" },
   { id: "sparmodus", thema: "technik", sym: "🐢", t: "Effekte laufen nicht? Der Sparmodus", x: "Bei schwachem Netz, „Datensparen“ oder zwei langsamen Starts schaltet sich der <b>🐢 Sparmodus</b> von selbst ein: dann ruhen Effekte und das Jahreszeiten-Bild. Tippst du eine Vorschau an, sagt die App den Grund und bietet <b>„🐢 Sparmodus aus“</b> an. Einstellen: ⚙️ → „🎨 Darstellung“ → <b>„🐢 Sparmodus“</b>: Automatisch, Immer an oder Aus.", zeig: () => suEinstellung("sparWahl"), seit: "2.330.0" },
   { id: "akku", thema: "technik", sym: "🔋", t: "Akku sparen mit der Club-App", x: "Die App spart von selbst: Das Bild im Kopf malt höchstens 30 Bilder pro Sekunde, nach 45 Sekunden ohne Tippen nur noch 12 – und bei weniger als 30 % Akku immer sparsam. Im Hintergrund und auf anderen Seiten ruht es ganz. Noch sparsamer: ⚙️ → „🎨 Darstellung“ → <b>🐢 Sparmodus „An“</b> oder ⚙️ → „✨ Effekte“ → <b>„🍂 Jahreszeiten im Kopf“</b> aus.", zeig: () => suEinstellung("sparWahl"), seit: "2.334.0" },
@@ -15959,6 +15959,11 @@ function jzbFxSchritt(dt) {
   for (const p of J.fx) {
     if (p.liegt && !W) { p.y = J.h - 2; p.a = (p.a ?? 1) - dt * p.blass; if (p.a <= 0) p.weg = true; continue; }
     if (p.typ === "funke") { p.a -= dt * 1.1; p.x += p.vx * dt; p.y += p.vy * dt; if (p.a <= 0) p.weg = true; continue; }
+    if (p.typ === "scherbe" || p.typ === "nuss") { // 2.356.0: Eis-Scherben und Nüsse fliegen, hüpfen am Boden und verschwinden
+      p.vy += 300 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+      if (p.y > J.h - 2) { p.y = J.h - 2; p.vy = -Math.abs(p.vy) * .3; p.vx *= .6; p.vr *= .6; p.a -= dt * 1.4; } else p.a -= dt * .2;
+      if (p.a <= 0 || p.x < -40 || p.x > J.w + 40) p.weg = true; continue;
+    }
     if (p.typ === "schmelz") { // rinnt am Schneemann herunter, wird schneller, wackelt leicht – unten läuft er in die Pfütze
       p.v = Math.min(70, p.v + 40 * dt); p.y += p.v * dt; p.spur = Math.min(10 * J.k, p.spur + p.v * dt * .5); p.x = p.x0 + Math.sin(p.y * .25 + p.ph) * .6 * J.k;
       if (p.y >= J.h - 2) { p.y = J.h - 2; p.a -= dt * 2.5; p.spur = Math.max(0, p.spur - 30 * dt); if (p.a <= 0) p.weg = true; }
@@ -16201,6 +16206,9 @@ function jzbMalen() {
     else if (p.typ === "blatt") jzbBlatt(c, p.x, p.y, p.s, p.rot, p.liegt ? 1 : Math.cos(p.ph * 1.3), p.liegt ? .55 : 1, p.farbe, p.form);
     else if (p.typ === "bluete" || p.typ === "bluetenblatt") { c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.fillStyle = p.farbe; c.beginPath(); c.ellipse(0, 0, p.s, p.s * (p.typ === "bluete" ? .7 : .35), 0, 0, 7); c.fill(); c.restore(); }
     else if (p.typ === "funke") jzbStern(c, p.x, p.y, p.s, p.farbe);
+    else if (p.typ === "scherbe") { c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.fillStyle = "#e3f5ff"; c.strokeStyle = "rgba(60,140,210,.9)"; c.lineWidth = .8;
+      c.beginPath(); c.moveTo(-p.s, -p.s * .35); c.lineTo(p.s * .85, -p.s * .7); c.lineTo(p.s * .3, p.s * .85); c.closePath(); c.fill(); c.stroke(); c.restore(); }
+    else if (p.typ === "nuss") jzbEichelMalen(c, p.x, p.y, p.nuss, p.rot, J.k, p.s);
     else if (p.typ === "schal") jzbSchalMalen(c, p.x, p.y, p.rot, p.t, !!p.los);
     else if (p.typ === "schmelz") jzbTropfenMalen(c, p);
     else if (p.typ === "wasser") { c.fillStyle = "rgba(120,190,255,.95)"; c.beginPath(); c.ellipse(p.x, p.y, 1.1, 1.8, 0, 0, 7); c.fill(); }
@@ -16796,7 +16804,7 @@ function jzbEisTropfen(sx, sy) {
 // Nur im Winter auf der Bühne, der Name bleibt nur auf diesem Gerät (nichts geht an den Server). Höchstens ein Stück gleichzeitig.
 const jzbEisNameText = () => String(ICH?.vorname || String(ICH?.name || "").split(" ")[0] || "").trim().slice(0, 12);
 function jzbEisNameWill() {
-  const J = JZB, txt = jzbEisNameText(); if (!J.cv || J.saison !== "winter" || !txt || J.eisStueck || J.sonne) return false;
+  const J = JZB, txt = jzbEisNameText(); if (!J.cv || J.saison !== "winter" || !txt || J.eisStueck || J.sonne || J.raupe) return false;
   const N = J.eisName; if (N && (N.schmelz > 0 || N.n >= [...N.text].length)) return false;
   if (!J.eisErster) return (J.eisErster = true); // 2.322.0: das erste Stück gleich beim ersten Mal – man soll es auch sehen
   return Math.random() < (J.vorschau ? .7 : .5); // „ab und an“ – etwa jedes zweite Mal statt eines Tropfens
@@ -16804,7 +16812,7 @@ function jzbEisNameWill() {
 function jzbEisStueck(sx, sy) {
   const J = JZB; if (!J.cv || J.saison !== "winter") return false;
   const r = J.cv.getBoundingClientRect(); if (!r.width) return false;
-  if (!J.eisName || J.eisName.text !== jzbEisNameText()) J.eisName = { text: jzbEisNameText(), n: 0, gelandet: [], schmelz: 0 };
+  if (!J.eisName || J.eisName.text !== jzbEisNameText()) J.eisName = { text: jzbEisNameText(), n: 0, gelandet: [], schmelz: 0, weg: [], fertig: null };
   const x = (sx - r.left) * J.w / r.width, y = (sy - r.top) * J.h / r.height;
   J.eisStueck = { x0: x, x, y, y0: y, v: 0, t: 0, rot: 0, vr: jzbZ(3, 6) * (Math.random() < .5 ? -1 : 1), ph: jzbZ(0, 6) };
   return true;
@@ -16817,6 +16825,7 @@ function jzbEisNameLage() { // Mitte jedes Buchstabens (zentriert), Schriftgrö�
   return { fs, z, pos, y: pos.reduce((a, v) => a + jzbGrund(v), 0) / Math.max(1, pos.length) + 1 }; // gemeinsame Grundlinie (Mittel der Schneehöhe) – steht im Schnee
 }
 function jzbEisNameSchritt(dt) {
+  if (JZB.saison !== "winter") { JZB.eisName = null; JZB.eisStueck = null; return; } // 2.356.0: nie neben dem Herbst-Namen stehen bleiben
   const J = JZB, N = J.eisName, S = J.eisStueck, k = J.k;
   if (S && N) {
     const L = jzbEisNameLage(), zx = L.pos[Math.min(N.n, L.pos.length - 1)], boden = L.y - L.fs * .45;
@@ -16824,25 +16833,31 @@ function jzbEisNameSchritt(dt) {
     const p = Math.min(1, (S.y - S.y0) / Math.max(1, boden - S.y0));
     S.x = S.x0 + (zx - S.x0) * jzbEase(p) + Math.sin(S.t * 5 + S.ph) * 7 * k * (1 - p); S.rot += (S.vr + Math.sin(S.t * 3) * 4) * dt;
     if (S.y >= boden) { // gelandet → der nächste Buchstabe entsteht mit Glitzer
-      J.eisStueck = null; N.gelandet[N.n] = J.T; N.n++;
+      J.eisStueck = null; N.gelandet[N.n] = J.T; N.n++; if (N.n >= [...N.text].length) N.fertig = J.T;
       for (let i = 0; i < 10; i++) J.fx.push({ typ: "flocke", x: zx, y: boden, r: jzbZ(.6, 1.6), vx: jzbZ(-45, 45), vy: -jzbZ(20, 70), a: 1, blass: 1.6 });
     }
   }
-  if (N && N.n && (J.sonne || N.schmelz > 0)) { // ☀️ die Sonne vom Schneemann lässt den Namen schmelzen
-    if (!J.sonne || J.sonne.t > JZB_SONNE * .6) N.schmelz = Math.min(1, N.schmelz + dt / 5);
-    if (Math.random() < dt * 6) { const L = jzbEisNameLage(), i = Math.floor(Math.random() * N.n); J.fx.push({ typ: "wasser", x: L.pos[i] + jzbZ(-4, 4) * k, y: L.y - 2, vx: jzbZ(-12, 12), vy: -jzbZ(5, 20), a: 1, blass: 2 }); }
-    if (N.schmelz >= 1) { // fertig geschmolzen: eine kleine Pfütze bleibt, dann geht es von vorn los
-      const L = jzbEisNameLage(), mx = (L.pos[0] + L.pos[N.n - 1]) / 2; (J.eisPfuetzen = J.eisPfuetzen || []).push({ x: mx, r: Math.min(22 * k, 8 * k + N.n * 1.5 * k), ringe: [0] });
-      J.eisName = null; J.eisStueck = null;
+  // 2.356.0 KC-CLUB-NAME-WEG (Wunsch Hansi „der Name soll weg sein, wenn die Schneeraupe ihn wegschiebt – dann zerspringt er in Stücke“):
+  // das Schild der Raupe erreicht einen Buchstaben → er zerspringt in Eis-Scherben; sind alle weg, beginnt der Name später von vorn
+  if (N && N.n && J.raupe) {
+    const R = J.raupe, vorn = R.x + R.dir * 36 * k, L = jzbEisNameLage(); N.weg = N.weg || [];
+    for (let i = 0; i < N.n; i++) {
+      if (N.weg[i] || (R.dir > 0 ? vorn < L.pos[i] - L.fs * .3 : vorn > L.pos[i] + L.fs * .3)) continue;
+      N.weg[i] = true;
+      for (let q = 0; q < 16; q++) J.fx.push({ typ: "scherbe", x: L.pos[i] + jzbZ(-.35, .35) * L.fs, y: L.y - jzbZ(.1, .9) * L.fs, s: jzbZ(1.6, 3.6) * k, rot: jzbZ(0, 6.3), vr: jzbZ(-14, 14),
+        vx: R.dir * jzbZ(40, 170) + jzbZ(-40, 40), vy: -jzbZ(60, 190), a: 1 });
+      for (let q = 0; q < 8; q++) J.fx.push({ typ: "flocke", x: L.pos[i], y: L.y - L.fs * .3, r: jzbZ(.6, 1.6), vx: jzbZ(-60, 60), vy: -jzbZ(30, 90), a: 1, blass: 1.6 });
     }
+    if (N.weg.filter(Boolean).length >= N.n) { J.eisName = null; J.eisStueck = null; }
   }
 }
 function jzbEisNameMalen(c) {
-  const J = JZB, N = J.eisName, S = J.eisStueck, k = J.k; if (!N) return;
+  const J = JZB, N = J.eisName, S = J.eisStueck, k = J.k; if (!N || J.saison !== "winter") return;
   if (N.n) {
     const L = jzbEisNameLage(), m = N.schmelz || 0;
     c.save(); c.font = `800 ${L.fs}px "Segoe UI", Roboto, Arial, sans-serif`; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.lineJoin = "round";
     for (let i = 0; i < N.n; i++) {
+      if (N.weg?.[i]) continue; // 2.356.0: von der Raupe zersprungen
       const x = L.pos[i], y = L.y, neu = Math.min(1, (J.T - (N.gelandet[i] ?? -9)) / .35), sc = (.4 + .6 * jzbEase(neu)) * (1 + (neu < 1 ? .15 * Math.sin(neu * Math.PI) : 0));
       c.save(); c.translate(x, y); c.scale(sc * (1 + m * .35), sc * (1 - m * .85)); c.globalAlpha = 1 - m * .55;
       const g = c.createLinearGradient(0, -L.fs, 0, 0); g.addColorStop(0, "#ffffff"); g.addColorStop(.45, "#d9f1ff"); g.addColorStop(1, "#86c8f4");
@@ -17132,6 +17147,8 @@ function jzbPiste(dt) {
   const J = JZB, k = J.k, B = J.boden;
   if (J.rillen) { J.rillen.t += dt; if (J.rillen.t > 120 || J.phase === "wind" || J.phase === "besuch") J.rillen = null; }
   if (!J.raupe && !J.ski) {
+    const nameFertig = J.eisName?.fertig != null && J.T - J.eisName.fertig > (J.vorschau ? 15 : 75); // 2.356.0: dann kommt die Raupe und schiebt ihn weg
+    if (nameFertig && J.raupeUhr > 3) J.raupeUhr = 3;
     if ((J.raupeUhr = (J.raupeUhr ?? (J.extra === "raupe" ? 2 : jzbZ(60, 150))) - dt) <= 0) {
       if (!jzbPisteFrei()) J.raupeUhr = 6;
       else { const dir = J.raupeDir = J.raupeDir === 1 ? -1 : 1; J.raupe = { dir, x: dir > 0 ? -70 * k : J.w + 70 * k, t: 0, eben: jzbSchneeMittel() }; J.rillen = null; }
@@ -17245,6 +17262,20 @@ function jzbBlaeserSchritt(dt) {
     }
     J.liegt = J.liegt.filter((b) => !b.weg);
     for (const p of J.fx) if (p.typ === "blatt" && p.liegt && p.x > lo && p.x < hi) { p.liegt = false; p.vx = B.dir * jzbZ(190, 300); p.vy = -jzbZ(40, 120); } // auch schon Hingefallenes
+    // 2.356.0 KC-CLUB-NAME-WEG (Wunsch Hansi „beim Herbstlaub soll das der Laubbläser sein – dann werden die Blätter aufgewirbelt“)
+    const N = J.saison === "herbst" ? J.nussName : null;
+    if (N && N.n) {
+      const L = jzbNussNameLage(); N.weg = N.weg || [];
+      for (let i = 0; i < N.n; i++) {
+        if (N.weg[i] || L.pos[i] < lo - L.fs * .3 || L.pos[i] > hi + L.fs * .3) continue;
+        N.weg[i] = true; const laub = themaWert("laub") || JZB_LAUB;
+        for (let q = 0; q < 14; q++) J.fx.push({ typ: "blatt", x: L.pos[i] + jzbZ(-.4, .4) * L.fs, y: L.y - jzbZ(.05, .9) * L.fs, s: jzbZ(5, 8.5) * (.75 + .25 * k), farbe: jzbW(laub), form: Math.random() < .45 ? 1 : 0,
+          rot: jzbZ(0, 6.3), vr: jzbZ(-14, 14), vx: B.dir * jzbZ(170, 340), vy: -jzbZ(90, 230), ph: jzbZ(0, 6.3), fq: jzbZ(1, 2) });
+        for (let q = 0; q < 6; q++) J.fx.push({ typ: "nuss", x: L.pos[i] + jzbZ(-.35, .35) * L.fs, y: L.y - jzbZ(.1, .7) * L.fs, s: jzbZ(.9, 1.3), nuss: q % 2 === 0, rot: jzbZ(0, 6.3), vr: jzbZ(-10, 10),
+          vx: B.dir * jzbZ(80, 200), vy: -jzbZ(60, 160), a: 1 });
+      }
+      if (N.weg.filter(Boolean).length >= N.n) J.nussName = null;
+    }
     if (Math.random() < dt * 22) B.luft.push({ x: B.x + B.dir * 16 * k, y: J.h - 4 * k - jzbZ(0, 6) * k, l: jzbZ(10, 22) * k, a: .8 });
   }
   for (const l of B.luft) { l.x += B.dir * 260 * k * dt; l.a -= dt * 1.6; }
@@ -17326,6 +17357,7 @@ function jzbNussNameMalen(c) {
   const J = JZB, N = J.nussName; if (J.saison !== "herbst" || !N || !N.n) return;
   const L = jzbNussNameLage();
   for (let i = 0; i < N.n; i++) {
+    if (N.weg?.[i]) continue; // 2.356.0: vom Laubbläser weggepustet
     const { pk, st } = jzbNussPunkte(L.z[i], L.fs, L.f), neu = Math.min(1, (J.T - (N.gelandet[i] ?? -9)) / .4);
     c.save(); c.font = L.f; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.globalAlpha = .5 * neu; c.fillStyle = "#4a2a10"; // dunkler Untergrund – damit man den Buchstaben gut lesen kann
     c.fillText(L.z[i], L.pos[i], L.y - L.fs * .12 + st * .45); c.restore();
@@ -17340,10 +17372,11 @@ function jzbHerbstTiere(dt) {
   const txt = jzbEisNameText(); if (J.nussName && J.nussName.text !== txt) J.nussName = null;
   if (!J.nussName && txt) J.nussName = { text: txt, n: 0, gelandet: [], fertig: null };
   const N = J.nussName, laenge = N ? [...N.text].length : 0;
+  if (N && N.fertig !== null && !J.blaeser && !J.hoernchen && J.T - N.fertig > (J.vorschau ? 15 : 75) && !N.weg?.some(Boolean)) jzbBlaeserStart(); // 2.356.0: Name eine Weile fertig → Laubbläser kommt
   if (!J.hoernchen && (J.hoernchenUhr = (J.hoernchenUhr ?? (J.extra === "hoernchen" ? 3 : jzbZ(15, 35))) - dt) <= 0) {
     let art = "essen";
     if (N && N.n < laenge && !N.fertig) art = !J.nussErster || Math.random() < .7 ? "bringen" : "essen";
-    else if (N && N.fertig !== null && J.T - N.fertig > (J.vorschau ? 25 : 120)) art = "holen";
+    // 2.356.0 KC-CLUB-NAME-WEG: das Eichhörnchen holt die Nüsse nicht mehr – der Laubbläser pustet den Namen weg (siehe oben)
     const frei = J.eicheln.filter((e) => !e.dy && !e.reserviert);
     if (J.blaeser || (art === "essen" && !frei.length)) J.hoernchenUhr = 8;
     else {
@@ -17607,6 +17640,7 @@ function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, t
   if (!fxAn()) return fxAusHinweis(() => jahreszeitVorschau(art, extra));
   if (!einst("jahreszeit", true)) return melde("„🍂 Jahreszeiten im Kopf“ ist aus – erst einschalten.", true);
   if (art === "heute") JZB.vorschau = ""; else if (art) JZB.vorschau = art;
+  JZB.eisName = null; JZB.eisStueck = null; JZB.nussName = null; // 2.356.0 KC-CLUB-NAME-WEG: Vorschau gewechselt oder beendet → kein alter Name bleibt stehen
   JZB.extra = extra || "";
   zeige("start"); setTimeout(jahreszeitKopf, 350);
   jzVorschauLeiste(); // 2.355.0
