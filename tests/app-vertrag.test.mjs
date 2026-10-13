@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6149,6 +6149,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/case "admin_verlauf": \{\s*nurAdmin\(ich\);/.test(server) && /insert\(\{ quelle: "api", db_ms: Date\.now\(\) - t0 \}\)/.test(server), "Server: Verlauf nur Admin, Schnittstellen-Messpunkt im Wartungslauf");
   assert.ok(/\["verlauf", "📈", "Verlauf", "ueb"\]/.test(html) && /const AD_UEBERWACHT = \["verlauf",/.test(html), "Kachel „📈 Verlauf“ im Admin-Register, in der Lage überwacht");
   assert.ok(/else if \(!b\.dbN && !b\.apiN\) f = bis > jetzt \? "jetzt" : "rot";/.test(html) && /if \(!v\) return \["grau", AD\.verlauf\[1\]\?\.fehler \? "⚠️ nicht abrufbar" : "wird geladen …"\]/.test(html), "ohne Messung nie grün (Regel 11)");
+}
+// 2.342.0 KC-CLUB-TEMPO (Wunsch Hansi „Tempo angehen, nix kaputt machen, messen“): Vorabfragen merken, Verbindung früh aufbauen, Zählabfragen parallel
+{
+  assert.ok(/"Access-Control-Allow-Headers": "content-type, x-club-token, x-club-version",/.test(server) && /"Access-Control-Max-Age": "7200",/.test(server), "Erlaubnis 2 Std. merken – erlaubte Kopfzeilen unverändert");
+  const seiteH = lies("index.html");
+  assert.ok(/^<!doctype html>\n<html lang="de">\n<head>\n<meta charset="utf-8">\n<link rel="preconnect" href="https:\/\/ptblnpiroqftcvlsrhac\.supabase\.co" crossorigin>/.test(seiteH), "Verbindung zum Club-Server ganz am Anfang vorbereiten");
+  assert.ok(/const \[ant, ges\] = ids\.length \? await Promise\.all\(\[/.test(server) && /const leih = pLeih \? \(\(await pLeih\)\.count \?\? 0\) : 0;/.test(server), "Hilfe-Zahl: Abfragen gleichzeitig, Ergebnis gleich");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

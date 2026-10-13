@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.341.0";
+const SERVER_VERSION = "2.342.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -94,6 +94,10 @@ const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "content-type, x-club-token, x-club-version",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  // 2.342.0 KC-CLUB-TEMPO (Messung 13.10.: 1.227 Vorabfragen auf 3.564 Anfragen in 24 Std., je ~230 ms + Netzweg): der Browser darf sich die
+  // Erlaubnis 2 Std. merken (Chrome deckelt bei 2 Std.) statt 5 s. ACHTUNG: Kommt ein neuer Kopfzeilen-Name dazu, gilt er bei Geräten mit
+  // gemerkter Erlaubnis erst nach bis zu 2 Std. – neue Kopfzeilen deshalb vorher hier eintragen und erst später in der App benutzen.
+  "Access-Control-Max-Age": "7200",
 };
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" } });
@@ -3747,12 +3751,15 @@ async function kachelZahlen(ich: Ich, p: any) {
     sicher(async () => {
       const au = ok(await db.from("kc_club_hilfe_aufrufe").select("id,von,anzahl,ziel").gte("datum", heute).is("geschlossen_am", null).neq("von", ich.person_id).limit(100)) as any[];
       const ids = au.map((x) => x.id);
-      const ant = ids.length ? ok(await db.from("kc_club_hilfe_antworten").select("aufruf_id,person_id,antwort").in("aufruf_id", ids)) as any[] : [];
-      const ges = ids.length ? ok(await db.from("kc_club_hilfe_gesehen").select("aufruf_id").eq("person_id", ich.person_id).in("aufruf_id", ids)) as any[] : [];
+      // 2.342.0 KC-CLUB-TEMPO: Antworten, Gesehen und Ausleih-Zahl hängen nur von den Aufrufen ab → gleichzeitig statt nacheinander (Inhalt gleich)
+      const pLeih = ich.vorstand ? Promise.resolve(db.from("kc_club_ausleihen").select("id", { count: "exact", head: true }).eq("status", "angefragt")) : null;
+      const [ant, ges] = ids.length ? await Promise.all([
+        db.from("kc_club_hilfe_antworten").select("aufruf_id,person_id,antwort").in("aufruf_id", ids).then((r: any) => ok(r) as any[]),
+        db.from("kc_club_hilfe_gesehen").select("aufruf_id").eq("person_id", ich.person_id).in("aufruf_id", ids).then((r: any) => ok(r) as any[])]) : [[] as any[], [] as any[]];
       const gesehen = new Set(ges.map((x) => x.aufruf_id));
       const offen = au.filter((x) => (x.ziel !== "online" || gesehen.has(x.id)) && !ant.some((y) => y.aufruf_id === x.id && y.person_id === ich.person_id)
         && !(x.anzahl && ant.filter((y) => y.aufruf_id === x.id && y.antwort === "komme").length >= x.anzahl)).length;
-      const leih = ich.vorstand ? ((await db.from("kc_club_ausleihen").select("id", { count: "exact", head: true }).eq("status", "angefragt")).count ?? 0) : 0;
+      const leih = pLeih ? ((await pLeih).count ?? 0) : 0;
       return offen + leih;
     }),
     // 🗂️ Büro: alles im Eingangskorb (nur wer ins Büro darf)

@@ -1,11 +1,18 @@
 {
-  "version": "2.341.0",
+  "version": "2.342.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "📈 Admin: neuer „Verlauf“ – Erreichbarkeit, Antwortzeit und Fehler der Datenbank über 24 Stunden, 7 oder 30 Tage"
+    "⚡ Schnellerer Start und schnellere Antworten: weniger Wartezeit beim Verbindungsaufbau zum Club-Server"
   ],
   "verlauf": [
+    {
+      "version": "2.342.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "⚡ Schnellerer Start und schnellere Antworten: weniger Wartezeit beim Verbindungsaufbau zum Club-Server"
+      ]
+    },
     {
       "version": "2.341.0",
       "datum": "2026-10-13",

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.342.0 – 2026-10-13 – KC-CLUB-TEMPO: schnellerer Start ohne Inhaltsänderung
+Gemessen (13.10., 24 Std. Server-Protokoll): 1.227 CORS-Vorabfragen auf 3.564 Anfragen, je ~230 ms Serverzeit + Netzweg; Start installierte App Median 2,5 s, davon 1,35 s Warten auf den Server (7 Tage, 422 Starts). Geändert: (1) Server schickt Access-Control-Max-Age 7200 – der Browser merkt sich die Erlaubnis 2 Std. statt 5 s (Kopfzeilen unverändert); (2) index.html baut die Verbindung zum Club-Server (DNS + Verschlüsselung) schon beim Laden auf (preconnect); (3) Hilfe-Zahl auf der Kachel: Antworten, Gesehen und Ausleih-Zahl gleichzeitig statt nacheinander. Inhalte und Abläufe unverändert.
+
 ## 2.341.0 – 2026-10-13 – KC-CLUB-ADMIN-VERLAUF: Admin-Register Stufe 2 – Verlauf
 Admin-Register Stufe 2 (vorbereitet in 2.21.0, jetzt eingebaut, Wunsch Hansi): neue Kachel „📈 Verlauf“ – Erreichbarkeit als Kästchen-Band (grün/gelb/rot, grau = keine Messung), Antwortzeit der Datenbank als Linie, fehlgeschlagene Hintergrund-Aufrufe als Säulen, Datenbankgröße; wählbar 24 Std. / 7 / 30 Tage. Messung alle 10 Min. direkt in der Datenbank (pg_cron, auch wenn die Schnittstelle hängt) und alle 15 Min. über die Schnittstelle vom Club-Server – fehlt diese, wird der Abschnitt rot. Tabelle kc_club_messwerte: nur Zahlen, 35 Tage, nur Server-Zugriff, bewusst nicht gespiegelt. Der Neustart-über-GitHub-Teil von damals entfällt (ersetzt durch den Ein-Knopf-Neustart seit 2.235.0).
 
