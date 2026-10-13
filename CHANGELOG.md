@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.365.0 – 2026-10-14 – 🔍 KC-CLUB-SCHRIFT-ZOOM-TEXT: Zwei-Finger-Zoom nur für Lese-Texte
+Anlass (Hansi): „Das Zoomen sollte wirklich nur bei Text sein, nicht die komplette Oberfläche.“
+- html bleibt bei var(--fs); --zoom wirkt per CSS „zoom“ nur auf .blase .txt, .blase .zitat, .uhk-msg, .zettel .ztext, .prl-text, .alarm-text, .dlg-text.
+  Kopfzeile, Knöpfe, Schreibfeld-Leiste und untere Leiste bleiben gleich groß (Ausgleichsregeln der unteren Leiste aus 2.364.0 entfernt). Geste/Speicher/A−/A+ unverändert.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## Server 2.365.0 – 2026-10-14 – 👣 KC-CLUB-WEGE-KLAR: „Wege der Mitglieder“ benennt Chats eindeutig
 Anlass (Hansi): „Wilfried hat sich heute Nachrichten angesehen, die an andere gegangen sind – er darf doch keine fremden Nachrichten ansehen.“
 - Geprüft: alle 6 von Wilfried geöffneten Chats – er war überall Empfänger von Anfang an (4 Rundschreiben von Klaus an alle 18, 2 Chats mit Hansi).

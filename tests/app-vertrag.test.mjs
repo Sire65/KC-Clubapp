@@ -9527,10 +9527,9 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.364.0 KC-CLUB-SCHRIFT-ZOOM: Zwei-Finger-Zoom der Schrift
 {
-  assert.ok(/html \{ font-size: calc\(var\(--fs\) \* var\(--zoom, 1\)\); \}/.test(seite), "Schrift rechnet mit --zoom");
+  assert.ok(/html \{ font-size: var\(--fs\); \}/.test(seite) && /\.blase \.txt, \.blase \.zitat, \.uhk-msg, \.zettel \.ztext, \.prl-text, \.alarm-text, \.dlg-text \{ zoom: var\(--zoom, 1\); \}/.test(seite), "2.365.0: nur Lese-Texte zoomen, nicht die ganze Oberfläche");
   assert.ok(/const szEigeneGeste = /.test(html) && /if \(e\.cancelable\) e\.preventDefault\(\); \/\/ kein Seiten-Zoom/.test(html) && /localStorage\.setItem\("kc_club_schrift_zoom"/.test(html), "Geste, kein Seiten-Zoom, gemerkt");
   assert.ok((seite.match(/onclick="szAendern\(0\.1\)">A\+<\/button>/g) || []).length === 2, "A−/A+ in beiden Einstellungs-Ansichten");
-  assert.ok(/min\(var\(--zoom, 1\), 1\.15\)/.test(seite), "untere Leiste wächst nur maßvoll");
 }
 
 // Server 2.365.0 KC-CLUB-WEGE-KLAR: Chats in „Wege der Mitglieder“ eindeutig benannt
