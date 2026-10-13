@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.346.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.347.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -16852,6 +16852,10 @@ const AD = { ext: {}, extZeit: 0, laedt: false, offen: null, verlauf: {}, vTage:
 const AD_ALT_MIN = 15, AD_EXT_MIN = 3, AD_B2_FREI = 10 * 1024 ** 3;
 const AD_REF = (API.match(/^https:\/\/([a-z0-9]+)\.supabase\.co/) || [])[1] || "";
 const AD_SB = `https://supabase.com/dashboard/project/${AD_REF}`, AD_GH = "https://github.com/Sire65";
+// KC-CORE-NOTFALL-LESEN (2.347.0): Werkzeuge „Daten zurückholen, wenn Supabase ausfällt“ – alles beim Anbieter, keine Schlüssel in der App
+const AD_NOTFALL = { ablauf: "notfall-sicherung-lesen.yml", schritt: "Sicherung lesen", repo: "Sire65/KC-Clubapp", maxTage: 8,
+  neon: "https://console.neon.tech/app/projects/purple-hat-23047492", tresor: AD_SB + "/integrations/vault/secrets",
+  anleitung: AD_GH + "/KC-Clubapp/blob/main/docs/NOTFALL_DATEN_ZURUECKHOLEN.md" };
 // Direktsprünge je Dienst (Registry – neuer Dienst = neuer Eintrag); Anmeldung jeweils beim Anbieter
 const AD_DIENSTE = {
   supabase: { sym: "🗄️", t: "Supabase", links: [
@@ -16861,12 +16865,14 @@ const AD_DIENSTE = {
     ["⏰", "Zeitpläne (Cron)", AD_SB + "/integrations/cron/jobs"], ["🧮", "SQL-Editor", AD_SB + "/sql/new"],
     ["🔑", "Zugangsschlüssel des Kontos (Access Tokens)", "https://supabase.com/dashboard/account/tokens"], ["🌐", "Störungsseite Supabase", "https://status.supabase.com"]] },
   neon: { sym: "🪞", t: "Neon", links: [["🏠", "Neon-Konsole (Projekte, Zweige, Sicherungen)", "https://console.neon.tech/app/projects"],
+    ["🧮", "KC Core Mirror – SQL-Editor (Spiegel und Notfall-Daten lesen)", AD_NOTFALL.neon + "/sql-editor"],
     ["🔑", "API-Schlüssel des Kontos", "https://console.neon.tech/app/settings/api-keys"], ["🌐", "Störungsseite Neon", "https://neonstatus.com"]] },
   cloudflare: { sym: "☁️", t: "Cloudflare", links: [["🏠", "Cloudflare-Übersicht", "https://dash.cloudflare.com/"],
     ["⚙️", "Workers (Notbetrieb, Kassen-Gateway)", "https://dash.cloudflare.com/?to=/:account/workers-and-pages"],
     ["🔑", "API-Schlüssel (Tokens)", "https://dash.cloudflare.com/profile/api-tokens"], ["🌐", "Störungsseite Cloudflare", "https://www.cloudflarestatus.com"]] },
   github: { sym: "🐙", t: "GitHub", links: [["⚙️", "Club-App: Abläufe (hochladen, Tests, Spiegel-Wächter)", AD_GH + "/KC-Clubapp/actions"],
     ["🪞", "Spiegel-Wächter von Hand starten", AD_GH + "/KC-Clubapp/actions/workflows/spiegel-waechter.yml"],
+    ["🔐", "Notfall – Sicherung lesen (Probe / Wiederherstellen)", AD_GH + "/KC-Clubapp/actions/workflows/" + AD_NOTFALL.ablauf],
     ["🔐", "Club-App: Geheimnisse (Secrets) anlegen", AD_GH + "/KC-Clubapp/settings/secrets/actions"],
     ["🧾", "Kasse (Repository)", AD_GH + "/kasse"], ["🛰️", "KICC (Repository)", AD_GH + "/KC-Infrastructure-Control-Center"],
     ["📨", "Communicator (Repository)", AD_GH + "/kc-communication"], ["🔑", "Persönliche Zugangsschlüssel", "https://github.com/settings/tokens"],
@@ -16889,6 +16895,24 @@ async function adExternPruefen(erzwingen) {
   const [n, g, s] = await Promise.all([notUrl ? diagMessen(notUrl, {}, 8000) : Promise.resolve(null),
     diagMessen("https://kc-failover-gateway.ha-joko.workers.dev/health", {}, 8000), diagMessen("https://status.supabase.com/api/v2/summary.json", {}, 8000)]);
   AD.ext = { zeit: Date.now(), not: n ? { ok: n.da && n.status < 500, ms: n.ms, status: n.status } : null, gw: await json(g), gwDa: !!g?.da, status: await json(s) };
+}
+// Ergebnis der Wochenprobe „Notfall – Sicherung lesen“: öffentliche GitHub-Schnittstelle (ohne Anmeldung, 60 Abrufe/Std. je Gerät → höchstens alle 30 Min.)
+// Lämpchen: grün = Schlüssel-Kopie hat entschlüsselt (≤ 8 Tage alt), rot = abgelehnt/abweichend, grau = nie gelaufen, nicht eingerichtet, veraltet oder nicht abrufbar
+async function adProbeLaden(erzwingen) {
+  if (!erzwingen && AD.probe && Date.now() - AD.probe.zeit < 30 * 60000) return;
+  const gh = (pfad) => fetch(`https://api.github.com/repos/${AD_NOTFALL.repo}/actions/${pfad}`, { headers: { Accept: "application/vnd.github+json" }, cache: "no-store", signal: zeitSignal(8000) })
+    .then((r) => { if (!r.ok) throw new Error("GitHub " + r.status); return r.json(); });
+  try {
+    const lauf = (await gh(`workflows/${AD_NOTFALL.ablauf}/runs?status=completed&per_page=1`)).workflow_runs?.[0];
+    if (!lauf) { AD.probe = { zeit: Date.now(), f: "grau", kurz: "noch nie", text: "Die Wochenprobe ist noch nie gelaufen." }; return; }
+    const schritt = (await gh(`runs/${lauf.id}/jobs`)).jobs?.[0]?.steps?.find((x) => x.name === AD_NOTFALL.schritt);
+    const am = lauf.updated_at || lauf.created_at, tage = adStd(am) / 24, wann = `${fKurz.format(new Date(am))} ${fZeit.format(new Date(am))} Uhr`;
+    const k = schritt?.conclusion || (lauf.conclusion === "success" ? "" : lauf.conclusion);
+    AD.probe = { zeit: Date.now(), url: lauf.html_url, wann, ...(k === "success" ? (tage <= AD_NOTFALL.maxTage ? { f: "gruen", kurz: "lesbar ✓", text: `Schlüssel-Kopie hat am ${wann} entschlüsselt und die Prüfsumme bestätigt.` } : { f: "grau", kurz: "⚠️ veraltet", text: `Letzte gute Probe am ${wann} – älter als ${AD_NOTFALL.maxTage} Tage.` })
+      : k === "failure" ? { f: "rot", kurz: "Fehler", text: `Probe am ${wann} fehlgeschlagen – Schlüssel-Kopie prüfen.` }
+      : k === "skipped" ? { f: "grau", kurz: "nicht eingerichtet", text: "Die Schlüssel-Kopie fehlt noch bei GitHub – siehe „Schlüssel-Kopie einrichten“." }
+      : { f: "grau", kurz: "unklar", text: `Lauf am ${wann} ohne klares Ergebnis (${k || "kein Ergebnis"}).` }) };
+  } catch (e) { AD.probe = { zeit: Date.now() - 25 * 60000, f: "grau", kurz: "unbekannt", text: "⚠️ Ergebnis bei GitHub gerade nicht abrufbar." }; }
 }
 async function adLaden(erzwingen) {
   if (!ICH?.admin || AD.laedt) return;
@@ -16950,7 +16974,7 @@ function adZustand(id) {
     case "inkognito": return ["keine", inkognitoAn() ? "🕶️ AN" : "aus"];
     case "nutzung": return ["keine", r ? `${m.heute} heute · ${m.online} online` : "Nutzung der App"];
     case "fehler": return ["keine", "Startprobleme der Mitglieder"];
-    case "notfall": return ["keine", "Fahrplan · Diagnose · Neustart"];
+    case "notfall": return ["keine", "Fahrplan · Diagnose · Daten zurückholen"];
     case "alarm": return ["keine", "Notfall-Meldung sofort an alle"];
     case "lage": { if (!r) return gemessen(); const ids = AD_UEBERWACHT.map(adZustand).map((z) => z[0]);
       const rot = ids.filter((x) => x === "rot").length, gelb = ids.filter((x) => x === "gelb").length, grau = ids.filter((x) => x === "grau").length;
@@ -17054,6 +17078,27 @@ function adSaeulen(werte) {
 const adZeile = (f, name, text) => `<div class="azeile">${f === "keine" ? "" : lampe(f)}<b>${esc(name)}</b><span>${esc(text)}</span></div>`;
 const adKnopf = (t, fn, haupt) => `<button class="knopf${haupt ? " haupt" : ""}" onclick="${fn}">${t}</button>`;
 const adLinks = (k) => { const d = AD_DIENSTE[k]; return `<details class="karte innen" style="margin:0"><summary>${d.sym} ${esc(d.t)} – direkt zur Verwaltung</summary><div style="display:grid;gap:6px;margin-top:6px">${d.links.map(([s, t, u]) => `<a class="knopf" href="${esc(u)}" target="_blank" rel="noopener">${s} ${esc(t)} ↗</a>`).join("")}</div></details>`; };
+// KC-CORE-NOTFALL-LESEN (2.347.0, Wunsch Hansi „unter Admin für den Notfall Werkzeuge hinterlegen“): Daten zurückholen, wenn Supabase ausfällt
+function adNotfallDaten() {
+  const p = AD.probe, lauf = AD_GH + "/KC-Clubapp/actions/workflows/" + AD_NOTFALL.ablauf;
+  const link = (t, u, haupt) => `<a class="knopf${haupt ? " haupt" : ""}" href="${esc(u)}" target="_blank" rel="noopener">${t} ↗</a>`;
+  return `<div style="display:grid;gap:8px;overflow-wrap:anywhere"><b>💾 Daten zurückholen, wenn Supabase ausfällt</b>
+    ${adZeile(p ? p.f : "grau", "🔐 Wochenprobe", p ? p.kurz : "wird geprüft …")}
+    ${p ? `<p class="hinweis" style="margin:0">${esc(p.text)}${p.url ? ` <a href="${esc(p.url)}" target="_blank" rel="noopener">Lauf ansehen ↗</a>` : ""}</p>` : ""}
+    <p class="hinweis" style="margin:0">Täglich wird jede Tabelle verschlüsselt auf Neon gesichert und geprüft. Sonntags liest GitHub eine zufällige Tabelle mit der <b>Schlüssel-Kopie außerhalb von Supabase</b> zurück – so ist bewiesen, dass die Daten auch ohne Supabase lesbar sind.</p>
+    <details class="karte innen" style="margin:0"><summary>🧭 Was tun, wenn …</summary><ol style="margin:6px 0 0;padding-left:20px;display:grid;gap:6px">
+      <li><b>Supabase kurz weg</b> (Minuten/Stunden): Die App läuft im Notbetrieb – abwarten, nichts zurückholen.</li>
+      <li><b>Länger weg, etwas nachsehen:</b> Im Neon SQL-Editor den Spiegel direkt lesen (höchstens 6 Std. alt; bei Personen fehlen geschützte Angaben), z. B. <code>select * from kc_club_treffen limit 50;</code><br>${link("🧮 Neon SQL-Editor", AD_NOTFALL.neon + "/sql-editor")}</li>
+      <li><b>Supabase verloren – alles zurückholen:</b> Ablauf öffnen → „Run workflow“ → modus <code>wiederherstellen</code>, bestaetigen <code>JA</code>. Die Daten stehen danach entschlüsselt auf Neon im Bereich <code>notfall_JJJJMMTT</code> (Spiegel bleibt unverändert); lesen z. B. mit <code>select zeile from notfall_20261013."kc_club_treffen";</code><br>${link("📥 Wiederherstellen starten", lauf)}</li>
+      <li>Neue Datenbank daraus befüllen: nur mit Claude, Schritt für Schritt (Prüfen → Sicherung → Freigabe → Einspielen → Nachprüfen).</li></ol></details>
+    <details class="karte innen" style="margin:0"${p?.kurz === "nicht eingerichtet" ? " open" : ""}><summary>🔐 Schlüssel-Kopie einrichten (einmal, am PC)</summary><ol style="margin:6px 0 0;padding-left:20px;display:grid;gap:6px">
+      <li>Im Supabase-Tresor den Eintrag <code>kc_db_backup_key_v1</code> anzeigen und kopieren.<br>${link("🔑 Supabase-Tresor", AD_NOTFALL.tresor)}</li>
+      <li>Bei GitHub als Secret <code>KC_BACKUP_KEY</code> speichern – zusätzlich in den Passwort-Manager und den Notfall-Umschlag.<br>${link("🔐 GitHub-Secrets", AD_GH + "/KC-Clubapp/settings/secrets/actions")}</li>
+      <li>In der Neon-Konsole (KC Core Mirror → Connect) die Verbindungsadresse kopieren und als Secret <code>KC_NEON_URL</code> speichern.<br>${link("🪞 Neon-Konsole", AD_NOTFALL.neon)}</li>
+      <li>Ablauf einmal mit modus <code>probe</code> starten – grün = Kopie stimmt.</li></ol>
+      <p class="hinweis" style="margin:6px 0 0">⚠️ Schlüssel und Adresse nie in Chat, Mail oder App eintippen – nur direkt beim Anbieter.</p></details>
+    <div class="knoepfe">${link("🧪 Probe jetzt starten", lauf, true)}${link("📖 Anleitung", AD_NOTFALL.anleitung)}${adKnopf("↻ Probe neu abfragen", "adProbeLaden(true).then(()=>adBlatt('notfall'))")}</div></div>`;
+}
 function adBlatt(id) {
   if (id === "alarm") return notfallMeldung(); // KC-CLUB-NOTFALL-MELDUNG
   if (id === "stadt") return stadtTermine(); // KC-CLUB-STADT-TERMINE
@@ -17094,7 +17139,9 @@ function adBlatt(id) {
         <button class="knopf alarm-knopf" onclick="$('adBlatt').remove();notfallMeldung()">🚨 Alarm an alle Mitglieder</button>
         <b>Weitere Notfall-Werkzeuge</b>
         <div class="knoepfe">${adKnopf("🪞 Spiegel jetzt anstoßen", "adminSpiegeln()")}${adKnopf("🧪 Notbetrieb-Probe (dieses Gerät)", "notProbeSetzen(!notProbe())")}${adKnopf("🧯 Ernstfall simulieren (dieses Gerät)", "notErnstfallSetzen(!notErnstfall())")}</div>
+        ${adNotfallDaten()}
         ${adLinks("supabase")}`;
+      if (!AD.probe || Date.now() - AD.probe.zeit > 30 * 60000) adProbeLaden().then(() => { if (AD.offen === "notfall" && document.getElementById("adBlatt")) adBlatt("notfall"); });
       break;
     case "verlauf":
       if (!AD.verlauf[AD.vTage]) adVerlaufLaden(AD.vTage).then(() => { if (AD.offen === "verlauf") adBlatt("verlauf"); });

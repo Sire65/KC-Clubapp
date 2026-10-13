@@ -1,12 +1,18 @@
 {
-  "version": "2.346.0",
+  "version": "2.347.0",
   "datum": "2026-10-13",
   "stufe": "RC",
   "neu": [
-    "🎬 Erklär-Videos: Bild und Text passen jetzt zusammen – erklärt die Stimme etwas im Kopf, rollt sich der Kopf vorher auf; nennt sie Kacheln (z. B. Fotoalbum, Archiv, SOS), kommt das passende Register nach vorn und die Kacheln leuchten auf",
-    "🎬 Verweise in den Videos: Gibt es zu einem Thema ein eigenes Video (z. B. Farben einstellen oder das Eselsohr), fragt das Video: ▶ Ja (danach geht es an derselben Stelle weiter), Nein, ⏰ Später (in der Video-Liste mit 📌 gemerkt und angehakt) oder 🔕 Nicht mehr fragen"
+    "🧯 Admin → Notfall: neuer Abschnitt „Daten zurückholen, wenn Supabase ausfällt“ – Wochenprobe-Lämpchen, Fahrplan und Direktsprünge"
   ],
   "verlauf": [
+    {
+      "version": "2.347.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🧯 Admin → Notfall: neuer Abschnitt „Daten zurückholen, wenn Supabase ausfällt“ – Wochenprobe-Lämpchen, Fahrplan und Direktsprünge"
+      ]
+    },
     {
       "version": "2.346.0",
       "datum": "2026-10-13",

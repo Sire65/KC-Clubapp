@@ -6165,6 +6165,22 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/v_zyklus > now\(\) - interval '15 minutes'/.test(nh) && /limit 10/.test(nh) && /interval '6 hours'[\s\S]{0,80}< 2/.test(nh), "frühestens 15 Min. danach, höchstens 10 Tabellen, 2 Versuche in 6 Std.");
   assert.ok(/perform public\.kc_db_mirror_dispatch\(v_tabellen\);/.test(nh) && /cron\.schedule\('kc-db-mirror-nachholen', '25,55 \* \* \* \*'/.test(nh), "vorhandener Spiegel-Weg, Zeitplan :25/:55");
 }
+
+// 2.347.0 KC-CORE-NOTFALL-LESEN: Admin → Notfall – Daten zurückholen (Wochenprobe-Lämpchen, Fahrplan, Direktsprünge; keine Schlüssel in der App)
+{
+  const w = lies(".github/workflows/notfall-sicherung-lesen.yml");
+  const schritt = (html.match(/schritt: "([^"]+)"/) || [])[1];
+  assert.ok(schritt && w.includes(`- name: ${schritt}\n        if: steps.da.outputs.da == '1'`), "App liest genau den Schritt, der bei fehlender Einrichtung übersprungen wird");
+  assert.ok(html.includes(`ablauf: "notfall-sicherung-lesen.yml"`), "Ablauf-Datei in der Registry");
+  const f = html.slice(html.indexOf("async function adProbeLaden("), html.indexOf("async function adLaden("));
+  assert.ok(/fetch\(`https:\/\/api\.github\.com\/repos\//.test(f) && !/Authorization|token/i.test(f), "öffentlich abgefragt, ohne Schlüssel");
+  assert.ok(/tage <= AD_NOTFALL\.maxTage \? \{ f: "gruen"/.test(f) && /: \{ f: "grau", kurz: "⚠️ veraltet"/.test(f) && /k === "skipped" \? \{ f: "grau"/.test(f) && /catch \(e\) \{ AD\.probe = \{ [^}]*f: "grau"/.test(f), "grün nur bei frischer Erfolgsprobe – sonst grau/rot (UNKNOWN nie OK)");
+  assert.ok(/AD\.probe && Date\.now\(\) - AD\.probe\.zeit < 30 \* 60000\) return;/.test(f), "höchstens alle 30 Min. bei GitHub");
+  const d = html.slice(html.indexOf("function adNotfallDaten("), html.indexOf("function adBlatt("));
+  for (const t of ["Wiederherstellen starten", "Probe jetzt starten", "Supabase-Tresor", "GitHub-Secrets", "Neon SQL-Editor", "nie in Chat, Mail oder App"]) assert.ok(d.includes(t), "Notfall-Blatt: " + t);
+  assert.ok(!/<input|<textarea/.test(d), "kein Eingabefeld für Schlüssel");
+  assert.ok(/\$\{adNotfallDaten\(\)\}/.test(html) && /case "notfall": return \["keine", "Fahrplan · Diagnose · Daten zurückholen"\]/.test(html), "im Notfall-Blatt eingebaut");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

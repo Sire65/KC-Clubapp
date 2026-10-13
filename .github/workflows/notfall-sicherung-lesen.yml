@@ -40,7 +40,18 @@ jobs:
           node-version: "20"
       - name: Werkzeug holen
         run: npm i --no-save --no-audit --no-fund postgres@3.4.5
+      - name: Einrichtung prüfen
+        id: da
+        env:
+          KC_NEON_URL: ${{ secrets.KC_NEON_URL }}
+          KC_BACKUP_KEY: ${{ secrets.KC_BACKUP_KEY }}
+        run: |
+          if [ -n "$KC_NEON_URL" ] && [ -n "$KC_BACKUP_KEY" ]; then echo "da=1" >> "$GITHUB_OUTPUT"
+          else echo "::notice::Noch nicht eingerichtet: GitHub-Secrets KC_NEON_URL und/oder KC_BACKUP_KEY fehlen (Anleitung: docs/NOTFALL_DATEN_ZURUECKHOLEN.md)."; fi
+      # Der Schrittname „Sicherung lesen“ ist Vertrag: die Club-App (Admin → Notfall) liest sein Ergebnis öffentlich bei GitHub
+      # (success = grün, failure = rot, skipped = grau „noch nicht eingerichtet“)
       - name: Sicherung lesen
+        if: steps.da.outputs.da == '1'
         env:
           KC_NEON_URL: ${{ secrets.KC_NEON_URL }}
           KC_BACKUP_KEY: ${{ secrets.KC_BACKUP_KEY }}
