@@ -9103,7 +9103,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 {
   assert.ok(/function bwEinladungPruefen\(versuch = 0\)/.test(html) && /st\.aus \|\| !esAn\(\)/.test(html) && /st\.tag === heuteIso\(\)/.test(html) && /setTimeout\(\(\) => bwEinladungPruefen\(\), 15000\)/.test(html), "Einladung beim Start, höchstens einmal am Tag");
   assert.ok(/data-w="ja"[\s\S]{0,200}data-w="spaeter"[\s\S]{0,200}data-w="nein"[\s\S]{0,200}data-w="aus"/.test(html) && /if \(w === "ja"\) \{ bwEinSetzen\(\{ tag: heuteIso\(\) \}\); esOeffnen\("buehne"\); \}/.test(html) && /id="setBwEinladung"/.test(html), "Ja / Später / Heute nicht / Nicht mehr fragen – Ja führt zur Bühne");
-  assert.ok(/\["spiegel", "🪞", "Spiegel"\]\]/.test(html) && /onclick="esSpiegelAn\(\)"/.test(html) && /function esSpiegelAus\(zeigen\)/.test(html) && /function esStop\(\) \{ esSpiegelAus\(\);/.test(html), "Spiegel: Kamera nur nach Antippen, aus beim Verlassen");
+  assert.ok(/\["spiegel", "🪞", "Spiegel"\](\]|, \["raetsel")/.test(html) /* 2.339.0: + Rätsel */ && /onclick="esSpiegelAn\(\)"/.test(html) && /function esSpiegelAus\(zeigen\)/.test(html) && /function esStop\(\) \{ esSpiegelAus\(\);/.test(html), "Spiegel: Kamera nur nach Antippen, aus beim Verlassen");
   assert.ok(/if \(document\.hidden && ES_SPIEGEL\.stream\) esSpiegelAus\(true\)/.test(html) && !/esSpiegel[\s\S]{0,4000}\bapi\(/.test(html.slice(html.indexOf("const ES_SPIEGEL"), html.indexOf("// ----- 🖼️ Diashow"))), "Spiegel: nichts gesendet, im Hintergrund aus");
   assert.ok(/\{ id: "wandstuetz", t: "Liegestütz an der Arbeitsplatte"/.test(html) && /\.bw-profil\.bw-p-liegestuetz \.p-ganz \{ animation: bwPLiegeGanz/.test(html) && /"Schweiß ist nur Fett, das weint!"/.test(html), "neue Übungen und Sprüche");
 }
@@ -9228,4 +9228,25 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // 2.336.0 KC-CLUB-DEKO-OBEN-FREI: oben im Kopf keine Girlanden mehr
 {
   assert.ok(!/jzbKetteY\(x, 5, 9 \* k\)/.test(html) && !/jzbKetteY\(x, 4, 8 \* k\)/.test(html) && !/Luftschlangen hängen vom oberen Rand/.test(html), "keine Lichterkette, Wimpel, Luftschlangen oben");
+}
+
+// 2.339.0 KC-CLUB-RAETSEL: Bilderrätsel auf der Rückseite mit Club-Bestenliste
+{
+  const srv = lies("supabase/functions/kc-club/index.ts");
+  assert.ok(/\["raetsel", "🧩", "Rätsel"\]/.test(html) && /else if \(k === "raetsel"\) esRaetselZeigen\(f\);/.test(html) && /function esStop\(\) \{ esSpiegelAus\(\); qzStop\(\);/.test(html), "Reiter auf der Rückseite");
+  assert.ok(/const QZ_SEK = 30, QZ_STUFEN = \[44, 30, 21, 14, 9, 6, 3, 1\], QZ_START = 1000, QZ_FALSCH = 150, QZ_RUNDE = 5;/.test(html), "30 s, 8 Stufen, 1000 Punkte, −150");
+  const motive = html.slice(html.indexOf("const QZ_MOTIVE = ["), html.indexOf("// Zusätzliche, gut klingende falsche"));
+  assert.equal((motive.match(/", "werne", "/g) || []).length, 20, "20 Werne-Motive"); assert.equal((motive.match(/", "kueche", "/g) || []).length, 15, "15 Küchen-Motive");
+  for (const [, id] of motive.matchAll(/\n  \["([a-z-]+)", "(?:werne|kueche)"/g)) assert.ok(fs.existsSync(new URL("../raetsel/" + id + ".webp", import.meta.url)), "Bild fehlt: " + id);
+  assert.ok(fs.existsSync(new URL("../raetsel/GFDL-1.2.txt", import.meta.url)) && /\| altes-rathaus\.webp \| Altes Rathaus \| Vincent van Zeijst \| CC BY-SA 4\.0/.test(lies("raetsel/QUELLEN.md")), "Lizenztext und Bildnachweise");
+  assert.ok(/case "raetsel_stand":/.test(srv) && /case "raetsel_ergebnis":/.test(srv) && /if \(String\(p\.woche \|\| ""\) !== woche\)/.test(srv) && /String\(error\.code\) === "23505"/.test(srv), "Server: Woche geprüft, erster Durchgang zählt");
+  const mo = srv.slice(srv.indexOf('case "raetsel_motiv_neu":'), srv.indexOf('case "hilfe_bewerten": {'));
+  assert.ok((mo.match(/nurAdmin\(ich\);/g) || []).length === 2, "eigene Bilder nur Admin");
+  const sql = lies("supabase/migrations/20261013_kc_club_raetsel.sql");
+  assert.ok(/enable row level security/.test(sql) && /grant select, insert, update, delete on public\.kc_club_raetsel_ergebnis to service_role;/.test(sql) && /grant select, insert, update, delete on public\.kc_club_raetsel_motiv to service_role;/.test(sql), "Tabellen geschützt, Freigabe nur service_role");
+  // gleiche Kalenderwoche in App und Server
+  const qzW = new Function(html.slice(html.indexOf("function qzWoche("), html.indexOf("function qzZufall(")) + "; return qzWoche;")();
+  const srvW = new Function("TZ", srv.slice(srv.indexOf("function raetselWoche("), srv.indexOf("async function dienstwunschAufstellung")) + "; return raetselWoche;")("Europe/Berlin");
+  for (const d of ["2026-10-12T10:00:00Z", "2026-01-01T12:00:00Z", "2027-01-03T22:30:00Z", "2026-12-31T23:30:00Z"]) assert.equal(qzW(new Date(d)), srvW(new Date(d)), "Woche " + d);
+  assert.equal(qzW(new Date("2026-10-13T08:00:00Z")), "2026-W42");
 }

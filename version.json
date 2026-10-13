@@ -1,12 +1,22 @@
 {
-  "version": "2.338.0",
+  "version": "2.339.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "👆 Größere Knöpfe: Pfeile und Punkte im Info-Feld und die Knöpfe 💬👋📞🎥 bei den Mitgliedern sind leichter zu treffen",
-    "🔒 Datenbank zusätzlich abgesichert (für dich ändert sich nichts)"
+    "🧩 Neues Spiel auf der Rückseite (Eselsohr → „🧩 Rätsel“): Wie gut kennst du Werne? Das Bild wird nach und nach schärfer – erkannt? Roten Buzzer drücken und aus 6 Tipps wählen",
+    "🏆 Wochen-Rätsel mit Club-Bestenliste: jede Woche 5 neue Bilder für alle – je früher erkannt, desto mehr Punkte, falsche Tipps kosten 150 Punkte",
+    "🏛️ 20 Motive aus Werne und 🥕 15 aus der Küche (freie Fotos von Wikimedia Commons) – der Admin kann eigene Fotos aus dem Club-Album dazunehmen"
   ],
   "verlauf": [
+    {
+      "version": "2.339.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "🧩 Neues Spiel auf der Rückseite (Eselsohr → „🧩 Rätsel“): Wie gut kennst du Werne? Das Bild wird nach und nach schärfer – erkannt? Roten Buzzer drücken und aus 6 Tipps wählen",
+        "🏆 Wochen-Rätsel mit Club-Bestenliste: jede Woche 5 neue Bilder für alle – je früher erkannt, desto mehr Punkte, falsche Tipps kosten 150 Punkte",
+        "🏛️ 20 Motive aus Werne und 🥕 15 aus der Küche (freie Fotos von Wikimedia Commons) – der Admin kann eigene Fotos aus dem Club-Album dazunehmen"
+      ]
+    },
     {
       "version": "2.338.0",
       "datum": "2026-10-13",

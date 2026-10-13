@@ -2022,6 +2022,13 @@ async function dwBestaetigungSenden(pid: string, vn: string, durch: string | nul
   await protokoll(pid, "dienstwunsch_bestaetigt", { revision: a.revision, tage: a.tage.length, versand, cc, bcc, ...(durch ? { durch } : {}) });
   return { ...versand, tage: a.tage.length, cc: cc.length, bcc: bcc.length };
 }
+// KC-CLUB-RAETSEL (2.339.0): Kalenderwoche nach ISO 8601 in deutscher Zeit, z. B. „2026-W42“ – gleich gerechnet wie in der App (raetselWoche)
+function raetselWoche(d = new Date()) {
+  const [y, m, t] = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d).split("-").map(Number);
+  const u = new Date(Date.UTC(y, m - 1, t)), tag = u.getUTCDay() || 7; u.setUTCDate(u.getUTCDate() + 4 - tag);
+  const j = u.getUTCFullYear(), kw = Math.ceil(((+u - Date.UTC(j, 0, 1)) / 86400000 + 1) / 7);
+  return `${j}-W${String(kw).padStart(2, "0")}`;
+}
 async function dienstwunschAufstellung(ich: Ich) {
   const { data: m } = await db.from("kc_dp_wish_inbox").select("revision,status,entries,standby,share_with_colleagues,submitted_at,taken_at")
     .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).eq("source", "club_app").maybeSingle();
@@ -7719,6 +7726,52 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const per = (await personen([m.person_id])).get(m.person_id);
         const v = await dwBestaetigungSenden(m.person_id, vorname(per) || m.person_id, ich.person_id);
         return json({ ok: true, name: per?.display_name || m.person_id, ...v });
+      }
+
+      // ----- KC-CLUB-RAETSEL (2.339.0, Wunsch Hansi): Bilderrätsel – Club-Bestenliste und eigene Rätselbilder aus dem Club-Album -----
+      case "raetsel_stand": {
+        const woche = raetselWoche();
+        const [{ data: wo }, { data: alle }, { data: mo }] = await Promise.all([
+          db.from("kc_club_raetsel_ergebnis").select("person_id,punkte,richtig,gespielt_am").eq("woche", woche).order("punkte", { ascending: false }).limit(200),
+          db.from("kc_club_raetsel_ergebnis").select("person_id,punkte").limit(5000),
+          db.from("kc_club_raetsel_motiv").select("id,foto_id,antwort,info").order("erstellt_am", { ascending: true }).limit(200),
+        ]);
+        const summe = new Map<string, { punkte: number; wochen: number }>();
+        for (const r of alle ?? []) { const x = summe.get(r.person_id) || { punkte: 0, wochen: 0 }; x.punkte += Number(r.punkte) || 0; x.wochen++; summe.set(r.person_id, x); }
+        const ges = [...summe.entries()].sort((a, b) => b[1].punkte - a[1].punkte).slice(0, 30);
+        const leute = await personen([...(wo ?? []).map((r: any) => r.person_id), ...ges.map(([id]) => id)]);
+        const nm = (id: string) => leute.get(id)?.display_name || "Mitglied";
+        const meins = (wo ?? []).find((r: any) => r.person_id === ich.person_id);
+        return json({ woche, meins: meins ? { punkte: meins.punkte, richtig: meins.richtig } : null,
+          woche_liste: (wo ?? []).slice(0, 30).map((r: any) => ({ name: nm(r.person_id), punkte: r.punkte, richtig: r.richtig, ich: r.person_id === ich.person_id })),
+          gesamt: ges.map(([id, x]) => ({ name: nm(id), punkte: x.punkte, wochen: x.wochen, ich: id === ich.person_id })),
+          motive: (mo ?? []).map((m: any) => ({ id: m.id, foto_id: m.foto_id, antwort: m.antwort, info: m.info ?? "" })) });
+      }
+      case "raetsel_ergebnis": { // Wochen-Rätsel: der erste Durchgang je Person und Woche zählt
+        const woche = raetselWoche();
+        if (String(p.woche || "") !== woche) throw new Fehler("Die Rätsel-Woche ist vorbei – bitte das neue Wochen-Rätsel spielen.", 409);
+        const punkte = Math.round(Number(p.punkte)), richtig = Math.round(Number(p.richtig));
+        if (!(punkte >= 0 && punkte <= 5000) || !(richtig >= 0 && richtig <= 5) || (richtig === 0 && punkte > 0)) throw new Fehler("Ungültiges Ergebnis.", 400);
+        const bilder = (Array.isArray(p.bilder) ? p.bilder : []).slice(0, 5).map((b: unknown) => txt(b, 60));
+        const { error } = await db.from("kc_club_raetsel_ergebnis").insert({ person_id: ich.person_id, woche, punkte, richtig, bilder });
+        if (error) { if (String(error.code) === "23505") throw new Fehler("Diese Woche hast du das Rätsel schon gespielt – nächste Woche gibt es neue Bilder.", 409); throw new Fehler("Ergebnis konnte nicht gespeichert werden.", 500); }
+        await protokoll(ich.person_id, "raetsel_gespielt", { woche, punkte, richtig });
+        return json({ ok: true, woche });
+      }
+      case "raetsel_motiv_neu": {
+        nurAdmin(ich);
+        const foto = await fotoHolen(p.foto_id); if (foto.geloescht_am) throw new Fehler("Foto nicht gefunden.", 404);
+        const antwort = txt(p.antwort, 60).trim(); if (antwort.length < 2) throw new Fehler("Bitte die Lösung eingeben.", 400);
+        const { data, error } = await db.from("kc_club_raetsel_motiv").insert({ foto_id: String(foto.id), antwort, info: txt(p.info, 200).trim() || null, erstellt_von: ich.person_id }).select("id").single();
+        if (error) throw new Fehler("Rätselbild konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "raetsel_motiv_neu", { id: data.id, foto: foto.id });
+        return json({ ok: true, id: data.id });
+      }
+      case "raetsel_motiv_weg": {
+        nurAdmin(ich);
+        await db.from("kc_club_raetsel_motiv").delete().eq("id", String(p.id || ""));
+        await protokoll(ich.person_id, "raetsel_motiv_weg", { id: String(p.id || "") });
+        return json({ ok: true });
       }
 
       case "hilfe_bewerten": {

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.338.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.339.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12811,7 +12811,7 @@ setInterval(() => { try { const h = document.querySelector("#v-start .hero"); if
 // Gespeichert oder verschickt wird nur, wenn man es selbst antippt. Abschaltbar: ⚙️ → „🧩 Startseite & Ansicht“.
 const ES = { offen: false, timer: 0, tipp: 0, dia: { fotos: null, alben: [], i: 0, laeuft: true, urls: new Map(), seite: 0, laedt: false },
   tafel: { striche: null, farbe: "#f4f1e6", dicke: 2, werkzeug: "stift", zeichnet: null }, uhr: { letzte: "", fbDatum: false } };
-const ES_TABS = [["dia", "🖼️", "Diashow"], ["tafel", "🖍️", "Tafel"], ["flip", "📋", "Flipchart"], ["uhr", "🕰️", "Uhr"], ["buehne", "🎭", "Bühne"], ["spiegel", "🪞", "Spiegel"]]; // 2.293.0: + Bühne · 2.295.0: + Flipchart · 2.314.0: + Spiegel
+const ES_TABS = [["dia", "🖼️", "Diashow"], ["tafel", "🖍️", "Tafel"], ["flip", "📋", "Flipchart"], ["uhr", "🕰️", "Uhr"], ["buehne", "🎭", "Bühne"], ["spiegel", "🪞", "Spiegel"], ["raetsel", "🧩", "Rätsel"]]; // 2.339.0: + Rätsel // 2.293.0: + Bühne · 2.295.0: + Flipchart · 2.314.0: + Spiegel
 const ES_FARBEN = [["#f4f1e6", "Kreide weiß"], ["#ffe066", "Gelb"], ["#ff8787", "Rot"], ["#74c0fc", "Blau"], ["#8ce99a", "Grün"], ["#ffa94d", "Orange"], ["#e599f7", "Lila"]];
 const ES_DICKEN = [[3, "fein"], [7, "mittel"], [14, "dick"]];
 const ES_UHREN = [["digital", "🟩 Digital", "Digital grün"], ["fallblatt", "🔢 Fallblatt", "Fallblatt mit Datum"], ["bahnhof", "🚉 Bahnhof", "Bahnhofsuhr"], ["klar", "🔠 Klar", "Groß & klar"]];
@@ -12914,17 +12914,228 @@ function esHoehe(scrollen) {
   r.style.height = Math.max(360, Math.round(innerHeight - Math.max(6, r.getBoundingClientRect().top) - fh - 10)) + "px";
 }
 addEventListener("resize", () => { if (ES.offen) esHoehe(false); });
-function esStop() { esSpiegelAus(); clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (BW.lauf || BW.hoeren || BWM.laeuft) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
+function esStop() { esSpiegelAus(); qzStop(); clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (BW.lauf || BW.hoeren || BWM.laeuft) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
 function esTab(k) {
   if (!ES_TABS.some(([x]) => x === k)) k = "uhr";
   esSchreib("tab", k); esStop();
   document.querySelectorAll("#heroRueck .hr-tab").forEach((b) => { b.classList.toggle("an", b.dataset.tab === k); b.setAttribute("aria-selected", String(b.dataset.tab === k)); });
   const f = $("hrFlaeche"); if (!f) return;
   f.className = "hr-flaeche hr-" + k;
-  if (k === "dia") esDiaZeigen(f); else if (k === "tafel") esTafelZeigen(f); else if (k === "flip") esFlipZeigen(f); else if (k === "buehne") esBuehneZeigen(f); else if (k === "spiegel") esSpiegelZeigen(f); else esUhrZeigen(f);
+  if (k === "dia") esDiaZeigen(f); else if (k === "tafel") esTafelZeigen(f); else if (k === "flip") esFlipZeigen(f); else if (k === "buehne") esBuehneZeigen(f); else if (k === "spiegel") esSpiegelZeigen(f); else if (k === "raetsel") esRaetselZeigen(f); else esUhrZeigen(f);
 }
 const esSichtbar = () => ES.offen && aktuelleAnsicht === "start" && !document.hidden;
 
+// ----- 🧩 2.339.0 KC-CLUB-RAETSEL (Wunsch Hansi „Spiel auf der Rückseite: Wie gut kennst du …? In Abständen kommen Pixel dazu, man muss erkennen, was
+// auf dem Bild ist (z. B. Rathaus Werne). Roter Buzzer, dann 6 Tipps zur Auswahl, jeder falsche Tipp kostet Punkte, ein Zeitbalken läuft“) -----
+// Bild startet grob verpixelt und wird in 8 Stufen scharf (30 s). Punkte starten bei 1000 und laufen mit der Zeit herunter; Buzzer hält die Uhr an,
+// 6 Antworten (1 richtig, 5 aus derselben Gruppe); falsch = −150 und es geht weiter. Wochen-Rätsel: alle bekommen dieselben 5 Bilder (aus der
+// Kalenderwoche errechnet), der erste Durchgang zählt für die Club-Bestenliste. Bilder: freie Fotos von Wikimedia Commons (Nachweis nach dem
+// Auflösen und unter „📜 Bildnachweise“, Lizenztexte in raetsel/) und eigene Fotos aus dem Club-Album (Admin wählt sie aus).
+const QZ_SEK = 30, QZ_STUFEN = [44, 30, 21, 14, 9, 6, 3, 1], QZ_START = 1000, QZ_FALSCH = 150, QZ_RUNDE = 5;
+const QZ_KAT = { werne: ["🏛️", "Werne"], kueche: ["🥕", "Küche"], club: ["📸", "Köcheclub"] };
+const QZ_LIZ = { "CC BY-SA 4.0": "https://creativecommons.org/licenses/by-sa/4.0/deed.de", "CC BY 4.0": "https://creativecommons.org/licenses/by/4.0/deed.de",
+  "CC BY-SA 3.0": "https://creativecommons.org/licenses/by-sa/3.0/deed.de", "GFDL 1.2": "raetsel/GFDL-1.2.txt", "gemeinfrei": "" };
+// [Datei, Gruppe, Lösung, Satz nach dem Auflösen, Fotograf, Lizenz, Commons-Datei]
+const QZ_MOTIVE = [
+  ["altes-rathaus", "werne", "Altes Rathaus", "Das Alte Rathaus am Markt – mit seinen Arkaden das Wahrzeichen von Werne.", "Vincent van Zeijst", "CC BY-SA 4.0", "Germany, Nordrhein-Westfalen, Kreis Unna, Werne, Markt, old town hall.jpg"],
+  ["christophorus", "werne", "St.-Christophorus-Kirche", "St. Christophorus – die Stadtkirche mitten in Werne.", "Creosoph", "CC BY-SA 4.0", "St. Christophorus 2024-03-14 Werne-1202052.jpg"],
+  ["kirchhof", "werne", "Kirchhof", "Der Kirchhof – Fachwerkhäuser rund um St. Christophorus.", "Vincent van Zeijst", "CC BY-SA 4.0", "Germany, Nordrhein-Westfalen, Kreis Unna, Werne, Kirchhof (2).jpg"],
+  ["steinhaus", "werne", "Steinhaus", "Das Steinhaus – ein historisches Bürgerhaus mit prächtigem Giebel.", "Mbdortmund", "GFDL 1.2", "Werne-070602 7603-Steinhaus.jpg"],
+  ["kloster", "werne", "Kapuzinerkloster", "Die Kirche des Kapuzinerklosters.", "Mbdortmund", "GFDL 1.2", "Werne-070602 7723-Kloster.jpg"],
+  ["stadtmuseum", "werne", "Stadtmuseum", "Das Karl-Pollender-Stadtmuseum.", "Mbdortmund", "GFDL 1.2", "Werne-Stadtmuseum-20070522 7055-DSC 7055.jpg"],
+  ["stadthaus", "werne", "Stadthaus", "Das Stadthaus – hier sitzt die Stadtverwaltung.", "Mbdortmund", "GFDL 1.2", "Werne-070602 7755-Stadthaus.jpg"],
+  ["bahnhof", "werne", "Bahnhof Werne", "Der Bahnhof Werne – hier hält der Zug.", "Christian Alexander Tietgen", "CC BY 4.0", "Bahnhof Werne (a d Lippe) 01.jpg"],
+  ["simjue", "werne", "Sim-Jü", "Sim-Jü – die große Kirmes Ende Oktober.", "Mbdortmund", "CC BY-SA 3.0", "Werne-Sim-Jü-09 0001.JPG"],
+  ["turmkater", "werne", "Turmkater", "Der bunte Turmkater – ein Kunstwerk von Otmar Alt.", "Mbdortmund", "GFDL 1.2", "Werne-20090522-Alt-Katze-Werne-DSC 7776.jpg"],
+  ["ausrufer", "werne", "Der Ausrufer", "Der Ausrufer – eine Bronzefigur an den Rathaus-Arkaden.", "Mbdortmund", "GFDL 1.2", "Werne-070602 7684-Rathaus-Skulptur.jpg"],
+  ["sprichwort", "werne", "Sprichwörterbrunnen", "Der Sprichwörterbrunnen – mit Figuren zu bekannten Redensarten.", "Mbdortmund", "GFDL 1.2", "Werne-070602 7637-Brunnen.jpg"],
+  ["moormann", "werne", "Moormann-Brunnen", "Der Moormann-Brunnen in der Fußgängerzone.", "Tasto", "CC BY-SA 3.0", "Werne-Moormann-Brunnen-IMG 8251.jpg"],
+  ["ziegenhirten", "werne", "Ziegenhirte mit Ziege", "Die Bronzefigur mit der Ziege in der Innenstadt.", "Mbdortmund", "GFDL 1.2", "Werne-070602 7697-Skulptur-Ziegenhirten.jpg"],
+  ["rochus", "werne", "Rochuskapelle", "Die kleine Rochuskapelle an der Lünener Straße.", "Icy2008", "CC BY-SA 4.0", "Rochus-Kapelle (1).jpg"],
+  ["antonius", "werne", "Antoniuskapelle", "Die Antoniuskapelle in Langern.", "Icy2008", "CC BY-SA 4.0", "Antoniuskapelle Langern 28 (1) 00001.jpg"],
+  ["hardenberg", "werne", "Haus Hardenberg", "Haus Hardenberg mit seiner Gräfte.", "Solon de Gordion", "CC BY-SA 3.0", "Haus Hardenberg Werne 9.JPG"],
+  ["gersteinwerk", "werne", "Kraftwerk Gersteinwerk", "Das Gersteinwerk in Stockum – die Kühltürme sieht man von weit her.", "Icy2008", "CC BY-SA 4.0", "Gersteinwerk in Werne.jpg"],
+  ["wildschweine", "werne", "Wildgehege Buschkämpken", "Das Wildgehege im Buschkämpken – mit Wildschweinen und Damwild.", "Fitti (Panoramio)", "CC BY-SA 3.0", "Wildschweine - panoramio.jpg"],
+  ["horne", "werne", "Hornebach", "Der Hornebach mit der alten Bogenbrücke.", "Mbdortmund", "GFDL 1.2", "Werne-Horne-20070522 7030-DSC 7030.jpg"],
+  ["sternanis", "kueche", "Sternanis", "Sternanis – das Gewürz für Glühwein und Lebkuchen.", "Sanjay Acharya", "CC BY-SA 4.0", "Dried Star Anise Fruit Seeds.jpg"],
+  ["pfeffer", "kueche", "Pfefferkörner", "Schwarze Pfefferkörner – der König der Gewürze.", "Hubertl", "CC BY 4.0", "Black Pepper IMG 4866 - 02.jpg"],
+  ["nelken", "kueche", "Gewürznelke", "Eine Gewürznelke – die getrocknete Blütenknospe des Nelkenbaums.", "Sanjay Acharya", "CC BY-SA 4.0", "Clove close up.jpg"],
+  ["safran", "kueche", "Safran", "Safran – die Fäden der Krokusblüte, das teuerste Gewürz der Welt.", "Rainer Zenz", "gemeinfrei", "Iran saffron threads.jpg"],
+  ["muskat", "kueche", "Muskatnuss", "Die Muskatnuss in der Frucht – mit dem roten Samenmantel, der Muskatblüte.", "Terrence Coombes", "CC BY-SA 4.0", "Nutmeg ready.jpg"],
+  ["ingwer", "kueche", "Ingwer", "Ingwer – scharf und frisch, toll im Tee und in der asiatischen Küche.", "Sanjay Acharya", "CC BY-SA 4.0", "Ginger Root.jpg"],
+  ["rosmarin", "kueche", "Rosmarin", "Rosmarin – passt prima zu Kartoffeln und Lamm.", "T137", "CC BY-SA 3.0", "Rosmarinus officinalis (1).jpg"],
+  ["romanesco", "kueche", "Romanesco", "Romanesco – der Blumenkohl mit den Spitztürmchen.", "George Chernilevsky", "CC BY 4.0", "Romanesco broccoli 2025 G2.jpg"],
+  ["artischocke", "kueche", "Artischocken", "Artischocken – gegessen werden die zarten Blattenden und der Boden.", "Toby Hudson", "CC BY-SA 3.0", "Artichoke stack.JPG"],
+  ["kohlrabi", "kueche", "Kohlrabi", "Kohlrabi – roh knackig, gekocht mild.", "Coyau", "CC BY-SA 3.0", "Chou-rave 04.jpg"],
+  ["zitrone", "kueche", "Zitrone", "Zitrone – sauer macht lustig!", "Ivar Leidus", "CC BY-SA 4.0", "Lemon - whole and split.jpg"],
+  ["reibe", "kueche", "Käsereibe", "Eine Käsereibe mit Kurbel – frischer Parmesan, bitte!", "Clément Bucco-Lechat", "CC BY-SA 3.0", "Râpe à fromage - endroit.jpg"],
+  ["kochloeffel", "kueche", "Kochlöffel", "Der Kochlöffel – das wichtigste Werkzeug in jeder Küche.", "Clément Bucco-Lechat", "CC BY-SA 3.0", "Cuiller en bois - dessus.jpg"],
+  ["zwiebel", "kueche", "Rote Zwiebel", "Die rote Zwiebel – mild und süßlich, schön im Salat.", "Colin", "CC BY-SA 3.0", "Red Onion on White.JPG"],
+  ["paprika", "kueche", "Paprika", "Rote Paprika – süß und voller Vitamin C.", "AntanO", "CC BY-SA 4.0", "Red bell pepper.jpg"],
+].map(([id, kat, a, info, autor, liz, datei]) => ({ id, kat, a, info, autor, liz, datei, src: `raetsel/${id}.webp` }));
+// Zusätzliche, gut klingende falsche Antworten je Gruppe (damit die 6 Tipps abwechslungsreich sind)
+const QZ_EXTRA = { werne: ["Marktplatz", "Natur-Solebad", "Gradierwerk", "Lippeaue", "Stadtpark", "Lippebrücke", "Alte Post"],
+  kueche: ["Kardamom", "Vanille", "Lorbeer", "Thymian", "Fenchel", "Brokkoli", "Wirsing", "Pastinake", "Kurkuma", "Muskatreibe", "Spätzlepresse", "Knoblauchpresse"],
+  club: ["Weihnachtsmarkt", "Clubabend", "Grillfest", "Kochkurs", "Sommerfest", "Jahreshauptversammlung", "Ausflug"] };
+const QZ = { stand: null, spiel: null, uhr: 0, eigene: [] };
+function qzWoche(d = new Date()) { // ISO-Kalenderwoche in deutscher Zeit – gleich wie auf dem Server (raetselWoche)
+  const [y, m, t] = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" }).format(d).split("-").map(Number);
+  const u = new Date(Date.UTC(y, m - 1, t)), tag = u.getUTCDay() || 7; u.setUTCDate(u.getUTCDate() + 4 - tag);
+  const j = u.getUTCFullYear(); return `${j}-W${String(Math.ceil(((+u - Date.UTC(j, 0, 1)) / 86400000 + 1) / 7)).padStart(2, "0")}`;
+}
+function qzZufall(saat) { let h = 2166136261; for (const c of String(saat)) h = Math.imul(h ^ c.charCodeAt(0), 16777619); // fester Zufall für das Wochen-Rätsel
+  return () => { h += 0x6d2b79f5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const qzMischen = (l, z = Math.random) => { const a = l.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(z() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const qzAlle = () => [...QZ_MOTIVE, ...QZ.eigene];
+function qzTipps(m, z = Math.random) { // 1 richtige + 5 falsche aus derselben Gruppe (ohne doppelte)
+  const andere = [...new Set([...qzAlle().filter((x) => x.kat === m.kat && x.a !== m.a).map((x) => x.a), ...(QZ_EXTRA[m.kat] || [])])].filter((a) => a !== m.a);
+  return qzMischen([m.a, ...qzMischen(andere, z).slice(0, 5)], z);
+}
+async function qzStandHolen() {
+  try { QZ.stand = await api("raetsel_stand", {}); QZ.eigene = (QZ.stand.motive || []).map((x) => ({ id: "c-" + x.id, mid: x.id, kat: "club", a: x.antwort, info: x.info || "", foto: x.foto_id, autor: "Köcheclub Werne", liz: "", datei: "" })); }
+  catch (e) { QZ.stand = QZ.stand || null; }
+}
+function qzStop() { clearInterval(QZ.uhr); QZ.uhr = 0; if (QZ.spiel) QZ.spiel.aus = true; }
+async function esRaetselZeigen(f) {
+  qzStop(); QZ.spiel = null;
+  f.innerHTML = `<div class="qz"><div class="qz-start"><div class="qz-titel">🧩 Wie gut kennst du …?</div><div class="qz-unter">Das Bild wird nach und nach schärfer. Erkannt? Drück den <b style="color:#ff6b6b">roten Buzzer</b>!</div>
+    <div class="qz-wahl" id="qzWahl"><div class="qz-laedt">⏳ Einen Moment …</div></div>
+    <div class="es-leiste qz-leiste"><button type="button" class="es-k" onclick="qzBestenliste()">🏆 Bestenliste</button><button type="button" class="es-k" onclick="qzNachweise()">📜 Bildnachweise</button>${ICH?.admin ? '<button type="button" class="es-k" onclick="qzEigeneVerwalten()">📸 Eigene Bilder</button>' : ""}</div></div></div>`;
+  await qzStandHolen(); if (!$("qzWahl")) return;
+  const s = QZ.stand, w = qzWoche(), clubN = QZ.eigene.length;
+  $("qzWahl").innerHTML = `<button type="button" class="qz-gross${s?.meins ? " gespielt" : ""}" onclick="qzStart('woche')"><span>🏆</span><b>Wochen-Rätsel ${w.slice(-2).replace(/^0/, "")}. Woche</b><small>${s?.meins ? `✅ Gespielt: ${s.meins.punkte} Punkte (${s.meins.richtig} von ${QZ_RUNDE}) – nochmal zum Üben` : "5 Bilder · zählt für die Club-Bestenliste"}</small></button>
+    <div class="qz-reihe"><button type="button" class="qz-klein" onclick="qzStart('werne')">🏛️ Werne üben</button><button type="button" class="qz-klein" onclick="qzStart('kueche')">🥕 Küche üben</button>${clubN ? `<button type="button" class="qz-klein" onclick="qzStart('club')">📸 Köcheclub (${clubN})</button>` : ""}</div>
+    ${s ? "" : '<p class="qz-hinweis">Die Bestenliste ist gerade nicht erreichbar – Üben geht trotzdem.</p>'}`;
+}
+function qzStart(art) {
+  const woche = art === "woche", z = woche ? qzZufall("kc-raetsel-" + qzWoche()) : Math.random, alle = qzAlle();
+  let bilder;
+  if (woche) { const w = qzMischen(alle.filter((m) => m.kat === "werne"), z), k = qzMischen(alle.filter((m) => m.kat === "kueche"), z), c = qzMischen(alle.filter((m) => m.kat === "club"), z);
+    bilder = qzMischen([...w.slice(0, c.length ? 2 : 3), ...k.slice(0, 2), ...c.slice(0, 1)], z); }
+  else bilder = qzMischen(alle.filter((m) => m.kat === art), z).slice(0, QZ_RUNDE);
+  if (!bilder.length) return melde("Für diese Gruppe gibt es noch keine Bilder.", true);
+  QZ.spiel = { art, zaehlt: woche && !QZ.stand?.meins && !!QZ.stand, woche: qzWoche(), bilder: bilder.map((m) => ({ m, tipps: qzTipps(m, z) })), i: 0, punkte: 0, richtig: 0 };
+  qzBild();
+}
+async function qzBildLaden(m) {
+  if (m.img) return m.img;
+  let src = m.src; if (m.foto) { try { src = (await api("foto_oeffnen", { id: m.foto })).url; } catch (e) { return null; } }
+  return new Promise((ok) => { const im = new Image(); im.onload = () => { m.img = im; ok(im); }; im.onerror = () => ok(null); im.src = src; });
+}
+async function qzBild() {
+  const S = QZ.spiel, f = $("hrFlaeche"); if (!S || !f) return; const B = S.bilder[S.i];
+  f.innerHTML = `<div class="qz qz-spiel"><div class="qz-kopf"><span>${QZ_KAT[B.m.kat][0]} Bild ${S.i + 1} von ${S.bilder.length}</span><b id="qzPunkte">${QZ_START}</b><span>Gesamt: ${S.punkte}</span></div>
+    <div class="qz-bildfeld"><canvas id="qzBild" aria-label="Rätselbild"></canvas><div class="qz-tipps versteckt" id="qzTipps"></div><div class="qz-loesung versteckt" id="qzLoesung"></div></div>
+    <div class="qz-balken"><i id="qzBalken"></i></div>
+    <div class="qz-unten" id="qzUnten"><button type="button" class="qz-buzzer" id="qzBuzzer" onclick="qzBuzz()" aria-label="Buzzer – ich weiß es"><span>BUZZ</span></button></div></div>`;
+  const im = await qzBildLaden(B.m); if (!$("qzBild") || QZ.spiel !== S) return;
+  if (!im) { melde("Das Bild konnte nicht geladen werden – nächstes Bild.", true); return qzWeiter(true); }
+  Object.assign(S, { t: 0, lauf: true, falsch: 0, stufe: -1, letzt: performance.now(), fertig: false });
+  qzMalen(); clearInterval(QZ.uhr); QZ.uhr = setInterval(qzTakt, 100);
+}
+function qzPunkteJetzt(S) { return Math.max(0, Math.round(QZ_START * (1 - S.t / QZ_SEK) - S.falsch * QZ_FALSCH)); }
+function qzTakt() {
+  const S = QZ.spiel; if (!S || S.aus || !$("qzBild")) return qzStop();
+  const jetzt = performance.now(), dt = (jetzt - S.letzt) / 1000; S.letzt = jetzt;
+  if (!S.lauf || !esSichtbar()) return;
+  S.t = Math.min(QZ_SEK, S.t + dt); qzMalen();
+  $("qzPunkte").textContent = qzPunkteJetzt(S); const b = $("qzBalken"), r = 1 - S.t / QZ_SEK;
+  b.style.width = `${r * 100}%`; b.style.background = r > .5 ? "#2ecc71" : r > .2 ? "#f1c40f" : "#e74c3c";
+  if (S.t >= QZ_SEK) qzAufloesen(false, true);
+}
+function qzMalen() { // nur neu malen, wenn eine neue Schärfe-Stufe erreicht ist (spart Akku)
+  const S = QZ.spiel, cv = $("qzBild"), B = S?.bilder[S.i]; if (!cv || !B?.m.img) return;
+  const st = S.fertig ? QZ_STUFEN.length - 1 : Math.min(QZ_STUFEN.length - 1, Math.floor(S.t / QZ_SEK * QZ_STUFEN.length)); if (st === S.stufe && cv.width) return; S.stufe = st;
+  const box = cv.parentElement.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1), W = Math.max(50, Math.round(box.width * dpr)), H = Math.max(50, Math.round(box.height * dpr));
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const im = B.m.img, s = Math.min(W / im.width, H / im.height), w = im.width * s, h = im.height * s, x = (W - w) / 2, y = (H - h) / 2, c = cv.getContext("2d");
+  c.fillStyle = "#1b1b1b"; c.fillRect(0, 0, W, H);
+  const blk = QZ_STUFEN[st] * dpr;
+  if (blk <= 1.5) { c.imageSmoothingEnabled = true; c.drawImage(im, x, y, w, h); return; }
+  const kw = Math.max(2, Math.round(w / blk)), kh = Math.max(2, Math.round(h / blk)), k = (QZ.klein = QZ.klein || document.createElement("canvas")); k.width = kw; k.height = kh;
+  const kc = k.getContext("2d"); kc.imageSmoothingEnabled = true; kc.drawImage(im, 0, 0, kw, kh);
+  c.imageSmoothingEnabled = false; c.drawImage(k, 0, 0, kw, kh, x, y, w, h);
+}
+function qzTon(art) { try { const A = (QZ.ac = QZ.ac || new (window.AudioContext || window.webkitAudioContext)()), o = A.createOscillator(), g = A.createGain(), t = A.currentTime;
+  if (!einst("ton", true)) return; o.connect(g); g.connect(A.destination);
+  if (art === "buzz") { o.type = "square"; o.frequency.setValueAtTime(110, t); g.gain.setValueAtTime(.18, t); g.gain.exponentialRampToValueAtTime(.001, t + .45); o.start(t); o.stop(t + .46); }
+  else if (art === "richtig") { o.type = "triangle"; o.frequency.setValueAtTime(660, t); o.frequency.setValueAtTime(880, t + .12); o.frequency.setValueAtTime(1320, t + .24); g.gain.setValueAtTime(.2, t); g.gain.exponentialRampToValueAtTime(.001, t + .6); o.start(t); o.stop(t + .62); }
+  else { o.type = "sawtooth"; o.frequency.setValueAtTime(200, t); o.frequency.linearRampToValueAtTime(110, t + .35); g.gain.setValueAtTime(.15, t); g.gain.exponentialRampToValueAtTime(.001, t + .4); o.start(t); o.stop(t + .42); } } catch (e) { /* ohne Ton */ } }
+function qzBuzz() {
+  const S = QZ.spiel; if (!S || !S.lauf || S.fertig) return; S.lauf = false; qzTon("buzz"); try { navigator.vibrate?.(60); } catch (e) {}
+  const B = S.bilder[S.i], t = $("qzTipps");
+  t.innerHTML = `<div class="qz-frage">Was ist auf dem Bild?</div><div class="qz-tipp-gitter">${B.tipps.map((a, i) => `<button type="button" class="qz-tipp${B.weg?.includes(a) ? " falsch" : ""}" ${B.weg?.includes(a) ? "disabled" : ""} onclick="qzTipp(${i})">${esc(a)}</button>`).join("")}</div>`;
+  t.classList.remove("versteckt"); $("qzBuzzer").disabled = true;
+}
+function qzTipp(i) {
+  const S = QZ.spiel; if (!S || S.fertig) return; const B = S.bilder[S.i], a = B.tipps[i];
+  if (a === B.m.a) return qzAufloesen(true);
+  S.falsch++; (B.weg = B.weg || []).push(a); qzTon("falsch"); try { navigator.vibrate?.([40, 60, 40]); } catch (e) {}
+  const pk = $("qzPunkte"); if (pk) { pk.classList.remove("minus"); void pk.offsetWidth; pk.classList.add("minus"); pk.dataset.minus = `−${QZ_FALSCH}`; } // ❌ blinkt rot im Spiel (keine Meldung oben)
+  if (qzPunkteJetzt(S) <= 0) return qzAufloesen(false);
+  $("qzTipps").classList.add("versteckt"); $("qzBuzzer").disabled = false; $("qzPunkte").textContent = qzPunkteJetzt(S); S.letzt = performance.now(); S.lauf = true;
+}
+function qzAufloesen(ok, zeit) {
+  const S = QZ.spiel; if (!S || S.fertig) return; S.fertig = true; S.lauf = false; clearInterval(QZ.uhr); QZ.uhr = 0;
+  const B = S.bilder[S.i], p = ok ? qzPunkteJetzt(S) : 0; S.punkte += p; if (ok) S.richtig++;
+  qzTon(ok ? "richtig" : "falsch"); qzMalen(); $("qzTipps")?.classList.add("versteckt"); if ($("qzBalken")) $("qzBalken").style.width = "0";
+  const nachweis = B.m.liz ? `Foto: ${esc(B.m.autor)} · ${B.m.liz === "gemeinfrei" ? "gemeinfrei" : `<a href="${QZ_LIZ[B.m.liz]}" target="_blank" rel="noopener">${esc(B.m.liz)}</a>`} · <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(B.m.datei.replace(/ /g, "_"))}" target="_blank" rel="noopener">Wikimedia Commons</a>` : "Foto: Köcheclub Werne";
+  const l = $("qzLoesung"); l.innerHTML = `<div class="qz-ergebnis ${ok ? "gut" : "schade"}">${ok ? `🎉 Richtig! +${p} Punkte` : zeit ? "⏰ Die Zeit ist um!" : "😕 Diesmal nicht"}</div><b>${esc(B.m.a)}</b>${B.m.info ? `<span>${esc(B.m.info)}</span>` : ""}<small>${nachweis}</small>`;
+  l.classList.remove("versteckt"); if (ok) try { const r = $("qzBild").getBoundingClientRect(); konfetti(r.left + r.width / 2, r.top + r.height / 2, 60); } catch (e) {}
+  $("qzUnten").innerHTML = `<button type="button" class="es-k es-haupt qz-weiter" onclick="qzWeiter()">${S.i < S.bilder.length - 1 ? "▶ Nächstes Bild" : "🏁 Ergebnis"}</button><button type="button" class="es-k" onclick="esRaetselZeigen($('hrFlaeche'))">✖ Ende</button>`;
+}
+async function qzWeiter(ueberspringen) {
+  const S = QZ.spiel; if (!S) return;
+  if (S.i < S.bilder.length - 1) { S.i++; return qzBild(); }
+  qzStop(); const f = $("hrFlaeche"); if (!f) return;
+  const max = S.bilder.length * QZ_START, q = S.punkte / max;
+  const spruch = q > .7 ? (S.art === "kueche" ? "Sterneköchin oder Sternekoch! 👨‍🍳" : "Echte Wernerin, echter Werner! 🏆") : q > .4 ? "Gut gemacht – da kennt sich jemand aus! 👍" : q > .15 ? "Nicht schlecht – öfter mal genau hinschauen! 😉" : "Da musst du öfter mal raus! 😄";
+  let info = S.zaehlt ? "⏳ Ergebnis wird eingetragen …" : S.art === "woche" ? "Übungsrunde – zählt nicht für die Bestenliste." : "Übungsrunde.";
+  f.innerHTML = `<div class="qz"><div class="qz-start qz-ende"><div class="qz-titel">🏁 ${S.punkte} Punkte</div><div class="qz-unter">${S.richtig} von ${S.bilder.length} richtig erkannt</div><div class="qz-spruch">${spruch}</div><p class="qz-hinweis" id="qzEndeInfo">${info}</p>
+    <div class="qz-reihe"><button type="button" class="qz-klein" onclick="qzBestenliste()">🏆 Bestenliste</button><button type="button" class="qz-klein" onclick="esRaetselZeigen($('hrFlaeche'))">🔁 Nochmal</button></div></div></div>`;
+  if (S.zaehlt) {
+    try { await api("raetsel_ergebnis", { woche: S.woche, punkte: S.punkte, richtig: S.richtig, bilder: S.bilder.map((b) => b.m.id) }); info = "✅ Eingetragen in die Club-Bestenliste der Woche!"; }
+    catch (e) { info = "⚠️ " + fehlerText(e, "Das Ergebnis konnte nicht eingetragen werden."); }
+    if ($("qzEndeInfo")) $("qzEndeInfo").textContent = info; await qzStandHolen();
+  }
+}
+async function qzBestenliste() {
+  qzStop(); const f = $("hrFlaeche"); if (!f) return;
+  f.innerHTML = '<div class="qz"><div class="qz-start"><div class="qz-laedt">⏳ Bestenliste wird geladen …</div></div></div>';
+  await qzStandHolen(); const s = QZ.stand; if (!$("hrFlaeche")) return;
+  const zeile = (r, i, wert) => `<li class="${r.ich ? "ich" : ""}"><span>${i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1 + "."}</span><b>${esc(r.name)}</b><em>${wert}</em></li>`;
+  f.innerHTML = `<div class="qz"><div class="qz-start qz-liste"><div class="qz-titel">🏆 Club-Bestenliste</div>
+    ${s ? `<h4>Diese Woche (${esc(s.woche.slice(-2).replace(/^0/, ""))}. KW)</h4><ol>${s.woche_liste.length ? s.woche_liste.map((r, i) => zeile(r, i, `${r.punkte} · ${r.richtig}/${QZ_RUNDE} ✓`)).join("") : "<li class='leer'>Noch niemand – sei die oder der Erste!</li>"}</ol>
+    <h4>Gesamt (alle Wochen)</h4><ol>${s.gesamt.length ? s.gesamt.map((r, i) => zeile(r, i, `${r.punkte} · ${r.wochen} Wo.`)).join("") : "<li class='leer'>Noch keine Ergebnisse.</li>"}</ol>` : '<p class="qz-hinweis">Die Bestenliste ist gerade nicht erreichbar.</p>'}
+    <div class="qz-reihe"><button type="button" class="qz-klein" onclick="esRaetselZeigen($('hrFlaeche'))">↩ Zurück</button></div></div></div>`;
+}
+function qzNachweise() {
+  qzStop(); const f = $("hrFlaeche"); if (!f) return;
+  f.innerHTML = `<div class="qz"><div class="qz-start qz-liste qz-nachweis"><div class="qz-titel">📜 Bildnachweise</div><p class="qz-hinweis">Freie Fotos von Wikimedia Commons – vielen Dank an die Fotografinnen und Fotografen! Die Bilder wurden verkleinert und werden im Spiel zunächst verpixelt gezeigt. Texte der Lizenzen: <a href="raetsel/GFDL-1.2.txt" target="_blank" rel="noopener">GFDL 1.2</a>, Creative Commons über die Links.</p>
+    <ul>${QZ_MOTIVE.map((m) => `<li><b>${esc(m.a)}</b>: ${esc(m.autor)}, ${m.liz === "gemeinfrei" ? "gemeinfrei" : `<a href="${QZ_LIZ[m.liz]}" target="_blank" rel="noopener">${esc(m.liz)}</a>`}, <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(m.datei.replace(/ /g, "_"))}" target="_blank" rel="noopener">Quelle</a></li>`).join("")}</ul>
+    <div class="qz-reihe"><button type="button" class="qz-klein" onclick="esRaetselZeigen($('hrFlaeche'))">↩ Zurück</button></div></div></div>`;
+}
+async function qzEigeneVerwalten() { // nur Admin: Fotos aus dem Club-Album als Rätselbilder
+  qzStop(); const f = $("hrFlaeche"); if (!f || !ICH?.admin) return;
+  f.innerHTML = '<div class="qz"><div class="qz-start"><div class="qz-laedt">⏳ Club-Album wird geladen …</div></div></div>';
+  let fotos = []; try { fotos = (await api("fotos_liste", {})).fotos || []; } catch (e) { return meldeFehler(e); }
+  await qzStandHolen(); if (!$("hrFlaeche")) return; const schon = new Set(QZ.eigene.map((m) => String(m.foto)));
+  f.innerHTML = `<div class="qz"><div class="qz-start qz-liste"><div class="qz-titel">📸 Eigene Rätselbilder</div>
+    <h4>Im Rätsel (${QZ.eigene.length})</h4><ul class="qz-eigene">${QZ.eigene.map((m) => `<li><b>${esc(m.a)}</b><button type="button" class="es-k" onclick="qzEigenesWeg('${m.mid}')">🗑️</button></li>`).join("") || "<li class='leer'>Noch keine – unten ein Foto antippen.</li>"}</ul>
+    <h4>Foto aus dem Club-Album antippen</h4><div class="qz-album">${fotos.filter((x) => x.vorschau && !schon.has(String(x.id))).slice(0, 120).map((x) => `<button type="button" onclick="qzEigenesNeu('${esc(String(x.id))}')"><img src="${esc(x.vorschau)}" alt="" loading="lazy"></button>`).join("") || "<p class='qz-hinweis'>Keine Fotos im Album.</p>"}</div>
+    <div class="qz-reihe"><button type="button" class="qz-klein" onclick="esRaetselZeigen($('hrFlaeche'))">↩ Zurück</button></div></div></div>`;
+}
+async function qzEigenesNeu(fotoId) {
+  const antwort = await eingabe("🧩 Was ist auf dem Foto? (die richtige Lösung, z. B. „Weihnachtsmarkt 2025“)", ""); if (!antwort || antwort.trim().length < 2) return;
+  const info = await eingabe("Ein Satz nach dem Auflösen? (freiwillig)", ""); 
+  try { await api("raetsel_motiv_neu", { foto_id: fotoId, antwort: antwort.trim(), info: (info || "").trim() }, { warten: true }); melde("🧩 Rätselbild hinzugefügt"); } catch (e) { return meldeFehler(e); }
+  qzEigeneVerwalten();
+}
+async function qzEigenesWeg(id) {
+  if (!await frage("🗑️ Dieses Rätselbild entfernen? (Das Foto im Album bleibt.)", { ja: "🗑️ Entfernen", nein: "Abbrechen" })) return;
+  try { await api("raetsel_motiv_weg", { id }); } catch (e) { return meldeFehler(e); }
+  qzEigeneVerwalten();
+}
 // ----- 🪞 2.314.0 KC-CLUB-SPIEGEL (Wunsch Hansi „die Fläche wie einen großen Spiegel, Kamerabild von sich selbst – etwas dicker, mit Pausbäckchen“) -----
 // Die Kamera läuft nur nach Antippen und nur, solange der Spiegel zu sehen ist. Das Bild bleibt im Gerät: nichts wird gespeichert oder gesendet.
 // Pausbäckchen: jedes Bild wird über eine einmal berechnete Verzerrungs-Tabelle gezogen (breiter + Wangen aufgeblasen) – schnell genug fürs Handy.
@@ -30504,6 +30715,7 @@ function suAppListe() {
     ["🕰️", "Große Uhr", "uhr uhrzeit große uhr bahnhofsuhr fallblatt digital datum", () => esOeffnen("uhr")],
     ["🎭", "Bühne: Bewegung mit Twinkey", "bühne buehne bewegung turnen gymnastik sport übungen musik twinkey küche sitzen stehen", () => esOeffnen("buehne")],
     ["🎤", "Club-Song „Seit einundneunzig“ (Karaoke)", "club song lied hymne singen karaoke seit einundneunzig 1991 köcheclub werne schlager", () => { esOeffnen("buehne"); setTimeout(() => { if (ES.offen) bwClubSong(); }, 900); }], // 2.316.0
+    ["🧩", "Rätsel: Wie gut kennst du Werne? (Bilderrätsel, Bestenliste)", "rätsel raetsel spiel quiz bilderrätsel pixel buzzer werne rathaus küche gewürze bestenliste wochen-rätsel", () => esOeffnen("raetsel")], // 2.339.0
     ["🪞", "Spiegel (Kamera, Pausbäckchen)", "spiegel kamera selfie pausbäckchen pausbacken dick gesicht", () => esOeffnen("spiegel")], // 2.314.0
     ["🎭", "Einladung zur Bewegung beim Start", "einladung bewegung start fragen bewegungseinheit sport frage", () => suEinstellung("setBwEinladung")],
     ["🎚️", "Bühne: Musik / Stimme lauter oder leiser", "lautstärke lauter leiser regler musik stimme stumm bühne", () => esOeffnen("buehne")],

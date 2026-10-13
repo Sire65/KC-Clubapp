@@ -2750,6 +2750,45 @@
   .es-gruppe { display: inline-flex; gap: 5px; align-items: center; }
   .es-k { border: 0; border-radius: 10px; min-width: 34px; height: 34px; padding: 0 8px; background: rgba(255,255,255,.14); color: #fff; font-weight: 700; font-size: .9rem; cursor: pointer; }
   .es-k.an, .es-k.es-haupt { background: var(--rot); }
+  /* 2.339.0 KC-CLUB-RAETSEL: Bilderrätsel auf der Rückseite */
+  .qz { position: absolute; inset: 0; display: flex; flex-direction: column; color: #fff; background: radial-gradient(ellipse at 50% 0%, #2a3346, #10131b 75%); }
+  .qz-start { flex: 1; overflow-y: auto; padding: 14px 14px 64px; display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+  .qz-titel { font: 800 1.5rem/1.2 system-ui, sans-serif; text-align: center; } .qz-unter { text-align: center; opacity: .9; }
+  .qz-wahl { display: flex; flex-direction: column; gap: 10px; } .qz-laedt { text-align: center; opacity: .8; padding: 20px; }
+  .qz-gross { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; text-align: left; border: 0; border-radius: 16px; padding: 14px; color: #fff; cursor: pointer;
+    background: linear-gradient(135deg, #c0392b, #8e1b10); box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+  .qz-gross span { grid-row: span 2; font-size: 2.2rem; } .qz-gross b { font-size: 1.15rem; } .qz-gross small { opacity: .9; } .qz-gross.gespielt { background: linear-gradient(135deg, #2d6a4f, #1b4332); }
+  .qz-reihe { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .qz-klein { flex: 1 1 140px; min-height: 48px; border: 0; border-radius: 14px; background: rgba(255,255,255,.14); color: #fff; font-weight: 700; font-size: 1rem; cursor: pointer; }
+  .qz-hinweis { text-align: center; opacity: .8; font-size: .9rem; margin: 0; } .qz-spruch { text-align: center; font-size: 1.15rem; font-weight: 700; }
+  .qz-leiste { position: absolute; }
+  .qz-kopf { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px 6px; font-size: .9rem; }
+  .qz-kopf b.minus { animation: qzMinus 1s ease-out; position: relative; } .qz-kopf b.minus::after { content: attr(data-minus); position: absolute; left: 50%; top: 100%; transform: translateX(-50%); font-size: .9rem; color: #ff6b6b; animation: qzMinusText 1s ease-out forwards; }
+  @keyframes qzMinus { 0%, 40% { color: #ff4d4d; transform: scale(1.2); } 100% { color: #ffd43b; transform: none; } } @keyframes qzMinusText { from { opacity: 1; } to { opacity: 0; transform: translate(-50%, 14px); } }
+  .qz-kopf b { font: 800 1.6rem/1 system-ui, sans-serif; color: #ffd43b; font-variant-numeric: tabular-nums; min-width: 3.2em; text-align: center; }
+  .qz-bildfeld { position: relative; flex: 1; min-height: 120px; margin: 0 10px; border-radius: 12px; overflow: hidden; background: #1b1b1b; }
+  .qz-bildfeld canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .qz-balken { height: 12px; margin: 8px 10px 0; border-radius: 6px; background: rgba(255,255,255,.15); overflow: hidden; } .qz-balken i { display: block; height: 100%; width: 100%; background: #2ecc71; transition: width .1s linear; }
+  .qz-unten { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 10px 10px 12px; min-height: 104px; }
+  .qz-buzzer { width: 92px; height: 92px; border-radius: 50%; border: 6px solid #5a0d0d; cursor: pointer; color: #fff; font: 900 1.05rem system-ui, sans-serif; letter-spacing: .06em;
+    background: radial-gradient(circle at 35% 30%, #ff8a80, #e31b1b 45%, #9e0b0b 100%); box-shadow: 0 8px 0 #5a0d0d, 0 12px 20px rgba(0,0,0,.5); transition: transform .08s, box-shadow .08s; }
+  .qz-buzzer:active { transform: translateY(6px); box-shadow: 0 2px 0 #5a0d0d, 0 4px 10px rgba(0,0,0,.5); } .qz-buzzer:disabled { filter: grayscale(.6) brightness(.7); }
+  .qz-tipps { position: absolute; inset: 0; background: rgba(10,12,20,.82); display: flex; flex-direction: column; justify-content: center; padding: 10px; gap: 8px; }
+  .qz-frage { text-align: center; font-weight: 800; font-size: 1.1rem; }
+  .qz-tipp-gitter { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .qz-tipp { min-height: 52px; border: 2px solid rgba(255,255,255,.35); border-radius: 12px; background: rgba(255,255,255,.12); color: #fff; font-weight: 700; font-size: .98rem; cursor: pointer; padding: 4px 6px; }
+  .qz-tipp.falsch { text-decoration: line-through; opacity: .4; border-color: #e74c3c; }
+  .qz-loesung { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(transparent, rgba(0,0,0,.88) 30%); padding: 30px 12px 10px; display: flex; flex-direction: column; gap: 3px; }
+  .qz-loesung b { font-size: 1.25rem; } .qz-loesung small { opacity: .75; font-size: .72rem; } .qz-loesung a { color: #9fd3ff; }
+  .qz-ergebnis { font-weight: 800; font-size: 1.05rem; } .qz-ergebnis.gut { color: #8cf5a0; } .qz-ergebnis.schade { color: #ffb3a7; }
+  .qz-weiter { height: 48px; font-size: 1.05rem; padding: 0 18px; } .qz-unten .es-k { height: 48px; }
+  .qz-liste h4 { margin: 6px 0 0; } .qz-liste ol, .qz-liste ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .qz-liste li { display: flex; gap: 8px; align-items: center; background: rgba(255,255,255,.08); border-radius: 10px; padding: 6px 10px; }
+  .qz-liste li span { width: 2em; text-align: center; } .qz-liste li b { flex: 1; } .qz-liste li em { font-style: normal; font-variant-numeric: tabular-nums; opacity: .9; }
+  .qz-liste li.ich { background: rgba(255,212,59,.22); } .qz-liste li.leer { opacity: .7; justify-content: center; }
+  .qz-nachweis li { display: block; font-size: .85rem; } .qz-nachweis a { color: #9fd3ff; }
+  .qz-album { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; } .qz-album button { border: 0; padding: 0; border-radius: 8px; overflow: hidden; aspect-ratio: 1; cursor: pointer; background: #333; }
+  .qz-album img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .es-leiste select { height: 36px; border-radius: 10px; border: 0; padding: 0 8px; max-width: 46%; background: rgba(255,255,255,.9); color: #222; font-weight: 600; }
   /* Diashow */
   .es-dia { position: absolute; inset: 0; background: #000; }
@@ -3368,7 +3407,7 @@
   .es-zf.es-flip .es-farbe { border-color: rgba(255,255,255,.55); }
   /* Rückseite: Reiter gleichmäßig nebeneinander, wenig Rand – die Fläche nutzt den Bildschirm bis zur Fußleiste */
   .hero-rueck { padding: 6px 6px 8px; gap: 6px; border-radius: 22px; }
-  .hr-tabs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; flex-wrap: nowrap; } /* 2.314.0: + Spiegel */
+  .hr-tabs { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; flex-wrap: nowrap; } /* 2.314.0: + Spiegel · 2.339.0: + Rätsel */
   .hr-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 5px 2px; border-radius: 12px; font-size: .74rem; line-height: 1.1; min-width: 0; }
   .hr-tab b { font-size: 1.15rem; font-weight: 400; } .hr-tab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
   .hr-flaeche { border-radius: 14px; }
@@ -4913,6 +4952,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.338.0" data-v="2.338.0"></script>
+<script src="app.js?v=2.339.0" data-v="2.339.0"></script>
 </body>
 </html>
