@@ -9266,3 +9266,8 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   for (const d of ["2026-10-12T10:00:00Z", "2026-01-01T12:00:00Z", "2027-01-03T22:30:00Z", "2026-12-31T23:30:00Z"]) assert.equal(qzW(new Date(d)), srvW(new Date(d)), "Woche " + d);
   assert.equal(qzW(new Date("2026-10-13T08:00:00Z")), "2026-W42");
 }
+
+// 2.343.0 KC-CLUB-TODO-LEER: leeres To-do-Feld wird markiert und fokussiert
+{
+  assert.ok(/id="todoText" maxlength="200" placeholder="Was ist zu tun\? z\. B\. Getränke einkaufen" autocomplete="off" enterkeyhint="done"/.test(html) && /feld\.classList\.add\("todo-leer"\); feld\.focus\(\);/.test(html), "leeres Feld markiert, Tastatur auf");
+}

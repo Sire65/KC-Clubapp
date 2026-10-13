@@ -1,11 +1,18 @@
 {
-  "version": "2.342.0",
+  "version": "2.343.0",
   "datum": "2026-10-12",
   "stufe": "RC",
   "neu": [
-    "⚡ Schnellerer Start und schnellere Antworten: weniger Wartezeit beim Verbindungsaufbau zum Club-Server"
+    "✅ To-do: Ist das Feld „Was ist zu tun?“ beim Eintragen noch leer, wird es rot umrandet und gleich zum Schreiben geöffnet – mit einem freundlichen Hinweis statt einer roten Fehlermeldung"
   ],
   "verlauf": [
+    {
+      "version": "2.343.0",
+      "datum": "2026-10-13",
+      "neu": [
+        "✅ To-do: Ist das Feld „Was ist zu tun?“ beim Eintragen noch leer, wird es rot umrandet und gleich zum Schreiben geöffnet – mit einem freundlichen Hinweis statt einer roten Fehlermeldung"
+      ]
+    },
     {
       "version": "2.342.0",
       "datum": "2026-10-13",

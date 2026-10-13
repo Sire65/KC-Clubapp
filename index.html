@@ -2751,6 +2751,7 @@
   .es-gruppe { display: inline-flex; gap: 5px; align-items: center; }
   .es-k { border: 0; border-radius: 10px; min-width: 34px; height: 34px; padding: 0 8px; background: rgba(255,255,255,.14); color: #fff; font-weight: 700; font-size: .9rem; cursor: pointer; }
   .es-k.an, .es-k.es-haupt { background: var(--rot); }
+  #todoText.todo-leer { outline: 3px solid var(--rot); animation: todoWackel .4s; } @keyframes todoWackel { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } } /* 2.343.0 */
   /* 2.339.0 KC-CLUB-RAETSEL: Bilderrätsel auf der Rückseite */
   .qz { position: absolute; inset: 0; display: flex; flex-direction: column; color: #fff; background: radial-gradient(ellipse at 50% 0%, #2a3346, #10131b 75%); }
   .qz-start { flex: 1; overflow-y: auto; padding: 14px 14px 64px; display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
@@ -4955,6 +4956,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.342.0" data-v="2.342.0"></script>
+<script src="app.js?v=2.343.0" data-v="2.343.0"></script>
 </body>
 </html>

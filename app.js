@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.342.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.343.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -6513,7 +6513,7 @@ async function todoLaden() {
 }
 function todoGeruest() {
   $("todoBereich").innerHTML = `<div class="karte todoform">
-      <input id="todoText" maxlength="200" placeholder="Was ist zu tun? z. B. Getränke einkaufen" onkeydown="if(event.key==='Enter')todoAnlegen()">
+      <input id="todoText" maxlength="200" placeholder="Was ist zu tun? z. B. Getränke einkaufen" autocomplete="off" enterkeyhint="done" onkeydown="if(event.key==='Enter')todoAnlegen()">
       <div class="reihe"><select id="todoKat"></select><input type="date" id="todoFaellig" title="fällig am (freiwillig)"></div>
       <button type="button" class="knopf todower" id="todoWer" onclick="todoWerWaehlen(null)">👉 Wer soll es machen? (offen)</button>
       <div class="umschalter" id="todoFuer" data-zyklus="Für wen" style="margin:0"><button data-f="ich" onclick="todoFuer('ich')">👤 Nur für mich</button><button data-f="alle" onclick="todoFuer('alle')">👥 Für alle</button></div>
@@ -6580,7 +6580,9 @@ function todoZeigen() {
   if (!TODO.erledigteZeigen && fertig.length && offen.length) $("todoTabelle").insertAdjacentHTML("beforeend", `<p class="hinweis" style="margin:8px 0 0">✓ ${fertig.length} erledigt (ausgeblendet)</p>`);
 }
 async function todoAnlegen() {
-  const text = $("todoText").value.trim(); if (!text) return melde("Bitte kurz aufschreiben, was zu tun ist.", true);
+  // 2.343.0 (Fund Hansi „kann keine Eintragung machen in To-do“): leeres Feld → Feld rot umrandet und gleich zum Schreiben bereit statt nur einer Meldung oben
+  const feld = $("todoText"), text = feld.value.trim();
+  if (!text) { feld.classList.remove("todo-leer"); void feld.offsetWidth; feld.classList.add("todo-leer"); feld.focus(); return melde("✍️ Erst oben ins Feld „Was ist zu tun?“ schreiben – dann auf „＋ Eintragen“ tippen."); }
   try { const wer = todoNamen(TODO.neuWer.filter((id) => id !== ICH.person_id));
     const r = await api("todo_anlegen", { text, kategorie: $("todoKat").value, fuer: TODO.fuer, faellig: $("todoFaellig").value || null, zustaendige: TODO.neuWer });
     $("todoText").value = ""; $("todoFaellig").value = ""; TODO.neuWer = []; todoWerKnopf(); melde(r.versand ? `✅ Eingetragen – ${wer} ${r.versand.benachrichtigt > 1 ? "bekommen" : "bekommt"} Bescheid` : "✅ Eingetragen"); await todoLaden(); $("todoText").focus(); }

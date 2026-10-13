@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.343.0 – 2026-10-13 – KC-CLUB-TODO-LEER
+Fund Hansi (Screenshot: „＋ Eintragen“ im To-do → rote Meldung „Bitte kurz aufschreiben, was zu tun ist“, Feld leer). Nachgestellt im Handy-Format: Text eingeben → Eintragen klappt (todo_anlegen kommt an). Neu: Ist das Feld leer, wird es rot umrandet, wackelt kurz und bekommt den Fokus (Tastatur geht auf); Hinweis „Erst oben ins Feld … schreiben – dann auf ＋ Eintragen tippen“ als normale Meldung. Feld ohne Browser-Autofill-Leiste (autocomplete=off) und mit „Fertig“-Taste (enterkeyhint=done).
+
 ## 2.342.0 – 2026-10-13 – KC-CLUB-TEMPO: schnellerer Start ohne Inhaltsänderung
 Gemessen (13.10., 24 Std. Server-Protokoll): 1.227 CORS-Vorabfragen auf 3.564 Anfragen, je ~230 ms Serverzeit + Netzweg; Start installierte App Median 2,5 s, davon 1,35 s Warten auf den Server (7 Tage, 422 Starts). Geändert: (1) Server schickt Access-Control-Max-Age 7200 – der Browser merkt sich die Erlaubnis 2 Std. statt 5 s (Kopfzeilen unverändert); (2) index.html baut die Verbindung zum Club-Server (DNS + Verschlüsselung) schon beim Laden auf (preconnect); (3) Hilfe-Zahl auf der Kachel: Antworten, Gesehen und Ausleih-Zahl gleichzeitig statt nacheinander. Inhalte und Abläufe unverändert.
 
