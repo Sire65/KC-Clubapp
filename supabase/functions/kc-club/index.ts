@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.363.0";
+const SERVER_VERSION = "2.365.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -8974,13 +8974,28 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         // „mit wem“: Mitglieds-Kennung → Name; Unterhaltung → Gruppenname oder die anderen Teilnehmer (keine Inhalte)
         const chats = [...new Set<string>(schritte.filter((x: any) => x.mit && !x.mit.startsWith("KC-P-")).map((x: any) => x.mit as string))].filter((x) => UUID_ALBUM.test(x)).slice(0, 200);
-        const [{ data: th }, { data: tn }] = chats.length ? await Promise.all([
-          db.from("kc_communication_threads").select("id,subject").in("id", chats),
-          db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", chats)]) : [{ data: [] }, { data: [] }];
-        const leute = await personen([pid, ...schritte.filter((x: any) => x.mit?.startsWith("KC-P-")).map((x: any) => x.mit), ...(tn ?? []).map((x: any) => x.person_id)]);
-        const name = (id: string) => leute.get(id)?.display_name || "unbekannt";
-        const chatName = (id: string) => { const t = (th ?? []).find((x: any) => x.id === id); const andere = (tn ?? []).filter((x: any) => x.thread_id === id && x.person_id !== pid).map((x: any) => name(x.person_id));
-          return t?.subject ? `${t.subject}${andere.length ? ` (${andere.length} Personen)` : ""}` : andere.length ? andere.slice(0, 6).join(", ") + (andere.length > 6 ? ` +${andere.length - 6}` : "") : "Unterhaltung"; };
+        const [{ data: th }, { data: tn }, { data: grp }, aktive] = chats.length ? await Promise.all([
+          db.from("kc_communication_threads").select("id,subject,created_by_person_id").in("id", chats),
+          db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", chats),
+          db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", chats), aktiveMitglieder().catch(() => [] as any[])]) : [{ data: [] }, { data: [] }, { data: [] }, [] as any[]];
+        const leute = await personen([pid, ...schritte.filter((x: any) => x.mit?.startsWith("KC-P-")).map((x: any) => x.mit), ...(tn ?? []).map((x: any) => x.person_id), ...(th ?? []).map((x: any) => x.created_by_person_id)]);
+        const name = (id: string) => leute.get(id)?.display_name || "unbekannt", vorn = (id: string) => vorname(leute.get(id)) || name(id);
+        // 2.365.0 KC-CLUB-WEGE-KLAR (Fund Hansi: „Wilfried hat Nachrichten angesehen, die an andere gegangen sind“ – es waren Rundschreiben an alle, in denen
+        // er selbst Empfänger war; die Liste der ANDEREN Teilnehmer sah aber aus wie ein fremder Chat). Jetzt immer klar, was für ein Chat es war – und dass die
+        // Person dabei ist (der Server lässt ohnehin nur Teilnehmer hinein).
+        const alleZahl = (aktive ?? []).length;
+        const chatName = (id: string) => {
+          const t: any = (th ?? []).find((x: any) => x.id === id), g: any = (grp ?? []).find((x: any) => x.thread_id === id);
+          const tl = (tn ?? []).filter((x: any) => x.thread_id === id), andere = tl.filter((x: any) => x.person_id !== pid).map((x: any) => vorn(x.person_id));
+          const von = t?.created_by_person_id ? (t.created_by_person_id === pid ? "selbst angelegt" : `von ${vorn(t.created_by_person_id)}`) : "";
+          const betreff = t?.subject ? ` „${t.subject}“` : "";
+          if (!tl.length) return "Unterhaltung (nicht mehr vorhanden)";
+          if (g) return `👥 Gruppe ${g.symbol || ""} ${g.name} (${tl.length} Personen, mit dabei)`.replace(/\s+/g, " ");
+          if (alleZahl && tl.length >= alleZahl - 1 && tl.length > 4) return `📢 Rundschreiben${betreff} ${von} an alle (${tl.length} Personen, mit dabei)`.replace(/\s+/g, " ");
+          if (tl.length === 2) return `💬 Zweier-Chat mit ${andere[0] || "?"}${betreff}`;
+          if (tl.length === 1) return `🧪 Unterhaltung nur mit sich selbst${betreff}`;
+          return `💬 Runde${betreff} ${von} mit ${andere.slice(0, 5).join(", ")}${andere.length > 5 ? ` +${andere.length - 5}` : ""} (mit dabei)`.replace(/\s+/g, " ");
+        };
         return json({ tag, name: name(pid!), schritte: schritte.map((x: any) => ({ t: new Date(x.t).toISOString(), w: x.w, mit: !x.mit ? null : x.mit.startsWith("KC-P-") ? name(x.mit) : chatName(x.mit) })) });
       }
       // ----- KC-CLUB-NUTZUNG (0.99.0): Statistik OHNE Namen – nur Tag + Bereich + Anzahl. Wer meldet, wird NICHT gespeichert

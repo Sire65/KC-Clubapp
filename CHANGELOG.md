@@ -1,5 +1,13 @@
 # Änderungen
 
+## Server 2.365.0 – 2026-10-14 – 👣 KC-CLUB-WEGE-KLAR: „Wege der Mitglieder“ benennt Chats eindeutig
+Anlass (Hansi): „Wilfried hat sich heute Nachrichten angesehen, die an andere gegangen sind – er darf doch keine fremden Nachrichten ansehen.“
+- Geprüft: alle 6 von Wilfried geöffneten Chats – er war überall Empfänger von Anfang an (4 Rundschreiben von Klaus an alle 18, 2 Chats mit Hansi).
+  Der Server lässt nur Teilnehmer hinein (binTeilnehmer → „Unterhaltung nicht gefunden“), es wurde nichts Fremdes gezeigt.
+- Ursache des Eindrucks: die Admin-Ansicht zeigte bei Chats ohne Betreff nur die ANDEREN Teilnehmer („Andrea, Annegret, … +11“).
+- Jetzt: „📢 Rundschreiben von Klaus an alle (18 Personen, mit dabei)“, „💬 Zweier-Chat mit Hansi“, „👥 Gruppe … (mit dabei)“, „💬 Runde von … mit … (mit dabei)“.
+  Nur Server – kein App-Download für die Mitglieder.
+
 ## 2.364.0 – 2026-10-14 – 🔍 Schrift-Zoom mit zwei Fingern + 🔋 Eco-Gesamtprüfung
 Anlass (Hansi): „Check nochmal, dass alle Funktionen Eco sind, ohne Akku leer zu saugen.“
 - Gemessen (Browser, alle 31 Ansichten, nach 4 Min. Ruhe, je 8 s): Rechenlast überall < 1 % (Start 0,82 %, Rest 0,04–0,65 %), 0 laufende Animationen,

@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -9531,4 +9531,9 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/const szEigeneGeste = /.test(html) && /if \(e\.cancelable\) e\.preventDefault\(\); \/\/ kein Seiten-Zoom/.test(html) && /localStorage\.setItem\("kc_club_schrift_zoom"/.test(html), "Geste, kein Seiten-Zoom, gemerkt");
   assert.ok((seite.match(/onclick="szAendern\(0\.1\)">A\+<\/button>/g) || []).length === 2, "A−/A+ in beiden Einstellungs-Ansichten");
   assert.ok(/min\(var\(--zoom, 1\), 1\.15\)/.test(seite), "untere Leiste wächst nur maßvoll");
+}
+
+// Server 2.365.0 KC-CLUB-WEGE-KLAR: Chats in „Wege der Mitglieder“ eindeutig benannt
+{
+  assert.ok(/📢 Rundschreiben\$\{betreff\} \$\{von\} an alle \(\$\{tl\.length\} Personen, mit dabei\)/.test(server) && /💬 Zweier-Chat mit \$\{andere\[0\]/.test(server), "Rundschreiben/Zweier-Chat klar benannt");
 }
