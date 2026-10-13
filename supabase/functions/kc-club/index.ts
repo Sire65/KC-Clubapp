@@ -9017,6 +9017,34 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true });
       }
 
+      // ----- KC-CLUB-ZURUECKHOLEN (2.362.0, Wunsch Hansi „Nachricht zurückholen, solange nicht gelesen – im eigenen Fenster ändern und nochmal
+      // abschicken“): nur eigene Textnachricht, nur solange KEIN anderer Teilnehmer sie in der App gelesen hat. Sie verschwindet für alle
+      // (wie Löschen, mit Papierkorb-Sicherung) und der Text kommt zurück ins Schreibfeld. Push/Mail, die schon raus sind, lassen sich nicht zurückholen.
+      case "nachricht_zurueckholen": {
+        const { data: m } = await db.from("kc_communication_messages").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Die Nachricht gibt es nicht mehr.", 404);
+        await binTeilnehmer(m.thread_id, ich.person_id);
+        if (m.sender_person_id !== ich.person_id) throw new Fehler("Du kannst nur deine eigenen Nachrichten zurückholen.", 403);
+        if (NOTFALL_RE.test(String(m.body || ""))) throw new Fehler("Notfall-Meldungen lassen sich nicht zurückholen.");
+        const [{ data: ma }, { data: uf }, { data: kk }, { data: wi }, { data: tn }] = await Promise.all([
+          db.from("kc_communication_message_attachments").select("attachment_id").eq("message_id", m.id),
+          db.from("kc_club_chat_umfrage").select("message_id").eq("message_id", m.id).maybeSingle(),
+          db.from("kc_club_chat_kontakt").select("message_id").eq("message_id", m.id).maybeSingle(),
+          db.from("kc_club_nachricht_wichtig").select("message_id").eq("message_id", m.id).maybeSingle(),
+          db.from("kc_communication_thread_participants").select("person_id,last_read_at").eq("thread_id", m.thread_id).neq("person_id", ich.person_id),
+        ]);
+        if ((ma ?? []).length || uf || kk) throw new Fehler("Zurückholen geht nur bei Nachrichten mit Text (ohne Foto, Datei, Abstimmung oder Kontakt).");
+        const gelesen = (tn ?? []).filter((x: any) => x.last_read_at && Date.parse(x.last_read_at) >= Date.parse(m.created_at)).length;
+        if (gelesen) throw new Fehler(`Zu spät – ${gelesen === 1 ? "jemand hat" : `${gelesen} haben`} die Nachricht schon gelesen. Du kannst sie noch bearbeiten oder löschen.`, 409);
+        await geloescht(ich, "nachricht", { nachricht: m, anlagen: [] });
+        const { error } = await db.from("kc_communication_messages").delete().eq("id", m.id).eq("sender_person_id", ich.person_id);
+        if (error) throw new Fehler("Konnte nicht zurückgeholt werden.", 500);
+        // offene Chats der anderen sofort auffrischen (die Nachricht verschwindet dort gleich, Zähler stimmt wieder)
+        await db.rpc("kc_club_rt_klingeln", { p_personen: (tn ?? []).map((x: any) => x.person_id), p_art: "chat", p_thread: m.thread_id }).then(() => {}, () => {});
+        await protokoll(ich.person_id, "nachricht_zurueckgeholt", { nachricht: m.id, thread: m.thread_id });
+        return json({ ok: true, text: m.body, wichtig: !!wi, antwort_auf: m.reply_to_message_id || null });
+      }
+
       // KC-CLUB-SELBSTLOESCHEN (2.148.0): ⏳ für den ganzen Chat ein-/ausschalten – jeder Teilnehmer darf; alle sehen es als Zeile im Chat
       case "chat_selbstloeschen": {
         const id = String(p.id || ""), std = slStd(p.stunden);

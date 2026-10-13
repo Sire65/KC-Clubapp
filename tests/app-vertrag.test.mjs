@@ -9489,3 +9489,14 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   const mig = lies("supabase/migrations/20261014_kc_club_v2362_spaeter_senden.sql");
   assert.ok(/enable row level security/.test(mig) && /where exists \(select 1 from public\.kc_club_geplant where status = 'offen' and senden_um <= now\(\)\)/.test(mig), "Tabelle geschützt, Zeitplaner ruft nur bei Fälligem");
 }
+
+// 2.362.0 KC-CLUB-ZURUECKHOLEN: eigene, ungelesene Nachricht zurück ins Schreibfeld
+{
+  assert.ok(server.includes('case "nachricht_zurueckholen": {'), "Server-Aktion zurückholen");
+  const z = server.slice(server.indexOf('case "nachricht_zurueckholen"'), server.indexOf('return json({ ok: true, text: m.body'));
+  assert.ok(/m\.sender_person_id !== ich\.person_id/.test(z) && /Date\.parse\(x\.last_read_at\) >= Date\.parse\(m\.created_at\)/.test(z) && /if \(gelesen\) throw/.test(z), "nur eigene, nur ungelesen");
+  assert.ok(/await geloescht\(ich, "nachricht"/.test(z), "Papierkorb-Sicherung wie beim Löschen");
+  assert.ok(/oncontextmenu="if\(!event\.target\.closest\('a,img,audio,video,input,textarea'\)\)\{event\.preventDefault\(\);nachrichtMenue/.test(html), "rechte Maustaste öffnet das Menü");
+  assert.ok(/naZurueckMoeglich\(m\) \? `<button class="knopf" onclick="document\.getElementById\('naMenue'\)\.remove\(\);naZurueckholen/.test(html) && /r\.eigen && !gel && naZurueckMoeglich/.test(html), "im Menü und im Info-Fenster");
+  assert.ok(/m\.haken !== "gelesen" && !m\.gelesenAlle && !\(m\.gelesenVon \|\| \[\]\)\.length/.test(html), "gelesene Nachrichten nicht anbieten");
+}

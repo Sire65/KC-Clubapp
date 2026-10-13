@@ -4793,6 +4793,7 @@ const HILFE = [
   { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste einmal auf einen Chat tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
+  { id: "zurueckholen", thema: "nachrichten", sym: "↩️", t: "Vertippt? Nachricht zurückholen", x: "Solange noch niemand deine Nachricht gelesen hat, kannst du sie <b>zurückholen</b>: Nachricht antippen (am PC: rechte Maustaste) oder im <b>ⓘ</b>-Fenster → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet für alle und steht wieder in deinem Schreibfeld – ändern und neu senden.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-ZURUECKHOLEN
   { id: "spaeter_senden", thema: "nachrichten", sym: "⏰", t: "Nachricht später senden – auch jeden Montag", x: "Nachricht schreiben, unten auf <b>⏰</b> tippen, Zeit wählen (z. B. <b>morgen früh 8 Uhr</b>) und wie oft (<b>einmal</b>, <b>jeden Tag</b>, <b>werktags</b>, <b>jeden Montag</b> …). Bis dahin steht sie blass unten im Chat – nur du siehst sie; antippen zum Ändern oder Löschen. Gesendet wird auch, wenn dein Handy aus ist.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-SPAETER-SENDEN
   { id: "weiterleiten", thema: "nachrichten", sym: "↪️", t: "Weitersagen leicht gemacht", x: "Soll jemand anderes eine Nachricht auch lesen? Antippen → <b>„↪️ Weiterleiten“</b> und die Person oder Unterhaltung aussuchen. Fertig.", seit: "2.23.1" },
   { id: "neue_linie", thema: "nachrichten", sym: "⬇️", t: "Wo hatte ich aufgehört?", x: "Öffnest du einen Chat, zeigt eine Linie <b>„Neue Nachrichten“</b>, ab wo es für dich Neues gibt. Hast du weit nach oben geblättert, bringt dich der Knopf <b>⬇️</b> mit einem Tipp wieder ans Ende.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
@@ -24548,7 +24549,7 @@ async function chatLaden(scrollen) {
       NA.trennerVor = erste && u.gelesenBis ? erste.id : null; NA.trennerSprung = !!NA.trennerVor;
     }
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
-    $("chat").innerHTML = u.nachrichten.map((m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')">
+    $("chat").innerHTML = u.nachrichten.map((m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
       ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}
       ${m.anlagen.map((a) => a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
@@ -24655,6 +24656,7 @@ function nachrichtMenue(id) {
     <button class="knopf" onclick="document.getElementById('naMenue').remove();chatVorlesenStart('${id}')">🔊 Ab hier alles vorlesen</button>
     ${(m.anlagen || []).some((a) => a.einmal) ? "" : `<button class="knopf" onclick="document.getElementById('naMenue').remove();weiterleitenBlatt('${id}')">↪️ Weiterleiten</button>`}
     ${(m.anlagen || []).some((a) => ARCHIV_TYP_OK(a.mime) && !a.einmal) ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naAnlagenArchiv('${id}')">🗄️ Datei in mein Archiv</button>` : ""}
+    ${naZurueckMoeglich(m) ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naZurueckholen('${id}')">↩️ Zurückholen und ändern (noch nicht gelesen)</button>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();nachrichtInfo('${id}')">ℹ️ Details – wann gesendet, angekommen, gelesen</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naLoeschenFragen('${id}')">🗑️ Löschen</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove()">Abbrechen</button></div>`;
@@ -25000,6 +25002,25 @@ function chatSucheZeigen(scrollen) {
 }
 
 // KC-CLUB-NA-SEITE (1.8.3, Wunsch Hansi – wie WhatsApp): gebogener Pfeil neben der Nachricht → sofort weiterleiten oder kopieren
+// ---------- KC-CLUB-ZURUECKHOLEN (2.362.0, Wunsch Hansi „Nachricht anklicken, rechte Maustaste oder über den Info-Knopf: Nachricht zurückholen.
+// Solange nicht gelesen, kommt sie wieder ins eigene Fenster – dort z. B. ändern und nochmals abschicken“) ----------
+// Nur eigene Textnachrichten ohne Anlage/Abstimmung/Kontakt, solange kein anderer sie gelesen hat (der Server prüft das noch einmal).
+// Die Nachricht verschwindet für alle; Text, ❗ und „Antwort auf“ kommen zurück ins Schreibfeld.
+const naZurueckMoeglich = (m) => !!m && m.eigen && !!m.text && m.text !== "📎" && !(m.anlagen || []).length && !m.umfrage && !m.kontakt && !istNotfall(m)
+  && m.haken !== "gelesen" && !m.gelesenAlle && !(m.gelesenVon || []).length;
+async function naZurueckholen(id) {
+  const m = NA.nachrichten.get(id); if (!m) return;
+  const schon = $("text").value.trim();
+  if (!(await frage(`↩️ Nachricht zurückholen?\n\nSie verschwindet für alle aus dem Chat und steht wieder in deinem Schreibfeld – dort kannst du sie ändern und neu senden.${schon ? "\n\nDein angefangener Text im Schreibfeld wird dabei ersetzt." : ""}\n\nHinweis: Eine Mitteilung aufs Handy oder eine E-Mail, die schon verschickt wurde, lässt sich nicht zurückholen.`,
+    { ja: "↩️ Ja, zurückholen", nein: "Nein" }))) return;
+  let r; try { r = await api("nachricht_zurueckholen", { id }, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const t = $("text"); t.value = r.text || m.text; t.style.height = "auto"; t.style.height = t.scrollHeight + "px";
+  wichtigUmschalten(!!r.wichtig); entwurfMarkeZeigen(); spur("zurueckgeholt", chatId);
+  chatStand = ""; await chatLaden(false);
+  if (r.antwort_auf && NA.nachrichten.has(r.antwort_auf)) naAntworten(r.antwort_auf); else naAntwortWeg();
+  t.focus(); try { t.setSelectionRange(t.value.length, t.value.length); } catch {}
+  melde("↩️ Zurückgeholt – jetzt ändern und mit ➤ neu senden");
+}
 function naPfeilMenue(id) {
   const m = NA.nachrichten.get(id); if (!m) return;
   document.getElementById("naMenue")?.remove();
@@ -25014,6 +25035,7 @@ function naPfeilMenue(id) {
       ${m.text ? `<button class="knopf" onclick="${zu}naKopieren('${id}')">📋 Kopieren</button>` : ""}
       ${m.text ? `<button class="knopf" onclick="${zu}naAusschneiden('${id}')">✂️ Ausschneiden</button>` : ""}
       <button class="knopf" onclick="${zu}naInsArchiv('${id}')">🗄️ Archivieren</button>
+      ${naZurueckMoeglich(m) ? `<button class="knopf" onclick="${zu}naZurueckholen('${id}')">↩️ Zurückholen</button>` : ""}
       ${m.eigen || ICH?.admin ? `<button class="knopf" onclick="${zu}naWichtig('${id}', ${!m.wichtig})">${m.wichtig ? "➖ Nicht wichtig" : "❗ Wichtig"}</button>` : ""}
       <button class="knopf" onclick="${zu}naLoeschenFragen('${id}')">🗑️ Löschen</button>
       <button class="knopf" onclick="${zu}">Abbrechen</button></div></div>`;
@@ -25356,6 +25378,7 @@ async function nachrichtInfo(id) {
     ${r.wichtig ? '<div class="ni-zeile ni-wichtig"><span>❗ <b>Wichtige Nachricht</b></span><span>Wichtigkeit: hoch</span></div>' : ""}
     <div class="ni-zeile"><span>✍️ Geschrieben ${r.eigen ? "von dir" : "von " + esc(r.von)}</span><span class="hinweis">${esc(niZeit(r.zeit))}</span></div>
     <b>👥 Empfänger${r.empfaenger.length > 1 ? ` – ${gel} von ${r.empfaenger.length} gelesen` : ""}</b>${empf || '<p class="hinweis" style="margin:0">Nur du (Test-Unterhaltung)</p>'}
+    ${r.eigen && !gel && naZurueckMoeglich(NA.nachrichten.get(id)) ? `<button class="knopf haupt" onclick="document.getElementById('niFenster').remove();naZurueckholen('${id}')">↩️ Zurückholen und ändern – noch hat sie niemand gelesen</button>` : ""}
     ${r.wegeSichtbar ? `<b>🚚 Zustellung</b>${wege}` : ""}
     <button class="knopf" onclick="document.getElementById('niFenster').remove()">Schließen</button></div>`;
   f.onclick = (e) => { if (e.target === f) f.remove(); };
@@ -32887,7 +32910,7 @@ setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
 const SPUR_WAS = { vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
-  geplant: "⏰ Nachricht für später geplant", mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
+  geplant: "⏰ Nachricht für später geplant", zurueckgeholt: "↩️ Nachricht zurückgeholt", mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
   sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", sprache_ziel: "🎙️ Sprache: Seite geöffnet", sprache_gelernt: "🎙️ Sprache: neuen Befehl gelernt", sprache_liste: "📋 Liste der Sprachbefehle geöffnet", sprache_training: "🎓 Sprach-Training gestartet", unterstuetzung_viel: "🙋 Unterstützung: viel Hilfe gewählt", unterstuetzung_etwas: "👌 Unterstützung: ein bisschen Hilfe", unterstuetzung_keine: "😎 Unterstützung: keine", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
 const SPW = { tag: null, person: null, uhr: null };
 async function spurAdmin(tag, person) {

@@ -13,6 +13,11 @@ Anlass (Hansi): „Bau das zeitversetzte Senden ein – bedienerfreundlich, logi
   Selbstlöschen des Chats wie von Hand). Erst belegen (nächste Zeit bzw. fertig), dann senden → nie doppelt. Wiederholung rechnet ab der ersten Zeit in Berliner Zeit
   (wiederholungen(), Sommer-/Winterzeit geprüft: Mo 8:00 bleibt 8:00 über den 25.10.); verpasste Termine einmal nachholen, nie stapeln.
 - Hilfe-Tipp „Nachricht später senden – auch jeden Montag“ und Station „⏰ Später senden“ im Chat-Erklärvideo.
+- ↩️ KC-CLUB-ZURUECKHOLEN (Wunsch Hansi „Nachricht anklicken, rechte Maustaste oder über Info-Button zurückholen – solange nicht gelesen wieder im
+  eigenen Fenster anzeigen, dort ändern und nochmals abschicken“): im Nachrichten-Menü (Antippen, NEU: rechte Maustaste am PC), im Pfeil-Menü und im ⓘ-Fenster.
+  Nur eigene Textnachrichten ohne Anlage/Abstimmung/Kontakt/Notfall und nur, solange kein anderer Teilnehmer sie gelesen hat (Server prüft last_read_at;
+  sonst „Zu spät – … schon gelesen“). Nachricht verschwindet für alle (Papierkorb-Sicherung wie Löschen), Realtime-Signal frischt offene Chats sofort auf;
+  Text, ❗ und „Antwort auf“ kommen zurück ins Schreibfeld. Ehrlicher Hinweis: schon verschickte Push-Mitteilungen/E-Mails lassen sich nicht zurückholen.
 
 ## 2.361.0 – 2026-10-13 – 🔋 KC-CLUB-AKKU-6: Stromsauger Tonausgabe + Kopfbild steht in Ruhe
 Anlass (Hansi, Akku-Übersicht: Chrome 25 % in einer Stunde): „Unsere App scheint das Handy-Akku leer zu saugen – finde die Stromsauger.“
