@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.371.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.372.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -4833,6 +4833,7 @@ const HILFE = [
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
   { id: "schrift_zoom", thema: "darstellung", sym: "🔍", t: "Schrift größer ziehen – mit zwei Fingern", x: "Zu klein zum Lesen? Lege <b>zwei Finger</b> auf den Bildschirm und ziehe sie <b>auseinander</b> – Nachrichten, Zettel und Texte werden größer (Knöpfe und Leisten bleiben, wie sie sind). Zusammenschieben macht sie kleiner. Die Größe bleibt gemerkt. Zurück auf normal: mit zwei Fingern <b>doppelt tippen</b> oder unter ⚙️ → Darstellung → „🔍 Schriftgröße“.", seit: "2.364.0" }, // 2.364.0 KC-CLUB-SCHRIFT-ZOOM
   { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag, nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
+  { id: "fee", thema: "darstellung", sym: "🧚", t: "Eine kleine Fee zu Besuch", x: "Bei jeder <b>20. Anmeldung</b> schwebt eine kleine Fee durchs obere Startbild, bleibt kurz stehen und lächelt. <b>Tipp sie an</b> – dann schenkt sie dir einen schönen Spruch. Vorab ansehen: <b>⚙️ → 🎨 Darstellung → 🧚 Fee ansehen</b>.", seit: "2.372.0" },
   { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → 🎨 Darstellung → Senden</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b>, <b>Luftballon</b> oder <b>Baron Münchhausen</b> auf der Kanonenkugel – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen.", seit: "2.362.0" },
   { id: "zurueckholen", thema: "nachrichten", sym: "↩️", t: "Vertippt? Nachricht zurückholen", x: "Solange noch niemand deine Nachricht gelesen hat, kannst du sie <b>zurückholen</b>: Nachricht antippen (am PC: rechte Maustaste) oder im <b>ⓘ</b>-Fenster → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet für alle und steht wieder in deinem Schreibfeld – ändern und neu senden.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-ZURUECKHOLEN
   { id: "spaeter_senden", thema: "nachrichten", sym: "⏰", t: "Nachricht später senden – auch jeden Montag", x: "Nachricht schreiben, unten auf <b>⏰</b> tippen, Zeit wählen (z. B. <b>morgen früh 8 Uhr</b>) und wie oft (<b>einmal</b>, <b>jeden Tag</b>, <b>werktags</b>, <b>jeden Montag</b> …). Bis dahin steht sie blass unten im Chat – nur du siehst sie; antippen zum Ändern oder Löschen. Gesendet wird auch, wenn dein Handy aus ist.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-SPAETER-SENDEN
@@ -14286,6 +14287,113 @@ function sendeEffektVorschau(knopf) {
   papierflieger(knopf, false);
 }
 function blaulichtVorschau(knopf) { if (!fxAn()) return fxAusHinweis(() => blaulichtVorschau(knopf)); if (sendeEffektWahl() === "aus") return melde("Sende-Effekt ist aus – oben einen auswählen.", true); papierflieger(knopf, true); }
+// KC-CLUB-FEE (2.372.0, Wunsch Hansi): bei jeder 20. Anmeldung (Server zählt je Mitglied über alle Geräte) schwebt eine kleine Fee
+// durchs obere Startbild – bleibt kurz stehen, lächelt, fliegt weiter. Antippen = ein motivierender Spruch. „🧚 Fee ansehen“ zeigt sie jederzeit.
+const FEE_SPRUECHE = [
+  "Heute ist ein guter Tag, um etwas Leckeres zu zaubern. ✨",
+  "Du bist ein wichtiger Teil vom Club – schön, dass es dich gibt!",
+  "Gute Laune ist die beste Zutat. Du hast sie dabei.",
+  "Jeder große Koch hat mal mit einem angebrannten Topf angefangen.",
+  "Mut ist, einfach mal ein neues Rezept auszuprobieren.",
+  "Was du heute mit Liebe machst, schmeckt morgen noch besser.",
+  "Ein Lächeln am Herd wärmt mehr als jede Flamme.",
+  "Kleine Schritte bringen dich auch ans Ziel – ganz in Ruhe.",
+  "Du kannst mehr, als du denkst. Wirklich!",
+  "Gemeinsam kochen heißt gemeinsam lachen. Darauf freuen wir uns.",
+  "Heute darfst du stolz auf dich sein – einfach so.",
+  "Die Prise Mut, die dir fehlt, streue ich dir hiermit drüber. ✨",
+  "Fehler sind nur Gewürze, die man noch nicht kannte.",
+  "Wer teilt, hat doppelt. Das gilt für Rezepte und für Freude.",
+  "Ein guter Tag beginnt mit einem guten Gedanken – hier ist er: Du schaffst das!",
+  "Nimm dir heute Zeit für etwas, das dir Freude macht.",
+  "Die besten Momente entstehen oft ganz ungeplant.",
+  "Du bringst Würze in unseren Club. Danke dafür!",
+  "Heute wird gut. Ich habe es mit meinem Zauberstab nachgeprüft. 🪄",
+  "Langsam gekocht wird’s am zartesten – auch bei Plänen.",
+  "Glaub an dich wie an einen frisch gebackenen Kuchen: Er geht auf!",
+  "Jede Begegnung im Club macht die Welt ein bisschen wärmer.",
+  "Atme tief durch – das Leben ist ein Festmahl.",
+  "Sei heute freundlich zu dir selbst. Du hast es verdient.",
+  "Neugier ist das beste Rezept gegen Langeweile.",
+  "Mit dir am Tisch wird jedes Essen zum Fest.",
+  "Was einmal gelingt, gelingt wieder. Du hast es schon bewiesen.",
+  "Heute ist ein schöner Tag, um jemandem eine Freude zu machen.",
+  "Die Welt braucht mehr Menschen wie dich – mit Herz und Kochlöffel.",
+  "Mach heute eine Sache, auf die du dich morgen freust.",
+  "Auch ein kleiner Erfolg ist ein Grund, die Gläser zu heben. 🥂",
+  "Kopf hoch – der Duft von etwas Gutem liegt schon in der Luft.",
+  "Du musst nicht perfekt sein, um wunderbar zu sein.",
+  "Freundschaft ist die beste Vorspeise fürs Leben.",
+  "Jeder Tag ist eine neue Seite im Kochbuch deines Lebens.",
+  "Heute ist dein Glückstag – ich habe Feenstaub dagelassen. ✨",
+  "Was du gibst, kommt zurück – meistens mit Nachtisch.",
+  "Bleib neugierig, bleib hungrig, bleib du.",
+  "Ruhe bewahren und weiterrühren – das wird was!",
+  "Danke, dass du immer wieder vorbeischaust. Das macht den Club lebendig. 💗",
+];
+const FEE_SVG = `<svg viewBox="0 0 100 120" aria-hidden="true"><defs>
+<radialGradient id="feeFg" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".55" stop-color="#ffd6ea" stop-opacity=".75"/><stop offset="1" stop-color="#d9b8ff" stop-opacity=".45"/></radialGradient>
+<linearGradient id="feeKl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc2d9"/><stop offset="1" stop-color="#f59ac0"/></linearGradient></defs>
+<g class="fee-fl l"><ellipse cx="30" cy="50" rx="22" ry="15" fill="url(#feeFg)" stroke="#f7b6d4" stroke-width=".8" transform="rotate(-25 30 50)"/><ellipse cx="33" cy="70" rx="13" ry="9" fill="url(#feeFg)" stroke="#f7b6d4" stroke-width=".8" transform="rotate(20 33 70)"/></g>
+<g class="fee-fl r"><ellipse cx="70" cy="50" rx="22" ry="15" fill="url(#feeFg)" stroke="#f7b6d4" stroke-width=".8" transform="rotate(25 70 50)"/><ellipse cx="67" cy="70" rx="13" ry="9" fill="url(#feeFg)" stroke="#f7b6d4" stroke-width=".8" transform="rotate(-20 67 70)"/></g>
+<path d="M45 82 L42 108 M55 82 L58 108" stroke="#ffd9c4" stroke-width="3.2" stroke-linecap="round"/>
+<ellipse cx="41.5" cy="109" rx="3.4" ry="2" fill="#f07aaa"/><ellipse cx="58.5" cy="109" rx="3.4" ry="2" fill="#f07aaa"/>
+<path d="M44 52 Q50 49 56 52 L66 88 Q50 95 34 88 Z" fill="url(#feeKl)" stroke="#e98bb2" stroke-width=".8"/>
+<path d="M34 88 Q38 84 42 89 Q46 84 50 89 Q54 84 58 89 Q62 84 66 88" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".9"/>
+<circle class="fee-gl" cx="46" cy="62" r="1.2" fill="#fff"/><circle class="fee-gl" cx="54" cy="68" r="1.1" fill="#fff"/><circle class="fee-gl" cx="43" cy="76" r="1.3" fill="#fff"/><circle class="fee-gl" cx="57" cy="80" r="1.2" fill="#fff"/><circle class="fee-gl" cx="50" cy="73" r=".9" fill="#fff"/><circle class="fee-gl" cx="40" cy="84" r="1" fill="#fff"/><circle class="fee-gl" cx="60" cy="86" r="1" fill="#fff"/><circle class="fee-gl" cx="51" cy="57" r=".8" fill="#fff"/>
+<path d="M45 55 Q38 62 36 70" stroke="#ffd9c4" stroke-width="3" fill="none" stroke-linecap="round"/>
+<g class="fee-stab"><path d="M56 55 Q63 60 68 64" stroke="#ffd9c4" stroke-width="3" fill="none" stroke-linecap="round"/><line x1="68" y1="66" x2="80" y2="44" stroke="#c99a3c" stroke-width="1.8" stroke-linecap="round"/>
+<path d="M81 34 L83.2 39.8 L89.4 40.1 L84.6 44 L86.2 50 L81 46.6 L75.8 50 L77.4 44 L72.6 40.1 L78.8 39.8 Z" fill="#ffd54a" stroke="#f4b400" stroke-width=".6"/><circle class="fee-gl" cx="88" cy="32" r="1.4" fill="#fff"/><circle class="fee-gl" cx="74" cy="33" r="1.1" fill="#fff8c4"/></g>
+<path d="M33 30 Q32 10 50 9 Q68 10 67 30 Q69 44 62 50 L38 50 Q31 44 33 30Z" fill="#f6d27a"/>
+<circle cx="50" cy="32" r="13" fill="#ffe3d3"/>
+<path d="M37 28 Q42 16 52 18 Q60 18 63 28 Q58 22 50 23 Q43 23 37 28Z" fill="#f2c55e"/>
+<path d="M40 18 l3 -6 l3 5 l4 -7 l4 7 l3 -5 l3 6 Z" fill="#ffc6de" stroke="#f39bc2" stroke-width=".6"/><circle cx="50" cy="12" r="1.3" fill="#fff"/>
+<ellipse class="fee-aug" cx="45" cy="32" rx="1.7" ry="2.2" fill="#4b3a5a"/><ellipse class="fee-aug" cx="55" cy="32" rx="1.7" ry="2.2" fill="#4b3a5a"/>
+<circle cx="45.6" cy="31.2" r=".6" fill="#fff"/><circle cx="55.6" cy="31.2" r=".6" fill="#fff"/>
+<ellipse class="fee-wange" cx="41.5" cy="37" rx="2.6" ry="1.6" fill="#ff9ec4" opacity=".55"/><ellipse class="fee-wange" cx="58.5" cy="37" rx="2.6" ry="1.6" fill="#ff9ec4" opacity=".55"/>
+<path class="fee-mund" d="M47.5 38.5 Q50 40.3 52.5 38.5" stroke="#d2678f" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+<path class="fee-mund-gross" d="M46 37.6 Q50 43.5 54 37.6 Z" fill="#e0688f" stroke="#c9547c" stroke-width=".6"/>
+</svg>`;
+let FEE_LAEUFT = false;
+function feeKommt(vorschau) {
+  if (typeof document === "undefined" || FEE_LAEUFT) return;
+  if (vorschau === true && !fxAn()) return fxAusHinweis(() => feeKommt(true));
+  if (vorschau !== true && (!fxAn() || document.hidden || aktuelleAnsicht !== "start")) { // 2.372.0: wartet, bis die Startseite sichtbar ist (höchstens 2 Min.)
+    const n = (feeKommt.versuche = (feeKommt.versuche || 0) + 1); if (n <= 24 && einst("animiert", true)) setTimeout(feeKommt, 5000); return;
+  }
+  feeKommt.versuche = 0;
+  const held = vorschau === true ? null : document.querySelector("#v-start .hero");
+  const r = held?.getBoundingClientRect(), bw = innerWidth, top = r && r.height > 60 ? Math.max(4, r.top) : 70, hoehe = r && r.height > 60 ? Math.min(r.height, 260) : 200;
+  const f = document.createElement("div"); f.className = "fee"; f.setAttribute("role", "button"); f.setAttribute("aria-label", "Fee – antippen für einen schönen Spruch"); f.innerHTML = FEE_SVG;
+  document.body.appendChild(f); FEE_LAEUFT = true;
+  const W = 84, mitte = bw / 2 - W / 2, grundY = top + Math.max(6, hoehe / 2 - 60), ein = 3200, steh = 2800, aus = 3200;
+  let t0 = 0, x = -W, y = grundY, staubUhr = 0, ende = false;
+  const pos = () => { f.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`; };
+  const staub = (sx, sy, viel) => {
+    for (let i = 0; i < (viel || 1); i++) {
+      const s = document.createElement("div"); s.className = "fee-staub"; document.body.appendChild(s);
+      const dx = (Math.random() - .5) * (viel ? 90 : 14), dy = (viel ? (Math.random() - .5) * 90 : 18 + Math.random() * 22);
+      s.animate([{ transform: `translate(${sx}px,${sy}px) scale(1)`, opacity: 1 }, { transform: `translate(${sx + dx}px,${sy + dy}px) scale(.2)`, opacity: 0 }], { duration: viel ? 900 : 1100 + Math.random() * 500, easing: "ease-out" }).onfinish = () => s.remove();
+    }
+  };
+  f.onclick = (e) => { e.stopPropagation(); staub(x + W * .8, y + 30, 18); feeSpruch(); };
+  const weg = () => { ende = true; f.remove(); FEE_LAEUFT = false; };
+  const schritt = (jetzt) => {
+    if (ende) return; if (!t0) t0 = jetzt; const t = jetzt - t0;
+    if (t < ein) { const k = t / ein, e = 1 - Math.pow(1 - k, 2); x = -W + (mitte + W) * e; y = grundY + Math.sin(t / 380) * 16; f.classList.remove("lacht"); }
+    else if (t < ein + steh) { x = mitte; y = grundY + Math.sin(t / 520) * 5; f.classList.add("lacht"); if (Math.random() < .25) staub(x + 70, y + 30, 0); }
+    else if (t < ein + steh + aus) { const k = (t - ein - steh) / aus; x = mitte + (bw - mitte + W) * k * k; y = grundY + Math.sin(t / 380) * 16 - k * 30; f.classList.remove("lacht"); }
+    else return weg();
+    if (jetzt - staubUhr > 70) { staubUhr = jetzt; staub(x + 20, y + 70, 0); }
+    pos(); requestAnimationFrame(schritt);
+  };
+  pos(); requestAnimationFrame(schritt);
+}
+function feeSpruch() {
+  const s = FEE_SPRUECHE[Math.floor(Math.random() * FEE_SPRUECHE.length)];
+  const b = blattAuf("feeBlatt", `<h3 style="text-align:center">🧚 Die Fee sagt …</h3><div class="fee-spruch">${s}</div><button type="button" class="knopf haupt" style="width:100%" onclick="document.getElementById('feeBlatt')?.remove()">✨ Danke!</button>`);
+  b.style.zIndex = "9200";
+}
 // 3) 📌 neuer Pinnwand-Zettel: fällt leicht schräg herunter, setzt auf, die Nadel wird hineingedrückt
 function zettelAnpinnen(el) {
   if (!fxAn() || !el) return;
@@ -31607,7 +31715,7 @@ function startMessFertig() {
   spur("geoeffnet"); setTimeout(spurSenden, 3000);
   // KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): jeden Start mit Dauer, Gerät und Browser melden (für die Startstatistik des Admins)
   setTimeout(() => api("start_melden", { ms: eintrag.ges, teile: p, netz: eintrag.netz, quelle: eintrag.quelle, v: APP_VERSION, spar: SPAR.an, hinter: !!START_MESS.hinter,
-    app: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, system: fpSystem(), browser: fpBrowser(), bildschirm: `${screen.width}x${screen.height}` }).catch(() => {}), 1500);
+    app: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, system: fpSystem(), browser: fpBrowser(), bildschirm: `${screen.width}x${screen.height}` }).then((r) => { if (r?.fee) setTimeout(feeKommt, 1500); }).catch(() => {}), 1500); // 2.372.0 KC-CLUB-FEE: jede 20. Anmeldung
 }
 const sek = (ms) => (ms / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s";
 function startMessHtml() {

@@ -4147,6 +4147,21 @@
 @media (prefers-reduced-motion: reduce) { .ruf-chip { animation: none; } }
   .adband { width: 100%; height: 22px; display: block; } .adlinie { width: 100%; height: 70px; display: block; } /* 2.341.0 KC-CLUB-ADMIN-VERLAUF */
   .adachse { display: flex; justify-content: space-between; gap: 6px; font-size: .72rem; opacity: .75; margin-top: -2px; }
+  /* KC-CLUB-FEE (2.372.0, Wunsch Hansi): bei jeder 20. Anmeldung schwebt eine Fee durchs Startbild – antippen = Mut-Spruch */
+  .fee { position: fixed; left: 0; top: 0; width: 84px; height: 101px; z-index: 60; cursor: pointer; pointer-events: auto; will-change: transform; filter: drop-shadow(0 0 6px rgba(255,182,213,.85)); -webkit-tap-highlight-color: transparent; }
+  .fee svg { width: 100%; height: 100%; overflow: visible; }
+  .fee .fee-fl { transform-box: fill-box; animation: feeFlattern .16s ease-in-out infinite alternate; }
+  .fee .fee-fl.l { transform-origin: 100% 60%; } .fee .fee-fl.r { transform-origin: 0% 60%; }
+  .fee .fee-gl { animation: feeFunkeln 1.1s ease-in-out infinite; } .fee .fee-gl:nth-of-type(2n) { animation-delay: .4s; } .fee .fee-gl:nth-of-type(3n) { animation-delay: .75s; }
+  .fee .fee-aug { transform-box: fill-box; transform-origin: center; animation: feeBlinzeln 3.2s infinite; }
+  .fee .fee-mund-gross { opacity: 0; transition: opacity .3s; } .fee.lacht .fee-mund-gross { opacity: 1; } .fee.lacht .fee-mund { opacity: 0; }
+  .fee.lacht .fee-wange { opacity: .85; }
+  .fee .fee-stab { transform-box: view-box; transform-origin: 70px 66px; transition: transform .35s; } .fee.lacht .fee-stab { transform: rotate(-28deg); }
+  .fee-staub { position: fixed; left: 0; top: 0; width: 7px; height: 7px; border-radius: 50%; pointer-events: none; z-index: 59; background: radial-gradient(circle, #fff 0 25%, #ffc4dd 45%, rgba(255,196,221,0) 70%); }
+  @keyframes feeFlattern { from { transform: scaleX(1); } to { transform: scaleX(.45); } }
+  @keyframes feeFunkeln { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+  @keyframes feeBlinzeln { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+  .fee-spruch { font-size: 1.15rem; line-height: 1.45; text-align: center; margin: 6px 4px 14px; }
 </style>
 </head>
 <body>
@@ -4693,7 +4708,7 @@
         <div class="reg-effekt-wahl" id="regEffektWahl"></div><button type="button" class="knopf klein" onclick="regEffektVorschau()">▶ Vorschau auf der Startseite</button></div>
       <!-- KC-CLUB-SENDE-EFFEKT (2.175.0, Wunsch Hansi) -->
       <div class="schalter" style="display:block"><div><b>✉️ Effekt beim Senden</b><div class="hinweis">Wenn du eine Nachricht abschickst, fliegt sie davon – als Papierflieger in Schlangenlinien, als weiße Brieftaube mit Kuvert oder im gelben Postauto. Ist die Nachricht als ❗ wichtig markiert, fährt ein Wagen mit Blaulicht. Beim Empfänger kommt sie genauso an – die Taube lässt dort das Kuvert fallen, das Postauto liefert ab.</div></div>
-        <div class="reg-effekt-wahl" id="sendeEffektWahl"></div><button type="button" class="knopf klein" onclick="sendeEffektVorschau(this)">▶ Vorschau</button> <button type="button" class="knopf klein" onclick="blaulichtVorschau(this)">🚨 Vorschau „wichtig“</button></div>
+        <div class="reg-effekt-wahl" id="sendeEffektWahl"></div><button type="button" class="knopf klein" onclick="sendeEffektVorschau(this)">▶ Vorschau</button> <button type="button" class="knopf klein" onclick="blaulichtVorschau(this)">🚨 Vorschau „wichtig“</button> <button type="button" class="knopf klein" onclick="feeKommt(true)">🧚 Fee ansehen</button></div>
       <div class="schalter"><div><b>🔄 Kacheln umdrehen</b><div class="hinweis">Doppelt auf eine Kachel tippen – hinten stehen Schnellaktionen (z. B. „Neue Nachricht“)</div></div><input type="checkbox" id="setKachelRueck" onchange="einstellung('kachelrueck', this.checked)"></div> <!-- KC-CLUB-KACHEL-RUECKSEITE 2.54.0 -->
       <div class="schalter"><div><b>🗑️ Reißwolf beim Löschen</b><div class="hinweis">Gelöschtes läuft sichtbar durch den Aktenvernichter</div></div><input type="checkbox" id="setReisswolf" onchange="einstellung('reisswolf', this.checked)"></div> <!-- KC-CLUB-REISSWOLF 2.54.0 -->
     </details>
@@ -5085,6 +5100,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.371.0" data-v="2.371.0"></script>
+<script src="app.js?v=2.372.0" data-v="2.372.0"></script>
 </body>
 </html>

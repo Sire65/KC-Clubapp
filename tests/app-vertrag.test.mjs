@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-const SERVER_VERSION = "2.369.0";
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -9609,4 +9609,14 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 {
   assert.ok(/function jzbStreunerSchritt\(dt\)/.test(html) && /function jzbStreunerMalen\(c, D, k\)/.test(html) && /jzbStreunerSchritt\(dt\); \/\/ 2\.369\.0/.test(html) && /if \(J\.hund\) jzbStreunerMalen\(c, J\.hund, k\);/.test(html), "Hund läuft und wird gemalt");
   assert.ok(/D\.phase = "schnuppern"/.test(html) && /zx: J\.w \* jzbZ\(\.42, \.58\)/.test(html), "bleibt um die Mitte stehen und schnuppert");
+}
+
+// 2.372.0 KC-CLUB-FEE: Fee bei jeder 20. Anmeldung, antippen = Mut-Spruch
+{
+  assert.ok(/schluessel", "fee_zaehler"\)\.maybeSingle\(\)/.test(server) && /return json\(\{ ok: true, anmeldungen, fee: anmeldungen % 20 === 0 \}\);/.test(server) && /if \(d\.hinter\) return json\(\{ ok: true \}\);/.test(server), "Server zählt Anmeldungen (ohne Hintergrund-Starts)");
+  assert.ok(/\.then\(\(r\) => \{ if \(r\?\.fee\) setTimeout\(feeKommt, 1500\); \}\)/.test(html), "App ruft die Fee bei fee: true");
+  assert.ok(/function feeKommt\(vorschau\)/.test(html) && /function feeSpruch\(\)/.test(html) && /onclick="feeKommt\(true\)">🧚 Fee ansehen</.test(html), "Fee, Spruch und Vorschau-Knopf");
+  const n = (html.match(/const FEE_SPRUECHE = \[([\s\S]*?)\n\];/) || [, ""])[1].split("\n").filter((z) => z.trim().startsWith('"')).length;
+  assert.ok(n >= 30, "genug Sprüche (" + n + ")");
+  assert.ok(/fxAn\(\) \|\| document\.hidden \|\| aktuelleAnsicht !== "start"/.test(html), "Fee nur bei Animationen und sichtbarer Startseite");
 }

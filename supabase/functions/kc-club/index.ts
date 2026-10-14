@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.369.0";
+const SERVER_VERSION = "2.372.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -8849,7 +8849,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           system: startText(p.system), browser: startText(p.browser), bildschirm: startText(p.bildschirm, 12), v: startText(p.v, 12), spar: p.spar === true, hinter: p.hinter === true }; // hinter: 2.181.0 Start im Hintergrund
         if (d.ms === null) throw new Fehler("Messung ungültig.", 400);
         if (await protokollPlatz(ich.person_id, "app_start", 60)) await protokoll(ich.person_id, "app_start", d);
-        return json({ ok: true });
+        // KC-CLUB-FEE (2.372.0): jede 20. Anmeldung je Mitglied (über alle Geräte) – dann schwebt die Fee durchs Startbild
+        if (d.hinter) return json({ ok: true });
+        const fz = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "fee_zaehler").maybeSingle();
+        const anmeldungen = (Number((fz.data?.wert as any)?.n) || 0) + 1;
+        await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "fee_zaehler", wert: { n: anmeldungen }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        return json({ ok: true, anmeldungen, fee: anmeldungen % 20 === 0 });
       }
       case "start_statistik": {
         nurAdmin(ich);

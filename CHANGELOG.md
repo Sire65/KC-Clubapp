@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.372.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: kleine Fee bei jeder 20. Anmeldung (Server 2.372.0)
+Anlass (Hansi): „Bei jeder 20. Anmeldung soll eine ganz süße Fee durchs obere Bild schweben, einmal kurz stehen bleiben, lächeln und weiterfliegen.
+Leicht rosé Glitzersachen, Zauberstab in der Hand. Wer drauf tippt, bekommt einen motivierenden Spruch.“
+- Server zählt in `start_melden` je Mitglied über alle Geräte (`kc_club_person_einstellung` „fee_zaehler“; Starts im Hintergrund zählen nicht) und meldet `fee: true` bei jeder 20.
+- Die Fee (SVG: rosé Glitzerkleid, flatternde Flügel, Krönchen, Zauberstab mit Stern) schwebt in Wellen von links bis zur Mitte des Startbilds, bleibt ~3 s stehen,
+  lächelt und schwingt den Stab, fliegt rechts hinaus; Glitzerstaub hinterher. Nur wenn Animationen an sind und die Startseite sichtbar ist (wartet sonst bis 2 Min.).
+- Antippen: Funkenregen und ein Fenster mit einem von 40 Mut-Sprüchen. Vorschau: ⚙️ → 🎨 Darstellung → „🧚 Fee ansehen“. Neuer Hilfe-Tipp.
+- Test-Nachtrag: die versehentlich überschriebene Prüfung „Serverversion erhöht“ (2.301.0-Block) wiederhergestellt.
+
 ## 2.371.0 – 2026-10-14 – 🐕 KC-CLUB-HERBST-HUND: streunender Hund im Herbstbild
 Anlass (Hansi): „Lass in der Herbst-Animation ab und an einen streunenden Hund mit wedelndem Schwanz durchs Bild laufen. Ca. in der Mitte bleibt er stehen,
 schnuppert ein bisschen rum und läuft dann weiter.“
