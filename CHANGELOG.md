@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.375.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: Gesicht, Beine und Füße neu gezeichnet
+Anlass (Hansi): „Gesicht nicht gut, Beine und Füße nicht gut – der Rest kann so bleiben.“
+- Gesicht: ovale Dreiviertel-Form mit Kinn und Wangenschatten, mandelförmige Augen mit Lidstrich, Wimpern, Lidfalte und glänzender Iris, feine Nase,
+  geformte Ober- und Unterlippe mit leichtem Lächeln (lacht beim Stehenbleiben mit Zähnen), seitlicher Pony.
+- Beine: geformt mit Oberschenkel, Knie, Wade und schmalem Knöchel statt gleich dicker Striche; Füße gestreckt in rosé Ballettschuhen mit gekreuzten Bändern.
+
 ## 2.374.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: neue, erwachsene Fee
 Anlass (Hansi, mit Beispielbildern): „Nein, die Fee ist zu kindlich.“ – Neu gezeichnet (eigene Zeichnung, keine fremden Bilder): schlanke, erwachsene Fee
 im eleganten Flug (leicht nach vorn geneigt, ein Knie angewinkelt), lange wehende blonde Haare, Augen mit Wimpern, Lippen, rosé Korsage und mehrlagiger
