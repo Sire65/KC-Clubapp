@@ -6371,6 +6371,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   // 2.401.0: auch beim Zurückholen aus dem Hintergrund (Android lädt die App dann nicht neu)
   assert.ok(/const KOPF_GLANZ_PAUSE_MS = 60000;/.test(html) && /if \(weg && Date\.now\(\) - weg >= KOPF_GLANZ_PAUSE_MS\) \{ aus\(\); void g\.offsetWidth; g\.classList\.add\("lauf"\); \}/.test(html), "Zurückholen nach ≥ 1 Min. → Glanz läuft erneut");
 }
+// 2.402.0 KC-CLUB-KUCKUCKSUHR (Wunsch Hansi „wenn volle Stunde, einblenden, Kuckuck kommt raus und ruft so oft, wie es Uhr ist“)
+{
+  assert.ok(/const kkRufe = \(h\) => \(h % 12\) \|\| 12;/.test(html), "12-Stunden-Zählung (0 Uhr → 12×)");
+  assert.ok(/const KK_FENSTER_MIN = 2, KK_NACHT_VON = 22, KK_NACHT_BIS = 7/.test(html) && /mitTon = einst\("ton", true\) && !\(h >= KK_NACHT_VON \|\| h < KK_NACHT_BIS\)/.test(html), "nachts und mit Töne aus ohne Ton");
+  assert.ok(/if \(!ICH\?\.person_id \|\| document\.hidden \|\| !einst\("kuckuck", true\)\) return;/.test(html) && /localStorage\.getItem\("kc_club_kuckuck_zuletzt"\) === stunde/.test(html), "nur offen + sichtbar, abschaltbar, einmal je Stunde");
+  assert.ok(/<input type="checkbox" id="setKuckuck" onchange="einstellung\('kuckuck', this\.checked\)">/.test(html) && /\$\("setKuckuck"\)\.checked = einst\("kuckuck", true\)/.test(html), "Schalter in den Einstellungen");
+  const kk = (h) => (h % 12) || 12; assert.deepEqual([0, 1, 12, 13, 23].map(kk), [12, 1, 12, 1, 11], "Rufe je Stunde");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

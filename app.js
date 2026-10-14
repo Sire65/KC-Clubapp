@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.401.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.402.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -800,7 +800,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setFee")) $("setFee").checked = einst("fee", true); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); if ($("setFee")) $("setFee").checked = einst("fee", true); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -18721,6 +18721,66 @@ const KOPF_GLANZ_PAUSE_MS = 60000;
     });
   }
 }
+// ---------- 2.402.0 KC-CLUB-KUCKUCKSUHR (Wunsch Hansi „wenn volle Stunde, dann einblenden, der Kuckuck kommt raus und ruft so oft, wie es Uhr ist“) ----------
+// Nur solange die App offen und sichtbar ist (kein Push, nichts an den Server). Einmal je Stunde und Gerät; wer die App in den ersten
+// KK_FENSTER_MIN Minuten nach der vollen Stunde öffnet, bekommt sie auch noch. Rufe: 12-Stunden-Zählung (13 Uhr → 1×, 0 Uhr → 12×).
+// Ton selbst erzeugt (zwei Pfeifen-Töne wie bei der echten Kuckucksuhr) – nur mit „Töne“ an und nicht nachts (KK_NACHT_VON–KK_NACHT_BIS Uhr).
+// Einstellung „🐦 Kuckucksuhr zur vollen Stunde“ (Standard an); antippen schließt die Uhr sofort.
+const KK_FENSTER_MIN = 2, KK_NACHT_VON = 22, KK_NACHT_BIS = 7, KK_TAKT_MS = 1150;
+const kkJetzt = () => { const [h, m] = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date()).split(":").map(Number); return { h, m }; };
+const kkRufe = (h) => (h % 12) || 12;
+function kkTon(t0) { // ein „Kuck-kuck“: hoher, dann tieferer Pfeifenton (kleine Terz)
+  for (const [f, v] of [[784, 0], [659.25, .32]]) {
+    const o = audio.createOscillator(), o2 = audio.createOscillator(), g = audio.createGain(), t = t0 + v;
+    o.type = "sine"; o.frequency.value = f; o2.type = "triangle"; o2.frequency.value = f * 2; const g2 = audio.createGain(); g2.gain.value = .12;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.28, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+    o.connect(g); o2.connect(g2).connect(g); g.connect(audio.destination); o.start(t); o2.start(t); o.stop(t + 0.32); o2.stop(t + 0.32);
+  }
+}
+function kuckuckZeigen(h = kkJetzt().h) {
+  document.querySelector(".kuckuck")?.remove();
+  const n = kkRufe(h), mitTon = einst("ton", true) && !(h >= KK_NACHT_VON || h < KK_NACHT_BIS);
+  const z = (h % 12) * 30, zeiger = (w, l, b) => `<line x1="75" y1="80" x2="${75 + l * Math.sin(w * Math.PI / 180)}" y2="${80 - l * Math.cos(w * Math.PI / 180)}" stroke="#2b1607" stroke-width="${b}" stroke-linecap="round"/>`;
+  const u = document.createElement("div"); u.className = "kuckuck"; u.setAttribute("role", "img"); u.setAttribute("aria-label", `Kuckucksuhr: ${h} Uhr`); u.title = `${h} Uhr – antippen schließt die Uhr`;
+  u.innerHTML = `<svg viewBox="0 0 150 175" aria-hidden="true">
+    <g class="kk-pendel"><line x1="75" y1="128" x2="75" y2="160" stroke="#8a5a1a" stroke-width="2"/><circle cx="75" cy="163" r="7" fill="#d4a017" stroke="#8a5a1a" stroke-width="1.5"/></g>
+    <line x1="58" y1="128" x2="58" y2="150" stroke="#555" stroke-width="1.2"/><path d="M53 150h10l-2 14h-6z" fill="#4a3a20"/>
+    <line x1="92" y1="128" x2="92" y2="146" stroke="#555" stroke-width="1.2"/><path d="M87 146h10l-2 14h-6z" fill="#4a3a20"/>
+    <path d="M22 55 L75 12 L128 55 L120 128 L30 128 Z" fill="#7a4a1e" stroke="#3a1f0a" stroke-width="2"/>
+    <path d="M8 60 L75 4 L142 60 L134 64 L75 16 L16 64 Z" fill="#4e2a0e" stroke="#2b1607" stroke-width="1.5"/>
+    <path d="M60 4 q15 -8 30 0" fill="none" stroke="#2e7d32" stroke-width="4" stroke-linecap="round"/><circle cx="75" cy="2" r="4" fill="#c62828"/>
+    <rect x="61" y="27" width="28" height="22" rx="3" fill="#1a0d04"/>
+    <g class="kk-vogel"><ellipse cx="75" cy="40" rx="10" ry="7" fill="#8d6e63"/><circle cx="81" cy="34" r="5.5" fill="#a1887f"/><circle cx="83" cy="33" r="1.3" fill="#111"/>
+      <path class="kk-schnabel" d="M86 34 l7 1.5 l-7 1.5 z" fill="#f9a825"/><path d="M66 40 l-7 -3 l2 5 z" fill="#6d4c41"/></g>
+    <rect class="kk-tuer" x="61" y="27" width="28" height="22" rx="3" fill="#a0652a" stroke="#3a1f0a" stroke-width="1.5"/>
+    <circle cx="75" cy="80" r="26" fill="#fff8e1" stroke="#3a1f0a" stroke-width="2.5"/>
+    ${Array.from({ length: 12 }, (_, i) => { const w = i * 30 * Math.PI / 180; return `<line x1="${75 + 21 * Math.sin(w)}" y1="${80 - 21 * Math.cos(w)}" x2="${75 + 24 * Math.sin(w)}" y2="${80 - 24 * Math.cos(w)}" stroke="#3a1f0a" stroke-width="${i % 3 ? 1.2 : 2.4}"/>`; }).join("")}
+    ${zeiger(z, 13, 3.2)}${zeiger(0, 19, 2)}<circle cx="75" cy="80" r="2.6" fill="#2b1607"/>
+    <path d="M30 128 h90" stroke="#3a1f0a" stroke-width="3"/><path d="M40 112 q8 -10 16 0 M94 112 q8 -10 16 0" fill="none" stroke="#2e7d32" stroke-width="3" stroke-linecap="round"/>
+  </svg><div class="kk-zahl" aria-hidden="true">${h}</div>`;
+  const zu = () => { clearTimeout(u._t); u.classList.remove("an"); setTimeout(() => u.remove(), 600); };
+  u.onclick = zu; document.body.appendChild(u);
+  requestAnimationFrame(() => requestAnimationFrame(() => u.classList.add("an")));
+  if (mitTon) try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.(); } catch {}
+  let i = 0;
+  const ruf = () => {
+    if (!u.isConnected) return;
+    if (i >= n) { u.classList.remove("offen"); u._t = setTimeout(zu, 1400); return; }
+    i++; u.classList.add("ruft"); setTimeout(() => u.classList.remove("ruft"), 350);
+    if (mitTon && audio) try { kkTon(audio.currentTime + 0.02); } catch {}
+    u._t = setTimeout(ruf, KK_TAKT_MS);
+  };
+  u._t = setTimeout(() => { u.classList.add("offen"); u._t = setTimeout(ruf, 350); }, 700);
+  return n;
+}
+function kuckuckPruefen() {
+  if (!ICH?.person_id || document.hidden || !einst("kuckuck", true)) return;
+  const { h, m } = kkJetzt(); if (m >= KK_FENSTER_MIN) return;
+  const stunde = `${heuteIso()} ${h}`; // nur die zuletzt gezeigte Stunde merken (kein Sammeln von Schlüsseln)
+  try { if (localStorage.getItem("kc_club_kuckuck_zuletzt") === stunde) return; localStorage.setItem("kc_club_kuckuck_zuletzt", stunde); } catch { return; }
+  kuckuckZeigen(h);
+}
+setInterval(kuckuckPruefen, 15000); document.addEventListener("visibilitychange", () => { if (!document.hidden) kuckuckPruefen(); });
 // art "ganz" (rechts ⌃⌃): offen/halb → ganz, ganz → offen · art "halb" (links ⌃): offen → halb, halb → offen, ganz → halb
 function kopfRollo(art = "ganz") {
   if (document.querySelector("#v-start .hero")?.dataset.rollt) return; // läuft schon – nichts merken, was nicht passiert
