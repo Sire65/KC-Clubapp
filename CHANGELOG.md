@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.404.0 – 2026-10-14 – 🐦 Kuckucksuhr klingt echt, Probe-Knopf
+Anlass (Hansi): „Kuckucksuhr gekommen, aber kein Ton – dafür gibt es den typischen Ton solcher Uhren.“ Der Ton fehlte, weil die Uhr nachts (22–7 Uhr) absichtlich stumm ist. Der Ruf klingt jetzt wie eine echte Kuckucksuhr: Türchen klackt, dann zwei Holzpfeifen mit Blasebalg-Luft (hoch – tief). Neu in den Einstellungen: „🔊 Probe“ zeigt die Uhr sofort mit Ton – auch nachts.
+
 ## 2.403.0 – 2026-10-14 – 🏎️ Express: Priorität 1, ehrliche Rückmeldung, Hinweis vorab
 Anlass (Hansi): Prüfung „wie läuft Express?“ – Christina bekam Express nur per Mail, die App meldete aber „nicht zugestellt“; bei ihr stand „angekommen“, obwohl sie nicht in der App war.
 - Express geht mit Priorität 1 raus: je Empfänger ein eigener Auftrag, alle gleichzeitig; der Versanddienst lässt Express an der Minutengrenze vorbei (KC Communication, Router).

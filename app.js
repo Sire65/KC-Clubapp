@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.403.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.404.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18729,17 +18729,35 @@ const KOPF_GLANZ_PAUSE_MS = 60000;
 const KK_FENSTER_MIN = 2, KK_NACHT_VON = 22, KK_NACHT_BIS = 7, KK_TAKT_MS = 1150;
 const kkJetzt = () => { const [h, m] = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date()).split(":").map(Number); return { h, m }; };
 const kkRufe = (h) => (h % 12) || 12;
-function kkTon(t0) { // ein „Kuck-kuck“: hoher, dann tieferer Pfeifenton (kleine Terz)
-  for (const [f, v] of [[784, 0], [659.25, .32]]) {
-    const o = audio.createOscillator(), o2 = audio.createOscillator(), g = audio.createGain(), t = t0 + v;
-    o.type = "sine"; o.frequency.value = f; o2.type = "triangle"; o2.frequency.value = f * 2; const g2 = audio.createGain(); g2.gain.value = .12;
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.28, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
-    o.connect(g); o2.connect(g2).connect(g); g.connect(audio.destination); o.start(t); o2.start(t); o.stop(t + 0.32); o2.stop(t + 0.32);
-  }
+// 2.404.0 KC-CLUB-KUCKUCK-KLANG (Fund Hansi „kein Ton – dafür gibt es den typischen Ton solcher Uhren“): klingt jetzt wie eine echte
+// Kuckucksuhr – zwei kleine Holzpfeifen mit Blasebalg: weicher Anblas-Ansatz, hauchiger Luftanteil, Holz-Obertöne, Ton sackt am Ende
+// leicht ab; vorher klackt das Türchen. Alles selbst erzeugt (keine Datei, kein Dienst).
+let KK_RAUSCHEN = null;
+function kkRauschen() { if (KK_RAUSCHEN) return KK_RAUSCHEN; const b = audio.createBuffer(1, audio.sampleRate, audio.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return (KK_RAUSCHEN = b); }
+function kkKlack(t) { // Türchen/Vogel: kurzes Holz-Klacken
+  const n = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
+  n.buffer = kkRauschen(); f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 3;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+  n.connect(f).connect(g).connect(audio.destination); n.start(t, Math.random() * 0.5); n.stop(t + 0.05);
 }
-function kuckuckZeigen(h = kkJetzt().h) {
+function kkPfeife(f, t, dauer) { // eine Holzpfeife: Grundton + leise Obertöne + Luft, Ansatz von leicht oben, am Ende kurzes Absacken
+  const aus = audio.createGain(); aus.connect(audio.destination);
+  aus.gain.setValueAtTime(0.0001, t); aus.gain.exponentialRampToValueAtTime(0.3, t + 0.045); aus.gain.setValueAtTime(0.3, t + dauer - 0.09); aus.gain.exponentialRampToValueAtTime(0.0001, t + dauer);
+  for (const [mal, laut] of [[1, 1], [2, .1], [3, .05]]) {
+    const o = audio.createOscillator(), g = audio.createGain(); o.type = "sine"; g.gain.value = laut;
+    o.frequency.setValueAtTime(f * mal * 1.025, t); o.frequency.exponentialRampToValueAtTime(f * mal, t + 0.05); o.frequency.setValueAtTime(f * mal, t + dauer - 0.08); o.frequency.exponentialRampToValueAtTime(f * mal * 0.97, t + dauer);
+    o.connect(g).connect(aus); o.start(t); o.stop(t + dauer + 0.02);
+  }
+  const n = audio.createBufferSource(), bp = audio.createBiquadFilter(), ng = audio.createGain(); // Blasebalg-Luft
+  n.buffer = kkRauschen(); bp.type = "bandpass"; bp.frequency.value = f * 1.5; bp.Q.value = 2.5; ng.gain.value = 0.22;
+  n.connect(bp).connect(ng).connect(aus); n.start(t, Math.random() * 0.5); n.stop(t + dauer + 0.02);
+}
+function kkTon(t0) { // ein „Kuck-kuck“: hohe, dann tiefere Pfeife (kleine Terz, wie bei der Schwarzwälder Kuckucksuhr)
+  kkKlack(t0); kkPfeife(698.46, t0 + 0.06, 0.32); kkPfeife(587.33, t0 + 0.46, 0.5);
+}
+function kuckuckZeigen(h = kkJetzt().h, tonImmer = false) { // tonImmer: Probe (🔊 in den Einstellungen) – auch nachts
   document.querySelector(".kuckuck")?.remove();
-  const n = kkRufe(h), mitTon = einst("ton", true) && !(h >= KK_NACHT_VON || h < KK_NACHT_BIS);
+  const n = kkRufe(h), mitTon = einst("ton", true) && (tonImmer || !(h >= KK_NACHT_VON || h < KK_NACHT_BIS));
   const z = (h % 12) * 30, zeiger = (w, l, b) => `<line x1="75" y1="80" x2="${75 + l * Math.sin(w * Math.PI / 180)}" y2="${80 - l * Math.cos(w * Math.PI / 180)}" stroke="#2b1607" stroke-width="${b}" stroke-linecap="round"/>`;
   const u = document.createElement("div"); u.className = "kuckuck"; u.setAttribute("role", "img"); u.setAttribute("aria-label", `Kuckucksuhr: ${h} Uhr`); u.title = `${h} Uhr – antippen schließt die Uhr`;
   u.innerHTML = `<svg viewBox="0 0 150 175" aria-hidden="true">
