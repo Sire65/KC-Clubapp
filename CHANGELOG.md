@@ -8,6 +8,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.386.0 – 2026-10-14 – Eselsohr mit runder Spitze, „Alle“ beim Benachrichtigen
+KC-CLUB-ESELSOHR-RUND (Hinweis Hansi): Die umgeklappte Spitze des Eselsohrs ist jetzt rund wie die Ecke des Kopfes (auch beim Aufblinken). KC-CLUB-ZUSTELL-ALLE (Wunsch Hansi): Neue Taste „✅ Alle“ bei „Benachrichtigen“ markiert Push, E-Mail und WhatsApp auf einmal; nochmal tippen nimmt alle drei weg.
+
 ## 2.385.0 – 2026-10-14 – Express: angekommen um / gelesen um
 KC-CLUB-EXPRESS-ZUSTELLUNG (Wunsch Hansi): Nach dem Senden „🏎️ Nachricht wurde per Express versandt“. Unter der eigenen Express-Sendung je Empfänger „📬 angekommen um … Uhr“ (früheste Rückmeldung: Push auf dem Handy angezeigt, in der App angekommen oder gelesen) und „👁 gelesen um … Uhr“ (Chat geöffnet; die Vorschau zählt nicht). Uhrzeiten nur aus echten Rückmeldungen. Server 2.385.0, neue Tabelle kc_club_express_zustellung (nur Server).
 

@@ -6257,6 +6257,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/express: eigen \? \{ quittungen: exQuittung\(m\.id\), versandt: m\.created_at, empfaenger: exEmpfaenger\(m\) \} : true/.test(server), "nur der Absender sieht die Zeiten");
   assert.ok(/function expressStatusHtml\(x\)/.test(html) && /Per Express versandt \$\{um\(x\.versandt\)\}/.test(html) && /📭 noch nicht angekommen/.test(html) && /if \(daten\.express\) melde\("🏎️ Nachricht wurde per Express versandt/.test(html), "Meldung beim Senden + Anzeige je Empfänger");
 }
+// 2.386.0 KC-CLUB-ESELSOHR-RUND + KC-CLUB-ZUSTELL-ALLE (Wünsche Hansi)
+{
+  assert.ok(/border-bottom-right-radius: 26px; border-top-left-radius: var\(--es-spitze, 16px\);/.test(lies("index.html")) && /\.eselsohr::before \{ content: ""; position: absolute; inset: 0; border-radius: inherit;/.test(lies("index.html")), "umgeklappte Spitze rund wie die Ecke des Kopfes (auch beim Blinken)");
+  assert.ok(/onclick="zustellAlle\(\)">✅ Alle<\/button>/.test(html) && /function zustellAlle\(\) \{ const an = !\(ZW\.push && ZW\.email && ZW\.whatsapp\); ZW\.push = ZW\.email = ZW\.whatsapp = an; zustellZeigen\(\); \}/.test(html), "„Alle“ markiert Push, E-Mail und WhatsApp – nochmal tippen nimmt alle weg");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

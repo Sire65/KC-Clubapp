@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.385.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.386.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -26481,10 +26481,13 @@ let ZW = { push: false, email: false, whatsapp: false }, CHAT = null;
 const wegIcons = (m) => { const w = m?.wege || {}; return `<span class="wege" title="🔔 Push · ✉️ E-Mail · 🟢 WhatsApp"><i class="${w.push ? "" : "nein"}">🔔</i><i class="${w.mail ? "" : "nein"}">✉️</i><i class="${w.whatsapp ? "" : "nein"}">🟢</i></span>`; };
 function zustellZeigen() {
   const b = (k, t) => `<button class="${ZW[k] ? "an" : ""}" onclick="ZW.${k}=!ZW.${k};zustellZeigen()">${t}</button>`;
-  $("zustell").innerHTML = `<span>Benachrichtigen:</span>${b("push", "🔔 Push")}${b("email", "✉️ E-Mail")}${b("whatsapp", "🟢 WhatsApp")}<span style="font-weight:600">${ZW.push || ZW.email ? "" : "· wie eingestellt"}</span>`;
+  // 2.386.0 KC-CLUB-ZUSTELL-ALLE (Wunsch Hansi): „✅ Alle“ markiert Push, E-Mail und WhatsApp auf einmal – noch einmal tippen nimmt alle drei weg
+  const alle = ZW.push && ZW.email && ZW.whatsapp;
+  $("zustell").innerHTML = `<span>Benachrichtigen:</span><button class="${alle ? "an" : ""}" onclick="zustellAlle()">✅ Alle</button>${b("push", "🔔 Push")}${b("email", "✉️ E-Mail")}${b("whatsapp", "🟢 WhatsApp")}<span style="font-weight:600">${ZW.push || ZW.email ? "" : "· wie eingestellt"}</span>`;
   // KC-CLUB-RUHIGE-EINGABE (1.12.0): Leiste nur auf Wunsch (🔔); das 🔔 leuchtet, wenn etwas Besonderes gewählt ist
   const k = $("zustellKnopf"); if (k) { const an = ZW.push || ZW.email || ZW.whatsapp; k.classList.toggle("an", an); k.title = an ? "Besondere Benachrichtigung gewählt – antippen zum Ändern" : "Wie benachrichtigen? (Push, E-Mail, WhatsApp)"; }
 }
+function zustellAlle() { const an = !(ZW.push && ZW.email && ZW.whatsapp); ZW.push = ZW.email = ZW.whatsapp = an; zustellZeigen(); }
 function zustellUmschalten(auf) {
   const z = $("zustell"), offen = auf ?? z.classList.contains("versteckt");
   z.classList.toggle("versteckt", !offen); $("zustellKnopf")?.setAttribute("aria-expanded", String(offen)); chatAbstand();

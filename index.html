@@ -2790,7 +2790,7 @@
   .lade-hilfe .lh-ja { background: var(--rot, #7b1e23); color: #fff; border: 0; } .lade-hilfe .lh-nein { background: transparent; color: inherit; border: 1px solid #c9a37a; }
   /* KC-CLUB-ESELSOHR (2.292.0, Wunsch Hansi): Eselsohr unten rechts am Kopf – nach links ziehen dreht den Kopf um; Rückseite mit Diashow, Tafel, Uhr */
   .eselsohr { position: absolute; right: 0; bottom: 0; width: calc(28px + var(--zug, 0px)); height: calc(28px + var(--zug, 0px)); padding: 0; border: 0; margin: 0; z-index: 6;
-    border-bottom-right-radius: 26px; cursor: grab; touch-action: none; -webkit-tap-highlight-color: transparent;
+    border-bottom-right-radius: 26px; border-top-left-radius: var(--es-spitze, 16px); /* 2.386.0 KC-CLUB-ESELSOHR-RUND: umgeklappte Spitze = die runde Ecke des Kopfes */ cursor: grab; touch-action: none; -webkit-tap-highlight-color: transparent;
     background: linear-gradient(to top left, var(--bg) 0 49%, rgba(0,0,0,.25) 49.5%, #fbf6ec 51%, #e9dcc6 72%, #cdbb9c 100%);
     filter: drop-shadow(-2px -2px 3px rgba(0,0,0,.35)); transition: width .12s, height .12s; }
   .eselsohr:active { cursor: grabbing; }
@@ -2799,7 +2799,7 @@
   @keyframes esWink { 30% { width: 46px; height: 46px; } 60% { width: 34px; height: 34px; } }
   .eselsohr::after { content: ""; position: absolute; inset: -8px; } /* größere Tippfläche, Ecke bleibt klein */
   /* 2.327.0 KC-CLUB-ESELSOHR-BLINKEN (Wunsch Hansi): zwischendurch kurz doppelt in Signalfarbe aufblinken – „hier doppelt tippen“ */
-  .eselsohr::before { content: ""; position: absolute; inset: 0; border-bottom-right-radius: inherit; pointer-events: none; opacity: 0;
+  .eselsohr::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
     background: linear-gradient(to top left, transparent 0 50%, #ffd400 51%, #ff9500 78%, #ff5e00 100%); }
   .eselsohr.blink2::before { animation: esBlink2 1.3s ease-in-out; }
   .eselsohr.blink2 { animation: esBlink2Glanz 1.3s ease-in-out; }
@@ -5122,6 +5122,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.385.0" data-v="2.385.0"></script>
+<script src="app.js?v=2.386.0" data-v="2.386.0"></script>
 </body>
 </html>
