@@ -6391,6 +6391,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/api\("express_angezeigt", \{ id: x\.id \}/.test(html) && /api\("express_stand", vorab/.test(html) && /expressOhnePushText\(st\?\.ohnePush\)/.test(html) && /expressWegeText\(r\?\.versand\)/.test(html), "App: Fenster meldet Ankunft, Hinweis vorab, Wege nach dem Senden");
   assert.ok(aufrufe.has("express_angezeigt") || /case "express_angezeigt"/.test(server), "Aktion vorhanden");
 }
+// DB 14.10.2026 KC-CLUB-DB-AUFRAEUMEN-KUERZER (Hansi „das Journal müsste ziemlich voll sein“): Messwerte 30 Tage, System-Check nach 14 Tagen ausgedünnt
+{
+  const m = lies("supabase/migrations/20261014_kc_club_db_aufraeumen_kuerzer.sql");
+  assert.ok(/delete from public\.kc_communication_health_snapshots where created_at < now\(\) - interval '30 days';/.test(m), "Messwerte nach 30 Tagen");
+  assert.ok(/x\.checked_at < now\(\) - interval '14 days'/.test(m) && /jsonb_build_object\('id', e->'id', 'name', e->'name', 'status', e->'status', 'health', e->'health'\)/.test(m) && /limit 2000\);/.test(m), "System-Check nach 14 Tagen ausgedünnt (Kernfelder bleiben)");
+  assert.ok(/delete from public\.kc_system_check_history where checked_at < now\(\) - make_interval\(days => v_tage\);/.test(m) && /v_tage integer := greatest\(coalesce\(p_tage, 90\), 60\);/.test(m), "Löschen weiter nach p_tage (mind. 60)");
+  assert.ok(/revoke all on function public\.kc_club_db_aufraeumen\(integer\) from public, anon, authenticated;/.test(m) && /grant execute on function public\.kc_club_db_aufraeumen\(integer\) to service_role;/.test(m), "nur der Server darf aufrufen");
+  assert.ok(!/kc_club_tippen|kc_core_people|kc_communication_requests|kc_communication_messages/.test(m.replace(/^--.*$/gm, "")), "keine Club- oder Versanddaten angefasst");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
