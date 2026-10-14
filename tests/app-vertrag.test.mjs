@@ -9677,3 +9677,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/@media \(min-width: 1100px\) \{\s*\.hz-klick \{ right: auto; left: calc\(50% \+ 392px\); \} \.hz-frage \{ left: calc\(50% \+ 444px\); \} \.su-klein \{ left: calc\(50% \+ 496px\); \}/.test(html), "PC: rechts neben der Fußleiste (760 px / 2 + 12)");
   assert.ok(/@media \(min-width: 1024px\) \{[\s\S]{0,200}\.hz-frage \{ left: calc\(50% \+ 392px\); \} \.su-klein \{ left: calc\(50% \+ 444px\); \}/.test(html), "1024er: rechts ? und Lupe");
 }
+
+// 2.381.0 KC-CLUB-KNOEPFE-PLATZ: Mikrofon kleiner und in derselben Reihe
+{
+  assert.ok(/\.sb-knopf \{ width: 44px; height: 44px; border-width: 2px; font-size: 1\.2rem; \}/.test(html) && /\.sb-knopf \{ left: auto; right: calc\(50% \+ 444px\); bottom: calc\(18px \+ env\(safe-area-inset-bottom\)\); width: 48px; height: 48px;/.test(html), "Mikrofon passt in die Reihe");
+}

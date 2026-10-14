@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.381.0 – 2026-10-14 – 🎙️ KC-CLUB-KNOEPFE-PLATZ: Mikrofon der Sprachsteuerung ausgemessen
+Anlass (Hansi): „Du musst auch das Mikrofon für die Sprachsteuerung ausmessen, damit es nicht zu sehr stört.“
+- Handy/Tablet hoch: 🎙️ jetzt 44 px wie 👆 ? 🔍 (vorher 56 px, ragte höher) und in derselben Reihe über der Fußleiste, links.
+- PC: 48 px, mittig auf Höhe der Fußleiste links daneben. Gemessen 320 bis 1920 px Breite: nichts überlappt.
+
 ## 2.380.0 – 2026-10-14 – 👆 ❓ 🔍 KC-CLUB-KNOEPFE-PLATZ: schwebende Knöpfe neu ausgemessen
 Anlass (Hansi, Bildschirmfoto PC): „Die 3 Knöpfe Lupe, Zeiger usw. sind nicht gut angeordnet – neu ausmessen, dass sie nicht im Weg stehen, bei kleinem Handy
 und Tablet auch.“ – Am PC ist der Inhalt breiter als die Fußleiste (höchstens 760 px); die Knöpfe hingen an einer 744-px-Spalte und standen mitten auf den Kacheln.
