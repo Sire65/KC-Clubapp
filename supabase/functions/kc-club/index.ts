@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.382.0";
+const SERVER_VERSION = "2.384.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -213,7 +213,9 @@ async function routerSendenRoh(eventKey: string, personIds: string[], vars: Reco
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
     body: JSON.stringify({ sourceProgram: "kc-club", eventKey, recipients: personIds.map((personId) => ({ personId })), variables: vars, correlationId: korrelation,
       // KC-CLUB-WICHTIGKEIT (2.287.0): ❗ hoch / 🚨 Notfall als Priorität an den Communicator (Spalte priority; Notfall = Push mit hoher Dringlichkeit)
-      ...(vars.wichtigkeit === "hoch" ? { priority: "high" } : vars.wichtigkeit === "notfall" ? { priority: "critical" } : {}),
+      // 2.384.0 KC-CLUB-EXPRESS-SOFORT (Wunsch Hansi „Express heißt so schnell wie möglich“): Express geht wie der Notfall als „critical“ –
+      // nur dann setzt der Versand beim Push die Dringlichkeit „high“. Mit „normal“ darf Android den Push im Stromsparmodus zurückhalten.
+      ...(vars.wichtigkeit === "notfall" || vars.eilig === true ? { priority: "critical" } : vars.wichtigkeit === "hoch" ? { priority: "high" } : {}),
       // 0.38.0: Kopien (Mitgliedsnummern) – der Communicator löst sie zu Mail-Adressen auf
       ...(kopie?.cc?.length ? { cc: kopie.cc.map((personId) => ({ personId })) } : {}), ...(kopie?.bcc?.length ? { bcc: kopie.bcc.map((personId) => ({ personId })) } : {}) }),
   });
@@ -8779,7 +8781,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : express ? `🏎️ EXPRESS – ${grp ? `${grp.symbol} ${grp.name}: ` : ""}${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : slHinweis ? slHinweis : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
           betreff: `${wMarke}Köcheclub Werne – ${wichtig ? "wichtige" : "neue"} Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${slHinweis || text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
-          url: `${APP_URL}#nachricht=${threadId}`, ...(notfall ? { wichtigkeit: "notfall" } : wichtig || express ? { wichtigkeit: "hoch" } : {}),
+          url: `${APP_URL}#nachricht=${threadId}`, ...(notfall ? { wichtigkeit: "notfall" } : wichtig || express ? { wichtigkeit: "hoch" } : {}), ...(express ? { eilig: true } : {}), // 2.384.0 KC-CLUB-EXPRESS-SOFORT
         }, `club-nachricht:${m.id}`, { notfall: notfall || express }); // Express: auch in der Ruhezeit (wie Notfall)
         await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, selbstloeschen: slNachricht, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand, mid: m.id }); // mid: KC-CLUB-EMPFANGS-EFFEKT (2.177.0) – gleicher „Abwechselnd“-Effekt bei Absender und Empfänger

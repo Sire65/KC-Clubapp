@@ -1,5 +1,8 @@
 # Änderungen
 
+## Server 2.384.0 – 2026-10-14 – KC-CLUB-EXPRESS-SOFORT: Express mit höchster Zustell-Dringlichkeit
+Anlass (Hansi): „Express heißt so schnell wie möglich.“ – Express ging bisher als Priorität „high“; der Versand setzt die Push-Dringlichkeit „high“ aber nur bei „critical“. Mit „normal“ darf Android den Push im Stromsparmodus zurückhalten. Jetzt geht Express wie der Notfall als „critical“ (Push-Dringlichkeit hoch); Text, Titel, Mail und ❗ wichtig bleiben unverändert. Weiter: durch Ruhezeit und Stummschaltung, Push + Mail.
+
 ## Server 2.382.0 – 2026-10-14 – KC-CLUB-NOTPAKET-STUENDLICH: weniger Datenbank-Last
 Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf das Nötigste und Sinnvollste.“ – Das Notfall-Paket (alle Mitglieder
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.

@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6239,6 +6239,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/>= ANSAGE_PAUSE_MS && !schonPerPush\(x\)\);/.test(html) && /const alle = \(OA\.warte \|\| \[\]\)\.filter\(\(x\) => !schonPerPush\(x\)\);/.test(html), "schon per Mitteilung gemeldet → keine nachgeholte Ansage (auch nicht aus der Sammelzeit)");
   const sw = lies("sw.js");
   assert.ok(/if \(online && sichtbar\.length\) \{ sichtbar\.forEach\(\(c\) => c\.postMessage\(\{ typ: "online-ansage"/.test(sw), "App sichtbar → weiter sofortige Ansage statt Mitteilung");
+}
+// Server 2.384.0 KC-CLUB-EXPRESS-SOFORT: Express-Push mit höchster Dringlichkeit (wie Notfall), ❗ wichtig unverändert
+{
+  assert.ok(/vars\.wichtigkeit === "notfall" \|\| vars\.eilig === true \? \{ priority: "critical" \} : vars\.wichtigkeit === "hoch" \? \{ priority: "high" \}/.test(server), "eilig/Notfall → critical, hoch → high");
+  assert.ok(/wichtig \|\| express \? \{ wichtigkeit: "hoch" \} : \{\}\), \.\.\.\(express \? \{ eilig: true \} : \{\}\)/.test(server), "nur Express wird eilig verschickt");
+  assert.ok(/\}, `club-nachricht:\$\{m\.id\}`, \{ notfall: notfall \|\| express \}\);/.test(server) && /if \(notfall \|\| express\) stumm\.clear\(\);/.test(server), "Express weiter durch Ruhezeit und Stummschaltung");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
