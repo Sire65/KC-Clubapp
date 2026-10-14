@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.386.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.387.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -24786,17 +24786,18 @@ async function unterhLaden() {
     // KC-CLUB-CHAT-ARCHIV (2.23.28): archivierte Chats stehen nicht in der Liste, sondern hinter „📦 Archiviert (n)“
     const arch = unterhaltungen.filter((u) => u.archiviert);
     if (UH.archivAnsicht && !arch.length) UH.archivAnsicht = false;
-    const zeigen = unterhaltungen.filter((u) => !!u.archiviert === !!UH.archivAnsicht), archNeu = arch.reduce((n, u) => n + (u.ungelesen || 0), 0);
-    const archKopf = UH.archivAnsicht ? `<div class="uh-archiv-kopf"><button class="knopf klein" onclick="uhArchivAnsicht(false)">← Zurück zu den Chats</button><b>📦 Archivierte Chats (${arch.length})</b></div>`
+    let zeigen = unterhaltungen.filter((u) => !!u.archiviert === !!UH.archivAnsicht); const archNeu = arch.reduce((n, u) => n + (u.ungelesen || 0), 0);
+    const favKopf = UH.favAnsicht && !UH.archivAnsicht ? favKopfHtml() : ""; if (favKopf) zeigen = favListe(zeigen); favKnopfZeigen(); // 2.387.0 KC-CLUB-CHAT-FAVORITEN
+    const archKopf = favKopf ? favKopf : UH.archivAnsicht ? `<div class="uh-archiv-kopf"><button class="knopf klein" onclick="uhArchivAnsicht(false)">← Zurück zu den Chats</button><b>📦 Archivierte Chats (${arch.length})</b></div>`
       : arch.length ? `<button class="uh-archiv-zeile" onclick="uhArchivAnsicht(true)"><span>📦 Archiviert</span><span class="hinweis">${arch.length} Chat${arch.length === 1 ? "" : "s"}</span>${archNeu ? `<span class="punkt">${archNeu}</span>` : ""}</button>` : "";
     // KC-CLUB-CHAT-KARTEI (2.191.0, Wunsch Hansi): Chats als Rollkartei – die vordere Karte ist schon „offen“ (letzte Nachrichten)
     uhKarteiKnopf(); $("unterhListe").classList.toggle("karte", !(rkAn("chats") && !UH.archivAnsicht && zeigen.length));
     if (rkAn("chats") && !UH.archivAnsicht && zeigen.length) { $("unterhListe").innerHTML = archKopf + uhKarteiHtml(zeigen); uhKarteiAn(); uhAmeisen(); return; }
     $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Einmal tippen = auswählen (${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen) · doppelt tippen = öffnen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
-      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
+      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${favIds().has(u.id) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
-      || (arch.length ? '<p class="hinweis">Alle Chats sind archiviert – oben auf „📦 Archiviert“ tippen.</p>' : '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>');
+      || (favKopf ? '<p class="hinweis">Noch keine Favoriten. Einen Chat einmal antippen und „⭐ Als Favorit“ wählen.</p>' : arch.length ? '<p class="hinweis">Alle Chats sind archiviert – oben auf „📦 Archiviert“ tippen.</p>' : '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>');
     UH.mark.forEach((id) => { if (!zeigen.some((u) => u.id === id)) UH.mark.delete(id); }); uhMarkZeichnen(); uhLangDruck(); // KC-CLUB-MEHRFACH-NACHRICHT
     uhAmeisen();
   } catch (e) { meldeFehler(e); ladeFehlerStand("unterhListe", e, "unterhLaden()"); }
@@ -24969,14 +24970,37 @@ function uhMehrfachStarten() {
 }
 const DOPPELTIPP_MS = 400;
 const unterhName = (u) => u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
+// ---------- 2.387.0 KC-CLUB-CHAT-FAVORITEN (Wunsch Hansi „Gruppe Favoriten: oben anklicken, dann erscheinen die, mit denen man am meisten
+// schreibt, oder die man mit Sternchen markiert“) ----------
+// Oben „⭐ Favoriten“ zeigt nur: die mit ⭐ markierten Chats (zuerst) und automatisch die 5 Chats mit den meisten Nachrichten („· oft“).
+// Die Sternchen sind eine Einstellung beim Mitglied (chat_favoriten) – auf allen Geräten gleich. Archivierte Chats bleiben im Archiv.
+const FAV_HAEUFIG = 5;
+const favIds = () => new Set(INIT?.einstellungen?.chat_favoriten?.threads || []);
+function favListe(liste) {
+  const fav = favIds(), stern = liste.filter((u) => fav.has(u.id));
+  const oft = liste.filter((u) => !fav.has(u.id) && (u.nachrichten || 0) > 0).sort((a, b) => (b.nachrichten || 0) - (a.nachrichten || 0)).slice(0, FAV_HAEUFIG).map((u) => ({ ...u, haeufig: true }));
+  return [...stern, ...oft];
+}
+const favKopfHtml = () => `<div class="uh-archiv-kopf"><button class="knopf klein" onclick="uhFavAnsicht(false)">← Alle Chats</button><b>⭐ Favoriten</b><span class="hinweis" style="font-size:.85rem">mit ⭐ markiert + wo du am meisten schreibst</span></div>`;
+function favKnopfZeigen() { const k = $("uhFavKnopf"); if (k) { k.classList.toggle("haupt", !!UH.favAnsicht); k.setAttribute("aria-pressed", String(!!UH.favAnsicht)); } }
+function uhFavAnsicht(an) { UH.favAnsicht = !!an; UH.archivAnsicht = false; UH.wahl = null; unterhLaden(); }
+async function favSetzen(id) {
+  const fav = favIds(), an = !fav.has(id); an ? fav.add(id) : fav.delete(id);
+  const w = { threads: [...fav].slice(0, 50) };
+  if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), chat_favoriten: w };
+  unterhLaden();
+  try { await api("einstellung_setzen", { schluessel: "chat_favoriten", wert: w }); melde(an ? "⭐ Als Favorit markiert – oben unter „⭐ Favoriten“" : "☆ Kein Favorit mehr"); }
+  catch (e) { meldeFehler(e); }
+}
 function unterhAktionen(u) {
   return `<div class="uhaktion" onclick="event.stopPropagation()"><button class="knopf haupt klein" onclick="chatOeffnen('${u.id}')">💬 Öffnen</button>
+    <button class="knopf klein" onclick="favSetzen('${u.id}')">${favIds().has(u.id) ? "☆ Kein Favorit mehr" : "⭐ Als Favorit"}</button>
     <button class="knopf klein" onclick="chatArchivieren('${u.id}', ${u.archiviert ? "true" : "false"})">${u.archiviert ? "📤 Wieder aktivieren" : "📦 Archivieren"}</button>
     <button class="knopf klein" onclick="unterhEntfernen('${u.id}', false)">🙈 Aus meiner Liste</button>
     <button class="knopf klein" onclick="chatKomplettLoeschen('${u.id}')">🗑️ Bei mir komplett löschen</button>${ICH?.admin ? `<button class="knopf klein" onclick="unterhEntfernen('${u.id}', true)">⚠️ Für alle löschen</button>` : ""}</div>`;
 }
 // KC-CLUB-CHAT-ARCHIV (2.23.28, Wunsch Hansi): archivieren / wieder aktivieren / bei mir komplett löschen – alles nur für mich
-function uhArchivAnsicht(an) { UH.archivAnsicht = !!an; UH.wahl = null; unterhLaden(); }
+function uhArchivAnsicht(an) { UH.archivAnsicht = !!an; if (an) UH.favAnsicht = false; UH.wahl = null; unterhLaden(); }
 async function chatArchivieren(id, zurueck) {
   $("chatBlatt")?.classList.add("versteckt");
   try {

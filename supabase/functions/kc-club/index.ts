@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.385.0";
+const SERVER_VERSION = "2.387.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1107,6 +1107,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   zuletzt: (w) => ({ zeigen: w?.zeigen !== false }),
   // KC-CLUB-BRIEFBOGEN (1.26.0): eigene Absenderzeile/Fußzeile und Unterschrift je Person (Clubleitung)
   briefbogen: (w) => ({ absender: txt(w?.absender, 200), fuss: txt(w?.fuss, 300), name: txt(w?.name, 80), amt: txt(w?.amt, 80) }),
+  // 2.387.0 KC-CLUB-CHAT-FAVORITEN (Wunsch Hansi): mit ⭐ markierte Chats (höchstens 50) – gleich auf allen Geräten
+  chat_favoriten: (w) => ({ threads: [...new Set((Array.isArray(w?.threads) ? w.threads : []).map(String).filter((id: string) => /^[0-9a-f-]{36}$/.test(id)))].slice(0, 50) }),
   // KC-CLUB-STUMM (1.9.0): Unterhaltungen stummschalten – je Unterhaltung „immer“ oder bis Zeitpunkt (höchstens 200)
   stumm: (w) => ({ threads: Object.fromEntries(Object.entries(w?.threads && typeof w.threads === "object" ? w.threads : {})
     .filter(([id, b]) => /^[0-9a-f-]{36}$/.test(id) && (b === "immer" || (typeof b === "string" && !isNaN(Date.parse(b)) && Date.parse(b) > Date.now())))

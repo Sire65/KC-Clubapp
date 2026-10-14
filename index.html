@@ -4391,7 +4391,7 @@
   <section id="v-nachrichten" class="versteckt">
     <!-- 1.32.1 (Hinweis Hansi): „＋ Neu“ immer sichtbar in der Kopfzeile, die übrigen Knöpfe beschriftet in einer eigenen Reihe -->
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>💬 Nachrichten</h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung()" title="Notfall-Meldung sofort an alle – Push, E-Mail, WhatsApp, SMS">🚨 SOS</button><button class="knopf haupt klein" onclick="uhNeu()">＋ Neu</button></div>
-    <div class="kom-leiste"><button class="knopf klein" onclick="gruppeForm()">👥 Gruppe</button><button class="knopf klein" onclick="gemerktZeigen()" title="Nachrichten, die du mit „⭐ merken“ markiert hast">⭐ Gemerkt</button><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail">🧪 Test</button></div>
+    <div class="kom-leiste"><button class="knopf klein" onclick="gruppeForm()">👥 Gruppe</button><button class="knopf klein" id="uhFavKnopf" onclick="uhFavAnsicht(!UH.favAnsicht)" title="Deine Favoriten: Chats mit ⭐ und die, in denen du am meisten schreibst">⭐ Favoriten</button><button class="knopf klein" onclick="gemerktZeigen()" title="Nachrichten, die du mit „⭐ merken“ markiert hast">⭐ Gemerkt</button><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail">🧪 Test</button></div>
     <div id="onlineLeiste"></div>
     <div id="uhMarkLeiste"></div>
     <div class="karte" id="unterhListe"><span class="hinweis">Wird geladen …</span></div>
@@ -5122,6 +5122,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.386.0" data-v="2.386.0"></script>
+<script src="app.js?v=2.387.0" data-v="2.387.0"></script>
 </body>
 </html>

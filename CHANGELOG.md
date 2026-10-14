@@ -8,6 +8,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.387.0 – 2026-10-14 – ⭐ Favoriten bei den Nachrichten
+KC-CLUB-CHAT-FAVORITEN (Wunsch Hansi): Oben bei den Nachrichten „⭐ Favoriten“ – zeigt die mit ⭐ markierten Chats (zuerst) und automatisch die 5 Chats mit den meisten Nachrichten („· oft“). Chat einmal antippen → „⭐ Als Favorit“ / „☆ Kein Favorit mehr“. Die Sternchen gelten auf allen Geräten (Einstellung chat_favoriten, Server 2.387.0).
+
 ## 2.386.0 – 2026-10-14 – Eselsohr mit runder Spitze, „Alle“ beim Benachrichtigen
 KC-CLUB-ESELSOHR-RUND (Hinweis Hansi): Die umgeklappte Spitze des Eselsohrs ist jetzt rund wie die Ecke des Kopfes (auch beim Aufblinken). KC-CLUB-ZUSTELL-ALLE (Wunsch Hansi): Neue Taste „✅ Alle“ bei „Benachrichtigen“ markiert Push, E-Mail und WhatsApp auf einmal; nochmal tippen nimmt alle drei weg.
 

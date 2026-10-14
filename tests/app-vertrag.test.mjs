@@ -3818,7 +3818,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/case "unterhaltung_leeren"[\s\S]*await binTeilnehmer\(id, ich\.person_id\);[\s\S]*kc_communication_message_hidden"\)\.upsert\(ms\.map\(\(m: any\) => \(\{ person_id: ich\.person_id/.test(ua), "Komplett löschen nur für mich (message_hidden)");
   assert.ok(!/\.delete\(\)/.test(ua), "Archivieren/Leeren löscht nichts für andere");
   assert.ok(/\.\.\.\(archiv\[t\.id\] \? \{ archiviert: archiv\[t\.id\] \} : \{\}\)/.test(server), "Liste liefert archiviert");
-  assert.ok(/const zeigen = unterhaltungen\.filter\(\(u\) => !!u\.archiviert === !!UH\.archivAnsicht\)/.test(html) && /📦 Archiviert/.test(html), "Liste trennt Archiv");
+  assert.ok(/(?:const|let) zeigen = unterhaltungen\.filter\(\(u\) => !!u\.archiviert === !!UH\.archivAnsicht\)/.test(html) && /📦 Archiviert/.test(html), "Liste trennt Archiv");
   assert.ok(/u\.archiviert \? "📤 Wieder aktivieren" : "📦 Archivieren"/.test(html) && /onclick="chatKomplettLoeschen\('\$\{u\.id\}'\)"/.test(html), "Aktionen in der Liste");
   const kl = html.slice(html.indexOf("async function chatKomplettLoeschen"), html.indexOf("async function chatKomplettLoeschen") + 1400);
   assert.ok(/if \(!\(await frage\(/.test(kl) && /api\("unterhaltung_leeren"/.test(kl), "Komplett löschen nur nach Rückfrage");
@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6261,6 +6261,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/border-bottom-right-radius: 26px; border-top-left-radius: var\(--es-spitze, 16px\);/.test(lies("index.html")) && /\.eselsohr::before \{ content: ""; position: absolute; inset: 0; border-radius: inherit;/.test(lies("index.html")), "umgeklappte Spitze rund wie die Ecke des Kopfes (auch beim Blinken)");
   assert.ok(/onclick="zustellAlle\(\)">✅ Alle<\/button>/.test(html) && /function zustellAlle\(\) \{ const an = !\(ZW\.push && ZW\.email && ZW\.whatsapp\); ZW\.push = ZW\.email = ZW\.whatsapp = an; zustellZeigen\(\); \}/.test(html), "„Alle“ markiert Push, E-Mail und WhatsApp – nochmal tippen nimmt alle weg");
+}
+// 2.387.0 KC-CLUB-CHAT-FAVORITEN (Wunsch Hansi „Favoriten: die mit Sternchen und die, mit denen man am meisten schreibt“)
+{
+  assert.ok(/chat_favoriten: \(w\) => \(\{ threads: \[\.\.\.new Set\(/.test(server) && /\.slice\(0, 50\) \}\),/.test(server), "Server: nur Chat-Kennungen, höchstens 50");
+  assert.ok(lies("index.html").includes('id="uhFavKnopf" onclick="uhFavAnsicht(!UH.favAnsicht)"'), "Taste ⭐ Favoriten oben in den Nachrichten");
+  assert.ok(/const FAV_HAEUFIG = 5;/.test(html) && /\.sort\(\(a, b\) => \(b\.nachrichten \|\| 0\) - \(a\.nachrichten \|\| 0\)\)\.slice\(0, FAV_HAEUFIG\)/.test(html) && /return \[\.\.\.stern, \.\.\.oft\];/.test(html), "zuerst ⭐, dann die 5 Chats mit den meisten Nachrichten");
+  assert.ok(/onclick="favSetzen\('\$\{u\.id\}'\)">\$\{favIds\(\)\.has\(u\.id\) \? "☆ Kein Favorit mehr" : "⭐ Als Favorit"\}/.test(html) && /api\("einstellung_setzen", \{ schluessel: "chat_favoriten", wert: w \}\)/.test(html), "⭐ setzen/entfernen am Chat, auf allen Geräten gleich");
+  assert.ok(/const archKopf = favKopf \? favKopf : UH\.archivAnsicht \?/.test(html) && /if \(an\) UH\.favAnsicht = false;/.test(html), "Favoriten und Archiv schließen sich aus");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
