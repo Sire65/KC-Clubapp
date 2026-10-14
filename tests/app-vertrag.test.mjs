@@ -1628,7 +1628,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 140. 1.11.0: Abstand unten, Wellen-Punkte, Sprachaufnahme-Anzeige mit Oszilloskop
 {
-  assert.ok(/padding: 8px 0 var\(--chatUnten, 160px\)/.test(html) && /function chatAbstand\(\)/.test(html) && /new ResizeObserver\(chatAbstand\)/.test(html), "Abstand unten gemessen");
+  assert.ok(/padding: 8px 0 var\(--chatUnten, 160px\)/.test(html) && /function chatAbstand\(\)/.test(html) && /new ResizeObserver\((chatAbstand|\(\) => requestAnimationFrame\(chatAbstand\))\)/.test(html), "Abstand unten gemessen");
   assert.ok(/@keyframes tippWelle/.test(html) && /\.punkte3 i \{ width: 9px; height: 9px/.test(html), "Punkte größer + Welle");
   const ti = server.slice(server.indexOf('case "tippen"'), server.indexOf('case "nachricht_senden"'));
   assert.ok(/const art = p\.sprache \? "sprache" : "text"/.test(ti) && /text: art === "sprache" \? null : text, art/.test(ti), "Server: Sprachaufnahme ohne Text");
@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -9553,4 +9553,11 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // 2.367.0 KC-CLUB-HAKEN-SCHNELL: Zustell-Haken nach dem Senden zügig, nur kurz und nur bis „angekommen“
 {
   assert.ok(/const hakenWarten = Date\.now\(\) - HAKEN_SEIT < 60000 && /.test(html) && /m\.haken === "gesendet"/.test(html) && /HAKEN_SEIT = Date\.now\(\);/.test(html), "nach dem Senden 60 s zügig, bis angekommen");
+}
+
+// 2.368.0 KC-CLUB-FP-RESIZE: harmlose „ResizeObserver loop“-Warnung löst keinen Alarm aus
+{
+  assert.ok(/if \(art === "skript" && \/ResizeObserver loop\/i\.test\(String\(daten\.text \|\| ""\)\)\) return;/.test(seite), "Start-Wächter schreibt sie nicht mit");
+  assert.ok(/if \(art === "skript" && \/ResizeObserver loop\/i\.test\(String\(d\?\.text \?\? ""\)\)\) return "info";/.test(server), "Server: nur Info");
+  assert.ok(/new ResizeObserver\(\(\) => requestAnimationFrame\(chatAbstand\)\)/.test(html), "Chat-Abstand im nächsten Bild");
 }

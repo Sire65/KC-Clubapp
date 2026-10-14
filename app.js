@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.367.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.368.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7504,7 +7504,7 @@ function chatAbstand() {
   document.documentElement.style.setProperty("--chatUnten", Math.max(40, Math.ceil(unten + 18 - rest)) + "px");
   document.documentElement.style.setProperty("--eingabeHoehe", Math.ceil(unten) + "px");
 }
-if (window.ResizeObserver) document.addEventListener("DOMContentLoaded", () => { const e = $("eingabe"); if (e) new ResizeObserver(chatAbstand).observe(e); });
+if (window.ResizeObserver) document.addEventListener("DOMContentLoaded", () => { const e = $("eingabe"); if (e) new ResizeObserver(() => requestAnimationFrame(chatAbstand)).observe(e); }); // 2.368.0: Abstand erst im nächsten Bild setzen (keine „ResizeObserver loop“-Warnung)
 window.addEventListener("resize", chatAbstand);
 // ---------- KC-CLUB-ENTWURF (1.12.0, Wunsch Hansi): halb geschriebener Text bleibt je Chat erhalten (nur auf diesem Gerät) ----------
 const entwurfSchluessel = () => "kc_club_entwurf_" + (ICH?.person_id || "x");

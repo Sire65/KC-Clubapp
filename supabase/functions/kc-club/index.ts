@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.365.0";
+const SERVER_VERSION = "2.368.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -489,6 +489,7 @@ function fpStufe(aktion: string, d: any): "schwer" | "hinweis" | "info" {
   const art = String(aktion).replace(/^fehler_anonym_/, "").replace(/^fehler_/, "");
   if (FP_SCHWER.has(art)) return "schwer";
   // 2.95.0 KC-CLUB-FP-SAFARI-GRAU (Wunsch Hansi): „Script error.“ ganz ohne Datei/Zeile/Stapel kommt vom Browser selbst (z. B. Safari-Teilen-Menü) → grau (Info)
+  if (art === "skript" && /ResizeObserver loop/i.test(String(d?.text ?? ""))) return "info"; // 2.368.0 KC-CLUB-FP-RESIZE: harmlose Browser-Warnung (auch von älteren App-Ständen)
   if (art === "skript") return fpNurBrowser(d) ? "info" : /^Script error\.?$/i.test(String(d?.text ?? "").trim()) ? "hinweis" : "schwer";
   if (art === "sicherheit") return Array.isArray(d?.probleme) && d.probleme.length ? "schwer" : "info";
   return FP_INFO.has(art) ? "info" : "hinweis";

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.368.0 – 2026-10-14 – 🔕 KC-CLUB-FP-RESIZE: „ResizeObserver loop“ ist kein schwerwiegender Fehler
+Anlass (Hansi, Screenshot 08:08): Alarm-Push „🔴 2 schwerwiegende Probleme in der Club-App – ohne Anmeldung: ResizeObserver loop completed with undelivered notifications“.
+- Befund: 2× heute 07:45 (Android, 2.366.0), erstmals überhaupt; harmlose Browser-Warnung (Größenmeldung ein Bild später zugestellt). app.js filterte sie schon
+  (AS_HARMLOS), der Start-Wächter in index.html schrieb sie aber als „skript“ mit → Server stufte „skript“ als schwer ein → Alarm-Push.
+- Jetzt: Start-Wächter schreibt sie nicht mehr mit; Server stuft sie (auch von älteren App-Ständen) als Info ein; Chat-Abstand (ResizeObserver am Schreibfeld)
+  wird erst im nächsten Bild gesetzt (requestAnimationFrame) → Warnung entsteht gar nicht erst.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.367.0 – 2026-10-14 – ✔️ KC-CLUB-HAKEN-SCHNELL: Zustell-Haken kommen nach dem Senden zügig
 Anlass (Hansi): „Habe gerade eine Express-Nachricht an Steven geschickt. Das hat lange gedauert, bis ich 2 graue Haken bekommen habe.“
 - Gemessen: gesendet 07:46:14, Push raus 07:46:16, Mail 07:46:17, Stevens Handy „angezeigt“ 07:46:34 (20 s). Verzögerung lag bei der Anzeige beim
