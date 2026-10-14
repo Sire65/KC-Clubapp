@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.397.0";
+const SERVER_VERSION = "2.403.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -220,9 +220,18 @@ async function routerSendenRoh(eventKey: string, personIds: string[], vars: Reco
       ...(kopie?.cc?.length ? { cc: kopie.cc.map((personId) => ({ personId })) } : {}), ...(kopie?.bcc?.length ? { bcc: kopie.bcc.map((personId) => ({ personId })) } : {}) }),
   });
   const out = await r.json().catch(() => ({}));
-  const ergebnis = { gesendet: Number(out?.sent || 0), fehler: Number(out?.failed || 0) };
+  const ergebnis: { gesendet: number; fehler: number; wege?: Record<string, { push: string; mail: string }> } = { gesendet: Number(out?.sent || 0), fehler: Number(out?.failed || 0) };
+  // 2.403.0 KC-CLUB-EXPRESS-WEGE: je Empfänger, was auf welchem Weg wirklich passiert ist (aus der Antwort des Versanddienstes) –
+  // „ja“ = raus, „kein“ = kein Push-Gerät bzw. keine Mail-Adresse, „fehler“ = versucht und gescheitert, „-“ = nicht vorgesehen
+  if (Array.isArray(out?.results)) ergebnis.wege = Object.fromEntries(out.results.filter((x: any) => x?.personId).map((x: any) => [x.personId, routerWege(x.attempts)]));
   if (VORGANG_KOPIE.test(korrelation) && !korrelation.endsWith(":kopie")) await vorgangKopie(eventKey, personIds, vars, korrelation, ergebnis).catch((e) => console.error("vorgangKopie", String(e)));
   return ergebnis;
+}
+function routerWege(attempts: any[]): { push: string; mail: string } {
+  const weg = (k: string) => { const a = (Array.isArray(attempts) ? attempts : []).filter((x: any) => x?.channel === k);
+    if (!a.length) return "-"; if (a.some((x: any) => x.result === "sent" || x.result === "deduplicated")) return "ja";
+    return a.some((x: any) => /^(NO_ACTIVE_PUSH_DEVICE|NO_EMAIL|PUSH_NO_ACTIVE_SUBSCRIPTION|PUSH_SUBSCRIPTION_NOT_FOUND|EMAIL_RECIPIENT_MISSING)/.test(String(x.reason || ""))) ? "kein" : "fehler"; };
+  return { push: weg("push"), mail: weg("email") };
 }
 // KC-CLUB-VORGANG-KOPIE (2.221.0, Wunsch Hansi „ich muss über alle Vorgänge Bescheid wissen und immer in BCC gesetzt werden, damit ich weiß,
 // dass alles gelaufen ist und geklappt hat“): bei jeder Benachrichtigung zu einem Vorgang (Änderungsmeldung, Erstattung, Dienstwunsch,
@@ -345,6 +354,30 @@ async function sendenGewaehlt(eventKey: string, personIds: string[], wege: strin
   return { gesendet, fehler, wege: w };
 }
 const zustellwege = (v: unknown) => (Array.isArray(v) ? v : []).map(String).filter((x) => ZUSTELLWEGE.includes(x));
+// 2.403.0 KC-CLUB-EXPRESS-PRIO1 (Wunsch Hansi „Express so schnell wie möglich raus, in der Warteschlange bevorzugt – Priorität 1“):
+// Express geht nicht als ein Sammelauftrag (der Versanddienst arbeitet die Empfänger darin nacheinander ab), sondern je Empfänger
+// ein eigener Auftrag – alle gleichzeitig (höchstens EXPRESS_PARALLEL auf einmal), mit Priorität „critical“ (= Priorität 1: der
+// Versanddienst lässt sie an der Minutengrenze vorbei und Push geht mit höchster Dringlichkeit). Push und Mail je Empfänger;
+// wer die App noch nie geöffnet hat, bekommt die Mail mit dem Link-Hinweis. Ergebnis je Empfänger und Weg (für die Anzeige beim Absender).
+const EXPRESS_PARALLEL = 8;
+async function expressSenden(personIds: string[], vars: Record<string, unknown>, korrelation: string) {
+  const ids = [...new Set(personIds)]; if (!ids.length) return { gesendet: 0, fehler: 0, wege: [] as any[] };
+  const [{ data: zug }, leute] = await Promise.all([
+    db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null).in("person_id", ids), personen(ids)]);
+  const mitApp = new Set((zug ?? []).map((z: any) => z.person_id));
+  const hinweis = "\n\n(Die Köcheclub-App hast du noch nicht geöffnet – deinen persönlichen Link bekommst du von Hansi.)";
+  const v = { ...vars, eilig: true, wichtigkeit: vars.wichtigkeit ?? "hoch" };
+  const einzeln = async (id: string) => {
+    const r = mitApp.has(id) ? await routerSenden("club_nachricht_beide", [id], v, korrelation)
+      : await routerSenden("club_nachricht_mail", [id], { ...v, text: String(v.text ?? "") + hinweis }, korrelation);
+    const w = (r as any).wege?.[id] ?? { push: "-", mail: "-" };
+    return { person_id: id, name: vorname(leute.get(id)) || leute.get(id)?.display_name || id, push: w.push, mail: w.mail, ok: w.push === "ja" || w.mail === "ja" || (!(r as any).wege && r.gesendet > 0) };
+  };
+  const wege: any[] = [];
+  for (let i = 0; i < ids.length; i += EXPRESS_PARALLEL) wege.push(...await Promise.all(ids.slice(i, i + EXPRESS_PARALLEL).map(einzeln)));
+  const gesendet = wege.filter((x) => x.ok).length;
+  return { gesendet, fehler: wege.length - gesendet, wege: wege.map(({ ok, ...x }) => x) };
+}
 
 // Vorhandenes Zweiergespräch (genau zwei Teilnehmer, ohne Betreff) zwischen a und b – sonst null
 async function zweierGespraech(a: string, b: string): Promise<string | null> {
@@ -5234,7 +5267,9 @@ async function expressOffen(ich: Ich, zahlen: any[]): Promise<any[]> {
   const exGelesenBis = new Map(offen.map((z) => [z.t.thread_id, z.t.last_read_at]));
   const ungelesen = (ex ?? []).filter((x: any) => !exGelesenBis.get(x.thread_id) || x.erstellt_am > exGelesenBis.get(x.thread_id));
   if (!ungelesen.length) return [];
-  await expressZustellung(ich, ungelesen, false).catch((e) => console.error("express zustellung", String(e))); // 2.385.0: in der App angekommen
+  // 2.403.0 KC-CLUB-EXPRESS-ANKUNFT-ECHT (Fund Hansi: „angekommen“ bei jemandem, der nicht in der App war): das Laden allein zählt nicht mehr –
+  // „angekommen“ meldet die App erst, wenn das Express-Fenster wirklich auf dem sichtbaren Bildschirm steht (express_angezeigt),
+  // sowie beim Antworten im Fenster und beim Öffnen des Chats.
   const { data: ant } = await db.from("kc_club_express_antwort").select("message_id,antwort,spaeter_bis").eq("person_id", ich.person_id).in("message_id", ungelesen.map((x: any) => x.message_id));
   const am = new Map((ant ?? []).map((a: any) => [a.message_id, a]));
   const zeigen = ungelesen.filter((x: any) => { const a: any = am.get(x.message_id); return !a || (a.antwort === "spaeter" && (!a.spaeter_bis || a.spaeter_bis <= jetzt())); });
@@ -8615,7 +8650,27 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       // ----- 2.362.0 KC-CLUB-EXPRESS: Antwort im Express-Fenster – geoeffnet / spaeter (30 Min.) / nein; „Empfang bestätigen“ meldet es dem Absender -----
-      case "express_stand": return json(await expressStand(ich)); // 2.391.0 KC-CLUB-EXPRESS-ZAEHLER
+      case "express_stand": { // 2.391.0 KC-CLUB-EXPRESS-ZAEHLER · 2.403.0 KC-CLUB-EXPRESS-VORAB: wer bekommt keinen Push (nur Mail / gar nichts)?
+        const st: any = await expressStand(ich);
+        let ids: string[] = [];
+        if (p.thread) { await binTeilnehmer(String(p.thread), ich.person_id); const { data: tn } = await db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", String(p.thread)); ids = (tn ?? []).map((x: any) => x.person_id); }
+        else if (Array.isArray(p.personen)) ids = p.personen.map(String).slice(0, 200);
+        ids = [...new Set(ids)].filter((x) => x !== ich.person_id);
+        if (ids.length) {
+          const [{ data: abo }, { data: pe }] = await Promise.all([db.from("kc_member_push_subscriptions").select("person_id").eq("active", true).in("person_id", ids),
+            db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,email").in("person_id", ids)]);
+          const mitPush = new Set((abo ?? []).map((x: any) => x.person_id));
+          st.ohnePush = (pe ?? []).filter((x: any) => !mitPush.has(x.person_id)).map((x: any) => ({ name: vorname(x) || x.display_name, mail: !!x.email }));
+        }
+        return json(st);
+      }
+      case "express_angezeigt": { // 2.403.0 KC-CLUB-EXPRESS-ANKUNFT-ECHT: das Express-Fenster steht beim Empfänger sichtbar auf dem Bildschirm
+        const { data: ex } = await db.from("kc_club_express").select("message_id,thread_id,absender").eq("message_id", String(p.id || "")).maybeSingle();
+        if (!ex) return json({ ok: true });
+        await binTeilnehmer(ex.thread_id, ich.person_id);
+        await expressZustellung(ich, [ex], false).catch(() => null);
+        return json({ ok: true });
+      }
       case "express_antwort": {
         const { data: ex } = await db.from("kc_club_express").select("message_id,thread_id,absender").eq("message_id", String(p.id || "")).maybeSingle();
         if (!ex) throw new Fehler("Diese Express-Sendung gibt es nicht mehr.", 404);
@@ -8846,12 +8901,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-PUSH-NUR-OFFLINE (2.138.0): wer gerade in der App ist, bekommt bei normalen Nachrichten keinen Push/keine Mail – Notfall und ❗ wichtig weiter immer
         const inApp = notfall || wichtig || express ? new Set<string>() : await geradeInDerApp(ziel.filter((x: string) => x !== ich.person_id)).catch(() => new Set<string>());
         for (let i = ziel.length - 1; i >= 0; i--) if (inApp.has(ziel[i])) ziel.splice(i, 1);
-        const versand = await sendenGewaehlt("club_nachricht", ziel, wege, {
+        const nachrichtVars = {
           titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : express ? `🏎️ EXPRESS – ${grp ? `${grp.symbol} ${grp.name}: ` : ""}${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : slHinweis ? slHinweis : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
           betreff: `${wMarke}Köcheclub Werne – ${wichtig ? "wichtige" : "neue"} Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${slHinweis || text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`, ...(notfall ? { wichtigkeit: "notfall" } : wichtig || express ? { wichtigkeit: "hoch" } : {}), ...(express ? { eilig: true } : {}), // 2.384.0 KC-CLUB-EXPRESS-SOFORT
-        }, `club-nachricht:${m.id}`, { notfall: notfall || express }); // Express: auch in der Ruhezeit (wie Notfall)
+        };
+        // 2.403.0 KC-CLUB-EXPRESS-PRIO1: Express (ohne Notfall) je Empfänger parallel mit Priorität 1 – sonst wie bisher
+        const versand = express && !notfall ? await expressSenden(ziel.filter((x: string) => x !== ich.person_id), nachrichtVars, `club-nachricht:${m.id}`)
+          : await sendenGewaehlt("club_nachricht", ziel, wege, nachrichtVars, `club-nachricht:${m.id}`, { notfall: notfall || express }); // Express: auch in der Ruhezeit (wie Notfall)
         await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, selbstloeschen: slNachricht, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand, mid: m.id, ...(express ? { expressStand: await expressStand(ich) } : {}) }); // mid: KC-CLUB-EMPFANGS-EFFEKT (2.177.0) – gleicher „Abwechselnd“-Effekt bei Absender und Empfänger
       }
