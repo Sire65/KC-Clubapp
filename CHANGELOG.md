@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.366.0 – 2026-10-14 – 🌗 KC-CLUB-FELD-KONTRAST: Auswahl- und Eingabefelder im Dunkelmodus lesbar
+Anlass (Hansi, Screenshot „Wege der Mitglieder“): „In der weißen Zeile kann man nix lesen. Kontrast anpassen.“
+- Ursache: Felder ohne eigene Gestaltung erbten die helle Schrift (button, input, select, textarea { color: inherit }), behielten aber den weißen
+  Standard-Hintergrund des Browsers. Betroffen: rund 60 Auswahlfelder ohne eigene Klasse, u. a. die Tagesauswahl in „Wege der Mitglieder“.
+- Jetzt: :where(select, textarea, input[Text-Arten]) { background-color: var(--karte); color: var(--text); Rahmen var(--linie) } – schwächste Regel, gestaltete
+  Felder bleiben unverändert; :root.dunkel { color-scheme: dark } (aufklappende Liste dunkel); Optionen in Schema-Farben.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.365.0 – 2026-10-14 – 🔍 KC-CLUB-SCHRIFT-ZOOM-TEXT: Zwei-Finger-Zoom nur für Lese-Texte
 Anlass (Hansi): „Das Zoomen sollte wirklich nur bei Text sein, nicht die komplette Oberfläche.“
 - html bleibt bei var(--fs); --zoom wirkt per CSS „zoom“ nur auf .blase .txt, .blase .zitat, .uhk-msg, .zettel .ztext, .prl-text, .alarm-text, .dlg-text.

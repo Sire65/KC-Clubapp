@@ -9544,3 +9544,8 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.deepEqual(vj.neu, ["Kleine Systemanpassung"], "version.json: neu = nur „Kleine Systemanpassung“");
   assert.deepEqual(vj.verlauf[0].neu, ["Kleine Systemanpassung"], "version.json: neuester Verlauf = nur „Kleine Systemanpassung“");
 }
+
+// 2.366.0 KC-CLUB-FELD-KONTRAST: ungestaltete Felder in Schema-Farben (nie weißer Grund mit heller Schrift)
+{
+  assert.ok(/:root\.dunkel \{ color-scheme: dark; \}/.test(seite) && /:where\(select, textarea, input:not\([^)]*\)\) \{ background-color: var\(--karte\); color: var\(--text\);/.test(seite), "Felder lesbar im Dunkelmodus");
+}
