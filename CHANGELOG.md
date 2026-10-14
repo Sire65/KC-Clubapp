@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.373.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: eigene Zeile „Die kleine Fee“ unter ⚙️ → ✨ Effekte
+Anlass (Hansi): „Unter Darstellung finde ich sie nicht.“ – Der Vorschau-Knopf stand versteckt in der Sende-Effekt-Zeile. Jetzt eigene Zeile direkt unter
+„✨ Animierte Knöpfe“ mit Erklärung und „🧚 Fee ansehen“; Hilfe-Tipp nennt den richtigen Weg.
+
 ## 2.372.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: kleine Fee bei jeder 20. Anmeldung (Server 2.372.0)
 Anlass (Hansi): „Bei jeder 20. Anmeldung soll eine ganz süße Fee durchs obere Bild schweben, einmal kurz stehen bleiben, lächeln und weiterfliegen.
 Leicht rosé Glitzersachen, Zauberstab in der Hand. Wer drauf tippt, bekommt einen motivierenden Spruch.“

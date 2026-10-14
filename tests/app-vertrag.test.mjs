@@ -9620,3 +9620,10 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(n >= 30, "genug Sprüche (" + n + ")");
   assert.ok(/fxAn\(\) \|\| document\.hidden \|\| aktuelleAnsicht !== "start"/.test(html), "Fee nur bei Animationen und sichtbarer Startseite");
 }
+
+// 2.373.0 KC-CLUB-FEE: eigene Zeile unter ✨ Effekte
+{
+  assert.ok(/<b>🧚 Die kleine Fee<\/b>[\s\S]{0,200}onclick="feeKommt\(true\)">🧚 Fee ansehen</.test(html) && (html.match(/Fee ansehen<\/button>/g) || []).length === 1, "Fee-Zeile unter Effekte, nur ein Knopf");
+  assert.ok(/⚙️ → ✨ Effekte → 🧚 Fee ansehen/.test(html), "Hilfe nennt den richtigen Weg");
+}
+assert.ok(/einstiegHin\("effekte", "feeKnopf"\)/.test(html) && /id="feeKnopf" onclick="feeKommt\(true\)"/.test(html), "Hilfe springt zum Fee-Knopf");
