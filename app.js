@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.398.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.399.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15562,15 +15562,18 @@ const BW_MODI = [["sitzen", "🪑 Im Sitzen"], ["stehen", "🧍 Im Stehen"], ["k
 // Twinkey turnt spiegelbildlich vor (wie ein Vorturner): „rechts“ ist auf deiner rechten Seite. Dazu markige Ansagen und viel Lob.
 const BW_KETTE_TAKT = 2; // Sekunden je Bewegung
 const BW_KETTE_SCHRITTE = [
-  { a: "kette-knie-r", t: "Knie hoch – rechts", s: ["Rechtes Knie hoch – zack!", "Rechts – hoch das Bein!", "Knie rechts – mit Power!", "Und rechts – Knie zur Brust!"] },
-  { a: "kette-knie-l", t: "Knie hoch – links", s: ["Und links – hoch damit!", "Linkes Knie – zack!", "Links – nicht schlappmachen!", "Knie links – volle Kraft!"] },
-  { a: "kette-schritt-l", t: "Schritt nach links", s: ["Schritt nach links!", "Ab nach links – Tschakka!", "Links rüber – zack, zack!", "Und nach links!"] },
-  { a: "kette-schritt-r", t: "Schritt nach rechts", s: ["Und nach rechts!", "Rüber nach rechts – Tempo!", "Rechts rüber!", "Schritt nach rechts – sauber!"] },
-  { a: "kette-hocke", t: "Kniebeuge – Arme nach vorn", s: ["Runter in die Hocke – Arme nach vorn!", "Hocke – und Arme lang!", "Po nach hinten, Arme nach vorn!", "Tief – und Arme nach vorn!"] },
-  { a: "hula", t: "Hula-Hoop-Hüfte", s: ["Hüfte kreisen – Hula-Hula!", "Und die Hüfte schwingt!", "Hula-Hoop – locker aus der Hüfte!", "Kreisen lassen!"] },
-  { a: "kette-sprung", t: "Sprung in die Luft", s: ["Und hoch in die Luft – hopp!", "Sprung – hopp!", "Abheben – hopp!", "Und springen – hopp!"] },
+  // 2.399.0 KC-CLUB-BUEHNE-KETTE-TAKT (Fund Hansi „Ablauf stimmt nicht mit den Texten“): jedes Kommando ist in unter 2 s gesprochen –
+  // so passt es immer genau zur Bewegung (vorher bis 5 s lang: das nächste Kommando fiel aus oder kam erst bei einer anderen Bewegung)
+  { a: "kette-knie-r", t: "Knie hoch – rechts", k: "Knie rechts", s: ["Rechtes Knie hoch!", "Knie rechts – hoch!", "Rechts – Knie hoch!", "Knie rechts – zack!"] },
+  { a: "kette-knie-l", t: "Knie hoch – links", k: "Knie links", s: ["Linkes Knie hoch!", "Knie links – hoch!", "Und links – zack!", "Knie links – Power!"] },
+  { a: "kette-schritt-l", t: "Schritt nach links", k: "Schritt links", s: ["Schritt nach links!", "Ab nach links!", "Links rüber!", "Und nach links!"] },
+  { a: "kette-schritt-r", t: "Schritt nach rechts", k: "Schritt rechts", s: ["Schritt nach rechts!", "Rüber nach rechts!", "Rechts rüber!", "Und nach rechts!"] },
+  { a: "kette-hocke", t: "Kniebeuge – Arme nach vorn", k: "Hocke", s: ["Hocke – Arme vor!", "Runter – Arme lang!", "Po nach hinten!", "Tief – Arme vor!"] },
+  { a: "kette-hula", t: "Hula-Hoop-Hüfte", k: "Hüfte kreisen", s: ["Hüfte kreisen!", "Hula-Hula!", "Hüfte schwingen!", "Kreisen lassen!"] },
+  { a: "kette-sprung", t: "Sprung in die Luft", k: "Sprung", s: ["Sprung – hopp!", "Und hopp!", "Abheben – hopp!", "Springen – hopp!"] },
 ];
 const BW_KETTE_H = "Im Stehen, immer der Reihe nach: rechtes Knie hoch, linkes Knie hoch, ein Schritt nach links, ein Schritt nach rechts, Kniebeuge mit den Armen nach vorn, Hüfte kreisen wie beim Hula-Hoop, ein Sprung in die Luft – und wieder von vorn. Wer mag, hält sich an der Stuhllehne fest und hüpft nur ganz klein.";
+const BW_KETTE_START = "Hallo! Heute machen wir die Power-Kette: drei Durchgänge mit je sieben Bewegungen. Rechtes Knie, linkes Knie, Schritt links, Schritt rechts, Hocke mit Armen nach vorn, Hüfte kreisen, Sprung. Mach nur so viel, wie dir guttut!";
 const BW_KETTE = { id: "powerkette", t: "Power-Kette", g: "kette", a: "kette-knie-r", kette: 1, sek: 56, pause: 15, h: BW_KETTE_H };
 const BW_KETTE_RUNDE = {
   1: { h: BW_KETTE_H, start: "Durchgang 1 von 3 – wir legen los!", ende: "Toll gemacht! Durchgang 1 ist geschafft. Kurz verschnaufen und ausschütteln!" },
@@ -15583,13 +15586,78 @@ const BW_KETTE_MARKIG = ["Wer bremst, verliert – weiter geht’s!", "Hier wird
   "Zähne zusammen – du schaffst das!", "Aufgeben ist was für Suppenhühner!", "Jetzt zeigen wir der Couch, wer hier der Chef ist!", "Schweiß ist nur Fett, das weint – also weiter!",
   "Mehr Power – die Küche bebt!", "Wir sind doch nicht zum Kaffeekränzchen hier – Tempo!", "Wer jetzt durchhält, hat sich den Nachtisch verdient!"];
 const bwKetteJetzt = (L) => { const u = L && L.plan[L.i]; return u && u.kette && L.phase === "uebung" ? BW_KETTE_SCHRITTE[Math.floor(Math.max(0, bwSekU(u) - L.rest) / BW_KETTE_TAKT) % BW_KETTE_SCHRITTE.length] : null; };
-function bwKetteTick(L, u) { // Bewegung alle 2 s weiter; Ansagen: Kommando je Bewegung (wenn gerade niemand spricht), Lob bzw. markiger Spruch je Kette, Endspurt, 3-2-1
-  const e = bwSekU(u) - L.rest, k = e % (BW_KETTE_TAKT * BW_KETTE_SCHRITTE.length), nr = Math.floor(e / (BW_KETTE_TAKT * BW_KETTE_SCHRITTE.length)), s = bwKetteJetzt(L);
+function bwKetteTick(L, u) { // 2.399.0: genau beim Bewegungswechsel ein kurzes Kommando (unterbricht Laufendes – nie verspätet); Lob kurz zur Hula-Hüfte,
+  // längere Sprüche nur in der Sprechblase; „noch 10“ und der letzte Sprung hängen am Kommando statt es zu ersetzen
+  const e = bwSekU(u) - L.rest, n = BW_KETTE_SCHRITTE.length, k = e % (BW_KETTE_TAKT * n), nr = Math.floor(e / (BW_KETTE_TAKT * n)), s = bwKetteJetzt(L);
   if (s && s.a !== L.ketteA) { L.ketteA = s.a; bwLaufZeigen(); }
-  if (L.rest >= 1 && L.rest <= 3) return bwSag(L.rest === 3 ? "Noch 3" : L.rest === 2 ? "noch 2" : "noch 1", true);
-  if (L.rest === 10) return bwSag(u.runde === 3 ? "Die letzten 10 Sekunden – jetzt nicht nachlassen!" : bwZufall(BW_ENDSPURT, L), false);
-  if (k === 11) return bwSag(nr % 2 ? bwNimm(BW_KETTE_MARKIG, L, "ketteMarkig") : bwNimm(BW_KETTE_LOB, L, "ketteLob"), false); // während der Hula-Hüfte
-  if (k % BW_KETTE_TAKT === 0 && s) bwSag(k === 0 && e > 0 ? `Und wieder von vorn – ${s.s[nr % s.s.length]}` : s.s[nr % s.s.length], false, "", true);
+  if (!s || k % BW_KETTE_TAKT !== 0 || e === 0 || L.rest <= 0) return; // e = 0: das erste Kommando kommt mit dem Start; rest 0: Durchgang ist vorbei
+  const nrS = k / BW_KETTE_TAKT;
+  if (L.rest <= BW_KETTE_TAKT) return bwSag("Letzter Sprung – hopp!", true);
+  if (L.rest === 10) return bwSag(`${s.k} – noch 10!`, true);
+  if (nrS === 0) return bwSag(`Von vorn – ${s.k}!`, true);
+  if (s.a === "kette-hula") { const lang = nr % 2 ? bwNimm(BW_KETTE_MARKIG, L, "ketteMarkig") : bwNimm(BW_KETTE_LOB, L, "ketteLob"); return bwSag(`${s.s[nr % s.s.length]} ${bwZufall(BW_KURZ, L)}`, true, lang); }
+  bwSag(s.s[nr % s.s.length], true);
+}
+// ----- 2.399.0 KC-CLUB-BUEHNE-KETTE-ECHT (Wunsch Hansi „Bewegungen flüssiger und realitätsnäher – Hüftschwung, Schritte usw.“) -----
+// Die 7 Bewegungen der Power-Kette werden beim ersten Gebrauch berechnet (alle 4 % ein Bild, linear dazwischen) und als <style> eingehängt –
+// so bleibt die Startdatei klein. Knie beugen sich (Oberschenkel von vorn verkürzt, Unterschenkel hängt mit), die Füße bleiben am Boden,
+// das Becken verlagert sich übers Standbein (Hüftschwung), Seitschritt = Fuß raus → Gewicht rüber → anderer Fuß ran, Hocke senkt die Hüfte,
+// Hula kreist das Becken (zwei Kreise je Bewegung), Sprung mit Ausholen und weicher Landung. Spiegelbildlich wie ein Vorturner (rechts = …R).
+function bwKetteStil() {
+  if (document.getElementById("bwKetteStil")) return;
+  const cl = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), ease = (x) => { x = cl(x); return x * x * (3 - 2 * x); }, win = (t, a, b) => cl((t - a) / (b - a));
+  const bump = (t, a, b) => { const u = win(t, a, b); return u > 0 && u < 1 ? Math.sin(Math.PI * u) : 0; };
+  const OS = 24, BEIN = 51, gr = (r) => r * 180 / Math.PI, z = (x) => x.toFixed(1);
+  const tr = ({ dx = 0, dy = 0, rot = 0, sx = 1, sy = 1, skx = 0 } = {}) => {
+    const p = []; if (Math.abs(dx) > .05 || Math.abs(dy) > .05) p.push(`translate(${z(dx)}px,${z(dy)}px)`); if (Math.abs(rot) > .05) p.push(`rotate(${z(rot)}deg)`);
+    if (Math.abs(skx) > .05) p.push(`skewX(${z(skx)}deg)`); if (Math.abs(sx - 1) > .002 || Math.abs(sy - 1) > .002) p.push(`scale(${sx.toFixed(3)},${sy.toFixed(3)})`); return p.join(" ") || "none"; };
+  const knie = (t, hub) => {
+    const lift = ease(win(t, .04, .36)) * (1 - ease(win(t, .62, .94))), v = hub === "R" ? 1 : -1, stand = hub === "R" ? "L" : "R", d = {};
+    d.ganz = tr({ dy: -2.5 * lift }); d.oben = tr({ dx: -2.2 * v * lift, rot: -2.5 * v * lift }); d.beine = tr({ skx: gr(Math.atan(2.2 * v * lift / BEIN)) });
+    d["os" + hub] = tr({ sy: 1 - .82 * lift }); d["ub" + hub] = tr({ dy: -OS * .82 * lift, rot: 4 * v * lift }); d["ob" + hub] = tr({ rot: -3 * v * lift }); d["ob" + stand] = tr({ rot: 1.5 * v * lift });
+    // Arme: alle Bewegungen beginnen und enden in derselben Grundhaltung (Oberarm ±10°, Unterarm gerade) – keine Sprünge beim Wechsel
+    if (hub === "R") { d.oaL = tr({ rot: 10 - 36 * lift }); d.uaL = tr({ rot: -75 * lift }); d.oaR = tr({ rot: -10 - 16 * lift }); d.uaR = tr({ rot: 20 * lift }); }
+    else { d.oaR = tr({ rot: -10 + 36 * lift }); d.uaR = tr({ rot: 75 * lift }); d.oaL = tr({ rot: 10 + 16 * lift }); d.uaL = tr({ rot: -20 * lift }); }
+    return d;
+  };
+  const schritt = (t, ri) => { // L: von 0 nach −16, R: von −16 zurück nach 0 (endet dort, wo die nächste Bewegung beginnt)
+    const W = 16, [von, nach, fuehrt, folgt] = ri === "L" ? [0, -W, "L", "R"] : [-W, 0, "R", "L"], vz = ri === "L" ? -1 : 1;
+    const bx = von + (nach - von) * ease(win(t, .14, .66)), fF = von + (nach - von) * ease(win(t, .04, .34)), fN = von + (nach - von) * ease(win(t, .56, .82));
+    const hF = bump(t, .04, .34), hN = bump(t, .56, .82) + bump(t, .86, .98) * .35, sw = bump(t, .18, .74), a = bump(t, .08, .9), d = {};
+    d.ganz = tr({ dx: bx, dy: -1.6 * (hF + hN) + 1.2 * bump(t, .3, .46) + 1.2 * bump(t, .78, .92) }); d.oben = tr({ dx: 3.2 * vz * sw, rot: 2.8 * vz * sw }); d.beine = tr({ skx: -gr(Math.atan(3.2 * vz * sw / BEIN)) });
+    for (const [sd, fuss, h] of [[fuehrt, fF, hF], [folgt, fN, hN]]) { d["ob" + sd] = tr({ rot: -gr(Math.atan((fuss - bx) / BEIN)) }); d["os" + sd] = tr({ sy: 1 - .45 * h }); d["ub" + sd] = tr({ dy: -OS * .45 * h }); }
+    d.oaL = tr({ rot: 10 + 30 * a + 6 * vz * sw }); d.oaR = tr({ rot: -10 - 30 * a + 6 * vz * sw }); d.uaL = tr({ rot: -10 * a }); d.uaR = tr({ rot: 10 * a });
+    return d;
+  };
+  const hocke = (t) => {
+    const s = ease(win(t, .04, .42)) * (1 - ease(win(t, .6, .96))), k = .5 * s, d = {};
+    d.ganz = tr({ dy: OS * k * .98 }); d.oben = tr({ dy: 1.5 * s, sy: 1 - .05 * s });
+    for (const [sd, v] of [["L", 1], ["R", -1]]) { d["ob" + sd] = tr({ rot: 7 * v * s }); d["os" + sd] = tr({ sy: 1 - k }); d["ub" + sd] = tr({ dy: -OS * k, rot: -9 * v * s }); }
+    d.oaL = tr({ rot: 10 - 40 * s, sy: 1 - .6 * s }); d.oaR = tr({ rot: -10 + 40 * s, sy: 1 - .6 * s }); d.hand = tr({ sx: 1 + .2 * s, sy: 1 / (1 - .6 * s) });
+    return d;
+  };
+  const hula = (t) => {
+    // Hände gehen am Anfang in die Hüften und am Ende wieder runter, der Hüftkreis setzt weich ein und klingt aus
+    const h = ease(win(t, 0, .16)) * (1 - ease(win(t, .86, 1))), am = ease(win(t, .04, .22)) * (1 - ease(win(t, .8, .98)));
+    const w = 4 * Math.PI * t, dx = 5 * am * Math.sin(w), dy = 1.6 * am * (1 - Math.cos(w)) / 2, d = { ganz: tr({ dy: 1.2 * h }), oben: tr({ dx, dy, rot: -.55 * dx }), beine: tr({ skx: -gr(Math.atan(dx / BEIN)) }) };
+    for (const sd of "LR") { d["os" + sd] = tr({ sy: 1 - .04 * h }); d["ub" + sd] = tr({ dy: -h }); }
+    d.oaL = tr({ rot: 10 + 24 * h }); d.oaR = tr({ rot: -10 - 24 * h }); d.uaL = tr({ rot: -102 * h }); d.uaR = tr({ rot: 102 * h }); return d;
+  };
+  const sprung = (t) => {
+    const aus = bump(t, .02, .32), flug = bump(t, .26, .66), land = bump(t, .6, .86), knick = .3 * aus + .22 * land, arm = -14 * aus + 160 * flug * (1 - .2 * land) + 30 * land, d = {};
+    d.ganz = tr({ dy: OS * knick - 30 * flug }); d.oben = tr({ dy: 1.2 * aus });
+    for (const [sd, v] of [["L", 1], ["R", -1]]) { d["os" + sd] = tr({ sy: 1 - knick }); d["ub" + sd] = tr({ dy: -OS * knick }); d["ob" + sd] = tr({ rot: 6 * v * flug }); }
+    d.oaL = tr({ rot: 10 + arm }); d.oaR = tr({ rot: -10 - arm }); d.uaL = tr({ rot: -12 * flug }); d.uaR = tr({ rot: 12 * flug }); return d;
+  };
+  const BEW = { "kette-knie-r": (t) => knie(t, "R"), "kette-knie-l": (t) => knie(t, "L"), "kette-schritt-l": (t) => schritt(t, "L"), "kette-schritt-r": (t) => schritt(t, "R"), "kette-hocke": hocke, "kette-hula": hula, "kette-sprung": sprung };
+  const SEL = { ganz: ".bw-ganz", oben: ".bw-oben", beine: ".bw-beine", hand: ".bw-hand" }, sel = (e) => SEL[e] || ".bw-" + e;
+  let css = `.bw-figur[class*="bw-a-kette-"] .bw-beine{transform-origin:60px 152px}.bw-figur[class*="bw-a-kette-"] .bw-osL,.bw-figur[class*="bw-a-kette-"] .bw-osR{transform-box:fill-box;transform-origin:50% 0}`;
+  for (const [name, fn] of Object.entries(BEW)) {
+    const bilder = Array.from({ length: 26 }, (_, i) => [i * 4, fn(i * 4 / 100)]), teile = [...new Set(bilder.flatMap(([, d]) => Object.keys(d)))];
+    for (const e of teile) { const kf = "bwK2" + name.replace(/-/g, "") + e;
+      css += `@keyframes ${kf}{${bilder.map(([p, d]) => `${p}%{transform:${d[e] || "none"}}`).join("")}}.bw-figur.bw-a-${name} ${sel(e)}{animation:${kf} calc(var(--b) * 4) linear var(--ph, 0s) infinite}`; }
+  }
+  const st = document.createElement("style"); st.id = "bwKetteStil"; st.textContent = css; document.head.appendChild(st);
 }
 const BW_DAUER = [5, 10, 15];
 const BW_TEMPO = { sitzen: 112, stehen: 120, kueche: 116, kette: 120 }; // Schläge/Min. (Seniorenkurse um 120, im Sitzen ruhiger); 2.370.0: Power-Kette 120 = 4 Schläge in 2 s
@@ -15648,6 +15716,7 @@ const bwSchuh = (x, y) => `<g class="bw-schuh"><path d="M${x - 8.5} ${y + 3} Q${
 const BW_FARBEN = [["#ff4fa3", "#2ee6d6", "#ffe14d"], ["#2ee6d6", "#ff4fa3", "#7c4dff"], ["#7c4dff", "#ffe14d", "#ff4fa3"], ["#ffe14d", "#7c4dff", "#2ee6d6"],
   ["#ff8a00", "#00c2ff", "#ff4fa3"], ["#39d353", "#ff4fa3", "#ffe14d"], ["#00c2ff", "#ff8a00", "#39d353"], ["#ff4fa3", "#ffe14d", "#00c2ff"]]; // [Jacke, Stulpen, Bänder]
 function bwFigur(a, sitz, p, ding, b, ph, farbe) {
+  if (String(a).startsWith("kette-")) bwKetteStil(); // 2.399.0 KC-CLUB-BUEHNE-KETTE-ECHT
   const dy = sitz ? 12 : 0, S = 56 + dy, H = 101 + dy, ky = S - 20, [fj, fs, fb] = BW_FARBEN[((farbe || 0) % BW_FARBEN.length + BW_FARBEN.length) % BW_FARBEN.length];
   const links = { schneebesen2: "schneebesen", loeffel2: "loeffel", flaschen: "flasche", deckel: "deckel" }[p] || "";
   const rechts = { schneebesen: "schneebesen", loeffel: "loeffel", schneebesen2: "schneebesen", loeffel2: "loeffel", flaschen: "flasche", deckel: "deckel", nudelholz: "nudelholz", tuch: "tuch", pfanne: "pfanne" }[p] || "";
@@ -15656,7 +15725,7 @@ function bwFigur(a, sitz, p, ding, b, ph, farbe) {
       <g class="bw-ua${s}" ${o(x, S + 21)}><rect x="${x - 3.5}" y="${S + 19}" width="7" height="21" rx="3.5" class="bw-jacke"/><rect x="${x - 4.3}" y="${S + 34}" width="8.6" height="4.6" rx="2" class="bw-band"/>${helfer ? BW_HELFER[helfer](x, S + 42) : ""}<circle cx="${x}" cy="${S + 42}" r="4.7" class="bw-haut bw-hand"/></g></g>`;
   const bein = (s, x) => sitz
     ? `<g class="bw-ob${s}" ${o(x, H)}><rect x="${x - 5.5}" y="${H - 2}" width="11" height="12" rx="5" class="bw-hose"/><g class="bw-ub${s}" ${o(x, H + 8)}><rect x="${x - 4.5}" y="${H + 6}" width="9" height="${143 - H}" rx="4.5" class="bw-hose"/>${bwStulpe(x)}${bwSchuh(x, 151)}</g></g>`
-    : `<g class="bw-ob${s}" ${o(x, H)}><rect x="${x - 5}" y="${H - 2}" width="10" height="26" rx="5" class="bw-hose"/><g class="bw-ub${s}" ${o(x, H + 22)}><rect x="${x - 4.5}" y="${H + 20}" width="9" height="${143 - H - 20}" rx="4.5" class="bw-hose"/>${bwStulpe(x)}${bwSchuh(x, 151)}</g></g>`;
+    : `<g class="bw-ob${s}" ${o(x, H)}><rect x="${x - 5}" y="${H - 2}" width="10" height="26" rx="5" class="bw-hose bw-os${s}"/><g class="bw-ub${s}" ${o(x, H + 22)}><rect x="${x - 4.5}" y="${H + 20}" width="9" height="${143 - H - 20}" rx="4.5" class="bw-hose"/>${bwStulpe(x)}${bwSchuh(x, 151)}</g></g>`;
   const stuhl = sitz ? `<g class="bw-stuhl"><rect x="33" y="${S + 4}" width="54" height="8" rx="3"/><rect x="31" y="${H}" width="58" height="7" rx="2"/><rect x="34" y="${H + 7}" width="5" height="${156 - H - 7}"/><rect x="81" y="${H + 7}" width="5" height="${156 - H - 7}"/></g>` : "";
   const kopf = `<g class="bw-kopf" ${o(60, S - 9)}><rect x="56" y="${S - 13}" width="8" height="10" class="bw-haut"/><circle cx="60" cy="${ky}" r="12" class="bw-haut"/>
       <circle cx="55.6" cy="${ky - 1}" r="1.5" class="bw-auge"/><circle cx="64.4" cy="${ky - 1}" r="1.5" class="bw-auge"/><path d="M54.5 ${ky + 4} Q60 ${ky + 8.5} 65.5 ${ky + 4}" class="bw-mund"/>
@@ -15797,7 +15866,9 @@ async function bwLos() {
   if (w.musik) bwMusik(true);
   // 2.299.2 (Wunsch Hansi): kurze Begrüßung vorweg – die erste Vorbereitung dauert dafür etwas länger
   BW.lauf.rest = BW_BEREIT + 6;
-  BWM.stufe = 1; bwLaufZeigen(true); const nimm0 = bwNimmDinge(plan[0]); bwSag(`${BW_BEGRUESSUNG} Als Erstes: ${plan[0].t}.${nimm0.length ? ` Nimm ${bwAufzaehlen(nimm0.map((x) => x[1]))}.` : ""} ${plan[0].h}`, false, BW_BEGRUESSUNG);
+  BWM.stufe = 1; bwLaufZeigen(true); const nimm0 = bwNimmDinge(plan[0]);
+  if (plan[0].kette) bwSag(BW_KETTE_START, false, "Hallo! Gleich geht’s los mit der Power-Kette – 3 Durchgänge, je 7 Bewegungen."); // 2.399.0: ~15 s statt ~32 s
+  else bwSag(`${BW_BEGRUESSUNG} Als Erstes: ${plan[0].t}.${nimm0.length ? ` Nimm ${bwAufzaehlen(nimm0.map((x) => x[1]))}.` : ""} ${plan[0].h}`, false, BW_BEGRUESSUNG);
   clearInterval(BW.takt); BW.takt = setInterval(bwTick, 1000);
 }
 // 2.296.0 (Wunsch Hansi „beim Abzählen wird der Text vom Erklären abgeschnitten“): Ansagen schneiden sich nicht mehr gegenseitig ab.
@@ -15834,7 +15905,7 @@ function bwTick() {
   const u = L.plan[L.i];
   // Einzählen erst, wenn die Erklärung fertig ist: solange Twinkey noch spricht, wartet der Zähler (höchstens 10 s)
   if (L.phase === "bereit" && L.rest <= 4 && !L.gezaehlt) {
-    if (L.ansage && bwSpricht() && L.warte < 10) { L.warte++; return bwZahl(); }
+    if (L.ansage && bwSpricht() && L.warte < 20) { L.warte++; return bwZahl(); } // 2.399.0: 20 statt 10 s – Erklärung wird nie vom Einzählen überholt
     L.gezaehlt = true; L.rest = 4; bwSag("Und fünf, sechs, sieben, acht!", false); BWM.riser = true; return bwZahl();
   }
   L.rest--;
@@ -15851,7 +15922,7 @@ function bwTick() {
   }
   if (L.phase === "schuetteln" && L.wisch && L.rest === 3) bwLaufZeigen(); // 2.311.0: Stirn ist trocken – jetzt ausschütteln
   if (L.rest > 0) return bwZahl();
-  if (L.phase === "bereit") { L.phase = "uebung"; L.rest = bwSekU(u); L.ketteA = ""; BWM.stufe = 2; BWM.becken = true; bwSag(u.kette ? `Los geht’s! ${BW_KETTE_RUNDE[u.runde]?.start || ""} ${BW_KETTE_SCHRITTE[0].s[0]}` : "Los geht’s!", false); }
+  if (L.phase === "bereit") { L.phase = "uebung"; L.rest = bwSekU(u); L.ketteA = ""; BWM.stufe = 2; BWM.becken = true; bwSag(u.kette ? BW_KETTE_SCHRITTE[0].s[0] : "Los geht’s!", !!u.kette); } // 2.399.0: Kette – sofort das erste Kommando
   else if (L.phase === "uebung") { // 2.311.0 KC-CLUB-BUEHNE-STIRN: ab und zu (jede dritte Übung) erst mit dem Schweißtuch die Stirn abwischen
     L.phase = "schuetteln"; L.rest = bwPauseU(u); BWM.stufe = 1; L.wisch = L.i % 3 === 1 && L.i < L.plan.length - 1;
     bwSag(u.kette ? BW_KETTE_RUNDE[u.runde]?.ende || "Toll gemacht!" : L.i >= L.plan.length - 1 ? "Und ausschütteln! Geschafft!" : L.wisch ? "Puh! Erst mal den Schweiß abwischen – und dann ausschütteln!" : bwZufall(BW_SCHUETTELN_SAG, L), true);
@@ -15859,7 +15930,7 @@ function bwTick() {
   else if (L.phase === "schuetteln") {
     if (L.i >= L.plan.length - 1) return bwFertig();
     L.i++; L.phase = "bereit"; L.rest = BW_BEREIT; L.warte = 0; L.gezaehlt = false; const n = L.plan[L.i];
-    const extra = n.kette ? "" : L.i === Math.floor(L.plan.length / 2) ? "Halbzeit – du bist spitze! " : L.i % 3 === 0 ? "Trinken nicht vergessen! " : "";
+    const extra = n.kette ? `${BW_KETTE_RUNDE[n.runde]?.start || ""} ` : L.i === Math.floor(L.plan.length / 2) ? "Halbzeit – du bist spitze! " : L.i % 3 === 0 ? "Trinken nicht vergessen! " : ""; // 2.399.0: Kette – Durchgangs-Ansage vor dem Einzählen
     const nimm = bwNimmDinge(n); // 2.309.0: Twinkey sagt, was man dafür in die Hand nimmt
     bwSag(`${extra}Als Nächstes: ${n.t}.${nimm.length ? ` Nimm ${bwAufzaehlen(nimm.map((x) => x[1]))}.` : ""} ${n.h}`, false, `${extra}Als Nächstes: ${n.t}${nimm.length ? ` ${nimm.map((x) => x[0]).join("")}` : ""}`);
   }

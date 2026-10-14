@@ -3428,57 +3428,7 @@
   .bw-figur.bw-a-hula .bw-ding { animation: bwHulaDing calc(var(--b) * 2) linear var(--ph, 0s) infinite; }
   @keyframes bwHulaGanz { 0% { transform: none; } 50% { transform: translate(0px, 1px); } 100% { transform: none; } }
   .bw-figur.bw-a-hula .bw-ganz { animation: bwHulaGanz calc(var(--b) * 2) linear var(--ph, 0s) infinite; }
-  /* 2.370.0 KC-CLUB-BUEHNE-POWERKETTE (Wunsch Hansi): Kette aus 7 Bewegungen, je 4 Schläge. Spiegelbildlich wie ein Vorturner: „rechts“ = Seite rechts im Bild (…R). */
-  @keyframes bwKetteKnieOb { 0%, 100% { transform: none; } 28%, 62% { transform: translate(0, -18px); } }
-  @keyframes bwKetteKnieUb { 0%, 100% { transform: scale(1, 1); } 28%, 62% { transform: scale(1, .64); } }
-  @keyframes bwKetteKnieGanz { 0%, 100% { transform: none; } 28%, 62% { transform: translate(0, -3px); } }
-  @keyframes bwKetteArmVor { 0%, 100% { transform: rotate(14deg); } 28%, 62% { transform: rotate(-40deg); } }
-  @keyframes bwKetteArmVorR { 0%, 100% { transform: rotate(-14deg); } 28%, 62% { transform: rotate(40deg); } }
-  @keyframes bwKetteArmZur { 0%, 100% { transform: rotate(14deg); } 28%, 62% { transform: rotate(32deg); } }
-  @keyframes bwKetteArmZurR { 0%, 100% { transform: rotate(-14deg); } 28%, 62% { transform: rotate(-32deg); } }
-  @keyframes bwKetteEllbogen { 0%, 100% { transform: rotate(-30deg); } 28%, 62% { transform: rotate(-78deg); } }
-  @keyframes bwKetteEllbogenR { 0%, 100% { transform: rotate(30deg); } 28%, 62% { transform: rotate(78deg); } }
-  .bw-figur.bw-a-kette-knie-r .bw-obR, .bw-figur.bw-a-kette-knie-l .bw-obL { animation: bwKetteKnieOb calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-knie-r .bw-ubR, .bw-figur.bw-a-kette-knie-l .bw-ubL { animation: bwKetteKnieUb calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-knie-r .bw-ganz, .bw-figur.bw-a-kette-knie-l .bw-ganz { animation: bwKetteKnieGanz calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-knie-r .bw-oaL { animation: bwKetteArmVor calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-kette-knie-r .bw-oaR { animation: bwKetteArmZurR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-knie-l .bw-oaR { animation: bwKetteArmVorR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-kette-knie-l .bw-oaL { animation: bwKetteArmZur calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-knie-r .bw-uaL, .bw-figur.bw-a-kette-knie-l .bw-uaL { animation: bwKetteEllbogen calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-knie-r .bw-uaR, .bw-figur.bw-a-kette-knie-l .bw-uaR { animation: bwKetteEllbogenR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  @keyframes bwKetteSchrittL { 0%, 100% { transform: none; } 35%, 65% { transform: translate(-16px, 0); } }
-  @keyframes bwKetteSchrittR { 0%, 100% { transform: none; } 35%, 65% { transform: translate(16px, 0); } }
-  @keyframes bwKetteBeinAus { 0%, 100% { transform: rotate(0deg); } 20% { transform: translate(0, -5px) rotate(10deg); } 35%, 65% { transform: rotate(7deg); } }
-  @keyframes bwKetteBeinAusR { 0%, 100% { transform: rotate(0deg); } 20% { transform: translate(0, -5px) rotate(-10deg); } 35%, 65% { transform: rotate(-7deg); } }
-  @keyframes bwKetteBeinNach { 0%, 35% { transform: rotate(0deg); } 50% { transform: rotate(-6deg); } 65%, 100% { transform: rotate(0deg); } }
-  @keyframes bwKetteBeinNachR { 0%, 35% { transform: rotate(0deg); } 50% { transform: rotate(6deg); } 65%, 100% { transform: rotate(0deg); } }
-  @keyframes bwKetteArmeAuf { 0%, 100% { transform: rotate(16deg); } 35%, 65% { transform: rotate(48deg); } }
-  @keyframes bwKetteArmeAufR { 0%, 100% { transform: rotate(-16deg); } 35%, 65% { transform: rotate(-48deg); } }
-  .bw-figur.bw-a-kette-schritt-l { animation: bwKetteSchrittL calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-schritt-r { animation: bwKetteSchrittR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-schritt-l .bw-obL { animation: bwKetteBeinAus calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-kette-schritt-l .bw-obR { animation: bwKetteBeinNach calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-schritt-r .bw-obR { animation: bwKetteBeinAusR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-kette-schritt-r .bw-obL { animation: bwKetteBeinNachR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-schritt-l .bw-oaL, .bw-figur.bw-a-kette-schritt-r .bw-oaL { animation: bwKetteArmeAuf calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-schritt-l .bw-oaR, .bw-figur.bw-a-kette-schritt-r .bw-oaR { animation: bwKetteArmeAufR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  /* Kniebeuge: Beine und Oberkörper wie „Kniebeuge am Stuhl“ (bwKnie…), dazu die Arme nach vorn – von vorn gesehen kürzer (zum Betrachter hin) */
-  @keyframes bwKetteHockeOa { 0%, 100% { transform: rotate(4deg); } 45%, 60% { transform: rotate(-30deg) scale(1, .36); } }
-  @keyframes bwKetteHockeOaR { 0%, 100% { transform: rotate(-4deg); } 45%, 60% { transform: rotate(30deg) scale(1, .36); } }
-  @keyframes bwKetteHockeHand { 0%, 100% { transform: scale(1); } 45%, 60% { transform: scale(1.3, 3.4); } }
-  .bw-figur.bw-a-kette-hocke .bw-oben { animation: bwKnieOben calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-hocke .bw-obL { animation: bwKnieOb calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-kette-hocke .bw-obR { animation: bwKnieObR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-hocke .bw-ubL { animation: bwKnieUb calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-kette-hocke .bw-ubR { animation: bwKnieUbR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-hocke .bw-oaL { animation: bwKetteHockeOa calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-kette-hocke .bw-oaR { animation: bwKetteHockeOaR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-hocke .bw-hand { transform-box: fill-box; transform-origin: center; animation: bwKetteHockeHand calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  /* Sprung: ausholen (in die Knie), hoch mit den Armen über dem Kopf, weich landen */
-  @keyframes bwKetteSprungGanz { 0%, 100% { transform: none; } 20% { transform: translate(0, 6px); } 45% { transform: translate(0, -30px); } 66% { transform: translate(0, 3px); } 80% { transform: none; } }
-  @keyframes bwKetteSprungUb { 0%, 100% { transform: scale(1, 1); } 20% { transform: scale(1, .84); } 45% { transform: scale(1, 1); } 66% { transform: scale(1, .9); } 80% { transform: scale(1, 1); } }
-  @keyframes bwKetteSprungOb { 0%, 30%, 62%, 100% { transform: rotate(0deg); } 45% { transform: rotate(7deg); } }
-  @keyframes bwKetteSprungObR { 0%, 30%, 62%, 100% { transform: rotate(0deg); } 45% { transform: rotate(-7deg); } }
-  @keyframes bwKetteSprungOa { 0%, 100% { transform: rotate(10deg); } 20% { transform: rotate(-12deg); } 45% { transform: rotate(158deg); } 70% { transform: rotate(40deg); } }
-  @keyframes bwKetteSprungOaR { 0%, 100% { transform: rotate(-10deg); } 20% { transform: rotate(12deg); } 45% { transform: rotate(-158deg); } 70% { transform: rotate(-40deg); } }
-  .bw-figur.bw-a-kette-sprung .bw-ganz { animation: bwKetteSprungGanz calc(var(--b) * 4) cubic-bezier(.3, 0, .4, 1) var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-sprung .bw-ubL, .bw-figur.bw-a-kette-sprung .bw-ubR { animation: bwKetteSprungUb calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-sprung .bw-obL { animation: bwKetteSprungOb calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-kette-sprung .bw-obR { animation: bwKetteSprungObR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
-  .bw-figur.bw-a-kette-sprung .bw-oaL { animation: bwKetteSprungOa calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; } .bw-figur.bw-a-kette-sprung .bw-oaR { animation: bwKetteSprungOaR calc(var(--b) * 4) ease-in-out var(--ph, 0s) infinite; }
+  /* 2.370.0 KC-CLUB-BUEHNE-POWERKETTE → 2.399.0 KC-CLUB-BUEHNE-KETTE-ECHT: die Bewegungen berechnet jetzt app.js (bwKetteStil) beim ersten Gebrauch */
   .bw-kette-info { cursor: default; }
   .bw-figur.bw-a-abwischen .bw-oaL { transform: rotate(-8deg); animation: none; }
   .bw-figur.bw-a-abwischen .bw-uaL { transform: rotate(-46deg); animation: none; }
@@ -5142,6 +5092,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.398.0" data-v="2.398.0"></script>
+<script src="app.js?v=2.399.0" data-v="2.399.0"></script>
 </body>
 </html>

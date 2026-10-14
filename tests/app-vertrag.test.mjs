@@ -6346,6 +6346,21 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/fs = Math\.round\(Math\.min\(36 \* J\.k, J\.h \* \.5\)\)/.test(html) && /st = Math\.max\(2\.4, fs \/ 10\.5\)/.test(html) && /c\.strokeText\(L\.z\[i\], L\.pos\[i\]/.test(html), "größer, dichter, heller Rand");
 }
+// 2.399.0 KC-CLUB-BUEHNE-KETTE-TAKT + KC-CLUB-BUEHNE-KETTE-ECHT (Funde Hansi: „Ablauf stimmt nicht mit den Texten“, „Bewegungen flüssiger, Hüftschwung, Schritte“)
+{
+  const b = html.slice(html.indexOf("const BW_KETTE_TAKT"), html.indexOf("function bwKetteTick("));
+  const K = new Function("BW_SEK", "BW_SCHUETTELN", `const bwSekU = (u) => (u && u.sek) || BW_SEK;\n${b}; return { BW_KETTE_SCHRITTE, BW_KETTE_START };`)(30, 6);
+  // jedes Kommando ist in unter 2 s gesprochen (ca. 14 Zeichen/s) – auch mit „Von vorn – …“ und „… – noch 10!“
+  for (const s of K.BW_KETTE_SCHRITTE) { assert.ok(s.k && `Von vorn – ${s.k}!`.length <= 26 && `${s.k} – noch 10!`.length <= 26, "kurzer Name " + s.a); for (const t of s.s) assert.ok(t.length <= 21, "Kommando kurz: " + t); }
+  assert.ok(K.BW_KETTE_START.length <= 260, "Begrüßung der Kette ca. 15 s (vorher ~32 s)");
+  const t = html.slice(html.indexOf("function bwKetteTick("), html.indexOf("// ----- 2.399.0 KC-CLUB-BUEHNE-KETTE-ECHT"));
+  assert.ok(/if \(!s \|\| k % BW_KETTE_TAKT !== 0 \|\| e === 0 \|\| L\.rest <= 0\) return;/.test(t) && !/, false, "", true\)/.test(t), "nur beim Wechsel, nie „nebenbei“ (verspätet)");
+  assert.ok(/bwSag\(`\$\{s\.k\} – noch 10!`, true\)/.test(t) && /bwSag\("Letzter Sprung – hopp!", true\)/.test(t), "Endspurt ersetzt kein Kommando mehr");
+  assert.ok(/bwSag\(u\.kette \? BW_KETTE_SCHRITTE\[0\]\.s\[0\] : "Los geht’s!", !!u\.kette\);/.test(html) && /const extra = n\.kette \? `\$\{BW_KETTE_RUNDE\[n\.runde\]\?\.start \|\| ""\} `/.test(html), "Start direkt mit dem ersten Kommando; Durchgangs-Ansage vor dem Einzählen");
+  // Bewegungen: beim ersten Gebrauch berechnet, Start-/Endhaltung gleich, Oberschenkel mit eigener Klasse
+  assert.ok(/function bwKetteStil\(\)/.test(html) && /if \(String\(a\)\.startsWith\("kette-"\)\) bwKetteStil\(\);/.test(html) && /class="bw-hose bw-os\$\{s\}"/.test(html), "Bewegungen werden berechnet");
+  assert.ok(!/bwKetteKnieOb|bwKetteSchrittL|bwKetteSprungGanz/.test(lies("index.html")), "alte starre Bewegungen entfernt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -9167,7 +9182,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/const ES_FLIP_MUSTER = \[\["blanko", "▢ Blanko"\], \["kariert", "▦ Kariert"\], \["liniert", "☰ Liniert"\]\];/.test(b) && /onclick="esFlipMusterWeiter\(\)"/.test(b), "ein Knopf schaltet blanko → kariert → liniert");
   assert.ok(/globalCompositeOperation = "destination-out"/.test(b), "Radierer nimmt nur Striche weg – Linien bleiben");
   assert.ok(/const BWM_LAUT = \.\d+, BWM_LEISE = \.\d+;/.test(b) && /createDynamicsCompressor\(\)/.test(b), "Musik lauter (mit Kompressor), beim Sprechen deutlich leiser");
-  assert.ok(/if \(L\.ansage && bwSpricht\(\) && L\.warte < 10\) \{ L\.warte\+\+; return bwZahl\(\); \}/.test(b), "Einzählen wartet, bis die Erklärung fertig ist");
+  assert.ok(/if \(L\.ansage && bwSpricht\(\) && L\.warte < (?:10|20)\) \{ L\.warte\+\+; return bwZahl\(\); \}/.test(b), "Einzählen wartet, bis die Erklärung fertig ist");
   assert.ok(/L\.rest === 27\)[\s\S]{0,200}L\.rest === 21\)[\s\S]{0,200}L\.rest === 15\)[\s\S]{0,200}L\.rest === 10\)[\s\S]{0,120}L\.rest === 6\)/.test(b), "Sprüche gleichmäßig verteilt");
   assert.ok(/const BW_FARBEN = \[/.test(b) && /const bwStulpe = /.test(b) && /class="bw-band"/.test(b) && /L\.farbe \+ L\.i\)/.test(b), "80er: Neon-Jacke, Stulpen, Schweißbänder – je Übung andere Farben");
 }
@@ -9694,7 +9709,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   const b = html.slice(html.indexOf("const BW_KETTE_TAKT"), html.indexOf("function bwKetteTick("));
   const sekU = "const bwSekU = (u) => (u && u.sek) || BW_SEK, bwPauseU = (u) => (u && u.pause) || BW_SCHUETTELN;";
   const K = new Function("BW_SEK", "BW_SCHUETTELN", `${sekU}\n${b}; return { BW_KETTE, BW_KETTE_SCHRITTE, BW_KETTE_RUNDE, BW_KETTE_LOB, BW_KETTE_MARKIG, bwKetteJetzt };`)(30, 6);
-  assert.deepEqual(K.BW_KETTE_SCHRITTE.map((s) => s.a), ["kette-knie-r", "kette-knie-l", "kette-schritt-l", "kette-schritt-r", "kette-hocke", "hula", "kette-sprung"], "Reihenfolge: Knie rechts, Knie links, Schritt links, Schritt rechts, Hocke, Hula, Sprung");
+  assert.deepEqual(K.BW_KETTE_SCHRITTE.map((s) => s.a), ["kette-knie-r", "kette-knie-l", "kette-schritt-l", "kette-schritt-r", "kette-hocke", "kette-hula", "kette-sprung"], "Reihenfolge: Knie rechts, Knie links, Schritt links, Schritt rechts, Hocke, Hula, Sprung");
   // im Durchgang alle 2 s die nächste Bewegung, nach dem Sprung wieder von vorn
   const u = { ...K.BW_KETTE, runde: 1 }, folge = [];
   for (let rest = u.sek; rest >= 1; rest--) folge.push(K.bwKetteJetzt({ plan: [u], i: 0, phase: "uebung", rest }).a);
@@ -9704,8 +9719,8 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok([1, 2, 3].every((r) => K.BW_KETTE_RUNDE[r].start && K.BW_KETTE_RUNDE[r].ende) && /eine Runde geht noch/.test(K.BW_KETTE_RUNDE[2].ende) && /nicht nachlassen/.test(K.BW_KETTE_RUNDE[3].start), "3 Durchgänge mit eigener An- und Absage");
   for (const t of ["Toll gemacht!", "Super Einsatz von dir!", "Ja, so geht’s gut – weiter so!", "Weiter so, auch wenn’s brennt in den Beinen!", "Jetzt nicht nachlassen!"]) assert.ok(K.BW_KETTE_LOB.includes(t), "Lob: " + t);
   assert.ok(K.BW_KETTE_MARKIG.length >= 8 && K.BW_KETTE_SCHRITTE.every((s) => s.s.length >= 4), "markige Sprüche, je Bewegung mehrere Ansagen");
-  for (const a of ["kette-knie-r", "kette-knie-l", "kette-schritt-l", "kette-schritt-r", "kette-hocke", "kette-sprung"]) assert.ok(new RegExp(`\\.bw-figur\\.bw-a-${a}[ {]`).test(html), "Bewegung " + a);
-  assert.ok(/\.bw-figur\.bw-a-kette-hocke \.bw-obL \{ animation: bwKnieOb /.test(html) && /\.bw-figur\.bw-a-hula \.bw-oben \{ animation: bwHulaOben/.test(html), "Hocke und Hula nutzen die vorhandenen Bewegungen");
+  // 2.399.0: Bewegungen werden in bwKetteStil berechnet (siehe Abschnitt 2.399.0)
+  for (const a of ["kette-knie-r", "kette-knie-l", "kette-schritt-l", "kette-schritt-r", "kette-hocke", "kette-hula", "kette-sprung"]) assert.ok(html.includes(`"${a}": `), "Bewegung " + a);
   // Plan, Auswahl, Ablauf
   assert.ok(/\["kette", "🔥 Power-Kette"\]\]/.test(html) && /if \(modus === "kette"\) return \[1, 2, 3\]\.map\(\(r\) => \(\{ \.\.\.BW_KETTE, runde: r,/.test(html), "eigene Auswahl, feste 3 Durchgänge");
   assert.ok(/w\.modus === "kette" \? `<span class="es-k an bw-kette-info">🔁 3 Durchgänge · ca\. 4 Min\.<\/span>`/.test(html) && /kette: \[0, ""\] \}\[w\.modus\] \|\| \[0, ""\]/.test(html), "Auswahl ohne Minuten-Knöpfe, Twinkey steht");
