@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.368.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.370.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15271,9 +15271,44 @@ const BW_UEBUNGEN = [
   { id: "arbeitsplatte", t: "Arbeitsplatten-Liegestütz", g: "kueche", a: "liegestuetz", profil: 1, h: "Hände an die Arbeitsplatte, Körper gerade halten, nach vorn neigen – und wieder hoch drücken.", c: ["So kriegen wir das Fett weg!", "Die Arbeitsplatte hält – du auch!"] },
   { id: "brotteig", t: "Brotteig kneten", g: "kueche", a: "kneten", sitz: 1, h: "Fäuste machen und kräftig kneten – der Brotteig muss geschmeidig werden.", c: ["Kneten, kneten, kneten!", "Das wird ein Bauernbrot!"] },
 ];
-const BW_MODI = [["sitzen", "🪑 Im Sitzen"], ["stehen", "🧍 Im Stehen"], ["kueche", "🥄 Küchenhelfer"]];
+const BW_MODI = [["sitzen", "🪑 Im Sitzen"], ["stehen", "🧍 Im Stehen"], ["kueche", "🥄 Küchenhelfer"], ["kette", "🔥 Power-Kette"]];
+// ---------- 2.370.0 KC-CLUB-BUEHNE-POWERKETTE (Wunsch Hansi): neue Übung im Stehen – sieben Bewegungen als Kette, immer wieder von vorn ----------
+// Knie rechts hoch, Knie links hoch, Schritt nach links, Schritt nach rechts, Kniebeuge mit Armen nach vorn, Hula-Hoop-Hüfte, Sprung in die Luft.
+// Je Bewegung 4 Schläge (2 s bei 120 Schlägen/Min.), eine Kette 14 s, ein Durchgang 4 Ketten (56 s); 3 Durchgänge mit Verschnaufpause.
+// Twinkey turnt spiegelbildlich vor (wie ein Vorturner): „rechts“ ist auf deiner rechten Seite. Dazu markige Ansagen und viel Lob.
+const BW_KETTE_TAKT = 2; // Sekunden je Bewegung
+const BW_KETTE_SCHRITTE = [
+  { a: "kette-knie-r", t: "Knie hoch – rechts", s: ["Rechtes Knie hoch – zack!", "Rechts – hoch das Bein!", "Knie rechts – mit Power!", "Und rechts – Knie zur Brust!"] },
+  { a: "kette-knie-l", t: "Knie hoch – links", s: ["Und links – hoch damit!", "Linkes Knie – zack!", "Links – nicht schlappmachen!", "Knie links – volle Kraft!"] },
+  { a: "kette-schritt-l", t: "Schritt nach links", s: ["Schritt nach links!", "Ab nach links – Tschakka!", "Links rüber – zack, zack!", "Und nach links!"] },
+  { a: "kette-schritt-r", t: "Schritt nach rechts", s: ["Und nach rechts!", "Rüber nach rechts – Tempo!", "Rechts rüber!", "Schritt nach rechts – sauber!"] },
+  { a: "kette-hocke", t: "Kniebeuge – Arme nach vorn", s: ["Runter in die Hocke – Arme nach vorn!", "Hocke – und Arme lang!", "Po nach hinten, Arme nach vorn!", "Tief – und Arme nach vorn!"] },
+  { a: "hula", t: "Hula-Hoop-Hüfte", s: ["Hüfte kreisen – Hula-Hula!", "Und die Hüfte schwingt!", "Hula-Hoop – locker aus der Hüfte!", "Kreisen lassen!"] },
+  { a: "kette-sprung", t: "Sprung in die Luft", s: ["Und hoch in die Luft – hopp!", "Sprung – hopp!", "Abheben – hopp!", "Und springen – hopp!"] },
+];
+const BW_KETTE_H = "Im Stehen, immer der Reihe nach: rechtes Knie hoch, linkes Knie hoch, ein Schritt nach links, ein Schritt nach rechts, Kniebeuge mit den Armen nach vorn, Hüfte kreisen wie beim Hula-Hoop, ein Sprung in die Luft – und wieder von vorn. Wer mag, hält sich an der Stuhllehne fest und hüpft nur ganz klein.";
+const BW_KETTE = { id: "powerkette", t: "Power-Kette", g: "kette", a: "kette-knie-r", kette: 1, sek: 56, pause: 15, h: BW_KETTE_H };
+const BW_KETTE_RUNDE = {
+  1: { h: BW_KETTE_H, start: "Durchgang 1 von 3 – wir legen los!", ende: "Toll gemacht! Durchgang 1 ist geschafft. Kurz verschnaufen und ausschütteln!" },
+  2: { h: "Gleiche Kette wie eben: Knie rechts, Knie links, Schritt links, Schritt rechts, Hocke mit Armen nach vorn, Hula-Hüfte, Sprung.", start: "Durchgang 2 – gleiches Spiel, gleiche Power!", ende: "Super Einsatz von dir! Kurz durchatmen – na komm, eine Runde geht noch!" },
+  3: { h: "Letzte Runde! Knie rechts, Knie links, Schritt links, Schritt rechts, Hocke, Hula-Hüfte, Sprung.", start: "Letzter Durchgang – jetzt nicht nachlassen!", ende: "Geschafft! Drei Durchgänge Power-Kette – das war ganz große Klasse!" },
+};
+const BW_KETTE_LOB = ["Toll gemacht!", "Super Einsatz von dir!", "Ja, so geht’s gut – weiter so!", "Weiter so, auch wenn’s brennt in den Beinen!", "Jetzt nicht nachlassen!",
+  "Genau so – du ziehst das durch!", "Stark – dranbleiben!", "Klasse Rhythmus – weiter!", "Na komm, eine Kette geht noch!", "Das sieht richtig sportlich aus!"];
+const BW_KETTE_MARKIG = ["Wer bremst, verliert – weiter geht’s!", "Hier wird nicht geschlichen, hier wird gerockt!", "Die Beine brennen? Das ist das Fett, das um Gnade bittet!",
+  "Zähne zusammen – du schaffst das!", "Aufgeben ist was für Suppenhühner!", "Jetzt zeigen wir der Couch, wer hier der Chef ist!", "Schweiß ist nur Fett, das weint – also weiter!",
+  "Mehr Power – die Küche bebt!", "Wir sind doch nicht zum Kaffeekränzchen hier – Tempo!", "Wer jetzt durchhält, hat sich den Nachtisch verdient!"];
+const bwKetteJetzt = (L) => { const u = L && L.plan[L.i]; return u && u.kette && L.phase === "uebung" ? BW_KETTE_SCHRITTE[Math.floor(Math.max(0, bwSekU(u) - L.rest) / BW_KETTE_TAKT) % BW_KETTE_SCHRITTE.length] : null; };
+function bwKetteTick(L, u) { // Bewegung alle 2 s weiter; Ansagen: Kommando je Bewegung (wenn gerade niemand spricht), Lob bzw. markiger Spruch je Kette, Endspurt, 3-2-1
+  const e = bwSekU(u) - L.rest, k = e % (BW_KETTE_TAKT * BW_KETTE_SCHRITTE.length), nr = Math.floor(e / (BW_KETTE_TAKT * BW_KETTE_SCHRITTE.length)), s = bwKetteJetzt(L);
+  if (s && s.a !== L.ketteA) { L.ketteA = s.a; bwLaufZeigen(); }
+  if (L.rest >= 1 && L.rest <= 3) return bwSag(L.rest === 3 ? "Noch 3" : L.rest === 2 ? "noch 2" : "noch 1", true);
+  if (L.rest === 10) return bwSag(u.runde === 3 ? "Die letzten 10 Sekunden – jetzt nicht nachlassen!" : bwZufall(BW_ENDSPURT, L), false);
+  if (k === 11) return bwSag(nr % 2 ? bwNimm(BW_KETTE_MARKIG, L, "ketteMarkig") : bwNimm(BW_KETTE_LOB, L, "ketteLob"), false); // während der Hula-Hüfte
+  if (k % BW_KETTE_TAKT === 0 && s) bwSag(k === 0 && e > 0 ? `Und wieder von vorn – ${s.s[nr % s.s.length]}` : s.s[nr % s.s.length], false, "", true);
+}
 const BW_DAUER = [5, 10, 15];
-const BW_TEMPO = { sitzen: 112, stehen: 120, kueche: 116 }; // Schläge/Min. (Seniorenkurse um 120, im Sitzen ruhiger)
+const BW_TEMPO = { sitzen: 112, stehen: 120, kueche: 116, kette: 120 }; // Schläge/Min. (Seniorenkurse um 120, im Sitzen ruhiger); 2.370.0: Power-Kette 120 = 4 Schläge in 2 s
 const BW_LOB = ["Super machst du das!", "Spitze – weiter so!", "Schön weiteratmen – ein und aus!", "Lächeln nicht vergessen!", "Du bist heute der Star auf der Bühne!",
   "Das sieht richtig sportlich aus!", "Mit Schwung – die Küche rockt!", "Wer rastet, der rostet – wer rührt, der glänzt!", "Prima, ganz in deinem Tempo!",
   "Spürst du, wie es warm wird?", "Toll – ich bin stolz auf dich!", "Und weiter – du schaffst das!", "Schultern locker, schön aufrecht!", "Bravo! Das macht Spaß, oder?",
@@ -15360,7 +15395,7 @@ function bwFigur(a, sitz, p, ding, b, ph, farbe) {
 }
 // ----- 2.303.0 KC-CLUB-BUEHNE-BEWEGUNG-2: Figur passend zur Übung – Seitenansicht (Aufstehen) oder auf einem Weg (Kreis, um den Stuhl) -----
 function bwBuehneFigur(u, phase, anim, sitz, farbe) {
-  const uebt = phase === "uebung", b = bwSchlag(), ph = bwPhase();
+  const uebt = phase === "uebung", b = bwSchlag(), ph = u.kette ? 0 : bwPhase(); // 2.370.0: Kette – jede Bewegung beginnt beim Wechsel von vorn
   if (u.seite && phase !== "schuetteln") return bwFigurSeite(uebt ? anim : "ruhe", b, ph, farbe); // Vorbereiten: sitzt schon seitlich auf dem Stuhl
   if (u.profil && phase !== "schuetteln") return bwFigurProfil(uebt ? anim : "ruhe", b, ph, farbe); // 2.304.0: stehend von der Seite (Schritte vor/zurück)
   const fig = bwFigur(anim, sitz, phase === "schuetteln" ? (anim === "stirn" ? "tuch" : "") : u.p, phase === "schuetteln" ? "" : u.ding, b, ph, farbe);
@@ -15406,6 +15441,7 @@ const bwHoop = (H, vorn) => `<g class="bw-hoop ${vorn ? "vorn" : "hinten"}" styl
 // 2.313.0 (Wunsch Hansi „jedes Mal andere Übungen“): zufällige Reihenfolge; was beim letzten Mal dran war, kommt zuletzt;
 // nie zweimal dieselbe Bewegung direkt hintereinander. Gemerkt wird nur auf diesem Gerät.
 function bwPlan(modus, dauer) {
+  if (modus === "kette") return [1, 2, 3].map((r) => ({ ...BW_KETTE, runde: r, t: `${BW_KETTE.t} – Durchgang ${r} von 3`, h: BW_KETTE_RUNDE[r].h })); // 2.370.0: feste 3 Durchgänge
   const passt = BW_UEBUNGEN.filter((u) => u.g === modus), n = Math.max(4, Math.round((dauer * 60) / (BW_SEK + BW_SCHUETTELN + BW_BEREIT)));
   let zuletzt = []; try { zuletzt = JSON.parse(esLies("bw_zuletzt_" + modus, "[]")); } catch (e) { zuletzt = []; }
   const misch = (l) => { const a = l.slice(); for (let i = a.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [a[i], a[k]] = [a[k], a[i]]; } return a; };
@@ -15429,14 +15465,14 @@ function esBuehneZeigen(f) {
   if (BW.lauf) return bwLaufZeigen();
   if (BW.hoeren) return bwHoerZeigen(); // 2.302.0
   if (BW.vorher) return bwVorher(); // 2.309.0: Bereitlegen-Liste bleibt beim Zurückkehren
-  const w = bwWahl(), hinweis = !fiLs(FI_HINWEIS_KEY, false), vorne = { sitzen: [1, ""], stehen: [0, ""], kueche: [1, "schneebesen"] }[w.modus];
+  const w = bwWahl(), hinweis = !fiLs(FI_HINWEIS_KEY, false), vorne = { sitzen: [1, ""], stehen: [0, ""], kueche: [1, "schneebesen"], kette: [0, ""] }[w.modus] || [0, ""];
   f.innerHTML = `<div class="bw-buehne"><div class="bw-licht"></div><div class="bw-vorhang links halb"></div><div class="bw-vorhang rechts halb"></div><div class="bw-boden"></div>
     <div class="bw-mitte">${bwFigur("winken", vorne[0], vorne[1], 0, bwSchlag())}</div>
     <div class="bw-wahl">
       <div class="bw-titel">🎭 Bühne frei für Bewegung!</div>
       ${hinweis ? `<div class="bw-hinweis">🩺 Mach nur so viel, wie es dir angenehm ist. Bei Schmerzen, Schwindel oder Atemnot sofort aufhören.<button type="button" class="es-k es-haupt" onclick="fiLsSetzen(FI_HINWEIS_KEY, true);esBuehneZeigen($('hrFlaeche'))">👍 Verstanden</button></div>` : ""}
       <div class="bw-reihe">${BW_MODI.map(([k, t]) => `<button type="button" class="es-k${w.modus === k ? " an" : ""}" onclick="bwWahlSetzen({modus:'${k}'})">${t}</button>`).join("")}</div>
-      <div class="bw-reihe">${BW_DAUER.map((d) => `<button type="button" class="es-k${w.dauer === d ? " an" : ""}" onclick="bwWahlSetzen({dauer:${d}})">${d} Min.</button>`).join("")}
+      <div class="bw-reihe">${w.modus === "kette" ? `<span class="es-k an bw-kette-info">🔁 3 Durchgänge · ca. 4 Min.</span>` : BW_DAUER.map((d) => `<button type="button" class="es-k${w.dauer === d ? " an" : ""}" onclick="bwWahlSetzen({dauer:${d}})">${d} Min.</button>`).join("")}
         <button type="button" class="es-k${w.musik ? " an" : ""}" onclick="bwWahlSetzen({musik:${!w.musik}})" aria-label="Musik ${w.musik ? "aus" : "an"}">${w.musik ? "🎵 Musik" : "🔇 Musik"}</button>
         <button type="button" class="es-k${w.ansage ? " an" : ""}" onclick="bwWahlSetzen({ansage:${!w.ansage}})" aria-label="Ansage ${w.ansage ? "aus" : "an"}">${w.ansage ? "🔊 Ansage" : "🔈 Ansage"}</button></div>
       <div class="bw-reihe"><button type="button" class="es-k es-haupt bw-los" ${hinweis ? "disabled" : ""} onclick="bwVorher()">▶️ Vorhang auf!</button><button type="button" class="es-k bw-hoeren-los" onclick="bwClubSong()">🎤 Club-Song</button><button type="button" class="es-k bw-hoeren-los" onclick="bwHoeren()">🎶 Nur Musik hören</button></div></div></div>`; // 2.302.0 KC-CLUB-BUEHNE-MUSIK
@@ -15518,7 +15554,8 @@ function bwTick() {
     L.gezaehlt = true; L.rest = 4; bwSag("Und fünf, sechs, sieben, acht!", false); BWM.riser = true; return bwZahl();
   }
   L.rest--;
-  if (L.phase === "uebung") { // Sprüche gleichmäßig verteilt: 27 · 21 · 15 · 10 · 6 · 3-2-1
+  if (L.phase === "uebung" && u.kette) { L.sek++; bwKetteTick(L, u); } // 2.370.0 Power-Kette: eigene Ansagen
+  else if (L.phase === "uebung") { // Sprüche gleichmäßig verteilt: 27 · 21 · 15 · 10 · 6 · 3-2-1
     L.sek++;
     if ((u.a2 || u.um) && L.rest === Math.floor(BW_SEK / 2)) bwLaufZeigen(); // 2.303.0: Seitenwechsel (z. B. Storch: anderes Bein); 2.310.0: um = jetzt andersherum
     if (L.rest === 27) bwSag(u.c?.[0] || bwNimm(BW_LOB, L, "lob"), false, "", true);
@@ -15530,15 +15567,15 @@ function bwTick() {
   }
   if (L.phase === "schuetteln" && L.wisch && L.rest === 3) bwLaufZeigen(); // 2.311.0: Stirn ist trocken – jetzt ausschütteln
   if (L.rest > 0) return bwZahl();
-  if (L.phase === "bereit") { L.phase = "uebung"; L.rest = BW_SEK; BWM.stufe = 2; BWM.becken = true; bwSag("Los geht’s!", false); }
+  if (L.phase === "bereit") { L.phase = "uebung"; L.rest = bwSekU(u); L.ketteA = ""; BWM.stufe = 2; BWM.becken = true; bwSag(u.kette ? `Los geht’s! ${BW_KETTE_RUNDE[u.runde]?.start || ""} ${BW_KETTE_SCHRITTE[0].s[0]}` : "Los geht’s!", false); }
   else if (L.phase === "uebung") { // 2.311.0 KC-CLUB-BUEHNE-STIRN: ab und zu (jede dritte Übung) erst mit dem Schweißtuch die Stirn abwischen
-    L.phase = "schuetteln"; L.rest = BW_SCHUETTELN; BWM.stufe = 1; L.wisch = L.i % 3 === 1 && L.i < L.plan.length - 1;
-    bwSag(L.i >= L.plan.length - 1 ? "Und ausschütteln! Geschafft!" : L.wisch ? "Puh! Erst mal den Schweiß abwischen – und dann ausschütteln!" : bwZufall(BW_SCHUETTELN_SAG, L), true);
+    L.phase = "schuetteln"; L.rest = bwPauseU(u); BWM.stufe = 1; L.wisch = L.i % 3 === 1 && L.i < L.plan.length - 1;
+    bwSag(u.kette ? BW_KETTE_RUNDE[u.runde]?.ende || "Toll gemacht!" : L.i >= L.plan.length - 1 ? "Und ausschütteln! Geschafft!" : L.wisch ? "Puh! Erst mal den Schweiß abwischen – und dann ausschütteln!" : bwZufall(BW_SCHUETTELN_SAG, L), true);
   }
   else if (L.phase === "schuetteln") {
     if (L.i >= L.plan.length - 1) return bwFertig();
     L.i++; L.phase = "bereit"; L.rest = BW_BEREIT; L.warte = 0; L.gezaehlt = false; const n = L.plan[L.i];
-    const extra = L.i === Math.floor(L.plan.length / 2) ? "Halbzeit – du bist spitze! " : L.i % 3 === 0 ? "Trinken nicht vergessen! " : "";
+    const extra = n.kette ? "" : L.i === Math.floor(L.plan.length / 2) ? "Halbzeit – du bist spitze! " : L.i % 3 === 0 ? "Trinken nicht vergessen! " : "";
     const nimm = bwNimmDinge(n); // 2.309.0: Twinkey sagt, was man dafür in die Hand nimmt
     bwSag(`${extra}Als Nächstes: ${n.t}.${nimm.length ? ` Nimm ${bwAufzaehlen(nimm.map((x) => x[1]))}.` : ""} ${n.h}`, false, `${extra}Als Nächstes: ${n.t}${nimm.length ? ` ${nimm.map((x) => x[0]).join("")}` : ""}`);
   }
@@ -15546,19 +15583,22 @@ function bwTick() {
 }
 // 2.317.0 KC-CLUB-BUEHNE-UHR (Wunsch Hansi): große Uhr neben Twinkey – wie lange das Training schon läuft und wie lange noch
 const bwUhrText = (s) => { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+// 2.370.0: Dauer je Übung (Power-Kette: längerer Durchgang, längere Verschnaufpause) – sonst wie bisher 30 s + 6 s
+const bwSekU = (u) => (u && u.sek) || BW_SEK, bwPauseU = (u) => (u && u.pause) || BW_SCHUETTELN;
 function bwRestZeit(L) { // noch übrige Sekunden: aktuelle Phase + restliche Phasen dieser Übung + alle folgenden Übungen
-  const je = BW_BEREIT + BW_SEK + BW_SCHUETTELN, danach = L.phase === "bereit" ? BW_SEK + BW_SCHUETTELN : L.phase === "uebung" ? BW_SCHUETTELN : 0;
-  return L.rest + danach + (L.plan.length - 1 - L.i) * je;
+  const u = L.plan[L.i], danach = L.phase === "bereit" ? bwSekU(u) + bwPauseU(u) : L.phase === "uebung" ? bwPauseU(u) : 0;
+  let s = L.rest + danach; for (let k = L.i + 1; k < L.plan.length; k++) s += BW_BEREIT + bwSekU(L.plan[k]) + bwPauseU(L.plan[k]);
+  return s;
 }
 function bwUhr() { const L = BW.lauf; if (!L) return; const a = $("bwUhrAb"), n = $("bwUhrNoch"); if (a) a.textContent = bwUhrText(L.zeit || 0); if (n) n.textContent = bwUhrText(bwRestZeit(L)); }
 function bwZahl() { const L = BW.lauf, z = $("bwZahl"); if (!L || !z) return; z.textContent = L.rest; z.classList.toggle("knapp", L.phase === "uebung" && L.rest <= 3); bwUhr();
-  const b = $("bwBalken"); if (b) { const ges = L.phase === "uebung" ? BW_SEK : L.phase === "schuetteln" ? BW_SCHUETTELN : BW_BEREIT; b.style.width = `${Math.max(0, 100 - (L.rest / ges) * 100)}%`; } }
+  const b = $("bwBalken"); if (b) { const ges = L.phase === "uebung" ? bwSekU(L.plan[L.i]) : L.phase === "schuetteln" ? bwPauseU(L.plan[L.i]) : BW_BEREIT; b.style.width = `${Math.max(0, 100 - (L.rest / ges) * 100)}%`; } }
 function bwLaufZeigen(vorhangAuf) {
   const L = BW.lauf, f = $("hrFlaeche"); if (!L || !f) return; bwTrainingKnoepfe(true);
-  const u = L.plan[L.i], anim = L.phase === "uebung" ? (u.a2 && L.rest <= BW_SEK / 2 ? u.a2 : u.a) : L.phase === "schuetteln" ? (L.wisch && L.rest > 3 ? "stirn" : "schuetteln") : "ruhe", sitz = bwWahl().modus !== "stehen" && !!u.sitz; // 2.303.0: a2 = zweite Hälfte (anderes Bein)
+  const u = L.plan[L.i], ks = bwKetteJetzt(L), anim = ks ? ks.a : L.phase === "uebung" ? (u.a2 && L.rest <= BW_SEK / 2 ? u.a2 : u.a) : L.phase === "schuetteln" ? (L.wisch && L.rest > 3 ? "stirn" : "schuetteln") : "ruhe", sitz = bwWahl().modus !== "stehen" && !!u.sitz; // 2.303.0: a2 = zweite Hälfte (anderes Bein)
   const text = L.phase === "bereit" ? "Gleich:" : L.phase === "schuetteln" ? "Ausschütteln!" : "Jetzt:", alt = BW.blase || "";
   f.innerHTML = `<div class="bw-buehne an${L.pause ? " angehalten" : ""}" id="bwLauf"><div class="bw-licht"></div><div class="bw-vorhang links${vorhangAuf ? " oeffnet" : " offen"}"></div><div class="bw-vorhang rechts${vorhangAuf ? " oeffnet" : " offen"}"></div><div class="bw-boden"></div>
-    <div class="bw-kopf"><div><small>${text} · Übung ${L.i + 1} von ${L.plan.length}</small><b>${esc(L.phase === "schuetteln" ? "Arme und Beine locker ausschütteln" : u.t)}</b></div><div class="bw-zahl" id="bwZahl">${L.rest}</div></div>
+    <div class="bw-kopf"><div><small>${text} · ${u.kette ? `Durchgang ${L.i + 1} von ${L.plan.length}${ks ? ` · Bewegung ${BW_KETTE_SCHRITTE.indexOf(ks) + 1} von ${BW_KETTE_SCHRITTE.length}` : ""}` : `Übung ${L.i + 1} von ${L.plan.length}`}</small><b>${esc(L.phase === "schuetteln" ? (u.kette ? "Verschnaufen und ausschütteln" : "Arme und Beine locker ausschütteln") : ks ? ks.t : u.t)}</b></div><div class="bw-zahl" id="bwZahl">${L.rest}</div></div>
     <div class="bw-balken-bahn"><div class="bw-balken" id="bwBalken"></div></div>
     <div class="bw-sprech" id="bwSprech" aria-live="polite">${esc(alt)}</div>
     <div class="bw-mitte">${bwBuehneFigur(u, L.phase, anim, sitz, L.farbe + L.i)}</div>
@@ -15587,12 +15627,12 @@ function bwStopp(zeigen) {
 // 2.313.0 (Wunsch Hansi): Twinkeys Schlusswort nach dem Sport
 const BW_SCHLUSS = "Nach dieser Plackerei habe ich mir einen Eierpunsch und eine Portion Grünkohl mit doppelt Mettwurst am Köcheclub-Stand verdient. Die kochen dort extra warm!";
 function bwFertig() {
-  const L = BW.lauf; if (!L) return; const sek = L.sek, n = L.plan.length; bwStopp(false);
+  const L = BW.lauf; if (!L) return; const sek = L.sek, n = L.plan.length, kette = !!L.plan[0]?.kette; bwStopp(false);
   if (bwWahl().ansage) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } bwSprechen(`Geschafft! Das war super – Applaus für dich! ${BW_SCHLUSS}`); }
   const f = $("hrFlaeche"); if (!f) return;
   f.innerHTML = `<div class="bw-buehne an"><div class="bw-licht"></div><div class="bw-vorhang links schliesst"></div><div class="bw-vorhang rechts schliesst"></div><div class="bw-boden"></div>
     <div class="bw-mitte">${bwFigur("jubel", 0, "", 0, bwSchlag(), 0, n)}</div><div class="bw-applaus" aria-hidden="true">👏 🎉 👏</div>
-    <div class="bw-wahl"><div class="bw-titel">🏅 Geschafft – Applaus für dich!</div><div class="bw-tipp" style="position:static">🍲 ${esc(BW_SCHLUSS)}</div><div class="bw-tipp" style="position:static">${n} Übungen · ${Math.floor(sek / 60)} Min. ${sek % 60} s Bewegung</div>
+    <div class="bw-wahl"><div class="bw-titel">🏅 Geschafft – Applaus für dich!</div><div class="bw-tipp" style="position:static">🍲 ${esc(BW_SCHLUSS)}</div><div class="bw-tipp" style="position:static">${kette ? `${n} Durchgänge Power-Kette` : `${n} Übungen`} · ${Math.floor(sek / 60)} Min. ${sek % 60} s Bewegung</div>
       <button type="button" class="es-k es-haupt bw-los" onclick="esBuehneZeigen($('hrFlaeche'))">🔁 Nochmal</button></div></div>`;
 }
 // ----- 2.298.0 KC-CLUB-BUEHNE-LAUTSTAERKE (Wunsch Hansi): Regler rechts für die Musik – Keil unten dünn, nach oben (lauter) dicker -----

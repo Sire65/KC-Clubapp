@@ -9027,7 +9027,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   for (const a of ["armkreis", "schulter", "marsch", "kneten", "bein", "seitheben", "hochdruecken", "klatschen", "trommeln", "ruehren", "seitbeuge", "rollen", "hochhalten", "strecken", "seit", "knie", "zehen", "rumpf", "nacken", "schuetteln", "jubel", "winken", "ruhe"])
     assert.ok(new RegExp(`\\.bw-figur\\.bw-a-${a}[ {]`).test(html), "Bewegung " + a);
   assert.ok(/animation: bw\w+ calc\(var\(--b\) \* [\d.]+\)/.test(html) && /style="--b:\$\{b \|\| \.5\}s;--ph:\$\{ph \|\| 0\}s/.test(b) && /function bwPhase\(\)/.test(b), "Bewegung im Takt der Musik (Dauer in Schlägen, Start auf dem Schlag)");
-  assert.ok(/const BW_TEMPO = \{ sitzen: 112, stehen: 120, kueche: 116 \}/.test(b), "Tempo wie in Seniorenkursen");
+  assert.ok(/const BW_TEMPO = \{ sitzen: 112, stehen: 120, kueche: 116, kette: 120 \}/.test(b), "Tempo wie in Seniorenkursen (2.370.0: Power-Kette 120)");
   assert.ok(/BWM_HOOK/.test(b) && /function bwRiser\(/.test(b) && /BWM\.becken = true/.test(b) && /fill = takt === 7/.test(b), "Musik: Hook, Riser, Becken, Fill");
   assert.ok(/"Und fünf, sechs, sieben, acht!"/.test(b) && BW_LOB_ANZAHL(b) >= 12 && /c: \[/.test(b) && /id="bwSprech"/.test(b), "Einzählen, viele Sprüche, eigene je Übung, Sprechblase");
   assert.ok(!/\bapi\(/.test(b) && !/\|\|=|\?\?=/.test(b), "nichts gesendet, alte Handys");
@@ -9573,4 +9573,34 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/`archiv\/\$\{dokId\}\/\$\{attId\}\.enc`/.test(server) && /body: await kceVerschluesseln\(inhalt\)/.test(server) && /!String\(kopie\.get\(d\.id\)\?\.schluessel \|\| ""\)\.endsWith\("\.enc"\)/.test(server), "Archiv-Kopie verschlüsselt, alte Klartext-Kopien werden ersetzt");
   assert.ok(/const klartext = !m\.fehler && !k\.endsWith\("\.enc"\) && !k\.endsWith\("\/manifest\.json"\);/.test(server), "alte Klartext-Dateien erst nach fehlerfreiem verschlüsseltem Lauf löschen");
   assert.ok(fs.existsSync(new URL("../tools/notfall/fra-entschluesseln.mjs", import.meta.url)) && /fra-entschluesseln\.mjs/.test(server), "Notfall-Werkzeug zum Entschlüsseln vorhanden");
+}
+
+// 2.370.0 KC-CLUB-BUEHNE-POWERKETTE (Wunsch Hansi): neue Übung im Stehen – 7 Bewegungen als Kette, 3 Durchgänge, markige Sprüche und Lob
+{
+  const b = html.slice(html.indexOf("const BW_KETTE_TAKT"), html.indexOf("function bwKetteTick("));
+  const sekU = "const bwSekU = (u) => (u && u.sek) || BW_SEK, bwPauseU = (u) => (u && u.pause) || BW_SCHUETTELN;";
+  const K = new Function("BW_SEK", "BW_SCHUETTELN", `${sekU}\n${b}; return { BW_KETTE, BW_KETTE_SCHRITTE, BW_KETTE_RUNDE, BW_KETTE_LOB, BW_KETTE_MARKIG, bwKetteJetzt };`)(30, 6);
+  assert.deepEqual(K.BW_KETTE_SCHRITTE.map((s) => s.a), ["kette-knie-r", "kette-knie-l", "kette-schritt-l", "kette-schritt-r", "kette-hocke", "hula", "kette-sprung"], "Reihenfolge: Knie rechts, Knie links, Schritt links, Schritt rechts, Hocke, Hula, Sprung");
+  // im Durchgang alle 2 s die nächste Bewegung, nach dem Sprung wieder von vorn
+  const u = { ...K.BW_KETTE, runde: 1 }, folge = [];
+  for (let rest = u.sek; rest >= 1; rest--) folge.push(K.bwKetteJetzt({ plan: [u], i: 0, phase: "uebung", rest }).a);
+  assert.equal(folge[0], "kette-knie-r"); assert.equal(folge[2], "kette-knie-l"); assert.equal(folge[12], "kette-sprung"); assert.equal(folge[14], "kette-knie-r", "von vorn");
+  assert.ok(u.sek === 56 && u.sek % (2 * 7) === 0 && u.pause === 15, "4 ganze Ketten je Durchgang, Verschnaufpause");
+  assert.equal(K.bwKetteJetzt({ plan: [u], i: 0, phase: "schuetteln", rest: 5 }), null, "in der Pause keine Kette");
+  assert.ok([1, 2, 3].every((r) => K.BW_KETTE_RUNDE[r].start && K.BW_KETTE_RUNDE[r].ende) && /eine Runde geht noch/.test(K.BW_KETTE_RUNDE[2].ende) && /nicht nachlassen/.test(K.BW_KETTE_RUNDE[3].start), "3 Durchgänge mit eigener An- und Absage");
+  for (const t of ["Toll gemacht!", "Super Einsatz von dir!", "Ja, so geht’s gut – weiter so!", "Weiter so, auch wenn’s brennt in den Beinen!", "Jetzt nicht nachlassen!"]) assert.ok(K.BW_KETTE_LOB.includes(t), "Lob: " + t);
+  assert.ok(K.BW_KETTE_MARKIG.length >= 8 && K.BW_KETTE_SCHRITTE.every((s) => s.s.length >= 4), "markige Sprüche, je Bewegung mehrere Ansagen");
+  for (const a of ["kette-knie-r", "kette-knie-l", "kette-schritt-l", "kette-schritt-r", "kette-hocke", "kette-sprung"]) assert.ok(new RegExp(`\\.bw-figur\\.bw-a-${a}[ {]`).test(html), "Bewegung " + a);
+  assert.ok(/\.bw-figur\.bw-a-kette-hocke \.bw-obL \{ animation: bwKnieOb /.test(html) && /\.bw-figur\.bw-a-hula \.bw-oben \{ animation: bwHulaOben/.test(html), "Hocke und Hula nutzen die vorhandenen Bewegungen");
+  // Plan, Auswahl, Ablauf
+  assert.ok(/\["kette", "🔥 Power-Kette"\]\]/.test(html) && /if \(modus === "kette"\) return \[1, 2, 3\]\.map\(\(r\) => \(\{ \.\.\.BW_KETTE, runde: r,/.test(html), "eigene Auswahl, feste 3 Durchgänge");
+  assert.ok(/w\.modus === "kette" \? `<span class="es-k an bw-kette-info">🔁 3 Durchgänge · ca\. 4 Min\.<\/span>`/.test(html) && /kette: \[0, ""\] \}\[w\.modus\] \|\| \[0, ""\]/.test(html), "Auswahl ohne Minuten-Knöpfe, Twinkey steht");
+  assert.ok(/if \(L\.phase === "uebung" && u\.kette\) \{ L\.sek\+\+; bwKetteTick\(L, u\); \}[^\n]*\n  else if \(L\.phase === "uebung"\) \{/.test(html) && /L\.rest = bwSekU\(u\);/.test(html) && /L\.rest = bwPauseU\(u\);/.test(html), "eigener Ablauf, Dauer je Übung");
+  assert.ok(/if \(s && s\.a !== L\.ketteA\) \{ L\.ketteA = s\.a; bwLaufZeigen\(\); \}/.test(html) && /ph = u\.kette \? 0 : bwPhase\(\)/.test(html), "Bewegungswechsel zeigt sofort die neue Bewegung von vorn");
+  // Restzeit: 3 × (7 + 56 + 15) = 234 s ≈ 4 Min.; bisherige Übungen unverändert (siehe 2.317.0)
+  const r = html.slice(html.indexOf("const bwUhrText"), html.indexOf("function bwZahl()"));
+  const { bwRestZeit } = new Function("BW_BEREIT", "BW_SEK", "BW_SCHUETTELN", r + "; return { bwRestZeit };")(7, 30, 6);
+  const plan = [1, 2, 3].map((runde) => ({ ...K.BW_KETTE, runde }));
+  assert.equal(bwRestZeit({ phase: "bereit", rest: 7, i: 0, plan }), 234, "Power-Kette dauert knapp 4 Minuten");
+  assert.equal(bwRestZeit({ phase: "uebung", rest: 20, i: 1, plan: [{}, {}, { sek: 56, pause: 15 }] }), 20 + 6 + 7 + 56 + 15, "gemischte Dauer");
 }
