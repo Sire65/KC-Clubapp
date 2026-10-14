@@ -6361,6 +6361,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function bwKetteStil\(\)/.test(html) && /if \(String\(a\)\.startsWith\("kette-"\)\) bwKetteStil\(\);/.test(html) && /class="bw-hose bw-os\$\{s\}"/.test(html), "Bewegungen werden berechnet");
   assert.ok(!/bwKetteKnieOb|bwKetteSchrittL|bwKetteSprungGanz/.test(lies("index.html")), "alte starre Bewegungen entfernt");
 }
+// 2.400.0 KC-CLUB-KOPF-GLANZ (Wunsch Hansi „beim Start ein heller Lichtschein von links nach rechts durch den Kopf“)
+{
+  assert.ok(/<div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><i><\/i><\/div>/.test(html), "Glanz-Element im Kopf der Startseite");
+  assert.ok(/\.kopf-glanz \{ position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none;/.test(html), "Glanz bleibt im runden Kopf und fängt keine Klicks");
+  assert.ok(/animation: kopfGlanz [^;]* 1 both;/.test(html) && /@keyframes kopfGlanz \{[^}]*transform: translateX\(-100%\)/.test(html), "einmal, per transform (flüssig)");
+  assert.ok(/:root\.ohne-anim \.kopf-glanz \{ display: none; \}/.test(html) && /prefers-reduced-motion: reduce\) \{ \.kopf-glanz \{ display: none; \}/.test(html), "Animationen aus / Bewegung reduzieren → kein Glanz");
+  assert.ok(/g\.addEventListener\("animationend", weg, \{ once: true \}\); g\.addEventListener\("animationcancel", weg, \{ once: true \}\);/.test(html), "nur einmal je App-Start");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

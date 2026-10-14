@@ -14,6 +14,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.400.0 – 2026-10-14 – Lichtschein über den Kopf beim Start
+Beim Öffnen der App läuft einmal ein heller Lichtschein von links nach rechts über den ganzen Kopf der Startseite (knapp 2 s). Er läuft flüssig, auch während die App beim Start noch rechnet, und kommt beim Zurückkehren zur Startseite nicht erneut. Bei „Animationen aus“ und bei „Bewegung reduzieren“ am Gerät entfällt er.
+
 ## 2.399.0 – 2026-10-14 – Bühne: Power-Kette im Takt und natürlicher
 Ansagen passen jetzt genau zur Bewegung (kurz, beim Wechsel, Begrüßung kürzer, Einzählen erst nach der Erklärung). Bewegungen neu: Knie beugen sich, Hüftschwung, echte Seitschritte, Hocke mit tiefer Hüfte, Sprung mit Ausholen – fließende Übergänge.
 
