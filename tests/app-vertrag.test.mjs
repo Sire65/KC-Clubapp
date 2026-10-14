@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6244,18 +6244,21 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/vars\.wichtigkeit === "notfall" \|\| vars\.eilig === true \? \{ priority: "critical" \} : vars\.wichtigkeit === "hoch" \? \{ priority: "high" \}/.test(server), "eilig/Notfall → critical, hoch → high");
   assert.ok(/wichtig \|\| express \? \{ wichtigkeit: "hoch" \} : \{\}\), \.\.\.\(express \? \{ eilig: true \} : \{\}\)/.test(server), "nur Express wird eilig verschickt");
-  assert.ok(/\}, `club-nachricht:\$\{m\.id\}`, \{ notfall: notfall \|\| express \}\);/.test(server) && /if \(notfall \|\| express\) stumm\.clear\(\);/.test(server), "Express weiter durch Ruhezeit und Stummschaltung");
+  // 2.403.0: Express läuft über expressSenden (ohne Ruhezeit-Prüfung, Stummschaltung vorher geleert) – Notfall weiter über sendenGewaehlt mit notfall
+  assert.ok(/nachrichtVars, `club-nachricht:\$\{m\.id\}`, \{ notfall: notfall \|\| express \}\);/.test(server) && /if \(notfall \|\| express\) stumm\.clear\(\);/.test(server)
+    && !/async function expressSenden[\s\S]{0,1500}ruhendePersonen/.test(server), "Express weiter durch Ruhezeit und Stummschaltung");
 }
 // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG (Wunsch Hansi „per Express versandt, angekommen um x Uhr und gelesen um y Uhr“)
 {
   const mig = lies("supabase/migrations/20261014_kc_club_v2385_express_zustellung.sql");
   assert.ok(/create table if not exists public\.kc_club_express_zustellung/.test(mig) && /enable row level security/.test(mig) && /revoke all on public\.kc_club_express_zustellung from anon, authenticated/.test(mig), "eigene Tabelle, nur der Server");
   assert.ok(/async function expressZustellung\(ich: Ich, liste/.test(server) && /ignoreDuplicates: true \}\)\.select\("message_id"\)/.test(server) && /\.is\("gelesen_am", null\)/.test(server), "nur das ERSTE Ankommen/Lesen zählt");
-  assert.ok(/await expressZustellung\(ich, ungelesen, false\)/.test(server) && /await expressZustellung\(ich, \[ex\], false\)/.test(server) && /if \(exFremd\.length\) await expressZustellung\(ich, exFremd, true\)/.test(server), "angekommen beim Start/Express-Fenster, gelesen beim Öffnen des Chats");
+  // 2.403.0 KC-CLUB-EXPRESS-ANKUNFT-ECHT: nicht mehr beim bloßen Start, sondern wenn das Fenster sichtbar ist (express_angezeigt) bzw. beim Antworten
+  assert.ok(!/await expressZustellung\(ich, ungelesen, false\)/.test(server) && /await expressZustellung\(ich, \[ex\], false\)/.test(server) && /if \(exFremd\.length\) await expressZustellung\(ich, exFremd, true\)/.test(server), "angekommen beim sichtbaren Express-Fenster, gelesen beim Öffnen des Chats");
   assert.ok(/if \(!ich\.nurLesen && p\.vorschau !== true\) \{\n\s+const exFremd/.test(server), "Vorschau in der Rollkartei zählt nicht als gelesen");
   assert.ok(/inkoAndere\.has\(x\.person_id\) \? null : z\?\.angekommen_am/.test(server) && /p_art: "chat", p_thread: x\.thread_id/.test(server), "Inkognito nicht verraten; Absender bekommt sofort ein Signal");
   assert.ok(/express: eigen \? \{ quittungen: exQuittung\(m\.id\), versandt: m\.created_at, empfaenger: exEmpfaenger\(m\) \} : true/.test(server), "nur der Absender sieht die Zeiten");
-  assert.ok(/function expressStatusHtml\(x\)/.test(html) && /Per Express versandt \$\{um\(x\.versandt\)\}/.test(html) && /📭 noch nicht angekommen/.test(html) && /if \(daten\.express\) \{ const st = r\?\.expressStand; if \(st\) EXS\.stand = st; melde\("🏎️ Nachricht wurde per Express versandt/.test(html), "Meldung beim Senden + Anzeige je Empfänger");
+  assert.ok(/function expressStatusHtml\(x\)/.test(html) && /Per Express versandt \$\{um\(x\.versandt\)\}/.test(html) && /📭 noch nicht angekommen/.test(html) && /if \(daten\.express\) \{ const st = r\?\.expressStand; if \(st\) EXS\.stand = st; melde\("🏎️ Per Express versandt" \+ expressWegeText\(r\?\.versand\)/.test(html), "Meldung beim Senden (2.403.0: mit Wegen je Empfänger) + Anzeige je Empfänger");
 }
 // 2.386.0 KC-CLUB-ESELSOHR-RUND + KC-CLUB-ZUSTELL-ALLE (Wünsche Hansi)
 {
@@ -6302,7 +6305,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.391.0 KC-CLUB-EXPRESS-ZAEHLER (Wunsch Hansi „bei 5 lassen und in der Express 1/5 anzeigen“)
 {
-  assert.ok(/async function expressStand\(ich: Ich\) \{\n\s+if \(ich\.admin\) return \{ genutzt: 0, max: EXPRESS_MAX, unbegrenzt: true/.test(server) && /case "express_stand": return json\(await expressStand\(ich\)\);/.test(server), "Server: Stand je Person, Admin unbegrenzt");
+  assert.ok(/async function expressStand\(ich: Ich\) \{\n\s+if \(ich\.admin\) return \{ genutzt: 0, max: EXPRESS_MAX, unbegrenzt: true/.test(server) && /case "express_stand": \{[^\n]*\n\s+const st: any = await expressStand\(ich\);/.test(server), "Server: Stand je Person, Admin unbegrenzt");
   assert.ok(/const EXPRESS_MAX = 5,/.test(server) && /if \(express && !ich\.admin\) \{/.test(server) && /\.\.\.\(express \? \{ expressStand: await expressStand\(ich\) \} : \{\}\)/.test(server), "Grenze bleibt 5, Antwort liefert neuen Stand");
   assert.ok(/const z = EXPRESS && st && !st\.unbegrenzt \? `\$\{st\.genutzt\}\/\$\{st\.max\}` : "";/.test(html) && /#expressKnopf\[data-zahl\]::after \{ content: attr\(data-zahl\);/.test(html), "„2/5“ am 🏎️-Knopf");
   assert.ok(/if \(st && !st\.unbegrenzt && st\.genutzt >= st\.max\) \{\n\s+expressUmschalten\(false\);/.test(html) && /\(heute \$\{st\.genutzt\}\/\$\{st\.max\}\)/.test(html), "voll → Express geht nicht an, Hinweis; nach dem Senden „heute 3/5“");
@@ -6378,6 +6381,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!ICH\?\.person_id \|\| document\.hidden \|\| !einst\("kuckuck", true\)\) return;/.test(html) && /localStorage\.getItem\("kc_club_kuckuck_zuletzt"\) === stunde/.test(html), "nur offen + sichtbar, abschaltbar, einmal je Stunde");
   assert.ok(/<input type="checkbox" id="setKuckuck" onchange="einstellung\('kuckuck', this\.checked\)">/.test(html) && /\$\("setKuckuck"\)\.checked = einst\("kuckuck", true\)/.test(html), "Schalter in den Einstellungen");
   const kk = (h) => (h % 12) || 12; assert.deepEqual([0, 1, 12, 13, 23].map(kk), [12, 1, 12, 1, 11], "Rufe je Stunde");
+}
+// 2.403.0 KC-CLUB-EXPRESS-PRIO1 / -WEGE / -VORAB / -ANKUNFT-ECHT (Prüfung Hansi „wie läuft Express?“)
+{
+  assert.ok(/const versand = express && !notfall \? await expressSenden\(/.test(server) && /const EXPRESS_PARALLEL = 8;/.test(server), "Express je Empfänger parallel");
+  assert.ok(/const v = \{ \.\.\.vars, eilig: true, wichtigkeit: vars\.wichtigkeit \?\? "hoch" \};/.test(server), "Express immer mit eilig → Priorität critical");
+  assert.ok(/ergebnis\.wege = Object\.fromEntries\(out\.results/.test(server) && /function routerWege\(attempts: any\[\]\)/.test(server), "Wege je Empfänger aus der Router-Antwort");
+  assert.ok(!/await expressZustellung\(ich, ungelesen, false\)/.test(server) && /case "express_angezeigt":/.test(server), "angekommen nicht mehr beim bloßen Laden");
+  assert.ok(/api\("express_angezeigt", \{ id: x\.id \}/.test(html) && /api\("express_stand", vorab/.test(html) && /expressOhnePushText\(st\?\.ohnePush\)/.test(html) && /expressWegeText\(r\?\.versand\)/.test(html), "App: Fenster meldet Ankunft, Hinweis vorab, Wege nach dem Senden");
+  assert.ok(aufrufe.has("express_angezeigt") || /case "express_angezeigt"/.test(server), "Aktion vorhanden");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

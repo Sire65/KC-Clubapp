@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.402.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.403.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -27040,7 +27040,9 @@ function expressZahlZeigen() {
   if (z) k.dataset.zahl = z; else delete k.dataset.zahl;
 }
 async function expressStandHolen(anzeigen) {
-  let st; try { st = await api("express_stand", {}, { still: true }); } catch { st = null; }
+  // 2.403.0 KC-CLUB-EXPRESS-VORAB: Empfänger mitschicken – der Server sagt, wer keinen Push bekommt (nur Mail bzw. gar nichts)
+  const vorab = chatId ? { thread: chatId } : neuEntwurf?.empfaenger?.personen?.length ? { personen: [...neuEntwurf.empfaenger.personen] } : {};
+  let st; try { st = await api("express_stand", vorab, { still: true }); } catch { st = null; }
   if (!EXPRESS) return;
   EXS.stand = st; expressZahlZeigen();
   if (!anzeigen) return;
@@ -27049,7 +27051,22 @@ async function expressStandHolen(anzeigen) {
     return melde(`🏎️ Heute schon ${st.max} von ${st.max} Express-Sendungen verschickt – mehr gehen nicht${st.wieder ? `. Ab ${new Date(st.wieder).toLocaleString("de-DE", { weekday: "short", hour: "2-digit", minute: "2-digit" })} Uhr wieder möglich` : ""}. Bitte normal senden.`, true);
   }
   const rest = st && !st.unbegrenzt ? ` Heute ${st.genutzt}/${st.max} – noch ${st.max - st.genutzt}.` : "";
-  melde("🏎️ Express an: kommt sofort an – auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf. Nur für Eiliges!" + rest);
+  melde("🏎️ Express an: kommt sofort an – auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf. Nur für Eiliges!" + rest + expressOhnePushText(st?.ohnePush));
+}
+// 2.403.0 KC-CLUB-EXPRESS-VORAB: schon vor dem Senden sagen, wer keine Benachrichtigung aufs Handy bekommt
+function expressOhnePushText(l) {
+  if (!Array.isArray(l) || !l.length) return "";
+  const mail = l.filter((x) => x.mail).map((x) => x.name), nichts = l.filter((x) => !x.mail).map((x) => x.name);
+  return (mail.length ? ` ⚠️ Kein Push bei ${mail.join(", ")} – ${mail.length === 1 ? "bekommt" : "bekommen"} die Express nur per Mail.` : "")
+    + (nichts.length ? ` ⚠️ ${nichts.join(", ")}: weder Push noch Mail – ${nichts.length === 1 ? "sieht" : "sehen"} sie erst beim Öffnen der App.` : "");
+}
+// 2.403.0 KC-CLUB-EXPRESS-WEGE: nach dem Senden je Empfänger, was wirklich raus ist (🔔 Push / ✉️ Mail) – statt nur einer Zahl
+function expressWegeText(v) {
+  const l = Array.isArray(v?.wege) ? v.wege : []; if (!l.length) return "";
+  const z = (x) => { const t = []; if (x.push === "ja") t.push("🔔 Push"); if (x.mail === "ja") t.push("✉️ Mail");
+    const fehlt = x.push === "kein" ? "kein Push auf dem Handy" : x.push === "fehler" ? "Push gescheitert" : "";
+    return `${x.name}: ${t.length ? t.join(" + ") : "❌ nicht zugestellt"}${fehlt && t.length ? ` (${fehlt})` : ""}`; };
+  return " – " + l.slice(0, 6).map(z).join(" · ") + (l.length > 6 ? ` · … und ${l.length - 6} weitere` : "");
 }
 const EXP = { weg: new Set(), akt: null };
 function expressPruefen() {
@@ -27066,6 +27083,7 @@ function expressPruefen() {
     <button class="knopf haupt" onclick="expressAntwort('geoeffnet')">📬 Öffnen</button>
     <button class="knopf" onclick="expressAntwort('spaeter')">⏰ Später – in 30 Minuten nochmal</button>
     <button class="knopf" onclick="expressAntwort('nein')">✖ Nein, jetzt nicht</button>`).classList.add("express-blatt");
+  api("express_angezeigt", { id: x.id }, { still: true }).catch(() => {}); // 2.403.0 KC-CLUB-EXPRESS-ANKUNFT-ECHT: erst jetzt gilt sie als angekommen
   if (fxAn()) setTimeout(() => { const k = document.querySelector("#expressBlatt .express-kopf"); if (k) sendeFahrzeug({ left: innerWidth, right: innerWidth + 20, top: k.getBoundingClientRect().top, width: 1 }, "express"); }, 150);
 }
 async function expressAntwort(antwort) {
@@ -27167,7 +27185,7 @@ async function senden() {
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
-    if (daten.express) { const st = r?.expressStand; if (st) EXS.stand = st; melde("🏎️ Nachricht wurde per Express versandt – unter der Nachricht siehst du, wann sie angekommen ist und gelesen wurde" + (st && !st.unbegrenzt ? ` (heute ${st.genutzt}/${st.max})` : "")); } // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG, 2.391.0 Zähler
+    if (daten.express) { const st = r?.expressStand; if (st) EXS.stand = st; melde("🏎️ Per Express versandt" + expressWegeText(r?.versand) + ". Unter der Nachricht siehst du, wann sie angekommen ist und gelesen wurde" + (st && !st.unbegrenzt ? ` (heute ${st.genutzt}/${st.max})` : ""), r?.versand?.fehler > 0); } // 2.403.0 KC-CLUB-EXPRESS-WEGE // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG, 2.391.0 Zähler
     HAKEN_SEIT = Date.now(); // 2.367.0 KC-CLUB-HAKEN-SCHNELL: Zustell-Haken eine Minute lang zügig nachsehen
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); expressUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN
