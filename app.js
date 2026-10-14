@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.392.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.393.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18030,6 +18030,14 @@ function jzbStreunerSchritt(dt) {
   } else { D.x += D.dir * 70 * k * dt; if (D.x < -40 * k || D.x > J.w + 40 * k) { J.hund = null; J.hundUhr = J.extra === "hund" ? 6 : jzbZ(90, 240); } }
   if (D.phase !== "schnuppern") for (const b of J.liegt || []) if (Math.abs(b.x - D.x) < 9 * k) b.wackel = 1; // trottet durchs Laub
 }
+function jzbHundBein(c, x, ph, hinten, laeuft, farbe) {
+  const L = 4.25, schw = laeuft ? Math.sin(ph) * .5 : 0, knick = laeuft ? Math.max(0, Math.cos(ph)) * .9 : 0;
+  const a1 = hinten ? schw + .38 + knick * .25 : schw - .05 - knick * .2, a2 = hinten ? schw - .38 - knick * .7 : schw - .05 - knick;
+  const kx = x + Math.sin(a1) * L, ky = -8 + Math.cos(a1) * L, fx = kx + Math.sin(a2) * L, fy = Math.min(0, ky + Math.cos(a2) * L);
+  c.strokeStyle = farbe; c.lineWidth = 2.5; c.beginPath(); c.moveTo(x, -8.6); c.lineTo(kx, ky); c.stroke();
+  c.lineWidth = 1.7; c.beginPath(); c.moveTo(kx, ky); c.lineTo(fx, fy); c.stroke();
+  c.fillStyle = farbe; c.beginPath(); c.ellipse(fx + .7, fy - .4, 1.3, .8, 0, 0, 7); c.fill(); // Pfote
+}
 function jzbStreunerMalen(c, D, k) {
   const J = JZB, laeuft = D.phase !== "schnuppern" || (D.halt > 1.4 && D.halt < 1.9), sp = laeuft ? (D.t * 9) % (Math.PI * 2) : 0;
   // Kopf: beim Schnuppern runter zur Erde (zwischendurch kurz hoch), die Nase zuckt
@@ -18041,11 +18049,10 @@ function jzbStreunerMalen(c, D, k) {
   // Schwanz (wedelt)
   c.save(); c.translate(-9, -11); c.rotate(-1.05 + wedel); c.strokeStyle = fell; c.lineWidth = 2.4; c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(-1, -5, 2, -8.5); c.stroke();
   c.strokeStyle = "#c9a77f"; c.lineWidth = 1; c.beginPath(); c.moveTo(1.4, -7); c.lineTo(2.2, -8.6); c.stroke(); c.restore();
-  // Beine (hinten dunkler, vorne heller), laufen über Kreuz
-  const b1 = laeuft ? Math.sin(sp) * 2.6 : 0, b2 = -b1;
-  c.strokeStyle = dunkel; c.lineWidth = 2.1;
-  c.beginPath(); c.moveTo(-6, -8); c.lineTo(-6 + b2, 0); c.stroke(); c.beginPath(); c.moveTo(5, -8); c.lineTo(5 + b1, 0); c.stroke();
-  c.strokeStyle = fell; c.beginPath(); c.moveTo(-4, -8); c.lineTo(-4 + b1, 0); c.stroke(); c.beginPath(); c.moveTo(7, -8); c.lineTo(7 + b2, 0); c.stroke();
+  // Beine (hinten dunkler, vorne heller), laufen über Kreuz – 2.393.0 KC-CLUB-HUND-GELENKE (Fund Hansi „läuft unnatürlich, keine Gelenke“):
+  // je Bein Ober- und Unterschenkel mit Knie bzw. Sprunggelenk und Pfote; beim Vorschwingen knickt das Bein ein und die Pfote hebt sich
+  jzbHundBein(c, -6, sp + Math.PI, true, laeuft, dunkel); jzbHundBein(c, 5, sp, false, laeuft, dunkel);
+  jzbHundBein(c, -4, sp, true, laeuft, fell); jzbHundBein(c, 7, sp + Math.PI, false, laeuft, fell);
   // Körper mit Fleck und etwas struppigem Fell
   c.fillStyle = fell; c.beginPath(); c.ellipse(0, -10.5, 9.5, 4.6, 0, 0, 7); c.fill();
   c.fillStyle = dunkel; c.beginPath(); c.ellipse(-3, -12, 3.6, 2.5, -.2, 0, 7); c.fill();
@@ -18184,9 +18191,14 @@ function jzbIgel(c, g, k) { // 🦔 Igel mit Stacheln, Schnäuzchen und trippeln
   const y = JZB.h - 1, lauf = g.schnuff > 0 ? 0 : Math.sin(g.t * 14);
   c.save(); c.translate(g.x, y); c.scale(g.dir * k, k);
   c.fillStyle = "#2b1d14"; for (const fx of [-4, 4]) { c.beginPath(); c.ellipse(fx + (fx > 0 ? lauf : -lauf) * 1.5, -1, 2, 1.2, 0, 0, 7); c.fill(); }
+  // 2.393.0 KC-CLUB-IGEL-STACHELN (Fund Hansi): feinere Stacheln, auch an den Seiten bis fast zum Boden
   c.fillStyle = "#4e342e"; c.beginPath();
-  for (let i = 0; i <= 16; i++) { const a = Math.PI + i / 16 * Math.PI, r = i % 2 ? 9.5 : 12.5; c.lineTo(Math.cos(a) * r * 1.15 - 1, -2 + Math.sin(a) * r); } c.closePath(); c.fill();
-  c.fillStyle = "#6d4c41"; c.beginPath(); c.ellipse(-1, -4, 10, 6, 0, Math.PI, 0); c.fill();
+  for (let i = 0; i <= 44; i++) { const a = Math.PI * .94 + i / 44 * Math.PI * .98, r = i % 2 ? 11 : 12.4; c.lineTo(Math.cos(a) * r * 1.15 - 1, -2 + Math.sin(a) * r); } c.lineTo(6, -1); c.closePath(); c.fill();
+  c.lineCap = "round";
+  for (let i = 0; i <= 38; i++) { const a = Math.PI * .93 + i / 38 * Math.PI * .97, r = 12.6 + (i % 3) * .7, cs = Math.cos(a) * 1.15, sn = Math.sin(a);
+    c.strokeStyle = i % 2 ? "#3b2a20" : "#5d4037"; c.lineWidth = .75; c.beginPath(); c.moveTo(cs * 7 - 1, -2 + sn * 7); c.lineTo(cs * r - 1, -2 + sn * r); c.stroke();
+    c.strokeStyle = "rgba(230,215,195,.75)"; c.lineWidth = .45; c.beginPath(); c.moveTo(cs * (r - 1.3) - 1, -2 + sn * (r - 1.3)); c.lineTo(cs * r - 1, -2 + sn * r); c.stroke(); } // helle Spitzen
+  c.fillStyle = "#6d4c41"; c.beginPath(); c.ellipse(-1, -4, 9.4, 5.6, 0, Math.PI, 0); c.fill();
   const schnupf = g.schnuff > 0 ? Math.sin(g.t * 22) * .6 : 0;
   c.fillStyle = "#d7b899"; c.beginPath(); c.moveTo(7, -9); c.quadraticCurveTo(13, -6, 16 + schnupf, -3.5); c.quadraticCurveTo(12, -1, 7, -2); c.closePath(); c.fill();
   c.fillStyle = "#111"; c.beginPath(); c.arc(16.2 + schnupf, -3.6, 1.2, 0, 7); c.fill(); c.beginPath(); c.arc(10.5, -6.2, .9, 0, 7); c.fill();

@@ -6312,6 +6312,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function jzbMitteFrei\(\)/.test(html) && /function jzbBodenX\(u, rand\)/.test(html) && /jzbPilzNeu\(jzbBodenX\(/.test(html) && /jzbEichelNeu\(jzbBodenX\(\(i \+ jzbZ/.test(html) && /J\.eicheln\.push\(jzbEichelNeu\(jzbBodenX\(Math\.random\(\)/.test(html), "Pilze und Eicheln meiden den Namensbereich");
   assert.ok(/filter\(\(pz\) => pz\.art === "fliegen" && !pz\.weg\)\.length < 2 \? 0/.test(html) && /s: jzbZ\(1\.1, 1\.4\)/.test(html), "höchstens 2 Fliegenpilze, kleiner");
 }
+// 2.393.0 KC-CLUB-HUND-GELENKE + KC-CLUB-IGEL-STACHELN (Funde Hansi)
+{
+  assert.ok(/function jzbHundBein\(c, x, ph, hinten, laeuft, farbe\)/.test(html) && /jzbHundBein\(c, -6, sp \+ Math\.PI, true, laeuft, dunkel\); jzbHundBein\(c, 5, sp, false, laeuft, dunkel\);/.test(html) && /\/\/ Pfote/.test(html), "Hund: Beine mit Gelenk und Pfote");
+  assert.ok(/for \(let i = 0; i <= 38; i\+\+\) \{ const a = Math\.PI \* \.93/.test(html) && /\/\/ helle Spitzen/.test(html), "Igel: feine Stacheln auch an den Seiten");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
