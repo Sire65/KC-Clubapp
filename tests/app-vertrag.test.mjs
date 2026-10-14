@@ -5722,7 +5722,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 
 // 2.264.0 (Wunsch Hansi): Video „Oberfläche“ – kurz vor Schluss Hinweis auf die vielen weiteren Einstellungen, live Meins → Einstellungen
 {
-  assert.ok(/t: "⚙️ Noch viel mehr Möglichkeiten"/.test(html) && /Farben oder Spezialeffekten/.test(html) && /im Register Meins unter Einstellungen/.test(html) && /Zu den Einstellungen gibt es auch eigene Erklär-Videos/.test(html), "Hinweis-Station mit Hansis Text");
+  assert.ok(/t: "⚙️ Noch viel mehr Möglichkeiten"/.test(html) && /Farben oder Spezialeffekten/.test(html) && /im Register Meins unter (?:Meine )?Einstellungen/.test(html) && /Zu den Einstellungen gibt es auch eigene Erklär-Videos/.test(html), "Hinweis-Station mit Hansis Text");
   assert.ok(/await L\.tipp\('#register button\[data-r="mein"\]'\); rgRegister\("mein"\)/.test(html) && /await L\.tipp\(rgKachel\("einstellungen"\)\)/.test(html) && /zeige\("einstellungen", true\)/.test(html), "live: Meins antippen, Einstellungen antippen, Einstellungen öffnen sich (einfache Ansicht: über „Mehr“)");
   assert.ok(/const unten = innerHeight - t\.offsetHeight - 12;/.test(html) && /y \+ h > unten/.test(html), "Tafel verdeckt nie das Ziel");
 }
@@ -6326,6 +6326,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.395.0 KC-CLUB-MEINE-EINSTELLUNGEN (Wunsch Hansi): Kachel in „Meins“ heißt „Meine Einstellungen“
 {
   assert.ok(/\{ id: "einstellungen", sym: "⚙️", t: "Meine Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" \}/.test(html), "Kachel in Meins umbenannt");
+}
+// 2.396.0 KC-CLUB-HILFE-NEUHEITEN (Wunsch Hansi „Videos, Hilfetexte, Suche und Twinkey auf die neuen Funktionen“)
+{
+  for (const id of ["express_zaehler", "express_status", "chat_favoriten", "zustell_alle", "online_uhrzeit", "terminanfrage_oben", "wer_kommt_wann"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "[a-z]+"`).test(html), `Hilfe-Eintrag ${id}`);
+  for (const id of ["express", "zurueckholen", "favoriten", "spaeter"]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+\\?"`).test(html), `Twinkey-Frage ${id}`);
+  assert.ok(/\["express", "eilig", "eilt", "dringend"/.test(html) && /\["favorit", "favoriten", "stern"/.test(html), "Twinkey versteht neue Wörter");
+  assert.ok(/\["⭐", "Favoriten \(Lieblings-Chats\)"/.test(html) && /\["🏎️", "Express-Nachricht \(5 am Tag\)"/.test(html) && /\["↩️", "Nachricht zurückholen"/.test(html), "Lupe findet die neuen Funktionen");
+  assert.ok(/id: "nachricht", stand: "2"/.test(html) && /\{ v: "neu", sel: \["#expressKnopf"\], t: "🏎️ Express"/.test(html) && /Mit dem Stern Favoriten siehst du nur deine Lieblings-Chats/.test(html), "Video Nachricht: Express, Später, Favoriten");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

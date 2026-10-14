@@ -14,6 +14,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.396.0 – 2026-10-14 – Hilfe, Suche, Twinkey und Video für die Neuheiten
+Neue Hilfetexte (Express 5/Tag mit Zähler, Express-Zustellung, Favoriten, ✅ Alle, Online mit Uhrzeit, Terminanfragen oben, Wer kommt wann), Twinkey beantwortet Express, Zurückholen, Favoriten, Später senden; die Lupe findet sie; Video „Neue Nachricht“ mit Express, Später senden, Zurückholen und Favoriten.
+
 ## 2.395.0 – 2026-10-14 – Meins: „Meine Einstellungen“
 Die Kachel „Einstellungen“ unter Meins heißt jetzt „Meine Einstellungen“.
 
