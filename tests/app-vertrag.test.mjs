@@ -9632,7 +9632,7 @@ assert.ok(/einstiegHin\("effekte", "feeKnopf"\)/.test(html) && /id="feeKnopf" on
 {
   const svg = (html.match(/const FEE_SVG = `([\s\S]*?)`;/) || [, ""])[1];
   assert.ok(/viewBox="0 0 170 170"/.test(svg) && /class="fee-fl l"/.test(svg) && /class="fee-fl r"/.test(svg) && (svg.match(/class="fee-aug"/g) || []).length === 2 && /class="fee-mund"/.test(svg) && /class="fee-mund-gross"/.test(svg) && /class="fee-stern"/.test(svg), "neue Fee mit Flügeln, Augen, Mund und Stern");
-  assert.ok(!/<!--/.test(svg) && /\.fee \{ position: fixed; left: 0; top: 0; width: 120px; height: 120px;/.test(html) && /const W = 120, mitte/.test(html), "Größe passt zur Flugbahn");
+  assert.ok(!/<!--/.test(svg) && /\.fee \{ position: fixed; left: 0; top: 0; width: 120px; height: 120px;/.test(html) && /const W = 120, (mitte|B) =/.test(html), "Größe passt zur Flugbahn");
 }
 
 // 2.375.0 KC-CLUB-FEE: Gesicht, Beine und Füße neu
@@ -9640,4 +9640,13 @@ assert.ok(/einstiegHin\("effekte", "feeKnopf"\)/.test(html) && /id="feeKnopf" on
   const svg = (html.match(/const FEE_SVG = `([\s\S]*?)`;/) || [, ""])[1];
   assert.ok(/clipPath id="feeA1"/.test(svg) && /clipPath id="feeA2"/.test(svg) && /fill="url\(#feeIr\)"/.test(svg) && /fill="url\(#feeHt\)"/.test(svg) && /fill="url\(#feeHt2\)"/.test(svg), "Augen mit Iris, geformte Beine");
   assert.ok(!/stroke-width="5\.2"/.test(svg) && !/stroke-width="6"/.test(svg), "keine Strich-Beine mehr");
+}
+
+// 2.376.0 KC-CLUB-FEE: von rechts, Vorderansicht, Zauberschnee, wechselnde Flugbahnen
+{
+  const vorn = (html.match(/const FEE_VORN_SVG = `([\s\S]*?)`;/) || [, ""])[1];
+  assert.ok(/class="fee-stab-f"/.test(vorn) && /class="fee-stern"/.test(vorn) && (vorn.match(/class="fee-aug"/g) || []).length === 2 && !/id="fee[A-Z]/.test(vorn), "Vorderansicht mit Stab, Stern, Augen und eigenen IDs");
+  assert.ok(/x = bw \+ 10, y = y0/.test(html) && /x = lerp\(bw \+ 10, hx, e\)/.test(html) && /\.fee-seite svg \{ transform: scaleX\(-1\); \}/.test(html), "kommt von rechts, Blick in Flugrichtung");
+  assert.ok(/drehen\(true\)/.test(html) && /f\.classList\.add\("zaubert"\)/.test(html) && /feeZauberschnee\(sx, sy, top, hoehe\)/.test(html) && /@keyframes feeWedeln/.test(html), "umdrehen, wedeln, Zauberschnee");
+  assert.ok(/while \(`\$\{b\.ein\}\/\$\{b\.aus\}` === alt\)/.test(html) && /FEE_EIN = \["welle", "bogen", "looping", "sturz"\]/.test(html), "jedes Mal andere Flugbahn");
 }

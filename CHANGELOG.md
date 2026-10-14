@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.376.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: von rechts, Vorderansicht, Zauberschnee, wechselnde Flugbahnen
+Anlass (Hansi): „Lass sie von der anderen Seite einfliegen; wenn sie vor einem steht, muss die Front zu sehen sein – ein Bein gestreckt, eins leicht im Knie
+gebeugt. Sie wedelt einmal mit dem Zauberstab, dann fliegt der Zauberschnee wild umher, dann fliegt sie weiter. Jedes Mal eine andere Flugbahn.“
+- Fliegt von rechts nach links (Seitenansicht gespiegelt). Beim Stehenbleiben dreht sie sich um (kurzes Drehen) und zeigt sich von vorn
+  (`FEE_VORN_SVG`: symmetrische Flügel, Gesicht von vorn, linkes Bein gestreckt mit gestrecktem Fuß, rechtes Bein im Knie gebeugt, Fuß dahinter).
+- Lächelt, wedelt einmal mit dem Stab (`feeWedeln`), dann wirbeln 64 Flocken und Funken wild durchs Startbild und rieseln aus (`feeZauberschnee`);
+  danach dreht sie sich zurück und fliegt weiter.
+- `feeBahn()`: Einflug welle/bogen/looping/sturz × Abflug welle/steil/bogen/sturz, Haltepunkt, Höhe, Wellenhöhe und -takt zufällig; dieselbe Kombination
+  nie zweimal hintereinander (gemerkt im Gerät). Glitzerspur kommt immer aus dem Stern des Stabs.
+
 ## 2.375.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: Gesicht, Beine und Füße neu gezeichnet
 Anlass (Hansi): „Gesicht nicht gut, Beine und Füße nicht gut – der Rest kann so bleiben.“
 - Gesicht: ovale Dreiviertel-Form mit Kinn und Wangenschatten, mandelförmige Augen mit Lidstrich, Wimpern, Lidfalte und glänzender Iris, feine Nase,

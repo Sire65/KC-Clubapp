@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.375.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.376.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14405,7 +14405,59 @@ const FEE_SVG = `<svg viewBox="0 0 170 170" aria-hidden="true"><defs>
 <path class="fee-stern" d="M136 9 L138.2 14.8 L144.2 15 L139.5 18.8 L141.2 24.6 L136 21.2 L130.8 24.6 L132.5 18.8 L127.8 15 L133.8 14.8Z" fill="#ffd8ea" stroke="#f08db5" stroke-width=".7"/>
 <circle class="fee-gl" cx="146" cy="10" r="1.2" fill="#fff"/><circle class="fee-gl" cx="150" cy="20" r=".9" fill="#ffe9a8"/><circle class="fee-gl" cx="128" cy="6" r="1" fill="#fff"/></g>
 </g></svg>`; // 2.374.0: erwachsene, schlanke Fee (Wunsch Hansi „zu kindlich“) – eigene Zeichnung; 2.375.0: Gesicht, Beine und Füße neu
+const FEE_VORN_SVG = `<svg viewBox="0 0 170 170" aria-hidden="true"><defs>
+<linearGradient id="fefFg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd1e8" stop-opacity=".9"/><stop offset=".45" stop-color="#e3d0ff" stop-opacity=".65"/><stop offset="1" stop-color="#c9f3e6" stop-opacity=".55"/></linearGradient>
+<linearGradient id="fefKl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7a8c8"/><stop offset="1" stop-color="#e57ba8"/></linearGradient>
+<linearGradient id="fefRo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd3e5" stop-opacity=".95"/><stop offset="1" stop-color="#f7a9cb" stop-opacity=".8"/></linearGradient>
+<linearGradient id="fefHa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbe3a0"/><stop offset=".6" stop-color="#f0c766"/><stop offset="1" stop-color="#d9a640"/></linearGradient>
+<linearGradient id="fefHt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f1bfa6"/><stop offset=".5" stop-color="#fcdcc9"/><stop offset="1" stop-color="#f1bfa6"/></linearGradient>
+<radialGradient id="fefIr" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#8fd0ff"/><stop offset=".6" stop-color="#3f86c8"/><stop offset="1" stop-color="#244f8a"/></radialGradient>
+<radialGradient id="fefSt" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#ffe9a8"/><stop offset="1" stop-color="#ffc4dd" stop-opacity="0"/></radialGradient>
+<clipPath id="fefA1"><path d="M77.4 31.2 C78.6 29.4 81.6 29.2 83.2 31 C81.8 33.2 78.8 33.4 77.4 31.2Z"/></clipPath><clipPath id="fefA2"><path d="M 92.6 31.2 C 91.4 29.4 88.4 29.2 86.8 31 C 88.2 32.6 91.2 32.8 92.6 31.2 Z"/></clipPath></defs>
+<g class="fee-fl l"><path d="M80 60 C66 40 44 20 30 20 C21 21 23 33 33 43 C46 54 64 60 80 60Z" fill="url(#fefFg)" stroke="#e9b7e0" stroke-width=".7"/><path d="M80 60 C62 48 44 32 32 24 M66 52 L46 42 M58 46 L42 30" stroke="#fff" stroke-width=".5" fill="none" opacity=".8"/><path d="M80 66 C66 68 50 78 44 90 C42 98 52 98 60 92 C70 84 76 74 80 66Z" fill="url(#fefFg)" stroke="#e9b7e0" stroke-width=".7"/><path d="M80 66 C66 74 54 84 46 92" stroke="#fff" stroke-width=".5" fill="none" opacity=".8"/></g><g class="fee-fl r"><path d="M 90 60 C 104 40 126 20 140 20 C 149 21 147 33 137 43 C 124 54 106 60 90 60 Z" fill="url(#fefFg)" stroke="#e9b7e0" stroke-width=".7"/><path d="M 90 60 C 108 48 126 32 138 24 M 104 52 L 124 42 M 112 46 L 128 30" stroke="#fff" stroke-width=".5" fill="none" opacity=".8"/><path d="M 90 66 C 104 68 120 78 126 90 C 128 98 118 98 110 92 C 100 84 94 74 90 66 Z" fill="url(#fefFg)" stroke="#e9b7e0" stroke-width=".7"/><path d="M 90 66 C 104 74 116 84 124 92" stroke="#fff" stroke-width=".5" fill="none" opacity=".8"/></g>
+<path d="M72 26 C70 12 79 8 85 8 C91 8 100 12 98 26 C100 40 104 56 103 76 C99 72 96.6 66 95.6 60 L74.4 60 C73.4 66 71 72 67 76 C66 56 70 40 72 26Z" fill="url(#fefHa)"/>
+<path d="M72.6 40 C71.4 52 70 62 68.6 72 M97.4 40 C98.6 52 100 62 101.4 72" stroke="#fff3c9" stroke-width=".8" fill="none" opacity=".6"/>
+<path d="M86.4 103 C87 109 89.4 113.6 91.2 117.4 C91.4 120.6 89 124.6 85.4 128.8 L87.6 130.6 C91.6 126.6 95.4 122.4 96.2 118.2 C96.6 113 95.6 107.6 94.8 103Z" fill="url(#fefHt)"/>
+<path d="M85.6 128.4 C84 131.6 82.4 135 81.4 138.6 C81.2 139.6 82 140 82.6 139.2 C84.6 136.4 86.6 133.6 88.2 130.6Z" fill="#ec8db3" stroke="#d26a95" stroke-width=".4"/>
+<path d="M84.6 126.8 L88.6 128.6 M85 129.2 L88.8 126.2" stroke="#f9c9dc" stroke-width=".65" stroke-linecap="round"/>
+<path d="M94.4 114.6 C95.2 116 95.4 117.8 95 119.4" stroke="#fff" stroke-width=".55" fill="none" opacity=".55" stroke-linecap="round"/>
+<path d="M75.4 103 C75 110 75.4 116 76 121 C76.4 125 75.6 130 76.6 136 L79.6 136 C80.4 130 81.6 125 81.8 121 C82.2 115 83.2 109 83.4 103Z" fill="url(#fefHt)"/>
+<path d="M76.4 135.4 C75.8 140 76.4 145 77.8 149 C78.4 150.2 79.4 150.2 79.6 149 C80.4 145 80.6 140 79.8 135.4Z" fill="#ec8db3" stroke="#d26a95" stroke-width=".4"/>
+<path d="M75.8 132 L80.2 134.6 M76 134.8 L80.4 131.8 M76.2 129.4 L79.8 131.4" stroke="#f9c9dc" stroke-width=".65" stroke-linecap="round"/>
+<path d="M76.5 78 C72 86 66 94 60 102 C64 104.5 68 102.5 71 105 C74 102.5 78 106 81 103.5 C84 106.5 87 103.5 89.5 106 C92.5 103 96 106 99 103.5 C102 105 106 103.5 110 102 C104 94 98 86 93.5 78Z" fill="url(#fefRo)" stroke="#f08db5" stroke-width=".6"/>
+<path d="M77 78 C74.6 85 71.6 91 68.6 97 C72 98 75 96.4 78 98 C81 96 84 98.6 86.4 96.6 C89 98.6 92 96.4 95 97.6 C97.6 96.6 100 97.6 102 96.6 C99 91 96 85 93 78Z" fill="url(#fefKl)"/>
+<circle class="fee-gl" cx="70" cy="99" r="0.6" fill="#fff"/><circle class="fee-gl" cx="78" cy="101" r="0.5" fill="#fff"/><circle class="fee-gl" cx="88" cy="100" r="0.6" fill="#fff"/><circle class="fee-gl" cx="98" cy="100" r="0.5" fill="#fff"/><circle class="fee-gl" cx="105" cy="101" r="0.5" fill="#fff"/><circle class="fee-gl" cx="64" cy="101" r="0.5" fill="#fff"/><circle class="fee-gl" cx="82" cy="92" r="0.5" fill="#fff"/><circle class="fee-gl" cx="91" cy="88" r="0.5" fill="#fff"/><circle class="fee-gl" cx="75" cy="94" r="0.5" fill="#fff"/><circle class="fee-gl" cx="97" cy="93" r="0.5" fill="#fff"/><circle class="fee-gl" cx="85" cy="96" r="0.4" fill="#fff"/>
+<path d="M82 45 L88 45 L88.6 54 L81.4 54Z" fill="#f3c6ae"/>
+<path d="M72 57 C76 53 80 52.6 85 53 C90 52.6 94 53 98 57 L96 61 L74 61Z" fill="#fcdcc9"/>
+<path d="M74 58.6 Q79.5 55.4 85 58.8 Q90.5 55.4 96 58.6 L93.6 80 Q85 83 76.4 80Z" fill="url(#fefKl)" stroke="#d96b98" stroke-width=".6"/>
+<circle class="fee-gl" cx="79" cy="63" r="0.55" fill="#fff"/><circle class="fee-gl" cx="85" cy="66" r="0.6" fill="#fff"/><circle class="fee-gl" cx="90" cy="62" r="0.5" fill="#fff"/><circle class="fee-gl" cx="81" cy="71" r="0.5" fill="#fff"/><circle class="fee-gl" cx="88" cy="73" r="0.55" fill="#fff"/><circle class="fee-gl" cx="84" cy="77" r="0.45" fill="#fff"/><circle class="fee-gl" cx="92" cy="69" r="0.45" fill="#fff"/>
+<path d="M74.6 59 C69.6 64 66.4 70 65 76 C64.4 79 65.8 82 68.2 84" stroke="#fbd6c2" stroke-width="3.5" fill="none" stroke-linecap="round"/><ellipse cx="68.8" cy="84.6" rx="1.8" ry="1.4" fill="#fbd6c2"/>
+<path d="M75 31 C75 20 79.6 15 85 15 C90.4 15 95 20 95 31 C95 37.6 93 43.4 89.4 46.6 C87.6 48.2 82.4 48.2 80.6 46.6 C77 43.4 75 37.6 75 31Z" fill="#fcdcc9"/>
+<path d="M77.6 41 C79 44.6 81 46.8 83 47.4 C81 47.6 79.4 46.6 78.4 45 Z M92.4 41 C91 44.6 89 46.8 87 47.4 C89 47.6 90.6 46.6 91.6 45Z" fill="#efc0a8" opacity=".6"/>
+<path d="M77 27.4 Q80 25.8 83.2 27" stroke="#b98a52" stroke-width=".85" fill="none" stroke-linecap="round"/><path d="M 93 27.4 Q 90 25.8 86.8 27" stroke="#b98a52" stroke-width=".85" fill="none" stroke-linecap="round"/>
+<g class="fee-aug"><path d="M77.4 31.2 C78.6 29.4 81.6 29.2 83.2 31 C81.8 33.2 78.8 33.4 77.4 31.2Z" fill="#fff"/><g clip-path="url(#fefA1)"><circle cx="80.3" cy="30.9" r="2" fill="url(#fefIr)"/><circle cx="80.3" cy="30.9" r=".8" fill="#14213a"/><circle cx="80.85" cy="30.3" r=".48" fill="#fff"/></g><path d="M76.8 31.4 C78.4 28.8 81.8 28.6 83.4 30.8" stroke="#2a1d2e" stroke-width=".95" fill="none" stroke-linecap="round"/><path d="M77.4 30.6 l-1.5 -.7 M78.2 29.6 l-1.1 -1.2 M79.4 29 l-.6 -1.4" stroke="#2a1d2e" stroke-width=".48" stroke-linecap="round"/></g><path d="M77.8 29.2 Q80.4 27.6 83 29" stroke="#e8b49c" stroke-width=".4" fill="none"/><g class="fee-aug"><path d="M 92.6 31.2 C 91.4 29.4 88.4 29.2 86.8 31 C 88.2 32.6 91.2 32.8 92.6 31.2 Z" fill="#fff"/><g clip-path="url(#fefA2)"><circle cx="89.7" cy="30.9" r="2" fill="url(#fefIr)"/><circle cx="89.7" cy="30.9" r=".8" fill="#14213a"/><circle cx="90.25" cy="30.3" r=".48" fill="#fff"/></g><path d="M 93.2 31.4 C 91.6 28.8 88.2 28.6 86.6 30.8" stroke="#2a1d2e" stroke-width=".95" fill="none" stroke-linecap="round"/><path d="M92.6 30.6 l1.5 -.7 M91.8 29.6 l1.1 -1.2 M90.6 29 l.6 -1.4" stroke="#2a1d2e" stroke-width=".48" stroke-linecap="round"/></g><path d="M 92.2 29.2 Q 89.6 27.6 87 29" stroke="#e8b49c" stroke-width=".4" fill="none"/>
+<path d="M85.7 33.6 C86.2 35.4 86.3 36.8 85.6 37.6" stroke="#d99a85" stroke-width=".5" fill="none" stroke-linecap="round" opacity=".8"/><path d="M83.9 38.2 Q85 38.8 86.1 38.2" stroke="#d99a85" stroke-width=".42" fill="none" stroke-linecap="round" opacity=".75"/>
+<ellipse class="fee-wange" cx="78.6" cy="37" rx="2.4" ry="1.3" fill="#ff9ec4" opacity=".35"/><ellipse class="fee-wange" cx="91.4" cy="37" rx="2.4" ry="1.3" fill="#ff9ec4" opacity=".35"/>
+<g class="fee-mund"><path d="M82 41.4 C83.2 40.6 84.4 40.5 85 41 C85.6 40.5 86.8 40.6 88 41.4 C86 42 84 42 82 41.4Z" fill="#d4567e"/><path d="M82.2 41.5 C84 42.1 86 42.1 87.8 41.5 C86.8 43.8 83.2 43.8 82.2 41.5Z" fill="#e57c9f"/><path d="M84 42.7 Q85 43.1 86 42.7" stroke="#fff" stroke-width=".35" opacity=".6" fill="none"/><path d="M81.2 40.7 Q81.6 41.5 82.2 41.5 M88.8 40.7 Q88.4 41.5 87.8 41.5" stroke="#c4476f" stroke-width=".45" fill="none" stroke-linecap="round"/></g>
+<g class="fee-mund-gross"><path d="M81.2 40.8 C83.6 40.2 86.4 40.2 88.8 40.8 C88 45.4 82 45.4 81.2 40.8Z" fill="#9e3358"/><path d="M81.8 41 C83.8 40.7 86.2 40.7 88.2 41 L87.8 42 C86 42.4 84 42.4 82.2 42Z" fill="#fff"/><path d="M81.2 40.8 C82.8 39.8 84.2 39.7 85 40.3 C85.8 39.7 87.2 39.8 88.8 40.8 C86.2 41 83.8 41 81.2 40.8Z" fill="#d4567e"/><path d="M81.8 42.4 C83.6 45 86.4 45 88.2 42.4 C87.6 46 82.4 46 81.8 42.4Z" fill="#e57c9f"/></g>
+<path d="M85 12.6 C78.6 12.6 73.6 17.4 74.4 27 C74.8 31.4 75.6 35 76 38.4 C77 32 78 25.6 82.6 21.6 C85.6 19.2 89.6 19.4 92.4 22.4 C93.6 25.4 94.2 30 94.4 34 C95.2 31 95.8 28 95.6 25.4 C95.4 17.4 91.2 12.6 85 12.6Z" fill="url(#fefHa)"/>
+<path d="M78 17.6 C81 15 86 14.4 90 16" stroke="#fff3c9" stroke-width=".9" fill="none" opacity=".75" stroke-linecap="round"/>
+<path d="M79 13 l2 -4 l2 3 l2 -5 l2 5 l2 -3 l2 4Z" fill="#ffd1e6" stroke="#ef9cc3" stroke-width=".5"/><circle cx="85" cy="7.6" r="1" fill="#fff"/>
+<g class="fee-stab-f"><path d="M95.4 59 C100 55 104.4 50 108.2 44" stroke="#fbd6c2" stroke-width="3.5" fill="none" stroke-linecap="round"/><ellipse cx="108.8" cy="43" rx="1.6" ry="1.9" fill="#fbd6c2"/>
+<line x1="108.6" y1="44" x2="121" y2="20" stroke="#e9c46a" stroke-width="1.6" stroke-linecap="round"/><line x1="108.6" y1="44" x2="121" y2="20" stroke="#fff" stroke-width=".5" stroke-dasharray="2 3"/>
+<circle cx="122.4" cy="17" r="9" fill="url(#fefSt)" class="fee-schein"/>
+<path class="fee-stern" d="M122.4 9 L124.6 14.8 L130.6 15 L125.9 18.8 L127.6 24.6 L122.4 21.2 L117.2 24.6 L118.9 18.8 L114.2 15 L120.2 14.8Z" fill="#ffd8ea" stroke="#f08db5" stroke-width=".7"/></g>
+</svg>`; // 2.376.0: Vorderansicht beim Stehenbleiben
 let FEE_LAEUFT = false;
+// 2.376.0 (Wunsch Hansi): kommt von rechts, dreht sich beim Stehen nach vorn (ein Bein gestreckt, eins leicht gebeugt), wedelt einmal mit dem Stab –
+// dann wirbelt Zauberschnee wild umher – dreht sich zurück und fliegt weiter. Jedes Mal eine andere Flugbahn (nie zweimal dieselbe hintereinander).
+const FEE_EIN = ["welle", "bogen", "looping", "sturz"], FEE_AUS = ["welle", "steil", "bogen", "sturz"];
+function feeBahn() {
+  let alt = ""; try { alt = localStorage.getItem("kc_club_fee_bahn") || ""; } catch {}
+  let b; do { b = { ein: FEE_EIN[Math.floor(Math.random() * FEE_EIN.length)], aus: FEE_AUS[Math.floor(Math.random() * FEE_AUS.length)] }; } while (`${b.ein}/${b.aus}` === alt);
+  try { localStorage.setItem("kc_club_fee_bahn", `${b.ein}/${b.aus}`); } catch {}
+  return { ...b, amp: 8 + Math.random() * 16, takt: 300 + Math.random() * 260, halt: .3 + Math.random() * .4, hoch: Math.random() };
+}
 function feeKommt(vorschau) {
   if (typeof document === "undefined" || FEE_LAEUFT) return;
   if (vorschau === true && !fxAn()) return fxAusHinweis(() => feeKommt(true));
@@ -14414,12 +14466,16 @@ function feeKommt(vorschau) {
   }
   feeKommt.versuche = 0;
   const held = vorschau === true ? null : document.querySelector("#v-start .hero");
-  const r = held?.getBoundingClientRect(), bw = innerWidth, top = r && r.height > 60 ? Math.max(4, r.top) : 70, hoehe = r && r.height > 60 ? Math.min(r.height, 260) : 200;
-  const f = document.createElement("div"); f.className = "fee"; f.setAttribute("role", "button"); f.setAttribute("aria-label", "Fee – antippen für einen schönen Spruch"); f.innerHTML = FEE_SVG;
+  const r = held?.getBoundingClientRect(), bw = innerWidth, top = r && r.height > 60 ? Math.max(4, r.top) : 70, hoehe = r && r.height > 60 ? Math.min(r.height, 260) : 220;
+  const f = document.createElement("div"); f.className = "fee"; f.setAttribute("role", "button"); f.setAttribute("aria-label", "Fee – antippen für einen schönen Spruch");
+  f.innerHTML = `<div class="fee-innen"><div class="fee-seite">${FEE_SVG}</div><div class="fee-vorn">${FEE_VORN_SVG}</div></div>`;
   document.body.appendChild(f); FEE_LAEUFT = true;
-  const W = 120, mitte = bw / 2 - W / 2, grundY = top + Math.max(6, hoehe / 2 - 60), ein = 3200, steh = 2800, aus = 3200;
-  let t0 = 0, x = -W, y = grundY, staubUhr = 0, ende = false;
+  const W = 120, B = feeBahn(), minY = Math.max(2, top - 16), maxY = Math.max(minY + 20, top + hoehe - 96);
+  const hx = Math.round(bw * B.halt - W / 2), hy = Math.min(maxY, Math.max(minY, top + Math.max(4, hoehe / 2 - 64))), y0 = minY + (maxY - minY) * B.hoch;
+  const ein = 3000, steh = 3400, aus = 3000, lerp = (a, b, k) => a + (b - a) * k, klemm = (v) => Math.min(maxY + 30, Math.max(minY - 30, v));
+  let t0 = 0, x = bw + 10, y = y0, staubUhr = 0, ende = false, stufe = "";
   const pos = () => { f.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`; };
+  const stern = () => { const s = f.querySelector(f.classList.contains("vorn") ? ".fee-vorn .fee-stern" : ".fee-seite .fee-stern")?.getBoundingClientRect(); return s ? [s.left + s.width / 2, s.top + s.height / 2] : [x + 10, y + 23]; };
   const staub = (sx, sy, viel) => {
     for (let i = 0; i < (viel || 1); i++) {
       const s = document.createElement("div"); s.className = "fee-staub"; document.body.appendChild(s);
@@ -14427,18 +14483,53 @@ function feeKommt(vorschau) {
       s.animate([{ transform: `translate(${sx}px,${sy}px) scale(1)`, opacity: 1 }, { transform: `translate(${sx + dx}px,${sy + dy}px) scale(.2)`, opacity: 0 }], { duration: viel ? 900 : 1100 + Math.random() * 500, easing: "ease-out" }).onfinish = () => s.remove();
     }
   };
-  f.onclick = (e) => { e.stopPropagation(); staub(x + 109, y + 23, 18); feeSpruch(); };
+  f.onclick = (e) => { e.stopPropagation(); const [sx, sy] = stern(); staub(sx, sy, 18); feeSpruch(); };
+  const drehen = (vorn) => { f.querySelector(".fee-innen")?.animate([{ transform: "scaleX(1)" }, { transform: "scaleX(.08)", offset: .5 }, { transform: "scaleX(1)" }], { duration: 340, easing: "ease-in-out" }); setTimeout(() => f.classList.toggle("vorn", vorn), 170); };
   const weg = () => { ende = true; f.remove(); FEE_LAEUFT = false; };
   const schritt = (jetzt) => {
     if (ende) return; if (!t0) t0 = jetzt; const t = jetzt - t0;
-    if (t < ein) { const k = t / ein, e = 1 - Math.pow(1 - k, 2); x = -W + (mitte + W) * e; y = grundY + Math.sin(t / 380) * 16; f.classList.remove("lacht"); }
-    else if (t < ein + steh) { x = mitte; y = grundY + Math.sin(t / 520) * 5; f.classList.add("lacht"); if (Math.random() < .25) staub(x + 109, y + 23, 0); }
-    else if (t < ein + steh + aus) { const k = (t - ein - steh) / aus; x = mitte + (bw - mitte + W) * k * k; y = grundY + Math.sin(t / 380) * 16 - k * 30; f.classList.remove("lacht"); }
-    else return weg();
-    if (jetzt - staubUhr > 70) { staubUhr = jetzt; staub(x + 106, y + 26, 0); }
+    if (t < ein) { // Einflug von rechts
+      const k = t / ein, e = 1 - Math.pow(1 - k, 2);
+      x = lerp(bw + 10, hx, e); y = lerp(y0, hy, e);
+      if (B.ein === "welle") y += Math.sin(t / B.takt) * B.amp * (1 - e * .7);
+      else if (B.ein === "bogen") y -= Math.sin(Math.PI * e) * hoehe * .32;
+      else if (B.ein === "sturz") y += Math.sin(Math.PI * e) * hoehe * .3;
+      else if (B.ein === "looping" && k > .3 && k < .75) { const p = (k - .3) / .45 * Math.PI * 2, R = 26; x -= R * Math.sin(p); y -= R * (1 - Math.cos(p)); }
+      y = klemm(y);
+    } else if (t < ein + steh) { // Stehen: umdrehen, lächeln, wedeln, Zauberschnee
+      const s = t - ein; x = hx; y = hy + Math.sin(t / 520) * 4;
+      if (!stufe) { stufe = "dreht"; drehen(true); }
+      if (stufe === "dreht" && s > 450) { stufe = "lacht"; f.classList.add("lacht"); }
+      if (stufe === "lacht" && s > 950) { stufe = "zaubert"; f.classList.add("zaubert"); }
+      if (stufe === "zaubert" && s > 1500) { stufe = "schnee"; const [sx, sy] = stern(); feeZauberschnee(sx, sy, top, hoehe); }
+      if (stufe === "schnee" && s > 3000) { stufe = "zurueck"; f.classList.remove("lacht", "zaubert"); drehen(false); }
+    } else if (t < ein + steh + aus) { // weiter nach links – jede Bahn anders
+      const k = (t - ein - steh) / aus, kk = k * k;
+      x = lerp(hx, -W - 20, kk); y = hy;
+      if (B.aus === "welle") y += Math.sin(t / B.takt) * B.amp - k * 24;
+      else if (B.aus === "steil") { x = lerp(hx, hx - bw * .45, k); y = hy - kk * (hy + W + 40); }
+      else if (B.aus === "bogen") y += Math.sin(Math.PI * k) * hoehe * .28;
+      else y -= Math.sin(Math.PI * k) * hoehe * .34;
+      if (B.aus !== "steil") y = klemm(y);
+      if (x < -W - 10 || y < -W - 10) return weg();
+    } else return weg();
+    if (stufe !== "lacht" && stufe !== "zaubert" && stufe !== "schnee" && jetzt - staubUhr > 70) { staubUhr = jetzt; const [sx, sy] = stern(); staub(sx, sy, 0); }
     pos(); requestAnimationFrame(schritt);
   };
   pos(); requestAnimationFrame(schritt);
+}
+// 2.376.0: Zauberschnee – Flocken und Funken wirbeln wild durchs Startbild und rieseln dann aus
+function feeZauberschnee(sx, sy, top, hoehe) {
+  const zeichen = ["❄", "❅", "✦", "✧", "❆", "•"], farben = ["#ffffff", "#ffe3f0", "#dff3ff", "#fff4c4"], bw = innerWidth;
+  for (let i = 0; i < 64; i++) {
+    const s = document.createElement("div"); s.className = "fee-flocke"; s.textContent = zeichen[i % zeichen.length];
+    s.style.color = farben[i % farben.length]; s.style.fontSize = `${8 + Math.random() * 10}px`; document.body.appendChild(s);
+    const pkt = [[sx, sy]]; for (let j = 0; j < 3; j++) pkt.push([Math.random() * bw, top + Math.random() * hoehe]);
+    const [lx, ly] = pkt[3]; pkt.push([lx + (Math.random() - .5) * 40, ly + 30 + Math.random() * 40]);
+    const dreh = (Math.random() - .5) * 720;
+    s.animate(pkt.map(([px, py], j) => ({ transform: `translate(${px.toFixed(0)}px,${py.toFixed(0)}px) rotate(${(dreh * j / 4).toFixed(0)}deg) scale(${j === 0 ? .3 : 1})`, opacity: j === 4 ? 0 : 1 })),
+      { duration: 2200 + Math.random() * 1400, delay: Math.random() * 220, easing: "ease-in-out", fill: "backwards" }).onfinish = () => s.remove();
+  }
 }
 function feeSpruch() {
   const s = FEE_SPRUECHE[Math.floor(Math.random() * FEE_SPRUECHE.length)];
