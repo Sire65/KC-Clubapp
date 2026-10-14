@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.371.0 – 2026-10-14 – 🐕 KC-CLUB-HERBST-HUND: streunender Hund im Herbstbild
+Anlass (Hansi): „Lass in der Herbst-Animation ab und an einen streunenden Hund mit wedelndem Schwanz durchs Bild laufen. Ca. in der Mitte bleibt er stehen,
+schnuppert ein bisschen rum und läuft dann weiter.“
+- Etwa alle 1½–4 Min. (erstes Mal nach ½–1 Min.; Vorschau-Extra „hund“: nach 3 s) trottet ein struppiger Streuner (braun, dunkler Fleck, Schlappohr) von einer
+  Seite herein, bleibt um die Mitte stehen, senkt die Nase ins Laub (Blätter rascheln, Schnupper-Wölkchen), hebt kurz den Kopf, macht zwei Schritte, schnuppert
+  weiter und trottet hinaus. Schwanz wedelt immer, beim Schnuppern schneller. Kommt nie mitten durch den Laubbläser.
+- Kostet nichts extra: läuft im vorhandenen Kopfbild (steht nach 3 Min. ohne Bedienung still wie alles andere).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.370.0 – 2026-10-14 – 🔥 KC-CLUB-BUEHNE-POWERKETTE: neue Übung auf der Bühne – die Power-Kette
 Anlass (Hansi): „Eine neue Übung für Twinkey auf der Bühne: im Stehen abwechselnd Knie hoch rechts, Knie hoch links, einen Schritt nach links,
 einen Schritt nach rechts, einmal in die Kniebeuge mit Armen nach vorn, einmal Hula-Hoop, einen Sprung in die Luft – und wieder von vorn.

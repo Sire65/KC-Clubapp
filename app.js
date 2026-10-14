@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.370.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.371.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17648,8 +17648,8 @@ function jzbNussNameMalen(c) {
 }
 function jzbHerbstTiere(dt) {
   const J = JZB, k = J.k;
-  if (J.saison !== "herbst") { J.eicheln = null; J.hoernchen = null; J.blaeser = null; J.nussName = null; return; }
-  jzbBlaeserSchritt(dt); jzbEichelnPruefen(dt);
+  if (J.saison !== "herbst") { J.eicheln = null; J.hoernchen = null; J.blaeser = null; J.nussName = null; J.hund = null; return; }
+  jzbBlaeserSchritt(dt); jzbEichelnPruefen(dt); jzbStreunerSchritt(dt); // 2.369.0 KC-CLUB-HERBST-HUND
   const txt = jzbEisNameText(); if (J.nussName && J.nussName.text !== txt) J.nussName = null;
   if (!J.nussName && txt) J.nussName = { text: txt, n: 0, gelandet: [], fertig: null };
   const N = J.nussName, laenge = N ? [...N.text].length : 0;
@@ -17695,6 +17695,63 @@ function jzbHerbstTiere(dt) {
     if (H.halt > 4.5) { H.phase = "weg"; H.dir = H.x < J.w / 2 ? -1 : 1; }
   } else { H.x += H.dir * 135 * k * dt; if (H.x < -40 * k || H.x > J.w + 40 * k) { const bau = J.nussName && !J.nussName.fertig; J.hoernchen = null; J.hoernchenUhr = bau ? jzbZ(12, 25) : jzbZ(35, 75); } }
   if (H.phase !== "nehmen" && H.phase !== "stolz") for (const b of J.liegt) if (Math.abs(b.x - H.x) < 8 * k) b.wackel = 1; // raschelt durchs Laub
+}
+// ---------- 2.369.0 KC-CLUB-HERBST-HUND (Wunsch Hansi „in der Herbst-Animation ab und an einen streunenden Hund mit wedelndem Schwanz durchs Bild laufen
+// lassen; ca. in der Mitte bleibt er stehen, schnuppert ein bisschen rum und läuft dann weiter“) ----------
+// Etwa alle 1½–4 Minuten (Vorschau „hund“: nach 3 s): trottet von einer Seite herein, bleibt um die Mitte stehen, senkt die Nase ins Laub (Blätter rascheln),
+// hebt kurz den Kopf, schnuppert noch einmal und trottet zur anderen Seite hinaus. Der Schwanz wedelt die ganze Zeit – beim Schnuppern besonders schnell.
+function jzbStreunerSchritt(dt) {
+  const J = JZB, k = J.k;
+  if (!J.hund) {
+    if (J.blaeser) return; // nicht mitten durch den Laubbläser
+    J.hundUhr = (J.hundUhr ?? (J.extra === "hund" ? 3 : jzbZ(30, 70))) - dt;
+    if (J.hundUhr > 0) return;
+    const dir = Math.random() < .5 ? 1 : -1;
+    J.hund = { dir, x: dir > 0 ? -30 * k : J.w + 30 * k, zx: J.w * jzbZ(.42, .58), phase: "hin", t: 0, halt: 0, dauer: jzbZ(3.2, 4.8) };
+    return;
+  }
+  const D = J.hund; D.t += dt;
+  if (D.phase === "hin") { D.x += D.dir * 62 * k * dt; if ((D.zx - D.x) * D.dir <= 0) { D.x = D.zx; D.phase = "schnuppern"; D.halt = 0; } }
+  else if (D.phase === "schnuppern") {
+    D.halt += dt;
+    if (D.halt > 1.4 && D.halt < 1.9) D.x += D.dir * 10 * k * dt; // zwei kleine Schritte weiter
+    if (Math.random() < dt * 4) for (const b of J.liegt || []) if (Math.abs(b.x - (D.x + D.dir * 16 * k)) < 7 * k) b.wackel = 1; // die Nase raschelt im Laub
+    if (D.halt > D.dauer) { D.phase = "weg"; }
+  } else { D.x += D.dir * 70 * k * dt; if (D.x < -40 * k || D.x > J.w + 40 * k) { J.hund = null; J.hundUhr = J.extra === "hund" ? 6 : jzbZ(90, 240); } }
+  if (D.phase !== "schnuppern") for (const b of J.liegt || []) if (Math.abs(b.x - D.x) < 9 * k) b.wackel = 1; // trottet durchs Laub
+}
+function jzbStreunerMalen(c, D, k) {
+  const J = JZB, laeuft = D.phase !== "schnuppern" || (D.halt > 1.4 && D.halt < 1.9), sp = laeuft ? (D.t * 9) % (Math.PI * 2) : 0;
+  // Kopf: beim Schnuppern runter zur Erde (zwischendurch kurz hoch), die Nase zuckt
+  let kopf = 0; if (D.phase === "schnuppern") { const h = D.halt; kopf = h < .4 ? h / .4 : h > 2.1 && h < 2.6 ? 1 - (h - 2.1) / .5 * .8 : h >= 2.6 && h < 3 ? .2 + (h - 2.6) / .4 * .8 : h > D.dauer - .4 ? Math.max(0, (D.dauer - h) / .4) : 1; kopf = Math.max(0, Math.min(1, kopf)); }
+  const zuck = D.phase === "schnuppern" && kopf > .8 ? Math.sin(D.t * 26) * .5 : 0;
+  const wedel = Math.sin(D.t * (D.phase === "schnuppern" ? 22 : 13)) * (D.phase === "schnuppern" ? .7 : .45), hopp = laeuft ? Math.abs(Math.sin(sp)) * 1.2 : 0;
+  c.save(); c.translate(D.x, J.h - 1 - hopp * k); c.scale(D.dir * k * 1.4, k * 1.4); c.lineCap = "round"; c.lineJoin = "round";
+  const fell = "#8a6a4a", dunkel = "#5e4630";
+  // Schwanz (wedelt)
+  c.save(); c.translate(-9, -11); c.rotate(-1.05 + wedel); c.strokeStyle = fell; c.lineWidth = 2.4; c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(-1, -5, 2, -8.5); c.stroke();
+  c.strokeStyle = "#c9a77f"; c.lineWidth = 1; c.beginPath(); c.moveTo(1.4, -7); c.lineTo(2.2, -8.6); c.stroke(); c.restore();
+  // Beine (hinten dunkler, vorne heller), laufen über Kreuz
+  const b1 = laeuft ? Math.sin(sp) * 2.6 : 0, b2 = -b1;
+  c.strokeStyle = dunkel; c.lineWidth = 2.1;
+  c.beginPath(); c.moveTo(-6, -8); c.lineTo(-6 + b2, 0); c.stroke(); c.beginPath(); c.moveTo(5, -8); c.lineTo(5 + b1, 0); c.stroke();
+  c.strokeStyle = fell; c.beginPath(); c.moveTo(-4, -8); c.lineTo(-4 + b1, 0); c.stroke(); c.beginPath(); c.moveTo(7, -8); c.lineTo(7 + b2, 0); c.stroke();
+  // Körper mit Fleck und etwas struppigem Fell
+  c.fillStyle = fell; c.beginPath(); c.ellipse(0, -10.5, 9.5, 4.6, 0, 0, 7); c.fill();
+  c.fillStyle = dunkel; c.beginPath(); c.ellipse(-3, -12, 3.6, 2.5, -.2, 0, 7); c.fill();
+  c.strokeStyle = "#6f5439"; c.lineWidth = .8; for (const x of [-6, -2, 2]) { c.beginPath(); c.moveTo(x, -14.6); c.lineTo(x + 1.2, -16); c.stroke(); }
+  // Hals und Kopf (senkt sich zum Schnuppern)
+  c.save(); c.translate(7, -12); c.rotate(kopf * .95);
+  c.fillStyle = fell; c.beginPath(); c.ellipse(2, -1.5, 3.4, 3.2, .3, 0, 7); c.fill(); // Hals
+  c.beginPath(); c.arc(4.6, -4.2, 3.9, 0, 7); c.fill(); // Kopf
+  c.beginPath(); c.ellipse(8.2 + zuck * .3, -3.2, 3.2, 2.1, .1, 0, 7); c.fill(); // Schnauze
+  c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(11.1 + zuck * .4, -3.4, 1, 0, 7); c.fill(); // Nase
+  c.beginPath(); c.arc(5.6, -5.4, .7, 0, 7); c.fill(); // Auge
+  c.fillStyle = dunkel; c.beginPath(); c.moveTo(3, -7.4); c.quadraticCurveTo(1, -6.5, 1.4, -2.2); c.quadraticCurveTo(3, -3.4, 4.4, -6.6); c.closePath(); c.fill(); // Schlappohr
+  c.restore();
+  // Schnupper-Wölkchen an der Nase
+  if (D.phase === "schnuppern" && kopf > .8 && Math.sin(D.t * 13) > .6) { c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.arc(19, -2.6, 1.2, 0, 7); c.arc(21.2, -3.6, .9, 0, 7); c.fill(); }
+  c.restore();
 }
 function jzbHoernchenMalen(c, H, k) {
   const J = JZB, laeuft = H.phase !== "nehmen" && H.phase !== "stolz", sp = laeuft ? (H.t * 11) % (Math.PI * 2) : 0, hopp = laeuft ? Math.abs(Math.sin(sp)) * 4 : 0;
@@ -17780,6 +17837,7 @@ function jzbExtrasBoden(c) { // Pfützen, Stiefel, Kochtopf, Igel, Schirm
   if (J.schirm) jzbSchirm(c, J.schirm, k);
   jzbNussNameMalen(c); // 2.329.0 KC-CLUB-NUSSNAME
   if (J.hoernchen) jzbHoernchenMalen(c, J.hoernchen, k); // 2.328.0
+  if (J.hund) jzbStreunerMalen(c, J.hund, k); // 2.369.0 KC-CLUB-HERBST-HUND
   if (J.blaeser) jzbBlaeserMalen(c, J.blaeser, k);
   jzbWinterKinderMalen(c); // 2.282.0
 }

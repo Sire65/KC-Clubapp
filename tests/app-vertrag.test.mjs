@@ -9604,3 +9604,9 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.equal(bwRestZeit({ phase: "bereit", rest: 7, i: 0, plan }), 234, "Power-Kette dauert knapp 4 Minuten");
   assert.equal(bwRestZeit({ phase: "uebung", rest: 20, i: 1, plan: [{}, {}, { sek: 56, pause: 15 }] }), 20 + 6 + 7 + 56 + 15, "gemischte Dauer");
 }
+
+// 2.371.0 (zuerst als 2.369.0 gebaut) KC-CLUB-HERBST-HUND: streunender Hund im Herbstbild
+{
+  assert.ok(/function jzbStreunerSchritt\(dt\)/.test(html) && /function jzbStreunerMalen\(c, D, k\)/.test(html) && /jzbStreunerSchritt\(dt\); \/\/ 2\.369\.0/.test(html) && /if \(J\.hund\) jzbStreunerMalen\(c, J\.hund, k\);/.test(html), "Hund läuft und wird gemalt");
+  assert.ok(/D\.phase = "schnuppern"/.test(html) && /zx: J\.w \* jzbZ\(\.42, \.58\)/.test(html), "bleibt um die Mitte stehen und schnuppert");
+}
