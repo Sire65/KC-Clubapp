@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.377.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.378.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14472,15 +14472,16 @@ function feeKommt(vorschau) {
   document.body.appendChild(f); FEE_LAEUFT = true;
   const W = 120, B = feeBahn(), minY = Math.max(2, top - 16), maxY = Math.max(minY + 20, top + hoehe - 96);
   const hx = Math.round(bw * B.halt - W / 2), hy = Math.min(maxY, Math.max(minY, top + Math.max(4, hoehe / 2 - 64))), y0 = minY + (maxY - minY) * B.hoch;
-  const ein = 3000, steh = 3400, aus = 3000, lerp = (a, b, k) => a + (b - a) * k, klemm = (v) => Math.min(maxY + 30, Math.max(minY - 30, v));
+  const ein = 3000, steh = 4000, aus = 3000, lerp = (a, b, k) => a + (b - a) * k, klemm = (v) => Math.min(maxY + 30, Math.max(minY - 30, v));
   let t0 = 0, x = bw + 10, y = y0, staubUhr = 0, ende = false, stufe = "";
   const pos = () => { f.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`; };
   const stern = () => { const s = f.querySelector(f.classList.contains("vorn") ? ".fee-vorn .fee-stern" : ".fee-seite .fee-stern")?.getBoundingClientRect(); return s ? [s.left + s.width / 2, s.top + s.height / 2] : [x + 10, y + 23]; };
   const staub = (sx, sy, viel) => {
+    const kreis = viel === -1; if (kreis) viel = 0; // 2.378.0: Glitzerkreis bleibt fast stehen
     for (let i = 0; i < (viel || 1); i++) {
       const s = document.createElement("div"); s.className = "fee-staub"; document.body.appendChild(s);
-      const dx = (Math.random() - .5) * (viel ? 90 : 14), dy = (viel ? (Math.random() - .5) * 90 : 18 + Math.random() * 22);
-      s.animate([{ transform: `translate(${sx}px,${sy}px) scale(1)`, opacity: 1 }, { transform: `translate(${sx + dx}px,${sy + dy}px) scale(.2)`, opacity: 0 }], { duration: viel ? 900 : 1100 + Math.random() * 500, easing: "ease-out" }).onfinish = () => s.remove();
+      const dx = (Math.random() - .5) * (viel ? 90 : kreis ? 5 : 14), dy = (viel ? (Math.random() - .5) * 90 : kreis ? 2 + Math.random() * 5 : 18 + Math.random() * 22);
+      s.animate([{ transform: `translate(${sx}px,${sy}px) scale(1)`, opacity: 1 }, { transform: `translate(${sx + dx}px,${sy + dy}px) scale(.2)`, opacity: 0 }], { duration: viel ? 900 : kreis ? 1300 : 1100 + Math.random() * 500, easing: "ease-out" }).onfinish = () => s.remove();
     }
   };
   f.onclick = (e) => { e.stopPropagation(); const [sx, sy] = stern(); staub(sx, sy, 18); feeSpruch(); };
@@ -14501,8 +14502,8 @@ function feeKommt(vorschau) {
       if (!stufe) { stufe = "dreht"; drehen(true); }
       if (stufe === "dreht" && s > 450) { stufe = "lacht"; f.classList.add("lacht"); }
       if (stufe === "lacht" && s > 950) { stufe = "zaubert"; f.classList.add("zaubert"); }
-      if (stufe === "zaubert" && s > 1500) { stufe = "schnee"; const [sx, sy] = stern(); feeZauberschnee(sx, sy, top, hoehe); }
-      if (stufe === "schnee" && s > 3000) { stufe = "zurueck"; f.classList.remove("lacht", "zaubert"); drehen(false); }
+      if (stufe === "zaubert" && s > 2150) { stufe = "schnee"; const [sx, sy] = stern(); feeZauberschnee(sx, sy, top, hoehe); }
+      if (stufe === "schnee" && s > 3600) { stufe = "zurueck"; f.classList.remove("lacht", "zaubert"); drehen(false); }
     } else if (t < ein + steh + aus) { // weiter nach links – jede Bahn anders
       const k = (t - ein - steh) / aus, kk = k * k;
       x = lerp(hx, -W - 20, kk); y = hy;
@@ -14513,7 +14514,8 @@ function feeKommt(vorschau) {
       if (B.aus !== "steil") y = klemm(y);
       if (x < -W - 10 || y < -W - 10) return weg();
     } else return weg();
-    if (stufe !== "lacht" && stufe !== "zaubert" && stufe !== "schnee" && jetzt - staubUhr > 70) { staubUhr = jetzt; const [sx, sy] = stern(); staub(sx, sy, 0); }
+    if (stufe !== "lacht" && stufe !== "schnee" && jetzt - staubUhr > (stufe === "zaubert" ? 30 : 70)) { staubUhr = jetzt; // 2.378.0: beim Kreisen zeichnet der Stern einen Glitzerkreis
+      const [sx, sy] = stern(); staub(sx, sy, stufe === "zaubert" ? -1 : 0); }
     pos(); requestAnimationFrame(schritt);
   };
   pos(); requestAnimationFrame(schritt);

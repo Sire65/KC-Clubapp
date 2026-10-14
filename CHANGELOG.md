@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.378.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: Zauberstab macht eine Rundbewegung
+Anlass (Hansi): „Beim Schwenken des Zauberstabs muss sie eine Rundbewegung machen, jetzt wedelt sie nur rechts–links.“
+- `feeWedeln`: Hand und Stab beschreiben einen ganzen Kreis (1,2 s, 16 Stützpunkte); der Stern zieht dabei einen Glitzerkreis, der kurz stehen bleibt.
+- Erst wenn der Kreis geschlossen ist, wirbelt der Zauberschnee los; die Fee bleibt dafür ~0,6 s länger stehen.
+
 ## 2.377.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: Beinhaltung im Flug wie klassische Feen
 Anlass (Hansi): „Beim Fliegen ist die Beinstellung noch nicht gut – schau dir an, wie Feen fliegen.“ – Vorher zeigte ein Knie nach vorn (wirkte wie Laufen).
 Jetzt wie bei klassischen Feen-Bildern: beide Beine ziehen hinter dem Körper her, das hintere lang nach hinten unten gestreckt mit gestreckter Fußspitze,

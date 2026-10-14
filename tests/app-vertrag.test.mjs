@@ -9656,3 +9656,11 @@ assert.ok(/einstiegHin\("effekte", "feeKnopf"\)/.test(html) && /id="feeKnopf" on
   const svg = (html.match(/const FEE_SVG = `([\s\S]*?)`;/) || [, ""])[1];
   assert.ok(/<path d="M95 102 C92 110 87 118 81\.4 125\.4/.test(svg) && /<path d="M82 98 C78 104 74 110 69\.5 117\.6/.test(svg) && !/C104 126 98 132 92 136|M93 100 C98 106 104 112 106 118|M89 100 C94 104 98\.6 109\.6/.test(svg), "kein Knie mehr nach vorn");
 }
+
+// 2.378.0 KC-CLUB-FEE: Rundbewegung mit dem Zauberstab
+{
+  const kf = (html.match(/@keyframes feeWedeln \{([^\n]*?)\} \/\* 2\.378\.0/) || [, ""])[1];
+  const pkt = [...kf.matchAll(/translate\((-?[\d.]+)px,(-?[\d.]+)px\)/g)].map((m) => [+m[1], +m[2]]);
+  assert.ok(pkt.length >= 12 && Math.min(...pkt.map((p) => p[0])) < -10 && Math.max(...pkt.map((p) => p[0])) > 10 && Math.min(...pkt.map((p) => p[1])) < -20, "Stab beschreibt einen Kreis");
+  assert.ok(/stufe === "zaubert" && s > 2150/.test(html) && /staub\(sx, sy, stufe === "zaubert" \? -1 : 0\)/.test(html), "Schnee erst nach dem Kreis, Glitzerkreis");
+}
