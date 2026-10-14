@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.372.0";
+const SERVER_VERSION = "2.382.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -13258,6 +13258,11 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
   };
   try {
     const erstellt = jetzt();
+    // KC-CLUB-NOTPAKET-STUENDLICH (Server 2.382.0, 14.10.2026 „Datenbank-Anfragen auf das Nötigste“): Das Paket für alle Mitglieder
+    // kostet ~3.000 Datenbankabfragen. Tagsüber ändert sich fast immer etwas → bisher alle 15 Min. neu gebaut. Jetzt höchstens 1× pro Stunde
+    // (der Nachtrag aus dem Notbetrieb läuft weiter alle 15 Min.); „erzwingen“ baut sofort.
+    if (!erzwingen && fp && st.fingerabdruck !== fp && st.hochgeladen_am && Date.now() - new Date(st.hochgeladen_am).getTime() < 60 * 60000)
+      return { ok: true, gedrosselt: true, naechsterBau: new Date(new Date(st.hochgeladen_am).getTime() + 60 * 60000).toISOString() };
     if (!erzwingen && fp && st.fingerabdruck === fp) {
       // nichts geändert: nur „Stand ist aktuell bis jetzt“ melden (klein, signiert)
       await senden("/stand", new TextEncoder().encode(JSON.stringify({ stand: erstellt, fingerabdruck: fp })), "application/json");

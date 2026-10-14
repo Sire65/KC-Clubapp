@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -9681,4 +9681,9 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.381.0 KC-CLUB-KNOEPFE-PLATZ: Mikrofon kleiner und in derselben Reihe
 {
   assert.ok(/\.sb-knopf \{ width: 44px; height: 44px; border-width: 2px; font-size: 1\.2rem; \}/.test(html) && /\.sb-knopf \{ left: auto; right: calc\(50% \+ 444px\); bottom: calc\(18px \+ env\(safe-area-inset-bottom\)\); width: 48px; height: 48px;/.test(html), "Mikrofon passt in die Reihe");
+}
+
+// Server 2.382.0 KC-CLUB-NOTPAKET-STUENDLICH: Notfall-Paket höchstens 1× pro Stunde neu bauen (je Bau ~3.000 Datenbankabfragen)
+{
+  assert.ok(/st\.fingerabdruck !== fp && st\.hochgeladen_am && Date\.now\(\) - new Date\(st\.hochgeladen_am\)\.getTime\(\) < 60 \* 60000\)/.test(server) && /gedrosselt: true/.test(server), "Notfall-Paket gedrosselt, erzwingen geht weiter");
 }
