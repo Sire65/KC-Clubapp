@@ -1,0 +1,7 @@
+erstes_mal=true
+ruhig_30s=true
+wieder_nach_pause=true
+vorher_vor_schreiben=true
+neue_version=true
+falscher_zugang=true
+inaktiv=true

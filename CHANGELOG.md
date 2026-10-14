@@ -1,5 +1,8 @@
 # Änderungen
 
+## DB – 2026-10-14 (ohne App-Build) – KC-CLUB-ANMELDUNG-SPARSAM: Anmeldung schreibt „zuletzt gesehen“ höchstens alle 30 s
+Anlass (Hansi): „Check nochmals … alle Sachen, die zu viele Datenbank-Abfragen machen und die DB überlasten.“ Messung: kc_club_anmeldung war der größte Einzelposten (rund ein Drittel der DB-Zeit, zuletzt 600 ms je Aufruf statt 36 ms – gleichzeitige Anfragen derselben Person warteten auf die Zeilensperre). Jetzt nur lesen; geschrieben wird beim ersten Mal, nach > 30 s oder bei neuer App-Version. Online-Anzeige (150 s) und Online-Push (vorher-Stand) unverändert. Probelauf tools/db-test/72_anmeldung_sparsam_test.sql. Rückweg: 20261002_kc_club_v1510_erstmals.sql.
+
 ## Server 2.388.0 – 2026-10-14 – KC-CLUB-EXPRESS-ADMIN-FREI: Admin ohne Express-Tagesgrenze
 Anlass (Hansi): „Wer hat die Grenze von 5 Express festgelegt?“ – Die Grenze (5 je Person und Tag) war beim Bau von 2.362.0 als Schutz vor Missbrauch eingesetzt worden, nicht von Hansi vorgegeben. Der Admin hat jetzt keine Grenze mehr; für Mitglieder gilt sie weiter, bis Hansi anders entscheidet.
 

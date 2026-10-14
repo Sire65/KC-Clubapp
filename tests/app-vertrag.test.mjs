@@ -6272,6 +6272,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // Server 2.388.0 KC-CLUB-EXPRESS-ADMIN-FREI: der Admin hat keine Express-Tagesgrenze, alle anderen weiter höchstens EXPRESS_MAX
 { assert.ok(/if \(express && !ich\.admin\) \{\n\s+const \{ count: ex \}/.test(server), "Admin ohne Express-Grenze"); }
+// DB KC-CLUB-ANMELDUNG-SPARSAM (14.10.2026): Anmeldung schreibt „zuletzt gesehen“ höchstens alle 30 s
+{
+  const mig = lies("supabase/migrations/20261014_kc_club_v2389_anmeldung_sparsam.sql");
+  assert.ok(/if v_zul is null or v_zul < now\(\) - interval '30 seconds' or v_erst is null/.test(mig) && /select max\(z2\.zuletzt_gesehen\) into v_vorher/.test(mig), "nur alle 30 s schreiben, vorher-Stand vor dem Schreiben");
+  assert.ok(/grant execute on function public\.kc_club_anmeldung\(text, text\) to service_role;/.test(mig) && /revoke all on function public\.kc_club_anmeldung\(text, text\) from public, anon, authenticated;/.test(mig), "Rechte unverändert nur Server");
+  assert.ok(lies("tools/db-test/72_erwartet.txt").includes("ruhig_30s=true"), "Probelauf prüft das Verhalten");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
