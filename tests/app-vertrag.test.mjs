@@ -9623,10 +9623,10 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.373.0 KC-CLUB-FEE: eigene Zeile unter ✨ Effekte
 {
-  assert.ok(/<b>🧚 Die kleine Fee<\/b>[\s\S]{0,200}onclick="feeKommt\(true\)">🧚 Fee ansehen</.test(html) && (html.match(/Fee ansehen<\/button>/g) || []).length === 1, "Fee-Zeile unter Effekte, nur ein Knopf");
-  assert.ok(/⚙️ → ✨ Effekte → 🧚 Fee ansehen/.test(html), "Hilfe nennt den richtigen Weg");
+  assert.ok(/<b>🧚 Die kleine Fee<\/b>[\s\S]{0,400}onclick="feeKommt\(true\)">🧚 Fee ansehen</.test(html) && (html.match(/Fee ansehen<\/button>/g) || []).length === 1, "Fee-Zeile unter Effekte, nur ein Knopf");
+  assert.ok(/⚙️ → ✨ Effekte → (🧚 Fee ansehen|🧚 Die kleine Fee)/.test(html), "Hilfe nennt den richtigen Weg");
 }
-assert.ok(/einstiegHin\("effekte", "feeKnopf"\)/.test(html) && /id="feeKnopf" onclick="feeKommt\(true\)"/.test(html), "Hilfe springt zum Fee-Knopf");
+assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="feeKnopf"( style="[^"]*")? onclick="feeKommt\(true\)"/.test(html), "Hilfe springt zum Fee-Knopf");
 
 // 2.374.0 KC-CLUB-FEE: erwachsene Fee (neu gezeichnet)
 {
@@ -9663,4 +9663,10 @@ assert.ok(/einstiegHin\("effekte", "feeKnopf"\)/.test(html) && /id="feeKnopf" on
   const pkt = [...kf.matchAll(/translate\((-?[\d.]+)px,(-?[\d.]+)px\)/g)].map((m) => [+m[1], +m[2]]);
   assert.ok(pkt.length >= 12 && Math.min(...pkt.map((p) => p[0])) < -10 && Math.max(...pkt.map((p) => p[0])) > 10 && Math.min(...pkt.map((p) => p[1])) < -20, "Stab beschreibt einen Kreis");
   assert.ok(/stufe === "zaubert" && s > 2150/.test(html) && /staub\(sx, sy, stufe === "zaubert" \? -1 : 0\)/.test(html), "Schnee erst nach dem Kreis, Glitzerkreis");
+}
+
+// 2.379.0 KC-CLUB-FEE: abschaltbar per Häkchen
+{
+  assert.ok(/<input type="checkbox" id="setFee"[^>]*onchange="einstellung\('fee', this\.checked\)">/.test(html) && /Bei jedem 20\. Start kommt die Fee – und beim Antippen gibt sie dir einen Spruch\./.test(html), "Häkchen mit Erklärung");
+  assert.ok(/if \(vorschau !== true && !einst\("fee", true\)\) return;/.test(html) && /\$\("setFee"\)\.checked = einst\("fee", true\)/.test(html) && /id: "setFee", t: "Die kleine Fee"/.test(html), "Aus heißt aus; Häkchen zeigt den Stand; Suche findet sie");
 }

@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.379.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: abschaltbar per Häkchen
+Anlass (Hansi): „Bau ein, dass sich die Fee abschalten lässt – mit Klickkästchen, und schreiben: bei jedem 20. Start kommt die Fee und beim Antippen gibt sie dir einen Spruch.“
+- ⚙️ → ✨ Effekte → „🧚 Die kleine Fee“: Häkchen (je Gerät, Standard an) und Text „Bei jedem 20. Start kommt die Fee – und beim Antippen gibt sie dir einen
+  Spruch. Aus: sie kommt nicht mehr.“; „🧚 Fee ansehen“ bleibt darunter und geht auch, wenn sie aus ist.
+- `feeKommt` kommt ohne Häkchen nicht mehr von selbst; die Einstellungs-Suche findet „Fee“; Hilfe-Tipp nennt das Abschalten.
+
 ## 2.378.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: Zauberstab macht eine Rundbewegung
 Anlass (Hansi): „Beim Schwenken des Zauberstabs muss sie eine Rundbewegung machen, jetzt wedelt sie nur rechts–links.“
 - `feeWedeln`: Hand und Stab beschreiben einen ganzen Kreis (1,2 s, 16 Stützpunkte); der Stern zieht dabei einen Glitzerkreis, der kurz stehen bleibt.
