@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.373.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.374.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14331,29 +14331,66 @@ const FEE_SPRUECHE = [
   "Ruhe bewahren und weiterrühren – das wird was!",
   "Danke, dass du immer wieder vorbeischaust. Das macht den Club lebendig. 💗",
 ];
-const FEE_SVG = `<svg viewBox="0 0 100 120" aria-hidden="true"><defs>
-<radialGradient id="feeFg" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".55" stop-color="#ffd6ea" stop-opacity=".75"/><stop offset="1" stop-color="#d9b8ff" stop-opacity=".45"/></radialGradient>
-<linearGradient id="feeKl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc2d9"/><stop offset="1" stop-color="#f59ac0"/></linearGradient></defs>
-<g class="fee-fl l"><ellipse cx="30" cy="50" rx="22" ry="15" fill="url(#feeFg)" stroke="#f7b6d4" stroke-width=".8" transform="rotate(-25 30 50)"/><ellipse cx="33" cy="70" rx="13" ry="9" fill="url(#feeFg)" stroke="#f7b6d4" stroke-width=".8" transform="rotate(20 33 70)"/></g>
-<g class="fee-fl r"><ellipse cx="70" cy="50" rx="22" ry="15" fill="url(#feeFg)" stroke="#f7b6d4" stroke-width=".8" transform="rotate(25 70 50)"/><ellipse cx="67" cy="70" rx="13" ry="9" fill="url(#feeFg)" stroke="#f7b6d4" stroke-width=".8" transform="rotate(-20 67 70)"/></g>
-<path d="M45 82 L42 108 M55 82 L58 108" stroke="#ffd9c4" stroke-width="3.2" stroke-linecap="round"/>
-<ellipse cx="41.5" cy="109" rx="3.4" ry="2" fill="#f07aaa"/><ellipse cx="58.5" cy="109" rx="3.4" ry="2" fill="#f07aaa"/>
-<path d="M44 52 Q50 49 56 52 L66 88 Q50 95 34 88 Z" fill="url(#feeKl)" stroke="#e98bb2" stroke-width=".8"/>
-<path d="M34 88 Q38 84 42 89 Q46 84 50 89 Q54 84 58 89 Q62 84 66 88" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".9"/>
-<circle class="fee-gl" cx="46" cy="62" r="1.2" fill="#fff"/><circle class="fee-gl" cx="54" cy="68" r="1.1" fill="#fff"/><circle class="fee-gl" cx="43" cy="76" r="1.3" fill="#fff"/><circle class="fee-gl" cx="57" cy="80" r="1.2" fill="#fff"/><circle class="fee-gl" cx="50" cy="73" r=".9" fill="#fff"/><circle class="fee-gl" cx="40" cy="84" r="1" fill="#fff"/><circle class="fee-gl" cx="60" cy="86" r="1" fill="#fff"/><circle class="fee-gl" cx="51" cy="57" r=".8" fill="#fff"/>
-<path d="M45 55 Q38 62 36 70" stroke="#ffd9c4" stroke-width="3" fill="none" stroke-linecap="round"/>
-<g class="fee-stab"><path d="M56 55 Q63 60 68 64" stroke="#ffd9c4" stroke-width="3" fill="none" stroke-linecap="round"/><line x1="68" y1="66" x2="80" y2="44" stroke="#c99a3c" stroke-width="1.8" stroke-linecap="round"/>
-<path d="M81 34 L83.2 39.8 L89.4 40.1 L84.6 44 L86.2 50 L81 46.6 L75.8 50 L77.4 44 L72.6 40.1 L78.8 39.8 Z" fill="#ffd54a" stroke="#f4b400" stroke-width=".6"/><circle class="fee-gl" cx="88" cy="32" r="1.4" fill="#fff"/><circle class="fee-gl" cx="74" cy="33" r="1.1" fill="#fff8c4"/></g>
-<path d="M33 30 Q32 10 50 9 Q68 10 67 30 Q69 44 62 50 L38 50 Q31 44 33 30Z" fill="#f6d27a"/>
-<circle cx="50" cy="32" r="13" fill="#ffe3d3"/>
-<path d="M37 28 Q42 16 52 18 Q60 18 63 28 Q58 22 50 23 Q43 23 37 28Z" fill="#f2c55e"/>
-<path d="M40 18 l3 -6 l3 5 l4 -7 l4 7 l3 -5 l3 6 Z" fill="#ffc6de" stroke="#f39bc2" stroke-width=".6"/><circle cx="50" cy="12" r="1.3" fill="#fff"/>
-<ellipse class="fee-aug" cx="45" cy="32" rx="1.7" ry="2.2" fill="#4b3a5a"/><ellipse class="fee-aug" cx="55" cy="32" rx="1.7" ry="2.2" fill="#4b3a5a"/>
-<circle cx="45.6" cy="31.2" r=".6" fill="#fff"/><circle cx="55.6" cy="31.2" r=".6" fill="#fff"/>
-<ellipse class="fee-wange" cx="41.5" cy="37" rx="2.6" ry="1.6" fill="#ff9ec4" opacity=".55"/><ellipse class="fee-wange" cx="58.5" cy="37" rx="2.6" ry="1.6" fill="#ff9ec4" opacity=".55"/>
-<path class="fee-mund" d="M47.5 38.5 Q50 40.3 52.5 38.5" stroke="#d2678f" stroke-width="1.1" fill="none" stroke-linecap="round"/>
-<path class="fee-mund-gross" d="M46 37.6 Q50 43.5 54 37.6 Z" fill="#e0688f" stroke="#c9547c" stroke-width=".6"/>
-</svg>`;
+const FEE_SVG = `<svg viewBox="0 0 170 170" aria-hidden="true"><defs>
+<linearGradient id="feeFg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd1e8" stop-opacity=".9"/><stop offset=".45" stop-color="#e3d0ff" stop-opacity=".65"/><stop offset="1" stop-color="#c9f3e6" stop-opacity=".55"/></linearGradient>
+<linearGradient id="feeKl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7a8c8"/><stop offset="1" stop-color="#e57ba8"/></linearGradient>
+<linearGradient id="feeRo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd3e5" stop-opacity=".95"/><stop offset="1" stop-color="#f7a9cb" stop-opacity=".8"/></linearGradient>
+<linearGradient id="feeHa" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbe3a0"/><stop offset=".6" stop-color="#f0c766"/><stop offset="1" stop-color="#d9a640"/></linearGradient>
+<radialGradient id="feeSt" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#ffe9a8"/><stop offset="1" stop-color="#ffc4dd" stop-opacity="0"/></radialGradient></defs>
+<g transform="rotate(16 90 90)">
+
+<g class="fee-fl l"><path d="M84 62 C70 40 44 14 26 10 C16 9 18 22 30 34 C44 48 66 58 84 62Z" fill="url(#feeFg)" stroke="#e9b7e0" stroke-width=".7"/>
+<path d="M84 62 C62 50 42 28 28 14 M70 52 L48 40 M60 44 L44 24" stroke="#fff" stroke-width=".5" fill="none" opacity=".8"/>
+<path d="M84 66 C68 66 46 74 38 86 C34 94 44 96 54 90 C66 82 78 72 84 66Z" fill="url(#feeFg)" stroke="#e9b7e0" stroke-width=".7"/>
+<path d="M84 66 C68 72 52 82 42 90" stroke="#fff" stroke-width=".5" fill="none" opacity=".8"/></g>
+<g class="fee-fl r"><path d="M88 60 C92 38 104 12 118 4 C128 0 128 12 120 26 C112 40 98 54 88 60Z" fill="url(#feeFg)" stroke="#e9b7e0" stroke-width=".7"/>
+<path d="M88 60 C98 42 108 22 118 8 M96 46 L108 36" stroke="#fff" stroke-width=".5" fill="none" opacity=".8"/></g>
+
+<path d="M82 30 C70 32 62 44 58 56 C54 66 46 72 40 76 C50 78 58 72 62 66 C60 76 54 84 48 88 C60 88 68 78 72 70 C74 78 72 86 68 92 C78 88 82 76 82 66 C84 56 88 46 92 40Z" fill="url(#feeHa)"/>
+<path d="M66 50 C62 60 54 68 46 74 M74 56 C70 66 64 76 56 84 M80 58 C80 68 76 78 72 86" stroke="#fff3c9" stroke-width=".9" fill="none" opacity=".75" stroke-linecap="round"/>
+
+<path d="M83 100 C78 108 72 116 66 122" stroke="#f3c4ad" stroke-width="6" fill="none" stroke-linecap="round"/>
+<path d="M66 122 C60 127 54 130 47 132" stroke="#f3c4ad" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+<path d="M48 129.6 C44 130 40 131.5 37 133.5 C41 134.5 45 134.5 49 134Z" fill="#e5799f"/>
+<path d="M93 100 C98 106 104 112 106 118" stroke="#fbd6c2" stroke-width="6.2" fill="none" stroke-linecap="round"/>
+<path d="M106 118 C104 126 98 132 92 136" stroke="#fbd6c2" stroke-width="4.3" fill="none" stroke-linecap="round"/>
+<path d="M93 133.5 C89 136 86 139 84 142 C88 141.5 92 139.5 95 137.6Z" fill="#e5799f"/>
+
+<path d="M82 60 C74 64 68 70 62 70 C58 70 55 67 52 66" stroke="#f8cdb6" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+
+<path d="M82 78 C78 86 70 94 64 102 C70 104 74 101 78 104 C82 101 86 106 90 103 C94 106 98 102 102 104 C106 101 110 103 114 100 C108 92 100 84 96 78Z" fill="url(#feeRo)" stroke="#f08db5" stroke-width=".6"/>
+<path d="M83 78 C80 86 76 92 72 98 C76 99 80 97 83 99 C86 96 90 100 93 97 C96 99 100 96 104 97 C100 90 97 84 95 78Z" fill="url(#feeKl)"/>
+<circle class="fee-gl" cx="76" cy="98" r=".6" fill="#fff"/><circle class="fee-gl" cx="96" cy="100" r=".6" fill="#fff"/><circle class="fee-gl" cx="108" cy="99" r=".6" fill="#fff"/><circle class="fee-gl" cx="86" cy="92" r=".6" fill="#fff"/><circle class="fee-gl" cx="68" cy="101" r=".6" fill="#fff"/>
+<circle class="fee-gl" cx="82" cy="72" r=".5" fill="#fff"/><circle class="fee-gl" cx="89" cy="78" r=".5" fill="#fff"/><circle class="fee-gl" cx="94" cy="74" r=".5" fill="#fff"/><circle class="fee-gl" cx="79" cy="95" r=".5" fill="#fff"/><circle class="fee-gl" cx="90" cy="99" r=".5" fill="#fff"/><circle class="fee-gl" cx="101" cy="96" r=".5" fill="#fff"/><circle class="fee-gl" cx="104" cy="101" r=".5" fill="#fff"/><circle class="fee-gl" cx="73" cy="100" r=".5" fill="#fff"/><circle class="fee-gl" cx="84" cy="102" r=".5" fill="#fff"/><circle class="fee-gl" cx="98" cy="90" r=".5" fill="#fff"/>
+
+<path d="M84 52 L92 52 L93 58 L83 58Z" fill="#f8cdb6"/>
+<path d="M78 60 C82 56 94 56 99 60 L97 64 L80 64Z" fill="#fbd6c2"/>
+<path d="M80 62 Q84 59 88 62 Q92 59 97 62 L95 80 Q89 83 83 80Z" fill="url(#feeKl)" stroke="#d96b98" stroke-width=".6"/>
+<circle class="fee-gl" cx="85" cy="66" r=".6" fill="#fff"/><circle class="fee-gl" cx="91" cy="70" r=".6" fill="#fff"/><circle class="fee-gl" cx="87" cy="75" r=".6" fill="#fff"/><circle class="fee-gl" cx="93" cy="65" r=".6" fill="#fff"/>
+
+<path d="M80 34 C80 22 88 18 94 20 C102 22 104 30 102 38 C101 46 96 50 90 50 C84 50 80 44 80 34Z" fill="#fbd6c2"/>
+<path d="M78 34 C76 20 88 12 98 16 C106 20 106 30 102 32 C98 24 90 22 84 28 C82 30 80 34 80 40Z" fill="url(#feeHa)"/>
+<path d="M86 21 C92 18 100 20 103 26" stroke="#fff3c9" stroke-width=".9" fill="none" opacity=".8"/>
+<path d="M88 16 l2 -4 l2 3 l2 -5 l2 5 l2 -3 l1 4Z" fill="#ffd1e6" stroke="#ef9cc3" stroke-width=".5"/><circle cx="94" cy="11" r="1" fill="#fff"/>
+
+<path d="M88 31 Q91 29.5 93 31" stroke="#a87b45" stroke-width=".8" fill="none"/><path d="M96 31 Q98.5 30 100.5 31.5" stroke="#a87b45" stroke-width=".8" fill="none"/>
+<g class="fee-aug"><path d="M88.3 35 Q90.6 33 93 35 Q90.6 36.4 88.3 35Z" fill="#fff"/><circle cx="90.8" cy="34.9" r="1.2" fill="#3f86c8"/><circle cx="90.8" cy="34.9" r=".55" fill="#1d2b44"/>
+<path d="M88 35 Q90.6 32.4 93.3 34.6 M93.3 34.6 l1 -.9" stroke="#2b2033" stroke-width=".7" fill="none" stroke-linecap="round"/></g>
+<g class="fee-aug"><path d="M96.2 35 Q98.2 33.3 100.2 35 Q98.2 36.2 96.2 35Z" fill="#fff"/><circle cx="98.4" cy="34.9" r="1.1" fill="#3f86c8"/><circle cx="98.4" cy="34.9" r=".5" fill="#1d2b44"/>
+<path d="M96 35 Q98.2 32.6 100.5 34.6 M100.5 34.6 l1 -.9" stroke="#2b2033" stroke-width=".7" fill="none" stroke-linecap="round"/></g>
+<path d="M95 36 Q96.2 39.5 94.6 40.4" stroke="#e0a58c" stroke-width=".6" fill="none" stroke-linecap="round"/>
+<ellipse class="fee-wange" cx="89" cy="40" rx="2.3" ry="1.3" fill="#ff9ec4" opacity=".4"/><ellipse class="fee-wange" cx="100" cy="39.5" rx="1.6" ry="1.1" fill="#ff9ec4" opacity=".4"/>
+<path class="fee-mund" d="M91.6 43.4 Q94.6 45 97.4 43" stroke="#d64f7c" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+<path class="fee-mund-gross" d="M91 42.8 Q94.6 47.6 98 42.4 Q94.6 43.6 91 42.8Z" fill="#fff" stroke="#d64f7c" stroke-width="1.1" stroke-linejoin="round"/>
+
+<path d="M80 30 C78 40 80 48 76 56 C82 52 84 44 84 36Z" fill="url(#feeHa)"/>
+
+<g class="fee-stab"><path d="M95 60 C102 56 108 50 114 44" stroke="#fbd6c2" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+<line x1="114" y1="45" x2="134" y2="20" stroke="#e9c46a" stroke-width="1.6" stroke-linecap="round"/><line x1="114" y1="45" x2="134" y2="20" stroke="#fff" stroke-width=".5" stroke-dasharray="2 3"/>
+<path class="fee-gl" d="M124 24 L124.6 25.4 L126 26 L124.6 26.6 L124 28 L123.4 26.6 L122 26 L123.4 25.4Z" fill="#fff4c4"/><path class="fee-gl" d="M118 16 L118.6 17.4 L120 18 L118.6 18.6 L118 20 L117.4 18.6 L116 18 L117.4 17.4Z" fill="#fff4c4"/><path class="fee-gl" d="M110 20 L110.6 21.4 L112 22 L110.6 22.6 L110 24 L109.4 22.6 L108 22 L109.4 21.4Z" fill="#fff4c4"/><path class="fee-gl" d="M102 12 L102.6 13.4 L104 14 L102.6 14.6 L102 16 L101.4 14.6 L100 14 L101.4 13.4Z" fill="#fff4c4"/><path class="fee-gl" d="M94 4 L94.6 5.4 L96 6 L94.6 6.6 L94 8 L93.4 6.6 L92 6 L93.4 5.4Z" fill="#fff4c4"/><circle cx="136" cy="17" r="9" fill="url(#feeSt)" class="fee-schein"/>
+<path class="fee-stern" d="M136 9 L138.2 14.8 L144.2 15 L139.5 18.8 L141.2 24.6 L136 21.2 L130.8 24.6 L132.5 18.8 L127.8 15 L133.8 14.8Z" fill="#ffd8ea" stroke="#f08db5" stroke-width=".7"/>
+<circle class="fee-gl" cx="146" cy="10" r="1.2" fill="#fff"/><circle class="fee-gl" cx="150" cy="20" r=".9" fill="#ffe9a8"/><circle class="fee-gl" cx="128" cy="6" r="1" fill="#fff"/></g>
+</g></svg>`; // 2.374.0: erwachsene, schlanke Fee (Wunsch Hansi „zu kindlich“) – eigene Zeichnung
 let FEE_LAEUFT = false;
 function feeKommt(vorschau) {
   if (typeof document === "undefined" || FEE_LAEUFT) return;
@@ -14366,7 +14403,7 @@ function feeKommt(vorschau) {
   const r = held?.getBoundingClientRect(), bw = innerWidth, top = r && r.height > 60 ? Math.max(4, r.top) : 70, hoehe = r && r.height > 60 ? Math.min(r.height, 260) : 200;
   const f = document.createElement("div"); f.className = "fee"; f.setAttribute("role", "button"); f.setAttribute("aria-label", "Fee – antippen für einen schönen Spruch"); f.innerHTML = FEE_SVG;
   document.body.appendChild(f); FEE_LAEUFT = true;
-  const W = 84, mitte = bw / 2 - W / 2, grundY = top + Math.max(6, hoehe / 2 - 60), ein = 3200, steh = 2800, aus = 3200;
+  const W = 120, mitte = bw / 2 - W / 2, grundY = top + Math.max(6, hoehe / 2 - 60), ein = 3200, steh = 2800, aus = 3200;
   let t0 = 0, x = -W, y = grundY, staubUhr = 0, ende = false;
   const pos = () => { f.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`; };
   const staub = (sx, sy, viel) => {
@@ -14376,15 +14413,15 @@ function feeKommt(vorschau) {
       s.animate([{ transform: `translate(${sx}px,${sy}px) scale(1)`, opacity: 1 }, { transform: `translate(${sx + dx}px,${sy + dy}px) scale(.2)`, opacity: 0 }], { duration: viel ? 900 : 1100 + Math.random() * 500, easing: "ease-out" }).onfinish = () => s.remove();
     }
   };
-  f.onclick = (e) => { e.stopPropagation(); staub(x + W * .8, y + 30, 18); feeSpruch(); };
+  f.onclick = (e) => { e.stopPropagation(); staub(x + 109, y + 23, 18); feeSpruch(); };
   const weg = () => { ende = true; f.remove(); FEE_LAEUFT = false; };
   const schritt = (jetzt) => {
     if (ende) return; if (!t0) t0 = jetzt; const t = jetzt - t0;
     if (t < ein) { const k = t / ein, e = 1 - Math.pow(1 - k, 2); x = -W + (mitte + W) * e; y = grundY + Math.sin(t / 380) * 16; f.classList.remove("lacht"); }
-    else if (t < ein + steh) { x = mitte; y = grundY + Math.sin(t / 520) * 5; f.classList.add("lacht"); if (Math.random() < .25) staub(x + 70, y + 30, 0); }
+    else if (t < ein + steh) { x = mitte; y = grundY + Math.sin(t / 520) * 5; f.classList.add("lacht"); if (Math.random() < .25) staub(x + 109, y + 23, 0); }
     else if (t < ein + steh + aus) { const k = (t - ein - steh) / aus; x = mitte + (bw - mitte + W) * k * k; y = grundY + Math.sin(t / 380) * 16 - k * 30; f.classList.remove("lacht"); }
     else return weg();
-    if (jetzt - staubUhr > 70) { staubUhr = jetzt; staub(x + 20, y + 70, 0); }
+    if (jetzt - staubUhr > 70) { staubUhr = jetzt; staub(x + 106, y + 26, 0); }
     pos(); requestAnimationFrame(schritt);
   };
   pos(); requestAnimationFrame(schritt);

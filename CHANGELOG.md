@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.374.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: neue, erwachsene Fee
+Anlass (Hansi, mit Beispielbildern): „Nein, die Fee ist zu kindlich.“ – Neu gezeichnet (eigene Zeichnung, keine fremden Bilder): schlanke, erwachsene Fee
+im eleganten Flug (leicht nach vorn geneigt, ein Knie angewinkelt), lange wehende blonde Haare, Augen mit Wimpern, Lippen, rosé Korsage und mehrlagiger
+Tüllrock mit feinem Glitzer, schimmernde Libellenflügel (rosé–flieder–mint), Zauberstab mit Sternenspur. Beim Stehenbleiben lächelt sie, der Stern leuchtet auf.
+
 ## 2.373.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: eigene Zeile „Die kleine Fee“ unter ⚙️ → ✨ Effekte
 Anlass (Hansi): „Unter Darstellung finde ich sie nicht.“ – Der Vorschau-Knopf stand versteckt in der Sende-Effekt-Zeile. Jetzt eigene Zeile direkt unter
 „✨ Animierte Knöpfe“ mit Erklärung und „🧚 Fee ansehen“; Hilfe-Tipp nennt den richtigen Weg.

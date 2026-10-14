@@ -9627,3 +9627,10 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/⚙️ → ✨ Effekte → 🧚 Fee ansehen/.test(html), "Hilfe nennt den richtigen Weg");
 }
 assert.ok(/einstiegHin\("effekte", "feeKnopf"\)/.test(html) && /id="feeKnopf" onclick="feeKommt\(true\)"/.test(html), "Hilfe springt zum Fee-Knopf");
+
+// 2.374.0 KC-CLUB-FEE: erwachsene Fee (neu gezeichnet)
+{
+  const svg = (html.match(/const FEE_SVG = `([\s\S]*?)`;/) || [, ""])[1];
+  assert.ok(/viewBox="0 0 170 170"/.test(svg) && /class="fee-fl l"/.test(svg) && /class="fee-fl r"/.test(svg) && (svg.match(/class="fee-aug"/g) || []).length === 2 && /class="fee-mund"/.test(svg) && /class="fee-mund-gross"/.test(svg) && /class="fee-stern"/.test(svg), "neue Fee mit Flügeln, Augen, Mund und Stern");
+  assert.ok(!/<!--/.test(svg) && /\.fee \{ position: fixed; left: 0; top: 0; width: 120px; height: 120px;/.test(html) && /const W = 120, mitte/.test(html), "Größe passt zur Flugbahn");
+}
