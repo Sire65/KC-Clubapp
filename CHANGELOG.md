@@ -1,5 +1,19 @@
 # Änderungen
 
+## Server 2.369.0 – 2026-10-14 – 🔐 KC-CLUB-FRA-VERSCHLUESSELT: Frankfurt-Sicherung und Archiv-Kopie nur noch verschlüsselt
+Anlass (Hansi, nach der Backup-Prüfung): „Ja alles sicher machen“. Befund: Die Dateien in Neon Frankfurt (Fach kc-archiv) waren nur gepackt,
+nicht verschlüsselt, und enthielten alle Spalten aller Tabellen – auch Geheimnis-Tabellen und Spalten, die der Neon-Spiegel schwärzt.
+- Datenbank-Teile: gepackt und mit AES-256-GCM verschlüsselt (Format KCE1, Datei *.json.gz.enc). Schlüssel = Vault kc_db_backup_key_v1, gleiche
+  Ableitung wie die Neon-Sicherung – die vorhandene Notfall-Kopie (Cloudflare-Tresor / GitHub-Secret KC_BACKUP_KEY) öffnet auch diese Dateien.
+  Fehlt der Schlüssel, wird nichts hochgeladen (nie Klartext). Rücklese-Test: Prüfsumme + Entschlüsseln (prüft Echtheit) + Entpacken + Zeilenzahl.
+- Tabellen mit Einstufung „secret“ im Spiegel-Register kommen nicht mehr mit; Spalten aus kc_db_mirror_redaction werden wie im Spiegel geleert
+  bzw. ersetzt. Personendaten bleiben (verschlüsselt) enthalten – die Frankfurt-Sicherung bleibt eine Komplett-Sicherung zum Wiederherstellen.
+- Archiv-Kopie (archiv/…): Dateien verschlüsselt (*.enc); die bisherigen Klartext-Kopien werden in den nächsten Nachtläufen verschlüsselt neu
+  abgelegt und die alten Dateien entfernt. PDF-Handbücher (dokumente/…) bleiben unverändert – sie sind ohnehin öffentlich.
+- Alte Klartext-Dateien der Tagesstände werden gelöscht, sobald der erste verschlüsselte Lauf ohne Fehler geprüft ist.
+- Inhaltsverzeichnis (manifest.json) nennt Verschlüsselung, ausgeschlossene Tabellen und geschwärzte Spalten (keine Inhalte).
+- Neu: tools/notfall/fra-entschluesseln.mjs (öffnet eine Datei ohne Supabase), Test tests/fra-verschluesselung.test.mjs.
+  Nur Server – kein App-Download für die Mitglieder.
 ## 2.368.0 – 2026-10-14 – 🔕 KC-CLUB-FP-RESIZE: „ResizeObserver loop“ ist kein schwerwiegender Fehler
 Anlass (Hansi, Screenshot 08:08): Alarm-Push „🔴 2 schwerwiegende Probleme in der Club-App – ohne Anmeldung: ResizeObserver loop completed with undelivered notifications“.
 - Befund: 2× heute 07:45 (Android, 2.366.0), erstmals überhaupt; harmlose Browser-Warnung (Größenmeldung ein Bild später zugestellt). app.js filterte sie schon

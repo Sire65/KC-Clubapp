@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368)\.0"/.test(server), "Serverversion erhöht");
+const SERVER_VERSION = "2.369.0";
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -8799,7 +8799,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/revoke all on public\.kc_club_fra_sicherung from anon, authenticated;/.test(m) && /cron\.schedule\('kc-club-fra-sicherung', '\*\/2 1-3 \* \* \*'/.test(m), "nur Server, nachts alle 2 Min.");
   assert.ok(/if \(a === "fra_sicherung"\) \{[^\n]*\n\s+const \{ data: geheim \} = await db\.rpc\("kc_communication_get_server_secret", \{ p_name: "kc_club_cron_secret" \}\);/.test(server), "nur mit Zeitplaner-Geheimnis");
   assert.ok(/where ctid >= \$\{fraTid\(Number\(t\.block_von\)\)\}/.test(server) && /const fraName = \(t: string\) => \/\^\[a-z0-9_\]\{1,63\}\$\/\.test\(t\)/.test(server), "Blockbereiche, nur sichere Tabellennamen");
-  assert.ok(/if \(\(await hexSha256\(gz\)\) !== t\.sha256\) throw new Error\("Prüfsumme weicht ab"\);/.test(server) && /daten\.length !== Number\(t\.zeilen\)/.test(server), "Rücklese-Test: Prüfsumme + Zeilenzahl");
+  assert.ok(/if \(\(await hexSha256\(enc\)\) !== t\.sha256\) throw new Error\("Prüfsumme weicht ab"\);/.test(server) && /daten\.length !== Number\(t\.zeilen\)/.test(server), "Rücklese-Test: Prüfsumme + Zeilenzahl");
   assert.ok(/FRA_BEHALTEN_TAGE = 14/.test(server) && /tag < grenze/.test(server), "14 Tage aufbewahren");
   assert.ok(/const fra = !fr \? \["grau", "noch nie gelaufen"\] : frStd > ARCHIV_KOPIE_ALT_STD \? \["grau"/.test(html) && /"Sicherung Frankfurt", sf2\.fra\[1\]/.test(html), "Lampe: unbekannt/alt nie als OK");
   assert.ok(/neu\("versprechen", \{ text: String\(r && r\.message \|\| r\), stapel:/.test(seite), "Hintergrundfehler mit Fundstelle melden");
@@ -9560,4 +9560,17 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/if \(art === "skript" && \/ResizeObserver loop\/i\.test\(String\(daten\.text \|\| ""\)\)\) return;/.test(seite), "Start-Wächter schreibt sie nicht mit");
   assert.ok(/if \(art === "skript" && \/ResizeObserver loop\/i\.test\(String\(d\?\.text \?\? ""\)\)\) return "info";/.test(server), "Server: nur Info");
   assert.ok(/new ResizeObserver\(\(\) => requestAnimationFrame\(chatAbstand\)\)/.test(html), "Chat-Abstand im nächsten Bild");
+}
+
+// Server 2.369.0 KC-CLUB-FRA-VERSCHLUESSELT (Auftrag Hansi 14.10.2026 „alles sicher machen“): Frankfurt nur noch verschlüsselt, ohne Geheimnisse
+{
+  assert.ok(/const \{ data, error \} = await db\.rpc\("kc_db_backup_key_v1"\);\n  if \(error \|\| !data\) throw new Error\("Sicherungsschlüssel fehlt – nichts hochgeladen"\);/.test(server), "Schlüssel aus dem Vault, ohne Schlüssel kein Upload");
+  assert.ok(/\{ name: "AES-GCM", iv \}, await kceSchluessel\(\), b\)/.test(server) && /const KCE_KOPF = "KCE1"/.test(server), "AES-256-GCM, Format KCE1");
+  assert.ok(/enc = await kceVerschluesseln\(await fraGzip\(rohB\)\), sha = await hexSha256\(enc\)/.test(server) && /\.json\.gz\.enc`;/.test(server) && /method: "PUT", body: enc,/.test(server), "Datenbank-Teile verschlüsselt hochgeladen");
+  assert.ok(!/method: "PUT", body: gz,/.test(server) && !/body: inhalt, headers: \{ "content-type": a\.mime_type/.test(server), "kein Klartext-Upload mehr");
+  assert.ok(/await fraGunzip\(await kceEntschluesseln\(enc\)\)/.test(server), "Rücklese-Test entschlüsselt (prüft Echtheit)");
+  assert.ok(/r\.table_name = c\.relname and r\.sensitivity = 'secret'/.test(server) && /select \$\{spalten\} from public\."\$\{name\}" \$\{bed\}/.test(server) && /left join public\.kc_db_mirror_redaction x on x\.table_name = \$\{name\}/.test(server), "Geheim-Tabellen draußen, Spalten geschwärzt wie im Spiegel");
+  assert.ok(/`archiv\/\$\{dokId\}\/\$\{attId\}\.enc`/.test(server) && /body: await kceVerschluesseln\(inhalt\)/.test(server) && /!String\(kopie\.get\(d\.id\)\?\.schluessel \|\| ""\)\.endsWith\("\.enc"\)/.test(server), "Archiv-Kopie verschlüsselt, alte Klartext-Kopien werden ersetzt");
+  assert.ok(/const klartext = !m\.fehler && !k\.endsWith\("\.enc"\) && !k\.endsWith\("\/manifest\.json"\);/.test(server), "alte Klartext-Dateien erst nach fehlerfreiem verschlüsseltem Lauf löschen");
+  assert.ok(fs.existsSync(new URL("../tools/notfall/fra-entschluesseln.mjs", import.meta.url)) && /fra-entschluesseln\.mjs/.test(server), "Notfall-Werkzeug zum Entschlüsseln vorhanden");
 }
