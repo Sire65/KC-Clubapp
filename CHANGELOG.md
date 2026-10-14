@@ -1,5 +1,21 @@
 # Änderungen
 
+## 2.370.0 – 2026-10-14 – 🔥 KC-CLUB-BUEHNE-POWERKETTE: neue Übung auf der Bühne – die Power-Kette
+Anlass (Hansi): „Eine neue Übung für Twinkey auf der Bühne: im Stehen abwechselnd Knie hoch rechts, Knie hoch links, einen Schritt nach links,
+einen Schritt nach rechts, einmal in die Kniebeuge mit Armen nach vorn, einmal Hula-Hoop, einen Sprung in die Luft – und wieder von vorn.
+Mit markigen Sprüchen, in 3 Durchgängen und immer schön loben.“
+- Bühne → neue Auswahl „🔥 Power-Kette“ (neben Im Sitzen / Im Stehen / Küchenhelfer). Feste 3 Durchgänge statt Minuten-Wahl, ca. 4 Min.
+- Je Bewegung 4 Schläge (2 s bei 120 Schlägen/Min.), eine Kette 14 s, ein Durchgang 4 Ketten (56 s), dazwischen 15 s verschnaufen und ausschütteln.
+  Oben steht immer die aktuelle Bewegung („Bewegung 3 von 7“) – auch ohne Ton lesbar.
+- Twinkey turnt spiegelbildlich vor wie ein Vorturner („rechts“ ist auf deiner rechten Seite). Neue Bewegungen: Knie hoch rechts/links mit
+  Armschwung, Seitschritt links/rechts, Kniebeuge mit Armen nach vorn, Sprung mit Armen über dem Kopf; Hula-Hüfte und Beinarbeit der Kniebeuge
+  nutzen die vorhandenen Bewegungen.
+- Ansagen: zu jeder Bewegung ein markiges Kommando („Rechtes Knie hoch – zack!“, „Und hoch in die Luft – hopp!“), je Kette Lob („Toll gemacht!“,
+  „Super Einsatz von dir!“, „Ja, so geht’s gut – weiter so!“, „Weiter so, auch wenn’s brennt in den Beinen!“, „Jetzt nicht nachlassen!“) oder ein
+  markiger Spruch; je Durchgang eigene An- und Absage („Na komm – eine Runde geht noch!“, „Letzter Durchgang – jetzt nicht nachlassen!“).
+- Bisherige Übungen unverändert (30 s Übung, 6 s Ausschütteln); die Uhr „noch“ rechnet jetzt mit der Dauer jeder Übung.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## Server 2.369.0 – 2026-10-14 – 🔐 KC-CLUB-FRA-VERSCHLUESSELT: Frankfurt-Sicherung und Archiv-Kopie nur noch verschlüsselt
 Anlass (Hansi, nach der Backup-Prüfung): „Ja alles sicher machen“. Befund: Die Dateien in Neon Frankfurt (Fach kc-archiv) waren nur gepackt,
 nicht verschlüsselt, und enthielten alle Spalten aller Tabellen – auch Geheimnis-Tabellen und Spalten, die der Neon-Spiegel schwärzt.
