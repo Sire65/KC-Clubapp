@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.377.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: Beinhaltung im Flug wie klassische Feen
+Anlass (Hansi): „Beim Fliegen ist die Beinstellung noch nicht gut – schau dir an, wie Feen fliegen.“ – Vorher zeigte ein Knie nach vorn (wirkte wie Laufen).
+Jetzt wie bei klassischen Feen-Bildern: beide Beine ziehen hinter dem Körper her, das hintere lang nach hinten unten gestreckt mit gestreckter Fußspitze,
+das vordere im Knie gebeugt, der Unterschenkel schwingt hinten hoch (Ballett-„Attitude“). Ballettschuhe mit Bändern bleiben.
+
 ## 2.376.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: von rechts, Vorderansicht, Zauberschnee, wechselnde Flugbahnen
 Anlass (Hansi): „Lass sie von der anderen Seite einfliegen; wenn sie vor einem steht, muss die Front zu sehen sein – ein Bein gestreckt, eins leicht im Knie
 gebeugt. Sie wedelt einmal mit dem Zauberstab, dann fliegt der Zauberschnee wild umher, dann fliegt sie weiter. Jedes Mal eine andere Flugbahn.“

@@ -9650,3 +9650,9 @@ assert.ok(/einstiegHin\("effekte", "feeKnopf"\)/.test(html) && /id="feeKnopf" on
   assert.ok(/drehen\(true\)/.test(html) && /f\.classList\.add\("zaubert"\)/.test(html) && /feeZauberschnee\(sx, sy, top, hoehe\)/.test(html) && /@keyframes feeWedeln/.test(html), "umdrehen, wedeln, Zauberschnee");
   assert.ok(/while \(`\$\{b\.ein\}\/\$\{b\.aus\}` === alt\)/.test(html) && /FEE_EIN = \["welle", "bogen", "looping", "sturz"\]/.test(html), "jedes Mal andere Flugbahn");
 }
+
+// 2.377.0 KC-CLUB-FEE: Flug-Beinhaltung (beide Beine nach hinten)
+{
+  const svg = (html.match(/const FEE_SVG = `([\s\S]*?)`;/) || [, ""])[1];
+  assert.ok(/<path d="M95 102 C92 110 87 118 81\.4 125\.4/.test(svg) && /<path d="M82 98 C78 104 74 110 69\.5 117\.6/.test(svg) && !/C104 126 98 132 92 136|M93 100 C98 106 104 112 106 118|M89 100 C94 104 98\.6 109\.6/.test(svg), "kein Knie mehr nach vorn");
+}

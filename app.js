@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.376.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.377.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14350,13 +14350,13 @@ const FEE_SVG = `<svg viewBox="0 0 170 170" aria-hidden="true"><defs>
 <path d="M82 30 C70 32 62 44 58 56 C54 66 46 72 40 76 C50 78 58 72 62 66 C60 76 54 84 48 88 C60 88 68 78 72 70 C74 78 72 86 68 92 C78 88 82 76 82 66 C84 56 88 46 92 40Z" fill="url(#feeHa)"/>
 <path d="M66 50 C62 60 54 68 46 74 M74 56 C70 66 64 76 56 84 M80 58 C80 68 76 78 72 86" stroke="#fff3c9" stroke-width=".9" fill="none" opacity=".75" stroke-linecap="round"/>
 
-<path d="M90 101 C85 107 79 114 71.5 120.5 C68 123 62 126.5 55 129 C52.4 129.9 50.4 130.5 48.8 131 C47.6 128.8 47.6 127.4 49 126.2 C54 124.4 60 121 64.4 117.5 C67 115.6 69 114.4 70.5 112.6 C75 107 79 102 82 99Z" fill="url(#feeHt2)"/>
-<path d="M49.6 131 C46 132.6 42 133.8 37.6 134.2 C36.6 134.2 36.4 133.4 37.2 132.9 C40.6 130.8 44 128.8 47 127.2 C48.4 126.4 49.4 126.4 50 127.2 C50.8 128.4 50.8 130 49.6 131Z" fill="#ec8db3" stroke="#d26a95" stroke-width=".4"/>
-<path d="M50.4 126.8 L53.6 129.6 M52.6 125.6 L55.4 128.6 M50.2 129.6 L54.6 125.4" stroke="#f9c9dc" stroke-width=".7" stroke-linecap="round"/>
-<path d="M89 100 C94 104 98.6 109.6 101.6 116.2 C102.4 118.6 101.6 121.6 100.6 124 C99.2 127.6 97.6 131 96 133.6 L98.2 135 C100.6 132 103.4 128.6 105.4 125 C107.4 121.6 108.8 118.4 108.4 115.6 C107.6 110.6 103 104.6 97 99Z" fill="url(#feeHt)"/>
-<path d="M97.4 133.4 C94.6 136 91 138.8 86.8 141.2 C85.8 141.8 86 142.6 87 142.6 C90.8 142.2 94.4 140.6 97.4 138.6 C98.8 137.6 99.6 136.4 99.2 135.2 C98.8 134 98.2 133.4 97.4 133.4Z" fill="#ec8db3" stroke="#d26a95" stroke-width=".4"/>
-<path d="M96.4 132.4 L100.4 134 M97.6 130.4 L101.6 132.4 M96.2 134.2 L101.8 130.6" stroke="#f9c9dc" stroke-width=".7" stroke-linecap="round"/>
-<path d="M105.6 113.6 C106.6 115.6 106.6 117.8 105.6 119.6" stroke="#fff" stroke-width=".6" fill="none" opacity=".55" stroke-linecap="round"/>
+<path d="M82 98 C78 104 74 110 69.5 117.6 C66 121 60 125 55 129.5 C52.5 131.4 50.6 132.6 49 133.4 L51 136.4 C56 134 62 130 66.6 125.6 C69.4 123.4 71 122.4 72 121 C77 114 83 108 90.6 103Z" fill="url(#feeHt2)"/>
+<path d="M49.4 133 C46 135 42 137.6 38.2 139.8 C37.4 140.4 37.8 141.2 38.8 141 C42.8 140.4 46.8 139.2 50.6 137.6 C52 137 52.4 135.6 51.8 134.4 C51.2 133.2 50.2 132.8 49.4 133Z" fill="#e57fa8" stroke="#d26a95" stroke-width=".4"/>
+<path d="M51.2 132 L54.4 135.4 M53.4 130.6 L56 133.8 M50.8 135.4 L55.6 131" stroke="#f9c9dc" stroke-width=".65" stroke-linecap="round"/>
+<path d="M95 102 C92 110 87 118 81.4 125.4 C79.8 127.6 77 128 75.4 126.6 C70 123 63.4 118.4 57.8 114.6 L58.8 111.4 C62.8 111.4 69 113.6 74.4 116.4 C76.2 117.4 77.8 117.6 78.8 116.8 C81 112 84 106 86.8 100.6Z" fill="url(#feeHt)"/>
+<path d="M59.2 111.2 C55.4 109.4 51 107.6 46.8 106.2 C45.8 105.9 45.4 106.7 46.2 107.4 C49.4 109.8 53.2 112.4 57.2 114.8 C58.6 115.6 59.8 114.8 60 113.4 C60.2 112.4 60 111.6 59.2 111.2Z" fill="#ec8db3" stroke="#d26a95" stroke-width=".4"/>
+<path d="M60.8 111 L61.6 115.4 M62.8 111.4 L63.4 116 M60.4 114.6 L64.2 111.8" stroke="#f9c9dc" stroke-width=".65" stroke-linecap="round"/>
+<path d="M80.4 124.6 C78.6 126 77 126.2 76 125.4" stroke="#fff" stroke-width=".55" fill="none" opacity=".55" stroke-linecap="round"/>
 
 <path d="M82 60 C74 64 68 70 62 70 C58 70 55 67 52 66" stroke="#f8cdb6" stroke-width="3.6" fill="none" stroke-linecap="round"/>
 
@@ -14404,7 +14404,7 @@ const FEE_SVG = `<svg viewBox="0 0 170 170" aria-hidden="true"><defs>
 <path class="fee-gl" d="M124 24 L124.6 25.4 L126 26 L124.6 26.6 L124 28 L123.4 26.6 L122 26 L123.4 25.4Z" fill="#fff4c4"/><path class="fee-gl" d="M118 16 L118.6 17.4 L120 18 L118.6 18.6 L118 20 L117.4 18.6 L116 18 L117.4 17.4Z" fill="#fff4c4"/><path class="fee-gl" d="M110 20 L110.6 21.4 L112 22 L110.6 22.6 L110 24 L109.4 22.6 L108 22 L109.4 21.4Z" fill="#fff4c4"/><path class="fee-gl" d="M102 12 L102.6 13.4 L104 14 L102.6 14.6 L102 16 L101.4 14.6 L100 14 L101.4 13.4Z" fill="#fff4c4"/><path class="fee-gl" d="M94 4 L94.6 5.4 L96 6 L94.6 6.6 L94 8 L93.4 6.6 L92 6 L93.4 5.4Z" fill="#fff4c4"/><circle cx="136" cy="17" r="9" fill="url(#feeSt)" class="fee-schein"/>
 <path class="fee-stern" d="M136 9 L138.2 14.8 L144.2 15 L139.5 18.8 L141.2 24.6 L136 21.2 L130.8 24.6 L132.5 18.8 L127.8 15 L133.8 14.8Z" fill="#ffd8ea" stroke="#f08db5" stroke-width=".7"/>
 <circle class="fee-gl" cx="146" cy="10" r="1.2" fill="#fff"/><circle class="fee-gl" cx="150" cy="20" r=".9" fill="#ffe9a8"/><circle class="fee-gl" cx="128" cy="6" r="1" fill="#fff"/></g>
-</g></svg>`; // 2.374.0: erwachsene, schlanke Fee (Wunsch Hansi „zu kindlich“) – eigene Zeichnung; 2.375.0: Gesicht, Beine und Füße neu
+</g></svg>`; // 2.377.0: Flug-Beinhaltung wie klassische Feen (beide Beine nach hinten, eins gestreckt, eins gebeugt) // 2.374.0: erwachsene, schlanke Fee (Wunsch Hansi „zu kindlich“) – eigene Zeichnung; 2.375.0: Gesicht, Beine und Füße neu
 const FEE_VORN_SVG = `<svg viewBox="0 0 170 170" aria-hidden="true"><defs>
 <linearGradient id="fefFg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd1e8" stop-opacity=".9"/><stop offset=".45" stop-color="#e3d0ff" stop-opacity=".65"/><stop offset="1" stop-color="#c9f3e6" stop-opacity=".55"/></linearGradient>
 <linearGradient id="fefKl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7a8c8"/><stop offset="1" stop-color="#e57ba8"/></linearGradient>
