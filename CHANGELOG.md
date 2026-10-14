@@ -14,6 +14,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.395.0 – 2026-10-14 – Meins: „Meine Einstellungen“
+Die Kachel „Einstellungen“ unter Meins heißt jetzt „Meine Einstellungen“.
+
 ## 2.394.0 – 2026-10-14 – Kein Fehlalarm bei doppelt offener App, Igel ganz stachelig
 Ist die Club-App zweimal offen, meldet das geleerte Fenster keine Fehler mehr (war ein Fehlalarm). Der Igel hat jetzt auf Rücken und Seiten überall Stacheln.
 

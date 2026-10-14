@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.394.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.395.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -13697,7 +13697,7 @@ const KACHELN = {
     { id: "fitness", sym: "🏋️", t: "Fit bleiben", u: () => (nurTest("fitness") ? "🔒 nur für dich (Test) · " : "") + "Übungen mit Twinkey", aktion: "fiStart()", nur: () => frei("fitness") }, // KC-CLUB-FITNESS (2.55.0)
     // 2.143.0 KC-CLUB-STUDIO (Wunsch Hansi): Kachel nur unter „Meins“ und nur, solange ein Mitglied freigeschaltet ist – der Admin nutzt die Studio-Karte im Kopf
     { id: "studio", sym: "🎬", t: "Studio", u: () => studioStufe() === "alles" ? "Foto · Mitschauen · Live zeigen" : "Live zeigen", aktion: "stOeffnen()", nur: () => !ICH?.admin && !!studioStufe() },
-    { id: "einstellungen", sym: "⚙️", t: "Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" },
+    { id: "einstellungen", sym: "⚙️", t: "Meine Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" },
     { id: "test", sym: "🧪", t: "Test an mich", u: "Push & Mail ausprobieren", aktion: "testAnMichStarten()" },
   ],
   programme: [

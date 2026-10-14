@@ -6323,6 +6323,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function anwendenDesign\(\) \{\n\s+if \(window\.KCFP\?\.schlaeft\) return;/.test(html) && /\{ warten: !!vonHand \}\); if \(window\.KCFP\?\.schlaeft\) return;/.test(html) && /if \(h && hg\) \{/.test(html), "Tag/Nacht und Laden stoppen im geleerten Fenster");
   assert.ok(!/c\.ellipse\(-1, -4, 9\.4, 5\.6, 0, Math\.PI, 0\)/.test(html), "Igel: keine glatte braune Fläche mehr");
 }
+// 2.395.0 KC-CLUB-MEINE-EINSTELLUNGEN (Wunsch Hansi): Kachel in „Meins“ heißt „Meine Einstellungen“
+{
+  assert.ok(/\{ id: "einstellungen", sym: "⚙️", t: "Meine Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" \}/.test(html), "Kachel in Meins umbenannt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
