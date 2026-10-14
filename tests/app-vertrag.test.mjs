@@ -9670,3 +9670,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/<input type="checkbox" id="setFee"[^>]*onchange="einstellung\('fee', this\.checked\)">/.test(html) && /Bei jedem 20\. Start kommt die Fee – und beim Antippen gibt sie dir einen Spruch\./.test(html), "Häkchen mit Erklärung");
   assert.ok(/if \(vorschau !== true && !einst\("fee", true\)\) return;/.test(html) && /\$\("setFee"\)\.checked = einst\("fee", true\)/.test(html) && /id: "setFee", t: "Die kleine Fee"/.test(html), "Aus heißt aus; Häkchen zeigt den Stand; Suche findet sie");
 }
+
+// 2.380.0 KC-CLUB-KNOEPFE-PLATZ: 👆 ? 🔍 neben der Fußleiste (PC) bzw. in einer Reihe darüber (Handy)
+{
+  assert.ok(/\.hz-klick \{ right: calc\(max\(12px, calc\(50% - 372px\)\) \+ 108px\); bottom: calc\(84px \+ env\(safe-area-inset-bottom\)\); \}/.test(html), "Handy: eine Reihe");
+  assert.ok(/@media \(min-width: 1100px\) \{\s*\.hz-klick \{ right: auto; left: calc\(50% \+ 392px\); \} \.hz-frage \{ left: calc\(50% \+ 444px\); \} \.su-klein \{ left: calc\(50% \+ 496px\); \}/.test(html), "PC: rechts neben der Fußleiste (760 px / 2 + 12)");
+  assert.ok(/@media \(min-width: 1024px\) \{[\s\S]{0,200}\.hz-frage \{ left: calc\(50% \+ 392px\); \} \.su-klein \{ left: calc\(50% \+ 444px\); \}/.test(html), "1024er: rechts ? und Lupe");
+}

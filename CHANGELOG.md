@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.380.0 – 2026-10-14 – 👆 ❓ 🔍 KC-CLUB-KNOEPFE-PLATZ: schwebende Knöpfe neu ausgemessen
+Anlass (Hansi, Bildschirmfoto PC): „Die 3 Knöpfe Lupe, Zeiger usw. sind nicht gut angeordnet – neu ausmessen, dass sie nicht im Weg stehen, bei kleinem Handy
+und Tablet auch.“ – Am PC ist der Inhalt breiter als die Fußleiste (höchstens 760 px); die Knöpfe hingen an einer 744-px-Spalte und standen mitten auf den Kacheln.
+Gemessen bei 320×568, 375×667, 412×915, 768×1024, 1024×768, 1080×720, 1200×700, 1366×768, 1920×1080:
+- Handy und Tablet hoch: 👆 ? 🔍 in einer Reihe direkt über der Fußleiste rechts (vorher zwei Reihen) – halb so viel verdeckt; der Abstand unten (150 px) reicht.
+- 1024–1099 px: ? und 🔍 rechts neben der Fußleiste, 👆 links daneben (🎙️ Sprachsteuerung ganz links) – alle auf Höhe der Fußleiste, nichts über dem Inhalt.
+- ab 1100 px: 👆 ? 🔍 zusammen rechts neben der Fußleiste, 🎙️ links neben ihr.
+
 ## 2.379.0 – 2026-10-14 – 🧚 KC-CLUB-FEE: abschaltbar per Häkchen
 Anlass (Hansi): „Bau ein, dass sich die Fee abschalten lässt – mit Klickkästchen, und schreiben: bei jedem 20. Start kommt die Fee und beim Antippen gibt sie dir einen Spruch.“
 - ⚙️ → ✨ Effekte → „🧚 Die kleine Fee“: Häkchen (je Gerät, Standard an) und Text „Bei jedem 20. Start kommt die Fee – und beim Antippen gibt sie dir einen
