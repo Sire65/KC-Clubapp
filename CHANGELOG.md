@@ -1,5 +1,8 @@
 # Änderungen
 
+## DB – 2026-10-14 (ohne App-Build) – KC-CLUB-DB-AUFRAEUMEN-KUERZER: Messwerte 30 Tage, System-Check-Verlauf nach 14 Tagen ausgedünnt
+Anlass (Hansi): „Der Communicator hat doch auch ein Journal – das müsste ziemlich voll sein.“ Messung: Datenbank 141 von 500 MB; das Versand-Journal selbst ist klein (Aufträge 2,8 MB, Zustellmeldungen 1 MB, eigene 180-Tage-Regel). Groß sind die Communicator-Messwerte (17 MB, ≈ 240/Tag) und der System-Check-Verlauf (40 MB, ≈ 9,5 kB je Prüfung) – beide wurden erst nach 90 Tagen gelöscht (System-Check wäre auf ≈ 85 MB gewachsen). Jetzt im nächtlichen Aufräumen (3:50 Uhr): Messwerte nach 30 Tagen weg; System-Check-Einträge nach 14 Tagen ausgedünnt (je Prüfpunkt bleiben Name, Status, Gesundheit – Verlauf bleibt sichtbar), gelöscht weiter nach 90 Tagen. Probelauf: 2.780 Einträge 20 MB → 3,6 MB, 5.859 Messwerte. Probe tools/db-test/73_db_aufraeumen_kuerzer_test.sql. Rückweg: 20261006_kc_club_v2247_db_aufraeumen.sql.
+
 ## DB – 2026-10-14 (ohne App-Build) – KC-CLUB-ANMELDUNG-SPARSAM: Anmeldung schreibt „zuletzt gesehen“ höchstens alle 30 s
 Anlass (Hansi): „Check nochmals … alle Sachen, die zu viele Datenbank-Abfragen machen und die DB überlasten.“ Messung: kc_club_anmeldung war der größte Einzelposten (rund ein Drittel der DB-Zeit, zuletzt 600 ms je Aufruf statt 36 ms – gleichzeitige Anfragen derselben Person warteten auf die Zeilensperre). Jetzt nur lesen; geschrieben wird beim ersten Mal, nach > 30 s oder bei neuer App-Version. Online-Anzeige (150 s) und Online-Push (vorher-Stand) unverändert. Probelauf tools/db-test/72_anmeldung_sparsam_test.sql. Rückweg: 20261002_kc_club_v1510_erstmals.sql.
 
