@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.383.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.385.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -25057,7 +25057,7 @@ async function chatLaden(scrollen) {
     $("chatAngeheftet").innerHTML = (u.angeheftet || []).map((a) => `<button class="pin-zeile" onclick="zuNachricht('${a.id}')">📌 <b>${esc(a.von)}:</b> ${esc(a.text)}</button>`).join(""); // KC-CLUB-ANHEFTEN
     tipptZeigen(u.tippt || [], u.entwurf || [], u.spricht || []); chatAbstand();
     if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
-    const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, m.haken, m.express?.quittungen?.length, (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join(""),
+    const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, m.haken, m.express?.quittungen?.length, JSON.stringify(m.express?.empfaenger || null), (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join(""),
       m.text, m.bearbeitet, m.gemerkt, m.angeheftet, m.umfrage?.optionen.map((o) => o.stimmen + (o.meine ? "*" : "")).join(","), m.loeschtAm ? slRest(m.loeschtAm) : ""])); // 1.12.0: auch Stimmen/Bearbeitungen anderer
     const idStand = u.nachrichten.map((m) => m.id).join(",");
     vorlesenNeue(u.nachrichten); // KC-CLUB-VORLESEN
@@ -25076,7 +25076,7 @@ async function chatLaden(scrollen) {
       ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}
       ${m.anlagen.map((a) => a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
-      ${m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
+      ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
       <div class="fuss">${m.loeschtAm ? `<span class="sl-marke" title="Löscht sich selbst – für alle">⏳ noch ${slRest(m.loeschtAm)}</span> ` : ""}${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button aria-label="Nachricht löschen" class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("") + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
@@ -26675,6 +26675,17 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden && SS
 // 🏎️ unter dem Schreibfeld schaltet Express für die nächste Nachricht ein. Express kommt wie ein Notfall durch (auch stummgeschaltet und nachts – Hansis
 // Wahl „Durchbricht alles“), höchstens 5 am Tag. Beim Empfänger: Rennwagen-Animation und ein Fenster beim Öffnen der App bzw. sofort, wenn sie offen ist.
 let EXPRESS = false;
+// 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG (Wunsch Hansi): unter der eigenen Express-Sendung „per Express versandt um …“ und je Empfänger
+// „angekommen um …“ und „gelesen um …“ – Uhrzeiten nur, wenn sie wirklich zurückgemeldet wurden (nie geschätzt).
+function expressStatusHtml(x) {
+  const um = (iso) => { const z = zeitKurz(iso); return esc(z.includes(" ") ? `am ${z} Uhr` : `um ${z} Uhr`); }; // heute: „um 17:02 Uhr“, sonst „am 13.10. 17:02 Uhr“
+  const l = x.empfaenger || [], zeile = (e) => {
+    const ank = e.angekommen ? `📬 angekommen ${um(e.angekommen)}` : e.gelesen || e.gelesenOhneZeit ? "📬 angekommen" : "📭 noch nicht angekommen";
+    const gel = e.gelesen ? ` · 👁 gelesen ${um(e.gelesen)}` : e.gelesenOhneZeit ? " · 👁 gelesen" : e.angekommen ? " · noch nicht gelesen" : "";
+    return `<div class="${e.gelesen || e.gelesenOhneZeit ? "" : "warte"}"><b>${esc(e.name)}</b>: ${ank}${gel}${e.bestaetigt ? " · ✅ Empfang bestätigt" : ""}</div>`;
+  };
+  return `<div class="express-quittung express-status"><div>🏎️ Per Express versandt ${um(x.versandt)}</div>${l.slice(0, 8).map(zeile).join("")}${l.length > 8 ? `<div>… und ${l.length - 8} weitere</div>` : ""}</div>`;
+}
 function expressUmschalten(an) {
   const vorher = EXPRESS; EXPRESS = an ?? !EXPRESS;
   const k = $("expressKnopf"), t = $("text");
@@ -26798,6 +26809,7 @@ async function senden() {
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
+    if (daten.express) melde("🏎️ Nachricht wurde per Express versandt – unter der Nachricht siehst du, wann sie angekommen ist und gelesen wurde"); // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG
     HAKEN_SEIT = Date.now(); // 2.367.0 KC-CLUB-HAKEN-SCHNELL: Zustell-Haken eine Minute lang zügig nachsehen
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); expressUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN

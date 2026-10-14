@@ -2523,7 +2523,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 224. 1.55.0: Haken wie WhatsApp (KC-CLUB-HAKEN)
 {
   const srv = lies("supabase/functions/kc-club/index.ts");
-  assert.match(srv, /select\("correlation_id,channel,status,recipient_refs"\)/, "Push-Rückmeldung je Empfänger");
+  assert.match(srv, /select\("(id,)?correlation_id,channel,status,recipient_refs"\)/, "Push-Rückmeldung je Empfänger");
   assert.match(srv, /\(x\.last_read_at && x\.last_read_at >= m\.created_at\) \|\| pushDa\.get\(m\.id\)\?\.has\(x\.person_id\) \|\| \(zuletztDa\.get\(x\.person_id\) \?\? ""\) >= m\.created_at/, "angekommen: gelesen, Push angezeigt oder App danach online");
   assert.match(srv, /haken: andere\.length > 0 && gelesenVon\.length === andere\.length \? "gelesen" : andere\.length > 0 && angekommenBei\(m\) === andere\.length \? "angekommen" : "gesendet"/, "drei Stufen, Gruppe erst wenn alle");
   const f = html.slice(html.indexOf("function hakenHtml("), html.indexOf("function zustellText("));
@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6245,6 +6245,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/vars\.wichtigkeit === "notfall" \|\| vars\.eilig === true \? \{ priority: "critical" \} : vars\.wichtigkeit === "hoch" \? \{ priority: "high" \}/.test(server), "eilig/Notfall → critical, hoch → high");
   assert.ok(/wichtig \|\| express \? \{ wichtigkeit: "hoch" \} : \{\}\), \.\.\.\(express \? \{ eilig: true \} : \{\}\)/.test(server), "nur Express wird eilig verschickt");
   assert.ok(/\}, `club-nachricht:\$\{m\.id\}`, \{ notfall: notfall \|\| express \}\);/.test(server) && /if \(notfall \|\| express\) stumm\.clear\(\);/.test(server), "Express weiter durch Ruhezeit und Stummschaltung");
+}
+// 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG (Wunsch Hansi „per Express versandt, angekommen um x Uhr und gelesen um y Uhr“)
+{
+  const mig = lies("supabase/migrations/20261014_kc_club_v2385_express_zustellung.sql");
+  assert.ok(/create table if not exists public\.kc_club_express_zustellung/.test(mig) && /enable row level security/.test(mig) && /revoke all on public\.kc_club_express_zustellung from anon, authenticated/.test(mig), "eigene Tabelle, nur der Server");
+  assert.ok(/async function expressZustellung\(ich: Ich, liste/.test(server) && /ignoreDuplicates: true \}\)\.select\("message_id"\)/.test(server) && /\.is\("gelesen_am", null\)/.test(server), "nur das ERSTE Ankommen/Lesen zählt");
+  assert.ok(/await expressZustellung\(ich, ungelesen, false\)/.test(server) && /await expressZustellung\(ich, \[ex\], false\)/.test(server) && /if \(exFremd\.length\) await expressZustellung\(ich, exFremd, true\)/.test(server), "angekommen beim Start/Express-Fenster, gelesen beim Öffnen des Chats");
+  assert.ok(/if \(!ich\.nurLesen && p\.vorschau !== true\) \{\n\s+const exFremd/.test(server), "Vorschau in der Rollkartei zählt nicht als gelesen");
+  assert.ok(/inkoAndere\.has\(x\.person_id\) \? null : z\?\.angekommen_am/.test(server) && /p_art: "chat", p_thread: x\.thread_id/.test(server), "Inkognito nicht verraten; Absender bekommt sofort ein Signal");
+  assert.ok(/express: eigen \? \{ quittungen: exQuittung\(m\.id\), versandt: m\.created_at, empfaenger: exEmpfaenger\(m\) \} : true/.test(server), "nur der Absender sieht die Zeiten");
+  assert.ok(/function expressStatusHtml\(x\)/.test(html) && /Per Express versandt \$\{um\(x\.versandt\)\}/.test(html) && /📭 noch nicht angekommen/.test(html) && /if \(daten\.express\) melde\("🏎️ Nachricht wurde per Express versandt/.test(html), "Meldung beim Senden + Anzeige je Empfänger");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

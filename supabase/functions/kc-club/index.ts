@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.384.0";
+const SERVER_VERSION = "2.385.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5188,6 +5188,19 @@ function wiederholungen(beginnIso: string, regel: string, von: Date, bis: Date, 
 // Sommer-/Winterzeit richtig); verpasste Termine (Server-Störung) werden einmal nachgeholt, nie gestapelt.
 const EXPRESS_MAX = 5, EXPRESS_SPAETER_MIN = 30; // 2.362.0 KC-CLUB-EXPRESS
 // 2.362.0 KC-CLUB-EXPRESS: ungelesene Express-Sendungen an mich (7 Tage), ohne „Nein“ und ohne laufendes „Später“ – für das Express-Fenster beim Start
+// 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG (Wunsch Hansi „angekommen um x Uhr und gelesen um y Uhr“): je Empfänger festhalten, wann die
+// Express-Sendung in seiner App ankam und wann er den Chat mit ihr geöffnet hat (nur das ERSTE Mal zählt). Neue Einträge melden dem
+// Absender sofort ein Signal („chat“), damit seine Anzeige ohne Warten nachzieht. Fehler stören nie das Laden.
+async function expressZustellung(ich: Ich, liste: { message_id: string; absender: string; thread_id: string }[], gelesen: boolean) {
+  const l = liste.filter((x) => x.absender !== ich.person_id); if (!l.length) return;
+  const t = jetzt(), ids = l.map((x) => x.message_id);
+  const { data: neu } = await db.from("kc_club_express_zustellung").upsert(ids.map((message_id) => ({ message_id, person_id: ich.person_id, angekommen_am: t, ...(gelesen ? { gelesen_am: t } : {}) })),
+    { onConflict: "message_id,person_id", ignoreDuplicates: true }).select("message_id");
+  const { data: gel } = gelesen ? await db.from("kc_club_express_zustellung").update({ gelesen_am: t }).eq("person_id", ich.person_id).in("message_id", ids).is("gelesen_am", null).select("message_id") : { data: [] as any[] };
+  const geaendert = new Set([...(neu ?? []), ...(gel ?? [])].map((x: any) => x.message_id));
+  for (const x of l.filter((y) => geaendert.has(y.message_id)))
+    await db.rpc("kc_club_rt_klingeln", { p_personen: [x.absender], p_art: "chat", p_thread: x.thread_id }).then(() => {}, () => {});
+}
 async function expressOffen(ich: Ich, zahlen: any[]): Promise<any[]> {
   const offen = zahlen.filter((z) => z.n > 0); if (!offen.length) return [];
   const { data: ex } = await db.from("kc_club_express").select("message_id,thread_id,absender,erstellt_am").in("thread_id", offen.map((z) => z.t.thread_id))
@@ -5195,6 +5208,7 @@ async function expressOffen(ich: Ich, zahlen: any[]): Promise<any[]> {
   const exGelesenBis = new Map(offen.map((z) => [z.t.thread_id, z.t.last_read_at]));
   const ungelesen = (ex ?? []).filter((x: any) => !exGelesenBis.get(x.thread_id) || x.erstellt_am > exGelesenBis.get(x.thread_id));
   if (!ungelesen.length) return [];
+  await expressZustellung(ich, ungelesen, false).catch((e) => console.error("express zustellung", String(e))); // 2.385.0: in der App angekommen
   const { data: ant } = await db.from("kc_club_express_antwort").select("message_id,antwort,spaeter_bis").eq("person_id", ich.person_id).in("message_id", ungelesen.map((x: any) => x.message_id));
   const am = new Map((ant ?? []).map((a: any) => [a.message_id, a]));
   const zeigen = ungelesen.filter((x: any) => { const a: any = am.get(x.message_id); return !a || (a.antwort === "spaeter" && (!a.spaeter_bis || a.spaeter_bis <= jetzt())); });
@@ -8401,7 +8415,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-QUITTUNG (0.34.0): Zustellung meiner Nachrichten aus dem Communicator (Push angezeigt/geöffnet, Mail verschickt)
         const eigeneIds = (msgs ?? []).filter((m: any) => m.sender_person_id === ich.person_id).slice(-60).map((m: any) => m.id);
         const kor = eigeneIds.flatMap((mid: string) => [`club-nachricht:${mid}`, `club-nachricht:${mid}:push`]);
-        const { data: auftr } = kor.length ? await db.from("kc_communication_requests").select("correlation_id,channel,status,recipient_refs").in("correlation_id", kor) : { data: [] };
+        const { data: auftr } = kor.length ? await db.from("kc_communication_requests").select("id,correlation_id,channel,status,recipient_refs").in("correlation_id", kor) : { data: [] };
         const RANG: Record<string, number> = { sent: 1, delivered: 2, displayed: 3, opened: 4 };
         // KC-CLUB-HAKEN (1.55.0, Wunsch Hansi „wie WhatsApp“): je Empfänger „auf dem Handy angekommen“ – Push dort angezeigt/geöffnet
         // (Rückmeldung des Handys) oder seine App war nach der Nachricht online (hat sie geladen). Gelesen = Chat geöffnet.
@@ -8449,6 +8463,25 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: exAnt } = exIds.size ? await db.from("kc_club_express_antwort").select("message_id,person_id,bestaetigt_am").in("message_id", [...exIds]).not("bestaetigt_am", "is", null) : leer;
         const exLeute = await personen((exAnt ?? []).map((x: any) => x.person_id));
         const exQuittung = (mid: string) => (exAnt ?? []).filter((x: any) => x.message_id === mid).map((x: any) => ({ name: vorname(exLeute.get(x.person_id)) || "?", am: x.bestaetigt_am }));
+        // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG: je Empfänger „angekommen um“ (früheste Rückmeldung: Push auf dem Handy angezeigt, in der App
+        // angekommen oder gelesen) und „gelesen um“ (Chat geöffnet). Ältere Sendungen ohne festgehaltene Lesezeit: „gelesen“ ohne Uhrzeit.
+        const exEigen = (msgs ?? []).filter((m: any) => exIds.has(m.id) && m.sender_person_id === ich.person_id).map((m: any) => m.id);
+        const { data: exZu } = exEigen.length ? await db.from("kc_club_express_zustellung").select("message_id,person_id,angekommen_am,gelesen_am").in("message_id", exEigen) : leer;
+        const exPushAuftr = ((auftr ?? []) as any[]).filter((x) => x.channel === "push" && (RANG[x.status] ?? 0) >= 3 && exEigen.includes(String(x.correlation_id).split(":")[1]));
+        const { data: exEv } = exPushAuftr.length ? await db.from("kc_communication_delivery_events").select("request_id,detail,created_at").in("request_id", exPushAuftr.map((x) => x.id)).in("event_type", ["displayed", "opened"]) : leer;
+        const exPushZeit = new Map<string, string>(); // „mid|person“ → früheste Anzeige auf dem Handy
+        for (const e of (exEv ?? []) as any[]) {
+          const a = exPushAuftr.find((x) => x.id === e.request_id); if (!a) continue;
+          const zeit = String(e.detail?.receivedAt || e.created_at), mid = String(a.correlation_id).split(":")[1];
+          for (const r of Array.isArray(a.recipient_refs) ? a.recipient_refs : []) if (r?.personId) { const k = `${mid}|${r.personId}`; if (!exPushZeit.has(k) || zeit < exPushZeit.get(k)!) exPushZeit.set(k, zeit); }
+        }
+        const exEmpfaenger = (m: any) => andere.slice(0, 30).map((x: any) => {
+          const z: any = (exZu ?? []).find((y: any) => y.message_id === m.id && y.person_id === x.person_id);
+          const gelesen = z?.gelesen_am ?? null, inApp = inkoAndere.has(x.person_id) ? null : z?.angekommen_am ?? null; // Inkognito nicht über „in der App“ verraten
+          const angekommen = [exPushZeit.get(`${m.id}|${x.person_id}`), inApp, gelesen].filter(Boolean).sort()[0] ?? null;
+          const best = (exAnt ?? []).find((y: any) => y.message_id === m.id && y.person_id === x.person_id)?.bestaetigt_am ?? null;
+          return { name: vorname(leute.get(x.person_id)) || "?", angekommen, gelesen, gelesenOhneZeit: !gelesen && !!x.last_read_at && x.last_read_at >= m.created_at, bestaetigt: best };
+        });
         const wichtigIds = new Set((wicht ?? []).map((x: any) => x.message_id));
         const midSet = new Set(mids), pinIds = (pins ?? []).map((x: any) => x.message_id).filter((x: string) => midSet.has(x)).slice(0, 3);
         const gemSet = new Set((gem ?? []).map((x: any) => x.message_id));
@@ -8488,12 +8521,17 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             erwaehnt: erw.map((x: any) => x.person_id === ich.person_id ? "dich" : vorname(rkLeute.get(x.person_id)) || "?"), erwaehntMich: erw.some((x: any) => x.person_id === ich.person_id),
             bearbeitet: bearbMap.get(m.id) ?? null, loeschtAm: ablaufMap.get(m.id) ?? null,
             gemerkt: gemSet.has(m.id), angeheftet: pinIds.includes(m.id), umfrage: umfrageVon(m.id), kontakt: kontaktVon(m.id), wichtig: wichtigIds.has(m.id),
-            ...(exIds.has(m.id) ? { express: eigen ? { quittungen: exQuittung(m.id) } : true } : {}),
+            ...(exIds.has(m.id) ? { express: eigen ? { quittungen: exQuittung(m.id), versandt: m.created_at, empfaenger: exEmpfaenger(m) } : true } : {}),
             ...(eigen && m.body !== "📎" && !(umf ?? []).some((x: any) => x.message_id === m.id) && !(kon ?? []).some((x: any) => x.message_id === m.id) && Date.now() - Date.parse(m.created_at) < BEARBEITEN_MIN * 60000 ? { bearbeitbarBis: new Date(Date.parse(m.created_at) + BEARBEITEN_MIN * 60000).toISOString() } : {}),
           };
         });
         // KC-CLUB-CHAT-KARTEI (2.191.0): „vorschau“ = Blick in die Rollkartei der Chats – zählt NICHT als gelesen (keine Lesehaken für andere)
         if (!ich.nurLesen && p.vorschau !== true) await db.from("kc_communication_thread_participants").update({ last_read_at: jetzt() }).eq("thread_id", id).eq("person_id", ich.person_id);
+        // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG: Chat mit Express-Sendung geöffnet = gelesen (nicht bei der Vorschau in der Rollkartei)
+        if (!ich.nurLesen && p.vorschau !== true) {
+          const exFremd = (msgs ?? []).filter((m: any) => exIds.has(m.id) && m.sender_person_id !== ich.person_id).map((m: any) => ({ message_id: m.id, absender: m.sender_person_id, thread_id: id }));
+          if (exFremd.length) await expressZustellung(ich, exFremd, true).catch((e) => console.error("express gelesen", String(e)));
+        }
         const [{ data: gr }, { data: tippen }] = await Promise.all([
           db.from("kc_club_gruppen").select("*").eq("thread_id", id).maybeSingle(),
           db.from("kc_club_tippen").select("person_id,text,art").eq("thread_id", id).neq("person_id", ich.person_id).gt("bis", jetzt()),
@@ -8554,6 +8592,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!ex) throw new Fehler("Diese Express-Sendung gibt es nicht mehr.", 404);
         await binTeilnehmer(ex.thread_id, ich.person_id);
         if (ex.absender === ich.person_id) return json({ ok: true });
+        await expressZustellung(ich, [ex], false).catch(() => null); // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG
         const antwort = ["geoeffnet", "spaeter", "nein"].includes(String(p.antwort)) ? String(p.antwort) : "geoeffnet";
         const { data: alt } = await db.from("kc_club_express_antwort").select("bestaetigt_am").eq("message_id", ex.message_id).eq("person_id", ich.person_id).maybeSingle();
         const neuBestaetigt = p.bestaetigen === true && !alt?.bestaetigt_am;
