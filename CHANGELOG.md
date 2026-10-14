@@ -5,6 +5,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.383.0 – 2026-10-14 – Online-Ansage nicht verspätet nachholen
+KC-CLUB-ONLINE-ANSAGE-NICHT-NACHTRAEGLICH (Fund Hansi „Ansage kommt sehr spät, der Push schneller“): War die App beim Online-Push nicht zu sehen, zeigt das Handy die Mitteilung – die App holte die Ansage beim Zurückkommen bis 3 Min. später nach. Wer schon per Mitteilung gemeldet wurde, wird auf diesem Gerät nicht noch einmal angesagt. Bei offener App bleibt die Ansage sofort.
+
 ## 2.381.0 – 2026-10-14 – 🎙️ KC-CLUB-KNOEPFE-PLATZ: Mikrofon der Sprachsteuerung ausgemessen
 Anlass (Hansi): „Du musst auch das Mikrofon für die Sprachsteuerung ausmessen, damit es nicht zu sehr stört.“
 - Handy/Tablet hoch: 🎙️ jetzt 44 px wie 👆 ? 🔍 (vorher 56 px, ragte höher) und in derselben Reihe über der Fußleiste, links.

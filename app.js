@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.381.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.383.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -6519,7 +6519,13 @@ const lsLesen = (k) => { try { return localStorage.getItem(k); } catch { return 
 const lsSetzen = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const ansageAn = () => lsLesen(ANSAGE) === "1";
 const anmeldeTonAn = () => !!ICH?.admin && lsLesen(ANSAGE_TON) !== "0"; // Admin: Standard an
-const OA = { vorher: null, zuletzt: 0, gesehen: new Map(), gesagt: new Map(), namen: new Map() };
+const OA = { vorher: null, zuletzt: 0, gesehen: new Map(), gesagt: new Map(), namen: new Map(), perPush: new Map() };
+// 2.383.0 KC-CLUB-ONLINE-ANSAGE-NICHT-NACHTRAEGLICH (Fund Hansi „Ansage kommt sehr spät, der Push schneller“): War die App beim Push
+// nicht zu sehen, zeigt das Handy „🟢 X ist jetzt online“ als Mitteilung (der Service Worker gibt sie dann als „push“ an die App).
+// Sprechen kann die App nur, wenn sie offen ist – sie hat die Ansage bisher beim Zurückkommen NACHGEHOLT (bis 3 Min. später).
+// Wer schon per Mitteilung gemeldet wurde, wird auf diesem Gerät nicht noch einmal verspätet angesagt (10 Min., wie die Ansage-Pause).
+function onlinePushGezeigt(titel) { const m = /^🟢 (.+) ist jetzt online$/.exec(String(titel || "")); if (m) OA.perPush.set(m[1], Date.now()); }
+const schonPerPush = (name) => Date.now() - (OA.perPush.get(name) || 0) < ANSAGE_PAUSE_MS;
 function onlineAnsagen(liste) {
   const jetzt = Date.now(), andere = (liste || []).filter((x) => x.person_id !== ICH?.person_id);
   // nur echte Neuankömmlinge: vorige Liste ist frisch (sonst nach langer Pause nicht alle auf einmal) und Person war ≥ 10 Min. weg
@@ -6578,13 +6584,13 @@ function onlineAnsageText(n) {
 }
 function onlineAnsageSprechen(namen) {
   if (document.hidden || inRuheJetzt(INIT?.einstellungen?.ruhezeit)) return;
-  const jetzt = Date.now(), n = [...new Set(namen.filter(Boolean))].filter((x) => jetzt - (OA.gesagt.get(x) || 0) >= ANSAGE_PAUSE_MS);
+  const jetzt = Date.now(), n = [...new Set(namen.filter(Boolean))].filter((x) => jetzt - (OA.gesagt.get(x) || 0) >= ANSAGE_PAUSE_MS && !schonPerPush(x));
   if (!n.length) return;
   n.forEach((x) => OA.gesagt.set(x, jetzt));
   OA.warte = [...new Set([...(OA.warte || []), ...n])];
   clearTimeout(OA.sammelTimer);
   OA.sammelTimer = setTimeout(() => {
-    const alle = OA.warte || []; OA.warte = []; if (!alle.length || document.hidden) return;
+    const alle = (OA.warte || []).filter((x) => !schonPerPush(x)); OA.warte = []; if (!alle.length || document.hidden) return; // 2.383.0: Mitteilung kam evtl. erst während des Sammelns an
     const ton = anmeldeTonAn(); if (ton) anmeldeTon();
     if (ansageAn()) setTimeout(() => sprechen(onlineAnsageText(alle)), ton ? 700 : 0);
   }, ANSAGE_SAMMEL_MS);
@@ -34293,7 +34299,7 @@ async function fpAdmin(tage) {
   history.replaceState({ basis: true }, "", url.pathname);
   history.pushState({ v: "start", tiefe: 1 }, "", url.pathname);
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { neuLaden(); onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
+    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { onlinePushGezeigt(e.data.titel); /* 2.383.0 */ neuLaden(); onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
       if (e.data?.typ === "online-ansage") { onlineAnsageSprechen([e.data.name]); onlinePing(); }
       if (e.data?.typ === "oeffnen") pushOeffnen(e.data.url); }); // 2.209.0 KC-CLUB-PUSH-SPRUNG // KC-CLUB-ONLINE-ANSAGE-PUSH; 2.24.18: LED/Zahl/Ring sofort mitziehen (Hinweis Hansi: Ansage kam immer zuerst)
   }

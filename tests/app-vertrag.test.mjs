@@ -6232,6 +6232,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(lies("notfall-tresor/wrangler.toml").includes("notfall-zweitkopie.yml@refs/heads/main") && !/console\.log\([^)]*payload/.test(z), "Tresor kennt den Ablauf; keine Inhalte im Protokoll");
   assert.ok(html.includes('zweitkopie: "notfall-zweitkopie.yml", zweitSchritt: "Zweitkopie prüfen"') && /const ok = schritt\?\.conclusion === "success" && lauf\.conclusion === "success";/.test(html), "Admin → Notfall zeigt die Zweitkopie (grün nur bei Erfolg)");
 }
+// 2.383.0 KC-CLUB-ONLINE-ANSAGE-NICHT-NACHTRAEGLICH (Fund Hansi „Ansage kommt sehr spät, der Push schneller“)
+{
+  assert.ok(/function onlinePushGezeigt\(titel\) \{ const m = \/\^🟢 \(\.\+\) ist jetzt online\$\/\.exec/.test(html) && /perPush: new Map\(\)/.test(html), "Mitteilung „X ist jetzt online“ wird je Name gemerkt");
+  assert.ok(/e\.data\?\.typ === "push"\) \{ onlinePushGezeigt\(e\.data\.titel\);/.test(html), "jeder an die App gereichte Push (= als Mitteilung gezeigt) wird geprüft");
+  assert.ok(/>= ANSAGE_PAUSE_MS && !schonPerPush\(x\)\);/.test(html) && /const alle = \(OA\.warte \|\| \[\]\)\.filter\(\(x\) => !schonPerPush\(x\)\);/.test(html), "schon per Mitteilung gemeldet → keine nachgeholte Ansage (auch nicht aus der Sammelzeit)");
+  const sw = lies("sw.js");
+  assert.ok(/if \(online && sichtbar\.length\) \{ sichtbar\.forEach\(\(c\) => c\.postMessage\(\{ typ: "online-ansage"/.test(sw), "App sichtbar → weiter sofortige Ansage statt Mitteilung");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
