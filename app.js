@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.390.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.391.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -4832,7 +4832,7 @@ const HILFE = [
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
   { id: "schrift_zoom", thema: "darstellung", sym: "🔍", t: "Schrift größer ziehen – mit zwei Fingern", x: "Zu klein zum Lesen? Lege <b>zwei Finger</b> auf den Bildschirm und ziehe sie <b>auseinander</b> – Nachrichten, Zettel und Texte werden größer (Knöpfe und Leisten bleiben, wie sie sind). Zusammenschieben macht sie kleiner. Die Größe bleibt gemerkt. Zurück auf normal: mit zwei Fingern <b>doppelt tippen</b> oder unter ⚙️ → Darstellung → „🔍 Schriftgröße“.", seit: "2.364.0" }, // 2.364.0 KC-CLUB-SCHRIFT-ZOOM
-  { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag, nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
+  { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag – am 🏎️-Knopf steht, wie viele du heute schon verschickt hast (z. B. <b>2/5</b>). Nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
   { id: "fee", thema: "darstellung", sym: "🧚", t: "Eine kleine Fee zu Besuch", x: "Bei jeder <b>20. Anmeldung</b> schwebt eine kleine Fee durchs obere Startbild, bleibt kurz stehen und lächelt. <b>Tipp sie an</b> – dann schenkt sie dir einen schönen Spruch. Vorab ansehen oder per Häkchen abschalten: <b>⚙️ → ✨ Effekte → 🧚 Die kleine Fee</b>.", zeig: () => einstiegHin("effekte", "setFee"), seit: "2.372.0" },
   { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → 🎨 Darstellung → Senden</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b>, <b>Luftballon</b> oder <b>Baron Münchhausen</b> auf der Kanonenkugel – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen.", seit: "2.362.0" },
   { id: "zurueckholen", thema: "nachrichten", sym: "↩️", t: "Vertippt? Nachricht zurückholen", x: "Solange noch niemand deine Nachricht gelesen hat, kannst du sie <b>zurückholen</b>: Nachricht antippen (am PC: rechte Maustaste) oder im <b>ⓘ</b>-Fenster → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet für alle und steht wieder in deinem Schreibfeld – ändern und neu senden.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-ZURUECKHOLEN
@@ -26810,7 +26810,28 @@ function expressUmschalten(an) {
   const k = $("expressKnopf"), t = $("text");
   k?.classList.toggle("an", EXPRESS); k?.setAttribute("aria-pressed", String(EXPRESS));
   t?.classList.toggle("express", EXPRESS); if (t) t.placeholder = EXPRESS ? "🏎️ Express-Sendung schreiben …" : WICHTIG ? "❗ Wichtige Nachricht schreiben …" : "Nachricht schreiben …";
-  if (EXPRESS && !vorher && an === undefined) melde("🏎️ Express an: kommt sofort an – auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf. Nur für Eiliges!");
+  expressZahlZeigen();
+  if (EXPRESS && !vorher && an === undefined) expressStandHolen(true);
+}
+// 2.391.0 KC-CLUB-EXPRESS-ZAEHLER (Wunsch Hansi „bei 5 lassen und in der Express 1/5 anzeigen“): am 🏎️-Knopf „2/5“ = heute (letzte
+// 24 Std.) schon verschickt. Sind alle 5 verbraucht, geht Express gar nicht erst an – mit Hinweis, ab wann es wieder geht. Admin: unbegrenzt.
+const EXS = { stand: null };
+function expressZahlZeigen() {
+  const k = $("expressKnopf"), st = EXS.stand; if (!k) return;
+  const z = EXPRESS && st && !st.unbegrenzt ? `${st.genutzt}/${st.max}` : "";
+  if (z) k.dataset.zahl = z; else delete k.dataset.zahl;
+}
+async function expressStandHolen(anzeigen) {
+  let st; try { st = await api("express_stand", {}, { still: true }); } catch { st = null; }
+  if (!EXPRESS) return;
+  EXS.stand = st; expressZahlZeigen();
+  if (!anzeigen) return;
+  if (st && !st.unbegrenzt && st.genutzt >= st.max) {
+    expressUmschalten(false);
+    return melde(`🏎️ Heute schon ${st.max} von ${st.max} Express-Sendungen verschickt – mehr gehen nicht${st.wieder ? `. Ab ${new Date(st.wieder).toLocaleString("de-DE", { weekday: "short", hour: "2-digit", minute: "2-digit" })} Uhr wieder möglich` : ""}. Bitte normal senden.`, true);
+  }
+  const rest = st && !st.unbegrenzt ? ` Heute ${st.genutzt}/${st.max} – noch ${st.max - st.genutzt}.` : "";
+  melde("🏎️ Express an: kommt sofort an – auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf. Nur für Eiliges!" + rest);
 }
 const EXP = { weg: new Set(), akt: null };
 function expressPruefen() {
@@ -26928,7 +26949,7 @@ async function senden() {
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
-    if (daten.express) melde("🏎️ Nachricht wurde per Express versandt – unter der Nachricht siehst du, wann sie angekommen ist und gelesen wurde"); // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG
+    if (daten.express) { const st = r?.expressStand; if (st) EXS.stand = st; melde("🏎️ Nachricht wurde per Express versandt – unter der Nachricht siehst du, wann sie angekommen ist und gelesen wurde" + (st && !st.unbegrenzt ? ` (heute ${st.genutzt}/${st.max})` : "")); } // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG, 2.391.0 Zähler
     HAKEN_SEIT = Date.now(); // 2.367.0 KC-CLUB-HAKEN-SCHNELL: Zustell-Haken eine Minute lang zügig nachsehen
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); expressUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN

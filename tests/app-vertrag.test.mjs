@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6255,7 +6255,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!ich\.nurLesen && p\.vorschau !== true\) \{\n\s+const exFremd/.test(server), "Vorschau in der Rollkartei zählt nicht als gelesen");
   assert.ok(/inkoAndere\.has\(x\.person_id\) \? null : z\?\.angekommen_am/.test(server) && /p_art: "chat", p_thread: x\.thread_id/.test(server), "Inkognito nicht verraten; Absender bekommt sofort ein Signal");
   assert.ok(/express: eigen \? \{ quittungen: exQuittung\(m\.id\), versandt: m\.created_at, empfaenger: exEmpfaenger\(m\) \} : true/.test(server), "nur der Absender sieht die Zeiten");
-  assert.ok(/function expressStatusHtml\(x\)/.test(html) && /Per Express versandt \$\{um\(x\.versandt\)\}/.test(html) && /📭 noch nicht angekommen/.test(html) && /if \(daten\.express\) melde\("🏎️ Nachricht wurde per Express versandt/.test(html), "Meldung beim Senden + Anzeige je Empfänger");
+  assert.ok(/function expressStatusHtml\(x\)/.test(html) && /Per Express versandt \$\{um\(x\.versandt\)\}/.test(html) && /📭 noch nicht angekommen/.test(html) && /if \(daten\.express\) \{ const st = r\?\.expressStand; if \(st\) EXS\.stand = st; melde\("🏎️ Nachricht wurde per Express versandt/.test(html), "Meldung beim Senden + Anzeige je Empfänger");
 }
 // 2.386.0 KC-CLUB-ESELSOHR-RUND + KC-CLUB-ZUSTELL-ALLE (Wünsche Hansi)
 {
@@ -6299,6 +6299,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(re.exec("🟢 Klaus ist jetzt online (19:05 Uhr)")[2] === "19" && re.exec("🟢 Klaus ist jetzt online")[1] === "Klaus", "SW erkennt neuen und alten Titel");
   assert.ok(/alt = min > 10;/.test(sw) && /if \(alt\) titel = `🟢 \$\{online\[1\]\} war um \$\{online\[2\]\}:\$\{online\[3\]\} Uhr online`;/.test(sw), "verspätete Mitteilung: „war um … online“, keine Ansage");
   assert.ok(/function stWannHtml\(l\)/.test(html) && /\$\{stWannHtml\(lMit\)\}/.test(html) && /onclick="wannStatistik\(\)">📅 Wer kommt wann\?<\/button>/.test(html) && /\.st-raster \{/.test(html), "Auswertung: Wochentag × Uhrzeit in der Startstatistik");
+}
+// 2.391.0 KC-CLUB-EXPRESS-ZAEHLER (Wunsch Hansi „bei 5 lassen und in der Express 1/5 anzeigen“)
+{
+  assert.ok(/async function expressStand\(ich: Ich\) \{\n\s+if \(ich\.admin\) return \{ genutzt: 0, max: EXPRESS_MAX, unbegrenzt: true/.test(server) && /case "express_stand": return json\(await expressStand\(ich\)\);/.test(server), "Server: Stand je Person, Admin unbegrenzt");
+  assert.ok(/const EXPRESS_MAX = 5,/.test(server) && /if \(express && !ich\.admin\) \{/.test(server) && /\.\.\.\(express \? \{ expressStand: await expressStand\(ich\) \} : \{\}\)/.test(server), "Grenze bleibt 5, Antwort liefert neuen Stand");
+  assert.ok(/const z = EXPRESS && st && !st\.unbegrenzt \? `\$\{st\.genutzt\}\/\$\{st\.max\}` : "";/.test(html) && /#expressKnopf\[data-zahl\]::after \{ content: attr\(data-zahl\);/.test(html), "„2/5“ am 🏎️-Knopf");
+  assert.ok(/if \(st && !st\.unbegrenzt && st\.genutzt >= st\.max\) \{\n\s+expressUmschalten\(false\);/.test(html) && /\(heute \$\{st\.genutzt\}\/\$\{st\.max\}\)/.test(html), "voll → Express geht nicht an, Hinweis; nach dem Senden „heute 3/5“");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -8257,7 +8264,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/sende_effekt: \(w\) => \(\{ art: SENDE_EFFEKT_ARTEN\.includes\(w\?\.art\) \? w\.art : "wechsel" \}\)/.test(server), "Server merkt nur bekannte Kennungen");
   assert.ok(/\.eq\("schluessel", "sende_effekt"\)\.in\("person_id", \(tn \?\? \[\]\)\.map/.test(server) && /selbstloeschen: slStd\(slChat\?\.stunden\), sendeEffekte,/.test(server), "Unterhaltung liefert Effekte der Teilnehmer");
-  assert.ok(/return json\(\{ ok: true, id: threadId, versand, mid: m\.id \}\);/.test(server), "Senden liefert Nachrichten-Kennung");
+  assert.ok(/return json\(\{ ok: true, id: threadId, versand, mid: m\.id(?:, \.\.\.\(express \? \{ expressStand: await expressStand\(ich\) \} : \{\}\))? \}\);/.test(server), "Senden liefert Nachrichten-Kennung");
   assert.ok(/const fxReihe = \(mid\) =>/.test(html) && /fxArt\(u\.sendeEffekte\?\.\[ziel\.vonId\], ziel\.wichtig, ziel\.id(, !!ziel\.express)?\)/.test(html), "gleicher Effekt bei Absender und Empfänger");
   assert.ok(/const neu = !erst && letzte\.id !== EMPF\.letzte;/.test(html) && /Date\.now\(\) - Date\.parse\(ziel\.zeit\) > \(neu \? 120000 : 7 \* 86400000\)\) return;/.test(html) && /sendeEffektWahl\(\) === "aus"/.test(html), "nur neue, frische Nachrichten, nicht beim Öffnen, abschaltbar");
   assert.ok(/empfangsEffekt\(u\); \/\/ 2\.177\.0/.test(html) && /sendeEffektMelden\(\); \/\/ 2\.177\.0/.test(html), "eingebunden in Chat-Laden und Start");

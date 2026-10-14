@@ -14,6 +14,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.391.0 – 2026-10-14 – Express-Zähler 2/5
+Am 🏎️-Knopf steht, wie viele Express-Sendungen heute schon verschickt wurden (z. B. 2/5). Sind alle 5 verbraucht, geht Express nicht an – mit Hinweis, ab wann es wieder geht. Admin unbegrenzt.
+
 ## 2.390.0 – 2026-10-14 – Online-Push mit Uhrzeit + Wer kommt wann?
 „🟢 Klaus ist jetzt online (19:05 Uhr)“ mit Datum; kommt die Mitteilung mehr als 10 Minuten später an (PC war aus), steht dort „war um 19:05 Uhr online“ und es gibt keine Ansage. Neu in Admin → Nutzung: „📅 Wer kommt wann?“ – Wochentag × Uhrzeit, je Mitglied filterbar.
 

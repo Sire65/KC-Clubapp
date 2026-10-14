@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.390.0";
+const SERVER_VERSION = "2.391.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5192,6 +5192,14 @@ function wiederholungen(beginnIso: string, regel: string, von: Date, bis: Date, 
 // Absenders – Push/Mail, stumm, Erwähnung, Selbstlöschen des Chats gelten wie immer). Wiederholungen rechnen ab der ersten Zeit (Berliner Uhr,
 // Sommer-/Winterzeit richtig); verpasste Termine (Server-Störung) werden einmal nachgeholt, nie gestapelt.
 const EXPRESS_MAX = 5, EXPRESS_SPAETER_MIN = 30; // 2.362.0 KC-CLUB-EXPRESS
+// 2.391.0 KC-CLUB-EXPRESS-ZAEHLER (Wunsch Hansi „bei 5 lassen und in der Express 1/5 anzeigen“): genutzt in den letzten 24 Std.,
+// bei voll: ab wann wieder frei (älteste Sendung + 24 Std.). Admin: unbegrenzt.
+async function expressStand(ich: Ich) {
+  if (ich.admin) return { genutzt: 0, max: EXPRESS_MAX, unbegrenzt: true, wieder: null };
+  const { data } = await db.from("kc_club_express").select("erstellt_am").eq("absender", ich.person_id).gte("erstellt_am", new Date(Date.now() - 86400000).toISOString()).order("erstellt_am", { ascending: true }).limit(EXPRESS_MAX + 5);
+  const l = data ?? [];
+  return { genutzt: l.length, max: EXPRESS_MAX, unbegrenzt: false, wieder: l.length >= EXPRESS_MAX ? new Date(new Date(l[l.length - EXPRESS_MAX].erstellt_am).getTime() + 86400000).toISOString() : null };
+}
 // 2.362.0 KC-CLUB-EXPRESS: ungelesene Express-Sendungen an mich (7 Tage), ohne „Nein“ und ohne laufendes „Später“ – für das Express-Fenster beim Start
 // 2.389.0 KC-CLUB-TERMINANFRAGE-SICHTBAR (Fund Hansi „Klaus hat meine Terminanfrage nicht gesehen“): persönliche Terminanfragen an mich,
 // auf die ich noch nicht geantwortet habe (offen, noch nicht vorbei, Frist nicht abgelaufen) – stehen dann groß unter „Heute wichtig“
@@ -8604,6 +8612,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       // ----- 2.362.0 KC-CLUB-EXPRESS: Antwort im Express-Fenster – geoeffnet / spaeter (30 Min.) / nein; „Empfang bestätigen“ meldet es dem Absender -----
+      case "express_stand": return json(await expressStand(ich)); // 2.391.0 KC-CLUB-EXPRESS-ZAEHLER
       case "express_antwort": {
         const { data: ex } = await db.from("kc_club_express").select("message_id,thread_id,absender").eq("message_id", String(p.id || "")).maybeSingle();
         if (!ex) throw new Fehler("Diese Express-Sendung gibt es nicht mehr.", 404);
@@ -8708,7 +8717,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // 2.388.0 KC-CLUB-EXPRESS-ADMIN-FREI (Hansi: „Wer hat die Grenze von 5 Express festgelegt?“ – war nicht seine Vorgabe): der Admin hat keine Tagesgrenze
         if (express && !ich.admin) {
           const { count: ex } = await db.from("kc_club_express").select("message_id", { count: "exact", head: true }).eq("absender", ich.person_id).gte("erstellt_am", new Date(Date.now() - 86400000).toISOString());
-          if ((ex ?? 0) >= EXPRESS_MAX) throw new Fehler(`🏎️ Höchstens ${EXPRESS_MAX} Express-Sendungen am Tag – diese bitte normal senden.`, 429);
+          if ((ex ?? 0) >= EXPRESS_MAX) { const st = await expressStand(ich); throw new Fehler(`🏎️ Heute schon ${EXPRESS_MAX} von ${EXPRESS_MAX} Express-Sendungen verschickt${st.wieder ? ` – ab ${wann(st.wieder)} wieder möglich` : ""}. Diese bitte normal senden.`, 429); }
         }
         let threadId = notfall && !probe ? await notfallUnterhaltung(ich) : String(p.id || ""), neu = false;
         if (threadId) await binTeilnehmer(threadId, ich.person_id);
@@ -8841,7 +8850,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           url: `${APP_URL}#nachricht=${threadId}`, ...(notfall ? { wichtigkeit: "notfall" } : wichtig || express ? { wichtigkeit: "hoch" } : {}), ...(express ? { eilig: true } : {}), // 2.384.0 KC-CLUB-EXPRESS-SOFORT
         }, `club-nachricht:${m.id}`, { notfall: notfall || express }); // Express: auch in der Ruhezeit (wie Notfall)
         await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, selbstloeschen: slNachricht, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
-        return json({ ok: true, id: threadId, versand, mid: m.id }); // mid: KC-CLUB-EMPFANGS-EFFEKT (2.177.0) – gleicher „Abwechselnd“-Effekt bei Absender und Empfänger
+        return json({ ok: true, id: threadId, versand, mid: m.id, ...(express ? { expressStand: await expressStand(ich) } : {}) }); // mid: KC-CLUB-EMPFANGS-EFFEKT (2.177.0) – gleicher „Abwechselnd“-Effekt bei Absender und Empfänger
       }
 
       // ----- KC-CLUB-PRIVATTERMIN (1.0.0): nur für mich sichtbar – jeder darf, jeder nur seine eigenen -----
