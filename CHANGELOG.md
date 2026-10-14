@@ -14,6 +14,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.390.0 – 2026-10-14 – Online-Push mit Uhrzeit + Wer kommt wann?
+„🟢 Klaus ist jetzt online (19:05 Uhr)“ mit Datum; kommt die Mitteilung mehr als 10 Minuten später an (PC war aus), steht dort „war um 19:05 Uhr online“ und es gibt keine Ansage. Neu in Admin → Nutzung: „📅 Wer kommt wann?“ – Wochentag × Uhrzeit, je Mitglied filterbar.
+
 ## 2.389.0 – 2026-10-14 – 📊 DB-Abfragen im Admin, 📨 Terminanfragen sichtbar, 🍄 Herbst-Pilze
 KC-CLUB-DB-LAST (Wunsch Hansi): Admin → Supabase zeigt eine Balkengrafik der Datenbank-Abfragen der letzten 7 Tage je Stunde (Wochentag + Uhrzeit), farbig nach Quelle (Club-App, Verwaltung/PC-Manager, Kasse, DP2, Kommunikation, Spiegel, Überwachung, Zeitpläne …), dazu Summe je Uhrzeit und Anteil je Quelle; Umschalter Anzahl/Rechenzeit; Balken antippen = Klartext. Messung alle 10 Min. (kc_club_db_last). KC-CLUB-TERMINANFRAGE-SICHTBAR (Fund Hansi „Klaus hat meine Terminanfrage nicht gesehen“): offene persönliche Terminanfragen stehen ganz oben unter „Heute wichtig“ (orange umrandet, „Antworten“), in „Für dich“ und als Zahl an der Termine-Kachel. KC-CLUB-HERBST-PILZE: im Herbst wachsen unten Fliegenpilze, Steinpilze und kleine Braune; der Laubbläser wirbelt sie davon. Server 2.389.0.
 

@@ -1982,6 +1982,11 @@
   .blase.eigen .express-marke { background: #fff; color: #c0392b; }
   .express-quittung { font-size: .78rem; margin-top: 4px; opacity: .9; }
   .express-quittung.warte { opacity: .65; }
+  .st-raster { display: grid; grid-template-columns: 2em repeat(24, minmax(0, 1fr)) 2.2em; gap: 2px; align-items: center; font-size: .75rem; } /* 2.390.0 KC-CLUB-WER-KOMMT-WANN */
+  .st-raster i { display: block; aspect-ratio: 1; min-height: 8px; border-radius: 2px; } .st-raster small { text-align: right; opacity: .75; } .st-raster .st-h { text-align: left; overflow: visible; white-space: nowrap; min-width: 0; }
+  .st-balken { display: grid; grid-template-columns: 2em 1fr 2.4em; gap: 6px; align-items: center; font-size: .8rem; } .st-balken i { display: block; height: 10px; border-radius: 4px; background: #741521; min-width: 2px; } .st-balken small { text-align: right; }
+  .st-stunden { display: flex; align-items: flex-end; height: 90px; gap: 1px; border-bottom: 1px solid rgba(0,0,0,.25); } .st-stunden i { flex: 1; background: #741521; border-radius: 2px 2px 0 0; min-height: 1px; }
+  .st-stunden-leg { display: flex; justify-content: space-between; font-size: .7rem; opacity: .75; }
   .dbl-chart { display: flex; align-items: flex-end; gap: 0; height: 120px; border-bottom: 1px solid rgba(0,0,0,.25); cursor: pointer; } /* 2.389.0 KC-CLUB-DB-LAST */
   .dbl-chart.klein { height: 70px; cursor: default; } .dbl-chart.klein .dbl-s { margin: 0 1px; }
   .dbl-s { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column-reverse; } .dbl-s i { display: block; width: 100%; }
@@ -5133,6 +5138,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.389.0" data-v="2.389.0"></script>
+<script src="app.js?v=2.390.0" data-v="2.390.0"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.389.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.390.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -6524,7 +6524,8 @@ const OA = { vorher: null, zuletzt: 0, gesehen: new Map(), gesagt: new Map(), na
 // nicht zu sehen, zeigt das Handy „🟢 X ist jetzt online“ als Mitteilung (der Service Worker gibt sie dann als „push“ an die App).
 // Sprechen kann die App nur, wenn sie offen ist – sie hat die Ansage bisher beim Zurückkommen NACHGEHOLT (bis 3 Min. später).
 // Wer schon per Mitteilung gemeldet wurde, wird auf diesem Gerät nicht noch einmal verspätet angesagt (10 Min., wie die Ansage-Pause).
-function onlinePushGezeigt(titel) { const m = /^🟢 (.+) ist jetzt online$/.exec(String(titel || "")); if (m) OA.perPush.set(m[1], Date.now()); }
+// 2.390.0 KC-CLUB-ONLINE-PUSH-ZEIT: Titel jetzt mit Uhrzeit bzw. „war um … online“
+function onlinePushGezeigt(titel) { const m = /^🟢 (.+?) (?:ist jetzt|war um \d\d:\d\d Uhr) online(?: \(\d\d:\d\d Uhr\))?$/.exec(String(titel || "")); if (m) OA.perPush.set(m[1], Date.now()); }
 const schonPerPush = (name) => Date.now() - (OA.perPush.get(name) || 0) < ANSAGE_PAUSE_MS;
 function onlineAnsagen(liste) {
   const jetzt = Date.now(), andere = (liste || []).filter((x) => x.person_id !== ICH?.person_id);
@@ -34095,6 +34096,27 @@ async function startStatistik(tage) {
   try { STS.daten = await api("start_statistik", { tage: STS.tage }, { warten: true }); } catch (e) { return meldeFehler(e); }
   startStatistikZeigen();
 }
+// 2.390.0 KC-CLUB-WER-KOMMT-WANN (Wunsch Hansi „Auswertung, wer wie oft reingeht, zu welchen Uhrzeiten an welchen Tagen“): Raster Wochentag ×
+// Uhrzeit (je dunkler, desto öfter), dazu Balken je Wochentag und je Uhrzeit und „am häufigsten“. Folgt dem Filter Mitglied/Gerät oben.
+// Gezählt wird jedes Öffnen der App (auch Zurückholen aus dem Hintergrund) – höchstens einmal je Minute und Person.
+const ST_TAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+function stWannHtml(l) {
+  if (!l.length) return "";
+  const raster = Array.from({ length: 7 }, () => Array(24).fill(0));
+  for (const x of l) { const d = new Date(x.zeit); raster[(d.getDay() + 6) % 7][d.getHours()]++; }
+  const max = Math.max(1, ...raster.flat()), jeTag = raster.map((r) => r.reduce((a, b) => a + b, 0)), jeStunde = Array.from({ length: 24 }, (_, h) => raster.reduce((a, r) => a + r[h], 0));
+  let top = [0, 0, 0]; raster.forEach((r, t) => r.forEach((n, h) => { if (n > top[2]) top = [t, h, n]; }));
+  const tmax = Math.max(1, ...jeTag), hmax = Math.max(1, ...jeStunde);
+  const zelle = (n) => `<i style="background:${n ? `rgba(116,21,33,${(.15 + .85 * n / max).toFixed(2)})` : "rgba(0,0,0,.05)"}" title="${n}×"></i>`;
+  const wer = STS.person ? esc(STS.daten?.starts?.find((x) => x.p === STS.person)?.name || "") : "alle Mitglieder";
+  return `<details class="karte" open id="stWann"><summary><b>📅 Wer kommt wann? – ${wer}</b></summary>
+    <p class="hinweis" style="margin:4px 0 6px">${l.length}× die App geöffnet. Am häufigsten: <b>${ST_TAGE[top[0]]} ${top[1]}–${top[1] + 1} Uhr</b> (${top[2]}×). Je dunkler, desto öfter.</p>
+    <div class="st-raster">${raster.map((r, t) => `<b>${ST_TAGE[t]}</b>${r.map(zelle).join("")}<small>${jeTag[t]}</small>`).join("")}<b></b>${Array.from({ length: 24 }, (_, h) => `<small class="st-h">${h % 6 === 0 ? h : ""}</small>`).join("")}<small></small></div>
+    <div class="zwei" style="margin-top:8px"><div><b style="font-size:.9rem">Je Wochentag</b>${jeTag.map((n, t) => `<div class="st-balken"><span>${ST_TAGE[t]}</span><i style="width:${(n / tmax * 100).toFixed(1)}%"></i><small>${n}</small></div>`).join("")}</div>
+      <div><b style="font-size:.9rem">Je Uhrzeit</b><div class="st-stunden">${jeStunde.map((n, h) => `<i style="height:${(n / hmax * 100).toFixed(1)}%" title="${h}–${h + 1} Uhr: ${n}×"></i>`).join("")}</div><div class="st-stunden-leg"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div></div></div>
+  </details>`;
+}
+function wannStatistik() { STS.springen = true; STS.person = ""; startStatistik(30); }
 function startStatistikZeigen() {
   const roh = STS.daten?.starts || [], alle = roh, lMit = alle.filter((x) => (!STS.person || x.p === STS.person) && (!STS.geraet || stGeraet(x) === STS.geraet)), l = lMit.filter((x) => !stHinter(x)), hinter = lMit.filter(stHinter);
   const personen = [...new Map(alle.map((x) => [x.p, x.name])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
@@ -34111,6 +34133,7 @@ function startStatistikZeigen() {
     ${hinter.length ? `<p class="hinweis" style="margin:6px 0 0">⏸️ <b>${hinter.length} Start${hinter.length > 1 ? "s" : ""} im Hintergrund</b> (App zwischendurch verlassen oder Bildschirm aus) – zählen nicht mit, stehen unten bei „Starts einzeln“.</p>` : ""}
     ${l.length ? `<div class="st-kacheln"><div><b>${l.length}</b><small>Starts</small></div><div class="${stAmpel(stMedian(l.map((x) => x.ms)))}"><b>${stSek(stMedian(l.map((x) => x.ms)))}</b><small>üblicher Start</small></div>
       <div><b>${stSek(stMedian(l.map((x) => x.server)))}</b><small>davon Server</small></div><div class="${langsam ? "st-rot" : "st-gruen"}"><b>${langsam}</b><small>langsam (über 6 s)</small></div></div>
+    ${stWannHtml(lMit)}
     <details class="karte" open><summary><b>👥 Je Mitglied</b></summary><div class="st-scroll"><table class="vb-tabelle st-tab">${kopfT}${gruppe((x) => x.name).map(([n, g]) => zeile(esc(n), g)).join("")}</table></div></details>
     <details class="karte" open><summary><b>📱 Je Gerät und Browser</b></summary><div class="st-scroll"><table class="vb-tabelle st-tab">${kopfT}${gruppe((x) => `${stGeraet(x)} · ${x.browser || "?"} · ${x.app ? "als App" : "im Browser"}`).map(([n, g]) => zeile(esc(n), g)).join("")}</table></div></details>
     <details class="karte"><summary><b>🌐 Je Netz</b></summary><div class="st-scroll"><table class="vb-tabelle st-tab">${kopfT}${gruppe((x) => (x.netz || "unbekannt").toUpperCase()).map(([n, g]) => zeile(esc(n), g)).join("")}</table></div></details>
@@ -34122,6 +34145,7 @@ function startStatistikZeigen() {
       : `<p class="hinweis">Im gewählten Zeitraum keine Starts aufgezeichnet (gezählt ab Version 2.31.0).</p>`}
     <div class="knoepfe"><button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
   $("adminBlatt").classList.remove("versteckt");
+  if (STS.springen) { STS.springen = false; setTimeout(() => $("stWann")?.scrollIntoView({ block: "start", behavior: "smooth" }), 80); } // 2.390.0
 }
 // ---------- KC-CLUB-NACHRICHTEN-STATISTIK (2.34.0, Wunsch Hansi): je Mitglied – E-Mail, Push, Club-Nachrichten; wann und wie viele ----------
 // Nur Admin. Nur Art, Zeit und Status – keine Inhalte. Push mit „angezeigt“/„geöffnet“ (ab 23.09.2026), E-Mails ab 25.08.2026.
@@ -34227,7 +34251,7 @@ async function nzAdmin(tage) {
   const zeilen = [...haupt.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).flatMap(([o, n]) => [[o, n, false], ...liste.filter(([b]) => nzOber(b) === o).map(([b, m]) => [b, m, true])]);
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">📊 Nutzung – ohne Namen</h3>
     <p class="hinweis" style="margin:0">Wie oft die Bereiche geöffnet wurden und <b>👤 von wie vielen verschiedenen Mitgliedern</b>. Es wird nie gespeichert, wer – nur Tag, Bereich, Anzahl und eine zufällige Geräte-Kennung; die Uhrzeit nur als Stunde, getrennt vom Bereich.</p>
-    <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}<button class="knopf klein" onclick="spurAdmin(heuteIso(), null)">👣 Wege der Mitglieder</button><button class="knopf klein" onclick="startStatistik(30)">⏱️ Startstatistik</button><button class="knopf klein" onclick="sbAdmin()">🎙️ Sprachbefehle</button><button class="knopf klein" onclick="nachrichtenStatistik()">📨 Nachrichten</button>${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
+    <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}<button class="knopf klein" onclick="spurAdmin(heuteIso(), null)">👣 Wege der Mitglieder</button><button class="knopf klein" onclick="startStatistik(30)">⏱️ Startstatistik</button><button class="knopf klein" onclick="wannStatistik()">📅 Wer kommt wann?</button><button class="knopf klein" onclick="sbAdmin()">🎙️ Sprachbefehle</button><button class="knopf klein" onclick="nachrichtenStatistik()">📨 Nachrichten</button>${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
     <b>Insgesamt ${gesamt} Öffnungen in ${r.tage} Tagen${r.geraeteGesamt == null ? " · 👤 unbekannt" : r.geraeteGesamt ? ` · 👤 ${r.geraeteGesamt} verschiedene Geräte (≈ Mitglieder${r.mitglieder ? `, ${r.mitglieder} im Club` : ""})` : ""}</b>
     <span class="hinweis" style="margin:0">👤 = verschiedene Mitglieder (genau: Geräte – wer Handy und Tablet nutzt, zählt doppelt). Gezählt ab Version 2.6.0. <span class="nz-wer nur1">👤 1</span> = nur ein einziges Mitglied. Bei 30/90 Tagen zählen die Öffnungen auch aus der Zeit davor.</span><span class="hinweis" style="margin:0">↳ = Teilbereich (z. B. Büro → Eingang). Die Zahl beim Hauptbereich zählt nur das Öffnen selbst.</span>
     <div class="nz-tage" title="Öffnungen je Tag">${tagListe.map(([t, n]) => `<div title="${esc(t.slice(8) + "." + t.slice(5, 7) + ".: " + n)}"><i style="height:${Math.round(n / tmax * 100)}%"></i></div>`).join("")}</div>

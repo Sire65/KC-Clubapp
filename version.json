@@ -1,11 +1,18 @@
 {
-  "version": "2.389.0",
+  "version": "2.390.0",
   "datum": "2026-10-14",
   "stufe": "RC",
   "neu": [
     "Kleine Systemanpassung"
   ],
   "verlauf": [
+    {
+      "version": "2.390.0",
+      "datum": "2026-10-14",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
     {
       "version": "2.389.0",
       "datum": "2026-10-14",

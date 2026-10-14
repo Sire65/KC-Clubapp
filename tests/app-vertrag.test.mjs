@@ -2731,8 +2731,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 237. 1.64.0: Online-Push auch bei offener App – sichtbares Gerät sagt an, sonst Mitteilung; je Name nur einmal in 10 Min.
 {
   const sw = lies("sw.js");
-  assert.match(sw, /const online = \/\^🟢 \(\.\+\) ist jetzt online\$\/\.exec\(titel\), sichtbar = fenster\.filter\(\(c\) => c\.visibilityState === "visible"\);/, "SW erkennt Online-Push");
-  assert.match(sw, /if \(online && sichtbar\.length\) \{ sichtbar\.forEach\(\(c\) => c\.postMessage\(\{ typ: "online-ansage", name: online\[1\] \}\)\);/, "sichtbare App bekommt die Ansage");
+  assert.match(sw, /const online = \/\^🟢 \(\.\+\?\) ist jetzt online\(\?: \\\(\(\\d\\d\):\(\\d\\d\) Uhr\\\)\)\?\$\/\.exec\(titel\), sichtbar = fenster\.filter\(\(c\) => c\.visibilityState === "visible"\);/, "SW erkennt Online-Push");
+  assert.match(sw, /if \(online && sichtbar\.length && !alt\) \{ sichtbar\.forEach\(\(c\) => c\.postMessage\(\{ typ: "online-ansage", name: online\[1\] \}\)\);/, "sichtbare App bekommt die Ansage");
   assert.match(html, /if \(e\.data\?\.typ === "online-ansage"\) \{ onlineAnsageSprechen\(\[e\.data\.name\]\);/, "App sagt an");
   const code = html.slice(html.indexOf("const ANSAGE = "), html.indexOf("function sprechen("));
   const gesagt = [];
@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6234,11 +6234,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.383.0 KC-CLUB-ONLINE-ANSAGE-NICHT-NACHTRAEGLICH (Fund Hansi „Ansage kommt sehr spät, der Push schneller“)
 {
-  assert.ok(/function onlinePushGezeigt\(titel\) \{ const m = \/\^🟢 \(\.\+\) ist jetzt online\$\/\.exec/.test(html) && /perPush: new Map\(\)/.test(html), "Mitteilung „X ist jetzt online“ wird je Name gemerkt");
+  assert.ok(/function onlinePushGezeigt\(titel\) \{ const m = \/\^🟢 \(\.\+\?\) \(\?:ist jetzt\|war um \\d\\d:\\d\\d Uhr\) online/.test(html) && /perPush: new Map\(\)/.test(html), "Mitteilung „X ist jetzt online“ wird je Name gemerkt");
   assert.ok(/e\.data\?\.typ === "push"\) \{ onlinePushGezeigt\(e\.data\.titel\);/.test(html), "jeder an die App gereichte Push (= als Mitteilung gezeigt) wird geprüft");
   assert.ok(/>= ANSAGE_PAUSE_MS && !schonPerPush\(x\)\);/.test(html) && /const alle = \(OA\.warte \|\| \[\]\)\.filter\(\(x\) => !schonPerPush\(x\)\);/.test(html), "schon per Mitteilung gemeldet → keine nachgeholte Ansage (auch nicht aus der Sammelzeit)");
   const sw = lies("sw.js");
-  assert.ok(/if \(online && sichtbar\.length\) \{ sichtbar\.forEach\(\(c\) => c\.postMessage\(\{ typ: "online-ansage"/.test(sw), "App sichtbar → weiter sofortige Ansage statt Mitteilung");
+  assert.ok(/if \(online && sichtbar\.length && !alt\) \{ sichtbar\.forEach\(\(c\) => c\.postMessage\(\{ typ: "online-ansage"/.test(sw), "App sichtbar → weiter sofortige Ansage statt Mitteilung");
 }
 // Server 2.384.0 KC-CLUB-EXPRESS-SOFORT: Express-Push mit höchster Dringlichkeit (wie Notfall), ❗ wichtig unverändert
 {
@@ -6290,6 +6290,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/terminanfragenOffen: await pAnfragen/.test(server) && /async function offeneTerminanfragen\(ich: Ich\)/.test(server) && /\.is\("antwort", null\)\.is\("vorschlag_beginn", null\)/.test(server), "Server: offene Terminanfragen an mich");
   assert.ok(/class="zeile ta-dringend"[^`]*onclick="taZeigen\('\$\{esc\(a\.id\)\}'\)"/.test(html) && /\(INIT\?\.terminanfragenOffen\?\.length \|\| 0\)/.test(html), "Heute wichtig ganz oben + Zahl an der Termine-Kachel");
   assert.ok(/function jzbPilzePruefen\(dt\)/.test(html) && /jzbPilzePruefen\(dt\); jzbStreunerSchritt\(dt\)/.test(html) && /typ: "pilz", x: pz\.x/.test(html) && /JZB_PILZ_ARTEN = \["fliegen", "stein", "braun"\]/.test(html), "Herbst: Pilze wachsen, Laubbläser pustet sie weg");
+}
+// 2.390.0 KC-CLUB-ONLINE-PUSH-ZEIT + KC-CLUB-WER-KOMMT-WANN (Wünsche Hansi)
+{
+  assert.ok(/titel: `🟢 \$\{name\} ist jetzt online \(\$\{um\} Uhr\)`, kurz: `\$\{fTag\.format\(d\)\} um \$\{um\} Uhr in die Köcheclub-App gekommen`/.test(server), "Server: Online-Push mit Uhrzeit und Datum");
+  const m = sw.match(/const online = (\/\^🟢[^\n]*?\/)\.exec\(titel\)/);
+  const re = new Function(`return ${m[1]}`)();
+  assert.ok(re.exec("🟢 Klaus ist jetzt online (19:05 Uhr)")[2] === "19" && re.exec("🟢 Klaus ist jetzt online")[1] === "Klaus", "SW erkennt neuen und alten Titel");
+  assert.ok(/alt = min > 10;/.test(sw) && /if \(alt\) titel = `🟢 \$\{online\[1\]\} war um \$\{online\[2\]\}:\$\{online\[3\]\} Uhr online`;/.test(sw), "verspätete Mitteilung: „war um … online“, keine Ansage");
+  assert.ok(/function stWannHtml\(l\)/.test(html) && /\$\{stWannHtml\(lMit\)\}/.test(html) && /onclick="wannStatistik\(\)">📅 Wer kommt wann\?<\/button>/.test(html) && /\.st-raster \{/.test(html), "Auswertung: Wochentag × Uhrzeit in der Startstatistik");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

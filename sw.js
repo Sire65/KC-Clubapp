@@ -1,6 +1,6 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json, APP_VERSION in app.js und app.js?v= in index.html übereinstimmen.
-const VERSION = "2.389.0";
+const VERSION = "2.390.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png", "badge-anruf.png", "badge-video.png"]; // 2.237.0: Statusleisten-Symbole für laufende Gespräche
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm app.js?v=<Version> ändert sich nie unter derselben Adresse → aus dem Speicher
@@ -78,12 +78,17 @@ async function quittung(requestId, state) {
 }
 self.addEventListener("push", (e) => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data ? e.data.text() : "" }; }
-  const titel = d.title || "Köcheclub Werne";
+  let titel = d.title || "Köcheclub Werne";
   e.waitUntil((async () => {
     const fenster = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     // KC-CLUB-ONLINE-ANSAGE-PUSH (1.64.0): „🟢 X ist jetzt online“ bei offener, sichtbarer App → Ton/Ansage in der App statt Mitteilung
-    const online = /^🟢 (.+) ist jetzt online$/.exec(titel), sichtbar = fenster.filter((c) => c.visibilityState === "visible");
-    if (online && sichtbar.length) { sichtbar.forEach((c) => c.postMessage({ typ: "online-ansage", name: online[1] })); await quittung(d.data?.requestId, "displayed"); return; }
+    // 2.390.0 KC-CLUB-ONLINE-PUSH-ZEIT: „🟢 X ist jetzt online (19:05 Uhr)“ – kommt die Mitteilung mehr als 10 Min. später an (z. B. PC war aus),
+    // steht im Titel „war um 19:05 Uhr online“ und die App sagt nichts an. Ohne Uhrzeit (älterer Server) wie bisher.
+    const online = /^🟢 (.+?) ist jetzt online(?: \((\d\d):(\d\d) Uhr\))?$/.exec(titel), sichtbar = fenster.filter((c) => c.visibilityState === "visible");
+    let alt = false;
+    if (online && online[2]) { const j = new Date(), t = new Date(j); t.setHours(+online[2], +online[3], 0, 0); let min = (j - t) / 60000; if (min < -5) min += 1440; alt = min > 10; }
+    if (alt) titel = `🟢 ${online[1]} war um ${online[2]}:${online[3]} Uhr online`;
+    if (online && sichtbar.length && !alt) { sichtbar.forEach((c) => c.postMessage({ typ: "online-ansage", name: online[1] })); await quittung(d.data?.requestId, "displayed"); return; }
     // KC-CLUB-SPRACHANSAGEN (1.71.0): Text und Link mitgeben – die offene App sagt an, was das Mitglied ausgewählt hat
     fenster.forEach((c) => c.postMessage({ typ: "push", titel, text: d.body || d.text || "", url: d.data?.url || "" }));
     if (self.navigator.setAppBadge) try { await self.navigator.setAppBadge(); } catch {}
