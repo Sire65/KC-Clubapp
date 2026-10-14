@@ -6315,7 +6315,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.393.0 KC-CLUB-HUND-GELENKE + KC-CLUB-IGEL-STACHELN (Funde Hansi)
 {
   assert.ok(/function jzbHundBein\(c, x, ph, hinten, laeuft, farbe\)/.test(html) && /jzbHundBein\(c, -6, sp \+ Math\.PI, true, laeuft, dunkel\); jzbHundBein\(c, 5, sp, false, laeuft, dunkel\);/.test(html) && /\/\/ Pfote/.test(html), "Hund: Beine mit Gelenk und Pfote");
-  assert.ok(/for \(let i = 0; i <= 38; i\+\+\) \{ const a = Math\.PI \* \.93/.test(html) && /\/\/ helle Spitzen/.test(html), "Igel: feine Stacheln auch an den Seiten");
+  assert.ok(/for \(const \[r0, r1, n, ab\] of \[\[1\.5, 7\.5, 18, 0\], \[4\.5, 10\.5, 28, \.5\], \[7, 13, 40, 0\]\]\)/.test(html) && /\/\/ helle Spitzen/.test(html), "Igel: feine Stacheln auch an den Seiten");
+}
+// 2.394.0 KC-CLUB-FENSTER-SCHLAF-RUHIG (Fund Hansi: Fehlalarm „setting 'checked'“, App war zweimal offen) + Igel ganz mit Stacheln
+{
+  assert.ok(/if \(window\.KCFP\) window\.KCFP\.schlaeft = true;/.test(html) && /if \(window\.KCFP && window\.KCFP\.schlaeft\) return;/.test(html), "geleertes Fenster meldet nichts mehr");
+  assert.ok(/function anwendenDesign\(\) \{\n\s+if \(window\.KCFP\?\.schlaeft\) return;/.test(html) && /\{ warten: !!vonHand \}\); if \(window\.KCFP\?\.schlaeft\) return;/.test(html) && /if \(h && hg\) \{/.test(html), "Tag/Nacht und Laden stoppen im geleerten Fenster");
+  assert.ok(!/c\.ellipse\(-1, -4, 9\.4, 5\.6, 0, Math\.PI, 0\)/.test(html), "Igel: keine glatte braune Fläche mehr");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

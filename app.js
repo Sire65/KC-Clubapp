@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.393.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.394.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -783,6 +783,7 @@ function themaWahlZeigen() {
 const dsEff = () => themaWert("design") ?? DS.design;
 const designAktuell = () => DESIGNS.find((d) => d.id === dsEff()) || DESIGNS[0];
 function anwendenDesign() {
+  if (window.KCFP?.schlaeft) return; // 2.394.0 KC-CLUB-FENSTER-SCHLAF-RUHIG: geleertes Fenster (App woanders offen)
   const nacht = istNacht(), f = designAktuell()[nacht ? "nacht" : "tag"], w = document.documentElement;
   w.classList.toggle("dunkel", nacht);
   w.classList.toggle("gross", einst("gross", false) || w.dataset.rgGross === "1"); // KC-CLUB-ERKLAERVIDEOS: Vorführung „Große Schrift“
@@ -6989,6 +6990,9 @@ function zweiFensterMelden() {
 }
 function fensterSchlafen(selbst) { // dieses Fenster legt sich schlafen: alle Abfragen aus, nur noch ein Hinweis mit „Hier weitermachen“
   if (FENSTER.schlaeft) return; FENSTER.schlaeft = true;
+  // 2.394.0 KC-CLUB-FENSTER-SCHLAF-RUHIG (Fund Hansi: Alarm-Push „1 schwerwiegendes Problem … setting 'checked'“): App zweimal offen → dieses
+  // Fenster wird geleert. Noch laufende Ladevorgänge/Tag-Nacht-Prüfung fanden dann die Elemente nicht mehr. Ab jetzt: hier nichts mehr tun und nichts melden.
+  if (window.KCFP) window.KCFP.schlaeft = true;
   try { esStop(); bwStopp?.(); } catch (e) { /* nichts offen */ }
   const hoechste = setTimeout(() => {}, 0); for (let i = 1; i <= hoechste; i++) { clearTimeout(i); clearInterval(i); } // alle Takte (Chat, Online, Vorführung …) anhalten
   try { FENSTER.kanal?.close(); } catch (e) { /* schon zu */ }
@@ -18194,11 +18198,14 @@ function jzbIgel(c, g, k) { // 🦔 Igel mit Stacheln, Schnäuzchen und trippeln
   // 2.393.0 KC-CLUB-IGEL-STACHELN (Fund Hansi): feinere Stacheln, auch an den Seiten bis fast zum Boden
   c.fillStyle = "#4e342e"; c.beginPath();
   for (let i = 0; i <= 44; i++) { const a = Math.PI * .94 + i / 44 * Math.PI * .98, r = i % 2 ? 11 : 12.4; c.lineTo(Math.cos(a) * r * 1.15 - 1, -2 + Math.sin(a) * r); } c.lineTo(6, -1); c.closePath(); c.fill();
+  // 2.394.0 (Fund Hansi „an den Seiten nur eine braune Fläche“): Rücken UND Seiten ganz mit Stacheln – drei Reihen, leicht nach hinten geneigt
   c.lineCap = "round";
-  for (let i = 0; i <= 38; i++) { const a = Math.PI * .93 + i / 38 * Math.PI * .97, r = 12.6 + (i % 3) * .7, cs = Math.cos(a) * 1.15, sn = Math.sin(a);
-    c.strokeStyle = i % 2 ? "#3b2a20" : "#5d4037"; c.lineWidth = .75; c.beginPath(); c.moveTo(cs * 7 - 1, -2 + sn * 7); c.lineTo(cs * r - 1, -2 + sn * r); c.stroke();
-    c.strokeStyle = "rgba(230,215,195,.75)"; c.lineWidth = .45; c.beginPath(); c.moveTo(cs * (r - 1.3) - 1, -2 + sn * (r - 1.3)); c.lineTo(cs * r - 1, -2 + sn * r); c.stroke(); } // helle Spitzen
-  c.fillStyle = "#6d4c41"; c.beginPath(); c.ellipse(-1, -4, 9.4, 5.6, 0, Math.PI, 0); c.fill();
+  for (const [r0, r1, n, ab] of [[1.5, 7.5, 18, 0], [4.5, 10.5, 28, .5], [7, 13, 40, 0]]) for (let i = 0; i <= n; i++) {
+    const a = Math.PI * .93 + (i + ab) / n * Math.PI * .95, r = r1 + (i % 3) * .6, at = a - .22;
+    const x0 = Math.cos(a) * r0 * 1.15 - 1, y0 = -2 + Math.sin(a) * r0, x1 = Math.cos(at) * r * 1.15 - 1, y1 = -2 + Math.sin(at) * r;
+    c.strokeStyle = i % 2 ? "#2e2018" : "#6b4a3a"; c.lineWidth = .95; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke();
+    c.strokeStyle = "rgba(235,220,200,.8)"; c.lineWidth = .55; c.beginPath(); c.moveTo(x0 + (x1 - x0) * .78, y0 + (y1 - y0) * .78); c.lineTo(x1, y1); c.stroke(); // helle Spitzen
+  }
   const schnupf = g.schnuff > 0 ? Math.sin(g.t * 22) * .6 : 0;
   c.fillStyle = "#d7b899"; c.beginPath(); c.moveTo(7, -9); c.quadraticCurveTo(13, -6, 16 + schnupf, -3.5); c.quadraticCurveTo(12, -1, 7, -2); c.closePath(); c.fill();
   c.fillStyle = "#111"; c.beginPath(); c.arc(16.2 + schnupf, -3.6, 1.2, 0, 7); c.fill(); c.beginPath(); c.arc(10.5, -6.2, .9, 0, 7); c.fill();
@@ -21516,7 +21523,7 @@ async function neuLadenRoh(vonHand) {
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   try {
     const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
-    INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
+    INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ document.body.classList.toggle("sos-frei", !!INIT?.sosFuerAlle); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
@@ -26404,7 +26411,7 @@ function cfAnwenden() {
   if (a) { root.style.setProperty("--cfAndere", a.c); root.style.setProperty("--cfAndereD", a.cd); }
   let hg = $("chatHg"); if (!hg && $("v-chat")) { $("v-chat").insertAdjacentHTML("afterbegin", '<div id="chatHg" class="chat-hg" aria-hidden="true"></div>'); hg = $("chatHg"); }
   if (hg) hg.style.background = h ? h.css : "";
-  if (h) { hg.style.backgroundSize = "cover"; hg.style.backgroundPosition = "center bottom"; }
+  if (h && hg) { hg.style.backgroundSize = "cover"; hg.style.backgroundPosition = "center bottom"; }
 }
 async function cfSetzen(feld, id) {
   CF = { ...CF, [feld]: id }; try { localStorage.setItem(CF_KEY, JSON.stringify(CF)); } catch {}
