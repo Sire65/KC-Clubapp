@@ -1,5 +1,8 @@
 # Änderungen
 
+## Server 2.388.0 – 2026-10-14 – KC-CLUB-EXPRESS-ADMIN-FREI: Admin ohne Express-Tagesgrenze
+Anlass (Hansi): „Wer hat die Grenze von 5 Express festgelegt?“ – Die Grenze (5 je Person und Tag) war beim Bau von 2.362.0 als Schutz vor Missbrauch eingesetzt worden, nicht von Hansi vorgegeben. Der Admin hat jetzt keine Grenze mehr; für Mitglieder gilt sie weiter, bis Hansi anders entscheidet.
+
 ## Server 2.384.0 – 2026-10-14 – KC-CLUB-EXPRESS-SOFORT: Express mit höchster Zustell-Dringlichkeit
 Anlass (Hansi): „Express heißt so schnell wie möglich.“ – Express ging bisher als Priorität „high“; der Versand setzt die Push-Dringlichkeit „high“ aber nur bei „critical“. Mit „normal“ darf Android den Push im Stromsparmodus zurückhalten. Jetzt geht Express wie der Notfall als „critical“ (Push-Dringlichkeit hoch); Text, Titel, Mail und ❗ wichtig bleiben unverändert. Weiter: durch Ruhezeit und Stummschaltung, Push + Mail.
 

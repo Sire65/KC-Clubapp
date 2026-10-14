@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.387.0";
+const SERVER_VERSION = "2.388.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -8690,7 +8690,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // 2.362.0 KC-CLUB-EXPRESS (Wunsch Hansi „per Rennwagen – Express-Sendung, wird sofort zugestellt, beim Empfänger ploppt ein Fenster auf“):
         // durchbricht wie der Notfall Stummschaltung und Ruhezeit (Hansis Wahl „Durchbricht alles“); höchstens EXPRESS_MAX je Person und Tag
         const express = !!p.express && !notfall && !umfrage && !kontaktPid;
-        if (express) {
+        // 2.388.0 KC-CLUB-EXPRESS-ADMIN-FREI (Hansi: „Wer hat die Grenze von 5 Express festgelegt?“ – war nicht seine Vorgabe): der Admin hat keine Tagesgrenze
+        if (express && !ich.admin) {
           const { count: ex } = await db.from("kc_club_express").select("message_id", { count: "exact", head: true }).eq("absender", ich.person_id).gte("erstellt_am", new Date(Date.now() - 86400000).toISOString());
           if ((ex ?? 0) >= EXPRESS_MAX) throw new Fehler(`🏎️ Höchstens ${EXPRESS_MAX} Express-Sendungen am Tag – diese bitte normal senden.`, 429);
         }

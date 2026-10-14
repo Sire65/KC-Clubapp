@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6270,6 +6270,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/onclick="favSetzen\('\$\{u\.id\}'\)">\$\{favIds\(\)\.has\(u\.id\) \? "☆ Kein Favorit mehr" : "⭐ Als Favorit"\}/.test(html) && /api\("einstellung_setzen", \{ schluessel: "chat_favoriten", wert: w \}\)/.test(html), "⭐ setzen/entfernen am Chat, auf allen Geräten gleich");
   assert.ok(/const archKopf = favKopf \? favKopf : UH\.archivAnsicht \?/.test(html) && /if \(an\) UH\.favAnsicht = false;/.test(html), "Favoriten und Archiv schließen sich aus");
 }
+// Server 2.388.0 KC-CLUB-EXPRESS-ADMIN-FREI: der Admin hat keine Express-Tagesgrenze, alle anderen weiter höchstens EXPRESS_MAX
+{ assert.ok(/if \(express && !ich\.admin\) \{\n\s+const \{ count: ex \}/.test(server), "Admin ohne Express-Grenze"); }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
