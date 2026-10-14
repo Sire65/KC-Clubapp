@@ -14,6 +14,12 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.402.0 – 2026-10-14 – 🐦 Kuckucksuhr zur vollen Stunde
+Solange die App offen ist, kommt zu jeder vollen Stunde oben eine Kuckucksuhr herein: Die Tür geht auf und der Kuckuck ruft so oft, wie es Uhr ist (13 Uhr → 1×, 12 Uhr → 12×). Wer die App in den ersten zwei Minuten nach der vollen Stunde öffnet, bekommt sie auch noch. Nachts (22–7 Uhr) und mit „Töne aus“ ohne Ton. Antippen schließt die Uhr. Abschaltbar unter Einstellungen → „🐦 Kuckucksuhr zur vollen Stunde“.
+
+## 2.401.0 – 2026-10-14 – Lichtschein auch beim Zurückholen der App
+Öffnet man die App, holt Android sie meist nur aus dem Hintergrund zurück, ohne sie neu zu starten – dann kam bisher kein Lichtschein. Jetzt läuft er auch dann, wenn die App mindestens eine Minute im Hintergrund war.
+
 ## 2.400.0 – 2026-10-14 – Lichtschein über den Kopf beim Start
 Beim Öffnen der App läuft einmal ein heller Lichtschein von links nach rechts über den ganzen Kopf der Startseite (knapp 2 s). Er läuft flüssig, auch während die App beim Start noch rechnet, und kommt beim Zurückkehren zur Startseite nicht erneut. Bei „Animationen aus“ und bei „Bewegung reduzieren“ am Gerät entfällt er.
 

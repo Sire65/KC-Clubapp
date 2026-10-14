@@ -6363,11 +6363,21 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.400.0 KC-CLUB-KOPF-GLANZ (Wunsch Hansi „beim Start ein heller Lichtschein von links nach rechts durch den Kopf“)
 {
-  assert.ok(/<div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><i><\/i><\/div>/.test(html), "Glanz-Element im Kopf der Startseite");
+  assert.ok(/<div class="kopf-glanz lauf" id="kopfGlanz" aria-hidden="true"><i><\/i><\/div>/.test(html), "Glanz-Element im Kopf der Startseite");
   assert.ok(/\.kopf-glanz \{ position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none;/.test(html), "Glanz bleibt im runden Kopf und fängt keine Klicks");
-  assert.ok(/animation: kopfGlanz [^;]* 1 both;/.test(html) && /@keyframes kopfGlanz \{[^}]*transform: translateX\(-100%\)/.test(html), "einmal, per transform (flüssig)");
+  assert.ok(/\.kopf-glanz\.lauf i \{ animation: kopfGlanz [^;]* 1 both; \}/.test(html) && /@keyframes kopfGlanz \{[^}]*transform: translateX\(-100%\)/.test(html), "einmal, per transform (flüssig)");
   assert.ok(/:root\.ohne-anim \.kopf-glanz \{ display: none; \}/.test(html) && /prefers-reduced-motion: reduce\) \{ \.kopf-glanz \{ display: none; \}/.test(html), "Animationen aus / Bewegung reduzieren → kein Glanz");
-  assert.ok(/g\.addEventListener\("animationend", weg, \{ once: true \}\); g\.addEventListener\("animationcancel", weg, \{ once: true \}\);/.test(html), "nur einmal je App-Start");
+  assert.ok(/<div class="kopf-glanz lauf" id="kopfGlanz"/.test(html) && /g\.addEventListener\("animationend", aus\); g\.addEventListener\("animationcancel", aus\);/.test(html), "beim Öffnen einmal, danach aus");
+  // 2.401.0: auch beim Zurückholen aus dem Hintergrund (Android lädt die App dann nicht neu)
+  assert.ok(/const KOPF_GLANZ_PAUSE_MS = 60000;/.test(html) && /if \(weg && Date\.now\(\) - weg >= KOPF_GLANZ_PAUSE_MS\) \{ aus\(\); void g\.offsetWidth; g\.classList\.add\("lauf"\); \}/.test(html), "Zurückholen nach ≥ 1 Min. → Glanz läuft erneut");
+}
+// 2.402.0 KC-CLUB-KUCKUCKSUHR (Wunsch Hansi „wenn volle Stunde, einblenden, Kuckuck kommt raus und ruft so oft, wie es Uhr ist“)
+{
+  assert.ok(/const kkRufe = \(h\) => \(h % 12\) \|\| 12;/.test(html), "12-Stunden-Zählung (0 Uhr → 12×)");
+  assert.ok(/const KK_FENSTER_MIN = 2, KK_NACHT_VON = 22, KK_NACHT_BIS = 7/.test(html) && /mitTon = einst\("ton", true\) && !\(h >= KK_NACHT_VON \|\| h < KK_NACHT_BIS\)/.test(html), "nachts und mit Töne aus ohne Ton");
+  assert.ok(/if \(!ICH\?\.person_id \|\| document\.hidden \|\| !einst\("kuckuck", true\)\) return;/.test(html) && /localStorage\.getItem\("kc_club_kuckuck_zuletzt"\) === stunde/.test(html), "nur offen + sichtbar, abschaltbar, einmal je Stunde");
+  assert.ok(/<input type="checkbox" id="setKuckuck" onchange="einstellung\('kuckuck', this\.checked\)">/.test(html) && /\$\("setKuckuck"\)\.checked = einst\("kuckuck", true\)/.test(html), "Schalter in den Einstellungen");
+  const kk = (h) => (h % 12) || 12; assert.deepEqual([0, 1, 12, 13, 23].map(kk), [12, 1, 12, 1, 11], "Rufe je Stunde");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
