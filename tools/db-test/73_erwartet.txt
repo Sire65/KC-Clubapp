@@ -1,0 +1,9 @@
+club=t
+leer=t
+cron=t
+verwaltung=t
+anmeldung=t
+erste_messung_leer=t
+zweite_messung=t
+club_zuwachs=t
+bericht_stunde=t

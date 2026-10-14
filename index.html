@@ -1982,6 +1982,17 @@
   .blase.eigen .express-marke { background: #fff; color: #c0392b; }
   .express-quittung { font-size: .78rem; margin-top: 4px; opacity: .9; }
   .express-quittung.warte { opacity: .65; }
+  .dbl-chart { display: flex; align-items: flex-end; gap: 0; height: 120px; border-bottom: 1px solid rgba(0,0,0,.25); cursor: pointer; } /* 2.389.0 KC-CLUB-DB-LAST */
+  .dbl-chart.klein { height: 70px; cursor: default; } .dbl-chart.klein .dbl-s { margin: 0 1px; }
+  .dbl-s { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column-reverse; } .dbl-s i { display: block; width: 100%; }
+  .dbl-s.dbl-mitternacht { box-shadow: inset 1px 0 0 rgba(0,0,0,.35); } .dbl-s.an { outline: 2px solid #ff8c00; outline-offset: -1px; }
+  .dbl-tage { display: flex; font-size: .72rem; opacity: .75; } .dbl-tage span { min-width: 0; text-align: left; padding-left: 2px; overflow: hidden; white-space: nowrap; text-overflow: clip; }
+  #adDbLast { display: block; min-width: 0; max-width: 100%; } #adDbLast .vb-tabelle { table-layout: fixed; width: 100%; }
+  #adDbLast .vb-tabelle td:first-child { width: 42%; overflow-wrap: anywhere; } #adDbLast .vb-tabelle td:nth-child(2) { width: 24%; padding-right: 6px; } #adDbLast .vb-tabelle td:nth-child(3) { width: 14%; white-space: nowrap; padding-right: 6px; }
+  .dbl-punkt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+  .zeile.ta-dringend { border: 2px solid #ff8c00; border-radius: 12px; background: rgba(255,140,0,.12); animation: taDringend 2.4s ease-in-out 3; } /* 2.389.0 KC-CLUB-TERMINANFRAGE-SICHTBAR */
+  @keyframes taDringend { 50% { box-shadow: 0 0 0 5px rgba(255,140,0,.35); } }
+  @media (prefers-reduced-motion: reduce) { .zeile.ta-dringend { animation: none; } }
   .express-status > div { line-height: 1.35; } .express-status > div.warte { opacity: .7; } /* 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG */
   .express-blatt .blatt-innen { border-top: 6px solid #c0392b; }
   .express-kopf { font-size: 1.35rem; font-weight: 900; font-style: italic; color: #c0392b; letter-spacing: .03em; }
@@ -5122,6 +5133,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.387.0" data-v="2.387.0"></script>
+<script src="app.js?v=2.389.0" data-v="2.389.0"></script>
 </body>
 </html>

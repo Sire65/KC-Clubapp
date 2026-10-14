@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6278,6 +6278,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if v_zul is null or v_zul < now\(\) - interval '30 seconds' or v_erst is null/.test(mig) && /select max\(z2\.zuletzt_gesehen\) into v_vorher/.test(mig), "nur alle 30 s schreiben, vorher-Stand vor dem Schreiben");
   assert.ok(/grant execute on function public\.kc_club_anmeldung\(text, text\) to service_role;/.test(mig) && /revoke all on function public\.kc_club_anmeldung\(text, text\) from public, anon, authenticated;/.test(mig), "Rechte unverändert nur Server");
   assert.ok(lies("tools/db-test/72_erwartet.txt").includes("ruhig_30s=t"), "Probelauf prüft das Verhalten");
+}
+// 2.389.0 KC-CLUB-DB-LAST + KC-CLUB-TERMINANFRAGE-SICHTBAR + KC-CLUB-HERBST-PILZE (Wünsche Hansi)
+{
+  const mig = lies("supabase/migrations/20261014_kc_club_v2389_db_last.sql");
+  assert.ok(/create or replace function public\.kc_club_db_last_quelle\(q text, rolle text\)/.test(mig) && /when q ~\* 'kc_club_' then 'Club-App'/.test(mig) && /select cron\.schedule\('kc-club-db-last-10min', '\*\/10 \* \* \* \*'/.test(mig), "Messung alle 10 Min., Quelle aus der Registry");
+  assert.ok(/revoke all on public\.kc_club_db_last, public\.kc_club_db_last_stand from anon, authenticated;/.test(mig) && /grant execute on function public\.kc_club_db_last_messen\(\), public\.kc_club_db_last_bericht\(int\) to service_role;/.test(mig), "nur der Server");
+  assert.ok(/case "db_last": \{\n\s+nurAdmin\(ich\);/.test(server) && /db\.rpc\("kc_club_db_last_bericht", \{ p_tage: tage \}\)/.test(server), "Server: nur Admin");
+  assert.ok(/function dbLastZeigen\(\)/.test(html) && /setTimeout\(dbBelegungLaden, 0\); setTimeout\(dbLastLaden, 0\);/.test(html) && /id="adDbLast"/.test(html), "Balkengrafik unter Admin → Supabase");
+  assert.ok(lies("tools/db-test/73_erwartet.txt").includes("zweite_messung=t"), "Probelauf prüft die Messung");
+  assert.ok(/terminanfragenOffen: await pAnfragen/.test(server) && /async function offeneTerminanfragen\(ich: Ich\)/.test(server) && /\.is\("antwort", null\)\.is\("vorschlag_beginn", null\)/.test(server), "Server: offene Terminanfragen an mich");
+  assert.ok(/class="zeile ta-dringend"[^`]*onclick="taZeigen\('\$\{esc\(a\.id\)\}'\)"/.test(html) && /\(INIT\?\.terminanfragenOffen\?\.length \|\| 0\)/.test(html), "Heute wichtig ganz oben + Zahl an der Termine-Kachel");
+  assert.ok(/function jzbPilzePruefen\(dt\)/.test(html) && /jzbPilzePruefen\(dt\); jzbStreunerSchritt\(dt\)/.test(html) && /typ: "pilz", x: pz\.x/.test(html) && /JZB_PILZ_ARTEN = \["fliegen", "stein", "braun"\]/.test(html), "Herbst: Pilze wachsen, Laubbläser pustet sie weg");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

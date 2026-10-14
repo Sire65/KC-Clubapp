@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.387.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.389.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -13709,7 +13709,7 @@ const KACHELN = {
   admin: [],
 };
 // KC-CLUB-KACHEL-ZAHLEN (2.22.12): Zahl-Funktionen an die bestehenden Kacheln hängen (Kachel-Einträge selbst bleiben unverändert)
-const KZ_KACHELN = { termine: () => kzZahl("termine", INIT?.terminfindungOffen?.length || 0), helfen: () => kzZahl("helfen"), buero: () => kzZahl("buero"),
+const KZ_KACHELN = { termine: () => kzZahl("termine", (INIT?.terminfindungOffen?.length || 0) + (INIT?.terminanfragenOffen?.length || 0)), // 2.389.0: + offene Terminanfragen helfen: () => kzZahl("helfen"), buero: () => kzZahl("buero"),
   fotos: () => kzZahl("fotos"), dienste: () => kzZahl("dienste") };
 KZ_KACHELN.schulung_admin = () => kzZahl("schulung"); // KC-CLUB-SCHULUNG-HINWEIS (2.23.68): wartet auf den Admin
 for (const k of KACHELN.verein) if (KZ_KACHELN[k.id] && !k.zahl) k.zahl = KZ_KACHELN[k.id];
@@ -16500,8 +16500,8 @@ function jzbFxSchritt(dt) {
   for (const p of J.fx) {
     if (p.liegt && !W) { p.y = J.h - 2; p.a = (p.a ?? 1) - dt * p.blass; if (p.a <= 0) p.weg = true; continue; }
     if (p.typ === "funke") { p.a -= dt * 1.1; p.x += p.vx * dt; p.y += p.vy * dt; if (p.a <= 0) p.weg = true; continue; }
-    if (p.typ === "scherbe" || p.typ === "nuss") { // 2.356.0: Eis-Scherben und Nüsse fliegen, hüpfen am Boden und verschwinden
-      p.vy += 300 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+    if (p.typ === "scherbe" || p.typ === "nuss" || p.typ === "pilz") { // 2.356.0: Eis-Scherben und Nüsse fliegen, hüpfen am Boden und verschwinden · 2.389.0: Pilze
+      p.vy += (p.leicht ? 190 : 300) * dt; if (p.leicht) p.vx *= 1 - .35 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
       if (p.y > J.h - 2) { p.y = J.h - 2; p.vy = -Math.abs(p.vy) * .3; p.vx *= .6; p.vr *= .6; p.a -= dt * 1.4; } else p.a -= dt * .2;
       if (p.a <= 0 || p.x < -40 || p.x > J.w + 40) p.weg = true; continue;
     }
@@ -16750,6 +16750,7 @@ function jzbMalen() {
     else if (p.typ === "scherbe") { c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.fillStyle = "#e3f5ff"; c.strokeStyle = "rgba(60,140,210,.9)"; c.lineWidth = .8;
       c.beginPath(); c.moveTo(-p.s, -p.s * .35); c.lineTo(p.s * .85, -p.s * .7); c.lineTo(p.s * .3, p.s * .85); c.closePath(); c.fill(); c.stroke(); c.restore(); }
     else if (p.typ === "nuss") jzbEichelMalen(c, p.x, p.y, p.nuss, p.rot, J.k, p.s);
+    else if (p.typ === "pilz") jzbPilzMalen(c, p.x, p.y, p.art, p.rot, J.k, p.s, 1); // 2.389.0
     else if (p.typ === "schal") jzbSchalMalen(c, p.x, p.y, p.rot, p.t, !!p.los);
     else if (p.typ === "schmelz") jzbTropfenMalen(c, p);
     else if (p.typ === "wasser") { c.fillStyle = "rgba(120,190,255,.95)"; c.beginPath(); c.ellipse(p.x, p.y, 1.1, 1.8, 0, 0, 7); c.fill(); }
@@ -17817,6 +17818,9 @@ function jzbBlaeserSchritt(dt) {
       }
       if (N.weg.filter(Boolean).length >= N.n) J.nussName = null;
     }
+    for (const pz of J.pilze || []) if (!pz.weg && pz.wachs > .3 && pz.x > lo && pz.x < hi) { // 2.389.0 KC-CLUB-HERBST-PILZE: Pilze wirbeln davon
+      pz.weg = true; J.fx.push({ typ: "pilz", x: pz.x, y: J.h - 2, art: pz.art, s: pz.s * pz.wachs, rot: pz.kipp, vr: B.dir * jzbZ(8, 18), vx: B.dir * jzbZ(170, 320), vy: -jzbZ(150, 280), a: 1, leicht: true });
+    }
     if (Math.random() < dt * 22) B.luft.push({ x: B.x + B.dir * 16 * k, y: J.h - 4 * k - jzbZ(0, 6) * k, l: jzbZ(10, 22) * k, a: .8 });
   }
   for (const l of B.luft) { l.x += B.dir * 260 * k * dt; l.a -= dt * 1.6; }
@@ -17854,6 +17858,38 @@ function jzbEichelnPruefen(dt) {
   for (const e of J.eicheln) if (e.dy < 0) { e.v = (e.v || 0) + 300 * dt; e.dy = Math.min(0, e.dy + e.v * dt); if (!e.dy) { e.hopp = .25; for (let i = 0; i < 4; i++) J.fx.push({ typ: "funke", x: e.x, y: J.h - 3, vx: jzbZ(-25, 25), vy: -jzbZ(10, 30), s: 1.4, a: .8, farbe: "#c9a36b" }); } }
   for (const e of J.eicheln) if (e.hopp) e.hopp = Math.max(0, e.hopp - dt);
   J.eicheln = J.eicheln.filter((e) => !e.weg);
+}
+// 🍄 2.389.0 KC-CLUB-HERBST-PILZE (Wunsch Hansi „unten ein paar Pilze wachsen lassen, auch Fliegenpilze – kommt der Laubbläser, pustet er sie
+// weg und sie fliegen wirbelnd durch die Gegend“): 3–5 Pilze (Fliegenpilz, Steinpilz, kleine Braune) wachsen langsam aus dem Boden; der
+// Laubbläser pustet sie wie das Laub davon. Später wächst an anderer Stelle ein neuer. Nur Herbst, nur Anzeige auf diesem Gerät.
+const JZB_PILZ_ARTEN = ["fliegen", "stein", "braun"];
+const jzbPilzNeu = (x, wachs = 0) => ({ x, art: JZB_PILZ_ARTEN[Math.random() < .45 ? 0 : Math.random() < .5 ? 1 : 2], s: jzbZ(1.5, 2), kipp: jzbZ(-.12, .12), wachs, tempo: jzbZ(.12, .25) });
+function jzbPilzePruefen(dt) {
+  const J = JZB, k = J.k;
+  if (!J.pilze) { const n = Math.max(3, Math.min(5, Math.round(J.w / 90))); J.pilze = Array.from({ length: n }, (_, i) => jzbPilzNeu(JZB_RAND + 30 * k + (i + jzbZ(.2, .8)) * (J.w - 2 * JZB_RAND - 60 * k) / n, 1)); }
+  for (const pz of J.pilze) if (pz.wachs < 1) pz.wachs = Math.min(1, pz.wachs + pz.tempo * dt);
+  J.pilze = J.pilze.filter((pz) => !pz.weg);
+  if (J.pilze.length < 3 && !J.blaeser && (J.pilzUhr = (J.pilzUhr ?? jzbZ(12, 30)) - dt) <= 0) { J.pilzUhr = null; J.pilze.push(jzbPilzNeu(jzbZ(JZB_RAND + 30 * k, J.w - JZB_RAND - 30 * k))); }
+}
+function jzbPilzeMalen(c) {
+  const J = JZB; if (J.saison !== "herbst" || !J.pilze) return;
+  for (const pz of J.pilze) jzbPilzMalen(c, pz.x, J.h - 1, pz.art, pz.kipp, J.k, pz.s, pz.wachs);
+}
+function jzbPilzMalen(c, x, y, art, kipp, k, gross = 1, wachs = 1) {
+  if (wachs <= 0) return;
+  c.save(); c.translate(x, y); c.rotate(kipp); c.scale(k * gross * (.35 + .65 * wachs), k * gross * wachs);
+  const stiel = art === "stein" ? "#efe3c8" : art === "braun" ? "#e8d9b8" : "#fbf7ee", sb = art === "stein" ? 3.2 : art === "braun" ? 1.3 : 2;
+  const sh = art === "braun" ? 7 : art === "stein" ? 7.5 : 10;
+  c.fillStyle = stiel; c.beginPath(); c.moveTo(-sb, 0); c.quadraticCurveTo(-sb * 1.25, -sh * .5, -sb * .8, -sh); c.lineTo(sb * .8, -sh); c.quadraticCurveTo(sb * 1.25, -sh * .5, sb, 0); c.closePath(); c.fill();
+  c.strokeStyle = "rgba(0,0,0,.18)"; c.lineWidth = .5; c.stroke();
+  if (art === "fliegen") { c.fillStyle = "#fff"; c.beginPath(); c.ellipse(0, -sh * .62, sb * 1.6, .9, 0, 0, 7); c.fill(); } // Manschette
+  const hw = art === "braun" ? 4.2 : art === "stein" ? 6.8 : 7.2, hh = art === "braun" ? 3.6 : art === "stein" ? 5 : 5.6;
+  c.fillStyle = art === "fliegen" ? "#d62828" : art === "stein" ? "#7a4a22" : "#a8743e";
+  c.beginPath(); c.ellipse(0, -sh, hw, hh, 0, Math.PI, 0); c.closePath(); c.fill();
+  c.fillStyle = art === "fliegen" ? "#f3e7d3" : "#d9c39c"; c.fillRect(-hw * .92, -sh - .2, hw * 1.84, 1); // Unterseite (Lamellen/Röhren)
+  if (art === "fliegen") { c.fillStyle = "#fff"; for (const [px, py, r] of [[-3.8, -2, .9], [-.8, -4.2, 1], [2.6, -2.6, .85], [4.6, -1.2, .6], [-5.6, -.8, .55], [.9, -1.6, .6]]) { c.beginPath(); c.arc(px, -sh + py, r, 0, 7); c.fill(); } }
+  c.fillStyle = "rgba(255,255,255,.28)"; c.beginPath(); c.ellipse(-hw * .35, -sh - hh * .55, hw * .25, hh * .18, -.3, 0, 7); c.fill(); // Glanz
+  c.restore();
 }
 const jzbEichelNeu = (x, nuss, dy) => ({ x, nuss, dy, kipp: jzbZ(-.6, .6), v: 0, hopp: 0 });
 function jzbEichelMalen(c, x, y, nuss, kipp, k, gross = 1) {
@@ -17908,8 +17944,8 @@ function jzbNussNameMalen(c) {
 }
 function jzbHerbstTiere(dt) {
   const J = JZB, k = J.k;
-  if (J.saison !== "herbst") { J.eicheln = null; J.hoernchen = null; J.blaeser = null; J.nussName = null; J.hund = null; return; }
-  jzbBlaeserSchritt(dt); jzbEichelnPruefen(dt); jzbStreunerSchritt(dt); // 2.369.0 KC-CLUB-HERBST-HUND
+  if (J.saison !== "herbst") { J.eicheln = null; J.pilze = null; J.hoernchen = null; J.blaeser = null; J.nussName = null; J.hund = null; return; }
+  jzbBlaeserSchritt(dt); jzbEichelnPruefen(dt); jzbPilzePruefen(dt); jzbStreunerSchritt(dt); // 2.369.0 KC-CLUB-HERBST-HUND · 2.389.0 Pilze
   const txt = jzbEisNameText(); if (J.nussName && J.nussName.text !== txt) J.nussName = null;
   if (!J.nussName && txt) J.nussName = { text: txt, n: 0, gelandet: [], fertig: null };
   const N = J.nussName, laenge = N ? [...N.text].length : 0;
@@ -18067,7 +18103,7 @@ function jzbExtrasSchritt(dt) {
 }
 function jzbExtrasHinten(c) { // vor dem Gras: Ostereier (das Gras wächst darüber)
   const J = JZB, k = J.k;
-  jzbEichelnMalen(c); // 2.328.0: Eicheln liegen unter dem Laub
+  jzbPilzeMalen(c); jzbEichelnMalen(c); // 2.328.0: Eicheln liegen unter dem Laub · 2.389.0: Pilze dahinter
   if (!J.ext?.ostern) return;
   const hase = J.gaeste.some((g) => g.typ === "osterhase");
   for (const e of J.eier || []) {
@@ -18620,6 +18656,7 @@ function infoFuerDich() {
   if (INIT?.ungelesen) z.push(zeile("💬", `<b>${INIT.ungelesen}</b> neue Nachricht${INIT.ungelesen > 1 ? "en" : ""}`, "zeige('nachrichten')"));
   if (t && !t.meine) z.push(zeile("📅", `Bitte für <b>${esc(t.titel)}</b> zu- oder absagen`, "zumTreffen()"));
   if (INIT?.offeneAbstimmungen) z.push(zeile("🗳️", `<b>${INIT.offeneAbstimmungen}</b> Abstimmung${INIT.offeneAbstimmungen > 1 ? "en warten" : " wartet"} auf dich`, "zeige('vorschlaege')"));
+  for (const a of INIT?.terminanfragenOffen || []) z.unshift(zeile("📨", `<b>${esc(a.von)}</b> fragt an: ${esc(a.anlass)} – bitte antworten`, `taZeigen('${esc(a.id)}')`)); // 2.389.0
   if ((INIT?.terminfindungOffen || []).length) z.push(zeile("🗓️", "Bitte Termine ankreuzen", "zeige('termine')"));
   if (INIT?.protokolleUngelesen) z.push(zeile("📄", `<b>${INIT.protokolleUngelesen}</b> neue${INIT.protokolleUngelesen > 1 ? "" : "s"} Protokoll${INIT.protokolleUngelesen > 1 ? "e" : ""}`, "zeige('protokolle')"));
   const auf = (INIT?.meineAufgaben || []).length;
@@ -19215,8 +19252,9 @@ function adBlatt(id) {
         <div class="ps-schritt"><b>🧹 Aufräumen</b>
         <p class="hinweis" style="margin:0">Löscht nur alte technische Protokolle und Messwerte (älter als 90 Tage, Spiegel-Läufe nach 48 Stunden). Club-Daten, Kasse, Dienstpläne und Mitglieder bleiben unberührt. Läuft jede Nacht auch von selbst; ab 400 MB bekommst du Push und E-Mail.</p>
         <div id="adBelegung"><p class="hinweis" style="margin:0">Wird geladen …</p></div>
-        <div class="knoepfe">${adKnopf("🧹 Jetzt aufräumen", "dbAufraeumen(this)", true)}</div></div>${adLinks("supabase")}`;
-      setTimeout(dbBelegungLaden, 0);
+        <div class="knoepfe">${adKnopf("🧹 Jetzt aufräumen", "dbAufraeumen(this)", true)}</div></div>
+        <div class="ps-schritt" id="adDbLast"><p class="hinweis" style="margin:0">📊 Datenbank-Abfragen werden geladen …</p></div>${adLinks("supabase")}`;
+      setTimeout(dbBelegungLaden, 0); setTimeout(dbLastLaden, 0); // 2.389.0 KC-CLUB-DB-LAST
       break;
     }
     case "neon": case "backup":
@@ -20245,6 +20283,57 @@ async function dbBelegungLaden() {
     $("adBelegung").innerHTML = `${r.tabellen == null ? `<p class="hinweis" style="margin:0">⚠️ Größte Tabellen nicht abrufbar</p>` : `<b style="font-size:.95rem">Was am meisten Platz braucht</b>
       <table class="vb-tabelle">${r.tabellen.map((t) => `<tr><td>${esc(dbTabName(t.tabelle))}</td><td style="text-align:right;white-space:nowrap">${esc(adGr(t.bytes))}</td><td style="width:35%"><div style="height:8px;border-radius:4px;background:#8884"><div style="height:8px;border-radius:4px;background:${AD_FARBE.gruen};width:${Math.max(2, Math.round((t.bytes / max) * 100))}%"></div></div></td></tr>`).join("")}</table>`}`;
   } catch (e) { if ($("adBelegung")) $("adBelegung").innerHTML = `<p class="hinweis" style="margin:0">⚠️ ${esc(fehlerText(e))}</p>`; }
+}
+// ---------- 2.389.0 KC-CLUB-DB-LAST (Wunsch Hansi „Balkengrafik unter Supabase: Datenbank-Abfragen mit Wochentag und Uhrzeit und woher
+// sie kommen“): die letzten 7 Tage je Stunde, farbig nach Quelle (Programm); darunter die Summe je Uhrzeit und die Quellen mit Anteil.
+// Balken antippen zeigt die Stunde im Klartext. Daten: alle 10 Min. gemessen (kc_club_db_last), nur Admin. ----------
+const DBL_FARBEN = { "Club-App": "#741521", "Verwaltung / PC-Manager": "#2e7d32", "Kasse / Money Butler": "#f9a825", "Dienstplan DP2": "#1565c0",
+  "Kommunikation (Push/Mail)": "#8e24aa", "Spiegel / Sicherung": "#00838f", "Überwachung": "#6d4c41", "Termine / Kalender": "#c2185b",
+  "Zeitpläne (Cron)": "#78909c", "Anmeldung (Supabase)": "#ef6c00", "Realtime": "#5c6bc0", "Supabase intern": "#b0bec5", "Sonstiges": "#9e9e9e" };
+const DBL = { werte: [], art: "n" };
+const dblFarbe = (q) => DBL_FARBEN[q] || "#9e9e9e";
+const dblZahl = (n) => Math.round(n).toLocaleString("de-DE");
+const dblStunde = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}`;
+async function dbLastLaden() {
+  try { DBL.werte = (await api("db_last", { tage: 7 })).werte || []; } catch (e) { if ($("adDbLast")) $("adDbLast").innerHTML = `<p class="hinweis" style="margin:0">⚠️ ${esc(fehlerText(e, "Messwerte nicht abrufbar"))}</p>`; return; }
+  dbLastZeigen();
+}
+function dbLastArt(a) { DBL.art = a; dbLastZeigen(); }
+// Tagesnamen genau über den Tagen (von Mitternacht bis Mitternacht); angeschnittene Tage am Rand ohne Namen, wenn zu schmal
+function dblTagAbschnitte(stunden) { const a = []; for (const d of stunden) { const l = a[a.length - 1]; if (l && l[0].toDateString() === d.toDateString()) l[1]++; else a.push([d, 1]); } return a; }
+function dbLastZeigen() {
+  const el = $("adDbLast"); if (!el) return;
+  const wert = (x) => DBL.art === "ms" ? Number(x.ms) / 1000 : Number(x.n);
+  const jetzt = new Date(); jetzt.setMinutes(0, 0, 0);
+  const stunden = Array.from({ length: 168 }, (_, i) => new Date(jetzt.getTime() - (167 - i) * 3600000));
+  const je = new Map(); const summe = new Map(); const uhr = Array(24).fill(0);
+  for (const x of DBL.werte) { const v = wert(x); if (!je.has(x.h)) je.set(x.h, []); je.get(x.h).push({ q: x.q, v }); summe.set(x.q, (summe.get(x.q) || 0) + v); }
+  for (const d of stunden) for (const s of je.get(dblStunde(d)) || []) uhr[d.getHours()] += s.v;
+  const quellen = [...summe.entries()].sort((a, b) => b[1] - a[1]), gesamt = quellen.reduce((s, [, v]) => s + v, 0);
+  const ord = new Map(quellen.map(([q], i) => [q, i]));
+  const max = Math.max(1, ...stunden.map((d) => (je.get(dblStunde(d)) || []).reduce((s, x) => s + x.v, 0)));
+  const einheit = DBL.art === "ms" ? "Sek. Rechenzeit" : "Abfragen";
+  if (!DBL.werte.length) { el.innerHTML = `<b>📊 Datenbank-Abfragen</b><p class="hinweis" style="margin:4px 0 0">Die Messung läuft – die ersten Balken erscheinen nach etwa 10 Minuten. Gemessen wird alle 10 Minuten, aufbewahrt 35 Tage.</p>`; return; }
+  const saeule = (d) => { const l = (je.get(dblStunde(d)) || []).slice().sort((a, b) => (ord.get(a.q) ?? 99) - (ord.get(b.q) ?? 99)), s = l.reduce((a, x) => a + x.v, 0);
+    return `<div class="dbl-s${d.getHours() === 0 ? " dbl-mitternacht" : ""}" data-h="${dblStunde(d)}" title="">${l.map((x) => `<i style="height:${(x.v / max * 100).toFixed(2)}%;background:${dblFarbe(x.q)}"></i>`).join("")}${s ? "" : ""}</div>`; };
+  const fTagLang = new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "numeric", month: "numeric" });
+  const fTag = { format: (d) => `${["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][d.getDay()]} ${d.getDate()}.` };
+  const umax = Math.max(1, ...uhr);
+  el.innerHTML = `<b>📊 Datenbank-Abfragen – letzte 7 Tage</b>
+    <div class="knoepfe" style="margin:6px 0"><button class="knopf klein${DBL.art === "n" ? " haupt" : ""}" onclick="dbLastArt('n')">Anzahl Abfragen</button><button class="knopf klein${DBL.art === "ms" ? " haupt" : ""}" onclick="dbLastArt('ms')">Rechenzeit</button></div>
+    <div class="dbl-chart" id="dblChart">${stunden.map(saeule).join("")}</div>
+    <div class="dbl-tage">${dblTagAbschnitte(stunden).map(([d, n]) => `<span style="flex:${n}">${n >= 8 ? esc(fTag.format(d)) : ""}</span>`).join("")}</div>
+    <p class="hinweis" id="dblInfo" style="margin:4px 0 8px;min-height:2.6em">Einen Balken antippen – dann steht hier, was in dieser Stunde los war.</p>
+    <b style="font-size:.95rem">Nach Uhrzeit (alle 7 Tage zusammen)</b>
+    <div class="dbl-chart klein">${uhr.map((v, h) => `<div class="dbl-s" title="${h}–${h + 1} Uhr: ${dblZahl(v)} ${einheit}"><i style="height:${(v / umax * 100).toFixed(2)}%;background:#741521"></i></div>`).join("")}</div>
+    <div class="dbl-tage">${[0, 6, 12, 18].map((h) => `<span style="flex:6">${h} Uhr</span>`).join("")}</div>
+    <b style="font-size:.95rem;display:block;margin-top:8px">Woher kommen sie? (${dblZahl(gesamt)} ${einheit})</b>
+    <table class="vb-tabelle">${quellen.map(([q, v]) => `<tr><td><i class="dbl-punkt" style="background:${dblFarbe(q)}"></i>${esc(q)}</td><td style="text-align:right;white-space:nowrap">${dblZahl(v)}</td><td style="text-align:right">${Math.round(v / Math.max(1, gesamt) * 100)} %</td><td style="width:30%"><div style="height:8px;border-radius:4px;background:${dblFarbe(q)};width:${(v / Math.max(1, quellen[0][1]) * 100).toFixed(1)}%"></div></td></tr>`).join("")}</table>
+    <p class="hinweis" style="margin:6px 0 0">Gemessen alle 10 Minuten. Die Quelle wird am Namen der Datenbank-Tabelle erkannt (z. B. kc_club_ = Club-App).</p>`;
+  $("dblChart").onclick = (e) => { const s = e.target.closest(".dbl-s"); if (!s) return; const h = s.dataset.h, l = (je.get(h) || []).slice().sort((a, b) => b.v - a.v), sum = l.reduce((a, x) => a + x.v, 0);
+    const d = new Date(h.slice(0, 10) + "T" + h.slice(11) + ":00:00");
+    document.querySelectorAll("#dblChart .dbl-s.an").forEach((x) => x.classList.remove("an")); s.classList.add("an");
+    $("dblInfo").innerHTML = `<b>${esc(fTagLang.format(d))}, ${d.getHours()}–${d.getHours() + 1} Uhr:</b> ${dblZahl(sum)} ${einheit}${l.length ? " · " + l.slice(0, 4).map((x) => `${esc(x.q)} ${dblZahl(x.v)}`).join(" · ") : ""}`; };
 }
 async function dbAufraeumen(knopf) {
   if (!(await frage("Jetzt aufräumen?\n\nGelöscht werden nur alte technische Protokolle und Messwerte (älter als 90 Tage). Club-Daten, Kasse, Dienstpläne und Mitglieder bleiben unberührt.", { ja: "🧹 Ja, aufräumen", nein: "Abbrechen" }))) return;
@@ -21377,6 +21466,8 @@ function wichtigZeigen() {
   const in7 = tagPlus(heuteIso(), 7);
   for (const a of (INIT?.meineAufgaben || []).filter((x) => x.faellig && x.faellig <= in7))
     h.push(`<div class="zeile">📌 <span style="flex:1"><b>${esc(a.text)}</b> ${faelligText(a.faellig)}</span><button class="knopf klein" onclick="aufgabeErledigt('${a.id}', true)">✔ erledigt</button></div>`);
+  // 2.389.0 KC-CLUB-TERMINANFRAGE-SICHTBAR (Fund Hansi „Klaus hat meine Terminanfrage nicht gesehen“): offene Anfragen an mich ganz oben, deutlich
+  for (const a of INIT?.terminanfragenOffen || []) h.unshift(`<div class="zeile ta-dringend" style="cursor:pointer" onclick="taZeigen('${esc(a.id)}')">📨 <span style="flex:1;min-width:0"><b>${esc(a.von)}</b> fragt an: <b>${esc(a.anlass)}</b><br><small>${esc(wann(a.beginn))} – bitte antworten</small></span><button class="knopf haupt klein">Antworten</button></div>`);
   for (const u of INIT?.terminfindungOffen || []) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('termine')">🗓️ Bitte Termine ankreuzen: <b>${esc(u.titel)}</b><span style="margin-left:auto">›</span></div>`);
   if (INIT?.protokolleUngelesen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('protokolle')">📄 <b>${INIT.protokolleUngelesen === 1 ? "1 neues Protokoll" : INIT.protokolleUngelesen + " neue Protokolle"}</b> zum Lesen<span style="margin-left:auto">›</span></div>`);
   const dn = dokHinweis(); // KC-CLUB-DOK-NEU: eine leise Zeile, ✕ = nicht mehr zeigen

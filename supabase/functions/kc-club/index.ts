@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.388.0";
+const SERVER_VERSION = "2.389.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5190,6 +5190,17 @@ function wiederholungen(beginnIso: string, regel: string, von: Date, bis: Date, 
 // Sommer-/Winterzeit richtig); verpasste Termine (Server-Störung) werden einmal nachgeholt, nie gestapelt.
 const EXPRESS_MAX = 5, EXPRESS_SPAETER_MIN = 30; // 2.362.0 KC-CLUB-EXPRESS
 // 2.362.0 KC-CLUB-EXPRESS: ungelesene Express-Sendungen an mich (7 Tage), ohne „Nein“ und ohne laufendes „Später“ – für das Express-Fenster beim Start
+// 2.389.0 KC-CLUB-TERMINANFRAGE-SICHTBAR (Fund Hansi „Klaus hat meine Terminanfrage nicht gesehen“): persönliche Terminanfragen an mich,
+// auf die ich noch nicht geantwortet habe (offen, noch nicht vorbei, Frist nicht abgelaufen) – stehen dann groß unter „Heute wichtig“
+async function offeneTerminanfragen(ich: Ich) {
+  const { data: em } = await db.from("kc_club_terminanfrage_empfaenger").select("anfrage_id").eq("person_id", ich.person_id).is("antwort", null).is("vorschlag_beginn", null);
+  if (!(em ?? []).length) return [];
+  const { data: an } = await db.from("kc_club_terminanfragen").select("id,erstellt_von,anlass,beginn,frist,spiel_id").in("id", (em ?? []).map((x: any) => x.anfrage_id))
+    .eq("status", "offen").is("spiel_id", null).gt("beginn", jetzt()).order("beginn").limit(5);
+  const l = (an ?? []).filter((x: any) => !x.frist || x.frist > jetzt()); if (!l.length) return [];
+  const leute = await personen(l.map((x: any) => x.erstellt_von));
+  return l.map((x: any) => ({ id: x.id, von: vorname(leute.get(x.erstellt_von)) || "?", anlass: txt(x.anlass, 80), beginn: x.beginn }));
+}
 // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG (Wunsch Hansi „angekommen um x Uhr und gelesen um y Uhr“): je Empfänger festhalten, wann die
 // Express-Sendung in seiner App ankam und wann er den Chat mit ihr geöffnet hat (nur das ERSTE Mal zählt). Neue Einträge melden dem
 // Absender sofort ein Signal („chat“), damit seine Anzeige ohne Warten nachzieht. Fehler stören nie das Laden.
@@ -5931,6 +5942,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const beantwortet = new Set((ta ?? []).map((x: any) => (to ?? []).find((o: any) => o.id === x.option_id)?.umfrage_id));
           return (tu ?? []).filter((x: any) => !beantwortet.has(x.id)).map((x: any) => ({ id: x.id, titel: x.titel }));
         })();
+        const pAnfragen = offeneTerminanfragen(ich).catch((e) => { console.error("anfragen offen", String(e)); return []; }); // 2.389.0 KC-CLUB-TERMINANFRAGE-SICHTBAR
         const pRest = Promise.all([
           db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", ich.person_id).maybeSingle(),
           db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
@@ -6047,7 +6059,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         zt.ende = Date.now() - t0Anfrage;
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
-        return json({ meinGeburtstag, alarm, express, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ meinGeburtstag, alarm, express, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -12520,6 +12532,14 @@ Köcheclub-App`,
         return json({ bericht: await wochenberichtBauen() });
       }
       // KC-CLUB-DB-AUFRAEUMEN (2.24.7): größte Tabellen ansehen + alte Protokolle/Messwerte löschen – nur Admin
+      // 2.389.0 KC-CLUB-DB-LAST (Wunsch Hansi): Datenbank-Abfragen je Stunde und Quelle (Programm) – für die Balkengrafik im Admin → Supabase
+      case "db_last": {
+        nurAdmin(ich);
+        const tage = Math.min(35, Math.max(1, Number(p.tage) || 7));
+        const { data, error } = await db.rpc("kc_club_db_last_bericht", { p_tage: tage });
+        if (error) throw new Fehler("Messwerte gerade nicht abrufbar.", 503);
+        return json({ tage, werte: data ?? [] });
+      }
       case "db_belegung": {
         nurAdmin(ich);
         const [{ data: g, error: ge }, { data: t, error: te }] = await Promise.all([db.rpc("kc_club_db_groesse"), db.rpc("kc_club_db_belegung")]);
