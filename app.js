@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.399.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.400.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18704,6 +18704,9 @@ async function kopfRolloFahren(ziel) {
     kopfRolloSetzen(kopfRolloStand());
   }
 }
+// 2.400.0 KC-CLUB-KOPF-GLANZ (Wunsch Hansi): der Lichtschein über dem Kopf läuft nur einmal je App-Start – danach (oder wenn er abbricht,
+// z. B. beim Wechsel auf eine andere Seite) wird er entfernt, damit er beim Zurückkehren zur Startseite nicht erneut startet.
+{ const g = document.getElementById("kopfGlanz"); if (g) { const weg = () => g.remove(); g.addEventListener("animationend", weg, { once: true }); g.addEventListener("animationcancel", weg, { once: true }); } }
 // art "ganz" (rechts ⌃⌃): offen/halb → ganz, ganz → offen · art "halb" (links ⌃): offen → halb, halb → offen, ganz → halb
 function kopfRollo(art = "ganz") {
   if (document.querySelector("#v-start .hero")?.dataset.rollt) return; // läuft schon – nichts merken, was nicht passiert
