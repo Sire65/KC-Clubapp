@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.368.0";
+const SERVER_VERSION = "2.369.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2634,7 +2634,7 @@ async function notfallNeustart(req: Request, p: any) {
 // Läuft im Zeitplaner („wartung“) nur nachts 2–5 Uhr; je Lauf höchstens ARCHIV_KOPIE_JE_LAUF Dateien bzw. ARCHIV_KOPIE_MAX_BYTES.
 // Gelöschte Dokumente bleiben noch ARCHIV_KOPIE_NACHLAUF_TAGE in der Kopie (Papierkorb), dann wird die Kopie entfernt.
 const ARCHIV_KOPIE_GRENZE = 5 * 1024 * 1024 * 1024, ARCHIV_KOPIE_JE_LAUF = 25, ARCHIV_KOPIE_MAX_BYTES = 60 * 1024 * 1024, ARCHIV_KOPIE_NACHLAUF_TAGE = 30;
-const archivKopieSchluessel = (dokId: string, attId: string) => `archiv/${dokId}/${attId}`;
+const archivKopieSchluessel = (dokId: string, attId: string) => `archiv/${dokId}/${attId}.enc`; // seit 2.369.0 verschlüsselt (KCE1)
 async function archivKopieStand(status: "ok" | "warnung" | "fehler", text: string, metrics: Record<string, unknown>) {
   const { error } = await db.from("kc_club_archiv_kopie_stand").upsert({ id: 1, zeit: jetzt(), status, text: txt(text, 300), metrics });
   if (error) console.error("archiv kopie stand", error.message);
@@ -2694,6 +2694,31 @@ async function neonDateispeicher() {
   return { s3, url, basis };
 }
 const hexSha256 = async (b: Uint8Array) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", b))].map((x) => x.toString(16).padStart(2, "0")).join("");
+// KC-CLUB-FRA-VERSCHLUESSELT (Server 2.369.0, Auftrag Hansi 14.10.2026 „alles sicher machen“): nach Frankfurt nur noch verschlüsselt.
+// Gleicher Schlüssel und gleiche Ableitung wie die Neon-Sicherung (Vault kc_db_backup_key_v1, AES-256-GCM, Schlüssel = SHA-256 des Geheimnisses),
+// damit die Notfall-Kopie des Schlüssels (Cloudflare-Tresor / GitHub-Secret KC_BACKUP_KEY) auch diese Dateien öffnet (tools/notfall/fra-entschluesseln.mjs).
+// Dateiformat: "KCE1" (4 Byte) + IV (12 Byte) + Chiffretext mit Prüfmarke. Fehlt der Schlüssel, wird NICHTS hochgeladen – nie Klartext.
+const KCE_KOPF = "KCE1", KCE_CACHE_MS = 10 * 60 * 1000;
+let kceCache: { k: CryptoKey; bis: number } | null = null;
+async function kceSchluessel() {
+  if (kceCache && kceCache.bis > Date.now()) return kceCache.k;
+  const { data, error } = await db.rpc("kc_db_backup_key_v1");
+  if (error || !data) throw new Error("Sicherungsschlüssel fehlt – nichts hochgeladen");
+  const k = await crypto.subtle.importKey("raw", await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(data))), { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+  kceCache = { k, bis: Date.now() + KCE_CACHE_MS };
+  return k;
+}
+async function kceVerschluesseln(b: Uint8Array) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await kceSchluessel(), b));
+  const aus = new Uint8Array(16 + ct.length);
+  aus.set(new TextEncoder().encode(KCE_KOPF)); aus.set(iv, 4); aus.set(ct, 16);
+  return aus;
+}
+async function kceEntschluesseln(b: Uint8Array) {
+  if (b.length < 32 || new TextDecoder().decode(b.subarray(0, 4)) !== KCE_KOPF) throw new Error("Datei ist nicht verschlüsselt");
+  return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b.subarray(4, 16) }, await kceSchluessel(), b.subarray(16)));
+}
 
 // ---------- KC-CLUB-FRA-SICHERUNG (2.236.0, Wunsch Hansi 11.10.2026) ----------
 // Tägliche Komplett-Sicherung aller Tabellen (Schema public) als gepacktes JSON nach Neon Frankfurt: datenbank/<Tag>/<tabelle>[.teilNNN].json.gz
@@ -2712,6 +2737,17 @@ async function fraGunzip(b: Uint8Array) { return new Uint8Array(await new Respon
 const fraTidCode = (c: string) => { const m = /^\((\d+),(\d+)\)$/.exec(String(c)); return m ? Number(m[1]) * 65536 + Number(m[2]) : 0; };
 const fraTid = (code: number) => `'(${Math.floor(code / 65536)},${code % 65536})'::tid`;
 const fraName = (t: string) => /^[a-z0-9_]{1,63}$/.test(t) ? t : null;
+// 2.369.0: Spaltenliste mit Schwärzung wie im Neon-Spiegel (kc_db_mirror_redaction): Geheimnis-Spalten leer bzw. Muster ersetzt, Typ und Reihenfolge bleiben
+async function fraSpalten(sql: any, name: string) {
+  const [r] = await sql`select string_agg(case when x.column_name is not null and x.muster is not null
+        then format('regexp_replace(%I::text, %L, %L, ''g'')::%s as %I', a.attname, x.muster, coalesce(x.ersatz, '[entfernt]'), format_type(a.atttypid, a.atttypmod), a.attname)
+      when x.column_name is not null then format('null::%s as %I', format_type(a.atttypid, a.atttypmod), a.attname)
+      else format('%I', a.attname) end, ', ' order by a.attnum) as s
+    from pg_attribute a left join public.kc_db_mirror_redaction x on x.table_name = ${name} and x.column_name = a.attname
+    where a.attrelid = format('public.%I', ${name}::text)::regclass and a.attnum > 0 and not a.attisdropped`;
+  if (!r?.s) throw new Error("Spalten nicht lesbar");
+  return String(r.s);
+}
 async function fraSchritt(jetztErzwingen = false) {
   const t0 = Date.now(), lauf = berlinTag(new Date()), sql = direktSql();
   const nz = await neonDateispeicher();
@@ -2721,7 +2757,9 @@ async function fraSchritt(jetztErzwingen = false) {
   const [{ n: vorhanden }] = await sql`select count(*)::int as n from public.kc_club_fra_sicherung where lauf = ${lauf}`;
   if (!vorhanden) {
     // Teile nach echter Größe (inkl. ausgelagerter Daten/TOAST): höchstens FRA_TEIL_BYTES je Teil, aufgeteilt in Blockbereiche
-    const tabs = await sql`select c.relname as t, (pg_relation_size(c.oid) / 8192)::bigint as seiten, pg_total_relation_size(c.oid)::bigint as gesamt from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind = 'r' order by 1`;
+    // 2.369.0: als „secret“ eingestufte Tabellen (Spiegel-Register) kommen nicht mit – Geheimnisse gehören in keine Sicherung (AGENTS.md Regel 15)
+    const tabs = await sql`select c.relname as t, (pg_relation_size(c.oid) / 8192)::bigint as seiten, pg_total_relation_size(c.oid)::bigint as gesamt from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind = 'r'
+      and not exists (select 1 from public.kc_db_mirror_table_rules r where r.table_name = c.relname and r.sensitivity = 'secret') order by 1`;
     const zeilen: any[] = [];
     for (const r of tabs) {
       if (!fraName(r.t)) continue;
@@ -2753,13 +2791,14 @@ async function fraSchritt(jetztErzwingen = false) {
     try {
       const name = fraName(t.tabelle); if (!name) throw new Error("ungültiger Tabellenname");
       const bed = t.block_von == null ? "" : t.block_bis == null ? `where ctid >= ${fraTid(Number(t.block_von))}` : `where ctid >= ${fraTid(Number(t.block_von))} and ctid < ${fraTid(Number(t.block_bis))}`;
-      const [r] = await sql.unsafe(`select count(*)::bigint as n, coalesce(json_agg(x), '[]'::json)::text as j from (select * from public."${name}" ${bed}) x`);
-      const rohB = new TextEncoder().encode(r.j), gz = await fraGzip(rohB), sha = await hexSha256(gz);
-      const schluessel = `datenbank/${lauf}/${name}${t.block_von == null ? "" : `.teil${String(t.teil).padStart(3, "0")}`}.json.gz`;
-      const p = await s3.fetch(url(schluessel), { method: "PUT", body: gz, headers: { "content-type": "application/gzip", "x-amz-meta-sha256": sha, "x-amz-meta-zeilen": String(r.n) } });
+      const spalten = await fraSpalten(sql, name);
+      const [r] = await sql.unsafe(`select count(*)::bigint as n, coalesce(json_agg(x), '[]'::json)::text as j from (select ${spalten} from public."${name}" ${bed}) x`);
+      const rohB = new TextEncoder().encode(r.j), enc = await kceVerschluesseln(await fraGzip(rohB)), sha = await hexSha256(enc);
+      const schluessel = `datenbank/${lauf}/${name}${t.block_von == null ? "" : `.teil${String(t.teil).padStart(3, "0")}`}.json.gz.enc`;
+      const p = await s3.fetch(url(schluessel), { method: "PUT", body: enc, headers: { "content-type": "application/octet-stream", "x-amz-meta-sha256": sha, "x-amz-meta-zeilen": String(r.n), "x-amz-meta-verschluesselung": "kce1-aes-256-gcm" } });
       await p.body?.cancel();
       if (!p.ok) throw new Error(`Neon antwortet ${p.status}`);
-      await sql`update public.kc_club_fra_sicherung set status = 'ok', zeilen = ${Number(r.n)}, bytes = ${gz.length}, roh_bytes = ${rohB.length}, sha256 = ${sha}, schluessel = ${schluessel}, fehler = null, zeit = now()
+      await sql`update public.kc_club_fra_sicherung set status = 'ok', zeilen = ${Number(r.n)}, bytes = ${enc.length}, roh_bytes = ${rohB.length}, sha256 = ${sha}, schluessel = ${schluessel}, fehler = null, zeit = now()
         where lauf = ${lauf} and tabelle = ${t.tabelle} and teil = ${t.teil}`;
       roh += rohB.length;
     } catch (e) {
@@ -2776,9 +2815,9 @@ async function fraSchritt(jetztErzwingen = false) {
       try {
         const r = await s3.fetch(url(t.schluessel));
         if (!r.ok) throw new Error(`Neon antwortet ${r.status}`);
-        const gz = new Uint8Array(await r.arrayBuffer());
-        if ((await hexSha256(gz)) !== t.sha256) throw new Error("Prüfsumme weicht ab");
-        const daten = JSON.parse(new TextDecoder().decode(await fraGunzip(gz)));
+        const enc = new Uint8Array(await r.arrayBuffer());
+        if ((await hexSha256(enc)) !== t.sha256) throw new Error("Prüfsumme weicht ab");
+        const daten = JSON.parse(new TextDecoder().decode(await fraGunzip(await kceEntschluesseln(enc)))); // entschlüsseln prüft zugleich die Echtheit
         if (!Array.isArray(daten) || daten.length !== Number(t.zeilen)) throw new Error("Zeilenzahl weicht ab");
         ok = true; roh += Number(t.roh_bytes) || 0;
       } catch (e) { grund = txt(String((e as any)?.message || e), 200); roh += 1024 * 1024; }
@@ -2791,7 +2830,7 @@ async function fraSchritt(jetztErzwingen = false) {
       count(*) filter (where status = 'fehler' and versuche >= ${FRA_VERSUCHE})::int as fehler, count(*) filter (where status in ('offen', 'laeuft', 'ok') or (status = 'fehler' and versuche < ${FRA_VERSUCHE}))::int as rest,
       coalesce(sum(zeilen), 0)::bigint as zeilen, coalesce(sum(bytes), 0)::bigint as bytes, coalesce(sum(roh_bytes), 0)::bigint as roh_bytes, min(zeit) as start, max(zeit) as ende
     from public.kc_club_fra_sicherung where lauf = ${lauf}`;
-  const metrics: Record<string, unknown> = { lauf, tabellen: m.tabellen, teile: m.teile, geprueft: m.geprueft, fehler: m.fehler, rest: m.rest, zeilen: Number(m.zeilen), bytes: Number(m.bytes), roh_bytes: Number(m.roh_bytes), grenze: FRA_GRENZE };
+  const metrics: Record<string, unknown> = { lauf, tabellen: m.tabellen, teile: m.teile, geprueft: m.geprueft, fehler: m.fehler, rest: m.rest, zeilen: Number(m.zeilen), bytes: Number(m.bytes), roh_bytes: Number(m.roh_bytes), grenze: FRA_GRENZE, verschluesselt: true };
   if (m.rest) {
     const spaet = new Date().getUTCHours() === 3 && new Date().getUTCMinutes() >= 50; // letzte Schritte des Zeitplaner-Fensters (bis 03:58 UTC)
     const [{ gesichert }] = await sql`select count(*) filter (where status in ('ok', 'geprueft'))::int as gesichert from public.kc_club_fra_sicherung where lauf = ${lauf}`;
@@ -2804,7 +2843,11 @@ async function fraSchritt(jetztErzwingen = false) {
   // Inhaltsverzeichnis mit Spalten je Tabelle (für die Wiederherstellung)
   const teile = await sql`select tabelle, teil, schluessel, zeilen, bytes, sha256, status, fehler from public.kc_club_fra_sicherung where lauf = ${lauf} order by tabelle, teil`;
   const spalten = await sql`select table_name as t, json_agg(json_build_object('name', column_name, 'typ', data_type, 'null', is_nullable) order by ordinal_position) as s from information_schema.columns where table_schema = 'public' group by table_name`;
-  const manifest = { art: "kc-club-fra-sicherung", lauf, erstellt: jetzt(), quelle: PROJEKT_REF, teile, spalten: Object.fromEntries(spalten.map((x: any) => [x.t, x.s])) };
+  const [schutz] = await sql`select (select coalesce(json_agg(table_name order by table_name), '[]'::json) from public.kc_db_mirror_table_rules where sensitivity = 'secret') as ausgeschlossen,
+      (select coalesce(json_agg(json_build_object('tabelle', table_name, 'spalte', column_name, 'art', case when muster is null then 'leer' else 'ersetzt' end) order by table_name, column_name), '[]'::json) from public.kc_db_mirror_redaction) as geschwaerzt`;
+  const manifest = { art: "kc-club-fra-sicherung", lauf, erstellt: jetzt(), quelle: PROJEKT_REF, teile, spalten: Object.fromEntries(spalten.map((x: any) => [x.t, x.s])),
+    verschluesselung: { format: "KCE1 + IV(12) + AES-256-GCM", schluessel: "Vault kc_db_backup_key_v1 (Notfall-Kopie: KC_BACKUP_KEY)", ableitung: "SHA-256 des Geheimnisses", werkzeug: "tools/notfall/fra-entschluesseln.mjs" },
+    ausgeschlossen: schutz.ausgeschlossen, geschwaerzt: schutz.geschwaerzt };
   const mb = new TextEncoder().encode(JSON.stringify(manifest));
   const mp = await s3.fetch(url(`datenbank/${lauf}/manifest.json`), { method: "PUT", body: mb, headers: { "content-type": "application/json" } }); await mp.body?.cancel();
   // alte Tage löschen (Dateien + Verzeichnis)
@@ -2815,7 +2858,9 @@ async function fraSchritt(jetztErzwingen = false) {
     const x = await l.text(); if (!l.ok) break;
     for (const k of [...x.matchAll(/<Key>([^<]+)<\/Key>/g)].map((a) => a[1])) {
       const tag = k.split("/")[1] || "";
-      if (/^\d{4}-\d{2}-\d{2}$/.test(tag) && tag < grenze) { const d = await s3.fetch(url(k), { method: "DELETE" }); await d.body?.cancel(); geloescht++; }
+      // alte Tage weg; 2.369.0: Klartext-Dateien von früher (nicht „.enc“, außer Inhaltsverzeichnis) erst, wenn der heutige Lauf ohne Fehler verschlüsselt geprüft ist
+      const klartext = !m.fehler && !k.endsWith(".enc") && !k.endsWith("/manifest.json");
+      if (/^\d{4}-\d{2}-\d{2}$/.test(tag) && (tag < grenze || klartext)) { const d = await s3.fetch(url(k), { method: "DELETE" }); await d.body?.cancel(); geloescht++; }
     }
     weiter = x.match(/<NextContinuationToken>([^<]+)<\/NextContinuationToken>/)?.[1] || ""; if (!weiter) break;
   }
@@ -2846,7 +2891,8 @@ async function archivKopieLauf(erzwingen = false) {
   const kopie = new Map((kopien ?? []).map((k: any) => [k.dokument_id, k]));
   const dokMap = new Map((doks ?? []).map((d: any) => [d.id, d]));
   const grenzeWeg = Date.now() - ARCHIV_KOPIE_NACHLAUF_TAGE * 86400000;
-  const offen = (doks ?? []).filter((d: any) => !d.geloescht_am && kopie.get(d.id)?.attachment_id !== d.attachment_id);
+  // 2.369.0: Klartext-Kopien von früher (ohne „.enc“) werden einmal verschlüsselt neu abgelegt; die alte Datei entfernt der Ersatz-Schritt unten
+  const offen = (doks ?? []).filter((d: any) => !d.geloescht_am && (kopie.get(d.id)?.attachment_id !== d.attachment_id || !String(kopie.get(d.id)?.schluessel || "").endsWith(".enc")));
   const weg = (kopien ?? []).filter((k: any) => { const d: any = dokMap.get(k.dokument_id); return !d || (d.geloescht_am && new Date(d.geloescht_am).getTime() < grenzeWeg); });
   let kopiert = 0, entfernt = 0, bytes = 0; const fehler: string[] = [];
   // 1) neue/geänderte Dokumente kopieren (Prüfsumme wird mit der Anlage verglichen)
@@ -2863,7 +2909,7 @@ async function archivKopieLauf(erzwingen = false) {
       const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", inhalt))].map((x) => x.toString(16).padStart(2, "0")).join("");
       if (a.sha256 && a.sha256 !== hash) throw new Error("Prüfsumme weicht ab");
       const schluessel = archivKopieSchluessel(d.id, d.attachment_id);
-      const r = await s3.fetch(url(schluessel), { method: "PUT", body: inhalt, headers: { "content-type": a.mime_type || "application/octet-stream", "x-amz-meta-sha256": hash } });
+      const r = await s3.fetch(url(schluessel), { method: "PUT", body: await kceVerschluesseln(inhalt), headers: { "content-type": "application/octet-stream", "x-amz-meta-verschluesselung": "kce1-aes-256-gcm" } });
       if (!r.ok) throw new Error(`Neon antwortet ${r.status}`);
       await r.body?.cancel();
       const alt: any = kopie.get(d.id);
