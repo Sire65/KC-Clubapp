@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.396.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.397.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1612,7 +1612,7 @@ const RG_NACHRICHT = [
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN: Express mit Zähler, Später senden, Zurückholen, Favoriten
   { v: "neu", sel: ["#expressKnopf"], t: "🏎️ Express", x: "Eilt es wirklich? Dann tippst du auf den Rennwagen: Die Nachricht kommt sofort an – auch nachts. Unter deiner Nachricht siehst du später, wann sie angekommen ist und wann sie gelesen wurde. Pro Tag gehen fünf Express-Sendungen. Am Knopf steht, wie viele du heute schon hattest – zum Beispiel zwei von fünf." },
   { v: "neu", sel: ["#spaeterKnopf"], t: "⏰ Später senden", x: "Mit dem Wecker schickst du die Nachricht später – zum Beispiel morgen früh um acht, oder jeden Montag. Und hast du dich vertippt: Solange noch niemand die Nachricht gelesen hat, tippst du sie an und holst sie mit Zurückholen und ändern wieder in dein Schreibfeld." },
-  { v: "nachrichten", sel: ["#v-nachrichten .kom-leiste"], puls: ["#v-nachrichten .kom-leiste .knopf"], t: "👥 Gruppe & mehr", x: "Mit Gruppe legst du eine eigene Gruppe an, zum Beispiel fürs Küchenteam. Gemerkt zeigt Nachrichten, die du dir mit dem Stern gemerkt hast. Mit dem Stern Favoriten siehst du nur deine Lieblings-Chats: Einen Chat in der Liste einmal antippen und Als Favorit wählen – dazu kommen automatisch die fünf, in denen du am meisten schreibst. Und Test schickt dir selbst eine Probe – so prüfst du, ob Push und E-Mail ankommen." },
+  { v: "nachrichten", sel: ["#v-nachrichten .kom-leiste"], puls: ["#v-nachrichten .kom-leiste .knopf"], t: "👥 Gruppe & mehr", x: "Mit Gruppe legst du eine eigene Gruppe an, zum Beispiel fürs Küchenteam. Gemerkt zeigt Nachrichten, die du dir mit dem Stern gemerkt hast. Mit dem Stern Favoriten siehst du nur deine Lieblings-Chats: In Mitglieder beim Mitglied auf den Stern tippen – oder hier einen Chat einmal antippen und Als Favorit wählen. Es ist derselbe Stern. Dazu kommen automatisch die fünf Chats, in denen du am meisten schreibst. Und Test schickt dir selbst eine Probe – so prüfst du, ob Push und E-Mail ankommen." },
   { v: "nachrichten", t: "✅ Fertig", x: "Das war's: Plus Neu, Empfänger wählen, schreiben, senden. Probier es aus – zum Beispiel mit einer Nachricht an dich selbst über Test." },
 ];
 const RG_TERMIN = [
@@ -4844,7 +4844,7 @@ const HILFE = [
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN (Wunsch Hansi „Videos, Hilfetexte, Suche und Twinkey auf die neuen Funktionen umstellen und gut erklären“)
   { id: "express_zaehler", thema: "nachrichten", sym: "🏎️", t: "Express: höchstens 5 am Tag – am Knopf steht „2/5“", x: "Express ist für wirklich Eiliges. Jedes Mitglied kann <b>5 Express-Sendungen pro Tag</b> verschicken (gezählt werden die letzten 24 Stunden). Tippst du auf <b>🏎️</b>, steht am Knopf, wie viele du heute schon hattest – z. B. <b>2/5</b>. Nach dem Senden steht in der Meldung „heute 3/5“. Sind alle 5 verbraucht, geht Express nicht an – die App sagt dir, <b>ab wann</b> es wieder geht. Dann einfach normal senden.", seit: "2.391.0" },
   { id: "express_status", thema: "nachrichten", sym: "📬", t: "Express: angekommen um … gelesen um …", x: "Unter deiner Express-Sendung siehst du genau, was passiert ist: <b>„🏎️ Per Express versandt um 19:05“</b> und für jeden Empfänger <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Steht dort „📭 noch nicht angekommen“, ist das Handy des Empfängers vermutlich aus oder offline.", seit: "2.385.0" },
-  { id: "chat_favoriten", thema: "nachrichten", sym: "⭐", t: "Favoriten: deine wichtigsten Chats oben", x: "In <b>💬 Nachrichten</b> oben auf <b>⭐ Favoriten</b> tippen – dann siehst du nur deine Lieblings-Chats. <b>So machst du einen Chat zum Favoriten:</b> in der Chat-Liste den Chat <b>einmal antippen</b> (nicht öffnen) → <b>„⭐ Als Favorit“</b>. Dazu kommen automatisch die <b>5 Chats, in denen du am meisten schreibst</b> („· oft“). Mit „☆ Kein Favorit mehr“ nimmst du den Stern wieder weg. Die Sterne gelten auf all deinen Geräten.", zeig: () => { zeige("nachrichten"); uhFavAnsicht(true); }, seit: "2.387.0" },
+  { id: "chat_favoriten", thema: "nachrichten", sym: "⭐", t: "Favoriten: deine wichtigsten Leute oben", x: "In <b>💬 Nachrichten</b> oben auf <b>⭐ Favoriten</b> tippen – dann siehst du nur deine Lieblings-Chats. <b>Den Stern setzt du an zwei Stellen – es ist immer derselbe:</b> in <b>👥 Mitglieder</b> beim Mitglied auf <b>☆</b> tippen (wird ⭐), oder in der Chat-Liste den Chat <b>einmal antippen</b> → <b>„⭐ Als Favorit“</b>. Ein Stern gehört zur <b>Person</b> – er steht dann in der Mitgliederliste <i>und</i> bei ihrem Chat. Gruppenchats bekommen ihren eigenen Stern. Dazu kommen automatisch die <b>5 Chats, in denen du am meisten schreibst</b> („· oft“). In <b>👥 Mitglieder</b> zeigt der Schalter <b>„⭐ Favoriten“</b> nur deine Favoriten. Die Sterne gelten auf all deinen Geräten.", zeig: () => { zeige("nachrichten"); uhFavAnsicht(true); }, seit: "2.387.0" },
   { id: "zustell_alle", thema: "nachrichten", sym: "✅", t: "Benachrichtigen: alles auf einmal mit „✅ Alle“", x: "Mit der <b>Glocke 🔔</b> unter dem Schreibfeld wählst du, wie benachrichtigt wird – <b>🔔 Push</b>, <b>✉️ E-Mail</b>, <b>WhatsApp</b>. Mit <b>„✅ Alle“</b> sind alle drei mit einem Tipp an – nochmal tippen schaltet alle aus.", seit: "2.386.0" },
   { id: "online_uhrzeit", thema: "nachrichten", sym: "🟢", t: "„… ist jetzt online“ – jetzt mit Uhrzeit", x: "Hast du die Mitteilung <b>„🟢 Klaus ist jetzt online“</b> eingeschaltet, steht jetzt die <b>Uhrzeit</b> dabei – z. B. „(19:05 Uhr)“ – und darunter der Tag. Kommt die Mitteilung erst später an (z. B. weil dein PC aus war), heißt sie <b>„🟢 Klaus war um 19:05 Uhr online“</b>. So weißt du, ob er wirklich gerade da ist.", seit: "2.390.0" },
   { id: "terminanfrage_oben", thema: "termine", sym: "📨", t: "Offene Terminanfragen stehen ganz oben", x: "Hat dich jemand per <b>Terminanfrage</b> gefragt und du hast noch nicht geantwortet, steht sie jetzt <b>ganz oben unter „Heute wichtig“</b> – rot umrandet. Die Kachel <b>📅 Termine</b> zeigt die Zahl. Antippen und mit <b>Ja</b>, <b>Vielleicht</b> oder <b>Nein</b> antworten.", seit: "2.389.0" },
@@ -8502,7 +8502,7 @@ const TW_FAQ = [
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN: Express, Zurückholen, Favoriten, Später senden
   { id: "express", sym: "🏎️", t: "Wie schicke ich eine Express-Nachricht – und wie viele darf ich?", x: "Im Chat unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden. Sie kommt <b>sofort</b> an – auch nachts und bei stummem Chat – und beim Empfänger geht ein Fenster auf. Unter deiner Nachricht siehst du <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Pro Tag gehen <b>5 Express-Sendungen</b>; am Knopf steht, wie viele du schon hattest (z. B. <b>2/5</b>).", los: () => zeige("nachrichten") },
   { id: "zurueckholen", sym: "↩️", t: "Ich habe mich vertippt – kann ich die Nachricht zurückholen?", x: "Ja, solange sie noch <b>niemand gelesen</b> hat: Nachricht antippen (am PC: rechte Maustaste) → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet bei allen und steht wieder in deinem Schreibfeld – verbessern und neu senden. Ist sie schon gelesen, kannst du sie noch <b>✏️ bearbeiten</b>.", los: () => zeige("nachrichten") },
-  { id: "favoriten", sym: "⭐", t: "Wie lege ich Favoriten an?", x: "In <b>💬 Nachrichten</b> den Chat in der Liste <b>einmal antippen</b> → <b>„⭐ Als Favorit“</b>. Oben mit <b>⭐ Favoriten</b> siehst du dann nur deine Lieblings-Chats – dazu automatisch die 5, in denen du am meisten schreibst. Nochmal antippen → „☆ Kein Favorit mehr“.", los: () => { zeige("nachrichten"); uhFavAnsicht(true); } },
+  { id: "favoriten", sym: "⭐", t: "Wie lege ich Favoriten an?", x: "Am einfachsten in <b>👥 Mitglieder</b>: beim Mitglied auf den Stern <b>☆</b> tippen – er wird gelb ⭐. Oder in <b>💬 Nachrichten</b> den Chat einmal antippen → <b>„⭐ Als Favorit“</b>. Es ist <b>derselbe Stern</b>: Er erscheint in der Mitgliederliste und bei den Chats unter <b>⭐ Favoriten</b>. Nochmal tippen nimmt ihn weg.", los: () => { zeige("nachrichten"); uhFavAnsicht(true); } },
   { id: "spaeter", sym: "⏰", t: "Kann ich eine Nachricht später senden lassen?", x: "Ja: Nachricht schreiben, unten auf <b>⏰</b> tippen, Zeit wählen (z. B. morgen 8 Uhr) und wie oft (einmal, jeden Tag, jeden Montag …). Bis dahin steht sie blass im Chat – nur du siehst sie.", los: () => zeige("nachrichten") },
   { id: "zettel", sym: "📌", t: "Wie hänge ich einen Zettel an die Pinnwand?", x: "Tippe auf <b>📌 Pinnwand</b> und dann auf <b>„＋ Zettel“</b>. Text schreiben (oder 🎤 sprechen) und aufhängen. Auf Zettel anderer antwortest du mit Emojis.", los: () => zeige("pinnwand") },
   { id: "hilfe-suchen", sym: "🙋", t: "Ich brauche Hilfe von anderen – was tun?", x: "Unter <b>🤝 Helfen &amp; Leihen</b> → <b>🙋 Wer kann helfen?</b> mit <b>„＋ Neu“</b> einen Hilfe-Aufruf anlegen. Du wählst, ob er an die Pinnwand kommt, per Push oder per E-Mail rausgeht.", los: () => zeige("helfen") },
@@ -24938,7 +24938,7 @@ async function unterhLaden() {
     if (rkAn("chats") && !UH.archivAnsicht && zeigen.length) { $("unterhListe").innerHTML = archKopf + uhKarteiHtml(zeigen); uhKarteiAn(); uhAmeisen(); return; }
     $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Einmal tippen = auswählen (${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen) · doppelt tippen = öffnen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
-      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${favIds().has(u.id) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
+      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
       || (favKopf ? '<p class="hinweis">Noch keine Favoriten. Einen Chat einmal antippen und „⭐ Als Favorit“ wählen.</p>' : arch.length ? '<p class="hinweis">Alle Chats sind archiviert – oben auf „📦 Archiviert“ tippen.</p>' : '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>');
     UH.mark.forEach((id) => { if (!zeigen.some((u) => u.id === id)) UH.mark.delete(id); }); uhMarkZeichnen(); uhLangDruck(); // KC-CLUB-MEHRFACH-NACHRICHT
@@ -25119,25 +25119,42 @@ const unterhName = (u) => u.gruppe?.name || u.betreff || u.teilnehmer.join(", ")
 // Die Sternchen sind eine Einstellung beim Mitglied (chat_favoriten) – auf allen Geräten gleich. Archivierte Chats bleiben im Archiv.
 const FAV_HAEUFIG = 5;
 const favIds = () => new Set(INIT?.einstellungen?.chat_favoriten?.threads || []);
+// 2.397.0 KC-CLUB-FAV-PERSONEN (Wunsch Hansi „Stern auch in der Mitgliederliste – wo wird er definitiv gesetzt?“): EIN Stern je Person.
+// Ob in der Mitgliederliste oder beim Einzelchat in der Chat-Liste gesetzt – es ist derselbe Stern (chat_favoriten.personen) und er
+// erscheint an beiden Stellen. Gruppenchats haben keinen „Partner“ – dort gehört der Stern weiter zum Chat (chat_favoriten.threads).
+const favPersonen = () => new Set(INIT?.einstellungen?.chat_favoriten?.personen || []);
+const uhPartner = (u) => (!u.gruppe && u.anzahl <= 2 ? u.partner || MITGLIEDER?.find((m) => m.name === u.teilnehmer?.[0])?.person_id || null : null);
+const istFav = (u) => { const p = uhPartner(u); return favIds().has(u.id) || (!!p && favPersonen().has(p)); };
 function favListe(liste) {
-  const fav = favIds(), stern = liste.filter((u) => fav.has(u.id));
-  const oft = liste.filter((u) => !fav.has(u.id) && (u.nachrichten || 0) > 0).sort((a, b) => (b.nachrichten || 0) - (a.nachrichten || 0)).slice(0, FAV_HAEUFIG).map((u) => ({ ...u, haeufig: true }));
+  const stern = liste.filter(istFav);
+  const oft = liste.filter((u) => !istFav(u) && (u.nachrichten || 0) > 0).sort((a, b) => (b.nachrichten || 0) - (a.nachrichten || 0)).slice(0, FAV_HAEUFIG).map((u) => ({ ...u, haeufig: true }));
   return [...stern, ...oft];
 }
 const favKopfHtml = () => `<div class="uh-archiv-kopf"><button class="knopf klein" onclick="uhFavAnsicht(false)">← Alle Chats</button><b>⭐ Favoriten</b><span class="hinweis" style="font-size:.85rem">mit ⭐ markiert + wo du am meisten schreibst</span></div>`;
 function favKnopfZeigen() { const k = $("uhFavKnopf"); if (k) { k.classList.toggle("haupt", !!UH.favAnsicht); k.setAttribute("aria-pressed", String(!!UH.favAnsicht)); } }
 function uhFavAnsicht(an) { UH.favAnsicht = !!an; UH.archivAnsicht = false; UH.wahl = null; unterhLaden(); }
-async function favSetzen(id) {
-  const fav = favIds(), an = !fav.has(id); an ? fav.add(id) : fav.delete(id);
-  const w = { threads: [...fav].slice(0, 50) };
+async function favSpeichern(fav, pers, an) {
+  const w = { threads: [...fav].slice(0, 50), personen: [...pers].slice(0, 100) }, vorher = INIT?.einstellungen?.chat_favoriten;
   if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), chat_favoriten: w };
-  unterhLaden();
-  try { await api("einstellung_setzen", { schluessel: "chat_favoriten", wert: w }); melde(an ? "⭐ Als Favorit markiert – oben unter „⭐ Favoriten“" : "☆ Kein Favorit mehr"); }
-  catch (e) { meldeFehler(e); }
+  favNeuZeichnen();
+  try { await api("einstellung_setzen", { schluessel: "chat_favoriten", wert: w }); melde(an ? "⭐ Favorit – steht jetzt in der Mitgliederliste und in den Chats unter „⭐ Favoriten“" : "☆ Kein Favorit mehr"); }
+  catch (e) { if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), chat_favoriten: vorher }; favNeuZeichnen(); meldeFehler(e); } // Regel 11: nicht still „gespeichert“
 }
+function favNeuZeichnen() { if (aktuelleAnsicht === "nachrichten") unterhLaden(); if (aktuelleAnsicht === "mitglieder" && MITGLIEDER) mitgliederZeichnen(); }
+async function favSetzen(id, partner) { // Chat-Liste: Einzelchat → Stern der Person; Gruppe → Stern des Chats
+  const fav = favIds(), pers = favPersonen(); let an;
+  if (partner) { an = !(pers.has(partner) || fav.has(id)); if (an) pers.add(partner); else pers.delete(partner); fav.delete(id); }
+  else { an = !fav.has(id); an ? fav.add(id) : fav.delete(id); }
+  return favSpeichern(fav, pers, an);
+}
+function favPersonSetzen(pid) { // Mitgliederliste: derselbe Stern wie beim Einzelchat
+  const fav = favIds(), pers = favPersonen(), an = !pers.has(pid); an ? pers.add(pid) : pers.delete(pid);
+  return favSpeichern(fav, pers, an);
+}
+const mgStern = (m) => m.person_id === ICH?.person_id ? "" : `<button class="knopf klein mg-stern${favPersonen().has(m.person_id) ? " an" : ""}" title="${favPersonen().has(m.person_id) ? "Favorit – antippen zum Entfernen" : "Als Favorit markieren"}" aria-pressed="${favPersonen().has(m.person_id)}" onclick="event.stopPropagation(); favPersonSetzen('${esc(m.person_id)}')">${favPersonen().has(m.person_id) ? "⭐" : "☆"}</button>`;
 function unterhAktionen(u) {
   return `<div class="uhaktion" onclick="event.stopPropagation()"><button class="knopf haupt klein" onclick="chatOeffnen('${u.id}')">💬 Öffnen</button>
-    <button class="knopf klein" onclick="favSetzen('${u.id}')">${favIds().has(u.id) ? "☆ Kein Favorit mehr" : "⭐ Als Favorit"}</button>
+    <button class="knopf klein" onclick="favSetzen('${u.id}'${uhPartner(u) ? `, '${esc(uhPartner(u))}'` : ""})">${istFav(u) ? "☆ Kein Favorit mehr" : "⭐ Als Favorit"}</button>
     <button class="knopf klein" onclick="chatArchivieren('${u.id}', ${u.archiviert ? "true" : "false"})">${u.archiviert ? "📤 Wieder aktivieren" : "📦 Archivieren"}</button>
     <button class="knopf klein" onclick="unterhEntfernen('${u.id}', false)">🙈 Aus meiner Liste</button>
     <button class="knopf klein" onclick="chatKomplettLoeschen('${u.id}')">🗑️ Bei mir komplett löschen</button>${ICH?.admin ? `<button class="knopf klein" onclick="unterhEntfernen('${u.id}', true)">⚠️ Für alle löschen</button>` : ""}</div>`;
@@ -28012,11 +28029,11 @@ async function protokollKorrigieren() {
 // ---------- Mitglieder (+ Admin: Links und Ämter) ----------
 // KC-CLUB-ONLINEFILTER (0.72.0, Wunsch Hansi): Umschalter „Alle | Nur online“ (je Gerät gemerkt). Wer die eigene
 // Online-Anzeige verborgen hat, sieht auch andere nicht online – dann ist der Filter gesperrt (nie eine falsche leere Liste).
-let MG_FILTER = (() => { try { return localStorage.getItem("kc_club_mg_filter") === "online" ? "online" : "alle"; } catch { return "alle"; } })();
+let MG_FILTER = (() => { try { const f = localStorage.getItem("kc_club_mg_filter"); return f === "online" || f === "fav" ? f : "alle"; } catch { return "alle"; } })();
 // KC-CLUB-ONLINE-SEITE (1.91.0, Wunsch Hansi): Kachel „Mitglieder/online“ oben im Kopf öffnet IMMER die Mitglieder-Seite nur mit den
 // Online-Mitgliedern – einmalig, ohne die gemerkte Wahl (👥 Alle / 🟢 Online) für die untere Leiste zu ändern
 function mgNurOnline() { MG_EINMAL = "online"; zeige("mitglieder"); }
-function mgFilterSetzen(f) { MG_EINMAL = null; MG_FILTER = f === "online" ? "online" : "alle"; try { localStorage.setItem("kc_club_mg_filter", MG_FILTER); } catch {} mitgliederZeichnen(); }
+function mgFilterSetzen(f) { MG_EINMAL = null; MG_FILTER = f === "online" || f === "fav" ? f : "alle"; try { localStorage.setItem("kc_club_mg_filter", MG_FILTER); } catch {} mitgliederZeichnen(); }
 // KC-CLUB-MG-KACHELN (1.45.0, Wunsch Hansi): Mitglieder als Kacheln oder Liste – jeder wählt selbst (⚙️ → Darstellung, je Gerät)
 const MG_ANSICHTEN = ["kacheln", "liste", "tafel", "kartei"]; // 2.185.0: „kartei“ = Rollkartei // KC-CLUB-ANWESENHEIT (2.23.89): „tafel“ = nur Name + LED
 let MG_ANSICHT = (() => { try { const a = localStorage.getItem("kc_club_mg_ansicht"); return MG_ANSICHTEN.includes(a) ? a : "kacheln"; } catch { return "kacheln"; } })();
@@ -28058,7 +28075,7 @@ function mgKachelnHtml(liste) {
       ${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}${gbKerze(m.person_id)}</span>
       ${m.aemter?.length ? `<span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
       ${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : ""}${da}${ICH.admin && m.unerreichbar ? '<span class="mk-unter" title="kein Push, keine E-Mail – nur über 🔗 Link oder Telefon">📵 nicht erreichbar</span>' : ""}${ICH.admin && m.probe ? `<span class="mk-unter" title="Probephase – nur für dich als Admin sichtbar">🧪 Probe${m.probe.bis ? " bis " + esc(prDatum(m.probe.bis)) : ""}</span>` : ""}
-      ${ich ? '<span class="mk-unter"><b>(du)</b></span>' : `<span class="mg-knoepfe" onclick="event.stopPropagation()"><button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${on ? `<button class="knopf klein" title="Anklopfen" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${mgAnrufKnoepfe(m)}</span>`}</div>`; // 2.23.87 (Wunsch Hansi): 📞/🎥 auch auf der Kachel – aktiv bei online (gleicher Baustein wie in der Liste)
+      ${ich ? '<span class="mk-unter"><b>(du)</b></span>' : `<span class="mg-knoepfe" onclick="event.stopPropagation()">${mgStern(m)}<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${on ? `<button class="knopf klein" title="Anklopfen" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${mgAnrufKnoepfe(m)}</span>`}</div>`; // 2.23.87 (Wunsch Hansi): 📞/🎥 auch auf der Kachel – aktiv bei online (gleicher Baustein wie in der Liste)
   };
   return `<p class="hinweis" style="margin:0 2px 8px;font-size:.85rem">🟢 online · 🔵 heute da · 🟠 abwesend · ⚪ noch nie in der App – Kachel antippen für Telefon, Adresse${ICH?.admin ? ", 🔗 Link und 🎖️ Ämter" : " usw."}</p>
     <div class="mini-kacheln mg-kacheln">${liste.map(k).join("")}</div>`;
@@ -28129,9 +28146,11 @@ function mgAnrufKnoepfe(m) {
 function mitgliederZeichnen() {
   try {
     const sichtbar = ONLINE_SICHTBAR !== false, anzahl = MITGLIEDER.filter((m) => mgOn(m)).length, nurOnline = (MG_EINMAL || MG_FILTER) === "online" && sichtbar;
-    document.querySelectorAll("#mgFilter button").forEach((b) => { b.classList.toggle("an", b.dataset.f === (nurOnline ? "online" : "alle")); if (b.dataset.f === "online") { b.disabled = !sichtbar; b.textContent = `🟢 Online${sichtbar ? ` (${anzahl})` : ""}`; b.title = sichtbar ? "" : "Du hast deine Online-Anzeige verborgen – dann siehst du auch andere nicht online (⚙️ → Privatsphäre)"; } });
+    const nurFav = !MG_EINMAL && MG_FILTER === "fav"; // 2.397.0 KC-CLUB-FAV-PERSONEN
+    document.querySelectorAll("#mgFilter button").forEach((b) => { b.classList.toggle("an", b.dataset.f === (nurOnline ? "online" : nurFav ? "fav" : "alle")); if (b.dataset.f === "online") { b.disabled = !sichtbar; b.textContent = `🟢 Online${sichtbar ? ` (${anzahl})` : ""}`; b.title = sichtbar ? "" : "Du hast deine Online-Anzeige verborgen – dann siehst du auch andere nicht online (⚙️ → Privatsphäre)"; } });
     const gr = mgGruppenZeichnen();
-    const liste = (nurOnline ? MITGLIEDER.filter((m) => mgOn(m)) : MITGLIEDER).filter((m) => !gr || gr.personen.includes(m.person_id));
+    const liste = (nurOnline ? MITGLIEDER.filter((m) => mgOn(m)) : MITGLIEDER).filter((m) => !gr || gr.personen.includes(m.person_id)).filter((m) => !nurFav || favPersonen().has(m.person_id));
+    if (nurFav && !liste.length) { $("mitgliederListe").innerHTML = `<div class="leer">Noch keine Favoriten.<br>Tippe bei einem Mitglied auf den Stern ☆ – dann steht es hier und in den Chats unter „⭐ Favoriten“.<br><button class="knopf klein" style="margin-top:8px" onclick="mgFilterSetzen('alle')">👥 Alle anzeigen</button></div>`; return; }
     if (gr && !liste.length) { $("mitgliederListe").innerHTML = `<div class="leer">Aus dieser Gruppe ist gerade niemand online.<br><button class="knopf klein" style="margin-top:8px" onclick="mgFilterSetzen('alle')">👥 Alle der Gruppe anzeigen</button></div>`; return; }
     if (nurOnline && !liste.length) { $("mitgliederListe").innerHTML = `<div class="leer">Gerade ist niemand online.<br><button class="knopf klein" style="margin-top:8px" onclick="mgFilterSetzen('alle')">👥 Alle anzeigen</button></div>`; return; }
     $("mitgliederListe").classList.toggle("karte", MG_ANSICHT === "liste"); // Kacheln/Tafel ohne weiße Unterlage
@@ -28147,7 +28166,7 @@ function mitgliederZeichnen() {
       <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${gbKerze(m.person_id)}${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
         <div class="hinweis" style="font-size:.85rem">${mgOn(m) ? '<b style="color:var(--textGruen)">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}${!mgOn(m) && m.zuletztDa ? ` · 🕒 ${esc(zuletztText(m.zuletztDa))}` : ""}</div>
         ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false || m.unerreichbar || m.probe) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.unerreichbar ? "📵 nicht erreichbar – kein Push, keine Mail" : m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : "", m.probe ? "🧪 Probephase" : "", m.app && m.zuletzt ? (m.ansicht === "einfach" ? "🟢 einfache Ansicht" : m.ansicht === "erweitert" ? "🔧 erweiterte Ansicht" : "❔ Ansicht noch nicht gewählt") : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
-      <div class="mg-akt${ICH.admin ? " mg-akt3" : ""}">${mgOn(m) ? `<button class="knopf klein" title="Anklopfen – direkt schreiben" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${m.person_id !== ICH.person_id ? `<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${mgAnrufKnoepfe(m)}` : ""}
+      <div class="mg-akt${ICH.admin ? " mg-akt3" : ""}">${mgStern(m)}${mgOn(m) ? `<button class="knopf klein" title="Anklopfen – direkt schreiben" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${m.person_id !== ICH.person_id ? `<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${mgAnrufKnoepfe(m)}` : ""}
       ${ICH.admin ? `<button class="knopf klein" title="App-Link" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" title="Einrichtungskarte drucken" onclick="einrichtungskarte('${m.person_id}')">🖨️</button><button class="knopf klein" title="Amt & Rechte" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div></div>`).join("")
       + '<p class="hinweis">Namen antippen für Details (Telefon, Adresse … sofern freigegeben).</p>'
       + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Amt und Rechte.</p>' : "");
@@ -28165,7 +28184,7 @@ function mgKarteiHtml(liste) {
   return `<div class="rk-box" id="mgKartei">${rkOnlineVorn(liste, mgOn).map((m) => { const ich = m.person_id === ICH.person_id;
     return `<details class="karte mgk" data-klappe="mgk" data-pid="${esc(m.person_id)}" open><summary>${kreis(m, m.name, 30)}<span>${esc(m.name)}</span></summary>
       <div class="mgk-kopf">${kreis(m, m.name, 80, `onclick="mitgliedOeffnen('${esc(m.person_id)}')"`)}
-        <div class="mgk-name">${esc(m.name)}${gbKerze(m.person_id)}${ich ? ' <small class="hinweis">(du)</small>' : ""}</div>
+        <div class="mgk-name">${esc(m.name)}${gbKerze(m.person_id)}${ich ? ' <small class="hinweis">(du)</small>' : ""} ${mgStern(m)}</div>
         ${m.aemter?.length ? `<div>${m.aemter.map((a) => `<span class="marke">${esc(a)}</span>`).join(" ")}</div>` : ""}
         ${m.status || m.aktiv ? `<div style="margin-top:6px"><span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "verfügbar")}</span></div>` : ""}
         ${!ich && mgDaText(m) ? `<div class="hinweis mgk-da${mgOn(m) ? " an" : ""}">${mgOn(m) ? "🟢 " : "🕒 "}${esc(mgDaText(m))}</div>` : ""}</div>
