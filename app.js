@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.366.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.367.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7458,12 +7458,16 @@ const CHAT_TAKT_MS = 2000;
 // es wurde in den letzten 90 s geschrieben → alle 4 s, sonst alle 8 s; niemand da → 12 s, mit Push (neue Nachrichten kommen ohnehin
 // sofort per Push) 20 s. Im Hintergrund gar nicht – beim Zurückholen lädt die App den Chat sowieso neu.
 let CHAT_AKTIV = 0;
+let HAKEN_SEIT = 0; // 2.367.0 KC-CLUB-HAKEN-SCHNELL
 function chatTakt() {
   ONL.takt++;
   if (chatTakt.laeuft || document.hidden) return;
   const jemandDa = (CHAT?.teilnehmer || []).some((t) => t.person_id !== ICH?.person_id && ONL.ids.has(t.person_id));
   const frisch = Date.now() - CHAT_AKTIV < 90000, ruhig = rtAn() ? 30 : PUSH_AKTIV ? 10 : 6; // KC-CLUB-REALTIME: neue Nachrichten melden sich selbst – nur noch alle 60 s zur Sicherheit
-  if (!(CHAT?.tippt?.length || (jemandDa && ONL.takt % (rtAn() ? 15 : frisch ? 2 : 4) === 0) || ONL.takt % ruhig === 0)) return; // Realtime: „gelesen“-Haken kommen per Signal (2.230.0) – Nachfragen nur alle 30 s
+  // 2.367.0 KC-CLUB-HAKEN-SCHNELL (Fund Hansi: Express an Steven war nach 20 s auf dessen Handy, die zwei grauen Haken kamen bei Hansi erst viel später):
+  // nach dem eigenen Senden 60 s lang alle 4 s nach dem Zustellstand fragen – nur bei offenem Chat und nur, bis die letzte eigene Nachricht „angekommen“ ist
+  const hakenWarten = Date.now() - HAKEN_SEIT < 60000 && (() => { const m = [...(CHAT?.nachrichten || [])].reverse().find((x) => x.eigen); return !!m && m.haken === "gesendet"; })();
+  if (!(CHAT?.tippt?.length || (hakenWarten && ONL.takt % 2 === 0) || (jemandDa && ONL.takt % (rtAn() ? 15 : frisch ? 2 : 4) === 0) || ONL.takt % ruhig === 0)) return; // Realtime: „gelesen“-Haken kommen per Signal (2.230.0) – Nachfragen nur alle 30 s
   chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; });
 }
 // KC-CLUB-TIPPT (0.54.0): beim Tippen höchstens alle 3 s „ich schreibe“ melden, Feld leer → sofort aus.
@@ -26436,6 +26440,7 @@ async function senden() {
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
+    HAKEN_SEIT = Date.now(); // 2.367.0 KC-CLUB-HAKEN-SCHNELL: Zustell-Haken eine Minute lang zügig nachsehen
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); expressUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN
     $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; EINMAL = false; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“

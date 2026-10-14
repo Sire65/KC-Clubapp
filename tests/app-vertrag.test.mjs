@@ -3747,7 +3747,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 359. 2.23.9: Spar-Takt (KC-CLUB-SPARTAKT) – weniger Server-Aufrufe, damit die kostenlose Grenze sicher hält
 {
   assert.ok(/if \(chatTakt\.laeuft \|\| document\.hidden\) return;/.test(html), "Chat im Hintergrund nicht nachfragen");
-  assert.ok(/const frisch = Date\.now\(\) - CHAT_AKTIV < 90000, ruhig = (rtAn\(\) \? 30 : )?PUSH_AKTIV \? 10 : 6;/.test(html) && /CHAT\?\.tippt\?\.length \|\| \(jemandDa && ONL\.takt % \((rtAn\(\) \? 1?5 : )?frisch \? 2 : 4\) === 0\)/.test(html), "Tippen bleibt sofort, sonst seltener"); // 2.226.0: mit Realtime noch seltener
+  assert.ok(/const frisch = Date\.now\(\) - CHAT_AKTIV < 90000, ruhig = (rtAn\(\) \? 30 : )?PUSH_AKTIV \? 10 : 6;/.test(html) && /CHAT\?\.tippt\?\.length \|\| (\(hakenWarten && ONL\.takt % 2 === 0\) \|\| )?\(jemandDa && ONL\.takt % \((rtAn\(\) \? 1?5 : )?frisch \? 2 : 4\) === 0\)/.test(html), "Tippen bleibt sofort, sonst seltener"); // 2.226.0: mit Realtime noch seltener
   assert.ok(/NA\.idStand = idStand; CHAT_AKTIV = Date\.now\(\);/.test(html), "neue Nachricht → wieder schnell");
   assert.ok(/if \(SP\.offen\.ichDran \? SPT_TAKT\.n % 5 : SPT_TAKT\.ruhig > 40 && !SP\.offen\.uhr\?\.laeuft && SPT_TAKT\.n % 3\) return;/.test(html) && /SPT_TAKT\.ruhig = 0; const warDran/.test(html), "Spiele-Takt");
   assert.ok(!/function aeErledigt/.test(html), "alter Knopf „Im KC Manager eingetragen“ entfernt");
@@ -9548,4 +9548,9 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // 2.366.0 KC-CLUB-FELD-KONTRAST: ungestaltete Felder in Schema-Farben (nie weißer Grund mit heller Schrift)
 {
   assert.ok(/:root\.dunkel \{ color-scheme: dark; \}/.test(seite) && /:where\(select, textarea, input:not\([^)]*\)\) \{ background-color: var\(--karte\); color: var\(--text\);/.test(seite), "Felder lesbar im Dunkelmodus");
+}
+
+// 2.367.0 KC-CLUB-HAKEN-SCHNELL: Zustell-Haken nach dem Senden zügig, nur kurz und nur bis „angekommen“
+{
+  assert.ok(/const hakenWarten = Date\.now\(\) - HAKEN_SEIT < 60000 && /.test(html) && /m\.haken === "gesendet"/.test(html) && /HAKEN_SEIT = Date\.now\(\);/.test(html), "nach dem Senden 60 s zügig, bis angekommen");
 }

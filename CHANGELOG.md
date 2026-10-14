@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.367.0 – 2026-10-14 – ✔️ KC-CLUB-HAKEN-SCHNELL: Zustell-Haken kommen nach dem Senden zügig
+Anlass (Hansi): „Habe gerade eine Express-Nachricht an Steven geschickt. Das hat lange gedauert, bis ich 2 graue Haken bekommen habe.“
+- Gemessen: gesendet 07:46:14, Push raus 07:46:16, Mail 07:46:17, Stevens Handy „angezeigt“ 07:46:34 (20 s). Verzögerung lag bei der Anzeige beim
+  Absender: bei stehender Leitung fragte der Chat nur alle 30–60 s nach (die Empfangsmeldung des Handys löst kein Signal an den Absender aus).
+- Jetzt: nach dem eigenen Senden 60 s lang alle 4 s nachfragen, nur bei offenem, sichtbarem Chat und nur bis die letzte eigene Nachricht „angekommen“ ist
+  (höchstens ~15 kleine Abfragen je gesendeter Nachricht).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.366.0 – 2026-10-14 – 🌗 KC-CLUB-FELD-KONTRAST: Auswahl- und Eingabefelder im Dunkelmodus lesbar
 Anlass (Hansi, Screenshot „Wege der Mitglieder“): „In der weißen Zeile kann man nix lesen. Kontrast anpassen.“
 - Ursache: Felder ohne eigene Gestaltung erbten die helle Schrift (button, input, select, textarea { color: inherit }), behielten aber den weißen
