@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.391.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.392.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17853,9 +17853,9 @@ function jzbBlaeserMalen(c, B, k) { // Gärtner in Warnjacke mit Gehörschutz un
 // 🌰 Eicheln und Haselnüsse – ein paar liegen immer da (unter dem Laub); ist eine weg, fällt später eine neue vom Baum
 function jzbEichelnPruefen(dt) {
   const J = JZB, k = J.k;
-  if (!J.eicheln) { const n = Math.max(4, Math.min(7, Math.round(J.w / 70))); J.eicheln = Array.from({ length: n }, (_, i) => jzbEichelNeu(JZB_RAND + 20 * k + (i + jzbZ(.15, .85)) * (J.w - 2 * JZB_RAND - 40 * k) / n, i % 3 === 1, 0)); }
+  if (!J.eicheln) { const n = Math.max(4, Math.min(7, Math.round(J.w / 70))); J.eicheln = Array.from({ length: n }, (_, i) => jzbEichelNeu(jzbBodenX((i + jzbZ(.15, .85)) / n, 20 * k), i % 3 === 1, 0)); }
   const frei = J.eicheln.filter((e) => !e.weg).length;
-  if (frei < 3 && (J.eichelUhr = (J.eichelUhr ?? jzbZ(20, 40)) - dt) <= 0) { J.eichelUhr = null; J.eicheln.push(jzbEichelNeu(jzbZ(JZB_RAND + 20 * k, J.w - JZB_RAND - 20 * k), Math.random() < .4, -J.h)); }
+  if (frei < 3 && (J.eichelUhr = (J.eichelUhr ?? jzbZ(20, 40)) - dt) <= 0) { J.eichelUhr = null; J.eicheln.push(jzbEichelNeu(jzbBodenX(Math.random(), 20 * k), Math.random() < .4, -J.h)); }
   for (const e of J.eicheln) if (e.dy < 0) { e.v = (e.v || 0) + 300 * dt; e.dy = Math.min(0, e.dy + e.v * dt); if (!e.dy) { e.hopp = .25; for (let i = 0; i < 4; i++) J.fx.push({ typ: "funke", x: e.x, y: J.h - 3, vx: jzbZ(-25, 25), vy: -jzbZ(10, 30), s: 1.4, a: .8, farbe: "#c9a36b" }); } }
   for (const e of J.eicheln) if (e.hopp) e.hopp = Math.max(0, e.hopp - dt);
   J.eicheln = J.eicheln.filter((e) => !e.weg);
@@ -17864,13 +17864,14 @@ function jzbEichelnPruefen(dt) {
 // weg und sie fliegen wirbelnd durch die Gegend“): 3–5 Pilze (Fliegenpilz, Steinpilz, kleine Braune) wachsen langsam aus dem Boden; der
 // Laubbläser pustet sie wie das Laub davon. Später wächst an anderer Stelle ein neuer. Nur Herbst, nur Anzeige auf diesem Gerät.
 const JZB_PILZ_ARTEN = ["fliegen", "stein", "braun"];
-const jzbPilzNeu = (x, wachs = 0) => ({ x, art: JZB_PILZ_ARTEN[Math.random() < .45 ? 0 : Math.random() < .5 ? 1 : 2], s: jzbZ(1.5, 2), kipp: jzbZ(-.12, .12), wachs, tempo: jzbZ(.12, .25) });
+// 2.392.0 (Fund Hansi): etwas kleiner und höchstens 2 Fliegenpilze gleichzeitig
+const jzbPilzNeu = (x, wachs = 0) => ({ x, art: JZB_PILZ_ARTEN[Math.random() < .45 && (JZB.pilze || []).filter((pz) => pz.art === "fliegen" && !pz.weg).length < 2 ? 0 : Math.random() < .5 ? 1 : 2], s: jzbZ(1.1, 1.4), kipp: jzbZ(-.12, .12), wachs, tempo: jzbZ(.12, .25) });
 function jzbPilzePruefen(dt) {
   const J = JZB, k = J.k;
-  if (!J.pilze) { const n = Math.max(3, Math.min(5, Math.round(J.w / 90))); J.pilze = Array.from({ length: n }, (_, i) => jzbPilzNeu(JZB_RAND + 30 * k + (i + jzbZ(.2, .8)) * (J.w - 2 * JZB_RAND - 60 * k) / n, 1)); }
+  if (!J.pilze) { const n = Math.max(3, Math.min(5, Math.round(J.w / 90))); J.pilze = []; for (let i = 0; i < n; i++) J.pilze.push(jzbPilzNeu(jzbBodenX((i + jzbZ(.2, .8)) / n, 30 * k), 1)); }
   for (const pz of J.pilze) if (pz.wachs < 1) pz.wachs = Math.min(1, pz.wachs + pz.tempo * dt);
   J.pilze = J.pilze.filter((pz) => !pz.weg);
-  if (J.pilze.length < 3 && !J.blaeser && (J.pilzUhr = (J.pilzUhr ?? jzbZ(12, 30)) - dt) <= 0) { J.pilzUhr = null; J.pilze.push(jzbPilzNeu(jzbZ(JZB_RAND + 30 * k, J.w - JZB_RAND - 30 * k))); }
+  if (J.pilze.length < 3 && !J.blaeser && (J.pilzUhr = (J.pilzUhr ?? jzbZ(12, 30)) - dt) <= 0) { J.pilzUhr = null; J.pilze.push(jzbPilzNeu(jzbBodenX(Math.random(), 30 * k))); }
 }
 function jzbPilzeMalen(c) {
   const J = JZB; if (J.saison !== "herbst" || !J.pilze) return;
@@ -17891,6 +17892,18 @@ function jzbPilzMalen(c, x, y, art, kipp, k, gross = 1, wachs = 1) {
   if (art === "fliegen") { c.fillStyle = "#fff"; for (const [px, py, r] of [[-3.8, -2, .9], [-.8, -4.2, 1], [2.6, -2.6, .85], [4.6, -1.2, .6], [-5.6, -.8, .55], [.9, -1.6, .6]]) { c.beginPath(); c.arc(px, -sh + py, r, 0, 7); c.fill(); } }
   c.fillStyle = "rgba(255,255,255,.28)"; c.beginPath(); c.ellipse(-hw * .35, -sh - hh * .55, hw * .25, hh * .18, -.3, 0, 7); c.fill(); // Glanz
   c.restore();
+}
+// 2.392.0 KC-CLUB-HERBST-MITTE-FREI (Fund Hansi): in der Mitte legt das Eichhörnchen den Namen – dort liegen keine Eicheln und
+// wachsen keine Pilze (nur Laub). jzbBodenX(u, rand) verteilt u (0…1) über den Boden OHNE den Namensbereich (+ Platz fürs Eichhörnchen).
+function jzbMitteFrei() {
+  const J = JZB, txt = J.nussName?.text || jzbEisNameText(); if (!txt || !J.ctx) return null;
+  const L = jzbNussNameLage(txt); return [L.pos[0] - L.fs * .6 - 8 * J.k, L.pos[L.pos.length - 1] + L.fs * .6 + 40 * J.k];
+}
+function jzbBodenX(u, rand) {
+  const J = JZB, lo = JZB_RAND + rand, hi = J.w - JZB_RAND - rand, z = jzbMitteFrei();
+  const a = z ? Math.max(lo, z[0]) : lo, b = z ? Math.min(hi, z[1]) : lo, luecke = Math.max(0, b - a), frei = hi - lo - luecke;
+  if (frei < 40 * J.k) return lo + u * (hi - lo);
+  const x = lo + u * frei; return x > a ? x + luecke : x;
 }
 const jzbEichelNeu = (x, nuss, dy) => ({ x, nuss, dy, kipp: jzbZ(-.6, .6), v: 0, hopp: 0 });
 function jzbEichelMalen(c, x, y, nuss, kipp, k, gross = 1) {
@@ -17916,8 +17929,8 @@ function jzbEichelnMalen(c) {
 // in der Backe und legt daraus den nächsten Buchstaben des Vornamens (jeder Buchstabe aus vielen kleinen Eicheln und Haselnüssen). Ist der Name
 // fertig, sitzt es stolz daneben. Nach einer Weile holt es sich die Nüsse Buchstabe für Buchstabe wieder (vom Ende her) – dann beginnt es von vorn.
 // Dazwischen frisst es weiter Nüsse vom Boden. Nur Herbst, nur auf diesem Gerät (nichts geht an den Server).
-function jzbNussNameLage() {
-  const J = JZB, N = J.nussName, c = J.ctx, fs = Math.round(Math.min(30 * J.k, J.h * .45)), z = [...N.text], f = `900 ${fs}px "Arial Black", "Segoe UI", Roboto, Arial, sans-serif`;
+function jzbNussNameLage(text = JZB.nussName.text) {
+  const J = JZB, c = J.ctx, fs = Math.round(Math.min(30 * J.k, J.h * .45)), z = [...text], f = `900 ${fs}px "Arial Black", "Segoe UI", Roboto, Arial, sans-serif`;
   c.save(); c.font = f; const b = z.map((ch) => c.measureText(ch).width + 3 * J.k); c.restore();
   const ges = b.reduce((a, v) => a + v, 0); let x = Math.max(JZB_RAND, (J.w - ges) / 2);
   return { fs, f, z, pos: b.map((w) => { const m = x + w / 2; x += w; return m; }), y: J.h - 2 };

@@ -14,6 +14,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.392.0 – 2026-10-14 – Herbst: Mitte frei, Pilze kleiner
+Pilze etwas kleiner, höchstens 2 Fliegenpilze; in der Mitte, wo das Eichhörnchen den Namen legt, liegen keine Eicheln und wachsen keine Pilze – nur Laub.
+
 ## 2.391.0 – 2026-10-14 – Express-Zähler 2/5
 Am 🏎️-Knopf steht, wie viele Express-Sendungen heute schon verschickt wurden (z. B. 2/5). Sind alle 5 verbraucht, geht Express nicht an – mit Hinweis, ab wann es wieder geht. Admin unbegrenzt.
 

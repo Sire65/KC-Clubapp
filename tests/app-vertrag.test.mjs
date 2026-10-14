@@ -6307,6 +6307,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const z = EXPRESS && st && !st\.unbegrenzt \? `\$\{st\.genutzt\}\/\$\{st\.max\}` : "";/.test(html) && /#expressKnopf\[data-zahl\]::after \{ content: attr\(data-zahl\);/.test(html), "„2/5“ am 🏎️-Knopf");
   assert.ok(/if \(st && !st\.unbegrenzt && st\.genutzt >= st\.max\) \{\n\s+expressUmschalten\(false\);/.test(html) && /\(heute \$\{st\.genutzt\}\/\$\{st\.max\}\)/.test(html), "voll → Express geht nicht an, Hinweis; nach dem Senden „heute 3/5“");
 }
+// 2.392.0 KC-CLUB-HERBST-MITTE-FREI (Fund Hansi): Pilze kleiner, höchstens 2 Fliegenpilze, in der Mitte (Name aus Nüssen) nur Laub
+{
+  assert.ok(/function jzbMitteFrei\(\)/.test(html) && /function jzbBodenX\(u, rand\)/.test(html) && /jzbPilzNeu\(jzbBodenX\(/.test(html) && /jzbEichelNeu\(jzbBodenX\(\(i \+ jzbZ/.test(html) && /J\.eicheln\.push\(jzbEichelNeu\(jzbBodenX\(Math\.random\(\)/.test(html), "Pilze und Eicheln meiden den Namensbereich");
+  assert.ok(/filter\(\(pz\) => pz\.art === "fliegen" && !pz\.weg\)\.length < 2 \? 0/.test(html) && /s: jzbZ\(1\.1, 1\.4\)/.test(html), "höchstens 2 Fliegenpilze, kleiner");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -9364,7 +9369,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.329.0 KC-CLUB-NUSSNAME: Eichhörnchen legt den Vornamen aus Nüssen, sitzt stolz daneben, holt sie wieder
 {
-  assert.ok(/function jzbNussNameLage\(\)/.test(html) && /function jzbNussPunkte\(ch, fs, f\)/.test(html) && /jzbNussNameMalen\(c\); \/\/ 2\.329\.0/.test(html), "Name aus Nüssen");
+  assert.ok(/function jzbNussNameLage\((?:text = JZB\.nussName\.text)?\)/.test(html) && /function jzbNussPunkte\(ch, fs, f\)/.test(html) && /jzbNussNameMalen\(c\); \/\/ 2\.329\.0/.test(html), "Name aus Nüssen");
   assert.ok(/H\.art === "bringen"/.test(html) && /H\.art === "holen"/.test(html) && /H\.phase = "stolz"/.test(html), "bringen, stolz, holen");
   assert.ok(/nussName: null, nussErster: false/.test(html), "beim Start zurückgesetzt");
 }
