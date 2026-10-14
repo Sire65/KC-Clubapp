@@ -6342,6 +6342,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(partner\) \{ an = !\(pers\.has\(partner\) \|\| fav\.has\(id\)\);/.test(html) && /catch \(e\) \{ if \(INIT\) INIT\.einstellungen = \{ \.\.\.\(INIT\.einstellungen \|\| \{\}\), chat_favoriten: vorher \};/.test(html), "Einzelchat-Stern = Person; Fehler → alter Stand zurück");
   assert.ok(/<button data-f="fav" onclick="mgFilterSetzen\('fav'\)">⭐ Favoriten<\/button>/.test(html) && /\$\{mgStern\(m\)\}<button class="knopf klein" title="Nachricht"/.test(html), "Mitglieder: ☆/⭐ und Filter");
 }
+// 2.398.0 KC-CLUB-NUSSNAME-LESBAR (Fund Hansi „Name größer, Buchstaben besser erkennbar“)
+{
+  assert.ok(/fs = Math\.round\(Math\.min\(36 \* J\.k, J\.h \* \.5\)\)/.test(html) && /st = Math\.max\(2\.4, fs \/ 10\.5\)/.test(html) && /c\.strokeText\(L\.z\[i\], L\.pos\[i\]/.test(html), "größer, dichter, heller Rand");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

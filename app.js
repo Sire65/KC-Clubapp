@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.397.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.398.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17953,7 +17953,8 @@ function jzbEichelnMalen(c) {
 // fertig, sitzt es stolz daneben. Nach einer Weile holt es sich die Nüsse Buchstabe für Buchstabe wieder (vom Ende her) – dann beginnt es von vorn.
 // Dazwischen frisst es weiter Nüsse vom Boden. Nur Herbst, nur auf diesem Gerät (nichts geht an den Server).
 function jzbNussNameLage(text = JZB.nussName.text) {
-  const J = JZB, c = J.ctx, fs = Math.round(Math.min(30 * J.k, J.h * .45)), z = [...text], f = `900 ${fs}px "Arial Black", "Segoe UI", Roboto, Arial, sans-serif`;
+  // 2.398.0 KC-CLUB-NUSSNAME-LESBAR (Fund Hansi „Name etwas größer, Buchstaben besser erkennbar“): ein Drittel größer
+  const J = JZB, c = J.ctx, fs = Math.round(Math.min(36 * J.k, J.h * .5)), z = [...text], f = `900 ${fs}px "Arial Black", "Segoe UI", Roboto, Arial, sans-serif`;
   c.save(); c.font = f; const b = z.map((ch) => c.measureText(ch).width + 3 * J.k); c.restore();
   const ges = b.reduce((a, v) => a + v, 0); let x = Math.max(JZB_RAND, (J.w - ges) / 2);
   return { fs, f, z, pos: b.map((w) => { const m = x + w / 2; x += w; return m; }), y: J.h - 2 };
@@ -17962,7 +17963,7 @@ function jzbNussPunkte(ch, fs, f) { // Rasterpunkte innerhalb des Buchstabens �
   const J = JZB, key = `${ch}|${fs}`; J.nussPunkte = J.nussPunkte || new Map(); if (J.nussPunkte.has(key)) return J.nussPunkte.get(key);
   const cv = document.createElement("canvas"), w = Math.ceil(fs * 1.4), h = Math.ceil(fs * 1.25), c = cv.getContext("2d"); cv.width = w; cv.height = h;
   c.font = f; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.fillStyle = "#000"; c.fillText(ch, w / 2, h - fs * .12);
-  const d = c.getImageData(0, 0, w, h).data, st = Math.max(2.6, fs / 8.5), pk = [];
+  const d = c.getImageData(0, 0, w, h).data, st = Math.max(2.4, fs / 10.5), pk = []; // 2.398.0: dichter → klarere Kanten
   for (let y = st / 2; y < h; y += st) for (let x = st / 2 + ((Math.round(y / st) % 2) ? st / 2 : 0); x < w; x += st)
     if (d[(Math.floor(y) * w + Math.floor(x)) * 4 + 3] > 120) pk.push([x - w / 2, y - (h - fs * .12), pk.length % 3 === 0, Math.sin(pk.length * 7.3) * .5]);
   const r = { pk, st }; J.nussPunkte.set(key, r); return r;
@@ -17973,8 +17974,9 @@ function jzbNussNameMalen(c) {
   for (let i = 0; i < N.n; i++) {
     if (N.weg?.[i]) continue; // 2.356.0: vom Laubbläser weggepustet
     const { pk, st } = jzbNussPunkte(L.z[i], L.fs, L.f), neu = Math.min(1, (J.T - (N.gelandet[i] ?? -9)) / .4);
-    c.save(); c.font = L.f; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.globalAlpha = .5 * neu; c.fillStyle = "#4a2a10"; // dunkler Untergrund – damit man den Buchstaben gut lesen kann
-    c.fillText(L.z[i], L.pos[i], L.y - L.fs * .12 + st * .45); c.restore();
+    c.save(); c.font = L.f; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.globalAlpha = .75 * neu; c.fillStyle = "#3a1f0a"; // dunkler Untergrund – damit man den Buchstaben gut lesen kann
+    c.lineJoin = "round"; c.lineWidth = Math.max(2, L.fs / 9); c.strokeStyle = "rgba(255,236,200,.55)"; // 2.398.0: heller Rand trennt den Buchstaben vom Hintergrund
+    c.strokeText(L.z[i], L.pos[i], L.y - L.fs * .12 + st * .45); c.fillText(L.z[i], L.pos[i], L.y - L.fs * .12 + st * .45); c.restore();
     for (const [px, py, nuss, kipp] of pk) { const q = jzbEase(Math.min(1, neu * 1.6 - (py / -L.fs) * .6)); if (q <= 0) continue; // Nüsse purzeln von unten nach oben dazu
       jzbEichelMalen(c, L.pos[i] + px, L.y + py + st * .45 - (1 - q) * 6 * J.k, nuss, kipp, 1, st / 6.2 * (.6 + .4 * q)); }
   }

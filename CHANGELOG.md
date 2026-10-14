@@ -14,6 +14,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.398.0 – 2026-10-14 – Herbst: Name aus Nüssen besser lesbar
+Der Name, den das Eichhörnchen legt, ist größer, aus mehr und kleineren Nüssen und hat einen hellen Rand – die Buchstaben sind gut zu erkennen.
+
 ## 2.397.0 – 2026-10-14 – ⭐ Favoriten auch in der Mitgliederliste
 Ein Stern je Person: in der Mitgliederliste ☆/⭐ antippen oder beim Einzelchat „⭐ Als Favorit“ – es ist derselbe Stern und er erscheint an beiden Stellen. Gruppenchats behalten ihren eigenen Stern. Neu: Filter „⭐ Favoriten“ bei den Mitgliedern.
 
