@@ -4442,7 +4442,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/freigaben: await freigaben\(\),/.test(server) && /const frei = \(id\) => !!ICH\?\.admin \|\| INIT\?\.freigaben\?\.\[id\] === "alle";/.test(html), "App blendet nicht Freigegebenes aus");
   assert.ok(/aktion: "rzStart\(\)", nur: \(\) => frei\("rezepte"\) \}/.test(html) && /aktion: "avWahl\(\)", nur: \(\) => frei\("avatar"\) \}/.test(html), "Kacheln hängen an der Freigabe");
   assert.ok(/\["freigaben", "🚦", "Freigaben", "app"\]/.test(html) && /api\("freigabe_setzen", \{ funktion: id, fuer \}/.test(html), "Admin-Kachel Freigaben");
-  assert.ok(server.includes('nurWennFrei(/^[bc]/.test(fig) ? "avatar_baukasten" : "avatar"'), "Baukasten-Figur (b… und c…, 2.23.99) nur mit Freigabe speicherbar");
+  assert.ok(server.includes('nurWennFrei(/^p/.test(fig) ? "avatar_premium" : /^[bc]/.test(fig) ? "avatar_baukasten" : "avatar"'), "Baukasten-Figur (b… und c…, 2.23.99) bzw. hochwertige (p…, 2.414.0) nur mit Freigabe speicherbar");
   const k = html.slice(html.indexOf("// ---------- KC-CLUB-AVATAR (2.23.85"), html.indexOf("// KC-CLUB-FREIGABE (2.23.86, Wunsch Hansi): neue Funktionen nur sichtbar"));
   const AV = new Function(k + "; return { avTeile, avatarSvg };")();
   assert.ok(AV.avTeile("b012300000") && /^<svg/.test(AV.avatarSvg("b482311b71")), "Baukasten-Code wird gezeichnet");
@@ -4537,10 +4537,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const k = html.slice(html.indexOf("// ---------- KC-CLUB-AVATAR (2.23.85"), html.indexOf("// ---------- KC-CLUB-KREISE (0.60.0)"));
   const AV = new Function(k + "; return { AV_FIGUREN, AV_BART, avatarSvg, avTeile };")();
-  assert.deepEqual(AV.AV_BART, [0, "voll", "schnurr", "stoppel", "zwirbel", "walross", "kinnbart"], "alte Baukasten-Codes bleiben gültig (nur angehängt)");
+  assert.deepEqual(AV.AV_BART.slice(0, 7), [0, "voll", "schnurr", "stoppel", "zwirbel", "walross", "kinnbart"], "alte Baukasten-Codes bleiben gültig (nur angehängt)");
   for (let i = 16; i <= 25; i++) { const f = AV.AV_FIGUREN["m" + i]; assert.ok(f && ["schnurr", "zwirbel", "walross", "kinnbart"].includes(f[4]), `m${i} mit Schnauzer`); }
   assert.ok(/stroke="rgba\(0,0,0,\.35\)"/.test(AV.avatarSvg("m21")), "feiner Rand am Bart");
-  assert.ok(/reihe\("Bart", 4, \["keiner", "Vollbart", "Schnurrbart", "Stoppeln", "Zwirbelbart", "Walross", "Schnauzer \+ Kinnbart"\]\)/.test(html), "Baukasten kennt die neuen Bärte");
+  assert.ok(/reiheB?\("Bart", 4, \["keiner", "Vollbart", "Schnurrbart", "Stoppeln", "Zwirbelbart", "Walross", "Schnauzer \+ Kinnbart"[,\]]/.test(html), "Baukasten kennt die neuen Bärte");
 }
 
 // 447. 2.23.97: Knopf in einer Nachricht, der an eine Stelle der App führt (KC-CLUB-SPRUNGKNOPF, Wunsch Hansi)
@@ -4556,11 +4556,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 
 // 448. 2.23.98: Mein Bild – erst auswählen (große Vorschau), dann übernehmen oder bearbeiten (Wunsch Hansi)
 {
-  const f = html.slice(html.indexOf("function avWahl()"), html.indexOf("// KC-CLUB-AVATAR-BAUKASTEN (2.23.86, Wunsch Hansi)"));
-  assert.ok(!/onclick="avSetzen\('\$\{k\}'\)"/.test(f) && (f.match(/onclick="avWaehlen\('\$\{k\}', this\)"/g) || []).length === 2, "Antippen wählt nur aus, speichert nicht sofort");
+  const f = html.slice(html.indexOf("function avKlappe("), html.indexOf("// KC-CLUB-AVATAR-BAUKASTEN (2.23.86, Wunsch Hansi)")); // 2.413.0: Figurenknöpfe stehen jetzt im Helfer avKlappe direkt vor avWahl
+  assert.ok(!/onclick="avSetzen\('\$\{k\}'\)"/.test(f) && (f.match(/onclick="avWaehlen\('\$\{k\}', this\)"/g) || []).length >= 1, "Antippen wählt nur aus, speichert nicht sofort");
   assert.ok(/onclick="avSetzen\(AVW\.wahl\)"/.test(f) && /onclick="avBauen\(AVW\.wahl\)">✏️ Bearbeiten/.test(f), "Übernehmen und Bearbeiten");
   assert.ok(/bauen = c && !AVF_RE\.test\(c\) && avTeile\(c\) && frei\("avatar_baukasten"\)/.test(f), "Bearbeiten nur, wenn der Baukasten freigegeben ist, nie beim Foto");
-  assert.ok(/function avBauen\(start\) \{[^\n]*\n  const jetzt = start \|\| INIT\?\.einstellungen\?\.avatar\?\.figur/.test(html), "Baukasten startet mit der gewählten Figur");
+  assert.ok(/function avBauen\(start(, teil)?\) \{[^\n]*\n  const jetzt = start \|\| INIT\?\.einstellungen\?\.avatar\?\.figur/.test(html), "Baukasten startet mit der gewählten Figur");
 }
 
 // 449. 2.23.99: Baukasten mit mehr Gesichtsteilen, großer Vorschau, 🎲 Zufall + Hinweis „wird als Knopf angezeigt“ (Wunsch Hansi)
@@ -4571,9 +4571,9 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(AV.avTeile("c" + "0".repeat(15)) && !AV.avTeile("c" + "z".repeat(15)) && AV.avTeile("b000000000"), "c-Codes geprüft, b-Codes weiter gültig");
   const c = "c" + [1, 5, 1, 0, 2, 4, 3, 2, 0, 1, 3, 1, 3, 2, 1].map((x) => x.toString(36)).join("");
   assert.ok(/^<svg viewBox="0 0 64 64"/.test(AV.avatarSvg(c)) && !/<image|href=|url\(/.test(AV.avatarSvg(c)), "selbst gezeichnet, keine fremden Bilder");
-  assert.ok(/reihe\("Augen", 9,/.test(html) && /reihe\("Mund", 11,/.test(html) && /reihe\("Wangen", 12,/.test(html) && /reihe\("Brille", 5, \["ohne", "rund", "eckig", "Halbbrille", "Sonnenbrille"(, "[^"]+")*\]\)/.test(html) && /reihe\("Kochjacke", 14,/.test(html), "neue Teile im Baukasten");
+  assert.ok(/reihe\("Augen", 9,/.test(html) && /reihe\("Mund", 11,/.test(html) && /reihe\("Wangen", 12,/.test(html) && /reiheB?\("Brille", 5, \["ohne", "rund", "eckig", "Halbbrille", "Sonnenbrille"(, "[^"]+")*\][),]/.test(html) && /reihe\("Kochjacke", 14,/.test(html), "neue Teile im Baukasten");
   assert.ok(/avatarSvg\(avbCode\(\), 160(, initialen\(ICH\?\.name\))?\)/.test(html) && /onclick="avbZufall\(\)">🎲 Zufall/.test(html), "große Vorschau + Zufall");
-  assert.ok(server.includes("/^c[0-9a-z]{15,26}$/.test(w.figur)"), "Server nimmt c-Codes an");
+  assert.ok(server.includes("/^c[0-9a-z]{15,31}$/.test(w.figur)"), "Server nimmt c-Codes an");
   assert.ok(/id="sprungHinweis"/.test(html) && /function sprungHinweisZeigen\(\)/.test(html) && /Wird nach dem Senden als Knopf angezeigt/.test(html), "Hinweis unter dem Schreibfeld");
 }
 
@@ -4842,7 +4842,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const a = html.indexOf("const AV_HAUT"), b = html.indexOf("// KC-CLUB-FREIGABE (2.23.86", a);
   const AV2 = new Function("INIT", "ICH", "MITGLIEDER", html.slice(a, b) + "\nreturn { avTeile, avatarSvg, AV_HAAR, AV_BRILLE, AV_KNOPF };")(null, null, []);
   assert.ok(AV2.AV_HAAR.meliert && AV2.AV_BRILLE.length >= 9 && AV2.AV_KNOPF.length === 7, "neue Auswahl");
-  assert.equal(AV2.avTeile("c" + "100000000000000").length, 26, "alter 15er-Code bleibt gültig (2.53.0: 26 Teile)");
+  assert.equal(AV2.avTeile("c" + "100000000000000").length, 32, "(2.414.0: 32 Teile) alter 15er-Code bleibt gültig (2.53.0: 26 Teile)");
   assert.equal(AV2.avTeile("c" + "1000000000000003")[15], 3, "16. Zeichen = Knopffarbe");
   assert.equal(AV2.avTeile("c" + "100000000000000z"), null, "ungültige Knopffarbe abgelehnt");
   const svg = AV2.avatarSvg("c15" + Object.keys(AV2.AV_HAAR).indexOf("meliert").toString(36) + "0600000000000", 80, "HK");
@@ -4964,7 +4964,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (let i = 0; i < AV3.AV_KOPF.length; i++) assert.ok(AV3.avatarSvg("c151" + i.toString(36) + "000000000000", 64).length > 500, "zeichnet " + AV3.AV_KOPF[i]);
   assert.ok(/L19\.6 \$\{y - \.4\} M\$\{64 - x\} \$\{y\} L44\.4/.test(html), "Brillenbügel bis zum Ohr");
   assert.ok(/reihe\(`Farbe \$\{AV_KOPF_NAME\[AVB\[3\]\]\}`, 16/.test(html) && /reihe\(`Muster \$\{AV_KOPF_NAME\[AVB\[3\]\]\}`, 17/.test(html), "Baukasten: Farbe und Muster je Kopfbedeckung");
-  assert.ok(server.includes("/^c[0-9a-z]{15,26}$/.test(w.figur)"), "Server nimmt 18er-Codes an");
+  assert.ok(server.includes("/^c[0-9a-z]{15,31}$/.test(w.figur)"), "Server nimmt 18er-Codes an");
 }
 // 2.34.0 KC-CLUB-NACHRICHTEN-ZAHL + KC-CLUB-NACHRICHTEN-STATISTIK (Wunsch Hansi)
 {
@@ -5038,7 +5038,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/"pilot", "randlos"[\],]/.test(html) && /"#a61b29", "#7d838a"[\],]/.test(html) && /"Pilotenbrille", "randlos"[\],]/.test(html), "Auswahl im Baukasten + Titan-Grau (2.45.0: weitere dahinter)");
   assert.ok(/KC-CLUB-AVATAR-RANDLOS/.test(html) && /22\.9, 22\.2[\],]/.test(html) && /brille === 9 \? \.8 : /.test(html), "eigene Zeichnung, dünne Bügel bis zum Ohr");
   const code = "c" + [1, 5, 1, 0, 0, 9, 1, 1, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0].map((x) => x.toString(36)).join("");
-  assert.ok(/^c[0-9a-z]{15,18}$/.test(code) && server.includes("/^c[0-9a-z]{15,26}$/.test(w.figur)"), "Server nimmt den Code an");
+  assert.ok(/^c[0-9a-z]{15,18}$/.test(code) && server.includes("/^c[0-9a-z]{15,31}$/.test(w.figur)"), "Server nimmt den Code an");
 }
 // 2.39.1 KC-CLUB-ANHANG-ANSEHEN (Meldung Hansi: Bildschirmfoto beim Antippen weg): Anhang antippen = ansehen, nur ✕ entfernt
 {
@@ -5065,7 +5065,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/function avWahl\(\) \{\n  spur\("mein_bild"\);/.test(html), "Öffnen von „Mein Bild“");
   const f = html.slice(html.indexOf("async function avSetzen(figur)"), html.indexOf("// ---------- KC-CLUB-REZEPTBUCH"));
-  assert.ok(/spur\(!figur \? "bild_entfernt" : \/\^\[bc\]\/\.test\(figur\) \? "bild_gebaut" : "bild_gewaehlt"\)/.test(f) && /spur\("bild_foto"\)/.test(html), "Speichern von Figur, eigener Figur, Foto, Entfernen");
+  assert.ok(/spur\(!figur \? "bild_entfernt" : \/\^\[bcp?\]\/\.test\(figur\)( && !AV_PREMIUM\.some\(\(x\) => x\.code === figur\))? \? "bild_gebaut" : "bild_gewaehlt"\)/.test(f) && /spur\("bild_foto"\)/.test(html), "Speichern von Figur, eigener Figur, Foto, Entfernen");
   assert.ok(/mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: /.test(html), "lesbare Namen in den Wegen");
   for (const w of ["mein_bild", "bild_gewaehlt", "bild_gebaut", "bild_foto", "bild_entfernt"]) assert.ok(/^[a-z][a-z0-9_]{0,29}$/.test(w), "Server nimmt " + w + " an");
 }
@@ -5088,10 +5088,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const code = (kopf, form) => "c" + [1, 5, 1, kopf, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, form].map((x) => x.toString(36)).join("");
   assert.ok(AV4.AV_KOPF.includes("haube") && /"Spitzenhaube"[\],]/.test(html) && AV4.avatarSvg(code(AV4.AV_KOPF.indexOf("haube"), 0), 64).length > 500, "Spitzenhaube (wie früher Hausmädchen)");
   for (let i = 0; i < 6; i++) assert.equal(AV4.avTeile(code(0, i))[18], i, "Kopfform " + i + " im Code");
-  assert.equal(AV4.avTeile("c" + "1510001100000001" + "00").length, 26, "alte 18er-Codes gültig, Kopfform = normal");
+  assert.equal(AV4.avTeile("c" + "1510001100000001" + "00").length, 32, "(2.414.0: 32 Teile) alte 18er-Codes gültig, Kopfform = normal");
   assert.notEqual(AV4.avatarSvg(code(3, 2), 64), AV4.avatarSvg(code(3, 0), 64), "eckig sieht anders aus");
   assert.ok(AV4.avatarSvg(code(AV4.AV_KOPF.indexOf("chefhoch"), 0), 64).length > 500 && AV4.avatarSvg(code(AV4.AV_KOPF.indexOf("schiffchen"), 0), 64).length > 500, "Mützen zeichnen");
-  assert.ok(/^c[0-9a-z]{15,19}$/.test(code(12, 5)) && server.includes("/^c[0-9a-z]{15,26}$/.test(w.figur)"), "Server nimmt 19er-Codes an");
+  assert.ok(/^c[0-9a-z]{15,19}$/.test(code(12, 5)) && server.includes("/^c[0-9a-z]{15,31}$/.test(w.figur)"), "Server nimmt 19er-Codes an");
   assert.ok(/reihe\("Kopfform", 18, AV_KOPFFORM\)/.test(html), "Kopfform im Baukasten");
 }
 // 2.43.0 KC-CLUB-JACKE-WOCHENTAG (Wunsch Hansi): Kochjacke „🔄 täglich wechselnd“ – Mo–So je Farbe mit Kontrast-Knöpfen
@@ -5105,7 +5105,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const code = "c" + [3, 5, 0, 0, 2, 0, 4, 5, 0, 0, 0, 0, 0, 0, AV5.AV_JACKE_AUTO, 0, 0, 0, 0].map((x) => x.toString(36)).join("");
   assert.ok(AV5.avTeile(code) && AV5.avatarSvg(code, 64).length > 500, "Code mit Jacke „auto“ gültig und zeichnet");
   assert.ok(/onchange="avJackeAuto\(this\.checked, this\)"/.test(html) && /🔄 Kochjacke wechselt jeden Tag/.test(html) && /"🔄 täglich wechselnd"[\],]/.test(html), "Schalter in Mein Bild und im Baukasten");
-  assert.ok(/r\(4\) \? 0 : \[1, 2, 3, 4, 5, 6, 8, 9, 10\]\[r\(9\)\]/.test(html), "Zufall wählt nie „auto“ (Index 7)");
+  assert.ok(/r\(4\) \? 0 : \[1, 2, 3, 4, 5, 6, 8, 9, 10(, 11, 12, 13, 14)?\]\[r\((9|13)\)\]/.test(html), "Zufall wählt nie „auto“ (Index 7)");
 }
 // 2.43.1 KC-CLUB-TERMIN-WER-SAGT-AB (Fund Hansi: Thomas hatte abgesagt, bekam „leider muss ich absagen“)
 {
@@ -5130,14 +5130,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const AV6 = new Function("INIT", "ICH", "MITGLIEDER", html.slice(a, b) + "\nreturn { avTeile, avatarSvg, AV_BRILLE, AV_BRILLENFARBE, AV_JACKE, AV_JACKE_AUTO };")(null, null, []);
   assert.ok(["schmetterling", "oversize", "herz"].every((x) => AV6.AV_BRILLE.includes(x)) && AV6.AV_BRILLENFARBE.length >= 13, "Damenformen + Brillenfarben");
   assert.equal(AV6.AV_JACKE_AUTO, 7, "„auto“ bleibt Index 7 (alte Codes unverändert)");
-  assert.deepEqual(AV6.AV_JACKE.slice(8), ["#c8102e", "#e8792b", "#ec8fb0"], "Nikolausrot, Orange, Pink");
+  assert.deepEqual(AV6.AV_JACKE.slice(8, 11), ["#c8102e", "#e8792b", "#ec8fb0"], "Nikolausrot, Orange, Pink");
   const c = (o) => { const z = [0, 3, 3, 3, 0, 0, 1, 0, 1, 3, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; Object.entries(o).forEach(([k, v]) => (z[k] = v)); return "c" + z.map((x) => x.toString(36)).join(""); };
   const strass = AV6.avatarSvg(c({ 5: 10, 19: 1 }), 64), ohne = AV6.avatarSvg(c({ 5: 10 }), 64);
   assert.ok((strass.match(/stroke="#9fd3ff"/g) || []).length >= 6 && !/stroke="#9fd3ff"/.test(ohne), "Strass nur, wenn gewählt");
   assert.ok(/<pattern id="avj\d+"/.test(AV6.avatarSvg(c({ 14: 1, 20: 1 }), 64)) && /fill="#2a2a2a" stroke="rgba\(0,0,0,\.25\)"/.test(AV6.avatarSvg(c({ 14: 8, 22: 2 }), 64)), "Längsstreifen als Muster, Kragenfarbe");
-  assert.equal(AV6.avTeile(c({})).length, 26, "26 Teile (2.53.0)");
-  assert.equal(AV6.avTeile("c" + "1510001100000001" + "00").length, 26, "alte Codes gültig, neue Teile = wie bisher");
-  assert.ok(server.includes("/^c[0-9a-z]{15,26}$/.test(w.figur)"), "Server nimmt 23er-Codes an");
+  assert.equal(AV6.avTeile(c({})).length, 32, "32 Teile (2.53.0: 26; 2.414.0: + Schmuck, Schnitt, Stil, Falten)");
+  assert.equal(AV6.avTeile("c" + "1510001100000001" + "00").length, 32, "(2.414.0: 32 Teile) alte Codes gültig, neue Teile = wie bisher");
+  assert.ok(server.includes("/^c[0-9a-z]{15,31}$/.test(w.figur)"), "Server nimmt 23er-Codes an");
   assert.ok(/reihe\("Glitzer", 19, AV_BRILLENDEKO\)/.test(html) && /reihe\("Jackenmuster", 20, AV_JACKENMUSTER\)/.test(html) && /reihe\("Streifenfarbe", 21,/.test(html) && /reihe\("Kragen", 22,/.test(html), "Auswahl im Baukasten");
 }
 // 2.45.1 KC-CLUB-STUNDE (Fund Hansi „Uhrzeiten sind nicht drin“): Stunde als Zahl 0–23 – Nachrichten-Statistik und Nutzung je Uhrzeit
@@ -5206,7 +5206,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal(typeof d.gesamt, "bigint");
   assert.ok(d.gesamt > 10n ** 18n, "über eine Trillion");
   assert.match(K.avZahlWort(11827419912496742400n), /^rund 11,8 Trillionen$/);
-  assert.equal(d.gruppen.length, 6, "sechs Gruppen: Person, Gesicht, Kopfbedeckung, Brille, Kochjacke, Hintergrund");
+  assert.equal(d.gruppen.length, 7, "sieben Gruppen: Person, Gesicht, Kopfbedeckung, Brille, Kochjacke, Hintergrund, Schmuck & Stil (2.414.0)");
   assert.ok(/class="av-info-knopf" onclick="avKombiInfo\(\)"/.test(html) && /\.av-info-knopf \{[^}]*background: #1565c0/.test(html), "blauer ⓘ-Knopf im Baukasten");
 }
 // 2.51.0 KC-CLUB-PROBEPHASE (Wunsch Hansi): Mitglied testet die App erst – ohne Begrüßung/Pinnwand, Admin übernimmt oder beendet mit einem Schalter
@@ -5242,13 +5242,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const A = new Function("INIT", "ICH", "MITGLIEDER", html.slice(a, b) + "\nreturn { avatarSvg, avTeile, AV_OHREN, AV_NASE, AV_AUGENFARBE };")(null, null, []);
   assert.ok(A.AV_OHREN.length >= 5 && A.AV_NASE.length >= 6 && A.AV_AUGENFARBE.length >= 6 && A.AV_OHREN.length <= 36 && A.AV_NASE.length <= 36, "Auswahl Ohren, Nasen, Augenfarben");
   const alt = "c" + [1, 5, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map((x) => x.toString(36)).join("");
-  assert.equal(A.avTeile(alt).length, 26, "alte 23er-Codes bekommen die neuen Teile als 0");
+  assert.equal(A.avTeile(alt).length, 32, "(2.414.0: 32 Teile) alte 23er-Codes bekommen die neuen Teile als 0");
   assert.equal(A.avatarSvg(alt + "000", 64), A.avatarSvg(alt, 64), "0 = sieht aus wie bisher");
   assert.ok(A.avTeile(alt + "123") && !A.avTeile(alt + "z00"), "26er-Codes gültig, unbekannte Werte abgewiesen");
   assert.ok(A.avatarSvg(alt + "001", 64).includes(A.AV_AUGENFARBE[1]), "Augenfarbe als Iris");
   assert.ok(/<path d="M27\.4 43\.4 Q32 45\.8 36\.6 43\.4/.test(html), "Halstuch läuft um den Hals");
   assert.ok(/reihe\("Augenfarbe", 25,/.test(html) && /reihe\("Nase", 24, AV_NASE\)/.test(html) && /reihe\("Ohren", 23, AV_OHREN\)/.test(html), "im Baukasten wählbar");
-  assert.ok(server.includes("/^c[0-9a-z]{15,26}$/.test(w.figur)"), "Server nimmt 26er-Codes an");
+  assert.ok(server.includes("/^c[0-9a-z]{15,31}$/.test(w.figur)"), "Server nimmt 26er-Codes an");
 }
 // 2.54.0 KC-CLUB-AVATAR-OHR-FEIN (Wunsch Hansi): Ohren natürlicher – Ohrrand, Muschel mit Schatten, Ohrknorpel bei allen Ohrformen
 {
@@ -5559,7 +5559,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const SH_FENSTER_ABLAEUFE = \[\["avbBlatt", "avatarBauen"\], \["avBlatt", "avatar"\][,\]]/.test(programm) && /blattAuf\("avBlatt"/.test(programm) && /blattAuf\("avbBlatt"/.test(programm), "Fenster haben eigenen Ablauf");
   assert.ok(/const key = shAblaufKey\(\); if \(key !== SH\.bereich\) return shWechsel\(key\);/.test(programm), "Fenster auf/zu wechselt den Ablauf");
   assert.ok(/const reihe = \(titel, i, werte\) => `<div class="ps-schritt" data-teil="\$\{i\}">/.test(programm), "Baukasten-Reihen sind markiert");
-  for (const t of [8, 0, 1, 2, 3, 16, 4, 9, 5, 13, 14, 20, 15, 6, 7]) assert.ok(new RegExp(`\\[${t}, "`).test(ab) && new RegExp(`reihe\\([^\\n]*, ${t}, `).test(programm), "Teil " + t + " im Baukasten und als Schritt");
+  for (const t of [8, 0, 1, 2, 3, 16, 4, 9, 5, 13, 14, 20, 15, 6, 7]) assert.ok(new RegExp(`\\[${t}, "`).test(ab) && new RegExp(`reiheB?\\([^\\n]*, ${t}, `).test(programm), "Teil " + t + " im Baukasten und als Schritt");
   assert.ok(ab.includes(`ziel: "#avWahlVorschau .av-vorschau-knoepfe .knopf.haupt"`) && /<div class="av-vorschau-knoepfe"><button class="knopf haupt"/.test(programm), "Übernehmen");
   assert.ok(ab.includes(`ziel: '#avbInhalt .bs-fuss .knopf.haupt'`) && /<div class="na-pfeil-knoepfe bs-fuss"><button class="knopf haupt" onclick="avSetzen\(avbCode\(\)\)/.test(programm), "Speichern im Baukasten");
 }
@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6366,9 +6366,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.400.0 KC-CLUB-KOPF-GLANZ (Wunsch Hansi „beim Start ein heller Lichtschein von links nach rechts durch den Kopf“)
 {
-  assert.ok(/<div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><i><\/i><\/div>/.test(html), "Glanz-Element im Kopf der Startseite");
+  assert.ok(/<div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><b><\/b><u><\/u><\/div>/.test(html), "Glanz-Element im Kopf der Startseite");
   assert.ok(/\.kopf-glanz \{ position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none;/.test(html), "Glanz bleibt im runden Kopf und fängt keine Klicks");
-  assert.ok(/\.kopf-glanz\.lauf i \{ animation: kopfGlanz [^;]* 1 both; \}/.test(html) && /@keyframes kopfGlanz \{[^}]*transform: translateX\(-100%\)/.test(html), "einmal, per transform (flüssig)");
+  // 2.410.0: statt Glanzstreifen Blitz + Stern – beide einmalig, nur transform/opacity
+  assert.ok(/\.kopf-glanz\.lauf u \{ animation: kopfFunkeln [^;]* 1 both; \}/.test(html) && /@keyframes kopfFunkeln \{[^}]*transform: translate\(0, 0\) scale\(1\.5\)/.test(html) && /50% \{ opacity: 1; transform: translate\(calc\(var\(--dx, 300px\) \* \.5\), calc\(var\(--dy, 150px\) \* \.5\)\) scale\(\.22\)/.test(html) && !/\.kopf-glanz u::before/.test(html) && !/@keyframes kopfGlanz/.test(html), "einmal, per transform (flüssig); Licht wandert schräg, verdichtet sich in der Mitte zum Blitz, ohne Stern-Strahlen");
   // 2.409.0 (Wahl Hansi, Diagnose: „Animationen entfernen“ am Handy aktiv): nur noch der App-Schalter schaltet den Glanz ab
   assert.ok(/:root\.ohne-anim \.kopf-glanz \{ display: none; \}/.test(html) && !/prefers-reduced-motion: reduce\) \{ \.kopf-glanz/.test(html), "Animierte Knöpfe aus → kein Glanz; Handy-Einstellung zählt nicht");
   assert.ok(/<div class="kopf-glanz" id="kopfGlanz"/.test(html) && /g\.addEventListener\("animationend", aus\); g\.addEventListener\("animationcancel", aus\);/.test(html), "beim Öffnen einmal, danach aus");
@@ -6423,6 +6424,81 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/api\("diagnose", \{ art: "glanz", daten: \{ ergebnis, ohne_anim:/.test(html) && /if \(KOPF_GLANZ_INFO\.gemeldet\) return; KOPF_GLANZ_INFO\.gemeldet = true;/.test(html), "einmal je Sitzung melden");
   assert.ok(/if \(getComputedStyle\(g\)\.display === "none"\) return kopfGlanzMelden\("aus"\);/.test(html), "abgeschaltet → sofort melden statt warten");
+}
+// 2.410.0 KC-CLUB-KOPF-AUFBLITZEN (Wunsch Hansi „Aufblitzen wie im Vorspann, wenn ein Logo erscheint“)
+{
+  assert.ok(/\.kopf-glanz\.lauf b \{ animation: kopfBlitz/.test(html) && /\.kopf-glanz\.lauf u \{ animation: kopfFunkeln/.test(html) && /@keyframes kopfFunkeln/.test(html), "Blitz und wanderndes Licht");
+  assert.ok(/if \(e\?\.animationName && e\.animationName !== "kopfFunkeln"\) return;/.test(html), "erst nach dem Stern aufräumen (Blitz endet früher)");
+}
+// 2.411.0 KC-CLUB-DIENST-WER-KLAPPE (Wunsch Hansi „Klappbereich, damit man sieht, dass es unten weitergeht“)
+{
+  assert.ok(/<details class="karte" data-klappe="dp_wer" data-ohne-unten><summary>👥 Wen anzeigen\? <span class="hinweis" id="dpWerKurz"/.test(html) && /id="dpPersonen"/.test(html), "Klappbereich mit Auswahl im Kopf");
+  assert.ok(/\$\("dpWerKurz"\)\.textContent = n\.length \?/.test(html), "Auswahl im Kopf wird gesetzt");
+  assert.ok(/el\?\.closest\("details:not\(\[open\]\)"\)\?\.setAttribute\("open", ""\);/.test(html), "Einführung klappt zugeklappte Ziele auf");
+}
+// 2.412.0 KC-CLUB-AVATAR-GALERIE / -KLAPPEN (Wunsch Hansi: hochwertige Avatare in Klappbereichen, alte bleiben)
+// 2.414.0: aus den vier Bereichen wurden die drei der Vorlage („Bisherige“, „Hochwertige“, „Individuell anpassen“) – Bild-Galerie bleibt als Zusatz
+{
+  assert.ok(/const AVG_RE = \/\^g\[wm\]\[0-9\]\{2,3\}\$\//.test(html) && /src="avatare\/\$\{code\}\.webp"/.test(html), "Galerie-Codes gw/gm als Bilddatei");
+  assert.ok(/avKlappe\("av_alt"/.test(html) && /avKlappe\("av_neu"/.test(html) && /avKlappe\("av_bau"/.test(html) && /data-klappe="\$\{name\}" data-ohne-unten/.test(html), "drei Klappbereiche");
+  assert.ok(/alt\.filter\(\(k\) => k\[0\] === "w"\)/.test(html) && /alt\.filter\(\(k\) => k\[0\] === "m"\)/.test(html) && /const alt = Object\.keys\(AV_FIGUREN\)/.test(html), "alte Figuren weiter da");
+  assert.ok(/\|\| \/\^g\[wm\]\[0-9\]\{2,3\}\$\/\.test\(w\.figur\)\)/.test(server) && /\^\(w\(0\[1-9\]\|1\[0-5\]\)/.test(server), "Server: neue Codes gültig, alte weiter gültig");
+  const j = JSON.parse(lies("avatare/avatare.json")); assert.ok(Array.isArray(j.figuren) && j.figuren.every((x) => /^g[wm][0-9]{2,3}$/.test(x.code) && fs.existsSync(new URL("../avatare/" + x.code + ".webp", import.meta.url))), "Liste gültig, jede Figur hat ihre Datei");
+}
+// 2.413.0 KC-CLUB-AVATAR-KARTEN (Vorlage Hansi/ChatGPT): Kopf als Karte mit Symbol, Untertitel und Mini-Vorschau, die nur zugeklappt sichtbar ist
+{
+  assert.ok(/function avKlappe\(name, offen, sym, titel, unter, inhalt, mini = \[\]\)/.test(html) && /class="av-k-mini"/.test(html) && /class="av-k-text"><b>\$\{titel\}<\/b><small>\$\{unter\}<\/small>/.test(html), "Karten-Kopf mit Untertitel und Mini-Vorschau");
+  assert.ok(/\.av-klappe\[open\] \.av-k-mini \{ display: none; \}/.test(html), "Mini-Vorschau nur zugeklappt");
+}
+// 2.414.0 KC-CLUB-AVATAR-PREMIUM (Vorgabe Hansi): 36 hochwertige Figuren aus Bausteinen, neue Accessoires, Baukasten mit Kacheln, eigene Freigabe
+{
+  const { avatarLaden } = await import("../tools/avatar-lader.mjs");
+  const A = avatarLaden(), P = A.lese("AV_PREMIUM");
+  assert.ok(P.length >= 30, "mindestens 30 hochwertige Figuren");
+  assert.ok(P.filter((x) => x.frau).length >= 15 && P.filter((x) => !x.frau).length >= 15, "Köchinnen und Köche");
+  assert.equal(new Set(P.map((x) => x.code)).size, P.length, "jede Figur einzigartig");
+  for (const x of P) { const t = A.teile(x.code); assert.ok(/^p[0-9a-z]{31}$/.test(x.code) && t && t[30] === true, "hochwertiger Code " + x.id); assert.ok(/^p[0-9a-z]{26,31}$/.test(x.code), "Server-Format " + x.id); }
+  const t = P.map((x) => A.teile(x.code));
+  assert.ok(new Set(t.map((x) => x[0])).size === 5 && new Set(t.map((x) => x[1])).size >= 12 && new Set(t.map((x) => x[2])).size >= 9 && new Set(t.map((x) => x[3])).size >= 14, "Vielfalt: alle Hauttöne, viele Frisuren, Haarfarben, Kopfbedeckungen");
+  assert.ok(t.some((x) => x[31] === 2) && t.some((x) => x[26]) && t.some((x) => x[27]) && t.some((x) => x[28]) && t.some((x) => x[29]), "Alter, Ohrringe, Ketten, Piercings, Jackenschnitte kommen vor");
+  // jede neue Auswahl zeichnet etwas anderes (kein toter Eintrag)
+  const basis = (i, n) => "p" + [0, 5, 1, 0, 0, 0, 12, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0].map((x, k) => (k === i ? n : x).toString(36)).join("");
+  for (const [i, liste] of [[1, "AV_FRISUREN"], [2, null], [3, "AV_KOPF"], [4, "AV_BART"], [5, "AV_BRILLE"], [14, "AV_JACKE"], [20, "AV_JACKENMUSTER"], [26, "AV_OHRRING"], [27, "AV_KETTE"], [28, "AV_PIERCING"], [29, "AV_JACKENSCHNITT"], [30, "AV_ALTER"], [6, "AV_BG"], [7, "AV_TUCH"]]) {
+    const n = liste ? A.lese(liste).length : Object.keys(A.lese("AV_HAAR")).length, bilder = new Set();
+    for (let k = 0; k < n; k++) { if (i === 14 && k === 7) continue; const c = basis(i, k); assert.ok(A.teile(c), `gültig ${i}/${k}`); bilder.add(A.svg(c)); }
+    assert.equal(bilder.size, n - (i === 14 ? 1 : 0), `jede Auswahl von Teil ${i} sieht anders aus`);
+  }
+  assert.ok(/^c/.test("c") && A.teile("c" + "0".repeat(31)) && !A.teile("c" + "0".repeat(32)) && !A.teile("p" + "0".repeat(29) + "z"), "Grenzen der Codes");
+  // App: Auswahl, Freigabe, Baukasten
+  assert.ok(/, prem = frei\("avatar_premium"\)/.test(html) && /avatar_premium: \{ t: "👑 Hochwertige Avatare"[^\n]*standard: "admin" \}/.test(server), "eigene Freigabe – erst Test, dann für alle");
+  assert.ok(/onclick="avBauen\(AVW\.wahl \|\| undefined, '\$\{t\}'\)"/.test(html) && /function avbSpringen\(teil\)/.test(html), "Kacheln öffnen den Baukasten an der richtigen Stelle");
+  assert.ok(/const avbCode = \(\) => \(AVB_P \? "p" : "c"\) \+ AVB\.map/.test(html) && /AVB_P = !!t\[30\] && frei\("avatar_premium"\)/.test(html), "Baukasten speichert Stil und neue Teile");
+  for (const r of ["Ohrringe\", 26", "Halskette\", 27", "Piercing\", 28", "Jackenschnitt\", 29", "Falten\", 30"]) assert.ok(html.includes(r), "Baukasten-Zeile " + r);
+  assert.ok(/data-teil="eigene">📷 <b>Eigene Brille:<\/b>/.test(html) && /\["📷", "eigene Brille", "eigene"\]/.test(html), "eigene Brille (randlos nach Foto) bleibt und ist erklärt");
+  assert.ok(/const eigene = jetzt && \/\^\[bcp\]\/\.test\(jetzt\) && avGueltig\(jetzt\) && !AV_PREMIUM\.some/.test(html), "angepasste Figur erscheint als „eigene Figur“");
+  // Dateien: jede Figur als eigenständige SVG-Datei, identisch zur App-Zeichnung
+  const { premiumDateien } = await import("../tools/avatare-erzeugen.mjs");
+  const idx = JSON.parse(lies("avatare/premium/index.json"));
+  assert.equal(idx.figuren.length, P.length, "index.json vollständig");
+  for (const d of premiumDateien(A)) { assert.equal(lies("avatare/premium/" + d.datei), d.svg, "Datei aktuell: " + d.datei + " (node tools/avatare-erzeugen.mjs)"); assert.ok(d.svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg"'), "eigenständige SVG " + d.datei); }
+}
+// 2.415.0 KC-CLUB-AVATAR-HILFE (Wunsch Hansi): Hilfe, Twinkey, Lupe, geführte Hilfe und Videos kennen die neuen Avatare
+{
+  for (const id of ["avatar_hochwertig", "avatar_anpassen"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "darstellung"[^\\n]*nur: \\(\\) => frei\\("avatar"\\) && frei\\("avatar_(premium|baukasten)"\\)`).test(html), "Hilfe " + id + " (nur mit Freigabe)");
+  for (const id of ["avatar-hochwertig", "avatar-schmuck", "avatar-brille"]) assert.ok(html.includes(`{ id: "${id}", sym:`), "Twinkey " + id);
+  assert.ok(/Bisherige Avatare“<\/b> die 40 bekannten Figuren/.test(html) && /„📷 eigene Brille“|mach ein Foto von deiner Brille und schick es an Hansi/.test(html), "Texte nennen Bereiche und eigene Brille");
+  assert.ok(/"🧩", "Figur anpassen \(Baukasten: Frisur, Brille, Schmuck, Kochjacke\)", "[^"]*ohrringe[^"]*piercing[^"]*"/.test(html) && /avatar avatare kochfigur[^"]*hochwertige/.test(html), "Lupe findet Baukasten und hochwertige Avatare");
+  assert.ok(/ziel: "#avBlatt details\[open\] \.av-raster"/.test(html) && /\[26, "Ohrringe\?/.test(html) && /\[29, "Schnitt der Kochjacke/.test(html), "geführte Hilfe");
+  assert.ok(/\{ id: "figur", stand: "2"/.test(html) && /\{ id: "figurbau", stand: "2"/.test(html), "Videos in neuer Fassung");
+  assert.ok(/sel: \['#avBlatt details\[data-klappe="av_neu"\]'\], mussSel: true, t: "👑 Hochwertige Avatare"/.test(html) && /t: "💎 Schmuck"/.test(html) && /t: "👑 Klassisch oder hochwertig"/.test(html), "Videos zeigen die neuen Bereiche");
+  assert.ok(/function rgKlappeAuf\(name\) \{[\s\S]{0,300}RG\.zurueck\.push/.test(html), "Video öffnet Klappbereiche nur vorübergehend");
+}
+// 2.416.0 KC-CLUB-KUCKUCK-ZAEHLEN (Fund Hansi „15 Uhr nur ein Kuckuck“): Rufe nie übereinander, nur bei laufendem Ton
+{
+  assert.ok(/const kkRufe = \(h\) => \(h % 12\) \|\| 12;/.test(html) && /timeZone: TZ, hour: "2-digit"/.test(html) && /const TZ = "Europe\/Berlin";/.test(html), "deutsche Zeit, 12-Stunden-Zählung");
+  assert.ok(/if \(mitTon && audio && audio\.state === "running"\) try \{ gespielt\+\+;/.test(html), "Ruf nur bei laufendem Ton");
+  assert.ok(/const bereit = mitTon && audio \? Promise\.race\(\[/.test(html) && /bereit\.then\(\(\) => \{ if \(u\.isConnected\) u\._t = setTimeout\(ruf, 350\); \}\)/.test(html), "wartet auf den Ton");
+  assert.ok(/api\("diagnose", \{ art: "kuckuck", daten: \{ stunde: h, rufe: n, gespielt,/.test(html), "Diagnose einmal je Sitzung");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -9873,6 +9949,18 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.381.0 KC-CLUB-KNOEPFE-PLATZ: Mikrofon kleiner und in derselben Reihe
 {
   assert.ok(/\.sb-knopf \{ width: 44px; height: 44px; border-width: 2px; font-size: 1\.2rem; \}/.test(html) && /\.sb-knopf \{ left: auto; right: calc\(50% \+ 444px\); bottom: calc\(18px \+ env\(safe-area-inset-bottom\)\); width: 48px; height: 48px;/.test(html), "Mikrofon passt in die Reihe");
+}
+
+// 2.417.0 KC-CLUB-WERBEFILM-SEITE: Filmseite film/ für Mitglieder ohne App – eigenständig, ohne Anmeldung/Daten, nicht im Offline-Speicher
+{
+  const fs_ = fs.existsSync, film = lies("film/index.html");
+  assert.ok(fs_(new URL("../film/werbefilm.mp4", import.meta.url)) && fs_(new URL("../film/werbefilm-bild.jpg", import.meta.url)) && fs_(new URL("../film/werbefilm-vorschau.jpg", import.meta.url)), "Filmseite: Film, Startbild und Vorschaubild vorhanden");
+  assert.ok(/<video[^>]*playsinline[^>]*poster="werbefilm-bild\.jpg"/.test(film) && /<source src="werbefilm\.mp4" type="video\/mp4">/.test(film), "Filmseite: Video spielt im Handy-Browser (playsinline, Startbild, mp4)");
+  assert.ok(/name="robots" content="noindex, nofollow"/.test(film) && /property="og:image" content="https:\/\/sire65\.github\.io\/KC-Clubapp\/film\/werbefilm-vorschau\.jpg"/.test(film), "Filmseite: nicht in Suchmaschinen, Vorschaubild für WhatsApp");
+  assert.ok(!/app\.js|supabase|<form|<input/i.test(film), "Filmseite: kein Programm, keine Anmeldung, keine Eingaben");
+  assert.ok(/Zugangslink bekommst du bei <b>Hansi<\/b>/.test(film) && /since 1991/.test(film), "Filmseite: Hinweis Zugangslink bei Hansi, „since 1991“");
+  assert.ok(/if \(url\.pathname\.includes\("\/film\/"\)\) return;/.test(sw), "Service Worker lässt film/ aus (kein 20-MB-Film im Offline-Speicher, Range-Abspielen übers Netz)");
+  assert.ok(!sw.match(/const DATEIEN = \[[^\]]*\]/)[0].includes("film"), "Film nicht in der Vorab-Liste des Service Workers");
 }
 
 // Server 2.382.0 KC-CLUB-NOTPAKET-STUENDLICH: Notfall-Paket höchstens 1× pro Stunde neu bauen (je Bau ~3.000 Datenbankabfragen)

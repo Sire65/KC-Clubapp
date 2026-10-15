@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- KC-CLUB-WERBEFILM-SEITE (2.417.0, Wunsch Hansi): Werbefilm „Köcheclub to go“ für Mitglieder, die die App noch nicht haben.
+     Eigene Seite ohne das App-Programm, ohne Anmeldung, ohne Daten. Der Service Worker lässt film/ aus (wie stimmen/): der 20-MB-Film
+     kommt nicht in den Offline-Speicher, und das Abspielen (Range-Anfragen, iPhone) läuft direkt über GitHub Pages.
+     Quellen und Bauanleitung des Films: KC-Infrastructure-Control-Center, Ordner werbefilm/. -->
+<title>Köcheclub Werne – jetzt als App</title>
+<meta name="description" content="Unser kleiner Film zur Club-App: Termine, Clubchat, Fotos, Wunschdienst – alles unter uns. Deinen persönlichen Zugangslink bekommst du bei Hansi.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#741521">
+<meta property="og:type" content="video.other">
+<meta property="og:title" content="Köcheclub Werne – jetzt als App 📱">
+<meta property="og:description" content="Unser kleiner Film zur Club-App. Noch keine App? Deinen persönlichen Zugangslink bekommst du bei Hansi.">
+<meta property="og:image" content="https://sire65.github.io/KC-Clubapp/film/werbefilm-vorschau.jpg">
+<meta property="og:image:width" content="600">
+<meta property="og:image:height" content="600">
+<meta property="og:url" content="https://sire65.github.io/KC-Clubapp/film/">
+<link rel="icon" href="../icon-192.png">
+<style>
+  :root { --rot: #741521; --rot2: #4d0c16; --beige: #f3e9dc; --gold: #f5c542; --text: #2b1a1c; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { min-height: 100vh; background: linear-gradient(#fbf4ea, var(--beige)); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; text-align: center; }
+  header { background: radial-gradient(ellipse at 50% 30%, #9a2436, var(--rot) 55%, var(--rot2)); color: #fff; padding: 22px 16px 26px; }
+  .logo { width: 84px; height: 84px; margin: 0 auto; border-radius: 50%; background: var(--rot); border: 4px solid #fff; display: grid; place-items: center; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); }
+  .logo img { width: 70%; display: block; }
+  h1 { font-family: Georgia, "DejaVu Serif", serif; font-size: 1.7rem; margin: 12px 0 2px; }
+  .since { font-family: Georgia, "DejaVu Serif", serif; font-style: italic; color: var(--gold); letter-spacing: .06em; }
+  main { max-width: 520px; margin: 0 auto; padding: 18px 16px 28px; }
+  .lead { font-size: 1.15rem; font-weight: 700; color: var(--rot); margin: 4px 0 14px; }
+  video { display: block; width: 100%; max-height: 78vh; aspect-ratio: 9 / 16; margin: 0 auto; border-radius: 22px; background: #000; box-shadow: 0 14px 40px rgba(116, 21, 33, .25); object-fit: contain; }
+  .karte { margin: 20px 0 0; background: #fff; border-radius: 22px; padding: 18px 18px 16px; box-shadow: 0 6px 18px rgba(0, 0, 0, .08); border-left: 8px solid var(--rot); text-align: left; }
+  .karte b { color: var(--rot); }
+  .karte p { margin: 6px 0; line-height: 1.45; }
+  .klein { font-size: .9rem; color: #6a5a4a; }
+  footer { font-family: Georgia, "DejaVu Serif", serif; font-style: italic; color: var(--rot); padding: 0 16px 30px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><img src="../kc-kochmuetze-weiss.webp" alt="Kochmütze – Köcheclub Werne"></div>
+  <h1>Köcheclub Werne</h1>
+  <div class="since">since 1991</div>
+</header>
+<main>
+  <p class="lead">Den Köcheclub gibt’s jetzt als App 📱</p>
+  <video controls playsinline preload="metadata" poster="werbefilm-bild.jpg" aria-label="Werbefilm Köcheclub to go">
+    <source src="werbefilm.mp4" type="video/mp4">
+    Dein Browser kann den Film hier nicht abspielen – <a href="werbefilm.mp4">Film herunterladen</a>.
+  </video>
+  <div class="karte">
+    <p>📲 <b>Noch keine App?</b><br>Deinen persönlichen Zugangslink bekommst du bei <b>Hansi</b> – einfach melden!</p>
+    <p class="klein">🔒 Die App ist nur für Mitglieder. Deinen Link bitte nicht weitergeben.</p>
+  </div>
+</main>
+<footer>„Gemeinsam kochen, gemeinsam helfen“</footer>
+</body>
+</html>

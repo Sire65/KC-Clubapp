@@ -1526,11 +1526,47 @@
   .hero .jz-silvester i { top: auto; bottom: 20%; opacity: 0; animation-name: jzFeuerwerk; } @keyframes jzFeuerwerk { 0% { transform: translateY(0) scale(.3); opacity: 0; } 40% { transform: translateY(-120px) scale(.5); opacity: .9; } 55% { transform: translateY(-140px) scale(1.6); opacity: 1; } 100% { transform: translateY(-120px) scale(2); opacity: 0; } }
   /* 2.400.0 KC-CLUB-KOPF-GLANZ: Lichtstreifen per transform/opacity (läuft im Compositor flüssig, auch während die App beim Start rechnet); nach dem Durchlauf entfernt app.js das Element */
   .kopf-glanz { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; z-index: 4; }
-  .kopf-glanz i { position: absolute; top: 0; bottom: 0; left: 0; width: 45%; opacity: 0; transform: translateX(-100%); will-change: transform, opacity;
-    background: linear-gradient(105deg, transparent 8%, rgba(255,255,255,.12) 32%, rgba(255,255,255,.55) 50%, rgba(255,255,255,.12) 68%, transparent 92%);
- }
-  .kopf-glanz.lauf i { animation: kopfGlanz 1.9s cubic-bezier(.45,0,.55,1) .6s 1 both; } /* 2.401.0: läuft, solange die Klasse „lauf“ gesetzt ist (Start + Zurückholen aus dem Hintergrund) */
-  @keyframes kopfGlanz { 0% { opacity: 0; transform: translateX(-100%); } 12% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translateX(222%); } }
+  /* 2.410.0 KC-CLUB-KOPF-AUFBLITZEN (Wunsch Hansi „ein Aufblitzen, wie man es in Werbung oder im Vorspann sieht, wenn ein Logo erscheint“):
+     ein weiches Licht startet an der Kochmütze, wandert schräg nach unten rechts, verdichtet sich in der Mitte zu einem hellen Punkt und blitzt
+     dort auf wie eine Spiegelung (der Kopf leuchtet rundherum mit), dann löst es sich wieder weich auf (Wahl Hansi: ohne Streifen, ohne Stern). Nur transform/opacity (Compositor). Position des Sterns setzt app.js (--fx/--fy). */
+  .kopf-glanz b { position: absolute; inset: 0; background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), #fff 0, rgba(255,255,255,.75) 3%, rgba(255,255,255,.25) 18%, rgba(255,255,255,.06) 45%, rgba(255,255,255,0) 70%); opacity: 0; will-change: opacity; }
+  .kopf-glanz u { position: absolute; left: var(--fx, 60px); top: var(--fy, 50px); width: 150px; height: 150px; margin: -75px 0 0 -75px; opacity: 0; transform: scale(1.4); will-change: transform, opacity; background: radial-gradient(circle, rgba(255,255,255,.95) 0, rgba(255,255,255,.45) 18%, rgba(255,255,255,.12) 42%, rgba(255,255,255,0) 68%); border-radius: 50%; }
+    background: radial-gradient(circle, #fff 0 9%, rgba(255,255,255,.75) 14%, rgba(255,255,255,0) 42%); border-radius: 50%; }
+  .kopf-glanz.lauf b { animation: kopfBlitz .45s ease-out 1.06s 1 both; } /* Blitz genau, wenn sich das Licht in der Mitte verdichtet */
+  .kopf-glanz.lauf u { animation: kopfFunkeln 1.6s cubic-bezier(.45,0,.55,1) .4s 1 both; } /* 2.410.0: weiches Licht wandert schräg, verdichtet sich in der Mitte zum Blitz, löst sich wieder auf */
+  @keyframes kopfBlitz { 0% { opacity: 0; } 22% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes kopfFunkeln { 0% { opacity: 0; transform: translate(0, 0) scale(1.5); } 15% { opacity: .35; transform: translate(calc(var(--dx, 300px) * .15), calc(var(--dy, 150px) * .15)) scale(1.5); } 40% { opacity: .55; transform: translate(calc(var(--dx, 300px) * .4), calc(var(--dy, 150px) * .4)) scale(1); } 50% { opacity: 1; transform: translate(calc(var(--dx, 300px) * .5), calc(var(--dy, 150px) * .5)) scale(.22); } 54% { opacity: 1; transform: translate(calc(var(--dx, 300px) * .54), calc(var(--dy, 150px) * .54)) scale(.3); } 66% { opacity: .45; transform: translate(calc(var(--dx, 300px) * .66), calc(var(--dy, 150px) * .66)) scale(1.6); } 100% { opacity: 0; transform: translate(var(--dx, 300px), var(--dy, 150px)) scale(2.1); } }
+  /* 2.412.0 KC-CLUB-AVATAR-KLAPPEN: Klappbereiche in „Mein Bild“ */
+  /* 2.413.0 KC-CLUB-AVATAR-KARTEN: Klappbereiche in „Mein Bild“ als Karten (Vorlage Hansi) */
+  .av-klappe { border: 1px solid var(--linie); border-radius: 16px; margin: 0 0 10px; background: var(--karte, #fff); overflow: hidden; }
+  .av-klappe > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--karte2); }
+  .av-klappe > summary::-webkit-details-marker { display: none; }
+  .av-klappe .av-k-sym { font-size: 1.5rem; flex: none; }
+  .av-klappe .av-k-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .av-klappe .av-k-text b { font-size: 1.05rem; } .av-klappe .av-k-text small { color: var(--grau, #666); font-size: .8rem; line-height: 1.25; }
+  .av-klappe .av-k-mini { display: flex; flex: none; } .av-klappe .av-k-mini > * { margin-left: -8px; border-radius: 50%; box-shadow: 0 0 0 2px var(--karte2); }
+  .av-klappe[open] .av-k-mini { display: none; }
+  .av-klappe .schloss { width: 34px; height: 34px; border: none; border-radius: 10px; background: transparent; font-size: 1rem; cursor: pointer; flex: none; padding: 0; }
+  .av-klappe .pfeil { flex: none; font-size: 1.4rem; color: var(--rot); transition: transform .2s; }
+  .av-klappe:not([open]) > summary .pfeil { transform: rotate(-90deg); }
+  .av-klappe > .av-k-inhalt { padding: 4px 10px 8px; }
+  /* 2.414.0 KC-CLUB-AVATAR-PREMIUM: Unterüberschriften, Kacheln „Individuell anpassen“, Baukasten mit Vorschau-Chips */
+  .av-k-unter { font-weight: 700; font-size: .9rem; color: var(--grau); margin: 8px 0 2px; }
+  .av-kacheln { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; padding: 6px 0 2px; }
+  .av-kachel { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border: 1px solid var(--linie); border-radius: 12px; background: var(--karte); color: var(--text); font-size: .78rem; font-weight: 600; cursor: pointer; line-height: 1.15; }
+  .av-kachel { overflow-wrap: anywhere; hyphens: auto; } .av-kachel > span { font-size: 1.35rem; } .av-kachel small { font-size: .68rem; font-weight: 500; color: var(--textRot, #a61b29); }
+  .av-kachel-foto { background: #fde7ef; border-color: #f2b8cb; } :root.dunkel .av-kachel-foto { background: #4a2633; border-color: #7a3a50; }
+  .av-b-kopf { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 6px 0 8px; position: sticky; top: 44px; z-index: 2; background: var(--karte); border-bottom: 1px solid var(--linie); margin-bottom: 8px; }
+  .av-b-kopf-knoepfe { display: flex; flex-direction: column; gap: 6px; }
+  .av-b-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .av-b-chip { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 70px; padding: 4px 2px; border: 2px solid transparent; border-radius: 12px; background: var(--karte2); color: var(--text); cursor: pointer; }
+  .av-b-chip small { font-size: .68rem; line-height: 1.1; text-align: center; } .av-b-chip.an { border-color: var(--rot); background: var(--karte); }
+  .av-b-chip svg { border-radius: 50%; }
+  .av-eigene-brille { margin: 6px 2px 0; font-size: .85rem; background: #fde7ef; border-radius: 10px; padding: 6px 8px; } :root.dunkel .av-eigene-brille { background: #4a2633; }
+  @keyframes avBlink { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 30% { box-shadow: 0 0 0 4px rgba(166, 27, 41, .45); } }
+  .av-blink { animation: avBlink 1.2s ease 2; border-radius: 10px; }
+  @media (max-width: 420px) { .av-klappe .av-k-mini > *:nth-child(n+4) { display: none; } }
+  .av-galerie { object-fit: cover; border-radius: 50%; }
   :root.ohne-anim .kopf-glanz { display: none; } /* 2.409.0 (Wahl Hansi): nur der App-Schalter „✨ Animierte Knöpfe“ zählt – wie bei den übrigen Effekten; „Animationen entfernen“ am Handy nicht mehr */
   /* 2.402.0 KC-CLUB-KUCKUCKSUHR (Wunsch Hansi): zur vollen Stunde kommt die Uhr, die Tür geht auf und der Kuckuck ruft so oft, wie es Uhr ist */
   .kuckuck { position: fixed; left: 50%; top: max(12px, env(safe-area-inset-top)); z-index: 9500; width: 150px; transform: translate(-50%, -130%); transition: transform .5s cubic-bezier(.3,1.4,.5,1);
@@ -4210,7 +4246,7 @@
       <button type="button" class="kopf-pfeil kp-halb" id="kopfPfeilHalb" title="Kopf halb einrollen – Statusleiste mit LEDs bleibt" aria-label="Kopf halb einrollen" aria-expanded="true" onclick="kopfRollo('halb')"><span>⌃</span></button>
       <button type="button" class="kopf-pfeil kp-ganz" id="kopfPfeil" title="Kopf ganz einrollen – nur die Kopfzeile bleibt" aria-label="Kopf ganz einrollen" aria-expanded="true" onclick="kopfRollo('ganz')"><span class="kp-doppel">⌃<b>⌃</b></span></button>
       <!-- KC-CLUB-KOPF-GLANZ (2.400.0, Wunsch Hansi): beim Start läuft einmal ein heller Lichtschein von links nach rechts über den Kopf -->
-      <div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><i></i></div>
+      <div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><b></b><u></u></div>
       <!-- KC-CLUB-KOPF-ORDNUNG (2.24.17, Wunsch Hansi): oben Marke + Knöpfe, darunter eine Statusleiste (Status, LEDs, Herz, Brille) -->
       <div class="kopfzeile">
         <div class="kopflogo"><button class="logo" title="Zur Internetseite des Köcheclubs" onclick="webseite()"><img src="kc-kochmuetze-weiss.webp" alt="Kochmütze"></button><button class="kopf-version" id="kopfVersion" title="Update prüfen" aria-label="Version – Update prüfen" onclick="updateKachel()">v–</button></div>
@@ -4368,11 +4404,11 @@
   <!-- DIENSTPLÄNE -->
   <section id="v-dienste" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>🗓️ Dienstpläne</h2></div>
-    <div class="karte">
-      <h3>Wen anzeigen?</h3>
-      <div class="knoepfe" id="dpPersonen"><span class="hinweis">Wird geladen …</span></div>
+    <!-- 2.411.0 KC-CLUB-DIENST-WER-KLAPPE (Wunsch Hansi „Klappbereich, damit man besser sieht, dass es unten weitergeht“): zugeklappt steht die Auswahl im Kopf -->
+    <details class="karte" data-klappe="dp_wer" data-ohne-unten><summary>👥 Wen anzeigen? <span class="hinweis" id="dpWerKurz" style="font-weight:400"></span></summary>
+      <div class="knoepfe" id="dpPersonen" style="margin-top:8px"><span class="hinweis">Wird geladen …</span></div>
       <p class="hinweis" style="font-size:.85rem;margin:8px 0 0">Tippe mehrere Namen an, um die Zeiten untereinander zu vergleichen. <span style="background:rgba(201,164,106,.45);border-radius:4px;padding:0 4px">Gold</span> = gleichzeitig im Dienst.</p>
-    </div>
+    </details>
     <div class="dpnav"><button class="knopf klein" onclick="dpWoche(-1)">‹ Woche</button><b id="dpZeitraum"></b><button class="knopf klein" onclick="dpWoche(1)">Woche ›</button></div>
     <div style="text-align:center"><button class="knopf klein" onclick="dpWoche(0)">Heute</button></div>
     <div id="dpListe"></div>
@@ -5118,6 +5154,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.410.0" data-v="2.410.0"></script>
+<script src="app.js?v=2.417.0" data-v="2.417.0"></script>
 </body>
 </html>

@@ -17,8 +17,42 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
-## 2.410.0 – 2026-10-15 – 🎤 Club-Song: neue Zeilen im Refrain
-Anlass (Hansi, beim Werbefilm „Köcheclub to go“): Im Refrain von „Seit einundneunzig“ heißt es jetzt „Seit einundneunzig – da **glüht** unser Herd, / weil Freundschaft **immer dazu** gehört!“ (vorher „da brennt unser Herd, / weil Freundschaft und Kochen für immer gehört“). Die zweite Zeile hat zwei Silben weniger; ihre Melodie ist auf 9 Töne gekürzt (gleicher Bogen, Schluss auf dem Grundton). Karaoke und Takte bleiben gleich (jede Zeile 2 Takte, letzte Silbe gehalten). Der Werbefilm (KC-Infrastructure-Control-Center, Ordner werbefilm/) singt denselben Text.
+## 2.417.0 – 2026-10-15 – 🎤 Club-Song: neue Zeilen im Refrain · 🎬 Filmseite für den Werbefilm
+**Club-Song** (Anlass Hansi, beim Werbefilm „Köcheclub to go“): Im Refrain von „Seit einundneunzig“ heißt es jetzt „Seit einundneunzig – da **glüht** unser Herd, / weil Freundschaft **immer dazu** gehört!“ (vorher „da brennt unser Herd, / weil Freundschaft und Kochen für immer gehört“). Die zweite Zeile hat zwei Silben weniger; ihre Melodie ist auf 9 Töne gekürzt (gleicher Bogen, Schluss auf dem Grundton). Karaoke und Takte bleiben gleich (jede Zeile 2 Takte, letzte Silbe gehalten). Der Werbefilm singt denselben Text.
+
+**Filmseite** (KC-CLUB-WERBEFILM-SEITE, Wunsch Hansi „Link, der den Film sofort abspielt“ – für Mitglieder, die die App noch nicht haben): neue Seite `film/` (https://sire65.github.io/KC-Clubapp/film/) mit dem Werbefilm (2:11, 20 MB, Hochformat), Kochmütze + „since 1991“ und dem Hinweis „Noch keine App? Deinen persönlichen Zugangslink bekommst du bei Hansi“. Ohne app.js, ohne Anmeldung, ohne Daten; `noindex`; Vorschaubild für WhatsApp (og:image). Der Service Worker lässt `film/` aus (wie `stimmen/`): der Film kommt nicht in den Offline-Speicher, Abspielen mit Range-Anfragen (iPhone) läuft direkt übers Netz. Quellen des Films: KC-Infrastructure-Control-Center, Ordner `werbefilm/`.
+
+## 2.416.0 – 2026-10-15 – Kuckucksuhr ruft wieder so oft, wie es Uhr ist (KC-CLUB-KUCKUCK-ZAEHLEN)
+Fund Hansi: „um 15:00 Uhr nur einen Kuckuck – falsche Zeitzone oder Fehler?“ Zeitzone (Europe/Berlin) und Zählung (15 Uhr → 3 Rufe) stimmten. Ursache: Kommt die Uhr ohne vorheriges Antippen, ist der Ton auf dem Handy oft noch angehalten – seine interne Uhr steht. Alle drei Rufe wurden auf denselben Zeitpunkt gelegt und erklangen beim Freigeben gleichzeitig, also wie ein einziger Kuckuck. Jetzt wartet die Uhr bis zu 1,5 s, bis der Ton läuft, und spielt jeden Ruf nur bei laufendem Ton – nie mehr übereinander (notfalls ruft der Kuckuck stumm, aber richtig oft). Einmal je Sitzung meldet die App zur Kontrolle Stunde, Rufe, gespielte Rufe und Ton-Zustand (Diagnose „kuckuck“).
+
+## 2.415.0 – 2026-10-15 – Hilfe, Twinkey, Lupe und Videos zu den neuen Avataren (KC-CLUB-AVATAR-HILFE)
+Wunsch Hansi: „Passe die Hilfetexte, Twinkey, Lupe und Video an die neuen Avatare an.“
+- Hilfe: „Ein Bild statt Buchstaben“ nennt Bisherige und Hochwertige Avatare; neu „👑 Hochwertige Avatare“ und „🧩 Figur individuell anpassen (Schmuck, Kochjacke, Stil)“ mit Hinweis zur eigenen Brille.
+- Twinkey: Antworten zu Kochbild und Baukasten aktualisiert; neu „Was sind die hochwertigen Avatare?“, „Ohrringe, Kette oder Piercing?“, „Kann ich meine eigene Brille verwenden?“.
+- Lupe: findet „Mein Bild“ auch mit „hochwertig“, „Avatare“ …; neuer Treffer „🧩 Figur anpassen“ (Frisur, Brille, Ohrringe, Kette, Piercing, Schürze …).
+- Geführte Hilfe: zeigt auf den aufgeklappten Bereich; im Baukasten zusätzlich Jackenschnitt, Ohrringe, Halskette, Piercing.
+- Videos (Fassung 2): „Koch-Figur aussuchen“ mit Bisherige/Hochwertige Avatare und Individuell anpassen; „Eigene Figur zusammenstellen“ mit Kacheln, Stil, Schmuck, neuen Bärten, Mützen, Brillen und Jackenschnitt. Klappbereiche öffnet das Video nur vorübergehend.
+
+## 2.414.0 – 2026-10-15 – Hochwertige Avatare, mehr Accessoires, Baukasten mit Kacheln (KC-CLUB-AVATAR-PREMIUM)
+Anlass (Hansi, Vorlage aus ChatGPT): hochwertige Avatar-Auswahl in die bestehende App einbauen, bisherige Avatare unverändert lassen.
+- „Mein Bild“ hat jetzt die drei Bereiche der Vorlage: **Bisherige Avatare** (die 40 Figuren, unverändert), **Hochwertige Avatare** (36 neue Figuren: 18 Köchinnen, 18 Köche, alle Hauttöne, jung bis reif, viele Frisuren, Kopfbedeckungen und Kochjacken) und **Individuell anpassen** (Kacheln, die den Baukasten direkt an der richtigen Stelle öffnen).
+- Die hochwertigen Figuren sind keine Bilder, sondern Codes „p…“ aus denselben Bausteinen wie der Baukasten, gezeichnet mit Licht, Schatten und Konturen. Darum ist jede im Baukasten anpassbar und wird zuverlässig gespeichert. Zusätzlich liegt jede als eigenständige SVG-Datei in avatare/premium/ (erzeugt mit tools/avatare-erzeugen.mjs).
+- Neue Teile, nur hinten an die Listen angehängt (alte Codes bleiben gleich): Ohrringe (7), Halsketten (5), Piercings (6), Jackenschnitt (zweireihig, schräg, mit Schürze), Falten, 5 Frisuren, 4 Haarfarben, 4 Bärte, Beanie/Barett/Turban, 2 Brillen (Panto, Browline), 4 Jackenfarben, 4 Jackenmuster, 7 Hintergründe, 3 Halstücher.
+- Baukasten: Kacheln „Was möchtest du ändern?“, Vorschaubilder bei Frisur, Kopfbedeckung, Bart, Brille und Schmuck, Stil klassisch/hochwertig. Alle bisherigen Einstellungen bleiben. Die Brille „randlos“ (nach Hansis Foto gezeichnet) bleibt, dazu der Hinweis „📷 Eigene Brille: Foto schicken, wird nachgezeichnet“.
+- Freigabe „👑 Hochwertige Avatare“ (neu, Standard: nur Admin) – erst testen, dann unter 🚦 Freigaben für alle einschalten.
+- Rückwärts-Prüfung: tests/avatar-rueckwaerts.test.mjs zeichnet 1.844 bisherige Bilder (alle 40 Figuren, die 7 echten Mitglieder-Bilder, 300 b- und 1.500 c-Codes) und verlangt das exakt gleiche Bild wie in 2.413.0. Keine Datenbank-Änderung.
+
+## 2.413.0 – 2026-10-15 – „Mein Bild“: Klappbereiche als Karten (Vorlage von Hansi)
+Anlass (Hansi): Entwurf aus ChatGPT („Dein Avatar“ mit „Bisherige Avatare“ und „Hochwertige Avatare“). Die vier Klappbereiche haben jetzt einen Kopf als Karte: Symbol, Titel, Untertitel („weiterhin verfügbar“ bzw. „mit mehr Ausdruck“), Pfeil rechts; zugeklappt zeigt der Kopf eine kleine Vorschau mit den ersten Figuren (KC-CLUB-AVATAR-KARTEN). Bisherige Figuren und Zuordnungen bleiben unverändert.
+
+## 2.412.0 – 2026-10-15 – „Mein Bild“: Klappbereiche und Platz für hochwertige Figuren
+Anlass (Hansi): „ChatGPT baut gerade neue, bessere Avatare. Baue sie in Klappbereiche ein – weibliche, männliche, hochwertige weibliche, hochwertige männliche. Die alten bleiben erhalten und zugeordnet.“ In „Mein Bild“ gibt es jetzt vier Klappbereiche: 👩‍🍳 Köchinnen, 👨‍🍳 Köche (die bisherigen Figuren, unverändert), ✨ Köchinnen – hochwertig, ✨ Köche – hochwertig. Die hochwertigen sind Bilddateien (avatare/gw01.webp …, gm01.webp …) und stehen in avatare/avatare.json – neue Figuren kommen ohne Programm-Update dazu (Anleitung: avatare/LIESMICH.md). Server: Codes gw/gm gültig.
+
+## 2.411.0 – 2026-10-15 – Dienstpläne: „Wen anzeigen?“ zum Zuklappen
+Anlass (Hansi): „Baue dort einen Klappbereich ein, damit man besser sieht, dass es unten weitergeht.“ Die Namensauswahl ist jetzt ein Klappbereich (anfangs zu, wird gemerkt, mit 🔒 feststellbar); zugeklappt steht im Kopf, wer gewählt ist („· Ich, Christina +2“), und der Dienstplan rückt nach oben. Einführung und Hilfe klappen ihn selbst auf.
+
+## 2.410.0 – 2026-10-15 – ✨ Aufblitzen im Kopf wie im Vorspann
+Anlass (Hansi): „Der Effekt ist noch nicht, wie ich es mir vorstelle – es soll ein Aufblitzen sein, wie man es in Werbung oder im Vorspann sieht, wenn ein Logo erscheint.“ Jetzt: Ein weiches Licht startet an der Kochmütze, wandert schräg nach unten rechts, verdichtet sich in der Mitte zu einem hellen Punkt und blitzt dort auf wie eine Spiegelung (der Kopf leuchtet rundherum mit); danach löst es sich weich auf (2 s). Glanzstreifen und Stern hat Hansi nach den Vorschauen gestrichen.
 
 ## 2.409.0 – 2026-10-15 – Lichtschein auch bei „Animationen entfernen“
 Die Rückmeldung aus 2.408.0 zeigte: Auf Hansis Handy ist „Animationen entfernen“ aktiv – deshalb blieb der Lichtschein aus, während Herbst-Bühne, Laub und Kuckucksuhr liefen. Wahl Hansi: Der Lichtschein folgt jetzt nur noch dem App-Schalter „✨ Animierte Knöpfe“, wie die übrigen Effekte.
