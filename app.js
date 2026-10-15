@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.420.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.421.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -935,7 +935,7 @@ function anwendenDesign() {
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
   jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); if ($("setFee")) $("setFee").checked = einst("fee", true); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
-  try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
+  try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
 }
 function designWahlZeigen() {
@@ -5106,6 +5106,7 @@ const HILFE = [
   { id: "anpassen", thema: "darstellung", sym: "🎨", t: "Meine App nach meinem Geschmack – alle Möglichkeiten", x: "So viel kannst du einstellen: <b>🎭 Thema</b> (Farben, Kopf-Bild, Sende-Effekt und Schrift mit einem Tipp – oder „Nach Kalender“), <b>🎨 Farbdesign</b>, <b>🌗 Tag und Nacht</b>, <b>🔠 große Schrift</b> (alles unter ⚙️ → „🎨 Darstellung“); <b>🍂 Jahreszeiten-Bild</b>, <b>🎏 Deko an der Leiste</b>, <b>🪟 Kachel- und Sende-Effekt</b>, <b>✨ ruhige oder lebendige Knöpfe</b> (⚙️ → „✨ Effekte“); <b>📄 Eselsohr</b>, Kacheln und Ansicht (⚙️ → „🧩 Startseite &amp; Ansicht“). Alles zeigt dir das Erklär-Video <b>„🎨 Meine App nach meinem Geschmack“</b>.", zeig: () => rgListeAbspielen(["anpassen"]), seit: "2.344.0" },
   { id: "bw_einladung", thema: "start", sym: "🎭", t: "Twinkey lädt zur Bewegung ein", x: "Beim Öffnen der App fragt Twinkey höchstens einmal am Tag: <i>„Heute Lust auf eine Bewegungseinheit mit mir?“</i> <b>„💪 Ja“</b> führt direkt zur Bühne, <b>„⏰ Später“</b> fragt in etwa 2 Stunden wieder, <b>„🙂 Heute nicht“</b> erst morgen, <b>„🔕 Nicht mehr fragen“</b> schaltet es ab. Wieder einschalten: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „🎭 Twinkey lädt zur Bewegung ein“.", zeig: () => einstiegHin("startseite", "setBwEinladung"), seit: "2.314.0" },
   { id: "kachel_vorschlag", thema: "start", sym: "💡", t: "Vorschläge zur Startseite", x: "Die App merkt sich <b>nur auf deinem Handy</b>, welche Kacheln du öffnest – nichts geht an den Server. Nach ein paar Wochen schlägt Twinkey <b>höchstens einmal pro Woche</b> etwas vor: eine Kachel, die du lange nicht gebraucht hast, <b>auszublenden</b> – oder, wenn du in der einfachen Ansicht gut zurechtkommst, <b>weitere Funktionen freizuschalten</b>. Die App ändert nie etwas von selbst; SOS, Termine, Nachrichten und Mein Dienst werden nie vorgeschlagen. Abschalten und „Gemerktes löschen“: ⚙️ → „🧩 Startseite &amp; Ansicht“.", zeig: () => einstiegHin("startseite", "setKachelVorschlag"), seit: "2.418.0" },
+  { id: "kachel_auswahl", thema: "start", sym: "☑️", t: "Kacheln auswählen", x: "Du bestimmst selbst, welche Kacheln auf deiner Startseite stehen: ⚙️ → „🧩 Startseite &amp; Ansicht“ → <b>„☑️ Kacheln auswählen“</b> zeigt alle Kacheln in drei Blöcken – <b>🏠 Club</b>, <b>🙋 Meins</b> und <b>🛠️ Technik</b> – zum Aufklappen. <b>Haken</b> = die Kachel ist auf deiner Startseite, <b>ohne Haken</b> = verborgen. „✅ Alle anzeigen“ holt einen ganzen Bereich zurück. Gilt für die erweiterte Ansicht und auf allen deinen Geräten.", zeig: () => einstiegHin("startseite", "kaAuswahl"), seit: "2.421.0" },
   { id: "es_regler", thema: "toene", sym: "🎚️", t: "Bühne: Musik und Stimme lauter oder leiser", x: "Während Twinkey turnt, stehen zwei Regler am Rand: <b>rechts die Musik</b> 🎵, <b>links Twinkeys Stimme</b> 🗣️. Nach oben ziehen = lauter (der Keil wird dicker), nach unten = leiser. <b>Unten aufs Symbol tippen</b> macht sofort stumm (🔇 bzw. 🤐) – nochmal tippen holt die vorige Lautstärke zurück. Die App merkt sich beides. Ist alles zu leise, auch die Lautstärke am Handy prüfen.", zeig: () => esOeffnen("buehne"), seit: "2.300.0" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🧩 Startseite &amp; Ansicht“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("startseite", "kachelGroesseWahl"), seit: "2.23.90" },
   // 2.415.0 KC-CLUB-AVATAR-HILFE (nur mit Freigabe sichtbar, darum nicht im Block „Neuerungen für alle“): hochwertige Avatare, Individuell anpassen (Kacheln), Schmuck, eigene Brille
@@ -13991,11 +13992,29 @@ function kaSchieben(id, d) {
   [liste[i], liste[j]] = [liste[j], liste[i]];
   KA.reihenfolge = { ...KA.reihenfolge, [kaSchluessel()]: liste }; kaFrisch = id; kaSpeichern(); kachelnZeigen();
 }
-function kaSichtbar(id, sichtbar) {
+function kaSichtbar(id, sichtbar, leise) { // 2.421.0: leise = aus der Kachel-Auswahl (kein Hinweis bei jedem Haken)
   KA.aus = sichtbar ? KA.aus.filter((x) => x !== id) : [...new Set([...KA.aus, id])];
   kaFrisch = id; kaSpeichern(); registerZeigen(); kachelnZeigen();
-  if (!sichtbar) melde("🙈 Ausgeblendet – mit 👁️ jederzeit wieder einblenden");
+  if (!sichtbar && !leise) melde("🙈 Ausgeblendet – mit 👁️ jederzeit wieder einblenden");
 }
+// ---------- 2.421.0 KC-CLUB-KACHEL-AUSWAHL (Wunsch Hansi „unter Einstellungen die Kacheln anhaken, die man haben möchte – die anderen sind verborgen;
+// in 3 einklappbaren Blöcken Club, Meins, Technik, alle auflisten mit Kästchen nebeneinander, nicht zu viel Platz verschwenden“) ----------
+// Kein eigener Speicher: Haken = nicht in KA.aus (dasselbe Ausblenden wie „Anordnen“ ✕/👁️, gilt auf allen Geräten). Gezeigt werden nur Kacheln,
+// die man sehen darf (kachelnAlle: „nur“-Regeln, keine „bald“-Kacheln); das Admin-Register bleibt außen vor.
+const KA_WAHL_BLOECKE = [["verein", "🏠 Club"], ["mein", "🙋 Meins"], ["programme", "🛠️ Technik"]];
+function kaAuswahlZeigen() {
+  const ziel = $("kaAuswahl"); if (!ziel) return;
+  const offen = new Set([...ziel.querySelectorAll("details[open]")].map((d) => d.dataset.r));
+  ziel.innerHTML = (einfach() ? '<p class="hinweis" style="margin:6px 0 0">🟢 Du nutzt gerade die einfache Ansicht – die Auswahl gilt für die erweiterte Ansicht.</p>' : "")
+    + KA_WAHL_BLOECKE.map(([r, name]) => { const alle = kachelnAlle(r); if (!alle.length) return "";
+      return `<details class="ka-wahl" data-r="${r}"${offen.has(r) ? " open" : ""}><summary>${name} <span class="ka-wahl-zahl"></span></summary>
+        <div class="ka-wahl-raster">${alle.map((k) => `<label><input type="checkbox" data-id="${k.id}"${KA.aus.includes(k.id) ? "" : " checked"} onchange="kaWahl(this)"><span>${k.sym} ${esc(k.t)}</span></label>`).join("")}</div>
+        <button type="button" class="knopf klein" onclick="kaWahlAlle('${r}')">✅ Alle anzeigen</button></details>`; }).join("");
+  kaWahlZahlen();
+}
+function kaWahlZahlen() { document.querySelectorAll("#kaAuswahl details.ka-wahl").forEach((d) => { const k = d.querySelectorAll("input"); d.querySelector(".ka-wahl-zahl").textContent = `${[...k].filter((x) => x.checked).length} von ${k.length}`; }); }
+function kaWahl(el) { kaSichtbar(el.dataset.id, el.checked, true); kaWahlZahlen(); }
+function kaWahlAlle(r) { const ids = kachelnAlle(r).map((k) => k.id); KA.aus = KA.aus.filter((x) => !ids.includes(x)); kaSpeichern(); registerZeigen(); kachelnZeigen(); kaAuswahlZeigen(); melde("✅ Alle Kacheln dieses Bereichs sind wieder da"); }
 async function kaStandard() {
   if (einfach()) { // einfache Ansicht: nur deren Reihenfolge zurücksetzen
     if (!(await frage("Kacheln wieder in der ursprünglichen Reihenfolge?"))) return;
@@ -34022,6 +34041,7 @@ function suAppListe() {
     ["🧩", "Rätsel: Wie gut kennst du Werne? (Bilderrätsel, Bestenliste)", "rätsel raetsel spiel quiz bilderrätsel pixel buzzer werne rathaus küche gewürze bestenliste wochen-rätsel", () => esOeffnen("raetsel")], // 2.339.0
     ["🪞", "Spiegel (Kamera, Pausbäckchen)", "spiegel kamera selfie pausbäckchen pausbacken dick gesicht", () => esOeffnen("spiegel")], // 2.314.0
     ["🎭", "Einladung zur Bewegung beim Start", "einladung bewegung start fragen bewegungseinheit sport frage", () => suEinstellung("setBwEinladung")],
+    ["☑️", "Kacheln auswählen (anhaken, was auf die Startseite soll)", "kacheln auswählen anhaken haken kästchen verbergen ausblenden einblenden startseite club meins technik auswahl", () => suEinstellung("kaAuswahl")], // 2.421.0
     ["💡", "Vorschläge zur Startseite (Kacheln ausblenden, Funktionen freischalten)", "vorschlag vorschläge kacheln ausblenden verbergen freischalten nutzung gemerkt adaptiv startseite löschen", () => suEinstellung("setKachelVorschlag")], // 2.418.0
     ["🎚️", "Bühne: Musik / Stimme lauter oder leiser", "lautstärke lauter leiser regler musik stimme stumm bühne", () => esOeffnen("buehne")],
     // 2.344.0 KC-CLUB-HILFE-NACHTRAG: alle Möglichkeiten, die App anzupassen, auch über die Lupe
