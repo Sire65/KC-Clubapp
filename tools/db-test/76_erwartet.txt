@@ -1,0 +1,6 @@
+bisheriger_name=t
+neuer_name=t
+formel=t
+zweiter_wechsel=t
+ohne_zugang_wie_bisher=t
+gesperrt=t

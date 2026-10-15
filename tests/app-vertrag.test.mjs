@@ -3262,7 +3262,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/\.from\("kc_club_rollen"\)\.select\("person_id"\)\.eq\("ist_admin", true\)\.in\("person_id", an\)/.test(server) && /!inkoAndere\.has\(z\.person_id\)/.test(server) && /mzS\.filter/.test(server), "Inkognito nur für Admins, nicht über Haken/Admin-Zentrale");
   assert.ok(/typeof p\.admin !== "boolean" \? null : p\.admin/.test(server) && /if \(re\) throw new Fehler\("Die Rolle konnte nicht gespeichert werden/.test(server), "Rolle: alte App entzieht nichts, Fehler bricht ab");
   assert.ok(/<span class="sl-extra">[^\n]*<button id="inkoKnopf"[^>]*>🕶️<\/button><\/span>/.test(html), "🕶️ in der Statusleiste, nicht in der Knopfreihe"); // 2.24.17 KC-CLUB-KOPF-ORDNUNG
-  assert.ok(/\n\s+anmeldungenVergessen\(\); \/\/ KC-CLUB-ANMELDECACHE: alter Link sofort ungültig/.test(server) && /if \(e3 \|\| count === null \|\| count > 0\) return;/.test(server), "Link-Cache, kein Fehlalarm");
+  assert.ok(/\n\s+anmeldungenVergessen\(\);(?: await rtNeu\(pid\);)? \/\/ KC-CLUB-ANMELDECACHE: alter Link sofort ungültig/.test(server) && /if \(e3 \|\| count === null \|\| count > 0\) return;/.test(server), "Link-Cache, kein Fehlalarm");
 }
 // 296. 2.6.2: Vorlese-Stimme – beste deutsche Stimme statt der ersten, wählbar (KC-CLUB-STIMME)
 {
@@ -5896,7 +5896,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -10172,4 +10172,17 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const kt = lies("supabase/functions/kc-termine/index.ts");
   assert.ok(!/throw new Fehler\(error\.message, 500\)/.test(kt) && !/p\.cronSecret !== geheim|internKey !== intern|internKey === intern/.test(kt) && /function gleichZeit\(/.test(kt), "kc-termine: keine internen Texte, Geheimnisse zeitkonstant");
   assert.ok(/gleichZeit\(tok,String\(expectedToken\)\)/.test(lies("supabase/functions/kc-db-mirror-worker/index.ts")), "Spiegel-Arbeiter: zeitkonstant");
+}
+// 2.426.0 KC-CLUB-RT-KANAL-WECHSEL: Name der direkten Leitung wechselt bei jeder Zugangsänderung
+{
+  const mig = lies("supabase/migrations/20261015_kc_club_v2426_rt_kanal_wechsel.sql");
+  assert.ok(/add column if not exists rt_epoche integer not null default 0/.test(mig) && /p_person \|\| coalesce\(':' \|\| nullif\(\(select z\.rt_epoche from public\.kc_club_zugang z where z\.person_id = p_person\), 0\)::text, ''\)/.test(mig), "Zählnummer 0 = bisheriger Name");
+  assert.ok(/revoke all on function public\.kc_club_rt_neu\(text\) from public, anon, authenticated;/.test(mig) && /revoke all on function public\.kc_club_rt_kanal\(text\) from public, anon, authenticated;/.test(mig), "Funktionen gesperrt");
+  assert.ok(/const rtNeu = \(pid: string\) => Promise\.resolve\(db\.rpc\("kc_club_rt_neu", \{ p_person: pid \}\)\)\.catch\(\(\) => null\);/.test(server), "rtNeu ohne Absturz vor dem DB-Update");
+  for (const [stelle, r] of [["vorgemerkter Link", /anmeldungenVergessen\(\); await rtNeu\(vm\[0\]\.person_id\);/], ["andere Geräte", /anmeldungenVergessen\(\); await rtNeu\(ich\.person_id\);/], ["Zugang beendet", /anmeldungenVergessen\(\); await rtNeu\(pid\); \/\/ Link sofort ungültig/],
+    ["neuer Link", /anmeldungenVergessen\(\); await rtNeu\(pid\); \/\/ KC-CLUB-ANMELDECACHE/], ["Sperre", /SPERREN\.bis = 0; await Promise\.all\(gueltig\.map\(\(id: string\) => rtNeu\(id\)\)\);/], ["Link angefordert", /if \(!bisher\?\.aktiv\) await rtNeu\(pe\.person_id\);/]])
+    assert.ok(r.test(server), "Kanalwechsel fehlt: " + stelle);
+  assert.ok(/if \(r\.rtKanal && INIT\) \{ INIT\.rtKanal = r\.rtKanal; try \{ rtVerbinden\(\); \} catch \{\} \}/.test(programm), "dieses Gerät wechselt sofort");
+  assert.ok(/topic: "realtime:" \+ kanal/.test(programm) && /if \(RT\.ws && RT\.kanal === kanal && RT\.ws\.readyState <= 1\) return;/.test(programm), "App verbindet bei neuem Namen neu");
+  assert.ok(/neuer_name=t/.test(lies("tools/db-test/76_erwartet.txt")), "Probelauf 76");
 }
