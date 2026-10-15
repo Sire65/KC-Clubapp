@@ -4,6 +4,9 @@ import fs from "node:fs";
 import assert from "node:assert/strict";
 
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
+// Fester Zufall für die Spiel-Simulationen (Mulberry32): gleiche Prüfung, aber jedes Mal dasselbe Ergebnis – vorher wurde der Test selten
+// zufällig rot (Fairness-Grenze ±40 bei 150 Partien), obwohl das Spiel fair ist
+const mitFestemZufall = (start, f) => { const echt = Math.random; let x = start >>> 0; Math.random = () => { x = (x + 0x6d2b79f5) >>> 0; let t = x; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; try { f(); } finally { Math.random = echt; } };
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm steht in app.js – für die Prüfungen wieder an seine Stelle in der Seite setzen
 const seite = lies("index.html"), programm = lies("app.js");
 const html = seite.replace(/<script src="app\.js\?v=([^"]+)" data-v="\1"><\/script>/, () => "<script>" + programm.replace(/^\/\/[^\n]*/, "") + "</script>");
@@ -8246,6 +8249,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   const pech = R.FDK_KARTEN.filter(([k]) => R.FDK_PECH.has(k)).reduce((x, [, n]) => x + n, 0), alle = R.FDK_KARTEN.reduce((x, [, n]) => x + n, 0);
   assert.ok(pech / alle >= 0.3 && pech / alle <= 0.6, "Pech und Glück ausgewogen (" + pech + "/" + alle + ")");
   // Ganze Partien Twinkey gegen Twinkey: enden, sind fair und kurzweilig
+  mitFestemZufall(20261015, () => {
   for (const st of ["leicht", "mittel", "schwer"]) {
     let wuerfe = 0, n = 0, siegA = 0, siegB = 0, tempo = 0, abg = 0, sauber = 0;
     for (let p = 0; p < 150; p++) { const F = R.fdkNeu({ stufe: st, anzahl: 2 }); F.dran = p % 2; let k = 0;
@@ -8260,6 +8264,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
     assert.ok(tempo / abg >= 1 && tempo / abg <= 7, st + ": Tempo-Bonus erreichbar (" + (tempo / abg).toFixed(1) + ")");
     assert.ok(sauber / abg >= 0.35, st + ": meist ohne Pech (" + (100 * sauber / abg).toFixed(0) + " %)");
   }
+  });
   // Ansicht: Tabletts links Du, rechts Twinkey; Felder antippen; Stoppuhr; Klingel; Hygienefrage aus Küchenterror; Fokus wie beim Schach
   assert.ok(/<div class="fdk-tisch">\$\{fdkTablett\(F, 0\)\}\$\{fdkBrettHtml\(F\)\}\$\{fdkTablett\(F, 1\)\}<\/div>/.test(programm), "Tabletts links/rechts");
   assert.ok(/onclick="\$\{FDK_MG \? "fdkMgFeld" : "fdkFeldKlick"\}\(\$\{i\}\)"/.test(programm) && /fdk-halt-schild">Halt</.test(programm), "leuchtende Felder antippen, Halt-Schild");
@@ -8775,6 +8780,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
     S.gespielt = false; const ab = R.fdkKarteSpielen(F, 0, "abkuerzung"); assert.ok(ab.zugVorbei && R.fdkNutzen(S, S.pos, F) !== "holen", "Abkürzung: direkt hin und gleich erledigt");
     assert.equal(R.fdkKannSpielen(F, 0, "schutz"), false, "Sous-Chef wird nicht ausgespielt"); }
   // Ganze Partien mit Karten und Vorräten: enden, fair, Karten werden wirklich gespielt
+  mitFestemZufall(20261016, () => {
   for (const st of ["leicht", "mittel", "schwer"]) {
     let siegA = 0, siegB = 0, gespielt = 0, nach = 0, wuerfe = 0, n = 0;
     for (let p = 0; p < 150; p++) { const F = R.fdkNeu({ stufe: st, anzahl: 2 }); F.dran = p % 2; let k = 0;
@@ -8792,6 +8798,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
     assert.ok(nach / 150 >= 0.5, st + ": Vorräte werden knapp (" + (nach / 150).toFixed(1) + "× Büro je Partie)");
     assert.ok(wuerfe / n <= 40, st + ": nicht zu lang (" + (wuerfe / n).toFixed(1) + " Würfe je Koch)");
   }
+  });
   // Ansicht: Karten unter dem Brett, Twinkey spielt Karten, Töne, schneller
   assert.ok(/\$\{fdkHandHtml\(F\)\}/.test(programm) && /onclick="\$\{FDK_MG \? "fdkMgKarte" : "fdkKarteAusspielen"\}\('\$\{k\}'\)"/.test(programm), "Karten antippen");
   assert.ok(/const karte = fdkKiKarte\(F, 1\);/.test(programm) && /fdkTw\("karteTw", karte\)/.test(programm), "Twinkey spielt Karten und sagt etwas dazu");
