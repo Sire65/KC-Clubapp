@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.419.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.420.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1379,7 +1379,7 @@ function einfachKacheln() {
   const NAME = { kommunikation: "Nachrichten", meindienst: "Mein Dienst", mitglieder: "Mitglieder" };
   // KC-CLUB-EINFACH-ANORDNEN (1.48.0): eigene Reihenfolge der einfachen Ansicht (KA.reihenfolge.einfach), nur oben/unten
   const ord = KA.reihenfolge.einfach || [], pos = (k) => { const i = ord.indexOf(k.id); return i < 0 ? 1000 + ids.indexOf(k.id) : i; };
-  return ids.map((id) => alle.find((k) => k.id === id)).filter((k) => k && (!k.nur || k.nur())).map((k) => (NAME[k.id] ? { ...k, t: NAME[k.id] } : k)).sort((a, b) => pos(a) - pos(b));
+  return ids.map((id) => alle.find((k) => k.id === id)).filter((k) => k && (!k.nur || k.nur()) && zugangKachel(k.id)).map((k) => (NAME[k.id] ? { ...k, t: NAME[k.id] } : k)).sort((a, b) => pos(a) - pos(b)); // 2.420.0: + Zugang
 }
 function ansichtAnwenden() {
   document.body.classList.toggle("einfach", einfach());
@@ -1606,7 +1606,7 @@ const EINWEISUNG = [
   { id: "b-mitfahrt", blatt: true, sym: "🚗", t: "Mitfahrgelegenheit anbieten", x: "Wähle, wie viele <b>Plätze</b> du frei hast, und trag auf Wunsch einen <b>Treffpunkt</b> ein. Andere können sich dann bei diesem Termin einen Platz nehmen; wer eine Mitfahrt gesucht hat, bekommt Bescheid." },
   { id: "b-mikro-wahl", blatt: true, sym: "🎤", t: "Sprachnachricht oder Diktieren", x: "<b>🎤 Sprachnachricht</b>: deine Stimme wird verschickt. <b>✍️ Diktieren</b>: die App schreibt mit, verschickt wird Text. Mit <b>Immer so</b> fragt die App nicht mehr – ändern unter ⚙️ → Ansagen, Töne &amp; Tipps." },
   { id: "b-neu-wahl", blatt: true, sym: "＋", t: "Etwas Neues anlegen", x: "Wähle, was du neu anlegen möchtest – unter jedem Punkt steht kurz, wofür er da ist. <b>Abbrechen</b> schließt das Fenster, ohne etwas anzulegen." },
-  { id: "b-rolle", blatt: true, sym: "🎖️", t: "Ämter und Rechte", x: "Hier legst du fest, welche <b>Ämter</b> das Mitglied hat und was es darf – z. B. Termine anlegen, Protokolle lesen und schreiben oder Kontaktdaten anderer sehen. Schalter aus heißt: darf das nicht. <b>💾 Speichern</b> übernimmt es.", nur: () => !!ICH?.admin },
+  { id: "b-rolle", blatt: true, sym: "🎖️", t: "Ämter und Rechte", x: "Hier legst du fest, welche <b>Ämter</b> das Mitglied hat und was es darf – z. B. Termine anlegen, Protokolle lesen und schreiben oder Kontaktdaten anderer sehen. Schalter aus heißt: darf das nicht. Unter <b>Zugang</b> wählst du 👤 Mitglied (alles), 🧑‍🍳 Aushilfe (Termine, Nachrichten, SOS, Spiele, Mein Dienst, Fotos ansehen) oder 🙋 Gast (Termine, Nachrichten, SOS, Spiele) – das sperrt auch der Server. <b>💾 Speichern</b> übernimmt es.", nur: () => !!ICH?.admin },
   { id: "b-sp-herausfordern", blatt: true, sym: "🎲", t: "Herausfordern", x: "<b>Spiel wählen</b> (Tic-Tac-Toe, Schach, Bauernskat, Küchenterror, Mensch ärgere dich nicht), je nach Spiel Feldgröße, Zeit oder Mitspieler, dann antippen, <b>wen</b> du herausfordern möchtest. Das Mitglied bekommt die Einladung und kann annehmen oder ablehnen." },
   { id: "b-sp-termin", blatt: true, sym: "📅", t: "Termin für die Partie", x: "<b>Tag, Uhrzeit</b> und <b>Ort</b> wählen. Dein Mitspieler bekommt die Anfrage und kann zu- oder absagen; danach steht der Termin bei euch beiden im Kalender – auf Wunsch mit Erinnerung." },
   { id: "b-teilen", blatt: true, sym: "📥", t: "Mit Köcheclub geteilt", x: "Du hast etwas aus einer anderen App mit dem Köcheclub geteilt. Wähle, wohin es soll: in einen <b>💬 Club-Chat</b>, bei Fotos ins <b>📷 Fotoalbum</b> oder in <b>🗄️ dein Archiv</b>." },
@@ -12794,6 +12794,8 @@ async function api(action, daten = {}, opt = {}) {
   const sichtbar = ladeSichtbar(action, opt); // KC-CLUB-LADE-SICHERHEIT: vor wartenStart prüfen (Tipp-Zeitpunkt)
   const warte = wartenStart(action, opt.warten, opt.still);
   try { for (;;) {
+  // 2.420.0 KC-CLUB-ZUGANG: für Gäste/Aushilfen nicht freigegebene Aktionen gar nicht erst schicken (der Server lehnt sie ohnehin ab)
+  if (!zugangAktion(action)) throw Object.assign(new Error(zugang() === "gast" ? "🔒 Das ist für Gäste nicht freigeschaltet." : "🔒 Das ist für Aushilfen nicht freigeschaltet."), { zugang: true, status: 403 });
   const lauf = sichtbar ? ladeBeginn(action) : null;
   try {
     if (NOT.an) return await notApi(action, daten); // KC-CLUB-NOTBETRIEB
@@ -13898,7 +13900,36 @@ const KZ_KACHELN = { termine: () => kzZahl("termine", (INIT?.terminfindungOffen?
 KZ_KACHELN.schulung_admin = () => kzZahl("schulung"); // KC-CLUB-SCHULUNG-HINWEIS (2.23.68): wartet auf den Admin
 for (const k of KACHELN.verein) if (KZ_KACHELN[k.id] && !k.zahl) k.zahl = KZ_KACHELN[k.id];
 // Kacheln, die für mich gelten (z. B. Protokolle nicht für Aushilfen)
-const kachelnAlle = (r) => KACHELN[r].filter((k) => !k.bald && (!k.nur || k.nur())); // 1.99.0 (Wunsch Hansi): „bald“-Kacheln erst zeigen, wenn es sie gibt (Überblick nennt sie weiter)
+const kachelnAlle = (r) => KACHELN[r].filter((k) => !k.bald && (!k.nur || k.nur()) && zugangKachel(k.id)); // 2.420.0: + Zugang (Gast/Aushilfe) // 1.99.0 (Wunsch Hansi): „bald“-Kacheln erst zeigen, wenn es sie gibt (Überblick nennt sie weiter)
+// ---------- 2.420.0 KC-CLUB-ZUGANG (Wunsch Hansi „den Zugang für Gäste und Aushilfen einschränken – Nachricht schreiben, SOS, Clubtermine, Spiele“) ----------
+// Die Sperre selbst sitzt auf dem Server (zugangPruefen in kc-club). Hier dieselbe Liste, damit die App verbotene Aufrufe gar nicht erst schickt
+// und nur passende Kacheln zeigt. Gast: Termine, Nachrichten, SOS (nur Clubleitung), Spiele, Hilfe/Einstellungen. Aushilfe: dazu Mein Dienst,
+// Dienstwünsche, Fotoalbum ansehen, Schulung. Der Vertragstest prüft, dass ZUGANG_AKTIONEN hier und im Server gleich sind.
+const ZUGANG_AKTIONEN = {
+  basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "start_melden", "spur_melden", "nutzung_melden", "video_bewerten", "stimmen",
+    "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
+    "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "privattermin_speichern",
+    "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
+    "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
+    "express_antwort", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "chat_selbstloeschen", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
+    "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
+    "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
+    "spiel_holen", "spiel_herausfordern", "spiel_antwort", "spiel_zug", "spiel_aufgeben", "spiel_revanche", "raetsel_stand", "raetsel_ergebnis",
+    "status_setzen", "einstellung_setzen", "benachrichtigung_setzen", "meine_daten", "avatar_bilder", "avatar_foto_setzen", "sprache_woerter",
+    "sprache_lernen", "sprache_training", "sprache_training_reset", "sprache_vergessen", "sprache_unbekannt", "twinkey_daten", "twinkey_frage",
+    "twinkey_gelesen", "fehler_melden", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
+    "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "push_anmelden",
+    "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test"],
+  aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
+    "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_album_fotos", "foto_oeffnen",
+    "schulung_meine", "schulung_antwort"],
+};
+const ZUGANG_KACHELN = { basis: ["termine", "kommunikation", "sos", "spiele", "status", "einstellungen", "hilfezentrum", "twinkey", "erklaer", "update", "sicherheit", "feedback", "test"],
+  aushilfe: ["mein_dienst", "meindienst", "dienstwunsch", "fotos", "schulungen"] };
+const zugang = () => (ICH?.zugang === "gast" || ICH?.zugang === "aushilfe" ? ICH.zugang : "mitglied");
+const zugangKachel = (id) => zugang() === "mitglied" || ZUGANG_KACHELN.basis.includes(id) || (zugang() === "aushilfe" && ZUGANG_KACHELN.aushilfe.includes(id));
+const zugangAktion = (a) => zugang() === "mitglied" || ZUGANG_AKTIONEN.basis.includes(a) || (zugang() === "aushilfe" && ZUGANG_AKTIONEN.aushilfe.includes(a));
 // KC-CLUB-KACHELN: eigene Reihenfolge + ausgeblendete Kacheln je Mitglied (Server-Einstellung „kacheln“, hier zwischengespeichert).
 // Neue Kacheln (noch nicht in der gespeicherten Reihenfolge) erscheinen hinten; ausgeblendete bleiben über „Anordnen“ erreichbar.
 let KA = { reihenfolge: {}, aus: [], register: [] }, kaBearb = false, kaFrisch = null;
@@ -32468,6 +32499,9 @@ function rolleBearbeiten(pid) {
   blattAuf("rolleBlatt", `${einwHtml("b-rolle")}<h3 style="margin-top:0">🎖️ ${esc(m.name)}</h3>
     <div class="hl-frage">Ämter</div><div class="bu-haken-liste">${liste.map((a) => `<label class="bu-haken"><input type="checkbox" class="roAmt" value="${esc(a)}" ${(m.aemter || []).includes(a) ? "checked" : ""}> ${esc(a)}</label>`).join("")}</div>
     <label class="feld">Weiteres Amt (freiwillig)<input id="roNeu" maxlength="40" placeholder="z. B. Beisitzer"></label>
+    <div class="hl-frage">Zugang</div>
+    <div class="ro-zugang">${[["mitglied", "👤 Mitglied", "alles wie bisher"], ["aushilfe", "🧑‍🍳 Aushilfe", "Termine, Nachrichten, SOS, Spiele, Mein Dienst, Fotos ansehen"], ["gast", "🙋 Gast", "Termine, Nachrichten, SOS, Spiele"]].map(([w, t, h]) =>
+      `<label class="bu-haken" title="${h}"><input type="radio" name="roZugang" value="${w}" ${(m.zugang || "mitglied") === w ? "checked" : ""}> ${t}<small class="hinweis" style="display:block;margin-left:24px">${h}</small></label>`).join("")}</div>
     <div class="hl-frage">Rechte</div>
     ${schalter("roLeitung", "Termine & Abstimmungen anlegen", "Termine, Veranstaltungen und Abstimmungen anlegen (Clubleitung)", !!m.vorstand)}
     ${schalter("roProtokolle", "Protokolle lesen & schreiben", "aus z. B. für Aushilfen", m.protokolle !== false)}
@@ -32482,8 +32516,9 @@ async function rolleSpeichern(pid, knopf) {
   const m = MITGLIEDER?.find((x) => x.person_id === pid), adminSchalter = $("roAdmin"), admin = adminSchalter ? adminSchalter.checked : !!m?.admin;
   if (adminSchalter && admin && !m?.admin && !(await frage(`${m?.name || "Dieses Mitglied"} wirklich zur Admin-Vertretung machen?\nVolle Rechte: Links erzeugen, Rollen und Freigaben ändern, Admin-Zentrale. Wird protokolliert, ${m?.name?.split(" ")[0] || "das Mitglied"} bekommt Bescheid.`, { ja: "🛡️ Ja, Admin-Vertretung" }))) return;
   knopf.disabled = true;
-  try { await api("rolle_setzen", { person_id: pid, vorstand: $("roLeitung").checked, protokolle: $("roProtokolle").checked, kontakte: $("roKontakte").checked, admin, aemter: [...new Set(aemter)].slice(0, 5) });
-    $("rolleBlatt").remove(); MITGLIEDER = null; melde("🎖️ Gespeichert"); mitgliederLaden(); }
+  const zugangWahl = document.querySelector('#rolleBlatt input[name="roZugang"]:checked')?.value || "mitglied"; // 2.420.0 KC-CLUB-ZUGANG
+  try { const r = await api("rolle_setzen", { person_id: pid, vorstand: $("roLeitung").checked, protokolle: $("roProtokolle").checked, kontakte: $("roKontakte").checked, admin, aemter: [...new Set(aemter)].slice(0, 5), zugang: zugangWahl });
+    $("rolleBlatt").remove(); MITGLIEDER = null; melde(r?.zugangFehlt ? "🎖️ Gespeichert – der Zugang (Gast/Aushilfe) wirkt erst nach dem Datenbank-Update" : "🎖️ Gespeichert"); mitgliederLaden(); }
   catch (e) { meldeFehler(e); knopf.disabled = false; }
 }
 

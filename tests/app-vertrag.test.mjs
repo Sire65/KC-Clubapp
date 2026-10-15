@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|420)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -9949,6 +9949,41 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.381.0 KC-CLUB-KNOEPFE-PLATZ: Mikrofon kleiner und in derselben Reihe
 {
   assert.ok(/\.sb-knopf \{ width: 44px; height: 44px; border-width: 2px; font-size: 1\.2rem; \}/.test(html) && /\.sb-knopf \{ left: auto; right: calc\(50% \+ 444px\); bottom: calc\(18px \+ env\(safe-area-inset-bottom\)\); width: 48px; height: 48px;/.test(html), "Mikrofon passt in die Reihe");
+}
+
+// 2.420.0 KC-CLUB-ZUGANG: Gäste/Aushilfen – Sperre auf dem Server, gleiche Liste in der App, heikle Bereiche gesperrt
+{
+  const liste = (q, name) => { const i = q.indexOf("const ZUGANG_AKTIONEN"), j = q.indexOf("};", i); assert.ok(i > 0, `${name}: ZUGANG_AKTIONEN fehlt`);
+    const t = q.slice(i, j + 2), hol = (k) => [...(t.match(new RegExp(k + ": \\[([^\\]]*)\\]")) || [, ""])[1].matchAll(/"([a-z_]+)"/g)].map((m) => m[1]); return { basis: hol("basis"), aushilfe: hol("aushilfe") }; };
+  const sv = liste(server, "Server"), ap = liste(programm, "App");
+  assert.deepEqual(ap, sv, "Zugang: Liste in App und Server gleich");
+  assert.ok(sv.basis.length > 50 && sv.aushilfe.length > 5, "Zugang: Listen gefüllt");
+  for (const a of [...sv.basis, ...sv.aushilfe]) assert.ok(aktionen.has(a), `Zugang: Aktion „${a}“ gibt es im Server nicht`);
+  const gesperrt = ["archiv_liste", "protokolle_liste", "pinnwand", "fotos_liste", "foto_hochladen", "buero_start", "rolle_setzen", "erstattung_meine", "vorschlaege_liste", "suche", "hilfe_liste", "todo_liste", "admin_lage", "link_erzeugen"];
+  for (const a of gesperrt) assert.ok(!sv.basis.includes(a), `Zugang: „${a}“ darf für Gäste nicht frei sein`);
+  for (const a of ["foto_hochladen", "foto_loeschen", "pinnwand", "archiv_liste", "protokolle_liste"]) assert.ok(!sv.aushilfe.includes(a), `Zugang: „${a}“ darf für Aushilfen nicht frei sein`);
+  for (const a of ["treffen_liste", "nachricht_senden", "sos_kontakte", "spiel_zug", "init", "einstellung_setzen"]) assert.ok(sv.basis.includes(a), `Zugang: „${a}“ muss für Gäste frei sein`);
+  for (const a of ["mein_dienst", "dienstwunsch_speichern", "fotos_liste", "foto_oeffnen"]) assert.ok(sv.aushilfe.includes(a), `Zugang: „${a}“ muss für Aushilfen frei sein`);
+  assert.ok(/async function aktionAusfuehren\(a: string, p: any, ich: Ich, req: Request, t0Anfrage: number, anmeldungMs: number\): Promise<Response> \{\s*zugangPruefen\(a, ich\);/.test(server), "Zugang: Prüfung als erste Zeile von aktionAusfuehren (alle vier Aufrufwege)");
+  assert.ok(/if \(ich\.zugang === "mitglied" \|\| ZUGANG_ERLAUBT\[ich\.zugang\]\.has\(a\)\) return;\s*throw new Fehler\([^;]*, 403\);/.test(server), "Zugang: alles andere 403");
+  assert.ok(/const zugangAus = \(r: any\): Zugang => \(r\?\.ist_admin \? "mitglied" :/.test(server) && /return zugangAnwenden\(\{ person_id: p\.person_id/.test(server), "Zugang: Admin immer Mitglied, ichAus wendet den Zugang an");
+  assert.ok(/const zugangAnwenden = \(ich: Ich\): Ich => \(ich\.zugang === "mitglied" \? ich : \{ \.\.\.ich, protokolle: false, kontakte: false \}\);/.test(server), "Zugang: Gäste/Aushilfen nie Protokolle oder Kontakte");
+  assert.ok(/leute\.filter\(\(m\) => !eingeschraenkt \|\| m\.person_id === ich\.person_id \|\| istLeitung\(m\.person_id\)\)/.test(server), "Zugang: SOS zeigt Gästen nur Clubleitung und sich selbst");
+  assert.ok(/if \(\["mitglied", "aushilfe", "gast"\]\.includes\(p\.zugang\)\) zeile\.zugang = p\.zugang;/.test(server) && /delete zeile\.zugang; zugangFehlt = true;/.test(server), "Zugang: Rollen-Fenster speichert den Zugang (auch vor dem Datenbank-Update ohne Fehler)");
+  assert.ok(/name="roZugang" value="\$\{w\}"/.test(programm) && /zugang: zugangWahl \}\);/.test(programm), "Zugang: Auswahl im Rollen-Fenster");
+  assert.ok(/try \{ for \(;;\) \{\s*\/\/ 2\.420\.0 KC-CLUB-ZUGANG[^\n]*\s*if \(!zugangAktion\(action\)\) throw/.test(programm), "Zugang: App schickt Verbotenes gar nicht erst");
+  assert.ok(/\(!k\.nur \|\| k\.nur\(\)\) && zugangKachel\(k\.id\)\)/.test(programm) && /\(\(k\) => k && \(!k\.nur \|\| k\.nur\(\)\) && zugangKachel\(k\.id\)\)/.test(programm), "Zugang: Kacheln (erweitert + einfach) gefiltert");
+  // App-Regeln im Sandkasten
+  const von = programm.indexOf("const ZUGANG_AKTIONEN"), bis = programm.indexOf("const zugangAktion"), ende = programm.indexOf("\n", bis);
+  const mach = (ich) => new Function("ICH", programm.slice(von, ende) + "; return { zugang, zugangKachel, zugangAktion };")(ich);
+  const g = mach({ zugang: "gast" }), h = mach({ zugang: "aushilfe" }), m = mach({ zugang: "mitglied" }), alt = mach({});
+  assert.ok(g.zugangKachel("termine") && g.zugangKachel("sos") && g.zugangKachel("spiele") && !g.zugangKachel("fotos") && !g.zugangKachel("pinnwand") && !g.zugangKachel("mitglieder"), "Zugang: Gast-Kacheln");
+  assert.ok(h.zugangKachel("fotos") && h.zugangKachel("mein_dienst") && !h.zugangKachel("archiv"), "Zugang: Aushilfe-Kacheln");
+  assert.ok(m.zugangKachel("archiv") && alt.zugangKachel("archiv") && alt.zugang() === "mitglied", "Zugang: Mitglied und alte Server ohne Feld = alles");
+  assert.ok(g.zugangAktion("nachricht_senden") && !g.zugangAktion("archiv_liste") && !g.zugangAktion("fotos_liste") && h.zugangAktion("fotos_liste") && !h.zugangAktion("foto_hochladen") && m.zugangAktion("archiv_liste"), "Zugang: Aktionen je Zugang");
+  const mig = fs.readFileSync(new URL("../supabase/migrations/20261015_kc_club_v2420_zugang.sql", import.meta.url), "utf8");
+  assert.ok(/add column if not exists zugang text not null default 'mitglied'/.test(mig) && /check \(zugang in \('mitglied', 'aushilfe', 'gast'\)\)/.test(mig) && /Rückweg:/.test(mig), "Zugang: Migration mit Standard, Prüfung und Rückweg");
+  assert.ok(fs.existsSync(new URL("../tools/db-test/74_zugang_test.sql", import.meta.url)) && fs.existsSync(new URL("../tools/db-test/74_erwartet.txt", import.meta.url)), "Zugang: Datenbank-Probelauf vorhanden");
 }
 
 // 2.419.0 KC-CLUB-KACHEL-AUSWAHL: Kacheln in den Einstellungen anhaken – drei Blöcke, kein eigener Speicher (KA.aus wie „Anordnen“)

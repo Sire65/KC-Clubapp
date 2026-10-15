@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.414.0";
+const SERVER_VERSION = "2.420.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2427,6 +2427,7 @@ const isoZeitOderFehler = (v: unknown, was: string) => { const d = new Date(Stri
 const ohneLinks = (t: string) => t.replace(/(https?:\/\/|www\.)\S+/gi, "[Link entfernt]");
 // ---------- Anmeldung ----------
 type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean; buero: BueroRecht;
+  zugang: "mitglied" | "aushilfe" | "gast"; // 2.420.0 KC-CLUB-ZUGANG
   nurLesen?: boolean }; // KC-CLUB-NOTBETRIEB: true = Antwort nur für das Notfall-Paket berechnen, nichts schreiben
 // KC-CLUB-BUERO-RECHTE (1.37.0): Büro je Mitglied vom Admin freigeschaltet – null = kein Büro; Admin immer „schreiben“
 type BueroRecht = "lesen" | "schreiben" | null;
@@ -2481,14 +2482,49 @@ async function anmeldenDb(hash: string, version: string | null): Promise<Ich> {
   }
   return ichAus(p, r);
 }
+// ----- 2.420.0 KC-CLUB-ZUGANG (Wunsch Hansi „den Zugang für Gäste und Aushilfen einschränken: Nachrichten schreiben, SOS, Clubtermine, Spiele“) -----
+// Zugang aus kc_club_rollen.zugang: „mitglied“ (alles wie bisher), „aushilfe“, „gast“. Admin ist immer „mitglied“. Für Gäste und Aushilfen gilt
+// NUR, was hier steht – alles andere lehnt aktionAusfuehren mit 403 ab (auf allen Wegen: Anfrage, geplante Nachricht, Notfall-Paket, Nachtrag).
+// Gast: Termine, Nachrichten (an alle), SOS (nur Clubleitung), Spiele (auch gegen Mitglieder), Hilfe/Einstellungen/Technik.
+// Aushilfe: dazu Mein Dienst/Dienstwünsche, Fotoalbum nur ansehen, Schulung. Kein Ablaufdatum (Hansi sperrt von Hand).
+// Dieselbe Liste steht in app.js (ZUGANG_AKTIONEN) – der Vertragstest prüft, dass beide gleich sind.
+type Zugang = "mitglied" | "aushilfe" | "gast";
+const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
+  basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "start_melden", "spur_melden", "nutzung_melden", "video_bewerten", "stimmen",
+    "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
+    "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "privattermin_speichern",
+    "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
+    "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
+    "express_antwort", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "chat_selbstloeschen", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
+    "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
+    "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
+    "spiel_holen", "spiel_herausfordern", "spiel_antwort", "spiel_zug", "spiel_aufgeben", "spiel_revanche", "raetsel_stand", "raetsel_ergebnis",
+    "status_setzen", "einstellung_setzen", "benachrichtigung_setzen", "meine_daten", "avatar_bilder", "avatar_foto_setzen", "sprache_woerter",
+    "sprache_lernen", "sprache_training", "sprache_training_reset", "sprache_vergessen", "sprache_unbekannt", "twinkey_daten", "twinkey_frage",
+    "twinkey_gelesen", "fehler_melden", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
+    "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "push_anmelden",
+    "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test"],
+  aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
+    "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_album_fotos", "foto_oeffnen",
+    "schulung_meine", "schulung_antwort"],
+};
+const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set([...ZUGANG_AKTIONEN.basis, ...ZUGANG_AKTIONEN.aushilfe]) };
+const zugangAus = (r: any): Zugang => (r?.ist_admin ? "mitglied" : r?.zugang === "gast" || r?.zugang === "aushilfe" ? r.zugang : "mitglied");
+// 2.420.0 KC-CLUB-ZUGANG: Gäste/Aushilfen nie Protokolle, nie Kontaktdaten anderer (unabhängig von den Schaltern im Rollen-Fenster)
+const zugangAnwenden = (ich: Ich): Ich => (ich.zugang === "mitglied" ? ich : { ...ich, protokolle: false, kontakte: false });
+function zugangPruefen(a: string, ich: Ich) {
+  if (ich.zugang === "mitglied" || ZUGANG_ERLAUBT[ich.zugang].has(a)) return;
+  throw new Fehler(ich.zugang === "gast" ? "Das ist für Gäste nicht freigeschaltet." : "Das ist für Aushilfen nicht freigeschaltet.", 403);
+}
 // Person + Rollen → angemeldetes Mitglied (gemeinsam für Anmeldung und Notfall-Paket – eine Regel, nicht zwei)
 function ichAus(p: any, r: any): Ich {
-  return { person_id: p.person_id, name: p.display_name, vorname: vorname(p), admin: !!r?.ist_admin, vorstand: !!(r?.ist_vorstand || r?.ist_admin), aemter: r?.aemter ?? [],
+  return zugangAnwenden({ person_id: p.person_id, name: p.display_name, vorname: vorname(p), admin: !!r?.ist_admin, vorstand: !!(r?.ist_vorstand || r?.ist_admin), aemter: r?.aemter ?? [], zugang: zugangAus(r),
     // Sitzungsprotokolle: Recht aus der Rollen-Registry (Standard ja; Aushilfen nein)
     protokolle: r ? r.protokolle_lesen !== false : true,
     // Kontaktdaten anderer (sofern freigegeben): Rollen-Registry (Standard ja; Aushilfen nein)
     kontakte: r ? r.kontakte_sehen !== false : true,
-    buero: r?.ist_admin ? "schreiben" : (BUERO_RECHTE as readonly string[]).includes(r?.buero_recht) ? r.buero_recht : null };
+    buero: r?.ist_admin ? "schreiben" : (BUERO_RECHTE as readonly string[]).includes(r?.buero_recht) ? r.buero_recht : null });
 }
 // „vorstand“ ist intern das Recht, Treffen/Veranstaltungen/Abstimmungen anzulegen (im Club: Clubsprecher, Kassenwart, Admin)
 const nurVorstand = (ich: Ich) => { if (!ich.vorstand) throw new Fehler("Das dürfen nur Clubsprecher, Kassenwart und Admin.", 403); };
@@ -5908,6 +5944,7 @@ async function ungelesenJeChat(ich: Ich): Promise<{ data: any[] | null; error: a
   return await db.from("kc_communication_thread_participants").select("thread_id,last_read_at").eq("person_id", ich.person_id).is("hidden_at", null);
 }
 async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anfrage: number, anmeldungMs: number): Promise<Response> {
+    zugangPruefen(a, ich); // 2.420.0 KC-CLUB-ZUGANG: Gäste/Aushilfen nur freigegebene Aktionen – hier, damit es für alle vier Aufrufwege gilt
     switch (a) {
       // ----- KC-CLUB-KURZCODE (1.87.0): Code für ein weiteres Gerät / die installierte App erzeugen -----
       case "kurzcode_erzeugen": {
@@ -6176,7 +6213,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))) },
             // für alle nur grob: in den letzten 14 Tagen in der App gewesen (genaue Zeit nur für den Admin)
             aktiv: !(inko.has(m.person_id) && m.person_id !== ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
-            ...(ich.admin ? { kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: inko.has(m.person_id) && m.person_id !== ich.person_id ? null : (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null,
+            ...(ich.admin ? { zugang: zugangAus(r.get(m.person_id)), kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: inko.has(m.person_id) && m.person_id !== ich.person_id ? null : (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null,
               unerreichbar: !ps.has(m.person_id) && !m.email, /* kein Push, keine E-Mail: Hinweis statt roter Kreis */ ansicht: ansicht.get(m.person_id) ?? null } : {}),
             ...(ich.admin && probe.has(m.person_id) ? { probe: { seit: probe.get(m.person_id).seit ?? null, bis: probe.get(m.person_id).bis ?? null } } : {}), // KC-CLUB-PROBEPHASE
           })),
@@ -8345,8 +8382,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const festnetzVon = (p2: any) => { const k = namensSchluessel(p2.given_name || p2.display_name.split(" ")[0], p2.family_name || p2.display_name.split(" ").slice(-1)[0]);
           return txt(mgl.find((x: any) => namensSchluessel(x.firstName, x.lastName) === k)?.phone, 40) || null; };
         const frei = (pid: string, f: string) => !!(fr ?? []).find((x: any) => x.person_id === pid && x.bereich === "kontakt_" + f)?.erlaubt;
-        const liste = leute.map((m) => {
-          const selbst = m.person_id === ich.person_id, darf = (f: string) => selbst || ich.admin || (ich.kontakte && frei(m.person_id, f));
+        // 2.420.0 KC-CLUB-ZUGANG: Gäste/Aushilfen sehen nur die Clubleitung (deren freigegebene Nummern) und sich selbst – keine Mitgliederkontakte
+        const eingeschraenkt = ich.zugang !== "mitglied", istLeitung = (pid: string) => { const r0: any = rm.get(pid); return !!(r0?.ist_vorstand || r0?.ist_admin); };
+        const liste = leute.filter((m) => !eingeschraenkt || m.person_id === ich.person_id || istLeitung(m.person_id)).map((m) => {
+          const selbst = m.person_id === ich.person_id, darf = (f: string) => selbst || ich.admin || (ich.kontakte && frei(m.person_id, f)) || (eingeschraenkt && istLeitung(m.person_id) && frei(m.person_id, f));
           const r: any = rm.get(m.person_id) || {}, x: any = pm.get(m.person_id) || {};
           const kontakt: Record<string, string> = {};
           if (darf("handy") && x.phone) kontakt.handy = txt(x.phone, 40);
@@ -13206,12 +13245,15 @@ Köcheclub-App`,
         if (!pe?.active) throw new Fehler("Mitglied nicht gefunden.", 404);
         const { data: vorher } = await db.from("kc_club_rollen").select("ist_admin").eq("person_id", pid).maybeSingle();
         const adminAlt = !!vorher?.ist_admin, adminNeu = pid === ich.person_id || typeof p.admin !== "boolean" ? null : p.admin;
-        const { error: re } = await db.from("kc_club_rollen").upsert({ person_id: pid, ist_vorstand: !!p.vorstand, ...(adminNeu === null ? {} : { ist_admin: adminNeu }), aemter,
-          ...(typeof p.protokolle === "boolean" ? { protokolle_lesen: p.protokolle } : {}), ...(typeof p.kontakte === "boolean" ? { kontakte_sehen: p.kontakte } : {}), geaendert_am: jetzt() });
+        const zeile: any = { person_id: pid, ist_vorstand: !!p.vorstand, ...(adminNeu === null ? {} : { ist_admin: adminNeu }), aemter,
+          ...(typeof p.protokolle === "boolean" ? { protokolle_lesen: p.protokolle } : {}), ...(typeof p.kontakte === "boolean" ? { kontakte_sehen: p.kontakte } : {}), geaendert_am: jetzt() };
+        if (["mitglied", "aushilfe", "gast"].includes(p.zugang)) zeile.zugang = p.zugang; // 2.420.0 KC-CLUB-ZUGANG
+        let { error: re } = await db.from("kc_club_rollen").upsert(zeile), zugangFehlt = false;
+        if (re && "zugang" in zeile && /zugang/i.test(String(re.message || ""))) { delete zeile.zugang; zugangFehlt = true; ({ error: re } = await db.from("kc_club_rollen").upsert(zeile)); } // Spalte noch nicht eingespielt
         if (re) throw new Fehler("Die Rolle konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500);
         if (adminNeu === false && adminAlt) await db.from("kc_club_person_einstellung").delete().eq("person_id", pid).eq("schluessel", "inkognito"); // KC-CLUB-INKOGNITO
         anmeldungenVergessen(); // KC-CLUB-ANMELDECACHE: neue Rolle sofort wirksam
-        await protokoll(ich.person_id, "rolle_gesetzt", { fuer: pid, vorstand: !!p.vorstand, aemter, protokolle: p.protokolle ?? null, admin: adminNeu });
+        await protokoll(ich.person_id, "rolle_gesetzt", { fuer: pid, vorstand: !!p.vorstand, aemter, protokolle: p.protokolle ?? null, admin: adminNeu, zugang: zeile.zugang ?? null });
         if (adminNeu !== null && adminNeu !== adminAlt) {
           await protokoll(ich.person_id, "admin_recht_geaendert", { fuer: pid, vorher: adminAlt, nachher: adminNeu });
           await senden("club_nachricht", [pid], adminNeu ? {
@@ -13221,7 +13263,7 @@ Köcheclub-App`,
           } : { titel: "🛡️ Admin-Rechte beendet", kurz: `${ich.name} hat deine Admin-Rechte beendet.`, betreff: "Köcheclub Werne – Admin-Rechte beendet",
             text: `Hallo,\n\n${ich.name} hat deine Admin-Rechte in der Köcheclub-App beendet.\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL }, `club-admin-recht:${pid}:${Date.now()}`).catch(() => null);
         }
-        return json({ ok: true });
+        return json({ ok: true, ...(zugangFehlt ? { zugangFehlt: true } : {}) });
       }
 
       // KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0): die App ist zurück aus dem Notbetrieb → Eingang sofort nachtragen (nicht erst
