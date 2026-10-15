@@ -17,6 +17,14 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.415.0 – 2026-10-15 – Hilfe, Twinkey, Lupe und Videos zu den neuen Avataren (KC-CLUB-AVATAR-HILFE)
+Wunsch Hansi: „Passe die Hilfetexte, Twinkey, Lupe und Video an die neuen Avatare an.“
+- Hilfe: „Ein Bild statt Buchstaben“ nennt Bisherige und Hochwertige Avatare; neu „👑 Hochwertige Avatare“ und „🧩 Figur individuell anpassen (Schmuck, Kochjacke, Stil)“ mit Hinweis zur eigenen Brille.
+- Twinkey: Antworten zu Kochbild und Baukasten aktualisiert; neu „Was sind die hochwertigen Avatare?“, „Ohrringe, Kette oder Piercing?“, „Kann ich meine eigene Brille verwenden?“.
+- Lupe: findet „Mein Bild“ auch mit „hochwertig“, „Avatare“ …; neuer Treffer „🧩 Figur anpassen“ (Frisur, Brille, Ohrringe, Kette, Piercing, Schürze …).
+- Geführte Hilfe: zeigt auf den aufgeklappten Bereich; im Baukasten zusätzlich Jackenschnitt, Ohrringe, Halskette, Piercing.
+- Videos (Fassung 2): „Koch-Figur aussuchen“ mit Bisherige/Hochwertige Avatare und Individuell anpassen; „Eigene Figur zusammenstellen“ mit Kacheln, Stil, Schmuck, neuen Bärten, Mützen, Brillen und Jackenschnitt. Klappbereiche öffnet das Video nur vorübergehend.
+
 ## 2.414.0 – 2026-10-15 – Hochwertige Avatare, mehr Accessoires, Baukasten mit Kacheln (KC-CLUB-AVATAR-PREMIUM)
 Anlass (Hansi, Vorlage aus ChatGPT): hochwertige Avatar-Auswahl in die bestehende App einbauen, bisherige Avatare unverändert lassen.
 - „Mein Bild“ hat jetzt die drei Bereiche der Vorlage: **Bisherige Avatare** (die 40 Figuren, unverändert), **Hochwertige Avatare** (36 neue Figuren: 18 Köchinnen, 18 Köche, alle Hauttöne, jung bis reif, viele Frisuren, Kopfbedeckungen und Kochjacken) und **Individuell anpassen** (Kacheln, die den Baukasten direkt an der richtigen Stelle öffnen).
