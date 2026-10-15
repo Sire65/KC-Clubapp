@@ -1,0 +1,257 @@
+{
+ "hinweis": "Erzeugt mit tools/avatare-erzeugen.mjs – nicht von Hand ändern. code = gespeicherter Bild-Code (im Baukasten anpassbar).",
+ "figuren": [
+  {
+   "id": "pw01",
+   "name": "Lena",
+   "code": "p121300d012112000000000001510000",
+   "art": "köchin",
+   "datei": "pw01.svg"
+  },
+  {
+   "id": "pw02",
+   "name": "Greta",
+   "code": "p036007f512100300000000001503002",
+   "art": "köchin",
+   "datei": "pw02.svg"
+  },
+  {
+   "id": "pw03",
+   "name": "Mei",
+   "code": "p130b00g312100000000000001650000",
+   "art": "köchin",
+   "datei": "pw03.svg"
+  },
+  {
+   "id": "pw04",
+   "name": "Amara",
+   "code": "p440700i212110000100000001530000",
+   "art": "köchin",
+   "datei": "pw04.svg"
+  },
+  {
+   "id": "pw05",
+   "name": "Sofia",
+   "code": "p201400d612100000310000001530100",
+   "art": "köchin",
+   "datei": "pw05.svg"
+  },
+  {
+   "id": "pw06",
+   "name": "Hanna",
+   "code": "p003000ha12103000000000001104000",
+   "art": "köchin",
+   "datei": "pw06.svg"
+  },
+  {
+   "id": "pw07",
+   "name": "Leyla",
+   "code": "p200600e412100000500000001600000",
+   "art": "köchin",
+   "datei": "pw07.svg"
+  },
+  {
+   "id": "pw08",
+   "name": "Nia",
+   "code": "p390800c012110000900000001540000",
+   "art": "köchin",
+   "datei": "pw08.svg"
+  },
+  {
+   "id": "pw09",
+   "name": "Rosa",
+   "code": "p1bb300fa12100010000000001570210",
+   "art": "köchin",
+   "datei": "pw09.svg"
+  },
+  {
+   "id": "pw10",
+   "name": "Ingrid",
+   "code": "p025d01g512100500000000001550002",
+   "art": "köchin",
+   "datei": "pw10.svg"
+  },
+  {
+   "id": "pw11",
+   "name": "Carla",
+   "code": "p1c8200e012103000300000001300000",
+   "art": "köchin",
+   "datei": "pw11.svg"
+  },
+  {
+   "id": "pw12",
+   "name": "Fatou",
+   "code": "p410j00c212100000a60000001561000",
+   "art": "köchin",
+   "datei": "pw12.svg"
+  },
+  {
+   "id": "pw13",
+   "name": "Julia",
+   "code": "p0d930bh6121006b0000000001520020",
+   "art": "köchin",
+   "datei": "pw13.svg"
+  },
+  {
+   "id": "pw14",
+   "name": "Maria",
+   "code": "p247003i512100200000000001501001",
+   "art": "köchin",
+   "datei": "pw14.svg"
+  },
+  {
+   "id": "pw15",
+   "name": "Yuki",
+   "code": "p1caf00d612100010200000001500030",
+   "art": "köchin",
+   "datei": "pw15.svg"
+  },
+  {
+   "id": "pw16",
+   "name": "Ebony",
+   "code": "p32000eg312100300000000001530000",
+   "art": "köchin",
+   "datei": "pw16.svg"
+  },
+  {
+   "id": "pw17",
+   "name": "Ana",
+   "code": "p212e00e012112000000000001505000",
+   "art": "köchin",
+   "datei": "pw17.svg"
+  },
+  {
+   "id": "pw18",
+   "name": "Elif",
+   "code": "p201h00f6121000c0400000001510400",
+   "art": "köchin",
+   "datei": "pw18.svg"
+  },
+  {
+   "id": "pm01",
+   "name": "Henrik",
+   "code": "p157012c002200445000000004500001",
+   "art": "koch",
+   "datei": "pm01.svg"
+  },
+  {
+   "id": "pm02",
+   "name": "Kofi",
+   "code": "p480b10e602210010000000004500010",
+   "art": "koch",
+   "datei": "pm02.svg"
+  },
+  {
+   "id": "pm03",
+   "name": "Leo",
+   "code": "p141000f302212000000000004500000",
+   "art": "koch",
+   "datei": "pm03.svg"
+  },
+  {
+   "id": "pm04",
+   "name": "Paolo",
+   "code": "p250270g602200010300000004500030",
+   "art": "koch",
+   "datei": "pm04.svg"
+  },
+  {
+   "id": "pm05",
+   "name": "Ole",
+   "code": "p0d4310d1022030c0000000004100000",
+   "art": "koch",
+   "datei": "pm05.svg"
+  },
+  {
+   "id": "pm06",
+   "name": "Rashid",
+   "code": "p3500a1h402200000000000004501000",
+   "art": "koch",
+   "datei": "pm06.svg"
+  },
+  {
+   "id": "pm07",
+   "name": "Walter",
+   "code": "p076053i002200200000000004500002",
+   "art": "koch",
+   "datei": "pm07.svg"
+  },
+  {
+   "id": "pm08",
+   "name": "Kenji",
+   "code": "p1a0300c902200010000000004500620",
+   "art": "koch",
+   "datei": "pm08.svg"
+  },
+  {
+   "id": "pm09",
+   "name": "Marcus",
+   "code": "p45001eh402200000000000004500010",
+   "art": "koch",
+   "datei": "pm09.svg"
+  },
+  {
+   "id": "pm10",
+   "name": "Tom",
+   "code": "p063a00e402210000500000004520000",
+   "art": "koch",
+   "datei": "pm10.svg"
+  },
+  {
+   "id": "pm11",
+   "name": "Giuseppe",
+   "code": "p155e40g002200000000000004500032",
+   "art": "koch",
+   "datei": "pm11.svg"
+  },
+  {
+   "id": "pm12",
+   "name": "Samir",
+   "code": "p250f30d6022000d0200000004500000",
+   "art": "koch",
+   "datei": "pm12.svg"
+  },
+  {
+   "id": "pm13",
+   "name": "Jonas",
+   "code": "p09230df902203200000000004500000",
+   "art": "koch",
+   "datei": "pm13.svg"
+  },
+  {
+   "id": "pm14",
+   "name": "Dmitri",
+   "code": "p081h80h8022000c0200000004502000",
+   "art": "koch",
+   "datei": "pm14.svg"
+  },
+  {
+   "id": "pm15",
+   "name": "Aziz",
+   "code": "p350j10i202200000400000004600000",
+   "art": "koch",
+   "datei": "pm15.svg"
+  },
+  {
+   "id": "pm16",
+   "name": "Bernd",
+   "code": "p177g26e5022001b0000000004500012",
+   "art": "koch",
+   "datei": "pm16.svg"
+  },
+  {
+   "id": "pm17",
+   "name": "Lucas",
+   "code": "p2d1i90c002200000200000004510000",
+   "art": "koch",
+   "datei": "pm17.svg"
+  },
+  {
+   "id": "pm18",
+   "name": "Emil",
+   "code": "p058c00g402213000000000004500000",
+   "art": "koch",
+   "datei": "pm18.svg"
+  }
+ ]
+}

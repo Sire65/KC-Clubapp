@@ -26,6 +26,7 @@ jobs:
       # erst die Tests – ein roter Test verhindert das Hochladen
       - run: node tests/app-vertrag.test.mjs
       - run: node tests/fra-verschluesselung.test.mjs
+      - run: node tests/avatar-rueckwaerts.test.mjs
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
