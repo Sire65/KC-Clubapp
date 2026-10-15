@@ -17,6 +17,18 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.422.0 – 2026-10-15 – 🔒 Zugang für Gäste und Aushilfen (KC-CLUB-ZUGANG) · Server 2.422.0 · DB
+Anlass (Hansi): „Wir müssen den Zugang für Gäste und Aushilfen einschränken – die dürfen Nachricht schreiben, SOS und Clubtermine … und Spiele.“ Entscheidungen Hansi: Aushilfen sehen das Fotoalbum (nur ansehen); Gäste schreiben an alle Mitglieder; Spiele auch gegen Mitglieder; kein Ablaufdatum.
+- **Zugang je Person** (`kc_club_rollen.zugang`): 👤 Mitglied (alles wie bisher), 🧑‍🍳 Aushilfe, 🙋 Gast. Einstellbar im Rollen-Fenster (🎖️ Ämter und Rechte). Admin ist immer Mitglied.
+- **Sperre auf dem Server:** `zugangPruefen` als erste Zeile von `aktionAusfuehren` – gilt für normale Anfragen, geplante Nachrichten, Notfall-Paket und Nachtrag. Für Gäste/Aushilfen ist nur erlaubt, was in `ZUGANG_AKTIONEN` steht; alles andere → 403.
+  - **Gast:** Clubtermine (ansehen, zu-/absagen, Kalender, eigene private Termine), Nachrichten (an alle), SOS, Spiele + Rätsel, Hilfe/Twinkey/Feedback, Einstellungen, Push und Technik.
+  - **Aushilfe:** dazu Mein Dienst/Dienstwünsche (inkl. Sondereinsatz-Zusage und Stunden melden), Fotoalbum ansehen, Schulung.
+  - Gesperrt u. a.: Archiv, Protokolle, Pinnwand, Vorschläge, Erstattung, Büro, Helfen & Leihen, To-dos, Suche, Admin.
+- Gäste/Aushilfen sehen **nie Protokolle und keine Kontaktdaten anderer** (`zugangAnwenden` in `ichAus`); **SOS** zeigt ihnen nur die Clubleitung (mit deren freigegebenen Nummern) und sich selbst.
+- **App:** dieselbe Liste (`ZUGANG_AKTIONEN`) – Verbotenes wird gar nicht erst geschickt; Kacheln (erweitert + einfach) passend gefiltert (`ZUGANG_KACHELN`).
+- **Datenbank:** `supabase/migrations/20261015_kc_club_v2422_zugang.sql` (Spalte `zugang`, Standard „mitglied“, Prüfregel; bisherige Aushilfen = Amt „Aushilfe“ → „aushilfe“). Probelauf `tools/db-test/74_zugang_test.sql`. Bis zum Einspielen gilt für alle „mitglied“; das Rollen-Fenster speichert weiter (Zugang dann mit Hinweis). Rückweg in der Migration.
+- Vertragstest: gleiche Liste in App und Server, alle Aktionen vorhanden, heikle Bereiche gesperrt, Sandkasten der App-Regeln (Gegenprobe: ohne Server-Sperre rot).
+
 ## 2.421.0 – 2026-10-15 – ☑️ Kacheln auswählen (KC-CLUB-KACHEL-AUSWAHL)
 Anlass (Hansi): „Unter Einstellungen generell die Kacheln anhaken, die man haben möchte – die anderen sind verborgen. In 3 Blöcken Club, Meins, Technik, einklappbar, alle auflisten mit Klickkästchen – nebeneinander, nicht zu viel Platz verschwenden.“
 - ⚙️ → „🧩 Startseite & Ansicht“ → **„☑️ Kacheln auswählen“**: drei einklappbare Blöcke 🏠 Club, 🙋 Meins, 🛠️ Technik mit Zähler („13 von 14“), Kästchen im Raster nebeneinander (Handy 2 Spalten, breiter 3–4); „✅ Alle anzeigen“ je Bereich.

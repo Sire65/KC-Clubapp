@@ -1,0 +1,5 @@
+standard_mitglied=t
+gast=t
+aushilfe=t
+falscher_wert_abgelehnt=t
+anmeldung_liefert_zugang=t
