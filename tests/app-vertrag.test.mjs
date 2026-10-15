@@ -9951,6 +9951,17 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\.sb-knopf \{ width: 44px; height: 44px; border-width: 2px; font-size: 1\.2rem; \}/.test(html) && /\.sb-knopf \{ left: auto; right: calc\(50% \+ 444px\); bottom: calc\(18px \+ env\(safe-area-inset-bottom\)\); width: 48px; height: 48px;/.test(html), "Mikrofon passt in die Reihe");
 }
 
+// 2.419.0 KC-CLUB-KACHEL-AUSWAHL: Kacheln in den Einstellungen anhaken – drei Blöcke, kein eigener Speicher (KA.aus wie „Anordnen“)
+{
+  const p = programm;
+  assert.ok(/const KA_WAHL_BLOECKE = \[\["verein", "🏠 Club"\], \["mein", "🙋 Meins"\], \["programme", "🛠️ Technik"\]\];/.test(p), "Kachel-Auswahl: drei Blöcke Club, Meins, Technik (kein Admin)");
+  assert.ok(/<details class="ka-wahl" data-r="\$\{r\}"/.test(p) && /const alle = kachelnAlle\(r\)/.test(p), "Kachel-Auswahl: einklappbar, nur Kacheln, die man sehen darf");
+  assert.ok(/function kaWahl\(el\) \{ kaSichtbar\(el\.dataset\.id, el\.checked, true\);/.test(p), "Kachel-Auswahl: Haken nutzt das vorhandene Ausblenden (gilt auf allen Geräten)");
+  assert.ok(/if \(!sichtbar && !leise\) melde\("🙈 Ausgeblendet/.test(p), "Kachel-Auswahl: Hinweis beim Ausblenden über ✕ bleibt, beim Ankreuzen leise");
+  assert.ok(/<div id="kaAuswahl"><\/div>/.test(seite) && /\.ka-wahl-raster \{ display: grid; grid-template-columns: repeat\(auto-fill, minmax\(140px, 1fr\)\)/.test(seite), "Kachel-Auswahl: in den Einstellungen, Kästchen nebeneinander");
+  assert.ok(/kaAuswahlZeigen\(\); \}/.test(p), "Kachel-Auswahl: wird beim Öffnen der Einstellungen gefüllt");
+}
+
 // 2.418.0 KC-CLUB-KACHEL-VORSCHLAG: adaptive Startseite nur als Vorschlag – Regeln im Sandkasten durchspielen
 {
   const p = programm, von = p.indexOf("const NU_KEY"), bis = p.indexOf("function nuVorschlagPruefen");

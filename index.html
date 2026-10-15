@@ -2598,6 +2598,15 @@
   .schalter { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--linie); }
   .schalter:last-child { border-bottom: none; }
   .schalter input { flex: none; width: 26px; height: 26px; accent-color: var(--rot); }
+  /* 2.419.0 KC-CLUB-KACHEL-AUSWAHL: drei Blöcke zum Aufklappen, Kästchen platzsparend nebeneinander (Handy 2 Spalten, breiter 3–4) */
+  .ka-wahl-block { padding: 14px 0; border-bottom: 1px solid var(--linie); }
+  .ka-wahl { margin-top: 8px; border: 1px solid var(--linie); border-radius: 12px; padding: 0 10px; background: var(--karte); }
+  .ka-wahl summary { cursor: pointer; font-weight: 800; padding: 10px 0; list-style-position: inside; }
+  .ka-wahl-zahl { font-weight: 600; font-size: .85rem; opacity: .7; margin-left: 4px; }
+  .ka-wahl-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 2px 10px; padding: 0 0 8px; }
+  .ka-wahl-raster label { display: flex; align-items: center; gap: 6px; min-height: 34px; font-size: .92rem; line-height: 1.2; cursor: pointer; }
+  .ka-wahl-raster input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--rot); }
+  .ka-wahl > .knopf { margin: 0 0 10px; }
   .blatt { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
   /* KC-CLUB-DIALOG (1.46.0): Rückfragen/Eingaben als App-Fenster – über allem anderen */
   .blatt.dlg-blatt { z-index: 5000; } #druckBlatt.blatt { z-index: 2050; } /* 2.25.3: Druck-Auswahl auch über offenen Fenstern (z. B. 🎓 Schulungen → km-Abrechnung), unter der Vorschau (2100) */
@@ -4773,6 +4782,8 @@
       <!-- KC-CLUB-BEWEGUNG-EINLADUNG (2.314.0) -->
       <div class="schalter"><div><b>🎭 Twinkey lädt zur Bewegung ein</b><div class="hinweis">Beim Öffnen fragt Twinkey höchstens einmal am Tag, ob du Lust auf eine Bewegungseinheit hast – „Ja“ führt direkt zur Bühne. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setBwEinladung" checked onchange="bwEinSetzen({ aus: !this.checked })"></div>
       <div class="schalter"><div><b>💡 Vorschläge zur Startseite</b><div class="hinweis">Die App merkt sich auf diesem Gerät, welche Kacheln du öffnest, und schlägt höchstens einmal pro Woche vor, selten genutzte auszublenden oder weitere Funktionen freizuschalten. Sie ändert nie etwas von selbst, nichts verlässt dein Handy.</div><button type="button" class="knopf klein" style="margin-top:6px" onclick="nuLoeschen()">🧹 Gemerktes löschen</button></div><input type="checkbox" id="setKachelVorschlag" checked onchange="nuSchalter(this.checked)"></div>
+      <!-- KC-CLUB-KACHEL-AUSWAHL (2.419.0) -->
+      <div class="ka-wahl-block"><b>☑️ Kacheln auswählen</b><div class="hinweis">Haken = Kachel auf der Startseite, ohne Haken = verborgen. Gilt für die erweiterte Ansicht und auf allen deinen Geräten.</div><div id="kaAuswahl"></div></div>
       <!-- KC-CLUB-ROLLKARTEI-WAHL (2.184.0, Wunsch Hansi): jeder entscheidet selbst – je Liste, gilt für dieses Gerät -->
       <div class="schalter" style="display:block"><div><b>🗂️ Rollkartei</b><div class="hinweis">Lange Listen wie eine Karteikarten-Rolle durchblättern (antippen, wischen, endlos). Aus: die gewohnte Liste. Gilt für dieses Gerät.</div></div>
         <div class="schalter" style="margin:6px 0 0"><div>⚙️ Einstellungen</div><input type="checkbox" id="setRkEinst" onchange="rkSchalten('einst', this.checked)"></div>
@@ -5155,6 +5166,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.418.0" data-v="2.418.0"></script>
+<script src="app.js?v=2.419.0" data-v="2.419.0"></script>
 </body>
 </html>

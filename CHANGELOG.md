@@ -17,6 +17,13 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.419.0 – 2026-10-15 – ☑️ Kacheln auswählen (KC-CLUB-KACHEL-AUSWAHL)
+Anlass (Hansi): „Unter Einstellungen generell die Kacheln anhaken, die man haben möchte – die anderen sind verborgen. In 3 Blöcken Club, Meins, Technik, einklappbar, alle auflisten mit Klickkästchen – nebeneinander, nicht zu viel Platz verschwenden.“
+- ⚙️ → „🧩 Startseite & Ansicht“ → **„☑️ Kacheln auswählen“**: drei einklappbare Blöcke 🏠 Club, 🙋 Meins, 🛠️ Technik mit Zähler („13 von 14“), Kästchen im Raster nebeneinander (Handy 2 Spalten, breiter 3–4); „✅ Alle anzeigen“ je Bereich.
+- Kein eigener Speicher: Haken = nicht in `KA.aus` – dasselbe Ausblenden wie „Anordnen“ (✕/👁️), gilt auf allen Geräten. Gezeigt werden nur Kacheln, die man sehen darf (`kachelnAlle`); das Admin-Register bleibt außen vor.
+- `kaSichtbar(id, sichtbar, leise)`: neuer optionaler Parameter, damit beim Ankreuzen nicht jedes Mal ein Hinweis erscheint; über ✕ bleibt der Hinweis wie bisher.
+- In der einfachen Ansicht steht ein Hinweis, dass die Auswahl für die erweiterte Ansicht gilt. Hilfe-Eintrag und Suchbegriff ergänzt, Vertragstest.
+
 ## 2.418.0 – 2026-10-15 – 💡 Vorschläge zur Startseite (KC-CLUB-KACHEL-VORSCHLAG)
 Anlass (Hansi): „Die App soll merken, welche Funktionen am meisten genutzt werden, und dann vorschlagen: sollen wir Kacheln verbergen oder weitere Funktionen freischalten?“ – adaptive Startseite, aber **nur als Vorschlag**, die App baut nie selbst um.
 - **Zählen nur auf dem Gerät:** Beim Öffnen einer Kachel merkt sich die App Anzahl und letzten Tag (localStorage `kc_club_nutzung`), dazu die Tage mit Nutzung. Nichts geht an den Server.
