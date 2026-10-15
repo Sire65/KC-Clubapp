@@ -17,6 +17,30 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.425.0 – 2026-10-15 – 🩺 Generalcheck: Fehler, einheitliche Bedienung, Sicherheit (KC-CLUB-GENERALCHECK) · Server 2.425.0 · kc-termine · Spiegel-Arbeiter
+Anlass (Hansi): „Tiefer Generalcheck – bedienerfreundlich, logisch, gleiche Bedienung, gleiche Bezeichnungen, Sicherheit, TÜV, Komfort … gerne auch mit externen Programmen.“ Geprüft mit den eigenen Tests, ESLint, Semgrep, detect-secrets, axe (Barrierefreiheit), Lighthouse, KICC-Regression (52 Browser-Tests) und drei Code-Prüfungen. Keine Datenbank-Änderung nötig (Rechte der Sicherungsfunktionen live geprüft: gesperrt).
+**Paket A – Fehler**
+- **Gast/Aushilfe:** keine Notfall-Meldung an alle mehr, auch wenn „SOS für alle“ an ist (Server 403, App zeigt den Knopf nicht) – SOS an die Clubleitung bleibt.
+- **Doppeltes Senden:** SOS an alle, Kurznachricht und Weiterleiten gegen Doppeltippen gesperrt; nach Netzfehler (WLAN↔Mobilnetz) wird nur noch Lesen still wiederholt, Schreiben nie (App und Dienstwunsch).
+- **Update beim Zurückkehren** wartet, solange ein Erstattungsantrag Positionen hat oder Fotos ausgewählt sind (vorher waren sie weg).
+- **Dienstwunsch bei schlechtem Netz:** der Service Worker liefert die Startseite nur noch für die App selbst – vorher lief im Twinkey-Fenster die ganze App ein zweites Mal.
+- **Spiele:** jeder eigene Zug startete einen weiteren Abfrage-Takt (Akku, Server) – jetzt immer nur einer. **Fitness:** Doppeltipp auf „Los geht’s“ ließ die Uhr doppelt laufen.
+- **Uhrzeiten** (Treffen, Umfragen, Fristen, Freud & Leid, Termin-Vorschläge …) immer in deutscher Zeit – auch wenn das Handy im Urlaub auf andere Zeit steht. **Beträge** mit Tausenderpunkt („1.250,00“). **km-Abrechnung** „letzter Monat“ am 1. kurz nach Mitternacht richtig. Fehler 413/429/408 in Klartext.
+- **Kalender-Abo** endet, wenn der Zugang entzogen oder gesperrt ist. **Anlagen-Links** für Gäste/Aushilfen nur eigene und Chat-Anlagen. Aushilfen: Album ändern entfernt (nur ansehen, wie entschieden).
+**Paket B – einheitliche Bedienung**
+- **Rückfragen:** Verwerfen, Zurücksetzen, Überschreiben, Vergessen, Sperren und 🗑️-Knöpfe sind jetzt rot mit Fokus auf „Abbrechen“; „Fernhilfe erlauben“ und „Feedback neu“ nicht mehr fälschlich rot. Gefahr-Knopf hell mit rotem Rand – deutlich anders als der weinrote Hauptknopf. Löschfenster (Nachricht, Termin aus Reihe) gleich gestaltet.
+- **Eingaben schützen:** wer in einem Fenster getippt hat und daneben tippt, ✕, Escape oder „Zurück“ drückt, wird gefragt („Verwerfen / Weiter bearbeiten“). Chat-✕ „Text löschen“ mit „Rückgängig“.
+- **Begriffe:** „🔧 Erweiterte Ansicht“ überall (statt „Alle Funktionen“/„Erweitert“), „🧪 Test an mich“, Namenssuche „🔍 Name suchen …“, „💾 … gespeichert“, Kachel „✏️ Änderung melden“, „📆 Termine im Handy-Kalender“ (📲 nur noch App-Installation), Knöpfe in gewohnter Reihenfolge.
+- **Hilfetexte** zeigen auf die richtigen Stellen (Boten → ✨ Effekte, Kurzanleitung, Sprachsteuerung, Sprachansagen, Männerstimme, Einweisung, „📤 Teilen“); Push-Hinweis mit Sprung-Knopf (auch in der einfachen Ansicht). Schalter, die nur auf diesem Handy gelten, sagen es.
+- **Barrierefreiheit/Komfort:** kleine Knöpfe 44 px, größere ✕ in Chips, Beschriftungen für Vorleseprogramme (Emoji-Knöpfe, Chat-Feld, Auswahllisten), größere Tippfläche für Online-Lämpchen und Versionsnummer, Kontrast (Dienstplan-Legende, Termin-Seite). Termin-Seite: du/ihr beim Absagen und Bestätigung danach.
+- Die Fußleiste behält „Mehr“: „Einstellungen“ passt auf kleinen Handys mit großer Schrift nicht (gemessen).
+**Paket C – Sicherheit**
+- **Mengengrenzen** gegen das Leeren des Mail-Kontingents: Hilfe-Aufrufe und Hilfe-Angebote je 5/Tag, neue Nachrichten an alle 10/Tag (Gäste/Aushilfen 3), „wichtig“-Bescheid je Zettel/Aufruf nur einmal. Admin ohne Grenze.
+- **Hochladen:** Kontingent je Person (300 MB/Tag, Gäste/Aushilfen 60 MB), angebliches Bild ohne Bild-Inhalt nur als Download.
+- **Notfall-Chat:** Selbstlöschen und Anheften nur der Admin. **Push** nur über echte Push-Dienste (Google, Mozilla, Apple, Microsoft – alle vorhandenen Anmeldungen geprüft). **Notbetrieb-Nachtrag** übernimmt nur die Felder, die der Ersatz-Server annimmt.
+- **kc-termine:** keine internen Datenbank-Texte nach außen, Geheimnisse zeitkonstant verglichen (auch Spiegel-Arbeiter).
+- Bewusst unverändert (Abwägung): Kurzcode-Bremse (löscht bei Überlauf offene Codes – Schutz gegen Erraten), Push-Anmeldung wandert bei geteiltem Gerät zur neu angemeldeten Person, Realtime-Kanal und Verschlüsselung des Notfall-Pakets beim Ersatz-Server (größerer Umbau, eigener Auftrag).
+
 ## 2.424.0 – 2026-10-15 – Texte: „KC-Verwaltung“ statt „KC Manager“ · Server 2.424.0
 Hinweis Hansi: „Es gibt ein Programm KC-Verwaltung und ein Programm PC Manager – das sind 2 Programme. Verwaltung ist das Verwaltungssystem, PC Manager managt hauptsächlich die Kassen.“ Die Club-App nannte die Verwaltung in sichtbaren Texten „KC Manager“ (alter interner Name, technisch weiter `KC_MANAGER`/`kc_manager_state_sections`).
 - Änderungen der Mitglieder (Hilfe, Hinweis „freigegeben – liegt für die KC-Verwaltung bereit“, Freigabe-Frage und Meldung), Aktionen/Ausflüge („Die Angaben kommen aus der KC-Verwaltung“), Austritts-Checkliste und Server-Meldung „kann nur in der KC-Verwaltung eingetragen werden“.

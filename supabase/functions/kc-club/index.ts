@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.424.0";
+const SERVER_VERSION = "2.425.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -88,6 +88,8 @@ const TZ = "Europe/Berlin";
 const APP_URL = "https://sire65.github.io/KC-Clubapp/";
 const BUCKET = "kc-communication-attachments";
 const MAX_ANLAGE = 8 * 1024 * 1024;
+const PUSH_DIENSTE = ["googleapis.com", "mozilla.com", "push.apple.com", "notify.windows.com"]; // 2.425.0: erlaubte Push-Dienste (Endpunkt-Host)
+const UPLOAD_TAG_MITGLIED = 300 * 1024 * 1024, UPLOAD_TAG_GAST = 60 * 1024 * 1024; // 2.425.0 KC-CLUB-UPLOAD-KONTINGENT: je Person und 24 Std.
 const SYSTEM_UPLOADER = "KC-P-002"; // Pflichtfeld uploaded_by (Benutzer-ID) – die eigentliche Person steht im Pfad und in der Verknüpfung
 
 const cors = {
@@ -186,6 +188,25 @@ async function protokollPlatz(person: string, aktion: string, proStunde: number)
   q = aktion.endsWith("%") ? q.like("aktion", aktion) : q.eq("aktion", aktion);
   const { count, error } = await q;
   return !!error || (count ?? 0) < proStunde; // Zählfehler → nicht blockieren (Meldungen sind nur Hilfsdaten)
+}
+// 2.425.0 KC-CLUB-MASSEN-GRENZE (Generalcheck Sicherheit): Aktionen, die Push + Mail an alle auslösen, je Person und Tag begrenzen –
+// sonst könnte ein Skript das Mail-Kontingent leeren und echte Notfall-Mails kämen nicht mehr an. Admin ohne Grenze; Zählfehler blockieren nie.
+async function massenGrenze(ich: Ich, aktionen: string[], maxTag: number, was: string) {
+  if (ich.admin) return;
+  const { count, error } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).in("aktion", aktionen)
+    .gte("zeit", new Date(Date.now() - 86400000).toISOString());
+  if (!error && (count ?? 0) >= maxTag) throw new Fehler(`Heute gingen schon ${maxTag} ${was} raus – mehr geht ab morgen wieder. Ist es dringend, sag ${await adminVorname()} Bescheid.`, 429);
+}
+// Bescheid an viele je Eintrag nur einmal (aus und wieder „wichtig“ löste sonst jedes Mal neue Pushes aus)
+async function schonBescheid(aktion: string, feld: string, id: string) {
+  const { count, error } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", aktion).eq(`details->>${feld}`, id);
+  return !error && (count ?? 0) > 0;
+}
+// 2.425.0 KC-CLUB-GENERALCHECK (Sicherheit): im Notfall-Chat aller Mitglieder ändern Selbstlöschen und Anheften nur der Admin
+async function notfallChatNurAdmin(ich: Ich, threadId: string) {
+  if (ich.admin) return;
+  const { data } = await db.from("kc_communication_threads").select("subject").eq("id", threadId).maybeSingle();
+  if (data?.subject === NOTFALL_BETREFF) throw new Fehler("Im Notfall-Chat kann das nur der Admin ändern.", 403);
 }
 // KC-CLUB-LOESCHEN: vor jedem Löschen eine vollständige Sicherung ins Änderungsprotokoll (Wiederherstellungspunkt)
 async function geloescht(ich: { person_id: string }, was: string, sicherung: Record<string, unknown>) {
@@ -695,15 +716,26 @@ async function dateiAblegen(ich: Ich, nameRoh: unknown, mimeRoh: unknown, datenR
   const bytes = (() => { try { return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)); } catch { throw new Fehler("Die Datei konnte nicht gelesen werden – bitte noch einmal auswählen."); } })();
   if (!bytes.length) throw new Fehler("Leere Datei.");
   if (bytes.length > MAX_ANLAGE) throw new Fehler("Die Datei ist zu groß (höchstens 8 MB).");
+  // 2.425.0 KC-CLUB-UPLOAD-KONTINGENT (Generalcheck Sicherheit): je Person und Tag begrenzt – eine Person allein konnte sonst den Speicher
+  // für alle volllaufen lassen (dann stoppen Fotos, Archiv und Anlagen). Admin ohne Grenze; Zählfehler blockieren nie.
+  if (!ich.admin && (ich as any).zugang) { // Systemablagen (Zeitplaner mit Teil-Ich ohne zugang) zählen nicht
+    const { data: heute, error: he } = await db.from("kc_communication_attachments").select("size_bytes").like("object_path", `club/${ich.person_id}/%`).gte("created_at", new Date(Date.now() - 86400000).toISOString()).limit(2000);
+    const summe = (heute ?? []).reduce((a: number, x: any) => a + (Number(x.size_bytes) || 0), 0), grenze = ich.zugang === "mitglied" ? UPLOAD_TAG_MITGLIED : UPLOAD_TAG_GAST;
+    if (!he && summe + bytes.length > grenze) throw new Fehler(`Heute hast du schon ${Math.round(summe / 1048576)} MB hochgeladen – mehr geht ab morgen wieder (höchstens ${Math.round(grenze / 1048576)} MB am Tag). Ist es dringend, sag ${await adminVorname()} Bescheid.`, 429);
+  }
+  // 2.425.0: angebliches Bild, dessen Inhalt kein Bild ist → nur noch als Download (nie im Browser angezeigt)
+  const istBild = (b: Uint8Array) => (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) || (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) || (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46)
+    || (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) || (b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70) || (b[0] === 0x42 && b[1] === 0x4d);
+  const mimeSicher = /^image\//i.test(mime) && !istBild(bytes) ? "application/octet-stream" : mime;
   // 2.74.0 (Fund Klaus: „Vertrag_Köchelub Werne.pdf“ → 400 vom Speicher): der Speicherpfad darf nur einfache Zeichen enthalten –
   // Umlaute/ß werden umschrieben, Leerzeichen und Sonderzeichen zu „_“. Der echte Dateiname bleibt in file_name und wird so angezeigt.
   const pfad = `club/${ich.person_id}/${crypto.randomUUID()}-${speicherName(name)}`;
-  const up = await db.storage.from(BUCKET).upload(pfad, bytes, { contentType: mime, upsert: false });
+  const up = await db.storage.from(BUCKET).upload(pfad, bytes, { contentType: mimeSicher, upsert: false });
   if (up.error) throw new Fehler("Hochladen fehlgeschlagen.", 500);
   const { data: link } = await db.from("kc_core_user_links").select("user_id").eq("person_id", SYSTEM_UPLOADER).eq("active", true).limit(1).maybeSingle();
   const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((x) => x.toString(16).padStart(2, "0")).join("");
   const { data: att, error } = await db.from("kc_communication_attachments").insert({
-    org_id: ORG, uploaded_by: link?.user_id, bucket: BUCKET, object_path: pfad, file_name: name, mime_type: mime, size_bytes: bytes.length, sha256: hash,
+    org_id: ORG, uploaded_by: link?.user_id, bucket: BUCKET, object_path: pfad, file_name: name, mime_type: mimeSicher, size_bytes: bytes.length, sha256: hash,
   }).select("id").single();
   if (error || !att) { await db.storage.from(BUCKET).remove([pfad]); throw new Fehler("Anlage konnte nicht gespeichert werden.", 500); }
   return { id: att.id as string, name, groesse: bytes.length };
@@ -2541,7 +2573,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "push_anmelden",
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
-    "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_album_fotos", "foto_oeffnen",
+    "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort",
     "sondereinsatz_zusage", "stunden_melden"],
 };
@@ -4994,6 +5026,9 @@ async function kalenderIcs(token: string) {
   if (!abo) return new Response("Kalender-Link ungültig – bitte in der App neu erzeugen.", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" } });
   const { data: pe } = await db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,active").eq("person_id", abo.person_id).maybeSingle();
   if (!pe?.active) return new Response("Kein Zugang.", { status: 403 });
+  // 2.425.0 KC-CLUB-GENERALCHECK: entzogener Zugang (Link gesperrt) oder Sperre gilt auch für das Kalender-Abo
+  const [{ data: zg }, sp] = await Promise.all([db.from("kc_club_zugang").select("aktiv").eq("person_id", abo.person_id).maybeSingle(), sperreFuer(abo.person_id)]);
+  if (!zg?.aktiv || sp) return new Response("Kein Zugang.", { status: 403 });
   db.from("kc_club_kalender_abo").update({ zuletzt_abgerufen: jetzt() }).eq("person_id", abo.person_id).then(() => {});
   const ich = { person_id: pe.person_id, name: pe.display_name, vorname: vorname(pe), admin: false, vorstand: false, aemter: [], protokolle: false, kontakte: false, buero: null } as Ich;
   const [{ data: tr }, akt, geb] = await Promise.all([
@@ -7849,6 +7884,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { count } = await db.from("kc_club_hilfe_angebote").select("id", { count: "exact", head: true }).eq("von", ich.person_id).eq("aktiv", true);
         if ((count ?? 0) >= 10) throw new Fehler("Du hast schon 10 Angebote – bitte erst eines beenden.");
         const kanaele = hilfeKanaele(p.kanaele); // KC-CLUB-HILFE-KANAELE (2.23.44)
+        await massenGrenze(ich, ["hilfe_angebot_angelegt"], 5, "neue Hilfe-Angebote"); // 2.425.0 KC-CLUB-MASSEN-GRENZE (beenden + neu anlegen ging beliebig oft)
         const { data: neu, error } = await db.from("kc_club_hilfe_angebote").insert({ von: ich.person_id, sym, titel, text, kanaele }).select("id").single();
         if (error || !neu) throw new Fehler("Angebot konnte nicht gespeichert werden.", 500);
         const wege = (kanaele ?? []).filter((k) => k !== "pinnwand");
@@ -7884,6 +7920,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (datum > tagDazu(heute, HILFE_VORLAUF_TAGE)) throw new Fehler("Bitte höchstens ein halbes Jahr im Voraus.");
         const slot = absprache ? null : slotWahl(p.slot), anzahl = hilfeAnzahl(p.anzahl);
         const ziel = p.ziel === "online" ? "online" : "alle", kanaele = hilfeKanaele(p.kanaele); // KC-CLUB-HILFE-KANAELE
+        await massenGrenze(ich, ["hilfe_aufruf"], 5, "Hilfe-Aufrufe"); // 2.425.0 KC-CLUB-MASSEN-GRENZE
         const { data: h, error } = await db.from("kc_club_hilfe_aufrufe").insert({ von: ich.person_id, art, datum, slot, anzahl, ort: txt(p.ort, 80) || null,
           notiz: txt(p.notiz, HILFE_NOTIZ_ZEICHEN) || null, ziel, nach_absprache: absprache, kanaele }).select().single();
         if (error || !h) throw new Fehler("Aufruf konnte nicht gespeichert werden.", 500);
@@ -7914,7 +7951,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const wichtig = !!p.wichtig;
         if (!!h.wichtig !== wichtig) await db.from("kc_club_hilfe_aufrufe").update({ wichtig }).eq("id", h.id);
         let versand: any = { gesendet: 0 };
-        if (wichtig && !h.wichtig && p.bescheid) {
+        if (wichtig && !h.wichtig && p.bescheid && !(await schonBescheid("hilfe_wichtig_bescheid", "aufruf", h.id))) { // 2.425.0: je Aufruf nur einmal
           const { data: ant } = await db.from("kc_club_hilfe_antworten").select("person_id").eq("aufruf_id", h.id);
           const schon = new Set((ant ?? []).map((x: any) => x.person_id));
           const empf = (h.ziel === "online" ? [...await onlineJetzt(true)] : (await aktiveMitglieder()).map((m) => m.person_id)).filter((id) => id !== h.von && id !== ich.person_id && !schon.has(id));
@@ -7924,6 +7961,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             text: `Hallo,\n\n${von} sucht dringend Hilfe:\n\n${was}\nWann: ${wann2}${h.ort ? `\nWo: ${h.ort}` : ""}${h.notiz ? `\n\n${h.notiz}` : ""}\n\nMit einem Tipp zusagen in der Köcheclub-App: ${APP_URL}#hilfe=${h.id}\n\nViele Grüße\nKöcheclub Werne`,
             url: APP_URL + "#hilfe=" + h.id };
           if (empf.length) versand = await senden("club_nachricht", empf, vars, `club-hilfe:${h.id}:wichtig`).catch(() => ({ gesendet: 0, fehler: empf.length }));
+          if ((versand?.gesendet ?? 0) > 0) await protokoll(ich.person_id, "hilfe_wichtig_bescheid", { aufruf: h.id }); // 2.425.0: erst nach dem Versand merken
         }
         await protokoll(ich.person_id, "hilfe_wichtig", { aufruf: h.id, wichtig, versand });
         return json({ ok: true, wichtig, versand });
@@ -8860,6 +8898,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const notfall = !!p.notfall, probe = notfall && !!p.probe; // 2.22.1 KC-CLUB-NOTFALL-PROBE: nur an mich selbst, alles andere wie echt
         if (probe) { p.empfaenger = { personen: [ich.person_id] }; p.betreff = "🧪 SOS-Probe"; p.id = ""; }
         if (notfall) {
+          if (ich.zugang !== "mitglied") throw new Fehler("Notfall-Meldungen an alle dürfen nur Mitglieder senden – bitte SOS an die Clubleitung nutzen.", 403); // 2.425.0 KC-CLUB-GENERALCHECK: Gäste/Aushilfen nie an alle
           if (!ich.admin && !(await sosFuerAlle())) throw new Fehler("Notfall-Meldungen an alle darf nur der Admin senden.", 403);
           if (!text.replace(NOTFALL_RE, "").trim() || umfrage || kontaktPid) throw new Fehler("Bitte die Notfall-Meldung schreiben.");
           text = `${NOTFALL_MARKE} ${text.replace(NOTFALL_RE, "").trim()}`.slice(0, 4000);
@@ -8879,6 +8918,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         else {
           // Test an mich selbst: nur ich als Empfänger → eigene Unterhaltung, Benachrichtigung an mich (prüft Push/Mail)
           const e = p.empfaenger ?? {};
+          if (e.alle && !notfall) await massenGrenze(ich, ["nachricht_an_alle"], ich.zugang === "mitglied" ? 10 : 3, "neue Nachrichten an alle"); // 2.425.0 KC-CLUB-MASSEN-GRENZE (gezählt erst nach dem Senden)
           const nurIch = !e.alle && !e.vorstand && !(Array.isArray(e.aemter) && e.aemter.length) && Array.isArray(e.personen) && e.personen.length === 1 && String(e.personen[0]) === ich.person_id;
           const ziel = nurIch ? [] : await empfaengerAufloesen(ich, e);
           if (!ziel.length && !nurIch) throw new Fehler("Bitte mindestens einen Empfänger wählen.");
@@ -9007,6 +9047,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // 2.403.0 KC-CLUB-EXPRESS-PRIO1: Express (ohne Notfall) je Empfänger parallel mit Priorität 1 – sonst wie bisher
         const versand = express && !notfall ? await expressSenden(ziel.filter((x: string) => x !== ich.person_id), nachrichtVars, `club-nachricht:${m.id}`)
           : await sendenGewaehlt("club_nachricht", ziel, wege, nachrichtVars, `club-nachricht:${m.id}`, { notfall: notfall || express }); // Express: auch in der Ruhezeit (wie Notfall)
+        if (neu && !notfall && p.empfaenger?.alle) await protokoll(ich.person_id, "nachricht_an_alle", { thread: threadId }); // 2.425.0 KC-CLUB-MASSEN-GRENZE
         await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, selbstloeschen: slNachricht, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand, mid: m.id, ...(express ? { expressStand: await expressStand(ich) } : {}) }); // mid: KC-CLUB-EMPFANGS-EFFEKT (2.177.0) – gleicher „Abwechselnd“-Effekt bei Absender und Empfänger
       }
@@ -9402,7 +9443,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       // KC-CLUB-SELBSTLOESCHEN (2.148.0): ⏳ für den ganzen Chat ein-/ausschalten – jeder Teilnehmer darf; alle sehen es als Zeile im Chat
       case "chat_selbstloeschen": {
         const id = String(p.id || ""), std = slStd(p.stunden);
-        await binTeilnehmer(id, ich.person_id);
+        await binTeilnehmer(id, ich.person_id); await notfallChatNurAdmin(ich, id);
         if (Number(p.stunden) && !std) throw new Fehler("Diese Zeit gibt es nicht.");
         const { data: alt } = await db.from("kc_club_chat_selbstloeschen").select("stunden").eq("thread_id", id).maybeSingle();
         if (slStd(alt?.stunden) === std && !(std && p.auchMeineAlten === true)) return json({ ok: true, stunden: std, unveraendert: true });
@@ -9461,7 +9502,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       case "nachricht_anheften": {
         const { data: m } = await db.from("kc_communication_messages").select("id,thread_id").eq("id", String(p.id || "")).maybeSingle();
         if (!m) throw new Fehler("Nachricht nicht gefunden.", 404);
-        await binTeilnehmer(m.thread_id, ich.person_id);
+        await binTeilnehmer(m.thread_id, ich.person_id); await notfallChatNurAdmin(ich, m.thread_id);
         if (!p.an) { await db.from("kc_club_angeheftet").delete().eq("message_id", m.id); await protokoll(ich.person_id, "nachricht_geloest", { nachricht: m.id, thread: m.thread_id }); return json({ ok: true }); }
         await db.from("kc_club_angeheftet").upsert({ message_id: m.id, thread_id: m.thread_id, von: ich.person_id, am: jetzt() }, { onConflict: "message_id" });
         const { data: alle } = await db.from("kc_club_angeheftet").select("message_id").eq("thread_id", m.thread_id).order("am", { ascending: false });
@@ -11223,7 +11264,7 @@ Köcheclub Werne`,
         const wichtig = !!p.wichtig;
         if (z.wichtig !== wichtig) await db.from("kc_club_pinnwand").update({ wichtig }).eq("id", z.id);
         let versand: any = { gesendet: 0 };
-        if (wichtig && !z.wichtig && p.bescheid && z.fuer !== "ich") {
+        if (wichtig && !z.wichtig && p.bescheid && z.fuer !== "ich" && !(await schonBescheid("pinnwand_wichtig_bescheid", "zettel", z.id))) { // 2.425.0: je Zettel nur einmal
           const ziel = z.fuer === "alle" ? (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== ich.person_id) : (z.personen ?? []);
           const { data: erl } = ziel.length ? await db.from("kc_club_pinnwand_gelesen").select("person_id").eq("zettel_id", z.id).not("erledigt_am", "is", null) : { data: [] as any[] };
           const fertig = new Set((erl ?? []).map((x: any) => x.person_id));
@@ -11233,6 +11274,7 @@ Köcheclub Werne`,
           if (an.length) versand = await senden("club_pinnwand", an, { titel: `📌 ${kopf}`, kurz: z.text, betreff: `Köcheclub Werne – ${kopf}`,
             text: `Hallo,\n\n${kopf} (jetzt als wichtig markiert):\n\n„${z.text}“\n\nAnsehen in der Köcheclub-App: ${APP_URL}#pinnwand\n\nViele Grüße\nKöcheclub Werne`, url: `${APP_URL}#pinnwand` }, `club-pinnwand:${z.id}:wichtig`)
               .catch((e) => { console.error("pinnwand wichtig push", String(e)); return { gesendet: 0, fehler: an.length }; });
+          if ((versand?.gesendet ?? 0) > 0) await protokoll(ich.person_id, "pinnwand_wichtig_bescheid", { zettel: z.id }); // 2.425.0: erst nach dem Versand merken (sonst kein zweiter Versuch)
         }
         await protokoll(ich.person_id, "pinnwand_wichtig", { zettel: z.id, wichtig, versand });
         return json({ ok: true, wichtig, versand });
@@ -11882,12 +11924,12 @@ Köcheclub Werne`,
             if (tp) { erlaubt = true; break; }
           }
         }
-        if (!erlaubt) {
+        if (!erlaubt && ich.zugang === "mitglied") { // 2.425.0 KC-CLUB-GENERALCHECK: Gäste/Aushilfen nur eigene und Chat-Anlagen
           // KC-CLUB-BOERSE (1.43.0): Fotos aktiver Börsen-Anzeigen dürfen alle Mitglieder sehen
           const { data: bo } = await db.from("kc_club_boerse").select("id").eq("status", "aktiv").contains("fotos", JSON.stringify([att.id])).limit(1); // jsonb: JSON-Text, kein {…}-Array
           if (bo?.length) erlaubt = true;
         }
-        if (!erlaubt) {
+        if (!erlaubt && ich.zugang === "mitglied") { // 2.425.0 KC-CLUB-GENERALCHECK: Gäste/Aushilfen nur eigene und Chat-Anlagen
           // KC-CLUB-REZEPTBUCH (2.23.83): Fotos von Rezepten im Club-Rezeptbuch dürfen alle Mitglieder sehen
           const { data: rz } = await db.from("kc_club_rezepte").select("id").eq("foto", att.id).is("geloescht_am", null).limit(1);
           if (rz?.length) erlaubt = true;
@@ -11900,7 +11942,7 @@ Köcheclub Werne`,
             if (pr && (pr.status === "veroeffentlicht" || darfBearbeiten(ich, pr))) { erlaubt = true; break; }
           }
         }
-        if (!erlaubt) {
+        if (!erlaubt && ich.zugang === "mitglied") { // 2.425.0 KC-CLUB-GENERALCHECK: Gäste/Aushilfen nur eigene und Chat-Anlagen
           // KC-CLUB-ARCHIV: Dokument in einem Ordner, den ich sehen darf (auch im Papierkorb nur für die Pflege)
           // KC-CLUB-ARCHIV-PERSOENLICH (1.5.0): persönliche Ordner nur Besitzer bzw. gültige Freigabe; sonst Fremdversuch-Meldung
           const { data: ad } = await db.from("kc_club_archiv_dokumente").select("id,ordner_id,register,status,hochgeladen_von,geloescht_am").eq("attachment_id", att.id);
@@ -13173,6 +13215,10 @@ Köcheclub-App`,
         // 2.209.0 (Gesamtprüfung 5): nur die nötigen Felder, mit Längengrenzen – nie ein beliebiges Objekt in jsonb speichern
         const endpunkt = String(roh.endpoint), p256 = String(roh.keys.p256dh), auth = String(roh.keys.auth);
         if (endpunkt.length > 1000 || p256.length > 200 || auth.length > 100) throw new Fehler("Push-Anmeldung ungültig.");
+        // 2.425.0 KC-CLUB-GENERALCHECK (Sicherheit): nur echte Push-Dienste der Browser (Google/Chrome/Samsung/Opera, Mozilla, Apple, Microsoft) –
+        // sonst könnte jemand den Push-Versand auf eine beliebige Adresse lenken. Unbekannter Dienst → Protokoll, damit der Admin ihn nachtragen kann.
+        let host = ""; try { host = new URL(endpunkt).hostname.toLowerCase(); } catch {}
+        if (!PUSH_DIENSTE.some((d) => host === d || host.endsWith("." + d))) { await protokoll(ich.person_id, "push_dienst_unbekannt", { host: host.slice(0, 100) }); throw new Fehler("Dieser Browser nutzt einen unbekannten Push-Dienst – bitte Chrome, Firefox, Safari, Edge oder Samsung Internet verwenden.", 400); }
         const sub = { endpoint: endpunkt, expirationTime: Number.isFinite(Number(roh.expirationTime)) ? Number(roh.expirationTime) : null, keys: { p256dh: p256, auth } };
         const { error } = await db.from("kc_member_push_subscriptions").upsert({
           person_id: ich.person_id, endpoint: endpunkt, subscription: sub, user_agent: txt(p.userAgent, 400), quelle: "kc-clubapp", active: true, updated_at: jetzt(),
@@ -13466,6 +13512,17 @@ async function notpaketBauen(geheim: string) {
 // verworfen: Ergebnis „abgelehnt“ mit Grund → Tagesinfo des Admins und Rückmeldung an das Mitglied.
 // Erst danach wird der Eintrag beim Ersatz-Server gelöscht (quittiert). Technische Fehler → beim nächsten Lauf erneut.
 const NOT_NACHTRAG = new Set(["nachricht_senden", "treffen_antwort", "status_setzen", "pinnwand_anheften"]);
+// 2.425.0 KC-CLUB-GENERALCHECK (Sicherheit): dem Ersatz-Server nicht blind vertrauen – nur die Felder übernehmen, die er selbst annimmt
+// (gleiche Liste wie notbetrieb/worker.js SCHREIBEN). So kann ein manipulierter Eingang z. B. nie eine Notfall-Meldung an alle,
+// neue Chats mit beliebigen Empfängern, Anlagen oder Abstimmungen auslösen.
+function notDatenKuerzen(aktion: string, d: any): Record<string, unknown> | null {
+  const t = (v: unknown, n: number) => String(v ?? "").trim().slice(0, n);
+  if (aktion === "nachricht_senden") { const id = t(d?.id, 60), text = t(d?.text, 4000); return id && text ? { id, text, wichtig: !!d?.wichtig, wege: (Array.isArray(d?.wege) ? d.wege : []).filter((w: unknown) => w === "push" || w === "email") } : null; }
+  if (aktion === "treffen_antwort") return { id: t(d?.id, 60), antwort: t(d?.antwort, 12), notiz: t(d?.notiz, 300) };
+  if (aktion === "status_setzen") return { status: t(d?.status, 20), bis: /^\d{4}-\d{2}-\d{2}$/.test(String(d?.bis || "")) ? String(d.bis) : "", hinweis: t(d?.hinweis, 120) };
+  if (aktion === "pinnwand_anheften") return { text: t(d?.text, 400), fuer: t(d?.fuer, 10), wichtig: !!d?.wichtig, personen: (Array.isArray(d?.personen) ? d.personen : []).map((x: unknown) => t(x, 40)).filter(Boolean).slice(0, 60) };
+  return null;
+}
 const NOT_UHR = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" });
 async function notSigniert(pfad: string, inhalt: Record<string, unknown>) {
   const st = await notStand(), { privat } = await notSchluessel();
@@ -13510,7 +13567,8 @@ async function notEingangLauf() {
       db.from("kc_club_rollen").select("*").eq("person_id", zg.person_id).maybeSingle(),
     ]);
     if (!pe?.active) { await ablehnen("Mitglied nicht mehr aktiv.", zg.person_id); continue; }
-    const ich = ichAus(pe, ro ?? null), daten: any = { ...(e.daten ?? {}) };
+    const ich = ichAus(pe, ro ?? null), daten: any = notDatenKuerzen(e.aktion, e.daten);
+    if (!daten) { await ablehnen("Unvollständig – im Notbetrieb nicht nachtragbar.", zg.person_id); continue; }
     // im Chat erkennbar: wann es wirklich geschrieben wurde (die Nachricht erscheint erst jetzt)
     if (e.aktion === "nachricht_senden" && daten.text) daten.text = `${daten.text}\n\n🟠 im Notbetrieb geschrieben um ${NOT_UHR.format(new Date(e.zeit || Date.now()))} Uhr`;
     try {

@@ -1522,7 +1522,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/async function archivFremdversuch/.test(server) && /"archiv_fremdzugriff"/.test(server) && /await adminIds\(\)/.test(server.slice(server.indexOf("async function archivFremdversuch"))), "Fremdversuch → Besitzer + Admins");
   assert.ok(/Deine Freigabe für diesen Ordner ist abgelaufen/.test(server), "Abgelaufene Freigabe: Hinweis statt Alarm");
   assert.ok(/Dieses Dokument ist für dich nicht freigegeben\./.test(server), "Freigabe ohne dieses Dokument: Hinweis statt „abgelaufen“");
-  const au = server.slice(server.indexOf('case "anlage_url"'), server.indexOf('case "anlage_url"') + 4000);
+  const au = server.slice(server.indexOf('case "anlage_url"'), server.indexOf('case "anlage_url"') + 4800);
   assert.ok(/darfDokSehen\(ich, o, x, fr\)/.test(au) && /archivKeinZugriff\(ich, fremd, "ein Dokument"\)/.test(au), "Datei-Link geschützt");
   assert.ok(/case "archiv_freigeben"/.test(server) && /FREIGABE_MAX_TAGE \* 86400_000/.test(server) && /case "archiv_freigabe_beenden"/.test(server), "Freigabe auf Zeit");
   const hl = server.slice(server.indexOf('case "archiv_hochladen"'), server.indexOf('case "archiv_pruefung"'));
@@ -2811,7 +2811,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.equal(satz("erste zeile neue zeile zweite"), "Erste zeile\nZweite");
   assert.ok(/if \(was === "senden"\) \{ if \(!feld\.value\) return melde\([^)]*\); return senden\(\); \}/.test(html), "Senden über den normalen Weg");
   assert.ok(/if \(was === "weg"\) \{ feld\.value = DT\.basis;/.test(html), "Verwerfen stellt den alten Text her");
-  assert.ok(/id="setMikro" onchange="mikroArtSetzen\(this\.value\)"/.test(html), "Einstellung");
+  assert.ok(/id="setMikro"(?: aria-label="[^"]*")? onchange="mikroArtSetzen\(this\.value\)"/.test(html), "Einstellung");
 }
 
 // 245. 1.69.0: Bestätigung der eigenen Eingaben (Dienstwünsche per Knopf, Erstattung beim Senden)
@@ -3099,7 +3099,8 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 // 278. 1.97.0: Updates & Ausfallsicherheit
 {
   const sw = lies("sw.js");
-  assert.ok(/c\.addAll\(DATEIEN\.map\(\(u\) => new Request\(u, \{ cache: "reload" \}\)\)\)/.test(sw) && /cache: "no-cache"/.test(sw) && /url\.searchParams\.has\("k"\)/.test(sw) && /e\.waitUntil\(caches\.open\(CACHE\)/.test(sw) && (/navi \? caches\.match\("index\.html"\) : Response\.error\(\)/.test(sw) || /r \|\| caches\.match\("index\.html"\)/.test(sw)), "Service Worker sicher"); // 2.209.0: Seitenaufruf in seiteHolen
+  assert.ok(/c\.addAll\(DATEIEN\.map\(\(u\) => new Request\(u, \{ cache: "reload" \}\)\)\)/.test(sw) && /cache: "no-cache"/.test(sw) && /url\.searchParams\.has\("k"\)/.test(sw) && /e\.waitUntil\(caches\.open\(CACHE\)/.test(sw) && (/navi \? caches\.match\("index\.html"\) : Response\.error\(\)/.test(sw) || /r \|\| caches\.match\("index\.html"\)/.test(sw) || /r \|\| \(istApp \? caches\.match\("index\.html"\) : undefined\)/.test(sw)), "Service Worker sicher");
+  assert.ok(/const istApp = url\.pathname\.endsWith\("\/"\) \|\| url\.pathname\.endsWith\("\/index\.html"\);/.test(sw), "2.425.0: Startseite nur als Ersatz für die App selbst (nicht im Dienstwunsch-Fenster)"); // 2.209.0: Seitenaufruf in seiteHolen
   assert.ok(!/self\.addEventListener\("install"[^\n]*skipWaiting/.test(sw), "kein Sofort-Umschalten beim Einrichten (Mischstand)");
   const ja = html.slice(html.indexOf("async function jetztAktualisieren() {"), html.indexOf("function updateRuhig() {"));
   assert.ok(/addEventListener\("controllerchange", neu, \{ once: true \}\)/.test(ja) && /sw\.addEventListener\("statechange"/.test(ja) && !/setTimeout\(\(\) => location\.reload\(\), 400\)/.test(ja), "Update wartet auf Einrichtung + Übernahme");
@@ -3118,7 +3119,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/if \(offen\.length && VERLAUF\.state\) \{/.test(html) && /f\.dataset\.dyn = "1"; f\._zu = beiZu;/.test(html) && /history\.pushState\(VERLAUF\.state, "", VERLAUF\.url\); return;/.test(html), "Zurück schließt nur das Fenster");
   assert.ok(/function frageVerb\(text\)/.test(html) && /gefahr \? frageVerb\(text\) : "✅ Ja"/.test(html) && /f\.querySelector\(gefahr \? "\[data-w='0'\]"/.test(html), "sprechender Gefahr-Knopf, Fokus Abbrechen");
   assert.ok(/<h2>💬 Nachrichten<\/h2>/.test(html) && !/Vereinsarchiv|Vereinsordner/.test(html) && /"🤖 Clubleben"/.test(html), "Begriffe");
-  assert.ok(/:root\.gross \.fuss-leiste button \{ font-size: 10px;/.test(html) && /\.knopf\.klein \{ min-height: 40px; \}/.test(html), "große Schrift / Tippflächen");
+  assert.ok(/:root\.gross \.fuss-leiste button \{ font-size: 10px;/.test(html) && /\.knopf\.klein \{ min-height: (?:40|44)px; \}/.test(html), "große Schrift / Tippflächen");
   assert.ok(/const inapp = \/; wv\\\)\|FBAN\|FBAV\|Instagram\|Line\\\/\|GSA\\\/\/\.test\(ua\);/.test(html) && /Erst in Chrome öffnen/.test(html) && /Erst in Safari öffnen/.test(html), "Mini-Browser im Assistenten");
   assert.ok(/iPhone\/iPad: in Safari öffnen, Android: in Chrome/.test(server), "Mail nennt Safari/Chrome");
 }
@@ -3375,7 +3376,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 {
   const pw = server.slice(server.indexOf('case "pinnwand_wichtig": {'), server.indexOf('case "pinnwand_abnehmen": {'));
   assert.ok(/if \(z\.person_id !== ich\.person_id\) throw/.test(pw), "nur der Verfasser");
-  assert.ok(/if \(wichtig && !z\.wichtig && p\.bescheid && z\.fuer !== "ich"\)/.test(pw) && /!fertig\.has\(id\)/.test(pw) && /senden\("club_pinnwand"/.test(pw), "Bescheid nur auf Wunsch, nur an noch nicht Erledigte");
+  assert.ok(/if \(wichtig && !z\.wichtig && p\.bescheid && z\.fuer !== "ich"(?: && !\(await schonBescheid\("pinnwand_wichtig_bescheid", "zettel", z\.id\)\))?\)/.test(pw) && /!fertig\.has\(id\)/.test(pw) && /senden\("club_pinnwand"/.test(pw), "Bescheid nur auf Wunsch, nur an noch nicht Erledigte");
   assert.ok(/if \(z\.vonMir\) knoepfe\.push\(`<button onclick="pwWichtig\(/.test(html) && /api\("pinnwand_wichtig", \{ id, wichtig: an, bescheid \}/.test(html), "App: Knopf");
 }
 // 308. 2.14.0: Küchenterror – Küchenquiz auf Zeit (KC-CLUB-KUECHENTERROR)
@@ -3401,7 +3402,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/ktWahl\(\(KT_FRAGEN as any\[\]\)\.filter\(\(q\) => !q\.m\)\.map\(\(q\) => q\.id\), alt, 11\), \.\.\.ktWahl\(\(KT_FRAGEN as any\[\]\)\.filter\(\(q\) => q\.m\)\.map\(\(q\) => q\.id\), alt, 1\)\]/.test(server), "Server: 11 normale + 1 Meisterfrage");
   assert.ok(/\* \(f\?\.m \? 2 : 1\); \/\/ Meisterfrage doppelt/.test(server) && /mal = f\?\.m \? 2 : 1/.test(html), "doppelte Punkte (Server + Computer-Spiel)");
   const hw = server.slice(server.indexOf('case "hilfe_wichtig": {'), server.indexOf('case "hilfe_antwort": {'));
-  assert.ok(/if \(h\.von !== ich\.person_id && !ich\.vorstand\) throw/.test(hw) && /if \(wichtig && !h\.wichtig && p\.bescheid\)/.test(hw) && /!schon\.has\(id\)/.test(hw), "Hilfe wichtig: nur Ersteller/Clubleitung, Bescheid nur auf Wunsch an Unbeantwortete");
+  assert.ok(/if \(h\.von !== ich\.person_id && !ich\.vorstand\) throw/.test(hw) && /if \(wichtig && !h\.wichtig && p\.bescheid(?: && !\(await schonBescheid\("hilfe_wichtig_bescheid", "aufruf", h\.id\)\))?\)/.test(hw) && /!schon\.has\(id\)/.test(hw), "Hilfe wichtig: nur Ersteller/Clubleitung, Bescheid nur auf Wunsch an Unbeantwortete");
   assert.ok(/wichtig: !!x\.wichtig/.test(server) && /onclick="hilfeWichtig\(/.test(html) && /\.zettel\.aushang\.wichtig \{/.test(html), "Aushang zeigt und schaltet wichtig");
 }
 // 310. 2.16.0: Küchenterror-Zeitstufen + Chat vorlesen mit zwei Stimmen (KC-CLUB-KUECHENTERROR-ZEIT, KC-CLUB-CHAT-VORLESEN)
@@ -3509,7 +3510,9 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 // 322. 2.21.0: Notfall-Meldung an alle (KC-CLUB-NOTFALL-MELDUNG) – nur Admin, Push + Mail, auch stumm/Ruhezeit, Marke nicht fälschbar
 {
   const ns = server.slice(server.indexOf('case "nachricht_senden": {'), server.indexOf('case "privattermin_speichern"'));
-  assert.ok(/if \(notfall\) \{\s*if \(!ich\.admin && !\(await sosFuerAlle\(\)\)\) throw new Fehler\("Notfall-Meldungen an alle darf nur der Admin senden\.", 403\);/.test(ns), "nur Admin");
+  assert.ok(/if \(notfall\) \{\s*(?:if \(ich\.zugang !== "mitglied"\) throw new Fehler\([^\n]*403\);[^\n]*\s*)?if \(!ich\.admin && !\(await sosFuerAlle\(\)\)\) throw new Fehler\("Notfall-Meldungen an alle darf nur der Admin senden\.", 403\);/.test(ns), "nur Admin");
+  assert.ok(/if \(notfall\) \{\s*if \(ich\.zugang !== "mitglied"\) throw new Fehler\([^\n]*403\);/.test(ns), "2.425.0: Gäste/Aushilfen nie Notfall an alle – auch wenn SOS für alle freigegeben ist");
+  assert.ok(/const sosDarf = \(\) => !!\(ICH\?\.admin \|\| \(INIT\?\.sosFuerAlle && zugang\(\) === "mitglied"\)\);/.test(html) && !/classList\.toggle\("sos-frei", (?!sosDarf\(\))/.test(html), "2.425.0: App zeigt Gästen/Aushilfen den Alarm an alle nicht");
   assert.ok(/\} else if \(NOTFALL_RE\.test\(text\)\) text = text\.replace\(NOTFALL_RE, ""\)/.test(ns), "Marke bei anderen entfernt");
   assert.ok(/if \(notfall( \|\| express)?\) stumm\.clear\(\);/.test(ns) && /const wege = notfall (?:\|\| wichtig )?(?:\|\| express )?\? \["push", "email"\]/.test(ns) && /\{ notfall(: notfall \|\| express)? \}\);/.test(ns), "an alle, Push + Mail, auch stumm");
   assert.ok(/if \(w\.includes\("push"\) && !opt\.notfall\)/.test(server), "auch in der Ruhezeit");
@@ -3553,7 +3556,7 @@ assert.ok(/#notfallText \{[^}]*background: var\(--bg\); color: var\(--text\);/.t
 // 328. 2.22.5: SOS für alle freigeben (KC-CLUB-SOS-FREIGABE) – nur der Admin schaltet, gespeichert als Club-Einstellung
 {
   assert.ok(/case "sos_freigabe_setzen": \{\s*nurAdmin\(ich\);[\s\S]{0,300}schluessel: "sos", wert: \{ alle \}/.test(server) && /protokoll\(ich\.person_id, "sos_freigabe"/.test(server), "Freigabe nur Admin, protokolliert");
-  assert.ok(/sosFuerAlle: await (sosFuerAlle\(\)|pSos)/.test(server) && /pSos = sosFuerAlle\(\)/.test(server) && /classList\.toggle\("sos-frei", !!INIT\?\.sosFuerAlle\)/.test(html), "App kennt die Freigabe");
+  assert.ok(/sosFuerAlle: await (sosFuerAlle\(\)|pSos)/.test(server) && /pSos = sosFuerAlle\(\)/.test(server) && /classList\.toggle\("sos-frei", (?:!!INIT\?\.sosFuerAlle|sosDarf\(\))\)/.test(html), "App kennt die Freigabe");
   assert.ok(/\$\{ICH\?\.admin \? `<label[^`]*onchange="sosFreigabe\(this\.checked, this\)"/.test(html) && /async function sosFreigabe\(alle, feld\)[\s\S]{0,600}await frage\(/.test(html), "Schalter nur beim Admin, mit Rückfrage");
 }
 // 329. 2.22.6: Ameisenrahmen um die Gruppe „Innovation“ beim Öffnen von Nachrichten (KC-CLUB-GRUPPE-AMEISEN)
@@ -3592,7 +3595,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   // Eingang: nur eigene Empfänger (Admin alles); Bank nach Erledigt gekürzt
   assert.ok(/case "aenderungen_liste": \{\s*if \(!ich\.vorstand && !ich\.admin\)/.test(server) && /if \(!ich\.admin\) q = q\.contains\("empfaenger", \[ich\.person_id\]\);/.test(server), "Eingang nur für Empfänger");
   assert.ok(/const neu = x\.art === "bank" \? aeKurz/.test(server) && /iban: "…" \+ String/.test(server), "IBAN nach Erledigt gekürzt");
-  assert.ok(/\{ id: "aenderung", sym: "✏️", t: "Meine Daten geändert\?"/.test(html) && /📬 Änderungsmeldungen\$\{AE\.offen/.test(html) && /h === "#aenderungen"/.test(html), "Kachel, Büro-Ordner, Link");
+  assert.ok(/\{ id: "aenderung", sym: "✏️", t: "(?:Meine Daten geändert\?|Änderung melden)"/.test(html) && /📬 Änderungsmeldungen\$\{AE\.offen/.test(html) && /h === "#aenderungen"/.test(html), "Kachel, Büro-Ordner, Link");
   assert.ok(/api\("aenderung_senden", \{/.test(html) && /api\("aenderung_freigeben", \{ id \}\)/.test(html), "App ruft die Aktionen"); // 2.23.9: „Erledigt“ ist seit 2.22.19 die Freigabe
 }
 // 333. 2.22.8: Änderungsmeldungen im Büro-Posteingang + Archiv (Register „Meldungen“)
@@ -3667,7 +3670,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 // 342. 2.22.14: Kachel-Zahl oben rechts (verdeckt keinen Text)
 assert.ok(/\.kachel \.zahl \{ position: absolute; right: 12px; top: 12px;/.test(html), "Kachel-Zahl oben rechts");
 // 343. 2.22.15: Erklärung Termine nennt den Handy-Kalender (nur eine Richtung)
-assert.ok(/\{ id: "termine", sym: "📅", t: "Termine", x: "[^"]*📲 Termine im Handy-Kalender[^"]*leider nicht umgekehrt/.test(html), "Termine-Erklärung: Handy-Kalender");
+assert.ok(/\{ id: "termine", sym: "📅", t: "Termine", x: "[^"]*📆 Termine im Handy-Kalender[^"]*leider nicht umgekehrt/.test(html), "Termine-Erklärung: Handy-Kalender");
 // 344. Schutz (Fehler 2.22.12 / 2.22.16-Entwurf): ein „// KC-…“-Kommentar darf in keiner Zeile Code hinter sich verschlucken
 for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const schlecht = txt.split("\n").map((l, i) => [i + 1, l]).filter(([, l]) => { const m = /\/\/ KC-[A-Z0-9-]+[^\n]*$/.exec(l); if (!m) return false;
@@ -3774,7 +3777,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 368. 2.23.20: ✕ oben rechts in langen Fenstern (KC-CLUB-BLATT-X)
 {
-  assert.ok(/function blattXPruefen\(\)/.test(html) && /sc\.innen\.querySelector\("\.blatt-x"\)\.onclick = \(e\) => \{ e\.stopPropagation\(\); fensterZu\(b\); \};/.test(html), "✕ schließt wie Zurück");
+  assert.ok(/function blattXPruefen\(\)/.test(html) && /sc\.innen\.querySelector\("\.blatt-x"\)\.onclick = \(e\) => \{ e\.stopPropagation\(\); fensterZu(?:Fragen)?\(b\); \};/.test(html), "✕ schließt wie Zurück");
   assert.ok(/const BLATT_X_OHNE = new Set\(\["alarmBlatt"\]\);/.test(html) && /if \(da \|\| blattHatObenX\(sc\.innen\)\) continue;/.test(html), "nicht doppelt, nie beim Notfall-Fenster");
   assert.ok(/\.blatt-x-leiste \{ position: sticky;[^}]*background: var\(--karte\)/.test(html), "Leiste mit Hintergrund – verdeckt nichts");
 }
@@ -4596,7 +4599,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.24.2 KC-CLUB-UPDATE-START: Update gleich beim Öffnen sofort laden (vor der ersten Eingabe), sonst wie bisher
 {
   assert.ok(/const UPDATE_START_MS = 20000, UPDATE_WEG_MS = 120000;/.test(html) && /\["pointerdown", "keydown"\]\.forEach\(\(t\) => addEventListener\(t, \(\) => \{ UPD_FRISCH = 0; \}/.test(html), "Start-Fenster 20 s, endet mit erster Eingabe");
-  assert.ok(/if \(frisch \? etwasGetippt\(\) : \(!updateRuhig\(\) \|\| !ICH \|\| aktuelleAnsicht !== "start" \|\| chatId \|\| RUF\)\) return;/.test(html), "frisch: nur nichts getippt; sonst bisherige Ruhe-Regeln");
+  assert.ok(/if \(frisch \? arbeitOffen\(\) : \(!updateRuhig\(\) \|\| !ICH \|\| aktuelleAnsicht !== "start" \|\| chatId \|\| RUF \|\| arbeitOffen\(\)\)\) return;/.test(html), "frisch: nichts Angefangenes; sonst bisherige Ruhe-Regeln + nichts Angefangenes");
+  assert.ok(/const arbeitOffen = \(\) => \{ try \{ return etwasGetippt\(\) \|\| ERS\.pos\.length > 0 \|\| \(faDateien\.length > 0 && !\$\("fotoForm"\)\?\.classList\.contains\("versteckt"\)\); \} catch \{ return true; \} \};/.test(html), "2.425.0: Erstattungs-Positionen und gewählte Fotos (Formular offen) zählen als angefangen");
   assert.ok(/if \(!NEUE_VERSION \|\| RUF \|\| SPR \|\| wartenZahl \|\|/.test(html), "nie während Anruf/Aufnahme/Übertragung");
   assert.ok(/setTimeout\(updateSelbst, updateFrisch\(\) \? 0 : 4000\)/.test(html) && /updWeg\(document\.hidden\); if \(!document\.hidden\)/.test(html), "Start sofort, Zurückholen nach ≥ 2 Min. zählt als Öffnen");
   assert.ok(/fpNeu\(frisch \? "update_start" : "update_selbst"/.test(html) && /return !etwasGetippt\(\);/.test(html), "Protokoll unterscheidbar, updateRuhig unverändert");
@@ -5892,7 +5896,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7500,7 +7504,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/for \(const l of LADE\.laufe\) if \(l\.lesen && l\.langsam\)/.test(programm), "Schreiben wird nie abgebrochen/wiederholt");
   assert.ok(/if \(opt\.still \|\| LADE_NIE\.has\(action\) \|\| NOT\.an \|\| document\.hidden\) return false;/.test(programm), "Hintergrund bleibt still");
   assert.ok(/const LADE_LANGSAM_MS = 12000/.test(programm) && /\.lade-hilfe \{ position: fixed; z-index: 3000;/.test(seite), "Leiste nach 12 s, über allem");
-  for (const r of [/return apiRoh\(action, daten, zweiterVersuch, abbruch\); \} \/\/ Region weg/, /return apiRoh\(action, daten, true, abbruch\); \}/, /signal: zeitSignalMit\(zeitMs, abbruch\)/]) assert.ok(r.test(programm), "Abbruch reicht durch: " + r);
+  for (const r of [/if \(API_LESEN\.test\(action\)\) \{ vbEnde\(true, performance\.now\(\) - t0, ""\); return apiRoh\(action, daten, zweiterVersuch, abbruch\); \} \}/, /return apiRoh\(action, daten, true, abbruch\); \}/, /signal: zeitSignalMit\(zeitMs, abbruch\)/]) assert.ok(r.test(programm), "Abbruch reicht durch: " + r);
   // keine Anfrage mehr ohne Zeitgrenze (außer Hochladen/Bilder über eigene Wege)
   const ohne = [...programm.matchAll(/await fetch\(([^\n]*)/g)].map((m) => m[1]).filter((z) => !/signal:/.test(z));
   assert.deepEqual(ohne, [], "fetch ohne Zeitgrenze");
@@ -10116,4 +10120,56 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(!/KC Manager/.test(sichtbar(html)), "App-Texte nennen noch „KC Manager“ statt „KC-Verwaltung“");
   assert.ok(!/KC Manager/.test(sichtbar(server)), "Server-Texte nennen noch „KC Manager“ statt „KC-Verwaltung“");
   assert.ok(/liegt für die KC-Verwaltung bereit/.test(html) && /kann nur in der KC-Verwaltung eingetragen werden/.test(server), "KC-Verwaltung-Texte fehlen");
+}
+// 2.425.0 KC-CLUB-GENERALCHECK Paket A: Fehler aus dem Generalcheck (Doppelsenden, Takte, Update, Zeitzone, Beträge, Zugang)
+{
+  assert.ok(/notfallSenden = nurEinmal\("notfallSenden", notfallSenden\); zeSenden = nurEinmal\("zeSenden", zeSenden\); weiterleiten = nurEinmal\("weiterleiten", weiterleiten\);/.test(programm), "SOS, Kurznachricht, Weiterleiten gegen Doppeltippen gesperrt");
+  assert.ok(/function spSpielZeigen\(\) \{\s*clearInterval\(SP\.takt\); SP\.takt = null;/.test(programm), "Spiele: alter Takt wird vor dem neuen beendet");
+  assert.ok(/async function fiLos\(\) \{\s*if \(FI\.lauf\) return;/.test(programm) && /if \(FI\.lauf !== L\) \{ try \{ L\.wach\?\.release\(\); \} catch \{\} return; \}/.test(programm), "Fitness: Doppeltipp startet keine zweite Uhr");
+  const roh = programm.slice(programm.indexOf("async function apiRoh("), programm.indexOf("// ---------- Verbindung zum Server (KC-CLUB-VERBINDUNG)"));
+  assert.ok(/if \(mitRegion && navigator\.onLine\) \{ REGION_AUS_BIS = Date\.now\(\) \+ REGION_PAUSE_MS; if \(API_LESEN\.test\(action\)\) \{/.test(roh) && !/if \(mitRegion && navigator\.onLine\) \{[^\n]*\} \/\/ Region weg/.test(roh), "Netzfehler: nur Lesen still über den Standardweg wiederholen");
+  assert.ok(/catch \(e\) \{ regionAus = true; r = null; if \(!\/_laden\$\/\.test\(action\)\) throw/.test(lies("dp2-club/lader.js")), "Dienstwunsch: Speichern nach Netzfehler nicht still doppelt");
+  assert.ok(/FEHLER_KLARTEXT\[r\.status\] \|\| "Fehler " \+ r\.status/.test(roh) && /413: "Die Datei ist zu groß/.test(programm), "Statuscodes in Klartext");
+  // Beträge und Zeiten: Verhalten prüfen
+  const zahlDe = new Function("return " + programm.match(/const zahlDe = (\(v\) => [^\n]+);/)[1])();
+  assert.deepEqual(["1.250,00", "23,90", "12.5", "0,38", "", "7 €"].map(zahlDe), [1250, 23.9, 12.5, 0.38, 0, 7], "zahlDe: deutsche Schreibweise");
+  assert.ok(!/Number\(String\(\$\("ers[A-Za-z]+"\)[^\n]{0,30}\)\.replace\(",", "\."\)\)/.test(programm) && /zahlDe\(\$\("ersBetrag"\)\.value\)/.test(programm), "Erstattung nutzt zahlDe");
+  const taSrc = programm.slice(programm.indexOf("function taZeitpunkt(datum, zeit) {"), programm.indexOf("async function taSenden() {"));
+  const ta = new Function("TZ", taSrc + "; return taZeitpunkt;")("Europe/Berlin");
+  assert.equal(ta("2026-10-15", "19:00"), "2026-10-15T17:00:00.000Z", "Sommerzeit"); assert.equal(ta("2026-01-15", "19:00"), "2026-01-15T18:00:00.000Z", "Winterzeit");
+  assert.equal(ta("", ""), "", "leer → ungültig, kein falsches Datum"); assert.ok(isNaN(new Date(ta("2026-10-15", "")).getTime()), "ohne Uhrzeit ungültig");
+  assert.ok(!/new Date\(`\$\{[^`{}]*\}T\$\{[^`{}]*\}:00`\)/.test(programm), "keine Uhrzeit mehr in Gerätezeit gerechnet");
+  assert.ok(/const arbeitOffen = /.test(programm), "Update wartet bei angefangener Arbeit");
+  // Server
+  assert.ok(/if \(!erlaubt && ich\.zugang === "mitglied"\) \{ \/\/ 2\.425\.0[^\n]*\n\s*\/\/ KC-CLUB-BOERSE/.test(server) && /if \(!erlaubt && ich\.zugang === "mitglied"\) \{ \/\/ 2\.425\.0[^\n]*\n\s*\/\/ KC-CLUB-REZEPTBUCH/.test(server) && /if \(!erlaubt && ich\.zugang === "mitglied"\) \{ \/\/ 2\.425\.0[^\n]*\n\s*\/\/ KC-CLUB-ARCHIV:/.test(server), "anlage_url: Gäste/Aushilfen nur eigene und Chat-Anlagen");
+  const ics = server.slice(server.indexOf("async function kalenderIcs("), server.indexOf("async function kalenderIcs(") + 1500);
+  assert.ok(/from\("kc_club_zugang"\)\.select\("aktiv"\)[^\n]*sperreFuer\(abo\.person_id\)/.test(ics) && /if \(!zg\?\.aktiv \|\| sp\) return new Response\("Kein Zugang\.", \{ status: 403 \}\);/.test(ics), "Kalender-Abo endet mit dem Zugang");
+  assert.ok(!/"foto_album_fotos"/.test(server.slice(server.indexOf("const ZUGANG_AKTIONEN"), server.indexOf("const ZUGANG_ERLAUBT"))), "Aushilfen: Album ändern nicht erlaubt (nur ansehen)");
+}
+// 2.425.0 KC-CLUB-GENERALCHECK Paket B/C: einheitliche Bedienung und Sicherheit
+{
+  // B: Rückfragen, Eingabeschutz, Bedienhilfen
+  const fg = new Function("return " + programm.match(/const frageGefahr = (\(t, ja\) => [^\n]+);/)[1])();
+  assert.ok(fg("Termin löschen?") && fg("Spielstand zurücksetzen?", "🗑️ Zurücksetzen") && fg("Frage verwerfen?") && !fg("🔴 Hansi möchte dir helfen.\n\nDu kannst jederzeit beenden. Erlauben?", "✅ Ja, erlauben"), "Gefahr-Erkennung: Löschen/Zurücksetzen rot, Fernhilfe nicht");
+  assert.ok(/\.knopf\.dlg-gefahr, \.knopf\.haupt\.dlg-gefahr \{ background: #fff; border: 2px solid #c62828;/.test(seite), "Gefahr-Knopf deutlich anders als der Hauptknopf");
+  assert.ok(/async function fensterZuFragen\(b\)/.test(programm) && /f\.onclick = \(e\) => \{ if \(e\.target === f\) fensterZuFragen\(f\); \};/.test(programm) && /fensterZuFragen\(offen\[offen\.length - 1\]\)/.test(programm), "Eingaben: daneben tippen / Escape fragen erst");
+  assert.ok(/const blattGeaendert = \(b\) => !!b && b\.dataset\.dyn === "1" && !b\.classList\.contains\("dlg-blatt"\)/.test(programm) && /el\.dataset\.getippt = "1"/.test(programm), "nur echtes Tippen zählt, kleine Rückfragen nie");
+  assert.ok(/🧹 Text gelöscht – hier antippen: ↩️ Rückgängig/.test(programm), "Chat: ✕ mit Rückgängig");
+  assert.ok(/\.knopf\.klein \{ min-height: 44px; \}/.test(seite), "44-px-Tippflächen");
+  assert.ok(!/onclick="ansichtSetzen\('erweitert'\)">🔧 Alle Funktionen</.test(seite) && /<b>🔧 Erweiterte Ansicht<\/b>/.test(seite), "Ansicht heißt überall „Erweiterte Ansicht“");
+  assert.ok(!/placeholder="🔍 Name eintippen …"|placeholder="🔎 Person suchen …"/.test(programm + seite), "Namenssuche einheitlich beschriftet");
+  assert.ok(!/Darstellung → Senden/.test(programm) && /einstiegHin\("effekte", "sendeEffektWahl"\)/.test(programm), "Boten-Tipp zeigt auf „✨ Effekte“");
+  // C: Server
+  assert.ok(/async function massenGrenze\(ich: Ich, aktionen: string\[\], maxTag: number, was: string\) \{\s*if \(ich\.admin\) return;/.test(server), "Massen-Grenze, Admin frei");
+  for (const [a, r] of [["hilfe_aufruf", /massenGrenze\(ich, \["hilfe_aufruf"\], 5,/], ["hilfe_angebot_speichern", /massenGrenze\(ich, \["hilfe_angebot_angelegt"\], 5,/], ["nachricht_senden", /if \(e\.alle && !notfall\) await massenGrenze\(ich, \["nachricht_an_alle"\], ich\.zugang === "mitglied" \? 10 : 3,/]])
+    assert.ok(r.test(server.slice(server.indexOf(`case "${a}"`), server.indexOf(`case "${a}"`) + 9000)), "Grenze fehlt: " + a);
+  assert.ok(/if \(neu && !notfall && p\.empfaenger\?\.alle\) await protokoll\(ich\.person_id, "nachricht_an_alle"/.test(server) && /if \(\(versand\?\.gesendet \?\? 0\) > 0\) await protokoll\(ich\.person_id, "pinnwand_wichtig_bescheid"/.test(server), "gezählt/gemerkt erst nach dem Versand");
+  assert.ok(/schonBescheid\("pinnwand_wichtig_bescheid", "zettel", z\.id\)/.test(server) && /schonBescheid\("hilfe_wichtig_bescheid", "aufruf", h\.id\)/.test(server), "„wichtig“-Bescheid je Eintrag nur einmal");
+  assert.ok(/if \(!ich\.admin && \(ich as any\)\.zugang\) \{[^\n]*\s*const \{ data: heute, error: he \} = await db\.from\("kc_communication_attachments"\)\.select\("size_bytes"\)\.like\("object_path", `club\/\$\{ich\.person_id\}\/%`\)/.test(server) && /contentType: mimeSicher/.test(server), "Upload-Kontingent je Person, falsches „Bild“ nur als Download");
+  assert.ok(/await binTeilnehmer\(id, ich\.person_id\); await notfallChatNurAdmin\(ich, id\);/.test(server) && /await binTeilnehmer\(m\.thread_id, ich\.person_id\); await notfallChatNurAdmin\(ich, m\.thread_id\);/.test(server), "Notfall-Chat: Selbstlöschen/Anheften nur Admin");
+  assert.ok(/const PUSH_DIENSTE = \["googleapis\.com", "mozilla\.com", "push\.apple\.com", "notify\.windows\.com"\]/.test(server) && /PUSH_DIENSTE\.some\(/.test(server), "Push nur über echte Push-Dienste");
+  assert.ok(/daten: any = notDatenKuerzen\(e\.aktion, e\.daten\);/.test(server) && !/daten: any = \{ \.\.\.\(e\.daten \?\? \{\}\) \}/.test(server), "Notbetrieb-Nachtrag: nur erlaubte Felder");
+  const kt = lies("supabase/functions/kc-termine/index.ts");
+  assert.ok(!/throw new Fehler\(error\.message, 500\)/.test(kt) && !/p\.cronSecret !== geheim|internKey !== intern|internKey === intern/.test(kt) && /function gleichZeit\(/.test(kt), "kc-termine: keine internen Texte, Geheimnisse zeitkonstant");
+  assert.ok(/gleichZeit\(tok,String\(expectedToken\)\)/.test(lies("supabase/functions/kc-db-mirror-worker/index.ts")), "Spiegel-Arbeiter: zeitkonstant");
 }

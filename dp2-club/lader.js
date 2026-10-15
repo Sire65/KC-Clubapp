@@ -3,7 +3,7 @@
 // start.js dort, wo DP2 twinkey-test-boot.js lädt. Die Seite hat <base href="dp2/">: Pfade sind relativ zu dp2/.
 (function () {
   "use strict";
-  const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club", APP_VERSION = "2.424.0";
+  const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club", APP_VERSION = "2.425.0";
   const laden = document.getElementById("dwLaden");
   // CSP ohne Inline-Skripte: Knopf per addEventListener
   const zurueck = () => (parent !== window ? parent.postMessage("dienstwunsch-zu", location.origin) : history.back());
@@ -23,7 +23,8 @@
     let r;
     if (!regionAus) {
       try { r = await anfrage(API + "?forceFunctionRegion=eu-west-2"); if (r.status >= 502 && r.status <= 504) { regionAus = true; r = null; } }
-      catch { regionAus = true; r = null; }
+      // 2.425.0 KC-CLUB-GENERALCHECK: Speichern nach Netzfehler/Zeitablauf NICHT still nochmal schicken (sonst evtl. doppelt) – nur Lesen
+      catch (e) { regionAus = true; r = null; if (!/_laden$/.test(action)) throw e?.name === "AbortError" ? e : new Error("Keine Verbindung zum Server – bitte gleich nochmal versuchen."); }
     }
     if (!r) r = await anfrage(API);
     const j = await r.json().catch(() => null);
