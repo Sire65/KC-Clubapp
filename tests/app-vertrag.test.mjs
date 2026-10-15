@@ -6377,7 +6377,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.402.0 KC-CLUB-KUCKUCKSUHR (Wunsch Hansi „wenn volle Stunde, einblenden, Kuckuck kommt raus und ruft so oft, wie es Uhr ist“)
 {
   assert.ok(/const kkRufe = \(h\) => \(h % 12\) \|\| 12;/.test(html), "12-Stunden-Zählung (0 Uhr → 12×)");
-  assert.ok(/const KK_FENSTER_MIN = 2, KK_NACHT_VON = 22, KK_NACHT_BIS = 7/.test(html) && /mitTon = einst\("ton", true\) && !\(h >= KK_NACHT_VON \|\| h < KK_NACHT_BIS\)/.test(html), "nachts und mit Töne aus ohne Ton");
+  assert.ok(/const KK_FENSTER_MIN = 2, KK_NACHT_VON = 22, KK_NACHT_BIS = 7/.test(html) && /mitTon = einst\("ton", true\) && \(tonImmer \|\| !\(h >= KK_NACHT_VON \|\| h < KK_NACHT_BIS\)\)/.test(html), "nachts und mit Töne aus ohne Ton (2.404.0: außer Probe)");
   assert.ok(/if \(!ICH\?\.person_id \|\| document\.hidden \|\| !einst\("kuckuck", true\)\) return;/.test(html) && /localStorage\.getItem\("kc_club_kuckuck_zuletzt"\) === stunde/.test(html), "nur offen + sichtbar, abschaltbar, einmal je Stunde");
   assert.ok(/<input type="checkbox" id="setKuckuck" onchange="einstellung\('kuckuck', this\.checked\)">/.test(html) && /\$\("setKuckuck"\)\.checked = einst\("kuckuck", true\)/.test(html), "Schalter in den Einstellungen");
   const kk = (h) => (h % 12) || 12; assert.deepEqual([0, 1, 12, 13, 23].map(kk), [12, 1, 12, 1, 11], "Rufe je Stunde");
@@ -6399,6 +6399,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/delete from public\.kc_system_check_history where checked_at < now\(\) - make_interval\(days => v_tage\);/.test(m) && /v_tage integer := greatest\(coalesce\(p_tage, 90\), 60\);/.test(m), "Löschen weiter nach p_tage (mind. 60)");
   assert.ok(/revoke all on function public\.kc_club_db_aufraeumen\(integer\) from public, anon, authenticated;/.test(m) && /grant execute on function public\.kc_club_db_aufraeumen\(integer\) to service_role;/.test(m), "nur der Server darf aufrufen");
   assert.ok(!/kc_club_tippen|kc_core_people|kc_communication_requests|kc_communication_messages/.test(m.replace(/^--.*$/gm, "")), "keine Club- oder Versanddaten angefasst");
+}
+// 2.404.0 KC-CLUB-KUCKUCK-KLANG (Fund Hansi „kein Ton – typischer Ton solcher Uhren“)
+{
+  assert.ok(/function kkTon\(t0\) \{[^\n]*\n  kkKlack\(t0\); kkPfeife\(698\.46, t0 \+ 0\.06, 0\.32\); kkPfeife\(587\.33, t0 \+ 0\.46, 0\.5\);/.test(html), "Klack + zwei Pfeifen (hoch – tief)");
+  assert.ok(/mitTon = einst\("ton", true\) && \(tonImmer \|\| !\(h >= KK_NACHT_VON \|\| h < KK_NACHT_BIS\)\)/.test(html) && /onclick="kuckuckZeigen\(kkJetzt\(\)\.h, true\)"/.test(html), "Probe-Knopf mit Ton auch nachts; sonst nachts stumm");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
