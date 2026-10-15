@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.410.0 – 2026-10-15 – 🎤 Club-Song: neue Zeilen im Refrain
+Anlass (Hansi, beim Werbefilm „Köcheclub to go“): Im Refrain von „Seit einundneunzig“ heißt es jetzt „Seit einundneunzig – da **glüht** unser Herd, / weil Freundschaft **immer dazu** gehört!“ (vorher „da brennt unser Herd, / weil Freundschaft und Kochen für immer gehört“). Die zweite Zeile hat zwei Silben weniger; ihre Melodie ist auf 9 Töne gekürzt (gleicher Bogen, Schluss auf dem Grundton). Karaoke und Takte bleiben gleich (jede Zeile 2 Takte, letzte Silbe gehalten). Der Werbefilm (KC-Infrastructure-Control-Center, Ordner werbefilm/) singt denselben Text.
+
 ## 2.409.0 – 2026-10-15 – Lichtschein auch bei „Animationen entfernen“
 Die Rückmeldung aus 2.408.0 zeigte: Auf Hansis Handy ist „Animationen entfernen“ aktiv – deshalb blieb der Lichtschein aus, während Herbst-Bühne, Laub und Kuckucksuhr liefen. Wahl Hansi: Der Lichtschein folgt jetzt nur noch dem App-Schalter „✨ Animierte Knöpfe“, wie die übrigen Effekte.
 
