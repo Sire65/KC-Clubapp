@@ -18742,14 +18742,14 @@ function kopfGlanzStarten(seit = Date.now()) {
       if (l?.width) { g.style.setProperty("--fx", `${Math.round(l.left - k.left + l.width * 0.78)}px`); g.style.setProperty("--fy", `${Math.round(l.top - k.top + l.height * 0.22)}px`); }
     } catch {}
     g.classList.remove("lauf"); void g.offsetWidth; g.classList.add("lauf"); // offsetWidth: Animation neu starten
-    const a = g.querySelector("i")?.getAnimations?.()[0];
+    const a = g.querySelector("u")?.getAnimations?.()[0]; // 2.410.0: der Stern (längste Teil-Animation)
     setTimeout(() => kopfGlanzMelden(a ? "gelaufen" : "keine_animation", { warte_ms: Date.now() - seit, anim: a ? a.playState : "-" }), 800);
   }));
 }
 {
   const g = document.getElementById("kopfGlanz");
   if (g) {
-    const aus = (e) => { if (e?.animationName && e.animationName !== "kopfGlanz") return; g.classList.remove("lauf"); }; // 2.410.0: erst wenn der Glanzstreifen durch ist (Blitz/Stern enden früher)
+    const aus = (e) => { if (e?.animationName && e.animationName !== "kopfFunkeln") return; g.classList.remove("lauf"); }; // 2.410.0: erst wenn der Stern verglüht ist (der Blitz endet früher)
     g.addEventListener("animationend", aus); g.addEventListener("animationcancel", aus);
     let weg = 0;
     document.addEventListener("visibilitychange", () => {
