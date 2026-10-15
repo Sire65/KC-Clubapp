@@ -8,7 +8,7 @@
 <title>Köcheclub Werne – Termin wählen</title>
 <link rel="icon" href="icon-192.png">
 <style>
-  :root { --rot: #741521; --rot-hell: #f6e9eb; --text: #222; --grau: #6b6b6b; --linie: #ddd; --bg: #f4f2f0; --gruen: #1f7a3a; --orange: #b25e00; }
+  :root { --rot: #741521; --rot-hell: #f6e9eb; --text: #222; --grau: #5c5c5c; --linie: #ddd; --bg: #f4f2f0; --gruen: #1f7a3a; --orange: #b25e00; }
   * { box-sizing: border-box; }
   body { margin: 0; font: 17px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
   header { background: var(--rot); color: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
@@ -185,9 +185,9 @@ function gegenvorschlag() {
   aktion(async () => { stand = await api("m_gegenvorschlag", { vorschlaege: v, bemerkung: $("gvBem").value }); zeigen(); melde("Danke! Hansi bekommt " + du("deine", "eure") + " Vorschläge."); window.scrollTo(0, 0); });
 }
 function absagen() {
-  const bem = prompt("Schade! Möchtest du Hansi noch etwas dazu schreiben? (freiwillig)", "");
+  const bem = prompt(`Schade! ${du("Möchtest du", "Möchtet ihr")} Hansi noch etwas dazu schreiben? (freiwillig)`, ""); // 2.425.0 KC-CLUB-GENERALCHECK: du/ihr + Bestätigung wie bei Wählen
   if (bem === null) return;
-  aktion(async () => { stand = await api("m_absagen", { bemerkung: bem }); zeigen(); window.scrollTo(0, 0); });
+  aktion(async () => { stand = await api("m_absagen", { bemerkung: bem }); zeigen(); melde("Danke für " + du("deine", "eure") + " Rückmeldung – Hansi weiß Bescheid."); window.scrollTo(0, 0); });
 }
 function aendern() {
   if (!confirm("Die bisherige Antwort zurücknehmen und neu wählen?")) return;

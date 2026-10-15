@@ -3,6 +3,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import postgres from "npm:postgres@3.4.5";
 
 const jsonHeaders={"Content-Type":"application/json"};
+const gleichZeit=(a:string,b:string)=>{const x=new TextEncoder().encode(a),y=new TextEncoder().encode(b);let d=x.length^y.length;for(let i=0;i<y.length;i++)d|=(x[i]??0)^y[i];return d===0;};
 const fail=(s:number,e:string)=>new Response(JSON.stringify({error:e}),{status:s,headers:jsonHeaders});
 const qi=(n:string)=>{if(!/^[a-z0-9_]+$/.test(n))throw new Error(`unsafe identifier: ${n}`);return `"${n}"`;};
 const personRefTables=new Set(["kc_core_club_memberships","kc_core_operational_directory","kc_core_pos_aliases","kc_core_app_access","kc_core_user_links","kc_dp_daily_push_preview"]);
@@ -30,7 +31,7 @@ Deno.serve(async(req)=>{
     EdgeRuntime.waitUntil(Promise.allSettled(auftraege));
     return new Response(JSON.stringify({ok:true,status:"angestossen",letzter_lauf:plan.letzter_lauf??null,tabellen:plan.tabellen,pakete:pakete.length}),{status:202,headers:jsonHeaders});
   }
-  if(te||!expectedToken||tok.length<32||tok!==expectedToken)return fail(401,"mirror worker authentication failed");
+  if(te||!expectedToken||tok.length<32||!gleichZeit(tok,String(expectedToken)))return fail(401,"mirror worker authentication failed"); // 2.425.0: Vergleich in gleichbleibender Zeit
   const requested=[...new Set<string>(Array.isArray(body.tables)?body.tables:[])];
   if(!requested.length||requested.length>48)return fail(400,"tables must contain 1..48 names");
   for(const t of requested) if(!/^[a-z0-9_]+$/.test(t)) return fail(400,`invalid table name: ${t}`);

@@ -34,6 +34,15 @@ const json = (body: unknown, status = 200) =>
 class Fehler extends Error {
   constructor(msg: string, public status = 400, public extra: Record<string, unknown> = {}) { super(msg); }
 }
+// 2.425.0 KC-CLUB-GENERALCHECK (Sicherheit): Geheimnisse in gleichbleibender Zeit vergleichen (wie kc-club) und interne Datenbank-Texte
+// nur ins Server-Protokoll schreiben – nach außen ein verständlicher Satz
+function gleichZeit(a: unknown, b: string) {
+  const x = new TextEncoder().encode(String(a ?? "")), y = new TextEncoder().encode(b);
+  let d = x.length ^ y.length;
+  for (let i = 0; i < y.length; i++) d |= (x[i] ?? 0) ^ y[i];
+  return d === 0;
+}
+function dbFehler(error: { message?: string }): never { console.error("kc-termine db", error?.message); throw new Fehler("Das hat gerade nicht geklappt – bitte gleich noch einmal versuchen.", 500); }
 
 // ---------- Hilfen ----------
 async function sha256(s: string) {
@@ -221,7 +230,7 @@ async function neuOeffnen(einladungId: string) {
     token_hash: await sha256(token), gueltig_bis: gueltig, status: "offen", ablauf_gemeldet_am: null,
     geoeffnet_am: null, beantwortet_am: null, geaendert_am: jetzt(),
   }).eq("id", einladungId);
-  if (error) throw new Fehler(error.message, 500);
+  if (error) dbFehler(error);
   return { link: `${MITGLIED_SEITE}?t=${token}`, gueltig };
 }
 
@@ -669,7 +678,7 @@ Deno.serve(async (req) => {
     // ----- Zeitplaner -----
     if (a === "wartung") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_termine_cron_secret" });
-      if (!geheim || p.cronSecret !== geheim) return json({ error: "Kein Zugang" }, 401);
+      if (!geheim || !gleichZeit(p.cronSecret, geheim)) return json({ error: "Kein Zugang" }, 401);
       return json({ ok: true, abgelaufen: await ablaufPruefen(), erinnerungen: await erinnerungen(), hansi: await hansiErinnerungen().catch((e) => ({ fehler: String(e) })) });
     }
 
@@ -702,7 +711,7 @@ Deno.serve(async (req) => {
       let e: any;
       if (internKey && p.einladung_id && p.person_id) {
         const { data: intern } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_termine_admin_token" });
-        if (!intern || internKey !== intern) return json({ error: "Kein Zugang" }, 401);
+        if (!intern || !gleichZeit(internKey, intern)) return json({ error: "Kein Zugang" }, 401);
         const { data } = await db.from("kc_termin_einladungen").select("*").eq("id", String(p.einladung_id)).maybeSingle();
         if (!data || !(data.person_ids ?? []).includes(String(p.person_id))) throw new Fehler("Einladung nicht gefunden.", 404);
         e = data;
@@ -723,7 +732,7 @@ Deno.serve(async (req) => {
         case "m_waehlen": {
           if (Array.isArray(e.slot_ids) && e.slot_ids.length && !e.slot_ids.includes(String(p.slot_id || ""))) throw new Fehler("Dieser Termin ist nicht mehr verfügbar. Bitte wähle einen anderen.");
           const { data: r, error } = await db.rpc("kc_termin_waehlen", { p_einladung: e.id, p_slot: String(p.slot_id || ""), p_art: String(p.besuchsart || "") });
-          if (error) throw new Fehler(error.message, 500);
+          if (error) dbFehler(error);
           if (!r?.ok) {
             const text: Record<string, string> = {
               voll: "Dieser Termin ist leider gerade vergeben. Bitte wähle einen anderen.",
@@ -805,7 +814,7 @@ Deno.serve(async (req) => {
     const { data: pruef } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_termine_pruefschluessel_sha256" });
     const { data: intern } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_termine_admin_token" });
     const istPruefung = !!key && !!pruef && pruef === h;
-    const istIntern = !!internKey && !!intern && internKey === intern;
+    const istIntern = !!internKey && !!intern && gleichZeit(internKey, intern);
     if (!istIntern && (!key || !((zug ?? []).some((z: any) => z.key_sha256 === h) || istPruefung))) return json({ error: "Kein Zugang" }, 401);
     if (istPruefung) p.test = true;
 
@@ -833,7 +842,7 @@ Deno.serve(async (req) => {
           return { beginn: beginn.toISOString(), ende: ende.toISOString(), besuchsart: x.besuchsart, plaetze, notiz: String(x.notiz || "").trim().slice(0, 300) || null, ist_test: p.test === true };
         });
         const { data, error } = await db.from("kc_termin_slots").insert(zeilen).select();
-        if (error) throw new Fehler(error.message, 500);
+        if (error) dbFehler(error);
         for (const s of data ?? []) await log("hansi", "termin_angeboten", { slot_id: s.id }, { wann: wann(s.beginn, s.ende), besuchsart: s.besuchsart, plaetze: s.plaetze, test: s.ist_test || undefined });
         return json({ ok: true, slots: data });
       }
@@ -944,7 +953,7 @@ Deno.serve(async (req) => {
           const { data: s, error } = await db.from("kc_termin_slots").insert({
             beginn: v.beginn, ende: v.ende, besuchsart: art, plaetze: leute.length, herkunft: "gegenvorschlag", ist_test: e.ist_test,
           }).select().single();
-          if (error) throw new Fehler(error.message, 500);
+          if (error) dbFehler(error);
           const { data: b, error: be } = await db.from("kc_termin_buchungen").insert({
             slot_id: s.id, einladung_id: e.id, personen: leute.length, besuchsart: art, status: "bestaetigt", entschieden_am: jetzt(),
           }).select().single();
@@ -1116,6 +1125,6 @@ Deno.serve(async (req) => {
   } catch (e) {
     if (e instanceof Fehler) return json({ error: e.message, ...e.extra }, e.status);
     console.error(e);
-    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+    return json({ error: "Das hat gerade nicht geklappt – bitte gleich noch einmal versuchen." }, 500); // 2.425.0: keine internen Texte nach außen
   }
 });

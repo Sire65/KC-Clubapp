@@ -1,6 +1,6 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json, APP_VERSION in app.js und app.js?v= in index.html übereinstimmen.
-const VERSION = "2.424.0";
+const VERSION = "2.425.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png", "badge-anruf.png", "badge-video.png", "kuckuck-ruf.mp3"]; // 2.406.0: Kuckucksruf (CC0-Aufnahme) // 2.237.0: Statusleisten-Symbole für laufende Gespräche
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm app.js?v=<Version> ändert sich nie unter derselben Adresse → aus dem Speicher
@@ -57,7 +57,9 @@ function seiteMerken(url, r) {
     : null).catch(() => {});
 }
 function seiteHolen(e, url, merken) {
-  const ausSpeicher = () => caches.match(e.request, { ignoreSearch: true }).then((r) => r || caches.match("index.html"));
+  // 2.425.0 KC-CLUB-GENERALCHECK: die Startseite nur als Ersatz für die App selbst – sonst lief im Dienstwunsch-Fenster bei schlechtem Netz die ganze App ein zweites Mal
+  const istApp = url.pathname.endsWith("/") || url.pathname.endsWith("/index.html");
+  const ausSpeicher = () => caches.match(e.request, { ignoreSearch: true }).then((r) => r || (istApp ? caches.match("index.html") : undefined));
   return new Promise((fertig, fehler) => {
     let erledigt = false; const gib = (r) => { if (!erledigt && r) { erledigt = true; fertig(r); return true; } return false; };
     const uhr = setTimeout(() => ausSpeicher().then(gib).catch(() => {}), NAVI_WARTEN_MS);
