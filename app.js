@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.404.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.405.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18732,28 +18732,52 @@ const kkRufe = (h) => (h % 12) || 12;
 // 2.404.0 KC-CLUB-KUCKUCK-KLANG (Fund Hansi „kein Ton – dafür gibt es den typischen Ton solcher Uhren“): klingt jetzt wie eine echte
 // Kuckucksuhr – zwei kleine Holzpfeifen mit Blasebalg: weicher Anblas-Ansatz, hauchiger Luftanteil, Holz-Obertöne, Ton sackt am Ende
 // leicht ab; vorher klackt das Türchen. Alles selbst erzeugt (keine Datei, kein Dienst).
-let KK_RAUSCHEN = null;
-function kkRauschen() { if (KK_RAUSCHEN) return KK_RAUSCHEN; const b = audio.createBuffer(1, audio.sampleRate, audio.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return (KK_RAUSCHEN = b); }
-function kkKlack(t) { // Türchen/Vogel: kurzes Holz-Klacken
-  const n = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
-  n.buffer = kkRauschen(); f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 3;
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
-  n.connect(f).connect(g).connect(audio.destination); n.start(t, Math.random() * 0.5); n.stop(t + 0.05);
+// 2.405.0 KC-CLUB-KUCKUCK-KLANG-2 (Fund Hansi „Tonfolge stimmt, hört sich aber nicht so gut an“): näher an echten Holzpfeifen –
+// der Ton entsteht aus Blasebalg-Luft, die durch schmale Resonanzfilter auf Grundton und ungerade Obertöne läuft (gedackte Pfeife
+// klingt hohl), dazu ein weicher Kern mit leichtem Zittern, ein kurzer Anblas-Hauch und etwas Hall vom Holzgehäuse.
+let KK_RAUSCHEN = null, KK_HALL = null;
+function kkRauschen() { if (KK_RAUSCHEN) return KK_RAUSCHEN; const b = audio.createBuffer(1, audio.sampleRate * 2, audio.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return (KK_RAUSCHEN = b); }
+function kkHall() { // kurzer Raum-/Gehäuseklang (selbst erzeugte Impulsantwort, 0,7 s)
+  if (KK_HALL) return KK_HALL;
+  const sr = audio.sampleRate, n = Math.floor(sr * 0.7), ir = audio.createBuffer(2, n, sr);
+  for (let k = 0; k < 2; k++) { const d = ir.getChannelData(k); let tief = 0; for (let i = 0; i < n; i++) { tief = tief * 0.6 + (Math.random() * 2 - 1) * 0.4; d[i] = tief * Math.pow(1 - i / n, 3); } }
+  const c = audio.createConvolver(); c.buffer = ir; const g = audio.createGain(); g.gain.value = 0.35; c.connect(g).connect(audio.destination);
+  return (KK_HALL = c);
 }
-function kkPfeife(f, t, dauer) { // eine Holzpfeife: Grundton + leise Obertöne + Luft, Ansatz von leicht oben, am Ende kurzes Absacken
-  const aus = audio.createGain(); aus.connect(audio.destination);
-  aus.gain.setValueAtTime(0.0001, t); aus.gain.exponentialRampToValueAtTime(0.3, t + 0.045); aus.gain.setValueAtTime(0.3, t + dauer - 0.09); aus.gain.exponentialRampToValueAtTime(0.0001, t + dauer);
-  for (const [mal, laut] of [[1, 1], [2, .1], [3, .05]]) {
-    const o = audio.createOscillator(), g = audio.createGain(); o.type = "sine"; g.gain.value = laut;
-    o.frequency.setValueAtTime(f * mal * 1.025, t); o.frequency.exponentialRampToValueAtTime(f * mal, t + 0.05); o.frequency.setValueAtTime(f * mal, t + dauer - 0.08); o.frequency.exponentialRampToValueAtTime(f * mal * 0.97, t + dauer);
-    o.connect(g).connect(aus); o.start(t); o.stop(t + dauer + 0.02);
+function kkAusgang() { const g = audio.createGain(), lp = audio.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 4200; g.connect(lp); lp.connect(audio.destination); lp.connect(kkHall()); return g; }
+function kkKlack(t) { // Türchen/Vogel: kurzes, trockenes Holz-Klacken
+  const aus = kkAusgang(), n = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain(), o = audio.createOscillator(), og = audio.createGain();
+  n.buffer = kkRauschen(); f.type = "bandpass"; f.frequency.value = 1900; f.Q.value = 5;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.6, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+  o.type = "sine"; o.frequency.setValueAtTime(820, t); o.frequency.exponentialRampToValueAtTime(520, t + 0.03);
+  og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(0.25, t + 0.002); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+  n.connect(f).connect(g).connect(aus); o.connect(og).connect(aus); n.start(t, Math.random()); n.stop(t + 0.05); o.start(t); o.stop(t + 0.04);
+}
+function kkPfeife(f, t, dauer, laut = 1) { // eine gedackte Holzpfeife mit Blasebalg
+  const aus = kkAusgang(), hk = audio.createGain(); hk.connect(aus); // Hüllkurve: schnell an, kurzer Überschwinger, Halten, weiches Ausklingen
+  hk.gain.setValueAtTime(0.0001, t); hk.gain.exponentialRampToValueAtTime(laut, t + 0.04); hk.gain.exponentialRampToValueAtTime(laut * 0.82, t + 0.12);
+  hk.gain.setValueAtTime(laut * 0.82, t + dauer - 0.13); hk.gain.exponentialRampToValueAtTime(0.0001, t + dauer);
+  const tonhoehe = (p) => { p.setValueAtTime(f * 0.985, t); p.exponentialRampToValueAtTime(f, t + 0.045); p.setValueAtTime(f, t + dauer - 0.1); p.exponentialRampToValueAtTime(f * 0.975, t + dauer); };
+  // Kern: Grundton + schwache ungerade Obertöne (hohl), mit leichtem Zittern (wie schwankender Luftdruck)
+  const kern = audio.createOscillator(), welle = audio.createPeriodicWave(new Float32Array([0, 0, 0, 0, 0, 0]), new Float32Array([0, 1, 0.02, 0.16, 0.01, 0.05])), kg = audio.createGain();
+  kern.setPeriodicWave(welle); tonhoehe(kern.frequency); kg.gain.value = 0.16;
+  const lfo = audio.createOscillator(), lg = audio.createGain(); lfo.frequency.value = 5.2; lg.gain.value = f * 0.004; lfo.connect(lg).connect(kern.frequency);
+  kern.connect(kg).connect(hk);
+  // Luft: Rauschen durch schmale Resonanzen auf 1×, 3×, 5× – das macht den Pfeifenklang
+  for (const [mal, q, g] of [[1, 28, 0.9], [3, 22, 0.16], [5, 18, 0.05]]) {
+    const n = audio.createBufferSource(), bp = audio.createBiquadFilter(), ng = audio.createGain();
+    n.buffer = kkRauschen(); bp.type = "bandpass"; bp.Q.value = q; tonhoehe(bp.frequency); ng.gain.value = g * 2.2;
+    n.connect(bp).connect(ng).connect(hk); n.start(t, Math.random()); n.stop(t + dauer + 0.02);
   }
-  const n = audio.createBufferSource(), bp = audio.createBiquadFilter(), ng = audio.createGain(); // Blasebalg-Luft
-  n.buffer = kkRauschen(); bp.type = "bandpass"; bp.frequency.value = f * 1.5; bp.Q.value = 2.5; ng.gain.value = 0.22;
-  n.connect(bp).connect(ng).connect(aus); n.start(t, Math.random() * 0.5); n.stop(t + dauer + 0.02);
+  // Anblas-Hauch: kurzes, helles Luftgeräusch am Anfang
+  const h = audio.createBufferSource(), hp = audio.createBiquadFilter(), hg = audio.createGain();
+  h.buffer = kkRauschen(); hp.type = "highpass"; hp.frequency.value = 2500;
+  hg.gain.setValueAtTime(0.0001, t); hg.gain.exponentialRampToValueAtTime(0.05 * laut, t + 0.01); hg.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+  h.connect(hp).connect(hg).connect(aus); h.start(t, Math.random()); h.stop(t + 0.1);
+  kern.start(t); lfo.start(t); kern.stop(t + dauer + 0.02); lfo.stop(t + dauer + 0.02);
 }
 function kkTon(t0) { // ein „Kuck-kuck“: hohe, dann tiefere Pfeife (kleine Terz, wie bei der Schwarzwälder Kuckucksuhr)
-  kkKlack(t0); kkPfeife(698.46, t0 + 0.06, 0.32); kkPfeife(587.33, t0 + 0.46, 0.5);
+  kkKlack(t0); kkPfeife(698.46, t0 + 0.07, 0.3, 0.9); kkPfeife(587.33, t0 + 0.43, 0.55, 0.8);
 }
 function kuckuckZeigen(h = kkJetzt().h, tonImmer = false) { // tonImmer: Probe (🔊 in den Einstellungen) – auch nachts
   document.querySelector(".kuckuck")?.remove();
