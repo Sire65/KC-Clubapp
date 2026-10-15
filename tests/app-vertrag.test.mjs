@@ -6369,7 +6369,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/<div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><i><\/i><\/div>/.test(html), "Glanz-Element im Kopf der Startseite");
   assert.ok(/\.kopf-glanz \{ position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none;/.test(html), "Glanz bleibt im runden Kopf und fängt keine Klicks");
   assert.ok(/\.kopf-glanz\.lauf i \{ animation: kopfGlanz [^;]* 1 both; \}/.test(html) && /@keyframes kopfGlanz \{[^}]*transform: translateX\(-100%\)/.test(html), "einmal, per transform (flüssig)");
-  assert.ok(/:root\.ohne-anim \.kopf-glanz \{ display: none; \}/.test(html) && /prefers-reduced-motion: reduce\) \{ \.kopf-glanz \{ display: none; \}/.test(html), "Animationen aus / Bewegung reduzieren → kein Glanz");
+  // 2.409.0 (Wahl Hansi, Diagnose: „Animationen entfernen“ am Handy aktiv): nur noch der App-Schalter schaltet den Glanz ab
+  assert.ok(/:root\.ohne-anim \.kopf-glanz \{ display: none; \}/.test(html) && !/prefers-reduced-motion: reduce\) \{ \.kopf-glanz/.test(html), "Animierte Knöpfe aus → kein Glanz; Handy-Einstellung zählt nicht");
   assert.ok(/<div class="kopf-glanz" id="kopfGlanz"/.test(html) && /g\.addEventListener\("animationend", aus\); g\.addEventListener\("animationcancel", aus\);/.test(html), "beim Öffnen einmal, danach aus");
   // 2.401.0: auch beim Zurückholen aus dem Hintergrund (Android lädt die App dann nicht neu)
   assert.ok(/const KOPF_GLANZ_PAUSE_MS = 60000, KOPF_GLANZ_WARTEN_MS = 600000;/.test(html) && /if \(weg && Date\.now\(\) - weg >= KOPF_GLANZ_PAUSE_MS\) kopfGlanzStarten\(\);/.test(html), "Zurückholen nach ≥ 1 Min. → Glanz läuft erneut");
