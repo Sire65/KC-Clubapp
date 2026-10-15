@@ -1652,7 +1652,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 142. 1.13.0: DP2 Build 251 Button-Logik (unverändert übernommen) + offene Club-App-Angaben zählen als eigene Daten
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(f893f5d|c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(5[134567]|6[2345678]|8[56789]|90)$/.test(q.dp2Version) && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 (ab 1.17.2: Build 253 RC) mit Button-Logik übernommen");
+  assert.ok(/^(f893f5d|c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(5[134567]|6[2345678]|8[56789]|9[01])$/.test(q.dp2Version) && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 (ab 1.17.2: Build 253 RC) mit Button-Logik übernommen");
   const d = lies("dp2-club/daten.js");
   assert.ok(/status: "confirmed", source: "club_app"/.test(d) && /K\.wishes = \[\.\.\.\(D\.meine\?\.entries \|\| \[\]\)\.map/.test(d), "Eingangs-Angaben (auch Status offen) zählen in DP2 als eigene aktive Wünsche");
 }
@@ -1687,7 +1687,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 146. 1.16.1: DP2-Nachtrag + Cache-Schlüssel mit Commit
 {
-  assert.ok(/^(c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(JSON.parse(lies("dp2/QUELLE.json")).commit), "Nachtrag c0d279a übernommen (ab 1.17.2 im gemeinsamen Stand d50ed58 enthalten)");
+  assert.ok(/^(c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(JSON.parse(lies("dp2/QUELLE.json")).commit), "Nachtrag c0d279a übernommen (ab 1.17.2 im gemeinsamen Stand d50ed58 enthalten)");
   assert.ok(/quelle\.dp2Version \+ "-" \+ String\(quelle\.commit \|\| ""\)\.slice\(0, 7\)/.test(lies("dp2-club/lader.js")), "Cache-Schlüssel mit Commit");
 }
 
@@ -1717,7 +1717,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 149. 1.17.2: DP2 Build 253 RC (dp3 d50ed58) – gemeinsamer Stand aus Club-App-Schnittstelle und PDF-/QR-Korrekturen
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(5[34567]|6[2345678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 253 RC (d50ed58) oder neuer übernommen");
+  assert.ok(/^(d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(5[34567]|6[2345678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 253 RC (d50ed58) oder neuer übernommen");
   for (const f of ["src/core/document-identity.js", "src/vendor/qrcode-generator.js", "src/core/personalized-forms.js", "src/adapters/pdf.js", "src/ui/member-button-logic.js"])
     assert.ok(q.reihenfolge.includes(f), `${f} fehlt in der DP2-Übernahme`);
   assert.ok(q.reihenfolge.indexOf("src/adapters/pdf.js") < q.reihenfolge.indexOf("src/ui/original-brand.js") || !q.reihenfolge.includes("src/ui/original-brand.js"), "PDF-Baustein vor dem Abschluss geladen");
@@ -1777,7 +1777,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 151. 1.18.1: DP2 Build 254 RC (dp3 3945960) – Meine Angaben ausdrucken (PDF mit QR, Abfrage, Vorschau) + Sperrtag ohne V/H/B
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(5[4567]|6[2345678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 254 RC (3945960) oder neuer übernommen");
+  assert.ok(/^(3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(5[4567]|6[2345678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 254 RC (3945960) oder neuer übernommen");
   assert.ok(q.reihenfolge.includes("src/ui/wish-print.js") && q.reihenfolge.includes("src/ui/wish-print.css"), "Ausdruck-Baustein fehlt in der Übernahme");
   assert.ok(/frame-src blob:/.test(lies("dienstwunsch.html")) && !/frame-src 'none'/.test(lies("dienstwunsch.html")), "PDF-Vorschau braucht frame-src blob: (nur selbst erzeugte PDFs)");
   assert.ok(/window\.confirm\(FRAGE\)/.test(lies("dp2/src/ui/wish-print.js")) && /filledPdf/.test(lies("dp2/src/core/personalized-forms.js")), "Sicherheitsabfrage/ausgefüllter Bogen fehlt");
@@ -2267,7 +2267,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 199. 1.44.1: DP2 Build 255 RC (dp3 ae349c0) – Reservierung je PC beim Club-App-Wunscheingang (KC-DP-WUNSCH-SPERRE)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(5[567]|6[2345678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 255 RC (ae349c0) oder neuer übernommen");
+  assert.ok(/^(ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(5[567]|6[2345678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 255 RC (ae349c0) oder neuer übernommen");
   assert.ok(q.reihenfolge.includes("src/ui/wish-print.js") && q.reihenfolge.includes("src/ui/member-button-logic.js"), "Build-254-Bausteine (Ausdruck, Button-Logik) bleiben enthalten");
   assert.ok(/kc_dp_wish_inbox_claim/.test(lies("supabase/migrations/20261001_kc_dp_wunsch_eingang_sperre.sql")), "Datenbankseite der Reservierung vorhanden");
 }
@@ -2282,7 +2282,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 201. 1.45.1: DP2 Build 256 RC (dp3 51518cc) – Twinkey einfacher und fehlersicher (KC-DP-TWINKEY-EINFACH)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), sw = lies("dp2/src/ui/simple-wish-assistant.js");
-  assert.ok(/^(51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(5[67]|6[2345678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 256 RC (51518cc) oder neuer übernommen");
+  assert.ok(/^(51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(5[67]|6[2345678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 256 RC (51518cc) oder neuer übernommen");
   assert.ok(/id="swProgress"/.test(sw) && /id="swNextOpen"/.test(sw) && /id="swNextDay"/.test(sw), "Fortschritt und nächster offener Tag");
   assert.ok(/function confirmOpenDays\(\)/.test(sw) && /if\(confirmOpenDays\(\)\)finishOverview\(false\)/.test(sw), "Rückfrage vor „Fertig“ bei offenen Tagen");
   assert.ok(/if\(!can\.length\)can=\[\{start:null,end:null,wishZone:'B'\}\];/.test(sw) && /id="swWholeDay"/.test(sw), "Kann-Zeit nicht vorausgefüllt, ganze Zeit nur per Knopf");
@@ -2318,7 +2318,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 205. 1.47.1: DP2 Build 257 RC (dp3 37bd067) – Twinkey übersichtlicher (KC-DP-TWINKEY-EINFACH)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), sw = lies("dp2/src/ui/simple-wish-assistant.js"), tw = lies("dp2/src/ui/twinkey.js");
-  assert.ok(/^(37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(57|6[2345678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 257 RC (37bd067) oder neuer übernommen");
+  assert.ok(/^(37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(57|6[2345678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 257 RC (37bd067) oder neuer übernommen");
   assert.ok(/id="swNoBlock"/.test(sw) && /!blockChosen&&blockMode==='none'\?\['Bitte zuerst wählen/.test(sw), "Sperren als klare Antwort, Weiter ohne Antwort gesperrt");
   assert.ok(!/id="swBackTop"/.test(sw) && /\(step==='wish'\?teamButton\(\):''\)/.test(sw), "ein Zurück je Schritt, Besetzung nur bei der Wunschzeit");
   assert.ok(/<details[^>]*class="sw-more"/.test(sw) && /sw-day-tile/.test(sw) && /\(Kann-Zeit\)/.test(sw) && /\(Wunschzeit\)/.test(sw), "kurze Zusammenfassung, Kacheln, Begriffe in Klammern wie Papier/Excel");
@@ -5072,7 +5072,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.41.0 KC-CLUB-DIENSTWUNSCH: DP2 Build 262 RC (dp3 d8976b9) – Builds 258–260 betreffen die Mitglieder-Eingabe (Twinkey)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), sw = lies("dp2/src/ui/simple-wish-assistant.js");
-  assert.ok(/^(d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(6[2345678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 262 RC (d8976b9) oder neuer übernommen");
+  assert.ok(/^(d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(6[2345678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 262 RC (d8976b9) oder neuer übernommen");
   assert.ok(/Deine Dienstzeiten wurden erfolgreich verschickt\./.test(sw) && /if\(saved!==true\)throw Error\('Versand nicht bestätigt\.'\)/.test(sw), "Build 258: Bestätigung nur nach bestätigtem Speichern");
   assert.ok(/laeuft = \(async \(\) => \{ do \{ nochmal = false; await senden\(\); \} while \(nochmal\); return true; \}\)\(\)/.test(lies("dp2-club/daten.js")), "Club-App meldet erfolgreiches Speichern mit true (Fehler werfen)");
   assert.ok(/sw-helper-fold/.test(sw) && /sw-fold sw-days/.test(sw), "Build 260: kompakte Tagesauswahl");
@@ -5119,7 +5119,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.44.0 KC-CLUB-DIENSTWUNSCH / KC-DP-KLAPPBEREICH: DP2 Build 263 RC (dp3 ceefe07) – Klappbereiche wie in der Club-App
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), fs = lies("dp2/src/ui/fold-sections.js");
-  assert.ok(/^(ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(6[345678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 263 RC (ceefe07) oder neuer übernommen (2.284.0: Build 264)");
+  assert.ok(/^(ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(6[345678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 263 RC (ceefe07) oder neuer übernommen (2.284.0: Build 264)");
   assert.ok(q.reihenfolge.includes("src/ui/fold-sections.js") && q.reihenfolge.includes("src/ui/fold-sections.css"), "Klappbaustein wird geladen");
   assert.ok(/kc_dp_klappe_/.test(fs) && /kc_dp_fest_/.test(fs) && /Zuklappen/.test(fs), "Schloss, gemerkter Zustand, unten Zuklappen (eigener DP2-Speicherschlüssel)");
   assert.ok(/data-klappe="tw-more"/.test(lies("dp2/src/ui/simple-wish-assistant.js")), "Mitgliederbereiche mit festen Schlüsseln");
@@ -5858,19 +5858,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.284.0 KC-CLUB-DP2-264 (Wunsch Hansi): Regelzeit erster Markt-Freitag 10:00–23:00 – aus DP2 Build 264 übernommen (nicht hier geändert)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^0\.20\.0-build2(6[45678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 264 oder neuer übernommen");
+  assert.ok(/^0\.20\.0-build2(6[45678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 264 oder neuer übernommen");
   assert.ok(/add\('2026-12-04','market',10,23,12,null\)/.test(lies("dp2/src/core/model.js")), "erster Freitag ab 10:00");
 }
 // 2.285.0 KC-CLUB-DP2-265 (Wunsch Hansi): Verfügbarkeitsmatrix lesbarer – aus DP2 Build 265 übernommen (nicht hier geändert)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^0\.20\.0-build2(6[5678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 265 oder neuer übernommen");
+  assert.ok(/^0\.20\.0-build2(6[5678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 265 oder neuer übernommen");
   assert.ok(/tag=!c\.header&&\(matrix\|\|wahl\|\|bereit\)/.test(lies("dp2/src/adapters/pdf.js")) && /kasten=\(matrix\|\|wahl\)&&!c\.header/.test(lies("dp2/src/adapters/pdf.js")), "Tageszellen größer, Kästchen mittig");
 }
 // 2.286.0 KC-DP-FORMULARE-EINHEITLICH (Wunsch Hansi): alle Wunsch-Formulare personalisiert mit DP2-lesbarem QR – DP2 Build 266 übernommen
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^0\.20\.0-build2(6[678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 266 oder neuer übernommen");
+  assert.ok(/^0\.20\.0-build2(6[678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 266 oder neuer übernommen");
   const pf = lies("dp2/src/core/personalized-forms.js");
   assert.ok(/const FORM_KINDS=\{matrix:'wish-matrix-v12',filled:'wish-filled-v12'/.test(pf) && /kind:FORM_KINDS\[kind\]\|\|String\(kind\)\}\)\}/.test(pf), "QR trägt die Dokumentart");
   assert.ok(/class="matrix-choice-table"/.test(pf) && /matrix-standby-table/.test(pf), "Bereitschaft mit mittigen Kästchen und großen Zellen");
@@ -5882,7 +5882,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.289.0 KC-DP-PLANERPAPIERE-QR (Wunsch Hansi, Paket 2): Leerplan, Papierplanung, Dienstplan mit QR – DP2 Build 267 übernommen
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^0\.20\.0-build2(6[78]|8[56789]|90)$/.test(q.dp2Version) && /^(c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit), "DP2 Build 267 (ab 2.312.0: 268) übernommen");
+  assert.ok(/^0\.20\.0-build2(6[78]|8[56789]|9[01])$/.test(q.dp2Version) && /^(c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit), "DP2 Build 267 (ab 2.312.0: 268) übernommen");
   assert.ok(/if\(meta\.personId\)x\.personId=String\(meta\.personId\);if\(meta\.date\)x\.date=String\(meta\.date\)/.test(lies("dp2/src/core/document-identity.js")), "Dokument-QR mit Person und Tag");
   assert.ok(/\.doc-qr\[data-kc-qr\]/.test(lies("dp2/src/adapters/pdf.js")), "PDF zeichnet den Papier-QR je Seite");
 }
@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -10094,4 +10094,18 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/vorgesehen: Array\.isArray\(e\.vorgesehen\) \? e\.vorgesehen\.map\(String\) : \[\]/.test(d), "Twinkey bekommt die Einteilung nicht");
   assert.ok(/vorgesehen\.map\(\(p: string\) => \(\{ person_id: p, vorgesehen: true \}\)\)/.test(server) && /!zugesagt\.has\(p\)/.test(server), "Erinnerung für Vorgesehene fehlt oder doppelt");
   assert.ok(/Du bist vorgesehen \(vorläufig\)/.test(tw) && /if\(!hr\.prefilled\)/.test(tw) && /const VERSION='0\.2\.0'/.test(se), "DP2 Build 290 nicht übernommen");
+}
+// 2.423.0 KC-CLUB-SONDERSTUNDEN-KONTO (KICC-F-100, DP2 Build 291): Sonderstunden mit Stand in „Mein Dienst“ und in Twinkey „Meine erfassten Zeiten“
+{
+  const tw = lies("dp2/src/ui/twinkey.js"), knopf = lies("dp2/src/ui/member-button-logic.js");
+  assert.ok(/db\.from\("kc_dp_hour_reports"\)\.select\("work_date,start_h,end_h,break_minutes,special_event_title,status,ablehngrund"\)\s*\.eq\("org_id", ORG\)\.eq\("event_id", DW\.veranstaltung\)\.eq\("person_id", ich\.person_id\)/.test(server), "Mein Dienst liest nur die eigenen Sonderstunden");
+  assert.ok(/gutMin: \(sonderRoh \?\? \[\]\)\.filter\(\(x: any\) => x\.status === "bestaetigt"\)/.test(server) && /offenMin: \(sonderRoh \?\? \[\]\)\.filter\(\(x: any\) => x\.status === "gemeldet"\)/.test(server), "Gutgeschrieben nur bestätigt, offen getrennt");
+  const m = html.match(/const MD_SONDER = [\s\S]*?\nfunction mdSonder\(so\) \{[\s\S]*?\n\}/);
+  assert.ok(m && /\$\{mdSonder\(MD_D\?\.sonder\)\}/.test(html), "Karte ★ Sonderstunden fehlt in Mein Dienst");
+  const sb = { esc: (t) => String(t ?? ""), mdHm: (n) => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`, mdTag: (d) => d };
+  const mdSonder = new Function(...Object.keys(sb), `${m[0]}; return mdSonder;`)(...Object.values(sb));
+  assert.equal(mdSonder(null), "", "Ohne Sonderstunden keine Karte");
+  const k = mdSonder({ liste: [{ datum: "2026-11-28", start: "07:00", ende: "15:30", titel: "Grünkohl kochen", status: "bestaetigt", min: 510 }, { datum: "2026-11-29", start: "09:00", ende: "11:00", titel: "Abholung", status: "abgelehnt", min: 120, grund: "doppelt" }], gutMin: 510, offenMin: 60 });
+  assert.ok(/8:30 Std\.<\/b> gutgeschrieben/.test(k) && /1:00 Std\. gemeldet, zählen erst nach Bestätigung/.test(k) && /✅ gutgeschrieben/.test(k) && /✖ nicht gutgeschrieben<\/span> <span class="hinweis">Grund: doppelt/.test(k), "Karte zeigt Stand, Summe und Grund");
+  assert.ok(/✓ Bestätigt – gutgeschrieben/.test(tw) && /Build 291: auch eigene Sonderstunden-Meldungen/.test(knopf), "DP2 Build 291 nicht übernommen");
 }

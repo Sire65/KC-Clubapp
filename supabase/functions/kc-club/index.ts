@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.422.0";
+const SERVER_VERSION = "2.423.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -8179,6 +8179,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_dp_plan_published").select("work_date,start_time,end_time,break_minutes,area").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published").gte("work_date", heute).order("work_date").order("start_time").limit(60),
           db.from("kc_dp_plan_published").select("work_date,start_time,end_time,break_minutes").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published").gte("work_date", vor60).lt("work_date", heute).limit(200),
           db.from("kc_dp_timeclock_actuals").select("work_date,start_time,end_time,break_minutes,status").eq("org_id", ORG).eq("person_id", ich.person_id).gte("work_date", vor60).order("work_date", { ascending: false }).limit(60)]);
+        // KC-CLUB-SONDERSTUNDEN-KONTO (2.423.0, KICC-F-100): eigene Sonderstunden der Veranstaltung mit Stand – gutgeschrieben zählt erst nach Bestätigung
+        const { data: sonderRoh } = await db.from("kc_dp_hour_reports").select("work_date,start_h,end_h,break_minutes,special_event_title,status,ablehngrund")
+          .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).in("status", ["gemeldet", "bestaetigt", "abgelehnt"]).order("work_date", { ascending: false }).limit(100);
+        const sonderMin = (x: any) => Math.max(0, Math.round((Number(x.end_h) - Number(x.start_h)) * 60)); // Pausen zählen wie in DP2 (bezahlt)
+        const uhrH = (h: number) => `${String(Math.floor(h % 24)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
         const min = (a: unknown, b: unknown, pause: unknown) => { const t = (x: unknown) => { const [h, m] = String(x || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
           let d = t(b) - t(a); if (d < 0) d += 1440; return Math.max(0, d - (Number(pause) || 0)); };
         const zeit = (x: any) => ({ datum: x.work_date, start: String(x.start_time || "").slice(0, 5), ende: String(x.end_time || "").slice(0, 5), bereich: x.area || null });
@@ -8189,6 +8194,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           ist: { liste: (ist ?? []).slice(0, 10).map((x: any) => ({ ...zeit(x), status: x.status })), anzahl: (ist ?? []).length,
             istMin: (ist ?? []).reduce((a: number, x: any) => a + min(x.start_time, x.end_time, x.break_minutes), 0),
             sollMin: (sollAlt ?? []).reduce((a: number, x: any) => a + min(x.start_time, x.end_time, x.break_minutes), 0) },
+          sonder: { liste: (sonderRoh ?? []).slice(0, 20).map((x: any) => ({ datum: x.work_date, start: uhrH(Number(x.start_h)), ende: uhrH(Number(x.end_h)), titel: x.special_event_title || "Sondereinsatz",
+              status: x.status, min: sonderMin(x), grund: x.status === "abgelehnt" ? (x.ablehngrund || null) : null })),
+            gutMin: (sonderRoh ?? []).filter((x: any) => x.status === "bestaetigt").reduce((a: number, x: any) => a + sonderMin(x), 0),
+            offenMin: (sonderRoh ?? []).filter((x: any) => x.status === "gemeldet").reduce((a: number, x: any) => a + sonderMin(x), 0) },
         });
       }
 

@@ -17,6 +17,12 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.423.0 – 2026-10-15 – Sonderstunden mit Stand: gutgeschrieben, offen, abgelehnt (KC-CLUB-SONDERSTUNDEN-KONTO, KICC-F-100)
+Wunsch Hansi: „noch bauen mit den Stunden“ – Mitglieder sehen ihre bestätigten Sonderstunden jetzt auch in der App (vorher nur die Nachricht „gutgeschrieben“ und der Kontoauszug in DP2).
+- **🗓️ Mein Dienst:** neue Karte „★ Sonderstunden“ – Summe gutgeschrieben, offen gemeldet (zählt erst nach Bestätigung), je Meldung Tag, Zeit, Einsatz und Stand; abgelehnt mit Grund. Gilt für die ganze Veranstaltung (nicht nur 60 Tage). Pausen zählen wie in DP2.
+- **Twinkey (DP2 Build 291, unverändert übernommen):** „Meine erfassten Zeiten“ zeigt Sonderstunden mit Stand und Summe; der Knopf war in der App bisher immer gesperrt (keine Stempelzeiten) und ist jetzt bei eigenen Meldungen wählbar.
+- Termin Abholung korrigiert: 29.11.2026 (Grünkohl kochen 28.11.2026). Server 2.423.0 (2.421.0/2.422.0 waren parallel vergeben).
+
 ## 2.422.0 – 2026-10-15 – 🔒 Zugang für Gäste und Aushilfen (KC-CLUB-ZUGANG) · Server 2.422.0 · DB
 Anlass (Hansi): „Wir müssen den Zugang für Gäste und Aushilfen einschränken – die dürfen Nachricht schreiben, SOS und Clubtermine … und Spiele.“ Entscheidungen Hansi: Aushilfen sehen das Fotoalbum (nur ansehen); Gäste schreiben an alle Mitglieder; Spiele auch gegen Mitglieder; kein Ablaufdatum.
 - **Zugang je Person** (`kc_club_rollen.zugang`): 👤 Mitglied (alles wie bisher), 🧑‍🍳 Aushilfe, 🙋 Gast. Einstellbar im Rollen-Fenster (🎖️ Ämter und Rechte). Admin ist immer Mitglied.
