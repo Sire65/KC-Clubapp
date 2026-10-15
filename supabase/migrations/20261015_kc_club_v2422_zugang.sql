@@ -1,4 +1,4 @@
--- 2.420.0 KC-CLUB-ZUGANG (Wunsch Hansi „den Zugang für Gäste und Aushilfen einschränken: Nachrichten schreiben, SOS, Clubtermine, Spiele“)
+-- 2.422.0 KC-CLUB-ZUGANG (Wunsch Hansi „den Zugang für Gäste und Aushilfen einschränken: Nachrichten schreiben, SOS, Clubtermine, Spiele“)
 -- Zugang je Person: „mitglied“ (alles wie bisher), „aushilfe“, „gast“. Was Gäste/Aushilfen dürfen, steht im Server (ZUGANG_AKTIONEN in kc-club),
 -- der Admin ist dort immer „mitglied“. Die Anmeldung (kc_club_anmeldung) liefert die ganze Rollenzeile – keine Änderung an der Funktion nötig.
 -- Bisherige Aushilfen (Amt „Aushilfe“) bekommen den Zugang „aushilfe“ (sie hatten schon keine Protokolle und keine Kontaktdaten).

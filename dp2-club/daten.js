@@ -67,6 +67,35 @@
   K.shifts = (D.schichten || []).map((s) => ({ id: s.source_shift_id, personId: ich, date: s.work_date, start: stunden(s.start_time), end: stunden(s.end_time),
     layer: "planned", status: "published", zone: s.zone, area: s.area, breakMinutes: Number(s.break_minutes || 0) }));
   K.actualShifts = [];
+
+  // --- KC-CLUB-SONDERSTUNDEN (KICC-F-100): Sondereinsätze (von DP2 veröffentlicht) + eigene Stundenmeldungen; Melden über kc-club ---
+  // Termine kommen bereits wirksam berechnet (Folge-Einsätze inkl. Abstand) – daher hier ohne folgtAuf.
+  K.specialEvents = (D.sondereinsaetze || []).map((e) => ({ id: e.source_id, eventId: K.eventConfig.eventId, titel: e.titel, ort: e.ort || "", art: e.art,
+    terminStatus: e.termin_status, datumVon: e.datum_von || null, datumBis: e.datum_bis || null, folgtAuf: null, abstandTage: null,
+    wiederkehrend: e.wiederkehrend || null, aktiv: true, version: Number(e.version || 1),
+    vorgesehen: Array.isArray(e.vorgesehen) ? e.vorgesehen.map(String) : [] })); // KC-CLUB-SONDER-VORGESEHEN (2.420.0): vorläufige Einteilung des Planers
+  const alsMeldung = (r) => ({ id: String(r.id), sammelId: r.sammel_id, eventId: r.event_id, specialEventId: r.special_event_id, specialEventTitle: r.special_event_title || "",
+    personId: r.person_id, gemeldetVon: r.gemeldet_von, date: r.work_date, start: Number(r.start_h), end: Number(r.end_h), breakMinutes: Number(r.break_minutes || 0),
+    taetigkeit: r.taetigkeit, bemerkung: r.bemerkung || "", status: r.status, verspaetet: !!r.verspaetet, gemeldetAm: r.gemeldet_am, ablehngrund: r.ablehngrund || null,
+    source: "club_app", version: Number(r.version || 1) });
+  K.hourReports = (D.stunden || []).map(alsMeldung);
+  // Aktive Club-Mitglieder, die DP2s Personenliste (model.js) noch nicht kennt, für „Wer war noch dabei?“ ergänzen
+  for (const m of D.mitglieder || []) if (m?.personId && !K.people.some((p) => p.personId === m.personId))
+    K.people.push({ personId: m.personId, name: m.name || m.personId, skills: "", personType: "member", active: true, expanded: false, maxHours: 8, preferences: {}, availability: [] });
+  // KICC-F-100 Phase 7: eigene Zusagen + veröffentlichte Fahrgemeinschaften; Zusagen über kc-club
+  K.specialEventSignups = (D.zusagen || []).map((z) => ({ id: String(z.id), specialEventId: z.special_event_id, personId: z.person_id, antwort: z.antwort, anreise: z.anreise || null,
+    plaetze: Number(z.plaetze || 0), startort: z.startort || null, bemerkung: z.bemerkung || "", version: Number(z.version || 1), updatedAt: z.updated_at }));
+  K.carpools = (D.fahrgemeinschaften || []).map((c) => ({ specialEventId: c.special_event_id, sourceId: c.source_id, fahrerId: c.fahrer_id, mitfahrer: c.mitfahrer || [], startort: c.startort || null, status: "published" }));
+  K.signupTransport = { save: (z) => window.KC_CLUB_DW_API("sondereinsatz_zusage", z) };
+  K.hourReportsTransport = {
+    // Nach dem Melden: Fahrtkosten/Auslagen in der Club-App erfassen (Erstattung mit Vorbelegung)
+    openErstattung(info) { try { parent !== window && parent.postMessage({ art: "erstattung-vorbelegen", ...info }, location.origin); } catch {} },
+    async submit(meldung) {
+      const r = await window.KC_CLUB_DW_API("stunden_melden", meldung);
+      try { parent !== window && parent.postMessage({ art: "sonderstunden-gemeldet", anzahl: (r.rows || []).length }, location.origin); } catch {}
+      return { sammelId: r.sammelId || null, rows: (r.rows || []).map(alsMeldung), skipped: r.skipped || [] };
+    },
+  };
   K.planVersions = K.shifts.length ? [{ version: 1, shifts: kopie(K.shifts), publishedAt: D.schichten[0]?.published_at }] : [];
 
   // --- Speichern: aktueller Stand → Wunsch-Eingang (nur bei Änderung; mehrere Aufrufe hintereinander werden zusammengefasst) ---

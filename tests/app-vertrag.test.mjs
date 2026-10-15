@@ -784,7 +784,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const a of ["erstattung_meine", "erstattung_senden"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Erstattungs-Aktion ${a} fehlt`);
   assert.ok(/kmSatzStandard: 0\.38/.test(server) && /empfaenger: \{ an: "Kassenwart", cc: "Clubsprecher" \}/.test(server), "Pauschale/Empfänger nicht in der Registry");
   const es = server.slice(server.indexOf('case "erstattung_senden"'), server.indexOf("// ----- Pinnwand (KC-CLUB-PINNWAND)"));
-  assert.ok(/const summe = Math\.round\(pos\.reduce/.test(es), "Summe kommt nicht vom Server");
+  assert.ok(/const summe = (Math\.round\(pos\.reduce|ersSumme\(pos\))/.test(es) && /const ersSumme = \(pos: any\[\]\) => Math\.round\(pos\.filter\(ersZaehlt\)\.reduce/.test(server), "Summe kommt nicht vom Server");
   assert.ok(/startsWith\(`club\/\$\{ich\.person_id\}\/`\)/.test(es), "fremde Belege anhängbar");
   assert.ok(/const bcc = \[\.\.\.new Set\(\[ich\.person_id, \.\.\.admins\]\)\]/.test(es) && /\{ cc, bcc \}\)/.test(es), "BCC an Antragsteller/Admin fehlt");
   assert.ok(/betrag: Math\.round\(km \* satz \* 100\) \/ 100/.test(server) && /betrag > 0 && betrag <= 5000/.test(server), "Beträge ungeprüft");
@@ -1652,7 +1652,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 142. 1.13.0: DP2 Build 251 Button-Logik (unverändert übernommen) + offene Club-App-Angaben zählen als eigene Daten
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(f893f5d|c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a)/.test(q.commit) && /^0\.20\.0-build2(5[134567]|6[2345678])$/.test(q.dp2Version) && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 (ab 1.17.2: Build 253 RC) mit Button-Logik übernommen");
+  assert.ok(/^(f893f5d|c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(5[134567]|6[2345678]|8[56789]|90)$/.test(q.dp2Version) && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 (ab 1.17.2: Build 253 RC) mit Button-Logik übernommen");
   const d = lies("dp2-club/daten.js");
   assert.ok(/status: "confirmed", source: "club_app"/.test(d) && /K\.wishes = \[\.\.\.\(D\.meine\?\.entries \|\| \[\]\)\.map/.test(d), "Eingangs-Angaben (auch Status offen) zählen in DP2 als eigene aktive Wünsche");
 }
@@ -1687,7 +1687,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 146. 1.16.1: DP2-Nachtrag + Cache-Schlüssel mit Commit
 {
-  assert.ok(/^(c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a)/.test(JSON.parse(lies("dp2/QUELLE.json")).commit), "Nachtrag c0d279a übernommen (ab 1.17.2 im gemeinsamen Stand d50ed58 enthalten)");
+  assert.ok(/^(c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(JSON.parse(lies("dp2/QUELLE.json")).commit), "Nachtrag c0d279a übernommen (ab 1.17.2 im gemeinsamen Stand d50ed58 enthalten)");
   assert.ok(/quelle\.dp2Version \+ "-" \+ String\(quelle\.commit \|\| ""\)\.slice\(0, 7\)/.test(lies("dp2-club/lader.js")), "Cache-Schlüssel mit Commit");
 }
 
@@ -1717,7 +1717,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 149. 1.17.2: DP2 Build 253 RC (dp3 d50ed58) – gemeinsamer Stand aus Club-App-Schnittstelle und PDF-/QR-Korrekturen
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a)/.test(q.commit) && /^0\.20\.0-build2(5[34567]|6[2345678])$/.test(q.dp2Version), "DP2 Build 253 RC (d50ed58) oder neuer übernommen");
+  assert.ok(/^(d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(5[34567]|6[2345678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 253 RC (d50ed58) oder neuer übernommen");
   for (const f of ["src/core/document-identity.js", "src/vendor/qrcode-generator.js", "src/core/personalized-forms.js", "src/adapters/pdf.js", "src/ui/member-button-logic.js"])
     assert.ok(q.reihenfolge.includes(f), `${f} fehlt in der DP2-Übernahme`);
   assert.ok(q.reihenfolge.indexOf("src/adapters/pdf.js") < q.reihenfolge.indexOf("src/ui/original-brand.js") || !q.reihenfolge.includes("src/ui/original-brand.js"), "PDF-Baustein vor dem Abschluss geladen");
@@ -1734,7 +1734,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/( id="ablJa" style="text-align:center"| style="text-align:center") onclick="einmal\(this, ablAblegen\)">🗄️ \$\{esc\(ja \|\| "Ja, ablegen"\)\}/.test(f) && /onclick="ablNein\(\)">\$\{esc\(nein \|\| "Nein, danke"\)\}/.test(f), "Rückfrage mit Ja/Nein (1.19.0: Texte je Anlass)");
   const s = html.slice(html.indexOf("async function erstattungSenden()"), html.indexOf("// KC-CLUB-KMSATZ (0.39.0): Admin"));
   assert.ok(s.indexOf('api("erstattung_senden"') < s.indexOf("erstattungAblageFragen(kopie, r)"), "Ablage erst nach erfolgreichem Versand");
-  assert.ok(/positionen: ERS\.pos\.map\(\(\{ belegNamen, belegDateien, satz, \.\.\.x \}\) => x\)/.test(s), "Beleg-Dateien gehen nicht mit dem Antrag an den Server");
+  assert.ok(/positionen: ERS\.pos\.map\(\(\{ belegNamen, belegDateien, satz, (sonder_titel, )?\.\.\.x \}\) => x\)/.test(s), "Beleg-Dateien gehen nicht mit dem Antrag an den Server");
   // 1.19.0 (Hinweis Hansi „hakt, zu unruhig“): zwei Ebenen statt Achsen-Sprünge, langsamer, Phase läuft beim Neuzeichnen weiter
   assert.ok(/\.si-muetze \{[^}]*animation: siAchse 14s linear infinite; animation-delay: var\(--si2/.test(html) && /\.si-muetze > span \{[^}]*animation: siKippen 5s linear infinite; animation-delay: var\(--si1/.test(html), "Kochmütze: Kippen + wandernde Achse, ruhig");
   assert.ok(!/siWirbel|rotate3d/.test(html), "keine harten Achsen-Sprünge mehr");
@@ -1777,7 +1777,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 151. 1.18.1: DP2 Build 254 RC (dp3 3945960) – Meine Angaben ausdrucken (PDF mit QR, Abfrage, Vorschau) + Sperrtag ohne V/H/B
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a)/.test(q.commit) && /^0\.20\.0-build2(5[4567]|6[2345678])$/.test(q.dp2Version), "DP2 Build 254 RC (3945960) oder neuer übernommen");
+  assert.ok(/^(3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(5[4567]|6[2345678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 254 RC (3945960) oder neuer übernommen");
   assert.ok(q.reihenfolge.includes("src/ui/wish-print.js") && q.reihenfolge.includes("src/ui/wish-print.css"), "Ausdruck-Baustein fehlt in der Übernahme");
   assert.ok(/frame-src blob:/.test(lies("dienstwunsch.html")) && !/frame-src 'none'/.test(lies("dienstwunsch.html")), "PDF-Vorschau braucht frame-src blob: (nur selbst erzeugte PDFs)");
   assert.ok(/window\.confirm\(FRAGE\)/.test(lies("dp2/src/ui/wish-print.js")) && /filledPdf/.test(lies("dp2/src/core/personalized-forms.js")), "Sicherheitsabfrage/ausgefüllter Bogen fehlt");
@@ -2267,7 +2267,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 199. 1.44.1: DP2 Build 255 RC (dp3 ae349c0) – Reservierung je PC beim Club-App-Wunscheingang (KC-DP-WUNSCH-SPERRE)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a)/.test(q.commit) && /^0\.20\.0-build2(5[567]|6[2345678])$/.test(q.dp2Version), "DP2 Build 255 RC (ae349c0) oder neuer übernommen");
+  assert.ok(/^(ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(5[567]|6[2345678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 255 RC (ae349c0) oder neuer übernommen");
   assert.ok(q.reihenfolge.includes("src/ui/wish-print.js") && q.reihenfolge.includes("src/ui/member-button-logic.js"), "Build-254-Bausteine (Ausdruck, Button-Logik) bleiben enthalten");
   assert.ok(/kc_dp_wish_inbox_claim/.test(lies("supabase/migrations/20261001_kc_dp_wunsch_eingang_sperre.sql")), "Datenbankseite der Reservierung vorhanden");
 }
@@ -2282,7 +2282,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 201. 1.45.1: DP2 Build 256 RC (dp3 51518cc) – Twinkey einfacher und fehlersicher (KC-DP-TWINKEY-EINFACH)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), sw = lies("dp2/src/ui/simple-wish-assistant.js");
-  assert.ok(/^(51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a)/.test(q.commit) && /^0\.20\.0-build2(5[67]|6[2345678])$/.test(q.dp2Version), "DP2 Build 256 RC (51518cc) oder neuer übernommen");
+  assert.ok(/^(51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(5[67]|6[2345678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 256 RC (51518cc) oder neuer übernommen");
   assert.ok(/id="swProgress"/.test(sw) && /id="swNextOpen"/.test(sw) && /id="swNextDay"/.test(sw), "Fortschritt und nächster offener Tag");
   assert.ok(/function confirmOpenDays\(\)/.test(sw) && /if\(confirmOpenDays\(\)\)finishOverview\(false\)/.test(sw), "Rückfrage vor „Fertig“ bei offenen Tagen");
   assert.ok(/if\(!can\.length\)can=\[\{start:null,end:null,wishZone:'B'\}\];/.test(sw) && /id="swWholeDay"/.test(sw), "Kann-Zeit nicht vorausgefüllt, ganze Zeit nur per Knopf");
@@ -2318,7 +2318,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 205. 1.47.1: DP2 Build 257 RC (dp3 37bd067) – Twinkey übersichtlicher (KC-DP-TWINKEY-EINFACH)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), sw = lies("dp2/src/ui/simple-wish-assistant.js"), tw = lies("dp2/src/ui/twinkey.js");
-  assert.ok(/^(37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a)/.test(q.commit) && /^0\.20\.0-build2(57|6[2345678])$/.test(q.dp2Version), "DP2 Build 257 RC (37bd067) oder neuer übernommen");
+  assert.ok(/^(37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(57|6[2345678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 257 RC (37bd067) oder neuer übernommen");
   assert.ok(/id="swNoBlock"/.test(sw) && /!blockChosen&&blockMode==='none'\?\['Bitte zuerst wählen/.test(sw), "Sperren als klare Antwort, Weiter ohne Antwort gesperrt");
   assert.ok(!/id="swBackTop"/.test(sw) && /\(step==='wish'\?teamButton\(\):''\)/.test(sw), "ein Zurück je Schritt, Besetzung nur bei der Wunschzeit");
   assert.ok(/<details[^>]*class="sw-more"/.test(sw) && /sw-day-tile/.test(sw) && /\(Kann-Zeit\)/.test(sw) && /\(Wunschzeit\)/.test(sw), "kurze Zusammenfassung, Kacheln, Begriffe in Klammern wie Papier/Excel");
@@ -5072,7 +5072,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.41.0 KC-CLUB-DIENSTWUNSCH: DP2 Build 262 RC (dp3 d8976b9) – Builds 258–260 betreffen die Mitglieder-Eingabe (Twinkey)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), sw = lies("dp2/src/ui/simple-wish-assistant.js");
-  assert.ok(/^(d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a)/.test(q.commit) && /^0\.20\.0-build26[2345678]$/.test(q.dp2Version), "DP2 Build 262 RC (d8976b9) oder neuer übernommen");
+  assert.ok(/^(d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(6[2345678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 262 RC (d8976b9) oder neuer übernommen");
   assert.ok(/Deine Dienstzeiten wurden erfolgreich verschickt\./.test(sw) && /if\(saved!==true\)throw Error\('Versand nicht bestätigt\.'\)/.test(sw), "Build 258: Bestätigung nur nach bestätigtem Speichern");
   assert.ok(/laeuft = \(async \(\) => \{ do \{ nochmal = false; await senden\(\); \} while \(nochmal\); return true; \}\)\(\)/.test(lies("dp2-club/daten.js")), "Club-App meldet erfolgreiches Speichern mit true (Fehler werfen)");
   assert.ok(/sw-helper-fold/.test(sw) && /sw-fold sw-days/.test(sw), "Build 260: kompakte Tagesauswahl");
@@ -5119,7 +5119,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.44.0 KC-CLUB-DIENSTWUNSCH / KC-DP-KLAPPBEREICH: DP2 Build 263 RC (dp3 ceefe07) – Klappbereiche wie in der Club-App
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), fs = lies("dp2/src/ui/fold-sections.js");
-  assert.ok(/^(ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a)/.test(q.commit) && /^0\.20\.0-build26[345678]$/.test(q.dp2Version), "DP2 Build 263 RC (ceefe07) oder neuer übernommen (2.284.0: Build 264)");
+  assert.ok(/^(ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit) && /^0\.20\.0-build2(6[345678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 263 RC (ceefe07) oder neuer übernommen (2.284.0: Build 264)");
   assert.ok(q.reihenfolge.includes("src/ui/fold-sections.js") && q.reihenfolge.includes("src/ui/fold-sections.css"), "Klappbaustein wird geladen");
   assert.ok(/kc_dp_klappe_/.test(fs) && /kc_dp_fest_/.test(fs) && /Zuklappen/.test(fs), "Schloss, gemerkter Zustand, unten Zuklappen (eigener DP2-Speicherschlüssel)");
   assert.ok(/data-klappe="tw-more"/.test(lies("dp2/src/ui/simple-wish-assistant.js")), "Mitgliederbereiche mit festen Schlüsseln");
@@ -5858,19 +5858,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.284.0 KC-CLUB-DP2-264 (Wunsch Hansi): Regelzeit erster Markt-Freitag 10:00–23:00 – aus DP2 Build 264 übernommen (nicht hier geändert)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^0\.20\.0-build26[45678]$/.test(q.dp2Version), "DP2 Build 264 oder neuer übernommen");
+  assert.ok(/^0\.20\.0-build2(6[45678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 264 oder neuer übernommen");
   assert.ok(/add\('2026-12-04','market',10,23,12,null\)/.test(lies("dp2/src/core/model.js")), "erster Freitag ab 10:00");
 }
 // 2.285.0 KC-CLUB-DP2-265 (Wunsch Hansi): Verfügbarkeitsmatrix lesbarer – aus DP2 Build 265 übernommen (nicht hier geändert)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^0\.20\.0-build26[5678]$/.test(q.dp2Version), "DP2 Build 265 oder neuer übernommen");
+  assert.ok(/^0\.20\.0-build2(6[5678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 265 oder neuer übernommen");
   assert.ok(/tag=!c\.header&&\(matrix\|\|wahl\|\|bereit\)/.test(lies("dp2/src/adapters/pdf.js")) && /kasten=\(matrix\|\|wahl\)&&!c\.header/.test(lies("dp2/src/adapters/pdf.js")), "Tageszellen größer, Kästchen mittig");
 }
 // 2.286.0 KC-DP-FORMULARE-EINHEITLICH (Wunsch Hansi): alle Wunsch-Formulare personalisiert mit DP2-lesbarem QR – DP2 Build 266 übernommen
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^0\.20\.0-build26[678]$/.test(q.dp2Version), "DP2 Build 266 oder neuer übernommen");
+  assert.ok(/^0\.20\.0-build2(6[678]|8[56789]|90)$/.test(q.dp2Version), "DP2 Build 266 oder neuer übernommen");
   const pf = lies("dp2/src/core/personalized-forms.js");
   assert.ok(/const FORM_KINDS=\{matrix:'wish-matrix-v12',filled:'wish-filled-v12'/.test(pf) && /kind:FORM_KINDS\[kind\]\|\|String\(kind\)\}\)\}/.test(pf), "QR trägt die Dokumentart");
   assert.ok(/class="matrix-choice-table"/.test(pf) && /matrix-standby-table/.test(pf), "Bereitschaft mit mittigen Kästchen und großen Zellen");
@@ -5882,7 +5882,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.289.0 KC-DP-PLANERPAPIERE-QR (Wunsch Hansi, Paket 2): Leerplan, Papierplanung, Dienstplan mit QR – DP2 Build 267 übernommen
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^0\.20\.0-build26[78]$/.test(q.dp2Version) && /^(c8d014b|769305a)/.test(q.commit), "DP2 Build 267 (ab 2.312.0: 268) übernommen");
+  assert.ok(/^0\.20\.0-build2(6[78]|8[56789]|90)$/.test(q.dp2Version) && /^(c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01)/.test(q.commit), "DP2 Build 267 (ab 2.312.0: 268) übernommen");
   assert.ok(/if\(meta\.personId\)x\.personId=String\(meta\.personId\);if\(meta\.date\)x\.date=String\(meta\.date\)/.test(lies("dp2/src/core/document-identity.js")), "Dokument-QR mit Person und Tag");
   assert.ok(/\.doc-qr\[data-kc-qr\]/.test(lies("dp2/src/adapters/pdf.js")), "PDF zeichnet den Papier-QR je Seite");
 }
@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|420)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -9951,7 +9951,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\.sb-knopf \{ width: 44px; height: 44px; border-width: 2px; font-size: 1\.2rem; \}/.test(html) && /\.sb-knopf \{ left: auto; right: calc\(50% \+ 444px\); bottom: calc\(18px \+ env\(safe-area-inset-bottom\)\); width: 48px; height: 48px;/.test(html), "Mikrofon passt in die Reihe");
 }
 
-// 2.420.0 KC-CLUB-ZUGANG: Gäste/Aushilfen – Sperre auf dem Server, gleiche Liste in der App, heikle Bereiche gesperrt
+// 2.422.0 KC-CLUB-ZUGANG: Gäste/Aushilfen – Sperre auf dem Server, gleiche Liste in der App, heikle Bereiche gesperrt
 {
   const liste = (q, name) => { const i = q.indexOf("const ZUGANG_AKTIONEN"), j = q.indexOf("};", i); assert.ok(i > 0, `${name}: ZUGANG_AKTIONEN fehlt`);
     const t = q.slice(i, j + 2), hol = (k) => [...(t.match(new RegExp(k + ": \\[([^\\]]*)\\]")) || [, ""])[1].matchAll(/"([a-z_]+)"/g)].map((m) => m[1]); return { basis: hol("basis"), aushilfe: hol("aushilfe") }; };
@@ -9963,7 +9963,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   for (const a of gesperrt) assert.ok(!sv.basis.includes(a), `Zugang: „${a}“ darf für Gäste nicht frei sein`);
   for (const a of ["foto_hochladen", "foto_loeschen", "pinnwand", "archiv_liste", "protokolle_liste"]) assert.ok(!sv.aushilfe.includes(a), `Zugang: „${a}“ darf für Aushilfen nicht frei sein`);
   for (const a of ["treffen_liste", "nachricht_senden", "sos_kontakte", "spiel_zug", "init", "einstellung_setzen"]) assert.ok(sv.basis.includes(a), `Zugang: „${a}“ muss für Gäste frei sein`);
-  for (const a of ["mein_dienst", "dienstwunsch_speichern", "fotos_liste", "foto_oeffnen"]) assert.ok(sv.aushilfe.includes(a), `Zugang: „${a}“ muss für Aushilfen frei sein`);
+  for (const a of ["mein_dienst", "dienstwunsch_speichern", "fotos_liste", "foto_oeffnen", "sondereinsatz_zusage", "stunden_melden"]) assert.ok(sv.aushilfe.includes(a), `Zugang: „${a}“ muss für Aushilfen frei sein`);
   assert.ok(/async function aktionAusfuehren\(a: string, p: any, ich: Ich, req: Request, t0Anfrage: number, anmeldungMs: number\): Promise<Response> \{\s*zugangPruefen\(a, ich\);/.test(server), "Zugang: Prüfung als erste Zeile von aktionAusfuehren (alle vier Aufrufwege)");
   assert.ok(/if \(ich\.zugang === "mitglied" \|\| ZUGANG_ERLAUBT\[ich\.zugang\]\.has\(a\)\) return;\s*throw new Fehler\([^;]*, 403\);/.test(server), "Zugang: alles andere 403");
   assert.ok(/const zugangAus = \(r: any\): Zugang => \(r\?\.ist_admin \? "mitglied" :/.test(server) && /return zugangAnwenden\(\{ person_id: p\.person_id/.test(server), "Zugang: Admin immer Mitglied, ichAus wendet den Zugang an");
@@ -9971,7 +9971,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/leute\.filter\(\(m\) => !eingeschraenkt \|\| m\.person_id === ich\.person_id \|\| istLeitung\(m\.person_id\)\)/.test(server), "Zugang: SOS zeigt Gästen nur Clubleitung und sich selbst");
   assert.ok(/if \(\["mitglied", "aushilfe", "gast"\]\.includes\(p\.zugang\)\) zeile\.zugang = p\.zugang;/.test(server) && /delete zeile\.zugang; zugangFehlt = true;/.test(server), "Zugang: Rollen-Fenster speichert den Zugang (auch vor dem Datenbank-Update ohne Fehler)");
   assert.ok(/name="roZugang" value="\$\{w\}"/.test(programm) && /zugang: zugangWahl \}\);/.test(programm), "Zugang: Auswahl im Rollen-Fenster");
-  assert.ok(/try \{ for \(;;\) \{\s*\/\/ 2\.420\.0 KC-CLUB-ZUGANG[^\n]*\s*if \(!zugangAktion\(action\)\) throw/.test(programm), "Zugang: App schickt Verbotenes gar nicht erst");
+  assert.ok(/try \{ for \(;;\) \{\s*\/\/ 2\.422\.0 KC-CLUB-ZUGANG[^\n]*\s*if \(!zugangAktion\(action\)\) throw/.test(programm), "Zugang: App schickt Verbotenes gar nicht erst");
   assert.ok(/\(!k\.nur \|\| k\.nur\(\)\) && zugangKachel\(k\.id\)\)/.test(programm) && /\(\(k\) => k && \(!k\.nur \|\| k\.nur\(\)\) && zugangKachel\(k\.id\)\)/.test(programm), "Zugang: Kacheln (erweitert + einfach) gefiltert");
   // App-Regeln im Sandkasten
   const von = programm.indexOf("const ZUGANG_AKTIONEN"), bis = programm.indexOf("const zugangAktion"), ende = programm.indexOf("\n", bis);
@@ -9981,12 +9981,12 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(h.zugangKachel("fotos") && h.zugangKachel("mein_dienst") && !h.zugangKachel("archiv"), "Zugang: Aushilfe-Kacheln");
   assert.ok(m.zugangKachel("archiv") && alt.zugangKachel("archiv") && alt.zugang() === "mitglied", "Zugang: Mitglied und alte Server ohne Feld = alles");
   assert.ok(g.zugangAktion("nachricht_senden") && !g.zugangAktion("archiv_liste") && !g.zugangAktion("fotos_liste") && h.zugangAktion("fotos_liste") && !h.zugangAktion("foto_hochladen") && m.zugangAktion("archiv_liste"), "Zugang: Aktionen je Zugang");
-  const mig = fs.readFileSync(new URL("../supabase/migrations/20261015_kc_club_v2420_zugang.sql", import.meta.url), "utf8");
+  const mig = fs.readFileSync(new URL("../supabase/migrations/20261015_kc_club_v2422_zugang.sql", import.meta.url), "utf8");
   assert.ok(/add column if not exists zugang text not null default 'mitglied'/.test(mig) && /check \(zugang in \('mitglied', 'aushilfe', 'gast'\)\)/.test(mig) && /Rückweg:/.test(mig), "Zugang: Migration mit Standard, Prüfung und Rückweg");
   assert.ok(fs.existsSync(new URL("../tools/db-test/74_zugang_test.sql", import.meta.url)) && fs.existsSync(new URL("../tools/db-test/74_erwartet.txt", import.meta.url)), "Zugang: Datenbank-Probelauf vorhanden");
 }
 
-// 2.419.0 KC-CLUB-KACHEL-AUSWAHL: Kacheln in den Einstellungen anhaken – drei Blöcke, kein eigener Speicher (KA.aus wie „Anordnen“)
+// 2.421.0 KC-CLUB-KACHEL-AUSWAHL: Kacheln in den Einstellungen anhaken – drei Blöcke, kein eigener Speicher (KA.aus wie „Anordnen“)
 {
   const p = programm;
   assert.ok(/const KA_WAHL_BLOECKE = \[\["verein", "🏠 Club"\], \["mein", "🙋 Meins"\], \["programme", "🛠️ Technik"\]\];/.test(p), "Kachel-Auswahl: drei Blöcke Club, Meins, Technik (kein Admin)");
@@ -10044,4 +10044,54 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // Server 2.382.0 KC-CLUB-NOTPAKET-STUENDLICH: Notfall-Paket höchstens 1× pro Stunde neu bauen (je Bau ~3.000 Datenbankabfragen)
 {
   assert.ok(/st\.fingerabdruck !== fp && st\.hochgeladen_am && Date\.now\(\) - new Date\(st\.hochgeladen_am\)\.getTime\(\) < 60 \* 60000\)/.test(server) && /gedrosselt: true/.test(server), "Notfall-Paket gedrosselt, erzwingen geht weiter");
+}
+
+// 2.417.0 KC-CLUB-SONDERSTUNDEN (KICC-F-100, DP2 Build 285): Sonderstunden über Twinkey melden – Sammelmeldung mit Stunden je Kollege,
+// Gutschrift erst nach Bestätigung durch den Planer in DP2; Club-App schreibt nur in den Eingang kc_dp_hour_reports
+{
+  const q = JSON.parse(lies("dp2/QUELLE.json")), d = lies("dp2-club/daten.js");
+  assert.ok(q.reihenfolge.includes("src/core/special-events.js") && q.reihenfolge.includes("src/core/hour-reports.js")
+    && q.reihenfolge.indexOf("src/core/hour-reports.js") < q.reihenfolge.indexOf("src/ui/twinkey.js"), "DP2-Kerne für Sondereinsätze/Stundenmeldungen fehlen");
+  assert.ok(/K\.specialEvents = \(D\.sondereinsaetze \|\| \[\]\)\.map/.test(d) && /K\.hourReports = \(D\.stunden \|\| \[\]\)\.map\(alsMeldung\)/.test(d), "Einsätze/Meldungen werden nicht an Twinkey gegeben");
+  assert.ok(/KC_CLUB_DW_API\("stunden_melden", meldung\)/.test(d) && /K\.hourReportsTransport = \{/.test(d), "Melden läuft nicht über kc-club");
+  assert.ok(/case "stunden_melden": \{\s*return json\(await sonderstundenMelden\(ich, p\)\);/.test(server), "Server-Aktion stunden_melden fehlt");
+  assert.ok(/const \{ sondereinsaetze, stunden, mitglieder, zusagen, fahrgemeinschaften \} = await sonderstundenLaden\(ich\.person_id\);/.test(server) && /schichten: schichten \?\? \[\], sondereinsaetze, stunden, mitglieder, zusagen, fahrgemeinschaften \}/.test(server), "Laden liefert Einsätze/Meldungen nicht");
+  assert.ok(/if \(ev\.termin_status === "OFFEN"\) throw new Fehler/.test(server) && /if \(datum > heute\) throw new Fehler/.test(server) && /ende - start > SH\.maxSpanne/.test(server)
+    && /const mitglieder = new Map\(\(await aktiveMitglieder\(\)\)/.test(server), "Serverprüfung (Termin offen, Zukunft, Spanne, Mitglieder) fehlt");
+  assert.ok(/\.in\("status", \["gemeldet", "bestaetigt"\]\)/.test(server) && /uebersprungen\.push\(\{ personId: e\.pid, grund: "schon gemeldet"/.test(server), "Doppelschutz fehlt");
+  assert.ok(/status: "gemeldet", verspaetet, source: "club_app"/.test(server) && !/from\("kc_dp_hour_reports"\)\.update/.test(server.replace('db.from("kc_dp_hour_reports").update({ benachrichtigt_am: jetzt() })', "")) && !/from\("kc_dp_hour_reports"\)\.delete/.test(server),
+    "Club-App darf nur melden (Status gemeldet), nicht bestätigen/ändern/löschen");
+  assert.ok(/\.or\(`person_id\.eq\.\$\{pid\},gemeldet_von\.eq\.\$\{pid\}`\)/.test(server), "Mitglied sieht nur eigene und selbst gemeldete Zeilen");
+  assert.ok(/const mitglieder = \(await aktiveMitglieder\(\)\)\.map\(\(m\) => \(\{ personId: m\.person_id, name: m\.display_name \}\)\);/.test(server)
+    && /for \(const m of D\.mitglieder \|\| \[\]\) if \(m\?\.personId && !K\.people\.some/.test(d), "Aktive Mitglieder fehlen in der Kollegenauswahl (nur Kennung + Name)");
+}
+
+// 2.419.0 KC-CLUB-SONDERSTUNDEN Teil 2 (KICC-F-100): Zusagen/Fahrgemeinschaften, Benachrichtigung, Erinnerung, Erstattung bei Sondereinsätzen
+{
+  const d = lies("dp2-club/daten.js"), seite = lies("index.html");
+  assert.ok(aktionen.has("sondereinsatz_zusage") && /case "sondereinsatz_zusage": \{\s*return json\(await sondereinsatzZusage\(ich, p\)\);/.test(server), "Zusage-Aktion fehlt");
+  assert.ok(/const SH_ORTE = \[/.test(server) && /SH_ORTE\.includes\(p\?\.startort\)/.test(server), "Startort nur aus der Auswahl (keine Adressen)");
+  assert.ok(/K\.signupTransport = \{ save: \(z\) => window\.KC_CLUB_DW_API\("sondereinsatz_zusage", z\) \}/.test(d) && /K\.carpools = \(D\.fahrgemeinschaften \|\| \[\]\)/.test(d), "Zusagen/Fahrgemeinschaften fehlen in Twinkey");
+  assert.ok(/fahrt_rolle: e\.rolle/.test(server) && /senden\("club_dienst", \[z\.person_id\], \{ titel: `👨‍🍳 \$\{ich\.vorname\} hat Sonderstunden für dich gemeldet`/.test(server), "Fahrtrolle/Benachrichtigung der Kollegen fehlt");
+  assert.ok(/await sonderstundenWartung\(\)\.catch/.test(server) && /\.is\("benachrichtigt_am", null\)/.test(server) && /kc_dp_hour_report_reminders"\)\.insert/.test(server) && /if \(std < 9 \|\| std >= 20\)/.test(server),
+    "Wartung: Entscheidung melden / einmal erinnern (9–20 Uhr) fehlt");
+  // Erstattung: neue Arten, Kraftstoff nicht mit eigenem Auto, Belegstatus, Kaution außerhalb der Summe, Vorschuss, Mitfahrer-Hinweis, Nachverfolgen
+  assert.ok(/\{ id: "parken", sym: "🅿️"/.test(server) && /\{ id: "kraftstoff", sym: "⛽"/.test(server) && /\{ id: "kaution", sym: "🔐"/.test(server), "Neue Erstattungsarten fehlen");
+  assert.ok(/if \(x\.fahrzeug === "eigen"\) throw new Fehler\("Mit dem eigenen Auto gibt es nur die km-Pauschale/.test(server), "Kraftstoff mit eigenem Auto muss abgewiesen werden");
+  assert.ok(/if \(st === "kein"\) \{ const g = txt\(x\?\.beleg_grund, 200\); if \(!g\) throw/.test(server) && /if \(st === "foto" && !beleg\.length\) throw/.test(server), "Belegstatus-Prüfung fehlt");
+  assert.ok(/const ersZaehlt = \(x: any\) => x\.art !== "kaution" \|\| \(x\.kaution_status === "verfallen" && x\.bezahlt_aus !== "vorschuss"\)/.test(server), "Kaution darf nicht zur Summe zählen");
+  assert.ok(/x\.hinweis = "laut Fahrgemeinschaft Mitfahrer – km-Pauschale bitte prüfen"/.test(server) && /\.\.\.\(vorschuss \? \{ vorschuss \} : \{\}\)/.test(server), "Mitfahrer-Hinweis/Vorschuss fehlt");
+  assert.ok(aktionen.has("erstattung_position_setzen") && /case "erstattung_position_setzen": \{\s*nurLeitung\(ich\);/.test(server) && /nachverfolgen: \[\.\.\.nachMap\.values\(\)\]/.test(server), "Nachverfolgen (Beleg/Kaution) fehlt");
+  assert.ok(/data-a="parken"/.test(seite) && /data-a="kraftstoff"/.test(seite) && /data-a="kaution"/.test(seite) && /id="ersVorschuss"/.test(seite), "Erstattungsformular ohne neue Arten/Vorschuss");
+  assert.ok(/function ersBelegStatus\(st\)/.test(html) && /function erstattungVorbelegen\(v\)/.test(html) && /e\.data\?\.art === "erstattung-vorbelegen"/.test(html) && /function ekNachInfo\(id\)/.test(html), "Client: Belegstatus/Vorbelegung/Nachverfolgen fehlt");
+  assert.ok(/openErstattung\(info\) \{ try \{ parent !== window && parent\.postMessage\(\{ art: "erstattung-vorbelegen"/.test(d), "Twinkey kann die Erstattung nicht öffnen");
+}
+
+// 2.420.0 KC-CLUB-SONDER-VORGESEHEN (KICC-F-100, DP2 Build 290): vorläufige Einteilung des Planers – anzeigen, beim Melden vorschlagen, erinnern
+{
+  const d = lies("dp2-club/daten.js"), tw = lies("dp2/src/ui/twinkey.js"), se = lies("dp2/src/core/special-events.js");
+  assert.ok((server.match(/select\("[^"]*vorgesehen:payload->vorgesehen"\)/g) || []).length >= 2, "Server liefert die Einteilung nicht (Laden + Erinnerung)");
+  assert.ok(/vorgesehen: Array\.isArray\(e\.vorgesehen\) \? e\.vorgesehen\.map\(String\) : \[\]/.test(d), "Twinkey bekommt die Einteilung nicht");
+  assert.ok(/vorgesehen\.map\(\(p: string\) => \(\{ person_id: p, vorgesehen: true \}\)\)/.test(server) && /!zugesagt\.has\(p\)/.test(server), "Erinnerung für Vorgesehene fehlt oder doppelt");
+  assert.ok(/Du bist vorgesehen \(vorläufig\)/.test(tw) && /if\(!hr\.prefilled\)/.test(tw) && /const VERSION='0\.2\.0'/.test(se), "DP2 Build 290 nicht übernommen");
 }

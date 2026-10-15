@@ -17,24 +17,38 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
-## 2.420.0 – 2026-10-15 – 🔒 Zugang für Gäste und Aushilfen (KC-CLUB-ZUGANG) · Server 2.420.0 · DB
+## 2.422.0 – 2026-10-15 – 🔒 Zugang für Gäste und Aushilfen (KC-CLUB-ZUGANG) · Server 2.422.0 · DB
 Anlass (Hansi): „Wir müssen den Zugang für Gäste und Aushilfen einschränken – die dürfen Nachricht schreiben, SOS und Clubtermine … und Spiele.“ Entscheidungen Hansi: Aushilfen sehen das Fotoalbum (nur ansehen); Gäste schreiben an alle Mitglieder; Spiele auch gegen Mitglieder; kein Ablaufdatum.
 - **Zugang je Person** (`kc_club_rollen.zugang`): 👤 Mitglied (alles wie bisher), 🧑‍🍳 Aushilfe, 🙋 Gast. Einstellbar im Rollen-Fenster (🎖️ Ämter und Rechte). Admin ist immer Mitglied.
 - **Sperre auf dem Server:** `zugangPruefen` als erste Zeile von `aktionAusfuehren` – gilt für normale Anfragen, geplante Nachrichten, Notfall-Paket und Nachtrag. Für Gäste/Aushilfen ist nur erlaubt, was in `ZUGANG_AKTIONEN` steht; alles andere → 403.
   - **Gast:** Clubtermine (ansehen, zu-/absagen, Kalender, eigene private Termine), Nachrichten (an alle), SOS, Spiele + Rätsel, Hilfe/Twinkey/Feedback, Einstellungen, Push und Technik.
-  - **Aushilfe:** dazu Mein Dienst/Dienstwünsche, Fotoalbum ansehen, Schulung.
+  - **Aushilfe:** dazu Mein Dienst/Dienstwünsche (inkl. Sondereinsatz-Zusage und Stunden melden), Fotoalbum ansehen, Schulung.
   - Gesperrt u. a.: Archiv, Protokolle, Pinnwand, Vorschläge, Erstattung, Büro, Helfen & Leihen, To-dos, Suche, Admin.
 - Gäste/Aushilfen sehen **nie Protokolle und keine Kontaktdaten anderer** (`zugangAnwenden` in `ichAus`); **SOS** zeigt ihnen nur die Clubleitung (mit deren freigegebenen Nummern) und sich selbst.
 - **App:** dieselbe Liste (`ZUGANG_AKTIONEN`) – Verbotenes wird gar nicht erst geschickt; Kacheln (erweitert + einfach) passend gefiltert (`ZUGANG_KACHELN`).
-- **Datenbank:** `supabase/migrations/20261015_kc_club_v2420_zugang.sql` (Spalte `zugang`, Standard „mitglied“, Prüfregel; bisherige Aushilfen = Amt „Aushilfe“ → „aushilfe“). Probelauf `tools/db-test/74_zugang_test.sql`. Bis zum Einspielen gilt für alle „mitglied“; das Rollen-Fenster speichert weiter (Zugang dann mit Hinweis). Rückweg in der Migration.
+- **Datenbank:** `supabase/migrations/20261015_kc_club_v2422_zugang.sql` (Spalte `zugang`, Standard „mitglied“, Prüfregel; bisherige Aushilfen = Amt „Aushilfe“ → „aushilfe“). Probelauf `tools/db-test/74_zugang_test.sql`. Bis zum Einspielen gilt für alle „mitglied“; das Rollen-Fenster speichert weiter (Zugang dann mit Hinweis). Rückweg in der Migration.
 - Vertragstest: gleiche Liste in App und Server, alle Aktionen vorhanden, heikle Bereiche gesperrt, Sandkasten der App-Regeln (Gegenprobe: ohne Server-Sperre rot).
 
-## 2.419.0 – 2026-10-15 – ☑️ Kacheln auswählen (KC-CLUB-KACHEL-AUSWAHL)
+## 2.421.0 – 2026-10-15 – ☑️ Kacheln auswählen (KC-CLUB-KACHEL-AUSWAHL)
 Anlass (Hansi): „Unter Einstellungen generell die Kacheln anhaken, die man haben möchte – die anderen sind verborgen. In 3 Blöcken Club, Meins, Technik, einklappbar, alle auflisten mit Klickkästchen – nebeneinander, nicht zu viel Platz verschwenden.“
 - ⚙️ → „🧩 Startseite & Ansicht“ → **„☑️ Kacheln auswählen“**: drei einklappbare Blöcke 🏠 Club, 🙋 Meins, 🛠️ Technik mit Zähler („13 von 14“), Kästchen im Raster nebeneinander (Handy 2 Spalten, breiter 3–4); „✅ Alle anzeigen“ je Bereich.
 - Kein eigener Speicher: Haken = nicht in `KA.aus` – dasselbe Ausblenden wie „Anordnen“ (✕/👁️), gilt auf allen Geräten. Gezeigt werden nur Kacheln, die man sehen darf (`kachelnAlle`); das Admin-Register bleibt außen vor.
 - `kaSichtbar(id, sichtbar, leise)`: neuer optionaler Parameter, damit beim Ankreuzen nicht jedes Mal ein Hinweis erscheint; über ✕ bleibt der Hinweis wie bisher.
 - In der einfachen Ansicht steht ein Hinweis, dass die Auswahl für die erweiterte Ansicht gilt. Hilfe-Eintrag und Suchbegriff ergänzt, Vertragstest.
+
+## 2.420.0 – 2026-10-15 – Sondereinsätze: vorläufige Einteilung durch den Planer (KC-CLUB-SONDER-VORGESEHEN, KICC-F-100)
+Wunsch Hansi: „Kochen am 28.11.26, Abholung am 29.12.26 – zum Kochen Wilfried, Steven, Manfred eintragen, zum Abholen Frank und Wilfried. Vorläufig geplant.“
+- **Twinkey (DP2 Build 290, unverändert übernommen):** Bei „Bei einem Sondereinsatz helfen“ steht „👥 Du bist vorgesehen (vorläufig)“. Beim Melden der Sonderstunden sind die vorgesehenen Kollegen schon ausgewählt (abwählbar, wer nicht dabei war).
+- **Server kc-club 2.420.0:** liefert die Einteilung mit (`payload->vorgesehen` aus kc_dp_special_events). Erinnerung nach der Meldefrist geht jetzt auch an Vorgesehene ohne Meldung („du warst … eingeteilt“), weiterhin einmal je Person und nur bei festem Termin.
+- Zusagen bleiben die eigene Entscheidung der Mitglieder; die Einteilung ist ein Vorschlag des Planers.
+
+## 2.419.0 – 2026-10-15 – Sonderstunden melden, Zusagen & Fahrgemeinschaften, Erstattung bei Sondereinsätzen (KC-CLUB-SONDERSTUNDEN, KICC-F-100)
+Wunsch Hansi: Grünkohl kochen im Krankenhaus Dortmund, Abholung nach Hamm, Getränke zuhause – Stunden aufs Stundenkonto Weihnachtsmarkt, Kosten über die Erstattung.
+- **Twinkey (DP2 Build 289, unverändert übernommen):** „Sonderstunden melden“ – Einsatz, Tag, Zeit von zuhause bis zuhause, Tätigkeit, Fahrtrolle, weitere Kollegen mit jeweils eigenen Stunden, „✓ Gutschreiben lassen“; danach „🚗 Fahrtkosten / Auslagen erfassen“ (öffnet die Erstattung vorausgefüllt). „Bei einem Sondereinsatz helfen“ – Zusage mit Anreise (fahre mit freien Plätzen / brauche Mitfahrt / komme selbst) und Startort (nur Ort); die eigene Fahrgemeinschaft wird angezeigt. Nur Mitglieder wählbar; fehlende Club-Mitglieder werden ergänzt.
+- **Server kc-club:** `stunden_melden` (Prüfung Termin/Datum/Zeiten/Mitglieder, Doppelschutz, je Person eine Zeile in kc_dp_hour_reports, Push an mitgemeldete Kollegen), `sondereinsatz_zusage`, `dienstwunsch_laden` liefert Einsätze, Meldungen, Zusagen, Fahrgemeinschaften, Mitglieder. Wartung: Nachricht bei Bestätigung/Ablehnung durch den Planer; Erinnerung 3 Tage nach dem Einsatz an Zugesagte ohne Meldung (einmal, 9–20 Uhr).
+- **Erstattung:** neue Arten 🅿️ Parkgebühren, ⛽ Kraftstoff (nur Miet-/Clubfahrzeug – mit eigenem Auto nur km-Pauschale), 🔐 Kaution (zählt nicht zur Summe; bezahlt aus eigenem Geld → zurück ans Mitglied, aus Club-Vorschuss → zurück an den Club; verfallen → wird erstattet). Je Position „Bon/Quittung vorhanden?“ (📷 Foto / 🧾 Papier / ❌ nein mit Begründung), Bezug zum Sondereinsatz, Vorschuss vom Club (Auszahlung bzw. Rückzahlung). Mitfahrer laut Fahrgemeinschaft, der km abrechnet → Hinweis für den Kassenwart.
+- **Büro-Eingangskorb:** „🔎 Erstattung – nachverfolgen“ für offene Kautionen und abzugebende Papierbelege (auch nach der Erstattung): „Beleg erhalten“, „Kaution an Mitglied zurück“ / „beim Club eingegangen“ / „verfallen“.
+- Voraussetzung: Migrationen aus dp3 (20261015120000/130000/140000) und 20261015_kc_club_v2418_erstattung_sonder. Server 2.419.0. (Nummer 2.418.0 war parallel für die Startseiten-Vorschläge vergeben.)
 
 ## 2.418.0 – 2026-10-15 – 💡 Vorschläge zur Startseite (KC-CLUB-KACHEL-VORSCHLAG)
 Anlass (Hansi): „Die App soll merken, welche Funktionen am meisten genutzt werden, und dann vorschlagen: sollen wir Kacheln verbergen oder weitere Funktionen freischalten?“ – adaptive Startseite, aber **nur als Vorschlag**, die App baut nie selbst um.

@@ -1,4 +1,4 @@
--- KC-CLUB-ZUGANG (2.420.0): Probelauf – Transaktion bricht am Ende absichtlich ab, nichts bleibt.
+-- KC-CLUB-ZUGANG (2.422.0): Probelauf – Transaktion bricht am Ende absichtlich ab, nichts bleibt.
 -- Prüft: Spalte zugang mit Standard „mitglied“, „gast“/„aushilfe“ speicherbar, falscher Wert abgelehnt, Anmeldung liefert den Zugang mit.
 do $$
 declare h text := repeat('ef', 32); p text := 'KC-P-TEST-BIRGIT'; r jsonb; z text;
