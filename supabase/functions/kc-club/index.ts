@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.414.0";
+const SERVER_VERSION = "2.420.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -909,8 +909,7 @@ const sosOrtZuletzt = new Map<string, number>(); // KC-CLUB-SOS-WO: höchstens 1
 const ERSTATTUNG_VORBEHALT = "Unter Vorbehalt: Dein Antrag wird vom Kassenwart geprüft – die Erstattung erfolgt nach Freigabe.";
 function erstattungBestaetigung(vorname: string, a: any, hinweis = "") {
   const pos = (a.positionen || []) as any[], summe = Number(a.summe || 0), d = (iso: string) => String(iso || "").split("-").reverse().join(".");
-  const zeilen = pos.map((x, i) => x.art === "fahrt" ? `${i + 1}. 🚗 ${d(x.datum)}: ${String(x.km).replace(".", ",")} km × ${euro(x.satz)} = ${euro(x.betrag)} · ${x.grund}${x.ziel ? " · " + x.ziel : ""}`
-    : `${i + 1}. ${x.art === "einkauf" ? "🛒" : "📦"} ${d(x.datum)}: ${euro(x.betrag)} · ${x.was || ""}`).join("\n");
+  const zeilen = pos.map((x, i) => `${i + 1}. ${d(x.datum)} – ${ersPosText(x)}`).join("\n");
   const url = `${APP_URL}#bestaetigung=erstattung:${a.id}`;
   return { titel: `✅ Dein Erstattungsantrag über ${euro(summe)} ist eingegangen`, kurz: `${pos.length} Position${pos.length === 1 ? "" : "en"} · ${euro(summe)} · unter Vorbehalt – 📄 Aufstellung öffnen`,
     betreff: `Köcheclub Werne – Bestätigung deines Erstattungsantrags (${euro(summe)})`, url,
@@ -1479,14 +1478,12 @@ async function ekDoku(art: string, id: string): Promise<{ person_id: string | nu
   if (art === "erstattung") {
     const { data: a } = await db.from("kc_club_erstattung").select("*").eq("id", id).maybeSingle(); if (!a) return null;
     const p = await personen([a.person_id, a.erledigt_von].filter(Boolean)), wer = p.get(a.person_id)?.display_name || a.person_id;
-    const zeilen = (a.positionen ?? []).map((x: any, i: number) => x.art === "fahrt"
-      ? `${i + 1}. 🚗 Fahrtkosten ${d(x.datum)}: ${String(x.km).replace(".", ",")} km × ${euroText(x.satz)} = ${euroText(x.betrag)} – ${x.grund || ""}${x.ziel ? " · Ziel: " + x.ziel : ""}`
-      : `${i + 1}. ${x.art === "einkauf" ? "🛒 Einkauf vorgestreckt" : "📦 Sonstige Auslage"} ${d(x.datum)}: ${euroText(x.betrag)} – ${x.was || ""}${x.geschaeft ? " · " + x.geschaeft : ""}`);
+    const zeilen = (a.positionen ?? []).map((x: any, i: number) => `${i + 1}. ${d(x.datum)} – ${ersPosText(x)}`);
     const stand = a.status === "eingereicht" ? "Status: eingereicht – noch nicht erstattet"
       : `Status: ${ERST_STATUS[a.status] ?? a.status}${a.ausgezahlt ? ` (${a.ausgezahlt === "bar" ? "bar" : "überwiesen"})` : ""} von ${p.get(a.erledigt_von)?.display_name || "?"} am ${wann(a.erledigt_am || jetzt())}${a.antwort ? `\nAntwort: ${a.antwort}` : ""}`;
     const text = ["Köcheclub Werne – Erstattungsantrag", "────────────────────", `Mitglied:  ${wer}`, `Eingereicht: ${wann(a.erstellt_am)}`,
       `Auszahlung gewünscht: ${a.auszahlung === "bar" ? "bar" : "per Überweisung"}`, "", ...zeilen, "", `Summe: ${euroText(a.summe)}`,
-      ...(a.bemerkung ? ["", `Bemerkung: ${a.bemerkung}`] : []), "", stand, "", `Vorgang: ${a.id}`, ""].join("\n");
+      ...(Number(a.vorschuss) ? [`Vorschuss vom Club: ${euroText(a.vorschuss)}`] : []), ...(a.bemerkung ? ["", `Bemerkung: ${a.bemerkung}`] : []), "", stand, "", `Vorgang: ${a.id}`, ""].join("\n");
     return { person_id: a.person_id, wer, datum: String(a.erstellt_am).slice(0, 10), titel: `Erstattung ${euroText(a.summe)} (${ERST_STATUS[a.status] ?? a.status})`,
       dateiname: `Erstattung-${String(a.erstellt_am).slice(0, 10)}-${vorname(p.get(a.person_id) ?? null) || "Mitglied"}.txt`, text, stichworte: `Erstattung, Fahrtkosten, ${wer}` };
   }
@@ -1552,10 +1549,29 @@ async function ekDienstwunschMelden() {
 const ERSTATTUNG = {
   kmSatzStandard: 0.38, // € je km, nur falls in kc_club_km_satz nichts eingetragen ist (0.39.0: Satz pflegt der Admin mit „gilt ab“)
   gruende: ["Kochen in Dortmund", "Fahrt zum Budendienst", "Einkaufsfahrt für den Club", "Club-Treffen / Sitzung", "Veranstaltung / Weihnachtsmarkt", "Schulung / Fortbildung", "Abholen / Liefern von Material"],
-  arten: [{ id: "fahrt", sym: "🚗", name: "Fahrtkosten" }, { id: "einkauf", sym: "🛒", name: "Einkauf vorgestreckt" }, { id: "sonstiges", sym: "📦", name: "Sonstige Auslage" }],
+  arten: [{ id: "fahrt", sym: "🚗", name: "Fahrtkosten" }, { id: "einkauf", sym: "🛒", name: "Einkauf vorgestreckt" }, { id: "sonstiges", sym: "📦", name: "Sonstige Auslage" },
+    // KC-CLUB-ERSTATTUNG-SONDER (2.419.0, KICC-F-100): weitere Auslagen bei Sondereinsätzen
+    { id: "parken", sym: "🅿️", name: "Parkgebühren" }, { id: "kraftstoff", sym: "⛽", name: "Kraftstoff (Miet-/Clubfahrzeug)" }, { id: "kaution", sym: "🔐", name: "Kaution" }],
+  fahrzeuge: [{ id: "miete", name: "Mietfahrzeug" }, { id: "club", name: "Clubfahrzeug" }, { id: "eigen", name: "Eigenes Auto" }],
+  belegStatus: ["foto", "papier", "kein"], kautionAus: ["eigen", "vorschuss"],
   empfaenger: { an: "Kassenwart", cc: "Clubsprecher" }, // Ämter aus kc_club_rollen
 };
 const euro = (n: number) => n.toFixed(2).replace(".", ",") + " €";
+// KC-CLUB-ERSTATTUNG-SONDER (2.419.0): eine Beschreibung je Position für Mail, Bestätigung, Ablage und Eingangskorb
+const ERS_SYM: Record<string, string> = { fahrt: "🚗", einkauf: "🛒", sonstiges: "📦", parken: "🅿️", kraftstoff: "⛽", kaution: "🔐" };
+const ERS_NAME: Record<string, string> = { fahrt: "Fahrtkosten", einkauf: "Einkauf vorgestreckt", sonstiges: "Sonstige Auslage", parken: "Parkgebühren", kraftstoff: "Kraftstoff", kaution: "Kaution" };
+const ERS_BELEG: Record<string, string> = { foto: "Beleg anbei", papier: "Beleg auf Papier – wird abgegeben", erhalten: "Beleg (Papier) erhalten", kein: "kein Beleg" };
+const ERS_KAUTION: Record<string, string> = { offen: "offen", zurueck_mitglied: "an das Mitglied zurück", beim_club: "beim Club eingegangen", verfallen: "verfallen – wird erstattet" };
+function ersPosText(x: any, kurz = false) {
+  if (x.art === "fahrt") return kurz ? `🚗 ${String(x.km).replace(".", ",")} km · ${x.grund || ""}${x.hinweis ? " ⚠" : ""}` : `🚗 Fahrtkosten: ${String(x.km).replace(".", ",")} km × ${euro(Number(x.satz))} = ${euro(Number(x.betrag))} · ${x.grund || ""}${x.ziel ? " · Ziel: " + x.ziel : ""}${x.besuch_id ? " · Besuch " + x.besuch_id : ""}${x.sonder_titel ? " · Einsatz: " + x.sonder_titel : ""}${x.hinweis ? " · ⚠ " + x.hinweis : ""}`;
+  const extra = [x.geschaeft, x.art === "kraftstoff" && x.fahrzeug ? (x.fahrzeug === "miete" ? "Mietfahrzeug" : "Clubfahrzeug") + (x.liter ? ` · ${String(x.liter).replace(".", ",")} l` : "") : "",
+    x.art === "kaution" ? `bezahlt aus ${x.bezahlt_aus === "vorschuss" ? "Club-Vorschuss" : "eigenem Geld"} · Kaution ${ERS_KAUTION[x.kaution_status] || "offen"}` : "",
+    x.sonder_titel && !kurz ? "Einsatz: " + x.sonder_titel : "", x.beleg_status ? ERS_BELEG[x.beleg_status] + (x.beleg_status === "kein" && x.beleg_grund ? ` (${x.beleg_grund})` : "") : (x.belege?.length ? "Beleg anbei" : "")].filter(Boolean).join(" · ");
+  return `${ERS_SYM[x.art] || "📦"} ${kurz ? "" : (ERS_NAME[x.art] || "Auslage") + ": "}${kurz ? "" : euro(Number(x.betrag)) + " · "}${x.was || ""}${extra ? " · " + extra : ""}${x.art === "kaution" && !kurz ? " (zählt nicht zur Summe)" : ""}`;
+}
+// Kaution zählt nicht zur Summe (geht an Mitglied bzw. Club zurück); erst eine verfallene Kaution aus eigenem Geld wird erstattet.
+const ersZaehlt = (x: any) => x.art !== "kaution" || (x.kaution_status === "verfallen" && x.bezahlt_aus !== "vorschuss");
+const ersSumme = (pos: any[]) => Math.round(pos.filter(ersZaehlt).reduce((a, x) => a + Number(x.betrag || 0), 0) * 100) / 100;
 // KC-CLUB-KMSATZ (0.39.0): Sätze mit „gilt ab“ – für eine Fahrt gilt der letzte Satz, dessen Datum nicht nach der Fahrt liegt
 type KmSatz = { id: string; satz: number; ab: string };
 // ----- KC-CLUB-WETTER (0.42.0): Wetter im Info-Feld der Startseite. Datenquelle und Wetter-App über Registry + Adapter,
@@ -1783,12 +1799,31 @@ function erstattungPruefen(roh: unknown, ich: Ich, saetze: KmSatz[]) {
       // KC-CLUB-ERSTATTUNG-BESUCHE (2.25.4): Fahrt aus einem Besuch (nur Admin – Besuche führt nur er); geprüft in erstattung_senden
       const besuchId = ich.admin && /^B-\d{4}-\d{3,}$/.test(String(x?.besuch_id || "")) ? String(x.besuch_id) : null;
       pos.push({ art: "fahrt", datum, km, satz, grund, ziel: txt(x.ziel, 120), betrag: Math.round(km * satz * 100) / 100, belege: beleg, ...(besuchId ? { besuch_id: besuchId } : {}) });
-    } else if (x?.art === "einkauf" || x?.art === "sonstiges") {
+    } else if (["einkauf", "sonstiges", "parken", "kraftstoff", "kaution"].includes(x?.art)) {
       const betrag = Math.round(Number(String(x.betrag).replace(",", ".")) * 100) / 100;
       if (!(betrag > 0 && betrag <= 5000)) throw new Fehler("Bitte einen Betrag zwischen 0,01 € und 5.000 € angeben.");
-      const was = txt(x.was, 200); if (!was) throw new Fehler(x.art === "einkauf" ? "Bitte angeben, was eingekauft wurde." : "Bitte die Auslage kurz beschreiben.");
-      pos.push({ art: x.art, datum, betrag, was, geschaeft: txt(x.geschaeft, 120), belege: beleg });
+      const was = txt(x.was, 200);
+      if (!was && x.art !== "kraftstoff") throw new Fehler(x.art === "einkauf" ? "Bitte angeben, was eingekauft wurde." : x.art === "parken" ? "Bitte angeben, wo geparkt wurde." : x.art === "kaution" ? "Bitte angeben, wofür die Kaution ist." : "Bitte die Auslage kurz beschreiben.");
+      const zusatz: Record<string, unknown> = {};
+      // KC-CLUB-ERSTATTUNG-SONDER (2.419.0): Kraftstoff nur für Miet-/Clubfahrzeuge – mit dem eigenen Auto gibt es nur die km-Pauschale
+      if (x.art === "kraftstoff") {
+        if (x.fahrzeug === "eigen") throw new Fehler("Mit dem eigenen Auto gibt es nur die km-Pauschale – bitte als Fahrtkosten (km) eintragen.");
+        if (!["miete", "club"].includes(x.fahrzeug)) throw new Fehler("Bitte das Fahrzeug wählen (Miet- oder Clubfahrzeug).");
+        zusatz.fahrzeug = x.fahrzeug; const l = Math.round(Number(String(x.liter ?? "").replace(",", ".")) * 10) / 10; if (l > 0 && l <= 500) zusatz.liter = l;
+      }
+      if (x.art === "kaution") { zusatz.bezahlt_aus = x.bezahlt_aus === "vorschuss" ? "vorschuss" : "eigen"; zusatz.kaution_status = "offen"; }
+      pos.push({ art: x.art, datum, betrag, was, geschaeft: txt(x.geschaeft, 120), belege: beleg, ...zusatz });
     } else throw new Fehler("Unbekannte Art der Erstattung.");
+    // Beleg vorhanden? (nicht bei km-Pauschale): fotografiert / Papier wird abgegeben / kein Beleg (dann Begründung Pflicht)
+    const letzte = pos[pos.length - 1];
+    if (letzte.art !== "fahrt") {
+      const st = ERSTATTUNG.belegStatus.includes(x?.beleg_status) ? x.beleg_status : (beleg.length ? "foto" : "papier");
+      if (st === "foto" && !beleg.length) throw new Fehler("Bitte den Beleg fotografieren oder „Beleg auf Papier“ wählen.");
+      if (st === "kein") { const g = txt(x?.beleg_grund, 200); if (!g) throw new Fehler("Ohne Beleg bitte kurz begründen (z. B. „Parkautomat ohne Quittung“)."); letzte.beleg_grund = g; }
+      letzte.beleg_status = st;
+    }
+    // Bezug zum Sondereinsatz (KICC-F-100) – Titel wird im Server ergänzt
+    const se = txt(x?.special_event_id, 80); if (se) letzte.special_event_id = se;
   }
   if (!pos.length) throw new Fehler("Bitte mindestens eine Position hinzufügen.");
   return pos;
@@ -5465,6 +5500,7 @@ Deno.serve(async (req) => {
       await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
       await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
       await geburtstagZettelAbnehmen().catch((e) => console.error("geburtstag zettel ab", String(e))); // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0)
+      await sonderstundenWartung().catch((e) => console.error("sonderstunden wartung", String(e))); // KICC-F-100 (2.419.0)
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-SPUR (2.23.88): Wege der Mitglieder nur 30 Tage aufbewahren
       { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }
@@ -8131,6 +8167,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).eq("status", "published"),
           db.from("kc_core_operational_directory").select("person_id,display_name,active").eq("org_id", ORG).eq("person_id", ich.person_id).maybeSingle(),
         ]);
+        const { sondereinsaetze, stunden, mitglieder, zusagen, fahrgemeinschaften } = await sonderstundenLaden(ich.person_id); // KC-CLUB-SONDERSTUNDEN (KICC-F-100)
         // Freigaben „Kollegen dürfen meine Zeiten sehen/übernehmen“: DP2-Tabelle + was Mitglieder in der Club-App gewählt haben
         const kollegen = (geteilt ?? []).map((x: any) => ({ personId: x.person_id, entries: (x.entries ?? []).filter((e: any) => ["available", "if_needed", "preferred"].includes(e.wishType)) }));
         const teilen = [...(freigaben ?? [])];
@@ -8139,7 +8176,17 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ vertrag: DW.vertrag, veranstaltung: DW.veranstaltung, name: DW.name,
           ich: { personId: ich.person_id, name: ich.name, imDienstplan: !!verz?.active },
           wunschphase: phase ? { status: phase.status, bis: phase.close_at, frist: phase.deadline_date } : null,
-          tage: tage ?? [], meine: meine ?? null, kollegen, teilen, schichten: schichten ?? [] });
+          tage: tage ?? [], meine: meine ?? null, kollegen, teilen, schichten: schichten ?? [], sondereinsaetze, stunden, mitglieder, zusagen, fahrgemeinschaften });
+      }
+
+      // KC-CLUB-SONDERSTUNDEN (KICC-F-100, DP2-F-SE-02): Sammelmeldung aus Twinkey – ein Kollege meldet für sich und weitere
+      // Kollegen, jeweils mit eigenem Stundenumfang. Gutschrift erst, wenn der Planer in DP2 bestätigt (kc_dp_hour_report_decide).
+      case "stunden_melden": {
+        return json(await sonderstundenMelden(ich, p));
+      }
+      // KICC-F-100 Phase 7: Zusage zu einem Sondereinsatz mit Anreise (Fahrer mit Plätzen / Mitfahrt / selbst) und Startort (nur Ort)
+      case "sondereinsatz_zusage": {
+        return json(await sondereinsatzZusage(ich, p));
       }
 
       case "dienstwunsch_speichern": {
@@ -10277,15 +10324,18 @@ Köcheclub-App`,
 
       // ----- Erstattung (KC-CLUB-ERSTATTUNG) -----
       case "erstattung_meine": {
-        const { data } = await db.from("kc_club_erstattung").select("id,positionen,summe,auszahlung,bemerkung,status,erstellt_am").eq("person_id", ich.person_id).order("erstellt_am", { ascending: false }).limit(20);
+        const { data } = await db.from("kc_club_erstattung").select("id,positionen,summe,auszahlung,bemerkung,status,erstellt_am,vorschuss").eq("person_id", ich.person_id).order("erstellt_am", { ascending: false }).limit(20);
         const { data: rollen } = await db.from("kc_club_rollen").select("person_id,aemter");
         const hat = (amt: string) => (rollen ?? []).some((r: any) => (r.aemter || []).includes(amt));
         const saetze = await kmSaetze();
+        // KC-CLUB-ERSTATTUNG-SONDER (2.419.0): Sondereinsätze zur Auswahl („Gehört zu Einsatz“)
+        const { data: se } = await db.from("kc_dp_special_events").select("source_id,titel,ort,datum_von").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "published").order("datum_von", { nullsFirst: false }).limit(50);
         return json({ kmSatz: satzFuer(saetze, berlinTag(new Date())), standard: ERSTATTUNG.kmSatzStandard, saetze, gruende: ERSTATTUNG.gruende, arten: ERSTATTUNG.arten, empfaengerDa: hat(ERSTATTUNG.empfaenger.an) || hat(ERSTATTUNG.empfaenger.cc),
+          fahrzeuge: ERSTATTUNG.fahrzeuge, sondereinsaetze: (se ?? []).map((x: any) => ({ id: x.source_id, titel: x.titel, ort: x.ort || "", datum: x.datum_von || null })),
           besucheAbgerechnet: ich.admin ? [...(await erstattungBesucheAbgerechnet(ich.person_id))] : [], // KC-CLUB-ERSTATTUNG-BESUCHE (2.25.4)
           // KC-CLUB-DRUCK (0.53.0): Positionen und Bemerkung mitliefern – eigener Antrag lässt sich später ausdrucken
           antraege: (data ?? []).map((a: any) => ({ id: a.id, summe: Number(a.summe), anzahl: (a.positionen || []).length, status: a.status, zeit: a.erstellt_am, auszahlung: a.auszahlung,
-            positionen: a.positionen || [], bemerkung: a.bemerkung ?? null })) });
+            positionen: a.positionen || [], bemerkung: a.bemerkung ?? null, vorschuss: Number(a.vorschuss || 0) })) });
       }
 
       // KC-CLUB-KMSATZ (0.39.0): Kilometerpauschale mit „gilt ab“ – nur Admin
@@ -10524,7 +10574,22 @@ Köcheclub-App`,
           const { data: att } = await db.from("kc_communication_attachments").select("id,object_path").in("id", belege);
           if ((att ?? []).length !== belege.length || (att ?? []).some((x: any) => !String(x.object_path).startsWith(`club/${ich.person_id}/`))) throw new Fehler("Beleg nicht gefunden – bitte erneut anhängen.");
         }
-        const summe = Math.round(pos.reduce((a, x) => a + x.betrag, 0) * 100) / 100;
+        // KC-CLUB-ERSTATTUNG-SONDER (2.419.0): Bezug zum Sondereinsatz (Titel) und Fahrgemeinschaft – km-Pauschale nur für Fahrer
+        const seIds = [...new Set(pos.map((x) => x.special_event_id).filter(Boolean))] as string[];
+        if (seIds.length) {
+          const [{ data: evs }, { data: cps }] = await Promise.all([
+            db.from("kc_dp_special_events").select("source_id,titel").eq("org_id", ORG).eq("event_id", DW.veranstaltung).in("source_id", seIds),
+            db.from("kc_dp_carpools").select("special_event_id,fahrer_id,mitfahrer").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "published").in("special_event_id", seIds)]);
+          for (const x of pos.filter((y) => y.special_event_id)) {
+            const ev = (evs ?? []).find((e: any) => e.source_id === x.special_event_id);
+            if (!ev) { delete x.special_event_id; continue; }
+            x.sonder_titel = txt(ev.titel, 120);
+            const mit = (cps ?? []).find((c: any) => c.special_event_id === x.special_event_id && (c.mitfahrer ?? []).includes(ich.person_id));
+            if (x.art === "fahrt" && mit) x.hinweis = "laut Fahrgemeinschaft Mitfahrer – km-Pauschale bitte prüfen";
+          }
+        }
+        const summe = ersSumme(pos);
+        const vorschuss = Math.min(5000, Math.max(0, Math.round(Number(String(p.vorschuss ?? 0).replace(",", ".")) * 100) / 100 || 0));
         const auszahlung = p.auszahlung === "bar" ? "bar" : "ueberweisung", bemerkung = txt(p.bemerkung, 1000);
         // Empfänger aus den Ämtern: An = Kassenwart (sonst Clubsprecher), CC = Clubsprecher, BCC = Antragsteller + Admin
         const [{ data: rollen }, aktiv] = await Promise.all([db.from("kc_club_rollen").select("person_id,aemter,ist_admin"), aktiveMitglieder()]);
@@ -10536,11 +10601,10 @@ Köcheclub-App`,
         const admins = (rollen ?? []).filter((r: any) => r.ist_admin && aktivIds.has(r.person_id)).map((r: any) => r.person_id);
         const bcc = [...new Set([ich.person_id, ...admins])].filter((id) => !an.includes(id) && !cc.includes(id));
         const d = (iso: string) => iso.split("-").reverse().join(".");
-        const zeilen = pos.map((x, i) => x.art === "fahrt"
-          ? `${i + 1}. 🚗 Fahrtkosten ${d(x.datum)}: ${String(x.km).replace(".", ",")} km × ${euro(x.satz)} = ${euro(x.betrag)}\n   Grund: ${x.grund}${x.ziel ? " · Ziel: " + x.ziel : ""}${x.besuch_id ? " · Besuch " + x.besuch_id : ""}`
-          : `${i + 1}. ${x.art === "einkauf" ? "🛒 Einkauf vorgestreckt" : "📦 Sonstige Auslage"} ${d(x.datum)}: ${euro(x.betrag)}\n   ${x.was}${x.geschaeft ? " · " + x.geschaeft : ""}${x.belege.length ? " · Beleg anbei" : ""}`).join("\n\n");
+        const zeilen = pos.map((x, i) => `${i + 1}. ${d(x.datum)} – ${ersPosText(x)}`).join("\n\n")
+          + (vorschuss ? `\n\nVorschuss vom Club erhalten: ${euro(vorschuss)} → ${summe - vorschuss >= 0 ? "Auszahlung " + euro(Math.round((summe - vorschuss) * 100) / 100) : "Rückzahlung an den Club " + euro(Math.round((vorschuss - summe) * 100) / 100)}` : "");
         const text = `Hallo,\n\n${ich.name} beantragt eine Erstattung über die Köcheclub-App:\n\n${zeilen}\n\n────────────\nSumme: ${euro(summe)}\nAuszahlung: ${auszahlung === "bar" ? "bar" : "per Überweisung"}${bemerkung ? "\nBemerkung: " + bemerkung : ""}\n\n(Kilometerpauschale je nach Fahrtdatum laut Club-Einstellung. Belege, falls vorhanden, sind angehängt.)\n\nViele Grüße\nKöcheclub Werne`;
-        const { data: a, error } = await db.from("kc_club_erstattung").insert({ person_id: ich.person_id, positionen: pos, summe, km_satz: satzFuer(saetze, berlinTag(new Date())), auszahlung, bemerkung: bemerkung || null }).select("id").single();
+        const { data: a, error } = await db.from("kc_club_erstattung").insert({ person_id: ich.person_id, positionen: pos, summe, km_satz: satzFuer(saetze, berlinTag(new Date())), auszahlung, bemerkung: bemerkung || null, ...(vorschuss ? { vorschuss } : {}) }).select("id").single();
         if (error || !a) throw new Fehler("Antrag konnte nicht gespeichert werden.", 500);
         const versand = await routerSenden("club_nachricht_mail", an, {
           titel: `💶 Erstattung von ${ich.vorname}: ${euro(summe)}`, kurz: `${pos.length} Position${pos.length === 1 ? "" : "en"} · ${euro(summe)}`,
@@ -10759,20 +10823,29 @@ Köcheclub Werne`,
       case "eingang_korb": {
         nurLeitung(ich);
         const [{ data: ers }, { data: dw }] = await Promise.all([
-          db.from("kc_club_erstattung").select("id,person_id,positionen,summe,auszahlung,bemerkung,status,erstellt_am").eq("status", "eingereicht").order("erstellt_am").limit(100),
+          db.from("kc_club_erstattung").select("id,person_id,positionen,summe,auszahlung,bemerkung,status,erstellt_am,vorschuss").eq("status", "eingereicht").order("erstellt_am").limit(100),
           db.from("kc_dp_wish_inbox").select("id,person_id,revision,status,entries,standby,comment,updated_at,submitted_at,taken_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung)
             .eq("source", "club_app").order("updated_at", { ascending: false }).limit(200),
         ]);
         const [stE, stD] = await Promise.all([ekStaende("erstattung", (ers ?? []).map((x: any) => x.id)), ekStaende("dienstwunsch", (dw ?? []).map((x: any) => x.id))]);
-        const ids = [...(ers ?? []).map((x: any) => x.person_id), ...(dw ?? []).map((x: any) => x.person_id),
+        // KC-CLUB-ERSTATTUNG-SONDER (2.419.0): offene Kautionen und abzugebende Papierbelege bleiben sichtbar, auch nach der Erstattung
+        const [{ data: nk }, { data: nb }] = await Promise.all([
+          db.from("kc_club_erstattung").select("id,person_id,positionen,status,erstellt_am").neq("status", "abgelehnt").contains("positionen", [{ art: "kaution", kaution_status: "offen" }]).limit(100),
+          db.from("kc_club_erstattung").select("id,person_id,positionen,status,erstellt_am").neq("status", "abgelehnt").contains("positionen", [{ beleg_status: "papier" }]).limit(100)]);
+        const nachMap = new Map<string, any>(); for (const x of [...(nk ?? []), ...(nb ?? [])]) nachMap.set(x.id, x);
+        const ids = [...(ers ?? []).map((x: any) => x.person_id), ...(dw ?? []).map((x: any) => x.person_id), ...[...nachMap.values()].map((x: any) => x.person_id),
           ...[...stE.values(), ...stD.values()].flatMap((st: any) => (st.kenntnis ?? []).map((k: any) => k.person_id))];
         const leute = await personen([...new Set(ids)] as string[]);
         const nm = (id: string) => leute.get(id)?.display_name || id;
-        const posKurz = (x: any) => x.art === "fahrt" ? `🚗 ${String(x.km).replace(".", ",")} km · ${x.grund || ""}` : `${x.art === "einkauf" ? "🛒" : "📦"} ${x.was || ""}`;
+        const posKurz = (x: any) => ersPosText(x, true);
         return json({
           erstattungen: (ers ?? []).map((x: any) => ({ id: x.id, name: nm(x.person_id), summe: Number(x.summe), auszahlung: x.auszahlung, bemerkung: x.bemerkung, erstellt_am: x.erstellt_am,
-            positionen: (x.positionen ?? []).map((y: any) => ({ datum: y.datum, betrag: Number(y.betrag), text: posKurz(y) })),
+            positionen: (x.positionen ?? []).map((y: any, i: number) => ({ i, datum: y.datum, betrag: Number(y.betrag), text: posKurz(y), art: y.art, beleg: y.beleg_status || null, kaution: y.kaution_status || null, zaehlt: ersZaehlt(y) })),
+            vorschuss: Number(x.vorschuss || 0),
             kenntnis: ekNamen(stE.get(x.id), leute), kenntnisIch: ekKenntnisVon(stE.get(x.id), ich.person_id), abgelegt: (stE.get(x.id)?.ablagen ?? []).length })),
+          nachverfolgen: [...nachMap.values()].map((x: any) => ({ id: x.id, name: nm(x.person_id), status: x.status, erstellt_am: x.erstellt_am,
+            offen: (x.positionen ?? []).map((y: any, i: number) => ({ i, datum: y.datum, betrag: Number(y.betrag), text: posKurz(y), kaution: y.art === "kaution" && y.kaution_status === "offen", bezahlt_aus: y.bezahlt_aus || null, beleg: y.beleg_status === "papier" }))
+              .filter((y: any) => y.kaution || y.beleg) })),
           // Dienstzeiten: im Eingang, bis ich die aktuelle Fassung zur Kenntnis genommen habe (Änderung → wieder im Eingang)
           dienstwuensche: (dw ?? []).filter((x: any) => !ekKenntnisVon(stD.get(x.id), ich.person_id, x.revision)).map((x: any) => {
             const tage = new Set([...(x.entries ?? []).map((e: any) => e.date), ...Object.entries(x.standby ?? {}).filter(([, b]: any) => b?.answer === "yes").map(([t]) => t)]);
@@ -10866,6 +10939,29 @@ Köcheclub Werne`,
       }
 
       // ✅ Erstattet / ✖ Abgelehnt – alle drei der Clubleitung dürfen das (Wunsch Hansi); das Mitglied bekommt Bescheid
+      // KC-CLUB-ERSTATTUNG-SONDER (2.419.0): Clubleitung vermerkt „Beleg erhalten“ oder den Stand einer Kaution
+      case "erstattung_position_setzen": {
+        nurLeitung(ich);
+        const { data: a } = await db.from("kc_club_erstattung").select("id,person_id,positionen,status,summe").eq("id", String(p.id || "")).maybeSingle();
+        if (!a) throw new Fehler("Antrag nicht gefunden.", 404);
+        const i = Number(p.index), pos = (a.positionen ?? []) as any[], x = pos[i];
+        if (!Number.isInteger(i) || !x) throw new Fehler("Position nicht gefunden.", 404);
+        if (p.beleg === "erhalten") { if (x.beleg_status !== "papier") throw new Fehler("Für diese Position wird kein Papierbeleg erwartet.", 409); x.beleg_status = "erhalten"; x.beleg_am = jetzt(); }
+        else if (["zurueck_mitglied", "beim_club", "verfallen"].includes(p.kaution)) {
+          if (x.art !== "kaution" || x.kaution_status !== "offen") throw new Fehler("Diese Kaution ist nicht mehr offen.", 409);
+          if (p.kaution === "zurueck_mitglied" && x.bezahlt_aus === "vorschuss") throw new Fehler("Die Kaution wurde aus dem Club-Vorschuss bezahlt – sie geht an den Club zurück.", 409);
+          if (p.kaution === "beim_club" && x.bezahlt_aus !== "vorschuss") throw new Fehler("Die Kaution hat das Mitglied bezahlt – sie geht an das Mitglied zurück.", 409);
+          x.kaution_status = p.kaution; x.kaution_am = jetzt(); x.kaution_von = ich.person_id;
+        } else throw new Fehler("Ungültige Angabe.");
+        const summe = ersSumme(pos);
+        const { error } = await db.from("kc_club_erstattung").update({ positionen: pos, summe }).eq("id", a.id);
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "erstattung_position", { antrag: a.id, index: i, beleg: p.beleg || null, kaution: p.kaution || null });
+        if (p.kaution === "verfallen") await sendenGewaehlt("club_nachricht", [a.person_id], ["push"], { titel: "🔐 Kaution wird erstattet", kurz: `${euro(Number(x.betrag))} · ${x.was || ""}`,
+          betreff: "Köcheclub Werne – Kaution wird erstattet", text: `Die Kaution (${x.was || ""}, ${euro(Number(x.betrag))}) kam nicht zurück und wird dir erstattet.`, url: APP_URL + "#erstattung" }, `club-kaution:${a.id}:${i}`).catch(() => null);
+        return json({ ok: true, summe, position: x });
+      }
+
       case "erstattung_erledigen": {
         nurLeitung(ich);
         const status = p.status === "erstattet" ? "erstattet" : p.status === "abgelehnt" ? "abgelehnt" : null;
@@ -13420,3 +13516,165 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
     return { ok: false, fehler };
   }
 }
+
+// ---------- KC-CLUB-SONDERSTUNDEN (KICC-F-100): Sondereinsätze (DP2 veröffentlicht) und Stundenmeldungen (Eingang → DP2) ----------
+const SH = { maxPersonen: 30, maxSpanne: 16, maxEnde: 30, maxPause: 180, fristTage: 3,
+  taetigkeiten: ["kochen", "vorbereitung", "transport", "einkauf", "getraenke", "aufraeumen", "sonstiges"] };
+const shZeile = (r: any) => ({ id: r.id, sammel_id: r.sammel_id, event_id: r.event_id, special_event_id: r.special_event_id,
+  special_event_title: r.special_event_title, person_id: r.person_id, gemeldet_von: r.gemeldet_von, work_date: r.work_date,
+  start_h: Number(r.start_h), end_h: Number(r.end_h), break_minutes: r.break_minutes, taetigkeit: r.taetigkeit, bemerkung: r.bemerkung,
+  status: r.status, verspaetet: r.verspaetet, gemeldet_am: r.gemeldet_am, ablehngrund: r.ablehngrund, version: r.version });
+const SH_SPALTEN = "id,sammel_id,event_id,special_event_id,special_event_title,person_id,gemeldet_von,work_date,start_h,end_h,break_minutes,taetigkeit,bemerkung,status,verspaetet,gemeldet_am,ablehngrund,version";
+async function sonderstundenLaden(pid: string) {
+  const [{ data: ev }, { data: st }] = await Promise.all([
+    db.from("kc_dp_special_events").select("source_id,titel,ort,art,termin_status,datum_von,datum_bis,wiederkehrend,version,vorgesehen:payload->vorgesehen")
+      .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "published").order("datum_von", { nullsFirst: false }),
+    db.from("kc_dp_hour_reports").select(SH_SPALTEN).eq("org_id", ORG).eq("event_id", DW.veranstaltung)
+      .or(`person_id.eq.${pid},gemeldet_von.eq.${pid}`).neq("status", "zurueckgezogen").order("work_date", { ascending: false }).limit(300),
+  ]);
+  // Aktive Mitglieder für „Wer war noch dabei?“ (nur Kennung + Anzeigename; DP2s Personenliste kennt neue Mitglieder evtl. noch nicht)
+  const mitglieder = (await aktiveMitglieder()).map((m) => ({ personId: m.person_id, name: m.display_name }));
+  // KICC-F-100 Phase 7: eigene Zusagen + veröffentlichte Fahrgemeinschaften (nur Kennungen und Startort)
+  const [{ data: zu }, { data: fg }] = await Promise.all([
+    db.from("kc_dp_special_event_signups").select("id,special_event_id,person_id,antwort,anreise,plaetze,startort,bemerkung,version,updated_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", pid),
+    db.from("kc_dp_carpools").select("special_event_id,source_id,fahrer_id,mitfahrer,startort").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "published")]);
+  return { sondereinsaetze: ev ?? [], stunden: (st ?? []).map(shZeile), mitglieder, zusagen: zu ?? [], fahrgemeinschaften: fg ?? [] };
+}
+async function sonderstundenMelden(ich: Ich, p: any) {
+  const heute = berlinTag(new Date()), zahl = (v: unknown) => { const n = Number(v); return Number.isFinite(n) ? Math.round(n * 100) / 100 : NaN; };
+  const viertel = (n: number) => Number.isFinite(n) && Math.abs(n * 4 - Math.round(n * 4)) < 1e-9;
+  const evId = txt(p?.specialEventId, 80), datum = String(p?.date ?? ""), taet = String(p?.taetigkeit ?? ""), bem = txt(p?.bemerkung, 500);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) throw new Fehler("Bitte ein gültiges Datum wählen.");
+  if (datum > heute) throw new Fehler("Stunden können erst nach dem Einsatz gemeldet werden.");
+  if (!SH.taetigkeiten.includes(taet)) throw new Fehler("Bitte eine Tätigkeit aus der Liste wählen.");
+  const { data: ev } = await db.from("kc_dp_special_events").select("source_id,titel,termin_status,datum_von,datum_bis,wiederkehrend")
+    .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source_id", evId).eq("status", "published").maybeSingle();
+  if (!ev) throw new Fehler("Diesen Sondereinsatz gibt es nicht (mehr).", 404);
+  if (ev.termin_status === "OFFEN") throw new Fehler("Für diesen Einsatz steht der Termin noch nicht fest.", 409);
+  if (ev.termin_status === "FEST") {
+    if (ev.wiederkehrend === "markttage") {
+      const { data: tag } = await db.from("kc_dp_days_published").select("work_date").eq("org_id", ORG).eq("event_id", DW.veranstaltung)
+        .eq("status", "published").eq("day_type", "market").eq("work_date", datum).maybeSingle();
+      if (!tag) throw new Fehler("Das Datum ist kein Markttag.");
+    } else if (ev.datum_von && (datum < ev.datum_von || datum > (ev.datum_bis || ev.datum_von))) throw new Fehler("Das Datum gehört nicht zu diesem Einsatz.");
+  }
+  const roh = Array.isArray(p?.eintraege) ? p.eintraege : [];
+  if (!roh.length) throw new Fehler("Bitte mindestens eine Person mit Zeiten angeben.");
+  if (roh.length > SH.maxPersonen) throw new Fehler(`Höchstens ${SH.maxPersonen} Personen je Meldung.`);
+  const mitglieder = new Map((await aktiveMitglieder()).map((m) => [m.person_id, m]));
+  const gesehen = new Set<string>(), eintraege: { pid: string; start: number; ende: number; pause: number; rolle: string | null }[] = [];
+  for (const e of roh) {
+    const pid = String(e?.personId ?? ""), m = mitglieder.get(pid), name = m?.display_name || pid;
+    if (!m) throw new Fehler(`Unbekannte Person: ${name}.`);
+    if (gesehen.has(pid)) throw new Fehler(`${name} ist doppelt ausgewählt.`); gesehen.add(pid);
+    const start = zahl(e?.start), ende = zahl(e?.end), pause = Number(e?.breakMinutes ?? 0), rolle = ["fahrer", "mitfahrer", "keine"].includes(e?.fahrtRolle) ? e.fahrtRolle : null;
+    if (!viertel(start) || !viertel(ende) || start < 0 || start >= 24 || ende <= start || ende > SH.maxEnde) throw new Fehler(`${name}: Bitte gültige Von-/Bis-Zeiten wählen.`);
+    if (ende - start > SH.maxSpanne) throw new Fehler(`${name}: Mehr als ${SH.maxSpanne} Stunden am Stück bitte beim Planer melden.`);
+    if (!Number.isInteger(pause) || pause < 0 || pause > SH.maxPause || pause / 60 >= ende - start) throw new Fehler(`${name}: Die Pause passt nicht zur Zeit.`);
+    eintraege.push({ pid, start, ende, pause, rolle });
+  }
+  // Doppelschutz: dieselbe Person, gleicher Tag und Einsatz, überlappend, noch offen oder bestätigt → nicht doppelt anlegen
+  const { data: vorhanden } = await db.from("kc_dp_hour_reports").select("id,person_id,start_h,end_h").eq("org_id", ORG).eq("event_id", DW.veranstaltung)
+    .eq("special_event_id", evId).eq("work_date", datum).in("status", ["gemeldet", "bestaetigt"]).in("person_id", [...gesehen]);
+  const frist = new Date(datum + "T12:00:00Z"); frist.setUTCDate(frist.getUTCDate() + SH.fristTage);
+  const verspaetet = heute > frist.toISOString().slice(0, 10), sammel = crypto.randomUUID();
+  const neu: any[] = [], uebersprungen: any[] = [];
+  for (const e of eintraege) {
+    const dup = (vorhanden ?? []).find((v: any) => v.person_id === e.pid && Number(v.start_h) < e.ende && Number(v.end_h) > e.start);
+    if (dup) { uebersprungen.push({ personId: e.pid, grund: "schon gemeldet", vorhandenId: dup.id }); continue; }
+    neu.push({ org_id: ORG, event_id: DW.veranstaltung, special_event_id: evId, special_event_title: txt(ev.titel, 120), sammel_id: sammel,
+      person_id: e.pid, gemeldet_von: ich.person_id, work_date: datum, start_h: e.start, end_h: e.ende, break_minutes: e.pause, fahrt_rolle: e.rolle,
+      taetigkeit: taet, bemerkung: bem || null, status: "gemeldet", verspaetet, source: "club_app" });
+  }
+  let zeilen: any[] = [];
+  if (neu.length) {
+    const r = await db.from("kc_dp_hour_reports").insert(neu).select(SH_SPALTEN);
+    if (r.error) throw new Fehler("Die Stunden konnten nicht gemeldet werden.", 500);
+    zeilen = (r.data ?? []).map(shZeile);
+  }
+  await protokoll(ich.person_id, "sonderstunden_gemeldet", { einsatz: evId, datum, personen: neu.length, uebersprungen: uebersprungen.length, verspaetet });
+  // Mitgemeldete Kollegen bekommen Bescheid (Einstellung „Dienste“) – mit Hinweis auf eigene Fahrtkosten/Auslagen
+  const andere = neu.filter((z) => z.person_id !== ich.person_id);
+  for (const z of andere) {
+    const uhr = (h: number) => `${String(Math.floor(h % 24)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
+    await senden("club_dienst", [z.person_id], { titel: `👨‍🍳 ${ich.vorname} hat Sonderstunden für dich gemeldet`, kurz: `${txt(ev.titel, 60)} · ${datum.split("-").reverse().join(".")} · ${uhr(z.start_h)}–${uhr(z.end_h)}`,
+      betreff: `Köcheclub Werne – Sonderstunden für dich gemeldet (${txt(ev.titel, 60)})`,
+      text: `Hallo,\n\n${ich.name} hat für dich Sonderstunden gemeldet:\n\n${txt(ev.titel, 120)} am ${datum.split("-").reverse().join(".")}, ${uhr(z.start_h)}–${uhr(z.end_h)} Uhr.\n\nDer Planer prüft die Meldung und schreibt die Stunden dann deinem Stundenkonto gut. Stimmt etwas nicht? Dann bitte kurz beim Planer melden.\n\nFahrtkosten oder Auslagen (Parkgebühren, Kaution …) meldest du selbst in der App unter 💶 Erstattung.\n\nViele Grüße\nKöcheclub-App`,
+      url: APP_URL + "#dienstwunsch" }, `club-sonderstunden:${z.id}`).catch((e) => console.error("sonderstunden push", String(e)));
+  }
+  return { ok: true, sammelId: neu.length ? sammel : null, rows: zeilen, skipped: uebersprungen };
+}
+
+// KICC-F-100 Phase 7: Zusage speichern (je Person und Einsatz eine Zeile, Änderung zählt die Version hoch)
+const SH_ORTE = ["Werne", "Hamm", "Bergkamen", "Kamen", "Unna", "Lünen", "Selm", "Bork", "Nordkirchen", "Ascheberg", "Dortmund", "Anderer Ort"];
+async function sondereinsatzZusage(ich: Ich, p: any) {
+  const evId = txt(p?.specialEventId, 80);
+  const { data: ev } = await db.from("kc_dp_special_events").select("source_id,titel").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source_id", evId).eq("status", "published").maybeSingle();
+  if (!ev) throw new Fehler("Diesen Sondereinsatz gibt es nicht (mehr).", 404);
+  const antwort = ["ja", "vielleicht", "nein"].includes(p?.antwort) ? p.antwort : null;
+  if (!antwort) throw new Fehler("Bitte angeben, ob du helfen kannst.");
+  const anreise = antwort !== "nein" && ["fahrer", "mitfahrer", "selbst"].includes(p?.anreise) ? p.anreise : null;
+  if (antwort !== "nein" && !anreise) throw new Fehler("Bitte angeben, wie du hinkommst.");
+  const startort = anreise === "fahrer" || anreise === "mitfahrer" ? (SH_ORTE.includes(p?.startort) ? p.startort : null) : null;
+  if ((anreise === "fahrer" || anreise === "mitfahrer") && !startort) throw new Fehler("Bitte den Startort wählen.");
+  const plaetze = anreise === "fahrer" ? Math.max(0, Math.min(8, Number.isInteger(Number(p?.plaetze)) ? Number(p.plaetze) : 0)) : 0;
+  const { data: alt } = await db.from("kc_dp_special_event_signups").select("id,version").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("special_event_id", evId).eq("person_id", ich.person_id).maybeSingle();
+  const zeile = { org_id: ORG, event_id: DW.veranstaltung, special_event_id: evId, person_id: ich.person_id, antwort, anreise, plaetze, startort, bemerkung: txt(p?.bemerkung, 300) || null, updated_at: jetzt() };
+  const r = alt ? await db.from("kc_dp_special_event_signups").update({ ...zeile, version: alt.version + 1 }).eq("id", alt.id).select("id,special_event_id,person_id,antwort,anreise,plaetze,startort,bemerkung,version,updated_at").single()
+    : await db.from("kc_dp_special_event_signups").insert({ ...zeile, version: 1 }).select("id,special_event_id,person_id,antwort,anreise,plaetze,startort,bemerkung,version,updated_at").single();
+  if (r.error) throw new Fehler("Die Zusage konnte nicht gespeichert werden.", 500);
+  await protokoll(ich.person_id, "sondereinsatz_zusage", { einsatz: evId, antwort, anreise });
+  return { ok: true, row: r.data };
+}
+
+// KICC-F-100 Phase 3/8 (Wartung): (1) Mitglied erfährt, wenn der Planer bestätigt oder abgelehnt hat; (2) Erinnerung, wenn 3 Tage nach
+// dem Einsatz für eine Zusage „ja“ noch keine Meldung vorliegt – höchstens einmal je Person, Einsatz und Tag.
+async function sonderstundenWartung() {
+  const heute = berlinTag(new Date()), d = (iso: string) => iso.split("-").reverse().join(".");
+  // (1) Entscheidungen melden
+  const { data: ent } = await db.from("kc_dp_hour_reports").select("id,person_id,special_event_title,work_date,start_h,end_h,status,ablehngrund")
+    .eq("org_id", ORG).eq("event_id", DW.veranstaltung).in("status", ["bestaetigt", "abgelehnt"]).is("benachrichtigt_am", null).limit(100);
+  let gemeldet = 0;
+  for (const r of ent ?? []) {
+    const ok = r.status === "bestaetigt", titel = txt(r.special_event_title || "Sondereinsatz", 80);
+    await senden("club_dienst", [r.person_id], { titel: ok ? "✅ Sonderstunden gutgeschrieben" : "✖ Sonderstunden nicht gutgeschrieben", kurz: `${titel} · ${d(r.work_date)}`,
+      betreff: `Köcheclub Werne – Sonderstunden ${ok ? "gutgeschrieben" : "abgelehnt"} (${titel})`,
+      text: ok ? `Hallo,\n\ndeine Sonderstunden „${titel}“ am ${d(r.work_date)} sind bestätigt und stehen jetzt in deinem Stundenkonto.\n\nViele Grüße\nKöcheclub-App`
+        : `Hallo,\n\ndeine Sonderstunden „${titel}“ am ${d(r.work_date)} wurden nicht gutgeschrieben.${r.ablehngrund ? `\nGrund: ${r.ablehngrund}` : ""}\n\nBei Fragen bitte beim Planer melden.\n\nViele Grüße\nKöcheclub-App`,
+      url: APP_URL + "#dienstwunsch" }, `club-sonderstunden-entscheid:${r.id}`).catch((e) => console.error("sonderstunden entscheid", String(e)));
+    await db.from("kc_dp_hour_reports").update({ benachrichtigt_am: jetzt() }).eq("id", r.id);
+    gemeldet++;
+  }
+  // (2) Erinnern nach Ablauf der Meldefrist (3 Tage) – nur feste, nicht wiederkehrende Einsätze der letzten 30 Tage; nur 9–20 Uhr
+  const std = berlinStunde(new Date()); if (std < 9 || std >= 20) return { gemeldet, erinnert: 0 };
+  const vor30 = berlinTag(new Date(Date.now() - 30 * 86400000));
+  const { data: evs } = await db.from("kc_dp_special_events").select("source_id,titel,datum_von,datum_bis,vorgesehen:payload->vorgesehen").eq("org_id", ORG).eq("event_id", DW.veranstaltung)
+    .eq("status", "published").eq("termin_status", "FEST").is("wiederkehrend", null).gte("datum_von", vor30).lte("datum_von", heute);
+  let erinnert = 0;
+  for (const ev of evs ?? []) {
+    const tage: string[] = []; for (let t = new Date(ev.datum_von + "T12:00:00Z"); t.toISOString().slice(0, 10) <= (ev.datum_bis || ev.datum_von); t.setUTCDate(t.getUTCDate() + 1)) tage.push(t.toISOString().slice(0, 10));
+    const faellig = tage.filter((t) => { const f = new Date(t + "T12:00:00Z"); f.setUTCDate(f.getUTCDate() + SH.fristTage); return heute > f.toISOString().slice(0, 10); });
+    if (!faellig.length) continue;
+    const [{ data: zu }, { data: st }, { data: schon }] = await Promise.all([
+      db.from("kc_dp_special_event_signups").select("person_id").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("special_event_id", ev.source_id).eq("antwort", "ja"),
+      db.from("kc_dp_hour_reports").select("person_id,work_date").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("special_event_id", ev.source_id).neq("status", "zurueckgezogen"),
+      db.from("kc_dp_hour_report_reminders").select("person_id,work_date").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("special_event_id", ev.source_id)]);
+    // Einsatz über mehrere Tage: erinnert wird, wer an KEINEM Tag gemeldet hat (sonst je Tag eine Nachricht – zu viel)
+    // KC-CLUB-SONDER-VORGESEHEN (2.420.0): auch vom Planer Vorgesehene (vorläufige Einteilung) werden erinnert – einmal je Person
+    const zugesagt = new Set((zu ?? []).map((z: any) => String(z.person_id)));
+    const vorgesehen = (Array.isArray(ev.vorgesehen) ? ev.vorgesehen : []).map(String).filter((p: string) => p && !zugesagt.has(p));
+    for (const z of [...(zu ?? []).map((x: any) => ({ person_id: String(x.person_id), vorgesehen: false })), ...vorgesehen.map((p: string) => ({ person_id: p, vorgesehen: true }))]) {
+      if ((st ?? []).some((r: any) => r.person_id === z.person_id)) continue;
+      if ((schon ?? []).some((r: any) => r.person_id === z.person_id)) continue;
+      const { error } = await db.from("kc_dp_hour_report_reminders").insert({ org_id: ORG, event_id: DW.veranstaltung, special_event_id: ev.source_id, work_date: faellig[0], person_id: z.person_id });
+      if (error) continue; // schon erinnert (parallel)
+      await senden("club_dienst", [z.person_id], { titel: "⏰ Bitte Sonderstunden melden", kurz: `${txt(ev.titel, 60)} · ${d(ev.datum_von)}`,
+        betreff: `Köcheclub Werne – Erinnerung: Sonderstunden für „${txt(ev.titel, 60)}“ melden`,
+        text: `Hallo,\n\ndu ${z.vorgesehen ? "warst" : "hattest"} für „${txt(ev.titel, 120)}“ (${d(ev.datum_von)}) ${z.vorgesehen ? "eingeteilt" : "zugesagt"}. Bitte melde deine Stunden – inklusive Fahrzeit von zuhause bis zuhause – in der App unter 🗓️ Dienstwunsch → Twinkey → „Sonderstunden melden“. Hat jemand für dich mitgemeldet, ist alles gut.\n\nViele Grüße\nKöcheclub-App`,
+        url: APP_URL + "#dienstwunsch" }, `club-sonderstunden-erinnerung:${ev.source_id}:${z.person_id}`).catch((e) => console.error("sonderstunden erinnerung", String(e)));
+      erinnert++;
+    }
+  }
+  return { gemeldet, erinnert };
+}
+

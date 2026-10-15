@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.419.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.421.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5106,7 +5106,7 @@ const HILFE = [
   { id: "anpassen", thema: "darstellung", sym: "🎨", t: "Meine App nach meinem Geschmack – alle Möglichkeiten", x: "So viel kannst du einstellen: <b>🎭 Thema</b> (Farben, Kopf-Bild, Sende-Effekt und Schrift mit einem Tipp – oder „Nach Kalender“), <b>🎨 Farbdesign</b>, <b>🌗 Tag und Nacht</b>, <b>🔠 große Schrift</b> (alles unter ⚙️ → „🎨 Darstellung“); <b>🍂 Jahreszeiten-Bild</b>, <b>🎏 Deko an der Leiste</b>, <b>🪟 Kachel- und Sende-Effekt</b>, <b>✨ ruhige oder lebendige Knöpfe</b> (⚙️ → „✨ Effekte“); <b>📄 Eselsohr</b>, Kacheln und Ansicht (⚙️ → „🧩 Startseite &amp; Ansicht“). Alles zeigt dir das Erklär-Video <b>„🎨 Meine App nach meinem Geschmack“</b>.", zeig: () => rgListeAbspielen(["anpassen"]), seit: "2.344.0" },
   { id: "bw_einladung", thema: "start", sym: "🎭", t: "Twinkey lädt zur Bewegung ein", x: "Beim Öffnen der App fragt Twinkey höchstens einmal am Tag: <i>„Heute Lust auf eine Bewegungseinheit mit mir?“</i> <b>„💪 Ja“</b> führt direkt zur Bühne, <b>„⏰ Später“</b> fragt in etwa 2 Stunden wieder, <b>„🙂 Heute nicht“</b> erst morgen, <b>„🔕 Nicht mehr fragen“</b> schaltet es ab. Wieder einschalten: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „🎭 Twinkey lädt zur Bewegung ein“.", zeig: () => einstiegHin("startseite", "setBwEinladung"), seit: "2.314.0" },
   { id: "kachel_vorschlag", thema: "start", sym: "💡", t: "Vorschläge zur Startseite", x: "Die App merkt sich <b>nur auf deinem Handy</b>, welche Kacheln du öffnest – nichts geht an den Server. Nach ein paar Wochen schlägt Twinkey <b>höchstens einmal pro Woche</b> etwas vor: eine Kachel, die du lange nicht gebraucht hast, <b>auszublenden</b> – oder, wenn du in der einfachen Ansicht gut zurechtkommst, <b>weitere Funktionen freizuschalten</b>. Die App ändert nie etwas von selbst; SOS, Termine, Nachrichten und Mein Dienst werden nie vorgeschlagen. Abschalten und „Gemerktes löschen“: ⚙️ → „🧩 Startseite &amp; Ansicht“.", zeig: () => einstiegHin("startseite", "setKachelVorschlag"), seit: "2.418.0" },
-  { id: "kachel_auswahl", thema: "start", sym: "☑️", t: "Kacheln auswählen", x: "Du bestimmst selbst, welche Kacheln auf deiner Startseite stehen: ⚙️ → „🧩 Startseite &amp; Ansicht“ → <b>„☑️ Kacheln auswählen“</b> zeigt alle Kacheln in drei Blöcken – <b>🏠 Club</b>, <b>🙋 Meins</b> und <b>🛠️ Technik</b> – zum Aufklappen. <b>Haken</b> = die Kachel ist auf deiner Startseite, <b>ohne Haken</b> = verborgen. „✅ Alle anzeigen“ holt einen ganzen Bereich zurück. Gilt für die erweiterte Ansicht und auf allen deinen Geräten.", zeig: () => einstiegHin("startseite", "kaAuswahl"), seit: "2.419.0" },
+  { id: "kachel_auswahl", thema: "start", sym: "☑️", t: "Kacheln auswählen", x: "Du bestimmst selbst, welche Kacheln auf deiner Startseite stehen: ⚙️ → „🧩 Startseite &amp; Ansicht“ → <b>„☑️ Kacheln auswählen“</b> zeigt alle Kacheln in drei Blöcken – <b>🏠 Club</b>, <b>🙋 Meins</b> und <b>🛠️ Technik</b> – zum Aufklappen. <b>Haken</b> = die Kachel ist auf deiner Startseite, <b>ohne Haken</b> = verborgen. „✅ Alle anzeigen“ holt einen ganzen Bereich zurück. Gilt für die erweiterte Ansicht und auf allen deinen Geräten.", zeig: () => einstiegHin("startseite", "kaAuswahl"), seit: "2.421.0" },
   { id: "es_regler", thema: "toene", sym: "🎚️", t: "Bühne: Musik und Stimme lauter oder leiser", x: "Während Twinkey turnt, stehen zwei Regler am Rand: <b>rechts die Musik</b> 🎵, <b>links Twinkeys Stimme</b> 🗣️. Nach oben ziehen = lauter (der Keil wird dicker), nach unten = leiser. <b>Unten aufs Symbol tippen</b> macht sofort stumm (🔇 bzw. 🤐) – nochmal tippen holt die vorige Lautstärke zurück. Die App merkt sich beides. Ist alles zu leise, auch die Lautstärke am Handy prüfen.", zeig: () => esOeffnen("buehne"), seit: "2.300.0" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🧩 Startseite &amp; Ansicht“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("startseite", "kachelGroesseWahl"), seit: "2.23.90" },
   // 2.415.0 KC-CLUB-AVATAR-HILFE (nur mit Freigabe sichtbar, darum nicht im Block „Neuerungen für alle“): hochwertige Avatare, Individuell anpassen (Kacheln), Schmuck, eigene Brille
@@ -12335,7 +12335,8 @@ const satzAm = (datum) => { let s = ERS.standard ?? 0.38; for (const x of ERS.sa
 async function erstattungLaden() {
   try {
     const r = await api("erstattung_meine");
-    Object.assign(ERS, { kmSatz: r.kmSatz, standard: r.standard, saetze: r.saetze || [], gruende: r.gruende, arten: r.arten, antraege: r.antraege || [], abgerechnet: r.besucheAbgerechnet || [], geladen: true });
+    Object.assign(ERS, { kmSatz: r.kmSatz, standard: r.standard, saetze: r.saetze || [], gruende: r.gruende, arten: r.arten, antraege: r.antraege || [], abgerechnet: r.besucheAbgerechnet || [], geladen: true,
+      sondereinsaetze: r.sondereinsaetze || [] }); // KC-CLUB-ERSTATTUNG-SONDER (2.419.0)
     if (!$("ersForm").innerHTML) erstattungArt("fahrt");
     $("ersMeine").innerHTML = r.antraege.length ? r.antraege.map((a) => `<div class="zeile"><div style="flex:1"><b>${eur(a.summe)}</b> · ${a.anzahl} Position${a.anzahl === 1 ? "" : "en"}<div class="hinweis" style="margin:0;font-size:.85rem">${esc(wann(a.zeit))} · ${a.auszahlung === "bar" ? "bar" : "Überweisung"}</div></div>
       <span class="stmarke ${a.status === "erstattet" ? "st-verfuegbar" : a.status === "abgelehnt" ? "st-abwesend" : "st-beschaeftigt"}">${a.status === "erstattet" ? "✅ erstattet" : a.status === "abgelehnt" ? "❌ abgelehnt" : "📨 eingereicht"}</span></div>`).join("")
@@ -12344,22 +12345,62 @@ async function erstattungLaden() {
   } catch (e) { meldeFehler(e); if (!ERS.geladen) $("ersMeine").innerHTML = `<div class="karte hinweis">⚠️ ${esc(fehlerText(e, "Konnte nicht geladen werden."))}<div style="margin-top:8px"><button type="button" class="knopf klein" onclick="erstattungLaden()">🔄 Nochmal laden</button></div></div>`; } // 2.337.0
   erstattungZeigen();
 }
+// KC-CLUB-ERSTATTUNG-SONDER (2.419.0, KICC-F-100): weitere Auslagen bei Sondereinsätzen – Parken, Kraftstoff (nur Miet-/Clubfahrzeug),
+// Kaution (zählt nicht zur Summe, wird nachverfolgt); je Position „Bon/Quittung vorhanden?“; Bezug zum Sondereinsatz; Vorschuss.
+const ERS_SYM = { fahrt: "🚗", einkauf: "🛒", sonstiges: "📦", parken: "🅿️", kraftstoff: "⛽", kaution: "🔐" };
+const ersZaehlt = (x) => x.art !== "kaution";
+function ersSonderFeld() {
+  const l = ERS.sondereinsaetze || []; if (!l.length) return "";
+  return `<label class="feld">Gehört zu Sondereinsatz (freiwillig)<select id="ersSonder"><option value="">– kein Sondereinsatz –</option>${l.map((e) => `<option value="${esc(e.id)}" ${ERS.vorSonder === e.id ? "selected" : ""}>${esc(e.titel)}${e.datum ? " · " + esc(e.datum.split("-").reverse().join(".")) : ""}</option>`).join("")}</select></label>`;
+}
+function ersBelegStatusFeld() {
+  return `<div class="feld">Bon / Quittung vorhanden?<div class="umschalter modus3" id="ersBelegStatus" style="margin:4px 0 0">
+    <button type="button" data-b="foto" onclick="ersBelegStatus('foto')">📷 Ja, Foto</button><button type="button" data-b="papier" onclick="ersBelegStatus('papier')">🧾 Ja, auf Papier</button><button type="button" data-b="kein" onclick="ersBelegStatus('kein')">❌ Nein</button></div></div>
+    <label class="feld versteckt" id="ersBelegGrundFeld">Warum kein Beleg?<input id="ersBelegGrund" maxlength="200" placeholder="z. B. Parkautomat ohne Quittung"></label>
+    <p class="hinweis versteckt" id="ersPapierHinweis" style="margin:0">Bitte den Beleg im Büro abgeben – im Eingangskorb steht er bis dahin als „Beleg ausstehend“.</p>`;
+}
+function ersBelegStatus(st) {
+  ERS.belegStatus = st;
+  document.querySelectorAll("#ersBelegStatus button").forEach((b) => b.classList.toggle("an", b.dataset.b === st));
+  $("ersBelegGrundFeld")?.classList.toggle("versteckt", st !== "kein"); $("ersPapierHinweis")?.classList.toggle("versteckt", st !== "papier");
+  document.querySelector("#ersForm .belegfeld")?.classList.toggle("versteckt", st !== "foto");
+}
 function erstattungArt(art, getippt) {
-  ERS.art = art; ERS.belege = []; if (getippt) ERS.gewaehlt = true; // 2.81.0: für die Schritt-Hilfe – Art selbst gewählt?
+  ERS.art = art; ERS.belege = []; ERS.belegStatus = null; if (getippt) ERS.gewaehlt = true; // 2.81.0: für die Schritt-Hilfe – Art selbst gewählt?
   document.querySelectorAll("#ersArt button").forEach((b) => b.classList.toggle("an", b.dataset.a === art));
   const heute = heuteIso(), beleg = `<div class="feld belegfeld">Belege (freiwillig, bis ${BELEG_MAX})
        <div class="knopfreihe belegknoepfe"><button type="button" class="knopf klein" onclick="$('ersFoto').click()">📷 Foto aufnehmen</button><button type="button" class="knopf klein" onclick="$('ersDatei').click()">📁 Datei wählen</button></div>
        <input type="file" id="ersFoto" accept="image/*" capture="environment" class="versteckt" onchange="erstattungBeleg(this)">
        <input type="file" id="ersDatei" accept="image/*,application/pdf" multiple class="versteckt" onchange="erstattungBeleg(this)"></div><div class="chips" id="ersBelege"></div>`;
   $("ersForm").innerHTML = (art === "fahrt" && ICH?.admin ? `<button type="button" class="knopf" style="margin-bottom:8px" onclick="ersBesucheWahl()">🎓 Fahrten aus Besuchen übernehmen</button>` : "") // KC-CLUB-ERSTATTUNG-BESUCHE (2.25.4)
-    + `<label class="feld">Datum<input type="date" id="ersDatum" value="${heute}" max="${heute}" oninput="if(ERS.art==='fahrt')erstattungVorschau()"></label>` + (art === "fahrt"
+    + `<label class="feld">Datum<input type="date" id="ersDatum" value="${ERS.vorDatum && ERS.vorDatum <= heute ? ERS.vorDatum : heute}" max="${heute}" oninput="if(ERS.art==='fahrt')erstattungVorschau()"></label>` + (art === "fahrt"
     ? `<label class="feld">Gefahrene Kilometer (hin und zurück)<input id="ersKm" inputmode="decimal" placeholder="z. B. 82" oninput="erstattungVorschau()"></label>
-       ${comboFeld("ersGrund", "Grund der Fahrt", ERS.gruende, "", "– bitte wählen –", "✏️ Anderer Grund …", "z. B. Messebesuch")}
-       <label class="feld">Ziel / Ort (freiwillig)<input id="ersZiel" maxlength="120" placeholder="z. B. Dortmund"></label>
+       ${comboFeld("ersGrund", "Grund der Fahrt", ERS.gruende, ERS.vorGrund || "", "– bitte wählen –", "✏️ Anderer Grund …", "z. B. Messebesuch")}
+       <label class="feld">Ziel / Ort (freiwillig)<input id="ersZiel" maxlength="120" placeholder="z. B. Dortmund" value="${esc(ERS.vorZiel || "")}"></label>
        <p class="hinweis" id="ersVorschau" style="margin:0">Pauschale: ${eur(satzAm(heute))} je km</p>`
     : `<label class="feld">Betrag in €<input id="ersBetrag" inputmode="decimal" placeholder="z. B. 23,90"></label>
-       <label class="feld">${art === "einkauf" ? "Was wurde eingekauft?" : "Wofür war die Auslage?"}<input id="ersWas" maxlength="200" placeholder="${art === "einkauf" ? "z. B. Getränke für die Sitzung" : "z. B. Parkgebühr"}"></label>
-       ${art === "einkauf" ? `<label class="feld">Geschäft (freiwillig)<input id="ersGeschaeft" maxlength="120" placeholder="z. B. Edeka Werne"></label>` : ""}${beleg}`);
+       ${art === "kraftstoff" ? `<label class="feld">Fahrzeug<select id="ersFahrzeug" onchange="$('ersEigenHinweis').classList.toggle('versteckt', this.value !== 'eigen')"><option value="">– bitte wählen –</option><option value="miete">Mietfahrzeug</option><option value="club">Clubfahrzeug</option><option value="eigen">Eigenes Auto</option></select></label>
+         <p class="hinweis versteckt" id="ersEigenHinweis" style="margin:0;color:#c62828">Mit dem eigenen Auto gibt es nur die km-Pauschale – bitte unter 🚗 Fahrtkosten eintragen.</p>
+         <label class="feld">Liter (freiwillig)<input id="ersLiter" inputmode="decimal" placeholder="z. B. 35"></label>` : ""}
+       <label class="feld">${art === "einkauf" ? "Was wurde eingekauft?" : art === "parken" ? "Wo wurde geparkt?" : art === "kaution" ? "Wofür ist die Kaution?" : art === "kraftstoff" ? "Wofür? (freiwillig)" : "Wofür war die Auslage?"}<input id="ersWas" maxlength="200" placeholder="${art === "einkauf" ? "z. B. Getränke für die Sitzung" : art === "parken" ? "z. B. Klinikum Dortmund" : art === "kaution" ? "z. B. Thermoboxen" : "z. B. Parkgebühr"}"></label>
+       ${art === "einkauf" ? `<label class="feld">Geschäft (freiwillig)<input id="ersGeschaeft" maxlength="120" placeholder="z. B. Edeka Werne"></label>` : ""}
+       ${art === "kaution" ? `<label class="feld">An wen? (freiwillig)<input id="ersGeschaeft" maxlength="120" placeholder="z. B. Kühlhaus Hamm"></label>
+         <div class="feld">Bezahlt aus<div class="umschalter" id="ersKautionAus" style="margin:4px 0 0"><button type="button" data-k="eigen" class="an" onclick="ersKautionAus('eigen')">👛 Eigenem Geld</button><button type="button" data-k="vorschuss" onclick="ersKautionAus('vorschuss')">🏦 Club-Vorschuss</button></div></div>
+         <p class="hinweis" style="margin:0">Die Kaution zählt nicht zur Summe. Kommt sie zurück, geht sie an dich (eigenes Geld) bzw. an den Club (Vorschuss). Kommt sie nicht zurück, wird sie dir erstattet.</p>` : ""}
+       ${ersBelegStatusFeld()}${beleg}`) + ersSonderFeld();
+  if (art !== "fahrt") ersBelegStatus("foto");
+  if (art === "kaution") ERS.kautionAus = "eigen";
+}
+function ersKautionAus(k) { ERS.kautionAus = k; document.querySelectorAll("#ersKautionAus button").forEach((b) => b.classList.toggle("an", b.dataset.k === k)); }
+// Vorbelegung aus Twinkey („🚗 Fahrtkosten / Auslagen erfassen“ nach der Sonderstunden-Meldung)
+async function erstattungVorbelegen(v) {
+  if (!ERS.geladen) await erstattungLaden().catch(() => {}); // Sondereinsätze/Gründe müssen da sein
+  const titel = String(v?.titel || ""), passt = (ERS.gruende || []).find((g) => g === titel) || (/kochen/i.test(titel) && /dortmund/i.test(titel + " " + (v?.ort || "")) ? (ERS.gruende || []).find((g) => g === "Kochen in Dortmund") : "");
+  Object.assign(ERS, { vorSonder: v?.specialEventId || null, vorDatum: /^\d{4}-\d{2}-\d{2}$/.test(String(v?.datum || "")) ? v.datum : null, vorGrund: passt || titel.slice(0, 120), vorZiel: String(v?.ort || "").slice(0, 120) });
+  KR_ZEIGE("erstattung", () => {
+    erstattungArt(v?.fahrer ? "fahrt" : "parken");
+    melde(v?.fahrer ? "🚗 Fahrt vorausgefüllt – bitte km ergänzen. Weitere Auslagen oben wählen." : "Bitte Art der Auslage wählen und ausfüllen.");
+  });
 }
 function erstattungVorschau() {
   const km = Number(String($("ersKm")?.value || "").replace(",", ".")), satz = satzAm($("ersDatum")?.value || heuteIso());
@@ -12395,9 +12436,17 @@ function erstattungHinzu() {
   } else {
     const betrag = Number(String($("ersBetrag").value).replace(",", ".")), was = $("ersWas").value.trim();
     if (!(betrag > 0)) return melde("Bitte einen Betrag angeben.", true);
-    if (!was) return melde(ERS.art === "einkauf" ? "Bitte angeben, was eingekauft wurde." : "Bitte kurz beschreiben, wofür.", true);
-    p = { art: ERS.art, datum, betrag: Math.round(betrag * 100) / 100, was, geschaeft: $("ersGeschaeft")?.value.trim() || "", belege: ERS.belege.map((b) => b.id), belegNamen: ERS.belege.map((b) => b.name), belegDateien: ERS.belege.map((b) => b.datei) };
+    if (!was && ERS.art !== "kraftstoff") return melde(ERS.art === "einkauf" ? "Bitte angeben, was eingekauft wurde." : ERS.art === "parken" ? "Bitte angeben, wo geparkt wurde." : "Bitte kurz beschreiben, wofür.", true);
+    const st = ERS.belegStatus || "foto";
+    if (st === "foto" && !ERS.belege.length) return melde("Bitte den Beleg fotografieren – oder „Ja, auf Papier“ bzw. „Nein“ wählen.", true);
+    const grundB = $("ersBelegGrund")?.value.trim() || ""; if (st === "kein" && !grundB) return melde("Ohne Beleg bitte kurz begründen.", true);
+    p = { art: ERS.art, datum, betrag: Math.round(betrag * 100) / 100, was, geschaeft: $("ersGeschaeft")?.value.trim() || "", belege: st === "foto" ? ERS.belege.map((b) => b.id) : [], belegNamen: st === "foto" ? ERS.belege.map((b) => b.name) : [], belegDateien: st === "foto" ? ERS.belege.map((b) => b.datei) : [],
+      beleg_status: st, ...(st === "kein" ? { beleg_grund: grundB } : {}) };
+    if (ERS.art === "kraftstoff") { const fz = $("ersFahrzeug").value; if (fz === "eigen") return melde("Mit dem eigenen Auto gibt es nur die km-Pauschale – bitte unter 🚗 Fahrtkosten eintragen.", true); if (!fz) return melde("Bitte das Fahrzeug wählen.", true);
+      p.fahrzeug = fz; const l = Number(String($("ersLiter").value).replace(",", ".")); if (l > 0) p.liter = l; }
+    if (ERS.art === "kaution") p.bezahlt_aus = ERS.kautionAus === "vorschuss" ? "vorschuss" : "eigen";
   }
+  const se = $("ersSonder")?.value; if (se) { p.special_event_id = se; p.sonder_titel = (ERS.sondereinsaetze || []).find((e) => e.id === se)?.titel || ""; }
   ERS.pos.push(p); erstattungArt(ERS.art); erstattungZeigen(); melde("➕ Position hinzugefügt");
 }
 // ---------- KC-CLUB-ERSTATTUNG-BESUCHE (2.25.4, Wunsch Hansi „die km-Abrechnung muss auch unter Erstattung laufen – von dort an den Kassenwart“) ----------
@@ -12439,11 +12488,11 @@ function ersBesuecheUebernehmen() {
 }
 function erstattungZeigen() {
   const d = (iso) => iso.split("-").reverse().join(".");
-  const summe = ERS.pos.reduce((a, x) => a + x.betrag, 0);
-  $("ersListe").innerHTML = ERS.pos.length ? `<table class="todotab">${ERS.pos.map((x, i) => `<tr><td class="kat">${x.art === "fahrt" ? "🚗" : x.art === "einkauf" ? "🛒" : "📦"}</td>
-      <td><div class="aufgabe">${x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km – ${esc(x.grund)}` : esc(x.was)}</div>${x.art === "fahrt" ? `<div class="meta">${String(x.km).replace(".", ",")} km × ${eur(x.satz)}</div>` : ""}<div class="meta">${d(x.datum)}${x.besuch_id ? " · 🎓 " + esc(x.besuch_id) : ""}${x.ziel ? " · " + esc(x.ziel) : ""}${x.geschaeft ? " · " + esc(x.geschaeft) : ""}${x.belege?.length ? " · 📎 Beleg" : ""}</div></td>
-      <td style="text-align:right;font-weight:800;white-space:nowrap">${eur(x.betrag)}</td><td style="width:34px"><button aria-label="Löschen" class="weg" onclick="ERS.pos.splice(${i},1);erstattungZeigen()">🗑️</button></td></tr>`).join("")}
-      <tr><td></td><td><b>Summe</b></td><td style="text-align:right;font-weight:900;font-size:1.1rem;white-space:nowrap">${eur(summe)}</td><td></td></tr></table>`
+  const summe = ERS.pos.filter(ersZaehlt).reduce((a, x) => a + x.betrag, 0), vorschuss = Number(String($("ersVorschuss")?.value || "").replace(",", ".")) || 0;
+  $("ersListe").innerHTML = ERS.pos.length ? `<table class="todotab">${ERS.pos.map((x, i) => `<tr><td class="kat">${ERS_SYM[x.art] || "📦"}</td>
+      <td><div class="aufgabe">${x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km – ${esc(x.grund)}` : esc(x.was || ({ kraftstoff: "Kraftstoff", parken: "Parkgebühren", kaution: "Kaution" })[x.art] || "")}</div>${x.art === "fahrt" ? `<div class="meta">${String(x.km).replace(".", ",")} km × ${eur(x.satz)}</div>` : ""}<div class="meta">${d(x.datum)}${x.besuch_id ? " · 🎓 " + esc(x.besuch_id) : ""}${x.ziel ? " · " + esc(x.ziel) : ""}${x.geschaeft ? " · " + esc(x.geschaeft) : ""}${x.belege?.length ? " · 📎 Beleg" : x.beleg_status === "papier" ? " · 🧾 Beleg auf Papier" : x.beleg_status === "kein" ? " · ❌ kein Beleg" : ""}${x.fahrzeug ? " · " + (x.fahrzeug === "miete" ? "Mietfahrzeug" : "Clubfahrzeug") : ""}${x.art === "kaution" ? ` · aus ${x.bezahlt_aus === "vorschuss" ? "Club-Vorschuss" : "eigenem Geld"} · zählt nicht zur Summe` : ""}${x.sonder_titel ? " · ★ " + esc(x.sonder_titel) : ""}</div></td>
+      <td style="text-align:right;font-weight:800;white-space:nowrap${ersZaehlt(x) ? "" : ";opacity:.55;text-decoration:line-through"}">${eur(x.betrag)}</td><td style="width:34px"><button aria-label="Löschen" class="weg" onclick="ERS.pos.splice(${i},1);erstattungZeigen()">🗑️</button></td></tr>`).join("")}
+      <tr><td></td><td><b>Summe</b></td><td style="text-align:right;font-weight:900;font-size:1.1rem;white-space:nowrap">${eur(summe)}</td><td></td></tr>${vorschuss > 0 ? `<tr><td></td><td>abzüglich Vorschuss → ${summe - vorschuss >= 0 ? "Auszahlung" : "Rückzahlung an den Club"}</td><td style="text-align:right;font-weight:800;white-space:nowrap">${eur(Math.abs(summe - vorschuss))}</td><td></td></tr>` : ""}</table>`
     : '<p class="hinweis" style="margin:0">Noch keine Position – oben ausfüllen und „＋ Position hinzufügen“ tippen.</p>';
   $("ersSendenKnopf").disabled = !ERS.pos.length;
   $("ersSendenKnopf").textContent = ERS.pos.length ? `📨 Antrag über ${eur(summe)} senden` : "📨 Antrag senden";
@@ -12451,12 +12500,13 @@ function erstattungZeigen() {
 function erstattungAuszahlung(a) { ERS.auszahlung = a; document.querySelectorAll("#ersAuszahlung button").forEach((b) => b.classList.toggle("an", b.dataset.a === a)); }
 async function erstattungSenden() {
   if (!ERS.pos.length) return;
-  const summe = ERS.pos.reduce((a, x) => a + x.betrag, 0);
+  const summe = ERS.pos.filter(ersZaehlt).reduce((a, x) => a + x.betrag, 0);
   if (!(await frage(`Erstattung über ${eur(summe)} beantragen?\n\nDer Antrag geht per Mail an Kassenwart und Clubsprecher. Du bekommst eine Kopie.`))) return;
   try {
     const kopie = { pos: ERS.pos.slice(), auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung").value.trim() };
-    const r = await api("erstattung_senden", { positionen: ERS.pos.map(({ belegNamen, belegDateien, satz, ...x }) => x), auszahlung: ERS.auszahlung, bemerkung: kopie.bemerkung });
-    ERS.pos = []; ERS.gewaehlt = false; $("ersBemerkung").value = ""; erstattungZeigen();
+    const r = await api("erstattung_senden", { positionen: ERS.pos.map(({ belegNamen, belegDateien, satz, sonder_titel, ...x }) => x), auszahlung: ERS.auszahlung, bemerkung: kopie.bemerkung,
+      vorschuss: Number(String($("ersVorschuss")?.value || "").replace(",", ".")) || 0 });
+    ERS.pos = []; ERS.gewaehlt = false; Object.assign(ERS, { vorSonder: null, vorDatum: null, vorGrund: null, vorZiel: null }); $("ersBemerkung").value = ""; if ($("ersVorschuss")) $("ersVorschuss").value = ""; erstattungZeigen();
     melde(`📨 Antrag über ${eur(r.summe)} verschickt an ${[...r.an, ...r.cc].join(" und ")} – du bekommst eine Kopie per Mail.`);
     erstattungLaden();
     erstattungAblageFragen(kopie, r); // KC-CLUB-ARCHIV-ABLAGE (1.18.0): erst nach erfolgreichem Versand
@@ -13656,6 +13706,9 @@ window.addEventListener("message", (e) => {
   if (String(e.data?.art || "").startsWith("wunschbogen")) return wbAntwort(e.data);
   if (e.data?.art === "dw-sperre") return dwSperreHinweis(e.data.funde);
   if (e.data?.art === "dw-alle-tage") return dwFertigLeiste(Number(e.data.tage) || 0);
+  // KICC-F-100 (2.419.0): Sonderstunden gemeldet / Fahrtkosten-Auslagen aus Twinkey erfassen
+  if (e.data?.art === "sonderstunden-gemeldet") return melde(`✓ Sonderstunden gemeldet (${Number(e.data.anzahl) || 0} Person${Number(e.data.anzahl) === 1 ? "" : "en"}) – der Planer bestätigt sie`);
+  if (e.data?.art === "erstattung-vorbelegen") { dwZurueck(); return erstattungVorbelegen(e.data); }
   if (e.data === "dienstwunsch-zu") dwZurueck();
   else if (e.data === "dienstwunsch-gespeichert") { DWB.geaendert = true; DWB.bestaetigt = false; melde("✓ Dienstwünsche gespeichert – DP2 übernimmt sie"); }
 });
@@ -13939,12 +13992,12 @@ function kaSchieben(id, d) {
   [liste[i], liste[j]] = [liste[j], liste[i]];
   KA.reihenfolge = { ...KA.reihenfolge, [kaSchluessel()]: liste }; kaFrisch = id; kaSpeichern(); kachelnZeigen();
 }
-function kaSichtbar(id, sichtbar, leise) { // 2.419.0: leise = aus der Kachel-Auswahl (kein Hinweis bei jedem Haken)
+function kaSichtbar(id, sichtbar, leise) { // 2.421.0: leise = aus der Kachel-Auswahl (kein Hinweis bei jedem Haken)
   KA.aus = sichtbar ? KA.aus.filter((x) => x !== id) : [...new Set([...KA.aus, id])];
   kaFrisch = id; kaSpeichern(); registerZeigen(); kachelnZeigen();
   if (!sichtbar && !leise) melde("🙈 Ausgeblendet – mit 👁️ jederzeit wieder einblenden");
 }
-// ---------- 2.419.0 KC-CLUB-KACHEL-AUSWAHL (Wunsch Hansi „unter Einstellungen die Kacheln anhaken, die man haben möchte – die anderen sind verborgen;
+// ---------- 2.421.0 KC-CLUB-KACHEL-AUSWAHL (Wunsch Hansi „unter Einstellungen die Kacheln anhaken, die man haben möchte – die anderen sind verborgen;
 // in 3 einklappbaren Blöcken Club, Meins, Technik, alle auflisten mit Kästchen nebeneinander, nicht zu viel Platz verschwenden“) ----------
 // Kein eigener Speicher: Haken = nicht in KA.aus (dasselbe Ausblenden wie „Anordnen“ ✕/👁️, gilt auf allen Geräten). Gezeigt werden nur Kacheln,
 // die man sehen darf (kachelnAlle: „nur“-Regeln, keine „bald“-Kacheln); das Admin-Register bleibt außen vor.
@@ -21469,6 +21522,7 @@ function hashSprung(h) {
     else if (h === "#pinnwand") zeige("pinnwand");
     else if (h === "#standort") zeige("standort");
     else if (h === "#dienstwunsch") dwOeffnen();
+    else if (h === "#erstattung") KR_ZEIGE("erstattung"); // KICC-F-100 (2.419.0): Link aus „Kaution wird erstattet“
     else if (h === "#wunschbogen") wbStart(); // KC-CLUB-WUNSCHBOGEN (2.23.28)
     else if (h === "#schulung") smStart(); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62)
     else if (h.startsWith("#besuch=")) bsDirekt(decodeURIComponent(h.slice(8))); // KC-CLUB-BESUCHE (2.23.65): „Protokoll öffnen“ aus Mails wie im alten Programm
@@ -24064,6 +24118,11 @@ function ekPosten(P) {
       auf: `ekErstInfo('${x.id}')`, ordner: ["🗄️", "Archiv", "arStart()"],
       schnell: [...(x.kenntnisIch ? [] : [["👁️ Zur Kenntnis genommen", `ekKenntnis('erstattung','${x.id}')`]]), ["✅ Erstattet", `ekErstattet('${x.id}')`, true],
         ["✖ Ablehnen", `ekErstAblehnen('${x.id}')`], ["🗄️ Ablegen …", `ekAblage('erstattung','${x.id}')`]] });
+  // KC-CLUB-ERSTATTUNG-SONDER (2.419.0): offene Kautionen und abzugebende Papierbelege – auch nach der Erstattung
+  for (const x of k.nachverfolgen || [])
+    P.push({ wer: x.name, datum: x.erstellt_am, sym: "🔎", gruppe: "Erstattung – nachverfolgen", titel: `${x.name}: ${x.offen.map((y) => y.kaution ? "🔐 Kaution " + euro(y.betrag) : "🧾 Beleg").join(" · ")}`,
+      unter: `${zeitKurz(x.erstellt_am)} · Antrag ${x.status === "erstattet" ? "erstattet" : "eingereicht"}`, auf: `ekNachInfo('${x.id}')`, ordner: ["🗄️", "Archiv", "arStart()"],
+      schnell: [["🔎 Öffnen", `ekNachInfo('${x.id}')`, true]] });
   for (const x of k.dienstwuensche || [])
     P.push({ wer: x.name, datum: x.zuletzt, sym: "📅", gruppe: x.geaendert ? "Dienstzeiten – geändert" : "Dienstzeiten – neu", titel: x.name,
       unter: `${x.tage} Tag${x.tage === 1 ? "" : "e"} · zuletzt ${zeitKurz(x.zuletzt)}${x.uebernommen ? " · im Dienstplan übernommen" : ""}${x.kenntnis.length ? " · 👁️ " + x.kenntnis.join(", ") : ""}`,
@@ -24080,7 +24139,9 @@ function ekErstInfo(id) {
   const f = blattAuf("ekErstBlatt", `<h3 style="margin-top:0">💶 Erstattung ${esc(x.name)}</h3>${einwHtml("b-ek-erstattung")}
     <p class="hinweis">Eingereicht ${esc(zeitKurz(x.erstellt_am))} · Auszahlung gewünscht: <b>${x.auszahlung === "bar" ? "bar" : "per Überweisung"}</b></p>
     <div class="karte" style="padding:6px 12px">${x.positionen.map((y) => `<div class="zeile" style="display:flex;justify-content:space-between;gap:8px"><span>${esc(aeDatum(y.datum))} · ${esc(y.text)}</span><b>${euro(y.betrag)}</b></div>`).join("")}
-      <div class="zeile" style="display:flex;justify-content:space-between;border-top:1px solid var(--linie);margin-top:4px;padding-top:4px"><b>Summe</b><b>${euro(x.summe)}</b></div></div>
+      <div class="zeile" style="display:flex;justify-content:space-between;border-top:1px solid var(--linie);margin-top:4px;padding-top:4px"><b>Summe</b><b>${euro(x.summe)}</b></div>
+      ${x.vorschuss ? `<div class="zeile" style="display:flex;justify-content:space-between"><span>abzüglich Vorschuss → ${x.summe - x.vorschuss >= 0 ? "Auszahlung" : "Rückzahlung an den Club"}</span><b>${euro(Math.abs(x.summe - x.vorschuss))}</b></div>` : ""}
+      ${x.positionen.some((y) => y.kaution) ? '<p class="hinweis" style="margin:4px 0 0">🔐 Kautionen zählen nicht zur Summe – sie bleiben unter „Nachverfolgen“, bis sie zurück sind.</p>' : ""}${x.positionen.some((y) => y.beleg === "papier") ? '<p class="hinweis" style="margin:4px 0 0">🧾 Papierbelege werden abgegeben – „Beleg erhalten“ unter „Nachverfolgen“.</p>' : ""}</div>
     ${x.bemerkung ? `<p>💬 ${esc(x.bemerkung)}</p>` : ""}${x.kenntnis.length ? `<p class="hinweis">👁️ Gesehen: ${esc(x.kenntnis.join(", "))}</p>` : ""}
     <p class="hinweis">Belege und Aufstellung kamen zusätzlich per Mail.</p>
     <div style="display:grid;gap:8px">${x.kenntnisIch ? "" : `<button class="knopf" data-fn="ekKenntnis('erstattung','${x.id}')">👁️ Zur Kenntnis genommen</button>`}
@@ -24103,6 +24164,22 @@ async function ekErstAblehnen(id) {
   const grund = await eingabe(`Erstattung von ${x.name.split(" ")[0]} ablehnen – warum? (${x.name.split(" ")[0]} bekommt den Grund)`, "", { mehrzeilig: true });
   if (!grund || !grund.trim()) return;
   ekErledigen(id, "abgelehnt", null, grund);
+}
+function ekNachInfo(id) {
+  const x = (BU_EIN.korb?.nachverfolgen || []).find((y) => y.id === id); if (!x) return melde("Nichts mehr offen – schon erledigt?");
+  const knopf = (t, fn, haupt) => `<button class="knopf${haupt ? " haupt" : ""}" data-fn="${fn}">${t}</button>`;
+  const f = blattAuf("ekNachBlatt", `<h3 style="margin-top:0">🔎 Nachverfolgen – ${esc(x.name)}</h3><p class="hinweis">Antrag vom ${esc(zeitKurz(x.erstellt_am))} · ${x.status === "erstattet" ? "bereits erstattet" : "noch eingereicht"}</p>
+    ${x.offen.map((y) => `<div class="karte" style="padding:8px 12px"><div>${esc(aeDatum(y.datum))} · ${esc(y.text)} · <b>${euro(y.betrag)}</b></div><div style="display:grid;gap:6px;margin-top:6px">
+      ${y.beleg ? knopf("🧾 Beleg erhalten", `ekPosSetzen('${x.id}',${y.i},{beleg:'erhalten'})`, true) : ""}
+      ${y.kaution ? (y.bezahlt_aus === "vorschuss" ? knopf("🏦 Kaution beim Club eingegangen", `ekPosSetzen('${x.id}',${y.i},{kaution:'beim_club'})`, true) : knopf("↩️ Kaution an Mitglied zurück", `ekPosSetzen('${x.id}',${y.i},{kaution:'zurueck_mitglied'})`, true))
+        + knopf(y.bezahlt_aus === "vorschuss" ? "✖ Kaution verfallen" : "✖ Kaution verfallen – wird erstattet", `ekPosSetzen('${x.id}',${y.i},{kaution:'verfallen'})`) : ""}</div></div>`).join("")}
+    <div style="display:grid;gap:8px">${knopf("Schließen", "")}</div>`);
+  f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.fn) new Function(b.dataset.fn)(); }));
+}
+async function ekPosSetzen(id, index, was) {
+  if (was.kaution === "verfallen" && !(await frage("Kaution als verfallen markieren?\n\nAus eigenem Geld bezahlt: der Betrag wird dem Mitglied zusätzlich erstattet."))) return;
+  try { await api("erstattung_position_setzen", { id, index, ...was }); } catch (e) { return meldeFehler(e); }
+  await ekNach(was.beleg ? "🧾 Beleg als erhalten vermerkt" : was.kaution === "verfallen" ? "🔐 Kaution verfallen – Mitglied hat Bescheid bekommen" : "🔐 Kaution erledigt");
 }
 async function ekErledigen(id, status, ausgezahlt, antwort) {
   try { await api("erstattung_erledigen", { id, status, ausgezahlt, antwort }); } catch (e) { return meldeFehler(e); }
@@ -33964,7 +34041,7 @@ function suAppListe() {
     ["🧩", "Rätsel: Wie gut kennst du Werne? (Bilderrätsel, Bestenliste)", "rätsel raetsel spiel quiz bilderrätsel pixel buzzer werne rathaus küche gewürze bestenliste wochen-rätsel", () => esOeffnen("raetsel")], // 2.339.0
     ["🪞", "Spiegel (Kamera, Pausbäckchen)", "spiegel kamera selfie pausbäckchen pausbacken dick gesicht", () => esOeffnen("spiegel")], // 2.314.0
     ["🎭", "Einladung zur Bewegung beim Start", "einladung bewegung start fragen bewegungseinheit sport frage", () => suEinstellung("setBwEinladung")],
-    ["☑️", "Kacheln auswählen (anhaken, was auf die Startseite soll)", "kacheln auswählen anhaken haken kästchen verbergen ausblenden einblenden startseite club meins technik auswahl", () => suEinstellung("kaAuswahl")], // 2.419.0
+    ["☑️", "Kacheln auswählen (anhaken, was auf die Startseite soll)", "kacheln auswählen anhaken haken kästchen verbergen ausblenden einblenden startseite club meins technik auswahl", () => suEinstellung("kaAuswahl")], // 2.421.0
     ["💡", "Vorschläge zur Startseite (Kacheln ausblenden, Funktionen freischalten)", "vorschlag vorschläge kacheln ausblenden verbergen freischalten nutzung gemerkt adaptiv startseite löschen", () => suEinstellung("setKachelVorschlag")], // 2.418.0
     ["🎚️", "Bühne: Musik / Stimme lauter oder leiser", "lautstärke lauter leiser regler musik stimme stumm bühne", () => esOeffnen("buehne")],
     // 2.344.0 KC-CLUB-HILFE-NACHTRAG: alle Möglichkeiten, die App anzupassen, auch über die Lupe
