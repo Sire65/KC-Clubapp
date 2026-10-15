@@ -17,6 +17,15 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.414.0 – 2026-10-15 – Hochwertige Avatare, mehr Accessoires, Baukasten mit Kacheln (KC-CLUB-AVATAR-PREMIUM)
+Anlass (Hansi, Vorlage aus ChatGPT): hochwertige Avatar-Auswahl in die bestehende App einbauen, bisherige Avatare unverändert lassen.
+- „Mein Bild“ hat jetzt die drei Bereiche der Vorlage: **Bisherige Avatare** (die 40 Figuren, unverändert), **Hochwertige Avatare** (36 neue Figuren: 18 Köchinnen, 18 Köche, alle Hauttöne, jung bis reif, viele Frisuren, Kopfbedeckungen und Kochjacken) und **Individuell anpassen** (Kacheln, die den Baukasten direkt an der richtigen Stelle öffnen).
+- Die hochwertigen Figuren sind keine Bilder, sondern Codes „p…“ aus denselben Bausteinen wie der Baukasten, gezeichnet mit Licht, Schatten und Konturen. Darum ist jede im Baukasten anpassbar und wird zuverlässig gespeichert. Zusätzlich liegt jede als eigenständige SVG-Datei in avatare/premium/ (erzeugt mit tools/avatare-erzeugen.mjs).
+- Neue Teile, nur hinten an die Listen angehängt (alte Codes bleiben gleich): Ohrringe (7), Halsketten (5), Piercings (6), Jackenschnitt (zweireihig, schräg, mit Schürze), Falten, 5 Frisuren, 4 Haarfarben, 4 Bärte, Beanie/Barett/Turban, 2 Brillen (Panto, Browline), 4 Jackenfarben, 4 Jackenmuster, 7 Hintergründe, 3 Halstücher.
+- Baukasten: Kacheln „Was möchtest du ändern?“, Vorschaubilder bei Frisur, Kopfbedeckung, Bart, Brille und Schmuck, Stil klassisch/hochwertig. Alle bisherigen Einstellungen bleiben. Die Brille „randlos“ (nach Hansis Foto gezeichnet) bleibt, dazu der Hinweis „📷 Eigene Brille: Foto schicken, wird nachgezeichnet“.
+- Freigabe „👑 Hochwertige Avatare“ (neu, Standard: nur Admin) – erst testen, dann unter 🚦 Freigaben für alle einschalten.
+- Rückwärts-Prüfung: tests/avatar-rueckwaerts.test.mjs zeichnet 1.844 bisherige Bilder (alle 40 Figuren, die 7 echten Mitglieder-Bilder, 300 b- und 1.500 c-Codes) und verlangt das exakt gleiche Bild wie in 2.413.0. Keine Datenbank-Änderung.
+
 ## 2.413.0 – 2026-10-15 – „Mein Bild“: Klappbereiche als Karten (Vorlage von Hansi)
 Anlass (Hansi): Entwurf aus ChatGPT („Dein Avatar“ mit „Bisherige Avatare“ und „Hochwertige Avatare“). Die vier Klappbereiche haben jetzt einen Kopf als Karte: Symbol, Titel, Untertitel („weiterhin verfügbar“ bzw. „mit mehr Ausdruck“), Pfeil rechts; zugeklappt zeigt der Kopf eine kleine Vorschau mit den ersten Figuren (KC-CLUB-AVATAR-KARTEN). Bisherige Figuren und Zuordnungen bleiben unverändert.
 
