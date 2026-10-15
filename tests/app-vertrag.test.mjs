@@ -10193,3 +10193,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/topic: "realtime:" \+ kanal/.test(programm) && /if \(RT\.ws && RT\.kanal === kanal && RT\.ws\.readyState <= 1\) return;/.test(programm), "App verbindet bei neuem Namen neu");
   assert.ok(/neuer_name=t/.test(lies("tools/db-test/76_erwartet.txt")), "Probelauf 76");
 }
+// 2.427.0 KC-CLUB-NEU-ALTER-CHAT: „Neue Nachricht“ an genau eine Person ohne Betreff öffnet den vorhandenen Chat
+{
+  const nw = programm.slice(programm.indexOf("function neuWeiter() {"), programm.indexOf("// ---------- KC-CLUB-ZUSTELLWAHL"));
+  assert.ok(/const einzeln = !empfWahl\.alle && !empfWahl\.vorstand && !empfWahl\.aemter\.length && empfWahl\.personen\.length === 1 \? empfWahl\.personen\[0\] : null;/.test(nw), "nur genau eine Person");
+  assert.ok(/if \(einzeln && einzeln !== ICH\?\.person_id && !\$\("neuBetreff"\)\.value\.trim\(\) && !RG\.an\) return direkt\(einzeln\);/.test(nw), "ohne Betreff → direkt() (vorhandener Chat, sonst neu); mit Betreff, an mich selbst, im Rundgang wie bisher");
+  assert.ok(nw.indexOf("return direkt(einzeln)") < nw.indexOf("neuEntwurf = { empfaenger"), "vor dem leeren Schreibfenster");
+  assert.ok(/api\("einzelchat_finden", \{ person_id: pid \}\); if \(r\?\.id\) return chatOeffnen\(r\.id\);/.test(programm), "direkt() sucht den vorhandenen Chat");
+}

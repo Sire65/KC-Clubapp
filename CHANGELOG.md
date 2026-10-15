@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.427.0 – 2026-10-15 – 💬 Neue Nachricht an eine Person ohne Betreff öffnet den bisherigen Chat (KC-CLUB-NEU-ALTER-CHAT)
+Frage Hansi: „Wenn ich Neue Nachricht wähle und Klaus antippe – neuer Chat oder vorhandener?“ Bisher erschien ein leeres Schreibfenster, gesendet wurde aber (ohne Betreff) schon in den vorhandenen Zweier-Chat – man sah den Verlauf erst danach. Jetzt öffnet „Weiter zum Schreiben“ bei genau einer Person ohne Betreff gleich den vorhandenen Chat mit Verlauf, wie über 👥 Mitglieder → „💬 Nachricht“ (gibt es noch keinen, ein neuer). Mit Betreff beginnt wie bisher ein eigener Chat zum Thema. Nur App, kein Server, keine Datenbank. Rundgang-Text ergänzt.
+
 ## 2.426.0 – 2026-10-15 – 🔐 Direkte Leitung: Kanal wechselt bei jeder Zugangsänderung (KC-CLUB-RT-KANAL-WECHSEL) · Server 2.426.0 · DB
 Wunsch Hansi nach dem Generalcheck („Ja“ zum wechselnden Kanalnamen). Die direkte Leitung (Supabase Realtime) meldet nur „es gibt Neues“ – nie Inhalte. Ihr Name je Person war aber für immer gleich: ein abgemeldetes Handy oder ein entfernter Gast hätte weiter gesehen, WANN jemand Nachrichten, Anrufe oder Anklopfen bekommt.
 - **Neu:** Kanal = HMAC(Geheimnis, Person + Zählnummer). Die Zählnummer steigt bei neuem Link, übernommenem vorgemerkten Link, selbst angefordertem Zugang, „Andere Geräte abmelden“, beendetem Zugang und Sperre. Die eigenen Geräte bekommen den neuen Namen beim nächsten Abruf; das Gerät, auf dem „Andere Geräte abmelden“ gedrückt wird, wechselt sofort.
