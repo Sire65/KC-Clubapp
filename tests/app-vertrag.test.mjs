@@ -4556,8 +4556,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 
 // 448. 2.23.98: Mein Bild – erst auswählen (große Vorschau), dann übernehmen oder bearbeiten (Wunsch Hansi)
 {
-  const f = html.slice(html.indexOf("function avWahl()"), html.indexOf("// KC-CLUB-AVATAR-BAUKASTEN (2.23.86, Wunsch Hansi)"));
-  assert.ok(!/onclick="avSetzen\('\$\{k\}'\)"/.test(f) && (f.match(/onclick="avWaehlen\('\$\{k\}', this\)"/g) || []).length === 2, "Antippen wählt nur aus, speichert nicht sofort");
+  const f = html.slice(html.indexOf("function avKlappe("), html.indexOf("// KC-CLUB-AVATAR-BAUKASTEN (2.23.86, Wunsch Hansi)")); // 2.413.0: Figurenknöpfe stehen jetzt im Helfer avKlappe direkt vor avWahl
+  assert.ok(!/onclick="avSetzen\('\$\{k\}'\)"/.test(f) && (f.match(/onclick="avWaehlen\('\$\{k\}', this\)"/g) || []).length >= 1, "Antippen wählt nur aus, speichert nicht sofort");
   assert.ok(/onclick="avSetzen\(AVW\.wahl\)"/.test(f) && /onclick="avBauen\(AVW\.wahl\)">✏️ Bearbeiten/.test(f), "Übernehmen und Bearbeiten");
   assert.ok(/bauen = c && !AVF_RE\.test\(c\) && avTeile\(c\) && frei\("avatar_baukasten"\)/.test(f), "Bearbeiten nur, wenn der Baukasten freigegeben ist, nie beim Foto");
   assert.ok(/function avBauen\(start\) \{[^\n]*\n  const jetzt = start \|\| INIT\?\.einstellungen\?\.avatar\?\.figur/.test(html), "Baukasten startet mit der gewählten Figur");
@@ -6439,10 +6439,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.412.0 KC-CLUB-AVATAR-GALERIE / -KLAPPEN (Wunsch Hansi: hochwertige Avatare in Klappbereichen, alte bleiben)
 {
   assert.ok(/const AVG_RE = \/\^g\[wm\]\[0-9\]\{2,3\}\$\//.test(html) && /src="avatare\/\$\{code\}\.webp"/.test(html), "Galerie-Codes gw/gm als Bilddatei");
-  assert.ok(/data-klappe="av_w"/.test(html) && /data-klappe="av_m"/.test(html) && /data-klappe="av_gw"/.test(html) && /data-klappe="av_gm"/.test(html), "vier Klappbereiche");
+  assert.ok(/avKlappe\("av_w"/.test(html) && /avKlappe\("av_m"/.test(html) && /avKlappe\("av_gw"/.test(html) && /avKlappe\("av_gm"/.test(html) && /data-klappe="\$\{name\}" data-ohne-unten/.test(html), "vier Klappbereiche");
   assert.ok(/Object\.keys\(AV_FIGUREN\)\.filter\(\(k\) => k\[0\] === "w"\)/.test(html) && /Object\.keys\(AV_FIGUREN\)\.filter\(\(k\) => k\[0\] === "m"\)/.test(html), "alte Figuren weiter da");
   assert.ok(/\|\| \/\^g\[wm\]\[0-9\]\{2,3\}\$\/\.test\(w\.figur\)\)/.test(server) && /\^\(w\(0\[1-9\]\|1\[0-5\]\)/.test(server), "Server: neue Codes gültig, alte weiter gültig");
   const j = JSON.parse(lies("avatare/avatare.json")); assert.ok(Array.isArray(j.figuren) && j.figuren.every((x) => /^g[wm][0-9]{2,3}$/.test(x.code) && fs.existsSync(new URL("../avatare/" + x.code + ".webp", import.meta.url))), "Liste gültig, jede Figur hat ihre Datei");
+}
+// 2.413.0 KC-CLUB-AVATAR-KARTEN (Vorlage Hansi/ChatGPT): Kopf als Karte mit Symbol, Untertitel und Mini-Vorschau, die nur zugeklappt sichtbar ist
+{
+  assert.ok(/function avKlappe\(name, offen, sym, titel, unter, codes, jetzt, id\)/.test(html) && /class="av-k-mini"/.test(html) && /class="av-k-text"><b>\$\{titel\}<\/b><small>\$\{unter\}<\/small>/.test(html), "Karten-Kopf mit Untertitel und Mini-Vorschau");
+  assert.ok(/\.av-klappe\[open\] \.av-k-mini \{ display: none; \}/.test(html), "Mini-Vorschau nur zugeklappt");
+  assert.ok(/\$\(id \+ "Mini"\)/.test(html), "Galerie füllt auch die Mini-Vorschau");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

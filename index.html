@@ -1536,8 +1536,21 @@
   .kopf-glanz.lauf u { animation: kopfFunkeln 1.6s cubic-bezier(.45,0,.55,1) .4s 1 both; } /* 2.410.0: weiches Licht wandert schräg, verdichtet sich in der Mitte zum Blitz, löst sich wieder auf */
   @keyframes kopfBlitz { 0% { opacity: 0; } 22% { opacity: 1; } 100% { opacity: 0; } }
   @keyframes kopfFunkeln { 0% { opacity: 0; transform: translate(0, 0) scale(1.5); } 15% { opacity: .35; transform: translate(calc(var(--dx, 300px) * .15), calc(var(--dy, 150px) * .15)) scale(1.5); } 40% { opacity: .55; transform: translate(calc(var(--dx, 300px) * .4), calc(var(--dy, 150px) * .4)) scale(1); } 50% { opacity: 1; transform: translate(calc(var(--dx, 300px) * .5), calc(var(--dy, 150px) * .5)) scale(.22); } 54% { opacity: 1; transform: translate(calc(var(--dx, 300px) * .54), calc(var(--dy, 150px) * .54)) scale(.3); } 66% { opacity: .45; transform: translate(calc(var(--dx, 300px) * .66), calc(var(--dy, 150px) * .66)) scale(1.6); } 100% { opacity: 0; transform: translate(var(--dx, 300px), var(--dy, 150px)) scale(2.1); } }
-  /* 2.412.0 KC-CLUB-AVATAR-KLAPPEN: Klappbereiche in „Mein Bild“ */
-  .av-klappe { border-top: 1px solid var(--linie); padding: 6px 0 2px; } .av-klappe > summary { font-weight: 700; cursor: pointer; padding: 4px 0; }
+  /* 2.413.0 KC-CLUB-AVATAR-KLAPPEN: Klappbereiche in „Mein Bild“ */
+  /* 2.413.0 KC-CLUB-AVATAR-KARTEN: Klappbereiche in „Mein Bild“ als Karten (Vorlage Hansi) */
+  .av-klappe { border: 1px solid var(--linie); border-radius: 16px; margin: 0 0 10px; background: var(--karte, #fff); overflow: hidden; }
+  .av-klappe > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--karte2); }
+  .av-klappe > summary::-webkit-details-marker { display: none; }
+  .av-klappe .av-k-sym { font-size: 1.5rem; flex: none; }
+  .av-klappe .av-k-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .av-klappe .av-k-text b { font-size: 1.05rem; } .av-klappe .av-k-text small { color: var(--grau, #666); font-size: .8rem; line-height: 1.25; }
+  .av-klappe .av-k-mini { display: flex; flex: none; } .av-klappe .av-k-mini > * { margin-left: -8px; border-radius: 50%; box-shadow: 0 0 0 2px var(--karte2); }
+  .av-klappe[open] .av-k-mini { display: none; }
+  .av-klappe .schloss { width: 34px; height: 34px; border: none; border-radius: 10px; background: transparent; font-size: 1rem; cursor: pointer; flex: none; padding: 0; }
+  .av-klappe .pfeil { flex: none; font-size: 1.4rem; color: var(--rot); transition: transform .2s; }
+  .av-klappe:not([open]) > summary .pfeil { transform: rotate(-90deg); }
+  .av-klappe > .av-raster { padding: 0 10px; }
+  @media (max-width: 420px) { .av-klappe .av-k-mini > *:nth-child(n+4) { display: none; } }
   .av-galerie { object-fit: cover; border-radius: 50%; }
   :root.ohne-anim .kopf-glanz { display: none; } /* 2.409.0 (Wahl Hansi): nur der App-Schalter „✨ Animierte Knöpfe“ zählt – wie bei den übrigen Effekten; „Animationen entfernen“ am Handy nicht mehr */
   /* 2.402.0 KC-CLUB-KUCKUCKSUHR (Wunsch Hansi): zur vollen Stunde kommt die Uhr, die Tür geht auf und der Kuckuck ruft so oft, wie es Uhr ist */
@@ -5126,6 +5139,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.412.0" data-v="2.412.0"></script>
+<script src="app.js?v=2.413.0" data-v="2.413.0"></script>
 </body>
 </html>

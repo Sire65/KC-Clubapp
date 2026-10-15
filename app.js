@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.412.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.413.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19761,6 +19761,13 @@ async function sperreAufheben(pid, knopf) {
 // KC-CLUB-AVATAR (2.23.85): Auswahl – 30 Figuren antippen, „Keins“ = wie bisher Buchstaben. Gespeichert wie andere Einstellungen (geräteübergreifend).
 // 2.23.98 (Wunsch Hansi): Figur antippen = erst auswählen (große Vorschau oben), dann „✅ Übernehmen“ oder „✏️ Bearbeiten“ (Baukasten mit dieser Figur)
 const AVW = { wahl: undefined };
+// 2.413.0 KC-CLUB-AVATAR-KARTEN: ein Klappbereich in „Mein Bild“ – codes=null heißt: Raster wird später gefüllt (Galerie)
+function avKlappe(name, offen, sym, titel, unter, codes, jetzt, id) {
+  const knopf = (k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avWaehlen('${k}', this)">${avatarSvg(k, 64)}</button>`;
+  const mini = codes ? codes.slice(0, 5).map((k) => avatarSvg(k, 30)).join("") : "";
+  return `<details class="av-klappe" data-klappe="${name}" data-ohne-unten${offen ? " open" : ""}><summary><span class="av-k-sym" aria-hidden="true">${sym}</span><span class="av-k-text"><b>${titel}</b><small>${unter}</small></span><span class="av-k-mini"${id ? ` id="${id}Mini"` : ""} aria-hidden="true">${mini}</span></summary>`
+    + `<div class="av-raster"${id ? ` id="${id}"` : ""} style="margin:8px 0 6px">${codes ? codes.map(knopf).join("") : '<span class="hinweis">Wird geladen …</span>'}</div></details>`;
+}
 function avWahl() {
   spur("mein_bild"); // KC-CLUB-SPUR-BILD (2.40.1): „Mein Bild“ ist ein Fenster, keine Seite – darum eigens vermerkt
   const jetzt = INIT?.einstellungen?.avatar?.figur || null; AVW.wahl = undefined;
@@ -19770,10 +19777,11 @@ function avWahl() {
     <div id="avJackeAuto"></div>
     ${jetzt && /^[bc]/.test(jetzt) && avGueltig(jetzt) ? `<b>🧩 Deine eigene Figur</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="an" aria-label="Eigene Figur" onclick="avWaehlen('${jetzt}', this)">${avatarSvg(jetzt, 64)}</button></div>` : ""}
     ${/* 2.412.0 KC-CLUB-AVATAR-KLAPPEN (Wunsch Hansi): vier Klappbereiche – Köchinnen, Köche, hochwertige Köchinnen, hochwertige Köche */""}
-    <details class="av-klappe" data-klappe="av_w" data-ohne-unten${/^w/.test(jetzt || "") ? " open" : ""}><summary>👩‍🍳 Köchinnen</summary><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "w").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avWaehlen('${k}', this)">${avatarSvg(k, 64)}</button>`).join("")}</div></details>
-    <details class="av-klappe" data-klappe="av_m" data-ohne-unten${/^m/.test(jetzt || "") ? " open" : ""}><summary>👨‍🍳 Köche</summary><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "m").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avWaehlen('${k}', this)">${avatarSvg(k, 64)}</button>`).join("")}</div></details>
-    <details class="av-klappe" data-klappe="av_gw" data-ohne-unten open><summary>✨ Köchinnen – hochwertig</summary><div class="av-raster" id="avGalerieW" style="margin:6px 0 10px"><span class="hinweis">Wird geladen …</span></div></details>
-    <details class="av-klappe" data-klappe="av_gm" data-ohne-unten open><summary>✨ Köche – hochwertig</summary><div class="av-raster" id="avGalerieM" style="margin:6px 0 10px"><span class="hinweis">Wird geladen …</span></div></details>
+    ${/* 2.413.0 KC-CLUB-AVATAR-KARTEN (Vorlage Hansi/ChatGPT): Kopf als Karte mit Symbol, Untertitel und – zugeklappt – kleiner Vorschau */""}
+    ${avKlappe("av_w", /^w/.test(jetzt || ""), "👩‍🍳", "Köchinnen", "Die bekannten, klassischen Figuren – weiterhin verfügbar.", Object.keys(AV_FIGUREN).filter((k) => k[0] === "w"), jetzt)}
+    ${avKlappe("av_m", /^m/.test(jetzt || ""), "👨‍🍳", "Köche", "Die bekannten, klassischen Figuren – weiterhin verfügbar.", Object.keys(AV_FIGUREN).filter((k) => k[0] === "m"), jetzt)}
+    ${avKlappe("av_gw", true, "👑", "Köchinnen – hochwertig", "Neue, detailliertere Figuren mit mehr Ausdruck.", null, jetzt, "avGalerieW")}
+    ${avKlappe("av_gm", true, "👑", "Köche – hochwertig", "Neue, detailliertere Figuren mit mehr Ausdruck.", null, jetzt, "avGalerieM")}
     <b>Kein Bild</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="${jetzt ? "" : "an"}" aria-label="Kein Bild – Buchstaben" onclick="avWaehlen(null, this)"><span class="av-keins">${esc(initialen(ICH?.name))}</span></button></div>
     ${frei("avatar_foto") ? `<b>📷 Eigenes Foto${nurTest("avatar_foto") ? ' <small class="hinweis">🔒 nur für dich (Test)</small>' : ""}</b>
       ${AVF_RE.test(jetzt || "") ? `<div class="av-raster" style="margin:6px 0 4px"><button type="button" class="an" aria-label="Dein Foto" onclick="avGross(ICH.person_id)">${avatarSvg(jetzt, 64)}</button></div>` : ""}
@@ -19787,6 +19795,7 @@ function avWahl() {
       const z = $(id); if (!z) continue; const liste = (l || []).filter((x) => x.code[1] === art);
       z.innerHTML = liste.length ? liste.map((x) => `<button type="button" class="${jetzt === x.code ? "an" : ""}" aria-label="${esc(x.name || "Figur " + x.code)}" onclick="avWaehlen('${x.code}', this)">${avatarSvg(x.code, 64)}</button>`).join("")
         : '<span class="hinweis" style="font-size:.85rem">Neue, hochwertige Figuren kommen in Kürze.</span>';
+      const m = $(id + "Mini"); if (m) m.innerHTML = liste.slice(0, 5).map((x) => avatarSvg(x.code, 30)).join("");
     }
   });
 }
