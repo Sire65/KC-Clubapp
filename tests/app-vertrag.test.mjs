@@ -6493,6 +6493,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/sel: \['#avBlatt details\[data-klappe="av_neu"\]'\], mussSel: true, t: "👑 Hochwertige Avatare"/.test(html) && /t: "💎 Schmuck"/.test(html) && /t: "👑 Klassisch oder hochwertig"/.test(html), "Videos zeigen die neuen Bereiche");
   assert.ok(/function rgKlappeAuf\(name\) \{[\s\S]{0,300}RG\.zurueck\.push/.test(html), "Video öffnet Klappbereiche nur vorübergehend");
 }
+// 2.416.0 KC-CLUB-KUCKUCK-ZAEHLEN (Fund Hansi „15 Uhr nur ein Kuckuck“): Rufe nie übereinander, nur bei laufendem Ton
+{
+  assert.ok(/const kkRufe = \(h\) => \(h % 12\) \|\| 12;/.test(html) && /timeZone: TZ, hour: "2-digit"/.test(html) && /const TZ = "Europe\/Berlin";/.test(html), "deutsche Zeit, 12-Stunden-Zählung");
+  assert.ok(/if \(mitTon && audio && audio\.state === "running"\) try \{ gespielt\+\+;/.test(html), "Ruf nur bei laufendem Ton");
+  assert.ok(/const bereit = mitTon && audio \? Promise\.race\(\[/.test(html) && /bereit\.then\(\(\) => \{ if \(u\.isConnected\) u\._t = setTimeout\(ruf, 350\); \}\)/.test(html), "wartet auf den Ton");
+  assert.ok(/api\("diagnose", \{ art: "kuckuck", daten: \{ stunde: h, rufe: n, gespielt,/.test(html), "Diagnose einmal je Sitzung");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

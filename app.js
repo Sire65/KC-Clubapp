@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.415.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.416.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19015,16 +19015,27 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false) { // tonImmer: Probe (
   u.onclick = zu; document.body.appendChild(u);
   requestAnimationFrame(() => requestAnimationFrame(() => u.classList.add("an")));
   if (mitTon) try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.(); kkAufnahmeLaden(); } catch {}
-  let i = 0;
+  // 2.416.0 KC-CLUB-KUCKUCK-ZAEHLEN (Fund Hansi „um 15 Uhr nur ein Kuckuck“): Zeitzone und Zählung stimmten (Berlin, 15 Uhr → 3 Rufe).
+  // Ursache: Beim Ruf ohne vorheriges Antippen ist der Ton auf dem Handy oft noch „angehalten“ (AudioContext suspended) – seine Uhr steht dann.
+  // Alle Rufe wurden auf denselben Zeitpunkt gelegt und klangen beim Freigeben gleichzeitig = ein Kuckuck. Jetzt wird nur bei laufendem
+  // Ton gespielt (sonst still, aber nie übereinander); einmal je Sitzung geht eine Diagnose an den Server (Rufe, gespielt, Ton-Zustand).
+  let i = 0, gespielt = 0;
   const ruf = () => {
     if (!u.isConnected) return;
-    if (i >= n) { u.classList.remove("offen"); u._t = setTimeout(zu, 1400); return; }
+    if (i >= n) { u.classList.remove("offen"); u._t = setTimeout(zu, 1400); kkDiagnose(h, n, gespielt, mitTon); return; }
     i++; u.classList.add("ruft"); setTimeout(() => u.classList.remove("ruft"), 350);
-    if (mitTon && audio) try { if (KK_AUFNAHME.puffer) kkAufnahmeSpielen(audio.currentTime + 0.02); else kkTon(audio.currentTime + 0.02); } catch {}
+    if (mitTon && audio && audio.state === "running") try { gespielt++; if (KK_AUFNAHME.puffer) kkAufnahmeSpielen(audio.currentTime + 0.02); else kkTon(audio.currentTime + 0.02); } catch {}
     u._t = setTimeout(ruf, KK_AUFNAHME.puffer && mitTon ? Math.round(KK_AUFNAHME.puffer.duration * 1000) : KK_TAKT_MS);
   };
-  u._t = setTimeout(() => { u.classList.add("offen"); u._t = setTimeout(ruf, 350); }, 700);
+  // 2.416.0: erst rufen, wenn der Ton läuft (höchstens 1,5 s warten – sonst ruft der Kuckuck stumm, aber richtig oft)
+  const bereit = mitTon && audio ? Promise.race([Promise.resolve(audio.resume?.()).then(() => true, () => false), new Promise((r) => setTimeout(() => r(false), 1500))]) : Promise.resolve(false);
+  u._t = setTimeout(() => { u.classList.add("offen"); bereit.then(() => { if (u.isConnected) u._t = setTimeout(ruf, 350); }); }, 700);
   return n;
+}
+let KK_DIAG = false;
+function kkDiagnose(h, n, gespielt, mitTon) { // einmal je Sitzung: hat der Ton so oft gerufen, wie es Uhr ist?
+  if (KK_DIAG) return; KK_DIAG = true;
+  try { api("diagnose", { art: "kuckuck", daten: { stunde: h, rufe: n, gespielt, ton: !!mitTon, zustand: audio?.state || "kein", aufnahme: !!KK_AUFNAHME.puffer } }).catch(() => {}); } catch {}
 }
 function kuckuckPruefen() {
   if (!ICH?.person_id || document.hidden || !einst("kuckuck", true)) return;
