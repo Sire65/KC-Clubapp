@@ -81,7 +81,14 @@
   // Aktive Club-Mitglieder, die DP2s Personenliste (model.js) noch nicht kennt, für „Wer war noch dabei?“ ergänzen
   for (const m of D.mitglieder || []) if (m?.personId && !K.people.some((p) => p.personId === m.personId))
     K.people.push({ personId: m.personId, name: m.name || m.personId, skills: "", personType: "member", active: true, expanded: false, maxHours: 8, preferences: {}, availability: [] });
+  // KICC-F-100 Phase 7: eigene Zusagen + veröffentlichte Fahrgemeinschaften; Zusagen über kc-club
+  K.specialEventSignups = (D.zusagen || []).map((z) => ({ id: String(z.id), specialEventId: z.special_event_id, personId: z.person_id, antwort: z.antwort, anreise: z.anreise || null,
+    plaetze: Number(z.plaetze || 0), startort: z.startort || null, bemerkung: z.bemerkung || "", version: Number(z.version || 1), updatedAt: z.updated_at }));
+  K.carpools = (D.fahrgemeinschaften || []).map((c) => ({ specialEventId: c.special_event_id, sourceId: c.source_id, fahrerId: c.fahrer_id, mitfahrer: c.mitfahrer || [], startort: c.startort || null, status: "published" }));
+  K.signupTransport = { save: (z) => window.KC_CLUB_DW_API("sondereinsatz_zusage", z) };
   K.hourReportsTransport = {
+    // Nach dem Melden: Fahrtkosten/Auslagen in der Club-App erfassen (Erstattung mit Vorbelegung)
+    openErstattung(info) { try { parent !== window && parent.postMessage({ art: "erstattung-vorbelegen", ...info }, location.origin); } catch {} },
     async submit(meldung) {
       const r = await window.KC_CLUB_DW_API("stunden_melden", meldung);
       try { parent !== window && parent.postMessage({ art: "sonderstunden-gemeldet", anzahl: (r.rows || []).length }, location.origin); } catch {}
