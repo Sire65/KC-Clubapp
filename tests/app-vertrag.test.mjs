@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -9951,6 +9951,38 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\.sb-knopf \{ width: 44px; height: 44px; border-width: 2px; font-size: 1\.2rem; \}/.test(html) && /\.sb-knopf \{ left: auto; right: calc\(50% \+ 444px\); bottom: calc\(18px \+ env\(safe-area-inset-bottom\)\); width: 48px; height: 48px;/.test(html), "Mikrofon passt in die Reihe");
 }
 
+// 2.418.0 KC-CLUB-KACHEL-VORSCHLAG: adaptive Startseite nur als Vorschlag – Regeln im Sandkasten durchspielen
+{
+  const p = programm, von = p.indexOf("const NU_KEY"), bis = p.indexOf("function nuVorschlagPruefen");
+  assert.ok(von > 0 && bis > von, "Kachel-Vorschlag: Regelteil gefunden");
+  const teil = p.slice(von, bis);
+  assert.ok(!/api\(/.test(p.slice(von, p.indexOf("function eselsohrSchalter", von))), "Kachel-Vorschlag: zählt nur auf dem Gerät (kein Server-Aufruf)");
+  assert.ok(/nuKachel\(k\.dataset\.id\); \/\/ 2\.418\.0/.test(p) && /setTimeout\(\(\) => nuVorschlagPruefen\(\), 25000\)/.test(p), "Kachel-Vorschlag: Zählen beim Öffnen, Prüfung beim Start");
+  assert.ok(/id="setKachelVorschlag" checked onchange="nuSchalter\(this\.checked\)"/.test(seite) && /onclick="nuLoeschen\(\)"/.test(seite), "Kachel-Vorschlag: Schalter und „Gemerktes löschen“ in den Einstellungen");
+  assert.ok(/data-w="aus">🔕 Keine Vorschläge mehr/.test(p) && /document\.querySelector\("\.blatt:not\(\.versteckt\)"\) \|\| kaBearb\) \{ if \(versuch < 8\)/.test(p), "Kachel-Vorschlag: abschaltbar, nie über offenem Fenster");
+  const mach = (heute, ansicht, liste) => { const ls = {};
+    const sb = new Function("localStorage", "heuteIso", "einfach", "kacheln", teil + "; return { nuStand, nuSpeichern, nuKachel, nuTag, nuVerbergenKandidat, nuFreischaltenPasst, NU_NIE_VERBERGEN };");
+    return sb({ getItem: (k) => ls[k] ?? null, setItem: (k, v) => { ls[k] = String(v); }, removeItem: (k) => { delete ls[k]; } }, () => heute.d, () => ansicht.e, () => liste); };
+  globalThis.reg = "start";
+  const heute = { d: "2026-10-01" }, ansicht = { e: false };
+  const liste = [{ id: "sos", sym: "🆘", t: "SOS" }, { id: "termine", t: "Termine" }, { id: "pinnwand", t: "Pinnwand" }, { id: "fotos", t: "Fotos" }, { id: "archiv", t: "Archiv", zahl: () => 3 }];
+  const nu = mach(heute, ansicht, liste);
+  nu.nuKachel("fotos"); assert.equal(nu.nuStand().k.fotos.n, 1, "Kachel-Vorschlag: Öffnen wird gezählt");
+  assert.equal(nu.nuVerbergenKandidat(nu.nuStand()), null, "Kachel-Vorschlag: am Anfang kein Vorschlag");
+  heute.d = "2026-11-05"; nu.nuKachel("fotos");
+  const k = nu.nuVerbergenKandidat(nu.nuStand());
+  assert.equal(k?.id, "pinnwand", "Kachel-Vorschlag: lange ungenutzte Kachel wird vorgeschlagen – nie SOS/Termine, nie mit neuer Zahl, nicht die genutzte");
+  const st = nu.nuStand(); st.nein = ["pinnwand"]; nu.nuSpeichern(st);
+  assert.equal(nu.nuVerbergenKandidat(nu.nuStand()), null, "Kachel-Vorschlag: „Nein, behalten“ wird respektiert");
+  ansicht.e = true; assert.equal(nu.nuVerbergenKandidat(nu.nuStand()), null, "Kachel-Vorschlag: in der einfachen Ansicht kein Ausblenden");
+  assert.equal(nu.nuFreischaltenPasst(nu.nuStand()), false, "Kachel-Vorschlag: Freischalten erst, wenn man gut zurechtkommt");
+  for (let i = 0; i < 20; i++) ["termine", "pinnwand", "sos", "fotos"].forEach((id) => i % 4 === 0 && nu.nuKachel(id)), nu.nuKachel("termine");
+  assert.equal(nu.nuFreischaltenPasst(nu.nuStand()), true, "Kachel-Vorschlag: einfache Ansicht + viel genutzt → Freischalten anbieten");
+  ansicht.e = false; assert.equal(nu.nuFreischaltenPasst(nu.nuStand()), false, "Kachel-Vorschlag: in der erweiterten Ansicht kein Freischalten");
+  assert.deepEqual(nu.NU_NIE_VERBERGEN.slice(0, 3), ["sos", "termine", "kommunikation"], "Kachel-Vorschlag: SOS, Termine, Nachrichten stehen auf der Nie-Liste");
+  delete globalThis.reg;
+}
+
 // 2.417.0 KC-CLUB-WERBEFILM-SEITE: Filmseite film/ für Mitglieder ohne App – eigenständig, ohne Anmeldung/Daten, nicht im Offline-Speicher
 {
   const fs_ = fs.existsSync, film = lies("film/index.html");
@@ -9988,7 +10020,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
     && /for \(const m of D\.mitglieder \|\| \[\]\) if \(m\?\.personId && !K\.people\.some/.test(d), "Aktive Mitglieder fehlen in der Kollegenauswahl (nur Kennung + Name)");
 }
 
-// 2.418.0 KC-CLUB-SONDERSTUNDEN Teil 2 (KICC-F-100): Zusagen/Fahrgemeinschaften, Benachrichtigung, Erinnerung, Erstattung bei Sondereinsätzen
+// 2.419.0 KC-CLUB-SONDERSTUNDEN Teil 2 (KICC-F-100): Zusagen/Fahrgemeinschaften, Benachrichtigung, Erinnerung, Erstattung bei Sondereinsätzen
 {
   const d = lies("dp2-club/daten.js"), seite = lies("index.html");
   assert.ok(aktionen.has("sondereinsatz_zusage") && /case "sondereinsatz_zusage": \{\s*return json\(await sondereinsatzZusage\(ich, p\)\);/.test(server), "Zusage-Aktion fehlt");

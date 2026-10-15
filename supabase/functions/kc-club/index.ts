@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.418.0";
+const SERVER_VERSION = "2.419.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1550,14 +1550,14 @@ const ERSTATTUNG = {
   kmSatzStandard: 0.38, // € je km, nur falls in kc_club_km_satz nichts eingetragen ist (0.39.0: Satz pflegt der Admin mit „gilt ab“)
   gruende: ["Kochen in Dortmund", "Fahrt zum Budendienst", "Einkaufsfahrt für den Club", "Club-Treffen / Sitzung", "Veranstaltung / Weihnachtsmarkt", "Schulung / Fortbildung", "Abholen / Liefern von Material"],
   arten: [{ id: "fahrt", sym: "🚗", name: "Fahrtkosten" }, { id: "einkauf", sym: "🛒", name: "Einkauf vorgestreckt" }, { id: "sonstiges", sym: "📦", name: "Sonstige Auslage" },
-    // KC-CLUB-ERSTATTUNG-SONDER (2.418.0, KICC-F-100): weitere Auslagen bei Sondereinsätzen
+    // KC-CLUB-ERSTATTUNG-SONDER (2.419.0, KICC-F-100): weitere Auslagen bei Sondereinsätzen
     { id: "parken", sym: "🅿️", name: "Parkgebühren" }, { id: "kraftstoff", sym: "⛽", name: "Kraftstoff (Miet-/Clubfahrzeug)" }, { id: "kaution", sym: "🔐", name: "Kaution" }],
   fahrzeuge: [{ id: "miete", name: "Mietfahrzeug" }, { id: "club", name: "Clubfahrzeug" }, { id: "eigen", name: "Eigenes Auto" }],
   belegStatus: ["foto", "papier", "kein"], kautionAus: ["eigen", "vorschuss"],
   empfaenger: { an: "Kassenwart", cc: "Clubsprecher" }, // Ämter aus kc_club_rollen
 };
 const euro = (n: number) => n.toFixed(2).replace(".", ",") + " €";
-// KC-CLUB-ERSTATTUNG-SONDER (2.418.0): eine Beschreibung je Position für Mail, Bestätigung, Ablage und Eingangskorb
+// KC-CLUB-ERSTATTUNG-SONDER (2.419.0): eine Beschreibung je Position für Mail, Bestätigung, Ablage und Eingangskorb
 const ERS_SYM: Record<string, string> = { fahrt: "🚗", einkauf: "🛒", sonstiges: "📦", parken: "🅿️", kraftstoff: "⛽", kaution: "🔐" };
 const ERS_NAME: Record<string, string> = { fahrt: "Fahrtkosten", einkauf: "Einkauf vorgestreckt", sonstiges: "Sonstige Auslage", parken: "Parkgebühren", kraftstoff: "Kraftstoff", kaution: "Kaution" };
 const ERS_BELEG: Record<string, string> = { foto: "Beleg anbei", papier: "Beleg auf Papier – wird abgegeben", erhalten: "Beleg (Papier) erhalten", kein: "kein Beleg" };
@@ -1805,7 +1805,7 @@ function erstattungPruefen(roh: unknown, ich: Ich, saetze: KmSatz[]) {
       const was = txt(x.was, 200);
       if (!was && x.art !== "kraftstoff") throw new Fehler(x.art === "einkauf" ? "Bitte angeben, was eingekauft wurde." : x.art === "parken" ? "Bitte angeben, wo geparkt wurde." : x.art === "kaution" ? "Bitte angeben, wofür die Kaution ist." : "Bitte die Auslage kurz beschreiben.");
       const zusatz: Record<string, unknown> = {};
-      // KC-CLUB-ERSTATTUNG-SONDER (2.418.0): Kraftstoff nur für Miet-/Clubfahrzeuge – mit dem eigenen Auto gibt es nur die km-Pauschale
+      // KC-CLUB-ERSTATTUNG-SONDER (2.419.0): Kraftstoff nur für Miet-/Clubfahrzeuge – mit dem eigenen Auto gibt es nur die km-Pauschale
       if (x.art === "kraftstoff") {
         if (x.fahrzeug === "eigen") throw new Fehler("Mit dem eigenen Auto gibt es nur die km-Pauschale – bitte als Fahrtkosten (km) eintragen.");
         if (!["miete", "club"].includes(x.fahrzeug)) throw new Fehler("Bitte das Fahrzeug wählen (Miet- oder Clubfahrzeug).");
@@ -5500,7 +5500,7 @@ Deno.serve(async (req) => {
       await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
       await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
       await geburtstagZettelAbnehmen().catch((e) => console.error("geburtstag zettel ab", String(e))); // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0)
-      await sonderstundenWartung().catch((e) => console.error("sonderstunden wartung", String(e))); // KICC-F-100 (2.418.0)
+      await sonderstundenWartung().catch((e) => console.error("sonderstunden wartung", String(e))); // KICC-F-100 (2.419.0)
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-SPUR (2.23.88): Wege der Mitglieder nur 30 Tage aufbewahren
       { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }
@@ -10328,7 +10328,7 @@ Köcheclub-App`,
         const { data: rollen } = await db.from("kc_club_rollen").select("person_id,aemter");
         const hat = (amt: string) => (rollen ?? []).some((r: any) => (r.aemter || []).includes(amt));
         const saetze = await kmSaetze();
-        // KC-CLUB-ERSTATTUNG-SONDER (2.418.0): Sondereinsätze zur Auswahl („Gehört zu Einsatz“)
+        // KC-CLUB-ERSTATTUNG-SONDER (2.419.0): Sondereinsätze zur Auswahl („Gehört zu Einsatz“)
         const { data: se } = await db.from("kc_dp_special_events").select("source_id,titel,ort,datum_von").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "published").order("datum_von", { nullsFirst: false }).limit(50);
         return json({ kmSatz: satzFuer(saetze, berlinTag(new Date())), standard: ERSTATTUNG.kmSatzStandard, saetze, gruende: ERSTATTUNG.gruende, arten: ERSTATTUNG.arten, empfaengerDa: hat(ERSTATTUNG.empfaenger.an) || hat(ERSTATTUNG.empfaenger.cc),
           fahrzeuge: ERSTATTUNG.fahrzeuge, sondereinsaetze: (se ?? []).map((x: any) => ({ id: x.source_id, titel: x.titel, ort: x.ort || "", datum: x.datum_von || null })),
@@ -10574,7 +10574,7 @@ Köcheclub-App`,
           const { data: att } = await db.from("kc_communication_attachments").select("id,object_path").in("id", belege);
           if ((att ?? []).length !== belege.length || (att ?? []).some((x: any) => !String(x.object_path).startsWith(`club/${ich.person_id}/`))) throw new Fehler("Beleg nicht gefunden – bitte erneut anhängen.");
         }
-        // KC-CLUB-ERSTATTUNG-SONDER (2.418.0): Bezug zum Sondereinsatz (Titel) und Fahrgemeinschaft – km-Pauschale nur für Fahrer
+        // KC-CLUB-ERSTATTUNG-SONDER (2.419.0): Bezug zum Sondereinsatz (Titel) und Fahrgemeinschaft – km-Pauschale nur für Fahrer
         const seIds = [...new Set(pos.map((x) => x.special_event_id).filter(Boolean))] as string[];
         if (seIds.length) {
           const [{ data: evs }, { data: cps }] = await Promise.all([
@@ -10828,7 +10828,7 @@ Köcheclub Werne`,
             .eq("source", "club_app").order("updated_at", { ascending: false }).limit(200),
         ]);
         const [stE, stD] = await Promise.all([ekStaende("erstattung", (ers ?? []).map((x: any) => x.id)), ekStaende("dienstwunsch", (dw ?? []).map((x: any) => x.id))]);
-        // KC-CLUB-ERSTATTUNG-SONDER (2.418.0): offene Kautionen und abzugebende Papierbelege bleiben sichtbar, auch nach der Erstattung
+        // KC-CLUB-ERSTATTUNG-SONDER (2.419.0): offene Kautionen und abzugebende Papierbelege bleiben sichtbar, auch nach der Erstattung
         const [{ data: nk }, { data: nb }] = await Promise.all([
           db.from("kc_club_erstattung").select("id,person_id,positionen,status,erstellt_am").neq("status", "abgelehnt").contains("positionen", [{ art: "kaution", kaution_status: "offen" }]).limit(100),
           db.from("kc_club_erstattung").select("id,person_id,positionen,status,erstellt_am").neq("status", "abgelehnt").contains("positionen", [{ beleg_status: "papier" }]).limit(100)]);
@@ -10939,7 +10939,7 @@ Köcheclub Werne`,
       }
 
       // ✅ Erstattet / ✖ Abgelehnt – alle drei der Clubleitung dürfen das (Wunsch Hansi); das Mitglied bekommt Bescheid
-      // KC-CLUB-ERSTATTUNG-SONDER (2.418.0): Clubleitung vermerkt „Beleg erhalten“ oder den Stand einer Kaution
+      // KC-CLUB-ERSTATTUNG-SONDER (2.419.0): Clubleitung vermerkt „Beleg erhalten“ oder den Stand einer Kaution
       case "erstattung_position_setzen": {
         nurLeitung(ich);
         const { data: a } = await db.from("kc_club_erstattung").select("id,person_id,positionen,status,summe").eq("id", String(p.id || "")).maybeSingle();

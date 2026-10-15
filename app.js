@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.418.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.419.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -935,7 +935,7 @@ function anwendenDesign() {
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
   jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); if ($("setFee")) $("setFee").checked = einst("fee", true); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
-  try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
+  try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
 }
 function designWahlZeigen() {
@@ -5105,6 +5105,7 @@ const HILFE = [
   { id: "akku", thema: "technik", sym: "🔋", t: "Akku sparen mit der Club-App", x: "Die App spart von selbst: Das Bild im Kopf malt höchstens 30 Bilder pro Sekunde, nach 45 Sekunden ohne Tippen nur noch 12 – und bei weniger als 30 % Akku immer sparsam. Im Hintergrund und auf anderen Seiten ruht es ganz. Noch sparsamer: ⚙️ → „🎨 Darstellung“ → <b>🐢 Sparmodus „An“</b> oder ⚙️ → „✨ Effekte“ → <b>„🍂 Jahreszeiten im Kopf“</b> aus. Läuft ein Erklär-Video in <b>Pause</b>, darf der Bildschirm nach 30 Sekunden wieder ausgehen; nach 10 Minuten Pause endet das Video von selbst. Eine <b>Jahreszeit-Vorschau</b> aus den Einstellungen läuft nur 2 Minuten mit voller Bildrate und endet nach 15 Minuten von selbst.", zeig: () => suEinstellung("sparWahl"), seit: "2.334.0" },
   { id: "anpassen", thema: "darstellung", sym: "🎨", t: "Meine App nach meinem Geschmack – alle Möglichkeiten", x: "So viel kannst du einstellen: <b>🎭 Thema</b> (Farben, Kopf-Bild, Sende-Effekt und Schrift mit einem Tipp – oder „Nach Kalender“), <b>🎨 Farbdesign</b>, <b>🌗 Tag und Nacht</b>, <b>🔠 große Schrift</b> (alles unter ⚙️ → „🎨 Darstellung“); <b>🍂 Jahreszeiten-Bild</b>, <b>🎏 Deko an der Leiste</b>, <b>🪟 Kachel- und Sende-Effekt</b>, <b>✨ ruhige oder lebendige Knöpfe</b> (⚙️ → „✨ Effekte“); <b>📄 Eselsohr</b>, Kacheln und Ansicht (⚙️ → „🧩 Startseite &amp; Ansicht“). Alles zeigt dir das Erklär-Video <b>„🎨 Meine App nach meinem Geschmack“</b>.", zeig: () => rgListeAbspielen(["anpassen"]), seit: "2.344.0" },
   { id: "bw_einladung", thema: "start", sym: "🎭", t: "Twinkey lädt zur Bewegung ein", x: "Beim Öffnen der App fragt Twinkey höchstens einmal am Tag: <i>„Heute Lust auf eine Bewegungseinheit mit mir?“</i> <b>„💪 Ja“</b> führt direkt zur Bühne, <b>„⏰ Später“</b> fragt in etwa 2 Stunden wieder, <b>„🙂 Heute nicht“</b> erst morgen, <b>„🔕 Nicht mehr fragen“</b> schaltet es ab. Wieder einschalten: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „🎭 Twinkey lädt zur Bewegung ein“.", zeig: () => einstiegHin("startseite", "setBwEinladung"), seit: "2.314.0" },
+  { id: "kachel_vorschlag", thema: "start", sym: "💡", t: "Vorschläge zur Startseite", x: "Die App merkt sich <b>nur auf deinem Handy</b>, welche Kacheln du öffnest – nichts geht an den Server. Nach ein paar Wochen schlägt Twinkey <b>höchstens einmal pro Woche</b> etwas vor: eine Kachel, die du lange nicht gebraucht hast, <b>auszublenden</b> – oder, wenn du in der einfachen Ansicht gut zurechtkommst, <b>weitere Funktionen freizuschalten</b>. Die App ändert nie etwas von selbst; SOS, Termine, Nachrichten und Mein Dienst werden nie vorgeschlagen. Abschalten und „Gemerktes löschen“: ⚙️ → „🧩 Startseite &amp; Ansicht“.", zeig: () => einstiegHin("startseite", "setKachelVorschlag"), seit: "2.418.0" },
   { id: "es_regler", thema: "toene", sym: "🎚️", t: "Bühne: Musik und Stimme lauter oder leiser", x: "Während Twinkey turnt, stehen zwei Regler am Rand: <b>rechts die Musik</b> 🎵, <b>links Twinkeys Stimme</b> 🗣️. Nach oben ziehen = lauter (der Keil wird dicker), nach unten = leiser. <b>Unten aufs Symbol tippen</b> macht sofort stumm (🔇 bzw. 🤐) – nochmal tippen holt die vorige Lautstärke zurück. Die App merkt sich beides. Ist alles zu leise, auch die Lautstärke am Handy prüfen.", zeig: () => esOeffnen("buehne"), seit: "2.300.0" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🧩 Startseite &amp; Ansicht“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("startseite", "kachelGroesseWahl"), seit: "2.23.90" },
   // 2.415.0 KC-CLUB-AVATAR-HILFE (nur mit Freigabe sichtbar, darum nicht im Block „Neuerungen für alle“): hochwertige Avatare, Individuell anpassen (Kacheln), Schmuck, eigene Brille
@@ -8698,6 +8699,7 @@ const TW_FAQ = [
   { id: "grosse-uhr", sym: "🕰️", t: "Gibt es eine große Uhr?", x: "Ja – auf der Rückseite des Kopfes unter <b>🕰️ Uhr</b>: digital grün, Fallblatt mit Datum, Bahnhofsuhr oder groß &amp; klar.", los: () => esOeffnen("uhr") },
   { id: "diashow", sym: "🖼️", t: "Kann ich die Fotos als Diashow ansehen?", x: "Ja – Kopf umdrehen (doppelt aufs Eselsohr) → <b>🖼️ Diashow</b>. Album wählen, aufs Foto tippen blendet alles andere aus.", los: () => esOeffnen("dia") },
   { id: "spiegel", sym: "🪞", t: "Gibt es einen Spiegel mit Kamera?", x: "Ja – Kopf umdrehen (doppelt aufs Eselsohr) → <b>🪞 Spiegel</b> → <b>„📷 Kamera an“</b>. Mit „🐹 Pausbäckchen“ wird’s lustig. Nichts wird gespeichert oder verschickt.", los: () => esOeffnen("spiegel") }, // 2.314.0
+  { id: "kachel_vorschlag_aus", sym: "💡", t: "Wie schalte ich die Vorschläge zur Startseite ab?", x: "Im Vorschlags-Fenster <b>„🔕 Keine Vorschläge mehr“</b> tippen – oder unter ⚙️ → „🧩 Startseite &amp; Ansicht“ den Schalter <b>„💡 Vorschläge zur Startseite“</b> ausschalten. Dort löscht <b>„🧹 Gemerktes löschen“</b> auch alles, was die App sich gemerkt hat.", los: () => suEinstellung("setKachelVorschlag") },
   { id: "einladung", sym: "🎭", t: "Wie schalte ich die Frage nach der Bewegungseinheit ab?", x: "Im Fenster <b>„🔕 Nicht mehr fragen“</b> tippen – oder unter ⚙️ → „🧩 Startseite &amp; Ansicht“ den Schalter <b>„🎭 Twinkey lädt zur Bewegung ein“</b> ausschalten.", los: () => suEinstellung("setBwEinladung") },
   { id: "ueber-twinkey", sym: "🧑‍🍳", t: "Wer ist Twinkey?", x: "Ich bin Twinkey, der Helfer der Köcheclub-App – früher waren auch viele von uns Küchenchefs. Frag mich in deinen Worten. Weiß ich etwas nicht, recherchiere ich und du bekommst die Antwort später." },
 ];
@@ -12333,7 +12335,7 @@ async function erstattungLaden() {
   try {
     const r = await api("erstattung_meine");
     Object.assign(ERS, { kmSatz: r.kmSatz, standard: r.standard, saetze: r.saetze || [], gruende: r.gruende, arten: r.arten, antraege: r.antraege || [], abgerechnet: r.besucheAbgerechnet || [], geladen: true,
-      sondereinsaetze: r.sondereinsaetze || [] }); // KC-CLUB-ERSTATTUNG-SONDER (2.418.0)
+      sondereinsaetze: r.sondereinsaetze || [] }); // KC-CLUB-ERSTATTUNG-SONDER (2.419.0)
     if (!$("ersForm").innerHTML) erstattungArt("fahrt");
     $("ersMeine").innerHTML = r.antraege.length ? r.antraege.map((a) => `<div class="zeile"><div style="flex:1"><b>${eur(a.summe)}</b> · ${a.anzahl} Position${a.anzahl === 1 ? "" : "en"}<div class="hinweis" style="margin:0;font-size:.85rem">${esc(wann(a.zeit))} · ${a.auszahlung === "bar" ? "bar" : "Überweisung"}</div></div>
       <span class="stmarke ${a.status === "erstattet" ? "st-verfuegbar" : a.status === "abgelehnt" ? "st-abwesend" : "st-beschaeftigt"}">${a.status === "erstattet" ? "✅ erstattet" : a.status === "abgelehnt" ? "❌ abgelehnt" : "📨 eingereicht"}</span></div>`).join("")
@@ -12342,7 +12344,7 @@ async function erstattungLaden() {
   } catch (e) { meldeFehler(e); if (!ERS.geladen) $("ersMeine").innerHTML = `<div class="karte hinweis">⚠️ ${esc(fehlerText(e, "Konnte nicht geladen werden."))}<div style="margin-top:8px"><button type="button" class="knopf klein" onclick="erstattungLaden()">🔄 Nochmal laden</button></div></div>`; } // 2.337.0
   erstattungZeigen();
 }
-// KC-CLUB-ERSTATTUNG-SONDER (2.418.0, KICC-F-100): weitere Auslagen bei Sondereinsätzen – Parken, Kraftstoff (nur Miet-/Clubfahrzeug),
+// KC-CLUB-ERSTATTUNG-SONDER (2.419.0, KICC-F-100): weitere Auslagen bei Sondereinsätzen – Parken, Kraftstoff (nur Miet-/Clubfahrzeug),
 // Kaution (zählt nicht zur Summe, wird nachverfolgt); je Position „Bon/Quittung vorhanden?“; Bezug zum Sondereinsatz; Vorschuss.
 const ERS_SYM = { fahrt: "🚗", einkauf: "🛒", sonstiges: "📦", parken: "🅿️", kraftstoff: "⛽", kaution: "🔐" };
 const ersZaehlt = (x) => x.art !== "kaution";
@@ -13703,7 +13705,7 @@ window.addEventListener("message", (e) => {
   if (String(e.data?.art || "").startsWith("wunschbogen")) return wbAntwort(e.data);
   if (e.data?.art === "dw-sperre") return dwSperreHinweis(e.data.funde);
   if (e.data?.art === "dw-alle-tage") return dwFertigLeiste(Number(e.data.tage) || 0);
-  // KICC-F-100 (2.418.0): Sonderstunden gemeldet / Fahrtkosten-Auslagen aus Twinkey erfassen
+  // KICC-F-100 (2.419.0): Sonderstunden gemeldet / Fahrtkosten-Auslagen aus Twinkey erfassen
   if (e.data?.art === "sonderstunden-gemeldet") return melde(`✓ Sonderstunden gemeldet (${Number(e.data.anzahl) || 0} Person${Number(e.data.anzahl) === 1 ? "" : "en"}) – der Planer bestätigt sie`);
   if (e.data?.art === "erstattung-vorbelegen") { dwZurueck(); return erstattungVorbelegen(e.data); }
   if (e.data === "dienstwunsch-zu") dwZurueck();
@@ -15052,6 +15054,61 @@ function bwEinladungPruefen(versuch = 0) {
     else if (w === "spaeter") { bwEinSetzen({ spaeter: Date.now() + BW_EIN_SPAETER_MS }); melde("⏰ Gut – ich frage dich später nochmal."); }
     else if (w === "nein") { bwEinSetzen({ tag: heuteIso() }); melde("🙂 Alles klar – vielleicht morgen!"); }
     else { bwEinSetzen({ aus: true }); try { $("setBwEinladung").checked = false; } catch (e) { /* Einstellungen noch nicht offen */ } melde("🔕 Ich frage nicht mehr. Wieder einschalten: ⚙️ → „🧩 Startseite & Ansicht“."); } });
+}
+// ----- 2.418.0 KC-CLUB-KACHEL-VORSCHLAG (Wunsch Hansi „die App soll merken, welche Funktionen am meisten genutzt werden, und dann vorschlagen:
+// sollen wir Kacheln verbergen oder weitere Funktionen freischalten“) – adaptive Startseite, aber NUR als Vorschlag: die App baut nie selbst um.
+// Gezählt wird nur auf diesem Gerät (localStorage, nichts geht an den Server): je Kachel Anzahl + letzter Tag, dazu die Tage mit Nutzung.
+// Frühestens nach 21 Tagen und 8 Nutzungstagen, höchstens alle 7 Tage ein Vorschlag, nie über einem offenen Fenster.
+// Erweiterte Ansicht: eine seit 28 Tagen ungenutzte Kachel ausblenden? (SOS, Termine, Nachrichten, Mein Dienst, Dienstwünsche nie; nie mit neuer Zahl).
+// Einfache Ansicht: wer gut zurechtkommt (≥ 4 verschiedene Kacheln, ≥ 20 Mal geöffnet), bekommt „weitere Funktionen freischalten?“ angeboten.
+// Abschaltbar unter ⚙️ → „🧩 Startseite & Ansicht“ („💡 Vorschläge zur Startseite“), dort auch „Gemerktes löschen“.
+const NU_KEY = "kc_club_nutzung", NU_NIE_VERBERGEN = ["sos", "termine", "kommunikation", "meindienst", "mein_dienst", "dienstwunsch"];
+const NU_MIN_TAGE = 21, NU_MIN_NUTZTAGE = 8, NU_ABSTAND_TAGE = 7, NU_UNGENUTZT_TAGE = 28, NU_ERW_SPAETER_TAGE = 14;
+const nuTageZwischen = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 86400000);
+const nuLeer = () => ({ seit: heuteIso(), k: {}, tage: [], nein: [], aus: false, zuletzt: "", erwSpaeter: "", erwNein: false });
+function nuStand() { try { const x = JSON.parse(localStorage.getItem(NU_KEY) || "null"); if (x && x.seit) return { ...nuLeer(), ...x }; } catch (e) { /* defekt → neu anfangen */ } return nuLeer(); }
+function nuSpeichern(st) { try { localStorage.setItem(NU_KEY, JSON.stringify(st)); } catch (e) { /* ohne Speicher keine Vorschläge */ } }
+function nuTag(st = nuStand()) { const h = heuteIso(); if (!st.tage.includes(h)) st.tage = [...st.tage, h].slice(-90); return st; }
+function nuKachel(id) { if (!id) return; const st = nuTag(), alt = st.k[id] || { n: 0, z: "" }; st.k[id] = { n: alt.n + 1, z: heuteIso() }; nuSpeichern(st); }
+function nuVerbergenKandidat(st) { // die am längsten ungenutzte sichtbare Kachel (seit Zählbeginn nie geöffnet zählt ab „seit“)
+  if (einfach() || reg === "admin") return null;
+  const h = heuteIso(), neu = (k) => { try { return k.zahl ? k.zahl() > 0 : false; } catch (e) { return true; } };
+  return kacheln(reg).filter((k) => !k.bald && !NU_NIE_VERBERGEN.includes(k.id) && !st.nein.includes(k.id) && !neu(k))
+    .map((k) => ({ k, z: st.k[k.id]?.z || st.seit })).filter((x) => nuTageZwischen(x.z, h) >= NU_UNGENUTZT_TAGE)
+    .sort((a, b) => a.z.localeCompare(b.z))[0]?.k || null;
+}
+function nuFreischaltenPasst(st) {
+  if (!einfach() || st.erwNein || (st.erwSpaeter && heuteIso() < st.erwSpaeter)) return false;
+  const ids = Object.keys(st.k); return ids.length >= 4 && ids.reduce((s, id) => s + (st.k[id].n || 0), 0) >= 20;
+}
+function nuVorschlagPruefen(versuch = 0) {
+  const st = nuTag(); nuSpeichern(st);
+  if (!ICH || st.aus || RG?.an) return;
+  const h = heuteIso();
+  if (nuTageZwischen(st.seit, h) < NU_MIN_TAGE || st.tage.length < NU_MIN_NUTZTAGE || (st.zuletzt && nuTageZwischen(st.zuletzt, h) < NU_ABSTAND_TAGE) || $("nuBlatt")) return;
+  if (document.hidden || aktuelleAnsicht !== "start" || document.querySelector(".blatt:not(.versteckt)") || kaBearb) { if (versuch < 8) setTimeout(() => nuVorschlagPruefen(versuch + 1), 12000); return; }
+  const frei = nuFreischaltenPasst(st), k = frei ? null : nuVerbergenKandidat(st);
+  if (!frei && !k) return;
+  st.zuletzt = h; nuSpeichern(st);
+  const name = ICH.vorname || String(ICH.name || "").split(" ")[0] || "";
+  const text = frei ? `<h3 style="margin:4px 0">Du kommst prima zurecht${name ? ", " + esc(name) : ""}! 🎉</h3><p style="margin:0 0 10px">Möchtest du <b>weitere Funktionen freischalten</b>? In der erweiterten Ansicht findest du zum Beispiel Fotoalbum, Archiv, Helfen &amp; Leihen und Vorschläge. Zurück zur einfachen Ansicht geht jederzeit.</p>`
+    : `<h3 style="margin:4px 0">Ein kleiner Vorschlag 💡</h3><p style="margin:0 0 10px">Die Kachel <b>„${k.sym} ${esc(k.t)}“</b> hast du in den letzten 4 Wochen nicht geöffnet. Soll ich sie <b>ausblenden</b>? Deine Startseite wird übersichtlicher – zurückholen geht jederzeit.</p>`;
+  const knoepfe = frei ? `<button type="button" class="knopf haupt" data-w="frei">✨ Ja, freischalten</button><button type="button" class="knopf" data-w="spaeter">⏰ Später</button><button type="button" class="knopf" data-w="nein">🙂 Nein, danke</button>`
+    : `<button type="button" class="knopf haupt" data-w="weg">🙈 Ja, ausblenden</button><button type="button" class="knopf" data-w="nein">👍 Nein, behalten</button>`;
+  const f = blattAuf("nuBlatt", `<div class="bw-ein"><div class="bw-ein-figur">${bwFigur("winken", 0, "", 0, .5, 0, new Date().getDate())}</div>${text}
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">${knoepfe}<button type="button" class="knopf klein" data-w="aus">🔕 Keine Vorschläge mehr</button></div></div>`);
+  f.querySelectorAll("[data-w]").forEach((b) => b.onclick = () => { const w = b.dataset.w, s = nuStand(); f.remove();
+    if (w === "weg") kaSichtbar(k.id, false);
+    else if (w === "frei") ansichtSetzen("erweitert");
+    else if (w === "spaeter") { s.erwSpaeter = new Date(Date.now() + NU_ERW_SPAETER_TAGE * 86400000).toISOString().slice(0, 10); nuSpeichern(s); melde("⏰ Gut – ich frage in ein paar Wochen nochmal."); }
+    else if (w === "nein") { if (frei) s.erwNein = true; else s.nein = [...new Set([...s.nein, k.id])]; nuSpeichern(s); melde(frei ? "🙂 Alles klar – du kannst jederzeit unten auf der Startseite umschalten." : "👍 Alles klar – die Kachel bleibt."); }
+    else { s.aus = true; nuSpeichern(s); try { $("setKachelVorschlag").checked = false; } catch (e) { /* Einstellungen noch nicht offen */ } melde("🔕 Keine Vorschläge mehr. Wieder einschalten: ⚙️ → „🧩 Startseite & Ansicht“."); } });
+}
+function nuSchalter(an) { const st = nuStand(); st.aus = !an; nuSpeichern(st); melde(an ? "💡 Vorschläge zur Startseite sind an" : "🔕 Keine Vorschläge zur Startseite"); }
+async function nuLoeschen() {
+  if (!(await frage("Gemerkte Nutzung auf diesem Gerät löschen? Die App fängt neu an zu zählen."))) return;
+  const aus = nuStand().aus; try { localStorage.removeItem(NU_KEY); } catch (e) { /* nichts gespeichert */ } if (aus) nuSpeichern({ ...nuLeer(), aus: true });
+  melde("🧹 Gemerkte Nutzung gelöscht");
 }
 function eselsohrSchalter(an) { esSchreib("an", an ? "1" : "0"); esEinsetzen(); melde(an ? "📄 Eselsohr ist da – unten rechts am Kopf doppelt tippen" : "Eselsohr ausgeblendet"); }
 function esEinsetzen() {
@@ -18812,6 +18869,7 @@ document.addEventListener("click", (e) => {
   const k = e.target.closest?.("#raster .kachel[data-id]"); if (!k || kaBearb || (typeof RG !== "undefined" && RG.an)) return;
   try { localStorage.setItem(KACHEL_ZULETZT, k.dataset.id); } catch {}
   kachelZuletztMarkieren();
+  nuKachel(k.dataset.id); // 2.418.0 KC-CLUB-KACHEL-VORSCHLAG: nur auf diesem Gerät mitzählen
 }, true);
 // ---------- KC-CLUB-INFOFELD (0.42.0): Info-Feld oben zum Blättern ----------
 // ‹ › antippen, im Feld wischen oder einen Punkt antippen. Felder kommen aus der Registry; die App merkt sich das zuletzt gezeigte.
@@ -21445,7 +21503,7 @@ function hashSprung(h) {
     else if (h === "#pinnwand") zeige("pinnwand");
     else if (h === "#standort") zeige("standort");
     else if (h === "#dienstwunsch") dwOeffnen();
-    else if (h === "#erstattung") KR_ZEIGE("erstattung"); // KICC-F-100 (2.418.0): Link aus „Kaution wird erstattet“
+    else if (h === "#erstattung") KR_ZEIGE("erstattung"); // KICC-F-100 (2.419.0): Link aus „Kaution wird erstattet“
     else if (h === "#wunschbogen") wbStart(); // KC-CLUB-WUNSCHBOGEN (2.23.28)
     else if (h === "#schulung") smStart(); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62)
     else if (h.startsWith("#besuch=")) bsDirekt(decodeURIComponent(h.slice(8))); // KC-CLUB-BESUCHE (2.23.65): „Protokoll öffnen“ aus Mails wie im alten Programm
@@ -24041,7 +24099,7 @@ function ekPosten(P) {
       auf: `ekErstInfo('${x.id}')`, ordner: ["🗄️", "Archiv", "arStart()"],
       schnell: [...(x.kenntnisIch ? [] : [["👁️ Zur Kenntnis genommen", `ekKenntnis('erstattung','${x.id}')`]]), ["✅ Erstattet", `ekErstattet('${x.id}')`, true],
         ["✖ Ablehnen", `ekErstAblehnen('${x.id}')`], ["🗄️ Ablegen …", `ekAblage('erstattung','${x.id}')`]] });
-  // KC-CLUB-ERSTATTUNG-SONDER (2.418.0): offene Kautionen und abzugebende Papierbelege – auch nach der Erstattung
+  // KC-CLUB-ERSTATTUNG-SONDER (2.419.0): offene Kautionen und abzugebende Papierbelege – auch nach der Erstattung
   for (const x of k.nachverfolgen || [])
     P.push({ wer: x.name, datum: x.erstellt_am, sym: "🔎", gruppe: "Erstattung – nachverfolgen", titel: `${x.name}: ${x.offen.map((y) => y.kaution ? "🔐 Kaution " + euro(y.betrag) : "🧾 Beleg").join(" · ")}`,
       unter: `${zeitKurz(x.erstellt_am)} · Antrag ${x.status === "erstattet" ? "erstattet" : "eingereicht"}`, auf: `ekNachInfo('${x.id}')`, ordner: ["🗄️", "Archiv", "arStart()"],
@@ -33964,6 +34022,7 @@ function suAppListe() {
     ["🧩", "Rätsel: Wie gut kennst du Werne? (Bilderrätsel, Bestenliste)", "rätsel raetsel spiel quiz bilderrätsel pixel buzzer werne rathaus küche gewürze bestenliste wochen-rätsel", () => esOeffnen("raetsel")], // 2.339.0
     ["🪞", "Spiegel (Kamera, Pausbäckchen)", "spiegel kamera selfie pausbäckchen pausbacken dick gesicht", () => esOeffnen("spiegel")], // 2.314.0
     ["🎭", "Einladung zur Bewegung beim Start", "einladung bewegung start fragen bewegungseinheit sport frage", () => suEinstellung("setBwEinladung")],
+    ["💡", "Vorschläge zur Startseite (Kacheln ausblenden, Funktionen freischalten)", "vorschlag vorschläge kacheln ausblenden verbergen freischalten nutzung gemerkt adaptiv startseite löschen", () => suEinstellung("setKachelVorschlag")], // 2.418.0
     ["🎚️", "Bühne: Musik / Stimme lauter oder leiser", "lautstärke lauter leiser regler musik stimme stumm bühne", () => esOeffnen("buehne")],
     // 2.344.0 KC-CLUB-HILFE-NACHTRAG: alle Möglichkeiten, die App anzupassen, auch über die Lupe
     ["🎭", "Thema wählen (Weihnachten, Herbst, Oktoberfest …)", "thema themen weihnachten herbst indian summer oktoberfest sim-jü simjue karneval halloween ostern karibik silvester winter sommer frühling paket kalender club-thema", ein("themaWahl")],
@@ -35114,6 +35173,7 @@ async function fpAdmin(tage) {
     if (!h || h === "#") setTimeout(() => ekHinweisPruefen(), 3000); // KC-CLUB-EINGANG-HINWEIS: viel im Eingangskorb?
     if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
     if (!h || h === "#") setTimeout(() => bwEinladungPruefen(), 15000); // 2.314.0 KC-CLUB-BEWEGUNG-EINLADUNG
+    if (!h || h === "#") setTimeout(() => nuVorschlagPruefen(), 25000); // 2.418.0 KC-CLUB-KACHEL-VORSCHLAG (nach der Einladung, nie darüber)
     fensterStart(); // KC-CLUB-ZWEI-FENSTER
     if (!h || h === "#") setTimeout(() => scHinweisPruefen(), 9000); // KC-CLUB-SCHULUNG-HINWEIS (2.23.68): Admin
     if (!h || h === "#") setTimeout(() => smHinweisPruefen(), 7000); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62): offene Schulungs-Einladung? // KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52): neue Terminanfrage?
