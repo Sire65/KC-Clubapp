@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.417.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.418.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -16431,8 +16431,8 @@ const KS_TEXT = {
     ["Wir ko-chen mit Herz, und das tun wir so ger-ne!", [64, 65, 67, 69, 69, 72, 72, 69, 67, 65, 67, 65]],
     ["Ob Grün-kohl, ob Punsch, ob die Ja-cke rot o-der weiß –", [67, 67, 69, 72, 72, 71, 69, 71, 72, 74, 72, 71, 72]],
     ["wir rüh-ren zu-sam-men, das ist un-ser Preis!", [69, 69, 69, 67, 65, 65, 67, 69, 71, 72, 74]],
-    ["Seit ein-und-neun-zig – da brennt un-ser Herd,", KS_HOOK, true],
-    ["weil Freund-schaft und Ko-chen für im-mer ge-hört!", [65, 65, 67, 69, 69, 72, 71, 69, 67, 64, 60]]],
+    ["Seit ein-und-neun-zig – da glüht un-ser Herd,", KS_HOOK, true], // 2.417.0 (Wunsch Hansi): „glüht“ statt „brennt“
+    ["weil Freund-schaft im-mer da-zu ge-hört!", [65, 65, 67, 69, 72, 71, 67, 64, 60]]], // 2.417.0 (Wunsch Hansi): neuer Text, Melodie auf 9 Silben gekürzt (gleicher Bogen, Schluss auf dem Grundton)
   bridge: [["Man-che sind ge-gan-gen, doch sie sind noch da-bei,", [69, 69, 67, 65, 65, 64, 64, 65, 67, 69, 67, 65]],
     ["in je-dem Re-zept und in je-der Fei-e-rei.", [64, 64, 65, 67, 67, 64, 64, 65, 67, 69, 67, 64]],
     ["Und kommt mal ein Neu-er, dann rü-cken wir zu-samm' –", [69, 69, 69, 72, 72, 69, 67, 69, 71, 72, 74, 72]],

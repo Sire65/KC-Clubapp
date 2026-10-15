@@ -9951,6 +9951,18 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\.sb-knopf \{ width: 44px; height: 44px; border-width: 2px; font-size: 1\.2rem; \}/.test(html) && /\.sb-knopf \{ left: auto; right: calc\(50% \+ 444px\); bottom: calc\(18px \+ env\(safe-area-inset-bottom\)\); width: 48px; height: 48px;/.test(html), "Mikrofon passt in die Reihe");
 }
 
+// 2.417.0 KC-CLUB-WERBEFILM-SEITE: Filmseite film/ für Mitglieder ohne App – eigenständig, ohne Anmeldung/Daten, nicht im Offline-Speicher
+{
+  const fs_ = fs.existsSync, film = lies("film/index.html");
+  assert.ok(fs_(new URL("../film/werbefilm.mp4", import.meta.url)) && fs_(new URL("../film/werbefilm-bild.jpg", import.meta.url)) && fs_(new URL("../film/werbefilm-vorschau.jpg", import.meta.url)), "Filmseite: Film, Startbild und Vorschaubild vorhanden");
+  assert.ok(/<video[^>]*playsinline[^>]*poster="werbefilm-bild\.jpg"/.test(film) && /<source src="werbefilm\.mp4" type="video\/mp4">/.test(film), "Filmseite: Video spielt im Handy-Browser (playsinline, Startbild, mp4)");
+  assert.ok(/name="robots" content="noindex, nofollow"/.test(film) && /property="og:image" content="https:\/\/sire65\.github\.io\/KC-Clubapp\/film\/werbefilm-vorschau\.jpg"/.test(film), "Filmseite: nicht in Suchmaschinen, Vorschaubild für WhatsApp");
+  assert.ok(!/app\.js|supabase|<form|<input/i.test(film), "Filmseite: kein Programm, keine Anmeldung, keine Eingaben");
+  assert.ok(/Zugangslink bekommst du bei <b>Hansi<\/b>/.test(film) && /since 1991/.test(film), "Filmseite: Hinweis Zugangslink bei Hansi, „since 1991“");
+  assert.ok(/if \(url\.pathname\.includes\("\/film\/"\)\) return;/.test(sw), "Service Worker lässt film/ aus (kein 20-MB-Film im Offline-Speicher, Range-Abspielen übers Netz)");
+  assert.ok(!sw.match(/const DATEIEN = \[[^\]]*\]/)[0].includes("film"), "Film nicht in der Vorab-Liste des Service Workers");
+}
+
 // Server 2.382.0 KC-CLUB-NOTPAKET-STUENDLICH: Notfall-Paket höchstens 1× pro Stunde neu bauen (je Bau ~3.000 Datenbankabfragen)
 {
   assert.ok(/st\.fingerabdruck !== fp && st\.hochgeladen_am && Date\.now\(\) - new Date\(st\.hochgeladen_am\)\.getTime\(\) < 60 \* 60000\)/.test(server) && /gedrosselt: true/.test(server), "Notfall-Paket gedrosselt, erzwingen geht weiter");
