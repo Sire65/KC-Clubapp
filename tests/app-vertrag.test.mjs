@@ -6366,13 +6366,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.400.0 KC-CLUB-KOPF-GLANZ (Wunsch Hansi „beim Start ein heller Lichtschein von links nach rechts durch den Kopf“)
 {
-  assert.ok(/<div class="kopf-glanz lauf" id="kopfGlanz" aria-hidden="true"><i><\/i><\/div>/.test(html), "Glanz-Element im Kopf der Startseite");
+  assert.ok(/<div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><i><\/i><\/div>/.test(html), "Glanz-Element im Kopf der Startseite");
   assert.ok(/\.kopf-glanz \{ position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none;/.test(html), "Glanz bleibt im runden Kopf und fängt keine Klicks");
   assert.ok(/\.kopf-glanz\.lauf i \{ animation: kopfGlanz [^;]* 1 both; \}/.test(html) && /@keyframes kopfGlanz \{[^}]*transform: translateX\(-100%\)/.test(html), "einmal, per transform (flüssig)");
   assert.ok(/:root\.ohne-anim \.kopf-glanz \{ display: none; \}/.test(html) && /prefers-reduced-motion: reduce\) \{ \.kopf-glanz \{ display: none; \}/.test(html), "Animationen aus / Bewegung reduzieren → kein Glanz");
-  assert.ok(/<div class="kopf-glanz lauf" id="kopfGlanz"/.test(html) && /g\.addEventListener\("animationend", aus\); g\.addEventListener\("animationcancel", aus\);/.test(html), "beim Öffnen einmal, danach aus");
+  assert.ok(/<div class="kopf-glanz" id="kopfGlanz"/.test(html) && /g\.addEventListener\("animationend", aus\); g\.addEventListener\("animationcancel", aus\);/.test(html), "beim Öffnen einmal, danach aus");
   // 2.401.0: auch beim Zurückholen aus dem Hintergrund (Android lädt die App dann nicht neu)
-  assert.ok(/const KOPF_GLANZ_PAUSE_MS = 60000;/.test(html) && /if \(weg && Date\.now\(\) - weg >= KOPF_GLANZ_PAUSE_MS\) \{ aus\(\); void g\.offsetWidth; g\.classList\.add\("lauf"\); \}/.test(html), "Zurückholen nach ≥ 1 Min. → Glanz läuft erneut");
+  assert.ok(/const KOPF_GLANZ_PAUSE_MS = 60000, KOPF_GLANZ_WARTEN_MS = 20000;/.test(html) && /if \(weg && Date\.now\(\) - weg >= KOPF_GLANZ_PAUSE_MS\) kopfGlanzStarten\(\);/.test(html), "Zurückholen nach ≥ 1 Min. → Glanz läuft erneut");
 }
 // 2.402.0 KC-CLUB-KUCKUCKSUHR (Wunsch Hansi „wenn volle Stunde, einblenden, Kuckuck kommt raus und ruft so oft, wie es Uhr ist“)
 {
@@ -6413,6 +6413,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/"kuckuck-ruf\.mp3"\]/.test(sw), "Aufnahme im Offline-Speicher");
   assert.ok(/const KK_AUFNAHME = \{ datei: "kuckuck-ruf\.mp3"/.test(html) && /Lizenz CC0/.test(html), "Quelle und Lizenz vermerkt");
   assert.ok(/if \(KK_AUFNAHME\.puffer\) kkAufnahmeSpielen\(audio\.currentTime \+ 0\.02\); else kkTon\(audio\.currentTime \+ 0\.02\);/.test(html), "Aufnahme, sonst erzeugter Klang");
+}
+// 2.407.0 KC-CLUB-KOPF-GLANZ-SICHTBAR (Fund Hansi „Lichteffekt noch nicht gesehen“): erst nach dem Laden, nur sichtbar und ohne Fenster
+{
+  assert.ok(/const frei = !document\.hidden && aktuelleAnsicht === "start" && !\[\.\.\.document\.querySelectorAll\("\.blatt"\)\]\.some\(\(b\) => b\.getClientRects\(\)\.length\)/.test(html) && /setTimeout\(\(\) => kopfGlanzStarten\(\), 400\);/.test(html), "Start nach dem Laden, nicht unter Fenstern");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
