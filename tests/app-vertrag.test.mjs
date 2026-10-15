@@ -6407,6 +6407,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/for \(const \[mal, a\] of \[\[1, 1\], \[2, 0\.03\], \[3, 0\.11\], \[5, 0\.02\]\]\)/.test(html) && /function kkGong\(t\)/.test(html) && /sp\.frequency\.value = f \* 2;/.test(html) && /KK_TAKT_MS = 1500;/.test(html), "Klang wie die echte Uhr");
   assert.ok(/mitTon = einst\("ton", true\) && \(tonImmer \|\| !\(h >= KK_NACHT_VON \|\| h < KK_NACHT_BIS\)\)/.test(html) && /onclick="kuckuckZeigen\(kkJetzt\(\)\.h, true\)"/.test(html), "Probe-Knopf mit Ton auch nachts; sonst nachts stumm");
 }
+// 2.406.0 KC-CLUB-KUCKUCK-ECHT (Wunsch Hansi „freie Aufnahme“): echte Aufnahme (CC0), offline gespeichert, Ersatz = erzeugter Klang
+{
+  assert.ok(fs.existsSync(new URL("../kuckuck-ruf.mp3", import.meta.url)) && fs.statSync(new URL("../kuckuck-ruf.mp3", import.meta.url)).size < 30000, "Aufnahme vorhanden und klein");
+  assert.ok(/"kuckuck-ruf\.mp3"\]/.test(sw), "Aufnahme im Offline-Speicher");
+  assert.ok(/const KK_AUFNAHME = \{ datei: "kuckuck-ruf\.mp3"/.test(html) && /Lizenz CC0/.test(html), "Quelle und Lizenz vermerkt");
+  assert.ok(/if \(KK_AUFNAHME\.puffer\) kkAufnahmeSpielen\(audio\.currentTime \+ 0\.02\); else kkTon\(audio\.currentTime \+ 0\.02\);/.test(html), "Aufnahme, sonst erzeugter Klang");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -8997,7 +9004,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/id="rufChip"[^>]*onclick="anrufZurueck\(\)"/.test(seite) && /class="anruf-klein"[^>]*onclick="anrufKlein\(\)"/.test(seite), "Kopfzeilen-Symbol + Verkleinern");
   assert.ok(/badge: video \? "badge-video\.png" : "badge-anruf\.png"/.test(html) && /tag: RUF_TAG, renotify: false, silent: true/.test(html), "stille Mitteilung mit Telefon-/Kamera-Symbol");
   assert.ok(/if \(!RUF\) \{[\s\S]{0,200}rufMeldungWeg\(\)/.test(html) && /setInterval\(rufAnzeige, 1000\)/.test(html), "endet mit dem Gespräch");
-  assert.ok(/"badge-anruf\.png", "badge-video\.png"\]/.test(lies("sw.js")) && fs.existsSync(new URL("../badge-anruf.png", import.meta.url)) && fs.existsSync(new URL("../badge-video.png", import.meta.url)), "Symbole vorhanden und zwischengespeichert");
+  assert.ok(/"badge-anruf\.png", "badge-video\.png"[\],]/.test(lies("sw.js")) && fs.existsSync(new URL("../badge-anruf.png", import.meta.url)) && fs.existsSync(new URL("../badge-video.png", import.meta.url)), "Symbole vorhanden und zwischengespeichert");
   assert.ok(/else if \(h === "#anruf"\) anrufZurueck\(\);/.test(html), "Mitteilung führt zurück ins Gespräch");
 }
 

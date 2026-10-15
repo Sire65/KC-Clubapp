@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.405.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.406.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18780,6 +18780,18 @@ function kkPfeife(f, t, dauer, laut = 1) { // eine gedackte Holzpfeife, vom fall
 function kkTon(t0) { // Gong, Türchen, dann „Ku – ckuck“ (A → F)
   kkGong(t0); kkKlack(t0 + 0.18); kkPfeife(440, t0 + 0.24, 0.26, 1); kkPfeife(349.23, t0 + 0.56, 0.5, 0.95);
 }
+// 2.406.0 KC-CLUB-KUCKUCK-ECHT (Wunsch Hansi „such eine freie Aufnahme“): der Ruf kommt aus einer echten Kuckucksuhr-Aufnahme –
+// „Cuckoo Clock.wav“ von DiArchangeli, freesound.org/s/128177, Lizenz CC0 (gemeinfrei, frei nutzbar ohne Namensnennung); daraus ein Ruf
+// geschnitten (0,84 s, 7 KB, kuckuck-ruf.mp3, im Offline-Speicher). Die Datei wird beim ersten Ruf einmal geladen; klappt das nicht,
+// ruft weiter der selbst erzeugte Klang (kkTon). Takt = Länge der Aufnahme (wie bei der echten Uhr).
+const KK_AUFNAHME = { datei: "kuckuck-ruf.mp3", puffer: null, laeuft: null };
+function kkAufnahmeLaden() {
+  if (KK_AUFNAHME.puffer || KK_AUFNAHME.laeuft || !audio) return KK_AUFNAHME.laeuft;
+  KK_AUFNAHME.laeuft = fetch(KK_AUFNAHME.datei).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(r.status)))
+    .then((b) => new Promise((ja, nein) => audio.decodeAudioData(b, ja, nein))).then((p) => (KK_AUFNAHME.puffer = p)).catch(() => { KK_AUFNAHME.laeuft = null; return null; });
+  return KK_AUFNAHME.laeuft;
+}
+function kkAufnahmeSpielen(t) { const q = audio.createBufferSource(), g = audio.createGain(); q.buffer = KK_AUFNAHME.puffer; g.gain.value = 0.9; q.connect(g).connect(audio.destination); q.start(t); }
 function kuckuckZeigen(h = kkJetzt().h, tonImmer = false) { // tonImmer: Probe (🔊 in den Einstellungen) – auch nachts
   document.querySelector(".kuckuck")?.remove();
   const n = kkRufe(h), mitTon = einst("ton", true) && (tonImmer || !(h >= KK_NACHT_VON || h < KK_NACHT_BIS));
@@ -18804,14 +18816,14 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false) { // tonImmer: Probe (
   const zu = () => { clearTimeout(u._t); u.classList.remove("an"); setTimeout(() => u.remove(), 600); };
   u.onclick = zu; document.body.appendChild(u);
   requestAnimationFrame(() => requestAnimationFrame(() => u.classList.add("an")));
-  if (mitTon) try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.(); } catch {}
+  if (mitTon) try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.(); kkAufnahmeLaden(); } catch {}
   let i = 0;
   const ruf = () => {
     if (!u.isConnected) return;
     if (i >= n) { u.classList.remove("offen"); u._t = setTimeout(zu, 1400); return; }
     i++; u.classList.add("ruft"); setTimeout(() => u.classList.remove("ruft"), 350);
-    if (mitTon && audio) try { kkTon(audio.currentTime + 0.02); } catch {}
-    u._t = setTimeout(ruf, KK_TAKT_MS);
+    if (mitTon && audio) try { if (KK_AUFNAHME.puffer) kkAufnahmeSpielen(audio.currentTime + 0.02); else kkTon(audio.currentTime + 0.02); } catch {}
+    u._t = setTimeout(ruf, KK_AUFNAHME.puffer && mitTon ? Math.round(KK_AUFNAHME.puffer.duration * 1000) : KK_TAKT_MS);
   };
   u._t = setTimeout(() => { u.classList.add("offen"); u._t = setTimeout(ruf, 350); }, 700);
   return n;
