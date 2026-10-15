@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.425.0";
+const SERVER_VERSION = "2.426.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -208,6 +208,9 @@ async function notfallChatNurAdmin(ich: Ich, threadId: string) {
   const { data } = await db.from("kc_communication_threads").select("subject").eq("id", threadId).maybeSingle();
   if (data?.subject === NOTFALL_BETREFF) throw new Fehler("Im Notfall-Chat kann das nur der Admin ändern.", 403);
 }
+// 2.426.0 KC-CLUB-RT-KANAL-WECHSEL: neuer Name der direkten Leitung bei jeder Zugangsänderung – alte Geräte/entfernte Personen hören
+// nichts mehr mit. Vor dem Datenbank-Update fehlt die Funktion: dann still nichts (die Leitung läuft wie bisher weiter).
+const rtNeu = (pid: string) => Promise.resolve(db.rpc("kc_club_rt_neu", { p_person: pid })).catch(() => null);
 // KC-CLUB-LOESCHEN: vor jedem Löschen eine vollständige Sicherung ins Änderungsprotokoll (Wiederherstellungspunkt)
 async function geloescht(ich: { person_id: string }, was: string, sicherung: Record<string, unknown>) {
   const { error } = await db.from("kc_club_protokoll").insert({ person_id: ich.person_id, aktion: was + "_geloescht", details: { sicherung } });
@@ -2534,7 +2537,7 @@ async function anmeldenDb(hash: string, version: string | null): Promise<Ich> {
   if (!a) {
     const { data: vm } = await db.from("kc_club_zugang").update({ token_hash: hash, neu_token_hash: null, neu_bis: null, erstellt_am: jetzt() })
       .eq("neu_token_hash", hash).gt("neu_bis", jetzt()).eq("aktiv", true).select("person_id");
-    if (vm?.length) { anmeldungenVergessen(); await protokoll(vm[0].person_id, "zugang_uebernommen", {}); }
+    if (vm?.length) { anmeldungenVergessen(); await rtNeu(vm[0].person_id); await protokoll(vm[0].person_id, "zugang_uebernommen", {}); }
     // 2.1.1: auch wenn eine gleichzeitige Anfrage die Übernahme gerade gemacht hat – jetzt nochmal normal prüfen
     ({ data: a, error } = await db.rpc("kc_club_anmeldung", { p_hash: hash, p_version: version }));
     if (error) throw new Fehler("Anmeldung gerade nicht möglich – bitte gleich noch einmal versuchen.", 503);
@@ -5900,6 +5903,7 @@ Köcheclub Werne`,
         ? await db.from("kc_club_zugang").update({ neu_token_hash: await sha256(token), neu_bis: new Date(Date.now() + ZUGANG_VORMERK_MS).toISOString() }).eq("person_id", pe.person_id)
         : await db.from("kc_club_zugang").upsert({ person_id: pe.person_id, token_hash: await sha256(token), aktiv: true, erstellt_am: jetzt(), erstellt_von: pe.person_id, neu_token_hash: null, neu_bis: null });
       if (zf) { console.error("zugang_anfordern", zf.message); return json({ ok: true, text }); } // 2.1.1: nie einen Link verschicken, der nicht gespeichert ist
+      if (!bisher?.aktiv) await rtNeu(pe.person_id); // 2.426.0: Zugang neu eingerichtet → direkte Leitung neu
       anmeldungenVergessen();
       const link = `${APP_URL}?k=${token}`;
       const versand = await routerSenden("club_nachricht_mail", [pe.person_id], {
@@ -12864,7 +12868,7 @@ Köcheclub-App`,
         if (!gueltig.length) throw new Fehler("Diese Personen gibt es nicht.", 400);
         const { error } = await db.from("kc_club_person_sperre").upsert(gueltig.map((id: string) => ({ person_id: id, aktiv: true, art, stumm: wahl.get(id) === true, bis, seit: jetzt(), von: ich.person_id, aufgehoben_am: null })), { onConflict: "person_id" });
         if (error) throw new Fehler("Sperre konnte nicht gespeichert werden.", 500);
-        SPERREN.bis = 0;
+        SPERREN.bis = 0; await Promise.all(gueltig.map((id: string) => rtNeu(id))); // 2.426.0: Gesperrte hören auf der direkten Leitung nichts mehr
         await protokoll(ich.person_id, "person_gesperrt", { ids: gueltig, art, bis, stumm: gueltig.filter((id: string) => wahl.get(id)) });
         return json({ ok: true, gesperrt: gueltig.length });
       }
@@ -13254,13 +13258,14 @@ Köcheclub-App`,
         const token = zufall(), endpunkt = txt(p.endpoint, 800);
         const { data: z, error: ze } = await db.from("kc_club_zugang").update({ token_hash: await sha256(token), neu_token_hash: null, neu_bis: null }).eq("person_id", ich.person_id).eq("aktiv", true).select("person_id");
         if (ze || !z?.length) throw new Fehler("Das hat gerade nicht geklappt – bitte gleich noch einmal versuchen.", 500);
-        anmeldungenVergessen();
+        anmeldungenVergessen(); await rtNeu(ich.person_id); // 2.426.0: abgemeldete Geräte hören auf der direkten Leitung nichts mehr mit
         await db.from("kc_club_kurzcodes").delete().eq("person_id", ich.person_id);
         let q = db.from("kc_member_push_subscriptions").update({ active: false, updated_at: jetzt() }).eq("person_id", ich.person_id).eq("active", true);
         if (endpunkt) q = q.neq("endpoint", endpunkt);
         const { data: pw } = await q.select("id");
         await protokoll(ich.person_id, "andere_geraete_abgemeldet", { benachrichtigungen_aus: pw?.length ?? 0 });
-        return json({ ok: true, k: token, benachrichtigungenAus: pw?.length ?? 0 });
+        const { data: rk } = await db.rpc("kc_club_rt_kanal", { p_person: ich.person_id }).then((r: any) => r, () => ({ data: null }));
+        return json({ ok: true, k: token, benachrichtigungenAus: pw?.length ?? 0, rtKanal: typeof rk === "string" ? rk : null });
       }
       case "push_abmelden": {
         await db.from("kc_member_push_subscriptions").update({ active: false, updated_at: jetzt() }).eq("person_id", ich.person_id).eq("endpoint", String(p.endpoint || ""));
@@ -13321,7 +13326,7 @@ Köcheclub-App`,
         await geloescht(ich, "probe", { fuer: pid, probe: w, einstellungen: eins ?? [], gruppen: inGruppen });
         const { error: ze } = await db.from("kc_club_zugang").update({ aktiv: false, neu_token_hash: null, neu_bis: null }).eq("person_id", pid);
         if (ze) throw new Fehler("Der Zugang konnte nicht abgeschaltet werden – es wurde nichts weiter geändert.", 500);
-        anmeldungenVergessen(); // Link sofort ungültig
+        anmeldungenVergessen(); await rtNeu(pid); // Link sofort ungültig, direkte Leitung neu (2.426.0)
         await db.from("kc_member_push_subscriptions").update({ active: false, updated_at: jetzt() }).eq("person_id", pid);
         await db.from("kc_club_benachrichtigung").delete().eq("person_id", pid);
         await db.from("kc_club_person_einstellung").delete().eq("person_id", pid);
@@ -13352,7 +13357,7 @@ Köcheclub-App`,
         const token = zufall();
         const { error: zf } = await db.from("kc_club_zugang").upsert({ person_id: pid, token_hash: await sha256(token), aktiv: true, erstellt_am: jetzt(), erstellt_von: ich.person_id, neu_token_hash: null, neu_bis: null });
         if (zf) throw new Fehler("Der Link konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500); // 2.1.1
-        anmeldungenVergessen(); // KC-CLUB-ANMELDECACHE: alter Link sofort ungültig (2.6.1: stand vorher versehentlich im Kommentar)
+        anmeldungenVergessen(); await rtNeu(pid); // KC-CLUB-ANMELDECACHE: alter Link sofort ungültig (2.6.1: stand vorher versehentlich im Kommentar); 2.426.0: direkte Leitung neu
         await protokoll(ich.person_id, "link_erzeugt", { fuer: pid });
         return json({ ok: true, link: `${APP_URL}?k=${token}` });
       }

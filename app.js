@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.425.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.426.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -26090,6 +26090,7 @@ async function andereGeraeteAbmelden() {
     const r = await api("andere_geraete_abmelden", { endpoint }, { warten: true });
     if (!r?.k) throw new Error("Das hat gerade nicht geklappt – bitte gleich noch einmal versuchen.");
     KEY = r.k; try { localStorage.setItem("kc_club_key", r.k); } catch {}
+    if (r.rtKanal && INIT) { INIT.rtKanal = r.rtKanal; try { rtVerbinden(); } catch {} } // 2.426.0 KC-CLUB-RT-KANAL-WECHSEL: dieses Gerät sofort auf die neue direkte Leitung
     melde("🔒 Alle anderen Geräte sind abgemeldet. Dieses Gerät bleibt angemeldet.");
   } catch (e) { meldeFehler(e); }
 }

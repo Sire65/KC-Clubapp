@@ -17,6 +17,12 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.426.0 – 2026-10-15 – 🔐 Direkte Leitung: Kanal wechselt bei jeder Zugangsänderung (KC-CLUB-RT-KANAL-WECHSEL) · Server 2.426.0 · DB
+Wunsch Hansi nach dem Generalcheck („Ja“ zum wechselnden Kanalnamen). Die direkte Leitung (Supabase Realtime) meldet nur „es gibt Neues“ – nie Inhalte. Ihr Name je Person war aber für immer gleich: ein abgemeldetes Handy oder ein entfernter Gast hätte weiter gesehen, WANN jemand Nachrichten, Anrufe oder Anklopfen bekommt.
+- **Neu:** Kanal = HMAC(Geheimnis, Person + Zählnummer). Die Zählnummer steigt bei neuem Link, übernommenem vorgemerkten Link, selbst angefordertem Zugang, „Andere Geräte abmelden“, beendetem Zugang und Sperre. Die eigenen Geräte bekommen den neuen Namen beim nächsten Abruf; das Gerät, auf dem „Andere Geräte abmelden“ gedrückt wird, wechselt sofort.
+- **Nichts bricht:** Zählnummer 0 ergibt genau den bisherigen Namen – laufende Geräte merken nichts. Vor dem Datenbank-Update läuft alles wie bisher (der Server ruft die neue Funktion nur „wenn vorhanden“).
+- DB: Spalte `kc_club_zugang.rt_epoche`, Funktionen `kc_club_rt_kanal` (neu berechnet) und `kc_club_rt_neu` – nur für den Server. Probelauf 76 (lokal mit PostgreSQL 16 grün: bisheriger Name gleich, neuer Name nach Wechsel, zweimal einspielbar, keine Testreste).
+
 ## 2.425.0 – 2026-10-15 – 🩺 Generalcheck: Fehler, einheitliche Bedienung, Sicherheit (KC-CLUB-GENERALCHECK) · Server 2.425.0 · kc-termine · Spiegel-Arbeiter
 Anlass (Hansi): „Tiefer Generalcheck – bedienerfreundlich, logisch, gleiche Bedienung, gleiche Bezeichnungen, Sicherheit, TÜV, Komfort … gerne auch mit externen Programmen.“ Geprüft mit den eigenen Tests, ESLint, Semgrep, detect-secrets, axe (Barrierefreiheit), Lighthouse, KICC-Regression (52 Browser-Tests) und drei Code-Prüfungen. Keine Datenbank-Änderung nötig (Rechte der Sicherungsfunktionen live geprüft: gesperrt).
 **Paket A – Fehler**
