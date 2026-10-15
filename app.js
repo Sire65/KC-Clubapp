@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.426.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.427.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1739,7 +1739,7 @@ const RG_NACHRICHT = [
   { v: "neu", tippVor: "#v-nachrichten .kopf2 .knopf.haupt", vor: () => { empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; $("empfSuche").value = "";
       (MITGLIEDER ? Promise.resolve() : mitgliederHolen()).then(() => empfListe()).catch(() => {}); neuGruppenZeigen("neuGruppen", true); },
     sel: ["#empfWahlBereich"], puls: ["#schnellEmpf", "#empfSuche", "#neuGruppen .knopf"], t: "👤 An wen?", x: "Jetzt wählst du, an wen die Nachricht geht. Oben die Schnellwahl: alle, die gerade online sind, alle Mitglieder oder ein Amt wie den Clubsprecher. Darunter suchst du einen Namen – zum Beispiel Anne – und hakst ihn an; auch mehrere gehen. Deine Gruppen stehen ganz oben – antippen, und du schreibst direkt hinein." },
-  { v: "neu", sel: [rgFeld("neuBetreff")], puls: ["#neuBetreff", rgOn("neuWeiter()")], t: "✏️ Betreff", x: "Ein Betreff ist freiwillig – praktisch bei Gruppen. Dann tippst du auf Weiter zum Schreiben." },
+  { v: "neu", sel: [rgFeld("neuBetreff")], puls: ["#neuBetreff", rgOn("neuWeiter()")], t: "✏️ Betreff", x: "Ein Betreff ist freiwillig – praktisch bei Gruppen. Schreibst du nur einer Person und ohne Betreff, geht es gleich in euren bisherigen Chat. Mit Betreff beginnt ein eigener Chat zu diesem Thema. Dann tippst du auf Weiter zum Schreiben." },
   { v: "neu", tippVor: rgOn("neuWeiter()"), vor: () => { $("eingabe").classList.remove("versteckt"); RG.zurueck.push(() => { if (aktuelleAnsicht !== "chat") $("eingabe").classList.add("versteckt"); }); },
     sel: ["#eingabe"], puls: ["#eingabe textarea", '#eingabe [title="Senden"]', '#eingabe [title="Anlage"]', '#eingabe [title^="Mikrofon"]', '#eingabe [title="Emoji einfügen"]', '#eingabe [title^="Wie benachrichtigen"]', '#eingabe [title^="Wichtig"]', '#eingabe [title^="Nachricht löscht"]', '#eingabe [title="Mit WhatsApp senden"]', "#expressKnopf", "#spaeterKnopf"], t: "⌨️ Schreiben und senden", x: "Unten schreibst du deine Nachricht, der Pfeil sendet sie. Darunter: die Büroklammer für Fotos und Dateien, das Mikrofon für eine Sprachnachricht oder zum Diktieren, Emojis, die Glocke – wie benachrichtigt wird, zum Beispiel per Push oder E-Mail –, das Ausrufezeichen für eine wichtige Nachricht und die Sanduhr für eine Nachricht, die sich selbst löscht. Mit WA geht sie auch über WhatsApp." },
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN: Express mit Zähler, Später senden, Zurückholen, Favoriten
@@ -27330,6 +27330,10 @@ let neuEntwurf = null;
 function neuWeiter() {
   ZW = { push: false, email: false, whatsapp: false }; CHAT = null; zustellZeigen();
   if (!empfWahl.alle && !empfWahl.vorstand && !empfWahl.aemter.length && !empfWahl.personen.length) return melde("Bitte mindestens einen Empfänger wählen.", true);
+  // 2.427.0 KC-CLUB-NEU-ALTER-CHAT (Wunsch Hansi): genau eine Person, kein Betreff → gleich den vorhandenen Chat mit ihr öffnen (mit Verlauf),
+  // wie über 👥 Mitglieder → „💬 Nachricht“. Gesendet wurde ohnehin schon in diesen Chat; jetzt sieht man ihn auch vorher. Mit Betreff: eigener Chat.
+  const einzeln = !empfWahl.alle && !empfWahl.vorstand && !empfWahl.aemter.length && empfWahl.personen.length === 1 ? empfWahl.personen[0] : null;
+  if (einzeln && einzeln !== ICH?.person_id && !$("neuBetreff").value.trim() && !RG.an) return direkt(einzeln);
   neuEntwurf = { empfaenger: { ...empfWahl }, betreff: $("neuBetreff").value };
   chatId = null; zeige("chat"); chatStand = "";
   $("chatTitel").textContent = $("neuBetreff").value || $("empfGewaehlt").textContent;
