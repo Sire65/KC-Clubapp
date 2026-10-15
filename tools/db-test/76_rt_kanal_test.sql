@@ -2,7 +2,8 @@
 -- Prüft: Zählnummer 0 = bisheriger Kanalname (nichts bricht), nach kc_club_rt_neu neuer Name (= Formel mit „:1“), ohne Zugang wie bisher,
 -- die Funktionen sind für Browser-Rollen gesperrt.
 do $$
-declare p text := 'KC-P-TEST-RTKANAL'; g text; alt text; k0 text; k1 text; k2 text; ohne text;
+-- vorhandene Testperson: der Zugang ist in der echten Datenbank an kc_core_people gebunden (wie Probelauf 72/74)
+declare p text := 'KC-P-TEST-BIRGIT'; g text; alt text; k0 text; k1 text; k2 text; ohne text;
   gleich_ok bool; wechsel_ok bool; formel_ok bool; zweimal_ok bool; ohne_ok bool; gesperrt_ok bool;
 begin
   select decrypted_secret into g from vault.decrypted_secrets where name = 'kc_club_rt_geheimnis';
