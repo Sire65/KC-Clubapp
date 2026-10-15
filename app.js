@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.407.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.408.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18704,6 +18704,14 @@ async function kopfRolloFahren(ziel) {
     kopfRolloSetzen(kopfRolloStand());
   }
 }
+// art "ganz" (rechts ⌃⌃): offen/halb → ganz, ganz → offen · art "halb" (links ⌃): offen → halb, halb → offen, ganz → halb
+function kopfRollo(art = "ganz") {
+  if (document.querySelector("#v-start .hero")?.dataset.rollt) return; // läuft schon – nichts merken, was nicht passiert
+  const von = kopfRolloStand();
+  const ziel = art === "halb" ? (von === "offen" ? "halb" : von === "halb" ? "offen" : "halb") : (von === "ganz" ? "offen" : "ganz");
+  kopfRolloFahren(ziel);
+  try { ziel === "offen" ? localStorage.removeItem(KOPF_ROLLO) : localStorage.setItem(KOPF_ROLLO, ziel === "ganz" ? "1" : "halb"); } catch {}
+}
 // 2.400.0 KC-CLUB-KOPF-GLANZ (Wunsch Hansi): der Lichtschein über dem Kopf läuft beim Öffnen der App einmal durch (Klasse „lauf“ in index.html).
 // Ist er durch (oder bricht ab, z. B. beim Wechsel auf eine andere Seite), wird „lauf“ entfernt – beim Zurückkehren zur Startseite startet er nicht erneut.
 // 2.401.0 (Fund Hansi „kein Licht beim Öffnen“): Android holt die App meist nur aus dem Hintergrund zurück, ohne sie neu zu laden – dann läuft
@@ -18712,12 +18720,27 @@ async function kopfRolloFahren(ziel) {
 // Sichtbarwerden der App – genau dann, wenn sie noch lädt und das Handy ausgelastet ist (auf langsamen Geräten war er vorbei, bevor
 // gezeichnet wurde) und oft unter einem Start-Fenster. Jetzt startet ihn kopfGlanzStarten() erst, wenn die Startseite fertig geladen,
 // sichtbar und frei von Fenstern ist (sonst kurz warten, höchstens KOPF_GLANZ_WARTEN_MS), und nach zwei gezeichneten Bildern.
-const KOPF_GLANZ_PAUSE_MS = 60000, KOPF_GLANZ_WARTEN_MS = 20000;
+// 2.408.0 KC-CLUB-KOPF-GLANZ-MELDUNG (Fund Hansi „immer noch nicht gesehen“): Wartezeit auf 10 Minuten; und einmal je Sitzung meldet die
+// App über die vorhandene Diagnose (diagnose_glanz, nur technische Werte, keine Inhalte), ob der Schein gelaufen ist und sonst warum nicht.
+const KOPF_GLANZ_PAUSE_MS = 60000, KOPF_GLANZ_WARTEN_MS = 600000;
+const KOPF_GLANZ_INFO = { gemeldet: false };
+function kopfGlanzMelden(ergebnis, extra = {}) {
+  if (KOPF_GLANZ_INFO.gemeldet) return; KOPF_GLANZ_INFO.gemeldet = true;
+  const g = document.getElementById("kopfGlanz"), fenster = [...document.querySelectorAll(".blatt")].filter((b) => b.getClientRects().length).map((b) => b.id || b.className).join(",");
+  let reduziert = false; try { reduziert = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch {}
+  api("diagnose", { art: "glanz", daten: { ergebnis, ohne_anim: document.documentElement.classList.contains("ohne-anim"), reduziert, ansicht: aktuelleAnsicht,
+    sichtbar: !document.hidden, fenster: fenster.slice(0, 180), anzeige: g ? getComputedStyle(g).display : "fehlt", breite: g?.offsetWidth || 0, ...extra } }, { still: true }).catch(() => {});
+}
 function kopfGlanzStarten(seit = Date.now()) {
-  const g = document.getElementById("kopfGlanz"); if (!g) return;
+  const g = document.getElementById("kopfGlanz"); if (!g) return kopfGlanzMelden("kein_element");
+  if (getComputedStyle(g).display === "none") return kopfGlanzMelden("aus"); // „Animierte Knöpfe“ aus oder „Bewegung reduzieren“ am Handy
   const frei = !document.hidden && aktuelleAnsicht === "start" && ![...document.querySelectorAll(".blatt")].some((b) => b.getClientRects().length) && g.offsetParent !== null; // nur sichtbare Fenster zählen (viele liegen versteckt bereit)
-  if (!frei) { if (Date.now() - seit < KOPF_GLANZ_WARTEN_MS) setTimeout(() => kopfGlanzStarten(seit), 700); return; }
-  requestAnimationFrame(() => requestAnimationFrame(() => { g.classList.remove("lauf"); void g.offsetWidth; g.classList.add("lauf"); })); // offsetWidth: Animation neu starten
+  if (!frei) { if (Date.now() - seit < KOPF_GLANZ_WARTEN_MS) setTimeout(() => kopfGlanzStarten(seit), 700); else kopfGlanzMelden("aufgegeben", { warte_ms: Date.now() - seit }); return; }
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    g.classList.remove("lauf"); void g.offsetWidth; g.classList.add("lauf"); // offsetWidth: Animation neu starten
+    const a = g.querySelector("i")?.getAnimations?.()[0];
+    setTimeout(() => kopfGlanzMelden(a ? "gelaufen" : "keine_animation", { warte_ms: Date.now() - seit, anim: a ? a.playState : "-" }), 800);
+  }));
 }
 {
   const g = document.getElementById("kopfGlanz");
@@ -18846,14 +18869,6 @@ function kuckuckPruefen() {
   kuckuckZeigen(h);
 }
 setInterval(kuckuckPruefen, 15000); document.addEventListener("visibilitychange", () => { if (!document.hidden) kuckuckPruefen(); });
-// art "ganz" (rechts ⌃⌃): offen/halb → ganz, ganz → offen · art "halb" (links ⌃): offen → halb, halb → offen, ganz → halb
-function kopfRollo(art = "ganz") {
-  if (document.querySelector("#v-start .hero")?.dataset.rollt) return; // läuft schon – nichts merken, was nicht passiert
-  const von = kopfRolloStand();
-  const ziel = art === "halb" ? (von === "offen" ? "halb" : von === "halb" ? "offen" : "halb") : (von === "ganz" ? "offen" : "ganz");
-  kopfRolloFahren(ziel);
-  try { ziel === "offen" ? localStorage.removeItem(KOPF_ROLLO) : localStorage.setItem(KOPF_ROLLO, ziel === "ganz" ? "1" : "halb"); } catch {}
-}
 try { const w = localStorage.getItem(KOPF_ROLLO); if (w === "1") kopfRolloSetzen("ganz"); else if (w === "halb") kopfRolloSetzen("halb"); } catch {}
 function heroZeigen(richtung) {
   const f = INFO_FELDER[INFO_I] || INFO_FELDER[0], inhalt = f.html();
