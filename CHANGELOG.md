@@ -17,6 +17,12 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.420.0 – 2026-10-15 – Sondereinsätze: vorläufige Einteilung durch den Planer (KC-CLUB-SONDER-VORGESEHEN, KICC-F-100)
+Wunsch Hansi: „Kochen am 28.11.26, Abholung am 29.12.26 – zum Kochen Wilfried, Steven, Manfred eintragen, zum Abholen Frank und Wilfried. Vorläufig geplant.“
+- **Twinkey (DP2 Build 290, unverändert übernommen):** Bei „Bei einem Sondereinsatz helfen“ steht „👥 Du bist vorgesehen (vorläufig)“. Beim Melden der Sonderstunden sind die vorgesehenen Kollegen schon ausgewählt (abwählbar, wer nicht dabei war).
+- **Server kc-club 2.420.0:** liefert die Einteilung mit (`payload->vorgesehen` aus kc_dp_special_events). Erinnerung nach der Meldefrist geht jetzt auch an Vorgesehene ohne Meldung („du warst … eingeteilt“), weiterhin einmal je Person und nur bei festem Termin.
+- Zusagen bleiben die eigene Entscheidung der Mitglieder; die Einteilung ist ein Vorschlag des Planers.
+
 ## 2.419.0 – 2026-10-15 – Sonderstunden melden, Zusagen & Fahrgemeinschaften, Erstattung bei Sondereinsätzen (KC-CLUB-SONDERSTUNDEN, KICC-F-100)
 Wunsch Hansi: Grünkohl kochen im Krankenhaus Dortmund, Abholung nach Hamm, Getränke zuhause – Stunden aufs Stundenkonto Weihnachtsmarkt, Kosten über die Erstattung.
 - **Twinkey (DP2 Build 289, unverändert übernommen):** „Sonderstunden melden“ – Einsatz, Tag, Zeit von zuhause bis zuhause, Tätigkeit, Fahrtrolle, weitere Kollegen mit jeweils eigenen Stunden, „✓ Gutschreiben lassen“; danach „🚗 Fahrtkosten / Auslagen erfassen“ (öffnet die Erstattung vorausgefüllt). „Bei einem Sondereinsatz helfen“ – Zusage mit Anreise (fahre mit freien Plätzen / brauche Mitfahrt / komme selbst) und Startort (nur Ort); die eigene Fahrgemeinschaft wird angezeigt. Nur Mitglieder wählbar; fehlende Club-Mitglieder werden ergänzt.

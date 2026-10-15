@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.419.0";
+const SERVER_VERSION = "2.420.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -13527,7 +13527,7 @@ const shZeile = (r: any) => ({ id: r.id, sammel_id: r.sammel_id, event_id: r.eve
 const SH_SPALTEN = "id,sammel_id,event_id,special_event_id,special_event_title,person_id,gemeldet_von,work_date,start_h,end_h,break_minutes,taetigkeit,bemerkung,status,verspaetet,gemeldet_am,ablehngrund,version";
 async function sonderstundenLaden(pid: string) {
   const [{ data: ev }, { data: st }] = await Promise.all([
-    db.from("kc_dp_special_events").select("source_id,titel,ort,art,termin_status,datum_von,datum_bis,wiederkehrend,version")
+    db.from("kc_dp_special_events").select("source_id,titel,ort,art,termin_status,datum_von,datum_bis,wiederkehrend,version,vorgesehen:payload->vorgesehen")
       .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "published").order("datum_von", { nullsFirst: false }),
     db.from("kc_dp_hour_reports").select(SH_SPALTEN).eq("org_id", ORG).eq("event_id", DW.veranstaltung)
       .or(`person_id.eq.${pid},gemeldet_von.eq.${pid}`).neq("status", "zurueckgezogen").order("work_date", { ascending: false }).limit(300),
@@ -13648,7 +13648,7 @@ async function sonderstundenWartung() {
   // (2) Erinnern nach Ablauf der Meldefrist (3 Tage) – nur feste, nicht wiederkehrende Einsätze der letzten 30 Tage; nur 9–20 Uhr
   const std = berlinStunde(new Date()); if (std < 9 || std >= 20) return { gemeldet, erinnert: 0 };
   const vor30 = berlinTag(new Date(Date.now() - 30 * 86400000));
-  const { data: evs } = await db.from("kc_dp_special_events").select("source_id,titel,datum_von,datum_bis").eq("org_id", ORG).eq("event_id", DW.veranstaltung)
+  const { data: evs } = await db.from("kc_dp_special_events").select("source_id,titel,datum_von,datum_bis,vorgesehen:payload->vorgesehen").eq("org_id", ORG).eq("event_id", DW.veranstaltung)
     .eq("status", "published").eq("termin_status", "FEST").is("wiederkehrend", null).gte("datum_von", vor30).lte("datum_von", heute);
   let erinnert = 0;
   for (const ev of evs ?? []) {
@@ -13660,14 +13660,17 @@ async function sonderstundenWartung() {
       db.from("kc_dp_hour_reports").select("person_id,work_date").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("special_event_id", ev.source_id).neq("status", "zurueckgezogen"),
       db.from("kc_dp_hour_report_reminders").select("person_id,work_date").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("special_event_id", ev.source_id)]);
     // Einsatz über mehrere Tage: erinnert wird, wer an KEINEM Tag gemeldet hat (sonst je Tag eine Nachricht – zu viel)
-    for (const z of zu ?? []) {
+    // KC-CLUB-SONDER-VORGESEHEN (2.420.0): auch vom Planer Vorgesehene (vorläufige Einteilung) werden erinnert – einmal je Person
+    const zugesagt = new Set((zu ?? []).map((z: any) => String(z.person_id)));
+    const vorgesehen = (Array.isArray(ev.vorgesehen) ? ev.vorgesehen : []).map(String).filter((p: string) => p && !zugesagt.has(p));
+    for (const z of [...(zu ?? []).map((x: any) => ({ person_id: String(x.person_id), vorgesehen: false })), ...vorgesehen.map((p: string) => ({ person_id: p, vorgesehen: true }))]) {
       if ((st ?? []).some((r: any) => r.person_id === z.person_id)) continue;
       if ((schon ?? []).some((r: any) => r.person_id === z.person_id)) continue;
       const { error } = await db.from("kc_dp_hour_report_reminders").insert({ org_id: ORG, event_id: DW.veranstaltung, special_event_id: ev.source_id, work_date: faellig[0], person_id: z.person_id });
       if (error) continue; // schon erinnert (parallel)
       await senden("club_dienst", [z.person_id], { titel: "⏰ Bitte Sonderstunden melden", kurz: `${txt(ev.titel, 60)} · ${d(ev.datum_von)}`,
         betreff: `Köcheclub Werne – Erinnerung: Sonderstunden für „${txt(ev.titel, 60)}“ melden`,
-        text: `Hallo,\n\ndu hattest für „${txt(ev.titel, 120)}“ (${d(ev.datum_von)}) zugesagt. Bitte melde deine Stunden – inklusive Fahrzeit von zuhause bis zuhause – in der App unter 🗓️ Dienstwunsch → Twinkey → „Sonderstunden melden“. Hat jemand für dich mitgemeldet, ist alles gut.\n\nViele Grüße\nKöcheclub-App`,
+        text: `Hallo,\n\ndu ${z.vorgesehen ? "warst" : "hattest"} für „${txt(ev.titel, 120)}“ (${d(ev.datum_von)}) ${z.vorgesehen ? "eingeteilt" : "zugesagt"}. Bitte melde deine Stunden – inklusive Fahrzeit von zuhause bis zuhause – in der App unter 🗓️ Dienstwunsch → Twinkey → „Sonderstunden melden“. Hat jemand für dich mitgemeldet, ist alles gut.\n\nViele Grüße\nKöcheclub-App`,
         url: APP_URL + "#dienstwunsch" }, `club-sonderstunden-erinnerung:${ev.source_id}:${z.person_id}`).catch((e) => console.error("sonderstunden erinnerung", String(e)));
       erinnert++;
     }

@@ -72,7 +72,8 @@
   // Termine kommen bereits wirksam berechnet (Folge-Einsätze inkl. Abstand) – daher hier ohne folgtAuf.
   K.specialEvents = (D.sondereinsaetze || []).map((e) => ({ id: e.source_id, eventId: K.eventConfig.eventId, titel: e.titel, ort: e.ort || "", art: e.art,
     terminStatus: e.termin_status, datumVon: e.datum_von || null, datumBis: e.datum_bis || null, folgtAuf: null, abstandTage: null,
-    wiederkehrend: e.wiederkehrend || null, aktiv: true, version: Number(e.version || 1) }));
+    wiederkehrend: e.wiederkehrend || null, aktiv: true, version: Number(e.version || 1),
+    vorgesehen: Array.isArray(e.vorgesehen) ? e.vorgesehen.map(String) : [] })); // KC-CLUB-SONDER-VORGESEHEN (2.420.0): vorläufige Einteilung des Planers
   const alsMeldung = (r) => ({ id: String(r.id), sammelId: r.sammel_id, eventId: r.event_id, specialEventId: r.special_event_id, specialEventTitle: r.special_event_title || "",
     personId: r.person_id, gemeldetVon: r.gemeldet_von, date: r.work_date, start: Number(r.start_h), end: Number(r.end_h), breakMinutes: Number(r.break_minutes || 0),
     taetigkeit: r.taetigkeit, bemerkung: r.bemerkung || "", status: r.status, verspaetet: !!r.verspaetet, gemeldetAm: r.gemeldet_am, ablehngrund: r.ablehngrund || null,
