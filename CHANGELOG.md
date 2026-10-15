@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.416.0 – 2026-10-15 – Kuckucksuhr ruft wieder so oft, wie es Uhr ist (KC-CLUB-KUCKUCK-ZAEHLEN)
+Fund Hansi: „um 15:00 Uhr nur einen Kuckuck – falsche Zeitzone oder Fehler?“ Zeitzone (Europe/Berlin) und Zählung (15 Uhr → 3 Rufe) stimmten. Ursache: Kommt die Uhr ohne vorheriges Antippen, ist der Ton auf dem Handy oft noch angehalten – seine interne Uhr steht. Alle drei Rufe wurden auf denselben Zeitpunkt gelegt und erklangen beim Freigeben gleichzeitig, also wie ein einziger Kuckuck. Jetzt wartet die Uhr bis zu 1,5 s, bis der Ton läuft, und spielt jeden Ruf nur bei laufendem Ton – nie mehr übereinander (notfalls ruft der Kuckuck stumm, aber richtig oft). Einmal je Sitzung meldet die App zur Kontrolle Stunde, Rufe, gespielte Rufe und Ton-Zustand (Diagnose „kuckuck“).
+
 ## 2.415.0 – 2026-10-15 – Hilfe, Twinkey, Lupe und Videos zu den neuen Avataren (KC-CLUB-AVATAR-HILFE)
 Wunsch Hansi: „Passe die Hilfetexte, Twinkey, Lupe und Video an die neuen Avatare an.“
 - Hilfe: „Ein Bild statt Buchstaben“ nennt Bisherige und Hochwertige Avatare; neu „👑 Hochwertige Avatare“ und „🧩 Figur individuell anpassen (Schmuck, Kochjacke, Stil)“ mit Hinweis zur eigenen Brille.
