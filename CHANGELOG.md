@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.408.0 – 2026-10-15 – Lichtschein: länger warten, Rückmeldung warum
+Anlass (Hansi): „Lichtschein immer noch nicht gesehen.“ Der Schein wartet jetzt bis zu 10 Minuten, bis die Startseite frei von Fenstern ist (vorher 20 s). Außerdem meldet die App einmal je Sitzung über die vorhandene Diagnose, ob er gelaufen ist und sonst warum nicht (z. B. „Animierte Knöpfe“ aus, „Bewegung reduzieren“ am Handy, Fenster offen) – nur technische Werte, keine Inhalte.
+
 ## 2.407.0 – 2026-10-15 – Lichtschein im Kopf wird jetzt sichtbar
 Anlass (Hansi): „Den Lichteffekt im Kopf habe ich noch nicht gesehen.“ Der Schein lief sofort beim Öffnen – während die App noch lädt (auf langsameren Handys war er vorbei, bevor etwas gezeichnet wurde) und oft unter einem Start-Fenster. Jetzt startet er erst, wenn die Startseite fertig geladen und frei von Fenstern ist; beim Zurückholen nach ≥ 1 Minute ebenso.
 

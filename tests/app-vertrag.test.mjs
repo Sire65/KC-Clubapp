@@ -6372,7 +6372,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/:root\.ohne-anim \.kopf-glanz \{ display: none; \}/.test(html) && /prefers-reduced-motion: reduce\) \{ \.kopf-glanz \{ display: none; \}/.test(html), "Animationen aus / Bewegung reduzieren → kein Glanz");
   assert.ok(/<div class="kopf-glanz" id="kopfGlanz"/.test(html) && /g\.addEventListener\("animationend", aus\); g\.addEventListener\("animationcancel", aus\);/.test(html), "beim Öffnen einmal, danach aus");
   // 2.401.0: auch beim Zurückholen aus dem Hintergrund (Android lädt die App dann nicht neu)
-  assert.ok(/const KOPF_GLANZ_PAUSE_MS = 60000, KOPF_GLANZ_WARTEN_MS = 20000;/.test(html) && /if \(weg && Date\.now\(\) - weg >= KOPF_GLANZ_PAUSE_MS\) kopfGlanzStarten\(\);/.test(html), "Zurückholen nach ≥ 1 Min. → Glanz läuft erneut");
+  assert.ok(/const KOPF_GLANZ_PAUSE_MS = 60000, KOPF_GLANZ_WARTEN_MS = 600000;/.test(html) && /if \(weg && Date\.now\(\) - weg >= KOPF_GLANZ_PAUSE_MS\) kopfGlanzStarten\(\);/.test(html), "Zurückholen nach ≥ 1 Min. → Glanz läuft erneut");
 }
 // 2.402.0 KC-CLUB-KUCKUCKSUHR (Wunsch Hansi „wenn volle Stunde, einblenden, Kuckuck kommt raus und ruft so oft, wie es Uhr ist“)
 {
@@ -6417,6 +6417,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.407.0 KC-CLUB-KOPF-GLANZ-SICHTBAR (Fund Hansi „Lichteffekt noch nicht gesehen“): erst nach dem Laden, nur sichtbar und ohne Fenster
 {
   assert.ok(/const frei = !document\.hidden && aktuelleAnsicht === "start" && !\[\.\.\.document\.querySelectorAll\("\.blatt"\)\]\.some\(\(b\) => b\.getClientRects\(\)\.length\)/.test(html) && /setTimeout\(\(\) => kopfGlanzStarten\(\), 400\);/.test(html), "Start nach dem Laden, nicht unter Fenstern");
+}
+// 2.408.0 KC-CLUB-KOPF-GLANZ-MELDUNG: Rückmeldung je Sitzung über die Diagnose (nur technische Werte)
+{
+  assert.ok(/api\("diagnose", \{ art: "glanz", daten: \{ ergebnis, ohne_anim:/.test(html) && /if \(KOPF_GLANZ_INFO\.gemeldet\) return; KOPF_GLANZ_INFO\.gemeldet = true;/.test(html), "einmal je Sitzung melden");
+  assert.ok(/if \(getComputedStyle\(g\)\.display === "none"\) return kopfGlanzMelden\("aus"\);/.test(html), "abgeschaltet → sofort melden statt warten");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
