@@ -6369,7 +6369,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/<div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><b><\/b><u><\/u><\/div>/.test(html), "Glanz-Element im Kopf der Startseite");
   assert.ok(/\.kopf-glanz \{ position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none;/.test(html), "Glanz bleibt im runden Kopf und fängt keine Klicks");
   // 2.410.0: statt Glanzstreifen Blitz + Stern – beide einmalig, nur transform/opacity
-  assert.ok(/\.kopf-glanz\.lauf u \{ animation: kopfFunkeln [^;]* 1 both; \}/.test(html) && /@keyframes kopfFunkeln \{[^}]*transform: translate\(0, 0\) scale\(\.25\) rotate\(0deg\)/.test(html) && /50% \{ opacity: 1; transform: translate\(calc\(var\(--dx, 300px\) \* \.5\)/.test(html) && !/@keyframes kopfGlanz/.test(html), "einmal, per transform (flüssig), ohne Glanzstreifen; Stern wandert schräg und blitzt in der Mitte");
+  assert.ok(/\.kopf-glanz\.lauf u \{ animation: kopfFunkeln [^;]* 1 both; \}/.test(html) && /@keyframes kopfFunkeln \{[^}]*transform: translate\(0, 0\) scale\(1\.5\)/.test(html) && /50% \{ opacity: 1; transform: translate\(calc\(var\(--dx, 300px\) \* \.5\), calc\(var\(--dy, 150px\) \* \.5\)\) scale\(\.22\)/.test(html) && !/\.kopf-glanz u::before/.test(html) && !/@keyframes kopfGlanz/.test(html), "einmal, per transform (flüssig); Licht wandert schräg, verdichtet sich in der Mitte zum Blitz, ohne Stern-Strahlen");
   // 2.409.0 (Wahl Hansi, Diagnose: „Animationen entfernen“ am Handy aktiv): nur noch der App-Schalter schaltet den Glanz ab
   assert.ok(/:root\.ohne-anim \.kopf-glanz \{ display: none; \}/.test(html) && !/prefers-reduced-motion: reduce\) \{ \.kopf-glanz/.test(html), "Animierte Knöpfe aus → kein Glanz; Handy-Einstellung zählt nicht");
   assert.ok(/<div class="kopf-glanz" id="kopfGlanz"/.test(html) && /g\.addEventListener\("animationend", aus\); g\.addEventListener\("animationcancel", aus\);/.test(html), "beim Öffnen einmal, danach aus");
@@ -6427,8 +6427,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.410.0 KC-CLUB-KOPF-AUFBLITZEN (Wunsch Hansi „Aufblitzen wie im Vorspann, wenn ein Logo erscheint“)
 {
-  assert.ok(/\.kopf-glanz\.lauf b \{ animation: kopfBlitz/.test(html) && /\.kopf-glanz\.lauf u \{ animation: kopfFunkeln/.test(html) && /@keyframes kopfFunkeln/.test(html), "Blitz und Stern");
+  assert.ok(/\.kopf-glanz\.lauf b \{ animation: kopfBlitz/.test(html) && /\.kopf-glanz\.lauf u \{ animation: kopfFunkeln/.test(html) && /@keyframes kopfFunkeln/.test(html), "Blitz und wanderndes Licht");
   assert.ok(/if \(e\?\.animationName && e\.animationName !== "kopfFunkeln"\) return;/.test(html), "erst nach dem Stern aufräumen (Blitz endet früher)");
+}
+// 2.411.0 KC-CLUB-DIENST-WER-KLAPPE (Wunsch Hansi „Klappbereich, damit man sieht, dass es unten weitergeht“)
+{
+  assert.ok(/<details class="karte" data-klappe="dp_wer" data-ohne-unten><summary>👥 Wen anzeigen\? <span class="hinweis" id="dpWerKurz"/.test(html) && /id="dpPersonen"/.test(html), "Klappbereich mit Auswahl im Kopf");
+  assert.ok(/\$\("dpWerKurz"\)\.textContent = n\.length \?/.test(html), "Auswahl im Kopf wird gesetzt");
+  assert.ok(/el\?\.closest\("details:not\(\[open\]\)"\)\?\.setAttribute\("open", ""\);/.test(html), "Einführung klappt zugeklappte Ziele auf");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

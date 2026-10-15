@@ -1527,18 +1527,15 @@
   /* 2.400.0 KC-CLUB-KOPF-GLANZ: Lichtstreifen per transform/opacity (läuft im Compositor flüssig, auch während die App beim Start rechnet); nach dem Durchlauf entfernt app.js das Element */
   .kopf-glanz { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; z-index: 4; }
   /* 2.410.0 KC-CLUB-KOPF-AUFBLITZEN (Wunsch Hansi „ein Aufblitzen, wie man es in Werbung oder im Vorspann sieht, wenn ein Logo erscheint“):
-     ein funkelnder Stern startet an der Kochmütze, wandert schräg nach unten rechts und blitzt in der Mitte einmal hell auf wie eine Spiegelung –
-     in diesem Moment leuchtet auch der ganze Kopf kurz auf (2.410.0, Wahl Hansi: ohne Glanzstreifen). Nur transform/opacity (Compositor). Position des Sterns setzt app.js (--fx/--fy). */
-  .kopf-glanz b { position: absolute; inset: 0; background: radial-gradient(ellipse at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.5), rgba(255,255,255,.1) 45%, rgba(255,255,255,0) 75%); opacity: 0; will-change: opacity; }
-  .kopf-glanz u { position: absolute; left: var(--fx, 60px); top: var(--fy, 50px); width: 56px; height: 56px; margin: -28px 0 0 -28px; opacity: 0; transform: scale(0) rotate(0deg); will-change: transform, opacity;
+     ein weiches Licht startet an der Kochmütze, wandert schräg nach unten rechts, verdichtet sich in der Mitte zu einem hellen Punkt und blitzt
+     dort auf wie eine Spiegelung (der Kopf leuchtet rundherum mit), dann löst es sich wieder weich auf (Wahl Hansi: ohne Streifen, ohne Stern). Nur transform/opacity (Compositor). Position des Sterns setzt app.js (--fx/--fy). */
+  .kopf-glanz b { position: absolute; inset: 0; background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), #fff 0, rgba(255,255,255,.75) 3%, rgba(255,255,255,.25) 18%, rgba(255,255,255,.06) 45%, rgba(255,255,255,0) 70%); opacity: 0; will-change: opacity; }
+  .kopf-glanz u { position: absolute; left: var(--fx, 60px); top: var(--fy, 50px); width: 150px; height: 150px; margin: -75px 0 0 -75px; opacity: 0; transform: scale(1.4); will-change: transform, opacity; background: radial-gradient(circle, rgba(255,255,255,.95) 0, rgba(255,255,255,.45) 18%, rgba(255,255,255,.12) 42%, rgba(255,255,255,0) 68%); border-radius: 50%; }
     background: radial-gradient(circle, #fff 0 9%, rgba(255,255,255,.75) 14%, rgba(255,255,255,0) 42%); border-radius: 50%; }
-  .kopf-glanz u::before, .kopf-glanz u::after { content: ""; position: absolute; left: 50%; top: 50%; width: 100%; height: 3px; margin: -1.5px 0 0 -50%; border-radius: 2px;
-    background: linear-gradient(90deg, rgba(255,255,255,0), #fff 50%, rgba(255,255,255,0)); }
-  .kopf-glanz u::after { transform: rotate(90deg); }
-  .kopf-glanz.lauf b { animation: kopfBlitz .5s ease-out 1.05s 1 both; } /* Blitz genau, wenn der Stern die Mitte erreicht */
-  .kopf-glanz.lauf u { animation: kopfFunkeln 1.5s cubic-bezier(.45,0,.55,1) .4s 1 both; } /* 2.410.0: wandert schräg von oben links nach unten rechts, blitzt in der Mitte auf (Spiegelung) */
-  @keyframes kopfBlitz { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; } }
-  @keyframes kopfFunkeln { 0% { opacity: 0; transform: translate(0, 0) scale(.25) rotate(0deg); } 15% { opacity: .7; transform: translate(calc(var(--dx, 300px) * .15), calc(var(--dy, 150px) * .15)) scale(.45) rotate(25deg); } 45% { opacity: .9; transform: translate(calc(var(--dx, 300px) * .45), calc(var(--dy, 150px) * .45)) scale(.6) rotate(70deg); } 50% { opacity: 1; transform: translate(calc(var(--dx, 300px) * .5), calc(var(--dy, 150px) * .5)) scale(1.9) rotate(95deg); } 58% { opacity: .9; transform: translate(calc(var(--dx, 300px) * .58), calc(var(--dy, 150px) * .58)) scale(.6) rotate(120deg); } 100% { opacity: 0; transform: translate(var(--dx, 300px), var(--dy, 150px)) scale(.2) rotate(200deg); } }
+  .kopf-glanz.lauf b { animation: kopfBlitz .45s ease-out 1.06s 1 both; } /* Blitz genau, wenn sich das Licht in der Mitte verdichtet */
+  .kopf-glanz.lauf u { animation: kopfFunkeln 1.6s cubic-bezier(.45,0,.55,1) .4s 1 both; } /* 2.410.0: weiches Licht wandert schräg, verdichtet sich in der Mitte zum Blitz, löst sich wieder auf */
+  @keyframes kopfBlitz { 0% { opacity: 0; } 22% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes kopfFunkeln { 0% { opacity: 0; transform: translate(0, 0) scale(1.5); } 15% { opacity: .35; transform: translate(calc(var(--dx, 300px) * .15), calc(var(--dy, 150px) * .15)) scale(1.5); } 40% { opacity: .55; transform: translate(calc(var(--dx, 300px) * .4), calc(var(--dy, 150px) * .4)) scale(1); } 50% { opacity: 1; transform: translate(calc(var(--dx, 300px) * .5), calc(var(--dy, 150px) * .5)) scale(.22); } 54% { opacity: 1; transform: translate(calc(var(--dx, 300px) * .54), calc(var(--dy, 150px) * .54)) scale(.3); } 66% { opacity: .45; transform: translate(calc(var(--dx, 300px) * .66), calc(var(--dy, 150px) * .66)) scale(1.6); } 100% { opacity: 0; transform: translate(var(--dx, 300px), var(--dy, 150px)) scale(2.1); } }
   :root.ohne-anim .kopf-glanz { display: none; } /* 2.409.0 (Wahl Hansi): nur der App-Schalter „✨ Animierte Knöpfe“ zählt – wie bei den übrigen Effekten; „Animationen entfernen“ am Handy nicht mehr */
   /* 2.402.0 KC-CLUB-KUCKUCKSUHR (Wunsch Hansi): zur vollen Stunde kommt die Uhr, die Tür geht auf und der Kuckuck ruft so oft, wie es Uhr ist */
   .kuckuck { position: fixed; left: 50%; top: max(12px, env(safe-area-inset-top)); z-index: 9500; width: 150px; transform: translate(-50%, -130%); transition: transform .5s cubic-bezier(.3,1.4,.5,1);
@@ -4376,11 +4373,11 @@
   <!-- DIENSTPLÄNE -->
   <section id="v-dienste" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>🗓️ Dienstpläne</h2></div>
-    <div class="karte">
-      <h3>Wen anzeigen?</h3>
-      <div class="knoepfe" id="dpPersonen"><span class="hinweis">Wird geladen …</span></div>
+    <!-- 2.411.0 KC-CLUB-DIENST-WER-KLAPPE (Wunsch Hansi „Klappbereich, damit man besser sieht, dass es unten weitergeht“): zugeklappt steht die Auswahl im Kopf -->
+    <details class="karte" data-klappe="dp_wer" data-ohne-unten><summary>👥 Wen anzeigen? <span class="hinweis" id="dpWerKurz" style="font-weight:400"></span></summary>
+      <div class="knoepfe" id="dpPersonen" style="margin-top:8px"><span class="hinweis">Wird geladen …</span></div>
       <p class="hinweis" style="font-size:.85rem;margin:8px 0 0">Tippe mehrere Namen an, um die Zeiten untereinander zu vergleichen. <span style="background:rgba(201,164,106,.45);border-radius:4px;padding:0 4px">Gold</span> = gleichzeitig im Dienst.</p>
-    </div>
+    </details>
     <div class="dpnav"><button class="knopf klein" onclick="dpWoche(-1)">‹ Woche</button><b id="dpZeitraum"></b><button class="knopf klein" onclick="dpWoche(1)">Woche ›</button></div>
     <div style="text-align:center"><button class="knopf klein" onclick="dpWoche(0)">Heute</button></div>
     <div id="dpListe"></div>
@@ -5126,6 +5123,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.410.0" data-v="2.410.0"></script>
+<script src="app.js?v=2.411.0" data-v="2.411.0"></script>
 </body>
 </html>

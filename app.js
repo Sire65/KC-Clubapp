@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.410.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.411.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2005,7 +2005,7 @@ const RG_DIENST = [
   { v: "dienste", vor: () => { $("mdBlatt")?.remove(); }, sel: ["#v-dienste .dpnav"], t: "🗓️ Der Dienstplan",
     x: "Im Dienstplan blätterst du mit Woche vor und Woche zurück. Heute springt wieder zur aktuellen Woche.",
     live: async (L) => { await L.tipp("#v-dienste .dpnav .knopf:last-child"); dpWoche(1); await L.warte(1800); await L.tipp("#v-dienste .dpnav .knopf:first-child"); dpWoche(-1); } },
-  { v: "dienste", sel: ["#dpPersonen"], t: "👥 Zeiten vergleichen",
+  { v: "dienste", sel: ["#dpPersonen", 'details[data-klappe="dp_wer"]'], t: "👥 Zeiten vergleichen", // 2.411.0: zugeklappt → Kopf des Klappbereichs
     x: "Oben tippst du Namen an, um Dienstzeiten zu vergleichen – gold heißt: gleichzeitig im Dienst. Andere sehen deine Zeiten nur, wenn du das ganz unten erlaubst." },
   { v: "dienste", t: "✅ Fertig", x: "Das war's: Wünsche abgeben, Dienstplan ansehen, Zeiten vergleichen. Fragen zum Dienst? Frag einfach Twinkey." },
 ];
@@ -6251,6 +6251,7 @@ function shAktualisieren() {
     shLeiste("<b>Kurz dazwischen:</b> Bitte zuerst die Frage im Fenster beantworten 👇"); return; }
   const i = gilt.findIndex((s, n) => !fertig(s, n)); if (i < 0) return;
   const s = gilt[i], el = document.querySelector(s.ziel);
+  el?.closest("details:not([open])")?.setAttribute("open", ""); // 2.411.0: Ziel in einem zugeklappten Bereich (z. B. „Wen anzeigen?“) → aufklappen
   document.querySelectorAll(".sh-ziel").forEach((e) => e !== el && e.classList.remove("sh-ziel"));
   el?.classList.add("sh-ziel"); if (SH.el !== el) shRahmen(el); shLage();
   if (!el && (SH.suche = (SH.suche || 0) + 1) < 8) { clearTimeout(SH.nochmal); SH.nochmal = setTimeout(shAktualisieren, 800); } else if (el) SH.suche = 0; // Seite lädt noch → gleich nochmal
@@ -25080,6 +25081,9 @@ async function dienstLaden() {
       const w = (DP.wunschPersonen || []).includes(p.person_id) ? ' <span title="hat Wunschzeiten abgegeben" aria-label="hat Wunschzeiten abgegeben">📝</span>' : ""; // KC-CLUB-DIENST-WUNSCHZEITEN
       return `<button class="ptaste${an ? " an" : ""}" style="${an ? `background:${f};border-color:${f}` : ""}" onclick="dpPerson('${p.person_id}')"><i style="background:${an ? "#fff" : f}"></i>${p.ich ? "Ich" : esc(p.name)}${w}</button>`;
     }).join("") + (DP.personen.length === 1 ? '<span class="hinweis" style="font-size:.85rem">Noch hat niemand sonst seine Dienstzeiten freigegeben.</span>' : "");
+    // 2.411.0 KC-CLUB-DIENST-WER-KLAPPE: Auswahl im Kopf des Klappbereichs („Ich, Christina +2“)
+    if ($("dpWerKurz")) { const n = DP.personen.filter((p) => dpWahl.includes(p.person_id)).map((p) => (p.ich ? "Ich" : p.name.split(" ")[0]));
+      $("dpWerKurz").textContent = n.length ? `· ${n.slice(0, 3).join(", ")}${n.length > 3 ? ` +${n.length - 3}` : ""}` : "· niemand gewählt"; }
     dpZeichnen();
   } catch (e) { meldeFehler(e); ladeFehlerStand("dpPersonen", e, "dienstLaden()"); } // 2.337.0: nicht ewig „Wird geladen …“
 }
