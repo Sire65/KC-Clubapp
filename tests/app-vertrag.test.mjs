@@ -6482,6 +6482,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal(idx.figuren.length, P.length, "index.json vollständig");
   for (const d of premiumDateien(A)) { assert.equal(lies("avatare/premium/" + d.datei), d.svg, "Datei aktuell: " + d.datei + " (node tools/avatare-erzeugen.mjs)"); assert.ok(d.svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg"'), "eigenständige SVG " + d.datei); }
 }
+// 2.415.0 KC-CLUB-AVATAR-HILFE (Wunsch Hansi): Hilfe, Twinkey, Lupe, geführte Hilfe und Videos kennen die neuen Avatare
+{
+  for (const id of ["avatar_hochwertig", "avatar_anpassen"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "darstellung"[^\\n]*nur: \\(\\) => frei\\("avatar"\\) && frei\\("avatar_(premium|baukasten)"\\)`).test(html), "Hilfe " + id + " (nur mit Freigabe)");
+  for (const id of ["avatar-hochwertig", "avatar-schmuck", "avatar-brille"]) assert.ok(html.includes(`{ id: "${id}", sym:`), "Twinkey " + id);
+  assert.ok(/Bisherige Avatare“<\/b> die 40 bekannten Figuren/.test(html) && /„📷 eigene Brille“|mach ein Foto von deiner Brille und schick es an Hansi/.test(html), "Texte nennen Bereiche und eigene Brille");
+  assert.ok(/"🧩", "Figur anpassen \(Baukasten: Frisur, Brille, Schmuck, Kochjacke\)", "[^"]*ohrringe[^"]*piercing[^"]*"/.test(html) && /avatar avatare kochfigur[^"]*hochwertige/.test(html), "Lupe findet Baukasten und hochwertige Avatare");
+  assert.ok(/ziel: "#avBlatt details\[open\] \.av-raster"/.test(html) && /\[26, "Ohrringe\?/.test(html) && /\[29, "Schnitt der Kochjacke/.test(html), "geführte Hilfe");
+  assert.ok(/\{ id: "figur", stand: "2"/.test(html) && /\{ id: "figurbau", stand: "2"/.test(html), "Videos in neuer Fassung");
+  assert.ok(/sel: \['#avBlatt details\[data-klappe="av_neu"\]'\], mussSel: true, t: "👑 Hochwertige Avatare"/.test(html) && /t: "💎 Schmuck"/.test(html) && /t: "👑 Klassisch oder hochwertig"/.test(html), "Videos zeigen die neuen Bereiche");
+  assert.ok(/function rgKlappeAuf\(name\) \{[\s\S]{0,300}RG\.zurueck\.push/.test(html), "Video öffnet Klappbereiche nur vorübergehend");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
