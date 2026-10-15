@@ -6402,9 +6402,9 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.404.0 KC-CLUB-KUCKUCK-KLANG (Fund Hansi „kein Ton – typischer Ton solcher Uhren“)
 {
-  assert.ok(/function kkTon\(t0\) \{[^\n]*\n  kkKlack\(t0\); kkPfeife\(698\.46, t0 \+ 0\.07, 0\.3, 0\.9\); kkPfeife\(587\.33, t0 \+ 0\.43, 0\.55, 0\.8\);/.test(html), "Klack + zwei Pfeifen (hoch – tief)");
-  // 2.405.0 KC-CLUB-KUCKUCK-KLANG-2: Pfeifenklang aus gefilterter Luft (1×/3×/5×), Kern mit Zittern, Hall
-  assert.ok(/for \(const \[mal, q, g\] of \[\[1, 28, 0\.9\], \[3, 22, 0\.16\], \[5, 18, 0\.05\]\]\)/.test(html) && /function kkHall\(\)/.test(html) && /lfo\.frequency\.value = 5\.2;/.test(html), "Holzpfeifen-Klang");
+  assert.ok(/function kkTon\(t0\) \{[^\n]*\n  kkGong\(t0\); kkKlack\(t0 \+ 0\.18\); kkPfeife\(440, t0 \+ 0\.24, 0\.26, 1\); kkPfeife\(349\.23, t0 \+ 0\.56, 0\.5, 0\.95\);/.test(html), "Gong, Klack, zwei Pfeifen A → F");
+  // 2.405.0 KC-CLUB-KUCKUCK-KLANG-2 (nach Recherche): gedackte Pfeife fast rein (3. Teilton etwas stärker), Anblas-Oktave, Spiralgong, Takt 1,5 s
+  assert.ok(/for \(const \[mal, a\] of \[\[1, 1\], \[2, 0\.03\], \[3, 0\.11\], \[5, 0\.02\]\]\)/.test(html) && /function kkGong\(t\)/.test(html) && /sp\.frequency\.value = f \* 2;/.test(html) && /KK_TAKT_MS = 1500;/.test(html), "Klang wie die echte Uhr");
   assert.ok(/mitTon = einst\("ton", true\) && \(tonImmer \|\| !\(h >= KK_NACHT_VON \|\| h < KK_NACHT_BIS\)\)/.test(html) && /onclick="kuckuckZeigen\(kkJetzt\(\)\.h, true\)"/.test(html), "Probe-Knopf mit Ton auch nachts; sonst nachts stumm");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
