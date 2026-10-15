@@ -6369,7 +6369,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/<div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><b><\/b><u><\/u><\/div>/.test(html), "Glanz-Element im Kopf der Startseite");
   assert.ok(/\.kopf-glanz \{ position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none;/.test(html), "Glanz bleibt im runden Kopf und fängt keine Klicks");
   // 2.410.0: statt Glanzstreifen Blitz + Stern – beide einmalig, nur transform/opacity
-  assert.ok(/\.kopf-glanz\.lauf u \{ animation: kopfFunkeln [^;]* 1 both; \}/.test(html) && /@keyframes kopfFunkeln \{[^}]*transform: scale\(0\) rotate\(0deg\)/.test(html) && !/@keyframes kopfGlanz/.test(html), "einmal, per transform (flüssig), ohne Glanzstreifen");
+  assert.ok(/\.kopf-glanz\.lauf u \{ animation: kopfFunkeln [^;]* 1 both; \}/.test(html) && /@keyframes kopfFunkeln \{[^}]*transform: translate\(0, 0\) scale\(\.25\) rotate\(0deg\)/.test(html) && /50% \{ opacity: 1; transform: translate\(calc\(var\(--dx, 300px\) \* \.5\)/.test(html) && !/@keyframes kopfGlanz/.test(html), "einmal, per transform (flüssig), ohne Glanzstreifen; Stern wandert schräg und blitzt in der Mitte");
   // 2.409.0 (Wahl Hansi, Diagnose: „Animationen entfernen“ am Handy aktiv): nur noch der App-Schalter schaltet den Glanz ab
   assert.ok(/:root\.ohne-anim \.kopf-glanz \{ display: none; \}/.test(html) && !/prefers-reduced-motion: reduce\) \{ \.kopf-glanz/.test(html), "Animierte Knöpfe aus → kein Glanz; Handy-Einstellung zählt nicht");
   assert.ok(/<div class="kopf-glanz" id="kopfGlanz"/.test(html) && /g\.addEventListener\("animationend", aus\); g\.addEventListener\("animationcancel", aus\);/.test(html), "beim Öffnen einmal, danach aus");

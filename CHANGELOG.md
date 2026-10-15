@@ -18,7 +18,7 @@ für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüb
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
 ## 2.410.0 – 2026-10-15 – ✨ Aufblitzen im Kopf wie im Vorspann
-Anlass (Hansi): „Der Effekt ist noch nicht, wie ich es mir vorstelle – es soll ein Aufblitzen sein, wie man es in Werbung oder im Vorspann sieht, wenn ein Logo erscheint.“ Jetzt: kurzer heller Blitz über den ganzen Kopf, und an der Kochmütze funkelt ein Stern auf (gut 1 s). Den Glanzstreifen hat Hansi nach der Vorschau gestrichen.
+Anlass (Hansi): „Der Effekt ist noch nicht, wie ich es mir vorstelle – es soll ein Aufblitzen sein, wie man es in Werbung oder im Vorspann sieht, wenn ein Logo erscheint.“ Jetzt: Ein funkelnder Stern startet an der Kochmütze, wandert schräg nach unten rechts und blitzt in der Mitte einmal hell auf wie eine Spiegelung; in diesem Moment leuchtet der ganze Kopf kurz auf (knapp 2 s). Den Glanzstreifen hat Hansi nach der Vorschau gestrichen.
 
 ## 2.409.0 – 2026-10-15 – Lichtschein auch bei „Animationen entfernen“
 Die Rückmeldung aus 2.408.0 zeigte: Auf Hansis Handy ist „Animationen entfernen“ aktiv – deshalb blieb der Lichtschein aus, während Herbst-Bühne, Laub und Kuckucksuhr liefen. Wahl Hansi: Der Lichtschein folgt jetzt nur noch dem App-Schalter „✨ Animierte Knöpfe“, wie die übrigen Effekte.

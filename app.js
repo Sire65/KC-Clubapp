@@ -18739,7 +18739,11 @@ function kopfGlanzStarten(seit = Date.now()) {
   requestAnimationFrame(() => requestAnimationFrame(() => {
     try { // 2.410.0 KC-CLUB-KOPF-AUFBLITZEN: Stern funkelt an der Kochmütze
       const l = document.querySelector("#v-start .kopflogo .logo")?.getBoundingClientRect(), k = g.getBoundingClientRect();
-      if (l?.width) { g.style.setProperty("--fx", `${Math.round(l.left - k.left + l.width * 0.78)}px`); g.style.setProperty("--fy", `${Math.round(l.top - k.top + l.height * 0.22)}px`); }
+      if (l?.width) {
+        const fx = Math.round(l.left - k.left + l.width * 0.78), fy = Math.round(l.top - k.top + l.height * 0.22), zx = Math.round(k.width - 30), zy = Math.round(k.height - 24); // Ziel: unten rechts
+        g.style.setProperty("--fx", `${fx}px`); g.style.setProperty("--fy", `${fy}px`); g.style.setProperty("--dx", `${zx - fx}px`); g.style.setProperty("--dy", `${zy - fy}px`);
+        g.style.setProperty("--mx", `${Math.round((fx + zx) / 2)}px`); g.style.setProperty("--my", `${Math.round((fy + zy) / 2)}px`); // Blitz-Mitte = Mitte des Weges
+      }
     } catch {}
     g.classList.remove("lauf"); void g.offsetWidth; g.classList.add("lauf"); // offsetWidth: Animation neu starten
     const a = g.querySelector("u")?.getAnimations?.()[0]; // 2.410.0: der Stern (längste Teil-Animation)
