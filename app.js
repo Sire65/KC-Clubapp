@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.420.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.421.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -25403,7 +25403,16 @@ async function mdStart() {
     <div class="karte"><h4 style="margin:0 0 4px">${schritt("3", ist.anzahl > 0)} ⏱️ Istplan <small class="hinweis">gearbeitet (Stempeluhr), letzte 60 Tage</small></h4>
       ${ist.anzahl ? `<div>${ist.anzahl} Einsätze · <b>${mdHm(ist.istMin)} Std.</b> gearbeitet${ist.sollMin ? ` · geplant waren ${mdHm(ist.sollMin)} Std. (${ist.istMin - ist.sollMin >= 0 ? "+" : "–"}${mdHm(Math.abs(ist.istMin - ist.sollMin))})` : ""}</div>
         ${ist.liste.map((d) => `<div>• ${esc(mdTag(d.datum))} ${esc(d.start)}–${esc(d.ende)} Uhr</div>`).join("")}`
-        : `<div class="ta-st-gv">Noch keine Ist-Zeiten vorhanden – sie erscheinen hier, sobald die Stempeluhr sie liefert.</div>`}</div>`;
+        : `<div class="ta-st-gv">Noch keine Ist-Zeiten vorhanden – sie erscheinen hier, sobald die Stempeluhr sie liefert.</div>`}</div>${mdSonder(MD_D?.sonder)}`;
+}
+// KC-CLUB-SONDERSTUNDEN-KONTO (2.421.0, KICC-F-100): Sonderstunden (Grünkohl kochen, Fahrten …) mit Stand – gutgeschrieben erst nach Bestätigung durch den Planer
+const MD_SONDER = { gemeldet: "⏳ gemeldet – wartet auf den Planer", bestaetigt: "✅ gutgeschrieben", abgelehnt: "✖ nicht gutgeschrieben" };
+function mdSonder(so) {
+  if (!so || !(so.liste || []).length) return "";
+  return `<div class="karte"><h4 style="margin:0 0 4px">★ Sonderstunden <small class="hinweis">Einsätze außerhalb des Stands, Stundenkonto Weihnachtsmarkt</small></h4>
+    <div><b>${mdHm(so.gutMin || 0)} Std.</b> gutgeschrieben${so.offenMin ? ` · <span class="ta-st-gv">${mdHm(so.offenMin)} Std. gemeldet, zählen erst nach Bestätigung</span>` : ""}</div>
+    ${so.liste.map((d) => `<div>• ${esc(mdTag(d.datum))} ${esc(d.start)}–${esc(d.ende)} Uhr · ${esc(d.titel)} · ${mdHm(d.min)} Std. · <span class="${d.status === "bestaetigt" ? "ta-st-ja" : d.status === "abgelehnt" ? "ta-st-nein" : "ta-st-gv"}">${esc(MD_SONDER[d.status] || d.status)}</span>${d.grund ? ` <span class="hinweis">Grund: ${esc(d.grund)}</span>` : ""}</div>`).join("")}
+    <div class="hinweis">Melden: 🗓️ Dienstwunsch → Twinkey → „Sonderstunden melden“.</div></div>`;
 }
 function dpWoche(n) { dpStart = n === 0 ? montag(heuteIso()) : tagPlus(dpStart, 7 * n); dienstLaden(); }
 function dpFarbe(pid) { const i = (DP?.personen || []).findIndex((p) => p.person_id === pid); return DP_FARBEN[Math.max(0, i) % DP_FARBEN.length]; }
