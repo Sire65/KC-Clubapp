@@ -1,0 +1,7 @@
+flow_alt_weg=t
+flow_neu_da=t
+versand_alt_weg=t
+versand_offen_da=t
+versand_neu_da=t
+zustellmeldung_weg=t
+cron_da=t
