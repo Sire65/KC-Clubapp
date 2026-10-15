@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.406.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.407.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18708,7 +18708,17 @@ async function kopfRolloFahren(ziel) {
 // Ist er durch (oder bricht ab, z. B. beim Wechsel auf eine andere Seite), wird „lauf“ entfernt – beim Zurückkehren zur Startseite startet er nicht erneut.
 // 2.401.0 (Fund Hansi „kein Licht beim Öffnen“): Android holt die App meist nur aus dem Hintergrund zurück, ohne sie neu zu laden – dann läuft
 // der Schein jetzt ebenfalls, wenn die App mindestens KOPF_GLANZ_PAUSE_MS im Hintergrund war.
-const KOPF_GLANZ_PAUSE_MS = 60000;
+// 2.407.0 KC-CLUB-KOPF-GLANZ-SICHTBAR (Fund Hansi „den Lichteffekt im Kopf habe ich noch nicht gesehen“): der Schein lief bisher sofort beim
+// Sichtbarwerden der App – genau dann, wenn sie noch lädt und das Handy ausgelastet ist (auf langsamen Geräten war er vorbei, bevor
+// gezeichnet wurde) und oft unter einem Start-Fenster. Jetzt startet ihn kopfGlanzStarten() erst, wenn die Startseite fertig geladen,
+// sichtbar und frei von Fenstern ist (sonst kurz warten, höchstens KOPF_GLANZ_WARTEN_MS), und nach zwei gezeichneten Bildern.
+const KOPF_GLANZ_PAUSE_MS = 60000, KOPF_GLANZ_WARTEN_MS = 20000;
+function kopfGlanzStarten(seit = Date.now()) {
+  const g = document.getElementById("kopfGlanz"); if (!g) return;
+  const frei = !document.hidden && aktuelleAnsicht === "start" && ![...document.querySelectorAll(".blatt")].some((b) => b.getClientRects().length) && g.offsetParent !== null; // nur sichtbare Fenster zählen (viele liegen versteckt bereit)
+  if (!frei) { if (Date.now() - seit < KOPF_GLANZ_WARTEN_MS) setTimeout(() => kopfGlanzStarten(seit), 700); return; }
+  requestAnimationFrame(() => requestAnimationFrame(() => { g.classList.remove("lauf"); void g.offsetWidth; g.classList.add("lauf"); })); // offsetWidth: Animation neu starten
+}
 {
   const g = document.getElementById("kopfGlanz");
   if (g) {
@@ -18717,7 +18727,7 @@ const KOPF_GLANZ_PAUSE_MS = 60000;
     let weg = 0;
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) { weg = Date.now(); return; }
-      if (weg && Date.now() - weg >= KOPF_GLANZ_PAUSE_MS) { aus(); void g.offsetWidth; g.classList.add("lauf"); } // offsetWidth: Animation neu starten
+      if (weg && Date.now() - weg >= KOPF_GLANZ_PAUSE_MS) kopfGlanzStarten();
     });
   }
 }
@@ -34783,6 +34793,7 @@ async function fpAdmin(tage) {
   neuLaden().then(() => {
     const h = startSprung;
     hashSprung(h); // 2.209.0: eigene Funktion – auch für Push-Antippen bei offener App
+    setTimeout(() => kopfGlanzStarten(), 400); // 2.407.0 KC-CLUB-KOPF-GLANZ-SICHTBAR: erst nach dem Laden
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
     if (!h || h === "#") setTimeout(() => ekHinweisPruefen(), 3000); // KC-CLUB-EINGANG-HINWEIS: viel im Eingangskorb?
     if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
