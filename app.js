@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.408.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.409.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18733,7 +18733,7 @@ function kopfGlanzMelden(ergebnis, extra = {}) {
 }
 function kopfGlanzStarten(seit = Date.now()) {
   const g = document.getElementById("kopfGlanz"); if (!g) return kopfGlanzMelden("kein_element");
-  if (getComputedStyle(g).display === "none") return kopfGlanzMelden("aus"); // „Animierte Knöpfe“ aus oder „Bewegung reduzieren“ am Handy
+  if (getComputedStyle(g).display === "none") return kopfGlanzMelden("aus"); // „Animierte Knöpfe“ aus (2.409.0: „Bewegung reduzieren“ am Handy zählt nicht mehr)
   const frei = !document.hidden && aktuelleAnsicht === "start" && ![...document.querySelectorAll(".blatt")].some((b) => b.getClientRects().length) && g.offsetParent !== null; // nur sichtbare Fenster zählen (viele liegen versteckt bereit)
   if (!frei) { if (Date.now() - seit < KOPF_GLANZ_WARTEN_MS) setTimeout(() => kopfGlanzStarten(seit), 700); else kopfGlanzMelden("aufgegeben", { warte_ms: Date.now() - seit }); return; }
   requestAnimationFrame(() => requestAnimationFrame(() => {
