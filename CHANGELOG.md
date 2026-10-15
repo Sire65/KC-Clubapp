@@ -17,11 +17,30 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
-## 2.421.0 – 2026-10-15 – Sonderstunden mit Stand: gutgeschrieben, offen, abgelehnt (KC-CLUB-SONDERSTUNDEN-KONTO, KICC-F-100)
+## 2.423.0 – 2026-10-15 – Sonderstunden mit Stand: gutgeschrieben, offen, abgelehnt (KC-CLUB-SONDERSTUNDEN-KONTO, KICC-F-100)
 Wunsch Hansi: „noch bauen mit den Stunden“ – Mitglieder sehen ihre bestätigten Sonderstunden jetzt auch in der App (vorher nur die Nachricht „gutgeschrieben“ und der Kontoauszug in DP2).
 - **🗓️ Mein Dienst:** neue Karte „★ Sonderstunden“ – Summe gutgeschrieben, offen gemeldet (zählt erst nach Bestätigung), je Meldung Tag, Zeit, Einsatz und Stand; abgelehnt mit Grund. Gilt für die ganze Veranstaltung (nicht nur 60 Tage). Pausen zählen wie in DP2.
 - **Twinkey (DP2 Build 291, unverändert übernommen):** „Meine erfassten Zeiten“ zeigt Sonderstunden mit Stand und Summe; der Knopf war in der App bisher immer gesperrt (keine Stempelzeiten) und ist jetzt bei eigenen Meldungen wählbar.
-- Termin Abholung korrigiert: 29.11.2026 (Grünkohl kochen 28.11.2026).
+- Termin Abholung korrigiert: 29.11.2026 (Grünkohl kochen 28.11.2026). Server 2.423.0 (2.421.0/2.422.0 waren parallel vergeben).
+
+## 2.422.0 – 2026-10-15 – 🔒 Zugang für Gäste und Aushilfen (KC-CLUB-ZUGANG) · Server 2.422.0 · DB
+Anlass (Hansi): „Wir müssen den Zugang für Gäste und Aushilfen einschränken – die dürfen Nachricht schreiben, SOS und Clubtermine … und Spiele.“ Entscheidungen Hansi: Aushilfen sehen das Fotoalbum (nur ansehen); Gäste schreiben an alle Mitglieder; Spiele auch gegen Mitglieder; kein Ablaufdatum.
+- **Zugang je Person** (`kc_club_rollen.zugang`): 👤 Mitglied (alles wie bisher), 🧑‍🍳 Aushilfe, 🙋 Gast. Einstellbar im Rollen-Fenster (🎖️ Ämter und Rechte). Admin ist immer Mitglied.
+- **Sperre auf dem Server:** `zugangPruefen` als erste Zeile von `aktionAusfuehren` – gilt für normale Anfragen, geplante Nachrichten, Notfall-Paket und Nachtrag. Für Gäste/Aushilfen ist nur erlaubt, was in `ZUGANG_AKTIONEN` steht; alles andere → 403.
+  - **Gast:** Clubtermine (ansehen, zu-/absagen, Kalender, eigene private Termine), Nachrichten (an alle), SOS, Spiele + Rätsel, Hilfe/Twinkey/Feedback, Einstellungen, Push und Technik.
+  - **Aushilfe:** dazu Mein Dienst/Dienstwünsche (inkl. Sondereinsatz-Zusage und Stunden melden), Fotoalbum ansehen, Schulung.
+  - Gesperrt u. a.: Archiv, Protokolle, Pinnwand, Vorschläge, Erstattung, Büro, Helfen & Leihen, To-dos, Suche, Admin.
+- Gäste/Aushilfen sehen **nie Protokolle und keine Kontaktdaten anderer** (`zugangAnwenden` in `ichAus`); **SOS** zeigt ihnen nur die Clubleitung (mit deren freigegebenen Nummern) und sich selbst.
+- **App:** dieselbe Liste (`ZUGANG_AKTIONEN`) – Verbotenes wird gar nicht erst geschickt; Kacheln (erweitert + einfach) passend gefiltert (`ZUGANG_KACHELN`).
+- **Datenbank:** `supabase/migrations/20261015_kc_club_v2422_zugang.sql` (Spalte `zugang`, Standard „mitglied“, Prüfregel; bisherige Aushilfen = Amt „Aushilfe“ → „aushilfe“). Probelauf `tools/db-test/74_zugang_test.sql`. Bis zum Einspielen gilt für alle „mitglied“; das Rollen-Fenster speichert weiter (Zugang dann mit Hinweis). Rückweg in der Migration.
+- Vertragstest: gleiche Liste in App und Server, alle Aktionen vorhanden, heikle Bereiche gesperrt, Sandkasten der App-Regeln (Gegenprobe: ohne Server-Sperre rot).
+
+## 2.421.0 – 2026-10-15 – ☑️ Kacheln auswählen (KC-CLUB-KACHEL-AUSWAHL)
+Anlass (Hansi): „Unter Einstellungen generell die Kacheln anhaken, die man haben möchte – die anderen sind verborgen. In 3 Blöcken Club, Meins, Technik, einklappbar, alle auflisten mit Klickkästchen – nebeneinander, nicht zu viel Platz verschwenden.“
+- ⚙️ → „🧩 Startseite & Ansicht“ → **„☑️ Kacheln auswählen“**: drei einklappbare Blöcke 🏠 Club, 🙋 Meins, 🛠️ Technik mit Zähler („13 von 14“), Kästchen im Raster nebeneinander (Handy 2 Spalten, breiter 3–4); „✅ Alle anzeigen“ je Bereich.
+- Kein eigener Speicher: Haken = nicht in `KA.aus` – dasselbe Ausblenden wie „Anordnen“ (✕/👁️), gilt auf allen Geräten. Gezeigt werden nur Kacheln, die man sehen darf (`kachelnAlle`); das Admin-Register bleibt außen vor.
+- `kaSichtbar(id, sichtbar, leise)`: neuer optionaler Parameter, damit beim Ankreuzen nicht jedes Mal ein Hinweis erscheint; über ✕ bleibt der Hinweis wie bisher.
+- In der einfachen Ansicht steht ein Hinweis, dass die Auswahl für die erweiterte Ansicht gilt. Hilfe-Eintrag und Suchbegriff ergänzt, Vertragstest.
 
 ## 2.420.0 – 2026-10-15 – Sondereinsätze: vorläufige Einteilung durch den Planer (KC-CLUB-SONDER-VORGESEHEN, KICC-F-100)
 Wunsch Hansi: „Kochen am 28.11.26, Abholung am 29.12.26 – zum Kochen Wilfried, Steven, Manfred eintragen, zum Abholen Frank und Wilfried. Vorläufig geplant.“
