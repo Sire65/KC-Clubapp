@@ -8131,6 +8131,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).eq("status", "published"),
           db.from("kc_core_operational_directory").select("person_id,display_name,active").eq("org_id", ORG).eq("person_id", ich.person_id).maybeSingle(),
         ]);
+        const { sondereinsaetze, stunden, mitglieder } = await sonderstundenLaden(ich.person_id); // KC-CLUB-SONDERSTUNDEN (KICC-F-100)
         // Freigaben „Kollegen dürfen meine Zeiten sehen/übernehmen“: DP2-Tabelle + was Mitglieder in der Club-App gewählt haben
         const kollegen = (geteilt ?? []).map((x: any) => ({ personId: x.person_id, entries: (x.entries ?? []).filter((e: any) => ["available", "if_needed", "preferred"].includes(e.wishType)) }));
         const teilen = [...(freigaben ?? [])];
@@ -8139,7 +8140,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ vertrag: DW.vertrag, veranstaltung: DW.veranstaltung, name: DW.name,
           ich: { personId: ich.person_id, name: ich.name, imDienstplan: !!verz?.active },
           wunschphase: phase ? { status: phase.status, bis: phase.close_at, frist: phase.deadline_date } : null,
-          tage: tage ?? [], meine: meine ?? null, kollegen, teilen, schichten: schichten ?? [] });
+          tage: tage ?? [], meine: meine ?? null, kollegen, teilen, schichten: schichten ?? [], sondereinsaetze, stunden, mitglieder });
+      }
+
+      // KC-CLUB-SONDERSTUNDEN (KICC-F-100, DP2-F-SE-02): Sammelmeldung aus Twinkey – ein Kollege meldet für sich und weitere
+      // Kollegen, jeweils mit eigenem Stundenumfang. Gutschrift erst, wenn der Planer in DP2 bestätigt (kc_dp_hour_report_decide).
+      case "stunden_melden": {
+        return json(await sonderstundenMelden(ich, p));
       }
 
       case "dienstwunsch_speichern": {
@@ -13419,4 +13426,79 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
     await db.from("kc_club_notbetrieb").update({ fehler, fehler_am: jetzt() }).eq("id", 1);
     return { ok: false, fehler };
   }
+}
+
+// ---------- KC-CLUB-SONDERSTUNDEN (KICC-F-100): Sondereinsätze (DP2 veröffentlicht) und Stundenmeldungen (Eingang → DP2) ----------
+const SH = { maxPersonen: 30, maxSpanne: 16, maxEnde: 30, maxPause: 180, fristTage: 3,
+  taetigkeiten: ["kochen", "vorbereitung", "transport", "einkauf", "getraenke", "aufraeumen", "sonstiges"] };
+const shZeile = (r: any) => ({ id: r.id, sammel_id: r.sammel_id, event_id: r.event_id, special_event_id: r.special_event_id,
+  special_event_title: r.special_event_title, person_id: r.person_id, gemeldet_von: r.gemeldet_von, work_date: r.work_date,
+  start_h: Number(r.start_h), end_h: Number(r.end_h), break_minutes: r.break_minutes, taetigkeit: r.taetigkeit, bemerkung: r.bemerkung,
+  status: r.status, verspaetet: r.verspaetet, gemeldet_am: r.gemeldet_am, ablehngrund: r.ablehngrund, version: r.version });
+const SH_SPALTEN = "id,sammel_id,event_id,special_event_id,special_event_title,person_id,gemeldet_von,work_date,start_h,end_h,break_minutes,taetigkeit,bemerkung,status,verspaetet,gemeldet_am,ablehngrund,version";
+async function sonderstundenLaden(pid: string) {
+  const [{ data: ev }, { data: st }] = await Promise.all([
+    db.from("kc_dp_special_events").select("source_id,titel,ort,art,termin_status,datum_von,datum_bis,wiederkehrend,version")
+      .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "published").order("datum_von", { nullsFirst: false }),
+    db.from("kc_dp_hour_reports").select(SH_SPALTEN).eq("org_id", ORG).eq("event_id", DW.veranstaltung)
+      .or(`person_id.eq.${pid},gemeldet_von.eq.${pid}`).neq("status", "zurueckgezogen").order("work_date", { ascending: false }).limit(300),
+  ]);
+  // Aktive Mitglieder für „Wer war noch dabei?“ (nur Kennung + Anzeigename; DP2s Personenliste kennt neue Mitglieder evtl. noch nicht)
+  const mitglieder = (await aktiveMitglieder()).map((m) => ({ personId: m.person_id, name: m.display_name }));
+  return { sondereinsaetze: ev ?? [], stunden: (st ?? []).map(shZeile), mitglieder };
+}
+async function sonderstundenMelden(ich: Ich, p: any) {
+  const heute = berlinTag(new Date()), zahl = (v: unknown) => { const n = Number(v); return Number.isFinite(n) ? Math.round(n * 100) / 100 : NaN; };
+  const viertel = (n: number) => Number.isFinite(n) && Math.abs(n * 4 - Math.round(n * 4)) < 1e-9;
+  const evId = txt(p?.specialEventId, 80), datum = String(p?.date ?? ""), taet = String(p?.taetigkeit ?? ""), bem = txt(p?.bemerkung, 500);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) throw new Fehler("Bitte ein gültiges Datum wählen.");
+  if (datum > heute) throw new Fehler("Stunden können erst nach dem Einsatz gemeldet werden.");
+  if (!SH.taetigkeiten.includes(taet)) throw new Fehler("Bitte eine Tätigkeit aus der Liste wählen.");
+  const { data: ev } = await db.from("kc_dp_special_events").select("source_id,titel,termin_status,datum_von,datum_bis,wiederkehrend")
+    .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source_id", evId).eq("status", "published").maybeSingle();
+  if (!ev) throw new Fehler("Diesen Sondereinsatz gibt es nicht (mehr).", 404);
+  if (ev.termin_status === "OFFEN") throw new Fehler("Für diesen Einsatz steht der Termin noch nicht fest.", 409);
+  if (ev.termin_status === "FEST") {
+    if (ev.wiederkehrend === "markttage") {
+      const { data: tag } = await db.from("kc_dp_days_published").select("work_date").eq("org_id", ORG).eq("event_id", DW.veranstaltung)
+        .eq("status", "published").eq("day_type", "market").eq("work_date", datum).maybeSingle();
+      if (!tag) throw new Fehler("Das Datum ist kein Markttag.");
+    } else if (ev.datum_von && (datum < ev.datum_von || datum > (ev.datum_bis || ev.datum_von))) throw new Fehler("Das Datum gehört nicht zu diesem Einsatz.");
+  }
+  const roh = Array.isArray(p?.eintraege) ? p.eintraege : [];
+  if (!roh.length) throw new Fehler("Bitte mindestens eine Person mit Zeiten angeben.");
+  if (roh.length > SH.maxPersonen) throw new Fehler(`Höchstens ${SH.maxPersonen} Personen je Meldung.`);
+  const mitglieder = new Map((await aktiveMitglieder()).map((m) => [m.person_id, m]));
+  const gesehen = new Set<string>(), eintraege: { pid: string; start: number; ende: number; pause: number }[] = [];
+  for (const e of roh) {
+    const pid = String(e?.personId ?? ""), m = mitglieder.get(pid), name = m?.display_name || pid;
+    if (!m) throw new Fehler(`Unbekannte Person: ${name}.`);
+    if (gesehen.has(pid)) throw new Fehler(`${name} ist doppelt ausgewählt.`); gesehen.add(pid);
+    const start = zahl(e?.start), ende = zahl(e?.end), pause = Number(e?.breakMinutes ?? 0);
+    if (!viertel(start) || !viertel(ende) || start < 0 || start >= 24 || ende <= start || ende > SH.maxEnde) throw new Fehler(`${name}: Bitte gültige Von-/Bis-Zeiten wählen.`);
+    if (ende - start > SH.maxSpanne) throw new Fehler(`${name}: Mehr als ${SH.maxSpanne} Stunden am Stück bitte beim Planer melden.`);
+    if (!Number.isInteger(pause) || pause < 0 || pause > SH.maxPause || pause / 60 >= ende - start) throw new Fehler(`${name}: Die Pause passt nicht zur Zeit.`);
+    eintraege.push({ pid, start, ende, pause });
+  }
+  // Doppelschutz: dieselbe Person, gleicher Tag und Einsatz, überlappend, noch offen oder bestätigt → nicht doppelt anlegen
+  const { data: vorhanden } = await db.from("kc_dp_hour_reports").select("id,person_id,start_h,end_h").eq("org_id", ORG).eq("event_id", DW.veranstaltung)
+    .eq("special_event_id", evId).eq("work_date", datum).in("status", ["gemeldet", "bestaetigt"]).in("person_id", [...gesehen]);
+  const frist = new Date(datum + "T12:00:00Z"); frist.setUTCDate(frist.getUTCDate() + SH.fristTage);
+  const verspaetet = heute > frist.toISOString().slice(0, 10), sammel = crypto.randomUUID();
+  const neu: any[] = [], uebersprungen: any[] = [];
+  for (const e of eintraege) {
+    const dup = (vorhanden ?? []).find((v: any) => v.person_id === e.pid && Number(v.start_h) < e.ende && Number(v.end_h) > e.start);
+    if (dup) { uebersprungen.push({ personId: e.pid, grund: "schon gemeldet", vorhandenId: dup.id }); continue; }
+    neu.push({ org_id: ORG, event_id: DW.veranstaltung, special_event_id: evId, special_event_title: txt(ev.titel, 120), sammel_id: sammel,
+      person_id: e.pid, gemeldet_von: ich.person_id, work_date: datum, start_h: e.start, end_h: e.ende, break_minutes: e.pause,
+      taetigkeit: taet, bemerkung: bem || null, status: "gemeldet", verspaetet, source: "club_app" });
+  }
+  let zeilen: any[] = [];
+  if (neu.length) {
+    const r = await db.from("kc_dp_hour_reports").insert(neu).select(SH_SPALTEN);
+    if (r.error) throw new Fehler("Die Stunden konnten nicht gemeldet werden.", 500);
+    zeilen = (r.data ?? []).map(shZeile);
+  }
+  await protokoll(ich.person_id, "sonderstunden_gemeldet", { einsatz: evId, datum, personen: neu.length, uebersprungen: uebersprungen.length, verspaetet });
+  return { ok: true, sammelId: neu.length ? sammel : null, rows: zeilen, skipped: uebersprungen };
 }

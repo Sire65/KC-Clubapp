@@ -67,6 +67,27 @@
   K.shifts = (D.schichten || []).map((s) => ({ id: s.source_shift_id, personId: ich, date: s.work_date, start: stunden(s.start_time), end: stunden(s.end_time),
     layer: "planned", status: "published", zone: s.zone, area: s.area, breakMinutes: Number(s.break_minutes || 0) }));
   K.actualShifts = [];
+
+  // --- KC-CLUB-SONDERSTUNDEN (KICC-F-100): Sondereinsätze (von DP2 veröffentlicht) + eigene Stundenmeldungen; Melden über kc-club ---
+  // Termine kommen bereits wirksam berechnet (Folge-Einsätze inkl. Abstand) – daher hier ohne folgtAuf.
+  K.specialEvents = (D.sondereinsaetze || []).map((e) => ({ id: e.source_id, eventId: K.eventConfig.eventId, titel: e.titel, ort: e.ort || "", art: e.art,
+    terminStatus: e.termin_status, datumVon: e.datum_von || null, datumBis: e.datum_bis || null, folgtAuf: null, abstandTage: null,
+    wiederkehrend: e.wiederkehrend || null, aktiv: true, version: Number(e.version || 1) }));
+  const alsMeldung = (r) => ({ id: String(r.id), sammelId: r.sammel_id, eventId: r.event_id, specialEventId: r.special_event_id, specialEventTitle: r.special_event_title || "",
+    personId: r.person_id, gemeldetVon: r.gemeldet_von, date: r.work_date, start: Number(r.start_h), end: Number(r.end_h), breakMinutes: Number(r.break_minutes || 0),
+    taetigkeit: r.taetigkeit, bemerkung: r.bemerkung || "", status: r.status, verspaetet: !!r.verspaetet, gemeldetAm: r.gemeldet_am, ablehngrund: r.ablehngrund || null,
+    source: "club_app", version: Number(r.version || 1) });
+  K.hourReports = (D.stunden || []).map(alsMeldung);
+  // Aktive Club-Mitglieder, die DP2s Personenliste (model.js) noch nicht kennt, für „Wer war noch dabei?“ ergänzen
+  for (const m of D.mitglieder || []) if (m?.personId && !K.people.some((p) => p.personId === m.personId))
+    K.people.push({ personId: m.personId, name: m.name || m.personId, skills: "", personType: "member", active: true, expanded: false, maxHours: 8, preferences: {}, availability: [] });
+  K.hourReportsTransport = {
+    async submit(meldung) {
+      const r = await window.KC_CLUB_DW_API("stunden_melden", meldung);
+      try { parent !== window && parent.postMessage({ art: "sonderstunden-gemeldet", anzahl: (r.rows || []).length }, location.origin); } catch {}
+      return { sammelId: r.sammelId || null, rows: (r.rows || []).map(alsMeldung), skipped: r.skipped || [] };
+    },
+  };
   K.planVersions = K.shifts.length ? [{ version: 1, shifts: kopie(K.shifts), publishedAt: D.schichten[0]?.published_at }] : [];
 
   // --- Speichern: aktueller Stand → Wunsch-Eingang (nur bei Änderung; mehrere Aufrufe hintereinander werden zusammengefasst) ---
