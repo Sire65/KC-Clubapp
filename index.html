@@ -4772,6 +4772,7 @@
       <div class="schalter"><div><b>📄 Eselsohr am Kopf</b><div class="hinweis">Unten rechts am Kopf doppelt tippen (oder nach links ziehen) – der Kopf dreht sich um: 🖼️ Diashow, 🖍️ Tafel, 📋 Flipchart, 🕰️ große Uhr, 🎭 Bühne für Bewegung, 🪞 Spiegel. Nochmal doppelt tippen dreht zurück.</div></div><input type="checkbox" id="setEselsohr" checked onchange="eselsohrSchalter(this.checked)"></div>
       <!-- KC-CLUB-BEWEGUNG-EINLADUNG (2.314.0) -->
       <div class="schalter"><div><b>🎭 Twinkey lädt zur Bewegung ein</b><div class="hinweis">Beim Öffnen fragt Twinkey höchstens einmal am Tag, ob du Lust auf eine Bewegungseinheit hast – „Ja“ führt direkt zur Bühne. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setBwEinladung" checked onchange="bwEinSetzen({ aus: !this.checked })"></div>
+      <div class="schalter"><div><b>💡 Vorschläge zur Startseite</b><div class="hinweis">Die App merkt sich auf diesem Gerät, welche Kacheln du öffnest, und schlägt höchstens einmal pro Woche vor, selten genutzte auszublenden oder weitere Funktionen freizuschalten. Sie ändert nie etwas von selbst, nichts verlässt dein Handy.</div><button type="button" class="knopf klein" style="margin-top:6px" onclick="nuLoeschen()">🧹 Gemerktes löschen</button></div><input type="checkbox" id="setKachelVorschlag" checked onchange="nuSchalter(this.checked)"></div>
       <!-- KC-CLUB-ROLLKARTEI-WAHL (2.184.0, Wunsch Hansi): jeder entscheidet selbst – je Liste, gilt für dieses Gerät -->
       <div class="schalter" style="display:block"><div><b>🗂️ Rollkartei</b><div class="hinweis">Lange Listen wie eine Karteikarten-Rolle durchblättern (antippen, wischen, endlos). Aus: die gewohnte Liste. Gilt für dieses Gerät.</div></div>
         <div class="schalter" style="margin:6px 0 0"><div>⚙️ Einstellungen</div><input type="checkbox" id="setRkEinst" onchange="rkSchalten('einst', this.checked)"></div>
@@ -5154,6 +5155,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.417.0" data-v="2.417.0"></script>
+<script src="app.js?v=2.418.0" data-v="2.418.0"></script>
 </body>
 </html>
