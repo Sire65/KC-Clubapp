@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.423.0";
+const SERVER_VERSION = "2.424.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4118,7 +4118,7 @@ const FL_ARTEN: Record<string, { sym: string; t: string; gruppe: "freude" | "lei
     { t: "🚶 Abordnung zur Beerdigung – Mitglieder fragen, wer mitkommt", wer: "alle", bis: "termin" },
     { t: "📝 Nachruf schreiben", wer: "clubsprecher", bis: "7" },
     { t: "🕯️ Schweigeminute bei der nächsten Sitzung", wer: "clubsprecher", bis: "sitzung" },
-    { t: "🗂️ Mitglied im KC Manager als ausgeschieden eintragen", wer: "admin", bis: "28" },
+    { t: "🗂️ Mitglied in der KC-Verwaltung als ausgeschieden eintragen", wer: "admin", bis: "28" },
     { t: "📞 In 4 Wochen bei der Familie nachfragen", wer: "clubsprecher", bis: "28" },
   ] },
   tod_angehoeriger: { sym: "🕯️", t: "Tod eines nahen Angehörigen", gruppe: "leid", betrag: 100, schritte: [
@@ -10828,7 +10828,7 @@ Köcheclub-App`,
         const { data: x } = await db.from("kc_club_aenderungen").select("id,art,status,person_id").eq("id", String(p.id || "")).maybeSingle();
         if (!x) throw new Fehler("Meldung nicht gefunden.", 404);
         if (x.status !== "freigegeben") throw new Fehler("Direkt eintragen geht nur bei freigegebenen Meldungen.", 409);
-        if (!AE_DIREKT_ARTEN.includes(x.art)) throw new Fehler("Diese Änderung kann nur im KC Manager eingetragen werden.", 409);
+        if (!AE_DIREKT_ARTEN.includes(x.art)) throw new Fehler("Diese Änderung kann nur in der KC-Verwaltung eingetragen werden.", 409);
         const { data: r, error } = await db.rpc("kc_club_aenderung_admin_uebernehmen", { p_id: x.id, p_admin_person: ich.person_id });
         if (error) throw new Fehler("Eintragen hat nicht geklappt – bitte gleich noch einmal.", 500);
         if (!r?.ok) {

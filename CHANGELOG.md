@@ -17,6 +17,11 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.424.0 – 2026-10-15 – Texte: „KC-Verwaltung“ statt „KC Manager“ · Server 2.424.0
+Hinweis Hansi: „Es gibt ein Programm KC-Verwaltung und ein Programm PC Manager – das sind 2 Programme. Verwaltung ist das Verwaltungssystem, PC Manager managt hauptsächlich die Kassen.“ Die Club-App nannte die Verwaltung in sichtbaren Texten „KC Manager“ (alter interner Name, technisch weiter `KC_MANAGER`/`kc_manager_state_sections`).
+- Änderungen der Mitglieder (Hilfe, Hinweis „freigegeben – liegt für die KC-Verwaltung bereit“, Freigabe-Frage und Meldung), Aktionen/Ausflüge („Die Angaben kommen aus der KC-Verwaltung“), Austritts-Checkliste und Server-Meldung „kann nur in der KC-Verwaltung eingetragen werden“.
+- Nur Texte; keine Funktion, keine Daten, keine Datenbank geändert.
+
 ## 2.423.0 – 2026-10-15 – Sonderstunden mit Stand: gutgeschrieben, offen, abgelehnt (KC-CLUB-SONDERSTUNDEN-KONTO, KICC-F-100)
 Wunsch Hansi: „noch bauen mit den Stunden“ – Mitglieder sehen ihre bestätigten Sonderstunden jetzt auch in der App (vorher nur die Nachricht „gutgeschrieben“ und der Kontoauszug in DP2).
 - **🗓️ Mein Dienst:** neue Karte „★ Sonderstunden“ – Summe gutgeschrieben, offen gemeldet (zählt erst nach Bestätigung), je Meldung Tag, Zeit, Einsatz und Stand; abgelehnt mit Grund. Gilt für die ganze Veranstaltung (nicht nur 60 Tage). Pausen zählen wie in DP2.
