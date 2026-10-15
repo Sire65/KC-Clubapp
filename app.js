@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.409.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.410.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18737,6 +18737,10 @@ function kopfGlanzStarten(seit = Date.now()) {
   const frei = !document.hidden && aktuelleAnsicht === "start" && ![...document.querySelectorAll(".blatt")].some((b) => b.getClientRects().length) && g.offsetParent !== null; // nur sichtbare Fenster zählen (viele liegen versteckt bereit)
   if (!frei) { if (Date.now() - seit < KOPF_GLANZ_WARTEN_MS) setTimeout(() => kopfGlanzStarten(seit), 700); else kopfGlanzMelden("aufgegeben", { warte_ms: Date.now() - seit }); return; }
   requestAnimationFrame(() => requestAnimationFrame(() => {
+    try { // 2.410.0 KC-CLUB-KOPF-AUFBLITZEN: Stern funkelt an der Kochmütze
+      const l = document.querySelector("#v-start .kopflogo .logo")?.getBoundingClientRect(), k = g.getBoundingClientRect();
+      if (l?.width) { g.style.setProperty("--fx", `${Math.round(l.left - k.left + l.width * 0.78)}px`); g.style.setProperty("--fy", `${Math.round(l.top - k.top + l.height * 0.22)}px`); }
+    } catch {}
     g.classList.remove("lauf"); void g.offsetWidth; g.classList.add("lauf"); // offsetWidth: Animation neu starten
     const a = g.querySelector("i")?.getAnimations?.()[0];
     setTimeout(() => kopfGlanzMelden(a ? "gelaufen" : "keine_animation", { warte_ms: Date.now() - seit, anim: a ? a.playState : "-" }), 800);
@@ -18745,7 +18749,7 @@ function kopfGlanzStarten(seit = Date.now()) {
 {
   const g = document.getElementById("kopfGlanz");
   if (g) {
-    const aus = () => g.classList.remove("lauf");
+    const aus = (e) => { if (e?.animationName && e.animationName !== "kopfGlanz") return; g.classList.remove("lauf"); }; // 2.410.0: erst wenn der Glanzstreifen durch ist (Blitz/Stern enden früher)
     g.addEventListener("animationend", aus); g.addEventListener("animationcancel", aus);
     let weg = 0;
     document.addEventListener("visibilitychange", () => {

@@ -6366,9 +6366,9 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.400.0 KC-CLUB-KOPF-GLANZ (Wunsch Hansi „beim Start ein heller Lichtschein von links nach rechts durch den Kopf“)
 {
-  assert.ok(/<div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><i><\/i><\/div>/.test(html), "Glanz-Element im Kopf der Startseite");
+  assert.ok(/<div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><b><\/b><i><\/i><u><\/u><\/div>/.test(html), "Glanz-Element im Kopf der Startseite");
   assert.ok(/\.kopf-glanz \{ position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none;/.test(html), "Glanz bleibt im runden Kopf und fängt keine Klicks");
-  assert.ok(/\.kopf-glanz\.lauf i \{ animation: kopfGlanz [^;]* 1 both; \}/.test(html) && /@keyframes kopfGlanz \{[^}]*transform: translateX\(-100%\)/.test(html), "einmal, per transform (flüssig)");
+  assert.ok(/\.kopf-glanz\.lauf i \{ animation: kopfGlanz [^;]* 1 both; \}/.test(html) && /@keyframes kopfGlanz \{[^}]*transform: translateX\(-160%\) skewX\(-22deg\)/.test(html), "einmal, per transform (flüssig)");
   // 2.409.0 (Wahl Hansi, Diagnose: „Animationen entfernen“ am Handy aktiv): nur noch der App-Schalter schaltet den Glanz ab
   assert.ok(/:root\.ohne-anim \.kopf-glanz \{ display: none; \}/.test(html) && !/prefers-reduced-motion: reduce\) \{ \.kopf-glanz/.test(html), "Animierte Knöpfe aus → kein Glanz; Handy-Einstellung zählt nicht");
   assert.ok(/<div class="kopf-glanz" id="kopfGlanz"/.test(html) && /g\.addEventListener\("animationend", aus\); g\.addEventListener\("animationcancel", aus\);/.test(html), "beim Öffnen einmal, danach aus");
@@ -6423,6 +6423,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/api\("diagnose", \{ art: "glanz", daten: \{ ergebnis, ohne_anim:/.test(html) && /if \(KOPF_GLANZ_INFO\.gemeldet\) return; KOPF_GLANZ_INFO\.gemeldet = true;/.test(html), "einmal je Sitzung melden");
   assert.ok(/if \(getComputedStyle\(g\)\.display === "none"\) return kopfGlanzMelden\("aus"\);/.test(html), "abgeschaltet → sofort melden statt warten");
+}
+// 2.410.0 KC-CLUB-KOPF-AUFBLITZEN (Wunsch Hansi „Aufblitzen wie im Vorspann, wenn ein Logo erscheint“)
+{
+  assert.ok(/\.kopf-glanz\.lauf b \{ animation: kopfBlitz/.test(html) && /\.kopf-glanz\.lauf u \{ animation: kopfFunkeln/.test(html) && /@keyframes kopfFunkeln/.test(html), "Blitz, Glanzstreifen und Stern");
+  assert.ok(/if \(e\?\.animationName && e\.animationName !== "kopfGlanz"\) return;/.test(html), "erst nach dem Glanzstreifen aufräumen (Blitz/Stern enden früher)");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

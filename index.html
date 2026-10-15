@@ -1526,11 +1526,23 @@
   .hero .jz-silvester i { top: auto; bottom: 20%; opacity: 0; animation-name: jzFeuerwerk; } @keyframes jzFeuerwerk { 0% { transform: translateY(0) scale(.3); opacity: 0; } 40% { transform: translateY(-120px) scale(.5); opacity: .9; } 55% { transform: translateY(-140px) scale(1.6); opacity: 1; } 100% { transform: translateY(-120px) scale(2); opacity: 0; } }
   /* 2.400.0 KC-CLUB-KOPF-GLANZ: Lichtstreifen per transform/opacity (läuft im Compositor flüssig, auch während die App beim Start rechnet); nach dem Durchlauf entfernt app.js das Element */
   .kopf-glanz { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; z-index: 4; }
-  .kopf-glanz i { position: absolute; top: 0; bottom: 0; left: 0; width: 45%; opacity: 0; transform: translateX(-100%); will-change: transform, opacity;
-    background: linear-gradient(105deg, transparent 8%, rgba(255,255,255,.12) 32%, rgba(255,255,255,.55) 50%, rgba(255,255,255,.12) 68%, transparent 92%);
- }
-  .kopf-glanz.lauf i { animation: kopfGlanz 1.9s cubic-bezier(.45,0,.55,1) .6s 1 both; } /* 2.401.0: läuft, solange die Klasse „lauf“ gesetzt ist (Start + Zurückholen aus dem Hintergrund) */
-  @keyframes kopfGlanz { 0% { opacity: 0; transform: translateX(-100%); } 12% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translateX(222%); } }
+  /* 2.410.0 KC-CLUB-KOPF-AUFBLITZEN (Wunsch Hansi „ein Aufblitzen, wie man es in Werbung oder im Vorspann sieht, wenn ein Logo erscheint“):
+     kurzer heller Blitz über den ganzen Kopf, dann huscht ein schmaler, gleißender Glanzstreifen schräg und schnell von links nach rechts,
+     und an der Kochmütze funkelt ein Stern auf. Nur transform/opacity (Compositor). Position des Sterns setzt app.js (--fx/--fy). */
+  .kopf-glanz i { position: absolute; top: -20%; bottom: -20%; left: 0; width: 22%; opacity: 0; transform: translateX(-160%) skewX(-22deg); will-change: transform, opacity;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.18) 30%, rgba(255,255,255,.9) 47%, #fff 50%, rgba(255,255,255,.9) 53%, rgba(255,255,255,.18) 70%, rgba(255,255,255,0) 100%); }
+  .kopf-glanz b { position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 40%, rgba(255,255,255,.55), rgba(255,255,255,.12) 55%, rgba(255,255,255,0) 80%); opacity: 0; will-change: opacity; }
+  .kopf-glanz u { position: absolute; left: var(--fx, 60px); top: var(--fy, 50px); width: 56px; height: 56px; margin: -28px 0 0 -28px; opacity: 0; transform: scale(0) rotate(0deg); will-change: transform, opacity;
+    background: radial-gradient(circle, #fff 0 9%, rgba(255,255,255,.75) 14%, rgba(255,255,255,0) 42%); border-radius: 50%; }
+  .kopf-glanz u::before, .kopf-glanz u::after { content: ""; position: absolute; left: 50%; top: 50%; width: 100%; height: 3px; margin: -1.5px 0 0 -50%; border-radius: 2px;
+    background: linear-gradient(90deg, rgba(255,255,255,0), #fff 50%, rgba(255,255,255,0)); }
+  .kopf-glanz u::after { transform: rotate(90deg); }
+  .kopf-glanz.lauf b { animation: kopfBlitz .45s ease-out .35s 1 both; }
+  .kopf-glanz.lauf i { animation: kopfGlanz .95s cubic-bezier(.65,0,.35,1) .35s 1 both; }
+  .kopf-glanz.lauf u { animation: kopfFunkeln .75s cubic-bezier(.3,1.6,.5,1) .5s 1 both; }
+  @keyframes kopfBlitz { 0% { opacity: 0; } 18% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes kopfGlanz { 0% { opacity: 0; transform: translateX(-160%) skewX(-22deg); } 10% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; transform: translateX(560%) skewX(-22deg); } }
+  @keyframes kopfFunkeln { 0% { opacity: 0; transform: scale(0) rotate(0deg); } 35% { opacity: 1; transform: scale(1.15) rotate(45deg); } 100% { opacity: 0; transform: scale(.2) rotate(110deg); } }
   :root.ohne-anim .kopf-glanz { display: none; } /* 2.409.0 (Wahl Hansi): nur der App-Schalter „✨ Animierte Knöpfe“ zählt – wie bei den übrigen Effekten; „Animationen entfernen“ am Handy nicht mehr */
   /* 2.402.0 KC-CLUB-KUCKUCKSUHR (Wunsch Hansi): zur vollen Stunde kommt die Uhr, die Tür geht auf und der Kuckuck ruft so oft, wie es Uhr ist */
   .kuckuck { position: fixed; left: 50%; top: max(12px, env(safe-area-inset-top)); z-index: 9500; width: 150px; transform: translate(-50%, -130%); transition: transform .5s cubic-bezier(.3,1.4,.5,1);
@@ -4210,7 +4222,7 @@
       <button type="button" class="kopf-pfeil kp-halb" id="kopfPfeilHalb" title="Kopf halb einrollen – Statusleiste mit LEDs bleibt" aria-label="Kopf halb einrollen" aria-expanded="true" onclick="kopfRollo('halb')"><span>⌃</span></button>
       <button type="button" class="kopf-pfeil kp-ganz" id="kopfPfeil" title="Kopf ganz einrollen – nur die Kopfzeile bleibt" aria-label="Kopf ganz einrollen" aria-expanded="true" onclick="kopfRollo('ganz')"><span class="kp-doppel">⌃<b>⌃</b></span></button>
       <!-- KC-CLUB-KOPF-GLANZ (2.400.0, Wunsch Hansi): beim Start läuft einmal ein heller Lichtschein von links nach rechts über den Kopf -->
-      <div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><i></i></div>
+      <div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><b></b><i></i><u></u></div>
       <!-- KC-CLUB-KOPF-ORDNUNG (2.24.17, Wunsch Hansi): oben Marke + Knöpfe, darunter eine Statusleiste (Status, LEDs, Herz, Brille) -->
       <div class="kopfzeile">
         <div class="kopflogo"><button class="logo" title="Zur Internetseite des Köcheclubs" onclick="webseite()"><img src="kc-kochmuetze-weiss.webp" alt="Kochmütze"></button><button class="kopf-version" id="kopfVersion" title="Update prüfen" aria-label="Version – Update prüfen" onclick="updateKachel()">v–</button></div>
@@ -5118,6 +5130,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.409.0" data-v="2.409.0"></script>
+<script src="app.js?v=2.410.0" data-v="2.410.0"></script>
 </body>
 </html>
