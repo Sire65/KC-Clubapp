@@ -5892,7 +5892,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6435,6 +6435,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/<details class="karte" data-klappe="dp_wer" data-ohne-unten><summary>👥 Wen anzeigen\? <span class="hinweis" id="dpWerKurz"/.test(html) && /id="dpPersonen"/.test(html), "Klappbereich mit Auswahl im Kopf");
   assert.ok(/\$\("dpWerKurz"\)\.textContent = n\.length \?/.test(html), "Auswahl im Kopf wird gesetzt");
   assert.ok(/el\?\.closest\("details:not\(\[open\]\)"\)\?\.setAttribute\("open", ""\);/.test(html), "Einführung klappt zugeklappte Ziele auf");
+}
+// 2.412.0 KC-CLUB-AVATAR-GALERIE / -KLAPPEN (Wunsch Hansi: hochwertige Avatare in Klappbereichen, alte bleiben)
+{
+  assert.ok(/const AVG_RE = \/\^g\[wm\]\[0-9\]\{2,3\}\$\//.test(html) && /src="avatare\/\$\{code\}\.webp"/.test(html), "Galerie-Codes gw/gm als Bilddatei");
+  assert.ok(/data-klappe="av_w"/.test(html) && /data-klappe="av_m"/.test(html) && /data-klappe="av_gw"/.test(html) && /data-klappe="av_gm"/.test(html), "vier Klappbereiche");
+  assert.ok(/Object\.keys\(AV_FIGUREN\)\.filter\(\(k\) => k\[0\] === "w"\)/.test(html) && /Object\.keys\(AV_FIGUREN\)\.filter\(\(k\) => k\[0\] === "m"\)/.test(html), "alte Figuren weiter da");
+  assert.ok(/\|\| \/\^g\[wm\]\[0-9\]\{2,3\}\$\/\.test\(w\.figur\)\)/.test(server) && /\^\(w\(0\[1-9\]\|1\[0-5\]\)/.test(server), "Server: neue Codes gültig, alte weiter gültig");
+  const j = JSON.parse(lies("avatare/avatare.json")); assert.ok(Array.isArray(j.figuren) && j.figuren.every((x) => /^g[wm][0-9]{2,3}$/.test(x.code) && fs.existsSync(new URL("../avatare/" + x.code + ".webp", import.meta.url))), "Liste gültig, jede Figur hat ihre Datei");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

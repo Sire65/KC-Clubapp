@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.411.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.412.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -341,12 +341,23 @@ function avTeileB(code) {
   if (z[0] >= AV_HAUT.length || z[1] >= AV_FRISUREN.length || z[2] >= haarf.length || z[3] >= AV_KOPF.length || z[4] >= AV_BART.length || z[5] > 1 || z[6] >= AV_BG.length || z[7] >= AV_TUCH.length || z[8] > 1) return null;
   return [z[0], AV_FRISUREN[z[1]], haarf[z[2]], AV_KOPF[z[3]], AV_BART[z[4]], z[5], AV_BG[z[6]], AV_TUCH[z[7]], z[8] === 1];
 }
-const avGueltig = (code) => !!(code && (AVF_RE.test(code) || avTeile(code)));
+// 2.412.0 KC-CLUB-AVATAR-GALERIE (Wunsch Hansi): hochwertige Bild-Figuren (z. B. von ChatGPT gezeichnet) als Dateien avatare/<code>.webp –
+// Code „gw01“ (Köchin) bzw. „gm01“ (Koch). Welche es gibt, steht in avatare/avatare.json (neue Bilder = Datei + Eintrag, kein Programm-Update).
+// Die bisherigen gezeichneten Figuren (w…, m…, b…, c…) und Fotos (f…) bleiben unverändert gültig und zugeordnet.
+const AVG_RE = /^g[wm][0-9]{2,3}$/, AVG = { liste: null, laeuft: null };
+function avgLaden() {
+  if (AVG.liste || AVG.laeuft) return AVG.laeuft || Promise.resolve(AVG.liste);
+  AVG.laeuft = fetch("avatare/avatare.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : { figuren: [] })).catch(() => ({ figuren: [] }))
+    .then((j) => (AVG.liste = (Array.isArray(j?.figuren) ? j.figuren : []).filter((x) => AVG_RE.test(x?.code || "")))).finally(() => { AVG.laeuft = null; });
+  return AVG.laeuft;
+}
+const avGueltig = (code) => !!(code && (AVF_RE.test(code) || AVG_RE.test(code) || avTeile(code)));
 // KC-CLUB-AVATAR-INITIALEN (2.56.1): Initialen auf allen Kochmützen (Wunsch Hansi) – je Mützenart Lage im Band [x, y, Schriftgröße]
 const AV_INI_POS = { koch: [41.6, 17.8, 3.4], chefhoch: [41.2, 17.9, 3.6], pizza: [41.2, 17.8, 3.6], kochkappe: [42.4, 20.2, 3.2], schiffchen: [40.6, 18.4, 2.8] };
 function avatarSvg(code, gr = 40, ini = "") { // 2.27.2: ini = Initialen (klein unten rechts auf der Kochmütze)
   if (AVF_RE.test(code || "")) { const b = AVF.bild[code] || (INIT?.einstellungen?.avatar_foto?.code === code ? INIT.einstellungen.avatar_foto.bild : ""); // KC-CLUB-AVATAR-FOTO
     return `<img class="av-foto" data-avf="${code}" src="${/^data:image\/jpeg;base64,/.test(b) ? b : AVF_LEER}" alt="" width="${gr}" height="${gr}">`; }
+  if (AVG_RE.test(code || "")) return `<img class="av-foto av-galerie" src="avatare/${code}.webp" alt="" width="${gr}" height="${gr}" loading="lazy" decoding="async">`; // 2.412.0 KC-CLUB-AVATAR-GALERIE
   const f = avTeile(code); if (!f) return "";
   const [h, frisur, hf, kopf, bart, brille, bg, tuch, frau, augen, brauen, mund, wangen, bfarbe, jacke, knopf, kfarbe, kmuster, kform, brdeko, jmuster, jstreifen, kragen, ohren, nase, afarbe] = f, haut = AV_HAUT[h], dunkel = h >= 3;
   // 2.33.0: Farbe der Kopfbedeckung (0 = wie bisher je Art) und Muster als SVG-Muster
@@ -19758,8 +19769,11 @@ function avWahl() {
     <div id="avWahlVorschau" class="av-vorschau"></div>
     <div id="avJackeAuto"></div>
     ${jetzt && /^[bc]/.test(jetzt) && avGueltig(jetzt) ? `<b>🧩 Deine eigene Figur</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="an" aria-label="Eigene Figur" onclick="avWaehlen('${jetzt}', this)">${avatarSvg(jetzt, 64)}</button></div>` : ""}
-    <b>👩‍🍳 Köchinnen</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "w").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avWaehlen('${k}', this)">${avatarSvg(k, 64)}</button>`).join("")}</div>
-    <b>👨‍🍳 Köche</b><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "m").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avWaehlen('${k}', this)">${avatarSvg(k, 64)}</button>`).join("")}</div>
+    ${/* 2.412.0 KC-CLUB-AVATAR-KLAPPEN (Wunsch Hansi): vier Klappbereiche – Köchinnen, Köche, hochwertige Köchinnen, hochwertige Köche */""}
+    <details class="av-klappe" data-klappe="av_w" data-ohne-unten${/^w/.test(jetzt || "") ? " open" : ""}><summary>👩‍🍳 Köchinnen</summary><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "w").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avWaehlen('${k}', this)">${avatarSvg(k, 64)}</button>`).join("")}</div></details>
+    <details class="av-klappe" data-klappe="av_m" data-ohne-unten${/^m/.test(jetzt || "") ? " open" : ""}><summary>👨‍🍳 Köche</summary><div class="av-raster" style="margin:6px 0 10px">${Object.keys(AV_FIGUREN).filter((k) => k[0] === "m").map((k) => `<button type="button" class="${jetzt === k ? "an" : ""}" aria-label="Figur ${k}" onclick="avWaehlen('${k}', this)">${avatarSvg(k, 64)}</button>`).join("")}</div></details>
+    <details class="av-klappe" data-klappe="av_gw" data-ohne-unten open><summary>✨ Köchinnen – hochwertig</summary><div class="av-raster" id="avGalerieW" style="margin:6px 0 10px"><span class="hinweis">Wird geladen …</span></div></details>
+    <details class="av-klappe" data-klappe="av_gm" data-ohne-unten open><summary>✨ Köche – hochwertig</summary><div class="av-raster" id="avGalerieM" style="margin:6px 0 10px"><span class="hinweis">Wird geladen …</span></div></details>
     <b>Kein Bild</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="${jetzt ? "" : "an"}" aria-label="Kein Bild – Buchstaben" onclick="avWaehlen(null, this)"><span class="av-keins">${esc(initialen(ICH?.name))}</span></button></div>
     ${frei("avatar_foto") ? `<b>📷 Eigenes Foto${nurTest("avatar_foto") ? ' <small class="hinweis">🔒 nur für dich (Test)</small>' : ""}</b>
       ${AVF_RE.test(jetzt || "") ? `<div class="av-raster" style="margin:6px 0 4px"><button type="button" class="an" aria-label="Dein Foto" onclick="avGross(ICH.person_id)">${avatarSvg(jetzt, 64)}</button></div>` : ""}
@@ -19767,6 +19781,14 @@ function avWahl() {
     ${frei("avatar_baukasten") ? "" : '<p class="hinweis" style="margin:0 0 8px;font-size:.85rem">Demnächst: Figur selbst zusammenstellen (Frisur, Bart, Brille, Mütze …).</p>'}
     <button class="knopf" onclick="fensterZu($('avBlatt'))">Schließen</button>`);
   f.classList.add("sc-blatt"); avWahlVorschau(); avJackeAutoZeigen();
+  try { klappenMerken(f); } catch {} // 2.412.0: auf/zu wird gemerkt (wie die übrigen Klappbereiche)
+  avgLaden().then((l) => { // 2.412.0 KC-CLUB-AVATAR-GALERIE: hochwertige Figuren einsetzen
+    for (const [art, id] of [["w", "avGalerieW"], ["m", "avGalerieM"]]) {
+      const z = $(id); if (!z) continue; const liste = (l || []).filter((x) => x.code[1] === art);
+      z.innerHTML = liste.length ? liste.map((x) => `<button type="button" class="${jetzt === x.code ? "an" : ""}" aria-label="${esc(x.name || "Figur " + x.code)}" onclick="avWaehlen('${x.code}', this)">${avatarSvg(x.code, 64)}</button>`).join("")
+        : '<span class="hinweis" style="font-size:.85rem">Neue, hochwertige Figuren kommen in Kürze.</span>';
+    }
+  });
 }
 // KC-CLUB-JACKE-WOCHENTAG (2.43.0): Schalter in „Mein Bild“ – wandelt das jetzige Bild (Figur oder eigene Figur) in einen Code mit Jacke „auto“
 function avJackeAutoZeigen() {

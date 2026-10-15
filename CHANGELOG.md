@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.412.0 – 2026-10-15 – „Mein Bild“: Klappbereiche und Platz für hochwertige Figuren
+Anlass (Hansi): „ChatGPT baut gerade neue, bessere Avatare. Baue sie in Klappbereiche ein – weibliche, männliche, hochwertige weibliche, hochwertige männliche. Die alten bleiben erhalten und zugeordnet.“ In „Mein Bild“ gibt es jetzt vier Klappbereiche: 👩‍🍳 Köchinnen, 👨‍🍳 Köche (die bisherigen Figuren, unverändert), ✨ Köchinnen – hochwertig, ✨ Köche – hochwertig. Die hochwertigen sind Bilddateien (avatare/gw01.webp …, gm01.webp …) und stehen in avatare/avatare.json – neue Figuren kommen ohne Programm-Update dazu (Anleitung: avatare/LIESMICH.md). Server: Codes gw/gm gültig.
+
 ## 2.411.0 – 2026-10-15 – Dienstpläne: „Wen anzeigen?“ zum Zuklappen
 Anlass (Hansi): „Baue dort einen Klappbereich ein, damit man besser sieht, dass es unten weitergeht.“ Die Namensauswahl ist jetzt ein Klappbereich (anfangs zu, wird gemerkt, mit 🔒 feststellbar); zugeklappt steht im Kopf, wer gewählt ist („· Ich, Christina +2“), und der Dienstplan rückt nach oben. Einführung und Hilfe klappen ihn selbst auf.
 

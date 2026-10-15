@@ -1536,6 +1536,9 @@
   .kopf-glanz.lauf u { animation: kopfFunkeln 1.6s cubic-bezier(.45,0,.55,1) .4s 1 both; } /* 2.410.0: weiches Licht wandert schräg, verdichtet sich in der Mitte zum Blitz, löst sich wieder auf */
   @keyframes kopfBlitz { 0% { opacity: 0; } 22% { opacity: 1; } 100% { opacity: 0; } }
   @keyframes kopfFunkeln { 0% { opacity: 0; transform: translate(0, 0) scale(1.5); } 15% { opacity: .35; transform: translate(calc(var(--dx, 300px) * .15), calc(var(--dy, 150px) * .15)) scale(1.5); } 40% { opacity: .55; transform: translate(calc(var(--dx, 300px) * .4), calc(var(--dy, 150px) * .4)) scale(1); } 50% { opacity: 1; transform: translate(calc(var(--dx, 300px) * .5), calc(var(--dy, 150px) * .5)) scale(.22); } 54% { opacity: 1; transform: translate(calc(var(--dx, 300px) * .54), calc(var(--dy, 150px) * .54)) scale(.3); } 66% { opacity: .45; transform: translate(calc(var(--dx, 300px) * .66), calc(var(--dy, 150px) * .66)) scale(1.6); } 100% { opacity: 0; transform: translate(var(--dx, 300px), var(--dy, 150px)) scale(2.1); } }
+  /* 2.412.0 KC-CLUB-AVATAR-KLAPPEN: Klappbereiche in „Mein Bild“ */
+  .av-klappe { border-top: 1px solid var(--linie); padding: 6px 0 2px; } .av-klappe > summary { font-weight: 700; cursor: pointer; padding: 4px 0; }
+  .av-galerie { object-fit: cover; border-radius: 50%; }
   :root.ohne-anim .kopf-glanz { display: none; } /* 2.409.0 (Wahl Hansi): nur der App-Schalter „✨ Animierte Knöpfe“ zählt – wie bei den übrigen Effekten; „Animationen entfernen“ am Handy nicht mehr */
   /* 2.402.0 KC-CLUB-KUCKUCKSUHR (Wunsch Hansi): zur vollen Stunde kommt die Uhr, die Tür geht auf und der Kuckuck ruft so oft, wie es Uhr ist */
   .kuckuck { position: fixed; left: 50%; top: max(12px, env(safe-area-inset-top)); z-index: 9500; width: 150px; transform: translate(-50%, -130%); transition: transform .5s cubic-bezier(.3,1.4,.5,1);
@@ -5123,6 +5126,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.411.0" data-v="2.411.0"></script>
+<script src="app.js?v=2.412.0" data-v="2.412.0"></script>
 </body>
 </html>
