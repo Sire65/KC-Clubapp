@@ -17,6 +17,15 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.418.0 – 2026-10-15 – 💡 Vorschläge zur Startseite (KC-CLUB-KACHEL-VORSCHLAG)
+Anlass (Hansi): „Die App soll merken, welche Funktionen am meisten genutzt werden, und dann vorschlagen: sollen wir Kacheln verbergen oder weitere Funktionen freischalten?“ – adaptive Startseite, aber **nur als Vorschlag**, die App baut nie selbst um.
+- **Zählen nur auf dem Gerät:** Beim Öffnen einer Kachel merkt sich die App Anzahl und letzten Tag (localStorage `kc_club_nutzung`), dazu die Tage mit Nutzung. Nichts geht an den Server.
+- **Wann:** frühestens nach 21 Tagen und 8 Nutzungstagen, höchstens alle 7 Tage ein Vorschlag, beim Start nach der Bewegungs-Einladung und nie über einem offenen Fenster.
+- **Erweiterte Ansicht – „ausblenden?“:** die am längsten ungenutzte sichtbare Kachel (≥ 28 Tage). Nie vorgeschlagen: SOS, Termine, Nachrichten, Mein Dienst, Dienstwünsche und Kacheln mit neuer Zahl. „🙈 Ja“ nutzt das bestehende Ausblenden (👁️ holt sie zurück), „👍 Nein, behalten“ wird gemerkt.
+- **Einfache Ansicht – „weitere Funktionen freischalten?“:** wer gut zurechtkommt (≥ 4 verschiedene Kacheln, ≥ 20 Mal geöffnet). „✨ Ja“ schaltet zur erweiterten Ansicht, „⏰ Später“ fragt nach 14 Tagen wieder, „🙂 Nein, danke“ nie mehr.
+- **Abschaltbar:** „🔕 Keine Vorschläge mehr“ im Fenster oder ⚙️ → „🧩 Startseite & Ansicht“ → „💡 Vorschläge zur Startseite“; dort auch „🧹 Gemerktes löschen“. Hilfe-Eintrag, Frage „Wie schalte ich … ab?“ und Suchbegriff ergänzt.
+- Vertragstest spielt die Regeln im Sandkasten durch (mit Gegenprobe).
+
 ## 2.417.0 – 2026-10-15 – 🎤 Club-Song: neue Zeilen im Refrain · 🎬 Filmseite für den Werbefilm
 **Club-Song** (Anlass Hansi, beim Werbefilm „Köcheclub to go“): Im Refrain von „Seit einundneunzig“ heißt es jetzt „Seit einundneunzig – da **glüht** unser Herd, / weil Freundschaft **immer dazu** gehört!“ (vorher „da brennt unser Herd, / weil Freundschaft und Kochen für immer gehört“). Die zweite Zeile hat zwei Silben weniger; ihre Melodie ist auf 9 Töne gekürzt (gleicher Bogen, Schluss auf dem Grundton). Karaoke und Takte bleiben gleich (jede Zeile 2 Takte, letzte Silbe gehalten). Der Werbefilm singt denselben Text.
 
