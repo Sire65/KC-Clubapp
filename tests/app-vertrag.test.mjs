@@ -10338,4 +10338,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/jzbKuerbisSchritt\(dt\); jzbPilzePruefen\(dt\); jzbStreunerSchritt\(dt\);/.test(programm) && /if \(J\.kuerbis && J\.saison === "herbst"\) jzbHerbstKuerbisMalen\(c, J\.kuerbis, k\);/.test(programm), "verdrahtet");
   assert.ok(/jahreszeitVorschau\('herbst', 'kuerbis'\)">🎃 Kürbis-Hund</.test(seite), "Vorschau");
 }
+// 2.435.0 KC-CLUB-HALLOWEEN-GEWITTER: Hexe, mehr Geister, Blitz und Donner, Vampir im Sarg, Schlusszauber
+{
+  const h = programm.slice(programm.indexOf("function jzbHwSchritt("), programm.indexOf("const jzbHwHexeY"));
+  assert.ok(/jzbHwSchritt\(F, dt\); \/\/ 2\.435\.0/.test(programm) && /jzbHwMalenHinten\(c, F\);/.test(programm) && /jzbHwMalenVorn\(c, F\); c\.restore\(\);/.test(programm), "in Halloween verdrahtet");
+  assert.ok(/H\.blitz = \{ t: 0, pfad, zweig \}; H\.donnerIn = /.test(h) && /if \(H\.donnerIn > 0 && \(H\.donnerIn -= dt\) <= 0\) H\.donner = \.9;/.test(h), "Blitz, danach Donner");
+  assert.ok(/H\.geister\.length < 3/.test(h) && /modus: "vorbei"/.test(h) && /modus: "ende"/.test(h) && /H\.knall = 1;/.test(h) && /if \(!H\.vamp && F\.t > 22\) H\.vamp = \{ t: 0 \};/.test(h), "Geister, Hexe vorbei, Schlusszauber, Vampir");
+  assert.ok(/Guten Abend, \$\{name\}!/.test(programm) && /"Hihihi!"/.test(programm), "Vampir grüßt mit Vornamen, Hexe kichert");
+  assert.ok(/HW\?\.donner > 0\) c\.translate\(/.test(programm), "Donner wackelt das Bild");
+}
 
