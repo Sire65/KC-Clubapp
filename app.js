@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.430.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.431.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1606,6 +1606,7 @@ const EINWEISUNG = [
   { id: "b-mitfahrt", blatt: true, sym: "🚗", t: "Mitfahrgelegenheit anbieten", x: "Wähle, wie viele <b>Plätze</b> du frei hast, und trag auf Wunsch einen <b>Treffpunkt</b> ein. Andere können sich dann bei diesem Termin einen Platz nehmen; wer eine Mitfahrt gesucht hat, bekommt Bescheid." },
   { id: "b-mikro-wahl", blatt: true, sym: "🎤", t: "Sprachnachricht oder Diktieren", x: "<b>🎤 Sprachnachricht</b>: deine Stimme wird verschickt. <b>✍️ Diktieren</b>: die App schreibt mit, verschickt wird Text. Mit <b>Immer so</b> fragt die App nicht mehr – ändern unter ⚙️ → Ansagen, Töne &amp; Tipps." },
   { id: "b-neu-wahl", blatt: true, sym: "＋", t: "Etwas Neues anlegen", x: "Wähle, was du neu anlegen möchtest – unter jedem Punkt steht kurz, wofür er da ist. <b>Abbrechen</b> schließt das Fenster, ohne etwas anzulegen." },
+  { id: "b-eltern", blatt: true, sym: "👪", t: "Eltern-Handy", x: "Für Kinder kannst du hier ein <b>Eltern-Handy</b> eintragen (Name und Handynummer). Mit <b>🟢 Einladung per WhatsApp</b> bekommen die Eltern einen Link, dort tippen sie auf „Einschalten“. Danach kommt <b>nur ein kurzer Hinweis</b>, wenn das Kind einen Termin hat (Club-Treffen, Schulung, Erinnerung, Absage) oder eine Nachricht der Clubleitung bekommt – <b>nie der Text</b>, nie Chats unter Mitgliedern. Das Kind sieht unter ⚙️ → Privatsphäre, wer benachrichtigt wird.", nur: () => !!(ICH?.admin || ICH?.vorstand) },
   { id: "b-rolle", blatt: true, sym: "🎖️", t: "Ämter und Rechte", x: "Hier legst du fest, welche <b>Ämter</b> das Mitglied hat und was es darf – z. B. Termine anlegen, Protokolle lesen und schreiben oder Kontaktdaten anderer sehen. Schalter aus heißt: darf das nicht. Unter <b>Zugang</b> wählst du 👤 Mitglied (alles), 🧑‍🍳 Aushilfe (Termine, Nachrichten, SOS, Spiele, Mein Dienst, Fotos ansehen) oder 🙋 Gast (Termine, Nachrichten, SOS, Spiele) – das sperrt auch der Server. <b>💾 Speichern</b> übernimmt es.", nur: () => !!ICH?.admin },
   { id: "b-sp-herausfordern", blatt: true, sym: "🎲", t: "Herausfordern", x: "<b>Spiel wählen</b> (Tic-Tac-Toe, Schach, Bauernskat, Küchenterror, Mensch ärgere dich nicht), je nach Spiel Feldgröße, Zeit oder Mitspieler, dann antippen, <b>wen</b> du herausfordern möchtest. Das Mitglied bekommt die Einladung und kann annehmen oder ablehnen." },
   { id: "b-sp-termin", blatt: true, sym: "📅", t: "Termin für die Partie", x: "<b>Tag, Uhrzeit</b> und <b>Ort</b> wählen. Dein Mitspieler bekommt die Anfrage und kann zu- oder absagen; danach steht der Termin bei euch beiden im Kalender – auf Wunsch mit Erinnerung." },
@@ -22593,7 +22594,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { MG_AMEISEN.bis = 0; MG_AMEISEN.neu = true; mgAnsichtWahlZeigen(); mitgliederLaden(); } // KC-CLUB-GRUPPEN-AMEISEN
-  if (v === "einstellungen") { leitungStartZeigen(); notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+  if (v === "einstellungen") { leitungStartZeigen(); notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;
@@ -32674,6 +32675,7 @@ function mitgliedZeigen() {
       ${ICH?.admin ? `<button class="knopf" onclick="nachrichtenStatistik('${m.person_id}')"><span class="kt-ico">📊</span>Statistik</button>` : ""}
       ${stDarf("zeigen") && !m.selbst ? `<button class="knopf" onclick="vfStart('${m.person_id}')"><span class="kt-ico">📺</span>Live zeigen</button>` : ""}
       ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button><button class="knopf" onclick="ansageVorgabeSetzen('${m.person_id}', ${esc(JSON.stringify((m.name || "").split(" ")[0]))})"><span class="kt-ico">🗣️</span>Online-Ansagen einschalten</button>` : ""}
+      ${(ICH?.admin || ICH?.vorstand) && !m.selbst ? `<button class="knopf" onclick="elternHandy('${esc(m.person_id)}')"><span class="kt-ico">👪</span>Eltern-Handy</button>` : ""}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
     </div>
     ${prKarte(m)}
@@ -32877,6 +32879,75 @@ async function rolleSpeichern(pid, knopf) {
   try { const r = await api("rolle_setzen", { person_id: pid, vorstand: $("roLeitung").checked, protokolle: $("roProtokolle").checked, kontakte: $("roKontakte").checked, admin, aemter: [...new Set(aemter)].slice(0, 5), zugang: zugangWahl });
     $("rolleBlatt").remove(); MITGLIEDER = null; melde(r?.zugangFehlt ? "🎖️ Gespeichert – der Zugang (Gast/Aushilfe) wirkt erst nach dem Datenbank-Update" : "🎖️ Gespeichert"); mitgliederLaden(); }
   catch (e) { meldeFehler(e); knopf.disabled = false; }
+}
+
+// ---------- 2.431.0 KC-CLUB-ELTERN (Wunsch Hansi „so sachte wie möglich – Kinder brauchen auch Privatsphäre“) ----------
+// Admin/Clubleitung trägt Name + Handynummer ein und schickt den Link per WhatsApp. Die Eltern schalten auf ihrer eigenen Seite (eltern/)
+// Benachrichtigungen ein und bekommen NUR einen Hinweis bei Terminen des Kindes und Nachrichten der Clubleitung – ohne Text, nie Chats.
+function elternText(name, kind, link) {
+  return `Hallo ${name},\n\nhier ist Ihr Link für Hinweise vom Köcheclub Werne zu ${kind}:\n${link}\n\n`
+    + `Sie bekommen nur einen kurzen Hinweis aufs Handy, wenn ${kind} einen Termin hat (Club-Treffen, Schulung, Erinnerung, Absage) oder eine Nachricht der Clubleitung bekommt – ohne Inhalt. Chats unter den Mitgliedern bekommen Sie nicht.\n\n`
+    + `So geht's: Link öffnen → „🔔 Einschalten“ tippen → Benachrichtigungen erlauben.\niPhone: Link in Safari öffnen → Teilen □↑ → „Zum Home-Bildschirm“ → dort öffnen und einschalten.\n\nViele Grüße, ${ICH?.vorname || adminName()}`;
+}
+const elternWa = (telefon, text) => window.open(`https://wa.me/${String(telefon || "").replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+async function elternHandy(pid) {
+  const m = MITGLIEDER?.find((x) => x.person_id === pid) || (MD?.person_id === pid ? MD : null); if (!m) return;
+  const vn = m.vorname || String(m.name || "").split(" ")[0];
+  const f = blattAuf("elternBlatt", `${einwHtml("b-eltern")}<h3 style="margin-top:0">👪 Eltern-Handy für ${esc(m.name)}</h3>
+    <p class="hinweis" style="margin-top:0">Die Eltern bekommen <b>nur einen kurzen Hinweis</b>, wenn ${esc(vn)} einen Termin hat (Club-Treffen, Schulung, Erinnerung, Absage) oder eine Nachricht von Admin/Clubleitung bekommt – <b>ohne Text</b>. Chats unter Mitgliedern, Anklopfen und Spiele gehen nie an die Eltern. ${esc(vn)} sieht unter ⚙️ → Privatsphäre, wer benachrichtigt wird.</p>
+    <div id="elListe" class="karte">Wird geladen …</div>
+    <div class="hl-frage">Eltern-Handy hinzufügen</div>
+    <label class="feld">Name<input id="elName" maxlength="60" placeholder="z. B. Mama oder Petra Muster" autocomplete="off"></label>
+    <label class="feld">Handynummer<input id="elTel" maxlength="30" inputmode="tel" placeholder="z. B. 0170 1234567" autocomplete="off"></label>
+    <div class="dlg-knoepfe"><button class="knopf haupt" id="elNeu">➕ Hinzufügen & Einladung per WhatsApp</button><button class="knopf" onclick="$('elternBlatt').remove()">Schließen</button></div>`);
+  const laden = async () => {
+    const z = f.querySelector("#elListe");
+    try {
+      const { eltern } = await api("eltern_liste", { person_id: pid });
+      z.innerHTML = !eltern.length ? `<p class="hinweis" style="margin:0">Noch kein Eltern-Handy eingetragen.</p>` : eltern.map((e) => `<div class="zeile" data-id="${esc(e.id)}" style="flex-wrap:wrap">
+        <div style="flex:1;min-width:160px"><b>${esc(e.name)}</b> <span class="hinweis">${esc(e.telefon)}</span>
+          <div class="hinweis" style="font-size:.85rem">${e.an ? "✅ Benachrichtigungen eingeschaltet" : "⏳ Noch nicht eingeschaltet – Link schicken"}${e.letzter_push ? ` · letzter Hinweis ${esc(new Date(e.letzter_push).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }))}` : ""}</div></div>
+        <div class="knoepfe"><button class="knopf klein" data-a="wa" title="Neuen Link per WhatsApp schicken">🟢 Link per WhatsApp</button><button class="knopf klein" data-a="kopie" title="Neuen Link kopieren">📋 Link kopieren</button><button class="knopf klein" data-a="weg" title="Entfernen">🗑️ Entfernen</button></div></div>`).join("");
+      z.querySelectorAll("[data-a]").forEach((b) => (b.onclick = async () => {
+        const id = b.closest("[data-id]").dataset.id, e = eltern.find((x) => x.id === id);
+        if (b.dataset.a === "weg") {
+          if (!(await frage(`Eltern-Handy „${e.name}“ entfernen?\nEs bekommt dann keine Hinweise mehr, der Link gilt nicht mehr.`, { ja: "🗑️ Entfernen", gefahr: true }))) return;
+          try { await api("eltern_entfernen", { id }); melde("🗑️ Entfernt"); laden(); } catch (x) { meldeFehler(x); }
+          return;
+        }
+        // Der Schlüssel liegt nur als Prüfsumme auf dem Server – darum gibt es beim Schicken/Kopieren immer einen frischen Link
+        if (e.an && !(await frage(`Neuen Link für „${e.name}“ erzeugen?\nDer alte Link gilt dann nicht mehr – ${e.name} muss auf der Seite noch einmal „Einschalten“ tippen.`, { ja: "🔄 Neuer Link" }))) return;
+        b.disabled = true;
+        try {
+          const r = await api("eltern_link_neu", { id }), text = elternText(r.name, r.kind, r.link);
+          if (b.dataset.a === "wa") elternWa(r.telefon, text);
+          else { try { await navigator.clipboard.writeText(text); melde("📋 Text mit Link kopiert"); } catch { await eingabe("Zum Kopieren:", text); } }
+          laden();
+        } catch (x) { meldeFehler(x); b.disabled = false; }
+      }));
+    } catch (x) { z.innerHTML = `<p class="hinweis" style="margin:0">${esc(fehlerText(x))}</p>`; }
+  };
+  f.querySelector("#elNeu").onclick = async (ev) => {
+    const name = f.querySelector("#elName").value.trim(), telefon = f.querySelector("#elTel").value.trim();
+    if (!name) { melde("Bitte den Namen eintragen.", true); f.querySelector("#elName").focus(); return; }
+    if (!telefon) { melde("Bitte die Handynummer eintragen.", true); f.querySelector("#elTel").focus(); return; }
+    ev.target.disabled = true;
+    try {
+      const r = await api("eltern_anlegen", { person_id: pid, name, telefon });
+      f.querySelector("#elName").value = ""; f.querySelector("#elTel").value = "";
+      elternWa(r.telefon, elternText(r.name, r.kind, r.link)); melde("👪 Eingetragen – jetzt in WhatsApp auf Senden tippen"); laden();
+    } catch (x) { meldeFehler(x); }
+    ev.target.disabled = false;
+  };
+  laden();
+}
+// Das Kind sieht ehrlich, wer benachrichtigt wird (ohne Nummer) – unter ⚙️ → Privatsphäre
+async function elternMeineZeigen() {
+  const z = $("elternMeine"); if (!z || !zugangAktion("eltern_meine")) return;
+  try {
+    const { eltern } = await api("eltern_meine", {});
+    z.innerHTML = !eltern?.length ? "" : `<div class="hinweis" style="margin:8px 0">👪 <b>Hinweise an Eltern:</b> ${eltern.map((e) => `${esc(e.name)}${e.an ? "" : " (noch nicht eingeschaltet)"}`).join(", ")} – nur wenn du einen Termin hast oder eine Nachricht der Clubleitung bekommst, <b>ohne Text</b>. Deine Chats sehen sie nicht. Fragen dazu: Clubleitung.</div>`;
+  } catch { z.innerHTML = ""; }
 }
 
 // ---------- Push & Ton ----------

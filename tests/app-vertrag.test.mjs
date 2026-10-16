@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -10234,4 +10234,42 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/onclick="kalVerbinden\(\)"/.test(seite) && /class="knopf klein kalv-kopf" onclick="kalVerbinden\(\)"/.test(seite), "Knopf in Termine und ⚙️");
   assert.ok(/if \(!r\.url && !r\.alt\) r = await api\("kalender_abo"\);/.test(programm), "erster Link ohne Rückfrage");
   assert.ok(/calendar\.google\.com\/calendar\/r\?cid=/.test(programm) && /outlook\.live\.com\/calendar\/0\/addfromweb\?url=/.test(programm) && /kalWebcal\(u\)/.test(programm), "Apple, Google, Outlook");
+}
+// 2.431.0 KC-CLUB-ELTERN: Eltern-Handy – nur Hinweise bei Terminen und Nachrichten der Clubleitung, ohne Text, nie Chats
+{
+  const el = lies("supabase/functions/kc-eltern/index.ts"), tm = lies("supabase/functions/kc-termine/index.ts"), wf = lies(".github/workflows/eltern-hochladen.yml");
+  const mig = lies("supabase/migrations/20261016_kc_club_v2431_eltern.sql"), es = lies("eltern/index.html"), esw = lies("eltern/sw.js"), em = JSON.parse(lies("eltern/manifest.webmanifest"));
+  // Datenbank: Schlüssel nur als Hash, Tabelle nur für den Server
+  assert.ok(/token_hash text not null unique check \(token_hash ~ '\^\[0-9a-f\]\{64\}\$'\)/.test(mig) && /enable row level security/.test(mig) && /revoke all on table public\.kc_club_eltern from public, anon, authenticated/.test(mig), "Tabelle: Hash, RLS, kein Zugriff von außen");
+  // kc-eltern: senden nur mit Dienstschlüssel, sonst nur info/anmelden/abmelden mit gültigem Link
+  assert.ok(/if \(a === "senden"\) \{[\s\S]{0,200}gleichZeit\(auth, SERVICE\)\) return json\(\{ error: "Kein Zugang" \}, 401\)/.test(el), "senden nur für den Server");
+  assert.ok(/const ARTEN = new Set\(\["termin", "erinnerung", "absage", "schulung", "nachricht", "notfall"\]\)/.test(el), "nur erlaubte Arten");
+  assert.ok(/if \(art !== "notfall" && nachts\(\)\) return/.test(el), "nachts nichts außer Notfall");
+  assert.ok(/eq\("token_hash", await sha256\(s\)\)/.test(el) && /return data && data\.aktiv \? data : null/.test(el), "Link → Hash, nur aktiv");
+  assert.ok(/PUSH_DIENSTE\.some\(\(d\) => host === d \|\| host\.endsWith\("\." \+ d\)\)/.test(el), "nur bekannte Push-Dienste");
+  assert.ok(!/case "eltern_|kc_club_unterhaltung|kc_club_nachrichten/.test(el), "kc-eltern liest keine Chats");
+  assert.ok(/functions deploy kc-eltern --project-ref "\$PROJEKT" --no-verify-jwt --use-api/.test(wf) && /supabase\/functions\/kc-eltern\/\*\*/.test(wf), "eigener Hochlade-Ablauf");
+  // kc-club: Verwaltung nur Leitung; Hinweise nur an den Stellen Termin + Nachricht der Clubleitung
+  for (const c of ["eltern_liste", "eltern_anlegen", "eltern_entfernen"]) {
+    const i = server.indexOf(`case "${c}"`); assert.ok(i > 0, c);
+    assert.ok(/nurLeitung\(ich\);/.test(server.slice(i, i + 250)), c + " nur Admin/Clubleitung");
+  }
+  assert.ok(/case "eltern_meine": \{[^\n]*\n\s*const \{ data \} = await db\.from\("kc_club_eltern"\)\.select\("name,subscription"\)\.eq\("kind", ich\.person_id\)/.test(server), "Kind sieht nur Namen, keine Nummer");
+  const aufrufe = [...server.matchAll(/elternHinweis\(([^,]+), "(\w+)"/g)].map((m) => m[2]);
+  assert.ok(aufrufe.length === 4 && aufrufe.every((a) => ["termin", "erinnerung", "absage"].includes(a)), "kc-club: Termin/Erinnerung/Absage (+ Nachricht der Leitung unten)");
+  assert.ok(/if \(\(ich\.admin \|\| ich\.vorstand\) && !probe\) elternHinweis\(\[\.\.\.tnIds\]\.filter\(\(id\) => id !== ich\.person_id\), notfall \? "notfall" : "nachricht"/.test(server), "Nachricht → nur von Admin/Clubleitung");
+  const ns = server.slice(server.indexOf('case "nachricht_senden"'), server.indexOf('case "nachricht_senden"') + 60000);
+  assert.ok(!/elternHinweis\([^)]*inhalt|elternHinweis\([^)]*p\.text/.test(ns), "nie der Nachrichtentext an Eltern");
+  assert.equal((tm.match(/elternHinweis\(/g) || []).length, 5, "kc-termine: Helfer + 4 Stellen (Einladung, Bestätigung, Erinnerung, Absage durch Hansi)");
+  assert.ok(/if \(test \|\| !kinder\.length\) return;/.test(tm), "keine Hinweise bei Testeinladungen");
+  // App: Knopf nur für Admin/Clubleitung, Kind sieht es unter Privatsphäre
+  assert.ok(/\(ICH\?\.admin \|\| ICH\?\.vorstand\) && !m\.selbst \? `<button class="knopf" onclick="elternHandy\(/.test(programm), "Knopf im Mitgliedsfenster");
+  assert.ok(/https:\/\/wa\.me\/\$\{String\(telefon \|\| ""\)\.replace\(\/\\D\/g, ""\)\}\?text=/.test(programm), "Einladung per WhatsApp an die Nummer");
+  assert.ok(/<div id="elternMeine"><\/div>/.test(seite) && /elternMeineZeigen\(\);/.test(programm), "Kind sieht, wer Hinweise bekommt");
+  assert.ok(!/"eltern_/.test(server.slice(server.indexOf("const ZUGANG_AKTIONEN"), server.indexOf("const ZUGANG_ERLAUBT"))), "Gast/Aushilfe: keine Eltern-Aktionen");
+  // Elternseite: eigener Service Worker, kein start_url (iPhone behält den Link), Haupt-SW lässt eltern/ aus
+  assert.ok(!("start_url" in em) && em.scope === "./", "Manifest ohne start_url");
+  assert.ok(/navigator\.serviceWorker\.register\("sw\.js", \{ scope: "\.\/" \}\)/.test(es) && /action, e: E/.test(es), "Elternseite meldet sich mit dem Link an");
+  assert.ok(/showNotification\(/.test(esw) && !/caches\.|fetch\(/.test(esw), "Eltern-SW zeigt nur an, speichert nichts");
+  assert.ok(/if \(url\.pathname\.includes\("\/eltern\/"\)\) return;/.test(sw), "Haupt-SW lässt eltern/ aus");
 }

@@ -1,6 +1,6 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json, APP_VERSION in app.js und app.js?v= in index.html übereinstimmen.
-const VERSION = "2.430.0";
+const VERSION = "2.431.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png", "badge-anruf.png", "badge-video.png", "kuckuck-ruf.mp3"]; // 2.406.0: Kuckucksruf (CC0-Aufnahme) // 2.237.0: Statusleisten-Symbole für laufende Gespräche
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm app.js?v=<Version> ändert sich nie unter derselben Adresse → aus dem Speicher
@@ -31,6 +31,7 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (e.request.method === "POST" && url.origin === location.origin && url.pathname.endsWith("/teilen")) { e.respondWith(geteiltAnnehmen(e.request).catch(() => Response.redirect("./#geteilt", 303))); return; }
   if (e.request.method !== "GET" || url.origin !== location.origin || url.pathname.endsWith("version.json")) return;
+  if (url.pathname.includes("/eltern/")) return; // 2.431.0 KC-CLUB-ELTERN: Elternseite hat ihren eigenen Service Worker – nichts merken, nichts dazwischen
   if (url.pathname.includes("/film/")) return; // 2.417.0 KC-CLUB-WERBEFILM-SEITE: Filmseite + 20-MB-Film nicht merken, Abspielen (Range) direkt übers Netz
   if (url.pathname.includes("/stimmen/")) return; // 2.348.0 KC-CLUB-VIDEO-STIMMEN-DOWNLOAD: große Stimm-Dateien nicht doppelt merken – die Stimme hat ihren eigenen Speicher
   // KC-CLUB-UPDATE-SICHER (1.97.0): Seitenaufrufe immer frisch beim Server nachfragen (no-cache); nichts mit persönlichem Schlüssel

@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.426.0";
+const SERVER_VERSION = "2.431.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -217,6 +217,19 @@ async function notfallChatNurAdmin(ich: Ich, threadId: string) {
 // 2.426.0 KC-CLUB-RT-KANAL-WECHSEL: neuer Name der direkten Leitung bei jeder Zugangsänderung – alte Geräte/entfernte Personen hören
 // nichts mehr mit. Vor dem Datenbank-Update fehlt die Funktion: dann still nichts (die Leitung läuft wie bisher weiter).
 const rtNeu = (pid: string) => Promise.resolve(db.rpc("kc_club_rt_neu", { p_person: pid })).catch(() => null);
+// 2.431.0 KC-CLUB-ELTERN (Wunsch Hansi „so sachte wie möglich, Kinder brauchen auch Privatsphäre“): Eltern-Handy bekommt NUR
+// Termine (Treffen neu/geändert/abgesagt, Erinnerung; Schulungen über kc-termine) und Nachrichten der Clubleitung/des Admins (nur Hinweis,
+// ohne Text). Versand über die eigene Edge Function kc-eltern (Dienstschlüssel); „{kind}“ ersetzt sie durch den Vornamen des Kindes.
+// Läuft im Hintergrund – das Speichern wartet nie darauf und scheitert nie daran.
+const ELTERN_SEITE = APP_URL + "eltern/"; const ELTERN_MAX = 3;
+function elternHinweis(kinder: string[], art: "termin" | "erinnerung" | "absage" | "nachricht" | "notfall", titel: string, text: string) {
+  const ids = [...new Set(kinder)].filter(Boolean); if (!ids.length) return;
+  const p = fetch(`${SUPA}/functions/v1/kc-eltern`, { method: "POST", signal: AbortSignal.timeout(15000),
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
+    body: JSON.stringify({ action: "senden", kinder: ids, art, titel: txt(titel, 120), text: txt(text, 300), url: ELTERN_SEITE }) })
+    .then((r) => r.body?.cancel()).catch((e) => console.error("elternHinweis", String(e)));
+  try { (globalThis as any).EdgeRuntime?.waitUntil?.(p); } catch {}
+}
 // KC-CLUB-LOESCHEN: vor jedem Löschen eine vollständige Sicherung ins Änderungsprotokoll (Wiederherstellungspunkt)
 async function geloescht(ich: { person_id: string }, was: string, sicherung: Record<string, unknown>) {
   const { error } = await db.from("kc_club_protokoll").insert({ person_id: ich.person_id, aktion: was + "_geloescht", details: { sicherung } });
@@ -5718,6 +5731,7 @@ Köcheclub Werne`,
           text: `Hallo,\n\nkurze Erinnerung an unser Treffen morgen:\n\n📅 ${wann(t.beginn, true)}${ort ? "\n📍 " + ort : ""}\n\nZu- oder absagen in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
           url: APP_URL + "#termine",
         }, `club-erinnerung:${t.id}`);
+        elternHinweis(ziel, "erinnerung", "⏰ Morgen Köcheclub – {kind}", `${t.titel}: ${wann(t.beginn)}${ort ? " – " + ort : ""}`); // 2.431.0 KC-CLUB-ELTERN
         await protokoll(null, "treffen_erinnerung", { treffen: t.id, empfaenger: ziel.length });
         n++;
       }
@@ -6349,6 +6363,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
               text: `Hallo,\n\nes gibt eine neue Terminreihe „${titel}“ (${WDH_TEXT[wdh]}, ${reihe.length} Termine):\n\n${liste}${zeile.ort ? "\n\n📍 " + zeile.ort : ""}\n\nZu- und absagen kannst du für jeden Termin einzeln in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
               url: APP_URL + "#termine",
             }, `club-treffen-reihe:${reihe[0].id}`);
+            elternHinweis(ziel, "termin", "📅 Neue Köcheclub-Termine – {kind}", `${titel}: ${reihe.length} Termine ab ${wann(reihe[0].beginn)}`); // 2.431.0 KC-CLUB-ELTERN
           }
           await protokoll(ich.person_id, "treffen_reihe_angelegt", { anzahl: reihe.length, wiederholung: wdh, titel, versand });
           return json({ ok: true, id: reihe[0].id, anzahl: reihe.length, versand });
@@ -6363,6 +6378,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
           const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
           versand = await senden("club_treffen", ziel, treffenText(t, vorname(g), anlass), `club-treffen:${t.id}:${Date.now()}`);
+          elternHinweis(ziel, "termin", `${anlass === "neu" ? "📅 Neuer" : "✏️ Geänderter"} Köcheclub-Termin – {kind}`, `${t.titel}: ${wann(t.beginn)}${t.ort ? " – " + t.ort : ""}`); // 2.431.0 KC-CLUB-ELTERN
         }
         await protokoll(ich.person_id, anlass === "neu" ? "treffen_angelegt" : "treffen_geaendert", { treffen: t.id, titel, beginn: t.beginn, versand });
         return json({ ok: true, id: t.id, versand });
@@ -6375,6 +6391,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
         const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
         const versand = await senden("club_treffen", ziel, treffenText(t, vorname(g), "abgesagt"), `club-treffen-absage:${t.id}`);
+        elternHinweis(ziel, "absage", "❌ Köcheclub-Termin fällt aus – {kind}", `${t.titel}: ${wann(t.beginn)}`); // 2.431.0 KC-CLUB-ELTERN
         await protokoll(ich.person_id, "treffen_abgesagt", { treffen: t.id, versand });
         return json({ ok: true, versand });
       }
@@ -9058,6 +9075,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const versand = express && !notfall ? await expressSenden(ziel.filter((x: string) => x !== ich.person_id), nachrichtVars, `club-nachricht:${m.id}`)
           : await sendenGewaehlt("club_nachricht", ziel, wege, nachrichtVars, `club-nachricht:${m.id}`, { notfall: notfall || express }); // Express: auch in der Ruhezeit (wie Notfall)
         if (neu && !notfall && p.empfaenger?.alle) await protokoll(ich.person_id, "nachricht_an_alle", { thread: threadId }); // 2.425.0 KC-CLUB-MASSEN-GRENZE
+        // 2.431.0 KC-CLUB-ELTERN: Nachricht der Clubleitung/des Admins → Eltern bekommen nur einen Hinweis (nie den Text, nie Chats unter Mitgliedern)
+        if ((ich.admin || ich.vorstand) && !probe) elternHinweis([...tnIds].filter((id) => id !== ich.person_id), notfall ? "notfall" : "nachricht",
+          notfall ? "🚨 Notfall-Meldung des Köcheclubs – {kind}" : "📨 Nachricht der Clubleitung – {kind}", notfall ? "Bitte die Köcheclub-App von {kind} ansehen." : "{kind} hat eine Nachricht der Clubleitung in der Köcheclub-App.");
         await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, selbstloeschen: slNachricht, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
         return json({ ok: true, id: threadId, versand, mid: m.id, ...(express ? { expressStand: await expressStand(ich) } : {}) }); // mid: KC-CLUB-EMPFANGS-EFFEKT (2.177.0) – gleicher „Abwechselnd“-Effekt bei Absender und Empfänger
       }
@@ -13376,6 +13396,52 @@ Köcheclub-App`,
         anmeldungenVergessen(); await rtNeu(pid); // KC-CLUB-ANMELDECACHE: alter Link sofort ungültig (2.6.1: stand vorher versehentlich im Kommentar); 2.426.0: direkte Leitung neu
         await protokoll(ich.person_id, "link_erzeugt", { fuer: pid });
         return json({ ok: true, link: `${APP_URL}?k=${token}` });
+      }
+      // ----- 2.431.0 KC-CLUB-ELTERN: Eltern-Handy (nur Admin/Clubleitung trägt ein; das Kind sieht, wer was bekommt) -----
+      case "eltern_liste": {
+        nurLeitung(ich);
+        const pid = String(p.person_id || "");
+        const { data } = await db.from("kc_club_eltern").select("id,name,telefon,angemeldet_am,subscription,letzter_push,erstellt_am").eq("kind", pid).eq("aktiv", true).order("erstellt_am");
+        return json({ eltern: (data ?? []).map((e: any) => ({ id: e.id, name: e.name, telefon: e.telefon, an: !!e.subscription, angemeldet_am: e.angemeldet_am, letzter_push: e.letzter_push })) });
+      }
+      case "eltern_anlegen": case "eltern_link_neu": {
+        nurLeitung(ich);
+        const token = zufall(), hash = await sha256(token);
+        let id = "", kind = "", name = "";
+        if (a === "eltern_anlegen") {
+          kind = String(p.person_id || ""); name = txt(p.name, 60);
+          const roh = String(p.telefon || "").replace(/[\s\-\/().]/g, ""), telefon = roh.startsWith("00") ? "+" + roh.slice(2) : roh.startsWith("0") ? "+49" + roh.slice(1) : roh;
+          if (!name) throw new Fehler("Bitte den Namen eintragen (z. B. „Mama“ oder „Petra Muster“).");
+          if (!/^\+?[0-9]{6,20}$/.test(telefon)) throw new Fehler("Bitte eine gültige Handynummer eintragen, z. B. 0170 1234567.");
+          const { data: k } = await db.from("kc_core_people").select("person_id").eq("person_id", kind).eq("active", true).maybeSingle();
+          if (!k) throw new Fehler("Mitglied nicht gefunden.", 404);
+          const { count } = await db.from("kc_club_eltern").select("id", { count: "exact", head: true }).eq("kind", kind).eq("aktiv", true);
+          if ((count ?? 0) >= ELTERN_MAX) throw new Fehler(`Höchstens ${ELTERN_MAX} Eltern-Handys je Mitglied.`);
+          const { data: neu, error } = await db.from("kc_club_eltern").insert({ kind, name, telefon, token_hash: hash, erstellt_von: ich.person_id }).select("id,telefon").single();
+          if (error || !neu) throw new Fehler("Das hat gerade nicht geklappt – bitte gleich nochmal versuchen.", 500);
+          id = neu.id;
+        } else {
+          const { data: e } = await db.from("kc_club_eltern").select("id,kind,name").eq("id", String(p.id || "")).eq("aktiv", true).maybeSingle();
+          if (!e) throw new Fehler("Eintrag nicht gefunden.", 404);
+          await db.from("kc_club_eltern").update({ token_hash: hash, subscription: null, endpoint: null, angemeldet_am: null }).eq("id", e.id);
+          id = e.id; kind = e.kind; name = e.name;
+        }
+        const { data: e2 } = await db.from("kc_club_eltern").select("telefon").eq("id", id).single();
+        const kp = (await personen([kind])).get(kind);
+        await protokoll(ich.person_id, a === "eltern_anlegen" ? "eltern_angelegt" : "eltern_link_neu", { kind, eltern: id });
+        return json({ ok: true, id, link: `${ELTERN_SEITE}?e=${token}`, telefon: e2?.telefon || "", kind: vorname(kp), name });
+      }
+      case "eltern_entfernen": {
+        nurLeitung(ich);
+        const { data: e } = await db.from("kc_club_eltern").select("id,kind").eq("id", String(p.id || "")).maybeSingle();
+        if (!e) throw new Fehler("Eintrag nicht gefunden.", 404);
+        await db.from("kc_club_eltern").update({ aktiv: false, subscription: null, endpoint: null }).eq("id", e.id);
+        await protokoll(ich.person_id, "eltern_entfernt", { kind: e.kind, eltern: e.id });
+        return json({ ok: true });
+      }
+      case "eltern_meine": { // das Kind sieht ehrlich, wer was bekommt (keine Nummer)
+        const { data } = await db.from("kc_club_eltern").select("name,subscription").eq("kind", ich.person_id).eq("aktiv", true).order("erstellt_am");
+        return json({ eltern: (data ?? []).map((e: any) => ({ name: e.name, an: !!e.subscription })) });
       }
       // KC-CLUB-BUERO-RECHTE (1.37.0): Admin legt fest, wer das Büro sieht (lesen) oder darin arbeitet (schreiben)
       case "buero_rechte": {
