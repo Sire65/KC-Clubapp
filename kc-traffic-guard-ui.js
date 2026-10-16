@@ -31,7 +31,8 @@
     const start=document.getElementById("v-start");
     if(!start)return;
     let b=document.getElementById("kcTrafficGuardHome");
-    const show=isLoggedIn() && (status?.level==="warning"||status?.level==="critical");
+    const admin=document.getElementById("adminBereich");
+    const show=isLoggedIn() && !!admin && !admin.classList.contains("versteckt") && (status?.level==="warning"||status?.level==="critical");
     if(!show){b?.remove();return;}
     if(!b){b=document.createElement("div");b.id="kcTrafficGuardHome";b.style.cssText="margin:10px 12px;padding:10px 12px;border:2px solid #a15a22;border-radius:12px;background:var(--gelbbg,#fff0c9);color:var(--text,#222);";const hero=start.querySelector(".hero");if(hero)hero.insertAdjacentElement("afterend",b);else start.prepend(b);}
     const red=status.level==="critical";b.style.borderColor=red?"#c62828":"#b47b00";
