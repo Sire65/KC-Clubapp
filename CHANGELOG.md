@@ -17,6 +17,13 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.433.0 – 2026-10-16 – 📥 Eingangskorb: beim Annehmen Ordner und Register wählen (KC-CLUB-EINGANG-WOHIN) · ▾ Schreibbereich einklappen (KC-CLUB-SCHREIBEN-KLAPPEN) · Server 2.433.0
+Wunsch Hansi: „Frag dann noch Steven, in welchen Ordner und in welches Register – mach aber schon einen Vorschlag dazu.“
+- Tippt das Mitglied bei einem Dokument im eigenen Ordner auf **✔ Annehmen**, fragt die App jetzt **„Wohin?“**: Ordner (eigene Jahrgänge) und Register. Vorausgewählt ist der **💡 Vorschlag** des Absenders (Ordner des laufenden Jahres, gewähltes Register) – ein Tipp auf „✔ Hierhin übernehmen“ genügt, oder es ändert die Auswahl.
+- Beim Hineinlegen heißt das Feld jetzt „Register (Vorschlag – … kann es beim Annehmen ändern)“.
+- **▾ Schreibbereich einklappen** (Wunsch Hansi: „im Nachrichten-Fenster einen Einklapppfeil nach unten, um den Bereich kurz wegzuklappen und mehr Nachrichten zu sehen – beim Öffnen aber immer den Schreibbereich offen“): kleiner ▾-Griff oben mittig über dem Schreibfeld; eingeklappt bleibt nur eine schmale Leiste „▴ ✏️ Schreiben“ (Antippen öffnet und setzt die Schreibmarke ins Feld). Der Platz geht an die Nachrichten (auf dem Handy rund 100 Pixel mehr). Beim Öffnen eines Chats ist der Schreibbereich immer offen.
+- **Server:** archiv_pruefung nimmt beim Annehmen ordner_id/register an – nur eigene, nicht gelöschte Ordner; unbekanntes Register → Vorschlag bzw. erstes Register. Keine DB-Änderung.
+
 ## 2.432.0 – 2026-10-16 – 🐕 Herbst-Hund naturgetreuer (KC-CLUB-HUND-KOPF) · 📥 Eingangskorb für Mitglieder (KC-CLUB-EINGANGSKORB) · Server 2.432.0
 Wunsch Hansi: „Den Hund im Herbst noch etwas naturgetreuer – der Kopf ist zu hoch und evtl. zu lang.“
 - Kopf sitzt jetzt etwa auf Rückenhöhe (vorher deutlich darüber), kräftiger Hals schräg nach vorn, der Rücken geht glatt in den Hals über.

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.432.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.433.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -22584,7 +22584,7 @@ function zeige(v, ausHistorie) {
   shBereich(v); // KC-CLUB-SCHRITT-HILFE (2.63.0)
   kzGesehen(v); // KC-CLUB-KACHEL-ZAHLEN (2.22.12): Fotoalbum/Dienstpläne geöffnet → Zahl weg
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
-  $("eingabe").classList.toggle("versteckt", v !== "chat");
+  $("eingabe").classList.toggle("versteckt", v !== "chat"); if (v === "chat") $("eingabe").classList.remove("zu"); // 2.433.0 KC-CLUB-SCHREIBEN-KLAPPEN: beim Öffnen immer offen
   document.body.classList.toggle("im-chat", v === "chat"); // KC-CLUB-SUCHE: Lupe nicht über dem Senden-Knopf
   clearInterval(chatTimer);
   if (v !== "chat" && TIPP.id) tippenAus(); // Unterhaltung verlassen → „schreibt …“ sofort beenden
@@ -32957,6 +32957,15 @@ async function elternHandy(pid) {
   };
   laden();
 }
+// 2.433.0 KC-CLUB-SCHREIBEN-KLAPPEN (Wunsch Hansi „einen Einklapppfeil nach unten, um den Bereich kurz wegzuklappen und mehr Nachrichten zu sehen –
+// wenn man den Bereich öffnet, aber immer den Schreibbereich offen haben“): ▾ klappt weg, „▴ ✏️ Schreiben“ holt ihn zurück (mit Schreibmarke im Feld)
+function eingabeKlappen(zu) {
+  const e = $("eingabe"); if (!e) return;
+  e.classList.toggle("zu", !!zu);
+  if (zu) { try { document.activeElement?.blur?.(); } catch {} if (!$("emoFeld")?.classList.contains("versteckt")) emoUmschalten?.(false); }
+  else setTimeout(() => $("text")?.focus(), 30);
+  requestAnimationFrame(() => { try { chatAbstand(); } catch {} });
+}
 // ---------- 2.432.0 KC-CLUB-EINGANGSKORB (Wunsch Hansi „Eingangskorb für Mitglieder“): Admin/Clubleitung legt ein Dokument in den persönlichen
 // Ordner eines Mitglieds – nur zur Prüfung. Das Mitglied sieht es unter „Heute wichtig“ → 📥 Eingangskorb und übernimmt es oder lehnt ab (dann gelöscht).
 const EINGANG_REGISTER = ["Sonstiges", "Urkunden", "Schulungen", "Rechnungen", "Fotos"];
@@ -32967,7 +32976,7 @@ function mgEingang(pid) {
     <p class="hinweis" style="margin-top:0">Das Dokument landet im persönlichen Archiv-Ordner von ${esc(vn)} – aber erst, wenn ${esc(vn)} es annimmt. Lehnt ${esc(vn)} ab, wird es gelöscht. Den Ordner selbst siehst du nicht.</p>
     <label class="feld">Datei (PDF, Bild, Word, Excel, Text – höchstens 8 MB)<input type="file" id="egDatei" accept=".pdf,.jpg,.jpeg,.png,.webp,.txt,.doc,.docx,.xls,.xlsx,application/pdf,image/jpeg,image/png,image/webp"></label>
     <label class="feld">Titel<input id="egTitel" maxlength="120" placeholder="z. B. Anleitung Anklopfen"></label>
-    <label class="feld">Register<select id="egReg">${EINGANG_REGISTER.map((r) => `<option>${esc(r)}</option>`).join("")}</select></label>
+    <label class="feld">Register (Vorschlag – ${esc(vn)} kann es beim Annehmen ändern)<select id="egReg">${EINGANG_REGISTER.map((r) => `<option>${esc(r)}</option>`).join("")}</select></label>
     <label class="feld">Kurze Nachricht dazu (freiwillig)<textarea id="egNotiz" rows="2" maxlength="500" placeholder="z. B. Wie besprochen – zum Nachlesen."></textarea></label>
     <div class="dlg-knoepfe"><button class="knopf haupt" id="egLos">📥 In den Eingangskorb legen</button><button class="knopf" onclick="$('eingangBlatt').remove()">Abbrechen</button></div>`);
   f.querySelector("#egDatei").onchange = (e) => { const d = e.target.files?.[0]; if (d && !f.querySelector("#egTitel").value.trim()) f.querySelector("#egTitel").value = d.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").slice(0, 120); };
@@ -34369,7 +34378,29 @@ async function arFreigabeBeenden(id) {
 }
 async function arPruefung(id, annehmen) {
   if (!annehmen && !(await frage("Dieses Dokument ablehnen? Es wird gelöscht und der Absender bekommt Bescheid."))) return;
+  const x = AR.daten?.dokumente?.find((y) => y.id === id), o = AR.daten?.ordner?.find((y) => y.id === x?.ordner_id);
+  if (annehmen && x && o?.eigen) return arWohin(x, o); // 2.433.0 KC-CLUB-EINGANG-WOHIN: im eigenen Ordner erst fragen, wohin
   try { await api("archiv_pruefung", { id, annehmen }); melde(annehmen ? "✔ Angenommen" : "✖ Abgelehnt und gelöscht"); await arLaden(); } catch (e) { meldeFehler(e); }
+}
+// 2.433.0 KC-CLUB-EINGANG-WOHIN (Wunsch Hansi „fragen, in welchen Ordner und welches Register – aber schon mit Vorschlag“):
+// Beim Annehmen wählt das Mitglied Ordner (eigene Jahrgänge) und Register; vorausgewählt ist der Vorschlag des Absenders.
+function arWohin(x, o) {
+  const eigene = (AR.daten.ordner || []).filter((y) => y.eigen && !y.geloescht_am).sort((a, b) => b.jahr - a.jahr);
+  const regOpt = (oid, wahl) => ((eigene.find((y) => y.id === oid) || o).register || []).map((r) => `<option${r === wahl ? " selected" : ""}>${esc(r)}</option>`).join("");
+  const f = blattAuf("arWohinBlatt", `<h3 style="margin-top:0">✔ „${esc(x.titel)}“ annehmen</h3>
+    <p class="hinweis" style="margin-top:0">Wohin soll das Dokument? 💡 <b>Vorschlag${x.von ? ` von ${esc(String(x.von).split(" ")[0])}` : ""}:</b> Ordner ${esc(arName(o))}${x.register ? `, Register „${esc(x.register)}“` : ""} – einfach übernehmen oder ändern.</p>
+    <label class="feld">Ordner<select id="awOrdner">${eigene.map((y) => `<option value="${esc(y.id)}"${y.id === o.id ? " selected" : ""}>${esc(arName(y))}</option>`).join("")}</select></label>
+    <label class="feld">Register<select id="awReg">${regOpt(o.id, x.register)}</select></label>
+    <div class="dlg-knoepfe"><button class="knopf haupt" id="awJa">✔ Hierhin übernehmen</button><button class="knopf" onclick="$('arWohinBlatt').remove()">Abbrechen</button></div>`);
+  f.querySelector("#awOrdner").onchange = (e) => { f.querySelector("#awReg").innerHTML = regOpt(e.target.value, f.querySelector("#awReg").value || x.register); };
+  f.querySelector("#awJa").onclick = async (e) => {
+    e.target.disabled = true;
+    const ordner_id = f.querySelector("#awOrdner").value, register = f.querySelector("#awReg").value;
+    try {
+      await api("archiv_pruefung", { id: x.id, annehmen: true, ordner_id, register }); f.remove();
+      melde(`✔ Angenommen – liegt jetzt in ${arName(eigene.find((y) => y.id === ordner_id) || o)}${register ? `, Register „${register}“` : ""}`); await arLaden();
+    } catch (er) { meldeFehler(er); e.target.disabled = false; }
+  };
 }
 async function arEinreichungZurueck(id) {
   if (!(await frage("Deine Einreichung zurückziehen? Sie wird gelöscht."))) return;

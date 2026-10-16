@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -10303,5 +10303,18 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/onclick="mgEingang\('\$\{esc\(m\.person_id\)\}'\)"/.test(programm) && /api\("archiv_eingang_senden"/.test(programm), "Knopf im Mitgliedsfenster");
   assert.ok(/INIT\?\.eingangskorb > 0/.test(programm) && /function eingangOeffnen\(\) \{ AR\.zielEingang = true; arStart\(\); \}/.test(programm), "Heute wichtig → Eingangskorb");
   assert.ok(!/"archiv_eingang_senden"/.test(server.slice(server.indexOf("const ZUGANG_AKTIONEN"), server.indexOf("const ZUGANG_ERLAUBT"))), "nicht für Gäste/Aushilfen");
+}
+// 2.433.0 KC-CLUB-EINGANG-WOHIN: beim Annehmen Ordner und Register wählen, Vorschlag vorausgewählt
+{
+  const p = server.slice(server.indexOf('case "archiv_pruefung"'), server.indexOf('case "archiv_freigeben"'));
+  assert.ok(/zo\.besitzer !== ich\.person_id \|\| zo\.geloescht_am/.test(p) && /if \(ja && o\.besitzer && o\._eigen && \(p\.ordner_id \|\| p\.register\)\)/.test(p), "nur in eigene Ordner verschieben");
+  assert.ok(/update\(\{ status: "ok", ordner_id: ziel\.ordner_id, register: ziel\.register/.test(p), "Ordner und Register übernommen");
+  assert.ok(/if \(annehmen && x && o\?\.eigen\) return arWohin\(x, o\);/.test(programm) && /💡 <b>Vorschlag/.test(programm) && /api\("archiv_pruefung", \{ id: x\.id, annehmen: true, ordner_id, register \}\)/.test(programm), "Wohin-Fenster mit Vorschlag");
+}
+// 2.433.0 KC-CLUB-SCHREIBEN-KLAPPEN: ▾ klappt den Schreibbereich weg, beim Öffnen eines Chats immer offen
+{
+  assert.ok(/<button class="eg-klapp" id="egKlapp" type="button" onclick="eingabeKlappen\(true\)"/.test(seite) && /<button class="eg-auf" id="egAuf" type="button" onclick="eingabeKlappen\(false\)"/.test(seite), "Griff und Öffnen-Leiste");
+  assert.ok(/\.eingabe\.zu > \*:not\(\.eg-auf\) \{ display: none !important; \}/.test(seite), "eingeklappt nur die Leiste");
+  assert.ok(/\$\("eingabe"\)\.classList\.toggle\("versteckt", v !== "chat"\); if \(v === "chat"\) \$\("eingabe"\)\.classList\.remove\("zu"\);/.test(programm), "beim Öffnen immer offen");
 }
 
