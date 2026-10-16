@@ -10328,4 +10328,14 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/jahreszeitVorschau\('unterwasser'\)">🐠 Unterwasserwelt</.test(seite), "Vorschau-Knopf");
   assert.ok(/unterwasser: \["🐠", "🫧", "🐟", "🐚"\]/.test(programm), "Ersatz-Bild ohne Bühne");
 }
+// 2.434.0 KC-CLUB-HERBST-KUERBIS: Hund rollt vor Sonnenuntergang den Kürbis herein, nachts flackert die Kerze
+{
+  const kz = programm.slice(programm.indexOf("function jzbKuerbisZeit()"), programm.indexOf("function jzbHerbstKuerbisMalen("));
+  assert.ok(/if \(istNacht\(\)\) return "nacht";/.test(kz) && /sonne\(\)\.unter - Date\.now\(\)/.test(kz) && /JZB_KUERBIS_VORHER_MIN \* 60000\) return "vorher";/.test(kz), "kurz vor Sonnenuntergang / nachts");
+  assert.ok(/if \(z === "tag"\) \{ if \(K && !K\.rollt\) J\.kuerbis = null; return; \}/.test(kz) && /if \(J\.hund \|\| J\.blaeser\) return;/.test(kz) && /rollt: true \};/.test(kz), "morgens weg, Hund rollt ihn herein");
+  assert.ok(/const soll = z === "nacht" \|\| \(z === "vorschau" && K\.liegt > 3\) \? 1 : 0;/.test(kz), "Kerze nur nachts (Vorschau nach 3 s)");
+  assert.ok(/if \(D\.phase === "hin" && D\.rollt\)/.test(programm) && /K\.x = K\.ziel; K\.rot = 0; K\.rollt = false;/.test(programm) && /if \(D\.rollt\) D\.dir = -D\.dir;/.test(programm), "rollen, aufrecht ankommen, zurücktrotten");
+  assert.ok(/jzbKuerbisSchritt\(dt\); jzbPilzePruefen\(dt\); jzbStreunerSchritt\(dt\);/.test(programm) && /if \(J\.kuerbis && J\.saison === "herbst"\) jzbHerbstKuerbisMalen\(c, J\.kuerbis, k\);/.test(programm), "verdrahtet");
+  assert.ok(/jahreszeitVorschau\('herbst', 'kuerbis'\)">🎃 Kürbis-Hund</.test(seite), "Vorschau");
+}
 

@@ -17,11 +17,18 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
-## 2.434.0 – 2026-10-16 – 🐠 Neues Thema Unterwasserwelt (KC-CLUB-UNTERWASSER)
+## 2.434.0 – 2026-10-16 – 🐠 Neues Thema Unterwasserwelt (KC-CLUB-UNTERWASSER) · 🎃 Herbst-Kürbis mit Kerze (KC-CLUB-HERBST-KUERBIS)
 Wunsch Hansi: „Als neues Thema eine Unterwasserwelt – bunte Fische, Luftblasen, Taucher, Helmtaucher mit dickem Helm und Luftschlauch, grüne Pflanzen, Muscheln, ein Seepferdchen schreibt den Namen. Zieht der Taucher den Stöpsel, läuft das ganze Wasser ab und alles ist verschwunden; dann kommt Regen und baut die Szene von vorne auf.“
 - **Thema 🐠 Unterwasserwelt** (⚙️ → 🎨 Darstellung → 🎭 Themen; Farben „Nordsee“, Effekt Taube, Schrift „Strand“, Wimpel in Meeresfarben) mit eigener Szene im Kopf der Startseite, Vorschau unter ⚙️ → ✨ Effekte.
 - **Ablauf je Lauf (≈ 1 Min. 50 s):** Regenwolken und Regen füllen das Becken (Tropfen machen Ringe) → Sand, grüne Pflanzen wachsen und wiegen sich, Muscheln und ein Seestern erscheinen, Lichtstrahlen im Wasser → bunte Fische (Clownfisch, Doktorfisch u. a., ab und zu ein kleiner Schwarm), Luftblasen steigen und platzen an der Oberfläche → ein **Helmtaucher** mit Kupferhelm, Fenstern, Bleigürtel und schweren Stiefeln stapft herein, sein **Luftschlauch** führt nach oben, aus dem Ventil blubbert es → ein **Seepferdchen** schwimmt und **schreibt den Vornamen** in Blasenschrift → ein **Taucher** mit Flossen und gelber Flasche schwimmt vorbei → später taucht er zum **Stöpsel**, zerrt an der Kette – **„Plopp!“** → **Strudel**, das Wasser läuft ab und zieht alles spiralförmig in den Abfluss → leer → es regnet wieder und alles baut sich von vorne auf.
-- Nur Bild auf dem eigenen Gerät, nichts wird gespeichert oder gesendet; Bildrate und Akku-Sparen wie bei den anderen Szenen. Nur App, kein Server- oder DB-Update.
+- Nur Bild auf dem eigenen Gerät, nichts wird gespeichert oder gesendet; Bildrate und Akku-Sparen wie bei den anderen Szenen.
+
+**🎃 Herbst-Kürbis mit Kerze** (Wunsch Hansi: „Im Herbst noch einen Halloween-Kürbis; wenn das Abend-Schema da ist, soll ein Licht wie eine flackernde Kerze aus dem Kürbis leuchten. Der Hund soll den Kürbis kurz vor dem Wechsel von Tag auf Nacht hereinrollen.“)
+- Etwa **20 Min. vor Sonnenuntergang** (Tag/Nacht „automatisch“ nach Sonnenstand in Werne) kommt der Hund von rechts und **schiebt mit der Nase einen geschnitzten Kürbis** herein – der Kürbis rollt und kommt aufrecht an –, schnuppert daran und trottet zurück.
+- Sobald das **Nacht-Schema** da ist, **flackert eine Kerze** im Kürbis: Augen und Mund leuchten unruhig gelb-orange, dazu ein warmer Schein und ein Lichtfleck auf dem Boden. Am Morgen (Tag-Schema) ist der Kürbis wieder weg.
+- Wer die App erst abends öffnet (oder Nacht fest eingestellt hat), findet ihn schon brennend da. Mit Helligkeitssensor ist der Wechsel nicht vorhersehbar – dann steht er mit dem Nacht-Schema einfach da.
+- Vorschau: ⚙️ → ✨ Effekte → Extras → **🎃 Kürbis-Hund** (nach 3 s rollt er herein, 3 s später brennt die Kerze).
+- Nur App, kein Server- oder DB-Update.
 
 ## 2.433.0 – 2026-10-16 – 📥 Eingangskorb: beim Annehmen Ordner und Register wählen (KC-CLUB-EINGANG-WOHIN) · ▾ Schreibbereich einklappen (KC-CLUB-SCHREIBEN-KLAPPEN) · Server 2.433.0
 Wunsch Hansi: „Frag dann noch Steven, in welchen Ordner und in welches Register – mach aber schon einen Vorschlag dazu.“

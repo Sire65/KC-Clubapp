@@ -18054,7 +18054,7 @@ function jzbUnterwasserMalen(c, F) {
 // kein Regen aus alten Daten, kein zusätzlicher Wetter-Abruf): Tropfen, Pfützen mit Ringen, ab und zu läuft ein gelber Schirm vorbei.
 // 🍲 Heute ist Treffen: ein dampfender Kochtopf (bis 5 Std. nach Beginn). 🥚 Ostern (Karfreitag bis Ostermontag): bunte Eier im Gras –
 // antippen, dann schlüpft ein Küken. 🦔 Herbst: ab und zu raschelt ein Igel durchs Laub. Vorschau je Extra unter ⚙️ → ✨ Effekte.
-const JZB_EXTRAS = { nikolaus: "advent", regen: "", topf: "", ostern: "fruehling", igel: "herbst" }; // Extra → Jahreszeit der Vorschau ("" = die jetzige)
+const JZB_EXTRAS = { nikolaus: "advent", regen: "", topf: "", ostern: "fruehling", igel: "herbst", kuerbis: "herbst" }; // Extra → Jahreszeit der Vorschau ("" = die jetzige)
 function jzbExtrasBestimmen() {
   const J = JZB, heute = heuteIso(), x = { igel: J.saison === "herbst" };
   x.nikolaus = heute.slice(5) === "12-06" && J.saison === "winter";
@@ -18719,8 +18719,8 @@ function jzbNussNameMalen(c) {
 }
 function jzbHerbstTiere(dt) {
   const J = JZB, k = J.k;
-  if (J.saison !== "herbst") { J.eicheln = null; J.pilze = null; J.hoernchen = null; J.blaeser = null; J.nussName = null; J.hund = null; return; }
-  jzbBlaeserSchritt(dt); jzbEichelnPruefen(dt); jzbPilzePruefen(dt); jzbStreunerSchritt(dt); // 2.369.0 KC-CLUB-HERBST-HUND · 2.389.0 Pilze
+  if (J.saison !== "herbst") { J.eicheln = null; J.pilze = null; J.hoernchen = null; J.blaeser = null; J.nussName = null; J.hund = null; J.kuerbis = null; return; }
+  jzbBlaeserSchritt(dt); jzbEichelnPruefen(dt); jzbKuerbisSchritt(dt); jzbPilzePruefen(dt); jzbStreunerSchritt(dt); // 2.369.0 KC-CLUB-HERBST-HUND · 2.389.0 Pilze · 2.434.0 Kürbis
   const txt = jzbEisNameText(); if (J.nussName && J.nussName.text !== txt) J.nussName = null;
   if (!J.nussName && txt) J.nussName = { text: txt, n: 0, gelandet: [], fertig: null };
   const N = J.nussName, laenge = N ? [...N.text].length : 0;
@@ -18782,14 +18782,67 @@ function jzbStreunerSchritt(dt) {
     return;
   }
   const D = J.hund; D.t += dt;
-  if (D.phase === "hin") { D.x += D.dir * 62 * k * dt; if ((D.zx - D.x) * D.dir <= 0) { D.x = D.zx; D.phase = "schnuppern"; D.halt = 0; } }
+  if (D.phase === "hin" && D.rollt) { // 2.434.0 KC-CLUB-HERBST-KUERBIS: schiebt den Kürbis mit der Nase vor sich her
+    D.x += D.dir * 34 * k * dt; const K = J.kuerbis;
+    if (K?.rollt) { const nx = D.x + D.dir * 34 * k; K.rot += (nx - K.x) / (K.reff || 9.5 * k); K.x = nx; if ((K.x - K.ziel) * D.dir >= 0) { K.x = K.ziel; K.rot = 0; K.rollt = false; D.zx = D.x; D.phase = "schnuppern"; D.halt = 0; } }
+    else { D.zx = D.x; D.phase = "schnuppern"; D.halt = 0; }
+  } else if (D.phase === "hin") { D.x += D.dir * 62 * k * dt; if ((D.zx - D.x) * D.dir <= 0) { D.x = D.zx; D.phase = "schnuppern"; D.halt = 0; } }
   else if (D.phase === "schnuppern") {
     D.halt += dt;
     if (D.halt > 1.4 && D.halt < 1.9) D.x += D.dir * 10 * k * dt; // zwei kleine Schritte weiter
     if (Math.random() < dt * 4) for (const b of J.liegt || []) if (Math.abs(b.x - (D.x + D.dir * 16 * k)) < 7 * k) b.wackel = 1; // die Nase raschelt im Laub
-    if (D.halt > D.dauer) { D.phase = "weg"; }
+    if (D.halt > D.dauer) { D.phase = "weg"; if (D.rollt) D.dir = -D.dir; } // nach dem Kürbis: umdrehen und zurücktrotten
   } else { D.x += D.dir * 70 * k * dt; if (D.x < -40 * k || D.x > J.w + 40 * k) { J.hund = null; J.hundUhr = J.extra === "hund" ? 6 : jzbZ(90, 240); } }
   if (D.phase !== "schnuppern") for (const b of J.liegt || []) if (Math.abs(b.x - D.x) < 9 * k) b.wackel = 1; // trottet durchs Laub
+}
+// ---------- 2.434.0 KC-CLUB-HERBST-KUERBIS (Wunsch Hansi „im Herbst einen Halloween-Kürbis; wenn das Abend-Schema da ist, soll ein Licht wie eine
+// flackernde Kerze aus dem Kürbis leuchten – der Hund soll den Kürbis kurz vor dem Wechsel von Tag auf Nacht hereinrollen“) ----------
+// Etwa 20 Min. vor Sonnenuntergang (Tag/Nacht automatisch) schiebt der Hund mit der Nase einen geschnitzten Kürbis herein, schnuppert daran und
+// trottet zurück. Sobald das Nacht-Schema da ist, flackert darin eine Kerze (Gesicht und Schein); am Morgen ist der Kürbis wieder weg.
+// Wer die App erst abends öffnet, findet ihn schon da. Vorschau „🎃 Kürbis-Hund“: nach 3 s rollt er herein, 3 s später brennt die Kerze.
+const JZB_KUERBIS_VORHER_MIN = 20;
+function jzbKuerbisZeit() {
+  if (JZB.extra === "kuerbis") return "vorschau";
+  if (istNacht()) return "nacht";
+  if (DS.modus === "auto" && LICHT_NACHT === null) { const bis = sonne().unter - Date.now(); if (bis > 0 && bis < JZB_KUERBIS_VORHER_MIN * 60000) return "vorher"; }
+  return "tag";
+}
+function jzbKuerbisSchritt(dt) {
+  const J = JZB, k = J.k, K = J.kuerbis;
+  if (!J.kuerbisZ || (J.kuerbisZ.uhr -= dt) <= 0) J.kuerbisZ = { z: jzbKuerbisZeit(), uhr: 5 }; // alle 5 s nachsehen reicht
+  const z = J.kuerbisZ.z, ziel = Math.max(JZB_RAND + 14 * k, J.w * .34); // rechts neben den Pilzen
+  if (z === "tag") { if (K && !K.rollt) J.kuerbis = null; return; }
+  if (!K) {
+    if (z === "nacht") { J.kuerbis = { x: ziel, rot: 0, an: 0, rollt: false, ziel, liegt: 9 }; return; } // abends geöffnet: er steht schon da
+    if (z === "vorschau" && (J.kuerbisUhr = (J.kuerbisUhr ?? 3) - dt) > 0) return;
+    if (J.hund || J.blaeser) return; // erst wenn der Hund frei ist – nie mitten durch den Laubbläser
+    const dir = -1; J.hund = { dir, x: J.w + 60 * k, zx: 0, phase: "hin", t: 0, halt: 0, dauer: jzbZ(2.6, 3.4), rollt: true };
+    const x0 = J.hund.x + dir * 34 * k, n = Math.max(1, Math.round(Math.abs(x0 - ziel) / (2 * Math.PI * 9.5 * k))); // ganze Umdrehungen → kommt aufrecht an
+    J.kuerbis = { x: x0, rot: 0, an: 0, rollt: true, ziel, liegt: 0, reff: Math.abs(x0 - ziel) / (2 * Math.PI * n) };
+    return;
+  }
+  if (K.rollt) return;
+  K.liegt += dt; const soll = z === "nacht" || (z === "vorschau" && K.liegt > 3) ? 1 : 0;
+  K.an += (soll - K.an) * Math.min(1, dt * (soll ? .8 : 2));
+}
+function jzbHerbstKuerbisMalen(c, K, k) {
+  const J = JZB, T = J.T, r = 9.5 * k, yb = J.h - 1, cx = K.x, cy = yb - r * .82;
+  const fl = .74 + .18 * Math.sin(T * 13) * Math.sin(T * 7.3) + .08 * Math.sin(T * 31 + 1), an = Math.max(0, Math.min(1, K.an)) * fl; // flackernde Kerze
+  if (an > .02) {
+    const gl = c.createRadialGradient(cx, cy, r * .2, cx, cy, r * 3.4); gl.addColorStop(0, `rgba(255,190,70,${.5 * an})`); gl.addColorStop(1, "rgba(255,140,20,0)");
+    c.fillStyle = gl; c.beginPath(); c.arc(cx, cy, r * 3.4, 0, 7); c.fill();
+    c.fillStyle = `rgba(255,180,60,${.28 * an})`; c.beginPath(); c.ellipse(cx, yb, r * 2.6, r * .45, 0, 0, 7); c.fill(); // Lichtschein am Boden
+  }
+  c.save(); c.translate(cx, cy); c.rotate(K.rot);
+  const g = c.createRadialGradient(-r * .3, -r * .3, r * .2, 0, 0, r * 1.2); g.addColorStop(0, an > .02 ? "#ffb24d" : "#ffa23a"); g.addColorStop(1, "#c9530a"); c.fillStyle = g;
+  for (const [dx, w] of [[-.45, .62], [.45, .62], [0, .7]]) { c.beginPath(); c.ellipse(dx * r, 0, r * w, r * .82, 0, 0, 7); c.fill(); }
+  c.strokeStyle = "rgba(120,50,0,.35)"; c.lineWidth = 1; for (const dx of [-.35, .35]) { c.beginPath(); c.ellipse(dx * r, 0, r * .3, r * .78, 0, 0, 7); c.stroke(); }
+  c.fillStyle = "#4e6b2a"; c.fillRect(-r * .1, -r * 1.02, r * .2, r * .3); c.strokeStyle = "#4e6b2a"; c.lineWidth = .8; c.beginPath(); c.moveTo(r * .1, -r * .95); c.quadraticCurveTo(r * .45, -r * 1.2, r * .4, -r * .85); c.stroke();
+  const gesicht = () => { c.beginPath(); for (const s of [-1, 1]) { c.moveTo(s * r * .45, -r * .32); c.lineTo(s * r * .2, -r * .02); c.lineTo(s * r * .62, -r * .02); c.closePath(); }
+    c.moveTo(-r * .6, r * .22); for (let j = 0; j <= 6; j++) c.lineTo(-r * .6 + j * r * .2, r * (j % 2 ? .32 : .22)); c.lineTo(r * .5, r * .5); c.lineTo(-r * .5, r * .5); c.closePath(); };
+  c.fillStyle = "#3b1a06"; gesicht(); c.fill(); // geschnitzt, dunkel
+  if (an > .02) { c.fillStyle = `rgba(255,${Math.round(200 + 40 * fl)},80,${Math.min(1, .25 + .85 * an)})`; gesicht(); c.fill(); }
+  c.restore();
 }
 function jzbHundBein(c, x, ph, hinten, laeuft, farbe) {
   const L = 4.25, schw = laeuft ? Math.sin(ph) * .5 : 0, knick = laeuft ? Math.max(0, Math.cos(ph)) * .9 : 0;
@@ -18803,6 +18856,7 @@ function jzbStreunerMalen(c, D, k) {
   const J = JZB, laeuft = D.phase !== "schnuppern" || (D.halt > 1.4 && D.halt < 1.9), sp = laeuft ? (D.t * 9) % (Math.PI * 2) : 0;
   // Kopf: beim Schnuppern runter zur Erde (zwischendurch kurz hoch), die Nase zuckt
   let kopf = 0; if (D.phase === "schnuppern") { const h = D.halt; kopf = h < .4 ? h / .4 : h > 2.1 && h < 2.6 ? 1 - (h - 2.1) / .5 * .8 : h >= 2.6 && h < 3 ? .2 + (h - 2.6) / .4 * .8 : h > D.dauer - .4 ? Math.max(0, (D.dauer - h) / .4) : 1; kopf = Math.max(0, Math.min(1, kopf)); }
+  if (D.rollt && D.phase === "hin") kopf = .4; // Nase am Kürbis
   const zuck = D.phase === "schnuppern" && kopf > .8 ? Math.sin(D.t * 26) * .5 : 0;
   const wedel = Math.sin(D.t * (D.phase === "schnuppern" ? 22 : 13)) * (D.phase === "schnuppern" ? .7 : .45), hopp = laeuft ? Math.abs(Math.sin(sp)) * 1.2 : 0;
   c.save(); c.translate(D.x, J.h - 1 - hopp * k); c.scale(D.dir * k * 1.4, k * 1.4); c.lineCap = "round"; c.lineJoin = "round";
@@ -18917,6 +18971,7 @@ function jzbExtrasBoden(c) { // Pfützen, Stiefel, Kochtopf, Igel, Schirm
   if (J.schirm) jzbSchirm(c, J.schirm, k);
   jzbNussNameMalen(c); // 2.329.0 KC-CLUB-NUSSNAME
   if (J.hoernchen) jzbHoernchenMalen(c, J.hoernchen, k); // 2.328.0
+  if (J.kuerbis && J.saison === "herbst") jzbHerbstKuerbisMalen(c, J.kuerbis, k); // 2.434.0 KC-CLUB-HERBST-KUERBIS
   if (J.hund) jzbStreunerMalen(c, J.hund, k); // 2.369.0 KC-CLUB-HERBST-HUND
   if (J.blaeser) jzbBlaeserMalen(c, J.blaeser, k);
   jzbWinterKinderMalen(c); // 2.282.0
@@ -19070,12 +19125,13 @@ function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, t
   JZB.vorschauSeit = art === "heute" ? 0 : Date.now(); // 2.358.0 KC-CLUB-AKKU-3
   JZB.eisName = null; JZB.eisStueck = null; JZB.nussName = null; // 2.356.0 KC-CLUB-NAME-WEG: Vorschau gewechselt oder beendet → kein alter Name bleibt stehen
   JZB.extra = extra || "";
+  JZB.kuerbis = null; JZB.kuerbisUhr = undefined; JZB.kuerbisZ = null; // 2.434.0: Vorschau „🎃 Kürbis-Hund“ beginnt von vorn
   zeige("start"); setTimeout(jahreszeitKopf, 350);
   jzVorschauLeiste(); // 2.355.0
 }
 // ---------- 2.355.0 KC-CLUB-VORSCHAU-ENDE (Fund Hansi „in den Einstellungen z. B. Nikolaus-Stiefel gewählt, wird angezeigt – wie bekomme ich ihn
 // wieder weg?“): solange eine Vorschau läuft, steht auf der Startseite ein Knopf „✕ Vorschau beenden“ (vorher nur „📅 Heute“ in den Einstellungen)
-const JZ_VORSCHAU_NAME = { nikolaus: "Nikolaus-Stiefel", regen: "Regen", topf: "Kochtopf am Treffen-Tag", ostern: "Ostereier", igel: "Igel", twinkey: "Twinkey fegt",
+const JZ_VORSCHAU_NAME = { nikolaus: "Nikolaus-Stiefel", regen: "Regen", topf: "Kochtopf am Treffen-Tag", ostern: "Ostereier", igel: "Igel", kuerbis: "Kürbis-Hund", twinkey: "Twinkey fegt",
   herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", unterwasser: "Unterwasserwelt", advent: "Advent" };
 function jzVorschauLeiste(v = aktuelleAnsicht) {
   const an = !!(JZB.vorschau || JZB.extra) && v === "start" && !(typeof RG !== "undefined" && RG.an);
