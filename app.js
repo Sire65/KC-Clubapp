@@ -14748,13 +14748,13 @@ const FEE_SVG = `<svg viewBox="0 0 170 170" aria-hidden="true"><defs>
 <path d="M82 30 C70 32 62 44 58 56 C54 66 46 72 40 76 C50 78 58 72 62 66 C60 76 54 84 48 88 C60 88 68 78 72 70 C74 78 72 86 68 92 C78 88 82 76 82 66 C84 56 88 46 92 40Z" fill="url(#feeHa)"/>
 <path d="M66 50 C62 60 54 68 46 74 M74 56 C70 66 64 76 56 84 M80 58 C80 68 76 78 72 86" stroke="#fff3c9" stroke-width=".9" fill="none" opacity=".75" stroke-linecap="round"/>
 
-<path d="M82 98 C78 104 74 110 69.5 117.6 C66 121 60 125 55 129.5 C52.5 131.4 50.6 132.6 49 133.4 L51 136.4 C56 134 62 130 66.6 125.6 C69.4 123.4 71 122.4 72 121 C77 114 83 108 90.6 103Z" fill="url(#feeHt2)"/>
+<g class="fee-bein a"><path d="M82 98 C78 104 74 110 69.5 117.6 C66 121 60 125 55 129.5 C52.5 131.4 50.6 132.6 49 133.4 L51 136.4 C56 134 62 130 66.6 125.6 C69.4 123.4 71 122.4 72 121 C77 114 83 108 90.6 103Z" fill="url(#feeHt2)"/>
 <path d="M49.4 133 C46 135 42 137.6 38.2 139.8 C37.4 140.4 37.8 141.2 38.8 141 C42.8 140.4 46.8 139.2 50.6 137.6 C52 137 52.4 135.6 51.8 134.4 C51.2 133.2 50.2 132.8 49.4 133Z" fill="#e57fa8" stroke="#d26a95" stroke-width=".4"/>
-<path d="M51.2 132 L54.4 135.4 M53.4 130.6 L56 133.8 M50.8 135.4 L55.6 131" stroke="#f9c9dc" stroke-width=".65" stroke-linecap="round"/>
-<path d="M95 102 C92 110 87 118 81.4 125.4 C79.8 127.6 77 128 75.4 126.6 C70 123 63.4 118.4 57.8 114.6 L58.8 111.4 C62.8 111.4 69 113.6 74.4 116.4 C76.2 117.4 77.8 117.6 78.8 116.8 C81 112 84 106 86.8 100.6Z" fill="url(#feeHt)"/>
+<path d="M51.2 132 L54.4 135.4 M53.4 130.6 L56 133.8 M50.8 135.4 L55.6 131" stroke="#f9c9dc" stroke-width=".65" stroke-linecap="round"/></g>
+<g class="fee-bein b"><path d="M95 102 C92 110 87 118 81.4 125.4 C79.8 127.6 77 128 75.4 126.6 C70 123 63.4 118.4 57.8 114.6 L58.8 111.4 C62.8 111.4 69 113.6 74.4 116.4 C76.2 117.4 77.8 117.6 78.8 116.8 C81 112 84 106 86.8 100.6Z" fill="url(#feeHt)"/>
 <path d="M59.2 111.2 C55.4 109.4 51 107.6 46.8 106.2 C45.8 105.9 45.4 106.7 46.2 107.4 C49.4 109.8 53.2 112.4 57.2 114.8 C58.6 115.6 59.8 114.8 60 113.4 C60.2 112.4 60 111.6 59.2 111.2Z" fill="#ec8db3" stroke="#d26a95" stroke-width=".4"/>
 <path d="M60.8 111 L61.6 115.4 M62.8 111.4 L63.4 116 M60.4 114.6 L64.2 111.8" stroke="#f9c9dc" stroke-width=".65" stroke-linecap="round"/>
-<path d="M80.4 124.6 C78.6 126 77 126.2 76 125.4" stroke="#fff" stroke-width=".55" fill="none" opacity=".55" stroke-linecap="round"/>
+<path d="M80.4 124.6 C78.6 126 77 126.2 76 125.4" stroke="#fff" stroke-width=".55" fill="none" opacity=".55" stroke-linecap="round"/></g>
 
 <path d="M82 60 C74 64 68 70 62 70 C58 70 55 67 52 66" stroke="#f8cdb6" stroke-width="3.6" fill="none" stroke-linecap="round"/>
 
@@ -14884,7 +14884,18 @@ function feeKommt(vorschau) {
     }
   };
   f.onclick = (e) => { e.stopPropagation(); const [sx, sy] = stern(); staub(sx, sy, 18); feeSpruch(); };
-  const drehen = (vorn) => { f.querySelector(".fee-innen")?.animate([{ transform: "scaleX(1)" }, { transform: "scaleX(.08)", offset: .5 }, { transform: "scaleX(1)" }], { duration: 340, easing: "ease-in-out" }); setTimeout(() => f.classList.toggle("vorn", vorn), 170); };
+  // 2.431.0 KC-CLUB-FEE-3D (Wunsch Hansi „beim Umdrehen mehr 3D – nicht von platter Seitenansicht zu Frontansicht“): echte Drehung um die
+  // Hochachse mit Perspektive – die Seitenansicht dreht sich weg und wird dunkler, die Vorderansicht dreht sich überlappend herein,
+  // dabei hebt sich die Fee kurz, neigt sich und schlägt schneller mit den Flügeln.
+  const drehen = (vorn) => {
+    const weg = f.querySelector(vorn ? ".fee-seite" : ".fee-vorn"), her = f.querySelector(vorn ? ".fee-vorn" : ".fee-seite"), r = vorn ? 1 : -1;
+    const winkel = (w, sk) => `perspective(320px) rotateY(${w}deg) scale(${sk})`;
+    weg?.animate([{ transform: winkel(0, 1), opacity: 1, filter: "brightness(1)" }, { transform: winkel(82 * r, .94), opacity: 0, filter: "brightness(.7)" }], { duration: 420, easing: "cubic-bezier(.5,0,.9,.6)" });
+    her?.animate([{ transform: winkel(-82 * r, .94), opacity: 0, filter: "brightness(.7)" }, { transform: winkel(-30 * r, .98), opacity: 1, filter: "brightness(.9)", offset: .45 }, { transform: winkel(6 * r, 1.02), opacity: 1, filter: "brightness(1.05)", offset: .8 }, { transform: winkel(0, 1), opacity: 1, filter: "brightness(1)" }],
+      { duration: 560, delay: 220, easing: "cubic-bezier(.2,.6,.3,1)", fill: "backwards" });
+    f.querySelector(".fee-innen")?.animate([{ transform: "translateY(0) rotate(0deg)" }, { transform: `translateY(-7px) rotate(${-5 * r}deg)`, offset: .45 }, { transform: "translateY(0) rotate(0deg)" }], { duration: 780, easing: "ease-in-out" });
+    f.classList.add("dreht"); setTimeout(() => f.classList.toggle("vorn", vorn), 220); setTimeout(() => f.classList.remove("dreht"), 780);
+  };
   const weg = () => { ende = true; f.remove(); FEE_LAEUFT = false; };
   const schritt = (jetzt) => {
     if (ende) return; if (!t0) t0 = jetzt; const t = jetzt - t0;

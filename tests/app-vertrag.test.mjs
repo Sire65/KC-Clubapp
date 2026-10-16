@@ -10279,3 +10279,12 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(k.length > 0 && /eilig: true,/.test(k), "Anklopfen: eilig → priority critical");
   assert.ok(/vars\.eilig === true \? \{ priority: "critical" \}/.test(server), "eilig wird zu critical");
 }
+// 2.431.0 KC-CLUB-FEE-3D: Umdrehen mit Perspektive (statt flachem Umklappen), Beine paddeln im Flug
+{
+  const d = programm.slice(programm.indexOf("const drehen = (vorn) => {"), programm.indexOf("const weg = () => { ende = true;"));
+  assert.ok(/perspective\(320px\) rotateY\(/.test(d) && !/scaleX\(\.08\)/.test(d), "Drehung mit Perspektive");
+  assert.ok(/fill: "backwards"/.test(d) && /f\.classList\.toggle\("vorn", vorn\)/.test(d), "Ansichten überlappen, Zustand wechselt");
+  assert.ok(/<g class="fee-bein a"><path d="M82 98/.test(programm) && /<g class="fee-bein b"><path d="M95 102/.test(programm), "Beine als eigene Gruppen");
+  assert.ok(/@keyframes feeBeinA/.test(seite) && /@keyframes feeBeinB/.test(seite) && /\.fee \.fee-bein\.a \{ transform-origin: 86px 100px;/.test(seite), "Beine bewegen sich um die Hüfte");
+}
+
