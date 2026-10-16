@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.432.0";
+const SERVER_VERSION = "2.433.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -12588,13 +12588,23 @@ Köcheclub-App`,
         if (o.besitzer ? !o._eigen : !darfArchivPflegen(ich)) throw new Fehler(o.besitzer ? "Das kann nur der Besitzer des Ordners." : "Prüfen dürfen Clubsprecher und Admin.", 403);
         if (d.status !== "pruefung") return json({ ok: true, schon: true });
         const ja = p.annehmen === true, url = `${APP_URL}#archiv`;
-        if (ja) await db.from("kc_club_archiv_dokumente").update({ status: "ok", geaendert_am: jetzt() }).eq("id", d.id);
+        // 2.433.0 KC-CLUB-EINGANG-WOHIN (Wunsch Hansi „Steven fragen, in welchen Ordner und welches Register – mit Vorschlag“): der Besitzer
+        // kann beim Annehmen einen anderen eigenen Ordner und ein anderes Register wählen; vorgeschlagen ist, was der Absender gewählt hat
+        let ziel = { ordner_id: d.ordner_id as string, register: d.register as string | null };
+        if (ja && o.besitzer && o._eigen && (p.ordner_id || p.register)) {
+          const { data: zo } = p.ordner_id && p.ordner_id !== d.ordner_id
+            ? await db.from("kc_club_archiv_ordner").select("id,register,besitzer,geloescht_am").eq("id", String(p.ordner_id)).maybeSingle() : { data: o };
+          if (!zo || zo.besitzer !== ich.person_id || zo.geloescht_am) throw new Fehler("Diesen Ordner gibt es nicht (mehr) – bitte einen anderen wählen.", 404);
+          const regs: string[] = zo.register ?? [];
+          ziel = { ordner_id: zo.id, register: regs.includes(String(p.register)) ? String(p.register) : regs.includes(String(d.register)) ? d.register : regs[0] ?? null };
+        }
+        if (ja) await db.from("kc_club_archiv_dokumente").update({ status: "ok", ordner_id: ziel.ordner_id, register: ziel.register, geaendert_am: jetzt() }).eq("id", d.id);
         else {
           await geloescht(ich, "archiv_einreichung", { dokument: d });
           await db.from("kc_club_archiv_dokumente").delete().eq("id", d.id);
           await dateienEntfernen([d.attachment_id]);
         }
-        await protokoll(ich.person_id, ja ? "archiv_einreichung_angenommen" : "archiv_einreichung_abgelehnt", { dokument: d.id, ordner: o.id, von: d.hochgeladen_von });
+        await protokoll(ich.person_id, ja ? "archiv_einreichung_angenommen" : "archiv_einreichung_abgelehnt", { dokument: d.id, ordner: ziel.ordner_id, register: ziel.register, von: d.hochgeladen_von });
         if (d.hochgeladen_von !== ich.person_id) await senden("club_nachricht", [d.hochgeladen_von], {
           titel: ja ? "✅ Dokument angenommen" : "✖ Dokument abgelehnt", kurz: `${ich.name} hat „${txt(d.titel, 80)}“ ${ja ? "angenommen" : "abgelehnt"}.`,
           betreff: `Köcheclub Werne – dein Dokument wurde ${ja ? "angenommen" : "abgelehnt"}`,
