@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.434.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.435.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17778,6 +17778,7 @@ function jzbHalloweenSchritt(F, dt) {
   F.fleder = F.fleder.filter((f) => (f.dir > 0 ? f.x < J.w + 80 : f.x > -80));
   if (!F.geist && (F.geistUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 10) F.geist = { t: 0 };
   if (F.geist && (F.geist.t += dt) > 7) { F.geist = null; F.geistUhr = jzbZ(14, 24); }
+  jzbHwSchritt(F, dt); // 2.435.0 KC-CLUB-HALLOWEEN-GEWITTER
 }
 function jzbKuerbis(c, x, yb, r, k, i) {
   const J = JZB, fl = .75 + .25 * Math.sin(J.T * 13 + i * 2) * Math.sin(J.T * 7.3 + i), cy = yb - r * .82;
@@ -17799,7 +17800,8 @@ function jzbFlederMalen(c, f, k) {
   c.restore();
 }
 function jzbHalloweenMalen(c, F) {
-  const J = JZB, k = J.k, T = J.T, mx = J.w * .5, my = J.h * .355, mr = 12 * k;
+  const J = JZB, k = J.k, T = J.T, mx = J.w * .5, my = J.h * .355, mr = 12 * k, HW = F.hw;
+  c.save(); if (HW?.donner > 0) c.translate((Math.random() - .5) * 5 * k * HW.donner, (Math.random() - .5) * 3 * k * HW.donner); // 2.435.0: Donner – das Bild wackelt
   const gl = c.createRadialGradient(mx, my, mr * .6, mx, my, mr * 3); gl.addColorStop(0, "rgba(220,235,255,.45)"); gl.addColorStop(1, "rgba(200,220,255,0)"); c.fillStyle = gl; c.beginPath(); c.arc(mx, my, mr * 3, 0, 7); c.fill();
   c.fillStyle = "#fff4cf"; c.beginPath(); c.arc(mx, my, mr, 0, 7); c.fill(); c.fillStyle = "rgba(200,180,120,.45)";
   for (const [dx, dy, r] of [[-.35, -.2, .22], [.3, .25, .16], [.1, -.45, .12], [-.1, .4, .1]]) { c.beginPath(); c.arc(mx + dx * mr, my + dy * mr, r * mr, 0, 7); c.fill(); }
@@ -17810,6 +17812,7 @@ function jzbHalloweenMalen(c, F) {
   c.beginPath(); c.moveTo(sx, sy0); c.lineTo(sx, sy); c.stroke(); c.fillStyle = "#151015"; c.strokeStyle = "#151015"; c.lineWidth = 1;
   for (let i = 0; i < 4; i++) for (const s of [-1, 1]) { const w = Math.sin(T * 6 + i) * .6 * k; c.beginPath(); c.moveTo(sx, sy + 3 * k); c.lineTo(sx + s * 4.5 * k, sy + (i - 1) * 2 * k + w); c.lineTo(sx + s * 6 * k, sy + (i - .5) * 2.6 * k); c.stroke(); }
   c.beginPath(); c.arc(sx, sy + 3 * k, 3 * k, 0, 7); c.fill(); c.beginPath(); c.arc(sx, sy + .5 * k, 1.8 * k, 0, 7); c.fill();
+  jzbHwMalenHinten(c, F); // 2.435.0: Gewitterwolken, Sarg mit Vampir
   const ks = [[JZB_RAND + 16 * k, 10], [JZB_RAND + 38 * k, 6.5], [J.w - 70 * k, 12.5], [J.w - 48 * k, 7]];
   ks.forEach(([x, r], i) => jzbKuerbis(c, x, J.h - 1, r * k, k, i));
   const G = F.geist;
@@ -17821,6 +17824,7 @@ function jzbHalloweenMalen(c, F) {
     if (G.t > 1.8 && G.t < 5.8) { const txt = name ? `Buuuh, ${name}!` : "Buuuh!"; c.font = `800 ${11 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "right"; c.textBaseline = "middle"; c.lineWidth = 3; c.strokeStyle = "rgba(20,10,30,.7)"; c.strokeText(txt, gx - s, gy - s * .9); c.fillStyle = "#fff"; c.fillText(txt, gx - s, gy - s * .9); }
     c.restore(); }
   for (const f of F.fleder) jzbFlederMalen(c, f, k);
+  jzbHwMalenVorn(c, F); c.restore(); // 2.435.0: Geister, Hexe, Blitz, Zauberblitz
 }
 // ---- 🐠 Unterwasserwelt (2.434.0 KC-CLUB-UNTERWASSER, Wunsch Hansi „bunte Fische, Luftblasen, Taucher, Helmtaucher mit dickem Helm und
 // Luftschlauch, grüne Pflanzen, Muscheln, ein Seepferdchen schreibt den Namen – zieht der Taucher den Stöpsel, läuft das ganze Wasser ab und
@@ -18048,6 +18052,150 @@ function jzbUnterwasserMalen(c, F) {
   for (const r of U.ringe) { c.strokeStyle = `rgba(255,255,255,${r.a})`; c.lineWidth = .8; c.beginPath(); c.ellipse(r.x, r.y, r.r * k, r.r * .3 * k, 0, 0, 7); c.stroke(); }
   if (U.plopp >= 0 && U.plopp < 1.6) { c.save(); c.globalAlpha *= Math.min(1, (1.6 - U.plopp) * 2); c.font = `800 ${12 * k}px "Comic Sans MS","Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle";
     c.lineWidth = 3; c.strokeStyle = "rgba(10,60,120,.8)"; c.strokeText("Plopp!", st.x - 14 * k, st.y - 34 * k - U.plopp * 8 * k); c.fillStyle = "#fff"; c.fillText("Plopp!", st.x - 14 * k, st.y - 34 * k - U.plopp * 8 * k); c.restore(); }
+}
+// ---- 2.435.0 KC-CLUB-HALLOWEEN-GEWITTER (Wunsch Hansi „bei Halloween noch die Hexe auf ihrem Besen durchfliegen lassen, mehr Geister, Blitz und
+// Donner wie bei Gewitter, auf seinem Sarg kommt ein Vampir mit Umhang – der setzt sich erst hin, dann steht er auf und geht weg – und die Hexe
+// fuchtelt mit ihrem Zauberstab und die Szene ist vorbei“) ----
+// Dunkle Wolken ziehen über den Mond; ab und zu ein Blitz (Lichtschein + Zickzack), kurz danach Donner (das Bild wackelt). Kleine Geister schweben
+// vorbei. Die Hexe fliegt zweimal auf dem Besen durch („Hihihi!“). Nach gut 20 s geht der Sargdeckel auf: der Vampir richtet sich auf, sitzt,
+// grüßt mit dem Vornamen, steigt heraus und geht mit wehendem Umhang davon; der Deckel schließt sich. Zum Schluss schwebt die Hexe in die Mitte,
+// fuchtelt mit dem Zauberstab (Funken) – ein Zauberblitz, sie fliegt davon und die Szene ist vorbei.
+const JZB_HW_ENDE = 12; // Sekunden vor Laufende: die Hexe kommt zum Schlusszauber
+const jzbHwSargX = () => Math.max(JZB_RAND + 70 * JZB.k, JZB.w * .37);
+function jzbHwSchritt(F, dt) {
+  const J = JZB, k = J.k, D = JZB_FEST_DAUER;
+  const H = F.hw || (F.hw = { geister: [], geistUhr: jzbZ(2, 5), blitz: null, blitzUhr: jzbZ(3, 7), donnerIn: 0, donner: 0, knall: 0, hexe: null, hexeNr: 0, vamp: null, ende: false,
+    wolken: Array.from({ length: 4 }, (_, i) => ({ x: (i + jzbZ(.1, .9)) * J.w / 4, y: jzbZ(5, 14) * k, r: jzbZ(10, 16) * k, v: jzbZ(3, 7) * k })) });
+  for (const w of H.wolken) { w.x += w.v * dt; if (w.x - w.r * 2.5 > J.w) w.x = -w.r * 2.5; }
+  // ⚡ Gewitter: Blitz, kurz danach Donner
+  if ((H.blitzUhr -= dt) <= 0 && F.t < D - JZB_HW_ENDE - 2) {
+    H.blitzUhr = jzbZ(7, 15); const x0 = jzbZ(J.w * .12, J.w * .88), yz = J.h * jzbZ(.45, .8), pfad = [[x0, 0]]; let x = x0, y = 0;
+    while (y < yz) { y += jzbZ(6, 12) * k; x += jzbZ(-8, 8) * k; pfad.push([x, y]); }
+    const ast = pfad[Math.floor(pfad.length * .45)], zweig = [ast]; let ax = ast[0], ay = ast[1]; for (let i = 0; i < 4; i++) { ay += jzbZ(5, 9) * k; ax += jzbZ(4, 9) * k * (x0 > J.w / 2 ? -1 : 1); zweig.push([ax, ay]); }
+    H.blitz = { t: 0, pfad, zweig }; H.donnerIn = jzbZ(.45, 1.1);
+  }
+  if (H.blitz && (H.blitz.t += dt) > .6) H.blitz = null;
+  if (H.donnerIn > 0 && (H.donnerIn -= dt) <= 0) H.donner = .9;
+  if (H.donner > 0) H.donner -= dt;
+  // 👻 kleine Geister schweben vorbei
+  if ((H.geistUhr -= dt) <= 0 && F.t < D - 10 && H.geister.length < 3) {
+    H.geistUhr = jzbZ(5, 10); const dir = Math.random() < .5 ? 1 : -1;
+    H.geister.push({ dir, x: dir > 0 ? -20 * k : J.w + 20 * k, y0: jzbZ(J.h * .2, J.h * .6), v: jzbZ(14, 24) * k, ph: jzbZ(0, 6), s: jzbZ(.6, .9) });
+  }
+  for (const g of H.geister) { g.x += g.dir * g.v * dt; g.ph += dt; }
+  H.geister = H.geister.filter((g) => g.x > -40 * k && g.x < J.w + 40 * k);
+  // 🧙 Hexe: zweimal vorbei, zum Schluss der Zauber
+  if (!H.hexe && !H.ende && ((F.t > 9 && H.hexeNr === 0) || (F.t > 58 && H.hexeNr === 1))) {
+    H.hexeNr++; const dir = H.hexeNr === 1 ? 1 : -1; H.hexe = { modus: "vorbei", dir, x: dir > 0 ? -45 * k : J.w + 45 * k, y0: J.h * jzbZ(.2, .34), t: 0 }; }
+  if (!H.ende && F.t > D - JZB_HW_ENDE) { H.ende = true; H.hexe = { modus: "ende", dir: 1, x: -45 * k, sx: -45 * k, y0: J.h * .3, t: 0 }; }
+  const X = H.hexe;
+  if (X) { X.t += dt;
+    if (X.modus === "vorbei") { X.x += X.dir * 75 * k * dt; if (X.x < -70 * k || X.x > J.w + 70 * k) H.hexe = null; }
+    else if (X.t < 2.4) X.x = X.sx + (J.w * .5 - X.sx) * jzbEase(X.t / 2.4);
+    else if (X.t < 6) { X.zaubert = true; if (Math.random() < dt * 28) { const [sx, sy] = jzbHwStab(X); J.fx.push({ typ: "funke", x: sx, y: sy, vx: jzbZ(-45, 45), vy: jzbZ(-45, 25), s: jzbZ(1.4, 2.6), a: 1, farbe: jzbW(["#c77dff", "#ffd23f", "#7bed6f", "#ffffff", "#ff9f1c"]) }); } }
+    else if (!X.knall) { X.knall = true; X.zaubert = false; H.knall = 1; const [sx, sy] = jzbHwStab(X);
+      for (let i = 0; i < 36; i++) { const w = i / 36 * Math.PI * 2, v = jzbZ(50, 110) * Math.max(.7, k); J.fx.push({ typ: "funke", x: sx, y: sy, vx: Math.cos(w) * v, vy: Math.sin(w) * v, s: jzbZ(1.8, 3.2), a: 1, farbe: jzbW(["#c77dff", "#ffd23f", "#ffffff", "#ff7a00"]) }); } }
+    else { X.x += 90 * k * dt; X.y0 -= 55 * k * dt; if (X.y0 < -60 * k) H.hexe = null; } // fliegt davon – die Szene ist vorbei
+  }
+  if (H.knall > 0) H.knall -= dt * 1.1;
+  // 🧛 Vampir im Sarg
+  if (!H.vamp && F.t > 22) H.vamp = { t: 0 };
+  if (H.vamp) H.vamp.t += dt;
+}
+const jzbHwHexeY = (X) => X.y0 + Math.sin(X.t * 2.2) * 3 * JZB.k;
+function jzbHwStab(X) { // Spitze des Zauberstabs in Bildkoordinaten
+  const sc = 1.15 * JZB.k, w = X.zaubert ? Math.sin(X.t * 12) * .8 : 0, a = -1.1 + w * .6, lx = Math.cos(a) * 10, ly = -6 + Math.sin(a) * 10;
+  return [X.x + X.dir * lx * sc, jzbHwHexeY(X) + ly * sc];
+}
+function jzbHwHexeMalen(c, X) {
+  const J = JZB, k = J.k, sc = 1.15 * k, fl = Math.sin(X.t * 9), y = jzbHwHexeY(X);
+  c.save(); c.translate(X.x, y); c.scale(X.dir * sc, sc); c.lineCap = "round"; c.lineJoin = "round";
+  c.strokeStyle = "#e0b04a"; c.lineWidth = .9; for (let i = -4; i <= 4; i++) { c.beginPath(); c.moveTo(-15, 3.4); c.lineTo(-26 + Math.abs(i) * .6, 3.4 + i * 1.1 + fl * .5); c.stroke(); } // Reisig
+  c.strokeStyle = "#7a4e26"; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-16, 3.6); c.lineTo(17, 1.6); c.stroke(); // Besenstiel
+  c.fillStyle = "#3c1450"; c.beginPath(); c.moveTo(-2.5, -7); c.lineTo(-14 - fl * 2, -3 + fl); c.lineTo(-9, 2.5); c.closePath(); c.fill(); // Umhang weht
+  c.strokeStyle = "#1b1b1b"; c.lineWidth = 1.6; c.beginPath(); c.moveTo(0, 2.5); c.lineTo(3, 8.5); c.moveTo(-1.6, 2.5); c.lineTo(.6, 8.8); c.stroke(); // Beine
+  c.fillStyle = "#1b1b1b"; c.beginPath(); c.ellipse(3.8, 8.8, 1.8, .9, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(1.4, 9.1, 1.8, .9, 0, 0, 7); c.fill();
+  c.fillStyle = "#5b1f7a"; c.beginPath(); c.moveTo(-4.4, 3.4); c.lineTo(4.4, 3.4); c.lineTo(2.2, -8); c.lineTo(-2.8, -8); c.closePath(); c.fill(); // Kleid
+  c.strokeStyle = "#5b1f7a"; c.lineWidth = 1.7; c.beginPath(); c.moveTo(1.4, -6); c.lineTo(7, 1.9); c.stroke(); c.fillStyle = "#8cc06a"; c.beginPath(); c.arc(7.2, 2, 1, 0, 7); c.fill(); // Hand am Besen
+  c.strokeStyle = "#ff8c1a"; c.lineWidth = 1.2; for (const d of [0, 1.2, 2.4]) { c.beginPath(); c.moveTo(-1.5, -12); c.quadraticCurveTo(-5 - d, -10 + fl * .6, -7.5 - d, -6.5 + d * .6); c.stroke(); } // Haare
+  c.fillStyle = "#8cc06a"; c.beginPath(); c.arc(.8, -11, 3.2, 0, 7); c.fill(); // Gesicht
+  c.beginPath(); c.moveTo(3.6, -11.6); c.lineTo(7.4, -10.2); c.lineTo(3.6, -9.6); c.closePath(); c.fill(); // lange Nase
+  c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(2.2, -11.8, .45, 0, 7); c.fill();
+  c.fillStyle = "#1d1028"; c.beginPath(); c.ellipse(.6, -14, 5.4, 1.2, -.1, 0, 7); c.fill(); // Hut mit Krempe
+  c.beginPath(); c.moveTo(-2.8, -14.2); c.lineTo(3.4, -14.6); c.quadraticCurveTo(0, -18, -5.5, -22.5); c.closePath(); c.fill();
+  c.fillStyle = "#c77dff"; c.fillRect(-2.6, -15.6, 5.8, 1.1);
+  const w = X.zaubert ? Math.sin(X.t * 12) * .8 : 0, a = -1.1 + w * .6, tx = Math.cos(a) * 10, ty = -6 + Math.sin(a) * 10; // Zauberstab
+  c.strokeStyle = "#5b1f7a"; c.lineWidth = 1.6; c.beginPath(); c.moveTo(0, -6); c.lineTo(Math.cos(a) * 5, -6 + Math.sin(a) * 5); c.stroke();
+  c.strokeStyle = "#2b1a10"; c.lineWidth = 1; c.beginPath(); c.moveTo(Math.cos(a) * 5, -6 + Math.sin(a) * 5); c.lineTo(tx, ty); c.stroke();
+  if (X.zaubert || X.modus === "ende") jzbStern(c, tx, ty, 1.8, "#ffd23f");
+  c.restore();
+  if (X.modus === "vorbei" && Math.abs(X.x - J.w / 2) < 50 * k) { c.save(); c.font = `800 ${10 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle";
+    c.lineWidth = 3; c.strokeStyle = "rgba(20,10,30,.7)"; c.strokeText("Hihihi!", X.x, y - 30 * k); c.fillStyle = "#d9b8ff"; c.fillText("Hihihi!", X.x, y - 30 * k); c.restore(); }
+}
+function jzbHwVampirMalen(c, x, yHuefte, rot, sc, schritt, umhang) { // stehend gezeichnet, Hüfte im Ursprung, Blick nach rechts
+  c.save(); c.translate(x, yHuefte); c.rotate(rot); c.scale(sc, sc); c.lineCap = "round"; c.lineJoin = "round";
+  const b = Math.sin(schritt) * 2.2;
+  c.fillStyle = "#7a0f1f"; c.beginPath(); c.moveTo(-3.6, -11); c.lineTo(-8.5 - umhang, 7.5); c.lineTo(2, 8.2); c.closePath(); c.fill(); // Umhang innen rot
+  c.fillStyle = "#111"; c.beginPath(); c.moveTo(-3.2, -11); c.lineTo(-9.6 - umhang * 1.2, 8.6); c.lineTo(-5.5 - umhang * .6, 9); c.lineTo(-1, -9); c.closePath(); c.fill();
+  c.strokeStyle = "#151515"; c.lineWidth = 2.2; c.beginPath(); c.moveTo(-1.3, 0); c.lineTo(-1.3 + b, 9); c.moveTo(1.3, 0); c.lineTo(1.3 - b, 9); c.stroke(); // Beine
+  c.fillStyle = "#000"; c.beginPath(); c.ellipse(-.6 + b, 9.4, 1.9, .9, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(2 - b, 9.4, 1.9, .9, 0, 0, 7); c.fill();
+  c.fillStyle = "#1a1a1a"; c.fillRect(-3.2, -11, 6.4, 11.4); // Anzug
+  c.fillStyle = "#f2f2f2"; c.beginPath(); c.moveTo(-1.2, -11); c.lineTo(0, -5.5); c.lineTo(1.2, -11); c.closePath(); c.fill();
+  c.fillStyle = "#c1121f"; c.beginPath(); c.moveTo(-1.4, -10.4); c.lineTo(1.4, -9.4); c.lineTo(1.4, -10.4); c.lineTo(-1.4, -9.4); c.closePath(); c.fill(); // Fliege
+  c.fillStyle = "#111"; for (const s of [-1, 1]) { c.beginPath(); c.moveTo(s * 3.2, -11); c.lineTo(s * 5.4, -18.5); c.lineTo(s * 1.4, -12.2); c.closePath(); c.fill(); } // hoher Kragen
+  c.fillStyle = "#7a0f1f"; c.beginPath(); c.moveTo(3, -11.4); c.lineTo(4.6, -17); c.lineTo(1.8, -12.2); c.closePath(); c.fill();
+  c.fillStyle = "#ddd6ea"; c.beginPath(); c.ellipse(.4, -14.6, 2.8, 3.2, 0, 0, 7); c.fill(); // Gesicht
+  c.fillStyle = "#111"; c.beginPath(); c.moveTo(-2.6, -15.4); c.quadraticCurveTo(-2.4, -18.6, .6, -18.2); c.quadraticCurveTo(3.4, -18, 3.2, -15.6); c.lineTo(1.2, -16.4); c.lineTo(.4, -15.2); c.lineTo(-.6, -16.4); c.closePath(); c.fill(); // Haare mit Spitze
+  c.fillStyle = "#e01e37"; c.beginPath(); c.arc(1.6, -14.9, .45, 0, 7); c.fill(); // rotes Auge
+  c.fillStyle = "#fff"; c.beginPath(); c.moveTo(1.6, -12.6); c.lineTo(2.1, -11.6); c.lineTo(2.4, -12.6); c.closePath(); c.fill(); // Eckzahn
+  c.restore();
+}
+function jzbHwSargMalen(c, F, hinten) { // hinten: nur der Deckel (liegt hinter dem Vampir), sonst die Kiste davor
+  const J = JZB, k = J.k, sx = jzbHwSargX(), yb = J.h - 1, V = F.hw?.vamp, t = V ? V.t : 0;
+  const offen = t < 12 ? jzbEase(t / 1.2) : Math.max(0, 1 - jzbEase((t - 12) / 1.2));
+  if (hinten) {
+    c.save(); c.translate(sx - 23 * k, yb - 10 * k); c.rotate(-offen * 1.25);
+    c.fillStyle = "#4a2a18"; c.beginPath(); c.moveTo(0, 0); c.lineTo(48 * k, 0); c.lineTo(46 * k, -5 * k); c.lineTo(3 * k, -5 * k); c.closePath(); c.fill();
+    c.fillStyle = "#2e180d"; c.fillRect(2 * k, -1.2 * k, 45 * k, 1.2 * k);
+    c.strokeStyle = "#d4a017"; c.lineWidth = 1.4 * k; c.beginPath(); c.moveTo(14 * k, -2.8 * k); c.lineTo(30 * k, -2.8 * k); c.moveTo(19 * k, -4.4 * k); c.lineTo(19 * k, -1.4 * k); c.stroke(); // goldenes Kreuz
+    c.restore(); return;
+  }
+  c.fillStyle = "#3d2214"; c.beginPath(); c.moveTo(sx - 26 * k, yb); c.lineTo(sx + 26 * k, yb); c.lineTo(sx + 28 * k, yb - 5 * k); c.lineTo(sx + 25 * k, yb - 10 * k); c.lineTo(sx - 23 * k, yb - 10 * k); c.lineTo(sx - 28 * k, yb - 5 * k); c.closePath(); c.fill();
+  c.strokeStyle = "rgba(0,0,0,.35)"; c.lineWidth = .7; c.beginPath(); c.moveTo(sx - 26 * k, yb - 5 * k); c.lineTo(sx + 27 * k, yb - 5 * k); c.stroke();
+  c.strokeStyle = "#b08d57"; c.lineWidth = 1.2 * k; c.beginPath(); c.moveTo(sx - 8 * k, yb - 3 * k); c.lineTo(sx + 8 * k, yb - 3 * k); c.stroke(); // Griff
+  if (offen > .05) { c.fillStyle = "rgba(122,15,31,.85)"; c.fillRect(sx - 22 * k, yb - 10.6 * k, 46 * k, 1.2 * k); } // rotes Futter am Rand
+}
+function jzbHwMalenHinten(c, F) {
+  const J = JZB, k = J.k, H = F.hw; if (!H) return;
+  c.fillStyle = "rgba(40,34,58,.78)"; for (const w of H.wolken) for (const [dx, dy, f] of [[0, 0, 1], [w.r * .9, w.r * .25, .8], [-w.r * .9, w.r * .25, .75], [w.r * 1.7, w.r * .4, .55]]) { c.beginPath(); c.arc(w.x + dx, w.y + dy, w.r * f, 0, 7); c.fill(); } // Gewitterwolken
+  jzbHwSargMalen(c, F, true);
+  const V = H.vamp, sx = jzbHwSargX(), yb = J.h - 1, sc = 1.4 * k;
+  if (V && V.t > 1.2) { const t = V.t, rand = yb - 3.5 * k, boden = yb - 9.6 * sc; // Hüfte tief im Sarg: beim Sitzen schauen nur Oberkörper und Kopf heraus
+    let x = sx + 6 * k, y = rand, rot = 0, schritt = 0, umhang = 0, sichtbar = true;
+    if (t < 3) rot = -Math.PI / 2 * (1 - jzbEase((t - 1.2) / 1.8)); // richtet sich auf
+    else if (t < 6) { /* sitzt und grüßt */ }
+    else if (t < 7.6) { const p = jzbEase((t - 6) / 1.6); x = sx + 6 * k + 26 * k * p; y = rand + (boden - rand) * p - Math.sin(Math.PI * p) * 10 * k; } // steht auf und steigt heraus
+    else { x = sx + 32 * k + (t - 7.6) * 16 * k; y = boden; schritt = (t - 7.6) * 7; umhang = Math.sin(t * 5) * 1.6 + 1.5; sichtbar = x < J.w + 30 * k; }
+    if (sichtbar) jzbHwVampirMalen(c, x, y, rot, sc, schritt, umhang);
+    if (t > 3.3 && t < 5.9) { const name = jzbEisNameText(), txt = name ? `Guten Abend, ${name}!` : "Guten Abend!"; c.save(); c.font = `800 ${10 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "left"; c.textBaseline = "middle";
+      c.lineWidth = 3; c.strokeStyle = "rgba(20,10,30,.75)"; c.strokeText(txt, x + 8 * k, y - 24 * k); c.fillStyle = "#ffd6dc"; c.fillText(txt, x + 8 * k, y - 24 * k); c.restore(); }
+  }
+  jzbHwSargMalen(c, F, false);
+}
+function jzbHwMalenVorn(c, F) {
+  const J = JZB, k = J.k, T = J.T, H = F.hw; if (!H) return;
+  for (const g of H.geister) { const gx = g.x, gy = g.y0 + Math.sin(g.ph * 2) * 5 * k, s = 11 * k * g.s; // kleine Geister
+    c.save(); c.globalAlpha *= .8; c.fillStyle = "rgba(245,245,255,.9)"; c.beginPath(); c.moveTo(gx - s * .7, gy + s * .9); c.lineTo(gx - s * .7, gy - s * .1); c.arc(gx, gy - s * .1, s * .7, Math.PI, 0); c.lineTo(gx + s * .7, gy + s * .9);
+    for (let i = 0; i < 4; i++) { const x0 = gx + s * .7 - (i + .5) * s * .35; c.quadraticCurveTo(x0, gy + s * (i % 2 ? .65 : 1.15) + Math.sin(T * 6 + i + g.ph) * 1.5, gx + s * .7 - (i + 1) * s * .35, gy + s * .9); } c.fill();
+    c.fillStyle = "#1a1a2a"; for (const d of [-.25, .25]) { c.beginPath(); c.ellipse(gx + d * s + g.dir * s * .1, gy - s * .25, s * .09, s * .14, 0, 0, 7); c.fill(); } c.beginPath(); c.ellipse(gx + g.dir * s * .1, gy + s * .1, s * .1, s * .14, 0, 0, 7); c.fill(); c.restore(); }
+  if (H.hexe) jzbHwHexeMalen(c, H.hexe);
+  const B = H.blitz;
+  if (B) { const t = B.t, a = t < .08 ? .5 : t < .14 ? .08 : t < .22 ? .4 : Math.max(0, .4 * (1 - (t - .22) / .3));
+    c.fillStyle = `rgba(225,232,255,${a})`; c.fillRect(0, 0, J.w, J.h); // Lichtschein
+    if (t < .3 || (t > .14 && t < .4)) { for (const [w, f] of [[5 * k, "rgba(190,210,255,.35)"], [1.6 * k, "rgba(255,255,255,.95)"]]) { c.strokeStyle = f; c.lineWidth = w; c.lineJoin = "miter";
+      for (const p of [B.pfad, B.zweig]) { c.beginPath(); p.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); } } }
+  }
+  if (H.knall > 0) { c.fillStyle = `rgba(200,130,255,${.45 * H.knall})`; c.fillRect(0, 0, J.w, J.h); } // Zauberblitz am Schluss
 }
 // ---------- KC-CLUB-JAHRESZEIT-EXTRAS (2.249.0, Wunsch Hansi „baue noch die weiteren Ideen“): Besonderes auf der Kopf-Bühne ----------
 // 🥾 Nikolaus (6.12.): ein gefüllter Stiefel steht unten. ☔ Regen – nur wenn die Wetterdaten frisch sind und es wirklich regnet (Regel 11:

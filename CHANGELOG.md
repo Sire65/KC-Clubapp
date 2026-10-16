@@ -17,6 +17,15 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.435.0 – 2026-10-16 – 🎃 Halloween: Hexe, Geister, Gewitter, Vampir im Sarg (KC-CLUB-HALLOWEEN-GEWITTER)
+Wunsch Hansi: „Bei Halloween noch die Hexe auf ihrem Besen durchfliegen lassen, mehr Geister und Blitz und Donner wie Gewitter. Auf seinem Sarg kommt ein Vampir mit Umhang – der setzt sich erst hin, dann steht er auf und geht weg. Und die Hexe fuchtelt mit ihrem Zauberstab und die Szene ist vorbei.“
+- **Gewitter:** dunkle Wolken ziehen über den Mond; etwa alle 7–15 s ein **Blitz** (heller Lichtschein, zweimal aufflackernd, Zickzack mit Ast), kurz danach **Donner** – das Bild wackelt einen Moment.
+- **Mehr Geister:** bis zu drei kleine Geister schweben gleichzeitig vorbei (dazu wie bisher das große „Buuuh, <Vorname>!“-Gespenst hinter dem Kürbis).
+- **🧙 Hexe auf dem Besen** (grünes Gesicht, langer Nase, spitzem Hut, orangen Haaren, wehendem Umhang) fliegt zweimal durch – in der Mitte „Hihihi!“.
+- **🧛 Vampir im Sarg:** unten steht ein Sarg; nach gut 20 s geht der Deckel (mit goldenem Kreuz) auf, der Vampir richtet sich auf, sitzt und grüßt „Guten Abend, <Vorname>!“, steigt heraus und geht mit wehendem, innen rotem Umhang davon; der Deckel schließt sich wieder.
+- **Schluss:** die Hexe schwebt in die Mitte, **fuchtelt mit dem Zauberstab** (bunte Funken), ein lila **Zauberblitz** – sie fliegt davon und die Szene ist vorbei (danach beginnt sie von vorn).
+- Nur App, kein Server- oder DB-Update.
+
 ## 2.434.0 – 2026-10-16 – 🐠 Neues Thema Unterwasserwelt (KC-CLUB-UNTERWASSER) · 🎃 Herbst-Kürbis mit Kerze (KC-CLUB-HERBST-KUERBIS)
 Wunsch Hansi: „Als neues Thema eine Unterwasserwelt – bunte Fische, Luftblasen, Taucher, Helmtaucher mit dickem Helm und Luftschlauch, grüne Pflanzen, Muscheln, ein Seepferdchen schreibt den Namen. Zieht der Taucher den Stöpsel, läuft das ganze Wasser ab und alles ist verschwunden; dann kommt Regen und baut die Szene von vorne auf.“
 - **Thema 🐠 Unterwasserwelt** (⚙️ → 🎨 Darstellung → 🎭 Themen; Farben „Nordsee“, Effekt Taube, Schrift „Strand“, Wimpel in Meeresfarben) mit eigener Szene im Kopf der Startseite, Vorschau unter ⚙️ → ✨ Effekte.
