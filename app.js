@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.431.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.432.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18586,17 +18586,19 @@ function jzbStreunerMalen(c, D, k) {
   c.fillStyle = fell; c.beginPath(); c.ellipse(0, -10.5, 9.5, 4.6, 0, 0, 7); c.fill();
   c.fillStyle = dunkel; c.beginPath(); c.ellipse(-3, -12, 3.6, 2.5, -.2, 0, 7); c.fill();
   c.strokeStyle = "#6f5439"; c.lineWidth = .8; for (const x of [-6, -2, 2]) { c.beginPath(); c.moveTo(x, -14.6); c.lineTo(x + 1.2, -16); c.stroke(); }
-  // Hals und Kopf (senkt sich zum Schnuppern)
-  c.save(); c.translate(7, -12); c.rotate(kopf * .95);
-  c.fillStyle = fell; c.beginPath(); c.ellipse(2, -1.5, 3.4, 3.2, .3, 0, 7); c.fill(); // Hals
-  c.beginPath(); c.arc(4.6, -4.2, 3.9, 0, 7); c.fill(); // Kopf
-  c.beginPath(); c.ellipse(8.2 + zuck * .3, -3.2, 3.2, 2.1, .1, 0, 7); c.fill(); // Schnauze
-  c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(11.1 + zuck * .4, -3.4, 1, 0, 7); c.fill(); // Nase
-  c.beginPath(); c.arc(5.6, -5.4, .7, 0, 7); c.fill(); // Auge
-  c.fillStyle = dunkel; c.beginPath(); c.moveTo(3, -7.4); c.quadraticCurveTo(1, -6.5, 1.4, -2.2); c.quadraticCurveTo(3, -3.4, 4.4, -6.6); c.closePath(); c.fill(); // Schlappohr
+  // Hals und Kopf (senkt sich zum Schnuppern) – 2.432.0 KC-CLUB-HUND-KOPF (Wunsch Hansi „naturgetreuer – der Kopf ist zu hoch und evtl. zu lang“):
+  // kräftiger Hals schräg nach vorn, Kopf etwa auf Rückenhöhe, kleiner Schädel mit schmaler werdender Schnauze, Schlappohr hängt am Schädel
+  c.save(); c.translate(7.5, -12); c.rotate(kopf * 1.2);
+  c.fillStyle = fell; c.beginPath(); c.moveTo(-3, 2); c.bezierCurveTo(-1.4, -2.6, 2, -5.2, 4.8, -5.3); c.lineTo(6.4, -1); c.quadraticCurveTo(2.6, 2.8, -2.2, 2.4); c.closePath(); c.fill(); // Hals, oben glatt in den Rücken
+  c.beginPath(); c.ellipse(5.6, -3.3, 3, 2.8, .15, 0, 7); c.fill(); // Schädel
+  c.beginPath(); c.moveTo(6.6, -5); c.quadraticCurveTo(8.6, -4.4, 10 + zuck * .3, -3.5); c.quadraticCurveTo(10.6 + zuck * .3, -2.4, 9.8, -1.8); c.lineTo(7, -1); c.closePath(); c.fill(); // Schnauze, vorn schmaler
+  c.strokeStyle = dunkel; c.lineWidth = .45; c.beginPath(); c.moveTo(9.4, -1.9); c.quadraticCurveTo(8.4, -1.6, 7.8, -1.9); c.stroke(); // Maul
+  c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(10.1 + zuck * .4, -3.1, .85, 0, 7); c.fill(); // Nase
+  c.beginPath(); c.arc(6.7, -4, .55, 0, 7); c.fill(); // Auge
+  c.fillStyle = dunkel; c.beginPath(); c.moveTo(5.2, -5.5); c.quadraticCurveTo(3.4, -5, 3.7, -1.6); c.quadraticCurveTo(4.8, -2.4, 5.8, -4.6); c.closePath(); c.fill(); // Schlappohr
   c.restore();
   // Schnupper-Wölkchen an der Nase
-  if (D.phase === "schnuppern" && kopf > .8 && Math.sin(D.t * 13) > .6) { c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.arc(19, -2.6, 1.2, 0, 7); c.arc(21.2, -3.6, .9, 0, 7); c.fill(); }
+  if (D.phase === "schnuppern" && kopf > .8 && Math.sin(D.t * 13) > .6) { c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.arc(15.4, -2.8, 1.1, 0, 7); c.arc(17.2, -3.6, .85, 0, 7); c.fill(); }
   c.restore();
 }
 function jzbHoernchenMalen(c, H, k) {

@@ -10287,4 +10287,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/<g class="fee-bein a"><path d="M82 98/.test(programm) && /<g class="fee-bein b"><path d="M95 102/.test(programm), "Beine als eigene Gruppen");
   assert.ok(/@keyframes feeBeinA/.test(seite) && /@keyframes feeBeinB/.test(seite) && /\.fee \.fee-bein\.a \{ transform-origin: 86px 100px;/.test(seite), "Beine bewegen sich um die Hüfte");
 }
+// 2.432.0 KC-CLUB-HUND-KOPF: Kopf des Herbst-Hunds auf Rückenhöhe, kürzer, schmale Schnauze
+{
+  const m = programm.slice(programm.indexOf("function jzbStreunerMalen(c, D, k)"), programm.indexOf("function jzbHoernchenMalen("));
+  assert.ok(/c\.translate\(7\.5, -12\); c\.rotate\(kopf \* 1\.2\);/.test(m) && /c\.ellipse\(5\.6, -3\.3, 3, 2\.8, \.15, 0, 7\); c\.fill\(\); \/\/ Schädel/.test(m), "Kopf tiefer und kleiner");
+  assert.ok(!/c\.arc\(4\.6, -4\.2, 3\.9, 0, 7\)/.test(m), "alte Kugel weg");
+}
 
