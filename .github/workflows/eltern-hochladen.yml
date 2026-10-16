@@ -1,0 +1,39 @@
+# KC-CLUB-ELTERN (2.431.0): lädt die Edge Function „kc-eltern“ (Eltern-Handy: Anmeldung + Versand) zu Supabase hoch. Kostenlos.
+name: Eltern-Programm hochladen
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/kc-eltern/**"
+  workflow_dispatch:
+concurrency:
+  group: eltern-hochladen
+  cancel-in-progress: false
+jobs:
+  hochladen:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJEKT: ptblnpiroqftcvlsrhac
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # erst der Test – ein roter Test verhindert das Hochladen
+      - run: node tests/app-vertrag.test.mjs
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+      - name: Edge Function hochladen
+        run: supabase functions deploy kc-eltern --project-ref "$PROJEKT" --no-verify-jwt --use-api
+      - name: Prüfen, ob kc-eltern antwortet und gesperrt ist
+        run: |
+          for i in 1 2 3 4 5 6; do
+            s=$(curl -s -o /tmp/a1 -w "%{http_code}" -X POST "https://$PROJEKT.supabase.co/functions/v1/kc-eltern" -H "content-type: application/json" -d '{"action":"senden","kinder":["KC-P-X"],"art":"termin"}' || true)
+            i2=$(curl -s -o /tmp/a2 -w "%{http_code}" -X POST "https://$PROJEKT.supabase.co/functions/v1/kc-eltern" -H "content-type: application/json" -d '{"action":"info","e":"00"}' || true)
+            echo "senden ohne Schlüssel: HTTP $s (erwartet 401) · info mit falschem Link: HTTP $i2 (erwartet 404)"
+            if [ "$s" = "401" ] && [ "$i2" = "404" ]; then exit 0; fi
+            sleep 10
+          done
+          echo "kc-eltern antwortet nicht wie erwartet"; exit 1

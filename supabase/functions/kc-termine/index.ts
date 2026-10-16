@@ -10,6 +10,16 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
+// 2.431.0 KC-CLUB-ELTERN: Eltern-Handy bekommt bei Schulungsterminen des Kindes einen kurzen Hinweis (Edge Function kc-eltern, „{kind}“ =
+// Vorname). Nie bei Testeinladungen; läuft im Hintergrund und stört den Versand an das Mitglied nie.
+function elternHinweis(kinder: string[], art: "schulung" | "erinnerung" | "absage", titel: string, text: string, test = false) {
+  if (test || !kinder.length) return;
+  const p = fetch(`${SUPA}/functions/v1/kc-eltern`, { method: "POST", signal: AbortSignal.timeout(15000),
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
+    body: JSON.stringify({ action: "senden", kinder, art, titel, text, url: "https://sire65.github.io/KC-Clubapp/eltern/" }) })
+    .then((r) => r.body?.cancel()).catch((e) => console.error("elternHinweis", String(e)));
+  try { (globalThis as any).EdgeRuntime?.waitUntil?.(p); } catch {}
+}
 
 const HANSI = "KC-P-002";
 const ORG = "KC_WERNE";
@@ -294,6 +304,7 @@ async function einladungSenden(e: any, leute: Person[], link: string, gueltig: s
   const v = await senden(anlass === "neu" || anlass === "erneut" ? "termin_einladung" : "termin_info_mitglied", leute.map((l) => l.person_id), {
     betreff, text, titel: "Köcheclub Werne", kurz: `Neue Terminvorschläge von Hansi – bitte bis ${frist(gueltig)} wählen.`, url: link,
   }, `termin-mitglied:${e.id}:${anlass}:${Date.now()}`, e.ist_test);
+  if (anlass === "neu") elternHinweis(leute.map((l) => l.person_id), "schulung", "🎓 Schulungstermin – {kind}", `Hansi hat {kind} Terminvorschläge geschickt – bitte bis ${frist(gueltig)} einen wählen.`, e.ist_test);
   if (v.some((x) => x.mail)) await db.from("kc_termin_einladungen").update({ gesendet_am: jetzt() }).eq("id", e.id);
   return v;
 }
@@ -330,6 +341,7 @@ async function bestaetigungSenden(e: any, leute: Person[], slot: any, buchung: a
     `Ich freue mich auf ${w.dich}!`, "",
     "Viele Grüße", "Hansi", "Köcheclub Werne",
   ].filter((z, i, a) => !(z === "" && a[i - 1] === "")).join("\n");
+  elternHinweis(leute.map((l) => l.person_id), "schulung", "🎓 Schulungstermin bestätigt – {kind}", `${wann(slot.beginn, slot.ende)}`, !!e.ist_test);
   return senden("termin_bestaetigung", leute.map((l) => l.person_id), {
     betreff: `Köcheclub Werne – Termin bestätigt: ${wann(slot.beginn, slot.ende)}`, text,
     titel: "Termin bestätigt", kurz: `Unser Treffen: ${wann(slot.beginn, slot.ende)} – ${artText(buchung.besuchsart, n)}. Die Bestätigung kommt auch per Mail.`,
@@ -413,6 +425,7 @@ async function erinnerungen() {
       betreff: `Köcheclub Werne – Erinnerung: morgen, ${fZeit.format(new Date(b.slot.beginn))} Uhr`, text,
       titel: "Erinnerung", kurz: `Morgen ${fZeit.format(new Date(b.slot.beginn))} Uhr: Treffen mit Hansi (${artText(b.besuchsart, k)}).`,
     }, `termin-erinnerung:${b.id}:${b.slot.beginn}`, b.einladung.ist_test); // 1.3.9: je Termin-Beginn eindeutig
+    elternHinweis(leute.map((l) => l.person_id), "erinnerung", "⏰ Morgen Schulung – {kind}", `Morgen ${fZeit.format(new Date(b.slot.beginn))} Uhr: Treffen mit Hansi.`, !!b.einladung.ist_test);
     await log("system", "erinnerung_gesendet", { einladung_id: b.einladung_id, slot_id: b.slot_id, buchung_id: b.id }, { versand: versandText(v) });
     n++;
   }
@@ -1050,6 +1063,8 @@ Deno.serve(async (req) => {
             titel: "Termin abgesagt", kurz: `Hansi muss den Termin ${wann(bestaetigt.slot.beginn, bestaetigt.slot.ende)} leider absagen.`,
           }, `termin-absage:${bestaetigt.id}:${bestaetigt.slot.beginn}`, e.ist_test); // 1.3.9: je Termin-Beginn eindeutig
           versand = versandText(v);
+          // KC-CLUB-ELTERN: Hansi sagt ab → Eltern-Hinweis (sagt das Kind selbst ab, bleibt das beim Kind – Privatsphäre)
+          elternHinweis(leute.map((l) => l.person_id), "absage", "❌ Schulungstermin abgesagt – {kind}", `${wann(bestaetigt.slot.beginn, bestaetigt.slot.ende)} fällt aus.`, !!e.ist_test);
         }
         await log("hansi", "einladung_zurueckgezogen", { einladung_id: e.id }, { namen: namenKurz(leute), vorher: e.status, versand: versand || undefined });
         return json({ ok: true });

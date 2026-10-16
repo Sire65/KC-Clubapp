@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- KC-CLUB-ELTERN (2.431.0, Wunsch Hansi „so sachte wie möglich – Kinder brauchen auch Privatsphäre“): Seite für das Eltern-Handy.
+     Ohne das App-Programm, ohne Anmeldung: Der Schlüssel aus dem WhatsApp-Link (?e=…) erlaubt NUR, Hinweise ein- oder auszuschalten.
+     Eltern bekommen nur einen kurzen Hinweis bei Terminen des Kindes und Nachrichten der Clubleitung – nie Texte, nie Chats.
+     Eigener Service Worker (eltern/sw.js, Bereich eltern/); der Haupt-Service-Worker lässt eltern/ aus. Kein start_url im Manifest:
+     So behält das iPhone beim „Zum Home-Bildschirm“ den Link mit Schlüssel. -->
+<title>Köcheclub Werne – Eltern</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#741521">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="KC Eltern">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../icon-192.png">
+<link rel="apple-touch-icon" href="../icon-192.png">
+<style>
+  :root { --rot: #741521; --rot2: #4d0c16; --beige: #f3e9dc; --gold: #f5c542; --text: #2b1a1c; --karte: #fff; --leise: #6a5a4a; }
+  @media (prefers-color-scheme: dark) { :root { --beige: #1e1416; --text: #f3e9dc; --karte: #2b1d20; --leise: #c9b8a8; } }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { min-height: 100vh; background: var(--beige); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 1.05rem; }
+  header { background: radial-gradient(ellipse at 50% 30%, #9a2436, var(--rot) 55%, var(--rot2)); color: #fff; padding: 22px 16px 24px; text-align: center; }
+  .logo { width: 72px; height: 72px; margin: 0 auto; border-radius: 50%; background: var(--rot); border: 4px solid #fff; display: grid; place-items: center; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); }
+  .logo img { width: 70%; display: block; }
+  h1 { font-family: Georgia, "DejaVu Serif", serif; font-size: 1.5rem; margin: 10px 0 2px; }
+  main { max-width: 520px; margin: 0 auto; padding: 16px 16px 30px; }
+  .karte { margin: 16px 0 0; background: var(--karte); border-radius: 18px; padding: 16px 18px; box-shadow: 0 6px 18px rgba(0, 0, 0, .08); border-left: 8px solid var(--rot); }
+  .karte h2 { font-size: 1.1rem; margin: 0 0 8px; }
+  .karte p, .karte li { line-height: 1.45; }
+  .karte ul { margin: 6px 0; padding-left: 1.2em; }
+  .status { font-size: 1.15rem; font-weight: 700; margin: 4px 0 12px; }
+  .knopf { display: block; width: 100%; padding: 14px 16px; margin: 8px 0 0; border: 0; border-radius: 14px; font: inherit; font-weight: 700; cursor: pointer; background: #e8dccd; color: #2b1a1c; }
+  .knopf.haupt { background: var(--rot); color: #fff; }
+  .knopf:disabled { opacity: .6; }
+  .klein { font-size: .9rem; color: var(--leise); }
+  .fehler { border-left-color: #b3261e; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><img src="../kc-kochmuetze-weiss.webp" alt=""></div>
+  <h1>Köcheclub Werne</h1>
+  <div>Hinweise für Eltern</div>
+</header>
+<main>
+  <div id="laden" class="karte"><p>Einen Moment …</p></div>
+
+  <div id="fehler" class="karte fehler" hidden><h2>⚠️ Link gilt nicht</h2><p id="fehlerText"></p></div>
+
+  <div id="inhalt" hidden>
+    <div class="karte">
+      <h2>👋 Hallo <span id="elName"></span></h2>
+      <div class="status" id="status"></div>
+      <button class="knopf haupt" id="ein" hidden>🔔 Einschalten</button>
+      <button class="knopf" id="aus" hidden>🔕 Ausschalten</button>
+      <p class="klein" id="hinweis"></p>
+    </div>
+    <div class="karte">
+      <h2>Was Sie bekommen</h2>
+      <ul>
+        <li>📅 einen kurzen Hinweis, wenn <b class="kind"></b> einen Termin hat – neu, geändert oder abgesagt (Club-Treffen, Veranstaltungen, Schulungen)</li>
+        <li>⏰ eine Erinnerung am Tag vorher</li>
+        <li>📨 einen Hinweis, wenn <b class="kind"></b> eine Nachricht von der Clubleitung bekommt – <b>ohne Inhalt</b></li>
+      </ul>
+      <h2>Was Sie nicht bekommen</h2>
+      <ul>
+        <li>💬 keine Chats und Nachrichten unter den Mitgliedern</li>
+        <li>🔒 keine Texte – den Inhalt sieht nur <b class="kind"></b> in der App</li>
+        <li>🌙 nachts (22–7 Uhr) nichts – außer bei einer Notfall-Meldung</li>
+      </ul>
+      <p class="klein"><b class="kind"></b> sieht in der App, dass Sie diese Hinweise bekommen. Fragen? Einfach bei der Clubleitung melden.</p>
+    </div>
+  </div>
+</main>
+<script>
+"use strict";
+const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-eltern";
+const $ = (id) => document.getElementById(id);
+const lsLesen = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+const lsSetzen = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+const ausLink = new URLSearchParams(location.search).get("e");
+if (ausLink && /^[0-9a-f]{40,96}$/.test(ausLink)) lsSetzen("kc_eltern_e", ausLink);
+const E = (ausLink && /^[0-9a-f]{40,96}$/.test(ausLink)) ? ausLink : lsLesen("kc_eltern_e");
+let INFO = null;
+
+async function api(action, daten = {}) {
+  const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, e: E, ...daten }) });
+  let j = {}; try { j = await r.json(); } catch {}
+  if (!r.ok) { const f = new Error(j.error || "Das hat gerade nicht geklappt – bitte gleich nochmal versuchen."); f.status = r.status; throw f; }
+  return j;
+}
+const pushMoeglich = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+const istIphone = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+function b64url(s) { const p = "=".repeat((4 - (s.length % 4)) % 4), b = atob((s + p).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(b, (c) => c.charCodeAt(0)); }
+function fehler(text) { $("laden").hidden = true; $("inhalt").hidden = true; $("fehler").hidden = false; $("fehlerText").textContent = text; }
+
+async function aufGeraet() {
+  if (!pushMoeglich()) return false;
+  try { const reg = await navigator.serviceWorker.getRegistration("./"); return !!(reg && Notification.permission === "granted" && await reg.pushManager.getSubscription()); } catch { return false; }
+}
+async function zeigen() {
+  const hier = await aufGeraet(), an = INFO.an && hier;
+  $("status").textContent = an ? "✅ Hinweise sind eingeschaltet" : INFO.an ? "🔔 Hinweise gehen an ein anderes Gerät" : "🔕 Hinweise sind ausgeschaltet";
+  $("ein").hidden = an; $("aus").hidden = !INFO.an;
+  $("ein").textContent = INFO.an && !hier ? "🔔 Auf diesem Handy einschalten" : "🔔 Einschalten";
+  let h = "";
+  if (!pushMoeglich()) h = istIphone() && !standalone()
+    ? "iPhone: Bitte unten auf Teilen □↑ tippen → „Zum Home-Bildschirm“ → „Hinzufügen“. Dann die Seite über das neue Symbol öffnen und hier einschalten."
+    : "Auf diesem Gerät gehen leider keine Hinweise. Bitte den Link in Chrome, Firefox, Safari, Edge oder Samsung Internet öffnen.";
+  else if (Notification.permission === "denied") h = "Benachrichtigungen sind für diese Seite im Handy gesperrt. Bitte in den Einstellungen des Browsers für diese Seite erlauben und neu laden.";
+  else if (an) h = "Fertig – Sie können die Seite schließen. Zum Ausschalten den Link einfach wieder öffnen.";
+  $("hinweis").textContent = h;
+  $("ein").disabled = !pushMoeglich() || Notification.permission === "denied";
+}
+async function einschalten() {
+  $("ein").disabled = true;
+  try {
+    if (!INFO.vapidPublicKey) throw new Error("Hinweise sind gerade nicht verfügbar – bitte später nochmal.");
+    if (await Notification.requestPermission() !== "granted") throw new Error("Benachrichtigungen wurden nicht erlaubt.");
+    const reg = await navigator.serviceWorker.register("sw.js", { scope: "./" });
+    await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64url(INFO.vapidPublicKey) });
+    await api("anmelden", { subscription: sub.toJSON() });
+    INFO.an = true;
+  } catch (x) { alert(x.message || String(x)); }
+  zeigen();
+}
+async function ausschalten() {
+  $("aus").disabled = true;
+  try {
+    await api("abmelden");
+    try { const reg = await navigator.serviceWorker.getRegistration("./"); const sub = await reg?.pushManager.getSubscription(); await sub?.unsubscribe(); } catch {}
+    INFO.an = false;
+  } catch (x) { alert(x.message || String(x)); }
+  $("aus").disabled = false; zeigen();
+}
+$("ein").onclick = einschalten;
+$("aus").onclick = ausschalten;
+(async () => {
+  if (!E) return fehler("Bitte den Link aus der WhatsApp-Nachricht des Köcheclubs öffnen.");
+  try { INFO = await api("info"); }
+  catch (x) { return fehler(x.status === 404 ? x.message : "Keine Verbindung – bitte gleich nochmal versuchen."); }
+  document.querySelectorAll(".kind").forEach((b) => (b.textContent = INFO.kind));
+  $("elName").textContent = INFO.name;
+  $("laden").hidden = true; $("inhalt").hidden = false;
+  zeigen();
+})();
+</script>
+</body>
+</html>

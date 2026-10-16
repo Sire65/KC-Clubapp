@@ -1,0 +1,6 @@
+anlegen=t
+telefon_falsch_abgelehnt=t
+schluessel_doppelt_abgelehnt=t
+schluessel_falsch_abgelehnt=t
+gesperrt=t
+rls=t
