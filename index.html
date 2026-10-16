@@ -1986,7 +1986,7 @@
   /* KC-CLUB-RUHIGE-EINGABE / -NEU-LINIE / -NACH-UNTEN / -SPRACHTEMPO (1.12.0) */
   .rund.zustell-knopf { width: 34px; height: 34px; min-width: 34px; font-size: .95rem; opacity: .55; }
   .rund.zustell-knopf.an { opacity: 1; background: var(--rot); color: #fff; }
-  /* 2.428.0 KC-CLUB-TAGE-EINKLAPPEN: Tage im Chat (Datum rechts, ältere Wochen als KW) */
+  /* 2.429.0 KC-CLUB-TAGE-EINKLAPPEN: Tage im Chat (Datum rechts, ältere Wochen als KW) */
   .tag-trenner { align-self: center; margin: 6px 0 2px; padding: 2px 12px; border-radius: 999px; background: var(--karte2); color: var(--grau); font-size: .78rem; font-weight: 800; }
   button.tag-trenner { border: none; font-family: inherit; cursor: pointer; }
   .tag-alle { display: flex; justify-content: center; }
@@ -1997,7 +1997,7 @@
   .tag-zu .tz-datum { flex: none; font-size: .85rem; }
   .tag-zu.kw { background: var(--karte2); border-style: dashed; } .tag-zu.kw .tz-datum { background: var(--karte); border-radius: 8px; padding: 1px 8px; }
   .kw-kopf { align-self: center; border: 1px dashed var(--linie); background: var(--karte2); color: var(--text); border-radius: 10px; padding: 3px 12px; font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; margin: 6px 0 2px; }
-  /* 2.428.0 KC-CLUB-NETZ-SYMBOL: Router (WLAN) / Satellit (Mobilfunk) oben links in Nachrichten */
+  /* 2.429.0 KC-CLUB-NETZ-SYMBOL: Router (WLAN) / Satellit (Mobilfunk) oben links in Nachrichten */
   .na-netz { flex: none; border: none; background: none; padding: 0; width: 42px; height: 34px; cursor: pointer; }
   .kopf2 .na-netz + h2 { white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .nz-svg { width: 40px; height: 32px; display: block; }
@@ -4805,12 +4805,12 @@
         <div class="reg-effekt-wahl" id="sendeEffektWahl"></div><button type="button" class="knopf klein" onclick="sendeEffektVorschau(this)">▶ Vorschau</button> <button type="button" class="knopf klein" onclick="blaulichtVorschau(this)">🚨 Vorschau „wichtig“</button></div>
       <div class="schalter"><div><b>🔄 Kacheln umdrehen</b><div class="hinweis">Doppelt auf eine Kachel tippen – hinten stehen Schnellaktionen (z. B. „Neue Nachricht“). Gilt für dieses Gerät.</div></div><input type="checkbox" id="setKachelRueck" onchange="einstellung('kachelrueck', this.checked)"></div> <!-- KC-CLUB-KACHEL-RUECKSEITE 2.54.0 -->
       <div class="schalter"><div><b>🗑️ Reißwolf beim Löschen</b><div class="hinweis">Gelöschtes läuft sichtbar durch den Aktenvernichter. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setReisswolf" onchange="einstellung('reisswolf', this.checked)"></div> <!-- KC-CLUB-REISSWOLF 2.54.0 -->
-      <div class="schalter"><div><b>📡 Verbindungs-Symbol in Nachrichten</b><div class="hinweis">Oben links in 💬 Nachrichten: Router im WLAN, Satellit im Mobilfunk – antippen zeigt die Verbindungsqualität. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setNetzSymbol" onchange="einstellung('netzSymbol', this.checked);netzSymbolZeigen()"></div> <!-- KC-CLUB-NETZ-SYMBOL 2.428.0 -->
+      <div class="schalter"><div><b>📡 Verbindungs-Symbol in Nachrichten</b><div class="hinweis">Oben links in 💬 Nachrichten: Router im WLAN, Satellit im Mobilfunk – antippen zeigt die Verbindungsqualität. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setNetzSymbol" onchange="einstellung('netzSymbol', this.checked);netzSymbolZeigen()"></div> <!-- KC-CLUB-NETZ-SYMBOL 2.429.0 -->
       <div class="schalter"><div><b>✨ Verbindungs-Symbol blinkt</b><div class="hinweis">Wellen und Lämpchen blinken (aus = ruhiges Symbol).</div></div><input type="checkbox" id="setNetzBlinken" onchange="einstellung('netzBlinken', this.checked);netzSymbolZeigen()"></div>
     </details>
     <details class="karte" data-klappe="startseite">
       <summary>🧩 Startseite &amp; Ansicht</summary>
-      <div class="schalter"><div><b>📂 Vergangene Tage im Chat einklappen</b><div class="hinweis">Nur heute und Ungelesenes offen – frühere Tage als eine Zeile, rechts das Datum (z. B. „Mo, 11.11.26“). Antippen klappt auf. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setChatEinklappen" onchange="einstellung('chatEinklappen', this.checked)"></div> <!-- KC-CLUB-TAGE-EINKLAPPEN 2.428.0 -->
+      <div class="schalter"><div><b>📂 Vergangene Tage im Chat einklappen</b><div class="hinweis">Nur heute und Ungelesenes offen – frühere Tage als eine Zeile, rechts das Datum (z. B. „Mo, 11.11.26“). Antippen klappt auf. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setChatEinklappen" onchange="einstellung('chatEinklappen', this.checked)"></div> <!-- KC-CLUB-TAGE-EINKLAPPEN 2.429.0 -->
       <div class="schalter"><div><b>📅 Ältere Wochen als Kalenderwoche</b><div class="hinweis">Nachrichten, die älter als 7 Tage sind, als eine Zeile je Woche („KW 45/26“).</div></div><input type="checkbox" id="setChatKW" onchange="einstellung('chatKW', this.checked)"></div>
       <!-- KC-CLUB-ESELSOHR (2.292.0) -->
       <div class="schalter"><div><b>📄 Eselsohr am Kopf</b><div class="hinweis">Unten rechts am Kopf doppelt tippen (oder nach links ziehen) – der Kopf dreht sich um: 🖼️ Diashow, 🖍️ Tafel, 📋 Flipchart, 🕰️ große Uhr, 🎭 Bühne für Bewegung, 🪞 Spiegel. Nochmal doppelt tippen dreht zurück.</div></div><input type="checkbox" id="setEselsohr" checked onchange="eselsohrSchalter(this.checked)"></div>
@@ -5201,6 +5201,6 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.428.0" data-v="2.428.0"></script>
+<script src="app.js?v=2.429.0" data-v="2.429.0"></script>
 </body>
 </html>

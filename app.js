@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.428.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.429.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -933,7 +933,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); if ($("setFee")) $("setFee").checked = einst("fee", true); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.428.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); if ($("setFee")) $("setFee").checked = einst("fee", true); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -4972,8 +4972,8 @@ const HILFE = [
   // 2.23.1 (Wunsch Hansi: „ganze App durchsuchen, weitere Hilfen – immer etwas anders formuliert, freundlich, nicht aufdringlich“)
   // 💬 Nachrichten & Chat
   { id: "anheften", thema: "nachrichten", sym: "📌", t: "Wichtiges oben im Chat festhalten", x: "Damit eine wichtige Nachricht nicht nach oben wegrutscht: einfach antippen und <b>„📌 Oben anheften“</b> wählen. Bis zu drei Nachrichten bleiben so über dem Chat stehen. Mit „Lösen“ kommen sie wieder an ihren Platz.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
-  { id: "tage_einklappen", thema: "nachrichten", sym: "📂", t: "Vergangene Tage im Chat eingeklappt", x: "Im Chat sind frühere Tage jetzt <b>eingeklappt</b> – eine Zeile mit Anzahl und Absendern, <b>rechts das Datum</b> (z. B. „Mo, 11.11.26“). Ältere Wochen stehen als <b>„KW 45/26“</b>. Heute und Ungelesenes bleiben offen. Antippen klappt auf, <b>„⤢ Alle aufklappen“</b> öffnet alles. Ausschalten: ⚙️ → <b>„🧩 Startseite &amp; Ansicht“</b>.", zeig: () => zeige("nachrichten"), seit: "2.428.0" },
-  { id: "netz_symbol", thema: "nachrichten", sym: "📡", t: "Router oder Satellit: deine Verbindung auf einen Blick", x: "Ein kleiner <b>Router</b> blinkt jetzt <b>oben links in 💬 Nachrichten</b>, wenn du im WLAN bist, und ein <b>Satellit</b> im Mobilfunk. Die Wellen zeigen die Qualität (grün = gut, gelb = mäßig, rot = schwach, grau = noch unbekannt). <b>Antippen</b> zeigt Netzart, Antwortzeit, Datentempo und <b>„📏 Jetzt messen“</b>. Aus- oder ruhig stellen: ⚙️ → <b>„✨ Effekte“</b>.", zeig: () => zeige("nachrichten"), seit: "2.428.0" },
+  { id: "tage_einklappen", thema: "nachrichten", sym: "📂", t: "Vergangene Tage im Chat eingeklappt", x: "Im Chat sind frühere Tage jetzt <b>eingeklappt</b> – eine Zeile mit Anzahl und Absendern, <b>rechts das Datum</b> (z. B. „Mo, 11.11.26“). Ältere Wochen stehen als <b>„KW 45/26“</b>. Heute und Ungelesenes bleiben offen. Antippen klappt auf, <b>„⤢ Alle aufklappen“</b> öffnet alles. Ausschalten: ⚙️ → <b>„🧩 Startseite &amp; Ansicht“</b>.", zeig: () => zeige("nachrichten"), seit: "2.429.0" },
+  { id: "netz_symbol", thema: "nachrichten", sym: "📡", t: "Router oder Satellit: deine Verbindung auf einen Blick", x: "Ein kleiner <b>Router</b> blinkt jetzt <b>oben links in 💬 Nachrichten</b>, wenn du im WLAN bist, und ein <b>Satellit</b> im Mobilfunk. Die Wellen zeigen die Qualität (grün = gut, gelb = mäßig, rot = schwach, grau = noch unbekannt). <b>Antippen</b> zeigt Netzart, Antwortzeit, Datentempo und <b>„📏 Jetzt messen“</b>. Aus- oder ruhig stellen: ⚙️ → <b>„✨ Effekte“</b>.", zeig: () => zeige("nachrichten"), seit: "2.429.0" },
   { id: "merken", thema: "nachrichten", sym: "⭐", t: "Eine Nachricht für später merken", x: "Manchmal liest man etwas und möchte es später schnell wiederfinden. Tipp die Nachricht an und wähle <b>„⭐ Merken“</b>. Alles Gemerkte liegt in 💬 Nachrichten oben unter <b>„⭐ Gemerkt“</b> – diese Liste siehst nur du.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "chat_abstimmung", thema: "nachrichten", sym: "📊", t: "Schnell mal abstimmen", x: "Grillen oder Pizza? Freitag oder Samstag? Über <b>📎</b> unter dem Schreibfeld → <b>„📊 Abstimmung“</b> stellst du eine Frage mit 2 bis 8 Antworten. Alle sehen gleich, wie es gerade steht.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "entwickler", thema: "technik", sym: "👨‍🍳", t: "Wer hat die Club-App gebaut?", x: "Die Club-App hat <b>Hans-Joachim Koch</b> entwickelt und gestaltet – Koch, Küchenmeister und Gründungsmitglied des Köcheclubs. Mehr über ihn mit Foto: <b>⚙️ Einstellungen → ℹ️ App-Info → „👨‍🍳 Über den Entwickler“</b>.", zeig: () => entwicklerZeigen(), seit: "2.23.32" },
@@ -13314,8 +13314,8 @@ function vbStatusLed() {
   const l = $("ledStatus"); if (!l) return;
   const [farbe, text] = vbZustand(), [cFarbe, cText] = vbCommZustand();
   l.className = "led " + farbe; $("ledComm").className = "led " + cFarbe; $("leds").title = text + " · " + cText;
-  if (!$("verbindungBlatt").classList.contains("versteckt")) VB.netzAnsicht ? netzBlattZeigen() : ICH?.admin ? vbBlattZeigen() : vbEinfachZeigen(); // 2.1.1: Mitglieder behalten die einfache Ansicht · 2.428.0 Netz-Symbol
-  netzSymbolZeigen(); // 2.428.0 KC-CLUB-NETZ-SYMBOL
+  if (!$("verbindungBlatt").classList.contains("versteckt")) VB.netzAnsicht ? netzBlattZeigen() : ICH?.admin ? vbBlattZeigen() : vbEinfachZeigen(); // 2.1.1: Mitglieder behalten die einfache Ansicht · 2.429.0 Netz-Symbol
+  netzSymbolZeigen(); // 2.429.0 KC-CLUB-NETZ-SYMBOL
 }
 // echte Datenübertragungen, die nicht über api() laufen (Fotos/Vorschauen aus dem Supabase-Speicher)
 try {
@@ -13343,7 +13343,7 @@ function rundinstrument(titel, wert, max, einheit, zonen, dezimal = 0) {
     <div class="i-wert">${zahl}<small> ${einheit}</small></div><div class="i-titel">${esc(titel)}</div></div>`;
 }
 const mittel = (a) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
-// ---------- KC-CLUB-NETZ-SYMBOL (2.428.0, Wunsch Hansi) ----------
+// ---------- KC-CLUB-NETZ-SYMBOL (2.429.0, Wunsch Hansi) ----------
 // In 💬 Nachrichten oben links: blinkender 📶 Router im WLAN, blinkender 🛰️ Satellit im Mobilfunk. Die Wellen zeigen die Qualität
 // (echte Antwortzeiten der App an den Club-Server, sonst die Schätzung des Handys; ohne Messung grau = unbekannt, nie „gut“).
 // Die Netzart verrät nur Android (navigator.connection.type) – sonst gilt die zuletzt gewählte Netzart (antippen → wählen), ohne Wahl 🌐.
@@ -13438,7 +13438,7 @@ function verbindungBlatt() {
   vbBlattZeigen(); $("verbindungBlatt").classList.remove("versteckt"); communicatorPruefen();
 }
 function vbEinfachZeigen() {
-  VB.netzAnsicht = false; // 2.428.0 KC-CLUB-NETZ-SYMBOL: andere Ansicht des Blatts
+  VB.netzAnsicht = false; // 2.429.0 KC-CLUB-NETZ-SYMBOL: andere Ansicht des Blatts
   {
     const [farbe, text] = vbZustand(), gut = farbe === "gruen";
     $("vbInhalt").innerHTML = `<div class="vb-status"><i class="led ${farbe}"></i><b>${gut ? "✅ Verbindung in Ordnung" : farbe === "blau" ? "🔧 " + esc(text) : farbe === "grau" ? "⏳ Verbindung wird geprüft …" : "⚠️ Gerade Störung – " + esc(text)}</b></div>
@@ -13474,7 +13474,7 @@ function vbCommBlock() {
     <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');testAnMichStarten()">🧪 Test an mich</button>`;
 }
 function vbBlattZeigen() {
-  VB.netzAnsicht = false; // 2.428.0 KC-CLUB-NETZ-SYMBOL: andere Ansicht des Blatts
+  VB.netzAnsicht = false; // 2.429.0 KC-CLUB-NETZ-SYMBOL: andere Ansicht des Blatts
   const [farbe, text] = vbZustand(), t = VB.test, c = navigator.connection;
   const antwort = t?.ping ?? (VB.zeiten.length ? Math.round(mittel(VB.zeiten)) : null);
   $("vbInhalt").innerHTML = `
@@ -26059,7 +26059,7 @@ async function chatLaden(scrollen) {
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
       <div class="fuss">${m.loeschtAm ? `<span class="sl-marke" title="Löscht sich selbst – für alle">⏳ noch ${slRest(m.loeschtAm)}</span> ` : ""}${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button aria-label="Nachricht löschen" class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`;
-    $("chat").innerHTML = naTageHtml(u, blaseHtml) + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2 · 2.428.0 KC-CLUB-TAGE-EINKLAPPEN
+    $("chat").innerHTML = naTageHtml(u, blaseHtml) + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2 · 2.429.0 KC-CLUB-TAGE-EINKLAPPEN
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
     naWischenEinrichten();
@@ -26485,7 +26485,7 @@ async function stummSetzen(dauer) {
 // ---------- KC-CLUB-CHATSUCHE (1.9.0, Wunsch Hansi): Lupe im Chat – findet Wörter nur in diesem Gespräch ----------
 // Sucht in den geladenen Nachrichten (Text + Absender), Umlaut-tolerant wie die große Suche; ▲▼ springt zwischen Treffern.
 const CS = { offen: false, treffer: [], i: -1 };
-function chatSucheAuf() { CS.offen = true; $("chatSuchLeiste").classList.remove("versteckt"); $("chatSuchFeld").focus(); if (document.querySelector("#chat .tag-zu")) naNeuZeichnen().then(() => chatSucheJetzt(true)); else chatSucheJetzt(true); } // 2.428.0: beim Suchen alle Tage offen
+function chatSucheAuf() { CS.offen = true; $("chatSuchLeiste").classList.remove("versteckt"); $("chatSuchFeld").focus(); if (document.querySelector("#chat .tag-zu")) naNeuZeichnen().then(() => chatSucheJetzt(true)); else chatSucheJetzt(true); } // 2.429.0: beim Suchen alle Tage offen
 function chatSucheZu() {
   CS.offen = false; CS.treffer = []; CS.i = -1; $("chatSuchFeld").value = ""; $("chatSuchLeiste").classList.add("versteckt");
   document.querySelectorAll("#chat .blase.su-treffer, #chat .blase.su-aktuell").forEach((b) => b.classList.remove("su-treffer", "su-aktuell"));
@@ -26615,11 +26615,11 @@ function naAntworten(id) {
 function naAntwortWeg() { NA.antwort = null; $("antwortLeiste")?.classList.add("versteckt"); }
 function zuNachricht(id) {
   const el = document.getElementById("msg-" + id);
-  if (!el && NA.nachrichten.has(id)) return naTagAufFuer(id).then(() => document.getElementById("msg-" + id) && zuNachricht(id)); // 2.428.0 KC-CLUB-TAGE-EINKLAPPEN
+  if (!el && NA.nachrichten.has(id)) return naTagAufFuer(id).then(() => document.getElementById("msg-" + id) && zuNachricht(id)); // 2.429.0 KC-CLUB-TAGE-EINKLAPPEN
   if (!el) return melde("Die Nachricht, auf die geantwortet wurde, gibt es nicht mehr.");
   el.scrollIntoView({ behavior: "smooth", block: "center" }); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1600);
 }
-// ---------- KC-CLUB-TAGE-EINKLAPPEN (2.428.0, Wunsch Hansi – wie im Bachkreis) ----------
+// ---------- KC-CLUB-TAGE-EINKLAPPEN (2.429.0, Wunsch Hansi – wie im Bachkreis) ----------
 // Vergangene Tage im Chat eingeklappt: eine Zeile mit Anzahl und Absendern, rechts das Datum („Mo, 11.11.26“);
 // ältere Wochen (ab 7 Tagen) als eine Zeile „KW 45/26“. Offen bleiben: heute, Tage mit Ungelesenem (Linie „Neue Nachrichten“),
 // beim Suchen und im Rundgang alles. Antippen klappt auf, „⤢ Alle aufklappen“ öffnet alles. ⚙️ → „🧩 Startseite & Ansicht“.
