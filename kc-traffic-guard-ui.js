@@ -21,7 +21,7 @@
         '<p id="kcTrafficGuardClubDetail" class="hinweis" aria-live="polite">Messstatus wird geladen …</p>'+
         '<div class="knoepfe"><button type="button" class="knopf klein" id="kcTrafficGuardClubReload">↻ Prüfen</button>'+
         '<a class="knopf klein" href="https://supabase.com/dashboard/org/_/usage#egress" target="_blank" rel="noopener noreferrer">Supabase-Verbrauch</a></div>'+
-        '<p class="hinweis" style="font-size:.8rem">Die Frühwarnung misst auffällige SQL-Last. Der tatsächlich abgerechnete Datenverkehr (GB) ist noch nicht automatisch angebunden.</p>';
+        '<p class="hinweis" style="font-size:.8rem">Die Frühwarnung erfasst SQL-Aufrufe und Ergebnismengen. Der tatsächlich abgerechnete Datenverkehr (GB) ist noch nicht automatisch angebunden.</p>';
       admin.insertBefore(el,admin.children[1]||null);
       el.querySelector("#kcTrafficGuardClubReload").addEventListener("click",()=>check(true));
     }
@@ -46,7 +46,10 @@
     const d=current||{level:"unknown",detail:"Keine Messung"};
     const labels={normal:"🟢 Last unauffällig",warning:"🟡 Erhöhte Last",critical:"🔴 Kritische Last",unknown:"⚪ Noch keine verlässliche Messung"};
     if(out)out.innerHTML='<b>'+esc(labels[d.level]||labels.unknown)+'</b><br>'+
-      esc(d.detail||"Keine Details")+'<br><small>Letzte Messung: '+esc(dateText(d.measured_at))+'</small>';
+      esc(d.detail||"Keine Details")+'<br><small>SQL-Aufrufe / 15 Min.: '+(d.calls_15m==null?'—':Math.round(Number(d.calls_15m)).toLocaleString("de-DE"))+
+      ' · Ergebniszeilen / 15 Min.: '+(d.rows_15m==null?'—':Math.round(Number(d.rows_15m)).toLocaleString("de-DE"))+
+      ' · Letzte Messung: '+esc(dateText(d.measured_at))+
+      ' · Egress-GB: nicht angebunden</small>';
     banner(d);
   }
   async function check(force){
