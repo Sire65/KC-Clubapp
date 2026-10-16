@@ -17,6 +17,12 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.430.0 – 2026-10-16 – 📲 Kalender einfach verbinden (KC-CLUB-KALENDER-EINFACH) · Server 2.430.0
+Wunsch Hansi: „Die richtige und einfache Möglichkeit, den Kalender zu verknüpfen – nicht nur ics erstellen.“ Das Kalender-Abo gab es schon, aber versteckt in ⚙️; der Link ließ sich nur einmal anzeigen – für ein zweites Gerät (iPhone UND Google) musste ein neuer her, der den ersten abschaltete.
+- **Ein Knopf „📲“ oben in 📅 Termine** (und im Termin-Fenster „In meinen Kalender“ als Tipp, und in ⚙️): öffnet „Kalender verbinden“ mit drei großen Wegen – 🍎 iPhone/iPad/Mac (webcal → „Abonnieren“), 🟦 Google Kalender (Konto-Seite „Hinzufügen“), 🟦 Outlook – plus Anleitung von Hand und „Link kopieren“. Gibt es noch keinen Link, wird er gleich angelegt (keine Rückfrage).
+- **Server:** Der Link ist jetzt aus dem Server-Geheimnis abgeleitet (HMAC aus Person + Erstellzeit, gespeichert weiter nur der Hash) und lässt sich mit `kalender_abo_holen` jederzeit wieder anzeigen. Ältere Links (Zufall) bleiben gültig; für ein weiteres Gerät einmal „Neuen Link erzeugen“.
+- Keine Datenbank-Änderung.
+
 ## 2.429.0 – 2026-10-16 – 📂 Vergangene Chat-Tage eingeklappt (KC-CLUB-TAGE-EINKLAPPEN) · 📡 Router/Satellit in Nachrichten (KC-CLUB-NETZ-SYMBOL)
 Wunsch Hansi: „Die Sache mit dem Ein- und Ausklappen der Nachrichten auch in KC Club“ (wie im Bachkreis) und „wenn mit WLAN verbunden in Nachrichten oben links ein blinkender Router, mit Handynetz ein blinkender Satellit; antippen zeigt Infos und Verbindungsqualität; Animation in den Einstellungen abschaltbar“.
 - **Chat:** Tage mit Trenner („Heute“, „Gestern“, „Mo, 11.11.26“). Vergangene Tage als eine Zeile (Anzahl, Absender, rechts das Datum), ältere Wochen als „KW 45/26“. Offen bleiben heute, Tage mit Ungelesenem (Linie „Neue Nachrichten“), beim Suchen und im Rundgang alles. Sprung zu Zitat/📌 klappt den Tag auf. „⤢ Alle aufklappen“ / „⤡ Vergangene Tage einklappen“. ⚙️ → „🧩 Startseite & Ansicht“: zwei Schalter (Standard an).

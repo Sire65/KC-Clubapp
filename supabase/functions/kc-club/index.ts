@@ -110,6 +110,12 @@ async function sha256(s: string) {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
+// 2.430.0 KC-CLUB-KALENDER-EINFACH: Kalender-Link aus dem Server-Geheimnis abgeleitet (nicht gespeichert, nur sein Hash)
+async function kalenderToken(pid: string, erstellt: string) {
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode("kc-kalender|" + SERVICE), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const b = new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(`${pid}|${new Date(erstellt).toISOString()}`)));
+  return [...b.slice(0, 24)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
 // ---------- KC-CLUB-KURZCODE (1.87.0, Wunsch Hansi: Installation ohne langen Link) ----------
 // 6-stelliger Code (15 Min., einmal). Der Schlüssel des Mitglieds liegt bis zum Einlösen AES-GCM-verschlüsselt in
 // kc_club_kurzcodes (Schlüssel abgeleitet aus dem Server-Geheimnis, nie im Klartext). Fehlversuche: je Netz 8, insgesamt 60 je 15 Min.
@@ -2562,7 +2568,7 @@ type Zugang = "mitglied" | "aushilfe" | "gast";
 const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
   basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "start_melden", "spur_melden", "nutzung_melden", "video_bewerten", "stimmen",
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
-    "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "privattermin_speichern",
+    "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
     "express_antwort", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
@@ -11533,10 +11539,20 @@ Köcheclub Werne`,
 
       case "kalender_abo": {
         // neuer Link (der alte wird ungültig) – gespeichert wird nur der Hash
-        const token = zufall();
-        await db.from("kc_club_kalender_abo").upsert({ person_id: ich.person_id, token_hash: await sha256(token), erstellt_am: jetzt(), zuletzt_abgerufen: null });
+        // 2.430.0 KC-CLUB-KALENDER-EINFACH: Link = HMAC(Server-Geheimnis, Person + Erstellzeit) → später wieder abrufbar (für das 2. Gerät)
+        const erstellt = jetzt(), token = await kalenderToken(ich.person_id, erstellt);
+        await db.from("kc_club_kalender_abo").upsert({ person_id: ich.person_id, token_hash: await sha256(token), erstellt_am: erstellt, zuletzt_abgerufen: null });
         await protokoll(ich.person_id, "kalender_abo_erzeugt", {});
-        return json({ ok: true, url: `${SUPA}/functions/v1/kc-club?kalender=${token}` });
+        return json({ ok: true, url: `${SUPA}/functions/v1/kc-club?kalender=${token}`, erstellt_am: erstellt });
+      }
+      case "kalender_abo_holen": {
+        // 2.430.0 KC-CLUB-KALENDER-EINFACH: den bestehenden Link noch einmal zeigen (iPhone UND Google, ohne den alten abzuschalten).
+        // Geht nur bei Links ab 2.430.0 – ältere (Zufall, nur Hash gespeichert) lassen sich nicht wiederherstellen → „alt“.
+        const { data: a } = await db.from("kc_club_kalender_abo").select("token_hash,erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle();
+        if (!a) return json({ ok: true, url: null });
+        const token = await kalenderToken(ich.person_id, new Date(a.erstellt_am).toISOString());
+        const passt = gleichZeit(await sha256(token), String(a.token_hash || ""));
+        return json({ ok: true, url: passt ? `${SUPA}/functions/v1/kc-club?kalender=${token}` : null, alt: !passt, erstellt_am: a.erstellt_am, zuletzt_abgerufen: a.zuletzt_abgerufen });
       }
 
       // ----- Aktionen / Ausflüge (KC-CLUB-AKTIONEN) -----
