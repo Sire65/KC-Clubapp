@@ -4,7 +4,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { avatarLaden } from "../tools/avatar-lader.mjs";
 import { fingerabdruck } from "../tools/avatar-schnappschuss.mjs";
-const A = avatarLaden();
+// 2.428.0: Der Schnappschuss entstand an einem Donnerstag; die „Kochjacke des Tages“ wechselt je Wochentag → Zeit fest auf einen Donnerstag
+// (vorher war der Test nur donnerstags grün)
+const A = avatarLaden(undefined, { jetzt: "2026-10-15T12:00:00+02:00" });
 const snap = JSON.parse(fs.readFileSync(new URL("./avatar-schnappschuss.json", import.meta.url), "utf8"));
 assert.equal(snap.stand, "2.413.0", "Schnappschuss darf nicht neu erzeugt werden");
 const codes = Object.keys(snap.bilder); assert.ok(codes.length >= 1800, "zu wenige Bilder im Schnappschuss");
