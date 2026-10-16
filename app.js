@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.427.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.428.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19194,11 +19194,38 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false) { // tonImmer: Probe (
   let i = 0, gespielt = 0;
   const ruf = () => {
     if (!u.isConnected) return;
-    if (i >= n) { u.classList.remove("offen"); u._t = setTimeout(zu, 1400); kkDiagnose(h, n, gespielt, mitTon); return; }
+    if (i >= n) {
+      u.classList.remove("offen"); kkDiagnose(h, n, gespielt, mitTon);
+      // 2.428.0 KC-CLUB-KUCKUCK-FREIGABE: Ton war gesperrt (stumm gerufen) → Uhr bleibt eine Minute stehen, Antippen ruft alles nochmal mit Ton
+      if (mitTon && !gespielt && !u._nochmal) { kkTonHinweis(`🔊 Antippen – ${n}× mit Ton`); u._t = setTimeout(zu, 60000); return; }
+      u._t = setTimeout(zu, 1400); return;
+    }
     i++; u.classList.add("ruft"); setTimeout(() => u.classList.remove("ruft"), 350);
-    if (mitTon && audio && audio.state === "running") try { gespielt++; if (KK_AUFNAHME.puffer) kkAufnahmeSpielen(audio.currentTime + 0.02); else kkTon(audio.currentTime + 0.02); } catch {}
+    // 2.428.0 KC-CLUB-KUCKUCK-FREIGABE: der Akku-Schutz (KC-CLUB-AKKU-6) legt die Tonausgabe 3 s nach dem letzten Ton schlafen – das traf die Lücke
+    // zwischen Freigabe und erstem Ruf; danach war „nur bei laufendem Ton“ nie mehr erfüllt (stumm bis zum Ende). Jetzt hält jeder Ruf den Ton
+    // wach und weckt ihn, falls er schläft – gespielt wird nur, wenn er binnen 0,4 s läuft (nie mehrere Rufe übereinander).
+    if (mitTon && audio) try {
+      audio.__zuletzt = Date.now(); const spielen = () => { gespielt++; if (KK_AUFNAHME.puffer) kkAufnahmeSpielen(audio.currentTime + 0.02); else kkTon(audio.currentTime + 0.02); };
+      if (audio.state === "running") spielen();
+      else { const ab = Date.now(); Promise.resolve(audio.resume?.()).then(() => { if (audio.state === "running" && Date.now() - ab < 400 && u.isConnected) spielen(); }, () => {}); }
+    } catch {}
     u._t = setTimeout(ruf, KK_AUFNAHME.puffer && mitTon ? Math.round(KK_AUFNAHME.puffer.duration * 1000) : KK_TAKT_MS);
   };
+  // 2.428.0 KC-CLUB-KUCKUCK-FREIGABE (Fund Hansi „um 10 Uhr nur einmal, Uhr und 10 waren da, Ton nicht“ – Diagnose: 10 Rufe, 0 gespielt,
+  // Ton „suspended“): Android/Chrome gibt den Ton erst frei, wenn man in der App einmal getippt hat. Öffnet man die App zur vollen Stunde,
+  // kommt der Kuckuck sofort – ohne Tippen also stumm. Jetzt: Ton noch gesperrt → die Uhr wartet bis zu 20 s mit „🔊 Antippen“; das Tippen
+  // gibt den Ton frei und der Kuckuck ruft n× hörbar. Ohne Tippen ruft er stumm (richtig oft) und bietet danach eine Minute „nochmal mit Ton“.
+  function kkTonHinweis(text) {
+    u.querySelector(".kk-tonhinweis")?.remove(); u.insertAdjacentHTML("beforeend", `<div class="kk-tonhinweis">${esc(text)}</div>`);
+    u.onclick = (e) => {
+      e.stopPropagation(); u.querySelector(".kk-tonhinweis")?.remove(); u.onclick = zu; clearTimeout(u._t);
+      try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.(); kkAufnahmeLaden(); } catch {} // im Tippen = erlaubt
+      i = 0; gespielt = 0; u._nochmal = true; u.classList.add("offen");
+      Promise.race([Promise.resolve(audio?.resume?.()), new Promise((r) => setTimeout(r, 1500))]).catch(() => {}).then(() => { if (u.isConnected) u._t = setTimeout(ruf, 350); });
+    };
+  }
+  const gesperrt = mitTon && (!audio || audio.state !== "running") && navigator.userActivation && !navigator.userActivation.hasBeenActive;
+  if (gesperrt) { kkTonHinweis(`🔊 Antippen – der Kuckuck ruft ${n}×`); u._t = setTimeout(() => { u.querySelector(".kk-tonhinweis")?.remove(); u.onclick = zu; u.classList.add("offen"); u._t = setTimeout(ruf, 350); }, 20000); return n; }
   // 2.416.0: erst rufen, wenn der Ton läuft (höchstens 1,5 s warten – sonst ruft der Kuckuck stumm, aber richtig oft)
   const bereit = mitTon && audio ? Promise.race([Promise.resolve(audio.resume?.()).then(() => true, () => false), new Promise((r) => setTimeout(() => r(false), 1500))]) : Promise.resolve(false);
   u._t = setTimeout(() => { u.classList.add("offen"); bereit.then(() => { if (u.isConnected) u._t = setTimeout(ruf, 350); }); }, 700);
@@ -19216,6 +19243,8 @@ function kuckuckPruefen() {
   try { if (localStorage.getItem("kc_club_kuckuck_zuletzt") === stunde) return; localStorage.setItem("kc_club_kuckuck_zuletzt", stunde); } catch { return; }
   kuckuckZeigen(h);
 }
+// 2.428.0 KC-CLUB-KUCKUCK-FREIGABE: hat Android den Ton im Hintergrund angehalten, gibt ihn das nächste Tippen wieder frei (nur wenn er schon da ist)
+addEventListener("pointerdown", () => { try { if (audio && audio.state === "suspended") audio.resume(); } catch {} }, { capture: true, passive: true });
 setInterval(kuckuckPruefen, 15000); document.addEventListener("visibilitychange", () => { if (!document.hidden) kuckuckPruefen(); });
 try { const w = localStorage.getItem(KOPF_ROLLO); if (w === "1") kopfRolloSetzen("ganz"); else if (w === "halb") kopfRolloSetzen("halb"); } catch {}
 function heroZeigen(richtung) {

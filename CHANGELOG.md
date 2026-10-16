@@ -17,6 +17,13 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.428.0 – 2026-10-16 – 🐦 Kuckuck: Ton freigeben statt stumm rufen (KC-CLUB-KUCKUCK-FREIGABE)
+Fund Hansi: „Der Kuckuck ruft nur einmal. Er hätte 10× machen müssen. Die Uhr war da, die 10 stand daneben, aber der Ton kam nicht.“ Diagnose vom Handy (10:01 Uhr, Android, 2.427.0): 10 Rufe gezählt, 0 gespielt, Ton „suspended“. Ursache: Android/Chrome gibt den Ton erst frei, wenn man in der App einmal getippt hat; öffnet man die App zur vollen Stunde, ruft der Kuckuck sofort – ohne Tippen stumm.
+- **Hauptursache (nachgestellt):** Der Akku-Schutz (2.361.0, KC-CLUB-AKKU-6) legt die Tonausgabe 3 s nach dem letzten Ton schlafen. Das traf die Lücke zwischen Freigabe und erstem Ruf; danach war „nur bei laufendem Ton“ nie mehr erfüllt – der Kuckuck rief stumm zu Ende. Nachgestellt im Browser (Ton vorher eingeschlafen): alter Code 0–1 von 10 hörbar, neu 10 von 10 (3 Läufe). Jetzt hält jeder Ruf den Ton wach und weckt ihn, falls er schläft; gespielt wird nur, wenn er binnen 0,4 s läuft (nie übereinander).
+- **Neu:** Ist der Ton noch gesperrt, wartet die Uhr bis zu 20 s mit „🔊 Antippen – der Kuckuck ruft 10×“. Das Tippen gibt den Ton frei, dann ruft er hörbar so oft, wie es Uhr ist. Ohne Tippen ruft er stumm (richtig oft) und bietet danach eine Minute lang „🔊 Antippen – 10× mit Ton“ an.
+- Hat Android den Ton im Hintergrund angehalten, gibt ihn das nächste Tippen irgendwo in der App wieder frei.
+- Nachts bleibt er wie bisher stumm; die Probe in den Einstellungen klingt immer.
+
 ## 2.427.0 – 2026-10-15 – 💬 Neue Nachricht an eine Person ohne Betreff öffnet den bisherigen Chat (KC-CLUB-NEU-ALTER-CHAT)
 Frage Hansi: „Wenn ich Neue Nachricht wähle und Klaus antippe – neuer Chat oder vorhandener?“ Bisher erschien ein leeres Schreibfenster, gesendet wurde aber (ohne Betreff) schon in den vorhandenen Zweier-Chat – man sah den Verlauf erst danach. Jetzt öffnet „Weiter zum Schreiben“ bei genau einer Person ohne Betreff gleich den vorhandenen Chat mit Verlauf, wie über 👥 Mitglieder → „💬 Nachricht“ (gibt es noch keinen, ein neuer). Mit Betreff beginnt wie bisher ein eigener Chat zum Thema. Nur App, kein Server, keine Datenbank. Rundgang-Text ergänzt.
 

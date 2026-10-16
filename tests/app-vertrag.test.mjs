@@ -6503,7 +6503,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.416.0 KC-CLUB-KUCKUCK-ZAEHLEN (Fund Hansi „15 Uhr nur ein Kuckuck“): Rufe nie übereinander, nur bei laufendem Ton
 {
   assert.ok(/const kkRufe = \(h\) => \(h % 12\) \|\| 12;/.test(html) && /timeZone: TZ, hour: "2-digit"/.test(html) && /const TZ = "Europe\/Berlin";/.test(html), "deutsche Zeit, 12-Stunden-Zählung");
-  assert.ok(/if \(mitTon && audio && audio\.state === "running"\) try \{ gespielt\+\+;/.test(html), "Ruf nur bei laufendem Ton");
+  assert.ok(/if \(audio\.state === "running"\) spielen\(\);/.test(html) && /if \(audio\.state === "running" && Date\.now\(\) - ab < 400 && u\.isConnected\) spielen\(\);/.test(html), "Ruf nur bei laufendem Ton (2.428.0: schlafenden Ton wecken, nie übereinander)");
+  assert.ok(/audio\.__zuletzt = Date\.now\(\); const spielen = /.test(html), "2.428.0: jeder Ruf hält den Ton wach (Akku-Schutz)");
   assert.ok(/const bereit = mitTon && audio \? Promise\.race\(\[/.test(html) && /bereit\.then\(\(\) => \{ if \(u\.isConnected\) u\._t = setTimeout\(ruf, 350\); \}\)/.test(html), "wartet auf den Ton");
   assert.ok(/api\("diagnose", \{ art: "kuckuck", daten: \{ stunde: h, rufe: n, gespielt,/.test(html), "Diagnose einmal je Sitzung");
 }
@@ -10200,4 +10201,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(einzeln && einzeln !== ICH\?\.person_id && !\$\("neuBetreff"\)\.value\.trim\(\) && !RG\.an\) return direkt\(einzeln\);/.test(nw), "ohne Betreff → direkt() (vorhandener Chat, sonst neu); mit Betreff, an mich selbst, im Rundgang wie bisher");
   assert.ok(nw.indexOf("return direkt(einzeln)") < nw.indexOf("neuEntwurf = { empfaenger"), "vor dem leeren Schreibfenster");
   assert.ok(/api\("einzelchat_finden", \{ person_id: pid \}\); if \(r\?\.id\) return chatOeffnen\(r\.id\);/.test(programm), "direkt() sucht den vorhandenen Chat");
+}
+// 2.428.0 KC-CLUB-KUCKUCK-FREIGABE: gesperrter Ton → „Antippen“ statt stumm; danach „nochmal mit Ton“
+{
+  const kk = programm.slice(programm.indexOf("function kuckuckZeigen("), programm.indexOf("let KK_DIAG = false;"));
+  assert.ok(/const gesperrt = mitTon && \(!audio \|\| audio\.state !== "running"\) && navigator\.userActivation && !navigator\.userActivation\.hasBeenActive;/.test(kk), "gesperrten Ton erkennen");
+  assert.ok(/if \(gesperrt\) \{ kkTonHinweis\(/.test(kk) && /setTimeout\(\(\) => \{[^\n]*u\.onclick = zu; u\.classList\.add\("offen"\); u\._t = setTimeout\(ruf, 350\); \}, 20000\)/.test(kk), "wartet 20 s aufs Tippen, sonst stumm");
+  assert.ok(/if \(mitTon && !gespielt && !u\._nochmal\) \{ kkTonHinweis\(/.test(kk), "nach stummem Rufen: nochmal mit Ton anbieten");
+  assert.ok(/audio = audio \|\| new \(window\.AudioContext \|\| window\.webkitAudioContext\)\(\); audio\.resume\?\.\(\); kkAufnahmeLaden\(\); \} catch \{\} \/\/ im Tippen = erlaubt/.test(kk), "Ton im Tippen freigeben");
+  assert.ok(/addEventListener\("pointerdown", \(\) => \{ try \{ if \(audio && audio\.state === "suspended"\) audio\.resume\(\); \} catch \{\} \}, \{ capture: true, passive: true \}\);/.test(programm), "Tippen gibt angehaltenen Ton frei");
 }
