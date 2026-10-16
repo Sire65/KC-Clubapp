@@ -10273,3 +10273,9 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/showNotification\(/.test(esw) && !/caches\.|fetch\(/.test(esw), "Eltern-SW zeigt nur an, speichert nichts");
   assert.ok(/if \(url\.pathname\.includes\("\/eltern\/"\)\) return;/.test(sw), "Haupt-SW lässt eltern/ aus");
 }
+// 2.431.0 KC-CLUB-ANKLOPFEN-SOFORT: Anklopfen geht wie Express mit höchster Zustell-Dringlichkeit
+{
+  const k = server.slice(server.indexOf('versand = await routerSenden("club_nachricht_push", [an], {'), server.indexOf('}, `club-anklopfen:${k.id}`);'));
+  assert.ok(k.length > 0 && /eilig: true,/.test(k), "Anklopfen: eilig → priority critical");
+  assert.ok(/vars\.eilig === true \? \{ priority: "critical" \}/.test(server), "eilig wird zu critical");
+}

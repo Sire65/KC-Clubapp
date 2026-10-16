@@ -10176,6 +10176,9 @@ Köcheclub-App`,
         if (zug?.length && abo?.length) versand = await routerSenden("club_nachricht_push", [an], {
           titel: `👋 ${ich.vorname} klopft an`, kurz: "Möchtest du das Gespräch annehmen? Hier antippen.",
           betreff: `${ich.vorname} klopft an`, text: `${ich.name} möchte kurz mit dir schreiben.`, url: `${APP_URL}#anklopfen=${k.id}`,
+          // 2.431.0 KC-CLUB-ANKLOPFEN-SOFORT (Fall Steven, älteres Android-Tablet; Wunsch Hansi „ist ja dringend“): wie Express als „critical“ →
+          // Push mit hoher Dringlichkeit, damit Android ihn im Stromsparmodus nicht zurückhält. Ruhezeit/Stumm bleiben unverändert (Anklopfen-Schalter).
+          eilig: true,
         }, `club-anklopfen:${k.id}`);
         await protokoll(ich.person_id, "angeklopft", { an, versand, ohnePush });
         return json({ ok: true, id: k.id, push: versand.gesendet > 0, ohnePush });
