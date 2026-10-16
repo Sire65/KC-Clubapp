@@ -10225,3 +10225,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const ntKw = new Function(kwCode + "; return ntKw;")();
   assert.equal(ntKw("2026-11-11T10:00:00"), "KW 46/26"); assert.equal(ntKw("2027-01-01T10:00:00"), "KW 53/26"); assert.equal(ntKw("2026-01-01T10:00:00"), "KW 1/26");
 }
+// 2.430.0 KC-CLUB-KALENDER-EINFACH: Kalender verbinden mit einem Knopf, Link wieder abrufbar
+{
+  const k = server.slice(server.indexOf('case "kalender_abo_holen"'), server.indexOf('case "kalender_abo_holen"') + 1400);
+  assert.ok(/const token = await kalenderToken\(ich\.person_id, new Date\(a\.erstellt_am\)\.toISOString\(\)\);/.test(k) && /gleichZeit\(await sha256\(token\), String\(a\.token_hash \|\| ""\)\)/.test(k), "Link nur, wenn der gespeicherte Hash passt");
+  assert.ok(/eq\("person_id", ich\.person_id\)/.test(k), "nur der eigene Link");
+  assert.ok(/const erstellt = jetzt\(\), token = await kalenderToken\(ich\.person_id, erstellt\);/.test(server) && /new TextEncoder\(\)\.encode\("kc-kalender\|" \+ SERVICE\)/.test(server), "HMAC aus dem Server-Geheimnis");
+  assert.ok(/onclick="kalVerbinden\(\)"/.test(seite) && /class="knopf klein kalv-kopf" onclick="kalVerbinden\(\)"/.test(seite), "Knopf in Termine und ⚙️");
+  assert.ok(/if \(!r\.url && !r\.alt\) r = await api\("kalender_abo"\);/.test(programm), "erster Link ohne Rückfrage");
+  assert.ok(/calendar\.google\.com\/calendar\/r\?cid=/.test(programm) && /outlook\.live\.com\/calendar\/0\/addfromweb\?url=/.test(programm) && /kalWebcal\(u\)/.test(programm), "Apple, Google, Outlook");
+}

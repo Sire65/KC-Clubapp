@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.429.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.430.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14064,7 +14064,7 @@ const kachelnAlle = (r) => KACHELN[r].filter((k) => !k.bald && (!k.nur || k.nur(
 const ZUGANG_AKTIONEN = {
   basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "start_melden", "spur_melden", "nutzung_melden", "video_bewerten", "stimmen",
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
-    "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "privattermin_speichern",
+    "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
     "express_antwort", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
@@ -30889,7 +30889,8 @@ function inKalender(id) {
   const d = terminKalDaten(id); if (!d) return;
   $("kalWahlText").innerHTML = `<h3 style="margin-top:0">📲 In meinen Kalender</h3><p class="hinweis" style="margin-top:0"><b>${esc(d.t.titel)}</b><br>${esc(zeitText(d.t))}</p>
     <div class="konf-wahl"><button class="knopf" onclick="kalGoogle('${id}')">🟦 Google Kalender</button><button class="knopf" onclick="kalOutlook('${id}')">🟦 Outlook</button>
-    <button class="knopf" onclick="kalIcs('${id}')">📱 Handy-Kalender (iPhone, Samsung …)</button></div>`;
+    <button class="knopf" onclick="kalIcs('${id}')">📱 Handy-Kalender (iPhone, Samsung …)</button></div>
+    <div class="kalv-tipp"><b>💡 Besser: alle Termine automatisch</b><span>Einmal verbinden – neue Termine und Verlegungen kommen von selbst.</span><button class="knopf haupt klein" onclick="kalVerbinden()">📲 Kalender verbinden</button></div>`;
   $("kalWahlBlatt").classList.remove("versteckt");
 }
 const kalZu = () => $("kalWahlBlatt").classList.add("versteckt");
@@ -30917,25 +30918,62 @@ function kalIcs(id) {
   kalZu(); melde("📲 Termin-Datei erstellt – antippen, dann „Zum Kalender hinzufügen“");
 }
 // Abo: alle Termine automatisch und immer aktuell im Handy-Kalender
-function kalenderAboZeigen(url) {
-  const a = INIT?.kalenderAbo;
-  $("kalAboInfo").innerHTML = url ? `<div class="karte" style="background:var(--karte2)">
-      <p style="margin-top:0"><b>📱 iPhone:</b> einfach antippen – fertig.</p>
-      <a class="knopf haupt" href="${esc(url.replace(/^https:/, "webcal:"))}">📅 Kalender jetzt abonnieren</a>
-      <p style="margin-bottom:6px"><b>Google oder Outlook:</b> antippen, anmelden (falls gefragt), „Hinzufügen“ bestätigen – danach erscheinen die Termine auch auf dem Handy.</p>
-      <div class="knoepfe"><button class="knopf" onclick='extOeffnen("https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(${JSON.stringify(url).replace(/'/g, "&#39;")}.replace(/^https:/, "webcal:")))'>➕ In Google Kalender</button>
-        <button class="knopf" onclick='extOeffnen("https://outlook.live.com/calendar/0/addfromweb?url=" + encodeURIComponent(${JSON.stringify(url).replace(/'/g, "&#39;")}) + "&name=" + encodeURIComponent("Köcheclub Werne"))'>➕ In Outlook</button></div>
-      <p class="hinweis" style="font-size:.85rem">Klappt es bei Google nicht (manche Handys): Link kopieren und einmalig am PC unter <i>calendar.google.com</i> → „Weitere Kalender ＋“ → „Per URL“ einfügen. Outlook am PC (Programm): oben „Kalender jetzt abonnieren“.</p>
-      <button class="knopf" onclick="navigator.clipboard.writeText(${JSON.stringify(url).replace(/"/g, "&quot;")}).then(() => melde('📋 Link kopiert'), () => eingabe('Link zum Kopieren:', ${JSON.stringify(url).replace(/"/g, "&quot;")}))">📋 Link kopieren</button>
-      <p class="hinweis" style="font-size:.85rem">Den Link bitte nicht weitergeben – er zeigt deine Club-Termine.</p></div>`
-    : a ? `<p class="hinweis">✅ Kalender verbunden seit ${esc(zeitKurz(a.erstellt_am))}${a.zuletzt_abgerufen ? ` · zuletzt aktualisiert ${esc(zeitKurz(a.zuletzt_abgerufen))}` : " · noch nicht abgerufen"}.</p>` : "";
-  $("kalAboKnopf").textContent = a || url ? "🔄 Neuen Link erzeugen" : "📲 Kalender verbinden";
+// 2.430.0 KC-CLUB-KALENDER-EINFACH (Wunsch Hansi „richtige und einfache Möglichkeit, den Kalender zu verknüpfen – nicht nur ics“):
+// Ein Knopf „📲 Kalender verbinden“ – oben in 📅 Termine, im Termin-Fenster und in ⚙️. Er holt den bestehenden Link (oder legt den ersten
+// an) und zeigt drei große Wege: 🍎 iPhone/iPad/Mac (webcal – „Abonnieren“), 🟦 Google (Konto-Seite „Kalender hinzufügen“), 🟦 Outlook.
+// Der Link bleibt abrufbar (Server: HMAC statt Zufall) – so lassen sich iPhone UND Google verbinden, ohne den ersten abzuschalten.
+const KALV = { url: null, info: null };
+const kalWebcal = (u) => u.replace(/^https:/, "webcal:");
+function kalVerbindenHtml() {
+  const u = KALV.url, a = KALV.info || INIT?.kalenderAbo, js = (x) => JSON.stringify(x).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+  if (!u) return `<h3 style="margin-top:0">📲 Kalender verbinden</h3>
+    ${a ? `<p>✅ Ein Kalender ist schon verbunden (seit ${esc(zeitKurz(a.erstellt_am))}${a.zuletzt_abgerufen ? `, zuletzt aktualisiert ${esc(zeitKurz(a.zuletzt_abgerufen))}` : ""}).</p>
+      <p class="hinweis">Dieser ältere Link lässt sich nicht noch einmal anzeigen. Für ein weiteres Handy oder Google braucht es einmal einen neuen Link – danach geht das jederzeit ohne Neuanlage. Den bisherigen Kalender dann bitte mit dem neuen Link neu verbinden.</p>
+      <button class="knopf haupt" onclick="kalNeuerLink()">🔄 Neuen Link erzeugen</button>` : '<p class="hinweis">⏳ Einen Moment …</p>'}`;
+  return `<h3 style="margin-top:0">📲 Kalender verbinden</h3>
+    <p class="hinweis" style="margin-top:0">Alle Sitzungen, Veranstaltungen, Aktionen und freigegebenen Geburtstage erscheinen in deinem normalen Kalender – und bleiben von selbst aktuell (neue Termine, Verlegungen, Absagen).</p>
+    ${a?.erstellt_am ? `<p class="hinweis">✅ Verbunden seit ${esc(zeitKurz(a.erstellt_am))}${a.zuletzt_abgerufen ? ` · zuletzt aktualisiert ${esc(zeitKurz(a.zuletzt_abgerufen))}` : " · noch nicht abgerufen"}</p>` : ""}
+    <div class="kalv-wege">
+      <a class="knopf haupt kalv-weg" href="${esc(kalWebcal(u))}" onclick="kalVerbundenMerken('apple')"><span>🍎</span><b>iPhone · iPad · Mac</b><small>antippen → „Abonnieren“ → „Hinzufügen“</small></a>
+      <button class="knopf kalv-weg kalv-google" onclick='kalGoogleAbo(${js(u)})'><span>🟦</span><b>Google Kalender</b><small>Android-Handy & PC – „Hinzufügen“ bestätigen</small></button>
+      <button class="knopf kalv-weg" onclick='kalOutlookAbo(${js(u)})'><span>🟦</span><b>Outlook</b><small>outlook.com / Microsoft-Konto</small></button>
+    </div>
+    <details class="kalv-hilfe"><summary>Klappt nicht? So geht's von Hand</summary>
+      <p><b>Google am PC:</b> calendar.google.com → links „Weitere Kalender ＋“ → „Per URL“ → Link einfügen → „Kalender hinzufügen“. Auf dem Android-Handy erscheint er danach von selbst (Google-Kalender-App → Menü → „Köcheclub“ einschalten).</p>
+      <p><b>iPhone von Hand:</b> Einstellungen → Kalender → Accounts → Account hinzufügen → Andere → Kalenderabo hinzufügen → Link einfügen.</p>
+      <p><b>Samsung-Kalender:</b> über das Google-Konto (oben) – der Samsung-Kalender zeigt Google-Kalender mit an.</p>
+      <button class="knopf klein" onclick='kalLinkKopieren(${js(u)})'>📋 Link kopieren</button></details>
+    <p class="hinweis" style="font-size:.85rem">🔒 Der Link zeigt nur deine Club-Termine – bitte nicht weitergeben. Neue Termine erscheinen je nach Kalender nach einigen Minuten (iPhone) bis einigen Stunden (Google).
+      <button type="button" class="kalv-link" onclick="kalNeuerLink()">Neuen Link erzeugen</button> (der alte hört dann auf).</p>`;
 }
-async function kalenderAbo() {
+async function kalVerbinden() {
   nzZaehlen("kalender_abo");
-  if (INIT?.kalenderAbo && !(await frage("Neuen Kalender-Link erzeugen? Der alte Link funktioniert dann nicht mehr (z. B. auf einem alten Handy)."))) return;
-  try { const r = await api("kalender_abo"); INIT.kalenderAbo = { erstellt_am: new Date().toISOString(), zuletzt_abgerufen: null }; kalenderAboZeigen(r.url); } catch (e) { meldeFehler(e); }
+  $("kalWahlText").innerHTML = kalVerbindenHtml(); $("kalWahlBlatt").classList.remove("versteckt");
+  try {
+    let r = await api("kalender_abo_holen");
+    if (!r.url && !r.alt) r = await api("kalender_abo"); // noch keiner da → gleich den ersten anlegen
+    KALV.url = r.url || null; KALV.info = r.erstellt_am ? { erstellt_am: r.erstellt_am, zuletzt_abgerufen: r.zuletzt_abgerufen || null } : null;
+    if (INIT && KALV.info) INIT.kalenderAbo = KALV.info;
+  } catch (e) { meldeFehler(e); }
+  if (!$("kalWahlBlatt").classList.contains("versteckt")) $("kalWahlText").innerHTML = kalVerbindenHtml();
+  kalenderAboZeigen();
 }
+async function kalNeuerLink() {
+  if (!(await frage("Neuen Kalender-Link erzeugen? Kalender, die mit dem alten Link verbunden sind, bekommen dann keine Termine mehr – dort bitte neu verbinden."))) return;
+  try { const r = await api("kalender_abo"); KALV.url = r.url; KALV.info = { erstellt_am: r.erstellt_am || new Date().toISOString(), zuletzt_abgerufen: null }; if (INIT) INIT.kalenderAbo = KALV.info; } catch (e) { meldeFehler(e); }
+  $("kalWahlText").innerHTML = kalVerbindenHtml(); kalenderAboZeigen();
+}
+function kalGoogleAbo(u) { kalVerbundenMerken("google"); extOeffnen("https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(kalWebcal(u))); }
+function kalOutlookAbo(u) { kalVerbundenMerken("outlook"); extOeffnen("https://outlook.live.com/calendar/0/addfromweb?url=" + encodeURIComponent(u) + "&name=" + encodeURIComponent("Köcheclub Werne")); }
+function kalLinkKopieren(u) { navigator.clipboard.writeText(u).then(() => melde("📋 Link kopiert"), () => eingabe("Link zum Kopieren:", u)); }
+function kalVerbundenMerken(weg) { try { localStorage.setItem("kc_club_kalender_weg", weg); } catch {} setTimeout(() => melde(weg === "apple" ? "🍎 Im Kalender „Abonnieren“ und „Hinzufügen“ tippen – fertig" : "Im Kalender „Hinzufügen“ bestätigen – fertig"), 300); }
+// ⚙️ Einstellungen: kurzer Stand + Knopf (die Wege selbst stehen im Fenster)
+function kalenderAboZeigen() {
+  const a = KALV.info || INIT?.kalenderAbo;
+  if ($("kalAboInfo")) $("kalAboInfo").innerHTML = a ? `<p class="hinweis">✅ Kalender verbunden seit ${esc(zeitKurz(a.erstellt_am))}${a.zuletzt_abgerufen ? ` · zuletzt aktualisiert ${esc(zeitKurz(a.zuletzt_abgerufen))}` : " · noch nicht abgerufen"}.</p>` : "";
+  if ($("kalAboKnopf")) $("kalAboKnopf").textContent = a ? "📲 Weiteren Kalender verbinden / Link zeigen" : "📲 Kalender verbinden";
+}
+const kalenderAbo = kalVerbinden; // ältere Knöpfe/Verweise
 
 // ---------- KC-CLUB-AENDERUNG (2.22.7, Wunsch Hansi): „✏️ Meine Daten haben sich geändert“ ----------
 // Mitglied tippt an, was sich geändert hat (Register AENDERUNG auf dem Server) → geht je Art an Clubsprecher/Kassenwart/Admin.
