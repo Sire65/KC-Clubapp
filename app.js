@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.431.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.432.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5061,6 +5061,7 @@ const HILFE = [
   // 2.23.8: Hilfen zu den Neuerungen aus 2.23.6 (Eingangskorb, Ablage, Büro-Hinweis, Töne, Inkognito)
   { id: "eingangskorb", thema: "club", sym: "📥", t: "Der Eingangskorb im Büro", x: "Alles, was für die Clubleitung neu hereinkommt, liegt im Büro im <b>📥 Eingangskorb</b>: Erstattungen (Fahrtkosten), Dienstzeiten, Vorschläge, Änderungsmeldungen, Ausleihen und mehr. Clubsprecher, Kassenwart und Admin bekommen dazu eine Meldung. Es bleibt im Eingang, bis es erledigt ist – zum Beispiel mit <b>„✅ Erstattet“</b> oder <b>„👁️ Zur Kenntnis genommen“</b>. Oben rechts: <b>🔽</b> filtert nach Jahr, Monat, Art und Name, <b>📊</b> zeigt alle Dienstzeiten als Übersicht quer (Name, Tage, Zeitbalken, Stunden) – mit Drucken und „🗄️ In Ordner ablegen“ (Ordner des Mitglieds, Register Dienstpläne, und im Büro „Dienstpläne“).", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "eingang_hinweis", thema: "club", sym: "📥", t: "Hinweis: viel im Eingangskorb", x: "Liegen <b>mehr als 5 Sachen</b> im Eingangskorb, zeigt die App der Clubleitung beim Start eine kleine Liste – z. B. „5 Dienstpläne, 1 Kostenerstattung, 1 Hilfegesuch“. Eine Zeile antippen öffnet den Eingangskorb gleich mit dieser Art. Darunter: <b>„✅ Ja, jetzt bearbeiten“</b>, <b>„⏰ Später“</b> (in ein paar Stunden wieder) oder <b>„🌙 Heute nicht mehr“</b>. Ganz ausschalten (und die Tages-Übersicht beim Start): ⚙️ → <b>„🗂️ Clubleitung beim Start“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => einstiegHin("leitung_start"), seit: "2.23.43" },
+  { id: "eingangskorb_mitglied", thema: "club", sym: "📥", t: "Dein Eingangskorb fürs Archiv", x: "Legt dir die Clubleitung ein Dokument hin (z. B. eine Anleitung oder Urkunde), steht unter <b>„Heute wichtig“ → 📥 Eingangskorb</b>. Antippen – du siehst das Dokument und entscheidest: <b>✔ annehmen</b>, dann liegt es in deinem persönlichen Archiv-Ordner, oder <b>✖ ablehnen</b>, dann wird es gelöscht. Dein Ordner bleibt privat. <i>Clubleitung:</i> Mitglied antippen → <b>„📥 In den Eingangskorb“</b>.", seit: "2.432.0" },
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
   { id: "ttt_toene", thema: "club", sym: "🔔", t: "Spiele mit Tönen", x: "Unter jedem Spiel gibt es den Knopf <b>„🔔 Töne an / 🔕 aus“</b>. Dann klingt jeder Zug, jeder Wurf und jede Karte – und am Ende hörst du, ob du gewonnen, verloren oder unentschieden gespielt hast. Der Schalter gilt für alle Spiele, nur auf diesem Gerät.", zeig: () => { zeige("spiele"); spArtWahl("ttt"); }, seit: "2.23.8" },
@@ -18586,17 +18587,19 @@ function jzbStreunerMalen(c, D, k) {
   c.fillStyle = fell; c.beginPath(); c.ellipse(0, -10.5, 9.5, 4.6, 0, 0, 7); c.fill();
   c.fillStyle = dunkel; c.beginPath(); c.ellipse(-3, -12, 3.6, 2.5, -.2, 0, 7); c.fill();
   c.strokeStyle = "#6f5439"; c.lineWidth = .8; for (const x of [-6, -2, 2]) { c.beginPath(); c.moveTo(x, -14.6); c.lineTo(x + 1.2, -16); c.stroke(); }
-  // Hals und Kopf (senkt sich zum Schnuppern)
-  c.save(); c.translate(7, -12); c.rotate(kopf * .95);
-  c.fillStyle = fell; c.beginPath(); c.ellipse(2, -1.5, 3.4, 3.2, .3, 0, 7); c.fill(); // Hals
-  c.beginPath(); c.arc(4.6, -4.2, 3.9, 0, 7); c.fill(); // Kopf
-  c.beginPath(); c.ellipse(8.2 + zuck * .3, -3.2, 3.2, 2.1, .1, 0, 7); c.fill(); // Schnauze
-  c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(11.1 + zuck * .4, -3.4, 1, 0, 7); c.fill(); // Nase
-  c.beginPath(); c.arc(5.6, -5.4, .7, 0, 7); c.fill(); // Auge
-  c.fillStyle = dunkel; c.beginPath(); c.moveTo(3, -7.4); c.quadraticCurveTo(1, -6.5, 1.4, -2.2); c.quadraticCurveTo(3, -3.4, 4.4, -6.6); c.closePath(); c.fill(); // Schlappohr
+  // Hals und Kopf (senkt sich zum Schnuppern) – 2.432.0 KC-CLUB-HUND-KOPF (Wunsch Hansi „naturgetreuer – der Kopf ist zu hoch und evtl. zu lang“):
+  // kräftiger Hals schräg nach vorn, Kopf etwa auf Rückenhöhe, kleiner Schädel mit schmaler werdender Schnauze, Schlappohr hängt am Schädel
+  c.save(); c.translate(7.5, -12); c.rotate(kopf * 1.2);
+  c.fillStyle = fell; c.beginPath(); c.moveTo(-3, 2); c.bezierCurveTo(-1.4, -2.6, 2, -5.2, 4.8, -5.3); c.lineTo(6.4, -1); c.quadraticCurveTo(2.6, 2.8, -2.2, 2.4); c.closePath(); c.fill(); // Hals, oben glatt in den Rücken
+  c.beginPath(); c.ellipse(5.6, -3.3, 3, 2.8, .15, 0, 7); c.fill(); // Schädel
+  c.beginPath(); c.moveTo(6.6, -5); c.quadraticCurveTo(8.6, -4.4, 10 + zuck * .3, -3.5); c.quadraticCurveTo(10.6 + zuck * .3, -2.4, 9.8, -1.8); c.lineTo(7, -1); c.closePath(); c.fill(); // Schnauze, vorn schmaler
+  c.strokeStyle = dunkel; c.lineWidth = .45; c.beginPath(); c.moveTo(9.4, -1.9); c.quadraticCurveTo(8.4, -1.6, 7.8, -1.9); c.stroke(); // Maul
+  c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(10.1 + zuck * .4, -3.1, .85, 0, 7); c.fill(); // Nase
+  c.beginPath(); c.arc(6.7, -4, .55, 0, 7); c.fill(); // Auge
+  c.fillStyle = dunkel; c.beginPath(); c.moveTo(5.2, -5.5); c.quadraticCurveTo(3.4, -5, 3.7, -1.6); c.quadraticCurveTo(4.8, -2.4, 5.8, -4.6); c.closePath(); c.fill(); // Schlappohr
   c.restore();
   // Schnupper-Wölkchen an der Nase
-  if (D.phase === "schnuppern" && kopf > .8 && Math.sin(D.t * 13) > .6) { c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.arc(19, -2.6, 1.2, 0, 7); c.arc(21.2, -3.6, .9, 0, 7); c.fill(); }
+  if (D.phase === "schnuppern" && kopf > .8 && Math.sin(D.t * 13) > .6) { c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.arc(15.4, -2.8, 1.1, 0, 7); c.arc(17.2, -3.6, .85, 0, 7); c.fill(); }
   c.restore();
 }
 function jzbHoernchenMalen(c, H, k) {
@@ -22263,6 +22266,7 @@ function wichtigZeigen() {
   const h = [];
   if (START_ART === "verknuepfung" || (START_ART === "browser" && !schonInstalliert)) h.push(`<div class="zeile" style="cursor:pointer" onclick="installHilfe()">📲 <b>${START_ART === "browser" ? "Köcheclub als App installieren" : "App richtig installieren"}</b> – dann klappen WhatsApp & Galerie<span style="margin-left:auto">›</span></div>`);
   if (INIT?.wartung?.an) h.push(`<div class="zeile" style="cursor:pointer" onclick="verbindungBlatt()">🔵 <b>Wartung</b>${INIT.wartung.hinweis ? " – " + esc(INIT.wartung.hinweis) : ": es kann kurz zu Unterbrechungen kommen"}<span style="margin-left:auto">›</span></div>`);
+  if (INIT?.eingangskorb > 0) h.push(`<div class="zeile" style="cursor:pointer" onclick="eingangOeffnen()">📥 <b>Eingangskorb: ${INIT.eingangskorb === 1 ? "1 Dokument" : INIT.eingangskorb + " Dokumente"} für dich</b> – ansehen, übernehmen oder ablehnen<span style="margin-left:auto">›</span></div>`); // 2.432.0 KC-CLUB-EINGANGSKORB
   if (INIT?.ungelesen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('nachrichten')">💬 <b>${INIT.ungelesen} neue Nachricht${INIT.ungelesen > 1 ? "en" : ""}</b><span style="margin-left:auto">›</span></div>`);
   if (INIT?.offeneAbstimmungen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('vorschlaege')">🗳️ <b>${INIT.offeneAbstimmungen === 1 ? "1 Abstimmung wartet" : INIT.offeneAbstimmungen + " Abstimmungen warten"}</b> auf deine Stimme<span style="margin-left:auto">›</span></div>`);
   for (const g of INIT?.geburtstageHeute || []) h.push(g.person_id === ICH?.person_id
@@ -32687,6 +32691,7 @@ function mitgliedZeigen() {
       ${stDarf("zeigen") && !m.selbst ? `<button class="knopf" onclick="vfStart('${m.person_id}')"><span class="kt-ico">📺</span>Live zeigen</button>` : ""}
       ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button><button class="knopf" onclick="ansageVorgabeSetzen('${m.person_id}', ${esc(JSON.stringify((m.name || "").split(" ")[0]))})"><span class="kt-ico">🗣️</span>Online-Ansagen einschalten</button>` : ""}
       ${(ICH?.admin || ICH?.vorstand) && !m.selbst ? `<button class="knopf" onclick="elternHandy('${esc(m.person_id)}')"><span class="kt-ico">👪</span>Eltern-Handy</button>` : ""}
+      ${(ICH?.admin || ICH?.vorstand) && !m.selbst ? `<button class="knopf" onclick="mgEingang('${esc(m.person_id)}')"><span class="kt-ico">📥</span>In den Eingangskorb</button>` : ""}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
     </div>
     ${prKarte(m)}
@@ -32951,6 +32956,33 @@ async function elternHandy(pid) {
     ev.target.disabled = false;
   };
   laden();
+}
+// ---------- 2.432.0 KC-CLUB-EINGANGSKORB (Wunsch Hansi „Eingangskorb für Mitglieder“): Admin/Clubleitung legt ein Dokument in den persönlichen
+// Ordner eines Mitglieds – nur zur Prüfung. Das Mitglied sieht es unter „Heute wichtig“ → 📥 Eingangskorb und übernimmt es oder lehnt ab (dann gelöscht).
+const EINGANG_REGISTER = ["Sonstiges", "Urkunden", "Schulungen", "Rechnungen", "Fotos"];
+function mgEingang(pid) {
+  const m = MITGLIEDER?.find((x) => x.person_id === pid) || (MD?.person_id === pid ? MD : null); if (!m) return;
+  const vn = m.vorname || String(m.name || "").split(" ")[0];
+  const f = blattAuf("eingangBlatt", `<h3 style="margin-top:0">📥 In den Eingangskorb von ${esc(m.name)}</h3>
+    <p class="hinweis" style="margin-top:0">Das Dokument landet im persönlichen Archiv-Ordner von ${esc(vn)} – aber erst, wenn ${esc(vn)} es annimmt. Lehnt ${esc(vn)} ab, wird es gelöscht. Den Ordner selbst siehst du nicht.</p>
+    <label class="feld">Datei (PDF, Bild, Word, Excel, Text – höchstens 8 MB)<input type="file" id="egDatei" accept=".pdf,.jpg,.jpeg,.png,.webp,.txt,.doc,.docx,.xls,.xlsx,application/pdf,image/jpeg,image/png,image/webp"></label>
+    <label class="feld">Titel<input id="egTitel" maxlength="120" placeholder="z. B. Anleitung Anklopfen"></label>
+    <label class="feld">Register<select id="egReg">${EINGANG_REGISTER.map((r) => `<option>${esc(r)}</option>`).join("")}</select></label>
+    <label class="feld">Kurze Nachricht dazu (freiwillig)<textarea id="egNotiz" rows="2" maxlength="500" placeholder="z. B. Wie besprochen – zum Nachlesen."></textarea></label>
+    <div class="dlg-knoepfe"><button class="knopf haupt" id="egLos">📥 In den Eingangskorb legen</button><button class="knopf" onclick="$('eingangBlatt').remove()">Abbrechen</button></div>`);
+  f.querySelector("#egDatei").onchange = (e) => { const d = e.target.files?.[0]; if (d && !f.querySelector("#egTitel").value.trim()) f.querySelector("#egTitel").value = d.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").slice(0, 120); };
+  f.querySelector("#egLos").onclick = async (ev) => {
+    const d = f.querySelector("#egDatei").files?.[0];
+    if (!d) { melde("Bitte zuerst eine Datei auswählen.", true); return; }
+    if (!ARCHIV_TYP_OK(d.type)) { melde("Diese Datei passt nicht ins Archiv – bitte PDF, Bild, Word, Excel oder Text.", true); return; }
+    if (d.size > 8 * 1024 * 1024) { melde("Die Datei ist zu groß (höchstens 8 MB).", true); return; }
+    ev.target.disabled = true;
+    try {
+      const r = await api("archiv_eingang_senden", { person_id: pid, name: d.name, mime: d.type, daten: base64(await d.arrayBuffer()), titel: f.querySelector("#egTitel").value.trim(),
+        register: f.querySelector("#egReg").value, notiz: f.querySelector("#egNotiz").value.trim() }, { warten: true });
+      f.remove(); melde(`📥 Liegt im Eingangskorb von ${vn}${r.register ? ` (Register „${r.register}“)` : ""} – ${vn} bekommt Bescheid`);
+    } catch (x) { meldeFehler(x); ev.target.disabled = false; }
+  };
 }
 // Das Kind sieht ehrlich, wer benachrichtigt wird (ohne Nummer) – unter ⚙️ → Privatsphäre
 async function elternMeineZeigen() {
@@ -33301,10 +33333,13 @@ const arFilterMerken = () => { try { localStorage.setItem("kc_club_archiv_filter
 function arStart() { AR.ordner = null; AR.korb = false; AR.suche = ""; zeige("archiv"); }
 // 1.65.0: direkt einen Ordner einer Art öffnen (z. B. die Chronik aus dem Büro-Regal); fehlt er, bleibt das Regal offen
 function arStartArt(art) { AR.zielArt = art; arStart(); }
+function eingangOeffnen() { AR.zielEingang = true; arStart(); } // 2.432.0 KC-CLUB-EINGANGSKORB: direkt in den Ordner mit den wartenden Dokumenten
 function arStartTitel(titel) { AR.zielTitel = titel; arStart(); } // Club-Ordner nach Beschriftung öffnen (neuester Jahrgang)
 async function arLaden() {
   if (!AR.daten) $("arInhalt").innerHTML = '<p class="hinweis">Lädt …</p>';
   try { AR.daten = await api("archiv_liste");
+    if (INIT) { const n = AR.daten.ordner.filter((o) => o.eigen).reduce((x, o) => x + (o.pruefung || 0), 0); if ((INIT.eingangskorb || 0) !== n) { INIT.eingangskorb = n; try { wichtigZeigen(); } catch {} } } // 2.432.0 KC-CLUB-EINGANGSKORB
+    if (AR.zielEingang) { AR.zielEingang = false; const ze = AR.daten.ordner.find((o) => o.eigen && o.pruefung); if (ze) return arOrdnerOeffnen(ze.id); }
     if (AR.zielArt) { const za = AR.daten.ordner.find((o) => !o.besitzer && o.art === AR.zielArt); AR.zielArt = null; if (za) return arOrdnerOeffnen(za.id); }
     if (AR.zielTitel) { const zt = AR.daten.ordner.filter((o) => !o.besitzer && o.titel === AR.zielTitel).sort((a, b) => b.jahr - a.jahr)[0]; const t = AR.zielTitel; AR.zielTitel = null; if (zt) return arOrdnerOeffnen(zt.id); melde(`Den Ordner „${t}“ gibt es noch nicht – im Archiv mit „＋“ anlegen.`, true); }
     if (AR.ziel) { const z = AR.ziel, zr = AR.zielRegister; AR.ziel = null; AR.zielRegister = "";

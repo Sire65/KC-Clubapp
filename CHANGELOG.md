@@ -17,6 +17,18 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.432.0 – 2026-10-16 – 🐕 Herbst-Hund naturgetreuer (KC-CLUB-HUND-KOPF) · 📥 Eingangskorb für Mitglieder (KC-CLUB-EINGANGSKORB) · Server 2.432.0
+Wunsch Hansi: „Den Hund im Herbst noch etwas naturgetreuer – der Kopf ist zu hoch und evtl. zu lang.“
+- Kopf sitzt jetzt etwa auf Rückenhöhe (vorher deutlich darüber), kräftiger Hals schräg nach vorn, der Rücken geht glatt in den Hals über.
+- Kleinerer Schädel mit schmaler werdender Schnauze und Maul statt runder Kugel mit Wurstschnauze – der Kopf ist kürzer (etwa 40 % der Körperlänge statt gut 55 %).
+- Beim Schnuppern senkt er die Nase tiefer ins Laub; das Schnupper-Wölkchen sitzt an der neuen Nase.
+
+**📥 Eingangskorb für Mitglieder** (Wunsch Hansi: „Steven ein Dokument in seinen Archiv-Ordner legen“ → „Eingangskorb für Mitglieder“). Persönliche Ordner sind privat; bisher ging das nur, wenn das Mitglied eine Freigabe „Hochladen“ erteilt hatte.
+- **Mitgliedsfenster → „📥 In den Eingangskorb“** (Admin und Clubleitung): Datei (PDF, Bild, Word, Excel, Text, bis 8 MB), Titel, Register (Standard „Sonstiges“), kurze Nachricht. Das Dokument kommt in den persönlichen Ordner des laufenden Jahres (fehlt er, wird er angelegt) – **nur zur Prüfung**.
+- **Das Mitglied** bekommt „📥 Neu in deinem Eingangskorb“ (Push/Mail wie gewohnt) und sieht unter **„Heute wichtig“ → 📥 Eingangskorb** die Anzahl; Antippen öffnet den Ordner mit den wartenden Dokumenten: ✔ annehmen (liegt dann im Ordner) oder ✖ ablehnen (wird gelöscht). Die Leitung sieht den Ordner auch danach nicht.
+- Nicht für Gäste/Aushilfen (kein Archiv), voller Ordner (50 MB) wird abgelehnt.
+- **Server:** neue Aktion archiv_eingang_senden (nur Leitung), init liefert eingangskorb. Keine DB-Änderung.
+
 ## 2.431.0 – 2026-10-16 – 👪 Eltern-Handy für Kinder (KC-CLUB-ELTERN) · Server 2.431.0 · neue Edge Function kc-eltern · DB
 Wunsch Hansi: „Können Push auch an zwei Handys gehen – das Kind auf seins und die Eltern auf ihres? So sachte wie möglich, Kinder brauchen auch Privatsphäre. Eltern nur, wenn das Kind einen Termin hat oder eine Nachricht vom Leitungsteam oder Admin; untereinander keine Push an die Eltern. Hinterlegt mit der Handynummer, nicht über einen extra Zugangscode.“
 - **Mitgliedsfenster → „👪 Eltern-Handy“** (nur Admin und Clubleitung): Name + Handynummer eintragen (höchstens 3 je Mitglied), dann geht WhatsApp an diese Nummer auf – mit Link und Erklärung. Liste mit Stand (✅ eingeschaltet / ⏳ noch nicht), „🟢 Link per WhatsApp“, „📋 Link kopieren“ (immer ein frischer Link, der alte gilt dann nicht mehr), „🗑️ Entfernen“.

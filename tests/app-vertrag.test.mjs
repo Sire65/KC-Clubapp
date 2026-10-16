@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -8301,7 +8301,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 }
 // 2.157.0 KC-CLUB-START-PARALLEL-3 / KC-CLUB-START-MESSUNG: Server-Teilzeiten in der Startmessung, Kachel-Zahlen-Ketten gleichzeitig
 {
-  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 19000); // 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel
+  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 20000); // 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb
   assert.ok(/const mess = <T,>\(n: string, x: PromiseLike<T>\)/.test(ini) && /srvT: zt,/.test(ini), "init misst Teilzeiten und liefert srvT");
   for (const n of ['mess("tr",', 'mess("teil",', 'mess("mg",', "kz: pKz", "comm: pComm", "rest: pRest", "auf: pAufgaben", "tf: pTermin"]) assert.ok(ini.includes(n), `Teilzeit ${n} gemessen`);
   assert.ok(/zt\.zl = Date\.now\(\) - t0Anfrage/.test(ini) && /zt\.ende = Date\.now\(\) - t0Anfrage/.test(ini), "Zählen und Ende gemessen");
@@ -10286,5 +10286,22 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/fill: "backwards"/.test(d) && /f\.classList\.toggle\("vorn", vorn\)/.test(d), "Ansichten überlappen, Zustand wechselt");
   assert.ok(/<g class="fee-bein a"><path d="M82 98/.test(programm) && /<g class="fee-bein b"><path d="M95 102/.test(programm), "Beine als eigene Gruppen");
   assert.ok(/@keyframes feeBeinA/.test(seite) && /@keyframes feeBeinB/.test(seite) && /\.fee \.fee-bein\.a \{ transform-origin: 86px 100px;/.test(seite), "Beine bewegen sich um die Hüfte");
+}
+// 2.432.0 KC-CLUB-HUND-KOPF: Kopf des Herbst-Hunds auf Rückenhöhe, kürzer, schmale Schnauze
+{
+  const m = programm.slice(programm.indexOf("function jzbStreunerMalen(c, D, k)"), programm.indexOf("function jzbHoernchenMalen("));
+  assert.ok(/c\.translate\(7\.5, -12\); c\.rotate\(kopf \* 1\.2\);/.test(m) && /c\.ellipse\(5\.6, -3\.3, 3, 2\.8, \.15, 0, 7\); c\.fill\(\); \/\/ Schädel/.test(m), "Kopf tiefer und kleiner");
+  assert.ok(!/c\.arc\(4\.6, -4\.2, 3\.9, 0, 7\)/.test(m), "alte Kugel weg");
+}
+// 2.432.0 KC-CLUB-EINGANGSKORB: Leitung legt Dokument zur Prüfung in den Ordner eines Mitglieds
+{
+  const e = server.slice(server.indexOf('case "archiv_eingang_senden"'), server.indexOf('case "archiv_ausblenden"'));
+  assert.ok(e.length > 0 && /nurLeitung\(ich\);/.test(e), "nur Admin/Clubleitung");
+  assert.ok(/status: "pruefung"/.test(e) && !/status: "ok"/.test(e), "immer nur zur Prüfung – erst nach Annahme sichtbar");
+  assert.ok(/zugangAus\(ro\) !== "mitglied"/.test(e) && /PERSOENLICH_GRENZE/.test(e) && /ARCHIV_DATEITYPEN/.test(e) && /dateienEntfernen\(\[datei\.id\]\)/.test(e), "Gast/Aushilfe, voller Ordner, Dateityp, Aufräumen");
+  assert.ok(/eingangskorb: await pEingang, /.test(server) && /\.neq\("hochgeladen_von", ich\.person_id\)/.test(server), "Anzahl beim Start");
+  assert.ok(/onclick="mgEingang\('\$\{esc\(m\.person_id\)\}'\)"/.test(programm) && /api\("archiv_eingang_senden"/.test(programm), "Knopf im Mitgliedsfenster");
+  assert.ok(/INIT\?\.eingangskorb > 0/.test(programm) && /function eingangOeffnen\(\) \{ AR\.zielEingang = true; arStart\(\); \}/.test(programm), "Heute wichtig → Eingangskorb");
+  assert.ok(!/"archiv_eingang_senden"/.test(server.slice(server.indexOf("const ZUGANG_AKTIONEN"), server.indexOf("const ZUGANG_ERLAUBT"))), "nicht für Gäste/Aushilfen");
 }
 

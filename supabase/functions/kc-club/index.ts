@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.431.0";
+const SERVER_VERSION = "2.432.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -3483,12 +3483,14 @@ async function archivDokHolen(ich: Ich, id: unknown, recht: ArchivRecht = "lesen
   if (!o.besitzer && !darfDokSehen(ich, o, d, [])) throw new Fehler("Dokument nicht gefunden.", 404); // KC-CLUB-CHRONIK: fremde Einreichung
   return { d, o };
 }
-async function archivEigenerOrdner(ich: Ich, jahr: number) {
-  const { data: da } = await db.from("kc_club_archiv_ordner").select("id").eq("besitzer", ich.person_id).eq("jahr", jahr).maybeSingle();
+async function archivEigenerOrdner(ich: Ich, jahr: number) { return await archivOrdnerVon(ich.person_id, ich.name, jahr, ich.person_id); }
+// 2.432.0 KC-CLUB-EINGANGSKORB: persönlicher Ordner einer Person (auch für den Eingangskorb, den Admin/Clubleitung befüllt) – fehlt er, wird er angelegt
+async function archivOrdnerVon(pid: string, name: string, jahr: number, von: string) {
+  const { data: da } = await db.from("kc_club_archiv_ordner").select("id").eq("besitzer", pid).eq("jahr", jahr).maybeSingle();
   if (da) return da.id as string;
-  const { data: neu } = await db.from("kc_club_archiv_ordner").insert({ art: "persoenlich", besitzer: ich.person_id, jahr, titel: ich.name, farbe: 6,
-    register: PERSOENLICH_REGISTER, erstellt_von: ich.person_id }).select("id").maybeSingle();
-  if (neu) await protokoll(ich.person_id, "archiv_eigener_ordner_angelegt", { ordner: neu.id, jahr });
+  const { data: neu } = await db.from("kc_club_archiv_ordner").insert({ art: "persoenlich", besitzer: pid, jahr, titel: name, farbe: 6,
+    register: PERSOENLICH_REGISTER, erstellt_von: von }).select("id").maybeSingle();
+  if (neu) await protokoll(von, "archiv_eigener_ordner_angelegt", { ordner: neu.id, jahr, ...(von !== pid ? { fuer: pid } : {}) });
   return neu?.id as string | undefined;
 }
 async function archivBelegtVon(pid: string) {
@@ -6125,6 +6127,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return (tu ?? []).filter((x: any) => !beantwortet.has(x.id)).map((x: any) => ({ id: x.id, titel: x.titel }));
         })();
         const pAnfragen = offeneTerminanfragen(ich).catch((e) => { console.error("anfragen offen", String(e)); return []; }); // 2.389.0 KC-CLUB-TERMINANFRAGE-SICHTBAR
+        // 2.432.0 KC-CLUB-EINGANGSKORB: Dokumente, die andere in meinen Ordner gelegt haben und die noch auf mich warten
+        const pEingang = (async () => {
+          if (ich.zugang !== "mitglied") return 0;
+          const { data: oo } = await db.from("kc_club_archiv_ordner").select("id").eq("besitzer", ich.person_id).is("geloescht_am", null);
+          const ids = (oo ?? []).map((x: any) => x.id); if (!ids.length) return 0;
+          const { count } = await db.from("kc_club_archiv_dokumente").select("id", { count: "exact", head: true }).in("ordner_id", ids).eq("status", "pruefung").neq("hochgeladen_von", ich.person_id);
+          return count ?? 0;
+        })().catch(() => 0);
         const pRest = Promise.all([
           db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", ich.person_id).maybeSingle(),
           db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
@@ -6241,7 +6251,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         zt.ende = Date.now() - t0Anfrage;
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
-        return json({ meinGeburtstag, alarm, express, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ meinGeburtstag, alarm, express, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -12497,6 +12507,46 @@ Köcheclub-App`,
             }, `club-archiv-pruefung:${d.id}`).catch(() => null);
           }
           return json({ ok: true, id: d.id, pruefung: einreichung });
+        } catch (e) { await dateienEntfernen([datei.id]); throw e; }
+      }
+
+      // 2.432.0 KC-CLUB-EINGANGSKORB (Wunsch Hansi: „Steven ein Dokument in seinen Archiv-Ordner legen“ – „Eingangskorb für Mitglieder“):
+      // Admin/Clubleitung legt ein Dokument in den persönlichen Ordner eines Mitglieds – ohne Freigabe, aber nur „zur Prüfung“: sichtbar und
+      // im Ordner erst, wenn das Mitglied es annimmt; ablehnen löscht es. Der Ordner bleibt privat (die Leitung sieht danach nichts darin).
+      case "archiv_eingang_senden": {
+        nurLeitung(ich);
+        const pid = String(p.person_id || "");
+        if (pid === ich.person_id) throw new Fehler("In deinen eigenen Ordner legst du Dokumente direkt im Archiv ab.");
+        const [{ data: pe }, { data: ro }] = await Promise.all([
+          db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name").eq("person_id", pid).eq("active", true).maybeSingle(),
+          db.from("kc_club_rollen").select("*").eq("person_id", pid).maybeSingle()]);
+        if (!pe) throw new Fehler("Mitglied nicht gefunden.", 404);
+        if (zugangAus(ro) !== "mitglied") throw new Fehler(`${vorname(pe)} hat als Gast/Aushilfe kein Archiv – bitte als Nachricht mit Anhang schicken.`);
+        if ((await archivBelegtVon(pid)) >= PERSOENLICH_GRENZE) throw new Fehler(`Der Ordner von ${vorname(pe)} ist voll (50 MB).`, 507);
+        const sp = await speicherStand();
+        if (sp.belegt >= SPEICHER_GRENZE * ARCHIV_STOPP) throw new Fehler("Der kostenlose Speicher ist voll – bitte zuerst Altes löschen.", 507);
+        const oid = await archivOrdnerVon(pid, pe.display_name || vorname(pe), new Date().getFullYear(), ich.person_id);
+        if (!oid) throw new Fehler("Ordner konnte nicht angelegt werden.", 500);
+        const { data: o } = await db.from("kc_club_archiv_ordner").select("id,register,geloescht_am").eq("id", oid).single();
+        if (o?.geloescht_am) throw new Fehler(`${vorname(pe)} hat den Ordner ${new Date().getFullYear()} in den Papierkorb gelegt – bitte als Nachricht mit Anhang schicken.`, 409);
+        const datei = await dateiAblegen(ich, p.name, p.mime, p.daten, ARCHIV_DATEITYPEN);
+        try {
+          const regs: string[] = o?.register ?? PERSOENLICH_REGISTER, register = regs.includes(String(p.register)) ? String(p.register) : regs.includes("Sonstiges") ? "Sonstiges" : regs[0] ?? null;
+          const titel = txt(p.titel, 120) || datei.name, notiz = txt(p.notiz, 500);
+          const { data: d, error } = await db.from("kc_club_archiv_dokumente").insert({
+            ordner_id: oid, register, titel, datum: archivDatum(p.datum), stichworte: archivStichworte(p.stichworte), beschreibung: notiz,
+            attachment_id: datei.id, datei_name: datei.name, mime: txt(p.mime, 100), groesse: datei.groesse, hochgeladen_von: ich.person_id, status: "pruefung",
+          }).select("id").single();
+          if (error || !d) throw new Fehler("Dokument konnte nicht gespeichert werden.", 500);
+          await protokoll(ich.person_id, "archiv_eingang_gesendet", { dokument: d.id, ordner: oid, fuer: pid, register, groesse: datei.groesse });
+          const url = `${APP_URL}#archiv`;
+          await senden("club_nachricht", [pid], {
+            titel: "📥 Neu in deinem Eingangskorb", kurz: `${ich.name}: „${titel}“ – in dein Archiv übernehmen oder ablehnen`,
+            betreff: "Köcheclub Werne – ein Dokument liegt in deinem Eingangskorb",
+            text: `Hallo ${vorname(pe)},\n\n${ich.name} hat dir „${titel}“ in deinen Eingangskorb gelegt${register ? ` (für das Register ${register})` : ""}.${notiz ? `\n\n${notiz}` : ""}\n\nIn der App unter „Heute wichtig“ → 📥 Eingangskorb kannst du es ansehen und in dein Archiv übernehmen – oder ablehnen, dann wird es gelöscht. Dein Ordner bleibt privat.\n\n${url}\n\nViele Grüße\nKöcheclub-App`,
+            url,
+          }, `club-archiv-eingang:${d.id}`).catch(() => null);
+          return json({ ok: true, id: d.id, register });
         } catch (e) { await dateienEntfernen([datei.id]); throw e; }
       }
 
