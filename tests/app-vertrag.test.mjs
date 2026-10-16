@@ -10361,4 +10361,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/setTimeout\(ruf, kkLautsprecherWecken\(mitTon\)\)/.test(programm) && /setTimeout\(ruf, kkLautsprecherWecken\(true\)\)/.test(programm), "auch nach dem Antippen");
   assert.ok(/<div class="kk-punkte" aria-hidden="true">\$\{"○"\.repeat\(n\)\}<\/div>/.test(programm) && /pk\.textContent = "●"\.repeat\(i\) \+ "○"\.repeat/.test(programm) && /\.kuckuck \.kk-punkte \{/.test(seite), "Punkte zählen mit");
 }
+// 2.437.0 KC-CLUB-GRABSTEIN-DEUTLICH: heller Grabstein mit Rand, Kreuz und lesbarer Inschrift
+{
+  const g = programm.slice(programm.indexOf("function jzbHwGrabMalen("), programm.indexOf("const S = H.skelett; if (!S) return;"));
+  assert.ok(/const b = 11 \* k, hoch = 20 \* k/.test(g) && /c\.strokeStyle = "#2c2e38"; c\.lineWidth = 1\.3 \* k; stein\(\); c\.stroke\(\);/.test(g), "größer, mit dunklem Rand");
+  assert.ok(/c\.fillStyle = "#f4f5fa"; c\.fillText\("R\.I\.P\.", gx, oben \+ 4\.5 \* k\);/.test(g) && /kreuz\(0, 0, "#3a3c48"\);/.test(g), "helle Inschrift mit Schattenkante, Kreuz");
+}
 
