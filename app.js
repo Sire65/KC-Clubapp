@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.436.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.437.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18235,10 +18235,20 @@ function jzbHwSkelettFigur(c, x, yb, sc, t, tanz) { // Skelett stehend (Füße b
   c.restore();
 }
 function jzbHwGrabMalen(c, F, H) {
-  const J = JZB, k = J.k, T = J.T, gx = jzbHwGrabX(), yb = J.h - 1, ex = gx + 15 * k;
-  c.fillStyle = "#5f6270"; c.beginPath(); c.moveTo(gx - 8 * k, yb); c.lineTo(gx - 8 * k, yb - 15 * k); c.arc(gx, yb - 15 * k, 8 * k, Math.PI, 0); c.lineTo(gx + 8 * k, yb); c.closePath(); c.fill(); // Grabstein
-  c.strokeStyle = "rgba(0,0,0,.35)"; c.lineWidth = .8; c.stroke(); c.beginPath(); c.moveTo(gx + 3 * k, yb - 20 * k); c.lineTo(gx + 1.5 * k, yb - 16 * k); c.lineTo(gx + 3.4 * k, yb - 13 * k); c.stroke();
-  c.fillStyle = "#3c3e48"; c.font = `800 ${5 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("R.I.P.", gx, yb - 14 * k);
+  const J = JZB, k = J.k, T = J.T, gx = jzbHwGrabX(), yb = J.h - 1, ex = gx + 20 * k;
+  // 2.437.0 KC-CLUB-GRABSTEIN-DEUTLICH (Fund Hansi „der Grabstein ist nicht gut zu erkennen, die Inschrift sieht man nicht“): größer, heller Stein
+  // mit Mondlicht-Kante und dunklem Rand, eingemeißeltes Kreuz und große, helle „R.I.P.“-Inschrift mit Schattenkante, Gras am Fuß
+  const b = 11 * k, hoch = 20 * k, oben = yb - hoch, stein = () => { c.beginPath(); c.moveTo(gx - b, yb); c.lineTo(gx - b, oben); c.arc(gx, oben, b, Math.PI, 0); c.lineTo(gx + b, yb); c.closePath(); };
+  const gl = c.createRadialGradient(gx, oben, 2 * k, gx, oben, 30 * k); gl.addColorStop(0, "rgba(220,225,255,.22)"); gl.addColorStop(1, "rgba(220,225,255,0)"); c.fillStyle = gl; c.beginPath(); c.arc(gx, oben, 30 * k, 0, 7); c.fill(); // leiser Schein
+  const g = c.createLinearGradient(gx - b, 0, gx + b, 0); g.addColorStop(0, "#d6d9e4"); g.addColorStop(.45, "#a9adbb"); g.addColorStop(1, "#6f7383"); c.fillStyle = g; stein(); c.fill();
+  c.strokeStyle = "#2c2e38"; c.lineWidth = 1.3 * k; stein(); c.stroke(); // dunkler Rand
+  c.strokeStyle = "rgba(255,255,255,.7)"; c.lineWidth = 1 * k; c.beginPath(); c.moveTo(gx - b + 1.3 * k, yb - 2 * k); c.lineTo(gx - b + 1.3 * k, oben); c.arc(gx, oben, b - 1.3 * k, Math.PI, Math.PI * 1.45); c.stroke(); // Mondlicht-Kante
+  c.strokeStyle = "rgba(40,42,52,.55)"; c.lineWidth = .8; c.beginPath(); c.moveTo(gx + 6 * k, oben - 6 * k); c.lineTo(gx + 4 * k, oben - 2 * k); c.lineTo(gx + 6.4 * k, oben + 2 * k); c.stroke(); // Riss
+  const kreuz = (dx, dy, f) => { c.fillStyle = f; c.fillRect(gx - .8 * k + dx, oben - 7 * k + dy, 1.6 * k, 6 * k); c.fillRect(gx - 2.6 * k + dx, oben - 5.4 * k + dy, 5.2 * k, 1.5 * k); };
+  kreuz(.5, .5, "rgba(255,255,255,.65)"); kreuz(0, 0, "#3a3c48"); // eingemeißeltes Kreuz
+  c.font = `900 ${7.6 * k}px Georgia,"Times New Roman",serif`; c.textAlign = "center"; c.textBaseline = "middle";
+  c.fillStyle = "#2c2e38"; c.fillText("R.I.P.", gx + .7 * k, oben + 5.2 * k); c.fillStyle = "#f4f5fa"; c.fillText("R.I.P.", gx, oben + 4.5 * k); // Inschrift hell mit Schattenkante
+  c.strokeStyle = "#3f6b2a"; c.lineWidth = 1 * k; c.lineCap = "round"; for (let i = -5; i <= 5; i++) { const x = gx + i * 2.2 * k, h = (2 + (i * 7 + 11) % 3) * k; c.beginPath(); c.moveTo(x, yb); c.lineTo(x + Math.sin(T * 1.5 + i) * .6 * k, yb - h); c.stroke(); } // Gras
   c.fillStyle = "#3b2a1e"; c.beginPath(); c.ellipse(ex, yb, 11 * k, 3 * k, 0, Math.PI, 0); c.fill(); // Erdhügel
   const S = H.skelett; if (!S) return; const t = S.t, sc = 1.15 * k;
   c.save(); c.beginPath(); c.rect(0, 0, J.w, yb - 1.5 * k); c.clip(); // nur über der Erde sichtbar

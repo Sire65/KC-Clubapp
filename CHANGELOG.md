@@ -17,6 +17,12 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.437.0 – 2026-10-16 – 🪦 Halloween: Grabstein deutlich mit lesbarer Inschrift (KC-CLUB-GRABSTEIN-DEUTLICH)
+Fund Hansi: „Der Grabstein ist nicht gut zu erkennen, der muss deutlicher – die Inschrift sieht man nicht.“
+- Größer (gut ein Drittel), heller Stein mit Verlauf und **dunklem Rand**, **Mondlicht-Kante** links und leisem Schein dahinter – hebt sich vom dunklen Halloween-Hintergrund ab.
+- **Eingemeißeltes Kreuz** und große, helle **„R.I.P.“**-Inschrift (Serifenschrift) mit dunkler Schattenkante – gut lesbar; dazu Gras am Fuß. Das Skelett kommt jetzt rechts daneben aus der Erde.
+- Nur App, kein Server- oder DB-Update.
+
 ## 2.436.0 – 2026-10-16 – 🎃 Halloween unten: Grab mit Skelett, Katze, Hexenkessel, Süßes oder Saures · Hexe fliegt tiefer (KC-CLUB-HALLOWEEN-UNTEN) · 🐦 Kuckuck: Lautsprecher wecken, Rufe mitzählen
 Fund Hansi: „Die Hexe hat keine gute Flugbahn, die fliegt genau hinter dem Stück mit den LEDs – besser ein Stück tiefer. Und unten muss noch mehr passieren.“ Gewählt: Grab mit Skelett, schwarze Katze, Hexenkessel, Süßes oder Saures.
 - **Flughöhe:** Hexe und kleine Geister fliegen jetzt **unterhalb der Lämpchen-Leiste** – deren Lage wird gemessen (sie hängt davon ab, wie viel im Kopf steht); reicht der Platz nicht, so tief wie möglich über dem Boden.
