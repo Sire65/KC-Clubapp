@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.433.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.434.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -820,6 +820,7 @@ const THEMEN = [
   { id: "ostern", sym: "🐣", name: "Ostern", design: "salbei", jz: "fruehling", effekt: "taube", schrift: "zart", extra: "ostern" }, // 2.332.0: Osterhase legt Eier zum Suchen
   { id: "sommer", sym: "🌻", name: "Sommer", design: "toskana", jz: "sommer", effekt: "flieger", schrift: "schwung" },
   { id: "karibik", sym: "🌴", name: "Karibik", design: "lagune", jz: "karibik", effekt: "taube", schrift: "strand" }, // 2.331.0 KC-CLUB-THEMEN-BUEHNE
+  { id: "unterwasser", sym: "🐠", name: "Unterwasserwelt", design: "nordsee", jz: "unterwasser", effekt: "taube", schrift: "strand" }, // 2.434.0 KC-CLUB-UNTERWASSER
   { id: "oktoberfest", sym: "🥨", name: "Oktoberfest", design: "nordsee", jz: "wiesn", effekt: "postauto", schrift: "fraktur" },
   { id: "herbst", sym: "🍂", name: "Herbst", design: "ocker", jz: "herbst", effekt: "flieger" },
   { id: "indian", sym: "🍁", name: "Indian Summer", design: "glut", jz: "herbst", effekt: "taube",
@@ -4940,7 +4941,7 @@ const HILFE = [
   // 🎨 Aussehen & Darstellung
   { id: "farbe", thema: "darstellung", sym: "🎨", t: "Die Farbe der App ändern", x: "Du kannst die Farbe einstellen: ⚙️ Einstellungen → Bereich <b>„🎨 Darstellung“</b> → „🎨 Farbdesign“. Unter „Weitere Farbschemen“ und „✨ Ausgefallene Farbschemen“ gibt es noch mehr. Antippen – die App färbt sich sofort um.", zeig: hzDesign },
   { id: "nacht", thema: "darstellung", sym: "🌗", t: "Tag- und Nachtmodus", x: "⚙️ → Darstellung → „🌗 Tag- und Nachtmodus“: <b>🔄 Automatisch</b> (nach dem Sonnenstand in Werne – hat das Handy einen Lichtsensor, nach der Helligkeit), <b>☀️ Immer Tag</b> oder <b>🌙 Immer Nacht</b>. Nachts ist der dunkle Modus angenehmer für die Augen.", zeig: () => einstiegHin("darstellung", "modusWahl") },
-  { id: "themen", thema: "darstellung", sym: "🎭", t: "Themen: Weihnachten, Herbst, Indian Summer …", x: "Mit einem Tipp auf ein Thema (⚙️ → <b>🎨 Darstellung</b> → <b>🎭 Themen</b>) stellst du Farben, das Bild im Kopf der Startseite und den Effekt beim Senden passend ein – z. B. 🎄 Weihnachten, 🍁 Indian Summer, 🎡 Sim-Jü, 🥨 Oktoberfest, 🌴 Karibik, 🐣 Ostern, 🎭 Karneval oder 🎃 Halloween – mit eigenem Bild im Kopf. „🔄 Nach Kalender“ wechselt das Thema von selbst (auch zu Karneval, Ostern, Oktoberfest, Sim-Jü und Halloween). Einzelnes kannst du danach trotzdem ändern. Viele Themen bringen auch eine passende Schrift für die Begrüßung mit – abschaltbar mit „✍️ Schrift des Themas“. Hat der Admin ein Club-Thema für alle eingestellt, kannst du es dort für dich abschalten." },
+  { id: "themen", thema: "darstellung", sym: "🎭", t: "Themen: Weihnachten, Herbst, Indian Summer …", x: "Mit einem Tipp auf ein Thema (⚙️ → <b>🎨 Darstellung</b> → <b>🎭 Themen</b>) stellst du Farben, das Bild im Kopf der Startseite und den Effekt beim Senden passend ein – z. B. 🎄 Weihnachten, 🍁 Indian Summer, 🎡 Sim-Jü, 🥨 Oktoberfest, 🌴 Karibik, 🐠 Unterwasserwelt, 🐣 Ostern, 🎭 Karneval oder 🎃 Halloween – mit eigenem Bild im Kopf. „🔄 Nach Kalender“ wechselt das Thema von selbst (auch zu Karneval, Ostern, Oktoberfest, Sim-Jü und Halloween). Einzelnes kannst du danach trotzdem ändern. Viele Themen bringen auch eine passende Schrift für die Begrüßung mit – abschaltbar mit „✍️ Schrift des Themas“. Hat der Admin ein Club-Thema für alle eingestellt, kannst du es dort für dich abschalten." },
   { id: "schrift", thema: "darstellung", sym: "🔠", t: "Größere Schrift", x: "Ist dir die Schrift zu klein? ⚙️ → Darstellung → „🔠 Große Schrift“ einschalten – alles wird etwas größer.", zeig: () => einstiegHin("darstellung", "setGross") },
   { id: "mitglieder_ansicht", thema: "darstellung", sym: "👥", t: "Mitglieder als Kacheln, Liste oder Tafel", x: "Ob du die Mitglieder als <b>🔲 Kacheln</b>, als <b>☰ Liste</b> oder als <b>📋 Anwesenheitstafel</b> siehst, wählst du unter ⚙️ → 🧩 Startseite &amp; Ansicht oder direkt oben bei den Mitgliedern.", zeig: () => einstiegHin("startseite", "mgAnsichtWahl") },
   { id: "feiertage", thema: "darstellung", sym: "🇩🇪", t: "Feiertage im Kalender", x: "Die Feiertage in NRW kannst du im Club-Kalender ein- oder ausblenden: ⚙️ → 🧩 Startseite &amp; Ansicht → „🇩🇪 Feiertage NRW im Kalender“.", zeig: () => einstiegHin("startseite", "setFeiertage") },
@@ -5061,6 +5062,7 @@ const HILFE = [
   // 2.23.8: Hilfen zu den Neuerungen aus 2.23.6 (Eingangskorb, Ablage, Büro-Hinweis, Töne, Inkognito)
   { id: "eingangskorb", thema: "club", sym: "📥", t: "Der Eingangskorb im Büro", x: "Alles, was für die Clubleitung neu hereinkommt, liegt im Büro im <b>📥 Eingangskorb</b>: Erstattungen (Fahrtkosten), Dienstzeiten, Vorschläge, Änderungsmeldungen, Ausleihen und mehr. Clubsprecher, Kassenwart und Admin bekommen dazu eine Meldung. Es bleibt im Eingang, bis es erledigt ist – zum Beispiel mit <b>„✅ Erstattet“</b> oder <b>„👁️ Zur Kenntnis genommen“</b>. Oben rechts: <b>🔽</b> filtert nach Jahr, Monat, Art und Name, <b>📊</b> zeigt alle Dienstzeiten als Übersicht quer (Name, Tage, Zeitbalken, Stunden) – mit Drucken und „🗄️ In Ordner ablegen“ (Ordner des Mitglieds, Register Dienstpläne, und im Büro „Dienstpläne“).", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "eingang_hinweis", thema: "club", sym: "📥", t: "Hinweis: viel im Eingangskorb", x: "Liegen <b>mehr als 5 Sachen</b> im Eingangskorb, zeigt die App der Clubleitung beim Start eine kleine Liste – z. B. „5 Dienstpläne, 1 Kostenerstattung, 1 Hilfegesuch“. Eine Zeile antippen öffnet den Eingangskorb gleich mit dieser Art. Darunter: <b>„✅ Ja, jetzt bearbeiten“</b>, <b>„⏰ Später“</b> (in ein paar Stunden wieder) oder <b>„🌙 Heute nicht mehr“</b>. Ganz ausschalten (und die Tages-Übersicht beim Start): ⚙️ → <b>„🗂️ Clubleitung beim Start“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => einstiegHin("leitung_start"), seit: "2.23.43" },
+  { id: "unterwasserwelt", thema: "darstellung", sym: "🐠", t: "Thema Unterwasserwelt", x: "Im Thema <b>🐠 Unterwasserwelt</b> füllt Regen den Kopf der Startseite mit Wasser: Pflanzen wachsen, Muscheln und ein Seestern liegen im Sand, bunte Fische schwimmen, Luftblasen steigen. Ein <b>Helmtaucher</b> mit dickem Kupferhelm und Luftschlauch stapft über den Grund, ein <b>Seepferdchen schreibt deinen Vornamen</b>. Zum Schluss zieht ein Taucher den <b>Stöpsel</b> – „Plopp!“, ein Strudel, alles läuft ab und ist weg. Dann regnet es wieder und alles beginnt von vorn. Vorschau: ⚙️ → ✨ Effekte → 🐠 Unterwasserwelt.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.434.0" },
   { id: "eingangskorb_mitglied", thema: "club", sym: "📥", t: "Dein Eingangskorb fürs Archiv", x: "Legt dir die Clubleitung ein Dokument hin (z. B. eine Anleitung oder Urkunde), steht unter <b>„Heute wichtig“ → 📥 Eingangskorb</b>. Antippen – du siehst das Dokument und entscheidest: <b>✔ annehmen</b>, dann liegt es in deinem persönlichen Archiv-Ordner, oder <b>✖ ablehnen</b>, dann wird es gelöscht. Dein Ordner bleibt privat. <i>Clubleitung:</i> Mitglied antippen → <b>„📥 In den Eingangskorb“</b>.", seit: "2.432.0" },
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
@@ -15032,9 +15034,10 @@ function jzEiszapfen(h, art) {
 const JZ_DEKO_WAHL = [["auto", "🔄 Automatisch"], ["wimpel", "🎏 Wimpel"], ["lichter", "💡 Lichterkette"], ["laternen", "🏮 Laternen"], ["aus", "🚫 Aus"]];
 const JZ_DEKO_FARBEN = { bunt: ["#e63946", "#ffb703", "#2a9d8f", "#3a86ff", "#ff6b9a", "#8ac926"], pastell: ["#f7a8c4", "#9fd3ff", "#fff3a0", "#b6f0b0", "#d9b8f7"],
   bayern: ["#1f6fd1", "#ffffff"], herbst: ["#e85d04", "#ffba08", "#dc2f02", "#f48c06", "#9d0208"], karibik: ["#ff006e", "#ffbe0b", "#00bbf9", "#00f5d4", "#fb5607"],
-  warm: ["#ffd27a", "#fff0c2", "#ffc65c"], gold: ["#ffd700", "#fff1a8", "#f5c542", "#ffe680"], halloween: ["#ff7a00", "#9b4dca", "#ffae42", "#7b2cbf"] };
+  warm: ["#ffd27a", "#fff0c2", "#ffc65c"], gold: ["#ffd700", "#fff1a8", "#f5c542", "#ffe680"], halloween: ["#ff7a00", "#9b4dca", "#ffae42", "#7b2cbf"],
+  meer: ["#00b4d8", "#90e0ef", "#ffd166", "#ff6b9a", "#06d6a0"] }; // 2.434.0
 const JZ_DEKO_AUTO = { herbst: ["laternen", "herbst"], advent: ["lichter", "warm"], silvester: ["lichter", "gold"], sommer: ["wimpel", "bunt"], fruehling: ["wimpel", "pastell"],
-  wiesn: ["wimpel", "bayern"], karneval: ["wimpel", "bunt"], kirmes: ["lichter", "bunt"], karibik: ["laternen", "karibik"], halloween: ["lichter", "halloween"] };
+  wiesn: ["wimpel", "bayern"], karneval: ["wimpel", "bunt"], kirmes: ["lichter", "bunt"], karibik: ["laternen", "karibik"], halloween: ["lichter", "halloween"], unterwasser: ["wimpel", "meer"] };
 const JZ_DEKO_STANDARD = { wimpel: "bunt", lichter: "warm", laternen: "herbst" };
 const jzDekoWahl = () => { try { const w = localStorage.getItem("kc_club_jzDeko"); return JZ_DEKO_WAHL.some(([k]) => k === w) ? w : "auto"; } catch { return "auto"; } };
 function jzDekoArt(art) { // → [Art, Farben] oder null
@@ -15157,7 +15160,7 @@ addEventListener("resize", () => requestAnimationFrame(() => { jzEisLaenge(); jz
     jzTropfTakt();
   }, 3500 + Math.random() * 4500); // 2.283.0: etwas öfter (alle 3½–8 s)
 })();
-const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"] };
+const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"], unterwasser: ["🐠", "🫧", "🐟", "🐚"] };
 function jahreszeitKopf() {
   const h = document.querySelector("#v-start .hero"); if (!h) return;
   h.querySelector(".jz-schicht")?.remove(); h.querySelector(".jz-sprech")?.remove(); h.classList.remove("jz-boden"); jzbStop(); jzDekoWeg(h);
@@ -16883,7 +16886,7 @@ function bwHoerPause() { const H = BW.hoeren; if (!H) return; H.pause = !H.pause
 // 🌻 Sommer: eine Sonnenblume wächst (jeder 3. Lauf drei), eine Biene besucht sie – abends Glühwürmchen. Am Ende fallen die Blütenblätter, Windstoß.
 // Ein <canvas> im Kopf; zeichnet nur, wenn die Startseite im Bild und die App im Vordergrund ist. Aus bei „✨ Animierte Knöpfe“ aus,
 // Sparmodus oder „Bewegung reduzieren“ (dann wie bisher). Tippen geht durch (pointer-events: none). Lauf-Zähler je Gerät (kc_club_jzLauf).
-const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween"]; // 2.331.0: + Themen-Bühnen
+const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser"]; // 2.331.0: + Themen-Bühnen · 2.434.0: + Unterwasserwelt
 const JZB_BLUEHT = 150; // 2.250.0 (Fund Hansi „Sonnenblume nur kurz“): Blumen/Sonnenblume blühen 2½ Min., bevor der Wind kommt
 const JZB_SP = 3, JZB_RAND = 22; // 2.259.0: 22 statt 16 – nichts in die runden Ecken (Radius 26) // Bodenspalten in px; nichts in den runden Ecken ablegen
 const JZB_LAUB = ["#e0802a", "#c8432b", "#e8b23a", "#a85a2a", "#d96a1f", "#b33a2a", "#cf9a2b"];
@@ -17483,7 +17486,7 @@ function jzbGastMalen(c, g) {
 // 🥨 Oktoberfest: blau-weiße Wimpel, Brezn, Fass wird angezapft („O'zapft is!“), zwei Maßkrüge stoßen an („Prost!“), Lebkuchenherz mit Namen.
 // 🌴 Karibik: Meer mit Wellen, Strand und Palme (ab und zu fällt eine Kokosnuss), Segelboot, Papagei oder springender Fisch, der Vorname
 // wird in den Sand geschrieben – eine Welle holt ihn; zum Schluss Sonnenuntergang. Alles nur Bild, nichts wird gespeichert oder gesendet.
-const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween"]; // 2.332.0: + Karneval, Halloween
+const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser"]; // 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt
 const JZB_FEST_DAUER = 120; // Sekunden je Lauf
 const JZB_FEST_BUNT = ["#ff4d6d", "#ffd23f", "#3ec1ff", "#7bed6f", "#c77dff", "#ff9f1c", "#ffffff"];
 function jzbFestStart() {
@@ -17495,6 +17498,7 @@ function jzbFest(dt) {
   const J = JZB, k = J.k;
   if (J.phase === "anfang" || !J.fest) { jzbFestStart(); jzbPhase("fest"); }
   const F = J.fest; F.t += dt;
+  if (J.saison === "unterwasser") return jzbUwSchritt(F, dt); // 2.434.0: eigener Ablauf (Regen füllt, Stöpsel leert) – ohne Ein-/Ausblenden
   F.a = Math.min(1, F.t / 2.5, Math.max(0, (JZB_FEST_DAUER - F.t) / 4));
   if (F.t >= JZB_FEST_DAUER) { J.fest = null; return jzbLaufEnde(); }
   for (const s of F.spritzer) { s.vy += 260 * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.a -= dt * 1.3; }
@@ -17579,7 +17583,7 @@ function jzbSpritzerMalen(c, F) {
 function jzbFestMalen(c) {
   const J = JZB, F = J.fest; if (!F) return;
   c.save(); c.globalAlpha = F.a;
-  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else jzbKaribikMalen(c, F);
+  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else jzbKaribikMalen(c, F);
   c.restore();
 }
 // ---- 🎡 Sim-Jü ----
@@ -17817,6 +17821,233 @@ function jzbHalloweenMalen(c, F) {
     if (G.t > 1.8 && G.t < 5.8) { const txt = name ? `Buuuh, ${name}!` : "Buuuh!"; c.font = `800 ${11 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "right"; c.textBaseline = "middle"; c.lineWidth = 3; c.strokeStyle = "rgba(20,10,30,.7)"; c.strokeText(txt, gx - s, gy - s * .9); c.fillStyle = "#fff"; c.fillText(txt, gx - s, gy - s * .9); }
     c.restore(); }
   for (const f of F.fleder) jzbFlederMalen(c, f, k);
+}
+// ---- 🐠 Unterwasserwelt (2.434.0 KC-CLUB-UNTERWASSER, Wunsch Hansi „bunte Fische, Luftblasen, Taucher, Helmtaucher mit dickem Helm und
+// Luftschlauch, grüne Pflanzen, Muscheln, ein Seepferdchen schreibt den Namen – zieht der Taucher den Stöpsel, läuft das ganze Wasser ab und
+// alles ist verschwunden; dann kommt Regen und baut die Szene von vorne auf“) ----
+// Ablauf je Lauf (≈ 1 Min. 50 s): Wolken und Regen füllen das Becken → Sand, Pflanzen wachsen, Muscheln und Seestern erscheinen, Fische
+// schwimmen, Luftblasen steigen → der Helmtaucher stapft herein (Schlauch nach oben zur Pumpe) → das Seepferdchen schreibt den Vornamen →
+// ein Taucher schwimmt vorbei → er kommt wieder, taucht zum Stöpsel und zieht („Plopp!“) → Strudel, das Wasser läuft ab und nimmt alles mit
+// → leer → nächster Lauf beginnt wieder mit Regen. Nur Bild – nichts wird gespeichert oder gesendet.
+const JZB_UW_ZIEHEN = 84, JZB_UW_ABLAUF = 9, JZB_UW_LEER = 3.5; // Sekunde, ab der der Taucher zum Stöpsel schwimmt; Ablaufen; leer
+const JZB_UW_FISCHE = [
+  { k: "#ff7a1a", f: "#ffa04a", s: "#ffffff", sx: [-3, 1.6] }, // Clownfisch
+  { k: "#2f6fe0", f: "#ffd23f", s: null }, // Doktorfisch
+  { k: "#ffd23f", f: "#ffb703", s: "#ff8c00", sx: [0] },
+  { k: "#ff5d8f", f: "#c77dff", s: "#ffd6e8", sx: [-1] },
+  { k: "#2ec4b6", f: "#cbf3f0", s: "#0b8a7f", sx: [-2.5, 1.5] },
+];
+const jzbUwStoepsel = () => { const J = JZB; return { x: Math.min(J.w - JZB_RAND - 14 * J.k, J.w * .86), y: J.h - 5 * J.k }; };
+const jzbUwWasserY = (U) => JZB.h - U.pegel * (JZB.h - 3);
+function jzbUwNeu() {
+  const J = JZB, k = J.k, st = jzbUwStoepsel();
+  const xs = [.05, .16, .29, .5, .73, .95].map((f) => Math.max(JZB_RAND + 4, Math.min(J.w - JZB_RAND - 4, J.w * f))).filter((x) => Math.abs(x - st.x) > 16 * k);
+  return { pegel: 0, phase: "regen", at: 0, sog: 0, tropfen: [], ringe: [], blasen: [], blasUhr: 0, fische: [], fischUhr: jzbZ(.5, 2),
+    pflanzen: xs.map((x, i) => ({ x, h: jzbZ(24, 42) * k, art: i % 2, farbe: jzbW(["#2f9e44", "#40c057", "#2b8a3e", "#69db7c"]), ph: jzbZ(0, 6) })),
+    muscheln: [[.11, "faecher", "#f9a8c4"], [.41, "stern", "#ff8c42"], [.61, "schnecke", "#f3d6a8"], [.23, "faecher", "#ffe0b3"]].map(([f, typ, farbe], i) => ({ x: J.w * f, typ, farbe, t0: 9 + i * 1.1 })),
+    helm: null, pferd: null, taucher: null, taucherDa: 0, plopp: -1, stoepsel: null };
+}
+function jzbUwSchritt(F, dt) {
+  const J = JZB, k = J.k, U = F.uw || (F.uw = jzbUwNeu()), t = F.t, st = jzbUwStoepsel();
+  F.a = 1;
+  if (U.phase === "ablauf") {
+    U.at += dt; U.sog = Math.min(1, U.at / JZB_UW_ABLAUF); const s = U.sog; U.pegel = 1 - s * s * (3 - 2 * s);
+    if (U.at > JZB_UW_ABLAUF + JZB_UW_LEER) { J.fest = null; return jzbLaufEnde(); }
+  } else {
+    U.pegel = jzbEase((t - 1) / 8);
+    if (t > 9) U.phase = "szene";
+    if (t > JZB_UW_ZIEHEN + 25) { U.phase = "ablauf"; U.at = 0; } // falls der Taucher nicht ankommt (z. B. Bühne verkleinert)
+  }
+  const wy = jzbUwWasserY(U);
+  // 🌧️ Regen füllt das Becken
+  if (t < 8.5 && U.phase !== "ablauf") { const n = Math.random() < dt * J.w * .12 ? 1 + Math.floor(Math.random() * 2) : 0;
+    for (let i = 0; i < n; i++) U.tropfen.push({ x: jzbZ(0, J.w), y: jzbZ(4, 14) * k, v: jzbZ(240, 320) }); }
+  for (const d of U.tropfen) { d.y += d.v * dt; if (d.y >= wy - 1) { d.weg = true; if (Math.random() < .5) U.ringe.push({ x: d.x, y: wy, r: 1, a: .8 }); } }
+  U.tropfen = U.tropfen.filter((d) => !d.weg && d.y < J.h + 6);
+  for (const r of U.ringe) { r.r += 14 * dt; r.a -= dt * 1.4; } U.ringe = U.ringe.filter((r) => r.a > 0);
+  // 🫧 Luftblasen
+  if (U.pegel > .5 && U.sog < .6 && (U.blasUhr -= dt) <= 0) { U.blasUhr = jzbZ(.25, .8); U.blasen.push({ x: jzbZ(JZB_RAND, J.w - JZB_RAND), y: J.h - 6 * k, r: jzbZ(1, 2.6) * k, v: jzbZ(16, 30) * k, ph: jzbZ(0, 6) }); }
+  for (const b of U.blasen) { b.y -= b.v * dt; b.ph += dt; b.x += Math.sin(b.ph * 3) * 7 * dt; if (b.y < wy + 2) { b.weg = true; if (U.pegel > .3) U.ringe.push({ x: b.x, y: wy, r: .5, a: .5 }); } }
+  U.blasen = U.blasen.filter((b) => !b.weg);
+  // 🐠 Fische
+  if (U.phase === "szene" && t > 8 && U.fische.length < 8 && (U.fischUhr -= dt) <= 0) {
+    U.fischUhr = jzbZ(1.6, 4.5); const dir = Math.random() < .5 ? 1 : -1, art = Math.floor(Math.random() * JZB_UW_FISCHE.length), y0 = jzbZ(wy + 16 * k, J.h - 22 * k);
+    const schwarm = Math.random() < .2 ? 4 : 1;
+    for (let i = 0; i < schwarm; i++) U.fische.push({ dir, x: (dir > 0 ? -20 : J.w + 20) - dir * i * 12 * k, y0: y0 + (i % 2 ? 6 : -4) * k * (schwarm > 1), v: (schwarm > 1 ? 30 : jzbZ(16, 32)) * k,
+      s: (schwarm > 1 ? .7 : jzbZ(.85, 1.35)) * k, art, ph: jzbZ(0, 6) });
+  }
+  for (const f of U.fische) { f.x += f.dir * f.v * dt; f.ph += dt; }
+  U.fische = U.fische.filter((f) => f.x > -40 && f.x < J.w + 40);
+  // 🤿 Helmtaucher stapft herein und bleibt stehen
+  if (!U.helm && t > 16 && U.phase === "szene") U.helm = { x: J.w + 30 * k, ziel: J.w * .64, schritt: 0, t: 0 };
+  if (U.helm) { const H = U.helm; H.t += dt; if (H.x > H.ziel) { H.x = Math.max(H.ziel, H.x - 9 * k * dt); H.schritt += dt * 2.6; }
+    if (U.sog < .5 && Math.random() < dt * 1.8) { const v = jzbUwHelmVentil(H); U.blasen.push({ x: v[0], y: v[1], r: jzbZ(1.2, 2.4) * k, v: jzbZ(22, 34) * k, ph: jzbZ(0, 6) }); } }
+  // 🐴 Seepferdchen schreibt den Namen
+  const name = jzbEisNameText();
+  if (!U.pferd && name && t > 25 && U.phase === "szene") {
+    const fs = Math.min(15 * k, (J.w * .42) / Math.max(3, name.length * .62)); J.ctx.font = `800 ${fs}px "Comic Sans MS","Trebuchet MS",sans-serif`;
+    const breite = J.ctx.measureText(name).width, x0 = Math.max(JZB_RAND + 6, Math.min(J.w * .38 - breite / 2, J.w * .64 - breite - 34 * k)); let cx = x0;
+    const buchst = [...name].map((z) => { const w = J.ctx.measureText(z).width, b = { z, x: cx + w / 2 }; cx += w; return b; });
+    U.pferd = { x: x0 - 12 * k, ende: x0 + breite + 8 * k, y: J.h - 30 * k, fs, buchst, t: 0 };
+  }
+  if (U.pferd) { const P = U.pferd; P.t += dt; if (P.x < P.ende) P.x += (P.ende - P.buchst[0].x + 12 * k) / (P.buchst.length * .65 + .8) * dt; }
+  // 🤿 Taucher: einmal vorbei – später zum Stöpsel
+  if (!U.taucher && U.phase === "szene" && ((t > 44 && U.taucherDa === 0) || (t > JZB_UW_ZIEHEN && U.taucherDa === 1))) {
+    U.taucherDa++; U.taucher = { modus: U.taucherDa === 1 ? "vorbei" : "hin", x: -46 * k, y: U.taucherDa === 1 ? J.h * .42 : J.h * .32, ang: 0, t: 0, zt: 0 }; }
+  const T = U.taucher;
+  if (T) { T.t += dt;
+    if (T.modus === "vorbei") { T.x += 30 * k * dt; T.y += Math.sin(T.t * 1.2) * 3 * k * dt; if (T.x > J.w + 50 * k) U.taucher = null; }
+    else if (T.modus === "hin") { const zx = st.x - 4.2 * k, zy = st.y - 31 * k, dx = zx - T.x, dy = zy - T.y, d = Math.hypot(dx, dy), v = 32 * k * dt; // Hand kommt an die Kette
+      T.ang += ((d < 45 * k ? 1.05 : 0) - T.ang) * Math.min(1, dt * 2);
+      if (d <= v) { T.x = zx; T.y = zy; T.y0 = zy; T.modus = "zieht"; } else { T.x += dx / d * v; T.y += dy / d * v; } }
+    else if (T.modus === "zieht") { T.ang += (1.05 - T.ang) * Math.min(1, dt * 3); T.zt += dt; T.y = T.y0 + Math.sin(T.zt * 9) * 1.4 * k - Math.min(1, T.zt / 1.8) * 3 * k; // zerrt an der Kette
+      if (T.zt > 1.8 && U.phase !== "ablauf") { U.phase = "ablauf"; U.at = 0; U.plopp = 0; T.modus = "weg"; } }
+    else if (T.modus === "weg") { T.y -= 6 * k * dt; T.ang += (.3 - T.ang) * Math.min(1, dt); }
+    if (U.sog < .5 && T.modus !== "zieht" && Math.random() < dt * 2.4) { const m = jzbUwTaucherMund(T); U.blasen.push({ x: m[0], y: m[1], r: jzbZ(1, 2.2) * k, v: jzbZ(24, 36) * k, ph: jzbZ(0, 6) }); }
+  }
+  if (U.plopp >= 0) U.plopp += dt;
+}
+// Sog beim Ablaufen: alles dreht sich spiralförmig zum Stöpsel und wird kleiner; nie über der sinkenden Wasseroberfläche
+function jzbUwSog(U, x, y) {
+  if (!U.sog) return [x, y, 1];
+  const J = JZB, st = jzbUwStoepsel(), e = Math.min(1, U.sog * U.sog * 1.15), w = e * 4.2, dx = x - st.x, dy = y - st.y, r = 1 - e;
+  const nx = st.x + (dx * Math.cos(w) - dy * Math.sin(w) * .4) * r, ny = st.y + (dx * Math.sin(w) * .25 + dy * Math.cos(w)) * r;
+  return [nx, Math.max(ny, jzbUwWasserY(U) + 3 * J.k * r), Math.max(0, r)];
+}
+function jzbUwHelmVentil(H) { const J = JZB, k = J.k * 1.05; return [H.x + 4 * k, J.h - 7 * J.k - 47 * k]; }
+function jzbUwTaucherMund(T) { const k = JZB.k * .95, c = Math.cos(T.ang), s = Math.sin(T.ang); return [T.x + (19 * c - 1 * s) * k, T.y + (19 * s + 1 * c) * k]; }
+function jzbUwHand(T) { const k = JZB.k * .95, c = Math.cos(T.ang), s = Math.sin(T.ang); return [T.x + (21 * c - 7 * s) * k, T.y + (21 * s + 7 * c) * k]; }
+function jzbUwFischMalen(c, f, x, y, sc) {
+  const A = JZB_UW_FISCHE[f.art], sw = Math.sin(f.ph * 9) * .3;
+  c.save(); c.translate(x, y); c.scale(f.dir * sc, sc);
+  c.fillStyle = A.f; c.beginPath(); c.moveTo(-6, 0); c.lineTo(-11.5, -4.6 + sw * 3); c.lineTo(-10, 0); c.lineTo(-11.5, 4.6 + sw * 3); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(-3.5, -4); c.quadraticCurveTo(0, -8, 3.5, -4.2); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(-1, 3.8); c.quadraticCurveTo(1, 6.6, 2.8, 4); c.closePath(); c.fill();
+  c.fillStyle = A.k; c.beginPath(); c.ellipse(0, 0, 7.6, 4.7, 0, 0, 7); c.fill();
+  if (A.s) { c.fillStyle = A.s; for (const sx of A.sx) { c.beginPath(); c.ellipse(sx, 0, 1.15, 4.5 * Math.sqrt(Math.max(0, 1 - (sx / 7.6) ** 2)), 0, 0, 7); c.fill(); } }
+  c.fillStyle = "rgba(255,255,255,.35)"; c.beginPath(); c.ellipse(1, -2.2, 4, 1.2, -.1, 0, 7); c.fill();
+  c.fillStyle = "#fff"; c.beginPath(); c.arc(4.4, -1.2, 1.5, 0, 7); c.fill(); c.fillStyle = "#111"; c.beginPath(); c.arc(4.8, -1.2, .8, 0, 7); c.fill();
+  c.restore();
+}
+function jzbUwPferdMalen(c, x, y, sc, t) { // Seepferdchen von der Seite, Blick nach rechts, Rückenflosse flattert
+  c.save(); c.translate(x, y); c.scale(sc, sc); c.lineCap = "round";
+  c.strokeStyle = "#f08c00"; c.lineWidth = 2.4; c.beginPath(); c.moveTo(-.6, 4); c.quadraticCurveTo(-1.6, 9, .4, 11.2); c.arc(1.6, 10.6, 1.4, Math.PI * .85, Math.PI * 2.6); c.stroke(); // Ringelschwanz
+  const fl = Math.sin(t * 22) * .35; c.fillStyle = "rgba(255,236,170,.9)"; c.beginPath(); c.moveTo(-2.6, -1.5); c.lineTo(-5.4, -2.6 + fl); c.lineTo(-5.6, 1 - fl); c.lineTo(-2.8, 2); c.closePath(); c.fill();
+  c.fillStyle = "#ffb23f"; c.beginPath(); c.ellipse(0, 0, 3, 5.2, .18, 0, 7); c.fill();
+  c.fillStyle = "#ffd77a"; c.beginPath(); c.ellipse(1.1, .6, 1.4, 3.6, .18, 0, 7); c.fill();
+  c.fillStyle = "#ffb23f"; c.beginPath(); c.ellipse(1, -6, 2.6, 2.3, 0, 0, 7); c.fill(); // Kopf
+  c.strokeStyle = "#ffb23f"; c.lineWidth = 1.9; c.beginPath(); c.moveTo(2.6, -6.3); c.lineTo(6.6, -5.7); c.stroke(); // Schnauze
+  c.fillStyle = "#f08c00"; c.beginPath(); c.moveTo(-.4, -8); c.lineTo(.4, -9.8); c.lineTo(1.6, -8); c.closePath(); c.fill(); // Krönchen
+  c.strokeStyle = "rgba(200,100,0,.5)"; c.lineWidth = .5; for (const yy of [-2.5, -.5, 1.5, 3.5]) { c.beginPath(); c.moveTo(-2.4, yy); c.lineTo(2.2, yy + .5); c.stroke(); }
+  c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(1.8, -6.6, .65, 0, 7); c.fill(); c.fillStyle = "#fff"; c.beginPath(); c.arc(2, -6.85, .25, 0, 7); c.fill();
+  c.restore();
+}
+function jzbUwHelmMalen(c, H, x, yb, sc, U) { // Helmtaucher: dicker Kupferhelm mit runden Fenstern, Schulterplatte, Bleigürtel, schwere Stiefel
+  const k = sc, g = H.x > H.ziel ? Math.sin(H.schritt * Math.PI) : 0, T = JZB.T;
+  c.save(); c.translate(x, yb); c.scale(k, k); c.lineCap = "round"; c.lineJoin = "round";
+  for (const s of [-1, 1]) { const sw = g * s * 3; // Beine mit Stiefeln (gehen langsam, nach links)
+    c.fillStyle = "#8d7b5a"; c.fillRect(s * 2.6 - 2.1 - sw * .5, -16, 4.2, 12);
+    c.fillStyle = "#2b2b2b"; c.beginPath(); c.roundRect ? c.roundRect(-6 + s * 2.6 - sw, -4.5, 6.4, 4.5, 1.2) : c.rect(-6 + s * 2.6 - sw, -4.5, 6.4, 4.5); c.fill(); }
+  c.fillStyle = "#9c8a66"; c.beginPath(); c.roundRect ? c.roundRect(-8.5, -31, 17, 17, 4) : c.rect(-8.5, -31, 17, 17); c.fill(); // Anzug
+  c.fillStyle = "#444"; c.fillRect(-8.8, -17.5, 17.6, 2.8); c.fillStyle = "#666"; for (const bx of [-6.5, -2, 2.5, 7]) c.fillRect(bx - 1.4, -18.2, 2.8, 4.2); // Bleigürtel
+  const arm = (s) => { const sw = g * s * 2.5; c.strokeStyle = "#9c8a66"; c.lineWidth = 4.2; c.beginPath(); c.moveTo(s * 7.5, -28); c.lineTo(s * 9.5 - sw, -20); c.stroke();
+    c.fillStyle = "#6b5b3e"; c.beginPath(); c.arc(s * 9.6 - sw, -19.2, 2.2, 0, 7); c.fill(); };
+  arm(1);
+  const hg = c.createLinearGradient(-10, -50, 10, -30); hg.addColorStop(0, "#f2c66d"); hg.addColorStop(.55, "#c98a2e"); hg.addColorStop(1, "#8a5a1a");
+  c.fillStyle = hg; c.beginPath(); c.ellipse(0, -30, 11.5, 4.2, 0, Math.PI, 0); c.fill(); // Schulterplatte
+  c.beginPath(); c.arc(0, -39.5, 9.4, 0, 7); c.fill(); // Helm
+  c.fillStyle = "#7a4e14"; for (const a of [0, 1, 2, 3, 4, 5, 6, 7]) { const w = a / 8 * Math.PI * 2; c.beginPath(); c.arc(-4.2 + Math.cos(w) * 5.6, -39.5 + Math.sin(w) * 5.6, .55, 0, 7); c.fill(); } // Schrauben
+  c.fillStyle = "#b07a2a"; c.beginPath(); c.arc(-4.2, -39.5, 5, 0, 7); c.fill(); // Fensterrahmen (Blick nach links)
+  const gg = c.createRadialGradient(-5.4, -41, .5, -4.2, -39.5, 4.2); gg.addColorStop(0, "#9fd8ff"); gg.addColorStop(1, "#1f5d8a"); c.fillStyle = gg; c.beginPath(); c.arc(-4.2, -39.5, 3.9, 0, 7); c.fill();
+  c.fillStyle = "rgba(255,220,190,.55)"; c.beginPath(); c.arc(-4.4, -39, 2.2, 0, 7); c.fill(); c.fillStyle = "#222"; for (const ex of [-5.4, -3.6]) { c.beginPath(); c.arc(ex, -39.6, .38, 0, 7); c.fill(); } // Gesicht
+  c.strokeStyle = "rgba(255,255,255,.7)"; c.lineWidth = .7; c.beginPath(); c.arc(-4.6, -40.2, 2.6, Math.PI * 1.05, Math.PI * 1.45); c.stroke();
+  c.fillStyle = "#b07a2a"; c.beginPath(); c.arc(4.6, -42.5, 2.3, 0, 7); c.fill(); c.fillStyle = "#1f5d8a"; c.beginPath(); c.arc(4.6, -42.5, 1.4, 0, 7); c.fill(); // Seitenfenster
+  c.fillStyle = "#8a5a1a"; c.fillRect(3.2, -50, 2.4, 3.4); c.fillRect(7.2, -41.5, 3.6, 2.8); // Ventil oben, Schlauchanschluss hinten
+  arm(-1);
+  c.restore(); void T; void U;
+}
+function jzbUwTaucherMalen(c, T, x, y, sc) { // Taucher mit Flossen, gelber Flasche, Maske und Atemregler (Blick in Schwimmrichtung nach rechts)
+  const kick = Math.sin(T.t * (T.modus === "zieht" ? 4 : 7)) * .35;
+  c.save(); c.translate(x, y); c.rotate(T.ang); c.scale(sc, sc); c.lineCap = "round"; c.lineJoin = "round";
+  for (const s of [-1, 1]) { const w = kick * s; c.save(); c.translate(-9, s * 1.4); c.rotate(w * .5);
+    c.strokeStyle = "#1f2a33"; c.lineWidth = 3.4; c.beginPath(); c.moveTo(0, 0); c.lineTo(-12, s * .6); c.stroke();
+    c.fillStyle = s > 0 ? "#1e88e5" : "#1565c0"; c.beginPath(); c.moveTo(-11.5, s * .6 - 1.8); c.lineTo(-20, s * .6 - 3.6 + w * 3); c.lineTo(-20, s * .6 + 3.6 + w * 3); c.lineTo(-11.5, s * .6 + 1.8); c.closePath(); c.fill(); c.restore(); }
+  c.fillStyle = "#f4c430"; c.beginPath(); c.roundRect ? c.roundRect(-9, -8.2, 15, 4.6, 2.2) : c.rect(-9, -8.2, 15, 4.6); c.fill(); // Flasche
+  c.fillStyle = "#555"; c.fillRect(6, -7.4, 2.2, 3);
+  c.fillStyle = "#1f2a33"; c.beginPath(); c.ellipse(0, 0, 11, 4.6, 0, 0, 7); c.fill(); // Körper im Neopren
+  c.fillStyle = "#e63946"; c.fillRect(-5, -4.4, 2.2, 8.8);
+  const greift = T.modus === "zieht"; c.strokeStyle = "#1f2a33"; c.lineWidth = 2.6; c.beginPath(); c.moveTo(7, 1.5); greift ? c.lineTo(21, 7) : c.lineTo(1, 5); c.stroke(); // Arm
+  c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(greift ? 21 : 1, greift ? 7 : 5, 1.4, 0, 7); c.fill();
+  c.fillStyle = "#1f2a33"; c.beginPath(); c.arc(14, -.8, 4.2, 0, 7); c.fill(); // Kopf mit Haube
+  c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(15.6, .2, 2.4, -1.2, 1.6); c.fill();
+  c.fillStyle = "#6ec6ff"; c.strokeStyle = "#111"; c.lineWidth = .9; c.beginPath(); c.roundRect ? c.roundRect(15, -3.2, 3.6, 2.8, .9) : c.rect(15, -3.2, 3.6, 2.8); c.fill(); c.stroke(); // Maske
+  c.strokeStyle = "#333"; c.lineWidth = 1; c.beginPath(); c.moveTo(7.5, -6); c.quadraticCurveTo(14, -7, 18.5, 1.2); c.stroke(); c.fillStyle = "#333"; c.beginPath(); c.arc(18.6, 1.3, 1, 0, 7); c.fill(); // Regler
+  c.restore();
+}
+function jzbUwMuschelMalen(c, m, x, y, sc) {
+  c.save(); c.translate(x, y); c.scale(sc, sc);
+  if (m.typ === "faecher") { c.fillStyle = m.farbe; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 6, Math.PI * 1.05, Math.PI * 1.95); c.closePath(); c.fill();
+    c.strokeStyle = "rgba(150,70,90,.45)"; c.lineWidth = .6; for (let i = 1; i < 6; i++) { const w = Math.PI * (1.05 + .9 * i / 6); c.beginPath(); c.moveTo(0, 0); c.lineTo(Math.cos(w) * 6, Math.sin(w) * 6); c.stroke(); }
+    c.fillStyle = m.farbe; c.fillRect(-1.6, -.4, 3.2, 1.6); }
+  else if (m.typ === "stern") { c.fillStyle = m.farbe; c.beginPath(); for (let i = 0; i < 10; i++) { const w = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 2.2 : 5.6; c.lineTo(Math.cos(w) * r, Math.sin(w) * r * .8 - 2.4); } c.closePath(); c.fill();
+    c.fillStyle = "rgba(255,255,255,.6)"; for (let i = 0; i < 5; i++) { const w = -Math.PI / 2 + i * Math.PI * .4; c.beginPath(); c.arc(Math.cos(w) * 3, Math.sin(w) * 2.4 - 2.4, .45, 0, 7); c.fill(); } }
+  else { c.fillStyle = m.farbe; c.beginPath(); c.moveTo(-5, 0); c.quadraticCurveTo(-3, -6.5, 3, -4.5); c.quadraticCurveTo(6, -2, 5, 0); c.closePath(); c.fill();
+    c.strokeStyle = "rgba(140,90,40,.55)"; c.lineWidth = .7; c.beginPath(); c.arc(1.5, -2.4, 1.6, 0, 6); c.arc(1.5, -2.4, 3, 0, 4.5); c.stroke(); }
+  c.restore();
+}
+function jzbUnterwasserMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T, U = F.uw; if (!U) return;
+  const t = F.t, wy = jzbUwWasserY(U), st = jzbUwStoepsel(), wolke = Math.min(1, t / 1.5, Math.max(0, (9.5 - t) / 1.5));
+  if (wolke > 0 && U.phase !== "ablauf") { c.save(); c.globalAlpha *= wolke; c.fillStyle = "rgba(120,130,150,.85)"; // Regenwolken
+    for (const [fx, fy, r] of [[.18, 10, 9], [.27, 8, 12], [.36, 11, 8], [.62, 9, 10], [.72, 7, 13], [.82, 10, 9]]) { c.beginPath(); c.arc(J.w * fx, fy * k, r * k, 0, 7); c.fill(); } c.restore(); }
+  c.strokeStyle = "rgba(170,210,255,.85)"; c.lineWidth = 1.1; c.lineCap = "round"; // Regentropfen
+  for (const d of U.tropfen) { c.beginPath(); c.moveTo(d.x, d.y); c.lineTo(d.x - .8, d.y + 6 * k); c.stroke(); }
+  if (U.pegel <= 0.002) return;
+  const welle = (x) => wy + Math.sin(x * .045 + T * 1.8) * 1.3 * k + (U.phase === "ablauf" ? Math.sin(x * .09 - T * 4) * .8 * k : 0);
+  const wasser = () => { c.beginPath(); c.moveTo(0, J.h + 2); for (let x = 0; x <= J.w + 6; x += 6) c.lineTo(x, welle(x)); c.lineTo(J.w, J.h + 2); c.closePath(); };
+  const g = c.createLinearGradient(0, wy, 0, J.h); g.addColorStop(0, "rgba(70,175,225,.5)"); g.addColorStop(1, "rgba(10,75,145,.72)");
+  c.fillStyle = g; wasser(); c.fill();
+  c.save(); wasser(); c.clip();
+  c.fillStyle = "rgba(255,255,255,.06)"; for (let i = 0; i < 3; i++) { const x0 = ((T * 9 + i * J.w * .37) % (J.w + 80)) - 40; c.beginPath(); c.moveTo(x0, wy); c.lineTo(x0 + 18 * k, wy); c.lineTo(x0 - 10 * k, J.h); c.lineTo(x0 - 34 * k, J.h); c.closePath(); c.fill(); } // Lichtstrahlen
+  const wachs = jzbEase((t - 5) / 10);
+  for (const p of U.pflanzen) { const [bx, by, sc] = jzbUwSog(U, p.x, J.h - 6 * k), h = p.h * wachs * sc; if (h < 1) continue; // grüne Pflanzen wiegen sich
+    c.strokeStyle = p.farbe; c.fillStyle = p.farbe; c.lineCap = "round";
+    if (p.art === 0) { c.lineWidth = 3.2 * k * sc; c.beginPath(); c.moveTo(bx, by); for (let i = 1; i <= 8; i++) { const f = i / 8; c.lineTo(bx + Math.sin(T * 1.3 + p.ph + f * 3) * 4 * k * f * sc, by - h * f); } c.stroke(); }
+    else for (const d of [-2.2, 0, 2.2]) { c.lineWidth = 1.5 * k * sc; c.beginPath(); c.moveTo(bx + d * k * sc, by); c.quadraticCurveTo(bx + (d * 2 + Math.sin(T * 1.6 + p.ph + d) * 3) * k * sc, by - h * .55, bx + (d * 3 + Math.sin(T * 1.6 + p.ph + d) * 5) * k * sc, by - h * (.75 + Math.abs(d) * .05)); c.stroke(); } }
+  const sandA = Math.min(1, U.pegel * 1.8); c.fillStyle = `rgba(233,210,154,${sandA})`; c.beginPath(); c.moveTo(0, J.h + 2); // Sand
+  for (let x = 0; x <= J.w + 6; x += 6) c.lineTo(x, J.h - 6.5 * k + Math.sin(x * .07) * 1.1 * k); c.lineTo(J.w, J.h + 2); c.closePath(); c.fill();
+  for (const m of U.muscheln) { const a = jzbHopp((t - m.t0) / .6); if (a <= 0) continue; const [mx, my, sc] = jzbUwSog(U, m.x, J.h - 3 * k); jzbUwMuschelMalen(c, m, mx, my, k * 1.5 * a * sc); }
+  // Stöpsel mit Kette
+  const T2 = U.taucher, gezogen = U.phase === "ablauf", hand = T2 && (T2.modus === "zieht" || T2.modus === "weg") ? jzbUwHand(T2) : null;
+  c.fillStyle = "#7d8790"; c.beginPath(); c.ellipse(st.x, st.y, 6 * k, 2 * k, 0, 0, 7); c.fill(); c.fillStyle = "#2a2f35"; c.beginPath(); c.ellipse(st.x, st.y, 4.4 * k, 1.3 * k, 0, 0, 7); c.fill();
+  const pz = gezogen && hand ? jzbUwSog(U, hand[0], hand[1] + 3 * k) : [st.x, st.y - 1.5 * k, 1];
+  if (!gezogen || pz[2] > .05) { const [px, py, ps] = pz; c.fillStyle = "#6b2d1f"; c.beginPath(); c.moveTo(px - 4.6 * k * ps, py); c.lineTo(px + 4.6 * k * ps, py); c.lineTo(px + 3.4 * k * ps, py - 3.4 * k * ps); c.lineTo(px - 3.4 * k * ps, py - 3.4 * k * ps); c.closePath(); c.fill();
+    const kx = hand && !gezogen ? hand[0] : px, ky = hand && !gezogen ? hand[1] : py - 10 * k * ps; c.strokeStyle = "#b0b8c0"; c.lineWidth = .9; c.setLineDash([1.6 * k, 1 * k]); c.beginPath(); c.moveTo(px, py - 3.4 * k * ps); c.lineTo(kx, ky); c.stroke(); c.setLineDash([]);
+    c.beginPath(); c.arc(kx, ky - 1.2 * k * ps, 1.4 * k * ps, 0, 7); c.stroke(); }
+  if (gezogen && U.sog < .97) { const a = Math.sin(Math.PI * U.sog); c.strokeStyle = `rgba(255,255,255,${.55 * a})`; c.lineWidth = 1.2; // Strudel
+    for (let r = 0; r < 3; r++) { c.beginPath(); for (let i = 0; i <= 40; i++) { const w = i / 40 * Math.PI * 3 + T * 7 + r * 2.1, rr = (3 + i / 40 * (14 + r * 6)) * k; const x = st.x + Math.cos(w) * rr, y = st.y - 3 * k - i / 40 * (10 + r * 4) * k + Math.sin(w) * rr * .3; i ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); } }
+  // Name des Seepferdchens (Blasenschrift)
+  const P = U.pferd;
+  if (P) { c.font = `800 ${P.fs}px "Comic Sans MS","Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.lineJoin = "round";
+    for (const b of P.buchst) { if (b.x > P.x - 3 * k) break; const [bx, by, sc] = jzbUwSog(U, b.x, P.y + Math.sin(T * 1.5 + b.x * .05) * 1.2 * k); if (sc < .05) continue;
+      c.save(); c.translate(bx, by); c.scale(sc, sc); c.lineWidth = 3; c.strokeStyle = "rgba(10,60,120,.75)"; c.strokeText(b.z, 0, 0); c.fillStyle = "#ffffff"; c.fillText(b.z, 0, 0);
+      c.fillStyle = "rgba(200,240,255,.8)"; c.beginPath(); c.arc(-P.fs * .18, -P.fs * .22, P.fs * .07, 0, 7); c.fill(); c.restore(); } }
+  // Helmtaucher mit Luftschlauch zur Pumpe oben
+  if (U.helm) { const H = U.helm, [hx, hy, hs] = jzbUwSog(U, H.x, J.h - 7 * k), sc = k * 1.05 * hs;
+    if (hs > .05) { const ax = hx + 9 * sc, ay = hy - 40 * sc; c.strokeStyle = "#3a3a3a"; c.lineWidth = 2.4 * k; c.beginPath(); c.moveTo(ax, ay);
+      c.bezierCurveTo(ax + 22 * k, ay - 6 * k + Math.sin(T * .9) * 4 * k, ax + 4 * k, -10, ax + 30 * k, -4); c.stroke();
+      c.strokeStyle = "rgba(255,255,255,.25)"; c.lineWidth = .8; c.stroke();
+      jzbUwHelmMalen(c, H, hx, hy, sc, U); } }
+  for (const f of U.fische) { const [fx, fy, sc] = jzbUwSog(U, f.x, f.y0 + Math.sin(f.ph * 1.7) * 3 * k); if (sc > .05) jzbUwFischMalen(c, f, fx, fy, f.s * sc); }
+  if (P) { const [px, py, sc] = jzbUwSog(U, P.x + 6 * k, P.y - 6 * k + Math.sin(T * 2.2) * 2 * k); if (sc > .05) jzbUwPferdMalen(c, px, py, k * 1.05 * sc, T); }
+  if (T2) { const [tx, ty, sc] = jzbUwSog(U, T2.x, T2.y); if (sc > .05) jzbUwTaucherMalen(c, { ...T2, ang: T2.ang + (U.sog ? U.sog * 5 : 0) }, tx, ty, k * .95 * sc); }
+  for (const b of U.blasen) { c.strokeStyle = "rgba(255,255,255,.75)"; c.lineWidth = .9; c.beginPath(); c.arc(b.x, b.y, b.r, 0, 7); c.stroke();
+    c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.arc(b.x - b.r * .35, b.y - b.r * .35, b.r * .3, 0, 7); c.fill(); }
+  c.restore();
+  c.strokeStyle = "rgba(255,255,255,.55)"; c.lineWidth = 1.2; c.beginPath(); for (let x = 0; x <= J.w + 6; x += 6) { const y = welle(x); x ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); // Oberfläche
+  for (const r of U.ringe) { c.strokeStyle = `rgba(255,255,255,${r.a})`; c.lineWidth = .8; c.beginPath(); c.ellipse(r.x, r.y, r.r * k, r.r * .3 * k, 0, 0, 7); c.stroke(); }
+  if (U.plopp >= 0 && U.plopp < 1.6) { c.save(); c.globalAlpha *= Math.min(1, (1.6 - U.plopp) * 2); c.font = `800 ${12 * k}px "Comic Sans MS","Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle";
+    c.lineWidth = 3; c.strokeStyle = "rgba(10,60,120,.8)"; c.strokeText("Plopp!", st.x - 14 * k, st.y - 34 * k - U.plopp * 8 * k); c.fillStyle = "#fff"; c.fillText("Plopp!", st.x - 14 * k, st.y - 34 * k - U.plopp * 8 * k); c.restore(); }
 }
 // ---------- KC-CLUB-JAHRESZEIT-EXTRAS (2.249.0, Wunsch Hansi „baue noch die weiteren Ideen“): Besonderes auf der Kopf-Bühne ----------
 // 🥾 Nikolaus (6.12.): ein gefüllter Stiefel steht unten. ☔ Regen – nur wenn die Wetterdaten frisch sind und es wirklich regnet (Regel 11:
@@ -18845,7 +19076,7 @@ function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, t
 // ---------- 2.355.0 KC-CLUB-VORSCHAU-ENDE (Fund Hansi „in den Einstellungen z. B. Nikolaus-Stiefel gewählt, wird angezeigt – wie bekomme ich ihn
 // wieder weg?“): solange eine Vorschau läuft, steht auf der Startseite ein Knopf „✕ Vorschau beenden“ (vorher nur „📅 Heute“ in den Einstellungen)
 const JZ_VORSCHAU_NAME = { nikolaus: "Nikolaus-Stiefel", regen: "Regen", topf: "Kochtopf am Treffen-Tag", ostern: "Ostereier", igel: "Igel", twinkey: "Twinkey fegt",
-  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", advent: "Advent" };
+  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", unterwasser: "Unterwasserwelt", advent: "Advent" };
 function jzVorschauLeiste(v = aktuelleAnsicht) {
   const an = !!(JZB.vorschau || JZB.extra) && v === "start" && !(typeof RG !== "undefined" && RG.an);
   let b = $("jzVorschauAus");
@@ -34511,7 +34742,7 @@ function suAppListe() {
     ["💡", "Vorschläge zur Startseite (Kacheln ausblenden, Funktionen freischalten)", "vorschlag vorschläge kacheln ausblenden verbergen freischalten nutzung gemerkt adaptiv startseite löschen", () => suEinstellung("setKachelVorschlag")], // 2.418.0
     ["🎚️", "Bühne: Musik / Stimme lauter oder leiser", "lautstärke lauter leiser regler musik stimme stumm bühne", () => esOeffnen("buehne")],
     // 2.344.0 KC-CLUB-HILFE-NACHTRAG: alle Möglichkeiten, die App anzupassen, auch über die Lupe
-    ["🎭", "Thema wählen (Weihnachten, Herbst, Oktoberfest …)", "thema themen weihnachten herbst indian summer oktoberfest sim-jü simjue karneval halloween ostern karibik silvester winter sommer frühling paket kalender club-thema", ein("themaWahl")],
+    ["🎭", "Thema wählen (Weihnachten, Herbst, Oktoberfest …)", "thema themen weihnachten herbst indian summer oktoberfest sim-jü simjue karneval halloween ostern karibik unterwasser meer fische taucher silvester winter sommer frühling paket kalender club-thema", ein("themaWahl")],
     ["✍️", "Schrift des Themas (Begrüßung)", "schrift schriftart fraktur thema begrüßung", ein("themaSchriftAn")],
     ["🍂", "Jahreszeiten-Bild im Kopf (fest oder automatisch)", "jahreszeit jahreszeiten kopf bild herbst winter frühling sommer advent silvester laub schnee schneemann eichhörnchen iglu vorschau", ein("jzWahl")],
     ["🎏", "Deko an der Leiste (Wimpel, Lichterkette, Laternen)", "deko dekoration wimpel wimpelkette lichterkette lichter laternen lampions girlande leiste", ein("jzDekoWahl")],
