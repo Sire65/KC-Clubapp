@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.435.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.436.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18060,8 +18060,14 @@ function jzbUnterwasserMalen(c, F) {
 // vorbei. Die Hexe fliegt zweimal auf dem Besen durch („Hihihi!“). Nach gut 20 s geht der Sargdeckel auf: der Vampir richtet sich auf, sitzt,
 // grüßt mit dem Vornamen, steigt heraus und geht mit wehendem Umhang davon; der Deckel schließt sich. Zum Schluss schwebt die Hexe in die Mitte,
 // fuchtelt mit dem Zauberstab (Funken) – ein Zauberblitz, sie fliegt davon und die Szene ist vorbei.
-const JZB_HW_ENDE = 12; // Sekunden vor Laufende: die Hexe kommt zum Schlusszauber
+const JZB_HW_ENDE = 15; // Sekunden vor Laufende: die Hexe kommt zum Schlusszauber (2.436.0: erst zum Kessel, dann zaubern)
 const jzbHwSargX = () => Math.max(JZB_RAND + 70 * JZB.k, JZB.w * .37);
+// 2.436.0 (Fund Hansi „die Hexe fliegt genau hinter dem Stück mit den LEDs – besser ein Stück tiefer“): Flughöhe unterhalb der Lämpchen-Leiste
+// (Statusleiste) – deren Lage hängt davon ab, wie viel im Kopf steht, darum wird sie gemessen; reicht der Platz nicht, so tief wie möglich
+function jzbHwLeisteUnten() {
+  try { const s = JZB.s, l = s?.parentElement?.querySelector(".statusleiste"); if (!l) return 0; const a = l.getBoundingClientRect(), b = s.getBoundingClientRect(); return a.height ? Math.max(0, a.bottom - b.top) : 0; } catch { return 0; }
+}
+function jzbHwFlugY(oben, unten, f) { const J = JZB, lu = jzbHwLeisteUnten(), min = Math.max(J.h * .12, lu + oben * J.k), max = J.h - unten * J.k; return max <= min ? max : min + (max - min) * f; }
 function jzbHwSchritt(F, dt) {
   const J = JZB, k = J.k, D = JZB_FEST_DAUER;
   const H = F.hw || (F.hw = { geister: [], geistUhr: jzbZ(2, 5), blitz: null, blitzUhr: jzbZ(3, 7), donnerIn: 0, donner: 0, knall: 0, hexe: null, hexeNr: 0, vamp: null, ende: false,
@@ -18080,19 +18086,22 @@ function jzbHwSchritt(F, dt) {
   // 👻 kleine Geister schweben vorbei
   if ((H.geistUhr -= dt) <= 0 && F.t < D - 10 && H.geister.length < 3) {
     H.geistUhr = jzbZ(5, 10); const dir = Math.random() < .5 ? 1 : -1;
-    H.geister.push({ dir, x: dir > 0 ? -20 * k : J.w + 20 * k, y0: jzbZ(J.h * .2, J.h * .6), v: jzbZ(14, 24) * k, ph: jzbZ(0, 6), s: jzbZ(.6, .9) });
+    H.geister.push({ dir, x: dir > 0 ? -20 * k : J.w + 20 * k, y0: jzbHwFlugY(14, 34, Math.random()), v: jzbZ(14, 24) * k, ph: jzbZ(0, 6), s: jzbZ(.6, .9) });
   }
   for (const g of H.geister) { g.x += g.dir * g.v * dt; g.ph += dt; }
   H.geister = H.geister.filter((g) => g.x > -40 * k && g.x < J.w + 40 * k);
   // 🧙 Hexe: zweimal vorbei, zum Schluss der Zauber
   if (!H.hexe && !H.ende && ((F.t > 9 && H.hexeNr === 0) || (F.t > 58 && H.hexeNr === 1))) {
-    H.hexeNr++; const dir = H.hexeNr === 1 ? 1 : -1; H.hexe = { modus: "vorbei", dir, x: dir > 0 ? -45 * k : J.w + 45 * k, y0: J.h * jzbZ(.2, .34), t: 0 }; }
-  if (!H.ende && F.t > D - JZB_HW_ENDE) { H.ende = true; H.hexe = { modus: "ende", dir: 1, x: -45 * k, sx: -45 * k, y0: J.h * .3, t: 0 }; }
+    H.hexeNr++; const dir = H.hexeNr === 1 ? 1 : -1; H.hexe = { modus: "vorbei", dir, x: dir > 0 ? -45 * k : J.w + 45 * k, y0: jzbHwFlugY(32, 44, jzbZ(.1, .5)), t: 0 }; }
+  if (!H.ende && F.t > D - JZB_HW_ENDE) { H.ende = true; const yy = jzbHwFlugY(36, 44, .35); H.hexe = { modus: "ende", dir: 1, x: -45 * k, sx: -45 * k, y0: yy, yStart: yy, yFlug: yy, t: 0 }; }
   const X = H.hexe;
   if (X) { X.t += dt;
     if (X.modus === "vorbei") { X.x += X.dir * 75 * k * dt; if (X.x < -70 * k || X.x > J.w + 70 * k) H.hexe = null; }
-    else if (X.t < 2.4) X.x = X.sx + (J.w * .5 - X.sx) * jzbEase(X.t / 2.4);
-    else if (X.t < 6) { X.zaubert = true; if (Math.random() < dt * 28) { const [sx, sy] = jzbHwStab(X); J.fx.push({ typ: "funke", x: sx, y: sy, vx: jzbZ(-45, 45), vy: jzbZ(-45, 25), s: jzbZ(1.4, 2.6), a: 1, farbe: jzbW(["#c77dff", "#ffd23f", "#7bed6f", "#ffffff", "#ff9f1c"]) }); } }
+    else if (X.t < 6.4) { const kx = jzbHwKesselX() + 13 * k, ky = J.h - 31 * k, zx = J.w * .5; // 2.436.0: erst zum Kessel, kurz rühren, dann hoch zum Zaubern
+      if (X.t < 2.6) { const p = jzbEase(X.t / 2.6); X.x = X.sx + (kx - X.sx) * p; X.y0 = X.yStart + (ky - X.yStart) * p; }
+      else if (X.t < 4.8) { X.ruehrt = true; X.x = kx; X.y0 = ky; }
+      else { X.ruehrt = false; const p = jzbEase((X.t - 4.8) / 1.6); X.x = kx + (zx - kx) * p; X.y0 = ky + (X.yFlug - ky) * p; } }
+    else if (X.t < 9.8) { X.zaubert = true; if (Math.random() < dt * 28) { const [sx, sy] = jzbHwStab(X); J.fx.push({ typ: "funke", x: sx, y: sy, vx: jzbZ(-45, 45), vy: jzbZ(-45, 25), s: jzbZ(1.4, 2.6), a: 1, farbe: jzbW(["#c77dff", "#ffd23f", "#7bed6f", "#ffffff", "#ff9f1c"]) }); } }
     else if (!X.knall) { X.knall = true; X.zaubert = false; H.knall = 1; const [sx, sy] = jzbHwStab(X);
       for (let i = 0; i < 36; i++) { const w = i / 36 * Math.PI * 2, v = jzbZ(50, 110) * Math.max(.7, k); J.fx.push({ typ: "funke", x: sx, y: sy, vx: Math.cos(w) * v, vy: Math.sin(w) * v, s: jzbZ(1.8, 3.2), a: 1, farbe: jzbW(["#c77dff", "#ffd23f", "#ffffff", "#ff7a00"]) }); } }
     else { X.x += 90 * k * dt; X.y0 -= 55 * k * dt; if (X.y0 < -60 * k) H.hexe = null; } // fliegt davon – die Szene ist vorbei
@@ -18101,10 +18110,12 @@ function jzbHwSchritt(F, dt) {
   // 🧛 Vampir im Sarg
   if (!H.vamp && F.t > 22) H.vamp = { t: 0 };
   if (H.vamp) H.vamp.t += dt;
+  jzbHwUntenSchritt(F, H, dt); // 2.436.0: Kessel, Skelett, Katze, Süßes oder Saures
 }
 const jzbHwHexeY = (X) => X.y0 + Math.sin(X.t * 2.2) * 3 * JZB.k;
+const jzbHwStabWinkel = (X) => X.ruehrt ? 2.35 + Math.sin(X.t * 6) * .35 : -1.1 + (X.zaubert ? Math.sin(X.t * 12) * .8 : 0) * .6; // rührt im Kessel / fuchtelt
 function jzbHwStab(X) { // Spitze des Zauberstabs in Bildkoordinaten
-  const sc = 1.15 * JZB.k, w = X.zaubert ? Math.sin(X.t * 12) * .8 : 0, a = -1.1 + w * .6, lx = Math.cos(a) * 10, ly = -6 + Math.sin(a) * 10;
+  const sc = 1.15 * JZB.k, a = jzbHwStabWinkel(X), lx = Math.cos(a) * 10, ly = -6 + Math.sin(a) * 10;
   return [X.x + X.dir * lx * sc, jzbHwHexeY(X) + ly * sc];
 }
 function jzbHwHexeMalen(c, X) {
@@ -18124,7 +18135,7 @@ function jzbHwHexeMalen(c, X) {
   c.fillStyle = "#1d1028"; c.beginPath(); c.ellipse(.6, -14, 5.4, 1.2, -.1, 0, 7); c.fill(); // Hut mit Krempe
   c.beginPath(); c.moveTo(-2.8, -14.2); c.lineTo(3.4, -14.6); c.quadraticCurveTo(0, -18, -5.5, -22.5); c.closePath(); c.fill();
   c.fillStyle = "#c77dff"; c.fillRect(-2.6, -15.6, 5.8, 1.1);
-  const w = X.zaubert ? Math.sin(X.t * 12) * .8 : 0, a = -1.1 + w * .6, tx = Math.cos(a) * 10, ty = -6 + Math.sin(a) * 10; // Zauberstab
+  const a = jzbHwStabWinkel(X), tx = Math.cos(a) * 10, ty = -6 + Math.sin(a) * 10; // Zauberstab
   c.strokeStyle = "#5b1f7a"; c.lineWidth = 1.6; c.beginPath(); c.moveTo(0, -6); c.lineTo(Math.cos(a) * 5, -6 + Math.sin(a) * 5); c.stroke();
   c.strokeStyle = "#2b1a10"; c.lineWidth = 1; c.beginPath(); c.moveTo(Math.cos(a) * 5, -6 + Math.sin(a) * 5); c.lineTo(tx, ty); c.stroke();
   if (X.zaubert || X.modus === "ende") jzbStern(c, tx, ty, 1.8, "#ffd23f");
@@ -18165,9 +18176,126 @@ function jzbHwSargMalen(c, F, hinten) { // hinten: nur der Deckel (liegt hinter 
   c.strokeStyle = "#b08d57"; c.lineWidth = 1.2 * k; c.beginPath(); c.moveTo(sx - 8 * k, yb - 3 * k); c.lineTo(sx + 8 * k, yb - 3 * k); c.stroke(); // Griff
   if (offen > .05) { c.fillStyle = "rgba(122,15,31,.85)"; c.fillRect(sx - 22 * k, yb - 10.6 * k, 46 * k, 1.2 * k); } // rotes Futter am Rand
 }
+// ---- 2.436.0 KC-CLUB-HALLOWEEN-UNTEN (Wunsch Hansi „unten muss noch mehr passieren“ – gewählt: Grab mit Skelett, schwarze Katze, Hexenkessel,
+// Süßes oder Saures) ----
+// 🪦 Grabstein „R.I.P.“: eine Knochenhand greift aus der Erde und winkt, ein Skelett klettert heraus, tanzt klappernd und zerfällt wieder.
+// 🐈‍⬛ Schwarze Katze mit leuchtenden Augen schleicht über den Boden; auf ihrem ersten Weg kracht ein Blitz – sie macht einen Buckel: „Fauch!“
+// 🧪 Hexenkessel über dem Feuer blubbert grün und dampft; zum Schluss rührt die Hexe darin, bevor sie zaubert.
+// 🍬 Verkleidete Kinder (Gespenst, Kürbis, kleine Hexe) ziehen mit Laterne und Eimer vorbei: „Süßes oder Saures, <Vorname>!“
+const jzbHwKesselX = () => { const J = JZB, k = J.k; return Math.min(JZB_RAND + 64 * k, jzbHwSargX() - 40 * k); };
+const jzbHwGrabX = () => { const J = JZB, k = J.k; return Math.max(jzbHwSargX() + 52 * k, Math.min(J.w * .6, J.w - 105 * k)); };
+function jzbHwUntenSchritt(F, H, dt) {
+  const J = JZB, k = J.k, t = F.t, D = JZB_FEST_DAUER;
+  // Kessel: Blasen steigen und platzen, beim Rühren der Hexe besonders viele
+  const kx = jzbHwKesselX(), ky = J.h - 15 * k, wild = H.hexe?.modus === "ende" && H.hexe.ruehrt;
+  H.kblasen = H.kblasen || []; if (Math.random() < dt * (wild ? 14 : 4)) H.kblasen.push({ x: kx + jzbZ(-6, 6) * k, y: ky, r: jzbZ(1, 2.2) * k, v: jzbZ(4, 9) * k, a: 1 });
+  for (const b of H.kblasen) { b.y -= b.v * dt; b.r += dt * 1.2 * k; b.a -= dt * 1.4; } H.kblasen = H.kblasen.filter((b) => b.a > 0);
+  // Skelett: einmal je Lauf
+  if (!H.skelett && t > 40 && t < D - 25) H.skelett = { t: 0 };
+  if (H.skelett) H.skelett.t += dt;
+  // Katze: zweimal je Lauf; beim ersten Mal gibt es mitten auf dem Weg einen Blitz
+  if (!H.katze && ((t > 14 && !H.katzeNr) || (t > 64 && H.katzeNr === 1))) { H.katzeNr = (H.katzeNr || 0) + 1; H.katze = { x: -20 * k, t: 0, fauch: 0, nr: H.katzeNr }; }
+  const C = H.katze;
+  if (C) { C.t += dt;
+    if (C.nr === 1 && !C.blitzt && C.x > J.w * .45) { C.blitzt = true; H.blitzUhr = .05; }
+    if (H.blitz && H.blitz.t < .1 && C.fauch <= 0 && C.x > 30 * k && C.x < J.w - 30 * k) C.fauch = 1.5;
+    if (C.fauch > 0) C.fauch -= dt; else C.x += 26 * k * dt;
+    if (C.x > J.w + 30 * k) H.katze = null; }
+  // Süßes oder Saures: einmal je Lauf von rechts
+  if (!H.kinderDa && t > 72 && t < D - 20) { H.kinderDa = true; H.kinder = { x: J.w + 30 * k, t: 0 }; }
+  if (H.kinder) { H.kinder.t += dt; H.kinder.x -= 20 * k * dt; if (H.kinder.x < -90 * k) H.kinder = null; }
+}
+function jzbHwKesselMalen(c, F, H) {
+  const J = JZB, k = J.k, T = J.T, kx = jzbHwKesselX(), yb = J.h - 1;
+  for (let i = 0; i < 4; i++) { const fl = Math.sin(T * 17 + i * 1.7) * 1.4 * k, x = kx + (i - 1.5) * 3.2 * k; // Feuer
+    c.fillStyle = i % 2 ? "#ff9f1c" : "#ff5d1c"; c.beginPath(); c.moveTo(x - 2.4 * k, yb); c.quadraticCurveTo(x, yb - 9 * k - fl, x + 2.4 * k, yb); c.closePath(); c.fill();
+    c.fillStyle = "#ffe066"; c.beginPath(); c.moveTo(x - 1 * k, yb); c.quadraticCurveTo(x, yb - 4.5 * k - fl * .5, x + 1 * k, yb); c.closePath(); c.fill(); }
+  const gl = c.createRadialGradient(kx, yb - 3 * k, 1, kx, yb - 3 * k, 20 * k); gl.addColorStop(0, "rgba(255,150,40,.35)"); gl.addColorStop(1, "rgba(255,120,20,0)"); c.fillStyle = gl; c.beginPath(); c.arc(kx, yb - 3 * k, 20 * k, 0, 7); c.fill();
+  c.strokeStyle = "#222"; c.lineWidth = 1.4 * k; c.beginPath(); c.moveTo(kx - 7 * k, yb - 8 * k); c.lineTo(kx - 9 * k, yb); c.moveTo(kx + 7 * k, yb - 8 * k); c.lineTo(kx + 9 * k, yb); c.stroke(); // Beine
+  c.fillStyle = "#1d1d22"; c.beginPath(); c.ellipse(kx, yb - 13 * k, 10 * k, 7.5 * k, 0, 0, 7); c.fill(); // Kessel
+  c.fillStyle = "#33333b"; c.beginPath(); c.ellipse(kx, yb - 19.5 * k, 9.5 * k, 2.2 * k, 0, 0, 7); c.fill();
+  c.fillStyle = "#62d84e"; c.beginPath(); c.ellipse(kx, yb - 19.6 * k, 8 * k, 1.5 * k, 0, 0, 7); c.fill(); // grünes Gebräu
+  c.fillStyle = "rgba(255,255,255,.12)"; c.beginPath(); c.ellipse(kx - 4 * k, yb - 15 * k, 2 * k, 3.5 * k, -.4, 0, 7); c.fill();
+  for (const b of H.kblasen || []) { c.strokeStyle = `rgba(160,255,140,${b.a})`; c.lineWidth = .8; c.beginPath(); c.arc(b.x, b.y - 6 * k, b.r, 0, 7); c.stroke(); }
+  for (let i = 0; i < 3; i++) { const p = (T * .35 + i / 3) % 1, x = kx + Math.sin(T * 1.3 + i * 2) * 4 * k, y = yb - 22 * k - p * 26 * k; // grüner Dampf
+    c.fillStyle = `rgba(150,240,130,${.28 * (1 - p)})`; c.beginPath(); c.arc(x, y, (3 + p * 5) * k, 0, 7); c.fill(); }
+}
+function jzbHwSkelettFigur(c, x, yb, sc, t, tanz) { // Skelett stehend (Füße bei yb); tanz 0..1 bewegt Arme und Beine
+  c.save(); c.translate(x, yb); c.scale(sc, sc); c.lineCap = "round"; c.strokeStyle = "#f1efe6"; c.lineWidth = 1.5;
+  const a = Math.sin(t * 9) * tanz, b = Math.sin(t * 9 + Math.PI) * tanz, hop = Math.abs(Math.sin(t * 9)) * 1.5 * tanz;
+  c.translate(0, -hop);
+  for (const [s, w] of [[-1, a], [1, b]]) { c.beginPath(); c.moveTo(s * 1.2, -10); c.lineTo(s * (1.8 + w * 1.5), -5); c.lineTo(s * (1.6 + w * 2.6), 0); c.stroke(); } // Beine
+  c.beginPath(); c.moveTo(0, -10); c.lineTo(0, -19.5); c.stroke(); // Wirbelsäule
+  c.lineWidth = 1.1; for (const y of [-18.2, -16.6, -15]) { c.beginPath(); c.moveTo(-2.6, y + .6); c.quadraticCurveTo(0, y - .8, 2.6, y + .6); c.stroke(); } // Rippen
+  c.beginPath(); c.ellipse(0, -10.2, 2.2, 1, 0, 0, 7); c.stroke(); // Becken
+  c.lineWidth = 1.4; for (const [s, w] of [[-1, a], [1, b]]) { c.beginPath(); c.moveTo(s * 2.6, -19); c.lineTo(s * (5 + w * .8), -15 - w * 4); c.lineTo(s * (6.4 + w), -20 - w * 5); c.stroke(); } // Arme winken
+  c.fillStyle = "#f1efe6"; c.beginPath(); c.arc(0, -23, 3.3, 0, 7); c.fill(); c.fillRect(-1.8, -21, 3.6, 2.2); // Schädel
+  c.fillStyle = "#1a1a1a"; for (const s of [-1, 1]) { c.beginPath(); c.arc(s * 1.2, -23.3, .85, 0, 7); c.fill(); } c.beginPath(); c.moveTo(0, -22.2); c.lineTo(-.5, -21.2); c.lineTo(.5, -21.2); c.closePath(); c.fill();
+  c.strokeStyle = "#1a1a1a"; c.lineWidth = .4; for (const x2 of [-1.2, -.4, .4, 1.2]) { c.beginPath(); c.moveTo(x2, -19.6); c.lineTo(x2, -18.9); c.stroke(); }
+  c.restore();
+}
+function jzbHwGrabMalen(c, F, H) {
+  const J = JZB, k = J.k, T = J.T, gx = jzbHwGrabX(), yb = J.h - 1, ex = gx + 15 * k;
+  c.fillStyle = "#5f6270"; c.beginPath(); c.moveTo(gx - 8 * k, yb); c.lineTo(gx - 8 * k, yb - 15 * k); c.arc(gx, yb - 15 * k, 8 * k, Math.PI, 0); c.lineTo(gx + 8 * k, yb); c.closePath(); c.fill(); // Grabstein
+  c.strokeStyle = "rgba(0,0,0,.35)"; c.lineWidth = .8; c.stroke(); c.beginPath(); c.moveTo(gx + 3 * k, yb - 20 * k); c.lineTo(gx + 1.5 * k, yb - 16 * k); c.lineTo(gx + 3.4 * k, yb - 13 * k); c.stroke();
+  c.fillStyle = "#3c3e48"; c.font = `800 ${5 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("R.I.P.", gx, yb - 14 * k);
+  c.fillStyle = "#3b2a1e"; c.beginPath(); c.ellipse(ex, yb, 11 * k, 3 * k, 0, Math.PI, 0); c.fill(); // Erdhügel
+  const S = H.skelett; if (!S) return; const t = S.t, sc = 1.15 * k;
+  c.save(); c.beginPath(); c.rect(0, 0, J.w, yb - 1.5 * k); c.clip(); // nur über der Erde sichtbar
+  if (t < 3.5) { const p = jzbEase(t / 1.6), w = t > 1.6 ? Math.sin((t - 1.6) * 10) * .35 : 0; // Knochenhand greift heraus und winkt
+    c.save(); c.translate(ex, yb + 8 * k - p * 13 * k); c.rotate(w); c.strokeStyle = "#f1efe6"; c.lineCap = "round"; c.lineWidth = 1.6 * k;
+    c.beginPath(); c.moveTo(0, 8 * k); c.lineTo(0, 0); c.stroke(); c.lineWidth = 1 * k; for (const [dx, l] of [[-2, 4], [-.7, 5], [.7, 5], [2, 4.2]]) { c.beginPath(); c.moveTo(dx * .6 * k, 0); c.lineTo(dx * k, -l * k); c.stroke(); }
+    c.beginPath(); c.moveTo(-1.5 * k, 1 * k); c.lineTo(-3.6 * k, -1.5 * k); c.stroke(); c.restore(); }
+  else if (t < 5.5) jzbHwSkelettFigur(c, ex, yb + 27 * sc * (1 - jzbEase((t - 3.5) / 2)), sc, T, 0); // klettert heraus
+  else if (t < 12) { jzbHwSkelettFigur(c, ex + Math.sin((t - 5.5) * 1.6) * 6 * k, yb, sc, T, 1); // tanzt
+    if (Math.sin(t * 4) > 0) { c.save(); c.font = `800 ${8 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.lineWidth = 3; c.strokeStyle = "rgba(20,10,30,.7)"; c.strokeText("Klapper!", ex, yb - 36 * k); c.fillStyle = "#f1efe6"; c.fillText("Klapper!", ex, yb - 36 * k); c.restore(); } }
+  else if (t < 15) { const p = Math.min(1, (t - 12) / 1), sink = Math.max(0, (t - 13) / 2); c.globalAlpha *= 1 - sink * .9; // zerfällt zu einem Knochenhaufen und versinkt
+    c.strokeStyle = "#f1efe6"; c.lineCap = "round"; c.lineWidth = 1.4 * k; const by = yb - 2 * k + sink * 4 * k;
+    for (let i = 0; i < 6; i++) { const r = (i * 1.3) % 3.1, x0 = ex + (i - 2.5) * 3 * k * p; c.beginPath(); c.moveTo(x0 - Math.cos(r) * 3 * k, by - (1 - p) * (20 - i * 3) * k - Math.sin(r) * 1.5 * k); c.lineTo(x0 + Math.cos(r) * 3 * k, by - (1 - p) * (20 - i * 3) * k + Math.sin(r) * 1.5 * k); c.stroke(); }
+    c.fillStyle = "#f1efe6"; c.beginPath(); c.arc(ex + 4 * k * p, by - 2 * k - (1 - p) * 22 * k, 3 * k, 0, 7); c.fill(); }
+  c.restore();
+}
+function jzbHwKatzeMalen(c, C) {
+  const J = JZB, k = J.k, T = J.T, yb = J.h - 1, f = C.fauch > 0, sc = 1.1 * k, sp = f ? 0 : C.t * 10;
+  c.save(); c.translate(C.x, yb); c.scale(sc, sc); c.lineCap = "round"; c.strokeStyle = "#111"; c.fillStyle = "#111";
+  const buckel = f ? 1 : 0, sw = Math.sin(T * 3) * .25;
+  c.lineWidth = 1.5; for (const [x, ph] of [[-5, 0], [-3.5, Math.PI], [4, Math.PI], [5.5, 0]]) { const s = Math.sin(sp + ph) * 1.6; c.beginPath(); c.moveTo(x, -5 - buckel * 2); c.lineTo(x + s, 0); c.stroke(); } // Beine
+  c.beginPath(); c.moveTo(-7, -5 - buckel * 2); c.quadraticCurveTo(0, -11 - buckel * 7, 7, -5 - buckel * 2); c.quadraticCurveTo(0, -3 - buckel * 2, -7, -5 - buckel * 2); c.fill(); // Körper (Buckel beim Fauchen)
+  c.lineWidth = f ? 2.6 : 1.6; c.beginPath(); c.moveTo(-6.5, -7 - buckel * 2); f ? c.lineTo(-8, -19) : c.quadraticCurveTo(-12, -9 + sw * 6, -10 + sw * 4, -16); c.stroke(); // Schwanz (gesträubt beim Fauchen)
+  c.beginPath(); c.arc(8.4, -9 - buckel * 2, 3.2, 0, 7); c.fill(); // Kopf
+  for (const dx of [6.6, 9.8]) { c.beginPath(); c.moveTo(dx - 1.2, -11.2 - buckel * 2); c.lineTo(dx, -14.2 - buckel * 2); c.lineTo(dx + 1.2, -11.2 - buckel * 2); c.fill(); } // Ohren
+  c.fillStyle = "#ffe14d"; c.shadowColor = "#ffe14d"; c.shadowBlur = 4; c.beginPath(); c.ellipse(9.6, -9.6 - buckel * 2, .9, f ? 1.1 : .6, 0, 0, 7); c.fill(); c.shadowBlur = 0; // leuchtendes Auge
+  if (f) { c.fillStyle = "#e01e37"; c.beginPath(); c.arc(10.8, -7.6 - buckel * 2, .8, 0, 7); c.fill(); }
+  c.restore();
+  if (f) { c.save(); c.font = `800 ${9 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.lineWidth = 3; c.strokeStyle = "rgba(20,10,30,.75)"; c.strokeText("Fauch!", C.x + 8 * k, yb - 28 * k); c.fillStyle = "#ffe14d"; c.fillText("Fauch!", C.x + 8 * k, yb - 28 * k); c.restore(); }
+}
+function jzbHwKindMalen(c, art, x, yb, sc, t) { // verkleidetes Kind, läuft nach links
+  c.save(); c.translate(x, yb); c.scale(-sc, sc); c.lineCap = "round"; const s = Math.sin(t * 9) * 1.8;
+  c.strokeStyle = "#2b2b2b"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(-1, -6); c.lineTo(-1 + s, 0); c.moveTo(1, -6); c.lineTo(1 - s, 0); c.stroke(); // Beine
+  if (art === 0) { c.fillStyle = "#f6f6fb"; c.beginPath(); c.moveTo(-5, -4); c.lineTo(-4.4, -15); c.arc(0, -15, 4.4, Math.PI, 0); c.lineTo(5, -4); for (let i = 0; i < 4; i++) c.lineTo(5 - (i + 1) * 2.5, -4 + (i % 2 ? 0 : 1.4)); c.closePath(); c.fill(); // Gespenst
+    c.fillStyle = "#1a1a2a"; c.beginPath(); c.ellipse(1.2, -15.5, .7, 1.1, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(3.4, -15.5, .7, 1.1, 0, 0, 7); c.fill(); }
+  else if (art === 1) { c.fillStyle = "#ff8c1a"; c.beginPath(); c.ellipse(0, -10, 5.5, 5, 0, 0, 7); c.fill(); // Kürbis
+    c.fillStyle = "#3b1a06"; c.beginPath(); c.moveTo(1, -12); c.lineTo(2.2, -10.5); c.lineTo(3.4, -12); c.closePath(); c.fill(); c.fillRect(.6, -8.6, 3.6, .9);
+    c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(0, -17.2, 2.8, 0, 7); c.fill(); c.fillStyle = "#4e6b2a"; c.fillRect(-.6, -21.5, 1.2, 2.2); }
+  else { c.fillStyle = "#7b2cbf"; c.beginPath(); c.moveTo(-4.5, -5); c.lineTo(4.5, -5); c.lineTo(1.8, -14); c.lineTo(-1.8, -14); c.closePath(); c.fill(); // kleine Hexe
+    c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(0, -16.5, 2.7, 0, 7); c.fill(); c.fillStyle = "#1d1028"; c.beginPath(); c.ellipse(0, -18.6, 4.2, .9, 0, 0, 7); c.fill();
+    c.beginPath(); c.moveTo(-2.2, -18.8); c.lineTo(2.4, -18.8); c.lineTo(-1.5, -25); c.closePath(); c.fill(); }
+  c.restore();
+}
+function jzbHwKinderMalen(c, K) {
+  const J = JZB, k = J.k, T = J.T, yb = J.h - 1, sc = 1.05 * k;
+  [0, 1, 2].forEach((art, i) => { const x = K.x + i * 20 * k, hop = Math.abs(Math.sin(K.t * 9 + i)) * .8 * k; jzbHwKindMalen(c, art, x, yb - hop, sc, K.t + i);
+    if (i === 0) { const lx = x - 6 * k, ly = yb - 14 * k; c.strokeStyle = "#5a3a20"; c.lineWidth = .9; c.beginPath(); c.moveTo(x - 2 * k, yb - 9 * k); c.lineTo(lx, ly); c.stroke(); // Laterne
+      const fl = .8 + .2 * Math.sin(T * 12); const g = c.createRadialGradient(lx, ly + 2.5 * k, .5, lx, ly + 2.5 * k, 8 * k); g.addColorStop(0, `rgba(255,200,80,${.5 * fl})`); g.addColorStop(1, "rgba(255,160,40,0)"); c.fillStyle = g; c.beginPath(); c.arc(lx, ly + 2.5 * k, 8 * k, 0, 7); c.fill();
+      c.fillStyle = "#ff9f1c"; c.beginPath(); c.arc(lx, ly + 2.5 * k, 2.2 * k, 0, 7); c.fill(); }
+    if (i === 1) { c.fillStyle = "#ff7a00"; c.beginPath(); c.ellipse(x - 6 * k, yb - 7 * k, 2.8 * k, 2.4 * k, 0, 0, 7); c.fill(); c.strokeStyle = "#333"; c.lineWidth = .7; c.beginPath(); c.arc(x - 6 * k, yb - 9 * k, 2.6 * k, Math.PI, 0); c.stroke(); } }); // Eimer
+  const mitte = K.x + 20 * k; if (mitte > J.w * .15 && mitte < J.w * .85) { const name = jzbEisNameText(), txt = name ? `Süßes oder Saures, ${name}!` : "Süßes oder Saures!";
+    c.save(); c.font = `800 ${9.5 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.lineWidth = 3; c.strokeStyle = "rgba(20,10,30,.75)"; c.strokeText(txt, mitte, yb - 34 * k); c.fillStyle = "#ffd23f"; c.fillText(txt, mitte, yb - 34 * k); c.restore(); }
+}
 function jzbHwMalenHinten(c, F) {
   const J = JZB, k = J.k, H = F.hw; if (!H) return;
   c.fillStyle = "rgba(40,34,58,.78)"; for (const w of H.wolken) for (const [dx, dy, f] of [[0, 0, 1], [w.r * .9, w.r * .25, .8], [-w.r * .9, w.r * .25, .75], [w.r * 1.7, w.r * .4, .55]]) { c.beginPath(); c.arc(w.x + dx, w.y + dy, w.r * f, 0, 7); c.fill(); } // Gewitterwolken
+  jzbHwKesselMalen(c, F, H); jzbHwGrabMalen(c, F, H); // 2.436.0
   jzbHwSargMalen(c, F, true);
   const V = H.vamp, sx = jzbHwSargX(), yb = J.h - 1, sc = 1.4 * k;
   if (V && V.t > 1.2) { const t = V.t, rand = yb - 3.5 * k, boden = yb - 9.6 * sc; // Hüfte tief im Sarg: beim Sitzen schauen nur Oberkörper und Kopf heraus
@@ -18184,6 +18312,7 @@ function jzbHwMalenHinten(c, F) {
 }
 function jzbHwMalenVorn(c, F) {
   const J = JZB, k = J.k, T = J.T, H = F.hw; if (!H) return;
+  if (H.katze) jzbHwKatzeMalen(c, H.katze); if (H.kinder) jzbHwKinderMalen(c, H.kinder); // 2.436.0
   for (const g of H.geister) { const gx = g.x, gy = g.y0 + Math.sin(g.ph * 2) * 5 * k, s = 11 * k * g.s; // kleine Geister
     c.save(); c.globalAlpha *= .8; c.fillStyle = "rgba(245,245,255,.9)"; c.beginPath(); c.moveTo(gx - s * .7, gy + s * .9); c.lineTo(gx - s * .7, gy - s * .1); c.arc(gx, gy - s * .1, s * .7, Math.PI, 0); c.lineTo(gx + s * .7, gy + s * .9);
     for (let i = 0; i < 4; i++) { const x0 = gx + s * .7 - (i + .5) * s * .35; c.quadraticCurveTo(x0, gy + s * (i % 2 ? .65 : 1.15) + Math.sin(T * 6 + i + g.ph) * 1.5, gx + s * .7 - (i + 1) * s * .35, gy + s * .9); } c.fill();

@@ -10347,4 +10347,12 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/Guten Abend, \$\{name\}!/.test(programm) && /"Hihihi!"/.test(programm), "Vampir grüßt mit Vornamen, Hexe kichert");
   assert.ok(/HW\?\.donner > 0\) c\.translate\(/.test(programm), "Donner wackelt das Bild");
 }
+// 2.436.0 KC-CLUB-HALLOWEEN-UNTEN: Hexe unter der Lämpchen-Leiste; Grab mit Skelett, Katze, Kessel, Süßes oder Saures
+{
+  assert.ok(/querySelector\("\.statusleiste"\)/.test(programm) && /function jzbHwFlugY\(oben, unten, f\)/.test(programm) && /y0: jzbHwFlugY\(32, 44, /.test(programm) && /y0: jzbHwFlugY\(14, 34, /.test(programm), "Hexe und Geister unter der Leiste");
+  const u = programm.slice(programm.indexOf("function jzbHwUntenSchritt("), programm.indexOf("function jzbHwKesselMalen("));
+  assert.ok(/H\.skelett = \{ t: 0 \}/.test(u) && /H\.blitzUhr = \.05;/.test(u) && /C\.fauch <= 0/.test(u) && /H\.kinderDa = true;/.test(u), "Skelett, Katze faucht beim Blitz, Kinder einmal");
+  assert.ok(/jzbHwKesselMalen\(c, F, H\); jzbHwGrabMalen\(c, F, H\);/.test(programm) && /if \(H\.katze\) jzbHwKatzeMalen\(c, H\.katze\); if \(H\.kinder\) jzbHwKinderMalen\(c, H\.kinder\);/.test(programm) && /jzbHwUntenSchritt\(F, H, dt\);/.test(programm), "verdrahtet");
+  assert.ok(/Süßes oder Saures, \$\{name\}!/.test(programm) && /"Fauch!"/.test(programm) && /"Klapper!"/.test(programm) && /X\.ruehrt = true;/.test(programm), "Texte und Rühren im Kessel");
+}
 
