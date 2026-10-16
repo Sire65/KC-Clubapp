@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.428.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.429.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -933,7 +933,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); if ($("setFee")) $("setFee").checked = einst("fee", true); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); if ($("setFee")) $("setFee").checked = einst("fee", true); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -4972,6 +4972,8 @@ const HILFE = [
   // 2.23.1 (Wunsch Hansi: „ganze App durchsuchen, weitere Hilfen – immer etwas anders formuliert, freundlich, nicht aufdringlich“)
   // 💬 Nachrichten & Chat
   { id: "anheften", thema: "nachrichten", sym: "📌", t: "Wichtiges oben im Chat festhalten", x: "Damit eine wichtige Nachricht nicht nach oben wegrutscht: einfach antippen und <b>„📌 Oben anheften“</b> wählen. Bis zu drei Nachrichten bleiben so über dem Chat stehen. Mit „Lösen“ kommen sie wieder an ihren Platz.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
+  { id: "tage_einklappen", thema: "nachrichten", sym: "📂", t: "Vergangene Tage im Chat eingeklappt", x: "Im Chat sind frühere Tage jetzt <b>eingeklappt</b> – eine Zeile mit Anzahl und Absendern, <b>rechts das Datum</b> (z. B. „Mo, 11.11.26“). Ältere Wochen stehen als <b>„KW 45/26“</b>. Heute und Ungelesenes bleiben offen. Antippen klappt auf, <b>„⤢ Alle aufklappen“</b> öffnet alles. Ausschalten: ⚙️ → <b>„🧩 Startseite &amp; Ansicht“</b>.", zeig: () => zeige("nachrichten"), seit: "2.429.0" },
+  { id: "netz_symbol", thema: "nachrichten", sym: "📡", t: "Router oder Satellit: deine Verbindung auf einen Blick", x: "Ein kleiner <b>Router</b> blinkt jetzt <b>oben links in 💬 Nachrichten</b>, wenn du im WLAN bist, und ein <b>Satellit</b> im Mobilfunk. Die Wellen zeigen die Qualität (grün = gut, gelb = mäßig, rot = schwach, grau = noch unbekannt). <b>Antippen</b> zeigt Netzart, Antwortzeit, Datentempo und <b>„📏 Jetzt messen“</b>. Aus- oder ruhig stellen: ⚙️ → <b>„✨ Effekte“</b>.", zeig: () => zeige("nachrichten"), seit: "2.429.0" },
   { id: "merken", thema: "nachrichten", sym: "⭐", t: "Eine Nachricht für später merken", x: "Manchmal liest man etwas und möchte es später schnell wiederfinden. Tipp die Nachricht an und wähle <b>„⭐ Merken“</b>. Alles Gemerkte liegt in 💬 Nachrichten oben unter <b>„⭐ Gemerkt“</b> – diese Liste siehst nur du.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "chat_abstimmung", thema: "nachrichten", sym: "📊", t: "Schnell mal abstimmen", x: "Grillen oder Pizza? Freitag oder Samstag? Über <b>📎</b> unter dem Schreibfeld → <b>„📊 Abstimmung“</b> stellst du eine Frage mit 2 bis 8 Antworten. Alle sehen gleich, wie es gerade steht.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "entwickler", thema: "technik", sym: "👨‍🍳", t: "Wer hat die Club-App gebaut?", x: "Die Club-App hat <b>Hans-Joachim Koch</b> entwickelt und gestaltet – Koch, Küchenmeister und Gründungsmitglied des Köcheclubs. Mehr über ihn mit Foto: <b>⚙️ Einstellungen → ℹ️ App-Info → „👨‍🍳 Über den Entwickler“</b>.", zeig: () => entwicklerZeigen(), seit: "2.23.32" },
@@ -13312,7 +13314,8 @@ function vbStatusLed() {
   const l = $("ledStatus"); if (!l) return;
   const [farbe, text] = vbZustand(), [cFarbe, cText] = vbCommZustand();
   l.className = "led " + farbe; $("ledComm").className = "led " + cFarbe; $("leds").title = text + " · " + cText;
-  if (!$("verbindungBlatt").classList.contains("versteckt")) ICH?.admin ? vbBlattZeigen() : vbEinfachZeigen(); // 2.1.1: Mitglieder behalten die einfache Ansicht
+  if (!$("verbindungBlatt").classList.contains("versteckt")) VB.netzAnsicht ? netzBlattZeigen() : ICH?.admin ? vbBlattZeigen() : vbEinfachZeigen(); // 2.1.1: Mitglieder behalten die einfache Ansicht · 2.429.0 Netz-Symbol
+  netzSymbolZeigen(); // 2.429.0 KC-CLUB-NETZ-SYMBOL
 }
 // echte Datenübertragungen, die nicht über api() laufen (Fotos/Vorschauen aus dem Supabase-Speicher)
 try {
@@ -13340,6 +13343,94 @@ function rundinstrument(titel, wert, max, einheit, zonen, dezimal = 0) {
     <div class="i-wert">${zahl}<small> ${einheit}</small></div><div class="i-titel">${esc(titel)}</div></div>`;
 }
 const mittel = (a) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+// ---------- KC-CLUB-NETZ-SYMBOL (2.429.0, Wunsch Hansi) ----------
+// In 💬 Nachrichten oben links: blinkender 📶 Router im WLAN, blinkender 🛰️ Satellit im Mobilfunk. Die Wellen zeigen die Qualität
+// (echte Antwortzeiten der App an den Club-Server, sonst die Schätzung des Handys; ohne Messung grau = unbekannt, nie „gut“).
+// Die Netzart verrät nur Android (navigator.connection.type) – sonst gilt die zuletzt gewählte Netzart (antippen → wählen), ohne Wahl 🌐.
+// Antippen: Verbindungs-Blatt mit Netzart, Qualität, Messwerten und „📏 Jetzt messen“. Ein/aus und Blinken: ⚙️ → „✨ Effekte“.
+function netzSvg(art, stufe, farbe) {
+  const f = { gruen: "#2e9d5b", gelb: "#d9a21b", rot: "#d0453f", grau: "#9aa0a6" }[farbe] || "#9aa0a6", aus = "rgba(128,128,128,.25)";
+  const w = (n) => (stufe == null || stufe >= n ? f : aus), led = stufe === 0 ? "#d0453f" : f;
+  const wellen = (x, y, dreh) => `<g transform="translate(${x} ${y}) rotate(${dreh})" fill="none" stroke-linecap="round" stroke-width="2.2"><path class="nz-w nz-w1" d="M-2.8 -2.8 A4 4 0 0 1 2.8 -2.8" stroke="${w(1)}"/><path class="nz-w nz-w2" d="M-5.6 -5.6 A8 8 0 0 1 5.6 -5.6" stroke="${w(2)}"/><path class="nz-w nz-w3" d="M-8.5 -8.5 A12 12 0 0 1 8.5 -8.5" stroke="${w(3)}"/></g>`;
+  const kreuz = stufe === 0 ? `<g stroke="#d0453f" stroke-width="2.6" stroke-linecap="round"><path d="M28 3 L37 12 M37 3 L28 12"/></g>` : "";
+  if (art === "mobil") return `<svg viewBox="0 0 40 32" class="nz-svg" aria-hidden="true">
+    <g transform="rotate(-35 16 19)"><rect x="1" y="15" width="9" height="8" rx="1" fill="#3f6fb5"/><rect x="22" y="15" width="9" height="8" rx="1" fill="#3f6fb5"/>
+    <path d="M1 19 H10 M22 19 H31 M5.5 15 V23 M26.5 15 V23" stroke="#a9c4ef" stroke-width=".8"/><rect x="10" y="18.2" width="12" height="1.6" fill="#78909c"/>
+    <rect x="12.5" y="14.5" width="7" height="9" rx="1.6" fill="#b0bec5" stroke="#546e7a" stroke-width="1"/><circle class="nz-led" cx="16" cy="17" r="1.3" fill="${led}"/></g>
+    <path d="M19 12 Q22 9 25 12" fill="none" stroke="#78909c" stroke-width="1.6"/>${wellen(27, 11, 45)}${kreuz}</svg>`;
+  if (art === "wlan") return `<svg viewBox="0 0 40 32" class="nz-svg" aria-hidden="true">
+    <path d="M11 21 L8.5 9 M29 21 L31.5 9" stroke="#546e7a" stroke-width="2" stroke-linecap="round"/>
+    <rect x="5" y="20" width="30" height="9" rx="2.6" fill="#546e7a"/><rect x="5" y="20" width="30" height="3" rx="1.5" fill="#78909c"/>
+    <circle class="nz-led nz-l1" cx="12" cy="25.3" r="1.5" fill="${led}"/><circle class="nz-led nz-l2" cx="17" cy="25.3" r="1.5" fill="${led}"/><circle class="nz-led nz-l3" cx="22" cy="25.3" r="1.5" fill="${led}"/><circle cx="29" cy="25.3" r="1" fill="#cfd8dc"/>
+    ${wellen(20, 17, 0)}${kreuz}</svg>`;
+  return `<svg viewBox="0 0 40 32" class="nz-svg" aria-hidden="true"><circle cx="20" cy="17" r="11" fill="none" stroke="${f}" stroke-width="2"/><path d="M9 17 H31 M20 6 Q13 17 20 28 Q27 17 20 6" fill="none" stroke="${f}" stroke-width="1.5"/>
+    <circle class="nz-led" cx="33" cy="7" r="2" fill="${led}"/>${kreuz}</svg>`;
+}
+function netzArtJetzt() {
+  const e = netzErkannt(); if (e) return { art: e, quelle: "erkannt" };
+  let l = null; try { l = localStorage.getItem("kc_club_netzart"); } catch {}
+  return l === "wlan" || l === "mobil" ? { art: l, quelle: "gewaehlt" } : { art: null, quelle: "" };
+}
+function netzQualitaet() {
+  if (!navigator.onLine) return { stufe: 0, farbe: "rot", text: "Offline – das Handy hat kein Netz" };
+  if (vbZustand()[0] === "rot") return { stufe: 0, farbe: "rot", text: "Keine Verbindung zum Club-Server" };
+  const c = navigator.connection, frisch = VB.letzteOk && Date.now() - VB.letzteOk < VB_VERALTET_MS;
+  const ms = frisch && VB.zeiten.length ? Math.round(mittel(VB.zeiten.slice(-5))) : null, wert = ms ?? (c?.rtt > 0 ? c.rtt : null);
+  if (wert == null) return { stufe: null, farbe: "grau", text: "Qualität noch unbekannt – noch keine Messung" };
+  let stufe = wert <= 400 ? 4 : wert <= 1000 ? 3 : wert <= 2500 ? 2 : 1;
+  if (SCHNECKE.an) stufe = Math.min(stufe, 1);
+  return { stufe, ms, farbe: ["", "rot", "gelb", "gruen", "gruen"][stufe], text: ["", "Schwach", "Mäßig", "Gut", "Sehr gut"][stufe] + (ms == null ? " (Schätzung des Handys)" : "") };
+}
+const NETZ_NAME = { wlan: "📶 WLAN", mobil: "🛰️ Mobilfunk" };
+function netzSymbolZeigen() {
+  const b = $("naNetz"); if (!b) return;
+  const an = einst("netzSymbol", true); b.classList.toggle("versteckt", !an); if (!an) return;
+  const { art, quelle } = netzArtJetzt(), q = netzQualitaet(), schl = [art, q.stufe, q.farbe].join("|");
+  b.classList.toggle("nz-blink", einst("netzBlinken", true) && einst("animiert", true) && q.stufe !== 0);
+  b.title = `${art ? NETZ_NAME[art] + (quelle === "gewaehlt" ? " (von dir gewählt)" : "") : "Netzart unbekannt"} · ${q.text} – antippen für Infos`;
+  b.setAttribute("aria-label", b.title);
+  if (b.dataset.schl !== schl) { b.dataset.schl = schl; b.innerHTML = netzSvg(art, q.stufe, q.farbe); }
+  if (VB.netzAnsicht && !$("verbindungBlatt").classList.contains("versteckt")) netzBlattZeigen();
+}
+function netzBlatt() { VB.netzAnsicht = true; netzBlattZeigen(); $("verbindungBlatt").classList.remove("versteckt"); }
+function netzWahl(n) { try { localStorage.setItem("kc_club_netzart", n); } catch {} netzSymbolZeigen(); netzBlattZeigen(); }
+function netzBlattZeigen() {
+  const { art, quelle } = netzArtJetzt(), q = netzQualitaet(), c = navigator.connection, m = VB.netzMessung;
+  const zeile = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`;
+  const balken = `<span class="nz-balken s${q.stufe ?? "x"} ${q.farbe}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>`;
+  $("vbInhalt").innerHTML = `<div class="nz-gross${einst("netzBlinken", true) && einst("animiert", true) && q.stufe !== 0 ? " nz-blink" : ""}">${netzSvg(art, q.stufe, q.farbe)}</div>
+    <div class="vb-status" style="justify-content:center"><b>${art ? NETZ_NAME[art] : "🌐 Netzart unbekannt"}</b></div>
+    <p class="hinweis" style="margin:0;text-align:center">${quelle === "erkannt" ? "vom Handy erkannt" : quelle === "gewaehlt" ? "von dir gewählt – das Handy verrät die Netzart nicht" : "Das Handy verrät die Netzart nicht (iPhone nie). Wähle sie selbst:"}</p>
+    ${quelle !== "erkannt" ? `<div class="knoepfe" style="justify-content:center"><button class="knopf klein${art === "wlan" ? " haupt" : ""}" onclick="netzWahl('wlan')">📶 Ich bin im WLAN</button><button class="knopf klein${art === "mobil" ? " haupt" : ""}" onclick="netzWahl('mobil')">🛰️ Mobilfunk</button></div>` : ""}
+    <div class="vb-status" style="justify-content:center">${balken}<b>Verbindungsqualität: ${esc(q.text)}</b></div>
+    <table class="vb-tabelle">
+      ${zeile("Handy", navigator.onLine ? "online" : "offline")}
+      ${zeile("Antwortzeit Club-Server", q.ms != null ? `Ø ${q.ms.toLocaleString("de-DE")} ms (letzte ${Math.min(5, VB.zeiten.length)} Anfragen)` : "–")}
+      ${m ? zeile("Gemessen", m.laeuft ? "⏳ misst …" : m.fehler ? "❌ " + esc(m.fehler) : `${m.ping} ms${m.db != null ? ` · Datenbank ${m.db} ms` : ""} · ${fZeit.format(new Date(m.zeit))} Uhr`) : ""}
+      ${zeile("Letzte Antwort", VB.letzteOk ? fZeit.format(new Date(VB.letzteOk)) + " Uhr" : "–")}
+      ${zeile("Tempo-Klasse (Handy)", c?.effectiveType ? esc(String(c.effectiveType).toUpperCase()) : "unbekannt")}
+      ${zeile("Datentempo laut Handy", c?.downlink ? `ca. ${c.downlink.toLocaleString("de-DE")} Mbit/s` : "unbekannt")}
+      ${zeile("Antwortzeit laut Handy", c?.rtt ? `ca. ${c.rtt} ms` : "unbekannt")}
+      ${c?.saveData ? zeile("Datensparmodus", "an") : ""}
+      ${zeile("Anfragen / Fehler (seit App-Start)", `${VB.anfragen} / ${VB.fehler}`)}
+      ${SCHNECKE.an ? zeile("🐌 Langsam", esc(SCHNECKE.grund)) : ""}
+    </table>
+    <div class="knoepfe" style="justify-content:center"><button class="knopf" onclick="netzMessen()" ${m?.laeuft ? "disabled" : ""}>📏 Jetzt messen</button>${ICH?.admin ? `<button class="knopf" onclick="verbindungBlatt()">📊 Ausführlich (Download/Upload)</button>` : ""}</div>
+    <p class="hinweis" style="font-size:.8rem;margin:0">Wellen: 4 = sehr gut (bis 0,4 s) · 3 = gut (bis 1 s) · 2 = mäßig (bis 2,5 s) · 1 = schwach · grau = noch unbekannt · ✕ = keine Verbindung. Symbol und Blinken: ⚙️ → „✨ Effekte“.</p>`;
+}
+async function netzMessen() {
+  if (VB.netzMessung?.laeuft) return;
+  VB.netzMessung = { laeuft: true }; netzBlattZeigen();
+  try {
+    const zeiten = []; let db = null;
+    for (let i = 0; i < 3; i++) { const t0 = performance.now(); const r = await api("ping"); zeiten.push(performance.now() - t0); db = r?.dbMs ?? db; }
+    VB.netzMessung = { ping: Math.round(Math.min(...zeiten)), db, zeit: Date.now() };
+  } catch (e) { VB.netzMessung = { fehler: e.message || "keine Antwort", zeit: Date.now() }; }
+  netzSymbolZeigen(); if (VB.netzAnsicht) netzBlattZeigen();
+}
+try { navigator.connection?.addEventListener?.("change", netzSymbolZeigen); } catch {}
+addEventListener("online", netzSymbolZeigen); addEventListener("offline", netzSymbolZeigen);
+setInterval(netzSymbolZeigen, 30000); setTimeout(netzSymbolZeigen, 0);
 // KC-CLUB-KOPF-EINFACH (2.1.0, Gesamtprüfung): Mitglieder sehen EIN Lämpchen und beim Antippen nur „in Ordnung / Störung“;
 // die Technik (Server, Communicator, Datenverkehr, Messwerte) bleibt für den Admin
 function verbindungBlatt() {
@@ -13347,6 +13438,7 @@ function verbindungBlatt() {
   vbBlattZeigen(); $("verbindungBlatt").classList.remove("versteckt"); communicatorPruefen();
 }
 function vbEinfachZeigen() {
+  VB.netzAnsicht = false; // 2.429.0 KC-CLUB-NETZ-SYMBOL: andere Ansicht des Blatts
   {
     const [farbe, text] = vbZustand(), gut = farbe === "gruen";
     $("vbInhalt").innerHTML = `<div class="vb-status"><i class="led ${farbe}"></i><b>${gut ? "✅ Verbindung in Ordnung" : farbe === "blau" ? "🔧 " + esc(text) : farbe === "grau" ? "⏳ Verbindung wird geprüft …" : "⚠️ Gerade Störung – " + esc(text)}</b></div>
@@ -13382,6 +13474,7 @@ function vbCommBlock() {
     <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');testAnMichStarten()">🧪 Test an mich</button>`;
 }
 function vbBlattZeigen() {
+  VB.netzAnsicht = false; // 2.429.0 KC-CLUB-NETZ-SYMBOL: andere Ansicht des Blatts
   const [farbe, text] = vbZustand(), t = VB.test, c = navigator.connection;
   const antwort = t?.ping ?? (VB.zeiten.length ? Math.round(mittel(VB.zeiten)) : null);
   $("vbInhalt").innerHTML = `
@@ -25960,12 +26053,13 @@ async function chatLaden(scrollen) {
       NA.trennerVor = erste && u.gelesenBis ? erste.id : null; NA.trennerSprung = !!NA.trennerVor;
     }
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
-    $("chat").innerHTML = u.nachrichten.map((m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
+    const blaseHtml = (m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
       ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}
       ${m.anlagen.map((a) => a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
-      <div class="fuss">${m.loeschtAm ? `<span class="sl-marke" title="Löscht sich selbst – für alle">⏳ noch ${slRest(m.loeschtAm)}</span> ` : ""}${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button aria-label="Nachricht löschen" class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`).join("") + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2
+      <div class="fuss">${m.loeschtAm ? `<span class="sl-marke" title="Löscht sich selbst – für alle">⏳ noch ${slRest(m.loeschtAm)}</span> ` : ""}${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button aria-label="Nachricht löschen" class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`;
+    $("chat").innerHTML = naTageHtml(u, blaseHtml) + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2 · 2.429.0 KC-CLUB-TAGE-EINKLAPPEN
       || '<p class="hinweis">Schreib die erste Nachricht.</p>';
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
     naWischenEinrichten();
@@ -26391,7 +26485,7 @@ async function stummSetzen(dauer) {
 // ---------- KC-CLUB-CHATSUCHE (1.9.0, Wunsch Hansi): Lupe im Chat – findet Wörter nur in diesem Gespräch ----------
 // Sucht in den geladenen Nachrichten (Text + Absender), Umlaut-tolerant wie die große Suche; ▲▼ springt zwischen Treffern.
 const CS = { offen: false, treffer: [], i: -1 };
-function chatSucheAuf() { CS.offen = true; $("chatSuchLeiste").classList.remove("versteckt"); $("chatSuchFeld").focus(); chatSucheJetzt(true); }
+function chatSucheAuf() { CS.offen = true; $("chatSuchLeiste").classList.remove("versteckt"); $("chatSuchFeld").focus(); if (document.querySelector("#chat .tag-zu")) naNeuZeichnen().then(() => chatSucheJetzt(true)); else chatSucheJetzt(true); } // 2.429.0: beim Suchen alle Tage offen
 function chatSucheZu() {
   CS.offen = false; CS.treffer = []; CS.i = -1; $("chatSuchFeld").value = ""; $("chatSuchLeiste").classList.add("versteckt");
   document.querySelectorAll("#chat .blase.su-treffer, #chat .blase.su-aktuell").forEach((b) => b.classList.remove("su-treffer", "su-aktuell"));
@@ -26521,8 +26615,81 @@ function naAntworten(id) {
 function naAntwortWeg() { NA.antwort = null; $("antwortLeiste")?.classList.add("versteckt"); }
 function zuNachricht(id) {
   const el = document.getElementById("msg-" + id);
+  if (!el && NA.nachrichten.has(id)) return naTagAufFuer(id).then(() => document.getElementById("msg-" + id) && zuNachricht(id)); // 2.429.0 KC-CLUB-TAGE-EINKLAPPEN
   if (!el) return melde("Die Nachricht, auf die geantwortet wurde, gibt es nicht mehr.");
   el.scrollIntoView({ behavior: "smooth", block: "center" }); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1600);
+}
+// ---------- KC-CLUB-TAGE-EINKLAPPEN (2.429.0, Wunsch Hansi – wie im Bachkreis) ----------
+// Vergangene Tage im Chat eingeklappt: eine Zeile mit Anzahl und Absendern, rechts das Datum („Mo, 11.11.26“);
+// ältere Wochen (ab 7 Tagen) als eine Zeile „KW 45/26“. Offen bleiben: heute, Tage mit Ungelesenem (Linie „Neue Nachrichten“),
+// beim Suchen und im Rundgang alles. Antippen klappt auf, „⤢ Alle aufklappen“ öffnet alles. ⚙️ → „🧩 Startseite & Ansicht“.
+const NT = { offen: new Map() };
+const ntWT = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+const ntZwei = (n) => String(n).padStart(2, "0");
+const ntTagKey = (iso) => { const d = new Date(iso); return `${d.getFullYear()}-${ntZwei(d.getMonth() + 1)}-${ntZwei(d.getDate())}`; };
+const ntTagKurz = (iso) => { const d = new Date(iso); return `${ntWT[d.getDay()]}, ${ntZwei(d.getDate())}.${ntZwei(d.getMonth() + 1)}.${String(d.getFullYear()).slice(2)}`; };
+function ntKw(iso) {
+  const d = new Date(iso), x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())), wt = x.getUTCDay() || 7;
+  x.setUTCDate(x.getUTCDate() + 4 - wt);
+  const j = new Date(Date.UTC(x.getUTCFullYear(), 0, 1));
+  return `KW ${Math.ceil(((x - j) / 86400000 + 1) / 7)}/${String(x.getUTCFullYear()).slice(2)}`;
+}
+const ntTageAlt = (iso) => { const a = new Date(iso), h = new Date(); return Math.round((new Date(h.getFullYear(), h.getMonth(), h.getDate()) - new Date(a.getFullYear(), a.getMonth(), a.getDate())) / 86400000); };
+const ntTrenner = (iso) => { const t = ntTageAlt(iso); return t === 0 ? "Heute" : t === 1 ? "Gestern" : ntTagKurz(iso); };
+const ntWer = (ns) => { const w = [...new Set(ns.map((m) => (m.eigen ? "Du" : String(m.von || "").split(" ")[0])))]; return w.slice(0, 3).join(", ") + (w.length > 3 ? " …" : ""); };
+const ntAnzahl = (n) => `${n} ${n === 1 ? "Nachricht" : "Nachrichten"}`;
+function naTageHtml(u, blase) {
+  const ns = u.nachrichten;
+  if (!ns.length) return "";
+  const ein = einst("chatEinklappen", true) && !RG.an && !CS.offen, kwAn = einst("chatKW", true);
+  const offen = NT.offen.get(chatId) || new Set(); NT.offen.set(chatId, offen);
+  const tage = [];
+  for (const m of ns) { const k = ntTagKey(m.zeit); if (tage[tage.length - 1]?.key !== k) tage.push({ key: k, zeit: m.zeit, ns: [] }); tage[tage.length - 1].ns.push(m); }
+  const heute = ntTagKey(new Date());
+  const ungelesen = (m) => !m.eigen && (!u.gelesenBis || m.zeit > u.gelesenBis);
+  const mussOffen = (t) => t.key === heute || t.ns.some((m) => m.id === NA.trennerVor || ungelesen(m));
+  const tagOffen = (t) => !ein || mussOffen(t) || offen.has("t:" + t.key);
+  let zu = 0;
+  const tagHtml = (t) => {
+    if (!tagOffen(t)) { zu++; return `<button type="button" class="tag-zu" onclick="naTagUm('t:${t.key}')"><span class="tz-pfeil">▸</span><span class="tz-info">${ntAnzahl(t.ns.length)} · ${esc(ntWer(t.ns))}</span><b class="tz-datum">${ntTagKurz(t.zeit)}</b></button>`; }
+    const kopf = ein && !mussOffen(t) ? `<button type="button" class="tag-trenner auf" id="nt-t-${t.key}" onclick="naTagUm('t:${t.key}')"><span>▾ ${ntTrenner(t.zeit)}</span></button>` : `<div class="tag-trenner" id="nt-t-${t.key}"><span>${ntTrenner(t.zeit)}</span></div>`;
+    return kopf + t.ns.map(blase).join("");
+  };
+  let html = "";
+  for (let i = 0; i < tage.length;) {
+    const t = tage[i];
+    if (ein && kwAn && ntTageAlt(t.zeit) >= 7) { // ganze Kalenderwoche als eine Zeile
+      const wk = ntKw(t.zeit), woche = [];
+      while (i < tage.length && ntTageAlt(tage[i].zeit) >= 7 && ntKw(tage[i].zeit) === wk) woche.push(tage[i++]);
+      if (!(offen.has("w:" + wk) || woche.some(mussOffen))) {
+        zu++; const alle = woche.flatMap((x) => x.ns);
+        html += `<button type="button" class="tag-zu kw" onclick="naTagUm('w:${wk}')"><span class="tz-pfeil">▸</span><span class="tz-info">${ntAnzahl(alle.length)} an ${woche.length} ${woche.length === 1 ? "Tag" : "Tagen"} · ${esc(ntWer(alle))}</span><b class="tz-datum">${wk}</b></button>`;
+        continue;
+      }
+      html += `<button type="button" class="kw-kopf" id="nt-w-${wk.replace(/\W/g, "")}" onclick="naTagUm('w:${wk}')">▾ ${wk}</button>` + woche.map(tagHtml).join("");
+      continue;
+    }
+    html += tagHtml(t); i++;
+  }
+  const leiste = ein && tage.length > 1 ? `<div class="tag-alle">${zu ? `<button type="button" onclick="naTageAlle(true)">⤢ Alle ${tage.length} Tage aufklappen</button>` : `<button type="button" onclick="naTageAlle(false)">⤡ Vergangene Tage einklappen</button>`}</div>` : "";
+  return leiste + html;
+}
+async function naNeuZeichnen() { chatStand = ""; await chatLaden(false); }
+async function naTagUm(k) {
+  const o = NT.offen.get(chatId) || new Set(); NT.offen.set(chatId, o);
+  const auf = !o.has(k); auf ? o.add(k) : o.delete(k);
+  await naNeuZeichnen();
+  if (auf) $(k[0] === "t" ? "nt-t-" + k.slice(2) : "nt-w-" + k.slice(2).replace(/\W/g, ""))?.scrollIntoView({ block: "start", behavior: "smooth" });
+}
+async function naTageAlle(auf) {
+  const o = new Set(); NT.offen.set(chatId, o);
+  if (auf) for (const m of NA.nachrichten.values()) { o.add("t:" + ntTagKey(m.zeit)); o.add("w:" + ntKw(m.zeit)); }
+  await naNeuZeichnen();
+}
+async function naTagAufFuer(id) { // Sprung zu einer Nachricht (Zitat, 📌, Gemerkt): ihren Tag aufklappen
+  const m = NA.nachrichten.get(id); if (!m) return;
+  const o = NT.offen.get(chatId) || new Set(); NT.offen.set(chatId, o); o.add("t:" + ntTagKey(m.zeit)); o.add("w:" + ntKw(m.zeit));
+  await naNeuZeichnen();
 }
 // @-Vorschläge: nur in Unterhaltungen mit mehreren anderen (in Zweiergesprächen überflüssig)
 function naKandidaten() { return (CHAT?.teilnehmer || []).filter((t) => t.person_id !== ICH?.person_id); }
