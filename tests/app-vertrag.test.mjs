@@ -6508,6 +6508,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const bereit = mitTon && audio \? Promise\.race\(\[/.test(html) && /bereit\.then\(\(\) => \{ if \(u\.isConnected\) u\._t = setTimeout\(ruf, (?:350|kkLautsprecherWecken\(mitTon\))\); \}\)/.test(html), "wartet auf den Ton (2.436.0: und weckt den Lautsprecher)");
   assert.ok(/api\("diagnose", \{ art: "kuckuck", daten: \{ stunde: h, rufe: n, gespielt,/.test(html), "Diagnose einmal je Sitzung");
 }
+// 2.438.0 KC-CLUB-BUEHNE-KETTE-HAMPELMANN (Wunsch Hansi „Hampelmann in die Power-Kette“)
+{
+  assert.ok(/\{ a: "kette-hampel", t: "Hampelmann", k: "Hampelmann", s: \[/.test(html) && /const hampel = \(t\) => \{/.test(html) && /"kette-hampel": hampel/.test(html), "8. Bewegung Hampelmann (vor dem Sprung), berechnet wie die anderen");
+  assert.ok(/kette: 1, sek: 64, pause: 15,/.test(html) && /je acht Bewegungen[^"]*Hampelmann, Sprung\./.test(html) && /zwei Hampelmänner, ein Sprung in die Luft/.test(html), "4 ganze Ketten à 8 × 2 s; Begrüßung und Erklärung nennen den Hampelmann");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -9860,18 +9865,18 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   const b = html.slice(html.indexOf("const BW_KETTE_TAKT"), html.indexOf("function bwKetteTick("));
   const sekU = "const bwSekU = (u) => (u && u.sek) || BW_SEK, bwPauseU = (u) => (u && u.pause) || BW_SCHUETTELN;";
   const K = new Function("BW_SEK", "BW_SCHUETTELN", `${sekU}\n${b}; return { BW_KETTE, BW_KETTE_SCHRITTE, BW_KETTE_RUNDE, BW_KETTE_LOB, BW_KETTE_MARKIG, bwKetteJetzt };`)(30, 6);
-  assert.deepEqual(K.BW_KETTE_SCHRITTE.map((s) => s.a), ["kette-knie-r", "kette-knie-l", "kette-schritt-l", "kette-schritt-r", "kette-hocke", "kette-hula", "kette-sprung"], "Reihenfolge: Knie rechts, Knie links, Schritt links, Schritt rechts, Hocke, Hula, Sprung");
+  assert.deepEqual(K.BW_KETTE_SCHRITTE.map((s) => s.a), ["kette-knie-r", "kette-knie-l", "kette-schritt-l", "kette-schritt-r", "kette-hocke", "kette-hula", "kette-hampel", "kette-sprung"], "Reihenfolge: Knie rechts, Knie links, Schritt links, Schritt rechts, Hocke, Hula, Hampelmann (2.439.0), Sprung");
   // im Durchgang alle 2 s die nächste Bewegung, nach dem Sprung wieder von vorn
   const u = { ...K.BW_KETTE, runde: 1 }, folge = [];
   for (let rest = u.sek; rest >= 1; rest--) folge.push(K.bwKetteJetzt({ plan: [u], i: 0, phase: "uebung", rest }).a);
-  assert.equal(folge[0], "kette-knie-r"); assert.equal(folge[2], "kette-knie-l"); assert.equal(folge[12], "kette-sprung"); assert.equal(folge[14], "kette-knie-r", "von vorn");
-  assert.ok(u.sek === 56 && u.sek % (2 * 7) === 0 && u.pause === 15, "4 ganze Ketten je Durchgang, Verschnaufpause");
+  assert.equal(folge[0], "kette-knie-r"); assert.equal(folge[2], "kette-knie-l"); assert.equal(folge[12], "kette-hampel"); assert.equal(folge[14], "kette-sprung"); assert.equal(folge[16], "kette-knie-r", "von vorn");
+  assert.ok(u.sek === 64 && u.sek % (2 * 8) === 0 && u.pause === 15, "4 ganze Ketten je Durchgang, Verschnaufpause");
   assert.equal(K.bwKetteJetzt({ plan: [u], i: 0, phase: "schuetteln", rest: 5 }), null, "in der Pause keine Kette");
   assert.ok([1, 2, 3].every((r) => K.BW_KETTE_RUNDE[r].start && K.BW_KETTE_RUNDE[r].ende) && /eine Runde geht noch/.test(K.BW_KETTE_RUNDE[2].ende) && /nicht nachlassen/.test(K.BW_KETTE_RUNDE[3].start), "3 Durchgänge mit eigener An- und Absage");
   for (const t of ["Toll gemacht!", "Super Einsatz von dir!", "Ja, so geht’s gut – weiter so!", "Weiter so, auch wenn’s brennt in den Beinen!", "Jetzt nicht nachlassen!"]) assert.ok(K.BW_KETTE_LOB.includes(t), "Lob: " + t);
   assert.ok(K.BW_KETTE_MARKIG.length >= 8 && K.BW_KETTE_SCHRITTE.every((s) => s.s.length >= 4), "markige Sprüche, je Bewegung mehrere Ansagen");
   // 2.399.0: Bewegungen werden in bwKetteStil berechnet (siehe Abschnitt 2.399.0)
-  for (const a of ["kette-knie-r", "kette-knie-l", "kette-schritt-l", "kette-schritt-r", "kette-hocke", "kette-hula", "kette-sprung"]) assert.ok(html.includes(`"${a}": `), "Bewegung " + a);
+  for (const a of ["kette-knie-r", "kette-knie-l", "kette-schritt-l", "kette-schritt-r", "kette-hocke", "kette-hula", "kette-hampel", "kette-sprung"]) assert.ok(html.includes(`"${a}": `), "Bewegung " + a);
   // Plan, Auswahl, Ablauf
   assert.ok(/\["kette", "🔥 Power-Kette"\]\]/.test(html) && /if \(modus === "kette"\) return \[1, 2, 3\]\.map\(\(r\) => \(\{ \.\.\.BW_KETTE, runde: r,/.test(html), "eigene Auswahl, feste 3 Durchgänge");
   assert.ok(/w\.modus === "kette" \? `<span class="es-k an bw-kette-info">🔁 3 Durchgänge · ca\. 4 Min\.<\/span>`/.test(html) && /kette: \[0, ""\] \}\[w\.modus\] \|\| \[0, ""\]/.test(html), "Auswahl ohne Minuten-Knöpfe, Twinkey steht");
@@ -9881,7 +9886,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   const r = html.slice(html.indexOf("const bwUhrText"), html.indexOf("function bwZahl()"));
   const { bwRestZeit } = new Function("BW_BEREIT", "BW_SEK", "BW_SCHUETTELN", r + "; return { bwRestZeit };")(7, 30, 6);
   const plan = [1, 2, 3].map((runde) => ({ ...K.BW_KETTE, runde }));
-  assert.equal(bwRestZeit({ phase: "bereit", rest: 7, i: 0, plan }), 234, "Power-Kette dauert knapp 4 Minuten");
+  assert.equal(bwRestZeit({ phase: "bereit", rest: 7, i: 0, plan }), 258, "Power-Kette dauert gut 4 Minuten (2.438.0: 3 × (7 + 64 + 15))");
   assert.equal(bwRestZeit({ phase: "uebung", rest: 20, i: 1, plan: [{}, {}, { sek: 56, pause: 15 }] }), 20 + 6 + 7 + 56 + 15, "gemischte Dauer");
 }
 
@@ -10367,10 +10372,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/const b = 11 \* k, hoch = 20 \* k/.test(g) && /c\.strokeStyle = "#2c2e38"; c\.lineWidth = 1\.3 \* k; stein\(\); c\.stroke\(\);/.test(g), "größer, mit dunklem Rand");
   assert.ok(/c\.fillStyle = "#f4f5fa"; c\.fillText\("R\.I\.P\.", gx, oben \+ 4\.5 \* k\);/.test(g) && /kreuz\(0, 0, "#3a3c48"\);/.test(g), "helle Inschrift mit Schattenkante, Kreuz");
 }
-// 2.438.0 KC-CLUB-INFO-LAUFBAND: gerahmtes Info-Feld zwischen Überschrift und den 3 Feldern, Meldungen aus den Startdaten
+// 2.439.0 KC-CLUB-INFO-LAUFBAND: gerahmtes Info-Feld zwischen Überschrift und den 3 Feldern, Meldungen aus den Startdaten
 {
-  assert.ok(/\$\{kopf\}<\/div>\n    <div class="il" id="infoLaufband"><\/div><!-- 2\.438\.0 KC-CLUB-INFO-LAUFBAND -->\n    <div class="kacheln3">/.test(programm), "zwischen Überschrift und den 3 Feldern");
-  assert.ok(/ilZeigen\(\); \/\/ 2\.438\.0 KC-CLUB-INFO-LAUFBAND/.test(programm) && /closest\?\.\("\.wtage, \.il"\)/.test(programm), "nach jedem Neuzeichnen gefüllt, eigenes Wischen");
+  assert.ok(/\$\{kopf\}<\/div>\n    <div class="il" id="infoLaufband"><\/div><!-- 2\.439\.0 KC-CLUB-INFO-LAUFBAND -->\n    <div class="kacheln3">/.test(programm), "zwischen Überschrift und den 3 Feldern");
+  assert.ok(/ilZeigen\(\); \/\/ 2\.439\.0 KC-CLUB-INFO-LAUFBAND/.test(programm) && /closest\?\.\("\.wtage, \.il"\)/.test(programm), "nach jedem Neuzeichnen gefüllt, eigenes Wischen");
   const m = programm.slice(programm.indexOf("function ilMeldungen("), programm.indexOf("function ilHtml("));
   assert.ok(/id: "eingang", stufe: "rot"/.test(m) && /id: "anmelden:"/.test(m) && /id: "buero", stufe: "orange"/.test(m) && /id: "_ok", stufe: "weiss", sym: "👍", t: "Alles erledigt"/.test(m) && /id: "_tipp"/.test(m), "Stufen, Alles erledigt, Tipp des Tages");
   assert.ok(!/api\(/.test(m), "keine zusätzliche Server-Abfrage");
