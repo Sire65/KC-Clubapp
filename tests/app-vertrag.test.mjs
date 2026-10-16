@@ -2506,7 +2506,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   // App
   assert.match(html, /const NOT_SCHREIBEN = \["nachricht_senden", "treffen_antwort", "status_setzen", "pinnwand_anheften"\]/, "App kennt die vier");
   assert.match(html, /if \(schreiben\) daten = \{ \.\.\.daten, notId: notNeueId\(\) \};/, "notId je Eintrag");
-  assert.match(html, /\.join\(""\) \+ notWartendeHtml\(chatId\)/, "⏳-Blasen im Chat");
+  assert.match(html, /naTageHtml\(u, blaseHtml\) \+ notWartendeHtml\(chatId\)/, "⏳-Blasen im Chat"); // 2.428.0: Blasen über naTageHtml
   assert.match(html, /setTimeout\(notNachtragen, 1500\); \/\/ KC-CLUB-NOTBETRIEB-STUFE2/, "nach Rückkehr nachtragen");
   assert.match(html, /\$\{w > 1 \? "warten" : "wartet"\}/, "Zahl im Band");
   assert.ok(lies("docs/NOTBETRIEB.md").includes("Stufe 2"), "Doku");
@@ -10210,4 +10210,17 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(mitTon && !gespielt && !u\._nochmal\) \{ kkTonHinweis\(/.test(kk), "nach stummem Rufen: nochmal mit Ton anbieten");
   assert.ok(/audio = audio \|\| new \(window\.AudioContext \|\| window\.webkitAudioContext\)\(\); audio\.resume\?\.\(\); kkAufnahmeLaden\(\); \} catch \{\} \/\/ im Tippen = erlaubt/.test(kk), "Ton im Tippen freigeben");
   assert.ok(/addEventListener\("pointerdown", \(\) => \{ try \{ if \(audio && audio\.state === "suspended"\) audio\.resume\(\); \} catch \{\} \}, \{ capture: true, passive: true \}\);/.test(programm), "Tippen gibt angehaltenen Ton frei");
+// 2.428.0 KC-CLUB-TAGE-EINKLAPPEN / KC-CLUB-NETZ-SYMBOL: Chat-Tage einklappen, Router/Satellit in Nachrichten
+{
+  assert.ok(/const blaseHtml = \(m\) => `\$\{m\.id === NA\.trennerVor/.test(programm) && /\$\("chat"\)\.innerHTML = naTageHtml\(u, blaseHtml\) \+ notWartendeHtml\(chatId\)/.test(programm), "Chat zeichnet über naTageHtml");
+  assert.ok(/const ein = einst\("chatEinklappen", true\) && !RG\.an && !CS\.offen/.test(programm), "Rundgang und Suche: alles offen");
+  assert.ok(/const mussOffen = \(t\) => t\.key === heute \|\| t\.ns\.some\(\(m\) => m\.id === NA\.trennerVor \|\| ungelesen\(m\)\)/.test(programm), "heute und Ungelesenes offen");
+  assert.ok(/if \(!el && NA\.nachrichten\.has\(id\)\) return naTagAufFuer\(id\)/.test(programm), "Sprung klappt den Tag auf");
+  assert.ok(/id="setChatEinklappen"/.test(seite) && /id="setChatKW"/.test(seite) && /id="setNetzSymbol"/.test(seite) && /id="setNetzBlinken"/.test(seite), "Schalter in den Einstellungen");
+  assert.ok(/id="naNetz" onclick="netzBlatt\(\)"/.test(seite), "Symbol oben links in Nachrichten");
+  assert.ok(/if \(wert == null\) return \{ stufe: null, farbe: "grau"/.test(programm), "ohne Messung grau (nie „gut“)");
+  // Kalenderwoche wie ISO 8601
+  const kwCode = programm.slice(programm.indexOf("const ntZwei"), programm.indexOf("const ntTageAlt"));
+  const ntKw = new Function(kwCode + "; return ntKw;")();
+  assert.equal(ntKw("2026-11-11T10:00:00"), "KW 46/26"); assert.equal(ntKw("2027-01-01T10:00:00"), "KW 53/26"); assert.equal(ntKw("2026-01-01T10:00:00"), "KW 1/26");
 }

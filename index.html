@@ -1986,6 +1986,29 @@
   /* KC-CLUB-RUHIGE-EINGABE / -NEU-LINIE / -NACH-UNTEN / -SPRACHTEMPO (1.12.0) */
   .rund.zustell-knopf { width: 34px; height: 34px; min-width: 34px; font-size: .95rem; opacity: .55; }
   .rund.zustell-knopf.an { opacity: 1; background: var(--rot); color: #fff; }
+  /* 2.428.0 KC-CLUB-TAGE-EINKLAPPEN: Tage im Chat (Datum rechts, ältere Wochen als KW) */
+  .tag-trenner { align-self: center; margin: 6px 0 2px; padding: 2px 12px; border-radius: 999px; background: var(--karte2); color: var(--grau); font-size: .78rem; font-weight: 800; }
+  button.tag-trenner { border: none; font-family: inherit; cursor: pointer; }
+  .tag-alle { display: flex; justify-content: center; }
+  .tag-alle button { border: none; background: none; color: var(--grau); font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; text-decoration: underline dotted; }
+  .tag-zu { display: flex; align-items: center; gap: 8px; width: 100%; border: 1px solid var(--linie); background: var(--karte); color: var(--text); border-radius: 12px; padding: 8px 12px; font: inherit; cursor: pointer; text-align: left; box-shadow: var(--schatten); }
+  .tag-zu .tz-pfeil { color: var(--grau); }
+  .tag-zu .tz-info { flex: 1; min-width: 0; font-size: .85rem; color: var(--grau); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tag-zu .tz-datum { flex: none; font-size: .85rem; }
+  .tag-zu.kw { background: var(--karte2); border-style: dashed; } .tag-zu.kw .tz-datum { background: var(--karte); border-radius: 8px; padding: 1px 8px; }
+  .kw-kopf { align-self: center; border: 1px dashed var(--linie); background: var(--karte2); color: var(--text); border-radius: 10px; padding: 3px 12px; font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; margin: 6px 0 2px; }
+  /* 2.428.0 KC-CLUB-NETZ-SYMBOL: Router (WLAN) / Satellit (Mobilfunk) oben links in Nachrichten */
+  .na-netz { flex: none; border: none; background: none; padding: 0; width: 42px; height: 34px; cursor: pointer; }
+  .nz-svg { width: 40px; height: 32px; display: block; }
+  .nz-gross { display: flex; justify-content: center; } .nz-gross .nz-svg { width: 96px; height: 77px; }
+  .nz-blink .nz-w { animation: nzWelle 1.8s ease-in-out infinite; } .nz-blink .nz-w2 { animation-delay: .3s; } .nz-blink .nz-w3 { animation-delay: .6s; }
+  .nz-blink .nz-led { animation: nzLed 1.1s steps(2, jump-none) infinite; } .nz-blink .nz-l2 { animation-delay: .35s; } .nz-blink .nz-l3 { animation-delay: .7s; }
+  @keyframes nzWelle { 0%, 100% { opacity: .25; } 45% { opacity: 1; } }
+  @keyframes nzLed { 0% { opacity: 1; } 100% { opacity: .2; } }
+  @media (prefers-reduced-motion: reduce) { .nz-blink .nz-w, .nz-blink .nz-led { animation: none; } }
+  .nz-balken { display: inline-flex; align-items: flex-end; gap: 2px; height: 16px; margin-right: 8px; }
+  .nz-balken i { width: 4px; border-radius: 1px; background: rgba(128,128,128,.3); } .nz-balken i:nth-child(1) { height: 25%; } .nz-balken i:nth-child(2) { height: 50%; } .nz-balken i:nth-child(3) { height: 75%; } .nz-balken i:nth-child(4) { height: 100%; }
+  .nz-balken.gruen.s4 i, .nz-balken.gruen.s3 i:nth-child(-n+3) { background: #2e9d5b; } .nz-balken.gelb.s2 i:nth-child(-n+2) { background: #d9a21b; } .nz-balken.rot.s1 i:nth-child(1) { background: #d0453f; }
   .neu-trenner { align-self: center; margin: 8px 0; padding: 4px 14px; border-radius: 999px; background: var(--rot); color: #fff; font-size: .8rem; font-weight: 800; box-shadow: var(--schatten); }
   .nach-unten { position: fixed; right: 14px; bottom: calc(var(--eingabeHoehe, 200px) + 10px); z-index: 30; width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--karte); color: inherit; font-size: 1.2rem; box-shadow: var(--schatten); cursor: pointer; }
   .nach-unten .punkt-neu { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; border-radius: 50%; background: var(--rot); border: 2px solid var(--karte); }
@@ -4436,7 +4459,7 @@
   <!-- NACHRICHTEN -->
   <section id="v-nachrichten" class="versteckt">
     <!-- 1.32.1 (Hinweis Hansi): „＋ Neu“ immer sichtbar in der Kopfzeile, die übrigen Knöpfe beschriftet in einer eigenen Reihe -->
-    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>💬 Nachrichten</h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung()" title="Notfall-Meldung sofort an alle – Push, E-Mail, WhatsApp, SMS">🚨 SOS</button><button class="knopf haupt klein" onclick="uhNeu()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><button type="button" class="na-netz" id="naNetz" onclick="netzBlatt()" aria-label="Verbindung"></button><h2>💬 Nachrichten</h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung()" title="Notfall-Meldung sofort an alle – Push, E-Mail, WhatsApp, SMS">🚨 SOS</button><button class="knopf haupt klein" onclick="uhNeu()">＋ Neu</button></div>
     <div class="kom-leiste"><button class="knopf klein" onclick="gruppeForm()">👥 Gruppe</button><button class="knopf klein" id="uhFavKnopf" onclick="uhFavAnsicht(!UH.favAnsicht)" title="Deine Favoriten: Chats mit ⭐ und die, in denen du am meisten schreibst">⭐ Favoriten</button><button class="knopf klein" onclick="gemerktZeigen()" title="Nachrichten, die du mit „⭐ merken“ markiert hast">⭐ Gemerkt</button><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail">🧪 Test</button></div>
     <div id="onlineLeiste"></div>
     <div id="uhMarkLeiste"></div>
@@ -4781,9 +4804,13 @@
         <div class="reg-effekt-wahl" id="sendeEffektWahl"></div><button type="button" class="knopf klein" onclick="sendeEffektVorschau(this)">▶ Vorschau</button> <button type="button" class="knopf klein" onclick="blaulichtVorschau(this)">🚨 Vorschau „wichtig“</button></div>
       <div class="schalter"><div><b>🔄 Kacheln umdrehen</b><div class="hinweis">Doppelt auf eine Kachel tippen – hinten stehen Schnellaktionen (z. B. „Neue Nachricht“). Gilt für dieses Gerät.</div></div><input type="checkbox" id="setKachelRueck" onchange="einstellung('kachelrueck', this.checked)"></div> <!-- KC-CLUB-KACHEL-RUECKSEITE 2.54.0 -->
       <div class="schalter"><div><b>🗑️ Reißwolf beim Löschen</b><div class="hinweis">Gelöschtes läuft sichtbar durch den Aktenvernichter. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setReisswolf" onchange="einstellung('reisswolf', this.checked)"></div> <!-- KC-CLUB-REISSWOLF 2.54.0 -->
+      <div class="schalter"><div><b>📡 Verbindungs-Symbol in Nachrichten</b><div class="hinweis">Oben links in 💬 Nachrichten: Router im WLAN, Satellit im Mobilfunk – antippen zeigt die Verbindungsqualität. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setNetzSymbol" onchange="einstellung('netzSymbol', this.checked);netzSymbolZeigen()"></div> <!-- KC-CLUB-NETZ-SYMBOL 2.428.0 -->
+      <div class="schalter"><div><b>✨ Verbindungs-Symbol blinkt</b><div class="hinweis">Wellen und Lämpchen blinken (aus = ruhiges Symbol).</div></div><input type="checkbox" id="setNetzBlinken" onchange="einstellung('netzBlinken', this.checked);netzSymbolZeigen()"></div>
     </details>
     <details class="karte" data-klappe="startseite">
       <summary>🧩 Startseite &amp; Ansicht</summary>
+      <div class="schalter"><div><b>📂 Vergangene Tage im Chat einklappen</b><div class="hinweis">Nur heute und Ungelesenes offen – frühere Tage als eine Zeile, rechts das Datum (z. B. „Mo, 11.11.26“). Antippen klappt auf. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setChatEinklappen" onchange="einstellung('chatEinklappen', this.checked)"></div> <!-- KC-CLUB-TAGE-EINKLAPPEN 2.428.0 -->
+      <div class="schalter"><div><b>📅 Ältere Wochen als Kalenderwoche</b><div class="hinweis">Nachrichten, die älter als 7 Tage sind, als eine Zeile je Woche („KW 45/26“).</div></div><input type="checkbox" id="setChatKW" onchange="einstellung('chatKW', this.checked)"></div>
       <!-- KC-CLUB-ESELSOHR (2.292.0) -->
       <div class="schalter"><div><b>📄 Eselsohr am Kopf</b><div class="hinweis">Unten rechts am Kopf doppelt tippen (oder nach links ziehen) – der Kopf dreht sich um: 🖼️ Diashow, 🖍️ Tafel, 📋 Flipchart, 🕰️ große Uhr, 🎭 Bühne für Bewegung, 🪞 Spiegel. Nochmal doppelt tippen dreht zurück.</div></div><input type="checkbox" id="setEselsohr" checked onchange="eselsohrSchalter(this.checked)"></div>
       <!-- KC-CLUB-BEWEGUNG-EINLADUNG (2.314.0) -->
