@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.438.0 – 2026-10-16 – Power-Kette mit Hampelmann
+Neue 8. Bewegung in der Power-Kette: Hampelmann (zweimal je 2 s) vor dem Sprung – mit kleinem Hopser, Beine auf, Arme über den Kopf.
+
 ## 2.437.0 – 2026-10-16 – 🪦 Halloween: Grabstein deutlich mit lesbarer Inschrift (KC-CLUB-GRABSTEIN-DEUTLICH)
 Fund Hansi: „Der Grabstein ist nicht gut zu erkennen, der muss deutlicher – die Inschrift sieht man nicht.“
 - Größer (gut ein Drittel), heller Stein mit Verlauf und **dunklem Rand**, **Mondlicht-Kante** links und leisem Schein dahinter – hebt sich vom dunklen Halloween-Hintergrund ab.

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.437.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.438.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15995,7 +15995,7 @@ const BW_UEBUNGEN = [
 const BW_MODI = [["sitzen", "🪑 Im Sitzen"], ["stehen", "🧍 Im Stehen"], ["kueche", "🥄 Küchenhelfer"], ["kette", "🔥 Power-Kette"]];
 // ---------- 2.370.0 KC-CLUB-BUEHNE-POWERKETTE (Wunsch Hansi): neue Übung im Stehen – sieben Bewegungen als Kette, immer wieder von vorn ----------
 // Knie rechts hoch, Knie links hoch, Schritt nach links, Schritt nach rechts, Kniebeuge mit Armen nach vorn, Hula-Hoop-Hüfte, Sprung in die Luft.
-// Je Bewegung 4 Schläge (2 s bei 120 Schlägen/Min.), eine Kette 14 s, ein Durchgang 4 Ketten (56 s); 3 Durchgänge mit Verschnaufpause.
+// Je Bewegung 4 Schläge (2 s bei 120 Schlägen/Min.), eine Kette 16 s (2.438.0: 8 Bewegungen), ein Durchgang 4 Ketten (64 s); 3 Durchgänge mit Verschnaufpause.
 // Twinkey turnt spiegelbildlich vor (wie ein Vorturner): „rechts“ ist auf deiner rechten Seite. Dazu markige Ansagen und viel Lob.
 const BW_KETTE_TAKT = 2; // Sekunden je Bewegung
 const BW_KETTE_SCHRITTE = [
@@ -16007,15 +16007,17 @@ const BW_KETTE_SCHRITTE = [
   { a: "kette-schritt-r", t: "Schritt nach rechts", k: "Schritt rechts", s: ["Schritt nach rechts!", "Rüber nach rechts!", "Rechts rüber!", "Und nach rechts!"] },
   { a: "kette-hocke", t: "Kniebeuge – Arme nach vorn", k: "Hocke", s: ["Hocke – Arme vor!", "Runter – Arme lang!", "Po nach hinten!", "Tief – Arme vor!"] },
   { a: "kette-hula", t: "Hula-Hoop-Hüfte", k: "Hüfte kreisen", s: ["Hüfte kreisen!", "Hula-Hula!", "Hüfte schwingen!", "Kreisen lassen!"] },
+  // 2.438.0 KC-CLUB-BUEHNE-KETTE-HAMPELMANN (Wunsch Hansi „Hampelmann in die Power-Kette“): 8. Bewegung vor dem Sprung – zwei Hampelmänner je 2 s
+  { a: "kette-hampel", t: "Hampelmann", k: "Hampelmann", s: ["Hampelmann!", "Hampelmann – los!", "Arme hoch, Beine auf!", "Und hampeln!"] },
   { a: "kette-sprung", t: "Sprung in die Luft", k: "Sprung", s: ["Sprung – hopp!", "Und hopp!", "Abheben – hopp!", "Springen – hopp!"] },
 ];
-const BW_KETTE_H = "Im Stehen, immer der Reihe nach: rechtes Knie hoch, linkes Knie hoch, ein Schritt nach links, ein Schritt nach rechts, Kniebeuge mit den Armen nach vorn, Hüfte kreisen wie beim Hula-Hoop, ein Sprung in die Luft – und wieder von vorn. Wer mag, hält sich an der Stuhllehne fest und hüpft nur ganz klein.";
-const BW_KETTE_START = "Hallo! Heute machen wir die Power-Kette: drei Durchgänge mit je sieben Bewegungen. Rechtes Knie, linkes Knie, Schritt links, Schritt rechts, Hocke mit Armen nach vorn, Hüfte kreisen, Sprung. Mach nur so viel, wie dir guttut!";
-const BW_KETTE = { id: "powerkette", t: "Power-Kette", g: "kette", a: "kette-knie-r", kette: 1, sek: 56, pause: 15, h: BW_KETTE_H };
+const BW_KETTE_H = "Im Stehen, immer der Reihe nach: rechtes Knie hoch, linkes Knie hoch, ein Schritt nach links, ein Schritt nach rechts, Kniebeuge mit den Armen nach vorn, Hüfte kreisen wie beim Hula-Hoop, zwei Hampelmänner, ein Sprung in die Luft – und wieder von vorn. Wer mag, hält sich an der Stuhllehne fest und hüpft nur ganz klein.";
+const BW_KETTE_START = "Hallo! Heute machen wir die Power-Kette: drei Durchgänge mit je acht Bewegungen. Rechtes Knie, linkes Knie, Schritt links, Schritt rechts, Hocke mit Armen nach vorn, Hüfte kreisen, Hampelmann, Sprung. Mach nur so viel, wie dir guttut!";
+const BW_KETTE = { id: "powerkette", t: "Power-Kette", g: "kette", a: "kette-knie-r", kette: 1, sek: 64, pause: 15, h: BW_KETTE_H };
 const BW_KETTE_RUNDE = {
   1: { h: BW_KETTE_H, start: "Durchgang 1 von 3 – wir legen los!", ende: "Toll gemacht! Durchgang 1 ist geschafft. Kurz verschnaufen und ausschütteln!" },
-  2: { h: "Gleiche Kette wie eben: Knie rechts, Knie links, Schritt links, Schritt rechts, Hocke mit Armen nach vorn, Hula-Hüfte, Sprung.", start: "Durchgang 2 – gleiches Spiel, gleiche Power!", ende: "Super Einsatz von dir! Kurz durchatmen – na komm, eine Runde geht noch!" },
-  3: { h: "Letzte Runde! Knie rechts, Knie links, Schritt links, Schritt rechts, Hocke, Hula-Hüfte, Sprung.", start: "Letzter Durchgang – jetzt nicht nachlassen!", ende: "Geschafft! Drei Durchgänge Power-Kette – das war ganz große Klasse!" },
+  2: { h: "Gleiche Kette wie eben: Knie rechts, Knie links, Schritt links, Schritt rechts, Hocke mit Armen nach vorn, Hula-Hüfte, Hampelmann, Sprung.", start: "Durchgang 2 – gleiches Spiel, gleiche Power!", ende: "Super Einsatz von dir! Kurz durchatmen – na komm, eine Runde geht noch!" },
+  3: { h: "Letzte Runde! Knie rechts, Knie links, Schritt links, Schritt rechts, Hocke, Hula-Hüfte, Hampelmann, Sprung.", start: "Letzter Durchgang – jetzt nicht nachlassen!", ende: "Geschafft! Drei Durchgänge Power-Kette – das war ganz große Klasse!" },
 };
 const BW_KETTE_LOB = ["Toll gemacht!", "Super Einsatz von dir!", "Ja, so geht’s gut – weiter so!", "Weiter so, auch wenn’s brennt in den Beinen!", "Jetzt nicht nachlassen!",
   "Genau so – du ziehst das durch!", "Stark – dranbleiben!", "Klasse Rhythmus – weiter!", "Na komm, eine Kette geht noch!", "Das sieht richtig sportlich aus!"];
@@ -16036,7 +16038,7 @@ function bwKetteTick(L, u) { // 2.399.0: genau beim Bewegungswechsel ein kurzes 
   bwSag(s.s[nr % s.s.length], true);
 }
 // ----- 2.399.0 KC-CLUB-BUEHNE-KETTE-ECHT (Wunsch Hansi „Bewegungen flüssiger und realitätsnäher – Hüftschwung, Schritte usw.“) -----
-// Die 7 Bewegungen der Power-Kette werden beim ersten Gebrauch berechnet (alle 4 % ein Bild, linear dazwischen) und als <style> eingehängt –
+// Die 8 Bewegungen (2.438.0: + Hampelmann) der Power-Kette werden beim ersten Gebrauch berechnet (alle 4 % ein Bild, linear dazwischen) und als <style> eingehängt –
 // so bleibt die Startdatei klein. Knie beugen sich (Oberschenkel von vorn verkürzt, Unterschenkel hängt mit), die Füße bleiben am Boden,
 // das Becken verlagert sich übers Standbein (Hüftschwung), Seitschritt = Fuß raus → Gewicht rüber → anderer Fuß ran, Hocke senkt die Hüfte,
 // Hula kreist das Becken (zwei Kreise je Bewegung), Sprung mit Ausholen und weicher Landung. Spiegelbildlich wie ein Vorturner (rechts = …R).
@@ -16086,7 +16088,13 @@ function bwKetteStil() {
     for (const [sd, v] of [["L", 1], ["R", -1]]) { d["os" + sd] = tr({ sy: 1 - knick }); d["ub" + sd] = tr({ dy: -OS * knick }); d["ob" + sd] = tr({ rot: 6 * v * flug }); }
     d.oaL = tr({ rot: 10 + arm }); d.oaR = tr({ rot: -10 - arm }); d.uaL = tr({ rot: -12 * flug }); d.uaR = tr({ rot: 12 * flug }); return d;
   };
-  const BEW = { "kette-knie-r": (t) => knie(t, "R"), "kette-knie-l": (t) => knie(t, "L"), "kette-schritt-l": (t) => schritt(t, "L"), "kette-schritt-r": (t) => schritt(t, "R"), "kette-hocke": hocke, "kette-hula": hula, "kette-sprung": sprung };
+  const hampel = (t) => { // 2.438.0: zwei Hampelmänner – kleiner Hopser raus (Beine auf, Arme über den Kopf), Hopser zurück, weich in den Knien
+    const u = (t * 2) % 1, auf = ease(win(u, .06, .34)) * (1 - ease(win(u, .56, .9))), hop = bump(u, .02, .3) + bump(u, .52, .8), knick = .1 * (bump(u, .28, .44) + bump(u, .8, .96)), d = {};
+    d.ganz = tr({ dy: -5 * hop + OS * knick }); d.oben = tr({ dy: .8 * hop });
+    for (const [sd, v] of [["L", 1], ["R", -1]]) { d["ob" + sd] = tr({ rot: 15 * v * auf }); d["os" + sd] = tr({ sy: 1 - knick }); d["ub" + sd] = tr({ dy: -OS * knick, rot: -3 * v * auf }); }
+    d.oaL = tr({ rot: 10 + 152 * auf }); d.oaR = tr({ rot: -10 - 152 * auf }); d.uaL = tr({ rot: -14 * auf }); d.uaR = tr({ rot: 14 * auf }); return d;
+  };
+  const BEW = { "kette-hampel": hampel, "kette-knie-r": (t) => knie(t, "R"), "kette-knie-l": (t) => knie(t, "L"), "kette-schritt-l": (t) => schritt(t, "L"), "kette-schritt-r": (t) => schritt(t, "R"), "kette-hocke": hocke, "kette-hula": hula, "kette-sprung": sprung };
   const SEL = { ganz: ".bw-ganz", oben: ".bw-oben", beine: ".bw-beine", hand: ".bw-hand" }, sel = (e) => SEL[e] || ".bw-" + e;
   let css = `.bw-figur[class*="bw-a-kette-"] .bw-beine{transform-origin:60px 152px}.bw-figur[class*="bw-a-kette-"] .bw-osL,.bw-figur[class*="bw-a-kette-"] .bw-osR{transform-box:fill-box;transform-origin:50% 0}`;
   for (const [name, fn] of Object.entries(BEW)) {
@@ -16304,7 +16312,7 @@ async function bwLos() {
   // 2.299.2 (Wunsch Hansi): kurze Begrüßung vorweg – die erste Vorbereitung dauert dafür etwas länger
   BW.lauf.rest = BW_BEREIT + 6;
   BWM.stufe = 1; bwLaufZeigen(true); const nimm0 = bwNimmDinge(plan[0]);
-  if (plan[0].kette) bwSag(BW_KETTE_START, false, "Hallo! Gleich geht’s los mit der Power-Kette – 3 Durchgänge, je 7 Bewegungen."); // 2.399.0: ~15 s statt ~32 s
+  if (plan[0].kette) bwSag(BW_KETTE_START, false, "Hallo! Gleich geht’s los mit der Power-Kette – 3 Durchgänge, je 8 Bewegungen."); // 2.399.0: ~15 s statt ~32 s
   else bwSag(`${BW_BEGRUESSUNG} Als Erstes: ${plan[0].t}.${nimm0.length ? ` Nimm ${bwAufzaehlen(nimm0.map((x) => x[1]))}.` : ""} ${plan[0].h}`, false, BW_BEGRUESSUNG);
   clearInterval(BW.takt); BW.takt = setInterval(bwTick, 1000);
 }
