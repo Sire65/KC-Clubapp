@@ -17,6 +17,16 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.436.0 – 2026-10-16 – 🎃 Halloween unten: Grab mit Skelett, Katze, Hexenkessel, Süßes oder Saures · Hexe fliegt tiefer (KC-CLUB-HALLOWEEN-UNTEN) · 🐦 Kuckuck: Lautsprecher wecken, Rufe mitzählen
+Fund Hansi: „Die Hexe hat keine gute Flugbahn, die fliegt genau hinter dem Stück mit den LEDs – besser ein Stück tiefer. Und unten muss noch mehr passieren.“ Gewählt: Grab mit Skelett, schwarze Katze, Hexenkessel, Süßes oder Saures.
+- **Flughöhe:** Hexe und kleine Geister fliegen jetzt **unterhalb der Lämpchen-Leiste** – deren Lage wird gemessen (sie hängt davon ab, wie viel im Kopf steht); reicht der Platz nicht, so tief wie möglich über dem Boden.
+- **🪦 Grab mit Skelett:** Grabstein „R.I.P.“ mit Erdhügel; eine Knochenhand greift heraus und winkt, das Skelett klettert heraus, tanzt („Klapper!“) und zerfällt zu einem Knochenhaufen, der versinkt.
+- **🐈‍⬛ Schwarze Katze** mit leuchtendem Auge schleicht zweimal über den Boden; auf dem ersten Weg kracht mitten im Bild ein Blitz – sie macht einen Buckel, sträubt den Schwanz: „Fauch!“
+- **🧪 Hexenkessel** über flackerndem Feuer, grünes Gebräu blubbert, grüner Dampf steigt auf. Zum Schluss fliegt die Hexe erst zum Kessel und **rührt** darin (es blubbert wild), dann steigt sie auf und zaubert.
+- **🐦 Kuckucksuhr** (Fund Hansi „hat 18 angezeigt, aber nach 4 Rufen war der Kuckuck weg“): Die Diagnose zeigt 6 Rufe gezählt und 6 gespielt, Ton lief – viele Android-Handys schalten den Lautsprecher nach einer Pause ab und verschlucken beim Wiedereinschalten die ersten ~1–1,5 s. Jetzt läuft vor dem ersten Ruf 1,2 s ein unhörbar leiser Ton, der den Lautsprecher weckt; erst dann ruft der Kuckuck. Unter der Uhr zählen Punkte jeden Ruf sichtbar mit (●●●○○○).
+- **🍬 Süßes oder Saures:** drei verkleidete Kinder (Gespenst, Kürbis, kleine Hexe) mit Laterne und Kürbis-Eimer ziehen vorbei: „Süßes oder Saures, <Vorname>!“
+- Nur App, kein Server- oder DB-Update.
+
 ## 2.435.0 – 2026-10-16 – 🎃 Halloween: Hexe, Geister, Gewitter, Vampir im Sarg (KC-CLUB-HALLOWEEN-GEWITTER)
 Wunsch Hansi: „Bei Halloween noch die Hexe auf ihrem Besen durchfliegen lassen, mehr Geister und Blitz und Donner wie Gewitter. Auf seinem Sarg kommt ein Vampir mit Umhang – der setzt sich erst hin, dann steht er auf und geht weg. Und die Hexe fuchtelt mit ihrem Zauberstab und die Szene ist vorbei.“
 - **Gewitter:** dunkle Wolken ziehen über den Mond; etwa alle 7–15 s ein **Blitz** (heller Lichtschein, zweimal aufflackernd, Zickzack mit Ast), kurz danach **Donner** – das Bild wackelt einen Moment.

@@ -6505,7 +6505,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const kkRufe = \(h\) => \(h % 12\) \|\| 12;/.test(html) && /timeZone: TZ, hour: "2-digit"/.test(html) && /const TZ = "Europe\/Berlin";/.test(html), "deutsche Zeit, 12-Stunden-Zählung");
   assert.ok(/if \(audio\.state === "running"\) spielen\(\);/.test(html) && /if \(audio\.state === "running" && Date\.now\(\) - ab < 400 && u\.isConnected\) spielen\(\);/.test(html), "Ruf nur bei laufendem Ton (2.428.0: schlafenden Ton wecken, nie übereinander)");
   assert.ok(/audio\.__zuletzt = Date\.now\(\); const spielen = /.test(html), "2.428.0: jeder Ruf hält den Ton wach (Akku-Schutz)");
-  assert.ok(/const bereit = mitTon && audio \? Promise\.race\(\[/.test(html) && /bereit\.then\(\(\) => \{ if \(u\.isConnected\) u\._t = setTimeout\(ruf, 350\); \}\)/.test(html), "wartet auf den Ton");
+  assert.ok(/const bereit = mitTon && audio \? Promise\.race\(\[/.test(html) && /bereit\.then\(\(\) => \{ if \(u\.isConnected\) u\._t = setTimeout\(ruf, (?:350|kkLautsprecherWecken\(mitTon\))\); \}\)/.test(html), "wartet auf den Ton (2.436.0: und weckt den Lautsprecher)");
   assert.ok(/api\("diagnose", \{ art: "kuckuck", daten: \{ stunde: h, rufe: n, gespielt,/.test(html), "Diagnose einmal je Sitzung");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
@@ -10346,5 +10346,19 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/H\.geister\.length < 3/.test(h) && /modus: "vorbei"/.test(h) && /modus: "ende"/.test(h) && /H\.knall = 1;/.test(h) && /if \(!H\.vamp && F\.t > 22\) H\.vamp = \{ t: 0 \};/.test(h), "Geister, Hexe vorbei, Schlusszauber, Vampir");
   assert.ok(/Guten Abend, \$\{name\}!/.test(programm) && /"Hihihi!"/.test(programm), "Vampir grüßt mit Vornamen, Hexe kichert");
   assert.ok(/HW\?\.donner > 0\) c\.translate\(/.test(programm), "Donner wackelt das Bild");
+}
+// 2.436.0 KC-CLUB-HALLOWEEN-UNTEN: Hexe unter der Lämpchen-Leiste; Grab mit Skelett, Katze, Kessel, Süßes oder Saures
+{
+  assert.ok(/querySelector\("\.statusleiste"\)/.test(programm) && /function jzbHwFlugY\(oben, unten, f\)/.test(programm) && /y0: jzbHwFlugY\(32, 44, /.test(programm) && /y0: jzbHwFlugY\(14, 34, /.test(programm), "Hexe und Geister unter der Leiste");
+  const u = programm.slice(programm.indexOf("function jzbHwUntenSchritt("), programm.indexOf("function jzbHwKesselMalen("));
+  assert.ok(/H\.skelett = \{ t: 0 \}/.test(u) && /H\.blitzUhr = \.05;/.test(u) && /C\.fauch <= 0/.test(u) && /H\.kinderDa = true;/.test(u), "Skelett, Katze faucht beim Blitz, Kinder einmal");
+  assert.ok(/jzbHwKesselMalen\(c, F, H\); jzbHwGrabMalen\(c, F, H\);/.test(programm) && /if \(H\.katze\) jzbHwKatzeMalen\(c, H\.katze\); if \(H\.kinder\) jzbHwKinderMalen\(c, H\.kinder\);/.test(programm) && /jzbHwUntenSchritt\(F, H, dt\);/.test(programm), "verdrahtet");
+  assert.ok(/Süßes oder Saures, \$\{name\}!/.test(programm) && /"Fauch!"/.test(programm) && /"Klapper!"/.test(programm) && /X\.ruehrt = true;/.test(programm), "Texte und Rühren im Kessel");
+}
+// 2.436.0 KC-CLUB-KUCKUCK-WECKEN: Lautsprecher vor dem ersten Ruf wecken, Rufe als Punkte mitzählen
+{
+  assert.ok(/function kkLautsprecherWecken\(mitTon\)/.test(programm) && /g\.gain\.value = 0\.0008;/.test(programm) && /return 1250;/.test(programm), "leiser Weck-Ton, dann erst rufen");
+  assert.ok(/setTimeout\(ruf, kkLautsprecherWecken\(mitTon\)\)/.test(programm) && /setTimeout\(ruf, kkLautsprecherWecken\(true\)\)/.test(programm), "auch nach dem Antippen");
+  assert.ok(/<div class="kk-punkte" aria-hidden="true">\$\{"○"\.repeat\(n\)\}<\/div>/.test(programm) && /pk\.textContent = "●"\.repeat\(i\) \+ "○"\.repeat/.test(programm) && /\.kuckuck \.kk-punkte \{/.test(seite), "Punkte zählen mit");
 }
 
