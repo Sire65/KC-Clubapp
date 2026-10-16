@@ -914,7 +914,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/onpointerdown="wtDruck\(event, \$\{i\}\)"/.test(w) && /onpointerup="wtLos\(\$\{i\}\)"/.test(w), "Tag antippen/lange drücken fehlt");
   assert.ok(/if \(WET\.tag === 0\)/.test(w) && /wetterTagWahl\(0\)/.test(w), "gewählter Tag ändert die Anzeige nicht / kein Zurück");
   assert.ok(/WT_DRUCK\.lang = true;[^\n]*wetterTagDetails\(i\)/.test(w) && /if \(!abbruch && !w\.lang && w\.i === i\) wetterTagWahl\(i\)/.test(w), "Lange drücken löst zusätzlich den Tipp aus");
-  assert.ok(/id="wetterBlatt"/.test(html) && /e\.target\.closest\?\.\("\.wtage"\) \? null/.test(html), "Detailblatt fehlt / Tagesleiste blättert das Info-Feld");
+  assert.ok(/id="wetterBlatt"/.test(html) && /e\.target\.closest\?\.\("\.wtage(?:, \.il)?"\) \? null/.test(html), "Detailblatt fehlt / Tagesleiste blättert das Info-Feld");
 }
 
 // 70. 0.47.0: Admin-Zentrale – nur Admin (Server und Karte), Programme aus Registry, unbekannt/alt nie grün
@@ -10367,4 +10367,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/const b = 11 \* k, hoch = 20 \* k/.test(g) && /c\.strokeStyle = "#2c2e38"; c\.lineWidth = 1\.3 \* k; stein\(\); c\.stroke\(\);/.test(g), "größer, mit dunklem Rand");
   assert.ok(/c\.fillStyle = "#f4f5fa"; c\.fillText\("R\.I\.P\.", gx, oben \+ 4\.5 \* k\);/.test(g) && /kreuz\(0, 0, "#3a3c48"\);/.test(g), "helle Inschrift mit Schattenkante, Kreuz");
 }
-
+// 2.438.0 KC-CLUB-INFO-LAUFBAND: gerahmtes Info-Feld zwischen Überschrift und den 3 Feldern, Meldungen aus den Startdaten
+{
+  assert.ok(/\$\{kopf\}<\/div>\n    <div class="il" id="infoLaufband"><\/div><!-- 2\.438\.0 KC-CLUB-INFO-LAUFBAND -->\n    <div class="kacheln3">/.test(programm), "zwischen Überschrift und den 3 Feldern");
+  assert.ok(/ilZeigen\(\); \/\/ 2\.438\.0 KC-CLUB-INFO-LAUFBAND/.test(programm) && /closest\?\.\("\.wtage, \.il"\)/.test(programm), "nach jedem Neuzeichnen gefüllt, eigenes Wischen");
+  const m = programm.slice(programm.indexOf("function ilMeldungen("), programm.indexOf("function ilHtml("));
+  assert.ok(/id: "eingang", stufe: "rot"/.test(m) && /id: "anmelden:"/.test(m) && /id: "buero", stufe: "orange"/.test(m) && /id: "_ok", stufe: "weiss", sym: "👍", t: "Alles erledigt"/.test(m) && /id: "_tipp"/.test(m), "Stufen, Alles erledigt, Tipp des Tages");
+  assert.ok(!/api\(/.test(m), "keine zusätzliche Server-Abfrage");
+  assert.ok(/const IL_TAKT_MS = 6000/.test(programm) && /a\.tag === heuteIso\(\) \? a\.ids : \[\]/.test(programm) && /IL\.halt = Date\.now\(\) \+ 9000/.test(programm), "6 s Takt, ✕ nur für heute, Berühren hält an");
+  assert.ok(/\.il \{[^}]*width: 100%; margin-top: 14px;[^}]*border: 2px solid var\(--il-f\); border-radius: 16px;/.test(seite) && /\.il-rot \{/.test(seite) && /\.il-orange \{/.test(seite) && /\.il-gold \{/.test(seite), "Rahmen so breit wie die 3 Felder, Farben nach Wichtigkeit");
+}
