@@ -19854,7 +19854,7 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false) { // tonImmer: Probe (
     ${Array.from({ length: 12 }, (_, i) => { const w = i * 30 * Math.PI / 180; return `<line x1="${75 + 21 * Math.sin(w)}" y1="${80 - 21 * Math.cos(w)}" x2="${75 + 24 * Math.sin(w)}" y2="${80 - 24 * Math.cos(w)}" stroke="#3a1f0a" stroke-width="${i % 3 ? 1.2 : 2.4}"/>`; }).join("")}
     ${zeiger(z, 13, 3.2)}${zeiger(0, 19, 2)}<circle cx="75" cy="80" r="2.6" fill="#2b1607"/>
     <path d="M30 128 h90" stroke="#3a1f0a" stroke-width="3"/><path d="M40 112 q8 -10 16 0 M94 112 q8 -10 16 0" fill="none" stroke="#2e7d32" stroke-width="3" stroke-linecap="round"/>
-  </svg><div class="kk-zahl" aria-hidden="true">${h}</div>`;
+  </svg><div class="kk-zahl" aria-hidden="true">${h}</div><div class="kk-punkte" aria-hidden="true">${"○".repeat(n)}</div>`; // 2.436.0: jeder Ruf ein Punkt
   const zu = () => { clearTimeout(u._t); u.classList.remove("an"); setTimeout(() => u.remove(), 600); };
   u.onclick = zu; document.body.appendChild(u);
   requestAnimationFrame(() => requestAnimationFrame(() => u.classList.add("an")));
@@ -19873,6 +19873,7 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false) { // tonImmer: Probe (
       u._t = setTimeout(zu, 1400); return;
     }
     i++; u.classList.add("ruft"); setTimeout(() => u.classList.remove("ruft"), 350);
+    const pk = u.querySelector(".kk-punkte"); if (pk) pk.textContent = "●".repeat(i) + "○".repeat(Math.max(0, n - i)); // 2.436.0 KC-CLUB-KUCKUCK-PUNKTE: sichtbar mitzählen
     // 2.428.0 KC-CLUB-KUCKUCK-FREIGABE: der Akku-Schutz (KC-CLUB-AKKU-6) legt die Tonausgabe 3 s nach dem letzten Ton schlafen – das traf die Lücke
     // zwischen Freigabe und erstem Ruf; danach war „nur bei laufendem Ton“ nie mehr erfüllt (stumm bis zum Ende). Jetzt hält jeder Ruf den Ton
     // wach und weckt ihn, falls er schläft – gespielt wird nur, wenn er binnen 0,4 s läuft (nie mehrere Rufe übereinander).
@@ -19893,15 +19894,24 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false) { // tonImmer: Probe (
       e.stopPropagation(); u.querySelector(".kk-tonhinweis")?.remove(); u.onclick = zu; clearTimeout(u._t);
       try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.(); kkAufnahmeLaden(); } catch {} // im Tippen = erlaubt
       i = 0; gespielt = 0; u._nochmal = true; u.classList.add("offen");
-      Promise.race([Promise.resolve(audio?.resume?.()), new Promise((r) => setTimeout(r, 1500))]).catch(() => {}).then(() => { if (u.isConnected) u._t = setTimeout(ruf, 350); });
+      Promise.race([Promise.resolve(audio?.resume?.()), new Promise((r) => setTimeout(r, 1500))]).catch(() => {}).then(() => { if (u.isConnected) u._t = setTimeout(ruf, kkLautsprecherWecken(true)); });
     };
   }
   const gesperrt = mitTon && (!audio || audio.state !== "running") && navigator.userActivation && !navigator.userActivation.hasBeenActive;
   if (gesperrt) { kkTonHinweis(`🔊 Antippen – der Kuckuck ruft ${n}×`); u._t = setTimeout(() => { u.querySelector(".kk-tonhinweis")?.remove(); u.onclick = zu; u.classList.add("offen"); u._t = setTimeout(ruf, 350); }, 20000); return n; }
   // 2.416.0: erst rufen, wenn der Ton läuft (höchstens 1,5 s warten – sonst ruft der Kuckuck stumm, aber richtig oft)
   const bereit = mitTon && audio ? Promise.race([Promise.resolve(audio.resume?.()).then(() => true, () => false), new Promise((r) => setTimeout(() => r(false), 1500))]) : Promise.resolve(false);
-  u._t = setTimeout(() => { u.classList.add("offen"); bereit.then(() => { if (u.isConnected) u._t = setTimeout(ruf, 350); }); }, 700);
+  u._t = setTimeout(() => { u.classList.add("offen"); bereit.then(() => { if (u.isConnected) u._t = setTimeout(ruf, kkLautsprecherWecken(mitTon)); }); }, 700);
   return n;
+}
+// 2.436.0 KC-CLUB-KUCKUCK-WECKEN (Fund Hansi „hat 18 angezeigt, aber nach 4 Rufen war der Kuckuck weg“ – Diagnose: 6 Rufe, 6 gespielt, Ton „running“):
+// Viele Android-Handys schalten den Lautsprecher nach einer Pause ab; die ersten ~1–1,5 s Ton gehen beim Wiedereinschalten verloren – so
+// verschluckte das Handy die ersten Rufe. Jetzt läuft vorher 1,2 s ein unhörbar leiser Ton, der den Lautsprecher weckt; erst dann ruft der Kuckuck.
+// Gibt die Wartezeit bis zum ersten Ruf zurück (ohne Ton wie bisher 350 ms).
+function kkLautsprecherWecken(mitTon) {
+  if (!mitTon || !audio || audio.state !== "running") return 350;
+  try { const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime; o.frequency.value = 200; g.gain.value = 0.0008; o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 1.3); audio.__zuletzt = Date.now(); } catch { return 350; }
+  return 1250;
 }
 let KK_DIAG = false;
 function kkDiagnose(h, n, gespielt, mitTon) { // einmal je Sitzung: hat der Ton so oft gerufen, wie es Uhr ist?

@@ -1581,6 +1581,7 @@
   .kuckuck.ruft .kk-schnabel { transform: rotate(-18deg); } .kuckuck .kk-schnabel { transform-box: fill-box; transform-origin: left center; transition: transform .1s; }
   .kuckuck .kk-pendel { transform-box: view-box; transform-origin: 75px 128px; animation: kkPendel 1.2s ease-in-out infinite alternate; }
   @keyframes kkPendel { from { transform: rotate(14deg); } to { transform: rotate(-14deg); } }
+  .kuckuck .kk-punkte { position: absolute; left: 50%; top: calc(100% - 4px); transform: translateX(-50%); white-space: nowrap; padding: 1px 8px; border-radius: 999px; background: rgba(58,31,10,.85); color: #f1c40f; font: 900 .8rem/1.3 system-ui, sans-serif; letter-spacing: 1px; } .kuckuck:has(.kk-tonhinweis) .kk-punkte { visibility: hidden; } /* 2.436.0 */
   .kuckuck .kk-zahl { position: absolute; right: -8px; top: -8px; min-width: 28px; height: 28px; padding: 0 6px; border-radius: 14px; background: #f1c40f; color: #3a1f0a; font: 900 .95rem/28px system-ui, sans-serif; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
   .kuckuck .kk-tonhinweis { position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%); white-space: nowrap; padding: 5px 12px; border-radius: 999px; background: #3a1f0a; color: #fff8e1; font: 800 .85rem system-ui, sans-serif; box-shadow: 0 3px 10px rgba(0,0,0,.3); animation: kkHinweis 1.2s ease-in-out infinite alternate; cursor: pointer; } /* 2.428.0 KC-CLUB-KUCKUCK-FREIGABE */
   @keyframes kkHinweis { from { transform: translateX(-50%) scale(1); } to { transform: translateX(-50%) scale(1.06); } }

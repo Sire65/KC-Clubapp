@@ -10355,4 +10355,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/jzbHwKesselMalen\(c, F, H\); jzbHwGrabMalen\(c, F, H\);/.test(programm) && /if \(H\.katze\) jzbHwKatzeMalen\(c, H\.katze\); if \(H\.kinder\) jzbHwKinderMalen\(c, H\.kinder\);/.test(programm) && /jzbHwUntenSchritt\(F, H, dt\);/.test(programm), "verdrahtet");
   assert.ok(/Süßes oder Saures, \$\{name\}!/.test(programm) && /"Fauch!"/.test(programm) && /"Klapper!"/.test(programm) && /X\.ruehrt = true;/.test(programm), "Texte und Rühren im Kessel");
 }
+// 2.436.0 KC-CLUB-KUCKUCK-WECKEN: Lautsprecher vor dem ersten Ruf wecken, Rufe als Punkte mitzählen
+{
+  assert.ok(/function kkLautsprecherWecken\(mitTon\)/.test(programm) && /g\.gain\.value = 0\.0008;/.test(programm) && /return 1250;/.test(programm), "leiser Weck-Ton, dann erst rufen");
+  assert.ok(/setTimeout\(ruf, kkLautsprecherWecken\(mitTon\)\)/.test(programm) && /setTimeout\(ruf, kkLautsprecherWecken\(true\)\)/.test(programm), "auch nach dem Antippen");
+  assert.ok(/<div class="kk-punkte" aria-hidden="true">\$\{"○"\.repeat\(n\)\}<\/div>/.test(programm) && /pk\.textContent = "●"\.repeat\(i\) \+ "○"\.repeat/.test(programm) && /\.kuckuck \.kk-punkte \{/.test(seite), "Punkte zählen mit");
+}
 
