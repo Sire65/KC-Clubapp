@@ -22584,7 +22584,7 @@ function zeige(v, ausHistorie) {
   shBereich(v); // KC-CLUB-SCHRITT-HILFE (2.63.0)
   kzGesehen(v); // KC-CLUB-KACHEL-ZAHLEN (2.22.12): Fotoalbum/Dienstpläne geöffnet → Zahl weg
   document.querySelectorAll("#fuss button").forEach((b) => b.classList.toggle("an", b.dataset.v === v || (v === "chat" && b.dataset.v === "nachrichten") || (v === "neu" && b.dataset.v === "nachrichten")));
-  $("eingabe").classList.toggle("versteckt", v !== "chat");
+  $("eingabe").classList.toggle("versteckt", v !== "chat"); if (v === "chat") $("eingabe").classList.remove("zu"); // 2.433.0 KC-CLUB-SCHREIBEN-KLAPPEN: beim Öffnen immer offen
   document.body.classList.toggle("im-chat", v === "chat"); // KC-CLUB-SUCHE: Lupe nicht über dem Senden-Knopf
   clearInterval(chatTimer);
   if (v !== "chat" && TIPP.id) tippenAus(); // Unterhaltung verlassen → „schreibt …“ sofort beenden
@@ -32956,6 +32956,15 @@ async function elternHandy(pid) {
     ev.target.disabled = false;
   };
   laden();
+}
+// 2.433.0 KC-CLUB-SCHREIBEN-KLAPPEN (Wunsch Hansi „einen Einklapppfeil nach unten, um den Bereich kurz wegzuklappen und mehr Nachrichten zu sehen –
+// wenn man den Bereich öffnet, aber immer den Schreibbereich offen haben“): ▾ klappt weg, „▴ ✏️ Schreiben“ holt ihn zurück (mit Schreibmarke im Feld)
+function eingabeKlappen(zu) {
+  const e = $("eingabe"); if (!e) return;
+  e.classList.toggle("zu", !!zu);
+  if (zu) { try { document.activeElement?.blur?.(); } catch {} if (!$("emoFeld")?.classList.contains("versteckt")) emoUmschalten?.(false); }
+  else setTimeout(() => $("text")?.focus(), 30);
+  requestAnimationFrame(() => { try { chatAbstand(); } catch {} });
 }
 // ---------- 2.432.0 KC-CLUB-EINGANGSKORB (Wunsch Hansi „Eingangskorb für Mitglieder“): Admin/Clubleitung legt ein Dokument in den persönlichen
 // Ordner eines Mitglieds – nur zur Prüfung. Das Mitglied sieht es unter „Heute wichtig“ → 📥 Eingangskorb und übernimmt es oder lehnt ab (dann gelöscht).

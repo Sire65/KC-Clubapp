@@ -10311,4 +10311,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/update\(\{ status: "ok", ordner_id: ziel\.ordner_id, register: ziel\.register/.test(p), "Ordner und Register übernommen");
   assert.ok(/if \(annehmen && x && o\?\.eigen\) return arWohin\(x, o\);/.test(programm) && /💡 <b>Vorschlag/.test(programm) && /api\("archiv_pruefung", \{ id: x\.id, annehmen: true, ordner_id, register \}\)/.test(programm), "Wohin-Fenster mit Vorschlag");
 }
+// 2.433.0 KC-CLUB-SCHREIBEN-KLAPPEN: ▾ klappt den Schreibbereich weg, beim Öffnen eines Chats immer offen
+{
+  assert.ok(/<button class="eg-klapp" id="egKlapp" type="button" onclick="eingabeKlappen\(true\)"/.test(seite) && /<button class="eg-auf" id="egAuf" type="button" onclick="eingabeKlappen\(false\)"/.test(seite), "Griff und Öffnen-Leiste");
+  assert.ok(/\.eingabe\.zu > \*:not\(\.eg-auf\) \{ display: none !important; \}/.test(seite), "eingeklappt nur die Leiste");
+  assert.ok(/\$\("eingabe"\)\.classList\.toggle\("versteckt", v !== "chat"\); if \(v === "chat"\) \$\("eingabe"\)\.classList\.remove\("zu"\);/.test(programm), "beim Öffnen immer offen");
+}
 

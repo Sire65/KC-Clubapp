@@ -2050,6 +2050,12 @@
   .eingabe { z-index: 25; } /* 2.197.0 (Fund Hansi): Nachrichten dürfen beim Scrollen nicht über das Schreibfeld rutschen */
   .eingabe { position: fixed; left: 0; right: 0; bottom: calc(76px + env(safe-area-inset-bottom)); padding: 8px 12px; background: var(--bg); border-top: 1px solid var(--linie); }
   .eingabe .innen { max-width: 1100px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; }
+  /* 2.433.0 KC-CLUB-SCHREIBEN-KLAPPEN: kleiner ▾-Griff oben mittig; eingeklappt bleibt nur „▴ ✏️ Schreiben“ */
+  .eingabe .eg-klapp { display: block; margin: -6px auto 2px; width: 64px; height: 20px; padding: 0; border: 1px solid var(--linie); border-radius: 10px; background: var(--karte2); color: var(--grau); font-size: 1rem; line-height: 1; cursor: pointer; }
+  .eingabe .eg-auf { display: none; }
+  .eingabe.zu { padding: 6px 12px; }
+  .eingabe.zu > *:not(.eg-auf) { display: none !important; }
+  .eingabe.zu .eg-auf { display: block; width: 100%; max-width: 1100px; margin: 0 auto; padding: 9px 12px; border: 1px solid var(--linie); border-radius: 12px; background: var(--karte); color: var(--text); font: inherit; font-weight: 700; cursor: pointer; }
   .eingabe textarea { flex: 1; resize: none; max-height: 140px; padding: 12px; border-radius: 18px; border: 1px solid var(--linie); background: var(--karte); }
   .eingabe .rund { background: var(--rot); }
   @media (max-width: 420px) { .eingabe .innen { gap: 5px; } .eingabe .innen > .rund:not(.zustell-knopf) { width: 42px; height: 42px; font-size: 1.05rem; } } /* 1.12.0: mehr Platz fürs Schreibfeld */
@@ -4967,6 +4973,9 @@
 </div>
 <button class="nach-unten versteckt" id="nachUnten" title="Zur neuesten Nachricht" aria-label="Zur neuesten Nachricht" onclick="nachUntenSpringen()">⬇️</button>
 <div class="eingabe versteckt" id="eingabe">
+  <!-- 2.433.0 KC-CLUB-SCHREIBEN-KLAPPEN (Wunsch Hansi): ▾ klappt den Schreibbereich kurz weg, damit mehr Nachrichten zu sehen sind; beim Öffnen eines Chats ist er immer offen -->
+  <button class="eg-klapp" id="egKlapp" type="button" onclick="eingabeKlappen(true)" title="Schreibbereich einklappen – mehr Nachrichten sehen" aria-label="Schreibbereich einklappen – mehr Nachrichten sehen">▾</button>
+  <button class="eg-auf" id="egAuf" type="button" onclick="eingabeKlappen(false)" aria-label="Schreibbereich wieder öffnen">▴ ✏️ Schreiben</button>
   <!-- KC-CLUB-TIPPT (0.54.0): „Klaus schreibt …“ -->
   <div class="tippt versteckt" id="tipptAnzeige" aria-live="polite"></div>
   <div class="hinweis versteckt" id="liveHinweis" style="font-size:.78rem;margin:0 6px 4px">👁️ Live-Tippen ist an – die anderen sehen, was du schreibst (⚙️ Mehr → Privatsphäre)</div>
