@@ -50,7 +50,8 @@
     banner(d);
   }
   async function check(force){
-    if(!isLoggedIn()||loading||(!force&&Date.now()-last<TTL))return;
+    const admin=document.getElementById("adminBereich");
+    if(!isLoggedIn()||!admin||admin.classList.contains("versteckt")||loading||(!force&&Date.now()-last<TTL))return;
     loading=true;last=Date.now();
     try{const res=await fetch(URL,{cache:"no-store",signal:AbortSignal.timeout(7000)});
       if(!res.ok)throw Error("HTTP "+res.status);
