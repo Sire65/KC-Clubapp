@@ -17,6 +17,14 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.439.0 – 2026-10-16 – 📣 Info-Laufband auf der Startseite (KC-CLUB-INFO-LAUFBAND)
+Wunsch Hansi: „Über den 3 Feldern Nachricht, online, Termine ein großes Info-Feld – komplett gerahmt, so breit wie die 3 zusammen; dort abwechselnd Infos, z. B. 3 Dokumente im Eingangskorb oder ‚jetzt noch für die nächste Sitzung anmelden‘.“
+- In der ersten Info-Karte zwischen Überschrift und den 3 Feldern: **genau so breit wie die 3 Felder zusammen**, gleiche Rundung, feste Höhe (die Karte springt beim Wechsel nicht).
+- **Rahmenfarbe nach Wichtigkeit**: rot = bitte erledigen (Eingangskorb, Zu-/Absage zum nächsten Treffen, Terminanfragen, Abstimmungen, Terminfindung, Schulung, fällige Aufgaben, Benachrichtigungen aus), orange = Clubleitung (Büro-Eingang), gold = Hinweise (App installieren, Dienst heute/morgen, neues Protokoll, Countdown, Regen am Treffen-Tag), weiß = schöne Infos (Geburtstag, wer online ist, neue Fotos, neues Dokument, Wetter).
+- Wechselt alle 6 s sanft, **Wischen** blättert, **Berühren** hält an; Punkte zeigen, wie viele Meldungen da sind. Wichtiges (rot) kommt öfter dran.
+- **Antippen** öffnet das Ziel; direkte Knöpfe: ✔ Zusagen / ✖, ✔ erledigt, 💬 Gratulieren, Einschalten. **✕** blendet eine Meldung für heute aus.
+- Steht nichts an: „Alles erledigt 👍“ und der **Tipp des Tages**. „Heute wichtig“ darunter bleibt die vollständige Liste.
+- Keine zusätzliche Server-Abfrage (nutzt die schon geladenen Startdaten); steht in der Ruhephase still. Nur App, kein Server- oder DB-Update.
 ## 2.438.0 – 2026-10-16 – Power-Kette mit Hampelmann
 Neue 8. Bewegung in der Power-Kette: Hampelmann (zweimal je 2 s) vor dem Sprung – mit kleinem Hopser, Beine auf, Arme über den Kopf.
 

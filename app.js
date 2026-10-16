@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.438.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.439.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19480,7 +19480,7 @@ function registerWischen(schritt) {
   let x0 = null, y0 = 0, ziel = null;
   const flaechen = () => [[$("heroInfo"), infoBlaettern], [$("raster"), registerWischen], [$("register"), registerWischen], [$("kalGitter"), kalBlaettern]];
   document.addEventListener("touchstart", (e) => {
-    const f = e.target.closest?.(".wtage") ? null : flaechen().find(([el]) => el && el.contains(e.target)); // Wetter-Tagesleiste scrollt selbst
+    const f = e.target.closest?.(".wtage, .il") ? null : flaechen().find(([el]) => el && el.contains(e.target)); // Wetter-Tagesleiste scrollt selbst, das Info-Laufband blättert selbst (2.439.0)
     ziel = f ? f[1] : null; if (ziel) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }
   }, { passive: true });
   document.addEventListener("touchend", (e) => {
@@ -19960,6 +19960,7 @@ function heroZeigen(richtung) {
   // 0.44.0: Pfeile mittig auf dem Rahmen, Punkte direkt unter dem Feld (keine eigene Steuerzeile mehr)
   $("infoPunkte").innerHTML = INFO_FELDER.map((x, i) => `<button class="ipunkt${i === INFO_I ? " an" : ""}" aria-label="${esc(x.t)}" title="${esc(x.t)}" onclick="infoGehe(${i})"></button>`).join("");
   zahlenHochzaehlen($("heroInfo"), ".mini > b:not(.mini-zeile)", (el) => "h:" + (el.parentElement.querySelector("span")?.textContent || "").slice(0, 20)); // 2.172.0 KC-CLUB-EFFEKTE-2
+  ilZeigen(); // 2.439.0 KC-CLUB-INFO-LAUFBAND: Platzhalter nach jedem Neuzeichnen füllen
   if (!document.querySelector("#v-start .hero .jz-schicht")) jahreszeitKopf();
   if (!document.getElementById("eselsohr")) esEinsetzen(); // KC-CLUB-ESELSOHR (2.292.0)
   if (f.id === "wetter") { wetterSzene(); if (!WET.laedt && Date.now() - WET.geholt > WETTER_NEU_MIN * 60000) wetterLaden(erzwingen); }
@@ -22264,6 +22265,7 @@ function infoTreffen() {
     frist = fristStufe(tage);
   } else kopf = `<h2>Kein Termin geplant</h2><div class="unter">Sobald ein Köcheclub-Termin ansteht, siehst du es hier.</div>`;
   return `<div class="klick" role="button" tabindex="0" onclick="zumTreffen()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();zumTreffen()}">${kopf}</div>
+    <div class="il" id="infoLaufband"></div><!-- 2.439.0 KC-CLUB-INFO-LAUFBAND -->
     <div class="kacheln3">
       ${(() => { const m = n ? nachrichtMahnung() : null; /* KC-CLUB-NACHRICHT-MAHNUNG (2.223.0) */
         return `<button class="mini${n ? " mini-neu" : ""}${m ? " " + m.klasse : ""}"${m ? ` title="${esc(m.titel)}"` : ""} onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${m?.wichtig ? "❗" : ""}${n}</b><span>${m?.wichtig ? "Wichtig!" : m ? "Lange offen" : "Neue Nachr."}</span>`; })()}${mpfeil("nachrichten", n > 0, n)}</button>
@@ -22272,6 +22274,99 @@ function infoTreffen() {
       <button id="cdKachel" class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}${cdInhalt(bisTreffen)}${mpfeil("termin", !!t, t ? `${t.id || t.beginn}|${frist}` : "", frist)}</button>
     </div>`;
 }
+// ---------- 2.439.0 KC-CLUB-INFO-LAUFBAND (Wunsch Hansi „über den 3 Feldern Nachricht, online, Termine ein großes Info-Feld – komplett gerahmt,
+// so breit wie die 3 zusammen; dort abwechselnd Infos, z. B. 3 Dokumente im Eingangskorb, jetzt noch für die nächste Sitzung anmelden“) ----------
+// Sammelt aus den schon geladenen Startdaten (keine zusätzliche Server-Abfrage): erst was zu erledigen ist (rot), dann Clubleitung (orange),
+// Hinweise (gold), schöne Infos (weiß); ist nichts da: „Alles erledigt 👍“ und der Tipp des Tages. Wechselt alle 6 s (sanft), Wischen blättert,
+// Berühren hält an, ✕ blendet eine Meldung für heute aus. Läuft nur, solange die Startseite sichtbar ist (in der Ruhephase steht es still).
+const IL_TAKT_MS = 6000, IL_AUS = "kc_club_il_aus";
+const IL = { liste: [], i: 0, uhr: 0, halt: 0, x0: null, gewischt: 0, schluessel: "" };
+function ilAusgeblendet() { try { const a = JSON.parse(localStorage.getItem(IL_AUS) || "null"); return a && a.tag === heuteIso() ? a.ids : []; } catch { return []; } }
+function ilAusblenden(id) {
+  const ids = [...new Set([...ilAusgeblendet(), id])]; try { localStorage.setItem(IL_AUS, JSON.stringify({ tag: heuteIso(), ids })); } catch {}
+  melde("Für heute ausgeblendet"); ilZeigen();
+}
+function ilMeldungen() {
+  const L = [], add = (m) => L.push(m), t = INIT?.naechstesTreffen, kz = INIT?.kz || {}, leitung = !!(ICH?.vorstand || ICH?.admin);
+  const anz = (n, ein, mehr) => `${n} ${n === 1 ? ein : mehr}`;
+  // 🔴 bitte erledigen
+  if (INIT?.eingangskorb > 0) add({ id: "eingang", stufe: "rot", sym: "📥", t: `Eingangskorb: ${anz(INIT.eingangskorb, "Dokument", "Dokumente")} für dich`, u: "Ansehen und ins Archiv übernehmen – oder ablehnen", auf: "eingangOeffnen()" });
+  if (t && t.meine !== "ja" && t.meine !== "nein" && new Date(t.beginn) > Date.now() && new Date(t.beginn) - Date.now() < 21 * 86400000)
+    add({ id: "anmelden:" + (t.id || t.beginn), stufe: "rot", sym: "📅", t: `Jetzt für ${t.titel} zu- oder absagen`, u: wann(t.beginn), auf: "zeige('termine')",
+      knoepfe: t.id ? [["✔ Zusagen", `ilAntwort('${esc(t.id)}','ja')`], ["✖", `ilAntwort('${esc(t.id)}','nein')`]] : null });
+  for (const a of INIT?.terminanfragenOffen || []) add({ id: "anfrage:" + a.id, stufe: "rot", sym: "📨", t: `${a.von} fragt an: ${a.anlass}`, u: "Bitte antworten", auf: `taZeigen('${esc(a.id)}')` });
+  if (INIT?.offeneAbstimmungen) add({ id: "abstimmung", stufe: "rot", sym: "🗳️", t: INIT.offeneAbstimmungen === 1 ? "Eine Abstimmung wartet auf deine Stimme" : `${INIT.offeneAbstimmungen} Abstimmungen warten auf deine Stimme`, u: "Antippen und abstimmen", auf: "zeige('vorschlaege')" });
+  for (const u of INIT?.terminfindungOffen || []) add({ id: "terminfindung:" + (u.id || u.titel), stufe: "rot", sym: "🗓️", t: `Bitte Termine ankreuzen: ${u.titel}`, u: "Wann kannst du?", auf: "zeige('termine')" });
+  if (kz.schulung > 0) add({ id: "schulung", stufe: "rot", sym: "🎓", t: "Schulung: bitte einen Termin wählen", u: "Hansi hat dir Termine vorgeschlagen", auf: "zeige('schulungen')" });
+  const in7 = tagPlus(heuteIso(), 7);
+  for (const a of (INIT?.meineAufgaben || []).filter((x) => x.faellig && x.faellig <= in7).slice(0, 3)) add({ id: "aufgabe:" + a.id, stufe: "rot", sym: "📌", t: a.text, u: "Aufgabe " + faelligText(a.faellig).replace(/<[^>]+>/g, ""), auf: "zeige('aufgaben')", knoepfe: [["✔ erledigt", `aufgabeErledigt('${esc(a.id)}', true)`]] });
+  if (pushMoeglich() && Notification.permission !== "granted") add({ id: "push", stufe: "rot", sym: "🔔", t: "Benachrichtigungen sind aus", u: "Sonst verpasst du Nachrichten und Anklopfen", auf: "zeige('einstellungen')", knoepfe: [["Einschalten", "pushEinschalten()"]] });
+  // 🟠 Clubleitung
+  if (leitung && kz.buero > 0) add({ id: "buero", stufe: "orange", sym: "🗂️", t: `Büro-Eingang: ${anz(kz.buero, "Sache wartet", "Sachen warten")}`, u: "Änderungen, Ausleihen, Vorschläge …", auf: "buStart()" });
+  // 🟡 Hinweise
+  if (START_ART === "verknuepfung" || (START_ART === "browser" && !schonInstalliert)) add({ id: "installieren", stufe: "gold", sym: "📲", t: START_ART === "browser" ? "Köcheclub als App installieren" : "App richtig installieren", u: "Dann klappen WhatsApp, Galerie und Benachrichtigungen", auf: "installHilfe()" });
+  const nd = INIT?.naechsterDienst;
+  if (nd && (nd.datum === heuteIso() || nd.datum === tagPlus(heuteIso(), 1))) add({ id: "dienst:" + nd.datum, stufe: "gold", sym: "🗓️", t: `${nd.datum === heuteIso() ? "Heute" : "Morgen"} hast du Dienst: ${nd.start}–${nd.ende} Uhr`, u: nd.bereich || "Mein Dienst", auf: "dpNurIch()" });
+  if (INIT?.protokolleUngelesen) add({ id: "protokoll", stufe: "gold", sym: "📄", t: INIT.protokolleUngelesen === 1 ? "Ein neues Protokoll zum Lesen" : `${INIT.protokolleUngelesen} neue Protokolle zum Lesen`, u: "Antippen zum Lesen", auf: "zeige('protokolle')" });
+  if (t && (t.meine === "ja" || t.meine === "nein")) { const tage = Math.ceil((new Date(t.beginn) - Date.now()) / 86400000);
+    if (tage >= 1 && tage <= 14) add({ id: "countdown:" + (t.id || t.beginn), stufe: "gold", sym: "⏳", t: tage === 1 ? `Morgen: ${t.titel}` : `Noch ${tage} Tage bis ${t.titel}`, u: wann(t.beginn), auf: "zeige('termine')" }); }
+  const wd = WET.r?.daten, wt = t && wd ? wd.tage?.find((x) => x.datum === isoBerlin(new Date(t.beginn))) : null;
+  if (wt) { const a = wetterArt(wt.code), nass = (wt.regenWkt ?? 0) >= 50 || ["regen", "niesel", "gewitter", "schnee"].includes(a.szene);
+    add({ id: "wetter:" + wt.datum, stufe: nass ? "gold" : "weiss", sym: a.sym, t: nass ? "Am Treffen-Tag wird es nass – Schirm mitnehmen" : `Wetter am Treffen-Tag: ${a.text}`, u: `${grad(wt.max)} / ${grad(wt.min)}${wt.regenWkt != null ? ` · ☔ ${wt.regenWkt} %` : ""}`, auf: "infoGehe(INFO_FELDER.findIndex((f) => f.id === 'wetter'))" }); }
+  // ⚪ schöne Infos
+  for (const g of INIT?.geburtstageHeute || []) if (g.person_id !== ICH?.person_id) add({ id: "geb:" + g.person_id, stufe: "weiss", sym: "🎂", t: `${g.name} hat heute Geburtstag`, u: "Gratuliere mit einem Tipp", auf: `gratulieren('${esc(g.person_id)}', true)`, knoepfe: [["💬 Gratulieren", `gratulieren('${esc(g.person_id)}', true)`]] });
+  const on = typeof mpOnline === "function" && ONL.zeigen ? mpOnline() : 0;
+  if (on > 0) add({ id: "online", stufe: "weiss", sym: "🟢", t: on === 1 ? "1 Mitglied ist gerade online" : `${on} Mitglieder sind gerade online`, u: "Antippen – anklopfen oder schreiben", auf: "mgNurOnline()" });
+  if (kz.fotos > 0) add({ id: "fotos", stufe: "weiss", sym: "📸", t: kz.fotos === 1 ? "Ein neues Foto im Album" : `${kz.fotos} neue Fotos im Album`, u: "Antippen und ansehen", auf: "zeige('fotos')" });
+  const dn = typeof dokHinweis === "function" ? dokHinweis() : null;
+  if (dn) add({ id: "dok:" + dn.id, stufe: "weiss", sym: dn.sym || "🆕", t: `Neu: ${dn.t}`, u: "Antippen zum Lesen", auf: `dokOeffnen('${esc(dn.id)}')` });
+  const aus = new Set(ilAusgeblendet()), sichtbar = L.filter((m) => !aus.has(m.id));
+  const rang = { rot: 0, orange: 1, gold: 2, weiss: 3 }; sichtbar.sort((a, b) => rang[a.stufe] - rang[b.stufe]);
+  if (!sichtbar.some((m) => m.stufe === "rot" || m.stufe === "orange")) sichtbar.unshift({ id: "_ok", stufe: "weiss", sym: "👍", t: "Alles erledigt", u: "Für dich steht gerade nichts an", ohneAus: true });
+  const tipps = HILFE.filter((h) => h.thema !== "erste" && (!h.nur || h.nur()));
+  if (tipps.length) { const d = new Date(), h = tipps[(d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate()) % tipps.length];
+    sichtbar.push({ id: "_tipp", stufe: "weiss", sym: "💡", t: `Tipp: ${hzTxt(h.t)}`, u: String(hzTxt(h.x)).replace(/<[^>]+>/g, "").slice(0, 90), auf: `hzZuEintrag('h:${esc(h.id)}')`, ohneAus: true }); }
+  // Wichtiges öfter zeigen: nach jeder Hinweis-/Info-Meldung kommt die nächste rote wieder dran
+  const rot = sichtbar.filter((m) => m.stufe === "rot" || m.stufe === "orange"), rest = sichtbar.filter((m) => !rot.includes(m));
+  if (rot.length && rest.length > 2) { const folge = [...rot]; rest.forEach((m, i) => { folge.push(m); if (i % 2 === 1) folge.push(rot[(i >> 1) % rot.length]); }); return folge; }
+  return [...rot, ...rest];
+}
+function ilHtml(m) {
+  const k = (m.knoepfe || []).map(([t, f]) => `<button type="button" class="il-knopf" onclick="event.stopPropagation();${f}">${esc(t)}</button>`).join("");
+  return `<span class="il-sym" aria-hidden="true">${m.sym}</span><span class="il-text"><b>${esc(m.t)}</b>${m.u ? `<small>${esc(m.u)}</small>` : ""}</span>${k ? `<span class="il-knoepfe">${k}</span>` : m.auf ? '<span class="il-pfeil" aria-hidden="true">›</span>' : ""}`
+    + (m.ohneAus ? "" : `<button type="button" class="il-zu" title="Für heute ausblenden" aria-label="Für heute ausblenden" onclick="event.stopPropagation();ilAusblenden('${esc(m.id)}')">✕</button>`);
+}
+function ilZeigen() {
+  const b = document.getElementById("infoLaufband"); if (!b) return;
+  // jedes Mal frisch aus den Startdaten (billig) – bleibt dabei auf derselben Meldung, wenn sich die Liste geändert hat
+  const alt = IL.liste[IL.i]?.id; try { IL.liste = ilMeldungen(); } catch { IL.liste = []; }
+  const s = IL.liste.map((m) => m.id + m.t).join("|"); if (s !== IL.schluessel) { IL.schluessel = s; const j = IL.liste.findIndex((m) => m.id === alt); IL.i = j >= 0 ? j : 0; }
+  if (IL.i >= IL.liste.length) IL.i = 0;
+  const m = IL.liste[IL.i]; if (!m) return;
+  b.className = `il il-${m.stufe}${m.auf ? " il-klick" : ""}`;
+  b.innerHTML = `<div class="il-inhalt${m.knoepfe ? " mit-knopf" : ""}" role="button" tabindex="0">${ilHtml(m)}</div>`
+    + (IL.liste.length > 1 ? `<div class="il-punkte" aria-hidden="true">${IL.liste.map((_, i) => `<i${i === IL.i ? ' class="an"' : ""}></i>`).join("")}</div>` : "");
+  const inh = b.firstElementChild;
+  inh.onclick = () => { if (Date.now() - IL.gewischt < 400) return; if (m.auf) { try { new Function(m.auf)(); } catch {} } };
+  inh.onkeydown = (e) => { if ((e.key === "Enter" || e.key === " ") && m.auf) { e.preventDefault(); inh.onclick(); } };
+  if (!b.dataset.il) { b.dataset.il = "1"; // wischen blättert, berühren hält an
+    b.addEventListener("pointerdown", (e) => { IL.halt = Date.now() + 9000; IL.x0 = e.clientX; }, { passive: true });
+    b.addEventListener("pointerup", (e) => { if (IL.x0 == null) return; const dx = e.clientX - IL.x0; IL.x0 = null; if (Math.abs(dx) > 40) { IL.gewischt = Date.now(); IL.uhr = 0; ilBlaettern(dx < 0 ? 1 : -1); } }, { passive: true });
+  }
+}
+function ilBlaettern(r) {
+  if (!IL.liste.length) return; IL.i = (IL.i + r + IL.liste.length) % IL.liste.length;
+  const inh = document.querySelector("#infoLaufband .il-inhalt"); if (!inh) return ilZeigen();
+  inh.classList.add(r > 0 ? "il-raus-l" : "il-raus-r"); setTimeout(() => { ilZeigen(); document.querySelector("#infoLaufband .il-inhalt")?.classList.add(r > 0 ? "il-rein-r" : "il-rein-l"); }, 220);
+}
+async function ilAntwort(id, a) { try { await antwort(id, a); } catch {} try { await neuLaden(); } catch {} ilZeigen(); }
+setInterval(() => {
+  try {
+    if (document.hidden || aktuelleAnsicht !== "start" || document.documentElement.classList.contains("kc-ruhe") || Date.now() < IL.halt || !document.getElementById("infoLaufband")) return;
+    IL.uhr += 1000; if (IL.uhr < IL_TAKT_MS) return; IL.uhr = 0;
+    if (IL.liste.length > 1) ilBlaettern(1);
+  } catch {}
+}, 1000);
 // 2.209.0 KC-CLUB-PUSH-SPRUNG (Gesamtprüfung 5): Sprungziele aus dem Link (#nachricht=…, #termine, …) – beim Start UND wenn ein
 // Push angetippt wird, während die App schon offen ist (der Service Worker schickt dann „oeffnen“ statt die Seite neu zu laden)
 function hashSprung(h) {
