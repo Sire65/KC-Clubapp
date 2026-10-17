@@ -45,17 +45,17 @@ jobs:
         run: |
           set -euo pipefail
           cat > /tmp/schlusskarte.txt <<'FILTER'
-drawbox=x=54:y=250:w=972:h=1420:color=0xF5C542@1:t=5,
-drawbox=x=65:y=261:w=950:h=1398:color=0x741521@1:t=fill,
-drawbox=x=240:y=492:w=600:h=5:color=0xF5C542@1:t=fill,
-drawbox=x=240:y=1093:w=600:h=5:color=0xF5C542@1:t=fill,
-drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='DIE CLUB-APP':fontcolor=white:fontsize=78:x=(w-text_w)/2:y=350,
-drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='auch auf deinem':fontcolor=0xF5C542:fontsize=61:x=(w-text_w)/2:y=580,
-drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='TABLET UND PC':fontcolor=white:fontsize=77:x=(w-text_w)/2:y=750,
-drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='Parallel zum Handy installieren':fontcolor=white:fontsize=51:x=(w-text_w)/2:y=1190,
-drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='Mit deinem persönlichen Zugang':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=1310,
-drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='KÖCHECLUB WERNE':fontcolor=0xF5C542:fontsize=49:x=(w-text_w)/2:y=1510
-FILTER
+          drawbox=x=54:y=250:w=972:h=1420:color=0xF5C542@1:t=5,
+          drawbox=x=65:y=261:w=950:h=1398:color=0x741521@1:t=fill,
+          drawbox=x=240:y=492:w=600:h=5:color=0xF5C542@1:t=fill,
+          drawbox=x=240:y=1093:w=600:h=5:color=0xF5C542@1:t=fill,
+          drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='DIE CLUB-APP':fontcolor=white:fontsize=78:x=(w-text_w)/2:y=350,
+          drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='auch auf deinem':fontcolor=0xF5C542:fontsize=61:x=(w-text_w)/2:y=580,
+          drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='TABLET UND PC':fontcolor=white:fontsize=77:x=(w-text_w)/2:y=750,
+          drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='Parallel zum Handy installieren':fontcolor=white:fontsize=51:x=(w-text_w)/2:y=1190,
+          drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='Mit deinem persönlichen Zugang':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=1310,
+          drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='KÖCHECLUB WERNE':fontcolor=0xF5C542:fontsize=49:x=(w-text_w)/2:y=1510
+          FILTER
           ffmpeg -nostdin -hide_banner -loglevel error -y \
             -f lavfi -i "color=c=0x741521:s=1080x1920:r=30:d=6" \
             -f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=44100" \
