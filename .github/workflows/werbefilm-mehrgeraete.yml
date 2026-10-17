@@ -1,4 +1,4 @@
-name: KC Werbefilm Tablet-PC-Hinweis
+name: KC Werbefilm Schlusskarte
 
 on:
   push:
@@ -10,56 +10,84 @@ permissions:
   contents: write
 
 jobs:
-  film-aktualisieren:
+  film-korrigieren:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
-      - name: Aktuelle Club-App holen
+      - name: Club-App auschecken
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: FFmpeg und Schrift sicherstellen
+      - name: FFmpeg sicherstellen
         shell: bash
         run: |
           set -euo pipefail
-          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
-            sudo apt-get update -qq
-            sudo apt-get install -y ffmpeg
-          fi
+          command -v ffmpeg
+          command -v ffprobe
+          test -f /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf
           test -f /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf
 
-      - name: Werbefilm gezielt ergaenzen
+      - name: Unveraenderten Originalfilm laden
         shell: bash
         run: |
           set -euo pipefail
-          QUELLE="film/werbefilm.mp4"
-          ZIEL="film/werbefilm-mehrgeraete.tmp.mp4"
-          test -s "$QUELLE"
-          ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "$QUELLE" | grep -qx '1080,1920'
-          LAENGE=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$QUELLE")
-          awk -v d="$LAENGE" 'BEGIN { exit !(d > 129 && d < 134) }'
-          SCHRIFT=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf
-          FILTER="drawbox=x=52:y=1523:w=976:h=350:color=0x741521@0.95:t=fill:enable='between(t,105.5,112.5)',drawbox=x=52:y=1523:w=976:h=350:color=0xF5C542@1:t=4:enable='between(t,105.5,112.5)',drawtext=fontfile=${SCHRIFT}:text='Die App kannst du parallel':fontcolor=white:fontsize=63:x=(w-text_w)/2:y=1562:enable='between(t,105.5,112.5)',drawtext=fontfile=${SCHRIFT}:text='auch auf deinem Tablet und PC':fontcolor=white:fontsize=55:x=(w-text_w)/2:y=1655:enable='between(t,105.5,112.5)',drawtext=fontfile=${SCHRIFT}:text='installieren.':fontcolor=white:fontsize=63:x=(w-text_w)/2:y=1750:enable='between(t,105.5,112.5)'"
-          ffmpeg -nostdin -hide_banner -loglevel error -stats -y \
-            -i "$QUELLE" -vf "$FILTER" \
-            -map 0:v:0 -map 0:a? \
-            -c:v libx264 -preset veryfast -crf 23 -pix_fmt yuv420p \
-            -c:a copy -movflags +faststart "$ZIEL"
-          test -s "$ZIEL"
-          ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "$ZIEL" | grep -qx '1080,1920'
-          mv "$ZIEL" "$QUELLE"
+          curl --fail --location --retry 3 --silent --show-error \
+            "https://raw.githubusercontent.com/Sire65/KC-Infrastructure-Control-Center/main/werbefilm/Koecheclub-Werbefilm.mp4" \
+            --output /tmp/kc-film-original.mp4
+          test -s /tmp/kc-film-original.mp4
+          test "$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 /tmp/kc-film-original.mp4)" = "1080,1920"
+          D=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 /tmp/kc-film-original.mp4)
+          awk -v d="$D" 'BEGIN { exit !(d > 129 && d < 134) }'
 
-      - name: Aktualisierten Film veroeffentlichen
+      - name: Separate Schlusskarte erzeugen - ohne bestehende Szene zu verdecken
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/schlusskarte.txt <<'FILTER'
+drawbox=x=54:y=250:w=972:h=1420:color=0xF5C542@1:t=5,
+drawbox=x=65:y=261:w=950:h=1398:color=0x741521@1:t=fill,
+drawbox=x=240:y=492:w=600:h=5:color=0xF5C542@1:t=fill,
+drawbox=x=240:y=1093:w=600:h=5:color=0xF5C542@1:t=fill,
+drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='DIE CLUB-APP':fontcolor=white:fontsize=78:x=(w-text_w)/2:y=350,
+drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='auch auf deinem':fontcolor=0xF5C542:fontsize=61:x=(w-text_w)/2:y=580,
+drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='TABLET UND PC':fontcolor=white:fontsize=77:x=(w-text_w)/2:y=750,
+drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='Parallel zum Handy installieren':fontcolor=white:fontsize=51:x=(w-text_w)/2:y=1190,
+drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='Mit deinem persönlichen Zugang':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=1310,
+drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='KÖCHECLUB WERNE':fontcolor=0xF5C542:fontsize=49:x=(w-text_w)/2:y=1510
+FILTER
+          ffmpeg -nostdin -hide_banner -loglevel error -y \
+            -f lavfi -i "color=c=0x741521:s=1080x1920:r=30:d=6" \
+            -f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=44100" \
+            -filter_script:v /tmp/schlusskarte.txt \
+            -t 6 -r 30 -map 0:v -map 1:a \
+            -c:v libx264 -preset medium -crf 20 -profile:v high -pix_fmt yuv420p \
+            -c:a aac -ar 44100 -ac 2 -b:a 192k -movflags +faststart /tmp/kc-film-ende.mp4
+          test -s /tmp/kc-film-ende.mp4
+
+      - name: Original und Schlusskarte verlustfrei zusammenfuehren
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf "file '/tmp/kc-film-original.mp4'\nfile '/tmp/kc-film-ende.mp4'\n" > /tmp/folge.txt
+          ffmpeg -nostdin -hide_banner -loglevel warning -y -f concat -safe 0 \
+            -i /tmp/folge.txt -map 0:v:0 -map 0:a:0 -c copy \
+            -movflags +faststart film/werbefilm-neu.tmp.mp4
+          test -s film/werbefilm-neu.tmp.mp4
+          D=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 film/werbefilm-neu.tmp.mp4)
+          awk -v d="$D" 'BEGIN { exit !(d > 134 && d < 141) }'
+          ffmpeg -nostdin -hide_banner -loglevel error -ss 134 -i film/werbefilm-neu.tmp.mp4 -frames:v 1 -y /tmp/kc-test.jpg
+          test -s /tmp/kc-test.jpg
+          mv film/werbefilm-neu.tmp.mp4 film/werbefilm.mp4
+          echo "Filmlaenge: $D Sekunden. Originalbild und Originalton unveraendert, Hinweis nur am Schluss."
+
+      - name: Film auf GitHub veroeffentlichen
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add film/werbefilm.mp4
-          if git diff --cached --quiet; then
-            echo "Keine Aenderung an der Videodatei"
-            exit 0
-          fi
-          git commit -m "Werbefilm: Tablet und PC als weitere Geraete einblenden"
+          git diff --cached --quiet && exit 0
+          git commit -m "Werbefilm: eigene Schlusskarte statt verdeckender Einblendung"
           git push
