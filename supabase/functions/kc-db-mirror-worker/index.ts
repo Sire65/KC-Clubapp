@@ -9,6 +9,7 @@ const qi=(n:string)=>{if(!/^[a-z0-9_]+$/.test(n))throw new Error(`unsafe identif
 const personRefTables=new Set(["kc_core_club_memberships","kc_core_operational_directory","kc_core_pos_aliases","kc_core_app_access","kc_core_user_links","kc_dp_daily_push_preview"]);
 const userRefTables=new Set(["kc_core_user_links","kc_dp_memberships","kc_manager_memberships"]);
 const redactedTables=new Set(["kc_core_people","kc_dp_memberships","kc_manager_memberships","kc_dp_pilot_testers","kc_dp_push_deliveries","kng_keys","kng_key_assignments","kng_key_movements"]);
+const verifySqlFor=(table:string,q:string)=>stableHashTables.has(table)?`select count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(t)::text),'' order by md5(to_jsonb(t)::text) collate "C"),'')) content_hash from ${q} t`:`select count(*)::bigint row_count,md5(coalesce(string_agg(row_to_json(t)::text,'' order by row_to_json(t)::text),'')) content_hash from ${q} t`;
 const stableHashTables=new Set(["kc_communication_templates","kc_dp_entity_versions","kc_manager_serving_materials","kc_manager_recipe_serving_materials"]);
 
 Deno.serve(async(req)=>{
@@ -64,8 +65,10 @@ Deno.serve(async(req)=>{
     for(let i=0;i<requested.length;i++){
       const table=requested[i];
       const startMs=Date.now(),started=new Date(startMs).toISOString();
-      const {data:snap,error:se}=await sb.rpc("kc_db_mirror_snapshot",{p_table_name:table});if(se||!snap){results.push({table,status:"error",stage:"source_snapshot"});continue}
-      const sc=String(snap.row_count??"0"),payload=String(snap.payload_text??"[]");let sh=String(snap.content_hash??"");
+      // KICC-F-107 (18.10.2026, Supabase-Egress): erst nur den Fingerabdruck (Zeilen + Prüfsumme, ~100 Byte) holen –
+      // die Daten selbst kommen nur, wenn die Tabelle sich geändert hat, und dann ohne Doppelkopie (kc_db_mirror_snapshot_text).
+      const {data:fp,error:fe}=await sb.rpc("kc_db_mirror_fingerprint",{p_table_name:table});if(fe||!fp){results.push({table,status:"error",stage:"source_fingerprint"});continue}
+      let sc=String(fp.row_count??"0"),payload="";let sh=String(fp.content_hash??"");
       if(stableHashTables.has(table)){const {data:stableHash,error:stableErr}=await sb.rpc("kc_db_mirror_stable_hash",{p_table_name:table});if(stableErr||!stableHash){results.push({table,status:"error",stage:"source_stable_hash"});continue}sh=String(stableHash)}
       const hashMode=stableHashTables.has(table)?"stable_row_hash_v1":"legacy_row_json_v1";
       const {data:lastOk,error:lastErr}=await sb.from("kc_db_mirror_runs").select("source_rows,metrics,finished_at").eq("run_type","snapshot").eq("status","ok").eq("metrics->>table",table).order("started_at",{ascending:false}).limit(1).maybeSingle();
@@ -81,6 +84,20 @@ Deno.serve(async(req)=>{
         results.push({table,status:"skipped",reason:"source_unchanged",source_rows:sc,source_hash:sh,last_verified_at:lastVerified.finished_at,batch_id:batchId,batch_index:i+1,batch_total:batchTotal});
         continue;
       }
+      // KICC-F-107: unverändert, aber Prüfung älter als das Intervall → das Ziel in Neon nachrechnen statt alles neu zu übertragen.
+      if(unchanged){
+        try{
+          const v=await getNeon().unsafe(verifySqlFor(table,`"public".${qi(table)}`));const tc=String(v[0]?.row_count??"0"),th=String(v[0]?.content_hash??"");
+          if(tc===sc&&th===sh){
+            const vm={table,batch_id:batchId,batch_index:i+1,batch_total:batchTotal,source_hash:sh,target_hash:th,hash_mode:hashMode,transfer_mode:"unchanged_target_verified",payload_bytes:0};
+            const {error:vErr}=await sb.from("kc_db_mirror_runs").insert({run_type:"snapshot",status:"ok",started_at:started,finished_at:new Date().toISOString(),source_rows:Number(sc),target_rows:Number(tc),mismatch_count:0,message:`${table}: source unchanged; target re-verified in Neon`,metrics:vm});
+            if(!vErr){results.push({table,status:"skipped",reason:"source_unchanged_target_verified",source_rows:sc,source_hash:sh,batch_id:batchId,batch_index:i+1,batch_total:batchTotal});continue}
+          }
+        }catch{/* Ziel nicht prüfbar → normal übertragen */}
+      }
+      {const {data:snap,error:se}=await sb.rpc("kc_db_mirror_snapshot_text",{p_table_name:table});if(se||!snap){results.push({table,status:"error",stage:"source_snapshot"});continue}
+        sc=String(snap.row_count??"0");payload=String(snap.payload_text??"[]");
+        if(stableHashTables.has(table)){const {data:h2}=await sb.rpc("kc_db_mirror_stable_hash",{p_table_name:table});if(h2)sh=String(h2)}else sh=String(snap.content_hash??"")}
       if(personRefTables.has(table)&&!prs){await syncP();prs=true}if(userRefTables.has(table)&&!urs){await syncU();urs=true}
       const bytes=new TextEncoder().encode(payload).byteLength,q=`"public".${qi(table)}`;
       const runningMetrics={table,batch_id:batchId,batch_index:i+1,batch_total:batchTotal,payload_bytes:bytes,privacy_redacted:redactedTables.has(table),write_mode:table==="kc_core_organizations"?"upsert":"replace",hash_mode:hashMode};
@@ -88,8 +105,7 @@ Deno.serve(async(req)=>{
       try{
         const schema=await schemaAbgleich(table);if(schema.created||schema.columns_added.length||schema.type_mismatch.length||schema.not_added_privacy.length)(runningMetrics as any).schema_sync=schema;
         await getNeon().begin(async tx=>{if(table==="kc_core_organizations"){if(sc!=="0")await tx.unsafe(`insert into ${q}(org_id,name,active,created_at,updated_at) select x.org_id,x.name,x.active,x.created_at,x.updated_at from jsonb_populate_recordset(null::${q},(($1::jsonb #>> '{}')::jsonb)) x on conflict(org_id) do update set name=excluded.name,active=excluded.active,created_at=excluded.created_at,updated_at=excluded.updated_at`,[payload])}else{await tx.unsafe(`delete from ${q}`);if(sc!=="0")await tx.unsafe(`insert into ${q} overriding system value select x.* from jsonb_populate_recordset(null::${q},(($1::jsonb #>> '{}')::jsonb)) x`,[payload])}});
-        const verifySql=stableHashTables.has(table)?`select count(*)::bigint row_count,md5(coalesce(string_agg(md5(to_jsonb(t)::text),'' order by md5(to_jsonb(t)::text) collate "C"),'')) content_hash from ${q} t`:`select count(*)::bigint row_count,md5(coalesce(string_agg(row_to_json(t)::text,'' order by row_to_json(t)::text),'')) content_hash from ${q} t`;
-        const v=await getNeon().unsafe(verifySql);const tc=String(v[0]?.row_count??"0"),th=String(v[0]?.content_hash??""),ok=sc===tc&&sh===th,endMs=Date.now(),durationMs=Math.max(1,endMs-startMs),bps=Math.round(bytes/(durationMs/1000));
+        const v=await getNeon().unsafe(verifySqlFor(table,q));const tc=String(v[0]?.row_count??"0"),th=String(v[0]?.content_hash??""),ok=sc===tc&&sh===th,endMs=Date.now(),durationMs=Math.max(1,endMs-startMs),bps=Math.round(bytes/(durationMs/1000));
         const metrics={...runningMetrics,source_hash:sh,target_hash:th,duration_ms:durationMs,bytes_per_second:bps,kilobytes_per_second:Number((bps/1024).toFixed(2)),megabytes_per_second:Number((bps/1048576).toFixed(4))};
         const finalRow={status:ok?"ok":"warning",finished_at:new Date(endMs).toISOString(),target_rows:Number(tc),mismatch_count:ok?0:1,message:ok?`${table}: source and target identical`:`${table}: verification mismatch`,metrics};
         if(runId)await sb.from("kc_db_mirror_runs").update(finalRow).eq("id",runId);else await sb.from("kc_db_mirror_runs").insert({run_type:"snapshot",started_at:started,source_rows:Number(sc),...finalRow});if(ok&&bytes>0){const {error:flowErr}=await sb.rpc("kicc_report_program_flow",{p_program_id:"kc-db-mirror-worker",p_instance_id:batchId,p_source_id:"supabase-kc-core",p_target_id:"neon-mirror",p_flow_type:"mirror",p_event_count:1,p_byte_count:bytes,p_status:"OK",p_measured_at:new Date(endMs).toISOString()});if(flowErr)results.push({table,status:"warning",stage:"flow_telemetry",message:"mirror succeeded but flow telemetry failed",batch_id:batchId,batch_index:i+1,batch_total:batchTotal})}results.push({table,status:ok?"ok":"warning",source_rows:sc,target_rows:tc,hash_match:sh===th,payload_bytes:bytes,duration_ms:durationMs,bytes_per_second:bps,batch_id:batchId,batch_index:i+1,batch_total:batchTotal});
