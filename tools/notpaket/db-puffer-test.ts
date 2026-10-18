@@ -20,7 +20,7 @@ const db = createClient("http://localhost:8788", "x", { auth: { persistSession: 
 const ok = (b: boolean, t: string) => { if (!b) { console.error("FEHLER:", t, anfragen); Deno.exit(1); } console.log("ok:", t); };
 const zaehle = (f: string) => anfragen.filter((a) => a.includes(f)).length;
 
-const pf = { antworten: new Map(), netz: 0, puffer: 0 };
+const pf = { antworten: new Map(), zeit: new Map(), netz: 0, puffer: 0, haltbarMs: 0 };
 await DB_PUFFER.run(pf, async () => {
   const a = await db.from("t").select("*").eq("x", 1);
   const [b, c] = await Promise.all([db.from("t").select("*").eq("x", 1), db.from("t").select("*").eq("x", 1)]);
@@ -46,12 +46,22 @@ ok(pf.netz === 9 && pf.puffer === 4 && anfragen.length === 9, `Zähler netz=${pf
 const vorher = zaehle("GET /rest/v1/t?select=*&x=eq.1");
 await db.from("t").select("*").eq("x", 1); await db.from("t").select("*").eq("x", 1);
 ok(zaehle("GET /rest/v1/t?select=*&x=eq.1") === vorher + 2, "außerhalb eines Notpaket-Teils nie gepuffert");
-const pf2 = { antworten: new Map(), netz: 0, puffer: 0 };
+const pf2 = { antworten: new Map(), zeit: new Map(), netz: 0, puffer: 0, haltbarMs: 0 };
 let fremd = 0;
 await Promise.all([
   DB_PUFFER.run(pf2, async () => { await db.from("p").select("*"); await new Promise((r) => setTimeout(r, 30)); await db.from("p").select("*"); }),
   (async () => { await new Promise((r) => setTimeout(r, 10)); const v = zaehle("/rest/v1/p?"); await db.from("p").select("*"); fremd = zaehle("/rest/v1/p?") - v; })(),
 ]);
 ok(fremd === 1 && pf2.puffer === 1 && pf2.netz === 1, "gleichzeitige fremde Anfrage sieht den Puffer nicht");
+// KC-CLUB-DB-SPARSAM: normaler App-Aufruf – Puffer nur haltbarMs gültig
+const pf3 = { antworten: new Map(), zeit: new Map(), netz: 0, puffer: 0, haltbarMs: 150 };
+await DB_PUFFER.run(pf3, async () => {
+  const v = zaehle("/rest/v1/h?");
+  await db.from("h").select("*"); await db.from("h").select("*");
+  ok(zaehle("/rest/v1/h?") === v + 1, "innerhalb der Haltbarkeit gepuffert");
+  await new Promise((r) => setTimeout(r, 200));
+  await db.from("h").select("*");
+  ok(zaehle("/rest/v1/h?") === v + 2 && pf3.puffer === 1, "nach Ablauf der Haltbarkeit frisch gelesen");
+});
 await srv.shutdown();
 console.log("ALLE TESTS GRÜN");

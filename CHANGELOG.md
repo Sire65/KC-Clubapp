@@ -1,5 +1,12 @@
 # Änderungen
 
+## Server 2.464.0 – 2026-10-18 – KC-CLUB-DB-SPARSAM: jeder App-Aufruf mit Lese-Puffer + Messung der Datenbank-Abfragen je Aktion
+Anlass (Hansi: „Anfragen minimieren, damit keine Funktionen gedrosselt oder abgeschaltet werden“; „kommen viele SQL-Aufrufe durch das ewige Einspielen?“): Jede neue Version startet die App neu (Anmeldung + Startdaten); wie viele Abfragen eine Aktion wirklich kostet, war bisher nicht messbar.
+- Jeder Aufruf der App bekommt den Lese-Puffer aus 2.453.0: dieselbe Leseabfrage innerhalb von 2 s nur einmal an die Datenbank. Schreiben (auch Communicator, Termin-Baustein, Eltern-Hinweis, direkter Datenbank-Weg) leert ihn; Fehler werden nie gepuffert; andere gleichzeitige Aufrufe sehen ihn nie. Notpaket-Teile behalten den Puffer über den ganzen Aufruf.
+- Messung: ab 15 Abfragen schreibt der Server eine Zeile ins Server-Log – Aktion, Abfragen, gespart, Dauer. Keine Inhalte, keine Personen, keine Datenbank-Schreibung (kostet nichts).
+- Test: tools/notpaket/db-puffer-test.ts 13/13 grün (neu: Haltbarkeit 2 s), Server-Probestart lokal (Deno 2.1.4) ok, Typprüfung unverändert.
+- Rückweg: Server 2.463.0 erneut hochladen.
+
 ## Server 2.456.0 – 2026-10-18 – KC-CLUB-NOTPAKET-PUFFER: Nachbesserung nach Messung
 Erster Bau mit 2.453.0 (09:18, erzwungen): Paket einwandfrei (17/17, 26,7 s, 5 statt 17 Aufrufe), aber nur 113 von 5.203 Abfragen gespart (2 %). Ursache: drei nur lesende Datenbank-Funktionen (kc_club_rt_kanal, kc_club_ungelesen_je_chat, kc_communication_get_server_secret – geprüft: STABLE bzw. reines SELECT) wurden als Schreiben gewertet und leerten den Puffer mehrmals je Mitglied. Jetzt lassen nur diese drei den Puffer stehen; jede andere Funktion leert ihn weiter vorsichtshalber. Lauf-Test um zwei Fälle erweitert (11/11 grün).
 

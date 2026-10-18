@@ -42,7 +42,11 @@ const DB_AUS = { n: 0 }; // zählt abgebrochene Abfragen (je Anfrage vorher/nach
 // gleiche Leseabfrage nur einmal gestellt und die Antwort wiederverwendet. Der Puffer gilt NUR innerhalb dieses Aufrufs (AsyncLocalStorage:
 // gleichzeitige andere Anfragen sehen ihn nie), lebt nur so lange wie der Aufruf und wird bei jedem Schreiben geleert. Fehler werden nie gepuffert.
 type DbAntwort = { status: number; statusText: string; headers: [string, string][]; body: ArrayBuffer | null };
-type DbPuffer = { antworten: Map<string, Promise<DbAntwort>>; netz: number; puffer: number };
+// KC-CLUB-DB-SPARSAM (2.464.0): haltbarMs > 0 → eine gepufferte Antwort gilt nur so lange (normale App-Aufrufe); 0 → den ganzen Aufruf (Notpaket-Teil, nur lesend).
+type DbPuffer = { antworten: Map<string, Promise<DbAntwort>>; zeit: Map<string, number>; netz: number; puffer: number; haltbarMs: number; aktion?: string };
+const dbPufferNeu = (haltbarMs: number): DbPuffer => ({ antworten: new Map(), zeit: new Map(), netz: 0, puffer: 0, haltbarMs });
+// Schreibt etwas außerhalb der Schnittstelle (andere Server-Funktion, direkter Datenbank-Weg), muss der Puffer des Aufrufs weg – nie veraltet lesen.
+const dbPufferLeeren = () => { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) { pf.antworten.clear(); pf.zeit.clear(); } };
 // Nur lesende Datenbank-Funktionen (STABLE bzw. reines SELECT, geprüft 18.10.2026): gehen ungepuffert durch, leeren den Puffer aber nicht.
 // Jede andere Funktion gilt vorsichtshalber als Schreiben. (Messung 2.453.0: diese drei leerten den Puffer mehrmals je Mitglied → nur 2 % gespart.)
 const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret"]);
@@ -54,12 +58,13 @@ const dbFetch: typeof fetch = (input, init) => {
   const methode = String(ri?.method || (input instanceof Request ? input.method : "GET")).toUpperCase();
   if (methode !== "GET" && methode !== "HEAD") {
     const rpc = /\/rest\/v1\/rpc\/([a-z0-9_]+)/.exec(url)?.[1];
-    if (!(methode === "POST" && rpc && DB_RPC_NUR_LESEN.has(rpc))) pf.antworten.clear();
+    if (!(methode === "POST" && rpc && DB_RPC_NUR_LESEN.has(rpc))) { pf.antworten.clear(); pf.zeit.clear(); }
     pf.netz++; return dbFetchNetz(input, init);
   }
   const h = new Headers(ri?.headers ?? (input instanceof Request ? input.headers : undefined));
   const schluessel = [methode, url, h.get("accept"), h.get("prefer"), h.get("range"), h.get("accept-profile")].join("|");
   let a = pf.antworten.get(schluessel);
+  if (a && pf.haltbarMs && Date.now() - (pf.zeit.get(schluessel) ?? 0) > pf.haltbarMs) a = undefined;
   if (a) pf.puffer++;
   else {
     pf.netz++;
@@ -68,7 +73,7 @@ const dbFetch: typeof fetch = (input, init) => {
       if (!r.ok) pf.antworten.delete(schluessel);
       return { status: r.status, statusText: r.statusText, headers: [...r.headers], body };
     });
-    pf.antworten.set(schluessel, a);
+    pf.antworten.set(schluessel, a); pf.zeit.set(schluessel, Date.now());
     a.catch(() => pf.antworten.delete(schluessel));
   }
   return a.then((x) => new Response(x.body && x.body.byteLength ? x.body.slice(0) : null, { status: x.status, statusText: x.statusText, headers: x.headers }));
@@ -85,7 +90,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.463.0";
+const SERVER_VERSION = "2.464.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -265,7 +270,7 @@ function elternHinweis(kinder: string[], art: "termin" | "erinnerung" | "absage"
   const p = fetch(`${SUPA}/functions/v1/kc-eltern`, { method: "POST", signal: AbortSignal.timeout(15000),
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
     body: JSON.stringify({ action: "senden", kinder: ids, art, titel: txt(titel, 120), text: txt(text, 300), url: ELTERN_SEITE }) })
-    .then((r) => r.body?.cancel()).catch((e) => console.error("elternHinweis", String(e)));
+    .then((r) => { dbPufferLeeren(); return r.body?.cancel(); }).catch((e) => console.error("elternHinweis", String(e)));
   try { (globalThis as any).EdgeRuntime?.waitUntil?.(p); } catch {}
 }
 // 2.447.0 KC-CLUB-GRUPPEN-QUITTUNG (Wunschliste #8): „angekommen“ (App hat neue Nachrichten geladen) bzw. „gelesen“ (Chat geöffnet)
@@ -364,6 +369,7 @@ async function routerSendenRoh(eventKey: string, personIds: string[], vars: Reco
     if (kopie) kopie = { cc: kopie.cc?.filter((id) => !stumm.has(id)), bcc: kopie.bcc?.filter((id) => !stumm.has(id)) };
     if (!personIds.length && !kopie?.cc?.length && !kopie?.bcc?.length) return { gesendet: 0, fehler: 0 };
   }
+  dbPufferLeeren(); // KC-CLUB-DB-SPARSAM: der Communicator schreibt selbst
   const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, { signal: AbortSignal.timeout(20000),
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
@@ -376,6 +382,7 @@ async function routerSendenRoh(eventKey: string, personIds: string[], vars: Reco
       ...(kopie?.cc?.length ? { cc: kopie.cc.map((personId) => ({ personId })) } : {}), ...(kopie?.bcc?.length ? { bcc: kopie.bcc.map((personId) => ({ personId })) } : {}) }),
   });
   const out = await r.json().catch(() => ({}));
+  dbPufferLeeren();
   const ergebnis: { gesendet: number; fehler: number; wege?: Record<string, { push: string; mail: string }> } = { gesendet: Number(out?.sent || 0), fehler: Number(out?.failed || 0) };
   // 2.403.0 KC-CLUB-EXPRESS-WEGE: je Empfänger, was auf welchem Weg wirklich passiert ist (aus der Antwort des Versanddienstes) –
   // „ja“ = raus, „kein“ = kein Push-Gerät bzw. keine Mail-Adresse, „fehler“ = versucht und gescheitert, „-“ = nicht vorgesehen
@@ -2869,7 +2876,7 @@ const NEUSTART_VAULT = "kc_supabase_neustart_token", NEUSTART_SPERRE_MIN = 20, P
 const GH_OIDC = "https://token.actions.githubusercontent.com";
 const GH_JWKS = createRemoteJWKSet(new URL(GH_OIDC + "/.well-known/jwks"));
 let DIREKT: ReturnType<typeof postgres> | null = null;
-const direktSql = () => DIREKT ??= postgres(Deno.env.get("SUPABASE_DB_URL")!, { max: 1, prepare: false, connect_timeout: 10, idle_timeout: 20 });
+const direktSql = () => (dbPufferLeeren(), DIREKT ??= postgres(Deno.env.get("SUPABASE_DB_URL")!, { max: 1, prepare: false, connect_timeout: 10, idle_timeout: 20 })); // KC-CLUB-DB-SPARSAM: direkter Weg → Puffer leeren
 async function neustartWaechter(req: Request) {
   const t = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   if (!t.startsWith("ey")) return false;
@@ -4833,6 +4840,7 @@ async function schulungAufruf(a: string, daten: Record<string, unknown>) {
   if (!token) throw new Fehler("Der Termin-Baustein ist nicht erreichbar (Schlüssel fehlt).", 503);
   const r = await fetch(`${SUPA}/functions/v1/kc-termine`, { method: "POST", signal: AbortSignal.timeout(25000),
     headers: { "Content-Type": "application/json", "x-kc-termine-admin-token": String(token) }, body: JSON.stringify({ ...daten, action: a, test: false }) });
+  dbPufferLeeren(); // KC-CLUB-DB-SPARSAM: der Termin-Baustein schreibt selbst
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Fehler(String(j?.error || "Der Termin-Baustein antwortet nicht."), r.status >= 500 ? 502 : r.status === 401 ? 503 : r.status);
   return j;
@@ -5662,7 +5670,7 @@ async function ktZug(g: any, ich: any, zug: any) {
   return json({ ok: true, antwort, frage, verpasst, spiel: spielSicht(neu, ich.person_id, await personen([g.von, g.an])) });
 }
 // ---------- Hauptprogramm ----------
-Deno.serve(async (req) => {
+const kcAnfrage = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   // KC-CLUB-KALENDERABO: Handy-Kalender holt die Termine per GET ?kalender=<geheimer Link>
   if (req.method === "GET") {
@@ -5675,6 +5683,7 @@ Deno.serve(async (req) => {
   let p: any; try { p = await req.json(); } catch { return json({ error: "Ungültige Anfrage" }, 400); }
   const dbAusVorher = DB_AUS.n; // KC-CLUB-DB-ZEITGRENZE
   const a = String(p?.action || "");
+  { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) pf.aktion = a; } // KC-CLUB-DB-SPARSAM: Messung je Aktion
   try {
     // ----- KC-CLUB-NOTBETRIEB (1.52.0): Notfall-Paket bauen und beim Ersatz-Server ablegen (Zeitplaner, alle 15 Min.) -----
     if (a === "fra_sicherung") { // KC-CLUB-FRA-SICHERUNG (2.236.0): Schritt der nächtlichen Frankfurt-Sicherung (nur Zeitplaner)
@@ -5698,7 +5707,7 @@ Deno.serve(async (req) => {
       const pids = (Array.isArray(p.person_ids) ? p.person_ids : [p.person_id]).map((x: unknown) => String(x || ""));
       for (const pid of pids) if (!/^KC-P-[A-Z0-9-]{1,40}$/.test(pid) || pid.startsWith("KC-P-TEST")) return json({ error: "Ungültig" }, 400);
       if (!pids.length || pids.length > NOT_GRUPPE) return json({ error: "Ungültig" }, 400);
-      const pf: DbPuffer = { antworten: new Map(), netz: 0, puffer: 0 }, mitglieder: Record<string, unknown> = {};
+      const pf = dbPufferNeu(0), mitglieder: Record<string, unknown> = {};
       await DB_PUFFER.run(pf, async () => { for (const pid of pids) mitglieder[pid] = await notpaketMitglied(pid); });
       if (DB_AUS.n !== dbAusVorher) return json({ error: "Datenbank antwortet nicht" }, 503); // nie ein halbes Ergebnis
       return json({ ok: true, antworten: mitglieder[pids[0]] ?? null, mitglieder, db: { netz: pf.netz, puffer: pf.puffer } });
@@ -6169,6 +6178,19 @@ Köcheclub Werne`,
     console.error("Fehler-Nr.", nr, a, e);
     return json({ error: `Da ist etwas schiefgelaufen – bitte gleich noch einmal versuchen. (Fehler-Nr. ${nr})` }, 500);
   }
+};
+// KC-CLUB-DB-SPARSAM (2.464.0, Wunsch Hansi „Anfragen minimieren, damit nichts gedrosselt oder abgeschaltet wird“): Jeder Aufruf bekommt
+// einen eigenen Lese-Puffer – dieselbe Leseabfrage innerhalb von DB_PUFFER_MS nur einmal an die Datenbank (Schreiben leert ihn, Fehler nie
+// gepuffert, andere gleichzeitige Aufrufe sehen ihn nie). Messung: ab DB_LOG_AB Abfragen eine Zeile ins Server-Log mit Aktion und Zahlen
+// (keine Inhalte, keine Personen, keine Datenbank-Schreibung – kostet nichts). So sieht man, welche Aktion wie viele Abfragen braucht.
+const DB_PUFFER_MS = 2000, DB_LOG_AB = 15;
+Deno.serve((req) => {
+  const pf = dbPufferNeu(DB_PUFFER_MS);
+  return DB_PUFFER.run(pf, async () => {
+    const t0 = Date.now(), antwort = await kcAnfrage(req);
+    if (pf.netz + pf.puffer >= DB_LOG_AB) console.log(JSON.stringify({ db: txt(pf.aktion || req.method, 40), netz: pf.netz, puffer: pf.puffer, ms: Date.now() - t0 }));
+    return antwort;
+  });
 });
 
 // KC-CLUB-NOTBETRIEB (1.52.0): alle angemeldeten Aktionen in einer Funktion – so kann der Server dieselben Antworten
