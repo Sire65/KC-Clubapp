@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.440.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.441.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19951,7 +19951,7 @@ function heroZeigen(richtung) {
   const f = INFO_FELDER[INFO_I] || INFO_FELDER[0], inhalt = f.html();
   // gleicher Inhalt → nicht neu zeichnen (sonst springen Wetter-Animationen bei jedem Online-Takt neu an)
   const erzwingen = richtung !== undefined; // heroZeigen(0) = sofort neu zeichnen (ohne Wisch-Animation)
-  if (!erzwingen && $("infoFeld") && infoLetztes === f.id + inhalt) return;
+  if (!erzwingen && $("infoFeld") && infoLetztes === f.id + inhalt) return ilZeigen(); // 2.441.0: das Laufband trotzdem auffrischen (z. B. nach Zu-/Absage)
   if (!erzwingen && document.activeElement?.id === "zeText") return; // beim Tippen in der Zentrale nicht neu zeichnen
   infoLetztes = f.id + inhalt;
   $("heroInfo").innerHTML = `<div class="ifeld ifeld-${f.id}${richtung ? (richtung > 0 ? " rein-r" : " rein-l") : ""}" id="infoFeld" data-id="${f.id}">${inhalt}</div>
@@ -22318,23 +22318,13 @@ function nachrichtMahnung() {
 // Feld 1: das nächste Treffen (antippen → Termine), darunter drei Kennzahlen, jede führt in ihren Bereich
 function infoTreffen() {
   const t = INIT?.naechstesTreffen, n = INIT?.ungelesen || 0;
-  let kopf, bisTreffen = "—", frist = "";
-  if (t) {
+  let bisTreffen = "—", frist = "";
+  if (t) { // 2.441.0: Titel, Datum und Zu-/Absage stehen jetzt als erster Punkt im Info-Laufband (ilTreffen) – die Kopfzeile darüber ist weg
     const tage = Math.ceil((new Date(t.beginn) - Date.now()) / 86400000);
-    const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
-    const meine = { ja: "✅ Ich komme", nein: "❌ Abgesagt", vielleicht: "❓ Vielleicht" }[t.meine] || "❔ Bitte zu- oder absagen";
-    // 2.102.0 KC-CLUB-TERMIN-ANTEIL (Wunsch Hansi): „✅ 3/18 angemeldet“ = 3 von 18 Mitgliedern haben schon zugesagt
-    const alle = Number(INIT?.mitgliederAnzahl) || 0, gesamtTxt = alle ? `✅ <b>${t.ja}/${alle}</b> angemeldet` : `✅ ${t.ja} Zusagen`;
-    // 2.239.0 KC-CLUB-ANTWORT-BLINKEN (Wunsch Hansi): noch nicht zu- oder abgesagt → ab 5 Tagen vorher gelb blinkend, ab 2 Tagen rot dauerblinkend
-    // („vielleicht“ zählt nicht als Antwort). Die Kopfzeile wird beim Laden/Takt neu gezeichnet, die Stufe wandert also von selbst mit.
-    const stdBis = (new Date(t.beginn) - Date.now()) / 3600000, offenAntwort = t.meine !== "ja" && t.meine !== "nein";
-    const blinken = offenAntwort && stdBis > 0 ? (stdBis <= 48 ? " antwort-blinken rot" : stdBis <= 120 ? " antwort-blinken gelb" : "") : "";
-    kopf = `<h2>${esc(t.titel)}</h2><div class="unter">${esc(wann(t.beginn))}${ort ? " · " + esc(ort) : ""}</div><div class="unter"><b class="antwort-zeile${blinken}">${meine}</b> · ${gesamtTxt}</div>`;
     bisTreffen = tage <= 0 ? "Heute" : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
     frist = fristStufe(tage);
-  } else kopf = `<h2>Kein Termin geplant</h2><div class="unter">Sobald ein Köcheclub-Termin ansteht, siehst du es hier.</div>`;
-  return `<div class="klick" role="button" tabindex="0" onclick="zumTreffen()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();zumTreffen()}">${kopf}</div>
-    <div class="il" id="infoLaufband"></div><!-- 2.439.0 KC-CLUB-INFO-LAUFBAND -->
+  }
+  return `<div class="il" id="infoLaufband"></div><!-- 2.439.0 KC-CLUB-INFO-LAUFBAND -->
     <div class="kacheln3">
       ${(() => { const m = n ? nachrichtMahnung() : null; /* KC-CLUB-NACHRICHT-MAHNUNG (2.223.0) */
         return `<button class="mini${n ? " mini-neu" : ""}${m ? " " + m.klasse : ""}"${m ? ` title="${esc(m.titel)}"` : ""} onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${m?.wichtig ? "❗" : ""}${n}</b><span>${m?.wichtig ? "Wichtig!" : m ? "Lange offen" : "Neue Nachr."}</span>`; })()}${mpfeil("nachrichten", n > 0, n)}</button>
@@ -22349,20 +22339,34 @@ function infoTreffen() {
 // Hinweise (gold), schöne Infos (weiß); ist nichts da: „Alles erledigt 👍“ und der Tipp des Tages. Wechselt alle 6 s (sanft), Wischen blättert,
 // Berühren hält an, ✕ blendet eine Meldung für heute aus. Läuft nur, solange die Startseite sichtbar ist (in der Ruhephase steht es still).
 const IL_TAKT_MS = 6000, IL_AUS = "kc_club_il_aus";
-const IL = { liste: [], i: 0, uhr: 0, halt: 0, x0: null, gewischt: 0, schluessel: "" };
+const IL = { liste: [], i: 0, uhr: 0, halt: 0, x0: null, gewischt: 0, schluessel: "", html: "", takt: 0 };
 function ilAusgeblendet() { try { const a = JSON.parse(localStorage.getItem(IL_AUS) || "null"); return a && a.tag === heuteIso() ? a.ids : []; } catch { return []; } }
 function ilAusblenden(id) {
   const ids = [...new Set([...ilAusgeblendet(), id])]; try { localStorage.setItem(IL_AUS, JSON.stringify({ tag: heuteIso(), ids })); } catch {}
   melde("Für heute ausgeblendet"); ilZeigen();
+}
+// 2.441.0 KC-CLUB-LAUFBAND-TREFFEN (Wunsch Hansi „was über dem neuen Feld steht, soll als ein Punkt ins Feld – jetzt ist alles viel zu hoch“):
+// das nächste Treffen ist immer der erste Punkt – Titel, Datum · Ort, Zu-/Absage-Knöpfe bzw. die eigene Antwort und „x/y angemeldet“
+function ilTreffen(t) {
+  if (!t) return { id: "treffen", stufe: "weiss", sym: "📅", t: "Kein Termin geplant", u: "Sobald ein Köcheclub-Termin ansteht, siehst du es hier.", ohneAus: true, voll: true };
+  const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
+  const meine = { ja: "✅ Ich komme", nein: "❌ Abgesagt", vielleicht: "❓ Vielleicht" }[t.meine] || "❔ Bitte zu- oder absagen";
+  // 2.102.0 KC-CLUB-TERMIN-ANTEIL (Wunsch Hansi): „✅ 3/18 angemeldet“ = 3 von 18 Mitgliedern haben schon zugesagt
+  const alle = Number(INIT?.mitgliederAnzahl) || 0, gesamtTxt = alle ? `✅ <b>${t.ja}/${alle}</b> angemeldet` : `✅ ${t.ja} Zusagen`;
+  // 2.239.0 KC-CLUB-ANTWORT-BLINKEN (Wunsch Hansi): noch nicht zu- oder abgesagt → ab 5 Tagen vorher gelb blinkend, ab 2 Tagen rot dauerblinkend
+  // („vielleicht“ zählt nicht als Antwort). Das Laufband zeichnet sich regelmäßig neu, die Stufe wandert also von selbst mit.
+  const stdBis = (new Date(t.beginn) - Date.now()) / 3600000, offenAntwort = t.meine !== "ja" && t.meine !== "nein";
+  const blinken = offenAntwort && stdBis > 0 ? (stdBis <= 48 ? " antwort-blinken rot" : stdBis <= 120 ? " antwort-blinken gelb" : "") : "";
+  const offen = offenAntwort && stdBis > 0 && !!t.id;
+  return { id: "treffen", stufe: offen ? "rot" : "weiss", sym: "📅", t: t.titel, u: wann(t.beginn) + (ort ? " · " + ort : ""), auf: "zumTreffen()", ohneAus: true, voll: true,
+    stand: `${offen ? "" : `<b class="antwort-zeile">${meine}</b> · `}${gesamtTxt.replace(" angemeldet", "")}`, // kurz, passt in eine Zeile
+    knoepfe: offen ? [["✔ Zusagen", `ilAntwort('${esc(t.id)}','ja')`, blinken], ["✖", `ilAntwort('${esc(t.id)}','nein')`]] : null };
 }
 function ilMeldungen() {
   const L = [], add = (m) => L.push(m), t = INIT?.naechstesTreffen, kz = INIT?.kz || {}, leitung = !!(ICH?.vorstand || ICH?.admin);
   const anz = (n, ein, mehr) => `${n} ${n === 1 ? ein : mehr}`;
   // 🔴 bitte erledigen
   if (INIT?.eingangskorb > 0) add({ id: "eingang", stufe: "rot", sym: "📥", t: `Eingangskorb: ${anz(INIT.eingangskorb, "Dokument", "Dokumente")} für dich`, u: "Ansehen und ins Archiv übernehmen – oder ablehnen", auf: "eingangOeffnen()" });
-  if (t && t.meine !== "ja" && t.meine !== "nein" && new Date(t.beginn) > Date.now() && new Date(t.beginn) - Date.now() < 21 * 86400000)
-    add({ id: "anmelden:" + (t.id || t.beginn), stufe: "rot", sym: "📅", t: `Jetzt für ${t.titel} zu- oder absagen`, u: wann(t.beginn), auf: "zeige('termine')",
-      knoepfe: t.id ? [["✔ Zusagen", `ilAntwort('${esc(t.id)}','ja')`], ["✖", `ilAntwort('${esc(t.id)}','nein')`]] : null });
   for (const a of INIT?.terminanfragenOffen || []) add({ id: "anfrage:" + a.id, stufe: "rot", sym: "📨", t: `${a.von} fragt an: ${a.anlass}`, u: "Bitte antworten", auf: `taZeigen('${esc(a.id)}')` });
   if (INIT?.offeneAbstimmungen) add({ id: "abstimmung", stufe: "rot", sym: "🗳️", t: INIT.offeneAbstimmungen === 1 ? "Eine Abstimmung wartet auf deine Stimme" : `${INIT.offeneAbstimmungen} Abstimmungen warten auf deine Stimme`, u: "Antippen und abstimmen", auf: "zeige('vorschlaege')" });
   for (const u of INIT?.terminfindungOffen || []) add({ id: "terminfindung:" + (u.id || u.titel), stufe: "rot", sym: "🗓️", t: `Bitte Termine ankreuzen: ${u.titel}`, u: "Wann kannst du?", auf: "zeige('termine')" });
@@ -22377,32 +22381,31 @@ function ilMeldungen() {
   const nd = INIT?.naechsterDienst;
   if (nd && (nd.datum === heuteIso() || nd.datum === tagPlus(heuteIso(), 1))) add({ id: "dienst:" + nd.datum, stufe: "gold", sym: "🗓️", t: `${nd.datum === heuteIso() ? "Heute" : "Morgen"} hast du Dienst: ${nd.start}–${nd.ende} Uhr`, u: nd.bereich || "Mein Dienst", auf: "dpNurIch()" });
   if (INIT?.protokolleUngelesen) add({ id: "protokoll", stufe: "gold", sym: "📄", t: INIT.protokolleUngelesen === 1 ? "Ein neues Protokoll zum Lesen" : `${INIT.protokolleUngelesen} neue Protokolle zum Lesen`, u: "Antippen zum Lesen", auf: "zeige('protokolle')" });
-  if (t && (t.meine === "ja" || t.meine === "nein")) { const tage = Math.ceil((new Date(t.beginn) - Date.now()) / 86400000);
-    if (tage >= 1 && tage <= 14) add({ id: "countdown:" + (t.id || t.beginn), stufe: "gold", sym: "⏳", t: tage === 1 ? `Morgen: ${t.titel}` : `Noch ${tage} Tage bis ${t.titel}`, u: wann(t.beginn), auf: "zeige('termine')" }); }
   const wd = WET.r?.daten, wt = t && wd ? wd.tage?.find((x) => x.datum === isoBerlin(new Date(t.beginn))) : null;
   if (wt) { const a = wetterArt(wt.code), nass = (wt.regenWkt ?? 0) >= 50 || ["regen", "niesel", "gewitter", "schnee"].includes(a.szene);
     add({ id: "wetter:" + wt.datum, stufe: nass ? "gold" : "weiss", sym: a.sym, t: nass ? "Am Treffen-Tag wird es nass – Schirm mitnehmen" : `Wetter am Treffen-Tag: ${a.text}`, u: `${grad(wt.max)} / ${grad(wt.min)}${wt.regenWkt != null ? ` · ☔ ${wt.regenWkt} %` : ""}`, auf: "infoGehe(INFO_FELDER.findIndex((f) => f.id === 'wetter'))" }); }
   // ⚪ schöne Infos
   for (const g of INIT?.geburtstageHeute || []) if (g.person_id !== ICH?.person_id) add({ id: "geb:" + g.person_id, stufe: "weiss", sym: "🎂", t: `${g.name} hat heute Geburtstag`, u: "Gratuliere mit einem Tipp", auf: `gratulieren('${esc(g.person_id)}', true)`, knoepfe: [["💬 Gratulieren", `gratulieren('${esc(g.person_id)}', true)`]] });
-  const on = typeof mpOnline === "function" && ONL.zeigen ? mpOnline() : 0;
-  if (on > 0) add({ id: "online", stufe: "weiss", sym: "🟢", t: on === 1 ? "1 Mitglied ist gerade online" : `${on} Mitglieder sind gerade online`, u: "Antippen – anklopfen oder schreiben", auf: "mgNurOnline()" });
+  // 2.441.0: „x Mitglieder online“ nicht hier – das zeigt schon das Feld „Mitglieder“ darunter (nichts doppelt)
   if (kz.fotos > 0) add({ id: "fotos", stufe: "weiss", sym: "📸", t: kz.fotos === 1 ? "Ein neues Foto im Album" : `${kz.fotos} neue Fotos im Album`, u: "Antippen und ansehen", auf: "zeige('fotos')" });
   const dn = typeof dokHinweis === "function" ? dokHinweis() : null;
   if (dn) add({ id: "dok:" + dn.id, stufe: "weiss", sym: dn.sym || "🆕", t: `Neu: ${dn.t}`, u: "Antippen zum Lesen", auf: `dokOeffnen('${esc(dn.id)}')` });
   const aus = new Set(ilAusgeblendet()), sichtbar = L.filter((m) => !aus.has(m.id));
   const rang = { rot: 0, orange: 1, gold: 2, weiss: 3 }; sichtbar.sort((a, b) => rang[a.stufe] - rang[b.stufe]);
-  if (!sichtbar.some((m) => m.stufe === "rot" || m.stufe === "orange")) sichtbar.unshift({ id: "_ok", stufe: "weiss", sym: "👍", t: "Alles erledigt", u: "Für dich steht gerade nichts an", ohneAus: true });
+  if (!sichtbar.some((m) => m.stufe === "rot" || m.stufe === "orange") && ilTreffen(t).stufe !== "rot") sichtbar.unshift({ id: "_ok", stufe: "weiss", sym: "👍", t: "Alles erledigt", u: "Für dich steht gerade nichts an", ohneAus: true });
   const tipps = HILFE.filter((h) => h.thema !== "erste" && (!h.nur || h.nur()));
   if (tipps.length) { const d = new Date(), h = tipps[(d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate()) % tipps.length];
     sichtbar.push({ id: "_tipp", stufe: "weiss", sym: "💡", t: `Tipp: ${hzTxt(h.t)}`, u: String(hzTxt(h.x)).replace(/<[^>]+>/g, "").slice(0, 90), auf: `hzZuEintrag('h:${esc(h.id)}')`, ohneAus: true }); }
   // Wichtiges öfter zeigen: nach jeder Hinweis-/Info-Meldung kommt die nächste rote wieder dran
-  const rot = sichtbar.filter((m) => m.stufe === "rot" || m.stufe === "orange"), rest = sichtbar.filter((m) => !rot.includes(m));
-  if (rot.length && rest.length > 2) { const folge = [...rot]; rest.forEach((m, i) => { folge.push(m); if (i % 2 === 1) folge.push(rot[(i >> 1) % rot.length]); }); return folge; }
-  return [...rot, ...rest];
+  const tf = ilTreffen(t), rot = [...(tf.stufe === "rot" ? [tf] : []), ...sichtbar.filter((m) => m.stufe === "rot" || m.stufe === "orange")], rest = sichtbar.filter((m) => !rot.includes(m));
+  let folge = [...rot, ...rest];
+  if (rot.length && rest.length > 2) { folge = [...rot]; rest.forEach((m, i) => { folge.push(m); if (i % 2 === 1) folge.push(rot[(i >> 1) % rot.length]); }); }
+  return tf.stufe === "rot" ? folge : [tf, ...folge]; // das Treffen steht immer vorn; ist die Antwort offen, kommt es als rote Meldung zwischendurch wieder
 }
 function ilHtml(m) {
-  const k = (m.knoepfe || []).map(([t, f]) => `<button type="button" class="il-knopf" onclick="event.stopPropagation();${f}">${esc(t)}</button>`).join("");
-  return `<span class="il-sym" aria-hidden="true">${m.sym}</span><span class="il-text"><b>${esc(m.t)}</b>${m.u ? `<small>${esc(m.u)}</small>` : ""}</span>${k ? `<span class="il-knoepfe">${k}</span>` : m.auf ? '<span class="il-pfeil" aria-hidden="true">›</span>' : ""}`
+  const k = (m.knoepfe || []).map(([t, f, kl]) => `<button type="button" class="il-knopf${kl || ""}" onclick="event.stopPropagation();${f}">${esc(t)}</button>`).join("");
+  // m.stand = fertiges HTML (nur aus eigenen, mit esc gebauten Teilen): steht neben den Knöpfen bzw. als dritte Zeile
+  return `<span class="il-sym" aria-hidden="true">${m.sym}</span><span class="il-text"><b>${esc(m.t)}</b>${m.u ? `<small>${esc(m.u)}</small>` : ""}${m.stand && !k ? `<small class="il-stand">${m.stand}</small>` : ""}</span>${k ? `<span class="il-knoepfe">${k}${m.stand ? `<span class="il-stand">${m.stand}</span>` : ""}</span>` : m.auf ? '<span class="il-pfeil" aria-hidden="true">›</span>' : ""}`
     + (m.ohneAus ? "" : `<button type="button" class="il-zu" title="Für heute ausblenden" aria-label="Für heute ausblenden" onclick="event.stopPropagation();ilAusblenden('${esc(m.id)}')">✕</button>`);
 }
 function ilZeigen() {
@@ -22412,9 +22415,10 @@ function ilZeigen() {
   const s = IL.liste.map((m) => m.id + m.t).join("|"); if (s !== IL.schluessel) { IL.schluessel = s; const j = IL.liste.findIndex((m) => m.id === alt); IL.i = j >= 0 ? j : 0; }
   if (IL.i >= IL.liste.length) IL.i = 0;
   const m = IL.liste[IL.i]; if (!m) return;
-  b.className = `il il-${m.stufe}${m.auf ? " il-klick" : ""}`;
-  b.innerHTML = `<div class="il-inhalt${m.knoepfe ? " mit-knopf" : ""}" role="button" tabindex="0">${ilHtml(m)}</div>`
+  const kl = `il il-${m.stufe}${m.auf ? " il-klick" : ""}`, html = `<div class="il-inhalt${m.knoepfe ? " mit-knopf" : ""}${m.voll ? " il-voll" : ""}" role="button" tabindex="0">${ilHtml(m)}</div>`
     + (IL.liste.length > 1 ? `<div class="il-punkte" aria-hidden="true">${IL.liste.map((_, i) => `<i${i === IL.i ? ' class="an"' : ""}></i>`).join("")}</div>` : "");
+  if (b.firstElementChild && IL.html === kl + html) return; // unverändert → nicht neu zeichnen (sonst stockt die Wisch-Animation)
+  IL.html = kl + html; b.className = kl; b.innerHTML = html;
   const inh = b.firstElementChild;
   inh.onclick = () => { if (Date.now() - IL.gewischt < 400) return; if (m.auf) { try { new Function(m.auf)(); } catch {} } };
   inh.onkeydown = (e) => { if ((e.key === "Enter" || e.key === " ") && m.auf) { e.preventDefault(); inh.onclick(); } };
@@ -22432,6 +22436,7 @@ async function ilAntwort(id, a) { try { await antwort(id, a); } catch {} try { a
 setInterval(() => {
   try {
     if (document.hidden || aktuelleAnsicht !== "start" || document.documentElement.classList.contains("kc-ruhe") || Date.now() < IL.halt || !document.getElementById("infoLaufband")) return;
+    if (++IL.takt % 15 === 0) ilZeigen(); // Antwort, Blinkstufe, Zahlen frisch halten (zeichnet nur bei Änderung)
     IL.uhr += 1000; if (IL.uhr < IL_TAKT_MS) return; IL.uhr = 0;
     if (IL.liste.length > 1) ilBlaettern(1);
   } catch {}
@@ -22631,8 +22636,9 @@ const CD_ARTEN = [ // [Schlüssel, Bezeichnung in den Einstellungen, Einträge l
     return h.slice(5, 7) === "12" && t >= 0 ? [{ id: "s", zahl: cdNoch(t), text: "🎆 Sil\u00ADves\u00ADter", los: () => zeige("termine") }] : []; }],
   ["meingeb", "🎂 Mein Geburtstag (30 Tage vorher)", () => { const g = (CD.daten?.geburtstage || []).find((x) => x.person_id === ICH?.person_id); const d = g && cdNaechsterTag(g.md), t = d ? cdTageBis(d) : -1;
     return t >= 0 && t <= 30 ? [{ id: "g", zahl: t === 0 ? "Alles Gute!" : cdNoch(t), text: "🎂 Mein Geb.", los: () => zeige("termine") }] : []; }],
+  // 2.441.0: am Geburtstag selbst steht er im Info-Laufband (mit 💬 Gratulieren) – hier nur die Tage davor
   ["mggeb", "🎂 Geburtstage der Mitglieder (14 Tage vorher)", () => (CD.daten?.geburtstage || []).filter((x) => x.person_id !== ICH?.person_id).map((g) => { const d = cdNaechsterTag(g.md), t = d ? cdTageBis(d) : -1;
-    return t >= 0 && t <= 14 ? { id: "m" + g.person_id, t, zahl: cdNoch(t), text: `🎂 Geb. ${g.vorname || g.name}`, los: () => mitgliedOeffnen(g.person_id) } : null; }).filter(Boolean).sort((a, b) => a.t - b.t).slice(0, 3)],
+    return t >= 1 && t <= 14 ? { id: "m" + g.person_id, t, zahl: cdNoch(t), text: `🎂 Geb. ${g.vorname || g.name}`, los: () => mitgliedOeffnen(g.person_id) } : null; }).filter(Boolean).sort((a, b) => a.t - b.t).slice(0, 3)],
 ];
 const CD_VERANSTALTUNGEN = { markt: { re: /weihnachtsmarkt/i, ohne: /aufbau|abbau|nachbereitung|vorbereitung/i, text: "🎄 Weih\u00ADnachts\u00ADmarkt", vorlauf: 120 } };
 function cdPrivat() {
