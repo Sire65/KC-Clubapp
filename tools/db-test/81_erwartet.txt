@@ -1,0 +1,8 @@
+nachgeholt=t
+alt_nachgeholt=t
+neu_nicht_nachgeholt=t
+zurueckgestellt_nicht_nachgeholt=t
+neu_im_audit=t
+zurueck_im_audit=t
+rot_wird_geprueft=t
+gruen_bleibt=t

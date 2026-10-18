@@ -10488,3 +10488,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(!/id: "online"/.test(m) && !/id: "countdown:/.test(m) && !/id: "anmelden:/.test(m) && /id: "geb:"/.test(m), "Laufband ohne Doppel");
   assert.ok(/return t >= 1 && t <= 14 \? \{ id: "m" \+ g\.person_id/.test(programm), "Countdown: Mitglieder-Geburtstage nur vorab");
 }
+// DB 18.10.2026 KC-CORE-BACKUP-NACHHOLEN-DISPATCH: Nachholen lädt nur Tabellen, die zum Satz gehören; Prüfen schaut auf den LETZTEN Restore-Test
+{
+  const mig = lies("supabase/migrations/20261018_kc_core_backup_nachholen_nur_dispatch.sql");
+  assert.ok(/create or replace function public\.kc_db_backup_nachholen\(\)/.test(mig) && /v_satz\.zurueck \? tr\.table_name/.test(mig) && /tr\.updated_at > v_satz\.happened_at/.test(mig) && /s\.finished_at < v_satz\.happened_at/.test(mig), "neue/zurückgestellte Tabellen nicht in den laufenden Satz");
+  assert.ok(/'backup_table_deferred'/.test(mig) && /'quelle','nachholen'/.test(mig), "Zurückstellen steht einmal je Satz im Audit");
+  assert.ok(/v_max_versuche constant int := 8/.test(mig) && /backup_nachholen_aufgegeben/.test(mig) && /KICC-F-105/.test(mig), "bestehende Nachhol-Regeln (Versuche, große Tabellen) unverändert");
+  assert.ok(/order by started_at desc, id desc limit 1\) = 'ok' then\s+return null;/.test(mig), "nur ein zuletzt bestandener Satz wird übersprungen");
+  assert.ok(lies("tools/db-test/81_erwartet.txt").includes("neu_nicht_nachgeholt=t") && lies("tools/db-test/81_erwartet.txt").includes("rot_wird_geprueft=t"), "Probelauf");
+  assert.ok(/### kc_db_backup_nachholen/.test(lies("docs/BACKUP_NACHHOLEN_2026-10-18.md")), "Rückweg dokumentiert");
+}
