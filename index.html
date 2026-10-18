@@ -985,6 +985,11 @@
   .ktag.frist { background: var(--gelbbg); color: var(--gelb); font-weight: 900; }
   .ktag.dienst { background: var(--blaubg); color: var(--blau); font-weight: 900; }
   .ktag.feiertag { background: var(--rotbg); color: var(--rot2); font-weight: 900; }
+  :root { --ferien: #e0a23b; --ferienbg: rgba(224, 162, 59, .2); } /* 2.484.0 KC-CLUB-FERIEN: Sand – halbdurchsichtig, passt hell und dunkel */
+  .ktag.ferien { background: var(--ferienbg); }
+  .p-ferien { background: var(--ferien); }
+  .ferien-laender { margin: 4px 0 8px; } .ferien-laender summary { cursor: pointer; font-weight: 700; padding: 6px 0; } .ferien-laender summary span { font-weight: 400; color: var(--grau); }
+  .ferien-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 4px 12px; padding: 4px 0 8px; } .ferien-liste label { display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; }
   .ktag.veranst { background: var(--gruenbg); color: var(--gruen); font-weight: 900; }
   .ktag.aktion { background: var(--tuerkisbg); color: var(--tuerkis); font-weight: 900; }
   .ktag.treffen { background: var(--rot); color: #fff; font-weight: 900; }
@@ -4546,7 +4551,7 @@
         <div class="tage" id="kalGitter"></div>
         <div class="legende">
           <span><i style="background:var(--rot)"></i>Sitzung</span><span><i style="background:var(--gruenbg);outline:1px solid var(--gruen)"></i>🎪 Veranstaltung</span><span><i style="background:var(--tuerkisbg);outline:1px solid var(--tuerkis)"></i>🧳 Aktion / Ausflug</span><span><i style="background:var(--blaubg);outline:1px solid var(--blau)"></i>mein Dienst</span>
-          <span><i style="background:var(--gelbbg);outline:1px solid #d19a22"></i>Abstimmungs-Frist</span><span><i style="background:var(--lilabg);outline:1px solid var(--lila)"></i>🎂 Geburtstag</span><span><i style="background:var(--rotbg);outline:1px solid var(--rot3)"></i>🇩🇪 Feiertag NRW</span>
+          <span><i style="background:var(--gelbbg);outline:1px solid #d19a22"></i>Abstimmungs-Frist</span><span><i style="background:var(--lilabg);outline:1px solid var(--lila)"></i>🎂 Geburtstag</span><span><i style="background:var(--ferienbg);outline:1px solid var(--ferien)"></i>🏖️ Ferien</span><span><i style="background:var(--rotbg);outline:1px solid var(--rot3)"></i>🇩🇪 Feiertag NRW</span>
           <span><i style="background:var(--gold)"></i>📨 Anfrage</span><span><i style="outline:2px dashed #5b7fa6"></i>🔒 Privat</span><span><i style="background:#7d3c98"></i>🎓 Schulung</span>
           <span><i style="outline:2px solid var(--gold)"></i>heute</span>
         </div>
@@ -5068,6 +5073,9 @@
       <div style="margin-top:8px"><b>👥 Mitglieder anzeigen als</b></div>
       <div class="umschalter" id="mgAnsichtWahl" data-zyklus="Ansicht"><button data-a="kacheln" onclick="mgAnsichtSetzen('kacheln')">🔲 Kacheln</button><button data-a="liste" onclick="mgAnsichtSetzen('liste')">☰ Liste</button><button data-a="tafel" onclick="mgAnsichtSetzen('tafel')">📋 Anwesenheit</button><button data-a="kartei" onclick="mgAnsichtSetzen('kartei')">🗂️ Kartei</button></div>
       <div class="schalter"><div><b>🇩🇪 Feiertage NRW im Kalender</b><div class="hinweis">Gesetzliche Feiertage in Nordrhein-Westfalen. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setFeiertage" onchange="einstellung('feiertage', this.checked); if (KAL) kalZeichnen()"></div>
+      <!-- 2.484.0 KC-CLUB-FERIEN: Schulferien wie Feiertage, darunter die Bundesländer zum Anhaken -->
+      <div class="schalter"><div><b>🏖️ Schulferien im Kalender</b><div class="hinweis">Ferien der angehakten Bundesländer. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setFerien" onchange="einstellung('ferien', this.checked); if (KAL) kalZeichnen()"></div>
+      <details class="ferien-laender"><summary>🗺️ Bundesländer wählen <span id="ferienLaenderZahl"></span></summary><div id="ferienLaender" class="ferien-liste"></div></details>
     </details>
     <!-- 2.23.46 KC-CLUB-LEITUNG-START-SCHALTER (Wunsch Hansi): was beim App-Start für die Clubleitung erscheint – je Gerät an/aus -->
     <details class="karte versteckt" data-klappe="leitung_start" id="leitungStart">
@@ -5434,7 +5442,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.483.0" data-v="2.483.0"></script>
+<script src="app.js?v=2.484.0" data-v="2.484.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>
