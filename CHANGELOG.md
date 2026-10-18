@@ -1,12 +1,12 @@
 # Änderungen
 
-## Server 2.449.0 – 2026-10-18 – KC-CLUB-NOTPAKET-PUFFER: Notfall-Paket mit deutlich weniger Datenbank-Abfragen (wird je Bau gemessen)
+## Server 2.450.0 – 2026-10-18 – KC-CLUB-NOTPAKET-PUFFER: Notfall-Paket mit deutlich weniger Datenbank-Abfragen (wird je Bau gemessen)
 Anlass (Prüfbericht KC-Infrastruktur 18.10.2026, Hansi: „Datenbank-Zugriffe minimieren, Notfall-Paket prüfen“): Jeder Bau des Notfall-Pakets stellte ~5.000 Datenbank-Abfragen in einer Minute (87 % der 11 Lastspitzen des Tages, Auslöser der „KRITISCHE Datenbanklast“-Pushs). Messung 07:45: von 4.988 Leseabfragen waren nur 2.308 verschieden – dieselben Mitglieder-, Rechte- und Chat-Abfragen liefen für jedes Mitglied erneut. Am 17.10. 11:30 brach ein Bau deshalb mit „Datenbank antwortet nicht“ ab (altes Paket blieb korrekt stehen) und lief 15 Min. später komplett noch einmal.
 - Ein Notpaket-Teil baut jetzt 4 Mitglieder nacheinander (17 → 5 Aufrufe, weiter 4 gleichzeitig). Innerhalb des Teils wird jede gleiche Leseabfrage nur einmal gestellt (Lese-Puffer nur für diesen Aufruf – andere gleichzeitige Anfragen sehen ihn nie; jedes Schreiben leert ihn; Fehler und Zeitüberschreitungen werden nie gepuffert).
 - Unverändert: alle Mitglieder, gleiche Antworten wie bisher, Ed25519-Signatur, stündliche Bremse, Nachtrag alle 15 Min., „fehlt ein Teil → altes Paket bleibt“ (jetzt zusätzlich: jedes Mitglied der Gruppe muss im Ergebnis stehen).
 - Neu im Protokoll je Bau (nur Zahlen): Grund (daten_geaendert / neuer_tag / nach_fehler / erzwungen), Mitglieder, Aufrufe, DB-Abfragen, gesparte Abfragen, Größe, Dauer – Messgrundlage.
 - Test: tools/notpaket/db-puffer-test.ts (Deno 2.1.4 wie Supabase, echter dbFetch-Code, 9 Fälle grün). Typprüfung unverändert gegenüber vorher.
-- Rückweg: Server 2.448.0 erneut hochladen (Datei-Stand vor diesem Eintrag).
+- Rückweg: Server-Stand vor diesem Eintrag (2.449.0) erneut hochladen.
 
 ## DB – 2026-10-18 (ohne App-Build) – KC-CORE-BACKUP-NACHHOLEN-DISPATCH: kein roter Restore-Test mehr durch neue Tabellen
 Anlass: Restore-Lesetest 18.10. 06:40 rot („type public.kc_club_wunschliste does not exist“). Die neue Tabelle wurde um 06:32 automatisch aufgenommen und vom Nachholen in den schon geprüften Satz des Tages geladen – in Neon gab es sie erst nach dem nächsten Spiegellauf. Gleiches Muster am 11.10., 13.10., 17.10. Keine Daten verloren (Satz 02:50 bestand 266/266).

@@ -19,7 +19,7 @@ import { AwsClient } from "npm:aws4fetch@1.0.20"; // KC-CLUB-ARCHIV-KOPIE (2.232
 import postgres from "npm:postgres@3.4.5"; // KC-CLUB-NOTFALL-NEUSTART (2.235.0): direkter Datenbank-Weg, wenn die Schnittstelle hängt
 import { createRemoteJWKSet, jwtVerify } from "npm:jose@5.9.6"; // KC-CLUB-NOTFALL-NEUSTART: GitHub-Wächter weist sich mit signiertem Token aus
 // @ts-types="./db-puffer.d.ts"
-import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.449.0): Lese-Puffer nur für den eigenen Aufruf
+import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.450.0): Lese-Puffer nur für den eigenen Aufruf
 // @ts-ignore: chess.js bringt keine Typdatei mit (in Deno ohne Bedeutung)
 import { Chess } from "./chess.js"; // KC-CLUB-SCHACH (2.8.0): chess.js 1.4.0 (BSD-2-Clause, Jeff Hlywa) – Zugprüfung, keine Kosten
 // @ts-ignore: reine JS-Datei ohne Typen
@@ -37,7 +37,7 @@ const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 // halben Ergebnis (UNKNOWN ≠ OK) – und die App schaltet schneller auf Notbetrieb/gespeicherten Stand. Speicher (Dateien) unverändert.
 const DB_ZEIT_MS = 15000;
 const DB_AUS = { n: 0 }; // zählt abgebrochene Abfragen (je Anfrage vorher/nachher verglichen)
-// KC-CLUB-NOTPAKET-PUFFER (2.449.0, Prüfbericht 18.10.2026): Ein Bau des Notfall-Pakets las ~5.000× aus der Datenbank, 54 % davon exakt
+// KC-CLUB-NOTPAKET-PUFFER (2.450.0, Prüfbericht 18.10.2026): Ein Bau des Notfall-Pakets las ~5.000× aus der Datenbank, 54 % davon exakt
 // doppelt (dieselben Mitglieder-, Rechte- und Chat-Abfragen für jedes Mitglied). Innerhalb eines Notpaket-Teils (nur lesend) wird jede
 // gleiche Leseabfrage nur einmal gestellt und die Antwort wiederverwendet. Der Puffer gilt NUR innerhalb dieses Aufrufs (AsyncLocalStorage:
 // gleichzeitige andere Anfragen sehen ihn nie), lebt nur so lange wie der Aufruf und wird bei jedem Schreiben geleert. Fehler werden nie gepuffert.
@@ -78,7 +78,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.449.0";
+const SERVER_VERSION = "2.450.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5676,7 +5676,7 @@ Deno.serve(async (req) => {
     if (a === "notpaket_teil") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
       if (!geheim || !gleichZeit(p.cronSecret, geheim)) return json({ error: "Kein Zugang" }, 401);
-      // KC-CLUB-NOTPAKET-PUFFER (2.449.0): bis NOT_GRUPPE Mitglieder je Aufruf, nacheinander, mit gemeinsamem Lese-Puffer
+      // KC-CLUB-NOTPAKET-PUFFER (2.450.0): bis NOT_GRUPPE Mitglieder je Aufruf, nacheinander, mit gemeinsamem Lese-Puffer
       const pids = (Array.isArray(p.person_ids) ? p.person_ids : [p.person_id]).map((x: unknown) => String(x || ""));
       for (const pid of pids) if (!/^KC-P-[A-Z0-9-]{1,40}$/.test(pid) || pid.startsWith("KC-P-TEST")) return json({ error: "Ungültig" }, 400);
       if (!pids.length || pids.length > NOT_GRUPPE) return json({ error: "Ungültig" }, 400);
@@ -13829,7 +13829,7 @@ async function gzip(text: string): Promise<Uint8Array> {
 // in einem eigenen Server-Aufruf (Aktion „notpaket_teil“, nur mit dem Zeitplaner-Geheimnis), NOT_PARALLEL gleichzeitig.
 // Der Hauptlauf setzt nur zusammen. Fehlt auch nur ein Teil, bleibt das alte, vollständige Paket stehen (nie ein lückenhaftes).
 const NOT_PARALLEL = 4, NOT_TEIL_MS = 60000;
-// KC-CLUB-NOTPAKET-PUFFER (2.449.0): 4 Mitglieder je Teil-Aufruf (17 → 5 Aufrufe). Gleiche Leseabfragen innerhalb des Teils nur einmal
+// KC-CLUB-NOTPAKET-PUFFER (2.450.0): 4 Mitglieder je Teil-Aufruf (17 → 5 Aufrufe). Gleiche Leseabfragen innerhalb des Teils nur einmal
 // (DB_PUFFER). Rechenzeit je Aufruf ≈ 4/17 des früheren Gesamtlaufs, weit unter der Grenze, die 2.124.0 zum Aufteilen zwang.
 const NOT_GRUPPE = 4, NOT_GRUPPE_MS = 140000;
 async function notpaketMitglied(personId: string): Promise<Record<string, unknown> | null> {
@@ -13986,7 +13986,7 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
     const roh = await gzip(JSON.stringify({ format: 1, erstellt, stand: erstellt, fingerabdruck: fp, server: SERVER_VERSION, mitglieder: paket.mitglieder }));
     await senden("/paket", roh, "application/gzip");
     await db.from("kc_club_notbetrieb").update({ fingerabdruck: fp, hochgeladen_am: erstellt, bestaetigt_am: erstellt, groesse: roh.length, mitglieder: paket.anzahl, dauer_ms: Date.now() - t0, fehler: null }).eq("id", 1);
-    // KC-CLUB-NOTPAKET-PUFFER (2.449.0): je Bau Grund und Datenbank-Abfragen festhalten (nur Zahlen, keine Inhalte) – Messgrundlage für weitere Einsparungen
+    // KC-CLUB-NOTPAKET-PUFFER (2.450.0): je Bau Grund und Datenbank-Abfragen festhalten (nur Zahlen, keine Inhalte) – Messgrundlage für weitere Einsparungen
     const zeitVon = (x: unknown) => (x ? Date.parse(String(x)) : NaN);
     const grund = erzwingen ? "erzwungen" : !st.fingerabdruck ? "erstes_paket"
       : zeitVon(st.fehler_am) > (zeitVon(st.hochgeladen_am) || 0) ? "nach_fehler"
