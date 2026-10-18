@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.487.0 – 2026-10-18 – 🥫 Bühne aufrollen wie eine Sardinenbüchse (KC-CLUB-SARDINENDOSE)
+Wunsch Hansi: „Die Bühne bei Doppelklick unten rechts auf die Ecke von rechts unten nach links oben wie eine Sardinenbüchse aufrollen – aber so, dass man es wieder rückgängig machen kann.“ (Wahl Hansi: lange drücken statt Doppeltipp, weil der Doppeltipp schon den Kopf umdreht; danach ein Röllchen mit Dosenschlüssel.)
+- **Lange aufs Eselsohr drücken** (ohne zu ziehen): Die Bühne wird schräg von rechts unten nach links oben weggerollt – eine silberne Blechrolle läuft mit und wird dicker, darunter kommt das Innere der Dose mit Sardinen 🐟 zum Vorschein.
+- Danach oben links ein **Röllchen mit Dosenschlüssel** („🥫 Bühne ausrollen“) – antippen rollt die Bühne rückwärts wieder ab.
+- Doppeltipp aufs Eselsohr dreht den Kopf wie bisher um; Ziehen nach links ebenso. Der Hinweis beim einfachen Antippen nennt jetzt auch das lange Drücken.
+- Gemerkt auf diesem Gerät (bleibt auch nach Neustart aufgerollt); bei „Bewegung reduzieren“ ohne Animation. Hilfe-Eintrag „Bühne aufrollen wie eine Sardinenbüchse“. Nur App.
+
 ## 2.486.0 – 2026-10-18 – Link-Vorschau in Nachrichten (KC-CLUB-LINK-VORSCHAU) · Server 2.486.0
 Wunsch Hansi („Ja, Link-Vorschau bauen“, Vergleich mit WhatsApp): Steht ein Link in einer Nachricht, zeigt die App eine kleine Karte mit Bild, Titel, Kurztext und Seite.
 - Beim Schreiben: 0,8 s nach dem Tippen holt der Server die Vorschau (keine Datenbank-Abfrage); Karte über dem Schreibfeld, ✖ = ohne Vorschau senden. App-Sprung-Links bekommen keine Karte.

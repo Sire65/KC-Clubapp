@@ -1039,6 +1039,25 @@
   /* KC-CLUB-KOPF-ROLLO (2.159.0/2.160.0): Statusleiste + Infofeld verschwinden unter einer Jalousie – Lamellen klappen zu,
      dann fährt sie mit Abschlussleiste langsam hoch (runter umgekehrt). Lamellen in Club-Beige (CD), Leiste Weinrot. */
   #v-start .hero { position: relative; }
+  /* 2.487.0 KC-CLUB-SARDINENDOSE: aufgerollte Bühne – Blechrolle unterwegs und Röllchen mit Dosenschlüssel */
+  #v-start .hero.dose-zu { display: none; }
+  .dose-fahrt { position: fixed; z-index: 50; pointer-events: none; border-radius: 999px; transform-origin: 50% 50%;
+    background: linear-gradient(180deg, #f7f8fa 0%, #c9ced6 30%, #8d949e 55%, #e6e9ee 75%, #9aa1ab 100%); box-shadow: 0 3px 8px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.4); }
+  .dose-innen { position: fixed; z-index: 1; pointer-events: none; border-radius: 22px; box-sizing: border-box; border: 7px solid #dfe3e8; overflow: hidden;
+    background: radial-gradient(ellipse at 30% 25%, rgba(255,236,170,.55), transparent 60%), repeating-linear-gradient(90deg, #b9bfc7 0 3px, #aab1ba 3px 6px); box-shadow: inset 0 0 18px rgba(0,0,0,.35); }
+  .dose-innen i { position: absolute; font-style: normal; font-size: 3.2rem; opacity: .85; filter: saturate(.6); }
+  .dose-innen i:nth-child(1) { left: 8%; top: 14%; transform: rotate(-8deg); } .dose-innen i:nth-child(2) { left: 46%; top: 22%; transform: rotate(174deg); }
+  .dose-innen i:nth-child(3) { left: 14%; top: 52%; transform: rotate(4deg); } .dose-innen i:nth-child(4) { left: 52%; top: 60%; transform: rotate(-176deg); }
+  .dose-roelchen { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; padding: 8px 14px 8px 10px; border: none; border-radius: 16px; background: var(--karte); color: var(--text);
+    box-shadow: 0 4px 12px rgba(0,0,0,.12); font: inherit; font-weight: 700; cursor: pointer; animation: doseRein .4s ease-out; }
+  .dose-roelchen:active { transform: scale(.97); }
+  .dose-rolle { position: relative; width: 92px; height: 24px; border-radius: 12px; background: linear-gradient(180deg, #f7f8fa 0%, #c9ced6 30%, #8d949e 55%, #e6e9ee 75%, #9aa1ab 100%); box-shadow: 0 2px 5px rgba(0,0,0,.3); }
+  .dose-rolle i { position: absolute; right: 2px; top: 2px; width: 20px; height: 20px; border-radius: 50%; background: repeating-radial-gradient(circle, #b8bec7 0 2px, #6f7680 2px 3px); }
+  .dose-schluessel { position: relative; width: 26px; height: 16px; margin-left: -14px; border: 3px solid #9aa1ab; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; }
+  .dose-schluessel::after { content: ""; position: absolute; left: -12px; top: 4px; width: 12px; height: 3px; background: #9aa1ab; border-radius: 2px; }
+  .dose-text { font-size: .9rem; } .dose-text::before { content: "🥫 "; }
+  @keyframes doseRein { from { opacity: 0; transform: translate(-10px, -6px) scale(.9); } }
+  @media (prefers-reduced-motion: reduce) { .dose-roelchen { animation: none; } }
   .kopf-pfeil { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 56px; height: 20px; border: none; border-radius: 0 0 14px 14px; background: rgba(0,0,0,.22); color: #fff; padding: 0; cursor: pointer; display: grid; place-items: center; z-index: 3; }
   .kopf-pfeil span { display: block; font-size: 18px; line-height: 1; margin-top: 4px; transition: transform .8s ease; }
   .kopf-pfeil:active { background: rgba(0,0,0,.35); }
@@ -5451,7 +5470,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.486.0" data-v="2.486.0"></script>
+<script src="app.js?v=2.487.0" data-v="2.487.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>
