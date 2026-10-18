@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.478.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.479.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -23004,7 +23004,7 @@ function stadtZeichnen() {
   const zeilen = d.termine.map((x) => {
     const m = fMonatJahr.format(new Date(x.beginn)), kopf = m !== monat ? `<b style="margin-top:6px">${esc(m)}</b>` : ""; monat = m;
     const zustand = x.imKalender ? '<span class="hinweis">✅ im Kalender</span>' : x.uebernommen ? '<span class="hinweis">früher übernommen</span>' : "";
-    return `${kopf}<label class="stadt-zeile">${x.uebernommen ? '<span style="width:22px"></span>' : `<input type="checkbox" ${STADT_T.wahl.has(x.key) ? "checked" : ""} onchange="stadtWahl('${esc(x.key).replace(/'/g, "&#39;")}',this.checked)">`}
+    return `${kopf}<label class="stadt-zeile">${x.uebernommen ? '<span style="width:22px"></span>' : `<input type="checkbox" ${STADT_T.wahl.has(x.key) ? "checked" : ""} onchange="stadtWahl(${jsArg(x.key)},this.checked)">`}
       <span style="flex:1"><b>${esc(x.titel)}</b><small>${esc(stadtWann(x))}${x.ort ? " · 📍 " + esc(x.ort) : ""} · ${esc(qn[x.quelle] || "")}</small></span>${zustand}</label>`;
   }).join("");
   const n = STADT_T.wahl.size;
@@ -25173,9 +25173,10 @@ function oaIds(pre) { if (OBJA_LAEDT[pre]) throw new Error("Bitte kurz warten �
 function oaLeeren(pre) { OBJA[pre] = []; }
 function oaAnzeige(liste) { // Anlagen an einem Eintrag: Bilder klein als Vorschau, alles antippbar (Öffnen/Teilen/Speichern)
   if (!liste?.length) return "";
+  // 2.479.0 KC-CLUB-SICHER-ANLAGENNAME (TÜV 18.10.): Name/Typ kommen vom Absender – nur über jsArg() in onclick (esc() allein wird vom Browser vor dem Ausführen zurückverwandelt)
   return `<div class="oa-zeige">${liste.map((a) => /^image\//.test(a.mime || "")
-    ? `<button type="button" class="oa-bildknopf" title="${esc(a.name)}" onclick="event.stopPropagation();anlageAktion('${esc(a.id)}', '${esc(a.name).replace(/'/g, "")}', '${esc(a.mime)}')"><img class="oa-bild" data-anlage="${esc(a.id)}" alt="${esc(a.name)}"></button>`
-    : `<button type="button" class="knopf klein oa-datei" onclick="event.stopPropagation();anlageAktion('${esc(a.id)}', '${esc(a.name).replace(/'/g, "")}', '${esc(a.mime)}')">${oaSym(a.mime)} ${esc(a.name)}</button>`).join("")}</div>`;
+    ? `<button type="button" class="oa-bildknopf" title="${esc(a.name)}" onclick="event.stopPropagation();anlageAktion(${jsArg(a.id)}, ${jsArg(a.name)}, ${jsArg(a.mime)})"><img class="oa-bild" data-anlage="${esc(a.id)}" alt="${esc(a.name)}"></button>`
+    : `<button type="button" class="knopf klein oa-datei" onclick="event.stopPropagation();anlageAktion(${jsArg(a.id)}, ${jsArg(a.name)}, ${jsArg(a.mime)})">${oaSym(a.mime)} ${esc(a.name)}</button>`).join("")}</div>`;
 }
 // Vorschaubilder nachladen, sobald sie im Bild auftauchen (egal welche Liste sie gezeichnet hat)
 let oaBeobachter = null;

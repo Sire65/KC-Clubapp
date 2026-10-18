@@ -6849,6 +6849,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/g: fpGeraet\(\) \}\);/.test(html) && /\(\/Macintosh\/\.test\(ua\) && tp > 1\)\) return "tablet"/.test(html), "App schickt Geräte-Hinweis (iPad erkannt)");
   const swq = lies("sw.js"); assert.ok(/\^🟢 \(\.\+\?\) ist jetzt online\(\?: \\\(\(\\d\\d\):\(\\d\\d\) Uhr\\\)\)\?\$/.test(swq), "Push-Titel-Muster im Service Worker unverändert passend");
 }
+
+// 2.479.0 KC-CLUB-SICHER-ANLAGENNAME (TÜV 18.10.2026): vom Absender bestimmte Texte (Dateiname, Typ, Titel, Schlüssel) nie per '${esc(…)}' in onclick/onchange –
+// der Browser verwandelt &#39; vor dem Ausführen zurück in ' → fremder Code. Nur jsArg() (JSON-String + esc) ist sicher.
+{
+  const riskant = [...html.matchAll(/ on[a-z]+="[^"]*'\$\{esc\(([^)]*)\)/g)].map((m) => m[1]).filter((x) => /name|mime|titel|text|key/i.test(x));
+  assert.deepEqual(riskant, [], "keine Absender-Texte per esc() in Ereignis-Attributen: " + riskant.join(", "));
+  assert.ok(/anlageAktion\(\$\{jsArg\(a\.id\)\}, \$\{jsArg\(a\.name\)\}, \$\{jsArg\(a\.mime\)\}\)/.test(html), "Anlagen-Knopf über jsArg");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
