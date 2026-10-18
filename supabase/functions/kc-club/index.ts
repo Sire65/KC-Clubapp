@@ -6575,7 +6575,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       case "mitglieder": {
         const [leute, { data: rollen }, { data: zug }, { data: push }, st, { data: tel }, { data: hfr }] = await Promise.all([
           aktiveMitglieder(), db.from("kc_club_rollen").select("*"), db.from("kc_club_zugang").select("person_id,aktiv,zuletzt_gesehen"),
-          db.from("kc_member_push_subscriptions").select("person_id").eq("active", true), statusMap(undefined, true),
+          db.from("kc_member_push_subscriptions").select("person_id,created_at").eq("active", true), statusMap(undefined, true),
           db.from("kc_core_people").select("person_id").eq("active", true).eq("org_id", ORG).not("phone", "is", null).neq("phone", ""),
           db.from("kc_club_freigaben").select("person_id").eq("bereich", "kontakt_handy").eq("erlaubt", true),
         ]);
@@ -6616,8 +6616,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           for (const x of ok ?? []) for (const r of (Array.isArray(x.recipient_refs) ? x.recipient_refs : []) as any[]) {
             const id = wer(r), k = id + "|" + x.channel; if (id && !(zuletztOk.get(k)! >= x.created_at)) zuletztOk.set(k, x.created_at);
           }
+          // KC-CLUB-PUSH-NEU-EINGESCHALTET (18.10.2026, Fall Christina): Push nach dem Fehler neu eingeschaltet → kein Rot mehr,
+          // auch wenn seitdem noch kein Push verschickt wurde (scheitert der nächste, wird es wieder rot)
+          const neuesAbo = new Map<string, string>();
+          for (const x of push ?? []) if (!(neuesAbo.get((x as any).person_id)! >= (x as any).created_at)) neuesAbo.set((x as any).person_id, (x as any).created_at);
           for (const x of fx ?? []) for (const r of (Array.isArray(x.recipient_refs) ? x.recipient_refs : []) as any[]) {
             const id = wer(r); if (!id || fehler.has(id) || zuletztOk.get(id + "|" + x.channel)! > x.created_at) continue;
+            if (x.channel === "push" && neuesAbo.get(id)! > x.created_at) continue;
             fehler.set(id, x.channel === "push" ? "Push kam nicht an (letzte 7 Tage)" : "E-Mail kam nicht an (letzte 7 Tage)");
           }
         }
