@@ -2587,7 +2587,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 227. 1.57.1: Ansage-Schalter in beiden Ansichten sichtbar
 {
-  const k0 = html.indexOf('<details class="karte" data-klappe="ansagen" data-einfach open>'), k1 = html.indexOf("</details>", k0);
+  const k0 = html.indexOf('<details class="karte" data-klappe="ansagen" data-einfach open>'), k1 = html.indexOf('<details class="karte"', k0 + 10); // 2.478.0: bis zum nächsten Bereich (darin jetzt Klappbereiche)
   assert.ok(k0 > 0, "eigener Kasten mit data-einfach (einfache Ansicht) – kein data-klappe=\"einfach\" (sonst in der erweiterten weg)");
   const kasten = html.slice(k0, k1);
   for (const id of ["setAnsage", "setAnmeldeTon", "setOnlinePush"]) assert.ok(kasten.includes(`id="${id}"`), `${id} im Kasten`);
@@ -2621,7 +2621,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 229. 1.58.1: Tipp des Tages in beiden Ansichten
 {
-  const k0 = html.indexOf('<details class="karte" data-klappe="hilfe" data-einfach open>'), kasten = html.slice(k0, html.indexOf("</details>", k0)); // 2.469.0: Tipps stehen jetzt in „💡 Hilfe & Lernen“ – weiter in beiden Ansichten (data-einfach)
+  const k0 = html.indexOf('<details class="karte" data-klappe="ansagen" data-einfach open>'), kasten = html.slice(k0, html.indexOf('<details class="karte"', k0 + 10)); // 2.478.0: wieder in „Ansagen, Töne & Tipps“ (beide Ansichten)
   assert.ok(kasten.includes('id="setTipps"'), "Tipp-Schalter im Kasten für beide Ansichten");
   assert.equal((html.match(/id="setTipps"/g) || []).length, 1, "nur einmal");
 }
@@ -4720,9 +4720,9 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.24.15 KC-CLUB-PRUEFUNG-4: Status-Pfeil mittig in Statusfarbe, Hilfe-Pfade auch in der einfachen Ansicht, Büro unvollständig ≠ leer
 {
   assert.ok(/d\.classList\.add\("einfach-sichtbar"\)/.test(html) && /body\.einfach #v-einstellungen > details\[data-klappe\]\.einfach-sichtbar \{ display: block; \}/.test(html), "Sprung aus Hilfe öffnet Bereich auch in der einfachen Ansicht");
-  const ans = html.slice(html.indexOf('data-klappe="hilfe"'), html.indexOf('data-klappe="hilfe"') + 3000); // 2.469.0: jetzt „💡 Hilfe & Lernen“ (auch einfache Ansicht)
-  assert.ok(/id="setWasNeu"/.test(ans) && /höchstens einmal in der Woche/.test(ans), "„Was ist neu“-Schalter bei Hilfe & Lernen (auch einfache Ansicht)");
-  assert.ok(/id: "was_neu"[^\n]*Spiele[^\n]*einstiegHin\("hilfe", "setWasNeu"\)/.test(html), "Hilfe „Was ist neu“ mit Spielen und richtigem Weg");
+  const ans = html.slice(html.indexOf('data-klappe="ansagen"'), html.indexOf('data-klappe="ansagen"') + 3000); // 2.478.0: wieder „Ansagen, Töne & Tipps“
+  assert.ok(/id="setWasNeu"/.test(ans) && /höchstens einmal in der Woche/.test(ans), "„Was ist neu“-Schalter bei Ansagen, Töne & Tipps (auch einfache Ansicht)");
+  assert.ok(/id: "was_neu"[^\n]*Spiele[^\n]*einstiegHin\("ansagen", "setWasNeu"\)/.test(html), "Hilfe „Was ist neu“ mit Spielen und richtigem Weg");
   assert.ok(/id: "status", sym: "🙂"[^\n]*los: \(\) => statusBlatt\(\)/.test(html), "Twinkey Status öffnet den Status, nicht den Standort");
   assert.ok(/id: "kacheln_klein"[^\n]*nur: \(\) => !einfach\(\)/.test(html), "Kachel-Tipp nur in der erweiterten Ansicht");
   assert.ok(/function buRaumHtml\(\) \{\n[^\n]*\n  if \(!Array\.isArray\(r\.sitzungen\) \|\| !r\.eingang\) return/.test(html), "Büro: unvollständige Antwort → Hinweis statt Absturz");
@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6783,20 +6783,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.ak-tuer \{[^}]*background: #741521/.test(lies("index.html")) && /\.ak-tuer:not\(\.auf\) \.ak-sym \{ visibility: hidden; \}/.test(lies("index.html")), "Corporate Design, Bild erst nach Öffnen");
 }
 
-// 2.469.0 KC-CLUB-EINST-GRUPPEN / -SUCHE / -ABHAENGIG (Wunsch Hansi „Einstellungen riesengroß“): Hauptbereiche, Suche, Unterauswahl erst nach Häkchen
+// 2.469.0 KC-CLUB-EINST-SUCHE / -ABHAENGIG; 2.478.0 KC-CLUB-EINST-KLAPPEN (Wunsch Hansi: Aufteilung wieder wie vorher, Unterauswahl als Klappbereich, der mit dem Häkchen aufgeht)
 {
   const seiteE = lies("index.html");
-  assert.ok(/const EINST_GRUPPEN = \[/.test(html) && /function einstGruppieren\(\) \{/.test(html) && /if \(einfach\) \{ if \(h\) \{ karten\.forEach\(\(d\) => h\.before\(d\)\); h\.remove\(\); \} continue; \}/.test(html), "Gruppen nur in der erweiterten Ansicht, einfache bleibt flach");
-  const gr = html.slice(html.indexOf("const EINST_GRUPPEN = ["), html.indexOf("function einstGruppieren"));
-  for (const k of [...gr.matchAll(/klappen: \[([^\]]+)\]/g)].flatMap((m) => m[1].match(/"([a-z_]+)"/g).map((x) => x.slice(1, -1)))) assert.ok(seiteE.includes(`data-klappe="${k}"`), "Bereich fehlt: " + k);
-  assert.ok(/if \(v === "einstellungen"\) \{ leitungStartZeigen\(\); einstGruppieren\(\); setTimeout\(abhKlappen, 900\);/.test(html), "beim Öffnen gruppieren + Häkchen neu prüfen");
+  assert.ok(!/EINST_GRUPPEN|function einstGruppieren/.test(html) && !/data-klappe="hilfe"/.test(seiteE), "Hauptbereiche aus 2.469.0 wieder entfernt (alte Aufteilung)");
+  assert.ok(/if \(v === "einstellungen"\) \{ leitungStartZeigen\(\); setTimeout\(abhKlappen, 900\);/.test(html), "beim Öffnen Häkchen neu prüfen");
   assert.ok(/<input type="search" id="einstSuche"[^>]*oninput="einstSuchen\(this\.value\)"/.test(seiteE) && /function einstSuchen\(q, leeren\)/.test(html) && /alle\.forEach\(\(d\) => \(d\.open = EINST_SUCHE\.offen\.has\(d\)\)\)/.test(html), "Suche + Zurückstellen der Auf/Zu-Stände");
-  assert.ok(/<details class="karte" data-klappe="hilfe" data-einfach open>/.test(seiteE), "Hilfe & Lernen in beiden Ansichten");
   for (const id of ["setTipps", "setWasNeu", "setSchrittHilfe", "setEinw"]) assert.equal((seiteE.match(new RegExp(`id="${id}"`, "g")) || []).length, 1, "genau einmal: " + id);
   assert.ok(/<div class="schalter nur-erweitert"><div><b>❓ Fragezeichen unten rechts<\/b>/.test(seiteE) && /body\.einfach #v-einstellungen \.nur-erweitert \{ display: none; \}/.test(seiteE), "kein doppeltes Fragezeichen in der einfachen Ansicht");
-  for (const id of ["ruheAn", "setSprache", "setSpiele", "setAnklopfen", "setJahreszeit", "setNetzSymbol", "ssAn", "setSchrittHilfe", "setEinw", "setKuckuck"]) assert.ok(seiteE.includes(`data-abh="${id}"`), "Unterauswahl hängt an " + id);
-  assert.ok(/\.abh-aus:not\(details\) \* \{ pointer-events: none; \}/.test(seiteE), "gesperrte Zeilen nicht bedienbar");
-  assert.ok(/x\.parentElement\?\.closest\("details"\)\) \{ x\.open = true;/.test(html) && /function rgAuf\(\.\.\.namen\) \{ for \(const n of namen\) \{ const d = document\.querySelector\(rgKlappe\(n\)\); for \(let x = d; x;/.test(html), "Sprünge öffnen auch den Hauptbereich");
+  const klappen = [...seiteE.matchAll(/<details class="abh-klappe" data-abh="([^"]+)"><summary>/g)].map((m) => m[1]);
+  for (const id of ["ruheAn", "setSprache", "setSpiele", "setAnklopfen", "setJahreszeit", "setNetzSymbol", "ssAn", "setSchrittHilfe", "setEinw"]) assert.ok(klappen.includes(id), "Klappbereich hängt an " + id);
+  for (const id of klappen) assert.ok(seiteE.includes(`id="${id}"`), "Schalter fehlt: " + id);
+  assert.ok(/<details class="abh-klappe" data-abh="setSpiele"><summary>[^\n]*\n\s*<div class="knoepfe versteckt" id="setSpieleArten"/.test(seiteE), "Spiele-Auswahl im Klappbereich");
+  assert.ok(/if \(e\.target\.checked && e\.target\.id\) document\.querySelectorAll\(`details\[data-abh="\$\{e\.target\.id\}"\]`\)\.forEach\(\(d\) => \(d\.open = true\)\);/.test(html), "Einschalten klappt die Auswahl auf");
+  assert.ok(/x\.parentElement\?\.closest\("details"\)\) \{ x\.open = true;/.test(html) && /function rgAuf\(\.\.\.namen\) \{ for \(const n of namen\) \{ const d = document\.querySelector\(rgKlappe\(n\)\); for \(let x = d; x;/.test(html), "Sprünge öffnen auch umgebende Bereiche");
   assert.ok(/if \(d\.closest\("\.abh-aus"\)\) return; \/\/ gesperrte Auswahl/.test(html), "gesperrte Auswahl wird nie automatisch geöffnet");
 }
 
@@ -6837,6 +6837,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(!/createConvolver/.test(hall) && /createDelay\(0\.1\)/.test(hall), "kein rechenschwerer Faltungshall mehr");
   assert.ok(/lp\.Q\.value = -12; fb\.gain\.value = 0\.97 \* Math\.pow\(10, -3 \* d \/ 2\.5\)/.test(hall), "Rückkopplung sicher unter 1 (schaukelt sich nicht auf)");
   assert.ok(/ng\.gain\.exponentialRampToValueAtTime\(laut \* 0\.08, t \+ 0\.003\)/.test(html), "Klöppel-Geräusch leiser");
+}
+
+// 2.477.0 KC-CLUB-ONLINE-GERAET (Wunsch Hansi „nur für Admin sagen, mit welchem Gerät jemand online ist – PC, Tablet oder Handy“)
+{
+  assert.ok(/function geraetAusUA\(ua: string\): string \| null \{/.test(server) && /if \(\/Android\/i\.test\(ua\)\) return "tablet";/.test(server), "Server erkennt Handy/Tablet/PC");
+  assert.ok(/if \(ich\.admin && on\.size\) \{ const \{ data: fe \}/.test(server) && /\.\.\.\(geraetMap\.has\(id\) \? \{ geraet: geraetMap\.get\(id\) \} : \{\}\)/.test(server), "Gerät in der Online-Liste nur für den Admin");
+  assert.ok(/const anAdmins = ger \? ids\.filter\(\(id\) => admins\.has\(id\)\) : \[\];/.test(server) && /senden\(anAdmins, `\$\{name\} \(\$\{ger\}\)`, ":a"\)/.test(server), "Push mit Gerät nur an Admins");
+  assert.ok(/const oaName = \(x\) => \{ const n = x\.vorname \|\| x\.name; return ICH\?\.admin && OA_GERAET\[x\.geraet\]/.test(html) && /onlineAnsageSprechen\(neu\.map\(oaName\)\)/.test(html), "App: Admin hört das Gerät");
+  assert.ok(/sprechen\(onlineAnsageText\(alle\)\.replace\(\/\[\(\)\]\/g, ""\)\)/.test(html), "Klammern werden nicht vorgelesen");
+  assert.ok(/g: fpGeraet\(\) \}\);/.test(html) && /\(\/Macintosh\/\.test\(ua\) && tp > 1\)\) return "tablet"/.test(html), "App schickt Geräte-Hinweis (iPad erkannt)");
+  const swq = lies("sw.js"); assert.ok(/\^🟢 \(\.\+\?\) ist jetzt online\(\?: \\\(\(\\d\\d\):\(\\d\\d\) Uhr\\\)\)\?\$/.test(swq), "Push-Titel-Muster im Service Worker unverändert passend");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -7666,7 +7677,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 
 // 4xx. 2.92.0: Admin wird bei einer Anmeldung gefragt, ob er sehen möchte, was das Mitglied gerade macht (KC-CLUB-SPUR-FRAGE, Wunsch Hansi)
 {
-  assert.ok(/onlineAnsageSprechen\(neu\.map\(\(x\) => x\.vorname \|\| x\.name\)\);\n  try \{ spurFrage\(neu\); \} catch \{\}/.test(programm), "nur bei echten Neuankömmlingen aus dem Online-Takt");
+  assert.ok(/onlineAnsageSprechen\(neu\.map\((?:\(x\) => x\.vorname \|\| x\.name|oaName)\)\);\n  try \{ spurFrage\(neu\); \} catch \{\}/.test(programm), "nur bei echten Neuankömmlingen aus dem Online-Takt");
   const f = programm.slice(programm.indexOf("function spurFrage(neu)"), programm.indexOf("function spurFrageSchalter(an)"));
   assert.ok(/const spurFrageAn = \(\) => !!ICH\?\.admin && lsLesen\(SPUR_FRAGE\) !== "0";/.test(programm) && /if \(!spurFrageAn\(\)/.test(f), "nur Admin, abschaltbar");
   assert.ok(/inRuheJetzt\(/.test(f) && /document\.querySelector\("\.blatt:not\(\.versteckt\)"\)\) return;/.test(f), "nie in der Ruhezeit, nie über einem anderen Fenster");
@@ -8768,7 +8779,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const c = server.slice(server.indexOf('case "ansage_vorgabe_setzen": {'), server.indexOf('case "studio_recht_setzen": {'));
   assert.ok(/nurAdmin\(ich\);/.test(c) && /an === ich\.person_id \|\| !\(await aktiveMitglieder\(\)\)\.some/.test(c) && /schluessel: "ansage_vorgabe"/.test(c) && /protokoll\(ich\.person_id, "ansage_vorgabe"/.test(c), "nur Admin, nur aktive Mitglieder, protokolliert");
   assert.ok(/if \(!v\?\.am \|\| lsLesen\(ANS_VORGABE_KEY\) === v\.am\) return;/.test(html) && /ansSetzen\("online", !!v\.online\); ansSetzen\("verlassen", !!v\.verlassen\);/.test(html), "je Gerät genau einmal übernommen, danach entscheidet das Mitglied");
-  assert.ok(/ansageVorgabeUebernehmen\(INIT\.einstellungen\?\.ansage_vorgabe\);/.test(html) && /Ändern: ⚙️ → „🗣️ Ansagen & Töne“/.test(html), "Mitglied bekommt einen Hinweis");
+  assert.ok(/ansageVorgabeUebernehmen\(INIT\.einstellungen\?\.ansage_vorgabe\);/.test(html) && /Ändern: ⚙️ → „🗣️ Ansagen, Töne & Tipps“/.test(html), "Mitglied bekommt einen Hinweis");
   assert.ok(/onclick="ansageVorgabeSetzen\('\$\{m\.person_id\}'/.test(html), "Knopf auf der Mitgliedsseite (Admin)");
 }
 

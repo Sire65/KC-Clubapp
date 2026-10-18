@@ -90,7 +90,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.477.0";
+const SERVER_VERSION = "2.478.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -670,15 +670,28 @@ async function zuletztDaMap(ich: Ich, ids: string[]) {
 // im selben Netz (gleiche IP, nur als Prüfsumme) mit demselben System (z. B. „Android 10“), ist es sehr wahrscheinlich dasselbe Gerät in einem zweiten Browser.
 // Gespeichert wird nur Kennung, Browser-Name, System, Netz-Prüfsumme und Zeit – höchstens 6 Einträge je Person.
 const FENSTER_SEK = 180;
+// 2.477.0 KC-CLUB-ONLINE-GERAET (Wunsch Hansi „nur für Admin sagen: Klaus ist vom PC, Tablet oder Handy online“): Gerät aus der Browser-Kennung
+// (User-Agent) bzw. dem Hinweis der App (g). Nur der Admin bekommt es zu sehen/hören (Online-Liste, Push-Titel). Gespeichert wird nur handy/tablet/pc.
+const GERAETE = new Set(["handy", "tablet", "pc"]);
+const GERAET_NAME: Record<string, string> = { handy: "am Handy", tablet: "am Tablet", pc: "am PC" };
+function geraetAusUA(ua: string): string | null {
+  if (!ua) return null;
+  if (/iPad|Tablet|Kindle|Silk\//i.test(ua)) return "tablet";
+  if (/iPhone|iPod|Windows Phone|Android.*Mobile|Mobile.*Android/i.test(ua)) return "handy";
+  if (/Android/i.test(ua)) return "tablet"; // Android ohne „Mobile“ = Tablet
+  if (/Windows|Macintosh|CrOS|X11|Linux/i.test(ua)) return "pc";
+  return null;
+}
 async function fensterAbgleich(ich: Ich, f: any, req: Request) {
   if (!f || typeof f !== "object" || ich.nurLesen) return null;
   const i = txt(f.i, 40).replace(/[^A-Za-z0-9-]/g, ""), b = txt(f.b, 30), sy = txt(f.s, 30);
+  const g = GERAETE.has(String(f.g)) ? String(f.g) : geraetAusUA(req.headers.get("user-agent") || ""); // 2.477.0 KC-CLUB-ONLINE-GERAET
   if (!i) return null;
   const netz = (await sha256("kc-netz:" + (req.headers.get("x-forwarded-for") || "").split(",")[0].trim())).slice(0, 16), t = Date.now();
   const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "fenster").maybeSingle();
   const alt = (Array.isArray((data?.wert as any)?.liste) ? (data!.wert as any).liste : []).filter((x: any) => x && x.i !== i && t - Number(x.t) < 3600000);
   const anders = alt.filter((x: any) => x.n === netz && x.s === sy && t - Number(x.t) < FENSTER_SEK * 1000).sort((x: any, y: any) => y.t - x.t)[0];
-  const liste = [{ i, b, s: sy, n: netz, t }, ...alt].slice(0, 6);
+  const liste = [{ i, b, s: sy, n: netz, t, ...(g ? { g } : {}) }, ...alt].slice(0, 6);
   await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "fenster", wert: { liste }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
   return anders ? { i: anders.i, b: anders.b, vorSek: Math.round((t - Number(anders.t)) / 1000) } : null;
 }
@@ -746,7 +759,7 @@ async function fpUeberwachen() {
 // (die hören Ton/Ansage in der App), nicht in deren Ruhezeit, nicht für Mitglieder, die ihren Online-Status verbergen.
 // Abschaltbar je Admin (Einstellung online_push). Nur Push – keine Mail.
 const ONLINE_PUSH_PAUSE_MS = 10 * 60000;
-async function onlinePushMelden(wer: Ich) {
+async function onlinePushMelden(wer: Ich, ua = "") {
   if (wer.person_id.startsWith("KC-P-TEST")) return;
   if ((await onlineZeigenMap([wer.person_id])).get(wer.person_id) === false) return;
   if ((await inkognitoSet([wer.person_id])).has(wer.person_id)) return; // KC-CLUB-INKOGNITO
@@ -768,9 +781,14 @@ async function onlinePushMelden(wer: Ich) {
   // 2.390.0 KC-CLUB-ONLINE-PUSH-ZEIT (Fund Hansi „die Push kam, als ich den PC anmachte – Klaus war aber gar nicht mehr online“): Uhrzeit im Titel,
   // Tag + Uhrzeit im Text. Der Service Worker erkennt daran verspätet zugestellte Mitteilungen und schreibt dann „war um … online“.
   const d = new Date(), um = fZeit.format(d);
-  await routerSenden("club_online", ids, { titel: `🟢 ${name} ist jetzt online (${um} Uhr)`, kurz: `${fTag.format(d)} um ${um} Uhr in die Köcheclub-App gekommen`,
+  // 2.477.0 KC-CLUB-ONLINE-GERAET: Admins lesen/hören zusätzlich das Gerät – „🟢 Klaus (am Handy) ist jetzt online (10:05 Uhr)“; Titel-Muster bleibt gleich
+  // (Service Worker erkennt es weiter), der Name trägt das Gerät. Alle anderen Empfänger wie bisher ohne Gerät.
+  const ger = GERAET_NAME[geraetAusUA(ua) || ""] || "";
+  const senden = (an: string[], name: string, k: string) => an.length ? routerSenden("club_online", an, { titel: `🟢 ${name} ist jetzt online (${um} Uhr)`, kurz: `${fTag.format(d)} um ${um} Uhr in die Köcheclub-App gekommen`,
     betreff: `Köcheclub Werne – ${name} ist online`, text: `${wer.name} ist gerade in der Köcheclub-App.`, url: APP_URL },
-    `club-online:${wer.person_id}:${Math.floor(Date.now() / ONLINE_PUSH_PAUSE_MS)}`);
+    `club-online:${wer.person_id}:${Math.floor(Date.now() / ONLINE_PUSH_PAUSE_MS)}${k}`) : Promise.resolve();
+  const anAdmins = ger ? ids.filter((id) => admins.has(id)) : [];
+  await Promise.all([senden(anAdmins, `${name} (${ger})`, ":a"), senden(ids.filter((id) => !anAdmins.includes(id)), name, "")]);
 }
 // 2.6.1: mitInkognito = auch der unsichtbare Admin (z. B. als Empfänger eines Hilfe-Aufrufs „an alle online“ – nur sichtbar ist er nicht)
 // KC-CLUB-ONLINE-SEIT (2.25.5, Wunsch Hansi „wenn online, dann online seit …“): Beginn der aktuellen Sitzung je Person merken.
@@ -2694,12 +2712,12 @@ async function anmelden(req: Request): Promise<Ich> {
     return { ...c.ich, aemter: [...c.ich.aemter] };
   }
   ANMELDUNG_TREFFER = false;
-  const ich = await anmeldenDb(hash, version);
+  const ich = await anmeldenDb(hash, version, req.headers.get("user-agent") || "");
   if (ANMELDUNGEN.size >= ANMELDUNG_CACHE_MAX) for (const [k, v] of ANMELDUNGEN) if (v.bis <= jetztMs) ANMELDUNGEN.delete(k);
   if (ANMELDUNGEN.size < ANMELDUNG_CACHE_MAX) ANMELDUNGEN.set(hash, { ich: { ...ich, aemter: [...ich.aemter] }, bis: jetztMs + ANMELDUNG_CACHE_MS, gesehen: jetztMs, version });
   return ich;
 }
-async function anmeldenDb(hash: string, version: string | null): Promise<Ich> {
+async function anmeldenDb(hash: string, version: string | null, ua = ""): Promise<Ich> {
   // 0.56.1: eine Datenbank-Runde (kc_club_anmeldung: Token-Hash prüfen, „zuletzt gesehen“ setzen, Person + Rollen liefern)
   let { data: a, error } = await db.rpc("kc_club_anmeldung", { p_hash: hash, p_version: version });
   if (error) throw new Fehler("Anmeldung gerade nicht möglich – bitte gleich noch einmal versuchen.", 503);
@@ -2717,7 +2735,7 @@ async function anmeldenDb(hash: string, version: string | null): Promise<Ich> {
   if (!p?.active) throw new Fehler("Kein Zugang – bitte bei Hansi melden.", 401);
   // KC-CLUB-ONLINE-PUSH (1.57.0): nach ≥ 10 Min. Pause (oder zum ersten Mal) wieder da → Admins benachrichtigen (im Hintergrund)
   if (!a.vorher || Date.now() - Date.parse(a.vorher) >= ONLINE_PUSH_PAUSE_MS) {
-    const lauf = onlinePushMelden(ichAus(p, r)).catch((e) => console.error("online push", String(e)));
+    const lauf = onlinePushMelden(ichAus(p, r), ua).catch((e) => console.error("online push", String(e)));
     try { (globalThis as any).EdgeRuntime?.waitUntil?.(lauf); } catch { /* ohne Hintergrund-Hilfe läuft es trotzdem an */ }
   }
   return ichAus(p, r);
@@ -10202,8 +10220,13 @@ Köcheclub-App`,
           for (const x of os ?? []) { const t = Date.parse((x as any).wert?.seit || ""); if (t > 0) seitMap.set((x as any).person_id, Math.max(0, Math.round((Date.now() - t) / 1000))); } }
         const leute = await personen([...on, ...(ss ? [ss.von] : []), ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von), ...(spAn ?? []).map((x: any) => x.von), ...(vf ? [vf.von] : [])]);
         const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
+        // 2.477.0 KC-CLUB-ONLINE-GERAET: nur für den Admin – mit welchem Gerät (neuester Eintrag der letzten 3 Min.) jemand online ist
+        const geraetMap = new Map<string, string>();
+        if (ich.admin && on.size) { const { data: fe } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "fenster").in("person_id", [...on]);
+          for (const x of fe ?? []) { const l = ((x as any).wert?.liste || []).filter((y: any) => y && GERAETE.has(y.g) && Date.now() - Number(y.t) < FENSTER_SEK * 1000).sort((a: any, b: any) => b.t - a.t);
+            if (l[0]) geraetMap.set((x as any).person_id, l[0].g); } }
         const liveT = await liveTerminAktiv().catch(() => null); // KC-CLUB-LIVE-TERMIN (2.231.0): auch ohne direkte Leitung bemerken
-        return json({ fensterAnders, liveTermin: liveT ? { id: liveT.id, stand: liveT.geaendert_am } : null, zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false, ...(seitMap.has(id) ? { seitSek: seitMap.get(id) } : {}) })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
+        return json({ fensterAnders, liveTermin: liveT ? { id: liveT.id, stand: liveT.geaendert_am } : null, zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false, ...(seitMap.has(id) ? { seitSek: seitMap.get(id) } : {}), ...(geraetMap.has(id) ? { geraet: geraetMap.get(id) } : {}) })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
           klopfAntworten: (anMich ?? []).length ? Object.entries(KLOPF_ANTWORTEN).map(([id, text]) => ({ id, text })) : undefined,
           antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null })),
           anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })),
