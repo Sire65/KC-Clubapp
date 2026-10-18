@@ -1,5 +1,19 @@
 # Änderungen
 
+## Server 2.449.0 – 2026-10-18 – KC-CLUB-NOTPAKET-PUFFER: Notfall-Paket mit deutlich weniger Datenbank-Abfragen (wird je Bau gemessen)
+Anlass (Prüfbericht KC-Infrastruktur 18.10.2026, Hansi: „Datenbank-Zugriffe minimieren, Notfall-Paket prüfen“): Jeder Bau des Notfall-Pakets stellte ~5.000 Datenbank-Abfragen in einer Minute (87 % der 11 Lastspitzen des Tages, Auslöser der „KRITISCHE Datenbanklast“-Pushs). Messung 07:45: von 4.988 Leseabfragen waren nur 2.308 verschieden – dieselben Mitglieder-, Rechte- und Chat-Abfragen liefen für jedes Mitglied erneut. Am 17.10. 11:30 brach ein Bau deshalb mit „Datenbank antwortet nicht“ ab (altes Paket blieb korrekt stehen) und lief 15 Min. später komplett noch einmal.
+- Ein Notpaket-Teil baut jetzt 4 Mitglieder nacheinander (17 → 5 Aufrufe, weiter 4 gleichzeitig). Innerhalb des Teils wird jede gleiche Leseabfrage nur einmal gestellt (Lese-Puffer nur für diesen Aufruf – andere gleichzeitige Anfragen sehen ihn nie; jedes Schreiben leert ihn; Fehler und Zeitüberschreitungen werden nie gepuffert).
+- Unverändert: alle Mitglieder, gleiche Antworten wie bisher, Ed25519-Signatur, stündliche Bremse, Nachtrag alle 15 Min., „fehlt ein Teil → altes Paket bleibt“ (jetzt zusätzlich: jedes Mitglied der Gruppe muss im Ergebnis stehen).
+- Neu im Protokoll je Bau (nur Zahlen): Grund (daten_geaendert / neuer_tag / nach_fehler / erzwungen), Mitglieder, Aufrufe, DB-Abfragen, gesparte Abfragen, Größe, Dauer – Messgrundlage.
+- Test: tools/notpaket/db-puffer-test.ts (Deno 2.1.4 wie Supabase, echter dbFetch-Code, 9 Fälle grün). Typprüfung unverändert gegenüber vorher.
+- Rückweg: Server 2.448.0 erneut hochladen (Datei-Stand vor diesem Eintrag).
+
+## DB – 2026-10-18 (ohne App-Build) – KC-CORE-BACKUP-NACHHOLEN-DISPATCH: kein roter Restore-Test mehr durch neue Tabellen
+Anlass: Restore-Lesetest 18.10. 06:40 rot („type public.kc_club_wunschliste does not exist“). Die neue Tabelle wurde um 06:32 automatisch aufgenommen und vom Nachholen in den schon geprüften Satz des Tages geladen – in Neon gab es sie erst nach dem nächsten Spiegellauf. Gleiches Muster am 11.10., 13.10., 17.10. Keine Daten verloren (Satz 02:50 bestand 266/266).
+- Nachholen lädt nur noch Tabellen, die zum Satz gehören; neue bzw. beim Dispatch zurückgestellte kommen in den nächsten Tagessatz (Audit backup_table_deferred). Bestehende Tabellen werden weiter immer nachgeholt.
+- Die Morgenprüfung prüft einen Satz erneut, wenn sein letzter Restore-Test nicht bestanden ist (vorher blieb er bis zum nächsten Tag rot).
+- Probelauf in Supabase (zurückgerollt) 8/8 grün, eingespielt 18.10. ~08:03. Rückweg: docs/BACKUP_NACHHOLEN_2026-10-18.md.
+
 ## DB – 2026-10-14 (ohne App-Build) – KC-CLUB-DB-AUFRAEUMEN-KUERZER: Messwerte 30 Tage, System-Check-Verlauf nach 14 Tagen ausgedünnt
 Anlass (Hansi): „Der Communicator hat doch auch ein Journal – das müsste ziemlich voll sein.“ Messung: Datenbank 141 von 500 MB; das Versand-Journal selbst ist klein (Aufträge 2,8 MB, Zustellmeldungen 1 MB, eigene 180-Tage-Regel). Groß sind die Communicator-Messwerte (17 MB, ≈ 240/Tag) und der System-Check-Verlauf (40 MB, ≈ 9,5 kB je Prüfung) – beide wurden erst nach 90 Tagen gelöscht (System-Check wäre auf ≈ 85 MB gewachsen). Jetzt im nächtlichen Aufräumen (3:50 Uhr): Messwerte nach 30 Tagen weg; System-Check-Einträge nach 14 Tagen ausgedünnt (je Prüfpunkt bleiben Name, Status, Gesundheit – Verlauf bleibt sichtbar), gelöscht weiter nach 90 Tagen. Probelauf: 2.780 Einträge 20 MB → 3,6 MB, 5.859 Messwerte. Probe tools/db-test/73_db_aufraeumen_kuerzer_test.sql. Rückweg: 20261006_kc_club_v2247_db_aufraeumen.sql.
 

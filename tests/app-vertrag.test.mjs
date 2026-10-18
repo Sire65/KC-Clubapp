@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7897,10 +7897,10 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 // 4xx. 2.124.0: Notfall-Paket je Mitglied in eigenem Aufruf (KC-CLUB-NOTPAKET-TEILE) + Tablet-Hinweis (KC-TERMINE-TABLET-TEXT)
 {
   const termine = lies("supabase/functions/kc-termine/index.ts");
-  const nt = server.slice(server.indexOf('if (a === "notpaket_teil")'), server.indexOf('if (a === "notpaket_teil")') + 900);
+  const nt = server.slice(server.indexOf('if (a === "notpaket_teil")'), server.indexOf('if (a === "notpaket_teil")') + 1500); // 2.449.0: Gruppen + Puffer
   assert.ok(/(?:p\.cronSecret !== geheim|!gleichZeit\(p\.cronSecret, geheim\))\) return json\(\{ error: "Kein Zugang" \}, 401\)/.test(nt) && /pid\.startsWith\("KC-P-TEST"\)/.test(nt) && /DB_AUS\.n !== dbAusVorher\) return json\(\{ error: "Datenbank antwortet nicht" \}, 503\)/.test(nt), "Teil nur mit Geheimnis, nie halb");
   const nb = server.slice(server.indexOf("async function notpaketBauen(geheim: string)"), server.indexOf("// ---------- KC-CLUB-NOTBETRIEB-STUFE2"));
-  assert.ok(/action: "notpaket_teil", cronSecret: geheim, person_id: z\.person_id/.test(nb) && /if \(!r\.ok \|\| !j\?\.ok\) throw new Error/.test(nb) && !/aktionAusfuehren/.test(nb), "Hauptlauf setzt nur zusammen, fehlender Teil → altes Paket bleibt");
+  assert.ok(/action: "notpaket_teil", cronSecret: geheim, person_ids: gruppe\.map\(\(z\) => z\.person_id\)/.test(nb) && /if \(!r\.ok \|\| !j\?\.ok \|\| !j\.mitglieder\) throw new Error/.test(nb) && !/aktionAusfuehren/.test(nb), "Hauptlauf setzt nur zusammen, fehlender Teil → altes Paket bleibt");
   assert.ok(/ich: Ich = \{ \.\.\.ichAus\(p0, ro \?\? null\), nurLesen: true \}/.test(server), "Teil weiter nur lesend");
   assert.ok(/Kommst du zu mir, bring bitte dein Tablet mit – komme ich zu dir, leg es bitte bereit/.test(termine) && /Leg bitte dein Tablet bereit/.test(termine) && /Bring bitte dein Tablet mit/.test(termine), "Tablet-Hinweis klar");
   assert.ok(/tabletHinweis\(n, frei\.length && frei\.every\(\(s\) => s\.besuchsart === frei\[0\]\.besuchsart\) \? frei\[0\]\.besuchsart : undefined\)/.test(termine), "gleiche Art → passender Satz");
@@ -10497,4 +10497,19 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/order by started_at desc, id desc limit 1\) = 'ok' then\s+return null;/.test(mig), "nur ein zuletzt bestandener Satz wird übersprungen");
   assert.ok(lies("tools/db-test/81_erwartet.txt").includes("neu_nicht_nachgeholt=t") && lies("tools/db-test/81_erwartet.txt").includes("rot_wird_geprueft=t"), "Probelauf");
   assert.ok(/### kc_db_backup_nachholen/.test(lies("docs/BACKUP_NACHHOLEN_2026-10-18.md")), "Rückweg dokumentiert");
+}
+// 2.449.0 KC-CLUB-NOTPAKET-PUFFER: gleiche Leseabfragen im Notpaket-Teil nur einmal, 4 Mitglieder je Aufruf, Messung je Bau
+{
+  const puffer = lies("supabase/functions/kc-club/db-puffer.js");
+  assert.ok(/import \{ AsyncLocalStorage \} from "node:async_hooks";/.test(puffer) && /export const DB_PUFFER = new AsyncLocalStorage\(\);/.test(puffer), "Puffer nur im eigenen Aufruf (AsyncLocalStorage)");
+  const f = server.slice(server.indexOf("const dbFetch: typeof fetch"), server.indexOf("const dbWeg"));
+  assert.ok(/DB_PUFFER\.getStore\(\)/.test(f) && /if \(methode !== "GET" && methode !== "HEAD"\) \{ pf\.antworten\.clear\(\);/.test(f), "Schreiben leert den Puffer");
+  assert.ok(/if \(!r\.ok\) pf\.antworten\.delete\(schluessel\);/.test(f) && /a\.catch\(\(\) => pf\.antworten\.delete\(schluessel\)\);/.test(f), "Fehler und Abbrüche werden nie gepuffert");
+  assert.ok(/if \(!pf\) return dbFetchNetz\(input, init\);/.test(f) && /if \(zeit\.aborted\) \{ DB_AUS\.n\+\+;/.test(f), "ohne Notpaket-Teil unverändert, Zeitgrenze bleibt");
+  const nt = server.slice(server.indexOf('if (a === "notpaket_teil")'), server.indexOf('if (a === "notpaket_teil")') + 1500);
+  assert.ok(/await DB_PUFFER\.run\(pf, async \(\) => \{ for \(const pid of pids\) mitglieder\[pid\] = await notpaketMitglied\(pid\); \}\);/.test(nt) && /pids\.length > NOT_GRUPPE/.test(nt), "Teil: Mitglieder nacheinander mit gemeinsamem Puffer, höchstens NOT_GRUPPE");
+  const nb = server.slice(server.indexOf("async function notpaketBauen(geheim: string)"), server.indexOf("// ---------- KC-CLUB-NOTBETRIEB-STUFE2"));
+  assert.ok(/const NOT_GRUPPE = 4, NOT_GRUPPE_MS = 140000;/.test(server) && /if \(!\(z\.person_id in j\.mitglieder\)\) throw new Error/.test(nb), "jedes Mitglied der Gruppe muss im Ergebnis stehen – sonst bleibt das alte Paket");
+  assert.ok(/await protokoll\(null, "notpaket_gebaut", \{ grund, mitglieder: paket\.anzahl, aufrufe: paket\.aufrufe, db_abfragen: paket\.db\.netz, db_gespart: paket\.db\.puffer/.test(server), "je Bau Grund und Abfragen im Protokoll (nur Zahlen)");
+  assert.ok(/\/\/ @ts-types="\.\/db-puffer\.d\.ts"\nimport \{ DB_PUFFER \} from "\.\/db-puffer\.js";/.test(server), "Node-Typen verändern die Server-Typen nicht");
 }
