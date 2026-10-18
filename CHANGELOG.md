@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.445.0 – 2026-10-18 – Thema Bauernhof (KC-CLUB-BAUERNHOF, Wunschliste #3)
+Neues Kopf-Thema 🐄 Bauernhof (Farben Küchengrün, rustikale Schrift): ein ganzer Tag auf dem Hof. Morgens geht die Sonne auf, der Hahn kräht auf dem Zaunpfosten („Kikeriki!“); Kuh, Schwein und Hühner kommen auf die Wiese, das Schwein suhlt sich in der Pfütze, Vögel und Wolken ziehen. Der Traktor bringt Stroh und lädt einen Ballen ab, dann steht ein Holzschild „Hof <Vorname>“. Abends Abendrot, alle Tiere gehen in den roten Stall, das Tor schließt, im Fenster brennt Licht; nachts Mond und Sterne, der Hahn schläft (zzz). Der nächste Lauf beginnt in der Nacht und wird Morgen – kein Bruch. Vorschau, Hilfe, Lupe ergänzt. Nur App.
+
 ## 2.444.0 – 2026-10-18 – Thema Weltraum (KC-CLUB-WELTRAUM, Wunschliste #2)
 Neues Kopf-Thema 🚀 Weltraum (Farben Tiefsee): der Kopf wird zum Nachthimmel – Sterne funkeln, ein Ringplanet schwebt herein, oben der Mond, ab und zu eine Sternschnuppe. Ein Astronaut schwebt herein und winkt, eine Rakete startet mit Feuerschweif, dann schreibt der Astronaut den Vornamen in Sternenschrift unten in den Kopf. Zum Schluss holt ihn ein UFO mit dem Lichtstrahl ab; nach gut 1½ Minuten beginnt alles von vorn. Vorschau unter ⚙️ → ✨ Effekte, Hilfe und Lupe ergänzt. Nur App.
 
