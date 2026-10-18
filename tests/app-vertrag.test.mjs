@@ -10713,3 +10713,17 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/VF\.fhL\?\.schliessen\(\); VF\.fhL = null;/.test(html) && /MSCH\.fhL\?\.schliessen\(\); MSCH\.fhL = null;/.test(html) && /function ssFhZu\(\)/.test(html), "Leitung wird beim Ende geschlossen");
   assert.ok(/ALLE TESTS GRÜN/.test(lies("tools/fernhilfe/fh-leitung-test.ts")) && /# KC Fernhilfe – Messung und Konzept/.test(lies("docs/FERNHILFE_KONZEPT.md")), "Lauf-Test und Konzept vorhanden");
 }
+// KC-CLUB-FERNHILFE F3 (18.10.2026): Bedienen aus der Ferne – nur mit Erlaubnis des Mitglieds, nur über die verschlüsselte Leitung
+{
+  const f = html.slice(html.indexOf("// ---------- KC-CLUB-FERNHILFE F3"), html.indexOf("// ---------- KC-CLUB-SPRACHE-LERNEN (2.83.0"));
+  assert.ok(/if \(!MSCH\.id \|\| !MSCH\.bedienen \|\| !d\?\.cmd\) return;/.test(f), "ohne Erlaubnis keine Befehle");
+  assert.ok(/if \(!\(MSCH\.id && MSCH\.fhL\?\.ok && MSCH\.fhHallo\)\) \{ b\?\.remove\(\); return; \}/.test(f), "Bedienen nur über die direkte Leitung");
+  assert.ok(/roh\.closest\("#ssLiveLeiste, \.dlg-blatt"\)/.test(f), "Leiste und Rückfragen nie aus der Ferne");
+  assert.ok(/const FH_GEFAHR = \/senden\|[^\n]*löschen[^\n]*sos\|notfall\|express[^\n]*abmelden|const FH_GEFAHR = \/senden\|schicken\|abschicken\|löschen\|loeschen\|entfernen\|leeren\|abmelden\|sos\|notfall\|express/.test(f) && /if \(FH_GEFAHR\.test\(was\)\)/.test(f) && /Erlauben\?`, \{ ja: "✅ Ja", nein: "Nein" \}\)\)\) return;/.test(f), "riskante Knöpfe nur nach Rückfrage");
+  assert.ok(/typ === "password" \|\| typ === "hidden" \|\| SPG_GEHEIM\.test/.test(f), "nie Text in Geheimfelder");
+  assert.ok(/const FH_BEFEHL_MS = 200;/.test(f) && /if \(t0 - \(MSCH\.befehlAm \|\| 0\) < FH_BEFEHL_MS\) return;/.test(f), "Bremse für Befehle");
+  assert.ok(/case "fernbedienung_melden": \{/.test(server) && /"fernbedienung_erlaubt" : "fernbedienung_beendet"/.test(server), "Erlauben/Beenden im Protokoll");
+  assert.ok(/"schnappschuss_ende", "fernbedienung_melden", "push_anmelden"/.test(server) && /"schnappschuss_ende", "fernbedienung_melden", "push_anmelden"/.test(html), "auch für Gäste/Aushilfen (wie Mitschauen)");
+  assert.ok(/\.spg-fern \{/.test(lies("index.html")) && /\.fern-tipp \{/.test(lies("index.html")), "sichtbare Markierung und Bedienfläche");
+  assert.ok(/id: "fernhilfe_bedienen", thema: "technik"/.test(html) && /ALLE TESTS GRÜN/.test(lies("tools/fernhilfe/fern-bedienen-test.mjs")), "Hilfe und Browser-Test");
+}

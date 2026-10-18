@@ -462,6 +462,8 @@
   .spg-rahmen { position: relative; overflow: hidden; border-radius: 10px; background: #fff; }
   .spg-iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; pointer-events: none; background: var(--bg); }
   .spg-vorhang { position: absolute; inset: 0; display: grid; place-items: center; background: #222; color: #fff; font-weight: 800; font-size: 1.1rem; z-index: 2; }
+  .spg-fern { position: absolute; inset: 0; z-index: 4; cursor: pointer; touch-action: none; outline: 3px dashed #2e7d32; outline-offset: -3px; border-radius: 10px; } /* KC-CLUB-FERNHILFE F3 */
+  .fern-tipp { position: fixed; z-index: 2600; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; background: rgba(46,125,50,.35); border: 3px solid #2e7d32; pointer-events: none; animation: vfPunkt 1.4s ease-out forwards; }
   .spg-tipp { position: absolute; z-index: 3; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: rgba(214,58,58,.45); border: 3px solid #d63a3a; pointer-events: none; animation: vfPunkt 1.4s ease-out forwards; }
   .spg-schirm { position: fixed; inset: 0; z-index: 2550; background: #111; padding: calc(env(safe-area-inset-top, 0px) + 92px) 6px calc(env(safe-area-inset-bottom, 0px) + 6px); display: flex; }
   .spg-schirm .st-buehne { flex: 1; margin: 0; min-height: 0; padding: 0; background: transparent; }

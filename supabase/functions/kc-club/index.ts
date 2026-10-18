@@ -104,7 +104,7 @@ const FH_BROADCAST = true;
 const fhNeu = () => { const b = crypto.getRandomValues(new Uint8Array(48)); let s = ""; for (const x of b.subarray(16)) s += String.fromCharCode(x);
   return { kanal: "kc-fh-" + [...b.subarray(0, 16)].map((x) => x.toString(16).padStart(2, "0")).join(""), schluessel: btoa(s) }; };
 // Messwerte einer Sitzung (nur Zahlen) fürs Protokoll – Grundlage für die Grenzen der Fernhilfe
-const fhMess = (m: any) => { const z = (v: any) => Math.max(0, Math.min(1e9, Math.round(Number(v) || 0))); return m && typeof m === "object" ? { n: z(m.n), kb: z(m.kb), max_kb: z(m.max_kb), weg: m.weg === "broadcast" ? "broadcast" : "server" } : null; };
+const fhMess = (m: any) => { const z = (v: any) => Math.max(0, Math.min(1e9, Math.round(Number(v) || 0))); return m && typeof m === "object" ? { n: z(m.n), kb: z(m.kb), max_kb: z(m.max_kb), befehle: z(m.befehle), weg: m.weg === "broadcast" ? "broadcast" : "server" } : null; };
 type StudioStufe = "zeigen" | "alles" | null;
 function studioAusWert(w: any): { stufe: StudioStufe; zeigen: boolean; allesBis: string | null } {
   const zeigen = w?.zeigen === true, allesBis = w?.alles_bis && Date.now() < new Date(w.alles_bis).getTime() ? String(w.alles_bis) : null;
@@ -2743,7 +2743,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "status_setzen", "einstellung_setzen", "benachrichtigung_setzen", "meine_daten", "avatar_bilder", "avatar_verlauf", "avatar_foto_setzen", "sprache_woerter",
     "sprache_lernen", "sprache_training", "sprache_training_reset", "sprache_vergessen", "sprache_unbekannt", "twinkey_daten", "twinkey_frage",
     "twinkey_gelesen", "fehler_melden", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
-    "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "push_anmelden",
+    "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "fernbedienung_melden", "push_anmelden",
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
@@ -10324,6 +10324,16 @@ Köcheclub-App`,
         if (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(bild) || bild.length > SS_MAX_ZEICHEN) throw new Fehler("Das Bild ist zu groß oder ungültig.", 400);
         await db.from("kc_club_person_einstellung").update({ wert: { ...w, bild, frame: null, am: jetzt(), n: (w.n || 0) + 1 }, geaendert_am: jetzt() }).eq("person_id", ich.person_id).eq("schluessel", "schnappschuss");
         return json({ ok: true, status: "live", bis: w.bis });
+      }
+      // KC-CLUB-FERNHILFE F3: das Mitglied erlaubt oder beendet das Bedienen durch den Helfer – nur fürs Protokoll (die Befehle selbst laufen
+      // verschlüsselt über die Sitzungs-Leitung und werden in der App des Mitglieds ausgeführt, Gefährliches erst nach seiner Rückfrage)
+      case "fernbedienung_melden": {
+        const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "schnappschuss").maybeSingle();
+        const w: any = data?.wert;
+        if (!w || w.id !== String(p.id || "") || w.status !== "live") return json({ ok: true, status: "vorbei" });
+        const befehle = Math.max(0, Math.min(1e6, Math.round(Number(p.befehle) || 0)));
+        await protokoll(ich.person_id, p.erlaubt === true ? "fernbedienung_erlaubt" : "fernbedienung_beendet", { von: w.von, befehle });
+        return json({ ok: true, status: "live" });
       }
       case "schnappschuss_ende": {
         const an = p.an ? String(p.an) : ich.person_id;

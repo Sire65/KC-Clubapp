@@ -5262,6 +5262,7 @@ const HILFE = [
   { id: "zeitumstellung", thema: "toene", sym: "🕐", t: "Erinnerung an die Zeitumstellung", x: "Am Samstag vor der Zeitumstellung (im März und im Oktober) bekommst du ab 18 Uhr einen Push, ob du die Uhr vor- oder zurückstellen musst. Das passiert jedes Jahr von selbst – einstellen musst du nichts.", seit: "2.442.0" },
   { id: "schreiben_klappen", thema: "nachrichten", sym: "▾", t: "Mehr Nachrichten sehen: Schreibbereich wegklappen", x: "Im Chat sitzt oben mittig über dem Schreibfeld ein kleiner <b>▾-Griff</b>. Antippen klappt den Schreibbereich weg – es bleibt nur eine schmale Leiste <b>„▴ ✏️ Schreiben“</b>, und du siehst mehr Nachrichten. Ein Tipp auf die Leiste holt das Schreibfeld zurück. Öffnest du einen Chat, ist der Schreibbereich immer offen.", seit: "2.433.0" },
   { id: "sonderstunden", thema: "termine", sym: "★", t: "Sonderstunden melden und den Stand sehen", x: "Hast du bei einem Sondereinsatz geholfen (z. B. Grünkohl kochen), meldest du die Zeit über <b>📝 Dienstwunsch → Twinkey → „Sonderstunden melden“</b>: Einsatz, Tag, Zeit von zuhause bis zuhause, Tätigkeit und wer noch dabei war. Danach kannst du gleich Fahrtkosten oder Auslagen erfassen. Den Stand siehst du in <b>🗓️ Mein Dienst</b> auf der Karte <b>„★ Sonderstunden“</b>: gutgeschrieben, offen (zählt erst nach Bestätigung) oder abgelehnt mit Grund.", seit: "2.423.0" },
+  { id: "fernhilfe_bedienen", thema: "technik", sym: "🖱️", t: "Wenn dir jemand aus der Ferne hilft", x: "Bittet dich Hansi (oder ein freigeschalteter Helfer), mitschauen zu dürfen, entscheidest du: Erst wenn du zusagst, sieht er live, was in deiner Club-App angezeigt wird – oben steht dann eine rote Leiste mit <b>Beenden</b>. Soll er dir etwas direkt einstellen, tippst du in der Leiste auf <b>„🖱️ Bedienen erlauben“</b>: Dann darf er in deiner App tippen und blättern; jeder Tipp wird grün markiert. Was etwas senden, löschen oder auslösen könnte, fragt die App dich vorher. Mit <b>„🖱️ Bedienen aus“</b> oder <b>Beenden</b> ist sofort Schluss. Andere Apps auf deinem Handy sieht und bedient niemand.", seit: "2.475.0" },
   { id: "wege_frage", thema: "technik", sym: "👣", t: "Wege eines Mitglieds ansehen (Admin)", x: "Meldet sich ein Mitglied an, fragt die App, ob du seine Wege durch die App ansehen möchtest – <b>„👀 Ja, ansehen“</b> öffnet die Liste aller Angemeldeten zum Antippen. Mit <b>„🔕 Nicht mehr fragen“</b> schaltest du die Frage ab.", nur: () => !!ICH?.admin, seit: "2.92.0" },
 ];
 // ---------- KC-CLUB-SPRACHE-STUFE3 (2.87.0, Wunsch Hansi): zusagen, Nachrichten und Pinnwand vorlesen, anrufen, Ordner öffnen ----------
@@ -14312,7 +14313,7 @@ const ZUGANG_AKTIONEN = {
     "status_setzen", "einstellung_setzen", "benachrichtigung_setzen", "meine_daten", "avatar_bilder", "avatar_verlauf", "avatar_foto_setzen", "sprache_woerter",
     "sprache_lernen", "sprache_training", "sprache_training_reset", "sprache_vergessen", "sprache_unbekannt", "twinkey_daten", "twinkey_frage",
     "twinkey_gelesen", "fehler_melden", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
-    "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "push_anmelden",
+    "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "fernbedienung_melden", "push_anmelden",
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
@@ -36747,6 +36748,7 @@ function stAktionen() {
   const lauf = ["wartet", "live"].includes(STD.status), hatFoto = STD.fotos.length > 0;
   if (!STD.modus && !hatFoto) { a.innerHTML = ""; return; }
   a.innerHTML = STD.modus === "mitschauen" && STD.status === "live" ? k("📸 Foto", "stFesthalten()", !STD.frame, "haupt") + k("💾 Speichern", "ssSpeichern()", !hatFoto) + k("⏹ Beenden", "ssAbbrechen()")
+      + (SS.bedienen ? k("⬆️ Hoch", "ssFernHoch()") + k("⬇️ Runter", "ssFernRunter()") + k("↩️ Zurück", "ssFernZurueck()") + k("⌨️ Text", "ssFernText()") : "") // KC-CLUB-FERNHILFE F3
     : STD.modus === "zeigen" && lauf ? k("📱 Zur App", "stSchliessen()", false, "haupt") + k(VF.vorhang ? "🙉 Vorhang auf" : "🙈 Vorhang", "vfVorhang()", STD.status !== "live") + k("⏹ Beenden", "vfBeenden()")
     : lauf ? k("📸 Foto", "", true) + k("💾 Speichern", "", true) + k("⏹ Abbrechen", "ssAbbrechen()")
     : k("📸 Foto", "stModus('foto')", !stDarf("alles"), "haupt") + k("💾 Speichern", "ssSpeichern()", !hatFoto) + k("🔴 Live", "stModus('mitschauen')", !stDarf("alles"));
@@ -36850,10 +36852,12 @@ async function ssStart(pid, name, live = false) {
     clearInterval(SS.uhr); SS.uhr = setInterval(ssHolen, 1500);
   } catch (e) { meldeFehler(e); }
 }
-function ssFhZu() { SS.fhL?.schliessen(); SS.fhL = null; SS.fhPruef = 0; SS.fhBild = false; } // KC-CLUB-FERNHILFE F1
+function ssFhZu() { SS.fhL?.schliessen(); SS.fhL = null; SS.fhPruef = 0; SS.fhBild = false; SS.bedienen = false; ssFernFlaeche(); } // KC-CLUB-FERNHILFE F1/F3
 function ssFhDaten(d) {
-  if (!SS.id || !d?.f) return;
-  SS.fhBild = true; STD.frame = d.f; const b = $("stdBuehne"); if (b) spgZeigen(b, d.f).then(() => stAktionen()).catch(() => {});
+  if (!SS.id || !d) return;
+  if ("bedienen" in d) { SS.bedienen = !!d.bedienen; ssFernFlaeche(); stAktionen(); melde(SS.bedienen ? "🖱️ Du darfst jetzt bedienen – tippe ins Live-Bild" : "🖱️ Bedienen wurde ausgeschaltet"); } // KC-CLUB-FERNHILFE F3
+  if (!d.f) return;
+  SS.fhBild = true; STD.frame = d.f; const b = $("stdBuehne"); if (b) spgZeigen(b, d.f).then(() => { stAktionen(); ssFernFlaeche(); }).catch(() => {});
 }
 function ssAbbrechen(still) {
   ssFhZu(); clearInterval(SS.uhr); if (SS.id) api("schnappschuss_ende", { an: SS.an, id: SS.id }).catch(() => {});
@@ -37052,7 +37056,8 @@ async function ssAnfrage(einl) {
 // 2.136.0 KC-CLUB-STUDIO-SPIEGEL: statt alle 2,5 s ein Foto jetzt echtes Live (sichtbarer Inhalt, nur bei Änderung), höchstens 30 Min.
 function mlStart(id, wer, fh) {
   Object.assign(MSCH, { id, wer, bis: Date.now() + ST_LIVE_MIN * 60000, laeuft: false, fhPruef: 0 });
-  MSCH.fhL?.schliessen(); MSCH.fhHallo = false; MSCH.fhL = fhGueltig(fh) ? fhLeitung(fh, (d) => { if (d?.hallo) { MSCH.fhHallo = true; fhNeuSenden(); } }) : null; // KC-CLUB-FERNHILFE F1
+  MSCH.fhL?.schliessen(); Object.assign(MSCH, { fhHallo: false, bedienen: false, befehle: 0, befehlAm: 0 });
+  MSCH.fhL = fhGueltig(fh) ? fhLeitung(fh, (d) => { if (d?.hallo) { MSCH.fhHallo = true; fhNeuSenden(); mlBedienenKnopf(); } else if (d?.cmd) mlFern(d); }) : null; // KC-CLUB-FERNHILFE F1/F3
   document.getElementById("ssLiveLeiste")?.remove();
   document.body.insertAdjacentHTML("beforeend", `<div id="ssLiveLeiste" class="ss-live-leiste" role="status">${onAirSchild(true)}<span>${esc(wer)} schaut zu</span><button onclick="mlEnde(true)">Beenden</button></div>`);
   spur("mitschauen_laeuft");
@@ -37070,12 +37075,84 @@ async function mlSenden(f) {
   return true;
 }
 function mlEnde(selbst, text) {
-  const id = MSCH.id, mess = MSCH.fhL ? MSCH.fhL.mess() : null; clearInterval(MSCH.uhr); MSCH.id = null; spgSenderStopp(); document.getElementById("ssLiveLeiste")?.remove();
+  const id = MSCH.id, mess = MSCH.fhL ? { ...MSCH.fhL.mess(), befehle: MSCH.befehle || 0 } : null; MSCH.bedienen = false; clearInterval(MSCH.uhr); MSCH.id = null; spgSenderStopp(); document.getElementById("ssLiveLeiste")?.remove();
   MSCH.fhL?.schliessen(); MSCH.fhL = null; // KC-CLUB-FERNHILFE F1
   if (selbst && id) api("schnappschuss_ende", { id, ...(mess ? { mess } : {}) }).catch(() => {});
   if (id) melde(text || "⏹ Mitschauen beendet");
 }
 
+// ---------- KC-CLUB-FERNHILFE F3: Bedienen aus der Ferne – nur nach „🖱️ Bedienen erlauben“ des Mitglieds, nur über die verschlüsselte Leitung ----------
+// Der Helfer tippt ins Live-Bild; hier wird an derselben Stelle getippt (sichtbar markiert). Was senden, löschen oder auslösen könnte, fragt
+// vorher das Mitglied. Nie aus der Ferne: die Fernhilfe-Leiste selbst und offene Rückfragen; Text nie in Passwort-/Geheimfelder.
+const FH_GEFAHR = /senden|schicken|abschicken|löschen|loeschen|entfernen|leeren|abmelden|sos|notfall|express|anrufen|zugang|freigabe|sperre|passwort|kennwort|bezahl|überweis|ueberweis|kaution|link_neu|neuer link|admin|tel:|mailto:|whatsapp/i;
+const FH_BEFEHL_MS = 200;
+function mlBedienenKnopf() {
+  const l = $("ssLiveLeiste"); if (!l) return;
+  let b = $("ssBedienen");
+  if (!(MSCH.id && MSCH.fhL?.ok && MSCH.fhHallo)) { b?.remove(); return; } // nur über die direkte, verschlüsselte Leitung
+  if (!b) { b = document.createElement("button"); b.id = "ssBedienen"; b.onclick = () => mlBedienen(!MSCH.bedienen); l.insertBefore(b, l.lastElementChild); }
+  b.textContent = MSCH.bedienen ? "🖱️ Bedienen aus" : "🖱️ Bedienen erlauben";
+}
+async function mlBedienen(an) {
+  if (an && !(await frage(`🖱️ ${MSCH.wer} darf dann in deiner Club-App tippen und blättern, um dir zu helfen.\n\nSenden, Löschen, Notfall und Ähnliches fragt die App dich vorher. Du kannst es jederzeit wieder ausschalten oder ganz beenden.`, { ja: "✅ Ja, erlauben", nein: "Nein" }))) return;
+  if (!MSCH.id) return;
+  MSCH.bedienen = !!an; mlBedienenKnopf();
+  MSCH.fhL?.senden({ bedienen: MSCH.bedienen });
+  api("fernbedienung_melden", { id: MSCH.id, erlaubt: MSCH.bedienen, befehle: MSCH.befehle || 0 }, { still: true }).catch(() => {});
+  melde(MSCH.bedienen ? `🖱️ ${MSCH.wer} darf jetzt bedienen` : "🖱️ Bedienen ausgeschaltet");
+}
+function fernMarke(x, y) { const p = document.createElement("div"); p.className = "fern-tipp"; p.style.left = x + "px"; p.style.top = y + "px"; document.body.appendChild(p); setTimeout(() => p.remove(), 1400); }
+async function mlFern(d) {
+  if (!MSCH.id || !MSCH.bedienen || !d?.cmd) return;
+  const t0 = Date.now(); if (t0 - (MSCH.befehlAm || 0) < FH_BEFEHL_MS) return; MSCH.befehlAm = t0; MSCH.befehle = (MSCH.befehle || 0) + 1;
+  const anteil = (v, min = 0) => Math.max(min, Math.min(1, Number(v) || 0));
+  if (d.cmd === "tipp") {
+    const x = anteil(d.x) * innerWidth, y = anteil(d.y) * innerHeight; fernMarke(x, y);
+    const roh = document.elementFromPoint(x, y); if (!roh || roh.closest("#ssLiveLeiste, .dlg-blatt")) return;
+    const el = roh.closest("button, a, summary, label, input, select, textarea, [onclick], [role='button'], .kachel, .mini-kachel") || roh;
+    if (el.matches("input, textarea, select") && !["checkbox", "radio", "button", "submit"].includes((el.type || "").toLowerCase())) { el.focus(); return; }
+    const was = `${el.getAttribute("onclick") || ""} ${el.getAttribute("href") || ""} ${el.textContent || ""} ${el.getAttribute("aria-label") || ""} ${el.title || ""}`;
+    if (FH_GEFAHR.test(was)) {
+      const name = (el.textContent || el.getAttribute("aria-label") || "diesen Knopf").replace(/\s+/g, " ").trim().slice(0, 60);
+      if (!(await frage(`🖱️ ${MSCH.wer} möchte „${name}“ antippen.\n\nDas könnte etwas senden, löschen oder auslösen. Erlauben?`, { ja: "✅ Ja", nein: "Nein" }))) return;
+    }
+    if (MSCH.id && MSCH.bedienen) el.click();
+    return;
+  }
+  if (d.cmd === "scroll") {
+    const dy = Math.max(-1, Math.min(1, Number(d.dy) || 0)) * innerHeight;
+    let sc = document.elementFromPoint(innerWidth / 2, innerHeight / 2);
+    while (sc && sc !== document.body && !(sc.scrollHeight > sc.clientHeight + 4 && /(auto|scroll)/.test(getComputedStyle(sc).overflowY))) sc = sc.parentElement;
+    (sc && sc !== document.body ? sc : window).scrollBy({ top: dy, behavior: "smooth" }); return;
+  }
+  if (d.cmd === "zurueck") { history.back(); return; }
+  if (d.cmd === "text") {
+    const el = document.activeElement, t = String(d.t || "").slice(0, 500);
+    if (!el?.matches?.("input, textarea") || el.closest("#ssLiveLeiste, .dlg-blatt")) return melde(`🖱️ ${MSCH.wer} möchte Text eingeben – dafür erst ein Eingabefeld antippen lassen`);
+    const typ = (el.type || "text").toLowerCase(); if (typ === "password" || typ === "hidden" || SPG_GEHEIM.test(`${el.name} ${el.id} ${el.autocomplete}`)) return;
+    try { el.setRangeText(t, el.selectionStart ?? el.value.length, el.selectionEnd ?? el.value.length, "end"); } catch { el.value += t; }
+    el.dispatchEvent(new Event("input", { bubbles: true })); return;
+  }
+}
+// beim Helfer: Fläche über dem Live-Bild (Tippen = antippen, Wischen/Mausrad = blättern), Knöpfe im Pult
+function ssFern(cmd) { if (SS.id && SS.bedienen && SS.fhL?.ok) SS.fhL.senden(cmd); }
+const ssFernHoch = () => ssFern({ cmd: "scroll", dy: -0.6 }), ssFernRunter = () => ssFern({ cmd: "scroll", dy: 0.6 }), ssFernZurueck = () => ssFern({ cmd: "zurueck" });
+async function ssFernText() { const t = await eingabe("⌨️ Text eingeben\nDer Text kommt in das Feld, das gerade beim Mitglied ausgewählt ist.", ""); if (t) ssFern({ cmd: "text", t: String(t).slice(0, 500) }); }
+function ssFernFlaeche() {
+  const r = $("stdBuehne")?.querySelector(".spg-rahmen"); if (!r) return;
+  let f = r.querySelector(".spg-fern");
+  if (!(SS.id && SS.bedienen && SS.fhL?.ok)) { f?.remove(); return; }
+  if (f) return;
+  f = document.createElement("div"); f.className = "spg-fern"; f.title = "Tippen = beim Mitglied antippen · Wischen = blättern";
+  let start = null, rad = 0;
+  f.onpointerdown = (e) => { start = { x: e.clientX, y: e.clientY }; };
+  f.onpointerup = (e) => {
+    const b = f.getBoundingClientRect(); if (!start || !b.width) return; const dy = e.clientY - start.y; start = null;
+    if (Math.abs(dy) > 20) ssFern({ cmd: "scroll", dy: -dy / b.height }); else ssFern({ cmd: "tipp", x: (e.clientX - b.left) / b.width, y: (e.clientY - b.top) / b.height });
+  };
+  f.onwheel = (e) => { e.preventDefault(); if (Date.now() - rad < 300) return; rad = Date.now(); ssFern({ cmd: "scroll", dy: Math.sign(e.deltaY) * 0.4 }); };
+  r.appendChild(f);
+}
 // ---------- KC-CLUB-SPRACHE-LERNEN (2.83.0, Wunsch Hansi): Admin-Übersicht – was die Sprachsteuerung (noch) nicht kennt und was sie gelernt hat ----------
 // Gelernt ist erst nur für das Mitglied selbst; 🌍 = für alle (vom Admin – oder von selbst, wenn 2 Mitglieder denselben Satz gleich zuordnen).
 async function sbAdmin() {

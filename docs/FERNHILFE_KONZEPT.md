@@ -1,6 +1,6 @@
 # KC Fernhilfe – Messung und Konzept (KC-CLUB-FERNHILFE)
 
-**Stand:** 18.10.2026 · **Status:** F0 erledigt, F1 gebaut (Einspielen 20 Uhr) · **Auftrag:** Hansi („mit Fernhilfe Messung und Konzept anfangen“)
+**Stand:** 18.10.2026 · **Status:** F0 erledigt, F1 und F3 gebaut (Einspielen 20 Uhr) · **Auftrag:** Hansi („mit Fernhilfe Messung und Konzept anfangen“)
 
 ## 1. Ziel
 
@@ -140,3 +140,15 @@ nötig außer ggf. Zugriffsregel auf `realtime.messages` (Weg A), die per Migrat
 | Unbefugtes Mithören | Weg A (privater Kanal) oder Weg B (E2E-Verschlüsselung), Sitzung je Thema neu |
 | Fehlbedienung aus der Ferne | Sperrliste + Bestätigung beim Mitglied, sichtbare Leiste, sofortiges Ende |
 | Mischstand alte/neue App bei Sitzung | Sitzung prüft Version beider Seiten; bei Unterschied alter Weg |
+
+## 7. Umsetzung F3 (18.10.2026)
+- **Mitglied:** In der roten Mitschau-Leiste erscheint „🖱️ Bedienen erlauben“ (nur wenn die verschlüsselte Leitung steht). Rückfrage,
+  dann darf der Helfer tippen/blättern; „🖱️ Bedienen aus“ oder „Beenden“ stoppt sofort. Erlauben/Ausschalten → Protokoll
+  (`fernbedienung_erlaubt` / `fernbedienung_beendet`, Anzahl Befehle).
+- **Helfer:** gestrichelte Fläche über dem Live-Bild: Tippen = beim Mitglied an derselben Stelle tippen, Wischen/Mausrad = blättern;
+  im Pult ⬆️ Hoch, ⬇️ Runter, ↩️ Zurück, ⌨️ Text (in das beim Mitglied ausgewählte Feld).
+- **Schutz:** Jeder Tipp grün markiert; riskante Knöpfe (senden, löschen, SOS/Notfall, Express, Abmelden, Zugang, Admin, Anrufe …)
+  nur nach Rückfrage beim Mitglied; Fernhilfe-Leiste und offene Rückfragen nie aus der Ferne; kein Text in Passwort-/Geheimfelder;
+  höchstens ein Befehl je 200 ms.
+- **Tests:** `tools/fernhilfe/fern-bedienen-test.mjs` (Chromium, echtes app.js): 13/13 grün.
+
