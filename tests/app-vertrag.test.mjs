@@ -10374,11 +10374,22 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 }
 // 2.439.0 KC-CLUB-INFO-LAUFBAND: gerahmtes Info-Feld zwischen Überschrift und den 3 Feldern, Meldungen aus den Startdaten
 {
-  assert.ok(/\$\{kopf\}<\/div>\n    <div class="il" id="infoLaufband"><\/div><!-- 2\.439\.0 KC-CLUB-INFO-LAUFBAND -->\n    <div class="kacheln3">/.test(programm), "zwischen Überschrift und den 3 Feldern");
+  assert.ok(/return `<div class="il" id="infoLaufband"><\/div><!-- 2\.439\.0 KC-CLUB-INFO-LAUFBAND -->\n    <div class="kacheln3">/.test(programm), "oben in der Karte, direkt über den 3 Feldern");
   assert.ok(/ilZeigen\(\); \/\/ 2\.439\.0 KC-CLUB-INFO-LAUFBAND/.test(programm) && /closest\?\.\("\.wtage, \.il"\)/.test(programm), "nach jedem Neuzeichnen gefüllt, eigenes Wischen");
   const m = programm.slice(programm.indexOf("function ilMeldungen("), programm.indexOf("function ilHtml("));
-  assert.ok(/id: "eingang", stufe: "rot"/.test(m) && /id: "anmelden:"/.test(m) && /id: "buero", stufe: "orange"/.test(m) && /id: "_ok", stufe: "weiss", sym: "👍", t: "Alles erledigt"/.test(m) && /id: "_tipp"/.test(m), "Stufen, Alles erledigt, Tipp des Tages");
+  assert.ok(/id: "eingang", stufe: "rot"/.test(m) && /id: "buero", stufe: "orange"/.test(m) && /id: "_ok", stufe: "weiss", sym: "👍", t: "Alles erledigt"/.test(m) && /id: "_tipp"/.test(m), "Stufen, Alles erledigt, Tipp des Tages");
   assert.ok(!/api\(/.test(m), "keine zusätzliche Server-Abfrage");
   assert.ok(/const IL_TAKT_MS = 6000/.test(programm) && /a\.tag === heuteIso\(\) \? a\.ids : \[\]/.test(programm) && /IL\.halt = Date\.now\(\) \+ 9000/.test(programm), "6 s Takt, ✕ nur für heute, Berühren hält an");
   assert.ok(/\.il \{[^}]*width: 100%; margin-top: 14px;[^}]*border: 2px solid var\(--il-f\); border-radius: 16px;/.test(seite) && /\.il-rot \{/.test(seite) && /\.il-orange \{/.test(seite) && /\.il-gold \{/.test(seite), "Rahmen so breit wie die 3 Felder, Farben nach Wichtigkeit");
+}
+// 2.440.0 KC-CLUB-LAUFBAND-TREFFEN: die Kopfzeile (Treffen, Datum, Zu-/Absage) ist der erste Punkt im Laufband – Karte deutlich niedriger
+{
+  const f = programm.slice(programm.indexOf("function infoTreffen() {"), programm.indexOf("// 2.209.0 KC-CLUB-PUSH-SPRUNG"));
+  assert.ok(!/class="klick"/.test(f.slice(0, f.indexOf("<div class=\"kacheln3\">"))) && !/<h2>/.test(f.slice(0, f.indexOf("function ilTreffen("))), "keine Kopfzeile mehr über dem Laufband");
+  const tr = programm.slice(programm.indexOf("function ilTreffen("), programm.indexOf("function ilMeldungen("));
+  assert.ok(/id: "treffen", stufe: offen \? "rot" : "weiss"/.test(tr) && /auf: "zumTreffen\(\)", ohneAus: true, voll: true/.test(tr) && /t: "Kein Termin geplant"/.test(tr), "Treffen-Punkt mit Antippen → Termine, nicht ausblendbar");
+  assert.ok(/\["✔ Zusagen", `ilAntwort\('\$\{esc\(t\.id\)\}','ja'\)`, blinken\]/.test(tr), "Zusagen-Knopf blinkt nach den alten Stufen");
+  assert.ok(/return tf\.stufe === "rot" \? folge : \[tf, \.\.\.folge\];/.test(programm), "Treffen immer vorn");
+  assert.ok(/infoLetztes === f\.id \+ inhalt\) return ilZeigen\(\);/.test(programm) && /if \(b\.firstElementChild && IL\.html === kl \+ html\) return;/.test(programm), "Laufband frisch, aber nur bei Änderung neu gezeichnet");
+  assert.ok(/\.ifeld > \.il:first-child \{ margin-top: 0; \}/.test(seite), "oben bündig in der Karte");
 }

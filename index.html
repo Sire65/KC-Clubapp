@@ -1095,6 +1095,7 @@
      gleiche Rundung wie die Felder; Rahmenfarbe nach Wichtigkeit: rot = bitte erledigen, orange = Clubleitung, gold = Hinweis, weiß = schöne Info */
   .il { --il-f: rgba(255,255,255,.55); --il-g: rgba(255,255,255,.16); position: relative; box-sizing: border-box; width: 100%; margin-top: 14px; padding: 9px 8px 7px 10px; border: 2px solid var(--il-f); border-radius: 16px; background: rgba(255,255,255,.1); color: #fff; overflow: hidden; touch-action: pan-y; transition: border-color .3s, box-shadow .3s; }
   .il:empty { display: none; }
+  .ifeld > .il:first-child { margin-top: 0; } /* 2.440.0: das Laufband ist jetzt oben in der Karte (die Kopfzeile ist ein Punkt darin) */
   .il-rot { --il-f: #ff7a7a; --il-g: rgba(255,122,122,.28); box-shadow: 0 0 14px rgba(255,90,90,.35); animation: ilGlut 2.6s ease-in-out infinite; }
   .il-orange { --il-f: #ffa53d; --il-g: rgba(255,165,61,.26); box-shadow: 0 0 10px rgba(255,165,61,.25); }
   .il-gold { --il-f: #f5c542; --il-g: rgba(245,197,66,.24); }
@@ -1102,12 +1103,16 @@
   .il-inhalt { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto auto; grid-template-areas: "s t a z"; align-items: center; column-gap: 10px; min-height: 78px; outline: none; } /* gleiche Höhe für alle Meldungen – die Karte springt beim Wechsel nicht */
   :root.gross .il-inhalt { min-height: 86px; }
   .il-inhalt.mit-knopf { grid-template-columns: 40px minmax(0, 1fr) auto; grid-template-areas: "s t z" "s a a"; row-gap: 6px; align-content: center; }
-  .il-inhalt.mit-knopf .il-text small { display: none; }
+  .il-inhalt.mit-knopf:not(.il-voll) .il-text small { display: none; }
+  .il-voll .il-text > b { -webkit-line-clamp: 1; line-clamp: 1; font-size: 1.08rem; }
+  .il-stand { font-size: .8rem; opacity: .92; }
+  .il-knoepfe .il-stand { align-self: center; margin-left: 4px; white-space: nowrap; }
+  .il-knoepfe .il-knopf.antwort-blinken { padding: 5px 12px; border-radius: 10px; }
   .il-klick .il-inhalt { cursor: pointer; }
   .il-klick .il-inhalt:active { opacity: .8; }
   .il-sym { grid-area: s; width: 40px; height: 40px; border-radius: 12px; background: var(--il-g); display: grid; place-items: center; font-size: 1.35rem; line-height: 1; }
   .il-text { grid-area: t; min-width: 0; }
-  .il-text b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; font-size: .98rem; line-height: 1.25; }
+  .il-text > b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; font-size: .98rem; line-height: 1.25; }
   .il-text small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; font-size: .8rem; line-height: 1.25; opacity: .85; }
   .il-knoepfe { grid-area: a; display: flex; flex-wrap: wrap; gap: 6px; }
   .il-knopf { min-height: 32px; padding: 5px 12px; border: none; border-radius: 10px; background: #fff; color: #741521; font: inherit; font-size: .82rem; font-weight: 800; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
@@ -5261,7 +5266,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.439.0" data-v="2.439.0"></script>
+<script src="app.js?v=2.440.0" data-v="2.440.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

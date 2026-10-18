@@ -17,6 +17,14 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.440.0 – 2026-10-18 – 📣 Info-Laufband: das Treffen ist der erste Punkt, Karte viel niedriger (KC-CLUB-LAUFBAND-TREFFEN)
+Fund Hansi: „Noch nicht optimal. Was da über dem neuen Feld steht, sollte in das Feld rein als ein Punkt. Jetzt ist alles viel zu hoch.“
+- Die Kopfzeile (Treffen, Datum, Ort, Zu-/Absage, x/y angemeldet) ist weg – sie ist jetzt der **erste Punkt im Laufband**. Die Karte ist dadurch deutlich niedriger.
+- Noch keine Antwort: roter Rahmen, Datum · Ort, Knöpfe **✔ Zusagen / ✖** und „✅ 5/18“; der Zusagen-Knopf blinkt wie bisher ab 5 Tagen gelb, ab 2 Tagen rot. Die Meldung kommt zwischendurch wieder.
+- Schon geantwortet: weißer Rahmen, „✅ Ich komme · ✅ 5/18“. Kein Termin: „Kein Termin geplant“. Antippen führt wie bisher zu den Terminen; nicht ausblendbar.
+- Die doppelten Meldungen „Jetzt zu- oder absagen“ und „Noch x Tage bis …“ entfallen (das steht im Treffen-Punkt bzw. im Feld „Clubtreffen“).
+- Das Laufband frischt sich auch ohne Wechsel auf (z. B. nach der Zusage) und zeichnet nur neu, wenn sich etwas geändert hat. Nur App.
+
 ## 2.439.0 – 2026-10-16 – 📣 Info-Laufband auf der Startseite (KC-CLUB-INFO-LAUFBAND)
 Wunsch Hansi: „Über den 3 Feldern Nachricht, online, Termine ein großes Info-Feld – komplett gerahmt, so breit wie die 3 zusammen; dort abwechselnd Infos, z. B. 3 Dokumente im Eingangskorb oder ‚jetzt noch für die nächste Sitzung anmelden‘.“
 - In der ersten Info-Karte zwischen Überschrift und den 3 Feldern: **genau so breit wie die 3 Felder zusammen**, gleiche Rundung, feste Höhe (die Karte springt beim Wechsel nicht).
