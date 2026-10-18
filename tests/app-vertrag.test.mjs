@@ -6612,6 +6612,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/"avatar_bilder", "avatar_verlauf", "avatar_foto_setzen"/.test(server) && /"avatar_bilder", "avatar_verlauf", "avatar_foto_setzen"/.test(html), "Aktion in beiden Listen");
   assert.ok(/<div id="avJackeAuto"><\/div><div id="avVerlauf"><\/div>/.test(html) && /onclick="avWaehlen\('\$\{esc\(x\.code\)\}', this\)"/.test(html) && /ohneVerlauf: true/.test(html), "Zeile „Zuletzt benutzt“, antippen = auswählen");
 }
+// 2.450.0 KC-CLUB-AVATAR-HUETE (Wunschliste #11, Wunsch Hansi „Nikolausmütze, Jägerhut, Cowboyhut und noch ein paar mehr“) + einfache Avatare wieder sichtbar
+{
+  const a = html.indexOf("const AV_HAUT"), b = html.indexOf("function avWahl() {");
+  for (const k of ["nikolaus", "jaeger", "cowboy", "zylinder", "stroh", "wikinger", "krone", "party", "bommel"]) assert.ok(new RegExp(`"${k}"`).test(html.slice(0, b)) && new RegExp(`\\n    ${k}: \``).test(html), "Kopfbedeckung " + k);
+  assert.ok(/"Nikolausmütze", "Jägerhut", "Cowboyhut", "Zylinder", "Strohhut", "Wikingerhelm", "Krone", "Partyhütchen", "Bommelmütze"\]/.test(html), "Namen");
+  assert.ok(/"turban", "nikolaus", "jaeger",/.test(html), "hinten angehängt – alte Figuren-Codes bleiben gleich");
+  assert.ok(/avKlappe\("av_alt", true,/.test(html), "einfache Avatare immer aufgeklappt (Fund Hansi: Übersicht nicht mehr komplett)");
+  void a;
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

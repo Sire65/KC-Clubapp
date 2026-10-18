@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.450.0 – 2026-10-18 – Neue Kopfbedeckungen + alle Avatare wieder sichtbar (KC-CLUB-AVATAR-HUETE, Wunschliste #11)
+Neun neue Kopfbedeckungen im Baukasten (Selbst zusammenstellen → 🧢 Kopfbedeckung): Nikolausmütze, Jägerhut mit Feder, Cowboyhut, Zylinder, Strohhut, Wikingerhelm, Krone, Partyhütchen und Bommelmütze – je mit Farbe und Muster wählbar. Hinten angehängt, alle bisherigen Figuren bleiben unverändert. Fund Hansi „ich sehe nicht mehr die komplette Übersicht“: Bei Foto oder eigener Figur war „Bisherige Avatare“ zugeklappt – jetzt sind die einfachen und die hochwertigen Avatare immer offen. Nur App.
+
 ## 2.449.0 – 2026-10-18 – Früheres Bild zurückholen (KC-CLUB-BILD-VERLAUF, Wunschliste #21)
 Fund Hansi: Avatar-Bild durch ein Selfie ersetzt – das alte war weg (der Server löschte das alte Foto beim Wechsel). Jetzt merkt die App bei jedem Wechsel automatisch das bisherige Bild – Foto, Selfie oder Koch-Figur –, höchstens die letzten 3. Unter Mein Bild steht „🕘 Zuletzt benutzt“: antippen, oben ✅ Übernehmen, das alte Bild ist wieder da (auch ein früheres Foto). Die tägliche Jacken-Automatik zählt nicht als Wechsel. Der Verlauf gehört nur der Person selbst und ist nicht im Start-Paket. Server + App.
 
