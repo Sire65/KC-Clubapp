@@ -180,6 +180,10 @@ if (document.currentScript?.dataset.v !== APP_VERSION) {
 const START_MESS = { prog: performance.now(), hinter: typeof document !== "undefined" && !!document.hidden };
 // 2.181.0 KC-CLUB-START-HINTERGRUND: war die App während des Starts im Hintergrund (andere App, Bildschirm aus), zählt die Zeit nicht als Startzeit
 if (typeof document !== "undefined") document.addEventListener("visibilitychange", () => { if (document.hidden && !START_MESS.fertig) START_MESS.hinter = true; });
+// 2.481.0 KC-CLUB-ZURUECK-SITZUNG (TÜV B-03: nach Neuladen/Update führte „Zurück“ in alte, teils leere Seiten des vorigen Starts und
+// „nochmal Zurück = Beenden“ stimmte nicht): jeder Verlaufseintrag dieses Starts trägt die Start-Kennung – zentral hier, damit kein Aufruf sie vergisst
+const SITZUNG = Math.random().toString(36).slice(2, 10);
+if (typeof history !== "undefined") for (const f of ["pushState", "replaceState"]) { const orig = history[f].bind(history); history[f] = (st, ...rest) => orig(st && typeof st === "object" ? { ...st, sz: SITZUNG } : st, ...rest); }
 try { const u = new URL(location.href); if (u.searchParams.has("neu")) { u.searchParams.delete("neu"); history.replaceState(null, "", u.pathname + u.search + u.hash); } } catch {}
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
@@ -1854,7 +1858,7 @@ const RG_NACHRICHT = [
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN: Express mit Zähler, Später senden, Zurückholen, Favoriten
   { v: "neu", sel: ["#expressKnopf"], t: "🏎️ Express", x: "Eilt es wirklich? Dann tippst du auf den Rennwagen: Die Nachricht kommt sofort an – auch nachts. Unter deiner Nachricht siehst du später, wann sie angekommen ist und wann sie gelesen wurde. Pro Tag gehen fünf Express-Sendungen. Am Knopf steht, wie viele du heute schon hattest – zum Beispiel zwei von fünf." },
   { v: "neu", sel: ["#spaeterKnopf"], t: "⏰ Später senden", x: "Mit dem Wecker schickst du die Nachricht später – zum Beispiel morgen früh um acht, oder jeden Montag. Und hast du dich vertippt: Solange noch niemand die Nachricht gelesen hat, tippst du sie an und holst sie mit Zurückholen und ändern wieder in dein Schreibfeld." },
-  { v: "nachrichten", sel: ["#v-nachrichten .kom-leiste"], puls: ["#v-nachrichten .kom-leiste .knopf"], t: "👥 Gruppe & mehr", x: "Mit Gruppe legst du eine eigene Gruppe an, zum Beispiel fürs Küchenteam. Gemerkt zeigt Nachrichten, die du dir mit dem Stern gemerkt hast. Mit dem Stern Favoriten siehst du nur deine Lieblings-Chats: In Mitglieder beim Mitglied auf den Stern tippen – oder hier einen Chat einmal antippen und Als Favorit wählen. Es ist derselbe Stern. Dazu kommen automatisch die fünf Chats, in denen du am meisten schreibst. Und Test schickt dir selbst eine Probe – so prüfst du, ob Push und E-Mail ankommen." },
+  { v: "nachrichten", sel: ["#v-nachrichten .kom-leiste"], puls: ["#v-nachrichten .kom-leiste .knopf"], t: "👥 Gruppe & mehr", x: "Mit Gruppe legst du eine eigene Gruppe an, zum Beispiel fürs Küchenteam. Gemerkt zeigt Nachrichten, die du dir mit dem Stern gemerkt hast. Mit dem Stern Favoriten siehst du nur deine Lieblings-Chats: In Mitglieder beim Mitglied auf den Stern tippen – oder hier rechts am Chat auf die drei Punkte tippen und Als Favorit wählen. Es ist derselbe Stern. Dazu kommen automatisch die fünf Chats, in denen du am meisten schreibst. Und Test schickt dir selbst eine Probe – so prüfst du, ob Push und E-Mail ankommen." },
   { v: "nachrichten", t: "✅ Fertig", x: "Das war's: Plus Neu, Empfänger wählen, schreiben, senden. Probier es aus – zum Beispiel mit einer Nachricht an dich selbst über Test." },
 ];
 const RG_TERMIN = [
@@ -5089,7 +5093,7 @@ const HILFE = [
   { id: "entwickler", thema: "technik", sym: "👨‍🍳", t: "Wer hat die Club-App gebaut?", x: "Die Club-App hat <b>Hans-Joachim Koch</b> entwickelt und gestaltet – Koch, Küchenmeister und Gründungsmitglied des Köcheclubs. Mehr über ihn mit Foto: <b>⚙️ Einstellungen → ℹ️ App-Info → „👨‍🍳 Über den Entwickler“</b>.", zeig: () => entwicklerZeigen(), seit: "2.23.32" },
   { id: "dw_fertig", thema: "termine", sym: "✅", t: "Dienstwünsche mit „Fertig“ abschließen", x: "Hast du Dienstwünsche eingetragen, schließt du mit <b>„✅ Fertig“</b> ab – dann bekommst du eine <b>Bestätigung mit Zusammenfassung per E-Mail</b> (das ist noch nicht der Dienstplan, sondern deine Wunschplanung). Gehst du vorher zurück, fragt die App nach; <b>„Abbrechen“</b> führt zurück in die Eingabe. Klappt der Versand nicht (z. B. kein Netz), kannst du trotzdem gehen.", seit: "2.326.0" }, // 2.337.0 KC-CLUB-TUEV-4
   { id: "wunschbogen", thema: "termine", sym: "🖨️", t: "Leeren Wunschbogen drucken oder mailen", x: "Unter <b>📝 Dienstwünsche</b> oben auf <b>„🖨️ Bogen“</b> tippen. Du bekommst deinen persönlichen Bogen mit Namen und oben rechts einem QR-Code mit deiner Mitglieds-ID. <b>🖨️ Drucken</b> – oder ohne Drucker <b>✉️ Per E-Mail an mich</b>, dann kommt er als PDF in dein Postfach. Von Hand ausfüllen und die Zeiten danach mit Twinkey eintragen.", zeig: () => wbStart(), seit: "2.23.28" },
-  { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste einmal auf einen Chat tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
+  { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste rechts am Chat auf <b>⋯</b> tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
   { id: "einstellungen_ordnung", thema: "darstellung", sym: "🔍", t: "Einstellungen schneller finden", x: "Ganz oben unter ⚙️ steht <b>„🔍 Einstellung suchen“</b>: ein Wort eintippen (z. B. <b>Uhr</b>, <b>Schrift</b>, <b>Push</b>) – dann siehst du nur noch die passenden Schalter, ✕ zeigt wieder alles. Was zu einem Schalter gehört (z. B. die <b>Szenen</b> bei „🍂 Jahreszeiten im Kopf“, die Uhrenauswahl oder die Zeiten bei „Nicht stören“), steht in einem <b>eigenen Klappbereich</b> darunter: Schaltest du den Schalter ein, klappt er von selbst auf. Ist der Schalter aus, ist er grau mit 🔒.", zeig: () => { zeige("einstellungen"); setTimeout(() => $("einstSuche")?.focus(), 300); }, seit: "2.478.0" },
@@ -5106,7 +5110,7 @@ const HILFE = [
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN (Wunsch Hansi „Videos, Hilfetexte, Suche und Twinkey auf die neuen Funktionen umstellen und gut erklären“)
   { id: "express_zaehler", thema: "nachrichten", sym: "🏎️", t: "Express: höchstens 5 am Tag – am Knopf steht „2/5“", x: "Express ist für wirklich Eiliges. Jedes Mitglied kann <b>5 Express-Sendungen pro Tag</b> verschicken (gezählt werden die letzten 24 Stunden). Tippst du auf <b>🏎️</b>, steht am Knopf, wie viele du heute schon hattest – z. B. <b>2/5</b>. Nach dem Senden steht in der Meldung „heute 3/5“. Sind alle 5 verbraucht, geht Express nicht an – die App sagt dir, <b>ab wann</b> es wieder geht. Dann einfach normal senden.", seit: "2.391.0" },
   { id: "express_status", thema: "nachrichten", sym: "📬", t: "Express: angekommen um … gelesen um …", x: "Unter deiner Express-Sendung siehst du genau, was passiert ist: <b>„🏎️ Per Express versandt um 19:05“</b> und für jeden Empfänger <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Steht dort „📭 noch nicht angekommen“, ist das Handy des Empfängers vermutlich aus oder offline.", seit: "2.385.0" },
-  { id: "chat_favoriten", thema: "nachrichten", sym: "⭐", t: "Favoriten: deine wichtigsten Leute oben", x: "In <b>💬 Nachrichten</b> oben auf <b>⭐ Favoriten</b> tippen – dann siehst du nur deine Lieblings-Chats. <b>Den Stern setzt du an zwei Stellen – es ist immer derselbe:</b> in <b>👥 Mitglieder</b> beim Mitglied auf <b>☆</b> tippen (wird ⭐), oder in der Chat-Liste den Chat <b>einmal antippen</b> → <b>„⭐ Als Favorit“</b>. Ein Stern gehört zur <b>Person</b> – er steht dann in der Mitgliederliste <i>und</i> bei ihrem Chat. Gruppenchats bekommen ihren eigenen Stern. Dazu kommen automatisch die <b>5 Chats, in denen du am meisten schreibst</b> („· oft“). In <b>👥 Mitglieder</b> zeigt der Schalter <b>„⭐ Favoriten“</b> nur deine Favoriten. Die Sterne gelten auf all deinen Geräten.", zeig: () => { zeige("nachrichten"); uhFavAnsicht(true); }, seit: "2.387.0" },
+  { id: "chat_favoriten", thema: "nachrichten", sym: "⭐", t: "Favoriten: deine wichtigsten Leute oben", x: "In <b>💬 Nachrichten</b> oben auf <b>⭐ Favoriten</b> tippen – dann siehst du nur deine Lieblings-Chats. <b>Den Stern setzt du an zwei Stellen – es ist immer derselbe:</b> in <b>👥 Mitglieder</b> beim Mitglied auf <b>☆</b> tippen (wird ⭐), oder in der Chat-Liste rechts am Chat auf <b>⋯</b> tippen → <b>„⭐ Als Favorit“</b>. Ein Stern gehört zur <b>Person</b> – er steht dann in der Mitgliederliste <i>und</i> bei ihrem Chat. Gruppenchats bekommen ihren eigenen Stern. Dazu kommen automatisch die <b>5 Chats, in denen du am meisten schreibst</b> („· oft“). In <b>👥 Mitglieder</b> zeigt der Schalter <b>„⭐ Favoriten“</b> nur deine Favoriten. Die Sterne gelten auf all deinen Geräten.", zeig: () => { zeige("nachrichten"); uhFavAnsicht(true); }, seit: "2.387.0" },
   { id: "zustell_alle", thema: "nachrichten", sym: "✅", t: "Benachrichtigen: alles auf einmal mit „✅ Alle“", x: "Mit der <b>Glocke 🔔</b> unter dem Schreibfeld wählst du, wie benachrichtigt wird – <b>🔔 Push</b>, <b>✉️ E-Mail</b>, <b>WhatsApp</b>. Mit <b>„✅ Alle“</b> sind alle drei mit einem Tipp an – nochmal tippen schaltet alle aus.", seit: "2.386.0" },
   { id: "online_uhrzeit", thema: "nachrichten", sym: "🟢", t: "„… ist jetzt online“ – jetzt mit Uhrzeit", x: "Hast du die Mitteilung <b>„🟢 Klaus ist jetzt online“</b> eingeschaltet, steht jetzt die <b>Uhrzeit</b> dabei – z. B. „(19:05 Uhr)“ – und darunter der Tag. Kommt die Mitteilung erst später an (z. B. weil dein PC aus war), heißt sie <b>„🟢 Klaus war um 19:05 Uhr online“</b>. So weißt du, ob er wirklich gerade da ist.", seit: "2.390.0" },
   { id: "terminanfrage_oben", thema: "termine", sym: "📨", t: "Offene Terminanfragen stehen ganz oben", x: "Hat dich jemand per <b>Terminanfrage</b> gefragt und du hast noch nicht geantwortet, steht sie jetzt <b>ganz oben unter „Heute wichtig“</b> – rot umrandet. Die Kachel <b>📅 Termine</b> zeigt die Zahl. Antippen und mit <b>Ja</b>, <b>Vielleicht</b> oder <b>Nein</b> antworten.", seit: "2.389.0" },
@@ -8944,7 +8948,7 @@ const TW_FAQ = [
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN: Express, Zurückholen, Favoriten, Später senden
   { id: "express", sym: "🏎️", t: "Wie schicke ich eine Express-Nachricht – und wie viele darf ich?", x: "Im Chat unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden. Sie kommt <b>sofort</b> an – auch nachts und bei stummem Chat – und beim Empfänger geht ein Fenster auf. Unter deiner Nachricht siehst du <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Pro Tag gehen <b>5 Express-Sendungen</b>; am Knopf steht, wie viele du schon hattest (z. B. <b>2/5</b>).", los: () => zeige("nachrichten") },
   { id: "zurueckholen", sym: "↩️", t: "Ich habe mich vertippt – kann ich die Nachricht zurückholen?", x: "Ja, solange sie noch <b>niemand gelesen</b> hat: Nachricht antippen (am PC: rechte Maustaste) → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet bei allen und steht wieder in deinem Schreibfeld – verbessern und neu senden. Ist sie schon gelesen, kannst du sie noch <b>✏️ bearbeiten</b>.", los: () => zeige("nachrichten") },
-  { id: "favoriten", sym: "⭐", t: "Wie lege ich Favoriten an?", x: "Am einfachsten in <b>👥 Mitglieder</b>: beim Mitglied auf den Stern <b>☆</b> tippen – er wird gelb ⭐. Oder in <b>💬 Nachrichten</b> den Chat einmal antippen → <b>„⭐ Als Favorit“</b>. Es ist <b>derselbe Stern</b>: Er erscheint in der Mitgliederliste und bei den Chats unter <b>⭐ Favoriten</b>. Nochmal tippen nimmt ihn weg.", los: () => { zeige("nachrichten"); uhFavAnsicht(true); } },
+  { id: "favoriten", sym: "⭐", t: "Wie lege ich Favoriten an?", x: "Am einfachsten in <b>👥 Mitglieder</b>: beim Mitglied auf den Stern <b>☆</b> tippen – er wird gelb ⭐. Oder in <b>💬 Nachrichten</b> rechts am Chat auf <b>⋯</b> tippen → <b>„⭐ Als Favorit“</b>. Es ist <b>derselbe Stern</b>: Er erscheint in der Mitgliederliste und bei den Chats unter <b>⭐ Favoriten</b>. Nochmal tippen nimmt ihn weg.", los: () => { zeige("nachrichten"); uhFavAnsicht(true); } },
   { id: "ausweis", sym: "🪪", t: "Wo ist mein Ausweis-QR für Kasse und Stechuhr?", x: "Auf der Startseite neben <b>Schnellzugriff</b> auf <b>QR</b> tippen – oder <b>Meins → 🪪 Mein Ausweis-QR</b>. Darin steht deine <b>Mitgliedsnummer</b>, wie auf dem Plastik-Ausweis. Vor den Scanner an der Kasse oder Stechuhr halten, Bildschirm hell stellen.", los: () => ausweisZeigen() },
   { id: "spaeter", sym: "⏰", t: "Kann ich eine Nachricht später senden lassen?", x: "Ja: Nachricht schreiben, unten auf <b>⏰</b> tippen, Zeit wählen (z. B. morgen 8 Uhr) und wie oft (einmal, jeden Tag, jeden Montag …). Bis dahin steht sie blass im Chat – nur du siehst sie.", los: () => zeige("nachrichten") },
   { id: "zettel", sym: "📌", t: "Wie hänge ich einen Zettel an die Pinnwand?", x: "Tippe auf <b>📌 Pinnwand</b> und dann auf <b>„＋ Zettel“</b>. Text schreiben (oder 🎤 sprechen) und aufhängen. Auf Zettel anderer antwortest du mit Emojis.", los: () => zeige("pinnwand") },
@@ -8952,7 +8956,7 @@ const TW_FAQ = [
   { id: "leihen", sym: "📦", t: "Wie leihe ich etwas vom Club aus?", x: "Unter <b>🤝 Helfen &amp; Leihen</b> → <b>📦 Ausleihen</b> reservierst du Club-Sachen wie den Pavillon für deinen Tag.", los: () => zeige("helfen") },
   { id: "boerse", sym: "🛍️", t: "Wie biete ich privat etwas an oder suche etwas?", x: "Unter <b>🤝 Helfen &amp; Leihen</b> → <b>🛍️ Börse</b> mit <b>„＋ Neu“</b>: Biete oder Suche wählen, gern mit Foto. Ein Angebot bleibt 30 Tage stehen.", los: () => hlStart("boerse") },
   { id: "vorschlag", sym: "🗳️", t: "Wie mache ich einen Vorschlag für den Club?", x: "Bei <b>🗳️ Vorschläge</b> auf <b>„＋ Neu“</b> tippen und deine Idee beschreiben – die anderen können abstimmen.", los: () => zeige("vorschlaege") },
-  { id: "dienstwunsch", sym: "📝", t: "Wie trage ich meine Dienstwünsche ein?", x: "Tippe auf <b>🗓️ Mein Dienst</b> → <b>„📝 Wünsche eintragen“</b> (in der einfachen Ansicht auf die Kachel <b>📝 Dienstwünsche</b>). Twinkey führt dich Tag für Tag durch: wann du kannst, wann lieber nicht. Gespeichert wird es für die Dienstplanung.", los: () => dwOeffnen() },
+  { id: "dienstwunsch", sym: "📝", t: "Wie trage ich meine Dienstwünsche ein?", x: "Tippe auf <b>🗓️ Mein Dienst</b> → <b>„📝 Wünsche eintragen“</b> (in der einfachen und der erweiterten Ansicht gleich). Twinkey führt dich Tag für Tag durch: wann du kannst, wann lieber nicht. Gespeichert wird es für die Dienstplanung.", los: () => dwOeffnen() },
   { id: "dienstplan", sym: "🗓️", t: "Wo sehe ich den Dienstplan?", x: "Unter <b>🗓️ Dienstpläne</b> – Woche für Woche. Mit <b>‹ Woche</b> / <b>Woche ›</b> blätterst du, <b>„Heute“</b> springt zurück.", los: () => zeige("dienste") },
   { id: "protokoll", sym: "📄", t: "Wo finde ich die Protokolle?", x: "Unter <b>📄 Protokolle</b>. Neue sind markiert, bis du sie geöffnet hast. Ältere stehen auch im <b>🗄️ Archiv</b> nach Jahren.", los: () => zeige("protokolle") },
   { id: "archiv", sym: "🗄️", t: "Wo finde ich alte Sachen und meinen Ordner?", x: "Im <b>🗄️ Archiv</b>: Ordner nach Jahren mit Terminen, Protokollen und Fotos, die <b>Clubchronik</b> zum Blättern – und dein <b>eigener Ordner</b>, den nur du siehst.", los: () => zeige("archiv") },
@@ -9104,7 +9108,7 @@ function twVideo(id) { $("twBlatt")?.remove(); rundgangStart(false, id); }
 function twHilfetext(id) { $("twBlatt")?.remove(); hzZuEintrag(id); }
 function twAntworten(wahl, gefragt = false) {
   const fr = ($("twFrage")?.value || "").trim(), z = $("twAntwort"); if (!z) return;
-  if (twNorm(fr).replace(/\s/g, "").length < 4) { z.innerHTML = ""; return; }
+  if (twNorm(fr).replace(/\s/g, "").length < 4) { z.innerHTML = gefragt ? '<p class="hinweis">✍️ Bitte erst deine Frage eintippen – oder auf 🎤 tippen und sprechen.</p>' : ""; return; } // 2.481.0 (TÜV B-11): „Fragen“ ohne Text tat nichts
   const t = twFinden(fr), best = (wahl && t.find((x) => x.e.id === wahl)) || t[0];
   if (!best) {
     z.innerHTML = gefragt ? `<div class="karte kc-antwort"><div class="kc-chef">🧑‍🍳 Das ist eine gute Frage.</div><p id="twWeiter" style="margin:4px 0 0">Ich werde recherchieren und dir bei Gelegenheit eine Antwort zukommen lassen.</p>${TW_MF_KNOPF}</div>`
@@ -12876,11 +12880,17 @@ function appSchliessen() {
 const JS_FEHLER = /Cannot read propert|Cannot set propert|is not a function|is not defined|is not iterable|is not an object|undefined is not|null is not/;
 const JS_FEHLER_TEXT = "Da hat in der App etwas nicht geklappt – bitte nochmal versuchen. Der Fehler ist gemeldet.";
 // 2.209.0 KC-CLUB-FEHLERTEXT (Gesamtprüfung 5): nie englische Programmtexte („Cannot read properties …“) in Karten zeigen
+// 2.481.0 KC-CLUB-FEHLER-EHRLICH (TÜV 18.10.: „Der Fehler ist gemeldet“ stand in Karten, gemeldet wurde aber nichts; „Cannot convert …“,
+// „Invalid time value“ kamen englisch): Programmfehler am Fehlertyp erkennen (nicht nur am Text) und an EINER Stelle melden – je Fehler einmal
+const NETZ_FEHLER = /Failed to fetch|NetworkError|Load failed|network/i;
+const istProgFehler = (e, t) => !NETZ_FEHLER.test(t) && (e instanceof TypeError || e instanceof ReferenceError || e instanceof RangeError || e instanceof SyntaxError || JS_FEHLER.test(t) || /^Cannot (convert|destructure)|^Invalid (time value|array length)/.test(t));
+const PROG_GEMELDET = new WeakSet();
+function progFehlerMelden(e, t) { if (e && typeof e === "object") { if (PROG_GEMELDET.has(e)) return; PROG_GEMELDET.add(e); } try { window.KCFP?.neu("gefangen", { text: t, stack: fehlerStapel(e?.stack || new Error().stack) }); } catch {} }
 const fehlerText = (e, sonst = "Das hat gerade nicht geklappt.") => {
   const t = String(e?.message || (typeof e === "string" ? e : "") || "");
   if (!t) return sonst;
-  if (JS_FEHLER.test(t) || /^Script error/i.test(t)) return JS_FEHLER_TEXT;
-  if (/Failed to fetch|NetworkError|Load failed|network/i.test(t)) return "Keine Verbindung – bitte gleich nochmal versuchen.";
+  if (istProgFehler(e, t) || /^Script error/i.test(t)) { progFehlerMelden(e, t); return JS_FEHLER_TEXT; }
+  if (NETZ_FEHLER.test(t)) return "Keine Verbindung – bitte gleich nochmal versuchen.";
   return t;
 };
 // 2.209.0 KC-CLUB-LADE-FEHLER-STAND (Gesamtprüfung 5): schlägt das Laden fehl, bleibt nicht ewig „Wird geladen …“ stehen –
@@ -12938,10 +12948,7 @@ window.addEventListener("unhandledrejection", (ev) => { const r = ev?.reason, t 
 })();
 function meldeFehler(e) {
   const t = String(e?.message ?? e ?? "Unbekannter Fehler");
-  if (e instanceof TypeError || e instanceof ReferenceError || JS_FEHLER.test(t)) {
-    try { window.KCFP?.neu("gefangen", { text: t, stack: fehlerStapel(e?.stack) }); } catch {}
-    return melde(JS_FEHLER_TEXT, true);
-  }
+  if (istProgFehler(e, t)) { progFehlerMelden(e, t); return melde(JS_FEHLER_TEXT, true); } // 2.481.0: gleiche Erkennung wie fehlerText
   melde(t, true);
 }
 function melde(t, fehler) {
@@ -14319,7 +14326,9 @@ const KACHELN = {
     // KC-CLUB-MEIN-DIENST (2.23.74, Wunsch Hansi): erweiterte Ansicht = EINE Kachel „🗓️ Mein Dienst“ (Wunsch → Soll → Ist);
     // die zwei bisherigen Kacheln bleiben für die einfache Ansicht und als Ziel der Knöpfe erhalten
     { id: "mein_dienst", sym: "🗓️", t: "Mein Dienst", u: () => mdUnter(), aktion: "mdStart()", nur: () => !einfach() },
-    { id: "meindienst", sym: "🗓️", t: "Mein Dienstplan", u: "Meine Dienste", nur: () => einfach(), aktion: "dpNurIch()" },
+    // 2.481.0 KC-CLUB-EINFACH-DIENSTWUNSCH (TÜV 18.10.: Dienstwunsch war in der einfachen Ansicht unerreichbar, die Hilfe versprach ihn): wie erweitert das Blatt
+    // „Mein Dienst“ – Wunsch → Plan → Zeiten; „📅 Plan ansehen“ führt von dort weiter zum Dienstplan (dpNurIch)
+    { id: "meindienst", sym: "🗓️", t: "Mein Dienstplan", u: "Wunsch · Plan · Zeiten", nur: () => einfach(), aktion: "mdStart()" },
     { id: "dienstwunsch", sym: "📝", t: "Dienstwünsche", u: "Mit Twinkey · Weihnachtsmarkt", nur: () => einfach(), aktion: "dwOeffnen()" },
     { id: "dokumente", sym: "📚", t: "Meine Dokumente", u: "Anleitungen zum Ansehen & Drucken", v: "dokumente" },
     { id: "erstattung", sym: "💶", t: "Erstattung", u: "Fahrtkosten & Auslagen", v: "erstattung" },
@@ -24189,7 +24198,7 @@ function wichtigZeigen() {
   if (INIT?.protokolleUngelesen) h.push(`<div class="zeile" style="cursor:pointer" onclick="zeige('protokolle')">📄 <b>${INIT.protokolleUngelesen === 1 ? "1 neues Protokoll" : INIT.protokolleUngelesen + " neue Protokolle"}</b> zum Lesen<span style="margin-left:auto">›</span></div>`);
   const dn = dokHinweis(); // KC-CLUB-DOK-NEU: eine leise Zeile, ✕ = nicht mehr zeigen
   if (dn) h.push(`<div class="zeile" style="cursor:pointer" onclick="dokOeffnen('${dn.id}')">${dn.sym} <span style="flex:1;min-width:0">Neu: <b>${esc(dn.t)}</b></span><span>›</span><button class="knopf klein" title="Nicht mehr zeigen" aria-label="Nicht mehr zeigen" onclick="event.stopPropagation();dokErledigt('${dn.id}')">✕</button></div>`);
-  if (pushMoeglich() && Notification.permission !== "granted") h.push(`<div class="zeile">🔔 Benachrichtigungen sind aus<button class="knopf haupt klein" style="margin-left:auto" onclick="pushEinschalten()">Einschalten</button></div>`);
+  if (pushMoeglich() && Notification.permission !== "granted") h.push(`<div class="zeile" style="flex-wrap:wrap"><span style="flex:1;min-width:0">🔔 Benachrichtigungen sind aus</span><button class="knopf haupt klein" style="margin-left:auto" onclick="pushEinschalten()">Einschalten</button></div>`); // 2.481.0 (TÜV B-06): große Schrift + 360 px → Knopf bricht um statt über den Rand
   $("wichtig").innerHTML = h.join("") || "Alles erledigt 👍";
 }
 // KC-CLUB-LADEN-EINMAL (1.97.0): läuft schon ein Laden, wird es mitbenutzt statt ein zweites zu starten (sonst konnte eine ältere
@@ -24234,7 +24243,15 @@ async function neuLadenRoh(vonHand) {
     if (vonHand) { melde("Aktualisiert"); updatePruefen(false); }
     standMerken(); offlineStandZeigen(false); owSenden(); // KC-CLUB-OFFLINE (2.1.0)
     if (ICH) startBereitLoesen(); // KC-CLUB-START-BEREIT
-  } catch (e) { if (!offlineStandLaden(e)) meldeFehler(e); }
+  } catch (e) { if (!offlineStandLaden(e)) { meldeFehler(e); if (!INIT) startFehlerZeigen(); } }
+}
+// 2.481.0 KC-CLUB-START-FEHLER (TÜV 18.10.: Start bei Serverfehler hing auf „Daten werden geladen“, nur alle 60 s ein neuer Versuch):
+// ohne gespeicherten Stand klar sagen, was los ist, Knopf „Nochmal“ und selbst nach 5 / 15 / 30 s erneut versuchen
+const START_FEHLER = { n: 0, t: null };
+function startFehlerZeigen() {
+  const h = $("heroInfo"); START_FEHLER.n++;
+  if (h) h.innerHTML = `<h2>⚠️ Keine Verbindung zum Club-Server</h2><div class="unter">Die App versucht es gleich von selbst noch einmal. <button type="button" class="knopf klein" onclick="neuLaden(true)">🔄 Nochmal versuchen</button></div>`;
+  clearTimeout(START_FEHLER.t); START_FEHLER.t = setTimeout(() => { if (!INIT) neuLaden(); }, [5000, 15000, 30000][Math.min(START_FEHLER.n - 1, 2)]);
 }
 // ---------- KC-CLUB-OFFLINE (2.1.0, Gesamtprüfung) ----------
 // Start ohne Netz: der zuletzt geladene Stand (nur auf diesem Gerät) wird gezeigt – deutlich als „Stand von …“ markiert,
@@ -24523,7 +24540,7 @@ function zeige(v, ausHistorie) {
   if (!ausHistorie) {
     const st = { v, id: v === "chat" ? chatId : v === "protokoll" ? prId : v === "aktion" ? aktionId : v === "mitglied" ? mitgliedId : v === "dokansicht" ? DOKA.id : null };
     const tiefe = history.state?.tiefe || 1; // KC-CLUB-ZURUECK-KNOPF: Startseite = 1, jede weitere Ansicht +1
-    if (v === vorher && v !== "chat") history.replaceState({ ...st, tiefe }, "", location.pathname + hash);
+    if (v === vorher && (v !== "chat" || history.state?.id === chatId)) history.replaceState({ ...st, tiefe }, "", location.pathname + hash); // 2.481.0 (TÜV B-10): derselbe Chat nochmal (z. B. Push) = kein zweiter Eintrag
     else history.pushState({ ...st, tiefe: tiefe + 1 }, "", location.pathname + hash);
   }
   window.scrollTo(0, 0);
@@ -24696,6 +24713,8 @@ window.addEventListener("popstate", (e) => {
   }
   VERLAUF.state = e.state; VERLAUF.url = location.href;
   const s = e.state || {};
+  // 2.481.0 KC-CLUB-ZURUECK-SITZUNG: Eintrag eines früheren Starts → Startseite zeigen und weiter zurück (so schließt sich die App wie angekündigt)
+  if ((s.v || s.basis) && s.sz !== SITZUNG) { zeige("start", true); history.back(); return; }
   if (s.basis) {
     // ganz am Anfang angekommen: Startseite zeigen; erst das nächste „Zurück“ schließt die App
     zeige("start", true);
@@ -27715,11 +27734,11 @@ async function unterhLaden() {
     // KC-CLUB-CHAT-KARTEI (2.191.0, Wunsch Hansi): Chats als Rollkartei – die vordere Karte ist schon „offen“ (letzte Nachrichten)
     uhKarteiKnopf(); $("unterhListe").classList.toggle("karte", !(rkAn("chats") && !UH.archivAnsicht && zeigen.length));
     if (rkAn("chats") && !UH.archivAnsicht && zeigen.length) { $("unterhListe").innerHTML = archKopf + uhKarteiHtml(zeigen); uhKarteiAn(); uhAmeisen(); return; }
-    $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Einmal tippen = auswählen (${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen) · doppelt tippen = öffnen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
+    $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Antippen = öffnen · <b>⋯</b> = ⭐ Favorit, ${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
-      <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
-      || (favKopf ? '<p class="hinweis">Noch keine Favoriten. Einen Chat einmal antippen und „⭐ Als Favorit“ wählen.</p>' : arch.length ? '<p class="hinweis">Alle Chats sind archiviert – oben auf „📦 Archiviert“ tippen.</p>' : '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>');
+      <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div><button type="button" class="uh-mehr" aria-label="Mehr zu diesem Chat: Favorit, archivieren, löschen" aria-expanded="${u.id === UH.wahl}" onclick="event.stopPropagation();uhMenue('${u.id}')">⋯</button></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
+      || (favKopf ? '<p class="hinweis">Noch keine Favoriten. Rechts am Chat auf <b>⋯</b> tippen und „⭐ Als Favorit“ wählen.</p>' : arch.length ? '<p class="hinweis">Alle Chats sind archiviert – oben auf „📦 Archiviert“ tippen.</p>' : '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>');
     UH.mark.forEach((id) => { if (!zeigen.some((u) => u.id === id)) UH.mark.delete(id); }); uhMarkZeichnen(); uhLangDruck(); // KC-CLUB-MEHRFACH-NACHRICHT
     uhAmeisen();
   } catch (e) { meldeFehler(e); ladeFehlerStand("unterhListe", e, "unterhLaden()"); }
@@ -27847,6 +27866,7 @@ function uhAmeisen() {
   }
 }
 // KC-CLUB-CHATLISTE (0.41.0): einmal tippen wählt die Unterhaltung aus (Öffnen / aus Liste entfernen), doppelt tippen öffnet sie.
+// 2.481.0: Antippen öffnet, die Auswahl kommt über „⋯“ (uhMenue).
 // „Entfernen“ blendet nur für mich aus (Server: unterhaltung_ausblenden) – schreibt jemand wieder, erscheint sie erneut.
 // Für alle löschen bleibt Admin-Sache (unterhaltung_loeschen mit Sicherung).
 const UH = { liste: [], wahl: null, letzterTipp: { id: null, t: 0 }, mark: new Set(), langGerade: false };
@@ -27964,14 +27984,13 @@ async function chatKomplettLoeschen(id, gefragt) {
 function unterhTipp(id) {
   if (UH.langGerade) { UH.langGerade = false; return; } // KC-CLUB-MEHRFACH-NACHRICHT: Loslassen nach langem Drücken ist kein Tipp
   if (UH.mark.size) return uhMarkieren(id); // solange etwas markiert ist, markiert ein Tipp weitere Chats (oder hebt sie auf)
-  const jetzt = Date.now(), lt = UH.letzterTipp;
-  UH.letzterTipp = { id, t: jetzt };
-  if (lt.id === id && jetzt - lt.t < DOPPELTIPP_MS) { UH.letzterTipp = { id: null, t: 0 }; return chatOeffnen(id); }
-  UH.wahl = UH.wahl === id ? null : id; // nochmal (langsam) tippen = Auswahl aufheben
-  unterhZeichnen();
+  // 2.481.0 KC-CLUB-CHATLISTE-ANTIPPEN (TÜV 18.10., von Hansi freigegeben): Antippen öffnet – wie in jeder anderen App. Die Auswahl
+  // (Favorit, archivieren, löschen …) liegt unverändert hinter „⋯“ rechts an der Zeile; langes Drücken markiert wie bisher.
+  UH.wahl = null; return chatOeffnen(id);
 }
+function uhMenue(id) { if (UH.mark.size) return uhMarkieren(id); UH.wahl = UH.wahl === id ? null : id; unterhZeichnen(); } // nochmal ⋯ = zu
 function unterhZeichnen() {
-  document.querySelectorAll("#unterhListe .unterh").forEach((el) => el.classList.toggle("gewaehlt", el.dataset.id === UH.wahl));
+  document.querySelectorAll("#unterhListe .unterh").forEach((el) => { el.classList.toggle("gewaehlt", el.dataset.id === UH.wahl); el.querySelector(".uh-mehr")?.setAttribute("aria-expanded", String(el.dataset.id === UH.wahl)); });
   document.querySelectorAll("#unterhListe .uhaktion").forEach((el) => el.remove());
   const u = UH.liste.find((x) => x.id === UH.wahl), el = u && document.querySelector(`#unterhListe .unterh[data-id="${u.id}"]`);
   if (el) el.insertAdjacentHTML("afterend", unterhAktionen(u));

@@ -820,7 +820,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/onclick="unterhTipp\('\$\{u\.id\}'\)"/.test(html) && !/class="unterh" onclick="chatOeffnen/.test(html), "Chatliste öffnet noch beim ersten Tippen");
   const tipp = html.slice(html.indexOf("function unterhTipp"), html.indexOf("function unterhZeichnen"));
-  assert.ok(/jetzt - lt\.t < DOPPELTIPP_MS/.test(tipp) && /return chatOeffnen\(id\)/.test(tipp), "Doppeltippen öffnet nicht");
+  // 2.481.0 KC-CLUB-CHATLISTE-ANTIPPEN (TÜV, von Hansi freigegeben): Antippen öffnet, Auswahl über „⋯“ (uhMenue) – Markieren bleibt
+  assert.ok(/UH\.wahl = null; return chatOeffnen\(id\);/.test(tipp) && /if \(UH\.mark\.size\) return uhMarkieren\(id\);/.test(tipp), "Antippen öffnet nicht");
+  assert.ok(/function uhMenue\(id\) \{ if \(UH\.mark\.size\) return uhMarkieren\(id\); UH\.wahl = UH\.wahl === id \? null : id; unterhZeichnen\(\); \}/.test(html) && /class="uh-mehr"[^>]*onclick="event\.stopPropagation\(\);uhMenue\('\$\{u\.id\}'\)">⋯<\/button>/.test(html), "Auswahl über ⋯ fehlt");
   const weg = html.slice(html.indexOf("async function unterhEntfernen"), html.indexOf("async function unterhEntfernen") + 900);
   assert.ok(/if \(!\(await frage\(/.test(weg) && /fuerAlle \? "unterhaltung_loeschen" : "unterhaltung_ausblenden"/.test(weg), "Entfernen ohne Rückfrage");
   assert.ok(/ICH\?\.admin \? `<button class="knopf klein" onclick="unterhEntfernen\('\$\{u\.id\}', true\)"/.test(html), "„Für alle löschen“ nicht auf Admin beschränkt");
@@ -3236,7 +3238,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 // 292. 2.4.2: Programmfehler aus catch-Blöcken protokollieren und verständlich zeigen (KC-CLUB-FEHLER-FANG)
 {
   assert.ok(!/melde\(e\.message, true\)/.test(html), "alle catch-Meldungen über meldeFehler");
-  assert.ok(/function meldeFehler\(e\) \{/.test(html) && /e instanceof TypeError \|\| e instanceof ReferenceError/.test(html) && /window\.KCFP\?\.neu\("gefangen", \{ text: t, stack: fehlerStapel\(e\?\.stack\) \}\)/.test(html), "mit Stapel ins Protokoll");
+  assert.ok(/function meldeFehler\(e\) \{/.test(html) && /e instanceof TypeError \|\| e instanceof ReferenceError/.test(html) && /window\.KCFP\?\.neu\("gefangen", \{ text: t, stack: fehlerStapel\(e\?\.stack \|\| new Error\(\)\.stack\) \}\)/.test(html) && /if \(istProgFehler\(e, t\)\) \{ progFehlerMelden\(e, t\); return melde\(JS_FEHLER_TEXT, true\); \}/.test(html), "mit Stapel ins Protokoll (2.481.0: zentral über progFehlerMelden)");
   assert.ok(/if \(fehler && JS_FEHLER\.test\(String\(t\)\)\)/.test(html), "auch direkte Meldungen");
 }
 // 293. 2.5.0: Vorlesen bei Einweisung und Tipp des Tages (KC-CLUB-VORLESEN-HILFE)
@@ -4291,7 +4293,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 425. 2.23.74: „🗓️ Mein Dienst“ – Wunsch → Soll → Ist in einer Kachel (KC-CLUB-MEIN-DIENST)
 {
   assert.ok(/\{ id: "mein_dienst", sym: "🗓️", t: "Mein Dienst", u: \(\) => mdUnter\(\), aktion: "mdStart\(\)", nur: \(\) => !einfach\(\) \}/.test(html), "eine Kachel in der erweiterten Ansicht");
-  assert.ok(/\{ id: "meindienst", sym: "🗓️", t: "Mein Dienstplan", u: "Meine Dienste", nur: \(\) => einfach\(\), aktion: "dpNurIch\(\)" \}/.test(html), "einfache Ansicht unverändert");
+  // 2.481.0 KC-CLUB-EINFACH-DIENSTWUNSCH (TÜV, Paket 1 von Hansi freigegeben): auch einfach das Blatt „Mein Dienst“ (Wunsch erreichbar)
+  assert.ok(/\{ id: "meindienst", sym: "🗓️", t: "Mein Dienstplan", u: "Wunsch · Plan · Zeiten", nur: \(\) => einfach\(\), aktion: "mdStart\(\)" \}/.test(html), "einfache Ansicht: Mein Dienst mit Wunsch");
   const k = html.slice(html.indexOf("// ---------- KC-CLUB-MEIN-DIENST (2.23.74"), html.indexOf("// ---------- KC-CLUB-MEIN-DIENST (2.23.74") + 6000);
   for (const x of ["📝 Wunschplan", "📅 Sollplan", "⏱️ Istplan", "Noch keine Ist-Zeiten", "dwOeffnen()", "dpNurIch()"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
   const g = server.slice(server.indexOf('case "mein_dienst"'), server.indexOf('case "dienstwunsch_laden"'));
@@ -6883,6 +6886,22 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(i === 0 && mitTon && suLaedtNoch\(U\) && \(u\._warte = \(u\._warte \|\| 0\) \+ 1\) <= 16\) \{ u\._t = setTimeout\(ruf, 250\); return; \}/.test(kz), "höchstens 4 s auf die Aufnahme warten");
   assert.ok(/sechs Uhren mit <b>echten Aufnahmen<\/b>/.test(html), "Hilfe nennt die neuen Uhren");
 }
+// 2.481.0 TÜV-Paket 1 (Hansi: „1 Fehler beheben“) – KC-CLUB-MARKE-UMLAUT, -EINFACH-DIENSTWUNSCH, -CHATLISTE-ANTIPPEN, -START-FEHLER, -FEHLER-EHRLICH,
+// -LANGE-LINKS, -ZURUECK-SITZUNG
+{
+  const ix = lies("index.html");
+  assert.ok(/\.marke-klein \{[^}]*overflow: hidden;[^}]*line-height: 1\.35; padding-top: 2px; \}/.test(ix) && /:root\.gross \.marke-klein \{[^}]*line-height: 1\.35; \}/.test(ix), "Ö-Punkte im Club-Namen nicht abgeschnitten");
+  assert.ok(/<button class="statuschip" id="statusChip" onclick="statusBlatt\(\)">⚪ … ▾<\/button>/.test(ix) && !/🟢 verfügbar ▾/.test(ix), "Status vor dem Laden nie grün (Regel 11)");
+  assert.ok(/function startFehlerZeigen\(\) \{/.test(html) && /if \(!offlineStandLaden\(e\)\) \{ meldeFehler\(e\); if \(!INIT\) startFehlerZeigen\(\); \}/.test(html) && /\[5000, 15000, 30000\]/.test(html), "Start bei Serverfehler: Hinweis, Knopf, schnelle Wiederholung");
+  assert.ok(/const fehlerText = [^\n]*\n[^\n]*\n[^\n]*\n  if \(istProgFehler\(e, t\) \|\| \/\^Script error\/i\.test\(t\)\) \{ progFehlerMelden\(e, t\); return JS_FEHLER_TEXT; \}/.test(html), "„Der Fehler ist gemeldet“ stimmt (fehlerText meldet)");
+  assert.ok(/e instanceof RangeError/.test(html) && /\^Cannot \(convert\|destructure\)\|\^Invalid \(time value\|array length\)/.test(html), "auch RangeError/„Cannot convert“ deutsch");
+  assert.ok(/\.zeile > \* \{ min-width: 0; \} \.zeile \{ overflow-wrap: anywhere; \}/.test(ix) && /\.stmarke \{[^}]*max-width: 100%; overflow-wrap: anywhere; \}/.test(ix), "lange Links verbreitern die Seite nicht");
+  assert.ok(/const SITZUNG = /.test(html) && /history\[f\] = \(st, \.\.\.rest\) => orig\(st && typeof st === "object" \? \{ \.\.\.st, sz: SITZUNG \} : st, \.\.\.rest\)/.test(html) && /if \(\(s\.v \|\| s\.basis\) && s\.sz !== SITZUNG\) \{ zeige\("start", true\); history\.back\(\); return; \}/.test(html), "Zurück nach Neuladen: alte Einträge überspringen");
+  assert.ok(/Benachrichtigungen sind aus<\/span><button/.test(html), "Einschalten-Knopf bricht bei großer Schrift um");
+  assert.ok(/z\.innerHTML = gefragt \? '<p class="hinweis">✍️ Bitte erst deine Frage eintippen/.test(html), "Twinkey: Fragen ohne Text erklärt sich");
+  assert.ok(!/einmal antippen\b[^"]*Als Favorit|einmal auf einen Chat tippen/.test(html), "Hilfetexte zur Chatliste angepasst");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1013,7 +1013,7 @@
   /* KC-CLUB-GROSSE-SCHRIFT (1.98.0, Gesamtprüfung): bei „große Schrift“ Leiste und Kopf nicht abschneiden */
   :root.gross .fuss-leiste button { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 0; padding-right: 0; }
   :root.gross .fuss-leiste button span { font-size: 1.45rem; }
-  :root.gross .marke-klein { white-space: normal; font-size: 13px; line-height: 1.15; }
+  :root.gross .marke-klein { white-space: normal; font-size: 13px; line-height: 1.35; }
   :root.gross .kopfzeile { flex-wrap: wrap; }
   :root.gross .ipfeil.sprung { display: none; }
   /* KC-CLUB-TIPPFLAECHE (1.98.0): kleine Knöpfe und Auswahl-Chips mind. 40 px hoch – leichter zu treffen */
@@ -1045,13 +1045,14 @@
   .logo { width: 54px; height: 54px; border-radius: 16px; background: rgba(255,255,255,.14); display: grid; place-items: center; flex: none; border: none; padding: 0; cursor: pointer; }
   .logo:active { transform: scale(.94); }
   .logo img { width: 40px; }
-  .marke-klein { font-size: .92rem; letter-spacing: .03em; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
+  /* 2.481.0 KC-CLUB-MARKE-UMLAUT (TÜV 18.10.: „KOCHECLUB“ – die Ö-Punkte wurden von overflow:hidden abgeschnitten): Zeile hoch genug für Großbuchstaben mit Umlaut */
+  .marke-klein { font-size: .92rem; letter-spacing: .03em; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; line-height: 1.35; padding-top: 2px; }
   /* Gruß hängt unter den Knöpfen, ohne die Spalte zu verbreitern → KÖCHECLUB WERNE hat die volle Breite */
   .kopfrechts { position: relative; flex: none; }
   .gruss { position: absolute; right: 0; top: calc(100% + 6px); font-weight: 800; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 210px; text-align: right; }
   .titel { font-size: 1.35rem; font-weight: 800; line-height: 1.15; }
   /* KC-CLUB-STATUSFARBE (0.34.1): jeder Status hat seine Farbe (grün verfügbar, orange beschäftigt, blau Urlaub, lila krank, rot nicht erreichbar) */
-  .stmarke { display: inline-block; border-radius: 999px; padding: 2px 9px; font-weight: 800; border: 1.5px solid transparent; }
+  .stmarke { display: inline-block; border-radius: 999px; padding: 2px 9px; font-weight: 800; border: 1.5px solid transparent; max-width: 100%; overflow-wrap: anywhere; } /* 2.481.0 (TÜV B-07): langer Status-Hinweis bricht um */
   .st-verfuegbar { background: var(--gruenbg); color: var(--textGruen); border-color: var(--gruen); }
   .st-beschaeftigt { background: var(--gelbbg); color: var(--gelb); border-color: #e08a1e; }
   .st-urlaub { background: var(--blaubg); color: var(--blau); border-color: var(--blau); }
@@ -1784,6 +1785,7 @@
   .karte h3 { margin: 0 0 10px; font-size: 1.15rem; }
   .hinweis { color: var(--grau); }
   .zeile { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--linie); }
+  .zeile > * { min-width: 0; } .zeile { overflow-wrap: anywhere; } /* 2.481.0 KC-CLUB-LANGE-LINKS (TÜV B-07): lange Links/Wörter brechen um statt die Seite zu verbreitern */
   .zeile:last-child { border-bottom: none; }
 
   /* Knöpfe & Formulare */
@@ -1983,6 +1985,8 @@
   .runde-angebot { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; margin: 6px 0; padding: 8px 10px; border-radius: 12px; background: var(--blaubg); color: var(--text); font-size: .9rem; }
   .runde-angebot .knoepfe { margin: 0; gap: 6px; }
   .unterh .mitte { flex: 1; min-width: 0; }
+  .unterh .uh-mehr { flex: none; min-width: 44px; min-height: 44px; margin: -6px -4px -6px 0; border: 0; border-radius: 12px; background: transparent; color: var(--text2, inherit); font-size: 1.5rem; line-height: 1; cursor: pointer; } /* 2.481.0 KC-CLUB-CHATLISTE-ANTIPPEN */
+  .unterh .uh-mehr[aria-expanded="true"] { background: var(--linie); }
   /* KC-CLUB-MEHRFACH-NACHRICHT: markierte Chats (lange drücken) – ✓ am Bild, goldener Grund; Leiste mit „Nachricht an alle“ */
   .unterh { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   .unterh.markiert { background: color-mix(in srgb, var(--gold) 16%, var(--karte)); border-radius: 14px; position: relative; }
@@ -4443,7 +4447,7 @@
         </div>
       </div>
       <div class="statusleiste">
-        <button class="statuschip" id="statusChip" onclick="statusBlatt()">🟢 verfügbar ▾</button><button class="ruf-chip versteckt" id="rufChip" title="Laufendes Gespräch – antippen zum Zurückkehren" onclick="anrufZurueck()"></button>
+        <button class="statuschip" id="statusChip" onclick="statusBlatt()">⚪ … ▾</button><button class="ruf-chip versteckt" id="rufChip" title="Laufendes Gespräch – antippen zum Zurückkehren" onclick="anrufZurueck()"></button>
         <span class="sl-luecke"></span>
         <button class="leds" id="leds" title="Verbindung zum Server" aria-label="Verbindung zum Server" onclick="verbindungBlatt()"><i class="led grau" id="ledStatus"></i><i class="led grau" id="ledComm"></i><i class="led daten" id="ledDaten"></i><i class="led-trenner" aria-hidden="true"></i><i class="led grau led-online" id="ledOnline" role="button" tabindex="0" title="Wer ist gerade online?" aria-label="Wer ist gerade online?" onclick="event.stopPropagation();onlineBlatt()"></i><i class="led grau led-rt versteckt" id="ledRt" role="button" tabindex="0" title="Direkte Leitung (Realtime)" aria-label="Direkte Leitung (Realtime)" onclick="event.stopPropagation();rtBlatt()"></i></button>
         <span class="sl-extra"><button class="herz" id="herzKnopf" title="Lebenszeichen – antippen: die letzten 15" aria-label="Lebenszeichen, antippen für die letzten 15" onclick="herzListe()">♥</button><button id="sparZeichen" class="spar-zeichen" title="Sparmodus an – antippen für Infos" aria-label="Sparmodus an" onclick="sparInfo()">🐢</button><button id="inkoKnopf" title="Inkognito – antippen zum Umschalten" aria-label="Inkognito umschalten" aria-pressed="false" onclick="inkognitoSetzen(!inkognitoAn())">🕶️</button></span>
@@ -4772,7 +4776,7 @@
 
   <!-- MITGLIEDER -->
   <section id="v-mitglieder" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>👥 Aktive Mitglieder</h2><button class="knopf klein stmarke st-verfuegbar" id="meinStatusKnopf" onclick="statusBlatt()"><small class="st-titel">Mein Status</small>🟢 verfügbar ▾</button><button class="rund mg-neu" id="mgAktualisieren" title="Aktualisieren" aria-label="Mitglieder aktualisieren" onclick="mgAktualisieren(this)">↻</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>👥 Aktive Mitglieder</h2><button class="knopf klein stmarke" id="meinStatusKnopf" onclick="statusBlatt()"><small class="st-titel">Mein Status</small>⚪ … ▾</button><button class="rund mg-neu" id="mgAktualisieren" title="Aktualisieren" aria-label="Mitglieder aktualisieren" onclick="mgAktualisieren(this)">↻</button></div>
     <!-- KC-CLUB-ONLINEFILTER (0.72.0): alle oder nur gerade online -->
     <!-- KC-CLUB-MG-UMSCHALTER (1.47.0): Kacheln | Liste direkt oben, daneben Alle | Online -->
     <div class="mg-schalter"><div class="umschalter" id="mgAnsichtOben" data-zyklus="Ansicht"><button data-a="kacheln" data-zk-text="🔲 Kacheln" onclick="mgAnsichtSetzen('kacheln')" title="Als Kacheln zeigen" aria-label="Als Kacheln zeigen">🔲</button><button data-a="liste" data-zk-text="☰ Liste" onclick="mgAnsichtSetzen('liste')" title="Als Liste zeigen" aria-label="Als Liste zeigen">☰</button><button data-a="tafel" data-zk-text="📋 Anwesenheit" onclick="mgAnsichtSetzen('tafel')" title="Anwesenheitstafel: nur Name und Lämpchen" aria-label="Anwesenheitstafel">📋</button><button data-a="kartei" data-zk-text="🗂️ Kartei" onclick="mgAnsichtSetzen('kartei')" title="Als Rollkartei zeigen" aria-label="Als Rollkartei zeigen">🗂️</button></div>
