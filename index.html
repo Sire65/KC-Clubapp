@@ -2855,7 +2855,14 @@
   /* KC-CLUB-ANSICHT-NAME (0.66.0): hinter „Schnellzugriff“ klein und farbig, welche Ansicht gerade aktiv ist.
      2.23.16 (Wunsch Hansi): etwas größer (.66 → .82rem); erweitert „< … >“ (nach außen), einfach „> … <“ (nach innen) statt Klammern */
   .ansichtname { font-size: .82rem; font-weight: 700; margin-left: 2px; vertical-align: middle; white-space: nowrap; border: none; background: none; padding: 6px 2px; font-family: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
-  #versionMarke { white-space: nowrap; flex: none; }
+  #versionMarke { white-space: nowrap; flex: none; display: inline-flex; align-items: center; gap: 4px; }
+  #versionMarke .qr-sym { width: 15px; height: 15px; }
+  /* KC-CLUB-AUSWEIS-QR (2.443.0): Ausweis-Karte – QR immer schwarz auf weiß (auch im Dunkel-Design), damit jeder Scanner ihn liest */
+  .ausweis-karte { background: #fff; color: #1d1a17; border: 2px solid #741521; border-radius: 14px; padding: 12px; max-width: 340px; margin: 0 auto 10px; text-align: center; }
+  .ausweis-kopf { display: flex; align-items: center; justify-content: center; gap: 8px; color: #741521; font-family: Georgia, 'Times New Roman', serif; font-size: 1.1em; margin-bottom: 6px; }
+  .ausweis-kopf .cd-logo { display: inline-flex; background: #741521; border-radius: 50%; padding: 5px; box-sizing: border-box; } .ausweis-kopf .cd-logo img { width: 100%; height: 100%; object-fit: contain; }
+  .ausweis-qr svg { width: 100%; max-width: 300px; height: auto; display: block; margin: 0 auto; background: #fff; }
+  .ausweis-name { font-weight: 700; font-size: 1.15em; margin-top: 6px; } .ausweis-nr { font-family: monospace; font-size: 1.2em; letter-spacing: 1px; color: #741521; }
   .sz-link { border: none; background: none; padding: 4px 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 4px; } /* KC-CLUB-SCHNELLZUGRIFF-LINK */
   .ansichtname.ein { color: var(--textGruen); } .ansichtname.erw { color: var(--textRot); } /* 1.23.0: im Nacht-Design lesbar */
   body.einfach .ansichtname.erw, body:not(.einfach) .ansichtname.ein { display: none; }
@@ -4373,7 +4380,7 @@
     </div>
     <div id="updateHinweis"></div>
     <div id="rgHinweis"></div><!-- KC-CLUB-RUNDGANG-HINWEIS (2.243.0) -->
-    <div class="abschnitt"><h3><button type="button" class="sz-link" onclick="schnellstartOben()" title="Antippen: oben die Schnellstart-Symbole zeigen">Schnellzugriff</button> <button type="button" class="ansichtname ein" onclick="ansichtWechseln()" title="Antippen: zur erweiterten Ansicht wechseln">&gt; Einfache Ansicht &lt;</button><button type="button" class="ansichtname erw" onclick="ansichtWechseln()" title="Antippen: zur einfachen Ansicht wechseln">&lt; Erweiterte Ansicht &gt;</button></h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Update prüfen" onclick="updateKachel()">v–</button></div>
+    <div class="abschnitt"><h3><button type="button" class="sz-link" onclick="schnellstartOben()" title="Antippen: oben die Schnellstart-Symbole zeigen">Schnellzugriff</button> <button type="button" class="ansichtname ein" onclick="ansichtWechseln()" title="Antippen: zur erweiterten Ansicht wechseln">&gt; Einfache Ansicht &lt;</button><button type="button" class="ansichtname erw" onclick="ansichtWechseln()" title="Antippen: zur einfachen Ansicht wechseln">&lt; Erweiterte Ansicht &gt;</button></h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Mein Ausweis-QR" onclick="versionMarkeTipp()">v–</button></div>
     <div class="register" id="register"></div>
     <div class="kachelleiste versteckt" id="kachelLeiste"><p>✏️ <b>Kacheln anordnen:</b> <span class="kl-erw">Kachel <b>kurz festhalten</b>, an den neuen Platz <b>ziehen</b> und loslassen (oder ◀ ▲ ▼ ▶ antippen). ✕ blendet aus, 👁️ wieder ein. Ausgeblendete bleiben hier blass an ihrem Platz.</span><span class="kl-ein">Kachel <b>festhalten</b> und nach oben oder unten <b>ziehen</b> – oder ▲ ▼ antippen.</span></p>
       <button class="knopf haupt klein" onclick="kaBearbeiten(false)">✅ Fertig</button><button class="knopf klein" onclick="kaStandard()">↺ Standard</button></div>
@@ -5270,7 +5277,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.442.0" data-v="2.442.0"></script>
+<script src="app.js?v=2.443.0" data-v="2.443.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

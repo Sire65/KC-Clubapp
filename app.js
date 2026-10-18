@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.442.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.443.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5080,6 +5080,7 @@ const HILFE = [
   { id: "abmelden", thema: "privat", sym: "🚪", t: "Von einem Gerät abmelden (Handy weitergeben)", x: "Gibst du ein Handy oder Tablet weiter, tippe vorher unter ⚙️ → <b>„🔒 Privatsphäre“</b> ganz unten auf <b>„🚪 Von diesem Gerät abmelden“</b>. Dann sind dein Zugang und alle Club-Daten auf diesem Gerät gelöscht – auch Notfallpass und Entwürfe. Auf deinen anderen Geräten bleibt alles; wieder anmelden geht mit deinem Zugangslink.", zeig: () => einstiegHin("privat"), seit: "2.337.0" }, // 2.337.0 KC-CLUB-ABMELDEN
   { id: "handy_verloren", thema: "privat", sym: "🔒", t: "Handy verloren oder gestohlen – was tun?", x: "Auf einem anderen Gerät, auf dem die Club-App läuft, unter ⚙️ → <b>„🔒 Privatsphäre“</b> auf <b>„🔒 Alle anderen Geräte abmelden“</b> tippen. Dann ist die Club-App auf dem verlorenen Handy sofort abgemeldet und bekommt keine Benachrichtigungen mehr. Hast du kein anderes Gerät, sag der Clubleitung Bescheid: Ein neuer Link macht den alten sofort ungültig.", zeig: () => einstiegHin("privat"), seit: "2.352.0" }, // 2.352.0 KC-CLUB-GERAETE-ABMELDEN
   { id: "meine_daten", thema: "privat", sym: "🔐", t: "Meine Daten ansehen", x: "Was weiß die App über dich? Die Kachel <b>„🔐 Meine Daten“</b> (Register Meins) zeigt es: Angaben, Zugang, Rechte, Benachrichtigungen und wie viel du angelegt hast. Du kannst es ausdrucken oder als Datei sichern; stimmt etwas nicht, meldest du es gleich dort.", zeig: () => mdatStart(), seit: "2.23.82" },
+  { id: "ausweis_qr", thema: "privat", sym: "🪪", t: "Mein Ausweis-QR für Kasse & Stechuhr", x: "Den Mitgliedsausweis hast du jetzt auch im Handy: Auf der Startseite neben <b>Schnellzugriff</b> auf <b>QR</b> tippen – oder unter <b>Meins → 🪪 Mein Ausweis-QR</b>. Der QR-Code enthält deine <b>Mitgliedsnummer</b> (z. B. KC-0005) – genau wie der Plastik-Ausweis. An der <b>Kasse</b> (Anmelden als Bediener) oder an der <b>Stechuhr</b> einfach vor den Scanner halten; Bildschirm ganz hell stellen. Klappt auch <b>ohne Netz</b>, wenn du ihn einmal geöffnet hattest. Die Versionsnummer steht weiter klein unter der Kochmütze.", zeig: () => ausweisZeigen(), seit: "2.443.0" },
   { id: "mein_dienst", thema: "termine", sym: "🗓️", t: "Mein Dienst: Wunsch, Plan und Zeiten", x: "Die Kachel <b>„🗓️ Mein Dienst“</b> (Meins, erweiterte Ansicht) zeigt alles an einer Stelle: <b>📝 Wunschplan</b> (abgegeben oder übernommen), <b>📅 Sollplan</b> (deine nächsten Dienste) und <b>⏱️ Istplan</b> (wann du wirklich da warst).", nur: () => !einfach(), zeig: () => mdStart(), seit: "2.23.74" },
   { id: "pfeil_menue", thema: "nachrichten", sym: "✂️", t: "Mehr am Pfeil einer Nachricht", x: "Der kleine Pfeil neben einer Nachricht bietet: ↪️ Weiterleiten, 📋 Kopieren, ✂️ Ausschneiden, 🗄️ ins eigene Archiv legen und 🗑️ Löschen. Bei eigenen Nachrichten kommt <b>❗ Wichtig</b> dazu.", zeig: () => zeige("nachrichten"), seit: "2.23.80" },
   { id: "wichtig_nachtraeglich", thema: "nachrichten", sym: "❗", t: "Eine Nachricht nachträglich wichtig machen", x: "Vergessen, ❗ anzutippen? Am Pfeil deiner Nachricht <b>„❗ Wichtig“</b> wählen – sie bekommt den orangefarbenen Rahmen für alle im Chat. Mit „➖ Nicht wichtig“ nimmst du es zurück. Es geht keine neue Benachrichtigung raus.", zeig: () => zeige("nachrichten"), seit: "2.23.80" },
@@ -8664,6 +8665,7 @@ const TW_FAQ = [
   { id: "express", sym: "🏎️", t: "Wie schicke ich eine Express-Nachricht – und wie viele darf ich?", x: "Im Chat unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden. Sie kommt <b>sofort</b> an – auch nachts und bei stummem Chat – und beim Empfänger geht ein Fenster auf. Unter deiner Nachricht siehst du <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Pro Tag gehen <b>5 Express-Sendungen</b>; am Knopf steht, wie viele du schon hattest (z. B. <b>2/5</b>).", los: () => zeige("nachrichten") },
   { id: "zurueckholen", sym: "↩️", t: "Ich habe mich vertippt – kann ich die Nachricht zurückholen?", x: "Ja, solange sie noch <b>niemand gelesen</b> hat: Nachricht antippen (am PC: rechte Maustaste) → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet bei allen und steht wieder in deinem Schreibfeld – verbessern und neu senden. Ist sie schon gelesen, kannst du sie noch <b>✏️ bearbeiten</b>.", los: () => zeige("nachrichten") },
   { id: "favoriten", sym: "⭐", t: "Wie lege ich Favoriten an?", x: "Am einfachsten in <b>👥 Mitglieder</b>: beim Mitglied auf den Stern <b>☆</b> tippen – er wird gelb ⭐. Oder in <b>💬 Nachrichten</b> den Chat einmal antippen → <b>„⭐ Als Favorit“</b>. Es ist <b>derselbe Stern</b>: Er erscheint in der Mitgliederliste und bei den Chats unter <b>⭐ Favoriten</b>. Nochmal tippen nimmt ihn weg.", los: () => { zeige("nachrichten"); uhFavAnsicht(true); } },
+  { id: "ausweis", sym: "🪪", t: "Wo ist mein Ausweis-QR für Kasse und Stechuhr?", x: "Auf der Startseite neben <b>Schnellzugriff</b> auf <b>QR</b> tippen – oder <b>Meins → 🪪 Mein Ausweis-QR</b>. Darin steht deine <b>Mitgliedsnummer</b>, wie auf dem Plastik-Ausweis. Vor den Scanner an der Kasse oder Stechuhr halten, Bildschirm hell stellen.", los: () => ausweisZeigen() },
   { id: "spaeter", sym: "⏰", t: "Kann ich eine Nachricht später senden lassen?", x: "Ja: Nachricht schreiben, unten auf <b>⏰</b> tippen, Zeit wählen (z. B. morgen 8 Uhr) und wie oft (einmal, jeden Tag, jeden Montag …). Bis dahin steht sie blass im Chat – nur du siehst sie.", los: () => zeige("nachrichten") },
   { id: "zettel", sym: "📌", t: "Wie hänge ich einen Zettel an die Pinnwand?", x: "Tippe auf <b>📌 Pinnwand</b> und dann auf <b>„＋ Zettel“</b>. Text schreiben (oder 🎤 sprechen) und aufhängen. Auf Zettel anderer antwortest du mit Emojis.", los: () => zeige("pinnwand") },
   { id: "hilfe-suchen", sym: "🙋", t: "Ich brauche Hilfe von anderen – was tun?", x: "Unter <b>🤝 Helfen &amp; Leihen</b> → <b>🙋 Wer kann helfen?</b> mit <b>„＋ Neu“</b> einen Hilfe-Aufruf anlegen. Du wählst, ob er an die Pinnwand kommt, per Push oder per E-Mail rausgeht.", los: () => zeige("helfen") },
@@ -14032,6 +14034,8 @@ const KACHELN = {
     { id: "erstattung", sym: "💶", t: "Erstattung", u: "Fahrtkosten & Auslagen", v: "erstattung" },
     // KC-CLUB-AENDERUNG (2.22.7, Wunsch Hansi): Anschrift, Name, Telefon, Bank, Größe … melden; Clubleitung sieht offene Meldungen als Zahl
     // KC-CLUB-MEINE-DATEN (2.23.82, Wunsch Hansi „in Meins“): ansehen, was über mich gespeichert ist – drucken, als Datei sichern
+    // KC-CLUB-AUSWEIS-QR (2.443.0, Wunschliste #9): Mitgliedsausweis als QR – an Kasse und Stechuhr vor den Scanner halten
+    { id: "ausweis", sym: "🪪", t: "Mein Ausweis-QR", u: "Für Kasse & Stechuhr", aktion: "ausweisZeigen()" },
     { id: "meinedaten", sym: "🔐", t: "Meine Daten", u: "Was ist über mich gespeichert?", aktion: "mdatStart()" },
     { id: "aenderung", sym: "✏️", t: "Änderung melden", u: "Neue Anschrift, Telefon, Größe …", aktion: "aeStart()", zahl: () => (ICH?.vorstand || ICH?.admin ? AE.offen : 0) },
     { id: "schulungen", sym: "🎓", t: "Meine Schulung", u: "Termin aussuchen · Zusammenfassungen", aktion: "smStart()", zahl: () => (SM.liste || []).filter((e) => e.status === "offen").length }, // 2.23.62 KC-CLUB-SCHULUNG-MITGLIED
@@ -14084,10 +14088,10 @@ const ZUGANG_AKTIONEN = {
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort",
-    "sondereinsatz_zusage", "stunden_melden"],
+    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis"],
 };
 const ZUGANG_KACHELN = { basis: ["termine", "kommunikation", "sos", "spiele", "status", "einstellungen", "hilfezentrum", "twinkey", "erklaer", "update", "sicherheit", "feedback", "test"],
-  aushilfe: ["mein_dienst", "meindienst", "dienstwunsch", "fotos", "schulungen"] };
+  aushilfe: ["mein_dienst", "meindienst", "dienstwunsch", "fotos", "schulungen", "ausweis"] };
 const zugang = () => (ICH?.zugang === "gast" || ICH?.zugang === "aushilfe" ? ICH.zugang : "mitglied");
 const zugangKachel = (id) => zugang() === "mitglied" || ZUGANG_KACHELN.basis.includes(id) || (zugang() === "aushilfe" && ZUGANG_KACHELN.aushilfe.includes(id));
 const zugangAktion = (a) => zugang() === "mitglied" || ZUGANG_AKTIONEN.basis.includes(a) || (zugang() === "aushilfe" && ZUGANG_AKTIONEN.aushilfe.includes(a));
@@ -33580,6 +33584,31 @@ async function qrLaden() {
   if (window.qrcode) return;
   await new Promise((ok, nein) => { const sc = document.createElement("script"); sc.src = "lib/qrcode/qrcode.js"; sc.onload = ok; sc.onerror = () => nein(new Error("QR-Baustein konnte nicht geladen werden.")); document.head.appendChild(sc); });
 }
+// ---------- KC-CLUB-AUSWEIS-QR (2.443.0, Wunschliste #9, Wunsch Hansi): Mitgliedsausweis als QR in der App ----------
+// Inhalt = nur die Mitgliedsnummer (KC-0005): genau das sucht die Kasse in jedem Ausweis-QR (Bedieneranmeldung + Stechuhr,
+// kasse/pos/app.js mitgliedsnummerAus, time-clock-pos.js parseKngQr). Nur Buchstaben, Ziffern, „-“ → kein Tastatur-Layout-Problem
+// beim Handscanner. Der fertige QR wird je Person auf dem Gerät gemerkt: so geht er auch ohne Netz an der Kasse.
+const ausweisSpeicher = () => "kc_club_ausweis_" + (ICH?.person_id || "");
+function ausweisGemerkt() { try { const x = JSON.parse(localStorage.getItem(ausweisSpeicher()) || "null"); return x && /^KC-\d{3,5}$/.test(x.nummer) && x.svg ? x : null; } catch { return null; } }
+function ausweisSvg(nummer) { const q = qrcode(0, "M"); q.addData(nummer); q.make(); return q.createSvgTag({ cellSize: 8, margin: 4, scalable: true }); }
+function ausweisHtml(x, frisch) {
+  const kopf = `<div class="kopf2" style="margin:0 0 6px"><h3 style="margin:0;flex:1">🪪 Mein Ausweis-QR</h3><button class="knopf klein" onclick="$('ausweisBlatt').remove()">✕</button></div>`;
+  if (!x) return kopf + `<p class="hinweis">Für dich ist noch keine Mitgliedsnummer hinterlegt. Bitte bei der Clubleitung melden – dann erscheint hier dein QR-Code.</p>`;
+  return kopf + `<div class="ausweis-karte"><div class="ausweis-kopf">${cdLogo(9)}<b>${esc(KC_CD.name)}</b></div>
+    <div class="ausweis-qr">${x.svg}</div><div class="ausweis-name">${esc(ICH?.name || "")}</div><div class="ausweis-nr">${esc(x.nummer)}</div></div>
+    <p class="hinweis" style="text-align:center">An der <b>Kasse</b> oder <b>Stechuhr</b> einfach vor den Scanner halten – wie den Plastik-Ausweis.<br>Tipp: Bildschirm ganz hell stellen.${frisch ? "" : "<br><small>⚠️ Ohne Netz: zuletzt gemerkter Stand.</small>"}</p>`;
+}
+async function ausweisZeigen() {
+  const alt = ausweisGemerkt();
+  blattAuf("ausweisBlatt", alt ? ausweisHtml(alt, false) : '<p class="hinweis">⏳ Ausweis wird geladen …</p>');
+  try {
+    const { nummer } = await api("mein_ausweis");
+    if (!nummer) { try { localStorage.removeItem(ausweisSpeicher()); } catch {} }
+    const x = nummer ? { nummer, svg: alt?.nummer === nummer ? alt.svg : (await qrLaden(), ausweisSvg(nummer)) } : null;
+    if (x) try { localStorage.setItem(ausweisSpeicher(), JSON.stringify(x)); } catch {}
+    const f = $("ausweisBlatt")?.querySelector(".blatt-innen"); if (f) f.innerHTML = ausweisHtml(x, true);
+  } catch (e) { if (!alt) { $("ausweisBlatt")?.remove(); meldeFehler(e); } }
+}
 async function einrichtungskarte(pid) {
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   const m = MITGLIEDER.find((x) => x.person_id === pid); if (!m) return;
@@ -34016,8 +34045,14 @@ async function updateKachel() {
   await updatePruefen(true);
   if (NEUE_VERSION) updateFenster();
 }
+// KC-CLUB-AUSWEIS-QR (2.443.0, Wunschliste #9): der kleine Knopf neben „Schnellzugriff“ zeigt jetzt den Ausweis-QR –
+// die Versionsnummer steht weiter unter der Kochmütze (antippen = Update prüfen). Gibt es ein Update, meldet der Knopf es wie bisher.
+const AUSWEIS_SYM = '<svg class="qr-sym" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 1h6v6H1zM2.5 2.5v3h3v-3zM9 1h6v6H9zm1.5 1.5v3h3v-3zM1 9h6v6H1zm1.5 1.5v3h3v-3zM9 9h2v2H9zm4 0h2v2h-2zm-2 2h2v2h-2zm-2 2h2v2H9zm4 0h2v2h-2z" fill="currentColor" fill-rule="evenodd"/></svg>';
+function versionMarkeTipp() { if (NEUE_VERSION) updateKachel(); else ausweisZeigen(); }
 function versionAnzeigen() {
-  $("versionMarke").textContent = NEUE_VERSION ? `🆕 v${NEUE_VERSION}` : `v${APP_VERSION} ↻`;
+  const vm = $("versionMarke");
+  if (NEUE_VERSION) vm.textContent = `🆕 v${NEUE_VERSION}`; else vm.innerHTML = `${AUSWEIS_SYM} QR`;
+  vm.title = NEUE_VERSION ? "Update prüfen" : "Mein Ausweis-QR für Kasse & Stechuhr"; vm.setAttribute("aria-label", vm.title);
   $("versionMarke").classList.toggle("gelb", !!NEUE_VERSION);
   // KC-CLUB-KOPF-ORDNUNG (2.24.17, Wunsch Hansi): Versionsnummer klein unter der Kochmütze, bei Update gelb mit 🆕
   const kv = $("kopfVersion"); if (kv) { kv.textContent = NEUE_VERSION ? `🆕 v${NEUE_VERSION}` : `v${APP_VERSION}${ICH?.admin && APP_STUFE !== "FINAL" ? " " + APP_STUFE : ""}`; kv.classList.toggle("neu", !!NEUE_VERSION); }
@@ -35248,6 +35283,7 @@ function suAppListe() {
     ["📨", "Offene Terminanfragen", "terminanfrage anfrage termin offen antworten einladung", () => zeige("termine")],
     ...(ICH?.admin ? [["📝", "Wünsche an Claude", "wunsch wünsche claude vorschlag idee fehler aufgabe liste entwickler", () => wuStart()]] : []), // 2.440.0
     ...(ICH?.admin ? [["📅", "Wer kommt wann? (Nutzung)", "wer kommt wann nutzung uhrzeit wochentag statistik öffnen", () => wannStatistik()]] : []),
+    ["🪪", "Mein Ausweis-QR", "ausweis qr code mitgliedsnummer kasse stechuhr scanner bediener anmelden mitgliedsausweis karte", () => ausweisZeigen()], // 2.443.0
     ["📊", "Abstimmung im Chat", "abstimmung umfrage chat wer kommt", () => { melde("Im Chat auf 📎 tippen → „📊 Abstimmung“"); zeige("nachrichten"); }],
     ["🛡️", "Sicherheits-Check", "sicherheit sicher datenschutz verschlüsselung sicherung prüfen test", () => sicherheitStart()],
     ["🔕", "Chat stummschalten", "stumm stummschalten leise chat gruppe", () => { melde("Im Chat oben auf ⋮ tippen → 🔕 Stummschalten"); zeige("nachrichten"); }],

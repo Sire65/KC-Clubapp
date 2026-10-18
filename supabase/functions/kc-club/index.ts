@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.442.0";
+const SERVER_VERSION = "2.443.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2620,7 +2620,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort",
-    "sondereinsatz_zusage", "stunden_melden"],
+    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis"],
 };
 const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set([...ZUGANG_AKTIONEN.basis, ...ZUGANG_AKTIONEN.aushilfe]) };
 const zugangAus = (r: any): Zugang => (r?.ist_admin ? "mitglied" : r?.zugang === "gast" || r?.zugang === "aushilfe" ? r.zugang : "mitglied");
@@ -12922,6 +12922,14 @@ Köcheclub-App`,
       // KC-CLUB-DB-AUFRAEUMEN (2.24.7): größte Tabellen ansehen + alte Protokolle/Messwerte löschen – nur Admin
       // 2.389.0 KC-CLUB-DB-LAST (Wunsch Hansi): Datenbank-Abfragen je Stunde und Quelle (Programm) – für die Balkengrafik im Admin → Supabase
       // ----- 2.440.0 KC-CLUB-WUNSCHLISTE (Wunsch Hansi): Wünsche an Claude – nur Admin; Claude liest/antwortet direkt in der Datenbank -----
+      // KC-CLUB-AUSWEIS-QR (2.443.0, Wunschliste #9): die EIGENE Mitgliedsnummer (= QR auf dem Ausweis, so liest ihn die Kasse
+      // für Bedieneranmeldung und Stechuhr) – nur lesen, nur für sich selbst; ohne gültige Nummer kommt null (nie ein geratener Wert)
+      case "mein_ausweis": {
+        const { data: p, error } = await db.from("kc_core_personen").select("mitgliedsnummer").eq("person_id", ich.person_id).eq("aktiv", true).maybeSingle();
+        if (error) throw new Fehler("Ausweis gerade nicht abrufbar.", 503);
+        const nr = String(p?.mitgliedsnummer ?? "").trim().toUpperCase();
+        return json({ nummer: /^KC-\d{3,5}$/.test(nr) ? nr : null });
+      }
       case "wl_liste": {
         nurAdmin(ich);
         const { data, error } = await db.from("kc_club_wunschliste").select("id,nr,text,bereich,wichtig,status,antwort,rueckmeldung,version,reihenfolge,erstellt_am,geaendert_am,erledigt_am")

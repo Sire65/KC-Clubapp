@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.443.0 – 2026-10-18 – Ausweis-QR (KC-CLUB-AUSWEIS-QR, Wunschliste #9)
+Mitgliedsausweis als QR in der App: Knopf „QR“ neben Schnellzugriff (statt der zweiten Versionsnummer; bei Update zeigt er weiter 🆕) und Kachel Meins → 🪪 Mein Ausweis-QR. Inhalt = nur die Mitgliedsnummer (KC-0005) – so liest die Kasse jeden Ausweis (Bedieneranmeldung + Stechuhr). Nur die eigene Nummer (Server: mein_ausweis, auch Aushilfen); ohne Nummer erscheint ein Hinweis statt eines QR. Der QR wird je Person auf dem Gerät gemerkt und geht auch ohne Netz (markiert). Versionsnummer unter der Kochmütze bleibt (antippen = Update prüfen). Hilfe, Twinkey und Lupe ergänzt.
+
 ## 2.442.0 – 2026-10-18 – Push zur Zeitumstellung
 Am Samstag vor der Zeitumstellung (März und Oktober) kommt ab 18 Uhr ein Push: Uhr vor- bzw. zurückstellen. Jedes Jahr automatisch.
 

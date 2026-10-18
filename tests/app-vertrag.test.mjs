@@ -126,7 +126,7 @@ assert.ok(leiste.indexOf('id="statusChip"') < leiste.indexOf('id="leds"') && lei
 const progr = html.slice(html.indexOf("  programme: ["), html.indexOf("],", html.indexOf("  programme: [")));
 assert.ok(/t: "Update prüfen"/.test(progr) && /aktion: "updateKachel\(\)"/.test(progr), "Kachel „Update prüfen“ fehlt unter Programme");
 assert.ok(/Installiert: v\$\{APP_VERSION\}/.test(progr), "Versionsnummer in der Kachel fehlt");
-assert.ok(/id="versionMarke"[^>]*onclick="updateKachel\(\)"/.test(html), "Versions-Knopf fehlt");
+assert.ok(/id="versionMarke"[^>]*onclick="versionMarkeTipp\(\)"/.test(html) && /if \(NEUE_VERSION\) updateKachel\(\)/.test(html), "Versions-Knopf fehlt"); // 2.443.0: ohne Update = Ausweis-QR (Wunschliste #9)
 
 // 16. KC-CLUB-KALENDER: Monats-/Jahres-Blättern, Farben je Art, Geburtstage nur Tag/Monat.
 assert.ok(/onclick="kalBlaettern\(-12\)"/.test(html) && /onclick="kalBlaettern\(1\)"/.test(html) && /onclick="kalBlaettern\(12\)"/.test(html), "Blätterpfeile Monat/Jahr fehlen");
@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6530,6 +6530,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal(zeitumstellungMorgen("2026-10-24"), "winter"); assert.equal(zeitumstellungMorgen("2026-10-25"), null);
   assert.equal(zeitumstellungMorgen("2027-03-27"), "sommer"); assert.equal(zeitumstellungMorgen("2027-10-30"), "winter"); assert.equal(zeitumstellungMorgen("2026-10-17"), null);
   assert.ok(/if \(!art \|\| berlinStunde\(jetztD\) < 18\) return;/.test(server) && /await protokoll\(null, "zeitumstellung_push", \{ tag: heute, art \}\); \/\/ erst merken, dann senden/.test(server) && /await zeitumstellungMelden\(\)\.catch/.test(server), "ab 18 Uhr, einmal je Umstellung, in der Wartung");
+}
+// 2.443.0 KC-CLUB-AUSWEIS-QR (Wunschliste #9): Mitgliedsausweis als QR – Inhalt = nur die Mitgliedsnummer (so liest ihn die Kasse)
+{
+  const c = server.slice(server.indexOf('case "mein_ausweis": {'), server.indexOf('case "wl_liste": {'));
+  assert.ok(/\.eq\("person_id", ich\.person_id\)/.test(c) && /\/\^KC-\\d\{3,5\}\$\/\.test\(nr\) \? nr : null/.test(c), "nur die eigene Nummer, ungültig → null");
+  assert.ok(/"stunden_melden", "mein_ausweis"\]/.test(server) && /"stunden_melden", "mein_ausweis"\]/.test(html), "auch für Aushilfen (Stechuhr)");
+  assert.ok(/function ausweisSvg\(nummer\) \{ const q = qrcode\(0, "M"\); q\.addData\(nummer\);/.test(html), "QR enthält nur die Nummer");
+  assert.ok(/function versionMarkeTipp\(\) \{ if \(NEUE_VERSION\) updateKachel\(\); else ausweisZeigen\(\); \}/.test(html) && /onclick="versionMarkeTipp\(\)"/.test(html), "QR-Knopf, Update-Hinweis bleibt");
+  assert.ok(/id="kopfVersion"[^>]*onclick="updateKachel\(\)"/.test(html), "Versionsnummer unter der Kochmütze bleibt anklickbar");
+  assert.ok(/\{ id: "ausweis", sym: "🪪", t: "Mein Ausweis-QR"/.test(html) && /zeig: \(\) => ausweisZeigen\(\), seit: "2\.443\.0"/.test(html), "Kachel unter Meins + Hilfe");
+  assert.ok(/Für dich ist noch keine Mitgliedsnummer hinterlegt/.test(html) && /Ohne Netz: zuletzt gemerkter Stand/.test(html), "ohne Nummer nie ein falscher QR, offline markiert");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
