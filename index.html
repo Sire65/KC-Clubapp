@@ -3795,6 +3795,15 @@
   @keyframes schneckeKriechen { 0%, 100% { scale: 1 1; } 50% { scale: 1.12 .9; } }
   :root.schnecke-spiegeln .schnecke i { transform: scaleX(-1); transform-origin: 50% 100%; } /* 2.357.0: Windows-Schnecke schaut nach rechts → in Laufrichtung drehen */
   :root.ohne-anim .schnecke .sn-zug { animation: none; left: calc(50% - 40px); } :root.ohne-anim .schnecke i { animation: none; } :root.ohne-anim .schnecke .sn-spur { display: none; }
+  /* KC-CLUB-LINK-VORSCHAU (2.486.0) */
+  .lv-karte { display: flex; gap: 10px; align-items: stretch; margin: 6px 0 2px; padding: 6px; border-radius: 12px; background: color-mix(in srgb, currentColor 7%, transparent); border-left: 4px solid var(--weinrot, #8b1e2d); color: inherit; text-decoration: none; overflow: hidden; max-width: 100%; }
+  .lv-bild { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; flex: 0 0 auto; background: #ddd; }
+  .lv-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+  .lv-seite { font-size: .75rem; opacity: .75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lv-titel { font-size: .9rem; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .lv-text { font-size: .8rem; opacity: .85; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .lv-entwurf { margin: 4px 8px; position: relative; padding-right: 34px; }
+  .lv-weg { position: absolute; top: 4px; right: 4px; border: 0; background: transparent; font-size: 1rem; min-width: 30px; min-height: 30px; cursor: pointer; color: inherit; }
   .ss-ton { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; } .ms-ton-text { font-weight: 700; } /* KC-CLUB-FERNHILFE F4 */
   .ss-live-leiste button { background: #fff; color: #d32f2f; border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 800; cursor: pointer; }
   /* 2.101.0 KC-CLUB-BUERO-EINLESEN */
@@ -5442,7 +5451,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.484.0" data-v="2.484.0"></script>
+<script src="app.js?v=2.486.0" data-v="2.486.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

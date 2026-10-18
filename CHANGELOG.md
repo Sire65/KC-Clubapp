@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.486.0 – 2026-10-18 – Link-Vorschau in Nachrichten (KC-CLUB-LINK-VORSCHAU) · Server 2.486.0
+Wunsch Hansi („Ja, Link-Vorschau bauen“, Vergleich mit WhatsApp): Steht ein Link in einer Nachricht, zeigt die App eine kleine Karte mit Bild, Titel, Kurztext und Seite.
+- Beim Schreiben: 0,8 s nach dem Tippen holt der Server die Vorschau (keine Datenbank-Abfrage); Karte über dem Schreibfeld, ✖ = ohne Vorschau senden. App-Sprung-Links bekommen keine Karte.
+- Beim Senden holt der SERVER die Angaben selbst (aus dem 10-Min.-Merker) – der Absender kann keine Vorschau fälschen. Gespeichert: Text + Bild-ADRESSE in kc_club_link_vorschau (löscht sich mit der Nachricht, gespiegelt und gesichert). Chat-Laden: 1 Abfrage mehr (parallel).
+- Sicherheit: nur http(s) Port 80/443, keine IP-Adressen und internen Namen, jede Weiterleitung neu geprüft (höchstens 3), 5 s, 512 KB, nur HTML; je Person höchstens 30 Abrufe je 10 Min.; alles als Text dargestellt; Bilder nur https, ohne Absender-Angabe (no-referrer), erst beim Ansehen geladen.
+- YouTube über die offizielle Vorschau-Schnittstelle (oEmbed). Manche Seiten sperren Abrufe von Servern (z. B. Chefkoch) – dann geht der Link ohne Karte raus.
+- Bearbeiten: Link entfernt → Karte entfernt. Hilfe-Eintrag „Vorschau zu Links in Nachrichten“, Twinkey-Frage.
+- Tests: tools/link-vorschau/lv-test.ts (Adressen-Schutz 21 Fälle, Auswertung, Bremse; mit --netz echte Seiten: Wikipedia, Tagesschau, YouTube), tools/link-vorschau/lv-browser.mjs (Chromium, echte App: 10 Prüfungen inkl. eingeschleustes HTML), Vertragstests grün, Typprüfung unverändert (17).
+- Rückweg: App 2.484.0 und Server 2.485.0 erneut einspielen; die Tabelle stört dann nicht.
+
 ## Server 2.485.0 – 2026-10-18 – Weniger Datenbank-Abfragen: Online-Meldung und Wartung (KC-CLUB-ONLINE-SPARSAM, KC-CLUB-WARTUNG-STUNDE)
 Anlass: Rangliste 18.10. (10:46–20:30 MESZ, Hansi „OK 2 und 3“): Online-Meldung 17 Abfragen je Aufruf (20 % aller gemessenen), Wartung 71 je Lauf alle 15 Min. (14 %).
 - **Online-Meldung, gleiche Antwort:** eigene Einstellungen (online_seit, fenster, online, vorführen, schnappschuss) in EINER Abfrage statt fünf; Anklopfen an mich/von mir in einer statt zwei; klingelt gerade/verpasst in einer statt zwei; Einstellungen der Online-Leute (sichtbar, Inkognito, anklopfbar, online seit, Gerät) in einer statt vier bis fünf; eigenes Fenster höchstens alle 30 s neu schreiben (Erkennung „anderes Gerät“ prüft 180 s); laufende Live-Umfrage 15 s gemerkt. Vorher ≈ 17, jetzt ≈ 8–10 Abfragen.

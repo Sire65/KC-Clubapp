@@ -92,7 +92,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.485.0";
+const SERVER_VERSION = "2.486.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2793,7 +2793,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
     "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
-    "chat_selbstloeschen", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
+    "chat_selbstloeschen", "link_vorschau", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
     "spiel_holen", "spiel_herausfordern", "spiel_antwort", "spiel_zug", "spiel_aufgeben", "spiel_revanche", "raetsel_stand", "raetsel_ergebnis",
@@ -5832,6 +5832,81 @@ async function ktZug(g: any, ich: any, zug: any) {
   }
   return json({ ok: true, antwort, frage, verpasst, spiel: spielSicht(neu, ich.person_id, await personen([g.von, g.an])) });
 }
+// ---------- KC-CLUB-LINK-VORSCHAU (2.486.0, Wunsch Hansi): kleine Karte zu einem Link in einer Nachricht (Titel, Kurztext, Seite, Bild) ----------
+// Der SERVER holt die Angaben (og:/twitter:-Angaben bzw. <title>) – der Absender kann keine Vorschau fälschen. Kosten: keine Datenbank-Abfrage beim
+// Abholen; beim Senden 1 Zeile in kc_club_link_vorschau. Schutz: nur http(s) auf Port 80/443, keine IP-Adressen/internen Namen, höchstens 3
+// Weiterleitungen (jede neu geprüft), 5 s, 512 KB, nur HTML; je Person höchstens LV_MAX_MIN Abrufe je 10 Min. (im Speicher). Gespeichert wird nur
+// Text und die Bild-ADRESSE (https), nie das Bild. Gemerkt 10 Min. je Adresse, damit Vorschau beim Tippen und beim Senden nur einmal geholt wird.
+const LV_MAX_MIN = 30, LV_MS = 5000, LV_BYTES = 512 * 1024;
+const LV_MERK = new Map<string, { t: number; v: any }>(), LV_ZAHL = new Map<string, number[]>();
+const LV_URL_RE = /\bhttps?:\/\/[^\s<>"']{4,1990}/i;
+function lvAdresseOk(u: string): URL | null {
+  let x: URL; try { x = new URL(u); } catch { return null; }
+  if (!/^https?:$/.test(x.protocol) || x.username || x.password) return null;
+  if (x.port && !["80", "443"].includes(x.port)) return null;
+  const h = x.hostname.toLowerCase().replace(/\.$/, "");
+  if (!h.includes(".") || /^[\d.]+$/.test(h) || h.includes(":") || h.startsWith("[")) return null; // keine IP-Adressen (auch IPv6), keine Namen ohne Punkt
+  if (/(^|\.)(localhost|local|internal|intranet|lan|home|corp|arpa)$/.test(h) || /(^|\.)supabase\.(co|in|net)$/.test(h)) return null;
+  return x;
+}
+const lvEnt = (t: string) => t.replace(/&#x([0-9a-f]{1,6});/gi, (_, h) => { try { return String.fromCodePoint(parseInt(h, 16)); } catch { return ""; } })
+  .replace(/&#(\d{1,7});/g, (_, d) => { try { return String.fromCodePoint(+d); } catch { return ""; } })
+  .replace(/&(amp|lt|gt|quot|apos|nbsp);/g, (_, n) => ({ amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " } as any)[n]);
+const lvKurz = (t: unknown, n: number) => lvEnt(String(t ?? "")).replace(/<[^>]*>/g, " ").replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
+function lvAuswerten(html: string, basis: URL) {
+  const kopf = html.slice(0, 200000), meta = new Map<string, string>();
+  for (const m of kopf.matchAll(/<meta\b[^>]*>/gi)) {
+    const a = m[0], k = (a.match(/\b(?:property|name)\s*=\s*["']([^"']+)["']/i)?.[1] || "").toLowerCase(), c = a.match(/\bcontent\s*=\s*"([^"]*)"|\bcontent\s*=\s*'([^']*)'/i);
+    if (k && c && !meta.has(k)) meta.set(k, c[1] ?? c[2] ?? "");
+  }
+  const titel = lvKurz(meta.get("og:title") || meta.get("twitter:title") || kopf.match(/<title[^>]*>([\s\S]{0,400}?)<\/title>/i)?.[1], 200);
+  const text = lvKurz(meta.get("og:description") || meta.get("twitter:description") || meta.get("description"), 300);
+  const seite = lvKurz(meta.get("og:site_name"), 100) || basis.hostname.replace(/^www\./, "").slice(0, 100);
+  let bild: string | null = null;
+  const b = lvEnt(meta.get("og:image:secure_url") || meta.get("og:image") || meta.get("twitter:image") || "").trim();
+  if (b) { try { const u = new URL(b, basis); if (u.protocol === "https:" && lvAdresseOk(u.href) && u.href.length <= 2000) bild = u.href; } catch { /* kein Bild */ } }
+  return titel || text ? { url: basis.href, titel, text, seite, bild } : null;
+}
+async function lvHolen(roh: string): Promise<any | null> {
+  let x: URL | null = lvAdresseOk(roh.trim()); if (!x) return null;
+  const schl = x.href, merk = LV_MERK.get(schl); if (merk && Date.now() - merk.t < 600000) return merk.v;
+  let v: any = null;
+  // YouTube sperrt Seitenabrufe von Servern („zu viele Anfragen“) – dafür gibt es die offizielle Vorschau-Schnittstelle (oEmbed, feste Adresse)
+  if (/(^|\.)(youtube\.com|youtu\.be)$/.test(x.hostname.toLowerCase())) {
+    try {
+      const r = await fetch("https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent(x.href), { signal: AbortSignal.timeout(LV_MS) });
+      const j: any = r.ok ? await r.json() : null;
+      if (j?.title) { const bild = typeof j.thumbnail_url === "string" && /^https:\/\/i\.ytimg\.com\//.test(j.thumbnail_url) ? j.thumbnail_url : null;
+        v = { url: x.href, titel: lvKurz(j.title, 200), text: lvKurz(j.author_name ? "▶️ Video von " + j.author_name : "▶️ Video", 300), seite: "YouTube", bild }; }
+    } catch { v = null; }
+    LV_MERK.set(schl, { t: Date.now(), v }); return v;
+  }
+  try {
+    const ende = Date.now() + LV_MS;
+    for (let i = 0; i < 4 && x; i++) {
+      const r: Response = await fetch(x.href, { redirect: "manual", signal: AbortSignal.timeout(Math.max(500, ende - Date.now())),
+        headers: { "user-agent": "Mozilla/5.0 (compatible; KC-Club-Linkvorschau/1.0)", accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.1", "accept-language": "de,en;q=0.5" } });
+      if (r.status >= 300 && r.status < 400) { const ziel: string | null = r.headers.get("location"); r.body?.cancel().catch(() => {}); x = ziel ? lvAdresseOk(new URL(ziel, x).href) : null; continue; }
+      if (!r.ok || !/text\/html|application\/xhtml/i.test(r.headers.get("content-type") || "")) { r.body?.cancel().catch(() => {}); break; }
+      const leser = r.body!.getReader(), teile: Uint8Array[] = []; let n = 0;
+      while (n < LV_BYTES) { const { done, value } = await leser.read(); if (done) break; teile.push(value); n += value.length; if (/<\/head>/i.test(new TextDecoder().decode(value))) break; }
+      leser.cancel().catch(() => {});
+      const alles = new Uint8Array(Math.min(n, LV_BYTES)); let o = 0; for (const t of teile) { const s2 = t.subarray(0, Math.min(t.length, alles.length - o)); alles.set(s2, o); o += s2.length; if (o >= alles.length) break; }
+      let cs = (r.headers.get("content-type")?.match(/charset=([\w-]+)/i)?.[1] || "").toLowerCase();
+      if (!cs) cs = (new TextDecoder("latin1").decode(alles.subarray(0, 4096)).match(/<meta[^>]+charset=["']?([\w-]+)/i)?.[1] || "utf-8").toLowerCase();
+      let html = ""; try { html = new TextDecoder(cs).decode(alles); } catch { html = new TextDecoder().decode(alles); }
+      v = lvAuswerten(html, x); break;
+    }
+  } catch { v = null; }
+  LV_MERK.set(schl, { t: Date.now(), v }); if (LV_MERK.size > 300) LV_MERK.delete(LV_MERK.keys().next().value!);
+  return v;
+}
+function lvBremse(pid: string) { // true = darf
+  const jetztMs = Date.now(), l = (LV_ZAHL.get(pid) || []).filter((t) => jetztMs - t < 600000);
+  if (l.length >= LV_MAX_MIN) { LV_ZAHL.set(pid, l); return false; }
+  l.push(jetztMs); LV_ZAHL.set(pid, l); return true;
+}
+const lvSicht = (x: any) => x ? { url: x.url, titel: x.titel || "", text: x.text || "", seite: x.seite || "", bild: x.bild || null } : null;
 // ---------- Hauptprogramm ----------
 const kcAnfrage = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -9074,14 +9149,16 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const bearbMap = new Map((bearb ?? []).map((x: any) => [x.message_id, x.bearbeitet_am]));
         // KC-CLUB-ANHEFTEN / -MERKEN / -CHATUMFRAGE / -KONTAKT (1.10.0)
         const leer = { data: [] as any[] };
-        const [{ data: pins }, { data: gem }, { data: umf }, { data: stim }, { data: kon }, { data: wicht }] = mids.length ? await Promise.all([
+        const [{ data: pins }, { data: gem }, { data: umf }, { data: stim }, { data: kon }, { data: wicht }, { data: lvs }] = mids.length ? await Promise.all([
           db.from("kc_club_angeheftet").select("message_id,am").eq("thread_id", id).order("am", { ascending: false }),
           db.from("kc_club_gemerkt").select("message_id").eq("person_id", ich.person_id).in("message_id", mids),
           db.from("kc_club_chat_umfrage").select("message_id,frage,optionen,mehrfach").in("message_id", mids),
           db.from("kc_club_chat_stimme").select("message_id,person_id,option").in("message_id", mids),
           db.from("kc_club_chat_kontakt").select("message_id,person_id").in("message_id", mids),
           db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", mids), // KC-CLUB-WICHTIG (1.53.0)
-        ]) : [leer, leer, leer, leer, leer, leer];
+          db.from("kc_club_link_vorschau").select("message_id,url,titel,text,bild,seite").in("message_id", mids), // KC-CLUB-LINK-VORSCHAU (2.486.0)
+        ]) : [leer, leer, leer, leer, leer, leer, leer];
+        const lvMap = new Map((lvs ?? []).map((x: any) => [x.message_id, lvSicht(x)]));
         // 2.362.0 KC-CLUB-EXPRESS: welche Nachrichten Express sind; der Absender sieht, wer den Empfang bestätigt hat
         const { data: exRows } = mids.length ? await db.from("kc_club_express").select("message_id").in("message_id", mids) : leer;
         const exIds = new Set((exRows ?? []).map((x: any) => x.message_id));
@@ -9136,6 +9213,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const gelesenVon = eigen ? andere.filter((x: any) => x.last_read_at && x.last_read_at >= m.created_at).map((x: any) => vorname(leute.get(x.person_id))) : [];
           return {
             id: m.id, eigen, von: eigen ? "Du" : leute.get(m.sender_person_id)?.display_name || m.sender_person_id, vonId: m.sender_person_id, text: m.body, zeit: m.created_at,
+            ...(lvMap.has(m.id) ? { link: lvMap.get(m.id) } : {}), // KC-CLUB-LINK-VORSCHAU
             anlagen: (ma ?? []).filter((x: any) => x.message_id === m.id).map((x: any) => (att ?? []).find((y: any) => y.id === x.attachment_id)).filter(Boolean)
               .map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes, ...(einm.has(y.id) ? { einmal: einmalInfo(y.id) } : {}) })),
             ...(eigen ? { gelesenVon, gelesenAlle: andere.length > 0 && gelesenVon.length === andere.length, zustellung: zustellung(m.id),
@@ -9409,6 +9487,16 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (express) {
           const { error: xe } = await db.from("kc_club_express").insert({ message_id: m.id, thread_id: threadId, absender: ich.person_id, erstellt_am: m.created_at });
           if (xe) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler("Express-Sendung konnte nicht gespeichert werden – nicht gesendet.", 500); }
+        }
+        // KC-CLUB-LINK-VORSCHAU (2.486.0): nur wenn der Absender sie nicht weggetippt hat und der Link wirklich im Text steht; der Server holt selbst
+        // (beim Tippen schon geholt → aus dem Merker). Klappt es nicht, geht die Nachricht trotzdem – nur ohne Karte.
+        if (typeof p.vorschau_url === "string" && text && !umfrage && !kontaktPid && !notfall && !einmal) {
+          const vu = txt(p.vorschau_url, 2000), steht = text.match(LV_URL_RE)?.[0];
+          if (vu && steht && text.includes(vu)) {
+            const v = await lvHolen(vu).catch(() => null);
+            if (v) await db.from("kc_club_link_vorschau").insert({ message_id: m.id, url: vu, titel: v.titel || null, text: v.text || null, bild: v.bild, seite: v.seite || null })
+              .then(({ error: le }) => { if (le) console.error("link vorschau", le.message); });
+          }
         }
         if (wichtig) {
           const { error: we } = await db.from("kc_club_nachricht_wichtig").insert({ message_id: m.id, person_id: ich.person_id });
@@ -9904,6 +9992,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true, stunden: std, alteMeine });
       }
 
+      case "link_vorschau": { // KC-CLUB-LINK-VORSCHAU (2.486.0): Vorschau beim Schreiben – keine Datenbank-Abfrage
+        const u = txt(p.url, 2000);
+        if (!lvBremse(ich.person_id)) return json({ vorschau: null, bremse: true });
+        return json({ vorschau: lvSicht(await lvHolen(u)) });
+      }
       case "nachricht_bearbeiten": {
         // KC-CLUB-BEARBEITEN (1.9.0): nur eigene Nachrichten mit Text, bis BEARBEITEN_MIN Minuten nach dem Senden.
         // Kein neuer Push/keine neue Mail (wie WhatsApp); im Protokoll steht nur, DASS bearbeitet wurde – nicht der Text.
@@ -9925,6 +10018,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
         const am = jetzt();
         await db.from("kc_club_nachricht_bearbeitet").upsert({ message_id: m.id, bearbeitet_am: am }, { onConflict: "message_id" });
+        // KC-CLUB-LINK-VORSCHAU: steht der Link nicht mehr im Text, verschwindet auch die Karte (keine Vorschau zu einem entfernten Link)
+        { const { data: lv } = await db.from("kc_club_link_vorschau").select("url").eq("message_id", m.id).maybeSingle();
+          if (lv && !text.includes(lv.url)) await db.from("kc_club_link_vorschau").delete().eq("message_id", m.id); }
         await protokoll(ich.person_id, "nachricht_bearbeitet", { nachricht: m.id, thread: m.thread_id });
         return json({ ok: true, bearbeitet: am });
       }

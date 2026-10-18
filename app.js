@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.484.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.486.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5128,6 +5128,7 @@ const HILFE = [
   { id: "anlage_mitschicken", thema: "nachrichten", sym: "📎", t: "Anlage bei Vorschlag, Spende, Terminfindung und Terminanfrage", x: "Beim Anlegen gibt es jetzt das Feld <b>📎 Anlage</b>: <b>🖼️ Foto</b> aus der Galerie, <b>📷 Kamera</b> oder <b>📄 PDF / Datei</b> aus dem Dateimanager – z. B. eine Skizze zum Vorschlag oder den Flyer des Spendenempfängers. Höchstens 5 Anlagen; mit ✕ wieder entfernen. Die anderen sehen sie im Eintrag und öffnen sie mit einem Tipp. Sehen kann sie nur, wer den Eintrag auch sehen darf.", seit: "2.448.0" },
   { id: "bild_zuletzt", thema: "privat", sym: "🕘", t: "Früheres Bild zurückholen", x: "Unter <b>Mein Bild</b> stehen oben bei <b>🕘 Zuletzt benutzt</b> deine letzten 3 Bilder – Foto, Selfie oder Koch-Figur. Antippen und oben <b>✅ Übernehmen</b> – schon ist das alte Bild wieder da. Die App merkt sich das automatisch bei jedem Wechsel.", seit: "2.449.0" },
   { id: "foto_muetze", thema: "privat", sym: "🎅", t: "Nikolausmütze oder Hut aufs eigene Foto", x: "Bei <b>Mein Bild → 🤳 Selfie, 🖼️ Galerie oder 📁 Datei</b> kannst du vor dem Übernehmen eine <b>Mütze aufsetzen</b> – z. B. Nikolausmütze, Kochmütze, Jägerhut, Cowboyhut, Zylinder, Krone – und mit dem Finger an die richtige Stelle schieben, größer/kleiner machen und drehen. Dazu ein <b>Rahmen</b> (Weinrot, Gold, Weihnacht, Bunt). Ohne Mütze bleibt das Foto, wie es ist. Dein voriges Bild findest du jederzeit unter 🕘 Zuletzt benutzt.", seit: "2.451.0" },
+  { id: "link_vorschau", thema: "nachrichten", sym: "🔗", t: "Vorschau zu Links in Nachrichten", x: "Schreibst du einen Link in eine Nachricht (z. B. ein Rezept, einen Zeitungsartikel oder ein YouTube-Video), erscheint über dem Schreibfeld eine kleine <b>Vorschau-Karte</b> mit Bild, Titel und kurzem Text. Sie wird mitgeschickt – alle sehen sofort, worum es geht. Antippen öffnet die Seite. Ohne Vorschau senden: auf <b>✖</b> an der Karte tippen. Manche Seiten erlauben keine Vorschau – dann geht der Link ganz normal ohne Karte raus.", seit: "2.486.0" },
   { id: "schuerze", thema: "privat", sym: "🧑‍🍳", t: "Schürze an der Koch-Figur", x: "Deine Koch-Figur kann jetzt eine Schürze tragen: <b>Mein Bild → Selbst zusammenstellen → 🧑‍🍳 Schürze</b>. Sie hat Träger um den Hals und deine <b>Initialen rechts oben</b>. 10 Farben (z. B. weinrot, schwarz, Jeansblau, Leder braun) und Muster wie <b>Nadelstreifen</b>, Längsstreifen, Karo, Punkte oder Jeans. „ohne“ nimmt sie wieder ab.", seit: "2.452.0" },
   { id: "sprachtempo", thema: "nachrichten", sym: "⏩", t: "Lange Sprachnachrichten schneller hören", x: "Sprachnachrichten kannst du auch in <b>1,5×</b> oder <b>2×</b> abspielen – der kleine Tempo-Knopf sitzt direkt an der Sprachnachricht. Deine Wahl merkt sich das Handy.", seit: "2.23.1" },
   { id: "chat_vorlesen", thema: "nachrichten", sym: "🔊", t: "Hände voll? Chat vorlesen lassen", x: "Gerade beim Kochen praktisch: im Chat oben <b>⋮</b> → <b>„🔊 Vorlesen ab den neuen Nachrichten“</b> oder <b>„🔊 Ganzen Chat vorlesen“</b>. Das Handy liest vor, du hörst einfach zu.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
@@ -8946,6 +8947,7 @@ const TW_SYN = [["termin", "verabredung", "treffen", "datum", "verabreden", "aus
   ["favorit", "favoriten", "stern", "sternchen", "lieblings", "lieblingschat", "wichtigste"], ["spaeter", "zeitversetzt", "planen", "geplant", "morgen", "wecker"]]; // 2.252.0 Fund Hansi: Wilfried fragte „Kochbild“
 // Twinkeys eigene Fragen und Antworten (Wunsch Hansi: „mehr Fragen und Antworten“) – kurz, mit Sprung an die richtige Stelle
 const TW_FAQ = [
+  { id: "link-vorschau", sym: "🔗", t: "Warum steht unter meinem Link eine Karte mit Bild?", x: "Das ist die <b>Link-Vorschau</b>: Die App holt zu einem Link Titel, kurzen Text und Bild der Seite – wie bei WhatsApp. Vor dem Senden kannst du sie mit <b>✖</b> an der Karte weglassen. Manche Seiten erlauben keine Vorschau, dann kommt nur der Link." },
   // 2.344.0 KC-CLUB-HILFE-NACHTRAG: häufige Fragen zu den neuen Möglichkeiten
   { id: "video-stimme", sym: "🗣️", t: "Die Stimme in den Videos klingt komisch – kann ich eine andere nehmen?", x: "Ja! Tippe im laufenden Video oben auf <b>🗣️</b> oder unten in der Liste der Erklär-Videos auf <b>🗣️ Stimme &amp; Tempo</b>. Mit <b>▶ Probe</b> hörst du jede Stimme, dann tippst du deine an. Besonders gut klingen die <b>⬇️ Stimmen zum Herunterladen</b> – ein Tipp lädt sie aufs Gerät. Auch das Tempo stellst du dort ein. Ist keine gut, steht dort, wie du eine bessere Stimme ins Handy lädst.", los: () => stimmenWahl() },
   { id: "video-verweis", sym: "🎬", t: "Das Video fragt nach einem anderen Video – was jetzt?", x: "Zu manchen Themen gibt es ein eigenes Erklär-Video, zum Beispiel zu Farben und Themen oder zum Eselsohr. Dann fragt das Video: <b>▶ Ja</b> spielt es sofort ab, danach geht es an derselben Stelle weiter. <b>Nein</b> läuft einfach weiter. <b>⏰ Später</b> merkt es dir mit 📌 – in der Liste der Erklär-Videos ist es schon angehakt. <b>🔕 Nicht mehr fragen</b> schaltet die Frage ab; wieder an geht es unten in der Liste der Erklär-Videos." },
@@ -14403,7 +14405,7 @@ const ZUGANG_AKTIONEN = {
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
     "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
-    "chat_selbstloeschen", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
+    "chat_selbstloeschen", "link_vorschau", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
     "spiel_holen", "spiel_herausfordern", "spiel_antwort", "spiel_zug", "spiel_aufgeben", "spiel_revanche", "raetsel_stand", "raetsel_ergebnis",
@@ -28226,7 +28228,7 @@ async function chatLaden(scrollen) {
     }
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
     const blaseHtml = (m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
-      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}
+      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}
       ${m.anlagen.map((a) => a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
@@ -28487,6 +28489,36 @@ async function cuSenden() {
     document.getElementById("cuFenster")?.remove(); melde("📊 Abstimmung gesendet"); await chatLaden(true); }
   catch (e) { meldeFehler(e); }
 }
+// ---------- KC-CLUB-LINK-VORSCHAU (2.486.0, Wunsch Hansi): Karte mit Bild, Titel und Kurztext zu einem Link in der Nachricht ----------
+// Die Angaben holt der Server (der Absender kann sie nicht fälschen). Beim Schreiben erscheint die Karte über dem Eingabefeld; ✖ = ohne Vorschau senden.
+// Das Bild kommt direkt von der verlinkten Seite (ohne Absender-Angabe, erst beim Ansehen); klappt es nicht, bleibt die Karte ohne Bild.
+const LV_RE = /\bhttps?:\/\/[^\s<>"']{4,1990}/i;
+const LVS = { url: "", chat: null, daten: null, weg: false, uhr: null };
+function lvKarteHtml(l, entwurf) {
+  if (!l || !/^https?:\/\//i.test(l.url || "")) return "";
+  const bild = l.bild && /^https:\/\//i.test(l.bild) ? `<img class="lv-bild" src="${esc(l.bild)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : "";
+  const inhalt = `${bild}<span class="lv-texte"><span class="lv-seite">🔗 ${esc(l.seite || "")}</span>${l.titel ? `<b class="lv-titel">${esc(l.titel)}</b>` : ""}${l.text ? `<span class="lv-text">${esc(l.text)}</span>` : ""}</span>`;
+  return entwurf ? `<div class="lv-karte lv-entwurf" role="group" aria-label="Link-Vorschau">${inhalt}<button type="button" class="lv-weg" onclick="lvWeg()" aria-label="Ohne Vorschau senden" title="Ohne Vorschau senden">✖</button></div>`
+    : `<a class="lv-karte" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer nofollow" onclick="event.stopPropagation()" aria-label="Link öffnen: ${esc(l.titel || l.seite || "")}">${inhalt}</a>`;
+}
+function lvEingabe() { // beim Schreiben: erster Link im Text → Vorschau holen (0,8 s nach dem letzten Tippen)
+  clearTimeout(LVS.uhr);
+  LVS.uhr = setTimeout(async () => {
+    const t = $("text")?.value || "", u = (t.match(LV_RE)?.[0] || "").replace(/[.,;:!?)\]]+$/, "");
+    if (!u || u.startsWith(SPRUNG_URL)) { Object.assign(LVS, { url: "", daten: null, weg: false }); return lvEntwurfZeigen(); }
+    if (u === LVS.url && LVS.chat === chatId) return;
+    Object.assign(LVS, { url: u, chat: chatId, daten: null, weg: false }); lvEntwurfZeigen();
+    try { const r = await api("link_vorschau", { url: u }, { still: true }); if (LVS.url === u) { LVS.daten = r?.vorschau || null; lvEntwurfZeigen(); } } catch {}
+  }, 800);
+}
+function lvEntwurfZeigen() {
+  let el = $("lvEntwurf");
+  if (!el) { const c = $("anlagenChips"); if (!c) return; c.insertAdjacentHTML("afterend", '<div id="lvEntwurf"></div>'); el = $("lvEntwurf"); }
+  el.innerHTML = LVS.daten && !LVS.weg && LVS.chat === chatId ? lvKarteHtml(LVS.daten, true) : "";
+}
+function lvWeg() { LVS.weg = true; lvEntwurfZeigen(); melde("🔗 Wird ohne Vorschau gesendet"); }
+function lvZurueck() { clearTimeout(LVS.uhr); Object.assign(LVS, { url: "", chat: null, daten: null, weg: false }); lvEntwurfZeigen(); }
+document.addEventListener("input", (e) => { if (e.target?.id === "text") lvEingabe(); });
 function kontaktKarteHtml(m) {
   const k = m.kontakt;
   return `<div class="ck"><div class="ck-kopf">👤 <b>${esc(k.name)}</b></div><div class="knoepfe" style="margin:0"><button class="knopf klein" onclick="mitgliedOeffnen('${k.person_id}')">📇 Kontakt ansehen</button>${k.person_id !== ICH?.person_id ? `<button class="knopf klein" onclick="direkt('${k.person_id}')">💬 Schreiben</button>` : ""}</div></div>`;
@@ -30198,13 +30230,15 @@ async function senden() {
       ...(WICHTIG ? { wichtig: true } : {}), // KC-CLUB-WICHTIG
       ...(EXPRESS ? { express: true } : {}), // 2.362.0 KC-CLUB-EXPRESS
       ...(EINMAL && anlagen.length === 1 ? { einmal: true } : {}), // KC-CLUB-EINMAL-FOTO
-      ...(SL.std !== null && SL.chat === chatId ? { ablauf_std: SL.std } : {}) }; // KC-CLUB-SELBSTLOESCHEN: ⏳ nur diese Nachricht
+      ...(SL.std !== null && SL.chat === chatId ? { ablauf_std: SL.std } : {}), // KC-CLUB-SELBSTLOESCHEN: ⏳ nur diese Nachricht
+      ...(LVS.daten && !LVS.weg && LVS.chat === chatId && text.includes(LVS.url) ? { vorschau_url: LVS.url } : {}) }; // KC-CLUB-LINK-VORSCHAU
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
     if (daten.express) { const st = r?.expressStand; if (st) EXS.stand = st; melde("🏎️ Per Express versandt" + expressWegeText(r?.versand) + ". Unter der Nachricht siehst du, wann sie angekommen ist und gelesen wurde" + (st && !st.unbegrenzt ? ` (heute ${st.genutzt}/${st.max})` : ""), r?.versand?.fehler > 0); } // 2.403.0 KC-CLUB-EXPRESS-WEGE // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG, 2.391.0 Zähler
     HAKEN_SEIT = Date.now(); // 2.367.0 KC-CLUB-HAKEN-SCHNELL: Zustell-Haken eine Minute lang zügig nachsehen
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
+    lvZurueck(); // KC-CLUB-LINK-VORSCHAU
     if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); expressUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN
     $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; EINMAL = false; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
     spur(daten.anlagen.length ? "gesendet_anlage" : "gesendet", r?.id || chatId); // KC-CLUB-SPUR: nur „gesendet“ + Unterhaltung, nie der Text
