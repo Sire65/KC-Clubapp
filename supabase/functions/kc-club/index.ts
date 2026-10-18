@@ -18,6 +18,8 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { AwsClient } from "npm:aws4fetch@1.0.20"; // KC-CLUB-ARCHIV-KOPIE (2.232.0): S3-Signatur für den Neon-Dateispeicher (MIT, kostenlos)
 import postgres from "npm:postgres@3.4.5"; // KC-CLUB-NOTFALL-NEUSTART (2.235.0): direkter Datenbank-Weg, wenn die Schnittstelle hängt
 import { createRemoteJWKSet, jwtVerify } from "npm:jose@5.9.6"; // KC-CLUB-NOTFALL-NEUSTART: GitHub-Wächter weist sich mit signiertem Token aus
+// @ts-ignore: reine JS-Datei ohne Typen
+import { fraTeileStabil } from "./fra-teile.js"; // KICC-F-107 (18.10.2026): stabile Teilgrenzen der Frankfurt-Sicherung
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
 // @ts-ignore: chess.js bringt keine Typdatei mit (in Deno ohne Bedeutung)
@@ -3030,7 +3032,7 @@ async function neonDateispeicher() {
   const s3 = new AwsClient({ accessKeyId: z.key, secretAccessKey: z.secret, region: z.region || "eu-central-1", service: "s3" });
   const basis = `${String(z.endpoint).replace(/\/$/, "")}/${encodeURIComponent(z.bucket)}`;
   const url = (k: string) => `${basis}/${k.split("/").map(encodeURIComponent).join("/")}`;
-  return { s3, url, basis };
+  return { s3, url, basis, fach: String(z.bucket) };
 }
 const hexSha256 = async (b: Uint8Array) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", b))].map((x) => x.toString(16).padStart(2, "0")).join("");
 // KC-CLUB-FRA-VERSCHLUESSELT (Server 2.369.0, Auftrag Hansi 14.10.2026 „alles sicher machen“): nach Frankfurt nur noch verschlüsselt.
@@ -3091,7 +3093,7 @@ async function fraSchritt(jetztErzwingen = false) {
   const t0 = Date.now(), lauf = berlinTag(new Date()), sql = direktSql();
   const nz = await neonDateispeicher();
   if (!nz) { await fraStand(lauf, "fehler", "Zugang zum Neon-Dateispeicher fehlt", {}); return { ok: false }; }
-  const { s3, url, basis } = nz;
+  const { s3, url, basis, fach } = nz;
   // 1) Lauf des Tages anlegen: alle Tabellen, große in Blockbereiche geteilt
   const [{ n: vorhanden }] = await sql`select count(*)::int as n from public.kc_club_fra_sicherung where lauf = ${lauf}`;
   if (!vorhanden) {
@@ -3105,13 +3107,11 @@ async function fraSchritt(jetztErzwingen = false) {
       // klein: ganze Tabelle. Groß: zeilengenau nach echter Textgröße (ausgelagerte Daten werden beim Sichern viel größer als auf der Platte)
       if (Number(r.gesamt) <= FRA_TEIL_BYTES * 1.5 || Number(r.seiten) < 1) { zeilen.push({ lauf, tabelle: r.t, teil: 0, block_von: null, block_bis: null }); continue; }
       const liste = await sql.unsafe(`select ctid::text as c, octet_length(row_to_json(x)::text)::bigint as l from public."${r.t}" x order by ctid`);
-      let von = 0, summe = 0, teil = 0;
-      for (const z of liste) {
-        const code = fraTidCode(z.c), l = Number(z.l) || 0;
-        if (summe > 0 && summe + l > FRA_TEIL_BYTES) { zeilen.push({ lauf, tabelle: r.t, teil: teil++, block_von: von, block_bis: code }); von = code; summe = 0; }
-        summe += l;
-      }
-      zeilen.push({ lauf, tabelle: r.t, teil, block_von: von, block_bis: null });
+      // KICC-F-107: Grenzen des letzten geprüften Laufs übernehmen, damit unveränderte Bereiche gleich bleiben (dann nur kopiert statt neu übertragen)
+      const alt = await sql`select block_von from public.kc_club_fra_sicherung where tabelle = ${r.t} and block_von is not null
+        and lauf = (select max(lauf) from public.kc_club_fra_sicherung where tabelle = ${r.t} and lauf < ${lauf} and status = 'geprueft') order by teil`;
+      const { teile } = fraTeileStabil(liste.map((z: any) => ({ code: fraTidCode(z.c), l: Number(z.l) || 0 })), alt.map((a: any) => Number(a.block_von)), FRA_TEIL_BYTES);
+      for (const x of teile) zeilen.push({ lauf, tabelle: r.t, ...x });
     }
     for (let i = 0; i < zeilen.length; i += 200) await sql`insert into public.kc_club_fra_sicherung ${sql(zeilen.slice(i, i + 200), "lauf", "tabelle", "teil", "block_von", "block_bis")} on conflict do nothing`;
     await fraStand(lauf, "laeuft", `Sicherung gestartet: ${tabs.length} Tabellen`, { teile: zeilen.length });
@@ -3125,19 +3125,39 @@ async function fraSchritt(jetztErzwingen = false) {
       where (f.lauf, f.tabelle, f.teil) = (select lauf, tabelle, teil from public.kc_club_fra_sicherung where lauf = ${lauf}
         and (status = 'offen' or (status = 'laeuft' and zeit < now() - interval '5 minutes' and versuche < ${FRA_VERSUCHE}) or (status = 'fehler' and versuche < ${FRA_VERSUCHE}))
         order by tabelle, teil limit 1 for update skip locked)
-      returning f.tabelle, f.teil, f.block_von, f.block_bis`;
+      returning f.tabelle, f.teil, f.block_von, f.block_bis, f.kopiert_von`;
     if (!t) break;
     try {
       const name = fraName(t.tabelle); if (!name) throw new Error("ungültiger Tabellenname");
       const bed = t.block_von == null ? "" : t.block_bis == null ? `where ctid >= ${fraTid(Number(t.block_von))}` : `where ctid >= ${fraTid(Number(t.block_von))} and ctid < ${fraTid(Number(t.block_bis))}`;
       const spalten = await fraSpalten(sql, name);
-      const [r] = await sql.unsafe(`select count(*)::bigint as n, coalesce(json_agg(x), '[]'::json)::text as j from (select ${spalten} from public."${name}" ${bed}) x`);
-      const rohB = new TextEncoder().encode(r.j), enc = await kceVerschluesseln(await fraGzip(rohB)), sha = await hexSha256(enc);
       const schluessel = `datenbank/${lauf}/${name}${t.block_von == null ? "" : `.teil${String(t.teil).padStart(3, "0")}`}.json.gz.enc`;
+      // KICC-F-107: erst nur die Prüfsumme in der Datenbank rechnen (64 Zeichen statt der ganzen Daten). Gleich wie ein geprüfter Teil
+      // eines früheren Tages → Datei im Dateispeicher kopieren (nichts verlässt Supabase). Rücklese-Test prüft die Kopie wie jede Datei.
+      // Kopieren nicht möglich oder Kopie war schon einmal kaputt → wie bisher abholen und hochladen.
+      if (t.kopiert_von !== "kopie_fehler") {
+        const [h] = await sql.unsafe(`select count(*)::bigint as n, encode(sha256(convert_to(coalesce(json_agg(x), '[]'::json)::text, 'UTF8')), 'hex') as h from (select ${spalten} from public."${name}" ${bed}) x`);
+        const [v] = await sql`select lauf, schluessel, bytes, roh_bytes, sha256 from public.kc_club_fra_sicherung where tabelle = ${t.tabelle} and lauf < ${lauf} and lauf >= ${berlinTag(new Date(Date.now() - (FRA_BEHALTEN_TAGE - 1) * 86400000))}
+          and status = 'geprueft' and inhalt_sha256 = ${h.h} and zeilen = ${Number(h.n)} and schluessel is not null order by lauf desc limit 1`;
+        if (v) {
+          const quelle = `/${encodeURIComponent(fach)}/${String(v.schluessel).split("/").map(encodeURIComponent).join("/")}`;
+          const k = await s3.fetch(url(schluessel), { method: "PUT", headers: { "x-amz-copy-source": quelle } }).catch(() => null);
+          const antwort = k ? await k.text().catch(() => "") : "";
+          if (k?.ok && !antwort.includes("<Error>")) {
+            await sql`update public.kc_club_fra_sicherung set status = 'ok', zeilen = ${Number(h.n)}, bytes = ${v.bytes}, roh_bytes = ${v.roh_bytes}, sha256 = ${v.sha256}, schluessel = ${schluessel},
+              inhalt_sha256 = ${h.h}, kopiert_von = ${v.lauf}, fehler = null, zeit = now() where lauf = ${lauf} and tabelle = ${t.tabelle} and teil = ${t.teil}`;
+            roh += 64 * 1024;
+            continue;
+          }
+          console.error("fra kopie", k?.status, txt(antwort, 200));
+        }
+      }
+      const [r] = await sql.unsafe(`select count(*)::bigint as n, coalesce(json_agg(x), '[]'::json)::text as j from (select ${spalten} from public."${name}" ${bed}) x`);
+      const rohB = new TextEncoder().encode(r.j), enc = await kceVerschluesseln(await fraGzip(rohB)), sha = await hexSha256(enc), inhalt = await hexSha256(rohB);
       const p = await s3.fetch(url(schluessel), { method: "PUT", body: enc, headers: { "content-type": "application/octet-stream", "x-amz-meta-sha256": sha, "x-amz-meta-zeilen": String(r.n), "x-amz-meta-verschluesselung": "kce1-aes-256-gcm" } });
       await p.body?.cancel();
       if (!p.ok) throw new Error(`Neon antwortet ${p.status}`);
-      await sql`update public.kc_club_fra_sicherung set status = 'ok', zeilen = ${Number(r.n)}, bytes = ${enc.length}, roh_bytes = ${rohB.length}, sha256 = ${sha}, schluessel = ${schluessel}, fehler = null, zeit = now()
+      await sql`update public.kc_club_fra_sicherung set status = 'ok', zeilen = ${Number(r.n)}, bytes = ${enc.length}, roh_bytes = ${rohB.length}, sha256 = ${sha}, schluessel = ${schluessel}, inhalt_sha256 = ${inhalt}, kopiert_von = null, fehler = null, zeit = now()
         where lauf = ${lauf} and tabelle = ${t.tabelle} and teil = ${t.teil}`;
       roh += rohB.length;
     } catch (e) {
@@ -3148,7 +3168,7 @@ async function fraSchritt(jetztErzwingen = false) {
   const [{ offen }] = await sql`select count(*)::int as offen from public.kc_club_fra_sicherung where lauf = ${lauf} and (status in ('offen', 'laeuft') or (status = 'fehler' and versuche < ${FRA_VERSUCHE}))`;
   if (!offen) {
     while (Date.now() - t0 < FRA_SCHRITT_MS && roh < FRA_SCHRITT_BYTES) {
-      const [t] = await sql`select tabelle, teil, schluessel, sha256, zeilen, roh_bytes from public.kc_club_fra_sicherung where lauf = ${lauf} and status = 'ok' order by tabelle, teil limit 1`;
+      const [t] = await sql`select tabelle, teil, schluessel, sha256, zeilen, roh_bytes, kopiert_von from public.kc_club_fra_sicherung where lauf = ${lauf} and status = 'ok' order by tabelle, teil limit 1`;
       if (!t) break;
       let ok = false, grund = "";
       try {
@@ -3160,6 +3180,12 @@ async function fraSchritt(jetztErzwingen = false) {
         if (!Array.isArray(daten) || daten.length !== Number(t.zeilen)) throw new Error("Zeilenzahl weicht ab");
         ok = true; roh += Number(t.roh_bytes) || 0;
       } catch (e) { grund = txt(String((e as any)?.message || e), 200); roh += 1024 * 1024; }
+      // KICC-F-107: kaputte Kopie → Teil noch einmal ganz normal abholen und hochladen (nie eine fehlerhafte Kopie behalten)
+      if (!ok && t.kopiert_von && t.kopiert_von !== "kopie_fehler") {
+        await sql`update public.kc_club_fra_sicherung set status = 'offen', versuche = 0, kopiert_von = 'kopie_fehler', fehler = ${"Kopie verworfen: " + grund}, zeit = now()
+          where lauf = ${lauf} and tabelle = ${t.tabelle} and teil = ${t.teil}`;
+        continue;
+      }
       await sql`update public.kc_club_fra_sicherung set status = ${ok ? "geprueft" : "fehler"}, versuche = ${ok ? 0 : FRA_VERSUCHE}, fehler = ${ok ? null : "Rücklese-Test: " + grund}, zeit = now()
         where lauf = ${lauf} and tabelle = ${t.tabelle} and teil = ${t.teil}`;
     }
@@ -3167,9 +3193,11 @@ async function fraSchritt(jetztErzwingen = false) {
   // 4) Stand + Abschluss (Inhaltsverzeichnis, alte Tage löschen)
   const [m] = await sql`select count(*)::int as teile, count(distinct tabelle)::int as tabellen, count(*) filter (where status = 'geprueft')::int as geprueft,
       count(*) filter (where status = 'fehler' and versuche >= ${FRA_VERSUCHE})::int as fehler, count(*) filter (where status in ('offen', 'laeuft', 'ok') or (status = 'fehler' and versuche < ${FRA_VERSUCHE}))::int as rest,
-      coalesce(sum(zeilen), 0)::bigint as zeilen, coalesce(sum(bytes), 0)::bigint as bytes, coalesce(sum(roh_bytes), 0)::bigint as roh_bytes, min(zeit) as start, max(zeit) as ende
+      coalesce(sum(zeilen), 0)::bigint as zeilen, coalesce(sum(bytes), 0)::bigint as bytes, coalesce(sum(roh_bytes), 0)::bigint as roh_bytes, min(zeit) as start, max(zeit) as ende,
+      count(*) filter (where kopiert_von is not null and kopiert_von <> 'kopie_fehler')::int as kopiert, coalesce(sum(roh_bytes) filter (where kopiert_von is null or kopiert_von = 'kopie_fehler'), 0)::bigint as uebertragen
     from public.kc_club_fra_sicherung where lauf = ${lauf}`;
-  const metrics: Record<string, unknown> = { lauf, tabellen: m.tabellen, teile: m.teile, geprueft: m.geprueft, fehler: m.fehler, rest: m.rest, zeilen: Number(m.zeilen), bytes: Number(m.bytes), roh_bytes: Number(m.roh_bytes), grenze: FRA_GRENZE, verschluesselt: true };
+  const metrics: Record<string, unknown> = { lauf, tabellen: m.tabellen, teile: m.teile, geprueft: m.geprueft, fehler: m.fehler, rest: m.rest, zeilen: Number(m.zeilen), bytes: Number(m.bytes), roh_bytes: Number(m.roh_bytes), grenze: FRA_GRENZE, verschluesselt: true,
+    kopiert: m.kopiert, uebertragen_roh_bytes: Number(m.uebertragen) }; // KICC-F-107: unveränderte Teile kopiert / tatsächlich übertragene Rohdaten
   if (m.rest) {
     const spaet = new Date().getUTCHours() === 3 && new Date().getUTCMinutes() >= 50; // letzte Schritte des Zeitplaner-Fensters (bis 03:58 UTC)
     const [{ gesichert }] = await sql`select count(*) filter (where status in ('ok', 'geprueft'))::int as gesichert from public.kc_club_fra_sicherung where lauf = ${lauf}`;

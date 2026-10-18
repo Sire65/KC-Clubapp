@@ -12,6 +12,7 @@ jobs:
           node-version: 22
       - run: node tests/app-vertrag.test.mjs
       - run: node tests/fra-verschluesselung.test.mjs
+      - run: node tests/fra-teile.test.mjs
       - run: node tests/notfall-tresor.test.mjs
       - run: node tests/avatar-rueckwaerts.test.mjs
       - run: node tests/termine-kennung.test.mjs

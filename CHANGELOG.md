@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.480.0 – 2026-10-18 – 📣 Info-Laufband schlauer und lebendiger (KC-CLUB-LAUFBAND-SCHLAU) · 🏠 Frühwarnung für Gastgeber (KC-CLUB-GASTGEBER-FRUEHWARNUNG) · Server 2.480.0
+## 2.481.0 – 2026-10-18 – 📣 Info-Laufband schlauer und lebendiger (KC-CLUB-LAUFBAND-SCHLAU) · 🏠 Frühwarnung für Gastgeber (KC-CLUB-GASTGEBER-FRUEHWARNUNG) · Server 2.481.0
 Wunsch Hansi: „Das muss noch etwas intelligenter werden. Wer schon zugesagt oder eine Abstimmung schon gemacht hat, braucht nur einen Hinweis mit grünem Haken – nicht zu etwas auffordern, was schon erledigt ist. Und ab und an auf neue Funktionen hinweisen, damit es lebendiger wird.“
 - **Neue grüne Stufe** = erledigt / gut so. Zugesagt: „✅ Du bist dabei · 👥 7/18“ (grüner Rahmen); abgesagt: „❌ Abgesagt – jederzeit änderbar“; „Vielleicht“ bleibt rot mit Knöpfen.
 - **Erledigtes wird bestätigt statt gefordert**: Was heute rot war und erledigt ist (Eingangskorb, Abstimmung, Terminanfrage, Terminfindung, Schulung, Aufgabe, Benachrichtigungen, Büro-Eingang), erscheint bis zum Abend als grüner Haken („Deine Stimme ist abgegeben“, „Erledigt – danke!“). Ausgeblendetes zählt nicht.
@@ -8,11 +8,22 @@ Wunsch Hansi: „Das muss noch etwas intelligenter werden. Wer schon zugesagt od
 - **Tageszeit & Anlass**: „Guten Morgen/Guten Abend, Hansi – alles erledigt 👍“, „Gute Nacht 🌙“; Advent, Nikolaus, Weihnachten, Silvester, Neujahr, Halloween. **Am Treffen-Tag** „Heute 18:00 Uhr · Hütte Anne“ mit **🚗 Mitfahrt**, während des Treffens „🍳 Viel Spaß!“, danach **„🙏 Danke fürs Kommen – Fotos hochladen?“**.
 - Übersichtlich: höchstens 7 Meldungen plus Tipp im Umlauf. Alles lokal, keine zusätzliche Server-Abfrage.
 
-**🏠 Frühwarnung für Gastgeber** (Wunsch Hansi: „1 Tag vorher E-Mail und Push, wie viele sich angemeldet haben, 2 Stunden vorher nochmal – aber nur, falls Änderungen da sind; ansonsten nur bei Änderung. Und wenn der Clubsprecher das Treffen vorbereitet, E-Mail und Push mit Einladung, Tagesordnung, Uhrzeit und Treffpunkt.“) – Server 2.480.0, ohne DB-Änderung:
+**🏠 Frühwarnung für Gastgeber** (Wunsch Hansi: „1 Tag vorher E-Mail und Push, wie viele sich angemeldet haben, 2 Stunden vorher nochmal – aber nur, falls Änderungen da sind; ansonsten nur bei Änderung. Und wenn der Clubsprecher das Treffen vorbereitet, E-Mail und Push mit Einladung, Tagesordnung, Uhrzeit und Treffpunkt.“) – Server 2.481.0, ohne DB-Änderung:
 - **Vorabend ab 18 Uhr** wie bisher: Anmeldestand an Gastgeber/in und Clubleitung (Push + E-Mail).
 - **Danach jede Änderung** (Zu-/Absage, zurückgenommen, neue Notiz) kurz an die Gastgeberin, mit Namen: „❌ Steven hat abgesagt – jetzt 6 Zusagen“. Gesammelt (höchstens alle 15 Min.), nachts 22–7 Uhr zurückgehalten.
 - **2 Stunden vorher** der ganze Stand **nur, wenn sich seit der letzten Meldung etwas geändert hat** (mit „Neu seit der letzten Meldung“); sonst bleibt es ruhig.
 - **Einladung** aus dem Büro (Tagesordnung, Uhrzeit, Treffpunkt), **Änderung** und **Absage** des Treffens bekommt die Gastgeberin immer per Push **und** E-Mail – egal welcher Weg gewählt ist – mit „Du bist Gastgeberin – aktuell 5 Zusagen“; nicht doppelt.
+
+## 2.480.0 – 2026-10-18 – SOS-Seite immer mit Notrufnummern
+- KC-CLUB-ZEIGE-FUELLEN (TÜV 18.10., Fehler behindert Mitglieder → sofort): Über Hilfe „Zeig mir wo“, Twinkey „Was mache ich im Notfall?“ oder Zurück nach Neuladen öffnete die SOS-Seite leer – ohne Notrufnummern. Ursache: nur sosStart() füllte sie. Jetzt füllt zeige() selbst (wie bei allen anderen Seiten); ebenso Sicherheits-Check. „Neue Gruppe“ ohne Formular → Nachrichten, „Neue Nachricht“ ohne Mitgliederliste lädt sie erst.
+
+## Server-Sicherung – 2026-10-18 (ohne App-Build, Server-Version unverändert) – KICC-F-107: Frankfurt-Sicherung überträgt nur geänderte Teile
+Wunsch Hansi („baue um, dass nur geänderte Daten gespiegelt oder gesichert werden“). Nichts wird reduziert – weiter jede Tabelle jeden Tag, verschlüsselt, mit Rücklese-Test und 14 Tagesständen.
+- Teilgrenzen großer Tabellen werden vom letzten geprüften Lauf übernommen (`supabase/functions/kc-club/fra-teile.js`); bisher verschob schon eine gelöschte alte Zeile alle Grenzen. Nur der letzte Bereich wird neu geteilt; passt ein Bereich nicht mehr, wird die Tabelle wie bisher neu geteilt.
+- Je Teil rechnet die Datenbank zuerst nur die Prüfsumme (SHA-256 des Inhalts). Gleich wie ein geprüfter Teil eines früheren Tages → Datei im Neon-Dateispeicher kopiert (nichts verlässt Supabase); sonst wie bisher abholen, packen, verschlüsseln, hochladen. Der Rücklese-Test prüft auch jede Kopie; eine kaputte Kopie wird verworfen und normal neu gesichert.
+- Stand zeigt neu `kopiert` und `uebertragen_roh_bytes`. Wirkung ab dem zweiten Lauf (heute Nacht entstehen die ersten Prüfsummen).
+- DB: `supabase/migrations/20261018_kicc_f107_fra_nur_geaenderte.sql` (bereits eingespielt, nur neue Spalten). Test: `tests/fra-teile.test.mjs`.
+- Rückweg: Server-Stand vor diesem Eintrag erneut hochladen.
 
 ## Spiegel – 2026-10-18 (ohne App-Build) – KICC-F-107: Spiegel und Backup übertragen nur geänderte Tabellen
 Wunsch Hansi („baue um, dass nur geänderte Daten gespiegelt oder gesichert werden“; Supabase-Hinweis: Egress unter 5,5 GB). Nichts wird reduziert – jede Tabelle wird weiter gespiegelt und gesichert.
