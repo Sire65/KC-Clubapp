@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.479.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.480.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -23424,33 +23424,97 @@ function ilAusblenden(id) {
 // das nächste Treffen ist immer der erste Punkt – Titel, Datum · Ort, Zu-/Absage-Knöpfe bzw. die eigene Antwort und „x/y angemeldet“
 function ilTreffen(t) {
   if (!t) return { id: "treffen", stufe: "weiss", sym: "📅", t: "Kein Termin geplant", u: "Sobald ein Köcheclub-Termin ansteht, siehst du es hier.", ohneAus: true, voll: true };
-  const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
-  const meine = { ja: "✅ Ich komme", nein: "❌ Abgesagt", vielleicht: "❓ Vielleicht" }[t.meine] || "❔ Bitte zu- oder absagen";
+  const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : ""), beginn = new Date(t.beginn), heute = isoBerlin(beginn) === heuteIso();
+  // 2.480.0 KC-CLUB-LAUFBAND-SCHLAU: schon geantwortet → nicht mehr auffordern, sondern bestätigen (grüner Haken)
+  const meine = { ja: "✅ Du bist dabei", nein: "❌ Abgesagt – jederzeit änderbar", vielleicht: "❓ Vielleicht" }[t.meine] || "❔ Bitte zu- oder absagen";
   // 2.102.0 KC-CLUB-TERMIN-ANTEIL (Wunsch Hansi): „✅ 3/18 angemeldet“ = 3 von 18 Mitgliedern haben schon zugesagt
   const alle = Number(INIT?.mitgliederAnzahl) || 0, gesamtTxt = alle ? `✅ <b>${t.ja}/${alle}</b> angemeldet` : `✅ ${t.ja} Zusagen`;
   // 2.239.0 KC-CLUB-ANTWORT-BLINKEN (Wunsch Hansi): noch nicht zu- oder abgesagt → ab 5 Tagen vorher gelb blinkend, ab 2 Tagen rot dauerblinkend
   // („vielleicht“ zählt nicht als Antwort). Das Laufband zeichnet sich regelmäßig neu, die Stufe wandert also von selbst mit.
-  const stdBis = (new Date(t.beginn) - Date.now()) / 3600000, offenAntwort = t.meine !== "ja" && t.meine !== "nein";
+  const stdBis = (beginn - Date.now()) / 3600000, offenAntwort = t.meine !== "ja" && t.meine !== "nein";
   const blinken = offenAntwort && stdBis > 0 ? (stdBis <= 48 ? " antwort-blinken rot" : stdBis <= 120 ? " antwort-blinken gelb" : "") : "";
-  const offen = offenAntwort && stdBis > 0 && !!t.id;
-  return { id: "treffen", stufe: offen ? "rot" : "weiss", sym: "📅", t: t.titel, u: wann(t.beginn) + (ort ? " · " + ort : ""), auf: "zumTreffen()", ohneAus: true, voll: true,
-    stand: `${offen ? "" : `<b class="antwort-zeile">${meine}</b> · `}${gesamtTxt.replace(" angemeldet", "")}`, // kurz, passt in eine Zeile
-    knoepfe: offen ? [["✔ Zusagen", `ilAntwort('${esc(t.id)}','ja')`, blinken], ["✖", `ilAntwort('${esc(t.id)}','nein')`]] : null };
+  const offen = offenAntwort && stdBis > 0 && !!t.id, dabei = t.meine === "ja", laeuft = stdBis <= 0, kommen = gesamtTxt.replace(" angemeldet", "").replace("✅ ", "👥 "); // 👥 – der grüne Haken gehört der eigenen Antwort
+  // am Treffen-Tag: „Heute 18:00 Uhr: …“ mit 🚗 Mitfahrt; läuft es gerade: „Viel Spaß!“
+  const mitfahrt = dabei && heute && !laeuft;
+  return { id: "treffen", stufe: offen ? "rot" : dabei ? "gruen" : "weiss", sym: dabei ? "✅" : "📅", auf: "zumTreffen()", ohneAus: true, voll: true,
+    t: t.titel, u: (laeuft ? "Läuft gerade" : heute ? `Heute ${fZeit.format(beginn)} Uhr` : wann(t.beginn)) + (ort ? " · " + ort : ""),
+    stand: laeuft ? (dabei ? "🍳 Viel Spaß beim Treffen!" : kommen) : offen ? (t.meine === "vielleicht" ? "❓ Vielleicht · " : "") + kommen
+      : mitfahrt ? `<b class="antwort-zeile">✅ Dabei</b>` : `<b class="antwort-zeile">${meine}</b> · ${kommen}`, // kurz, passt in eine Zeile
+    knoepfe: offen ? [["✔ Zusagen", `ilAntwort('${esc(t.id)}','ja')`, blinken], ["✖", `ilAntwort('${esc(t.id)}','nein')`]] : mitfahrt ? [["🚗 Mitfahrt", "zumTreffen(true)"]] : null };
+}
+// ---------- 2.480.0 KC-CLUB-LAUFBAND-SCHLAU (Wunsch Hansi „etwas intelligenter: wer schon zugesagt oder abgestimmt hat, braucht nur einen Hinweis
+// mit grünem Haken – nicht zu etwas auffordern, was schon erledigt ist; ab und an auf neue Funktionen hinweisen, damit es lebendiger wird“) ----------
+// Erledigt-Abgleich: rote Meldungen, die heute schon da waren und jetzt weg sind, kommen bis zum Abend als grüne Bestätigung.
+// Neuheiten: je Gerät an höchstens 3 Tagen, nach dem Antippen nie wieder; immer nur eine pro Runde. Alles lokal, keine Server-Abfrage.
+const IL_ROT = "kc_club_il_rot", IL_FERTIG = "kc_club_il_fertig", IL_NEU = "kc_club_il_neu", IL_LETZTES = "kc_club_il_letztes";
+function ilTag(k) { try { const a = JSON.parse(localStorage.getItem(k) || "null"); return a && a.tag === heuteIso() ? a.m || {} : {}; } catch { return {}; } }
+function ilTagSetzen(k, m) { try { localStorage.setItem(k, JSON.stringify({ tag: heuteIso(), m })); } catch {} }
+function ilErledigt(L) {
+  if (!INIT || !ICH) return [];
+  const jetzt = {}; for (const m of L) if (m.fertig) jetzt[m.id] = m.fertig;
+  const vorher = ilTag(IL_ROT), fertig = ilTag(IL_FERTIG), aus = new Set(ilAusgeblendet());
+  for (const id in vorher) if (!(id in jetzt) && !aus.has(id)) fertig[id] = vorher[id];
+  for (const id in jetzt) delete fertig[id]; // wieder offen → keine Bestätigung mehr
+  ilTagSetzen(IL_ROT, jetzt); ilTagSetzen(IL_FERTIG, fertig);
+  return Object.entries(fertig).slice(-3).map(([id, t]) => ({ id: "ok:" + id, stufe: "gruen", sym: "✅", t, u: "Erledigt – danke! 👍" }));
+}
+const IL_NEUHEITEN = [ // wann(Monat 1–12, Tag) · los = was „▶ Ansehen“ tut
+  { id: "halloween", wann: (m, d) => (m === 10 && d >= 10) || (m === 11 && d <= 2), sym: "🎃", t: "Neu: Halloween-Szene im Kopf", u: "Hexe, Vampir, Geister und Gewitter – jetzt ansehen", los: "jahreszeitVorschau('halloween')" },
+  { id: "kuerbis", wann: (m) => m >= 9 && m <= 11, sym: "🐕", t: "Neu: Herbst mit Kürbis-Hund", u: "Abends rollt der Hund den Kürbis herein – ansehen", los: "jahreszeitVorschau('herbst', 'kuerbis')" },
+  { id: "unterwasser", wann: () => true, sym: "🐠", t: "Neu: Thema Unterwasserwelt", u: "Fische, Taucher – und wer zieht den Stöpsel?", los: "jahreszeitVorschau('unterwasser')" },
+];
+const ilVersionNr = (v) => +String(v || "").split(".")[1] || 0;
+function ilNeuLesen() { try { return JSON.parse(localStorage.getItem(IL_NEU) || "{}") || {}; } catch { return {}; } }
+function ilNeuGesehen(id) { const s = ilNeuLesen(); s[id] = { ...(s[id] || {}), fertig: true }; try { localStorage.setItem(IL_NEU, JSON.stringify(s)); } catch {} }
+function ilNeuheit() {
+  const d = new Date(), m = d.getMonth() + 1, tag = d.getDate(), jetzt = ilVersionNr(APP_VERSION), s = ilNeuLesen();
+  const hilfe = HILFE.filter((h) => h.seit && h.thema !== "erste" && jetzt - ilVersionNr(h.seit) <= 10 && (!h.nur || h.nur()))
+    .map((h) => ({ id: "h:" + h.id, sym: "🆕", t: "Neu: " + hzTxt(h.t), u: String(hzTxt(h.x)).replace(/<[^>]+>/g, "").slice(0, 90), los: `hzZuEintrag('h:${esc(h.id)}')` }));
+  for (const n of [...IL_NEUHEITEN.filter((x) => x.wann(m, tag)), ...hilfe]) {
+    const r = s[n.id] || { n: 0 }; if (r.fertig || (r.tag !== heuteIso() && r.n >= 3)) continue;
+    if (r.tag !== heuteIso()) { s[n.id] = { n: r.n + 1, tag: heuteIso() }; try { localStorage.setItem(IL_NEU, JSON.stringify(s)); } catch {} }
+    const los = `ilNeuGesehen('${esc(n.id)}');${n.los}`;
+    return { id: "neu:" + n.id, stufe: "gold", sym: n.sym, t: n.t, u: n.u, auf: los, knoepfe: [["▶ Ansehen", los]] };
+  }
+  return null;
+}
+// Tageszeit & Anlass: Gruß statt nüchternem „Alles erledigt“, Feiertags-Gruß, Dank nach dem Treffen
+function ilGruss() {
+  const h = new Date().getHours(), vn = ICH?.vorname || "";
+  const [t, u] = h >= 5 && h < 11 ? [`Guten Morgen${vn ? ", " + vn : ""}!`, "Heute ist nichts zu tun 👍"] : h >= 11 && h < 18 ? ["Alles erledigt 👍", "Für dich steht gerade nichts an"]
+    : h >= 18 && h < 23 ? [`Guten Abend${vn ? ", " + vn : ""}!`, "Alles erledigt – schönen Feierabend 👍"] : [`Gute Nacht${vn ? ", " + vn : ""} 🌙`, "Alles erledigt – bis morgen"];
+  return { id: "_ok", stufe: "gruen", sym: h >= 23 || h < 5 ? "🌙" : "👍", t, u, ohneAus: true };
+}
+function ilAnlass() {
+  const h = heuteIso(), md = h.slice(5), j = +h.slice(0, 4);
+  const w = new Date(Date.UTC(j, 11, 24)), vierter = tagPlus(`${j}-12-24`, -w.getUTCDay()); // 4. Advent = letzter Sonntag bis 24.12.
+  const advent = [3, 2, 1, 0].findIndex((n) => tagPlus(vierter, -7 * n) === h);
+  const g = advent >= 0 ? ["🕯️", `Schönen ${advent + 1}. Advent!`] : { "10-31": ["🎃", "Happy Halloween!"], "12-06": ["🎅", "Schönen Nikolaustag!"], "12-24": ["🎄", "Frohe Weihnachten!"], "12-25": ["🎄", "Frohe Weihnachten!"],
+    "12-26": ["🎄", "Schöne Feiertage!"], "12-31": ["🎆", "Guten Rutsch ins neue Jahr!"], "01-01": ["🥂", "Frohes neues Jahr!"] }[md];
+  return g ? { id: "anlass:" + h, stufe: "weiss", sym: g[0], t: g[1], u: "Dein Köcheclub Werne" } : null;
+}
+function ilNachTreffen(t) {
+  if (t?.id) try { localStorage.setItem(IL_LETZTES, JSON.stringify({ id: t.id, titel: t.titel, beginn: t.beginn, meine: t.meine })); } catch {}
+  let l = null; try { l = JSON.parse(localStorage.getItem(IL_LETZTES) || "null"); } catch {}
+  if (!l || l.meine !== "ja" || (t && t.id === l.id)) return null;
+  const std = (Date.now() - Date.parse(l.beginn)) / 3600000;
+  return std >= 3 && std <= 36 ? { id: "danke:" + l.id, stufe: "weiss", sym: "🙏", t: `Danke fürs Kommen – ${l.titel}!`, u: "Schöne Fotos gemacht? Lade sie hoch", auf: "zeige('fotos')", knoepfe: [["📸 Fotos", "zeige('fotos');setTimeout(fotoForm,250)"]] } : null;
 }
 function ilMeldungen() {
   const L = [], add = (m) => L.push(m), t = INIT?.naechstesTreffen, kz = INIT?.kz || {}, leitung = !!(ICH?.vorstand || ICH?.admin);
   const anz = (n, ein, mehr) => `${n} ${n === 1 ? ein : mehr}`;
-  // 🔴 bitte erledigen
-  if (INIT?.eingangskorb > 0) add({ id: "eingang", stufe: "rot", sym: "📥", t: `Eingangskorb: ${anz(INIT.eingangskorb, "Dokument", "Dokumente")} für dich`, u: "Ansehen und ins Archiv übernehmen – oder ablehnen", auf: "eingangOeffnen()" });
-  for (const a of INIT?.terminanfragenOffen || []) add({ id: "anfrage:" + a.id, stufe: "rot", sym: "📨", t: `${a.von} fragt an: ${a.anlass}`, u: "Bitte antworten", auf: `taZeigen('${esc(a.id)}')` });
-  if (INIT?.offeneAbstimmungen) add({ id: "abstimmung", stufe: "rot", sym: "🗳️", t: INIT.offeneAbstimmungen === 1 ? "Eine Abstimmung wartet auf deine Stimme" : `${INIT.offeneAbstimmungen} Abstimmungen warten auf deine Stimme`, u: "Antippen und abstimmen", auf: "zeige('vorschlaege')" });
-  for (const u of INIT?.terminfindungOffen || []) add({ id: "terminfindung:" + (u.id || u.titel), stufe: "rot", sym: "🗓️", t: `Bitte Termine ankreuzen: ${u.titel}`, u: "Wann kannst du?", auf: "zeige('termine')" });
-  if (kz.schulung > 0) add({ id: "schulung", stufe: "rot", sym: "🎓", t: "Schulung: bitte einen Termin wählen", u: "Hansi hat dir Termine vorgeschlagen", auf: "smStart()" }); // 2.466.0 (Wunschliste #24): vorher Sprung auf die Seite „schulungen“, die es nicht gibt → leere Seite
+  // 🔴 bitte erledigen (fertig = Text der grünen Bestätigung, wenn es erledigt ist)
+  if (INIT?.eingangskorb > 0) add({ id: "eingang", stufe: "rot", sym: "📥", t: `Eingangskorb: ${anz(INIT.eingangskorb, "Dokument", "Dokumente")} für dich`, u: "Ansehen und ins Archiv übernehmen – oder ablehnen", auf: "eingangOeffnen()", fertig: "Eingangskorb erledigt – alles einsortiert" });
+  for (const a of INIT?.terminanfragenOffen || []) add({ id: "anfrage:" + a.id, stufe: "rot", sym: "📨", t: `${a.von} fragt an: ${a.anlass}`, u: "Bitte antworten", auf: `taZeigen('${esc(a.id)}')`, fertig: `Terminanfrage von ${a.von} beantwortet` });
+  if (INIT?.offeneAbstimmungen) add({ id: "abstimmung", stufe: "rot", sym: "🗳️", t: INIT.offeneAbstimmungen === 1 ? "Eine Abstimmung wartet auf deine Stimme" : `${INIT.offeneAbstimmungen} Abstimmungen warten auf deine Stimme`, u: "Antippen und abstimmen", auf: "zeige('vorschlaege')", fertig: "Deine Stimme ist abgegeben" });
+  for (const u of INIT?.terminfindungOffen || []) add({ id: "terminfindung:" + (u.id || u.titel), stufe: "rot", sym: "🗓️", t: `Bitte Termine ankreuzen: ${u.titel}`, u: "Wann kannst du?", auf: "zeige('termine')", fertig: `Termine angekreuzt: ${u.titel}` });
+  if (kz.schulung > 0) add({ id: "schulung", stufe: "rot", sym: "🎓", t: "Schulung: bitte einen Termin wählen", u: "Hansi hat dir Termine vorgeschlagen", auf: "smStart()", fertig: "Schulungstermin gewählt" }); // 2.466.0 (Wunschliste #24): vorher Sprung auf die Seite „schulungen“, die es nicht gibt → leere Seite
   const in7 = tagPlus(heuteIso(), 7);
-  for (const a of (INIT?.meineAufgaben || []).filter((x) => x.faellig && x.faellig <= in7).slice(0, 3)) add({ id: "aufgabe:" + a.id, stufe: "rot", sym: "📌", t: a.text, u: "Aufgabe " + faelligText(a.faellig).replace(/<[^>]+>/g, ""), auf: "zeige('protokolle')", knoepfe: [["✔ erledigt", `aufgabeErledigt('${esc(a.id)}', true)`]] });
-  if (pushMoeglich() && Notification.permission !== "granted") add({ id: "push", stufe: "rot", sym: "🔔", t: "Benachrichtigungen sind aus", u: "Sonst verpasst du Nachrichten und Anklopfen", auf: "zeige('einstellungen')", knoepfe: [["Einschalten", "pushEinschalten()"]] });
+  for (const a of (INIT?.meineAufgaben || []).filter((x) => x.faellig && x.faellig <= in7).slice(0, 3)) add({ id: "aufgabe:" + a.id, stufe: "rot", sym: "📌", t: a.text, u: "Aufgabe " + faelligText(a.faellig).replace(/<[^>]+>/g, ""), auf: "zeige('protokolle')", knoepfe: [["✔ erledigt", `aufgabeErledigt('${esc(a.id)}', true)`]], fertig: `Erledigt: ${a.text}` });
+  if (pushMoeglich() && Notification.permission !== "granted") add({ id: "push", stufe: "rot", sym: "🔔", t: "Benachrichtigungen sind aus", u: "Sonst verpasst du Nachrichten und Anklopfen", auf: "zeige('einstellungen')", knoepfe: [["Einschalten", "pushEinschalten()"]], fertig: "Benachrichtigungen sind an" });
   // 🟠 Clubleitung
-  if (leitung && kz.buero > 0) add({ id: "buero", stufe: "orange", sym: "🗂️", t: `Büro-Eingang: ${anz(kz.buero, "Sache wartet", "Sachen warten")}`, u: "Änderungen, Ausleihen, Vorschläge …", auf: "buStart()" });
+  if (leitung && kz.buero > 0) add({ id: "buero", stufe: "orange", sym: "🗂️", t: `Büro-Eingang: ${anz(kz.buero, "Sache wartet", "Sachen warten")}`, u: "Änderungen, Ausleihen, Vorschläge …", auf: "buStart()", fertig: "Büro-Eingang abgearbeitet" });
+  L.push(...ilErledigt(L)); // 🟢 heute erledigt
   // 🟡 Hinweise
   if (START_ART === "verknuepfung" || (START_ART === "browser" && !schonInstalliert)) add({ id: "installieren", stufe: "gold", sym: "📲", t: START_ART === "browser" ? "Köcheclub als App installieren" : "App richtig installieren", u: "Dann klappen WhatsApp, Galerie und Benachrichtigungen", auf: "installHilfe()" });
   const nd = INIT?.naechsterDienst;
@@ -23470,20 +23534,23 @@ function ilMeldungen() {
   const wd = WET.r?.daten, wt = t && wd ? wd.tage?.find((x) => x.datum === isoBerlin(new Date(t.beginn))) : null;
   if (wt) { const a = wetterArt(wt.code), nass = (wt.regenWkt ?? 0) >= 50 || ["regen", "niesel", "gewitter", "schnee"].includes(a.szene);
     add({ id: "wetter:" + wt.datum, stufe: nass ? "gold" : "weiss", sym: a.sym, t: nass ? "Am Treffen-Tag wird es nass – Schirm mitnehmen" : `Wetter am Treffen-Tag: ${a.text}`, u: `${grad(wt.max)} / ${grad(wt.min)}${wt.regenWkt != null ? ` · ☔ ${wt.regenWkt} %` : ""}`, auf: "infoGehe(INFO_FELDER.findIndex((f) => f.id === 'wetter'))" }); }
+  const nh = ilNeuheit(); if (nh) add(nh); // 🆕 eine Neuheit pro Runde
   // ⚪ schöne Infos
+  const an = ilAnlass(); if (an) add(an);
+  const dk = ilNachTreffen(t); if (dk) add(dk);
   for (const g of INIT?.geburtstageHeute || []) if (g.person_id !== ICH?.person_id) add({ id: "geb:" + g.person_id, stufe: "weiss", sym: "🎂", t: `${g.name} hat heute Geburtstag`, u: "Gratuliere mit einem Tipp", auf: `gratulieren('${esc(g.person_id)}', true)`, knoepfe: [["💬 Gratulieren", `gratulieren('${esc(g.person_id)}', true)`]] });
   // 2.441.0: „x Mitglieder online“ nicht hier – das zeigt schon das Feld „Mitglieder“ darunter (nichts doppelt)
   if (kz.fotos > 0) add({ id: "fotos", stufe: "weiss", sym: "📸", t: kz.fotos === 1 ? "Ein neues Foto im Album" : `${kz.fotos} neue Fotos im Album`, u: "Antippen und ansehen", auf: "zeige('fotos')" });
   const dn = typeof dokHinweis === "function" ? dokHinweis() : null;
   if (dn) add({ id: "dok:" + dn.id, stufe: "weiss", sym: dn.sym || "🆕", t: `Neu: ${dn.t}`, u: "Antippen zum Lesen", auf: `dokOeffnen('${esc(dn.id)}')` });
   const aus = new Set(ilAusgeblendet()), sichtbar = L.filter((m) => !aus.has(m.id));
-  const rang = { rot: 0, orange: 1, gold: 2, weiss: 3 }; sichtbar.sort((a, b) => rang[a.stufe] - rang[b.stufe]);
-  if (!sichtbar.some((m) => m.stufe === "rot" || m.stufe === "orange") && ilTreffen(t).stufe !== "rot") sichtbar.unshift({ id: "_ok", stufe: "weiss", sym: "👍", t: "Alles erledigt", u: "Für dich steht gerade nichts an", ohneAus: true });
+  const rang = { rot: 0, orange: 1, gold: 2, gruen: 3, weiss: 4 }; sichtbar.sort((a, b) => rang[a.stufe] - rang[b.stufe]);
+  if (!sichtbar.some((m) => m.stufe === "rot" || m.stufe === "orange") && ilTreffen(t).stufe !== "rot") sichtbar.unshift(ilGruss());
   const tipps = HILFE.filter((h) => h.thema !== "erste" && (!h.nur || h.nur()));
   if (tipps.length) { const d = new Date(), h = tipps[(d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate()) % tipps.length];
     sichtbar.push({ id: "_tipp", stufe: "weiss", sym: "💡", t: `Tipp: ${hzTxt(h.t)}`, u: String(hzTxt(h.x)).replace(/<[^>]+>/g, "").slice(0, 90), auf: `hzZuEintrag('h:${esc(h.id)}')`, ohneAus: true }); }
   // Wichtiges öfter zeigen: nach jeder Hinweis-/Info-Meldung kommt die nächste rote wieder dran
-  const tf = ilTreffen(t), rot = [...(tf.stufe === "rot" ? [tf] : []), ...sichtbar.filter((m) => m.stufe === "rot" || m.stufe === "orange")], rest = sichtbar.filter((m) => !rot.includes(m));
+  const tf = ilTreffen(t), rot = [...(tf.stufe === "rot" ? [tf] : []), ...sichtbar.filter((m) => m.stufe === "rot" || m.stufe === "orange")], rest = sichtbar.filter((m) => !rot.includes(m)).filter((m, i, l) => m.id === "_tipp" || l.indexOf(m) < 7); // übersichtlich: höchstens 7 + Tipp
   let folge = [...rot, ...rest];
   if (rot.length && rest.length > 2) { folge = [...rot]; rest.forEach((m, i) => { folge.push(m); if (i % 2 === 1) folge.push(rot[(i >> 1) % rot.length]); }); }
   return tf.stufe === "rot" ? folge : [tf, ...folge]; // das Treffen steht immer vorn; ist die Antwort offen, kommt es als rote Meldung zwischendurch wieder

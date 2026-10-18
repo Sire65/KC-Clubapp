@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.480.0 – 2026-10-18 – 📣 Info-Laufband schlauer und lebendiger (KC-CLUB-LAUFBAND-SCHLAU)
+Wunsch Hansi: „Das muss noch etwas intelligenter werden. Wer schon zugesagt oder eine Abstimmung schon gemacht hat, braucht nur einen Hinweis mit grünem Haken – nicht zu etwas auffordern, was schon erledigt ist. Und ab und an auf neue Funktionen hinweisen, damit es lebendiger wird.“
+- **Neue grüne Stufe** = erledigt / gut so. Zugesagt: „✅ Du bist dabei · 👥 7/18“ (grüner Rahmen); abgesagt: „❌ Abgesagt – jederzeit änderbar“; „Vielleicht“ bleibt rot mit Knöpfen.
+- **Erledigtes wird bestätigt statt gefordert**: Was heute rot war und erledigt ist (Eingangskorb, Abstimmung, Terminanfrage, Terminfindung, Schulung, Aufgabe, Benachrichtigungen, Büro-Eingang), erscheint bis zum Abend als grüner Haken („Deine Stimme ist abgegeben“, „Erledigt – danke!“). Ausgeblendetes zählt nicht.
+- **Neuheiten** (je Gerät an höchstens 3 Tagen, nach dem Antippen nie wieder, eine pro Runde) mit **▶ Ansehen**: 🎃 Halloween-Szene (10.10.–2.11.), 🐕 Herbst mit Kürbis-Hund (Sept.–Nov.), 🐠 Unterwasserwelt – spielt die Szene oben gleich als Vorschau ab; dazu neue Hilfe-Einträge der letzten Versionen.
+- **Tageszeit & Anlass**: „Guten Morgen/Guten Abend, Hansi – alles erledigt 👍“, „Gute Nacht 🌙“; Advent, Nikolaus, Weihnachten, Silvester, Neujahr, Halloween. **Am Treffen-Tag** „Heute 18:00 Uhr · Hütte Anne“ mit **🚗 Mitfahrt**, während des Treffens „🍳 Viel Spaß!“, danach **„🙏 Danke fürs Kommen – Fotos hochladen?“**.
+- Übersichtlich: höchstens 7 Meldungen plus Tipp im Umlauf. Alles lokal, keine zusätzliche Server-Abfrage. Nur App.
+
 ## Spiegel – 2026-10-18 (ohne App-Build) – KICC-F-107: Spiegel und Backup übertragen nur geänderte Tabellen
 Wunsch Hansi („baue um, dass nur geänderte Daten gespiegelt oder gesichert werden“; Supabase-Hinweis: Egress unter 5,5 GB). Nichts wird reduziert – jede Tabelle wird weiter gespiegelt und gesichert.
 - Spiegel-Arbeiter fragt zuerst nur den Fingerabdruck (`kc_db_mirror_fingerprint`: Zeilen + Prüfsumme, ~100 Byte). Unverändert → kein Abholen; ist die letzte Prüfung älter als 24 h, wird das Ziel in Neon nachgerechnet statt neu übertragen. Geändert → Abholen über `kc_db_mirror_snapshot_text` (bisher kam jede Tabelle doppelt über die Leitung).

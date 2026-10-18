@@ -10721,7 +10721,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/return `<div class="il" id="infoLaufband"><\/div><!-- 2\.439\.0 KC-CLUB-INFO-LAUFBAND -->\n    <div class="kacheln3">/.test(programm), "oben in der Karte, direkt über den 3 Feldern");
   assert.ok(/ilZeigen\(\); \/\/ 2\.439\.0 KC-CLUB-INFO-LAUFBAND/.test(programm) && /closest\?\.\("\.wtage, \.il"\)/.test(programm), "nach jedem Neuzeichnen gefüllt, eigenes Wischen");
   const m = programm.slice(programm.indexOf("function ilMeldungen("), programm.indexOf("function ilHtml("));
-  assert.ok(/id: "eingang", stufe: "rot"/.test(m) && /id: "buero", stufe: "orange"/.test(m) && /id: "_ok", stufe: "weiss", sym: "👍", t: "Alles erledigt"/.test(m) && /id: "_tipp"/.test(m), "Stufen, Alles erledigt, Tipp des Tages");
+  assert.ok(/id: "eingang", stufe: "rot"/.test(m) && /id: "buero", stufe: "orange"/.test(m) && /sichtbar\.unshift\(ilGruss\(\)\)/.test(m) && /\["Alles erledigt 👍", "Für dich steht gerade nichts an"\]/.test(programm) && /id: "_tipp"/.test(m), "Stufen, Alles erledigt (Gruß), Tipp des Tages");
   assert.ok(!/api\(/.test(m), "keine zusätzliche Server-Abfrage");
   assert.ok(/const IL_TAKT_MS = 6000/.test(programm) && /a\.tag === heuteIso\(\) \? a\.ids : \[\]/.test(programm) && /IL\.halt = Date\.now\(\) \+ 9000/.test(programm), "6 s Takt, ✕ nur für heute, Berühren hält an");
   assert.ok(/\.il \{[^}]*width: 100%; margin-top: 14px;[^}]*border: 2px solid var\(--il-f\); border-radius: 16px;/.test(seite) && /\.il-rot \{/.test(seite) && /\.il-orange \{/.test(seite) && /\.il-gold \{/.test(seite), "Rahmen so breit wie die 3 Felder, Farben nach Wichtigkeit");
@@ -10731,7 +10731,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const f = programm.slice(programm.indexOf("function infoTreffen() {"), programm.indexOf("// 2.209.0 KC-CLUB-PUSH-SPRUNG"));
   assert.ok(!/class="klick"/.test(f.slice(0, f.indexOf("<div class=\"kacheln3\">"))) && !/<h2>/.test(f.slice(0, f.indexOf("function ilTreffen("))), "keine Kopfzeile mehr über dem Laufband");
   const tr = programm.slice(programm.indexOf("function ilTreffen("), programm.indexOf("function ilMeldungen("));
-  assert.ok(/id: "treffen", stufe: offen \? "rot" : "weiss"/.test(tr) && /auf: "zumTreffen\(\)", ohneAus: true, voll: true/.test(tr) && /t: "Kein Termin geplant"/.test(tr), "Treffen-Punkt mit Antippen → Termine, nicht ausblendbar");
+  assert.ok(/id: "treffen", stufe: offen \? "rot" : dabei \? "gruen" : "weiss"/.test(tr) && /auf: "zumTreffen\(\)", ohneAus: true, voll: true/.test(tr) && /t: "Kein Termin geplant"/.test(tr), "Treffen-Punkt mit Antippen → Termine, nicht ausblendbar");
   assert.ok(/\["✔ Zusagen", `ilAntwort\('\$\{esc\(t\.id\)\}','ja'\)`, blinken\]/.test(tr), "Zusagen-Knopf blinkt nach den alten Stufen");
   assert.ok(/return tf\.stufe === "rot" \? folge : \[tf, \.\.\.folge\];/.test(programm), "Treffen immer vorn");
   assert.ok(/infoLetztes === f\.id \+ inhalt\) return ilZeigen\(\);/.test(programm) && /if \(b\.firstElementChild && IL\.html === kl \+ html\) return;/.test(programm), "Laufband frisch, aber nur bei Änderung neu gezeichnet");
@@ -10828,4 +10828,14 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/RUF\.ms = !RUF\.vf && !r\.konferenz && !!r\.gegenueber\?\.person_id && r\.gegenueber\.person_id === msPartner\(\);/.test(html), "eingehender Ton nur vom Sitzungspartner kompakt");
   assert.ok(/if \(RUF\.rolle === "angerufen" && !RUF\.pc\) return `<span class="ms-ton-text">🔊 \$\{vn\} möchte mit dir sprechen<\/span>` \+ k\("🔊 Annehmen"/.test(html), "Mikrofon erst nach eigenem Annehmen");
   assert.ok(/if \(RUF\?\.ms\) anrufAuflegen\(\); \/\/ KC-CLUB-FERNHILFE F4: Ende der Sitzung = Ton aus/.test(html) && /ssFernFlaeche\(\); if \(RUF\?\.ms\) anrufAuflegen\(\); \}/.test(html), "Ende der Sitzung = Ton aus (beide Seiten)");
+}
+// 2.480.0 KC-CLUB-LAUFBAND-SCHLAU: Erledigtes bestätigen statt auffordern, Neuheiten, Tageszeit & Anlass
+{
+  const s = programm.slice(programm.indexOf("function ilTreffen("), programm.indexOf("function ilHtml("));
+  assert.ok(/ja: "✅ Du bist dabei", nein: "❌ Abgesagt – jederzeit änderbar"/.test(s) && /mitfahrt \? \[\["🚗 Mitfahrt", "zumTreffen\(true\)"\]\]/.test(s) && /"🍳 Viel Spaß beim Treffen!"/.test(s), "Treffen: dabei grün, heute mit Mitfahrt, läuft: viel Spaß");
+  assert.ok(/for \(const id in vorher\) if \(!\(id in jetzt\) && !aus\.has\(id\)\) fertig\[id\] = vorher\[id\];/.test(s) && /L\.push\(\.\.\.ilErledigt\(L\)\);/.test(s) && /fertig: "Deine Stimme ist abgegeben"/.test(s), "erledigt → grüne Bestätigung, ausgeblendet zählt nicht");
+  assert.ok(/r\.fertig \|\| \(r\.tag !== heuteIso\(\) && r\.n >= 3\)/.test(s) && /jahreszeitVorschau\('herbst', 'kuerbis'\)/.test(s) && /jahreszeitVorschau\('halloween'\)/.test(s) && /const nh = ilNeuheit\(\); if \(nh\) add\(nh\);/.test(s), "Neuheiten: höchstens 3 Tage, nach Antippen nie wieder, eine pro Runde");
+  assert.ok(/Guten Morgen/.test(s) && /Guten Abend/.test(s) && /Schönen \$\{advent \+ 1\}\. Advent!/.test(s) && /Danke fürs Kommen/.test(s) && /std >= 3 && std <= 36/.test(s), "Gruß nach Tageszeit, Advent/Feiertage, Dank nach dem Treffen");
+  assert.ok(!/api\(/.test(s), "keine Server-Abfrage");
+  assert.ok(/\.il-gruen \{ --il-f: #5fd38d;/.test(seite), "grüne Stufe");
 }
