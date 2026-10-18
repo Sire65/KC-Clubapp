@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.484.0 – 2026-10-18 – 🏖️ Schulferien im Kalender (KC-CLUB-FERIEN) · Server 2.484.0
+Wunsch Hansi: „Baue Ferien-Termine in den Kalender wie Feiertage. Und einstellbar genau wie Feiertage. Darunter eine einklappbare Liste mit den Bundesländern zum Anhaken.“
+- Im Club-Kalender sind Ferientage sandfarben hinterlegt (mit Punkt); antippen zeigt „🏖️ Herbstferien · Schulferien Nordrhein-Westfalen · 17.10.–31.10.“. Gleiche Ferien mehrerer Länder werden ein Eintrag. Andere Termine (Sitzung, Feiertag, Geburtstag …) behalten ihre Farbe – Ferien färben nur Tage ohne anderes.
+- Einstellbar wie die Feiertage: ⚙️ → 🧩 Startseite & Ansicht → **🏖️ Schulferien im Kalender** (an/aus, je Gerät); darunter aufklappbar **🗺️ Bundesländer wählen** mit allen 16 Ländern zum Anhaken (vorgewählt: Nordrhein-Westfalen).
+- Auch in Legende, Kalender-Druck („🏖️ Schulferien“), Hilfe und Einstellungs-Suche.
+- Quelle: OpenHolidays (openholidaysapi.org, frei, ohne Schlüssel). Server ohne Datenbank, 24 Std. im Speicher; das Gerät hält je Jahr 30 Tage vor.
 ## 2.483.0 – 2026-10-18 – Bündel: sechs Glocken-Uhren mit echten Aufnahmen · TÜV-Pakete 1–3 · Adventskalender als Überraschung
 - KC-CLUB-STUNDENUHREN-ECHT: Wunsch Hansi „schneiden und als Uhren einbauen“: Big Ben 1945 (gemeinfrei), Westminster-Glockenspiel (Carillon, CC BY-SA 4.0), Kieler Rathaus-Glockenspiel (CC BY 4.0), Freiburger Rathaus-Glockenspiel (CC BY-SA 4.0), Berliner Dom (CC BY-SA 4.0), Röhrenglocken-Standuhr (CC0) – freie Aufnahmen von Wikimedia Commons, gekürzt (mono MP3, je < 160 KB), Quelle/Urheber/Lizenz bei der Uhr. Ohne Datei spielt der selbst erzeugte Ton einer verwandten Uhr.
 - Fehler an der Quelle behoben: echte Aufnahmen wurden geladen, bevor die Tonausgabe lief – beim ersten Mal lud nichts. Jetzt Laden nach dem Start, bis zu 4 s Warten auf die Aufnahme.

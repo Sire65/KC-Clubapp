@@ -92,7 +92,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.482.0";
+const SERVER_VERSION = "2.484.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1863,6 +1863,7 @@ const STADT = {
 };
 const STADT_WOCHE_QUELLEN = ["feste", "maerkte", "simjue", "sonstige", "theater", "fuehrungen"], STADT_WOCHE_MS = 6 * 3600000; // 2.482.0 KC-CLUB-LAUFBAND-WERNE
 let stadtWoche: { zeit: number; liste: unknown[] } | null = null;
+const FERIEN_MS = 24 * 3600000, ferienCache = new Map<number, { zeit: number; liste: unknown[] }>(); // 2.484.0 KC-CLUB-FERIEN
 type StadtTermin = { key: string; quelle: string; titel: string; beginn: string; ende: string | null; ganztaegig: boolean; ort: string | null; url: string | null; tag: string; bisTag: string };
 const stadtCache = new Map<string, { zeit: number; liste: StadtTermin[] }>();
 function icsZeilen(text: string) { return text.replace(/\r\n?/g, "\n").replace(/\n[ \t]/g, "").split("\n"); }
@@ -2757,7 +2758,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -11024,6 +11025,29 @@ Köcheclub-App`,
 
       // 2.482.0 KC-CLUB-LAUFBAND-WERNE (Wunsch Hansi, Punkt 3 des Info-Feld-Konzepts): „Diese Woche in Werne“ für alle Mitglieder –
       // ohne Datenbank: Stadt-Kalender (werne.de) mit Zwischenspeicher, das Ergebnis 6 Std. im Speicher; die App fragt höchstens einmal am Tag.
+      // 2.484.0 KC-CLUB-FERIEN (Wunsch Hansi „Ferien-Termine in den Kalender wie Feiertage, einstellbar wie Feiertage, darunter eine einklappbare
+      // Liste mit den Bundesländern zum Anhaken“): Schulferien aller 16 Länder je Jahr von OpenHolidays (openholidaysapi.org, frei, ohne Schlüssel) –
+      // ohne Datenbank, 24 Std. im Speicher; die App hält sie 30 Tage auf dem Gerät und filtert dort nach den angehakten Ländern.
+      case "ferien": {
+        const jahr = Math.round(Number(p.jahr));
+        if (!(jahr >= 2020 && jahr <= 2100)) throw new Fehler("Ungültiges Jahr.");
+        const c = ferienCache.get(jahr);
+        if (c && Date.now() - c.zeit < FERIEN_MS) return json({ jahr, liste: c.liste });
+        let d: any = null;
+        try {
+          const r = await fetch(`https://openholidaysapi.org/SchoolHolidays?countryIsoCode=DE&languageIsoCode=DE&validFrom=${jahr}-01-01&validTo=${jahr}-12-31`,
+            { headers: { accept: "application/json", "User-Agent": "KC-Clubapp (Koecheclub Werne, sire65.github.io/KC-Clubapp)" }, signal: AbortSignal.timeout(8000) });
+          if (r.ok) d = await r.json();
+        } catch (e) { console.error("ferien", String(e).slice(0, 120)); }
+        if (!Array.isArray(d)) { if (c) return json({ jahr, liste: c.liste }); throw new Fehler("Der Ferien-Kalender ist gerade nicht erreichbar.", 502); }
+        const tag = /^\d{4}-\d{2}-\d{2}$/;
+        const liste = d.flatMap((x: any) => (Array.isArray(x.subdivisions) ? x.subdivisions : []).map((u: any) => ({ l: String(u?.code || "").replace(/^DE-/, ""), von: String(x.startDate || ""), bis: String(x.endDate || ""),
+          n: txt((Array.isArray(x.name) ? (x.name.find((z: any) => z?.language === "DE") || x.name[0])?.text : "") || "Ferien", 60) })))
+          .filter((x: any) => /^[A-Z]{2}$/.test(x.l) && tag.test(x.von) && tag.test(x.bis) && x.bis >= x.von);
+        ferienCache.set(jahr, { zeit: Date.now(), liste });
+        return json({ jahr, liste });
+      }
+
       case "stadt_woche": {
         if (stadtWoche && Date.now() - stadtWoche.zeit < STADT_WOCHE_MS) return json({ termine: stadtWoche.liste });
         const { termine } = await stadtHolen(STADT_WOCHE_QUELLEN);

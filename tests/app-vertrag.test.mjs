@@ -5902,7 +5902,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -10983,5 +10983,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 {
   assert.ok(/const knopf = p\.knopf === "push" \? "push" : null;/.test(server), "Server nimmt nur den bekannten Knopf");
   assert.ok(/\$\{x\.knopf === "push" \? snPushKnopf\(\) : ""\}/.test(html) && /id="snPushAn">🔔 Benachrichtigungen jetzt einschalten/.test(html) && /await pushEinschalten\(\);/.test(html) && /knopf: \$\("snKnopfPush"\)\?\.checked \? "push" : null/.test(html), "Knopf im Fenster und beim Verfassen");
+}
+// 2.484.0 KC-CLUB-FERIEN: Schulferien im Kalender wie Feiertage, Schalter + einklappbare Bundesländer-Liste
+{
+  const s = server.slice(server.indexOf('case "ferien": {'), server.indexOf('case "stadt_woche": {'));
+  assert.ok(/openholidaysapi\.org\/SchoolHolidays\?countryIsoCode=DE/.test(s) && /Date\.now\(\) - c\.zeit < FERIEN_MS/.test(s) && !/db\./.test(s), "Quelle OpenHolidays, ohne Datenbank, Zwischenspeicher");
+  assert.ok(/if \(einst\("ferien", true\)\) e\.push\(\.\.\.ferienAm\(tag\)\);/.test(html) && /"geb", "schulung-ab", "ferien"\]/.test(html), "im Kalender, ganz hinten im Rang");
+  assert.ok(/id="setFerien"/.test(seite) && /<details class="ferien-laender"><summary>🗺️ Bundesländer wählen/.test(seite) && /BUNDESLAENDER = \[\["BW"/.test(html) && /: \["NW"\]/.test(html), "Schalter + einklappbare Länder-Liste, NRW vorgewählt");
+  assert.ok(/FERIEN_GERAET_MS = 30 \* 86400000/.test(html) && /\["ferien", "🏖️ Schulferien"\]/.test(html) && /k: "ferien", re: \/ferien/.test(html), "30 Tage auf dem Gerät, Druck, Suche");
 }
 

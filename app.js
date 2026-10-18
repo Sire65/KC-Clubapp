@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.483.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.484.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1043,7 +1043,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); if ($("setFee")) $("setFee").checked = einst("fee", true); if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); if ($("setFee")) $("setFee").checked = einst("fee", true); if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -5059,6 +5059,7 @@ const HILFE = [
   { id: "schrift", thema: "darstellung", sym: "🔠", t: "Größere Schrift", x: "Ist dir die Schrift zu klein? ⚙️ → Darstellung → „🔠 Große Schrift“ einschalten – alles wird etwas größer.", zeig: () => einstiegHin("darstellung", "setGross") },
   { id: "mitglieder_ansicht", thema: "darstellung", sym: "👥", t: "Mitglieder als Kacheln, Liste oder Tafel", x: "Ob du die Mitglieder als <b>🔲 Kacheln</b>, als <b>☰ Liste</b> oder als <b>📋 Anwesenheitstafel</b> siehst, wählst du unter ⚙️ → 🧩 Startseite &amp; Ansicht oder direkt oben bei den Mitgliedern.", zeig: () => einstiegHin("startseite", "mgAnsichtWahl") },
   { id: "feiertage", thema: "darstellung", sym: "🇩🇪", t: "Feiertage im Kalender", x: "Die Feiertage in NRW kannst du im Club-Kalender ein- oder ausblenden: ⚙️ → 🧩 Startseite &amp; Ansicht → „🇩🇪 Feiertage NRW im Kalender“.", zeig: () => einstiegHin("startseite", "setFeiertage") },
+  { id: "ferien", thema: "darstellung", sym: "🏖️", t: "Schulferien im Kalender", x: "Die Schulferien kannst du im Club-Kalender wie die Feiertage ein- oder ausblenden: ⚙️ → 🧩 Startseite &amp; Ansicht → „🏖️ Schulferien im Kalender“. Darunter klappst du die <b>Bundesländer</b> auf und hakst an, welche Ferien du sehen willst (vorgewählt: Nordrhein-Westfalen). Gilt für dieses Gerät.", zeig: () => einstiegHin("startseite", "setFerien"), seit: "2.484.0" },
   { id: "wetter", thema: "darstellung", sym: "🌦️", t: "Wetter für deinen Ort", x: "Im Info-Feld oben steht das Wetter. Unter ⚙️ → Darstellung → „🌦️ Wetter für“ wählst du deinen eigenen Ort.", zeig: () => einstiegHin("darstellung", "meinWetterort") },
   // 🔔 Benachrichtigungen & Töne
   { id: "push_selbst", thema: "toene", sym: "🩹", t: "Benachrichtigungen reparieren sich selbst", x: "Ist der Push-Zugang auf deinem Gerät kaputt, obwohl das Handy Benachrichtigungen erlaubt, richtet die App ihn beim Öffnen <b>von selbst neu ein</b>. Hat das Handy die Erlaubnis entzogen und du bekommst auf keinem Gerät mehr etwas, zeigt die App höchstens einmal am Tag ein Fenster <b>„Benachrichtigungen wieder einschalten“</b> – mit dem Weg, wo man es im Handy erlaubt.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.321.0" }, // 2.337.0 KC-CLUB-TUEV-4
@@ -5405,6 +5406,7 @@ const SB_EINST = [
   { k: "animation", re: /animation|bewegung/, klappe: "effekte", id: "setAnimiert", t: "Bewegungen" },
   { k: "fee", re: /\bfee\b|feen|zauberspruch|spruch der fee/, klappe: "effekte", id: "setFee", t: "Die kleine Fee" }, // 2.379.0
   { k: "feiertage", re: /feiertag/, klappe: "startseite", id: "setFeiertage", t: "Feiertage" },
+  { k: "ferien", re: /ferien|schulferien|bundesl/, klappe: "startseite", id: "setFerien", t: "Schulferien" }, // 2.484.0 KC-CLUB-FERIEN
   { k: "ansicht", re: /mitglieder ?ansicht|ansicht der mitglieder/, klappe: "startseite", id: "mgAnsichtWahl", t: "Mitglieder-Ansicht" },
   { k: "ruhezeit", re: /ruhe ?zeit|nachtruhe|nicht stören/, klappe: "benachrichtigung", id: "ruheVon", t: "Ruhezeit" },
   { k: "vorlesen", re: /vorlesen|vorlese/, klappe: "ansagen", id: "setVorlesenZeile", t: "Vorlesen" },
@@ -14400,7 +14402,7 @@ const ZUGANG_AKTIONEN = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -24916,9 +24918,45 @@ function feiertageNRW(jahr) {
   ];
   return (FEIERTAGE_CACHE[jahr] = Object.fromEntries(liste));
 }
+// ---------- 2.484.0 KC-CLUB-FERIEN (Wunsch Hansi „Ferien-Termine in den Kalender wie Feiertage, einstellbar wie Feiertage, darunter eine einklappbare
+// Liste mit den Bundesländern zum Anhaken“): Schulferien vom Server (OpenHolidays, ohne Datenbank), je Jahr 30 Tage auf dem Gerät gespeichert ----------
+const BUNDESLAENDER = [["BW", "Baden-Württemberg"], ["BY", "Bayern"], ["BE", "Berlin"], ["BB", "Brandenburg"], ["HB", "Bremen"], ["HH", "Hamburg"], ["HE", "Hessen"],
+  ["MV", "Mecklenburg-Vorpommern"], ["NI", "Niedersachsen"], ["NW", "Nordrhein-Westfalen"], ["RP", "Rheinland-Pfalz"], ["SL", "Saarland"], ["SN", "Sachsen"],
+  ["ST", "Sachsen-Anhalt"], ["SH", "Schleswig-Holstein"], ["TH", "Thüringen"]];
+const FERIEN = { jahre: {}, laeuft: new Set() }, FERIEN_GERAET_MS = 30 * 86400000;
+function ferienLaender() { try { const l = JSON.parse(localStorage.getItem("kc_club_ferien_laender") || "null"); return Array.isArray(l) ? l.filter((x) => BUNDESLAENDER.some(([k]) => k === x)) : ["NW"]; } catch { return ["NW"]; } }
+function ferienLand(k, an) {
+  const l = new Set(ferienLaender()); an ? l.add(k) : l.delete(k);
+  try { localStorage.setItem("kc_club_ferien_laender", JSON.stringify([...l])); } catch {}
+  ferienLaenderZeigen(); if (KAL) kalZeichnen();
+}
+function ferienLaenderZeigen() {
+  const box = $("ferienLaender"); if (!box) return; const l = ferienLaender();
+  box.innerHTML = BUNDESLAENDER.map(([k, n]) => `<label><input type="checkbox" ${l.includes(k) ? "checked" : ""} onchange="ferienLand('${k}', this.checked)"> ${esc(n)}</label>`).join("");
+  if ($("ferienLaenderZahl")) $("ferienLaenderZahl").textContent = l.length ? `(${l.length === 1 ? BUNDESLAENDER.find(([k]) => k === l[0])[1] : l.length + " gewählt"})` : "(keins gewählt)";
+}
+function ferienJahr(jahr) { // Liste aus dem Speicher; sonst (oder wenn älter als 30 Tage) im Hintergrund holen und danach neu zeichnen
+  if (FERIEN.jahre[jahr]) return FERIEN.jahre[jahr];
+  let c = null; try { c = JSON.parse(localStorage.getItem("kc_club_ferien_" + jahr) || "null"); } catch {}
+  if (c && Array.isArray(c.liste)) { FERIEN.jahre[jahr] = c.liste; if (Date.now() - (c.geholt || 0) < FERIEN_GERAET_MS) return c.liste; }
+  if (!FERIEN.laeuft.has(jahr) && ICH && zugangAktion("ferien")) {
+    FERIEN.laeuft.add(jahr);
+    api("ferien", { jahr }, { still: true }).then((r) => { FERIEN.jahre[jahr] = r.liste || []; try { localStorage.setItem("kc_club_ferien_" + jahr, JSON.stringify({ geholt: Date.now(), liste: FERIEN.jahre[jahr] })); } catch {}
+      if (KAL && $("kalGitter")) kalZeichnen(); }).catch(() => {}).finally(() => FERIEN.laeuft.delete(jahr));
+  }
+  return FERIEN.jahre[jahr] || [];
+}
+function ferienAm(tag) { // gleiche Ferien (Name + Zeitraum) mehrerer Länder werden ein Eintrag
+  const l = new Set(ferienLaender()); if (!l.size) return [];
+  const je = new Map();
+  for (const j of new Set([+tag.slice(0, 4), +tag.slice(0, 4) - 1])) for (const f of ferienJahr(j)) if (l.has(f.l) && tag >= f.von && tag <= f.bis) {
+    const k = f.n + f.von + f.bis, x = je.get(k) || { art: "ferien", name: f.n, von: f.von, bis: f.bis, laender: [] }; x.laender.push(f.l); je.set(k, x); }
+  return [...je.values()];
+}
 function kalEintraege(tag, Q = KAL, mitFeiertagen = einst("feiertage", true)) { // 0.53.0: auch für den Druck (andere Quelle)
   const e = [];
   if (mitFeiertagen) { const ft = feiertageNRW(+tag.slice(0, 4))[tag]; if (ft) e.push({ art: "feiertag", name: ft }); }
+  if (einst("ferien", true)) e.push(...ferienAm(tag)); // 2.484.0 KC-CLUB-FERIEN
   // Treffen am Beginntag; Veranstaltungen an jedem Tag von Beginn bis Ende (mehrtägig, z. B. Weihnachtsmarkt)
   for (const t of Q.treffen) {
     const von = berlinIso(t.beginn), bis = t.ende ? berlinIso(t.ende) : von;
@@ -24937,7 +24975,7 @@ function kalEintraege(tag, Q = KAL, mitFeiertagen = einst("feiertage", true)) { 
 }
 function kalZeichnen() {
   $("kalHeuteChip")?.classList.toggle("da", kalTagWahl ? kalTagWahl === heuteIso() : heuteIso().startsWith(`${kalJ}-${String(kalM + 1).padStart(2, "0")}`)); // 2.471.0 KC-CLUB-KAL-HEUTE: rot = woanders, grau = schon bei heute
-  const heute = heuteIso(), rang = ["treffen", "schulung", "anfrage", "privat", "schulung-vb", "aktion", "veranst", "dienst", "feiertag", "frist", "todo", "geb", "schulung-ab"];
+  const heute = heuteIso(), rang = ["treffen", "schulung", "anfrage", "privat", "schulung-vb", "aktion", "veranst", "dienst", "feiertag", "frist", "todo", "geb", "schulung-ab", "ferien"]; // 2.484.0: Ferien ganz hinten – färben nur Tage ohne anderes
   const tage = [...Array(42)].map((_, i) => tagPlus(KAL.start, i));
   // letzte Woche weglassen, wenn sie ganz im Folgemonat liegt
   const sichtbar = +tage[35].slice(5, 7) - 1 !== kalM ? tage.slice(0, 35) : tage;
@@ -24964,6 +25002,9 @@ function kalTagZeigen() {
     if (x.art === "schulung-vb") return `<div class="keintrag sc-vorbehalt"><div class="farbe" style="background:repeating-linear-gradient(#7d3c98 0 6px,transparent 6px 10px)"></div><div style="flex:1"><b>🎓 ${esc(fZeit.format(new Date(x.x.beginn)))}–${esc(fZeit.format(new Date(x.x.ende)))} Schulung – unter Vorbehalt</b><small>${x.x.namen.length ? "angeboten an " + esc(x.x.namen.join(", ")) : "noch niemandem angeboten"} · ${esc(x.x.art || "")} · noch nicht gewählt</small></div></div>`; // KC-CLUB-SCHULUNG-VORBEHALT (2.120.0)
     if (x.art === "schulung") return `<div class="keintrag"><div class="farbe" style="background:#7d3c98"></div><div style="flex:1"><b>🎓 ${esc(fZeit.format(new Date(x.x.beginn)))}–${esc(fZeit.format(new Date(x.x.ende)))} Schulung${x.x.ichDabei && !ICH?.admin ? "" : ": " + esc(x.x.namen.join(", "))}</b><small>${esc(x.x.art || "")}${x.x.status === "vorgemerkt" ? " · ⏳ vorgemerkt" : " · ✅ bestätigt"}${x.x.besuch ? " · " + esc(x.x.besuch) : ""} · aus dem Termin-Programm</small></div></div>`; // KC-CLUB-SCHULUNGSTERMINE
     if (x.art === "anfrage") return `<div class="keintrag" onclick="taZeigen('${x.x.id}')"><div class="farbe" style="background:var(--gold)"></div><div style="flex:1"><b>📨 ${esc(fZeit.format(new Date(x.x.beginn)))} ${esc(x.x.anlass)}</b><small>${x.x.vonMir ? "Anfrage an " + esc(taAnWen(x.x)) + (x.x.empfaenger.length === 1 && x.x.status !== "abgesagt" ? " · " + taStatus(x.x, x.x.empfaenger[0]).sym + " " + esc(taStatus(x.x, x.x.empfaenger[0]).t) : "") : "von " + esc(x.x.von.vorname)}${x.x.ort ? " · 📍 " + esc(x.x.ort) : ""}${x.x.meine ? " · " + TA_ANTW[x.x.meine] : ""}</small></div></div>`;
+    if (x.art === "ferien") { const d = (t) => new Date(t + "T12:00:00Z").toLocaleDateString("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit" });
+      const ld = x.laender.length > 3 ? `${x.laender.length} Bundesländer` : x.laender.map((k) => BUNDESLAENDER.find(([b]) => b === k)?.[1] || k).join(", ");
+      return `<div class="keintrag"><div class="farbe" style="background:var(--ferien)"></div><div style="flex:1"><b>🏖️ ${esc(x.name)}</b><small>Schulferien ${esc(ld)} · ${d(x.von)}${x.bis > x.von ? "–" + d(x.bis) : ""}</small></div></div>`; }
     if (x.art === "feiertag") return `<div class="keintrag"><div class="farbe" style="background:var(--rot3)"></div><div style="flex:1"><b>🇩🇪 Feiertag: ${esc(x.name)}</b><small>gesetzlicher Feiertag in NRW</small></div></div>`;
     if (x.art === "aktion") { const n = Math.round((new Date(kalTagWahl + "T12:00:00Z") - new Date(x.a.von + "T12:00:00Z")) / 86400000) + 1, ges = Math.round((new Date(x.a.bis + "T12:00:00Z") - new Date(x.a.von + "T12:00:00Z")) / 86400000) + 1;
       return `<div class="keintrag" onclick="aktionOeffnen('${esc(x.a.id)}')"><div class="farbe" style="background:var(--tuerkis)"></div><div style="flex:1"><b>${aktionSymbol(x.a)} ${esc(x.a.titel)}</b><small>${ges > 1 ? `Tag ${n} von ${ges}` : "Aktion"}${x.a.veranstalter ? " · " + esc(x.a.veranstalter) : ""}</small></div><b style="color:var(--rot)">›</b></div>`; }
@@ -33807,7 +33848,7 @@ document.querySelectorAll("button.druckknopf:empty").forEach((b) => (b.innerHTML
 const druckKnopf = (klick, klasse = "") => `<button type="button" class="druckknopf ${klasse}" title="Drucken / als PDF speichern" aria-label="Drucken" onclick="${klick}">${DRUCK_ICON}</button>`;
 const IST_IOS_APP = () => IST_IOS && (navigator.standalone === true || matchMedia("(display-mode: standalone)").matches);
 let DRUCK = null; // { art, param }
-const DRUCK_INHALTE = [["treffen", "🍽️ Sitzungen & Veranstaltungen"], ["aktion", "🧳 Aktionen & Ausflüge"], ["geb", "🎂 Geburtstage"], ["dienst", "🗓️ Meine Dienste"], ["frist", "🗳️ Abstimmungen"], ["feiertag", "🇩🇪 Feiertage"]];
+const DRUCK_INHALTE = [["treffen", "🍽️ Sitzungen & Veranstaltungen"], ["aktion", "🧳 Aktionen & Ausflüge"], ["geb", "🎂 Geburtstage"], ["dienst", "🗓️ Meine Dienste"], ["frist", "🗳️ Abstimmungen"], ["feiertag", "🇩🇪 Feiertage"], ["ferien", "🏖️ Schulferien"]];
 // ---------- KC-CLUB-CD (2.130.0, Wunsch Hansi): Corporate Design des Köcheclubs – EINE Quelle für alles Gedruckte ----------
 // Logo = Kochmütze, Schriftzug „Köcheclub Werne“, Farben Weinrot + Beige. Briefbögen, Protokolle, Listen usw. benutzen nur cdKopf/cdFuss
 // (Regel in AGENTS.md + Test: kein Ausdruck baut eigenen Kopf, eigene Farben oder ein anderes Logo).
@@ -34463,7 +34504,7 @@ function druckTermineOptionen() {
   return `<b>Was drucken?</b><div class="dwahl">${[["tag", "📄 Tag"], ["woche", "🗓️ Woche"], ["monat", "📅 Monat"], ["jahr", "📆 Jahr"], ["todo", "✅ To-do-Liste"]]
       .map(([v, t]) => `<label><input type="radio" name="dArt" value="${v}" ${v === art ? "checked" : ""} onchange="druckOptSicht()"> ${t}</label>`).join("")}</div>
     <div id="dKal"><label class="feld">Datum <small class="hinweis">(der Tag / die Woche / der Monat / das Jahr, in dem es liegt)</small><input type="date" id="dDatum" value="${kalTagWahl || heuteIso()}"></label>
-      <b style="display:block;margin-top:10px">Was soll drauf?</b><div class="dhaken">${DRUCK_INHALTE.map(([k, t]) => `<label><input type="checkbox" data-inhalt="${k}" ${k === "feiertag" && !einst("feiertage", true) ? "" : "checked"}> ${t}</label>`).join("")}</div></div>
+      <b style="display:block;margin-top:10px">Was soll drauf?</b><div class="dhaken">${DRUCK_INHALTE.map(([k, t]) => `<label><input type="checkbox" data-inhalt="${k}" ${(k === "feiertag" && !einst("feiertage", true)) || (k === "ferien" && !einst("ferien", true)) ? "" : "checked"}> ${t}</label>`).join("")}</div></div>
     <div id="dTodo"><label class="feld">Welche Aufgaben?<select id="dTodoFilter"><option value="alle">Alle</option><option value="mir">👉 Mir zugewiesen</option><option value="ich">👤 Nur meine</option><option value="gemeinsam">👥 Für alle</option></select></label>
       <label class="feld">Geordnet nach<select id="dTodoGruppe"><option value="wer">Zuständigen</option><option value="kategorie">Kategorie</option><option value="faellig">Fälligkeit</option></select></label>
       <label class="schalter" style="margin-top:8px"><span>Erledigte mitdrucken</span><input type="checkbox" id="dTodoErl"></label></div>`;
@@ -34491,6 +34532,7 @@ function druckEintrag(x, lang) {
   if (x.art === "dienst") return { zeit: `${x.d.start}–${x.d.ende}`, text: "🗓️ Mein Dienst", info: x.d.bereich || "" };
   if (x.art === "frist") return { zeit: fZeit.format(new Date(x.f.frist)), text: `🗳️ Abstimmung endet: ${x.f.titel}`, info: "" };
   if (x.art === "geb") return { zeit: "", text: `🎂 ${x.g.name}`, info: "" };
+  if (x.art === "ferien") return { zeit: "", text: `🏖️ ${x.name}`, info: "Ferien" };
   return { zeit: "", text: `🇩🇪 ${x.name}`, info: "Feiertag" };
 }
 async function druckKalender(o) {
