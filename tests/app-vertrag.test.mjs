@@ -6857,6 +6857,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.deepEqual(riskant, [], "keine Absender-Texte per esc() in Ereignis-Attributen: " + riskant.join(", "));
   assert.ok(/anlageAktion\(\$\{jsArg\(a\.id\)\}, \$\{jsArg\(a\.name\)\}, \$\{jsArg\(a\.mime\)\}\)/.test(html), "Anlagen-Knopf über jsArg");
 }
+
+// 2.480.0 KC-CLUB-ZEIGE-FUELLEN (TÜV 18.10.2026: SOS-Seite über Hilfe/Twinkey/Zurück leer – keine Notrufnummern): zeige() füllt selbst
+{
+  const z = html.slice(html.indexOf("function zeige(v, ausHistorie) {"), html.indexOf("// KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag"));
+  assert.ok(/if \(v === "sos"\) \{ sosZeigen\(\); sosLaden\(\); \}/.test(z) && /if \(v === "sicherheit" && !SI\.laeuft\) sicherheitPruefen\(\);/.test(z), "SOS und Sicherheits-Check auf jedem Weg gefüllt");
+  assert.ok(/if \(v === "gruppe" && !GR\) v = "nachrichten";/.test(z) && /if \(v === "neu" && !MITGLIEDER\) \{ neueNachricht\(\); return; \}/.test(z), "Gruppe/Neue Nachricht nie halb geöffnet");
+  assert.ok(/function sosStart\(\) \{ SOS\.suche = ""; SOS\.offen = null; SOS\.wo = null; zeige\("sos"\); \}/.test(html), "sosStart lädt nicht doppelt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

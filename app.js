@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.479.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.480.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -24415,6 +24415,10 @@ function zeige(v, ausHistorie) {
   if (v !== vorher && v !== "chat" && v !== "mitglied") spur(v); // KC-CLUB-SPUR (2.23.88): Chat/Mitglied mit „mit wem“ eigens
   if (v !== vorher) setTimeout(() => neuPulsieren(v), 350); // KC-CLUB-NEU-PULS (2.23.91)
   if (v === "dokansicht" && !DOKA.id) v = "dokumente"; // KC-CLUB-DOK-ANZEIGE: ohne Dokument zur Liste
+  // 2.480.0 KC-CLUB-ZEIGE-FUELLEN (TÜV 18.10.: SOS-Seite über Hilfe/Twinkey/Zurück leer – ohne Notrufnummern): Seiten, die vorbereitet werden
+  // müssen, nie halb öffnen – Gruppe ohne Formular → Nachrichten, „Neue Nachricht“ ohne Mitgliederliste → erst laden
+  if (v === "gruppe" && !GR) v = "nachrichten";
+  if (v === "neu" && !MITGLIEDER) { neueNachricht(); return; }
   if (vorher === "dokansicht" && v !== "dokansicht") dokAufraeumen();
   if (vorher === "fotos" && v !== "fotos" && FAW.an) { FAW.an = false; FAW.ziel = null; FAW.ids.clear(); $("faLeiste").classList.add("versteckt"); document.body.classList.remove("fa-waehlen"); } // KC-CLUB-FOTO-ALBEN
   if (v !== "chat" && typeof CS !== "undefined" && CS.offen) chatSucheZu();
@@ -24442,6 +24446,8 @@ function zeige(v, ausHistorie) {
   if (v !== "chat") tipptZeigen([]);
   if (v !== "chat") chatId = null;
   if (v === "termine") treffenLaden();
+  if (v === "sos") { sosZeigen(); sosLaden(); } // 2.480.0 KC-CLUB-ZEIGE-FUELLEN: Notrufnummern auf jedem Weg (Hilfe, Twinkey, Zurück, Kachel)
+  if (v === "sicherheit" && !SI.laeuft) sicherheitPruefen();
   if (v === "vorschlaege") { $("vorschlagForm").classList.add("versteckt"); $("vorschlagHinweis").innerHTML = ""; $("vorschlagNeuKnopf").classList.remove("vs-puls"); VS_ZIEL = null; vorschlaegeLaden(); }
   if (v === "protokolle") protokolleLaden();
   if (v === "aktionen") aktionenLaden();
@@ -28292,7 +28298,7 @@ const SI_UHREN = [
   { id: "datenbank", t: "Daten-Speicher", max: 1000, gut: 300, mittel: 700, wert: (r) => r.s?.dbMs ?? null },
 ];
 let SI = { laeuft: false, r: null, zeit: null };
-function sicherheitStart() { zeige("sicherheit"); if (!SI.laeuft) sicherheitPruefen(); }
+function sicherheitStart() { zeige("sicherheit"); } // 2.480.0: Prüfen startet zeige("sicherheit") selbst
 function siKlasse(ok) { return ok === true ? "si-gut" : ok === false ? "si-schlecht" : "si-offen"; }
 function siUhr(u, r) {
   const v = r ? u.wert(r) : null, anteil = v == null ? 0 : Math.min(1, v / u.max), laenge = Math.PI * 50;
@@ -28929,7 +28935,7 @@ const NOTRUFE = [
   { nr: "116116", anzeige: "116 116", t: "Sperr-Notruf", u: "Bank- und Kreditkarten sperren", sym: "💳" },
 ];
 let SOS = { daten: null, suche: "", offen: null, wo: null };
-function sosStart() { SOS.suche = ""; SOS.offen = null; SOS.wo = null; zeige("sos"); sosZeigen(); sosLaden(); }
+function sosStart() { SOS.suche = ""; SOS.offen = null; SOS.wo = null; zeige("sos"); } // 2.480.0: Füllen + Laden macht zeige("sos") selbst (jeder Weg)
 async function sosLaden() { try { SOS.daten = await api("sos_kontakte"); sosZeigen(); } catch (e) { SOS.daten = { fehler: e.message }; sosZeigen(); } }
 async function sosAnrufen(nr) {
   const n = NOTRUFE.find((x) => x.nr === nr); if (!n) return;

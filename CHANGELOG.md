@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.480.0 – 2026-10-18 – SOS-Seite immer mit Notrufnummern
+- KC-CLUB-ZEIGE-FUELLEN (TÜV 18.10., Fehler behindert Mitglieder → sofort): Über Hilfe „Zeig mir wo“, Twinkey „Was mache ich im Notfall?“ oder Zurück nach Neuladen öffnete die SOS-Seite leer – ohne Notrufnummern. Ursache: nur sosStart() füllte sie. Jetzt füllt zeige() selbst (wie bei allen anderen Seiten); ebenso Sicherheits-Check. „Neue Gruppe“ ohne Formular → Nachrichten, „Neue Nachricht“ ohne Mitgliederliste lädt sie erst.
+
 ## 2.479.0 – 2026-10-18 – Sicherheit: Anlagen-Namen
 - KC-CLUB-SICHER-ANLAGENNAME (TÜV 18.10.): Dateiname/-typ einer Anlage (Vorschläge, Terminanfragen, Umfragen) und Stadttermin-Schlüssel gingen per esc() in onclick – der Browser macht aus &#39; vor dem Ausführen wieder ' → präparierter Dateiname hätte fremden Code starten können; nebenbei ging „Hansi's Rezept.pdf“ nicht auf. Jetzt jsArg() wie überall sonst; Test verbietet das Muster.
 
