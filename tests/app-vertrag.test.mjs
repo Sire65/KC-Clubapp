@@ -10868,4 +10868,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(altHier\) try \{ await api\("push_abmelden", \{ endpoint: sub\?\.endpoint \|\| "", erlaubnisWeg: true/.test(p) && /if \(!r\.frueher \|\| \(r\.aktiv \|\| 0\) - altHier > 0\) return;/.test(p), "alte Abos dieses Geräts abmelden, dann Hinweis zeigen");
   assert.ok(/gleichesGeraet: gleich/.test(server) && /x\.active && x\.endpoint !== eigen && x\.user_agent === ua/.test(server) && /if \(p\.erlaubnisWeg\)/.test(server) && /"push_erlaubnis_weg"/.test(server), "Server erkennt und meldet ab");
 }
+// 2.481.0 KC-CLUB-ANKLOPFEN-GESPERRT: Anklopfen blockiert → eigenes Fenster mit „💬 Nachricht schreiben“ und „📞 Anrufen“
+{
+  const k = html.slice(html.indexOf("function klopfGesperrt("), html.indexOf("// KC-CLUB-ANKLOPFEN-WARTEN (1.51.0"));
+  assert.ok(/hat Anklopfen blockiert<\/h3>/.test(k) && /data-w="chat">💬 Nachricht schreiben/.test(k) && /data-w="anruf">📞 Anrufen/.test(k) && /direkt\(pid\); else if \(b\.dataset\.w === "anruf"\) anrufen\(pid\)/.test(k), "Fenster mit Chat und Anruf");
+  assert.ok(/klopfbar === false\) return klopfGesperrt\(pid, name\);/.test(html) && (html.match(/KLOPF_GESPERRT_RE\.test\(e\?\.message \|\| ""\)/g) || []).length === 2, "beim Antippen und bei der Antwort des Servers (auch „weiter anklopfen“)");
+  assert.ok(/hat Anklopfen ausgeschaltet – schreib einfach eine Nach/.test(server), "Server-Text passt zur Erkennung");
+}
 

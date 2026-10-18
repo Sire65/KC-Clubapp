@@ -7649,7 +7649,7 @@ async function onlineRunde() {
 function onlineBlatt() {
   $("onlineListe").innerHTML = ONL.liste.length ? ONL.liste.map((x) => `<div class="onzeile">${kreis({ ...(MITGLIEDER?.find((m) => m.person_id === x.person_id) || {}), online: true }, x.name || x.vorname, 40)}
       <div style="flex:1"><b>${esc(x.name || x.vorname)}</b><div class="hinweis" style="font-size:.85rem;margin:0">gerade online</div></div>
-      ${x.klopfbar === false ? `<button class="knopf" disabled title="Anklopfen ausgeschaltet">🔕</button>` : `<button class="knopf haupt" onclick="$('onlineBlatt').classList.add('versteckt'); anklopfen('${x.person_id}')">👋 Anklopfen</button>`}
+      ${x.klopfbar === false ? `<button class="knopf" title="Anklopfen ausgeschaltet" onclick="anklopfen('${x.person_id}')">🔕</button>` : `<button class="knopf haupt" onclick="$('onlineBlatt').classList.add('versteckt'); anklopfen('${x.person_id}')">👋 Anklopfen</button>`}
       <button class="knopf" title="Anrufen (Test)" onclick="$('onlineBlatt').classList.add('versteckt'); anrufen('${x.person_id}')">📞</button>
       <button class="knopf" title="Videoanruf (Test)" onclick="$('onlineBlatt').classList.add('versteckt'); anrufen('${x.person_id}', true)">🎥</button>
       <button class="knopf" title="Nachricht schreiben" onclick="$('onlineBlatt').classList.add('versteckt'); direkt('${x.person_id}')">💬</button></div>`).join("")
@@ -7659,13 +7659,24 @@ function onlineBlatt() {
 async function anklopfen(pid) {
   const m = MITGLIEDER?.find((x) => x.person_id === pid) || ONL.liste.find((x) => x.person_id === pid);
   const name = m?.vorname || m?.name || "";
-  if (ONL.liste.find((x) => x.person_id === pid)?.klopfbar === false) return melde(`🔕 ${name} hat Anklopfen ausgeschaltet – schreib einfach eine Nachricht.`);
+  if (ONL.liste.find((x) => x.person_id === pid)?.klopfbar === false) return klopfGesperrt(pid, name);
   if (!(await frage(`Bei ${name} anklopfen?\n\n${name} bekommt sofort die Frage, ob ihr jetzt schreiben wollt.`))) return;
   spur("anklopfen", pid); // KC-CLUB-SPUR
   try {
     const r = await api("anklopfen", { an: pid });
     ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush);
-  } catch (e) { meldeFehler(e); }
+  } catch (e) { if (KLOPF_GESPERRT_RE.test(e?.message || "")) klopfGesperrt(pid, name); else meldeFehler(e); }
+}
+// 2.481.0 KC-CLUB-ANKLOPFEN-GESPERRT (Wunsch Hansi „klopfe ich bei jemandem an, der das blockiert hat: Meldung ‚Dieter hat Anklopfen blockiert –
+// schreib ihm doch eine Nachricht über die Chat-Funktion oder ruf an‘“): eigenes Fenster mit beiden Wegen statt einer kurzen Einblendung.
+const KLOPF_GESPERRT_RE = /Anklopfen ausgeschaltet/;
+function klopfGesperrt(pid, name) {
+  const n = esc(name || "Das Mitglied");
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">🔕 ${n} hat Anklopfen blockiert</h3>
+    <p class="dlg-text">${n} möchte gerade nicht angeklopft werden. Schreib ${n} doch eine Nachricht über den Chat – oder ruf an.</p>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="chat">💬 Nachricht schreiben</button><button class="knopf" data-w="anruf">📞 Anrufen</button><button class="knopf" data-w="zu">Schließen</button></div>`, () => {});
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); $("onlineBlatt")?.classList.add("versteckt");
+    if (b.dataset.w === "chat") direkt(pid); else if (b.dataset.w === "anruf") anrufen(pid); }));
 }
 // KC-CLUB-ANKLOPFEN-WARTEN (1.51.0, Wunsch Hansi): „👋 Klopfe gerade an bei X“ mit Sekunden-Uhr; nach 1 Minute fragen:
 // weiter anklopfen, auflegen oder eine Nachricht „Melde dich doch mal bei mir“ schicken. Antwortet X, schließt sich alles.
@@ -7699,7 +7710,8 @@ const klopfMeldeText = () => `Melde dich doch mal bei mir. Gruß ${ICH?.vorname 
 async function klopfWeiter() {
   if (!KW) return;
   const { pid, name } = KW;
-  try { const r = await api("anklopfen", { an: pid }); ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush); } catch (e) { meldeFehler(e); }
+  try { const r = await api("anklopfen", { an: pid }); ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush); }
+  catch (e) { if (KLOPF_GESPERRT_RE.test(e?.message || "")) { klopfWartenEnde(); klopfGesperrt(pid, name); } else meldeFehler(e); }
 }
 async function klopfAuflegen(still) {
   if (!KW) return;
