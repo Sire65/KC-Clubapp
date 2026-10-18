@@ -1026,7 +1026,7 @@
   :root.gross .kopfzeile { flex-wrap: wrap; }
   :root.gross .ipfeil.sprung { display: none; }
   /* KC-CLUB-TIPPFLAECHE (1.98.0): kleine Knöpfe und Auswahl-Chips mind. 40 px hoch – leichter zu treffen */
-  :root { accent-color: var(--rot); } /* 2.482.0 KC-CLUB-CD-HAKEN (TÜV C-22): Häkchen/Auswahlpunkte im Club-Weinrot statt Browser-Blau */
+  :root { accent-color: var(--rot); } /* 2.481.0 KC-CLUB-CD-HAKEN (TÜV C-22): Häkchen/Auswahlpunkte im Club-Weinrot statt Browser-Blau */
   .knopf.klein { min-height: 44px; } .chip { min-height: 38px; } /* 2.425.0 KC-CLUB-GENERALCHECK: 44 px Tippfläche (Empfehlung für ältere Finger) */
   .versteckt { display: none !important; }
 
@@ -1064,7 +1064,7 @@
   /* KC-CLUB-STATUSFARBE (0.34.1): jeder Status hat seine Farbe (grün verfügbar, orange beschäftigt, blau Urlaub, lila krank, rot nicht erreichbar) */
   .stmarke { display: inline-block; border-radius: 999px; padding: 2px 9px; font-weight: 800; border: 1.5px solid transparent; max-width: 100%; overflow-wrap: anywhere; } /* 2.481.0 (TÜV B-07): langer Status-Hinweis bricht um */
   .st-verfuegbar { background: var(--gruenbg); color: var(--textGruen); border-color: var(--gruen); }
-  .st-beschaeftigt { background: var(--gelbbg); color: var(--textOrange); border-color: #e08a1e; } /* 2.482.0 KC-CLUB-KONTRAST (TÜV: 4,1:1 → ≥ 4,5:1) */
+  .st-beschaeftigt { background: var(--gelbbg); color: var(--textOrange); border-color: #e08a1e; } /* 2.481.0 KC-CLUB-KONTRAST (TÜV: 4,1:1 → ≥ 4,5:1) */
   .st-urlaub { background: var(--blaubg); color: var(--blau); border-color: var(--blau); }
   .st-krank { background: var(--lilabg); color: var(--lila); border-color: var(--lila); }
   .st-abwesend { background: var(--rotbg); color: #c62828; border-color: #c62828; }
@@ -2781,7 +2781,7 @@
   .dlg-knoepfe .knopf { text-align: center; justify-content: center; width: 100%; }
   /* 2.425.0 KC-CLUB-GENERALCHECK: Gefahr deutlich anders als der weinrote Hauptknopf – hell mit kräftig rotem Rand */
   /* 2.425.0 KC-CLUB-GENERALCHECK (Barrierefreiheit): winzige Ziele (Online-Lämpchen 9 px, Versionsnummer) bekommen eine unsichtbar größere Tippfläche */
-  #ledOnline, #ledRt, .kopf-version { position: relative; } #ledOnline::after, #ledRt::after { content: ""; position: absolute; inset: -8px -10px; } .kopf-version::after { content: ""; position: absolute; inset: -10px -4px; } /* 2.482.0 KC-CLUB-TIPPFLAECHE (TÜV: ≥ 24 px Trefffläche, WCAG 2.5.8) */
+  #ledOnline, #ledRt, .kopf-version { position: relative; } #ledOnline::after, #ledRt::after { content: ""; position: absolute; inset: -8px -10px; } .kopf-version::after { content: ""; position: absolute; inset: -10px -4px; } /* 2.481.0 KC-CLUB-TIPPFLAECHE (TÜV: ≥ 24 px Trefffläche, WCAG 2.5.8) */
   .knopf.dlg-gefahr, .knopf.haupt.dlg-gefahr { background: #fff; border: 2px solid #c62828; color: #b3261e; font-weight: 700; }
   :root.dunkel .knopf.dlg-gefahr, :root.dunkel .knopf.haupt.dlg-gefahr { background: transparent; border-color: #ff8a7a; color: #ff8a7a; }
   .blatt-innen { background: var(--karte); width: min(560px, 100%); border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }

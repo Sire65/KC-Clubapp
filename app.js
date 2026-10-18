@@ -1478,7 +1478,7 @@ function begruessungFertig(weiter) {
 // Beim ersten Start (auch für Mitglieder, die schon drin waren) genau eine Frage; die Wahl gilt geräteübergreifend
 // (Server-Einstellung „ansicht“), umschaltbar unten auf der Startseite und in den Einstellungen. Einfach = 5 große Kacheln,
 // oben nur „Nächstes Treffen“, Einstellungen mit drei Dingen. Es wird nichts gelöscht – die erweiterte Ansicht zeigt alles.
-// 2.482.0 KC-CLUB-EINFACH-MEHR (TÜV 18.10., Hansi: „einfache Ansicht bekommt Fotos/Erstattung/Abstimmungen“): Fotos waren nur über die Suche zu finden
+// 2.481.0 KC-CLUB-EINFACH-MEHR (TÜV 18.10., Hansi: „einfache Ansicht bekommt Fotos/Erstattung/Abstimmungen“): Fotos waren nur über die Suche zu finden
 const EINFACH_KACHELN = ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "fotos", "vorschlaege", "erstattung", "dokumente", "spiele", "sos"]; // 2.7.0: + Spiele
 // Dienstwünsche kommen in die einfache Ansicht erst, wenn DP2 die Wünsche abholt (Codex-Umbau) – dann nur in der Wunschphase
 const DIENSTWUNSCH_EINFACH = false;
@@ -4639,7 +4639,7 @@ function rgHinweisZeigen() {
   const zeigen = !!(INIT && ICH && !RG.an && !rgErledigt() && spaeter !== heuteIso());
   if (!zeigen) { b.innerHTML = ""; return; }
   if (b.firstElementChild) return;
-  // 2.482.0 KC-CLUB-START-KOMPAKT (TÜV 18.10.: Startseite zeigte im ersten Bild keine Kachel – der Kasten nahm einen halben Bildschirm ein):
+  // 2.481.0 KC-CLUB-START-KOMPAKT (TÜV 18.10.: Startseite zeigte im ersten Bild keine Kachel – der Kasten nahm einen halben Bildschirm ein):
   // eine kompakte Zeile, alle drei Wahlmöglichkeiten bleiben (Ansehen · Später · Nein, danke)
   b.innerHTML = `<div class="karte rg-hinweis rg-kompakt" role="note"><span class="rg-h-sym" aria-hidden="true">🎬</span><div class="rg-k-text"><b>Warum diese App?</b><small>2 Min. mit Ton erklärt</small>
     <div class="rg-k-neben"><button type="button" class="rg-k-link" onclick="rgHinweisSpaeter()">Später</button> · <button type="button" class="rg-k-link" onclick="rgHinweisErledigt('nein')">Nein, danke</button></div></div>
@@ -5337,7 +5337,7 @@ function ustPruefen() {
 function ustWennFrei(n) {
   const besetzt = aktuelleAnsicht !== "start" || document.hidden || document.querySelector(".dlg-blatt, .blatt:not(.versteckt)");
   if (besetzt) { if (n < 12) setTimeout(() => ustWennFrei(n + 1), 15000); return; } // später nochmal – nie über eine andere Frage
-  if (!ruheInfo()) return; // 2.482.0 KC-CLUB-EIN-HINWEIS (TÜV 18.10.: Einstiegs-Hinweise stapelten sich): kam schon ein Info-Fenster, beim nächsten Öffnen
+  if (!ruheInfo()) return; // 2.481.0 KC-CLUB-EIN-HINWEIS (TÜV 18.10.: Einstiegs-Hinweise stapelten sich): kam schon ein Info-Fenster, beim nächsten Öffnen
   ustFragen(true);
 }
 function ustFragen(erstes) {
@@ -12960,7 +12960,7 @@ function melde(t, fehler) {
     try { window.KCFP?.neu("gefangen", { text: String(t), stack: fehlerStapel(new Error().stack) }); } catch {}
     t = JS_FEHLER_TEXT;
   }
-  // 2.482.0 KC-CLUB-MELDUNG-EINMAL (TÜV B-09: zwei gleiche rote Meldungen übereinander, wenn mehrere Teile gleichzeitig scheitern): dieselbe Meldung,
+  // 2.481.0 KC-CLUB-MELDUNG-EINMAL (TÜV B-09: zwei gleiche rote Meldungen übereinander, wenn mehrere Teile gleichzeitig scheitern): dieselbe Meldung,
   // die gerade noch zu sehen ist, nicht ein zweites Mal darüberlegen
   if ([...document.querySelectorAll("body > .meldung")].some((x) => x.textContent === String(t))) return;
   // Lange genug zum Lesen (je nach Textlänge, Fehler doppelt so lange); Antippen schließt die Meldung sofort.
@@ -24318,7 +24318,7 @@ window.addEventListener("online", () => { if (KEY) neuLaden(); owSenden(); }); /
 // 2.209.0 KC-CLUB-ONLINE-OFFLINE (Gesamtprüfung 5, AGENTS Regel 11): ohne Netz wissen wir nicht, wer online ist – Anzeige
 // „X sind gerade online“, grüne Zahl und Ameisenlauf verschwinden sofort statt grün stehen zu bleiben; mit Netz kommt der Stand neu
 window.addEventListener("offline", () => { try { ONL.liste = []; ONL.ids = new Set(); ONL.stand = 0; onlineLeisteZeigen(); if (INIT) heroZeigen(); } catch {} });
-// 2.482.0 KC-CLUB-OFFLINE-KLARTEXT (TÜV B-16: ging das Netz während der Benutzung weg, sagte nur die rote LED etwas; Regel 11: veralteten Stand sichtbar
+// 2.481.0 KC-CLUB-OFFLINE-KLARTEXT (TÜV B-16: ging das Netz während der Benutzung weg, sagte nur die rote LED etwas; Regel 11: veralteten Stand sichtbar
 // markieren): dieselbe Zeile wie beim Offline-Start – „Kein Netz – das ist dein Stand von …“; kommt das Netz zurück, ersetzt das Neuladen sie
 window.addEventListener("offline", () => { try { if (INIT && !INIT._offline && NEU_ZULETZT) { INIT._offline = NEU_ZULETZT; offlineStandZeigen(true); } } catch {} });
 window.addEventListener("online", () => { try { if (KEY) onlinePing(); } catch {} });

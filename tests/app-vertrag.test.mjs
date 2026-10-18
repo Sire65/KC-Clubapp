@@ -6919,13 +6919,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const JZB_FPS_BEDIENT = 20, JZB_RUHE_BEDIENT_MS = 20000;/.test(html) && /const jzbSchwach = /.test(html), "Jahreszeiten-Bild sparsamer");
 }
 
-// 2.482.0 TÜV-Paket 3 (Hansi: „3 Aufräumen & einheitlich“) – KC-CLUB-START-KOMPAKT, -EINFACH-MEHR, -EIN-HINWEIS, -KONTRAST, -TIPPFLAECHE, -MELDUNG-EINMAL,
+// 2.481.0 TÜV-Paket 3 (Hansi: „3 Aufräumen & einheitlich“) – KC-CLUB-START-KOMPAKT, -EINFACH-MEHR, -EIN-HINWEIS, -KONTRAST, -TIPPFLAECHE, -MELDUNG-EINMAL,
 // -OFFLINE-KLARTEXT, -CD-HAKEN
 {
   const ix = lies("index.html");
   assert.ok(/class="karte rg-hinweis rg-kompakt"/.test(html) && /rgHinweisSpaeter\(\)">Später<\/button>/.test(html) && /rgHinweisErledigt\('nein'\)">Nein, danke<\/button>/.test(html) && /rgHinweisLos\(\)">▶ Ansehen<\/button>/.test(html), "„Warum diese App?“ kompakt, alle drei Wahlen bleiben");
   assert.ok(/const EINFACH_KACHELN = \[[^\]]*"fotos", "vorschlaege", "erstattung"[^\]]*\];/.test(html), "einfache Ansicht: Fotos, Vorschläge, Erstattung");
-  assert.ok(/if \(!ruheInfo\(\)\) return; \/\/ 2\.482\.0 KC-CLUB-EIN-HINWEIS/.test(html), "höchstens ein Info-Fenster je Öffnen (KC-CLUB-RUHE)");
+  assert.ok(/if \(!ruheInfo\(\)\) return; \/\/ 2\.481\.0 KC-CLUB-EIN-HINWEIS/.test(html), "höchstens ein Info-Fenster je Öffnen (KC-CLUB-RUHE)");
   assert.ok(/\.st-beschaeftigt \{ background: var\(--gelbbg\); color: var\(--textOrange\);/.test(ix) && /\.ue-version \{[^}]*color: var\(--textGruen\);/.test(ix), "Kontrast ≥ 4,5:1");
   assert.ok(/#ledOnline::after, #ledRt::after \{ content: ""; position: absolute; inset: -8px -10px; \}/.test(ix), "größere Trefffläche der kleinen Kopf-Elemente");
   assert.ok(/if \(\[\.\.\.document\.querySelectorAll\("body > \.meldung"\)\]\.some\(\(x\) => x\.textContent === String\(t\)\)\) return;/.test(html), "gleiche Meldung nicht doppelt");
