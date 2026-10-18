@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.460.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.461.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5090,6 +5090,7 @@ const HILFE = [
   { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste einmal auf einen Chat tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
+  { id: "termin_link_prospekt", thema: "termine", sym: "🎪", t: "Termin mit Webseite, Prospekt und Laufband", x: "Beim Anlegen oder Ändern eines Clubtermins (z. B. <b>Adventsmarkt der Freilichtbühne</b>) gibt es jetzt: <b>🌐 Link zur Webseite</b> des Veranstalters, <b>📎 Anlage</b> für den Prospekt (Foto oder PDF) und <b>„📣 Im Info-Laufband ankündigen“</b> – dann erscheint der Termin oben auf der Startseite im Info-Feld, ab 3 Wochen vorher, mit Knopf <b>„🌐 Webseite“</b>. Antippen öffnet den Termin mit Webseite und Prospekt.", seit: "2.461.0" },
   { id: "schrift_zoom", thema: "darstellung", sym: "🔍", t: "Schrift größer ziehen – mit zwei Fingern", x: "Zu klein zum Lesen? Lege <b>zwei Finger</b> auf den Bildschirm und ziehe sie <b>auseinander</b> – Nachrichten, Zettel und Texte werden größer (Knöpfe und Leisten bleiben, wie sie sind). Zusammenschieben macht sie kleiner. Die Größe bleibt gemerkt. Zurück auf normal: mit zwei Fingern <b>doppelt tippen</b> oder unter ⚙️ → Darstellung → „🔍 Schriftgröße“. <b>Ganz ausschalten:</b> ⚙️ → Darstellung → „✌️ Schrift mit zwei Fingern ändern“ (A− / A+ gehen weiter). Ein aufliegender Daumen beim Scrollen verstellt die Schrift nicht mehr.", seit: "2.364.0" }, // 2.364.0 KC-CLUB-SCHRIFT-ZOOM
   { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag – am 🏎️-Knopf steht, wie viele du heute schon verschickt hast (z. B. <b>2/5</b>). Nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
   { id: "fee", thema: "darstellung", sym: "🧚", t: "Eine kleine Fee zu Besuch", x: "Bei jeder <b>20. Anmeldung</b> schwebt eine kleine Fee durchs obere Startbild, bleibt kurz stehen und lächelt. <b>Tipp sie an</b> – dann schenkt sie dir einen schönen Spruch. Vorab ansehen oder per Häkchen abschalten: <b>⚙️ → ✨ Effekte → 🧚 Die kleine Fee</b>.", zeig: () => einstiegHin("effekte", "setFee"), seit: "2.372.0" },
@@ -23019,6 +23020,10 @@ function ilMeldungen() {
   if (START_ART === "verknuepfung" || (START_ART === "browser" && !schonInstalliert)) add({ id: "installieren", stufe: "gold", sym: "📲", t: START_ART === "browser" ? "Köcheclub als App installieren" : "App richtig installieren", u: "Dann klappen WhatsApp, Galerie und Benachrichtigungen", auf: "installHilfe()" });
   const nd = INIT?.naechsterDienst;
   if (nd && (nd.datum === heuteIso() || nd.datum === tagPlus(heuteIso(), 1))) add({ id: "dienst:" + nd.datum, stufe: "gold", sym: "🗓️", t: `${nd.datum === heuteIso() ? "Heute" : "Morgen"} hast du Dienst: ${nd.start}–${nd.ende} Uhr`, u: nd.bereich || "Mein Dienst", auf: "dpNurIch()" });
+  // 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT (Wunschliste #20): angekündigte Termine (z. B. Adventsmarkt der Freilichtbühne) – mit 🌐 Webseite
+  for (const lt of (INIT?.laufbandTermine || []).filter((x) => x.id !== t?.id)) add({ id: "lauf:" + lt.id, stufe: "gold", sym: lt.art === "veranstaltung" ? "🎪" : "📅", t: lt.titel,
+    u: wann(lt.beginn) + (lt.ort ? " · " + lt.ort : ""), auf: `ilTerminOeffnen('${esc(lt.id)}')`, knoepfe: /^https:\/\//.test(lt.link || "") ? [["🌐 Webseite", `ilTerminLink('${esc(lt.id)}')`]] : null,
+    stand: /^https:\/\//.test(lt.link || "") ? `📅 ${esc(wann(lt.beginn))}` : "" }); // mit Knopf: Datum daneben (sonst fehlt der Platz)
   if (INIT?.protokolleUngelesen) add({ id: "protokoll", stufe: "gold", sym: "📄", t: INIT.protokolleUngelesen === 1 ? "Ein neues Protokoll zum Lesen" : `${INIT.protokolleUngelesen} neue Protokolle zum Lesen`, u: "Antippen zum Lesen", auf: "zeige('protokolle')" });
   const wd = WET.r?.daten, wt = t && wd ? wd.tage?.find((x) => x.datum === isoBerlin(new Date(t.beginn))) : null;
   if (wt) { const a = wetterArt(wt.code), nass = (wt.regenWkt ?? 0) >= 50 || ["regen", "niesel", "gewitter", "schnee"].includes(a.szene);
@@ -23041,6 +23046,8 @@ function ilMeldungen() {
   if (rot.length && rest.length > 2) { folge = [...rot]; rest.forEach((m, i) => { folge.push(m); if (i % 2 === 1) folge.push(rot[(i >> 1) % rot.length]); }); }
   return tf.stufe === "rot" ? folge : [tf, ...folge]; // das Treffen steht immer vorn; ist die Antwort offen, kommt es als rote Meldung zwischendurch wieder
 }
+function ilTerminOeffnen(id) { zeige("termine"); const auf = () => { if (TREFFEN_IDX.has(id) && !$("treffenInfo")) treffenInfo(id, false); }; setTimeout(auf, 700); setTimeout(auf, 1800); }
+function ilTerminLink(id) { const l = (INIT?.laufbandTermine || []).find((x) => x.id === id)?.link; if (/^https:\/\//.test(l || "")) window.open(l, "_blank", "noopener"); }
 function ilHtml(m) {
   const k = (m.knoepfe || []).map(([t, f, kl]) => `<button type="button" class="il-knopf${kl || ""}" onclick="event.stopPropagation();${f}">${esc(t)}</button>`).join("");
   // m.stand = fertiges HTML (nur aus eigenen, mit esc gebauten Teilen): steht neben den Knöpfen bzw. als dritte Zeile
@@ -24409,11 +24416,12 @@ function treffenKarte(t, vorbei) {
   const liste = (a, sym) => t.teilnahme.filter((x) => x.antwort === a).map((x) => esc(x.name) + (x.notiz ? ` <i class="hinweis">(${esc(x.notiz)})</i>` : "")).join(", ");
   const va = t.art === "veranstaltung"; // Veranstaltung: ohne Zu-/Absage
   const offen = t.status === "geplant" && !vorbei;
-  const bearbeiten = { id: t.id, titel: t.titel, beginn: t.beginn, ende: t.ende, ort: t.ort, beschreibung: t.beschreibung, gastgeber: t.gastgeber?.person_id || "", art: t.art, ganztaegig: t.ganztaegig };
+  const bearbeiten = { id: t.id, titel: t.titel, beginn: t.beginn, ende: t.ende, ort: t.ort, beschreibung: t.beschreibung, gastgeber: t.gastgeber?.person_id || "", art: t.art, ganztaegig: t.ganztaegig, link: t.link || "", imLaufband: !!t.imLaufband };
   return `<div class="karte treffen"${va ? ' style="border-left:6px solid var(--gruen)"' : ""}>
     ${t.status === "abgesagt" ? '<span class="marke rot">❌ abgesagt</span> ' : ""}${va ? '<span class="marke gruen">🎪 Veranstaltung</span>' : ""}
     ${druckKnopf(`druckStarten('treffen','${t.id}')`, "klein")}<div class="wann">${esc(t.titel)}</div><div>${esc(zeitText(t))}${ort ? " · 📍 " + esc(ort) : ""}</div>
     ${t.beschreibung ? `<p class="hinweis" style="white-space:pre-wrap">${esc(t.beschreibung)}</p>` : ""}
+    ${/^https:\/\//.test(t.link || "") ? `<div class="knoepfe"><a class="knopf klein" href="${esc(t.link)}" target="_blank" rel="noopener noreferrer">🌐 Webseite ansehen ↗</a></div>` : ""}${oaAnzeige(t.anlagen)}<!-- 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT -->
     ${offen && !va ? `<div class="antworten">
       <button class="ja ${t.meine === "ja" ? "an" : ""}" onclick="antwort('${t.id}','ja')">✅ Ich komme</button>
       <button class="vielleicht ${t.meine === "vielleicht" ? "an" : ""}" onclick="antwort('${t.id}','vielleicht')">❓ Vielleicht</button>
@@ -24493,6 +24501,7 @@ async function treffenForm(t) {
   const art = t?.art || "treffen", ganz = !!t?.ganztaegig;
   const datum = t?.beginn ? tagIso(t.beginn) : "", zeit = t?.beginn && !ganz ? fZeit.format(new Date(t.beginn)) : "18:00";
   const bisDatum = t?.ende && tagIso(t.ende) !== datum ? tagIso(t.ende) : "", bisZeit = t?.ende && !ganz ? fZeit.format(new Date(t.ende)) : "";
+  oaLeeren("tf"); // 2.461.0: Prospekt – nur neue Anlagen; schon angehängte bleiben
   $("treffenForm").innerHTML = `<h3>${t?.id ? "Termin ändern" : "Neuer Termin"}</h3>
     ${t?.id ? "" : `<label class="schalter pt-privat"><span><b>🔒 Privat</b> – nur ich sehe diesen Termin</span><input type="checkbox" onchange="if(this.checked)privatForm(ptAusTreffen())"></label>`}
     <div class="artwahl"><button type="button" class="knopf ${art === "treffen" ? "haupt" : ""}" data-art="treffen" onclick="tfArtWahl('treffen')">👥 Sitzungen</button><button type="button" class="knopf ${art === "veranstaltung" ? "haupt" : ""}" data-art="veranstaltung" onclick="tfArtWahl('veranstaltung')">🎪 Veranstaltung</button></div>
@@ -24505,6 +24514,10 @@ async function treffenForm(t) {
     ${comboFeld("tfOrt", "Ort", [...ORT_VORSCHLAEGE, ...TR_ORTE], t?.ort || "", "🏠 beim Gastgeber / noch offen", "✏️ Anderer Ort …", "z. B. Grillhütte am See")}
     ${t?.id ? "" : wdhFelder("tf", "keine", "", true) + `<p class="hinweis" style="margin:0">🔁 Eine Terminreihe legt jeden Termin einzeln an (eigene Zu-/Absagen). Die Mitglieder bekommen eine Sammel-Einladung.</p>`}
     <label class="feld">Beschreibung / Tagesordnung<textarea id="tfBeschr" rows="3">${esc(t?.beschreibung || "")}</textarea></label>
+    <!-- 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT (Wunschliste #20, z. B. Adventsmarkt der Freilichtbühne): Link, Prospekt, Ankündigung im Info-Laufband -->
+    <label class="feld">🌐 Link zur Webseite (freiwillig)<input id="tfLink" type="url" inputmode="url" autocapitalize="off" maxlength="500" value="${esc(t?.link || "")}" placeholder="z. B. www.freilichtbuehne-werne.de"></label>
+    ${oaFeld("tf")}${t?.id ? '<p class="hinweis" style="margin:-4px 0 0">Schon angehängte Prospekte bleiben – hier nur neue dazunehmen.</p>' : ""}
+    <label class="schalter"><span><b>📣 Im Info-Laufband ankündigen</b><br><small class="hinweis">oben auf der Startseite, ab 3 Wochen vorher bis zum Termin</small></span><input type="checkbox" id="tfLauf" ${t?.imLaufband ? "checked" : ""}></label>
     <label class="schalter"><span>Alle Mitglieder benachrichtigen (Push/Mail)</span><input type="checkbox" id="tfInfo" ${art === "treffen" ? "checked" : ""}></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="treffenSpeichern('${t?.id || ""}', this)">Speichern</button><button class="knopf" onclick="$('treffenForm').classList.add('versteckt')">Abbrechen</button></div>`;
   tfArtWahl(art, true);
@@ -24540,7 +24553,9 @@ async function treffenSpeichern(id, knopf) {
     try {
       const r = await api("treffen_speichern", { id: id || undefined, art, ganztaegig: ganz, titel: $("tfTitel").value, beginn: beginn.toISOString(), ende: ende ? ende.toISOString() : null,
         gastgeber_person_id: art === "treffen" ? $("tfGast").value || null : null, ort: $("tfOrt").value, beschreibung: $("tfBeschr").value, benachrichtigen: $("tfInfo").checked,
+        link: $("tfLink").value.trim(), im_laufband: $("tfLauf").checked, anlagen: oaIds("tf"), // 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT
         ...(!id && $("tfWdh") && $("tfWdh").value !== "keine" ? { wiederholung: $("tfWdh").value, wiederholung_bis: $("tfWdhBis").value || null } : {}) });
+      oaLeeren("tf");
       if (r.anzahl) { $("treffenForm").classList.add("versteckt"); melde(`🔁 Terminreihe mit ${r.anzahl} Terminen angelegt${r.versand ? ` – ${r.versand.gesendet} Mitglieder benachrichtigt` : ""}`); treffenLaden(); return; }
       $("treffenForm").classList.add("versteckt"); melde(r.versand ? `Gespeichert – ${r.versand.gesendet} Mitglieder benachrichtigt` : "Gespeichert"); treffenLaden();
     } catch (e) { meldeFehler(e); }

@@ -85,7 +85,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.458.0";
+const SERVER_VERSION = "2.461.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -280,6 +280,14 @@ function quittungMerken(ich: { person_id: string; nurLesen?: boolean }, threads:
 // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN (Wunschliste #10, Wunsch Hansi „bei allen Möglichkeiten eine Anlage mit hochladen – Foto, PDF oder
 // Dateimanager“): Anlagen (gleiche Ablage wie im Chat, vorher per anlage_hochladen geladen) an Vorschlag/Spende, Terminfindung, Terminanfrage.
 const OBJ_ANLAGEN_MAX = 5;
+// 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT: Link zur Seite des Veranstalters – nur https (ohne Schema wird https:// davorgesetzt), sonst klare Meldung
+function terminLink(roh: unknown): string | null {
+  let l = String(roh ?? "").trim(); if (!l) return null;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(l)) l = "https://" + l.replace(/^\/+/, "");
+  l = l.replace(/^http:\/\//i, "https://"); // http → https (sicherer, fast alle Seiten können es)
+  if (!/^https:\/\/[^\s<>"]+$/.test(l) || l.length > 500) throw new Fehler("Bitte einen gültigen Link angeben, z. B. https://www.freilichtbuehne-werne.de");
+  return l;
+}
 async function objAnlagenSetzen(ich: { person_id: string }, art: string, objektId: string, roh: unknown) {
   const ids = [...new Set((Array.isArray(roh) ? roh : []).map((x) => String(x)).filter((x) => /^[0-9a-f-]{36}$/i.test(x)))].slice(0, OBJ_ANLAGEN_MAX);
   if (!ids.length) return 0;
@@ -305,6 +313,7 @@ async function objAnlageSichtbar(ich: Ich, art: string, objektId: string) {
     const { data: v } = await db.from("kc_club_vorschlaege").select("ziel_ids,erstellt_von").eq("id", objektId).maybeSingle();
     return !!v && (!v.ziel_ids || v.ziel_ids.includes(ich.person_id) || v.erstellt_von === ich.person_id || ich.admin);
   }
+  if (art === "treffen") { const { data: t } = await db.from("kc_club_treffen").select("id").eq("id", objektId).maybeSingle(); return !!t; } // 2.461.0: Clubtermine sieht jeder
   if (art === "terminumfrage") { const { data: u } = await db.from("kc_club_terminumfragen").select("id").eq("id", objektId).maybeSingle(); return !!u; }
   if (art === "terminanfrage") {
     if (ich.zugang !== "mitglied") return false;
@@ -2813,10 +2822,11 @@ async function treffenListe(ich: Ich, nurNaechstes = false, zeitraum?: { von: st
   const { data: treffen } = await q;
   const ids = (treffen ?? []).map((t: any) => t.id);
   const { data: teil } = ids.length ? await db.from("kc_club_teilnahme").select("*").in("treffen_id", ids) : { data: [] as any[] };
-  const [leute, mitfahrten, suche] = await Promise.all([
+  const [leute, mitfahrten, suche, anl] = await Promise.all([
     personen([...(teil ?? []).map((x: any) => x.person_id), ...(treffen ?? []).map((t: any) => t.gastgeber_person_id)]),
     nurNaechstes ? Promise.resolve(new Map<string, any[]>()) : mitfahrtenZu(ich, "treffen", ids),
     nurNaechstes ? Promise.resolve(new Map<string, any[]>()) : suchendeZu(ich, "treffen", ids),
+    nurNaechstes ? Promise.resolve(new Map<string, any[]>()) : objAnlagenHolen("treffen", ids), // 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT: Prospekt (Foto/PDF)
   ]);
   return (treffen ?? []).map((t: any) => {
     const tn = (teil ?? []).filter((x: any) => x.treffen_id === t.id)
@@ -2829,6 +2839,7 @@ async function treffenListe(ich: Ich, nurNaechstes = false, zeitraum?: { von: st
       teilnahme: tn, ja: zahl("ja"), nein: zahl("nein"), vielleicht: zahl("vielleicht"),
       meine: tn.find((x: any) => x.person_id === ich.person_id)?.antwort ?? null,
       mitfahrten: mitfahrten.get(t.id) ?? [], mitfahrtSuche: suche.get(t.id) ?? [],
+      link: t.link ?? null, imLaufband: !!t.im_laufband, anlagen: anl.get(t.id) ?? [], // 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT
     };
   });
 }
@@ -6213,6 +6224,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data } = await db.from("kc_club_vorschlaege").select("ziel_ids,erstellt_von").eq("status", "offen").limit(500);
           return (data ?? []).filter((v: any) => !v.ziel_ids || v.ziel_ids.includes(ich.person_id) || v.erstellt_von === ich.person_id || ich.admin).length;
         })();
+        // 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT: Termine mit „Im Info-Laufband ankündigen“ – ab 21 Tagen vorher bis zum Ende
+        const nu = new Date(), pLauf = Promise.resolve(db.from("kc_club_treffen").select("id,titel,beginn,ende,ort,link,art").eq("im_laufband", true).eq("status", "geplant")
+          .lte("beginn", new Date(nu.getTime() + 21 * 86400000).toISOString()).or(`beginn.gte.${new Date(nu.getTime() - 6 * 3600000).toISOString()},ende.gte.${nu.toISOString()}`).order("beginn").limit(3))
+          .then((r: any) => r.data ?? [], () => []);
         const pNd = Promise.resolve(db.from("kc_dp_plan_published").select("work_date,start_time,end_time,area").eq("org_id", ORG).eq("status", "published")
           .eq("person_id", ich.person_id).gte("work_date", berlinTag(new Date())).order("work_date").order("start_time").limit(1));
         const pWahlPm = Promise.all([
@@ -6390,7 +6405,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         zt.ende = Date.now() - t0Anfrage;
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
-        return json({ meinGeburtstag, alarm, express, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ meinGeburtstag, alarm, express, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -6488,7 +6503,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (beginn.getTime() < Date.now() - 3600000) throw new Fehler("Das Treffen liegt in der Vergangenheit.");
         const zeile = { titel, beginn: beginn.toISOString(), ende: p.ende ? isoZeitOderFehler(p.ende, "Ende") : null, ort: txt(p.ort, 200) || null,
           gastgeber_person_id: p.gastgeber_person_id ? String(p.gastgeber_person_id) : null, beschreibung: txt(p.beschreibung, 2000) || null, geaendert_am: jetzt(),
-          art: p.art === "veranstaltung" ? "veranstaltung" : "treffen", ganztaegig: p.art === "veranstaltung" && !!p.ganztaegig };
+          art: p.art === "veranstaltung" ? "veranstaltung" : "treffen", ganztaegig: p.art === "veranstaltung" && !!p.ganztaegig,
+          link: terminLink(p.link), im_laufband: !!p.im_laufband }; // 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT
         if (zeile.ende && zeile.ende < zeile.beginn) throw new Fehler("Das Ende liegt vor dem Beginn.");
         let t: any, anlass: "neu" | "geaendert" = "neu";
         // KC-CLUB-WIEDERHOLUNG (1.1.0): neue Terminreihe = viele einzelne Treffen (jedes mit eigenen Zu-/Absagen), EINE Sammel-Einladung
@@ -6502,6 +6518,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const dauer = zeile.ende ? new Date(zeile.ende).getTime() - beginn.getTime() : 0;
           const { data: reihe, error: re } = await db.from("kc_club_treffen").insert(beginne.map((b) => ({ ...zeile, beginn: b, ende: zeile.ende ? new Date(new Date(b).getTime() + dauer).toISOString() : null, erstellt_von: ich.person_id }))).select();
           if (re || !reihe?.length) throw new Fehler("Speichern fehlgeschlagen.", 500);
+          for (const r of reihe) await objAnlagenSetzen(ich, "treffen", r.id, p.anlagen); // 2.461.0: Prospekt an jedem Termin der Reihe
           let versand = null;
           if (p.benachrichtigen !== false) {
             const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
@@ -6522,6 +6539,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           anlass = "geaendert";
         } else ({ data: t } = await db.from("kc_club_treffen").insert({ ...zeile, erstellt_von: ich.person_id }).select().single());
         if (!t) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        await objAnlagenSetzen(ich, "treffen", t.id, p.anlagen); // 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT (z. B. Prospekt der Freilichtbühne)
         let versand = null;
         if (p.benachrichtigen !== false) {
           const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;

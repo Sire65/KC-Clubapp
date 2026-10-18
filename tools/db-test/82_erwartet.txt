@@ -1,0 +1,4 @@
+link_ok=t
+falscher_link_abgewiesen=t
+anlage_treffen=t
+im_laufband=t
