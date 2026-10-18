@@ -29867,6 +29867,7 @@ function snPruefen() {
   const f = blattAuf("snBlatt", `<div class="sn-kopf">📣 Nachricht von <b>${esc(x.vonName || "der Clubleitung")}</b>${x.wichtig ? ' <span class="sn-wichtig">❗ WICHTIG</span>' : ""}</div>
     <p class="hinweis" style="margin:2px 0 10px">${esc(tag)}${l.length > 1 ? ` · noch ${l.length - 1} weitere` : ""}</p>
     <div class="sn-text">${esc(x.text).replace(/\n/g, "<br>")}</div>
+    ${x.knopf === "push" ? snPushKnopf() : ""}
     <label class="sn-pflicht"><input type="checkbox" id="snGelesen"><span><b>Ich habe die Nachricht gelesen</b><small>Pflicht – ${esc(vn)} sieht deine Bestätigung</small></span></label>
     <button class="knopf haupt" id="snOk" disabled>✅ Gelesen – bestätigen</button>
     <button class="knopf" id="snFrageAuf">↩️ Rückfrage an ${esc(vn)}</button>
@@ -29877,8 +29878,16 @@ function snPruefen() {
   const ok = $("snOk");
   $("snGelesen").onchange = (e) => { ok.disabled = !e.target.checked; };
   ok.onclick = () => snBestaetigen(x, "");
+  $("snPushAn")?.addEventListener("click", async () => { await pushEinschalten(); const k = $("snPushBox"); if (k) k.outerHTML = snPushKnopf(); });
   $("snFrageAuf").onclick = () => { $("snFrage").hidden = false; $("snFrageAuf").hidden = true; $("snFrageText").focus(); };
   $("snFrageSenden").onclick = () => { const t = $("snFrageText").value.trim(); if (!t) return melde("Bitte die Rückfrage eintippen.", true); snBestaetigen(x, t); };
+}
+// Startnachricht mit Knopf „🔔 Benachrichtigungen einschalten“ (2.482.0, Wunsch Hansi für Dieter): je nach Lage am Handy
+function snPushKnopf() {
+  if (!pushMoeglich()) return `<div class="sn-push" id="snPushBox">📱 ${esc(pushWeg() || "Benachrichtigungen gehen auf diesem Gerät leider nicht.").replace(/<[^>]+>/g, "")}</div>`;
+  if (Notification.permission === "granted") return '<div class="sn-push an" id="snPushBox">✅ Deine Benachrichtigungen sind an – danke!</div>';
+  if (Notification.permission === "denied") return '<div class="sn-push" id="snPushBox">🔕 Benachrichtigungen sind im Handy gesperrt. So erlaubst du sie wieder: <b>Handy-Einstellungen → Apps → Chrome (bzw. Club-App) → Benachrichtigungen → an</b>, danach die App neu öffnen.</div>';
+  return '<div class="sn-push" id="snPushBox"><button class="knopf haupt" id="snPushAn">🔔 Benachrichtigungen jetzt einschalten</button></div>';
 }
 async function snBestaetigen(x, frage) {
   const knoepfe = document.querySelectorAll("#snBlatt button"); knoepfe.forEach((b) => (b.disabled = true));
@@ -29917,6 +29926,7 @@ function snZeigen() {
   el.innerHTML = `<h3 style="margin-top:0">📣 Startnachricht</h3>
     <p class="hinweis">Die Empfänger sehen sie beim nächsten Öffnen der App als Fenster und müssen „gelesen“ bestätigen. Rückfragen kommen bei dir im Chat an.</p>
     <textarea id="snText" rows="4" maxlength="2000" placeholder="Deine Nachricht …" data-diktat>${esc(text)}</textarea>
+    <label class="sn-pflicht"><input type="checkbox" id="snKnopfPush"${$("snKnopfPush")?.checked ? " checked" : ""}><span><b>🔔 Knopf „Benachrichtigungen einschalten“ mitgeben</b><small>für alle, deren Benachrichtigungen aus sind</small></span></label>
     <label class="sn-pflicht"><input type="checkbox" id="snWichtig"${wichtig ? " checked" : ""}><span><b>❗ Als wichtig markieren</b><small>rot hervorgehoben, dazu ein Push „Bitte die App öffnen“</small></span></label>
     <p style="margin:10px 0 6px"><b>An wen?</b></p><div class="sn-wahl">${art("alle", "👥 Alle")}${art("aemter", "🎖️ Ämter")}${art("gruppe", "💬 Gruppe")}${art("personen", "🙋 Personen")}</div>${wahl}
     <div class="knoepfe" style="margin-top:10px"><button class="knopf haupt" onclick="snSenden()">📣 Senden</button><button class="knopf" onclick="$('snAdmin').remove()">Schließen</button></div>
@@ -29929,7 +29939,7 @@ async function snSenden() {
   const an = A.art === "alle" ? { alle: true } : A.art === "aemter" ? { aemter: [...A.aemter] } : A.art === "gruppe" ? { gruppe: A.gruppe } : { personen: [...A.personen] };
   const wer = A.art === "alle" ? "alle Mitglieder" : A.art === "aemter" ? `die Ämter ${[...A.aemter].join(", ") || "–"}` : A.art === "gruppe" ? "die gewählte Gruppe" : `${A.personen.size} Person${A.personen.size === 1 ? "" : "en"}`;
   if (!(await frage(`Startnachricht an ${wer} senden?\n\nSie erscheint beim nächsten Öffnen der App.`))) return;
-  try { const r = await api("startnachricht_senden", { text, wichtig: !!$("snWichtig")?.checked, an }); melde(`📣 Gesendet an ${r.empfaenger} Person${r.empfaenger === 1 ? "" : "en"}`);
+  try { const r = await api("startnachricht_senden", { text, wichtig: !!$("snWichtig")?.checked, knopf: $("snKnopfPush")?.checked ? "push" : null, an }); melde(`📣 Gesendet an ${r.empfaenger} Person${r.empfaenger === 1 ? "" : "en"}`);
     $("snText").value = ""; SN.daten = await api("startnachricht_liste"); snZeigen(); } catch (e) { meldeFehler(e); }
 }
 async function snZurueck(id) {

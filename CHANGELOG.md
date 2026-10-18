@@ -6,6 +6,7 @@
 - Admin-Register → **📣 Startnachricht**: Text, **❗ als wichtig markieren** (rot + Push „Bitte die App öffnen“), Empfänger **Alle / Ämter / Chat-Gruppe / Personen**.
 - Die Empfänger bekommen sie beim nächsten Öffnen der App als Fenster: **Pflicht** „Ich habe die Nachricht gelesen“ ankreuzen → „✅ Gelesen – bestätigen“ (nicht wegtippbar, kein ✕); **↩️ Rückfrage** kommt als Chat-Nachricht beim Absender an. Mehrere Startnachrichten kommen nacheinander.
 - Überblick „Gesendet“: wer gelesen hat (mit Uhrzeit), wer noch nicht, Rückfragen; **zurückziehen** möglich.
+- Auf Wunsch mit Knopf **🔔 Benachrichtigungen jetzt einschalten** (Fall Dieter): je nach Handy der Knopf, „✅ sind an“ oder die Anleitung, wenn sie im Handy gesperrt sind.
 - **Clubsprecher und Kassenwart**: fertig eingebaut, aber **noch nicht freigeschaltet** – Schalter dafür im selben Fenster (nur Admin). Freigeschaltet sehen sie die Kachel unter „Meins“ und nur ihre eigenen Startnachrichten.
 - Ohne neue Tabelle und ohne zusätzliche Abfrage beim App-Start (steht in den persönlichen Einstellungen, die der Start ohnehin lädt); selbst überschreiben können Mitglieder sie nicht.
 

@@ -10955,7 +10955,8 @@ Köcheclub-App`,
         const id = crypto.randomUUID(), am = jetzt(), alt = Date.now() - 60 * 86400000;
         const { data: vorher } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", SN_SCHLUESSEL).in("person_id", ziel);
         const vm = new Map((vorher ?? []).map((x: any) => [x.person_id, snListe(x.wert)]));
-        const eintrag = { id, von: ich.person_id, vonName: ich.name, text, wichtig, am };
+        const knopf = p.knopf === "push" ? "push" : null; // Knopf im Fenster: „🔔 Benachrichtigungen jetzt einschalten“ (Fall Dieter)
+        const eintrag = { id, von: ich.person_id, vonName: ich.name, text, wichtig, am, ...(knopf ? { knopf } : {}) };
         const zeilen = ziel.map((pid) => ({ person_id: pid, schluessel: SN_SCHLUESSEL, geaendert_am: am,
           wert: { liste: [eintrag, ...(vm.get(pid) ?? []).filter((x: any) => !x.gelesen_am || Date.parse(x.gelesen_am) > alt)].slice(0, SN_MAX_JE_PERSON) } }));
         const { error } = await db.from("kc_club_person_einstellung").upsert(zeilen, { onConflict: "person_id,schluessel" });

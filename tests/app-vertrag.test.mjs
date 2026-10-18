@@ -10896,4 +10896,9 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/Rückfrage zu deiner Startnachricht/.test(html) && /empfaenger: \{ personen: \[x\.von\]/.test(html), "Rückfrage kommt als Chat beim Absender an");
   assert.ok(/id: "ad-startnachricht"/.test(html) && /nur: \(\) => !ICH\?\.admin && !!INIT\?\.startnachrichtDarf/.test(html), "Kachel Admin; Ämter nur, wenn freigeschaltet");
 }
+// 2.482.0 KC-CLUB-STARTNACHRICHT: Knopf „🔔 Benachrichtigungen jetzt einschalten“ in der Startnachricht (Fall Dieter)
+{
+  assert.ok(/const knopf = p\.knopf === "push" \? "push" : null;/.test(server), "Server nimmt nur den bekannten Knopf");
+  assert.ok(/\$\{x\.knopf === "push" \? snPushKnopf\(\) : ""\}/.test(html) && /id="snPushAn">🔔 Benachrichtigungen jetzt einschalten/.test(html) && /await pushEinschalten\(\);/.test(html) && /knopf: \$\("snKnopfPush"\)\?\.checked \? "push" : null/.test(html), "Knopf im Fenster und beim Verfassen");
+}
 
