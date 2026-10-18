@@ -34,6 +34,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.460.0 – 2026-10-18 – KC-CLUB-AVATAR-BEARBEITEN-MITGLIED: ✏️ auch auf der eigenen Mitglieder-Seite
+Fund Hansi (Foto): Auf der eigenen Mitglieder-Seite das Bild angetippt – in der Großansicht fehlte „✏️ Bearbeiten“. Jetzt dort beim eigenen Bild (Figur) vorhanden, bei anderen Mitgliedern nie. Nur App.
+
 ## 2.459.0 – 2026-10-18 – KC-CLUB-SCHRIFT-ZOOM-AUS: Schrift mit zwei Fingern abschaltbar (Wunschliste #16)
 Fund Hansi: Nach dem Vergrößern in Nachrichten erschien beim Scrollen ständig die Prozentanzeige – ein aufliegender Daumen plus scrollender Finger zählte als Auseinanderziehen. Jetzt nur noch, wenn sich beide Finger deutlich bewegen; neuer Schalter ⚙️ → Darstellung → „✌️ Schrift mit zwei Fingern ändern“; die Anzeige nennt ihn. Nur App.
 

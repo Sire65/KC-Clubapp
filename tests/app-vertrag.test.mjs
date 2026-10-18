@@ -6699,6 +6699,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!beide \|\| Math\.abs\(f - 1\) < SZ_SCHWELLE\) return;/.test(html) && /const SZ_BEWEGT_PX = 12, SZ_SCHWELLE = 0\.08;/.test(html), "aufliegender Daumen zählt nicht");
   assert.ok(/<small>Ausschalten: ⚙️ → Darstellung<\/small>/.test(html), "Anzeige nennt den Schalter");
 }
+
+// 2.460.0 KC-CLUB-AVATAR-BEARBEITEN-MITGLIED (Fund Hansi „kein Bearbeiten-Knopf“ – auf der eigenen Mitglieder-Seite Bild angetippt)
+{
+  assert.ok(/\$\{pid === ICH\?\.person_id && avEigenBearbeitbar\(\) \? `<button class="knopf haupt" onclick="fensterZu\(\$\('avGrossBlatt'\)\); avBauen\(/.test(html), "✏️ auch in der Großansicht der eigenen Mitglieder-Seite, nie bei anderen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

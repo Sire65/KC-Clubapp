@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.459.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.460.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -443,7 +443,7 @@ function avGross(pid) {
   const f = blattAuf("avGrossBlatt", `<div style="display:grid;place-items:center;gap:10px;padding:6px 0" onclick="fensterZu($('avGrossBlatt'))">
     <div style="width:min(280px,80vw);height:min(280px,80vw)">${avatarSvg(fig, 280, initialen(m?.name || m?.display_name || "")).replace('width="280" height="280"', 'style="width:100%;height:100%;border-radius:50%;object-fit:cover"')}</div>
     <b style="font-size:1.2rem">${esc(m.name || MD?.name || "")}</b></div>
-    <button class="knopf" onclick="fensterZu($('avGrossBlatt'))">Schließen</button>`);
+    <div class="knoepfe">${pid === ICH?.person_id && avEigenBearbeitbar() ? `<button class="knopf haupt" onclick="fensterZu($('avGrossBlatt')); avBauen(INIT?.einstellungen?.avatar?.figur || undefined)">✏️ Bearbeiten</button>` : ""}<button class="knopf" onclick="fensterZu($('avGrossBlatt'))">Schließen</button></div>`); // 2.460.0 (Fund Hansi „kein Bearbeiten-Knopf“): auch auf der eigenen Mitglieder-Seite
   f.style.zIndex = "2100";
 }
 // 2.451.0 KC-CLUB-FOTO-MUETZE: Kopfbedeckungen als eigener Baustein – für die Figur und zum Aufsetzen aufs eigene Foto
