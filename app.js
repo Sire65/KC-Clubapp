@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.457.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.458.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14140,7 +14140,9 @@ const KACHELN = {
     { id: "sos", sym: "🆘", t: "SOS – Notfall", u: "Notruf · Kontakte im Notfall", aktion: "sosStart()", klasse: "sos" },
     { id: "kommunikation", sym: "💬", t: "Nachrichten", u: "Chats, Gruppen & Anlagen", v: "nachrichten", zahl: () => INIT?.ungelesen || 0, neuFarbe: true }, // 1.21.4: farbig bei Neuem
     { id: "mitglieder", sym: "👥", t: "Aktive Mitglieder", u: "Status · Ämter · Kontakt", v: "mitglieder" },
-    { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", u: "Themen & Abstimmungen", v: "vorschlaege", zahl: () => INIT?.offeneAbstimmungen || 0 },
+    // 2.458.0 KC-CLUB-VORSCHLAEGE-ANZAHL (Wunschliste #15, Wahl Hansi „Alle Vorschläge“): Zahl = alle laufenden Vorschläge; wie viele auf meine Stimme
+    // warten, steht darunter (und weiter unter „Heute wichtig“). Älterer Server ohne die Zahl → wie bisher die offenen Abstimmungen.
+    { id: "vorschlaege", sym: "🗳️", t: "Vorschläge", u: () => INIT?.offeneAbstimmungen ? `🗳️ ${INIT.offeneAbstimmungen === 1 ? "1 wartet" : INIT.offeneAbstimmungen + " warten"} auf deine Stimme` : "Themen & Abstimmungen", v: "vorschlaege", zahl: () => Number.isFinite(INIT?.vorschlaegeOffen) ? INIT.vorschlaegeOffen : INIT?.offeneAbstimmungen || 0 },
     { id: "protokolle", sym: "📄", t: "Protokolle", u: "Sitzungen · Aufgaben", v: "protokolle", nur: () => ICH?.protokolle !== false, zahl: () => (INIT?.protokolleUngelesen || 0) + (INIT?.meineAufgaben?.length || 0) },
     { id: "archiv", sym: "🗄️", t: "Archiv", u: "Ordner · Vergangenes · Unterlagen", aktion: "arStart()" },
     { id: "dienste", sym: "🗓️", t: "Dienstpläne", u: "Meine & freigegebene Zeiten", v: "dienste" },

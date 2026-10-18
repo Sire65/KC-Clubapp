@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6679,6 +6679,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/Dein jetziges Bild – tippe unten eine Figur an\.<\/small>\$\{avEigenBearbeitbar\(\) \? `<div class="av-vorschau-knoepfe"><button class="knopf" onclick="avBauen\(INIT\?\.einstellungen\?\.avatar\?\.figur \|\| undefined\)">✏️ Bearbeiten/.test(html), "✏️ unter dem jetzigen Bild");
   assert.ok(/code === \(INIT\?\.einstellungen\?\.avatar\?\.figur \|\| null\) && avEigenBearbeitbar\(\) \? `<button class="knopf haupt" onclick="fensterZu\(\$\('avGrossBlatt'\)\); avBauen\(/.test(html), "✏️ auch in der Großansicht des eigenen Bilds");
   assert.ok(/avKlappe\("av_alt", true,/.test(html) && /avKlappe\("av_neu", true,/.test(html), "Bisherige und Hochwertige offen");
+}
+
+// 2.458.0 KC-CLUB-VORSCHLAEGE-ANZAHL (Wunschliste #15, Wahl Hansi „Alle Vorschläge“): Kachel zeigt alle laufenden Vorschläge
+{
+  assert.ok(/const pVorAnz = \(async \(\) => \{\n\s*const \{ data \} = await db\.from\("kc_club_vorschlaege"\)\.select\("ziel_ids,erstellt_von"\)\.eq\("status", "offen"\)/.test(server), "Server zählt laufende Vorschläge");
+  assert.ok(/!v\.ziel_ids \|\| v\.ziel_ids\.includes\(ich\.person_id\) \|\| v\.erstellt_von === ich\.person_id \|\| ich\.admin\)\.length;/.test(server), "gleiche Sichtbarkeit wie die Liste");
+  assert.ok(/vorschlaegeOffen: await pVorAnz\.catch\(\(\) => null\)/.test(server), "mit init geliefert, Fehler = unbekannt");
+  assert.ok(/zahl: \(\) => Number\.isFinite\(INIT\?\.vorschlaegeOffen\) \? INIT\.vorschlaegeOffen : INIT\?\.offeneAbstimmungen \|\| 0 \}/.test(html), "Kachel: alle Vorschläge, sonst wie bisher");
+  assert.ok(/auf deine Stimme` : "Themen & Abstimmungen", v: "vorschlaege"/.test(html), "wartende Abstimmungen bleiben sichtbar");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -8473,7 +8482,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 }
 // 2.157.0 KC-CLUB-START-PARALLEL-3 / KC-CLUB-START-MESSUNG: Server-Teilzeiten in der Startmessung, Kachel-Zahlen-Ketten gleichzeitig
 {
-  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 20000); // 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb
+  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 21000); // 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl
   assert.ok(/const mess = <T,>\(n: string, x: PromiseLike<T>\)/.test(ini) && /srvT: zt,/.test(ini), "init misst Teilzeiten und liefert srvT");
   for (const n of ['mess("tr",', 'mess("teil",', 'mess("mg",', "kz: pKz", "comm: pComm", "rest: pRest", "auf: pAufgaben", "tf: pTermin"]) assert.ok(ini.includes(n), `Teilzeit ${n} gemessen`);
   assert.ok(/zt\.zl = Date\.now\(\) - t0Anfrage/.test(ini) && /zt\.ende = Date\.now\(\) - t0Anfrage/.test(ini), "Zählen und Ende gemessen");

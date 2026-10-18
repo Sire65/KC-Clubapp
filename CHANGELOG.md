@@ -34,6 +34,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.458.0 – 2026-10-18 – KC-CLUB-VORSCHLAEGE-ANZAHL: Kachel zeigt alle laufenden Vorschläge (Wunschliste #15)
+Wahl Hansi „Alle Vorschläge“: Die Zahl auf der Kachel 🗳️ Vorschläge zeigt jetzt alle laufenden Vorschläge (gleiche Sichtbarkeit wie die Liste). Wie viele Abstimmungen auf die eigene Stimme warten, steht darunter und weiter unter „Heute wichtig“. App + Server.
+
 ## 2.457.0 – 2026-10-18 – KC-CLUB-AVATAR-UEBERSICHT + KC-CLUB-AVATAR-BEARBEITEN: Figuren wieder sichtbar, ✏️ am eigenen Bild
 Fund Hansi: In „Mein Bild“ waren die Klappbereiche „Bisherige“ und „Hochwertige Avatare“ auf dem Handy nur noch Striche (im Fenster auf Höhe 0 gedrückt) – behoben (overflow:clip, min-height). Neu: „✏️ Bearbeiten“ unter dem jetzigen Bild und in der Großansicht des eigenen Bilds öffnet den Baukasten mit der eigenen Figur. Nur App.
 

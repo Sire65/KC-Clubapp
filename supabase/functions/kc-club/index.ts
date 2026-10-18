@@ -85,7 +85,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.456.0";
+const SERVER_VERSION = "2.458.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -6207,6 +6207,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data: meineSt } = (abst ?? []).length ? await db.from("kc_club_video_stimmen").select("vorschlag_id").eq("person_id", ich.person_id).in("vorschlag_id", (abst ?? []).map((x: any) => x.id)) : { data: [] as any[] };
           return (abst ?? []).length - (meineSt ?? []).length;
         })();
+        // 2.458.0 KC-CLUB-VORSCHLAEGE-ANZAHL (Wunschliste #15, Wahl Hansi „Alle Vorschläge“): Zahl aller laufenden Vorschläge für die Kachel –
+        // dieselbe Sichtbarkeit wie die Liste (Abstimmungen mit Zielgruppe nur für diese, eigene, Admin alle)
+        const pVorAnz = (async () => {
+          const { data } = await db.from("kc_club_vorschlaege").select("ziel_ids,erstellt_von").eq("status", "offen").limit(500);
+          return (data ?? []).filter((v: any) => !v.ziel_ids || v.ziel_ids.includes(ich.person_id) || v.erstellt_von === ich.person_id || ich.admin).length;
+        })();
         const pNd = Promise.resolve(db.from("kc_dp_plan_published").select("work_date,start_time,end_time,area").eq("org_id", ORG).eq("status", "published")
           .eq("person_id", ich.person_id).gte("work_date", berlinTag(new Date())).order("work_date").order("start_time").limit(1));
         const pWahlPm = Promise.all([
@@ -6384,7 +6390,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         zt.ende = Date.now() - t0Anfrage;
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
-        return json({ meinGeburtstag, alarm, express, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ meinGeburtstag, alarm, express, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
