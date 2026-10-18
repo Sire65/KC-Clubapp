@@ -10393,3 +10393,9 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/infoLetztes === f\.id \+ inhalt\) return ilZeigen\(\);/.test(programm) && /if \(b\.firstElementChild && IL\.html === kl \+ html\) return;/.test(programm), "Laufband frisch, aber nur bei Änderung neu gezeichnet");
   assert.ok(/\.ifeld > \.il:first-child \{ margin-top: 0; \}/.test(seite), "oben bündig in der Karte");
 }
+// 2.440.0: nichts doppelt mit den 3 Feldern darunter – kein „online“ im Laufband, Geburtstag am Tag selbst nur im Laufband
+{
+  const m = programm.slice(programm.indexOf("function ilMeldungen("), programm.indexOf("function ilHtml("));
+  assert.ok(!/id: "online"/.test(m) && !/id: "countdown:/.test(m) && !/id: "anmelden:/.test(m) && /id: "geb:"/.test(m), "Laufband ohne Doppel");
+  assert.ok(/return t >= 1 && t <= 14 \? \{ id: "m" \+ g\.person_id/.test(programm), "Countdown: Mitglieder-Geburtstage nur vorab");
+}

@@ -22,7 +22,7 @@ Fund Hansi: „Noch nicht optimal. Was da über dem neuen Feld steht, sollte in 
 - Die Kopfzeile (Treffen, Datum, Ort, Zu-/Absage, x/y angemeldet) ist weg – sie ist jetzt der **erste Punkt im Laufband**. Die Karte ist dadurch deutlich niedriger.
 - Noch keine Antwort: roter Rahmen, Datum · Ort, Knöpfe **✔ Zusagen / ✖** und „✅ 5/18“; der Zusagen-Knopf blinkt wie bisher ab 5 Tagen gelb, ab 2 Tagen rot. Die Meldung kommt zwischendurch wieder.
 - Schon geantwortet: weißer Rahmen, „✅ Ich komme · ✅ 5/18“. Kein Termin: „Kein Termin geplant“. Antippen führt wie bisher zu den Terminen; nicht ausblendbar.
-- Die doppelten Meldungen „Jetzt zu- oder absagen“ und „Noch x Tage bis …“ entfallen (das steht im Treffen-Punkt bzw. im Feld „Clubtreffen“).
+- **Nichts doppelt mit den 3 Feldern darunter** (Nachfrage Hansi): „Jetzt zu- oder absagen“ und „Noch x Tage bis …“ entfallen (stehen im Treffen-Punkt bzw. im Feld „Clubtreffen“), ebenso „x Mitglieder online“ (Feld „Mitglieder“). Geburtstag am Tag selbst steht nur noch im Laufband (mit 💬 Gratulieren); das Feld „Clubtreffen“ zeigt Mitglieder-Geburtstage nur noch vorab (1–14 Tage).
 - Das Laufband frischt sich auch ohne Wechsel auf (z. B. nach der Zusage) und zeichnet nur neu, wenn sich etwas geändert hat. Nur App.
 
 ## 2.439.0 – 2026-10-16 – 📣 Info-Laufband auf der Startseite (KC-CLUB-INFO-LAUFBAND)

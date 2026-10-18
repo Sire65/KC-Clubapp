@@ -22317,8 +22317,7 @@ function ilMeldungen() {
     add({ id: "wetter:" + wt.datum, stufe: nass ? "gold" : "weiss", sym: a.sym, t: nass ? "Am Treffen-Tag wird es nass – Schirm mitnehmen" : `Wetter am Treffen-Tag: ${a.text}`, u: `${grad(wt.max)} / ${grad(wt.min)}${wt.regenWkt != null ? ` · ☔ ${wt.regenWkt} %` : ""}`, auf: "infoGehe(INFO_FELDER.findIndex((f) => f.id === 'wetter'))" }); }
   // ⚪ schöne Infos
   for (const g of INIT?.geburtstageHeute || []) if (g.person_id !== ICH?.person_id) add({ id: "geb:" + g.person_id, stufe: "weiss", sym: "🎂", t: `${g.name} hat heute Geburtstag`, u: "Gratuliere mit einem Tipp", auf: `gratulieren('${esc(g.person_id)}', true)`, knoepfe: [["💬 Gratulieren", `gratulieren('${esc(g.person_id)}', true)`]] });
-  const on = typeof mpOnline === "function" && ONL.zeigen ? mpOnline() : 0;
-  if (on > 0) add({ id: "online", stufe: "weiss", sym: "🟢", t: on === 1 ? "1 Mitglied ist gerade online" : `${on} Mitglieder sind gerade online`, u: "Antippen – anklopfen oder schreiben", auf: "mgNurOnline()" });
+  // 2.440.0: „x Mitglieder online“ nicht hier – das zeigt schon das Feld „Mitglieder“ darunter (nichts doppelt)
   if (kz.fotos > 0) add({ id: "fotos", stufe: "weiss", sym: "📸", t: kz.fotos === 1 ? "Ein neues Foto im Album" : `${kz.fotos} neue Fotos im Album`, u: "Antippen und ansehen", auf: "zeige('fotos')" });
   const dn = typeof dokHinweis === "function" ? dokHinweis() : null;
   if (dn) add({ id: "dok:" + dn.id, stufe: "weiss", sym: dn.sym || "🆕", t: `Neu: ${dn.t}`, u: "Antippen zum Lesen", auf: `dokOeffnen('${esc(dn.id)}')` });
@@ -22568,8 +22567,9 @@ const CD_ARTEN = [ // [Schlüssel, Bezeichnung in den Einstellungen, Einträge l
     return h.slice(5, 7) === "12" && t >= 0 ? [{ id: "s", zahl: cdNoch(t), text: "🎆 Sil\u00ADves\u00ADter", los: () => zeige("termine") }] : []; }],
   ["meingeb", "🎂 Mein Geburtstag (30 Tage vorher)", () => { const g = (CD.daten?.geburtstage || []).find((x) => x.person_id === ICH?.person_id); const d = g && cdNaechsterTag(g.md), t = d ? cdTageBis(d) : -1;
     return t >= 0 && t <= 30 ? [{ id: "g", zahl: t === 0 ? "Alles Gute!" : cdNoch(t), text: "🎂 Mein Geb.", los: () => zeige("termine") }] : []; }],
+  // 2.440.0: am Geburtstag selbst steht er im Info-Laufband (mit 💬 Gratulieren) – hier nur die Tage davor
   ["mggeb", "🎂 Geburtstage der Mitglieder (14 Tage vorher)", () => (CD.daten?.geburtstage || []).filter((x) => x.person_id !== ICH?.person_id).map((g) => { const d = cdNaechsterTag(g.md), t = d ? cdTageBis(d) : -1;
-    return t >= 0 && t <= 14 ? { id: "m" + g.person_id, t, zahl: cdNoch(t), text: `🎂 Geb. ${g.vorname || g.name}`, los: () => mitgliedOeffnen(g.person_id) } : null; }).filter(Boolean).sort((a, b) => a.t - b.t).slice(0, 3)],
+    return t >= 1 && t <= 14 ? { id: "m" + g.person_id, t, zahl: cdNoch(t), text: `🎂 Geb. ${g.vorname || g.name}`, los: () => mitgliedOeffnen(g.person_id) } : null; }).filter(Boolean).sort((a, b) => a.t - b.t).slice(0, 3)],
 ];
 const CD_VERANSTALTUNGEN = { markt: { re: /weihnachtsmarkt/i, ohne: /aufbau|abbau|nachbereitung|vorbereitung/i, text: "🎄 Weih\u00ADnachts\u00ADmarkt", vorlauf: 120 } };
 function cdPrivat() {
