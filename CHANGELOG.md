@@ -34,6 +34,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.463.0 – 2026-10-18 – KC-CLUB-THEMEN-LAUFBAND: Info-Feld fordert zum Abstimmen über die Sitzungs-Themen auf (Wunschliste #22)
+Wunsch Hansi: In den 3 Wochen vor einer Sitzung steht im Info-Laufband „x Themen für die Sitzung am …“ mit „👍 Abstimmen“ und „＋ Thema“ (Formular mit vorgewählter Sitzung). Gelb, solange man noch nicht alle Themen unterstützt hat. App + Server.
+
 ## 2.462.0 – 2026-10-18 – KC-CLUB-STIMMEN-TABELLE: Stimmen bei Vorschlägen und Abstimmungen werden wieder gespeichert
 Fund 18.10.: Seit 2.351.0 las und schrieb der Server Stimmen (👍 bei Themen/Spenden, Abstimmungen, „wartet auf deine Stimme“) in der Tabelle der Twinkey-Stimmen statt in kc_club_stimmen – 8 Stellen, versehentlich beim Einbau der Video-Stimmen umbenannt. Stimmen gingen still verloren (Logs: 21 Lese- und 1 Schreibfehler in 24 Std.). Jetzt richtige Tabelle, Schreibfehler werden gemeldet. Server 2.462.0.
 

@@ -85,7 +85,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.462.0";
+const SERVER_VERSION = "2.463.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -6315,6 +6315,17 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-UNBEKANNT-NICHT-OK (1.97.0, Gesamtprüfung): klemmt die Datenbank, lieber ehrlich „gerade nicht möglich“ (503 → App
         // zeigt den Fehler bzw. Notbetrieb) als „0 ungelesen / Alles erledigt 👍“ aus fehlenden Daten
         if (teilFehler) throw new Fehler("Die Daten konnten gerade nicht geladen werden – bitte gleich noch einmal versuchen.", 503);
+        // 2.463.0 KC-CLUB-THEMEN-LAUFBAND (Wunschliste #22, Wunsch Hansi „in der Laufschrift: Bitte stimme bei den Themen für die nächste Sitzung ab
+        // oder reiche selber welche ein“): Themen-Vorschläge zur nächsten Sitzung (bzw. ohne Termin) – wie viele, und wie viele ich noch nicht 👍 habe.
+        // Nur ab 21 Tagen vor der Sitzung; Fehler → null (die App zeigt dann nichts statt einer falschen Zahl).
+        const pThemenN = (async () => {
+          const s0 = naechstes[0]; if (!s0 || new Date(s0.beginn).getTime() - Date.now() > 21 * 86400000) return null;
+          const { data: th, error } = await db.from("kc_club_vorschlaege").select("id").eq("status", "offen").eq("art", "thema").or(`treffen_id.eq.${s0.id},treffen_id.is.null`).limit(100);
+          if (error) return null;
+          const ids = (th ?? []).map((x: any) => x.id);
+          const { data: meine } = ids.length ? await db.from("kc_club_stimmen").select("vorschlag_id").eq("person_id", ich.person_id).in("vorschlag_id", ids) : { data: [] as any[] };
+          return { treffen: s0.id, anzahl: ids.length, offen: ids.length - (meine ?? []).length };
+        })().catch(() => null);
         let ungelesen = 0, ungelesenLaut = 0, zaehlUnsicher = false;
         const { data: stummE } = await pStumm;
         // KC-CLUB-SCHNELLSTART-SERVER (1.16.0): alle Unterhaltungen gleichzeitig zählen statt nacheinander (spart je Chat eine Runde)
@@ -6405,7 +6416,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         zt.ende = Date.now() - t0Anfrage;
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
-        return json({ meinGeburtstag, alarm, express, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ meinGeburtstag, alarm, express, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)

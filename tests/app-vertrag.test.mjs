@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6727,6 +6727,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok((server.match(/db\.from\("kc_club_stimmen"\)/g) || []).length >= 8, "alle Stimmen-Stellen auf kc_club_stimmen");
   assert.ok(/db\.from\("kc_club_video_stimmen"\)\.select\("plattform,art,muster/.test(server), "Twinkey-Stimmen bleiben, wo sie sind");
   assert.equal((server.match(/Stimme konnte nicht gespeichert werden – bitte gleich noch einmal versuchen\./g) || []).length, 2, "Schreibfehler werden gemeldet, nie still verloren");
+}
+
+// 2.463.0 KC-CLUB-THEMEN-LAUFBAND (Wunschliste #22): im Info-Laufband zum Abstimmen über die Themen der nächsten Sitzung bzw. Einreichen auffordern
+{
+  assert.ok(/const pThemenN = \(async \(\) => \{/.test(server) && /\.eq\("art", "thema"\)\.or\(`treffen_id\.eq\.\$\{s0\.id\},treffen_id\.is\.null`\)/.test(server) && /themenNaechste: await pThemenN/.test(server), "Server zählt Themen zur nächsten Sitzung");
+  assert.ok(/db\.from\("kc_club_stimmen"\)\.select\("vorschlag_id"\)\.eq\("person_id", ich\.person_id\)\.in\("vorschlag_id", ids\)/.test(server), "eigene 👍 aus der richtigen Tabelle");
+  assert.ok(/if \(th && t\?\.id === th\.treffen && Date\.parse\(t\.beginn\) > Date\.now\(\)\) add\(\{ id: "themen:"/.test(html), "nur für die kommende Sitzung");
+  assert.ok(/\["＋ Thema", `ilThemaNeu\('\$\{esc\(th\.treffen\)\}'\)`\]/.test(html) && /function ilThemaNeu\(id\) \{ zeige\("vorschlaege"\); VS_ZIEL = id;/.test(html), "＋ Thema mit vorgewählter Sitzung");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
