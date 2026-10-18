@@ -31,6 +31,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.454.0 – 2026-10-18 – KC-CLUB-WER-IST-DA: Ansage beim Reinkommen (Wunschliste #13)
+Beim Öffnen der App (oder nach 10 Min. Pause) einmal Meldung + Ansage: „Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder.“ Gleiche Online-Liste wie überall (Verborgene/Inkognito nicht genannt), nie in der Ruhezeit, abschaltbar unter Ansagen („👋 Beim Öffnen“). Nur App.
+
 ## 2.453.0 – 2026-10-18 – KC-CLUB-DIA-MUSIK: Diashow mit Club-Song (Wunschliste #12)
 In der Diashow schaltet 🎵 unseren Club-Song dazu (gemerkt, startet nur nach Antippen, ⏸ hält Bilder und Musik an, beim Verlassen aus). Die Leiste liegt jetzt über den Hilfe-Knöpfen. Nur App.
 

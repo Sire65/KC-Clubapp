@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.453.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.454.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5127,6 +5127,7 @@ const HILFE = [
   // 🔔 Benachrichtigungen & Töne
   { id: "meine_geraete", thema: "toene", sym: "📱", t: "Auf welchen Geräten kommt Push an?", x: "Kommt auf dem Tablet nichts an? Unter ⚙️ → „🔔 Benachrichtigungen“ zeigt <b>„📱 Meine Geräte“</b>, welche deiner Handys und Tablets Benachrichtigungen bekommen. Daneben schickt „Test-Push senden“ eine Probe.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.23.1" },
   { id: "anklopfton", thema: "toene", sym: "🔔", t: "Ein Anklopfton nach deinem Geschmack", x: "Holz-Klopfen, Ding-Dong, Gong oder Glöckchen: Welcher Ton erklingt, wenn jemand bei dir anklopft, suchst du dir unter ⚙️ → „🔒 Privatsphäre“ aus.", zeig: () => einstiegHin("privat"), seit: "2.23.1" },
+  { id: "wer_ist_da", thema: "toene", sym: "👋", t: "Wer ist da, wenn ich reinkomme?", x: "Beim Reinkommen – also beim Öffnen der App oder nach mindestens 10 Minuten Pause – sagt sie einmal, wer gerade da ist – z. B. <b>„Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder.“</b> Oben erscheint dazu eine kurze Meldung. Ist niemand da, kommt nichts. Wer seinen Online-Status verbirgt, wird nicht genannt. Das Handy spricht erst, wenn du einmal auf den Bildschirm getippt hast. Ausschalten: ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ → <b>„👋 Beim Öffnen“</b>.", zeig: () => einstiegHin("ansagen"), seit: "2.454.0" },
   { id: "ansage_verlassen", thema: "toene", sym: "🚪", t: "Ansage, wenn jemand die App verlässt", x: "Neben „… ist jetzt online“ kann das Handy auch ansagen, wenn jemand die App verlässt. Das ist zunächst aus – unter ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ kannst du es dazunehmen, wenn du magst.", zeig: () => einstiegHin("ansagen"), seit: "2.23.1" },
   // 🔒 Privatsphäre & Zugang
   { id: "live_tippen", thema: "privat", sym: "👁️", t: "Sehen andere, was ich tippe?", x: "Nein – solange du es nicht willst. Die Einstellung <b>„👁️ Andere sehen live, was ich tippe“</b> unter ⚙️ → „🔒 Privatsphäre“ ist von Haus aus aus. Normal sehen die anderen nur „schreibt …“.", zeig: () => einstiegHin("privat", "setLiveTippen"), seit: "2.23.1" },
@@ -6810,6 +6811,36 @@ function onlineAnsagen(liste) {
   onlineAnsageSprechen(neu.map((x) => x.vorname || x.name));
   try { spurFrage(neu); } catch {} // KC-CLUB-SPUR-FRAGE (2.92.0) – darf die Ansage nie stören
 }
+// ---------- KC-CLUB-WER-IST-DA (2.454.0, Wunschliste #13, Wunsch Hansi „Ansage beim Reinkommen: Im Moment sind Hansi, Klaus und Anne online
+// und 2 weitere Mitglieder“): beim Öffnen der App – und wenn sie mindestens 10 Min. im Hintergrund lag – EINMAL Meldung + Ansage, wer gerade da ist.
+// Dieselbe Online-Liste wie überall (wer sich verbirgt oder inkognito ist, wird nicht genannt; wer selbst die Online-Anzeige aus hat, hört nichts).
+// Niemand da → nichts. Nie in der Ruhezeit. Abschaltbar unter ⚙️ → Ansagen („👋 Beim Öffnen“). Handys sprechen erst nach der ersten Berührung –
+// dann wird die Ansage beim ersten Tippen nachgeholt (bis 30 s), die Meldung steht sofort da. Die Genannten werden danach nicht noch einmal einzeln
+// als „… ist jetzt online“ angesagt.
+const WER_DA = { faellig: true, weg: 0 }; // Merker für „App lag im Hintergrund“ – der Lauscher steht beim Online-Takt
+function werIstDaText(namen) {
+  const n = namen.length, gezeigt = namen.slice(0, ANSAGE_NAMEN_MAX), rest = n - gezeigt.length;
+  const liste = gezeigt.length === 1 ? gezeigt[0] : `${gezeigt.slice(0, -1).join(", ")} und ${gezeigt[gezeigt.length - 1]}`;
+  return `Im Moment ${n === 1 ? "ist" : "sind"} ${liste} online${rest ? ` und ${rest === 1 ? "1 weiteres Mitglied" : rest + " weitere Mitglieder"}` : ""}.`;
+}
+function werIstDa(liste, zeigen) {
+  if (!WER_DA.faellig || document.hidden) return; WER_DA.faellig = false;
+  if (zeigen === false || !ansAn("beim_start") || inRuheJetzt(INIT?.einstellungen?.ruhezeit)) return;
+  const namen = [...new Set((liste || []).filter((x) => x.person_id !== ICH?.person_id).map((x) => x.vorname || x.name).filter(Boolean))];
+  if (!namen.length) return;
+  const text = werIstDaText(namen), jetzt = Date.now();
+  namen.forEach((x) => OA.gesagt.set(x, jetzt));
+  melde("🟢 " + text);
+  if (!("speechSynthesis" in window)) return;
+  if (!navigator.userActivation || navigator.userActivation.hasBeenActive) { WER_DA.warte = null; document.removeEventListener("pointerdown", werIstDaNachTipp, true); return sprechen(text); }
+  if (!WER_DA.warte) document.addEventListener("pointerdown", werIstDaNachTipp, true);
+  WER_DA.warte = { text, bis: jetzt + 30000 }; // immer nur EINE wartende Ansage (die neueste)
+}
+function werIstDaNachTipp() {
+  document.removeEventListener("pointerdown", werIstDaNachTipp, true); const w = WER_DA.warte; WER_DA.warte = null;
+  if (w && Date.now() < w.bis && !document.hidden && ansAn("beim_start")) sprechen(w.text);
+}
+
 // ---------- KC-CLUB-SPUR-FRAGE (2.92.0, Wunsch Hansi): meldet sich ein Mitglied an → nur der Admin wird gefragt, ob er sehen möchte,
 // was es gerade macht. Ja → „Wege der Benutzung“ mit allen, die gerade da sind (antippbar). Nie über einem anderen offenen Fenster,
 // nie in der Ruhezeit; abschaltbar („Nicht mehr fragen“) und im Wege-Fenster wieder einschaltbar.
@@ -7028,6 +7059,8 @@ const ANS_ARTEN = [
   // 1.88.0 (Wunsch Hansi): „Hansi hat die Club-App verlassen“ – Ansage + kurze Meldung; Standard aus
   { id: "verlassen", sym: "🚪", t: "Jemand verlässt die App", k: "Verlassen", u: "„Hansi hat die Club-App verlassen“ – mit kurzer Meldung", bsp: "Hansi hat die Club-App verlassen." },
   { id: "online", sym: "🟢", t: "Jemand kommt online", k: "Online", u: "„Steven ist jetzt online“", bsp: "Steven ist jetzt online." },
+  // 2.454.0 KC-CLUB-WER-IST-DA (Wunschliste #13): beim Öffnen der App einmal sagen, wer gerade da ist – Standard an
+  { id: "beim_start", sym: "👋", t: "Beim Öffnen: wer gerade da ist", k: "Beim Öffnen", u: "„Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder“ – mit kurzer Meldung", bsp: "Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder.", an: true },
   { id: "nachricht", sym: "💬", t: "Nachrichten", u: "auch @Erwähnungen und Reaktionen", bsp: "Christina hat dir eine Nachricht geschickt.", an: true },
   { id: "anklopfen", sym: "👋", t: "Anklopfen", bsp: "Christina klopft gerade bei dir an.", an: true },
   { id: "pinnwand", sym: "📌", t: "Pinnwand", bsp: "Christina hat dir ein Post-it an die Pinnwand gehängt." },
@@ -7037,7 +7070,7 @@ const ANS_ARTEN = [
   { id: "termine", sym: "📅", t: "Termine & Abstimmungen", u: "neue Termine, Erinnerungen, Anfragen", bsp: "Morgen: Clubabend im Vereinsheim." },
 ];
 const ANS_KEY = "kc_club_sprachansagen", ANS = { q: [], t: null, gesagt: new Map(), st: null };
-function ansWahl() { let w = null; try { w = JSON.parse(lsLesen(ANS_KEY) || "null"); } catch {} return { ...(w && typeof w === "object" ? w : Object.fromEntries(ANS_ARTEN.map((a) => [a.id, !!a.an]))), online: ansageAn() }; }
+function ansWahl() { let w = null; try { w = JSON.parse(lsLesen(ANS_KEY) || "null"); } catch {} return { ...Object.fromEntries(ANS_ARTEN.map((a) => [a.id, !!a.an])), ...(w && typeof w === "object" ? w : {}), online: ansageAn() }; } // 2.454.0: neue Arten bekommen ihre Vorgabe, gewählte bleiben
 const ansAn = (id) => !!ansWahl()[id];
 // ---------- KC-CLUB-ANSAGE-VORGABE (2.173.0, Wunsch Hansi): Admin schaltet bei einem Mitglied „online“/„verlässt die App“ ein ----------
 // Die Vorgabe kommt mit „init“; je Gerät genau einmal übernommen (Stempel „am“), danach entscheidet wieder das Mitglied selbst.
@@ -7283,6 +7316,7 @@ async function onlinePing() {
     ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id)); ONL.stand = Date.now();
     if (vorher !== [...ONL.ids].sort().join() && aktuelleAnsicht === "mitglieder" && MITGLIEDER) { try { mitgliederZeichnen(); } catch {} }
     if (vorher !== [...ONL.ids].sort().join()) grOnlineAuffrischen(); // KC-CLUB-GRUPPE-ALLE-ONLINE
+    werIstDa(ONL.liste, r.zeigen); // KC-CLUB-WER-IST-DA (2.454.0) – vor der Online-Ansage, damit niemand doppelt genannt wird
     onlineAnsagen(ONL.liste); // KC-CLUB-ONLINE-ANSAGE
     if ($("setOnline")) $("setOnline").checked = r.zeigen;
     onlineLeisteZeigen(); if (INIT) heroZeigen();
@@ -7436,6 +7470,9 @@ function onlineTakt() {
   // darum dann alle 15 s nachsehen (mit Push weckt der Push die offene App sofort, 60 s reichen).
   ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : sparTakt(PUSH_AKTIV || rtAn() ? 60000 : 15000)); // KC-CLUB-SPARMODUS: seltener · KC-CLUB-REALTIME: Leitung steht → wie mit Push
 }
+document.addEventListener("visibilitychange", () => { // KC-CLUB-WER-IST-DA (2.454.0): nach ≥ 10 Min. im Hintergrund wieder „wer ist da“ – vor dem Ping
+  if (document.hidden) WER_DA.weg = Date.now(); else if (WER_DA.weg && Date.now() - WER_DA.weg >= ANSAGE_PAUSE_MS) WER_DA.faellig = true;
+});
 document.addEventListener("visibilitychange", () => { if (!document.hidden) onlinePing(); });
 // KC-CLUB-ONLINE-LED (0.96.0): vierte LED oben unter den drei Verbindungs-LEDs – grün, sobald jemand anderes online ist,
 // damit man es in jeder Ansicht sieht (die Anzeige auf der Startseite bleibt wie sie ist). Grau = niemand online,

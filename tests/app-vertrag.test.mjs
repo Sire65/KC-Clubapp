@@ -6647,6 +6647,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!esSichtbar\(\) \|\| !d\.laeuft\) \{ if \(BWM\.laeuft\) bwMusik\(false\); return; \}/.test(html), "⏸ und App im Hintergrund = Musik Pause");
   assert.ok(/\.es-dia \.es-leiste \{ gap: 5px; bottom: 58px; \}/.test(lies("index.html")), "Leiste über den Hilfe-Knöpfen");
 }
+
+// 2.454.0 KC-CLUB-WER-IST-DA (Wunschliste #13): beim Reinkommen einmal sagen, wer gerade da ist
+{
+  assert.ok(/\{ id: "beim_start", sym: "👋", t: "Beim Öffnen: wer gerade da ist"[^\n]*an: true \}/.test(html), "eigene Ansage-Art, Standard an");
+  assert.ok(html.includes("return { ...Object.fromEntries(ANS_ARTEN.map((a) => [a.id, !!a.an])), ...(w && typeof w === \"object\" ? w : {}), online: ansageAn() };"), "neue Arten bekommen ihre Vorgabe, eigene Wahl bleibt");
+  assert.ok(/werIstDa\(ONL\.liste, r\.zeigen\);[^\n]*\n    onlineAnsagen\(ONL\.liste\);/.test(html), "vor der Online-Ansage (niemand doppelt)");
+  assert.ok(/if \(!WER_DA\.faellig \|\| document\.hidden\) return; WER_DA\.faellig = false;/.test(html) && /Date\.now\(\) - WER_DA\.weg >= ANSAGE_PAUSE_MS\) WER_DA\.faellig = true;\n\}\);\ndocument\.addEventListener\("visibilitychange", \(\) => \{ if \(!document\.hidden\) onlinePing\(\); \}\);/.test(html), "nur beim Öffnen bzw. nach 10 Min. Pause");
+  assert.ok(/if \(zeigen === false \|\| !ansAn\("beim_start"\) \|\| inRuheJetzt\(/.test(html), "Privatsphäre, Schalter, Ruhezeit");
+  const f = new Function(`const ANSAGE_NAMEN_MAX = 3; ${html.slice(html.indexOf("function werIstDaText("), html.indexOf("function werIstDa(liste"))} return werIstDaText;`)();
+  assert.equal(f(["Hansi", "Klaus", "Anne", "Christina", "Steven"]), "Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder.");
+  assert.equal(f(["Hansi", "Klaus", "Anne", "Christina"]), "Im Moment sind Hansi, Klaus und Anne online und 1 weiteres Mitglied.");
+  assert.equal(f(["Klaus"]), "Im Moment ist Klaus online.");
+  assert.equal(f(["Klaus", "Anne"]), "Im Moment sind Klaus und Anne online.");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
