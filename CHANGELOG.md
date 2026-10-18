@@ -1,5 +1,11 @@
 # Änderungen
 
+## Spiegel – 2026-10-18 (ohne App-Build) – KICC-F-107: Spiegel und Backup übertragen nur geänderte Tabellen
+Wunsch Hansi („baue um, dass nur geänderte Daten gespiegelt oder gesichert werden“; Supabase-Hinweis: Egress unter 5,5 GB). Nichts wird reduziert – jede Tabelle wird weiter gespiegelt und gesichert.
+- Spiegel-Arbeiter fragt zuerst nur den Fingerabdruck (`kc_db_mirror_fingerprint`: Zeilen + Prüfsumme, ~100 Byte). Unverändert → kein Abholen; ist die letzte Prüfung älter als 24 h, wird das Ziel in Neon nachgerechnet statt neu übertragen. Geändert → Abholen über `kc_db_mirror_snapshot_text` (bisher kam jede Tabelle doppelt über die Leitung).
+- DB: `supabase/migrations/20261018_kicc_f107_spiegel_fingerabdruck.sql` (bereits eingespielt). Backup-Arbeiter v20 im KICC-Repo.
+- Rückweg: Spiegel-Arbeiter-Stand vor diesem Eintrag erneut hochladen (Workflow „Spiegel-Arbeiter hochladen“).
+
 ## 2.479.0 – 2026-10-18 – Sicherheit: Anlagen-Namen
 - KC-CLUB-SICHER-ANLAGENNAME (TÜV 18.10.): Dateiname/-typ einer Anlage (Vorschläge, Terminanfragen, Umfragen) und Stadttermin-Schlüssel gingen per esc() in onclick – der Browser macht aus &#39; vor dem Ausführen wieder ' → präparierter Dateiname hätte fremden Code starten können; nebenbei ging „Hansi's Rezept.pdf“ nicht auf. Jetzt jsArg() wie überall sonst; Test verbietet das Muster.
 
