@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.452.0 – 2026-10-18 – KC-CLUB-AVATAR-SCHUERZE: Schürze an der Koch-Figur (Wunschliste #19)
+Die Koch-Figur kann eine Schürze tragen: 10 Farben, Muster (Nadelstreifen, Längsstreifen, Karo, Punkte, Jeans), Träger um den Hals, Initialen rechts. Alte Bild-Codes bleiben gültig. App + Server (Prüfung der längeren Bild-Codes).
+
 ## 2.451.0 – 2026-10-18 – Mütze und Rahmen aufs eigene Foto (KC-CLUB-FOTO-MUETZE, Wunschliste #11)
 Beim eigenen Foto (Selfie, Galerie, Datei) kann man vor dem Übernehmen eine Mütze aufsetzen – Nikolausmütze, Kochmütze, Chefmütze, Jägerhut, Cowboyhut, Zylinder, Strohhut, Bommelmütze, Beanie, Krone, Partyhütchen, Wikingerhelm – mit dem Finger verschieben, Größe und Drehung einstellen, dazu ein Rahmen (Weinrot, Gold, Weihnacht, Bunt). Es sind dieselben Zeichnungen wie bei der Koch-Figur (gemeinsamer Baustein avMuetzeSvg). Mütze und Rahmen werden fest ins kleine Foto gezeichnet; klappt das auf einem Gerät nicht, wird das Foto ohne gespeichert (Hinweis). Nur App.
 

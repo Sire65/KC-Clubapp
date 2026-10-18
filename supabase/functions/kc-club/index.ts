@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.449.0";
+const SERVER_VERSION = "2.452.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1237,7 +1237,7 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   infofeld: (w) => ({ start: typeof w?.start === "string" && KA_ID.test(w.start) ? w.start : "zuletzt" }),
   // KC-CLUB-ONLINE (0.29.0): anderen zeigen, wann ich online bin (Standard: an)
   online: (w) => ({ zeigen: w?.zeigen !== false }),
-  avatar: (w) => ({ figur: typeof w?.figur === "string" && (/^(w(0[1-9]|1[0-5])|m(0[1-9]|1[0-9]|2[0-5]))$/.test(w.figur) || /^b[0-9a-z]{9}$/.test(w.figur) || /^c[0-9a-z]{15,31}$/.test(w.figur) || /^p[0-9a-z]{26,31}$/.test(w.figur) || AVF_CODE.test(w.figur) || /^g[wm][0-9]{2,3}$/.test(w.figur)) ? w.figur : null }), // 2.414.0 KC-CLUB-AVATAR-PREMIUM: „p…“ = hochwertiger Stil, c/p bis 31 Zeichen (Ohrringe, Kette, Piercing, Jackenschnitt, Falten) // 2.23.99: „c…“ = erweiterter Baukasten // 2.23.89: „f…“ = eigenes Foto; 2.23.96: Köche bis m25 // KC-CLUB-AVATAR (2.23.85); „b…“ = Baukasten (2.23.86)
+  avatar: (w) => ({ figur: typeof w?.figur === "string" && (/^(w(0[1-9]|1[0-5])|m(0[1-9]|1[0-9]|2[0-5]))$/.test(w.figur) || /^b[0-9a-z]{9}$/.test(w.figur) || /^c[0-9a-z]{15,33}$/.test(w.figur) || /^p[0-9a-z]{26,33}$/.test(w.figur) || AVF_CODE.test(w.figur) || /^g[wm][0-9]{2,3}$/.test(w.figur)) ? w.figur : null }), // 2.414.0 KC-CLUB-AVATAR-PREMIUM: „p…“ = hochwertiger Stil, c/p bis 31 Zeichen (Ohrringe, Kette, Piercing, Jackenschnitt, Falten) // 2.23.99: „c…“ = erweiterter Baukasten // 2.23.89: „f…“ = eigenes Foto; 2.23.96: Köche bis m25 // KC-CLUB-AVATAR (2.23.85); „b…“ = Baukasten (2.23.86)
   // KC-CLUB-INKOGNITO (2.3.0): nur Admins (Prüfung in einstellung_setzen) – Standard: aus
   inkognito: (w) => ({ an: w?.an === true }),
   // KC-CLUB-SPIELE (2.7.0): darf man mich herausfordern (Standard: nein) + welche Spiele (bisher nur Tic-Tac-Toe)
