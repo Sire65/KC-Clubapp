@@ -1,5 +1,8 @@
 # Änderungen
 
+## Server 2.456.0 – 2026-10-18 – KC-CLUB-NOTPAKET-PUFFER: Nachbesserung nach Messung
+Erster Bau mit 2.453.0 (09:18, erzwungen): Paket einwandfrei (17/17, 26,7 s, 5 statt 17 Aufrufe), aber nur 113 von 5.203 Abfragen gespart (2 %). Ursache: drei nur lesende Datenbank-Funktionen (kc_club_rt_kanal, kc_club_ungelesen_je_chat, kc_communication_get_server_secret – geprüft: STABLE bzw. reines SELECT) wurden als Schreiben gewertet und leerten den Puffer mehrmals je Mitglied. Jetzt lassen nur diese drei den Puffer stehen; jede andere Funktion leert ihn weiter vorsichtshalber. Lauf-Test um zwei Fälle erweitert (11/11 grün).
+
 ## Server 2.453.0 – 2026-10-18 – KC-CLUB-NOTPAKET-PUFFER: Notfall-Paket mit deutlich weniger Datenbank-Abfragen (wird je Bau gemessen)
 Anlass (Prüfbericht KC-Infrastruktur 18.10.2026, Hansi: „Datenbank-Zugriffe minimieren, Notfall-Paket prüfen“): Jeder Bau des Notfall-Pakets stellte ~5.000 Datenbank-Abfragen in einer Minute (87 % der 11 Lastspitzen des Tages, Auslöser der „KRITISCHE Datenbanklast“-Pushs). Messung 07:45: von 4.988 Leseabfragen waren nur 2.308 verschieden – dieselben Mitglieder-, Rechte- und Chat-Abfragen liefen für jedes Mitglied erneut. Am 17.10. 11:30 brach ein Bau deshalb mit „Datenbank antwortet nicht“ ab (altes Paket blieb korrekt stehen) und lief 15 Min. später komplett noch einmal.
 - Ein Notpaket-Teil baut jetzt 4 Mitglieder nacheinander (17 → 5 Aufrufe, weiter 4 gleichzeitig). Innerhalb des Teils wird jede gleiche Leseabfrage nur einmal gestellt (Lese-Puffer nur für diesen Aufruf – andere gleichzeitige Anfragen sehen ihn nie; jedes Schreiben leert ihn; Fehler und Zeitüberschreitungen werden nie gepuffert).

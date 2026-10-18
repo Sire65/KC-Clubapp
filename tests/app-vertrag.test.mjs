@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -10571,7 +10571,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const puffer = lies("supabase/functions/kc-club/db-puffer.js");
   assert.ok(/import \{ AsyncLocalStorage \} from "node:async_hooks";/.test(puffer) && /export const DB_PUFFER = new AsyncLocalStorage\(\);/.test(puffer), "Puffer nur im eigenen Aufruf (AsyncLocalStorage)");
   const f = server.slice(server.indexOf("const dbFetch: typeof fetch"), server.indexOf("const dbWeg"));
-  assert.ok(/DB_PUFFER\.getStore\(\)/.test(f) && /if \(methode !== "GET" && methode !== "HEAD"\) \{ pf\.antworten\.clear\(\);/.test(f), "Schreiben leert den Puffer");
+  assert.ok(/DB_PUFFER\.getStore\(\)/.test(f) && /if \(!\(methode === "POST" && rpc && DB_RPC_NUR_LESEN\.has\(rpc\)\)\) pf\.antworten\.clear\(\);/.test(f), "Schreiben leert den Puffer");
+  assert.ok(/const DB_RPC_NUR_LESEN = new Set\(\["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret"\]\);/.test(server), "nur geprüfte Lese-Funktionen lassen den Puffer stehen");
   assert.ok(/if \(!r\.ok\) pf\.antworten\.delete\(schluessel\);/.test(f) && /a\.catch\(\(\) => pf\.antworten\.delete\(schluessel\)\);/.test(f), "Fehler und Abbrüche werden nie gepuffert");
   assert.ok(/if \(!pf\) return dbFetchNetz\(input, init\);/.test(f) && /if \(zeit\.aborted\) \{ DB_AUS\.n\+\+;/.test(f), "ohne Notpaket-Teil unverändert, Zeitgrenze bleibt");
   const nt = server.slice(server.indexOf('if (a === "notpaket_teil")'), server.indexOf('if (a === "notpaket_teil")') + 1500);

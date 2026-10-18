@@ -43,13 +43,20 @@ const DB_AUS = { n: 0 }; // zählt abgebrochene Abfragen (je Anfrage vorher/nach
 // gleichzeitige andere Anfragen sehen ihn nie), lebt nur so lange wie der Aufruf und wird bei jedem Schreiben geleert. Fehler werden nie gepuffert.
 type DbAntwort = { status: number; statusText: string; headers: [string, string][]; body: ArrayBuffer | null };
 type DbPuffer = { antworten: Map<string, Promise<DbAntwort>>; netz: number; puffer: number };
+// Nur lesende Datenbank-Funktionen (STABLE bzw. reines SELECT, geprüft 18.10.2026): gehen ungepuffert durch, leeren den Puffer aber nicht.
+// Jede andere Funktion gilt vorsichtshalber als Schreiben. (Messung 2.453.0: diese drei leerten den Puffer mehrmals je Mitglied → nur 2 % gespart.)
+const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret"]);
 const dbFetch: typeof fetch = (input, init) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
   const pf = url.includes("/rest/v1/") ? DB_PUFFER.getStore() as DbPuffer | undefined : undefined;
   if (!pf) return dbFetchNetz(input, init);
   const ri = init as RequestInit | undefined;
   const methode = String(ri?.method || (input instanceof Request ? input.method : "GET")).toUpperCase();
-  if (methode !== "GET" && methode !== "HEAD") { pf.antworten.clear(); pf.netz++; return dbFetchNetz(input, init); }
+  if (methode !== "GET" && methode !== "HEAD") {
+    const rpc = /\/rest\/v1\/rpc\/([a-z0-9_]+)/.exec(url)?.[1];
+    if (!(methode === "POST" && rpc && DB_RPC_NUR_LESEN.has(rpc))) pf.antworten.clear();
+    pf.netz++; return dbFetchNetz(input, init);
+  }
   const h = new Headers(ri?.headers ?? (input instanceof Request ? input.headers : undefined));
   const schluessel = [methode, url, h.get("accept"), h.get("prefer"), h.get("range"), h.get("accept-profile")].join("|");
   let a = pf.antworten.get(schluessel);
@@ -78,7 +85,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.453.0";
+const SERVER_VERSION = "2.456.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
