@@ -1,6 +1,6 @@
 # KC Fernhilfe – Messung und Konzept (KC-CLUB-FERNHILFE)
 
-**Stand:** 18.10.2026 · **Status:** F0 erledigt, F1, F3 und F4 gebaut (Einspielen 20 Uhr) · **Auftrag:** Hansi („mit Fernhilfe Messung und Konzept anfangen“)
+**Stand:** 18.10.2026 · **Status:** F0 erledigt, F1, F3, F4 eingespielt (2.475.0), F2 gebaut (2.477.0) · **Auftrag:** Hansi („mit Fernhilfe Messung und Konzept anfangen“)
 
 ## 1. Ziel
 
@@ -130,6 +130,24 @@ nachgezogen, Rückweg beschrieben.
 
 **Rückweg:** Schalter „Fernhilfe über Broadcast“ aus → alter Studio-Weg (Datenbank) wie bisher. Keine Datenbank-Änderung
 nötig außer ggf. Zugriffsregel auf `realtime.messages` (Weg A), die per Migration wieder entfernt werden kann.
+
+## 5a. F2 gebaut (2.477.0): nur Änderungen statt Vollbild
+
+- **Sender** (`fhBildSenden`): vergleicht das neue Bild mit dem zuletzt gesendeten – gleicher Anfang und gleiches Ende fallen weg, nur die Mitte
+  geht raus (ab 4.000 Zeichen gepackt), dazu Fenstergröße, Scroll-Position und Tipp-Punkt. Ist mehr als die Hälfte neu, geht ein Vollbild.
+- **Nummern:** Jede Änderung nennt das Bild, auf dem sie aufbaut. Der Empfänger (`fhBildEmpfangen`) setzt der Reihe nach zusammen
+  (`fhBildFolge`); passt eine Änderung nicht (verloren, Neustart), zeigt er nichts Falsches, sondern fordert mit „hallo“ ein Vollbild an.
+- **Selbstheilung:** spätestens alle 60 s ein Vollbild (`FH_VOLL_MS`), auch wenn sich nichts ändert.
+- **Verträglich:** Nur Zuschauer, die sich mit `hallo + f2` melden, bekommen Änderungen; ältere Apps weiter Vollbilder. Der Datenbank-Weg
+  (Rückfall) ist unverändert.
+- **Teile ≤ 200 KB:** wie seit F1 – jede Nachricht höchstens 180.000 Zeichen.
+- **Messung im Protokoll:** zusätzlich `voll` (Vollbilder) und `aend` (Änderungen) je Sitzung.
+- **Tests:** `tools/fernhilfe/fh-aenderungen-test.ts` (21/21, Liste mit 356 KB Inhalt: Änderung 158 Zeichen statt 28.277; Verlust → Vollbild;
+  60-s-Vollbild; Emoji an der Schnittstelle; Reihenfolge) und `tools/fernhilfe/fh-aenderungen-browser.mjs` (Chromium, echte App mit
+  3.000 Zeilen: Änderung 460 Zeichen statt 26 KB, im Live-Bild sichtbar, nach Verlust wieder vollständig, keine Nachricht über 200 KB).
+- **Ehrlich:** Die Zahl der Realtime-Nachrichten sinkt dadurch kaum (je Bildänderung weiterhin eine Nachricht) – gespart werden Datenmenge
+  (≈ 98 % je Änderung), Rechenzeit und Akku auf beiden Handys; sehr große Seiten brauchen nicht mehr mehrere Teile je Änderung.
+- **Rückweg:** App 2.476.0 erneut einspielen (oder in `fhBildSenden` die Bedingung `!L.f2` immer wahr) – dann wieder nur Vollbilder.
 
 ## 6. Risiken
 

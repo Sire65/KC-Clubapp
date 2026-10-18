@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.477.0 – 2026-10-18 – KC Fernhilfe F2: nur Änderungen statt Vollbild · Server 2.477.0
+**KC-CLUB-FERNHILFE F2** (Wunsch Hansi „mit F2 weitermachen“, Konzept docs/FERNHILFE_KONZEPT.md): Beim Mitschauen und Vorführen über die direkte Leitung geht nach dem ersten Vollbild nur noch die geänderte Stelle raus (gleicher Anfang/Ende entfallen, große Mitte gepackt). Jede Änderung trägt die Nummer ihres Bildes; passt sie beim Empfänger nicht, fordert er ein Vollbild an (nie ein falsches Bild). Spätestens alle 60 s ein Vollbild (Selbstheilung). Nur an Apps, die das können (Meldung „hallo + f2“) – ältere bekommen weiter Vollbilder; Datenbank-Rückfall unverändert. Server: Protokoll je Sitzung zusätzlich Vollbilder/Änderungen.
+Tests: tools/fernhilfe/fh-aenderungen-test.ts 21/21 (Änderung 158 Zeichen statt 28.277 bei 356 KB Liste), tools/fernhilfe/fh-aenderungen-browser.mjs (Chromium, echte App) grün, fh-leitung-test.ts 11/11, fern-bedienen-test.mjs grün, Vertragstests grün, Typprüfung unverändert (17). Hilfe/Twinkey/Lupe: keine sichtbare Änderung, nichts nachzuziehen.
+Rückweg: 2.476.0 erneut einspielen.
+
 ## 2.476.0 – 2026-10-18 – Bündel: Adventskalender, Einstellungen neu geordnet, echter Hahn, „Heute“ im Kalender, letzte Chat-Nachricht offen, Uhren ohne Kratzen
 Bündel (Wunsch Hansi „Spiele alles ein, was noch offen ist“) – eine Version mit:
 - KC-CLUB-ADVENTSKALENDER: 24 Türchen mit Bastelanleitungen für süße Naschereien (Wunschliste #17): Wunsch Hansi „Adventskalender einbauen“: vom 1. bis 24. Dezember jeden Tag ein Türchen (Weinrot/Beige, heutiges leuchtet golden) mit einer Bastelanleitung für eine kleine süße Nascherei. Erinnerung im Info-Laufband, solange das heutige Türchen zu ist; frühere nachholbar, spätere gesperrt. Merkt sich das Gerät (kein Server). ⚙️ → Effekte → 🎄 Adventskalender (an/aus, Kalender ansehen); Hilfe-Eintrag. Nur App.

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.476.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.477.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7475,7 +7475,9 @@ function fhLeitung(fh, beiDaten, beiBereit) {
     const t = L.teile.get(q.m) || []; t[q.i] = q.c; L.teile.set(q.m, t);
     if (t.filter((x) => typeof x === "string").length !== q.n) return;
     L.teile.delete(q.m); if (L.teile.size > 10) L.teile.clear();
-    try { const klar = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(q.iv) }, L.key, unb64(t.join(""))); beiDaten(JSON.parse(new TextDecoder().decode(klar))); } catch {}
+    try { const klar = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(q.iv) }, L.key, unb64(t.join(""))), obj = JSON.parse(new TextDecoder().decode(klar));
+      if (obj?.hallo) { L.f2 = !!obj.f2; if (L.d) L.d.neu = true; } // KC-CLUB-FERNHILFE F2: Gegenseite kann Änderungen zusammensetzen; nach „hallo“ immer ein Vollbild
+      beiDaten(obj); } catch {}
   }
   L.senden = async (obj) => {
     if (!L.ok || !L.key) return false;
@@ -7488,13 +7490,54 @@ function fhLeitung(fh, beiDaten, beiBereit) {
     } catch { return false; }
   };
   L.schliessen = () => { L.zu = true; L.ok = false; clearInterval(L.herz); try { L.ws?.close(); } catch {} };
-  L.mess = () => ({ n: L.msgs, kb: Math.round(L.bytes / 1024), max_kb: Math.round(L.max / 1024), weg: "broadcast" });
+  L.mess = () => ({ n: L.msgs, kb: Math.round(L.bytes / 1024), max_kb: Math.round(L.max / 1024), weg: "broadcast", voll: L.vN || 0, aend: L.aN || 0 });
   if (typeof crypto?.subtle?.importKey === "function") crypto.subtle.importKey("raw", unb64(fh.schluessel), { name: "AES-GCM" }, false, ["encrypt", "decrypt"]).then((k) => { L.key = k; verbinden(); }).catch(() => {});
   return L;
 }
 const fhGueltig = (fh) => !!(fh && typeof fh.kanal === "string" && /^kc-fh-[0-9a-f]{32}$/.test(fh.kanal) && typeof fh.schluessel === "string");
 // Der Sender schickt nach einem „hallo“ des Zuschauers sofort ein ganzes Bild (wer später dazukommt, sieht nicht erst nach der nächsten Änderung etwas)
 const fhNeuSenden = () => { SPG.letzt = ""; SPG.schmutzig = true; };
+// ---------- KC-CLUB-FERNHILFE F2: nach dem ersten Vollbild nur noch die geänderte Stelle (Konzept docs/FERNHILFE_KONZEPT.md, Stufe F2) ----------
+// Der Sender vergleicht das neue Bild mit dem zuletzt gesendeten: gleicher Anfang und gleiches Ende bleiben weg, nur die Mitte dazwischen geht raus
+// (ab 4.000 Zeichen gepackt). Jede Änderung trägt die Nummer des Bildes, auf dem sie aufbaut. Passt sie beim Empfänger nicht (Nachricht verloren,
+// Neustart), fordert er mit „hallo“ ein Vollbild an. Zusätzlich spätestens alle FH_VOLL_MS ein Vollbild (Selbstheilung). Ältere Apps melden
+// sich ohne f2 und bekommen weiter nur Vollbilder.
+const FH_VOLL_MS = 60000;
+const fhVollFaellig = () => [MSCH.fhL, VF.fhL].some((L) => L?.f2 && L.d?.s && Date.now() - L.d.voll > FH_VOLL_MS);
+async function fhBildSenden(L, f, extra = {}) {
+  const s = f?._s;
+  if (!s || !L.f2) { const ok = await L.senden({ f: f || null, ...extra }); if (ok && s) L.vN = (L.vN || 0) + 1; return ok; }
+  const D = L.d || (L.d = { seq: 0, s: null, voll: 0, neu: true }), alt = D.s?.html, html = s.html;
+  let n = null;
+  if (typeof alt === "string" && !D.neu && Date.now() - D.voll < FH_VOLL_MS) {
+    const max = Math.min(alt.length, html.length); let p = 0, q = 0;
+    while (p < max && alt.charCodeAt(p) === html.charCodeAt(p)) p++;
+    while (q < max - p && alt.charCodeAt(alt.length - 1 - q) === html.charCodeAt(html.length - 1 - q)) q++;
+    const mitte = html.slice(p, html.length - q);
+    if (mitte.length < html.length / 2) n = { d: { von: D.seq, seq: D.seq + 1, p, q, m: mitte.length > 4000 ? await spgPacken(mitte) : mitte, ha: s.ha, ba: s.ba, w: s.w, h: s.h, sy: s.sy, tipp: f.tipp || null } };
+  }
+  if (!n) n = { f, seq: D.seq + 1 };
+  const ok = await L.senden({ ...n, ...extra });
+  if (ok) { D.seq++; D.s = s; if (n.f) { D.voll = Date.now(); D.neu = false; L.vN = (L.vN || 0) + 1; } else L.aN = (L.aN || 0) + 1; }
+  return ok;
+}
+// Empfänger: setzt Vollbild + Änderungen der Reihe nach zusammen; liefert ein Bild für spgZeigen (oder null, wenn erst ein Vollbild nötig ist)
+async function fhBildEmpfangen(L, d) {
+  const R = L.r || (L.r = { seq: -1, s: null, halloAm: 0 });
+  if (d.f) {
+    if (!d.f.d) return d.f; // Vorhang
+    const s = await spgAuspacken(d.f); R.s = s; R.seq = Number.isInteger(d.seq) ? d.seq : -1; return { ...d.f, _s: s };
+  }
+  const x = d.d; if (!x) return null;
+  const alt = R.s?.html;
+  if (typeof alt !== "string" || x.von !== R.seq || !(x.p >= 0 && x.q >= 0 && x.p + x.q <= alt.length)) {
+    if (Date.now() - R.halloAm > 2000) { R.halloAm = Date.now(); L.senden({ hallo: 1, f2: 1 }); } return null;
+  }
+  const m = typeof x.m === "string" ? x.m : await spgAuspacken(x.m); if (typeof m !== "string") return null;
+  const s = { html: alt.slice(0, x.p) + m + alt.slice(alt.length - x.q), ha: x.ha, ba: x.ba, w: x.w, h: x.h, sy: x.sy };
+  R.s = s; R.seq = x.seq; return { _s: s, w: x.w, h: x.h, tipp: x.tipp };
+}
+const fhBildFolge = (L, d) => (L.rKette = (L.rKette || Promise.resolve()).then(() => fhBildEmpfangen(L, d)).catch(() => null));
 
 // KC-CLUB-RT-SPARBREMSE (2.230.0): Verbrauch des kostenlosen Monats-Kontingents (nur Admin, Zahl vom Server)
 function rtKontingent() {
@@ -22133,7 +22176,7 @@ async function vfSenden(f) {
   const zn = VF.zN, zMit = zn !== VF.zGes; // KC-CLUB-VORFUEHREN-ZEIGER: Pfeil-Punkt nur bei Änderung
   // KC-CLUB-FERNHILFE F1: läuft die Leitung, gehen Bild und Zeiger direkt – der Server wird nur alle FH_PRUEF_MS nach dem Stand gefragt
   let fl = VF.status === "laeuft" && VF.fhL?.ok && VF.fhHallo ? VF.fhL : null; // erst wenn der Zuschauer sich auf der Leitung gemeldet hat (ältere App → bisheriger Weg)
-  if (fl && (f || zMit) && !(await fl.senden({ f: f || null, ...(zMit ? { z: VF.vorhang ? null : VF.zeiger } : {}) }))) fl = null;
+  if (fl && (f || zMit) && !(await fhBildSenden(fl, f, { ...(zMit ? { z: VF.vorhang ? null : VF.zeiger } : {}) }))) fl = null; // KC-CLUB-FERNHILFE F2
   if (fl) { if (zMit) VF.zGes = zn; if (Date.now() - (VF.fhPruef || 0) < FH_PRUEF_MS) return true; VF.fhPruef = Date.now(); }
   const r = await api("vorfuehren_bild", { id: VF.id, an: VF.an, f: !fl && VF.status === "laeuft" ? f : null, ...(!fl && zMit ? { z: VF.vorhang ? null : VF.zeiger } : {}) }, { still: true });
   if (!fl && zMit) VF.zGes = zn;
@@ -22172,7 +22215,7 @@ async function vfAnfrage(einl) {
     if (!ja || r.status !== "laeuft") { if (ja) melde("📺 Die Vorführung ist schon vorbei."); return; }
     Object.assign(VF, { rolle: "schaut", id: einl.id, vonPid: r.von?.person_id || einl.von?.person_id || null, gegen: r.von?.vorname || wer, status: "laeuft", seit: r.n || 0, fseit: 0, start: Date.now(), bis: r.bis ? Date.parse(r.bis) : Date.now() + ST_LIVE_MIN * 60000 });
     spur("vorfuehren_zuschauen"); vfSchirm(); vfLeiste(); VF.takt = setInterval(vfHolen, 800); vfHolen();
-    if (fhGueltig(r.fh)) VF.fhL = fhLeitung(r.fh, vfFhDaten, () => VF.fhL?.senden({ hallo: 1 })); // KC-CLUB-FERNHILFE F1
+    if (fhGueltig(r.fh)) VF.fhL = fhLeitung(r.fh, vfFhDaten, () => VF.fhL?.senden({ hallo: 1, f2: 1 })); // KC-CLUB-FERNHILFE F1
   } catch (e) { meldeFehler(e); }
 }
 function vfSchirm() {
@@ -22181,7 +22224,7 @@ function vfSchirm() {
 }
 async function vfFhDaten(d) { // KC-CLUB-FERNHILFE F1: Bild und Zeiger kommen direkt
   if (VF.rolle !== "schaut" || !d) return;
-  if (d.f) { VF.fhBild = true; try { await spgZeigen($("spgSchirmBuehne"), d.f); } catch {} }
+  if (d.f || d.d) { const f = await fhBildFolge(VF.fhL, d); if (f && VF.rolle === "schaut") { VF.fhBild = true; try { await spgZeigen($("spgSchirmBuehne"), f); } catch {} } } // KC-CLUB-FERNHILFE F2
   if ("z" in d) vfZeigerMalen(d.z);
 }
 async function vfHolen(sofort) {
@@ -22189,7 +22232,7 @@ async function vfHolen(sofort) {
   if (document.hidden && sofort !== true) return; // 2.314.1 KC-CLUB-VORFUEHREN-HINTERGRUND: Fenster im Hintergrund (z. B. zweiter Browser) fragt nicht mit – Fund 10.10.: zwei Browser je 0,8 s
   if (VF.fhL?.ok && VF.fhBild && sofort !== true && Date.now() - (VF.fhPruef || 0) < FH_PRUEF_MS) return; // KC-CLUB-FERNHILFE F1: nur noch der Stand alle 15 s
   if (VF.fhL?.ok && VF.fhBild) VF.fhPruef = Date.now();
-  if (VF.fhL?.ok && !VF.fhBild && Date.now() - (VF.fhHalloAm || 0) > 3000) { VF.fhHalloAm = Date.now(); VF.fhL.senden({ hallo: 1 }); } // bis das erste Bild direkt kommt
+  if (VF.fhL?.ok && !VF.fhBild && Date.now() - (VF.fhHalloAm || 0) > 3000) { VF.fhHalloAm = Date.now(); VF.fhL.senden({ hallo: 1, f2: 1 }); } // bis das erste Bild direkt kommt
   if (VF.laeuft) { if (sofort === true) VF.nochmal = true; return; } // Signal während einer Abfrage → gleich danach noch einmal
   // KC-CLUB-REALTIME-VORFUEHREN (2.229.0): steht die direkte Leitung, meldet sich jedes neue Bild selbst – der Takt nur zur Sicherheit
   if (sofort !== true && rtAn() && (VF.tn = (VF.tn || 0) + 1) % 4) return;
@@ -37004,8 +37047,9 @@ function ssFhZu() { SS.fhL?.schliessen(); SS.fhL = null; SS.fhPruef = 0; SS.fhBi
 function ssFhDaten(d) {
   if (!SS.id || !d) return;
   if ("bedienen" in d) { SS.bedienen = !!d.bedienen; ssFernFlaeche(); stAktionen(); melde(SS.bedienen ? "🖱️ Du darfst jetzt bedienen – tippe ins Live-Bild" : "🖱️ Bedienen wurde ausgeschaltet"); } // KC-CLUB-FERNHILFE F3
-  if (!d.f) return;
-  SS.fhBild = true; STD.frame = d.f; const b = $("stdBuehne"); if (b) spgZeigen(b, d.f).then(() => { stAktionen(); ssFernFlaeche(); }).catch(() => {});
+  if (!d.f && !d.d) return;
+  fhBildFolge(SS.fhL, d).then((f) => { if (!f || !SS.id) return; // KC-CLUB-FERNHILFE F2: Vollbild oder zusammengesetzte Änderung
+    SS.fhBild = true; STD.frame = f; const b = $("stdBuehne"); if (b) spgZeigen(b, f).then(() => { stAktionen(); ssFernFlaeche(); }).catch(() => {}); });
 }
 function ssAbbrechen(still) {
   ssFhZu(); clearInterval(SS.uhr); if (SS.id) api("schnappschuss_ende", { an: SS.an, id: SS.id }).catch(() => {});
@@ -37025,8 +37069,8 @@ async function ssHolen(sofort) {
     if (SS.id !== id) return;
     if (r.status === "live") {
       if (SS.fhL?.ok && SS.fhBild) SS.fhPruef = Date.now();
-      if (SS.fhL?.ok && !SS.fhBild && Date.now() - (SS.fhHalloAm || 0) > 3000) { SS.fhHalloAm = Date.now(); SS.fhL.senden({ hallo: 1 }); } // bis das erste Bild direkt kommt
-      if (fhGueltig(r.fh) && !SS.fhL) SS.fhL = fhLeitung(r.fh, ssFhDaten, () => SS.fhL?.senden({ hallo: 1 })); // KC-CLUB-FERNHILFE F1
+      if (SS.fhL?.ok && !SS.fhBild && Date.now() - (SS.fhHalloAm || 0) > 3000) { SS.fhHalloAm = Date.now(); SS.fhL.senden({ hallo: 1, f2: 1 }); } // bis das erste Bild direkt kommt
+      if (fhGueltig(r.fh) && !SS.fhL) SS.fhL = fhLeitung(r.fh, ssFhDaten, () => SS.fhL?.senden({ hallo: 1, f2: 1 })); // KC-CLUB-FERNHILFE F1
       if (STD.status !== "live") { stSetzen("mitschauen", "live", { start: Date.now(), bis: r.bis ? Date.parse(r.bis) : Date.now() + ST_LIVE_MIN * 60000 }); clearInterval(SS.uhr); SS.uhr = setInterval(ssHolen, 800); }
       if (!(r.n <= SS.seit)) { SS.seit = r.n;
         if (r.frame) { STD.frame = r.frame; const b = $("stdBuehne"); if (b) await spgZeigen(b, r.frame); stAktionen(); }
@@ -37135,6 +37179,7 @@ function spgSenderStopp() {
 }
 async function spgSenderTakt() {
   if (!SPG.an || SPG.laeuft || document.hidden) return;
+  if (fhVollFaellig()) { SPG.letzt = ""; SPG.schmutzig = true; } // KC-CLUB-FERNHILFE F2: Selbstheilung
   const jetzt = Date.now(); if (!SPG.schmutzig && !(SPG.vorhang && !SPG.vorhangGesendet) && !SPG.mehr?.() && jetzt - SPG.ping < 4000) return;
   SPG.laeuft = true;
   try {
@@ -37142,7 +37187,7 @@ async function spgSenderTakt() {
     if (SPG.vorhang) { if (!SPG.vorhangGesendet) f = { vorhang: true }; }
     else if (SPG.schmutzig) {
       SPG.schmutzig = false; const s = spgSchnappen(SPG.privat), sch = s.html.length + "|" + s.sy + "|" + s.w + "|" + (SPG.tipp?.n || 0) + "|" + s.ba.join() + "|" + s.html;
-      if (sch !== SPG.letzt) { SPG.letzt = sch; f = { ...(await spgPacken(s)), w: s.w, h: s.h, tipp: SPG.tipp }; }
+      if (sch !== SPG.letzt) { SPG.letzt = sch; f = { ...(await spgPacken(s)), w: s.w, h: s.h, tipp: SPG.tipp }; Object.defineProperty(f, "_s", { value: s }); } // F2: Rohbild nur für den Vergleich
     }
     SPG.ping = jetzt; const ok = await SPG.senden(f);
     if (f?.vorhang && ok !== false) SPG.vorhangGesendet = true;
@@ -37161,7 +37206,7 @@ async function spgZeigen(buehne, f) {
   const vorhang = rahmen.querySelector(".spg-vorhang"); vorhang.classList.toggle("versteckt", !f.vorhang); if (f.vorhang) return;
   const ifr = rahmen.querySelector("iframe");
   if (!ifr.contentDocument?.body || ifr.contentDocument.readyState !== "complete") await new Promise((ok) => { ifr.addEventListener("load", ok, { once: true }); setTimeout(ok, 1500); });
-  let s; try { s = await spgAuspacken(f); } catch { return; }
+  let s; try { s = f._s || await spgAuspacken(f); } catch { return; } // F2: zusammengesetzte Bilder sind schon ausgepackt
   const doc = ifr.contentDocument; if (!doc?.body) return;
   const t = doc.createElement("template"); t.innerHTML = s.html;
   t.content.querySelectorAll("script, iframe, object, embed, link, meta, base, frame").forEach((x) => x.remove());
@@ -37217,7 +37262,7 @@ async function mlSenden(f) {
   if (!MSCH.id) return false;
   // KC-CLUB-FERNHILFE F1: Bild direkt an den Helfer; beim Server nur alle FH_PRUEF_MS fragen, ob noch zugeschaut wird
   let fl = MSCH.fhL?.ok && MSCH.fhHallo ? MSCH.fhL : null; // erst wenn der Helfer sich auf der Leitung gemeldet hat
-  if (fl && f && !(await fl.senden({ f }))) fl = null;
+  if (fl && f && !(await fhBildSenden(fl, f))) fl = null; // KC-CLUB-FERNHILFE F2: nur Änderungen
   if (fl) { if (Date.now() - (MSCH.fhPruef || 0) < FH_PRUEF_MS) return true; MSCH.fhPruef = Date.now(); }
   const r = await api("schnappschuss_bild", { id: MSCH.id, f: fl ? null : f }, { still: true });
   if (r.status !== "live") { mlEnde(false, `⏹ ${MSCH.wer} schaut nicht mehr zu`); return false; }

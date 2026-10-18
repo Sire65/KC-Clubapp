@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -10791,6 +10791,18 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\.spg-fern \{/.test(lies("index.html")) && /\.fern-tipp \{/.test(lies("index.html")), "sichtbare Markierung und Bedienfläche");
   assert.ok(/id: "fernhilfe_bedienen", thema: "technik"/.test(html) && /ALLE TESTS GRÜN/.test(lies("tools/fernhilfe/fern-bedienen-test.mjs")), "Hilfe und Browser-Test");
 }
+// KC-CLUB-FERNHILFE F2 (18.10.2026): nach dem ersten Vollbild nur noch Änderungen; Lücke → Vollbild; spätestens alle 60 s Vollbild; ältere Apps nur Vollbilder
+{
+  assert.ok(/const FH_VOLL_MS = 60000;/.test(html) && /async function fhBildSenden\(L, f, extra = \{\}\)/.test(html) && /async function fhBildEmpfangen\(L, d\)/.test(html), "F2-Bausteine fehlen");
+  assert.ok(/if \(!s \|\| !L\.f2\) \{/.test(html) && /if \(obj\?\.hallo\) \{ L\.f2 = !!obj\.f2; if \(L\.d\) L\.d\.neu = true; \}/.test(html), "Änderungen nur an Apps, die sie zusammensetzen können; nach hallo Vollbild");
+  assert.ok(/x\.von !== R\.seq/.test(html) && /L\.senden\(\{ hallo: 1, f2: 1 \}\)/.test(html), "passt eine Änderung nicht, wird ein Vollbild angefordert");
+  assert.ok((html.match(/senden\(\{ hallo: 1, f2: 1 \}\)/g) || []).length === 5 && !/senden\(\{ hallo: 1 \}\)/.test(html), "alle Zuschauer melden sich mit f2");
+  assert.ok(/if \(fhVollFaellig\(\)\) \{ SPG\.letzt = ""; SPG\.schmutzig = true; \}/.test(html), "Selbstheilung: Vollbild spätestens nach 60 s");
+  assert.ok(/Object\.defineProperty\(f, "_s", \{ value: s \}\)/.test(html) && /s = f\._s \|\| await spgAuspacken\(f\)/.test(html), "Rohbild nie mitgesendet (nicht aufzählbar), Empfänger nutzt zusammengesetztes Bild");
+  assert.ok(/await fhBildSenden\(fl, f\)/.test(html) && /await fhBildSenden\(fl, f, \{/.test(html) && /fhBildFolge\(VF\.fhL, d\)/.test(html) && /fhBildFolge\(SS\.fhL, d\)/.test(html), "Mitschauen und Vorführen nutzen F2");
+  assert.ok(/voll: z\(m\.voll\), aend: z\(m\.aend\)/.test(server), "Server: Vollbilder/Änderungen im Protokoll");
+}
+
 // KC-CLUB-FERNHILFE F4 (18.10.2026): Ton während Mitschauen/Bedienen – vorhandener App-Anruf, ohne Vollbild, Ende der Sitzung = Ton aus
 {
   assert.ok(/const rufLeisten = \(\) => \{ if \(RUF\?\.vf\) vfLeiste\(\); else if \(RUF\?\.ms\) msTonZeigen\(\); \};/.test(html) && /await anrufen\(pid, false, false, true\)/.test(html), "Ton über den vorhandenen App-Anruf");
