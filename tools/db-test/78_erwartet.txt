@@ -1,0 +1,6 @@
+nummer_steigt=t
+status_geprueft=t
+bereich_geprueft=t
+rls=t
+kein_zugriff_ohne_server=t
+erledigt=t
