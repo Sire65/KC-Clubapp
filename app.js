@@ -14378,7 +14378,7 @@ const ZUGANG_AKTIONEN = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -21503,6 +21503,8 @@ KACHELN.admin = AD_KACHELN.map(([id, sym, t, gr]) => ({ id: "ad-" + id, sym, t, 
 const WU = { liste: null, bearbeiten: null };
 const WU_BEREICHE = ["Club-App", "Kasse", "PC-Manager", "Money Butler", "Dienstplan DP2", "Verwaltung", "Sonstiges"];
 const WU_STATUS = { offen: "🆕 offen", in_arbeit: "🔧 Claude arbeitet daran", rueckfrage: "❓ Rückfrage", erledigt: "✅ erledigt", zurueckgestellt: "⏸ zurückgestellt" };
+KACHELN.admin.unshift({ id: "ad-startnachricht", sym: "📣", t: "Startnachricht", nur: () => !!ICH?.admin, aktion: "snStart()", u: "An alle, Gruppe oder Personen – mit Lesebestätigung", klasse: () => "ad ad-app" }); // 2.482.0 KC-CLUB-STARTNACHRICHT
+KACHELN.mein.push({ id: "startnachricht", sym: "📣", t: "Startnachricht", u: "Nachricht mit Lesebestätigung", aktion: "snStart()", nur: () => !ICH?.admin && !!INIT?.startnachrichtDarf }); // nur, wenn für Clubsprecher/Kassenwart freigeschaltet
 KACHELN.admin.unshift({ id: "ad-wuensche", sym: "📝", t: "Wünsche an Claude", nur: () => !!ICH?.admin, aktion: "wuStart()",
   u: () => { const l = WU.liste; if (!l) return "Vorschläge, Fehler, Ideen"; const r = l.filter((x) => x.status === "rueckfrage").length, o = l.filter((x) => ["offen", "in_arbeit"].includes(x.status)).length; return r ? `❓ ${r} Rückfrage${r === 1 ? "" : "n"} · ${o} offen` : `${o} offen`; },
   zahl: () => (WU.liste || []).filter((x) => x.status === "rueckfrage").length, klasse: () => "ad ad-app" });
@@ -24259,7 +24261,7 @@ async function neuLadenRoh(vonHand) {
   try {
     const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
     INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
-    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
+    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     if ($("setWichtigFrage")) $("setWichtigFrage").checked = wichtigFrageAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0)
@@ -29853,6 +29855,90 @@ function expressWegeText(v) {
   return " – " + l.slice(0, 6).map(z).join(" · ") + (l.length > 6 ? ` · … und ${l.length - 6} weitere` : "");
 }
 const EXP = { weg: new Set(), akt: null };
+// ---------- 2.482.0 KC-CLUB-STARTNACHRICHT (Wunsch Hansi): Admin (später auch Clubsprecher/Kassenwart, wenn freigeschaltet) schickt eine Nachricht,
+// die die Ausgewählten beim nächsten App-Start als Fenster bekommen – Pflicht: „gelesen“ bestätigen; dazu „↩️ Rückfrage“ (kommt als Chat beim Absender an).
+// Die Nachrichten stehen in INIT.einstellungen.startnachricht (kein zusätzlicher Abruf beim Start).
+const SN = { weg: new Set(), daten: null, an: { art: "alle", aemter: new Set(), personen: new Set(), gruppe: "" } };
+const snOffen = () => (INIT?.einstellungen?.startnachricht?.liste || []).filter((x) => x && !x.gelesen_am && !SN.weg.has(x.id));
+function snPruefen() {
+  const l = snOffen();
+  if (!l.length || document.hidden || $("snBlatt") || $("expressBlatt") || $("alarmBlatt") || RUF) return;
+  const x = l[0], vn = String(x.vonName || "").split(" ")[0] || "der Clubleitung", tag = x.am ? gpWann(x.am).replace(" um ", ", ") : "";
+  const f = blattAuf("snBlatt", `<div class="sn-kopf">📣 Nachricht von <b>${esc(x.vonName || "der Clubleitung")}</b>${x.wichtig ? ' <span class="sn-wichtig">❗ WICHTIG</span>' : ""}</div>
+    <p class="hinweis" style="margin:2px 0 10px">${esc(tag)}${l.length > 1 ? ` · noch ${l.length - 1} weitere` : ""}</p>
+    <div class="sn-text">${esc(x.text).replace(/\n/g, "<br>")}</div>
+    <label class="sn-pflicht"><input type="checkbox" id="snGelesen"><span><b>Ich habe die Nachricht gelesen</b><small>Pflicht – ${esc(vn)} sieht deine Bestätigung</small></span></label>
+    <button class="knopf haupt" id="snOk" disabled>✅ Gelesen – bestätigen</button>
+    <button class="knopf" id="snFrageAuf">↩️ Rückfrage an ${esc(vn)}</button>
+    <div id="snFrage" hidden><textarea id="snFrageText" rows="3" maxlength="1000" placeholder="Deine Rückfrage an ${esc(vn)} …" data-diktat></textarea>
+      <button class="knopf haupt" id="snFrageSenden">↩️ Rückfrage senden (gilt auch als gelesen)</button></div>`);
+  f.classList.add("sn-blatt"); f.onclick = null; f.dataset.ohneX = "1"; // Pflicht: nicht wegtippen, kein ✕ (blattXPruefen) – nur „gelesen“ schließt
+  if (x.wichtig) try { navigator.vibrate?.([120, 60, 120]); } catch {}
+  const ok = $("snOk");
+  $("snGelesen").onchange = (e) => { ok.disabled = !e.target.checked; };
+  ok.onclick = () => snBestaetigen(x, "");
+  $("snFrageAuf").onclick = () => { $("snFrage").hidden = false; $("snFrageAuf").hidden = true; $("snFrageText").focus(); };
+  $("snFrageSenden").onclick = () => { const t = $("snFrageText").value.trim(); if (!t) return melde("Bitte die Rückfrage eintippen.", true); snBestaetigen(x, t); };
+}
+async function snBestaetigen(x, frage) {
+  const knoepfe = document.querySelectorAll("#snBlatt button"); knoepfe.forEach((b) => (b.disabled = true));
+  try {
+    await api("startnachricht_bestaetigen", { id: x.id, rueckfrage: frage });
+    if (frage) { // die Rückfrage kommt beim Absender als normale Chat-Nachricht an (Push wie jede Nachricht)
+      const kurz = [...String(x.text)].slice(0, 60).join("") + ([...String(x.text)].length > 60 ? "…" : "");
+      await api("nachricht_senden", { text: `↩️ Rückfrage zu deiner Startnachricht „${kurz}“:\n${frage}`, wege: ["push"], empfaenger: { personen: [x.von], aemter: [], alle: false, vorstand: false }, betreff: "" })
+        .catch((e) => meldeFehler(e));
+    }
+    x.gelesen_am = new Date().toISOString(); SN.weg.add(x.id); $("snBlatt")?.remove();
+    melde(frage ? "↩️ Rückfrage gesendet – danke!" : "✅ Bestätigt – danke!");
+    setTimeout(snPruefen, 600);
+  } catch (e) { knoepfe.forEach((b) => (b.disabled = false)); if ($("snOk") && !$("snGelesen")?.checked) $("snOk").disabled = true; meldeFehler(e); }
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => { try { snPruefen(); } catch {} }, 1800); });
+// Verfassen + Überblick (wer hat gelesen, Rückfragen)
+async function snStart() {
+  blattAuf("snAdmin", '<p class="hinweis">⏳ Wird geladen …</p>');
+  try { if (!MITGLIEDER) await mitgliederHolen(); SN.daten = await api("startnachricht_liste"); snZeigen(); } catch (e) { $("snAdmin")?.remove(); meldeFehler(e); }
+}
+function snZeigen() {
+  const d = SN.daten || { liste: [], gruppen: [] }, A = SN.an, el = document.querySelector("#snAdmin .blatt-innen"); if (!el) return;
+  const text = $("snText")?.value ?? "", wichtig = !!$("snWichtig")?.checked;
+  const art = (k, t) => `<button type="button" class="chip${A.art === k ? " an" : ""}" onclick="SN.an.art='${k}';snZeigen()">${t}</button>`;
+  const wahl = A.art === "aemter" ? `<div class="sn-wahl">${(AEMTER || []).map((x) => `<button type="button" class="chip${A.aemter.has(x) ? " an" : ""}" onclick="snUmschalten('aemter', ${jsArg(x)})">🎖️ ${esc(x)}</button>`).join("") || '<p class="hinweis">Keine Ämter eingetragen.</p>'}</div>`
+    : A.art === "gruppe" ? `<select id="snGruppe" onchange="SN.an.gruppe=this.value">${['<option value="">– Gruppe wählen –</option>', ...d.gruppen.map((g) => `<option value="${esc(g.id)}"${A.gruppe === g.id ? " selected" : ""}>${esc((g.symbol || "👥") + " " + g.name)}</option>`)].join("")}</select>`
+    : A.art === "personen" ? `<div class="sn-wahl sn-personen">${(MITGLIEDER || []).filter((m) => m.person_id !== ICH?.person_id).map((m) => `<label class="chip${A.personen.has(m.person_id) ? " an" : ""}"><input type="checkbox"${A.personen.has(m.person_id) ? " checked" : ""} onchange="snUmschalten('personen', ${jsArg(m.person_id)})">${esc(m.name)}</label>`).join("")}</div>` : "";
+  const wann = (z) => z ? new Date(z).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
+  const liste = d.liste.map((s) => { const g = s.empfaenger.filter((e) => e.gelesen_am).length, rf = s.empfaenger.filter((e) => e.rueckfrage);
+    return `<details class="karte sn-gesendet"><summary><span>${s.wichtig ? "❗ " : ""}${esc([...s.text].slice(0, 50).join(""))}${[...s.text].length > 50 ? "…" : ""}</span>
+      <span class="sn-stand${g === s.empfaenger.length ? " fertig" : ""}">✅ ${g}/${s.empfaenger.length}${rf.length ? ` · ↩️ ${rf.length}` : ""}</span></summary>
+      <p class="hinweis">${esc(wann(s.am))}${ICH?.admin && s.von ? ` · von ${esc(s.von)}` : ""}</p><div class="sn-text">${esc(s.text).replace(/\n/g, "<br>")}</div>
+      <ul class="sn-empf">${s.empfaenger.map((e) => `<li>${e.gelesen_am ? "✅" : "⏳"} <b>${esc(e.name)}</b>${e.gelesen_am ? ` <small>${esc(wann(e.gelesen_am))}</small>` : " <small>noch nicht gelesen</small>"}${e.rueckfrage ? `<div class="sn-rf">↩️ ${esc(e.rueckfrage)}</div>` : ""}</li>`).join("")}</ul>
+      <button class="knopf klein" onclick="snZurueck(${jsArg(s.id)})">🗑️ Zurückziehen (bei allen, die sie noch nicht gelesen haben, verschwindet sie)</button></details>`; }).join("");
+  el.innerHTML = `<h3 style="margin-top:0">📣 Startnachricht</h3>
+    <p class="hinweis">Die Empfänger sehen sie beim nächsten Öffnen der App als Fenster und müssen „gelesen“ bestätigen. Rückfragen kommen bei dir im Chat an.</p>
+    <textarea id="snText" rows="4" maxlength="2000" placeholder="Deine Nachricht …" data-diktat>${esc(text)}</textarea>
+    <label class="sn-pflicht"><input type="checkbox" id="snWichtig"${wichtig ? " checked" : ""}><span><b>❗ Als wichtig markieren</b><small>rot hervorgehoben, dazu ein Push „Bitte die App öffnen“</small></span></label>
+    <p style="margin:10px 0 6px"><b>An wen?</b></p><div class="sn-wahl">${art("alle", "👥 Alle")}${art("aemter", "🎖️ Ämter")}${art("gruppe", "💬 Gruppe")}${art("personen", "🙋 Personen")}</div>${wahl}
+    <div class="knoepfe" style="margin-top:10px"><button class="knopf haupt" onclick="snSenden()">📣 Senden</button><button class="knopf" onclick="$('snAdmin').remove()">Schließen</button></div>
+    ${ICH?.admin ? `<label class="sn-pflicht" style="margin-top:12px"><input type="checkbox"${d.aemterFrei ? " checked" : ""} onchange="snFreigabe(this.checked)"><span><b>Clubsprecher und Kassenwart dürfen auch Startnachrichten schicken</b><small>${d.aemterFrei ? "freigeschaltet" : "noch nicht freigeschaltet"}</small></span></label>` : ""}
+    <h4 style="margin:16px 0 6px">Gesendet</h4>${liste || '<p class="hinweis">Noch keine Startnachricht gesendet.</p>'}`;
+}
+function snUmschalten(was, v) { const s = SN.an[was]; s.has(v) ? s.delete(v) : s.add(v); snZeigen(); }
+async function snSenden() {
+  const text = $("snText").value.trim(), A = SN.an; if (!text) return melde("Bitte einen Text schreiben.", true);
+  const an = A.art === "alle" ? { alle: true } : A.art === "aemter" ? { aemter: [...A.aemter] } : A.art === "gruppe" ? { gruppe: A.gruppe } : { personen: [...A.personen] };
+  const wer = A.art === "alle" ? "alle Mitglieder" : A.art === "aemter" ? `die Ämter ${[...A.aemter].join(", ") || "–"}` : A.art === "gruppe" ? "die gewählte Gruppe" : `${A.personen.size} Person${A.personen.size === 1 ? "" : "en"}`;
+  if (!(await frage(`Startnachricht an ${wer} senden?\n\nSie erscheint beim nächsten Öffnen der App.`))) return;
+  try { const r = await api("startnachricht_senden", { text, wichtig: !!$("snWichtig")?.checked, an }); melde(`📣 Gesendet an ${r.empfaenger} Person${r.empfaenger === 1 ? "" : "en"}`);
+    $("snText").value = ""; SN.daten = await api("startnachricht_liste"); snZeigen(); } catch (e) { meldeFehler(e); }
+}
+async function snZurueck(id) {
+  if (!(await frage("Startnachricht zurückziehen?\n\nWer sie noch nicht gelesen hat, bekommt sie nicht mehr."))) return;
+  try { await api("startnachricht_zurueckziehen", { id }); SN.daten = await api("startnachricht_liste"); snZeigen(); melde("🗑️ Zurückgezogen"); } catch (e) { meldeFehler(e); }
+}
+async function snFreigabe(an) {
+  try { await api("startnachricht_freigabe", { aemter: an }); SN.daten.aemterFrei = an; snZeigen(); melde(an ? "Clubsprecher und Kassenwart dürfen jetzt Startnachrichten schicken" : "Nur noch der Admin schickt Startnachrichten"); } catch (e) { meldeFehler(e); }
+}
 function expressPruefen() {
   const l = (INIT?.express || []).filter((x) => !EXP.weg.has(x.id));
   if (!l.length || document.hidden || $("expressBlatt") || $("alarmBlatt") || RUF) return;

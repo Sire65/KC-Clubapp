@@ -10884,4 +10884,16 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\/\^https:\\\/\\\/www\\\.werne\\\.de\\\/\//.test(a) && /Diese Woche"\} in Werne/.test(a), "nur Links auf werne.de");
   assert.ok(/const sw = ilStadt\(\); if \(sw\) add\(sw\);/.test(html), "im Laufband");
 }
+// 2.482.0 KC-CLUB-STARTNACHRICHT: Admin schickt Startnachricht (alle/Ämter/Gruppe/Personen, wichtig); beim Start Pflicht „gelesen“, Rückfrage an den Absender;
+// Clubsprecher/Kassenwart vorbereitet, aber erst nach Freischaltung (kc_club_konfig „startnachricht“ {aemter})
+{
+  assert.ok(/if \(ich\.admin\) return true;\s*if \(!\(ich\.aemter \|\| \[\]\)\.some\(\(x\) => SN_AEMTER\.test\(x\)\)\) return false;\s*return await snAemterFrei\(\);/.test(server) && /SN_AEMTER = \/\^\(clubsprecher\|kassenwart\)\/i/.test(server), "Admin immer, Ämter nur freigeschaltet");
+  assert.ok(!/startnachricht:/.test(server.slice(server.indexOf("const EINSTELLUNGEN"), server.indexOf("const EINSTELLUNGEN") + 20000).split("\n};")[0]), "Mitglieder können die Startnachricht nicht selbst überschreiben");
+  for (const a of ["startnachricht_senden", "startnachricht_bestaetigen", "startnachricht_liste", "startnachricht_zurueckziehen", "startnachricht_freigabe"]) assert.ok(server.includes(`case "${a}": {`), a);
+  assert.ok(/startnachrichtDarf: await pSnDarf/.test(server) && /const snOffen = \(\) => \(INIT\?\.einstellungen\?\.startnachricht\?\.liste/.test(html), "ohne zusätzlichen Abruf beim Start");
+  const p = html.slice(html.indexOf("function snPruefen("), html.indexOf("async function snBestaetigen("));
+  assert.ok(/id="snOk" disabled/.test(p) && /ok\.disabled = !e\.target\.checked/.test(p) && /f\.onclick = null; f\.dataset\.ohneX = "1";/.test(p), "Pflicht: gelesen ankreuzen, nicht wegtippbar, kein ✕");
+  assert.ok(/Rückfrage zu deiner Startnachricht/.test(html) && /empfaenger: \{ personen: \[x\.von\]/.test(html), "Rückfrage kommt als Chat beim Absender an");
+  assert.ok(/id: "ad-startnachricht"/.test(html) && /nur: \(\) => !ICH\?\.admin && !!INIT\?\.startnachrichtDarf/.test(html), "Kachel Admin; Ämter nur, wenn freigeschaltet");
+}
 

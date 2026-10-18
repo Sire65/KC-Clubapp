@@ -2757,7 +2757,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -5097,6 +5097,33 @@ async function gastgeberMitteilen(t: any, ich: string, art: "einladung" | "geaen
   await protokoll(ich, "gastgeber_mitgeteilt", { treffen: t.id, art });
   return true;
 }
+// ---------- 2.482.0 KC-CLUB-STARTNACHRICHT (Wunsch Hansi „als Admin direkt eine Startnachricht an alle, eine Gruppe oder ausgewählte Personen –
+// als wichtig markierbar; beim Programmstart bekommen die Ausgewählten sie; Pflicht-Knopf ‚Gelesen‘ und ein Rückfrage-Knopf, die Antwort kommt bei mir an;
+// auch für Clubsprecher und Kassenwart bauen, aber für die beiden noch nicht freischalten“) ----------
+// Ohne neue Tabelle und ohne zusätzliche Abfrage beim Start: jede Startnachricht steht beim Empfänger in kc_club_person_einstellung
+// (Schlüssel „startnachricht“), die der Start ohnehin ganz lädt. Mitglieder können den Schlüssel NICHT selbst setzen (nicht in EINSTELLUNGEN) –
+// gelesen/Rückfrage gehen nur über startnachricht_bestaetigen. Freischaltung für Clubsprecher/Kassenwart: kc_club_konfig „startnachricht“ {aemter}.
+const SN_SCHLUESSEL = "startnachricht", SN_MAX_JE_PERSON = 20, SN_MAX_EMPFAENGER = 300, SN_AEMTER = /^(clubsprecher|kassenwart)/i;
+async function snAemterFrei() { const { data } = await konfigZeile("startnachricht"); return !!(data?.wert as any)?.aemter; }
+async function snDarf(ich: Ich) {
+  if (ich.admin) return true;
+  if (!(ich.aemter || []).some((x) => SN_AEMTER.test(x))) return false;
+  return await snAemterFrei();
+}
+async function snNurWennDarf(ich: Ich) { if (!(await snDarf(ich))) throw new Fehler("Startnachrichten darfst du (noch) nicht schicken.", 403); }
+const snListe = (w: any): any[] => (Array.isArray(w?.liste) ? w.liste : []).filter((x: any) => x && typeof x.id === "string");
+async function snEmpfaenger(ich: Ich, an: any): Promise<string[]> {
+  const ids = new Set(await empfaengerAufloesen(ich, { personen: an?.personen, aemter: an?.aemter, alle: !!an?.alle }));
+  const gruppe = String(an?.gruppe || "");
+  if (gruppe) { // Chat-Gruppe – auch ohne selbst darin zu sein (nur wer Startnachrichten schicken darf)
+    const { data: g } = await db.from("kc_club_gruppen").select("thread_id").eq("thread_id", gruppe).maybeSingle();
+    if (!g) throw new Fehler("Gruppe nicht gefunden.", 404);
+    const { data: tn } = await db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", gruppe);
+    const aktiv = new Set((await aktiveMitglieder()).map((x) => x.person_id));
+    (tn ?? []).forEach((x: any) => { if (x.person_id !== ich.person_id && aktiv.has(x.person_id)) ids.add(String(x.person_id)); });
+  }
+  return [...ids];
+}
 // KC-CLUB-ANTWORT-ERINNERUNG-2T (2.240.0, Wunsch Hansi): 2 Tage (48 Std.) vor einem Köcheclub-Treffen eine Push-Erinnerung an alle,
 // die noch nicht zu- oder abgesagt haben („vielleicht“ zählt nicht) – passend zum rot blinkenden Hinweis in der App. Einmal je Treffen.
 async function antwortErinnerung2T() {
@@ -6496,6 +6523,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         pNotfall.catch(() => {});
         // 2.362.0 KC-CLUB-EXPRESS: ungelesene Express-Sendungen an mich (7 Tage) → App zeigt das Express-Fenster (Öffnen / Später / Nein)
         const pExpress = expressOffen(ich, zahlen).catch((e) => { console.error("express", String(e)); return []; });
+        const pSnDarf = snDarf(ich).catch(() => false); // 2.482.0 KC-CLUB-STARTNACHRICHT: Admin sofort; Clubsprecher/Kassenwart nur, wenn freigeschaltet
         const { data: grNeu, error: grFehler } = neuIds.length ? await db.from("kc_club_gruppen").select("thread_id").in("thread_id", neuIds) : { data: [] as any[], error: null };
         const grSet = new Set((grNeu ?? []).map((g: any) => g.thread_id));
         const ungelesenGruppen = grFehler ? null : zahlen.reduce((a: number, x: any) => a + (grSet.has(x.t.thread_id) ? x.n : 0), 0);
@@ -6536,7 +6564,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         zt.ende = Date.now() - t0Anfrage;
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
-        return json({ meinGeburtstag, alarm, express, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ meinGeburtstag, alarm, express, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -10917,6 +10945,82 @@ Köcheclub-App`,
       }
 
       // KC-CLUB-STADT-TERMINE (2.22.6): Liste aus den Kalendern der Stadt Werne, Übernehmen, Einstellungen – nur Admin
+      // ----- 2.482.0 KC-CLUB-STARTNACHRICHT -----
+      case "startnachricht_senden": {
+        await snNurWennDarf(ich);
+        const text = txt(p.text, 2000); if (!text) throw new Fehler("Bitte einen Text schreiben.");
+        const wichtig = !!p.wichtig, ziel = await snEmpfaenger(ich, p.an ?? {});
+        if (!ziel.length) throw new Fehler("Bitte mindestens eine Person, eine Gruppe, ein Amt oder „alle“ wählen.");
+        if (ziel.length > SN_MAX_EMPFAENGER) throw new Fehler("Zu viele Empfänger.");
+        const id = crypto.randomUUID(), am = jetzt(), alt = Date.now() - 60 * 86400000;
+        const { data: vorher } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", SN_SCHLUESSEL).in("person_id", ziel);
+        const vm = new Map((vorher ?? []).map((x: any) => [x.person_id, snListe(x.wert)]));
+        const eintrag = { id, von: ich.person_id, vonName: ich.name, text, wichtig, am };
+        const zeilen = ziel.map((pid) => ({ person_id: pid, schluessel: SN_SCHLUESSEL, geaendert_am: am,
+          wert: { liste: [eintrag, ...(vm.get(pid) ?? []).filter((x: any) => !x.gelesen_am || Date.parse(x.gelesen_am) > alt)].slice(0, SN_MAX_JE_PERSON) } }));
+        const { error } = await db.from("kc_club_person_einstellung").upsert(zeilen, { onConflict: "person_id,schluessel" });
+        if (error) throw new Fehler("Startnachricht konnte nicht gespeichert werden.", 500);
+        // wichtig: zusätzlich ein Push, damit die App bald geöffnet wird (der Text selbst kommt erst in der App)
+        const versand = wichtig ? await sendenGewaehlt("club_nachricht", ziel, ["push"], { titel: `📣 Wichtige Nachricht von ${ich.vorname}`, kurz: "Bitte die Club-App öffnen und lesen.",
+          betreff: `Wichtige Nachricht von ${ich.vorname}`, text: "Bitte die Club-App öffnen und die Nachricht lesen.", url: APP_URL }, `club-startnachricht:${id}`).catch(() => null) : null;
+        await protokoll(ich.person_id, "startnachricht_gesendet", { id, empfaenger: ziel.length, wichtig, text: text.slice(0, 200), versand });
+        return json({ ok: true, id, empfaenger: ziel.length });
+      }
+
+      case "startnachricht_bestaetigen": {
+        const id = String(p.id || ""), rueckfrage = txt(p.rueckfrage, 1000);
+        const { data: z } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", SN_SCHLUESSEL).maybeSingle();
+        const liste = snListe(z?.wert), e = liste.find((x: any) => x.id === id);
+        if (!e) throw new Fehler("Nachricht nicht gefunden.", 404);
+        if (!e.gelesen_am) e.gelesen_am = jetzt();
+        if (rueckfrage) { e.rueckfrage = rueckfrage; e.rueckfrage_am = jetzt(); }
+        await db.from("kc_club_person_einstellung").update({ wert: { liste }, geaendert_am: jetzt() }).eq("person_id", ich.person_id).eq("schluessel", SN_SCHLUESSEL);
+        await protokoll(ich.person_id, "startnachricht_gelesen", { id, von: e.von, rueckfrage: !!rueckfrage });
+        return json({ ok: true, von: e.von });
+      }
+
+      case "startnachricht_liste": {
+        await snNurWennDarf(ich);
+        const [{ data: zs }, { data: gr }] = await Promise.all([
+          db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", SN_SCHLUESSEL),
+          db.from("kc_club_gruppen").select("thread_id,name,symbol").order("name")]);
+        const pm = await personen((zs ?? []).map((x: any) => x.person_id));
+        const je = new Map<string, any>();
+        for (const z of zs ?? []) for (const e of snListe(z.wert)) {
+          if (!ich.admin && e.von !== ich.person_id) continue; // Admin sieht alle, die Ämter nur ihre eigenen
+          const s = je.get(e.id) ?? { id: e.id, von: e.vonName || e.von, text: e.text, wichtig: !!e.wichtig, am: e.am, empfaenger: [] as any[] };
+          const x = pm.get(z.person_id);
+          s.empfaenger.push({ person_id: z.person_id, name: x ? x.display_name || vorname(x) : z.person_id, gelesen_am: e.gelesen_am || null, rueckfrage: e.rueckfrage || null });
+          je.set(e.id, s);
+        }
+        const liste = [...je.values()].sort((x, y) => String(y.am).localeCompare(String(x.am))).slice(0, 30);
+        for (const s of liste) s.empfaenger.sort((x: any, y: any) => (x.gelesen_am ? 1 : 0) - (y.gelesen_am ? 1 : 0) || x.name.localeCompare(y.name, "de"));
+        return json({ liste, gruppen: (gr ?? []).map((g: any) => ({ id: g.thread_id, name: g.name, symbol: g.symbol })), aemterFrei: ich.admin ? await snAemterFrei() : undefined });
+      }
+
+      case "startnachricht_zurueckziehen": {
+        await snNurWennDarf(ich);
+        const id = String(p.id || "");
+        const { data: zs } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", SN_SCHLUESSEL);
+        let n = 0;
+        for (const z of zs ?? []) {
+          const l = snListe(z.wert), e = l.find((x: any) => x.id === id);
+          if (!e || (!ich.admin && e.von !== ich.person_id)) continue;
+          await db.from("kc_club_person_einstellung").update({ wert: { liste: l.filter((x: any) => x.id !== id) }, geaendert_am: jetzt() }).eq("person_id", z.person_id).eq("schluessel", SN_SCHLUESSEL);
+          n++;
+        }
+        await protokoll(ich.person_id, "startnachricht_zurueckgezogen", { id, anzahl: n });
+        return json({ ok: true, anzahl: n });
+      }
+
+      case "startnachricht_freigabe": {
+        nurAdmin(ich);
+        const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "startnachricht", wert: { aemter: !!p.aemter }, geaendert_von: ich.person_id, geaendert_am: jetzt() }, { onConflict: "schluessel" });
+        if (error) throw new Fehler("Freigabe konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "startnachricht_freigabe", { aemter: !!p.aemter });
+        return json({ ok: true, aemter: !!p.aemter });
+      }
+
       // 2.482.0 KC-CLUB-LAUFBAND-WERNE (Wunsch Hansi, Punkt 3 des Info-Feld-Konzepts): „Diese Woche in Werne“ für alle Mitglieder –
       // ohne Datenbank: Stadt-Kalender (werne.de) mit Zwischenspeicher, das Ergebnis 6 Std. im Speicher; die App fragt höchstens einmal am Tag.
       case "stadt_woche": {
