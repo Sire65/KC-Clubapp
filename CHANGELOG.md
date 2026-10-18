@@ -1,5 +1,9 @@
 # Änderungen
 
+## Server – 2026-10-18 (ohne App-Build) – KC-CLUB-PUSH-NEU-EINGESCHALTET: kein Rot mehr nach neu eingeschaltetem Push
+- Fall Christina: Push am 12.10. nicht angekommen (altes Abo abgelaufen), am 18.10. neu eingeschaltet – in der Mitgliederliste blieb sie rot, weil Rot erst nach dem nächsten erfolgreich zugestellten Push verschwand. Jetzt hebt ein Push-Abo, das nach dem Fehler eingeschaltet wurde, das Rot auf. Scheitert der nächste Push, wird es wieder rot. Nur Admin-Anzeige.
+- Rückweg: Server-Stand vor diesem Eintrag erneut hochladen.
+
 ## 2.484.0 – 2026-10-18 – 🏖️ Schulferien im Kalender (KC-CLUB-FERIEN) · Server 2.484.0
 Wunsch Hansi: „Baue Ferien-Termine in den Kalender wie Feiertage. Und einstellbar genau wie Feiertage. Darunter eine einklappbare Liste mit den Bundesländern zum Anhaken.“
 - Im Club-Kalender sind Ferientage sandfarben hinterlegt (mit Punkt); antippen zeigt „🏖️ Herbstferien · Schulferien Nordrhein-Westfalen · 17.10.–31.10.“. Gleiche Ferien mehrerer Länder werden ein Eintrag. Andere Termine (Sitzung, Feiertag, Geburtstag …) behalten ihre Farbe – Ferien färben nur Tage ohne anderes.
