@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.481.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.483.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7657,7 +7657,7 @@ async function onlineRunde() {
 function onlineBlatt() {
   $("onlineListe").innerHTML = ONL.liste.length ? ONL.liste.map((x) => `<div class="onzeile">${kreis({ ...(MITGLIEDER?.find((m) => m.person_id === x.person_id) || {}), online: true }, x.name || x.vorname, 40)}
       <div style="flex:1"><b>${esc(x.name || x.vorname)}</b><div class="hinweis" style="font-size:.85rem;margin:0">gerade online</div></div>
-      ${x.klopfbar === false ? `<button class="knopf" disabled title="Anklopfen ausgeschaltet">🔕</button>` : `<button class="knopf haupt" onclick="$('onlineBlatt').classList.add('versteckt'); anklopfen('${x.person_id}')">👋 Anklopfen</button>`}
+      ${x.klopfbar === false ? `<button class="knopf" title="Anklopfen ausgeschaltet" onclick="anklopfen('${x.person_id}')">🔕</button>` : `<button class="knopf haupt" onclick="$('onlineBlatt').classList.add('versteckt'); anklopfen('${x.person_id}')">👋 Anklopfen</button>`}
       <button class="knopf" title="Anrufen (Test)" onclick="$('onlineBlatt').classList.add('versteckt'); anrufen('${x.person_id}')">📞</button>
       <button class="knopf" title="Videoanruf (Test)" onclick="$('onlineBlatt').classList.add('versteckt'); anrufen('${x.person_id}', true)">🎥</button>
       <button class="knopf" title="Nachricht schreiben" onclick="$('onlineBlatt').classList.add('versteckt'); direkt('${x.person_id}')">💬</button></div>`).join("")
@@ -7667,13 +7667,24 @@ function onlineBlatt() {
 async function anklopfen(pid) {
   const m = MITGLIEDER?.find((x) => x.person_id === pid) || ONL.liste.find((x) => x.person_id === pid);
   const name = m?.vorname || m?.name || "";
-  if (ONL.liste.find((x) => x.person_id === pid)?.klopfbar === false) return melde(`🔕 ${name} hat Anklopfen ausgeschaltet – schreib einfach eine Nachricht.`);
+  if (ONL.liste.find((x) => x.person_id === pid)?.klopfbar === false) return klopfGesperrt(pid, name);
   if (!(await frage(`Bei ${name} anklopfen?\n\n${name} bekommt sofort die Frage, ob ihr jetzt schreiben wollt.`))) return;
   spur("anklopfen", pid); // KC-CLUB-SPUR
   try {
     const r = await api("anklopfen", { an: pid });
     ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush);
-  } catch (e) { meldeFehler(e); }
+  } catch (e) { if (KLOPF_GESPERRT_RE.test(e?.message || "")) klopfGesperrt(pid, name); else meldeFehler(e); }
+}
+// 2.481.0 KC-CLUB-ANKLOPFEN-GESPERRT (Wunsch Hansi „klopfe ich bei jemandem an, der das blockiert hat: Meldung ‚Dieter hat Anklopfen blockiert –
+// schreib ihm doch eine Nachricht über die Chat-Funktion oder ruf an‘“): eigenes Fenster mit beiden Wegen statt einer kurzen Einblendung.
+const KLOPF_GESPERRT_RE = /Anklopfen ausgeschaltet/;
+function klopfGesperrt(pid, name) {
+  const n = esc(name || "Das Mitglied");
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">🔕 ${n} hat Anklopfen blockiert</h3>
+    <p class="dlg-text">${n} möchte gerade nicht angeklopft werden. Schreib ${n} doch eine Nachricht über den Chat – oder ruf an.</p>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="chat">💬 Nachricht schreiben</button><button class="knopf" data-w="anruf">📞 Anrufen</button><button class="knopf" data-w="zu">Schließen</button></div>`, () => {});
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); $("onlineBlatt")?.classList.add("versteckt");
+    if (b.dataset.w === "chat") direkt(pid); else if (b.dataset.w === "anruf") anrufen(pid); }));
 }
 // KC-CLUB-ANKLOPFEN-WARTEN (1.51.0, Wunsch Hansi): „👋 Klopfe gerade an bei X“ mit Sekunden-Uhr; nach 1 Minute fragen:
 // weiter anklopfen, auflegen oder eine Nachricht „Melde dich doch mal bei mir“ schicken. Antwortet X, schließt sich alles.
@@ -7707,7 +7718,8 @@ const klopfMeldeText = () => `Melde dich doch mal bei mir. Gruß ${ICH?.vorname 
 async function klopfWeiter() {
   if (!KW) return;
   const { pid, name } = KW;
-  try { const r = await api("anklopfen", { an: pid }); ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush); } catch (e) { meldeFehler(e); }
+  try { const r = await api("anklopfen", { an: pid }); ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush); }
+  catch (e) { if (KLOPF_GESPERRT_RE.test(e?.message || "")) { klopfWartenEnde(); klopfGesperrt(pid, name); } else meldeFehler(e); }
 }
 async function klopfAuflegen(still) {
   if (!KW) return;
@@ -14388,7 +14400,7 @@ const ZUGANG_AKTIONEN = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -21571,6 +21583,8 @@ KACHELN.admin = AD_KACHELN.map(([id, sym, t, gr]) => ({ id: "ad-" + id, sym, t, 
 const WU = { liste: null, bearbeiten: null };
 const WU_BEREICHE = ["Club-App", "Kasse", "PC-Manager", "Money Butler", "Dienstplan DP2", "Verwaltung", "Sonstiges"];
 const WU_STATUS = { offen: "🆕 offen", in_arbeit: "🔧 Claude arbeitet daran", rueckfrage: "❓ Rückfrage", erledigt: "✅ erledigt", zurueckgestellt: "⏸ zurückgestellt" };
+KACHELN.admin.unshift({ id: "ad-startnachricht", sym: "📣", t: "Startnachricht", nur: () => !!ICH?.admin, aktion: "snStart()", u: "An alle, Gruppe oder Personen – mit Lesebestätigung", klasse: () => "ad ad-app" }); // 2.482.0 KC-CLUB-STARTNACHRICHT
+KACHELN.mein.push({ id: "startnachricht", sym: "📣", t: "Startnachricht", u: "Nachricht mit Lesebestätigung", aktion: "snStart()", nur: () => !ICH?.admin && !!INIT?.startnachrichtDarf }); // nur, wenn für Clubsprecher/Kassenwart freigeschaltet
 KACHELN.admin.unshift({ id: "ad-wuensche", sym: "📝", t: "Wünsche an Claude", nur: () => !!ICH?.admin, aktion: "wuStart()",
   u: () => { const l = WU.liste; if (!l) return "Vorschläge, Fehler, Ideen"; const r = l.filter((x) => x.status === "rueckfrage").length, o = l.filter((x) => ["offen", "in_arbeit"].includes(x.status)).length; return r ? `❓ ${r} Rückfrage${r === 1 ? "" : "n"} · ${o} offen` : `${o} offen`; },
   zahl: () => (WU.liste || []).filter((x) => x.status === "rueckfrage").length, klasse: () => "ad ad-app" });
@@ -23504,33 +23518,117 @@ function ilAusblenden(id) {
 // das nächste Treffen ist immer der erste Punkt – Titel, Datum · Ort, Zu-/Absage-Knöpfe bzw. die eigene Antwort und „x/y angemeldet“
 function ilTreffen(t) {
   if (!t) return { id: "treffen", stufe: "weiss", sym: "📅", t: "Kein Termin geplant", u: "Sobald ein Köcheclub-Termin ansteht, siehst du es hier.", ohneAus: true, voll: true };
-  const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
-  const meine = { ja: "✅ Ich komme", nein: "❌ Abgesagt", vielleicht: "❓ Vielleicht" }[t.meine] || "❔ Bitte zu- oder absagen";
+  const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : ""), beginn = new Date(t.beginn), heute = isoBerlin(beginn) === heuteIso();
+  // 2.481.0 KC-CLUB-LAUFBAND-SCHLAU: schon geantwortet → nicht mehr auffordern, sondern bestätigen (grüner Haken)
+  const meine = { ja: "✅ Du bist dabei", nein: "❌ Abgesagt – jederzeit änderbar", vielleicht: "❓ Vielleicht" }[t.meine] || "❔ Bitte zu- oder absagen";
   // 2.102.0 KC-CLUB-TERMIN-ANTEIL (Wunsch Hansi): „✅ 3/18 angemeldet“ = 3 von 18 Mitgliedern haben schon zugesagt
   const alle = Number(INIT?.mitgliederAnzahl) || 0, gesamtTxt = alle ? `✅ <b>${t.ja}/${alle}</b> angemeldet` : `✅ ${t.ja} Zusagen`;
   // 2.239.0 KC-CLUB-ANTWORT-BLINKEN (Wunsch Hansi): noch nicht zu- oder abgesagt → ab 5 Tagen vorher gelb blinkend, ab 2 Tagen rot dauerblinkend
   // („vielleicht“ zählt nicht als Antwort). Das Laufband zeichnet sich regelmäßig neu, die Stufe wandert also von selbst mit.
-  const stdBis = (new Date(t.beginn) - Date.now()) / 3600000, offenAntwort = t.meine !== "ja" && t.meine !== "nein";
+  const stdBis = (beginn - Date.now()) / 3600000, offenAntwort = t.meine !== "ja" && t.meine !== "nein";
   const blinken = offenAntwort && stdBis > 0 ? (stdBis <= 48 ? " antwort-blinken rot" : stdBis <= 120 ? " antwort-blinken gelb" : "") : "";
-  const offen = offenAntwort && stdBis > 0 && !!t.id;
-  return { id: "treffen", stufe: offen ? "rot" : "weiss", sym: "📅", t: t.titel, u: wann(t.beginn) + (ort ? " · " + ort : ""), auf: "zumTreffen()", ohneAus: true, voll: true,
-    stand: `${offen ? "" : `<b class="antwort-zeile">${meine}</b> · `}${gesamtTxt.replace(" angemeldet", "")}`, // kurz, passt in eine Zeile
-    knoepfe: offen ? [["✔ Zusagen", `ilAntwort('${esc(t.id)}','ja')`, blinken], ["✖", `ilAntwort('${esc(t.id)}','nein')`]] : null };
+  const offen = offenAntwort && stdBis > 0 && !!t.id, dabei = t.meine === "ja", laeuft = stdBis <= 0, kommen = gesamtTxt.replace(" angemeldet", "").replace("✅ ", "👥 "); // 👥 – der grüne Haken gehört der eigenen Antwort
+  // am Treffen-Tag: „Heute 18:00 Uhr: …“ mit 🚗 Mitfahrt; läuft es gerade: „Viel Spaß!“
+  const mitfahrt = dabei && heute && !laeuft;
+  return { id: "treffen", stufe: offen ? "rot" : dabei ? "gruen" : "weiss", sym: dabei ? "✅" : "📅", auf: "zumTreffen()", ohneAus: true, voll: true,
+    t: t.titel, u: (laeuft ? "Läuft gerade" : heute ? `Heute ${fZeit.format(beginn)} Uhr` : wann(t.beginn)) + (ort ? " · " + ort : ""),
+    stand: laeuft ? (dabei ? "🍳 Viel Spaß beim Treffen!" : kommen) : offen ? (t.meine === "vielleicht" ? "❓ Vielleicht · " : "") + kommen
+      : mitfahrt ? `<b class="antwort-zeile">✅ Dabei</b>` : `<b class="antwort-zeile">${meine}</b> · ${kommen}`, // kurz, passt in eine Zeile
+    knoepfe: offen ? [["✔ Zusagen", `ilAntwort('${esc(t.id)}','ja')`, blinken], ["✖", `ilAntwort('${esc(t.id)}','nein')`]] : mitfahrt ? [["🚗 Mitfahrt", "zumTreffen(true)"]] : null };
+}
+// ---------- 2.481.0 KC-CLUB-LAUFBAND-SCHLAU (Wunsch Hansi „etwas intelligenter: wer schon zugesagt oder abgestimmt hat, braucht nur einen Hinweis
+// mit grünem Haken – nicht zu etwas auffordern, was schon erledigt ist; ab und an auf neue Funktionen hinweisen, damit es lebendiger wird“) ----------
+// Erledigt-Abgleich: rote Meldungen, die heute schon da waren und jetzt weg sind, kommen bis zum Abend als grüne Bestätigung.
+// Neuheiten: je Gerät an höchstens 3 Tagen, nach dem Antippen nie wieder; immer nur eine pro Runde. Alles lokal, keine Server-Abfrage.
+const IL_ROT = "kc_club_il_rot", IL_FERTIG = "kc_club_il_fertig", IL_NEU = "kc_club_il_neu", IL_LETZTES = "kc_club_il_letztes";
+function ilTag(k) { try { const a = JSON.parse(localStorage.getItem(k) || "null"); return a && a.tag === heuteIso() ? a.m || {} : {}; } catch { return {}; } }
+function ilTagSetzen(k, m) { try { localStorage.setItem(k, JSON.stringify({ tag: heuteIso(), m })); } catch {} }
+function ilErledigt(L) {
+  if (!INIT || !ICH) return [];
+  const jetzt = {}; for (const m of L) if (m.fertig) jetzt[m.id] = m.fertig;
+  const vorher = ilTag(IL_ROT), fertig = ilTag(IL_FERTIG), aus = new Set(ilAusgeblendet());
+  for (const id in vorher) if (!(id in jetzt) && !aus.has(id)) fertig[id] = vorher[id];
+  for (const id in jetzt) delete fertig[id]; // wieder offen → keine Bestätigung mehr
+  ilTagSetzen(IL_ROT, jetzt); ilTagSetzen(IL_FERTIG, fertig);
+  return Object.entries(fertig).slice(-3).map(([id, t]) => ({ id: "ok:" + id, stufe: "gruen", sym: "✅", t, u: "Erledigt – danke! 👍" }));
+}
+const IL_NEUHEITEN = [ // wann(Monat 1–12, Tag) · los = was „▶ Ansehen“ tut
+  { id: "halloween", wann: (m, d) => (m === 10 && d >= 10) || (m === 11 && d <= 2), sym: "🎃", t: "Neu: Halloween-Szene im Kopf", u: "Hexe, Vampir, Geister und Gewitter – jetzt ansehen", los: "jahreszeitVorschau('halloween')" },
+  { id: "kuerbis", wann: (m) => m >= 9 && m <= 11, sym: "🐕", t: "Neu: Herbst mit Kürbis-Hund", u: "Abends rollt der Hund den Kürbis herein – ansehen", los: "jahreszeitVorschau('herbst', 'kuerbis')" },
+  { id: "unterwasser", wann: () => true, sym: "🐠", t: "Neu: Thema Unterwasserwelt", u: "Fische, Taucher – und wer zieht den Stöpsel?", los: "jahreszeitVorschau('unterwasser')" },
+];
+const ilVersionNr = (v) => +String(v || "").split(".")[1] || 0;
+function ilNeuLesen() { try { return JSON.parse(localStorage.getItem(IL_NEU) || "{}") || {}; } catch { return {}; } }
+function ilNeuGesehen(id) { const s = ilNeuLesen(); s[id] = { ...(s[id] || {}), fertig: true }; try { localStorage.setItem(IL_NEU, JSON.stringify(s)); } catch {} }
+function ilNeuheit() {
+  const d = new Date(), m = d.getMonth() + 1, tag = d.getDate(), jetzt = ilVersionNr(APP_VERSION), s = ilNeuLesen();
+  const hilfe = HILFE.filter((h) => h.seit && h.thema !== "erste" && jetzt - ilVersionNr(h.seit) <= 10 && (!h.nur || h.nur()))
+    .map((h) => ({ id: "h:" + h.id, sym: "🆕", t: "Neu: " + hzTxt(h.t), u: String(hzTxt(h.x)).replace(/<[^>]+>/g, "").slice(0, 90), los: `hzZuEintrag('h:${esc(h.id)}')` }));
+  for (const n of [...IL_NEUHEITEN.filter((x) => x.wann(m, tag)), ...hilfe]) {
+    const r = s[n.id] || { n: 0 }; if (r.fertig || (r.tag !== heuteIso() && r.n >= 3)) continue;
+    if (r.tag !== heuteIso()) { s[n.id] = { n: r.n + 1, tag: heuteIso() }; try { localStorage.setItem(IL_NEU, JSON.stringify(s)); } catch {} }
+    const los = `ilNeuGesehen('${esc(n.id)}');${n.los}`;
+    return { id: "neu:" + n.id, stufe: "gold", sym: n.sym, t: n.t, u: n.u, auf: los, knoepfe: [["▶ Ansehen", los]] };
+  }
+  return null;
+}
+// Tageszeit & Anlass: Gruß statt nüchternem „Alles erledigt“, Feiertags-Gruß, Dank nach dem Treffen
+function ilGruss() {
+  const h = new Date().getHours(), vn = ICH?.vorname || "";
+  const [t, u] = h >= 5 && h < 11 ? [`Guten Morgen${vn ? ", " + vn : ""}!`, "Heute ist nichts zu tun 👍"] : h >= 11 && h < 18 ? ["Alles erledigt 👍", "Für dich steht gerade nichts an"]
+    : h >= 18 && h < 23 ? [`Guten Abend${vn ? ", " + vn : ""}!`, "Alles erledigt – schönen Feierabend 👍"] : [`Gute Nacht${vn ? ", " + vn : ""} 🌙`, "Alles erledigt – bis morgen"];
+  return { id: "_ok", stufe: "gruen", sym: h >= 23 || h < 5 ? "🌙" : "👍", t, u, ohneAus: true };
+}
+function ilAnlass() {
+  const h = heuteIso(), md = h.slice(5), j = +h.slice(0, 4);
+  const w = new Date(Date.UTC(j, 11, 24)), vierter = tagPlus(`${j}-12-24`, -w.getUTCDay()); // 4. Advent = letzter Sonntag bis 24.12.
+  const advent = [3, 2, 1, 0].findIndex((n) => tagPlus(vierter, -7 * n) === h);
+  const g = advent >= 0 ? ["🕯️", `Schönen ${advent + 1}. Advent!`] : { "10-31": ["🎃", "Happy Halloween!"], "12-06": ["🎅", "Schönen Nikolaustag!"], "12-24": ["🎄", "Frohe Weihnachten!"], "12-25": ["🎄", "Frohe Weihnachten!"],
+    "12-26": ["🎄", "Schöne Feiertage!"], "12-31": ["🎆", "Guten Rutsch ins neue Jahr!"], "01-01": ["🥂", "Frohes neues Jahr!"] }[md];
+  return g ? { id: "anlass:" + h, stufe: "weiss", sym: g[0], t: g[1], u: "Dein Köcheclub Werne" } : null;
+}
+function ilNachTreffen(t) {
+  if (t?.id) try { localStorage.setItem(IL_LETZTES, JSON.stringify({ id: t.id, titel: t.titel, beginn: t.beginn, meine: t.meine })); } catch {}
+  let l = null; try { l = JSON.parse(localStorage.getItem(IL_LETZTES) || "null"); } catch {}
+  if (!l || l.meine !== "ja" || (t && t.id === l.id)) return null;
+  const std = (Date.now() - Date.parse(l.beginn)) / 3600000;
+  return std >= 3 && std <= 36 ? { id: "danke:" + l.id, stufe: "weiss", sym: "🙏", t: `Danke fürs Kommen – ${l.titel}!`, u: "Schöne Fotos gemacht? Lade sie hoch", auf: "zeige('fotos')", knoepfe: [["📸 Fotos", "zeige('fotos');setTimeout(fotoForm,250)"]] } : null;
+}
+// 2.482.0 KC-CLUB-LAUFBAND-WERNE (Wunsch Hansi, Punkt 3): „Diese Woche in Werne“ aus dem Stadt-Kalender – höchstens einmal am Tag je Gerät
+// geholt (Server ohne Datenbank, 6 Std. Zwischenspeicher), dann aus dem Gerätespeicher; je Runde ein Tipp, täglich ein anderer.
+const IL_STADT = "kc_club_stadt_woche"; let ilStadtLaeuft = false;
+function ilStadtLesen() { try { const a = JSON.parse(localStorage.getItem(IL_STADT) || "null"); return a && Array.isArray(a.liste) ? a : null; } catch { return null; } }
+async function ilStadtLaden() {
+  const c = ilStadtLesen(); if (ilStadtLaeuft || (c && c.tag === heuteIso()) || !ICH || !zugangAktion("stadt_woche")) return;
+  ilStadtLaeuft = true;
+  try { const r = await api("stadt_woche"); localStorage.setItem(IL_STADT, JSON.stringify({ tag: heuteIso(), liste: (r.termine || []).slice(0, 8) })); ilZeigen(); }
+  catch { try { localStorage.setItem(IL_STADT, JSON.stringify({ tag: heuteIso(), liste: c?.liste || [] })); } catch {} } // nicht erreichbar → heute nicht nochmal
+}
+function ilStadt() {
+  setTimeout(ilStadtLaden, 4000); // nach dem Start, nicht im Startweg
+  const h = heuteIso(), l = (ilStadtLesen()?.liste || []).filter((t) => t.bisTag >= h && t.tag <= tagPlus(h, 7)); if (!l.length) return null;
+  const t = l[(+h.slice(8, 10)) % l.length], tagTxt = (iso) => fTag.format(new Date(iso + "T12:00:00Z"));
+  const wannTxt = t.tag <= h ? (t.bisTag > h ? `heute bis ${tagTxt(t.bisTag)}` : t.ganztaegig ? "heute" : `heute ${fZeit.format(new Date(t.beginn))} Uhr`)
+    : `${tagTxt(t.tag)}${t.bisTag > t.tag ? " – " + tagTxt(t.bisTag) : ""}${t.ganztaegig ? "" : `, ${fZeit.format(new Date(t.beginn))} Uhr`}`;
+  const url = /^https:\/\/www\.werne\.de\//.test(t.url || "") ? t.url : "https://www.werne.de/de/veranstaltungen/";
+  return { id: "stadt:" + t.key, stufe: "weiss", sym: "🏙️", t: `${t.tag <= h ? "Heute" : "Diese Woche"} in Werne: ${t.titel}`, u: wannTxt + (t.ort ? " · " + t.ort : ""),
+    auf: `window.open(${JSON.stringify(url)}, '_blank', 'noopener')` }; // auf läuft über new Function (kein HTML-Attribut) – JSON genügt
 }
 function ilMeldungen() {
   const L = [], add = (m) => L.push(m), t = INIT?.naechstesTreffen, kz = INIT?.kz || {}, leitung = !!(ICH?.vorstand || ICH?.admin);
   const anz = (n, ein, mehr) => `${n} ${n === 1 ? ein : mehr}`;
-  // 🔴 bitte erledigen
-  if (INIT?.eingangskorb > 0) add({ id: "eingang", stufe: "rot", sym: "📥", t: `Eingangskorb: ${anz(INIT.eingangskorb, "Dokument", "Dokumente")} für dich`, u: "Ansehen und ins Archiv übernehmen – oder ablehnen", auf: "eingangOeffnen()" });
-  for (const a of INIT?.terminanfragenOffen || []) add({ id: "anfrage:" + a.id, stufe: "rot", sym: "📨", t: `${a.von} fragt an: ${a.anlass}`, u: "Bitte antworten", auf: `taZeigen('${esc(a.id)}')` });
-  if (INIT?.offeneAbstimmungen) add({ id: "abstimmung", stufe: "rot", sym: "🗳️", t: INIT.offeneAbstimmungen === 1 ? "Eine Abstimmung wartet auf deine Stimme" : `${INIT.offeneAbstimmungen} Abstimmungen warten auf deine Stimme`, u: "Antippen und abstimmen", auf: "zeige('vorschlaege')" });
-  for (const u of INIT?.terminfindungOffen || []) add({ id: "terminfindung:" + (u.id || u.titel), stufe: "rot", sym: "🗓️", t: `Bitte Termine ankreuzen: ${u.titel}`, u: "Wann kannst du?", auf: "zeige('termine')" });
-  if (kz.schulung > 0) add({ id: "schulung", stufe: "rot", sym: "🎓", t: "Schulung: bitte einen Termin wählen", u: "Hansi hat dir Termine vorgeschlagen", auf: "smStart()" }); // 2.466.0 (Wunschliste #24): vorher Sprung auf die Seite „schulungen“, die es nicht gibt → leere Seite
+  // 🔴 bitte erledigen (fertig = Text der grünen Bestätigung, wenn es erledigt ist)
+  if (INIT?.eingangskorb > 0) add({ id: "eingang", stufe: "rot", sym: "📥", t: `Eingangskorb: ${anz(INIT.eingangskorb, "Dokument", "Dokumente")} für dich`, u: "Ansehen und ins Archiv übernehmen – oder ablehnen", auf: "eingangOeffnen()", fertig: "Eingangskorb erledigt – alles einsortiert" });
+  for (const a of INIT?.terminanfragenOffen || []) add({ id: "anfrage:" + a.id, stufe: "rot", sym: "📨", t: `${a.von} fragt an: ${a.anlass}`, u: "Bitte antworten", auf: `taZeigen('${esc(a.id)}')`, fertig: `Terminanfrage von ${a.von} beantwortet` });
+  if (INIT?.offeneAbstimmungen) add({ id: "abstimmung", stufe: "rot", sym: "🗳️", t: INIT.offeneAbstimmungen === 1 ? "Eine Abstimmung wartet auf deine Stimme" : `${INIT.offeneAbstimmungen} Abstimmungen warten auf deine Stimme`, u: "Antippen und abstimmen", auf: "zeige('vorschlaege')", fertig: "Deine Stimme ist abgegeben" });
+  for (const u of INIT?.terminfindungOffen || []) add({ id: "terminfindung:" + (u.id || u.titel), stufe: "rot", sym: "🗓️", t: `Bitte Termine ankreuzen: ${u.titel}`, u: "Wann kannst du?", auf: "zeige('termine')", fertig: `Termine angekreuzt: ${u.titel}` });
+  if (kz.schulung > 0) add({ id: "schulung", stufe: "rot", sym: "🎓", t: "Schulung: bitte einen Termin wählen", u: "Hansi hat dir Termine vorgeschlagen", auf: "smStart()", fertig: "Schulungstermin gewählt" }); // 2.466.0 (Wunschliste #24): vorher Sprung auf die Seite „schulungen“, die es nicht gibt → leere Seite
   const in7 = tagPlus(heuteIso(), 7);
-  for (const a of (INIT?.meineAufgaben || []).filter((x) => x.faellig && x.faellig <= in7).slice(0, 3)) add({ id: "aufgabe:" + a.id, stufe: "rot", sym: "📌", t: a.text, u: "Aufgabe " + faelligText(a.faellig).replace(/<[^>]+>/g, ""), auf: "zeige('protokolle')", knoepfe: [["✔ erledigt", `aufgabeErledigt('${esc(a.id)}', true)`]] });
-  if (pushMoeglich() && Notification.permission !== "granted") add({ id: "push", stufe: "rot", sym: "🔔", t: "Benachrichtigungen sind aus", u: "Sonst verpasst du Nachrichten und Anklopfen", auf: "zeige('einstellungen')", knoepfe: [["Einschalten", "pushEinschalten()"]] });
+  for (const a of (INIT?.meineAufgaben || []).filter((x) => x.faellig && x.faellig <= in7).slice(0, 3)) add({ id: "aufgabe:" + a.id, stufe: "rot", sym: "📌", t: a.text, u: "Aufgabe " + faelligText(a.faellig).replace(/<[^>]+>/g, ""), auf: "zeige('protokolle')", knoepfe: [["✔ erledigt", `aufgabeErledigt('${esc(a.id)}', true)`]], fertig: `Erledigt: ${a.text}` });
+  if (pushMoeglich() && Notification.permission !== "granted") add({ id: "push", stufe: "rot", sym: "🔔", t: "Benachrichtigungen sind aus", u: "Sonst verpasst du Nachrichten und Anklopfen", auf: "zeige('einstellungen')", knoepfe: [["Einschalten", "pushEinschalten()"]], fertig: "Benachrichtigungen sind an" });
   // 🟠 Clubleitung
-  if (leitung && kz.buero > 0) add({ id: "buero", stufe: "orange", sym: "🗂️", t: `Büro-Eingang: ${anz(kz.buero, "Sache wartet", "Sachen warten")}`, u: "Änderungen, Ausleihen, Vorschläge …", auf: "buStart()" });
+  if (leitung && kz.buero > 0) add({ id: "buero", stufe: "orange", sym: "🗂️", t: `Büro-Eingang: ${anz(kz.buero, "Sache wartet", "Sachen warten")}`, u: "Änderungen, Ausleihen, Vorschläge …", auf: "buStart()", fertig: "Büro-Eingang abgearbeitet" });
+  L.push(...ilErledigt(L)); // 🟢 heute erledigt
   // 🟡 Hinweise
   if (START_ART === "verknuepfung" || (START_ART === "browser" && !schonInstalliert)) add({ id: "installieren", stufe: "gold", sym: "📲", t: START_ART === "browser" ? "Köcheclub als App installieren" : "App richtig installieren", u: "Dann klappen WhatsApp, Galerie und Benachrichtigungen", auf: "installHilfe()" });
   const nd = INIT?.naechsterDienst;
@@ -23550,20 +23648,25 @@ function ilMeldungen() {
   const wd = WET.r?.daten, wt = t && wd ? wd.tage?.find((x) => x.datum === isoBerlin(new Date(t.beginn))) : null;
   if (wt) { const a = wetterArt(wt.code), nass = (wt.regenWkt ?? 0) >= 50 || ["regen", "niesel", "gewitter", "schnee"].includes(a.szene);
     add({ id: "wetter:" + wt.datum, stufe: nass ? "gold" : "weiss", sym: a.sym, t: nass ? "Am Treffen-Tag wird es nass – Schirm mitnehmen" : `Wetter am Treffen-Tag: ${a.text}`, u: `${grad(wt.max)} / ${grad(wt.min)}${wt.regenWkt != null ? ` · ☔ ${wt.regenWkt} %` : ""}`, auf: "infoGehe(INFO_FELDER.findIndex((f) => f.id === 'wetter'))" }); }
+  const nh = ilNeuheit(); if (nh) add(nh); // 🆕 eine Neuheit pro Runde
   // ⚪ schöne Infos
+  const an = ilAnlass(); if (an) add(an);
+  const sw = ilStadt(); if (sw) add(sw); // 🏙️ Werne
+
+  const dk = ilNachTreffen(t); if (dk) add(dk);
   for (const g of INIT?.geburtstageHeute || []) if (g.person_id !== ICH?.person_id) add({ id: "geb:" + g.person_id, stufe: "weiss", sym: "🎂", t: `${g.name} hat heute Geburtstag`, u: "Gratuliere mit einem Tipp", auf: `gratulieren('${esc(g.person_id)}', true)`, knoepfe: [["💬 Gratulieren", `gratulieren('${esc(g.person_id)}', true)`]] });
   // 2.441.0: „x Mitglieder online“ nicht hier – das zeigt schon das Feld „Mitglieder“ darunter (nichts doppelt)
   if (kz.fotos > 0) add({ id: "fotos", stufe: "weiss", sym: "📸", t: kz.fotos === 1 ? "Ein neues Foto im Album" : `${kz.fotos} neue Fotos im Album`, u: "Antippen und ansehen", auf: "zeige('fotos')" });
   const dn = typeof dokHinweis === "function" ? dokHinweis() : null;
   if (dn) add({ id: "dok:" + dn.id, stufe: "weiss", sym: dn.sym || "🆕", t: `Neu: ${dn.t}`, u: "Antippen zum Lesen", auf: `dokOeffnen('${esc(dn.id)}')` });
   const aus = new Set(ilAusgeblendet()), sichtbar = L.filter((m) => !aus.has(m.id));
-  const rang = { rot: 0, orange: 1, gold: 2, weiss: 3 }; sichtbar.sort((a, b) => rang[a.stufe] - rang[b.stufe]);
-  if (!sichtbar.some((m) => m.stufe === "rot" || m.stufe === "orange") && ilTreffen(t).stufe !== "rot") sichtbar.unshift({ id: "_ok", stufe: "weiss", sym: "👍", t: "Alles erledigt", u: "Für dich steht gerade nichts an", ohneAus: true });
+  const rang = { rot: 0, orange: 1, gold: 2, gruen: 3, weiss: 4 }; sichtbar.sort((a, b) => rang[a.stufe] - rang[b.stufe]);
+  if (!sichtbar.some((m) => m.stufe === "rot" || m.stufe === "orange") && ilTreffen(t).stufe !== "rot") sichtbar.unshift(ilGruss());
   const tipps = HILFE.filter((h) => h.thema !== "erste" && (!h.nur || h.nur()));
   if (tipps.length) { const d = new Date(), h = tipps[(d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate()) % tipps.length];
     sichtbar.push({ id: "_tipp", stufe: "weiss", sym: "💡", t: `Tipp: ${hzTxt(h.t)}`, u: String(hzTxt(h.x)).replace(/<[^>]+>/g, "").slice(0, 90), auf: `hzZuEintrag('h:${esc(h.id)}')`, ohneAus: true }); }
   // Wichtiges öfter zeigen: nach jeder Hinweis-/Info-Meldung kommt die nächste rote wieder dran
-  const tf = ilTreffen(t), rot = [...(tf.stufe === "rot" ? [tf] : []), ...sichtbar.filter((m) => m.stufe === "rot" || m.stufe === "orange")], rest = sichtbar.filter((m) => !rot.includes(m));
+  const tf = ilTreffen(t), rot = [...(tf.stufe === "rot" ? [tf] : []), ...sichtbar.filter((m) => m.stufe === "rot" || m.stufe === "orange")], rest = sichtbar.filter((m) => !rot.includes(m)).filter((m, i, l) => m.id === "_tipp" || l.indexOf(m) < 7); // übersichtlich: höchstens 7 + Tipp
   let folge = [...rot, ...rest];
   if (rot.length && rest.length > 2) { folge = [...rot]; rest.forEach((m, i) => { folge.push(m); if (i % 2 === 1) folge.push(rot[(i >> 1) % rot.length]); }); }
   return tf.stufe === "rot" ? folge : [tf, ...folge]; // das Treffen steht immer vorn; ist die Antwort offen, kommt es als rote Meldung zwischendurch wieder
@@ -24240,7 +24343,7 @@ async function neuLadenRoh(vonHand) {
   try {
     const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
     INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
-    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
+    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     if ($("setWichtigFrage")) $("setWichtigFrage").checked = wichtigFrageAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0)
@@ -29848,6 +29951,100 @@ function expressWegeText(v) {
   return " – " + l.slice(0, 6).map(z).join(" · ") + (l.length > 6 ? ` · … und ${l.length - 6} weitere` : "");
 }
 const EXP = { weg: new Set(), akt: null };
+// ---------- 2.482.0 KC-CLUB-STARTNACHRICHT (Wunsch Hansi): Admin (später auch Clubsprecher/Kassenwart, wenn freigeschaltet) schickt eine Nachricht,
+// die die Ausgewählten beim nächsten App-Start als Fenster bekommen – Pflicht: „gelesen“ bestätigen; dazu „↩️ Rückfrage“ (kommt als Chat beim Absender an).
+// Die Nachrichten stehen in INIT.einstellungen.startnachricht (kein zusätzlicher Abruf beim Start).
+const SN = { weg: new Set(), daten: null, an: { art: "alle", aemter: new Set(), personen: new Set(), gruppe: "" } };
+const snOffen = () => (INIT?.einstellungen?.startnachricht?.liste || []).filter((x) => x && !x.gelesen_am && !SN.weg.has(x.id));
+function snPruefen() {
+  const l = snOffen();
+  if (!l.length || document.hidden || $("snBlatt") || $("expressBlatt") || $("alarmBlatt") || RUF) return;
+  const x = l[0], vn = String(x.vonName || "").split(" ")[0] || "der Clubleitung", tag = x.am ? gpWann(x.am).replace(" um ", ", ") : "";
+  const f = blattAuf("snBlatt", `<div class="sn-kopf">📣 Nachricht von <b>${esc(x.vonName || "der Clubleitung")}</b>${x.wichtig ? ' <span class="sn-wichtig">❗ WICHTIG</span>' : ""}</div>
+    <p class="hinweis" style="margin:2px 0 10px">${esc(tag)}${l.length > 1 ? ` · noch ${l.length - 1} weitere` : ""}</p>
+    <div class="sn-text">${esc(x.text).replace(/\n/g, "<br>")}</div>
+    ${x.knopf === "push" ? snPushKnopf() : ""}
+    <label class="sn-pflicht"><input type="checkbox" id="snGelesen"><span><b>Ich habe die Nachricht gelesen</b><small>Pflicht – ${esc(vn)} sieht deine Bestätigung</small></span></label>
+    <button class="knopf haupt" id="snOk" disabled>✅ Gelesen – bestätigen</button>
+    <button class="knopf" id="snFrageAuf">↩️ Rückfrage an ${esc(vn)}</button>
+    <div id="snFrage" hidden><textarea id="snFrageText" rows="3" maxlength="1000" placeholder="Deine Rückfrage an ${esc(vn)} …" data-diktat></textarea>
+      <button class="knopf haupt" id="snFrageSenden">↩️ Rückfrage senden (gilt auch als gelesen)</button></div>`);
+  f.classList.add("sn-blatt"); f.onclick = null; f.dataset.ohneX = "1"; // Pflicht: nicht wegtippen, kein ✕ (blattXPruefen) – nur „gelesen“ schließt
+  if (x.wichtig) try { navigator.vibrate?.([120, 60, 120]); } catch {}
+  const ok = $("snOk");
+  $("snGelesen").onchange = (e) => { ok.disabled = !e.target.checked; };
+  ok.onclick = () => snBestaetigen(x, "");
+  $("snPushAn")?.addEventListener("click", async () => { await pushEinschalten(); const k = $("snPushBox"); if (k) k.outerHTML = snPushKnopf(); });
+  $("snFrageAuf").onclick = () => { $("snFrage").hidden = false; $("snFrageAuf").hidden = true; $("snFrageText").focus(); };
+  $("snFrageSenden").onclick = () => { const t = $("snFrageText").value.trim(); if (!t) return melde("Bitte die Rückfrage eintippen.", true); snBestaetigen(x, t); };
+}
+// Startnachricht mit Knopf „🔔 Benachrichtigungen einschalten“ (2.482.0, Wunsch Hansi für Dieter): je nach Lage am Handy
+function snPushKnopf() {
+  if (!pushMoeglich()) return `<div class="sn-push" id="snPushBox">📱 ${esc(pushWeg() || "Benachrichtigungen gehen auf diesem Gerät leider nicht.").replace(/<[^>]+>/g, "")}</div>`;
+  if (Notification.permission === "granted") return '<div class="sn-push an" id="snPushBox">✅ Deine Benachrichtigungen sind an – danke!</div>';
+  if (Notification.permission === "denied") return '<div class="sn-push" id="snPushBox">🔕 Benachrichtigungen sind im Handy gesperrt. So erlaubst du sie wieder: <b>Handy-Einstellungen → Apps → Chrome (bzw. Club-App) → Benachrichtigungen → an</b>, danach die App neu öffnen.</div>';
+  return '<div class="sn-push" id="snPushBox"><button class="knopf haupt" id="snPushAn">🔔 Benachrichtigungen jetzt einschalten</button></div>';
+}
+async function snBestaetigen(x, frage) {
+  const knoepfe = document.querySelectorAll("#snBlatt button"); knoepfe.forEach((b) => (b.disabled = true));
+  try {
+    await api("startnachricht_bestaetigen", { id: x.id, rueckfrage: frage });
+    if (frage) { // die Rückfrage kommt beim Absender als normale Chat-Nachricht an (Push wie jede Nachricht)
+      const kurz = [...String(x.text)].slice(0, 60).join("") + ([...String(x.text)].length > 60 ? "…" : "");
+      await api("nachricht_senden", { text: `↩️ Rückfrage zu deiner Startnachricht „${kurz}“:\n${frage}`, wege: ["push"], empfaenger: { personen: [x.von], aemter: [], alle: false, vorstand: false }, betreff: "" })
+        .catch((e) => meldeFehler(e));
+    }
+    x.gelesen_am = new Date().toISOString(); SN.weg.add(x.id); $("snBlatt")?.remove();
+    melde(frage ? "↩️ Rückfrage gesendet – danke!" : "✅ Bestätigt – danke!");
+    setTimeout(snPruefen, 600);
+  } catch (e) { knoepfe.forEach((b) => (b.disabled = false)); if ($("snOk") && !$("snGelesen")?.checked) $("snOk").disabled = true; meldeFehler(e); }
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => { try { snPruefen(); } catch {} }, 1800); });
+// Verfassen + Überblick (wer hat gelesen, Rückfragen)
+async function snStart() {
+  blattAuf("snAdmin", '<p class="hinweis">⏳ Wird geladen …</p>');
+  try { if (!MITGLIEDER) await mitgliederHolen(); SN.daten = await api("startnachricht_liste"); snZeigen(); } catch (e) { $("snAdmin")?.remove(); meldeFehler(e); }
+}
+function snZeigen() {
+  const d = SN.daten || { liste: [], gruppen: [] }, A = SN.an, el = document.querySelector("#snAdmin .blatt-innen"); if (!el) return;
+  const text = $("snText")?.value ?? "", wichtig = !!$("snWichtig")?.checked;
+  const art = (k, t) => `<button type="button" class="chip${A.art === k ? " an" : ""}" onclick="SN.an.art='${k}';snZeigen()">${t}</button>`;
+  const wahl = A.art === "aemter" ? `<div class="sn-wahl">${(AEMTER || []).map((x) => `<button type="button" class="chip${A.aemter.has(x) ? " an" : ""}" onclick="snUmschalten('aemter', ${jsArg(x)})">🎖️ ${esc(x)}</button>`).join("") || '<p class="hinweis">Keine Ämter eingetragen.</p>'}</div>`
+    : A.art === "gruppe" ? `<select id="snGruppe" onchange="SN.an.gruppe=this.value">${['<option value="">– Gruppe wählen –</option>', ...d.gruppen.map((g) => `<option value="${esc(g.id)}"${A.gruppe === g.id ? " selected" : ""}>${esc((g.symbol || "👥") + " " + g.name)}</option>`)].join("")}</select>`
+    : A.art === "personen" ? `<div class="sn-wahl sn-personen">${(MITGLIEDER || []).filter((m) => m.person_id !== ICH?.person_id).map((m) => `<label class="chip${A.personen.has(m.person_id) ? " an" : ""}"><input type="checkbox"${A.personen.has(m.person_id) ? " checked" : ""} onchange="snUmschalten('personen', ${jsArg(m.person_id)})">${esc(m.name)}</label>`).join("")}</div>` : "";
+  const wann = (z) => z ? new Date(z).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
+  const liste = d.liste.map((s) => { const g = s.empfaenger.filter((e) => e.gelesen_am).length, rf = s.empfaenger.filter((e) => e.rueckfrage);
+    return `<details class="karte sn-gesendet"><summary><span>${s.wichtig ? "❗ " : ""}${esc([...s.text].slice(0, 50).join(""))}${[...s.text].length > 50 ? "…" : ""}</span>
+      <span class="sn-stand${g === s.empfaenger.length ? " fertig" : ""}">✅ ${g}/${s.empfaenger.length}${rf.length ? ` · ↩️ ${rf.length}` : ""}</span></summary>
+      <p class="hinweis">${esc(wann(s.am))}${ICH?.admin && s.von ? ` · von ${esc(s.von)}` : ""}</p><div class="sn-text">${esc(s.text).replace(/\n/g, "<br>")}</div>
+      <ul class="sn-empf">${s.empfaenger.map((e) => `<li>${e.gelesen_am ? "✅" : "⏳"} <b>${esc(e.name)}</b>${e.gelesen_am ? ` <small>${esc(wann(e.gelesen_am))}</small>` : " <small>noch nicht gelesen</small>"}${e.rueckfrage ? `<div class="sn-rf">↩️ ${esc(e.rueckfrage)}</div>` : ""}</li>`).join("")}</ul>
+      <button class="knopf klein" onclick="snZurueck(${jsArg(s.id)})">🗑️ Zurückziehen (bei allen, die sie noch nicht gelesen haben, verschwindet sie)</button></details>`; }).join("");
+  el.innerHTML = `<h3 style="margin-top:0">📣 Startnachricht</h3>
+    <p class="hinweis">Die Empfänger sehen sie beim nächsten Öffnen der App als Fenster und müssen „gelesen“ bestätigen. Rückfragen kommen bei dir im Chat an.</p>
+    <textarea id="snText" rows="4" maxlength="2000" placeholder="Deine Nachricht …" data-diktat>${esc(text)}</textarea>
+    <label class="sn-pflicht"><input type="checkbox" id="snKnopfPush"${$("snKnopfPush")?.checked ? " checked" : ""}><span><b>🔔 Knopf „Benachrichtigungen einschalten“ mitgeben</b><small>für alle, deren Benachrichtigungen aus sind</small></span></label>
+    <label class="sn-pflicht"><input type="checkbox" id="snWichtig"${wichtig ? " checked" : ""}><span><b>❗ Als wichtig markieren</b><small>rot hervorgehoben, dazu ein Push „Bitte die App öffnen“</small></span></label>
+    <p style="margin:10px 0 6px"><b>An wen?</b></p><div class="sn-wahl">${art("alle", "👥 Alle")}${art("aemter", "🎖️ Ämter")}${art("gruppe", "💬 Gruppe")}${art("personen", "🙋 Personen")}</div>${wahl}
+    <div class="knoepfe" style="margin-top:10px"><button class="knopf haupt" onclick="snSenden()">📣 Senden</button><button class="knopf" onclick="$('snAdmin').remove()">Schließen</button></div>
+    ${ICH?.admin ? `<label class="sn-pflicht" style="margin-top:12px"><input type="checkbox"${d.aemterFrei ? " checked" : ""} onchange="snFreigabe(this.checked)"><span><b>Clubsprecher und Kassenwart dürfen auch Startnachrichten schicken</b><small>${d.aemterFrei ? "freigeschaltet" : "noch nicht freigeschaltet"}</small></span></label>` : ""}
+    <h4 style="margin:16px 0 6px">Gesendet</h4>${liste || '<p class="hinweis">Noch keine Startnachricht gesendet.</p>'}`;
+}
+function snUmschalten(was, v) { const s = SN.an[was]; s.has(v) ? s.delete(v) : s.add(v); snZeigen(); }
+async function snSenden() {
+  const text = $("snText").value.trim(), A = SN.an; if (!text) return melde("Bitte einen Text schreiben.", true);
+  const an = A.art === "alle" ? { alle: true } : A.art === "aemter" ? { aemter: [...A.aemter] } : A.art === "gruppe" ? { gruppe: A.gruppe } : { personen: [...A.personen] };
+  const wer = A.art === "alle" ? "alle Mitglieder" : A.art === "aemter" ? `die Ämter ${[...A.aemter].join(", ") || "–"}` : A.art === "gruppe" ? "die gewählte Gruppe" : `${A.personen.size} Person${A.personen.size === 1 ? "" : "en"}`;
+  if (!(await frage(`Startnachricht an ${wer} senden?\n\nSie erscheint beim nächsten Öffnen der App.`))) return;
+  try { const r = await api("startnachricht_senden", { text, wichtig: !!$("snWichtig")?.checked, knopf: $("snKnopfPush")?.checked ? "push" : null, an }); melde(`📣 Gesendet an ${r.empfaenger} Person${r.empfaenger === 1 ? "" : "en"}`);
+    $("snText").value = ""; SN.daten = await api("startnachricht_liste"); snZeigen(); } catch (e) { meldeFehler(e); }
+}
+async function snZurueck(id) {
+  if (!(await frage("Startnachricht zurückziehen?\n\nWer sie noch nicht gelesen hat, bekommt sie nicht mehr."))) return;
+  try { await api("startnachricht_zurueckziehen", { id }); SN.daten = await api("startnachricht_liste"); snZeigen(); melde("🗑️ Zurückgezogen"); } catch (e) { meldeFehler(e); }
+}
+async function snFreigabe(an) {
+  try { await api("startnachricht_freigabe", { aemter: an }); SN.daten.aemterFrei = an; snZeigen(); melde(an ? "Clubsprecher und Kassenwart dürfen jetzt Startnachrichten schicken" : "Nur noch der Admin schickt Startnachrichten"); } catch (e) { meldeFehler(e); }
+}
 function expressPruefen() {
   const l = (INIT?.express || []).filter((x) => !EXP.weg.has(x.id));
   if (!l.length || document.hidden || $("expressBlatt") || $("alarmBlatt") || RUF) return;
@@ -35117,7 +35314,7 @@ const PUSH_PRUEF = { lief: false };
 async function pushPruefen() {
   if (!KEY || !ICH || !pushMoeglich() || pushWeg() || !INIT?.vapidPublicKey) return;
   const reg = await navigator.serviceWorker.ready; let sub = null; try { sub = await reg.pushManager.getSubscription(); } catch {}
-  const r = await api("push_pruefen", { endpoint: sub?.endpoint || "" });
+  const r = await api("push_pruefen", { endpoint: sub?.endpoint || "", ua: navigator.userAgent });
   if (Notification.permission === "granted") {
     if (sub && r.diesesAktiv) return; // alles in Ordnung
     if (sub && r.diesesBekannt) { try { await sub.unsubscribe(); } catch {} sub = null; } // vom Push-Dienst abgelehnt (410) → neu anlegen
@@ -35125,7 +35322,12 @@ async function pushPruefen() {
     await api("push_anmelden", { subscription: sub.toJSON(), userAgent: navigator.userAgent, wieder: true });
     pushStatusZeigen?.(); wichtigZeigen(); return;
   }
-  if (!r.frueher || r.aktiv > 0) return; // nie Push gehabt (bewusst ohne) oder ein anderes Gerät bekommt ihn
+  // 2.481.0 KC-CLUB-PUSH-ERLAUBNIS-WEG (Fall Dieter: angeklopft, nichts kam an): Erlaubnis im Handy weg, aber das alte Abo dieses Geräts stand
+  // beim Server noch als aktiv → er schickte weiter (Push-Dienst nimmt an, Handy zeigt nichts), und hier hieß es „ein anderes Gerät bekommt ihn“.
+  // Jetzt: alte Abos DIESES Geräts abmelden – dann sagt das Anklopfen dem Gegenüber ehrlich „bekommt gerade keine Benachrichtigungen“.
+  const altHier = (r.diesesAktiv ? 1 : 0) + (r.gleichesGeraet || 0);
+  if (altHier) try { await api("push_abmelden", { endpoint: sub?.endpoint || "", erlaubnisWeg: true, ua: navigator.userAgent, erlaubnis: Notification.permission }); } catch {}
+  if (!r.frueher || (r.aktiv || 0) - altHier > 0) return; // nie Push gehabt (bewusst ohne) oder ein anderes Gerät bekommt ihn
   const heute = heuteIso(); if (lsLesen("kc_club_push_wieder_gefragt") === heute) return; lsSetzen("kc_club_push_wieder_gefragt", heute);
   const gesperrt = Notification.permission === "denied";
   const f = dlgOeffnen(`<h3 class="dlg-kopf">🔔 Deine Benachrichtigungen sind aus</h3>
