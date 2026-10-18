@@ -15668,6 +15668,15 @@ function doseLinie(t, b, h) { // sichtbarer Teil links oben und die Rolle auf de
   const A = t <= 1 ? [t * b, 0] : [b, (t - 1) * h], B = t <= 1 ? [0, t * h] : [(t - 1) * b, h];
   return { poly, A, B };
 }
+// Sardinen wie in der echten Dose (Vorbild Hansi): silbrig, der Länge nach nebeneinander, Köpfe nach rechts, dunkles Öl dazwischen
+function doseSardinen(hoehe) {
+  const n = Math.max(3, Math.min(7, Math.round((hoehe - 20) / 46)));
+  const fisch = (i) => `<svg viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="dsf${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f3843"/><stop offset=".32" stop-color="#8e9aa7"/><stop offset=".58" stop-color="#eef2f5"/><stop offset=".8" stop-color="#c3ccd5"/><stop offset="1" stop-color="#7d8794"/></linearGradient></defs>
+    <path d="M14 20 L1 7 L6 20 L1 33 Z" fill="#6d7783"/><path d="M12 20 Q60 3 160 9 Q186 11 194 20 Q186 29 160 31 Q60 37 12 20 Z" fill="url(#dsf${i})"/>
+    <path d="M40 15 Q100 10 150 13" stroke="#ffffff" stroke-opacity=".55" stroke-width="1.6" fill="none"/><path d="M165 11 Q159 20 165 29" stroke="#9b6470" stroke-width="2" fill="none"/>
+    <circle cx="179" cy="18" r="4.2" fill="#d9b24a"/><circle cx="179" cy="18" r="2.6" fill="#141414"/></svg>`;
+  return `<div class="dose-fische">${Array.from({ length: n }, (_, i) => fisch(i)).join("")}</div>`;
+}
 function doseRoelchenSetzen(an) {
   let r = document.getElementById("doseRoelchen"); const h = document.querySelector("#v-start .hero");
   if (!an) { r?.remove(); h?.classList.remove("dose-zu"); return; }
@@ -15677,9 +15686,9 @@ function doseRoelchenSetzen(an) {
 }
 async function doseFahren(h, von, bis) { // t von → bis; Bühne wird geschnitten, die Rolle läuft auf der Linie mit
   const ra = h.getBoundingClientRect(), b = ra.width, hh = ra.height;
-  const rolle = document.createElement("div"); rolle.className = "dose-fahrt"; document.body.appendChild(rolle);
+  const rolle = document.createElement("div"); rolle.className = "dose-fahrt"; rolle.innerHTML = '<i class="dose-ring" aria-hidden="true"></i>'; document.body.appendChild(rolle); // Rolle in Messing mit Dosenschlüssel
   // unter dem Deckel: das Innere der Dose (Blech, Öl-Glanz, Sardinen) – liegt hinter der Bühne und kommt beim Aufrollen zum Vorschein
-  const innen = document.createElement("div"); innen.className = "dose-innen"; innen.innerHTML = "<i>🐟</i><i>🐟</i><i>🐟</i><i>🐟</i>";
+  const innen = document.createElement("div"); innen.className = "dose-innen"; innen.innerHTML = doseSardinen(hh);
   Object.assign(innen.style, { left: ra.left + "px", top: ra.top + "px", width: b + "px", height: hh + "px" }); document.body.appendChild(innen); h.style.zIndex = "2";
   const t0 = performance.now();
   await new Promise((fertig) => {

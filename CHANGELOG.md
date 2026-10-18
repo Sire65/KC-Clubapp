@@ -2,7 +2,7 @@
 
 ## 2.487.0 – 2026-10-18 – 🥫 Bühne aufrollen wie eine Sardinenbüchse (KC-CLUB-SARDINENDOSE)
 Wunsch Hansi: „Die Bühne bei Doppelklick unten rechts auf die Ecke von rechts unten nach links oben wie eine Sardinenbüchse aufrollen – aber so, dass man es wieder rückgängig machen kann.“ (Wahl Hansi: lange drücken statt Doppeltipp, weil der Doppeltipp schon den Kopf umdreht; danach ein Röllchen mit Dosenschlüssel.)
-- **Lange aufs Eselsohr drücken** (ohne zu ziehen): Die Bühne wird schräg von rechts unten nach links oben weggerollt – eine silberne Blechrolle läuft mit und wird dicker, darunter kommt das Innere der Dose mit Sardinen 🐟 zum Vorschein.
+- **Lange aufs Eselsohr drücken** (ohne zu ziehen): Die Bühne wird schräg von rechts unten nach links oben weggerollt – eine goldene Messing-Rolle mit Dosenschlüssel-Ring läuft mit und wird dicker; darunter kommt das Innere der Dose zum Vorschein – silberne Sardinen der Länge nach nebeneinander, dunkles Öl, silberner Rand (nach Hansis Vorbild-Foto).
 - Danach oben links ein **Röllchen mit Dosenschlüssel** („🥫 Bühne ausrollen“) – antippen rollt die Bühne rückwärts wieder ab.
 - Doppeltipp aufs Eselsohr dreht den Kopf wie bisher um; Ziehen nach links ebenso. Der Hinweis beim einfachen Antippen nennt jetzt auch das lange Drücken.
 - Gemerkt auf diesem Gerät (bleibt auch nach Neustart aufgerollt); bei „Bewegung reduzieren“ ohne Animation. Hilfe-Eintrag „Bühne aufrollen wie eine Sardinenbüchse“. Nur App.
