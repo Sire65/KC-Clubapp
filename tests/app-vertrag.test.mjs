@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6717,6 +6717,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/for \(const lt of \(INIT\?\.laufbandTermine \|\| \[\]\)\.filter\(\(x\) => x\.id !== t\?\.id\)\) add\(\{ id: "lauf:" \+ lt\.id, stufe: "gold"/.test(html), "im Info-Laufband");
   assert.ok(/\$\{\/\^https:\\\/\\\/\/\.test\(t\.link \|\| ""\) \? `<div class="knoepfe"><a class="knopf klein" href="\$\{esc\(t\.link\)\}" target="_blank" rel="noopener noreferrer">🌐 Webseite ansehen ↗<\/a>/.test(html), "Webseite am Termin, nur https");
   assert.ok(/link: \$\("tfLink"\)\.value\.trim\(\), im_laufband: \$\("tfLauf"\)\.checked, anlagen: oaIds\("tf"\)/.test(html), "Formular sendet Link, Laufband, Prospekt");
+}
+
+// 2.462.0 KC-CLUB-STIMMEN-TABELLE (Fund 18.10.2026): seit 2.351.0 lasen/schrieben Vorschläge und Abstimmungen in kc_club_video_stimmen
+// (Twinkey-Stimmen) statt kc_club_stimmen – Stimmen gingen still verloren. Vorschlags-Stimmen nur in kc_club_stimmen, Schreibfehler werden gemeldet.
+{
+  const falsch = server.split("\n").filter((z) => z.includes("kc_club_video_stimmen") && z.includes("vorschlag_id"));
+  assert.equal(falsch.length, 0, "Vorschlags-Stimmen nie in der Tabelle der Twinkey-Stimmen");
+  assert.ok((server.match(/db\.from\("kc_club_stimmen"\)/g) || []).length >= 8, "alle Stimmen-Stellen auf kc_club_stimmen");
+  assert.ok(/db\.from\("kc_club_video_stimmen"\)\.select\("plattform,art,muster/.test(server), "Twinkey-Stimmen bleiben, wo sie sind");
+  assert.equal((server.match(/Stimme konnte nicht gespeichert werden – bitte gleich noch einmal versuchen\./g) || []).length, 2, "Schreibfehler werden gemeldet, nie still verloren");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

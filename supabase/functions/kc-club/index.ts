@@ -85,7 +85,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.461.0";
+const SERVER_VERSION = "2.462.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -3662,7 +3662,7 @@ async function archivAuto(ich: Ich) {
       const { data: vs } = await db.from("kc_club_vorschlaege").select("id,titel,optionen,geheim,abgeschlossen_am,erstellt_am").eq("art", "abstimmung").eq("status", "abgeschlossen").order("abgeschlossen_am", { ascending: false }).limit(300);
       const ids = (vs ?? []).map((v: any) => v.id);
       const [{ data: st }, { data: geh }] = ids.length ? await Promise.all([
-        db.from("kc_club_video_stimmen").select("vorschlag_id,wahl").in("vorschlag_id", ids), db.from("kc_club_geheime_stimmen").select("vorschlag_id,wahl").in("vorschlag_id", ids),
+        db.from("kc_club_stimmen").select("vorschlag_id,wahl").in("vorschlag_id", ids), db.from("kc_club_geheime_stimmen").select("vorschlag_id,wahl").in("vorschlag_id", ids),
       ]) : [leer, leer];
       for (const v of vs ?? []) {
         const s = (v.geheim ? geh : st) ?? [];
@@ -3761,7 +3761,7 @@ async function vorschlaegeListe(ich: Ich) {
   const tids = [...new Set(alle.map((v: any) => v.treffen_id).filter(Boolean))];
   const leer = { data: [] as any[] };
   const [{ data: st }, { data: geh }, { data: tr }] = await Promise.all([
-    ids.length ? db.from("kc_club_video_stimmen").select("vorschlag_id,person_id,wahl").in("vorschlag_id", ids) : Promise.resolve(leer),
+    ids.length ? db.from("kc_club_stimmen").select("vorschlag_id,person_id,wahl").in("vorschlag_id", ids) : Promise.resolve(leer),
     ids.length ? db.from("kc_club_geheime_stimmen").select("vorschlag_id,wahl").in("vorschlag_id", ids) : Promise.resolve(leer),
     tids.length ? db.from("kc_club_treffen").select("id,titel,beginn").in("id", tids) : Promise.resolve(leer),
   ]);
@@ -4201,7 +4201,7 @@ async function bueroSitzung(ich: Ich, tid: string) {
   const ant = new Map<string, any>((teil ?? []).map((x: any) => [x.person_id as string, x]));
   const unterst = new Map<string, number>();
   if ((vs ?? []).length) {
-    const { data: st } = await db.from("kc_club_video_stimmen").select("vorschlag_id").in("vorschlag_id", (vs ?? []).map((v: any) => v.id));
+    const { data: st } = await db.from("kc_club_stimmen").select("vorschlag_id").in("vorschlag_id", (vs ?? []).map((v: any) => v.id));
     (st ?? []).forEach((s: any) => unterst.set(s.vorschlag_id, (unterst.get(s.vorschlag_id) ?? 0) + 1));
   }
   const vorschlaege: any[] = (vs ?? []).map((v: any) => ({ id: v.id, art: v.art, titel: v.titel, text: topVorschlag(v), fuerDiese: v.treffen_id === tid, status: v.status, unterstuetzt: unterst.get(v.id) ?? 0 }));
@@ -6215,7 +6215,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const pAbst = (async () => {
           const { data: abstAlle } = await db.from("kc_club_vorschlaege").select("id,ziel_ids").eq("status", "offen").eq("art", "abstimmung");
           const abst = (abstAlle ?? []).filter((x: any) => !x.ziel_ids || x.ziel_ids.includes(ich.person_id)); // KC-CLUB-ABSTIMMUNG-ZIEL
-          const { data: meineSt } = (abst ?? []).length ? await db.from("kc_club_video_stimmen").select("vorschlag_id").eq("person_id", ich.person_id).in("vorschlag_id", (abst ?? []).map((x: any) => x.id)) : { data: [] as any[] };
+          const { data: meineSt } = (abst ?? []).length ? await db.from("kc_club_stimmen").select("vorschlag_id").eq("person_id", ich.person_id).in("vorschlag_id", (abst ?? []).map((x: any) => x.id)) : { data: [] as any[] };
           return (abst ?? []).length - (meineSt ?? []).length;
         })();
         // 2.458.0 KC-CLUB-VORSCHLAEGE-ANZAHL (Wunschliste #15, Wahl Hansi „Alle Vorschläge“): Zahl aller laufenden Vorschläge für die Kachel –
@@ -7011,8 +7011,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (v.ziel_ids && !v.ziel_ids.includes(ich.person_id)) throw new Fehler("Diese Abstimmung ist nur für eine bestimmte Gruppe.", 403); // KC-CLUB-ABSTIMMUNG-ZIEL
         if (unterstuetzbar(v.art)) {
           // Unterstützen an/aus (Thema und Spendenprojekt)
-          if (p.wahl) await db.from("kc_club_video_stimmen").upsert({ vorschlag_id: v.id, person_id: ich.person_id, wahl: "dafuer", geaendert_am: jetzt() });
-          else await db.from("kc_club_video_stimmen").delete().eq("vorschlag_id", v.id).eq("person_id", ich.person_id);
+          // 2.462.0 KC-CLUB-STIMMEN-TABELLE (Fund 18.10.): seit 2.351.0 stand hier versehentlich kc_club_video_stimmen (Twinkey-Stimmen) – Stimmen gingen verloren
+          const { error: se } = p.wahl ? await db.from("kc_club_stimmen").upsert({ vorschlag_id: v.id, person_id: ich.person_id, wahl: "dafuer", geaendert_am: jetzt() })
+            : await db.from("kc_club_stimmen").delete().eq("vorschlag_id", v.id).eq("person_id", ich.person_id);
+          if (se) throw new Fehler("Stimme konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500); // nie mehr still verlieren
         } else {
           const wahl = String(p.wahl || "");
           if (!v.optionen.includes(wahl)) throw new Fehler("Bitte eine der Antworten wählen.");
@@ -7020,7 +7022,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             const { data: ok, error } = await db.rpc("kc_club_geheim_abstimmen", { p_vorschlag: v.id, p_person: ich.person_id, p_wahl: wahl });
             if (error) throw new Fehler("Stimme konnte nicht gespeichert werden.", 500);
             if (!ok) throw new Fehler("Du hast hier schon abgestimmt – bei geheimen Abstimmungen geht das nur einmal.", 409);
-          } else await db.from("kc_club_video_stimmen").upsert({ vorschlag_id: v.id, person_id: ich.person_id, wahl, geaendert_am: jetzt() });
+          } else { const { error: se } = await db.from("kc_club_stimmen").upsert({ vorschlag_id: v.id, person_id: ich.person_id, wahl, geaendert_am: jetzt() });
+            if (se) throw new Fehler("Stimme konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500); }
         }
         // bei geheimer Abstimmung keine Wahl ins Protokoll
         await protokoll(ich.person_id, "vorschlag_stimme", { vorschlag: v.id, ...(v.geheim ? {} : { wahl: p.wahl ?? null }) });
@@ -7047,7 +7050,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: v } = await db.from("kc_club_vorschlaege").select("*").eq("id", String(p.id || "")).maybeSingle();
         if (!v) throw new Fehler("Vorschlag nicht gefunden.", 404);
         const [{ data: st }, { data: geh }] = await Promise.all([
-          db.from("kc_club_video_stimmen").select("*").eq("vorschlag_id", v.id),
+          db.from("kc_club_stimmen").select("*").eq("vorschlag_id", v.id),
           db.from("kc_club_geheime_stimmen").select("wahl").eq("vorschlag_id", v.id),
         ]);
         const fremd = (st ?? []).some((x: any) => x.person_id !== ich.person_id) || (geh ?? []).length > 0;

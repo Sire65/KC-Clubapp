@@ -34,6 +34,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.462.0 – 2026-10-18 – KC-CLUB-STIMMEN-TABELLE: Stimmen bei Vorschlägen und Abstimmungen werden wieder gespeichert
+Fund 18.10.: Seit 2.351.0 las und schrieb der Server Stimmen (👍 bei Themen/Spenden, Abstimmungen, „wartet auf deine Stimme“) in der Tabelle der Twinkey-Stimmen statt in kc_club_stimmen – 8 Stellen, versehentlich beim Einbau der Video-Stimmen umbenannt. Stimmen gingen still verloren (Logs: 21 Lese- und 1 Schreibfehler in 24 Std.). Jetzt richtige Tabelle, Schreibfehler werden gemeldet. Server 2.462.0.
+
 ## 2.461.0 – 2026-10-18 – KC-CLUB-TERMIN-LINK-PROSPEKT: Clubtermin mit Webseite, Prospekt und Laufband (Wunschliste #20)
 Wunsch Hansi (Adventsmarkt der Freilichtbühne): Clubtermine bekommen 🌐 Link zur Webseite (nur https), 📎 Prospekt (Foto/PDF) und „📣 Im Info-Laufband ankündigen“ (Startseite, ab 3 Wochen vorher, mit Knopf 🌐 Webseite). DB: kc_club_treffen.link/im_laufband, Objekt-Anlagen art 'treffen'. App + Server + DB.
 
