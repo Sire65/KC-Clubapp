@@ -11026,7 +11026,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 }
 // 2.487.0 KC-CLUB-SARDINENDOSE · 2.488.0: lange aufs Eselsohr drücken rollt den Kopf wie eine Sardinenbüchse auf – darunter die Rückseite (wie Doppeltipp)
 {
-  assert.ok(/if \(!hinten\) ES\.langUhr = setTimeout\(\(\) => \{ if \(x0 === null \|\| Math\.abs\(dx\) > 8\) return; ES\.lang = true;/.test(html) && /doseAufrollen\(\); \}, DOSE_LANG_MS\)/.test(html), "lange drücken (nur vorne, ohne Ziehen)");
+  assert.ok(/ES\.langUhr = setTimeout\(\(\) => \{ if \(x0 === null \|\| Math\.abs\(dx\) > 8\) return; ES\.lang = true;/.test(html) && /hinten \? doseZurollen\(\) : doseAufrollen\(\); \}, DOSE_LANG_MS\)/.test(html), "lange drücken (ohne Ziehen): vorne aufrollen, hinten zurollen");
+  assert.ok(/await doseFahren\(h, 0, 2\);/.test(html) && /await esDrehen\(false, true\);/.test(html), "zurollen: Deckel kommt zurück, danach vorne");
   assert.ok(/const poly = t <= 1 \? \[\[0, 0\], \[t \* b, 0\], \[0, t \* h\]\]/.test(html) && /await doseFahren\(h, 2, 0\)/.test(html), "schräg von rechts unten nach links oben");
   const d = html.slice(html.indexOf("async function doseAufrollen("), html.indexOf("async function esDrehen("));
   assert.ok(/r\.classList\.remove\("versteckt"\)/.test(d) && /await esDrehen\(true, true\); \/\/ derselbe Endzustand wie nach dem Doppeltipp/.test(d) && /return esDrehen\(true\);/.test(d), "darunter die Rückseite, Endzustand wie Doppeltipp");

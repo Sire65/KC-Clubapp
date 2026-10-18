@@ -3,7 +3,7 @@
 ## 2.488.0 – 2026-10-18 – 🥫 Sardinenbüchse öffnet die Rückseite des Kopfs (KC-CLUB-SARDINENDOSE)
 Wunsch Hansi: „Wenn die Sardinenbüchse auf ist, muss die Bühne bzw. die Rückseite des Kopfbereichs kommen – genau so, als wenn ich doppelt aufs Eselsohr klicke.“
 - Lange aufs Eselsohr drücken: Der Kopf rollt sich wie der Deckel einer Sardinenbüchse von rechts unten nach links oben auf (Messing-Rolle mit Dosenschlüssel) – und darunter liegt schon die **Rückseite** mit der zuletzt gewählten Ansicht (Bühne, Diashow, Tafel, Uhr …). Am Ende derselbe Zustand wie nach dem Doppeltipp.
-- Zurück wie gewohnt: doppelt aufs Eselsohr hinten tippen (oder nach rechts ziehen). Das Röllchen „Bühne ausrollen“ und das Doseninnere entfallen; ein in 2.487.0 gemerktes „aufgerollt“ wird gelöscht, der Kopf ist wieder da.
+- **Rückgängig mit langem Festhalten** (Nachtrag Hansi): lange aufs Eselsohr hinten drücken – der Deckel rollt sich von links oben nach rechts unten wieder über die Rückseite zu, danach ist der Kopf wieder vorne. Doppelt tippen (oder nach rechts ziehen) geht weiterhin. Das Röllchen „Bühne ausrollen“ und das Doseninnere entfallen; ein in 2.487.0 gemerktes „aufgerollt“ wird gelöscht, der Kopf ist wieder da.
 - Bei „Bewegung reduzieren“ dreht der Kopf einfach um. Nur App.
 
 ## 2.487.0 – 2026-10-18 – 🥫 Bühne aufrollen wie eine Sardinenbüchse (KC-CLUB-SARDINENDOSE)

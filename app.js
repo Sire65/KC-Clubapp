@@ -5226,7 +5226,7 @@ const HILFE = [
   { id: "jahreszeit_kopf", thema: "darstellung", sym: "🍂", t: "Jahreszeiten-Bild und Deko im Kopf", x: "Im Kopf der Startseite wechselt das Bild <b>von selbst nach dem Kalender</b>: Frühling, Sommer, Herbst, Winter, Advent und Silvester – mit Laub, Schnee, Blumen und kleinen Besuchern. An der Leiste mit den Lämpchen kann eine <b>Deko</b> hängen (Wimpel, Lichterkette, Laternen). Fest einstellen oder ganz abschalten unter ⚙️ → <b>„✨ Effekte“</b>. Die Bühne spart Akku: nach einer Weile ohne Bedienung läuft sie langsamer. Eine <b>Vorschau</b> aus den Einstellungen (z. B. Nikolaus-Stiefel) bleibt stehen, bis du unten auf der Startseite <b>„✕ beenden“</b> tippst (oder in den Einstellungen „📅 Heute“).", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.273.0" }, // 2.337.0 KC-CLUB-TUEV-4
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „✨ Effekte“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("effekte", "setAnimiert"), seit: "2.24.1" },
   { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am grünen Kopf ist eine kleine Ecke umgeknickt. <b>Doppelt tippen</b> (oder nach links ziehen) – der Kopf dreht sich um wie ein Blatt Papier. Auf der Rückseite oben sieben Reiter: <b>🖼️ Diashow</b>, <b>🖍️ Tafel</b>, <b>📋 Flipchart</b>, <b>🕰️ Uhr</b>, <b>🎭 Bühne</b>, <b>🪞 Spiegel</b> und <b>🧩 Rätsel</b>. Damit man das Eselsohr nicht übersieht, blinkt es ab und zu kurz gelb-orange. Sie nutzt den ganzen Bildschirm bis zur Leiste unten. <b>Nochmal doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „📄 Eselsohr am Kopf“. Alles zum Ansehen: Erklär-Video <b>„📄 Die Rückseite: Eselsohr“</b>.", zeig: () => esOeffnen(null), seit: "2.292.0" },
-  { id: "sardinendose", thema: "start", sym: "🥫", t: "Kopf aufrollen wie eine Sardinenbüchse", x: "<b>Lange aufs Eselsohr</b> unten rechts am Kopf drücken – dann rollt sich der Kopf wie der Deckel einer Sardinenbüchse von rechts unten nach links oben auf, und darunter liegt die <b>Rückseite</b> mit Bühne, Diashow, Tafel, Uhr … – genau wie nach dem Doppeltipp. Zurück: doppelt aufs Eselsohr hinten tippen.", seit: "2.488.0" },
+  { id: "sardinendose", thema: "start", sym: "🥫", t: "Kopf aufrollen wie eine Sardinenbüchse", x: "<b>Lange aufs Eselsohr</b> unten rechts am Kopf drücken – dann rollt sich der Kopf wie der Deckel einer Sardinenbüchse von rechts unten nach links oben auf, und darunter liegt die <b>Rückseite</b> mit Bühne, Diashow, Tafel, Uhr … – genau wie nach dem Doppeltipp. Zurück: doppelt aufs Eselsohr hinten tippen – oder <b>lange festhalten</b>, dann rollt sich der Deckel wieder zu.", seit: "2.488.0" },
   // 2.300.0 KC-CLUB-RUECKSEITE-HILFE (Wunsch Hansi „Hilfetexte anpassen“): je ein Text für jeden Reiter der Rückseite
   { id: "es_dia", thema: "start", sym: "🖼️", t: "Rückseite: Diashow", x: "Die <b>🖼️ Diashow</b> zeigt die Fotos aus dem 📷 Fotoalbum, sanft überblendet. Unten: Album wählen, ◀ ▶ blättern, ⏸ anhalten, <b>🎵 Club-Song dazu</b> (🔇 = ohne Musik, wird gemerkt), ⛶ Vollbild. <b>Aufs Foto tippen</b> blendet Leiste und Text aus (nochmal tippen holt sie zurück). Querformat-Fotos stehen auf einem weichen Hintergrund statt schwarzer Balken.", zeig: () => esOeffnen("dia"), seit: "2.300.0" },
   { id: "es_tafel", thema: "start", sym: "🖍️", t: "Rückseite: Tafel & Flipchart", x: "Zum Skizzieren mit dem Finger. <b>🖍️ Tafel</b>: Kreide in sieben Farben, drei Dicken, 🧽 Schwamm, 🧹 alles abwischen, ↶ letzten Strich zurück. <b>📋 Flipchart</b>: Marker, Radierer, <b>„⤴ Umblättern“</b> klappt das volle Blatt nach hinten, ⤵ holt das vorige zurück, ✂️ reißt ein Blatt ab; ein Knopf schaltet das Papier <b>blanko → kariert → liniert</b>. Mit <b>„📤 Sichern“</b> kommt die Skizze ins 🗄️ Archiv oder als Nachricht zu jemandem.", zeig: () => esOeffnen("flip"), seit: "2.300.0" },
@@ -15642,7 +15642,8 @@ function esZiehen(o, hinten) {
   o.addEventListener("pointerdown", (e) => { x0 = e.clientX; dx = 0; try { o.setPointerCapture(e.pointerId); } catch (er) { /* alte Browser */ } e.stopPropagation();
     // 2.487.0 KC-CLUB-SARDINENDOSE: vorne lange drücken (ohne zu ziehen) → die Bühne rollt sich wie eine Sardinenbüchse auf
     clearTimeout(ES.langUhr); ES.lang = false;
-    if (!hinten) ES.langUhr = setTimeout(() => { if (x0 === null || Math.abs(dx) > 8) return; ES.lang = true; x0 = null; o.style.removeProperty("--zug"); try { navigator.vibrate?.(25); } catch {} doseAufrollen(); }, DOSE_LANG_MS); });
+    // 2.488.0: hinten lange drücken → der Deckel rollt sich wieder zu (Rückgängig, Wunsch Hansi)
+    ES.langUhr = setTimeout(() => { if (x0 === null || Math.abs(dx) > 8) return; ES.lang = true; x0 = null; o.style.removeProperty("--zug"); try { navigator.vibrate?.(25); } catch {} hinten ? doseZurollen() : doseAufrollen(); }, DOSE_LANG_MS); });
   o.addEventListener("pointermove", (e) => { if (x0 === null) return; dx = e.clientX - x0; const z = hinten ? Math.max(0, dx) : Math.max(0, -dx); o.style.setProperty("--zug", Math.min(70, z / 2) + "px"); e.stopPropagation(); });
   const los = (e) => { clearTimeout(ES.langUhr); if (x0 === null) return; const d = dx; x0 = null; o.style.removeProperty("--zug"); e.stopPropagation();
     if (!hinten && d < -35) return esDrehen(true);
@@ -15651,7 +15652,7 @@ function esZiehen(o, hinten) {
     // 2.295.0 (Wunsch Hansi): Doppeltipp öffnet und schließt – vorne wie hinten; ein einzelner Tipp erklärt es nur
     const t = Date.now(); if (t - ES.tipp < 450) { ES.tipp = 0; esDrehen(!hinten); return; } ES.tipp = t;
     clearTimeout(ES.tippHinweis); ES.tippHinweis = setTimeout(() => { if (!ES.tipp || Date.now() - ES.tipp < 440) return;
-      if (hinten) melde("↩︎ Doppelt aufs Eselsohr tippen – dann dreht sich der Kopf zurück");
+      if (hinten) melde("↩︎ Doppelt aufs Eselsohr tippen – dann dreht sich der Kopf zurück. Lange drücken: Sardinenbüchse wieder zurollen 🥫");
       else { o.classList.remove("wink"); void o.offsetWidth; o.classList.add("wink"); melde("📄 Doppelt aufs Eselsohr tippen – dann dreht sich der Kopf um: Diashow, Tafel, Flipchart, Uhr, Bühne und Spiegel. Lange drücken: wie eine Sardinenbüchse aufrollen 🥫"); } }, 480); };
   o.addEventListener("pointerup", los); o.addEventListener("pointercancel", () => { clearTimeout(ES.langUhr); x0 = null; o.style.removeProperty("--zug"); });
   o.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); esDrehen(!hinten); } }); // Tastatur: direkt drehen
@@ -15705,6 +15706,23 @@ async function doseAufrollen() {
     Object.assign(h.style, alt); h.style.clipPath = ""; r.style.clipPath = ""; r.classList.add("versteckt"); delete h.dataset.dose;
   }
   await esDrehen(true, true); // derselbe Endzustand wie nach dem Doppeltipp (Rückseite offen, Höhe, Tab, Eselsohr hinten)
+}
+// Rückgängig (Wunsch Hansi „und rückgängig wieder mit langem Festhalten des Eselsohrs“): der Kopf rollt sich als Deckel von links oben nach rechts unten
+// wieder über die Rückseite, danach derselbe Zustand wie nach dem Doppeltipp hinten
+async function doseZurollen() {
+  const h = document.querySelector("#v-start .hero"), r = document.getElementById("heroRueck");
+  if (!h || !r || !ES.offen || ES.dreht || h.dataset.dose) return;
+  if (esOhneAnim() || !r.getClientRects().length) return esDrehen(false);
+  h.dataset.dose = "1";
+  const alt = { position: h.style.position, top: h.style.top, left: h.style.left, width: h.style.width, zIndex: h.style.zIndex };
+  try {
+    Object.assign(h.style, { position: "absolute", top: r.offsetTop + "px", left: r.offsetLeft + "px", width: r.offsetWidth + "px", zIndex: "3", clipPath: "polygon(0 0,0 0,0 0)" });
+    h.classList.remove("versteckt");
+    await doseFahren(h, 0, 2);
+  } finally {
+    Object.assign(h.style, alt); h.style.clipPath = ""; h.classList.add("versteckt"); delete h.dataset.dose;
+  }
+  await esDrehen(false, true);
 }
 async function esDrehen(an, sofort) {
   const h = document.querySelector("#v-start .hero"); if (!h || ES.offen === an || ES.dreht) return;
