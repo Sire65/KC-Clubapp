@@ -6933,6 +6933,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/:root \{ accent-color: var\(--rot\); \}/.test(ix), "Häkchen im CD-Weinrot");
 }
 
+// 2.482.0 KC-CLUB-EINST-LISTE-EINFACH + KC-CLUB-KLAPPE-EINHEIT (TÜV, Hansi „2, 3“)
+{
+  const ix = lies("index.html");
+  assert.ok(/k === "einst" && einfach\(\) && !w \? false/.test(html), "einfache Ansicht: Einstellungen als Liste (eigene Wahl bleibt)");
+  assert.ok(/RK\.einst && \(RK\.einst\.an \|\| rkAn\("einst"\)\)\) rkAufbauen\(RK\.einst\)/.test(html), "Ansichtswechsel wechselt Liste/Kartei mit");
+  assert.ok(/details:not\(\.karte\):not\(\.iv-ordner\) > summary::before \{ content: "▸";/.test(ix) && /details\[open\]:not\(\.karte\):not\(\.iv-ordner\) > summary::before \{ transform: rotate\(90deg\); \}/.test(ix), "alle kleinen Klappbereiche: gleicher Pfeil");
+  assert.ok(!/summary::before \{ content/.test(ix.replace(/details:not\(\.karte\):not\(\.iv-ordner\) > summary::before \{ content: "▸";/, "").replace(/\.iv-ordner > summary::before \{ content: "▸";/, "")), "kein zweites eigenes Klapp-Zeichen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -8996,7 +9004,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/if \(!ich\.nurLesen && p\.vorschau !== true\) await db\.from\("kc_communication_thread_participants"\)\.update\(\{ last_read_at: jetzt\(\) \}\)/.test(server), "Vorschau in der Kartei zählt nicht als gelesen");
   assert.ok(/api\("unterhaltung", \{ id, vorschau: true \}\)/.test(html) && /\.slice\(-6\)/.test(html) && /\[0, 1\]\.forEach\(\(k\) => uhkLaden/.test(html), "vorne die letzten 6 Nachrichten, nur vordere + nächste Karte geladen");
   assert.ok(/onclick="chatOeffnen\('\$\{esc\(u\.id\)\}'\)">💬 Öffnen &amp; antworten/.test(html), "gelesen erst mit „Öffnen & antworten“");
-  assert.ok(/return k === "chats" \? w === "an" : w !== "aus";/.test(html) && /id="setRkChats"/.test(idx) && /id="uhKarteiKnopf"/.test(html), "Chats ab Werk aus; ein Umschalter oben + Haken in den Einstellungen");
+  assert.ok(/return k === "chats" \? w === "an" : (k === "einst" && einfach\(\) && !w \? false : )?w !== "aus";/.test(html) && /id="setRkChats"/.test(idx) && /id="uhKarteiKnopf"/.test(html), "Chats ab Werk aus; ein Umschalter oben + Haken in den Einstellungen");
   assert.ok(/esc\(String\(m\.text \|\| \(m\.anlagen\?\.length \? "📎 Anhang" : ""\)\)\.slice\(0, 220\)\)/.test(html), "Nachrichtentext immer maskiert");
 }
 

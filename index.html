@@ -1303,6 +1303,15 @@
   details.karte .pfeil { width: 42px; height: 42px; display: grid; place-items: center; font-size: 1.7rem; line-height: 1; color: var(--rot); transition: transform .2s; flex: none; }
   details.karte:not([open]) > summary .pfeil { transform: rotate(-90deg); }
   details.karte.fest > summary .pfeil { opacity: .35; }
+  /* 2.482.0 KC-CLUB-KLAPPE-EINHEIT (TÜV 18.10., Hansi „3“): alle kleinen Klappbereiche sehen gleich aus – weinroter Pfeil ▸ links, offen ▾.
+     Vorher: schwarzes Browser-Dreieck, Strich links, oder gar kein Zeichen (Uhren-, Avatar-Klappen). Große Karten (details.karte) behalten
+     ihren Pfeil rechts mit Schloss. Nichts an Inhalt oder Verhalten geändert. */
+  details:not(.karte):not(.iv-ordner) > summary { list-style: none; cursor: pointer; }
+  details:not(.karte):not(.iv-ordner) > summary::-webkit-details-marker { display: none; }
+  details:not(.karte):not(.iv-ordner) > summary::before { content: "▸"; display: inline-block; width: 1.1em; flex: none; color: var(--rot); font-weight: 900; text-align: center; transition: transform .15s; }
+  details[open]:not(.karte):not(.iv-ordner) > summary::before { transform: rotate(90deg); }
+  :root.dunkel details:not(.karte):not(.iv-ordner) > summary::before { color: var(--textRot); }
+  #druck details > summary::before { display: none; } /* gedruckt ohne Klapp-Pfeil */
   /* KC-CLUB-KLAPPE-UNTEN (1.6.0) */
   details.karte > .klappe-unten { display: block; margin: 12px auto 0; padding: 8px 18px; border: none; border-radius: 20px; background: var(--karte2); font-weight: 800; cursor: pointer; }
   /* KC-CLUB-WISCHEN (1.6.0) */
@@ -1656,12 +1665,12 @@
   .su-zeile { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--linie); }
   .su-zeile label { display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer; } .su-zeile small { display: block; }
   .su-zeile .knopf { margin: 0; min-width: 44px; }
-  .su-uhr { border-bottom: 1px solid var(--linie); } .su-uhr > summary { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 4px; cursor: pointer; font-weight: 700; }
+  .su-uhr { border-bottom: 1px solid var(--linie); } .su-uhr > summary { display: flex; justify-content: flex-start; align-items: center; gap: 8px; padding: 9px 4px; cursor: pointer; font-weight: 700; }
   .su-uhr .su-quelle { margin: 0 4px 8px 12px; font-size: .8rem; } /* 2.470.0 Quelle + Lizenz der echten Aufnahme */
-  .su-uhr .su-an { font-size: .8rem; font-weight: 800; color: var(--ok, #2e7d32); white-space: nowrap; } .su-uhr .su-zeile { border-bottom: 0; padding: 0 4px 8px 12px; }
+  .su-uhr .su-an { margin-left: auto; font-size: .8rem; font-weight: 800; color: var(--ok, #2e7d32); white-space: nowrap; } .su-uhr .su-zeile { border-bottom: 0; padding: 0 4px 8px 12px; }
   /* 2.467.0 KC-CLUB-EINST-ABHAENGIG: Auswahl gesperrt, solange ihr Häkchen aus ist */
   /* 2.478.0 KC-CLUB-EINST-KLAPPEN: Unterauswahl eines Schalters als eigener Klappbereich, eingerückt */
-  #v-einstellungen .abh-klappe { margin: -2px 0 10px 14px; border-left: 3px solid var(--linie); padding-left: 10px; }
+  #v-einstellungen .abh-klappe { margin: -2px 0 10px 10px; } /* 2.482.0 KC-CLUB-KLAPPE-EINHEIT: Pfeil statt Strich */
   #v-einstellungen .abh-klappe > summary { cursor: pointer; font-weight: 700; font-size: .92rem; padding: 6px 0; }
   .abh-aus > summary { opacity: .5; cursor: not-allowed; } .abh-aus > summary::after { content: " 🔒 erst Häkchen setzen"; font-size: .8rem; font-weight: 600; }
   /* 2.468.0 KC-CLUB-ADVENTSKALENDER: 24 Türchen in Weinrot/Beige (Corporate Design), heutiges leuchtet golden, geöffnete zeigen ihr Bild */

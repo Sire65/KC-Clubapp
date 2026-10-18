@@ -3715,7 +3715,7 @@ function rgEinfachAnwenden() { // wie ansichtAnwenden(), aber ohne Speichern und
   if ($("ansichtKnopf")) $("ansichtKnopf").textContent = einfach() ? "🔧 Erweiterte Ansicht" : "🟢 Einfache Ansicht";
   ansichtInfo();
   if (INIT) { registerZeigen(); kachelnZeigen(); infoFelderAktualisieren(); heroZeigen(0); }
-  try { if (RK.einst?.an) rkAufbauen(RK.einst); } catch {} // Einstellungen als Rollkartei: Karten der jeweiligen Ansicht neu legen
+  try { if (RK.einst && (RK.einst.an || rkAn("einst"))) rkAufbauen(RK.einst); } catch {} // Einstellungen als Rollkartei: Karten der jeweiligen Ansicht neu legen; 2.482.0: einfach ↔ erweitert wechselt Liste/Kartei mit
 }
 function rgEinfachDemo(an) { // an = true: einfache Ansicht zeigen, an = false: erweiterte Ansicht zeigen – nie gespeichert
   if (!RG.einfachAlt) {
@@ -24014,7 +24014,9 @@ function klappenMerken(wurzel = document) {
 // blättern – die vordere Karte klappt über das Rad nach vorn weg. Inhalt und Funktionen der Bereiche bleiben unverändert;
 // „☰ Liste“ schaltet je Gerät zur gewohnten Liste zurück. Erst die Einstellungen, später weitere Listen (z. B. Chats).
 const RK = {};
-const rkAn = (k) => { try { const w = localStorage.getItem("kc_club_rk_" + k); return k === "chats" ? w === "an" : w !== "aus"; } catch { return k !== "chats"; } }; // Chats ab Werk aus (2.191.0)
+// 2.482.0 KC-CLUB-EINST-LISTE-EINFACH (TÜV 18.10., Hansi „2“): in der einfachen Ansicht starten die Einstellungen als ruhige Liste mit Klappbereichen
+// (eine Ebene statt Reiter + Kartenstapel + ▲▼). Wer die Kartei einmal selbst gewählt hat, behält sie – „🗂️ Kartei“ bleibt oben erreichbar.
+const rkAn = (k) => { try { const w = localStorage.getItem("kc_club_rk_" + k); return k === "chats" ? w === "an" : k === "einst" && einfach() && !w ? false : w !== "aus"; } catch { return k !== "chats" && !(k === "einst" && einfach()); } }; // Chats ab Werk aus (2.191.0)
 function rkKarten(w) { return [...w.children].filter((d) => d.matches("details.karte[data-klappe]") && getComputedStyle(d).display !== "none" && !d.classList.contains("versteckt")); }
 function rkEinrichten(wurzelId, schluessel) {
   const w = $(wurzelId); if (!w || typeof MutationObserver === "undefined") return;
