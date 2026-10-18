@@ -14276,6 +14276,12 @@ function ueberblickHtml(v, druck) {
 }
 async function ueberblickLaden() {
   if (!VERSION_INFO) { try { VERSION_INFO = await (await fetch("version.json?x=" + Date.now(), { cache: "no-store", signal: zeitSignal(15000) })).json(); } catch {} }
+  // 2.481.0 KC-CLUB-VERLAUF-KURZ: version.json trägt nur die neuesten Einträge – der ganze Verlauf (Ältere Neuigkeiten) steht in verlauf.json
+  // und wird nur hier geladen; fehlt er (offline), reicht der kurze Verlauf
+  if (VERSION_INFO?.verlaufVoll && !VERSION_INFO._voll) try {
+    const voll = (await (await fetch(VERSION_INFO.verlaufVoll + "?v=" + encodeURIComponent(VERSION_INFO.version), { cache: "no-cache", signal: zeitSignal(15000) })).json()).verlauf;
+    if (Array.isArray(voll) && voll.length >= (VERSION_INFO.verlauf || []).length) VERSION_INFO = { ...VERSION_INFO, verlauf: voll, _voll: true };
+  } catch {}
   return VERSION_INFO;
 }
 async function ueberblickZeigen() { $("ueInhalt").innerHTML = ueberblickHtml(await ueberblickLaden()); }
@@ -17302,7 +17308,11 @@ setInterval(() => { try { document.documentElement.classList.toggle("kc-ruhe", j
 addEventListener("pointerdown", () => document.documentElement.classList.remove("kc-ruhe"), { passive: true, capture: true });
 // 2.358.0 KC-CLUB-AKKU-3: eine Vorschau läuft nur noch 2 Minuten mit voller Bildrate (vorher dauerhaft), danach wie sonst sparsam;
 // nach 15 Minuten endet sie von selbst (vorher blieb sie bis „beenden“ oder Neustart – auch der Grund für Hansis 30 % Akku in kurzer Zeit)
-const jzbFps = () => ((JZB.vorschau && Date.now() - (JZB.vorschauSeit || 0) < 120000) || (!jzbAkkuKnapp && Date.now() - jzbBedient < JZB_RUHE_MS) ? JZB_FPS : JZB_FPS_RUHE);
+// 2.481.0 KC-CLUB-AKKU-TUEV (TÜV 18.10.: Startseite 59–79 % Rechenzeit bei Bedienung): in Bedienung 20 statt 30 Bilder/s (Bewegung rechnet mit der
+// echten Zeit – sieht gleich aus), Ruhe schon nach 20 s; schwache Handys (≤ 4 Kerne oder ≤ 3 GB) und „weniger Bewegung“ immer sparsam. Vorschau bleibt flüssig.
+const JZB_FPS_BEDIENT = 20, JZB_RUHE_BEDIENT_MS = 20000;
+const jzbSchwach = (() => { try { return (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3 || matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } })();
+const jzbFps = () => ((JZB.vorschau && Date.now() - (JZB.vorschauSeit || 0) < 120000) ? JZB_FPS : !jzbSchwach && !jzbAkkuKnapp && Date.now() - jzbBedient < JZB_RUHE_BEDIENT_MS ? JZB_FPS_BEDIENT : JZB_FPS_RUHE);
 // 2.361.0 KC-CLUB-AKKU-6 (Hansi „unsere App saugt das Handy leer“): Auch 6–12 Bilder/s halten Grafikchip und Bildschirm-Elektronik dauernd wach.
 // Nach 3 Minuten ohne Bedienung bleibt das Kopfbild jetzt stehen (wie ein Foto); das erste Antippen/Wischen lässt es sofort weiterlaufen.
 const jzbStehen = () => !(JZB.vorschau && Date.now() - (JZB.vorschauSeit || 0) < 120000) && Date.now() - jzbBedient > JZB_STEHEN_MS;
@@ -37830,6 +37840,7 @@ async function fpAdmin(tage) {
   korrekturMelden = nurEinmal("korrekturMelden", korrekturMelden); arChronikAnlegen = nurEinmal("arChronikAnlegen", arChronikAnlegen);
   // 2.425.0 KC-CLUB-GENERALCHECK: SOS an alle, Kurznachricht und Weiterleiten gingen bei langsamem Netz und Doppeltippen doppelt raus
   notfallSenden = nurEinmal("notfallSenden", notfallSenden); zeSenden = nurEinmal("zeSenden", zeSenden); weiterleiten = nurEinmal("weiterleiten", weiterleiten);
+  $("appLaedt")?.remove(); // 2.481.0 KC-CLUB-LADEANZEIGE: Programm ist da – Ladeanzeige weg (die App zeigt ab hier selbst ihren Stand)
   if (!KEY) { $("gesperrt").classList.remove("versteckt"); fpOhneLink(); return; }
   $("app").classList.remove("versteckt");
   iosStartMitSchluessel();

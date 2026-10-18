@@ -74,11 +74,17 @@
   } catch (e) {}
   if (!speicherOk) neu("speicher", { text: "Speicher gesperrt (privater Modus?) – App kann sich nichts merken" });
   // Start-Wächter: nach 12 s noch nicht fertig → mitschreiben; ist die App gar nicht angelaufen, einfache Hilfe anzeigen
-  setTimeout(function () {
+  // 2.481.0 KC-CLUB-LADEANZEIGE: lädt das Programm lange, erklärt die Ladeanzeige es (15 s) und bietet später „Neu laden“ an (45 s)
+  setTimeout(function () { var l = document.getElementById("appLaedtLang"); if (l) l.hidden = false; }, 15000);
+  setTimeout(function () { var k = document.getElementById("appLaedtNeu"); if (k) k.hidden = false; }, 45000);
+  var startPruefN = 0;
+  setTimeout(function startPruefen() {
     if (window.KCFP.startOk) return;
     // 2.0.0 (Gesamtprüfung): auch „Programm da, aber Bildschirm leer“ (Start abgebrochen) zählt als kaputt → Hilfe zeigen
     var leer = (function () { var a = document.getElementById("app"), g = document.getElementById("gesperrt"); return !!(a && g && a.classList.contains("versteckt") && g.classList.contains("versteckt")); })();
     var appDa = typeof window.zeige === "function" && !leer;
+    // 2.481.0 KC-CLUB-LADEANZEIGE (TÜV 18.10.): lädt die Seite noch (langsames Netz), ist nichts kaputt – die Ladeanzeige erklärt es; bis 2 Min. weiter warten
+    if (!appDa && document.readyState !== "complete" && startPruefN++ < 10) { setTimeout(startPruefen, 12000); return; }
     neu(appDa ? "start_haengt" : "start_kaputt", { text: appDa ? "nach 12 s noch nicht angemeldet" : "App-Programm ist gar nicht angelaufen", bildschirm: screen.width + "x" + screen.height });
     senden(true);
     if (!appDa) {
@@ -4400,9 +4406,26 @@
     .hz-klick { right: auto; left: calc(50% + 392px); } .hz-frage { left: calc(50% + 444px); } .su-klein { left: calc(50% + 496px); }
     .sb-knopf { right: calc(50% + 392px); }
   }
+  /* 2.481.0 KC-CLUB-LADEANZEIGE (CD: Weinrot/Beige, Kochmütze) */
+  .app-laedt { position: fixed; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px; text-align: center; background: #f3e9dc; color: #741521; font-family: inherit; }
+  .app-laedt-logo { width: 96px; height: 96px; border-radius: 50%; background: #741521; display: flex; align-items: center; justify-content: center; }
+  .app-laedt-name { font-family: Georgia, "Times New Roman", serif; font-size: 1.6rem; font-weight: 700; }
+  .app-laedt-text { font-size: 1.1rem; color: #4a2a20; }
+  .app-laedt-balken { width: 160px; height: 6px; border-radius: 3px; background: rgba(116, 21, 33, .18); overflow: hidden; }
+  .app-laedt-balken i { display: block; width: 40%; height: 100%; border-radius: 3px; background: #741521; animation: appLaedt 1.4s ease-in-out infinite; }
+  @keyframes appLaedt { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+  @media (prefers-reduced-motion: reduce) { .app-laedt-balken i { animation: none; width: 100%; } }
+  .app-laedt-lang { max-width: 320px; font-size: 1rem; color: #4a2a20; }
+  .app-laedt-lang button { margin-top: 10px; min-height: 44px; padding: 8px 18px; border: 0; border-radius: 12px; background: #741521; color: #fff; font-size: 1rem; font-weight: 700; }
+  body:has(#app:not(.versteckt)) #appLaedt, body:has(#gesperrt:not(.versteckt)) #appLaedt { display: none; }
 </style>
 </head>
 <body>
+<!-- 2.481.0 KC-CLUB-LADEANZEIGE (TÜV 18.10.: erster Start / Update bei schwachem Netz 9–31 s leere Fläche): sofort sichtbar im CD, bis das
+     Programm läuft (app.js entfernt sie). Dauert es lange, erklärt sie sich und bietet „Neu laden“ an. Altes, einfaches JavaScript (ES5). -->
+<div id="appLaedt" class="app-laedt" role="status" aria-live="polite"><div class="app-laedt-logo"><img src="kc-kochmuetze-weiss.webp" alt="" width="64" height="43"></div>
+  <div class="app-laedt-name">Köcheclub Werne</div><div class="app-laedt-text">Die Club-App wird geladen …</div><div class="app-laedt-balken"><i></i></div>
+  <div class="app-laedt-lang" id="appLaedtLang" hidden>Das Netz ist gerade langsam – die App lädt noch. Beim nächsten Mal geht es schneller.<br><button type="button" id="appLaedtNeu" hidden onclick="location.reload()">🔄 Neu laden</button></div></div>
 <div id="gesperrt" class="seite versteckt">
   <div class="hero"><div class="kopfzeile"><div class="logo"><img src="kc-kochmuetze-weiss.webp" alt=""></div><div><div class="marke-klein">KÖCHECLUB WERNE</div><div class="titel">Willkommen</div></div></div></div>
   <div class="karte versteckt" id="linkUngueltig" style="border:2px solid #c62828"><h3 style="color:#c62828">⚠️ Dieser Link gilt nicht mehr</h3><p style="margin:0">Es wurde inzwischen ein <b>neuerer Link</b> für dich verschickt – oder der Link ist unvollständig. Kein Problem: unten bei <b>„Link verloren?“</b> deine E-Mail-Adresse eingeben, dann kommt sofort ein neuer, gültiger Link.</p></div>

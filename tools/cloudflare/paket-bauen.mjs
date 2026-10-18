@@ -5,7 +5,7 @@
 import fs from "node:fs"; import path from "node:path"; import { createHash } from "node:crypto";
 const wurzel = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../.."), ziel = path.resolve(wurzel, process.argv[2] || "dist-cloudflare");
 // Positivliste (Registry): neue öffentliche Datei/Ordner = hier eintragen. Alles andere bleibt privat.
-const OEFFENTLICH = ["index.html", "app.js", "sw.js", "version.json", "manifest.webmanifest", "termin.html", "dienstwunsch.html", "notbetrieb.json",
+const OEFFENTLICH = ["index.html", "app.js", "sw.js", "version.json", "verlauf.json", "manifest.webmanifest", "termin.html", "dienstwunsch.html", "notbetrieb.json",
   "icon-192.png", "icon-512.png", "kc-kochmuetze-weiss.webp", "entwickler-hans-joachim-koch.webp", "lib", "dp2", "dp2-club", "dokumente"];
 const NIE = [/^supabase\//, /^tests\//, /^tools\//, /^docs\//, /^google\//, /^notbetrieb\//, /\.md$/i, /\.sql$/i, /(^|\/)\./];
 fs.rmSync(ziel, { recursive: true, force: true }); fs.mkdirSync(ziel, { recursive: true });

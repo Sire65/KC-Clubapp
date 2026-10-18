@@ -9,7 +9,21 @@ const istProgramm = (url) => url.pathname.endsWith("/app.js") && url.searchParam
 
 // KC-CLUB-UPDATE-SICHER (1.97.0): beim Einrichten die Dateien am Browser-Zwischenspeicher VORBEI holen (cache: "reload") –
 // sonst kann ein neuer Speicher noch die alte Seite enthalten (Mischstand alt/neu, AGENTS Regel 16)
-self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(DATEIEN.map((u) => new Request(u, { cache: "reload" }))))); });
+// 2.481.0 KC-CLUB-UPDATE-SPARSAM (TÜV 18.10.: jedes Update lud app.js 2× und index.html 3× ≈ 3,1 MB): das Programm app.js?v=VERSION ist unter
+// seiner Adresse unveränderlich – liegt es schon in einem Speicher (die Seite hat es eben geladen), wird es übernommen statt neu geholt.
+// Alles andere wird beim Server nachgefragt („no-cache“: 304 ohne Neuübertragung, wenn unverändert) – nie ungeprüft aus dem Browser-Speicher.
+// Alles-oder-nichts wie addAll: fehlt eine Datei, bricht die Einrichtung ab (kein halber Speicher).
+// Beim allerersten Start liegt es noch in keinem Speicher, aber im Browser-Zwischenspeicher (eben geladen) – „default“ nimmt es von dort.
+// „./“ und „index.html“ sind dieselbe Seite: einmal holen, unter beiden Namen merken.
+const einrichtenHolen = (u) => u === "app.js?v=" + VERSION
+  ? caches.match(u).then((r) => r || fetch(new Request(u, { cache: "default" })))
+  : fetch(new Request(u, { cache: "no-cache" }));
+self.addEventListener("install", (e) => {
+  e.waitUntil(Promise.all(DATEIEN.filter((u) => u !== "index.html").map((u) => einrichtenHolen(u).then((r) => { if (!r.ok) throw new Error("Einrichten: " + u + " " + r.status);
+    // Seite muss genau zu diesem Programm passen (sonst lieber gar nicht einrichten – nie Mischstand, Regel 16)
+    return u === "./" ? r.clone().text().then((t) => { if (!t.includes("app.js?v=" + VERSION)) throw new Error("Einrichten: Seite passt nicht zu " + VERSION); return [u, r]; }) : [u, r]; })))
+    .then((liste) => caches.open(CACHE).then((c) => Promise.all(liste.flatMap(([u, r]) => u === "./" ? [c.put(u, r.clone()), c.put("index.html", r)] : [c.put(u, r)])))));
+});
 self.addEventListener("activate", (e) => {
   e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith("kc-club-") && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });

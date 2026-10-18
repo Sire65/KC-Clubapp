@@ -44,6 +44,8 @@ Die Freigaben des Dienstplans selbst (`kc_dp_plan_sharing`: Kann/Wunsch/Bereitsc
 
 Die Version steht gleichlautend in `index.html` (`APP_VERSION`), `sw.js` (`VERSION`) und `version.json`.
 Jede Änderung erhöht alle drei gemeinsam; die App meldet neue Versionen und aktiviert sie auf Knopfdruck komplett (kein Mischstand).
+`version.json` trägt nur die neuesten 40 Verlaufseinträge (wird bei jedem Start geholt); der ganze Verlauf steht in `verlauf.json`.
+Nach jedem neuen Versions-Eintrag `node tools/verlauf-kuerzen.mjs` ausführen – der Vertragstest prüft das.
 
 ## Test
 

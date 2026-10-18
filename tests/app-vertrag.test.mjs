@@ -685,7 +685,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(Array.isArray(vj.verlauf) && vj.verlauf[0].version === vj.version && vj.verlauf.every((e) => e.version && e.neu?.length), "version.json: Verlauf fehlt oder passt nicht zur Version");
   const code = html.slice(html.indexOf("function neuigkeitenSeit"), html.indexOf("function neuigkeitenZeigen"));
   const neuigkeitenSeit = new Function("versionNeuer", code + "return neuigkeitenSeit;")((a, b) => { const x = a.split(".").map(Number), y = b.split(".").map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); return false; });
-  assert.deepEqual(neuigkeitenSeit(vj, "0.27.2", "0.29.0").map((e) => e.version), ["0.29.0", "0.28.0", "0.27.4"], "Übersprungene Versionen fehlen");
+  assert.deepEqual(neuigkeitenSeit({ ...vj, verlauf: JSON.parse(lies("verlauf.json")).verlauf }, "0.27.2", "0.29.0").map((e) => e.version), ["0.29.0", "0.28.0", "0.27.4"], "Übersprungene Versionen fehlen");
   assert.ok(/if \(NEUE_VERSION\) updateFenster\(\);/.test(html) && /onclick="updateFenster\(\)">Was ist neu\?/.test(html), "Update zeigt kein Neuigkeiten-Fenster");
   assert.ok(/nachUpdatePruefen\(begruesst\)/.test(html) && /kc_club_version_gesehen/.test(html), "Neuigkeiten nach automatischem Update fehlen");
   assert.ok(/🟢 \$\{ONL\.liste\.length\} online/.test(html), "Startseite zeigt nicht, wie viele online sind");
@@ -3104,7 +3104,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 // 278. 1.97.0: Updates & Ausfallsicherheit
 {
   const sw = lies("sw.js");
-  assert.ok(/c\.addAll\(DATEIEN\.map\(\(u\) => new Request\(u, \{ cache: "reload" \}\)\)\)/.test(sw) && /cache: "no-cache"/.test(sw) && /url\.searchParams\.has\("k"\)/.test(sw) && /e\.waitUntil\(caches\.open\(CACHE\)/.test(sw) && (/navi \? caches\.match\("index\.html"\) : Response\.error\(\)/.test(sw) || /r \|\| caches\.match\("index\.html"\)/.test(sw) || /r \|\| \(istApp \? caches\.match\("index\.html"\) : undefined\)/.test(sw)), "Service Worker sicher");
+  assert.ok((/c\.addAll\(DATEIEN\.map\(\(u\) => new Request\(u, \{ cache: "reload" \}\)\)\)/.test(sw) || /caches\.match\(u\)\.then\(\(r\) => r \|\| fetch\(new Request\(u, \{ cache: "default" \}\)\)\)\s*: fetch\(new Request\(u, \{ cache: "no-cache" \}\)\)/.test(sw)) && /cache: "no-cache"/.test(sw) && /url\.searchParams\.has\("k"\)/.test(sw) && /e\.waitUntil\(caches\.open\(CACHE\)/.test(sw) && (/navi \? caches\.match\("index\.html"\) : Response\.error\(\)/.test(sw) || /r \|\| caches\.match\("index\.html"\)/.test(sw) || /r \|\| \(istApp \? caches\.match\("index\.html"\) : undefined\)/.test(sw)), "Service Worker sicher");
   assert.ok(/const istApp = url\.pathname\.endsWith\("\/"\) \|\| url\.pathname\.endsWith\("\/index\.html"\);/.test(sw), "2.425.0: Startseite nur als Ersatz für die App selbst (nicht im Dienstwunsch-Fenster)"); // 2.209.0: Seitenaufruf in seiteHolen
   assert.ok(!/self\.addEventListener\("install"[^\n]*skipWaiting/.test(sw), "kein Sofort-Umschalten beim Einrichten (Mischstand)");
   const ja = html.slice(html.indexOf("async function jetztAktualisieren() {"), html.indexOf("function updateRuhig() {"));
@@ -6900,6 +6900,23 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/Benachrichtigungen sind aus<\/span><button/.test(html), "Einschalten-Knopf bricht bei großer Schrift um");
   assert.ok(/z\.innerHTML = gefragt \? '<p class="hinweis">✍️ Bitte erst deine Frage eintippen/.test(html), "Twinkey: Fragen ohne Text erklärt sich");
   assert.ok(!/einmal antippen\b[^"]*Als Favorit|einmal auf einen Chat tippen/.test(html), "Hilfetexte zur Chatliste angepasst");
+}
+
+// 2.481.0 TÜV-Paket 2 (Hansi: „2 Schneller + weniger Daten“) – KC-CLUB-LADEANZEIGE, -UPDATE-SPARSAM, -VERLAUF-KURZ, -AKKU-TUEV
+{
+  const ix = lies("index.html"), sw = lies("sw.js");
+  assert.ok(ix.indexOf('<div id="appLaedt" class="app-laedt"') > ix.indexOf("<body>") && ix.indexOf('<div id="appLaedt"') < ix.indexOf('<div id="gesperrt"'), "Ladeanzeige als Erstes sichtbar");
+  assert.ok(/<div class="app-laedt-name">Köcheclub Werne<\/div>/.test(ix) && /\.app-laedt \{[^}]*background: #f3e9dc; color: #741521;/.test(ix), "Ladeanzeige im CD (Weinrot/Beige, Kochmütze)");
+  assert.ok(/\$\("appLaedt"\)\?\.remove\(\);/.test(html) && /body:has\(#app:not\(\.versteckt\)\) #appLaedt/.test(ix), "Ladeanzeige verschwindet, sobald die App da ist");
+  assert.ok(/if \(!appDa && document\.readyState !== "complete" && startPruefN\+\+ < 10\) \{ setTimeout\(startPruefen, 12000\); return; \}/.test(ix), "langsames Netz ist kein „startet nicht richtig“");
+  assert.ok(/caches\.match\(u\)\.then\(\(r\) => r \|\| fetch\(new Request\(u, \{ cache: "default" \}\)\)\)/.test(sw) && /u === "\.\/" \? \[c\.put\(u, r\.clone\(\)\), c\.put\("index\.html", r\)\]/.test(sw), "Update lädt app.js/Seite nur einmal");
+  assert.ok(/if \(!t\.includes\("app\.js\?v=" \+ VERSION\)\) throw new Error\("Einrichten: Seite passt nicht zu " \+ VERSION\)/.test(sw), "Einrichten nur mit passender Seite (Regel 16)");
+  const vj = JSON.parse(lies("version.json")), vl = JSON.parse(lies("verlauf.json")).verlauf;
+  assert.ok(vj.verlauf.length <= 40 && vj.verlaufVoll === "verlauf.json", "version.json klein halten – nach jedem Versions-Eintrag: node tools/verlauf-kuerzen.mjs");
+  assert.deepEqual(vl.slice(0, vj.verlauf.length), vj.verlauf, "verlauf.json beginnt mit dem Verlauf aus version.json – node tools/verlauf-kuerzen.mjs ausführen");
+  assert.ok(new Set(vl.map((e) => e.version)).size === vl.length, "verlauf.json ohne doppelte Versionen");
+  assert.ok(/VERSION_INFO\?\.verlaufVoll && !VERSION_INFO\._voll/.test(html), "Überblick lädt den ganzen Verlauf");
+  assert.ok(/const JZB_FPS_BEDIENT = 20, JZB_RUHE_BEDIENT_MS = 20000;/.test(html) && /const jzbSchwach = /.test(html), "Jahreszeiten-Bild sparsamer");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
