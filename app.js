@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.466.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.467.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1039,10 +1039,11 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); if ($("setFee")) $("setFee").checked = einst("fee", true); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); if ($("setFee")) $("setFee").checked = einst("fee", true); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
+  abhKlappen(); // 2.467.0 KC-CLUB-EINST-ABHAENGIG
 }
 function designWahlZeigen() {
   try { themaWahlZeigen(); } catch {} // 2.323.0 KC-CLUB-THEMEN
@@ -5090,6 +5091,7 @@ const HILFE = [
   { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste einmal auf einen Chat tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
+  { id: "stundenuhren", thema: "toene", sym: "🕰️", t: "Big Ben, Kölner Dom & Co. zur vollen Stunde", x: "Zur vollen Stunde kommt nicht nur der Kuckuck: Unter ⚙️ → <b>„🕰️ Uhr zur vollen Stunde“</b> → <b>„🔔 Welche Uhr?“</b> wählst du <b>Big Ben</b> (Westminster-Schlag), <b>Kölner Dom</b> (Dicker Pitter), <b>Münchner Glockenspiel</b>, <b>Prager Rathausuhr</b> (Tod läutet, Hahn kräht), <b>Hamburger Michel</b> (Turmbläser), <b>Schiffsglocke</b> (Glasen), <b>Standuhr</b>, <b>Ave-Maria-Glockenspiel</b> oder <b>Westerkerk Amsterdam</b>. Mit <b>▶</b> hörst du jede vorher an. Kreuzt du mehrere an, kommt jede Stunde eine andere. Alles wird im Handy selbst erzeugt – nachts 22–7 Uhr ohne Ton.", zeig: () => einstiegHin("darstellung"), seit: "2.467.0" },
   { id: "themen_laufband", thema: "club", sym: "🗳️", t: "Themen für die nächste Sitzung im Info-Feld", x: "In den 3 Wochen vor einer Sitzung erinnert dich das Info-Feld oben auf der Startseite an die Themen: <b>„3 Themen für die Sitzung am …“</b>. Mit <b>„👍 Abstimmen“</b> unterstützt du die Themen, die dir wichtig sind, mit <b>„＋ Thema“</b> reichst du selbst eins ein – die Sitzung ist dabei schon ausgewählt. Hast du alle unterstützt, wird die Meldung ruhiger (weiß statt gelb).", zeig: () => zeige("vorschlaege"), seit: "2.463.0" },
   { id: "termin_link_prospekt", thema: "termine", sym: "🎪", t: "Termin mit Webseite, Prospekt und Laufband", x: "Beim Anlegen oder Ändern eines Clubtermins (z. B. <b>Adventsmarkt der Freilichtbühne</b>) gibt es jetzt: <b>🌐 Link zur Webseite</b> des Veranstalters, <b>📎 Anlage</b> für den Prospekt (Foto oder PDF) und <b>„📣 Im Info-Laufband ankündigen“</b> – dann erscheint der Termin oben auf der Startseite im Info-Feld, ab 3 Wochen vorher, mit Knopf <b>„🌐 Webseite“</b>. Antippen öffnet den Termin mit Webseite und Prospekt.", seit: "2.461.0" },
   { id: "schrift_zoom", thema: "darstellung", sym: "🔍", t: "Schrift größer ziehen – mit zwei Fingern", x: "Zu klein zum Lesen? Lege <b>zwei Finger</b> auf den Bildschirm und ziehe sie <b>auseinander</b> – Nachrichten, Zettel und Texte werden größer (Knöpfe und Leisten bleiben, wie sie sind). Zusammenschieben macht sie kleiner. Die Größe bleibt gemerkt. Zurück auf normal: mit zwei Fingern <b>doppelt tippen</b> oder unter ⚙️ → Darstellung → „🔍 Schriftgröße“. <b>Ganz ausschalten:</b> ⚙️ → Darstellung → „✌️ Schrift mit zwei Fingern ändern“ (A− / A+ gehen weiter). Ein aufliegender Daumen beim Scrollen verstellt die Schrift nicht mehr.", seit: "2.364.0" }, // 2.364.0 KC-CLUB-SCHRIFT-ZOOM
@@ -20477,12 +20479,165 @@ function kkAufnahmeLaden() {
   return KK_AUFNAHME.laeuft;
 }
 function kkAufnahmeSpielen(t) { const q = audio.createBufferSource(), g = audio.createGain(); q.buffer = KK_AUFNAHME.puffer; g.gain.value = 0.9; q.connect(g).connect(audio.destination); q.start(t); }
-function kuckuckZeigen(h = kkJetzt().h, tonImmer = false) { // tonImmer: Probe (🔊 in den Einstellungen) – auch nachts
+// ---------- 2.467.0 KC-CLUB-STUNDENUHREN (Wunschliste #23, Wunsch Hansi „Bisher nur Kuckucksuhr. Baue noch weitere berühmte Sachen ein wie Big Ben,
+// Glockenspiel, Kölner Dom … Jeweils eigene zum Wählen oder automatisch jede Stunde Wechsel zwischen den gewählten“; „baue alle ein“). Recherche 18.10.2026:
+// Originalaufnahmen sind fast alle geschützt (z. B. Big Ben: Parlaments-Lizenz) – darum ALLES selbst erzeugt (kein Download, kein Dienst, kostenlos).
+// Melodien, soweit belegt, nach freien Quellen (gemeinfrei): Westminster-Schlag (Wikipedia „Westminster Quarters“: G#4 F#4 E4 H3, Wechsel 2–5 zur vollen
+// Stunde), Whittington (clockguy.com, 4. Viertel, D-Dur), „Lobe den Herren“ (1680, Wikipedia-Noten), Lourdes-Lied „Ave Maria“ (Wikipedia-Noten),
+// Petersglocke Köln (Wikipedia-Glockendaten: Schlagton c⁰, Unterton C, Terz es⁰, Quint ges⁰), Glasen an Bord (Doppelschläge, 8 Glasen je Wache),
+// Prager Orloj (Tod läutet → Hahn kräht → Stundenschlag). München und Amsterdam: keine freien Noten auffindbar → eigene kleine Melodie im Stil
+// (bayerischer Ländler bzw. flinkes Turmglockenspiel). Gleiche Abläufe wie der Kuckuck (Ton-Freigabe, Lautsprecher wecken, Nachtruhe, Mitzählen).
+const SU_KEY = "kc_club_stundenuhren";
+let SU_HALL = null;
+function suHall() { // großer Raum / Turm: 2,8 s Nachhall, selbst erzeugt
+  if (SU_HALL) return SU_HALL;
+  const sr = audio.sampleRate, n = Math.floor(sr * 2.8), ir = audio.createBuffer(2, n, sr);
+  for (let k = 0; k < 2; k++) { const d = ir.getChannelData(k); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3.2); }
+  const c = audio.createConvolver(); c.buffer = ir; const g = audio.createGain(); g.gain.value = 0.3; c.connect(g).connect(audio.destination);
+  return (SU_HALL = c);
+}
+function suAus(hall = true) { const g = audio.createGain(), lp = audio.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 7000; g.connect(lp); lp.connect(audio.destination); if (hall) lp.connect(suHall()); return g; }
+const suHz = (m) => 440 * Math.pow(2, (m - 69) / 12); // MIDI-Nummer → Hz
+// Kirchenglocke (Moll-Terz-Glocke): Unterton, Prim, Terz, Quint, Schlagton (Oktave) …; höhere Teiltöne klingen schneller ab, leichte Schwebung
+const SU_GLOCKE = [[0.5, 0.32, 1.5], [1, 0.42, 1], [1.19, 0.3, 0.75], [1.5, 0.16, 0.55], [2, 0.42, 0.6], [2.51, 0.12, 0.35], [2.66, 0.14, 0.3], [3.01, 0.09, 0.22], [4.07, 0.06, 0.15], [5.33, 0.035, 0.1]];
+function suGlocke(t, f, laut = 0.5, dauer = 5, teile = SU_GLOCKE) {
+  const aus = suAus();
+  for (const [mal, a, d] of teile) {
+    const o = audio.createOscillator(), g = audio.createGain(); o.type = "sine"; o.frequency.value = f * mal * (1 + (Math.random() - 0.5) * 0.002);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(laut * a, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + dauer * d);
+    o.connect(g).connect(aus); o.start(t); o.stop(t + dauer * d + 0.05);
+  }
+  const n = audio.createBufferSource(), bp = audio.createBiquadFilter(), ng = audio.createGain(); // Klöppel-Anschlag
+  n.buffer = kkRauschen(); bp.type = "bandpass"; bp.frequency.value = Math.min(6000, f * 3); bp.Q.value = 3;
+  ng.gain.setValueAtTime(0.0001, t); ng.gain.exponentialRampToValueAtTime(laut * 0.25, t + 0.002); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+  n.connect(bp).connect(ng).connect(aus); n.start(t, Math.random()); n.stop(t + 0.06);
+}
+// Petersglocke (Köln): Unterton C, Prim c⁰, Terz es⁰, Nebenschlagton e⁰, Quint ges⁰ (verminderte Quinte), Schlagton-Oktave – sehr langes Summen
+const SU_PETER = [[0.5, 0.4, 2], [1, 0.45, 1.4], [1.19, 0.32, 1], [1.26, 0.12, 0.8], [1.414, 0.18, 0.7], [2, 0.4, 0.8], [2.51, 0.12, 0.4], [3.01, 0.08, 0.3], [4.07, 0.05, 0.2]];
+const suPeter = (t, laut = 0.6) => suGlocke(t, 130.81, laut, 8, SU_PETER);
+// Glockenspiel-Glöckchen: kleine Glocken mit schwachem Unterton, damit die Melodie klar in der richtigen Oktave klingt
+const SU_KLEIN = [[0.5, 0.08, 1.2], [1, 0.55, 1], [1.19, 0.18, 0.7], [1.5, 0.1, 0.5], [2, 0.32, 0.6], [2.51, 0.08, 0.35], [3.01, 0.06, 0.22], [4.07, 0.04, 0.15]];
+const suKlein = (t, m, laut = 0.28) => suGlocke(t, suHz(m), laut, 2.4, SU_KLEIN);
+function suStab(t, f, laut = 0.4, dauer = 2.6) { // Standuhr: Klangstab (unharmonische Teiltöne wie ein Stab)
+  const aus = suAus(false);
+  for (const [mal, a, d] of [[1, 0.5, 1], [2.76, 0.2, 0.55], [5.4, 0.08, 0.3], [8.93, 0.03, 0.15]]) {
+    const o = audio.createOscillator(), g = audio.createGain(); o.type = "sine"; o.frequency.value = f * mal;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(laut * a, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + dauer * d);
+    o.connect(g).connect(aus); o.start(t); o.stop(t + dauer * d + 0.05);
+  }
+}
+function suTrompete(t, f, dauer, laut = 0.22) { // Turmbläser: Blech-Klang (Sägezahn, Filter öffnet beim Anblasen), leichtes Vibrato
+  const aus = suAus(), o = audio.createOscillator(), o2 = audio.createOscillator(), lp = audio.createBiquadFilter(), g = audio.createGain(), lfo = audio.createOscillator(), lg = audio.createGain();
+  o.type = "sawtooth"; o2.type = "square"; o.frequency.value = f; o2.frequency.value = f; lfo.frequency.value = 5.2; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(f * 0.006, t + Math.min(0.35, dauer));
+  lfo.connect(lg); lg.connect(o.frequency); lg.connect(o2.frequency);
+  lp.type = "lowpass"; lp.Q.value = 1.2; lp.frequency.setValueAtTime(f * 1.5, t); lp.frequency.exponentialRampToValueAtTime(f * 6, t + 0.08); lp.frequency.exponentialRampToValueAtTime(f * 4, t + dauer);
+  const g2 = audio.createGain(); g2.gain.value = 0.35;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(laut, t + 0.05); g.gain.setValueAtTime(laut, t + Math.max(0.06, dauer - 0.08)); g.gain.exponentialRampToValueAtTime(0.0001, t + dauer + 0.04);
+  o.connect(lp); o2.connect(g2).connect(lp); lp.connect(g).connect(aus);
+  for (const x of [o, o2, lfo]) { x.start(t); x.stop(t + dauer + 0.1); }
+}
+function suHahn(t) { // „Ki-ke-ri-kiii“: vier Laute mit Tonhöhenbogen, rau (Sägezahn + Formantfilter)
+  const aus = suAus(false);
+  const teil = (t0, d, f0, f1, f2) => {
+    const o = audio.createOscillator(), bp = audio.createBiquadFilter(), bp2 = audio.createBiquadFilter(), g = audio.createGain();
+    o.type = "sawtooth"; o.frequency.setValueAtTime(f0, t0); o.frequency.linearRampToValueAtTime(f1, t0 + d * 0.3); o.frequency.linearRampToValueAtTime(f2, t0 + d);
+    bp.type = "bandpass"; bp.frequency.value = 1700; bp.Q.value = 2; bp2.type = "bandpass"; bp2.frequency.value = 3200; bp2.Q.value = 3;
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.5, t0 + 0.02); g.gain.setValueAtTime(0.5, t0 + d - 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+    o.connect(bp).connect(g); o.connect(bp2).connect(g); g.connect(aus); o.start(t0); o.stop(t0 + d + 0.02);
+  };
+  teil(t, 0.13, 520, 760, 700); teil(t + 0.17, 0.13, 640, 820, 760); teil(t + 0.34, 0.15, 700, 900, 860); teil(t + 0.53, 0.75, 820, 980, 640);
+}
+// Noten spielen: [MIDI, Schläge] – Schläge × Takt (s); 0 = Pause
+function suNoten(t0, noten, schlag, inst) { let t = t0; for (const [m, d] of noten) { if (m) inst(t, m, d * schlag); t += d * schlag; } return t - t0; }
+// Westminster (Big Ben): Wechsel 2–5 zur vollen Stunde, je drei Viertel + eine Halbe, dazwischen ein Viertel Pause
+const SU_WESTMINSTER = [[64, 68, 66, 59], [64, 66, 68, 64], [68, 64, 66, 59], [59, 66, 68, 64]]; // E G# F# H | E F# G# E | G# E F# H | H F# G# E
+// Whittington (Standuhr), 4. Viertel: 1 = d … 8 = d' (D-Dur)
+const SU_WHITT_TON = [0, 62, 64, 66, 67, 69, 71, 73, 74];
+const SU_WHITT = [[8, 2, 7, 3, 6, 4, 5, 1], [8, 6, 4, 2, 7, 5, 3, 1], [8, 7, 4, 3, 6, 5, 2, 1], [2, 4, 6, 8, 5, 2, 3, 1]];
+// „Lobe den Herren“ (Neander 1680), erste Zeile, G-Dur 3/4
+const SU_LOBE = [[67, 1], [67, 1], [74, 1], [71, 1.5], [69, 0.5], [67, 1], [66, 1], [64, 1], [62, 1], [64, 1], [66, 1], [67, 1], [69, 3], [67, 3]];
+// Lourdes-Lied, Kehrvers „A-ve, A-ve, A-ve Ma-ri-a …“, G-Dur 3/4
+const SU_AVE = [[72, 2], [72, 1], [71, 2], [71, 1], [69, 1], [69, 1], [69, 1], [74, 2], [67, 1], [72, 2], [72, 1], [71, 1], [71, 1], [71, 1], [69, 2], [71, 0.5], [69, 0.5], [67, 3]];
+// eigene Melodien im Stil: Münchner Ländler (3/4) und flinkes Turmglockenspiel (Amsterdam)
+const SU_LAENDLER = [[72, 1], [76, 1], [79, 1], [79, 1], [76, 1], [72, 1], [74, 1], [77, 1], [81, 1], [81, 1], [79, 1], [77, 1], [76, 1], [79, 1], [84, 1], [83, 1], [81, 1], [79, 1], [77, 1], [74, 1], [71, 1], [72, 3]];
+const SU_BEIAARD = [[77, 1], [79, 1], [81, 1], [84, 1], [81, 1], [77, 1], [72, 1], [77, 1], [82, 1], [81, 1], [79, 1], [77, 1], [76, 1], [79, 1], [72, 1], [76, 1], [77, 1], [81, 1], [84, 1], [89, 1], [88, 1], [84, 1], [81, 1], [79, 1], [77, 4]];
+// Zifferblatt für die Bilder
+function suBlatt(cx, cy, r, h, rand = "#3a1f0a", grund = "#fff8e1") {
+  const z = (w, l, b) => `<line x1="${cx}" y1="${cy}" x2="${(cx + l * Math.sin(w * Math.PI / 180)).toFixed(1)}" y2="${(cy - l * Math.cos(w * Math.PI / 180)).toFixed(1)}" stroke="${rand}" stroke-width="${b}" stroke-linecap="round"/>`;
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${grund}" stroke="${rand}" stroke-width="2"/>${Array.from({ length: 12 }, (_, i) => { const w = i * 30 * Math.PI / 180; return `<line x1="${(cx + r * 0.78 * Math.sin(w)).toFixed(1)}" y1="${(cy - r * 0.78 * Math.cos(w)).toFixed(1)}" x2="${(cx + r * 0.92 * Math.sin(w)).toFixed(1)}" y2="${(cy - r * 0.92 * Math.cos(w)).toFixed(1)}" stroke="${rand}" stroke-width="${i % 3 ? 1 : 2}"/>`; }).join("")}${z((h % 12) * 30, r * 0.5, 2.6)}${z(0, r * 0.75, 1.6)}<circle cx="${cx}" cy="${cy}" r="1.8" fill="${rand}"/>`;
+}
+const suGlockeBild = (x, y, s, farbe = "#c9a227") => `<g class="su-schwinger" style="transform-origin:${x}px ${y}px"><path d="M${x - 9 * s} ${y + 16 * s} Q${x - 9 * s} ${y + 2 * s} ${x} ${y} Q${x + 9 * s} ${y + 2 * s} ${x + 9 * s} ${y + 16 * s} L${x + 11 * s} ${y + 19 * s} L${x - 11 * s} ${y + 19 * s} Z" fill="${farbe}" stroke="#6b5310" stroke-width="1"/><circle cx="${x}" cy="${y + 20 * s}" r="${2.4 * s}" fill="#6b5310"/></g>`;
+// Registry: id, Symbol, Name, Ort/Kurztext, Vorspiel (Melodie, gibt Sekunden zurück), Schlag (je Stunde), Takt (ms nach Schlag i), Rufe, Bild
+const STUNDENUHREN = [
+  { id: "kuckuck", sym: "🐦", t: "Kuckucksuhr", u: "Schwarzwald – der Kuckuck ruft" },
+  { id: "bigben", sym: "🇬🇧", t: "Big Ben", u: "London – Westminster-Schlag, dann die große Glocke",
+    vorspiel: (t) => { let d = 0; for (const w of SU_WESTMINSTER) { d += suNoten(t + d, [[w[0], 1], [w[1], 1], [w[2], 1], [w[3], 2]], 0.62, (x, m) => suGlocke(x, suHz(m), 0.3, 4.5)); } return d + 1.6; },
+    schlag: (t) => suGlocke(t, 164.81, 0.55, 7), takt: () => 2300,
+    bild: (h) => `<rect x="55" y="40" width="40" height="125" fill="#c8a96a" stroke="#6b5530" stroke-width="2"/><path d="M50 40 L75 2 L100 40Z" fill="#3b5a3a" stroke="#22361f" stroke-width="2"/><rect x="50" y="36" width="50" height="8" fill="#a68a4f"/>${suBlatt(75, 66, 18, h, "#1b1b1b", "#f7f1dc")}<rect x="61" y="92" width="28" height="40" fill="#b3955a"/>${[0, 1, 2].map((i) => `<rect x="${64 + i * 8}" y="96" width="5" height="32" fill="#7a6438"/>`).join("")}${suGlockeBild(75, 140, 0.9, "#a88a3a")}` },
+  { id: "koeln", sym: "⛪", t: "Kölner Dom", u: "Köln – der „Dicke Pitter“ (Petersglocke) und das Domgeläut",
+    vorspiel: (t) => { for (let i = 0; i < 4; i++) { suPeter(t + i * 1.9, 0.5); suGlocke(t + 0.95 + i * 1.9, 196, 0.25, 4); if (i % 2) suGlocke(t + 1.4 + i * 1.9, 220, 0.2, 3.5); } return 8.2; },
+    schlag: (t) => suGlocke(t, 196, 0.5, 5.5), takt: () => 2200,
+    bild: (h) => `${[30, 120].map((x) => `<path d="M${x - 16} 165 L${x - 16} 60 L${x} 4 L${x + 16} 60 L${x + 16} 165Z" fill="#6d6a63" stroke="#3e3c37" stroke-width="2"/>${[30, 55, 80, 105, 130].map((y) => `<path d="M${x - 8} ${y + 14} L${x - 8} ${y} Q${x} ${y - 8} ${x + 8} ${y} L${x + 8} ${y + 14}Z" fill="#3e3c37"/>`).join("")}`).join("")}<rect x="46" y="70" width="58" height="95" fill="#7c786f" stroke="#3e3c37" stroke-width="2"/>${suBlatt(75, 98, 16, h, "#2a2925", "#ece6d6")}${suGlockeBild(75, 124, 1.05, "#8a6d2b")}` },
+  { id: "muenchen", sym: "🍺", t: "Münchner Glockenspiel", u: "Marienplatz – fröhlicher Ländler (eigene Melodie im Stil), Figuren tanzen",
+    vorspiel: (t) => { const d = suNoten(t, SU_LAENDLER, 0.3, (x, m) => suKlein(x, m)); [0, 3, 6, 9, 12, 15, 18, 21].forEach((b, i) => suKlein(t + b * 0.3, [60, 60, 65, 65, 60, 67, 65, 60][i] - 12, 0.18)); return d + 0.5; },
+    schlag: (t) => suGlocke(t, 233.08, 0.45, 4.5), takt: () => 1900,
+    bild: (h) => `<rect x="20" y="40" width="110" height="125" fill="#d9c7a3" stroke="#6a5a3c" stroke-width="2"/><path d="M15 42 L75 6 L135 42Z" fill="#5d7b4a" stroke="#3a5130" stroke-width="2"/>${[35, 55, 75, 95, 115].map((x) => `<path d="M${x - 6} 165 L${x - 6} 140 Q${x} 132 ${x + 6} 140 L${x + 6} 165Z" fill="#8a7650"/>`).join("")}${suBlatt(75, 66, 16, h)}<g class="su-tanz">${[45, 65, 85, 105].map((x, i) => `<circle cx="${x}" cy="102" r="4" fill="#f2d2b0"/><rect x="${x - 4}" y="106" width="8" height="12" rx="2" fill="${["#c0392b", "#2c5d9b", "#c0392b", "#2c5d9b"][i]}"/>`).join("")}</g><rect x="30" y="96" width="90" height="26" fill="none" stroke="#6a5a3c" stroke-width="1.5"/>` },
+  { id: "prag", sym: "💀", t: "Prager Rathausuhr", u: "Prag (Orloj) – der Tod läutet, der Hahn kräht, dann der Stundenschlag",
+    vorspiel: (t) => { for (let i = 0; i < 8; i++) suGlocke(t + i * 0.36, 1318.5, 0.16, 1.4); suHahn(t + 3.7); return 5.4; },
+    schlag: (t) => suGlocke(t, 207.65, 0.5, 5), takt: () => 2000,
+    bild: (h) => `<rect x="25" y="20" width="100" height="145" fill="#8c7356" stroke="#4a3a28" stroke-width="2"/><circle cx="75" cy="78" r="38" fill="#2c4d7a" stroke="#c9a227" stroke-width="3"/><circle cx="75" cy="78" r="28" fill="#3b6ea5"/><path d="M47 78 A28 28 0 0 0 103 78Z" fill="#6b4a2b" opacity=".7"/>${suBlatt(75, 78, 15, h, "#c9a227", "#f4e7b8")}<g class="su-schwinger" style="transform-origin:117px 60px"><circle cx="117" cy="56" r="4" fill="#eee"/><line x1="117" y1="60" x2="117" y2="78" stroke="#eee" stroke-width="2"/><line x1="117" y1="64" x2="124" y2="70" stroke="#eee" stroke-width="1.6"/></g><path d="M62 18 l6 -10 l4 8 l6 -6 l-2 10Z" fill="#c9a227"/>` },
+  { id: "michel", sym: "🎺", t: "Hamburger Michel", u: "Hamburg – der Türmer bläst „Lobe den Herren“, dann die Glocke",
+    vorspiel: (t) => suNoten(t, SU_LOBE, 0.55, (x, m, d) => suTrompete(x, suHz(m), d * 0.92)) + 0.6,
+    schlag: (t) => suGlocke(t, 146.83, 0.55, 6), takt: () => 2200,
+    bild: (h) => `<rect x="52" y="60" width="46" height="105" fill="#7a3b2e" stroke="#4a231b" stroke-width="2"/><path d="M57 60 L57 40 Q75 20 93 40 L93 60Z" fill="#3f6b5a" stroke="#28463b" stroke-width="2"/><path d="M70 22 Q75 4 80 22Z" fill="#3f6b5a"/><line x1="75" y1="4" x2="75" y2="0" stroke="#c9a227" stroke-width="2"/>${suBlatt(75, 88, 15, h, "#c9a227", "#1d1d1d")}<g class="su-tanz"><circle cx="104" cy="52" r="4" fill="#f2d2b0"/><rect x="100" y="56" width="8" height="12" fill="#222"/><path d="M107 54 l14 -4 l2 4 l-14 2Z" fill="#c9a227"/></g>${suGlockeBild(75, 120, 0.9, "#a88a3a")}` },
+  { id: "schiff", sym: "⚓", t: "Schiffsglocke", u: "An Bord „Glasen“: Doppelschläge, 8 Glasen am Ende jeder Wache",
+    rufe: (h) => ((h % 4) * 2) || 8, schlag: (t) => suGlocke(t, 1046.5, 0.32, 2.6), takt: (i) => (i % 2 ? 420 : 1300),
+    bild: () => `<rect x="20" y="20" width="110" height="10" rx="5" fill="#6b4a2b"/><path d="M60 30 L60 40 M90 30 L90 40" stroke="#6b4a2b" stroke-width="4"/>${suGlockeBild(75, 42, 2.6, "#d4a520")}<path d="M75 110 q-30 20 -10 45" fill="none" stroke="#c9b28a" stroke-width="3"/><path d="M40 160 q20 -12 35 0 q20 12 35 0" fill="none" stroke="#2c6aa0" stroke-width="3"/>` },
+  { id: "standuhr", sym: "🕰️", t: "Standuhr", u: "Großvateruhr – Whittington-Melodie auf Klangstäben",
+    vorspiel: (t) => { let d = 0; for (const z of SU_WHITT) { d += suNoten(t + d, [...z.map((b) => [SU_WHITT_TON[b], 1]), [0, 1.5]], 0.3, (x, m) => suStab(x, suHz(m), 0.32, 2.4)); } return d + 0.4; },
+    schlag: (t) => suStab(t, 146.83, 0.6, 4.5), takt: () => 1800,
+    bild: (h) => `<rect x="40" y="10" width="70" height="155" rx="6" fill="#5a3418" stroke="#2e1a0b" stroke-width="2"/><path d="M40 20 Q75 -4 110 20" fill="#4a2a12" stroke="#2e1a0b" stroke-width="2"/>${suBlatt(75, 45, 22, h, "#2e1a0b", "#f6ead2")}<rect x="55" y="80" width="40" height="72" rx="4" fill="#2e1a0b" opacity=".55"/><g class="kk-pendel" style="transform-origin:75px 82px"><line x1="75" y1="82" x2="75" y2="138" stroke="#c9a227" stroke-width="2"/><circle cx="75" cy="141" r="8" fill="#c9a227"/></g>` },
+  { id: "ave", sym: "🙏", t: "Ave-Maria-Glockenspiel", u: "Lourdes-Lied „Ave, Ave, Ave Maria“ auf Glocken, dann der Stundenschlag",
+    vorspiel: (t) => suNoten(t, SU_AVE, 0.55, (x, m) => suKlein(x, m, 0.3)) + 0.5,
+    schlag: (t) => suGlocke(t, 196, 0.5, 5.5), takt: () => 2100,
+    bild: (h) => `<path d="M35 165 L35 70 L75 30 L115 70 L115 165Z" fill="#e7dcc6" stroke="#7a6a4f" stroke-width="2"/><path d="M58 30 L75 2 L92 30Z" fill="#7a6a4f"/><line x1="75" y1="2" x2="75" y2="-6" stroke="#7a6a4f" stroke-width="2"/><line x1="70" y1="-3" x2="80" y2="-3" stroke="#7a6a4f" stroke-width="2"/>${suGlockeBild(75, 44, 0.9)}${suBlatt(75, 98, 15, h, "#5a4a30")}<path d="M62 165 L62 135 Q75 122 88 135 L88 165Z" fill="#7a6a4f"/>` },
+  { id: "amsterdam", sym: "🌷", t: "Westerkerk Amsterdam", u: "Flinkes Turmglockenspiel (eigene Melodie im Stil), dann die große Glocke",
+    vorspiel: (t) => suNoten(t, SU_BEIAARD, 0.17, (x, m) => suKlein(x, m, 0.24)) + 0.6,
+    schlag: (t) => suGlocke(t, 174.61, 0.55, 6), takt: () => 2000,
+    bild: (h) => `<rect x="50" y="70" width="50" height="95" fill="#8a4a33" stroke="#4d281b" stroke-width="2"/><rect x="56" y="40" width="38" height="32" fill="#a98b5a" stroke="#4d281b" stroke-width="2"/><path d="M60 40 L66 18 L84 18 L90 40Z" fill="#355f8f" stroke="#1f3a59" stroke-width="2"/><path d="M66 18 L75 4 L84 18Z" fill="#c9a227"/><circle cx="75" cy="2" r="3" fill="#c9a227"/>${suBlatt(75, 56, 12, h)}${suGlockeBild(75, 100, 1, "#a88a3a")}` },
+];
+const suUhr = (id) => STUNDENUHREN.find((x) => x.id === id && x.id !== "kuckuck") || null;
+function suGewaehlt() { try { const l = JSON.parse(localStorage.getItem(SU_KEY) || "null"); const ok = Array.isArray(l) ? l.filter((id) => STUNDENUHREN.some((x) => x.id === id)) : []; return ok.length ? ok : ["kuckuck"]; } catch { return ["kuckuck"]; } }
+// mehrere gewählt → jede Stunde die nächste (über den Tag fortlaufend, auf allen Geräten gleich)
+function suFuerStunde(h) { const l = suGewaehlt(); const tag = Math.floor(Date.parse(heuteIso() + "T12:00:00Z") / 86400000); return l[(tag * 24 + h) % l.length]; }
+function suWahlSetzen(id, an) {
+  const l = new Set(suGewaehlt()); if (an) l.add(id); else l.delete(id);
+  if (!l.size) { melde("Mindestens eine Uhr bleibt ausgewählt", true); return suWahlZeigen(); }
+  try { localStorage.setItem(SU_KEY, JSON.stringify(STUNDENUHREN.map((x) => x.id).filter((x) => l.has(x)))); } catch {}
+  suWahlZeigen(); melde(l.size > 1 ? `🔄 ${l.size} Uhren gewählt – jede Stunde kommt eine andere` : `${STUNDENUHREN.find((x) => l.has(x.id))?.sym} Zur vollen Stunde kommt: ${STUNDENUHREN.find((x) => l.has(x.id))?.t}`);
+}
+function suWahlZeigen() {
+  // 2.467.0 KC-CLUB-STUNDENUHREN-KLAPPEN (Wunsch Hansi „als Klappbereiche“): jede Uhr ein eigener Klappbereich – zu sieht man Name und ✓, auf die Beschreibung,
+  // „Diese Uhr verwenden“ und ▶ Anhören. Die ganze Auswahl öffnet sich erst, wenn „Uhr zur vollen Stunde“ an ist (data-abh, siehe abhKlappen)
+  const z = $("stundenUhrWahl"); if (!z) return; const l = suGewaehlt(), offen = new Set([...z.querySelectorAll("details[open]")].map((d) => d.dataset.uhr));
+  z.innerHTML = STUNDENUHREN.map((x) => `<details class="su-uhr" data-uhr="${x.id}"${offen.has(x.id) ? " open" : ""}><summary><span>${x.sym} ${esc(x.t)}</span>${l.includes(x.id) ? '<span class="su-an">✓ gewählt</span>' : ""}</summary>`
+    + `<div class="su-zeile"><label><input type="checkbox" ${l.includes(x.id) ? "checked" : ""} onchange="suWahlSetzen('${x.id}', this.checked)"><span><b>Diese Uhr verwenden</b><small class="hinweis">${esc(x.u)}</small></span></label>`
+    + `<button type="button" class="knopf klein" aria-label="${esc(x.t)} anhören" onclick="kuckuckZeigen(kkJetzt().h, true, '${x.id}')">▶</button></div></details>`).join("")
+    + `<p class="hinweis" style="margin:4px 0 0">${l.length > 1 ? `🔄 ${l.length} gewählt – jede volle Stunde kommt die nächste.` : "Mehrere ankreuzen = jede Stunde eine andere."}</p>`;
+}
+// 2.467.0 KC-CLUB-EINST-ABHAENGIG (Wunsch Hansi „Erst wenn man ein Klickkästchen aktiviert, sollen sich die weiteren Auswahlen öffnen lassen“): ein Klappbereich mit
+// data-abh="<id des Häkchens>" ist gesperrt (grau, 🔒), solange das Häkchen aus ist. Weitere Stellen = nur data-abh ergänzen (Registry statt Sonderfälle).
+function abhKlappen() {
+  document.querySelectorAll("[data-abh]").forEach((d) => { const an = !!$(d.dataset.abh)?.checked; d.classList.toggle("abh-aus", !an); if (!an && d.open) d.open = false; });
+}
+document.addEventListener("click", (e) => { const s = e.target.closest?.(".abh-aus > summary"); if (s) { e.preventDefault(); melde("🔒 Erst das Häkchen darüber setzen – dann lässt sich die Auswahl öffnen", true); } }, true);
+document.addEventListener("change", (e) => { if (e.target?.matches?.("input[type=checkbox]")) abhKlappen(); });
+function kuckuckZeigen(h = kkJetzt().h, tonImmer = false, uhrId = null) { // tonImmer: Probe (🔊 in den Einstellungen) – auch nachts; 2.467.0: uhrId = andere Stundenuhr
   document.querySelector(".kuckuck")?.remove();
-  const n = kkRufe(h), mitTon = einst("ton", true) && (tonImmer || !(h >= KK_NACHT_VON || h < KK_NACHT_BIS));
+  const U = suUhr(uhrId), n = U?.rufe ? U.rufe(h) : kkRufe(h), mitTon = einst("ton", true) && (tonImmer || !(h >= KK_NACHT_VON || h < KK_NACHT_BIS));
   const z = (h % 12) * 30, zeiger = (w, l, b) => `<line x1="75" y1="80" x2="${75 + l * Math.sin(w * Math.PI / 180)}" y2="${80 - l * Math.cos(w * Math.PI / 180)}" stroke="#2b1607" stroke-width="${b}" stroke-linecap="round"/>`;
-  const u = document.createElement("div"); u.className = "kuckuck"; u.setAttribute("role", "img"); u.setAttribute("aria-label", `Kuckucksuhr: ${h} Uhr`); u.title = `${h} Uhr – antippen schließt die Uhr`;
-  u.innerHTML = `<svg viewBox="0 0 150 175" aria-hidden="true">
+  const u = document.createElement("div"); u.className = "kuckuck" + (U ? " su su-" + U.id : ""); u.setAttribute("role", "img"); u.setAttribute("aria-label", `${U ? U.t : "Kuckucksuhr"}: ${h} Uhr`); u.title = `${h} Uhr – antippen schließt die Uhr`;
+  u.innerHTML = U ? `<svg viewBox="0 0 150 175" aria-hidden="true">${U.bild(h)}</svg><div class="kk-zahl" aria-hidden="true">${h}</div><div class="kk-punkte" aria-hidden="true">${"○".repeat(n)}</div>` : `<svg viewBox="0 0 150 175" aria-hidden="true">
     <g class="kk-pendel"><line x1="75" y1="128" x2="75" y2="160" stroke="#8a5a1a" stroke-width="2"/><circle cx="75" cy="163" r="7" fill="#d4a017" stroke="#8a5a1a" stroke-width="1.5"/></g>
     <line x1="58" y1="128" x2="58" y2="150" stroke="#555" stroke-width="1.2"/><path d="M53 150h10l-2 14h-6z" fill="#4a3a20"/>
     <line x1="92" y1="128" x2="92" y2="146" stroke="#555" stroke-width="1.2"/><path d="M87 146h10l-2 14h-6z" fill="#4a3a20"/>
@@ -20507,10 +20662,16 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false) { // tonImmer: Probe (
   // Alle Rufe wurden auf denselben Zeitpunkt gelegt und klangen beim Freigeben gleichzeitig = ein Kuckuck. Jetzt wird nur bei laufendem
   // Ton gespielt (sonst still, aber nie übereinander); einmal je Sitzung geht eine Diagnose an den Server (Rufe, gespielt, Ton-Zustand).
   let i = 0, gespielt = 0;
+  let vorspielDa = false;
   const ruf = () => {
     if (!u.isConnected) return;
+    // 2.467.0 KC-CLUB-STUNDENUHREN: vor dem ersten Schlag die Melodie (Westminster, Glockenspiel, Turmbläser …) – nur mit laufendem Ton
+    if (U?.vorspiel && !vorspielDa && i === 0) { vorspielDa = true;
+      if (mitTon && audio && audio.state === "running") { let d = 0; try { audio.__zuletzt = Date.now(); d = U.vorspiel(audio.currentTime + 0.05); } catch {}
+        u.classList.add("spielt"); const halten = setInterval(() => { if (!u.isConnected) return clearInterval(halten); audio.__zuletzt = Date.now(); }, 1000); // Akku-Schutz: Ton bleibt wach
+        u._t = setTimeout(() => { clearInterval(halten); u.classList.remove("spielt"); ruf(); }, Math.round(d * 1000)); return; } }
     if (i >= n) {
-      u.classList.remove("offen"); kkDiagnose(h, n, gespielt, mitTon);
+      u.classList.remove("offen"); kkDiagnose(h, n, gespielt, mitTon, U?.id || "kuckuck");
       // 2.428.0 KC-CLUB-KUCKUCK-FREIGABE: Ton war gesperrt (stumm gerufen) → Uhr bleibt eine Minute stehen, Antippen ruft alles nochmal mit Ton
       if (mitTon && !gespielt && !u._nochmal) { kkTonHinweis(`🔊 Antippen – ${n}× mit Ton`); u._t = setTimeout(zu, 60000); return; }
       u._t = setTimeout(zu, 1400); return;
@@ -20521,11 +20682,11 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false) { // tonImmer: Probe (
     // zwischen Freigabe und erstem Ruf; danach war „nur bei laufendem Ton“ nie mehr erfüllt (stumm bis zum Ende). Jetzt hält jeder Ruf den Ton
     // wach und weckt ihn, falls er schläft – gespielt wird nur, wenn er binnen 0,4 s läuft (nie mehrere Rufe übereinander).
     if (mitTon && audio) try {
-      audio.__zuletzt = Date.now(); const spielen = () => { gespielt++; if (KK_AUFNAHME.puffer) kkAufnahmeSpielen(audio.currentTime + 0.02); else kkTon(audio.currentTime + 0.02); };
+      audio.__zuletzt = Date.now(); const spielen = U ? () => { gespielt++; U.schlag(audio.currentTime + 0.02, i); } : () => { gespielt++; if (KK_AUFNAHME.puffer) kkAufnahmeSpielen(audio.currentTime + 0.02); else kkTon(audio.currentTime + 0.02); };
       if (audio.state === "running") spielen();
       else { const ab = Date.now(); Promise.resolve(audio.resume?.()).then(() => { if (audio.state === "running" && Date.now() - ab < 400 && u.isConnected) spielen(); }, () => {}); }
     } catch {}
-    u._t = setTimeout(ruf, KK_AUFNAHME.puffer && mitTon ? Math.round(KK_AUFNAHME.puffer.duration * 1000) : KK_TAKT_MS);
+    u._t = setTimeout(ruf, U ? (mitTon ? U.takt(i) : KK_TAKT_MS) : KK_AUFNAHME.puffer && mitTon ? Math.round(KK_AUFNAHME.puffer.duration * 1000) : KK_TAKT_MS);
   };
   // 2.428.0 KC-CLUB-KUCKUCK-FREIGABE (Fund Hansi „um 10 Uhr nur einmal, Uhr und 10 waren da, Ton nicht“ – Diagnose: 10 Rufe, 0 gespielt,
   // Ton „suspended“): Android/Chrome gibt den Ton erst frei, wenn man in der App einmal getippt hat. Öffnet man die App zur vollen Stunde,
@@ -20536,7 +20697,7 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false) { // tonImmer: Probe (
     u.onclick = (e) => {
       e.stopPropagation(); u.querySelector(".kk-tonhinweis")?.remove(); u.onclick = zu; clearTimeout(u._t);
       try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.(); kkAufnahmeLaden(); } catch {} // im Tippen = erlaubt
-      i = 0; gespielt = 0; u._nochmal = true; u.classList.add("offen");
+      i = 0; gespielt = 0; vorspielDa = false; u._nochmal = true; u.classList.add("offen");
       Promise.race([Promise.resolve(audio?.resume?.()), new Promise((r) => setTimeout(r, 1500))]).catch(() => {}).then(() => { if (u.isConnected) u._t = setTimeout(ruf, kkLautsprecherWecken(true)); });
     };
   }
@@ -20557,16 +20718,16 @@ function kkLautsprecherWecken(mitTon) {
   return 1250;
 }
 let KK_DIAG = false;
-function kkDiagnose(h, n, gespielt, mitTon) { // einmal je Sitzung: hat der Ton so oft gerufen, wie es Uhr ist?
+function kkDiagnose(h, n, gespielt, mitTon, uhr = "kuckuck") { // einmal je Sitzung: hat der Ton so oft gerufen, wie es Uhr ist?
   if (KK_DIAG) return; KK_DIAG = true;
-  try { api("diagnose", { art: "kuckuck", daten: { stunde: h, rufe: n, gespielt, ton: !!mitTon, zustand: audio?.state || "kein", aufnahme: !!KK_AUFNAHME.puffer } }).catch(() => {}); } catch {}
+  try { api("diagnose", { art: "kuckuck", daten: { stunde: h, rufe: n, gespielt, ton: !!mitTon, zustand: audio?.state || "kein", aufnahme: !!KK_AUFNAHME.puffer, uhr } }).catch(() => {}); } catch {}
 }
 function kuckuckPruefen() {
   if (!ICH?.person_id || document.hidden || !einst("kuckuck", true)) return;
   const { h, m } = kkJetzt(); if (m >= KK_FENSTER_MIN) return;
   const stunde = `${heuteIso()} ${h}`; // nur die zuletzt gezeigte Stunde merken (kein Sammeln von Schlüsseln)
   try { if (localStorage.getItem("kc_club_kuckuck_zuletzt") === stunde) return; localStorage.setItem("kc_club_kuckuck_zuletzt", stunde); } catch { return; }
-  kuckuckZeigen(h);
+  kuckuckZeigen(h, false, suFuerStunde(h)); // 2.467.0: gewählte Stundenuhr (mehrere → jede Stunde eine andere)
 }
 // 2.428.0 KC-CLUB-KUCKUCK-FREIGABE: hat Android den Ton im Hintergrund angehalten, gibt ihn das nächste Tippen wieder frei (nur wenn er schon da ist)
 addEventListener("pointerdown", () => { try { if (audio && audio.state === "suspended") audio.resume(); } catch {} }, { capture: true, passive: true });

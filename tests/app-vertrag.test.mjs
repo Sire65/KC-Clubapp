@@ -6745,6 +6745,28 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.deepEqual(fehlt, [], "Sprungziele ohne Seite: " + fehlt.join(", "));
   assert.ok(/t: "Schulung: bitte einen Termin wählen"[^\n]*auf: "smStart\(\)"/.test(html), "Schulung öffnet die Schulungsauswahl");
 }
+
+// 2.467.0 KC-CLUB-STUNDENUHREN (Wunschliste #23): 9 weitere Uhren zur vollen Stunde (selbst erzeugt), Auswahl + stündlicher Wechsel
+{
+  const ids = ["kuckuck", "bigben", "koeln", "muenchen", "prag", "michel", "schiff", "standuhr", "ave", "amsterdam"];
+  for (const id of ids) assert.ok(new RegExp(`\\{ id: "${id}", sym: `).test(html), "Uhr in der Liste: " + id);
+  assert.ok(/const SU_WESTMINSTER = \[\[64, 68, 66, 59\], \[64, 66, 68, 64\], \[68, 64, 66, 59\], \[59, 66, 68, 64\]\];/.test(html), "Westminster-Schlag (Wechsel 2–5) wie in den Noten");
+  assert.ok(/const SU_PETER = \[\[0\.5, /.test(html) && /suGlocke\(t, 130\.81, laut, 8, SU_PETER\)/.test(html), "Petersglocke: Schlagton c⁰");
+  assert.ok(/rufe: \(h\) => \(\(h % 4\) \* 2\) \|\| 8/.test(html), "Glasen zählt die Wache");
+  assert.ok(/function kuckuckZeigen\(h = kkJetzt\(\)\.h, tonImmer = false, uhrId = null\)/.test(html) && /kuckuckZeigen\(h, false, suFuerStunde\(h\)\);/.test(html), "gleicher Ablauf wie der Kuckuck, gewählte Uhr je Stunde");
+  assert.ok(/if \(!l\.size\) \{ melde\("Mindestens eine Uhr bleibt ausgewählt", true\);/.test(html) && /return ok\.length \? ok : \["kuckuck"\];/.test(html), "Standard Kuckuck, nie keine Uhr");
+  assert.ok(/<div id="stundenUhrWahl"><\/div>/.test(lies("index.html")) && /onclick="kuckuckZeigen\(kkJetzt\(\)\.h, true, '\$\{x\.id\}'\)">▶<\/button>/.test(html), "Auswahl mit ▶ Probe in den Einstellungen");
+  assert.ok(!/fetch\([^)]*(bigben|westminster|koeln)/i.test(html), "keine fremden Aufnahmen – alles selbst erzeugt");
+}
+
+// 2.467.0 KC-CLUB-STUNDENUHREN-KLAPPEN + KC-CLUB-EINST-ABHAENGIG: jede Uhr ein Klappbereich; Unterauswahl erst nach Häkchen
+{
+  assert.ok(/<details class="su-uhr" data-uhr="\$\{x\.id\}"/.test(html) && /<b>Diese Uhr verwenden<\/b>/.test(html), "jede Uhr klappbar");
+  assert.ok(/<details class="su-wahl" data-abh="setKuckuck">/.test(lies("index.html")), "Uhrenauswahl hängt am Häkchen");
+  assert.ok(/function abhKlappen\(\) \{\n  document\.querySelectorAll\("\[data-abh\]"\)/.test(html) && /d\.classList\.toggle\("abh-aus", !an\); if \(!an && d\.open\) d\.open = false;/.test(html), "gesperrt + zugeklappt solange aus");
+  assert.ok(/closest\?\.\("\.abh-aus > summary"\); if \(s\) \{ e\.preventDefault\(\);/.test(html) && /abhKlappen\(\); \/\/ 2\.467\.0 KC-CLUB-EINST-ABHAENGIG\n\}/.test(html), "Öffnen verhindert, nach jedem Umschalten neu geprüft");
+  for (const m of lies("index.html").matchAll(/data-abh="([^"]+)"/g)) assert.ok(lies("index.html").includes(`id="${m[1]}"`), "Häkchen fehlt: " + m[1]);
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

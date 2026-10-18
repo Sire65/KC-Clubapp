@@ -41,9 +41,11 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.467.0 – 2026-10-18 – KC-CLUB-STUNDENUHREN: Big Ben, Kölner Dom und 8 weitere Uhren zur vollen Stunde (Wunschliste #23) + Auswahl nur nach Häkchen
+Wunsch Hansi: Neben der Kuckucksuhr Big Ben (Westminster-Schlag), Kölner Dom (Petersglocke), Münchner Glockenspiel, Prager Rathausuhr, Hamburger Michel (Turmbläser „Lobe den Herren“), Schiffsglocke (Glasen), Standuhr (Whittington), Ave-Maria-Glockenspiel (Lourdes-Lied), Westerkerk Amsterdam. Alles im Handy erzeugt (Originalaufnahmen sind geschützt); Melodien nach freien Quellen, München/Amsterdam eigene Melodie im Stil. Auswahl mit ▶ Probe, mehrere = jede Stunde eine andere. Gleicher Ablauf wie der Kuckuck (Ton-Freigabe, Nachtruhe, Mitzählen). Nur App. Neu (Wunsch Hansi): jede Uhr ein eigener Klappbereich; die Auswahl „Welche Uhr?“ öffnet sich erst, wenn „Uhr zur vollen Stunde“ angehakt ist (KC-CLUB-EINST-ABHAENGIG, allgemein über data-abh nutzbar).
+
 ## 2.466.0 – 2026-10-18 – Laufband: Schulung und Aufgaben öffnen die richtige Seite (KC-CLUB-LAUFBAND-ZIELE)
 Wunschliste #24: Antippen von „Schulung: bitte einen Termin wählen“ und von Aufgaben im Info-Laufband öffnete eine leere Seite (Sprungziel gab es nicht). Jetzt: Schulung → Schulungsauswahl, Aufgabe → Protokolle/Aufgaben. Neuer Test prüft alle Sprungziele.
-
 ## 2.463.0 – 2026-10-18 – KC-CLUB-THEMEN-LAUFBAND: Info-Feld fordert zum Abstimmen über die Sitzungs-Themen auf (Wunschliste #22)
 Wunsch Hansi: In den 3 Wochen vor einer Sitzung steht im Info-Laufband „x Themen für die Sitzung am …“ mit „👍 Abstimmen“ und „＋ Thema“ (Formular mit vorgewählter Sitzung). Gelb, solange man noch nicht alle Themen unterstützt hat. App + Server.
 
