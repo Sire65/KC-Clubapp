@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.481.0 – 2026-10-18 – Sechs Uhren mit echten Glocken-Aufnahmen
+- KC-CLUB-STUNDENUHREN-ECHT: Wunsch Hansi „schneiden und als Uhren einbauen“: Big Ben 1945 (gemeinfrei), Westminster-Glockenspiel (Carillon, CC BY-SA 4.0), Kieler Rathaus-Glockenspiel (CC BY 4.0), Freiburger Rathaus-Glockenspiel (CC BY-SA 4.0), Berliner Dom (CC BY-SA 4.0), Röhrenglocken-Standuhr (CC0) – freie Aufnahmen von Wikimedia Commons, gekürzt (mono MP3, je < 160 KB), Quelle/Urheber/Lizenz bei der Uhr. Ohne Datei spielt der selbst erzeugte Ton einer verwandten Uhr.
+- Fehler an der Quelle behoben: echte Aufnahmen wurden geladen, bevor die Tonausgabe lief – beim ersten Mal lud nichts. Jetzt Laden nach dem Start, bis zu 4 s Warten auf die Aufnahme.
+
 ## 2.480.0 – 2026-10-18 – SOS-Seite immer mit Notrufnummern
 - KC-CLUB-ZEIGE-FUELLEN (TÜV 18.10., Fehler behindert Mitglieder → sofort): Über Hilfe „Zeig mir wo“, Twinkey „Was mache ich im Notfall?“ oder Zurück nach Neuladen öffnete die SOS-Seite leer – ohne Notrufnummern. Ursache: nur sosStart() füllte sie. Jetzt füllt zeige() selbst (wie bei allen anderen Seiten); ebenso Sicherheits-Check. „Neue Gruppe“ ohne Formular → Nachrichten, „Neue Nachricht“ ohne Mitgliederliste lädt sie erst.
 

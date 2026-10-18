@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.480.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.481.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5094,7 +5094,7 @@ const HILFE = [
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
   { id: "einstellungen_ordnung", thema: "darstellung", sym: "🔍", t: "Einstellungen schneller finden", x: "Ganz oben unter ⚙️ steht <b>„🔍 Einstellung suchen“</b>: ein Wort eintippen (z. B. <b>Uhr</b>, <b>Schrift</b>, <b>Push</b>) – dann siehst du nur noch die passenden Schalter, ✕ zeigt wieder alles. Was zu einem Schalter gehört (z. B. die <b>Szenen</b> bei „🍂 Jahreszeiten im Kopf“, die Uhrenauswahl oder die Zeiten bei „Nicht stören“), steht in einem <b>eigenen Klappbereich</b> darunter: Schaltest du den Schalter ein, klappt er von selbst auf. Ist der Schalter aus, ist er grau mit 🔒.", zeig: () => { zeige("einstellungen"); setTimeout(() => $("einstSuche")?.focus(), 300); }, seit: "2.478.0" },
   { id: "adventskalender", thema: "darstellung", sym: "🎄", t: "Adventskalender", x: "Vom <b>1. bis 24. Dezember</b> öffnet sich jeden Tag ein Türchen mit einer Bastelanleitung für eine kleine süße Nascherei. Oben im Info-Laufband steht „🎄 Türchen … wartet auf dich“ – antippen, Türchen öffnen. Frühere Türchen kannst du jederzeit nachholen, spätere bleiben zu. Ausschalten: ⚙️ → ✨ Effekte → „🎄 Adventskalender“.", zeig: () => akZeigen(), seit: "2.476.0" },
-  { id: "stundenuhren", thema: "toene", sym: "🕰️", t: "Big Ben, Kölner Dom & Co. zur vollen Stunde", x: "Zur vollen Stunde kommt nicht nur der Kuckuck: Unter ⚙️ → <b>„✨ Effekte“</b> → <b>„🕰️ Uhr zur vollen Stunde“</b> (Häkchen setzen) → <b>„🔔 Welche Uhr?“</b> wählst du <b>Big Ben</b> (Westminster-Schlag), <b>Kölner Dom</b> (Dicker Pitter), <b>Münchner Glockenspiel</b>, <b>Prager Rathausuhr</b> (Tod läutet, Hahn kräht), <b>Hamburger Michel</b> (Turmbläser), <b>Schiffsglocke</b> (Glasen), <b>Standuhr</b>, <b>Ave-Maria-Glockenspiel</b> oder <b>Westerkerk Amsterdam</b>. Mit <b>▶</b> hörst du jede vorher an. Kreuzt du mehrere an, kommt jede Stunde eine andere. Fast alles wird im Handy selbst erzeugt – der Hahn bei Prag ist eine echte Aufnahme (Quelle steht bei der Uhr). Nachts 22–7 Uhr ohne Ton.", zeig: () => einstiegHin("effekte", "setKuckuck"), seit: "2.467.0" },
+  { id: "stundenuhren", thema: "toene", sym: "🕰️", t: "Big Ben, Kölner Dom & Co. zur vollen Stunde", x: "Zur vollen Stunde kommt nicht nur der Kuckuck: Unter ⚙️ → <b>„✨ Effekte“</b> → <b>„🕰️ Uhr zur vollen Stunde“</b> (Häkchen setzen) → <b>„🔔 Welche Uhr?“</b> wählst du <b>Big Ben</b> (Westminster-Schlag), <b>Kölner Dom</b> (Dicker Pitter), <b>Münchner Glockenspiel</b>, <b>Prager Rathausuhr</b> (Tod läutet, Hahn kräht), <b>Hamburger Michel</b> (Turmbläser), <b>Schiffsglocke</b> (Glasen), <b>Standuhr</b>, <b>Ave-Maria-Glockenspiel</b> oder <b>Westerkerk Amsterdam</b>. Seit 2.481.0 gibt es dazu sechs Uhren mit <b>echten Aufnahmen</b>: <b>Big Ben 1945</b>, <b>Westminster-Glockenspiel</b>, <b>Kieler</b> und <b>Freiburger Rathaus-Glockenspiel</b>, <b>Berliner Dom</b> und die <b>Röhrenglocken-Standuhr</b>. Mit <b>▶</b> hörst du jede vorher an. Kreuzt du mehrere an, kommt jede Stunde eine andere. Die übrigen Uhren werden im Handy selbst erzeugt; echte Aufnahmen (auch der Hahn bei Prag) nennen ihre Quelle bei der Uhr. Ohne Internet klingt statt der Aufnahme der selbst erzeugte Ton. Nachts 22–7 Uhr ohne Ton.", zeig: () => einstiegHin("effekte", "setKuckuck"), seit: "2.467.0" },
   { id: "themen_laufband", thema: "club", sym: "🗳️", t: "Themen für die nächste Sitzung im Info-Feld", x: "In den 3 Wochen vor einer Sitzung erinnert dich das Info-Feld oben auf der Startseite an die Themen: <b>„3 Themen für die Sitzung am …“</b>. Mit <b>„👍 Abstimmen“</b> unterstützt du die Themen, die dir wichtig sind, mit <b>„＋ Thema“</b> reichst du selbst eins ein – die Sitzung ist dabei schon ausgewählt. Hast du alle unterstützt, wird die Meldung ruhiger (weiß statt gelb).", zeig: () => zeige("vorschlaege"), seit: "2.463.0" },
   { id: "termin_link_prospekt", thema: "termine", sym: "🎪", t: "Termin mit Webseite, Prospekt und Laufband", x: "Beim Anlegen oder Ändern eines Clubtermins (z. B. <b>Adventsmarkt der Freilichtbühne</b>) gibt es jetzt: <b>🌐 Link zur Webseite</b> des Veranstalters, <b>📎 Anlage</b> für den Prospekt (Foto oder PDF) und <b>„📣 Im Info-Laufband ankündigen“</b> – dann erscheint der Termin oben auf der Startseite im Info-Feld, ab 3 Wochen vorher, mit Knopf <b>„🌐 Webseite“</b>. Antippen öffnet den Termin mit Webseite und Prospekt.", seit: "2.461.0" },
   { id: "schrift_zoom", thema: "darstellung", sym: "🔍", t: "Schrift größer ziehen – mit zwei Fingern", x: "Zu klein zum Lesen? Lege <b>zwei Finger</b> auf den Bildschirm und ziehe sie <b>auseinander</b> – Nachrichten, Zettel und Texte werden größer (Knöpfe und Leisten bleiben, wie sie sind). Zusammenschieben macht sie kleiner. Die Größe bleibt gemerkt. Zurück auf normal: mit zwei Fingern <b>doppelt tippen</b> oder unter ⚙️ → Darstellung → „🔍 Schriftgröße“. <b>Ganz ausschalten:</b> ⚙️ → Darstellung → „✌️ Schrift mit zwei Fingern ändern“ (A− / A+ gehen weiter). Ein aufliegender Daumen beim Scrollen verstellt die Schrift nicht mehr.", seit: "2.364.0" }, // 2.364.0 KC-CLUB-SCHRIFT-ZOOM
@@ -20758,6 +20758,52 @@ const STUNDENUHREN = [
     schlag: (t) => suGlocke(t, 174.61, 0.55, 6), takt: () => 2000,
     bild: (h) => `<rect x="50" y="70" width="50" height="95" fill="#8a4a33" stroke="#4d281b" stroke-width="2"/><rect x="56" y="40" width="38" height="32" fill="#a98b5a" stroke="#4d281b" stroke-width="2"/><path d="M60 40 L66 18 L84 18 L90 40Z" fill="#355f8f" stroke="#1f3a59" stroke-width="2"/><path d="M66 18 L75 4 L84 18Z" fill="#c9a227"/><circle cx="75" cy="2" r="3" fill="#c9a227"/>${suBlatt(75, 56, 12, h)}${suGlockeBild(75, 100, 1, "#a88a3a")}` },
 ];
+// 2.481.0 KC-CLUB-STUNDENUHREN-ECHT (Wunsch Hansi „schneiden und als Uhren einbauen“): sechs Uhren mit echten, freien Aufnahmen von Wikimedia Commons
+// (gekürzt, mono MP3). Fehlt eine Datei (offline), spielt die Uhr den selbst erzeugten Ton der verwandten Uhr – nie Stille.
+const SU_CC_BY_SA = "https://creativecommons.org/licenses/by-sa/4.0/deed.de", SU_GEKUERZT = "gekürzt, lautstärkeangepasst";
+Object.assign(SU_AUFNAHMEN, {
+  bigben_melodie: { datei: "uhr-bigben-melodie.mp3", was: "Big Ben, Westminster-Melodie (Radio Oranje, Neujahr 1945)", urheber: "Great Brightstar (Hochlader)", lizenz: "gemeinfrei", lizenzLink: "https://commons.wikimedia.org/wiki/File:Westminster_chimes_(1_January_1945).wav",
+    quelle: "https://commons.wikimedia.org/wiki/File:Westminster_chimes_(1_January_1945).wav", geaendert: SU_GEKUERZT },
+  bigben_schlag: { datei: "uhr-bigben-schlag.mp3", was: "Big Ben, Stundenschlag (1945)", urheber: "Great Brightstar (Hochlader)", lizenz: "gemeinfrei", lizenzLink: "https://commons.wikimedia.org/wiki/File:Westminster_chimes_(1_January_1945).wav",
+    quelle: "https://commons.wikimedia.org/wiki/File:Westminster_chimes_(1_January_1945).wav", geaendert: SU_GEKUERZT },
+  carillon_melodie: { datei: "uhr-carillon-melodie.mp3", was: "Westminster-Melodie vom Carillon", urheber: "Max.metz", lizenz: "CC BY-SA 4.0", lizenzLink: SU_CC_BY_SA,
+    quelle: "https://commons.wikimedia.org/wiki/File:Westminster-vom-Carillon_MaxMetz.wav", geaendert: SU_GEKUERZT },
+  carillon_schlag: { datei: "uhr-carillon-schlag.mp3", was: "Carillon, Stundenschlag", urheber: "Max.metz", lizenz: "CC BY-SA 4.0", lizenzLink: SU_CC_BY_SA,
+    quelle: "https://commons.wikimedia.org/wiki/File:Westminster-vom-Carillon_MaxMetz.wav", geaendert: SU_GEKUERZT },
+  roehren_schlag: { datei: "uhr-roehren-schlag.mp3", was: "Standuhr aus Röhrenglocken (am Computer gespielt)", urheber: "gsb1039", lizenz: "CC0", lizenzLink: "https://creativecommons.org/publicdomain/zero/1.0/deed.de",
+    quelle: "https://commons.wikimedia.org/wiki/File:415061_gsb1039_clock-chime-tubebells-handbells-vibes.wav", geaendert: SU_GEKUERZT },
+  kiel: { datei: "uhr-kiel.mp3", was: "Glockenspiel im Kieler Rathausturm", urheber: "Michael Brandtner", lizenz: "CC BY 4.0", lizenzLink: "https://creativecommons.org/licenses/by/4.0/deed.de",
+    quelle: "https://commons.wikimedia.org/wiki/File:Glockenspiel_Kieler_Rathausturm.flac", geaendert: SU_GEKUERZT },
+  berlin: { datei: "uhr-berlin.mp3", was: "Geläut des Berliner Doms (2016)", urheber: "Morn", lizenz: "CC BY-SA 4.0", lizenzLink: SU_CC_BY_SA,
+    quelle: "https://commons.wikimedia.org/wiki/File:Berlin_Cathedral_bells,_2016.wav", geaendert: SU_GEKUERZT },
+  freiburg: { datei: "uhr-freiburg.mp3", was: "Glockenspiel am Neuen Rathaus Freiburg („Stimmt an mit hellem hohen Klang“)", urheber: "Andreas Schwarzkopf", lizenz: "CC BY-SA 4.0", lizenzLink: SU_CC_BY_SA,
+    quelle: "https://commons.wikimedia.org/wiki/File:Neues_Rathaus_Freiburg,_Glockenspiel.mp3", geaendert: SU_GEKUERZT },
+});
+// Aufnahme spielen und ihre Länge (s) zurückgeben; ohne geladene Aufnahme der Ersatzton
+const suEcht = (k, t, ersatz, laut) => { const p = SU_AUFNAHMEN[k]?.puffer; if (p && suAufnahme(k, t, laut)) return p.duration; return ersatz ? ersatz(t) : 0; };
+const suVon = (id) => STUNDENUHREN.find((x) => x.id === id);
+STUNDENUHREN.push(
+  { id: "bigben1945", sym: "📻", t: "Big Ben – echte Aufnahme", u: "London, Neujahr 1945 im Radio: Westminster-Melodie und die große Glocke im Original",
+    aufnahmen: ["bigben_melodie", "bigben_schlag"], vorspiel: (t) => suEcht("bigben_melodie", t, suVon("bigben").vorspiel),
+    schlag: (t) => suEcht("bigben_schlag", t, suVon("bigben").schlag, 1), takt: () => 4050, bild: (h) => suVon("bigben").bild(h) },
+  { id: "carillon", sym: "🔔", t: "Westminster-Glockenspiel", u: "Echte Aufnahme eines Carillons: Westminster-Melodie, dann der Stundenschlag",
+    aufnahmen: ["carillon_melodie", "carillon_schlag"], vorspiel: (t) => suEcht("carillon_melodie", t, suVon("bigben").vorspiel),
+    schlag: (t) => suEcht("carillon_schlag", t, suVon("bigben").schlag), takt: () => 2200, bild: (h) => suVon("amsterdam").bild(h) },
+  { id: "kiel", sym: "⛵", t: "Kieler Rathaus-Glockenspiel", u: "Echte Aufnahme vom Kieler Rathausturm, dann der Stundenschlag",
+    aufnahmen: ["kiel"], vorspiel: (t) => suEcht("kiel", t, suVon("muenchen").vorspiel),
+    schlag: (t) => suVon("muenchen").schlag(t), takt: () => 1900, bild: (h) => suVon("muenchen").bild(h) },
+  { id: "freiburg", sym: "🌲", t: "Freiburger Rathaus-Glockenspiel", u: "Echte Aufnahme: „Stimmt an mit hellem hohen Klang“, dann der Stundenschlag",
+    aufnahmen: ["freiburg"], vorspiel: (t) => suEcht("freiburg", t, suVon("ave").vorspiel),
+    schlag: (t) => suVon("ave").schlag(t), takt: () => 2100, bild: (h) => suVon("ave").bild(h) },
+  { id: "berlin", sym: "🏛️", t: "Berliner Dom", u: "Echte Aufnahme: das Geläut des Berliner Doms, dann der Stundenschlag",
+    aufnahmen: ["berlin"], vorspiel: (t) => suEcht("berlin", t, suVon("koeln").vorspiel),
+    schlag: (t) => suVon("koeln").schlag(t), takt: () => 2200, bild: (h) => suVon("koeln").bild(h) },
+  { id: "roehren", sym: "🎐", t: "Röhrenglocken-Standuhr", u: "Tiefer, voller Schlag aus Röhrenglocken (frei verwendbare Aufnahme)",
+    aufnahmen: ["roehren_schlag"], schlag: (t) => suEcht("roehren_schlag", t, suVon("standuhr").schlag), takt: () => 2600, bild: (h) => suVon("standuhr").bild(h) },
+);
+// Aufnahmen einer Uhr laden (braucht die Tonausgabe – erst nach deren Start aufrufen)
+const suAufnahmenLaden = (U) => (U?.aufnahmen || []).forEach((k) => suAufnahmeLaden(k));
+const suLaedtNoch = (U) => (U?.aufnahmen || []).some((k) => SU_PUFFER[k] && !SU_AUFNAHMEN[k].puffer);
 const suUhr = (id) => STUNDENUHREN.find((x) => x.id === id && x.id !== "kuckuck") || null;
 function suGewaehlt() { try { const l = JSON.parse(localStorage.getItem(SU_KEY) || "null"); const ok = Array.isArray(l) ? l.filter((id) => STUNDENUHREN.some((x) => x.id === id)) : []; return ok.length ? ok : ["kuckuck"]; } catch { return ["kuckuck"]; } }
 // mehrere gewählt → jede Stunde die nächste (über den Tag fortlaufend, auf allen Geräten gleich)
@@ -20890,7 +20936,6 @@ document.addEventListener("change", (e) => {
 function kuckuckZeigen(h = kkJetzt().h, tonImmer = false, uhrId = null) { // tonImmer: Probe (🔊 in den Einstellungen) – auch nachts; 2.467.0: uhrId = andere Stundenuhr
   document.querySelector(".kuckuck")?.remove();
   const U = suUhr(uhrId), n = U?.rufe ? U.rufe(h) : kkRufe(h), mitTon = einst("ton", true) && (tonImmer || !(h >= KK_NACHT_VON || h < KK_NACHT_BIS));
-  (U?.aufnahmen || []).forEach((k) => suAufnahmeLaden(k)); // 2.470.0: echte Aufnahme rechtzeitig vor ihrem Einsatz laden (sonst selbst erzeugter Ton)
   const z = (h % 12) * 30, zeiger = (w, l, b) => `<line x1="75" y1="80" x2="${75 + l * Math.sin(w * Math.PI / 180)}" y2="${80 - l * Math.cos(w * Math.PI / 180)}" stroke="#2b1607" stroke-width="${b}" stroke-linecap="round"/>`;
   const u = document.createElement("div"); u.className = "kuckuck" + (U ? " su su-" + U.id : ""); u.setAttribute("role", "img"); u.setAttribute("aria-label", `${U ? U.t : "Kuckucksuhr"}: ${h} Uhr`); u.title = `${h} Uhr – antippen schließt die Uhr`;
   u.innerHTML = U ? `<svg viewBox="0 0 150 175" aria-hidden="true">${U.bild(h)}</svg><div class="kk-zahl" aria-hidden="true">${h}</div><div class="kk-punkte" aria-hidden="true">${"○".repeat(n)}</div>` : `<svg viewBox="0 0 150 175" aria-hidden="true">
@@ -20913,6 +20958,8 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false, uhrId = null) { // ton
   u.onclick = zu; document.body.appendChild(u);
   requestAnimationFrame(() => requestAnimationFrame(() => u.classList.add("an")));
   if (mitTon) try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.(); kkAufnahmeLaden(); } catch {}
+  // 2.470.0: echte Aufnahme rechtzeitig vor ihrem Einsatz laden (sonst selbst erzeugter Ton); 2.481.0: erst nach dem Start der Tonausgabe (vorher lud sie nie)
+  if (mitTon) suAufnahmenLaden(U);
   // 2.416.0 KC-CLUB-KUCKUCK-ZAEHLEN (Fund Hansi „um 15 Uhr nur ein Kuckuck“): Zeitzone und Zählung stimmten (Berlin, 15 Uhr → 3 Rufe).
   // Ursache: Beim Ruf ohne vorheriges Antippen ist der Ton auf dem Handy oft noch „angehalten“ (AudioContext suspended) – seine Uhr steht dann.
   // Alle Rufe wurden auf denselben Zeitpunkt gelegt und klangen beim Freigeben gleichzeitig = ein Kuckuck. Jetzt wird nur bei laufendem
@@ -20921,6 +20968,8 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false, uhrId = null) { // ton
   let vorspielDa = false;
   const ruf = () => {
     if (!u.isConnected) return;
+    // 2.481.0 KC-CLUB-STUNDENUHREN-ECHT: lädt die echte Aufnahme noch, bis zu 4 s auf sie warten (sonst Ersatzton)
+    if (i === 0 && mitTon && suLaedtNoch(U) && (u._warte = (u._warte || 0) + 1) <= 16) { u._t = setTimeout(ruf, 250); return; }
     // 2.467.0 KC-CLUB-STUNDENUHREN: vor dem ersten Schlag die Melodie (Westminster, Glockenspiel, Turmbläser …) – nur mit laufendem Ton
     if (U?.vorspiel && !vorspielDa && i === 0) { vorspielDa = true;
       if (mitTon && audio && audio.state === "running") { let d = 0; try { audio.__zuletzt = Date.now(); d = U.vorspiel(audio.currentTime + 0.05); } catch {}
@@ -20953,6 +21002,7 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false, uhrId = null) { // ton
     u.onclick = (e) => {
       e.stopPropagation(); u.querySelector(".kk-tonhinweis")?.remove(); u.onclick = zu; clearTimeout(u._t);
       try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.(); kkAufnahmeLaden(); } catch {} // im Tippen = erlaubt
+      suAufnahmenLaden(U); u._warte = 0;
       i = 0; gespielt = 0; vorspielDa = false; u._nochmal = true; u.classList.add("offen");
       Promise.race([Promise.resolve(audio?.resume?.()), new Promise((r) => setTimeout(r, 1500))]).catch(() => {}).then(() => { if (u.isConnected) u._t = setTimeout(ruf, kkLautsprecherWecken(true)); });
     };

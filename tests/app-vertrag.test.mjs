@@ -6808,7 +6808,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   }
   assert.ok((reg.match(/datei: "/g) || []).length === (reg.match(/lizenzLink: "https:/g) || []).length, "jede Aufnahme mit Lizenz-Link");
   assert.ok(/function suHahn\(t\) \{[^\n]*\n  if \(suAufnahme\("hahn", t\)\) return;/.test(html), "Hahn: Aufnahme, sonst selbst erzeugt");
-  assert.ok(/\(U\?\.aufnahmen \|\| \[\]\)\.forEach\(\(k\) => suAufnahmeLaden\(k\)\);/.test(html) && /delete SU_PUFFER\[k\]; return null;/.test(html), "rechtzeitig laden, Fehler → Rückfall");
+  assert.ok(/const suAufnahmenLaden = \(U\) => \(U\?\.aufnahmen \|\| \[\]\)\.forEach\(\(k\) => suAufnahmeLaden\(k\)\);/.test(html) && /delete SU_PUFFER\[k\]; return null;/.test(html), "rechtzeitig laden, Fehler → Rückfall");
   assert.ok(/🎙️ \$\{esc\(A\.was\)\}: echte Aufnahme von \$\{esc\(A\.urheber\)\}/.test(html), "Quelle + Lizenz bei der Uhr sichtbar");
 }
 
@@ -6864,6 +6864,24 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(v === "sos"\) \{ sosZeigen\(\); sosLaden\(\); \}/.test(z) && /if \(v === "sicherheit" && !SI\.laeuft\) sicherheitPruefen\(\);/.test(z), "SOS und Sicherheits-Check auf jedem Weg gefüllt");
   assert.ok(/if \(v === "gruppe" && !GR\) v = "nachrichten";/.test(z) && /if \(v === "neu" && !MITGLIEDER\) \{ neueNachricht\(\); return; \}/.test(z), "Gruppe/Neue Nachricht nie halb geöffnet");
   assert.ok(/function sosStart\(\) \{ SOS\.suche = ""; SOS\.offen = null; SOS\.wo = null; zeige\("sos"\); \}/.test(html), "sosStart lädt nicht doppelt");
+}
+
+// 2.481.0 KC-CLUB-STUNDENUHREN-ECHT (Wunsch Hansi „schneiden und als Uhren einbauen“): sechs Uhren mit echten, freien Aufnahmen, Ersatzton ohne Datei
+{
+  const reg = html.slice(html.indexOf("Object.assign(SU_AUFNAHMEN, {"), html.indexOf("const suEcht ="));
+  const dateien = [...reg.matchAll(/datei: "([^"]+)", was: "[^"]+", urheber: "[^"]+", lizenz: "(CC0|CC BY 4\.0|CC BY-SA 4\.0|gemeinfrei)", lizenzLink: (?:"https:[^"]+"|SU_CC_BY_SA),\s*quelle: "https:\/\/commons\.wikimedia\.org\/wiki\/File:[^"]+", geaendert: SU_GEKUERZT/g)].map((m) => m[1]);
+  assert.equal(dateien.length, 8, "8 neue Aufnahmen, je mit Urheber, Lizenz, Lizenz-Link und Commons-Quelle");
+  for (const d of dateien) { const f = new URL("../" + d, import.meta.url); assert.ok(fs.existsSync(f) && fs.statSync(f).size < 200000, "Aufnahme vorhanden und klein: " + d); }
+  const neu = html.slice(html.indexOf("STUNDENUHREN.push("), html.indexOf("const suAufnahmenLaden"));
+  const ids = [...neu.matchAll(/\{ id: "([a-z0-9]+)", sym: "[^"]+", t: "[^"]+", u: "[^"]+",\s*aufnahmen: \[([^\]]+)\]/g)];
+  assert.deepEqual(ids.map((m) => m[1]), ["bigben1945", "carillon", "kiel", "freiburg", "berlin", "roehren"], "sechs neue Uhren, jede mit ihren Aufnahmen");
+  for (const m of ids) for (const k of m[2].match(/"([a-z_]+)"/g).map((x) => x.slice(1, -1))) assert.ok(new RegExp(`\\b${k}: \\{ datei:`).test(reg), "Aufnahme registriert: " + k);
+  assert.equal((neu.match(/suEcht\("[a-z_]+", t, suVon\("[a-z]+"\)\.(vorspiel|schlag)/g) || []).length, 8, "jede Aufnahme hat einen Ersatzton einer bestehenden Uhr");
+  assert.ok(/const suEcht = \(k, t, ersatz, laut\) => \{ const p = SU_AUFNAHMEN\[k\]\?\.puffer; if \(p && suAufnahme\(k, t, laut\)\) return p\.duration; return ersatz \? ersatz\(t\) : 0; \};/.test(html), "Länge der Aufnahme = Dauer des Vorspiels");
+  const kz = html.slice(html.indexOf("function kuckuckZeigen("), html.indexOf("function kkLautsprecherWecken("));
+  assert.ok(kz.indexOf("if (mitTon) suAufnahmenLaden(U);") > kz.indexOf("audio = audio || new (window.AudioContext"), "Laden erst nach Start der Tonausgabe (decodeAudioData braucht sie)");
+  assert.ok(/if \(i === 0 && mitTon && suLaedtNoch\(U\) && \(u\._warte = \(u\._warte \|\| 0\) \+ 1\) <= 16\) \{ u\._t = setTimeout\(ruf, 250\); return; \}/.test(kz), "höchstens 4 s auf die Aufnahme warten");
+  assert.ok(/sechs Uhren mit <b>echten Aufnahmen<\/b>/.test(html), "Hilfe nennt die neuen Uhren");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
