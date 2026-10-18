@@ -1,5 +1,13 @@
 # Änderungen
 
+## Server 2.485.0 – 2026-10-18 – Weniger Datenbank-Abfragen: Online-Meldung und Wartung (KC-CLUB-ONLINE-SPARSAM, KC-CLUB-WARTUNG-STUNDE)
+Anlass: Rangliste 18.10. (10:46–20:30 MESZ, Hansi „OK 2 und 3“): Online-Meldung 17 Abfragen je Aufruf (20 % aller gemessenen), Wartung 71 je Lauf alle 15 Min. (14 %).
+- **Online-Meldung, gleiche Antwort:** eigene Einstellungen (online_seit, fenster, online, vorführen, schnappschuss) in EINER Abfrage statt fünf; Anklopfen an mich/von mir in einer statt zwei; klingelt gerade/verpasst in einer statt zwei; Einstellungen der Online-Leute (sichtbar, Inkognito, anklopfbar, online seit, Gerät) in einer statt vier bis fünf; eigenes Fenster höchstens alle 30 s neu schreiben (Erkennung „anderes Gerät“ prüft 180 s); laufende Live-Umfrage 15 s gemerkt. Vorher ≈ 17, jetzt ≈ 8–10 Abfragen.
+- **Wartung:** Aufräumen (Spur, App-Starts, Lesebestätigungen, Geräte-Kennungen, Protokoll-Wächter) und Tagesaufgaben mit Stundenschwelle oder Fristen von Stunden/Tagen (Wochenbericht, DB-Größe, Stadt-Termine, Schulung, Reise-Checkliste, Dienst-Gruß, Realtime-Kontingent, Antwort-Erinnerung 2 Tage, wichtig-ungelesen, Probephase, To-do-Fristen, Geburtstags-Zettel, Zeitumstellung, Admin-abwesend, Geburtstags-Push, Nachfassen) nur noch im Lauf zur vollen Stunde – die Schwellen sind volle Stunden, darum kommt alles zur selben Zeit wie bisher. Minutengenaues bleibt alle 15 Min. (Fehler-Push, Postausgang, Änderungen, Gastgeber, Archiv-Kopie nachts, Sonderstunden, Dienstwunsch-Eingang, Abstimmungsfristen, Dienst-Erinnerung, Termin-/Spiel-/Privat-Erinnerungen, Ruhezeit). Messung getrennt: Server-Log „wartung“ und „wartung_stunde“.
+- Nur Server – die App bleibt 2.484.0 (kein Neustart aller Apps).
+- Tests: tools/db-sparsam/online-sparsam-test.ts (echter Server-Code, nachgebaute Datenschnittstelle, 300 Zufallswelten: Online-Liste, Anklopfen, Anrufe alt = neu, nie mehr Abfragen); Vertragstests grün (bestehende Prüfungen auf die neue Form erweitert, neuer Block 2.485.0); Typprüfung unverändert (17); Server-Probestart lokal ok.
+- Rückweg: Server 2.484.0 erneut hochladen.
+
 ## Server – 2026-10-18 (ohne App-Build) – KC-CLUB-PUSH-NEU-EINGESCHALTET: kein Rot mehr nach neu eingeschaltetem Push
 - Fall Christina: Push am 12.10. nicht angekommen (altes Abo abgelaufen), am 18.10. neu eingeschaltet – in der Mitgliederliste blieb sie rot, weil Rot erst nach dem nächsten erfolgreich zugestellten Push verschwand. Jetzt hebt ein Push-Abo, das nach dem Fehler eingeschaltet wurde, das Rot auf. Scheitert der nächste Push, wird es wieder rot. Nur Admin-Anzeige.
 - Rückweg: Server-Stand vor diesem Eintrag erneut hochladen.

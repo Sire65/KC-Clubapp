@@ -668,7 +668,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const a of ["online", "anklopfen", "anklopfen_antwort"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Online-Aktion ${a} fehlt`);
   assert.ok(/online: \(w\) => \(\{ zeigen: w\?\.zeigen !== false \}\)/.test(server), "Einstellung „online“ fehlt oder Standard nicht an");
   const on = server.slice(server.indexOf('case "online": {'), server.indexOf('case "anklopfen": {'));
-  assert.ok(/zeigen \? onlineJetzt\(\) : Promise\.resolve\(new Set/.test(on), "Wer sich verbirgt, sieht trotzdem andere");
+  assert.ok(/zeigen \? (onlineJetzt\(\) : Promise\.resolve\(new Set|await onlineJetztMit\(.*\) : \{ on: new Set)/.test(on), "Wer sich verbirgt, sieht trotzdem andere"); // 2.485.0 KC-CLUB-ONLINE-SPARSAM
   // 2.3.0: zusätzlich ohne Inkognito-Admin (KC-CLUB-INKOGNITO)
   assert.ok(/filter\(\(id: string\) => zeigen\.get\(id\) !== false(\)| && !inko\.has\(id\)\)| && \(mitInkognito \|\| !inko\.has\(id\)\)\)\))/.test(server), "Verborgene erscheinen als online");
   const aw = server.slice(server.indexOf('case "anklopfen_antwort"'), server.indexOf('case "anklopfen_antwort"') + 400);
@@ -1414,7 +1414,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const KONFERENZ_MAX = 4;/.test(server) && /case "konferenz_dazu"/.test(server) && /case "konferenz_status"/.test(server) && /case "konferenz_bein"/.test(server), "Konferenz-Aktionen");
   const ks = server.slice(server.indexOf('case "konferenz_status"'), server.indexOf('case "konferenz_bein"'));
   assert.ok(/b\.an === ich\.person_id && b\.status === "klingelt" \? \{ angebot/.test(ks) && /b\.von === ich\.person_id && b\.status === "angenommen" \? \{ antwort/.test(ks) && /return json\(\{ dabei: false \}\)/.test(ks), "Verbindungsdaten nur an die andere Seite / nur Teilnehmer");
-  assert.ok(/\.eq\("status", "klingelt"\)\.eq\("automatisch", false\)\.gte/.test(server) && /eq\("an", ich\.person_id\)\.eq\("automatisch", false\)\.is\("angenommen_am", null\)/.test(server), "automatische Verbindungen klingeln nie / nie verpasst");
+  assert.ok((/\.eq\("status", "klingelt"\)\.eq\("automatisch", false\)\.gte/.test(server) || /x\.status === "klingelt" && Date\.parse\(x\.erstellt_am\) >= ende/.test(server)) && (/eq\("an", ich\.person_id\)\.eq\("automatisch", false\)\.is\("angenommen_am", null\)/.test(server) || (/select\("id,von,art,erstellt_am,status,angenommen_am,verpasst_gesehen_am"\)\.eq\("an", ich\.person_id\)\.eq\("automatisch", false\)/.test(server) && /x\.angenommen_am == null && x\.verpasst_gesehen_am == null/.test(server))), "automatische Verbindungen klingeln nie / nie verpasst"); // 2.485.0: eine Abfrage (KC-CLUB-ONLINE-SPARSAM)
   assert.ok(/eq\("von", ich\.person_id\)\.eq\("status", "klingelt"\)\.eq\("automatisch", false\);/.test(server), "eigener neuer Anruf beendet keine Konferenz-Verbindungen");
   assert.ok(/p\.art === "video" && !konferenz \? "video" : "ton"/.test(server), "Konferenz nur Ton");
   assert.ok(/function konfTakt\(\)/.test(html) && /ich > t\.person_id/.test(html) && /api\("konferenz_bein"/.test(html) && /onclick="zweitDazu\(\)"/.test(html) && /onclick="konfWahl\(\)"/.test(html), "App: Takt, Querverbindung, Dazuholen, ➕");
@@ -5902,7 +5902,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6037,7 +6037,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.319.0 KC-CLUB-ONLINE-ANSAGE-NACHHOLEN (Fund Hansi „Christina online, keine Ansage“) + KC-CLUB-EISNAME (Wunsch Hansi: Name aus Glitzer-Eis, schmilzt bei der Sonne)
 {
-  assert.ok(/const seitMap = new Map<string, number>\(\);/.test(server) && /\.eq\("schluessel", "online_seit"\)\.in\("person_id", \[\.\.\.on\]\)/.test(server) && /\.\.\.\(seitMap\.has\(id\) \? \{ seitSek: seitMap\.get\(id\) \} : \{\}\)/.test(server), "Server: seit wann online (Sekunden)");
+  assert.ok(/const seitMap = new Map<string, number>\(\);/.test(server) && (/\.eq\("schluessel", "online_seit"\)\.in\("person_id", \[\.\.\.on\]\)/.test(server) || /einst\.get\("online_seit"\)\?\.get\(id\)\?\.seit/.test(server)) && /\.\.\.\(seitMap\.has\(id\) \? \{ seitSek: seitMap\.get\(id\) \} : \{\}\)/.test(server), "Server: seit wann online (Sekunden)");
   assert.ok(/: andere\.filter\(\(x\) => Number\.isFinite\(x\.seitSek\) && x\.seitSek \* 1000 < ANSAGE_FRISCH_MS && jetzt - \(OA\.gesehen\.get\(x\.person_id\) \|\| 0\) >= ANSAGE_PAUSE_MS\);/.test(html), "nach Pause: nur wer in den letzten 3 Min. kam");
   assert.ok(/function jzbEisNameWill\(\)/.test(html) && /Math\.random\(\) < \(J\.vorschau \? \.7 : \.(35|5)\)/.test(html) && /if \(eis\) \{ let g = 0; for \(let i = 1; i < sp\.length; i\+\+\) if \(sp\[i\]\[1\] > sp\[g\]\[1\]\) g = i; n = g; \}/.test(html), "ab und an, vom größten Zapfen");
   assert.ok(/\(eis \? jzbEisStueck : jzbEisTropfen\)\(/.test(html) && /function jzbEisStueck\(sx, sy\)/.test(html), "Eisstück fällt in die Bühne");
@@ -6845,7 +6845,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.477.0 KC-CLUB-ONLINE-GERAET (Wunsch Hansi „nur für Admin sagen, mit welchem Gerät jemand online ist – PC, Tablet oder Handy“)
 {
   assert.ok(/function geraetAusUA\(ua: string\): string \| null \{/.test(server) && /if \(\/Android\/i\.test\(ua\)\) return "tablet";/.test(server), "Server erkennt Handy/Tablet/PC");
-  assert.ok(/if \(ich\.admin && on\.size\) \{ const \{ data: fe \}/.test(server) && /\.\.\.\(geraetMap\.has\(id\) \? \{ geraet: geraetMap\.get\(id\) \} : \{\}\)/.test(server), "Gerät in der Online-Liste nur für den Admin");
+  assert.ok((/if \(ich\.admin && on\.size\) \{ const \{ data: fe \}/.test(server) || (/if \(ich\.admin\) for \(const id of on\) \{ const l = \(einst\.get\("fenster"\)/.test(server) && /\.\.\.\(ich\.admin \? \["fenster"\] : \[\]\)/.test(server))) && /\.\.\.\(geraetMap\.has\(id\) \? \{ geraet: geraetMap\.get\(id\) \} : \{\}\)/.test(server), "Gerät in der Online-Liste nur für den Admin");
   assert.ok(/const anAdmins = ger \? ids\.filter\(\(id\) => admins\.has\(id\)\) : \[\];/.test(server) && /senden\(anAdmins, `\$\{name\} \(\$\{ger\}\)`, ":a"\)/.test(server), "Push mit Gerät nur an Admins");
   assert.ok(/const oaName = \(x\) => \{ const n = x\.vorname \|\| x\.name; return ICH\?\.admin && OA_GERAET\[x\.geraet\]/.test(html) && /onlineAnsageSprechen\(neu\.map\(oaName\)\)/.test(html), "App: Admin hört das Gerät");
   assert.ok(/sprechen\(onlineAnsageText\(alle\)\.replace\(\/\[\(\)\]\/g, ""\)\)/.test(html), "Klammern werden nicht vorgelesen");
@@ -7494,7 +7494,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/const da = m\.person_id === ICH\.person_id \? "" : mgDaText\(m\);/.test(html) && /<small class="mg-da/.test(html), "Tafel zeigt die Zeile");
   const ms = server.slice(server.indexOf("async function onlineSeitMerken("), server.indexOf("async function onlineJetzt("));
   assert.ok(/jetztMs - z > ONLINE_SEK \* 1000/.test(ms) && /schluessel: "online_seit"/.test(ms) && /if \(!neu && jetztMs - z < 30000\) return;/.test(ms), "Sitzungsbeginn: neue Sitzung nach ONLINE_SEK Pause, höchstens alle 30 s schreiben");
-  assert.ok(/if \(!ich\.nurLesen\) await onlineSeitMerken\(ich\.person_id\)/.test(server) && /"inkognito", "online_seit"\]/.test(server), "beim Online-Takt gemerkt, über zuletztDaMap (mit Privatsphäre) geliefert");
+  assert.ok(/if \(!ich\.nurLesen\) await onlineSeitMerken\(ich\.person_id(, mein\.get\("online_seit"\) \?\? null)?\)/.test(server) && /"inkognito", "online_seit"\]/.test(server), "beim Online-Takt gemerkt, über zuletztDaMap (mit Privatsphäre) geliefert");
 }
 
 // 4xx. 2.25.6: ↻ Aktualisieren oben rechts auf der Mitglieder-Seite (KC-CLUB-MG-AKTUALISIEREN, Wunsch Hansi „wie auf der Startseite“)
@@ -9935,7 +9935,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   const srv = lies("supabase/functions/kc-club/index.ts");
   assert.ok(/new BroadcastChannel\("kc_club_fenster"\)/.test(html) && /function zweiFensterMelden\(\)/.test(html) && /function fensterSchlafen\(selbst\)/.test(html) && /fensterStart\(\); \/\/ KC-CLUB-ZWEI-FENSTER/.test(html), "gleicher Browser: Funkkanal, Meldung, anderes Fenster schläft");
   assert.ok(/await api\("online", \{ fenster: fensterKennung\(\) \}\)/.test(html) && /if \(r\.fensterAnders\) zweiBrowserMelden\(r\.fensterAnders\)/.test(html) && /data-w="anderes">📲 Das ist ein anderes Gerät/.test(html), "anderer Browser: Meldung mit „anderes Gerät“");
-  assert.ok(/async function fensterAbgleich\(ich: Ich, f: any, req: Request\)/.test(srv) && /x\.n === netz && x\.s === sy && t - Number\(x\.t\) < FENSTER_SEK \* 1000/.test(srv) && /return json\(\{ fensterAnders, /.test(srv), "Server: gleiche Person, gleiches Netz, gleiches System, andere Kennung");
+  assert.ok(/async function fensterAbgleich\(ich: Ich, f: any, req: Request(, vorab\?: \{ wert: any \} \| null)?\)/.test(srv) && /x\.n === netz && x\.s === sy && t - Number\(x\.t\) < FENSTER_SEK \* 1000/.test(srv) && /return json\(\{ fensterAnders, /.test(srv), "Server: gleiche Person, gleiches Netz, gleiches System, andere Kennung");
 }
 
 // KC-CLUB-SONG (Wunsch Hansi): Club-Song mit Melodie und Karaoke
@@ -10907,6 +10907,23 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\.spg-fern \{/.test(lies("index.html")) && /\.fern-tipp \{/.test(lies("index.html")), "sichtbare Markierung und Bedienfläche");
   assert.ok(/id: "fernhilfe_bedienen", thema: "technik"/.test(html) && /ALLE TESTS GRÜN/.test(lies("tools/fernhilfe/fern-bedienen-test.mjs")), "Hilfe und Browser-Test");
 }
+// 2.485.0 KC-CLUB-ONLINE-SPARSAM + KC-CLUB-WARTUNG-STUNDE (Rangliste 18.10.: Online-Meldung 17, Wartung 71 Abfragen je Aufruf)
+{
+  const on = server.slice(server.indexOf('case "online": {'), server.indexOf('case "anklopfen": {'));
+  assert.ok(/\.in\("schluessel", \["online_seit", "fenster", "online", "vorfuehren", "schnappschuss"\]\)/.test(on) && /onlineAnklopfenTeilen\(/.test(on) && /onlineAnrufeTeilen\(/.test(on) && /liveTerminKurz\(\)/.test(on), "Online-Meldung: zusammengefasste Abfragen");
+  assert.ok(!/onlineZeigenMap\(\[ich\.person_id\]\)/.test(on) && !/anklopfenErlaubtMap\(/.test(on), "keine Einzelabfragen mehr in der Online-Meldung");
+  assert.ok(/async function onlineJetztMit\(weitere: string\[\]\)/.test(server) && /\.in\("schluessel", \["online", "inkognito", \.\.\.weitere\]\)/.test(server) && /eq\("ist_admin", true\)\.in\("person_id", inkoAn\)/.test(server) && /not\("person_id", "like", "KC-P-TEST%"\)/.test(server.slice(server.indexOf("async function onlineJetztMit"))), "onlineJetztMit: verborgen, Inkognito nur für Admins, keine Testpersonen");
+  assert.ok(/FENSTER_SCHREIB_MS = 30000/.test(server) && /t - Number\(ich0\.t\) < FENSTER_SCHREIB_MS/.test(server) && /const FENSTER_SEK = 180,/.test(server), "eigenes Fenster höchstens alle 30 s schreiben (< FENSTER_SEK)");
+  const wa = server.slice(server.indexOf('if (a === "wartung") {'), server.indexOf('if (stunde < 9) return json({ ok: true, erinnerungen: 0'));
+  assert.ok(/const stuendlich = new Date\(\)\.getUTCMinutes\(\) < 15 \|\| p\.alles === true;/.test(wa) && /pf\.aktion = stuendlich \? "wartung_stunde" : "wartung"/.test(wa), "Wartung: Stundenlauf zur vollen Stunde, getrennt gemessen");
+  for (const f of ["adminAbwesendPruefen", "stadtAutoLauf", "wochenberichtLauf", "dbWarnungLauf", "schulungNachfrageErinnern", "reiseChecklisteErinnern", "dienstGrussSenden", "rtZaehlerWarnen", "antwortErinnerung2T", "wichtigUngelesenMelden", "probeErinnern", "todoFristenErinnern", "geburtstagZettelAbnehmen", "zeitumstellungMelden", "protokollWaechter"])
+    assert.ok(new RegExp(`if \\(stuendlich\\) await ${f}\\(\\)\\.catch`).test(wa), `Wartung: ${f} nur stündlich`);
+  for (const f of ["fpUeberwachen", "postausgangLauf", "aeUebernahmeMelden", "aeFreigabeMelden", "gastgeberStandLauf", "archivKopieLauf", "sonderstundenWartung", "ekDienstwunschMelden"])
+    assert.ok(new RegExp(`\\n      await ${f}\\(`).test(wa), `Wartung: ${f} weiter alle 15 Min.`);
+  const rest = server.slice(server.indexOf('if (stunde < 9) return json({ ok: true, erinnerungen: 0'), server.indexOf('if (stunde < 9) return json({ ok: true, erinnerungen: 0') + 30000);
+  assert.ok(/let geb = 0;\n      if \(stuendlich\) \{/.test(rest) && /let nachfass = 0;\n      if \(stuendlich\) \{/.test(rest) && /KC-CLUB-SPIEL-TERMIN/.test(rest), "Geburtstag/Nachfassen stündlich, Termin-Erinnerungen weiter alle 15 Min.");
+}
+
 // KC-CLUB-FERNHILFE F2 (18.10.2026): nach dem ersten Vollbild nur noch Änderungen; Lücke → Vollbild; spätestens alle 60 s Vollbild; ältere Apps nur Vollbilder
 {
   assert.ok(/const FH_VOLL_MS = 60000;/.test(html) && /async function fhBildSenden\(L, f, extra = \{\}\)/.test(html) && /async function fhBildEmpfangen\(L, d\)/.test(html), "F2-Bausteine fehlen");

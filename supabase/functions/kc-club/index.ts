@@ -92,7 +92,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.484.0";
+const SERVER_VERSION = "2.485.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -671,7 +671,7 @@ async function zuletztDaMap(ich: Ich, ids: string[]) {
 // Jede Browser-Kennung (G-…, je Browser eine) meldet sich mit dem Online-Abgleich. Gab es in den letzten 3 Minuten eine ANDERE Kennung derselben Person
 // im selben Netz (gleiche IP, nur als Prüfsumme) mit demselben System (z. B. „Android 10“), ist es sehr wahrscheinlich dasselbe Gerät in einem zweiten Browser.
 // Gespeichert wird nur Kennung, Browser-Name, System, Netz-Prüfsumme und Zeit – höchstens 6 Einträge je Person.
-const FENSTER_SEK = 180;
+const FENSTER_SEK = 180, FENSTER_SCHREIB_MS = 30000; // KC-CLUB-ONLINE-SPARSAM: eigenes Fenster höchstens alle 30 s neu schreiben
 // 2.477.0 KC-CLUB-ONLINE-GERAET (Wunsch Hansi „nur für Admin sagen: Klaus ist vom PC, Tablet oder Handy online“): Gerät aus der Browser-Kennung
 // (User-Agent) bzw. dem Hinweis der App (g). Nur der Admin bekommt es zu sehen/hören (Online-Liste, Push-Titel). Gespeichert wird nur handy/tablet/pc.
 const GERAETE = new Set(["handy", "tablet", "pc"]);
@@ -684,16 +684,20 @@ function geraetAusUA(ua: string): string | null {
   if (/Windows|Macintosh|CrOS|X11|Linux/i.test(ua)) return "pc";
   return null;
 }
-async function fensterAbgleich(ich: Ich, f: any, req: Request) {
+async function fensterAbgleich(ich: Ich, f: any, req: Request, vorab?: { wert: any } | null) {
   if (!f || typeof f !== "object" || ich.nurLesen) return null;
   const i = txt(f.i, 40).replace(/[^A-Za-z0-9-]/g, ""), b = txt(f.b, 30), sy = txt(f.s, 30);
   const g = GERAETE.has(String(f.g)) ? String(f.g) : geraetAusUA(req.headers.get("user-agent") || ""); // 2.477.0 KC-CLUB-ONLINE-GERAET
   if (!i) return null;
   const netz = (await sha256("kc-netz:" + (req.headers.get("x-forwarded-for") || "").split(",")[0].trim())).slice(0, 16), t = Date.now();
-  const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "fenster").maybeSingle();
-  const alt = (Array.isArray((data?.wert as any)?.liste) ? (data!.wert as any).liste : []).filter((x: any) => x && x.i !== i && t - Number(x.t) < 3600000);
+  const { data } = vorab !== undefined ? { data: vorab } : await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "fenster").maybeSingle();
+  const roh = Array.isArray((data?.wert as any)?.liste) ? (data!.wert as any).liste : [];
+  const alt = roh.filter((x: any) => x && x.i !== i && t - Number(x.t) < 3600000);
   const anders = alt.filter((x: any) => x.n === netz && x.s === sy && t - Number(x.t) < FENSTER_SEK * 1000).sort((x: any, y: any) => y.t - x.t)[0];
   const liste = [{ i, b, s: sy, n: netz, t, ...(g ? { g } : {}) }, ...alt].slice(0, 6);
+  // KC-CLUB-ONLINE-SPARSAM: dasselbe Fenster hat sich vor < FENSTER_SCHREIB_MS schon gleich gemeldet → nicht neu schreiben (andere prüfen mit FENSTER_SEK = 180 s)
+  const ich0 = roh.find((x: any) => x && x.i === i);
+  if (ich0 && ich0.b === b && ich0.s === sy && ich0.n === netz && (ich0.g || "") === (g || "") && t - Number(ich0.t) < FENSTER_SCHREIB_MS && t >= Number(ich0.t)) return anders ? { i: anders.i, b: anders.b, vorSek: Math.round((t - Number(anders.t)) / 1000) } : null;
   await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "fenster", wert: { liste }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
   return anders ? { i: anders.i, b: anders.b, vorSek: Math.round((t - Number(anders.t)) / 1000) } : null;
 }
@@ -796,8 +800,8 @@ async function onlinePushMelden(wer: Ich, ua = "") {
 // KC-CLUB-ONLINE-SEIT (2.25.5, Wunsch Hansi „wenn online, dann online seit …“): Beginn der aktuellen Sitzung je Person merken.
 // Die App meldet sich alle 15–60 s („online“); liegt die letzte Meldung länger als ONLINE_SEK zurück, beginnt eine neue Sitzung.
 // Geschrieben wird nur bei neuer Sitzung oder alle 30 s (Einstellungs-Tabelle, Schlüssel „online_seit“ – keine neue Tabelle).
-async function onlineSeitMerken(pid: string) {
-  const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "online_seit").maybeSingle();
+async function onlineSeitMerken(pid: string, vorab?: { wert: any } | null) { // KC-CLUB-ONLINE-SPARSAM: vorab = schon gelesener Eintrag (undefined = selbst lesen)
+  const { data } = vorab !== undefined ? { data: vorab } : await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "online_seit").maybeSingle();
   const jetztMs = Date.now(), z = Date.parse(data?.wert?.zuletzt || ""), neu = !(z > 0) || jetztMs - z > ONLINE_SEK * 1000;
   if (!neu && jetztMs - z < 30000) return;
   await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "online_seit", wert: { seit: neu ? jetzt() : data!.wert.seit, zuletzt: jetzt() }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
@@ -816,6 +820,36 @@ async function onlineJetzt(mitInkognito = false): Promise<Set<string>> {
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", seit).not("person_id", "like", "KC-P-TEST%");
   const ids = (data ?? []).map((x: any) => x.person_id), [zeigen, inko] = await Promise.all([onlineZeigenMap(ids), inkognitoSet(ids)]);
   return new Set(ids.filter((id: string) => zeigen.get(id) !== false && (mitInkognito || !inko.has(id))));
+}
+// KC-CLUB-ONLINE-SPARSAM (2.485.0): wie onlineJetzt(), holt aber „online“, „inkognito“ und weitere Einstellungen der Online-Leute in EINER Abfrage
+async function onlineJetztMit(weitere: string[]): Promise<{ on: Set<string>; einst: Map<string, Map<string, any>> }> {
+  const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString(), einst = new Map<string, Map<string, any>>();
+  const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", seit).not("person_id", "like", "KC-P-TEST%");
+  const ids = [...new Set((data ?? []).map((x: any) => x.person_id as string))];
+  if (!ids.length) return { on: new Set(), einst };
+  const { data: es } = await db.from("kc_club_person_einstellung").select("person_id,schluessel,wert").in("schluessel", ["online", "inkognito", ...weitere]).in("person_id", ids);
+  for (const x of es ?? []) { const m = einst.get(x.schluessel) ?? new Map(); m.set(x.person_id, x.wert); einst.set(x.schluessel, m); }
+  const inkoAn = ids.filter((id) => einst.get("inkognito")?.get(id)?.an === true);
+  let inko = new Set<string>(); // 2.6.1: Inkognito gilt nur, solange die Person Admin ist (wie inkognitoSet)
+  if (inkoAn.length) { const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).in("person_id", inkoAn); inko = new Set((ad ?? []).map((x: any) => x.person_id as string)); }
+  return { on: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen !== false && !inko.has(id))), einst };
+}
+// Anklopfen an mich (offen, ANKLOPFEN_SEK, neueste 3) und von mir (10 Min.) aus einer gemeinsamen Abfrage – wie vorher die zwei Abfragen
+function onlineAnklopfenTeilen(rows: any[], ich: string, seit: string, seit10: string) {
+  const neu = [...rows].sort((a, b) => String(b.erstellt_am).localeCompare(String(a.erstellt_am)));
+  return {
+    anMich: neu.filter((x) => x.an === ich && x.status === "offen" && Date.parse(x.erstellt_am) >= Date.parse(seit)).slice(0, 3).map((x) => ({ id: x.id, von: x.von, erstellt_am: x.erstellt_am })),
+    vonMir: neu.filter((x) => x.von === ich && Date.parse(x.erstellt_am) >= Date.parse(seit10)).map((x) => ({ id: x.id, an: x.an, status: x.status, thread_id: x.thread_id, beantwortet_am: x.beantwortet_am, antwort: x.antwort })),
+  };
+}
+// Anrufe an mich der letzten 24 h → klingelt gerade (ANRUF_KLINGEL_SEK, neuester) und verpasst (nicht angenommen, Hinweis nicht gesehen, neueste 5)
+function onlineAnrufeTeilen(rows: any[], klingelEnde: string) {
+  const neu = [...rows].sort((a, b) => String(b.erstellt_am).localeCompare(String(a.erstellt_am))), ende = Date.parse(klingelEnde);
+  const kurz = (x: any) => ({ id: x.id, von: x.von, art: x.art, erstellt_am: x.erstellt_am });
+  return {
+    rufe: neu.filter((x) => x.status === "klingelt" && Date.parse(x.erstellt_am) >= ende).slice(0, 1).map(kurz),
+    verp: neu.filter((x) => x.angenommen_am == null && x.verpasst_gesehen_am == null && (x.status === "verpasst" || (x.status === "klingelt" && Date.parse(x.erstellt_am) < ende))).slice(0, 5).map(kurz),
+  };
 }
 
 // ---------- KC-CLUB-ANRUF (0.31.0, Test): Sprechen per Ton, App zu App (WebRTC) ----------
@@ -4621,6 +4655,9 @@ async function mitfahrtBezugTitel(art: string, id: string) {
 // Der Sprecher sieht das Ergebnis live und legt fest (vorhandener Kern terminumfrage_festlegen: Termin + Zusagen) oder schlägt eine
 // Alternative vor. Nach dem Festlegen fragt jede App: „In deinen Kalender eintragen?“. Läuft höchstens LIVE_TERMIN_STD Stunden.
 const LIVE_TERMIN_STD = 3;
+// KC-CLUB-ONLINE-SPARSAM: für die Online-Meldung 15 s gemerkt (alle Mitglieder fragen dasselbe; Start/Ende einer Live-Umfrage meldet zusätzlich die direkte Leitung)
+let LIVE_KURZ: { t: number; v: Promise<any> } | null = null;
+function liveTerminKurz() { if (!LIVE_KURZ || Date.now() - LIVE_KURZ.t > 15000) LIVE_KURZ = { t: Date.now(), v: liveTerminAktiv().catch((e) => { LIVE_KURZ = null; throw e; }) }; return LIVE_KURZ.v; }
 async function liveTerminAktiv() {
   const { data } = await db.from("kc_club_terminumfragen").select("*").eq("live", true).gte("erstellt_am", new Date(Date.now() - LIVE_TERMIN_STD * 3600000).toISOString())
     .order("erstellt_am", { ascending: false }).limit(1).maybeSingle();
@@ -5848,6 +5885,12 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
     if (a === "wartung") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
       if (!geheim || !gleichZeit(p.cronSecret, geheim)) return json({ error: "Kein Zugang" }, 401);
+      // KC-CLUB-WARTUNG-STUNDE (2.485.0, Rangliste 18.10.: 71 Abfragen je Lauf, 14 % aller gemessenen): der Zeitplaner ruft alle 15 Min.; Aufräumen und
+      // Tagesaufgaben, die erst ab einer vollen Stunde loslegen („ab 8 Uhr“, „ab 9 Uhr“ …) oder Fristen von Stunden/Tagen haben, laufen nur im Lauf
+      // zur vollen Stunde – sie kommen also zur selben Zeit wie bisher. Minutengenaues (Erinnerungen kurz vor Terminen, Postausgang, Fehler-Push,
+      // Anfragen, Live-Abläufe) bleibt im 15-Minuten-Takt. Fällt ein Stundenlauf aus, holt der nächste Stundenlauf alles nach.
+      const stuendlich = new Date().getUTCMinutes() < 15 || p.alles === true;
+      { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) pf.aktion = stuendlich ? "wartung_stunde" : "wartung"; } // Messung getrennt
       // 2.341.0 KC-CLUB-ADMIN-VERLAUF (Stufe 2, vorbereitet in 2.21.0): Messpunkt „api“ – Antwortzeit der Datenbank über die Datenschnittstelle.
       // Fehlt dieser Punkt, während die Messung in der Datenbank („db“, alle 10 Min. per pg_cron) weiterläuft → Schnittstelle/Server gestört.
       { const t0 = Date.now(); const { error } = await db.from("kc_club_messwerte").select("id").limit(1);
@@ -5855,34 +5898,34 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       // KC-CLUB-FP-UEBERWACHUNG (1.58.0): neue schwerwiegende Einträge im Fehlerprotokoll → Push an den Admin
       await fpUeberwachen().catch((e) => console.error("fp ueberwachung", String(e)));
       await postausgangLauf().catch((e) => console.error("postausgang", String(e))); // KC-CLUB-POSTAUSGANG (1.69.1)
-      await adminAbwesendPruefen().catch((e) => console.error("admin abwesend", String(e))); // KC-CLUB-VERTRETUNG (2.2.0)
-      await stadtAutoLauf().catch((e) => console.error("stadt termine", String(e)));
+      if (stuendlich) await adminAbwesendPruefen().catch((e) => console.error("admin abwesend", String(e))); // KC-CLUB-VERTRETUNG (2.2.0)
+      if (stuendlich) await stadtAutoLauf().catch((e) => console.error("stadt termine", String(e)));
       await aeUebernahmeMelden().catch((e) => console.error("aenderung uebernahme", String(e)));
       await aeFreigabeMelden().catch((e) => console.error("aenderung freigabe", String(e))); // KC-CLUB-AE-FREIGABE-PUSH (2.88.0)
-      await wochenberichtLauf().catch((e) => console.error("wochenbericht", String(e))); // KC-CLUB-WOCHENBERICHT (2.23.81)
-      await dbWarnungLauf().catch((e) => console.error("db warnung", String(e))); // KC-CLUB-DB-AUFRAEUMEN (2.24.7)
-      await schulungNachfrageErinnern().catch((e) => console.error("schulung nachfrage", String(e))); // KC-CLUB-SCHULUNG-NACHFRAGE (2.35.0)
-      await reiseChecklisteErinnern().catch((e) => console.error("reise checkliste", String(e))); // KC-CLUB-REISE-CHECKLISTE (2.223.0)
-      await dienstGrussSenden().catch((e) => console.error("dienst gruss", String(e))); // KC-CLUB-DIENST-GRUSS (2.224.0)
-      await rtZaehlerWarnen().catch((e) => console.error("rt zaehler", String(e))); // KC-CLUB-RT-SPARBREMSE (2.230.0)
+      if (stuendlich) await wochenberichtLauf().catch((e) => console.error("wochenbericht", String(e))); // KC-CLUB-WOCHENBERICHT (2.23.81)
+      if (stuendlich) await dbWarnungLauf().catch((e) => console.error("db warnung", String(e))); // KC-CLUB-DB-AUFRAEUMEN (2.24.7)
+      if (stuendlich) await schulungNachfrageErinnern().catch((e) => console.error("schulung nachfrage", String(e))); // KC-CLUB-SCHULUNG-NACHFRAGE (2.35.0)
+      if (stuendlich) await reiseChecklisteErinnern().catch((e) => console.error("reise checkliste", String(e))); // KC-CLUB-REISE-CHECKLISTE (2.223.0)
+      if (stuendlich) await dienstGrussSenden().catch((e) => console.error("dienst gruss", String(e))); // KC-CLUB-DIENST-GRUSS (2.224.0)
+      if (stuendlich) await rtZaehlerWarnen().catch((e) => console.error("rt zaehler", String(e))); // KC-CLUB-RT-SPARBREMSE (2.230.0)
       await gastgeberStandLauf().catch((e) => console.error("gastgeber stand", String(e))); // KC-CLUB-GASTGEBER-STAND (2.238.0)
-      await antwortErinnerung2T().catch((e) => console.error("antwort 2t", String(e))); // KC-CLUB-ANTWORT-ERINNERUNG-2T (2.240.0)
-      await wichtigUngelesenMelden().catch((e) => console.error("wichtig ungelesen", String(e))); // KC-CLUB-WICHTIG-UNGELESEN (2.287.0)
+      if (stuendlich) await antwortErinnerung2T().catch((e) => console.error("antwort 2t", String(e))); // KC-CLUB-ANTWORT-ERINNERUNG-2T (2.240.0)
+      if (stuendlich) await wichtigUngelesenMelden().catch((e) => console.error("wichtig ungelesen", String(e))); // KC-CLUB-WICHTIG-UNGELESEN (2.287.0)
       await archivKopieLauf().catch((e) => archivKopieStand("fehler", String((e as any)?.message || e), {})); // KC-CLUB-ARCHIV-KOPIE (2.232.0): nur nachts 2–5 Uhr
-      await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
-      await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
-      await geburtstagZettelAbnehmen().catch((e) => console.error("geburtstag zettel ab", String(e))); // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0)
+      if (stuendlich) await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
+      if (stuendlich) await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
+      if (stuendlich) await geburtstagZettelAbnehmen().catch((e) => console.error("geburtstag zettel ab", String(e))); // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0)
       await sonderstundenWartung().catch((e) => console.error("sonderstunden wartung", String(e))); // KICC-F-100 (2.419.0)
-      await zeitumstellungMelden().catch((e) => console.error("zeitumstellung", String(e))); // 2.442.0 KC-CLUB-ZEITUMSTELLUNG
-      await db.from("kc_club_chat_quittung").delete().lt("am", new Date(Date.now() - 400 * 86400000).toISOString()).then(() => {}, () => {}); // 2.447.0: nach 400 Tagen weg
+      if (stuendlich) await zeitumstellungMelden().catch((e) => console.error("zeitumstellung", String(e))); // 2.442.0 KC-CLUB-ZEITUMSTELLUNG
+      if (stuendlich) await db.from("kc_club_chat_quittung").delete().lt("am", new Date(Date.now() - 400 * 86400000).toISOString()).then(() => {}, () => {}); // 2.447.0: nach 400 Tagen weg
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-SPUR (2.23.88): Wege der Mitglieder nur 30 Tage aufbewahren
-      { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }
+      if (stuendlich) { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }
       // KC-CLUB-STARTSTATISTIK (2.31.0): App-Starts nur 180 Tage aufbewahren
-      { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "app_start").lt("zeit", new Date(Date.now() - START_TAGE * 86400000).toISOString()); if (error) console.error("app_start loeschen", error.message); }
-      await protokollWaechter().catch((e) => console.error("protokoll waechter", String(e))); // KC-CLUB-PROTOKOLL-WAECHTER (2.114.0)
+      if (stuendlich) { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "app_start").lt("zeit", new Date(Date.now() - START_TAGE * 86400000).toISOString()); if (error) console.error("app_start loeschen", error.message); }
+      if (stuendlich) await protokollWaechter().catch((e) => console.error("protokoll waechter", String(e))); // KC-CLUB-PROTOKOLL-WAECHTER (2.114.0)
       // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): Geräte-Kennungen nur 100 Tage aufbewahren
-      { const { error } = await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))); if (error) console.error("nutzung geraete loeschen", error.message); }
+      if (stuendlich) { const { error } = await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))); if (error) console.error("nutzung geraete loeschen", error.message); }
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)
       const { data: abgelaufen } = await db.from("kc_club_vorschlaege").select("*").eq("status", "offen").lt("frist", jetzt());
       let beendet = 0;
@@ -5915,7 +5958,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       if (stunde < 9) return json({ ok: true, erinnerungen: 0, beendet, dienst });
       // KC-CLUB-GEBURTSTAG-PUSH: 2 Tage vorher und am Tag – nur freigegebene Geburtstage, nur an Mitglieder mit geöffneter App
       let geb = 0;
-      {
+      if (stuendlich) { // KC-CLUB-WARTUNG-STUNDE: ab 9 Uhr, je Tag einmal
         const heute = berlinTag(new Date()), in2 = berlinTag(new Date(Date.now() + 2 * 86400000));
         const [leute, { data: fr }, { data: nutzer }] = await Promise.all([
           aktiveMitglieder(),
@@ -5949,7 +5992,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       }
       // KC-CLUB-NACHFASSEN: 3 Tage vor dem Treffen einmal an alle, die noch nicht zu- oder abgesagt haben
       let nachfass = 0;
-      {
+      if (stuendlich) { // KC-CLUB-WARTUNG-STUNDE: 3 Tage vorher, einmal
         const in3 = berlinTag(new Date(Date.now() + 3 * 86400000));
         const { data: tf } = await db.from("kc_club_treffen").select("*").eq("status", "geplant").eq("art", "treffen").is("nachfass_gesendet_am", null)
           .gte("beginn", new Date().toISOString()).lte("beginn", new Date(Date.now() + 4 * 86400000).toISOString());
@@ -10291,50 +10334,52 @@ Köcheclub-App`,
 
       // ----- Online & Anklopfen (KC-CLUB-ONLINE) -----
       case "online": {
-        if (!ich.nurLesen) await onlineSeitMerken(ich.person_id).catch(() => null); // KC-CLUB-ONLINE-SEIT (2.25.5)
-        const fensterAnders = await fensterAbgleich(ich, p.fenster, req).catch(() => null); // KC-CLUB-ZWEI-BROWSER
-        const zeigen = (await onlineZeigenMap([ich.person_id])).get(ich.person_id) !== false;
-        const seit = new Date(Date.now() - ANKLOPFEN_SEK * 1000).toISOString();
-        const [on, { data: anMich }, { data: vonMir }] = await Promise.all([
-          zeigen ? onlineJetzt() : Promise.resolve(new Set<string>()),
-          db.from("kc_club_anklopfen").select("id,von,erstellt_am").eq("an", ich.person_id).eq("status", "offen").gte("erstellt_am", seit).order("erstellt_am", { ascending: false }).limit(3),
-          db.from("kc_club_anklopfen").select("id,an,status,thread_id,beantwortet_am,antwort").eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 600000).toISOString()),
+        // KC-CLUB-ONLINE-SPARSAM (2.485.0, Rangliste 18.10.: 17 Abfragen je Online-Meldung, 20 % aller gemessenen): gleiche Antwort, weniger Abfragen –
+        // eigene Einstellungen in EINER Abfrage, Anklopfen und Anrufe je in EINER Abfrage (Aufteilen in onlineAnklopfenTeilen/onlineAnrufeTeilen),
+        // Einstellungen der anderen in EINER Abfrage (onlineJetztMit), eigenes Fenster höchstens alle 30 s schreiben, Live-Umfrage 15 s gemerkt.
+        const t = Date.now(), seit = new Date(t - ANKLOPFEN_SEK * 1000).toISOString(), seit10 = new Date(t - 600000).toISOString();
+        const klingelEnde = new Date(t - ANRUF_KLINGEL_SEK * 1000).toISOString();
+        const [{ data: meine }, { data: klopf }, { data: spAn }, { data: anrufe24 }] = await Promise.all([
+          db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).in("schluessel", ["online_seit", "fenster", "online", "vorfuehren", "schnappschuss"]),
+          db.from("kc_club_anklopfen").select("id,von,an,status,thread_id,beantwortet_am,antwort,erstellt_am")
+            .or(`and(an.eq.${ich.person_id},status.eq.offen,erstellt_am.gte."${seit}"),and(von.eq.${ich.person_id},erstellt_am.gte."${seit10}")`).order("erstellt_am", { ascending: false }).limit(60),
+          // KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): frische Herausforderungen an mich (15 Min.) – die App zeigt sie sofort als Fenster
+          db.from("kc_club_spiele").select("id,von,spiel,groesse,uhr,erstellt_am").eq("an", ich.person_id).eq("status", "angefragt")
+            .gte("erstellt_am", new Date(t - 15 * 60000).toISOString()).order("erstellt_am", { ascending: false }).limit(3),
+          // KC-CLUB-ANRUF (klingelt jetzt) + KC-CLUB-ANRUF-VERPASST (0.81.0, letzte 24 h) in einer Abfrage
+          db.from("kc_club_anruf").select("id,von,art,erstellt_am,status,angenommen_am,verpasst_gesehen_am").eq("an", ich.person_id).eq("automatisch", false)
+            .gte("erstellt_am", new Date(t - 86400000).toISOString()).order("erstellt_am", { ascending: false }).limit(60),
         ]);
-        // KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): frische Herausforderungen an mich (15 Min.) – die App zeigt sie sofort als Fenster
-        const { data: vfE } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "vorfuehren").maybeSingle(); // KC-CLUB-VORFUEHREN
-        const vfW: any = vfE?.wert, vf = vfW?.status === "angefragt" && Date.now() - new Date(vfW.seit).getTime() < 3 * 60000 ? vfW : null;
+        const mein = new Map((meine ?? []).map((x: any) => [x.schluessel as string, x]));
+        if (!ich.nurLesen) await onlineSeitMerken(ich.person_id, mein.get("online_seit") ?? null).catch(() => null); // KC-CLUB-ONLINE-SEIT (2.25.5)
+        const fensterAnders = await fensterAbgleich(ich, p.fenster, req, mein.get("fenster") ?? null).catch(() => null); // KC-CLUB-ZWEI-BROWSER
+        const zeigen = (mein.get("online") as any)?.wert?.zeigen !== false;
+        const { anMich, vonMir } = onlineAnklopfenTeilen(klopf ?? [], ich.person_id, seit, seit10);
+        const vfW: any = (mein.get("vorfuehren") as any)?.wert, vf = vfW?.status === "angefragt" && Date.now() - new Date(vfW.seit).getTime() < 3 * 60000 ? vfW : null; // KC-CLUB-VORFUEHREN
         // KC-CLUB-SCHNAPPSCHUSS (2.102.0): offene Bitte des Admins um EIN Bild der Club-App – das Mitglied entscheidet selbst
-        const { data: ssE } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "schnappschuss").maybeSingle();
-        const ssW: any = ssE?.wert, ss = ssW?.status === "angefragt" && Date.now() - new Date(ssW.seit).getTime() < SS_FRIST_MS ? ssW : null;
-        const { data: spAn } = await db.from("kc_club_spiele").select("id,von,spiel,groesse,uhr,erstellt_am").eq("an", ich.person_id).eq("status", "angefragt")
-          .gte("erstellt_am", new Date(Date.now() - 15 * 60000).toISOString()).order("erstellt_am", { ascending: false }).limit(3);
-        const { data: rufe } = await db.from("kc_club_anruf").select("id,von,art,erstellt_am").eq("an", ich.person_id).eq("status", "klingelt").eq("automatisch", false).gte("erstellt_am", new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString()).order("erstellt_am", { ascending: false }).limit(1);
-        // KC-CLUB-ANRUF-VERPASST (0.81.0): nicht angenommen, nicht selbst abgelehnt, Hinweis noch nicht gesehen (letzte 24 h).
+        const ssW: any = (mein.get("schnappschuss") as any)?.wert, ss = ssW?.status === "angefragt" && Date.now() - new Date(ssW.seit).getTime() < SS_FRIST_MS ? ssW : null;
         // Nicht melden, wenn wir danach doch miteinander telefoniert haben (z. B. nach gleichzeitigem Anrufen).
-        const klingelEnde = new Date(Date.now() - ANRUF_KLINGEL_SEK * 1000).toISOString();
-        const { data: verp0 } = await db.from("kc_club_anruf").select("id,von,art,erstellt_am").eq("an", ich.person_id).eq("automatisch", false).is("angenommen_am", null).is("verpasst_gesehen_am", null)
-          .gte("erstellt_am", new Date(Date.now() - 86400000).toISOString()).or(`status.eq.verpasst,and(status.eq.klingelt,erstellt_am.lt."${klingelEnde}")`).order("erstellt_am", { ascending: false }).limit(5);
-        let verp: any[] = verp0 ?? [];
+        const { rufe, verp: verp0 } = onlineAnrufeTeilen(anrufe24 ?? [], klingelEnde);
+        const { on, einst } = zeigen ? await onlineJetztMit(["anklopfen", "online_seit", ...(ich.admin ? ["fenster"] : [])]) : { on: new Set<string>(), einst: new Map<string, Map<string, any>>() };
+        let verp: any[] = verp0;
         if (verp.length) {
           const { data: spaeter } = await db.from("kc_club_anruf").select("von,an,angenommen_am").not("angenommen_am", "is", null).gte("angenommen_am", verp[verp.length - 1].erstellt_am)
             .or(`von.eq.${ich.person_id},an.eq.${ich.person_id}`);
           verp = verp.filter((v) => !(spaeter ?? []).some((s: any) => [s.von, s.an].includes(v.von) && s.angenommen_am > v.erstellt_am));
         }
         on.delete(ich.person_id);
-        const klopfbar = await anklopfenErlaubtMap([...on]);
+        const klopfbar = new Map([...on].map((id) => [id, einst.get("anklopfen")?.get(id)?.erlaubt !== false])); // wie anklopfenErlaubtMap
         // 2.319.0 KC-CLUB-ONLINE-ANSAGE-NACHHOLEN (Fund Hansi „Christina online, keine Ansage“): seit wann jemand ohne Pause online ist (Sekunden,
         // vom Server gerechnet – keine Uhrenabweichung) – die App sagt beim Zurückkommen an, wer in den letzten 3 Min. dazugekommen ist
         const seitMap = new Map<string, number>();
-        if (on.size) { const { data: os } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "online_seit").in("person_id", [...on]);
-          for (const x of os ?? []) { const t = Date.parse((x as any).wert?.seit || ""); if (t > 0) seitMap.set((x as any).person_id, Math.max(0, Math.round((Date.now() - t) / 1000))); } }
+        for (const id of on) { const ts = Date.parse(einst.get("online_seit")?.get(id)?.seit || ""); if (ts > 0) seitMap.set(id, Math.max(0, Math.round((Date.now() - ts) / 1000))); }
         const leute = await personen([...on, ...(ss ? [ss.von] : []), ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von), ...(spAn ?? []).map((x: any) => x.von), ...(vf ? [vf.von] : [])]);
         const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
         // 2.477.0 KC-CLUB-ONLINE-GERAET: nur für den Admin – mit welchem Gerät (neuester Eintrag der letzten 3 Min.) jemand online ist
         const geraetMap = new Map<string, string>();
-        if (ich.admin && on.size) { const { data: fe } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "fenster").in("person_id", [...on]);
-          for (const x of fe ?? []) { const l = ((x as any).wert?.liste || []).filter((y: any) => y && GERAETE.has(y.g) && Date.now() - Number(y.t) < FENSTER_SEK * 1000).sort((a: any, b: any) => b.t - a.t);
-            if (l[0]) geraetMap.set((x as any).person_id, l[0].g); } }
-        const liveT = await liveTerminAktiv().catch(() => null); // KC-CLUB-LIVE-TERMIN (2.231.0): auch ohne direkte Leitung bemerken
+        if (ich.admin) for (const id of on) { const l = (einst.get("fenster")?.get(id)?.liste || []).filter((y: any) => y && GERAETE.has(y.g) && Date.now() - Number(y.t) < FENSTER_SEK * 1000).sort((a: any, b: any) => b.t - a.t);
+          if (l[0]) geraetMap.set(id, l[0].g); }
+        const liveT = await liveTerminKurz().catch(() => null); // KC-CLUB-LIVE-TERMIN (2.231.0): auch ohne direkte Leitung bemerken
         return json({ fensterAnders, liveTermin: liveT ? { id: liveT.id, stand: liveT.geaendert_am } : null, zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false, ...(seitMap.has(id) ? { seitSek: seitMap.get(id) } : {}), ...(geraetMap.has(id) ? { geraet: geraetMap.get(id) } : {}) })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
           klopfAntworten: (anMich ?? []).length ? Object.entries(KLOPF_ANTWORTEN).map(([id, text]) => ({ id, text })) : undefined,
           antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null })),
