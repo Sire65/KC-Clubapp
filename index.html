@@ -993,6 +993,7 @@
   .blase .txt, .blase .zitat, .uhk-msg, .zettel .ztext, .prl-text, .alarm-text, .dlg-text { zoom: var(--zoom, 1); }
   .sz-hinweis { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%) scale(.9); z-index: 9800; background: rgba(20,20,20,.85); color: #fff; font-size: 20px; font-weight: 800; padding: 10px 18px; border-radius: 14px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
   .sz-hinweis.an { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .sz-hinweis small { display: block; font-size: 12px; font-weight: 600; opacity: .8; text-align: center; margin-top: 2px; } /* 2.459.0 */
   .sz-zeile { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .sz-zeile .knopf { margin: 0; padding: 6px 12px; min-width: 44px; } .sz-wert { font-weight: 800; min-width: 3.5em; text-align: center; }
   body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
@@ -4753,6 +4754,7 @@
         <details class="ds-mehr" id="designBuntKlappeE"><summary>✨ Ausgefallene Farbschemen</summary><div class="designwahl" id="designWahlBuntE"></div></details></div>
       <div class="schalter"><div><b>🔠 Große Schrift</b><div class="hinweis">Gilt für dieses Gerät.</div></div><input type="checkbox" id="setGrossE" onchange="einstellung('gross', this.checked); if ($('setGross')) $('setGross').checked = this.checked"></div>
       <div class="schalter"><div><b>🔍 Schriftgröße</b><small class="hinweis" style="display:block">für Nachrichten und Texte – auch mit zwei Fingern auseinanderziehen</small></div><div class="sz-zeile"><button type="button" class="knopf" aria-label="Schrift kleiner" onclick="szAendern(-0.1)">A−</button><span class="sz-wert">100 %</span><button type="button" class="knopf" aria-label="Schrift größer" onclick="szAendern(0.1)">A+</button><button type="button" class="knopf sz-zurueck versteckt" onclick="szAendern(0)">↺ 100 %</button></div></div>
+      <div class="schalter"><div><b>✌️ Schrift mit zwei Fingern ändern</b><small class="hinweis" style="display:block">Aus = Auseinanderziehen ändert die Schrift nicht mehr – A− / A+ hier oben gehen weiter</small></div><input type="checkbox" class="sz-geste" checked onchange="szGesteSetzen(this.checked)"></div> <!-- 2.459.0 KC-CLUB-SCHRIFT-ZOOM-AUS -->
       <div class="schalter"><div><b>❓ Fragezeichen unten rechts</b><div class="hinweis">Öffnet die passende Hilfe zum Bereich. Ausblenden geht auch: lange auf das „?“ drücken</div></div><input type="checkbox" id="setHzFrageE" checked onchange="hzFrageSchalter(this.checked)"></div> <!-- KC-CLUB-HILFEZENTRUM (2.23.5) -->
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Ausschalten zeigt alle Funktionen – du kannst jederzeit zurück.</div></div><button class="knopf klein" onclick="ansichtSetzen('erweitert')">🔧 Erweiterte Ansicht</button></div>
       <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
@@ -4871,6 +4873,7 @@
       <details class="ds-mehr" id="wbKlappe" style="margin:2px 0 10px"><summary>⏳ Warte-Bild: <span id="wbAktName">Kochmütze</span></summary><div class="hinweis" style="margin-top:6px">Erscheint, wenn die App etwas länger braucht. Antippen wählt das Bild.</div><div id="wbWahl"></div></details> <!-- KC-CLUB-WARTEBILD 2.46.0 -->
       <div class="schalter"><div><b>🔠 Große Schrift</b><div class="hinweis">Gilt für dieses Gerät.</div></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
       <div class="schalter"><div><b>🔍 Schriftgröße</b><small class="hinweis" style="display:block">für Nachrichten und Texte – auch mit zwei Fingern auseinanderziehen</small></div><div class="sz-zeile"><button type="button" class="knopf" aria-label="Schrift kleiner" onclick="szAendern(-0.1)">A−</button><span class="sz-wert">100 %</span><button type="button" class="knopf" aria-label="Schrift größer" onclick="szAendern(0.1)">A+</button><button type="button" class="knopf sz-zurueck versteckt" onclick="szAendern(0)">↺ 100 %</button></div></div>
+      <div class="schalter"><div><b>✌️ Schrift mit zwei Fingern ändern</b><small class="hinweis" style="display:block">Aus = Auseinanderziehen ändert die Schrift nicht mehr – A− / A+ hier oben gehen weiter</small></div><input type="checkbox" class="sz-geste" checked onchange="szGesteSetzen(this.checked)"></div> <!-- 2.459.0 KC-CLUB-SCHRIFT-ZOOM-AUS -->
       <div style="margin-top:8px"><b>🌗 Tag- und Nachtmodus</b></div>
       <div class="umschalter modus3" id="modusWahl" data-zyklus="Tag/Nacht"><button data-m="auto" onclick="modusWaehlen('auto')">🔄 Automatisch</button><button data-m="tag" onclick="modusWaehlen('tag')">☀️ Immer Tag</button><button data-m="nacht" onclick="modusWaehlen('nacht')">🌙 Immer Nacht</button></div>
       <p class="hinweis" id="modusInfo" style="margin-top:-4px"></p>
@@ -5305,7 +5308,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.458.0" data-v="2.458.0"></script>
+<script src="app.js?v=2.459.0" data-v="2.459.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

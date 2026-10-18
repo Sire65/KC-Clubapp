@@ -6689,6 +6689,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/zahl: \(\) => Number\.isFinite\(INIT\?\.vorschlaegeOffen\) \? INIT\.vorschlaegeOffen : INIT\?\.offeneAbstimmungen \|\| 0 \}/.test(html), "Kachel: alle Vorschläge, sonst wie bisher");
   assert.ok(/auf deine Stimme` : "Themen & Abstimmungen", v: "vorschlaege"/.test(html), "wartende Abstimmungen bleiben sichtbar");
 }
+
+// 2.459.0 KC-CLUB-SCHRIFT-ZOOM-AUS (Wunschliste #16): Zwei-Finger-Schrift abschaltbar, nur bei echtem Auseinanderziehen
+{
+  const seite = lies("index.html");
+  assert.equal((seite.match(/<input type="checkbox" class="sz-geste" checked onchange="szGesteSetzen\(this\.checked\)">/g) || []).length, 2, "Schalter in beiden Ansichten");
+  assert.ok(/const szGesteAn = \(\) => \{ try \{ return localStorage\.getItem\(SZ_GESTE_KEY\) !== "aus"; \}/.test(html), "Standard an, je Gerät");
+  assert.ok(/SZ\.aus = !szGesteAn\(\);/.test(html) && /if \(SZ\.aus\) return;/.test(html), "aus = Schrift bleibt (Seiten-Zoom weiter aus)");
+  assert.ok(/if \(!beide \|\| Math\.abs\(f - 1\) < SZ_SCHWELLE\) return;/.test(html) && /const SZ_BEWEGT_PX = 12, SZ_SCHWELLE = 0\.08;/.test(html), "aufliegender Daumen zählt nicht");
+  assert.ok(/<small>Ausschalten: ⚙️ → Darstellung<\/small>/.test(html), "Anzeige nennt den Schalter");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

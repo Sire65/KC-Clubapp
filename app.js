@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.458.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.459.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7,7 +7,14 @@ const APP_STUFE = "RC";
 // größer, zusammenschieben = kleiner (wie in vielen Nachrichten-Apps). 2.365.0 (Wunsch Hansi „nur bei Text, nicht die komplette Oberfläche“): es wachsen nur
 // die Lese-Texte (Nachrichten, Zettel, Protokolle, Fenstertexte – CSS „zoom“ auf genau diesen Blöcken), Knöpfe und Leisten bleiben gleich. Gilt zusätzlich zu „🔠 Große Schrift“, bleibt auf diesem Gerät gemerkt (70–200 %). Fotos, Videos, Spielbretter und Malflächen
 // behalten ihre eigene Bedienung. Zurück auf 100 %: ⚙️ → Darstellung → „🔍 Schriftgröße“ oder mit zwei Fingern doppelt tippen.
-const SZ = { min: 0.7, max: 2, wert: 1, start: null, basis: 1, raf: 0, anzeige: null, letzterTipp: 0 };
+const SZ = { min: 0.7, max: 2, wert: 1, start: null, basis: 1, raf: 0, anzeige: null, letzterTipp: 0, p0: null, aktiv: false, fAkt: 1 };
+// 2.459.0 KC-CLUB-SCHRIFT-ZOOM-AUS (Wunschliste #16, Fund Hansi „nach dem Vergrößern in Nachrichten wurde beim Scrollen immer die Prozentzahl angezeigt
+// und ließ sich nicht abschalten“): Ursache – ein aufliegender Daumen plus scrollender Finger zählte als „zwei Finger auseinanderziehen“. Jetzt:
+// (1) abschaltbar je Gerät (⚙️ → Darstellung → „✌️ Schrift mit zwei Fingern ändern“), (2) die Schrift ändert sich nur, wenn sich BEIDE Finger
+// bewegen und der Abstand sich deutlich ändert (echtes Auseinanderziehen), (3) die Anzeige nennt, wo man es ausschaltet. Seiten-Zoom bleibt wie bisher aus.
+const SZ_GESTE_KEY = "kc_club_schrift_zoom_geste";
+const szGesteAn = () => { try { return localStorage.getItem(SZ_GESTE_KEY) !== "aus"; } catch { return true; } };
+function szGesteSetzen(an) { try { localStorage.setItem(SZ_GESTE_KEY, an ? "an" : "aus"); } catch {} SZ.start = null; SZ.aktiv = false; try { szAnzeigeEinstellung(); } catch {} melde?.(an ? "✌️ Schrift mit zwei Fingern ändern: an" : "✌️ Aus – die Schrift ändert sich nur noch mit A− / A+ in den Einstellungen"); }
 try { const w = parseFloat(localStorage.getItem("kc_club_schrift_zoom") || "1"); if (w >= SZ.min && w <= SZ.max) SZ.wert = w; } catch {}
 const szSetzen = (w, merken) => {
   SZ.wert = Math.round(Math.min(SZ.max, Math.max(SZ.min, w)) * 100) / 100;
@@ -19,26 +26,36 @@ const szAbstand = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - 
 const szEigeneGeste = (el) => !!el?.closest?.("img, video, canvas, iframe, .sch-brett, .sch-rahmen, .mae-brett, .rg-schicht, .vf-zeiger-flaeche, .es-tafel, [data-pinch]");
 function szHinweis(text) {
   let h = SZ.anzeige; if (!h) { h = SZ.anzeige = document.createElement("div"); h.className = "sz-hinweis"; h.setAttribute("aria-live", "polite"); document.body.appendChild(h); }
-  h.textContent = text; h.classList.add("an"); clearTimeout(h._uhr); h._uhr = setTimeout(() => h.classList.remove("an"), 1200);
+  h.innerHTML = `${esc(text)}<small>Ausschalten: ⚙️ → Darstellung</small>`; h.classList.add("an"); clearTimeout(h._uhr); h._uhr = setTimeout(() => h.classList.remove("an"), 1200);
 }
 document.addEventListener("touchstart", (e) => {
-  if (e.touches.length !== 2 || szEigeneGeste(e.target)) { SZ.start = null; return; }
+  if (e.touches.length !== 2 || szEigeneGeste(e.target)) { SZ.start = null; SZ.aktiv = false; return; }
+  SZ.aus = !szGesteAn(); // ausgeschaltet: nur den Seiten-Zoom weiter verhindern (wie bisher), die Schrift bleibt
   const jetzt = Date.now();
-  if (jetzt - SZ.letzterTipp < 350) { szSetzen(1, true); szHinweis("🔍 Schrift 100 %"); SZ.start = null; SZ.letzterTipp = 0; return; } // Doppeltipp mit zwei Fingern
-  SZ.letzterTipp = jetzt; SZ.start = szAbstand(e.touches); SZ.basis = SZ.wert;
+  if (!SZ.aus && jetzt - SZ.letzterTipp < 350) { szSetzen(1, true); szHinweis("🔍 Schrift 100 %"); SZ.start = null; SZ.letzterTipp = 0; return; } // Doppeltipp mit zwei Fingern
+  SZ.letzterTipp = jetzt; SZ.start = szAbstand(e.touches); SZ.basis = SZ.wert; SZ.aktiv = false; SZ.fAkt = 1;
+  SZ.p0 = new Map([...e.touches].map((t) => [t.identifier, [t.clientX, t.clientY]]));
 }, { passive: true, capture: true });
+const SZ_BEWEGT_PX = 12, SZ_SCHWELLE = 0.08; // beide Finger mind. 12 px bewegt und Abstand ±8 % – erst dann ist es ein echtes Auseinanderziehen
 document.addEventListener("touchmove", (e) => {
   if (!SZ.start || e.touches.length !== 2) return;
   if (e.cancelable) e.preventDefault(); // kein Seiten-Zoom – die Schrift wächst stattdessen
+  if (SZ.aus) return;
   const f = szAbstand(e.touches) / SZ.start; if (Math.abs(f - 1) > 0.04) SZ.letzterTipp = 0;
-  const w = SZ.basis * f; cancelAnimationFrame(SZ.raf);
+  if (!SZ.aktiv) {
+    const beide = [...e.touches].every((t) => { const p = SZ.p0?.get(t.identifier); return p && Math.hypot(t.clientX - p[0], t.clientY - p[1]) >= SZ_BEWEGT_PX; });
+    if (!beide || Math.abs(f - 1) < SZ_SCHWELLE) return; // z. B. aufliegender Daumen + scrollender Finger → keine Schriftänderung, keine Anzeige
+    SZ.aktiv = true; SZ.fAkt = f; // ab hier ohne Sprung weiterziehen
+  }
+  const w = SZ.basis * f / SZ.fAkt; cancelAnimationFrame(SZ.raf);
   SZ.raf = requestAnimationFrame(() => { szSetzen(w, false); szHinweis(`🔍 Schrift ${Math.round(SZ.wert * 100)} %`); });
 }, { passive: false, capture: true });
-document.addEventListener("touchend", (e) => { if (SZ.start && e.touches.length < 2) { SZ.start = null; szSetzen(SZ.wert, true); } }, { passive: true, capture: true });
+document.addEventListener("touchend", (e) => { if (SZ.start && e.touches.length < 2) { SZ.start = null; if (SZ.aktiv) szSetzen(SZ.wert, true); SZ.aktiv = false; } }, { passive: true, capture: true });
 ["gesturestart", "gesturechange"].forEach((t) => document.addEventListener(t, (e) => { if (!szEigeneGeste(e.target)) e.preventDefault(); }, { passive: false })); // iPhone/iPad: Safari-eigenes Zoomen hier aus
 function szAnzeigeEinstellung() {
   document.querySelectorAll(".sz-wert").forEach((el) => { el.textContent = `${Math.round(SZ.wert * 100)} %`; });
   document.querySelectorAll(".sz-zurueck").forEach((el) => el.classList.toggle("versteckt", SZ.wert === 1));
+  document.querySelectorAll(".sz-geste").forEach((el) => { el.checked = szGesteAn(); }); // 2.459.0
 }
 function szAendern(d) { szSetzen(d === 0 ? 1 : SZ.wert + d, true); szHinweis(`🔍 Schrift ${Math.round(SZ.wert * 100)} %`); }
 // KC-CLUB-SPARMODUS (2.30.0, Fall Klara: schwaches Netz, Start 3–55 s): Bei langsamem Netz, „Datensparen“, wenig Gerätespeicher oder
@@ -5073,7 +5090,7 @@ const HILFE = [
   { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste einmal auf einen Chat tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
-  { id: "schrift_zoom", thema: "darstellung", sym: "🔍", t: "Schrift größer ziehen – mit zwei Fingern", x: "Zu klein zum Lesen? Lege <b>zwei Finger</b> auf den Bildschirm und ziehe sie <b>auseinander</b> – Nachrichten, Zettel und Texte werden größer (Knöpfe und Leisten bleiben, wie sie sind). Zusammenschieben macht sie kleiner. Die Größe bleibt gemerkt. Zurück auf normal: mit zwei Fingern <b>doppelt tippen</b> oder unter ⚙️ → Darstellung → „🔍 Schriftgröße“.", seit: "2.364.0" }, // 2.364.0 KC-CLUB-SCHRIFT-ZOOM
+  { id: "schrift_zoom", thema: "darstellung", sym: "🔍", t: "Schrift größer ziehen – mit zwei Fingern", x: "Zu klein zum Lesen? Lege <b>zwei Finger</b> auf den Bildschirm und ziehe sie <b>auseinander</b> – Nachrichten, Zettel und Texte werden größer (Knöpfe und Leisten bleiben, wie sie sind). Zusammenschieben macht sie kleiner. Die Größe bleibt gemerkt. Zurück auf normal: mit zwei Fingern <b>doppelt tippen</b> oder unter ⚙️ → Darstellung → „🔍 Schriftgröße“. <b>Ganz ausschalten:</b> ⚙️ → Darstellung → „✌️ Schrift mit zwei Fingern ändern“ (A− / A+ gehen weiter). Ein aufliegender Daumen beim Scrollen verstellt die Schrift nicht mehr.", seit: "2.364.0" }, // 2.364.0 KC-CLUB-SCHRIFT-ZOOM
   { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag – am 🏎️-Knopf steht, wie viele du heute schon verschickt hast (z. B. <b>2/5</b>). Nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
   { id: "fee", thema: "darstellung", sym: "🧚", t: "Eine kleine Fee zu Besuch", x: "Bei jeder <b>20. Anmeldung</b> schwebt eine kleine Fee durchs obere Startbild, bleibt kurz stehen und lächelt. <b>Tipp sie an</b> – dann schenkt sie dir einen schönen Spruch. Vorab ansehen oder per Häkchen abschalten: <b>⚙️ → ✨ Effekte → 🧚 Die kleine Fee</b>.", zeig: () => einstiegHin("effekte", "setFee"), seit: "2.372.0" },
   { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b>, <b>Luftballon</b> oder <b>Baron Münchhausen</b> auf der Kanonenkugel – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen.", zeig: () => einstiegHin("effekte", "sendeEffektWahl"), seit: "2.362.0" },
