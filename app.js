@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.452.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.453.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5189,7 +5189,7 @@ const HILFE = [
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „✨ Effekte“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("effekte", "setAnimiert"), seit: "2.24.1" },
   { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am grünen Kopf ist eine kleine Ecke umgeknickt. <b>Doppelt tippen</b> (oder nach links ziehen) – der Kopf dreht sich um wie ein Blatt Papier. Auf der Rückseite oben sieben Reiter: <b>🖼️ Diashow</b>, <b>🖍️ Tafel</b>, <b>📋 Flipchart</b>, <b>🕰️ Uhr</b>, <b>🎭 Bühne</b>, <b>🪞 Spiegel</b> und <b>🧩 Rätsel</b>. Damit man das Eselsohr nicht übersieht, blinkt es ab und zu kurz gelb-orange. Sie nutzt den ganzen Bildschirm bis zur Leiste unten. <b>Nochmal doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „📄 Eselsohr am Kopf“. Alles zum Ansehen: Erklär-Video <b>„📄 Die Rückseite: Eselsohr“</b>.", zeig: () => esOeffnen(null), seit: "2.292.0" },
   // 2.300.0 KC-CLUB-RUECKSEITE-HILFE (Wunsch Hansi „Hilfetexte anpassen“): je ein Text für jeden Reiter der Rückseite
-  { id: "es_dia", thema: "start", sym: "🖼️", t: "Rückseite: Diashow", x: "Die <b>🖼️ Diashow</b> zeigt die Fotos aus dem 📷 Fotoalbum, sanft überblendet. Unten: Album wählen, ◀ ▶ blättern, ⏸ anhalten, ⛶ Vollbild. <b>Aufs Foto tippen</b> blendet Leiste und Text aus (nochmal tippen holt sie zurück). Querformat-Fotos stehen auf einem weichen Hintergrund statt schwarzer Balken.", zeig: () => esOeffnen("dia"), seit: "2.300.0" },
+  { id: "es_dia", thema: "start", sym: "🖼️", t: "Rückseite: Diashow", x: "Die <b>🖼️ Diashow</b> zeigt die Fotos aus dem 📷 Fotoalbum, sanft überblendet. Unten: Album wählen, ◀ ▶ blättern, ⏸ anhalten, <b>🎵 Club-Song dazu</b> (🔇 = ohne Musik, wird gemerkt), ⛶ Vollbild. <b>Aufs Foto tippen</b> blendet Leiste und Text aus (nochmal tippen holt sie zurück). Querformat-Fotos stehen auf einem weichen Hintergrund statt schwarzer Balken.", zeig: () => esOeffnen("dia"), seit: "2.300.0" },
   { id: "es_tafel", thema: "start", sym: "🖍️", t: "Rückseite: Tafel & Flipchart", x: "Zum Skizzieren mit dem Finger. <b>🖍️ Tafel</b>: Kreide in sieben Farben, drei Dicken, 🧽 Schwamm, 🧹 alles abwischen, ↶ letzten Strich zurück. <b>📋 Flipchart</b>: Marker, Radierer, <b>„⤴ Umblättern“</b> klappt das volle Blatt nach hinten, ⤵ holt das vorige zurück, ✂️ reißt ein Blatt ab; ein Knopf schaltet das Papier <b>blanko → kariert → liniert</b>. Mit <b>„📤 Sichern“</b> kommt die Skizze ins 🗄️ Archiv oder als Nachricht zu jemandem.", zeig: () => esOeffnen("flip"), seit: "2.300.0" },
   { id: "es_uhr", thema: "start", sym: "🕰️", t: "Rückseite: große Uhr", x: "Die <b>🕰️ große Uhr</b> gibt es in vier Stilen: <b>🟩 Digital</b> (grün), <b>🔢 Fallblatt</b> mit Datum, <b>🚉 Bahnhofsuhr</b> und <b>🔠 Groß &amp; klar</b>. Den Stil unten antippen – die App merkt ihn sich.", zeig: () => esOeffnen("uhr"), seit: "2.300.0" },
   { id: "es_buehne", thema: "start", sym: "🎭", t: "Rückseite: Bühne für Bewegung", x: "Auf der <b>🎭 Bühne</b> macht Twinkey Übungen vor – mit Musik und Ansagen wie beim Fitnesstrainer. Wähle <b>im Sitzen</b>, <b>im Stehen</b> oder <b>mit Küchenhelfern</b> (Schneebesen, Kochlöffel, Topf, Pfanne …), die Dauer, Musik und Ansage – dann <b>„▶️ Vorhang auf!“</b>. Twinkey begrüßt dich, zählt ein, feuert an und sagt „noch 3, 2, 1 – und ausschütteln“. Unten: ⏸ Pause, ⏭ nächste Übung, 🎵 Musik, 🔊 Ansage, ✖ Ende. Neben Twinkey zeigt eine große Uhr, wie lange das Training <b>schon läuft</b> und wie lange es <b>noch geht</b>; Lupe, Hand, ? und Mikrofon sind währenddessen ausgeblendet. <b>Mach nur so viel, wie dir guttut</b> – bei Schmerzen, Schwindel oder Atemnot sofort aufhören.", zeig: () => esOeffnen("buehne"), seit: "2.300.0" },
@@ -8804,7 +8804,7 @@ const TW_FAQ = [
   { id: "buehne", sym: "🎭", t: "Wie mache ich mit Twinkey Bewegung zu Musik?", x: "Kopf umdrehen (doppelt aufs Eselsohr) → <b>🎭 Bühne</b>: im Sitzen, im Stehen oder mit Küchenhelfern wählen, Dauer einstellen, <b>„▶️ Vorhang auf!“</b>. Twinkey turnt vor und feuert dich an.", los: () => esOeffnen("buehne") },
   { id: "buehne-laut", sym: "🎚️", t: "Die Musik oder Twinkeys Stimme ist zu laut oder zu leise", x: "Auf der Bühne: <b>rechts</b> der Regler für die Musik, <b>links</b> für die Stimme – hochziehen = lauter, runter = leiser. Unten aufs Symbol tippen = stumm, nochmal = wieder an.", los: () => esOeffnen("buehne") },
   { id: "grosse-uhr", sym: "🕰️", t: "Gibt es eine große Uhr?", x: "Ja – auf der Rückseite des Kopfes unter <b>🕰️ Uhr</b>: digital grün, Fallblatt mit Datum, Bahnhofsuhr oder groß &amp; klar.", los: () => esOeffnen("uhr") },
-  { id: "diashow", sym: "🖼️", t: "Kann ich die Fotos als Diashow ansehen?", x: "Ja – Kopf umdrehen (doppelt aufs Eselsohr) → <b>🖼️ Diashow</b>. Album wählen, aufs Foto tippen blendet alles andere aus.", los: () => esOeffnen("dia") },
+  { id: "diashow", sym: "🖼️", t: "Kann ich die Fotos als Diashow ansehen?", x: "Ja – Kopf umdrehen (doppelt aufs Eselsohr) → <b>🖼️ Diashow</b>. Album wählen, aufs Foto tippen blendet alles andere aus. Mit <b>🔇/🎵</b> in der Leiste läuft unser Club-Song dazu.", los: () => esOeffnen("dia") },
   { id: "spiegel", sym: "🪞", t: "Gibt es einen Spiegel mit Kamera?", x: "Ja – Kopf umdrehen (doppelt aufs Eselsohr) → <b>🪞 Spiegel</b> → <b>„📷 Kamera an“</b>. Mit „🐹 Pausbäckchen“ wird’s lustig. Nichts wird gespeichert oder verschickt.", los: () => esOeffnen("spiegel") }, // 2.314.0
   { id: "kachel_vorschlag_aus", sym: "💡", t: "Wie schalte ich die Vorschläge zur Startseite ab?", x: "Im Vorschlags-Fenster <b>„🔕 Keine Vorschläge mehr“</b> tippen – oder unter ⚙️ → „🧩 Startseite &amp; Ansicht“ den Schalter <b>„💡 Vorschläge zur Startseite“</b> ausschalten. Dort löscht <b>„🧹 Gemerktes löschen“</b> auch alles, was die App sich gemerkt hat.", los: () => suEinstellung("setKachelVorschlag") },
   { id: "einladung", sym: "🎭", t: "Wie schalte ich die Frage nach der Bewegungseinheit ab?", x: "Im Fenster <b>„🔕 Nicht mehr fragen“</b> tippen – oder unter ⚙️ → „🧩 Startseite &amp; Ansicht“ den Schalter <b>„🎭 Twinkey lädt zur Bewegung ein“</b> ausschalten.", los: () => suEinstellung("setBwEinladung") },
@@ -15446,7 +15446,7 @@ function esHoehe(scrollen) {
   r.style.height = Math.max(360, Math.round(innerHeight - Math.max(6, r.getBoundingClientRect().top) - fh - 10)) + "px";
 }
 addEventListener("resize", () => { if (ES.offen) esHoehe(false); });
-function esStop() { esSpiegelAus(); qzStop(); clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (BW.lauf || BW.hoeren || BWM.laeuft) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
+function esStop() { esSpiegelAus(); qzStop(); esDiaMusikAus(); clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (BW.lauf || BW.hoeren || BWM.laeuft) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
 function esTab(k) {
   if (!ES_TABS.some(([x]) => x === k)) k = "uhr";
   esSchreib("tab", k); esStop();
@@ -15733,7 +15733,8 @@ async function esDiaZeigen(f) {
   const d = ES.dia;
   f.innerHTML = `<div class="es-dia" onclick="if (event.target.tagName === 'IMG' || event.target === this || event.target.id === 'esDiaHinter') this.classList.toggle('ohne-leiste')"><div class="es-dia-hinter" id="esDiaHinter"></div><img class="es-dia-bild" alt=""><img class="es-dia-bild" alt=""><div class="es-dia-text" id="esDiaText">Fotos werden geladen …</div>
     <div class="es-leiste es-dia-leiste"><select id="esDiaAlbum" aria-label="Welche Fotos?" onchange="esDiaAlbum(this.value)"><option value="">📷 Alle</option></select>
-      <button type="button" class="es-k" onclick="esDiaSchritt(-1)" aria-label="Voriges Foto">◀</button><button type="button" class="es-k" id="esDiaPause" onclick="esDiaPause()" aria-label="Pause">⏸</button><button type="button" class="es-k" onclick="esDiaSchritt(1)" aria-label="Nächstes Foto">▶</button>${document.fullscreenEnabled ? '<button type="button" class="es-k" onclick="esDiaVollbild()" aria-label="Vollbild">⛶</button>' : ""}</div></div>`;
+      <button type="button" class="es-k" onclick="esDiaSchritt(-1)" aria-label="Voriges Foto">◀</button><button type="button" class="es-k" id="esDiaPause" onclick="esDiaPause()" aria-label="Pause">⏸</button><button type="button" class="es-k" onclick="esDiaSchritt(1)" aria-label="Nächstes Foto">▶</button>${esDiaMusikKnopf()}${document.fullscreenEnabled ? '<button type="button" class="es-k" onclick="esDiaVollbild()" aria-label="Vollbild">⛶</button>' : ""}</div></div>`;
+  esDiaMusikStart(); // 2.453.0: noch im Antippen starten (Handys erlauben Ton nur nach einer Berührung)
   if (!d.fotos && !d.laedt) await esDiaLaden(esLies("album", ""));
   esDiaAlbenZeigen();
   if (!d.fotos?.length) { $("esDiaText").textContent = d.fehler ? "⚠️ " + d.fehler : "Noch keine Fotos im Fotoalbum."; return; }
@@ -15770,9 +15771,38 @@ async function esDiaBild(i, sofort) {
 }
 // 2.295.0: Foto antippen blendet Leiste und Text aus (fast Vollbild); ⛶ schaltet echtes Vollbild, wo das Handy es kann
 function esDiaVollbild() { const f = $("hrFlaeche"); try { if (document.fullscreenElement) document.exitFullscreen(); else f?.requestFullscreen?.(); } catch (e) { /* ohne Vollbild */ } }
-function esDiaTakt() { esStop(); if (!ES.dia.laeuft) return; ES.timer = setInterval(() => { if (!esSichtbar()) return; esDiaBild(ES.dia.i + 1); }, 6500); }
+function esDiaTakt() { clearInterval(ES.timer); ES.timer = 0; if (!ES.dia.laeuft) return; ES.timer = setInterval(() => { if (!esSichtbar()) return; esDiaBild(ES.dia.i + 1); }, 6500); }
 function esDiaSchritt(r) { esDiaBild(ES.dia.i + r); esDiaTakt(); }
-function esDiaPause() { ES.dia.laeuft = !ES.dia.laeuft; $("esDiaPause").textContent = ES.dia.laeuft ? "⏸" : "▶︎"; esDiaTakt(); melde(ES.dia.laeuft ? "▶︎ Diashow läuft" : "⏸ Diashow angehalten"); }
+function esDiaPause() { ES.dia.laeuft = !ES.dia.laeuft; $("esDiaPause").textContent = ES.dia.laeuft ? "⏸" : "▶︎"; esDiaTakt(); esDiaMusikTick(); melde(ES.dia.laeuft ? "▶︎ Diashow läuft" : "⏸ Diashow angehalten"); }
+
+// 2.453.0 KC-CLUB-DIA-MUSIK (Wunschliste #12, Wunsch Hansi „Diashow mit Musik zuschaltbar (Club-Song)“): 🎵 in der Diashow-Leiste schaltet unseren
+// Club-Song dazu (gemerkt auf diesem Gerät, Start immer erst nach Antippen). Dieselbe Musik wie auf der Bühne (BWM, Lautstärke vom Musik-Regler);
+// ist das Lied zu Ende, beginnt es von vorn. ⏸ hält Bilder und Musik an; Kopf zurückdrehen, anderer Reiter oder App im Hintergrund = Musik aus bzw. Pause.
+const esDiaMusikGewuenscht = () => esLies("diaMusik", "") === "1";
+function esDiaMusikKnopf() { const an = esDiaMusikGewuenscht(); return `<button type="button" class="es-k${an ? " an" : ""}" id="esDiaMusik" onclick="esDiaMusikSchalten()" aria-pressed="${an}" aria-label="Musik zur Diashow: Club-Song ${an ? "aus" : "an"}schalten" title="Club-Song zur Diashow">${an ? "🎵" : "🔇"}</button>`; }
+function esDiaMusikSchalten() {
+  const an = !esDiaMusikGewuenscht(); esSchreib("diaMusik", an ? "1" : "");
+  const k = $("esDiaMusik"); if (k) k.outerHTML = esDiaMusikKnopf();
+  if (an) esDiaMusikStart(); else esDiaMusikAus();
+  melde(an ? "🎵 Club-Song zur Diashow an" : "🔇 Diashow ohne Musik");
+}
+function esDiaMusikStart() {
+  if (!esDiaMusikGewuenscht()) return; const d = ES.dia;
+  if (BWM.stueck?.id !== "clubsong" || !d.musik) { const s = BW_STUECKE.find((x) => x.id === "clubsong"); if (!s) return; BWM.stueck = s; BWM.gesamt = 0; BWM.schritt = 0; BWM.stufe = 2; }
+  d.musik = true; if (d.laeuft) bwMusik(true);
+  clearInterval(d.musikTakt); d.musikTakt = setInterval(esDiaMusikTick, 1000);
+}
+function esDiaMusikTick() {
+  const d = ES.dia; if (!d.musik) return;
+  if (!$("esDiaMusik")) return esDiaMusikAus(); // Diashow nicht mehr zu sehen
+  if (!esSichtbar() || !d.laeuft) { if (BWM.laeuft) bwMusik(false); return; }
+  if (!BWM.laeuft) bwMusik(true);
+  if (BWM.stueck && Math.floor((BWM.gesamt || 0) / 16) >= bwmTakte(BWM.stueck)) { BWM.gesamt = 0; BWM.schritt = 0; BWM.zeit += 1; BWM.start = BWM.zeit; } // von vorn, kurze Atempause
+}
+function esDiaMusikAus() {
+  const d = ES.dia; clearInterval(d.musikTakt); d.musikTakt = 0; if (!d.musik) return; d.musik = false;
+  if (!BW.lauf && !BW.hoeren) { bwMusik(false); BWM.stueck = null; }
+}
 
 // ----- 🖍️ Tafel und 📋 Flipchart: mit dem Finger skizzieren (gemeinsamer Zeichen-Kern) -----
 // Striche werden als Linien gemerkt (0…1, auf diesem Gerät) – so passt das Bild auch nach dem Drehen des Handys, und ↶ nimmt den letzten zurück.
@@ -35913,7 +35943,7 @@ function suAppListe() {
     ...(frei("avatar") && frei("avatar_baukasten") ? [["🧩", "Figur anpassen (Baukasten: Frisur, Brille, Schmuck, Kochjacke)", "anpassen individuell zusammenstellen baukasten frisur haare haarfarbe bart brille eigene brille ohrringe ohrring kette halskette piercing schmuck mütze kopfbedeckung kochjacke jacke schürze muster hintergrund halstuch falten stil", () => avBauen()]] : []), // 2.415.0 KC-CLUB-AVATAR-HILFE // 2.260.0 KC-CLUB-SUCHE-KOCHBILD (Fund Hansi)
     // 2.300.0 KC-CLUB-RUECKSEITE-HILFE (Wunsch Hansi „Suchfunktion bei der Lupe anpassen“): die Rückseite des Kopfes
     ["📄", "Eselsohr: Kopf umdrehen (Rückseite)", "eselsohr rückseite rueckseite kopf umdrehen ecke umgeknickt", () => esOeffnen(null)],
-    ["🖼️", "Diashow (Fotos groß zeigen)", "diashow dia fotos bilder vollbild schau album", () => esOeffnen("dia")],
+    ["🖼️", "Diashow (Fotos groß zeigen)", "diashow dia fotos bilder vollbild schau album musik club-song lied", () => esOeffnen("dia")],
     ["🖍️", "Tafel zum Skizzieren", "tafel kreide skizze zeichnen malen schwamm", () => esOeffnen("tafel")],
     ["📋", "Flipchart (umblättern, kariert, liniert)", "flipchart flip skizze zeichnen malen marker umblättern kariert liniert blanko papier", () => esOeffnen("flip")],
     ["🕰️", "Große Uhr", "uhr uhrzeit große uhr bahnhofsuhr fallblatt digital datum", () => esOeffnen("uhr")],

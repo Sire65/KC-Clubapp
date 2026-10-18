@@ -6637,6 +6637,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function avbSchuerze\(n\) \{ if \(n\) \{ AVB\[29\] = 3; AVB\[31\] = n - 1; \}/.test(html) && /data-teil="schuerze"/.test(html), "Baukasten-Reihe Schürze mit „ohne“");
   assert.ok(/id: "schuerze", thema: "privat"/.test(html), "Hilfe-Eintrag Schürze");
 }
+
+// 2.453.0 KC-CLUB-DIA-MUSIK (Wunschliste #12): Diashow mit Club-Song zuschaltbar – gemerkt, nur nach Antippen, aus beim Verlassen
+{
+  assert.ok(/\$\{esDiaMusikKnopf\(\)\}/.test(html) && /function esDiaMusikSchalten\(\) \{\n  const an = !esDiaMusikGewuenscht\(\); esSchreib\("diaMusik"/.test(html), "🎵-Knopf in der Diashow-Leiste, Wahl wird gemerkt");
+  assert.ok(/BW_STUECKE\.find\(\(x\) => x\.id === "clubsong"\)/.test(html.slice(html.indexOf("function esDiaMusikStart()"))), "es spielt der Club-Song");
+  assert.ok(/function esStop\(\) \{ esSpiegelAus\(\); qzStop\(\); esDiaMusikAus\(\);/.test(html) && /if \(!BW\.lauf && !BW\.hoeren\) \{ bwMusik\(false\); BWM\.stueck = null; \}/.test(html), "Musik aus beim Verlassen, Bühne bleibt unberührt");
+  assert.ok(/function esDiaTakt\(\) \{ clearInterval\(ES\.timer\); ES\.timer = 0;/.test(html), "Blättern stoppt die Musik nicht");
+  assert.ok(/if \(!esSichtbar\(\) \|\| !d\.laeuft\) \{ if \(BWM\.laeuft\) bwMusik\(false\); return; \}/.test(html), "⏸ und App im Hintergrund = Musik Pause");
+  assert.ok(/\.es-dia \.es-leiste \{ gap: 5px; bottom: 58px; \}/.test(lies("index.html")), "Leiste über den Hilfe-Knöpfen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
