@@ -6941,6 +6941,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/details:not\(\.karte\):not\(\.iv-ordner\) > summary::before \{ content: "▸";/.test(ix) && /details\[open\]:not\(\.karte\):not\(\.iv-ordner\) > summary::before \{ transform: rotate\(90deg\); \}/.test(ix), "alle kleinen Klappbereiche: gleicher Pfeil");
   assert.ok(!/summary::before \{ content/.test(ix.replace(/details:not\(\.karte\):not\(\.iv-ordner\) > summary::before \{ content: "▸";/, "").replace(/\.iv-ordner > summary::before \{ content: "▸";/, "")), "kein zweites eigenes Klapp-Zeichen");
 }
+// 2.482.0 KC-CLUB-ADVENT-UEBERRASCHUNG (Wunsch Hansi): vor Dezember für Mitglieder unsichtbar (Hilfe, Neu-Tipps, Einstellungen)
+{
+  assert.ok(/\{ id: "adventskalender", nur: \(\) => akSichtbar\(\),/.test(html) && /const akSichtbar = \(\) => !!ICH\?\.admin \|\| new Date\(\)\.getMonth\(\) === 11;/.test(html), "Hilfe-Eintrag erst ab Dezember");
+  assert.ok(/<div class="schalter versteckt" id="setAdventZeile">/.test(lies("index.html")) && /if \(v === "einstellungen"\) akSichtbarSetzen\(\);/.test(html), "Schalter unter Effekte erst ab Dezember (Admin immer)");
+  const ak = html.slice(html.indexOf("const akHeute"), html.indexOf("const akHeute") + 400);
+  assert.ok(/getMonth\(\) === 11/.test(ak), "Laufband-Erinnerung nur im Dezember");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
