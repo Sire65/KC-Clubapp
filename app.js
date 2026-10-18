@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.446.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.447.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5006,6 +5006,7 @@ const HILFE = [
   { id: "entwurf", thema: "nachrichten", sym: "✏️", t: "Angefangener Text geht nicht verloren", x: "Mitten im Schreiben klingelt es an der Tür? Kein Problem – dein halb geschriebener Text bleibt in diesem Chat auf deinem Handy liegen. Der Hinweis <b>„✏️ Entwurf – noch nicht gesendet“</b> erinnert dich später daran.", seit: "2.23.1" },
   { id: "ohne_netz", thema: "nachrichten", sym: "📵", t: "Schreiben, auch wenn das Netz weg ist", x: "Im Keller oder unterwegs kein Empfang? Schreib ruhig trotzdem. Die Nachricht zeigt <b>„⏳ wartet auf Netz“</b> und geht von ganz allein raus, sobald wieder Verbindung da ist.", seit: "2.23.1" },
   { id: "haken", thema: "nachrichten", sym: "✔️", t: "Was die Haken an deinen Nachrichten bedeuten", x: "Wie bei WhatsApp: <b>graue Haken</b> heißen gesendet bzw. angekommen, <b>blaue Haken</b> heißen gelesen. Willst du es genau wissen, tipp deine Nachricht an – unter <b>„ℹ️ Nachricht – Einzelheiten“</b> steht mehr.", seit: "2.23.1" },
+  { id: "gelesen_von", thema: "nachrichten", sym: "☑️", t: "Wer hat meine Nachricht bekommen und gelesen?", x: "Tippe an deiner eigenen Nachricht auf die <b>Haken</b> (oder Nachricht antippen → <b>ℹ️ Details</b>). Wie bei WhatsApp siehst du: <b>blaue ✓✓ Gelesen von</b> – wer sie gelesen hat und um wie viel Uhr, <b>graue ✓✓ Zugestellt an</b> – bei wem sie schon in der App angekommen ist, und <b>✓ Noch nicht zugestellt</b>. Bei älteren Nachrichten steht „Uhrzeit unbekannt“. Ampel, Push und E-Mail findest du darunter unter „Mehr Einzelheiten“.", seit: "2.447.0" },
   { id: "sprachtempo", thema: "nachrichten", sym: "⏩", t: "Lange Sprachnachrichten schneller hören", x: "Sprachnachrichten kannst du auch in <b>1,5×</b> oder <b>2×</b> abspielen – der kleine Tempo-Knopf sitzt direkt an der Sprachnachricht. Deine Wahl merkt sich das Handy.", seit: "2.23.1" },
   { id: "chat_vorlesen", thema: "nachrichten", sym: "🔊", t: "Hände voll? Chat vorlesen lassen", x: "Gerade beim Kochen praktisch: im Chat oben <b>⋮</b> → <b>„🔊 Vorlesen ab den neuen Nachrichten“</b> oder <b>„🔊 Ganzen Chat vorlesen“</b>. Das Handy liest vor, du hörst einfach zu.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "whatsapp", thema: "nachrichten", sym: "🟢", t: "Text zusätzlich per WhatsApp schicken", x: "Ist jemand in der App noch nicht so oft unterwegs? Der grüne Knopf <b>„WA“</b> unter dem Schreibfeld übernimmt deinen Text nach WhatsApp – du musst ihn nicht nochmal tippen.", seit: "2.23.1" },
@@ -8258,7 +8259,9 @@ function hakenHtml(m, anzahl) {
   const h = m.haken || (m.gelesenAlle ? "gelesen" : "gesendet");
   const zeichen = h === "gelesen" ? `<span class="haken blau" title="gelesen" aria-label="gelesen">${HAKEN_ZWEI}</span>` : h === "angekommen" ? `<span class="haken" title="auf dem Handy angekommen – noch nicht gelesen" aria-label="angekommen">${HAKEN_ZWEI}</span>` : `<span class="haken" title="gesendet – noch nicht auf dem Handy angekommen" aria-label="gesendet">${HAKEN_EINS}</span>`;
   const teil = h !== "gelesen" && anzahl > 1 && m.gelesenVon?.length ? ` <small class="haken-teil" title="schon gelesen">${m.gelesenVon.length}/${anzahl}</small>` : "";
-  return zeichen + teil + (m.zustellung?.mail ? ' <span class="zustellung" title="auch per E-Mail verschickt">✉️</span>' : "");
+  // 2.447.0 KC-CLUB-GRUPPEN-QUITTUNG (Wunschliste #8): Haken antippen → wer hat es bekommen und gelesen (wie WhatsApp „Info“)
+  const tipp = m.id ? `<span class="haken-tipp" role="button" tabindex="0" title="Antippen: wer hat es bekommen und gelesen?" onclick="event.stopPropagation();nachrichtInfo('${esc(m.id)}')">${zeichen}${teil}</span>` : zeichen + teil;
+  return tipp + (m.zustellung?.mail ? ' <span class="zustellung" title="auch per E-Mail verschickt">✉️</span>' : "");
 }
 function zustellText(z) {
   if (!z) return "";
@@ -28158,11 +28161,29 @@ function ampelErklaeren() {
 function ampelHtml(stufen) {
   return `<div class="ampel" role="list" onclick="ampelErklaeren()">${stufen.map((x) => `<span role="listitem" class="ampel-st${x.am ? " an" : ""}" title="${esc(x.am ? `${x.t}: ${zeitKurz(x.am)}${x.wie ? " – " + x.wie : ""}` : x.leer || `${x.t}: noch keine Rückmeldung`)}">${x.sym} ${x.t}${x.am ? `<small>${esc(zeitKurz(x.am))}</small>` : ""}</span>`).join('<span class="ampel-pfeil">›</span>')}</div>`;
 }
+// 2.447.0 KC-CLUB-GRUPPEN-QUITTUNG (Wunschliste #8, Wunsch Hansi „einfache Übersicht wie in WhatsApp: Zugestellt an xy um x Uhr mit 2 grauen
+// Haken und gelesen von xy um x Uhr mit 2 blauen Haken“). Uhrzeit nur, wenn sie wirklich festgehalten ist – sonst „Uhrzeit unbekannt“.
+function niUhr(iso) {
+  const d = new Date(iso), heute = new Date(), gestern = new Date(Date.now() - 86400000), gleich = (a, b) => a.toDateString() === b.toDateString();
+  return `${gleich(d, heute) ? "heute" : gleich(d, gestern) ? "gestern" : fTag.format(d)}, ${fZeit.format(d)} Uhr`;
+}
+function niQuittungHtml(r) {
+  const l = (r.empfaenger || []).filter((e) => e.quittung); if (!l.length) return "";
+  const nachZeit = (feld) => (a, b) => String(a.quittung[feld] || "9").localeCompare(String(b.quittung[feld] || "9")) || a.name.localeCompare(b.name, "de");
+  const gel = l.filter((e) => e.quittung.gelesen || e.quittung.gelesenOhneZeit).sort(nachZeit("gelesen")), gs = new Set(gel);
+  const zu = l.filter((e) => !gs.has(e) && (e.quittung.zugestellt || e.quittung.zugestelltOhneZeit)).sort(nachZeit("zugestellt")), zs = new Set(zu);
+  const nicht = l.filter((e) => !gs.has(e) && !zs.has(e));
+  const zeile = (e, wann, ohne) => `<div class="ni-zeile ni-q"><b>${esc(e.name)}</b><span class="hinweis">${wann ? esc(niUhr(wann)) : ohne ? "Uhrzeit unbekannt" : ""}</span></div>`;
+  const block = (kopf, liste, fn, leer) => `<div class="ni-q-block"><div class="ni-q-kopf">${kopf}</div>${liste.length ? liste.map(fn).join("") : `<div class="hinweis ni-q-leer">${leer}</div>`}</div>`;
+  return block(`<span class="haken blau">${HAKEN_ZWEI}</span> Gelesen von`, gel, (e) => zeile(e, e.quittung.gelesen, e.quittung.gelesenOhneZeit), "noch niemand")
+    + block(`<span class="haken">${HAKEN_ZWEI}</span> Zugestellt an`, zu, (e) => zeile(e, e.quittung.zugestellt, e.quittung.zugestelltOhneZeit), gel.length === l.length ? "– alle haben schon gelesen –" : "noch niemand")
+    + (nicht.length ? block(`<span class="haken">${HAKEN_EINS}</span> Noch nicht zugestellt`, nicht, (e) => zeile(e, null, false), "") : "");
+}
 async function nachrichtInfo(id) {
   let r; try { r = await api("nachricht_details", { id }, { warten: true }); } catch (e) { return meldeFehler(e); }
   document.getElementById("niFenster")?.remove();
   const f = document.createElement("div"); f.id = "niFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
-  const gel = r.empfaenger.filter((e) => e.gelesen).length;
+  const gel = r.empfaenger.filter((e) => e.gelesen).length, quittung = niQuittungHtml(r);
   const empf = r.empfaenger.map((e) => `<div class="ni-zeile"><span>${e.gelesen ? "✓✓" : "✓"} <b>${esc(e.name)}</b></span><span class="hinweis">${e.gelesen ? "in der App gelesen" + (e.zuletztGeoeffnet ? ` (zuletzt geöffnet ${esc(niZeit(e.zuletztGeoeffnet))})` : "") : "in der App noch nicht gelesen"}</span></div>${e.ampel ? ampelHtml([
     { sym: "✉️", t: "Gesendet", am: e.ampel.gesendet, wie: e.ampel.gesendetWie || "", leer: "nur in der App (kein Push, keine Mail)" },
     { sym: "📬", t: "Angekommen", am: e.ampel.angekommen, wie: e.ampel.angekommenWie },
@@ -28180,10 +28201,13 @@ async function nachrichtInfo(id) {
   f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
     <h3>ℹ️ Nachricht – Einzelheiten</h3>
     ${r.wichtig ? '<div class="ni-zeile ni-wichtig"><span>❗ <b>Wichtige Nachricht</b></span><span>Wichtigkeit: hoch</span></div>' : ""}
+    ${r.express ? '<div class="ni-zeile"><span>🏎️ <b>Express-Nachricht</b></span><span class="hinweis">kommt sofort an, auch nachts</span></div>' : ""}
     <div class="ni-zeile"><span>✍️ Geschrieben ${r.eigen ? "von dir" : "von " + esc(r.von)}</span><span class="hinweis">${esc(niZeit(r.zeit))}</span></div>
-    <b>👥 Empfänger${r.empfaenger.length > 1 ? ` – ${gel} von ${r.empfaenger.length} gelesen` : ""}</b>${empf || '<p class="hinweis" style="margin:0">Nur du (Test-Unterhaltung)</p>'}
+    ${quittung ? `<b>👥 ${r.empfaenger.length > 1 ? `${gel} von ${r.empfaenger.length} gelesen` : "Empfänger"}</b>${quittung}
+      <details class="ni-mehr"><summary>🔎 Mehr Einzelheiten (Ampel, Push, E-Mail)</summary>${empf}${r.wegeSichtbar ? `<b>🚚 Zustellung</b>${wege}` : ""}</details>`
+    : `<b>👥 Empfänger${r.empfaenger.length > 1 ? ` – ${gel} von ${r.empfaenger.length} gelesen` : ""}</b>${empf || '<p class="hinweis" style="margin:0">Nur du (Test-Unterhaltung)</p>'}`}
     ${r.eigen && !gel && naZurueckMoeglich(NA.nachrichten.get(id)) ? `<button class="knopf haupt" onclick="document.getElementById('niFenster').remove();naZurueckholen('${id}')">↩️ Zurückholen und ändern – noch hat sie niemand gelesen</button>` : ""}
-    ${r.wegeSichtbar ? `<b>🚚 Zustellung</b>${wege}` : ""}
+    ${r.wegeSichtbar && !quittung ? `<b>🚚 Zustellung</b>${wege}` : ""}
     <button class="knopf" onclick="document.getElementById('niFenster').remove()">Schließen</button></div>`;
   f.onclick = (e) => { if (e.target === f) f.remove(); };
   document.body.appendChild(f);

@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.447.0 – 2026-10-18 – Gelesen/zugestellt wie WhatsApp (KC-CLUB-GRUPPEN-QUITTUNG, Wunschliste #8)
+Antippen der Haken an eigener Nachricht (oder ℹ️ Details) zeigt eine einfache Übersicht wie WhatsApp: blaue ✓✓ „Gelesen von“ mit Name und Uhrzeit, graue ✓✓ „Zugestellt an“ mit Uhrzeit, ✓ „Noch nicht zugestellt“. Express und ❗ wichtig stehen oben. Die bisherige Ampel samt Push/E-Mail-Verlauf bleibt unter „Mehr Einzelheiten“. DB: neue Tabelle kc_club_chat_quittung (+ Funktion kc_club_chat_quittung_merken, nur Server, RLS) hält fest, wann neue Nachrichten in der App ankamen und wann der Chat geöffnet wurde – nur erste echte Uhrzeit, ältere Nachrichten „Uhrzeit unbekannt“; Inkognito wird nicht verraten; nach 400 Tagen gelöscht. Server + App.
+
 ## 2.446.0 – 2026-10-18 – Thema Kegelabend (KC-CLUB-KEGELN, Wunschliste #4)
 Neues Kopf-Thema 🎳 Kegelabend (Farben Schokolade): unten eine Holzbahn mit 9 Kegeln (König mit roter Krone). Ein Koch mit Kochmütze nimmt Anlauf und rollt die Kugel – Kegel fliegen um, „5 Holz!“, dann stellen sie sich wieder auf. Oben rechts die Kreidetafel mit dem Vornamen: Strichliste und Summe. Der 6. Wurf ist immer „Alle Neune!“ mit Konfetti, der Koch jubelt; danach wischt ein Schwamm die Tafel sauber und der nächste Durchgang beginnt nahtlos. Vorschau, Hilfe, Lupe ergänzt. Nur App.
 

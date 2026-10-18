@@ -1,0 +1,8 @@
+erster_eintrag=t
+doppelt_verhindert=t
+nicht_teilnehmer=t
+gelesen_neu=t
+zeilen=2
+seit_leer=t
+rls=t
+kein_zugriff_ohne_server=t

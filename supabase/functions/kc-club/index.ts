@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.443.0";
+const SERVER_VERSION = "2.447.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -229,6 +229,15 @@ function elternHinweis(kinder: string[], art: "termin" | "erinnerung" | "absage"
     body: JSON.stringify({ action: "senden", kinder: ids, art, titel: txt(titel, 120), text: txt(text, 300), url: ELTERN_SEITE }) })
     .then((r) => r.body?.cancel()).catch((e) => console.error("elternHinweis", String(e)));
   try { (globalThis as any).EdgeRuntime?.waitUntil?.(p); } catch {}
+}
+// 2.447.0 KC-CLUB-GRUPPEN-QUITTUNG (Wunschliste #8): „angekommen“ (App hat neue Nachrichten geladen) bzw. „gelesen“ (Chat geöffnet)
+// je Chat festhalten – nur wenn wirklich Neues da ist (die Datenbank prüft das). Läuft nebenher; Fehler stören nie.
+function quittungMerken(ich: { person_id: string; nurLesen?: boolean }, threads: string[], art: "angekommen" | "gelesen") {
+  if (!threads.length || ich.nurLesen) return Promise.resolve();
+  const p = Promise.resolve(db.rpc("kc_club_chat_quittung_merken", { p_person: ich.person_id, p_threads: threads.slice(0, 50), p_art: art }))
+    .then((r: any) => { if (r?.error) console.error("quittung", r.error.message); }, (e) => console.error("quittung", String(e)));
+  try { (globalThis as any).EdgeRuntime?.waitUntil?.(p); } catch {}
+  return p;
 }
 // KC-CLUB-LOESCHEN: vor jedem Löschen eine vollständige Sicherung ins Änderungsprotokoll (Wiederherstellungspunkt)
 async function geloescht(ich: { person_id: string }, was: string, sicherung: Record<string, unknown>) {
@@ -5621,6 +5630,7 @@ Deno.serve(async (req) => {
       await geburtstagZettelAbnehmen().catch((e) => console.error("geburtstag zettel ab", String(e))); // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0)
       await sonderstundenWartung().catch((e) => console.error("sonderstunden wartung", String(e))); // KICC-F-100 (2.419.0)
       await zeitumstellungMelden().catch((e) => console.error("zeitumstellung", String(e))); // 2.442.0 KC-CLUB-ZEITUMSTELLUNG
+      await db.from("kc_club_chat_quittung").delete().lt("am", new Date(Date.now() - 400 * 86400000).toISOString()).then(() => {}, () => {}); // 2.447.0: nach 400 Tagen weg
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-SPUR (2.23.88): Wege der Mitglieder nur 30 Tage aufbewahren
       { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }
@@ -6203,6 +6213,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         // KC-CLUB-WAS-NEU (2.24.12, Wunsch Hansi): beim Öffnen getrennt nach Einzel- und Gruppenchats zeigen
         const neuIds = zahlen.filter((x: any) => x.n > 0).map((x: any) => x.t.thread_id);
+        quittungMerken(ich, neuIds, "angekommen"); // 2.447.0: neue Nachrichten sind in der App angekommen (zugestellt)
         // KC-CLUB-NACHRICHT-MAHNUNG (2.223.0, Wunsch Hansi): ungelesene Nachrichten älter als 5 Tage bzw. ungelesene ❗ wichtige →
         // die Kachel „Neue Nachr.“ blinkt rot/orange. Fehler hier stören den Start nie (dann ohne Mahnung, Zahl bleibt ehrlich).
         // KC-CLUB-REALTIME (2.226.0): eigener, nicht erratbarer Signal-Kanal (HMAC in der Datenbank) – Fehler → App fragt wie früher nach
@@ -6713,12 +6724,27 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
               if (["delivered", "displayed", "opened"].includes(x.event_type) && (!angekommen || x.created_at < angekommen)) { angekommen = x.created_at; angWie = x.event_type === "delivered" ? "vom Mail-Anbieter bestätigt" : "Push auf dem Handy angezeigt"; }
               if (x.event_type === "opened") geoeffnet = frueh(geoeffnet, x.created_at);
             }
+            e.pushAm = angekommen; // 2.447.0: echte Rückmeldung des Handys (für „zugestellt um“)
             const z = (zg ?? []).find((x: any) => x.person_id === e.person_id);
             if (!angekommen && z && !inko.has(e.person_id) && String(z.zuletzt_gesehen) >= m.created_at) { angekommen = z.zuletzt_gesehen; angWie = "Club-App seitdem geöffnet"; }
             const gelesen = e.gelesen ? (e.zuletztGeoeffnet || null) : null;
             if (gelesen && !angekommen) { angekommen = gelesen; angWie = "in der App gelesen"; }
             const a = (antw ?? []).find((x: any) => x.sender_person_id === e.person_id);
             e.ampel = { gesendet, gesendetWie: [...new Set(gesWie)].join(" + "), angekommen, angekommenWie: angWie, gelesen: gelesen || geoeffnet, gelesenWie: gelesen ? "in der App gelesen" : geoeffnet ? "Push geöffnet" : "", beantwortet: a?.created_at || null };
+          }
+          // 2.447.0 KC-CLUB-GRUPPEN-QUITTUNG (Wunschliste #8, Wunsch Hansi „wie in WhatsApp: zugestellt an xy um x Uhr, gelesen von xy um x Uhr“):
+          // erste echte Uhrzeit je Empfänger – aus den Einträgen „angekommen“/„gelesen“, der Push-Rückmeldung und bei Express deren Zeiten.
+          // Ohne festgehaltene Uhrzeit (ältere Nachrichten): „Uhrzeit unbekannt“ – nie eine geratene Zeit.
+          const [{ data: qu }, { data: exZ }] = await Promise.all([
+            ids.length ? db.from("kc_club_chat_quittung").select("person_id,art,seit,am").eq("thread_id", m.thread_id).in("person_id", ids).gte("am", m.created_at).order("am").limit(3000) : Promise.resolve({ data: [] as any[] }),
+            db.from("kc_club_express_zustellung").select("person_id,angekommen_am,gelesen_am").eq("message_id", m.id)]);
+          const erste = (pid: string, art: string) => (qu ?? []).find((q: any) => q.person_id === pid && q.art === art && (!q.seit || q.seit < m.created_at))?.am ?? null;
+          for (const e of empfaenger as any[]) {
+            const xz: any = (exZ ?? []).find((x: any) => x.person_id === e.person_id), ink = inko.has(e.person_id);
+            const gel = [erste(e.person_id, "gelesen"), xz?.gelesen_am].filter(Boolean).map(String).sort()[0] ?? null;
+            const zu = [e.pushAm, ink ? null : erste(e.person_id, "angekommen"), ink ? null : xz?.angekommen_am, gel].filter(Boolean).map(String).sort()[0] ?? null;
+            e.quittung = { zugestellt: zu, gelesen: gel, gelesenOhneZeit: !gel && !!e.gelesen, zugestelltOhneZeit: !zu && (!!e.gelesen || !!e.ampel?.angekommen) };
+            delete e.pushAm;
           }
           wege = (req ?? []).map((r: any) => ({
             kanal: r.channel, status: r.status,
@@ -6729,8 +6755,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           }));
         }
         // KC-CLUB-WICHTIG (1.53.1, Wunsch Hansi): in den Infos zeigen, dass es eine wichtige Nachricht ist
-        const { data: wi } = await db.from("kc_club_nachricht_wichtig").select("am").eq("message_id", m.id).maybeSingle();
-        return json({ id: m.id, zeit: m.created_at, von: eigen ? "Du" : name(m.sender_person_id), eigen, empfaenger, wege, wegeSichtbar: darfWege, wichtig: !!wi });
+        const [{ data: wi }, { data: exr }] = await Promise.all([db.from("kc_club_nachricht_wichtig").select("am").eq("message_id", m.id).maybeSingle(),
+          db.from("kc_club_express").select("message_id").eq("message_id", m.id).maybeSingle()]); // 2.447.0: auch Express in den Infos
+        return json({ id: m.id, zeit: m.created_at, von: eigen ? "Du" : name(m.sender_person_id), eigen, empfaenger, wege, wegeSichtbar: darfWege, wichtig: !!wi, express: !!exr });
       }
 
       // ----- KC-CLUB-FEHLERPROTOKOLL (0.93.0) -----
@@ -8609,6 +8636,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const archiv = await chatArchivHolen(ich.person_id); // KC-CLUB-CHAT-ARCHIV (2.23.28)
         // KC-CLUB-WICHTIG (1.53.0): ungelesene wichtige Nachrichten je Chat
         const ungelesenIds = (msgs ?? []).filter((x: any) => x.sender_person_id !== ich.person_id && (!gelesen.get(x.thread_id) || x.created_at > gelesen.get(x.thread_id))).map((x: any) => x.id).slice(0, 300);
+        quittungMerken(ich, [...new Set((msgs ?? []).filter((x: any) => ungelesenIds.includes(x.id)).map((x: any) => x.thread_id as string))], "angekommen"); // 2.447.0
         const { data: wi } = ungelesenIds.length ? await db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", ungelesenIds) : { data: [] as any[] };
         const wichtigSet = new Set((wi ?? []).map((x: any) => x.message_id));
         const liste = (th ?? []).map((t: any) => {
@@ -8785,6 +8813,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           };
         });
         // KC-CLUB-CHAT-KARTEI (2.191.0): „vorschau“ = Blick in die Rollkartei der Chats – zählt NICHT als gelesen (keine Lesehaken für andere)
+        if (!ich.nurLesen && p.vorschau !== true) await quittungMerken(ich, [id], "gelesen"); // 2.447.0: VOR dem Weitersetzen von „gelesen bis“ (zählt die Uhrzeit)
         if (!ich.nurLesen && p.vorschau !== true) await db.from("kc_communication_thread_participants").update({ last_read_at: jetzt() }).eq("thread_id", id).eq("person_id", ich.person_id);
         // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG: Chat mit Express-Sendung geöffnet = gelesen (nicht bei der Vorschau in der Rollkartei)
         if (!ich.nurLesen && p.vorschau !== true) {

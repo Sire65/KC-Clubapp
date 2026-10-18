@@ -2446,7 +2446,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 218. 1.53.1: Wichtig auch in den Nachricht-Infos (KC-CLUB-WICHTIG)
 {
   const srv = lies("supabase/functions/kc-club/index.ts");
-  assert.match(srv, /wegeSichtbar: darfWege, wichtig: !!wi \}/, "nachricht_details liefert wichtig");
+  assert.match(srv, /wegeSichtbar: darfWege, wichtig: !!wi(, express: !!exr)? \}/, "nachricht_details liefert wichtig"); // 2.447.0: + express
   assert.match(html, /\$\{r\.wichtig \? '<div class="ni-zeile ni-wichtig">❗ ?<span>|\$\{r\.wichtig \? '<div class="ni-zeile ni-wichtig"><span>❗ <b>Wichtige Nachricht<\/b><\/span><span>Wichtigkeit: hoch<\/span>/, "Info zeigt Wichtigkeit hoch");
   assert.match(srv, /const stumm = await stummFuer\(/, "stumm bleibt stumm (auch bei ❗)");
 }
@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6574,6 +6574,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/i === JZB_KG_WUERFE - 1 \? 9 :/.test(g) && /if \(t >= JZB_KG_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(g) && /K\.wisch = Math\.min\(1, K\.wisch \+ dt \/ 3\)/.test(g), "letzter Wurf alle Neune, Tafel wischen, neuer Lauf");
   assert.ok(/jzbKgTafelMalen\(c, K, J, k, jzbEisNameText\(\)\)/.test(programm) && /neun \? "Alle Neune!" : H\.n \+ " Holz!"/.test(programm), "Tafel mit Vornamen, Holz-Ansage");
   assert.ok(/jahreszeitVorschau\('kegeln'\)">🎳 Kegelabend</.test(seite) && /kegeln: \["🎳", "✨", "🎉"\]/.test(programm) && /\{ id: "kegeln", thema: "darstellung"/.test(programm), "Vorschau, Ersatz-Bild, Hilfe");
+}
+// 2.447.0 KC-CLUB-GRUPPEN-QUITTUNG (Wunschliste #8): Übersicht wie WhatsApp – gelesen von (blau) / zugestellt an (grau) mit Uhrzeit
+{
+  const mig = lies("supabase/migrations/20261018_kc_club_v2447_chat_quittung.sql");
+  assert.ok(/art text not null check \(art in \('angekommen', 'gelesen'\)\)/.test(mig) && /enable row level security/.test(mig) && /revoke all on function public\.kc_club_chat_quittung_merken\(text, uuid\[\], text\) from public, anon, authenticated;/.test(mig), "Tabelle + Funktion nur für den Server");
+  assert.ok(/m\.created_at > s\.seit/.test(mig) && /t\.person_id = p_person/.test(mig), "nur bei neuen Nachrichten, nur Teilnehmer");
+  assert.ok(lies("tools/db-test/79_erwartet.txt").includes("doppelt_verhindert=t"), "Probelauf");
+  assert.ok(/quittungMerken\(ich, neuIds, "angekommen"\);/.test(server) && /await quittungMerken\(ich, \[id\], "gelesen"\); \/\/ 2\.447\.0: VOR dem Weitersetzen/.test(server), "angekommen beim Laden, gelesen beim Öffnen");
+  assert.ok(/q\.art === art && \(!q\.seit \|\| q\.seit < m\.created_at\)/.test(server) && /gelesenOhneZeit: !gel && !!e\.gelesen/.test(server), "erste echte Uhrzeit, sonst ohne Zeit");
+  assert.ok(/ink \? null : erste\(e\.person_id, "angekommen"\)/.test(server), "Inkognito nicht verraten");
+  assert.ok(/function niQuittungHtml\(r\)/.test(html) && /Gelesen von/.test(html) && /Zugestellt an/.test(html) && /"Uhrzeit unbekannt"/.test(html) && /class="ni-mehr"/.test(html), "Übersicht, alte Einzelheiten aufklappbar");
+  assert.ok(/onclick="event\.stopPropagation\(\);nachrichtInfo\('\$\{esc\(m\.id\)\}'\)"/.test(html), "Haken antippen öffnet die Übersicht");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
