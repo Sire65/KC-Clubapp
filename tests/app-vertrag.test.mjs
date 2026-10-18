@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6056,7 +6056,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/case "push_pruefen": \{/.test(server) && /diesesBekannt: !!dies, diesesAktiv: !!dies\?\.active/.test(server), "Server: Stand der eigenen Push-Zugänge");
   assert.ok(/if \(sub && r\.diesesBekannt\) \{ try \{ await sub\.unsubscribe\(\); \} catch \{\} sub = null; \}/.test(html) && /await api\("push_anmelden", \{ subscription: sub\.toJSON\(\), userAgent: navigator\.userAgent, wieder: true \}\);/.test(html), "Selbstheilung bei Erlaubnis, aber totem Zugang");
-  assert.ok(/if \(!r\.frueher \|\| r\.aktiv > 0\) return;/.test(html) && /lsSetzen\("kc_club_push_wieder_gefragt", heute\)/.test(html) && /🔔 Jetzt wieder einschalten/.test(html), "nur wenn früher Push lief und kein Gerät mehr – höchstens einmal am Tag");
+  assert.ok(/if \(!r\.frueher \|\| \(r\.aktiv \|\| 0\) - altHier > 0\) return;/.test(html) && /lsSetzen\("kc_club_push_wieder_gefragt", heute\)/.test(html) && /🔔 Jetzt wieder einschalten/.test(html), "nur wenn früher Push lief und kein anderes Gerät mehr (2.481.0: alte Abos dieses Geräts zählen nicht) – höchstens einmal am Tag");
   assert.ok(/if \(!PUSH_PRUEF\.lief\) \{ PUSH_PRUEF\.lief = true; setTimeout\(\(\) => pushPruefen\(\)\.catch\(\(\) => \{\}\), 6000\); \}/.test(html), "einmal je Start, nicht im Startweg");
   assert.ok(/const ohnePush = !abo\?\.length && !imApp\.has\(an\);/.test(server) && /if \(zug\?\.length && abo\?\.length\) versand = await routerSenden\("club_nachricht_push"/.test(server) && /return json\(\{ ok: true, id: k\.id, push: versand\.gesendet > 0, ohnePush \}\);/.test(server), "Anklopfen: ehrliche Rückmeldung ohne Push-Zugang");
   assert.ok(/klopfWartenStart\(r\.id, pid, name, r\.ohnePush\)/.test(html) && /hat auf dem Handy gerade keine Benachrichtigungen an/.test(html), "Hinweis im Anklopf-Fenster");
@@ -9464,7 +9464,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 }
 
 // 2.238.0 KC-CLUB-GASTGEBER-STAND (Wunsch Hansi): Gastgeber/in + Clubleitung bekommen am Vorabend den Anmeldestand
-// 2.480.0 KC-CLUB-GASTGEBER-FRUEHWARNUNG: 2 Std. vorher nur bei Änderung, dazwischen jede Änderung (gesammelt, nachts nicht) an die Gastgeberin
+// 2.481.0 KC-CLUB-GASTGEBER-FRUEHWARNUNG: 2 Std. vorher nur bei Änderung, dazwischen jede Änderung (gesammelt, nachts nicht) an die Gastgeberin
 {
   const g = server.slice(server.indexOf("async function gastgeberStandLauf("), server.indexOf("async function gastgeberMitteilen("));
   assert.ok(/await gastgeberStandLauf\(\)\.catch/.test(server) && /const vorabendFaellig = !war\("vorabend"\) && heuteAbend && berlinTag\(new Date\(t\.beginn\)\) === morgen;/.test(g) && /heuteAbend = std >= 18/.test(g), "Vorabend ab 18 Uhr, im Zeitplaner");
@@ -10843,7 +10843,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(RUF\.rolle === "angerufen" && !RUF\.pc\) return `<span class="ms-ton-text">🔊 \$\{vn\} möchte mit dir sprechen<\/span>` \+ k\("🔊 Annehmen"/.test(html), "Mikrofon erst nach eigenem Annehmen");
   assert.ok(/if \(RUF\?\.ms\) anrufAuflegen\(\); \/\/ KC-CLUB-FERNHILFE F4: Ende der Sitzung = Ton aus/.test(html) && /ssFernFlaeche\(\); if \(RUF\?\.ms\) anrufAuflegen\(\); \}/.test(html), "Ende der Sitzung = Ton aus (beide Seiten)");
 }
-// 2.480.0 KC-CLUB-LAUFBAND-SCHLAU: Erledigtes bestätigen statt auffordern, Neuheiten, Tageszeit & Anlass
+// 2.481.0 KC-CLUB-LAUFBAND-SCHLAU: Erledigtes bestätigen statt auffordern, Neuheiten, Tageszeit & Anlass
 {
   const s = programm.slice(programm.indexOf("function ilTreffen("), programm.indexOf("function ilHtml("));
   assert.ok(/ja: "✅ Du bist dabei", nein: "❌ Abgesagt – jederzeit änderbar"/.test(s) && /mitfahrt \? \[\["🚗 Mitfahrt", "zumTreffen\(true\)"\]\]/.test(s) && /"🍳 Viel Spaß beim Treffen!"/.test(s), "Treffen: dabei grün, heute mit Mitfahrt, läuft: viel Spaß");
@@ -10853,7 +10853,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(!/api\(/.test(s), "keine Server-Abfrage");
   assert.ok(/\.il-gruen \{ --il-f: #5fd38d;/.test(seite), "grüne Stufe");
 }
-// 2.480.0 KC-CLUB-GASTGEBER-FRUEHWARNUNG: Einladung (mit Tagesordnung, Uhrzeit, Treffpunkt), Änderung und Absage an die Gastgeberin immer per Push + E-Mail
+// 2.481.0 KC-CLUB-GASTGEBER-FRUEHWARNUNG: Einladung (mit Tagesordnung, Uhrzeit, Treffpunkt), Änderung und Absage an die Gastgeberin immer per Push + E-Mail
 {
   const m = server.slice(server.indexOf("async function gastgeberMitteilen("), server.indexOf("// KC-CLUB-ANTWORT-ERINNERUNG-2T"));
   assert.ok(/if \(!t\.gastgeber_person_id \|\| t\.gastgeber_person_id === ich\) return false;/.test(m) && /\["push", "email"\]/.test(m) && /Du bist Gastgeberin\/Gastgeber – aktuell/.test(m), "Gastgeber-Hinweis, Push + E-Mail");
@@ -10861,3 +10861,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/await gastgeberMitteilen\(t, ich\.person_id, "geaendert", treffenText/.test(server) && /await gastgeberMitteilen\(t, ich\.person_id, "abgesagt", treffenText/.test(server), "Änderung und Absage");
   assert.ok(/Tagesordnung:\\n\$\{top\.join\("\\n"\)\}/.test(server), "Einladung enthält die Tagesordnung");
 }
+// 2.481.0 KC-CLUB-PUSH-ERLAUBNIS-WEG (Fall Dieter): Erlaubnis im Handy weg, altes Abo stand noch aktiv → abmelden, ehrlich warnen
+{
+  const p = html.slice(html.indexOf("async function pushPruefen("), html.indexOf("async function pushUmschalten("));
+  assert.ok(/api\("push_pruefen", \{ endpoint: sub\?\.endpoint \|\| "", ua: navigator\.userAgent \}\)/.test(p) && /const altHier = \(r\.diesesAktiv \? 1 : 0\) \+ \(r\.gleichesGeraet \|\| 0\);/.test(p), "App fragt mit Geräte-Kennung");
+  assert.ok(/if \(altHier\) try \{ await api\("push_abmelden", \{ endpoint: sub\?\.endpoint \|\| "", erlaubnisWeg: true/.test(p) && /if \(!r\.frueher \|\| \(r\.aktiv \|\| 0\) - altHier > 0\) return;/.test(p), "alte Abos dieses Geräts abmelden, dann Hinweis zeigen");
+  assert.ok(/gleichesGeraet: gleich/.test(server) && /x\.active && x\.endpoint !== eigen && x\.user_agent === ua/.test(server) && /if \(p\.erlaubnisWeg\)/.test(server) && /"push_erlaubnis_weg"/.test(server), "Server erkennt und meldet ab");
+}
+

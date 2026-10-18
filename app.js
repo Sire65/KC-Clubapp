@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.480.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.481.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -23425,7 +23425,7 @@ function ilAusblenden(id) {
 function ilTreffen(t) {
   if (!t) return { id: "treffen", stufe: "weiss", sym: "📅", t: "Kein Termin geplant", u: "Sobald ein Köcheclub-Termin ansteht, siehst du es hier.", ohneAus: true, voll: true };
   const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : ""), beginn = new Date(t.beginn), heute = isoBerlin(beginn) === heuteIso();
-  // 2.480.0 KC-CLUB-LAUFBAND-SCHLAU: schon geantwortet → nicht mehr auffordern, sondern bestätigen (grüner Haken)
+  // 2.481.0 KC-CLUB-LAUFBAND-SCHLAU: schon geantwortet → nicht mehr auffordern, sondern bestätigen (grüner Haken)
   const meine = { ja: "✅ Du bist dabei", nein: "❌ Abgesagt – jederzeit änderbar", vielleicht: "❓ Vielleicht" }[t.meine] || "❔ Bitte zu- oder absagen";
   // 2.102.0 KC-CLUB-TERMIN-ANTEIL (Wunsch Hansi): „✅ 3/18 angemeldet“ = 3 von 18 Mitgliedern haben schon zugesagt
   const alle = Number(INIT?.mitgliederAnzahl) || 0, gesamtTxt = alle ? `✅ <b>${t.ja}/${alle}</b> angemeldet` : `✅ ${t.ja} Zusagen`;
@@ -23442,7 +23442,7 @@ function ilTreffen(t) {
       : mitfahrt ? `<b class="antwort-zeile">✅ Dabei</b>` : `<b class="antwort-zeile">${meine}</b> · ${kommen}`, // kurz, passt in eine Zeile
     knoepfe: offen ? [["✔ Zusagen", `ilAntwort('${esc(t.id)}','ja')`, blinken], ["✖", `ilAntwort('${esc(t.id)}','nein')`]] : mitfahrt ? [["🚗 Mitfahrt", "zumTreffen(true)"]] : null };
 }
-// ---------- 2.480.0 KC-CLUB-LAUFBAND-SCHLAU (Wunsch Hansi „etwas intelligenter: wer schon zugesagt oder abgestimmt hat, braucht nur einen Hinweis
+// ---------- 2.481.0 KC-CLUB-LAUFBAND-SCHLAU (Wunsch Hansi „etwas intelligenter: wer schon zugesagt oder abgestimmt hat, braucht nur einen Hinweis
 // mit grünem Haken – nicht zu etwas auffordern, was schon erledigt ist; ab und an auf neue Funktionen hinweisen, damit es lebendiger wird“) ----------
 // Erledigt-Abgleich: rote Meldungen, die heute schon da waren und jetzt weg sind, kommen bis zum Abend als grüne Bestätigung.
 // Neuheiten: je Gerät an höchstens 3 Tagen, nach dem Antippen nie wieder; immer nur eine pro Runde. Alles lokal, keine Server-Abfrage.
@@ -35088,7 +35088,7 @@ const PUSH_PRUEF = { lief: false };
 async function pushPruefen() {
   if (!KEY || !ICH || !pushMoeglich() || pushWeg() || !INIT?.vapidPublicKey) return;
   const reg = await navigator.serviceWorker.ready; let sub = null; try { sub = await reg.pushManager.getSubscription(); } catch {}
-  const r = await api("push_pruefen", { endpoint: sub?.endpoint || "" });
+  const r = await api("push_pruefen", { endpoint: sub?.endpoint || "", ua: navigator.userAgent });
   if (Notification.permission === "granted") {
     if (sub && r.diesesAktiv) return; // alles in Ordnung
     if (sub && r.diesesBekannt) { try { await sub.unsubscribe(); } catch {} sub = null; } // vom Push-Dienst abgelehnt (410) → neu anlegen
@@ -35096,7 +35096,12 @@ async function pushPruefen() {
     await api("push_anmelden", { subscription: sub.toJSON(), userAgent: navigator.userAgent, wieder: true });
     pushStatusZeigen?.(); wichtigZeigen(); return;
   }
-  if (!r.frueher || r.aktiv > 0) return; // nie Push gehabt (bewusst ohne) oder ein anderes Gerät bekommt ihn
+  // 2.481.0 KC-CLUB-PUSH-ERLAUBNIS-WEG (Fall Dieter: angeklopft, nichts kam an): Erlaubnis im Handy weg, aber das alte Abo dieses Geräts stand
+  // beim Server noch als aktiv → er schickte weiter (Push-Dienst nimmt an, Handy zeigt nichts), und hier hieß es „ein anderes Gerät bekommt ihn“.
+  // Jetzt: alte Abos DIESES Geräts abmelden – dann sagt das Anklopfen dem Gegenüber ehrlich „bekommt gerade keine Benachrichtigungen“.
+  const altHier = (r.diesesAktiv ? 1 : 0) + (r.gleichesGeraet || 0);
+  if (altHier) try { await api("push_abmelden", { endpoint: sub?.endpoint || "", erlaubnisWeg: true, ua: navigator.userAgent, erlaubnis: Notification.permission }); } catch {}
+  if (!r.frueher || (r.aktiv || 0) - altHier > 0) return; // nie Push gehabt (bewusst ohne) oder ein anderes Gerät bekommt ihn
   const heute = heuteIso(); if (lsLesen("kc_club_push_wieder_gefragt") === heute) return; lsSetzen("kc_club_push_wieder_gefragt", heute);
   const gesperrt = Notification.permission === "denied";
   const f = dlgOeffnen(`<h3 class="dlg-kopf">🔔 Deine Benachrichtigungen sind aus</h3>

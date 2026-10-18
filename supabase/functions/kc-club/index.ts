@@ -92,7 +92,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.480.0";
+const SERVER_VERSION = "2.481.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5015,7 +5015,7 @@ const RT_GRENZE = 2000000, RT_STUFEN: [number, string][] = [[50, "Hälfte erreic
 // KC-CLUB-GASTGEBER-STAND (2.238.0, Wunsch Hansi): Wer bei einem Treffen als Gastgeber/in eingetragen ist (z. B. Anne), bekommt
 // am Vorabend (ab 18 Uhr) und 2 Stunden vor Beginn Push + E-Mail mit dem Anmeldestand (Zusagen mit Namen, vielleicht, Absagen, offen,
 // Notizen wie „bringe Gast mit“) – die Clubleitung (Vorstand + Admin) bekommt dasselbe. Jede Stufe nur einmal (Merker im Protokoll).
-// 2.480.0 KC-CLUB-GASTGEBER-FRUEHWARNUNG (Wunsch Hansi „1 Tag vorher E-Mail und Push, wie viele sich angemeldet haben, 2 Stunden vorher nochmal –
+// 2.481.0 KC-CLUB-GASTGEBER-FRUEHWARNUNG (Wunsch Hansi „1 Tag vorher E-Mail und Push, wie viele sich angemeldet haben, 2 Stunden vorher nochmal –
 // aber nur, falls Änderungen da sind; ansonsten nur bei Änderung“): Vorabend (ab 18 Uhr) wie bisher immer; danach meldet jede Änderung
 // (Zu-/Absage, Notiz) kurz an die Gastgeberin – gesammelt (höchstens alle 15 Min.), nachts (22–7 Uhr) zurückgehalten; 2 Stunden vorher der
 // ganze Stand nur, wenn sich seit der letzten Meldung etwas geändert hat. Merker: der gemeldete Stand steht im Protokoll (details.stand).
@@ -5084,7 +5084,7 @@ async function gastgeberStandLauf() {
       text: text(false), url: APP_URL + "#termine" }, `club-gastgeber-stand-leitung:${t.id}:${stufe}`).catch((e) => console.error("gastgeber stand leitung", String(e)));
   }
 }
-// 2.480.0 KC-CLUB-GASTGEBER-FRUEHWARNUNG: die Gastgeberin bekommt Einladung, Änderung und Absage immer per Push UND E-Mail (egal welcher Weg
+// 2.481.0 KC-CLUB-GASTGEBER-FRUEHWARNUNG: die Gastgeberin bekommt Einladung, Änderung und Absage immer per Push UND E-Mail (egal welcher Weg
 // sonst gewählt ist) – mit Hinweis, dass sie Gastgeberin ist, und dem aktuellen Stand der Zusagen. Liefert true, wenn gesendet.
 async function gastgeberMitteilen(t: any, ich: string, art: "einladung" | "geaendert" | "abgesagt", vars: { titel: string; kurz: string; betreff: string; text: string; url: string }) {
   if (!t.gastgeber_person_id || t.gastgeber_person_id === ich) return false;
@@ -6673,7 +6673,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (p.benachrichtigen !== false) {
           const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
           const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
-          const gast = anlass === "geaendert" && t.art === "treffen" && await gastgeberMitteilen(t, ich.person_id, "geaendert", treffenText(t, vorname(g), anlass)); // 2.480.0
+          const gast = anlass === "geaendert" && t.art === "treffen" && await gastgeberMitteilen(t, ich.person_id, "geaendert", treffenText(t, vorname(g), anlass)); // 2.481.0
           versand = await senden("club_treffen", gast ? ziel.filter((id) => id !== t.gastgeber_person_id) : ziel, treffenText(t, vorname(g), anlass), `club-treffen:${t.id}:${Date.now()}`);
           elternHinweis(ziel, "termin", `${anlass === "neu" ? "📅 Neuer" : "✏️ Geänderter"} Köcheclub-Termin – {kind}`, `${t.titel}: ${wann(t.beginn)}${t.ort ? " – " + t.ort : ""}`); // 2.431.0 KC-CLUB-ELTERN
         }
@@ -6687,7 +6687,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!t) throw new Fehler("Treffen nicht gefunden.", 404);
         const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
         const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
-        const gast = t.art === "treffen" && await gastgeberMitteilen(t, ich.person_id, "abgesagt", treffenText(t, vorname(g), "abgesagt")); // 2.480.0
+        const gast = t.art === "treffen" && await gastgeberMitteilen(t, ich.person_id, "abgesagt", treffenText(t, vorname(g), "abgesagt")); // 2.481.0
         const versand = await senden("club_treffen", gast ? ziel.filter((id) => id !== t.gastgeber_person_id) : ziel, treffenText(t, vorname(g), "abgesagt"), `club-treffen-absage:${t.id}`);
         elternHinweis(ziel, "absage", "❌ Köcheclub-Termin fällt aus – {kind}", `${t.titel}: ${wann(t.beginn)}`); // 2.431.0 KC-CLUB-ELTERN
         await protokoll(ich.person_id, "treffen_abgesagt", { treffen: t.id, versand });
@@ -7278,7 +7278,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           url,
         };
         const wege = zustellwege(p.wege);
-        const gast = !nurOffen && await gastgeberMitteilen(t, ich.person_id, "einladung", vars); // 2.480.0: Gastgeberin immer per Push + E-Mail, mit Gastgeber-Hinweis
+        const gast = !nurOffen && await gastgeberMitteilen(t, ich.person_id, "einladung", vars); // 2.481.0: Gastgeberin immer per Push + E-Mail, mit Gastgeber-Hinweis
         const versand = await sendenGewaehlt("club_treffen", gast ? ziel.filter((id) => id !== t.gastgeber_person_id) : ziel, wege, vars, `club-buero-${nurOffen ? "erinnerung" : "einladung"}:${tid}:${Date.now()}`);
         await db.from("kc_club_buero_sitzung").upsert({ treffen_id: tid, ...(prep ? {} : { geaendert_von: ich.person_id }), [nurOffen ? "erinnerung_am" : "einladung_am"]: jetzt() }, { onConflict: "treffen_id" });
         await protokoll(ich.person_id, nurOffen ? "buero_erinnerung" : "buero_einladung", { treffen: tid, empfaenger: ziel.length, wege, versand });
@@ -13724,9 +13724,12 @@ Köcheclub-App`,
       }
       // 2.321.0 KC-CLUB-PUSH-WIEDER: Stand der eigenen Push-Zugänge (nur eigene) – ist der dieses Geräts noch gültig, lief früher schon Push?
       case "push_pruefen": {
-        const { data } = await db.from("kc_member_push_subscriptions").select("endpoint,active").eq("person_id", ich.person_id);
+        const { data } = await db.from("kc_member_push_subscriptions").select("endpoint,active,user_agent").eq("person_id", ich.person_id);
         const eigen = String(p.endpoint || ""), dies = eigen ? (data ?? []).find((x: any) => x.endpoint === eigen) : null;
-        return json({ aktiv: (data ?? []).filter((x: any) => x.active).length, frueher: (data ?? []).length > 0, diesesBekannt: !!dies, diesesAktiv: !!dies?.active });
+        // 2.481.0 KC-CLUB-PUSH-ERLAUBNIS-WEG (Fall Dieter): aktive Abos mit genau derselben Geräte-Kennung (User-Agent) – hat das Handy die
+        // Erlaubnis verloren, sind das die alten Abos DIESES Geräts (der Push-Dienst nimmt sie weiter an, das Handy zeigt sie aber nie)
+        const ua = txt(p.ua, 400), gleich = ua ? (data ?? []).filter((x: any) => x.active && x.endpoint !== eigen && x.user_agent === ua).length : 0;
+        return json({ aktiv: (data ?? []).filter((x: any) => x.active).length, frueher: (data ?? []).length > 0, diesesBekannt: !!dies, diesesAktiv: !!dies?.active, gleichesGeraet: gleich });
       }
       // ----- KC-CLUB-GERAETE (0.98.0): welche Geräte bekommen meine Push-Meldungen? (nur eigene) -----
       case "geraete_liste": {
@@ -13760,6 +13763,11 @@ Köcheclub-App`,
       }
       case "push_abmelden": {
         await db.from("kc_member_push_subscriptions").update({ active: false, updated_at: jetzt() }).eq("person_id", ich.person_id).eq("endpoint", String(p.endpoint || ""));
+        if (p.erlaubnisWeg) { // 2.481.0 KC-CLUB-PUSH-ERLAUBNIS-WEG: Handy hat die Erlaubnis verloren → auch die alten Abos dieses Geräts abmelden
+          const ua = txt(p.ua, 400);
+          const { data: weg } = ua ? await db.from("kc_member_push_subscriptions").update({ active: false, updated_at: jetzt(), last_error: "Erlaubnis im Handy weg" }).eq("person_id", ich.person_id).eq("active", true).eq("user_agent", ua).select("id") : { data: [] };
+          await protokoll(ich.person_id, "push_erlaubnis_weg", { erlaubnis: txt(p.erlaubnis, 20), abgemeldet: (weg?.length ?? 0) + (p.endpoint ? 1 : 0) });
+        }
         return json({ ok: true });
       }
       case "push_test": {

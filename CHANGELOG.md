@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.481.0 – 2026-10-18 – 📣 Info-Laufband schlauer und lebendiger (KC-CLUB-LAUFBAND-SCHLAU) · 🏠 Frühwarnung für Gastgeber (KC-CLUB-GASTGEBER-FRUEHWARNUNG) · Server 2.481.0
+## 2.481.0 – 2026-10-18 – 📣 Info-Laufband schlauer und lebendiger (KC-CLUB-LAUFBAND-SCHLAU) · 🏠 Frühwarnung für Gastgeber (KC-CLUB-GASTGEBER-FRUEHWARNUNG) · 🔔 Anklopfen-Fehler behoben · Server 2.481.0
 Wunsch Hansi: „Das muss noch etwas intelligenter werden. Wer schon zugesagt oder eine Abstimmung schon gemacht hat, braucht nur einen Hinweis mit grünem Haken – nicht zu etwas auffordern, was schon erledigt ist. Und ab und an auf neue Funktionen hinweisen, damit es lebendiger wird.“
 - **Neue grüne Stufe** = erledigt / gut so. Zugesagt: „✅ Du bist dabei · 👥 7/18“ (grüner Rahmen); abgesagt: „❌ Abgesagt – jederzeit änderbar“; „Vielleicht“ bleibt rot mit Knöpfen.
 - **Erledigtes wird bestätigt statt gefordert**: Was heute rot war und erledigt ist (Eingangskorb, Abstimmung, Terminanfrage, Terminfindung, Schulung, Aufgabe, Benachrichtigungen, Büro-Eingang), erscheint bis zum Abend als grüner Haken („Deine Stimme ist abgegeben“, „Erledigt – danke!“). Ausgeblendetes zählt nicht.
@@ -13,6 +13,8 @@ Wunsch Hansi: „Das muss noch etwas intelligenter werden. Wer schon zugesagt od
 - **Danach jede Änderung** (Zu-/Absage, zurückgenommen, neue Notiz) kurz an die Gastgeberin, mit Namen: „❌ Steven hat abgesagt – jetzt 6 Zusagen“. Gesammelt (höchstens alle 15 Min.), nachts 22–7 Uhr zurückgehalten.
 - **2 Stunden vorher** der ganze Stand **nur, wenn sich seit der letzten Meldung etwas geändert hat** (mit „Neu seit der letzten Meldung“); sonst bleibt es ruhig.
 - **Einladung** aus dem Büro (Tagesordnung, Uhrzeit, Treffpunkt), **Änderung** und **Absage** des Treffens bekommt die Gastgeberin immer per Push **und** E-Mail – egal welcher Weg gewählt ist – mit „Du bist Gastgeberin – aktuell 5 Zusagen“; nicht doppelt.
+
+**🔔 Anklopfen kam nicht an** (KC-CLUB-PUSH-ERLAUBNIS-WEG, Fall Dieter: „angeklopft, er hat nicht angenommen – das passiert öfter“): Hatte das Handy die Erlaubnis für Benachrichtigungen verloren (Android räumt auf, Neuinstallation), stand das alte Abo beim Server weiter als aktiv – der Push-Dienst nahm an, das Handy zeigte nichts, und die App dachte „ein anderes Gerät bekommt ihn“ und schwieg. Betroffen waren 4 Mitglieder. Jetzt meldet die App beim Start die alten Abos dieses Geräts ab und zeigt „🔔 Deine Benachrichtigungen sind aus – jetzt wieder einschalten“; wer anklopft, sieht ehrlich „bekommt gerade keine Benachrichtigungen“.
 
 ## 2.480.0 – 2026-10-18 – SOS-Seite immer mit Notrufnummern
 - KC-CLUB-ZEIGE-FUELLEN (TÜV 18.10., Fehler behindert Mitglieder → sofort): Über Hilfe „Zeig mir wo“, Twinkey „Was mache ich im Notfall?“ oder Zurück nach Neuladen öffnete die SOS-Seite leer – ohne Notrufnummern. Ursache: nur sosStart() füllte sie. Jetzt füllt zeige() selbst (wie bei allen anderen Seiten); ebenso Sicherheits-Check. „Neue Gruppe“ ohne Formular → Nachrichten, „Neue Nachricht“ ohne Mitgliederliste lädt sie erst.
