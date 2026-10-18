@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.440.0 – 2026-10-18 – Admin: Wünsche an Claude
+Neue Admin-Liste „📝 Wünsche an Claude“: Vorschläge, Fehler und Ideen eintragen (auch per 🎤), Reihenfolge und ⭐ wichtig festlegen; Claude arbeitet sie der Reihe nach ab und schreibt Ergebnis, Version oder Rückfrage hinein.
+
 ## 2.439.0 – 2026-10-16 – 📣 Info-Laufband auf der Startseite (KC-CLUB-INFO-LAUFBAND)
 Wunsch Hansi: „Über den 3 Feldern Nachricht, online, Termine ein großes Info-Feld – komplett gerahmt, so breit wie die 3 zusammen; dort abwechselnd Infos, z. B. 3 Dokumente im Eingangskorb oder ‚jetzt noch für die nächste Sitzung anmelden‘.“
 - In der ersten Info-Karte zwischen Überschrift und den 3 Feldern: **genau so breit wie die 3 Felder zusammen**, gleiche Rundung, feste Höhe (die Karte springt beim Wechsel nicht).

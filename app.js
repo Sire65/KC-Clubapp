@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.439.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.440.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -20442,6 +20442,75 @@ const AD_KACHELN = [
 KACHELN.admin = AD_KACHELN.map(([id, sym, t, gr]) => ({ id: "ad-" + id, sym, t, nur: () => !!ICH?.admin, aktion: `adBlatt('${id}')`,
   u: () => (gr === "link" ? "Direkt zur Verwaltung" : adZustand(id)[1]),
   klasse: () => `ad ad-${gr}${gr === "link" ? "" : " l-" + adZustand(id)[0]}` }));
+// ---------- 2.440.0 KC-CLUB-WUNSCHLISTE (Wunsch Hansi „Baue mir eine Liste ins Programm, wo ich dir Vorschläge reinschreibe – du schaust immer
+// da rein und arbeitest Punkt für Punkt ab“): nur Admin. Hansi schreibt (auch per 🎤), Claude liest die Liste direkt in der Datenbank, setzt
+// „in Arbeit“ / „Rückfrage“ / „erledigt (Version)“ und schreibt die Antwort hinein. Rückfragen stehen ganz oben; die Antwort darauf gibt den
+// Punkt wieder an Claude. Reihenfolge = Abarbeitungsfolge (⭐ wichtig zuerst, sonst ▲▼). ----------
+const WU = { liste: null, bearbeiten: null };
+const WU_BEREICHE = ["Club-App", "Kasse", "PC-Manager", "Money Butler", "Dienstplan DP2", "Verwaltung", "Sonstiges"];
+const WU_STATUS = { offen: "🆕 offen", in_arbeit: "🔧 Claude arbeitet daran", rueckfrage: "❓ Rückfrage", erledigt: "✅ erledigt", zurueckgestellt: "⏸ zurückgestellt" };
+KACHELN.admin.unshift({ id: "ad-wuensche", sym: "📝", t: "Wünsche an Claude", nur: () => !!ICH?.admin, aktion: "wuStart()",
+  u: () => { const l = WU.liste; if (!l) return "Vorschläge, Fehler, Ideen"; const r = l.filter((x) => x.status === "rueckfrage").length, o = l.filter((x) => ["offen", "in_arbeit"].includes(x.status)).length; return r ? `❓ ${r} Rückfrage${r === 1 ? "" : "n"} · ${o} offen` : `${o} offen`; },
+  zahl: () => (WU.liste || []).filter((x) => x.status === "rueckfrage").length, klasse: () => "ad ad-app" });
+const wuOffen = (l) => l.filter((x) => ["offen", "in_arbeit"].includes(x.status)).sort((a, b) => (b.wichtig - a.wichtig) || (a.reihenfolge - b.reihenfolge));
+async function wuLaden() { try { WU.liste = (await api("wl_liste", {}, { still: true })).liste || []; } catch (e) { if (!WU.liste) throw e; } }
+async function wuStart() {
+  blattAuf("wuBlatt", '<p class="hinweis">⏳ Liste wird geladen …</p>');
+  try { await wuLaden(); wuZeigen(); } catch (e) { $("wuBlatt")?.remove(); meldeFehler(e); }
+}
+function wuZeile(x, art) {
+  const wann = (z) => z ? new Date(z).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }) : "";
+  const kopf = `<div class="wu-kopf"><b>#${x.nr}</b>${x.wichtig ? ' <span title="wichtig">⭐</span>' : ""} <span class="marke">${esc(x.bereich)}</span> <span class="wu-st wu-${x.status}">${WU_STATUS[x.status]}</span><span class="hinweis" style="margin-left:auto">${wann(x.erstellt_am)}</span></div>`;
+  if (WU.bearbeiten === x.id) return `<div class="karte wu-z">${kopf}<textarea id="wuEdit" rows="4" maxlength="4000" data-diktat>${esc(x.text)}</textarea>
+    <div class="knoepfe"><button class="knopf haupt klein" onclick="wuSpeichern('${x.id}')">💾 Speichern</button><button class="knopf klein" onclick="WU.bearbeiten=null;wuZeigen()">Abbrechen</button></div></div>`;
+  const text = `<div class="wu-text">${esc(x.text).replace(/\n/g, "<br>")}</div>`;
+  const antwort = x.antwort ? `<div class="wu-antwort"><b>🤖 Claude${x.version ? ` · v${esc(x.version)}` : ""}:</b> ${esc(x.antwort).replace(/\n/g, "<br>")}</div>` : "";
+  const rm = x.rueckmeldung ? `<div class="wu-rm"><b>🧑‍🍳 Deine Antwort:</b> ${esc(x.rueckmeldung).replace(/\n/g, "<br>")}</div>` : "";
+  if (art === "rueckfrage") return `<div class="karte wu-z wu-frage">${kopf}${text}${antwort}${rm}<textarea id="wuRm_${x.id}" rows="3" maxlength="4000" placeholder="Deine Antwort an Claude …" data-diktat></textarea>
+    <div class="knoepfe"><button class="knopf haupt klein" onclick="wuAntworten('${x.id}')">↩️ Antworten</button></div></div>`;
+  const knoepfe = art === "offen" ? `<div class="knoepfe"><button class="knopf klein" title="früher" onclick="wuSchieben('${x.id}', -1)">▲</button><button class="knopf klein" title="später" onclick="wuSchieben('${x.id}', 1)">▼</button>
+      <button class="knopf klein" onclick="WU.bearbeiten='${x.id}';wuZeigen()">✏️ Ändern</button><button class="knopf klein" onclick="wuWichtig('${x.id}')">${x.wichtig ? "☆ nicht wichtig" : "⭐ wichtig"}</button>
+      <button class="knopf klein" onclick="wuStatus('${x.id}', 'zurueckgestellt')">⏸ Später</button>${x.status === "offen" && !x.antwort ? `<button class="knopf klein" onclick="wuLoeschen('${x.id}')">🗑️</button>` : ""}</div>`
+    : art === "zurueck" ? `<div class="knoepfe"><button class="knopf klein" onclick="wuStatus('${x.id}', 'offen')">▶️ Wieder aufnehmen</button></div>`
+    : art === "erledigt" ? `<div class="knoepfe"><button class="knopf klein" onclick="wuStatus('${x.id}', 'offen')">↩️ Nochmal öffnen</button></div>` : "";
+  return `<div class="karte wu-z">${kopf}${text}${antwort}${rm}${knoepfe}</div>`;
+}
+function wuZeigen() {
+  const f = $("wuBlatt")?.querySelector(".blatt-innen"); if (!f) return;
+  const l = WU.liste || [], frage = l.filter((x) => x.status === "rueckfrage"), offen = wuOffen(l), erl = l.filter((x) => x.status === "erledigt").sort((a, b) => String(b.erledigt_am || "").localeCompare(String(a.erledigt_am || ""))), zur = l.filter((x) => x.status === "zurueckgestellt");
+  const entwurf = $("wuText")?.value || "";
+  f.innerHTML = `<div class="kopf2" style="margin:0 0 6px"><h3 style="margin:0;flex:1">📝 Wünsche an Claude</h3><button class="knopf klein" onclick="$('wuBlatt').remove()">✕</button></div>
+    <p class="hinweis" style="margin:0 0 8px">Schreib hier hinein, was geändert, gebaut oder repariert werden soll – gern mit 🎤. Claude schaut regelmäßig hinein, arbeitet die Punkte <b>der Reihe nach</b> ab (⭐ wichtig zuerst) und schreibt dir hier, was gemacht wurde und in welcher Version. Hat Claude eine Frage, steht sie ganz oben.</p>
+    <div class="karte" style="margin:0 0 10px"><textarea id="wuText" rows="3" maxlength="4000" placeholder="Was soll Claude machen? Zum Beispiel: Im Kalender die Feiertage fetter schreiben" data-diktat>${esc(entwurf)}</textarea>
+      <div class="knoepfe" style="align-items:center"><select id="wuBereich" aria-label="Bereich">${WU_BEREICHE.map((b) => `<option>${b}</option>`).join("")}</select>
+        <label class="wu-wichtig"><input type="checkbox" id="wuWichtig"> ⭐ wichtig</label><button class="knopf haupt" onclick="wuNeu()">➕ Eintragen</button></div></div>
+    ${frage.length ? `<h4 class="wu-h">❓ Rückfragen von Claude (${frage.length})</h4>${frage.map((x) => wuZeile(x, "rueckfrage")).join("")}` : ""}
+    <h4 class="wu-h">📋 Offen (${offen.length}) <small class="hinweis">– in dieser Reihenfolge arbeitet Claude sie ab</small></h4>${offen.map((x) => wuZeile(x, "offen")).join("") || '<p class="hinweis">Nichts offen. 👍</p>'}
+    ${zur.length ? `<details class="wu-d"><summary><b>⏸ Zurückgestellt (${zur.length})</b></summary>${zur.map((x) => wuZeile(x, "zurueck")).join("")}</details>` : ""}
+    ${erl.length ? `<details class="wu-d"><summary><b>✅ Erledigt (${erl.length})</b></summary>${erl.map((x) => wuZeile(x, "erledigt")).join("")}</details>` : ""}`;
+}
+async function wuNeu() {
+  const t = $("wuText")?.value.trim(); if (!t) return melde("Bitte erst etwas hineinschreiben", true);
+  try { const r = await api("wl_speichern", { text: t, bereich: $("wuBereich").value, wichtig: $("wuWichtig").checked }); $("wuText").value = ""; melde(`📝 Eingetragen als #${r.nr} – Claude kümmert sich darum`); await wuLaden(); wuZeigen(); }
+  catch (e) { meldeFehler(e); }
+}
+async function wuSpeichern(id) {
+  const x = (WU.liste || []).find((y) => y.id === id), t = $("wuEdit")?.value.trim(); if (!x || !t) return;
+  try { await api("wl_speichern", { id, text: t, bereich: x.bereich, wichtig: x.wichtig }); WU.bearbeiten = null; await wuLaden(); wuZeigen(); melde("💾 Geändert"); } catch (e) { meldeFehler(e); }
+}
+async function wuAntworten(id) {
+  const x = (WU.liste || []).find((y) => y.id === id), t = $("wuRm_" + id)?.value.trim(); if (!x) return; if (!t) return melde("Bitte erst die Antwort hineinschreiben", true);
+  try { await api("wl_speichern", { id, text: x.text, bereich: x.bereich, wichtig: x.wichtig, rueckmeldung: t }); await wuLaden(); wuZeigen(); melde("↩️ Antwort ist bei Claude – der Punkt ist wieder offen"); } catch (e) { meldeFehler(e); }
+}
+async function wuWichtig(id) { const x = (WU.liste || []).find((y) => y.id === id); if (!x) return; try { await api("wl_speichern", { id, text: x.text, bereich: x.bereich, wichtig: !x.wichtig }); await wuLaden(); wuZeigen(); } catch (e) { meldeFehler(e); } }
+async function wuStatus(id, status) { try { await api("wl_status", { id, status }); await wuLaden(); wuZeigen(); } catch (e) { meldeFehler(e); } }
+async function wuSchieben(id, richtung) { // ▲▼ innerhalb der offenen Punkte gleicher Wichtigkeit: Reihenfolge-Wert zwischen die Nachbarn legen
+  const l = wuOffen(WU.liste || []), i = l.findIndex((x) => x.id === id), x = l[i]; if (!x) return;
+  const gl = l.filter((y) => y.wichtig === x.wichtig), k = gl.indexOf(x), ziel = k + richtung; if (ziel < 0 || ziel >= gl.length) return;
+  const nb = gl[ziel], weiter = gl[ziel + richtung], neu = weiter ? (nb.reihenfolge + weiter.reihenfolge) / 2 : nb.reihenfolge + richtung;
+  try { await api("wl_status", { id, reihenfolge: neu }); await wuLaden(); wuZeigen(); } catch (e) { meldeFehler(e); }
+}
+async function wuLoeschen(id) { if (!(await frage("Diesen Punkt löschen?", { ja: "🗑️ Löschen" }))) return; try { await api("wl_loeschen", { id }); await wuLaden(); wuZeigen(); } catch (e) { meldeFehler(e); } }
 // ---------- 2.341.0 KC-CLUB-ADMIN-VERLAUF (Admin-Register Stufe 2, vorbereitet in 2.21.0, Wunsch Hansi): Verlauf aus kc_club_messwerte ----------
 // Messung in der Datenbank alle 10 Min. (pg_cron, ohne Datenschnittstelle: Größe, Verbindungen, Hintergrund-Aufrufe ok/fehlgeschlagen) und
 // über die Datenschnittstelle alle 15 Min. vom Club-Server (Antwortzeit). Fehlt die Schnittstellen-Messung → rot. Nie grün ohne Messung.
@@ -35171,6 +35240,7 @@ function suAppListe() {
     ["↩️", "Nachricht zurückholen", "zurückholen zurueckholen vertippt zurücknehmen ändern korrigieren falsch", () => { melde("↩️ Nachricht antippen (PC: rechte Maustaste) → „Zurückholen und ändern“ – geht, solange sie noch niemand gelesen hat"); zeige("nachrichten"); }],
     ["⏰", "Nachricht später senden", "später senden planen zeit morgen montag wiederholen", () => { melde("⏰ Nachricht schreiben, unten auf ⏰ tippen und Zeit wählen"); zeige("nachrichten"); }],
     ["📨", "Offene Terminanfragen", "terminanfrage anfrage termin offen antworten einladung", () => zeige("termine")],
+    ...(ICH?.admin ? [["📝", "Wünsche an Claude", "wunsch wünsche claude vorschlag idee fehler aufgabe liste entwickler", () => wuStart()]] : []), // 2.440.0
     ...(ICH?.admin ? [["📅", "Wer kommt wann? (Nutzung)", "wer kommt wann nutzung uhrzeit wochentag statistik öffnen", () => wannStatistik()]] : []),
     ["📊", "Abstimmung im Chat", "abstimmung umfrage chat wer kommt", () => { melde("Im Chat auf 📎 tippen → „📊 Abstimmung“"); zeige("nachrichten"); }],
     ["🛡️", "Sicherheits-Check", "sicherheit sicher datenschutz verschlüsselung sicherung prüfen test", () => sicherheitStart()],

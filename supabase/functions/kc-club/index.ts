@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.433.0";
+const SERVER_VERSION = "2.440.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -12897,6 +12897,46 @@ Köcheclub-App`,
       }
       // KC-CLUB-DB-AUFRAEUMEN (2.24.7): größte Tabellen ansehen + alte Protokolle/Messwerte löschen – nur Admin
       // 2.389.0 KC-CLUB-DB-LAST (Wunsch Hansi): Datenbank-Abfragen je Stunde und Quelle (Programm) – für die Balkengrafik im Admin → Supabase
+      // ----- 2.440.0 KC-CLUB-WUNSCHLISTE (Wunsch Hansi): Wünsche an Claude – nur Admin; Claude liest/antwortet direkt in der Datenbank -----
+      case "wl_liste": {
+        nurAdmin(ich);
+        const { data, error } = await db.from("kc_club_wunschliste").select("id,nr,text,bereich,wichtig,status,antwort,rueckmeldung,version,reihenfolge,erstellt_am,geaendert_am,erledigt_am")
+          .order("reihenfolge", { ascending: true }).limit(500);
+        if (error) throw new Fehler("Wunschliste gerade nicht abrufbar.", 503);
+        return json({ liste: data ?? [] });
+      }
+      case "wl_speichern": {
+        nurAdmin(ich);
+        const BEREICHE = ["Club-App", "Kasse", "PC-Manager", "Money Butler", "Dienstplan DP2", "Verwaltung", "Sonstiges"];
+        const text = txt(p.text, 4000), bereich = BEREICHE.includes(String(p.bereich)) ? String(p.bereich) : "Club-App", wichtig = !!p.wichtig;
+        if (!text) throw new Fehler("Bitte etwas eintragen.", 400);
+        if (p.id) {
+          const neu: Record<string, unknown> = { text, bereich, wichtig, geaendert_am: new Date().toISOString() };
+          if (p.rueckmeldung !== undefined) { neu.rueckmeldung = txt(p.rueckmeldung, 4000) || null; if (neu.rueckmeldung) neu.status = "offen"; } // Antwort auf Rückfrage → wieder an Claude
+          const { error } = await db.from("kc_club_wunschliste").update(neu).eq("id", String(p.id));
+          if (error) throw new Fehler("Konnte nicht speichern.", 500);
+          return json({ ok: true });
+        }
+        const { data, error } = await db.from("kc_club_wunschliste").insert({ text, bereich, wichtig, erstellt_von: ich.person_id }).select("id,nr").single();
+        if (error) throw new Fehler("Konnte nicht speichern.", 500);
+        return json({ ok: true, id: data.id, nr: data.nr });
+      }
+      case "wl_status": { // Admin: zurückstellen, wieder öffnen, nach oben/unten
+        nurAdmin(ich);
+        const neu: Record<string, unknown> = { geaendert_am: new Date().toISOString() };
+        if (["offen", "zurueckgestellt", "erledigt"].includes(String(p.status))) { neu.status = String(p.status); neu.erledigt_am = p.status === "erledigt" ? new Date().toISOString() : null; }
+        if (Number.isFinite(Number(p.reihenfolge))) neu.reihenfolge = Number(p.reihenfolge);
+        const { error } = await db.from("kc_club_wunschliste").update(neu).eq("id", String(p.id || ""));
+        if (error) throw new Fehler("Konnte nicht speichern.", 500);
+        return json({ ok: true });
+      }
+      case "wl_loeschen": { // nur, solange Claude noch nicht daran gearbeitet hat
+        nurAdmin(ich);
+        const { data, error } = await db.from("kc_club_wunschliste").delete().eq("id", String(p.id || "")).eq("status", "offen").is("antwort", null).select("id");
+        if (error) throw new Fehler("Konnte nicht löschen.", 500);
+        if (!data?.length) throw new Fehler("Daran arbeitet Claude schon – bitte stattdessen „zurückstellen“.", 409);
+        return json({ ok: true });
+      }
       case "db_last": {
         nurAdmin(ich);
         const tage = Math.min(35, Math.max(1, Number(p.tage) || 7));
