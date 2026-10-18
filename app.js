@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.475.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.476.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1039,7 +1039,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); if ($("setFee")) $("setFee").checked = einst("fee", true); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); if ($("setFee")) $("setFee").checked = einst("fee", true); if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -1137,7 +1137,7 @@ function wasNeuZeigen(pw) {
       <p class="hinweis" style="margin:4px 0 0">In deinen Einstellungen kannst du sie jederzeit wieder aktivieren.</p></div>`);
   f.querySelectorAll("[data-wn]").forEach((b) => (b.onclick = () => { const w = b.dataset.wn; fensterZu(f);
     if (w === "n") zeige("nachrichten"); else if (w === "p") pwFenster(pw); else if (w === "sp") spStart("mg");
-    else if (w === "aus") { einstellung("wasNeu", false); if ($("setWasNeu")) $("setWasNeu").checked = false; melde("🔕 Ausgeschaltet – wieder einschalten: ⚙️ Einstellungen → 🗣️ Ansagen, Töne & Tipps → „👋 Beim Öffnen zeigen, was neu ist“"); } }));
+    else if (w === "aus") { einstellung("wasNeu", false); if ($("setWasNeu")) $("setWasNeu").checked = false; melde("🔕 Ausgeschaltet – wieder einschalten: ⚙️ Einstellungen → 💡 Hilfe & Lernen → „👋 Beim Öffnen zeigen, was neu ist“"); } }));
   return true;
 }
 async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pinnwand nicht zusätzlich öffnen
@@ -1633,6 +1633,7 @@ async function einstiegFristenSpeichern() {
 function einstiegHin(klappe, zielId) {
   zeige("einstellungen");
   const d = document.querySelector(`#v-einstellungen details[data-klappe="${klappe}"]`); if (d) { d.open = true; d.classList.add("einfach-sichtbar"); } // 2.24.15: auch in der einfachen Ansicht erreichbar
+  for (let x = (zielId && $(zielId)) || d; x; x = x.parentElement?.closest("details")) { x.open = true; if (x.matches("#v-einstellungen > details[data-klappe]")) x.classList.add("einfach-sichtbar"); } // 2.469.0 KC-CLUB-EINST-GRUPPEN: auch Haupt- und Nachbarbereich
   setTimeout(() => { const z = (zielId && $(zielId)) || d; if (!z) return; z.scrollIntoView({ behavior: "smooth", block: "center" });
     z.classList.add("hervor"); setTimeout(() => z.classList.remove("hervor"), 2600); }, 300);
 }
@@ -1711,7 +1712,7 @@ const EINWEISUNG = [
   { id: "b-kontakt-teilen", blatt: true, sym: "👤", t: "Kontakt teilen", x: "Mitglied <b>suchen und antippen</b> – seine Kontaktkarte wird in den Chat geschickt. Die anderen sehen nur, was das Mitglied selbst freigegeben hat." },
   { id: "b-link", blatt: true, sym: "🔗", t: "Persönlicher Link", x: "Für das Mitglied wurde ein <b>neuer persönlicher Link</b> zur App erzeugt – der alte gilt ab jetzt nicht mehr. Schick ihn per <b>🟢 WhatsApp</b> oder <b>📋 kopiere</b> ihn; eine Anleitung zum Installieren ist im Text schon dabei.", nur: () => !!ICH?.admin },
   { id: "b-mitfahrt", blatt: true, sym: "🚗", t: "Mitfahrgelegenheit anbieten", x: "Wähle, wie viele <b>Plätze</b> du frei hast, und trag auf Wunsch einen <b>Treffpunkt</b> ein. Andere können sich dann bei diesem Termin einen Platz nehmen; wer eine Mitfahrt gesucht hat, bekommt Bescheid." },
-  { id: "b-mikro-wahl", blatt: true, sym: "🎤", t: "Sprachnachricht oder Diktieren", x: "<b>🎤 Sprachnachricht</b>: deine Stimme wird verschickt. <b>✍️ Diktieren</b>: die App schreibt mit, verschickt wird Text. Mit <b>Immer so</b> fragt die App nicht mehr – ändern unter ⚙️ → Ansagen, Töne &amp; Tipps." },
+  { id: "b-mikro-wahl", blatt: true, sym: "🎤", t: "Sprachnachricht oder Diktieren", x: "<b>🎤 Sprachnachricht</b>: deine Stimme wird verschickt. <b>✍️ Diktieren</b>: die App schreibt mit, verschickt wird Text. Mit <b>Immer so</b> fragt die App nicht mehr – ändern unter ⚙️ → Ansagen &amp; Töne." },
   { id: "b-neu-wahl", blatt: true, sym: "＋", t: "Etwas Neues anlegen", x: "Wähle, was du neu anlegen möchtest – unter jedem Punkt steht kurz, wofür er da ist. <b>Abbrechen</b> schließt das Fenster, ohne etwas anzulegen." },
   { id: "b-eltern", blatt: true, sym: "👪", t: "Eltern-Handy", x: "Für Kinder kannst du hier ein <b>Eltern-Handy</b> eintragen (Name und Handynummer). Beim Eintragen öffnet sich WhatsApp mit Link und Erklärung; später schickst du ihn mit <b>🟢 Link per WhatsApp</b> erneut, <b>📋 Link kopieren</b> macht immer einen frischen Link (der alte gilt dann nicht mehr). Die Eltern tippen dort auf „Einschalten“. Danach kommt <b>nur ein kurzer Hinweis</b>, wenn das Kind einen Termin hat (Club-Treffen, Schulung, Erinnerung, Absage) oder eine Nachricht der Clubleitung bekommt – <b>nie der Text</b>, nie Chats unter Mitgliedern. Das Kind sieht unter ⚙️ → Privatsphäre, wer benachrichtigt wird.", nur: () => !!(ICH?.admin || ICH?.vorstand) },
   { id: "b-rolle", blatt: true, sym: "🎖️", t: "Ämter und Rechte", x: "Hier legst du fest, welche <b>Ämter</b> das Mitglied hat und was es darf – z. B. Termine anlegen, Protokolle lesen und schreiben oder Kontaktdaten anderer sehen. Schalter aus heißt: darf das nicht. Unter <b>Zugang</b> wählst du 👤 Mitglied (alles), 🧑‍🍳 Aushilfe (Termine, Nachrichten, SOS, Spiele, Mein Dienst, Fotos ansehen) oder 🙋 Gast (Termine, Nachrichten, SOS, Spiele) – das sperrt auch der Server. <b>💾 Speichern</b> übernimmt es.", nur: () => !!ICH?.admin },
@@ -1765,7 +1766,7 @@ function einwHtml(v) {
     <div class="knoepfe"><button class="knopf haupt klein" onclick="einwVerstanden('${v}')">👍 Verstanden</button><button class="knopf klein" onclick="einwAlleAus()">Keine Einweisungen mehr</button></div></div>`;
 }
 function einwVerstanden(v) { einwKarteWeg(); einwSpeichern({ gesehen: { ...einwStand().gesehen, [v]: new Date().toISOString() } }); }
-async function einwAlleAus() { einwKarteWeg(); if (await einwSpeichern({ an: false })) { einwSchalterZeigen(); melde("🎓 Keine Einweisungen mehr – wieder einschalten unter ⚙️ → „🗣️ Ansagen, Töne & Tipps“ → „🎓 Einweisung beim ersten Öffnen“"); } }
+async function einwAlleAus() { einwKarteWeg(); if (await einwSpeichern({ an: false })) { einwSchalterZeigen(); melde("🎓 Keine Einweisungen mehr – wieder einschalten unter ⚙️ → „💡 Hilfe & Lernen“ → „🎓 Einweisung beim ersten Öffnen“"); } }
 async function einwSchalter(an) { if (await einwSpeichern({ an })) melde(an ? "🎓 Einweisungen sind an" : "🎓 Einweisungen sind aus"); }
 async function einwZuruecksetzen() { try { localStorage.removeItem(EINW_GEZEIGT); } catch {} if (await einwSpeichern({ an: true, gesehen: {} })) { einwSchalterZeigen(); einwZeigen(aktuelleAnsicht); melde("🎓 Alle Einweisungen kommen beim nächsten Öffnen der Bereiche wieder"); } }
 function einwSchalterZeigen() { if ($("setEinw")) $("setEinw").checked = einwStand().an; }
@@ -1820,7 +1821,7 @@ function rgPulsStart(s) {
 function rgPulsStop() { clearTimeout(RG.pulsUhr); document.querySelectorAll(".rg-puls").forEach((e) => e.classList.remove("rg-puls")); }
 const rgKlappe = (name) => `#v-einstellungen details[data-klappe="${name}"]`;
 // Bereich aufklappen und beim Ende wieder in den alten Zustand bringen (auch das gemerkte Auf/Zu)
-function rgAuf(...namen) { for (const n of namen) { const d = document.querySelector(rgKlappe(n)); if (!d || d.open) continue; d.open = true; RG.zurueck.push(() => { d.open = false; }); } }
+function rgAuf(...namen) { for (const n of namen) { const d = document.querySelector(rgKlappe(n)); for (let x = d; x; x = x.parentElement?.closest("details")) if (!x.open) { const y = x; y.open = true; RG.zurueck.push(() => { y.open = false; }); } } } // 2.469.0: auch den Hauptbereich (KC-CLUB-EINST-GRUPPEN)
 const rgDatum = (n) => tagPlus(heuteIso(), n);
 const RG_EINSTELLUNGEN = [
   { v: "einstellungen", sel: ["#v-einstellungen .kopf2"], t: "⚙️ Alle Einstellungen", x: "In diesem Video zeige ich dir alle Einstellungen und was sie bedeuten. Du findest sie unten unter Mehr. Ein Tipp auf eine Überschrift klappt den Bereich auf und zu. Keine Sorge: Ich verstelle nichts – alles bleibt, wie du es eingestellt hast." },
@@ -1832,8 +1833,8 @@ const RG_EINSTELLUNGEN = [
   { v: "einstellungen", sel: [rgFeld("setGross"), rgFeld("setGrossE")], mussSel: true, vor: () => rgAuf("darstellung", "einfach"), live: async (L) => { await L.tipp(rgSichtbarer("#setGross, #setGrossE")); rgDemo({ gross: true }); }, t: "🔠 Große Schrift", x: "Große Schrift macht alle Texte und Knöpfe größer – so wie jetzt. Gut, wenn man ohne Brille liest." },
   { v: "einstellungen", sel: [rgKlappe("darstellung")], mussSel: true, vor: () => rgAuf("darstellung"), t: "🎨 Weiteres zur Darstellung", x: "Außerdem in der Darstellung: Chat-Farben ändern deine Sprechblasen und den Hintergrund in allen Chats. Der Sparmodus hilft bei schwachem Netz oder älteren Handys – dann ist alles ruhiger. Und das Warte-Bild ist das, was beim Laden erscheint." },
   { v: "einstellungen", sel: [rgKlappe("effekte")], mussSel: true, vor: () => rgAuf("effekte"), video: "effekte", t: "✨ Effekte", x: "Effekte machen die App lebendig: Jahreszeiten im Kopf wie Herbstlaub oder Schnee, ein Effekt beim Wechsel der Register und beim Senden – zum Beispiel Papierflieger oder Brieftaube –, Kacheln umdrehen per Doppeltipp und der Reißwolf beim Löschen. Alles ist einzeln abschaltbar." },
-  { v: "einstellungen", sel: [rgKlappe("ansagen")], mussSel: true, vor: () => rgAuf("ansagen"), t: "🗣️ Tipps & Hilfe", x: "Ansagen, Töne und Tipps, Teil eins – die Hilfen: der Tipp des Tages, was neu ist, und das Fragezeichen unten rechts. Viel Hilfe schaltet alles auf einmal ein. Die Schritt-Unterstützung zeigt mit rotem Rahmen, was als Nächstes kommt, und die Einweisung erklärt jeden Bereich beim ersten Öffnen." },
-  { v: "einstellungen", sel: [rgKlappe("ansagen")], mussSel: true, vor: () => rgAuf("ansagen"), video: "sprache", t: "🎙️ Sprache & Ansagen", x: "Teil zwei – Sprache: Mit der Sprachsteuerung sagst du, was du tun möchtest – zum Beispiel Nachricht an Klaus. Das Handy kann ansagen, wer online kommt, und neue Nachrichten vorlesen. Und das Mikrofon im Chat nimmt Sprachnachrichten auf oder schreibt mit." },
+  { v: "einstellungen", sel: [rgKlappe("hilfe")], mussSel: true, vor: () => rgAuf("hilfe"), t: "💡 Tipps & Hilfe", x: "Hilfe und Lernen – die Hilfen: der Tipp des Tages, was neu ist, und das Fragezeichen unten rechts. Viel Hilfe schaltet alles auf einmal ein. Die Schritt-Unterstützung zeigt mit rotem Rahmen, was als Nächstes kommt, und die Einweisung erklärt jeden Bereich beim ersten Öffnen." },
+  { v: "einstellungen", sel: [rgKlappe("ansagen")], mussSel: true, vor: () => rgAuf("ansagen"), video: "sprache", t: "🎙️ Sprache & Ansagen", x: "Ansagen und Töne – Sprache: Mit der Sprachsteuerung sagst du, was du tun möchtest – zum Beispiel Nachricht an Klaus. Das Handy kann ansagen, wer online kommt, und neue Nachrichten vorlesen. Und das Mikrofon im Chat nimmt Sprachnachrichten auf oder schreibt mit." },
   { v: "einstellungen", sel: [rgKlappe("privat")], mussSel: true, vor: () => rgAuf("privat"), t: "🔒 Privatsphäre – was andere sehen", x: "Privatsphäre, Teil eins: Ob andere deinen Geburtstag sehen – nur Tag und Monat. Ob die Clubleitung bei runden Geburtstagen dein Alter sehen darf. Ob andere sehen, wann du zuletzt da warst – und ob du gerade online bist. Wichtig: Wer das ausschaltet, sieht es auch bei den anderen nicht." },
   { v: "einstellungen", sel: [rgKlappe("privat")], mussSel: true, vor: () => rgAuf("privat"), t: "🔒 Privatsphäre – Spiele & Kontakt", x: "Teil zwei: Ob andere dich zu Spielen herausfordern dürfen, und ob die Spiel-Einladung beim Start kommt. Ob andere bei dir anklopfen dürfen. Ob andere live sehen, was du gerade tippst. Und welche Kontaktdaten andere Mitglieder sehen: Handynummer, Festnetz, E-Mail, Adresse und dein Notfallkontakt." },
   { v: "einstellungen", sel: [rgKlappe("handykalender")], mussSel: true, vor: () => rgAuf("handykalender"), t: "📆 Termine im Handy-Kalender", x: "Termine im Handy-Kalender: Einmal verbinden – dann stehen alle Sitzungen, Veranstaltungen, Aktionen und freigegebenen Geburtstage automatisch in deinem normalen Kalender und bleiben aktuell." },
@@ -3105,7 +3106,7 @@ const RG_PUSH = [
     x: "Welcher Ton erklingt, wenn jemand bei dir anklopft – Holz-Klopfen, Ding-Dong, Gong oder Glöckchen –, suchst du dir unter Privatsphäre beim Anklopfton aus. Mit Testton hörst du ihn vorher." },
   // 7. Ansagen bei offener App
   { v: "einstellungen", tippVor: rgPushTipp("ansagen"), vor: () => rgPushAuf("ansagen"), sel: ["#setSprAnsZeile"], mussSel: true, puls: ["#setSprAnsZeile .knopf"], t: "🗣️ Ansagen bei offener App",
-    x: "Solange die App offen ist, kann dein Handy auch ansagen, was dich betrifft – zum Beispiel, wer gerade online kommt. Das wählst du unter Ansagen, Töne und Tipps bei Sprachansagen. Ist die App zu, kommt der normale Push mit Ton." },
+    x: "Solange die App offen ist, kann dein Handy auch ansagen, was dich betrifft – zum Beispiel, wer gerade online kommt. Das wählst du unter Ansagen und Töne bei Sprachansagen. Ist die App zu, kommt der normale Push mit Ton." },
   // 8. Push repariert sich selbst
   { v: "einstellungen", nur: () => !einfach(), vor: () => rgPushAuf("benachrichtigung"), sel: [rgOn("pushUmschalten()", ".schalter")], mussSel: true, puls: ["#pushStatus"], t: "🩹 Push repariert sich selbst",
     x: "Ist der Push-Zugang auf deinem Gerät kaputt, obwohl das Handy Benachrichtigungen erlaubt, richtet die App ihn beim Öffnen von selbst neu ein. Du musst dafür nichts tun." },
@@ -4885,7 +4886,7 @@ const TIPPS = [
     ja: "🎨 Jetzt einstellen", nein: "🙈 Nicht mehr anzeigen", nur: () => !DESIGNS.find((d) => d.id === DS.design)?.mehr,
     testen: () => { const e = einfach(); einstiegHin(e ? "einfach" : "darstellung", e ? "designMehrKlappeE" : "designMehrKlappe"); setTimeout(() => { for (const id of e ? ["designMehrKlappeE", "designBuntKlappeE"] : ["designMehrKlappe", "designBuntKlappe"]) if ($(id)) $(id).open = true; }, 350); } },
   // 1.59.0 (Wunsch Hansi): Fragen „Soll ich dir zeigen, wo?“ – Ja führt genau hin, Nein = später nochmal anbieten
-  { id: "sprachansage", sym: "🗣️", t: "Möchtest du hören, wenn sich jemand anmeldet?", x: "Unter ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ → <b>„🗣️ Sprachansagen“</b> kreuzt du an, was dein Handy ansagen soll – z. B. „Klaus ist jetzt online“ oder „Christina hat dir eine Nachricht geschickt“. Mit ▶ hörst du ein Beispiel. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !ansageAn(), testen: () => einstiegHin("ansagen", "setSprAnsZeile") }, // 1.75.0: Online-Ansage steht jetzt unter „Sprachansagen“
+  { id: "sprachansage", sym: "🗣️", t: "Möchtest du hören, wenn sich jemand anmeldet?", x: "Unter ⚙️ → „🗣️ Ansagen &amp; Töne“ → <b>„🗣️ Sprachansagen“</b> kreuzt du an, was dein Handy ansagen soll – z. B. „Klaus ist jetzt online“ oder „Christina hat dir eine Nachricht geschickt“. Mit ▶ hörst du ein Beispiel. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !ansageAn(), testen: () => einstiegHin("ansagen", "setSprAnsZeile") }, // 1.75.0: Online-Ansage steht jetzt unter „Sprachansagen“
   { id: "vorlesen", sym: "🔊", t: "Nachrichten vorlesen lassen?", x: "Das Handy kann dir neue Nachrichten im Chat <b>vorlesen</b> – an- und ausschalten mit dem Lautsprecher 🔇/🔊 oben im Chat. <b>Soll ich dir zeigen, wo?</b>", ja: "👉 Ja, zeig mir wo", nein: "⏰ Nein, später", neinSpaeter: true, nur: () => !vorlesenAn(), testen: () => einstiegHin("ansagen", "setVorlesenZeile") },
   { id: "archiv_ordner", sym: "👤", t: "Kennst du schon deinen eigenen Archiv-Ordner?", x: "Im Archiv hast du einen persönlichen Ordner mit Registern – nur du siehst ihn. Mit 🔓 kannst du anderen etwas auf Zeit freigeben.", testen: () => arStart() },
   { id: "wischen", sym: "👉", t: "In Nachrichten kannst du jetzt wischen", x: "Eine Nachricht <b>nach rechts</b> wischen = antworten. <b>Nach links</b> wischen = löschen (mit Rückfrage).", testen: () => zeige("nachrichten") },
@@ -5054,11 +5055,11 @@ const HILFE = [
   { id: "wetter", thema: "darstellung", sym: "🌦️", t: "Wetter für deinen Ort", x: "Im Info-Feld oben steht das Wetter. Unter ⚙️ → Darstellung → „🌦️ Wetter für“ wählst du deinen eigenen Ort.", zeig: () => einstiegHin("darstellung", "meinWetterort") },
   // 🔔 Benachrichtigungen & Töne
   { id: "push_selbst", thema: "toene", sym: "🩹", t: "Benachrichtigungen reparieren sich selbst", x: "Ist der Push-Zugang auf deinem Gerät kaputt, obwohl das Handy Benachrichtigungen erlaubt, richtet die App ihn beim Öffnen <b>von selbst neu ein</b>. Hat das Handy die Erlaubnis entzogen und du bekommst auf keinem Gerät mehr etwas, zeigt die App höchstens einmal am Tag ein Fenster <b>„Benachrichtigungen wieder einschalten“</b> – mit dem Weg, wo man es im Handy erlaubt.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.321.0" }, // 2.337.0 KC-CLUB-TUEV-4
-  { id: "ansage_nachholen", thema: "toene", sym: "📢", t: "Online-Ansage auch kurz nach dem Öffnen", x: "Kommt jemand <b>bis zu 3 Minuten</b> bevor du die App öffnest in die App, sagt sie das beim Öffnen noch an – vorher ging diese Ansage verloren. Wer schon länger da ist, wird nicht angesagt. Ein- und ausschalten unter ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“.", zeig: () => einstiegHin("ansagen"), seit: "2.319.0" },
+  { id: "ansage_nachholen", thema: "toene", sym: "📢", t: "Online-Ansage auch kurz nach dem Öffnen", x: "Kommt jemand <b>bis zu 3 Minuten</b> bevor du die App öffnest in die App, sagt sie das beim Öffnen noch an – vorher ging diese Ansage verloren. Wer schon länger da ist, wird nicht angesagt. Ein- und ausschalten unter ⚙️ → „🗣️ Ansagen &amp; Töne“.", zeig: () => einstiegHin("ansagen"), seit: "2.319.0" },
   { id: "push", thema: "toene", sym: "🔔", t: "Benachrichtigungen je Bereich", x: "Unter ⚙️ → <b>„🔔 Benachrichtigungen“</b> legst du für jeden Bereich fest, ob du eine Push-Nachricht, eine E-Mail oder nichts bekommst.", zeig: () => einstiegHin("benachrichtigung") },
   { id: "test_an_mich", thema: "toene", sym: "🧪", t: "Kommt meine Benachrichtigung an?", x: "Im Register <b>Meins</b> schickt dir „🧪 Test an mich“ einen Probe-Push und eine Probe-Mail. So siehst du sofort, ob alles ankommt.", zeig: () => { zeige("start"); if (!einfach()) register("mein"); } },
-  { id: "tipps_schalter", thema: "toene", sym: "💡", t: "Tipp des Tages an- oder ausschalten", x: "Beim Öffnen zeigt die App ab und zu einen Tipp. Ein- und ausschalten unter ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ → „💡 Tipp des Tages“. Alle Tipps kannst du jederzeit hier im Hilfe-Zentrum nachlesen.", zeig: () => einstiegHin("ansagen", "setTipps") },
-  { id: "einweisung_wieder", thema: "toene", sym: "🎓", t: "Die Erklärungen nochmal sehen", x: "Beim ersten Öffnen eines Bereichs erklärt die App kurz, was man dort machen kann. Unter ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ → „🎓 Einweisung“ holst du alle Erklärungen zurück. Nachlesen kannst du sie hier im Register <b>„🎓 Bereiche kurz erklärt“</b>.", zeig: () => einstiegHin("ansagen", "setEinw") },
+  { id: "tipps_schalter", thema: "toene", sym: "💡", t: "Tipp des Tages an- oder ausschalten", x: "Beim Öffnen zeigt die App ab und zu einen Tipp. Ein- und ausschalten unter ⚙️ → „💡 Hilfe &amp; Lernen“ → „💡 Tipp des Tages“. Alle Tipps kannst du jederzeit hier im Hilfe-Zentrum nachlesen.", zeig: () => einstiegHin("hilfe", "setTipps") },
+  { id: "einweisung_wieder", thema: "toene", sym: "🎓", t: "Die Erklärungen nochmal sehen", x: "Beim ersten Öffnen eines Bereichs erklärt die App kurz, was man dort machen kann. Unter ⚙️ → „💡 Hilfe &amp; Lernen“ → „🎓 Einweisung“ holst du alle Erklärungen zurück. Nachlesen kannst du sie hier im Register <b>„🎓 Bereiche kurz erklärt“</b>.", zeig: () => einstiegHin("hilfe", "setEinw") },
   // 🔒 Privatsphäre & Zugang
   { id: "privatsphaere", thema: "privat", sym: "🔒", t: "Wer sieht was von mir?", x: "Du entscheidest selbst: Unter ⚙️ → <b>„🔒 Privatsphäre“</b> legst du z. B. fest, ob andere sehen, dass du online bist oder wann du zuletzt da warst, ob dein Geburtstag angezeigt wird, ob man bei dir anklopfen darf und ob andere dich zu Spielen herausfordern dürfen. Bekommen deine Eltern kurze Hinweise (nur Termine und Nachrichten der Clubleitung, nie Chat-Texte), steht dort auch <b>„👪 Hinweise an Eltern“</b> mit ihren Namen.", zeig: () => einstiegHin("privat") },
   { id: "zugangslink", thema: "privat", sym: "🔗", t: "Dein persönlicher Zugangslink", x: () => `Die App öffnest du über deinen persönlichen Link. Gib ihn bitte <b>nicht weiter</b> – wer ihn hat, ist in der App als du angemeldet. Neues Handy oder Link verloren? ${esc(adminName())} erzeugt dir einen neuen.` },
@@ -5091,7 +5092,9 @@ const HILFE = [
   { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste einmal auf einen Chat tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
-  { id: "stundenuhren", thema: "toene", sym: "🕰️", t: "Big Ben, Kölner Dom & Co. zur vollen Stunde", x: "Zur vollen Stunde kommt nicht nur der Kuckuck: Unter ⚙️ → <b>„✨ Effekte“</b> → <b>„🕰️ Uhr zur vollen Stunde“</b> (Häkchen setzen) → <b>„🔔 Welche Uhr?“</b> wählst du <b>Big Ben</b> (Westminster-Schlag), <b>Kölner Dom</b> (Dicker Pitter), <b>Münchner Glockenspiel</b>, <b>Prager Rathausuhr</b> (Tod läutet, Hahn kräht), <b>Hamburger Michel</b> (Turmbläser), <b>Schiffsglocke</b> (Glasen), <b>Standuhr</b>, <b>Ave-Maria-Glockenspiel</b> oder <b>Westerkerk Amsterdam</b>. Mit <b>▶</b> hörst du jede vorher an. Kreuzt du mehrere an, kommt jede Stunde eine andere. Alles wird im Handy selbst erzeugt – nachts 22–7 Uhr ohne Ton.", zeig: () => einstiegHin("effekte", "setKuckuck"), seit: "2.467.0" },
+  { id: "einstellungen_ordnung", thema: "darstellung", sym: "🔍", t: "Einstellungen schneller finden", x: "Ganz oben unter ⚙️ steht <b>„🔍 Einstellung suchen“</b>: ein Wort eintippen (z. B. <b>Uhr</b>, <b>Schrift</b>, <b>Push</b>) – dann siehst du nur noch die passenden Schalter, ✕ zeigt wieder alles. In der erweiterten Ansicht gibt es nur noch wenige <b>Hauptbereiche</b> (Benachrichtigungen, Ansagen &amp; Töne, Privatsphäre, Aussehen, Startseite, Hilfe) – darin die Unterbereiche zum Aufklappen. Was zu einem Schalter gehört (z. B. die Uhrenauswahl oder die Jahreszeit), ist <b>grau mit 🔒</b>, bis du den Schalter darüber anhakst.", zeig: () => { zeige("einstellungen"); setTimeout(() => $("einstSuche")?.focus(), 300); }, seit: "2.476.0" },
+  { id: "adventskalender", thema: "darstellung", sym: "🎄", t: "Adventskalender", x: "Vom <b>1. bis 24. Dezember</b> öffnet sich jeden Tag ein Türchen mit einer Bastelanleitung für eine kleine süße Nascherei. Oben im Info-Laufband steht „🎄 Türchen … wartet auf dich“ – antippen, Türchen öffnen. Frühere Türchen kannst du jederzeit nachholen, spätere bleiben zu. Ausschalten: ⚙️ → ✨ Effekte → „🎄 Adventskalender“.", zeig: () => akZeigen(), seit: "2.476.0" },
+  { id: "stundenuhren", thema: "toene", sym: "🕰️", t: "Big Ben, Kölner Dom & Co. zur vollen Stunde", x: "Zur vollen Stunde kommt nicht nur der Kuckuck: Unter ⚙️ → <b>„✨ Effekte“</b> → <b>„🕰️ Uhr zur vollen Stunde“</b> (Häkchen setzen) → <b>„🔔 Welche Uhr?“</b> wählst du <b>Big Ben</b> (Westminster-Schlag), <b>Kölner Dom</b> (Dicker Pitter), <b>Münchner Glockenspiel</b>, <b>Prager Rathausuhr</b> (Tod läutet, Hahn kräht), <b>Hamburger Michel</b> (Turmbläser), <b>Schiffsglocke</b> (Glasen), <b>Standuhr</b>, <b>Ave-Maria-Glockenspiel</b> oder <b>Westerkerk Amsterdam</b>. Mit <b>▶</b> hörst du jede vorher an. Kreuzt du mehrere an, kommt jede Stunde eine andere. Fast alles wird im Handy selbst erzeugt – der Hahn bei Prag ist eine echte Aufnahme (Quelle steht bei der Uhr). Nachts 22–7 Uhr ohne Ton.", zeig: () => einstiegHin("effekte", "setKuckuck"), seit: "2.467.0" },
   { id: "themen_laufband", thema: "club", sym: "🗳️", t: "Themen für die nächste Sitzung im Info-Feld", x: "In den 3 Wochen vor einer Sitzung erinnert dich das Info-Feld oben auf der Startseite an die Themen: <b>„3 Themen für die Sitzung am …“</b>. Mit <b>„👍 Abstimmen“</b> unterstützt du die Themen, die dir wichtig sind, mit <b>„＋ Thema“</b> reichst du selbst eins ein – die Sitzung ist dabei schon ausgewählt. Hast du alle unterstützt, wird die Meldung ruhiger (weiß statt gelb).", zeig: () => zeige("vorschlaege"), seit: "2.463.0" },
   { id: "termin_link_prospekt", thema: "termine", sym: "🎪", t: "Termin mit Webseite, Prospekt und Laufband", x: "Beim Anlegen oder Ändern eines Clubtermins (z. B. <b>Adventsmarkt der Freilichtbühne</b>) gibt es jetzt: <b>🌐 Link zur Webseite</b> des Veranstalters, <b>📎 Anlage</b> für den Prospekt (Foto oder PDF) und <b>„📣 Im Info-Laufband ankündigen“</b> – dann erscheint der Termin oben auf der Startseite im Info-Feld, ab 3 Wochen vorher, mit Knopf <b>„🌐 Webseite“</b>. Antippen öffnet den Termin mit Webseite und Prospekt.", seit: "2.461.0" },
   { id: "schrift_zoom", thema: "darstellung", sym: "🔍", t: "Schrift größer ziehen – mit zwei Fingern", x: "Zu klein zum Lesen? Lege <b>zwei Finger</b> auf den Bildschirm und ziehe sie <b>auseinander</b> – Nachrichten, Zettel und Texte werden größer (Knöpfe und Leisten bleiben, wie sie sind). Zusammenschieben macht sie kleiner. Die Größe bleibt gemerkt. Zurück auf normal: mit zwei Fingern <b>doppelt tippen</b> oder unter ⚙️ → Darstellung → „🔍 Schriftgröße“. <b>Ganz ausschalten:</b> ⚙️ → Darstellung → „✌️ Schrift mit zwei Fingern ändern“ (A− / A+ gehen weiter). Ein aufliegender Daumen beim Scrollen verstellt die Schrift nicht mehr.", seit: "2.364.0" }, // 2.364.0 KC-CLUB-SCHRIFT-ZOOM
@@ -5147,13 +5150,13 @@ const HILFE = [
   { id: "vorschlag_unterstuetzen", thema: "club", sym: "👍", t: "Gute Ideen unterstützen", x: "Bei den <b>🗳️ Vorschlägen</b> kannst du Themen anderer mit 👍 unterstützen. So sieht die Clubleitung schnell, was vielen am Herzen liegt.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spende", thema: "club", sym: "💝", t: "Ein Spendenprojekt vorschlagen", x: "Kennst du ein Projekt, das der Club unterstützen könnte? Bei den Vorschlägen gibt es dafür die Art <b>„💝 Spende“</b> – die Projekte kommen dann in die nächste Sitzung.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spiel_mitglieder", thema: "club", sym: "🎲", t: "Gegen andere Mitglieder spielen", x: "In den Spielen unter <b>„👥 Gegen Mitglieder“</b> forderst du jemanden heraus – ihr zieht abwechselnd, und du bekommst Bescheid, wenn du dran bist. An offenen Partien lässt sich sogar <b>„📅 Termin vereinbaren“</b>. Oben steht der 🏆 Pokal des Monats.", zeig: () => spStart(), seit: "2.23.1" },
-  { id: "spiel_schach", thema: "club", sym: "♟️", t: "Schach: schieben, Rochade, Twinkey", x: "Figuren einfach mit dem Finger <b>schieben</b> – oder antippen und dann das Zielfeld. <b>Rochade:</b> den König auf den Turm schieben. Geht sie nicht, sagt dir Twinkey in der Sprechblase, warum (z. B. „Im Schach darfst du nicht rochieren“). Gegen den Computer spielst du gegen <b>🧑‍🍳 Twinkey</b>: Er macht Sprüche, und mit <b>💡 Tipp</b> verrät er dir einen guten Zug. Ob gesprochen wird, stellst du mit einem Knopf ein: <b>🔇 Stumm</b> → <b>🗣️ Nur Twinkey</b> (nur seine Sprüche und Tipps) → <b>🔊 Twinkey + Züge</b> (auch jeder Zug). <b>🔔 Töne</b> schaltet das leise Klacken beim Ziehen. Mit <b>♟️ Figuren</b> wechselst du zwischen Klassisch (Standard), Plastisch und der Küchenbrigade. Twinkey spricht mit der Männerstimme (⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ → „👨 Männerstimme“). Während einer Partie ist oben alles ausgeblendet, damit das Brett groß ist – mit <b>⚙️ Einstellungen</b> holst du es zurück. <b>📼 Meine Partien:</b> Jede Partie wird aufgezeichnet – mit <b>▶ Nachspielen</b> siehst du sie Zug für Zug noch einmal an (⏮ ◀ ▶ ⏭ oder ▶️ Abspielen). Bei Partien gegen Mitglieder geht das auch über <b>📼 Nachspielen</b>.", zeig: () => spStart("pc", "schach"), seit: "2.118.0" },
+  { id: "spiel_schach", thema: "club", sym: "♟️", t: "Schach: schieben, Rochade, Twinkey", x: "Figuren einfach mit dem Finger <b>schieben</b> – oder antippen und dann das Zielfeld. <b>Rochade:</b> den König auf den Turm schieben. Geht sie nicht, sagt dir Twinkey in der Sprechblase, warum (z. B. „Im Schach darfst du nicht rochieren“). Gegen den Computer spielst du gegen <b>🧑‍🍳 Twinkey</b>: Er macht Sprüche, und mit <b>💡 Tipp</b> verrät er dir einen guten Zug. Ob gesprochen wird, stellst du mit einem Knopf ein: <b>🔇 Stumm</b> → <b>🗣️ Nur Twinkey</b> (nur seine Sprüche und Tipps) → <b>🔊 Twinkey + Züge</b> (auch jeder Zug). <b>🔔 Töne</b> schaltet das leise Klacken beim Ziehen. Mit <b>♟️ Figuren</b> wechselst du zwischen Klassisch (Standard), Plastisch und der Küchenbrigade. Twinkey spricht mit der Männerstimme (⚙️ → „🗣️ Ansagen &amp; Töne“ → „👨 Männerstimme“). Während einer Partie ist oben alles ausgeblendet, damit das Brett groß ist – mit <b>⚙️ Einstellungen</b> holst du es zurück. <b>📼 Meine Partien:</b> Jede Partie wird aufgezeichnet – mit <b>▶ Nachspielen</b> siehst du sie Zug für Zug noch einmal an (⏮ ◀ ▶ ⏭ oder ▶️ Abspielen). Bei Partien gegen Mitglieder geht das auch über <b>📼 Nachspielen</b>.", zeig: () => spStart("pc", "schach"), seit: "2.118.0" },
   { id: "spiel_pause", thema: "club", sym: "⏸", t: "Spiel kurz anhalten", x: "Kommt beim Spielen gegen den Computer etwas dazwischen? Unten auf <b>„⏸ Pause“</b> tippen – mit <b>„▶ Weiter“</b> geht es genau dort weiter.", zeig: () => spStart(), seit: "2.23.1" },
   // 🔔 Benachrichtigungen & Töne
   { id: "meine_geraete", thema: "toene", sym: "📱", t: "Auf welchen Geräten kommt Push an?", x: "Kommt auf dem Tablet nichts an? Unter ⚙️ → „🔔 Benachrichtigungen“ zeigt <b>„📱 Meine Geräte“</b>, welche deiner Handys und Tablets Benachrichtigungen bekommen. Daneben schickt „Test-Push senden“ eine Probe.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.23.1" },
   { id: "anklopfton", thema: "toene", sym: "🔔", t: "Ein Anklopfton nach deinem Geschmack", x: "Holz-Klopfen, Ding-Dong, Gong oder Glöckchen: Welcher Ton erklingt, wenn jemand bei dir anklopft, suchst du dir unter ⚙️ → „🔒 Privatsphäre“ aus.", zeig: () => einstiegHin("privat"), seit: "2.23.1" },
-  { id: "wer_ist_da", thema: "toene", sym: "👋", t: "Wer ist da, wenn ich reinkomme?", x: "Beim Reinkommen – also beim Öffnen der App oder nach mindestens 10 Minuten Pause – sagt sie einmal, wer gerade da ist – z. B. <b>„Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder.“</b> Oben erscheint dazu eine kurze Meldung. Ist niemand da, kommt nichts. Wer seinen Online-Status verbirgt, wird nicht genannt. Das Handy spricht erst, wenn du einmal auf den Bildschirm getippt hast. Ausschalten: ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ → <b>„👋 Beim Öffnen“</b>.", zeig: () => einstiegHin("ansagen"), seit: "2.454.0" },
-  { id: "ansage_verlassen", thema: "toene", sym: "🚪", t: "Ansage, wenn jemand die App verlässt", x: "Neben „… ist jetzt online“ kann das Handy auch ansagen, wenn jemand die App verlässt. Das ist zunächst aus – unter ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ kannst du es dazunehmen, wenn du magst.", zeig: () => einstiegHin("ansagen"), seit: "2.23.1" },
+  { id: "wer_ist_da", thema: "toene", sym: "👋", t: "Wer ist da, wenn ich reinkomme?", x: "Beim Reinkommen – also beim Öffnen der App oder nach mindestens 10 Minuten Pause – sagt sie einmal, wer gerade da ist – z. B. <b>„Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder.“</b> Oben erscheint dazu eine kurze Meldung. Ist niemand da, kommt nichts. Wer seinen Online-Status verbirgt, wird nicht genannt. Das Handy spricht erst, wenn du einmal auf den Bildschirm getippt hast. Ausschalten: ⚙️ → „💡 Hilfe &amp; Lernen“ → <b>„👋 Beim Öffnen“</b>.", zeig: () => einstiegHin("hilfe"), seit: "2.454.0" },
+  { id: "ansage_verlassen", thema: "toene", sym: "🚪", t: "Ansage, wenn jemand die App verlässt", x: "Neben „… ist jetzt online“ kann das Handy auch ansagen, wenn jemand die App verlässt. Das ist zunächst aus – unter ⚙️ → „🗣️ Ansagen &amp; Töne“ kannst du es dazunehmen, wenn du magst.", zeig: () => einstiegHin("ansagen"), seit: "2.23.1" },
   // 🔒 Privatsphäre & Zugang
   { id: "live_tippen", thema: "privat", sym: "👁️", t: "Sehen andere, was ich tippe?", x: "Nein – solange du es nicht willst. Die Einstellung <b>„👁️ Andere sehen live, was ich tippe“</b> unter ⚙️ → „🔒 Privatsphäre“ ist von Haus aus aus. Normal sehen die anderen nur „schreibt …“.", zeig: () => einstiegHin("privat", "setLiveTippen"), seit: "2.23.1" },
   { id: "zuletzt_da", thema: "privat", sym: "🕒", t: "„Zuletzt da“ lieber für dich behalten?", x: "Wie bei WhatsApp kannst du entscheiden, ob andere sehen, wann du zuletzt in der App warst: ⚙️ → „🔒 Privatsphäre“ → <b>„🕒 Anderen zeigen, wann ich zuletzt da war“</b>.", zeig: () => einstiegHin("privat"), seit: "2.23.1" },
@@ -5210,7 +5213,7 @@ const HILFE = [
   { id: "mitglieder_fragen", thema: "start", sym: "👥", t: "Andere Mitglieder um Rat fragen", x: "Weiß Twinkey nicht weiter, stellst du die Frage den Mitgliedern: bei <b>„🧑‍🍳 Frag Twinkey“</b> unter dem Fragefeld auf <b>„👥 Lieber ein Mitglied fragen“</b> – an alle oder an ausgewählte, per App, Push oder E-Mail. Die Antworten siehst du dort unter „Deine Fragen an Mitglieder“.", zeig: () => twFrageStart(), seit: "2.23.51" },
   { id: "anfrage_vorbehalt", thema: "termine", sym: "🤔", t: "Gegenvorschlag unter Vorbehalt annehmen", x: "Schlägt dir jemand eine andere Zeit vor, kannst du <b>„✅ Neue Zeit annehmen“</b>, <b>„🤔 Unter Vorbehalt“</b> oder <b>„❌ Passt nicht“</b> wählen. Beim Vorbehalt schreibst du kurz dazu, woran es noch hängt – der andere sieht es sofort.", zeig: () => zeige("termine"), seit: "2.23.57" },
   { id: "sprungknopf", thema: "nachrichten", sym: "🔘", t: "Einen Knopf in die Nachricht setzen", x: "Willst du jemanden direkt an eine Stelle der App schicken? Unter dem Schreibfeld auf <b>📎</b> → <b>„🔘 Knopf zu einer App-Stelle“</b> und das Ziel wählen, z. B. „Mein Bild wählen“. In der Nachricht erscheint ein Knopf – antippen, und man ist dort.", zeig: () => zeige("nachrichten"), seit: "2.23.97" },
-  { id: "was_neu", thema: "nachrichten", sym: "👋", t: "Was ist neu? Gleich beim Öffnen", x: "Öffnest du die App und es gibt Neues, zeigt sie dir kurz, wie viele <b>neue Nachrichten</b> (in deinen Chats und in Gruppen) und <b>Pinnwand-Einträge</b> da sind und ob <b>Spiele</b> auf dich warten – mit Knopf direkt dorthin. Abschalten: im Fenster selbst mit „🔕 Diese Meldung ausschalten“ oder unter ⚙️ Einstellungen → 🗣️ Ansagen, Töne &amp; Tipps → „👋 Beim Öffnen zeigen, was neu ist“.", zeig: () => einstiegHin("ansagen", "setWasNeu"), seit: "2.24.12" },
+  { id: "was_neu", thema: "nachrichten", sym: "👋", t: "Was ist neu? Gleich beim Öffnen", x: "Öffnest du die App und es gibt Neues, zeigt sie dir kurz, wie viele <b>neue Nachrichten</b> (in deinen Chats und in Gruppen) und <b>Pinnwand-Einträge</b> da sind und ob <b>Spiele</b> auf dich warten – mit Knopf direkt dorthin. Abschalten: im Fenster selbst mit „🔕 Diese Meldung ausschalten“ oder unter ⚙️ Einstellungen → 💡 Hilfe &amp; Lernen → „👋 Beim Öffnen zeigen, was neu ist“.", zeig: () => einstiegHin("hilfe", "setWasNeu"), seit: "2.24.12" },
   { id: "jahreszeit_kopf", thema: "darstellung", sym: "🍂", t: "Jahreszeiten-Bild und Deko im Kopf", x: "Im Kopf der Startseite wechselt das Bild <b>von selbst nach dem Kalender</b>: Frühling, Sommer, Herbst, Winter, Advent und Silvester – mit Laub, Schnee, Blumen und kleinen Besuchern. An der Leiste mit den Lämpchen kann eine <b>Deko</b> hängen (Wimpel, Lichterkette, Laternen). Fest einstellen oder ganz abschalten unter ⚙️ → <b>„✨ Effekte“</b>. Die Bühne spart Akku: nach einer Weile ohne Bedienung läuft sie langsamer. Eine <b>Vorschau</b> aus den Einstellungen (z. B. Nikolaus-Stiefel) bleibt stehen, bis du unten auf der Startseite <b>„✕ beenden“</b> tippst (oder in den Einstellungen „📅 Heute“).", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.273.0" }, // 2.337.0 KC-CLUB-TUEV-4
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „✨ Effekte“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("effekte", "setAnimiert"), seit: "2.24.1" },
   { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am grünen Kopf ist eine kleine Ecke umgeknickt. <b>Doppelt tippen</b> (oder nach links ziehen) – der Kopf dreht sich um wie ein Blatt Papier. Auf der Rückseite oben sieben Reiter: <b>🖼️ Diashow</b>, <b>🖍️ Tafel</b>, <b>📋 Flipchart</b>, <b>🕰️ Uhr</b>, <b>🎭 Bühne</b>, <b>🪞 Spiegel</b> und <b>🧩 Rätsel</b>. Damit man das Eselsohr nicht übersieht, blinkt es ab und zu kurz gelb-orange. Sie nutzt den ganzen Bildschirm bis zur Leiste unten. <b>Nochmal doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „📄 Eselsohr am Kopf“. Alles zum Ansehen: Erklär-Video <b>„📄 Die Rückseite: Eselsohr“</b>.", zeig: () => esOeffnen(null), seit: "2.292.0" },
@@ -5397,7 +5400,7 @@ const SB_EINST = [
   { k: "ansicht", re: /mitglieder ?ansicht|ansicht der mitglieder/, klappe: "startseite", id: "mgAnsichtWahl", t: "Mitglieder-Ansicht" },
   { k: "ruhezeit", re: /ruhe ?zeit|nachtruhe|nicht stören/, klappe: "benachrichtigung", id: "ruheVon", t: "Ruhezeit" },
   { k: "vorlesen", re: /vorlesen|vorlese/, klappe: "ansagen", id: "setVorlesenZeile", t: "Vorlesen" },
-  { k: "tipps", re: /tipps?\b|tagestipp/, klappe: "ansagen", id: "setTipps", t: "Tipps" },
+  { k: "tipps", re: /tipps?\b|tagestipp/, klappe: "hilfe", id: "setTipps", t: "Tipps" },
   { k: "spiele", re: /spiel/, klappe: "privat", id: "setSpiele", t: "Spiele" },
   { k: "livetippen", re: /live ?tippen|mitlesen/, klappe: "privat", id: "setLiveTippen", t: "Live-Tippen" },
 ];
@@ -5819,7 +5822,7 @@ function sbLangDruck(k) {
   k.addEventListener("contextmenu", (e) => e.preventDefault());
 }
 async function sbAusFragen() {
-  if (await frage("🎙️ Sprachsteuerung ausschalten?\n\nDer 🎙️-Knopf verschwindet. Wieder einschalten: ⚙️ → „🗣️ Ansagen, Töne & Tipps“ → „🎙️ Sprachsteuerung“.", { ja: "🔇 Ausschalten", nein: "🎙️ Anlassen" })) sbSchalter(false);
+  if (await frage("🎙️ Sprachsteuerung ausschalten?\n\nDer 🎙️-Knopf verschwindet. Wieder einschalten: ⚙️ → „🗣️ Ansagen & Töne“ → „🎙️ Sprachsteuerung“.", { ja: "🔇 Ausschalten", nein: "🎙️ Anlassen" })) sbSchalter(false);
 }
 function sbStopp() {
   try { SB.erk?.abort(); } catch {} SB.erk = null; try { speechSynthesis.cancel(); } catch {}
@@ -6368,7 +6371,7 @@ const SH_ABLAEUFE = {
     { id: "wer", ruhe: true, ziel: "#dpPersonen", t: "Tippe deinen Namen an – mehrere Namen zeigen eure Zeiten untereinander. Mit ‹ Woche und Woche › blätterst du", fertig: () => false },
   ],
   einstellungen: [
-    { id: "ust", ruhe: true, ziel: '#v-einstellungen [onclick="ustFragen(false)"]', t: "Hier stellst du ein, wie viel Hilfe du möchtest – „🤝 Unterstützung → Wählen“. Darunter: Schritt-Hilfe, Vorlesen, Sprachsteuerung, große Schrift", fertig: () => false },
+    { id: "ust", ruhe: true, ziel: '#v-einstellungen [onclick="ustFragen(false)"]', t: "Hier stellst du ein, wie viel Hilfe du möchtest – „🤝 Unterstützung → Wählen“. Darunter: Schritt-Hilfe und Vorlesen", fertig: () => false },
   ],
   spiele: [
     { id: "wahl", ruhe: true, ziel: "#spInhalt", t: "Such dir ein Spiel aus und tippe es an. Oben: gegen den Computer oder gegen Mitglieder", fertig: () => false },
@@ -6602,7 +6605,7 @@ const HZ_SICHT_THEMA = {
   hilfezentrum: null, // in der Hilfe selbst kein „?“
 };
 // 2.23.5 (Wunsch Hansi): lange auf das „?“ drücken → ausblenden (mit Rückfrage, die sagt, wie man es zurückholt).
-// Zurück: ⚙️ → „Das Wichtigste“ (einfache Ansicht) bzw. „🗣️ Ansagen, Töne & Tipps“ → „❓ Fragezeichen unten rechts“. Je Gerät gespeichert.
+// Zurück: ⚙️ → „Das Wichtigste“ (einfache Ansicht) bzw. „💡 Hilfe & Lernen“ → „❓ Fragezeichen unten rechts“. Je Gerät gespeichert.
 const HZ_FRAGE_AUS = "kc_club_hz_frage_aus", hzFrageAus = () => lsLesen(HZ_FRAGE_AUS) === "1", HZ_LANG_MS = 600;
 function hzFrageEinsetzen(v) {
   let k = $("hzFrage");
@@ -7113,7 +7116,7 @@ function ansageVorgabeUebernehmen(v) {
   lsSetzen(ANS_VORGABE_KEY, v.am);
   ansSetzen("online", !!v.online); ansSetzen("verlassen", !!v.verlassen);
   const was = [v.online && "wenn jemand online kommt", v.verlassen && "wenn jemand die App verlässt"].filter(Boolean).join(" und ");
-  setTimeout(() => melde(was ? `🗣️ ${v.von || "Der Admin"} hat für dich die Ansage eingeschaltet, ${was}. Ändern: ⚙️ → „🗣️ Ansagen, Töne & Tipps“.` : `🗣️ ${v.von || "Der Admin"} hat die Online-Ansagen für dich ausgeschaltet.`), 2500);
+  setTimeout(() => melde(was ? `🗣️ ${v.von || "Der Admin"} hat für dich die Ansage eingeschaltet, ${was}. Ändern: ⚙️ → „🗣️ Ansagen & Töne“.` : `🗣️ ${v.von || "Der Admin"} hat die Online-Ansagen für dich ausgeschaltet.`), 2500);
 }
 async function ansageVorgabeSetzen(pid, name) {
   const ja = await frage(`🗣️ Ansagen für ${name} einschalten?\n\nSein/ihr Handy sagt dann, wenn jemand online kommt und wenn jemand die App verlässt (nur bei offener App, nie in der Ruhezeit). ${name} sieht beim nächsten Öffnen einen Hinweis und kann es selbst wieder ändern.`, { ja: "🟢 Ja, einschalten", nein: "Abbrechen" });
@@ -8587,7 +8590,7 @@ function mikroWahl() {
   const f = blattAuf("mikroWahlBlatt", `${einwHtml("b-mikro-wahl")}<h3 style="margin-top:0">🎤 Was möchtest du?</h3>
     <div class="mikro-wahl"><button class="knopf haupt" data-a="sprach"><span>🎤</span><b>Sprachnachricht</b><small>Deine Stimme wird verschickt</small></button>
       <button class="knopf haupt" data-a="diktat"><span>✍️</span><b>Diktieren</b><small>Ich schreibe mit – verschickt wird Text</small></button></div>
-    <label class="mikro-merken"><input type="checkbox" id="mikroMerken"> Immer so (änderbar unter ⚙️ → Ansagen, Töne & Tipps)</label>
+    <label class="mikro-merken"><input type="checkbox" id="mikroMerken"> Immer so (änderbar unter ⚙️ → Ansagen & Töne)</label>
     <div class="knoepfe"><button class="knopf" data-a="zu">Abbrechen</button></div>`);
   f.querySelectorAll("[data-a]").forEach((b) => (b.onclick = () => { const w = b.dataset.a; const merken = $("mikroMerken")?.checked; f.remove();
     if (w === "zu") return; if (merken) mikroArtSetzen(w); w === "diktat" ? diktatStart() : spracheStart(); }));
@@ -20562,12 +20565,18 @@ function kkAufnahmeSpielen(t) { const q = audio.createBufferSource(), g = audio.
 // (bayerischer Ländler bzw. flinkes Turmglockenspiel). Gleiche Abläufe wie der Kuckuck (Ton-Freigabe, Lautsprecher wecken, Nachtruhe, Mitzählen).
 const SU_KEY = "kc_club_stundenuhren";
 let SU_HALL = null;
-function suHall() { // großer Raum / Turm: 2,8 s Nachhall, selbst erzeugt
+function suHall() { // großer Raum / Turm: ~2,5 s weicher Nachhall
+  // 2.476.0 KC-CLUB-STUNDENUHREN-KLANG (Fund Hansi „in den Tönen der Uhren sind Kratzgeräusche“): vorher Faltungshall mit 2,8 s Rauschen – rechenschwer
+  // (auf dem Handy Aussetzer = Knacksen) und körnig. Jetzt vier Rückkopplungs-Echos mit Tiefpass (Schroeder-Art): sehr wenig Rechenarbeit, glatter Ausklang.
   if (SU_HALL) return SU_HALL;
-  const sr = audio.sampleRate, n = Math.floor(sr * 2.8), ir = audio.createBuffer(2, n, sr);
-  for (let k = 0; k < 2; k++) { const d = ir.getChannelData(k); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3.2); }
-  const c = audio.createConvolver(); c.buffer = ir; const g = audio.createGain(); g.gain.value = 0.3; c.connect(g).connect(audio.destination);
-  return (SU_HALL = c);
+  const ein = audio.createGain(), aus = audio.createGain(); ein.gain.value = 1; aus.gain.value = 0.22; aus.connect(audio.destination);
+  for (const [d, pan] of [[0.0297, -0.6], [0.0371, 0.6], [0.0411, -0.3], [0.0437, 0.3]]) {
+    const dl = audio.createDelay(0.1), lp = audio.createBiquadFilter(), fb = audio.createGain(), st = audio.createStereoPanner ? audio.createStereoPanner() : audio.createGain();
+    dl.delayTime.value = d; lp.type = "lowpass"; lp.frequency.value = 3200; lp.Q.value = -12; fb.gain.value = 0.97 * Math.pow(10, -3 * d / 2.5); // −60 dB nach ~2,5 s; Q −12 dB = keine Überhöhung → Schleife bleibt sicher unter 1 (sonst schaukelt sie sich auf)
+    if (st.pan) st.pan.value = pan;
+    ein.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(st); st.connect(aus);
+  }
+  return (SU_HALL = ein);
 }
 function suAus(hall = true) { const g = audio.createGain(), lp = audio.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 7000; g.connect(lp); lp.connect(audio.destination); if (hall) lp.connect(suHall()); return g; }
 const suHz = (m) => 440 * Math.pow(2, (m - 69) / 12); // MIDI-Nummer → Hz
@@ -20582,7 +20591,7 @@ function suGlocke(t, f, laut = 0.5, dauer = 5, teile = SU_GLOCKE) {
   }
   const n = audio.createBufferSource(), bp = audio.createBiquadFilter(), ng = audio.createGain(); // Klöppel-Anschlag
   n.buffer = kkRauschen(); bp.type = "bandpass"; bp.frequency.value = Math.min(6000, f * 3); bp.Q.value = 3;
-  ng.gain.setValueAtTime(0.0001, t); ng.gain.exponentialRampToValueAtTime(laut * 0.25, t + 0.002); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+  ng.gain.setValueAtTime(0.0001, t); ng.gain.exponentialRampToValueAtTime(laut * 0.08, t + 0.003); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.03); // 2.476.0: leiser – war als Kratzen hörbar
   n.connect(bp).connect(ng).connect(aus); n.start(t, Math.random()); n.stop(t + 0.06);
 }
 // Petersglocke (Köln): Unterton C, Prim c⁰, Terz es⁰, Nebenschlagton e⁰, Quint ges⁰ (verminderte Quinte), Schlagton-Oktave – sehr langes Summen
@@ -20609,7 +20618,22 @@ function suTrompete(t, f, dauer, laut = 0.22) { // Turmbläser: Blech-Klang (Sä
   o.connect(lp); o2.connect(g2).connect(lp); lp.connect(g).connect(aus);
   for (const x of [o, o2, lfo]) { x.start(t); x.stop(t + dauer + 0.1); }
 }
-function suHahn(t) { // „Ki-ke-ri-kiii“: vier Laute mit Tonhöhenbogen, rau (Sägezahn + Formantfilter)
+// 2.470.0 KC-CLUB-STUNDENUHREN-ORIGINAL (Wunsch Hansi „Baue die echten Aufnahmen ein“): freie Originalaufnahmen (Wikimedia Commons) – Quelle, Urheber und
+// Lizenz stehen bei der Uhr in den Einstellungen. Geladen erst beim ersten Gebrauch; fehlt die Datei (offline), klingt der selbst erzeugte Ton wie bisher.
+// Neue Aufnahme = Eintrag hier + Datei im Hauptordner (gekürzt, mono MP3), sonst nichts.
+const SU_AUFNAHMEN = {
+  hahn: { datei: "hahn-ruf.mp3", was: "Hahnenschrei", urheber: "Yosef Ben Melamed", lizenz: "CC BY-SA 4.0", lizenzLink: "https://creativecommons.org/licenses/by-sa/4.0/deed.de",
+    quelle: "https://commons.wikimedia.org/wiki/File:Kukuriku.flac", geaendert: "gekürzt, lautstärkeangepasst" },
+};
+const SU_PUFFER = {};
+function suAufnahmeLaden(k) {
+  const A = SU_AUFNAHMEN[k]; if (!A || !audio) return Promise.resolve(null);
+  return SU_PUFFER[k] || (SU_PUFFER[k] = fetch(A.datei).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(r.status)))
+    .then((b) => new Promise((ja, nein) => audio.decodeAudioData(b, ja, nein))).then((p) => (A.puffer = p)).catch(() => { delete SU_PUFFER[k]; return null; }));
+}
+function suAufnahme(k, t, laut = 0.9) { const p = SU_AUFNAHMEN[k]?.puffer; if (!p) return false; const q = audio.createBufferSource(), g = audio.createGain(); q.buffer = p; g.gain.value = laut; q.connect(g).connect(audio.destination); q.start(t); return true; }
+function suHahn(t) { // „Ki-ke-ri-kiii“: echte Aufnahme (2.470.0), sonst vier Laute mit Tonhöhenbogen, rau (Sägezahn + Formantfilter)
+  if (suAufnahme("hahn", t)) return;
   const aus = suAus(false);
   const teil = (t0, d, f0, f1, f2) => {
     const o = audio.createOscillator(), bp = audio.createBiquadFilter(), bp2 = audio.createBiquadFilter(), g = audio.createGain();
@@ -20656,7 +20680,7 @@ const STUNDENUHREN = [
     schlag: (t) => suGlocke(t, 233.08, 0.45, 4.5), takt: () => 1900,
     bild: (h) => `<rect x="20" y="40" width="110" height="125" fill="#d9c7a3" stroke="#6a5a3c" stroke-width="2"/><path d="M15 42 L75 6 L135 42Z" fill="#5d7b4a" stroke="#3a5130" stroke-width="2"/>${[35, 55, 75, 95, 115].map((x) => `<path d="M${x - 6} 165 L${x - 6} 140 Q${x} 132 ${x + 6} 140 L${x + 6} 165Z" fill="#8a7650"/>`).join("")}${suBlatt(75, 66, 16, h)}<g class="su-tanz">${[45, 65, 85, 105].map((x, i) => `<circle cx="${x}" cy="102" r="4" fill="#f2d2b0"/><rect x="${x - 4}" y="106" width="8" height="12" rx="2" fill="${["#c0392b", "#2c5d9b", "#c0392b", "#2c5d9b"][i]}"/>`).join("")}</g><rect x="30" y="96" width="90" height="26" fill="none" stroke="#6a5a3c" stroke-width="1.5"/>` },
   { id: "prag", sym: "💀", t: "Prager Rathausuhr", u: "Prag (Orloj) – der Tod läutet, der Hahn kräht, dann der Stundenschlag",
-    vorspiel: (t) => { for (let i = 0; i < 8; i++) suGlocke(t + i * 0.36, 1318.5, 0.16, 1.4); suHahn(t + 3.7); return 5.4; },
+    aufnahmen: ["hahn"], vorspiel: (t) => { for (let i = 0; i < 8; i++) suGlocke(t + i * 0.36, 1318.5, 0.16, 1.4); suHahn(t + 3.7); return 6; },
     schlag: (t) => suGlocke(t, 207.65, 0.5, 5), takt: () => 2000,
     bild: (h) => `<rect x="25" y="20" width="100" height="145" fill="#8c7356" stroke="#4a3a28" stroke-width="2"/><circle cx="75" cy="78" r="38" fill="#2c4d7a" stroke="#c9a227" stroke-width="3"/><circle cx="75" cy="78" r="28" fill="#3b6ea5"/><path d="M47 78 A28 28 0 0 0 103 78Z" fill="#6b4a2b" opacity=".7"/>${suBlatt(75, 78, 15, h, "#c9a227", "#f4e7b8")}<g class="su-schwinger" style="transform-origin:117px 60px"><circle cx="117" cy="56" r="4" fill="#eee"/><line x1="117" y1="60" x2="117" y2="78" stroke="#eee" stroke-width="2"/><line x1="117" y1="64" x2="124" y2="70" stroke="#eee" stroke-width="1.6"/></g><path d="M62 18 l6 -10 l4 8 l6 -6 l-2 10Z" fill="#c9a227"/>` },
   { id: "michel", sym: "🎺", t: "Hamburger Michel", u: "Hamburg – der Türmer bläst „Lobe den Herren“, dann die Glocke",
@@ -20695,19 +20719,136 @@ function suWahlZeigen() {
   const z = $("stundenUhrWahl"); if (!z) return; const l = suGewaehlt(), offen = new Set([...z.querySelectorAll("details[open]")].map((d) => d.dataset.uhr));
   z.innerHTML = STUNDENUHREN.map((x) => `<details class="su-uhr" data-uhr="${x.id}"${offen.has(x.id) ? " open" : ""}><summary><span>${x.sym} ${esc(x.t)}</span>${l.includes(x.id) ? '<span class="su-an">✓ gewählt</span>' : ""}</summary>`
     + `<div class="su-zeile"><label><input type="checkbox" ${l.includes(x.id) ? "checked" : ""} onchange="suWahlSetzen('${x.id}', this.checked)"><span><b>Diese Uhr verwenden</b><small class="hinweis">${esc(x.u)}</small></span></label>`
-    + `<button type="button" class="knopf klein" aria-label="${esc(x.t)} anhören" onclick="kuckuckZeigen(kkJetzt().h, true, '${x.id}')">▶</button></div></details>`).join("")
+    + `<button type="button" class="knopf klein" aria-label="${esc(x.t)} anhören" onclick="kuckuckZeigen(kkJetzt().h, true, '${x.id}')">▶</button></div>`
+    + (x.aufnahmen || []).map((k) => SU_AUFNAHMEN[k]).filter(Boolean).map((A) => `<p class="hinweis su-quelle">🎙️ ${esc(A.was)}: echte Aufnahme von ${esc(A.urheber)}, <a href="${esc(A.quelle)}" target="_blank" rel="noopener">Wikimedia Commons</a>, Lizenz <a href="${esc(A.lizenzLink)}" target="_blank" rel="noopener">${esc(A.lizenz)}</a> (${esc(A.geaendert)})</p>`).join("") + `</details>`).join("")
     + `<p class="hinweis" style="margin:4px 0 0">${l.length > 1 ? `🔄 ${l.length} gewählt – jede volle Stunde kommt die nächste.` : "Mehrere ankreuzen = jede Stunde eine andere."}</p>`;
+}
+// ---------- 2.468.0 KC-CLUB-ADVENTSKALENDER (Wunschliste #17, Wunsch Hansi „Adventskalender einbauen“): 1.–24. Dezember jeden Tag ein Türchen mit
+// einer Bastelanleitung für eine kleine süße Nascherei. Geöffnete Türchen merkt sich das Gerät (kein Server, keine Datenbank). Erinnerung im Info-Laufband, solange das
+// heutige Türchen zu ist. Abschaltbar unter ⚙️ → Effekte. Neues Türchen/anderer Inhalt = nur AK_TUERCHEN ändern (Registry).
+const AK_TUERCHEN = [ // 2.468.0 (Wunsch Hansi): Bastelanleitungen für kleine süße Naschereien – z = Zutaten, s = Schritte
+  { sym: "🚂", t: "Lokomotive aus Dominosteinen", z: ["4 Dominosteine", "1 Schokoriegel (z. B. Kinderriegel)", "6 Schoko-Taler oder Rolos als Räder", "1 Mini-Marshmallow (Dampf)", "Zuckerguss als Kleber"], s: ["Zwei Dominosteine nebeneinander als Kessel auf den Schokoriegel kleben – das ist der Boden der Lok.", "Einen Dominostein hinten hochkant als Führerhaus daraufsetzen, einen vorne als Schornstein.", "Je drei Taler an jede Seite kleben – das sind die Räder.", "Den Marshmallow oben auf den Schornstein setzen: Dampf! Gut trocknen lassen."], tipp: "Mit weiteren Dominosteinen und Lakritzschnecken als Rädern hängst du Waggons an." },
+  { sym: "☃️", t: "Schneemann aus Pfeffernüssen", z: ["3 weiße Pfeffernüsse", "1 Butterkeks als Sockel", "1 Dominostein + 1 Schoko-Taler (Hut)", "Zuckerguss, Schokolinsen, 1 Stück Fruchtgummischnur"], s: ["Die erste Pfeffernuss mit Zuckerguss auf den Butterkeks kleben.", "Die zweite und dritte darauf stapeln – jeweils kurz antrocknen lassen.", "Für den Hut den Taler und darauf den Dominostein kleben und oben aufsetzen.", "Knöpfe aus Schokolinsen, Gesicht mit Zuckerguss oder Lebensmittelstift, Schal aus Fruchtgummischnur."], tipp: "Etwas Zuckerguss über den Keks laufen lassen – das sieht aus wie Schnee." },
+  { sym: "🕯️", t: "Lebkuchen-Kerze mit Mandel-Flamme", z: ["Lebkuchen-Sterne oder -Herzen mit Loch", "Waffelröllchen", "geschälte ganze Mandeln", "Puderzucker + 1 Eiweiß (Guss)", "etwas Kuvertüre"], s: ["Kuvertüre schmelzen und einen Klecks auf jeden Lebkuchen geben.", "Ein Waffelröllchen senkrecht in das Loch bzw. in die Schokolade stellen.", "Puderzucker mit Eiweiß zu dickem Guss rühren und oben über das Röllchen laufen lassen – wie tropfendes Wachs.", "Die Mandel mit der Spitze nach oben hineinstecken: die Flamme. Fest werden lassen."], tipp: "Mandeln mit Haut kurz in kochendes Wasser geben – dann lässt sich die Haut leicht abziehen." },
+  { sym: "🏠", t: "Hexenhaus aus Butterkeksen", z: ["5 Butterkekse", "dicker Zuckerguss", "Gummibärchen, Smarties, Streusel", "Puderzucker zum Bestäuben"], s: ["Ein Keks ist der Boden. Zwei Kekse als Seitenwände mit Zuckerguss daraufstellen.", "Zwei weitere Kekse als spitzes Dach gegeneinander lehnen und am First gut mit Guss verkleben.", "Etwas stützen und 30 Minuten trocknen lassen.", "Dach und Wände mit Guss bestreichen und mit Süßigkeiten verzieren – zum Schluss Puderzucker als Schnee."], tipp: "Für Dachziegel eignen sich Mandelblättchen oder kleine Schokoplättchen." },
+  { sym: "👼", t: "Engel aus Nudeln (Baumschmuck)", z: ["1 Penne oder Rigatoni (Körper)", "1 Farfalle (Flügel)", "1 Holzperle (Kopf)", "Bastelkleber, goldene Acrylfarbe, Faden"], s: ["Die Farfalle hinten oben an die Penne kleben – das sind die Flügel.", "Die Holzperle oben als Kopf aufkleben, durch das Loch vorher einen Faden zum Aufhängen ziehen.", "Trocknen lassen und alles mit goldener Farbe anmalen.", "Gesicht mit feinem Stift aufmalen – fertig für den Tannenbaum."], tipp: "Dieser Engel ist nicht zum Essen, aber er hält viele Jahre. Haare aus Grieß: Kopf mit Kleber bestreichen und in Grieß tupfen." },
+  { sym: "🎅", t: "Nikolaus aus Schokokuss", z: ["1 Schokokuss", "1 Erdbeere oder rotes Marzipan (Mütze)", "Kokosraspeln", "weißer Zuckerguss, 2 Zuckerperlen"], s: ["Den Schokokuss auf einen Teller stellen.", "Die Erdbeere (Spitze nach oben) als Mütze oben aufsetzen, mit etwas Guss festkleben.", "Unten rundherum Guss auftragen und in Kokosraspeln drücken – der Bart.", "Einen Gusspunkt als Bommel an die Mütze, zwei Zuckerperlen als Augen."], tipp: "Schön auf einem Teller neben dem Nikolausstiefel." },
+  { sym: "🦌", t: "Rentier aus Marshmallow", z: ["große Marshmallows", "Holzspieße", "Vollmilch-Schokolade", "kleine Brezeln, Schokoaugen, rote Schokolinsen"], s: ["Marshmallow auf einen Spieß stecken und in geschmolzene Schokolade tauchen.", "Eine Brezel in der Mitte durchbrechen – zwei Hälften sind das Geweih. Oben in die noch weiche Schokolade stecken.", "Schokoaugen und eine rote Linse als Nase aufsetzen.", "Im Glas aufrecht fest werden lassen."], tipp: "Mit der roten Nase ist es natürlich Rudolph!" },
+  { sym: "🎄", t: "Tannenbaum aus Eiswaffel", z: ["1 spitze Eiswaffel", "Puderzucker + grüne Lebensmittelfarbe", "Smarties oder Zuckerperlen", "1 Butterkeks, 1 Stern aus Marzipan"], s: ["Puderzucker mit wenig Wasser und grüner Farbe zu dickem Guss rühren.", "Die Eiswaffel umgedreht auf den Butterkeks setzen und ringsum mit grünem Guss bestreichen.", "Smarties als Christbaumkugeln eindrücken.", "Den Marzipanstern auf die Spitze kleben."], tipp: "Mit einer Gabel Zacken in den Guss ziehen – dann sieht es aus wie Tannennadeln." },
+  { sym: "🛷", t: "Schlitten aus Zuckerstangen", z: ["2 kleine Zuckerstangen (Kufen)", "1 Schokoriegel (z. B. Kitkat)", "3–5 kleine Pralinen oder Schokotäfelchen", "Geschenkband, flüssige Schokolade"], s: ["Die Zuckerstangen nebeneinander hinlegen, Bogen nach vorne – das sind die Kufen.", "Den Schokoriegel mit Schokolade quer darauf kleben.", "Die Pralinen wie Pakete darauf stapeln und festkleben.", "Mit Geschenkband umwickeln – ein tolles Mitbringsel."], tipp: "Statt Pralinen gehen auch kleine Schokoweihnachtsmänner." },
+  { sym: "🐧", t: "Pinguin aus Mini-Schokoküssen", z: ["Mini-Schokoküsse", "weißes Marzipan", "orange Fruchtgummis", "Zuckerguss"], s: ["Aus Marzipan ein ovales Plättchen ausrollen und als weißen Bauch vorne aufkleben.", "Aus Fruchtgummi einen kleinen Schnabel und zwei Füße schneiden.", "Schnabel oben, Füße unten mit Guss ankleben.", "Zwei Gusspunkte als Augen."], tipp: "Mehrere Pinguine nebeneinander auf Kokos-Schnee sehen herrlich aus." },
+  { sym: "✨", t: "Zauberstäbe aus Salzstangen", z: ["dicke Salzstangen oder Brezelstangen", "weiße und dunkle Schokolade", "bunte Zuckerstreusel, Sternchen"], s: ["Schokolade schmelzen.", "Die Stangen zu zwei Dritteln eintauchen und abtropfen lassen.", "Sofort in Streusel drehen oder darüberstreuen.", "Auf Backpapier fest werden lassen."], tipp: "In ein Glas gestellt sind sie eine süße Tischdeko." },
+  { sym: "🥄", t: "Schokolöffel für heiße Milch", z: ["Teelöffel oder Holzlöffel", "Zartbitter-Schokolade", "Mini-Marshmallows, Zimt"], s: ["Schokolade schmelzen und die Löffel damit füllen.", "Mini-Marshmallows daraufsetzen und eine Prise Zimt darüber.", "Im Kühlschrank fest werden lassen.", "In Folie wickeln – zum Verschenken: in heiße Milch rühren, fertig ist der Kakao."], tipp: "Mit einem Kärtchen „Für kalte Wintertage“ ein schönes kleines Geschenk." },
+  { sym: "🍊", t: "Mandarinen-Licht (Luciatag)", z: ["1 Mandarine", "Speiseöl", "Teller"], s: ["Die Mandarine rundherum in der Mitte einritzen und die Schale vorsichtig als zwei Hälften abnehmen.", "Der weiße Strang in der unteren Hälfte bleibt stehen – das ist der Docht.", "Etwas Öl hineingießen, den Docht damit tränken und 5 Minuten warten.", "Den Docht anzünden. In die obere Hälfte ein kleines Loch schneiden und als Deckel aufsetzen."], tipp: "Echte Flamme: nie unbeaufsichtigt brennen lassen! Das Fruchtfleisch schmeckt dazu." },
+  { sym: "🎁", t: "Päckchen aus Dominosteinen", z: ["Dominosteine", "weißer Zuckerguss (Spritzbeutel)", "rote Zuckerperlen"], s: ["Guss in einen kleinen Beutel füllen und eine winzige Ecke abschneiden.", "Auf jeden Dominostein ein Kreuz spritzen – das Geschenkband.", "Oben eine kleine Schleife spritzen und eine Zuckerperle in die Mitte setzen.", "Trocknen lassen."], tipp: "Auf einem Teller unter dem Eiswaffel-Tannenbaum sieht das aus wie Bescherung." },
+  { sym: "❄️", t: "Schneeflocke aus Brezeln", z: ["6 Mini-Brezeln", "weiße Schokolade", "Puderzucker"], s: ["Weiße Schokolade schmelzen.", "Die Brezeln sternförmig auf Backpapier legen, so dass sie sich in der Mitte berühren.", "In die Mitte einen dicken Klecks Schokolade geben und alle Spitzen damit verbinden.", "Fest werden lassen und mit Puderzucker bestäuben."], tipp: "Mit einem Faden lassen sie sich auch an den Baum hängen." },
+  { sym: "⛄", t: "Marshmallow-Schneemann am Spieß", z: ["3 große Marshmallows", "1 Holzspieß", "Lebensmittelstift", "Fruchtgummischnur, 1 Zuckerstange oder Salzstange"], s: ["Die Marshmallows auf den Spieß stecken.", "Mit dem Lebensmittelstift Augen, Mund und Knöpfe malen.", "Eine Möhrennase aus orangem Fruchtgummi eindrücken.", "Schal aus Fruchtgummischnur umbinden, Salzstangen als Arme."], tipp: "In eine Tasse heißen Kakao gestellt: ein „badender Schneemann“." },
+  { sym: "🌲", t: "Keks-Tannen", z: ["Sternkekse in 5 Größen", "grüner Zuckerguss", "Zuckerperlen, Puderzucker"], s: ["Die Kekse der Größe nach sortieren.", "Den größten Stern hinlegen, Guss in die Mitte und den nächstkleineren leicht verdreht daraufsetzen.", "So weiter bis zum kleinsten Stern.", "Zuckerperlen an die Zacken, oben ein kleiner Stern hochkant – Puderzucker als Schnee."], tipp: "Mit selbst gebackenen Zimtsternen wird es besonders fein." },
+  { sym: "🫙", t: "Naschglas-Schneekugel", z: ["kleines Schraubglas", "Kokosraspeln", "Marzipan oder kleiner Lebkuchenbaum", "Gummibärchen oder Pralinen"], s: ["Den Deckel innen mit Zuckerguss bestreichen und Kokosraspeln darauf drücken.", "Ein Marzipanbäumchen oder eine kleine Figur darauf kleben.", "Das Glas mit Süßigkeiten füllen.", "Zuschrauben und umdrehen – fertig ist die Schneekugel zum Naschen."], tipp: "Mit Namensschild ein schönes Geschenk für Nachbarn." },
+  { sym: "🦔", t: "Apfel-Igel", z: ["1 roter Apfel", "Mandelstifte", "2 Gewürznelken oder Schokoaugen", "1 Rosine (Nase)"], s: ["Den Apfel hinlegen, die vordere Seite ist das Gesicht.", "Rundherum auf der Rückseite Mandelstifte als Stacheln hineinstecken.", "Vorne zwei Nelken oder Schokoaugen als Augen, eine Rosine als Nase.", "Auf Kokos-Schnee oder Moos setzen."], tipp: "Mit geröstetem Mandelstift duftet er nach Weihnachten." },
+  { sym: "🐑", t: "Stall aus Zwieback", z: ["6 Zwieback", "Salzstangen", "Zuckerguss", "Marzipan oder Gummitiere"], s: ["Zwei Zwieback als Rückwand und Seiten auf einen Teller kleben.", "Zwei Zwieback als schräges Dach aufsetzen, gut trocknen lassen.", "Vorne einen Zaun aus Salzstangen in Guss stecken.", "Tiere aus Marzipan oder Gummitiere hineinstellen, Stroh aus Kokosraspeln."], tipp: "So entsteht eine kleine Krippe zum Naschen." },
+  { sym: "🧁", t: "Schneemann-Muffin", z: ["Muffins", "weißer Zuckerguss", "große Marshmallows", "Schokolinsen, Lebensmittelstift"], s: ["Die Muffins oben mit weißem Guss bestreichen – der Schnee.", "Einen Marshmallow als Kopf an den Rand setzen, so dass er herausschaut.", "Mit Lebensmittelstift ein Gesicht malen.", "Zwei Schokolinsen als Knöpfe in den Guss drücken."], tipp: "Es sieht aus, als würde der Schneemann im Schnee schmelzen." },
+  { sym: "❤️", t: "Zuckerstangen-Herz", z: ["2 Zuckerstangen pro Herz", "Zartbitter- oder weiße Schokolade", "Streusel"], s: ["Die Zuckerstangen auf Backpapier so legen, dass die Bögen ein Herz bilden.", "Schokolade schmelzen und das Herz innen damit füllen.", "Streusel darüberstreuen.", "Im Kühlschrank fest werden lassen und vorsichtig lösen."], tipp: "Ein süßer Gruß – auch als Anhänger am Geschenk." },
+  { sym: "🥝", t: "Obst-Tannenbaum", z: ["Kiwi, grüne Weintrauben", "1 Apfel", "1 Karotte", "Granatapfelkerne oder Johannisbeeren"], s: ["Den Apfel halbieren und mit der flachen Seite auf einen Teller legen – das ist der Fuß.", "Die Karotte als Stamm hineinstecken.", "Kiwi-Scheiben und Trauben mit Zahnstochern von unten nach oben immer kleiner anstecken.", "Granatapfelkerne als Kugeln, oben ein Stern aus Apfel oder Karotte."], tipp: "Gesund und bunt – ein schöner Gegenpol zu den Plätzchen." },
+  { sym: "🎄", t: "Frohe Weihnachten!", z: ["Zeit", "Familie und Freunde", "ein gutes Essen"], s: ["Den Tisch festlich decken.", "Die gebastelten Naschereien als Deko aufstellen.", "Zusammen essen, lachen und genießen.", "Und am Ende: naschen erlaubt!"], tipp: "Der Köcheclub Werne wünscht dir und deiner Familie frohe Weihnachten und gesegnete Festtage!" },
+];
+const AK_REIHE = [7, 15, 1, 22, 10, 3, 18, 12, 24, 5, 20, 9, 2, 14, 17, 6, 11, 23, 4, 19, 13, 8, 16, 21]; // feste, gemischte Anordnung der Türchen
+const akHeute = (d = new Date()) => d.getMonth() === 11 ? Math.min(d.getDate(), 24) : 0; // 0 = nicht im Dezember; 25.–31.12.: alle offen
+const akKey = (d = new Date()) => "kc_club_advent_" + d.getFullYear();
+function akOffen() { try { const l = JSON.parse(localStorage.getItem(akKey()) || "[]"); return Array.isArray(l) ? l.filter((n) => Number.isInteger(n) && n >= 1 && n <= 24) : []; } catch { return []; } }
+const akAn = () => einst("advent", true);
+function akZeigen() {
+  const h = akHeute(), offen = akOffen(), vorschau = !h && !!ICH?.admin;
+  const f = blattAuf("akBlatt", `<div class="ak-kopf"><h3 style="margin:0">🎄 Adventskalender</h3><button type="button" class="knopf klein" onclick="fensterZu($('akBlatt'))" aria-label="Schließen">✕</button></div>
+    <p class="hinweis" style="margin:4px 0 10px">${h ? (offen.includes(h) ? "Heute schon geöffnet – morgen wartet das nächste Türchen." : `Heute darfst du Türchen <b>${h}</b> öffnen!`) : "Vom 1. bis 24. Dezember öffnet sich jeden Tag ein Türchen."}${vorschau ? " 👀 Vorschau für Admin: alle Türchen zum Ansehen." : ""}</p>
+    <div class="ak-raster">${AK_REIHE.map((n) => `<button type="button" class="ak-tuer${offen.includes(n) ? " auf" : ""}${n === h ? " heute" : ""}${n > h && !vorschau ? " zu" : ""}" data-n="${n}" onclick="akTuer(${n})" aria-label="Türchen ${n}"><span class="ak-zahl">${n}</span><span class="ak-sym" aria-hidden="true">${AK_TUERCHEN[n - 1].sym}</span></button>`).join("")}</div>
+    <div id="akInhalt" class="ak-inhalt" aria-live="polite"></div>`);
+  f.classList.add("ak-blatt");
+}
+function akTuer(n) {
+  const h = akHeute();
+  if (n > h && !(!h && ICH?.admin)) { const fehlt = h ? n - h : 0; melde(h ? `🔒 Noch ${fehlt === 1 ? "einen Tag" : fehlt + " Tage"} – Türchen ${n} öffnet am ${n}. Dezember` : `🔒 Türchen ${n} öffnet am ${n}. Dezember`, true); return; }
+  if (h) { const l = new Set(akOffen()); l.add(n); try { localStorage.setItem(akKey(), JSON.stringify([...l].sort((a, b) => a - b))); } catch {} }
+  document.querySelector(`.ak-tuer[data-n="${n}"]`)?.classList.add("auf");
+  const T = AK_TUERCHEN[n - 1];
+  $("akInhalt").innerHTML = `<div class="ak-karte"><div class="ak-gross" aria-hidden="true">${T.sym}</div><div><b>${n}. Dezember – ${esc(T.t)}</b>
+    <div class="ak-ueber">🧺 Du brauchst</div><ul class="ak-liste">${T.z.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+    <div class="ak-ueber">✂️ So geht's</div><ol class="ak-liste">${T.s.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>
+    <p class="ak-tipp">💡 ${esc(T.tipp)}</p>${n < 24 ? '<p class="hinweis" style="margin:6px 0 0">🍯 Kleber für alles: 100 g Puderzucker mit 1–2 TL Wasser oder Zitronensaft verrühren – dick wie Zahnpasta.</p>' : ""}</div></div>`;
+  $("akInhalt").scrollIntoView({ block: "nearest", behavior: "smooth" });
+  if (n === h) try { ilZeigen(); } catch {} // Erinnerung im Laufband verschwindet
+}
+// ---------- 2.469.0 KC-CLUB-EINST-GRUPPEN (Wunsch Hansi „Der Einstellungen-Bereich ist inzwischen riesengroß“): in der erweiterten Ansicht
+// wenige Hauptbereiche, darin die bisherigen Bereiche als Unterbereiche. Nur umgehängt – alle Schalter, ids und gemerkten Auf/Zu-Stände bleiben.
+// Die einfache Ansicht bleibt flach wie bisher. Neuer Hauptbereich = Eintrag hier (Registry), nichts im HTML.
+const EINST_GRUPPEN = [
+  { id: "nachrichten", sym: "🔔", t: "Benachrichtigungen & Kalender", klappen: ["benachrichtigung", "handykalender"] },
+  { id: "aussehen", sym: "🎨", t: "Aussehen, Schrift & Effekte", klappen: ["darstellung", "effekte"] },
+  { id: "bedienung", sym: "🧩", t: "Startseite & Bedienung", klappen: ["startseite", "schnellstart", "leitung_start"] },
+  { id: "hilfe", sym: "💡", t: "Hilfe, Installation & App-Info", klappen: ["hilfe", "install", "app"], platz: "install" }, // platz: steht dort, wo dieser Bereich war
+];
+function einstGruppieren() {
+  const w = $("v-einstellungen"); if (!w) return; const einfach = document.body.classList.contains("einfach");
+  for (const g of EINST_GRUPPEN) {
+    let h = w.querySelector(`:scope > details[data-klappe="gruppe_${g.id}"]`);
+    const karten = g.klappen.map((k) => w.querySelector(`details[data-klappe="${k}"]`)).filter(Boolean);
+    if (einfach) { if (h) { karten.forEach((d) => h.before(d)); h.remove(); } continue; }
+    if (!h) { h = document.createElement("details"); h.className = "karte einst-gruppe"; h.dataset.klappe = "gruppe_" + g.id; h.innerHTML = `<summary>${g.sym} ${esc(g.t)}</summary>`; (karten.find((d) => d.dataset.klappe === g.platz) || karten[0])?.before(h); }
+    karten.forEach((d) => { if (d.parentElement !== h) h.appendChild(d); });
+  }
+  try { klappenMerken(w); } catch {}
+}
+// Wird ein Unterbereich geöffnet (Hilfe-Sprung, Rundgang, Suche), geht auch der Hauptbereich darum auf – sonst bliebe er unsichtbar
+if (typeof document !== "undefined") document.addEventListener("toggle", (e) => {
+  const d = e.target; if (!d.open || !d.closest?.("#v-einstellungen") || $("v-einstellungen").classList.contains("versteckt")) return;
+  if (d.closest(".abh-aus")) return; // gesperrte Auswahl (Häkchen aus) bleibt zu
+  for (let x = d.parentElement?.closest("details"); x; x = x.parentElement?.closest("details")) if (!x.open) x.open = true;
+}, true);
+// ---------- 2.469.0 KC-CLUB-EINST-SUCHE: „🔍 Einstellung suchen“ – zeigt nur passende Zeilen und klappt ihre Bereiche auf; Löschen stellt alles wieder her
+const EINST_SUCHE = { offen: null };
+function einstSuchen(q, leeren) {
+  const w = $("v-einstellungen"); if (!w) return;
+  if (leeren) { $("einstSuche").value = ""; q = ""; }
+  q = String(q || "").trim().toLowerCase(); $("einstSucheWeg")?.classList.toggle("versteckt", !q);
+  w.querySelectorAll(".such-weg, .such-treffer").forEach((x) => x.classList.remove("such-weg", "such-treffer"));
+  const alle = [...w.querySelectorAll("details")];
+  if (q.length < 2) {
+    if (EINST_SUCHE.offen) { alle.forEach((d) => (d.open = EINST_SUCHE.offen.has(d))); EINST_SUCHE.offen = null; }
+    $("einstSucheNichts")?.classList.add("versteckt"); w.classList.remove("sucht"); if (RK.einst?.an) rkAufbauen(RK.einst); return;
+  }
+  if (!EINST_SUCHE.offen) EINST_SUCHE.offen = new Set(alle.filter((d) => d.open));
+  w.classList.add("sucht");
+  const text = (el) => (el.textContent || "").toLowerCase() + " " + [...el.querySelectorAll("option")].map((o) => o.textContent.toLowerCase()).join(" ");
+  const pruefe = (d) => { // true = in diesem Bereich gibt es einen Treffer
+    const sum = d.querySelector(":scope > summary"), sumTreffer = !!sum && text(sum).includes(q); let treffer = false;
+    for (const k of d.children) {
+      if (k === sum) continue;
+      const t = k.matches("details") ? (pruefe(k) || sumTreffer) : (sumTreffer || text(k).includes(q));
+      k.classList.toggle("such-weg", !t); if (t && !sumTreffer && k.matches(".schalter")) k.classList.add("such-treffer"); if (t) treffer = true;
+    }
+    if (sumTreffer) d.classList.add("such-treffer");
+    if (treffer || sumTreffer) d.open = true; return treffer || sumTreffer;
+  };
+  let irgendwas = false;
+  for (const d of w.querySelectorAll(":scope > details[data-klappe]")) { const t = pruefe(d); d.classList.toggle("such-weg", !t); if (t && getComputedStyle(d).display !== "none") irgendwas = true; }
+  $("einstSucheNichts")?.classList.toggle("versteckt", irgendwas);
+  if (RK.einst?.an) rkAufbauen(RK.einst);
 }
 // 2.467.0 KC-CLUB-EINST-ABHAENGIG (Wunsch Hansi „Erst wenn man ein Klickkästchen aktiviert, sollen sich die weiteren Auswahlen öffnen lassen“): ein Klappbereich mit
 // data-abh="<id des Häkchens>" ist gesperrt (grau, 🔒), solange das Häkchen aus ist. Weitere Stellen = nur data-abh ergänzen (Registry statt Sonderfälle).
 function abhKlappen() {
   document.querySelectorAll("[data-abh]").forEach((d) => { const an = !!$(d.dataset.abh)?.checked; d.classList.toggle("abh-aus", !an); if (!an && d.open) d.open = false; });
 }
-document.addEventListener("click", (e) => { const s = e.target.closest?.(".abh-aus > summary"); if (s) { e.preventDefault(); melde("🔒 Erst das Häkchen darüber setzen – dann lässt sich die Auswahl öffnen", true); } }, true);
+document.addEventListener("click", (e) => {
+  const z = e.target.closest?.(".abh-aus > summary, .abh-aus:not(details)"); if (!z) return;
+  abhKlappen(); if (!z.closest(".abh-aus")) return; // 2.469.0: erst neu prüfen – das Häkchen kann inzwischen (z. B. vom Server) gesetzt sein
+  e.preventDefault(); e.stopPropagation(); melde("🔒 Erst das Häkchen darüber setzen – dann lässt sich das einstellen", true);
+}, true);
 document.addEventListener("change", (e) => { if (e.target?.matches?.("input[type=checkbox]")) abhKlappen(); });
 function kuckuckZeigen(h = kkJetzt().h, tonImmer = false, uhrId = null) { // tonImmer: Probe (🔊 in den Einstellungen) – auch nachts; 2.467.0: uhrId = andere Stundenuhr
   document.querySelector(".kuckuck")?.remove();
   const U = suUhr(uhrId), n = U?.rufe ? U.rufe(h) : kkRufe(h), mitTon = einst("ton", true) && (tonImmer || !(h >= KK_NACHT_VON || h < KK_NACHT_BIS));
+  (U?.aufnahmen || []).forEach((k) => suAufnahmeLaden(k)); // 2.470.0: echte Aufnahme rechtzeitig vor ihrem Einsatz laden (sonst selbst erzeugter Ton)
   const z = (h % 12) * 30, zeiger = (w, l, b) => `<line x1="75" y1="80" x2="${75 + l * Math.sin(w * Math.PI / 180)}" y2="${80 - l * Math.cos(w * Math.PI / 180)}" stroke="#2b1607" stroke-width="${b}" stroke-linecap="round"/>`;
   const u = document.createElement("div"); u.className = "kuckuck" + (U ? " su su-" + U.id : ""); u.setAttribute("role", "img"); u.setAttribute("aria-label", `${U ? U.t : "Kuckucksuhr"}: ${h} Uhr`); u.title = `${h} Uhr – antippen schließt die Uhr`;
   u.innerHTML = U ? `<svg viewBox="0 0 150 175" aria-hidden="true">${U.bild(h)}</svg><div class="kk-zahl" aria-hidden="true">${h}</div><div class="kk-punkte" aria-hidden="true">${"○".repeat(n)}</div>` : `<svg viewBox="0 0 150 175" aria-hidden="true">
@@ -23279,6 +23420,7 @@ function ilMeldungen() {
     u: th.anzahl ? (th.offen ? "Bitte stimme ab (👍) – oder reiche selbst eins ein" : "Du hast alle unterstützt – hast du noch ein eigenes?") : "Noch keine Themen – reiche selbst eins ein",
     auf: "zeige('vorschlaege')", knoepfe: [...(th.anzahl ? [["👍 Abstimmen", "zeige('vorschlaege')"]] : []), ["＋ Thema", `ilThemaNeu('${esc(th.treffen)}')`]] });
   // 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT (Wunschliste #20): angekündigte Termine (z. B. Adventsmarkt der Freilichtbühne) – mit 🌐 Webseite
+  { const ah = akHeute(); if (ah && akAn() && !akOffen().includes(ah)) add({ id: "advent:" + ah, stufe: "gold", sym: "🎄", t: `Adventskalender: Türchen ${ah} wartet auf dich`, u: "Antippen und öffnen", auf: "akZeigen()" }); } // 2.468.0 KC-CLUB-ADVENTSKALENDER
   for (const lt of (INIT?.laufbandTermine || []).filter((x) => x.id !== t?.id)) add({ id: "lauf:" + lt.id, stufe: "gold", sym: lt.art === "veranstaltung" ? "🎪" : "📅", t: lt.titel,
     u: wann(lt.beginn) + (lt.ort ? " · " + lt.ort : ""), auf: `ilTerminOeffnen('${esc(lt.id)}')`, knoepfe: /^https:\/\//.test(lt.link || "") ? [["🌐 Webseite", `ilTerminLink('${esc(lt.id)}')`]] : null,
     stand: /^https:\/\//.test(lt.link || "") ? `📅 ${esc(wann(lt.beginn))}` : "" }); // mit Knopf: Datum daneben (sonst fehlt der Platz)
@@ -24276,7 +24418,7 @@ function zeige(v, ausHistorie) {
   if (v === "dienste") dienstLaden();
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { MG_AMEISEN.bis = 0; MG_AMEISEN.neu = true; mgAnsichtWahlZeigen(); mitgliederLaden(); } // KC-CLUB-GRUPPEN-AMEISEN
-  if (v === "einstellungen") { leitungStartZeigen(); notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+  if (v === "einstellungen") { leitungStartZeigen(); einstGruppieren(); setTimeout(abhKlappen, 900); /* 2.469.0 KC-CLUB-EINST-GRUPPEN, -ABHAENGIG (Häkchen kommen teils erst vom Server) */ notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;
@@ -24547,6 +24689,7 @@ function kalEintraege(tag, Q = KAL, mitFeiertagen = einst("feiertage", true)) { 
   return e;
 }
 function kalZeichnen() {
+  $("kalHeuteChip")?.classList.toggle("da", kalTagWahl ? kalTagWahl === heuteIso() : heuteIso().startsWith(`${kalJ}-${String(kalM + 1).padStart(2, "0")}`)); // 2.471.0 KC-CLUB-KAL-HEUTE: rot = woanders, grau = schon bei heute
   const heute = heuteIso(), rang = ["treffen", "schulung", "anfrage", "privat", "schulung-vb", "aktion", "veranst", "dienst", "feiertag", "frist", "todo", "geb", "schulung-ab"];
   const tage = [...Array(42)].map((_, i) => tagPlus(KAL.start, i));
   // letzte Woche weglassen, wenn sie ganz im Folgemonat liegt
@@ -28387,7 +28530,8 @@ function naTageHtml(u, blase) {
   for (const m of ns) { const k = ntTagKey(m.zeit); if (tage[tage.length - 1]?.key !== k) tage.push({ key: k, zeit: m.zeit, ns: [] }); tage[tage.length - 1].ns.push(m); }
   const heute = ntTagKey(new Date());
   const ungelesen = (m) => !m.eigen && (!u.gelesenBis || m.zeit > u.gelesenBis);
-  const mussOffen = (t) => t.key === heute || t.ns.some((m) => m.id === NA.trennerVor || ungelesen(m));
+  const letzter = tage[tage.length - 1]; // 2.472.0 KC-CLUB-CHAT-LETZTE-OFFEN (Wunsch Hansi „die letzte Nachricht offen lassen“): der Tag mit der letzten Nachricht bleibt immer offen – auch ohne Nachricht von heute
+  const mussOffen = (t) => t === letzter || t.key === heute || t.ns.some((m) => m.id === NA.trennerVor || ungelesen(m));
   const tagOffen = (t) => !ein || mussOffen(t) || offen.has("t:" + t.key);
   let zu = 0;
   const tagHtml = (t) => {

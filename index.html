@@ -963,6 +963,8 @@
   .kalnav .mitte { flex: 1; text-align: center; border: none; background: none; cursor: pointer; }
   .kalnav .monat { font-size: 1.15rem; font-weight: 900; }
   .kalnav .jahr { font-size: .9rem; color: var(--grau); font-weight: 800; }
+  .kalnav .kal-heute { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--rot); color: #fff; font-size: .75rem; font-weight: 800; line-height: 1.5; vertical-align: 1px; } /* 2.471.0 */
+  .kalnav .kal-heute.da { background: var(--karte2); color: var(--grau); }
   .wt { display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 8px; font-size: .75rem; font-weight: 800; color: var(--grau); text-align: center; }
   .wt span:nth-child(n+6) { color: var(--rot2); }
   .tage { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 4px; touch-action: pan-y; }
@@ -1644,9 +1646,21 @@
   .su-zeile label { display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer; } .su-zeile small { display: block; }
   .su-zeile .knopf { margin: 0; min-width: 44px; }
   .su-uhr { border-bottom: 1px solid var(--linie); } .su-uhr > summary { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 4px; cursor: pointer; font-weight: 700; }
+  .su-uhr .su-quelle { margin: 0 4px 8px 12px; font-size: .8rem; } /* 2.470.0 Quelle + Lizenz der echten Aufnahme */
   .su-uhr .su-an { font-size: .8rem; font-weight: 800; color: var(--ok, #2e7d32); white-space: nowrap; } .su-uhr .su-zeile { border-bottom: 0; padding: 0 4px 8px 12px; }
   /* 2.467.0 KC-CLUB-EINST-ABHAENGIG: Auswahl gesperrt, solange ihr Häkchen aus ist */
   .abh-aus > summary { opacity: .5; cursor: not-allowed; } .abh-aus > summary::after { content: " 🔒 erst Häkchen setzen"; font-size: .8rem; font-weight: 600; }
+  /* 2.468.0 KC-CLUB-ADVENTSKALENDER: 24 Türchen in Weinrot/Beige (Corporate Design), heutiges leuchtet golden, geöffnete zeigen ihr Bild */
+  .ak-kopf { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .ak-raster { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+  .ak-tuer { position: relative; aspect-ratio: 1; border: 2px solid #e0cfb9; border-radius: 10px; background: #741521; color: #f3e9dc; cursor: pointer; padding: 0; font: 900 1.35rem/1 system-ui, sans-serif; perspective: 300px; overflow: hidden; }
+  .ak-tuer .ak-zahl { position: absolute; inset: 0; display: grid; place-items: center; background: #741521; transition: transform .6s ease; transform-origin: left center; backface-visibility: hidden; }
+  .ak-tuer .ak-sym { font-size: 1.7rem; } .ak-tuer.auf { background: #f3e9dc; } .ak-tuer.auf .ak-zahl { transform: rotateY(-100deg); }
+  .ak-tuer.heute { border-color: #f1c40f; box-shadow: 0 0 0 3px rgba(241,196,15,.45); animation: akLeuchte 1.4s ease-in-out infinite alternate; }
+  .ak-tuer.zu .ak-zahl { color: rgba(243,233,220,.7); } .ak-tuer:not(.auf) .ak-sym { visibility: hidden; } @keyframes akLeuchte { from { box-shadow: 0 0 0 2px rgba(241,196,15,.3); } to { box-shadow: 0 0 0 6px rgba(241,196,15,.6); } }
+  .ak-inhalt:empty { display: none; } .ak-karte { display: flex; gap: 12px; align-items: flex-start; margin-top: 12px; padding: 12px; border-radius: 12px; background: #f3e9dc; color: #1d1a17; border: 1px solid #e0cfb9; }
+  .ak-gross { font-size: 2.4rem; line-height: 1; } .ak-ueber { margin: 8px 0 2px; font-weight: 800; color: #741521; }
+  .ak-liste { margin: 0; padding-left: 20px; } .ak-liste li { margin: 2px 0; } .ak-tipp { margin: 8px 0 0; font-style: italic; }
   @media (prefers-reduced-motion: reduce) { .kuckuck, .kuckuck * { transition: none !important; animation: none !important; } }
   :root.ohne-anim .jz-schicht, :root.ohne-anim .gb-kerze .gb-flamme { animation: none; } :root.ohne-anim .jz-schicht { display: none; }
   .konfetti i { position: absolute; display: block; border-radius: 2px; font-style: normal; font-size: 18px; line-height: 1; will-change: transform, opacity; }
@@ -2876,6 +2890,12 @@
   body.einfach #raster .kachel.bearb .kstrg { left: auto; top: 6px; bottom: 6px; right: 8px; width: 58px; flex-direction: column; gap: 4px; }
   body.einfach #raster .kachel.bearb .kstrg button { padding: 0; font-size: 1.2rem; }
   body.einfach .kl-erw, body:not(.einfach) .kl-ein { display: none; }
+  /* 2.469.0 KC-CLUB-EINST-GRUPPEN / -SUCHE / -ABHAENGIG */
+  body.einfach #v-einstellungen .nur-erweitert { display: none; }
+  #v-einstellungen .einst-gruppe > details.karte { margin: 8px 0; box-shadow: none; border: 1px solid var(--linie); }
+  .einst-suche { display: flex; gap: 6px; align-items: center; margin: 0 0 8px; } .einst-suche input { flex: 1; min-width: 0; font-size: 1rem; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--linie); }
+  #v-einstellungen .such-weg { display: none !important; } #v-einstellungen .such-treffer > summary, #v-einstellungen .schalter.such-treffer { outline: 2px solid #f1c40f; outline-offset: 2px; border-radius: 8px; }
+  .abh-aus:not(details) { opacity: .45; } .abh-aus:not(details) * { pointer-events: none; }
   body.einfach #v-einstellungen > details[data-klappe]:not([data-einfach]) { display: none; }
   /* 2.24.15: Sprung aus Hilfe/Tipp in einen sonst nur erweiterten Bereich – in der einfachen Ansicht dann trotzdem zeigen */
   body.einfach #v-einstellungen > details[data-klappe].einfach-sichtbar { display: block; }
@@ -4457,7 +4477,7 @@
       <div class="karte">
         <div class="kalnav">
           <button class="pf" title="Ein Jahr zurück" onclick="kalBlaettern(-12)">«</button><button class="pf" title="Einen Monat zurück" onclick="kalBlaettern(-1)">‹</button>
-          <button class="mitte" title="Zurück zu heute" onclick="kalHeute()"><div class="monat" id="kalMonat"></div><div class="jahr" id="kalJahr"></div></button>
+          <button class="mitte" title="Zurück zu heute" onclick="kalHeute()"><div class="monat" id="kalMonat"></div><div class="jahr"><span id="kalJahr"></span> <span class="kal-heute" id="kalHeuteChip">📍 Heute</span></div></button> <!-- 2.471.0 KC-CLUB-KAL-HEUTE: in der Jahreszeile, keine eigene Zeile -->
           <button class="pf" title="Einen Monat vor" onclick="kalBlaettern(1)">›</button><button class="pf" title="Ein Jahr vor" onclick="kalBlaettern(12)">»</button>
         </div>
         <div class="wt"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
@@ -4761,6 +4781,8 @@
   <!-- EINSTELLUNGEN -->
   <section id="v-einstellungen" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>⚙️ Einstellungen</h2></div>
+    <div class="einst-suche"><input type="search" id="einstSuche" placeholder="🔍 Einstellung suchen – z. B. Uhr, Schrift, Push" aria-label="Einstellung suchen" oninput="einstSuchen(this.value)" autocomplete="off"><button type="button" class="knopf klein versteckt" id="einstSucheWeg" onclick="einstSuchen('', true)" aria-label="Suche löschen">✕</button></div> <!-- 2.469.0 KC-CLUB-EINST-SUCHE -->
+    <p class="hinweis versteckt" id="einstSucheNichts" style="margin:4px 0 8px">Nichts gefunden – anderes Wort versuchen, z. B. „Ton“, „Farbe“ oder „Geburtstag“.</p>
     <div class="klappen-alle-zeile"><button type="button" class="knopf klein klappen-alle" data-wurzel="v-einstellungen" onclick="klappenAlle(this)" aria-label="Alle Bereiche aufklappen">▾ Alle auf</button></div>
     <!-- KC-CLUB-ANSICHT (0.62.0): Einstellungen der einfachen Ansicht – nur drei Dinge -->
     <details class="karte" data-klappe="einfach" data-einfach open>
@@ -4789,9 +4811,9 @@
     <details class="karte" data-klappe="schnellstart">
       <summary>⚡ Schnellstart</summary>
       <div class="schalter"><div><b>⚡ Schnellstart-Kachel auf der Startseite</b><div class="hinweis">Große Kachel mit Symbolen – ein Tipp, und es geht sofort los.</div></div><input type="checkbox" id="ssAn" checked onchange="schnellSetzen({ an: this.checked })"></div>
-      <p class="hinweis" style="margin:8px 0 0">Bis zu 8 Symbole antippen – die Reihenfolge ist die Reihenfolge des Antippens. Nochmal tippen = entfernen.</p>
-      <div class="ss-wahl" id="ssWahl"></div>
-      <div class="knoepfe"><button class="knopf klein" onclick="schnellSetzen({ ids: null })">↺ Grundeinstellung</button></div>
+      <p class="hinweis" data-abh="ssAn" style="margin:8px 0 0">Bis zu 8 Symbole antippen – die Reihenfolge ist die Reihenfolge des Antippens. Nochmal tippen = entfernen.</p>
+      <div class="ss-wahl" id="ssWahl" data-abh="ssAn"></div>
+      <div class="knoepfe" data-abh="ssAn"><button class="knopf klein" onclick="schnellSetzen({ ids: null })">↺ Grundeinstellung</button></div>
     </details>
     <details class="karte" data-klappe="benachrichtigung" open>
       <summary>🔔 Benachrichtigungen</summary>
@@ -4803,27 +4825,17 @@
       <div class="knoepfe"><button class="knopf klein" onclick="tonTest()">Ton testen</button><button class="knopf klein" onclick="pushTest()">Test-Push senden</button><button class="knopf klein" onclick="geraeteBlatt()">📱 Meine Geräte</button></div>
       <!-- KC-CLUB-RUHEZEIT (0.98.0) -->
       <div class="schalter" style="margin-top:10px"><div><b>🌙 Nicht stören</b><div class="hinweis" id="ruheHinweis">In dieser Zeit kein Push. Anrufe kommen trotzdem durch, danach eine Sammelmeldung.</div></div><input type="checkbox" id="ruheAn" onchange="ruheSpeichern()"></div>
-      <div class="zwei ruhe-zeiten"><label class="feld">von<input type="time" id="ruheVon" value="22:00" onchange="ruheSpeichern()"></label><label class="feld">bis<input type="time" id="ruheBis" value="07:00" onchange="ruheSpeichern()"></label></div>
-      <div class="schalter"><div><b>📣 @Erwähnungen trotzdem melden</b><div class="hinweis">Wenn dich jemand mit @ direkt anspricht</div></div><input type="checkbox" id="ruheErw" checked onchange="ruheSpeichern()"></div>
+      <div class="zwei ruhe-zeiten" data-abh="ruheAn"><label class="feld">von<input type="time" id="ruheVon" value="22:00" onchange="ruheSpeichern()"></label><label class="feld">bis<input type="time" id="ruheBis" value="07:00" onchange="ruheSpeichern()"></label></div>
+      <div class="schalter" data-abh="ruheAn"><div><b>📣 @Erwähnungen trotzdem melden</b><div class="hinweis">Wenn dich jemand mit @ direkt anspricht</div></div><input type="checkbox" id="ruheErw" checked onchange="ruheSpeichern()"></div>
       <!-- KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0) -->
       <div class="schalter"><div><b>❗ Vor dem Senden nach der Wichtigkeit fragen</b><div class="hinweis">📝 Normal oder ❗ Hoch – je Chat höchstens alle 30 Minuten. Hoch: farbig markiert, Push und E-Mail, nach 24 Std. ungelesen bekommst du Bescheid.</div></div><input type="checkbox" id="setWichtigFrage" onchange="wichtigFrageSetzen(this.checked)"></div>
     </details>
     <!-- KC-CLUB-ONLINE-ANSAGE (1.57.1, 1.58.1 + Tipp des Tages): eigener Kasten – in der einfachen UND der erweiterten Ansicht sichtbar -->
     <details class="karte" data-klappe="ansagen" data-einfach open>
-      <summary>🗣️ Ansagen, Töne &amp; Tipps</summary>
-      <div class="schalter"><div><b>💡 Tipp des Tages</b><div class="hinweis">Beim Öffnen höchstens einmal in der Woche ein kurzer Tipp</div></div><input type="checkbox" id="setTipps" checked onchange="tippSchalter(this.checked)"></div>
-      <div class="schalter"><div><b>👋 Beim Öffnen zeigen, was neu ist</b><div class="hinweis">Neue Nachrichten (Chats und Gruppen), Pinnwand-Einträge und Spiele, die auf dich warten – auf einen Blick, mit Knopf direkt dorthin. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setWasNeu" onchange="einstellung('wasNeu', this.checked)"></div> <!-- 2.24.12 KC-CLUB-WAS-NEU -->
-      <div class="schalter"><div><b>❓ Fragezeichen unten rechts</b><div class="hinweis">Öffnet die passende Hilfe zum Bereich. Ausblenden geht auch: lange auf das „?“ drücken</div></div><input type="checkbox" id="setHzFrage" checked onchange="hzFrageSchalter(this.checked)"></div> <!-- KC-CLUB-HILFEZENTRUM (2.23.5) -->
-      <div class="schalter"><div><b>🤝 Unterstützung</b><div class="hinweis">Wie viel Hilfe möchtest du? Viel Hilfe schaltet alles auf einmal ein.</div></div><button class="knopf klein" onclick="ustFragen(false)">Wählen</button></div> <!-- KC-CLUB-UNTERSTUETZUNG (2.85.0) -->
-      <div class="schalter"><div><b>👣 Schritt-Unterstützung</b><div class="hinweis">Ein roter Rahmen zeigt Schritt für Schritt, was als Nächstes kommt. Zum Ausprobieren an der 📌 Pinnwand und bei 💬 Nachrichten.</div></div><input type="checkbox" id="setSchrittHilfe" onchange="shSchalter(this.checked)"></div> <!-- KC-CLUB-SCHRITT-HILFE (2.63.0) -->
-      <div class="schalter"><div><b>🔊 Schritte vorlesen</b><div class="hinweis">Die Schritt-Unterstützung sagt jeden Schritt auch an. Geht auch mit 🔈 in der roten Leiste.</div></div><input type="checkbox" id="setSchrittVorlesen" onchange="shVorlesen(this.checked)"></div> <!-- KC-CLUB-SCHRITT-HILFE (2.65.0) -->
+      <summary>🗣️ Ansagen &amp; Töne</summary>
       <div class="schalter"><div><b>🎙️ Sprachsteuerung</b><div class="hinweis">Unten links auf 🎙️ tippen und sagen, was du tun möchtest – z. B. „Nachricht an Klaus“, „Zettel an die Pinnwand“, „Startseite“.</div></div><input type="checkbox" id="setSprache" onchange="sbSchalter(this.checked)"></div> <!-- KC-CLUB-SPRACHSTEUERUNG (2.75.0) -->
-      <button type="button" class="knopf klein" style="margin:-4px 0 10px" onclick="sbListe()">📋 Alle Sprachbefehle anzeigen – antippen führt aus</button> <!-- 2.170.0 KC-CLUB-SPRACHE-LISTE-TIPPEN -->
-      <div class="schalter"><div><b>🎓 Sprach-Training</b><div class="hinweis">Die App lernt, wie du deine Befehle sprichst: Sätze nachsprechen – fertig. Ausgeführt wird dabei nichts.</div></div><button class="knopf klein" onclick="sbtStart()">🎓 Trainieren</button></div> <!-- KC-CLUB-SPRACH-TRAINING (2.152.0) -->
-      <div class="schalter"><div><b>❓ Alle Tipps nachlesen</b><div class="hinweis">Hilfe-Zentrum: alle Tipps und Erklärungen nach Themen – auch im Register Technik</div></div><button class="knopf klein" onclick="hzStart()">Öffnen</button></div>
-      <!-- KC-CLUB-EINWEISUNG (2.4.0) -->
-      <div class="schalter"><div><b>🎓 Einweisung beim ersten Öffnen</b><div class="hinweis">Beim ersten Besuch eines Bereichs eine kurze Erklärung, was man dort machen kann</div></div><input type="checkbox" id="setEinw" checked onchange="einwSchalter(this.checked)"></div>
-      <button class="knopf klein" onclick="einwZuruecksetzen()">🎓 Alle Einweisungen nochmal zeigen</button>
+      <button type="button" class="knopf klein" data-abh="setSprache" style="margin:-4px 0 10px" onclick="sbListe()">📋 Alle Sprachbefehle anzeigen – antippen führt aus</button> <!-- 2.170.0 KC-CLUB-SPRACHE-LISTE-TIPPEN -->
+      <div class="schalter" data-abh="setSprache"><div><b>🎓 Sprach-Training</b><div class="hinweis">Die App lernt, wie du deine Befehle sprichst: Sätze nachsprechen – fertig. Ausgeführt wird dabei nichts.</div></div><button class="knopf klein" onclick="sbtStart()">🎓 Trainieren</button></div> <!-- KC-CLUB-SPRACH-TRAINING (2.152.0) -->
       <!-- KC-CLUB-ONLINE-ANSAGE (1.56.0, Wunsch Hansi): Sprachansage „Klaus ist jetzt online“ – nur dieses Gerät, nur wenn die App offen ist -->
       <div class="schalter versteckt" id="setAnsageZeile"><div><b>🗣️ Ansage, wenn jemand online kommt</b><div class="hinweis">Das Handy sagt z. B. „Klaus ist jetzt online“ – nur solange die App offen ist, nicht in deiner Ruhezeit</div></div><input type="checkbox" id="setAnsage" onchange="ansageSchalter(this.checked)"></div>
       <!-- KC-CLUB-VORLESEN (1.59.0, Wunsch Hansi): neue Nachrichten im offenen Chat vorlesen (auch im Chat oben 🔇/🔊) -->
@@ -4846,6 +4858,23 @@
       <!-- KC-CLUB-ONLINE-PUSH (1.57.0): auch bei geschlossener App – als Push mit dem normalen Benachrichtigungston -->
       <div class="schalter versteckt" id="setOnlinePushZeile"><div><b>📲 Push, wenn sich jemand anmeldet</b><div class="hinweis">Auch wenn die App zu ist: „🟢 Klaus ist jetzt online“ – mit dem normalen Ton des Handys. Nicht in deiner Ruhezeit, nicht wenn die App gerade offen ist.</div></div><input type="checkbox" id="setOnlinePush" onchange="onlinePushSchalter(this.checked)"></div>
     </details>
+    <!-- 2.469.0 KC-CLUB-EINST-GRUPPEN (Wunsch Hansi „Einstellungen riesengroß“): Hilfen und Tipps aus „Ansagen, Töne & Tipps“ und „Startseite & Ansicht“ in einem eigenen Bereich -->
+    <details class="karte" data-klappe="hilfe" data-einfach open>
+      <summary>💡 Hilfe &amp; Lernen</summary>
+      <div class="schalter"><div><b>💡 Tipp des Tages</b><div class="hinweis">Beim Öffnen höchstens einmal in der Woche ein kurzer Tipp</div></div><input type="checkbox" id="setTipps" checked onchange="tippSchalter(this.checked)"></div>
+      <div class="schalter"><div><b>👋 Beim Öffnen zeigen, was neu ist</b><div class="hinweis">Neue Nachrichten (Chats und Gruppen), Pinnwand-Einträge und Spiele, die auf dich warten – auf einen Blick, mit Knopf direkt dorthin. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setWasNeu" onchange="einstellung('wasNeu', this.checked)"></div> <!-- 2.24.12 KC-CLUB-WAS-NEU -->
+      <div class="schalter nur-erweitert"><div><b>❓ Fragezeichen unten rechts</b><div class="hinweis">Öffnet die passende Hilfe zum Bereich. Ausblenden geht auch: lange auf das „?“ drücken</div></div><input type="checkbox" id="setHzFrage" checked onchange="hzFrageSchalter(this.checked)"></div> <!-- KC-CLUB-HILFEZENTRUM (2.23.5) -->
+      <div class="schalter"><div><b>🤝 Unterstützung</b><div class="hinweis">Wie viel Hilfe möchtest du? Viel Hilfe schaltet alles auf einmal ein.</div></div><button class="knopf klein" onclick="ustFragen(false)">Wählen</button></div> <!-- KC-CLUB-UNTERSTUETZUNG (2.85.0) -->
+      <div class="schalter"><div><b>👣 Schritt-Unterstützung</b><div class="hinweis">Ein roter Rahmen zeigt Schritt für Schritt, was als Nächstes kommt. Zum Ausprobieren an der 📌 Pinnwand und bei 💬 Nachrichten.</div></div><input type="checkbox" id="setSchrittHilfe" onchange="shSchalter(this.checked)"></div> <!-- KC-CLUB-SCHRITT-HILFE (2.63.0) -->
+      <div class="schalter" data-abh="setSchrittHilfe"><div><b>🔊 Schritte vorlesen</b><div class="hinweis">Die Schritt-Unterstützung sagt jeden Schritt auch an. Geht auch mit 🔈 in der roten Leiste.</div></div><input type="checkbox" id="setSchrittVorlesen" onchange="shVorlesen(this.checked)"></div> <!-- KC-CLUB-SCHRITT-HILFE (2.65.0) -->
+      <div class="schalter"><div><b>❓ Alle Tipps nachlesen</b><div class="hinweis">Hilfe-Zentrum: alle Tipps und Erklärungen nach Themen – auch im Register Technik</div></div><button class="knopf klein" onclick="hzStart()">Öffnen</button></div>
+      <!-- KC-CLUB-EINWEISUNG (2.4.0) -->
+      <div class="schalter"><div><b>🎓 Einweisung beim ersten Öffnen</b><div class="hinweis">Beim ersten Besuch eines Bereichs eine kurze Erklärung, was man dort machen kann</div></div><input type="checkbox" id="setEinw" checked onchange="einwSchalter(this.checked)"></div>
+      <button class="knopf klein" data-abh="setEinw" onclick="einwZuruecksetzen()">🎓 Alle Einweisungen nochmal zeigen</button>
+      <div class="schalter nur-erweitert"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
+      <div class="schalter nur-erweitert"><div><b>🎬 Rundgang durch die App</b><div class="hinweis">Die App zeigt und erzählt dir in 3 Minuten, was sie kann – mit Ton</div></div><button class="knopf klein" onclick="rundgangStart()">▶ Starten</button></div> <!-- KC-CLUB-RUNDGANG (2.241.0) -->
+      <div class="schalter nur-erweitert"><div><b>🎬 Weitere Erklär-Videos</b><div class="hinweis">Alle Einstellungen erklärt, Nachricht schreiben, Termin eintragen, Pinnwand, Vorschläge, Koch-Figur aussuchen und zusammenstellen</div></div><button class="knopf klein" onclick="erklaerVideos()">Auswählen</button></div> <!-- KC-CLUB-ERKLAERVIDEOS (2.244.0) -->
+    </details>
     <details class="karte" data-klappe="privat" data-einfach>
       <summary>🔒 Privatsphäre</summary>
       <div id="elternMeine"></div><!-- 2.431.0 KC-CLUB-ELTERN: wer Hinweise bekommt (nur wenn ein Eltern-Handy eingetragen ist) -->
@@ -4862,10 +4891,10 @@
       <!-- KC-CLUB-SPIELE (2.7.0) -->
       <div class="schalter"><div><b>🎲 Andere dürfen mich zu Spielen herausfordern</b><div class="hinweis">Tic-Tac-Toe, Schach, Bauernskat, Küchenterror und Mensch ärgere dich nicht – darunter wählst du, welche. Aus: Du erscheinst nicht in der Liste und bekommst keine Herausforderungen. Gegen den Computer spielen geht immer.</div></div><input type="checkbox" id="setSpiele" onchange="spBereitSetzen(this.checked)"></div>
       <div class="knoepfe versteckt" id="setSpieleArten" style="margin:-4px 0 10px" aria-label="Zu welchen Spielen darf man dich herausfordern?"></div>
-      <div class="schalter"><div><b>🎲 Spiel-Einladung beim Start</b><div class="hinweis">Höchstens einmal in der Woche: „Heute Lust auf eine Partie?“ – mit Ja, Nein, Später oder Keine Spiele</div></div><input type="checkbox" id="setSpielEinl" checked onchange="spEinlSchalter(this.checked)"></div>
+      <div class="schalter" data-abh="setSpiele"><div><b>🎲 Spiel-Einladung beim Start</b><div class="hinweis">Höchstens einmal in der Woche: „Heute Lust auf eine Partie?“ – mit Ja, Nein, Später oder Keine Spiele</div></div><input type="checkbox" id="setSpielEinl" checked onchange="spEinlSchalter(this.checked)"></div>
       <!-- KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0) -->
       <div class="schalter"><div><b>👋 Anklopfen erlauben</b><div class="hinweis">Andere dürfen bei dir anklopfen, wenn du online bist. Aus: Sie sehen 🔕 und schreiben dir stattdessen eine Nachricht.</div></div><input type="checkbox" id="setAnklopfen" checked onchange="anklopfenSetzen({ erlaubt: this.checked })"></div>
-      <div class="zwei"><label class="feld">🔔 Anklopfton<select id="setKlopfTon" onchange="anklopfenSetzen({ ton: this.value })"></select></label><button class="knopf klein" style="align-self:end" onclick="klopfTonSpielen($('setKlopfTon').value)">▶ Testton</button></div>
+      <div class="zwei" data-abh="setAnklopfen"><label class="feld">🔔 Anklopfton<select id="setKlopfTon" onchange="anklopfenSetzen({ ton: this.value })"></select></label><button class="knopf klein" style="align-self:end" onclick="klopfTonSpielen($('setKlopfTon').value)">▶ Testton</button></div>
       <div class="schalter"><div><b>👁️ Andere sehen live, was ich tippe</b><div class="hinweis">In Unterhaltungen sehen die anderen deinen Text schon beim Schreiben – auch, was du wieder löschst. Nicht gesendete Entwürfe werden nicht gespeichert und nach wenigen Sekunden verworfen. Standard: aus.</div></div><input type="checkbox" id="setLiveTippen" onchange="liveTippenSetzen(this.checked)"></div>
       <p class="hinweis" style="margin:14px 0 0"><b>Für andere Mitglieder sichtbar:</b> (Aushilfen sehen keine Kontaktdaten)</p>
       <div class="schalter"><div><b>📱 Meine Handynummer</b></div><input type="checkbox" id="setKontakt_handy" onchange="kontaktFreigabe('handy', this.checked)"></div>
@@ -4917,10 +4946,11 @@
       <div class="schalter"><div><b>✨ Animierte Knöpfe</b><div class="hinweis">Kacheln zoomen kurz beim Antippen, Reiter und „＋ Neu“ leuchten auf – aus: alles ruhig. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setAnimiert" onchange="einstellung('animiert', this.checked)"></div> <!-- 2.24.1 (Wunsch Hansi) -->
       <div class="schalter"><div><b>🕰️ Uhr zur vollen Stunde</b><div class="hinweis">Solange die App offen ist, kommt zu jeder vollen Stunde die Uhr – Kuckuck, Big Ben, Kölner Dom und mehr (unten auswählen) – und schlägt so oft, wie es Uhr ist (nachts 22–7 Uhr ohne Ton). Antippen schließt sie. Gilt für dieses Gerät.</div></div><button type="button" class="knopf klein" onclick="kuckuckZeigen(kkJetzt().h, true)" title="Kuckucksuhr jetzt mit Ton zeigen">🔊 Probe</button><input type="checkbox" id="setKuckuck" onchange="einstellung('kuckuck', this.checked)"></div> <!-- 2.402.0 KC-CLUB-KUCKUCKSUHR -->
       <details class="su-wahl" data-abh="setKuckuck"><summary>🔔 Welche Uhr? <small class="hinweis">– jede Uhr zum Aufklappen, ▶ zum Anhören, mehrere = jede Stunde eine andere</small></summary><div id="stundenUhrWahl"></div></details> <!-- 2.467.0 KC-CLUB-STUNDENUHREN -->
+      <div class="schalter"><div><b>🎄 Adventskalender</b><div class="hinweis">Vom 1. bis 24. Dezember jeden Tag ein Türchen mit einer Bastelanleitung für eine kleine süße Nascherei – Erinnerung oben im Info-Laufband. Aus: keine Erinnerung. Gilt für dieses Gerät.</div><button type="button" class="knopf klein" style="margin-top:6px" onclick="akZeigen()">🎄 Kalender ansehen</button></div><input type="checkbox" id="setAdvent" aria-label="Adventskalender an oder aus" onchange="einstellung('advent', this.checked)"></div> <!-- 2.468.0 KC-CLUB-ADVENTSKALENDER -->
       <div class="schalter"><div><b>🧚 Die kleine Fee</b><div class="hinweis">Bei jedem 20. Start kommt die Fee – und beim Antippen gibt sie dir einen Spruch. Aus: sie kommt nicht mehr. Gilt für dieses Gerät.</div><button type="button" class="knopf klein" id="feeKnopf" style="margin-top:6px" onclick="feeKommt(true)">🧚 Fee ansehen</button></div><input type="checkbox" id="setFee" aria-label="Die kleine Fee an oder aus" onchange="einstellung('fee', this.checked)"></div> <!-- 2.373.0 KC-CLUB-FEE: eigene Zeile; 2.379.0: abschaltbar -->
       <div class="schalter"><div><b>🍂 Jahreszeiten im Kopf</b><div class="hinweis">Herbstlaub bleibt unten liegen, bis ein Windstoß es wegweht – Schnee ebenso, jedes 3. Mal wird ein lachender Schneemann daraus. Im Frühling wachsen Gras und Blumen, im Sommer eine Sonnenblume. Feuerwerk zu Silvester.</div></div><input type="checkbox" id="setJahreszeit" onchange="jahreszeitUmschalten(this.checked)"></div>
-      <div class="schalter" style="display:block"><div><b>📅 Welche Jahreszeit?</b><div class="hinweis" id="jzWahlInfo"></div></div><div class="reg-effekt-wahl" id="jzWahl"></div></div> <!-- 2.273.0 KC-CLUB-JAHRESZEIT-AUTOMATIK --> <!-- 2.172.0 KC-CLUB-EFFEKTE-2, 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE -->
-      <div class="schalter" style="display:block"><div class="hinweis">Vorschau im Kopf der Startseite:</div><div class="reg-effekt-wahl"><button type="button" class="chip" onclick="jahreszeitVorschau('herbst')">🍂 Herbst</button><button type="button" class="chip" onclick="jahreszeitVorschau('winter')">⛄ Winter</button><button type="button" class="chip" onclick="jahreszeitVorschau('fruehling')">🌱 Frühling</button><button type="button" class="chip" onclick="jahreszeitVorschau('sommer')">🌻 Sommer</button><button type="button" class="chip" onclick="jahreszeitVorschau('kirmes')">🎡 Sim-Jü</button><button type="button" class="chip" onclick="jahreszeitVorschau('wiesn')">🥨 Oktoberfest</button><button type="button" class="chip" onclick="jahreszeitVorschau('karibik')">🌴 Karibik</button><button type="button" class="chip" onclick="jahreszeitVorschau('karneval')">🎭 Karneval</button><button type="button" class="chip" onclick="jahreszeitVorschau('halloween')">🎃 Halloween</button><button type="button" class="chip" onclick="jahreszeitVorschau('unterwasser')">🐠 Unterwasserwelt</button><button type="button" class="chip" onclick="jahreszeitVorschau('weltraum')">🚀 Weltraum</button><button type="button" class="chip" onclick="jahreszeitVorschau('bauernhof')">🐄 Bauernhof</button><button type="button" class="chip" onclick="jahreszeitVorschau('kegeln')">🎳 Kegelabend</button><button type="button" class="chip" onclick="jahreszeitVorschau('heute')">📅 Heute (Vorschau beenden)</button></div>
+      <div class="schalter" data-abh="setJahreszeit" style="display:block"><div><b>📅 Welche Jahreszeit?</b><div class="hinweis" id="jzWahlInfo"></div></div><div class="reg-effekt-wahl" id="jzWahl"></div></div> <!-- 2.273.0 KC-CLUB-JAHRESZEIT-AUTOMATIK --> <!-- 2.172.0 KC-CLUB-EFFEKTE-2, 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE -->
+      <div class="schalter" data-abh="setJahreszeit" style="display:block"><div class="hinweis">Vorschau im Kopf der Startseite:</div><div class="reg-effekt-wahl"><button type="button" class="chip" onclick="jahreszeitVorschau('herbst')">🍂 Herbst</button><button type="button" class="chip" onclick="jahreszeitVorschau('winter')">⛄ Winter</button><button type="button" class="chip" onclick="jahreszeitVorschau('fruehling')">🌱 Frühling</button><button type="button" class="chip" onclick="jahreszeitVorschau('sommer')">🌻 Sommer</button><button type="button" class="chip" onclick="jahreszeitVorschau('kirmes')">🎡 Sim-Jü</button><button type="button" class="chip" onclick="jahreszeitVorschau('wiesn')">🥨 Oktoberfest</button><button type="button" class="chip" onclick="jahreszeitVorschau('karibik')">🌴 Karibik</button><button type="button" class="chip" onclick="jahreszeitVorschau('karneval')">🎭 Karneval</button><button type="button" class="chip" onclick="jahreszeitVorschau('halloween')">🎃 Halloween</button><button type="button" class="chip" onclick="jahreszeitVorschau('unterwasser')">🐠 Unterwasserwelt</button><button type="button" class="chip" onclick="jahreszeitVorschau('weltraum')">🚀 Weltraum</button><button type="button" class="chip" onclick="jahreszeitVorschau('bauernhof')">🐄 Bauernhof</button><button type="button" class="chip" onclick="jahreszeitVorschau('kegeln')">🎳 Kegelabend</button><button type="button" class="chip" onclick="jahreszeitVorschau('heute')">📅 Heute (Vorschau beenden)</button></div>
         <div class="hinweis" style="margin-top:6px">Extras: Nikolaus-Stiefel am 6.12., Regen mit Pfützen (nur wenn es wirklich regnet), Kochtopf am Treffen-Tag, Ostereier zum Suchen, Igel im Herbst, abends der Kürbis mit Kerze (bringt der Hund)</div><div class="reg-effekt-wahl"><button type="button" class="chip" onclick="jahreszeitVorschau('advent', 'nikolaus')">🥾 Nikolaus</button><button type="button" class="chip" onclick="jahreszeitVorschau('', 'regen')">☔ Regen</button><button type="button" class="chip" onclick="jahreszeitVorschau('', 'topf')">🍲 Treffen</button><button type="button" class="chip" onclick="jahreszeitVorschau('fruehling', 'ostern')">🥚 Ostern</button><button type="button" class="chip" onclick="jahreszeitVorschau('herbst', 'igel')">🦔 Igel</button><button type="button" class="chip" onclick="jahreszeitVorschau('herbst', 'kuerbis')">🎃 Kürbis-Hund</button><button type="button" class="chip" onclick="jahreszeitVorschau('herbst', 'twinkey')">🧹 Twinkey fegt</button></div></div>
       <div class="schalter" style="display:block"><div><b>🎏 Deko an der Leiste</b><div class="hinweis" id="jzDekoInfo">Wimpel, Lichterkette oder Laternen hängen oben an der Leiste mit den Lämpchen – dort, wo im Winter die Eiszapfen hängen.</div></div><div class="reg-effekt-wahl" id="jzDekoWahl"></div></div> <!-- 2.335.0 KC-CLUB-DEKO -->
       <!-- KC-CLUB-REGISTER-EFFEKTE (2.169.0, Wunsch Hansi) -->
@@ -4932,11 +4962,11 @@
       <div class="schalter"><div><b>🔄 Kacheln umdrehen</b><div class="hinweis">Doppelt auf eine Kachel tippen – hinten stehen Schnellaktionen (z. B. „Neue Nachricht“). Gilt für dieses Gerät.</div></div><input type="checkbox" id="setKachelRueck" onchange="einstellung('kachelrueck', this.checked)"></div> <!-- KC-CLUB-KACHEL-RUECKSEITE 2.54.0 -->
       <div class="schalter"><div><b>🗑️ Reißwolf beim Löschen</b><div class="hinweis">Gelöschtes läuft sichtbar durch den Aktenvernichter. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setReisswolf" onchange="einstellung('reisswolf', this.checked)"></div> <!-- KC-CLUB-REISSWOLF 2.54.0 -->
       <div class="schalter"><div><b>📡 Verbindungs-Symbol in Nachrichten</b><div class="hinweis">Oben links in 💬 Nachrichten: Router im WLAN, Satellit im Mobilfunk – antippen zeigt die Verbindungsqualität. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setNetzSymbol" onchange="einstellung('netzSymbol', this.checked);netzSymbolZeigen()"></div> <!-- KC-CLUB-NETZ-SYMBOL 2.429.0 -->
-      <div class="schalter"><div><b>✨ Verbindungs-Symbol blinkt</b><div class="hinweis">Wellen und Lämpchen blinken (aus = ruhiges Symbol).</div></div><input type="checkbox" id="setNetzBlinken" onchange="einstellung('netzBlinken', this.checked);netzSymbolZeigen()"></div>
+      <div class="schalter" data-abh="setNetzSymbol"><div><b>✨ Verbindungs-Symbol blinkt</b><div class="hinweis">Wellen und Lämpchen blinken (aus = ruhiges Symbol).</div></div><input type="checkbox" id="setNetzBlinken" onchange="einstellung('netzBlinken', this.checked);netzSymbolZeigen()"></div>
     </details>
     <details class="karte" data-klappe="startseite">
       <summary>🧩 Startseite &amp; Ansicht</summary>
-      <div class="schalter"><div><b>📂 Vergangene Tage im Chat einklappen</b><div class="hinweis">Nur heute und Ungelesenes offen – frühere Tage als eine Zeile, rechts das Datum (z. B. „Mo, 11.11.26“). Antippen klappt auf. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setChatEinklappen" onchange="einstellung('chatEinklappen', this.checked)"></div> <!-- KC-CLUB-TAGE-EINKLAPPEN 2.429.0 -->
+      <div class="schalter"><div><b>📂 Vergangene Tage im Chat einklappen</b><div class="hinweis">Nur heute, der Tag der letzten Nachricht und Ungelesenes offen – frühere Tage als eine Zeile, rechts das Datum (z. B. „Mo, 11.11.26“). Antippen klappt auf. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setChatEinklappen" onchange="einstellung('chatEinklappen', this.checked)"></div> <!-- KC-CLUB-TAGE-EINKLAPPEN 2.429.0 -->
       <div class="schalter"><div><b>📅 Ältere Wochen als Kalenderwoche</b><div class="hinweis">Nachrichten, die älter als 7 Tage sind, als eine Zeile je Woche („KW 45/26“).</div></div><input type="checkbox" id="setChatKW" onchange="einstellung('chatKW', this.checked)"></div>
       <!-- KC-CLUB-ESELSOHR (2.292.0) -->
       <div class="schalter"><div><b>📄 Eselsohr am Kopf</b><div class="hinweis">Unten rechts am Kopf doppelt tippen (oder nach links ziehen) – der Kopf dreht sich um: 🖼️ Diashow, 🖍️ Tafel, 📋 Flipchart, 🕰️ große Uhr, 🎭 Bühne für Bewegung, 🪞 Spiegel. Nochmal doppelt tippen dreht zurück.</div></div><input type="checkbox" id="setEselsohr" checked onchange="eselsohrSchalter(this.checked)"></div>
@@ -4955,9 +4985,6 @@
         <div id="cdWahl" style="margin-top:6px"></div></div>
       <div class="schalter"><div><b>🪧 Info-Feld oben beim Start</b><div class="hinweis">Welche Karte zuerst erscheint – z. B. Nr. 1 oder die Kommunikationszentrale</div></div><select id="setInfoStart" aria-label="Info-Feld oben beim Start" onchange="infoStartSetzen(this.value)" style="max-width:48%"></select></div>
       <div class="schalter"><div><b>🟢 Einfache Ansicht</b><div class="hinweis">Nur das Wichtigste mit großen Knöpfen – jederzeit umschaltbar</div></div><button class="knopf klein" onclick="ansichtSetzen('einfach')">Einschalten</button></div>
-      <div class="schalter"><div><b>📄 Kurzanleitung</b><div class="hinweis">Die App in 3 Schritten – zum Ansehen oder Ausdrucken</div></div><button class="knopf klein" onclick="druckStarten('anleitung')">Ansehen</button></div>
-      <div class="schalter"><div><b>🎬 Rundgang durch die App</b><div class="hinweis">Die App zeigt und erzählt dir in 3 Minuten, was sie kann – mit Ton</div></div><button class="knopf klein" onclick="rundgangStart()">▶ Starten</button></div> <!-- KC-CLUB-RUNDGANG (2.241.0) -->
-      <div class="schalter"><div><b>🎬 Weitere Erklär-Videos</b><div class="hinweis">Alle Einstellungen erklärt, Nachricht schreiben, Termin eintragen, Pinnwand, Vorschläge, Koch-Figur aussuchen und zusammenstellen</div></div><button class="knopf klein" onclick="erklaerVideos()">Auswählen</button></div> <!-- KC-CLUB-ERKLAERVIDEOS (2.244.0) -->
       <div class="schalter"><div><b>🧩 Startseite anordnen</b><div class="hinweis">Kacheln verschieben oder ausblenden – oder auf der Startseite eine Kachel lange drücken</div></div><button class="knopf klein" onclick="zeige('start');kaBearbeiten(true)">Anordnen</button></div>
       <!-- KC-CLUB-MG-KACHELN (1.45.0, Wunsch Hansi): jeder wählt selbst, wie die Mitglieder angezeigt werden (je Gerät) -->
       <div style="margin-top:8px"><b>🔲 Kacheln auf der Startseite</b> <span class="hinweis">(erweiterte Ansicht, gilt für dieses Gerät)</span></div>
@@ -5331,7 +5358,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.475.0" data-v="2.475.0"></script>
+<script src="app.js?v=2.476.0" data-v="2.476.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

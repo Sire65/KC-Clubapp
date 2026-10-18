@@ -2621,7 +2621,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 229. 1.58.1: Tipp des Tages in beiden Ansichten
 {
-  const k0 = html.indexOf('<details class="karte" data-klappe="ansagen" data-einfach open>'), kasten = html.slice(k0, html.indexOf("</details>", k0));
+  const k0 = html.indexOf('<details class="karte" data-klappe="hilfe" data-einfach open>'), kasten = html.slice(k0, html.indexOf("</details>", k0)); // 2.469.0: Tipps stehen jetzt in „💡 Hilfe & Lernen“ – weiter in beiden Ansichten (data-einfach)
   assert.ok(kasten.includes('id="setTipps"'), "Tipp-Schalter im Kasten für beide Ansichten");
   assert.equal((html.match(/id="setTipps"/g) || []).length, 1, "nur einmal");
 }
@@ -4720,9 +4720,9 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.24.15 KC-CLUB-PRUEFUNG-4: Status-Pfeil mittig in Statusfarbe, Hilfe-Pfade auch in der einfachen Ansicht, Büro unvollständig ≠ leer
 {
   assert.ok(/d\.classList\.add\("einfach-sichtbar"\)/.test(html) && /body\.einfach #v-einstellungen > details\[data-klappe\]\.einfach-sichtbar \{ display: block; \}/.test(html), "Sprung aus Hilfe öffnet Bereich auch in der einfachen Ansicht");
-  const ans = html.slice(html.indexOf('data-klappe="ansagen"'), html.indexOf('data-klappe="ansagen"') + 3000);
-  assert.ok(/id="setWasNeu"/.test(ans) && /höchstens einmal in der Woche/.test(ans), "„Was ist neu“-Schalter bei Ansagen, Töne & Tipps (auch einfache Ansicht)");
-  assert.ok(/id: "was_neu"[^\n]*Spiele[^\n]*einstiegHin\("ansagen", "setWasNeu"\)/.test(html), "Hilfe „Was ist neu“ mit Spielen und richtigem Weg");
+  const ans = html.slice(html.indexOf('data-klappe="hilfe"'), html.indexOf('data-klappe="hilfe"') + 3000); // 2.469.0: jetzt „💡 Hilfe & Lernen“ (auch einfache Ansicht)
+  assert.ok(/id="setWasNeu"/.test(ans) && /höchstens einmal in der Woche/.test(ans), "„Was ist neu“-Schalter bei Hilfe & Lernen (auch einfache Ansicht)");
+  assert.ok(/id: "was_neu"[^\n]*Spiele[^\n]*einstiegHin\("hilfe", "setWasNeu"\)/.test(html), "Hilfe „Was ist neu“ mit Spielen und richtigem Weg");
   assert.ok(/id: "status", sym: "🙂"[^\n]*los: \(\) => statusBlatt\(\)/.test(html), "Twinkey Status öffnet den Status, nicht den Standort");
   assert.ok(/id: "kacheln_klein"[^\n]*nur: \(\) => !einfach\(\)/.test(html), "Kachel-Tipp nur in der erweiterten Ansicht");
   assert.ok(/function buRaumHtml\(\) \{\n[^\n]*\n  if \(!Array\.isArray\(r\.sitzungen\) \|\| !r\.eingang\) return/.test(html), "Büro: unvollständige Antwort → Hinweis statt Absturz");
@@ -6764,8 +6764,64 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/<details class="su-uhr" data-uhr="\$\{x\.id\}"/.test(html) && /<b>Diese Uhr verwenden<\/b>/.test(html), "jede Uhr klappbar");
   assert.ok(/<details class="su-wahl" data-abh="setKuckuck">/.test(lies("index.html")), "Uhrenauswahl hängt am Häkchen");
   assert.ok(/function abhKlappen\(\) \{\n  document\.querySelectorAll\("\[data-abh\]"\)/.test(html) && /d\.classList\.toggle\("abh-aus", !an\); if \(!an && d\.open\) d\.open = false;/.test(html), "gesperrt + zugeklappt solange aus");
-  assert.ok(/closest\?\.\("\.abh-aus > summary"\); if \(s\) \{ e\.preventDefault\(\);/.test(html) && /abhKlappen\(\); \/\/ 2\.467\.0 KC-CLUB-EINST-ABHAENGIG\n\}/.test(html), "Öffnen verhindert, nach jedem Umschalten neu geprüft");
+  assert.ok(/closest\?\.\("\.abh-aus > summary, \.abh-aus:not\(details\)"\); if \(!z\) return;\n  abhKlappen\(\); if \(!z\.closest\("\.abh-aus"\)\) return;/.test(html) && /abhKlappen\(\); \/\/ 2\.467\.0 KC-CLUB-EINST-ABHAENGIG\n\}/.test(html), "Öffnen verhindert, nach jedem Umschalten neu geprüft");
   for (const m of lies("index.html").matchAll(/data-abh="([^"]+)"/g)) assert.ok(lies("index.html").includes(`id="${m[1]}"`), "Häkchen fehlt: " + m[1]);
+}
+
+// 2.468.0 KC-CLUB-ADVENTSKALENDER (Wunschliste #17): 24 Türchen 1.–24.12., nur bis heute zu öffnen, Erinnerung im Laufband, abschaltbar
+{
+  const ak = html.slice(html.indexOf("const AK_TUERCHEN = ["), html.indexOf("const AK_REIHE"));
+  assert.equal((ak.match(/\{ sym: "/g) || []).length, 24, "24 Türchen");
+  assert.equal((ak.match(/\{ sym: "[^"]+", t: "[^"]+", z: \[[^\]]+\], s: \[[^\]]+\], tipp: "/g) || []).length, 24, "jedes Türchen: Zutaten, Schritte, Tipp (Bastelanleitung)");
+  for (const w of ["Lokomotive aus Dominosteinen", "Schneemann aus Pfeffernüssen", "Lebkuchen-Kerze mit Mandel-Flamme", "Hexenhaus aus Butterkeksen", "Engel aus Nudeln"]) assert.ok(ak.includes(w), "Wunsch Hansi: " + w);
+  const reihe = JSON.parse(html.match(/const AK_REIHE = (\[[^\]]+\])/)[1]);
+  assert.deepEqual([...reihe].sort((a, b) => a - b), Array.from({ length: 24 }, (_, i) => i + 1), "jede Zahl genau einmal");
+  assert.ok(/const akHeute = \(d = new Date\(\)\) => d\.getMonth\(\) === 11 \? Math\.min\(d\.getDate\(\), 24\) : 0;/.test(html), "nur im Dezember");
+  assert.ok(/if \(n > h && !\(!h && ICH\?\.admin\)\) \{/.test(html), "spätere Türchen bleiben zu (Vorschau nur Admin außerhalb Dezember)");
+  assert.ok(/if \(ah && akAn\(\) && !akOffen\(\)\.includes\(ah\)\) add\(\{ id: "advent:" \+ ah/.test(html), "Laufband-Erinnerung nur solange heute zu");
+  assert.ok(/id="setAdvent"[^>]*onchange="einstellung\('advent', this\.checked\)"/.test(lies("index.html")) && /\$\("setAdvent"\)\.checked = akAn\(\)/.test(html), "abschaltbar");
+  assert.ok(/\.ak-tuer \{[^}]*background: #741521/.test(lies("index.html")) && /\.ak-tuer:not\(\.auf\) \.ak-sym \{ visibility: hidden; \}/.test(lies("index.html")), "Corporate Design, Bild erst nach Öffnen");
+}
+
+// 2.469.0 KC-CLUB-EINST-GRUPPEN / -SUCHE / -ABHAENGIG (Wunsch Hansi „Einstellungen riesengroß“): Hauptbereiche, Suche, Unterauswahl erst nach Häkchen
+{
+  const seiteE = lies("index.html");
+  assert.ok(/const EINST_GRUPPEN = \[/.test(html) && /function einstGruppieren\(\) \{/.test(html) && /if \(einfach\) \{ if \(h\) \{ karten\.forEach\(\(d\) => h\.before\(d\)\); h\.remove\(\); \} continue; \}/.test(html), "Gruppen nur in der erweiterten Ansicht, einfache bleibt flach");
+  const gr = html.slice(html.indexOf("const EINST_GRUPPEN = ["), html.indexOf("function einstGruppieren"));
+  for (const k of [...gr.matchAll(/klappen: \[([^\]]+)\]/g)].flatMap((m) => m[1].match(/"([a-z_]+)"/g).map((x) => x.slice(1, -1)))) assert.ok(seiteE.includes(`data-klappe="${k}"`), "Bereich fehlt: " + k);
+  assert.ok(/if \(v === "einstellungen"\) \{ leitungStartZeigen\(\); einstGruppieren\(\); setTimeout\(abhKlappen, 900\);/.test(html), "beim Öffnen gruppieren + Häkchen neu prüfen");
+  assert.ok(/<input type="search" id="einstSuche"[^>]*oninput="einstSuchen\(this\.value\)"/.test(seiteE) && /function einstSuchen\(q, leeren\)/.test(html) && /alle\.forEach\(\(d\) => \(d\.open = EINST_SUCHE\.offen\.has\(d\)\)\)/.test(html), "Suche + Zurückstellen der Auf/Zu-Stände");
+  assert.ok(/<details class="karte" data-klappe="hilfe" data-einfach open>/.test(seiteE), "Hilfe & Lernen in beiden Ansichten");
+  for (const id of ["setTipps", "setWasNeu", "setSchrittHilfe", "setEinw"]) assert.equal((seiteE.match(new RegExp(`id="${id}"`, "g")) || []).length, 1, "genau einmal: " + id);
+  assert.ok(/<div class="schalter nur-erweitert"><div><b>❓ Fragezeichen unten rechts<\/b>/.test(seiteE) && /body\.einfach #v-einstellungen \.nur-erweitert \{ display: none; \}/.test(seiteE), "kein doppeltes Fragezeichen in der einfachen Ansicht");
+  for (const id of ["ruheAn", "setSprache", "setSpiele", "setAnklopfen", "setJahreszeit", "setNetzSymbol", "ssAn", "setSchrittHilfe", "setEinw", "setKuckuck"]) assert.ok(seiteE.includes(`data-abh="${id}"`), "Unterauswahl hängt an " + id);
+  assert.ok(/\.abh-aus:not\(details\) \* \{ pointer-events: none; \}/.test(seiteE), "gesperrte Zeilen nicht bedienbar");
+  assert.ok(/x\.parentElement\?\.closest\("details"\)\) \{ x\.open = true;/.test(html) && /function rgAuf\(\.\.\.namen\) \{ for \(const n of namen\) \{ const d = document\.querySelector\(rgKlappe\(n\)\); for \(let x = d; x;/.test(html), "Sprünge öffnen auch den Hauptbereich");
+  assert.ok(/if \(d\.closest\("\.abh-aus"\)\) return; \/\/ gesperrte Auswahl/.test(html), "gesperrte Auswahl wird nie automatisch geöffnet");
+}
+
+// 2.470.0 KC-CLUB-STUNDENUHREN-ORIGINAL: echte, freie Aufnahmen (Wikimedia Commons) mit Quelle/Urheber/Lizenz, Rückfall auf selbst erzeugten Ton
+{
+  const reg = html.slice(html.indexOf("const SU_AUFNAHMEN = {"), html.indexOf("const SU_PUFFER"));
+  for (const m of reg.matchAll(/datei: "([^"]+)", was: "[^"]+", urheber: "[^"]+", lizenz: "(CC0|CC BY 4\.0|CC BY-SA 4\.0|gemeinfrei)", lizenzLink: "https:[^"]+",\s*quelle: "https:\/\/commons\.wikimedia\.org\/wiki\/File:[^"]+", geaendert: "[^"]+"/g)) {
+    const f = new URL("../" + m[1], import.meta.url); assert.ok(fs.existsSync(f) && fs.statSync(f).size < 200000, "Aufnahme vorhanden und klein: " + m[1]);
+  }
+  assert.ok((reg.match(/datei: "/g) || []).length === (reg.match(/lizenzLink: "https:/g) || []).length, "jede Aufnahme mit Lizenz-Link");
+  assert.ok(/function suHahn\(t\) \{[^\n]*\n  if \(suAufnahme\("hahn", t\)\) return;/.test(html), "Hahn: Aufnahme, sonst selbst erzeugt");
+  assert.ok(/\(U\?\.aufnahmen \|\| \[\]\)\.forEach\(\(k\) => suAufnahmeLaden\(k\)\);/.test(html) && /delete SU_PUFFER\[k\]; return null;/.test(html), "rechtzeitig laden, Fehler → Rückfall");
+  assert.ok(/🎙️ \$\{esc\(A\.was\)\}: echte Aufnahme von \$\{esc\(A\.urheber\)\}/.test(html), "Quelle + Lizenz bei der Uhr sichtbar");
+}
+
+// 2.471.0 KC-CLUB-KAL-HEUTE (Wunsch Hansi „oben im Kalender Heute – platzsparend, keine Zeile verschwenden“)
+{
+  assert.ok(/<div class="jahr"><span id="kalJahr"><\/span> <span class="kal-heute" id="kalHeuteChip">📍 Heute<\/span><\/div><\/button>/.test(lies("index.html")), "„Heute“ in der Jahreszeile des Knopfs, der zu heute springt (keine neue Zeile)");
+  assert.ok(/function kalZeichnen\(\) \{\n  \$\("kalHeuteChip"\)\?\.classList\.toggle\("da", /.test(html) && /\.kalnav \.kal-heute\.da \{/.test(lies("index.html")), "grau, wenn man schon bei heute ist");
+  assert.ok(/function kalHeute\(\) \{ const h = heuteIso\(\); kalJ = \+h\.slice\(0, 4\); kalM = \+h\.slice\(5, 7\) - 1; kalTagWahl = h; kalLaden\(\); \}/.test(html), "springt auf den heutigen Tag");
+}
+
+// 2.472.0 KC-CLUB-CHAT-LETZTE-OFFEN (Wunsch Hansi „In Nachrichten die letzte Nachricht offen lassen“)
+{
+  assert.ok(/const letzter = tage\[tage\.length - 1\];[^\n]*\n  const mussOffen = \(t\) => t === letzter \|\| t\.key === heute \|\|/.test(html), "Tag der letzten Nachricht nie eingeklappt (auch in der Kalenderwochen-Zeile, da woche.some(mussOffen))");
 }
 
 // 2.473.0 KC-CLUB-AVATAR-UEBERLAPPUNG (Fund Hansi, Bildschirmfoto): Klappbereiche in „Mein Bild“ lagen übereinander; klarere Namen
@@ -6773,6 +6829,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const seiteA = lies("index.html");
   assert.ok(!/\.av-klappe \{[^}]*overflow/.test(seiteA) && /\.av-klappe > summary \{ border-radius: 15px 15px 0 0; \} \.av-klappe:not\(\[open\]\) > summary \{ border-radius: 15px; \}/.test(seiteA), "runde Ecken ohne overflow (Raster darf nicht auf 0 schrumpfen)");
   assert.ok(/avKlappe\("av_alt", true, "🙂", "Einfache Figuren"/.test(html) && /avKlappe\("av_neu", true, "👑", `Hochwertige Figuren/.test(html), "Klappbereiche: Einfache und Hochwertige Figuren");
+}
+
+// 2.476.0 KC-CLUB-STUNDENUHREN-KLANG (Fund Hansi „Kratzgeräusche in den Tönen der Uhren“): leichter, stabiler Nachhall statt Rausch-Faltung
+{
+  const hall = html.slice(html.indexOf("function suHall()"), html.indexOf("function suAus("));
+  assert.ok(!/createConvolver/.test(hall) && /createDelay\(0\.1\)/.test(hall), "kein rechenschwerer Faltungshall mehr");
+  assert.ok(/lp\.Q\.value = -12; fb\.gain\.value = 0\.97 \* Math\.pow\(10, -3 \* d \/ 2\.5\)/.test(hall), "Rückkopplung sicher unter 1 (schaukelt sich nicht auf)");
+  assert.ok(/ng\.gain\.exponentialRampToValueAtTime\(laut \* 0\.08, t \+ 0\.003\)/.test(html), "Klöppel-Geräusch leiser");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -8704,7 +8768,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const c = server.slice(server.indexOf('case "ansage_vorgabe_setzen": {'), server.indexOf('case "studio_recht_setzen": {'));
   assert.ok(/nurAdmin\(ich\);/.test(c) && /an === ich\.person_id \|\| !\(await aktiveMitglieder\(\)\)\.some/.test(c) && /schluessel: "ansage_vorgabe"/.test(c) && /protokoll\(ich\.person_id, "ansage_vorgabe"/.test(c), "nur Admin, nur aktive Mitglieder, protokolliert");
   assert.ok(/if \(!v\?\.am \|\| lsLesen\(ANS_VORGABE_KEY\) === v\.am\) return;/.test(html) && /ansSetzen\("online", !!v\.online\); ansSetzen\("verlassen", !!v\.verlassen\);/.test(html), "je Gerät genau einmal übernommen, danach entscheidet das Mitglied");
-  assert.ok(/ansageVorgabeUebernehmen\(INIT\.einstellungen\?\.ansage_vorgabe\);/.test(html) && /Ändern: ⚙️ → „🗣️ Ansagen, Töne & Tipps“/.test(html), "Mitglied bekommt einen Hinweis");
+  assert.ok(/ansageVorgabeUebernehmen\(INIT\.einstellungen\?\.ansage_vorgabe\);/.test(html) && /Ändern: ⚙️ → „🗣️ Ansagen & Töne“/.test(html), "Mitglied bekommt einen Hinweis");
   assert.ok(/onclick="ansageVorgabeSetzen\('\$\{m\.person_id\}'/.test(html), "Knopf auf der Mitgliedsseite (Admin)");
 }
 
@@ -10481,7 +10545,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 {
   assert.ok(/const blaseHtml = \(m\) => `\$\{m\.id === NA\.trennerVor/.test(programm) && /\$\("chat"\)\.innerHTML = naTageHtml\(u, blaseHtml\) \+ notWartendeHtml\(chatId\)/.test(programm), "Chat zeichnet über naTageHtml");
   assert.ok(/const ein = einst\("chatEinklappen", true\) && !RG\.an && !CS\.offen/.test(programm), "Rundgang und Suche: alles offen");
-  assert.ok(/const mussOffen = \(t\) => t\.key === heute \|\| t\.ns\.some\(\(m\) => m\.id === NA\.trennerVor \|\| ungelesen\(m\)\)/.test(programm), "heute und Ungelesenes offen");
+  assert.ok(/const mussOffen = \(t\) => (?:t === letzter \|\| )?t\.key === heute \|\| t\.ns\.some\(\(m\) => m\.id === NA\.trennerVor \|\| ungelesen\(m\)\)/.test(programm), "heute und Ungelesenes offen");
   assert.ok(/if \(!el && NA\.nachrichten\.has\(id\)\) return naTagAufFuer\(id\)/.test(programm), "Sprung klappt den Tag auf");
   assert.ok(/id="setChatEinklappen"/.test(seite) && /id="setChatKW"/.test(seite) && /id="setNetzSymbol"/.test(seite) && /id="setNetzBlinken"/.test(seite), "Schalter in den Einstellungen");
   assert.ok(/id="naNetz" onclick="netzBlatt\(\)"/.test(seite), "Symbol oben links in Nachrichten");
