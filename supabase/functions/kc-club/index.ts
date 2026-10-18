@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.448.0";
+const SERVER_VERSION = "2.449.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -275,6 +275,26 @@ async function objAnlageSichtbar(ich: Ich, art: string, objektId: string) {
     const { data: e } = await db.from("kc_club_terminanfrage_empfaenger").select("anfrage_id").eq("anfrage_id", objektId).eq("person_id", ich.person_id).maybeSingle(); return !!e;
   }
   return false;
+}
+// 2.449.0 KC-CLUB-BILD-VERLAUF (Wunschliste #21, Fund Hansi „Avatar-Bild durch ein Selfie ersetzt und wollte es wieder haben – ist weg“;
+// Antwort Hansi: „nur automatisch – die letzten 3 benutzten Bilder, für Fotos, Selfies und die gebaute Figur“): vor jedem Wechsel wird das
+// bisherige Bild gemerkt (Figur = Code, Foto = Code + kleines JPG wie bisher). Höchstens 3; das aktuelle steht nie im Verlauf.
+// Nur für die Person selbst (eigene Aktion „avatar_verlauf“); nicht im Start-Paket, damit der Start klein bleibt.
+const AV_VERLAUF_MAX = 3;
+async function avJetzt(pid: string): Promise<{ code: string | null; bild: string | null }> {
+  const { data } = await db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", pid).in("schluessel", ["avatar", "avatar_foto"]);
+  const code = ((data ?? []).find((x: any) => x.schluessel === "avatar")?.wert as any)?.figur ?? null;
+  const fo: any = (data ?? []).find((x: any) => x.schluessel === "avatar_foto")?.wert;
+  return { code, bild: code && AVF_CODE.test(code) && fo?.code === code ? fo.bild ?? null : null };
+}
+async function avVerlaufHolen(pid: string): Promise<any[]> {
+  const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "avatar_verlauf").maybeSingle();
+  return (Array.isArray((data?.wert as any)?.liste) ? (data!.wert as any).liste : []).filter((x: any) => typeof x?.code === "string" && (!AVF_CODE.test(x.code) || typeof x.bild === "string"));
+}
+async function avVerlaufMerken(pid: string, alt: { code: string | null; bild: string | null }, neu: string | null) {
+  let liste = (await avVerlaufHolen(pid)).filter((x: any) => x.code !== alt.code && x.code !== neu);
+  if (alt.code && alt.code !== neu && (!AVF_CODE.test(alt.code) || alt.bild)) liste = [{ code: alt.code, ...(alt.bild ? { bild: alt.bild } : {}), am: jetzt() }, ...liste];
+  await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "avatar_verlauf", wert: { liste: liste.slice(0, AV_VERLAUF_MAX) }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
 }
 // KC-CLUB-LOESCHEN: vor jedem Löschen eine vollständige Sicherung ins Änderungsprotokoll (Wiederherstellungspunkt)
 async function geloescht(ich: { person_id: string }, was: string, sicherung: Record<string, unknown>) {
@@ -2658,7 +2678,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
     "spiel_holen", "spiel_herausfordern", "spiel_antwort", "spiel_zug", "spiel_aufgeben", "spiel_revanche", "raetsel_stand", "raetsel_ergebnis",
-    "status_setzen", "einstellung_setzen", "benachrichtigung_setzen", "meine_daten", "avatar_bilder", "avatar_foto_setzen", "sprache_woerter",
+    "status_setzen", "einstellung_setzen", "benachrichtigung_setzen", "meine_daten", "avatar_bilder", "avatar_verlauf", "avatar_foto_setzen", "sprache_woerter",
     "sprache_lernen", "sprache_training", "sprache_training_reset", "sprache_vergessen", "sprache_unbekannt", "twinkey_daten", "twinkey_frage",
     "twinkey_gelesen", "fehler_melden", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "push_anmelden",
@@ -6210,7 +6230,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", ich.person_id).maybeSingle(),
           db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
           wartungLesen(),
-          db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id),
+          db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).neq("schluessel", "avatar_verlauf"), // 2.449.0: Bild-Verlauf nicht ins Start-Paket
           pinnwandFristen().catch(() => ({ ...PINNWAND_FRISTEN_STANDARD, geaendertAm: null })),
           // KC-CLUB-EINSTIEG: an wie vielen Tagen die App genutzt wurde (Start je Sitzung = diagnose_start) und seit wann –
           // Tage statt Starts, damit mehrfaches Öffnen am ersten Tag nicht schon Tipps auslöst
@@ -13364,11 +13384,13 @@ Köcheclub-App`,
         const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "avatar_foto_gesetzt").gte("zeit", new Date(Date.now() - 3600000).toISOString());
         if ((count ?? 0) >= 10) throw new Fehler("Gerade schon oft geändert – bitte etwas später.", 429);
         const code = "f" + Date.now().toString(36).padStart(9, "0").slice(-9);
+        const vorher = await avJetzt(ich.person_id); // 2.449.0 KC-CLUB-BILD-VERLAUF: bisheriges Bild merken
         const { error: e1 } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "avatar_foto", wert: { code, bild }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
         if (e1) throw new Fehler("Foto konnte nicht gespeichert werden.", 500);
         const { error: e2 } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "avatar", wert: { figur: code }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
         if (e2) throw new Fehler("Foto konnte nicht gespeichert werden.", 500);
         await protokoll(ich.person_id, "avatar_foto_gesetzt", { bytes: bild.length });
+        await avVerlaufMerken(ich.person_id, vorher, code).catch((e) => console.error("avVerlauf", String(e)));
         return json({ ok: true, code });
       }
       case "avatar_bilder": {
@@ -13376,6 +13398,9 @@ Köcheclub-App`,
         if (!ids.length) return json({ bilder: {} });
         const { data } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "avatar_foto").in("person_id", ids);
         return json({ bilder: Object.fromEntries((data ?? []).filter((x: any) => AVF_CODE.test(x.wert?.code || "")).map((x: any) => [x.person_id, { code: x.wert.code, bild: x.wert.bild }])) });
+      }
+      case "avatar_verlauf": { // 2.449.0 KC-CLUB-BILD-VERLAUF: die letzten (bis zu 3) eigenen Bilder
+        return json({ liste: (await avVerlaufHolen(ich.person_id)).map((x: any) => ({ code: x.code, ...(x.bild ? { bild: x.bild } : {}), am: x.am ?? null })) });
       }
       case "avatar_foto_entfernen": {
         nurAdmin(ich);
@@ -13392,11 +13417,15 @@ Köcheclub-App`,
         const pruefen = EINSTELLUNGEN[schluessel];
         if (!pruefen) throw new Fehler("Unbekannte Einstellung.");
         const wert = pruefen(p.wert);
+        let vorherAv: { code: string | null; bild: string | null } | null = null;
         if (schluessel === "avatar") { // KC-CLUB-FREIGABE (2.23.86): Figuren bzw. Baukasten nur, wenn freigegeben
           const fig = (wert as any).figur as string | null;
+          vorherAv = p.ohneVerlauf === true ? null : await avJetzt(ich.person_id); // 2.449.0 KC-CLUB-BILD-VERLAUF (Jacken-Automatik zählt nicht)
           if (fig && AVF_CODE.test(fig)) { // KC-CLUB-AVATAR-FOTO (2.23.89): nur das eigene, schon hochgeladene Foto
             const { data: fo } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "avatar_foto").maybeSingle();
-            if ((fo?.wert as any)?.code !== fig) throw new Fehler("Bitte das Foto über 📷 Selfie, Galerie oder Datei wählen.", 400);
+            const ausVerlauf = (fo?.wert as any)?.code !== fig ? (await avVerlaufHolen(ich.person_id)).find((x: any) => x.code === fig) : null; // 2.449.0: Foto aus „Zuletzt benutzt“
+            if ((fo?.wert as any)?.code !== fig && !ausVerlauf) throw new Fehler("Bitte das Foto über 📷 Selfie, Galerie oder Datei wählen.", 400);
+            if (ausVerlauf) await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "avatar_foto", wert: { code: fig, bild: ausVerlauf.bild }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
           } else if (fig) await nurWennFrei(/^p/.test(fig) ? "avatar_premium" : /^[bc]/.test(fig) ? "avatar_baukasten" : "avatar", ich, /^p/.test(fig) ? "Die hochwertigen Avatare" : /^[bc]/.test(fig) ? "Das Selbst-Zusammenstellen" : "Mein Bild"); // 2.414.0: „p…“ = hochwertige Avatare (eigene Freigabe)
           // anderes Bild gewählt → das Foto wird nicht mehr gebraucht und gelöscht (Datensparsamkeit)
           if (!fig || !AVF_CODE.test(fig)) await db.from("kc_club_person_einstellung").delete().eq("person_id", ich.person_id).eq("schluessel", "avatar_foto");
@@ -13405,6 +13434,7 @@ Köcheclub-App`,
         const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel, wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
         if (error) throw new Fehler("Einstellung konnte nicht gespeichert werden.", 500);
         if (schluessel === "inkognito") await protokoll(ich.person_id, "inkognito_geaendert", { an: (wert as any).an });
+        if (vorherAv) await avVerlaufMerken(ich.person_id, vorherAv, (wert as any).figur ?? null).catch((e) => console.error("avVerlauf", String(e))); // 2.449.0
         return json({ ok: true, wert });
       }
 

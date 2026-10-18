@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.448.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.449.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5008,6 +5008,7 @@ const HILFE = [
   { id: "haken", thema: "nachrichten", sym: "✔️", t: "Was die Haken an deinen Nachrichten bedeuten", x: "Wie bei WhatsApp: <b>graue Haken</b> heißen gesendet bzw. angekommen, <b>blaue Haken</b> heißen gelesen. Willst du es genau wissen, tipp deine Nachricht an – unter <b>„ℹ️ Nachricht – Einzelheiten“</b> steht mehr.", seit: "2.23.1" },
   { id: "gelesen_von", thema: "nachrichten", sym: "☑️", t: "Wer hat meine Nachricht bekommen und gelesen?", x: "Tippe an deiner eigenen Nachricht auf die <b>Haken</b> (oder Nachricht antippen → <b>ℹ️ Details</b>). Wie bei WhatsApp siehst du: <b>blaue ✓✓ Gelesen von</b> – wer sie gelesen hat und um wie viel Uhr, <b>graue ✓✓ Zugestellt an</b> – bei wem sie schon in der App angekommen ist, und <b>✓ Noch nicht zugestellt</b>. Bei älteren Nachrichten steht „Uhrzeit unbekannt“. Ampel, Push und E-Mail findest du darunter unter „Mehr Einzelheiten“.", seit: "2.447.0" },
   { id: "anlage_mitschicken", thema: "nachrichten", sym: "📎", t: "Anlage bei Vorschlag, Spende, Terminfindung und Terminanfrage", x: "Beim Anlegen gibt es jetzt das Feld <b>📎 Anlage</b>: <b>🖼️ Foto</b> aus der Galerie, <b>📷 Kamera</b> oder <b>📄 PDF / Datei</b> aus dem Dateimanager – z. B. eine Skizze zum Vorschlag oder den Flyer des Spendenempfängers. Höchstens 5 Anlagen; mit ✕ wieder entfernen. Die anderen sehen sie im Eintrag und öffnen sie mit einem Tipp. Sehen kann sie nur, wer den Eintrag auch sehen darf.", seit: "2.448.0" },
+  { id: "bild_zuletzt", thema: "privat", sym: "🕘", t: "Früheres Bild zurückholen", x: "Unter <b>Mein Bild</b> stehen oben bei <b>🕘 Zuletzt benutzt</b> deine letzten 3 Bilder – Foto, Selfie oder Koch-Figur. Antippen und oben <b>✅ Übernehmen</b> – schon ist das alte Bild wieder da. Die App merkt sich das automatisch bei jedem Wechsel.", seit: "2.449.0" },
   { id: "sprachtempo", thema: "nachrichten", sym: "⏩", t: "Lange Sprachnachrichten schneller hören", x: "Sprachnachrichten kannst du auch in <b>1,5×</b> oder <b>2×</b> abspielen – der kleine Tempo-Knopf sitzt direkt an der Sprachnachricht. Deine Wahl merkt sich das Handy.", seit: "2.23.1" },
   { id: "chat_vorlesen", thema: "nachrichten", sym: "🔊", t: "Hände voll? Chat vorlesen lassen", x: "Gerade beim Kochen praktisch: im Chat oben <b>⋮</b> → <b>„🔊 Vorlesen ab den neuen Nachrichten“</b> oder <b>„🔊 Ganzen Chat vorlesen“</b>. Das Handy liest vor, du hörst einfach zu.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "whatsapp", thema: "nachrichten", sym: "🟢", t: "Text zusätzlich per WhatsApp schicken", x: "Ist jemand in der App noch nicht so oft unterwegs? Der grüne Knopf <b>„WA“</b> unter dem Schreibfeld übernimmt deinen Text nach WhatsApp – du musst ihn nicht nochmal tippen.", seit: "2.23.1" },
@@ -14090,7 +14091,7 @@ const ZUGANG_AKTIONEN = {
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
     "spiel_holen", "spiel_herausfordern", "spiel_antwort", "spiel_zug", "spiel_aufgeben", "spiel_revanche", "raetsel_stand", "raetsel_ergebnis",
-    "status_setzen", "einstellung_setzen", "benachrichtigung_setzen", "meine_daten", "avatar_bilder", "avatar_foto_setzen", "sprache_woerter",
+    "status_setzen", "einstellung_setzen", "benachrichtigung_setzen", "meine_daten", "avatar_bilder", "avatar_verlauf", "avatar_foto_setzen", "sprache_woerter",
     "sprache_lernen", "sprache_training", "sprache_training_reset", "sprache_vergessen", "sprache_unbekannt", "twinkey_daten", "twinkey_frage",
     "twinkey_gelesen", "fehler_melden", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "push_anmelden",
@@ -21355,7 +21356,7 @@ function avWahl() {
   const f = blattAuf("avBlatt", `<h3 style="margin:0">🧑‍🍳 Mein Bild</h3>
     <p class="hinweis" style="margin:4px 0 8px">Tippe eine Koch-Figur an – oben siehst du sie groß und kannst sie <b>übernehmen</b> oder <b>bearbeiten</b>. Sie erscheint bei den Mitgliedern, im Chat und bei „Wer ist online“. Ring und Abzeichen zeigen weiter, ob du gerade da bist.</p>
     <div id="avWahlVorschau" class="av-vorschau"></div>
-    <div id="avJackeAuto"></div>
+    <div id="avJackeAuto"></div><div id="avVerlauf"></div>
     ${eigene ? `<b>🧩 Deine eigene Figur</b><div class="av-raster" style="margin:6px 0 10px"><button type="button" class="an" aria-label="Eigene Figur" onclick="avWaehlen('${jetzt}', this)">${avatarSvg(jetzt, 64)}</button></div>` : ""}
     ${avKlappe("av_alt", AV_FIGUREN[jetzt] ? true : !prem, "👥", "Bisherige Avatare", "Deine bekannten, klassischen Avatare – weiterhin verfügbar.",
       avRaster("👩‍🍳 Köchinnen", alt.filter((k) => k[0] === "w"), jetzt) + avRaster("👨‍🍳 Köche", alt.filter((k) => k[0] === "m"), jetzt), alt)}
@@ -21369,7 +21370,7 @@ function avWahl() {
       <p class="hinweis" style="margin:2px 0 10px;font-size:.85rem">🤳 Selfie, 🖼️ Galerie und 📁 Datei findest du oben rechts neben deinem Bild.</p>` : ""}
     ${bau ? "" : '<p class="hinweis" style="margin:0 0 8px;font-size:.85rem">Demnächst: Figur selbst zusammenstellen (Frisur, Bart, Brille, Mütze …).</p>'}
     <button class="knopf" onclick="fensterZu($('avBlatt'))">Schließen</button>`);
-  f.classList.add("sc-blatt"); avWahlVorschau(); avJackeAutoZeigen();
+  f.classList.add("sc-blatt"); avWahlVorschau(); avJackeAutoZeigen(); avVerlaufLaden();
   try { klappenMerken(f); } catch {} // 2.412.0: auf/zu wird gemerkt (wie die übrigen Klappbereiche)
   if (prem) avgLaden().then((l) => { // 2.412.0 KC-CLUB-AVATAR-GALERIE: zusätzliche Bild-Figuren (Dateien), falls welche eingetragen sind
     const z = $("avGalerie"); if (!z || !l?.length) return;
@@ -21377,6 +21378,17 @@ function avWahl() {
   });
 }
 // KC-CLUB-JACKE-WOCHENTAG (2.43.0): Schalter in „Mein Bild“ – wandelt das jetzige Bild (Figur oder eigene Figur) in einen Code mit Jacke „auto“
+// 2.449.0 KC-CLUB-BILD-VERLAUF (Wunschliste #21): „🕘 Zuletzt benutzt“ – die letzten (bis zu 3) eigenen Bilder (Foto, Selfie, Figur).
+// Antippen wählt wie überall nur aus; „✅ Übernehmen“ oben setzt es wieder ein (der Server holt das Foto aus dem Verlauf zurück).
+async function avVerlaufLaden() {
+  const z = $("avVerlauf"); if (!z) return;
+  let l = []; try { l = (await api("avatar_verlauf")).liste || []; } catch { return; }
+  for (const x of l) if (x.bild && AVF_RE.test(x.code)) avfSetzen(x.code, x.bild);
+  const jetzt = INIT?.einstellungen?.avatar?.figur || null;
+  l = l.filter((x) => x.code !== jetzt && (AVF_RE.test(x.code) || avGueltig(x.code)));
+  z.innerHTML = l.length ? `<b>🕘 Zuletzt benutzt</b> <span class="hinweis">– antippen und oben übernehmen</span>
+    <div class="av-raster" style="margin:6px 0 10px">${l.map((x) => `<button type="button" aria-label="Früheres Bild" onclick="avWaehlen('${esc(x.code)}', this)">${avatarSvg(x.code, 64)}</button>`).join("")}</div>` : "";
+}
 function avJackeAutoZeigen() {
   const z = $("avJackeAuto"); if (!z) return;
   const jetzt = INIT?.einstellungen?.avatar?.figur || null, t = jetzt && !AVF_RE.test(jetzt) ? avTeile(jetzt) : null;
@@ -21390,7 +21402,7 @@ async function avJackeAuto(an, box) {
   if (an && (b[15] || 0) !== 0) b[15] = 0; // Knöpfe „passend“, damit der Kontrast je Tag stimmt
   const code = "c" + b.map((x) => Math.max(0, x).toString(36)).join("");
   if (box) box.disabled = true;
-  try { await api("einstellung_setzen", { schluessel: "avatar", wert: { figur: code } }); INIT.einstellungen = { ...(INIT.einstellungen || {}), avatar: { figur: code } };
+  try { await api("einstellung_setzen", { schluessel: "avatar", wert: { figur: code }, ohneVerlauf: true }); INIT.einstellungen = { ...(INIT.einstellungen || {}), avatar: { figur: code } };
     const ich = MITGLIEDER?.find?.((x) => x.person_id === ICH?.person_id); if (ich) ich.avatar = code;
     melde(an ? "🔄 Deine Kochjacke wechselt jetzt jeden Tag die Farbe" : "Kochjacke bleibt jetzt weiß"); spur(an ? "jacke_auto_an" : "jacke_auto_aus");
     AVW.wahl = undefined; avWahlVorschau(); avJackeAutoZeigen(); try { kachelnZeigen?.(); } catch {} }

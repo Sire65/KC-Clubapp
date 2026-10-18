@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.449.0 – 2026-10-18 – Früheres Bild zurückholen (KC-CLUB-BILD-VERLAUF, Wunschliste #21)
+Fund Hansi: Avatar-Bild durch ein Selfie ersetzt – das alte war weg (der Server löschte das alte Foto beim Wechsel). Jetzt merkt die App bei jedem Wechsel automatisch das bisherige Bild – Foto, Selfie oder Koch-Figur –, höchstens die letzten 3. Unter Mein Bild steht „🕘 Zuletzt benutzt“: antippen, oben ✅ Übernehmen, das alte Bild ist wieder da (auch ein früheres Foto). Die tägliche Jacken-Automatik zählt nicht als Wechsel. Der Verlauf gehört nur der Person selbst und ist nicht im Start-Paket. Server + App.
+
 ## 2.448.0 – 2026-10-18 – Anlage bei Vorschlag, Spende, Terminfindung, Terminanfrage (KC-CLUB-OBJEKT-ANLAGEN, Wunschliste #10)
 Neues Feld „📎 Anlage“ in Vorschlag/Spendenprojekt, Terminfindung und Terminanfrage: 🖼️ Foto, 📷 Kamera oder 📄 PDF/Datei aus dem Dateimanager (z. B. Skizze, Flyer des Spendenempfängers), höchstens 5, sofort hochgeladen wie im Chat (Bilder verkleinert, gleiche Speicher-/Tagesgrenzen). Am Eintrag: Bilder als kleine Vorschau, Dateien als Knopf (Öffnen/Teilen/Speichern). Sehen darf sie nur, wer den Eintrag sieht (Abstimmungs-Zielgruppe, Empfänger der Terminanfrage). DB: neue Tabelle kc_club_objekt_anlagen (nur Server, RLS; Probelauf 80 grün, eingespielt). Server + App.
 
