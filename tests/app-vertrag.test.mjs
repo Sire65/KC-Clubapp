@@ -6602,6 +6602,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\$\{oaAnzeige\(v\.anlagen\)\}/.test(html) && /\$\{oaAnzeige\(u\.anlagen\)\}/.test(html) && /\$\{oaAnzeige\(a\.anlagen\)\}/.test(html), "Anzeige an allen drei Karten");
   assert.ok(/📷 Kamera/.test(html) && /📄 PDF \/ Datei/.test(html) && /accept="application\/pdf,image\/\*/.test(html), "Foto, Kamera, PDF/Datei");
 }
+// 2.449.0 KC-CLUB-BILD-VERLAUF (Wunschliste #21): die letzten 3 eigenen Bilder (Foto, Selfie, Figur) – antippen und übernehmen
+{
+  assert.ok(/const AV_VERLAUF_MAX = 3;/.test(server) && /liste\.slice\(0, AV_VERLAUF_MAX\)/.test(server), "höchstens 3");
+  assert.ok(/const vorher = await avJetzt\(ich\.person_id\);/.test(server) && /await avVerlaufMerken\(ich\.person_id, vorher, code\)/.test(server), "Foto/Selfie: altes Bild gemerkt");
+  assert.ok(/vorherAv = p\.ohneVerlauf === true \? null : await avJetzt\(ich\.person_id\);/.test(server) && /if \(vorherAv\) await avVerlaufMerken\(ich\.person_id, vorherAv,/.test(server), "Figur: altes Bild gemerkt (nicht bei der Jacken-Automatik)");
+  assert.ok(/if \(\(fo\?\.wert as any\)\?\.code !== fig && !ausVerlauf\) throw/.test(server) && /schluessel: "avatar_foto", wert: \{ code: fig, bild: ausVerlauf\.bild \}/.test(server), "Foto aus dem Verlauf wieder einsetzbar, sonst nur das eigene");
+  assert.ok(/\.neq\("schluessel", "avatar_verlauf"\)/.test(server), "Verlauf nicht im Start-Paket");
+  assert.ok(/"avatar_bilder", "avatar_verlauf", "avatar_foto_setzen"/.test(server) && /"avatar_bilder", "avatar_verlauf", "avatar_foto_setzen"/.test(html), "Aktion in beiden Listen");
+  assert.ok(/<div id="avJackeAuto"><\/div><div id="avVerlauf"><\/div>/.test(html) && /onclick="avWaehlen\('\$\{esc\(x\.code\)\}', this\)"/.test(html) && /ohneVerlauf: true/.test(html), "Zeile „Zuletzt benutzt“, antippen = auswählen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
