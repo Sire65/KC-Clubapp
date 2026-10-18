@@ -8892,8 +8892,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.199.0 KC-CLUB-VORFUEHREN-TON (Wunsch Hansi: beim Live zeigen miteinander sprechen) – nutzt den App-Anruf, kein eigener Ton-Kern
 {
-  assert.ok(/async function anrufen\(pid, mitBild, vf = false\)/.test(html) && /await anrufen\(pid, false, true\)/.test(html), "Ton läuft über den vorhandenen App-Anruf");
-  assert.ok(/if \(!RUF\?\.vf\) \$\("anrufSchirm"\)\.classList\.remove\("versteckt"\)/.test(html), "kein Vollbild-Anrufschirm über dem Live-Bild");
+  assert.ok(/async function anrufen\(pid, mitBild, vf = false(, ms = false)?\)/.test(html) && /await anrufen\(pid, false, true\)/.test(html), "Ton läuft über den vorhandenen App-Anruf");
+  assert.ok(/if \(!RUF\?\.vf( && !RUF\?\.ms)?\) \$\("anrufSchirm"\)\.classList\.remove\("versteckt"\)/.test(html), "kein Vollbild-Anrufschirm über dem Live-Bild");
   assert.ok(/vf: !r\.konferenz && VF\.status === "laeuft" && !!r\.gegenueber\?\.person_id && r\.gegenueber\.person_id === vfPartner\(\)/.test(html), "nur der Vorführ-Partner wird in der Leiste angeboten");
   assert.ok(/k\("🔊 Annehmen", "anrufAnnehmen\(false\)"\)/.test(html), "Mikrofon erst nach eigenem Annehmen");
   assert.ok(/if \(RUF\?\.vf\) anrufAuflegen\(\); \/\/ KC-CLUB-VORFUEHREN-TON/.test(html), "Ende der Vorführung beendet den Ton");
@@ -10726,4 +10726,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/"schnappschuss_ende", "fernbedienung_melden", "push_anmelden"/.test(server) && /"schnappschuss_ende", "fernbedienung_melden", "push_anmelden"/.test(html), "auch für Gäste/Aushilfen (wie Mitschauen)");
   assert.ok(/\.spg-fern \{/.test(lies("index.html")) && /\.fern-tipp \{/.test(lies("index.html")), "sichtbare Markierung und Bedienfläche");
   assert.ok(/id: "fernhilfe_bedienen", thema: "technik"/.test(html) && /ALLE TESTS GRÜN/.test(lies("tools/fernhilfe/fern-bedienen-test.mjs")), "Hilfe und Browser-Test");
+}
+// KC-CLUB-FERNHILFE F4 (18.10.2026): Ton während Mitschauen/Bedienen – vorhandener App-Anruf, ohne Vollbild, Ende der Sitzung = Ton aus
+{
+  assert.ok(/const rufLeisten = \(\) => \{ if \(RUF\?\.vf\) vfLeiste\(\); else if \(RUF\?\.ms\) msTonZeigen\(\); \};/.test(html) && /await anrufen\(pid, false, false, true\)/.test(html), "Ton über den vorhandenen App-Anruf");
+  assert.ok(/RUF\.ms = !RUF\.vf && !r\.konferenz && !!r\.gegenueber\?\.person_id && r\.gegenueber\.person_id === msPartner\(\);/.test(html), "eingehender Ton nur vom Sitzungspartner kompakt");
+  assert.ok(/if \(RUF\.rolle === "angerufen" && !RUF\.pc\) return `<span class="ms-ton-text">🔊 \$\{vn\} möchte mit dir sprechen<\/span>` \+ k\("🔊 Annehmen"/.test(html), "Mikrofon erst nach eigenem Annehmen");
+  assert.ok(/if \(RUF\?\.ms\) anrufAuflegen\(\); \/\/ KC-CLUB-FERNHILFE F4: Ende der Sitzung = Ton aus/.test(html) && /ssFernFlaeche\(\); if \(RUF\?\.ms\) anrufAuflegen\(\); \}/.test(html), "Ende der Sitzung = Ton aus (beide Seiten)");
 }

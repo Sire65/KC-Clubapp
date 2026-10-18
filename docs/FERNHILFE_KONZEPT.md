@@ -1,6 +1,6 @@
 # KC Fernhilfe – Messung und Konzept (KC-CLUB-FERNHILFE)
 
-**Stand:** 18.10.2026 · **Status:** F0 erledigt, F1 und F3 gebaut (Einspielen 20 Uhr) · **Auftrag:** Hansi („mit Fernhilfe Messung und Konzept anfangen“)
+**Stand:** 18.10.2026 · **Status:** F0 erledigt, F1, F3 und F4 gebaut (Einspielen 20 Uhr) · **Auftrag:** Hansi („mit Fernhilfe Messung und Konzept anfangen“)
 
 ## 1. Ziel
 
@@ -151,4 +151,14 @@ nötig außer ggf. Zugriffsregel auf `realtime.messages` (Weg A), die per Migrat
   nur nach Rückfrage beim Mitglied; Fernhilfe-Leiste und offene Rückfragen nie aus der Ferne; kein Text in Passwort-/Geheimfelder;
   höchstens ein Befehl je 200 ms.
 - **Tests:** `tools/fernhilfe/fern-bedienen-test.mjs` (Chromium, echtes app.js): 13/13 grün.
+
+## 8. Umsetzung F4 (18.10.2026)
+- Kein neuer Sprachweg: genutzt wird der vorhandene **App-Anruf** (KC-CLUB-ANRUF, WebRTC direkt von Handy zu Handy, kostenlose
+  STUN-Hilfe) – wie schon beim Vorführen (KC-CLUB-VORFUEHREN-TON). Neu: auch beim **Mitschauen/Bedienen**.
+- Mitglied: „🔊 Ton an“ in der roten Mitschau-Leiste; Helfer: im Studio-Pult. Ruft der Sitzungspartner an, erscheint
+  „🔊 … möchte mit dir sprechen – Annehmen / Nein“ in der Leiste bzw. im Pult (kein Vollbild); das Mikrofon geht erst nach eigenem
+  Annehmen an. Stumm/Mikro an, Ton aus; **Ende der Sitzung beendet auch den Ton** (beide Seiten).
+- Grenze (unverändert vom App-Anruf): Verbindungsaufbau über den Server (wenige Abfragen während des Klingelns); ohne TURN-Server
+  klappt die Sprache nicht in jedem Mobilfunknetz – dann ehrlicher Hinweis „kurz normal anrufen“, die Sitzung läuft weiter.
+- Tests: `tools/fernhilfe/fern-bedienen-test.mjs` jetzt 18/18 (5 neue Ton-Prüfungen).
 

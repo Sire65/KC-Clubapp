@@ -5262,7 +5262,7 @@ const HILFE = [
   { id: "zeitumstellung", thema: "toene", sym: "🕐", t: "Erinnerung an die Zeitumstellung", x: "Am Samstag vor der Zeitumstellung (im März und im Oktober) bekommst du ab 18 Uhr einen Push, ob du die Uhr vor- oder zurückstellen musst. Das passiert jedes Jahr von selbst – einstellen musst du nichts.", seit: "2.442.0" },
   { id: "schreiben_klappen", thema: "nachrichten", sym: "▾", t: "Mehr Nachrichten sehen: Schreibbereich wegklappen", x: "Im Chat sitzt oben mittig über dem Schreibfeld ein kleiner <b>▾-Griff</b>. Antippen klappt den Schreibbereich weg – es bleibt nur eine schmale Leiste <b>„▴ ✏️ Schreiben“</b>, und du siehst mehr Nachrichten. Ein Tipp auf die Leiste holt das Schreibfeld zurück. Öffnest du einen Chat, ist der Schreibbereich immer offen.", seit: "2.433.0" },
   { id: "sonderstunden", thema: "termine", sym: "★", t: "Sonderstunden melden und den Stand sehen", x: "Hast du bei einem Sondereinsatz geholfen (z. B. Grünkohl kochen), meldest du die Zeit über <b>📝 Dienstwunsch → Twinkey → „Sonderstunden melden“</b>: Einsatz, Tag, Zeit von zuhause bis zuhause, Tätigkeit und wer noch dabei war. Danach kannst du gleich Fahrtkosten oder Auslagen erfassen. Den Stand siehst du in <b>🗓️ Mein Dienst</b> auf der Karte <b>„★ Sonderstunden“</b>: gutgeschrieben, offen (zählt erst nach Bestätigung) oder abgelehnt mit Grund.", seit: "2.423.0" },
-  { id: "fernhilfe_bedienen", thema: "technik", sym: "🖱️", t: "Wenn dir jemand aus der Ferne hilft", x: "Bittet dich Hansi (oder ein freigeschalteter Helfer), mitschauen zu dürfen, entscheidest du: Erst wenn du zusagst, sieht er live, was in deiner Club-App angezeigt wird – oben steht dann eine rote Leiste mit <b>Beenden</b>. Soll er dir etwas direkt einstellen, tippst du in der Leiste auf <b>„🖱️ Bedienen erlauben“</b>: Dann darf er in deiner App tippen und blättern; jeder Tipp wird grün markiert. Was etwas senden, löschen oder auslösen könnte, fragt die App dich vorher. Mit <b>„🖱️ Bedienen aus“</b> oder <b>Beenden</b> ist sofort Schluss. Andere Apps auf deinem Handy sieht und bedient niemand.", seit: "2.475.0" },
+  { id: "fernhilfe_bedienen", thema: "technik", sym: "🖱️", t: "Wenn dir jemand aus der Ferne hilft", x: "Bittet dich Hansi (oder ein freigeschalteter Helfer), mitschauen zu dürfen, entscheidest du: Erst wenn du zusagst, sieht er live, was in deiner Club-App angezeigt wird – oben steht dann eine rote Leiste mit <b>Beenden</b>. Soll er dir etwas direkt einstellen, tippst du in der Leiste auf <b>„🖱️ Bedienen erlauben“</b>: Dann darf er in deiner App tippen und blättern; jeder Tipp wird grün markiert. Was etwas senden, löschen oder auslösen könnte, fragt die App dich vorher. Mit <b>„🔊 Ton an“</b> in der Leiste könnt ihr dabei miteinander sprechen – dein Mikrofon geht erst an, wenn du selbst annimmst. Mit <b>„🖱️ Bedienen aus“</b> oder <b>Beenden</b> ist sofort Schluss (auch der Ton). Andere Apps auf deinem Handy sieht und bedient niemand.", seit: "2.475.0" },
   { id: "wege_frage", thema: "technik", sym: "👣", t: "Wege eines Mitglieds ansehen (Admin)", x: "Meldet sich ein Mitglied an, fragt die App, ob du seine Wege durch die App ansehen möchtest – <b>„👀 Ja, ansehen“</b> öffnet die Liste aller Angemeldeten zum Antippen. Mit <b>„🔕 Nicht mehr fragen“</b> schaltest du die Frage ab.", nur: () => !!ICH?.admin, seit: "2.92.0" },
 ];
 // ---------- KC-CLUB-SPRACHE-STUFE3 (2.87.0, Wunsch Hansi): zusagen, Nachrichten und Pinnwand vorlesen, anrufen, Ordner öffnen ----------
@@ -8014,7 +8014,7 @@ async function anrufVerbindung(mitBild) {
   };
   pc.onconnectionstatechange = () => {
     if (!RUF || RUF.pc !== pc) return;
-    if (pc.connectionState === "connected" && !RUF.verbunden) { RUF.verbunden = true; RUF.start = Date.now(); klangAus(); anrufUhr(); anrufKnoepfe("aktiv"); if (RUF.vf) { melde(`🔊 Ton an – ihr könnt jetzt miteinander sprechen`); vfLeiste(); } }
+    if (pc.connectionState === "connected" && !RUF.verbunden) { RUF.verbunden = true; RUF.start = Date.now(); klangAus(); anrufUhr(); anrufKnoepfe("aktiv"); if (RUF.vf || RUF.ms) { melde(`🔊 Ton an – ihr könnt jetzt miteinander sprechen`); rufLeisten(); } }
     if (pc.connectionState === "connected" && RUF.konf) { const h = RUF.konf.beine.get(RUF.id); if (h) h.verbunden = true; konfAnzeigen(); } // KC-CLUB-KONFERENZ: Hauptverbindung steht
     if (pc.connectionState === "failed") { if (RUF.konf) konfBeinWeg(RUF.id, true); else anrufFehlgeschlagen(); }
     if (pc.connectionState === "disconnected" && !RUF.konf) anrufZustand("⚠️ Verbindung wackelt …");
@@ -8066,12 +8066,12 @@ async function rufMeldung(video, name) {
 }
 async function rufMeldungWeg() { try { const reg = await navigator.serviceWorker?.ready; (await reg?.getNotifications({ tag: RUF_TAG }) || []).forEach((n) => n.close()); } catch {} }
 function anrufKlein() { if (!RUF) return; $("anrufSchirm").classList.add("versteckt"); melde(`${RUF.art === "video" ? "🎥" : "📞"} Das Gespräch läuft weiter – oben antippen, um zurückzukehren`); }
-function anrufZurueck() { if (!RUF) return rufAnzeige(); if (RUF.vf) return vfLeiste?.(); $("anrufSchirm").classList.remove("versteckt"); }
+function anrufZurueck() { if (!RUF) return rufAnzeige(); if (RUF.vf || RUF.ms) return rufLeisten(); $("anrufSchirm").classList.remove("versteckt"); }
 setInterval(rufAnzeige, 1000);
 window.addEventListener("pagehide", () => { if (RUF_ANZ.meldung) rufMeldungWeg(); }); // App wird geschlossen → keine verwaiste Mitteilung
 function anrufSchirm(gegen) {
   $("anrufBild").textContent = initialen(gegen.name || gegen.vorname); $("anrufName").textContent = gegen.name || gegen.vorname;
-  if (!RUF?.vf) $("anrufSchirm").classList.remove("versteckt"); // KC-CLUB-VORFUEHREN-TON: Bedienung steht dann in der Vorführ-Leiste
+  if (!RUF?.vf && !RUF?.ms) $("anrufSchirm").classList.remove("versteckt"); // KC-CLUB-VORFUEHREN-TON / FERNHILFE F4: Bedienung steht dann in der Leiste
 }
 function anrufKnoepfe(art) {
   $("anrufBild").classList.toggle("klingelt", art === "eingehend" || art === "rufe");
@@ -8106,10 +8106,12 @@ async function anrufKameraWechseln() {
   } catch { RUF.hinten = !RUF.hinten; melde("Kamera wechseln geht auf diesem Handy nicht.", true); }
 }
 // Ich rufe an
-async function anrufen(pid, mitBild, vf = false) {
+// KC-CLUB-FERNHILFE F4: Ton während Mitschauen/Bedienen – gleicher App-Anruf, Bedienung in der Mitschau-Leiste bzw. im Studio-Pult
+const rufLeisten = () => { if (RUF?.vf) vfLeiste(); else if (RUF?.ms) msTonZeigen(); };
+async function anrufen(pid, mitBild, vf = false, ms = false) {
   if (RUF) return melde("Es läuft schon ein Anruf.", true);
   const m = MITGLIEDER?.find((x) => x.person_id === pid) || ONL.liste.find((x) => x.person_id === pid) || { person_id: pid, name: "" };
-  RUF = { rolle: "rufer", gegen: m, art: mitBild ? "video" : "ton", vf: !!vf }; spur(mitBild ? "video" : "anruf", pid); // KC-CLUB-SPUR
+  RUF = { rolle: "rufer", gegen: m, art: mitBild ? "video" : "ton", vf: !!vf, ms: !vf && !!ms }; spur(mitBild ? "video" : "anruf", pid); // KC-CLUB-SPUR
   anrufSchirm(m); anrufKnoepfe("rufe"); anrufZustand(mitBild ? "Kamera und Mikrofon werden vorbereitet …" : "Mikrofon wird vorbereitet …");
   const lauf = RUF, art = RUF.art; // 2.122.0 (Gesamtprüfung 4, Fehlerprotokoll): wird während der Vorbereitung aufgelegt, ist RUF schon weg
   try {
@@ -8121,7 +8123,7 @@ async function anrufen(pid, mitBild, vf = false) {
     const r = await api("anruf_start", { an: pid, angebot: pc.localDescription.sdp, art });
     if (r.gegenanruf) { anrufAufraeumen(); return gegenanrufAnnehmen(r.gegenanruf, mitBild); }
     if (RUF !== lauf) { api("anruf_ende", { id: r.id }).catch(() => {}); return; } // während des Startens aufgelegt → beim Server gleich beenden
-    RUF.id = r.id; anrufZustand(`${mitBild ? "🎥" : "📞"} Klingelt bei ${m.vorname || m.name} …`); klang("frei"); if (RUF.vf) vfLeiste();
+    RUF.id = r.id; anrufZustand(`${mitBild ? "🎥" : "📞"} Klingelt bei ${m.vorname || m.name} …`); klang("frei"); rufLeisten();
     RUF.poll = setInterval(anrufPruefen, 1500);
   } catch (e) { if (RUF !== lauf) return; anrufAufraeumen(); meldeFehler(e); }
 }
@@ -8134,7 +8136,7 @@ async function anrufPruefen() {
     if (RUF.rolle === "rufer" && r.status === "angenommen" && r.antwort && !RUF.pc.remoteDescription) {
       klangAus(); anrufZustand("🔗 Verbindung wird aufgebaut …"); anrufKnoepfe("aktiv");
       await RUF.pc.setRemoteDescription({ type: "answer", sdp: r.antwort });
-      clearInterval(RUF.poll); RUF.poll = setInterval(anrufPruefen, 3000); if (RUF.vf) vfLeiste();
+      clearInterval(RUF.poll); RUF.poll = setInterval(anrufPruefen, 3000); rufLeisten();
       setTimeout(() => { if (RUF && !RUF.verbunden) anrufFehlgeschlagen(); }, 15000);
     }
     // KC-CLUB-KONFERENZ (0.82.0): unser Gespräch ist jetzt Teil einer Konferenz → ab hier übernimmt der Konferenz-Takt
@@ -8157,9 +8159,10 @@ async function anrufEingehend(id) {
     if (r.ichRufe || r.status !== "klingelt") { if (r.status === "verpasst") melde(`Verpasster Anruf von ${r.gegenueber.vorname}.`); return; }
     RUF = { id, rolle: "angerufen", gegen: r.gegenueber, angebot: r.angebot, art: r.art || "ton", konferenzId: r.konferenz || null,
       vf: !r.konferenz && VF.status === "laeuft" && !!r.gegenueber?.person_id && r.gegenueber.person_id === vfPartner() }; // KC-CLUB-VORFUEHREN-TON
+    RUF.ms = !RUF.vf && !r.konferenz && !!r.gegenueber?.person_id && r.gegenueber.person_id === msPartner(); // KC-CLUB-FERNHILFE F4
     anrufSchirm(r.gegenueber); anrufKnoepfe("eingehend");
     anrufZustand(RUF.konferenzId ? `👥 ${r.gegenueber.vorname} holt dich in eine Konferenz …` : RUF.art === "video" ? `🎥 ${r.gegenueber.vorname} ruft per Video an …` : `📞 ${r.gegenueber.vorname} ruft an …`); klang("klingeln");
-    RUF.poll = setInterval(anrufPruefen, 2000); if (RUF.vf) vfLeiste();
+    RUF.poll = setInterval(anrufPruefen, 2000); rufLeisten();
   } catch {}
 }
 // ---- KC-CLUB-ANRUF-KURZANTWORT (0.81.0): mit Text ablehnen – Texte vom Admin (INIT.anrufAntworten), sonst Grundeinstellung ----
@@ -8419,7 +8422,7 @@ async function anrufAnnehmen(mitBild) {
   if (!RUF || RUF.rolle !== "angerufen") return;
   klangAus(); anrufZustand("🔗 Verbindung wird aufgebaut …");
   try {
-    const { pc, strom } = await anrufVerbindung(!!mitBild && RUF.art === "video"); Object.assign(RUF, { pc, strom }); anrufKnoepfe("aktiv"); if (RUF.vf) vfLeiste();
+    const { pc, strom } = await anrufVerbindung(!!mitBild && RUF.art === "video"); Object.assign(RUF, { pc, strom }); anrufKnoepfe("aktiv"); rufLeisten();
     await pc.setRemoteDescription({ type: "offer", sdp: RUF.angebot });
     await pc.setLocalDescription(await pc.createAnswer()); await iceFertig(pc);
     await api("anruf_annehmen", { id: RUF.id, antwort: pc.localDescription.sdp });
@@ -8429,10 +8432,10 @@ async function anrufAnnehmen(mitBild) {
   } catch (e) { const id = RUF?.id; anrufAufraeumen(); if (id) api("anruf_ende", { id }).catch(() => {}); meldeFehler(e); }
 }
 async function anrufFehlgeschlagen() {
-  if (!RUF) return; const g = RUF.gegen, id = RUF.id, vf = RUF.vf;
+  if (!RUF) return; const g = RUF.gegen, id = RUF.id, vf = RUF.vf || RUF.ms;
   api("diagnose", { art: "anruf", daten: { verbunden: false, rolle: RUF.rolle, ice: RUF.pc?.iceConnectionState || "" } }).catch(() => {});
   anrufAufraeumen(); if (id) api("anruf_ende", { id }).catch(() => {});
-  if (vf) return melde(`🔈 Der Ton zu ${g.vorname || g.name} ließ sich über dieses Netz nicht verbinden – das Zeigen läuft weiter. Am besten kurz normal anrufen.`, true);
+  if (vf) return melde(`🔈 Der Ton zu ${g.vorname || g.name} ließ sich über dieses Netz nicht verbinden – die Sitzung läuft weiter. Am besten kurz normal anrufen.`, true);
   if ((await frage(`Die Verbindung zu ${g.vorname || g.name} ließ sich nicht aufbauen – das passiert in manchen Mobilfunknetzen.\n\nStattdessen eine Nachricht schreiben?`))) direkt(g.person_id);
 }
 async function anrufAuflegen() {
@@ -8452,8 +8455,8 @@ function anrufAufraeumen() {
   try { RUF.pc?.close(); } catch {}
   $("anrufTon").srcObject = null; $("anrufVideo").srcObject = null; $("anrufSelbst").srcObject = null;
   $("anrufVideo").classList.add("versteckt"); $("anrufSelbst").classList.add("versteckt"); $("anrufSchirm").classList.remove("mitbild");
-  $("anrufSchirm").classList.add("versteckt"); const warVf = RUF.vf; RUF = null;
-  anrufAntwortBereich(false); if (warVf && VF.rolle) vfLeiste();
+  $("anrufSchirm").classList.add("versteckt"); const warVf = RUF.vf, warMs = RUF.ms; RUF = null;
+  anrufAntwortBereich(false); if (warVf && VF.rolle) vfLeiste(); if (warMs) msTonZeigen();
   if (ZWEIT) { const z = ZWEIT; zweitWeg(); setTimeout(() => anrufEingehend(z.id), 300); } // KC-CLUB-ANRUF-ZWEIT: klingelt noch → normal annehmen können
 }
 
@@ -36748,6 +36751,7 @@ function stAktionen() {
   const lauf = ["wartet", "live"].includes(STD.status), hatFoto = STD.fotos.length > 0;
   if (!STD.modus && !hatFoto) { a.innerHTML = ""; return; }
   a.innerHTML = STD.modus === "mitschauen" && STD.status === "live" ? k("📸 Foto", "stFesthalten()", !STD.frame, "haupt") + k("💾 Speichern", "ssSpeichern()", !hatFoto) + k("⏹ Beenden", "ssAbbrechen()")
+      + msTonHtml((t, fn) => k(t, fn)) // KC-CLUB-FERNHILFE F4
       + (SS.bedienen ? k("⬆️ Hoch", "ssFernHoch()") + k("⬇️ Runter", "ssFernRunter()") + k("↩️ Zurück", "ssFernZurueck()") + k("⌨️ Text", "ssFernText()") : "") // KC-CLUB-FERNHILFE F3
     : STD.modus === "zeigen" && lauf ? k("📱 Zur App", "stSchliessen()", false, "haupt") + k(VF.vorhang ? "🙉 Vorhang auf" : "🙈 Vorhang", "vfVorhang()", STD.status !== "live") + k("⏹ Beenden", "vfBeenden()")
     : lauf ? k("📸 Foto", "", true) + k("💾 Speichern", "", true) + k("⏹ Abbrechen", "ssAbbrechen()")
@@ -36852,7 +36856,7 @@ async function ssStart(pid, name, live = false) {
     clearInterval(SS.uhr); SS.uhr = setInterval(ssHolen, 1500);
   } catch (e) { meldeFehler(e); }
 }
-function ssFhZu() { SS.fhL?.schliessen(); SS.fhL = null; SS.fhPruef = 0; SS.fhBild = false; SS.bedienen = false; ssFernFlaeche(); } // KC-CLUB-FERNHILFE F1/F3
+function ssFhZu() { SS.fhL?.schliessen(); SS.fhL = null; SS.fhPruef = 0; SS.fhBild = false; SS.bedienen = false; ssFernFlaeche(); if (RUF?.ms) anrufAuflegen(); } // KC-CLUB-FERNHILFE F1/F3/F4
 function ssFhDaten(d) {
   if (!SS.id || !d) return;
   if ("bedienen" in d) { SS.bedienen = !!d.bedienen; ssFernFlaeche(); stAktionen(); melde(SS.bedienen ? "🖱️ Du darfst jetzt bedienen – tippe ins Live-Bild" : "🖱️ Bedienen wurde ausgeschaltet"); } // KC-CLUB-FERNHILFE F3
@@ -37042,7 +37046,7 @@ async function ssBildMachen() {
 async function ssAnfrage(einl) {
   if (!einl?.id || SS.gefragt.has(einl.id) || MSCH.id) return; SS.gefragt.add(einl.id);
   try { navigator.vibrate?.([80, 60, 80]); } catch {}
-  const wer = einl.von?.vorname || "Hansi", live = !!einl.live;
+  const wer = einl.von?.vorname || "Hansi", live = !!einl.live; MSCH.vonPid = einl.von?.person_id || null; // KC-CLUB-FERNHILFE F4: für den Ton
   const ja = await frage(live ? `🔴 ${wer} möchte dir helfen und eine Weile mitschauen, was in deiner Club-App angezeigt wird.\n\n${wer} sieht dann live, was in deiner Club-App angezeigt wird – nichts anderes von deinem Gerät, keine PIN. Oben steht dann ein roter Balken; damit kannst du jederzeit beenden. Spätestens nach 30 Minuten endet es von selbst. Erlauben?`
     : `📸 ${wer} möchte dir helfen und kurz sehen, was in deiner Club-App gerade angezeigt wird.\n\nEs wird ein einziges Bild gemacht – nur von der Club-App, nichts anderes von deinem Gerät. Erlauben?`, { ja: "✅ Ja, erlauben", nein: "Nein, jetzt nicht" });
   let bild = "";
@@ -37058,6 +37062,7 @@ function mlStart(id, wer, fh) {
   Object.assign(MSCH, { id, wer, bis: Date.now() + ST_LIVE_MIN * 60000, laeuft: false, fhPruef: 0 });
   MSCH.fhL?.schliessen(); Object.assign(MSCH, { fhHallo: false, bedienen: false, befehle: 0, befehlAm: 0 });
   MSCH.fhL = fhGueltig(fh) ? fhLeitung(fh, (d) => { if (d?.hallo) { MSCH.fhHallo = true; fhNeuSenden(); mlBedienenKnopf(); } else if (d?.cmd) mlFern(d); }) : null; // KC-CLUB-FERNHILFE F1/F3
+  setTimeout(msTonZeigen, 0); // KC-CLUB-FERNHILFE F4
   document.getElementById("ssLiveLeiste")?.remove();
   document.body.insertAdjacentHTML("beforeend", `<div id="ssLiveLeiste" class="ss-live-leiste" role="status">${onAirSchild(true)}<span>${esc(wer)} schaut zu</span><button onclick="mlEnde(true)">Beenden</button></div>`);
   spur("mitschauen_laeuft");
@@ -37077,10 +37082,37 @@ async function mlSenden(f) {
 function mlEnde(selbst, text) {
   const id = MSCH.id, mess = MSCH.fhL ? { ...MSCH.fhL.mess(), befehle: MSCH.befehle || 0 } : null; MSCH.bedienen = false; clearInterval(MSCH.uhr); MSCH.id = null; spgSenderStopp(); document.getElementById("ssLiveLeiste")?.remove();
   MSCH.fhL?.schliessen(); MSCH.fhL = null; // KC-CLUB-FERNHILFE F1
+  if (RUF?.ms) anrufAuflegen(); // KC-CLUB-FERNHILFE F4: Ende der Sitzung = Ton aus
   if (selbst && id) api("schnappschuss_ende", { id, ...(mess ? { mess } : {}) }).catch(() => {});
   if (id) melde(text || "⏹ Mitschauen beendet");
 }
 
+// ---------- KC-CLUB-FERNHILFE F4: Ton während Mitschauen und Bedienen ----------
+// Wie KC-CLUB-VORFUEHREN-TON: der App-Anruf (WebRTC direkt von Handy zu Handy, kostenlose STUN-Hilfe) – ohne Vollbild-Anrufschirm.
+// Beide Seiten können den Ton starten; das Mikrofon der Gegenseite geht erst an, wenn sie selbst „🔊 Annehmen“ tippt. Ende der Sitzung = Ton aus.
+const msPartner = () => MSCH.id ? MSCH.vonPid || null : SS.id && STD.modus === "mitschauen" && STD.status === "live" ? SS.an || null : null;
+function msTonHtml(k) {
+  if (RUF && !RUF.ms) return ""; // anderer Anruf läuft
+  const vn = esc(MSCH.id ? MSCH.wer || "" : STD.name || "");
+  if (!RUF) return k("🔊 Ton an", "msTon()");
+  if (RUF.rolle === "angerufen" && !RUF.pc) return `<span class="ms-ton-text">🔊 ${vn} möchte mit dir sprechen</span>` + k("🔊 Annehmen", "anrufAnnehmen(false)") + k("Nein", "anrufAuflegen()");
+  if (!RUF.verbunden) return `<span class="ms-ton-text">${RUF.rolle === "rufer" && !RUF.pc?.remoteDescription ? `🔔 Klingelt bei ${vn} …` : "🔗 Ton wird verbunden …"}</span>` + k("✖ Abbrechen", "anrufAuflegen()");
+  const stumm = RUF.strom?.getAudioTracks()[0]?.enabled === false;
+  return k(stumm ? "🎙️ Mikro an" : "🔇 Stumm", "anrufStumm(); msTonZeigen()") + k("🔈 Ton aus", "anrufAuflegen()");
+}
+function msTonZeigen() {
+  if (MSCH.id) { // beim Mitglied: in der roten Mitschau-Leiste
+    const l = $("ssLiveLeiste"); if (!l) return;
+    let t = $("ssTon"); if (!t) { t = document.createElement("span"); t.id = "ssTon"; t.className = "ss-ton"; l.insertBefore(t, l.lastElementChild); }
+    t.innerHTML = msTonHtml((txt, fn) => `<button onclick="${fn}">${txt}</button>`);
+  }
+  if (SS.id) stAktionen(); // beim Helfer: im Studio-Pult
+}
+async function msTon() {
+  const pid = msPartner(); if (!pid) return melde("🔊 Ton geht nur während einer laufenden Mitschau-Sitzung.", true);
+  if (RUF) return melde(RUF.ms ? "🔊 Der Ton ist schon an." : "Es läuft schon ein Anruf.", true);
+  spur("fernhilfe_ton"); await anrufen(pid, false, false, true); msTonZeigen();
+}
 // ---------- KC-CLUB-FERNHILFE F3: Bedienen aus der Ferne – nur nach „🖱️ Bedienen erlauben“ des Mitglieds, nur über die verschlüsselte Leitung ----------
 // Der Helfer tippt ins Live-Bild; hier wird an derselben Stelle getippt (sichtbar markiert). Was senden, löschen oder auslösen könnte, fragt
 // vorher das Mitglied. Nie aus der Ferne: die Fernhilfe-Leiste selbst und offene Rückfragen; Text nie in Passwort-/Geheimfelder.
