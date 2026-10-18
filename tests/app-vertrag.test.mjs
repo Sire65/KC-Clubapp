@@ -6661,6 +6661,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal(f(["Klaus"]), "Im Moment ist Klaus online.");
   assert.equal(f(["Klaus", "Anne"]), "Im Moment sind Klaus und Anne online.");
 }
+
+// 2.455.0 KC-CLUB-TASTATUR-KNOPF (Wunschliste #14): ⌨️ neben ▾ blendet die Handy-Tastatur aus und ein
+{
+  const seite = lies("index.html");
+  assert.ok(/<div class="eg-griffe"><button class="eg-klapp" id="egKlapp" type="button" onclick="eingabeKlappen\(true\)"[^\n]*<button class="eg-tast" id="egTast" type="button" onpointerdown="event\.preventDefault\(\)" onmousedown="event\.preventDefault\(\)" onclick="tastaturUmschalten\(\)"/.test(seite), "Taste neben dem Pfeil, Antippen nimmt dem Feld nicht die Schreibmarke");
+  assert.ok(/@media \(hover: none\) and \(pointer: coarse\) \{ \.eingabe \.eg-tast \{ display: block; \} \}/.test(seite), "nur auf Touch-Geräten");
+  assert.ok(/if \(document\.activeElement === t\) t\.blur\(\); else \{ \$\("eingabe"\)\?\.classList\.remove\("zu"\); t\.focus\(\); \}/.test(html), "aus: Feld verlassen · ein: ins Feld (Tastatur kommt)");
+  assert.ok(/document\.addEventListener\("focusin", \(e\) => \{ if \(e\.target\?\.id === "text"\) tastaturKnopfZeigen\(\); \}\);/.test(html), "Knopf zeigt den Zustand");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

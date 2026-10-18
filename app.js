@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.454.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.455.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5059,6 +5059,7 @@ const HILFE = [
   // 2.23.1 (Wunsch Hansi: „ganze App durchsuchen, weitere Hilfen – immer etwas anders formuliert, freundlich, nicht aufdringlich“)
   // 💬 Nachrichten & Chat
   { id: "anheften", thema: "nachrichten", sym: "📌", t: "Wichtiges oben im Chat festhalten", x: "Damit eine wichtige Nachricht nicht nach oben wegrutscht: einfach antippen und <b>„📌 Oben anheften“</b> wählen. Bis zu drei Nachrichten bleiben so über dem Chat stehen. Mit „Lösen“ kommen sie wieder an ihren Platz.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
+  { id: "tastatur_knopf", thema: "nachrichten", sym: "⌨️", t: "Tastatur im Chat aus- und einblenden", x: "Unten im Chat steht neben dem kleinen Pfeil <b>▾</b> eine Taste <b>⌨️</b>. Ist sie <b>rot (⌨️ ▾)</b>, ist die Tastatur offen – antippen nimmt sie weg, und du siehst mehr Nachrichten. Nochmal antippen <b>(⌨️ ▴)</b> holt sie zurück, die Schreibmarke steht wieder im Feld. Dein angefangener Text bleibt dabei stehen. Nur auf Handy und Tablet.", seit: "2.455.0" },
   { id: "tage_einklappen", thema: "nachrichten", sym: "📂", t: "Vergangene Tage im Chat eingeklappt", x: "Im Chat sind frühere Tage jetzt <b>eingeklappt</b> – eine Zeile mit Anzahl und Absendern, <b>rechts das Datum</b> (z. B. „Mo, 11.11.26“). Ältere Wochen stehen als <b>„KW 45/26“</b>. Heute und Ungelesenes bleiben offen. Antippen klappt auf, <b>„⤢ Alle aufklappen“</b> öffnet alles. Ausschalten: ⚙️ → <b>„🧩 Startseite &amp; Ansicht“</b>.", zeig: () => zeige("nachrichten"), seit: "2.429.0" },
   { id: "netz_symbol", thema: "nachrichten", sym: "📡", t: "Router oder Satellit: deine Verbindung auf einen Blick", x: "Ein kleiner <b>Router</b> blinkt jetzt <b>oben links in 💬 Nachrichten</b>, wenn du im WLAN bist, und ein <b>Satellit</b> im Mobilfunk. Die Wellen zeigen die Qualität (grün = gut, gelb = mäßig, rot = schwach, grau = noch unbekannt). <b>Antippen</b> zeigt Netzart, Antwortzeit, Datentempo und <b>„📏 Jetzt messen“</b>. Aus- oder ruhig stellen: ⚙️ → <b>„✨ Effekte“</b>.", zeig: () => zeige("nachrichten"), seit: "2.429.0" },
   { id: "merken", thema: "nachrichten", sym: "⭐", t: "Eine Nachricht für später merken", x: "Manchmal liest man etwas und möchte es später schnell wiederfinden. Tipp die Nachricht an und wähle <b>„⭐ Merken“</b>. Alles Gemerkte liegt in 💬 Nachrichten oben unter <b>„⭐ Gemerkt“</b> – diese Liste siehst nur du.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
@@ -34440,6 +34441,21 @@ function eingabeKlappen(zu) {
   else setTimeout(() => $("text")?.focus(), 30);
   requestAnimationFrame(() => { try { chatAbstand(); } catch {} });
 }
+// 2.455.0 KC-CLUB-TASTATUR-KNOPF (Wunschliste #14, Wunsch Hansi „unten im Chat neben dem kleinen Pfeil eine kleine Taste – Tastatur ein- oder ausblenden,
+// um mehr Platz zu schaffen“): Tastatur offen (Schreibmarke im Feld) → wegnehmen; zu → ins Feld, das Handy blendet sie wieder ein. Der Text bleibt.
+// onpointerdown verhindert, dass schon das Antippen des Knopfs das Feld verlässt (sonst wüsste der Knopf nicht mehr, dass die Tastatur offen war).
+function tastaturUmschalten() {
+  const t = $("text"); if (!t) return;
+  if (document.activeElement === t) t.blur(); else { $("eingabe")?.classList.remove("zu"); t.focus(); }
+  tastaturKnopfZeigen();
+}
+function tastaturKnopfZeigen() {
+  const k = $("egTast"), auf = document.activeElement === $("text"); if (!k) return;
+  k.textContent = auf ? "⌨️ ▾" : "⌨️ ▴"; k.classList.toggle("an", auf); k.setAttribute("aria-pressed", String(auf));
+  k.title = auf ? "Tastatur ausblenden – mehr Platz für die Nachrichten" : "Tastatur einblenden"; k.setAttribute("aria-label", k.title);
+}
+document.addEventListener("focusin", (e) => { if (e.target?.id === "text") tastaturKnopfZeigen(); });
+document.addEventListener("focusout", (e) => { if (e.target?.id === "text") setTimeout(tastaturKnopfZeigen, 0); });
 // ---------- 2.432.0 KC-CLUB-EINGANGSKORB (Wunsch Hansi „Eingangskorb für Mitglieder“): Admin/Clubleitung legt ein Dokument in den persönlichen
 // Ordner eines Mitglieds – nur zur Prüfung. Das Mitglied sieht es unter „Heute wichtig“ → 📥 Eingangskorb und übernimmt es oder lehnt ab (dann gelöscht).
 const EINGANG_REGISTER = ["Sonstiges", "Urkunden", "Schulungen", "Rechnungen", "Fotos"];

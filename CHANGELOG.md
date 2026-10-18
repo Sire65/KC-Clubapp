@@ -31,6 +31,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.455.0 – 2026-10-18 – KC-CLUB-TASTATUR-KNOPF: Tastatur im Chat aus- und einblenden (Wunschliste #14)
+Unten im Chat neben dem Pfeil ▾ die Taste ⌨️: rot = Tastatur offen, antippen blendet sie aus (mehr Platz), nochmal antippen holt sie zurück; der Text bleibt. Nur auf Handy/Tablet. Nur App.
+
 ## 2.454.0 – 2026-10-18 – KC-CLUB-WER-IST-DA: Ansage beim Reinkommen (Wunschliste #13)
 Beim Öffnen der App (oder nach 10 Min. Pause) einmal Meldung + Ansage: „Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder.“ Gleiche Online-Liste wie überall (Verborgene/Inkognito nicht genannt), nie in der Ruhezeit, abschaltbar unter Ansagen („👋 Beim Öffnen“). Nur App.
 
