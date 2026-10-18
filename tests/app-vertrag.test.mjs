@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6586,6 +6586,21 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/ink \? null : erste\(e\.person_id, "angekommen"\)/.test(server), "Inkognito nicht verraten");
   assert.ok(/function niQuittungHtml\(r\)/.test(html) && /Gelesen von/.test(html) && /Zugestellt an/.test(html) && /"Uhrzeit unbekannt"/.test(html) && /class="ni-mehr"/.test(html), "Übersicht, alte Einzelheiten aufklappbar");
   assert.ok(/onclick="event\.stopPropagation\(\);nachrichtInfo\('\$\{esc\(m\.id\)\}'\)"/.test(html), "Haken antippen öffnet die Übersicht");
+}
+// 2.448.0 KC-CLUB-OBJEKT-ANLAGEN (Wunschliste #10): Anlage (Foto, Kamera, PDF/Datei) bei Vorschlag/Spende, Terminfindung, Terminanfrage
+{
+  const mig = lies("supabase/migrations/20261018_kc_club_v2448_objekt_anlagen.sql");
+  assert.ok(/art in \('vorschlag', 'terminumfrage', 'terminanfrage'\)/.test(mig) && /enable row level security/.test(mig) && /revoke all on public\.kc_club_objekt_anlagen from anon, authenticated;/.test(mig), "Tabelle nur für den Server");
+  assert.ok(lies("tools/db-test/80_erwartet.txt").includes("doppelt_verhindert=t"), "Probelauf");
+  const h = server.slice(server.indexOf("async function objAnlagenSetzen("), server.indexOf("async function objAnlagenHolen("));
+  assert.ok(/startsWith\(`club\/\$\{ich\.person_id\}\/`\)/.test(h) && /\.slice\(0, OBJ_ANLAGEN_MAX\)/.test(h), "nur eigene Dateien, höchstens 5");
+  assert.ok(/await objAnlagenSetzen\(ich, "vorschlag", v\.id, p\.anlagen\);/.test(server) && /await objAnlagenSetzen\(ich, "terminumfrage", u\.id, p\.anlagen\);/.test(server) && /await objAnlagenSetzen\(ich, "terminanfrage", a\.id, p\.anlagen\);/.test(server), "alle drei speichern Anlagen");
+  const s = server.slice(server.indexOf("async function objAnlageSichtbar("), server.indexOf("// KC-CLUB-LOESCHEN: vor jedem Löschen"));
+  assert.ok(/v\.ziel_ids\.includes\(ich\.person_id\)/.test(s) && /kc_club_terminanfrage_empfaenger/.test(s) && /ich\.zugang !== "mitglied"/.test(s), "sehen nur, wer den Eintrag sehen darf");
+  assert.ok(/if \(await objAnlageSichtbar\(ich, x\.art, x\.objekt_id\)\) \{ erlaubt = true; break; \}/.test(server), "anlage_url prüft die Sichtbarkeit");
+  for (const pre of ["vf", "tu", "ta"]) assert.ok(html.includes(`\${oaFeld("${pre}")}`) && html.includes(`oaIds("${pre}")`), "Formular mit Anlage: " + pre);
+  assert.ok(/\$\{oaAnzeige\(v\.anlagen\)\}/.test(html) && /\$\{oaAnzeige\(u\.anlagen\)\}/.test(html) && /\$\{oaAnzeige\(a\.anlagen\)\}/.test(html), "Anzeige an allen drei Karten");
+  assert.ok(/📷 Kamera/.test(html) && /📄 PDF \/ Datei/.test(html) && /accept="application\/pdf,image\/\*/.test(html), "Foto, Kamera, PDF/Datei");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

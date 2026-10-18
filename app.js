@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.447.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.448.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5007,6 +5007,7 @@ const HILFE = [
   { id: "ohne_netz", thema: "nachrichten", sym: "📵", t: "Schreiben, auch wenn das Netz weg ist", x: "Im Keller oder unterwegs kein Empfang? Schreib ruhig trotzdem. Die Nachricht zeigt <b>„⏳ wartet auf Netz“</b> und geht von ganz allein raus, sobald wieder Verbindung da ist.", seit: "2.23.1" },
   { id: "haken", thema: "nachrichten", sym: "✔️", t: "Was die Haken an deinen Nachrichten bedeuten", x: "Wie bei WhatsApp: <b>graue Haken</b> heißen gesendet bzw. angekommen, <b>blaue Haken</b> heißen gelesen. Willst du es genau wissen, tipp deine Nachricht an – unter <b>„ℹ️ Nachricht – Einzelheiten“</b> steht mehr.", seit: "2.23.1" },
   { id: "gelesen_von", thema: "nachrichten", sym: "☑️", t: "Wer hat meine Nachricht bekommen und gelesen?", x: "Tippe an deiner eigenen Nachricht auf die <b>Haken</b> (oder Nachricht antippen → <b>ℹ️ Details</b>). Wie bei WhatsApp siehst du: <b>blaue ✓✓ Gelesen von</b> – wer sie gelesen hat und um wie viel Uhr, <b>graue ✓✓ Zugestellt an</b> – bei wem sie schon in der App angekommen ist, und <b>✓ Noch nicht zugestellt</b>. Bei älteren Nachrichten steht „Uhrzeit unbekannt“. Ampel, Push und E-Mail findest du darunter unter „Mehr Einzelheiten“.", seit: "2.447.0" },
+  { id: "anlage_mitschicken", thema: "nachrichten", sym: "📎", t: "Anlage bei Vorschlag, Spende, Terminfindung und Terminanfrage", x: "Beim Anlegen gibt es jetzt das Feld <b>📎 Anlage</b>: <b>🖼️ Foto</b> aus der Galerie, <b>📷 Kamera</b> oder <b>📄 PDF / Datei</b> aus dem Dateimanager – z. B. eine Skizze zum Vorschlag oder den Flyer des Spendenempfängers. Höchstens 5 Anlagen; mit ✕ wieder entfernen. Die anderen sehen sie im Eintrag und öffnen sie mit einem Tipp. Sehen kann sie nur, wer den Eintrag auch sehen darf.", seit: "2.448.0" },
   { id: "sprachtempo", thema: "nachrichten", sym: "⏩", t: "Lange Sprachnachrichten schneller hören", x: "Sprachnachrichten kannst du auch in <b>1,5×</b> oder <b>2×</b> abspielen – der kleine Tempo-Knopf sitzt direkt an der Sprachnachricht. Deine Wahl merkt sich das Handy.", seit: "2.23.1" },
   { id: "chat_vorlesen", thema: "nachrichten", sym: "🔊", t: "Hände voll? Chat vorlesen lassen", x: "Gerade beim Kochen praktisch: im Chat oben <b>⋮</b> → <b>„🔊 Vorlesen ab den neuen Nachrichten“</b> oder <b>„🔊 Ganzen Chat vorlesen“</b>. Das Handy liest vor, du hörst einfach zu.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "whatsapp", thema: "nachrichten", sym: "🟢", t: "Text zusätzlich per WhatsApp schicken", x: "Ist jemand in der App noch nicht so oft unterwegs? Der grüne Knopf <b>„WA“</b> unter dem Schreibfeld übernimmt deinen Text nach WhatsApp – du musst ihn nicht nochmal tippen.", seit: "2.23.1" },
@@ -24413,7 +24414,7 @@ function vorschlagKarte(v) {
     v.darfLoeschen ? `<button class="knopf klein" onclick="vorschlagLoeschen('${v.id}')">🗑️ Löschen</button>` : "",
   ].join("");
   return `<div class="karte">${kopf}<div class="wann" style="font-size:1.12rem;font-weight:800;margin-top:6px">${esc(v.titel)}</div>${unter}
-    ${v.beschreibung ? `<p style="white-space:pre-wrap;margin:8px 0 0">${esc(v.beschreibung)}</p>` : ""}${mitte}${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}</div>`;
+    ${v.beschreibung ? `<p style="white-space:pre-wrap;margin:8px 0 0">${esc(v.beschreibung)}</p>` : ""}${oaAnzeige(v.anlagen)}${mitte}${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}</div>`;
 }
 async function stimme(id, wahl) {
   try { await api("vorschlag_stimme", { id, wahl }); melde(wahl ? "Deine Stimme ist gespeichert 👍" : "Zurückgenommen"); vorschlaegeLaden(); neuLaden(); }
@@ -24487,6 +24488,53 @@ function vfSp(i, feld, wert) {
   else if (feld === "freiBetrag") { x.freiBetrag = true; if (VORSCHLAG_SPENDEN.betraege.includes(Number(x.betrag))) x.betrag = 0; }
   vfSpZeigen();
 }
+// ---------- 2.448.0 KC-CLUB-OBJEKT-ANLAGEN (Wunschliste #10, Wunsch Hansi „bei allen Möglichkeiten eine Anlage mit hochladen – Foto, PDF
+// oder Dateimanager; bei Vorschlägen z. B. eine Skizze, bei Spenden z. B. einen Flyer des Spendenempfängers“) ----------
+// Gemeinsamer Baustein für Vorschlag/Spende, Terminfindung und Terminanfrage: Dateien werden sofort hochgeladen (wie im Chat, Bilder
+// verkleinert), beim Speichern gehen nur die Kennungen mit. Höchstens 5. Anzeige: Bilder als kleine Vorschau, alles antippbar.
+const OBJA = {}, OBJA_LAEDT = {}, OBJA_MAX = 5;
+function oaFeld(pre) {
+  OBJA[pre] = OBJA[pre] || [];
+  return `<div class="oa-feld" id="${pre}Anl"><div class="oa-titel">📎 <b>Anlage</b> <span class="hinweis">(freiwillig – z. B. Foto, Skizze, Flyer oder PDF; höchstens ${OBJA_MAX})</span></div>
+    <div class="oa-knoepfe"><button type="button" class="knopf klein" onclick="dateiWahl('${pre}AnlFoto', (i) => oaGewaehlt('${pre}', i))">🖼️ Foto</button><button type="button" class="knopf klein" onclick="appKamera((i) => oaGewaehlt('${pre}', i))">📷 Kamera</button><button type="button" class="knopf klein" onclick="dateiWahl('${pre}AnlDatei', (i) => oaGewaehlt('${pre}', i))">📄 PDF / Datei</button></div>
+    <input type="file" id="${pre}AnlFoto" accept="image/*" multiple class="versteckt"><input type="file" id="${pre}AnlDatei" accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx,.odt,.ods,.txt" multiple class="versteckt">
+    <div class="oa-liste" id="${pre}AnlListe">${oaChips(pre)}</div></div>`;
+}
+const oaSym = (mime) => /^image\//.test(mime || "") ? "🖼️" : /pdf/.test(mime || "") ? "📕" : "📄";
+function oaChips(pre) {
+  return (OBJA[pre] || []).map((a) => `<span class="oa-chip">${oaSym(a.mime)} ${esc(a.name)} <button type="button" class="oa-weg" title="Anlage entfernen" aria-label="Anlage entfernen" onclick="oaWeg('${pre}', '${esc(a.id)}')">✕</button></span>`).join("")
+    + (OBJA_LAEDT[pre] ? `<span class="oa-chip oa-laedt">⏳ ${OBJA_LAEDT[pre]} wird hochgeladen …</span>` : "");
+}
+function oaZeigen(pre) { const l = $(pre + "AnlListe"); if (l) l.innerHTML = oaChips(pre); }
+async function oaGewaehlt(pre, input) {
+  OBJA[pre] = OBJA[pre] || [];
+  const frei = OBJA_MAX - OBJA[pre].length - (OBJA_LAEDT[pre] || 0), dateien = [...(input.files || [])].slice(0, Math.max(0, frei)); input.value = "";
+  if (!dateien.length) return melde(`Höchstens ${OBJA_MAX} Anlagen.`, true);
+  for (const roh of dateien) {
+    OBJA_LAEDT[pre] = (OBJA_LAEDT[pre] || 0) + 1; oaZeigen(pre);
+    try { const r = await anlageHochladen(roh); OBJA[pre].push({ id: r.id, name: r.name, mime: roh.type || "", groesse: r.groesse }); }
+    catch (e) { meldeFehler(e); }
+    finally { OBJA_LAEDT[pre]--; oaZeigen(pre); }
+  }
+}
+function oaWeg(pre, id) { OBJA[pre] = (OBJA[pre] || []).filter((a) => a.id !== id); oaZeigen(pre); }
+function oaIds(pre) { if (OBJA_LAEDT[pre]) throw new Error("Bitte kurz warten – die Anlage wird noch hochgeladen."); return (OBJA[pre] || []).map((a) => a.id); }
+function oaLeeren(pre) { OBJA[pre] = []; }
+function oaAnzeige(liste) { // Anlagen an einem Eintrag: Bilder klein als Vorschau, alles antippbar (Öffnen/Teilen/Speichern)
+  if (!liste?.length) return "";
+  return `<div class="oa-zeige">${liste.map((a) => /^image\//.test(a.mime || "")
+    ? `<button type="button" class="oa-bildknopf" title="${esc(a.name)}" onclick="event.stopPropagation();anlageAktion('${esc(a.id)}', '${esc(a.name).replace(/'/g, "")}', '${esc(a.mime)}')"><img class="oa-bild" data-anlage="${esc(a.id)}" alt="${esc(a.name)}"></button>`
+    : `<button type="button" class="knopf klein oa-datei" onclick="event.stopPropagation();anlageAktion('${esc(a.id)}', '${esc(a.name).replace(/'/g, "")}', '${esc(a.mime)}')">${oaSym(a.mime)} ${esc(a.name)}</button>`).join("")}</div>`;
+}
+// Vorschaubilder nachladen, sobald sie im Bild auftauchen (egal welche Liste sie gezeichnet hat)
+let oaBeobachter = null;
+function oaBilderBeobachten() {
+  if (oaBeobachter || typeof MutationObserver === "undefined") return;
+  let geplant = false;
+  oaBeobachter = new MutationObserver(() => { if (geplant) return; geplant = true;
+    requestAnimationFrame(() => { geplant = false; document.querySelectorAll("img.oa-bild[data-anlage]:not([data-oa])").forEach((img) => { img.dataset.oa = "1"; bildLaden(img); }); }); });
+  oaBeobachter.observe(document.body, { childList: true, subtree: true });
+}
 function vorschlagForm(art) {
   vfArt = art || "thema";
   if (vfArt === "spende") VF_SP = [{ empfaenger: VORSCHLAG_SPENDEN.empfaenger[0] || "", betrag: 0 }];
@@ -24502,6 +24550,7 @@ function vorschlagForm(art) {
       <label class="schalter"><span><b>🔒 Geheime Abstimmung</b><br><small class="hinweis">Niemand sieht, wer wie gestimmt hat; Ergebnis erst am Ende</small></span><input type="checkbox" id="vfGeheim"></label>
       <div class="zwei"><label class="feld">Abstimmen bis (freiwillig)<input id="vfFristDatum" type="date"></label><label class="feld">Uhrzeit<input id="vfFristZeit" type="time" value="20:00"></label></div>
       <div class="feld"><b>An wen?</b><div id="vfZiel"></div></div>` : ""}
+    ${oaFeld("vf")}
     <label class="schalter"><span>${vfArt === "abstimmung" ? "Teilnehmer benachrichtigen (Push/Mail)" : "Clubsprecher & Kassenwart benachrichtigen"}</span><input type="checkbox" id="vfInfo" checked></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="vorschlagSpeichern(this)">${vfArt === "abstimmung" ? "Abstimmung starten" : "Vorschlagen"}</button><button class="knopf" onclick="$('vorschlagForm').classList.add('versteckt')">Abbrechen</button></div>`;
   $("vorschlagForm").classList.remove("versteckt"); window.scrollTo(0, 0);
@@ -24566,8 +24615,9 @@ async function vorschlagSpeichern(knopf) {
   }
   await einmal(knopf, async () => {
     try {
+      daten.anlagen = oaIds("vf"); // 2.448.0
       const r = await api("vorschlag_speichern", daten);
-      $("vorschlagForm").classList.add("versteckt");
+      oaLeeren("vf"); $("vorschlagForm").classList.add("versteckt");
       melde(r.versand ? `Gespeichert – ${r.versand.gesendet} benachrichtigt` : "Gespeichert"); vorschlaegeLaden();
     } catch (e) { meldeFehler(e); }
   });
@@ -30522,7 +30572,7 @@ function taKarte(a) {
     <div>📅 <b>${esc(wann(a.beginn))}</b>${a.ende ? ` – ${esc(fZeit.format(new Date(a.ende)))} Uhr` : ""}</div>
     ${a.ort ? `<div>📍 ${esc(a.ort)}</div>` : ""}
     <div class="hinweis" style="font-size:.85rem">${a.vonMir ? `<b>Anfrage an ${esc(taAnWen(a))}</b>` : "von " + esc(a.von.name) + " · an " + (a.empfaenger.length === 1 ? "dich" : a.empfaenger.length + " Mitglieder")}</div>
-    ${a.notiz ? `<p class="hinweis" style="white-space:pre-wrap;margin:6px 0 0">📝 ${esc(a.notiz)}</p>` : ""}
+    ${a.notiz ? `<p class="hinweis" style="white-space:pre-wrap;margin:6px 0 0">📝 ${esc(a.notiz)}</p>` : ""}${oaAnzeige(a.anlagen)}
     ${a.vorbehalt && !ab ? `<p class="ta-vorbehalt">🤔 <b>Unter Vorbehalt</b> (${esc(a.vonMir ? "deiner" : a.von.vorname)}): „${esc(a.vorbehalt)}“</p>` : ""}
     ${!a.vonMir && !ab ? `<div class="ta-antw">${k("ja")}${k("vielleicht")}${k("nein")}</div>
       ${a.meine ? `<div class="hinweis" style="font-size:.8rem;margin-top:4px">Nochmal auf deine Antwort tippen nimmt sie zurück.${a.meineNotiz ? ` Deine Notiz: „${esc(a.meineNotiz)}“` : ""}</div>` : ""}
@@ -31685,6 +31735,7 @@ async function taForm(vorwahl) {
     <div class="zwei"><label class="feld">bis (freiwillig)<input id="taBis" type="time"></label><label class="feld">Antwort bis (freiwillig)<input id="taFrist" type="date" min="${heuteIso()}"></label></div>
     ${comboFeld("taOrt", "Ort", [...ORT_VORSCHLAEGE, ...TR_ORTE], "", "– noch offen –", "✏️ Anderer Ort …", "z. B. Parkplatz Markt")}
     <label class="feld">Notiz (freiwillig)<textarea id="taNotiz" rows="2" maxlength="1000" placeholder="z. B. Bitte Schürze mitbringen"></textarea></label>
+    ${oaFeld("ta")}
     <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, taSenden)">📨 Anfrage senden</button><button class="knopf" onclick="$('terminanfrageForm').classList.add('versteckt')">Abbrechen</button></div>`;
   taEmpfListe();
   $("terminanfrageForm").classList.remove("versteckt"); $("treffenForm").classList.add("versteckt"); $("terminumfrageForm").classList.add("versteckt");
@@ -31723,8 +31774,8 @@ async function taSenden() {
   if (n >= ZE_RUECKFRAGE_AB && !(await frage(`Anfrage wirklich an ${taWerText()} senden?`))) return;
   try {
     const r = await api("terminanfrage_senden", { an: TA.wahl.gruppe ? { gruppe: TA.wahl.gruppe.id } : { personen: TA.wahl.personen }, anlass, beginn, ende,
-      ort: $("taOrt").value.trim(), notiz: $("taNotiz").value.trim(), frist: frist ? taZeitpunkt(frist, "23:59") : null });
-    $("terminanfrageForm").classList.add("versteckt");
+      ort: $("taOrt").value.trim(), notiz: $("taNotiz").value.trim(), frist: frist ? taZeitpunkt(frist, "23:59") : null, anlagen: oaIds("ta") });
+    oaLeeren("ta"); $("terminanfrageForm").classList.add("versteckt");
     melde(`📨 Anfrage an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"} gesendet`);
     TA.markiert = r.id; await taLaden(); erinAnfrage(r.id); // KC-CLUB-ERINNERUNG-WAHL
   } catch (e) { meldeFehler(e); }
@@ -31866,7 +31917,7 @@ function umfrageKarte(u) {
     <span class="marke gelb">🗓️ Terminfindung</span>${u.frist ? ` <span class="marke">⏳ bis ${esc(wann(u.frist))}</span>` : ""}
     <div style="font-size:1.12rem;font-weight:800;margin-top:6px">${esc(u.titel)}</div>
     <div class="hinweis" style="font-size:.85rem">von ${esc(u.von)} · ${u.antwortende} ${u.antwortende === 1 ? "hat" : "haben"} geantwortet${u.ort ? " · 📍 " + esc(u.ort) : ""}</div>
-    ${u.beschreibung ? `<p class="hinweis" style="white-space:pre-wrap">${esc(u.beschreibung)}</p>` : ""}
+    ${u.beschreibung ? `<p class="hinweis" style="white-space:pre-wrap">${esc(u.beschreibung)}</p>` : ""}${oaAnzeige(u.anlagen)}
     <p class="hinweis" style="margin:8px 0 0;font-size:.85rem">Bei jedem Termin antippen: ✅ passt · ❓ vielleicht · ❌ passt nicht${u.darfFestlegen ? " · 📅 = diesen Termin festlegen" : ""}</p>
     ${u.optionen.map(zeile).join("")}
     <details style="margin-top:8px"><summary class="hinweis">👥 Wer hat was angekreuzt?</summary>${wer}</details>
@@ -31995,6 +32046,7 @@ function umfrageForm() {
     <div id="tuReihen">${reihe()}${reihe()}${reihe()}</div>
     <button class="knopf klein" onclick="tuReiheNeu()">＋ weiterer Termin</button>
     <label class="feld">Antworten bis (freiwillig)<input type="date" id="tuFrist"></label>
+    ${oaFeld("tu")}
     <label class="schalter"><span><b>📣 Alle benachrichtigen</b></span><input type="checkbox" id="tuInfo" checked></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, umfrageSpeichern)">🗓️ Starten</button><button class="knopf" onclick="$('terminumfrageForm').classList.add('versteckt')">Abbrechen</button></div>`;
   $("terminumfrageForm").classList.remove("versteckt"); $("treffenForm").classList.add("versteckt");
@@ -32006,8 +32058,8 @@ async function umfrageSpeichern() {
   if (optionen.length < 2) return melde("Bitte mindestens 2 Termine eintragen.", true);
   const frist = $("tuFrist").value ? new Date(`${$("tuFrist").value}T23:59:00`).toISOString() : null;
   try {
-    const r = await api("terminumfrage_speichern", { titel: $("tuTitel").value, ort: $("tuOrt").value, beschreibung: $("tuBeschr").value, art: tuArt, optionen, frist, benachrichtigen: $("tuInfo").checked });
-    $("terminumfrageForm").classList.add("versteckt"); melde(`🗓️ Gestartet${r.versand ? ` – ${r.versand.gesendet} Mitglieder benachrichtigt` : ""}`); terminfindungLaden();
+    const r = await api("terminumfrage_speichern", { titel: $("tuTitel").value, ort: $("tuOrt").value, beschreibung: $("tuBeschr").value, art: tuArt, optionen, frist, benachrichtigen: $("tuInfo").checked, anlagen: oaIds("tu") });
+    oaLeeren("tu"); $("terminumfrageForm").classList.add("versteckt"); melde(`🗓️ Gestartet${r.versand ? ` – ${r.versand.gesendet} Mitglieder benachrichtigt` : ""}`); terminfindungLaden();
   } catch (e) { meldeFehler(e); }
 }
 
@@ -36886,7 +36938,7 @@ async function fpAdmin(tage) {
 (function start() {
   START_MESS.eingerichtet = performance.now(); // KC-CLUB-STARTZEIT
   anwendenDesign(); lichtSensorStarten();
-  versionAnzeigen(); $("appVersion").textContent = APP_VERSION;
+  versionAnzeigen(); $("appVersion").textContent = APP_VERSION; oaBilderBeobachten(); // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN
   const url = new URL(location.href), k = url.searchParams.get("k");
   try { if (k) localStorage.setItem("kc_club_key", k); KEY = k || localStorage.getItem("kc_club_key") || ""; } catch { KEY = k || ""; }
   if (k) { url.searchParams.delete("k"); history.replaceState(null, "", url.pathname + url.hash); }

@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.448.0 – 2026-10-18 – Anlage bei Vorschlag, Spende, Terminfindung, Terminanfrage (KC-CLUB-OBJEKT-ANLAGEN, Wunschliste #10)
+Neues Feld „📎 Anlage“ in Vorschlag/Spendenprojekt, Terminfindung und Terminanfrage: 🖼️ Foto, 📷 Kamera oder 📄 PDF/Datei aus dem Dateimanager (z. B. Skizze, Flyer des Spendenempfängers), höchstens 5, sofort hochgeladen wie im Chat (Bilder verkleinert, gleiche Speicher-/Tagesgrenzen). Am Eintrag: Bilder als kleine Vorschau, Dateien als Knopf (Öffnen/Teilen/Speichern). Sehen darf sie nur, wer den Eintrag sieht (Abstimmungs-Zielgruppe, Empfänger der Terminanfrage). DB: neue Tabelle kc_club_objekt_anlagen (nur Server, RLS; Probelauf 80 grün, eingespielt). Server + App.
+
 ## 2.447.0 – 2026-10-18 – Gelesen/zugestellt wie WhatsApp (KC-CLUB-GRUPPEN-QUITTUNG, Wunschliste #8)
 Antippen der Haken an eigener Nachricht (oder ℹ️ Details) zeigt eine einfache Übersicht wie WhatsApp: blaue ✓✓ „Gelesen von“ mit Name und Uhrzeit, graue ✓✓ „Zugestellt an“ mit Uhrzeit, ✓ „Noch nicht zugestellt“. Express und ❗ wichtig stehen oben. Die bisherige Ampel samt Push/E-Mail-Verlauf bleibt unter „Mehr Einzelheiten“. DB: neue Tabelle kc_club_chat_quittung (+ Funktion kc_club_chat_quittung_merken, nur Server, RLS) hält fest, wann neue Nachrichten in der App ankamen und wann der Chat geöffnet wurde – nur erste echte Uhrzeit, ältere Nachrichten „Uhrzeit unbekannt“; Inkognito wird nicht verraten; nach 400 Tagen gelöscht. Server + App.
 

@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.447.0";
+const SERVER_VERSION = "2.448.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -238,6 +238,43 @@ function quittungMerken(ich: { person_id: string; nurLesen?: boolean }, threads:
     .then((r: any) => { if (r?.error) console.error("quittung", r.error.message); }, (e) => console.error("quittung", String(e)));
   try { (globalThis as any).EdgeRuntime?.waitUntil?.(p); } catch {}
   return p;
+}
+// 2.448.0 KC-CLUB-OBJEKT-ANLAGEN (Wunschliste #10, Wunsch Hansi „bei allen Möglichkeiten eine Anlage mit hochladen – Foto, PDF oder
+// Dateimanager“): Anlagen (gleiche Ablage wie im Chat, vorher per anlage_hochladen geladen) an Vorschlag/Spende, Terminfindung, Terminanfrage.
+const OBJ_ANLAGEN_MAX = 5;
+async function objAnlagenSetzen(ich: { person_id: string }, art: string, objektId: string, roh: unknown) {
+  const ids = [...new Set((Array.isArray(roh) ? roh : []).map((x) => String(x)).filter((x) => /^[0-9a-f-]{36}$/i.test(x)))].slice(0, OBJ_ANLAGEN_MAX);
+  if (!ids.length) return 0;
+  const { data: att } = await db.from("kc_communication_attachments").select("id,object_path").in("id", ids);
+  const eigene = ids.filter((id) => (att ?? []).some((a: any) => a.id === id && String(a.object_path).startsWith(`club/${ich.person_id}/`))); // nur selbst hochgeladene
+  if (!eigene.length) return 0;
+  const { error } = await db.from("kc_club_objekt_anlagen").insert(eigene.map((attachment_id, i) => ({ art, objekt_id: objektId, attachment_id, reihenfolge: i })));
+  if (error) throw new Fehler("Gespeichert – aber die Anlage konnte nicht angehängt werden. Bitte noch einmal versuchen.", 500);
+  return eigene.length;
+}
+async function objAnlagenHolen(art: string, objektIds: string[]): Promise<Map<string, any[]>> {
+  const m = new Map<string, any[]>(); if (!objektIds.length) return m;
+  const { data: v } = await db.from("kc_club_objekt_anlagen").select("objekt_id,attachment_id,reihenfolge").eq("art", art).in("objekt_id", objektIds.slice(0, 300)).order("reihenfolge");
+  const { data: att } = (v ?? []).length ? await db.from("kc_communication_attachments").select("id,file_name,mime_type,size_bytes").in("id", (v ?? []).map((x: any) => x.attachment_id)) : { data: [] as any[] };
+  for (const x of v ?? []) { const a: any = (att ?? []).find((y: any) => y.id === x.attachment_id); if (!a) continue;
+    m.set(x.objekt_id, [...(m.get(x.objekt_id) ?? []), { id: a.id, name: a.file_name, mime: a.mime_type, groesse: a.size_bytes }]); }
+  return m;
+}
+// Darf ich die Anlage sehen? Genau dann, wenn ich den Eintrag sehen darf (gleiche Regeln wie die Listen).
+async function objAnlageSichtbar(ich: Ich, art: string, objektId: string) {
+  if (art === "vorschlag") {
+    if (ich.zugang !== "mitglied") return false;
+    const { data: v } = await db.from("kc_club_vorschlaege").select("ziel_ids,erstellt_von").eq("id", objektId).maybeSingle();
+    return !!v && (!v.ziel_ids || v.ziel_ids.includes(ich.person_id) || v.erstellt_von === ich.person_id || ich.admin);
+  }
+  if (art === "terminumfrage") { const { data: u } = await db.from("kc_club_terminumfragen").select("id").eq("id", objektId).maybeSingle(); return !!u; }
+  if (art === "terminanfrage") {
+    if (ich.zugang !== "mitglied") return false;
+    const { data: a } = await db.from("kc_club_terminanfragen").select("erstellt_von").eq("id", objektId).maybeSingle(); if (!a) return false;
+    if (a.erstellt_von === ich.person_id) return true;
+    const { data: e } = await db.from("kc_club_terminanfrage_empfaenger").select("anfrage_id").eq("anfrage_id", objektId).eq("person_id", ich.person_id).maybeSingle(); return !!e;
+  }
+  return false;
 }
 // KC-CLUB-LOESCHEN: vor jedem Löschen eine vollständige Sicherung ins Änderungsprotokoll (Wiederherstellungspunkt)
 async function geloescht(ich: { person_id: string }, was: string, sicherung: Record<string, unknown>) {
@@ -3661,7 +3698,7 @@ async function vorschlaegeListe(ich: Ich) {
   ]);
   const leute = await personen([...alle.map((v: any) => v.erstellt_von), ...(st ?? []).map((x: any) => x.person_id)]);
   const treffen = new Map((tr ?? []).map((t: any) => [t.id, t]));
-  const berechtigt = (await aktiveMitglieder()).length;
+  const [berechtigt, anl] = await Promise.all([aktiveMitglieder().then((l) => l.length), objAnlagenHolen("vorschlag", ids)]); // 2.448.0: + Anlagen
   return alle.map((v: any) => {
     const s = (st ?? []).filter((x: any) => x.vorschlag_id === v.id);
     const mein = s.find((x: any) => x.person_id === ich.person_id);
@@ -3675,7 +3712,7 @@ async function vorschlaegeListe(ich: Ich) {
     const eigener = v.erstellt_von === ich.person_id;
     const t: any = v.treffen_id ? treffen.get(v.treffen_id) : null;
     return {
-      id: v.id, art: v.art, titel: v.titel, beschreibung: v.beschreibung, optionen: unterstuetzbar(v.art) ? [] : v.optionen, geheim: v.geheim,
+      id: v.id, art: v.art, titel: v.titel, beschreibung: v.beschreibung, optionen: unterstuetzbar(v.art) ? [] : v.optionen, geheim: v.geheim, anlagen: anl.get(v.id) ?? [],
       ...(v.art === "spende" ? { spenden: v.spenden ?? [], summe: spendenSumme(v.spenden) } : {}),
       status: v.status, frist: v.frist, erstellt_am: v.erstellt_am, abgeschlossen_am: v.abgeschlossen_am,
       von: { person_id: v.erstellt_von, name: leute.get(v.erstellt_von)?.display_name || v.erstellt_von },
@@ -4514,13 +4551,13 @@ async function terminumfragenListe(ich: Ich) {
   const { data: opt } = ids.length ? await db.from("kc_club_terminumfrage_optionen").select("*").in("umfrage_id", ids).order("beginn") : { data: [] as any[] };
   const oids = (opt ?? []).map((o: any) => o.id);
   const { data: ant } = oids.length ? await db.from("kc_club_terminumfrage_antworten").select("option_id,person_id,antwort").in("option_id", oids) : { data: [] as any[] };
-  const leute = await personen([...alle.map((u: any) => u.erstellt_von), ...(ant ?? []).map((x: any) => x.person_id)]);
+  const [leute, anl] = await Promise.all([personen([...alle.map((u: any) => u.erstellt_von), ...(ant ?? []).map((x: any) => x.person_id)]), objAnlagenHolen("terminumfrage", ids)]); // 2.448.0: + Anlagen
   const name = (id: string) => leute.get(id)?.display_name || id;
   return alle.map((u: any) => {
     const o = (opt ?? []).filter((x: any) => x.umfrage_id === u.id);
     const a = (ant ?? []).filter((x: any) => o.some((y: any) => y.id === x.option_id));
     return {
-      id: u.id, titel: u.titel, beschreibung: u.beschreibung, ort: u.ort, art: u.art, status: u.status, frist: u.frist, festgelegt_option: u.festgelegt_option,
+      id: u.id, titel: u.titel, beschreibung: u.beschreibung, ort: u.ort, art: u.art, status: u.status, frist: u.frist, festgelegt_option: u.festgelegt_option, anlagen: anl.get(u.id) ?? [],
       von: name(u.erstellt_von), antwortende: new Set(a.map((x: any) => x.person_id)).size,
       optionen: o.map((x: any) => {
         const z = (w: string) => a.filter((y: any) => y.option_id === x.id && y.antwort === w).map((y: any) => name(y.person_id)).sort();
@@ -5257,13 +5294,13 @@ async function terminanfragenListe(ich: Ich, zeitraum?: { von: string; bis: stri
   if (!liste.length) return [];
   const [{ data: zeilen }, erin] = await Promise.all([db.from("kc_club_terminanfrage_empfaenger").select("*").in("anfrage_id", liste.map((a) => a.id)),
     meineErinnerungen(ich.person_id, liste.map((a) => a.id))]); // KC-CLUB-ERINNERUNG-WAHL
-  const leute = await personen([...liste.map((a) => a.erstellt_von), ...(zeilen ?? []).map((z: any) => z.person_id)]);
+  const [leute, anl] = await Promise.all([personen([...liste.map((a) => a.erstellt_von), ...(zeilen ?? []).map((z: any) => z.person_id)]), objAnlagenHolen("terminanfrage", liste.map((a) => a.id))]); // 2.448.0: + Anlagen
   const name = (id: string) => leute.get(id)?.display_name || "Mitglied";
   return liste.map((a) => {
     const e = (zeilen ?? []).filter((z: any) => z.anfrage_id === a.id);
     const mein = e.find((z: any) => z.person_id === ich.person_id);
     return {
-      id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, notiz: a.notiz, frist: a.frist, status: a.status, spiel: !!a.spiel_id, vorbehalt: a.vorbehalt ?? null,
+      id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, notiz: a.notiz, frist: a.frist, status: a.status, spiel: !!a.spiel_id, vorbehalt: a.vorbehalt ?? null, anlagen: anl.get(a.id) ?? [],
       vonMir: a.erstellt_von === ich.person_id, von: { person_id: a.erstellt_von, name: name(a.erstellt_von), vorname: vorname(leute.get(a.erstellt_von)) || name(a.erstellt_von) },
       meine: mein?.antwort ?? null, meineNotiz: mein?.notiz ?? null, meinGelesen: mein?.gelesen_am ?? null, // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50)
       meinVorschlag: mein?.vorschlag_beginn ? { beginn: mein.vorschlag_beginn, ende: mein.vorschlag_ende } : null, erinnerung: erin.get(a.id) ?? null, erinnerungStandard: a.erinnerung_min || 0,
@@ -6495,6 +6532,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (error || !a) throw new Fehler("Speichern fehlgeschlagen.", 500);
         const { error: e2 } = await db.from("kc_club_terminanfrage_empfaenger").insert(ziel.map((person_id) => ({ anfrage_id: a.id, person_id })));
         if (e2) { await db.from("kc_club_terminanfragen").delete().eq("id", a.id); throw new Fehler("Speichern fehlgeschlagen.", 500); }
+        await objAnlagenSetzen(ich, "terminanfrage", a.id, p.anlagen); // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN
         const versand = await senden("club_treffen", ziel, {
           titel: `📨 Terminanfrage von ${ich.vorname}`, kurz: `${anlass} – ${wann(a.beginn)}${ort ? " – " + ort : ""}`,
           betreff: `Köcheclub Werne – Terminanfrage von ${ich.name}: ${anlass}`,
@@ -6856,6 +6894,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           treffen_id: p.treffen_id ? String(p.treffen_id) : null, frist: art === "abstimmung" && frist ? frist.toISOString() : null, erstellt_von: ich.person_id,
         }).select().single();
         if (error || !v) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        await objAnlagenSetzen(ich, "vorschlag", v.id, p.anlagen); // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN (z. B. Skizze, Flyer des Spendenempfängers)
         // Abstimmung → alle; Themenvorschlag → Clubsprecher/Kassenwart (Recht „Organisation“)
         let versand = null;
         if (p.benachrichtigen !== false) {
@@ -11453,6 +11492,7 @@ Köcheclub Werne`,
           art: p.art === "veranstaltung" ? "veranstaltung" : "treffen", frist: frist ? frist.toISOString() : null, erstellt_von: ich.person_id }).select().single();
         if (error || !u) throw new Fehler("Speichern fehlgeschlagen.", 500);
         await db.from("kc_club_terminumfrage_optionen").insert(optionen.map((beginn, i) => ({ umfrage_id: u.id, beginn, reihenfolge: i })));
+        await objAnlagenSetzen(ich, "terminumfrage", u.id, p.anlagen); // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN
         let versand = null;
         if (p.benachrichtigen !== false) {
           const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
@@ -12064,6 +12104,10 @@ Köcheclub Werne`,
             } else if (darfDokSehen(ich, o, x, []) && ((!x.geloescht_am && !o.geloescht_am) || darfArchivPflegen(ich))) { erlaubt = true; break; }
           }
           if (!erlaubt && fremd) await archivKeinZugriff(ich, fremd, "ein Dokument");
+        }
+        if (!erlaubt) { // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN: Anlage an Vorschlag/Spende, Terminfindung, Terminanfrage – wer den Eintrag sieht
+          const { data: oa } = await db.from("kc_club_objekt_anlagen").select("art,objekt_id").eq("attachment_id", att.id).limit(5);
+          for (const x of oa ?? []) if (await objAnlageSichtbar(ich, x.art, x.objekt_id)) { erlaubt = true; break; }
         }
         if (!erlaubt) throw new Fehler("Anlage nicht gefunden.", 404);
         const { data: s } = await db.storage.from(att.bucket).createSignedUrl(att.object_path, 600, p.herunterladen ? { download: att.file_name } : undefined);

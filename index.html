@@ -4193,6 +4193,13 @@
   .ampel-pfeil { color: var(--grau, #999); font-size: .9rem; }
   .ni-zeile { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 4px 0; border-bottom: 1px solid var(--linie); }
   /* 2.447.0 KC-CLUB-GRUPPEN-QUITTUNG: Übersicht wie WhatsApp – gelesen (blaue Haken) / zugestellt (graue Haken) */
+  /* 2.448.0 KC-CLUB-OBJEKT-ANLAGEN: Anlage bei Vorschlag/Spende, Terminfindung, Terminanfrage */
+  .oa-feld { margin: 10px 0; padding: 8px 10px; border: 1px dashed var(--linie); border-radius: 12px; } .oa-titel { margin-bottom: 6px; }
+  .oa-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; } .oa-liste { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .oa-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--karte2); border-radius: 999px; padding: 3px 4px 3px 10px; font-size: .9rem; max-width: 100%; overflow-wrap: anywhere; }
+  .oa-chip.oa-laedt { padding-right: 10px; } .oa-weg { border: none; background: none; cursor: pointer; font-size: 1rem; min-width: 32px; min-height: 32px; color: var(--grau); }
+  .oa-zeige { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; } .oa-bildknopf { border: none; padding: 0; background: none; cursor: pointer; }
+  .oa-bild { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; background: var(--karte2); display: block; } .oa-datei { max-width: 100%; overflow-wrap: anywhere; }
   .ni-q-block { margin: 8px 0 10px; } .ni-q-kopf { display: flex; align-items: center; gap: 6px; font-weight: 700; padding: 4px 0; border-bottom: 2px solid var(--linie); }
   .ni-q-kopf .haken { margin: 0; } .ni-q-kopf .haken.blau { color: #34b7f1; filter: none; } .ni-q-leer { padding: 4px 0; }
   .ni-mehr { margin: 6px 0 10px; } .ni-mehr > summary { cursor: pointer; font-weight: 600; padding: 6px 0; color: var(--rot); } .haken-tipp { cursor: pointer; }
@@ -5281,7 +5288,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.447.0" data-v="2.447.0"></script>
+<script src="app.js?v=2.448.0" data-v="2.448.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

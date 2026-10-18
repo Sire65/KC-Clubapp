@@ -1,0 +1,5 @@
+gespeichert=t
+art_geprueft=t
+doppelt_verhindert=t
+rls=t
+kein_zugriff_ohne_server=t
