@@ -6670,6 +6670,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(document\.activeElement === t\) t\.blur\(\); else \{ \$\("eingabe"\)\?\.classList\.remove\("zu"\); t\.focus\(\); \}/.test(html), "aus: Feld verlassen · ein: ins Feld (Tastatur kommt)");
   assert.ok(/document\.addEventListener\("focusin", \(e\) => \{ if \(e\.target\?\.id === "text"\) tastaturKnopfZeigen\(\); \}\);/.test(html), "Knopf zeigt den Zustand");
 }
+
+// 2.457.0 KC-CLUB-AVATAR-UEBERSICHT + KC-CLUB-AVATAR-BEARBEITEN (Fund/Wunsch Hansi): Figuren-Übersicht in „Mein Bild“ wieder sichtbar, ✏️ am eigenen Bild
+{
+  const seite = lies("index.html");
+  assert.ok(/\.av-klappe \{[^}]*overflow: hidden; overflow: clip; min-height: max-content; \}/.test(seite), "Klappbereiche schrumpfen im Fenster nicht mehr auf 0");
+  assert.ok(/const avEigenBearbeitbar = \(\) => \{ const j = INIT\?\.einstellungen\?\.avatar\?\.figur \|\| null; return frei\("avatar_baukasten"\) && !!j && !AVF_RE\.test\(j\) && !!avTeile\(j\); \};/.test(html), "nur Figuren (kein Foto, nicht ohne Bild)");
+  assert.ok(/Dein jetziges Bild – tippe unten eine Figur an\.<\/small>\$\{avEigenBearbeitbar\(\) \? `<div class="av-vorschau-knoepfe"><button class="knopf" onclick="avBauen\(INIT\?\.einstellungen\?\.avatar\?\.figur \|\| undefined\)">✏️ Bearbeiten/.test(html), "✏️ unter dem jetzigen Bild");
+  assert.ok(/code === \(INIT\?\.einstellungen\?\.avatar\?\.figur \|\| null\) && avEigenBearbeitbar\(\) \? `<button class="knopf haupt" onclick="fensterZu\(\$\('avGrossBlatt'\)\); avBauen\(/.test(html), "✏️ auch in der Großansicht des eigenen Bilds");
+  assert.ok(/avKlappe\("av_alt", true,/.test(html) && /avKlappe\("av_neu", true,/.test(html), "Bisherige und Hochwertige offen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

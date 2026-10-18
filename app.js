@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.455.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.457.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -408,13 +408,16 @@ async function avfEntfernen(pid, knopf) { // nur Admin: unpassendes Foto entfern
     catch (e) { meldeFehler(e); }
   });
 }
+// 2.457.0 KC-CLUB-AVATAR-BEARBEITEN (Wunsch Hansi „wenn ich auf mein Bild klicke, dort einen Bearbeiten-Knopf mit Stift, um direkt zu bearbeiten“):
+// das eigene Bild ist bearbeitbar, wenn der Baukasten frei ist und es eine Figur ist (kein Foto, nicht „kein Bild“ – dafür gibt es „Selbst zusammenstellen“)
+const avEigenBearbeitbar = () => { const j = INIT?.einstellungen?.avatar?.figur || null; return frei("avatar_baukasten") && !!j && !AVF_RE.test(j) && !!avTeile(j); };
 // Bild groß ansehen (Mitglieds-Seite: aufs Bild tippen)
 // KC-CLUB-AVATAR-GROSS (2.42.0, Wunsch Hansi): Beispielbild/Vorschau antippen = groß ansehen (auch beim Zusammenstellen)
 function avCodeGross(code) {
   if (!avGueltig(code)) return;
   const f = blattAuf("avGrossBlatt", `<div style="display:grid;place-items:center;gap:10px;padding:6px 0" onclick="fensterZu($('avGrossBlatt'))">
     <div style="width:min(320px,86vw);height:min(320px,86vw)">${avatarSvg(code, 320, initialen(ICH?.name)).replace('width="320" height="320"', 'style="width:100%;height:100%;border-radius:50%;object-fit:cover"')}</div></div>
-    <button class="knopf" onclick="fensterZu($('avGrossBlatt'))">Schließen</button>`);
+    <div class="knoepfe">${code === (INIT?.einstellungen?.avatar?.figur || null) && avEigenBearbeitbar() ? `<button class="knopf haupt" onclick="fensterZu($('avGrossBlatt')); avBauen(INIT?.einstellungen?.avatar?.figur || undefined)">✏️ Bearbeiten</button>` : ""}<button class="knopf" onclick="fensterZu($('avGrossBlatt'))">Schließen</button></div>`);
   f.style.zIndex = "2200";
 }
 function avGross(pid) {
@@ -5212,6 +5215,7 @@ const HILFE = [
   { id: "es_regler", thema: "toene", sym: "🎚️", t: "Bühne: Musik und Stimme lauter oder leiser", x: "Während Twinkey turnt, stehen zwei Regler am Rand: <b>rechts die Musik</b> 🎵, <b>links Twinkeys Stimme</b> 🗣️. Nach oben ziehen = lauter (der Keil wird dicker), nach unten = leiser. <b>Unten aufs Symbol tippen</b> macht sofort stumm (🔇 bzw. 🤐) – nochmal tippen holt die vorige Lautstärke zurück. Die App merkt sich beides. Ist alles zu leise, auch die Lautstärke am Handy prüfen.", zeig: () => esOeffnen("buehne"), seit: "2.300.0" },
   { id: "kacheln_klein", thema: "darstellung", sym: "🔲", nur: () => !einfach(), t: "Kacheln kleiner – 3 oder 4 nebeneinander", x: "Mehr Kacheln auf einen Blick: Bei ⚙️ → <b>„🧩 Startseite &amp; Ansicht“</b> → <b>„🔲 Kacheln auf der Startseite“</b> „Klein“ wählen – dann passen 3 nebeneinander, bei „Sehr klein“ 4 (nur Symbol und Name). Das geht nur in der <b>erweiterten Ansicht</b> – in der einfachen Ansicht bleiben die Kacheln groß. Gilt nur für dieses Gerät.", zeig: () => einstiegHin("startseite", "kachelGroesseWahl"), seit: "2.23.90" },
   // 2.415.0 KC-CLUB-AVATAR-HILFE (nur mit Freigabe sichtbar, darum nicht im Block „Neuerungen für alle“): hochwertige Avatare, Individuell anpassen (Kacheln), Schmuck, eigene Brille
+  { id: "avatar_bearbeiten", thema: "darstellung", sym: "✏️", t: "Eigenes Bild direkt bearbeiten", nur: () => frei("avatar") && frei("avatar_baukasten"), x: "In <b>Meins → „🧑‍🍳 Mein Bild“</b> steht unter deinem jetzigen Bild <b>„✏️ Bearbeiten“</b> – damit änderst du deine Figur gleich im Baukasten (Frisur, Mütze, Schürze, Brille …) und speicherst mit <b>„💾 Speichern“</b>. Auch wenn du dein Bild antippst und es groß ansiehst, gibt es dort <b>„✏️ Bearbeiten“</b>. Darunter findest du wieder alle Figuren zum Aussuchen: <b>👥 Bisherige</b> und <b>👑 Hochwertige Avatare</b> – jede kannst du nach dem Antippen ebenfalls bearbeiten.", zeig: () => avWahl(), seit: "2.457.0" },
   { id: "avatar_hochwertig", thema: "darstellung", sym: "👑", t: "Hochwertige Avatare", nur: () => frei("avatar") && frei("avatar_premium"), x: "In <b>„🧑‍🍳 Mein Bild“</b> → <b>„👑 Hochwertige Avatare“</b> gibt es 36 neue Köchinnen und Köche – gezeichnet mit Licht und Schatten, jung und älter, mit Schmuck, Brillen, Mützen und vielen Kochjacken. Antippen, oben groß ansehen, <b>„✅ Übernehmen“</b>. Mit <b>„✏️ Bearbeiten“</b> passt du jede im Baukasten an. Deine bisherige Figur bleibt, bis du eine andere wählst.", zeig: () => avWahl(), seit: "2.414.0" },
   { id: "avatar_anpassen", thema: "darstellung", sym: "🧩", t: "Figur individuell anpassen (Schmuck, Kochjacke, Stil)", nur: () => frei("avatar") && frei("avatar_baukasten"), x: "In <b>„🧑‍🍳 Mein Bild“</b> → <b>„🧩 Individuell anpassen“</b> tippst du eine Kachel an – etwa Frisur, Brille, Bart, Ohrringe, Halskette, Piercing oder Kochjacke – und landest direkt an der richtigen Stelle im Baukasten. Bei Frisur, Mütze, Bart, Brille und Schmuck siehst du jede Auswahl als kleines Bild. Beim <b>Stil</b> wählst du – sobald freigeschaltet – klassisch oder hochwertig. Zum Schluss <b>„💾 Speichern“</b>. <b>Eigene Brille:</b> Ist deine nicht dabei, schick Hansi ein Foto – sie wird nachgezeichnet (so entstand „randlos“).", zeig: () => avBauen(), seit: "2.414.0" },
   // 2.110.0 (Wunsch Hansi „Hilfetexte und Handbuch anpassen“): Hilfen zu den Neuerungen seit Anleitung V8 (2.96.0)
@@ -21573,7 +21577,7 @@ function avWahlVorschau() {
   const rechts = frei("avatar_baukasten") || frei("avatar_foto") ? `<div class="av-vorschau-rechts">${frei("avatar_baukasten") ? `<button class="knopf haupt" onclick="avBauen()">🧩 Selbst zusammen&shy;stellen${nurTest("avatar_baukasten") ? " · 🔒" : ""}</button>` : ""}
     ${frei("avatar_foto") ? `<button class="knopf" onclick="avfWaehlen('selfie')">🤳 Selfie</button><button class="knopf" onclick="avfWaehlen('galerie')">🖼️ Galerie</button><button class="knopf" onclick="avfWaehlen('datei')">📁 Datei</button>` : ""}</div>` : "";
   z.classList.toggle("mit-rechts", !!rechts);
-  if (AVW.wahl === undefined) { z.innerHTML = `<div class="av-vorschau-links"><div class="av-vorschau-bild av-gross-tipp" role="button" tabindex="0" title="Antippen = groß ansehen" onclick="avCodeGross(INIT?.einstellungen?.avatar?.figur)">${avGueltig(jetzt) ? avatarSvg(jetzt, 96, initialen(ICH?.name)) : `<span class="av-keins" style="width:96px;height:96px;font-size:2rem">${esc(initialen(ICH?.name))}</span>`}</div><small class="hinweis">Dein jetziges Bild – tippe unten eine Figur an.</small></div>${rechts}`; return; }
+  if (AVW.wahl === undefined) { z.innerHTML = `<div class="av-vorschau-links"><div class="av-vorschau-bild av-gross-tipp" role="button" tabindex="0" title="Antippen = groß ansehen" onclick="avCodeGross(INIT?.einstellungen?.avatar?.figur)">${avGueltig(jetzt) ? avatarSvg(jetzt, 96, initialen(ICH?.name)) : `<span class="av-keins" style="width:96px;height:96px;font-size:2rem">${esc(initialen(ICH?.name))}</span>`}</div><small class="hinweis">Dein jetziges Bild – tippe unten eine Figur an.</small>${avEigenBearbeitbar() ? `<div class="av-vorschau-knoepfe"><button class="knopf" onclick="avBauen(INIT?.einstellungen?.avatar?.figur || undefined)">✏️ Bearbeiten${nurTest("avatar_baukasten") ? " · 🔒" : ""}</button></div>` : ""}</div>${rechts}`; return; }
   const c = AVW.wahl, gleich = c === jetzt, bauen = c && !AVF_RE.test(c) && avTeile(c) && frei("avatar_baukasten");
   z.innerHTML = `<div class="av-vorschau-links"><div class="av-vorschau-bild av-gross-tipp" role="button" tabindex="0" title="Antippen = groß ansehen" onclick="avCodeGross(AVW.wahl)">${c ? avatarSvg(c, 96, initialen(ICH?.name)) : `<span class="av-keins" style="width:96px;height:96px;font-size:2rem">${esc(initialen(ICH?.name))}</span>`}</div>
     <div class="av-vorschau-knoepfe"><button class="knopf haupt" ${gleich ? "disabled" : ""} onclick="avSetzen(AVW.wahl)">${gleich ? "✓ Das ist dein Bild" : "✅ Übernehmen"}</button>
