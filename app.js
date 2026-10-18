@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.476.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.477.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -6828,6 +6828,10 @@ const OA = { vorher: null, zuletzt: 0, gesehen: new Map(), gesagt: new Map(), na
 // 2.390.0 KC-CLUB-ONLINE-PUSH-ZEIT: Titel jetzt mit Uhrzeit bzw. „war um … online“
 function onlinePushGezeigt(titel) { const m = /^🟢 (.+?) (?:ist jetzt|war um \d\d:\d\d Uhr) online(?: \(\d\d:\d\d Uhr\))?$/.exec(String(titel || "")); if (m) OA.perPush.set(m[1], Date.now()); }
 const schonPerPush = (name) => Date.now() - (OA.perPush.get(name) || 0) < ANSAGE_PAUSE_MS;
+// 2.477.0 KC-CLUB-ONLINE-GERAET: nur der Admin bekommt das Gerät dazu – „Klaus (am Handy)“ (gesprochen: „Klaus am Handy ist jetzt online“);
+// gleiche Schreibweise wie im Push-Titel des Servers, damit dieselbe Meldung nicht doppelt angesagt wird
+const OA_GERAET = { handy: "am Handy", tablet: "am Tablet", pc: "am PC" };
+const oaName = (x) => { const n = x.vorname || x.name; return ICH?.admin && OA_GERAET[x.geraet] ? `${n} (${OA_GERAET[x.geraet]})` : n; };
 function onlineAnsagen(liste) {
   const jetzt = Date.now(), andere = (liste || []).filter((x) => x.person_id !== ICH?.person_id);
   // nur echte Neuankömmlinge: vorige Liste ist frisch (sonst nach langer Pause nicht alle auf einmal) und Person war ≥ 10 Min. weg
@@ -6844,7 +6848,7 @@ function onlineAnsagen(liste) {
   }
   OA.vorher = new Set(andere.map((x) => x.person_id)); OA.zuletzt = jetzt;
   if (!neu.length || document.hidden) return;
-  onlineAnsageSprechen(neu.map((x) => x.vorname || x.name));
+  onlineAnsageSprechen(neu.map(oaName));
   try { spurFrage(neu); } catch {} // KC-CLUB-SPUR-FRAGE (2.92.0) – darf die Ansage nie stören
 }
 // ---------- KC-CLUB-WER-IST-DA (2.454.0, Wunschliste #13, Wunsch Hansi „Ansage beim Reinkommen: Im Moment sind Hansi, Klaus und Anne online
@@ -6862,15 +6866,15 @@ function werIstDaText(namen) {
 function werIstDa(liste, zeigen) {
   if (!WER_DA.faellig || document.hidden) return; WER_DA.faellig = false;
   if (zeigen === false || !ansAn("beim_start") || inRuheJetzt(INIT?.einstellungen?.ruhezeit)) return;
-  const namen = [...new Set((liste || []).filter((x) => x.person_id !== ICH?.person_id).map((x) => x.vorname || x.name).filter(Boolean))];
+  const namen = [...new Set((liste || []).filter((x) => x.person_id !== ICH?.person_id).map(oaName).filter(Boolean))]; // 2.477.0: Admin mit Gerät
   if (!namen.length) return;
   const text = werIstDaText(namen), jetzt = Date.now();
   namen.forEach((x) => OA.gesagt.set(x, jetzt));
   melde("🟢 " + text);
   if (!("speechSynthesis" in window)) return;
-  if (!navigator.userActivation || navigator.userActivation.hasBeenActive) { WER_DA.warte = null; document.removeEventListener("pointerdown", werIstDaNachTipp, true); return sprechen(text); }
+  if (!navigator.userActivation || navigator.userActivation.hasBeenActive) { WER_DA.warte = null; document.removeEventListener("pointerdown", werIstDaNachTipp, true); return sprechen(text.replace(/[()]/g, "")); }
   if (!WER_DA.warte) document.addEventListener("pointerdown", werIstDaNachTipp, true);
-  WER_DA.warte = { text, bis: jetzt + 30000 }; // immer nur EINE wartende Ansage (die neueste)
+  WER_DA.warte = { text: text.replace(/[()]/g, ""), bis: jetzt + 30000 }; // immer nur EINE wartende Ansage (die neueste)
 }
 function werIstDaNachTipp() {
   document.removeEventListener("pointerdown", werIstDaNachTipp, true); const w = WER_DA.warte; WER_DA.warte = null;
@@ -6924,7 +6928,7 @@ function onlineAnsageSprechen(namen) {
   OA.sammelTimer = setTimeout(() => {
     const alle = (OA.warte || []).filter((x) => !schonPerPush(x)); OA.warte = []; if (!alle.length || document.hidden) return; // 2.383.0: Mitteilung kam evtl. erst während des Sammelns an
     const ton = anmeldeTonAn(); if (ton) anmeldeTon();
-    if (ansageAn()) setTimeout(() => sprechen(onlineAnsageText(alle)), ton ? 700 : 0);
+    if (ansageAn()) setTimeout(() => sprechen(onlineAnsageText(alle).replace(/[()]/g, "")), ton ? 700 : 0); // 2.477.0: „Klaus (am Handy)“ → „Klaus am Handy“
   }, ANSAGE_SAMMEL_MS);
 }
 // KC-CLUB-STIMME (2.6.2, Fund Hansi: „auf dem iPad hört sich das Vorlesen schrecklich an“): Apple liefert unter Deutsch auch
@@ -7302,7 +7306,15 @@ let ONL = { zeigen: true, ids: new Set(), liste: [], erledigt: new Set(), wartet
 //    antwortet eines, kommt die Meldung. „Hier weitermachen“ legt das andere schlafen (es fragt nichts mehr beim Server ab), „Dieses Fenster schließen“ schließt.
 // 2) Anderer Browser auf demselben Gerät: kann kein Fenster sehen – der Server erkennt es am Online-Abgleich (gleiche Person, gleiches Netz, gleiches System,
 //    andere Browser-Kennung in den letzten 3 Min.). Ist es doch ein anderes Gerät (z. B. Tablet im selben WLAN): „Das ist ein anderes Gerät“ → nie wieder dafür.
-const fensterKennung = () => ({ i: window.KCFP?.geraet?.() || "", b: fpBrowser(), s: fpSystem() });
+// 2.477.0 KC-CLUB-ONLINE-GERAET: Geräteart als Hinweis für den Server (iPad gibt sich als Mac aus → Berührung zählt); der Admin hört „… am Handy/Tablet/PC“
+function fpGeraet() {
+  const ua = navigator.userAgent, tp = navigator.maxTouchPoints || 0;
+  if (/iPad|Tablet|Kindle|Silk\//i.test(ua) || (/Macintosh/.test(ua) && tp > 1)) return "tablet";
+  if (/iPhone|iPod|Android.*Mobile|Mobile.*Android/i.test(ua)) return "handy";
+  if (/Android/i.test(ua)) return "tablet";
+  return tp > 1 && Math.min(screen.width, screen.height) >= 600 && !/Windows|CrOS/.test(ua) ? "tablet" : "pc";
+}
+const fensterKennung = () => ({ i: window.KCFP?.geraet?.() || "", b: fpBrowser(), s: fpSystem(), g: fpGeraet() });
 const FENSTER = { id: Math.random().toString(36).slice(2, 10), kanal: null, schlaeft: false, gefragt: false };
 function fensterStart() {
   if (!("BroadcastChannel" in window)) return;

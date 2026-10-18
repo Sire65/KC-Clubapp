@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6838,6 +6838,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/lp\.Q\.value = -12; fb\.gain\.value = 0\.97 \* Math\.pow\(10, -3 \* d \/ 2\.5\)/.test(hall), "Rückkopplung sicher unter 1 (schaukelt sich nicht auf)");
   assert.ok(/ng\.gain\.exponentialRampToValueAtTime\(laut \* 0\.08, t \+ 0\.003\)/.test(html), "Klöppel-Geräusch leiser");
 }
+
+// 2.477.0 KC-CLUB-ONLINE-GERAET (Wunsch Hansi „nur für Admin sagen, mit welchem Gerät jemand online ist – PC, Tablet oder Handy“)
+{
+  assert.ok(/function geraetAusUA\(ua: string\): string \| null \{/.test(server) && /if \(\/Android\/i\.test\(ua\)\) return "tablet";/.test(server), "Server erkennt Handy/Tablet/PC");
+  assert.ok(/if \(ich\.admin && on\.size\) \{ const \{ data: fe \}/.test(server) && /\.\.\.\(geraetMap\.has\(id\) \? \{ geraet: geraetMap\.get\(id\) \} : \{\}\)/.test(server), "Gerät in der Online-Liste nur für den Admin");
+  assert.ok(/const anAdmins = ger \? ids\.filter\(\(id\) => admins\.has\(id\)\) : \[\];/.test(server) && /senden\(anAdmins, `\$\{name\} \(\$\{ger\}\)`, ":a"\)/.test(server), "Push mit Gerät nur an Admins");
+  assert.ok(/const oaName = \(x\) => \{ const n = x\.vorname \|\| x\.name; return ICH\?\.admin && OA_GERAET\[x\.geraet\]/.test(html) && /onlineAnsageSprechen\(neu\.map\(oaName\)\)/.test(html), "App: Admin hört das Gerät");
+  assert.ok(/sprechen\(onlineAnsageText\(alle\)\.replace\(\/\[\(\)\]\/g, ""\)\)/.test(html), "Klammern werden nicht vorgelesen");
+  assert.ok(/g: fpGeraet\(\) \}\);/.test(html) && /\(\/Macintosh\/\.test\(ua\) && tp > 1\)\) return "tablet"/.test(html), "App schickt Geräte-Hinweis (iPad erkannt)");
+  const swq = lies("sw.js"); assert.ok(/\^🟢 \(\.\+\?\) ist jetzt online\(\?: \\\(\(\\d\\d\):\(\\d\\d\) Uhr\\\)\)\?\$/.test(swq), "Push-Titel-Muster im Service Worker unverändert passend");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -7666,7 +7677,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 
 // 4xx. 2.92.0: Admin wird bei einer Anmeldung gefragt, ob er sehen möchte, was das Mitglied gerade macht (KC-CLUB-SPUR-FRAGE, Wunsch Hansi)
 {
-  assert.ok(/onlineAnsageSprechen\(neu\.map\(\(x\) => x\.vorname \|\| x\.name\)\);\n  try \{ spurFrage\(neu\); \} catch \{\}/.test(programm), "nur bei echten Neuankömmlingen aus dem Online-Takt");
+  assert.ok(/onlineAnsageSprechen\(neu\.map\((?:\(x\) => x\.vorname \|\| x\.name|oaName)\)\);\n  try \{ spurFrage\(neu\); \} catch \{\}/.test(programm), "nur bei echten Neuankömmlingen aus dem Online-Takt");
   const f = programm.slice(programm.indexOf("function spurFrage(neu)"), programm.indexOf("function spurFrageSchalter(an)"));
   assert.ok(/const spurFrageAn = \(\) => !!ICH\?\.admin && lsLesen\(SPUR_FRAGE\) !== "0";/.test(programm) && /if \(!spurFrageAn\(\)/.test(f), "nur Admin, abschaltbar");
   assert.ok(/inRuheJetzt\(/.test(f) && /document\.querySelector\("\.blatt:not\(\.versteckt\)"\)\) return;/.test(f), "nie in der Ruhezeit, nie über einem anderen Fenster");
