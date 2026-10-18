@@ -6621,6 +6621,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/avKlappe\("av_alt", true,/.test(html), "einfache Avatare immer aufgeklappt (Fund Hansi: Übersicht nicht mehr komplett)");
   void a;
 }
+// 2.451.0 KC-CLUB-FOTO-MUETZE (Wunschliste #11 Teil 2): Mütze und Rahmen aufs eigene Foto – dieselben Zeichnungen wie bei der Figur
+{
+  assert.ok(/function avMuetzeSvg\(kopf, kFill, kBasis, kHell, kKontrast, kId, kfarbe\)/.test(html) && /const muetze = avMuetzeSvg\(kopf, kFill, kBasis, kHell, kKontrast, kId, kfarbe\);/.test(html), "ein Baustein für Figur und Foto");
+  assert.ok(/const AVF_HUETE = \["", "nikolaus", "koch"/.test(html) && AVF_OK(html), "Auswahl mit „ohne“ zuerst");
+  assert.ok(/if \(AVF\.hut \|\| AVF\.rahmen\) try \{ AVF\.neu = await avfZusammensetzen\(\); \} catch/.test(html), "vor dem Speichern ins Foto zeichnen, sonst ohne");
+  assert.ok(/while \(url\.length > 70000 && q > 0\.45\)/.test(html.slice(html.indexOf("async function avfZusammensetzen()"))), "bleibt klein wie bisher");
+  function AVF_OK(h) { return /\["🎄 Weihnacht",/.test(h) && /<div class="avf-buehne" id="avfBuehne">/.test(h); }
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
