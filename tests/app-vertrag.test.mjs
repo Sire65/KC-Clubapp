@@ -6493,11 +6493,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   for (const id of ["avatar_hochwertig", "avatar_anpassen"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "darstellung"[^\\n]*nur: \\(\\) => frei\\("avatar"\\) && frei\\("avatar_(premium|baukasten)"\\)`).test(html), "Hilfe " + id + " (nur mit Freigabe)");
   for (const id of ["avatar-hochwertig", "avatar-schmuck", "avatar-brille"]) assert.ok(html.includes(`{ id: "${id}", sym:`), "Twinkey " + id);
-  assert.ok(/Bisherige Avatare“<\/b> die 40 bekannten Figuren/.test(html) && /„📷 eigene Brille“|mach ein Foto von deiner Brille und schick es an Hansi/.test(html), "Texte nennen Bereiche und eigene Brille");
+  assert.ok(/Einfache Figuren“<\/b> die 40 bekannten Figuren/.test(html) && /„📷 eigene Brille“|mach ein Foto von deiner Brille und schick es an Hansi/.test(html), "Texte nennen Bereiche und eigene Brille");
   assert.ok(/"🧩", "Figur anpassen \(Baukasten: Frisur, Brille, Schmuck, Kochjacke\)", "[^"]*ohrringe[^"]*piercing[^"]*"/.test(html) && /avatar avatare kochfigur[^"]*hochwertige/.test(html), "Lupe findet Baukasten und hochwertige Avatare");
   assert.ok(/ziel: "#avBlatt details\[open\] \.av-raster"/.test(html) && /\[26, "Ohrringe\?/.test(html) && /\[29, "Schnitt der Kochjacke/.test(html), "geführte Hilfe");
   assert.ok(/\{ id: "figur", stand: "2"/.test(html) && /\{ id: "figurbau", stand: "2"/.test(html), "Videos in neuer Fassung");
-  assert.ok(/sel: \['#avBlatt details\[data-klappe="av_neu"\]'\], mussSel: true, t: "👑 Hochwertige Avatare"/.test(html) && /t: "💎 Schmuck"/.test(html) && /t: "👑 Klassisch oder hochwertig"/.test(html), "Videos zeigen die neuen Bereiche");
+  assert.ok(/sel: \['#avBlatt details\[data-klappe="av_neu"\]'\], mussSel: true, t: "👑 Hochwertige Figuren"/.test(html) && /t: "💎 Schmuck"/.test(html) && /t: "👑 Klassisch oder hochwertig"/.test(html), "Videos zeigen die neuen Bereiche");
   assert.ok(/function rgKlappeAuf\(name\) \{[\s\S]{0,300}RG\.zurueck\.push/.test(html), "Video öffnet Klappbereiche nur vorübergehend");
 }
 // 2.416.0 KC-CLUB-KUCKUCK-ZAEHLEN (Fund Hansi „15 Uhr nur ein Kuckuck“): Rufe nie übereinander, nur bei laufendem Ton
@@ -6674,7 +6674,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.457.0 KC-CLUB-AVATAR-UEBERSICHT + KC-CLUB-AVATAR-BEARBEITEN (Fund/Wunsch Hansi): Figuren-Übersicht in „Mein Bild“ wieder sichtbar, ✏️ am eigenen Bild
 {
   const seite = lies("index.html");
-  assert.ok(/\.av-klappe \{[^}]*overflow: hidden; overflow: clip; min-height: max-content; \}/.test(seite), "Klappbereiche schrumpfen im Fenster nicht mehr auf 0");
+  assert.ok(/\.av-klappe \{ border: 1px solid var\(--linie\); border-radius: 16px; margin: 0 0 10px; background: var\(--karte, #fff\); \}/.test(seite) && !/\.av-klappe \{[^}]*overflow/.test(seite), "Klappbereiche schrumpfen im Fenster nicht auf 0 (2.473.0: kein overflow – sonst lagen sie im Raster übereinander)");
   assert.ok(/const avEigenBearbeitbar = \(\) => \{ const j = INIT\?\.einstellungen\?\.avatar\?\.figur \|\| null; return frei\("avatar_baukasten"\) && !!j && !AVF_RE\.test\(j\) && !!avTeile\(j\); \};/.test(html), "nur Figuren (kein Foto, nicht ohne Bild)");
   assert.ok(/Dein jetziges Bild – tippe unten eine Figur an\.<\/small>\$\{avEigenBearbeitbar\(\) \? `<div class="av-vorschau-knoepfe"><button class="knopf" onclick="avBauen\(INIT\?\.einstellungen\?\.avatar\?\.figur \|\| undefined\)">✏️ Bearbeiten/.test(html), "✏️ unter dem jetzigen Bild");
   assert.ok(/code === \(INIT\?\.einstellungen\?\.avatar\?\.figur \|\| null\) && avEigenBearbeitbar\(\) \? `<button class="knopf haupt" onclick="fensterZu\(\$\('avGrossBlatt'\)\); avBauen\(/.test(html), "✏️ auch in der Großansicht des eigenen Bilds");
@@ -6766,6 +6766,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function abhKlappen\(\) \{\n  document\.querySelectorAll\("\[data-abh\]"\)/.test(html) && /d\.classList\.toggle\("abh-aus", !an\); if \(!an && d\.open\) d\.open = false;/.test(html), "gesperrt + zugeklappt solange aus");
   assert.ok(/closest\?\.\("\.abh-aus > summary"\); if \(s\) \{ e\.preventDefault\(\);/.test(html) && /abhKlappen\(\); \/\/ 2\.467\.0 KC-CLUB-EINST-ABHAENGIG\n\}/.test(html), "Öffnen verhindert, nach jedem Umschalten neu geprüft");
   for (const m of lies("index.html").matchAll(/data-abh="([^"]+)"/g)) assert.ok(lies("index.html").includes(`id="${m[1]}"`), "Häkchen fehlt: " + m[1]);
+}
+
+// 2.473.0 KC-CLUB-AVATAR-UEBERLAPPUNG (Fund Hansi, Bildschirmfoto): Klappbereiche in „Mein Bild“ lagen übereinander; klarere Namen
+{
+  const seiteA = lies("index.html");
+  assert.ok(!/\.av-klappe \{[^}]*overflow/.test(seiteA) && /\.av-klappe > summary \{ border-radius: 15px 15px 0 0; \} \.av-klappe:not\(\[open\]\) > summary \{ border-radius: 15px; \}/.test(seiteA), "runde Ecken ohne overflow (Raster darf nicht auf 0 schrumpfen)");
+  assert.ok(/avKlappe\("av_alt", true, "🙂", "Einfache Figuren"/.test(html) && /avKlappe\("av_neu", true, "👑", `Hochwertige Figuren/.test(html), "Klappbereiche: Einfache und Hochwertige Figuren");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
