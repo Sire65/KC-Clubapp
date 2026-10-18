@@ -6094,7 +6094,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.332.0 KC-CLUB-THEMEN-BUEHNE-2 (Wunsch Hansi „weitere Themen: Ostern, Karneval und Halloween“)
 {
   for (const [id, jz] of [["ostern", "fruehling"], ["karneval", "karneval"], ["halloween", "halloween"]]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", name: "[^"]+", design: "[a-z]+", jz: "${jz}", effekt: "[a-z]+"`).test(html), `Thema ${id}`);
-  assert.ok(/const JZB_FESTE = \["kirmes", "wiesn", "karibik", "karneval", "halloween"(?:, "unterwasser")?\];/.test(html) && /else if \(J\.saison === "karneval"\) jzbKarnevalMalen\(c, F\); else if \(J\.saison === "halloween"\) jzbHalloweenMalen\(c, F\);/.test(html), "Karneval und Halloween auf der Bühne");
+  assert.ok(/const JZB_FESTE = \["kirmes", "wiesn", "karibik", "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum")?)?\];/.test(html) && /else if \(J\.saison === "karneval"\) jzbKarnevalMalen\(c, F\); else if \(J\.saison === "halloween"\) jzbHalloweenMalen\(c, F\);/.test(html), "Karneval und Halloween auf der Bühne");
   assert.ok(/const txt = name \? `Helau, \$\{name\}!` : "Helau!";/.test(html) && /const txt = name \? `Buuuh, \$\{name\}!` : "Buuuh!";/.test(html), "Vorname auf dem Wagen und beim Gespenst");
   assert.ok(/if \(te === "ostern" && J\.saison === "fruehling"\) x\.ostern = true;/.test(html) && /J\.gaeste\.push\(\{ typ: "osterhase", x: J\.w \+ 24, t: 0 \}\)/.test(html) && /if \(e\.da === false && hase\) continue;/.test(html) && /!v\.gef && v\.da !== false/.test(html), "Ostern: Osterhase legt die Eier, erst dann sicht- und findbar");
   assert.ok(/function osterSonntag\(jahr\)/.test(html) && /const ostern = osterSonntag\(jahr\);/.test(html), "eine Osterformel für Feiertage und Themen");
@@ -6541,6 +6541,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/id="kopfVersion"[^>]*onclick="updateKachel\(\)"/.test(html), "Versionsnummer unter der Kochmütze bleibt anklickbar");
   assert.ok(/\{ id: "ausweis", sym: "🪪", t: "Mein Ausweis-QR"/.test(html) && /zeig: \(\) => ausweisZeigen\(\), seit: "2\.443\.0"/.test(html), "Kachel unter Meins + Hilfe");
   assert.ok(/Für dich ist noch keine Mitgliedsnummer hinterlegt/.test(html) && /Ohne Netz: zuletzt gemerkter Stand/.test(html), "ohne Nummer nie ein falscher QR, offline markiert");
+}
+// 2.444.0 KC-CLUB-WELTRAUM (Wunschliste #2): Thema Weltraum mit eigener Szene (Sterne, Planet, Rakete, Astronaut schreibt den Namen, UFO)
+{
+  assert.ok(/\{ id: "weltraum", sym: "🚀", name: "Weltraum", design: "tiefsee", jz: "weltraum"/.test(programm), "Thema eingetragen");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"weltraum"\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"weltraum"\]/.test(programm), "Bühne bekannt");
+  assert.ok(/if \(J\.saison === "weltraum"\) return jzbWrSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "weltraum"\) jzbWeltraumMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
+  const w = programm.slice(programm.indexOf("function jzbWrSchritt("), programm.indexOf("function jzbWrBahn("));
+  assert.ok(/if \(t >= JZB_WR_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(w), "Lauf endet, neuer Lauf");
+  assert.ok(/A\.modus = jzbEisNameText\(\) \? "runter" : "warten"/.test(w) && /W\.rakete = \{/.test(w) && /W\.ufo = \{/.test(w) && /W\.schnuppen\.push/.test(w), "Name, Rakete, UFO, Sternschnuppen; ohne Namen kein Schreiben");
+  assert.ok(/jahreszeitVorschau\('weltraum'\)">🚀 Weltraum</.test(seite) && /weltraum: \["⭐", "✨", "🚀", "🪐"\]/.test(programm) && /weltraum: "Weltraum"/.test(programm), "Vorschau-Knopf, Ersatz-Bild, Vorschau-Name");
+  assert.ok(/\{ id: "weltraum", thema: "darstellung", sym: "🚀", t: "Thema Weltraum"/.test(programm) && /seit: "2\.444\.0"/.test(programm), "Hilfe");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -9157,7 +9168,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE"), html.indexOf("// ---------- KC-CLUB-KONFETTI (2.169.0)"));
   assert.ok(b.length > 1000, "Bühne vorhanden");
-  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser")?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
+  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum")?)?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
   assert.ok(/J\.wind = \{ dir: \(J\.lauf >> 1\) % 2 \? -1 : 1/.test(b), "Windstoß abwechselnd von links und rechts (2.259.0: über die Wind-Läufe, dazwischen Twinkey)");
   assert.ok(/if \(J\.lauf % 3 === 2\) (jzbSchneemannStart|\(Math\.floor\(J\.lauf \/ 3\) % 2 \? jzbIgluStart : jzbSchneemannStart\))\(\); else (if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else )?jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (ab 2.320.0 abwechselnd mit dem Iglu; Advent mit Weihnachtsmütze)");
   assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!fxAn\(\) \|\| !einst\("jahreszeit", true\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");
@@ -10354,7 +10365,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.434.0 KC-CLUB-UNTERWASSER: Thema Unterwasserwelt mit eigener Szene (Regen füllt, Stöpsel leert)
 {
   assert.ok(/\{ id: "unterwasser", sym: "🐠", name: "Unterwasserwelt", design: "nordsee", jz: "unterwasser"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"unterwasser"\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"unterwasser"\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"unterwasser"(?:, "weltraum")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"unterwasser"(?:, "weltraum")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "unterwasser"\) return jzbUwSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "unterwasser"\) jzbUnterwasserMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const u = programm.slice(programm.indexOf("function jzbUwSchritt("), programm.indexOf("function jzbUwSog("));
   assert.ok(/U\.phase = "ablauf"; U\.at = 0; U\.plopp = 0;/.test(u) && /J\.fest = null; return jzbLaufEnde\(\);/.test(u), "Stöpsel → ablaufen → neuer Lauf");

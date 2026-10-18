@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.443.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.444.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -821,6 +821,7 @@ const THEMEN = [
   { id: "sommer", sym: "🌻", name: "Sommer", design: "toskana", jz: "sommer", effekt: "flieger", schrift: "schwung" },
   { id: "karibik", sym: "🌴", name: "Karibik", design: "lagune", jz: "karibik", effekt: "taube", schrift: "strand" }, // 2.331.0 KC-CLUB-THEMEN-BUEHNE
   { id: "unterwasser", sym: "🐠", name: "Unterwasserwelt", design: "nordsee", jz: "unterwasser", effekt: "taube", schrift: "strand" }, // 2.434.0 KC-CLUB-UNTERWASSER
+  { id: "weltraum", sym: "🚀", name: "Weltraum", design: "tiefsee", jz: "weltraum", effekt: "flieger" }, // 2.444.0 KC-CLUB-WELTRAUM (Wunschliste #2)
   { id: "oktoberfest", sym: "🥨", name: "Oktoberfest", design: "nordsee", jz: "wiesn", effekt: "postauto", schrift: "fraktur" },
   { id: "herbst", sym: "🍂", name: "Herbst", design: "ocker", jz: "herbst", effekt: "flieger" },
   { id: "indian", sym: "🍁", name: "Indian Summer", design: "glut", jz: "herbst", effekt: "taube",
@@ -2527,7 +2528,7 @@ const RG_ANPASSEN = [
   { v: "start", vor: () => rgKopf("offen"), t: "🎨 Meine App – so wie ich sie mag",
     x: "In der Club-App kannst du vieles nach deinem Geschmack einstellen: ein Thema, die Farben, Tag und Nacht, die Schrift, das Bild der Jahreszeit oben im Kopf, eine Deko, die Effekte – und wie ruhig oder lebendig alles sein soll. Ich zeige dir, wo du was findest. Alles sind nur Möglichkeiten – du kannst jederzeit zurück." },
   { v: "einstellungen", vor: () => rgAuf("darstellung"), sel: ["#themaWahl"], mussSel: true, t: "🎭 Themen – alles mit einem Tipp",
-    x: "Am einfachsten geht es mit einem Thema, in den Einstellungen unter Darstellung. Ein Thema ist ein fertiges Paket: Farbe, Bild im Kopf, Effekt beim Senden und eine passende Schrift – zum Beispiel Weihnachten, Indian Summer, Oktoberfest, Sim-Jü, Karneval, Ostern, Halloween oder Karibik. Mit Nach Kalender wechselt das Thema von selbst. Mit Kein Thema gelten wieder deine eigenen Einstellungen." },
+    x: "Am einfachsten geht es mit einem Thema, in den Einstellungen unter Darstellung. Ein Thema ist ein fertiges Paket: Farbe, Bild im Kopf, Effekt beim Senden und eine passende Schrift – zum Beispiel Weihnachten, Indian Summer, Oktoberfest, Sim-Jü, Karneval, Ostern, Halloween, Karibik oder Weltraum. Mit Nach Kalender wechselt das Thema von selbst. Mit Kein Thema gelten wieder deine eigenen Einstellungen." },
   { v: "einstellungen", vor: () => rgAuf("darstellung"), sel: [rgSchalter("themaSchriftAn")], puls: ["#themaSchriftAn"], t: "✍️ Schrift des Themas",
     x: "Die Begrüßung oben erscheint in der Schrift des Themas – zum Oktoberfest in Fraktur, zu Halloween gruselig. Gefällt dir das nicht, nimmst du hier den Haken raus." },
   { v: "einstellungen", vor: () => rgAuf("darstellung"), sel: ["#designWahl"], mussSel: true, t: "🎨 Farbdesign",
@@ -4941,7 +4942,7 @@ const HILFE = [
   // 🎨 Aussehen & Darstellung
   { id: "farbe", thema: "darstellung", sym: "🎨", t: "Die Farbe der App ändern", x: "Du kannst die Farbe einstellen: ⚙️ Einstellungen → Bereich <b>„🎨 Darstellung“</b> → „🎨 Farbdesign“. Unter „Weitere Farbschemen“ und „✨ Ausgefallene Farbschemen“ gibt es noch mehr. Antippen – die App färbt sich sofort um.", zeig: hzDesign },
   { id: "nacht", thema: "darstellung", sym: "🌗", t: "Tag- und Nachtmodus", x: "⚙️ → Darstellung → „🌗 Tag- und Nachtmodus“: <b>🔄 Automatisch</b> (nach dem Sonnenstand in Werne – hat das Handy einen Lichtsensor, nach der Helligkeit), <b>☀️ Immer Tag</b> oder <b>🌙 Immer Nacht</b>. Nachts ist der dunkle Modus angenehmer für die Augen.", zeig: () => einstiegHin("darstellung", "modusWahl") },
-  { id: "themen", thema: "darstellung", sym: "🎭", t: "Themen: Weihnachten, Herbst, Indian Summer …", x: "Mit einem Tipp auf ein Thema (⚙️ → <b>🎨 Darstellung</b> → <b>🎭 Themen</b>) stellst du Farben, das Bild im Kopf der Startseite und den Effekt beim Senden passend ein – z. B. 🎄 Weihnachten, 🍁 Indian Summer, 🎡 Sim-Jü, 🥨 Oktoberfest, 🌴 Karibik, 🐠 Unterwasserwelt, 🐣 Ostern, 🎭 Karneval oder 🎃 Halloween – mit eigenem Bild im Kopf. „🔄 Nach Kalender“ wechselt das Thema von selbst (auch zu Karneval, Ostern, Oktoberfest, Sim-Jü und Halloween). Einzelnes kannst du danach trotzdem ändern. Viele Themen bringen auch eine passende Schrift für die Begrüßung mit – abschaltbar mit „✍️ Schrift des Themas“. Hat der Admin ein Club-Thema für alle eingestellt, kannst du es dort für dich abschalten." },
+  { id: "themen", thema: "darstellung", sym: "🎭", t: "Themen: Weihnachten, Herbst, Indian Summer …", x: "Mit einem Tipp auf ein Thema (⚙️ → <b>🎨 Darstellung</b> → <b>🎭 Themen</b>) stellst du Farben, das Bild im Kopf der Startseite und den Effekt beim Senden passend ein – z. B. 🎄 Weihnachten, 🍁 Indian Summer, 🎡 Sim-Jü, 🥨 Oktoberfest, 🌴 Karibik, 🐠 Unterwasserwelt, 🚀 Weltraum, 🐣 Ostern, 🎭 Karneval oder 🎃 Halloween – mit eigenem Bild im Kopf. „🔄 Nach Kalender“ wechselt das Thema von selbst (auch zu Karneval, Ostern, Oktoberfest, Sim-Jü und Halloween). Einzelnes kannst du danach trotzdem ändern. Viele Themen bringen auch eine passende Schrift für die Begrüßung mit – abschaltbar mit „✍️ Schrift des Themas“. Hat der Admin ein Club-Thema für alle eingestellt, kannst du es dort für dich abschalten." },
   { id: "schrift", thema: "darstellung", sym: "🔠", t: "Größere Schrift", x: "Ist dir die Schrift zu klein? ⚙️ → Darstellung → „🔠 Große Schrift“ einschalten – alles wird etwas größer.", zeig: () => einstiegHin("darstellung", "setGross") },
   { id: "mitglieder_ansicht", thema: "darstellung", sym: "👥", t: "Mitglieder als Kacheln, Liste oder Tafel", x: "Ob du die Mitglieder als <b>🔲 Kacheln</b>, als <b>☰ Liste</b> oder als <b>📋 Anwesenheitstafel</b> siehst, wählst du unter ⚙️ → 🧩 Startseite &amp; Ansicht oder direkt oben bei den Mitgliedern.", zeig: () => einstiegHin("startseite", "mgAnsichtWahl") },
   { id: "feiertage", thema: "darstellung", sym: "🇩🇪", t: "Feiertage im Kalender", x: "Die Feiertage in NRW kannst du im Club-Kalender ein- oder ausblenden: ⚙️ → 🧩 Startseite &amp; Ansicht → „🇩🇪 Feiertage NRW im Kalender“.", zeig: () => einstiegHin("startseite", "setFeiertage") },
@@ -5063,6 +5064,7 @@ const HILFE = [
   { id: "eingangskorb", thema: "club", sym: "📥", t: "Der Eingangskorb im Büro", x: "Alles, was für die Clubleitung neu hereinkommt, liegt im Büro im <b>📥 Eingangskorb</b>: Erstattungen (Fahrtkosten), Dienstzeiten, Vorschläge, Änderungsmeldungen, Ausleihen und mehr. Clubsprecher, Kassenwart und Admin bekommen dazu eine Meldung. Es bleibt im Eingang, bis es erledigt ist – zum Beispiel mit <b>„✅ Erstattet“</b> oder <b>„👁️ Zur Kenntnis genommen“</b>. Oben rechts: <b>🔽</b> filtert nach Jahr, Monat, Art und Name, <b>📊</b> zeigt alle Dienstzeiten als Übersicht quer (Name, Tage, Zeitbalken, Stunden) – mit Drucken und „🗄️ In Ordner ablegen“ (Ordner des Mitglieds, Register Dienstpläne, und im Büro „Dienstpläne“).", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "eingang_hinweis", thema: "club", sym: "📥", t: "Hinweis: viel im Eingangskorb", x: "Liegen <b>mehr als 5 Sachen</b> im Eingangskorb, zeigt die App der Clubleitung beim Start eine kleine Liste – z. B. „5 Dienstpläne, 1 Kostenerstattung, 1 Hilfegesuch“. Eine Zeile antippen öffnet den Eingangskorb gleich mit dieser Art. Darunter: <b>„✅ Ja, jetzt bearbeiten“</b>, <b>„⏰ Später“</b> (in ein paar Stunden wieder) oder <b>„🌙 Heute nicht mehr“</b>. Ganz ausschalten (und die Tages-Übersicht beim Start): ⚙️ → <b>„🗂️ Clubleitung beim Start“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => einstiegHin("leitung_start"), seit: "2.23.43" },
   { id: "unterwasserwelt", thema: "darstellung", sym: "🐠", t: "Thema Unterwasserwelt", x: "Im Thema <b>🐠 Unterwasserwelt</b> füllt Regen den Kopf der Startseite mit Wasser: Pflanzen wachsen, Muscheln und ein Seestern liegen im Sand, bunte Fische schwimmen, Luftblasen steigen. Ein <b>Helmtaucher</b> mit dickem Kupferhelm und Luftschlauch stapft über den Grund, ein <b>Seepferdchen schreibt deinen Vornamen</b>. Zum Schluss zieht ein Taucher den <b>Stöpsel</b> – „Plopp!“, ein Strudel, alles läuft ab und ist weg. Dann regnet es wieder und alles beginnt von vorn. Vorschau: ⚙️ → ✨ Effekte → 🐠 Unterwasserwelt.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.434.0" },
+  { id: "weltraum", thema: "darstellung", sym: "🚀", t: "Thema Weltraum", x: "Im Thema <b>🚀 Weltraum</b> wird der Kopf der Startseite zum Nachthimmel: Sterne funkeln, ein <b>Ringplanet</b> schwebt herein, oben steht der <b>Mond</b>, ab und zu fällt eine <b>Sternschnuppe</b>. Ein <b>Astronaut</b> schwebt herein und winkt, eine <b>Rakete</b> startet mit Feuerschweif. Dann schreibt der Astronaut <b>deinen Vornamen in Sternenschrift</b>. Zum Schluss holt ihn ein <b>UFO</b> mit dem Lichtstrahl ab – dann beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚀 Weltraum.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.444.0" },
   { id: "eingangskorb_mitglied", thema: "club", sym: "📥", t: "Dein Eingangskorb fürs Archiv", x: "Legt dir die Clubleitung ein Dokument hin (z. B. eine Anleitung oder Urkunde), steht unter <b>„Heute wichtig“ → 📥 Eingangskorb</b>. Antippen – du siehst das Dokument und entscheidest: <b>✔ annehmen</b>, dann liegt es in deinem persönlichen Archiv-Ordner, oder <b>✖ ablehnen</b>, dann wird es gelöscht. Dein Ordner bleibt privat. <i>Clubleitung:</i> Mitglied antippen → <b>„📥 In den Eingangskorb“</b>.", seit: "2.432.0" },
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
@@ -15039,9 +15041,9 @@ const JZ_DEKO_WAHL = [["auto", "🔄 Automatisch"], ["wimpel", "🎏 Wimpel"], [
 const JZ_DEKO_FARBEN = { bunt: ["#e63946", "#ffb703", "#2a9d8f", "#3a86ff", "#ff6b9a", "#8ac926"], pastell: ["#f7a8c4", "#9fd3ff", "#fff3a0", "#b6f0b0", "#d9b8f7"],
   bayern: ["#1f6fd1", "#ffffff"], herbst: ["#e85d04", "#ffba08", "#dc2f02", "#f48c06", "#9d0208"], karibik: ["#ff006e", "#ffbe0b", "#00bbf9", "#00f5d4", "#fb5607"],
   warm: ["#ffd27a", "#fff0c2", "#ffc65c"], gold: ["#ffd700", "#fff1a8", "#f5c542", "#ffe680"], halloween: ["#ff7a00", "#9b4dca", "#ffae42", "#7b2cbf"],
-  meer: ["#00b4d8", "#90e0ef", "#ffd166", "#ff6b9a", "#06d6a0"] }; // 2.434.0
+  meer: ["#00b4d8", "#90e0ef", "#ffd166", "#ff6b9a", "#06d6a0"], all: ["#ffffff", "#9bb7ff", "#ffd166", "#c77dff"] }; // 2.434.0 · 2.444.0: all (Weltraum)
 const JZ_DEKO_AUTO = { herbst: ["laternen", "herbst"], advent: ["lichter", "warm"], silvester: ["lichter", "gold"], sommer: ["wimpel", "bunt"], fruehling: ["wimpel", "pastell"],
-  wiesn: ["wimpel", "bayern"], karneval: ["wimpel", "bunt"], kirmes: ["lichter", "bunt"], karibik: ["laternen", "karibik"], halloween: ["lichter", "halloween"], unterwasser: ["wimpel", "meer"] };
+  wiesn: ["wimpel", "bayern"], karneval: ["wimpel", "bunt"], kirmes: ["lichter", "bunt"], karibik: ["laternen", "karibik"], halloween: ["lichter", "halloween"], unterwasser: ["wimpel", "meer"], weltraum: ["lichter", "all"] };
 const JZ_DEKO_STANDARD = { wimpel: "bunt", lichter: "warm", laternen: "herbst" };
 const jzDekoWahl = () => { try { const w = localStorage.getItem("kc_club_jzDeko"); return JZ_DEKO_WAHL.some(([k]) => k === w) ? w : "auto"; } catch { return "auto"; } };
 function jzDekoArt(art) { // → [Art, Farben] oder null
@@ -15164,7 +15166,7 @@ addEventListener("resize", () => requestAnimationFrame(() => { jzEisLaenge(); jz
     jzTropfTakt();
   }, 3500 + Math.random() * 4500); // 2.283.0: etwas öfter (alle 3½–8 s)
 })();
-const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"], unterwasser: ["🐠", "🫧", "🐟", "🐚"] };
+const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"], unterwasser: ["🐠", "🫧", "🐟", "🐚"], weltraum: ["⭐", "✨", "🚀", "🪐"] };
 function jahreszeitKopf() {
   const h = document.querySelector("#v-start .hero"); if (!h) return;
   h.querySelector(".jz-schicht")?.remove(); h.querySelector(".jz-sprech")?.remove(); h.classList.remove("jz-boden"); jzbStop(); jzDekoWeg(h);
@@ -16898,7 +16900,7 @@ function bwHoerPause() { const H = BW.hoeren; if (!H) return; H.pause = !H.pause
 // 🌻 Sommer: eine Sonnenblume wächst (jeder 3. Lauf drei), eine Biene besucht sie – abends Glühwürmchen. Am Ende fallen die Blütenblätter, Windstoß.
 // Ein <canvas> im Kopf; zeichnet nur, wenn die Startseite im Bild und die App im Vordergrund ist. Aus bei „✨ Animierte Knöpfe“ aus,
 // Sparmodus oder „Bewegung reduzieren“ (dann wie bisher). Tippen geht durch (pointer-events: none). Lauf-Zähler je Gerät (kc_club_jzLauf).
-const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser"]; // 2.331.0: + Themen-Bühnen · 2.434.0: + Unterwasserwelt
+const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum"]; // 2.331.0: + Themen-Bühnen · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum
 const JZB_BLUEHT = 150; // 2.250.0 (Fund Hansi „Sonnenblume nur kurz“): Blumen/Sonnenblume blühen 2½ Min., bevor der Wind kommt
 const JZB_SP = 3, JZB_RAND = 22; // 2.259.0: 22 statt 16 – nichts in die runden Ecken (Radius 26) // Bodenspalten in px; nichts in den runden Ecken ablegen
 const JZB_LAUB = ["#e0802a", "#c8432b", "#e8b23a", "#a85a2a", "#d96a1f", "#b33a2a", "#cf9a2b"];
@@ -17498,7 +17500,7 @@ function jzbGastMalen(c, g) {
 // 🥨 Oktoberfest: blau-weiße Wimpel, Brezn, Fass wird angezapft („O'zapft is!“), zwei Maßkrüge stoßen an („Prost!“), Lebkuchenherz mit Namen.
 // 🌴 Karibik: Meer mit Wellen, Strand und Palme (ab und zu fällt eine Kokosnuss), Segelboot, Papagei oder springender Fisch, der Vorname
 // wird in den Sand geschrieben – eine Welle holt ihn; zum Schluss Sonnenuntergang. Alles nur Bild, nichts wird gespeichert oder gesendet.
-const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser"]; // 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt
+const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum"]; // 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum
 const JZB_FEST_DAUER = 120; // Sekunden je Lauf
 const JZB_FEST_BUNT = ["#ff4d6d", "#ffd23f", "#3ec1ff", "#7bed6f", "#c77dff", "#ff9f1c", "#ffffff"];
 function jzbFestStart() {
@@ -17510,6 +17512,7 @@ function jzbFest(dt) {
   const J = JZB, k = J.k;
   if (J.phase === "anfang" || !J.fest) { jzbFestStart(); jzbPhase("fest"); }
   const F = J.fest; F.t += dt;
+  if (J.saison === "weltraum") return jzbWrSchritt(F, dt); // 2.444.0: eigener Ablauf (Rakete, Astronaut, UFO)
   if (J.saison === "unterwasser") return jzbUwSchritt(F, dt); // 2.434.0: eigener Ablauf (Regen füllt, Stöpsel leert) – ohne Ein-/Ausblenden
   F.a = Math.min(1, F.t / 2.5, Math.max(0, (JZB_FEST_DAUER - F.t) / 4));
   if (F.t >= JZB_FEST_DAUER) { J.fest = null; return jzbLaufEnde(); }
@@ -17595,7 +17598,7 @@ function jzbSpritzerMalen(c, F) {
 function jzbFestMalen(c) {
   const J = JZB, F = J.fest; if (!F) return;
   c.save(); c.globalAlpha = F.a;
-  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else jzbKaribikMalen(c, F);
+  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else jzbKaribikMalen(c, F);
   c.restore();
 }
 // ---- 🎡 Sim-Jü ----
@@ -18064,6 +18067,144 @@ function jzbUnterwasserMalen(c, F) {
   for (const r of U.ringe) { c.strokeStyle = `rgba(255,255,255,${r.a})`; c.lineWidth = .8; c.beginPath(); c.ellipse(r.x, r.y, r.r * k, r.r * .3 * k, 0, 0, 7); c.stroke(); }
   if (U.plopp >= 0 && U.plopp < 1.6) { c.save(); c.globalAlpha *= Math.min(1, (1.6 - U.plopp) * 2); c.font = `800 ${12 * k}px "Comic Sans MS","Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle";
     c.lineWidth = 3; c.strokeStyle = "rgba(10,60,120,.8)"; c.strokeText("Plopp!", st.x - 14 * k, st.y - 34 * k - U.plopp * 8 * k); c.fillStyle = "#fff"; c.fillText("Plopp!", st.x - 14 * k, st.y - 34 * k - U.plopp * 8 * k); c.restore(); }
+}
+// ---- 2.444.0 KC-CLUB-WELTRAUM (Wunschliste #2, Wunsch Hansi „Weltraum-Szene … als neues Kopfthema“) ----
+// Der Himmel wird dunkel, Sterne funkeln, ein Ringplanet schwebt herein, ein Mond mit Kratern steht oben links, ab und zu eine Sternschnuppe.
+// Ein Astronaut schwebt herein und winkt, eine Rakete startet unten und fliegt mit Feuerschweif hinaus. Dann schreibt der Astronaut den
+// Vornamen in Sternenschrift unten in den Kopf. Zum Schluss holt ein UFO ihn mit dem Lichtstrahl ab und saust davon – alles wird wieder hell,
+// dann beginnt der Lauf von vorn. Nur Bild, nichts wird gespeichert oder gesendet.
+const JZB_WR_DAUER = 92, JZB_WR_SCHREIBEN = 30, JZB_WR_UFO = 62; // Sekunden: Lauflänge, Name schreiben, UFO kommt
+function jzbWrNeu() {
+  const J = JZB, k = J.k, n = Math.min(160, Math.round(J.w * J.h / 900));
+  return { sterne: Array.from({ length: n }, () => ({ x: jzbZ(0, J.w), y: jzbZ(0, J.h), r: jzbZ(.4, 1.3) * k, ph: jzbZ(0, 6), v: jzbZ(1.5, 4) })),
+    schnuppen: [], schnuppUhr: jzbZ(3, 6), rakete: null, rauch: [], astro: null, schrift: null, ufo: null, funken: [] };
+}
+function jzbWrSchritt(F, dt) {
+  const J = JZB, k = J.k, W = F.wr || (F.wr = jzbWrNeu()), t = F.t;
+  F.a = Math.min(1, t / 3, Math.max(0, (JZB_WR_DAUER - t) / 4));
+  if (t >= JZB_WR_DAUER) { J.fest = null; return jzbLaufEnde(); }
+  for (const s of W.sterne) s.ph += dt * s.v;
+  // 🌠 Sternschnuppen
+  if ((W.schnuppUhr -= dt) <= 0 && t < JZB_WR_DAUER - 6) { W.schnuppUhr = jzbZ(4, 9); const dir = Math.random() < .5 ? 1 : -1;
+    W.schnuppen.push({ x: dir > 0 ? jzbZ(0, J.w * .5) : jzbZ(J.w * .5, J.w), y: jzbZ(4, J.h * .35), vx: dir * jzbZ(170, 240) * k, vy: jzbZ(50, 90) * k, a: 1 }); }
+  for (const s of W.schnuppen) { s.x += s.vx * dt; s.y += s.vy * dt; s.a -= dt * 1.1; }
+  W.schnuppen = W.schnuppen.filter((s) => s.a > 0);
+  // 🚀 Rakete startet unten und fliegt im Bogen hinaus
+  if (!W.rakete && t > 16 && t < 18) W.rakete = { t: 0, p0: [J.w * .16, J.h + 24 * k], p1: [J.w * .5, J.h * .3], p2: [J.w + 50 * k, -40 * k] };
+  const R = W.rakete;
+  if (R && R.t < 1) { R.t += dt / 6.5; const [x, y] = jzbWrBahn(R, Math.min(1, R.t)), [dx, dy] = jzbWrBahn(R, Math.min(1, R.t) + .01);
+    R.x = x; R.y = y; R.w = Math.atan2(dy - y, dx - x);
+    for (let i = 0; i < 2; i++) W.rauch.push({ x: x - Math.cos(R.w) * 20 * k, y: y - Math.sin(R.w) * 20 * k, r: jzbZ(2.5, 4.5) * k, a: .7, vx: jzbZ(-8, 8) * k, vy: jzbZ(-8, 8) * k }); }
+  for (const r of W.rauch) { r.x += r.vx * dt; r.y += r.vy * dt; r.r += 5 * k * dt; r.a -= dt * .55; }
+  W.rauch = W.rauch.filter((r) => r.a > 0);
+  // 👨‍🚀 Astronaut schwebt herein, winkt, schreibt den Namen, wird vom UFO abgeholt
+  if (!W.astro && t > 7) W.astro = { x: -30 * k, y: J.h * .22, dreh: 0, modus: "rein", t: 0, sc: 1 };
+  const A = W.astro;
+  if (A) { A.t += dt;
+    const ziel = (zx, zy, v) => { const dx = zx - A.x, dy = zy - A.y, d = Math.hypot(dx, dy); if (d <= v * dt) { A.x = zx; A.y = zy; return true; } A.x += dx / d * v * dt; A.y += dy / d * v * dt; return false; };
+    if (A.modus === "rein") { A.dreh = Math.sin(A.t * .7) * .25; if (ziel(J.w * .68, J.h * .22 + Math.sin(A.t) * 4 * k, 26 * k) || t > JZB_WR_SCHREIBEN) A.modus = "schwebt"; }
+    else if (A.modus === "schwebt") { A.dreh = Math.sin(A.t * .6) * .3; A.y = J.h * .22 + Math.sin(A.t) * 4 * k; if (t > JZB_WR_SCHREIBEN) A.modus = jzbEisNameText() ? "runter" : "warten"; }
+    else if (A.modus === "runter") { A.dreh += (0 - A.dreh) * Math.min(1, dt * 2); A.sc += (.6 - A.sc) * Math.min(1, dt * 2);
+      if (!W.schrift) W.schrift = jzbWrSchriftNeu();
+      if (ziel(W.schrift.buchst[0].x - 14 * k, W.schrift.y - 8 * k, 46 * k)) { A.modus = "schreibt"; A.x0 = A.x; } }
+    else if (A.modus === "schreibt") { const S = W.schrift, ende = S.buchst[S.buchst.length - 1].x + 12 * k; A.x = Math.min(ende, A.x + (ende - A.x0) / (S.buchst.length * 1.1 + 1.5) * dt); A.y = S.y - 8 * k + Math.sin(A.t * 3) * 1.5 * k;
+      if (Math.random() < dt * 14) W.funken.push({ x: A.x + 13 * k * A.sc, y: A.y + 2 * k, vx: jzbZ(-14, 14) * k, vy: jzbZ(-18, 6) * k, a: 1 });
+      if (A.x >= ende) A.modus = "hoch"; }
+    else if (A.modus === "hoch" || A.modus === "warten") { if (A.modus === "hoch") { A.sc += (1 - A.sc) * Math.min(1, dt); ziel(J.w * .68, J.h * .24, 30 * k); } A.dreh = Math.sin(A.t * .6) * .3; }
+    else if (A.modus === "strahl") { A.dreh += dt * 1.6; A.y -= 16 * k * dt; A.sc = Math.max(0, A.sc - dt * .22); A.x += (W.ufo.x - A.x) * Math.min(1, dt * 2); }
+  }
+  // 🛸 UFO kommt, Lichtstrahl, Astronaut schwebt hinein, weg
+  if (!W.ufo && t > JZB_WR_UFO && A) W.ufo = { x: J.w + 40 * k, y: Math.max(14 * k, J.h * .24 - 46 * k), modus: "kommt", t: 0, strahl: 0 };
+  const U = W.ufo;
+  if (U) { U.t += dt;
+    if (U.modus === "kommt") { const zx = A.x; U.x += (zx - U.x) * Math.min(1, dt * 1.4); if (Math.abs(U.x - zx) < 3 * k) { U.modus = "strahlt"; U.t = 0; A.modus = "strahl"; } }
+    else if (U.modus === "strahlt") { U.strahl = Math.min(1, U.t / .6); if (A.sc <= .05 || A.y < U.y + 4 * k) { A.weg = true; U.modus = "weg"; U.t = 0; } }
+    else { U.strahl = Math.max(0, U.strahl - dt * 3); U.x += (60 + U.t * 420) * k * dt; U.y -= U.t * 30 * k * dt; }
+  }
+  for (const f of W.funken) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 20 * k * dt; f.a -= dt * 1.4; }
+  W.funken = W.funken.filter((f) => f.a > 0);
+}
+function jzbWrBahn(R, u) { const v = 1 - u; return [v * v * R.p0[0] + 2 * v * u * R.p1[0] + u * u * R.p2[0], v * v * R.p0[1] + 2 * v * u * R.p1[1] + u * u * R.p2[1]]; }
+function jzbWrSchriftNeu() { // Vorname unten im freien Streifen (unter den Karten), mittig
+  const J = JZB, k = J.k, name = jzbEisNameText(), fs = Math.min(17 * k, (J.w * .5) / Math.max(3, name.length * .62));
+  J.ctx.font = `800 ${fs}px "Trebuchet MS","Segoe UI",sans-serif`;
+  const breite = J.ctx.measureText(name).width, x0 = Math.max(JZB_RAND + 20 * k, J.w * .5 - breite / 2); let cx = x0;
+  return { fs, y: J.h - 15 * k, buchst: [...name].map((z) => { const w = J.ctx.measureText(z).width, b = { z, x: cx + w / 2 }; cx += w; return b; }) };
+}
+function jzbWrPlanetMalen(c, x, y, r, T) {
+  c.save(); c.translate(x, y); c.rotate(-.35);
+  c.strokeStyle = "rgba(240,215,170,.75)"; c.lineWidth = r * .22; c.beginPath(); c.ellipse(0, 0, r * 1.9, r * .5, 0, Math.PI, 0); c.stroke(); // Ring hinten
+  const g = c.createRadialGradient(-r * .35, -r * .4, r * .1, 0, 0, r); g.addColorStop(0, "#ffe2a8"); g.addColorStop(.6, "#e0a458"); g.addColorStop(1, "#9c5a24");
+  c.fillStyle = g; c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill();
+  c.save(); c.beginPath(); c.arc(0, 0, r, 0, 7); c.clip(); c.fillStyle = "rgba(150,80,30,.35)"; // Wolkenbänder ziehen
+  for (const [by, bh] of [[-.45, .12], [-.1, .16], [.3, .1]]) { c.beginPath(); c.ellipse(Math.sin(T * .2 + by * 9) * r * .1, by * r, r * 1.2, bh * r, 0, 0, 7); c.fill(); } c.restore();
+  c.strokeStyle = "rgba(255,235,195,.9)"; c.lineWidth = r * .22; c.beginPath(); c.ellipse(0, 0, r * 1.9, r * .5, 0, 0, Math.PI); c.stroke(); // Ring vorn
+  c.restore();
+}
+function jzbWrMondMalen(c, x, y, r) {
+  const g = c.createRadialGradient(x - r * .3, y - r * .3, r * .1, x, y, r); g.addColorStop(0, "#f4f4f0"); g.addColorStop(1, "#a9adb5");
+  c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+  c.fillStyle = "rgba(120,124,134,.55)"; for (const [cx, cy, cr] of [[-.35, -.2, .22], [.3, .25, .17], [.15, -.45, .12], [-.1, .45, .1]]) { c.beginPath(); c.arc(x + cx * r, y + cy * r, cr * r, 0, 7); c.fill(); }
+}
+function jzbWrRaketeMalen(c, R, k) { // Blick in Flugrichtung, Feuer flackert
+  c.save(); c.translate(R.x, R.y); c.rotate(R.w); c.scale(k, k);
+  const fl = 6 + Math.random() * 5; c.fillStyle = "#ffb703"; c.beginPath(); c.moveTo(-9, -3); c.lineTo(-9 - fl * 1.6, 0); c.lineTo(-9, 3); c.closePath(); c.fill();
+  c.fillStyle = "#fff3b0"; c.beginPath(); c.moveTo(-9, -1.6); c.lineTo(-9 - fl * .8, 0); c.lineTo(-9, 1.6); c.closePath(); c.fill();
+  c.fillStyle = "#d62828"; for (const s of [-1, 1]) { c.beginPath(); c.moveTo(-9, s * 3.5); c.lineTo(-12, s * 8); c.lineTo(-4, s * 3.5); c.closePath(); c.fill(); } // Flossen
+  c.fillStyle = "#f1f3f5"; c.beginPath(); c.moveTo(-9, -4.2); c.lineTo(6, -4.2); c.quadraticCurveTo(13, -2, 15, 0); c.quadraticCurveTo(13, 2, 6, 4.2); c.lineTo(-9, 4.2); c.closePath(); c.fill();
+  c.fillStyle = "#d62828"; c.beginPath(); c.moveTo(8, -3.6); c.quadraticCurveTo(13, -2, 15, 0); c.quadraticCurveTo(13, 2, 8, 3.6); c.closePath(); c.fill(); // Spitze
+  c.fillStyle = "#3a86ff"; c.strokeStyle = "#8d99ae"; c.lineWidth = .8; c.beginPath(); c.arc(1, 0, 2.2, 0, 7); c.fill(); c.stroke(); // Bullauge
+  c.restore();
+}
+function jzbWrAstroMalen(c, A, k, T) { // weißer Anzug, Helm mit goldenem Visier, Rucksack; winkt mit dem rechten Arm
+  c.save(); c.translate(A.x, A.y); c.rotate(A.dreh); c.scale(k * A.sc, k * A.sc); c.lineCap = "round"; c.lineJoin = "round";
+  c.fillStyle = "#ced4da"; c.beginPath(); c.roundRect ? c.roundRect(-9, -6, 5, 13, 2) : c.rect(-9, -6, 5, 13); c.fill(); // Rucksack
+  c.strokeStyle = "#f1f3f5"; c.lineWidth = 4.2; for (const s of [-1, 1]) { c.beginPath(); c.moveTo(s * 2.2, 6); c.lineTo(s * 3.2 + Math.sin(T * 1.4 + s) * 1.2, 14); c.stroke(); } // Beine
+  c.fillStyle = "#adb5bd"; for (const s of [-1, 1]) { c.beginPath(); c.arc(s * 3.2 + Math.sin(T * 1.4 + s) * 1.2, 15, 2.3, 0, 7); c.fill(); } // Stiefel
+  c.fillStyle = "#f8f9fa"; c.beginPath(); c.roundRect ? c.roundRect(-5.5, -7, 11, 14, 4) : c.rect(-5.5, -7, 11, 14); c.fill(); // Rumpf
+  c.fillStyle = "#e63946"; c.fillRect(-2.5, -3, 5, 3); c.fillStyle = "#3a86ff"; c.fillRect(-1, -2.4, 1.2, 1.8); // Brustschild
+  c.strokeStyle = "#f1f3f5"; c.lineWidth = 3.6; c.beginPath(); c.moveTo(-5, -4); c.lineTo(-8, 3); c.stroke(); // linker Arm
+  const wink = A.modus === "schreibt" ? .2 : Math.sin(T * 5) * .5; c.beginPath(); c.moveTo(5, -4); c.lineTo(9, -9 - wink * 4); c.stroke(); // rechter Arm winkt
+  c.fillStyle = "#dee2e6"; c.beginPath(); c.arc(9, -9.5 - wink * 4, 1.9, 0, 7); c.fill();
+  c.fillStyle = "#f8f9fa"; c.beginPath(); c.arc(0, -12, 6.5, 0, 7); c.fill(); // Helm
+  const g = c.createLinearGradient(-4, -15, 4, -9); g.addColorStop(0, "#ffd166"); g.addColorStop(1, "#c77d0a"); c.fillStyle = g;
+  c.beginPath(); c.ellipse(1, -12, 4.4, 3.4, 0, 0, 7); c.fill(); // Visier
+  c.fillStyle = "rgba(255,255,255,.75)"; c.beginPath(); c.ellipse(-.4, -13.4, 1.6, .8, -.4, 0, 7); c.fill();
+  c.restore();
+}
+function jzbWrUfoMalen(c, U, k, T, A) {
+  if (U.strahl > 0 && A && !A.weg) { const by = A.y + 18 * k * A.sc, g = c.createLinearGradient(0, U.y, 0, by); g.addColorStop(0, `rgba(160,255,180,${.6 * U.strahl})`); g.addColorStop(1, `rgba(160,255,180,${.12 * U.strahl})`);
+    c.fillStyle = g; c.beginPath(); c.moveTo(U.x - 5 * k, U.y + 3 * k); c.lineTo(U.x + 5 * k, U.y + 3 * k); c.lineTo(U.x + 16 * k, by); c.lineTo(U.x - 16 * k, by); c.closePath(); c.fill(); }
+  c.save(); c.translate(U.x, U.y + Math.sin(T * 2.5) * 1.5 * k); c.scale(k, k);
+  c.fillStyle = "rgba(160,220,255,.85)"; c.beginPath(); c.ellipse(0, -3, 6, 5, 0, Math.PI, 0); c.fill(); // Kuppel
+  c.fillStyle = "#7ddc8c"; c.beginPath(); c.arc(0, -4, 1.8, 0, 7); c.fill(); c.fillStyle = "#111"; c.beginPath(); c.arc(-.6, -4.3, .35, 0, 7); c.arc(.6, -4.3, .35, 0, 7); c.fill(); // kleines grünes Männchen
+  const g = c.createLinearGradient(0, -4, 0, 4); g.addColorStop(0, "#e9ecef"); g.addColorStop(1, "#6c757d"); c.fillStyle = g;
+  c.beginPath(); c.ellipse(0, 0, 15, 4.2, 0, 0, 7); c.fill();
+  for (let i = 0; i < 5; i++) { c.fillStyle = (Math.floor(T * 6) + i) % 2 ? "#ffd166" : "#ff4d6d"; c.beginPath(); c.arc(-10 + i * 5, .6, 1.1, 0, 7); c.fill(); } // Lichter blinken
+  c.restore();
+}
+function jzbWeltraumMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T, W = F.wr; if (!W) return;
+  const t = F.t;
+  c.fillStyle = "rgba(4,8,30,.62)"; c.fillRect(0, 0, J.w, J.h); // Nachthimmel über der Kopffarbe
+  for (const s of W.sterne) { c.globalAlpha = F.a * (.45 + .55 * Math.abs(Math.sin(s.ph))); c.fillStyle = "#fff"; c.beginPath(); c.arc(s.x, s.y, s.r, 0, 7); c.fill(); }
+  c.globalAlpha = F.a;
+  jzbWrMondMalen(c, J.w * .5, 17 * k, 10 * k); // oben in der Mitte (links das Logo, rechts der Planet)
+  const px = J.w + 60 * k - (J.w + 60 * k - J.w * .84) * jzbEase((t - 1) / 9); jzbWrPlanetMalen(c, px, J.h * .14 + Math.sin(T * .3) * 3 * k, 19 * k, T);
+  for (const s of W.schnuppen) { const g = c.createLinearGradient(s.x, s.y, s.x - s.vx * .18, s.y - s.vy * .18); g.addColorStop(0, `rgba(255,255,255,${s.a})`); g.addColorStop(1, "rgba(255,255,255,0)");
+    c.strokeStyle = g; c.lineWidth = 1.4; c.lineCap = "round"; c.beginPath(); c.moveTo(s.x, s.y); c.lineTo(s.x - s.vx * .18, s.y - s.vy * .18); c.stroke(); }
+  for (const r of W.rauch) { c.fillStyle = `rgba(220,225,235,${r.a * .6})`; c.beginPath(); c.arc(r.x, r.y, r.r, 0, 7); c.fill(); }
+  if (W.rakete && W.rakete.t < 1 && W.rakete.x != null) jzbWrRaketeMalen(c, W.rakete, k * 1.5);
+  const S = W.schrift, A = W.astro; // Name in Sternenschrift – leuchtet auf, wo der Astronaut vorbeikommt
+  if (S) { c.font = `800 ${S.fs}px "Trebuchet MS","Segoe UI",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.lineJoin = "round";
+    for (const b of S.buchst) { if (A && !A.weg && A.modus === "schreibt" && b.x > A.x) break; if (A && (A.modus === "runter")) break;
+      const fun = .75 + .25 * Math.sin(T * 3 + b.x * .1); c.shadowColor = "rgba(255,230,140,.9)"; c.shadowBlur = 8 * k * fun;
+      c.lineWidth = 2.6; c.strokeStyle = "rgba(20,30,80,.8)"; c.strokeText(b.z, b.x, S.y); c.fillStyle = "#fff6c8"; c.fillText(b.z, b.x, S.y); c.shadowBlur = 0;
+      const sx = b.x + S.fs * .28, sy = S.y - S.fs * .38, sr = S.fs * .1 * fun; c.fillStyle = "#fff"; c.beginPath(); // kleines Funkeln je Buchstabe
+      c.moveTo(sx, sy - sr * 2); c.lineTo(sx + sr * .5, sy); c.lineTo(sx, sy + sr * 2); c.lineTo(sx - sr * .5, sy); c.closePath(); c.fill(); } }
+  for (const f of W.funken) { c.fillStyle = `rgba(255,236,150,${f.a})`; c.beginPath(); c.arc(f.x, f.y, 1.2 * k, 0, 7); c.fill(); }
+  if (W.ufo) jzbWrUfoMalen(c, W.ufo, k * 1.5, T, A);
+  if (A && !A.weg && A.sc > .03) jzbWrAstroMalen(c, A, k * 1.6, T);
 }
 // ---- 2.435.0 KC-CLUB-HALLOWEEN-GEWITTER (Wunsch Hansi „bei Halloween noch die Hexe auf ihrem Besen durchfliegen lassen, mehr Geister, Blitz und
 // Donner wie bei Gewitter, auf seinem Sarg kommt ein Vampir mit Umhang – der setzt sich erst hin, dann steht er auf und geht weg – und die Hexe
@@ -19431,7 +19572,7 @@ function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, t
 // ---------- 2.355.0 KC-CLUB-VORSCHAU-ENDE (Fund Hansi „in den Einstellungen z. B. Nikolaus-Stiefel gewählt, wird angezeigt – wie bekomme ich ihn
 // wieder weg?“): solange eine Vorschau läuft, steht auf der Startseite ein Knopf „✕ Vorschau beenden“ (vorher nur „📅 Heute“ in den Einstellungen)
 const JZ_VORSCHAU_NAME = { nikolaus: "Nikolaus-Stiefel", regen: "Regen", topf: "Kochtopf am Treffen-Tag", ostern: "Ostereier", igel: "Igel", kuerbis: "Kürbis-Hund", twinkey: "Twinkey fegt",
-  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", unterwasser: "Unterwasserwelt", advent: "Advent" };
+  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", unterwasser: "Unterwasserwelt", weltraum: "Weltraum", advent: "Advent" };
 function jzVorschauLeiste(v = aktuelleAnsicht) {
   const an = !!(JZB.vorschau || JZB.extra) && v === "start" && !(typeof RG !== "undefined" && RG.an);
   let b = $("jzVorschauAus");
@@ -35310,7 +35451,7 @@ function suAppListe() {
     ["💡", "Vorschläge zur Startseite (Kacheln ausblenden, Funktionen freischalten)", "vorschlag vorschläge kacheln ausblenden verbergen freischalten nutzung gemerkt adaptiv startseite löschen", () => suEinstellung("setKachelVorschlag")], // 2.418.0
     ["🎚️", "Bühne: Musik / Stimme lauter oder leiser", "lautstärke lauter leiser regler musik stimme stumm bühne", () => esOeffnen("buehne")],
     // 2.344.0 KC-CLUB-HILFE-NACHTRAG: alle Möglichkeiten, die App anzupassen, auch über die Lupe
-    ["🎭", "Thema wählen (Weihnachten, Herbst, Oktoberfest …)", "thema themen weihnachten herbst indian summer oktoberfest sim-jü simjue karneval halloween ostern karibik unterwasser meer fische taucher silvester winter sommer frühling paket kalender club-thema", ein("themaWahl")],
+    ["🎭", "Thema wählen (Weihnachten, Herbst, Oktoberfest …)", "thema themen weihnachten herbst indian summer oktoberfest sim-jü simjue karneval halloween ostern karibik unterwasser weltraum sterne planet rakete astronaut ufo meer fische taucher silvester winter sommer frühling paket kalender club-thema", ein("themaWahl")],
     ["✍️", "Schrift des Themas (Begrüßung)", "schrift schriftart fraktur thema begrüßung", ein("themaSchriftAn")],
     ["🍂", "Jahreszeiten-Bild im Kopf (fest oder automatisch)", "jahreszeit jahreszeiten kopf bild herbst winter frühling sommer advent silvester laub schnee schneemann eichhörnchen iglu vorschau", ein("jzWahl")],
     ["🎏", "Deko an der Leiste (Wimpel, Lichterkette, Laternen)", "deko dekoration wimpel wimpelkette lichterkette lichter laternen lampions girlande leiste", ein("jzDekoWahl")],
