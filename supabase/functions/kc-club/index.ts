@@ -97,6 +97,14 @@ const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 600
 // Rechte (kc_club_person_einstellung „studio_recht“, setzt nur der Admin): zeigen = dauerhaft „📺 Live zeigen“; alles_bis = für kurze Zeit
 // auch Foto + Mitschauen. Der Admin hat immer alles. Das andere Mitglied wird IMMER gefragt und kann jederzeit beenden.
 const STUDIO_MS = 30 * 60000, STUDIO_ALLES_MIN = [30, 60, 120, 480];
+// KC-CLUB-FERNHILFE F1: Live-Bild und Zeiger gehen über einen geheimen Broadcast-Kanal je Sitzung, jede Nachricht mit AES-GCM verschlüsselt –
+// nicht mehr über die Datenbank. Kanal + Schlüssel bekommen nur die beiden Beteiligten (mit der Zusage bzw. beim Abholen). Der Server bleibt für
+// Zustimmung, Dauer und Ende zuständig. Rückweg: FH_BROADCAST = false → alter Weg (Bild über kc_club_person_einstellung).
+const FH_BROADCAST = true;
+const fhNeu = () => { const b = crypto.getRandomValues(new Uint8Array(48)); let s = ""; for (const x of b.subarray(16)) s += String.fromCharCode(x);
+  return { kanal: "kc-fh-" + [...b.subarray(0, 16)].map((x) => x.toString(16).padStart(2, "0")).join(""), schluessel: btoa(s) }; };
+// Messwerte einer Sitzung (nur Zahlen) fürs Protokoll – Grundlage für die Grenzen der Fernhilfe
+const fhMess = (m: any) => { const z = (v: any) => Math.max(0, Math.min(1e9, Math.round(Number(v) || 0))); return m && typeof m === "object" ? { n: z(m.n), kb: z(m.kb), max_kb: z(m.max_kb), weg: m.weg === "broadcast" ? "broadcast" : "server" } : null; };
 type StudioStufe = "zeigen" | "alles" | null;
 function studioAusWert(w: any): { stufe: StudioStufe; zeigen: boolean; allesBis: string | null } {
   const zeigen = w?.zeigen === true, allesBis = w?.alles_bis && Date.now() < new Date(w.alles_bis).getTime() ? String(w.alles_bis) : null;
@@ -10231,9 +10239,10 @@ Köcheclub-App`,
         if (an !== ich.person_id && w.von !== ich.person_id) throw new Fehler("Kein Zugriff.", 403);
         const alt = Date.now() - new Date(w.seit).getTime() > (w.status === "angefragt" ? 3 * 60000 : STUDIO_MS); // 2.136.0: läuft höchstens 30 Min.
         const speichern = () => db.from("kc_club_person_einstellung").update({ wert: w, geaendert_am: jetzt() }).eq("person_id", an).eq("schluessel", "vorfuehren");
-        if (alt && w.status !== "beendet") { w.status = "beendet"; if (w.frame) { w.frame = null; await speichern(); } } // 2.136.0: letztes Live-Bild nicht liegen lassen
-        if (a === "vorfuehren_antwort" && w.status === "angefragt") { w.status = p.annehmen === true ? "laeuft" : "abgelehnt"; w.seit = jetzt(); await speichern(); }
-        if (a === "vorfuehren_ende" && (w.status !== "beendet" || w.frame)) { w.status = "beendet"; w.frame = null; w.zeiger = null; await speichern(); } // 2.136.0: Ende löscht das Live-Bild
+        if (alt && w.status !== "beendet") { w.status = "beendet"; if (w.frame || w.fh) { w.frame = null; w.fh = null; await speichern(); } } // 2.136.0: letztes Live-Bild nicht liegen lassen
+        if (a === "vorfuehren_antwort" && w.status === "angefragt") { w.status = p.annehmen === true ? "laeuft" : "abgelehnt"; w.seit = jetzt(); if (w.status === "laeuft" && FH_BROADCAST) w.fh = fhNeu(); await speichern(); }
+        if (a === "vorfuehren_ende" && (w.status !== "beendet" || w.frame)) { w.status = "beendet"; w.frame = null; w.zeiger = null; w.fh = null; await speichern(); }
+        if (a === "vorfuehren_ende" && fhMess(p.mess)) await protokoll(ich.person_id, "vorfuehren_beendet", { mess: fhMess(p.mess) }); // KC-CLUB-FERNHILFE: Messwerte // 2.136.0: Ende löscht das Live-Bild
         if (a === "vorfuehren_senden" && w.status === "laeuft") {
           const neu = (Array.isArray(p.ev) ? p.ev : []).slice(0, 10).map((e: any) => ({
             n: ++w.n, art: ["ansicht", "tipp", "scroll", "fenster", "fenster_zu"].includes(String(e?.art)) ? String(e.art) : "tipp",
@@ -10269,6 +10278,7 @@ Köcheclub-App`,
         return json({ ok: true, status: w.status, von: { person_id: w.von, vorname: vorname(vonP ?? null) || w.von, name: vonP?.display_name || w.von },
           ev: a === "vorfuehren_holen" ? (w.ev || []).filter((e: any) => e.n > seit) : [], n: w.n || 0,
           bis: w.status === "laeuft" ? new Date(new Date(w.seit).getTime() + STUDIO_MS).toISOString() : null,
+          ...(w.status === "laeuft" && w.fh ? { fh: w.fh } : {}),
           ...(a === "vorfuehren_holen" && w.frame && w.frame.n > (Number(p.fseit) || 0) ? { frame: w.frame } : {}),
           ...(a === "vorfuehren_holen" ? { zeiger: w.status === "laeuft" ? w.zeiger ?? null : null } : {}) });
       }
@@ -10296,11 +10306,11 @@ Köcheclub-App`,
         if (!w || w.id !== String(p.id || "") || w.status !== "angefragt" || Date.now() - new Date(w.seit).getTime() > SS_FRIST_MS) return json({ ok: true, status: "vorbei" });
         const bild = String(p.bild || "");
         if (p.erlaubt === true && (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(bild) || bild.length > SS_MAX_ZEICHEN)) throw new Fehler("Das Bild ist zu groß oder ungültig.", 400);
-        const neu = p.erlaubt === true ? { ...w, status: w.live ? "live" : "bild", bild, am: jetzt(), n: 1, ...(w.live ? { bis: new Date(Date.now() + SS_LIVE_MS).toISOString() } : {}) }
+        const neu = p.erlaubt === true ? { ...w, status: w.live ? "live" : "bild", bild, am: jetzt(), n: 1, ...(w.live ? { bis: new Date(Date.now() + SS_LIVE_MS).toISOString(), ...(FH_BROADCAST ? { fh: fhNeu() } : {}) } : {}) }
           : { id: w.id, von: w.von, status: "abgelehnt", seit: w.seit, am: jetzt() };
         await db.from("kc_club_person_einstellung").update({ wert: neu, geaendert_am: jetzt() }).eq("person_id", ich.person_id).eq("schluessel", "schnappschuss");
         await protokoll(ich.person_id, p.erlaubt === true ? (w.live ? "mitschauen_erlaubt" : "schnappschuss_erlaubt") : "schnappschuss_abgelehnt", { von: w.von });
-        return json({ ok: true, status: neu.status });
+        return json({ ok: true, status: neu.status, ...((neu as any).fh ? { fh: (neu as any).fh } : {}) });
       }
       case "schnappschuss_bild": {
         const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "schnappschuss").maybeSingle();
@@ -10322,7 +10332,7 @@ Köcheclub-App`,
         if (!w || w.id !== String(p.id || "")) return json({ ok: true });
         if (an !== ich.person_id && w.von !== ich.person_id) throw new Fehler("Kein Zugriff.", 403);
         if (["angefragt", "live", "bild"].includes(w.status)) await ssBeenden(an, w);
-        await protokoll(ich.person_id, "mitschauen_beendet", { durch: an === ich.person_id ? "mitglied" : "admin" });
+        await protokoll(ich.person_id, "mitschauen_beendet", { durch: an === ich.person_id ? "mitglied" : "admin", ...(fhMess(p.mess) ? { mess: fhMess(p.mess) } : {}) });
         return json({ ok: true });
       }
       case "schnappschuss_holen": {
@@ -10335,7 +10345,7 @@ Köcheclub-App`,
         if (w.status === "live") {
           if (Date.now() > new Date(w.bis).getTime()) { await ssBeenden(an, w); return json({ ok: true, status: "beendet" }); }
           const seit = Number(p.seit) || 0; // nur ein neueres Bild ausliefern; immer nur das neueste liegt auf dem Server
-          return json({ ok: true, status: "live", n: w.n || 0, am: w.am, bis: w.bis, ...((w.n || 0) > seit ? (w.frame ? { frame: w.frame } : { bild: w.bild }) : {}) });
+          return json({ ok: true, status: "live", n: w.n || 0, am: w.am, bis: w.bis, ...(w.fh ? { fh: w.fh } : {}), ...((w.n || 0) > seit ? (w.frame ? { frame: w.frame } : { bild: w.bild }) : {}) });
         }
         if (w.status !== "bild") return json({ ok: true, status: w.status });
         // Bild nur einmal ausliefern und sofort vom Server löschen

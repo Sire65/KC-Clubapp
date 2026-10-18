@@ -1,6 +1,6 @@
 # KC Fernhilfe – Messung und Konzept (KC-CLUB-FERNHILFE)
 
-**Stand:** 18.10.2026 · **Status:** Konzept, noch nichts gebaut · **Auftrag:** Hansi („mit Fernhilfe Messung und Konzept anfangen“)
+**Stand:** 18.10.2026 · **Status:** F0 erledigt, F1 gebaut (Einspielen 20 Uhr) · **Auftrag:** Hansi („mit Fernhilfe Messung und Konzept anfangen“)
 
 ## 1. Ziel
 
@@ -42,8 +42,16 @@ Weiterentwicklung davon: gleiche Oberfläche, gleiche Rechte, gleiche Zustimmung
 bis zu 150 ganze Bildschirm-Rahmen in die Datenbank geschrieben und wieder gelesen. Zum Vergleich: ein Bau des
 Notfall-Pakets kostet seit heute ≈ 3.300 Abfragen.
 
-**Noch offen (Messpunkt F0):** tatsächliche Rahmengröße (KB je Rahmen) und der heutige Realtime-Verbrauch der App
-(die App nutzt Realtime schon für Signale „neu“). Beides wird vor dem Bau gemessen.
+### Ergebnisse F0 (18.10.2026)
+- **Realtime heute:** Die Datenbank schickt 2.000–4.500 Signale am Tag über `realtime.send` (15.–18.10.: 2.086 / 4.534 / 3.345 / 1.941
+  bis Mittag), alle über öffentliche Kanäle. Je Signal zählen 1 + Anzahl Empfänger → grob einige Hunderttausend Nachrichten im Monat;
+  das 2-Mio.-Kontingent hat also reichlich Platz für die Fernhilfe.
+- **Weg A (Sitzungs-JWT):** Edge Functions haben laut Supabase-Doku (Default Secrets) **keinen Signierschlüssel** für eigene JWTs
+  (nur `SUPABASE_JWKS` zum Prüfen). Weg A bräuchte ein manuell hinterlegtes Geheimnis oder Supabase Auth → **F1 nutzt Weg B**.
+- **Weg B geprüft:** Zwei Verbindungen auf einem zufälligen Kanal des Projekts, 300.000 Zeichen in 2 Teilen: angekommen in 129 ms.
+  Lauf-Test `tools/fernhilfe/fh-leitung-test.ts` (echter Code aus app.js): 11/11 grün, u. a. 450.000 Zeichen in Teilen, falscher Schlüssel liest nichts.
+- **Rahmengröße:** Alte Rahmen werden beim Ende gelöscht, daher nicht nachträglich messbar. F1 schreibt je Sitzung Anzahl Nachrichten,
+  KB gesamt und größten Rahmen ins Protokoll (`mitschauen_beendet` / `vorfuehren_beendet` → `mess`).
 
 ## 3. Grenzen des kostenlosen Tarifs (Supabase-Doku, abgerufen 18.10.2026)
 

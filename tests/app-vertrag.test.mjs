@@ -10695,3 +10695,21 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/dbPufferLeeren\(\); \/\/ KC-CLUB-DB-SPARSAM: der Termin-Baustein schreibt selbst/.test(server) && /const direktSql = \(\) => \(dbPufferLeeren\(\), DIREKT \?\?= postgres\(/.test(server) && /\.then\(\(r\) => \{ dbPufferLeeren\(\); return r\.body\?\.cancel\(\); \}\)/.test(server), "andere Schreibwege leeren den Puffer");
   assert.ok(/const kcAnfrage = async \(req: Request\): Promise<Response> => \{/.test(server) && /\{ const pf = DB_PUFFER\.getStore\(\) as DbPuffer \| undefined; if \(pf\) pf\.aktion = a; \}/.test(server), "Aktion für die Messung");
 }
+// KC-CLUB-FERNHILFE F1 (18.10.2026): Live-Bild und Zeiger über geheimen, verschlüsselten Broadcast-Kanal je Sitzung statt über die Datenbank
+{
+  assert.ok(/const FH_BROADCAST = true;/.test(server) && /kanal: "kc-fh-" \+ \[\.\.\.b\.subarray\(0, 16\)\]/.test(server), "Server: Kanal je Sitzung, Rückweg-Schalter");
+  assert.ok(/\.\.\.\(FH_BROADCAST \? \{ fh: fhNeu\(\) \} : \{\}\)/.test(server) && /if \(w\.status === "laeuft" && FH_BROADCAST\) w\.fh = fhNeu\(\);/.test(server), "Kanal erst mit der Zusage des Mitglieds");
+  assert.ok(/\.\.\.\(w\.status === "laeuft" && w\.fh \? \{ fh: w\.fh \} : \{\}\)/.test(server) && /if \(!w \|\| w\.id !== String\(p\.id \|\| ""\) \|\| w\.von !== ich\.person_id\) return json\(\{ ok: true, status: "vorbei" \}\);/.test(server), "Kanal nur an die beiden Beteiligten");
+  assert.ok(/w\.status = "beendet"; w\.frame = null; w\.zeiger = null; w\.fh = null;/.test(server), "Ende löscht den Kanal");
+  assert.ok(/const fhMess = \(m: any\)/.test(server) && /"mitschauen_beendet", \{ durch: [^\n]*mess: fhMess\(p\.mess\)/.test(server), "Messwerte nur als Zahlen im Protokoll");
+  const fh = html.slice(html.indexOf("const FH_TEIL ="), html.indexOf("// Der Sender schickt nach einem"));
+  assert.ok(/name: "AES-GCM", iv/.test(fh) && /crypto\.getRandomValues\(new Uint8Array\(12\)\)/.test(fh), "jede Nachricht verschlüsselt, frischer IV");
+  assert.ok(/const FH_TEIL = 180000, FH_PRUEF_MS = 15000;/.test(fh) && /if \(n > 20\) return false;/.test(fh), "Teile unter 256 KB, Obergrenze");
+  assert.ok(/private: false/.test(fh) && /join_ref: L\.joinRef/.test(fh) && !/sb_secret_|service_role/.test(fh), "nur öffentlicher Browser-Schlüssel");
+  assert.ok(/let fl = VF\.status === "laeuft" && VF\.fhL\?\.ok && VF\.fhHallo \? VF\.fhL : null;/.test(html) && /f: !fl && VF\.status === "laeuft" \? f : null/.test(html), "Vorführen: ohne Leitung bisheriger Weg");
+  assert.ok(/let fl = MSCH\.fhL\?\.ok && MSCH\.fhHallo \? MSCH\.fhL : null;/.test(html) && /SS\.fhBild = true;/.test(html), "gemischte Versionen: direkt erst nach hallo bzw. erstem direkten Bild");
+  assert.ok(/const r = await api\("schnappschuss_bild", \{ id: MSCH\.id, f: fl \? null : f \}/.test(html), "Mitschauen: ohne Leitung bisheriger Weg");
+  assert.ok(/if \(SS\.fhL\?\.ok && SS\.fhBild && sofort !== true && Date\.now\(\) - \(SS\.fhPruef \|\| 0\) < FH_PRUEF_MS\) return;/.test(html) && /if \(VF\.fhL\?\.ok && VF\.fhBild && sofort !== true && Date\.now\(\) - \(VF\.fhPruef \|\| 0\) < FH_PRUEF_MS\) return;/.test(html), "Server nur noch alle 15 s fragen");
+  assert.ok(/VF\.fhL\?\.schliessen\(\); VF\.fhL = null;/.test(html) && /MSCH\.fhL\?\.schliessen\(\); MSCH\.fhL = null;/.test(html) && /function ssFhZu\(\)/.test(html), "Leitung wird beim Ende geschlossen");
+  assert.ok(/ALLE TESTS GRÜN/.test(lies("tools/fernhilfe/fh-leitung-test.ts")) && /# KC Fernhilfe – Messung und Konzept/.test(lies("docs/FERNHILFE_KONZEPT.md")), "Lauf-Test und Konzept vorhanden");
+}
