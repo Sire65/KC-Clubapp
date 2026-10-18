@@ -6736,6 +6736,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(th && t\?\.id === th\.treffen && Date\.parse\(t\.beginn\) > Date\.now\(\)\) add\(\{ id: "themen:"/.test(html), "nur für die kommende Sitzung");
   assert.ok(/\["＋ Thema", `ilThemaNeu\('\$\{esc\(th\.treffen\)\}'\)`\]/.test(html) && /function ilThemaNeu\(id\) \{ zeige\("vorschlaege"\); VS_ZIEL = id;/.test(html), "＋ Thema mit vorgewählter Sitzung");
 }
+
+// 2.466.0 KC-CLUB-LAUFBAND-ZIELE (Wunschliste #24): jedes Sprungziel zeige('…') muss als Seite existieren – sonst öffnet sich eine leere Seite
+{
+  const ziele = [...new Set([...html.matchAll(/zeige\(\\?['"]([a-z0-9_-]+)\\?['"]/g)].map((m) => m[1]))];
+  assert.ok(ziele.length > 10, "Sprungziele gefunden");
+  const fehlt = ziele.filter((z) => !html.includes(`id="v-${z}"`));
+  assert.deepEqual(fehlt, [], "Sprungziele ohne Seite: " + fehlt.join(", "));
+  assert.ok(/t: "Schulung: bitte einen Termin wählen"[^\n]*auf: "smStart\(\)"/.test(html), "Schulung öffnet die Schulungsauswahl");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.463.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.466.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -23011,9 +23011,9 @@ function ilMeldungen() {
   for (const a of INIT?.terminanfragenOffen || []) add({ id: "anfrage:" + a.id, stufe: "rot", sym: "📨", t: `${a.von} fragt an: ${a.anlass}`, u: "Bitte antworten", auf: `taZeigen('${esc(a.id)}')` });
   if (INIT?.offeneAbstimmungen) add({ id: "abstimmung", stufe: "rot", sym: "🗳️", t: INIT.offeneAbstimmungen === 1 ? "Eine Abstimmung wartet auf deine Stimme" : `${INIT.offeneAbstimmungen} Abstimmungen warten auf deine Stimme`, u: "Antippen und abstimmen", auf: "zeige('vorschlaege')" });
   for (const u of INIT?.terminfindungOffen || []) add({ id: "terminfindung:" + (u.id || u.titel), stufe: "rot", sym: "🗓️", t: `Bitte Termine ankreuzen: ${u.titel}`, u: "Wann kannst du?", auf: "zeige('termine')" });
-  if (kz.schulung > 0) add({ id: "schulung", stufe: "rot", sym: "🎓", t: "Schulung: bitte einen Termin wählen", u: "Hansi hat dir Termine vorgeschlagen", auf: "zeige('schulungen')" });
+  if (kz.schulung > 0) add({ id: "schulung", stufe: "rot", sym: "🎓", t: "Schulung: bitte einen Termin wählen", u: "Hansi hat dir Termine vorgeschlagen", auf: "smStart()" }); // 2.466.0 (Wunschliste #24): vorher Sprung auf die Seite „schulungen“, die es nicht gibt → leere Seite
   const in7 = tagPlus(heuteIso(), 7);
-  for (const a of (INIT?.meineAufgaben || []).filter((x) => x.faellig && x.faellig <= in7).slice(0, 3)) add({ id: "aufgabe:" + a.id, stufe: "rot", sym: "📌", t: a.text, u: "Aufgabe " + faelligText(a.faellig).replace(/<[^>]+>/g, ""), auf: "zeige('aufgaben')", knoepfe: [["✔ erledigt", `aufgabeErledigt('${esc(a.id)}', true)`]] });
+  for (const a of (INIT?.meineAufgaben || []).filter((x) => x.faellig && x.faellig <= in7).slice(0, 3)) add({ id: "aufgabe:" + a.id, stufe: "rot", sym: "📌", t: a.text, u: "Aufgabe " + faelligText(a.faellig).replace(/<[^>]+>/g, ""), auf: "zeige('protokolle')", knoepfe: [["✔ erledigt", `aufgabeErledigt('${esc(a.id)}', true)`]] });
   if (pushMoeglich() && Notification.permission !== "granted") add({ id: "push", stufe: "rot", sym: "🔔", t: "Benachrichtigungen sind aus", u: "Sonst verpasst du Nachrichten und Anklopfen", auf: "zeige('einstellungen')", knoepfe: [["Einschalten", "pushEinschalten()"]] });
   // 🟠 Clubleitung
   if (leitung && kz.buero > 0) add({ id: "buero", stufe: "orange", sym: "🗂️", t: `Büro-Eingang: ${anz(kz.buero, "Sache wartet", "Sachen warten")}`, u: "Änderungen, Ausleihen, Vorschläge …", auf: "buStart()" });
