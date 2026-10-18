@@ -47,7 +47,7 @@ const dbFetch: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.440.0";
+const SERVER_VERSION = "2.442.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1981,6 +1981,29 @@ async function geburtstagZettel(ich: Ich, heute: string) {
   if (await inProbe(ich.person_id)) return;
   const text = `🎂 Heute hat unser Clubmitglied ${ich.name || ich.vorname} Geburtstag! Herzlichen Glückwunsch und alles Gute! 🥳`.slice(0, PINNWAND_ZEICHEN);
   return clubZettelAushaengen(ich.person_id, `geburtstag_zettel_${heute.slice(0, 4)}`, text, "pinnwand_geburtstag", { tag: heute });
+}
+// 2.442.0 KC-CLUB-ZEITUMSTELLUNG (Wunschliste #18, Hansi): am Samstag vor der Zeitumstellung (letzter Sonntag im März/Oktober) ab 18 Uhr
+// ein Push an alle mit App – jedes Jahr von selbst berechnet, einmal je Umstellung (Merker im Protokoll). Ruhezeit wird beachtet.
+const letzterSonntag = (j: number, monat: number) => { const t = new Date(Date.UTC(j, monat, 0)); return new Date(Date.UTC(j, monat - 1, t.getUTCDate() - t.getUTCDay())); };
+function zeitumstellungMorgen(heute: string): "sommer" | "winter" | null {
+  const j = Number(heute.slice(0, 4)), vortag = (d: Date) => new Date(d.getTime() - 86400000).toISOString().slice(0, 10);
+  return vortag(letzterSonntag(j, 3)) === heute ? "sommer" : vortag(letzterSonntag(j, 10)) === heute ? "winter" : null;
+}
+async function zeitumstellungMelden() {
+  const jetztD = new Date(), heute = berlinTag(jetztD), art = zeitumstellungMorgen(heute);
+  if (!art || berlinStunde(jetztD) < 18) return;
+  const { data: schon } = await db.from("kc_club_protokoll").select("id").eq("aktion", "zeitumstellung_push").eq("details->>tag", heute).limit(1);
+  if (schon?.length) return;
+  await protokoll(null, "zeitumstellung_push", { tag: heute, art }); // erst merken, dann senden – nie doppelt
+  const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null);
+  const ids = [...new Set((zug ?? []).map((z: any) => z.person_id as string))];
+  const winter = art === "winter";
+  await sendenGewaehlt("club_erinnerung", ids, ["push"], {
+    titel: winter ? "🕑 Heute Nacht: Uhr zurückstellen" : "🕑 Heute Nacht: Uhr vorstellen",
+    kurz: winter ? "Um 3 Uhr wird die Uhr auf 2 Uhr zurückgestellt – eine Stunde länger schlafen! 😴 Handy stellt sich selbst um, Backofen- und Autouhr von Hand."
+      : "Um 2 Uhr wird die Uhr auf 3 Uhr vorgestellt – eine Stunde weniger Schlaf. ⏰ Handy stellt sich selbst um, Backofen- und Autouhr von Hand.",
+    url: APP_URL,
+  }, `club-zeitumstellung:${heute}`);
 }
 async function geburtstagZettelAbnehmen() {
   const heute = berlinTag(new Date());
@@ -5597,6 +5620,7 @@ Deno.serve(async (req) => {
       await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
       await geburtstagZettelAbnehmen().catch((e) => console.error("geburtstag zettel ab", String(e))); // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0)
       await sonderstundenWartung().catch((e) => console.error("sonderstunden wartung", String(e))); // KICC-F-100 (2.419.0)
+      await zeitumstellungMelden().catch((e) => console.error("zeitumstellung", String(e))); // 2.442.0 KC-CLUB-ZEITUMSTELLUNG
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-SPUR (2.23.88): Wege der Mitglieder nur 30 Tage aufbewahren
       { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }

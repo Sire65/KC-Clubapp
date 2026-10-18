@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6522,6 +6522,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(neu\.rueckmeldung\) neu\.status = "offen";/.test(server) && /\.eq\("status", "offen"\)\.is\("antwort", null\)/.test(server), "Antwort auf Rückfrage gibt den Punkt zurück; löschen nur unbearbeitet");
   assert.ok(/KACHELN\.admin\.unshift\(\{ id: "ad-wuensche", sym: "📝", t: "Wünsche an Claude"/.test(html) && /function wuStart\(\)/.test(html) && /id="wuText" rows="3" maxlength="4000"[^>]*data-diktat/.test(html), "Admin-Kachel, Eingabe mit 🎤");
   assert.ok(/const wuOffen = \(l\) => l\.filter\(\(x\) => \["offen", "in_arbeit"\]\.includes\(x\.status\)\)\.sort\(\(a, b\) => \(b\.wichtig - a\.wichtig\) \|\| \(a\.reihenfolge - b\.reihenfolge\)\);/.test(html), "Reihenfolge: ⭐ zuerst, dann ▲▼");
+}
+// 2.442.0 KC-CLUB-ZEITUMSTELLUNG (Wunschliste #18): Push am Samstag vor der Zeitumstellung
+{
+  const b = server.slice(server.indexOf("const letzterSonntag ="), server.indexOf("async function zeitumstellungMelden")).replace(/: (number|string|Date)(?=[,)])/g, "").replace(/\): "sommer" \| "winter" \| null/, ")");
+  const { zeitumstellungMorgen } = new Function(b + "; return { zeitumstellungMorgen };")();
+  assert.equal(zeitumstellungMorgen("2026-10-24"), "winter"); assert.equal(zeitumstellungMorgen("2026-10-25"), null);
+  assert.equal(zeitumstellungMorgen("2027-03-27"), "sommer"); assert.equal(zeitumstellungMorgen("2027-10-30"), "winter"); assert.equal(zeitumstellungMorgen("2026-10-17"), null);
+  assert.ok(/if \(!art \|\| berlinStunde\(jetztD\) < 18\) return;/.test(server) && /await protokoll\(null, "zeitumstellung_push", \{ tag: heute, art \}\); \/\/ erst merken, dann senden/.test(server) && /await zeitumstellungMelden\(\)\.catch/.test(server), "ab 18 Uhr, einmal je Umstellung, in der Wartung");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

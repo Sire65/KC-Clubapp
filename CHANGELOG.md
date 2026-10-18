@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.442.0 – 2026-10-18 – Push zur Zeitumstellung
+Am Samstag vor der Zeitumstellung (März und Oktober) kommt ab 18 Uhr ein Push: Uhr vor- bzw. zurückstellen. Jedes Jahr automatisch.
+
 ## 2.441.0 – 2026-10-18 – 📣 Info-Laufband: das Treffen ist der erste Punkt, Karte viel niedriger (KC-CLUB-LAUFBAND-TREFFEN)
 Fund Hansi: „Noch nicht optimal. Was da über dem neuen Feld steht, sollte in das Feld rein als ein Punkt. Jetzt ist alles viel zu hoch.“
 - Die Kopfzeile (Treffen, Datum, Ort, Zu-/Absage, x/y angemeldet) ist weg – sie ist jetzt der **erste Punkt im Laufband**. Die Karte ist dadurch deutlich niedriger.
