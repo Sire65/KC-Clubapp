@@ -1,7 +1,9 @@
 # Änderungen
 
-## 2.477.0 – 2026-10-18 – KC-CLUB-ONLINE-GERAET: Admin hört, mit welchem Gerät jemand online ist
-Wunsch Hansi („Kannst du nur für Admin sagen: Klaus ist vom PC oder Tablet oder Handy online“): Der Server erkennt das Gerät an der Browser-Kennung (User-Agent) bzw. am Hinweis der App (iPad gibt sich als Mac aus – Berührung zählt). Nur Admins: Push „🟢 Klaus (am Handy) ist jetzt online (10:05 Uhr)“, Ansage „Klaus am Handy ist jetzt online“, Meldung beim Öffnen „Im Moment sind Klaus (am PC) …“. Alle anderen wie bisher ohne Gerät. Gespeichert wird nur handy/tablet/pc. Server 2.477.0.
+## 2.477.0 – 2026-10-18 – KC Fernhilfe F2: nur Änderungen statt Vollbild · Server 2.477.0
+**KC-CLUB-FERNHILFE F2** (Wunsch Hansi „mit F2 weitermachen“, Konzept docs/FERNHILFE_KONZEPT.md): Beim Mitschauen und Vorführen über die direkte Leitung geht nach dem ersten Vollbild nur noch die geänderte Stelle raus (gleicher Anfang/Ende entfallen, große Mitte gepackt). Jede Änderung trägt die Nummer ihres Bildes; passt sie beim Empfänger nicht, fordert er ein Vollbild an (nie ein falsches Bild). Spätestens alle 60 s ein Vollbild (Selbstheilung). Nur an Apps, die das können (Meldung „hallo + f2“) – ältere bekommen weiter Vollbilder; Datenbank-Rückfall unverändert. Server: Protokoll je Sitzung zusätzlich Vollbilder/Änderungen.
+Tests: tools/fernhilfe/fh-aenderungen-test.ts 21/21 (Änderung 158 Zeichen statt 28.277 bei 356 KB Liste), tools/fernhilfe/fh-aenderungen-browser.mjs (Chromium, echte App) grün, fh-leitung-test.ts 11/11, fern-bedienen-test.mjs grün, Vertragstests grün, Typprüfung unverändert (17). Hilfe/Twinkey/Lupe: keine sichtbare Änderung, nichts nachzuziehen.
+Rückweg: 2.476.0 erneut einspielen.
 
 ## 2.476.0 – 2026-10-18 – Bündel: Adventskalender, Einstellungen neu geordnet, echter Hahn, „Heute“ im Kalender, letzte Chat-Nachricht offen, Uhren ohne Kratzen
 Bündel (Wunsch Hansi „Spiele alles ein, was noch offen ist“) – eine Version mit:

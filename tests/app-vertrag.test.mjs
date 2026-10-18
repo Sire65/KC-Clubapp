@@ -10802,6 +10802,18 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\.spg-fern \{/.test(lies("index.html")) && /\.fern-tipp \{/.test(lies("index.html")), "sichtbare Markierung und Bedienfläche");
   assert.ok(/id: "fernhilfe_bedienen", thema: "technik"/.test(html) && /ALLE TESTS GRÜN/.test(lies("tools/fernhilfe/fern-bedienen-test.mjs")), "Hilfe und Browser-Test");
 }
+// KC-CLUB-FERNHILFE F2 (18.10.2026): nach dem ersten Vollbild nur noch Änderungen; Lücke → Vollbild; spätestens alle 60 s Vollbild; ältere Apps nur Vollbilder
+{
+  assert.ok(/const FH_VOLL_MS = 60000;/.test(html) && /async function fhBildSenden\(L, f, extra = \{\}\)/.test(html) && /async function fhBildEmpfangen\(L, d\)/.test(html), "F2-Bausteine fehlen");
+  assert.ok(/if \(!s \|\| !L\.f2\) \{/.test(html) && /if \(obj\?\.hallo\) \{ L\.f2 = !!obj\.f2; if \(L\.d\) L\.d\.neu = true; \}/.test(html), "Änderungen nur an Apps, die sie zusammensetzen können; nach hallo Vollbild");
+  assert.ok(/x\.von !== R\.seq/.test(html) && /L\.senden\(\{ hallo: 1, f2: 1 \}\)/.test(html), "passt eine Änderung nicht, wird ein Vollbild angefordert");
+  assert.ok((html.match(/senden\(\{ hallo: 1, f2: 1 \}\)/g) || []).length === 5 && !/senden\(\{ hallo: 1 \}\)/.test(html), "alle Zuschauer melden sich mit f2");
+  assert.ok(/if \(fhVollFaellig\(\)\) \{ SPG\.letzt = ""; SPG\.schmutzig = true; \}/.test(html), "Selbstheilung: Vollbild spätestens nach 60 s");
+  assert.ok(/Object\.defineProperty\(f, "_s", \{ value: s \}\)/.test(html) && /s = f\._s \|\| await spgAuspacken\(f\)/.test(html), "Rohbild nie mitgesendet (nicht aufzählbar), Empfänger nutzt zusammengesetztes Bild");
+  assert.ok(/await fhBildSenden\(fl, f\)/.test(html) && /await fhBildSenden\(fl, f, \{/.test(html) && /fhBildFolge\(VF\.fhL, d\)/.test(html) && /fhBildFolge\(SS\.fhL, d\)/.test(html), "Mitschauen und Vorführen nutzen F2");
+  assert.ok(/voll: z\(m\.voll\), aend: z\(m\.aend\)/.test(server), "Server: Vollbilder/Änderungen im Protokoll");
+}
+
 // KC-CLUB-FERNHILFE F4 (18.10.2026): Ton während Mitschauen/Bedienen – vorhandener App-Anruf, ohne Vollbild, Ende der Sitzung = Ton aus
 {
   assert.ok(/const rufLeisten = \(\) => \{ if \(RUF\?\.vf\) vfLeiste\(\); else if \(RUF\?\.ms\) msTonZeigen\(\); \};/.test(html) && /await anrufen\(pid, false, false, true\)/.test(html), "Ton über den vorhandenen App-Anruf");

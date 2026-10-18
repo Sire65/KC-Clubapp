@@ -104,7 +104,7 @@ const FH_BROADCAST = true;
 const fhNeu = () => { const b = crypto.getRandomValues(new Uint8Array(48)); let s = ""; for (const x of b.subarray(16)) s += String.fromCharCode(x);
   return { kanal: "kc-fh-" + [...b.subarray(0, 16)].map((x) => x.toString(16).padStart(2, "0")).join(""), schluessel: btoa(s) }; };
 // Messwerte einer Sitzung (nur Zahlen) fürs Protokoll – Grundlage für die Grenzen der Fernhilfe
-const fhMess = (m: any) => { const z = (v: any) => Math.max(0, Math.min(1e9, Math.round(Number(v) || 0))); return m && typeof m === "object" ? { n: z(m.n), kb: z(m.kb), max_kb: z(m.max_kb), befehle: z(m.befehle), weg: m.weg === "broadcast" ? "broadcast" : "server" } : null; };
+const fhMess = (m: any) => { const z = (v: any) => Math.max(0, Math.min(1e9, Math.round(Number(v) || 0))); return m && typeof m === "object" ? { n: z(m.n), kb: z(m.kb), max_kb: z(m.max_kb), befehle: z(m.befehle), voll: z(m.voll), aend: z(m.aend), weg: m.weg === "broadcast" ? "broadcast" : "server" } : null; };
 type StudioStufe = "zeigen" | "alles" | null;
 function studioAusWert(w: any): { stufe: StudioStufe; zeigen: boolean; allesBis: string | null } {
   const zeigen = w?.zeigen === true, allesBis = w?.alles_bis && Date.now() < new Date(w.alles_bis).getTime() ? String(w.alles_bis) : null;
