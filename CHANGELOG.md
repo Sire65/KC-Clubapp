@@ -17,6 +17,9 @@ Anlass (Hansi): „Checke alle Programme durch und reduziere die DB-Anfragen auf
 für den Ersatz-Server) kostet je Bau ~3.000 Datenbankabfragen und wurde tagsüber alle 15 Min. neu gebaut, weil sich fast immer etwas ändert.
 Jetzt höchstens 1× pro Stunde (Nachtrag aus dem Notbetrieb weiter alle 15 Min., „erzwingen“ baut sofort). Im Ausfall ist der Stand damit höchstens ~1 Std. alt.
 
+## 2.446.0 – 2026-10-18 – Thema Kegelabend (KC-CLUB-KEGELN, Wunschliste #4)
+Neues Kopf-Thema 🎳 Kegelabend (Farben Schokolade): unten eine Holzbahn mit 9 Kegeln (König mit roter Krone). Ein Koch mit Kochmütze nimmt Anlauf und rollt die Kugel – Kegel fliegen um, „5 Holz!“, dann stellen sie sich wieder auf. Oben rechts die Kreidetafel mit dem Vornamen: Strichliste und Summe. Der 6. Wurf ist immer „Alle Neune!“ mit Konfetti, der Koch jubelt; danach wischt ein Schwamm die Tafel sauber und der nächste Durchgang beginnt nahtlos. Vorschau, Hilfe, Lupe ergänzt. Nur App.
+
 ## 2.445.0 – 2026-10-18 – Thema Bauernhof (KC-CLUB-BAUERNHOF, Wunschliste #3)
 Neues Kopf-Thema 🐄 Bauernhof (Farben Küchengrün, rustikale Schrift): ein ganzer Tag auf dem Hof. Morgens geht die Sonne auf, der Hahn kräht auf dem Zaunpfosten („Kikeriki!“); Kuh, Schwein und Hühner kommen auf die Wiese, das Schwein suhlt sich in der Pfütze, Vögel und Wolken ziehen. Der Traktor bringt Stroh und lädt einen Ballen ab, dann steht ein Holzschild „Hof <Vorname>“. Abends Abendrot, alle Tiere gehen in den roten Stall, das Tor schließt, im Fenster brennt Licht; nachts Mond und Sterne, der Hahn schläft (zzz). Der nächste Lauf beginnt in der Nacht und wird Morgen – kein Bruch. Vorschau, Hilfe, Lupe ergänzt. Nur App.
 
