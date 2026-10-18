@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.481.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.482.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -23512,6 +23512,26 @@ function ilNachTreffen(t) {
   const std = (Date.now() - Date.parse(l.beginn)) / 3600000;
   return std >= 3 && std <= 36 ? { id: "danke:" + l.id, stufe: "weiss", sym: "🙏", t: `Danke fürs Kommen – ${l.titel}!`, u: "Schöne Fotos gemacht? Lade sie hoch", auf: "zeige('fotos')", knoepfe: [["📸 Fotos", "zeige('fotos');setTimeout(fotoForm,250)"]] } : null;
 }
+// 2.482.0 KC-CLUB-LAUFBAND-WERNE (Wunsch Hansi, Punkt 3): „Diese Woche in Werne“ aus dem Stadt-Kalender – höchstens einmal am Tag je Gerät
+// geholt (Server ohne Datenbank, 6 Std. Zwischenspeicher), dann aus dem Gerätespeicher; je Runde ein Tipp, täglich ein anderer.
+const IL_STADT = "kc_club_stadt_woche"; let ilStadtLaeuft = false;
+function ilStadtLesen() { try { const a = JSON.parse(localStorage.getItem(IL_STADT) || "null"); return a && Array.isArray(a.liste) ? a : null; } catch { return null; } }
+async function ilStadtLaden() {
+  const c = ilStadtLesen(); if (ilStadtLaeuft || (c && c.tag === heuteIso()) || !ICH || !zugangAktion("stadt_woche")) return;
+  ilStadtLaeuft = true;
+  try { const r = await api("stadt_woche"); localStorage.setItem(IL_STADT, JSON.stringify({ tag: heuteIso(), liste: (r.termine || []).slice(0, 8) })); ilZeigen(); }
+  catch { try { localStorage.setItem(IL_STADT, JSON.stringify({ tag: heuteIso(), liste: c?.liste || [] })); } catch {} } // nicht erreichbar → heute nicht nochmal
+}
+function ilStadt() {
+  setTimeout(ilStadtLaden, 4000); // nach dem Start, nicht im Startweg
+  const h = heuteIso(), l = (ilStadtLesen()?.liste || []).filter((t) => t.bisTag >= h && t.tag <= tagPlus(h, 7)); if (!l.length) return null;
+  const t = l[(+h.slice(8, 10)) % l.length], tagTxt = (iso) => fTag.format(new Date(iso + "T12:00:00Z"));
+  const wannTxt = t.tag <= h ? (t.bisTag > h ? `heute bis ${tagTxt(t.bisTag)}` : t.ganztaegig ? "heute" : `heute ${fZeit.format(new Date(t.beginn))} Uhr`)
+    : `${tagTxt(t.tag)}${t.bisTag > t.tag ? " – " + tagTxt(t.bisTag) : ""}${t.ganztaegig ? "" : `, ${fZeit.format(new Date(t.beginn))} Uhr`}`;
+  const url = /^https:\/\/www\.werne\.de\//.test(t.url || "") ? t.url : "https://www.werne.de/de/veranstaltungen/";
+  return { id: "stadt:" + t.key, stufe: "weiss", sym: "🏙️", t: `${t.tag <= h ? "Heute" : "Diese Woche"} in Werne: ${t.titel}`, u: wannTxt + (t.ort ? " · " + t.ort : ""),
+    auf: `window.open(${JSON.stringify(url)}, '_blank', 'noopener')` }; // auf läuft über new Function (kein HTML-Attribut) – JSON genügt
+}
 function ilMeldungen() {
   const L = [], add = (m) => L.push(m), t = INIT?.naechstesTreffen, kz = INIT?.kz || {}, leitung = !!(ICH?.vorstand || ICH?.admin);
   const anz = (n, ein, mehr) => `${n} ${n === 1 ? ein : mehr}`;
@@ -23549,6 +23569,8 @@ function ilMeldungen() {
   const nh = ilNeuheit(); if (nh) add(nh); // 🆕 eine Neuheit pro Runde
   // ⚪ schöne Infos
   const an = ilAnlass(); if (an) add(an);
+  const sw = ilStadt(); if (sw) add(sw); // 🏙️ Werne
+
   const dk = ilNachTreffen(t); if (dk) add(dk);
   for (const g of INIT?.geburtstageHeute || []) if (g.person_id !== ICH?.person_id) add({ id: "geb:" + g.person_id, stufe: "weiss", sym: "🎂", t: `${g.name} hat heute Geburtstag`, u: "Gratuliere mit einem Tipp", auf: `gratulieren('${esc(g.person_id)}', true)`, knoepfe: [["💬 Gratulieren", `gratulieren('${esc(g.person_id)}', true)`]] });
   // 2.441.0: „x Mitglieder online“ nicht hier – das zeigt schon das Feld „Mitglieder“ darunter (nichts doppelt)

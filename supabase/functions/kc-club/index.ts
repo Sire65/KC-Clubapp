@@ -92,7 +92,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.481.0";
+const SERVER_VERSION = "2.482.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1861,6 +1861,8 @@ const STADT = {
   zeichen: "🏙️ ",
   tageVoraus: 400,
 };
+const STADT_WOCHE_QUELLEN = ["feste", "maerkte", "simjue", "sonstige", "theater", "fuehrungen"], STADT_WOCHE_MS = 6 * 3600000; // 2.482.0 KC-CLUB-LAUFBAND-WERNE
+let stadtWoche: { zeit: number; liste: unknown[] } | null = null;
 type StadtTermin = { key: string; quelle: string; titel: string; beginn: string; ende: string | null; ganztaegig: boolean; ort: string | null; url: string | null; tag: string; bisTag: string };
 const stadtCache = new Map<string, { zeit: number; liste: StadtTermin[] }>();
 function icsZeilen(text: string) { return text.replace(/\r\n?/g, "\n").replace(/\n[ \t]/g, "").split("\n"); }
@@ -10915,6 +10917,18 @@ Köcheclub-App`,
       }
 
       // KC-CLUB-STADT-TERMINE (2.22.6): Liste aus den Kalendern der Stadt Werne, Übernehmen, Einstellungen – nur Admin
+      // 2.482.0 KC-CLUB-LAUFBAND-WERNE (Wunsch Hansi, Punkt 3 des Info-Feld-Konzepts): „Diese Woche in Werne“ für alle Mitglieder –
+      // ohne Datenbank: Stadt-Kalender (werne.de) mit Zwischenspeicher, das Ergebnis 6 Std. im Speicher; die App fragt höchstens einmal am Tag.
+      case "stadt_woche": {
+        if (stadtWoche && Date.now() - stadtWoche.zeit < STADT_WOCHE_MS) return json({ termine: stadtWoche.liste });
+        const { termine } = await stadtHolen(STADT_WOCHE_QUELLEN);
+        const heute = berlinTag(new Date()), bis = tagPlusS(heute, 7);
+        const liste = termine.filter((t) => t.tag <= bis && t.bisTag >= heute).sort((x, y) => x.beginn.localeCompare(y.beginn)).slice(0, 8)
+          .map((t) => ({ key: t.key, titel: t.titel, tag: t.tag, bisTag: t.bisTag, ganztaegig: t.ganztaegig, beginn: t.beginn, ort: t.ort, url: t.url }));
+        stadtWoche = { zeit: Date.now(), liste };
+        return json({ termine: liste });
+      }
+
       case "stadt_termine": {
         nurAdmin(ich);
         const k = await stadtKonfig(), quellen = Array.isArray(p.quellen) ? p.quellen.map(String) : STADT.quellen.map((q) => q.id);

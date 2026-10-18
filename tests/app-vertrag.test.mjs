@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -10850,7 +10850,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/for \(const id in vorher\) if \(!\(id in jetzt\) && !aus\.has\(id\)\) fertig\[id\] = vorher\[id\];/.test(s) && /L\.push\(\.\.\.ilErledigt\(L\)\);/.test(s) && /fertig: "Deine Stimme ist abgegeben"/.test(s), "erledigt → grüne Bestätigung, ausgeblendet zählt nicht");
   assert.ok(/r\.fertig \|\| \(r\.tag !== heuteIso\(\) && r\.n >= 3\)/.test(s) && /jahreszeitVorschau\('herbst', 'kuerbis'\)/.test(s) && /jahreszeitVorschau\('halloween'\)/.test(s) && /const nh = ilNeuheit\(\); if \(nh\) add\(nh\);/.test(s), "Neuheiten: höchstens 3 Tage, nach Antippen nie wieder, eine pro Runde");
   assert.ok(/Guten Morgen/.test(s) && /Guten Abend/.test(s) && /Schönen \$\{advent \+ 1\}\. Advent!/.test(s) && /Danke fürs Kommen/.test(s) && /std >= 3 && std <= 36/.test(s), "Gruß nach Tageszeit, Advent/Feiertage, Dank nach dem Treffen");
-  assert.ok(!/api\(/.test(s), "keine Server-Abfrage");
+  assert.ok(!/api\(/.test(s.replace(/async function ilStadtLaden\([\s\S]*?\n\}\n/, "")), "keine Server-Abfrage (außer der täglichen Werne-Abfrage, 2.482.0)");
   assert.ok(/\.il-gruen \{ --il-f: #5fd38d;/.test(seite), "grüne Stufe");
 }
 // 2.481.0 KC-CLUB-GASTGEBER-FRUEHWARNUNG: Einladung (mit Tagesordnung, Uhrzeit, Treffpunkt), Änderung und Absage an die Gastgeberin immer per Push + E-Mail
@@ -10874,5 +10874,14 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/hat Anklopfen blockiert<\/h3>/.test(k) && /data-w="chat">💬 Nachricht schreiben/.test(k) && /data-w="anruf">📞 Anrufen/.test(k) && /direkt\(pid\); else if \(b\.dataset\.w === "anruf"\) anrufen\(pid\)/.test(k), "Fenster mit Chat und Anruf");
   assert.ok(/klopfbar === false\) return klopfGesperrt\(pid, name\);/.test(html) && (html.match(/KLOPF_GESPERRT_RE\.test\(e\?\.message \|\| ""\)/g) || []).length === 2, "beim Antippen und bei der Antwort des Servers (auch „weiter anklopfen“)");
   assert.ok(/hat Anklopfen ausgeschaltet – schreib einfach eine Nach/.test(server), "Server-Text passt zur Erkennung");
+}
+// 2.482.0 KC-CLUB-LAUFBAND-WERNE: „Diese Woche in Werne“ im Info-Laufband – Server ohne Datenbank, App höchstens einmal am Tag
+{
+  const s = server.slice(server.indexOf('case "stadt_woche": {'), server.indexOf('case "stadt_termine": {'));
+  assert.ok(/if \(stadtWoche && Date\.now\(\) - stadtWoche\.zeit < STADT_WOCHE_MS\) return json/.test(s) && /stadtHolen\(STADT_WOCHE_QUELLEN\)/.test(s) && !/db\./.test(s) && !/nurAdmin/.test(s), "für alle, ohne Datenbank, 6 Std. Zwischenspeicher");
+  const a = html.slice(html.indexOf("async function ilStadtLaden("), html.indexOf("function ilMeldungen("));
+  assert.ok(/\(c && c\.tag === heuteIso\(\)\)/.test(a) && /zugangAktion\("stadt_woche"\)/.test(a) && /setTimeout\(ilStadtLaden, 4000\)/.test(a), "höchstens einmal am Tag, nicht im Startweg");
+  assert.ok(/\/\^https:\\\/\\\/www\\\.werne\\\.de\\\/\//.test(a) && /Diese Woche"\} in Werne/.test(a), "nur Links auf werne.de");
+  assert.ok(/const sw = ilStadt\(\); if \(sw\) add\(sw\);/.test(html), "im Laufband");
 }
 
