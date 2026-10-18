@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6512,6 +6512,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/\{ a: "kette-hampel", t: "Hampelmann", k: "Hampelmann", s: \[/.test(html) && /const hampel = \(t\) => \{/.test(html) && /"kette-hampel": hampel/.test(html), "8. Bewegung Hampelmann (vor dem Sprung), berechnet wie die anderen");
   assert.ok(/kette: 1, sek: 64, pause: 15,/.test(html) && /je acht Bewegungen[^"]*Hampelmann, Sprung\./.test(html) && /zwei Hampelmänner, ein Sprung in die Luft/.test(html), "4 ganze Ketten à 8 × 2 s; Begrüßung und Erklärung nennen den Hampelmann");
+}
+// 2.440.0 KC-CLUB-WUNSCHLISTE (Wunsch Hansi „Liste im Programm, wo ich dir Vorschläge reinschreibe – du arbeitest Punkt für Punkt ab“)
+{
+  const mig = lies("supabase/migrations/20261018_kc_club_v2440_wunschliste.sql");
+  assert.ok(/create table if not exists public\.kc_club_wunschliste/.test(mig) && /enable row level security/.test(mig) && /revoke all on public\.kc_club_wunschliste from anon, authenticated;/.test(mig) && /grant select, insert, update, delete on public\.kc_club_wunschliste to service_role;/.test(mig), "Tabelle nur für den Server");
+  assert.ok(lies("tools/db-test/78_erwartet.txt").includes("kein_zugriff_ohne_server=t"), "Probelauf");
+  for (const a of ["wl_liste", "wl_speichern", "wl_status", "wl_loeschen"]) assert.ok(new RegExp(`case "${a}": \\{[^\\n]*\\n\\s+nurAdmin\\(ich\\);`).test(server), "nur Admin: " + a);
+  assert.ok(/if \(neu\.rueckmeldung\) neu\.status = "offen";/.test(server) && /\.eq\("status", "offen"\)\.is\("antwort", null\)/.test(server), "Antwort auf Rückfrage gibt den Punkt zurück; löschen nur unbearbeitet");
+  assert.ok(/KACHELN\.admin\.unshift\(\{ id: "ad-wuensche", sym: "📝", t: "Wünsche an Claude"/.test(html) && /function wuStart\(\)/.test(html) && /id="wuText" rows="3" maxlength="4000"[^>]*data-diktat/.test(html), "Admin-Kachel, Eingabe mit 🎤");
+  assert.ok(/const wuOffen = \(l\) => l\.filter\(\(x\) => \["offen", "in_arbeit"\]\.includes\(x\.status\)\)\.sort\(\(a, b\) => \(b\.wichtig - a\.wichtig\) \|\| \(a\.reihenfolge - b\.reihenfolge\)\);/.test(html), "Reihenfolge: ⭐ zuerst, dann ▲▼");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -10382,7 +10392,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/const IL_TAKT_MS = 6000/.test(programm) && /a\.tag === heuteIso\(\) \? a\.ids : \[\]/.test(programm) && /IL\.halt = Date\.now\(\) \+ 9000/.test(programm), "6 s Takt, ✕ nur für heute, Berühren hält an");
   assert.ok(/\.il \{[^}]*width: 100%; margin-top: 14px;[^}]*border: 2px solid var\(--il-f\); border-radius: 16px;/.test(seite) && /\.il-rot \{/.test(seite) && /\.il-orange \{/.test(seite) && /\.il-gold \{/.test(seite), "Rahmen so breit wie die 3 Felder, Farben nach Wichtigkeit");
 }
-// 2.440.0 KC-CLUB-LAUFBAND-TREFFEN: die Kopfzeile (Treffen, Datum, Zu-/Absage) ist der erste Punkt im Laufband – Karte deutlich niedriger
+// 2.441.0 KC-CLUB-LAUFBAND-TREFFEN: die Kopfzeile (Treffen, Datum, Zu-/Absage) ist der erste Punkt im Laufband – Karte deutlich niedriger
 {
   const f = programm.slice(programm.indexOf("function infoTreffen() {"), programm.indexOf("// 2.209.0 KC-CLUB-PUSH-SPRUNG"));
   assert.ok(!/class="klick"/.test(f.slice(0, f.indexOf("<div class=\"kacheln3\">"))) && !/<h2>/.test(f.slice(0, f.indexOf("function ilTreffen("))), "keine Kopfzeile mehr über dem Laufband");
@@ -10393,7 +10403,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/infoLetztes === f\.id \+ inhalt\) return ilZeigen\(\);/.test(programm) && /if \(b\.firstElementChild && IL\.html === kl \+ html\) return;/.test(programm), "Laufband frisch, aber nur bei Änderung neu gezeichnet");
   assert.ok(/\.ifeld > \.il:first-child \{ margin-top: 0; \}/.test(seite), "oben bündig in der Karte");
 }
-// 2.440.0: nichts doppelt mit den 3 Feldern darunter – kein „online“ im Laufband, Geburtstag am Tag selbst nur im Laufband
+// 2.441.0: nichts doppelt mit den 3 Feldern darunter – kein „online“ im Laufband, Geburtstag am Tag selbst nur im Laufband
 {
   const m = programm.slice(programm.indexOf("function ilMeldungen("), programm.indexOf("function ilHtml("));
   assert.ok(!/id: "online"/.test(m) && !/id: "countdown:/.test(m) && !/id: "anmelden:/.test(m) && /id: "geb:"/.test(m), "Laufband ohne Doppel");
