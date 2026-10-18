@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.487.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.488.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5226,7 +5226,7 @@ const HILFE = [
   { id: "jahreszeit_kopf", thema: "darstellung", sym: "🍂", t: "Jahreszeiten-Bild und Deko im Kopf", x: "Im Kopf der Startseite wechselt das Bild <b>von selbst nach dem Kalender</b>: Frühling, Sommer, Herbst, Winter, Advent und Silvester – mit Laub, Schnee, Blumen und kleinen Besuchern. An der Leiste mit den Lämpchen kann eine <b>Deko</b> hängen (Wimpel, Lichterkette, Laternen). Fest einstellen oder ganz abschalten unter ⚙️ → <b>„✨ Effekte“</b>. Die Bühne spart Akku: nach einer Weile ohne Bedienung läuft sie langsamer. Eine <b>Vorschau</b> aus den Einstellungen (z. B. Nikolaus-Stiefel) bleibt stehen, bis du unten auf der Startseite <b>„✕ beenden“</b> tippst (oder in den Einstellungen „📅 Heute“).", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.273.0" }, // 2.337.0 KC-CLUB-TUEV-4
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „✨ Effekte“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("effekte", "setAnimiert"), seit: "2.24.1" },
   { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am grünen Kopf ist eine kleine Ecke umgeknickt. <b>Doppelt tippen</b> (oder nach links ziehen) – der Kopf dreht sich um wie ein Blatt Papier. Auf der Rückseite oben sieben Reiter: <b>🖼️ Diashow</b>, <b>🖍️ Tafel</b>, <b>📋 Flipchart</b>, <b>🕰️ Uhr</b>, <b>🎭 Bühne</b>, <b>🪞 Spiegel</b> und <b>🧩 Rätsel</b>. Damit man das Eselsohr nicht übersieht, blinkt es ab und zu kurz gelb-orange. Sie nutzt den ganzen Bildschirm bis zur Leiste unten. <b>Nochmal doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „📄 Eselsohr am Kopf“. Alles zum Ansehen: Erklär-Video <b>„📄 Die Rückseite: Eselsohr“</b>.", zeig: () => esOeffnen(null), seit: "2.292.0" },
-  { id: "sardinendose", thema: "start", sym: "🥫", t: "Bühne aufrollen wie eine Sardinenbüchse", x: "<b>Lange aufs Eselsohr</b> unten rechts am Kopf drücken – dann rollt sich die Bühne wie der Deckel einer Sardinenbüchse von rechts unten nach links oben auf (mit Blick in die Dose 🐟). Oben bleibt ein kleines <b>Röllchen mit Dosenschlüssel</b>: antippen, und die Bühne rollt sich wieder ab. Doppelt tippen dreht den Kopf weiterhin um. Gemerkt auf diesem Gerät.", seit: "2.487.0" },
+  { id: "sardinendose", thema: "start", sym: "🥫", t: "Kopf aufrollen wie eine Sardinenbüchse", x: "<b>Lange aufs Eselsohr</b> unten rechts am Kopf drücken – dann rollt sich der Kopf wie der Deckel einer Sardinenbüchse von rechts unten nach links oben auf, und darunter liegt die <b>Rückseite</b> mit Bühne, Diashow, Tafel, Uhr … – genau wie nach dem Doppeltipp. Zurück: doppelt aufs Eselsohr hinten tippen.", seit: "2.488.0" },
   // 2.300.0 KC-CLUB-RUECKSEITE-HILFE (Wunsch Hansi „Hilfetexte anpassen“): je ein Text für jeden Reiter der Rückseite
   { id: "es_dia", thema: "start", sym: "🖼️", t: "Rückseite: Diashow", x: "Die <b>🖼️ Diashow</b> zeigt die Fotos aus dem 📷 Fotoalbum, sanft überblendet. Unten: Album wählen, ◀ ▶ blättern, ⏸ anhalten, <b>🎵 Club-Song dazu</b> (🔇 = ohne Musik, wird gemerkt), ⛶ Vollbild. <b>Aufs Foto tippen</b> blendet Leiste und Text aus (nochmal tippen holt sie zurück). Querformat-Fotos stehen auf einem weichen Hintergrund statt schwarzer Balken.", zeig: () => esOeffnen("dia"), seit: "2.300.0" },
   { id: "es_tafel", thema: "start", sym: "🖍️", t: "Rückseite: Tafel & Flipchart", x: "Zum Skizzieren mit dem Finger. <b>🖍️ Tafel</b>: Kreide in sieben Farben, drei Dicken, 🧽 Schwamm, 🧹 alles abwischen, ↶ letzten Strich zurück. <b>📋 Flipchart</b>: Marker, Radierer, <b>„⤴ Umblättern“</b> klappt das volle Blatt nach hinten, ⤵ holt das vorige zurück, ✂️ reißt ein Blatt ab; ein Knopf schaltet das Papier <b>blanko → kariert → liniert</b>. Mit <b>„📤 Sichern“</b> kommt die Skizze ins 🗄️ Archiv oder als Nachricht zu jemandem.", zeig: () => esOeffnen("flip"), seit: "2.300.0" },
@@ -15657,39 +15657,21 @@ function esZiehen(o, hinten) {
   o.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); esDrehen(!hinten); } }); // Tastatur: direkt drehen
   o.addEventListener("dblclick", (e) => { e.preventDefault(); }); // Doppeltipp läuft über pointerup (Handy und PC gleich)
 }
-// ---------- 2.487.0 KC-CLUB-SARDINENDOSE (Wunsch Hansi „die Bühne bei Doppelklick unten rechts auf die Ecke von rechts unten nach links oben wie eine
-// Sardinenbüchse aufrollen – aber so, dass man es wieder rückgängig machen kann“; Wahl Hansi: lange aufs Eselsohr drücken, danach ein Röllchen mit
-// Dosenschlüssel oben links, Antippen rollt wieder ab). Doppeltipp dreht weiter zur Rückseite. Gemerkt nur auf diesem Gerät.
-// Technik: die Bühne wird entlang einer schrägen Linie (x/b + y/h = t) weggeschnitten (clip-path); auf der Linie läuft die aufgerollte Blechrolle mit.
-const DOSE_KEY = "kc_club_dose_zu", DOSE_MS = 1700, DOSE_LANG_MS = 650;
-const doseZu = () => { try { return localStorage.getItem(DOSE_KEY) === "1"; } catch { return false; } };
+// ---------- 2.487.0 KC-CLUB-SARDINENDOSE (Wunsch Hansi „die Bühne von rechts unten nach links oben wie eine Sardinenbüchse aufrollen“; Wahl Hansi:
+// lange aufs Eselsohr drücken) · 2.488.0 (Wunsch Hansi „wenn die Sardinenbüchse auf ist, muss die Bühne bzw. die Rückseite des Kopfbereichs kommen –
+// genau so, als wenn ich doppelt aufs Eselsohr klicke“): unter dem Deckel liegt die Rückseite; am Ende derselbe Zustand wie nach dem Doppeltipp,
+// zurück wie gewohnt über das Eselsohr hinten. Technik: der Kopf wird entlang einer schrägen Linie (x/b + y/h = t) weggeschnitten (clip-path),
+// auf der Linie läuft die Messing-Rolle mit Dosenschlüssel mit.
+const DOSE_MS = 1700, DOSE_LANG_MS = 650;
+try { localStorage.removeItem("kc_club_dose_zu"); } catch {} // 2.487.0 merkte „aufgerollt“ – gibt es nicht mehr (danach ist die Rückseite offen)
 function doseLinie(t, b, h) { // sichtbarer Teil links oben und die Rolle auf der Schnittlinie
   const poly = t <= 1 ? [[0, 0], [t * b, 0], [0, t * h]] : [[0, 0], [b, 0], [b, (t - 1) * h], [(t - 1) * b, h], [0, h]];
   const A = t <= 1 ? [t * b, 0] : [b, (t - 1) * h], B = t <= 1 ? [0, t * h] : [(t - 1) * b, h];
   return { poly, A, B };
 }
-// Sardinen wie in der echten Dose (Vorbild Hansi): silbrig, der Länge nach nebeneinander, Köpfe nach rechts, dunkles Öl dazwischen
-function doseSardinen(hoehe) {
-  const n = Math.max(3, Math.min(7, Math.round((hoehe - 20) / 46)));
-  const fisch = (i) => `<svg viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="dsf${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f3843"/><stop offset=".32" stop-color="#8e9aa7"/><stop offset=".58" stop-color="#eef2f5"/><stop offset=".8" stop-color="#c3ccd5"/><stop offset="1" stop-color="#7d8794"/></linearGradient></defs>
-    <path d="M14 20 L1 7 L6 20 L1 33 Z" fill="#6d7783"/><path d="M12 20 Q60 3 160 9 Q186 11 194 20 Q186 29 160 31 Q60 37 12 20 Z" fill="url(#dsf${i})"/>
-    <path d="M40 15 Q100 10 150 13" stroke="#ffffff" stroke-opacity=".55" stroke-width="1.6" fill="none"/><path d="M165 11 Q159 20 165 29" stroke="#9b6470" stroke-width="2" fill="none"/>
-    <circle cx="179" cy="18" r="4.2" fill="#d9b24a"/><circle cx="179" cy="18" r="2.6" fill="#141414"/></svg>`;
-  return `<div class="dose-fische">${Array.from({ length: n }, (_, i) => fisch(i)).join("")}</div>`;
-}
-function doseRoelchenSetzen(an) {
-  let r = document.getElementById("doseRoelchen"); const h = document.querySelector("#v-start .hero");
-  if (!an) { r?.remove(); h?.classList.remove("dose-zu"); return; }
-  if (!h) return; h.classList.add("dose-zu");
-  if (!r) { h.insertAdjacentHTML("beforebegin", `<button type="button" class="dose-roelchen" id="doseRoelchen" onclick="doseAbrollen()" title="Bühne wieder ausrollen" aria-label="Bühne wieder ausrollen">
-    <span class="dose-rolle" aria-hidden="true"><i></i></span><span class="dose-schluessel" aria-hidden="true"></span><span class="dose-text">Bühne ausrollen</span></button>`); }
-}
-async function doseFahren(h, von, bis) { // t von → bis; Bühne wird geschnitten, die Rolle läuft auf der Linie mit
+async function doseFahren(h, von, bis) { // t von → bis; der Kopf wird geschnitten, die Rolle läuft auf der Linie mit
   const ra = h.getBoundingClientRect(), b = ra.width, hh = ra.height;
-  const rolle = document.createElement("div"); rolle.className = "dose-fahrt"; rolle.innerHTML = '<i class="dose-ring" aria-hidden="true"></i>'; document.body.appendChild(rolle); // Rolle in Messing mit Dosenschlüssel
-  // unter dem Deckel: das Innere der Dose (Blech, Öl-Glanz, Sardinen) – liegt hinter der Bühne und kommt beim Aufrollen zum Vorschein
-  const innen = document.createElement("div"); innen.className = "dose-innen"; innen.innerHTML = doseSardinen(hh);
-  Object.assign(innen.style, { left: ra.left + "px", top: ra.top + "px", width: b + "px", height: hh + "px" }); document.body.appendChild(innen); h.style.zIndex = "2";
+  const rolle = document.createElement("div"); rolle.className = "dose-fahrt"; rolle.innerHTML = '<i class="dose-ring" aria-hidden="true"></i>'; document.body.appendChild(rolle); // Messing-Rolle mit Dosenschlüssel
   const t0 = performance.now();
   await new Promise((fertig) => {
     const schritt = (jetzt) => {
@@ -15703,19 +15685,26 @@ async function doseFahren(h, von, bis) { // t von → bis; Bühne wird geschnitt
     };
     requestAnimationFrame(schritt);
   });
-  rolle.remove(); innen.remove(); h.style.clipPath = ""; h.style.zIndex = "";
+  rolle.remove();
 }
 async function doseAufrollen() {
-  const h = document.querySelector("#v-start .hero"); if (!h || h.dataset.dose || doseZu() || ES.offen) return;
+  const h = document.querySelector("#v-start .hero"); if (!h || h.dataset.dose || ES.offen || ES.dreht) return;
+  if (esOhneAnim() || !h.getClientRects().length) return esDrehen(true); // ohne Animation: einfach umdrehen
+  let r = document.getElementById("heroRueck");
+  if (!r) { h.insertAdjacentHTML("afterend", esRueckHtml()); r = h.nextElementSibling; esZiehen(r.querySelector(".eselsohr"), true); }
   h.dataset.dose = "1";
-  try { if (!esOhneAnim() && h.getClientRects().length) await doseFahren(h, 2, 0); doseRoelchenSetzen(true); try { localStorage.setItem(DOSE_KEY, "1"); } catch {} }
-  finally { delete h.dataset.dose; }
-}
-async function doseAbrollen() {
-  const h = document.querySelector("#v-start .hero"); if (!h || h.dataset.dose) return;
-  h.dataset.dose = "1";
-  try { doseRoelchenSetzen(false); try { localStorage.removeItem(DOSE_KEY); } catch {} if (!esOhneAnim()) await doseFahren(h, 0, 2); }
-  finally { delete h.dataset.dose; h.style.clipPath = ""; }
+  const ht = h.offsetHeight, alt = { position: h.style.position, top: h.style.top, left: h.style.left, width: h.style.width, zIndex: h.style.zIndex };
+  try {
+    // Kopf liegt als Deckel über der Rückseite (die rückt an seine Stelle) – beim Aufrollen kommt sie darunter zum Vorschein
+    Object.assign(h.style, { position: "absolute", top: h.offsetTop + "px", left: h.offsetLeft + "px", width: h.offsetWidth + "px", zIndex: "3" });
+    r.classList.remove("versteckt");
+    const tab = esLies("tab", "uhr"); if (tab !== "spiegel") esTab(tab); // Spiegel (Kamera) erst am Ende
+    r.style.clipPath = `inset(0 0 ${Math.max(0, r.offsetHeight - ht)}px 0)`; // nur so groß wie der Deckel, bis er weg ist
+    await doseFahren(h, 2, 0);
+  } finally {
+    Object.assign(h.style, alt); h.style.clipPath = ""; r.style.clipPath = ""; r.classList.add("versteckt"); delete h.dataset.dose;
+  }
+  await esDrehen(true, true); // derselbe Endzustand wie nach dem Doppeltipp (Rückseite offen, Höhe, Tab, Eselsohr hinten)
 }
 async function esDrehen(an, sofort) {
   const h = document.querySelector("#v-start .hero"); if (!h || ES.offen === an || ES.dreht) return;
@@ -21149,7 +21138,6 @@ function kuckuckPruefen() {
 addEventListener("pointerdown", () => { try { if (audio && audio.state === "suspended") audio.resume(); } catch {} }, { capture: true, passive: true });
 setInterval(kuckuckPruefen, 15000); document.addEventListener("visibilitychange", () => { if (!document.hidden) kuckuckPruefen(); });
 try { const w = localStorage.getItem(KOPF_ROLLO); if (w === "1") kopfRolloSetzen("ganz"); else if (w === "halb") kopfRolloSetzen("halb"); } catch {}
-if (doseZu()) doseRoelchenSetzen(true); // 2.487.0 KC-CLUB-SARDINENDOSE: aufgerollt bleibt aufgerollt
 function heroZeigen(richtung) {
   const f = INFO_FELDER[INFO_I] || INFO_FELDER[0], inhalt = f.html();
   // gleicher Inhalt → nicht neu zeichnen (sonst springen Wetter-Animationen bei jedem Online-Takt neu an)

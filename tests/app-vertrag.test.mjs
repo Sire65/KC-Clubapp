@@ -11024,11 +11024,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/id="setFerien"/.test(seite) && /<details class="ferien-laender"><summary>🗺️ Bundesländer wählen/.test(seite) && /BUNDESLAENDER = \[\["BW"/.test(html) && /: \["NW"\]/.test(html), "Schalter + einklappbare Länder-Liste, NRW vorgewählt");
   assert.ok(/FERIEN_GERAET_MS = 30 \* 86400000/.test(html) && /\["ferien", "🏖️ Schulferien"\]/.test(html) && /k: "ferien", re: \/ferien/.test(html), "30 Tage auf dem Gerät, Druck, Suche");
 }
-// 2.487.0 KC-CLUB-SARDINENDOSE: lange aufs Eselsohr drücken rollt die Bühne wie eine Sardinenbüchse auf, Röllchen rollt wieder ab
+// 2.487.0 KC-CLUB-SARDINENDOSE · 2.488.0: lange aufs Eselsohr drücken rollt den Kopf wie eine Sardinenbüchse auf – darunter die Rückseite (wie Doppeltipp)
 {
   assert.ok(/if \(!hinten\) ES\.langUhr = setTimeout\(\(\) => \{ if \(x0 === null \|\| Math\.abs\(dx\) > 8\) return; ES\.lang = true;/.test(html) && /doseAufrollen\(\); \}, DOSE_LANG_MS\)/.test(html), "lange drücken (nur vorne, ohne Ziehen)");
-  assert.ok(/const poly = t <= 1 \? \[\[0, 0\], \[t \* b, 0\], \[0, t \* h\]\]/.test(html) && /await doseFahren\(h, 2, 0\)/.test(html) && /await doseFahren\(h, 0, 2\)/.test(html), "schräg von rechts unten nach links oben, und zurück");
-  assert.ok(/onclick="doseAbrollen\(\)"/.test(html) && /if \(doseZu\(\)\) doseRoelchenSetzen\(true\);/.test(html) && /#v-start \.hero\.dose-zu \{ display: none; \}/.test(seite), "Röllchen rollt ab, gemerkt");
+  assert.ok(/const poly = t <= 1 \? \[\[0, 0\], \[t \* b, 0\], \[0, t \* h\]\]/.test(html) && /await doseFahren\(h, 2, 0\)/.test(html), "schräg von rechts unten nach links oben");
+  const d = html.slice(html.indexOf("async function doseAufrollen("), html.indexOf("async function esDrehen("));
+  assert.ok(/r\.classList\.remove\("versteckt"\)/.test(d) && /await esDrehen\(true, true\); \/\/ derselbe Endzustand wie nach dem Doppeltipp/.test(d) && /return esDrehen\(true\);/.test(d), "darunter die Rückseite, Endzustand wie Doppeltipp");
+  assert.ok(!/doseRoelchen|kc_club_dose_zu"\) === "1"/.test(html) && /localStorage\.removeItem\("kc_club_dose_zu"\)/.test(html), "kein Röllchen mehr, alter Merker wird gelöscht");
   assert.ok(/if \(t - ES\.tipp < 450\) \{ ES\.tipp = 0; esDrehen\(!hinten\); return; \}/.test(html), "Doppeltipp dreht weiter um");
 }
 
