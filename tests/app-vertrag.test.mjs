@@ -11024,4 +11024,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/id="setFerien"/.test(seite) && /<details class="ferien-laender"><summary>🗺️ Bundesländer wählen/.test(seite) && /BUNDESLAENDER = \[\["BW"/.test(html) && /: \["NW"\]/.test(html), "Schalter + einklappbare Länder-Liste, NRW vorgewählt");
   assert.ok(/FERIEN_GERAET_MS = 30 \* 86400000/.test(html) && /\["ferien", "🏖️ Schulferien"\]/.test(html) && /k: "ferien", re: \/ferien/.test(html), "30 Tage auf dem Gerät, Druck, Suche");
 }
+// 2.487.0 KC-CLUB-SARDINENDOSE: lange aufs Eselsohr drücken rollt die Bühne wie eine Sardinenbüchse auf, Röllchen rollt wieder ab
+{
+  assert.ok(/if \(!hinten\) ES\.langUhr = setTimeout\(\(\) => \{ if \(x0 === null \|\| Math\.abs\(dx\) > 8\) return; ES\.lang = true;/.test(html) && /doseAufrollen\(\); \}, DOSE_LANG_MS\)/.test(html), "lange drücken (nur vorne, ohne Ziehen)");
+  assert.ok(/const poly = t <= 1 \? \[\[0, 0\], \[t \* b, 0\], \[0, t \* h\]\]/.test(html) && /await doseFahren\(h, 2, 0\)/.test(html) && /await doseFahren\(h, 0, 2\)/.test(html), "schräg von rechts unten nach links oben, und zurück");
+  assert.ok(/onclick="doseAbrollen\(\)"/.test(html) && /if \(doseZu\(\)\) doseRoelchenSetzen\(true\);/.test(html) && /#v-start \.hero\.dose-zu \{ display: none; \}/.test(seite), "Röllchen rollt ab, gemerkt");
+  assert.ok(/if \(t - ES\.tipp < 450\) \{ ES\.tipp = 0; esDrehen\(!hinten\); return; \}/.test(html), "Doppeltipp dreht weiter um");
+}
 

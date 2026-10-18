@@ -1039,6 +1039,27 @@
   /* KC-CLUB-KOPF-ROLLO (2.159.0/2.160.0): Statusleiste + Infofeld verschwinden unter einer Jalousie – Lamellen klappen zu,
      dann fährt sie mit Abschlussleiste langsam hoch (runter umgekehrt). Lamellen in Club-Beige (CD), Leiste Weinrot. */
   #v-start .hero { position: relative; }
+  /* 2.487.0 KC-CLUB-SARDINENDOSE: aufgerollte Bühne – Blechrolle unterwegs und Röllchen mit Dosenschlüssel */
+  #v-start .hero.dose-zu { display: none; }
+  .dose-fahrt { position: fixed; z-index: 50; pointer-events: none; border-radius: 999px; transform-origin: 50% 50%; overflow: visible;
+    background: repeating-linear-gradient(90deg, rgba(0,0,0,.08) 0 2px, transparent 2px 9px), linear-gradient(180deg, #fff3c4 0%, #e6c96b 28%, #b8923a 55%, #f0dc93 75%, #9c7a2c 100%);
+    box-shadow: 0 3px 8px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.35); } /* 2.487.0: Messing-Rolle wie auf Hansis Vorbild */
+  .dose-ring { position: absolute; left: -30px; top: 50%; width: 26px; height: 18px; margin-top: -9px; border: 3px solid #c8ccd2; border-radius: 45% 45% 45% 45% / 55% 55% 45% 45%; box-sizing: border-box; }
+  .dose-ring::after { content: ""; position: absolute; right: -9px; top: 50%; width: 9px; height: 3px; margin-top: -1.5px; background: #c8ccd2; border-radius: 2px; }
+  .dose-innen { position: fixed; z-index: 1; pointer-events: none; border-radius: 22px; box-sizing: border-box; border: 8px solid #e3e7ec; overflow: hidden; padding: 6px 8px;
+    background: radial-gradient(ellipse at 30% 25%, rgba(255,226,140,.25), transparent 60%), #3a3022; box-shadow: inset 0 0 0 2px #b9c0c8, inset 0 0 22px rgba(0,0,0,.55); }
+  .dose-fische { display: flex; flex-direction: column; justify-content: space-evenly; height: 100%; gap: 2px; }
+  .dose-fische svg { display: block; width: 100%; flex: 1; min-height: 0; filter: drop-shadow(0 2px 2px rgba(0,0,0,.45)); }
+  .dose-roelchen { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; padding: 8px 14px 8px 10px; border: none; border-radius: 16px; background: var(--karte); color: var(--text);
+    box-shadow: 0 4px 12px rgba(0,0,0,.12); font: inherit; font-weight: 700; cursor: pointer; animation: doseRein .4s ease-out; }
+  .dose-roelchen:active { transform: scale(.97); }
+  .dose-rolle { position: relative; width: 92px; height: 24px; border-radius: 12px; background: repeating-linear-gradient(90deg, rgba(0,0,0,.08) 0 2px, transparent 2px 9px), linear-gradient(180deg, #fff3c4 0%, #e6c96b 28%, #b8923a 55%, #f0dc93 75%, #9c7a2c 100%); box-shadow: 0 2px 5px rgba(0,0,0,.3); }
+  .dose-rolle i { position: absolute; right: 2px; top: 2px; width: 20px; height: 20px; border-radius: 50%; background: repeating-radial-gradient(circle, #f3e2a2 0 2px, #9c7a2c 2px 3px); }
+  .dose-schluessel { position: relative; width: 26px; height: 18px; margin-left: -6px; border: 3px solid #c8ccd2; border-radius: 45% 45% 45% 45% / 55% 55% 45% 45%; box-sizing: border-box; }
+  .dose-schluessel::after { content: ""; position: absolute; left: -12px; top: 50%; margin-top: -1.5px; width: 12px; height: 3px; background: #c8ccd2; border-radius: 2px; }
+  .dose-text { font-size: .9rem; } .dose-text::before { content: "🥫 "; }
+  @keyframes doseRein { from { opacity: 0; transform: translate(-10px, -6px) scale(.9); } }
+  @media (prefers-reduced-motion: reduce) { .dose-roelchen { animation: none; } }
   .kopf-pfeil { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 56px; height: 20px; border: none; border-radius: 0 0 14px 14px; background: rgba(0,0,0,.22); color: #fff; padding: 0; cursor: pointer; display: grid; place-items: center; z-index: 3; }
   .kopf-pfeil span { display: block; font-size: 18px; line-height: 1; margin-top: 4px; transition: transform .8s ease; }
   .kopf-pfeil:active { background: rgba(0,0,0,.35); }
@@ -5451,7 +5472,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.486.0" data-v="2.486.0"></script>
+<script src="app.js?v=2.487.0" data-v="2.487.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>
