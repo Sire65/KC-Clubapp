@@ -1182,7 +1182,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/ansicht: ansicht\.get\(m\.person_id\) \?\? null \} : \{\}\)/.test(server), "Ansicht je Mitglied nur für den Admin");
   assert.ok(/const begruesst = (?:geburtstagPruefen\(\) \|\| )?ansichtPruefen\(\) \|\| begruessungPruefen\(\);/.test(html) && /INIT\?\.einstellungen\?\.ansicht\?\.gewaehlt\) return false/.test(html), "Frage beim Start fehlt / käme mehrfach");
   assert.ok(/id="ansichtBlatt" onclick="if\(event\.target===this\)ansichtSetzen\('einfach', true\)"/.test(html) && /Du kannst jederzeit umschalten/.test(html), "Überspringen = einfach / Umschalt-Hinweis fehlt");
-  assert.ok(/const EINFACH_KACHELN = \["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"(, "dokumente")?(, "spiele")?(, "sos")?\];/.test(html) && /const kacheln = \(r\) => einfach\(\) \? einfachKacheln\(\) : kaSortiert/.test(html), "Einfache Startseite fehlt");
+  assert.ok(/const EINFACH_KACHELN = \["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"(, "fotos", "vorschlaege", "erstattung")?(, "dokumente")?(, "spiele")?(, "sos")?\];/.test(html) && /const kacheln = \(r\) => einfach\(\) \? einfachKacheln\(\) : kaSortiert/.test(html), "Einfache Startseite fehlt");
   const alle = [...html.matchAll(/\{ id: "([a-z]+)", sym:/g)].map((m) => m[1]);
   for (const id of ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "dokumente"]) assert.ok(alle.includes(id), `Kachel ${id} fehlt in der Registry`);
   assert.ok(/id="ansichtKnopf"[^>]*onclick="ansichtWechseln\(\)"/.test(html) && /onclick="ansichtSetzen\('einfach'\)"/.test(html) && /onclick="ansichtSetzen\('erweitert'\)"/.test(html), "Umschalter fehlt");
@@ -6917,6 +6917,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(new Set(vl.map((e) => e.version)).size === vl.length, "verlauf.json ohne doppelte Versionen");
   assert.ok(/VERSION_INFO\?\.verlaufVoll && !VERSION_INFO\._voll/.test(html), "Überblick lädt den ganzen Verlauf");
   assert.ok(/const JZB_FPS_BEDIENT = 20, JZB_RUHE_BEDIENT_MS = 20000;/.test(html) && /const jzbSchwach = /.test(html), "Jahreszeiten-Bild sparsamer");
+}
+
+// 2.482.0 TÜV-Paket 3 (Hansi: „3 Aufräumen & einheitlich“) – KC-CLUB-START-KOMPAKT, -EINFACH-MEHR, -EIN-HINWEIS, -KONTRAST, -TIPPFLAECHE, -MELDUNG-EINMAL,
+// -OFFLINE-KLARTEXT, -CD-HAKEN
+{
+  const ix = lies("index.html");
+  assert.ok(/class="karte rg-hinweis rg-kompakt"/.test(html) && /rgHinweisSpaeter\(\)">Später<\/button>/.test(html) && /rgHinweisErledigt\('nein'\)">Nein, danke<\/button>/.test(html) && /rgHinweisLos\(\)">▶ Ansehen<\/button>/.test(html), "„Warum diese App?“ kompakt, alle drei Wahlen bleiben");
+  assert.ok(/const EINFACH_KACHELN = \[[^\]]*"fotos", "vorschlaege", "erstattung"[^\]]*\];/.test(html), "einfache Ansicht: Fotos, Vorschläge, Erstattung");
+  assert.ok(/if \(!ruheInfo\(\)\) return; \/\/ 2\.482\.0 KC-CLUB-EIN-HINWEIS/.test(html), "höchstens ein Info-Fenster je Öffnen (KC-CLUB-RUHE)");
+  assert.ok(/\.st-beschaeftigt \{ background: var\(--gelbbg\); color: var\(--textOrange\);/.test(ix) && /\.ue-version \{[^}]*color: var\(--textGruen\);/.test(ix), "Kontrast ≥ 4,5:1");
+  assert.ok(/#ledOnline::after, #ledRt::after \{ content: ""; position: absolute; inset: -8px -10px; \}/.test(ix), "größere Trefffläche der kleinen Kopf-Elemente");
+  assert.ok(/if \(\[\.\.\.document\.querySelectorAll\("body > \.meldung"\)\]\.some\(\(x\) => x\.textContent === String\(t\)\)\) return;/.test(html), "gleiche Meldung nicht doppelt");
+  assert.ok(/INIT\._offline = NEU_ZULETZT; offlineStandZeigen\(true\);/.test(html), "Netz weg während der Benutzung: Klartext statt nur LED");
+  assert.ok(/:root \{ accent-color: var\(--rot\); \}/.test(ix), "Häkchen im CD-Weinrot");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

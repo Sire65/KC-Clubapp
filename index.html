@@ -943,6 +943,9 @@
   .rg-h-kopf { display: flex; gap: 10px; align-items: center; }
   .rg-h-sym { font-size: 2rem; line-height: 1; }
   .rg-hinweis .knoepfe { margin-top: 10px; flex-wrap: wrap; }
+  .rg-kompakt { display: flex; align-items: center; gap: 10px; padding: 10px 12px; } .rg-kompakt .rg-h-sym { font-size: 1.6rem; }
+  .rg-k-text { flex: 1; min-width: 0; } .rg-k-text b, .rg-k-text small { display: block; } .rg-k-text small { color: var(--text2, inherit); }
+  .rg-k-neben { margin-top: 2px; font-size: .9rem; } .rg-k-link { border: 0; background: none; padding: 6px 2px; min-height: 32px; color: var(--rot); text-decoration: underline; font: inherit; cursor: pointer; }
   body.rg-an .hz-frage, body.rg-an .su-klein { z-index: 8999; }
   body.rg-ohne-admin #adminBereich, body.rg-ohne-admin #register [data-r="admin"], body.rg-ohne-admin #raster .kachel.ad { display: none !important; } /* KC-CLUB-ERKLAERVIDEOS-ROLLEN */
   body.rg-ohne-leitung #leitungStart, body.rg-ohne-leitung #raster .kachel[data-id="buero"] { display: none !important; }
@@ -1023,6 +1026,7 @@
   :root.gross .kopfzeile { flex-wrap: wrap; }
   :root.gross .ipfeil.sprung { display: none; }
   /* KC-CLUB-TIPPFLAECHE (1.98.0): kleine Knöpfe und Auswahl-Chips mind. 40 px hoch – leichter zu treffen */
+  :root { accent-color: var(--rot); } /* 2.482.0 KC-CLUB-CD-HAKEN (TÜV C-22): Häkchen/Auswahlpunkte im Club-Weinrot statt Browser-Blau */
   .knopf.klein { min-height: 44px; } .chip { min-height: 38px; } /* 2.425.0 KC-CLUB-GENERALCHECK: 44 px Tippfläche (Empfehlung für ältere Finger) */
   .versteckt { display: none !important; }
 
@@ -1060,7 +1064,7 @@
   /* KC-CLUB-STATUSFARBE (0.34.1): jeder Status hat seine Farbe (grün verfügbar, orange beschäftigt, blau Urlaub, lila krank, rot nicht erreichbar) */
   .stmarke { display: inline-block; border-radius: 999px; padding: 2px 9px; font-weight: 800; border: 1.5px solid transparent; max-width: 100%; overflow-wrap: anywhere; } /* 2.481.0 (TÜV B-07): langer Status-Hinweis bricht um */
   .st-verfuegbar { background: var(--gruenbg); color: var(--textGruen); border-color: var(--gruen); }
-  .st-beschaeftigt { background: var(--gelbbg); color: var(--gelb); border-color: #e08a1e; }
+  .st-beschaeftigt { background: var(--gelbbg); color: var(--textOrange); border-color: #e08a1e; } /* 2.482.0 KC-CLUB-KONTRAST (TÜV: 4,1:1 → ≥ 4,5:1) */
   .st-urlaub { background: var(--blaubg); color: var(--blau); border-color: var(--blau); }
   .st-krank { background: var(--lilabg); color: var(--lila); border-color: var(--lila); }
   .st-abwesend { background: var(--rotbg); color: #c62828; border-color: #c62828; }
@@ -1073,7 +1077,7 @@
   .statuschip .stpfeil .u { stroke: #fff; stroke-width: 6.4; } :root.dunkel .statuschip .stpfeil .u { stroke: #111; }
   .knopf.stmarke { padding: 8px 12px; }
   /* KC-CLUB-MG-GRUPPEN (1.34.0, Wunsch Hansi): „Mein Status“ als kleine Überschrift im Status-Knopf */
-  .st-titel { display: block; font-size: .72rem; font-weight: 700; opacity: .85; line-height: 1.1; text-align: left; }
+  .st-titel { display: block; font-size: .75rem; font-weight: 700; line-height: 1.1; text-align: left; }
   .mg-gruppen { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 8px; }
   /* KC-CLUB-GRUPPEN-AMEISEN (2.23.21, Wunsch Hansi): beim Öffnen der Mitglieder-Seite läuft kurz (4 s) ein Ameisenrahmen um die Gruppen-Knöpfe */
   .mg-gruppen .knopf { position: relative; }
@@ -1082,7 +1086,7 @@
   @media (prefers-reduced-motion: reduce) { .mg-gruppen .ameisen rect { animation-duration: 3s; } }
   .mg-gruppen .knopf.an { background: var(--karte); box-shadow: var(--schatten); color: var(--rot); outline: 2px solid var(--rot); }
   .statuschip { margin-top: 6px; border: none; border-radius: 12px; padding: 4px 10px; background: rgba(255,255,255,.18); color: #fff; font-weight: 700; font-size: .82rem; cursor: pointer; }
-  .statuschip.st-verfuegbar { background: var(--gruenbg); color: var(--textGruen); } .statuschip.st-beschaeftigt { background: var(--gelbbg); color: var(--gelb); }
+  .statuschip.st-verfuegbar { background: var(--gruenbg); color: var(--textGruen); } .statuschip.st-beschaeftigt { background: var(--gelbbg); color: var(--textOrange); }
   .statuschip.st-urlaub { background: var(--blaubg); color: var(--blau); } .statuschip.st-krank { background: var(--lilabg); color: var(--lila); } .statuschip.st-abwesend { background: var(--rotbg); color: #c62828; }
   .rund { width: 48px; height: 48px; border-radius: 50%; border: none; background: rgba(255,255,255,.16); color: #fff; font-size: 1.15rem; cursor: pointer; flex: none;
     display: inline-flex; align-items: center; justify-content: center; padding: 0; line-height: 1; box-sizing: border-box; } /* 1.59.0 (Fund Hansi, Tablet): Symbol immer mittig im Kreis */
@@ -2523,7 +2527,7 @@
   .ue-kasten ul { margin: 0; padding-left: 20px; display: grid; gap: 3px; }
   .ue-beta { border: 1.5px solid #b98f52; }
   .ue-neukasten { border: 1.5px solid var(--gruen); }
-  .ue-version { font-weight: 700; font-size: .85rem; color: var(--gruen); margin: 10px 0 3px; }
+  .ue-version { font-weight: 700; font-size: .85rem; color: var(--textGruen); margin: 10px 0 3px; }
   .ue-version:first-child { margin-top: 0; }
   .ue-aelter { margin-top: 10px; } .ue-aelter summary { cursor: pointer; font-weight: 700; }
   .ue-gruppe { margin: 10px 0 6px; font-size: .95rem; }
@@ -2777,7 +2781,7 @@
   .dlg-knoepfe .knopf { text-align: center; justify-content: center; width: 100%; }
   /* 2.425.0 KC-CLUB-GENERALCHECK: Gefahr deutlich anders als der weinrote Hauptknopf – hell mit kräftig rotem Rand */
   /* 2.425.0 KC-CLUB-GENERALCHECK (Barrierefreiheit): winzige Ziele (Online-Lämpchen 9 px, Versionsnummer) bekommen eine unsichtbar größere Tippfläche */
-  #ledOnline, #ledRt, .kopf-version { position: relative; } #ledOnline::after, #ledRt::after { content: ""; position: absolute; inset: -2px -8px; } .kopf-version::after { content: ""; position: absolute; inset: -4px -2px; }
+  #ledOnline, #ledRt, .kopf-version { position: relative; } #ledOnline::after, #ledRt::after { content: ""; position: absolute; inset: -8px -10px; } .kopf-version::after { content: ""; position: absolute; inset: -10px -4px; } /* 2.482.0 KC-CLUB-TIPPFLAECHE (TÜV: ≥ 24 px Trefffläche, WCAG 2.5.8) */
   .knopf.dlg-gefahr, .knopf.haupt.dlg-gefahr { background: #fff; border: 2px solid #c62828; color: #b3261e; font-weight: 700; }
   :root.dunkel .knopf.dlg-gefahr, :root.dunkel .knopf.haupt.dlg-gefahr { background: transparent; border-color: #ff8a7a; color: #ff8a7a; }
   .blatt-innen { background: var(--karte); width: min(560px, 100%); border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
