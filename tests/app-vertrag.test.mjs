@@ -5899,7 +5899,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -9455,11 +9455,17 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/else if \(h === "#anruf"\) anrufZurueck\(\);/.test(html), "Mitteilung führt zurück ins Gespräch");
 }
 
-// 2.238.0 KC-CLUB-GASTGEBER-STAND (Wunsch Hansi): Gastgeber/in + Clubleitung bekommen am Vorabend und 2 Std. vorher den Anmeldestand
+// 2.238.0 KC-CLUB-GASTGEBER-STAND (Wunsch Hansi): Gastgeber/in + Clubleitung bekommen am Vorabend den Anmeldestand
+// 2.480.0 KC-CLUB-GASTGEBER-FRUEHWARNUNG: 2 Std. vorher nur bei Änderung, dazwischen jede Änderung (gesammelt, nachts nicht) an die Gastgeberin
 {
-  assert.ok(/await gastgeberStandLauf\(\)\.catch/.test(server) && /bis > 0 && bis <= 2 \* 3600000 \? "2std" : heuteAbend && berlinTag\(new Date\(t\.beginn\)\) === morgen \? "vorabend"/.test(server), "Vorabend ab 18 Uhr + 2 Std. vorher, im Zeitplaner");
-  assert.ok(/sendenGewaehlt\("club_erinnerung", \[t\.gastgeber_person_id\], \["push", "email"\]/.test(server) && /const leitung = \(await leitungIds\(\)\)\.filter\(\(id\) => id !== t\.gastgeber_person_id\)/.test(server), "Push + E-Mail an Gastgeber/in und Clubleitung, ohne Doppel");
-  assert.ok(/eq\("aktion", "gastgeber_stand"\)\.eq\("details->>treffen", t\.id\)\.eq\("details->>stufe", stufe\)/.test(server), "jede Stufe nur einmal");
+  const g = server.slice(server.indexOf("async function gastgeberStandLauf("), server.indexOf("async function gastgeberMitteilen("));
+  assert.ok(/await gastgeberStandLauf\(\)\.catch/.test(server) && /const vorabendFaellig = !war\("vorabend"\) && heuteAbend && berlinTag\(new Date\(t\.beginn\)\) === morgen;/.test(g) && /heuteAbend = std >= 18/.test(g), "Vorabend ab 18 Uhr, im Zeitplaner");
+  assert.ok(/else if \(zweiStd\) stufe = aenderungen\.length \|\| altVorabend \? "2std" : "2std_ruhig";/.test(g) && /uebersprungen: "keine Änderung"/.test(g), "2 Std. vorher nur, wenn sich etwas geändert hat");
+  assert.ok(/else if \(aenderungen\.length && !nachts && jetztMs - Date\.parse\(letzte\.zeit\) >= GG_PAUSE_MS\) stufe = "aenderung";/.test(g) && /nachts = std >= 22 \|\| std < 7/.test(g) && /const GG_PAUSE_MS = 15 \* 60000;/.test(server), "Änderungen gesammelt, höchstens alle 15 Min., nachts zurückgehalten");
+  assert.ok(/if \(!vorabendFaellig && !letzte && !\(zweiStd && altVorabend\)\) continue;/.test(g), "vor dem Vorabend keine Änderungsmeldungen");
+  assert.ok(/sendenGewaehlt\("club_erinnerung", \[t\.gastgeber_person_id\], \["push", "email"\]/.test(g) && /const leitung = stufe === "aenderung" \? \[\] : \(await leitungIds\(\)\)\.filter\(\(id\) => id !== t\.gastgeber_person_id\);/.test(g), "Push + E-Mail an Gastgeber/in; Clubleitung nur Vorabend/2 Std.");
+  assert.ok(/stand \}\); \/\/ erst merken, dann senden – nie doppelt/.test(g) && /ggUnterschiede\(letzte\.details\.stand, stand, name\)/.test(g), "gemeldeter Stand gemerkt, Unterschied dazu gemeldet");
+  assert.ok(/hat zugesagt/.test(server) && /hat abgesagt/.test(server) && /Neu seit der letzten Meldung:/.test(g), "Änderungen mit Namen");
 }
 
 // 2.239.0 KC-CLUB-ANTWORT-BLINKEN (Wunsch Hansi): ohne Zu-/Absage 5 Tage vorher gelb, 2 Tage vorher rot dauerblinkend
@@ -10838,4 +10844,12 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/Guten Morgen/.test(s) && /Guten Abend/.test(s) && /Schönen \$\{advent \+ 1\}\. Advent!/.test(s) && /Danke fürs Kommen/.test(s) && /std >= 3 && std <= 36/.test(s), "Gruß nach Tageszeit, Advent/Feiertage, Dank nach dem Treffen");
   assert.ok(!/api\(/.test(s), "keine Server-Abfrage");
   assert.ok(/\.il-gruen \{ --il-f: #5fd38d;/.test(seite), "grüne Stufe");
+}
+// 2.480.0 KC-CLUB-GASTGEBER-FRUEHWARNUNG: Einladung (mit Tagesordnung, Uhrzeit, Treffpunkt), Änderung und Absage an die Gastgeberin immer per Push + E-Mail
+{
+  const m = server.slice(server.indexOf("async function gastgeberMitteilen("), server.indexOf("// KC-CLUB-ANTWORT-ERINNERUNG-2T"));
+  assert.ok(/if \(!t\.gastgeber_person_id \|\| t\.gastgeber_person_id === ich\) return false;/.test(m) && /\["push", "email"\]/.test(m) && /Du bist Gastgeberin\/Gastgeber – aktuell/.test(m), "Gastgeber-Hinweis, Push + E-Mail");
+  assert.ok(/const gast = !nurOffen && await gastgeberMitteilen\(t, ich\.person_id, "einladung", vars\);/.test(server) && /gast \? ziel\.filter\(\(id\) => id !== t\.gastgeber_person_id\) : ziel, wege, vars/.test(server), "Einladung: Gastgeberin extra, nicht doppelt");
+  assert.ok(/await gastgeberMitteilen\(t, ich\.person_id, "geaendert", treffenText/.test(server) && /await gastgeberMitteilen\(t, ich\.person_id, "abgesagt", treffenText/.test(server), "Änderung und Absage");
+  assert.ok(/Tagesordnung:\\n\$\{top\.join\("\\n"\)\}/.test(server), "Einladung enthält die Tagesordnung");
 }

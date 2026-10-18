@@ -1,12 +1,18 @@
 # Änderungen
 
-## 2.480.0 – 2026-10-18 – 📣 Info-Laufband schlauer und lebendiger (KC-CLUB-LAUFBAND-SCHLAU)
+## 2.480.0 – 2026-10-18 – 📣 Info-Laufband schlauer und lebendiger (KC-CLUB-LAUFBAND-SCHLAU) · 🏠 Frühwarnung für Gastgeber (KC-CLUB-GASTGEBER-FRUEHWARNUNG) · Server 2.480.0
 Wunsch Hansi: „Das muss noch etwas intelligenter werden. Wer schon zugesagt oder eine Abstimmung schon gemacht hat, braucht nur einen Hinweis mit grünem Haken – nicht zu etwas auffordern, was schon erledigt ist. Und ab und an auf neue Funktionen hinweisen, damit es lebendiger wird.“
 - **Neue grüne Stufe** = erledigt / gut so. Zugesagt: „✅ Du bist dabei · 👥 7/18“ (grüner Rahmen); abgesagt: „❌ Abgesagt – jederzeit änderbar“; „Vielleicht“ bleibt rot mit Knöpfen.
 - **Erledigtes wird bestätigt statt gefordert**: Was heute rot war und erledigt ist (Eingangskorb, Abstimmung, Terminanfrage, Terminfindung, Schulung, Aufgabe, Benachrichtigungen, Büro-Eingang), erscheint bis zum Abend als grüner Haken („Deine Stimme ist abgegeben“, „Erledigt – danke!“). Ausgeblendetes zählt nicht.
 - **Neuheiten** (je Gerät an höchstens 3 Tagen, nach dem Antippen nie wieder, eine pro Runde) mit **▶ Ansehen**: 🎃 Halloween-Szene (10.10.–2.11.), 🐕 Herbst mit Kürbis-Hund (Sept.–Nov.), 🐠 Unterwasserwelt – spielt die Szene oben gleich als Vorschau ab; dazu neue Hilfe-Einträge der letzten Versionen.
 - **Tageszeit & Anlass**: „Guten Morgen/Guten Abend, Hansi – alles erledigt 👍“, „Gute Nacht 🌙“; Advent, Nikolaus, Weihnachten, Silvester, Neujahr, Halloween. **Am Treffen-Tag** „Heute 18:00 Uhr · Hütte Anne“ mit **🚗 Mitfahrt**, während des Treffens „🍳 Viel Spaß!“, danach **„🙏 Danke fürs Kommen – Fotos hochladen?“**.
-- Übersichtlich: höchstens 7 Meldungen plus Tipp im Umlauf. Alles lokal, keine zusätzliche Server-Abfrage. Nur App.
+- Übersichtlich: höchstens 7 Meldungen plus Tipp im Umlauf. Alles lokal, keine zusätzliche Server-Abfrage.
+
+**🏠 Frühwarnung für Gastgeber** (Wunsch Hansi: „1 Tag vorher E-Mail und Push, wie viele sich angemeldet haben, 2 Stunden vorher nochmal – aber nur, falls Änderungen da sind; ansonsten nur bei Änderung. Und wenn der Clubsprecher das Treffen vorbereitet, E-Mail und Push mit Einladung, Tagesordnung, Uhrzeit und Treffpunkt.“) – Server 2.480.0, ohne DB-Änderung:
+- **Vorabend ab 18 Uhr** wie bisher: Anmeldestand an Gastgeber/in und Clubleitung (Push + E-Mail).
+- **Danach jede Änderung** (Zu-/Absage, zurückgenommen, neue Notiz) kurz an die Gastgeberin, mit Namen: „❌ Steven hat abgesagt – jetzt 6 Zusagen“. Gesammelt (höchstens alle 15 Min.), nachts 22–7 Uhr zurückgehalten.
+- **2 Stunden vorher** der ganze Stand **nur, wenn sich seit der letzten Meldung etwas geändert hat** (mit „Neu seit der letzten Meldung“); sonst bleibt es ruhig.
+- **Einladung** aus dem Büro (Tagesordnung, Uhrzeit, Treffpunkt), **Änderung** und **Absage** des Treffens bekommt die Gastgeberin immer per Push **und** E-Mail – egal welcher Weg gewählt ist – mit „Du bist Gastgeberin – aktuell 5 Zusagen“; nicht doppelt.
 
 ## Spiegel – 2026-10-18 (ohne App-Build) – KICC-F-107: Spiegel und Backup übertragen nur geänderte Tabellen
 Wunsch Hansi („baue um, dass nur geänderte Daten gespiegelt oder gesichert werden“; Supabase-Hinweis: Egress unter 5,5 GB). Nichts wird reduziert – jede Tabelle wird weiter gespiegelt und gesichert.
