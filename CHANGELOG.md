@@ -1,5 +1,19 @@
 # Änderungen
 
+## 2.482.0 – 2026-10-18 – 🏙️ Info-Laufband: „Diese Woche in Werne“ (KC-CLUB-LAUFBAND-WERNE) · 📣 Startnachricht mit Lesebestätigung (KC-CLUB-STARTNACHRICHT) · Server 2.482.0
+
+**📣 Startnachricht** (Wunsch Hansi: „Als Admin direkt als Startnachricht an alle, eine Gruppe oder eine Personenwahl eine Nachricht schicken, als wichtig markierbar. Beim Programmstart bekommen die Ausgewählten sie. Bestätigungs-Knopf ‚gelesen‘ als Pflicht und ein Rückfrage-Knopf – die Antwort kommt bei mir an. Auch für Clubsprecher und Kassenwart, aber für die beiden noch nicht freischalten.“)
+- Admin-Register → **📣 Startnachricht**: Text, **❗ als wichtig markieren** (rot + Push „Bitte die App öffnen“), Empfänger **Alle / Ämter / Chat-Gruppe / Personen**.
+- Die Empfänger bekommen sie beim nächsten Öffnen der App als Fenster: **Pflicht** „Ich habe die Nachricht gelesen“ ankreuzen → „✅ Gelesen – bestätigen“ (nicht wegtippbar, kein ✕); **↩️ Rückfrage** kommt als Chat-Nachricht beim Absender an. Mehrere Startnachrichten kommen nacheinander.
+- Überblick „Gesendet“: wer gelesen hat (mit Uhrzeit), wer noch nicht, Rückfragen; **zurückziehen** möglich.
+- Auf Wunsch mit Knopf **🔔 Benachrichtigungen jetzt einschalten** (Fall Dieter): je nach Handy der Knopf, „✅ sind an“ oder die Anleitung, wenn sie im Handy gesperrt sind.
+- **Clubsprecher und Kassenwart**: fertig eingebaut, aber **noch nicht freigeschaltet** – Schalter dafür im selben Fenster (nur Admin). Freigeschaltet sehen sie die Kachel unter „Meins“ und nur ihre eigenen Startnachrichten.
+- Ohne neue Tabelle und ohne zusätzliche Abfrage beim App-Start (steht in den persönlichen Einstellungen, die der Start ohnehin lädt); selbst überschreiben können Mitglieder sie nicht.
+
+Wunsch Hansi: Punkt 3 des Info-Feld-Konzepts – „Programm in Werne“, damit es lebendiger wird.
+- Im Info-Laufband erscheint je Runde ein Tipp aus dem Veranstaltungskalender der Stadt Werne (Feste, Märkte, Sim-Jü, Sonstiges, Theater & Konzerte, Führungen & Ausstellungen; ohne Wochenmarkt): „🏙️ Diese Woche in Werne: Herbstkirmes · Sa., 24.10. – So., 25.10. · Innenstadt“, am Tag selbst „Heute in Werne: …“. Täglich ein anderer; antippen öffnet die Seite der Stadt. Mit ✕ für heute ausblendbar.
+- Sparsam: neue Server-Aktion `stadt_woche` für alle Mitglieder **ohne Datenbank** (Stadt-Kalender von werne.de, Ergebnis 6 Std. im Speicher); jedes Gerät fragt **höchstens einmal am Tag** und erst 4 s nach dem Start.
+
 ## 2.481.0 – 2026-10-18 – 📣 Info-Laufband schlauer und lebendiger (KC-CLUB-LAUFBAND-SCHLAU) · 🏠 Frühwarnung für Gastgeber (KC-CLUB-GASTGEBER-FRUEHWARNUNG) · 🔔 Anklopfen-Fehler behoben · Server 2.481.0
 Wunsch Hansi: „Das muss noch etwas intelligenter werden. Wer schon zugesagt oder eine Abstimmung schon gemacht hat, braucht nur einen Hinweis mit grünem Haken – nicht zu etwas auffordern, was schon erledigt ist. Und ab und an auf neue Funktionen hinweisen, damit es lebendiger wird.“
 - **Neue grüne Stufe** = erledigt / gut so. Zugesagt: „✅ Du bist dabei · 👥 7/18“ (grüner Rahmen); abgesagt: „❌ Abgesagt – jederzeit änderbar“; „Vielleicht“ bleibt rot mit Knöpfen.
