@@ -1043,7 +1043,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); if ($("setFee")) $("setFee").checked = einst("fee", true); if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ if ($("setFee")) $("setFee").checked = einst("fee", true); if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -20575,6 +20575,13 @@ async function kopfRolloFahren(ziel) {
   const kante = (s) => (s === "ganz" ? kz.offsetTop + kz.offsetHeight : sl.offsetTop + sl.offsetHeight) + 6;
   const offenerStand = zu ? von : ziel, engerStand = zu ? ziel : von;
   const klein = hoehe(engerStand), gross = hoehe(offenerStand), oben = kante(engerStand); // Messung im offeneren Stand
+  // KC-CLUB-KOPF-EFFEKTE (Wunsch Hansi 19.10.2026): statt Jalousie auf Wunsch Lamellenvorhang (zur Seite) oder Climber (Lamellen klappen hoch)
+  const effekt = kopfEffektNaechster();
+  if (effekt !== "jalousie") {
+    try { await kopfEffektAnimieren(effekt, h, zu, gross, klein, oben); kopfRolloSetzen(ziel); }
+    finally { h.getAnimations?.().forEach((a) => a.cancel()); h.style.overflow = ""; h.querySelectorAll(".kopf-effekt").forEach((x) => x.remove()); delete h.dataset.rollt; kopfRolloSetzen(kopfRolloStand()); }
+    return;
+  }
   const vorhang = document.createElement("div"); vorhang.className = "rollo-lamellen"; vorhang.style.top = oben + "px"; vorhang.style.height = Math.max(0, gross - oben) + "px";
   const anzahl = Math.ceil(Math.max(0, gross - oben) / 16);
   vorhang.innerHTML = '<i class="rl-lamelle"></i>'.repeat(anzahl);
@@ -20598,6 +20605,57 @@ async function kopfRolloFahren(ziel) {
   } finally {
     h.getAnimations?.().forEach((a) => a.cancel()); h.style.overflow = ""; vorhang.remove(); leiste.remove(); delete h.dataset.rollt;
     kopfRolloSetzen(kopfRolloStand());
+  }
+}
+// ---------- KC-CLUB-KOPF-EFFEKTE: Auswahl in ⚙️ → ✨ Effekte (Häkchen an → Klappbereich). Aus = Jalousie (Standard) ----------
+const KOPF_EFFEKT = "kc_club_kopf_effekt", KOPF_EFFEKTE = ["jalousie", "vorhang", "climber"];
+const KOPF_EFFEKT_NAMEN = { jalousie: "🪟 Jalousie (Standard)", vorhang: "🎭 Lamellenvorhang – zu den Seiten", climber: "🗄️ Climber – Lamellen klappen hoch", auto: "🔄 Automatisch – jedes Mal ein anderer" };
+function kopfEffektStand() { try { const j = JSON.parse(localStorage.getItem(KOPF_EFFEKT) || "{}"); return { an: !!j.an, wahl: KOPF_EFFEKTE.includes(j.wahl) || j.wahl === "auto" ? j.wahl : "jalousie", n: Number(j.n) || 0 }; } catch { return { an: false, wahl: "jalousie", n: 0 }; } }
+function kopfEffektSpeichern(neu) { try { localStorage.setItem(KOPF_EFFEKT, JSON.stringify({ ...kopfEffektStand(), ...neu })); } catch {} }
+function kopfEffektNaechster() {
+  const st = kopfEffektStand(); if (!st.an) return "jalousie";
+  if (st.wahl !== "auto") return st.wahl;
+  const e = KOPF_EFFEKTE[st.n % KOPF_EFFEKTE.length]; kopfEffektSpeichern({ n: st.n + 1 }); return e;
+}
+function kopfEffektEinstellungen() {
+  const st = kopfEffektStand(), cb = $("setKopfEffekt"), z = $("kopfEffektWahl"); if (cb) cb.checked = st.an;
+  if (z) z.innerHTML = Object.entries(KOPF_EFFEKT_NAMEN).map(([k, t]) => `<label class="ke-wahl"><input type="radio" name="kopfEffekt" value="${k}" ${st.wahl === k ? "checked" : ""} onchange="kopfEffektSpeichern({ wahl: this.value })"> ${t}</label>`).join("")
+    + '<div class="knoepfe"><button type="button" class="knopf klein" onclick="kopfEffektProbe()">▶ Ausprobieren</button></div>';
+}
+async function kopfEffektProbe() { // einmal ein- und wieder ausrollen, damit man den Effekt sieht
+  zeige("start"); await new Promise((r) => setTimeout(r, 450));
+  const von = kopfRolloStand(), ziel = von === "offen" ? "ganz" : "offen";
+  await kopfRolloFahren(ziel); await new Promise((r) => setTimeout(r, 500)); await kopfRolloFahren(von);
+}
+async function kopfEffektAnimieren(effekt, h, zu, gross, klein, oben) {
+  const warten = (a) => a.finished.catch(() => {}), bereich = Math.max(0, gross - oben), MS = 1500;
+  const fahren = (von, bis, ms) => { h.style.overflow = "hidden"; return warten(h.animate([{ height: von + "px" }, { height: bis + "px" }], { duration: ms, easing: "cubic-bezier(.45,.05,.4,1)", fill: "forwards" })); };
+  const box = document.createElement("div"); box.className = `kopf-effekt ke-${effekt}`; box.style.top = oben + "px"; box.style.height = bereich + "px";
+  if (effekt === "vorhang") {
+    // senkrechte Lamellen: schließen sich von den Seiten zur Mitte, drehen sich auf und gleiten nach links/rechts weg
+    const n = Math.max(6, Math.round(h.offsetWidth / 34)); box.innerHTML = '<i class="ke-lamelle"></i>'.repeat(n);
+    const L = [...box.children], mitte = (n - 1) / 2, weg = (i) => (i < mitte ? -1 : 1) * (h.offsetWidth / 2 + 20);
+    const offen = (i) => ({ transform: `translateX(${weg(i)}px) rotateY(80deg)`, opacity: 0.2 }), zuF = { transform: "translateX(0) rotateY(0deg)", opacity: 1 };
+    const lauf = (auf) => Promise.all(L.map((l, i) => warten(l.animate(auf ? [zuF, offen(i)] : [offen(i), zuF], { duration: 650, delay: Math.abs(i - mitte) * (auf ? 18 : 30), easing: "ease-in-out", fill: "forwards" }))));
+    h.append(box);
+    if (zu) { L.forEach((l, i) => Object.assign(l.style, { transform: offen(i).transform, opacity: 0.2 })); await lauf(false); await fahren(gross, klein, MS * 0.6); }
+    else { await fahren(klein, gross, MS * 0.6); await lauf(true); }
+    return;
+  }
+  // Climber: waagerechte Lamellen kippen schräg und schieben sich oben zu einem schmalen Paket zusammen
+  const H = 16, n = Math.max(3, Math.ceil(bereich / H)); box.innerHTML = '<i class="ke-lamelle"></i>'.repeat(n);
+  const L = [...box.children], flach = (i) => ({ transform: `translateY(${i * H}px) rotateX(0deg)`, opacity: 1 }), paket = (i) => ({ transform: `translateY(${i * 3}px) rotateX(72deg)`, opacity: 1 });
+  L.forEach((l, i) => { l.style.transform = flach(i).transform; });
+  h.append(box);
+  const kippen = (hoch) => Promise.all(L.map((l, i) => warten(l.animate(hoch ? [flach(i), paket(i)] : [paket(i), flach(i)], { duration: 900, delay: (hoch ? i : n - 1 - i) * 25, easing: "cubic-bezier(.5,.05,.35,1)", fill: "forwards" }))));
+  if (zu) {
+    L.forEach((l) => { l.style.opacity = "0"; }); await Promise.all(L.map((l, i) => warten(l.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: i * 12, fill: "forwards" }))));
+    await Promise.all([kippen(true), fahren(gross, klein, 1000)]);
+    await warten(box.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: "forwards" }));
+  } else {
+    L.forEach((l, i) => { l.style.transform = paket(i).transform; });
+    await Promise.all([fahren(klein, gross, 1000), kippen(false)]);
+    await Promise.all(L.map((l, i) => warten(l.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, delay: (n - 1 - i) * 15, fill: "forwards" }))));
   }
 }
 // art "ganz" (rechts ⌃⌃): offen/halb → ganz, ganz → offen · art "halb" (links ⌃): offen → halb, halb → offen, ganz → halb

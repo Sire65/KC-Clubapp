@@ -1067,6 +1067,12 @@
   #v-start .hero.halb-eingerollt > #heroInfo, #v-start .hero.halb-eingerollt > #infoPunkte { display: none; }
   .rollo-lamellen { position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none; display: flex; flex-direction: column; gap: 1px; padding-top: 1px; background: rgba(60,10,20,.35); }
   .rl-lamelle { flex: none; height: 15px; transform-origin: center; background: linear-gradient(to bottom, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+  /* KC-CLUB-KOPF-EFFEKTE: Lamellenvorhang (senkrecht, zu den Seiten) und Climber (waagerecht, klappt hoch) */
+  .kopf-effekt { position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none; overflow: hidden; perspective: 600px; }
+  .ke-vorhang { display: flex; gap: 1px; background: rgba(60,10,20,.25); }
+  .ke-vorhang .ke-lamelle { flex: 1; transform-origin: center; background: linear-gradient(to right, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 1px 0 2px rgba(0,0,0,.35); }
+  .ke-climber .ke-lamelle { position: absolute; left: 0; right: 0; top: 0; height: 15px; transform-origin: top center; background: linear-gradient(to bottom, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+  .ke-wahl { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; }
   .rollo-leiste { position: absolute; left: 0; right: 0; bottom: 0; height: 9px; z-index: 2; pointer-events: none; background: linear-gradient(to bottom, #a8364a, #6d1424); box-shadow: 0 -1px 3px rgba(0,0,0,.4); }
   .hero { background: var(--heroverlauf, linear-gradient(135deg, var(--hero1) 0%, var(--rot) 45%, var(--rot2) 75%, var(--hero4) 100%)); color: #fff; border-radius: 26px; padding: 18px; box-shadow: 0 12px 30px var(--heroschatten); }
   .kopfzeile { display: flex; align-items: flex-start; gap: 12px; }
@@ -5053,6 +5059,9 @@
     <details class="karte" data-klappe="effekte">
       <summary>✨ Effekte</summary>
       <div class="schalter"><div><b>✨ Animierte Knöpfe</b><div class="hinweis">Kacheln zoomen kurz beim Antippen, Reiter und „＋ Neu“ leuchten auf – aus: alles ruhig. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setAnimiert" onchange="einstellung('animiert', this.checked)"></div> <!-- 2.24.1 (Wunsch Hansi) -->
+      <!-- KC-CLUB-KOPF-EFFEKTE (Wunsch Hansi 19.10.2026): Effekt beim Ein-/Ausrollen des Kopfes – aus = Jalousie (Standard) -->
+      <div class="schalter"><div><b>🪟 Anderer Effekt beim Einrollen des Kopfes</b><div class="hinweis">Aus: Jalousie wie bisher. An: unten Lamellenvorhang, Climber oder Automatisch wählen. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setKopfEffekt" onchange="kopfEffektSpeichern({ an: this.checked })"></div>
+      <details class="abh-klappe" data-abh="setKopfEffekt"><summary>🪟 Effekt auswählen</summary><div id="kopfEffektWahl"></div></details>
       <div class="schalter"><div><b>🕰️ Uhr zur vollen Stunde</b><div class="hinweis">Solange die App offen ist, kommt zu jeder vollen Stunde die Uhr – Kuckuck, Big Ben, Kölner Dom und mehr (unten auswählen) – und schlägt so oft, wie es Uhr ist (nachts 22–7 Uhr ohne Ton). Antippen schließt sie. Gilt für dieses Gerät.</div></div><button type="button" class="knopf klein" onclick="kuckuckZeigen(kkJetzt().h, true)" title="Kuckucksuhr jetzt mit Ton zeigen">🔊 Probe</button><input type="checkbox" id="setKuckuck" onchange="einstellung('kuckuck', this.checked)"></div> <!-- 2.402.0 KC-CLUB-KUCKUCKSUHR -->
       <details class="su-wahl" data-abh="setKuckuck"><summary>🔔 Welche Uhr? <small class="hinweis">– jede Uhr zum Aufklappen, ▶ zum Anhören, mehrere = jede Stunde eine andere</small></summary><div id="stundenUhrWahl"></div></details> <!-- 2.467.0 KC-CLUB-STUNDENUHREN -->
       <div class="schalter versteckt" id="setAdventZeile"><div><b>🎄 Adventskalender</b><div class="hinweis">Vom 1. bis 24. Dezember jeden Tag ein Türchen mit einer Bastelanleitung für eine kleine süße Nascherei – Erinnerung oben im Info-Laufband. Aus: keine Erinnerung. Gilt für dieses Gerät.</div><button type="button" class="knopf klein" style="margin-top:6px" onclick="akZeigen()">🎄 Kalender ansehen</button></div><input type="checkbox" id="setAdvent" aria-label="Adventskalender an oder aus" onchange="einstellung('advent', this.checked)"></div> <!-- 2.468.0 KC-CLUB-ADVENTSKALENDER -->
