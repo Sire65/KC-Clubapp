@@ -25636,8 +25636,10 @@ function spendeKachel(v) {
   return `<button class="mini-kachel" onclick="vorschlagInfo('${v.id}')"><span class="mk-sym">💝</span>
     <span class="mk-titel">${esc(sp[0]?.empfaenger || "Spende")}${sp.length > 1 ? ` <small>+${sp.length - 1} weitere</small>` : ""}</span>
     <span class="mk-gross">${esc(spEuro(v.summe ?? sp.reduce((s, x) => s + Number(x.betrag || 0), 0)))}</span>
-    <span class="mk-unter">👍 ${e}${v.meine ? " · auch von dir" : ""} · von ${esc(v.von?.name || "?")}</span></button>`;
+    <span class="mk-unter">👍 ${e}${v.meine ? " · auch von dir" : ""} · von ${esc(v.von?.name || "?")}</span>${vsAnlagenZahl(v)}</button>`;
 }
+// KC-CLUB-VORSCHLAG-ANLAGEN-ZAHL (Wunsch Hansi 19.10.2026 „bei den Vorschlägen die Anzahl der Anhänge dabei“): „📎 2 Anlagen“ auf der Kachel
+const vsAnlagenZahl = (v) => { const n = v.anlagen?.length || 0; return n ? `<span class="mk-unter mk-anlagen">📎 ${n} ${n === 1 ? "Anlage" : "Anlagen"}</span>` : ""; };
 // KC-CLUB-VORSCHLAG-KACHELN (1.46.1): Themen, Abstimmungen und Erledigtes als kleine Kacheln – Antippen öffnet alles groß
 function vorschlagKachel(v) {
   if (v.art === "spende" && v.status === "offen") return spendeKachel(v);
@@ -25648,7 +25650,7 @@ function vorschlagKachel(v) {
   const zahl = (v.art === "abstimmung" ? `🗳️ ${v.stimmen ?? 0} von ${v.berechtigt ?? "?"}` : `👍 ${e}${v.meine ? " · auch von dir" : ""}`) + (v.ziel ? ` · 🔐 ${v.ziel}` : ""); // KC-CLUB-ABSTIMMUNG-ZIEL
   return `<button class="mini-kachel${offen && v.art === "abstimmung" && !(v.meine || v.abgestimmt) ? " mk-offen" : ""}" onclick="vorschlagInfo('${v.id}')"><span class="mk-sym">${sym}</span>
     <span class="mk-titel">${esc(v.titel)}</span>${lage}<span class="mk-unter">${zahl}</span>
-    ${offen && v.frist ? `<span class="mk-unter">⏳ bis ${esc(wann(v.frist))}</span>` : ""}<span class="mk-unter">von ${esc(v.von?.name || "?")}</span></button>`;
+    ${offen && v.frist ? `<span class="mk-unter">⏳ bis ${esc(wann(v.frist))}</span>` : ""}<span class="mk-unter">von ${esc(v.von?.name || "?")}</span>${vsAnlagenZahl(v)}</button>`;
 }
 function vorschlagInfo(id) {
   const v = VORSCHLAG_MAP.get(id);
