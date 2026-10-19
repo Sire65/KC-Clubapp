@@ -1,5 +1,11 @@
 # Änderungen
 
+## Server 2.507.0 – 2026-10-19 (ohne App-Build) – Halbe Stunden in der Dienstwunsch-Bestätigung (KC-CLUB-DW-HALBE-STUNDE)
+Fund Hansi (Bestätigung Dieter: „Kann: 11:00–12.5:00 Uhr“): Die Wunschzeiten sind als Dezimalstunden gespeichert (12.5 = 12:30). Mail und „📄 Aufstellung“ setzten einfach „:00“ dahinter.
+- Jetzt richtig: „11:00–12:30 Uhr“ (auch Viertelstunden, Bereitschaft und Spalten-Ansicht). Die gespeicherten Wünsche waren immer richtig – nur die Anzeige.
+- Nur Server, die App bleibt 2.506.0 (kein Neustart aller Apps).
+- Tests: Vertragstest (12.5 → 12:30, 9.25 → 09:15, 13.75 → 13:45 …) grün.
+
 ## 2.506.0 – 2026-10-19 – Protokoll veröffentlichen ohne Warten (KC-CLUB-PROTOKOLL-SCHNELL)
 - KC-CLUB-PROTOKOLL-SCHNELL (Hansi: Veröffentlichen dauerte 21 s): Das Protokoll ist sofort veröffentlicht; die Benachrichtigung der Mitglieder, die Aufgaben-Mitteilung und der Protokolleintrag laufen im Hintergrund (Fehler landen im Server-Log und im Protokoll).
 - Server 2.506.0.
