@@ -1,5 +1,15 @@
 # Änderungen
 
+## Server 2.491.0 – 2026-10-19 – Notfall-Paket: seltener, gemeinsam, nur Geänderte (KC-CLUB-NOTPAKET-SELTENER/-GEMEINSAM/-NUR-GEAENDERTE)
+Wunsch Hansi („Kannst du das Notfall-Paket in kleinen Stücken bauen? … Ja bau 1 und 2. Und auch 3“; Anlass: Warnung „hohe Datenbank-Last“ – ein Bau kostet ~3.300 Abfragen). Nur Server, die App bleibt 2.490.0 (kein Neustart aller Apps).
+- **1 · Seltener:** tagsüber höchstens alle 3 Std. statt stündlich, nachts (22–6 Uhr) gar nicht wegen geänderter Daten. Weiter immer: neuer Tag, erstes Paket, nach einem Fehler (frühestens nach 30 Min.), „erzwingen“. Der Nachtrag aus dem Notbetrieb läuft unverändert alle 15 Min.
+- **2 · Gemeinsame Abfragen nur einmal:** Der erste Teil-Aufruf (4 Mitglieder) läuft allein und gibt die Antworten, die er mehrfach brauchte (für alle gleich: Mitglieder, Treffen, Pinnwand …), an die übrigen Teile weiter. Gleicher Schlüssel = exakt dieselbe Abfrage; nur fehlerfreie Antworten, höchstens 1,5 MB.
+- **3 · Nur geänderte Mitglieder:** Haben sich seit dem letzten Bau nur Chats geändert (neue/bearbeitete Nachrichten, Reaktionen, Anheften, Ausblenden, neue Chats), werden nur die Teilnehmer dieser Chats neu gebaut, alle anderen kommen unverändert aus dem letzten Paket (Messung der letzten 4 Tage: meist 1–3 von 17 Mitgliedern). Bei jedem Zweifel wie bisher alles: Löschungen, jede andere Tabelle, neuer Tag, geänderte Zugänge, zurückgesetzte Zähler, weniger gefundene als gezählte Zeilen, fast alle betroffen, spätestens alle 6 Std.
+- Datenbank: neue Funktion `kc_club_notpaket_zaehler()` (nur lesend) und Tabelle `kc_club_notpaket_vorrat` (letztes Paket, nur Server, nie gespiegelt) – Migration `20261019_kc_club_v2491_notpaket_teile.sql`, Probelauf `tools/db-test/83_notpaket_teile_test.sql`. Ohne Migration baut der Server einfach wie bisher alles.
+- Protokoll „notpaket_gebaut“ zeigt zusätzlich Teilbau ja/nein, neu gebaute Mitglieder, Plan-Grund und übernommene Vorrat-Antworten.
+- Tests: Planer mit nachgestellter Datenbank (13 Fälle: nur Nachricht → nur Teilnehmer; Löschung/Treffen/Zähler zurück/fehlende Zeile/neuer Tag/6 Std./fast alle → alles), Vorrat hin und zurück; Vertragstests grün.
+- Rückweg: Server 2.490.0 erneut hochladen; Datenbank: `drop function public.kc_club_notpaket_zaehler(); drop table public.kc_club_notpaket_vorrat;`
+
 ## 2.490.0 – 2026-10-19 – Link-Vorschau: auch „www.…“ und bei schnellem Senden · Server 2.490.0
 Fund Hansi (Test an mich: „www.puerform.de“ – keine Karte): Die Vorschau erkannte nur Links mit http(s)://, und beim sofortigen Senden (Karte noch nicht geladen) ging der Link nicht mit.
 - App erkennt jetzt auch „www.…“ (ergänzt https://) und gibt den Link beim Senden immer mit – außer man hat für genau diesen Link ✖ getippt. Der Server holt die Vorschau ohnehin selbst.

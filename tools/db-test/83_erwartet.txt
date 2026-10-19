@@ -1,0 +1,10 @@
+zaehler_tabellen=t
+chat_dabei=t
+teilnehmer_dabei=t
+zugang=t
+tag=t
+eine_zeile=t
+rls=t
+kein_zugriff_ohne_server=t
+funktion_nur_server=t
+nicht_gespiegelt=t
