@@ -1,5 +1,13 @@
 # Änderungen
 
+## Server 2.496.0 – 2026-10-19 (ohne App-Build) – Kachel-Zahlen in einer Abfrage (KC-CLUB-KACHEL-EINS, Stufe 2 Punkt 4)
+Wunsch Hansi („Punkt 4 bis 20 Uhr bauen“):
+- Die Zahlen auf den Kacheln 📅 Termine, 🤝 Helfen, 📷 Fotos und 🗓️ Dienste kommen beim App-Start aus EINER Datenbank-Abfrage (neue Lesefunktion `kc_club_kachel_zahlen`) statt aus bis zu 9. Gleiche Rechnung wie vorher; 🗂️ Büro wie bisher.
+- Schlägt die Funktion fehl, rechnet der Server wie bisher einzeln (alte Rechnung bleibt als Rückfall).
+- DB: `supabase/migrations/20261019_kc_club_kachel_zahlen.sql` (bereits eingespielt, nur lesend; nur der Server darf sie aufrufen).
+- Tests: `tools/db-sparsam/kachel-test.mjs` – echte Funktion in Postgres 16 im Speicher (PGlite), 400 Zufallswelten × 4 Personen/Rollen, alt = neu. Zusätzlich an den echten Daten nur lesend geprüft: 19 Mitglieder, 0 Abweichungen. Vertragstest-Block 2.496.0.
+- Rückweg: Server 2.495.0 erneut hochladen (die Funktion bleibt dann ungenutzt).
+
 ## Server 2.495.0 – 2026-10-19 (ohne App-Build) – App-Start sparsamer, Stufe 2 Punkt 3 (KC-CLUB-START-SPARSAM-2)
 Wunsch Hansi („Bau die offenen Positionen noch, damit sie um 12:00 noch rübergehen“):
 - Clubtermine für den App-Start je Server-Instanz 60 s gemerkt: das nächste Treffen (Startseite) und die kommenden Treffen für die Zahl auf der Termin-Kachel. Gemerkt werden nur die Termin-Zeilen – Zu- und Absagen werden weiter jedes Mal frisch gelesen. Speichert die App einen Termin (anlegen, ändern, absagen, Erinnerung), ist der Merker sofort weg; Fehler werden nie gemerkt. Spart 2 Abfragen je App-Start.
