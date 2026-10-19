@@ -1,5 +1,9 @@
 # Änderungen
 
+## Server – 2026-10-19 (ohne App-Build) – KC-CLUB-ANFRAGE-ALLE-INFO: Terminanfrage an mehrere – alle erfahren Antworten
+- Wunsch Hansi („Termin mit Dieter und Klaus … wenn Zusagen, Absagen, andere Vorschläge kommen, müssen alle benachrichtigt werden“): Anfragen an mehrere Personen gingen schon (Mitglieder wählen oder Gruppe), Antworten und Gegenvorschläge erfuhr aber nur der Anfragende. Jetzt bekommen auch die übrigen Eingeladenen Push/E-Mail bei Ja, Vielleicht, Nein und Gegenvorschlag („… zu der du auch eingeladen bist“). Angenommene Vorschläge (neue Zeit) und Absagen gingen schon an alle.
+- Rückweg: Server-Stand vor diesem Eintrag erneut hochladen.
+
 ## Spiegel – 2026-10-19 (ohne App-Build) – KICC-F-109: Spiegel überträgt nur geänderte Blöcke
 Wunsch Hansi („mach du die Umbauten, es muss kostenlos bleiben“; Supabase-Egress 7,19 von 5 GB). Nichts wird reduziert – jede Tabelle wird weiter alle 6 Stunden gespiegelt und vollständig geprüft.
 - Tabellen mit Ganzzahl-Schlüssel werden in Blöcke zu 500 Schlüsselnummern geteilt. Supabase liefert je Block nur Zeilenzahl + Prüfsumme (`kc_db_mirror_block_hashes`, ~1 KB je Tabelle), Neon rechnet dasselbe; übertragen werden nur abweichende Blöcke (`kc_db_mirror_block_rows`). Beispiel kc_club_protokoll: statt 3,4 MB je Lauf meist nur der letzte Block.

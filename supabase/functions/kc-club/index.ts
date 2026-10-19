@@ -5613,6 +5613,12 @@ async function terminanfragenListe(ich: Ich, zeitraum?: { von: string; bis: stri
   });
 }
 const ANTWORT_TEXT: Record<string, string> = { ja: "✅ Ja", vielleicht: "🤔 Vielleicht", nein: "❌ Nein" };
+// KC-CLUB-ANFRAGE-ALLE-INFO (19.10.2026, Wunsch Hansi „wenn Zusagen, Absagen, andere Vorschläge kommen, müssen alle benachrichtigt werden“):
+// bei Anfragen an mehrere Personen erfahren auch die übrigen Eingeladenen von Antworten und Gegenvorschlägen (ohne Anfragenden und ohne den Antwortenden selbst)
+async function anfrageMitEingeladene(a: any, ohne: string): Promise<string[]> {
+  const { data } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id").eq("anfrage_id", a.id);
+  return [...new Set((data ?? []).map((x: any) => String(x.person_id)))].filter((id) => id !== ohne && id !== a.erstellt_von);
+}
 // ---------- KC-CLUB-ERINNERUNG-WAHL (2.23.22, Wunsch Hansi): jede Person stellt ihre Erinnerung zu einer Terminanfrage selbst ein ----------
 // wann: 15/30/60/120 Min. vorher (0 = keine), zusätzlich am Vortag; wie: Push und/oder E-Mail. Kalender mit Alarm macht die App selbst.
 // Ohne eigene Zeile gilt wie bisher die Erinnerung der Anfrage (erinnerung_min) über die allgemeinen Benachrichtigungs-Einstellungen.
@@ -7045,6 +7051,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             text: `Hallo,\n\n${ich.name} hat auf deine Terminanfrage geantwortet:\n\n${ANTWORT_TEXT[antwort]}${notiz ? `\n📝 „${notiz}“` : ""}\n\n📌 ${a.anlass}\n📅 ${anfrageWann(a)}\n\nAlle Antworten in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
             url: APP_URL + "#termine",
           }, `club-terminanfrage-antwort:${a.id}:${ich.person_id}:${Date.now()}`);
+          const mit = await anfrageMitEingeladene(a, ich.person_id);
+          if (mit.length) await senden("club_treffen", mit, {
+            titel: `${ANTWORT_TEXT[antwort]} von ${ich.vorname}`, kurz: `${a.anlass} – ${wann(a.beginn)}${notiz ? " · „" + notiz + "“" : ""}`,
+            betreff: `Köcheclub Werne – ${ich.name} antwortet: ${ANTWORT_TEXT[antwort].slice(2)} (${a.anlass})`,
+            text: `Hallo,\n\n${ich.name} hat auf die Terminanfrage geantwortet, zu der du auch eingeladen bist:\n\n${ANTWORT_TEXT[antwort]}${notiz ? `\n📝 „${notiz}“` : ""}\n\n📌 ${a.anlass}\n📅 ${anfrageWann(a)}\n\nAlle Antworten in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+            url: APP_URL + "#termine",
+          }, `club-terminanfrage-antwort-mit:${a.id}:${ich.person_id}:${Date.now()}`).catch(() => null);
         }
         await protokoll(ich.person_id, "terminanfrage_antwort", { anfrage: a.id, antwort });
         return json({ ok: true, anfrage: (await terminanfragenListe(ich, { von: new Date(new Date(a.beginn).getTime() - 1000).toISOString(), bis: new Date(new Date(a.beginn).getTime() + 1000).toISOString() })).find((x: any) => x.id === a.id) });
@@ -7077,6 +7090,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           text: `Hallo,\n\n${ich.name} hat auf deine Terminanfrage mit einem Gegenvorschlag geantwortet:\n\n📌 ${a.anlass}\n📅 angefragt: ${anfrageWann(a)}\n🔄 Vorschlag: ${vWann}${notiz ? `\n📝 „${notiz}“` : ""}\n\nAnnehmen oder ablehnen in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
           url: APP_URL + "#termine",
         }, `club-terminanfrage-vorschlag:${a.id}:${ich.person_id}:${Date.now()}`).catch(() => null);
+        const mit = await anfrageMitEingeladene(a, ich.person_id); // KC-CLUB-ANFRAGE-ALLE-INFO
+        if (mit.length) await senden("club_treffen", mit, {
+          titel: `🔄 Gegenvorschlag von ${ich.vorname}`, kurz: `${a.anlass}: lieber ${vWann}${notiz ? " · „" + notiz + "“" : ""}`,
+          betreff: `Köcheclub Werne – ${ich.name} schlägt eine andere Zeit vor (${a.anlass})`,
+          text: `Hallo,\n\n${ich.name} schlägt für die Terminanfrage, zu der du auch eingeladen bist, eine andere Zeit vor:\n\n📌 ${a.anlass}\n📅 angefragt: ${anfrageWann(a)}\n🔄 Vorschlag: ${vWann}${notiz ? `\n📝 „${notiz}“` : ""}\n\nÜber den Vorschlag entscheidet, wer angefragt hat. Wird er angenommen, bekommst du Bescheid und kannst neu antworten.\n${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+          url: APP_URL + "#termine",
+        }, `club-terminanfrage-vorschlag-mit:${a.id}:${ich.person_id}:${Date.now()}`).catch(() => null);
         await protokoll(ich.person_id, "terminanfrage_gegenvorschlag", { anfrage: a.id, versand });
         return json({ ok: true });
       }
