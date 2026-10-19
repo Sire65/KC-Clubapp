@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.492.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.493.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14025,6 +14025,9 @@ function druckBestaetigung() {
     <p style="margin:3mm 0 0;font-size:3mm;color:#555">Zeiten in Uhr · Buchstabe = Bereich · ${b.freigabe ? "Kollegen dürfen die Zeiten sehen" : "nur für die Planung sichtbar"} · Änderungen jederzeit in der App, solange die Wunschphase läuft.</p>`;
   return { titel: `Meine Dienstwünsche – ${b.veranstaltung}`, unter: "Bestätigung meiner Eingaben", html, quer: true, fuss: "Bestätigung aus der Köcheclub-App" };
 }
+// KC-CLUB-DW-LAUFBAND (2.493.0): nach dem Öffnen bis zum nächsten App-Start nicht mehr anbieten (dann weiß der Server, ob abgegeben)
+const DW_LB = { geoeffnet: false };
+function dwLaufbandAuf() { DW_LB.geoeffnet = true; spur("dw_laufband"); dwOeffnen(); setTimeout(() => ilZeigen?.(), 300); }
 function dwOeffnen() {
   if (document.getElementById("dwFenster")) return;
   const f = document.createElement("div"); f.id = "dwFenster"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true"); f.setAttribute("aria-label", "Dienstwünsche");
@@ -23780,6 +23783,8 @@ function ilMeldungen() {
   if (wt) { const a = wetterArt(wt.code), nass = (wt.regenWkt ?? 0) >= 50 || ["regen", "niesel", "gewitter", "schnee"].includes(a.szene);
     add({ id: "wetter:" + wt.datum, stufe: nass ? "gold" : "weiss", sym: a.sym, t: nass ? "Am Treffen-Tag wird es nass – Schirm mitnehmen" : `Wetter am Treffen-Tag: ${a.text}`, u: `${grad(wt.max)} / ${grad(wt.min)}${wt.regenWkt != null ? ` · ☔ ${wt.regenWkt} %` : ""}`, auf: "infoGehe(INFO_FELDER.findIndex((f) => f.id === 'wetter'))" }); }
   const nh = ilNeuheit(); if (nh) add(nh); // 🆕 eine Neuheit pro Runde
+  // 2.493.0 KC-CLUB-DW-LAUFBAND (Wunsch Hansi): Dienstwünsche Weihnachtsmarkt noch nicht abgegeben → Twinkey führt durch (der Server weiß, wer schon abgegeben hat)
+  if (INIT?.dienstwunschFehlt === true && !DW_LB.geoeffnet) add({ id: "dw-fehlt", stufe: "rot", sym: "🎄", t: "Dienstplan Weihnachtsmarkt: Wünsche eingeben?", u: "Twinkey führt dich Schritt für Schritt durch", auf: "dwLaufbandAuf()", knoepfe: [["📝 Mit Twinkey eingeben", "dwLaufbandAuf()"]], fertig: "Dienstwünsche Weihnachtsmarkt eingegeben" });
   // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE: Admin – offene Anfragen (orange); alle anderen – Angebot „Unterstützung?“ (ausblendbar, 30 Tage Pause nach dem Senden)
   if (ICH?.admin && kz.unterstuetzung > 0) add({ id: "ua-admin", stufe: "orange", sym: "🙋", t: kz.unterstuetzung === 1 ? "Eine Unterstützungs-Anfrage wartet" : `${kz.unterstuetzung} Unterstützungs-Anfragen warten`, u: "Antippen und Kontakt aufnehmen", auf: "uaAdmin()" });
   else if (!ICH?.admin && !uaKuerzlich()) add({ id: "unterstuetzung", stufe: "weiss", sym: "🙋", t: "Unterstützung bei der Club-App?", u: "Anfrage senden – Hansi meldet sich", auf: "uaStart()", knoepfe: [["🙋 Anfrage senden", "uaStart()"]] });

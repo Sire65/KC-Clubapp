@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.493.0 – 2026-10-19 – „Dienstplan Weihnachtsmarkt: Wünsche eingeben?“ im Info-Laufband (KC-CLUB-DW-LAUFBAND) · Server 2.493.0
+Wunsch Hansi („Dienstplan Weihnachtsmarkt eingeben? – wer schon eingegeben hat, nicht anzeigen – und dann zu Twinkey führen“):
+- Rote Meldung im Info-Laufband mit Knopf „📝 Mit Twinkey eingeben“ – öffnet direkt die Dienstwünsche mit Twinkey. Nach dem Öffnen bis zum nächsten App-Start nicht mehr.
+- Nur für Mitglieder/Aushilfen, die für den Weihnachtsmarkt 2026 noch keine Wünsche abgegeben haben (Server prüft kc_dp_wish_inbox, submitted_at), nur bei offener Wunschphase (Stand 5 Min. gemerkt). Fehler → keine Meldung. Stand 19.10.: 9 von 17 noch offen.
+- Start: 1 Abfrage mehr (nur bei offener Wunschphase).
+- Tests: tools/dienstwunsch/dw-laufband-browser.mjs (Chromium, 4 Prüfungen), Vertragstests grün, Typprüfung unverändert.
+
 ## 2.492.0 – 2026-10-19 – „Unterstützung bei der Club-App?“ – Anfrage mit kurzem Fragebogen (KC-CLUB-UNTERSTUETZUNG-ANFRAGE) · Server 2.492.0
 Wunsch Hansi („Unterstützung Club App?? Anfrage senden … Fragebogen in Kategorien … weniger Punkte, sonst wird der User überfordert“):
 - Info-Laufband (und Mehr → 🙋 Unterstützung anfragen): „Unterstützung bei der Club-App? – Anfrage senden“. Ausblendbar; nach dem Senden 30 Tage Pause.

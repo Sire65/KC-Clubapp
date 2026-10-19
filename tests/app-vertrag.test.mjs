@@ -5904,7 +5904,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491|492)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -10943,6 +10943,14 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\.spg-fern \{/.test(lies("index.html")) && /\.fern-tipp \{/.test(lies("index.html")), "sichtbare Markierung und Bedienfläche");
   assert.ok(/id: "fernhilfe_bedienen", thema: "technik"/.test(html) && /ALLE TESTS GRÜN/.test(lies("tools/fernhilfe/fern-bedienen-test.mjs")), "Hilfe und Browser-Test");
 }
+// 2.493.0 KC-CLUB-DW-LAUFBAND (Wunsch Hansi): „Dienstplan Weihnachtsmarkt: Wünsche eingeben?“ – nur wer noch nicht abgegeben hat, führt zu Twinkey
+{
+  assert.ok(/const pDwFehlt = ich\.zugang === "gast" \? Promise\.resolve\(null\) : dwPhaseKurz\(\)\.then\(async \(ph\) => \{\n\s*if \(ph !== "open"\) return false;/.test(server), "nur Mitglieder/Aushilfen, nur bei offener Wunschphase");
+  assert.ok(/\.eq\("event_id", DW\.veranstaltung\)\.eq\("person_id", ich\.person_id\)\.not\("submitted_at", "is", null\)\.limit\(1\);\n\s*return error \? null : !\(data \?\? \[\]\)\.length;/.test(server), "abgegeben = Wunsch mit submitted_at; Fehler → null");
+  assert.ok(/return json\(\{ meinGeburtstag, alarm, express, dienstwunschFehlt,/.test(server), "Start liefert dienstwunschFehlt");
+  assert.ok(/if \(INIT\?\.dienstwunschFehlt === true && !DW_LB\.geoeffnet\) add\(\{ id: "dw-fehlt", stufe: "rot"/.test(html) && /function dwLaufbandAuf\(\) \{ DW_LB\.geoeffnet = true;[^\n]*dwOeffnen\(\);/.test(html), "Laufband nur bei true, öffnet Twinkey");
+}
+
 // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE (Wunsch Hansi): kurzer Fragebogen „Unterstützung bei der Club-App?“, Admin nimmt Kontakt auf
 {
   for (const a of ["unterstuetzung_meine", "unterstuetzung_senden", "unterstuetzung_liste", "unterstuetzung_status"]) assert.ok(aktionen.has(a) && aufrufe.has(a), "Aktion " + a);

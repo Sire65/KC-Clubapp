@@ -95,7 +95,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.492.0";
+const SERVER_VERSION = "2.493.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5910,6 +5910,14 @@ function lvBremse(pid: string) { // true = darf
   l.push(jetztMs); LV_ZAHL.set(pid, l); return true;
 }
 const lvSicht = (x: any) => x ? { url: x.url, titel: x.titel || "", text: x.text || "", seite: x.seite || "", bild: x.bild || null } : null;
+// KC-CLUB-DW-LAUFBAND (2.493.0): Stand der Wunschphase (open/closed) – gilt für alle, 5 Min. je Server-Instanz gemerkt (nur Erfolg)
+let DW_PHASE_MERK: { t: number; v: string | null } | null = null;
+async function dwPhaseKurz(): Promise<string | null> {
+  if (DW_PHASE_MERK && Date.now() - DW_PHASE_MERK.t < 300000) return DW_PHASE_MERK.v;
+  const { data, error } = await db.from("kc_dp_wish_phase_settings").select("status").eq("org_id", ORG).eq("project_id", DW.projekt).maybeSingle();
+  if (error) throw new Error(error.message);
+  DW_PHASE_MERK = { t: Date.now(), v: data?.status ?? null }; return DW_PHASE_MERK.v;
+}
 // KC-CLUB-START-SPARSAM (2.489.0): öffentlicher Push-Schlüssel (VAPID) ändert sich praktisch nie – 10 Min. je Server-Instanz gemerkt (nur Erfolg)
 let VAPID_MERK: { t: number; v: any } | null = null;
 async function vapidOeffentlich() {
@@ -6539,6 +6547,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // 2.301.0 KC-CLUB-SCHNECKE-START: gleichzeitig mit den Kachelzahlen statt danach (war beim Admin-Start der letzte, längste Schritt „kz“)
         const pSchulungZahl = ich.admin ? schulungStand(ich, null).then((x) => x.wartet.length).catch(() => null) : Promise.resolve(null);
         // KC-CLUB-UNTERSTUETZUNG-ANFRAGE (2.492.0): offene Unterstützungs-Anfragen – nur für den Admin (1 Abfrage), Fehler → keine Zahl
+        // KC-CLUB-DW-LAUFBAND (2.493.0, Wunsch Hansi „Dienstplan Weihnachtsmarkt eingeben? – wer schon eingegeben hat, nicht anzeigen“):
+        // nur Mitglieder/Aushilfen, nur bei offener Wunschphase (5 Min. gemerkt); 1 Abfrage, Fehler → null (die App zeigt dann nichts)
+        const pDwFehlt = ich.zugang === "gast" ? Promise.resolve(null) : dwPhaseKurz().then(async (ph) => {
+          if (ph !== "open") return false;
+          const { data, error } = await db.from("kc_dp_wish_inbox").select("submitted_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).not("submitted_at", "is", null).limit(1);
+          return error ? null : !(data ?? []).length;
+        }).catch(() => null);
         const pUaZahl = ich.admin ? Promise.resolve(db.from("kc_club_unterstuetzung").select("id", { count: "exact", head: true }).eq("status", "offen")).then((r: any) => r.error ? null : r.count ?? 0, () => null) : Promise.resolve(null);
         const pKz = kachelZahlen(ich, p).catch(() => null).then(async (kz) => {
           if (kz && ich.admin) { (kz as any).schulung = await pSchulungZahl; (kz as any).unterstuetzung = await pUaZahl; }
@@ -6718,7 +6733,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         zt.ende = Date.now() - t0Anfrage;
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
-        return json({ meinGeburtstag, alarm, express, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
