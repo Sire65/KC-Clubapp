@@ -356,6 +356,27 @@ async function objAnlagenSetzen(ich: { person_id: string }, art: string, objektI
   if (error) throw new Fehler("Gespeichert – aber die Anlage konnte nicht angehängt werden. Bitte noch einmal versuchen.", 500);
   return eigene.length;
 }
+// KC-CLUB-VORSCHLAG-BEARBEITEN (Wunsch Hansi 19.10.2026 „Vorschläge verändern und dann die Anlagen dazu packen“): Anlagen eines Eintrags
+// neu festlegen. Bleiben dürfen die schon angehängten (auch von anderen), neu dazu nur selbst hochgeladene – wie beim Anlegen.
+async function objAnlagenErsetzen(ich: { person_id: string }, art: string, objektId: string, roh: unknown) {
+  const ids = [...new Set((Array.isArray(roh) ? roh : []).map((x) => String(x)).filter((x) => /^[0-9a-f-]{36}$/i.test(x)))].slice(0, OBJ_ANLAGEN_MAX);
+  const { data: alt, error: ae } = await db.from("kc_club_objekt_anlagen").select("attachment_id").eq("art", art).eq("objekt_id", objektId);
+  if (ae) throw new Fehler("Anlagen konnten nicht geladen werden – bitte noch einmal versuchen.", 500);
+  const bisher = new Set((alt ?? []).map((x: any) => String(x.attachment_id)));
+  const kandidaten = ids.filter((id) => !bisher.has(id));
+  const { data: att } = kandidaten.length ? await db.from("kc_communication_attachments").select("id,object_path").in("id", kandidaten) : { data: [] as any[] };
+  const erlaubt = ids.filter((id) => bisher.has(id) || (att ?? []).some((a: any) => a.id === id && String(a.object_path).startsWith(`club/${ich.person_id}/`)));
+  const weg = [...bisher].filter((id) => !erlaubt.includes(id));
+  if (erlaubt.length) {
+    const { error } = await db.from("kc_club_objekt_anlagen").upsert(erlaubt.map((attachment_id, i) => ({ art, objekt_id: objektId, attachment_id, reihenfolge: i })), { onConflict: "art,objekt_id,attachment_id" });
+    if (error) throw new Fehler("Gespeichert – aber die Anlagen konnten nicht angehängt werden. Bitte noch einmal versuchen.", 500);
+  }
+  if (weg.length) {
+    const { error } = await db.from("kc_club_objekt_anlagen").delete().eq("art", art).eq("objekt_id", objektId).in("attachment_id", weg);
+    if (error) throw new Fehler("Gespeichert – aber eine Anlage konnte nicht entfernt werden. Bitte noch einmal versuchen.", 500);
+  }
+  return { anzahl: erlaubt.length, neu: erlaubt.filter((id) => !bisher.has(id)).length, entfernt: weg.length };
+}
 async function objAnlagenHolen(art: string, objektIds: string[]): Promise<Map<string, any[]>> {
   const m = new Map<string, any[]>(); if (!objektIds.length) return m;
   const { data: v } = await db.from("kc_club_objekt_anlagen").select("objekt_id,attachment_id,reihenfolge").eq("art", art).in("objekt_id", objektIds.slice(0, 300)).order("reihenfolge");
@@ -3963,6 +3984,7 @@ async function vorschlaegeListe(ich: Ich) {
       ziel: v.ziel_text || null, fuerMich: !v.ziel_ids || v.ziel_ids.includes(ich.person_id),
       darfAbschliessen: v.status === "offen" && (ich.vorstand || (eigener && unterstuetzbar(v.art))),
       darfZurueckziehen: v.status === "offen" && (ich.vorstand || eigener),
+      darfBearbeiten: v.status === "offen" && (ich.vorstand || eigener), // KC-CLUB-VORSCHLAG-BEARBEITEN
       // löschen: Organisation immer; wer ihn gemacht hat, solange niemand sonst abgestimmt/unterstützt hat
       darfLoeschen: ich.vorstand || (eigener && !s.some((x: any) => x.person_id !== ich.person_id) && !(geh ?? []).some((g: any) => g.vorschlag_id === v.id)),
     };
@@ -7475,6 +7497,32 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         } else throw new Fehler("Unbekannter Status.");
         await protokoll(ich.person_id, "vorschlag_" + p.status, { vorschlag: v.id, versand });
         return json({ ok: true, versand });
+      }
+
+      // KC-CLUB-VORSCHLAG-BEARBEITEN (Wunsch Hansi 19.10.2026): Thema/Frage, Beschreibung, Termin und Anlagen nachträglich ändern.
+      // Darf, wer ihn gemacht hat, oder die Clubleitung – solange er offen ist. Ohne Benachrichtigung; der alte Stand steht im Protokoll.
+      // Bei Abstimmungen bleibt die Frage nach der ersten Stimme fest (sonst stimmten Leute über etwas anderes ab).
+      case "vorschlag_aendern": {
+        const { data: v } = await db.from("kc_club_vorschlaege").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!v) throw new Fehler("Vorschlag nicht gefunden.", 404);
+        if (v.status !== "offen") throw new Fehler("Erledigte oder zurückgezogene Vorschläge lassen sich nicht mehr ändern.", 409);
+        if (!ich.vorstand && v.erstellt_von !== ich.person_id) throw new Fehler("Ändern darf, wer den Vorschlag gemacht hat, oder Clubsprecher/Kassenwart.", 403);
+        const titel = txt(p.titel, 150) || (v.art === "spende" ? v.titel : "");
+        if (!titel) throw new Fehler("Bitte ein Thema bzw. eine Frage eingeben.");
+        if (v.art === "abstimmung" && titel !== v.titel) {
+          const [{ count: n1 }, { count: n2 }] = await Promise.all([
+            db.from("kc_club_stimmen").select("vorschlag_id", { count: "exact", head: true }).eq("vorschlag_id", v.id),
+            db.from("kc_club_geheime_stimmen").select("vorschlag_id", { count: "exact", head: true }).eq("vorschlag_id", v.id),
+          ]);
+          if ((n1 ?? 0) + (n2 ?? 0) > 0) throw new Fehler("Die Frage lässt sich nach der ersten Stimme nicht mehr ändern – Beschreibung und Anlagen schon.", 409);
+        }
+        const neu: Record<string, unknown> = { titel, beschreibung: txt(p.beschreibung, 2000) || null };
+        if ("treffen_id" in p) neu.treffen_id = p.treffen_id ? String(p.treffen_id) : null;
+        const { error } = await db.from("kc_club_vorschlaege").update(neu).eq("id", v.id).eq("status", "offen");
+        if (error) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        const anlagen = Array.isArray(p.anlagen) ? await objAnlagenErsetzen(ich, "vorschlag", v.id, p.anlagen) : null;
+        await protokoll(ich.person_id, "vorschlag_geaendert", { vorschlag: v.id, vorher: { titel: v.titel, beschreibung: v.beschreibung, treffen_id: v.treffen_id }, anlagen });
+        return json({ ok: true, anlagen });
       }
 
       case "vorschlag_loeschen": {

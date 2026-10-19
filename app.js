@@ -25505,6 +25505,7 @@ function vorschlagKarte(v) {
   }
   const knoepfe = [
     v.darfAbschliessen ? `<button class="knopf klein" onclick="vorschlagStatus('${v.id}','abgeschlossen','${v.art}')">${v.art === "abstimmung" ? "🏁 Abstimmung beenden" : "✔ Erledigt / in Tagesordnung"}</button>` : "",
+    v.darfBearbeiten ? `<button class="knopf klein" onclick="vorschlagBearbeiten('${v.id}')">✏️ Bearbeiten</button>` : "", // KC-CLUB-VORSCHLAG-BEARBEITEN
     v.darfZurueckziehen ? `<button class="knopf klein" onclick="vorschlagStatus('${v.id}','zurueckgezogen')">Zurückziehen</button>` : "",
     v.darfLoeschen ? `<button class="knopf klein" onclick="vorschlagLoeschen('${v.id}')">🗑️ Löschen</button>` : "",
   ].join("");
@@ -25519,6 +25520,32 @@ async function vorschlagStatus(id, status, art) {
   const text = status === "zurueckgezogen" ? "Vorschlag wirklich zurückziehen?" : art === "abstimmung" ? "Abstimmung jetzt beenden? Alle bekommen das Ergebnis." : "Als erledigt markieren (z. B. in die Tagesordnung aufgenommen)?";
   if (!(await frage(text))) return; // 2.18.2: Variable hieß „frage“ und verdeckte die Funktion frage()
   try { await api("vorschlag_status", { id, status }); melde("💾 Gespeichert"); vorschlaegeLaden(); neuLaden(); } catch (e) { meldeFehler(e); }
+}
+// KC-CLUB-VORSCHLAG-BEARBEITEN (Wunsch Hansi 19.10.2026 „Vorschläge verändern … und die Anlagen dazu packen“): Thema, Beschreibung,
+// Termin und Anlagen nachträglich ändern – ohne neue Benachrichtigung. Vorhandene Anlagen stehen als Chips da (✕ entfernt), neue kommen dazu.
+function vorschlagBearbeiten(id) {
+  const v = VORSCHLAG_MAP.get(id); if (!v) return;
+  $("vorschlagInfo")?.remove();
+  OBJA.vb = (v.anlagen || []).map((a) => ({ id: a.id, name: a.name, mime: a.mime || "", groesse: a.groesse }));
+  const termine = VORSCHLAG_TREFFEN.slice();
+  if (v.treffen && !termine.some((t) => t.id === v.treffen.id)) termine.unshift(v.treffen);
+  const f = blattAuf("vorschlagBearb", `<h3 style="margin:0 0 6px">✏️ Vorschlag bearbeiten</h3>
+    <label class="feld">${v.art === "abstimmung" ? "Frage" : v.art === "spende" ? "Überschrift" : "Thema"}<input id="vbTitel" maxlength="150" value="${esc(v.titel)}"></label>
+    ${v.art === "abstimmung" && v.stimmen ? '<p class="hinweis" style="margin:-4px 0 6px">Es wurde schon abgestimmt – die Frage bleibt deshalb, wie sie ist.</p>' : ""}
+    <label class="feld">Beschreibung (freiwillig)<textarea id="vbBeschr" rows="4">${esc(v.beschreibung || "")}</textarea></label>
+    <label class="feld">Für welchen Termin?<select id="vbTreffen"><option value="">– allgemein –</option>${termine.map((t) => `<option value="${t.id}" ${v.treffen?.id === t.id ? "selected" : ""}>${esc(t.titel)} · ${esc(wann(t.beginn))}</option>`).join("")}</select></label>
+    ${oaFeld("vb")}
+    <p class="hinweis" style="margin:6px 0 0">Beim Speichern wird niemand benachrichtigt.</p>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="vbOk">💾 Speichern</button><button class="knopf" onclick="$('vorschlagBearb').remove()">Abbrechen</button></div>`);
+  if (v.art === "abstimmung" && v.stimmen) $("vbTitel").disabled = true;
+  $("vbOk").onclick = () => einmal($("vbOk"), async () => {
+    try {
+      const r = await api("vorschlag_aendern", { id, titel: $("vbTitel").value, beschreibung: $("vbBeschr").value, treffen_id: $("vbTreffen").value || null, anlagen: oaIds("vb") });
+      oaLeeren("vb"); f.remove();
+      melde(r.anlagen?.neu ? `💾 Gespeichert – ${r.anlagen.neu} Anlage${r.anlagen.neu > 1 ? "n" : ""} dazu` : "💾 Gespeichert");
+      await vorschlaegeLaden(); if (VORSCHLAG_MAP.get(id)) vorschlagInfo(id);
+    } catch (e) { meldeFehler(e); }
+  });
 }
 async function vorschlagLoeschen(id) {
   if (!(await frage("Diesen Vorschlag bzw. diese Abstimmung endgültig löschen?\n\nAlle Stimmen gehen mit verloren. Es wird niemand benachrichtigt.\nEine Sicherung bleibt im Änderungsprotokoll."))) return;

@@ -10283,6 +10283,14 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/enable row level security/.test(mig) && /on delete cascade/.test(mig), "Express-Tabellen geschützt, hängen an der Nachricht");
 }
 
+// KC-CLUB-VORSCHLAG-BEARBEITEN: Vorschlag nachträglich ändern (Thema, Beschreibung, Termin, Anlagen)
+{
+  assert.ok(/case "vorschlag_aendern": \{/.test(server) && /async function objAnlagenErsetzen\(/.test(server), "Server-Aktion + Anlagen ersetzen");
+  assert.ok(/darfBearbeiten: v\.status === "offen" && \(ich\.vorstand \|\| eigener\)/.test(server), "Recht: Ersteller oder Clubleitung, nur offen");
+  assert.ok(/Die Frage lässt sich nach der ersten Stimme nicht mehr ändern/.test(server), "Abstimmungsfrage fest nach erster Stimme");
+  assert.ok(/function vorschlagBearbeiten\(id\)/.test(html) && /api\("vorschlag_aendern"/.test(html) && /oaFeld\("vb"\)/.test(html) && /✏️ Bearbeiten/.test(html), "Knopf + Fenster in der App");
+}
+
 // 2.363.0 KC-CLUB-MUENCHHAUSEN: Baron Münchhausen als Bote
 {
   assert.ok(/\["muenchhausen", "🎩 Baron Münchhausen"\]/.test(html) && /const SENDE_REIHE = \[[^\]]*"muenchhausen"\]/.test(html), "wählbar und bei Abwechselnd dabei");
