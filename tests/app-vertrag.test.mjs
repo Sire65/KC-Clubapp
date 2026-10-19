@@ -7032,6 +7032,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.gbv \{ position: absolute; inset: 0; z-index: 4; pointer-events: none;/.test(html), "blockiert keine Bedienung");
 }
 
+// 2.507.0 KC-CLUB-HILFE-NACHTRAG-3 (Wunsch Hansi „Hilfetexte, Lupe, Twinkey und Videos an die neuen Sachen anpassen – nix von Adminfunktionen“)
+{
+  const neu = ["kopf_effekte", "geburtstag_vogel", "tippgeraeusche", "dienst_uebersicht", "dienstwunsch_hinweis", "vorschlag_bearbeiten", "protokoll_drucken", "kurz_erklaert_zu", "info_neues", "kalender_heute", "anfrage_mehrere"];
+  for (const id of neu) { const m = html.match(new RegExp(`\\{ id: "${id}", thema: "[a-z]+", sym: "[^"]+", t: "[^"]+", x: "([^"]+)"[^\\n]*seit: "2\\.\\d+\\.0" \\}`));
+    assert.ok(m, "Hilfe-Eintrag mit seit: " + id);
+    assert.ok(!/(Clubleitung|Admin|Vorstand|erinnern|Ablegen|wer fehlt|Wochenbericht|Claude)/i.test(m[1]), "keine Admin-Funktionen im Hilfetext: " + id); }
+  for (const id of ["dienst-uebersicht", "tippgeraeusche", "kopf-effekt", "geburtstag-vogel", "vorschlag-aendern", "protokoll-drucken"]) assert.ok(html.includes(`{ id: "${id}", sym: `), "Twinkey-Frage: " + id);
+  for (const t of ["Dienstzeiten-Übersicht (wer kann wann)", "Kopf-Effekt wählen", "Tippgeräusche (Tastatur, Schreibmaschine)", "Geburtstags-Vogel ansehen"]) assert.ok(html.includes(`"${t}`), "Lupe: " + t);
+  assert.ok(/t: "🎪 Der Kopf geht auf und zu"/.test(html) && /await kopfRolloFahren\("ganz", e\)/.test(html) && /async function kopfRolloFahren\(ziel, vorgabe\)/.test(html) && /const effekt = vorgabe \|\| kopfEffektNaechster\(\);/.test(html), "Video Effekte: Kopf-Effekte nur vorgeführt (Einstellung bleibt)");
+  assert.ok(/t: "🎁 Geburtstag im Kopf"/.test(html) && /t: "📊 Wer kann wann\?"/.test(html), "Videos: Geburtstags-Vogel, Dienstzeiten-Übersicht");
+  assert.ok(/"h:kopf_effekte": \["effekte", "anpassen"\]/.test(html) && /"h:dienst_uebersicht": \["dienst"\]/.test(html), "Twinkey verweist auf die passenden Videos");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -9729,7 +9742,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE (Wunsch Hansi): Effekte & Wetter – nur vorgeführt, jederzeit abschaltbar
 {
   const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-EFFEKTE"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR (2.248.0"));
-  assert.ok(/\{ id: "effekte", stand: "1", [^\n]*st: \(\) => RG_EFFEKTE \}/.test(html) && /\{ id: "ich", [^\n]*videos: \[[^\]]*"oberflaeche", "effekte"/.test(html), "Video registriert und im Thema");
+  assert.ok(/\{ id: "effekte", stand: "\d+", [^\n]*st: \(\) => RG_EFFEKTE \}/.test(html) && /\{ id: "ich", [^\n]*videos: \[[^\]]*"oberflaeche", "effekte"/.test(html), "Video registriert und im Thema");
   assert.ok(/regEffekt\(1, art\)/.test(b) && /rgJz\("herbst", "igel"/.test(b) && /rgJz\("herbst", "twinkey"/.test(b) && /rgJz\("winter"/.test(b) && /rgJz\("fruehling"/.test(b) && /rgJz\("sommer"/.test(b), "alle Effekte gezeigt");
   assert.ok(/wetterTagWahl\(1\)/.test(b) && /L\.tipp\("#infoFeld \.wtag:nth-child\(2\)", "lang"\); wetterTagDetails\(1\)/.test(b), "Wetter: antippen und lange festhalten");
   assert.ok(!/einstellung\(|api\(|einstSpeichern/.test(b) && /JZB\.vorschau = alt\[0\]; JZB\.extra = alt\[1\]; jahreszeitKopf\(\)/.test(b) && /if \(WET\.tag\) \{ WET\.tag = 0; heroZeigen\(0\); \}/.test(b), "nichts gespeichert, alles zurückgestellt");
@@ -9739,7 +9752,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.269.0 KC-CLUB-ERKLAERVIDEOS-5 (Wunsch Hansi): Dienst, Status, Protokolle & Dokumente, Meine Daten – nur vorgeführt
 {
   const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-5"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-EFFEKTE"));
-  for (const [id, st] of [["dienst", "RG_DIENST"], ["status", "RG_STATUS"], ["lesen", "RG_LESEN"], ["meinedaten", "RG_DATEN"]]) assert.ok(new RegExp(`\\{ id: "${id}", stand: "1", [^\\n]*st: \\(\\) => ${st} \\}`).test(html), `Video ${id} registriert`);
+  for (const [id, st] of [["dienst", "RG_DIENST"], ["status", "RG_STATUS"], ["lesen", "RG_LESEN"], ["meinedaten", "RG_DATEN"]]) assert.ok(new RegExp(`\\{ id: "${id}", stand: "\\d+", [^\\n]*st: \\(\\) => ${st} \\}`).test(html), `Video ${id} registriert`);
   assert.ok(!/[;{(]\s*(await )?statusSpeichern\(|aeSenden\(|\bapi\(|protokollOeffnen\(|prOeffnen\(|einstellung\(/.test(b) && /\[onclick="statusSpeichern\(\)"\]/.test(b), "nichts gespeichert, gemeldet oder als gelesen markiert (Speichern nur gezeigt)");
   assert.ok(/RG\.zurueck\.push\(\(\) => \{ if \(\$\(id\)\) fensterZu\(\$\(id\)\); \}\)/.test(b) && /\$\("statusBlatt"\)\.classList\.add\("versteckt"\); \$\("statusBlatt"\)\.classList\.remove\("rg-zeigen"\)/.test(b), "Fenster am Ende zu");
 }
@@ -10162,7 +10175,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   for (const id of ["raetsel", "club_song", "kopf_besucher", "deko_leiste", "sparmodus", "akku", "anpassen"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "[a-z]+", sym: "[^"]+", t: "[^"]+", x: "[^"]+", zeig: `).test(html), "Hilfe: " + id);
   for (const w of ["Thema wählen", "Deko an der Leiste", "Sparmodus / Akku sparen", "Erklär-Video: Meine App nach meinem Geschmack", "Trainingsuhr auf der Bühne", "Dienstwünsche: Bestätigung per E-Mail"]) assert.ok(html.includes(`"${w}`), "Lupe: " + w);
   for (const id of ["aussehen", "kopf-ruhig", "raetsel"]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+\\?", x: `).test(html), "Twinkey: " + id);
-  assert.ok(/\{ id: "anpassen", stand: "1", sym: "🎨", t: "Meine App nach meinem Geschmack"[^\n]*st: \(\) => RG_ANPASSEN \}/.test(html) && /videos: \[[^\]]*"rueckseite", "anpassen"/.test(html), "Video registriert, im Thema Ich & meine App");
+  assert.ok(/\{ id: "anpassen", stand: "\d+", sym: "🎨", t: "Meine App nach meinem Geschmack"[^\n]*st: \(\) => RG_ANPASSEN \}/.test(html) && /videos: \[[^\]]*"rueckseite", "anpassen"/.test(html), "Video registriert, im Thema Ich & meine App");
   const v = html.slice(html.indexOf("const RG_ANPASSEN = ["), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR (2.248.0"));
   for (const id of ["themaWahl", "themaSchriftAn", "designWahl", "modusWahl", "setGross", "setJahreszeit", "jzDekoWahl", "regEffektWahl", "setAnimiert", "sparWahl", "setEselsohr"]) { assert.ok(v.includes(id), "Station zeigt " + id); assert.ok(lies("index.html").includes(`id="${id}"`), "Feld da: " + id); }
   assert.ok(!/live:/.test(v), "nur vorgeführt – nichts wird umgestellt");
