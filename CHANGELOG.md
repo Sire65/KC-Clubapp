@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.501.0 – 2026-10-19 – 📊 Dienstzeiten-Übersicht für Mitglieder (KC-CLUB-DV-MITGLIEDER)
+- Feature KC-CLUB-DV-MITGLIEDER (Wunsch Hansi): Der 📊-Knopf steht jetzt auch für Mitglieder bereit. Mitglieder sehen ihre eigenen Zeiten und die der Mitglieder, die das Teilen erlaubt haben (gleiche Regel wie in „Dienstpläne“); „wer fehlt noch“, Erinnern und Ablegen bleiben bei der Clubleitung.
+- Server 2.501.0: `dienst_uebersicht` filtert für Nicht-Leitung serverseitig.
+
 ## 2.500.0 – 2026-10-19 – 📊 Dienstzeiten-Übersicht überall beim Dienstplan (KC-CLUB-DV-UEBERALL)
 - Feature KC-CLUB-DV-UEBERALL (Wunschliste Nr. 27): Der 📊-Knopf aus dem Büro-Eingang steht jetzt auch in „Dienstpläne“, „Mein Dienst“ und den Dienstwünschen – gleicher Knopf, gleiches Recht (Clubleitung).
 

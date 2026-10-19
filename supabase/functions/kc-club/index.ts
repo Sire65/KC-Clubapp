@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.499.0";
+const SERVER_VERSION = "2.501.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -11817,11 +11817,21 @@ Köcheclub Werne`,
         return json({ ok: true, erinnert: ziel.length, namen: ziel.map((m) => m.display_name) });
       }
       case "dienst_uebersicht": {
-        nurLeitung(ich);
-        const { data: rows, error } = await db.from("kc_dp_wish_inbox").select("id,person_id,revision,status,entries,updated_at,taken_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source", "club_app").limit(300);
-        if (error) throw new Fehler("Die Dienstzeiten konnten gerade nicht geladen werden.", 503); // Regel 11: unbekannt ≠ leer
-        const liste = (rows ?? []).filter((x: any) => !String(x.person_id).startsWith("KC-P-TEST"));
+        // KC-CLUB-DV-MITGLIEDER (2.501.0, Wunsch Hansi „auch eine Fassung für die Mitglieder“): die Clubleitung sieht alle; Mitglieder sehen sich
+        // selbst und nur, wer das Teilen erlaubt hat – dieselbe Regel wie bei den Wunschzeiten in „dienste“. „Wer fehlt noch“ bleibt bei der Leitung.
+        const leitung = !!(ich.vorstand || ich.admin);
+        const [{ data: rows, error }, { data: fr, error: frFehler }] = await Promise.all([
+          db.from("kc_dp_wish_inbox").select("id,person_id,revision,status,entries,updated_at,taken_at,share_with_colleagues").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source", "club_app").limit(300),
+          leitung ? Promise.resolve({ data: [] as any[], error: null }) : db.from("kc_club_freigaben").select("person_id").eq("bereich", "dienstzeiten").eq("erlaubt", true),
+        ]);
+        if (error || frFehler) throw new Fehler("Die Dienstzeiten konnten gerade nicht geladen werden.", 503); // Regel 11: unbekannt ≠ leer
+        const freigegeben = new Set((fr ?? []).map((x: any) => x.person_id));
+        const liste = (rows ?? []).filter((x: any) => !String(x.person_id).startsWith("KC-P-TEST")
+          && (leitung || x.person_id === ich.person_id || x.share_with_colleagues === true || freigegeben.has(x.person_id)));
         const leute = await personen(liste.map((x: any) => x.person_id));
+        if (!leitung) return json({ nurFreigegeben: true, veranstaltung: DW.name, personen: liste.map((x: any) => ({ id: x.id, name: leute.get(x.person_id)?.display_name || x.person_id, ich: x.person_id === ich.person_id,
+          eintraege: (x.entries ?? []).filter((e: any) => DW.typen.includes(e?.wishType) && /^\d{4}-\d{2}-\d{2}$/.test(String(e?.date)) && Number.isFinite(Number(e?.start)) && Number.isFinite(Number(e?.end)))
+            .map((e: any) => ({ d: e.date, s: Number(e.start), e: Number(e.end), t: e.wishType })) })) });
         // KC-CLUB-DW-FEHLT (2.222.0, Wunsch Hansi): wer hat noch nichts abgegeben (nur Einsammeln – geplant wird in DP2)
         const abgegeben = new Set(liste.map((x: any) => x.person_id));
         const fehlen = (await aktiveMitglieder()).filter((m) => !abgegeben.has(m.person_id)).map((m) => ({ person_id: m.person_id, name: m.display_name }));

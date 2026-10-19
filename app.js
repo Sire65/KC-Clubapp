@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.500.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.501.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -26591,16 +26591,18 @@ async function dvErinnern(knopf) {
 function dvZeichnen() {
   const z = $("dvInhalt"); if (!z) return;
   const P = DV.daten?.personen || [];
-  z.innerHTML = dvFehltHtml() + `<p class="hinweis" style="margin:0">${esc(DV.daten?.veranstaltung || "")} · ${P.filter((x) => x.eintraege.length).length} Personen · Stand ${esc(zeitKurz(new Date().toISOString()))}</p>
+  z.innerHTML = dvFehltHtml() + (DV.daten?.nurFreigegeben ? `<div class="karte innen dv-fehlt">👁️ Du siehst deine eigenen Zeiten und die der Mitglieder, die ihre Zeiten freigegeben haben – nicht alle. Freigeben: „Dienstpläne“ → „Meine Dienstzeiten für andere sichtbar“.</div>` : "") + `<p class="hinweis" style="margin:0">${esc(DV.daten?.veranstaltung || "")} · ${P.filter((x) => x.eintraege.length).length} Personen · Stand ${esc(zeitKurz(new Date().toISOString()))}</p>
     ${dvLegende()}
     <div class="dv-leiste"><button class="knopf klein${DV.sort === "name" ? " haupt" : ""}" onclick="DV.sort='name';dvZeichnen()">🔤 Name</button><button class="knopf klein${DV.sort === "stunden" ? " haupt" : ""}" onclick="DV.sort='stunden';dvZeichnen()">⏱️ Stunden</button>
-      <button class="knopf klein" onclick="dvDrucken()">🖨️ Drucken (A4 quer)</button><button class="knopf klein" onclick="dvAblegen()">🗄️ In Ordner ablegen</button></div>
+      <button class="knopf klein" onclick="dvDrucken()">🖨️ Drucken (A4 quer)</button>${DV.daten?.nurFreigegeben ? "" : '<button class="knopf klein" onclick="dvAblegen()">🗄️ In Ordner ablegen</button>'}</div>
     <div class="dv-rahmen">${dvGanttHtml()}</div>
     <p class="hinweis" style="margin:0">Feld antippen = genaue Uhrzeiten. Auf dem Handy am besten quer halten – sonst seitlich wischen.</p>`;
 }
 // KC-CLUB-DV-UEBERALL (2.500.0, Wunschliste Nr. 27): derselbe 📊-Knopf wie im Büro-Eingang überall, wo der Dienstplan aufgeht
-// (Dienstpläne, Mein Dienst, Dienstwünsche). Gleiches Recht wie bisher (Clubleitung) – die Übersicht zeigt die Wünsche aller.
-const dvDarf = () => !!(ICH?.vorstand || ICH?.admin);
+// (Dienstpläne, Mein Dienst, Dienstwünsche). KC-CLUB-DV-MITGLIEDER (2.501.0): auch für Mitglieder – der Server liefert ihnen nur sich selbst
+// und wer das Teilen erlaubt hat; Ablegen und „wer fehlt noch“ bleiben bei der Clubleitung.
+const dvLeitung = () => !!(ICH?.vorstand || ICH?.admin);
+const dvDarf = () => !!ICH;
 const dvKnopf = () => dvDarf() ? `<button type="button" class="knopf klein pr-filter-knopf" onclick="dvStart()" title="Dienstzeiten-Übersicht (alle Namen und Tage)" aria-label="Dienstzeiten-Übersicht">📊</button>` : "";
 async function dvStart() {
   const f = blattAuf("dvBlatt", `<div class="dv-kopf"><h3>📊 Dienstzeiten-Übersicht</h3><button type="button" class="pr-filter-zu" aria-label="Übersicht schließen" title="Schließen" onclick="$('dvBlatt').remove()">✕</button></div><div id="dvInhalt"><p class="hinweis">Wird geladen …</p></div>`);

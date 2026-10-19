@@ -3961,7 +3961,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/onclick="ekfUmschalten\(\)" title="Eingang filtern/.test(html) && /class="pr-filter-zu" onclick="ekfUmschalten\(false\)"/.test(html) && /const ekfPasst = \(x\) =>/.test(html) && /zeig\.map\(\(\[x, i\]\) =>/.test(html), "Filter mit 🔽, ✕ und gefilterter Liste (Index bleibt)");
   assert.ok(/📅 Jahr\$\{wahl\("jahr"/.test(html) && /🗓️ Monat\$\{wahl\("monat"/.test(html) && /🏷️ Art\$\{wahl\("art"/.test(html) && /👤 Name\$\{wahl\("wer"/.test(html), "Jahr, Monat, Art, Name");
   assert.ok((html.match(/P\.push\(\{ wer: /g) || []).length >= 10, "Einträge tragen Name + Datum");
-  assert.ok(/case "dienst_uebersicht": \{\s*nurLeitung\(ich\);/.test(server) && /case "dienst_ablegen": \{\s*nurLeitung\(ich\);/.test(server), "nur Clubleitung");
+  assert.ok(/case "dienst_uebersicht": \{[\s\S]{0,400}const leitung = !!\(ich\.vorstand \|\| ich\.admin\);/.test(server) && /case "dienst_ablegen": \{\s*nurLeitung\(ich\);/.test(server), "Ablegen nur Clubleitung; Übersicht seit 2.501.0 für Mitglieder gefiltert (KC-CLUB-DV-MITGLIEDER)");
   const ab = server.slice(server.indexOf('case "dienst_ablegen": {'), server.indexOf('case "eingang_dienstwunsch": {'));
   assert.ok(/vereinsOrdner\(DIENSTPLAN_ORDNER, jahr, DIENST_REG\.wunsch\)/.test(ab) && /persoenlicherOrdner\(r\.person_id, doku\.wer, jahr, DIENST_REG\.persoenlich\)/.test(ab) && /if \(schon\.has\(/.test(ab) && /startsWith\("KC-P-TEST"\)/.test(ab), "Ordner des Mitglieds + Büro, nichts doppelt, ohne Testpersonen");
   assert.ok(/persoenlich: "Dienstpläne"/.test(server) && /titel: "Dienstpläne", farbe: 5, register: \["Wünsche", "Gesamtplan", "Sonstiges"\]/.test(server), "Register Dienstpläne / Büro-Ordner Dienstpläne");
@@ -5905,7 +5905,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|499)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|499|501)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6970,13 +6970,26 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 
 // 2.500.0 KC-CLUB-DV-UEBERALL (Wunschliste Nr. 27): 📊 Dienstzeiten-Übersicht mit demselben Knopf überall, wo der Dienstplan aufgeht
 {
-  assert.ok(/const dvDarf = \(\) => !!\(ICH\?\.vorstand \|\| ICH\?\.admin\);/.test(html) && /nurLeitung\(ich\);\s*const \{ data: rows, error \} = await db\.from\("kc_dp_wish_inbox"\)/.test(server), "gleiches Recht wie im Büro (Clubleitung), Server prüft weiter");
+  assert.ok(/const dvDarf = \(\) => !!ICH;/.test(html), "Knopf für alle angemeldeten Mitglieder (2.501.0 KC-CLUB-DV-MITGLIEDER), Server filtert");
   const knopf = html.match(/const dvKnopf = \(\) => dvDarf\(\) \? `([^`]+)` : "";/);
   assert.ok(knopf && /onclick="dvStart\(\)"/.test(knopf[1]) && /aria-label="Dienstzeiten-Übersicht">📊</.test(knopf[1]), "ein Knopf für alle Stellen");
   assert.ok(/<b>📥 Eingang[^\n]*\$\{dvKnopf\(\)\}/.test(html), "Büro-Eingang nutzt denselben Knopf");
   assert.ok(/🗓️ Mein Dienst<\/h3>\$\{dvKnopf\(\)\}/.test(html), "Mein Dienst");
   assert.ok(/<div class="dw-reihe2"><details class="dw-tipp">[\s\S]*?<\/details>\$\{dvKnopf\(\)\}<\/div>/.test(html) && /if \(\$\("dwFenster"\)\) f\.style\.zIndex = "2100";/.test(html), "Dienstwünsche – Übersicht liegt über dem Vollbild-Fenster");
-  assert.ok(/<h2>🗓️ Dienstpläne<\/h2><button type="button" id="dpUebersicht" class="[^"]*versteckt"[^>]*onclick="dvStart\(\)"[^>]*>📊<\/button>/.test(html) && /\$\("dpUebersicht"\)\?\.classList\.toggle\("versteckt", !dvDarf\(\)\);/.test(html), "Dienstpläne – nur für die Clubleitung sichtbar");
+  assert.ok(/<h2>🗓️ Dienstpläne<\/h2><button type="button" id="dpUebersicht" class="[^"]*versteckt"[^>]*onclick="dvStart\(\)"[^>]*>📊<\/button>/.test(html) && /\$\("dpUebersicht"\)\?\.classList\.toggle\("versteckt", !dvDarf\(\)\);/.test(html), "Dienstpläne – Knopf erst nach dem Laden sichtbar");
+}
+
+// 2.501.0 KC-CLUB-DV-MITGLIEDER (Wunsch Hansi „auch eine Fassung für die Mitglieder“): Mitglieder sehen nur sich und wer freigegeben hat
+{
+  const c = server.slice(server.indexOf('case "dienst_uebersicht": {'), server.indexOf('case "dienst_ablegen": {'));
+  assert.ok(/const leitung = !!\(ich\.vorstand \|\| ich\.admin\);/.test(c), "Leitung erkennt der Server selbst");
+  assert.ok(/&& \(leitung \|\| x\.person_id === ich\.person_id \|\| x\.share_with_colleagues === true \|\| freigegeben\.has\(x\.person_id\)\)\);/.test(c), "Mitglieder: nur ich + wer das Teilen erlaubt hat (Regel wie in „dienste“)");
+  assert.ok(/if \(error \|\| frFehler\) throw new Fehler\(/.test(c), "Freigaben nicht lesbar → Fehler statt alle zeigen (Regel 11)");
+  const mg = c.slice(c.indexOf("if (!leitung) return json("), c.indexOf("// KC-CLUB-DW-FEHLT"));
+  assert.ok(mg.includes("nurFreigegeben: true") && !/fehlen|revision|status|zuletzt/.test(mg), "Mitglieder-Antwort ohne „wer fehlt“, Status, Zeitstempel");
+  const ab = server.slice(server.indexOf('case "dienst_ablegen": {'), server.indexOf('case "dienst_ablegen": {') + 200);
+  assert.ok(/nurLeitung\(ich\);/.test(ab) && /case "dw_erinnern"[\s\S]{0,200}nurLeitung\(ich\)/.test(server), "Ablegen/Erinnern bleiben bei der Clubleitung");
+  assert.ok(/\$\{DV\.daten\?\.nurFreigegeben \? "" : '<button class="knopf klein" onclick="dvAblegen\(\)">/.test(html) && /DV\.daten\?\.nurFreigegeben \? `<div class="karte innen dv-fehlt">👁️ Du siehst deine eigenen Zeiten/.test(html), "App: Hinweis statt Ablegen-Knopf");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
