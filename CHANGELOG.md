@@ -1,5 +1,12 @@
 # Änderungen
 
+## Spiegel – 2026-10-19 (ohne App-Build) – KICC-F-109: Spiegel überträgt nur geänderte Blöcke
+Wunsch Hansi („mach du die Umbauten, es muss kostenlos bleiben“; Supabase-Egress 7,19 von 5 GB). Nichts wird reduziert – jede Tabelle wird weiter alle 6 Stunden gespiegelt und vollständig geprüft.
+- Tabellen mit Ganzzahl-Schlüssel werden in Blöcke zu 500 Schlüsselnummern geteilt. Supabase liefert je Block nur Zeilenzahl + Prüfsumme (`kc_db_mirror_block_hashes`, ~1 KB je Tabelle), Neon rechnet dasselbe; übertragen werden nur abweichende Blöcke (`kc_db_mirror_block_rows`). Beispiel kc_club_protokoll: statt 3,4 MB je Lauf meist nur der letzte Block.
+- Danach Prüfung der ganzen Tabelle wie bisher. Passt sie nicht, ist der Block-Weg nicht möglich oder sind über 60 % der Blöcke anders → ganze Tabelle wie früher.
+- DB: `supabase/migrations/20261019_kicc_f109_spiegel_bloecke.sql` (bereits eingespielt, nur Lesefunktionen).
+- Rückweg: Spiegel-Arbeiter-Stand vor diesem Eintrag erneut hochladen.
+
 ## 2.493.0 – 2026-10-19 – „Dienstplan Weihnachtsmarkt: Wünsche eingeben?“ im Info-Laufband (KC-CLUB-DW-LAUFBAND) · Server 2.493.0
 Wunsch Hansi („Dienstplan Weihnachtsmarkt eingeben? – wer schon eingegeben hat, nicht anzeigen – und dann zu Twinkey führen“):
 - Rote Meldung im Info-Laufband mit Knopf „📝 Mit Twinkey eingeben“ – öffnet direkt die Dienstwünsche mit Twinkey. Nach dem Öffnen bis zum nächsten App-Start nicht mehr.
