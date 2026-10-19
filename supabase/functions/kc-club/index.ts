@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.506.0";
+const SERVER_VERSION = "2.507.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2428,6 +2428,17 @@ const DW = { vertrag: "KC_DP_WISH_INBOX_V1", projekt: "KC_DP", veranstaltung: "K
   typen: ["available", "preferred", "if_needed", "unavailable"], zonen: ["V", "H", "B", "Z"], maxEintraege: 400 };
 // KC-CLUB-BESTAETIGUNG (1.69.0): eigene Dienstwünsche lesbar aufbereitet – je Tag „Kann / Am liebsten / Wenn nötig / Kann nicht / Bereitschaft“
 // Wortlaut Hansi (1.69.3): steht in Bestätigung, Aufstellung und Archiv-Datei – eine Stelle für alle
+// KC-CLUB-DIENST-AUSNAHMEN (2.507.0, Wunsch Hansi: ein Mitglied ist weit weggezogen und steht für den Dienstplan nicht zur Verfügung):
+// Mitglieder in kc_club_dienst_ausnahmen bleiben Mitglied, werden aber nicht an Dienstwünsche erinnert, stehen nicht unter „noch nicht
+// abgegeben“ und bekommen den Laufband-Hinweis nicht. Registry statt fest im Programm; 60 s je Server-Instanz gemerkt (nur Erfolg).
+let DA_STAND: { t: number; ids: Set<string> } | null = null;
+async function dienstAusnahmen(): Promise<Set<string>> {
+  if (DA_STAND && Date.now() - DA_STAND.t < 60000) return DA_STAND.ids;
+  const { data, error } = await db.from("kc_club_dienst_ausnahmen").select("person_id");
+  if (error) throw new Fehler("Die Dienstplan-Ausnahmen konnten gerade nicht geladen werden.", 503); // Regel 11: unbekannt ≠ keine
+  DA_STAND = { t: Date.now(), ids: new Set((data ?? []).map((x: any) => String(x.person_id))) };
+  return DA_STAND.ids;
+}
 // KC-CLUB-DW-FEHLT (2.222.0): wann wurde wer zuletzt an die Dienstwünsche erinnert (aus dem Protokoll, 30 Tage)
 async function dwZuletztErinnert() {
   const { data } = await db.from("kc_club_protokoll").select("zeit,details").eq("aktion", "dw_erinnert").gte("zeit", new Date(Date.now() - 30 * 86400000).toISOString()).order("zeit", { ascending: false }).limit(50);
@@ -6665,6 +6676,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // nur Mitglieder/Aushilfen, nur bei offener Wunschphase (5 Min. gemerkt); 1 Abfrage, Fehler → null (die App zeigt dann nichts)
         const pDwFehlt = ich.zugang === "gast" ? Promise.resolve(null) : dwPhaseKurz().then(async (ph) => {
           if (ph !== "open") return false;
+          if ((await dienstAusnahmen()).has(ich.person_id)) return false; // KC-CLUB-DIENST-AUSNAHMEN
           const { data, error } = await db.from("kc_dp_wish_inbox").select("submitted_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).not("submitted_at", "is", null).limit(1);
           return error ? null : !(data ?? []).length;
         }).catch(() => null);
@@ -11870,9 +11882,9 @@ Köcheclub Werne`,
         nurLeitung(ich);
         const { data: rows, error } = await db.from("kc_dp_wish_inbox").select("person_id").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source", "club_app").limit(300);
         if (error) throw new Fehler("Die Dienstwünsche konnten gerade nicht geprüft werden.", 503);
-        const abgegeben = new Set((rows ?? []).map((x: any) => x.person_id)), erinnert = await dwZuletztErinnert();
+        const abgegeben = new Set((rows ?? []).map((x: any) => x.person_id)), erinnert = await dwZuletztErinnert(), aus = await dienstAusnahmen();
         const wunsch = Array.isArray(p.personen) ? new Set(p.personen.map(String)) : null;
-        const ziel = (await aktiveMitglieder()).filter((m) => !abgegeben.has(m.person_id) && (!wunsch || wunsch.has(m.person_id)))
+        const ziel = (await aktiveMitglieder()).filter((m) => !abgegeben.has(m.person_id) && !aus.has(m.person_id) && (!wunsch || wunsch.has(m.person_id)))
           .filter((m) => { const z = erinnert.get(m.person_id); return !z || Date.now() - Date.parse(z) > 24 * 3600000; });
         if (!ziel.length) return json({ ok: true, erinnert: 0, hinweis: "Alle Fehlenden wurden in den letzten 24 Stunden schon erinnert." });
         const r = await sendenGewaehlt("club_nachricht", ziel.map((m) => m.person_id), ["push", "email"], {
@@ -11901,7 +11913,8 @@ Köcheclub Werne`,
             .map((e: any) => ({ d: e.date, s: Number(e.start), e: Number(e.end), t: e.wishType })) })) });
         // KC-CLUB-DW-FEHLT (2.222.0, Wunsch Hansi): wer hat noch nichts abgegeben (nur Einsammeln – geplant wird in DP2)
         const abgegeben = new Set(liste.map((x: any) => x.person_id));
-        const fehlen = (await aktiveMitglieder()).filter((m) => !abgegeben.has(m.person_id)).map((m) => ({ person_id: m.person_id, name: m.display_name }));
+        const aus = await dienstAusnahmen(); // KC-CLUB-DIENST-AUSNAHMEN: nicht verfügbar → fehlt auch nicht
+        const fehlen = (await aktiveMitglieder()).filter((m) => !abgegeben.has(m.person_id) && !aus.has(m.person_id)).map((m) => ({ person_id: m.person_id, name: m.display_name }));
         const erinnert = await dwZuletztErinnert();
         return json({ fehlen: fehlen.map((f) => ({ ...f, erinnert: erinnert.get(f.person_id) ?? null })), veranstaltung: DW.name, personen: liste.map((x: any) => ({ id: x.id, name: leute.get(x.person_id)?.display_name || x.person_id, revision: x.revision, status: x.status,
           uebernommen: !!x.taken_at, zuletzt: x.updated_at,

@@ -5905,7 +5905,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7043,6 +7043,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/t: "🎪 Der Kopf geht auf und zu"/.test(html) && /await kopfRolloFahren\("ganz", e\)/.test(html) && /async function kopfRolloFahren\(ziel, vorgabe\)/.test(html) && /const effekt = vorgabe \|\| kopfEffektNaechster\(\);/.test(html), "Video Effekte: Kopf-Effekte nur vorgeführt (Einstellung bleibt)");
   assert.ok(/t: "🎁 Geburtstag im Kopf"/.test(html) && /t: "📊 Wer kann wann\?"/.test(html), "Videos: Geburtstags-Vogel, Dienstzeiten-Übersicht");
   assert.ok(/"h:kopf_effekte": \["effekte", "anpassen"\]/.test(html) && /"h:dienst_uebersicht": \["dienst"\]/.test(html), "Twinkey verweist auf die passenden Videos");
+}
+
+// 2.507.0 KC-CLUB-DIENST-AUSNAHMEN (Wunsch Hansi: weggezogenes Mitglied steht für den Dienstplan nicht zur Verfügung)
+{
+  const mig = lies("supabase/migrations/20261019_kc_club_dienst_ausnahmen.sql");
+  assert.ok(/enable row level security/i.test(mig) && /to service_role/.test(mig) && !/to (anon|authenticated)/i.test(mig), "Ausnahmen nur über den Server");
+  assert.ok(!/KC-P-M0004/.test(server), "keine Person fest im Programm – Registry");
+  assert.ok(/if \(error\) throw new Fehler\("Die Dienstplan-Ausnahmen konnten gerade nicht geladen werden\.", 503\);/.test(server), "unbekannt ≠ keine Ausnahmen");
+  assert.ok(/if \(\(await dienstAusnahmen\(\)\)\.has\(ich\.person_id\)\) return false;/.test(server), "kein Laufband-Hinweis");
+  assert.ok(/!abgegeben\.has\(m\.person_id\) && !aus\.has\(m\.person_id\) && \(!wunsch/.test(server), "keine Erinnerung");
+  assert.ok(/!abgegeben\.has\(m\.person_id\) && !aus\.has\(m\.person_id\)\)\.map/.test(server), "nicht unter „noch nicht abgegeben“");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
@@ -9465,7 +9476,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const e = server.slice(server.indexOf('case "dw_erinnern": {'), server.indexOf('case "dienst_uebersicht": {'));
   assert.ok(/nurLeitung\(ich\)/.test(e) && /24 \* 3600000/.test(e) && /`club-dw-erinnerung:\$\{Date\.now\(\)\}`/.test(e) && /protokoll\(ich\.person_id, "dw_erinnert"/.test(e), "nur Leitung, 1× je 24 Std., Admin-Kopie über club-dw-");
-  assert.ok(/const fehlen = \(await aktiveMitglieder\(\)\)\.filter\(\(m\) => !abgegeben\.has\(m\.person_id\)\)/.test(server), "Liste der Fehlenden");
+  assert.ok(/const fehlen = \(await aktiveMitglieder\(\)\)\.filter\(\(m\) => !abgegeben\.has\(m\.person_id\)( && !aus\.has\(m\.person_id\))?\)/.test(server), "Liste der Fehlenden");
   const d = server.slice(server.indexOf('case "aenderung_uebernehmen": {'), server.indexOf('case "aenderung_rueckfrage": {'));
   assert.ok(/if \(!ich\.admin\) throw/.test(d) && /x\.status !== "freigegeben"/.test(d) && /AE_DIREKT_ARTEN\.includes\(x\.art\)/.test(d), "nur Admin, nur freigegeben, nur Kern-Arten");
   assert.ok(/db\.rpc\("kc_club_aenderung_admin_uebernehmen", \{ p_id: x\.id, p_admin_person: ich\.person_id \}\)/.test(d) && !/from\("kc_core_people"\)/.test(d), "Club-App schreibt nicht selbst – der vorhandene Kern übernimmt (als der Admin)");
