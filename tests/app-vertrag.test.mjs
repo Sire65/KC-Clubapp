@@ -11148,3 +11148,12 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/@media \(prefers-reduced-motion: reduce\) \{ \.ktag\.heute::after \{ animation: none; \} \}/.test(seite), "Bewegung reduzieren → ruhig");
   assert.ok(/tag === heute \? "heute" : ""/.test(programm), "Kalender setzt die Klasse heute");
 }
+
+// 2.498.0 KC-CLUB-FOTOS-NEU-INFO (Wunsch Hansi): „x neue Fotos hochgeladen“ im Info-Feld führt direkt zu den neuen Fotos
+{
+  assert.ok(/`\$\{kz\.fotos\} neue Fotos hochgeladen`/.test(programm) && /auf: "fotosNeuZeigen\(\)"/.test(programm), "Info-Feld: x neue Fotos hochgeladen → direkt dorthin");
+  const fn = programm.slice(programm.indexOf("function fotosNeuZeigen()"), programm.indexOf("function faFilterSetzen("));
+  assert.ok(/faNeuSeit = kzSeit\("fotos"\);[^\n]*\n\s*if \(aktuelleAnsicht === "fotos"\) fotosLaden\(\); else zeige\("fotos"\);/.test(fn), "„seit“ gemerkt, bevor das Öffnen die Zahl zurücksetzt");
+  assert.ok(/f\.hochgeladen > seit && f\.von\?\.person_id !== ICH\?\.person_id/.test(fn) && /scrollIntoView/.test(fn) && /fk-neu/.test(fn), "nur fremde neue Fotos, oben gesammelt, NEU-Marke, hingescrollt");
+  assert.ok(/faNeuKasten\(\); \/\/ 2\.498\.0/.test(programm), "nach dem Zeichnen des Albums");
+}
