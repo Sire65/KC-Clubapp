@@ -5905,7 +5905,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|499|501|502)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|499|501|502|503)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -10296,6 +10296,14 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/\["muenchhausen", "🎩 Baron Münchhausen"\]/.test(html) && /const SENDE_REIHE = \[[^\]]*"muenchhausen"\]/.test(html), "wählbar und bei Abwechselnd dabei");
   assert.ok(/function sendeMuenchhausen\(r\)/.test(html) && /BUMM!/.test(html) && /\} else if \(art === "muenchhausen"\) \{/.test(html), "Absender- und Empfänger-Animation");
   assert.ok(/"muenchhausen", "wechsel", "aus"\]/.test(server), "Server kennt die Art");
+}
+
+// KC-CLUB-UHU: Uhu mit blauer Briefträger-Mütze und Posttasche als Bote (wie Brieftaube)
+{
+  assert.ok(html.includes('["uhu", "🦉 Uhu mit Posttasche"]') && /const SENDE_REIHE = \[[^\]]*"uhu"/.test(html), "wählbar und bei Abwechselnd dabei");
+  assert.ok(/const UHU_SVG = /.test(html) && /const VOGEL_SVG = \{ taube: TAUBE_SVG, uhu: UHU_SVG \}/.test(html), "Uhu-Bild wie Taube");
+  assert.ok(/f\.innerHTML = vogel \? vogel\(g\)/.test(html) && /if \(VOGEL_SVG\[art\]\) \{/.test(html), "Absender- und Empfänger-Animation");
+  assert.ok(/"uhu", "muenchhausen", "wechsel", "aus"\]/.test(server), "Server kennt die Art");
 }
 
 // 2.364.0 KC-CLUB-AKKU-7: Mitschauen im Hintergrund still

@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.503.0 – 2026-10-19 – 🪟 Kopf-Effekte wählbar, 🦉 Uhu als Bote
+- Feature KC-CLUB-KOPF-EFFEKTE (Wunsch Hansi): unter ⚙️ → ✨ Effekte Häkchen „🪟 Anderer Effekt beim Einrollen des Kopfes“; Klappbereich mit Jalousie (Standard), Lamellenvorhang (zu den Seiten), Climber (Lamellen kippen und schieben sich nach oben) und Automatisch (wechselt), ▶ Ausprobieren. Ohne Häkchen bleibt die Jalousie.
+- Feature KC-CLUB-UHU (Wunsch Hansi): neuer Sende-Bote „🦉 Uhu mit Posttasche“ – blaue Briefträger-Mütze, Umhängetasche in Club-Farben; fliegt wie die Brieftaube, beim Empfänger fällt das Kuvert aus der Tasche. Auch bei „Abwechselnd“ dabei.
+- Server 2.503.0: `SENDE_EFFEKT_ARTEN` kennt „uhu“.
+
 ## 2.502.0 – 2026-10-19 – Bündel 20 Uhr: Vorschläge bearbeiten, Protokoll drucken, Hilfetexte einklappen, Protokoll-Hinweis
 - Feature KC-CLUB-VORSCHLAG-BEARBEITEN (Wunsch Hansi): Knopf „✏️ Bearbeiten“ an offenen Vorschlägen (Ersteller und Clubleitung) – Thema, Beschreibung, Termin und Anlagen nachträglich ändern; vorhandene Anlagen bleiben (✕ entfernt), neue kommen dazu. Ohne Benachrichtigung, alter Stand im Protokoll; bei Abstimmungen bleibt die Frage nach der ersten Stimme fest. Server: `vorschlag_aendern`, `darfBearbeiten`.
 - Feature KC-CLUB-PROTOKOLL-DRUCKEN (Wunsch Hansi): „🖨️ Drucken / PDF“ im Protokoll-Entwurf und in der Leseansicht; der Entwurf wird vorher gespeichert und frisch geladen.
