@@ -45,13 +45,16 @@ const DB_AUS = { n: 0 }; // zählt abgebrochene Abfragen (je Anfrage vorher/nach
 // gleichzeitige andere Anfragen sehen ihn nie), lebt nur so lange wie der Aufruf und wird bei jedem Schreiben geleert. Fehler werden nie gepuffert.
 type DbAntwort = { status: number; statusText: string; headers: [string, string][]; body: ArrayBuffer | null };
 // KC-CLUB-DB-SPARSAM (2.464.0): haltbarMs > 0 → eine gepufferte Antwort gilt nur so lange (normale App-Aufrufe); 0 → den ganzen Aufruf (Notpaket-Teil, nur lesend).
-type DbPuffer = { antworten: Map<string, Promise<DbAntwort>>; zeit: Map<string, number>; netz: number; puffer: number; haltbarMs: number; aktion?: string };
+type DbPuffer = { antworten: Map<string, Promise<DbAntwort>>; zeit: Map<string, number>; netz: number; puffer: number; haltbarMs: number; aktion?: string; pfade?: Map<string, number> };
 const dbPufferNeu = (haltbarMs: number): DbPuffer => ({ antworten: new Map(), zeit: new Map(), netz: 0, puffer: 0, haltbarMs });
 // Schreibt etwas außerhalb der Schnittstelle (andere Server-Funktion, direkter Datenbank-Weg), muss der Puffer des Aufrufs weg – nie veraltet lesen.
 const dbPufferLeeren = () => { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) { pf.antworten.clear(); pf.zeit.clear(); } };
 // Nur lesende Datenbank-Funktionen (STABLE bzw. reines SELECT, geprüft 18.10.2026): gehen ungepuffert durch, leeren den Puffer aber nicht.
 // Jede andere Funktion gilt vorsichtshalber als Schreiben. (Messung 2.453.0: diese drei leerten den Puffer mehrmals je Mitglied → nur 2 % gespart.)
 const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret"]);
+// KC-CLUB-DB-PFADE (2.489.0, Messung „App-Start sparsamer“): bei einem Teil der Aufrufe zählen, WELCHE Tabelle/Funktion wie oft gefragt wird
+// (nur Name + Anzahl, keine Inhalte) – zeigt, wo sich Zusammenfassen lohnt. Nur Server-Log, keine Datenbank.
+const dbPfad = (pf: DbPuffer, methode: string, url: string) => { if (!pf.pfade) return; const k = methode + " " + (/\/rest\/v1\/([a-z0-9_/]+)/.exec(url)?.[1] || "?"); pf.pfade.set(k, (pf.pfade.get(k) || 0) + 1); };
 const dbFetch: typeof fetch = (input, init) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
   const pf = url.includes("/rest/v1/") ? DB_PUFFER.getStore() as DbPuffer | undefined : undefined;
@@ -61,7 +64,7 @@ const dbFetch: typeof fetch = (input, init) => {
   if (methode !== "GET" && methode !== "HEAD") {
     const rpc = /\/rest\/v1\/rpc\/([a-z0-9_]+)/.exec(url)?.[1];
     if (!(methode === "POST" && rpc && DB_RPC_NUR_LESEN.has(rpc))) { pf.antworten.clear(); pf.zeit.clear(); }
-    pf.netz++; return dbFetchNetz(input, init);
+    pf.netz++; dbPfad(pf, methode, url); return dbFetchNetz(input, init);
   }
   const h = new Headers(ri?.headers ?? (input instanceof Request ? input.headers : undefined));
   const schluessel = [methode, url, h.get("accept"), h.get("prefer"), h.get("range"), h.get("accept-profile")].join("|");
@@ -69,7 +72,7 @@ const dbFetch: typeof fetch = (input, init) => {
   if (a && pf.haltbarMs && Date.now() - (pf.zeit.get(schluessel) ?? 0) > pf.haltbarMs) a = undefined;
   if (a) pf.puffer++;
   else {
-    pf.netz++;
+    pf.netz++; dbPfad(pf, methode, url);
     a = dbFetchNetz(input, init).then(async (r) => {
       const body = methode === "HEAD" ? null : await r.arrayBuffer();
       if (!r.ok) pf.antworten.delete(schluessel);
@@ -92,7 +95,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.486.0";
+const SERVER_VERSION = "2.489.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5907,6 +5910,14 @@ function lvBremse(pid: string) { // true = darf
   l.push(jetztMs); LV_ZAHL.set(pid, l); return true;
 }
 const lvSicht = (x: any) => x ? { url: x.url, titel: x.titel || "", text: x.text || "", seite: x.seite || "", bild: x.bild || null } : null;
+// KC-CLUB-START-SPARSAM (2.489.0): öffentlicher Push-Schlüssel (VAPID) ändert sich praktisch nie – 10 Min. je Server-Instanz gemerkt (nur Erfolg)
+let VAPID_MERK: { t: number; v: any } | null = null;
+async function vapidOeffentlich() {
+  if (VAPID_MERK && Date.now() - VAPID_MERK.t < 600000) return VAPID_MERK.v;
+  const r = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_communication_vapid_public_key" });
+  if (!r.error && r.data) VAPID_MERK = { t: Date.now(), v: { data: r.data, error: null } };
+  return r;
+}
 // ---------- Hauptprogramm ----------
 const kcAnfrage = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -5921,7 +5932,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
   let p: any; try { p = await req.json(); } catch { return json({ error: "Ungültige Anfrage" }, 400); }
   const dbAusVorher = DB_AUS.n; // KC-CLUB-DB-ZEITGRENZE
   const a = String(p?.action || "");
-  { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) pf.aktion = a; } // KC-CLUB-DB-SPARSAM: Messung je Aktion
+  { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) { pf.aktion = a; if (DB_PFADE_AKTIONEN.has(a) && Math.random() < DB_PFADE_ANTEIL) pf.pfade = new Map(); } } // KC-CLUB-DB-SPARSAM: Messung je Aktion
   try {
     // ----- KC-CLUB-NOTBETRIEB (1.52.0): Notfall-Paket bauen und beim Ersatz-Server ablegen (Zeitplaner, alle 15 Min.) -----
     if (a === "fra_sicherung") { // KC-CLUB-FRA-SICHERUNG (2.236.0): Schritt der nächtlichen Frankfurt-Sicherung (nur Zeitplaner)
@@ -6428,11 +6439,12 @@ Köcheclub Werne`,
 // gepuffert, andere gleichzeitige Aufrufe sehen ihn nie). Messung: ab DB_LOG_AB Abfragen eine Zeile ins Server-Log mit Aktion und Zahlen
 // (keine Inhalte, keine Personen, keine Datenbank-Schreibung – kostet nichts). So sieht man, welche Aktion wie viele Abfragen braucht.
 const DB_PUFFER_MS = 2000, DB_LOG_AB = 15;
+const DB_PFADE_AKTIONEN = new Set(["init", "online", "unterhaltung"]), DB_PFADE_ANTEIL = 0.25; // KC-CLUB-DB-PFADE: jeder 4. Aufruf dieser Aktionen
 Deno.serve((req) => {
   const pf = dbPufferNeu(DB_PUFFER_MS);
   return DB_PUFFER.run(pf, async () => {
     const t0 = Date.now(), antwort = await kcAnfrage(req);
-    if (pf.netz + pf.puffer >= DB_LOG_AB) console.log(JSON.stringify({ db: txt(pf.aktion || req.method, 40), netz: pf.netz, puffer: pf.puffer, ms: Date.now() - t0 }));
+    if (pf.netz + pf.puffer >= DB_LOG_AB || pf.pfade) console.log(JSON.stringify({ db: txt(pf.aktion || req.method, 40), netz: pf.netz, puffer: pf.puffer, ms: Date.now() - t0, ...(pf.pfade ? { pfade: Object.fromEntries(pf.pfade) } : {}) }));
     return antwort;
   });
 });
@@ -6476,10 +6488,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const zt: Record<string, number> = {};
         const mess = <T,>(n: string, x: PromiseLike<T>): Promise<T> => Promise.resolve(x).then((v) => { zt[n] = Date.now() - t0Anfrage; return v; });
         const pWillkommen = willkommenZettel(ich).catch((e) => console.error("willkommen", String(e))); // KC-CLUB-WILLKOMMEN-PINNWAND (2.29.0)
-        const pPk = Promise.resolve(db.rpc("kc_communication_get_server_secret", { p_name: "kc_communication_vapid_public_key" }));
+        const pPk = vapidOeffentlich(); // KC-CLUB-START-SPARSAM (2.489.0): fester Schlüssel, 10 Min. gemerkt
         const pStatus = statusMap([ich.person_id]);
+        // KC-CLUB-START-SPARSAM (2.489.0): offene Vorschläge EINMAL holen – daraus Abstimmungen (pAbst), Vorschlags-Zahl (pVorAnz) und Themen (pThemenN);
+        // vorher drei Abfragen auf dieselbe Tabelle. Fehler → wie vorher (leer bzw. null).
+        const pVorOffen = Promise.resolve(db.from("kc_club_vorschlaege").select("id,art,ziel_ids,erstellt_von,treffen_id").eq("status", "offen").limit(1000));
+        pVorOffen.catch(() => {});
         const pAbst = (async () => {
-          const { data: abstAlle } = await db.from("kc_club_vorschlaege").select("id,ziel_ids").eq("status", "offen").eq("art", "abstimmung");
+          const { data: vo } = await pVorOffen; const abstAlle = (vo ?? []).filter((x: any) => x.art === "abstimmung");
           const abst = (abstAlle ?? []).filter((x: any) => !x.ziel_ids || x.ziel_ids.includes(ich.person_id)); // KC-CLUB-ABSTIMMUNG-ZIEL
           const { data: meineSt } = (abst ?? []).length ? await db.from("kc_club_stimmen").select("vorschlag_id").eq("person_id", ich.person_id).in("vorschlag_id", (abst ?? []).map((x: any) => x.id)) : { data: [] as any[] };
           return (abst ?? []).length - (meineSt ?? []).length;
@@ -6487,7 +6503,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // 2.458.0 KC-CLUB-VORSCHLAEGE-ANZAHL (Wunschliste #15, Wahl Hansi „Alle Vorschläge“): Zahl aller laufenden Vorschläge für die Kachel –
         // dieselbe Sichtbarkeit wie die Liste (Abstimmungen mit Zielgruppe nur für diese, eigene, Admin alle)
         const pVorAnz = (async () => {
-          const { data } = await db.from("kc_club_vorschlaege").select("ziel_ids,erstellt_von").eq("status", "offen").limit(500);
+          const { data } = await pVorOffen;
           return (data ?? []).filter((v: any) => !v.ziel_ids || v.ziel_ids.includes(ich.person_id) || v.erstellt_von === ich.person_id || ich.admin).length;
         })();
         // 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT: Termine mit „Im Info-Laufband ankündigen“ – ab 21 Tagen vorher bis zum Ende
@@ -6501,8 +6517,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_core_people").select("email").eq("person_id", ich.person_id).maybeSingle(),
         ]);
         const pGeb = geburtstageSichtbar(ich);
-        const pGfs = Promise.resolve(db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", ich.person_id).in("bereich", ["geburtstag", "runder_geburtstag"]));
-        const pKf = Promise.resolve(db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", ich.person_id).like("bereich", "kontakt_%"));
+        // KC-CLUB-START-SPARSAM (2.489.0): meine Freigaben in EINER Abfrage, danach aufgeteilt wie vorher (Geburtstag / Kontakt)
+        const pFrei = Promise.resolve(db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", ich.person_id));
+        const pGfs = pFrei.then((r: any) => ({ data: r.error ? null : (r.data ?? []).filter((x: any) => x.bereich === "geburtstag" || x.bereich === "runder_geburtstag") }));
+        const pKf = pFrei.then((r: any) => ({ data: r.error ? null : (r.data ?? []).filter((x: any) => String(x.bereich).startsWith("kontakt_")) }));
         const pSpiele = Promise.resolve(db.from("kc_club_spiele").select("id", { count: "exact", head: true })
           .or(`and(status.eq.laeuft,dran.eq.${ich.person_id}),and(status.eq.angefragt,an.eq.${ich.person_id})`));
         // 🎓 Schulungen: was auf den Admin wartet – KC-CLUB-SCHULUNG-HINWEIS (2.23.68); Fehler → keine Zahl.
@@ -6516,7 +6534,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const pGedenken = gedenkenListe().catch(() => [] as any[]); // KC-CLUB-GEDENKEN (2.204.0)
         // KC-CLUB-START-PARALLEL-2 (2.155.0, Wunsch Hansi „heute öfter langsam“): auch die übrigen Ketten (stumme Chats, Aufgaben/Protokolle,
         // Terminumfragen, Einstellungen & Co.) sofort mitstarten – vorher liefen sie erst nacheinander nach dem Zählen. Inhalt bleibt gleich.
-        const pStumm = Promise.resolve(db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "stumm").maybeSingle());
+        // KC-CLUB-START-SPARSAM (2.489.0): meine Einstellungen EINMAL holen – „stumm“ (für die Zähler) und alle übrigen (pRest) daraus
+        const pEinst = Promise.resolve(db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).neq("schluessel", "avatar_verlauf")); // 2.449.0: Bild-Verlauf nicht ins Start-Paket
+        const pStumm = pEinst.then((r: any) => ({ data: r.error ? null : (r.data ?? []).find((x: any) => x.schluessel === "stumm") ?? null }));
         const pAufgaben = (async () => {
           // KC-CLUB-AUFGABEN / KC-CLUB-PROTOKOLLE: meine offenen Aufgaben, ungelesene Protokolle
           let meineAufgaben: any[] = [], protokolleUngelesen = 0;
@@ -6558,7 +6578,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", ich.person_id).maybeSingle(),
           db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
           wartungLesen(),
-          db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).neq("schluessel", "avatar_verlauf"), // 2.449.0: Bild-Verlauf nicht ins Start-Paket
+          pEinst, // KC-CLUB-START-SPARSAM: gemeinsame Abfrage (siehe oben)
           pinnwandFristen().catch(() => ({ ...PINNWAND_FRISTEN_STANDARD, geaendertAm: null })),
           // KC-CLUB-EINSTIEG: an wie vielen Tagen die App genutzt wurde (Start je Sitzung = diagnose_start) und seit wann –
           // Tage statt Starts, damit mehrfaches Öffnen am ersten Tag nicht schon Tipps auslöst
@@ -6586,8 +6606,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // Nur ab 21 Tagen vor der Sitzung; Fehler → null (die App zeigt dann nichts statt einer falschen Zahl).
         const pThemenN = (async () => {
           const s0 = naechstes[0]; if (!s0 || new Date(s0.beginn).getTime() - Date.now() > 21 * 86400000) return null;
-          const { data: th, error } = await db.from("kc_club_vorschlaege").select("id").eq("status", "offen").eq("art", "thema").or(`treffen_id.eq.${s0.id},treffen_id.is.null`).limit(100);
+          const { data: vo, error } = await pVorOffen; // KC-CLUB-START-SPARSAM: aus der gemeinsamen Abfrage
           if (error) return null;
+          const th = (vo ?? []).filter((x: any) => x.art === "thema" && (x.treffen_id === s0.id || x.treffen_id == null)).slice(0, 100);
           const ids = (th ?? []).map((x: any) => x.id);
           const { data: meine } = ids.length ? await db.from("kc_club_stimmen").select("vorschlag_id").eq("person_id", ich.person_id).in("vorschlag_id", ids) : { data: [] as any[] };
           return { treffen: s0.id, anzahl: ids.length, offen: ids.length - (meine ?? []).length };

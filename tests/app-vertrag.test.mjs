@@ -4895,7 +4895,9 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const a = server.indexOf('      case "init": {'), ini = server.slice(a, server.indexOf('      case "mitglieder": {', a));
   // Supabase-Abfragen laufen erst beim await – darum Promise.resolve(…) zum sofortigen Start; keine unbehandelten Fehler
-  for (const n of ["pPk", "pNd", "pGfs", "pKf", "pSpiele"]) assert.ok(new RegExp(`const ${n} = Promise\\.resolve\\(db\\.`).test(ini), n + " startet sofort");
+  for (const n of ["pNd", "pSpiele", "pFrei", "pEinst", "pVorOffen"]) assert.ok(new RegExp(`const ${n} = Promise\\.resolve\\(db\\.`).test(ini), n + " startet sofort");
+  // 2.489.0 KC-CLUB-START-SPARSAM: pPk aus dem 10-Min.-Merker, pGfs/pKf aus der gemeinsamen Freigaben-Abfrage – starten ebenfalls sofort
+  assert.ok(/const pPk = vapidOeffentlich\(\);/.test(ini) && /const pGfs = pFrei\.then\(/.test(ini) && /const pKf = pFrei\.then\(/.test(ini) && /const pStumm = pEinst\.then\(/.test(ini), "pPk/pGfs/pKf/pStumm starten sofort (gemeinsame Abfragen)");
   assert.ok(/for \(const x of \[pPk, pStatus, pAbst, pNd, pWahlPm, pGeb, pGfs, pKf, pSpiele, pSos, pAdmin(, pStumm, pAufgaben, pTermin, pRest)?\]\) x\.catch\(\(\) => \{\}\);/.test(ini), "abgebrochener Start ohne unbehandelte Fehler");
   assert.ok(ini.indexOf("const pPk") < ini.indexOf("const [naechstes,"), "alles startet vor dem ersten Warten");
   for (const x of ["await pPk", "await pStatus", "await pAbst", "await pNd", "await pWahlPm", "await pGeb", "await pGfs", "await pKf", "await pComm", "await pSpiele", "await pKz", "await pWillkommen", "await pSos", "await pAdmin"]) assert.ok(ini.includes(x), "Ergebnis genutzt: " + x);
@@ -5902,7 +5904,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6686,7 +6688,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 
 // 2.458.0 KC-CLUB-VORSCHLAEGE-ANZAHL (Wunschliste #15, Wahl Hansi „Alle Vorschläge“): Kachel zeigt alle laufenden Vorschläge
 {
-  assert.ok(/const pVorAnz = \(async \(\) => \{\n\s*const \{ data \} = await db\.from\("kc_club_vorschlaege"\)\.select\("ziel_ids,erstellt_von"\)\.eq\("status", "offen"\)/.test(server), "Server zählt laufende Vorschläge");
+  assert.ok(/const pVorAnz = \(async \(\) => \{\n\s*const \{ data \} = (await db\.from\("kc_club_vorschlaege"\)\.select\("ziel_ids,erstellt_von"\)\.eq\("status", "offen"\)|await pVorOffen;)/.test(server) && /const pVorOffen = Promise\.resolve\(db\.from\("kc_club_vorschlaege"\)\.select\("id,art,ziel_ids,erstellt_von,treffen_id"\)\.eq\("status", "offen"\)/.test(server), "Server zählt laufende Vorschläge (2.489.0: aus der gemeinsamen Abfrage)");
   assert.ok(/!v\.ziel_ids \|\| v\.ziel_ids\.includes\(ich\.person_id\) \|\| v\.erstellt_von === ich\.person_id \|\| ich\.admin\)\.length;/.test(server), "gleiche Sichtbarkeit wie die Liste");
   assert.ok(/vorschlaegeOffen: await pVorAnz\.catch\(\(\) => null\)/.test(server), "mit init geliefert, Fehler = unbekannt");
   assert.ok(/zahl: \(\) => Number\.isFinite\(INIT\?\.vorschlaegeOffen\) \? INIT\.vorschlaegeOffen : INIT\?\.offeneAbstimmungen \|\| 0 \}/.test(html), "Kachel: alle Vorschläge, sonst wie bisher");
@@ -6734,7 +6736,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 
 // 2.463.0 KC-CLUB-THEMEN-LAUFBAND (Wunschliste #22): im Info-Laufband zum Abstimmen über die Themen der nächsten Sitzung bzw. Einreichen auffordern
 {
-  assert.ok(/const pThemenN = \(async \(\) => \{/.test(server) && /\.eq\("art", "thema"\)\.or\(`treffen_id\.eq\.\$\{s0\.id\},treffen_id\.is\.null`\)/.test(server) && /themenNaechste: await pThemenN/.test(server), "Server zählt Themen zur nächsten Sitzung");
+  assert.ok(/const pThemenN = \(async \(\) => \{/.test(server) && (/\.eq\("art", "thema"\)\.or\(`treffen_id\.eq\.\$\{s0\.id\},treffen_id\.is\.null`\)/.test(server) || /x\.art === "thema" && \(x\.treffen_id === s0\.id \|\| x\.treffen_id == null\)/.test(server)) && /themenNaechste: await pThemenN/.test(server), "Server zählt Themen zur nächsten Sitzung");
   assert.ok(/db\.from\("kc_club_stimmen"\)\.select\("vorschlag_id"\)\.eq\("person_id", ich\.person_id\)\.in\("vorschlag_id", ids\)/.test(server), "eigene 👍 aus der richtigen Tabelle");
   assert.ok(/if \(th && t\?\.id === th\.treffen && Date\.parse\(t\.beginn\) > Date\.now\(\)\) add\(\{ id: "themen:"/.test(html), "nur für die kommende Sitzung");
   assert.ok(/\["＋ Thema", `ilThemaNeu\('\$\{esc\(th\.treffen\)\}'\)`\]/.test(html) && /function ilThemaNeu\(id\) \{ zeige\("vorschlaege"\); VS_ZIEL = id;/.test(html), "＋ Thema mit vorgewählter Sitzung");
@@ -10870,10 +10872,12 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 {
   assert.ok(/const DB_PUFFER_MS = 2000, DB_LOG_AB = 15;/.test(server) && /Deno\.serve\(\(req\) => \{\n  const pf = dbPufferNeu\(DB_PUFFER_MS\);\n  return DB_PUFFER\.run\(pf, async \(\) => \{/.test(server), "jeder Aufruf mit eigenem, kurzlebigem Puffer");
   assert.ok(/if \(a && pf\.haltbarMs && Date\.now\(\) - \(pf\.zeit\.get\(schluessel\) \?\? 0\) > pf\.haltbarMs\) a = undefined;/.test(server), "gepufferte Antwort nur DB_PUFFER_MS gültig");
-  assert.ok(/console\.log\(JSON\.stringify\(\{ db: txt\(pf\.aktion \|\| req\.method, 40\), netz: pf\.netz, puffer: pf\.puffer, ms: Date\.now\(\) - t0 \}\)\)/.test(server), "Messung nur ins Log: Aktion und Zahlen, keine Inhalte/Personen");
+  assert.ok(/console\.log\(JSON\.stringify\(\{ db: txt\(pf\.aktion \|\| req\.method, 40\), netz: pf\.netz, puffer: pf\.puffer, ms: Date\.now\(\) - t0(, \.\.\.\(pf\.pfade \? \{ pfade: Object\.fromEntries\(pf\.pfade\) \} : \{\}\))? \}\)\)/.test(server), "Messung nur ins Log: Aktion und Zahlen, keine Inhalte/Personen");
+  // 2.489.0 KC-CLUB-DB-PFADE: nur Tabellen-/Funktionsnamen (aus der Adresse ohne Filter) und Anzahl
+  assert.ok(/const k = methode \+ " " \+ \(\/\\\/rest\\\/v1\\\/\(\[a-z0-9_\/\]\+\)\/\.exec\(url\)\?\.\[1\] \|\| "\?"\)/.test(server) && /DB_PFADE_ANTEIL = 0\.25/.test(server), "Pfad-Messung: nur Namen, keine Filterwerte, jeder 4. Aufruf");
   assert.ok(/dbPufferLeeren\(\); \/\/ KC-CLUB-DB-SPARSAM: der Communicator schreibt selbst/.test(server) && /const out = await r\.json\(\)\.catch\(\(\) => \(\{\}\)\);\n  dbPufferLeeren\(\);/.test(server), "Communicator: Puffer vorher und nachher leeren");
   assert.ok(/dbPufferLeeren\(\); \/\/ KC-CLUB-DB-SPARSAM: der Termin-Baustein schreibt selbst/.test(server) && /const direktSql = \(\) => \(dbPufferLeeren\(\), DIREKT \?\?= postgres\(/.test(server) && /\.then\(\(r\) => \{ dbPufferLeeren\(\); return r\.body\?\.cancel\(\); \}\)/.test(server), "andere Schreibwege leeren den Puffer");
-  assert.ok(/const kcAnfrage = async \(req: Request\): Promise<Response> => \{/.test(server) && /\{ const pf = DB_PUFFER\.getStore\(\) as DbPuffer \| undefined; if \(pf\) pf\.aktion = a; \}/.test(server), "Aktion für die Messung");
+  assert.ok(/const kcAnfrage = async \(req: Request\): Promise<Response> => \{/.test(server) && /\{ const pf = DB_PUFFER\.getStore\(\) as DbPuffer \| undefined; if \(pf\) (pf\.aktion = a; |\{ pf\.aktion = a; if \(DB_PFADE_AKTIONEN\.has\(a\) && Math\.random\(\) < DB_PFADE_ANTEIL\) pf\.pfade = new Map\(\); \} )\}/.test(server), "Aktion für die Messung");
 }
 // KC-CLUB-FERNHILFE F1 (18.10.2026): Live-Bild und Zeiger über geheimen, verschlüsselten Broadcast-Kanal je Sitzung statt über die Datenbank
 {

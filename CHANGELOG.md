@@ -1,5 +1,12 @@
 # Änderungen
 
+## Server 2.489.0 – 2026-10-19 – App-Start sparsamer, Stufe 1 + genaue Messung (KC-CLUB-START-SPARSAM, KC-CLUB-DB-PFADE)
+Wunsch Hansi („Online-Meldung nachmessen, App-Start sparsamer – vorsichtig, damit alles lauffähig bleibt“). Nur Server, die App bleibt 2.488.0 (kein Neustart aller Apps).
+- **App-Start, gleiche Antwort:** offene Vorschläge einmal statt dreimal holen (Abstimmungen, Vorschlags-Zahl, Themen zur Sitzung); meine Freigaben einmal statt zweimal (Geburtstag/Kontakt); meine Einstellungen einmal statt zweimal („stumm“ für die Zähler); öffentlicher Push-Schlüssel 10 Min. gemerkt. ≈ 5 Abfragen weniger je Start (72 → ≈ 67).
+- **Messung:** bei jedem 4. App-Start, jeder 4. Online-Meldung und jedem 4. Chat-Öffnen schreibt der Server ins Log, welche Tabelle/Funktion wie oft gefragt wurde (nur Namen und Anzahl, keine Inhalte) – Grundlage für Stufe 2.
+- Tests: tools/db-sparsam/start-sparsam-test.ts (500 Zufallswelten alt = neu), online-sparsam-test.ts, db-puffer-test.ts grün; Vertragstests grün (Prüfungen auf die gleichwertige Form erweitert); Typprüfung unverändert (17).
+- Rückweg: Server 2.488.0 bzw. 2.486.0 erneut hochladen.
+
 ## 2.488.0 – 2026-10-18 – 🥫 Sardinenbüchse öffnet die Rückseite des Kopfs (KC-CLUB-SARDINENDOSE)
 Wunsch Hansi: „Wenn die Sardinenbüchse auf ist, muss die Bühne bzw. die Rückseite des Kopfbereichs kommen – genau so, als wenn ich doppelt aufs Eselsohr klicke.“
 - Lange aufs Eselsohr drücken: Der Kopf rollt sich wie der Deckel einer Sardinenbüchse von rechts unten nach links oben auf (Messing-Rolle mit Dosenschlüssel) – und darunter liegt schon die **Rückseite** mit der zuletzt gewählten Ansicht (Bühne, Diashow, Tafel, Uhr …). Am Ende derselbe Zustand wie nach dem Doppeltipp.
