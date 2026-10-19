@@ -11123,3 +11123,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(am("2027-03-27")?.t === "Heute Nacht: Uhr vorstellen" && /Sommerzeit/.test(am("2027-03-28")?.t) && !am("2027-03-24"), "März: vorstellen");
   assert.ok(/const zu = ilZeitumstellung\(\); if \(zu\) add\(zu\);/.test(programm), "im Info-Feld eingehängt");
 }
+
+// 2.495.0 KC-CLUB-WERNE-WISSEN: täglich ein „Wusstest du?“ über Werne im Info-Feld, führt zum Bilderrätsel
+{
+  const f = programm.slice(programm.indexOf("const IL_WERNE = ["), programm.indexOf("function ilWerneRaetsel()"));
+  const am = (h) => new Function("heuteIso", f + "return ilWerneWissen();")(() => h);
+  const tage = ["2026-10-19", "2026-10-20", "2026-10-21"].map(am);
+  assert.ok(tage.every((x) => x && /^Wusstest du\? /.test(x.t) && x.auf === "ilWerneRaetsel()") && new Set(tage.map((x) => x.t)).size === 3 && am("2026-10-19").t === tage[0].t, "jeden Tag ein anderer, am selben Tag derselbe");
+  assert.ok(!/\b1[0-9]{3}\b|\b20[0-9]{2}\b/.test(f.replace(/\d+\.000/g, "")), "keine ungeprüften Jahreszahlen");
+  assert.ok(/add\(ilWerneWissen\(\)\);/.test(programm) && /function ilWerneRaetsel\(\) \{[^}]*esSchreib\("tab", "raetsel"\)/.test(programm), "eingehängt, öffnet das Rätsel");
+}

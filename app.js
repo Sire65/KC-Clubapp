@@ -23736,6 +23736,31 @@ function ilZeitumstellung() {
   }
   return null;
 }
+// 2.495.0 KC-CLUB-WERNE-WISSEN (Wunsch Hansi „in die Info einbauen“): jeden Tag ein „Wusstest du?“ über Werne im Info-Feld – nur sichere
+// Fakten (Jahreszahlen erst nach Prüfung durch Hansi, Wunschliste #26); Antippen führt zum Bilderrätsel „Wie gut kennst du …?“ auf der Bühne.
+const IL_WERNE = [
+  ["🌊", "Werne liegt an der Lippe", "Der Fluss gibt der Stadt ihren vollen Namen: Werne an der Lippe"],
+  ["🗺️", "Werne gehört zum Kreis Unna", "Nachbarn sind unter anderem Hamm und Bergkamen"],
+  ["🎡", "Sim-Jü heißt die große Kirmes", "Ende Oktober – der Name kommt von Simon und Judas (28. Oktober)"],
+  ["♨️", "Werne ist eine Solestadt", "Im Natur-Solebad badet man in salzhaltiger Sole aus der Tiefe"],
+  ["🐈", "Der bunte Turmkater", "Das Kunstwerk stammt von Otmar Alt"],
+  ["⛪", "St. Christophorus ist die Stadtkirche", "Rundherum der Kirchhof mit seinen Fachwerkhäusern"],
+  ["🏛️", "Das Alte Rathaus am Markt", "Mit seinen Arkaden das Wahrzeichen von Werne – davor steht der Ausrufer aus Bronze"],
+  ["🏭", "Das Gersteinwerk steht in Stockum", "Die Kühltürme des Kraftwerks sieht man von weit her"],
+  ["🏘️", "Stockum, Langern und Horst", "… gehören zu Werne – Cappenberg dagegen zu Selm"],
+  ["👥", "Rund 30.000 Menschen leben in Werne", "Und mittendrin unser Köcheclub 👨‍🍳"],
+  ["🦌", "Wildgehege im Buschkämpken", "Dort leben Wildschweine und Damwild – ein schöner Spaziergang"],
+  ["⛲", "Der Sprichwörterbrunnen", "Seine Figuren zeigen bekannte Redensarten – findest du sie alle?"],
+];
+function ilWerneWissen() {
+  const h = heuteIso(), n = Math.round(Date.parse(h) / 86400000), [sym, t, u] = IL_WERNE[((n % IL_WERNE.length) + IL_WERNE.length) % IL_WERNE.length];
+  return { id: "werne-wissen:" + h, stufe: "weiss", sym, t: "Wusstest du? " + t, u, auf: "ilWerneRaetsel()", knoepfe: [["🧩 Werne-Rätsel", "ilWerneRaetsel()"]] };
+}
+function ilWerneRaetsel() { // Bühne umdrehen und das Bilderrätsel öffnen
+  zeige("start"); esSchreib("tab", "raetsel");
+  if (ES.offen) esTab("raetsel"); else esDrehen(true);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 function ilNachTreffen(t) {
   if (t?.id) try { localStorage.setItem(IL_LETZTES, JSON.stringify({ id: t.id, titel: t.titel, beginn: t.beginn, meine: t.meine })); } catch {}
   let l = null; try { l = JSON.parse(localStorage.getItem(IL_LETZTES) || "null"); } catch {}
@@ -23807,6 +23832,7 @@ function ilMeldungen() {
   const an = ilAnlass(); if (an) add(an);
   const zu = ilZeitumstellung(); if (zu) add(zu); // 2.495.0 KC-CLUB-ZEITUMSTELLUNG-INFO
   const sw = ilStadt(); if (sw) add(sw); // 🏙️ Werne
+  add(ilWerneWissen()); // 2.495.0 KC-CLUB-WERNE-WISSEN: täglich ein „Wusstest du?“
 
   const dk = ilNachTreffen(t); if (dk) add(dk);
   for (const g of INIT?.geburtstageHeute || []) if (g.person_id !== ICH?.person_id) add({ id: "geb:" + g.person_id, stufe: "weiss", sym: "🎂", t: `${g.name} hat heute Geburtstag`, u: "Gratuliere mit einem Tipp", auf: `gratulieren('${esc(g.person_id)}', true)`, knoepfe: [["💬 Gratulieren", `gratulieren('${esc(g.person_id)}', true)`]] });
