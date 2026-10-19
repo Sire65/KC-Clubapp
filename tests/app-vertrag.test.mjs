@@ -11141,3 +11141,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const tl = server.slice(server.indexOf("async function treffenListe("), server.indexOf("async function treffenListe(") + 2500);
   assert.ok(/await db\.from\("kc_club_teilnahme"\)\.select\("\*"\)\.in\("treffen_id", ids\)/.test(tl), "Zu-/Absagen bleiben frisch");
 }
+
+// 2.497.0 KC-CLUB-KALENDER-HEUTE-BLINKT (Wunsch Hansi): der heutige Tag im Kalender pulsiert langsam, bei „Bewegung reduzieren“ ruhig
+{
+  assert.ok(/\.ktag\.heute::after \{[^}]*animation: kalHeute 2\.4s ease-in-out infinite;/.test(seite) && /@keyframes kalHeute/.test(seite), "heute pulsiert langsam (2,4 s)");
+  assert.ok(/@media \(prefers-reduced-motion: reduce\) \{ \.ktag\.heute::after \{ animation: none; \} \}/.test(seite), "Bewegung reduzieren → ruhig");
+  assert.ok(/tag === heute \? "heute" : ""/.test(programm), "Kalender setzt die Klasse heute");
+}

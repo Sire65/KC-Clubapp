@@ -980,7 +980,13 @@
   .ktag { height: 44px; border-radius: 10px; border: none; background: none; display: flex; flex-direction: column; align-items: center; padding: 5px 0 0; font-size: .95rem; cursor: pointer; color: var(--text); }
   .ktag.aus { color: var(--grau); opacity: .45; }
   .ktag.we { color: var(--rot2); }
-  .ktag.heute { outline: 2px solid var(--gold); font-weight: 800; }
+  .ktag.heute { position: relative; font-weight: 800; }
+  /* 2.497.0 KC-CLUB-KALENDER-HEUTE-BLINKT (Wunsch Hansi „der aktuelle Tag langsam blinkt, damit man ihn sofort sieht“): goldener Ring pulsiert sanft
+     (2,4 s, kein hartes Flackern); als eigener Ring, damit Farben (Treffen, Feiertag …) und die Auswahl erhalten bleiben. Bei „Bewegung reduzieren“ ruhig. */
+  .ktag.heute::after { content: ""; position: absolute; inset: -5px; border-radius: 14px; border: 3px solid #e0b25a; pointer-events: none; z-index: 1;
+    background: rgba(224, 178, 90, .18); animation: kalHeute 2.4s ease-in-out infinite; }
+  @keyframes kalHeute { 0%, 100% { opacity: 1; box-shadow: 0 0 12px 3px rgba(224, 178, 90, .75); } 50% { opacity: .15; box-shadow: 0 0 0 0 rgba(224, 178, 90, 0); } }
+  @media (prefers-reduced-motion: reduce) { .ktag.heute::after { animation: none; } }
   .ktag.geb { background: var(--lilabg); color: var(--lila); font-weight: 900; }
   .ktag.frist { background: var(--gelbbg); color: var(--gelb); font-weight: 900; }
   .ktag.dienst { background: var(--blaubg); color: var(--blau); font-weight: 900; }
@@ -5464,7 +5470,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.496.0" data-v="2.496.0"></script>
+<script src="app.js?v=2.497.0" data-v="2.497.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>
