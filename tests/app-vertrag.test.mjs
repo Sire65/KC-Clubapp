@@ -10283,6 +10283,11 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/enable row level security/.test(mig) && /on delete cascade/.test(mig), "Express-Tabellen geschützt, hängen an der Nachricht");
 }
 
+// KC-CLUB-VORSCHLAG-ANLAGEN-ZAHL: Anzahl der Anlagen auf Vorschlags- und Spendenkachel
+{
+  assert.ok(/const vsAnlagenZahl = \(v\) =>/.test(html) && (html.match(/\$\{vsAnlagenZahl\(v\)\}<\/button>`;/g) || []).length === 2, "auf beiden Kachelarten");
+}
+
 // KC-CLUB-VORSCHLAG-BEARBEITEN: Vorschlag nachträglich ändern (Thema, Beschreibung, Termin, Anlagen)
 {
   assert.ok(/case "vorschlag_aendern": \{/.test(server) && /async function objAnlagenErsetzen\(/.test(server), "Server-Aktion + Anlagen ersetzen");
