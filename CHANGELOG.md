@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.499.0 – 2026-10-19 – Protokoll: diktierte Texte mit einem Tipp übernehmen (KC-CLUB-PROTOKOLL-NACHTRAG)
+- Feature KC-CLUB-PROTOKOLL-NACHTRAG: Texte, die Hansi diktiert und Claude als Vorschlag abgelegt hat, erscheinen oben im Protokoll-Entwurf; ✅ Übernehmen hängt sie an die Kurzfassung (bzw. als Beschluss-Zeilen), ✕ Verwerfen fragt nach. Nur wer das Protokoll bearbeiten darf, nur im Entwurf; Doppeltipp-sicher.
+- DB: neue Tabelle `kc_club_protokoll_nachtrag` (RLS an, nur service_role), Migration `20261019_kc_club_protokoll_nachtrag.sql`. Rückweg: `drop table public.kc_club_protokoll_nachtrag`.
+- Server 2.499.0: Aktion `protokoll_nachtrag`, `protokoll_laden` liefert `nachtraege`.
+
 ## 2.498.0 – 2026-10-19 – 📸 „x neue Fotos hochgeladen“ im Info-Feld – direkt zu den neuen Fotos (KC-CLUB-FOTOS-NEU-INFO)
 Wunsch Hansi („Schreibe in die Info-Box ‚x neue Fotos hochgeladen‘ und dann bei Klick direkt dorthin“).
 - Im Info-Feld steht jetzt „📸 3 neue Fotos hochgeladen – Antippen: direkt zu den neuen Fotos“ (mit Knopf „📸 Ansehen“). Gezählt werden wie bisher Fotos anderer seit dem letzten Öffnen des Albums.

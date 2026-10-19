@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.495.0";
+const SERVER_VERSION = "2.499.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -12536,7 +12536,44 @@ Köcheclub Werne`,
           fassungen: fa ?? [], darfBearbeiten: bearb, darfLoeschen: darfProtokollLoeschen(ich, pr), eigen: pr.verfasser === ich.person_id,
           schreiber: bearb ? (await protokollLeser()) : [],
           naechsterVorschlag: bearb ? await protokollNaechsterVorschlag(pr) : null, // KC-CLUB-PROTOKOLL-NAECHSTER-TERMIN (1.84.0)
+          // KC-CLUB-PROTOKOLL-NACHTRAG (2.499.0): abgelegte Texte (z. B. aus Hansis Diktat über Claude) – nur für wer bearbeiten darf, nur im Entwurf
+          nachtraege: bearb && pr.status === "entwurf" ? ((await db.from("kc_club_protokoll_nachtrag").select("id,feld,text,quelle,erstellt_am").eq("protokoll_id", pr.id)
+            .is("uebernommen_am", null).is("verworfen_am", null).order("erstellt_am")).data ?? []) : [],
         });
+      }
+
+      // KC-CLUB-PROTOKOLL-NACHTRAG (2.499.0, Wunsch Hansi „Ich will nicht manuell eintragen“): abgelegten Text mit einem Tipp übernehmen (hinten an
+      // die Kurzfassung bzw. als Beschluss-Zeilen) oder verwerfen. Gleiche Rechte wie protokoll_speichern; nie ungeprüft ins Protokoll.
+      case "protokoll_nachtrag": {
+        nurProtokolle(ich);
+        const { data: n } = await db.from("kc_club_protokoll_nachtrag").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!n || n.uebernommen_am || n.verworfen_am) throw new Fehler("Dieser Vorschlag ist schon erledigt.", 409);
+        const pr = await protokollHolen(n.protokoll_id);
+        if (!darfBearbeiten(ich, pr)) throw new Fehler("Übernehmen darf nur, wer das Protokoll schreibt (oder Clubsprecher/Kassenwart).", 403);
+        if (p.wahl === "verwerfen") {
+          await db.from("kc_club_protokoll_nachtrag").update({ verworfen_am: jetzt(), erledigt_von: ich.person_id }).eq("id", n.id).is("uebernommen_am", null);
+          await protokoll(ich.person_id, "sitzungsprotokoll_nachtrag", { protokoll: pr.id, nachtrag: n.id, wahl: "verworfen" });
+          return json({ ok: true });
+        }
+        if (pr.status !== "entwurf") throw new Fehler("Das Protokoll ist veröffentlicht – bitte erst „Korrigieren“ tippen.", 409);
+        const upd: any = { geaendert_am: jetzt() };
+        if (n.feld === "beschluesse") upd.beschluesse = [...(pr.beschluesse ?? []), ...String(n.text).split("\n").map((x) => txt(x, 300)).filter(Boolean)].slice(0, 40);
+        else {
+          const neu = [String(pr.kurzfassung ?? "").trim(), String(n.text).trim()].filter(Boolean).join("\n\n");
+          if (neu.length > 4000) throw new Fehler("Die Kurzfassung würde zu lang (über 4000 Zeichen) – bitte vorher kürzen.");
+          upd.kurzfassung = neu;
+        }
+        // erst den Vorschlag für sich beanspruchen (nur wenn noch offen) – ein Doppeltipp hängt den Text so nie zweimal an
+        const { data: frei } = await db.from("kc_club_protokoll_nachtrag").update({ uebernommen_am: jetzt(), erledigt_von: ich.person_id }).eq("id", n.id)
+          .is("uebernommen_am", null).is("verworfen_am", null).select("id");
+        if (!frei?.length) throw new Fehler("Dieser Vorschlag ist schon erledigt.", 409);
+        const { error: fehlerUpd } = await db.from("kc_club_sitzungsprotokolle").update(upd).eq("id", pr.id);
+        if (fehlerUpd) {
+          await db.from("kc_club_protokoll_nachtrag").update({ uebernommen_am: null, erledigt_von: null }).eq("id", n.id);
+          throw new Fehler("Übernehmen hat nicht geklappt – bitte gleich noch einmal tippen.", 503);
+        }
+        await protokoll(ich.person_id, "sitzungsprotokoll_nachtrag", { protokoll: pr.id, nachtrag: n.id, wahl: "uebernommen", feld: n.feld });
+        return json({ ok: true });
       }
 
       case "protokoll_speichern": {

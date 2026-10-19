@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.498.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.499.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -31240,12 +31240,32 @@ function aufgabeZeile(a, darfAbhaken, darfLoeschen) {
       <div class="hinweis" style="font-size:.85rem">${esc(a.name)}${a.mit?.length ? ` <span title="gemeinsame Aufgabe">· gemeinsam mit ${esc(a.mit.join(", "))}</span>` : ""} ${a.erledigt_am ? "" : faelligText(a.faellig)}${a.protokoll ? " · aus „" + esc(a.protokoll.titel) + "“" : ""}</div></div>
     ${darfLoeschen ? `<button class="knopf klein" title="löschen" aria-label="Aufgabe löschen" onclick="aufgabeLoeschen('${a.id}')">🗑️</button>` : ""}</div>`;
 }
+// ---------- 2.499.0 KC-CLUB-PROTOKOLL-NACHTRAG (Wunsch Hansi „Ich will nicht manuell eintragen“): Texte, die Hansi diktiert hat (über Claude abgelegt),
+// stehen oben als Vorschlag – ✅ übernehmen hängt sie an die Kurzfassung (bzw. als Beschluss-Zeilen), ✕ verwirft sie. Nie ungeprüft im Protokoll.
+const PR_FELD = { kurzfassung: "Kurzfassung", beschluesse: "Beschlüsse" };
+function prNachtraegeHtml() {
+  const l = PR?.nachtraege || []; if (!l.length) return "";
+  return `<div class="karte pr-nachtrag"><h3 style="margin-top:0">📝 ${l.length === 1 ? "Ein Text wartet" : l.length + " Texte warten"} auf Übernahme</h3>${l.map((n) => `<div class="pr-nt">
+    <p class="hinweis" style="margin:0 0 4px">Für <b>${esc(PR_FELD[n.feld] || n.feld)}</b> · ${n.quelle === "claude" ? "von Claude nach deinem Diktat" : esc(n.quelle)} · ${esc(zeitKurz(n.erstellt_am))}</p>
+    <div class="pr-nt-text">${esc(n.text).replace(/\n/g, "<br>")}</div>
+    <div class="knoepfe"><button type="button" class="knopf haupt klein" onclick="prNachtrag(${jsArg(n.id)}, 'uebernehmen')">✅ Übernehmen</button><button type="button" class="knopf klein" onclick="prNachtrag(${jsArg(n.id)}, 'verwerfen')">✕ Verwerfen</button></div></div>`).join("")}</div>`;
+}
+async function prNachtrag(id, wahl) {
+  if (wahl === "verwerfen" && !(await frage("Diesen Text wirklich verwerfen? Er wird dann nicht ins Protokoll übernommen."))) return;
+  try {
+    if (prTimer) await prSpeichernJetzt(false); // eigene, noch nicht gespeicherte Eingaben zuerst sichern – sonst überschreibt das Neuladen sie
+    await api("protokoll_nachtrag", { id, wahl });
+    melde(wahl === "verwerfen" ? "✕ Verworfen" : "✅ Ins Protokoll übernommen");
+    await protokollOeffnen(prId, true);
+  } catch (e) { meldeFehler(e); }
+}
 function protokollFormular() {
   const p = PR.protokoll, da = new Set(p.anwesend.map((x) => x.person_id)), ent = new Set(p.entschuldigt.map((x) => x.person_id));
   $("prTitel").textContent = "✍️ Protokoll schreiben";
   $("protokollInhalt").innerHTML = `
     <div class="karte">${prStatusMarke(p)}${p.version > 1 ? ` <span class="marke">Fassung ${p.version} (Korrektur)</span>` : ""}
       <p class="hinweis" style="margin-bottom:0">So geht's: <b>1.</b> Vorlage kurz prüfen (ist schon ausgefüllt) · <b>2.</b> Foto vom Blatt oder Datei anhängen · <b>3.</b> Veröffentlichen. Alles wird automatisch gespeichert. <span id="prGespeichert"></span></p></div>
+    ${prNachtraegeHtml()}
     <div class="karte"><h3>1 · Vorlage</h3>
       <label class="feld">Titel<input id="prT" maxlength="120" value="${esc(p.titel)}" oninput="prAendern()"></label>
       <div class="zwei"><label class="feld">Datum<input id="prD" type="date" value="${esc(p.datum)}" onchange="prAendern()"></label><label class="feld">Ort<input id="prO" maxlength="200" value="${esc(p.ort || "")}" oninput="prAendern()"></label></div>
