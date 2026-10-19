@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.495.0 – 2026-10-19 – 🕑 Zeitumstellung im Info-Feld (KC-CLUB-ZEITUMSTELLUNG-INFO)
+Wunsch Hansi („Wird in der Info auf Uhrzeit umstellen hingewiesen?“ – bisher nur der Push am Samstag ab 18 Uhr).
+- Ab Donnerstag vor der Umstellung (letzter Sonntag im März/Oktober) steht im Info-Feld „🕑 In der Nacht zum Sonntag: Uhr zurückstellen“ (bzw. vorstellen), am Samstag gelb „Heute Nacht: Uhr zurückstellen – eine Stunde länger schlafen 😴“, am Sonntag „Seit heute Nacht Winterzeit – Backofen-, Auto- und Wanduhren schon umgestellt?“. Jedes Jahr von selbst berechnet.
+- Der Push am Samstag ab 18 Uhr bleibt. Hilfe-Eintrag „Erinnerung an die Zeitumstellung“ ergänzt. Nur App, keine zusätzliche Datenbank-Abfrage.
+- Tests: Vertragstest mit den Tagen Oktober 2026 und März 2027 grün.
+
 ## Server 2.494.0 – 2026-10-19 (ohne App-Build) – App-Start sparsamer, Stufe 2 (KC-CLUB-START-SPARSAM-2)
 Freigabe Hansi („Ja“ zu Stufe 2, Punkte 1, 2 und 5 – „vorsichtig, damit alles lauffähig bleibt“). Gleiche Anzeige, weniger Datenbank-Abfragen:
 - Selten geänderte Daten merkt sich jede Server-Instanz 60 s: Club-Einstellungen (SOS, Pinnwand, Einstieg, Thema, Schnellantworten – jetzt in der gebündelten Lesung), Wartungsmodus, Funktions-Freigaben (vorher 15 s) und der Zustand des KC Communicators (5 Lesungen). Speichert die App selbst etwas davon, ist der Merker sofort weg; andere Instanzen sehen es spätestens nach 60 s. Fehler werden nie gemerkt. Die Admin-Ansicht des Communicators liest immer frisch.
