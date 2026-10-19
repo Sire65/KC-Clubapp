@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.506.0";
+const SERVER_VERSION = "2.507.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2472,7 +2472,9 @@ function raetselWoche(d = new Date()) {
 async function dienstwunschAufstellung(ich: Ich) {
   const { data: m } = await db.from("kc_dp_wish_inbox").select("revision,status,entries,standby,share_with_colleagues,submitted_at,taken_at")
     .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).eq("source", "club_app").maybeSingle();
-  const h = (x: unknown) => `${String(x).padStart(2, "0")}:00`;
+  // 2.507.0 KC-CLUB-DW-HALBE-STUNDE (Fund Hansi, Bestätigung Dieter „11:00–12.5:00 Uhr“): Zeiten sind Dezimalstunden (12.5 = 12:30) – Minuten richtig ausgeben
+  const h = (x: unknown) => { const n = Number(x); if (!Number.isFinite(n)) return String(x); let s = Math.floor(n), mi = Math.round((n - s) * 60); if (mi === 60) { s++; mi = 0; }
+    return `${String(s).padStart(2, "0")}:${String(mi).padStart(2, "0")}`; };
   const wt = new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", timeZone: "UTC" });
   const je = new Map<string, any[]>();
   for (const e of (m?.entries ?? []) as any[]) { if (!je.has(e.date)) je.set(e.date, []); je.get(e.date)!.push(e); }
