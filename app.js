@@ -20762,20 +20762,34 @@ async function kopfEffektAnimieren(effekt, h, zu, gross, klein, oben) {
     else { await fahren(klein, gross, MS * 0.6); await warten(k.animate([runter, hoch], { duration: 850, easing: "cubic-bezier(.45,0,.4,1)", fill: "forwards" })); }
     return;
   }
-  // Climber: waagerechte Lamellen kippen schräg und schieben sich oben zu einem schmalen Paket zusammen
-  const H = 16, n = Math.max(3, Math.ceil(bereich / H)); box.innerHTML = '<i class="ke-lamelle"></i>'.repeat(n);
-  const L = [...box.children], flach = (i) => ({ transform: `translateY(${i * H}px) rotateX(0deg)`, opacity: 1 }), paket = (i) => ({ transform: `translateY(${i * 3}px) rotateX(72deg)`, opacity: 1 });
-  L.forEach((l, i) => { l.style.transform = flach(i).transform; });
+  // Climber (2.505.0 KC-CLUB-KOPF-CLIMBER-2, Hansi: „soll sich Lamelle für Lamelle hochkrempeln“): wie ein echter Raffstore – die Endschiene
+  // fährt von unten hoch, jede Lamelle kippt, wenn die Schiene sie erreicht, und legt sich aufs Paket; das Paket verschwindet oben im Kasten.
+  // Öffnen genau umgekehrt: Lamelle für Lamelle rollt sich ab, dann kippen alle auf und geben den Inhalt frei.
+  const H = 16, n = Math.max(3, Math.ceil(bereich / H)), T = MS, ABST = 4;
+  box.innerHTML = '<i class="ke-lamelle"></i>'.repeat(n) + '<i class="ke-schiene"></i>';
+  const L = [...box.children].slice(0, n), schiene = box.lastElementChild, P0 = bereich, P1 = Math.max(0, klein - oben); // Schiene: Start/Ende (px im Kasten)
+  const P = (t) => P0 - (P0 - P1) * t; // t = 0…1, gleichmäßig wie der Kopf
+  // Lamelle i wird eingesammelt, wenn das Paket über der Schiene ihre Lage erreicht: P(t) - (n - i) * ABST = i * H
+  const fang = L.map((_, i) => Math.min(1, Math.max(0, (P0 - (n - i) * ABST - i * H) / (P0 - P1))));
+  const flach = (i) => `translateY(${i * H}px) rotateX(0deg)`, gepackt = (i) => `translateY(${P1 - (n - i) * ABST}px) rotateX(64deg)`;
+  const krempeln = (i) => { // kippt in ~120 ms, fährt dabei schon mit dem Paket (gleichmäßig) nach oben – nie hinter der Schiene zurück
+    const k = Math.min(.5, 120 / Math.max(60, T * (1 - fang[i]))), ziel = P1 - (n - i) * ABST;
+    return [{ transform: flach(i), offset: 0 }, { transform: `translateY(${i * H + (ziel - i * H) * k}px) rotateX(64deg)`, offset: k }, { transform: gepackt(i), offset: 1 }]; };
+  L.forEach((l, i) => { l.style.transform = flach(i); });
   h.append(box);
-  const kippen = (hoch) => Promise.all(L.map((l, i) => warten(l.animate(hoch ? [flach(i), paket(i)] : [paket(i), flach(i)], { duration: 900, delay: (hoch ? i : n - 1 - i) * 25, easing: "cubic-bezier(.5,.05,.35,1)", fill: "forwards" }))));
+  const lauf = (zuRichtung) => Promise.all([
+    ...L.map((l, i) => { const dauer = Math.max(60, T * (1 - fang[i])); // eingesammelt ab fang[i], danach mit dem Paket nach oben
+      return warten(l.animate(krempeln(i), { duration: dauer, delay: zuRichtung ? T * fang[i] : 0, direction: zuRichtung ? "normal" : "reverse", easing: "linear", fill: "both" })); }),
+    warten(schiene.animate([{ transform: `translateY(${P0 - 4}px)` }, { transform: `translateY(${P1 - 4}px)` }], { duration: T, direction: zuRichtung ? "normal" : "reverse", easing: "linear", fill: "both" })),
+    (h.style.overflow = "hidden", warten(h.animate([{ height: gross + "px" }, { height: klein + "px" }], { duration: T, direction: zuRichtung ? "normal" : "reverse", easing: "linear", fill: "forwards" }))),
+  ]);
   if (zu) {
-    L.forEach((l) => { l.style.opacity = "0"; }); await Promise.all(L.map((l, i) => warten(l.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: i * 12, fill: "forwards" }))));
-    await Promise.all([kippen(true), fahren(gross, klein, 1000)]);
-    await warten(box.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: "forwards" }));
+    L.forEach((l) => { l.style.opacity = "0"; }); // erst schließen sich die Lamellen (Inhalt verschwindet), dann krempelt es hoch
+    await Promise.all(L.map((l, i) => warten(l.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: i * 12, fill: "forwards" }))));
+    await lauf(true);
   } else {
-    L.forEach((l, i) => { l.style.transform = paket(i).transform; });
-    await Promise.all([fahren(klein, gross, 1000), kippen(false)]);
-    await Promise.all(L.map((l, i) => warten(l.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, delay: (n - 1 - i) * 15, fill: "forwards" }))));
+    await lauf(false); // Lamelle für Lamelle rollt sich ab
+    await Promise.all(L.map((l, i) => warten(l.animate([{ transform: flach(i), opacity: 1 }, { transform: `translateY(${i * H}px) rotateX(80deg)`, opacity: 0 }], { duration: 320, delay: i * 15, fill: "forwards" }))));
   }
 }
 // art "ganz" (rechts ⌃⌃): offen/halb → ganz, ganz → offen · art "halb" (links ⌃): offen → halb, halb → offen, ganz → halb

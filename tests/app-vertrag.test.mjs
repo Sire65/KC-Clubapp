@@ -7000,6 +7000,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const th = html.slice(html.indexOf("const THEMEN = ["), html.indexOf("];", html.indexOf("const THEMEN = [")));
   assert.ok(/id: "weihnachten"[^\n]*kopf: "bude"/.test(th) && /id: "karneval"[^\n]*kopf: "theater"/.test(th), "Weihnachten → Marktbude, Karneval → Theatervorhang");
   assert.ok(/\.ke-theater-l, \.ke-theater-r \{[^}]*#741521/.test(html) && /\.ke-bude-schild \{[^}]*#f3e9dc[^}]*#741521/.test(html), "Corporate Design Weinrot/Beige");
+  // Climber (Hansi: „Lamelle für Lamelle hochkrempeln“): Schiene fährt hoch, jede Lamelle wird eingesammelt, wenn das Paket sie erreicht
+  assert.ok(/const fang = L\.map\(/.test(html) && /delay: zuRichtung \? T \* fang\[i\] : 0, direction: zuRichtung \? "normal" : "reverse"/.test(html) && /\.ke-climber \.ke-schiene \{/.test(html), "Climber krempelt Lamelle für Lamelle hoch und wieder ab");
   // Tippgeräusche
   assert.ok(/<select id="setTippTon"[^>]*onchange="tippTonSetzen\(this\.value\)"><option value="aus">/.test(html) && /tippTonZeigen\(\); \/\* KC-CLUB-TIPP-GERAEUSCH \*\//.test(html), "Einstellung unter ⚙️ (Standard aus)");
   assert.ok(/return TIPP_TOENE\[w\] \? w : "aus";/.test(html), "unbekannt/leer = aus");
