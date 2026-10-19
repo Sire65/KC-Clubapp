@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.502.0 – 2026-10-19 – Bündel 20 Uhr: Vorschläge bearbeiten, Protokoll drucken, Hilfetexte einklappen, Protokoll-Hinweis
+- Feature KC-CLUB-VORSCHLAG-BEARBEITEN (Wunsch Hansi): Knopf „✏️ Bearbeiten“ an offenen Vorschlägen (Ersteller und Clubleitung) – Thema, Beschreibung, Termin und Anlagen nachträglich ändern; vorhandene Anlagen bleiben (✕ entfernt), neue kommen dazu. Ohne Benachrichtigung, alter Stand im Protokoll; bei Abstimmungen bleibt die Frage nach der ersten Stimme fest. Server: `vorschlag_aendern`, `darfBearbeiten`.
+- Feature KC-CLUB-PROTOKOLL-DRUCKEN (Wunsch Hansi): „🖨️ Drucken / PDF“ im Protokoll-Entwurf und in der Leseansicht; der Entwurf wird vorher gespeichert und frisch geladen.
+- Feature KC-CLUB-EINW-KLAPPEN (Wunsch Hansi): alle Hilfetexte „🎓 Kurz erklärt“ lassen sich einklappen (Pfeil klappt wieder auf); gemerkt je Gerät.
+- Feature KC-CLUB-PROTOKOLL-NEU-INFO (Wunsch Hansi): im Info-Feld „Neues Besprechungsprotokoll eingestellt“ mit Titel – Antippen öffnet das Protokoll. Server liefert `protokollNeu` beim Start.
+- Server 2.502.0.
+
 ## 2.501.0 – 2026-10-19 – 📊 Dienstzeiten-Übersicht für Mitglieder (KC-CLUB-DV-MITGLIEDER)
 - Feature KC-CLUB-DV-MITGLIEDER (Wunsch Hansi): Der 📊-Knopf steht jetzt auch für Mitglieder bereit. Mitglieder sehen ihre eigenen Zeiten und die der Mitglieder, die das Teilen erlaubt haben (gleiche Regel wie in „Dienstpläne“); „wer fehlt noch“, Erinnern und Ablegen bleiben bei der Clubleitung.
 - Server 2.501.0: `dienst_uebersicht` filtert für Nicht-Leitung serverseitig.
