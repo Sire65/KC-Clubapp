@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.498.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.501.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14038,8 +14038,8 @@ function dwOeffnen() {
     <button class="knopf klein" data-k="zu" aria-label="Zurück zur Club-App">‹ Zurück</button><b class="dw-titel">📝 Dienstwünsche</b>
     <button class="knopf klein" data-k="bogen" title="Leeren persönlichen Wunschbogen mit QR-Code drucken oder per E-Mail schicken" aria-label="Leerer Bogen">🖨️ Bogen</button>
     <button class="knopf haupt klein" data-k="fertig" title="Bestätigung mit Zusammenfassung deiner Eingaben per E-Mail anfordern" aria-label="Fertig – Bestätigung per E-Mail anfordern">✅ Fertig</button></div>
-    <details class="dw-tipp"><summary>💡 Tipp: Wann eine Sperrzeit?</summary><b>Sperrzeit nur, wenn du innerhalb deiner Kann-Zeit kurz weg musst.</b> Beispiel: Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr.
-      Außerhalb der Kann-Zeit bist du automatisch frei.</details></div>
+    <div class="dw-reihe2"><details class="dw-tipp"><summary>💡 Tipp: Wann eine Sperrzeit?</summary><b>Sperrzeit nur, wenn du innerhalb deiner Kann-Zeit kurz weg musst.</b> Beispiel: Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr.
+      Außerhalb der Kann-Zeit bist du automatisch frei.</details>${dvKnopf()}</div></div>
     <div style="flex:1;position:relative;display:flex">
       <!-- 1.40.0: drehende Mütze schon, während die Twinkey-Seite selbst noch lädt (danach zeigt die Seite ihre eigene) -->
       <div class="warten an" style="position:absolute;left:50%;top:42%;z-index:0"><div class="muetze"><img src="kc-kochmuetze-weiss.webp" alt=""></div><b>Twinkey wird geladen …</b></div>
@@ -26508,7 +26508,7 @@ function buEingangPosten() {
 function buEingangHtml() {
   const geladen = BU_EIN.leihen || BU_EIN.vorschlaege || BU_EIN.hilfe, P = (BU_EIN.posten = buEingangPosten());
   const zeig = P.map((x, i) => [x, i]).filter(([x]) => ekfPasst(x)), aktiv = ["jahr", "monat", "art", "wer"].filter((k) => EKF[k]).length;
-  return `<div class="ek-kopf"><b>📥 Eingang${P.length ? ` – ${P.length} ${P.length === 1 ? "Sache" : "Sachen"}` : ""}</b>${ICH?.vorstand || ICH?.admin ? `<button class="knopf klein pr-filter-knopf" onclick="dvStart()" title="Dienstzeiten-Übersicht (alle Namen und Tage)" aria-label="Dienstzeiten-Übersicht">📊</button>` : ""}<button class="knopf klein pr-filter-knopf" onclick="ekfUmschalten()" title="Eingang filtern (Jahr, Monat, Art, Name)" aria-label="Eingang filtern" aria-expanded="${EKF.offen}">🔽${aktiv ? `<span class="anz">${aktiv}</span>` : ""}</button></div>
+  return `<div class="ek-kopf"><b>📥 Eingang${P.length ? ` – ${P.length} ${P.length === 1 ? "Sache" : "Sachen"}` : ""}</b>${dvKnopf()}<button class="knopf klein pr-filter-knopf" onclick="ekfUmschalten()" title="Eingang filtern (Jahr, Monat, Art, Name)" aria-label="Eingang filtern" aria-expanded="${EKF.offen}">🔽${aktiv ? `<span class="anz">${aktiv}</span>` : ""}</button></div>
     ${EKF.offen ? ekfHtml(P, zeig.length) : ""}
     <div class="karte bu-gruss"><span class="hinweis">Antippen → bearbeiten, zurück in den Eingang oder zum Ordner. Es bleibt hier, bis es erledigt ist; mit 🗄️ Ablegen in einen oder mehrere Ordner legen (auch in den Ordner des Mitglieds).</span></div>
     ${!geladen ? '<div class="karte hinweis">Wird geladen …</div>' : !zeig.length && P.length ? '<div class="karte hinweis">Zu diesem Filter liegt nichts im Eingang – <button class="knopf klein" onclick="ekfLeeren()">↺ Alle zeigen</button></div>' : P.length ? `<div class="karte" style="padding:4px 12px">${zeig.map(([x, i]) => `<button class="bu-ein-zeile" onclick="buEinPosten(${i})"><span class="sym">${esc(x.sym)}</span>
@@ -26591,16 +26591,23 @@ async function dvErinnern(knopf) {
 function dvZeichnen() {
   const z = $("dvInhalt"); if (!z) return;
   const P = DV.daten?.personen || [];
-  z.innerHTML = dvFehltHtml() + `<p class="hinweis" style="margin:0">${esc(DV.daten?.veranstaltung || "")} · ${P.filter((x) => x.eintraege.length).length} Personen · Stand ${esc(zeitKurz(new Date().toISOString()))}</p>
+  z.innerHTML = dvFehltHtml() + (DV.daten?.nurFreigegeben ? `<div class="karte innen dv-fehlt">👁️ Du siehst deine eigenen Zeiten und die der Mitglieder, die ihre Zeiten freigegeben haben – nicht alle. Freigeben: „Dienstpläne“ → „Meine Dienstzeiten für andere sichtbar“.</div>` : "") + `<p class="hinweis" style="margin:0">${esc(DV.daten?.veranstaltung || "")} · ${P.filter((x) => x.eintraege.length).length} Personen · Stand ${esc(zeitKurz(new Date().toISOString()))}</p>
     ${dvLegende()}
     <div class="dv-leiste"><button class="knopf klein${DV.sort === "name" ? " haupt" : ""}" onclick="DV.sort='name';dvZeichnen()">🔤 Name</button><button class="knopf klein${DV.sort === "stunden" ? " haupt" : ""}" onclick="DV.sort='stunden';dvZeichnen()">⏱️ Stunden</button>
-      <button class="knopf klein" onclick="dvDrucken()">🖨️ Drucken (A4 quer)</button><button class="knopf klein" onclick="dvAblegen()">🗄️ In Ordner ablegen</button></div>
+      <button class="knopf klein" onclick="dvDrucken()">🖨️ Drucken (A4 quer)</button>${DV.daten?.nurFreigegeben ? "" : '<button class="knopf klein" onclick="dvAblegen()">🗄️ In Ordner ablegen</button>'}</div>
     <div class="dv-rahmen">${dvGanttHtml()}</div>
     <p class="hinweis" style="margin:0">Feld antippen = genaue Uhrzeiten. Auf dem Handy am besten quer halten – sonst seitlich wischen.</p>`;
 }
+// KC-CLUB-DV-UEBERALL (2.500.0, Wunschliste Nr. 27): derselbe 📊-Knopf wie im Büro-Eingang überall, wo der Dienstplan aufgeht
+// (Dienstpläne, Mein Dienst, Dienstwünsche). KC-CLUB-DV-MITGLIEDER (2.501.0): auch für Mitglieder – der Server liefert ihnen nur sich selbst
+// und wer das Teilen erlaubt hat; Ablegen und „wer fehlt noch“ bleiben bei der Clubleitung.
+const dvLeitung = () => !!(ICH?.vorstand || ICH?.admin);
+const dvDarf = () => !!ICH;
+const dvKnopf = () => dvDarf() ? `<button type="button" class="knopf klein pr-filter-knopf" onclick="dvStart()" title="Dienstzeiten-Übersicht (alle Namen und Tage)" aria-label="Dienstzeiten-Übersicht">📊</button>` : "";
 async function dvStart() {
   const f = blattAuf("dvBlatt", `<div class="dv-kopf"><h3>📊 Dienstzeiten-Übersicht</h3><button type="button" class="pr-filter-zu" aria-label="Übersicht schließen" title="Schließen" onclick="$('dvBlatt').remove()">✕</button></div><div id="dvInhalt"><p class="hinweis">Wird geladen …</p></div>`);
   f.classList.add("dv-blatt");
+  if ($("dwFenster")) f.style.zIndex = "2100"; // aus den Dienstwünschen geöffnet: über deren Vollbild-Fenster
   try { DV.daten = await api("dienst_uebersicht", {}, { warten: true }); } catch (e) { f.remove(); return meldeFehler(e); }
   dvZeichnen();
 }
@@ -27938,7 +27945,7 @@ function mdUnter() {
 }
 const MD_WUNSCH = { offen: "📨 abgegeben – wartet auf den Planer", uebernommen: "✅ vom Planer übernommen", abgelehnt: "✖ vom Planer abgelehnt" };
 async function mdStart() {
-  const f = blattAuf("mdBlatt", `<h3 style="margin:0">🗓️ Mein Dienst</h3><div id="mdInhalt"><p class="hinweis">Wird geladen …</p></div><button class="knopf" onclick="$('mdBlatt').remove()">Schließen</button>`);
+  const f = blattAuf("mdBlatt", `<div class="dv-kopf"><h3 style="margin:0">🗓️ Mein Dienst</h3>${dvKnopf()}</div><div id="mdInhalt"><p class="hinweis">Wird geladen …</p></div><button class="knopf" onclick="$('mdBlatt').remove()">Schließen</button>`);
   f.classList.add("sc-blatt");
   try { MD_D = await api("mein_dienst", {}, { warten: true }); } catch (e) { $("mdInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ Stand konnte nicht geladen werden: ${esc(fehlerText(e, ""))} <button class="knopf klein" onclick="mdStart()">🔄 Nochmal</button></div>`; return; }
   const w = MD_D?.wunsch || {}, so = MD_D?.soll || { anzahl: 0 }, ist = MD_D?.ist || {}; // Gesamtprüfung 3: unvollständige Antwort → leer statt Absturz
@@ -27981,6 +27988,7 @@ async function dienstLaden() {
   try {
     DP = await api("dienste", { von: dpStart, bis, personen: dpWahl || [] });
     dpWahl = DP.gewaehlt;
+    $("dpUebersicht")?.classList.toggle("versteckt", !dvDarf()); // KC-CLUB-DV-UEBERALL
     $("dpFreigabe").checked = !!DP.freigabe;
     // eigene Person zuerst, dann alphabetisch (Farben bleiben so stabil)
     DP.personen.sort((a, b) => (b.ich - a.ich) || a.name.localeCompare(b.name));
@@ -31240,12 +31248,32 @@ function aufgabeZeile(a, darfAbhaken, darfLoeschen) {
       <div class="hinweis" style="font-size:.85rem">${esc(a.name)}${a.mit?.length ? ` <span title="gemeinsame Aufgabe">· gemeinsam mit ${esc(a.mit.join(", "))}</span>` : ""} ${a.erledigt_am ? "" : faelligText(a.faellig)}${a.protokoll ? " · aus „" + esc(a.protokoll.titel) + "“" : ""}</div></div>
     ${darfLoeschen ? `<button class="knopf klein" title="löschen" aria-label="Aufgabe löschen" onclick="aufgabeLoeschen('${a.id}')">🗑️</button>` : ""}</div>`;
 }
+// ---------- 2.499.0 KC-CLUB-PROTOKOLL-NACHTRAG (Wunsch Hansi „Ich will nicht manuell eintragen“): Texte, die Hansi diktiert hat (über Claude abgelegt),
+// stehen oben als Vorschlag – ✅ übernehmen hängt sie an die Kurzfassung (bzw. als Beschluss-Zeilen), ✕ verwirft sie. Nie ungeprüft im Protokoll.
+const PR_FELD = { kurzfassung: "Kurzfassung", beschluesse: "Beschlüsse" };
+function prNachtraegeHtml() {
+  const l = PR?.nachtraege || []; if (!l.length) return "";
+  return `<div class="karte pr-nachtrag"><h3 style="margin-top:0">📝 ${l.length === 1 ? "Ein Text wartet" : l.length + " Texte warten"} auf Übernahme</h3>${l.map((n) => `<div class="pr-nt">
+    <p class="hinweis" style="margin:0 0 4px">Für <b>${esc(PR_FELD[n.feld] || n.feld)}</b> · ${n.quelle === "claude" ? "von Claude nach deinem Diktat" : esc(n.quelle)} · ${esc(zeitKurz(n.erstellt_am))}</p>
+    <div class="pr-nt-text">${esc(n.text).replace(/\n/g, "<br>")}</div>
+    <div class="knoepfe"><button type="button" class="knopf haupt klein" onclick="prNachtrag(${jsArg(n.id)}, 'uebernehmen')">✅ Übernehmen</button><button type="button" class="knopf klein" onclick="prNachtrag(${jsArg(n.id)}, 'verwerfen')">✕ Verwerfen</button></div></div>`).join("")}</div>`;
+}
+async function prNachtrag(id, wahl) {
+  if (wahl === "verwerfen" && !(await frage("Diesen Text wirklich verwerfen? Er wird dann nicht ins Protokoll übernommen."))) return;
+  try {
+    if (prTimer) await prSpeichernJetzt(false); // eigene, noch nicht gespeicherte Eingaben zuerst sichern – sonst überschreibt das Neuladen sie
+    await api("protokoll_nachtrag", { id, wahl });
+    melde(wahl === "verwerfen" ? "✕ Verworfen" : "✅ Ins Protokoll übernommen");
+    await protokollOeffnen(prId, true);
+  } catch (e) { meldeFehler(e); }
+}
 function protokollFormular() {
   const p = PR.protokoll, da = new Set(p.anwesend.map((x) => x.person_id)), ent = new Set(p.entschuldigt.map((x) => x.person_id));
   $("prTitel").textContent = "✍️ Protokoll schreiben";
   $("protokollInhalt").innerHTML = `
     <div class="karte">${prStatusMarke(p)}${p.version > 1 ? ` <span class="marke">Fassung ${p.version} (Korrektur)</span>` : ""}
       <p class="hinweis" style="margin-bottom:0">So geht's: <b>1.</b> Vorlage kurz prüfen (ist schon ausgefüllt) · <b>2.</b> Foto vom Blatt oder Datei anhängen · <b>3.</b> Veröffentlichen. Alles wird automatisch gespeichert. <span id="prGespeichert"></span></p></div>
+    ${prNachtraegeHtml()}
     <div class="karte"><h3>1 · Vorlage</h3>
       <label class="feld">Titel<input id="prT" maxlength="120" value="${esc(p.titel)}" oninput="prAendern()"></label>
       <div class="zwei"><label class="feld">Datum<input id="prD" type="date" value="${esc(p.datum)}" onchange="prAendern()"></label><label class="feld">Ort<input id="prO" maxlength="200" value="${esc(p.ort || "")}" oninput="prAendern()"></label></div>

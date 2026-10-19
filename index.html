@@ -4485,6 +4485,11 @@
   .app-laedt-lang { max-width: 320px; font-size: 1rem; color: #4a2a20; }
   .app-laedt-lang button { margin-top: 10px; min-height: 44px; padding: 8px 18px; border: 0; border-radius: 12px; background: #741521; color: #fff; font-size: 1rem; font-weight: 700; }
   body:has(#app:not(.versteckt)) #appLaedt, body:has(#gesperrt:not(.versteckt)) #appLaedt { display: none; }
+  /* 2.500.0 KC-CLUB-DV-UEBERALL: 📊 in den Dienstwünschen neben dem Tipp (oben ist auf schmalen Handys kein Platz) */
+  .dw-reihe2 { display: flex; gap: 8px; align-items: flex-start; } .dw-reihe2 > .dw-tipp { flex: 1; min-width: 0; } .dw-reihe2 > .pr-filter-knopf { flex: none; }
+  /* 2.499.0 KC-CLUB-PROTOKOLL-NACHTRAG */
+  .pr-nachtrag { border: 2px solid var(--gold); } .pr-nt + .pr-nt { border-top: 1px solid var(--linie); margin-top: 10px; padding-top: 10px; }
+  .pr-nt-text { background: var(--karte2); border-radius: 10px; padding: 8px 10px; white-space: normal; line-height: 1.45; }
 </style>
 </head>
 <body>
@@ -4681,7 +4686,7 @@
 
   <!-- DIENSTPLÄNE -->
   <section id="v-dienste" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>🗓️ Dienstpläne</h2></div>
+    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>🗓️ Dienstpläne</h2><button type="button" id="dpUebersicht" class="knopf klein pr-filter-knopf versteckt" style="margin-left:auto" onclick="dvStart()" title="Dienstzeiten-Übersicht (alle Namen und Tage)" aria-label="Dienstzeiten-Übersicht">📊</button></div>
     <!-- 2.411.0 KC-CLUB-DIENST-WER-KLAPPE (Wunsch Hansi „Klappbereich, damit man besser sieht, dass es unten weitergeht“): zugeklappt steht die Auswahl im Kopf -->
     <details class="karte" data-klappe="dp_wer" data-ohne-unten><summary>👥 Wen anzeigen? <span class="hinweis" id="dpWerKurz" style="font-weight:400"></span></summary>
       <div class="knoepfe" id="dpPersonen" style="margin-top:8px"><span class="hinweis">Wird geladen …</span></div>
@@ -5472,7 +5477,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.498.0" data-v="2.498.0"></script>
+<script src="app.js?v=2.501.0" data-v="2.501.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

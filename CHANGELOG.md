@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.501.0 – 2026-10-19 – 📊 Dienstzeiten-Übersicht für Mitglieder (KC-CLUB-DV-MITGLIEDER)
+- Feature KC-CLUB-DV-MITGLIEDER (Wunsch Hansi): Der 📊-Knopf steht jetzt auch für Mitglieder bereit. Mitglieder sehen ihre eigenen Zeiten und die der Mitglieder, die das Teilen erlaubt haben (gleiche Regel wie in „Dienstpläne“); „wer fehlt noch“, Erinnern und Ablegen bleiben bei der Clubleitung.
+- Server 2.501.0: `dienst_uebersicht` filtert für Nicht-Leitung serverseitig.
+
+## 2.500.0 – 2026-10-19 – 📊 Dienstzeiten-Übersicht überall beim Dienstplan (KC-CLUB-DV-UEBERALL)
+- Feature KC-CLUB-DV-UEBERALL (Wunschliste Nr. 27): Der 📊-Knopf aus dem Büro-Eingang steht jetzt auch in „Dienstpläne“, „Mein Dienst“ und den Dienstwünschen – gleicher Knopf, gleiches Recht (Clubleitung).
+
+## 2.499.0 – 2026-10-19 – Protokoll: diktierte Texte mit einem Tipp übernehmen (KC-CLUB-PROTOKOLL-NACHTRAG)
+- Feature KC-CLUB-PROTOKOLL-NACHTRAG: Texte, die Hansi diktiert und Claude als Vorschlag abgelegt hat, erscheinen oben im Protokoll-Entwurf; ✅ Übernehmen hängt sie an die Kurzfassung (bzw. als Beschluss-Zeilen), ✕ Verwerfen fragt nach. Nur wer das Protokoll bearbeiten darf, nur im Entwurf; Doppeltipp-sicher.
+- DB: neue Tabelle `kc_club_protokoll_nachtrag` (RLS an, nur service_role), Migration `20261019_kc_club_protokoll_nachtrag.sql`. Rückweg: `drop table public.kc_club_protokoll_nachtrag`.
+- Server 2.499.0: Aktion `protokoll_nachtrag`, `protokoll_laden` liefert `nachtraege`.
+
 ## 2.498.0 – 2026-10-19 – 📸 „x neue Fotos hochgeladen“ im Info-Feld – direkt zu den neuen Fotos (KC-CLUB-FOTOS-NEU-INFO)
 Wunsch Hansi („Schreibe in die Info-Box ‚x neue Fotos hochgeladen‘ und dann bei Klick direkt dorthin“).
 - Im Info-Feld steht jetzt „📸 3 neue Fotos hochgeladen – Antippen: direkt zu den neuen Fotos“ (mit Knopf „📸 Ansehen“). Gezählt werden wie bisher Fotos anderer seit dem letzten Öffnen des Albums.

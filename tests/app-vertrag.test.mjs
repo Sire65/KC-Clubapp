@@ -186,12 +186,12 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 21. 0.9.0: Sitzungsprotokolle & Aufgaben (KC-CLUB-PROTOKOLLE, KC-CLUB-AUFGABEN).
 {
   for (const a of ["protokolle_liste", "protokoll_vorlage", "protokoll_laden", "protokoll_speichern", "protokoll_anlage", "protokoll_veroeffentlichen",
-    "protokoll_korrigieren", "protokoll_loeschen", "protokoll_einwand", "einwand_erledigt", "aufgabe_speichern", "aufgabe_erledigt", "aufgabe_loeschen"])
+    "protokoll_korrigieren", "protokoll_loeschen", "protokoll_einwand", "einwand_erledigt", "aufgabe_speichern", "aufgabe_erledigt", "aufgabe_loeschen", "protokoll_nachtrag"])
     assert.ok(aktionen.has(a), `Server-Aktion ${a} fehlt`);
   // Leserecht aus der Rollen-Registry (Aushilfen nein), nicht hart codiert im Server
   assert.ok(/protokolle: r \? r\.protokolle_lesen !== false : true/.test(server), "Protokoll-Recht aus kc_club_rollen fehlt");
   assert.ok(!/["'`]Aushilfe/.test(server), "Server darf das Amt „Aushilfe“ nicht hart codieren");
-  assert.equal((server.match(/nurProtokolle\(ich\)/g) || []).length, 14, "jede Protokoll-/Aufgaben-Aktion prüft das Leserecht");
+  assert.equal((server.match(/nurProtokolle\(ich\)/g) || []).length, 15, "jede Protokoll-/Aufgaben-Aktion prüft das Leserecht");
   // 7 Tage Einspruch; genehmigt erst nach Fristablauf ohne offene Einwände
   assert.ok(/const EINSPRUCH_TAGE = 7;/.test(server), "Einspruchsfrist 7 Tage fehlt");
   assert.ok(/if \(offeneEinwaende > 0\) return "einwand";/.test(server), "offener Einwand darf nicht als genehmigt gelten");
@@ -3961,7 +3961,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/onclick="ekfUmschalten\(\)" title="Eingang filtern/.test(html) && /class="pr-filter-zu" onclick="ekfUmschalten\(false\)"/.test(html) && /const ekfPasst = \(x\) =>/.test(html) && /zeig\.map\(\(\[x, i\]\) =>/.test(html), "Filter mit 🔽, ✕ und gefilterter Liste (Index bleibt)");
   assert.ok(/📅 Jahr\$\{wahl\("jahr"/.test(html) && /🗓️ Monat\$\{wahl\("monat"/.test(html) && /🏷️ Art\$\{wahl\("art"/.test(html) && /👤 Name\$\{wahl\("wer"/.test(html), "Jahr, Monat, Art, Name");
   assert.ok((html.match(/P\.push\(\{ wer: /g) || []).length >= 10, "Einträge tragen Name + Datum");
-  assert.ok(/case "dienst_uebersicht": \{\s*nurLeitung\(ich\);/.test(server) && /case "dienst_ablegen": \{\s*nurLeitung\(ich\);/.test(server), "nur Clubleitung");
+  assert.ok(/case "dienst_uebersicht": \{[\s\S]{0,400}const leitung = !!\(ich\.vorstand \|\| ich\.admin\);/.test(server) && /case "dienst_ablegen": \{\s*nurLeitung\(ich\);/.test(server), "Ablegen nur Clubleitung; Übersicht seit 2.501.0 für Mitglieder gefiltert (KC-CLUB-DV-MITGLIEDER)");
   const ab = server.slice(server.indexOf('case "dienst_ablegen": {'), server.indexOf('case "eingang_dienstwunsch": {'));
   assert.ok(/vereinsOrdner\(DIENSTPLAN_ORDNER, jahr, DIENST_REG\.wunsch\)/.test(ab) && /persoenlicherOrdner\(r\.person_id, doku\.wer, jahr, DIENST_REG\.persoenlich\)/.test(ab) && /if \(schon\.has\(/.test(ab) && /startsWith\("KC-P-TEST"\)/.test(ab), "Ordner des Mitglieds + Büro, nichts doppelt, ohne Testpersonen");
   assert.ok(/persoenlich: "Dienstpläne"/.test(server) && /titel: "Dienstpläne", farbe: 5, register: \["Wünsche", "Gesamtplan", "Sonstiges"\]/.test(server), "Register Dienstpläne / Büro-Ordner Dienstpläne");
@@ -5905,7 +5905,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|499|501)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6951,6 +6951,47 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const ak = html.slice(html.indexOf("const akHeute"), html.indexOf("const akHeute") + 400);
   assert.ok(/getMonth\(\) === 11/.test(ak), "Laufband-Erinnerung nur im Dezember");
 }
+// 2.499.0 KC-CLUB-PROTOKOLL-NACHTRAG (Wunsch Hansi „Ich will nicht manuell eintragen“): abgelegter Text wird per Tipp übernommen – nie ungeprüft
+{
+  const mig = lies("supabase/migrations/20261019_kc_club_protokoll_nachtrag.sql");
+  assert.ok(/enable row level security/i.test(mig) && /grant [^;]* to service_role/i.test(mig) && !/to (anon|authenticated)/i.test(mig), "Nachtrags-Tabelle nur über den Server erreichbar");
+  assert.ok(/on delete cascade/i.test(mig) && /feld in \('kurzfassung', ?'beschluesse'\)/.test(mig), "Nachtrag hängt am Protokoll, nur zwei Felder");
+  const c = server.slice(server.indexOf('case "protokoll_nachtrag": {'), server.indexOf('case "protokoll_speichern": {'));
+  assert.ok(/nurProtokolle\(ich\);/.test(c) && /if \(!darfBearbeiten\(ich, pr\)\) throw/.test(c), "gleiche Rechte wie Protokoll schreiben");
+  assert.ok(/if \(pr\.status !== "entwurf"\) throw/.test(c), "veröffentlichte Protokolle bleiben unverändert");
+  assert.ok(c.indexOf('.is("uebernommen_am", null).is("verworfen_am", null).select("id")') < c.indexOf('update(upd)'), "Vorschlag erst beanspruchen – Doppeltipp hängt nie zweimal an");
+  assert.ok(/if \(fehlerUpd\) \{\s*await db\.from\("kc_club_protokoll_nachtrag"\)\.update\(\{ uebernommen_am: null/.test(c), "misslungenes Übernehmen gibt den Vorschlag wieder frei");
+  assert.ok(/if \(neu\.length > 4000\) throw/.test(c) && /\.slice\(0, 40\)/.test(c), "Grenzen wie beim normalen Speichern");
+  assert.ok(/nachtraege: bearb && pr\.status === "entwurf" \?/.test(server), "Vorschläge nur für wer bearbeiten darf, nur im Entwurf");
+  assert.ok(/\$\{prNachtraegeHtml\(\)\}/.test(html) && /prNachtrag\(\$\{jsArg\(n\.id\)\}, 'uebernehmen'\)/.test(html), "Knopf ✅ Übernehmen im Protokoll-Formular");
+  const f = html.slice(html.indexOf("async function prNachtrag(id, wahl) {"), html.indexOf("function protokollFormular() {"));
+  assert.ok(/if \(wahl === "verwerfen" && !\(await frage\(/.test(f) && f.indexOf("prSpeichernJetzt(false)") < f.indexOf('api("protokoll_nachtrag"'), "Verwerfen fragt nach; eigene Eingaben werden vorher gespeichert");
+}
+
+// 2.500.0 KC-CLUB-DV-UEBERALL (Wunschliste Nr. 27): 📊 Dienstzeiten-Übersicht mit demselben Knopf überall, wo der Dienstplan aufgeht
+{
+  assert.ok(/const dvDarf = \(\) => !!ICH;/.test(html), "Knopf für alle angemeldeten Mitglieder (2.501.0 KC-CLUB-DV-MITGLIEDER), Server filtert");
+  const knopf = html.match(/const dvKnopf = \(\) => dvDarf\(\) \? `([^`]+)` : "";/);
+  assert.ok(knopf && /onclick="dvStart\(\)"/.test(knopf[1]) && /aria-label="Dienstzeiten-Übersicht">📊</.test(knopf[1]), "ein Knopf für alle Stellen");
+  assert.ok(/<b>📥 Eingang[^\n]*\$\{dvKnopf\(\)\}/.test(html), "Büro-Eingang nutzt denselben Knopf");
+  assert.ok(/🗓️ Mein Dienst<\/h3>\$\{dvKnopf\(\)\}/.test(html), "Mein Dienst");
+  assert.ok(/<div class="dw-reihe2"><details class="dw-tipp">[\s\S]*?<\/details>\$\{dvKnopf\(\)\}<\/div>/.test(html) && /if \(\$\("dwFenster"\)\) f\.style\.zIndex = "2100";/.test(html), "Dienstwünsche – Übersicht liegt über dem Vollbild-Fenster");
+  assert.ok(/<h2>🗓️ Dienstpläne<\/h2><button type="button" id="dpUebersicht" class="[^"]*versteckt"[^>]*onclick="dvStart\(\)"[^>]*>📊<\/button>/.test(html) && /\$\("dpUebersicht"\)\?\.classList\.toggle\("versteckt", !dvDarf\(\)\);/.test(html), "Dienstpläne – Knopf erst nach dem Laden sichtbar");
+}
+
+// 2.501.0 KC-CLUB-DV-MITGLIEDER (Wunsch Hansi „auch eine Fassung für die Mitglieder“): Mitglieder sehen nur sich und wer freigegeben hat
+{
+  const c = server.slice(server.indexOf('case "dienst_uebersicht": {'), server.indexOf('case "dienst_ablegen": {'));
+  assert.ok(/const leitung = !!\(ich\.vorstand \|\| ich\.admin\);/.test(c), "Leitung erkennt der Server selbst");
+  assert.ok(/&& \(leitung \|\| x\.person_id === ich\.person_id \|\| x\.share_with_colleagues === true \|\| freigegeben\.has\(x\.person_id\)\)\);/.test(c), "Mitglieder: nur ich + wer das Teilen erlaubt hat (Regel wie in „dienste“)");
+  assert.ok(/if \(error \|\| frFehler\) throw new Fehler\(/.test(c), "Freigaben nicht lesbar → Fehler statt alle zeigen (Regel 11)");
+  const mg = c.slice(c.indexOf("if (!leitung) return json("), c.indexOf("// KC-CLUB-DW-FEHLT"));
+  assert.ok(mg.includes("nurFreigegeben: true") && !/fehlen|revision|status|zuletzt/.test(mg), "Mitglieder-Antwort ohne „wer fehlt“, Status, Zeitstempel");
+  const ab = server.slice(server.indexOf('case "dienst_ablegen": {'), server.indexOf('case "dienst_ablegen": {') + 200);
+  assert.ok(/nurLeitung\(ich\);/.test(ab) && /case "dw_erinnern"[\s\S]{0,200}nurLeitung\(ich\)/.test(server), "Ablegen/Erinnern bleiben bei der Clubleitung");
+  assert.ok(/\$\{DV\.daten\?\.nurFreigegeben \? "" : '<button class="knopf klein" onclick="dvAblegen\(\)">/.test(html) && /DV\.daten\?\.nurFreigegeben \? `<div class="karte innen dv-fehlt">👁️ Du siehst deine eigenen Zeiten/.test(html), "App: Hinweis statt Ablegen-Knopf");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
