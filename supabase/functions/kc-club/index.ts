@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.496.0";
+const SERVER_VERSION = "2.504.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -355,6 +355,27 @@ async function objAnlagenSetzen(ich: { person_id: string }, art: string, objektI
   const { error } = await db.from("kc_club_objekt_anlagen").insert(eigene.map((attachment_id, i) => ({ art, objekt_id: objektId, attachment_id, reihenfolge: i })));
   if (error) throw new Fehler("Gespeichert – aber die Anlage konnte nicht angehängt werden. Bitte noch einmal versuchen.", 500);
   return eigene.length;
+}
+// KC-CLUB-VORSCHLAG-BEARBEITEN (Wunsch Hansi 19.10.2026 „Vorschläge verändern und dann die Anlagen dazu packen“): Anlagen eines Eintrags
+// neu festlegen. Bleiben dürfen die schon angehängten (auch von anderen), neu dazu nur selbst hochgeladene – wie beim Anlegen.
+async function objAnlagenErsetzen(ich: { person_id: string }, art: string, objektId: string, roh: unknown) {
+  const ids = [...new Set((Array.isArray(roh) ? roh : []).map((x) => String(x)).filter((x) => /^[0-9a-f-]{36}$/i.test(x)))].slice(0, OBJ_ANLAGEN_MAX);
+  const { data: alt, error: ae } = await db.from("kc_club_objekt_anlagen").select("attachment_id").eq("art", art).eq("objekt_id", objektId);
+  if (ae) throw new Fehler("Anlagen konnten nicht geladen werden – bitte noch einmal versuchen.", 500);
+  const bisher = new Set((alt ?? []).map((x: any) => String(x.attachment_id)));
+  const kandidaten = ids.filter((id) => !bisher.has(id));
+  const { data: att } = kandidaten.length ? await db.from("kc_communication_attachments").select("id,object_path").in("id", kandidaten) : { data: [] as any[] };
+  const erlaubt = ids.filter((id) => bisher.has(id) || (att ?? []).some((a: any) => a.id === id && String(a.object_path).startsWith(`club/${ich.person_id}/`)));
+  const weg = [...bisher].filter((id) => !erlaubt.includes(id));
+  if (erlaubt.length) {
+    const { error } = await db.from("kc_club_objekt_anlagen").upsert(erlaubt.map((attachment_id, i) => ({ art, objekt_id: objektId, attachment_id, reihenfolge: i })), { onConflict: "art,objekt_id,attachment_id" });
+    if (error) throw new Fehler("Gespeichert – aber die Anlagen konnten nicht angehängt werden. Bitte noch einmal versuchen.", 500);
+  }
+  if (weg.length) {
+    const { error } = await db.from("kc_club_objekt_anlagen").delete().eq("art", art).eq("objekt_id", objektId).in("attachment_id", weg);
+    if (error) throw new Fehler("Gespeichert – aber eine Anlage konnte nicht entfernt werden. Bitte noch einmal versuchen.", 500);
+  }
+  return { anzahl: erlaubt.length, neu: erlaubt.filter((id) => !bisher.has(id)).length, entfernt: weg.length };
 }
 async function objAnlagenHolen(art: string, objektIds: string[]): Promise<Map<string, any[]>> {
   const m = new Map<string, any[]>(); if (!objektIds.length) return m;
@@ -1367,7 +1388,7 @@ async function feedbackArchivieren(ich: Ich, grund: string, nurPerson: string | 
 const KA_ID = /^[a-z0-9_-]{1,30}$/;
 const kaIds = (v: unknown) => [...new Set((Array.isArray(v) ? v : []).filter((x) => typeof x === "string" && KA_ID.test(x)))].slice(0, 50) as string[];
 // KC-CLUB-EMPFANGS-EFFEKT (2.177.0): mit welchem Effekt meine Nachrichten beim Empfänger ankommen (Wahl unter 🎨 Darstellung)
-const SENDE_EFFEKT_ARTEN = ["flieger", "taube", "postauto", "fahrrad", "flasche", "rakete", "ballon", "muenchhausen", "wechsel", "aus"]; // 2.362.0: + Fahrrad, Flaschenpost, Rakete, Ballon · 2.363.0: + Münchhausen
+const SENDE_EFFEKT_ARTEN = ["flieger", "taube", "postauto", "fahrrad", "flasche", "rakete", "ballon", "uhu", "muenchhausen", "wechsel", "aus"]; // 2.362.0: + Fahrrad, Flaschenpost, Rakete, Ballon · 2.363.0: + Münchhausen
 const MAHNUNG_TAGE = 5; // KC-CLUB-NACHRICHT-MAHNUNG (2.223.0): ab so vielen Tagen ungelesen blinkt die Nachrichten-Kachel
 const RC_EIGENE_MAX = 12; // KC-CLUB-REISE-CHECKLISTE (2.223.0): eigene Punkte je Reise
 const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
@@ -3963,6 +3984,7 @@ async function vorschlaegeListe(ich: Ich) {
       ziel: v.ziel_text || null, fuerMich: !v.ziel_ids || v.ziel_ids.includes(ich.person_id),
       darfAbschliessen: v.status === "offen" && (ich.vorstand || (eigener && unterstuetzbar(v.art))),
       darfZurueckziehen: v.status === "offen" && (ich.vorstand || eigener),
+      darfBearbeiten: v.status === "offen" && (ich.vorstand || eigener), // KC-CLUB-VORSCHLAG-BEARBEITEN
       // löschen: Organisation immer; wer ihn gemacht hat, solange niemand sonst abgestimmt/unterstützt hat
       darfLoeschen: ich.vorstand || (eigener && !s.some((x: any) => x.person_id !== ich.person_id) && !(geh ?? []).some((g: any) => g.vorschlag_id === v.id)),
     };
@@ -6660,11 +6682,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const pStumm = pEinst.then((r: any) => ({ data: r.error ? null : (r.data ?? []).find((x: any) => x.schluessel === "stumm") ?? null }));
         const pAufgaben = (async () => {
           // KC-CLUB-AUFGABEN / KC-CLUB-PROTOKOLLE: meine offenen Aufgaben, ungelesene Protokolle
-          let meineAufgaben: any[] = [], protokolleUngelesen = 0;
-          if (!ich.protokolle) return { meineAufgaben, protokolleUngelesen };
+          let meineAufgaben: any[] = [], protokolleUngelesen = 0, protokollNeu: any = null;
+          if (!ich.protokolle) return { meineAufgaben, protokolleUngelesen, protokollNeu };
           const [{ data: au }, { data: pv }] = await Promise.all([
             db.from("kc_club_aufgaben").select("id,text,faellig,protokoll_id").eq("person_id", ich.person_id).is("erledigt_am", null).order("faellig", { nullsFirst: false }).limit(30),
-            db.from("kc_club_sitzungsprotokolle").select("id,status,version").eq("status", "veroeffentlicht").gte("veroeffentlicht_am", new Date(Date.now() - 180 * 86400000).toISOString()),
+            db.from("kc_club_sitzungsprotokolle").select("id,status,version,titel,datum,veroeffentlicht_am").eq("status", "veroeffentlicht").gte("veroeffentlicht_am", new Date(Date.now() - 180 * 86400000).toISOString()),
           ]);
           const pids = [...new Set((au ?? []).map((x: any) => x.protokoll_id).filter(Boolean))], vids = (pv ?? []).map((x: any) => x.id);
           const [{ data: ap }, { data: gl }] = await Promise.all([ // beide hängen nur von der ersten Runde ab → gleichzeitig
@@ -6674,8 +6696,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const apm = new Map((ap ?? []).map((x: any) => [x.id, x]));
           meineAufgaben = (au ?? []).filter((x: any) => !x.protokoll_id || (apm.get(x.protokoll_id) as any)?.status === "veroeffentlicht")
             .map((x: any) => ({ id: x.id, text: x.text, faellig: x.faellig, protokoll: x.protokoll_id ? (apm.get(x.protokoll_id) as any)?.titel : null }));
-          protokolleUngelesen = (pv ?? []).filter((x: any) => !(gl ?? []).some((g: any) => g.protokoll_id === x.id && g.version >= x.version)).length;
-          return { meineAufgaben, protokolleUngelesen };
+          const ungelesen = (pv ?? []).filter((x: any) => !(gl ?? []).some((g: any) => g.protokoll_id === x.id && g.version >= x.version));
+          protokolleUngelesen = ungelesen.length;
+          // KC-CLUB-PROTOKOLL-NEU-INFO (Wunsch Hansi 19.10.2026 „In die Info: Neues Besprechungsprotokoll eingestellt“): Titel des neuesten ungelesenen
+          const n: any = ungelesen.sort((a: any, b: any) => String(b.veroeffentlicht_am || "").localeCompare(String(a.veroeffentlicht_am || "")))[0];
+          protokollNeu = n ? { id: n.id, titel: n.titel, datum: n.datum } : null;
+          return { meineAufgaben, protokolleUngelesen, protokollNeu };
         })();
         const pTermin = (async () => {
           // KC-CLUB-TERMINFINDUNG: offene Umfragen, bei denen ich noch nichts angekreuzt habe
@@ -6810,7 +6836,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0): heute mein (freigegebener) Geburtstag → Ständchen in der App + Zettel für alle
         const meinGeburtstag = geburtstageHeute.some((g) => g.person_id === ich.person_id);
         if (meinGeburtstag) await geburtstagZettel(ich, berlinTag(new Date())).catch((e) => console.error("geburtstag zettel", String(e)));
-        const { meineAufgaben, protokolleUngelesen } = await pAufgaben; // 2.155.0: früh gestartet
+        const { meineAufgaben, protokolleUngelesen, protokollNeu } = await pAufgaben; // 2.155.0: früh gestartet
         const { data: kf } = await pKf;
         const terminfindungOffen = await pTermin;
         const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen, starts, eiFristen, { count: fbAnzahl }, anrufAntw] = await pRest;
@@ -6826,7 +6852,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -7486,6 +7512,32 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         } else throw new Fehler("Unbekannter Status.");
         await protokoll(ich.person_id, "vorschlag_" + p.status, { vorschlag: v.id, versand });
         return json({ ok: true, versand });
+      }
+
+      // KC-CLUB-VORSCHLAG-BEARBEITEN (Wunsch Hansi 19.10.2026): Thema/Frage, Beschreibung, Termin und Anlagen nachträglich ändern.
+      // Darf, wer ihn gemacht hat, oder die Clubleitung – solange er offen ist. Ohne Benachrichtigung; der alte Stand steht im Protokoll.
+      // Bei Abstimmungen bleibt die Frage nach der ersten Stimme fest (sonst stimmten Leute über etwas anderes ab).
+      case "vorschlag_aendern": {
+        const { data: v } = await db.from("kc_club_vorschlaege").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!v) throw new Fehler("Vorschlag nicht gefunden.", 404);
+        if (v.status !== "offen") throw new Fehler("Erledigte oder zurückgezogene Vorschläge lassen sich nicht mehr ändern.", 409);
+        if (!ich.vorstand && v.erstellt_von !== ich.person_id) throw new Fehler("Ändern darf, wer den Vorschlag gemacht hat, oder Clubsprecher/Kassenwart.", 403);
+        const titel = txt(p.titel, 150) || (v.art === "spende" ? v.titel : "");
+        if (!titel) throw new Fehler("Bitte ein Thema bzw. eine Frage eingeben.");
+        if (v.art === "abstimmung" && titel !== v.titel) {
+          const [{ count: n1 }, { count: n2 }] = await Promise.all([
+            db.from("kc_club_stimmen").select("vorschlag_id", { count: "exact", head: true }).eq("vorschlag_id", v.id),
+            db.from("kc_club_geheime_stimmen").select("vorschlag_id", { count: "exact", head: true }).eq("vorschlag_id", v.id),
+          ]);
+          if ((n1 ?? 0) + (n2 ?? 0) > 0) throw new Fehler("Die Frage lässt sich nach der ersten Stimme nicht mehr ändern – Beschreibung und Anlagen schon.", 409);
+        }
+        const neu: Record<string, unknown> = { titel, beschreibung: txt(p.beschreibung, 2000) || null };
+        if ("treffen_id" in p) neu.treffen_id = p.treffen_id ? String(p.treffen_id) : null;
+        const { error } = await db.from("kc_club_vorschlaege").update(neu).eq("id", v.id).eq("status", "offen");
+        if (error) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        const anlagen = Array.isArray(p.anlagen) ? await objAnlagenErsetzen(ich, "vorschlag", v.id, p.anlagen) : null;
+        await protokoll(ich.person_id, "vorschlag_geaendert", { vorschlag: v.id, vorher: { titel: v.titel, beschreibung: v.beschreibung, treffen_id: v.treffen_id }, anlagen });
+        return json({ ok: true, anlagen });
       }
 
       case "vorschlag_loeschen": {
@@ -11832,11 +11884,21 @@ Köcheclub Werne`,
         return json({ ok: true, erinnert: ziel.length, namen: ziel.map((m) => m.display_name) });
       }
       case "dienst_uebersicht": {
-        nurLeitung(ich);
-        const { data: rows, error } = await db.from("kc_dp_wish_inbox").select("id,person_id,revision,status,entries,updated_at,taken_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source", "club_app").limit(300);
-        if (error) throw new Fehler("Die Dienstzeiten konnten gerade nicht geladen werden.", 503); // Regel 11: unbekannt ≠ leer
-        const liste = (rows ?? []).filter((x: any) => !String(x.person_id).startsWith("KC-P-TEST"));
+        // KC-CLUB-DV-MITGLIEDER (2.501.0, Wunsch Hansi „auch eine Fassung für die Mitglieder“): die Clubleitung sieht alle; Mitglieder sehen sich
+        // selbst und nur, wer das Teilen erlaubt hat – dieselbe Regel wie bei den Wunschzeiten in „dienste“. „Wer fehlt noch“ bleibt bei der Leitung.
+        const leitung = !!(ich.vorstand || ich.admin);
+        const [{ data: rows, error }, { data: fr, error: frFehler }] = await Promise.all([
+          db.from("kc_dp_wish_inbox").select("id,person_id,revision,status,entries,updated_at,taken_at,share_with_colleagues").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source", "club_app").limit(300),
+          leitung ? Promise.resolve({ data: [] as any[], error: null }) : db.from("kc_club_freigaben").select("person_id").eq("bereich", "dienstzeiten").eq("erlaubt", true),
+        ]);
+        if (error || frFehler) throw new Fehler("Die Dienstzeiten konnten gerade nicht geladen werden.", 503); // Regel 11: unbekannt ≠ leer
+        const freigegeben = new Set((fr ?? []).map((x: any) => x.person_id));
+        const liste = (rows ?? []).filter((x: any) => !String(x.person_id).startsWith("KC-P-TEST")
+          && (leitung || x.person_id === ich.person_id || x.share_with_colleagues === true || freigegeben.has(x.person_id)));
         const leute = await personen(liste.map((x: any) => x.person_id));
+        if (!leitung) return json({ nurFreigegeben: true, veranstaltung: DW.name, personen: liste.map((x: any) => ({ id: x.id, name: leute.get(x.person_id)?.display_name || x.person_id, ich: x.person_id === ich.person_id,
+          eintraege: (x.entries ?? []).filter((e: any) => DW.typen.includes(e?.wishType) && /^\d{4}-\d{2}-\d{2}$/.test(String(e?.date)) && Number.isFinite(Number(e?.start)) && Number.isFinite(Number(e?.end)))
+            .map((e: any) => ({ d: e.date, s: Number(e.start), e: Number(e.end), t: e.wishType })) })) });
         // KC-CLUB-DW-FEHLT (2.222.0, Wunsch Hansi): wer hat noch nichts abgegeben (nur Einsammeln – geplant wird in DP2)
         const abgegeben = new Set(liste.map((x: any) => x.person_id));
         const fehlen = (await aktiveMitglieder()).filter((m) => !abgegeben.has(m.person_id)).map((m) => ({ person_id: m.person_id, name: m.display_name }));
@@ -12551,7 +12613,44 @@ Köcheclub Werne`,
           fassungen: fa ?? [], darfBearbeiten: bearb, darfLoeschen: darfProtokollLoeschen(ich, pr), eigen: pr.verfasser === ich.person_id,
           schreiber: bearb ? (await protokollLeser()) : [],
           naechsterVorschlag: bearb ? await protokollNaechsterVorschlag(pr) : null, // KC-CLUB-PROTOKOLL-NAECHSTER-TERMIN (1.84.0)
+          // KC-CLUB-PROTOKOLL-NACHTRAG (2.499.0): abgelegte Texte (z. B. aus Hansis Diktat über Claude) – nur für wer bearbeiten darf, nur im Entwurf
+          nachtraege: bearb && pr.status === "entwurf" ? ((await db.from("kc_club_protokoll_nachtrag").select("id,feld,text,quelle,erstellt_am").eq("protokoll_id", pr.id)
+            .is("uebernommen_am", null).is("verworfen_am", null).order("erstellt_am")).data ?? []) : [],
         });
+      }
+
+      // KC-CLUB-PROTOKOLL-NACHTRAG (2.499.0, Wunsch Hansi „Ich will nicht manuell eintragen“): abgelegten Text mit einem Tipp übernehmen (hinten an
+      // die Kurzfassung bzw. als Beschluss-Zeilen) oder verwerfen. Gleiche Rechte wie protokoll_speichern; nie ungeprüft ins Protokoll.
+      case "protokoll_nachtrag": {
+        nurProtokolle(ich);
+        const { data: n } = await db.from("kc_club_protokoll_nachtrag").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!n || n.uebernommen_am || n.verworfen_am) throw new Fehler("Dieser Vorschlag ist schon erledigt.", 409);
+        const pr = await protokollHolen(n.protokoll_id);
+        if (!darfBearbeiten(ich, pr)) throw new Fehler("Übernehmen darf nur, wer das Protokoll schreibt (oder Clubsprecher/Kassenwart).", 403);
+        if (p.wahl === "verwerfen") {
+          await db.from("kc_club_protokoll_nachtrag").update({ verworfen_am: jetzt(), erledigt_von: ich.person_id }).eq("id", n.id).is("uebernommen_am", null);
+          await protokoll(ich.person_id, "sitzungsprotokoll_nachtrag", { protokoll: pr.id, nachtrag: n.id, wahl: "verworfen" });
+          return json({ ok: true });
+        }
+        if (pr.status !== "entwurf") throw new Fehler("Das Protokoll ist veröffentlicht – bitte erst „Korrigieren“ tippen.", 409);
+        const upd: any = { geaendert_am: jetzt() };
+        if (n.feld === "beschluesse") upd.beschluesse = [...(pr.beschluesse ?? []), ...String(n.text).split("\n").map((x) => txt(x, 300)).filter(Boolean)].slice(0, 40);
+        else {
+          const neu = [String(pr.kurzfassung ?? "").trim(), String(n.text).trim()].filter(Boolean).join("\n\n");
+          if (neu.length > 4000) throw new Fehler("Die Kurzfassung würde zu lang (über 4000 Zeichen) – bitte vorher kürzen.");
+          upd.kurzfassung = neu;
+        }
+        // erst den Vorschlag für sich beanspruchen (nur wenn noch offen) – ein Doppeltipp hängt den Text so nie zweimal an
+        const { data: frei } = await db.from("kc_club_protokoll_nachtrag").update({ uebernommen_am: jetzt(), erledigt_von: ich.person_id }).eq("id", n.id)
+          .is("uebernommen_am", null).is("verworfen_am", null).select("id");
+        if (!frei?.length) throw new Fehler("Dieser Vorschlag ist schon erledigt.", 409);
+        const { error: fehlerUpd } = await db.from("kc_club_sitzungsprotokolle").update(upd).eq("id", pr.id);
+        if (fehlerUpd) {
+          await db.from("kc_club_protokoll_nachtrag").update({ uebernommen_am: null, erledigt_von: null }).eq("id", n.id);
+          throw new Fehler("Übernehmen hat nicht geklappt – bitte gleich noch einmal tippen.", 503);
+        }
+        await protokoll(ich.person_id, "sitzungsprotokoll_nachtrag", { protokoll: pr.id, nachtrag: n.id, wahl: "uebernommen", feld: n.feld });
+        return json({ ok: true });
       }
 
       case "protokoll_speichern": {

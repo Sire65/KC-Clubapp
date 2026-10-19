@@ -952,6 +952,12 @@
   body.rg-an .blatt:not(.rg-zeigen) { display: none !important; } /* Fenster, die während des Rundgangs aufgehen, warten bis danach (außer vorgeführte) */
   .einw-karte .einw-kopf { font-size: .8rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--textGruen); }
   .einw-karte h3 { margin: 4px 0 6px; } .einw-karte p { margin: 0 0 10px; line-height: 1.45; }
+  /* KC-CLUB-EINW-KLAPPEN: Hilfetext einklappbar – eingeklappt bleibt nur die Kopfzeile */
+  .einw-karte .einw-kopf { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .einw-klapp { margin-left: auto; border: 1px solid var(--linie); background: var(--karte); color: var(--text); border-radius: 999px; padding: 3px 10px; font: inherit; font-size: .8rem; text-transform: none; letter-spacing: 0; cursor: pointer; }
+  .einw-karte.einw-zu { padding-top: 8px; padding-bottom: 8px; }
+  .einw-karte.einw-zu > :not(.einw-kopf) { display: none; }
+  .einw-karte.einw-zu .vorlese-knopf { display: none; }
   /* KC-CLUB-INKOGNITO (2.3.0) */
   .inko-marke { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 9px; background: #34495e; color: #fff; font-size: .8rem; line-height: 1.4; vertical-align: middle; }
   textarea.hl-notiz { min-height: 8.5em; font-size: 1.02rem; line-height: 1.4; }
@@ -980,7 +986,15 @@
   .ktag { height: 44px; border-radius: 10px; border: none; background: none; display: flex; flex-direction: column; align-items: center; padding: 5px 0 0; font-size: .95rem; cursor: pointer; color: var(--text); }
   .ktag.aus { color: var(--grau); opacity: .45; }
   .ktag.we { color: var(--rot2); }
-  .ktag.heute { outline: 2px solid var(--gold); font-weight: 800; }
+  .ktag.heute { position: relative; font-weight: 800; }
+  .fa-neu { border: 2px solid var(--gold); } .fa-neu .abschnitt { margin-top: 0; } /* 2.498.0 KC-CLUB-FOTOS-NEU-INFO */
+  .fk-neu { position: absolute; left: 4px; top: 4px; padding: 1px 6px; border-radius: 999px; background: var(--rot); color: #fff; font-size: .62rem; font-weight: 800; letter-spacing: .03em; }
+  /* 2.497.0 KC-CLUB-KALENDER-HEUTE-BLINKT (Wunsch Hansi „der aktuelle Tag langsam blinkt, damit man ihn sofort sieht“): goldener Ring pulsiert sanft
+     (2,4 s, kein hartes Flackern); als eigener Ring, damit Farben (Treffen, Feiertag …) und die Auswahl erhalten bleiben. Bei „Bewegung reduzieren“ ruhig. */
+  .ktag.heute::after { content: ""; position: absolute; inset: -5px; border-radius: 14px; border: 3px solid #e0b25a; pointer-events: none; z-index: 1;
+    background: rgba(224, 178, 90, .18); animation: kalHeute 2.4s ease-in-out infinite; }
+  @keyframes kalHeute { 0%, 100% { opacity: 1; box-shadow: 0 0 12px 3px rgba(224, 178, 90, .75); } 50% { opacity: .15; box-shadow: 0 0 0 0 rgba(224, 178, 90, 0); } }
+  @media (prefers-reduced-motion: reduce) { .ktag.heute::after { animation: none; } }
   .ktag.geb { background: var(--lilabg); color: var(--lila); font-weight: 900; }
   .ktag.frist { background: var(--gelbbg); color: var(--gelb); font-weight: 900; }
   .ktag.dienst { background: var(--blaubg); color: var(--blau); font-weight: 900; }
@@ -1059,6 +1073,12 @@
   #v-start .hero.halb-eingerollt > #heroInfo, #v-start .hero.halb-eingerollt > #infoPunkte { display: none; }
   .rollo-lamellen { position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none; display: flex; flex-direction: column; gap: 1px; padding-top: 1px; background: rgba(60,10,20,.35); }
   .rl-lamelle { flex: none; height: 15px; transform-origin: center; background: linear-gradient(to bottom, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+  /* KC-CLUB-KOPF-EFFEKTE: Lamellenvorhang (senkrecht, zu den Seiten) und Climber (waagerecht, klappt hoch) */
+  .kopf-effekt { position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none; overflow: hidden; perspective: 600px; }
+  .ke-vorhang { display: flex; gap: 1px; background: rgba(60,10,20,.25); }
+  .ke-vorhang .ke-lamelle { flex: 1; transform-origin: center; background: linear-gradient(to right, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 1px 0 2px rgba(0,0,0,.35); }
+  .ke-climber .ke-lamelle { position: absolute; left: 0; right: 0; top: 0; height: 15px; transform-origin: top center; background: linear-gradient(to bottom, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+  .ke-wahl { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; }
   .rollo-leiste { position: absolute; left: 0; right: 0; bottom: 0; height: 9px; z-index: 2; pointer-events: none; background: linear-gradient(to bottom, #a8364a, #6d1424); box-shadow: 0 -1px 3px rgba(0,0,0,.4); }
   .hero { background: var(--heroverlauf, linear-gradient(135deg, var(--hero1) 0%, var(--rot) 45%, var(--rot2) 75%, var(--hero4) 100%)); color: #fff; border-radius: 26px; padding: 18px; box-shadow: 0 12px 30px var(--heroschatten); }
   .kopfzeile { display: flex; align-items: flex-start; gap: 12px; }
@@ -4477,6 +4497,11 @@
   .app-laedt-lang { max-width: 320px; font-size: 1rem; color: #4a2a20; }
   .app-laedt-lang button { margin-top: 10px; min-height: 44px; padding: 8px 18px; border: 0; border-radius: 12px; background: #741521; color: #fff; font-size: 1rem; font-weight: 700; }
   body:has(#app:not(.versteckt)) #appLaedt, body:has(#gesperrt:not(.versteckt)) #appLaedt { display: none; }
+  /* 2.500.0 KC-CLUB-DV-UEBERALL: 📊 in den Dienstwünschen neben dem Tipp (oben ist auf schmalen Handys kein Platz) */
+  .dw-reihe2 { display: flex; gap: 8px; align-items: flex-start; } .dw-reihe2 > .dw-tipp { flex: 1; min-width: 0; } .dw-reihe2 > .pr-filter-knopf { flex: none; }
+  /* 2.499.0 KC-CLUB-PROTOKOLL-NACHTRAG */
+  .pr-nachtrag { border: 2px solid var(--gold); } .pr-nt + .pr-nt { border-top: 1px solid var(--linie); margin-top: 10px; padding-top: 10px; }
+  .pr-nt-text { background: var(--karte2); border-radius: 10px; padding: 8px 10px; white-space: normal; line-height: 1.45; }
 </style>
 </head>
 <body>
@@ -4667,13 +4692,13 @@
     <div id="protokollListe"><div class="karte hinweis">Wird geladen …</div></div>
   </section>
   <section id="v-protokoll" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zurueck('protokolle')" aria-label="Zurück">‹</button><h2 id="prTitel">📄 Protokoll</h2><button type="button" class="druckknopf" title="Protokoll drucken / als PDF" aria-label="Drucken" onclick="druckStarten('protokoll')" id="druckProtokoll"></button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zurueck('protokolle')" aria-label="Zurück">‹</button><h2 id="prTitel">📄 Protokoll</h2><button type="button" class="druckknopf" title="Protokoll drucken / als PDF" aria-label="Drucken" onclick="prDrucken()" id="druckProtokoll"></button></div>
     <div id="protokollInhalt"></div>
   </section>
 
   <!-- DIENSTPLÄNE -->
   <section id="v-dienste" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>🗓️ Dienstpläne</h2></div>
+    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>🗓️ Dienstpläne</h2><button type="button" id="dpUebersicht" class="knopf klein pr-filter-knopf versteckt" style="margin-left:auto" onclick="dvStart()" title="Dienstzeiten-Übersicht (alle Namen und Tage)" aria-label="Dienstzeiten-Übersicht">📊</button></div>
     <!-- 2.411.0 KC-CLUB-DIENST-WER-KLAPPE (Wunsch Hansi „Klappbereich, damit man besser sieht, dass es unten weitergeht“): zugeklappt steht die Auswahl im Kopf -->
     <details class="karte" data-klappe="dp_wer" data-ohne-unten><summary>👥 Wen anzeigen? <span class="hinweis" id="dpWerKurz" style="font-weight:400"></span></summary>
       <div class="knoepfe" id="dpPersonen" style="margin-top:8px"><span class="hinweis">Wird geladen …</span></div>
@@ -5040,6 +5065,9 @@
     <details class="karte" data-klappe="effekte">
       <summary>✨ Effekte</summary>
       <div class="schalter"><div><b>✨ Animierte Knöpfe</b><div class="hinweis">Kacheln zoomen kurz beim Antippen, Reiter und „＋ Neu“ leuchten auf – aus: alles ruhig. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setAnimiert" onchange="einstellung('animiert', this.checked)"></div> <!-- 2.24.1 (Wunsch Hansi) -->
+      <!-- KC-CLUB-KOPF-EFFEKTE (Wunsch Hansi 19.10.2026): Effekt beim Ein-/Ausrollen des Kopfes – aus = Jalousie (Standard) -->
+      <div class="schalter"><div><b>🪟 Anderer Effekt beim Einrollen des Kopfes</b><div class="hinweis">Aus: Jalousie wie bisher. An: unten Lamellenvorhang, Climber oder Automatisch wählen. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setKopfEffekt" onchange="kopfEffektSpeichern({ an: this.checked })"></div>
+      <details class="abh-klappe" data-abh="setKopfEffekt"><summary>🪟 Effekt auswählen</summary><div id="kopfEffektWahl"></div></details>
       <div class="schalter"><div><b>🕰️ Uhr zur vollen Stunde</b><div class="hinweis">Solange die App offen ist, kommt zu jeder vollen Stunde die Uhr – Kuckuck, Big Ben, Kölner Dom und mehr (unten auswählen) – und schlägt so oft, wie es Uhr ist (nachts 22–7 Uhr ohne Ton). Antippen schließt sie. Gilt für dieses Gerät.</div></div><button type="button" class="knopf klein" onclick="kuckuckZeigen(kkJetzt().h, true)" title="Kuckucksuhr jetzt mit Ton zeigen">🔊 Probe</button><input type="checkbox" id="setKuckuck" onchange="einstellung('kuckuck', this.checked)"></div> <!-- 2.402.0 KC-CLUB-KUCKUCKSUHR -->
       <details class="su-wahl" data-abh="setKuckuck"><summary>🔔 Welche Uhr? <small class="hinweis">– jede Uhr zum Aufklappen, ▶ zum Anhören, mehrere = jede Stunde eine andere</small></summary><div id="stundenUhrWahl"></div></details> <!-- 2.467.0 KC-CLUB-STUNDENUHREN -->
       <div class="schalter versteckt" id="setAdventZeile"><div><b>🎄 Adventskalender</b><div class="hinweis">Vom 1. bis 24. Dezember jeden Tag ein Türchen mit einer Bastelanleitung für eine kleine süße Nascherei – Erinnerung oben im Info-Laufband. Aus: keine Erinnerung. Gilt für dieses Gerät.</div><button type="button" class="knopf klein" style="margin-top:6px" onclick="akZeigen()">🎄 Kalender ansehen</button></div><input type="checkbox" id="setAdvent" aria-label="Adventskalender an oder aus" onchange="einstellung('advent', this.checked)"></div> <!-- 2.468.0 KC-CLUB-ADVENTSKALENDER -->
@@ -5464,7 +5492,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.493.0" data-v="2.493.0"></script>
+<script src="app.js?v=2.503.0" data-v="2.503.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

@@ -1,12 +1,55 @@
 # Änderungen
 
-## Server 2.496.0 – 2026-10-19 (ohne App-Build) – Kachel-Zahlen in einer Abfrage (KC-CLUB-KACHEL-EINS, Stufe 2 Punkt 4)
+## Server 2.504.0 – 2026-10-19 (ohne App-Build) – Kachel-Zahlen in einer Abfrage (KC-CLUB-KACHEL-EINS, Stufe 2 Punkt 4)
 Wunsch Hansi („Punkt 4 bis 20 Uhr bauen“):
 - Die Zahlen auf den Kacheln 📅 Termine, 🤝 Helfen, 📷 Fotos und 🗓️ Dienste kommen beim App-Start aus EINER Datenbank-Abfrage (neue Lesefunktion `kc_club_kachel_zahlen`) statt aus bis zu 9. Gleiche Rechnung wie vorher; 🗂️ Büro wie bisher.
 - Schlägt die Funktion fehl, rechnet der Server wie bisher einzeln (alte Rechnung bleibt als Rückfall).
 - DB: `supabase/migrations/20261019_kc_club_kachel_zahlen.sql` (bereits eingespielt, nur lesend; nur der Server darf sie aufrufen).
-- Tests: `tools/db-sparsam/kachel-test.mjs` – echte Funktion in Postgres 16 im Speicher (PGlite), 400 Zufallswelten × 4 Personen/Rollen, alt = neu. Zusätzlich an den echten Daten nur lesend geprüft: 19 Mitglieder, 0 Abweichungen. Vertragstest-Block 2.496.0.
-- Rückweg: Server 2.495.0 erneut hochladen (die Funktion bleibt dann ungenutzt).
+- Tests: `tools/db-sparsam/kachel-test.mjs` – echte Funktion in Postgres 16 im Speicher (PGlite), 400 Zufallswelten × 4 Personen/Rollen, alt = neu. Zusätzlich an den echten Daten nur lesend geprüft: 19 Mitglieder, 0 Abweichungen. Vertragstest-Block Server 2.504.0.
+- Rückweg: Server 2.503.0 erneut hochladen (die Funktion bleibt dann ungenutzt).
+## 2.503.0 – 2026-10-19 – 🪟 Kopf-Effekte wählbar, 🦉 Uhu als Bote
+- Feature KC-CLUB-KOPF-EFFEKTE (Wunsch Hansi): unter ⚙️ → ✨ Effekte Häkchen „🪟 Anderer Effekt beim Einrollen des Kopfes“; Klappbereich mit Jalousie (Standard), Lamellenvorhang (zu den Seiten), Climber (Lamellen kippen und schieben sich nach oben) und Automatisch (wechselt), ▶ Ausprobieren. Ohne Häkchen bleibt die Jalousie.
+- Feature KC-CLUB-UHU (Wunsch Hansi): neuer Sende-Bote „🦉 Uhu mit Posttasche“ – blaue Briefträger-Mütze, Umhängetasche in Club-Farben; fliegt wie die Brieftaube, beim Empfänger fällt das Kuvert aus der Tasche. Auch bei „Abwechselnd“ dabei.
+- Server 2.503.0: `SENDE_EFFEKT_ARTEN` kennt „uhu“.
+
+## 2.502.0 – 2026-10-19 – Bündel 20 Uhr: Vorschläge bearbeiten, Protokoll drucken, Hilfetexte einklappen, Protokoll-Hinweis
+- Feature KC-CLUB-VORSCHLAG-BEARBEITEN (Wunsch Hansi): Knopf „✏️ Bearbeiten“ an offenen Vorschlägen (Ersteller und Clubleitung) – Thema, Beschreibung, Termin und Anlagen nachträglich ändern; vorhandene Anlagen bleiben (✕ entfernt), neue kommen dazu. Ohne Benachrichtigung, alter Stand im Protokoll; bei Abstimmungen bleibt die Frage nach der ersten Stimme fest. Server: `vorschlag_aendern`, `darfBearbeiten`.
+- Feature KC-CLUB-PROTOKOLL-DRUCKEN (Wunsch Hansi): „🖨️ Drucken / PDF“ im Protokoll-Entwurf und in der Leseansicht; der Entwurf wird vorher gespeichert und frisch geladen.
+- Feature KC-CLUB-EINW-KLAPPEN (Wunsch Hansi): alle Hilfetexte „🎓 Kurz erklärt“ lassen sich einklappen (Pfeil klappt wieder auf); gemerkt je Gerät.
+- Feature KC-CLUB-PROTOKOLL-NEU-INFO (Wunsch Hansi): im Info-Feld „Neues Besprechungsprotokoll eingestellt“ mit Titel – Antippen öffnet das Protokoll. Server liefert `protokollNeu` beim Start.
+- Server 2.502.0.
+
+## 2.501.0 – 2026-10-19 – 📊 Dienstzeiten-Übersicht für Mitglieder (KC-CLUB-DV-MITGLIEDER)
+- Feature KC-CLUB-DV-MITGLIEDER (Wunsch Hansi): Der 📊-Knopf steht jetzt auch für Mitglieder bereit. Mitglieder sehen ihre eigenen Zeiten und die der Mitglieder, die das Teilen erlaubt haben (gleiche Regel wie in „Dienstpläne“); „wer fehlt noch“, Erinnern und Ablegen bleiben bei der Clubleitung.
+- Server 2.501.0: `dienst_uebersicht` filtert für Nicht-Leitung serverseitig.
+
+## 2.500.0 – 2026-10-19 – 📊 Dienstzeiten-Übersicht überall beim Dienstplan (KC-CLUB-DV-UEBERALL)
+- Feature KC-CLUB-DV-UEBERALL (Wunschliste Nr. 27): Der 📊-Knopf aus dem Büro-Eingang steht jetzt auch in „Dienstpläne“, „Mein Dienst“ und den Dienstwünschen – gleicher Knopf, gleiches Recht (Clubleitung).
+
+## 2.499.0 – 2026-10-19 – Protokoll: diktierte Texte mit einem Tipp übernehmen (KC-CLUB-PROTOKOLL-NACHTRAG)
+- Feature KC-CLUB-PROTOKOLL-NACHTRAG: Texte, die Hansi diktiert und Claude als Vorschlag abgelegt hat, erscheinen oben im Protokoll-Entwurf; ✅ Übernehmen hängt sie an die Kurzfassung (bzw. als Beschluss-Zeilen), ✕ Verwerfen fragt nach. Nur wer das Protokoll bearbeiten darf, nur im Entwurf; Doppeltipp-sicher.
+- DB: neue Tabelle `kc_club_protokoll_nachtrag` (RLS an, nur service_role), Migration `20261019_kc_club_protokoll_nachtrag.sql`. Rückweg: `drop table public.kc_club_protokoll_nachtrag`.
+- Server 2.499.0: Aktion `protokoll_nachtrag`, `protokoll_laden` liefert `nachtraege`.
+
+## 2.498.0 – 2026-10-19 – 📸 „x neue Fotos hochgeladen“ im Info-Feld – direkt zu den neuen Fotos (KC-CLUB-FOTOS-NEU-INFO)
+Wunsch Hansi („Schreibe in die Info-Box ‚x neue Fotos hochgeladen‘ und dann bei Klick direkt dorthin“).
+- Im Info-Feld steht jetzt „📸 3 neue Fotos hochgeladen – Antippen: direkt zu den neuen Fotos“ (mit Knopf „📸 Ansehen“). Gezählt werden wie bisher Fotos anderer seit dem letzten Öffnen des Albums.
+- Antippen öffnet das Fotoalbum mit einem goldenen Kasten ganz oben: „🆕 3 neue Fotos – von Dieter, Klaus“ mit genau diesen Fotos (antippen = groß ansehen); im Raster darunter tragen sie zusätzlich ein rotes „NEU“. Die Seite scrollt direkt dorthin. Bisher landete man nur im Album und musste die neuen Fotos selbst suchen (sie stehen nach Aufnahmedatum, oft weiter unten).
+- Nur App, keine zusätzliche Datenbank-Abfrage.
+- Tests: Vertragstest grün; Browserprobe (Kasten mit 2 fremden neuen Fotos, eigenes Foto nicht gezählt, NEU-Marken, keine Fehler).
+
+## 2.497.0 – 2026-10-19 – ✨ Heutiger Tag im Kalender blinkt langsam (KC-CLUB-KALENDER-HEUTE-BLINKT)
+Wunsch Hansi („Baue ein, dass im Kalender der aktuelle Tag langsam blinkt, damit man ihn sofort sieht“).
+- Um den heutigen Tag pulsiert ein goldener Ring mit sanftem Schein (alle 2,4 Sekunden, kein hartes Flackern) – auch wenn der Tag gerade ausgewählt ist oder farbig markiert (Treffen, Feiertag, Geburtstag …); die Farben bleiben.
+- Bei „Bewegung reduzieren“ im Handy steht der Ring ruhig. Nur App.
+- Tests: Vertragstest grün; Browserprobe (Ring hell ↔ blass sichtbar).
+
+## 2.496.0 – 2026-10-19 – 🕑 Zeitumstellung und 🏛️ Werne-Wissen im Info-Feld (KC-CLUB-ZEITUMSTELLUNG-INFO, KC-CLUB-WERNE-WISSEN)
+Wunsch Hansi („Wird in der Info auf Uhrzeit umstellen hingewiesen?“ – bisher nur der Push am Samstag ab 18 Uhr).
+- Ab Donnerstag vor der Umstellung (letzter Sonntag im März/Oktober) steht im Info-Feld „🕑 In der Nacht zum Sonntag: Uhr zurückstellen“ (bzw. vorstellen), am Samstag gelb „Heute Nacht: Uhr zurückstellen – eine Stunde länger schlafen 😴“, am Sonntag „Seit heute Nacht Winterzeit – Backofen-, Auto- und Wanduhren schon umgestellt?“. Jedes Jahr von selbst berechnet.
+- Der Push am Samstag ab 18 Uhr bleibt. Hilfe-Eintrag „Erinnerung an die Zeitumstellung“ ergänzt. Nur App, keine zusätzliche Datenbank-Abfrage.
+- **Werne-Wissen (KC-CLUB-WERNE-WISSEN, Wunsch Hansi „in die Info einbauen“):** jeden Tag ein „🏛️ Wusstest du? …“ über Werne im Info-Feld (Lippe, Kreis Unna, Sim-Jü, Sole, Turmkater, St. Christophorus, Altes Rathaus, Gersteinwerk, Stadtteile, Wildgehege, Sprichwörterbrunnen …) – nur sichere Fakten, Jahreszahlen erst nach Prüfung. Antippen oder „🧩 Werne-Rätsel“ dreht die Bühne um und öffnet das Bilderrätsel „Wie gut kennst du …?“. Das Werne-Wissensquiz selbst ist vorgemerkt (Wunschliste #26).
+- Tests: Vertragstests (Zeitumstellung Oktober 2026/März 2027; Werne-Wissen täglich wechselnd, keine Jahreszahlen) grün.
 
 ## Server 2.495.0 – 2026-10-19 (ohne App-Build) – App-Start sparsamer, Stufe 2 Punkt 3 (KC-CLUB-START-SPARSAM-2)
 Wunsch Hansi („Bau die offenen Positionen noch, damit sie um 12:00 noch rübergehen“):
