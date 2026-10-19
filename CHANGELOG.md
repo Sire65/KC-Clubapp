@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.498.0 – 2026-10-19 – 📸 „x neue Fotos hochgeladen“ im Info-Feld – direkt zu den neuen Fotos (KC-CLUB-FOTOS-NEU-INFO)
+Wunsch Hansi („Schreibe in die Info-Box ‚x neue Fotos hochgeladen‘ und dann bei Klick direkt dorthin“).
+- Im Info-Feld steht jetzt „📸 3 neue Fotos hochgeladen – Antippen: direkt zu den neuen Fotos“ (mit Knopf „📸 Ansehen“). Gezählt werden wie bisher Fotos anderer seit dem letzten Öffnen des Albums.
+- Antippen öffnet das Fotoalbum mit einem goldenen Kasten ganz oben: „🆕 3 neue Fotos – von Dieter, Klaus“ mit genau diesen Fotos (antippen = groß ansehen); im Raster darunter tragen sie zusätzlich ein rotes „NEU“. Die Seite scrollt direkt dorthin. Bisher landete man nur im Album und musste die neuen Fotos selbst suchen (sie stehen nach Aufnahmedatum, oft weiter unten).
+- Nur App, keine zusätzliche Datenbank-Abfrage.
+- Tests: Vertragstest grün; Browserprobe (Kasten mit 2 fremden neuen Fotos, eigenes Foto nicht gezählt, NEU-Marken, keine Fehler).
+
 ## 2.497.0 – 2026-10-19 – ✨ Heutiger Tag im Kalender blinkt langsam (KC-CLUB-KALENDER-HEUTE-BLINKT)
 Wunsch Hansi („Baue ein, dass im Kalender der aktuelle Tag langsam blinkt, damit man ihn sofort sieht“).
 - Um den heutigen Tag pulsiert ein goldener Ring mit sanftem Schein (alle 2,4 Sekunden, kein hartes Flackern) – auch wenn der Tag gerade ausgewählt ist oder farbig markiert (Treffen, Feiertag, Geburtstag …); die Farben bleiben.

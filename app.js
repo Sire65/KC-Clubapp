@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.497.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.498.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -23837,7 +23837,8 @@ function ilMeldungen() {
   const dk = ilNachTreffen(t); if (dk) add(dk);
   for (const g of INIT?.geburtstageHeute || []) if (g.person_id !== ICH?.person_id) add({ id: "geb:" + g.person_id, stufe: "weiss", sym: "🎂", t: `${g.name} hat heute Geburtstag`, u: "Gratuliere mit einem Tipp", auf: `gratulieren('${esc(g.person_id)}', true)`, knoepfe: [["💬 Gratulieren", `gratulieren('${esc(g.person_id)}', true)`]] });
   // 2.441.0: „x Mitglieder online“ nicht hier – das zeigt schon das Feld „Mitglieder“ darunter (nichts doppelt)
-  if (kz.fotos > 0) add({ id: "fotos", stufe: "weiss", sym: "📸", t: kz.fotos === 1 ? "Ein neues Foto im Album" : `${kz.fotos} neue Fotos im Album`, u: "Antippen und ansehen", auf: "zeige('fotos')" });
+  // 2.498.0 KC-CLUB-FOTOS-NEU-INFO (Wunsch Hansi „x neue Fotos hochgeladen – bei Klick direkt dorthin“): führt zu den neuen Fotos oben im Album
+  if (kz.fotos > 0) add({ id: "fotos", stufe: "weiss", sym: "📸", t: kz.fotos === 1 ? "1 neues Foto hochgeladen" : `${kz.fotos} neue Fotos hochgeladen`, u: "Antippen – direkt zu den neuen Fotos", auf: "fotosNeuZeigen()", knoepfe: [["📸 Ansehen", "fotosNeuZeigen()"]] });
   const dn = typeof dokHinweis === "function" ? dokHinweis() : null;
   if (dn) add({ id: "dok:" + dn.id, stufe: "weiss", sym: dn.sym || "🆕", t: `Neu: ${dn.t}`, u: "Antippen zum Lesen", auf: `dokOeffnen('${esc(dn.id)}')` });
   const aus = new Set(ilAusgeblendet()), sichtbar = L.filter((m) => !aus.has(m.id));
@@ -33700,6 +33701,27 @@ function fotosZeigen() {
     <div class="abschnitt" style="margin-top:16px"><h3 style="font-size:1.05rem">${MONATE[Number(k.slice(5)) - 1]} ${k.slice(0, 4)}</h3><span class="hinweis">${liste.length} Foto${liste.length > 1 ? "s" : ""}</span></div>
     <div class="fotoraster">${liste.map(([f, i]) => `<button class="fotokachel${FAW.an && FAW.ids.has(f.id) ? " gewaehlt" : ""}" data-id="${f.id}" onclick="${faPapierkorb ? `fotoWiederherstellen('${f.id}')` : FAW.an ? `faWahl('${f.id}', this)` : `fotoAnsehen(${i})`}" title="${esc([f.thema, fTagDe(f.datum), f.beschreibung].filter(Boolean).join(" · "))}">
       ${f.vorschau ? `<img src="${esc(f.vorschau)}" alt="${esc(f.beschreibung || f.thema || "Foto")}" loading="lazy">` : "📷"}${faPapierkorb ? '<span class="fk-marke">♻️</span>' : ""}${FAW.an ? '<span class="fk-haken">✓</span>' : ""}</button>`).join("")}</div>`).join("");
+  faNeuKasten(); // 2.498.0 KC-CLUB-FOTOS-NEU-INFO
+}
+// 2.498.0 KC-CLUB-FOTOS-NEU-INFO: „seit meinem letzten Besuch“ merken, BEVOR das Öffnen die Zahl zurücksetzt; im Album oben ein Kasten mit
+// genau diesen Fotos (von anderen hochgeladen), dorthin gescrollt; im Raster zusätzlich „NEU“. Gilt für dieses eine Öffnen.
+let faNeuSeit = null;
+function fotosNeuZeigen() {
+  faNeuSeit = kzSeit("fotos"); faFilter = {}; faPapierkorb = false; FAW.an = false; FAW.ids.clear();
+  if (aktuelleAnsicht === "fotos") fotosLaden(); else zeige("fotos");
+}
+function faNeuKasten() {
+  const seit = faNeuSeit; faNeuSeit = null;
+  if (!seit || faPapierkorb || FAW.an || Object.keys(faFilter).length || !FA?.fotos?.length) return;
+  const neu = FA.fotos.map((f, i) => [f, i]).filter(([f]) => f.hochgeladen && f.hochgeladen > seit && f.von?.person_id !== ICH?.person_id);
+  if (!neu.length) return;
+  const ids = new Set(neu.map(([f]) => f.id));
+  document.querySelectorAll("#fotoListe .fotokachel").forEach((k) => { if (ids.has(k.dataset.id)) k.insertAdjacentHTML("beforeend", '<span class="fk-neu">NEU</span>'); });
+  const wer = [...new Set(neu.map(([f]) => (f.von?.name || "").split(" ")[0]).filter(Boolean))];
+  $("fotoListe").insertAdjacentHTML("afterbegin", `<div class="karte fa-neu" id="faNeu"><div class="abschnitt"><h3 style="font-size:1.05rem">🆕 ${neu.length === 1 ? "1 neues Foto" : neu.length + " neue Fotos"}</h3>
+    <span class="hinweis">${wer.length ? "von " + esc(wer.join(", ")) : "seit deinem letzten Besuch"}</span></div>
+    <div class="fotoraster">${neu.map(([f, i]) => `<button class="fotokachel" data-id="${f.id}" onclick="fotoAnsehen(${i})" title="${esc([f.thema, fTagDe(f.datum), f.beschreibung].filter(Boolean).join(" · "))}">${f.vorschau ? `<img src="${esc(f.vorschau)}" alt="${esc(f.beschreibung || f.thema || "Foto")}" loading="lazy">` : "📷"}</button>`).join("")}</div></div>`);
+  setTimeout(() => $("faNeu")?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
 }
 function faFilterSetzen(was, wert) {
   if (was === "bezug") { delete faFilter.bezug_art; delete faFilter.bezug_id; if (wert) { const [a, ...id] = wert.split("|"); faFilter.bezug_art = a; faFilter.bezug_id = id.join("|"); } }
