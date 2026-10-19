@@ -5904,7 +5904,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -10917,12 +10917,12 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/function lvAdresseOk\(u: string\)/.test(server) && /\/\^\[\\d\.\]\+\$\/\.test\(h\)/.test(server) && /redirect: "manual"/.test(server) && /x = ziel \? lvAdresseOk\(new URL\(ziel, x\)\.href\) : null/.test(server), "keine IP-Adressen/internen Namen, jede Weiterleitung neu geprüft");
   assert.ok(/const LV_MAX_MIN = 30, LV_MS = 5000, LV_BYTES = 512 \* 1024;/.test(server), "Grenzen: 30 je 10 Min., 5 s, 512 KB");
   const se = server.slice(server.indexOf('case "nachricht_senden": {'), server.indexOf('case "nachricht_senden": {') + 20000);
-  assert.ok(/const v = await lvHolen\(vu\)/.test(se) && /text\.includes\(vu\)/.test(se) && !/p\.vorschau\.titel|p\.titel/.test(se), "beim Senden holt der Server selbst – keine Angaben vom Absender");
+  assert.ok(/const v = await lvHolen\(vu\)/.test(se) && /steht = text\.includes\(vu\) \|\| \(\/\^www\\\.\/i\.test\(ohne\) && text\.includes\(ohne\)\)/.test(se) && !/p\.vorschau\.titel|p\.titel/.test(se), "beim Senden holt der Server selbst – keine Angaben vom Absender");
   assert.ok(/db\.from\("kc_club_link_vorschau"\)\.select\("message_id,url,titel,text,bild,seite"\)\.in\("message_id", mids\)/.test(server) && /\.\.\.\(lvMap\.has\(m\.id\) \? \{ link: lvMap\.get\(m\.id\) \} : \{\}\)/.test(server), "Chat liefert die Karten mit (eine Abfrage)");
   const mig = lies("supabase/migrations/20261018_kc_club_link_vorschau.sql");
   assert.ok(/on delete cascade/.test(mig) && /bild ~ '\^https:\/\/'/.test(mig) && /revoke all on public\.kc_club_link_vorschau from anon, authenticated/.test(mig) && /'kc_club_link_vorschau', 'Club-App', 'sensitive', false, true, true/.test(mig) && !/drop |truncate|delete from/i.test(mig), "Migration additiv, gespiegelt, gesichert, nur Server");
   assert.ok(/function lvKarteHtml\(l, entwurf\)/.test(html) && /referrerpolicy="no-referrer"/.test(html) && /rel="noopener noreferrer nofollow"/.test(html) && /if \(!l \|\| !\/\^https\?:/.test(html), "Karte: nur http(s), Bild ohne Absender-Angabe, Link sicher");
-  assert.ok(/LVS\.daten && !LVS\.weg && LVS\.chat === chatId && text\.includes\(LVS\.url\) \? \{ vorschau_url: LVS\.url \}/.test(html) && /function lvWeg\(\)/.test(html) && /u\.startsWith\(SPRUNG_URL\)/.test(html), "Senden mit Vorschau nur wenn nicht weggetippt; App-Sprünge ohne");
+  assert.ok(/\.\.\.\(lvSendeUrl\(text\) \? \{ vorschau_url: lvSendeUrl\(text\) \} : \{\}\)/.test(html) && /return LVS\.weg && LVS\.url === u && LVS\.chat === chatId \? "" : u;/.test(html) && /function lvWeg\(\)/.test(html) && /u\.startsWith\(SPRUNG_URL\)/.test(html), "Senden mit Vorschau nur wenn nicht weggetippt; App-Sprünge ohne");
   assert.ok(/\{ id: "link_vorschau", thema: "nachrichten"[^\n]*seit: "2\.486\.0" \}/.test(html) && /\{ id: "link-vorschau", sym: "🔗"/.test(html), "Hilfe und Twinkey");
 }
 

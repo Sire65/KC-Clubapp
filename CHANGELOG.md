@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.490.0 – 2026-10-19 – Link-Vorschau: auch „www.…“ und bei schnellem Senden · Server 2.490.0
+Fund Hansi (Test an mich: „www.puerform.de“ – keine Karte): Die Vorschau erkannte nur Links mit http(s)://, und beim sofortigen Senden (Karte noch nicht geladen) ging der Link nicht mit.
+- App erkennt jetzt auch „www.…“ (ergänzt https://) und gibt den Link beim Senden immer mit – außer man hat für genau diesen Link ✖ getippt. Der Server holt die Vorschau ohnehin selbst.
+- Server akzeptiert „www.…“ im Text; beim Bearbeiten bleibt die Karte, solange der Link (auch ohne https://) im Text steht.
+- Tests: lv-browser.mjs um beide Fälle erweitert (12 Prüfungen grün), lv-test.ts grün, Vertragstests grün. Behebt einen Fehler, der Mitglieder behindert → sofort eingespielt (AGENTS.md).
+
 ## Server 2.489.0 – 2026-10-19 – App-Start sparsamer, Stufe 1 + genaue Messung (KC-CLUB-START-SPARSAM, KC-CLUB-DB-PFADE)
 Wunsch Hansi („Online-Meldung nachmessen, App-Start sparsamer – vorsichtig, damit alles lauffähig bleibt“). Nur Server, die App bleibt 2.488.0 (kein Neustart aller Apps).
 - **App-Start, gleiche Antwort:** offene Vorschläge einmal statt dreimal holen (Abstimmungen, Vorschlags-Zahl, Themen zur Sitzung); meine Freigaben einmal statt zweimal (Geburtstag/Kontakt); meine Einstellungen einmal statt zweimal („stumm“ für die Zähler); öffentlicher Push-Schlüssel 10 Min. gemerkt. ≈ 5 Abfragen weniger je Start (72 → ≈ 67).

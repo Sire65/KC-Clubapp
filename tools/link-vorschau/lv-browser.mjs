@@ -36,6 +36,11 @@ const erg = await seite.evaluate(async () => {
   r.karteLink = d.querySelector("a.lv-karte")?.getAttribute("href"); r.karteRel = d.querySelector("a.lv-karte")?.getAttribute("rel");
   r.karteKeinXss = !d.querySelector("img[onerror='window.__xss=1']") && !window.__xss;
   r.jsAbgelehnt = lvKarteHtml({ ...VOR, url: "javascript:alert(1)" }) === "" && !/src="http:/.test(lvKarteHtml({ ...VOR, bild: "http://x.de/b.jpg" }));
+  // 2.490.0: „www.…“ ohne https:// und sofortiges Senden (Karte noch nicht geladen) → Server bekommt den Link trotzdem
+  __api.length = 0; t.value = "Guck mal www.puerform.de"; t.dispatchEvent(new Event("input", { bubbles: true }));
+  await senden(); r.wwwSofort = __api.find((x) => x.a === "nachricht_senden")?.p?.vorschau_url;
+  t.value = "nochmal www.puerform.de/seite."; t.dispatchEvent(new Event("input", { bubbles: true })); await warte(1300);
+  r.wwwAbruf = __api.filter((x) => x.a === "link_vorschau").map((x) => x.p.url).pop();
   // App-Sprung-Links bekommen keine Vorschau
   __api.length = 0; t.value = "https://sire65.github.io/KC-Clubapp/#zu=termine"; t.dispatchEvent(new Event("input", { bubbles: true })); await warte(1100);
   r.sprungOhne = !__api.some((x) => x.a === "link_vorschau");
@@ -51,4 +56,6 @@ ok(erg.wegtippen && erg.ohneUrl, "✖ = ohne Vorschau senden");
 ok(erg.karteLink === "https://www.beispiel.de/rezept" && /noopener/.test(erg.karteRel) && /noreferrer/.test(erg.karteRel), "Karte in der Nachricht öffnet den Link sicher");
 ok(erg.karteKeinXss && erg.jsAbgelehnt, "Karte: kein Skript, keine javascript:-Links, keine http-Bilder");
 ok(erg.sprungOhne, "App-Sprung-Links ohne Vorschau");
+ok(erg.wwwSofort === "https://www.puerform.de", "www-Link ohne https:// sofort gesendet → Link geht mit (Server holt selbst)");
+ok(erg.wwwAbruf === "https://www.puerform.de/seite", "www-Link beim Tippen erkannt, Satzzeichen am Ende weg");
 await browser.close(); srv.close(); console.log("ALLE TESTS GRÜN");

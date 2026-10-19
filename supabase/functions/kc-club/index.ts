@@ -95,7 +95,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.489.0";
+const SERVER_VERSION = "2.490.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -9512,8 +9512,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-LINK-VORSCHAU (2.486.0): nur wenn der Absender sie nicht weggetippt hat und der Link wirklich im Text steht; der Server holt selbst
         // (beim Tippen schon geholt → aus dem Merker). Klappt es nicht, geht die Nachricht trotzdem – nur ohne Karte.
         if (typeof p.vorschau_url === "string" && text && !umfrage && !kontaktPid && !notfall && !einmal) {
-          const vu = txt(p.vorschau_url, 2000), steht = text.match(LV_URL_RE)?.[0];
-          if (vu && steht && text.includes(vu)) {
+          // 2.490.0: auch „www.…“ ohne https:// im Text (die App schickt dann https://www.…)
+          const vu = txt(p.vorschau_url, 2000), ohne = vu.replace(/^https?:\/\//i, ""), steht = text.includes(vu) || (/^www\./i.test(ohne) && text.includes(ohne));
+          if (vu && steht) {
             const v = await lvHolen(vu).catch(() => null);
             if (v) await db.from("kc_club_link_vorschau").insert({ message_id: m.id, url: vu, titel: v.titel || null, text: v.text || null, bild: v.bild, seite: v.seite || null })
               .then(({ error: le }) => { if (le) console.error("link vorschau", le.message); });
@@ -10041,7 +10042,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await db.from("kc_club_nachricht_bearbeitet").upsert({ message_id: m.id, bearbeitet_am: am }, { onConflict: "message_id" });
         // KC-CLUB-LINK-VORSCHAU: steht der Link nicht mehr im Text, verschwindet auch die Karte (keine Vorschau zu einem entfernten Link)
         { const { data: lv } = await db.from("kc_club_link_vorschau").select("url").eq("message_id", m.id).maybeSingle();
-          if (lv && !text.includes(lv.url)) await db.from("kc_club_link_vorschau").delete().eq("message_id", m.id); }
+          if (lv && !text.includes(lv.url) && !text.includes(String(lv.url).replace(/^https?:\/\//i, "").replace(/\/$/, ""))) await db.from("kc_club_link_vorschau").delete().eq("message_id", m.id); }
         await protokoll(ich.person_id, "nachricht_bearbeitet", { nachricht: m.id, thread: m.thread_id });
         return json({ ok: true, bearbeitet: am });
       }

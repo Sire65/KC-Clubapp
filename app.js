@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.488.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.490.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -28563,7 +28563,8 @@ async function cuSenden() {
 // ---------- KC-CLUB-LINK-VORSCHAU (2.486.0, Wunsch Hansi): Karte mit Bild, Titel und Kurztext zu einem Link in der Nachricht ----------
 // Die Angaben holt der Server (der Absender kann sie nicht fälschen). Beim Schreiben erscheint die Karte über dem Eingabefeld; ✖ = ohne Vorschau senden.
 // Das Bild kommt direkt von der verlinkten Seite (ohne Absender-Angabe, erst beim Ansehen); klappt es nicht, bleibt die Karte ohne Bild.
-const LV_RE = /\bhttps?:\/\/[^\s<>"']{4,1990}/i;
+const LV_RE = /\b(?:https?:\/\/|www\.)[^\s<>"']{4,1990}/i; // 2.490.0: auch „www.…“ ohne https:// (Fund Hansi: www.puerform.de)
+const lvAdresse = (roh) => (/^www\./i.test(roh) ? "https://" + roh : roh);
 const LVS = { url: "", chat: null, daten: null, weg: false, uhr: null };
 function lvKarteHtml(l, entwurf) {
   if (!l || !/^https?:\/\//i.test(l.url || "")) return "";
@@ -28575,7 +28576,7 @@ function lvKarteHtml(l, entwurf) {
 function lvEingabe() { // beim Schreiben: erster Link im Text → Vorschau holen (0,8 s nach dem letzten Tippen)
   clearTimeout(LVS.uhr);
   LVS.uhr = setTimeout(async () => {
-    const t = $("text")?.value || "", u = (t.match(LV_RE)?.[0] || "").replace(/[.,;:!?)\]]+$/, "");
+    const t = $("text")?.value || "", u = lvAdresse((t.match(LV_RE)?.[0] || "").replace(/[.,;:!?)\]]+$/, ""));
     if (!u || u.startsWith(SPRUNG_URL)) { Object.assign(LVS, { url: "", daten: null, weg: false }); return lvEntwurfZeigen(); }
     if (u === LVS.url && LVS.chat === chatId) return;
     Object.assign(LVS, { url: u, chat: chatId, daten: null, weg: false }); lvEntwurfZeigen();
@@ -28586,6 +28587,13 @@ function lvEntwurfZeigen() {
   let el = $("lvEntwurf");
   if (!el) { const c = $("anlagenChips"); if (!c) return; c.insertAdjacentHTML("afterend", '<div id="lvEntwurf"></div>'); el = $("lvEntwurf"); }
   el.innerHTML = LVS.daten && !LVS.weg && LVS.chat === chatId ? lvKarteHtml(LVS.daten, true) : "";
+}
+// 2.490.0: der Server holt die Vorschau beim Senden selbst – darum den Link auch mitgeben, wenn die Karte noch nicht geladen war
+// (Fund Hansi: schnell gesendet → keine Karte). Nur nicht, wenn für genau diesen Link ✖ getippt wurde.
+function lvSendeUrl(text) {
+  const u = lvAdresse((String(text || "").match(LV_RE)?.[0] || "").replace(/[.,;:!?)\]]+$/, ""));
+  if (!u || u.startsWith(SPRUNG_URL)) return "";
+  return LVS.weg && LVS.url === u && LVS.chat === chatId ? "" : u;
 }
 function lvWeg() { LVS.weg = true; lvEntwurfZeigen(); melde("🔗 Wird ohne Vorschau gesendet"); }
 function lvZurueck() { clearTimeout(LVS.uhr); Object.assign(LVS, { url: "", chat: null, daten: null, weg: false }); lvEntwurfZeigen(); }
@@ -30302,7 +30310,7 @@ async function senden() {
       ...(EXPRESS ? { express: true } : {}), // 2.362.0 KC-CLUB-EXPRESS
       ...(EINMAL && anlagen.length === 1 ? { einmal: true } : {}), // KC-CLUB-EINMAL-FOTO
       ...(SL.std !== null && SL.chat === chatId ? { ablauf_std: SL.std } : {}), // KC-CLUB-SELBSTLOESCHEN: ⏳ nur diese Nachricht
-      ...(LVS.daten && !LVS.weg && LVS.chat === chatId && text.includes(LVS.url) ? { vorschau_url: LVS.url } : {}) }; // KC-CLUB-LINK-VORSCHAU
+      ...(lvSendeUrl(text) ? { vorschau_url: lvSendeUrl(text) } : {}) }; // KC-CLUB-LINK-VORSCHAU
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
