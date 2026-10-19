@@ -21246,7 +21246,8 @@ function infoFuerDich() {
   if (INIT?.offeneAbstimmungen) z.push(zeile("🗳️", `<b>${INIT.offeneAbstimmungen}</b> Abstimmung${INIT.offeneAbstimmungen > 1 ? "en warten" : " wartet"} auf dich`, "zeige('vorschlaege')"));
   for (const a of INIT?.terminanfragenOffen || []) z.unshift(zeile("📨", `<b>${esc(a.von)}</b> fragt an: ${esc(a.anlass)} – bitte antworten`, `taZeigen('${esc(a.id)}')`)); // 2.389.0
   if ((INIT?.terminfindungOffen || []).length) z.push(zeile("🗓️", "Bitte Termine ankreuzen", "zeige('termine')"));
-  if (INIT?.protokolleUngelesen) z.push(zeile("📄", `<b>${INIT.protokolleUngelesen}</b> neue${INIT.protokolleUngelesen > 1 ? "" : "s"} Protokoll${INIT.protokolleUngelesen > 1 ? "e" : ""}`, "zeige('protokolle')"));
+  if (INIT?.protokolleUngelesen) z.push(INIT.protokollNeu && INIT.protokolleUngelesen === 1 ? zeile("📄", `<b>${esc(protokollNeuText(INIT.protokollNeu))}</b>`, `protokollOeffnen('${esc(INIT.protokollNeu.id)}')`) // KC-CLUB-PROTOKOLL-NEU-INFO
+    : zeile("📄", `<b>${INIT.protokolleUngelesen}</b> neue${INIT.protokolleUngelesen > 1 ? "" : "s"} Protokoll${INIT.protokolleUngelesen > 1 ? "e" : ""}`, "zeige('protokolle')"));
   const auf = (INIT?.meineAufgaben || []).length;
   if (auf) z.push(zeile("📌", `<b>${auf}</b> offene Aufgabe${auf > 1 ? "n" : ""}`, "$('wichtig').scrollIntoView({behavior:'smooth',block:'center'})"));
   const nd = INIT?.naechsterDienst;
@@ -23831,7 +23832,10 @@ function ilMeldungen() {
   for (const lt of (INIT?.laufbandTermine || []).filter((x) => x.id !== t?.id)) add({ id: "lauf:" + lt.id, stufe: "gold", sym: lt.art === "veranstaltung" ? "🎪" : "📅", t: lt.titel,
     u: wann(lt.beginn) + (lt.ort ? " · " + lt.ort : ""), auf: `ilTerminOeffnen('${esc(lt.id)}')`, knoepfe: /^https:\/\//.test(lt.link || "") ? [["🌐 Webseite", `ilTerminLink('${esc(lt.id)}')`]] : null,
     stand: /^https:\/\//.test(lt.link || "") ? `📅 ${esc(wann(lt.beginn))}` : "" }); // mit Knopf: Datum daneben (sonst fehlt der Platz)
-  if (INIT?.protokolleUngelesen) add({ id: "protokoll", stufe: "gold", sym: "📄", t: INIT.protokolleUngelesen === 1 ? "Ein neues Protokoll zum Lesen" : `${INIT.protokolleUngelesen} neue Protokolle zum Lesen`, u: "Antippen zum Lesen", auf: "zeige('protokolle')" });
+  // KC-CLUB-PROTOKOLL-NEU-INFO: mit Titel des neuesten ungelesenen Protokolls, Antippen öffnet es direkt
+  const pn = INIT?.protokollNeu, pnText = protokollNeuText(pn);
+  if (INIT?.protokolleUngelesen) add({ id: "protokoll", stufe: "gold", sym: "📄", t: pn ? (INIT.protokolleUngelesen === 1 ? pnText : `${pnText} (+${INIT.protokolleUngelesen - 1} weitere)`) : INIT.protokolleUngelesen === 1 ? "Ein neues Protokoll zum Lesen" : `${INIT.protokolleUngelesen} neue Protokolle zum Lesen`,
+    u: pn ? `${pn.titel}${pn.datum ? " vom " + fKurzJahr.format(new Date(String(pn.datum).slice(0, 10) + "T12:00:00Z")) : ""} · Antippen zum Lesen` : "Antippen zum Lesen", auf: pn && INIT.protokolleUngelesen === 1 ? `protokollOeffnen('${esc(pn.id)}')` : "zeige('protokolle')" });
   const wd = WET.r?.daten, wt = t && wd ? wd.tage?.find((x) => x.datum === isoBerlin(new Date(t.beginn))) : null;
   if (wt) { const a = wetterArt(wt.code), nass = (wt.regenWkt ?? 0) >= 50 || ["regen", "niesel", "gewitter", "schnee"].includes(a.szene);
     add({ id: "wetter:" + wt.datum, stufe: nass ? "gold" : "weiss", sym: a.sym, t: nass ? "Am Treffen-Tag wird es nass – Schirm mitnehmen" : `Wetter am Treffen-Tag: ${a.text}`, u: `${grad(wt.max)} / ${grad(wt.min)}${wt.regenWkt != null ? ` · ☔ ${wt.regenWkt} %` : ""}`, auf: "infoGehe(INFO_FELDER.findIndex((f) => f.id === 'wetter'))" }); }
@@ -34785,6 +34789,12 @@ async function druckTeilen() {
   const datei = new File([html], (DRUCK.titel || "Druck").replace(/[^\wäöüÄÖÜß.-]+/g, "_").slice(0, 60) + ".html", { type: "text/html" });
   try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { if (e?.name === "AbortError") return; }
   melde("Teilen geht auf diesem Gerät nicht – bitte „Drucken“ versuchen.", true);
+}
+// KC-CLUB-PROTOKOLL-NEU-INFO: „Besprechung“ → „Neues Besprechungsprotokoll eingestellt“; längere Titel → „Neues Protokoll eingestellt: …“
+function protokollNeuText(pn) { // Funktionsdeklaration: schon beim ersten Zeichnen des Info-Feldes verfügbar
+  if (!pn?.titel) return "Neues Protokoll eingestellt";
+  if (/protokoll$/i.test(pn.titel)) return `Neues ${pn.titel} eingestellt`;
+  return /^[A-ZÄÖÜ][a-zäöüß]+$/.test(pn.titel) ? `Neues ${pn.titel}${/(ung|heit|keit|schaft)$/.test(pn.titel) ? "s" : ""}protokoll eingestellt` : `Neues Protokoll eingestellt: ${pn.titel}`;
 }
 const dz = (iso) => fKurzJahr.format(new Date(iso.slice(0, 10) + "T12:00:00Z"));
 const dWt = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", weekday: "short" });
