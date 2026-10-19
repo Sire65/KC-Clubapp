@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.497.0 – 2026-10-19 – ✨ Heutiger Tag im Kalender blinkt langsam (KC-CLUB-KALENDER-HEUTE-BLINKT)
+Wunsch Hansi („Baue ein, dass im Kalender der aktuelle Tag langsam blinkt, damit man ihn sofort sieht“).
+- Um den heutigen Tag pulsiert ein goldener Ring mit sanftem Schein (alle 2,4 Sekunden, kein hartes Flackern) – auch wenn der Tag gerade ausgewählt ist oder farbig markiert (Treffen, Feiertag, Geburtstag …); die Farben bleiben.
+- Bei „Bewegung reduzieren“ im Handy steht der Ring ruhig. Nur App.
+- Tests: Vertragstest grün; Browserprobe (Ring hell ↔ blass sichtbar).
+
 ## 2.496.0 – 2026-10-19 – 🕑 Zeitumstellung und 🏛️ Werne-Wissen im Info-Feld (KC-CLUB-ZEITUMSTELLUNG-INFO, KC-CLUB-WERNE-WISSEN)
 Wunsch Hansi („Wird in der Info auf Uhrzeit umstellen hingewiesen?“ – bisher nur der Push am Samstag ab 18 Uhr).
 - Ab Donnerstag vor der Umstellung (letzter Sonntag im März/Oktober) steht im Info-Feld „🕑 In der Nacht zum Sonntag: Uhr zurückstellen“ (bzw. vorstellen), am Samstag gelb „Heute Nacht: Uhr zurückstellen – eine Stunde länger schlafen 😴“, am Sonntag „Seit heute Nacht Winterzeit – Backofen-, Auto- und Wanduhren schon umgestellt?“. Jedes Jahr von selbst berechnet.
