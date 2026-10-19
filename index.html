@@ -952,6 +952,12 @@
   body.rg-an .blatt:not(.rg-zeigen) { display: none !important; } /* Fenster, die während des Rundgangs aufgehen, warten bis danach (außer vorgeführte) */
   .einw-karte .einw-kopf { font-size: .8rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--textGruen); }
   .einw-karte h3 { margin: 4px 0 6px; } .einw-karte p { margin: 0 0 10px; line-height: 1.45; }
+  /* KC-CLUB-EINW-KLAPPEN: Hilfetext einklappbar – eingeklappt bleibt nur die Kopfzeile */
+  .einw-karte .einw-kopf { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .einw-klapp { margin-left: auto; border: 1px solid var(--linie); background: var(--karte); color: var(--text); border-radius: 999px; padding: 3px 10px; font: inherit; font-size: .8rem; text-transform: none; letter-spacing: 0; cursor: pointer; }
+  .einw-karte.einw-zu { padding-top: 8px; padding-bottom: 8px; }
+  .einw-karte.einw-zu > :not(.einw-kopf) { display: none; }
+  .einw-karte.einw-zu .vorlese-knopf { display: none; }
   /* KC-CLUB-INKOGNITO (2.3.0) */
   .inko-marke { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 9px; background: #34495e; color: #fff; font-size: .8rem; line-height: 1.4; vertical-align: middle; }
   textarea.hl-notiz { min-height: 8.5em; font-size: 1.02rem; line-height: 1.4; }

@@ -1767,8 +1767,21 @@ function einwHtml(v) {
   if (!einwOffen(v)) return "";
   einwTagMerken(v);
   const e = EINWEISUNG.find((x) => x.id === v);
-  return `<div class="karte einw-karte vorlese-karte" role="note" data-v="${v}"><div class="einw-kopf">🎓 Kurz erklärt ${VORLESE_KNOPF}</div><h3>${e.sym} ${esc(e.t)}</h3><p>${typeof e.x === "function" ? e.x() : e.x}</p>
+  const zu = einwZuSet().has(v); // KC-CLUB-EINW-KLAPPEN: eingeklappt bleibt eingeklappt (je Fenster, auf diesem Gerät)
+  return `<div class="karte einw-karte vorlese-karte${zu ? " einw-zu" : ""}" role="note" data-v="${v}"><div class="einw-kopf">🎓 Kurz erklärt ${VORLESE_KNOPF}${einwKlappKnopf(zu)}</div><h3>${e.sym} ${esc(e.t)}</h3><p>${typeof e.x === "function" ? e.x() : e.x}</p>
     <div class="knoepfe"><button class="knopf haupt klein" onclick="einwVerstanden('${v}')">👍 Verstanden</button><button class="knopf klein" onclick="einwAlleAus()">Keine Einweisungen mehr</button></div></div>`;
+}
+// KC-CLUB-EINW-KLAPPEN (Wunsch Hansi 19.10.2026): Hilfetexte „🎓 Kurz erklärt“ nehmen in Fenstern viel Platz weg – „▴ Einklappen“ lässt nur
+// die Kopfzeile stehen, der Pfeil ▾ klappt wieder auf. Gilt für alle Hilfefenster (alle kommen aus einwHtml). Gemerkt je Fenster im Gerät.
+const EINW_ZU_KEY = "kc-einw-zu";
+function einwZuSet() { try { const a = JSON.parse(lsLesen(EINW_ZU_KEY) || "[]"); return new Set(Array.isArray(a) ? a.map(String) : []); } catch { return new Set(); } }
+const einwKlappKnopf = (zu) => `<button type="button" class="einw-klapp" onclick="einwKlappen(this)" aria-expanded="${!zu}" aria-label="${zu ? "Hilfetext aufklappen" : "Hilfetext einklappen"}" title="${zu ? "Aufklappen" : "Einklappen"}">${zu ? "▾" : "▴ Einklappen"}</button>`;
+function einwKlappen(knopf) {
+  const k = knopf.closest(".einw-karte"); if (!k) return;
+  const zu = !k.classList.contains("einw-zu"), v = k.dataset.v, set = einwZuSet();
+  k.classList.toggle("einw-zu", zu); knopf.outerHTML = einwKlappKnopf(zu);
+  if (zu) set.add(v); else set.delete(v);
+  lsSetzen(EINW_ZU_KEY, JSON.stringify([...set].slice(-200)));
 }
 function einwVerstanden(v) { einwKarteWeg(); einwSpeichern({ gesehen: { ...einwStand().gesehen, [v]: new Date().toISOString() } }); }
 async function einwAlleAus() { einwKarteWeg(); if (await einwSpeichern({ an: false })) { einwSchalterZeigen(); melde("🎓 Keine Einweisungen mehr – wieder einschalten unter ⚙️ → „🗣️ Ansagen, Töne & Tipps“ → „🎓 Einweisung beim ersten Öffnen“"); } }
