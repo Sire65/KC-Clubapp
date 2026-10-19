@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.490.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.492.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5128,6 +5128,7 @@ const HILFE = [
   { id: "anlage_mitschicken", thema: "nachrichten", sym: "📎", t: "Anlage bei Vorschlag, Spende, Terminfindung und Terminanfrage", x: "Beim Anlegen gibt es jetzt das Feld <b>📎 Anlage</b>: <b>🖼️ Foto</b> aus der Galerie, <b>📷 Kamera</b> oder <b>📄 PDF / Datei</b> aus dem Dateimanager – z. B. eine Skizze zum Vorschlag oder den Flyer des Spendenempfängers. Höchstens 5 Anlagen; mit ✕ wieder entfernen. Die anderen sehen sie im Eintrag und öffnen sie mit einem Tipp. Sehen kann sie nur, wer den Eintrag auch sehen darf.", seit: "2.448.0" },
   { id: "bild_zuletzt", thema: "privat", sym: "🕘", t: "Früheres Bild zurückholen", x: "Unter <b>Mein Bild</b> stehen oben bei <b>🕘 Zuletzt benutzt</b> deine letzten 3 Bilder – Foto, Selfie oder Koch-Figur. Antippen und oben <b>✅ Übernehmen</b> – schon ist das alte Bild wieder da. Die App merkt sich das automatisch bei jedem Wechsel.", seit: "2.449.0" },
   { id: "foto_muetze", thema: "privat", sym: "🎅", t: "Nikolausmütze oder Hut aufs eigene Foto", x: "Bei <b>Mein Bild → 🤳 Selfie, 🖼️ Galerie oder 📁 Datei</b> kannst du vor dem Übernehmen eine <b>Mütze aufsetzen</b> – z. B. Nikolausmütze, Kochmütze, Jägerhut, Cowboyhut, Zylinder, Krone – und mit dem Finger an die richtige Stelle schieben, größer/kleiner machen und drehen. Dazu ein <b>Rahmen</b> (Weinrot, Gold, Weihnacht, Bunt). Ohne Mütze bleibt das Foto, wie es ist. Dein voriges Bild findest du jederzeit unter 🕘 Zuletzt benutzt.", seit: "2.451.0" },
+  { id: "unterstuetzung_anfrage", thema: "technik", sym: "🙋", t: "Hilfe bei der App anfragen", x: "Du kommst mit etwas nicht klar? Unter <b>Mehr → 🙋 Unterstützung anfragen</b> (oder im Info-Laufband) kreuzt du an, wobei du Hilfe möchtest – zum Beispiel Benachrichtigungen oder die Schrift – und wie: Anruf, Nachricht oder persönlich. Hansi bekommt Bescheid und meldet sich bei dir.", seit: "2.492.0" },
   { id: "link_vorschau", thema: "nachrichten", sym: "🔗", t: "Vorschau zu Links in Nachrichten", x: "Schreibst du einen Link in eine Nachricht (z. B. ein Rezept, einen Zeitungsartikel oder ein YouTube-Video), erscheint über dem Schreibfeld eine kleine <b>Vorschau-Karte</b> mit Bild, Titel und kurzem Text. Sie wird mitgeschickt – alle sehen sofort, worum es geht. Antippen öffnet die Seite. Ohne Vorschau senden: auf <b>✖</b> an der Karte tippen. Manche Seiten erlauben keine Vorschau – dann geht der Link ganz normal ohne Karte raus.", seit: "2.486.0" },
   { id: "schuerze", thema: "privat", sym: "🧑‍🍳", t: "Schürze an der Koch-Figur", x: "Deine Koch-Figur kann jetzt eine Schürze tragen: <b>Mein Bild → Selbst zusammenstellen → 🧑‍🍳 Schürze</b>. Sie hat Träger um den Hals und deine <b>Initialen rechts oben</b>. 10 Farben (z. B. weinrot, schwarz, Jeansblau, Leder braun) und Muster wie <b>Nadelstreifen</b>, Längsstreifen, Karo, Punkte oder Jeans. „ohne“ nimmt sie wieder ab.", seit: "2.452.0" },
   { id: "sprachtempo", thema: "nachrichten", sym: "⏩", t: "Lange Sprachnachrichten schneller hören", x: "Sprachnachrichten kannst du auch in <b>1,5×</b> oder <b>2×</b> abspielen – der kleine Tempo-Knopf sitzt direkt an der Sprachnachricht. Deine Wahl merkt sich das Handy.", seit: "2.23.1" },
@@ -14343,6 +14344,7 @@ const KACHELN = {
     { id: "helfen", sym: "🤝", t: "Helfen & Leihen", u: "Wer kann helfen? · Ausleihen", aktion: "hlStart()" },
     // KC-CLUB-BUERO (1.25.0): nur für die Clubleitung (Clubsprecher, Kassenwart, Admin)
     { id: "buero", sym: "🗂️", t: "Büro", u: "Sitzung vorbereiten · Einladung · Eingang", aktion: "buStart()", nur: () => !!ICH?.buero },
+    { id: "unterstuetzung_admin", sym: "🙋", t: "Unterstützung", u: "Wer braucht Hilfe bei der App?", aktion: "uaAdmin()", nur: () => !!ICH?.admin, zahl: () => INIT?.kz?.unterstuetzung || 0 }, // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE
     { id: "schulung_admin", sym: "🎓", t: "Schulungen", u: "Termine · Einladungen · Freigeben", aktion: "scStart()", nur: () => !!ICH?.admin }, // 2.23.60 KC-CLUB-SCHULUNG-ADMIN (nur Admin)
     // KC-CLUB-SPIELE (2.7.0, Wunsch Hansi): Spiele – Köcheclub Edition (Zahl = Partien, in denen ich dran bin / Herausforderungen an mich)
     { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Schach · Bauernskat · Küchenterror · Mensch ärgere dich nicht · Fang den Koch", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
@@ -14368,6 +14370,7 @@ const KACHELN = {
     { id: "ausweis", sym: "🪪", t: "Mein Ausweis-QR", u: "Für Kasse & Stechuhr", aktion: "ausweisZeigen()" },
     { id: "meinedaten", sym: "🔐", t: "Meine Daten", u: "Was ist über mich gespeichert?", aktion: "mdatStart()" },
     { id: "aenderung", sym: "✏️", t: "Änderung melden", u: "Neue Anschrift, Telefon, Größe …", aktion: "aeStart()", zahl: () => (ICH?.vorstand || ICH?.admin ? AE.offen : 0) },
+    { id: "unterstuetzung", sym: "🙋", t: "Unterstützung anfragen", u: "Hilfe bei der Club-App", aktion: "uaStart()", nur: () => !ICH?.admin }, // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE
     { id: "schulungen", sym: "🎓", t: "Meine Schulung", u: "Termin aussuchen · Zusammenfassungen", aktion: "smStart()", zahl: () => (SM.liste || []).filter((e) => e.status === "offen").length }, // 2.23.62 KC-CLUB-SCHULUNG-MITGLIED
     { id: "fitness", sym: "🏋️", t: "Fit bleiben", u: () => (nurTest("fitness") ? "🔒 nur für dich (Test) · " : "") + "Übungen mit Twinkey", aktion: "fiStart()", nur: () => frei("fitness") }, // KC-CLUB-FITNESS (2.55.0)
     // 2.143.0 KC-CLUB-STUDIO (Wunsch Hansi): Kachel nur unter „Meins“ und nur, solange ein Mitglied freigeschaltet ist – der Admin nutzt die Studio-Karte im Kopf
@@ -14406,7 +14409,7 @@ const ZUGANG_AKTIONEN = {
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
     "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
-    "chat_selbstloeschen", "link_vorschau", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
+    "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
     "spiel_holen", "spiel_herausfordern", "spiel_antwort", "spiel_zug", "spiel_aufgeben", "spiel_revanche", "raetsel_stand", "raetsel_ergebnis",
@@ -23577,6 +23580,59 @@ function infoTreffen() {
       <button id="cdKachel" class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}${cdInhalt(bisTreffen)}${mpfeil("termin", !!t, t ? `${t.id || t.beginn}|${frist}` : "", frist)}</button>
     </div>`;
 }
+// ---------- KC-CLUB-UNTERSTUETZUNG-ANFRAGE (2.492.0, Wunsch Hansi): „Unterstützung bei der Club-App? Anfrage senden“ ----------
+// Kurzer Fragebogen – bewusst nur wenige Punkte („sonst wird der User überfordert“). Gleiche Liste im Server (UA_PUNKTE). Der Admin bekommt
+// Push + E-Mail und sieht die Anfragen unter „🙋 Unterstützung“ (Mehr) bzw. als orange Meldung im Info-Laufband; Kontakt per Anruf, Chat, Fernhilfe.
+const UA_BEREICHE = [
+  { sym: "📲", t: "Einrichten", p: [["startbild", "App auf den Startbildschirm legen"], ["anmeldung", "Anmeldung oder Link klappt nicht"]] },
+  { sym: "🔔", t: "Benachrichtigungen", p: [["push_keine", "Ich bekomme keine Benachrichtigungen"], ["push_viele", "Ich bekomme zu viele Benachrichtigungen"]] },
+  { sym: "👆", t: "Bedienung", p: [["zurecht", "Ich finde mich nicht zurecht"], ["schrift", "Schrift zu klein oder schlecht lesbar"]] },
+  { sym: "💬", t: "Nachrichten", p: [["nachrichten", "Schreiben, Fotos, anrufen"]] },
+  { sym: "📅", t: "Termine & Dienste", p: [["termine", "Zusagen, Kalender, Dienste"]] },
+];
+const UA_KONTAKT = [["anruf", "📞 Anruf"], ["nachricht", "💬 Nachricht"], ["persoenlich", "🤝 Persönlich"]];
+const UA_GESENDET = "kc_club_ua_gesendet", UA_PAUSE_TAGE = 30;
+const uaKuerzlich = () => { try { return Date.now() - Number(localStorage.getItem(UA_GESENDET) || 0) < UA_PAUSE_TAGE * 86400000; } catch { return false; } };
+async function uaStart() {
+  let alt = null; try { alt = (await api("unterstuetzung_meine", {}, { still: true }))?.anfrage || null; } catch {}
+  const an = new Set(alt?.punkte || []), ko = new Set(alt?.kontakt || []);
+  const html = `<h3 style="margin:0 0 4px">🙋 Unterstützung bei der Club-App</h3>
+    <p class="hinweis" style="margin:0 0 10px">Kreuze an, wobei du Hilfe möchtest – Hansi meldet sich bei dir.${alt ? "<br>📝 Du hast schon angefragt – hier kannst du ergänzen." : ""}</p>
+    ${UA_BEREICHE.map((b) => `<div class="ua-bereich"><b>${b.sym} ${esc(b.t)}</b>${b.p.map(([id, t]) => `<label class="zeile ua-zeile"><input type="checkbox" data-ua="${id}"${an.has(id) ? " checked" : ""}> <span>${esc(t)}</span></label>`).join("")}</div>`).join("")}
+    <div class="ua-bereich"><b>✏️ Etwas anderes</b><textarea id="uaText" rows="2" maxlength="500" placeholder="Wobei brauchst du noch Hilfe?" style="width:100%">${esc(alt?.text || "")}</textarea></div>
+    <div class="ua-bereich"><b>Wie möchtest du Hilfe?</b><div class="ua-kontakt">${UA_KONTAKT.map(([id, t]) => `<label class="chip ua-chip"><input type="checkbox" data-uak="${id}"${ko.has(id) ? " checked" : ""}> ${t}</label>`).join("")}</div></div>
+    <div class="knoepfe"><button class="knopf haupt" onclick="uaSenden()">🙋 Anfrage senden</button><button class="knopf" onclick="fensterZu($('uaBlatt'))">Abbrechen</button></div>`;
+  blattAuf("uaBlatt", html);
+}
+async function uaSenden() {
+  const f = $("uaBlatt"); if (!f) return;
+  const punkte = [...f.querySelectorAll("[data-ua]:checked")].map((x) => x.dataset.ua), kontakt = [...f.querySelectorAll("[data-uak]:checked")].map((x) => x.dataset.uak);
+  const text = ($("uaText")?.value || "").trim();
+  if (!punkte.length && !text) return melde("Bitte mindestens einen Punkt ankreuzen oder kurz schreiben, wobei du Hilfe möchtest.", true);
+  try {
+    const r = await api("unterstuetzung_senden", { punkte, kontakt, text }, { warten: true });
+    try { localStorage.setItem(UA_GESENDET, String(Date.now())); } catch {}
+    fensterZu(f); melde(r?.ergaenzt ? "🙋 Deine Anfrage ist ergänzt – Hansi meldet sich bei dir." : "🙋 Anfrage gesendet – Hansi meldet sich bei dir."); ilZeigen?.();
+  } catch (e) { meldeFehler(e); }
+}
+const UA_STAND = { offen: "🆕 neu", in_arbeit: "🔧 in Arbeit", erledigt: "✅ erledigt" };
+async function uaAdmin() {
+  if (!ICH?.admin) return uaStart();
+  let r; try { r = await api("unterstuetzung_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const a = r.anfragen || [], P = r.punkte || {}, K = r.kontakt || {};
+  const karte = (x) => `<div class="ua-karte ua-${esc(x.status)}"><div class="ua-kopf"><b>${esc(x.name)}</b><span class="ua-stand">${UA_STAND[x.status] || esc(x.status)}</span></div>
+    <small class="hinweis">${esc(wann(x.geaendert_am || x.erstellt_am))}</small>
+    <ul class="ua-liste">${(x.punkte || []).map((p) => `<li>${esc(P[p] || p)}</li>`).join("")}${x.text ? `<li>✏️ ${esc(x.text)}</li>` : ""}</ul>
+    <div class="hinweis">Kontakt: ${(x.kontakt || []).map((k) => esc(K[k] || k)).join(", ") || "egal"}</div>
+    <div class="knoepfe" style="margin-top:6px"><button class="knopf klein" onclick="anrufen('${esc(x.person_id)}', false)">📞 Anrufen</button><button class="knopf klein" onclick="fensterZu($('uaAdminBlatt'));direkt('${esc(x.person_id)}')">💬 Nachricht</button>
+      ${x.status === "offen" ? `<button class="knopf klein" onclick="uaStand('${esc(x.id)}','in_arbeit')">🔧 Übernehmen</button>` : ""}${x.status !== "erledigt" ? `<button class="knopf klein" onclick="uaStand('${esc(x.id)}','erledigt')">✅ Erledigt</button>` : `<button class="knopf klein" onclick="uaStand('${esc(x.id)}','offen')">↩️ Wieder öffnen</button>`}</div></div>`;
+  blattAuf("uaAdminBlatt", `<h3 style="margin:0 0 4px">🙋 Unterstützungs-Anfragen</h3><p class="hinweis" style="margin:0 0 8px">„🔧 Übernehmen“ sagt dem Mitglied per Push, dass du dich meldest.</p>
+    ${a.length ? a.map(karte).join("") : '<p class="hinweis">Keine Anfragen – alle kommen klar 👍</p>'}<div class="knoepfe"><button class="knopf" onclick="fensterZu($('uaAdminBlatt'))">Schließen</button></div>`);
+}
+async function uaStand(id, status) {
+  try { await api("unterstuetzung_status", { id, status }, { warten: true }); if (INIT?.kz && status !== "offen") INIT.kz.unterstuetzung = Math.max(0, (INIT.kz.unterstuetzung || 1) - 1);
+    melde(status === "in_arbeit" ? "🔧 Übernommen – das Mitglied bekommt Bescheid" : status === "erledigt" ? "✅ Erledigt" : "↩️ Wieder offen"); uaAdmin(); } catch (e) { meldeFehler(e); }
+}
 // ---------- 2.439.0 KC-CLUB-INFO-LAUFBAND (Wunsch Hansi „über den 3 Feldern Nachricht, online, Termine ein großes Info-Feld – komplett gerahmt,
 // so breit wie die 3 zusammen; dort abwechselnd Infos, z. B. 3 Dokumente im Eingangskorb, jetzt noch für die nächste Sitzung anmelden“) ----------
 // Sammelt aus den schon geladenen Startdaten (keine zusätzliche Server-Abfrage): erst was zu erledigen ist (rot), dann Clubleitung (orange),
@@ -23724,6 +23780,9 @@ function ilMeldungen() {
   if (wt) { const a = wetterArt(wt.code), nass = (wt.regenWkt ?? 0) >= 50 || ["regen", "niesel", "gewitter", "schnee"].includes(a.szene);
     add({ id: "wetter:" + wt.datum, stufe: nass ? "gold" : "weiss", sym: a.sym, t: nass ? "Am Treffen-Tag wird es nass – Schirm mitnehmen" : `Wetter am Treffen-Tag: ${a.text}`, u: `${grad(wt.max)} / ${grad(wt.min)}${wt.regenWkt != null ? ` · ☔ ${wt.regenWkt} %` : ""}`, auf: "infoGehe(INFO_FELDER.findIndex((f) => f.id === 'wetter'))" }); }
   const nh = ilNeuheit(); if (nh) add(nh); // 🆕 eine Neuheit pro Runde
+  // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE: Admin – offene Anfragen (orange); alle anderen – Angebot „Unterstützung?“ (ausblendbar, 30 Tage Pause nach dem Senden)
+  if (ICH?.admin && kz.unterstuetzung > 0) add({ id: "ua-admin", stufe: "orange", sym: "🙋", t: kz.unterstuetzung === 1 ? "Eine Unterstützungs-Anfrage wartet" : `${kz.unterstuetzung} Unterstützungs-Anfragen warten`, u: "Antippen und Kontakt aufnehmen", auf: "uaAdmin()" });
+  else if (!ICH?.admin && !uaKuerzlich()) add({ id: "unterstuetzung", stufe: "weiss", sym: "🙋", t: "Unterstützung bei der Club-App?", u: "Anfrage senden – Hansi meldet sich", auf: "uaStart()", knoepfe: [["🙋 Anfrage senden", "uaStart()"]] });
   // ⚪ schöne Infos
   const an = ilAnlass(); if (an) add(an);
   const sw = ilStadt(); if (sw) add(sw); // 🏙️ Werne
@@ -23814,6 +23873,7 @@ function hashSprung(h) {
     else if (h === "#erstattung") KR_ZEIGE("erstattung"); // KICC-F-100 (2.419.0): Link aus „Kaution wird erstattet“
     else if (h === "#wunschbogen") wbStart(); // KC-CLUB-WUNSCHBOGEN (2.23.28)
     else if (h === "#schulung") smStart(); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62)
+    else if (h === "#unterstuetzung") uaAdmin(); // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE (Push an den Admin)
     else if (h.startsWith("#besuch=")) bsDirekt(decodeURIComponent(h.slice(8))); // KC-CLUB-BESUCHE (2.23.65): „Protokoll öffnen“ aus Mails wie im alten Programm
     else if (h === "#schulungen") scStart();
     else if (h === "#mikrofon") mikroAssistent(); // KC-CLUB-MIKRO-ASSISTENT (2.23.72)

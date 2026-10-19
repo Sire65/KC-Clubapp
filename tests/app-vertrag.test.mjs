@@ -5904,7 +5904,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491|492)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -8743,7 +8743,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 }
 // 2.157.0 KC-CLUB-START-PARALLEL-3 / KC-CLUB-START-MESSUNG: Server-Teilzeiten in der Startmessung, Kachel-Zahlen-Ketten gleichzeitig
 {
-  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 23000); // 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl
+  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 26000); // 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl; 2.492.0: +Unterstützungs-Zahl
   assert.ok(/const mess = <T,>\(n: string, x: PromiseLike<T>\)/.test(ini) && /srvT: zt,/.test(ini), "init misst Teilzeiten und liefert srvT");
   for (const n of ['mess("tr",', 'mess("teil",', 'mess("mg",', "kz: pKz", "comm: pComm", "rest: pRest", "auf: pAufgaben", "tf: pTermin"]) assert.ok(ini.includes(n), `Teilzeit ${n} gemessen`);
   assert.ok(/zt\.zl = Date\.now\(\) - t0Anfrage/.test(ini) && /zt\.ende = Date\.now\(\) - t0Anfrage/.test(ini), "Zählen und Ende gemessen");
@@ -10943,6 +10943,22 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\.spg-fern \{/.test(lies("index.html")) && /\.fern-tipp \{/.test(lies("index.html")), "sichtbare Markierung und Bedienfläche");
   assert.ok(/id: "fernhilfe_bedienen", thema: "technik"/.test(html) && /ALLE TESTS GRÜN/.test(lies("tools/fernhilfe/fern-bedienen-test.mjs")), "Hilfe und Browser-Test");
 }
+// 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE (Wunsch Hansi): kurzer Fragebogen „Unterstützung bei der Club-App?“, Admin nimmt Kontakt auf
+{
+  for (const a of ["unterstuetzung_meine", "unterstuetzung_senden", "unterstuetzung_liste", "unterstuetzung_status"]) assert.ok(aktionen.has(a) && aufrufe.has(a), "Aktion " + a);
+  const srvIds = Object.keys(Function(`return ${server.slice(server.indexOf("const UA_PUNKTE: Record<string, string> = ") + 42, server.indexOf("};", server.indexOf("const UA_PUNKTE")) + 1)}`)());
+  const appIds = [...html.slice(html.indexOf("const UA_BEREICHE = ["), html.indexOf("const UA_KONTAKT = [")).matchAll(/\["([a-z_]+)", "/g)].map((m) => m[1]);
+  assert.deepEqual(appIds.sort(), srvIds.sort(), "gleiche Punkte in App und Server");
+  assert.ok(appIds.length <= 10, "kurz halten (Wunsch Hansi: nicht überfordern)");
+  assert.ok(/case "unterstuetzung_liste": \{\n\s*nurAdmin\(ich\);/.test(server) && /case "unterstuetzung_status": \{\n\s*nurAdmin\(ich\);/.test(server), "Liste und Stand nur für den Admin");
+  assert.ok(/protokollPlatz\(ich\.person_id, "unterstuetzung_angefragt", 5\)/.test(server) && /\.neq\("status", "erledigt"\)\.order\("erstellt_am", \{ ascending: false \}\)\.limit\(1\);\n\s*const id = alt/.test(server), "Bremse; eine offene Anfrage je Person (wird ergänzt)");
+  assert.ok(/const pUaZahl = ich\.admin \?/.test(server), "Zahl im Start nur für den Admin");
+  assert.ok(/id: "unterstuetzung", stufe: "weiss"[^\n]*auf: "uaStart\(\)"/.test(html) && /!ICH\?\.admin && !uaKuerzlich\(\)/.test(html) && /id: "ua-admin", stufe: "orange"/.test(html), "Laufband: Angebot (ausblendbar, 30 Tage Pause) und Admin-Hinweis");
+  assert.ok(/<b>\$\{esc\(x\.name\)\}<\/b>/.test(html) && /✏️ \$\{esc\(x\.text\)\}/.test(html), "Admin-Liste: Namen und Text als Text");
+  const mig = lies("supabase/migrations/20261019_kc_club_unterstuetzung_anfrage.sql");
+  assert.ok(/revoke all on public\.kc_club_unterstuetzung from anon, authenticated/.test(mig) && /'kc_club_unterstuetzung', 'Club-App', 'sensitive', false, true, true/.test(mig) && !/drop |truncate|delete from/i.test(mig), "Migration additiv, gespiegelt, gesichert");
+}
+
 // 2.486.0 KC-CLUB-LINK-VORSCHAU (Wunsch Hansi): Server holt die Vorschau (nie der Absender), Schutz vor internen Adressen, Karte sicher dargestellt
 {
   assert.ok(/case "link_vorschau": \{/.test(server) && /if \(!lvBremse\(ich\.person_id\)\)/.test(server) && aufrufe.has("link_vorschau"), "Aktion link_vorschau mit Bremse");

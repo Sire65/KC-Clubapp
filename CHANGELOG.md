@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.492.0 – 2026-10-19 – „Unterstützung bei der Club-App?“ – Anfrage mit kurzem Fragebogen (KC-CLUB-UNTERSTUETZUNG-ANFRAGE) · Server 2.492.0
+Wunsch Hansi („Unterstützung Club App?? Anfrage senden … Fragebogen in Kategorien … weniger Punkte, sonst wird der User überfordert“):
+- Info-Laufband (und Mehr → 🙋 Unterstützung anfragen): „Unterstützung bei der Club-App? – Anfrage senden“. Ausblendbar; nach dem Senden 30 Tage Pause.
+- Fragebogen mit nur 8 Punkten in 5 Bereichen (Einrichten, Benachrichtigungen, Bedienung, Nachrichten, Termine & Dienste) + „Etwas anderes“ + Kontaktwunsch (📞 Anruf, 💬 Nachricht, 🤝 Persönlich). Eine offene Anfrage je Person – neue Angaben ergänzen sie.
+- Admin: Push + E-Mail, orange Meldung im Laufband mit Anzahl, Liste unter Mehr → 🙋 Unterstützung mit 📞 Anrufen, 💬 Nachricht, 🔧 Übernehmen (Mitglied bekommt „… kümmert sich“), ✅ Erledigt.
+- Neue Tabelle kc_club_unterstuetzung (gespiegelt, gesichert). Start: 1 Abfrage mehr nur für den Admin.
+- Tests: tools/unterstuetzung/ua-browser.mjs (Chromium, echte App, 8 Prüfungen), Vertragstests grün (neuer Block, gleiche Punkte in App und Server), Typprüfung unverändert.
+- Rückweg: App 2.490.0 / Server 2.491.0 erneut einspielen; die Tabelle stört dann nicht.
+
 ## Server 2.491.0 – 2026-10-19 – Notfall-Paket: seltener, gemeinsam, nur Geänderte (KC-CLUB-NOTPAKET-SELTENER/-GEMEINSAM/-NUR-GEAENDERTE)
 Wunsch Hansi („Kannst du das Notfall-Paket in kleinen Stücken bauen? … Ja bau 1 und 2. Und auch 3“; Anlass: Warnung „hohe Datenbank-Last“ – ein Bau kostet ~3.300 Abfragen). Nur Server, die App bleibt 2.490.0 (kein Neustart aller Apps).
 - **1 · Seltener:** tagsüber höchstens alle 3 Std. statt stündlich, nachts (22–6 Uhr) gar nicht wegen geänderter Daten. Weiter immer: neuer Tag, erstes Paket, nach einem Fehler (frühestens nach 30 Min.), „erzwingen“. Der Nachtrag aus dem Notbetrieb läuft unverändert alle 15 Min.

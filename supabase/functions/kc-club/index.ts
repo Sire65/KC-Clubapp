@@ -95,7 +95,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.491.0";
+const SERVER_VERSION = "2.492.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2796,7 +2796,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
     "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
-    "chat_selbstloeschen", "link_vorschau", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
+    "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
     "spiel_holen", "spiel_herausfordern", "spiel_antwort", "spiel_zug", "spiel_aufgeben", "spiel_revanche", "raetsel_stand", "raetsel_ergebnis",
@@ -5918,6 +5918,15 @@ async function vapidOeffentlich() {
   if (!r.error && r.data) VAPID_MERK = { t: Date.now(), v: { data: r.data, error: null } };
   return r;
 }
+// KC-CLUB-UNTERSTUETZUNG-ANFRAGE (2.492.0): wenige, wichtige Punkte (Wunsch Hansi „sonst wird der User überfordert“) – gleiche Liste in app.js (UA_BEREICHE)
+const UA_PUNKTE: Record<string, string> = {
+  startbild: "App auf den Startbildschirm legen", anmeldung: "Anmeldung oder Link klappt nicht",
+  push_keine: "Ich bekomme keine Benachrichtigungen", push_viele: "Ich bekomme zu viele Benachrichtigungen",
+  zurecht: "Ich finde mich nicht zurecht", schrift: "Schrift zu klein oder schlecht lesbar",
+  nachrichten: "Nachrichten: schreiben, Fotos, anrufen", termine: "Termine & Dienste: zusagen, Kalender, Dienste",
+};
+const UA_KONTAKT: Record<string, string> = { anruf: "📞 Anruf", nachricht: "💬 Nachricht", persoenlich: "🤝 Persönlich" };
+const uaKurz = (punkte: string[], text: string) => [...punkte.map((x) => UA_PUNKTE[x]), ...(text ? [text] : [])].join(" · ").slice(0, 180);
 // ---------- Hauptprogramm ----------
 const kcAnfrage = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -6529,8 +6538,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // 🎓 Schulungen: was auf den Admin wartet – KC-CLUB-SCHULUNG-HINWEIS (2.23.68); Fehler → keine Zahl.
         // 2.301.0 KC-CLUB-SCHNECKE-START: gleichzeitig mit den Kachelzahlen statt danach (war beim Admin-Start der letzte, längste Schritt „kz“)
         const pSchulungZahl = ich.admin ? schulungStand(ich, null).then((x) => x.wartet.length).catch(() => null) : Promise.resolve(null);
+        // KC-CLUB-UNTERSTUETZUNG-ANFRAGE (2.492.0): offene Unterstützungs-Anfragen – nur für den Admin (1 Abfrage), Fehler → keine Zahl
+        const pUaZahl = ich.admin ? Promise.resolve(db.from("kc_club_unterstuetzung").select("id", { count: "exact", head: true }).eq("status", "offen")).then((r: any) => r.error ? null : r.count ?? 0, () => null) : Promise.resolve(null);
         const pKz = kachelZahlen(ich, p).catch(() => null).then(async (kz) => {
-          if (kz && ich.admin) (kz as any).schulung = await pSchulungZahl;
+          if (kz && ich.admin) { (kz as any).schulung = await pSchulungZahl; (kz as any).unterstuetzung = await pUaZahl; }
           return kz;
         });
         const pComm = communicatorStatus(ich).catch(() => null), pSos = sosFuerAlle(), pAdmin = adminVorname(), pThema = konfigZeile("thema").then((r) => { const w: any = r.data?.wert; return w?.id ? w : null; }).catch(() => null); // 2.323.0 KC-CLUB-THEMEN
@@ -8259,6 +8270,54 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             gelesen: !!x.gelesen, beantwortet_am: x.beantwortet_am, versand: vs.get(x.id) ?? null }));
         }
         return json({ wissen: w ?? [], meine: m ?? [], offen, beantwortet, ...(await mfDaten(ich)) }); // + KC-CLUB-MITGLIEDER-FRAGEN
+      }
+      // ----- KC-CLUB-UNTERSTUETZUNG-ANFRAGE (2.492.0, Wunsch Hansi): „Unterstützung bei der Club-App? Anfrage senden“ -----
+      case "unterstuetzung_meine": {
+        const { data } = await db.from("kc_club_unterstuetzung").select("id,punkte,text,kontakt,status,erstellt_am").eq("person_id", ich.person_id).neq("status", "erledigt").order("erstellt_am", { ascending: false }).limit(1);
+        return json({ anfrage: data?.[0] ?? null });
+      }
+      case "unterstuetzung_senden": {
+        const punkte: string[] = [...new Set<string>((Array.isArray(p.punkte) ? p.punkte : []).map(String).filter((x: string) => x in UA_PUNKTE))];
+        const kontakt: string[] = [...new Set<string>((Array.isArray(p.kontakt) ? p.kontakt : []).map(String).filter((x: string) => x in UA_KONTAKT))];
+        const text = txt(p.text, 500);
+        if (!punkte.length && !text) throw new Fehler("Bitte mindestens einen Punkt ankreuzen oder kurz schreiben, wobei du Hilfe möchtest.");
+        if (!(await protokollPlatz(ich.person_id, "unterstuetzung_angefragt", 5))) throw new Fehler("Du hast gerade schon angefragt – Hansi meldet sich bei dir.", 429);
+        const { data: alt } = await db.from("kc_club_unterstuetzung").select("id").eq("person_id", ich.person_id).neq("status", "erledigt").order("erstellt_am", { ascending: false }).limit(1);
+        const id = alt?.[0]?.id;
+        const { data: z, error } = id
+          ? await db.from("kc_club_unterstuetzung").update({ punkte, text: text || null, kontakt, geaendert_am: jetzt() }).eq("id", id).select("id").single()
+          : await db.from("kc_club_unterstuetzung").insert({ person_id: ich.person_id, punkte, text: text || null, kontakt }).select("id").single();
+        if (error || !z) throw new Fehler("Die Anfrage konnte nicht gespeichert werden – bitte gleich noch einmal.", 500);
+        await protokoll(ich.person_id, "unterstuetzung_angefragt", { punkte: punkte.length, neu: !id });
+        const ziel = (await adminIds()).filter((x) => x !== ich.person_id), was = uaKurz(punkte, text);
+        if (ziel.length) await senden("club_nachricht", ziel, {
+          titel: `🙋 ${ich.vorname} wünscht Unterstützung`, kurz: was,
+          betreff: `Köcheclub Werne – ${ich.name} wünscht Unterstützung bei der App`,
+          text: `Hallo,\n\n${ich.name} wünscht Unterstützung bei der Club-App:\n\n${punkte.map((x) => "• " + UA_PUNKTE[x]).join("\n")}${text ? `\n• ${text}` : ""}\n\nKontakt gewünscht: ${kontakt.map((x) => UA_KONTAKT[x]).join(", ") || "egal"}\n\nIn der App: ${APP_URL}#unterstuetzung`,
+          url: APP_URL + "#unterstuetzung",
+        }, `club-unterstuetzung:${z.id}:${Date.now()}`).catch((e) => console.error("unterstuetzung push", String(e)));
+        return json({ ok: true, id: z.id, ergaenzt: !!id });
+      }
+      case "unterstuetzung_liste": {
+        nurAdmin(ich);
+        const { data } = await db.from("kc_club_unterstuetzung").select("id,person_id,punkte,text,kontakt,status,erstellt_am,geaendert_am,bearbeitet_am")
+          .or(`status.neq.erledigt,bearbeitet_am.gte."${new Date(Date.now() - 30 * 86400000).toISOString()}"`).order("erstellt_am", { ascending: false }).limit(60);
+        const leute = await personen((data ?? []).map((x: any) => x.person_id));
+        return json({ anfragen: (data ?? []).map((x: any) => ({ ...x, name: leute.get(x.person_id)?.display_name || x.person_id, vorname: vorname(leute.get(x.person_id) ?? null) || "" })),
+          punkte: UA_PUNKTE, kontakt: UA_KONTAKT });
+      }
+      case "unterstuetzung_status": {
+        nurAdmin(ich);
+        const st = String(p.status || "");
+        if (!["offen", "in_arbeit", "erledigt"].includes(st)) throw new Fehler("Unbekannter Stand.");
+        const { data: z } = await db.from("kc_club_unterstuetzung").update({ status: st, bearbeitet_von: ich.person_id, bearbeitet_am: jetzt() }).eq("id", String(p.id || "")).select("id,person_id,status").maybeSingle();
+        if (!z) throw new Fehler("Anfrage nicht gefunden.", 404);
+        await protokoll(ich.person_id, "unterstuetzung_stand", { anfrage: z.id, status: st });
+        if (st === "in_arbeit" && z.person_id !== ich.person_id) await senden("club_nachricht", [z.person_id], {
+          titel: "🙋 Deine Anfrage ist angekommen", kurz: `${ich.vorname} kümmert sich und meldet sich bei dir.`,
+          betreff: "Köcheclub Werne – deine Unterstützungs-Anfrage", text: `Hallo,\n\n${ich.name} hat deine Anfrage zur Club-App gesehen und meldet sich bei dir.\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL,
+        }, `club-unterstuetzung-stand:${z.id}:in_arbeit`).catch(() => null);
+        return json({ ok: true, status: st });
       }
       case "twinkey_frage": {
         const frage = txt(p.frage, 300).replace(/\s+/g, " ");
