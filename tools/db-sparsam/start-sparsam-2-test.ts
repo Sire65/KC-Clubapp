@@ -17,7 +17,7 @@ const kopf = `export const T: any = { db: null }; const db: any = new Proxy({}, 
 const ORG = "ORG"; const APP_ID = "KC_CLUBAPP"; const COMM_FEHLER = ["failed"]; const FREIGABE = { bis: 1 }; let LIVE_KURZ: any = 1;\n`;
 const datei = await Deno.makeTempFile({ suffix: ".ts" });
 await Deno.writeTextFile(datei, kopf + code + `
-export { personen, aktiveMitglieder, konfigZeile, wartungLesen, commLesen, merkerVergessen, MERK_MS };
+export { personen, aktiveMitglieder, konfigZeile, wartungLesen, commLesen, merkerVergessen, treffenGemerkt, MERK_MS };
 export const zustand = () => ({ MG_NAMEN, KONFIG_MERK, WARTUNG_MERK, COMM_MERK });
 export const commVergessen = () => { COMM_MERK = null; };`);
 const M: any = await import("file://" + datei);
@@ -106,4 +106,14 @@ abfragen = []; await M.commLesen(false); await M.commLesen(false); ok(abfragen.l
 await M.commLesen(true); ok(abfragen.length === 10, "Admin-Ansicht liest immer frisch");
 M.commVergessen();
 FEHLER = true; abfragen = []; await M.commLesen(false); FEHLER = false; await M.commLesen(false); ok(abfragen.length === 10, "Communicator: Fehler wird nicht gemerkt");
+// 5. Clubtermine (2.495.0): nur Termin-Zeilen gemerkt, Kopien, Speichern leert, Fehler nie gemerkt
+let lesungen = 0, TR = [{ id: "t1", titel: "Treffen" }], TRFEHLER = false;
+const lese = () => Promise.resolve().then(() => (lesungen++, TRFEHLER ? { data: null, error: { message: "x" } } : { data: structuredClone(TR), error: null }));
+const a1 = await M.treffenGemerkt("naechstes", lese), a2 = await M.treffenGemerkt("naechstes", lese);
+ok(lesungen === 1 && a2.data[0].titel === "Treffen", "Termine: einmal gelesen, dann gemerkt");
+a1.data[0].titel = "x"; ok((await M.treffenGemerkt("naechstes", lese)).data[0].titel === "Treffen", "Termine: Kopien");
+TR = [{ id: "t1", titel: "Neu" }]; M.merkerVergessen("/rest/v1/kc_club_treffen?id=eq.t1");
+ok((await M.treffenGemerkt("naechstes", lese)).data[0].titel === "Neu" && lesungen === 2, "Termin speichern leert den Merker");
+M.merkerVergessen("/rest/v1/kc_club_treffen"); TRFEHLER = true; await M.treffenGemerkt("kommend", lese); TRFEHLER = false;
+const vorher = lesungen; await M.treffenGemerkt("kommend", lese); ok(lesungen === vorher + 1, "Termine: Fehler wird nicht gemerkt");
 console.log("ALLE TESTS GRÜN"); Deno.exit(0);

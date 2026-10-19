@@ -103,11 +103,24 @@ function merkerVergessen(url: string) {
   else if (t === "kc_core_app_registry") WARTUNG_MERK = null;
   else if (t === "kc_club_funktion_freigabe") FREIGABE.bis = 0;
   else if (t === "kc_club_terminumfragen") LIVE_KURZ = null;
+  else if (t === "kc_club_treffen") TREFFEN_MERK.clear();
+}
+// KC-CLUB-START-SPARSAM-2 (Server 2.495.0, Stufe 2 Punkt 3): Clubtermine (nur die Termin-Zeilen, nie Zu-/Absagen) für den App-Start MERK_MS lang
+// gemerkt – das nächste Treffen und die kommenden Treffen für die Kachel-Zahl. Zu-/Absagen bleiben frisch. Speichern eines Termins leert den Merker.
+const TREFFEN_MERK = new Map<string, { t: number; v: Promise<{ data: any; error: any }> }>();
+function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: any }>): Promise<{ data: any; error: any }> {
+  const m0 = TREFFEN_MERK.get(k);
+  if (!m0 || Date.now() - m0.t > MERK_MS) {
+    const m = { t: Date.now(), v: Promise.resolve(lesen()).then((r) => { if (r.error && TREFFEN_MERK.get(k) === m) TREFFEN_MERK.delete(k); return r; },
+      (e) => { if (TREFFEN_MERK.get(k) === m) TREFFEN_MERK.delete(k); throw e; }) };
+    TREFFEN_MERK.set(k, m);
+  }
+  return TREFFEN_MERK.get(k)!.v.then((r) => ({ data: r.data == null ? r.data : structuredClone(r.data), error: r.error }));
 }
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.494.0";
+const SERVER_VERSION = "2.495.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2953,7 +2966,7 @@ async function treffenListe(ich: Ich, nurNaechstes = false, zeitraum?: { von: st
   q = zeitraum ? q.lt("beginn", zeitraum.bis).or(`ende.gte.${zeitraum.von},and(ende.is.null,beginn.gte.${zeitraum.von})`).limit(100)
     : nurNaechstes ? q.gte("beginn", new Date(Date.now() - 3 * 3600000).toISOString()).eq("status", "geplant").eq("art", "treffen").limit(1)
     : q.gte("beginn", new Date(Date.now() - 30 * 86400000).toISOString()).limit(60);
-  const { data: treffen } = await q;
+  const { data: treffen } = nurNaechstes && !zeitraum ? await treffenGemerkt("naechstes", () => q) : await q; // KC-CLUB-START-SPARSAM-2
   const ids = (treffen ?? []).map((t: any) => t.id);
   const { data: teil } = ids.length ? await db.from("kc_club_teilnahme").select("*").in("treffen_id", ids) : { data: [] as any[] };
   const [leute, mitfahrten, suche, anl] = await Promise.all([
@@ -4252,7 +4265,7 @@ async function kachelZahlen(ich: Ich, p: any) {
     sicher(async () => {
       // 2.157.0 KC-CLUB-START-PARALLEL-3: Treffen und Terminanfragen hängen nicht voneinander ab → beide Ketten gleichzeitig
       const [offenTr, an] = await Promise.all([(async () => {
-        const tr = ok(await db.from("kc_club_treffen").select("id").eq("status", "geplant").eq("art", "treffen").gte("beginn", jetztIso).limit(100)) as any[];
+        const tr = ok(await treffenGemerkt("kommend", () => db.from("kc_club_treffen").select("id").eq("status", "geplant").eq("art", "treffen").gte("beginn", jetztIso).limit(100))) as any[]; // KC-CLUB-START-SPARSAM-2
         const ids = tr.map((x) => x.id);
         const tn = ids.length ? ok(await db.from("kc_club_teilnahme").select("treffen_id,antwort").eq("person_id", ich.person_id).in("treffen_id", ids)) as any[] : [];
         const beantwortet = new Set(tn.filter((x) => x.antwort).map((x) => x.treffen_id));

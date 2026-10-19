@@ -1,5 +1,5 @@
 {
-  "version": "2.495.0",
+  "version": "2.496.0",
   "datum": "2026-10-19",
   "stufe": "RC",
   "neu": [
@@ -7,7 +7,7 @@
   ],
   "verlauf": [
     {
-      "version": "2.495.0",
+      "version": "2.496.0",
       "datum": "2026-10-19",
       "neu": [
         "Kleine Systemanpassung"
