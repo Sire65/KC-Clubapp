@@ -11098,3 +11098,18 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(t - ES\.tipp < 450\) \{ ES\.tipp = 0; esDrehen\(!hinten\); return; \}/.test(html), "Doppeltipp dreht weiter um");
 }
 
+// Server 2.494.0 KC-CLUB-START-SPARSAM-2 (Stufe 2 „App-Start sparsamer“, Freigabe Hansi): seltene Daten je Instanz MERK_MS gemerkt, Speichern leert sofort
+{
+  assert.ok(/const MERK_MS = 60_000;/.test(server) && /if \(schreibt\) merkerVergessen\(url\);/.test(server) && /return schreibt \? r\.finally\(\(\) => merkerVergessen\(url\)\) : r;/.test(server), "Merker: 60 s, jedes Schreiben leert vorher und nachher");
+  const mv = server.slice(server.indexOf("function merkerVergessen("), server.indexOf("const dbWeg ="));
+  assert.ok(/"kc_club_konfig"\) \{ KONFIG_MERK\.clear\(\); KONFIG_STAND\+\+; \}/.test(mv) && /"kc_core_app_registry"\) WARTUNG_MERK = null/.test(mv) && /"kc_club_funktion_freigabe"\) FREIGABE\.bis = 0/.test(mv) && /"kc_club_terminumfragen"\) LIVE_KURZ = null/.test(mv), "Speichern von Einstellungen, Wartung, Freigaben, Umfragen leert den passenden Merker");
+  const kz = server.slice(server.indexOf("function konfigZeile("), server.indexOf("async function sosFuerAlle"));
+  assert.ok(/if \(!error && stand === KONFIG_STAND\) KONFIG_MERK\.set/.test(kz) && /structuredClone/.test(kz), "Club-Einstellungen: nur fehlerfreie Lesungen ohne gleichzeitiges Speichern, Kopien");
+  assert.ok(/const \{ data \} = await konfigZeile\("anruf_antworten"\);/.test(server), "Schnellantworten aus der gebündelten Lesung");
+  const pe = server.slice(server.indexOf("async function personen("), server.indexOf("// KC-CLUB-START-PARALLEL-3 (2.162.0): laufen"));
+  assert.ok(/aus\.set\(id, personKopie\(p\)\)/.test(pe) && /\.in\("person_id", rest\)/.test(pe) && /const PERSON_FELDER = \["person_id", "display_name", "given_name", "preferred_name", "email"\] as const;/.test(server) && /if \(!error && data\) mgNamenMerken\(data\);/.test(server), "Namen aus der Mitgliederliste, nur gleiche Felder (kein Geburtsdatum), Rest einzeln");
+  assert.ok(/function commLesen\(frisch: boolean\)/.test(server) && /commLesen\(erreichbarkeit\)/.test(server) && /if \(r\.some\(\(x: any\) => x\.error\) && COMM_MERK === m\) COMM_MERK = null;/.test(server), "Communicator: Admin-Ansicht frisch, Fehler nie gemerkt");
+  assert.ok(/FREIGABE\.bis = Date\.now\(\) \+ MERK_MS;/.test(server) && /Date\.now\(\) - LIVE_KURZ\.t > 30000/.test(server), "Freigaben 60 s, Live-Umfrage 30 s");
+  assert.ok(/if \(!neu && jetztMs - z < 30000\) return;/.test(server) && /ZULETZT_TAKT_MS = 30_000/.test(server) && /const ONLINE_SEK = 150/.test(server), "„online seit“ und „zuletzt gesehen“ unverändert (sonst flackert die Anzeige)");
+  assert.ok(fs.existsSync(new URL("../tools/db-sparsam/start-sparsam-2-test.ts", import.meta.url)), "Gleichwertigkeits-Test vorhanden");
+}

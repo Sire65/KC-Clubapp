@@ -1,5 +1,14 @@
 # Änderungen
 
+## Server 2.494.0 – 2026-10-19 (ohne App-Build) – App-Start sparsamer, Stufe 2 (KC-CLUB-START-SPARSAM-2)
+Freigabe Hansi („Ja“ zu Stufe 2, Punkte 1, 2 und 5 – „vorsichtig, damit alles lauffähig bleibt“). Gleiche Anzeige, weniger Datenbank-Abfragen:
+- Selten geänderte Daten merkt sich jede Server-Instanz 60 s: Club-Einstellungen (SOS, Pinnwand, Einstieg, Thema, Schnellantworten – jetzt in der gebündelten Lesung), Wartungsmodus, Funktions-Freigaben (vorher 15 s) und der Zustand des KC Communicators (5 Lesungen). Speichert die App selbst etwas davon, ist der Merker sofort weg; andere Instanzen sehen es spätestens nach 60 s. Fehler werden nie gemerkt. Die Admin-Ansicht des Communicators liest immer frisch.
+- Namen aktiver Mitglieder kommen aus der (60 s gemerkten) Mitgliederliste statt aus je einer eigenen Abfrage – die häufigste Abfrage überhaupt (pg_stat_statements: gut 25.000 Aufrufe). Gleiche Felder wie vorher, nie Geburtsdatum; Ausgeschiedene/Gäste wie bisher einzeln.
+- Online-Meldung: eigener Fenster-Abgleich (zwei Browser) nur noch jedes 2. Mal geschrieben (30 → 75 s; die App meldet sich alle 60 s). Live-Umfrage 30 statt 15 s gemerkt, Speichern einer Umfrage leert den Merker. „Online seit“ und „zuletzt gesehen“ bleiben bewusst bei 30 s – längere Abstände würden die Online-Anzeige flackern lassen.
+- Die Zählung „welche Tabelle wie oft“ (KC-CLUB-DB-PFADE, 2.489.0) ist wieder ausgebaut (KC-SPARSAM-PROTOKOLLE: messen über eigene Tabellen und pg_stat_statements).
+- Tests: `tools/db-sparsam/start-sparsam-2-test.ts` (echter Server-Code, 300 Zufallswelten: Namen alt = neu; Merker: Kopien, Speichern leert, Lesung während des Speicherns wird nicht gemerkt, Fehler nie gemerkt) · Vertragstest-Block 2.494.0.
+- Rückweg: Server 2.493.0 erneut hochladen (keine Datenbank-Änderung).
+
 ## Server – 2026-10-19 (ohne App-Build) – KC-CLUB-ANFRAGE-ALLE-INFO: Terminanfrage an mehrere – alle erfahren Antworten
 - Wunsch Hansi („Termin mit Dieter und Klaus … wenn Zusagen, Absagen, andere Vorschläge kommen, müssen alle benachrichtigt werden“): Anfragen an mehrere Personen gingen schon (Mitglieder wählen oder Gruppe), Antworten und Gegenvorschläge erfuhr aber nur der Anfragende. Jetzt bekommen auch die übrigen Eingeladenen Push/E-Mail bei Ja, Vielleicht, Nein und Gegenvorschlag („… zu der du auch eingeladen bist“). Angenommene Vorschläge (neue Zeit) und Absagen gingen schon an alle.
 - Rückweg: Server-Stand vor diesem Eintrag erneut hochladen.
