@@ -61,6 +61,44 @@ Deno.serve(async(req)=>{
     if(angelegt||neu.length)await sb.from("kc_db_mirror_audit").insert({severity:"info",action:"mirror_schema_auto",detail:angelegt?`Neon-Tabelle ${table} automatisch angelegt (${spalten.length} Spalten)`:`Neon-Tabelle ${table}: Spalten ergänzt (${neu.join(", ")})`,metadata:{table,created:angelegt,columns_added:neu,batch_id:batchId}});
     return {created:angelegt,columns_added:neu,type_mismatch:abweichend,not_added_privacy:fehlend};
   };
+  // KICC-F-109 (19.10.2026, Supabase-Egress): Tabellen mit Ganzzahl-Schlüssel in Blöcke zu BLOCK Schlüsselnummern teilen,
+  // je Block Zeilen + Prüfsumme in Supabase und Neon vergleichen und nur abweichende Blöcke übertragen. Danach die ganze
+  // Tabelle prüfen wie immer; passt etwas nicht (oder ist der Block-Weg nicht möglich), kommt null zurück → ganze Tabelle wie bisher.
+  const BLOCK=500;
+  const blockAbgleich=async(table:string,i:number,sc:string,sh:string,hashMode:string,started:string,startMs:number)=>{
+    const {data:bh,error:be}=await sb.rpc("kc_db_mirror_block_hashes",{p_table_name:table,p_width:BLOCK});
+    if(be||!bh?.pk||!Array.isArray(bh.blocks))return null;
+    const schema=await schemaAbgleich(table);
+    if(schema.created||schema.type_mismatch.length||schema.not_added_privacy.length)return null;
+    const q=`"public".${qi(table)}`,pk=qi(String(bh.pk)),w=Number(bh.width);
+    if(!Number.isInteger(w)||w<10)return null;
+    const ziel=await getNeon().unsafe(`select (${pk}/${w})::bigint::text b,count(*)::bigint::text n,md5(string_agg(row_to_json(t)::text,'' order by ${pk})) h from ${q} t group by 1`);
+    const zielMap=new Map<string,string>(ziel.map((z:any)=>[String(z.b),`${z.n}|${z.h}`]));
+    const quelle=new Set<string>();const anders:string[]=[];
+    for(const [b,n,h] of bh.blocks as [number,number,string][]){const k=String(b);quelle.add(k);if(zielMap.get(k)!==`${n}|${h}`)anders.push(k)}
+    for(const k of zielMap.keys())if(!quelle.has(k))anders.push(k);
+    if(anders.length>Math.max(3,bh.blocks.length*0.6))return null; // fast alles anders → ganze Tabelle ist einfacher
+    let bytes=0;const teile:string[]=[];
+    for(let j=0;j<anders.length;j+=200){
+      const {data:rows,error:re}=await sb.rpc("kc_db_mirror_block_rows",{p_table_name:table,p_width:w,p_blocks:anders.slice(j,j+200)});
+      if(re||!rows)return null;
+      const p=String(rows.payload_text??"[]");teile.push(p);bytes+=new TextEncoder().encode(p).byteLength;
+    }
+    if(anders.length)await getNeon().begin(async(tx:any)=>{
+      await tx.unsafe(`delete from ${q} where (${pk}/${w})::bigint = any($1::bigint[])`,[anders]);
+      for(const p of teile)await tx.unsafe(`insert into ${q} overriding system value select x.* from jsonb_populate_recordset(null::${q},(($1::jsonb #>> '{}')::jsonb)) x`,[p]);
+    });
+    const v=await getNeon().unsafe(verifySqlFor(table,q));const tc=String(v[0]?.row_count??"0"),th=String(v[0]?.content_hash??"");
+    if(tc!==sc||th!==sh)return null;
+    const endMs=Date.now(),durationMs=Math.max(1,endMs-startMs);
+    const metrics={table,batch_id:batchId,batch_index:i+1,batch_total:batchTotal,payload_bytes:bytes,source_hash:sh,target_hash:th,hash_mode:hashMode,
+      transfer_mode:"block_delta",block_width:w,blocks_total:bh.blocks.length,blocks_changed:anders.length,duration_ms:durationMs,
+      ...(schema.columns_added.length?{schema_sync:schema}:{})};
+    const {error:ie}=await sb.from("kc_db_mirror_runs").insert({run_type:"snapshot",status:"ok",started_at:started,finished_at:new Date(endMs).toISOString(),source_rows:Number(sc),target_rows:Number(tc),mismatch_count:0,message:`${table}: ${anders.length} of ${bh.blocks.length} blocks transferred; source and target identical`,metrics});
+    if(ie)return null;
+    if(bytes>0)await sb.rpc("kicc_report_program_flow",{p_program_id:"kc-db-mirror-worker",p_instance_id:batchId,p_source_id:"supabase-kc-core",p_target_id:"neon-mirror",p_flow_type:"mirror",p_event_count:1,p_byte_count:bytes,p_status:"OK",p_measured_at:new Date(endMs).toISOString()});
+    return {table,status:"ok",source_rows:sc,target_rows:tc,hash_match:true,payload_bytes:bytes,transfer_mode:"block_delta",blocks_changed:anders.length,blocks_total:bh.blocks.length,duration_ms:durationMs,batch_id:batchId,batch_index:i+1,batch_total:batchTotal};
+  };
   try{
     for(let i=0;i<requested.length;i++){
       const table=requested[i];
@@ -94,6 +132,9 @@ Deno.serve(async(req)=>{
             if(!vErr){results.push({table,status:"skipped",reason:"source_unchanged_target_verified",source_rows:sc,source_hash:sh,batch_id:batchId,batch_index:i+1,batch_total:batchTotal});continue}
           }
         }catch{/* Ziel nicht prüfbar → normal übertragen */}
+      }
+      if(!stableHashTables.has(table)&&!personRefTables.has(table)&&!userRefTables.has(table)&&!redactedTables.has(table)&&table!=="kc_core_organizations"){
+        try{const r=await blockAbgleich(table,i,sc,sh,hashMode,started,startMs);if(r){results.push(r);continue}}catch(e){console.error("block_delta",table,String(e))}
       }
       {const {data:snap,error:se}=await sb.rpc("kc_db_mirror_snapshot_text",{p_table_name:table});if(se||!snap){results.push({table,status:"error",stage:"source_snapshot"});continue}
         sc=String(snap.row_count??"0");payload=String(snap.payload_text??"[]");
