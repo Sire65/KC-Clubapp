@@ -6968,6 +6968,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(wahl === "verwerfen" && !\(await frage\(/.test(f) && f.indexOf("prSpeichernJetzt(false)") < f.indexOf('api("protokoll_nachtrag"'), "Verwerfen fragt nach; eigene Eingaben werden vorher gespeichert");
 }
 
+// 2.500.0 KC-CLUB-DV-UEBERALL (Wunschliste Nr. 27): 📊 Dienstzeiten-Übersicht mit demselben Knopf überall, wo der Dienstplan aufgeht
+{
+  assert.ok(/const dvDarf = \(\) => !!\(ICH\?\.vorstand \|\| ICH\?\.admin\);/.test(html) && /nurLeitung\(ich\);\s*const \{ data: rows, error \} = await db\.from\("kc_dp_wish_inbox"\)/.test(server), "gleiches Recht wie im Büro (Clubleitung), Server prüft weiter");
+  const knopf = html.match(/const dvKnopf = \(\) => dvDarf\(\) \? `([^`]+)` : "";/);
+  assert.ok(knopf && /onclick="dvStart\(\)"/.test(knopf[1]) && /aria-label="Dienstzeiten-Übersicht">📊</.test(knopf[1]), "ein Knopf für alle Stellen");
+  assert.ok(/<b>📥 Eingang[^\n]*\$\{dvKnopf\(\)\}/.test(html), "Büro-Eingang nutzt denselben Knopf");
+  assert.ok(/🗓️ Mein Dienst<\/h3>\$\{dvKnopf\(\)\}/.test(html), "Mein Dienst");
+  assert.ok(/<div class="dw-reihe2"><details class="dw-tipp">[\s\S]*?<\/details>\$\{dvKnopf\(\)\}<\/div>/.test(html) && /if \(\$\("dwFenster"\)\) f\.style\.zIndex = "2100";/.test(html), "Dienstwünsche – Übersicht liegt über dem Vollbild-Fenster");
+  assert.ok(/<h2>🗓️ Dienstpläne<\/h2><button type="button" id="dpUebersicht" class="[^"]*versteckt"[^>]*onclick="dvStart\(\)"[^>]*>📊<\/button>/.test(html) && /\$\("dpUebersicht"\)\?\.classList\.toggle\("versteckt", !dvDarf\(\)\);/.test(html), "Dienstpläne – nur für die Clubleitung sichtbar");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

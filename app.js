@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.499.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.500.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14038,8 +14038,8 @@ function dwOeffnen() {
     <button class="knopf klein" data-k="zu" aria-label="Zurück zur Club-App">‹ Zurück</button><b class="dw-titel">📝 Dienstwünsche</b>
     <button class="knopf klein" data-k="bogen" title="Leeren persönlichen Wunschbogen mit QR-Code drucken oder per E-Mail schicken" aria-label="Leerer Bogen">🖨️ Bogen</button>
     <button class="knopf haupt klein" data-k="fertig" title="Bestätigung mit Zusammenfassung deiner Eingaben per E-Mail anfordern" aria-label="Fertig – Bestätigung per E-Mail anfordern">✅ Fertig</button></div>
-    <details class="dw-tipp"><summary>💡 Tipp: Wann eine Sperrzeit?</summary><b>Sperrzeit nur, wenn du innerhalb deiner Kann-Zeit kurz weg musst.</b> Beispiel: Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr.
-      Außerhalb der Kann-Zeit bist du automatisch frei.</details></div>
+    <div class="dw-reihe2"><details class="dw-tipp"><summary>💡 Tipp: Wann eine Sperrzeit?</summary><b>Sperrzeit nur, wenn du innerhalb deiner Kann-Zeit kurz weg musst.</b> Beispiel: Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr.
+      Außerhalb der Kann-Zeit bist du automatisch frei.</details>${dvKnopf()}</div></div>
     <div style="flex:1;position:relative;display:flex">
       <!-- 1.40.0: drehende Mütze schon, während die Twinkey-Seite selbst noch lädt (danach zeigt die Seite ihre eigene) -->
       <div class="warten an" style="position:absolute;left:50%;top:42%;z-index:0"><div class="muetze"><img src="kc-kochmuetze-weiss.webp" alt=""></div><b>Twinkey wird geladen …</b></div>
@@ -26508,7 +26508,7 @@ function buEingangPosten() {
 function buEingangHtml() {
   const geladen = BU_EIN.leihen || BU_EIN.vorschlaege || BU_EIN.hilfe, P = (BU_EIN.posten = buEingangPosten());
   const zeig = P.map((x, i) => [x, i]).filter(([x]) => ekfPasst(x)), aktiv = ["jahr", "monat", "art", "wer"].filter((k) => EKF[k]).length;
-  return `<div class="ek-kopf"><b>📥 Eingang${P.length ? ` – ${P.length} ${P.length === 1 ? "Sache" : "Sachen"}` : ""}</b>${ICH?.vorstand || ICH?.admin ? `<button class="knopf klein pr-filter-knopf" onclick="dvStart()" title="Dienstzeiten-Übersicht (alle Namen und Tage)" aria-label="Dienstzeiten-Übersicht">📊</button>` : ""}<button class="knopf klein pr-filter-knopf" onclick="ekfUmschalten()" title="Eingang filtern (Jahr, Monat, Art, Name)" aria-label="Eingang filtern" aria-expanded="${EKF.offen}">🔽${aktiv ? `<span class="anz">${aktiv}</span>` : ""}</button></div>
+  return `<div class="ek-kopf"><b>📥 Eingang${P.length ? ` – ${P.length} ${P.length === 1 ? "Sache" : "Sachen"}` : ""}</b>${dvKnopf()}<button class="knopf klein pr-filter-knopf" onclick="ekfUmschalten()" title="Eingang filtern (Jahr, Monat, Art, Name)" aria-label="Eingang filtern" aria-expanded="${EKF.offen}">🔽${aktiv ? `<span class="anz">${aktiv}</span>` : ""}</button></div>
     ${EKF.offen ? ekfHtml(P, zeig.length) : ""}
     <div class="karte bu-gruss"><span class="hinweis">Antippen → bearbeiten, zurück in den Eingang oder zum Ordner. Es bleibt hier, bis es erledigt ist; mit 🗄️ Ablegen in einen oder mehrere Ordner legen (auch in den Ordner des Mitglieds).</span></div>
     ${!geladen ? '<div class="karte hinweis">Wird geladen …</div>' : !zeig.length && P.length ? '<div class="karte hinweis">Zu diesem Filter liegt nichts im Eingang – <button class="knopf klein" onclick="ekfLeeren()">↺ Alle zeigen</button></div>' : P.length ? `<div class="karte" style="padding:4px 12px">${zeig.map(([x, i]) => `<button class="bu-ein-zeile" onclick="buEinPosten(${i})"><span class="sym">${esc(x.sym)}</span>
@@ -26598,9 +26598,14 @@ function dvZeichnen() {
     <div class="dv-rahmen">${dvGanttHtml()}</div>
     <p class="hinweis" style="margin:0">Feld antippen = genaue Uhrzeiten. Auf dem Handy am besten quer halten – sonst seitlich wischen.</p>`;
 }
+// KC-CLUB-DV-UEBERALL (2.500.0, Wunschliste Nr. 27): derselbe 📊-Knopf wie im Büro-Eingang überall, wo der Dienstplan aufgeht
+// (Dienstpläne, Mein Dienst, Dienstwünsche). Gleiches Recht wie bisher (Clubleitung) – die Übersicht zeigt die Wünsche aller.
+const dvDarf = () => !!(ICH?.vorstand || ICH?.admin);
+const dvKnopf = () => dvDarf() ? `<button type="button" class="knopf klein pr-filter-knopf" onclick="dvStart()" title="Dienstzeiten-Übersicht (alle Namen und Tage)" aria-label="Dienstzeiten-Übersicht">📊</button>` : "";
 async function dvStart() {
   const f = blattAuf("dvBlatt", `<div class="dv-kopf"><h3>📊 Dienstzeiten-Übersicht</h3><button type="button" class="pr-filter-zu" aria-label="Übersicht schließen" title="Schließen" onclick="$('dvBlatt').remove()">✕</button></div><div id="dvInhalt"><p class="hinweis">Wird geladen …</p></div>`);
   f.classList.add("dv-blatt");
+  if ($("dwFenster")) f.style.zIndex = "2100"; // aus den Dienstwünschen geöffnet: über deren Vollbild-Fenster
   try { DV.daten = await api("dienst_uebersicht", {}, { warten: true }); } catch (e) { f.remove(); return meldeFehler(e); }
   dvZeichnen();
 }
@@ -27938,7 +27943,7 @@ function mdUnter() {
 }
 const MD_WUNSCH = { offen: "📨 abgegeben – wartet auf den Planer", uebernommen: "✅ vom Planer übernommen", abgelehnt: "✖ vom Planer abgelehnt" };
 async function mdStart() {
-  const f = blattAuf("mdBlatt", `<h3 style="margin:0">🗓️ Mein Dienst</h3><div id="mdInhalt"><p class="hinweis">Wird geladen …</p></div><button class="knopf" onclick="$('mdBlatt').remove()">Schließen</button>`);
+  const f = blattAuf("mdBlatt", `<div class="dv-kopf"><h3 style="margin:0">🗓️ Mein Dienst</h3>${dvKnopf()}</div><div id="mdInhalt"><p class="hinweis">Wird geladen …</p></div><button class="knopf" onclick="$('mdBlatt').remove()">Schließen</button>`);
   f.classList.add("sc-blatt");
   try { MD_D = await api("mein_dienst", {}, { warten: true }); } catch (e) { $("mdInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ Stand konnte nicht geladen werden: ${esc(fehlerText(e, ""))} <button class="knopf klein" onclick="mdStart()">🔄 Nochmal</button></div>`; return; }
   const w = MD_D?.wunsch || {}, so = MD_D?.soll || { anzahl: 0 }, ist = MD_D?.ist || {}; // Gesamtprüfung 3: unvollständige Antwort → leer statt Absturz
@@ -27981,6 +27986,7 @@ async function dienstLaden() {
   try {
     DP = await api("dienste", { von: dpStart, bis, personen: dpWahl || [] });
     dpWahl = DP.gewaehlt;
+    $("dpUebersicht")?.classList.toggle("versteckt", !dvDarf()); // KC-CLUB-DV-UEBERALL
     $("dpFreigabe").checked = !!DP.freigabe;
     // eigene Person zuerst, dann alphabetisch (Farben bleiben so stabil)
     DP.personen.sort((a, b) => (b.ich - a.ich) || a.name.localeCompare(b.name));
