@@ -31282,6 +31282,7 @@ function protokollFormular() {
     <div class="knoepfe">
       <button class="knopf haupt" onclick="einmal(this, protokollVeroeffentlichen)">📢 Veröffentlichen</button>
       <button class="knopf" onclick="einmal(this, () => prSpeichernJetzt(true))">💾 Speichern</button>
+      <button class="knopf" onclick="einmal(this, prDrucken)">🖨️ Drucken / PDF</button>
       ${PR.darfLoeschen ? `<button class="knopf" onclick="protokollLoeschen()">🗑️ ${p.version === 1 ? "Entwurf" : "Protokoll"} löschen</button>` : ""}
     </div>
     <p class="hinweis" style="font-size:.85rem">Nach dem Veröffentlichen bekommen alle Mitglieder (ohne Aushilfen) Bescheid und haben ${7} Tage Zeit für Einwände – danach gilt das Protokoll als genehmigt.</p>`;
@@ -31293,6 +31294,13 @@ function prDa(box, gegen) {
   $("prDaZahl").textContent = document.querySelectorAll("[data-da]:checked").length;
   $("prEntZahl").textContent = document.querySelectorAll("[data-ent]:checked").length;
   prAendern();
+}
+// KC-CLUB-PROTOKOLL-DRUCKEN (Wunsch Hansi 19.10.2026 „Druckknopf da rein“): gut sichtbarer Knopf in Entwurf und Lese-Ansicht.
+// Beim Entwurf erst speichern und neu laden – sonst druckt die Vorschau den Stand vom Öffnen statt der gerade getippten Eingaben.
+async function prDrucken() {
+  if (!PR) return;
+  if ($("prT")) { await prSpeichernJetzt(false); PR = await api("protokoll_laden", { id: prId }); aufgabenMitGruppe(PR.aufgaben || []); }
+  druckStarten("protokoll");
 }
 function prAendern() { clearTimeout(prTimer); $("prGespeichert").textContent = ""; prTimer = setTimeout(() => prSpeichernJetzt(false), 1200); }
 async function prSpeichernJetzt(vonHand) {
@@ -31403,7 +31411,7 @@ function protokollLesen() {
       ${p.naechster_termin ? `<p style="margin:10px 0 0"><b>📅 Nächster Termin:</b> ${esc(p.naechster_termin)}</p>` : ""}
     </div>
     ${PR.anlagen.length ? `<div class="karte"><h3>📎 Das Protokoll</h3><p class="hinweis" style="margin-top:0;font-size:.85rem">Antippen zum Vergrößern bzw. Öffnen.</p>${anlagenListe(false)}</div>` : ""}
-    ${p.roh !== "entwurf" ? '<div class="knoepfe" style="margin:0 0 10px"><button class="knopf klein" onclick="protokollInsArchiv()">🗄️ In mein Archiv legen</button></div>' : ""}
+    <div class="knoepfe" style="margin:0 0 10px"><button class="knopf klein" onclick="einmal(this, prDrucken)">🖨️ Drucken / PDF</button>${p.roh !== "entwurf" ? '<button class="knopf klein" onclick="protokollInsArchiv()">🗄️ In mein Archiv legen</button>' : ""}</div>
     ${PR.aufgaben.length ? `<div class="karte"><h3>📌 Aufgaben</h3>${PR.aufgaben.map((a) => aufgabeZeile(a, a.meine || PR.darfBearbeiten, a.verwalten)).join("")}</div>` : ""}
     ${PR.einwaende.length || einspruchOffen ? `<div class="karte"><h3>⚠️ Einwände</h3>
       ${PR.einwaende.map((e) => `<div class="zeile"><div style="flex:1${e.erledigt_am ? ";opacity:.6" : ""}"><b>${esc(e.name)}:</b> ${esc(e.text)}<div class="hinweis" style="font-size:.85rem">${esc(zeitKurz(e.erstellt_am))}${e.erledigt_am ? " · ✔ erledigt" : ""}</div></div>
