@@ -5221,7 +5221,7 @@ const HILFE = [
   { id: "pc_tablet", thema: "technik", sym: "💻", t: "Auch am PC oder Tablet", x: "Auf dem großen Bildschirm liest es sich manchmal angenehmer. Unter ⚙️ → „📲 App-Installation“ → <b>„💻 Auch am PC oder Tablet nutzen“</b> steht, wie das klappt.", zeig: () => einstiegHin("install"), seit: "2.23.1" },
   { id: "was_ist_neu", thema: "technik", sym: "🆕", t: "Was hat sich geändert?", x: "Ob deine App aktuell ist, siehst du mit <b>„🔄 Update prüfen“</b> im Register Technik. Neue Hilfen sind hier im Hilfe-Zentrum außerdem mit <span class=\"hz-neu\">neu</span> markiert.", zeig: hzTechnik, seit: "2.23.1" },
   // 2.23.7: Bereiche, zu denen es noch keine eigene Hilfe gab (für das „?“ der jeweiligen Ansicht)
-  { id: "protokoll_aufgaben", thema: "club", sym: "📌", t: "Deine Aufgaben aus dem Protokoll", x: "Steht in einem Sitzungsprotokoll eine Aufgabe für dich, bekommst du Bescheid. In den Protokollen oben unter <b>„📌 Offene Aufgaben“</b> siehst du sie mit Fälligkeit – ist sie geschafft, tippst du auf <b>„✔ erledigt“</b>.", zeig: () => zeige("protokolle"), seit: "2.23.7" },
+  { id: "protokoll_aufgaben", thema: "club", sym: "📌", t: "Deine Aufgaben aus dem Protokoll", x: "Steht in einem Sitzungsprotokoll eine Aufgabe für dich, bekommst du Bescheid. In den Protokollen oben unter <b>„📌 Offene Aufgaben“</b> siehst du sie mit Fälligkeit – ist sie geschafft, tippst du auf <b>„✔ erledigt“</b>. Beim Abhaken schreibst du kurz dazu, was dabei herausgekommen ist – wer die Aufgabe eingetragen hat, bekommt Bescheid.", zeig: () => zeige("protokolle"), seit: "2.23.7" },
   { id: "aktionen_kacheln", thema: "club", sym: "🧳", t: "Ausflüge und Reisen auf einen Blick", x: "Jede Aktion steht als Kachel da – mit Zeitraum, wie lange es noch dauert (etwa „in 12 T.“ oder „läuft“) und ob du schon <b>„✅ dabei“</b> bist. Antippen zeigt alle Einzelheiten.", zeig: () => zeige("aktionen"), seit: "2.23.7" },
   // nur für die Clubleitung
   { id: "buero_sprache", thema: "club", sym: "🎙️", t: "Im Büro einfach sagen, was du brauchst", x: "Im Büro gibt es das Mikrofon <b>„🎙️ Sag mir, was du brauchst“</b> – zum Beispiel „Öffne Ordner Protokolle“. Das spart Tipperei, wenn es schnell gehen soll.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.1" },
@@ -27087,7 +27087,8 @@ async function buEinArchiv(id, annehmen) {
   buEingangLaden();
 }
 async function buEinAufgabe(id) {
-  try { await api("aufgabe_erledigt", { id, erledigt: true }); melde("✔ Aufgabe erledigt"); } catch (e) { meldeFehler(e); }
+  const bemerkung = await aufgabeBemerkung(); if (bemerkung === null) return; // KC-CLUB-AUFGABE-BEMERKUNG
+  try { await api("aufgabe_erledigt", { id, erledigt: true, bemerkung }); melde("✔ Aufgabe erledigt"); } catch (e) { meldeFehler(e); }
   buEingangLaden();
 }
 
@@ -31552,7 +31553,7 @@ function anlagenListe(bearbeiten) {
 function aufgabeZeile(a, darfAbhaken, darfLoeschen) {
   return `<div class="zeile">${darfAbhaken ? `<button class="knopf klein ${a.erledigt_am ? "gruen" : ""}" title="erledigt" onclick="aufgabeErledigt('${a.id}', ${!a.erledigt_am})">${a.erledigt_am ? "✔" : "☐"}</button>` : `<span>${a.erledigt_am ? "✔" : "📌"}</span>`}
     <div style="flex:1${a.erledigt_am ? ";text-decoration:line-through;opacity:.6" : ""}"><b>${esc(a.text)}</b>
-      <div class="hinweis" style="font-size:.85rem">${esc(a.name)}${a.mit?.length ? ` <span title="gemeinsame Aufgabe">· gemeinsam mit ${esc(a.mit.join(", "))}</span>` : ""} ${a.erledigt_am ? "" : faelligText(a.faellig)}${a.protokoll ? " · aus „" + esc(a.protokoll.titel) + "“" : ""}</div></div>
+      <div class="hinweis" style="font-size:.85rem">${esc(a.name)}${a.mit?.length ? ` <span title="gemeinsame Aufgabe">· gemeinsam mit ${esc(a.mit.join(", "))}</span>` : ""} ${a.erledigt_am ? "" : faelligText(a.faellig)}${a.protokoll ? " · aus „" + esc(a.protokoll.titel) + "“" : ""}</div>${a.erledigt_am && a.bemerkung ? `<div class="hinweis" style="font-size:.85rem;text-decoration:none;opacity:1">💬 ${esc(a.bemerkung)}</div>` : ""}</div>
     ${darfLoeschen ? `<button class="knopf klein" title="löschen" aria-label="Aufgabe löschen" onclick="aufgabeLoeschen('${a.id}')">🗑️</button>` : ""}</div>`;
 }
 // ---------- 2.499.0 KC-CLUB-PROTOKOLL-NACHTRAG (Wunsch Hansi „Ich will nicht manuell eintragen“): Texte, die Hansi diktiert hat (über Claude abgelegt),
@@ -31690,9 +31691,19 @@ function aufgabenMitGruppe(liste) {
   for (const a of liste) a.mit = a.gruppe ? (g.get(a.gruppe) || []).filter((x) => x.id !== a.id).map((x) => (x.name || "").split(" ")[0]) : [];
   return liste;
 }
+// 2.507.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi): Erledigt nur mit kurzer Bemerkung – „Was ist dabei herausgekommen?“
+async function aufgabeBemerkung() {
+  for (;;) {
+    const t = await eingabe("✔ Aufgabe erledigt\n\nWas ist dabei herausgekommen? Ein, zwei Sätze reichen – wer die Aufgabe eingetragen hat, bekommt sie zu lesen.", "", { mehrzeilig: true, ja: "✔ Erledigt melden", nein: "Abbrechen" });
+    if (t === null) return null;
+    if (t.trim().length >= 3) return t.trim();
+    melde("Bitte kurz dazuschreiben, was dabei herausgekommen ist.", true);
+  }
+}
 async function aufgabeErledigt(id, erledigt) {
   try {
-    await api("aufgabe_erledigt", { id, erledigt }); melde(erledigt ? "✔ Erledigt – danke!" : "Wieder offen");
+    const bemerkung = erledigt ? await aufgabeBemerkung() : null; if (erledigt && bemerkung === null) return;
+    await api("aufgabe_erledigt", { id, erledigt, bemerkung }); melde(erledigt ? "✔ Erledigt – danke!" : "Wieder offen");
     if (aktuelleAnsicht === "protokoll") { if ($("prAufgaben")) await prNeuLaden(); else protokollOeffnen(prId, true); }
     else if (aktuelleAnsicht === "buero" && BU.sicht === "nachher") await buNachherNeu(); // KC-CLUB-BUERO-NACHHER
     else if (aktuelleAnsicht === "protokolle") protokolleLaden();

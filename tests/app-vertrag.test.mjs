@@ -7056,6 +7056,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/!abgegeben\.has\(m\.person_id\) && !aus\.has\(m\.person_id\)\)\.map/.test(server), "nicht unter „noch nicht abgegeben“");
 }
 
+// 2.507.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi „Wenn er sie erledigt hat, muss er sie bestätigen mit einem Bemerkungstext“)
+{
+  assert.ok(/add column if not exists bemerkung text check \(bemerkung is null or char_length\(bemerkung\) <= 1000\)/.test(lies("supabase/migrations/20261019_kc_club_aufgaben_bemerkung.sql")), "Spalte Bemerkung");
+  const c = server.slice(server.indexOf('case "aufgabe_erledigt": {'), server.indexOf('case "aufgabe_loeschen": {'));
+  assert.ok(/if \(erledigt && bemerkung\.length < 3\) throw new Fehler\(/.test(c) && c.indexOf("bemerkung.length < 3") < c.indexOf('.update(erledigt'), "Erledigt nur mit Bemerkung – Server prüft");
+  assert.ok(/x\.a\.erstellt_von !== ich\.person_id/.test(c) && /EdgeRuntime\?\.waitUntil\?\.\(info\)/.test(c), "wer eingetragen hat, bekommt Bescheid (im Hintergrund)");
+  assert.ok(/bemerkung: a\.bemerkung \?\? null,/.test(server), "Bemerkung kommt in der Protokoll-Ansicht an");
+  assert.ok(/const bemerkung = erledigt \? await aufgabeBemerkung\(\) : null; if \(erledigt && bemerkung === null\) return;/.test(html) && /const bemerkung = await aufgabeBemerkung\(\); if \(bemerkung === null\) return;/.test(html), "App fragt an beiden Stellen (Protokoll, Büro) – Abbrechen hakt nicht ab");
+  assert.ok(/await eingabe\("✔ Aufgabe erledigt/.test(html) && !/prompt\(/.test(html.slice(html.indexOf("async function aufgabeBemerkung"), html.indexOf("async function aufgabeErledigt"))), "eigenes Eingabefenster, kein prompt()");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

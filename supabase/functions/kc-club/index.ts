@@ -12619,7 +12619,7 @@ Köcheclub Werne`,
           },
           anlagen: aids.map((id: string) => (att ?? []).find((y: any) => y.id === id)).filter(Boolean).map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes })),
           einwaende: (ew ?? []).map((x: any) => ({ id: x.id, name: name(x.person_id), text: x.text, erstellt_am: x.erstellt_am, erledigt_am: x.erledigt_am, eigen: x.person_id === ich.person_id })),
-          aufgaben: (auf ?? []).map((a: any) => ({ id: a.id, person_id: a.person_id, gruppe: a.gruppe ?? null, name: name(a.person_id), text: a.text, faellig: a.faellig, erledigt_am: a.erledigt_am, meine: a.person_id === ich.person_id,
+          aufgaben: (auf ?? []).map((a: any) => ({ id: a.id, person_id: a.person_id, gruppe: a.gruppe ?? null, name: name(a.person_id), text: a.text, faellig: a.faellig, erledigt_am: a.erledigt_am, bemerkung: a.bemerkung ?? null, meine: a.person_id === ich.person_id,
             verwalten: bearb || a.erstellt_von === ich.person_id })),
           // Lesestand nur für Verfasser/Organisation
           gelesen: leser.length ? { von: leser.filter((id) => aktuell.has(id)).map(name).sort(), fehlt: leser.filter((id) => !aktuell.has(id)).map(name).sort() } : null,
@@ -12857,8 +12857,21 @@ Köcheclub Werne`,
         nurProtokolle(ich);
         const x = await aufgabeHolen(ich, p.id);
         if (!x.verwalten && x.a.person_id !== ich.person_id) throw new Fehler("Abhaken darf, wer die Aufgabe hat oder eingetragen hat.", 403);
-        await db.from("kc_club_aufgaben").update({ erledigt_am: p.erledigt === false ? null : jetzt() }).eq("id", x.a.id);
-        await protokoll(ich.person_id, p.erledigt === false ? "aufgabe_wieder_offen" : "aufgabe_erledigt", { aufgabe: x.a.id });
+        // 2.507.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi „muss er sie bestätigen mit einem Bemerkungstext“): Erledigt nur mit kurzer Bemerkung;
+        // wer die Aufgabe eingetragen hat, bekommt Bescheid (Push, ohne App per Mail). Wieder öffnen behält die alte Bemerkung im Protokoll.
+        const erledigt = p.erledigt !== false, bemerkung = txt(p.bemerkung, 1000);
+        if (erledigt && bemerkung.length < 3) throw new Fehler("Bitte kurz dazuschreiben, was dabei herausgekommen ist.");
+        await db.from("kc_club_aufgaben").update(erledigt ? { erledigt_am: jetzt(), bemerkung } : { erledigt_am: null }).eq("id", x.a.id);
+        await protokoll(ich.person_id, erledigt ? "aufgabe_erledigt" : "aufgabe_wieder_offen", { aufgabe: x.a.id, ...(erledigt ? { bemerkung } : { alte_bemerkung: x.a.bemerkung ?? null }) });
+        if (erledigt && x.a.erstellt_von && x.a.erstellt_von !== ich.person_id) {
+          const info = sendenGewaehlt("club_nachricht", [x.a.erstellt_von], ["push"], {
+            titel: `✔ ${ich.name.split(" ")[0]} hat eine Aufgabe erledigt`, kurz: `${txt(x.a.text, 80)} – „${txt(bemerkung, 120)}“`,
+            betreff: `Köcheclub Werne – Aufgabe erledigt: ${txt(x.a.text, 80)}`,
+            text: `Hallo,\n\n${ich.name} hat die Aufgabe „${x.a.text}“ als erledigt abgehakt.\n\nBemerkung: ${bemerkung}\n\nKöcheclub Werne`,
+            url: x.a.protokoll_id ? `${APP_URL}#protokoll=${x.a.protokoll_id}` : APP_URL }, `club-aufgabe-erledigt:${x.a.id}:${Date.now()}`)
+            .catch((e) => console.error("aufgabe erledigt info", String(e)));
+          try { (globalThis as any).EdgeRuntime?.waitUntil?.(info); } catch { /* läuft trotzdem an */ }
+        }
         return json({ ok: true });
       }
 
