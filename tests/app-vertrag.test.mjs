@@ -5904,7 +5904,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -8247,7 +8247,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   const termine = lies("supabase/functions/kc-termine/index.ts");
   const nt = server.slice(server.indexOf('if (a === "notpaket_teil")'), server.indexOf('if (a === "notpaket_teil")') + 1500); // 2.453.0: Gruppen + Puffer
   assert.ok(/(?:p\.cronSecret !== geheim|!gleichZeit\(p\.cronSecret, geheim\))\) return json\(\{ error: "Kein Zugang" \}, 401\)/.test(nt) && /pid\.startsWith\("KC-P-TEST"\)/.test(nt) && /DB_AUS\.n !== dbAusVorher\) return json\(\{ error: "Datenbank antwortet nicht" \}, 503\)/.test(nt), "Teil nur mit Geheimnis, nie halb");
-  const nb = server.slice(server.indexOf("async function notpaketBauen(geheim: string)"), server.indexOf("// ---------- KC-CLUB-NOTBETRIEB-STUFE2"));
+  const nb = server.slice(server.indexOf("async function notpaketBauen(geheim: string"), server.indexOf("// ---------- KC-CLUB-NOTBETRIEB-STUFE2"));
   assert.ok(/action: "notpaket_teil", cronSecret: geheim, person_ids: gruppe\.map\(\(z\) => z\.person_id\)/.test(nb) && /if \(!r\.ok \|\| !j\?\.ok \|\| !j\.mitglieder\) throw new Error/.test(nb) && !/aktionAusfuehren/.test(nb), "Hauptlauf setzt nur zusammen, fehlender Teil → altes Paket bleibt");
   assert.ok(/ich: Ich = \{ \.\.\.ichAus\(p0, ro \?\? null\), nurLesen: true \}/.test(server), "Teil weiter nur lesend");
   assert.ok(/Kommst du zu mir, bring bitte dein Tablet mit – komme ich zu dir, leg es bitte bereit/.test(termine) && /Leg bitte dein Tablet bereit/.test(termine) && /Bring bitte dein Tablet mit/.test(termine), "Tablet-Hinweis klar");
@@ -10503,7 +10503,39 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 
 // Server 2.382.0 KC-CLUB-NOTPAKET-STUENDLICH: Notfall-Paket höchstens 1× pro Stunde neu bauen (je Bau ~3.000 Datenbankabfragen)
 {
-  assert.ok(/st\.fingerabdruck !== fp && st\.hochgeladen_am && Date\.now\(\) - new Date\(st\.hochgeladen_am\)\.getTime\(\) < 60 \* 60000\)/.test(server) && /gedrosselt: true/.test(server), "Notfall-Paket gedrosselt, erzwingen geht weiter");
+  // 2.491.0 KC-CLUB-NOTPAKET-SELTENER: statt 1× pro Stunde jetzt tagsüber alle 3 Std., nachts gar nicht (neuer Tag/Fehler/erzwingen weiter)
+  assert.ok(/if \(!erzwingen && fp && st\.fingerabdruck !== fp && st\.hochgeladen_am\) \{/.test(server) && /gedrosselt: true/.test(server), "Notfall-Paket gedrosselt, erzwingen geht weiter");
+}
+
+// Server 2.491.0 KC-CLUB-NOTPAKET-SELTENER / -GEMEINSAM / -NUR-GEAENDERTE (Wunsch Hansi „Ja bau 1 und 2. Und auch 3“)
+{
+  const mig = lies("supabase/migrations/20261019_kc_club_v2491_notpaket_teile.sql");
+  const lauf = server.slice(server.indexOf("async function notpaketLauf("), server.indexOf("// ---------- KC-CLUB-SONDERSTUNDEN"));
+  // 1) seltener
+  assert.ok(/const NOT_ABSTAND_MIN = 180, NOT_NACHT_AB = 22, NOT_NACHT_BIS = 6;/.test(server), "tagsüber alle 3 Std., nachts 22–6 Uhr nicht");
+  assert.ok(/if \(!neuerTag && !nachFehler && \(nacht \|\| Date\.now\(\) - zuletzt < NOT_ABSTAND_MIN \* 60000\)\)/.test(lauf), "neuer Tag und nach Fehler wird trotzdem gebaut");
+  assert.ok(/const nachtrag = await notEingangLauf\(\)/.test(server), "Nachtrag aus dem Notbetrieb läuft weiter jedes Mal");
+  // 2) gemeinsamer Vorrat
+  const nb = server.slice(server.indexOf("async function notpaketBauen("), server.indexOf("// ---------- 2.491.0 KC-CLUB-NOTPAKET-NUR-GEAENDERTE"));
+  assert.ok(/const erster = liste\.length > 1 \? liste\.shift\(\) : null;/.test(nb) && /if \(erster\) await teil\(erster, true\);/.test(nb), "erst ein Teil allein, dann der Rest mit Vorrat");
+  const vg = server.slice(server.indexOf("async function notVorratGeben("), server.indexOf("// nur: bloß diese Mitglieder"));
+  assert.ok(/x\.status < 200 \|\| x\.status > 299\) continue/.test(vg) && /if \(groesse \+ n > NOT_VORRAT_MAX\) continue;/.test(vg) && /pf\.treffer/.test(vg), "nur fehlerfreie, mehrfach gebrauchte Antworten, mit Obergrenze");
+  assert.ok(/!\/\^GET\\\|\/\.test\(v\.k\)/.test(vg), "Vorrat nur für Leseabfragen");
+  assert.ok(/if \(a\) \{ pf\.puffer\+\+; if \(pf\.treffer\) pf\.treffer\.set/.test(server), "Treffer je Abfrage gezählt");
+  // 3) nur geänderte Mitglieder
+  const tp = server.slice(server.indexOf("async function notTeilPlan("), server.indexOf("async function notTeilPlan(") + 6000);
+  assert.ok(/if \(\(n\[0\] && !e\.includes\("i"\)\) \|\| \(n\[1\] && !e\.includes\("u"\)\) \|\| n\[2\]\) return voll\("andere_aenderung"\);/.test(tp), "jede Löschung und jede andere Tabelle → alles neu");
+  assert.ok(/w < 0\)\) return voll\("zaehler_zurueck"\)/.test(tp) && /a\.zugang !== z\.zugang \|\| a\.tag !== z\.tag\) return voll/.test(tp) && /NOT_VOLL_STD \* 3600000\) return voll\("voll_faellig"\)/.test(tp), "Zähler zurück, neuer Tag, Zugänge, 6-Std.-Komplettbau");
+  assert.ok(/if \(ms\.length < ch\[0\]\) return voll\("nicht_gefunden"\)/.test(tp) && /NOT_SPANNE_MS/.test(tp), "weniger gefunden als gezählt → alles neu; Sicherheitsabstand");
+  assert.ok(!/kc_club_todo|kc_club_treffen|kc_club_teilnahme/.test(JSON.stringify(server.match(/const NOT_NUR_CHAT[^;]+;/)[0])), "nur Chat-Tabellen dürfen teilweise bauen");
+  assert.ok(/const plan = erzwingen \? null : await notTeilPlan\(\)\.catch\(\(\) => null\);/.test(lauf) && /const paket = await notpaketBauen\(geheim, plan\?\.nur \?\? null\);/.test(lauf), "Plan vor dem Bau; ohne Plan wie bisher alles");
+  assert.ok(/const neu = plan\.nur\.has\(z\.person_id\), e = neu \? paket\.mitglieder\[z\.token_hash\] : plan\.alt\[z\.token_hash\];/.test(lauf), "Betroffene neu, alle anderen aus dem letzten Paket");
+  assert.ok(lauf.indexOf('await senden("/paket"') < lauf.indexOf('from("kc_club_notpaket_vorrat").upsert'), "Vorrat erst nach erfolgreichem Hochladen");
+  assert.ok(/if \(DB_AUS\.n !== dbVorher\) throw new Error/.test(lauf), "nie ein lückenhaftes Paket");
+  // Migration
+  assert.ok(/create table if not exists public\.kc_club_notpaket_vorrat/.test(mig) && /enable row level security/.test(mig) && /revoke all on public\.kc_club_notpaket_vorrat from public, anon, authenticated/.test(mig), "Vorrat nur für den Server");
+  assert.ok(/kc_db_mirror_table_rules/.test(mig) && /mirror_enabled = false, backup_enabled = false/.test(mig), "Vorrat nie gespiegelt");
+  assert.ok(/revoke all on function public\.kc_club_notpaket_zaehler\(\) from public, anon, authenticated/.test(mig) && /stable/.test(mig) && /Rückweg:/.test(mig), "Zähler nur lesend, nur Server, mit Rückweg");
 }
 
 // 2.417.0 KC-CLUB-SONDERSTUNDEN (KICC-F-100, DP2 Build 285): Sonderstunden über Twinkey melden – Sammelmeldung mit Stunden je Kollege,
@@ -10863,9 +10895,9 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(!pf\) return dbFetchNetz\(input, init\);/.test(f) && /if \(zeit\.aborted\) \{ DB_AUS\.n\+\+;/.test(f), "ohne Notpaket-Teil unverändert, Zeitgrenze bleibt");
   const nt = server.slice(server.indexOf('if (a === "notpaket_teil")'), server.indexOf('if (a === "notpaket_teil")') + 1500);
   assert.ok(/await DB_PUFFER\.run\(pf, async \(\) => \{ for \(const pid of pids\) mitglieder\[pid\] = await notpaketMitglied\(pid\); \}\);/.test(nt) && /const pf = dbPufferNeu\(0\)/.test(nt) && /pids\.length > NOT_GRUPPE/.test(nt), "Teil: Mitglieder nacheinander mit gemeinsamem Puffer, höchstens NOT_GRUPPE");
-  const nb = server.slice(server.indexOf("async function notpaketBauen(geheim: string)"), server.indexOf("// ---------- KC-CLUB-NOTBETRIEB-STUFE2"));
+  const nb = server.slice(server.indexOf("async function notpaketBauen(geheim: string"), server.indexOf("// ---------- KC-CLUB-NOTBETRIEB-STUFE2"));
   assert.ok(/const NOT_GRUPPE = 4, NOT_GRUPPE_MS = 140000;/.test(server) && /if \(!\(z\.person_id in j\.mitglieder\)\) throw new Error/.test(nb), "jedes Mitglied der Gruppe muss im Ergebnis stehen – sonst bleibt das alte Paket");
-  assert.ok(/await protokoll\(null, "notpaket_gebaut", \{ grund, mitglieder: paket\.anzahl, aufrufe: paket\.aufrufe, db_abfragen: paket\.db\.netz, db_gespart: paket\.db\.puffer/.test(server), "je Bau Grund und Abfragen im Protokoll (nur Zahlen)");
+  assert.ok(/await protokoll\(null, "notpaket_gebaut", \{ grund, mitglieder: (paket\.)?anzahl, aufrufe: paket\.aufrufe, db_abfragen: paket\.db\.netz, db_gespart: paket\.db\.puffer/.test(server), "je Bau Grund und Abfragen im Protokoll (nur Zahlen)");
   assert.ok(/\/\/ @ts-types="\.\/db-puffer\.d\.ts"\nimport \{ DB_PUFFER \} from "\.\/db-puffer\.js";/.test(server), "Node-Typen verändern die Server-Typen nicht");
 }
 // 2.464.0 KC-CLUB-DB-SPARSAM: jeder App-Aufruf mit eigenem Lese-Puffer (2 s), Messung je Aktion ins Server-Log (keine Datenbank-Schreibung)

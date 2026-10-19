@@ -45,7 +45,7 @@ const DB_AUS = { n: 0 }; // zählt abgebrochene Abfragen (je Anfrage vorher/nach
 // gleichzeitige andere Anfragen sehen ihn nie), lebt nur so lange wie der Aufruf und wird bei jedem Schreiben geleert. Fehler werden nie gepuffert.
 type DbAntwort = { status: number; statusText: string; headers: [string, string][]; body: ArrayBuffer | null };
 // KC-CLUB-DB-SPARSAM (2.464.0): haltbarMs > 0 → eine gepufferte Antwort gilt nur so lange (normale App-Aufrufe); 0 → den ganzen Aufruf (Notpaket-Teil, nur lesend).
-type DbPuffer = { antworten: Map<string, Promise<DbAntwort>>; zeit: Map<string, number>; netz: number; puffer: number; haltbarMs: number; aktion?: string; pfade?: Map<string, number> };
+type DbPuffer = { antworten: Map<string, Promise<DbAntwort>>; zeit: Map<string, number>; netz: number; puffer: number; haltbarMs: number; aktion?: string; pfade?: Map<string, number>; treffer?: Map<string, number> };
 const dbPufferNeu = (haltbarMs: number): DbPuffer => ({ antworten: new Map(), zeit: new Map(), netz: 0, puffer: 0, haltbarMs });
 // Schreibt etwas außerhalb der Schnittstelle (andere Server-Funktion, direkter Datenbank-Weg), muss der Puffer des Aufrufs weg – nie veraltet lesen.
 const dbPufferLeeren = () => { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) { pf.antworten.clear(); pf.zeit.clear(); } };
@@ -70,7 +70,7 @@ const dbFetch: typeof fetch = (input, init) => {
   const schluessel = [methode, url, h.get("accept"), h.get("prefer"), h.get("range"), h.get("accept-profile")].join("|");
   let a = pf.antworten.get(schluessel);
   if (a && pf.haltbarMs && Date.now() - (pf.zeit.get(schluessel) ?? 0) > pf.haltbarMs) a = undefined;
-  if (a) pf.puffer++;
+  if (a) { pf.puffer++; if (pf.treffer) pf.treffer.set(schluessel, (pf.treffer.get(schluessel) || 0) + 1); }
   else {
     pf.netz++; dbPfad(pf, methode, url);
     a = dbFetchNetz(input, init).then(async (r) => {
@@ -95,7 +95,7 @@ const dbFetchNetz: typeof fetch = (input, init) => {
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.490.0";
+const SERVER_VERSION = "2.491.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5957,9 +5957,12 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       for (const pid of pids) if (!/^KC-P-[A-Z0-9-]{1,40}$/.test(pid) || pid.startsWith("KC-P-TEST")) return json({ error: "Ungültig" }, 400);
       if (!pids.length || pids.length > NOT_GRUPPE) return json({ error: "Ungültig" }, 400);
       const pf = dbPufferNeu(0), mitglieder: Record<string, unknown> = {};
+      const vorratGeben = p.vorratGeben === true, vorratNeu = notVorratLaden(pf, p.vorrat); // 2.491.0 KC-CLUB-NOTPAKET-GEMEINSAM
+      if (vorratGeben) pf.treffer = new Map();
       await DB_PUFFER.run(pf, async () => { for (const pid of pids) mitglieder[pid] = await notpaketMitglied(pid); });
       if (DB_AUS.n !== dbAusVorher) return json({ error: "Datenbank antwortet nicht" }, 503); // nie ein halbes Ergebnis
-      return json({ ok: true, antworten: mitglieder[pids[0]] ?? null, mitglieder, db: { netz: pf.netz, puffer: pf.puffer } });
+      return json({ ok: true, antworten: mitglieder[pids[0]] ?? null, mitglieder, db: { netz: pf.netz, puffer: pf.puffer, vorrat: vorratNeu },
+        ...(vorratGeben ? { vorrat: await notVorratGeben(pf) } : {}) });
     }
     // KC-CLUB-SPAETER-SENDEN (2.362.0): geplante Nachrichten senden – pg_cron ruft das jede Minute, aber nur wenn etwas fällig ist
     if (a === "geplant_faellig") {
@@ -14334,6 +14337,7 @@ const NOT_PARALLEL = 4, NOT_TEIL_MS = 60000;
 // KC-CLUB-NOTPAKET-PUFFER (2.453.0): 4 Mitglieder je Teil-Aufruf (17 → 5 Aufrufe). Gleiche Leseabfragen innerhalb des Teils nur einmal
 // (DB_PUFFER). Rechenzeit je Aufruf ≈ 4/17 des früheren Gesamtlaufs, weit unter der Grenze, die 2.124.0 zum Aufteilen zwang.
 const NOT_GRUPPE = 4, NOT_GRUPPE_MS = 140000;
+const NOT_ABSTAND_MIN = 180, NOT_NACHT_AB = 22, NOT_NACHT_BIS = 6; // 2.491.0 KC-CLUB-NOTPAKET-SELTENER
 async function notpaketMitglied(personId: string): Promise<Record<string, unknown> | null> {
   const [{ data: p0 }, { data: ro }] = await Promise.all([
     db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,active").eq("person_id", personId).maybeSingle(),
@@ -14352,14 +14356,47 @@ async function notpaketMitglied(personId: string): Promise<Record<string, unknow
   for (const c of chats) { const j = await holen("unterhaltung", { id: c.id }); if (j) antworten["unterhaltung:" + c.id] = j; }
   return antworten;
 }
-async function notpaketBauen(geheim: string) {
+// ---------- 2.491.0 KC-CLUB-NOTPAKET-GEMEINSAM (Wunsch Hansi „gemeinsame Abfragen nur einmal“): Der Lese-Puffer galt nur innerhalb
+// EINES Teil-Aufrufs (4 Mitglieder) – dieselben Club-weiten Abfragen (Mitgliederliste, Treffen, Pinnwand, Rechte …) stellte jeder der
+// 5 Teile neu. Jetzt läuft der erste Teil allein und gibt die Antworten, die bei ihm mehrfach gebraucht wurden (also für alle gleich),
+// als „Vorrat“ zurück; die übrigen Teile starten damit. Gleicher Schlüssel = exakt dieselbe Abfrage (Adresse, Filter, Kopfzeilen) –
+// was nur für ein Mitglied gilt, wurde im ersten Teil nie doppelt gebraucht und kommt gar nicht in den Vorrat. Nur fehlerfreie Antworten,
+// höchstens NOT_VORRAT_MAX Zeichen. Schreibt ein Teil doch etwas, leert sich der Puffer wie bisher (dann eben ohne Vorrat).
+const NOT_VORRAT_MAX = 1_500_000, NOT_VORRAT_ANZAHL = 400;
+async function notVorratGeben(pf: DbPuffer) {
+  const raus: { k: string; s: number; st: string; h: [string, string][]; b: string | null }[] = [];
+  let groesse = 0;
+  for (const [k] of [...(pf.treffer ?? new Map<string, number>())].sort((x, y) => y[1] - x[1])) {
+    const p = pf.antworten.get(k); if (!p || raus.length >= NOT_VORRAT_ANZAHL) continue;
+    const x = await p.catch(() => null); if (!x || x.status < 200 || x.status > 299) continue;
+    const b = x.body && x.body.byteLength ? b64(new Uint8Array(x.body)) : null, n = k.length + (b?.length ?? 0) + 200;
+    if (groesse + n > NOT_VORRAT_MAX) continue;
+    groesse += n; raus.push({ k, s: x.status, st: x.statusText, h: x.headers, b });
+  }
+  return raus;
+}
+function notVorratLaden(pf: DbPuffer, vorrat: unknown): number {
+  if (!Array.isArray(vorrat)) return 0;
+  let n = 0;
+  for (const v of vorrat.slice(0, NOT_VORRAT_ANZAHL) as any[]) {
+    if (typeof v?.k !== "string" || !/^GET\|/.test(v.k) || !(v.s >= 200 && v.s <= 299) || !Array.isArray(v.h)) continue;
+    let body: ArrayBuffer | null = null;
+    try { body = typeof v.b === "string" ? kcUnb64(v.b).buffer as ArrayBuffer : null; } catch { continue; }
+    pf.antworten.set(v.k, Promise.resolve({ status: v.s, statusText: String(v.st || ""), headers: v.h.filter((x: any) => Array.isArray(x) && x.length === 2).map((x: any) => [String(x[0]), String(x[1])]), body }));
+    pf.zeit.set(v.k, Date.now()); n++;
+  }
+  return n;
+}
+// nur: bloß diese Mitglieder bauen (2.491.0 KC-CLUB-NOTPAKET-NUR-GEAENDERTE) – sonst alle
+async function notpaketBauen(geheim: string, nur: Set<string> | null = null) {
   const { data: zug } = await db.from("kc_club_zugang").select("person_id,token_hash").eq("aktiv", true).not("token_hash", "is", null).not("person_id", "like", "KC-P-TEST%");
-  const mitglieder: Record<string, unknown> = {}, dbz = { netz: 0, puffer: 0 };
-  const teil = async (gruppe: any[]) => {
+  const mitglieder: Record<string, unknown> = {}, dbz = { netz: 0, puffer: 0, vorrat: 0 };
+  let vorrat: unknown[] | null = null;
+  const teil = async (gruppe: any[], geben = false) => {
     const r = await fetch(`${SUPA}/functions/v1/kc-club`, {
       method: "POST", signal: AbortSignal.timeout(Math.min(NOT_TEIL_MS * gruppe.length, NOT_GRUPPE_MS)),
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
-      body: JSON.stringify({ action: "notpaket_teil", cronSecret: geheim, person_ids: gruppe.map((z) => z.person_id) }),
+      body: JSON.stringify({ action: "notpaket_teil", cronSecret: geheim, person_ids: gruppe.map((z) => z.person_id), ...(geben ? { vorratGeben: true } : vorrat?.length ? { vorrat } : {}) }),
     });
     const j = await r.json().catch(() => null);
     if (!r.ok || !j?.ok || !j.mitglieder) throw new Error(`Notfall-Paket: Teil für ${gruppe.length} Mitglied(er) fehlgeschlagen (${r.status}) – altes Paket bleibt`);
@@ -14367,12 +14404,85 @@ async function notpaketBauen(geheim: string) {
       if (!(z.person_id in j.mitglieder)) throw new Error("Notfall-Paket: Teil unvollständig – altes Paket bleibt");
       if (j.mitglieder[z.person_id]) mitglieder[z.token_hash] = { person_id: z.person_id, antworten: j.mitglieder[z.person_id] };
     }
-    dbz.netz += Number(j.db?.netz) || 0; dbz.puffer += Number(j.db?.puffer) || 0;
+    dbz.netz += Number(j.db?.netz) || 0; dbz.puffer += Number(j.db?.puffer) || 0; dbz.vorrat += Number(j.db?.vorrat) || 0;
+    if (geben && Array.isArray(j.vorrat)) vorrat = j.vorrat;
   };
-  const alle = [...(zug ?? [])], liste: any[][] = [];
+  const alle = [...(zug ?? [])].filter((z) => !nur || nur.has(z.person_id)), liste: any[][] = [];
   for (let i = 0; i < alle.length; i += NOT_GRUPPE) liste.push(alle.slice(i, i + NOT_GRUPPE));
+  const erster = liste.length > 1 ? liste.shift() : null; // KC-CLUB-NOTPAKET-GEMEINSAM: erst ein Teil allein, der Rest mit dessen Vorrat
+  if (erster) await teil(erster, true);
   await Promise.all(Array.from({ length: Math.min(NOT_PARALLEL, liste.length) }, async () => { for (let z = liste.shift(); z; z = liste.shift()) await teil(z); }));
-  return { mitglieder, anzahl: Object.keys(mitglieder).length, aufrufe: Math.ceil(alle.length / NOT_GRUPPE), db: dbz };
+  return { mitglieder, anzahl: Object.keys(mitglieder).length, aufrufe: Math.ceil(alle.length / NOT_GRUPPE), db: dbz, zugang: zug ?? [] };
+}
+// ---------- 2.491.0 KC-CLUB-NOTPAKET-NUR-GEAENDERTE (Wunsch Hansi „nur geänderte Mitglieder neu bauen“) ----------
+// Haben sich seit dem letzten Bau NUR Chats geändert (neue/bearbeitete Nachrichten, Reaktionen, Anheften, Ausblenden, neue Chats/Teilnehmer),
+// betrifft das nur die Teilnehmer dieser Chats – alle anderen Mitglieder kommen unverändert aus dem letzten Paket (kc_club_notpaket_vorrat).
+// Grundlage: die Zähler der Datenbank je Tabelle (kc_club_notpaket_zaehler, VOR dem Bau gelesen) und die Zeitstempel der neuen Zeilen.
+// Jeder Zweifel → wie bisher ALLES neu: Löschungen, jede andere Tabelle, neuer Tag, geänderte Zugänge, Zähler zurückgesetzt, weniger
+// gefundene Zeilen als gezählt, letzter Komplettbau älter als NOT_VOLL_STD Stunden, Migration noch nicht eingespielt.
+const NOT_VOLL_STD = 6, NOT_SPANNE_MS = 5 * 60000, NOT_FAST_ALLE = 0.6;
+const NOT_NUR_CHAT: Record<string, string> = { kc_communication_messages: "iu", kc_communication_threads: "iu", kc_club_reaktionen: "iu",
+  kc_club_angeheftet: "iu", kc_club_nachricht_bearbeitet: "iu", kc_communication_message_hidden: "i", kc_communication_thread_participants: "i" };
+async function notTeilPlan(): Promise<{ zaehler: any; nur: Set<string> | null; alt: Record<string, any> | null; vollAm: string | null; warum: string }> {
+  const { data: z, error } = await db.rpc("kc_club_notpaket_zaehler");
+  if (error || !z?.tabellen) return { zaehler: null, nur: null, alt: null, vollAm: null, warum: "ohne_zaehler" };
+  const voll = (warum: string, vollAm: string | null = null) => ({ zaehler: z, nur: null, alt: null, vollAm, warum });
+  const { data: v, error: ve } = await db.from("kc_club_notpaket_vorrat").select("paket_gz,zaehler,voll_am").eq("id", 1).maybeSingle();
+  if (ve) return { zaehler: null, nur: null, alt: null, vollAm: null, warum: "ohne_vorrat" };
+  const a = v?.zaehler;
+  if (!v?.paket_gz || !a?.tabellen || !a.am) return voll("kein_vorrat");
+  if (!v.voll_am || Date.now() - Date.parse(v.voll_am) > NOT_VOLL_STD * 3600000) return voll("voll_faellig");
+  if (a.zugang !== z.zugang || a.tag !== z.tag) return voll("zugang_oder_tag");
+  const d: Record<string, number[]> = {};
+  for (const t of new Set([...Object.keys(z.tabellen), ...Object.keys(a.tabellen)])) {
+    const x = z.tabellen[t], y = a.tabellen[t];
+    if (!Array.isArray(x) || !Array.isArray(y) || x.length !== 3 || y.length !== 3) return voll("zaehler_fehlen");
+    const n = x.map((w: any, i: number) => Number(w) - Number(y[i]));
+    if (n.some((w) => !Number.isFinite(w) || w < 0)) return voll("zaehler_zurueck");
+    const e = NOT_NUR_CHAT[t] ?? "";
+    if ((n[0] && !e.includes("i")) || (n[1] && !e.includes("u")) || n[2]) return voll("andere_aenderung");
+    d[t] = n;
+  }
+  const seit = new Date(Date.parse(a.am) - NOT_SPANNE_MS).toISOString(), GRENZE = 1000;
+  const threads = new Set<string>(), personen = new Set<string>();
+  const holen = async (tab: string, spalten: string, filter: (q: any) => any) => {
+    const { data, error: fe } = await filter(db.from(tab).select(spalten)).limit(GRENZE);
+    if (fe || (data ?? []).length >= GRENZE) throw new Error("zu_viel");
+    return data ?? [];
+  };
+  const nachrichtThreads = async (ids: string[]) => {
+    if (!ids.length) return;
+    if (new Set(ids).size > 300) throw new Error("zu_viel");
+    const ms = await holen("kc_communication_messages", "thread_id", (q) => q.in("id", [...new Set(ids)]));
+    ms.forEach((m: any) => threads.add(m.thread_id));
+  };
+  // gefunden < gezählt → irgendwo fehlt eine Zeile (z. B. alte Zeitangabe) → lieber alles
+  const passt = (n: number[], gefunden: number) => gefunden >= n[0] && (!n[1] || gefunden > 0);
+  try {
+    const ch = d.kc_communication_messages ?? [0, 0, 0], be = d.kc_club_nachricht_bearbeitet ?? [0, 0, 0];
+    if (ch[1] > be[0] + be[1]) return voll("nachricht_geaendert");
+    if (ch[0]) { const ms = await holen("kc_communication_messages", "thread_id", (q) => q.gt("created_at", seit)); if (ms.length < ch[0]) return voll("nicht_gefunden"); ms.forEach((m: any) => threads.add(m.thread_id)); }
+    if (be[0] || be[1]) { const bs = await holen("kc_club_nachricht_bearbeitet", "message_id", (q) => q.gt("bearbeitet_am", seit)); if (!passt(be, bs.length)) return voll("nicht_gefunden"); await nachrichtThreads(bs.map((x: any) => x.message_id)); }
+    const th = d.kc_communication_threads ?? [0, 0, 0];
+    if (th[0] || th[1]) { const ts = await holen("kc_communication_threads", "id", (q) => q.or(`created_at.gt.${seit},updated_at.gt.${seit}`)); if (!passt(th, ts.length)) return voll("nicht_gefunden"); ts.forEach((t: any) => threads.add(t.id)); }
+    const re = d.kc_club_reaktionen ?? [0, 0, 0];
+    if (re[0] || re[1]) { const rs = await holen("kc_club_reaktionen", "message_id", (q) => q.gt("zeit", seit)); if (!passt(re, rs.length)) return voll("nicht_gefunden"); await nachrichtThreads(rs.map((x: any) => x.message_id)); }
+    const an = d.kc_club_angeheftet ?? [0, 0, 0];
+    if (an[0] || an[1]) { const as = await holen("kc_club_angeheftet", "thread_id", (q) => q.gt("am", seit)); if (!passt(an, as.length)) return voll("nicht_gefunden"); as.forEach((x: any) => threads.add(x.thread_id)); }
+    const hi = d.kc_communication_message_hidden ?? [0, 0, 0];
+    if (hi[0]) { const hs = await holen("kc_communication_message_hidden", "person_id", (q) => q.gt("hidden_at", seit)); if (hs.length < hi[0]) return voll("nicht_gefunden"); hs.forEach((x: any) => personen.add(x.person_id)); }
+    const tn = d.kc_communication_thread_participants ?? [0, 0, 0];
+    if (tn[0]) { const ts = await holen("kc_communication_thread_participants", "thread_id,person_id", (q) => q.gt("joined_at", seit)); if (ts.length < tn[0]) return voll("nicht_gefunden"); ts.forEach((x: any) => { threads.add(x.thread_id); personen.add(x.person_id); }); }
+    if (threads.size > 300) return voll("zu_viele_chats");
+    if (threads.size) (await holen("kc_communication_thread_participants", "person_id", (q) => q.in("thread_id", [...threads]))).forEach((x: any) => personen.add(x.person_id));
+  } catch { return voll("suche_fehlgeschlagen"); }
+  if (!personen.size) return voll("niemand_gefunden");
+  let alt: Record<string, any>;
+  try { alt = JSON.parse(new TextDecoder().decode(await fraGunzip(kcUnb64(v.paket_gz))))?.mitglieder; } catch { return voll("vorrat_kaputt"); }
+  if (!alt || typeof alt !== "object") return voll("vorrat_kaputt");
+  // fast alle betroffen → gleich komplett (kostet kaum mehr und frischt alles auf)
+  if (personen.size > Object.keys(alt).length * NOT_FAST_ALLE) return voll("fast_alle", v.voll_am);
+  return { zaehler: z, nur: personen, alt, vollAm: v.voll_am, warum: "nur_chats" };
 }
 // ---------- KC-CLUB-NOTBETRIEB-STUFE2 (1.54.0): im Notbetrieb Geschriebenes nachtragen ----------
 // Der Ersatz-Server hat Nachricht/Zu-/Absage/Status/Pinnwand-Zettel nur in seinen Eingang gelegt. Hier wird jeder Eintrag
@@ -14474,27 +14584,53 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
     // KC-CLUB-NOTPAKET-STUENDLICH (Server 2.382.0, 14.10.2026 „Datenbank-Anfragen auf das Nötigste“): Das Paket für alle Mitglieder
     // kostet ~3.000 Datenbankabfragen. Tagsüber ändert sich fast immer etwas → bisher alle 15 Min. neu gebaut. Jetzt höchstens 1× pro Stunde
     // (der Nachtrag aus dem Notbetrieb läuft weiter alle 15 Min.); „erzwingen“ baut sofort.
-    if (!erzwingen && fp && st.fingerabdruck !== fp && st.hochgeladen_am && Date.now() - new Date(st.hochgeladen_am).getTime() < 60 * 60000)
-      return { ok: true, gedrosselt: true, naechsterBau: new Date(new Date(st.hochgeladen_am).getTime() + 60 * 60000).toISOString() };
+    // 2.491.0 KC-CLUB-NOTPAKET-SELTENER (Wunsch Hansi „Ja bau 1“): tagsüber höchstens alle NOT_ABSTAND_MIN Minuten, nachts (22–6 Uhr) gar
+    // nicht wegen geänderter Daten. Immer gebaut wird: neuer Tag (Datumsangaben wie „heute“), das erste Paket, nach einem Fehler (frühestens
+    // nach 30 Min. wieder) und „erzwingen“. Der Nachtrag aus dem Notbetrieb läuft unverändert alle 15 Min.
+    const zeitVon = (x: unknown) => (x ? Date.parse(String(x)) : NaN);
+    if (!erzwingen && fp && st.fingerabdruck !== fp && st.hochgeladen_am) {
+      const zuletzt = zeitVon(st.hochgeladen_am), std = berlinStunde(new Date()), nacht = std >= NOT_NACHT_AB || std < NOT_NACHT_BIS;
+      const neuerTag = berlinTag(new Date(zuletzt)) !== berlinTag(new Date());
+      const nachFehler = zeitVon(st.fehler_am) > zuletzt && Date.now() - zeitVon(st.fehler_am) > 30 * 60000;
+      if (!neuerTag && !nachFehler && (nacht || Date.now() - zuletzt < NOT_ABSTAND_MIN * 60000))
+        return { ok: true, gedrosselt: true, nacht, naechsterBau: nacht ? null : new Date(zuletzt + NOT_ABSTAND_MIN * 60000).toISOString() };
+    }
     if (!erzwingen && fp && st.fingerabdruck === fp) {
       // nichts geändert: nur „Stand ist aktuell bis jetzt“ melden (klein, signiert)
       await senden("/stand", new TextEncoder().encode(JSON.stringify({ stand: erstellt, fingerabdruck: fp })), "application/json");
       await db.from("kc_club_notbetrieb").update({ bestaetigt_am: erstellt, fehler: null }).eq("id", 1);
       return { ok: true, unveraendert: true };
     }
-    const dbVorher = DB_AUS.n, t0 = Date.now(), paket = await notpaketBauen(geheim);
+    const dbVorher = DB_AUS.n, t0 = Date.now();
+    // 2.491.0 KC-CLUB-NOTPAKET-NUR-GEAENDERTE: Zähler VOR dem Bau lesen (was währenddessen dazukommt, fällt beim nächsten Mal auf)
+    const plan = erzwingen ? null : await notTeilPlan().catch(() => null);
+    const zaehler = erzwingen ? await Promise.resolve(db.rpc("kc_club_notpaket_zaehler")).then((r: any) => (r.error ? null : r.data), () => null) : plan?.zaehler ?? null;
+    const paket = await notpaketBauen(geheim, plan?.nur ?? null);
     // KC-CLUB-DB-ZEITGRENZE: hing die Datenbank beim Bauen, das gute alte Paket NICHT durch ein lückenhaftes ersetzen
     if (DB_AUS.n !== dbVorher) throw new Error("Datenbank antwortet nicht – Notfall-Paket bleibt auf dem letzten guten Stand");
-    const roh = await gzip(JSON.stringify({ format: 1, erstellt, stand: erstellt, fingerabdruck: fp, server: SERVER_VERSION, mitglieder: paket.mitglieder }));
+    let mitglieder = paket.mitglieder, teilbau = false;
+    if (plan?.nur && plan.alt) {
+      // nur die Betroffenen sind neu gebaut – alle anderen (gleiche Zugänge, siehe Plan) unverändert aus dem letzten Paket
+      mitglieder = {};
+      for (const z of paket.zugang as any[]) {
+        const neu = plan.nur.has(z.person_id), e = neu ? paket.mitglieder[z.token_hash] : plan.alt[z.token_hash];
+        if (e) mitglieder[z.token_hash] = e;
+      }
+      teilbau = true;
+    }
+    const anzahl = Object.keys(mitglieder).length;
+    const roh = await gzip(JSON.stringify({ format: 1, erstellt, stand: erstellt, fingerabdruck: fp, server: SERVER_VERSION, mitglieder }));
     await senden("/paket", roh, "application/gzip");
-    await db.from("kc_club_notbetrieb").update({ fingerabdruck: fp, hochgeladen_am: erstellt, bestaetigt_am: erstellt, groesse: roh.length, mitglieder: paket.anzahl, dauer_ms: Date.now() - t0, fehler: null }).eq("id", 1);
+    await db.from("kc_club_notbetrieb").update({ fingerabdruck: fp, hochgeladen_am: erstellt, bestaetigt_am: erstellt, groesse: roh.length, mitglieder: anzahl, dauer_ms: Date.now() - t0, fehler: null }).eq("id", 1);
+    // Vorrat für den nächsten Teilbau (fehlt die Tabelle noch, bleibt es einfach beim Komplettbau)
+    if (zaehler) await db.from("kc_club_notpaket_vorrat").upsert({ id: 1, paket_gz: b64(roh), zaehler, voll_am: teilbau ? plan?.vollAm ?? null : erstellt, geaendert_am: erstellt }).then(() => {}, () => {});
     // KC-CLUB-NOTPAKET-PUFFER (2.453.0): je Bau Grund und Datenbank-Abfragen festhalten (nur Zahlen, keine Inhalte) – Messgrundlage für weitere Einsparungen
-    const zeitVon = (x: unknown) => (x ? Date.parse(String(x)) : NaN);
     const grund = erzwingen ? "erzwungen" : !st.fingerabdruck ? "erstes_paket"
       : zeitVon(st.fehler_am) > (zeitVon(st.hochgeladen_am) || 0) ? "nach_fehler"
       : st.hochgeladen_am && berlinTag(new Date(st.hochgeladen_am)) !== berlinTag(new Date()) ? "neuer_tag" : "daten_geaendert";
-    await protokoll(null, "notpaket_gebaut", { grund, mitglieder: paket.anzahl, aufrufe: paket.aufrufe, db_abfragen: paket.db.netz, db_gespart: paket.db.puffer, groesse: roh.length, ms: Date.now() - t0 }).catch(() => {});
-    return { ok: true, mitglieder: paket.anzahl, groesse: roh.length, ms: Date.now() - t0, db: paket.db, grund };
+    await protokoll(null, "notpaket_gebaut", { grund, mitglieder: anzahl, aufrufe: paket.aufrufe, db_abfragen: paket.db.netz, db_gespart: paket.db.puffer,
+      db_vorrat: paket.db.vorrat, teilbau, neu_gebaut: paket.anzahl, plan: plan?.warum ?? (erzwingen ? "erzwungen" : "ohne_plan"), groesse: roh.length, ms: Date.now() - t0 }).catch(() => {});
+    return { ok: true, mitglieder: anzahl, neu_gebaut: paket.anzahl, teilbau, groesse: roh.length, ms: Date.now() - t0, db: paket.db, grund };
   } catch (e) {
     const fehler = txt(e instanceof Error ? e.message : String(e), 300);
     await db.from("kc_club_notbetrieb").update({ fehler, fehler_am: jetzt() }).eq("id", 1);
