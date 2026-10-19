@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.504.0 – 2026-10-19 – 📎 Anzahl der Anlagen auf den Vorschlags-Kacheln (KC-CLUB-VORSCHLAG-ANLAGEN-ZAHL)
+- Feature KC-CLUB-VORSCHLAG-ANLAGEN-ZAHL (Wunsch Hansi, „sofort einspielen“): Themen-, Abstimmungs- und Spendenkacheln zeigen „📎 2 Anlagen“, wenn Anlagen dranhängen. Nur App (Server liefert `anlagen` schon).
+
 ## Server 2.504.0 – 2026-10-19 (ohne App-Build) – Kachel-Zahlen in einer Abfrage (KC-CLUB-KACHEL-EINS, Stufe 2 Punkt 4)
 Wunsch Hansi („Punkt 4 bis 20 Uhr bauen“):
 - Die Zahlen auf den Kacheln 📅 Termine, 🤝 Helfen, 📷 Fotos und 🗓️ Dienste kommen beim App-Start aus EINER Datenbank-Abfrage (neue Lesefunktion `kc_club_kachel_zahlen`) statt aus bis zu 9. Gleiche Rechnung wie vorher; 🗂️ Büro wie bisher.
