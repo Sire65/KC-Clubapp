@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.501.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.502.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1767,8 +1767,21 @@ function einwHtml(v) {
   if (!einwOffen(v)) return "";
   einwTagMerken(v);
   const e = EINWEISUNG.find((x) => x.id === v);
-  return `<div class="karte einw-karte vorlese-karte" role="note" data-v="${v}"><div class="einw-kopf">🎓 Kurz erklärt ${VORLESE_KNOPF}</div><h3>${e.sym} ${esc(e.t)}</h3><p>${typeof e.x === "function" ? e.x() : e.x}</p>
+  const zu = einwZuSet().has(v); // KC-CLUB-EINW-KLAPPEN: eingeklappt bleibt eingeklappt (je Fenster, auf diesem Gerät)
+  return `<div class="karte einw-karte vorlese-karte${zu ? " einw-zu" : ""}" role="note" data-v="${v}"><div class="einw-kopf">🎓 Kurz erklärt ${VORLESE_KNOPF}${einwKlappKnopf(zu)}</div><h3>${e.sym} ${esc(e.t)}</h3><p>${typeof e.x === "function" ? e.x() : e.x}</p>
     <div class="knoepfe"><button class="knopf haupt klein" onclick="einwVerstanden('${v}')">👍 Verstanden</button><button class="knopf klein" onclick="einwAlleAus()">Keine Einweisungen mehr</button></div></div>`;
+}
+// KC-CLUB-EINW-KLAPPEN (Wunsch Hansi 19.10.2026): Hilfetexte „🎓 Kurz erklärt“ nehmen in Fenstern viel Platz weg – „▴ Einklappen“ lässt nur
+// die Kopfzeile stehen, der Pfeil ▾ klappt wieder auf. Gilt für alle Hilfefenster (alle kommen aus einwHtml). Gemerkt je Fenster im Gerät.
+const EINW_ZU_KEY = "kc-einw-zu";
+function einwZuSet() { try { const a = JSON.parse(lsLesen(EINW_ZU_KEY) || "[]"); return new Set(Array.isArray(a) ? a.map(String) : []); } catch { return new Set(); } }
+const einwKlappKnopf = (zu) => `<button type="button" class="einw-klapp" onclick="einwKlappen(this)" aria-expanded="${!zu}" aria-label="${zu ? "Hilfetext aufklappen" : "Hilfetext einklappen"}" title="${zu ? "Aufklappen" : "Einklappen"}">${zu ? "▾" : "▴ Einklappen"}</button>`;
+function einwKlappen(knopf) {
+  const k = knopf.closest(".einw-karte"); if (!k) return;
+  const zu = !k.classList.contains("einw-zu"), v = k.dataset.v, set = einwZuSet();
+  k.classList.toggle("einw-zu", zu); knopf.outerHTML = einwKlappKnopf(zu);
+  if (zu) set.add(v); else set.delete(v);
+  lsSetzen(EINW_ZU_KEY, JSON.stringify([...set].slice(-200)));
 }
 function einwVerstanden(v) { einwKarteWeg(); einwSpeichern({ gesehen: { ...einwStand().gesehen, [v]: new Date().toISOString() } }); }
 async function einwAlleAus() { einwKarteWeg(); if (await einwSpeichern({ an: false })) { einwSchalterZeigen(); melde("🎓 Keine Einweisungen mehr – wieder einschalten unter ⚙️ → „🗣️ Ansagen, Töne & Tipps“ → „🎓 Einweisung beim ersten Öffnen“"); } }
@@ -21311,7 +21324,8 @@ function infoFuerDich() {
   if (INIT?.offeneAbstimmungen) z.push(zeile("🗳️", `<b>${INIT.offeneAbstimmungen}</b> Abstimmung${INIT.offeneAbstimmungen > 1 ? "en warten" : " wartet"} auf dich`, "zeige('vorschlaege')"));
   for (const a of INIT?.terminanfragenOffen || []) z.unshift(zeile("📨", `<b>${esc(a.von)}</b> fragt an: ${esc(a.anlass)} – bitte antworten`, `taZeigen('${esc(a.id)}')`)); // 2.389.0
   if ((INIT?.terminfindungOffen || []).length) z.push(zeile("🗓️", "Bitte Termine ankreuzen", "zeige('termine')"));
-  if (INIT?.protokolleUngelesen) z.push(zeile("📄", `<b>${INIT.protokolleUngelesen}</b> neue${INIT.protokolleUngelesen > 1 ? "" : "s"} Protokoll${INIT.protokolleUngelesen > 1 ? "e" : ""}`, "zeige('protokolle')"));
+  if (INIT?.protokolleUngelesen) z.push(INIT.protokollNeu && INIT.protokolleUngelesen === 1 ? zeile("📄", `<b>${esc(protokollNeuText(INIT.protokollNeu))}</b>`, `protokollOeffnen('${esc(INIT.protokollNeu.id)}')`) // KC-CLUB-PROTOKOLL-NEU-INFO
+    : zeile("📄", `<b>${INIT.protokolleUngelesen}</b> neue${INIT.protokolleUngelesen > 1 ? "" : "s"} Protokoll${INIT.protokolleUngelesen > 1 ? "e" : ""}`, "zeige('protokolle')"));
   const auf = (INIT?.meineAufgaben || []).length;
   if (auf) z.push(zeile("📌", `<b>${auf}</b> offene Aufgabe${auf > 1 ? "n" : ""}`, "$('wichtig').scrollIntoView({behavior:'smooth',block:'center'})"));
   const nd = INIT?.naechsterDienst;
@@ -23896,7 +23910,10 @@ function ilMeldungen() {
   for (const lt of (INIT?.laufbandTermine || []).filter((x) => x.id !== t?.id)) add({ id: "lauf:" + lt.id, stufe: "gold", sym: lt.art === "veranstaltung" ? "🎪" : "📅", t: lt.titel,
     u: wann(lt.beginn) + (lt.ort ? " · " + lt.ort : ""), auf: `ilTerminOeffnen('${esc(lt.id)}')`, knoepfe: /^https:\/\//.test(lt.link || "") ? [["🌐 Webseite", `ilTerminLink('${esc(lt.id)}')`]] : null,
     stand: /^https:\/\//.test(lt.link || "") ? `📅 ${esc(wann(lt.beginn))}` : "" }); // mit Knopf: Datum daneben (sonst fehlt der Platz)
-  if (INIT?.protokolleUngelesen) add({ id: "protokoll", stufe: "gold", sym: "📄", t: INIT.protokolleUngelesen === 1 ? "Ein neues Protokoll zum Lesen" : `${INIT.protokolleUngelesen} neue Protokolle zum Lesen`, u: "Antippen zum Lesen", auf: "zeige('protokolle')" });
+  // KC-CLUB-PROTOKOLL-NEU-INFO: mit Titel des neuesten ungelesenen Protokolls, Antippen öffnet es direkt
+  const pn = INIT?.protokollNeu, pnText = protokollNeuText(pn);
+  if (INIT?.protokolleUngelesen) add({ id: "protokoll", stufe: "gold", sym: "📄", t: pn ? (INIT.protokolleUngelesen === 1 ? pnText : `${pnText} (+${INIT.protokolleUngelesen - 1} weitere)`) : INIT.protokolleUngelesen === 1 ? "Ein neues Protokoll zum Lesen" : `${INIT.protokolleUngelesen} neue Protokolle zum Lesen`,
+    u: pn ? `${pn.titel}${pn.datum ? " vom " + fKurzJahr.format(new Date(String(pn.datum).slice(0, 10) + "T12:00:00Z")) : ""} · Antippen zum Lesen` : "Antippen zum Lesen", auf: pn && INIT.protokolleUngelesen === 1 ? `protokollOeffnen('${esc(pn.id)}')` : "zeige('protokolle')" });
   const wd = WET.r?.daten, wt = t && wd ? wd.tage?.find((x) => x.datum === isoBerlin(new Date(t.beginn))) : null;
   if (wt) { const a = wetterArt(wt.code), nass = (wt.regenWkt ?? 0) >= 50 || ["regen", "niesel", "gewitter", "schnee"].includes(a.szene);
     add({ id: "wetter:" + wt.datum, stufe: nass ? "gold" : "weiss", sym: a.sym, t: nass ? "Am Treffen-Tag wird es nass – Schirm mitnehmen" : `Wetter am Treffen-Tag: ${a.text}`, u: `${grad(wt.max)} / ${grad(wt.min)}${wt.regenWkt != null ? ` · ☔ ${wt.regenWkt} %` : ""}`, auf: "infoGehe(INFO_FELDER.findIndex((f) => f.id === 'wetter'))" }); }
@@ -25566,6 +25583,7 @@ function vorschlagKarte(v) {
   }
   const knoepfe = [
     v.darfAbschliessen ? `<button class="knopf klein" onclick="vorschlagStatus('${v.id}','abgeschlossen','${v.art}')">${v.art === "abstimmung" ? "🏁 Abstimmung beenden" : "✔ Erledigt / in Tagesordnung"}</button>` : "",
+    v.darfBearbeiten ? `<button class="knopf klein" onclick="vorschlagBearbeiten('${v.id}')">✏️ Bearbeiten</button>` : "", // KC-CLUB-VORSCHLAG-BEARBEITEN
     v.darfZurueckziehen ? `<button class="knopf klein" onclick="vorschlagStatus('${v.id}','zurueckgezogen')">Zurückziehen</button>` : "",
     v.darfLoeschen ? `<button class="knopf klein" onclick="vorschlagLoeschen('${v.id}')">🗑️ Löschen</button>` : "",
   ].join("");
@@ -25580,6 +25598,32 @@ async function vorschlagStatus(id, status, art) {
   const text = status === "zurueckgezogen" ? "Vorschlag wirklich zurückziehen?" : art === "abstimmung" ? "Abstimmung jetzt beenden? Alle bekommen das Ergebnis." : "Als erledigt markieren (z. B. in die Tagesordnung aufgenommen)?";
   if (!(await frage(text))) return; // 2.18.2: Variable hieß „frage“ und verdeckte die Funktion frage()
   try { await api("vorschlag_status", { id, status }); melde("💾 Gespeichert"); vorschlaegeLaden(); neuLaden(); } catch (e) { meldeFehler(e); }
+}
+// KC-CLUB-VORSCHLAG-BEARBEITEN (Wunsch Hansi 19.10.2026 „Vorschläge verändern … und die Anlagen dazu packen“): Thema, Beschreibung,
+// Termin und Anlagen nachträglich ändern – ohne neue Benachrichtigung. Vorhandene Anlagen stehen als Chips da (✕ entfernt), neue kommen dazu.
+function vorschlagBearbeiten(id) {
+  const v = VORSCHLAG_MAP.get(id); if (!v) return;
+  $("vorschlagInfo")?.remove();
+  OBJA.vb = (v.anlagen || []).map((a) => ({ id: a.id, name: a.name, mime: a.mime || "", groesse: a.groesse }));
+  const termine = VORSCHLAG_TREFFEN.slice();
+  if (v.treffen && !termine.some((t) => t.id === v.treffen.id)) termine.unshift(v.treffen);
+  const f = blattAuf("vorschlagBearb", `<h3 style="margin:0 0 6px">✏️ Vorschlag bearbeiten</h3>
+    <label class="feld">${v.art === "abstimmung" ? "Frage" : v.art === "spende" ? "Überschrift" : "Thema"}<input id="vbTitel" maxlength="150" value="${esc(v.titel)}"></label>
+    ${v.art === "abstimmung" && v.stimmen ? '<p class="hinweis" style="margin:-4px 0 6px">Es wurde schon abgestimmt – die Frage bleibt deshalb, wie sie ist.</p>' : ""}
+    <label class="feld">Beschreibung (freiwillig)<textarea id="vbBeschr" rows="4">${esc(v.beschreibung || "")}</textarea></label>
+    <label class="feld">Für welchen Termin?<select id="vbTreffen"><option value="">– allgemein –</option>${termine.map((t) => `<option value="${t.id}" ${v.treffen?.id === t.id ? "selected" : ""}>${esc(t.titel)} · ${esc(wann(t.beginn))}</option>`).join("")}</select></label>
+    ${oaFeld("vb")}
+    <p class="hinweis" style="margin:6px 0 0">Beim Speichern wird niemand benachrichtigt.</p>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="vbOk">💾 Speichern</button><button class="knopf" onclick="$('vorschlagBearb').remove()">Abbrechen</button></div>`);
+  if (v.art === "abstimmung" && v.stimmen) $("vbTitel").disabled = true;
+  $("vbOk").onclick = () => einmal($("vbOk"), async () => {
+    try {
+      const r = await api("vorschlag_aendern", { id, titel: $("vbTitel").value, beschreibung: $("vbBeschr").value, treffen_id: $("vbTreffen").value || null, anlagen: oaIds("vb") });
+      oaLeeren("vb"); f.remove();
+      melde(r.anlagen?.neu ? `💾 Gespeichert – ${r.anlagen.neu} Anlage${r.anlagen.neu > 1 ? "n" : ""} dazu` : "💾 Gespeichert");
+      await vorschlaegeLaden(); if (VORSCHLAG_MAP.get(id)) vorschlagInfo(id);
+    } catch (e) { meldeFehler(e); }
+  });
 }
 async function vorschlagLoeschen(id) {
   if (!(await frage("Diesen Vorschlag bzw. diese Abstimmung endgültig löschen?\n\nAlle Stimmen gehen mit verloren. Es wird niemand benachrichtigt.\nEine Sicherung bleibt im Änderungsprotokoll."))) return;
@@ -31388,6 +31432,7 @@ function protokollFormular() {
     <div class="knoepfe">
       <button class="knopf haupt" onclick="einmal(this, protokollVeroeffentlichen)">📢 Veröffentlichen</button>
       <button class="knopf" onclick="einmal(this, () => prSpeichernJetzt(true))">💾 Speichern</button>
+      <button class="knopf" onclick="einmal(this, prDrucken)">🖨️ Drucken / PDF</button>
       ${PR.darfLoeschen ? `<button class="knopf" onclick="protokollLoeschen()">🗑️ ${p.version === 1 ? "Entwurf" : "Protokoll"} löschen</button>` : ""}
     </div>
     <p class="hinweis" style="font-size:.85rem">Nach dem Veröffentlichen bekommen alle Mitglieder (ohne Aushilfen) Bescheid und haben ${7} Tage Zeit für Einwände – danach gilt das Protokoll als genehmigt.</p>`;
@@ -31399,6 +31444,13 @@ function prDa(box, gegen) {
   $("prDaZahl").textContent = document.querySelectorAll("[data-da]:checked").length;
   $("prEntZahl").textContent = document.querySelectorAll("[data-ent]:checked").length;
   prAendern();
+}
+// KC-CLUB-PROTOKOLL-DRUCKEN (Wunsch Hansi 19.10.2026 „Druckknopf da rein“): gut sichtbarer Knopf in Entwurf und Lese-Ansicht.
+// Beim Entwurf erst speichern und neu laden – sonst druckt die Vorschau den Stand vom Öffnen statt der gerade getippten Eingaben.
+async function prDrucken() {
+  if (!PR) return;
+  if ($("prT")) { await prSpeichernJetzt(false); PR = await api("protokoll_laden", { id: prId }); aufgabenMitGruppe(PR.aufgaben || []); }
+  druckStarten("protokoll");
 }
 function prAendern() { clearTimeout(prTimer); $("prGespeichert").textContent = ""; prTimer = setTimeout(() => prSpeichernJetzt(false), 1200); }
 async function prSpeichernJetzt(vonHand) {
@@ -31509,7 +31561,7 @@ function protokollLesen() {
       ${p.naechster_termin ? `<p style="margin:10px 0 0"><b>📅 Nächster Termin:</b> ${esc(p.naechster_termin)}</p>` : ""}
     </div>
     ${PR.anlagen.length ? `<div class="karte"><h3>📎 Das Protokoll</h3><p class="hinweis" style="margin-top:0;font-size:.85rem">Antippen zum Vergrößern bzw. Öffnen.</p>${anlagenListe(false)}</div>` : ""}
-    ${p.roh !== "entwurf" ? '<div class="knoepfe" style="margin:0 0 10px"><button class="knopf klein" onclick="protokollInsArchiv()">🗄️ In mein Archiv legen</button></div>' : ""}
+    <div class="knoepfe" style="margin:0 0 10px"><button class="knopf klein" onclick="einmal(this, prDrucken)">🖨️ Drucken / PDF</button>${p.roh !== "entwurf" ? '<button class="knopf klein" onclick="protokollInsArchiv()">🗄️ In mein Archiv legen</button>' : ""}</div>
     ${PR.aufgaben.length ? `<div class="karte"><h3>📌 Aufgaben</h3>${PR.aufgaben.map((a) => aufgabeZeile(a, a.meine || PR.darfBearbeiten, a.verwalten)).join("")}</div>` : ""}
     ${PR.einwaende.length || einspruchOffen ? `<div class="karte"><h3>⚠️ Einwände</h3>
       ${PR.einwaende.map((e) => `<div class="zeile"><div style="flex:1${e.erledigt_am ? ";opacity:.6" : ""}"><b>${esc(e.name)}:</b> ${esc(e.text)}<div class="hinweis" style="font-size:.85rem">${esc(zeitKurz(e.erstellt_am))}${e.erledigt_am ? " · ✔ erledigt" : ""}</div></div>
@@ -34842,6 +34894,12 @@ async function druckTeilen() {
   const datei = new File([html], (DRUCK.titel || "Druck").replace(/[^\wäöüÄÖÜß.-]+/g, "_").slice(0, 60) + ".html", { type: "text/html" });
   try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { if (e?.name === "AbortError") return; }
   melde("Teilen geht auf diesem Gerät nicht – bitte „Drucken“ versuchen.", true);
+}
+// KC-CLUB-PROTOKOLL-NEU-INFO: „Besprechung“ → „Neues Besprechungsprotokoll eingestellt“; längere Titel → „Neues Protokoll eingestellt: …“
+function protokollNeuText(pn) { // Funktionsdeklaration: schon beim ersten Zeichnen des Info-Feldes verfügbar
+  if (!pn?.titel) return "Neues Protokoll eingestellt";
+  if (/protokoll$/i.test(pn.titel)) return `Neues ${pn.titel} eingestellt`;
+  return /^[A-ZÄÖÜ][a-zäöüß]+$/.test(pn.titel) ? `Neues ${pn.titel}${/(ung|heit|keit|schaft)$/.test(pn.titel) ? "s" : ""}protokoll eingestellt` : `Neues Protokoll eingestellt: ${pn.titel}`;
 }
 const dz = (iso) => fKurzJahr.format(new Date(iso.slice(0, 10) + "T12:00:00Z"));
 const dWt = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", weekday: "short" });
