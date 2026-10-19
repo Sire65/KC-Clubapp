@@ -1078,6 +1078,18 @@
   .ke-vorhang { display: flex; gap: 1px; background: rgba(60,10,20,.25); }
   .ke-vorhang .ke-lamelle { flex: 1; transform-origin: center; background: linear-gradient(to right, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 1px 0 2px rgba(0,0,0,.35); }
   .ke-climber .ke-lamelle { position: absolute; left: 0; right: 0; top: 0; height: 15px; transform-origin: top center; background: linear-gradient(to bottom, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+  /* 2.502.0 KC-CLUB-KOPF-EFFEKTE-2: Theatervorhang, Servierglocke, Marktbude (CD-Farben Weinrot/Beige) */
+  .ke-theater-l, .ke-theater-r { position: absolute; top: 0; bottom: 0; width: 51%; background: repeating-linear-gradient(to right, #5c0f19 0 6px, #8a1c2b 12px, #741521 18px, #4a0c14 24px); box-shadow: inset 0 -8px 0 #c9a46a, inset 0 -10px 0 #8a6d3b; }
+  .ke-theater-l { left: 0; transform-origin: left center; border-right: 2px solid #3a0910; } .ke-theater-r { right: 0; transform-origin: right center; border-left: 2px solid #3a0910; }
+  .ke-theater-kante { position: absolute; left: 0; right: 0; top: 0; height: 10px; background: linear-gradient(#c9a46a, #8a6d3b); z-index: 1; }
+  .ke-glocke { position: absolute; left: 4%; right: 4%; top: 0; bottom: 0; border-radius: 50% 50% 6px 6px / 70% 70% 6px 6px; overflow: hidden; background: radial-gradient(ellipse at 35% 25%, #ffffff 0, #e8ebef 18%, #b9c0c8 55%, #8a929c 100%); box-shadow: inset 0 -6px 0 #7b838d, 0 4px 10px rgba(0,0,0,.35); }
+  .ke-glanz { position: absolute; top: 0; bottom: 0; left: 0; width: 22%; background: linear-gradient(to right, transparent, rgba(255,255,255,.85), transparent); transform: translateX(-140%) skewX(-20deg); }
+  .ke-knauf { position: absolute; left: 50%; top: 6px; width: 22px; height: 12px; margin-left: -11px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff, #a3abb5 70%); }
+  .ke-voila { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); opacity: 0; font: 700 1.6rem/1 Georgia, serif; color: #741521; text-shadow: 0 1px 0 #fff, 0 0 12px #f3e9dc; white-space: nowrap; }
+  .ke-bude { perspective: 500px; }
+  .ke-bude-dach { position: absolute; left: 0; right: 0; top: 0; height: 12px; z-index: 1; background: repeating-linear-gradient(to right, #741521 0 18px, #f3e9dc 18px 36px); box-shadow: 0 2px 3px rgba(0,0,0,.3); }
+  .ke-bude-klappe { position: absolute; left: 0; right: 0; top: 6px; bottom: 0; transform-origin: top center; background: repeating-linear-gradient(to bottom, #8b5a2b 0 13px, #6f4520 13px 15px); box-shadow: inset 0 -4px 0 #5a3718; display: flex; align-items: center; justify-content: center; }
+  .ke-bude-schild { background: #f3e9dc; color: #741521; border: 2px solid #5a3718; border-radius: 6px; padding: 2px 10px; font: 700 .9rem/1.2 Georgia, serif; box-shadow: 0 2px 3px rgba(0,0,0,.3); }
   .ke-wahl { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; }
   .rollo-leiste { position: absolute; left: 0; right: 0; bottom: 0; height: 9px; z-index: 2; pointer-events: none; background: linear-gradient(to bottom, #a8364a, #6d1424); box-shadow: 0 -1px 3px rgba(0,0,0,.4); }
   .hero { background: var(--heroverlauf, linear-gradient(135deg, var(--hero1) 0%, var(--rot) 45%, var(--rot2) 75%, var(--hero4) 100%)); color: #fff; border-radius: 26px; padding: 18px; box-shadow: 0 12px 30px var(--heroschatten); }
@@ -4939,6 +4951,8 @@
       <p class="hinweis" style="font-size:.85rem" id="wahlHinweis">Nur Push: Kommt der Push nicht an, schicken wir automatisch eine E-Mail.</p>
       <div class="schalter"><div><b>📲 Push auf diesem Handy</b><div class="hinweis" id="pushStatus">…</div></div><button class="knopf klein" id="pushKnopf" onclick="pushUmschalten()">Einschalten</button></div>
       <div class="schalter"><div><b>🔊 Warnton bei neuer Nachricht</b><div class="hinweis">Kurzer Ton, wenn die App offen ist. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setTon" onchange="einstellung('ton', this.checked)"></div>
+      <!-- 2.502.0 KC-CLUB-TIPP-GERAEUSCH -->
+      <div class="schalter"><div><b>⌨️ Tippgeräusche beim Live-Tippen</b><div class="hinweis">Zeigt dir jemand live, was er tippt, hörst du seine Anschläge – nur in der offenen Unterhaltung. Gilt für dieses Gerät.</div></div><select id="setTippTon" aria-label="Tippgeräusche" onchange="tippTonSetzen(this.value)"><option value="aus">🔇 Aus</option><option value="tastatur">⌨️ Tastatur</option><option value="schreibmaschine">📠 Schreibmaschine</option></select></div>
       <div class="knoepfe"><button class="knopf klein" onclick="tonTest()">Ton testen</button><button class="knopf klein" onclick="pushTest()">Test-Push senden</button><button class="knopf klein" onclick="geraeteBlatt()">📱 Meine Geräte</button></div>
       <!-- KC-CLUB-RUHEZEIT (0.98.0) -->
       <div class="schalter" style="margin-top:10px"><div><b>🌙 Nicht stören</b><div class="hinweis" id="ruheHinweis">In dieser Zeit kein Push. Anrufe kommen trotzdem durch, danach eine Sammelmeldung.</div></div><input type="checkbox" id="ruheAn" onchange="ruheSpeichern()"></div>
@@ -5493,7 +5507,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.504.0" data-v="2.504.0"></script>
+<script src="app.js?v=2.505.0" data-v="2.505.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

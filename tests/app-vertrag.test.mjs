@@ -6992,6 +6992,23 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\$\{DV\.daten\?\.nurFreigegeben \? "" : '<button class="knopf klein" onclick="dvAblegen\(\)">/.test(html) && /DV\.daten\?\.nurFreigegeben \? `<div class="karte innen dv-fehlt">👁️ Du siehst deine eigenen Zeiten/.test(html), "App: Hinweis statt Ablegen-Knopf");
 }
 
+// 2.505.0 KC-CLUB-KOPF-EFFEKTE-2 + KC-CLUB-TIPP-GERAEUSCH (Wunsch Hansi): drei neue Kopf-Effekte, „Passend zum Thema“, Tippgeräusche beim Live-Tippen
+{
+  assert.ok(/KOPF_EFFEKTE = \["jalousie", "vorhang", "climber", "theater", "glocke", "bude"\];/.test(html), "drei neue Effekte in der Registry (auch in „Automatisch“)");
+  for (const e of ["theater", "glocke", "bude"]) assert.ok(html.includes(`if (effekt === "${e}") {`) && new RegExp(`\\.ke-${e === "theater" ? "theater-l" : e === "glocke" ? "glocke" : "bude-klappe"} \\{`).test(html), "Effekt + Aussehen: " + e);
+  assert.ok(/if \(st\.wahl === "thema"\) return kopfEffektThema\(\);/.test(html) && /const kopfEffektThema = \(\) => \{ const k = themaWert\("kopf"\);/.test(html), "Passend zum Thema aus der Themen-Registry");
+  const th = html.slice(html.indexOf("const THEMEN = ["), html.indexOf("];", html.indexOf("const THEMEN = [")));
+  assert.ok(/id: "weihnachten"[^\n]*kopf: "bude"/.test(th) && /id: "karneval"[^\n]*kopf: "theater"/.test(th), "Weihnachten → Marktbude, Karneval → Theatervorhang");
+  assert.ok(/\.ke-theater-l, \.ke-theater-r \{[^}]*#741521/.test(html) && /\.ke-bude-schild \{[^}]*#f3e9dc[^}]*#741521/.test(html), "Corporate Design Weinrot/Beige");
+  // Tippgeräusche
+  assert.ok(/<select id="setTippTon"[^>]*onchange="tippTonSetzen\(this\.value\)"><option value="aus">/.test(html) && /tippTonZeigen\(\); \/\* KC-CLUB-TIPP-GERAEUSCH \*\//.test(html), "Einstellung unter ⚙️ (Standard aus)");
+  assert.ok(/return TIPP_TOENE\[w\] \? w : "aus";/.test(html), "unbekannt/leer = aus");
+  const tg = html.slice(html.indexOf("function tippGeraeusche(entwurf) {"), html.indexOf("function tipptZeigen("));
+  assert.ok(/if \(alt !== undefined\)/.test(tg) && /if \(TT\.chat !== chatId\)/.test(tg), "beim Öffnen kein Geprassel für vorhandenen Text");
+  assert.ok(/document\.hidden \|\| aktuelleAnsicht !== "chat" \|\| \(chatId && stummAn\(chatId\)\)/.test(tg) && /n = Math\.min\(n, 24\)/.test(tg), "nur offene, nicht stumme Unterhaltung, begrenzt");
+  assert.ok(/function tipptZeigen\(namen, entwurf = \[\], sprechen = \[\]\) \{\s*const e = \$\("tipptAnzeige"\); if \(!e\) return;\s*tippGeraeusche\(entwurf\);/.test(html), "hängt an der Live-Tippen-Anzeige (nur Entwurf, nicht bloß „schreibt …“)");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

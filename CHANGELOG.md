@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.505.0 – 2026-10-19 – Kopf: Theatervorhang, Servierglocke, Marktbude · Tippgeräusche beim Live-Tippen
+- Feature KC-CLUB-KOPF-EFFEKTE-2 (Wunsch Hansi): drei neue Arten, den Kopf auf- und zuzumachen – 🎪 Theatervorhang (weinroter Samt), 🍽️ Servierglocke („Voilà!“), 🏠 Marktbude (Holzklappe) – und „🎭 Passend zum Thema bzw. zur Jahreszeit“ (Themen-Registry `kopf`; ohne Thema: Advent → Marktbude, sonst Servierglocke).
+- Feature KC-CLUB-TIPP-GERAEUSCH (Wunsch Hansi): Zeigt die Gegenseite live, was sie tippt, sind ihre Anschläge zu hören – ⌨️ Tastatur oder 📠 Schreibmaschine (mit Glöckchen). ⚙️ → Benachrichtigungen, je Gerät, Standard aus; nur in der offenen, nicht stummen Unterhaltung.
+
 ## 2.504.0 – 2026-10-19 – 📎 Anzahl der Anlagen auf den Vorschlags-Kacheln (KC-CLUB-VORSCHLAG-ANLAGEN-ZAHL)
 - Feature KC-CLUB-VORSCHLAG-ANLAGEN-ZAHL (Wunsch Hansi, „sofort einspielen“): Themen-, Abstimmungs- und Spendenkacheln zeigen „📎 2 Anlagen“, wenn Anlagen dranhängen. Nur App (Server liefert `anlagen` schon).
 

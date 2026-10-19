@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.504.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.505.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -920,8 +920,8 @@ function lichtSensorStarten() {
 // Effekt, gilt das nur, solange dieses Thema läuft (beim nächsten Thema zählt wieder das Paket). Status-/Warnfarben bleiben immer gleich,
 // Gedrucktes immer im Köcheclub-Design.
 const THEMEN = [
-  { id: "klassik", sym: "🏛️", name: "Köcheclub klassisch", design: "klassik", jz: "auto", effekt: "wechsel" },
-  { id: "karneval", sym: "🎭", name: "Karneval", design: "retro", jz: "karneval", effekt: "flieger", schrift: "comic" }, // 2.332.0
+  { id: "klassik", sym: "🏛️", name: "Köcheclub klassisch", design: "klassik", jz: "auto", effekt: "wechsel", kopf: "glocke" },
+  { id: "karneval", sym: "🎭", name: "Karneval", design: "retro", jz: "karneval", effekt: "flieger", schrift: "comic", kopf: "theater" }, // 2.332.0
   { id: "fruehling", sym: "🌱", name: "Frühling", design: "kirschbluete", jz: "fruehling", effekt: "taube", schrift: "zart" },
   { id: "ostern", sym: "🐣", name: "Ostern", design: "salbei", jz: "fruehling", effekt: "taube", schrift: "zart", extra: "ostern" }, // 2.332.0: Osterhase legt Eier zum Suchen
   { id: "sommer", sym: "🌻", name: "Sommer", design: "toskana", jz: "sommer", effekt: "flieger", schrift: "schwung" },
@@ -929,16 +929,16 @@ const THEMEN = [
   { id: "unterwasser", sym: "🐠", name: "Unterwasserwelt", design: "nordsee", jz: "unterwasser", effekt: "taube", schrift: "strand" }, // 2.434.0 KC-CLUB-UNTERWASSER
   { id: "weltraum", sym: "🚀", name: "Weltraum", design: "tiefsee", jz: "weltraum", effekt: "flieger" }, // 2.444.0 KC-CLUB-WELTRAUM (Wunschliste #2)
   { id: "bauernhof", sym: "🐄", name: "Bauernhof", design: "kuechengruen", jz: "bauernhof", effekt: "taube", schrift: "kirmes" }, // 2.445.0 KC-CLUB-BAUERNHOF (Wunschliste #3)
-  { id: "kegeln", sym: "🎳", name: "Kegelabend", design: "schokolade", jz: "kegeln", effekt: "flieger", schrift: "schwung" }, // 2.446.0 KC-CLUB-KEGELN (Wunschliste #4)
-  { id: "oktoberfest", sym: "🥨", name: "Oktoberfest", design: "nordsee", jz: "wiesn", effekt: "postauto", schrift: "fraktur" },
+  { id: "kegeln", sym: "🎳", name: "Kegelabend", design: "schokolade", jz: "kegeln", effekt: "flieger", schrift: "schwung", kopf: "theater" }, // 2.446.0 KC-CLUB-KEGELN (Wunschliste #4)
+  { id: "oktoberfest", sym: "🥨", name: "Oktoberfest", design: "nordsee", jz: "wiesn", effekt: "postauto", schrift: "fraktur", kopf: "bude" },
   { id: "herbst", sym: "🍂", name: "Herbst", design: "ocker", jz: "herbst", effekt: "flieger" },
   { id: "indian", sym: "🍁", name: "Indian Summer", design: "glut", jz: "herbst", effekt: "taube",
     laub: ["#d7261e", "#ff6a13", "#ffb300", "#b5121b", "#ff8f1f", "#e8c21a", "#8e1b10", "#f04e23"] }, // leuchtendes Rot, Orange, Gold
-  { id: "halloween", sym: "🎃", name: "Halloween", design: "sonnenuntergang", jz: "halloween", effekt: "taube", schrift: "grusel" }, // 2.332.0
-  { id: "simjue", sym: "🎡", name: "Sim-Jü", design: "regenbogen", jz: "kirmes", effekt: "flieger", schrift: "kirmes" },
-  { id: "winter", sym: "⛄", name: "Winter", design: "nordsee", jz: "winter", effekt: "postauto" },
-  { id: "weihnachten", sym: "🎄", name: "Weihnachten", design: "weinberg", jz: "advent", effekt: "taube", schrift: "weihnacht" },
-  { id: "silvester", sym: "🎆", name: "Silvester", design: "disko", jz: "silvester", effekt: "flieger", schrift: "schwung" },
+  { id: "halloween", sym: "🎃", name: "Halloween", design: "sonnenuntergang", jz: "halloween", effekt: "taube", schrift: "grusel", kopf: "theater" }, // 2.332.0
+  { id: "simjue", sym: "🎡", name: "Sim-Jü", design: "regenbogen", jz: "kirmes", effekt: "flieger", schrift: "kirmes", kopf: "theater" },
+  { id: "winter", sym: "⛄", name: "Winter", design: "nordsee", jz: "winter", effekt: "postauto", kopf: "bude" },
+  { id: "weihnachten", sym: "🎄", name: "Weihnachten", design: "weinberg", jz: "advent", effekt: "taube", schrift: "weihnacht", kopf: "bude" },
+  { id: "silvester", sym: "🎆", name: "Silvester", design: "disko", jz: "silvester", effekt: "flieger", schrift: "schwung", kopf: "theater" },
 ];
 // 2.331.0: Feste nach Kalender – Oktoberfest (Samstag nach dem 15.9. bis 1. Oktobersonntag, mindestens bis 3.10.) und Sim-Jü in Werne
 // (Samstag bis Dienstag um Simon und Juda, 28.10. – der Dienstag, der dem 28.10. am nächsten liegt; 2026: 24.–27.10.)
@@ -1043,7 +1043,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ if ($("setFee")) $("setFee").checked = einst("fee", true); if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setFee")) $("setFee").checked = einst("fee", true); if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -8069,8 +8069,56 @@ async function liveTippenSetzen(an) {
 }
 const OSZI_SVG = `<svg class="oszi" viewBox="0 0 70 24" aria-hidden="true"><g class="hub"><g class="lauf"><path d="M0 12 ${Array.from({ length: 10 }, (_, i) => `Q${i * 10 + 5} ${i % 2 ? 22 : 2} ${i * 10 + 10} 12`).join(" ")}"/></g></g></svg>`;
 const werText = (n) => n.length === 1 ? n[0] : n.length === 2 ? `${n[0]} und ${n[1]}` : `${n.length} Personen`;
+// ---------- 2.502.0 KC-CLUB-TIPP-GERAEUSCH (Wunsch Hansi): Zeigt die Gegenseite live, was sie tippt (👁️ Live-Tippen), hörst du ihre
+// Anschläge – Computer-Tastatur oder Schreibmaschine (mit Glöckchen am Zeilenende). ⚙️ → Benachrichtigungen, je Gerät, Standard aus.
+// Nur in der offenen, nicht stummgeschalteten Unterhaltung und nur für neu Getipptes (beim Öffnen kein Geprassel für vorhandenen Text).
+const TIPP_TOENE = { aus: "🔇 Aus", tastatur: "⌨️ Computer-Tastatur", schreibmaschine: "📠 Schreibmaschine" };
+const TT = { chat: null, stand: new Map(), zeile: 0, rauschen: null };
+const tippTonWahl = () => { try { const w = localStorage.getItem("kc_club_tippton"); return TIPP_TOENE[w] ? w : "aus"; } catch { return "aus"; } };
+function tippTonZeigen() { const s = $("setTippTon"); if (s) s.value = tippTonWahl(); }
+function tippTonSetzen(w) { try { localStorage.setItem("kc_club_tippton", TIPP_TOENE[w] ? w : "aus"); } catch {} if (w !== "aus") tippTonProbe(w); }
+function tippTonProbe(w = tippTonWahl()) { const art = w === "aus" ? "tastatur" : w; for (let i = 0; i < 14; i++) tippAnschlag(art, i * 0.12 + Math.random() * 0.05); if (art === "schreibmaschine") tippGlocke(1.85); }
+function tippAnschlag(art, ab) {
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.();
+    const t = audio.currentTime + .02 + ab, sm = art === "schreibmaschine";
+    if (!TT.rauschen) { const b = audio.createBuffer(1, Math.round(audio.sampleRate * .08), audio.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; TT.rauschen = b; }
+    // Anschlag: kurzes gefiltertes Rauschen (hell bei der Tastatur, kräftiger bei der Schreibmaschine) …
+    const q = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain(), dauer = sm ? .05 : .025;
+    q.buffer = TT.rauschen; f.type = "bandpass"; f.frequency.value = (sm ? 1800 : 3200) * (.85 + Math.random() * .3); f.Q.value = sm ? 1.2 : 2.5;
+    g.gain.setValueAtTime(sm ? .5 : .22, t); g.gain.exponentialRampToValueAtTime(.0001, t + dauer);
+    q.connect(f).connect(g).connect(audio.destination); q.start(t); q.stop(t + dauer + .01);
+    // … dazu der Körper: dumpfes „Tock“ der Taste bzw. der metallische Typenhebel
+    const o = audio.createOscillator(), g2 = audio.createGain(); o.type = sm ? "square" : "sine";
+    o.frequency.setValueAtTime(sm ? 900 : 180, t); o.frequency.exponentialRampToValueAtTime(sm ? 400 : 90, t + .03);
+    g2.gain.setValueAtTime(sm ? .05 : .12, t); g2.gain.exponentialRampToValueAtTime(.0001, t + .04);
+    o.connect(g2).connect(audio.destination); o.start(t); o.stop(t + .05);
+  } catch {}
+}
+function tippGlocke(ab) { // Schreibmaschine: „Ding“ am Zeilenende
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.();
+    const t = audio.currentTime + .02 + ab;
+    for (const [hz, laut] of [[2637, .18], [5274, .05]]) { const o = audio.createOscillator(), g = audio.createGain(); o.type = "sine"; o.frequency.value = hz;
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(laut, t + .005); g.gain.exponentialRampToValueAtTime(.0001, t + 1.1);
+      o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 1.2); }
+  } catch {}
+}
+function tippGeraeusche(entwurf) {
+  if (TT.chat !== chatId) { TT.chat = chatId; TT.stand = new Map(); TT.zeile = 0; }
+  const neu = new Map(entwurf.map((x) => [x.name, [...String(x.text || "")].length]));
+  let n = 0;
+  for (const [wer, l] of neu) { const alt = TT.stand.get(wer); if (alt !== undefined) n += l > alt ? l - alt : l < alt ? 1 : 0; } // Löschen = ein Anschlag
+  TT.stand = neu;
+  const w = tippTonWahl();
+  if (w === "aus" || !n || document.hidden || aktuelleAnsicht !== "chat" || (chatId && stummAn(chatId))) return;
+  n = Math.min(n, 24); const abstand = Math.min(.16, 1.7 / n); // über die Zeit bis zur nächsten Meldung verteilt, leicht unregelmäßig
+  for (let i = 0; i < n; i++) tippAnschlag(w, i * abstand + Math.random() * abstand * .4);
+  if (w === "schreibmaschine" && (TT.zeile += n) >= 40) { TT.zeile = 0; tippGlocke(n * abstand + .1); }
+}
 function tipptZeigen(namen, entwurf = [], sprechen = []) {
   const e = $("tipptAnzeige"); if (!e) return;
+  tippGeraeusche(entwurf);
   if (!namen.length && !sprechen.length) { e.classList.add("versteckt"); e.innerHTML = ""; e.dataset.stand = ""; return; }
   // KC-CLUB-SPRICHT (1.11.0): „nimmt eine Sprachnachricht auf“ mit Oszilloskop-Welle
   const sp = sprechen.length ? `<div class="zeile">${OSZI_SVG}<span>🎤 ${esc(werText(sprechen))} ${sprechen.length > 1 ? "nehmen" : "nimmt"} eine Sprachnachricht auf</span></div>` : "";
@@ -20641,12 +20689,18 @@ async function kopfRolloFahren(ziel) {
   }
 }
 // ---------- KC-CLUB-KOPF-EFFEKTE: Auswahl in ⚙️ → ✨ Effekte (Häkchen an → Klappbereich). Aus = Jalousie (Standard) ----------
-const KOPF_EFFEKT = "kc_club_kopf_effekt", KOPF_EFFEKTE = ["jalousie", "vorhang", "climber"];
-const KOPF_EFFEKT_NAMEN = { jalousie: "🪟 Jalousie (Standard)", vorhang: "🎭 Lamellenvorhang – zu den Seiten", climber: "🗄️ Climber – Lamellen klappen hoch", auto: "🔄 Automatisch – jedes Mal ein anderer" };
-function kopfEffektStand() { try { const j = JSON.parse(localStorage.getItem(KOPF_EFFEKT) || "{}"); return { an: !!j.an, wahl: KOPF_EFFEKTE.includes(j.wahl) || j.wahl === "auto" ? j.wahl : "jalousie", n: Number(j.n) || 0 }; } catch { return { an: false, wahl: "jalousie", n: 0 }; } }
+const KOPF_EFFEKT = "kc_club_kopf_effekt", KOPF_EFFEKTE = ["jalousie", "vorhang", "climber", "theater", "glocke", "bude"];
+// 2.502.0 KC-CLUB-KOPF-EFFEKTE-2 (Wunsch Hansi): Theatervorhang, Servierglocke, Marktbude + „Passend zum Thema“ (Thema-Registry: THEMEN[].kopf)
+const KOPF_EFFEKT_NAMEN = { jalousie: "🪟 Jalousie (Standard)", vorhang: "🎭 Lamellenvorhang – zu den Seiten", climber: "🗄️ Climber – Lamellen klappen hoch",
+  theater: "🎪 Theatervorhang – weinroter Samt", glocke: "🍽️ Servierglocke – „Voilà!“", bude: "🏠 Marktbude – die Holzklappe geht zu",
+  auto: "🔄 Automatisch – jedes Mal ein anderer", thema: "🎭 Passend zum Thema bzw. zur Jahreszeit" };
+// ohne Thema: im Advent die Marktbude (Weihnachtsmarkt), sonst die Servierglocke
+const kopfEffektThema = () => { const k = themaWert("kopf"); return KOPF_EFFEKTE.includes(k) ? k : jahreszeitArt(new Date()) === "advent" ? "bude" : "glocke"; };
+function kopfEffektStand() { try { const j = JSON.parse(localStorage.getItem(KOPF_EFFEKT) || "{}"); return { an: !!j.an, wahl: KOPF_EFFEKTE.includes(j.wahl) || j.wahl === "auto" || j.wahl === "thema" ? j.wahl : "jalousie", n: Number(j.n) || 0 }; } catch { return { an: false, wahl: "jalousie", n: 0 }; } }
 function kopfEffektSpeichern(neu) { try { localStorage.setItem(KOPF_EFFEKT, JSON.stringify({ ...kopfEffektStand(), ...neu })); } catch {} }
 function kopfEffektNaechster() {
   const st = kopfEffektStand(); if (!st.an) return "jalousie";
+  if (st.wahl === "thema") return kopfEffektThema();
   if (st.wahl !== "auto") return st.wahl;
   const e = KOPF_EFFEKTE[st.n % KOPF_EFFEKTE.length]; kopfEffektSpeichern({ n: st.n + 1 }); return e;
 }
@@ -20673,6 +20727,39 @@ async function kopfEffektAnimieren(effekt, h, zu, gross, klein, oben) {
     h.append(box);
     if (zu) { L.forEach((l, i) => Object.assign(l.style, { transform: offen(i).transform, opacity: 0.2 })); await lauf(false); await fahren(gross, klein, MS * 0.6); }
     else { await fahren(klein, gross, MS * 0.6); await lauf(true); }
+    return;
+  }
+  if (effekt === "theater") {
+    // zwei weinrote Samthälften mit Falten und Goldborte: ziehen sich von den Seiten zu; beim Öffnen raffen sie sich nach außen
+    box.innerHTML = '<i class="ke-theater-l"></i><i class="ke-theater-r"></i><i class="ke-theater-kante"></i>';
+    const [li, re] = box.children, offenL = { transform: "translateX(-102%) scaleX(.35)" }, offenR = { transform: "translateX(102%) scaleX(.35)" }, zuF = { transform: "translateX(0) scaleX(1)" };
+    const ziehen = (auf) => Promise.all([[li, offenL], [re, offenR]].map(([el, o]) => warten(el.animate(auf ? [zuF, o] : [o, zuF], { duration: 900, easing: "cubic-bezier(.55,.05,.35,1)", fill: "forwards" }))));
+    h.append(box);
+    if (zu) { li.style.transform = offenL.transform; re.style.transform = offenR.transform; await ziehen(false); await fahren(gross, klein, MS * 0.6); }
+    else { await fahren(klein, gross, MS * 0.6); await ziehen(true); }
+    return;
+  }
+  if (effekt === "glocke") {
+    // silberne Servierglocke senkt sich über den Kopf; beim Öffnen glänzt sie kurz, hebt sich – „Voilà!“
+    box.innerHTML = '<i class="ke-glocke"><b class="ke-glanz"></b><u class="ke-knauf"></u></i><span class="ke-voila">Voilà!</span>';
+    const g = box.firstElementChild, voila = box.lastElementChild, oben0 = { transform: "translateY(-115%)" }, unten = { transform: "translateY(0)" };
+    h.append(box);
+    if (zu) { g.style.transform = oben0.transform; await warten(g.animate([oben0, unten], { duration: 750, easing: "cubic-bezier(.5,0,.3,1.25)", fill: "forwards" })); await fahren(gross, klein, MS * 0.6); }
+    else {
+      await fahren(klein, gross, MS * 0.6);
+      await warten(g.querySelector(".ke-glanz").animate([{ transform: "translateX(-140%) skewX(-20deg)" }, { transform: "translateX(560%) skewX(-20deg)" }], { duration: 450, easing: "ease-in-out" }));
+      g.animate([unten, oben0], { duration: 800, easing: "cubic-bezier(.5,-.25,.6,1)", fill: "forwards" });
+      await warten(voila.animate([{ opacity: 0, transform: "translate(-50%,-50%) scale(.6)" }, { opacity: 1, transform: "translate(-50%,-50%) scale(1.1)", offset: .35 }, { opacity: 1, transform: "translate(-50%,-50%) scale(1)", offset: .75 }, { opacity: 0, transform: "translate(-50%,-50%) scale(1)" }], { duration: 1300, easing: "ease-out", fill: "forwards" }));
+    }
+    return;
+  }
+  if (effekt === "bude") {
+    // Holzklappe einer Weihnachtsmarkt-Bude, oben am Vordach angeschlagen: klappt herunter (Ladenschluss) bzw. hoch (wird zum Vordach)
+    box.innerHTML = '<i class="ke-bude-dach"></i><i class="ke-bude-klappe"><b class="ke-bude-schild">Geschlossen</b></i>';
+    const k = box.lastElementChild, hoch = { transform: "rotateX(-100deg)", opacity: .25 }, runter = { transform: "rotateX(0deg)", opacity: 1 };
+    h.append(box);
+    if (zu) { k.style.transform = hoch.transform; await warten(k.animate([hoch, runter], { duration: 800, easing: "cubic-bezier(.6,0,.45,1.3)", fill: "forwards" })); await fahren(gross, klein, MS * 0.6); }
+    else { await fahren(klein, gross, MS * 0.6); await warten(k.animate([runter, hoch], { duration: 850, easing: "cubic-bezier(.45,0,.4,1)", fill: "forwards" })); }
     return;
   }
   // Climber: waagerechte Lamellen kippen schräg und schieben sich oben zu einem schmalen Paket zusammen
