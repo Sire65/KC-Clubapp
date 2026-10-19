@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.507.0 – 2026-10-19 – 🎁 Geburtstags-Vogel im Kopf (KC-CLUB-GEBURTSTAG-VOGEL)
+- Feature KC-CLUB-GEBURTSTAG-VOGEL (Wunsch Hansi): Hat heute ein Mitglied Geburtstag (nur freigegebene Geburtstage), fliegt im Kopf der Startseite ein Vogel mit Geschenkpaket herein und wirft es ab; unten platzt es, ein Blumenstrauß springt heraus, darüber ein bunter „Happy Birthday“-Schriftzug mit Vornamen. Höchstens einmal je Stunde und Gerät; blockiert keine Bedienung. ⚙️ → ✨ Effekte: 🎁 Geburtstags-Vogel (an/aus + ▶ Vorschau).
+
 ## 2.506.0 – 2026-10-19 – Protokoll veröffentlichen ohne Warten (KC-CLUB-PROTOKOLL-SCHNELL)
 - KC-CLUB-PROTOKOLL-SCHNELL (Hansi: Veröffentlichen dauerte 21 s): Das Protokoll ist sofort veröffentlicht; die Benachrichtigung der Mitglieder, die Aufgaben-Mitteilung und der Protokolleintrag laufen im Hintergrund (Fehler landen im Server-Log und im Protokoll).
 - Server 2.506.0.

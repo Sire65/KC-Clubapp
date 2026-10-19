@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.506.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.507.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1043,7 +1043,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setFee")) $("setFee").checked = einst("fee", true); if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setFee")) $("setFee").checked = einst("fee", true); if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -24676,7 +24676,58 @@ function installHilfe() {
   if (START_ART !== "app") return einrichtenAssistent(); // 1.87.0: Schritt-für-Schritt-Assistent (Android mit „Jetzt installieren“ obenauf)
   zeige("einstellungen"); const d = document.querySelector('details[data-klappe="install"]'); if (d) { d.open = true; setTimeout(() => d.scrollIntoView({ block: "start", behavior: "smooth" }), 100); }
 }
+// ---------- 2.507.0 KC-CLUB-GEBURTSTAG-VOGEL (Wunsch Hansi): Hat heute ein Mitglied Geburtstag, fliegt im Kopf der Startseite ein Vogel mit einem
+// Geschenkpaket herein und wirft es ab; unten platzt es, ein Blumenstrauß springt heraus, darüber ein bunter „Happy Birthday“-Schriftzug mit
+// Vornamen. Nur die Geburtstage, die die App ohnehin zeigt (Freigabe). Höchstens einmal je Stunde und Gerät; ⚙️ → ✨ Effekte (an/aus + Vorschau).
+const GBV_ABSTAND_MS = 60 * 60000;
+const gbvAn = () => einst("gbvogel", true);
+function gbvPruefen() {
+  if (!gbvAn() || !fxAn() || aktuelleAnsicht !== "start" || document.hidden || kopfRolloStand() === "ganz") return;
+  const g = (INIT?.geburtstageHeute || []); if (!g.length) return;
+  const k = "kc_club_gbv_" + heuteIso(); let zuletzt = 0; try { zuletzt = Number(localStorage.getItem(k)) || 0; } catch {}
+  if (Date.now() - zuletzt < GBV_ABSTAND_MS) return;
+  try { localStorage.setItem(k, String(Date.now())); } catch {}
+  setTimeout(() => gbvFlug(g.map((x) => x.person_id === ICH?.person_id ? "dir" : x.vorname || String(x.name || "").split(" ")[0])), 1500);
+}
+const GBV_VOGEL = `<svg viewBox="0 0 90 70" width="90" height="70"><path class="gbv-schnur" d="M45 40 L45 52" stroke="#5a3718" stroke-width="1.5"/>
+  <g class="gbv-paket-am"><rect x="33" y="50" width="24" height="18" rx="2" fill="#741521"/><rect x="43" y="50" width="4" height="18" fill="#c9a46a"/><rect x="33" y="57" width="24" height="4" fill="#c9a46a"/></g>
+  <ellipse cx="45" cy="32" rx="20" ry="11" fill="#3d6fb6"/><circle cx="64" cy="25" r="8" fill="#3d6fb6"/><circle cx="67" cy="23" r="1.8" fill="#fff"/><circle cx="67.5" cy="23" r=".9" fill="#111"/>
+  <path d="M71 25 L80 27 L71 29 Z" fill="#f2a900"/><path d="M25 30 L10 24 L14 34 Z" fill="#2c5592"/><path class="gbv-fluegel" d="M40 28 Q32 6 52 10 Q50 22 48 28 Z" fill="#5b8fd8"/></svg>`;
+const GBV_PAKET = `<svg viewBox="0 0 28 26" width="28" height="26"><rect x="2" y="6" width="24" height="18" rx="2" fill="#741521"/><rect x="12" y="6" width="4" height="18" fill="#c9a46a"/><rect x="2" y="13" width="24" height="4" fill="#c9a46a"/><path d="M14 6 Q8 0 6 4 Q8 7 14 6 Q20 7 22 4 Q20 0 14 6" fill="#c9a46a"/></svg>`;
+async function gbvFlug(namen = ["dir"]) {
+  const h = document.querySelector("#v-start .hero"); if (!h || !h.getClientRects().length || typeof h.animate !== "function" || h.querySelector(".gbv")) return;
+  const W = h.offsetWidth, H = h.offsetHeight, warten = (a) => a.finished.catch(() => {});
+  const b = document.createElement("div"); b.className = "gbv"; b.setAttribute("aria-hidden", "true");
+  b.innerHTML = `<i class="gbv-vogel">${GBV_VOGEL}</i><i class="gbv-paket">${GBV_PAKET}</i><i class="gbv-strauss">💐</i><b class="gbv-text">${[..."Happy Birthday"].map((c, i) => `<span style="--i:${i}">${c === " " ? "&nbsp;" : esc(c)}</span>`).join("")}</b><small class="gbv-name"></small>`;
+  b.querySelector(".gbv-name").textContent = namen.length === 1 && namen[0] === "dir" ? "Alles Gute für dich! 🎂" : "Alles Gute, " + (namen.length > 1 ? namen.slice(0, -1).join(", ") + " und " + namen[namen.length - 1] : namen[0]) + "! 🎂";
+  h.append(b);
+  try {
+    const v = b.querySelector(".gbv-vogel"), pk = b.querySelector(".gbv-paket"), am = v.querySelector(".gbv-paket-am"), schnur = v.querySelector(".gbv-schnur");
+    const y0 = Math.max(10, H * 0.12), abwurfX = W * 0.5 - 45, boden = H - 34, FLUG = 4200, ANTEIL = (abwurfX + 100) / (W + 200);
+    const flug = v.animate([{ transform: `translate(-100px, ${y0 + 20}px)` }, { transform: `translate(${abwurfX}px, ${y0}px)`, offset: ANTEIL }, { transform: `translate(${W + 100}px, ${y0 - 30}px)` }], { duration: FLUG, easing: "linear", fill: "forwards" });
+    await new Promise((r) => setTimeout(r, FLUG * ANTEIL)); // über der Mitte: Paket los
+    am.style.visibility = "hidden"; schnur.style.visibility = "hidden";
+    const px = abwurfX + 31, py = y0 + 46;
+    pk.style.opacity = "1";
+    await warten(pk.animate([{ transform: `translate(${px}px, ${py}px) rotate(0deg)` }, { transform: `translate(${px}px, ${boden}px) rotate(18deg)` }], { duration: 900, easing: "cubic-bezier(.45,0,1,1)", fill: "forwards" }));
+    // Aufprall: kurz stauchen, dann platzt es – Konfetti-Fetzen, der Strauß springt heraus
+    await warten(pk.animate([{ transform: `translate(${px}px, ${boden}px) scale(1.25, .7)` }, { transform: `translate(${px}px, ${boden - 6}px) scale(1.5)`, opacity: 0 }], { duration: 260, fill: "forwards" }));
+    for (let i = 0; i < 14; i++) { const f = document.createElement("u"); f.className = "gbv-fetzen"; f.style.background = ["#741521", "#c9a46a", "#e94b3c", "#3d6fb6", "#2fa36b", "#f2a900"][i % 6]; b.append(f);
+      const wink = (i / 14) * Math.PI * 2, wx = Math.cos(wink) * (40 + (i % 3) * 18), wy = Math.sin(wink) * 30 - 40;
+      f.animate([{ transform: `translate(${px + 12}px, ${boden + 8}px)`, opacity: 1 }, { transform: `translate(${px + 12 + wx}px, ${boden + 8 + wy}px) rotate(${i * 50}deg)`, opacity: 0 }], { duration: 900, easing: "cubic-bezier(.2,.7,.4,1)", fill: "forwards" }); }
+    const st = b.querySelector(".gbv-strauss"), sx = W / 2 - 30, sy = boden - 44;
+    st.animate([{ transform: `translate(${sx}px, ${sy + 30}px) scale(.1)`, opacity: 0 }, { transform: `translate(${sx}px, ${sy - 8}px) scale(1.15)`, opacity: 1, offset: .6 }, { transform: `translate(${sx}px, ${sy}px) scale(1)`, opacity: 1 }], { duration: 700, easing: "ease-out", fill: "forwards" });
+    const tx = b.querySelector(".gbv-text"), nm = b.querySelector(".gbv-name"), ty = Math.max(y0 + 50, sy - 70);
+    tx.style.top = ty + "px"; nm.style.top = ty + 44 + "px"; b.classList.add("gbv-feier");
+    await warten(nm.animate([{ opacity: 0 }, { opacity: 0, offset: .4 }, { opacity: 1 }], { duration: 1200, fill: "forwards" }));
+    await new Promise((r) => setTimeout(r, 5000));
+    await warten(b.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 800, fill: "forwards" }));
+    flug.cancel();
+  } finally { b.remove(); }
+}
+function gbvVorschau() { zeige("start"); setTimeout(() => { if (kopfRolloStand() !== "offen") kopfRolloSetzen("offen"); gbvFlug([ICH?.vorname || "Hansi"]); }, 500); }
 function wichtigZeigen() {
+  gbvPruefen(); // KC-CLUB-GEBURTSTAG-VOGEL
   $("tiKnopfStart")?.classList.toggle("versteckt", !ICH?.vorstand); // KC-CLUB-TAGESINFO-MANUELL (1.38.0)
   const h = [];
   if (START_ART === "verknuepfung" || (START_ART === "browser" && !schonInstalliert)) h.push(`<div class="zeile" style="cursor:pointer" onclick="installHilfe()">📲 <b>${START_ART === "browser" ? "Köcheclub als App installieren" : "App richtig installieren"}</b> – dann klappen WhatsApp & Galerie<span style="margin-left:auto">›</span></div>`);

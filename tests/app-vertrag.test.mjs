@@ -7020,6 +7020,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/r\.versand === "laeuft" \? " · die Mitglieder werden gerade benachrichtigt" : ""/.test(html), "App sagt, dass benachrichtigt wird");
 }
 
+// 2.507.0 KC-CLUB-GEBURTSTAG-VOGEL (Wunsch Hansi): Vogel bringt ein Geschenk, es platzt, Blumenstrauß + bunter „Happy Birthday“-Schriftzug
+{
+  const g = html.slice(html.indexOf("function gbvPruefen() {"), html.indexOf("function wichtigZeigen() {"));
+  assert.ok(/if \(!gbvAn\(\) \|\| !fxAn\(\) \|\| aktuelleAnsicht !== "start" \|\| document\.hidden \|\| kopfRolloStand\(\) === "ganz"\) return;/.test(g), "nur auf der sichtbaren Startseite, abschaltbar, Sparmodus/Animationen beachtet");
+  assert.ok(/const g = \(INIT\?\.geburtstageHeute \|\| \[\]\); if \(!g\.length\) return;/.test(g), "nur die Geburtstage, die die App ohnehin zeigt (Freigabe)");
+  assert.ok(/const GBV_ABSTAND_MS = 60 \* 60000;/.test(html) && /if \(Date\.now\(\) - zuletzt < GBV_ABSTAND_MS\) return;/.test(g), "höchstens einmal je Stunde");
+  assert.ok(/class="gbv-vogel"/.test(g) && /class="gbv-paket"/.test(g) && /class="gbv-strauss">💐</.test(g) && /\[\.\.\."Happy Birthday"\]/.test(g), "Vogel, Paket, Strauß, Schriftzug");
+  assert.ok(/b\.querySelector\("\.gbv-name"\)\.textContent = /.test(g) && /\} finally \{ b\.remove\(\); \}/.test(g), "Namen als Text (kein HTML), räumt immer auf");
+  assert.ok(/function wichtigZeigen\(\) \{\s*gbvPruefen\(\);/.test(html) && /id="setGbVogel"[^>]*onchange="einstellung\('gbvogel', this\.checked\)"/.test(html) && /onclick="gbvVorschau\(\)"/.test(html), "Auslöser + Schalter + Vorschau unter ⚙️ → ✨ Effekte");
+  assert.ok(/\.gbv \{ position: absolute; inset: 0; z-index: 4; pointer-events: none;/.test(html), "blockiert keine Bedienung");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1078,6 +1078,21 @@
   .ke-vorhang { display: flex; gap: 1px; background: rgba(60,10,20,.25); }
   .ke-vorhang .ke-lamelle { flex: 1; transform-origin: center; background: linear-gradient(to right, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 1px 0 2px rgba(0,0,0,.35); }
   .ke-climber .ke-lamelle { position: absolute; left: 0; right: 0; top: 0; height: 15px; transform-origin: top center; background: linear-gradient(to bottom, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+  /* 2.507.0 KC-CLUB-GEBURTSTAG-VOGEL */
+  .gbv { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
+  .gbv > i, .gbv > u { position: absolute; left: 0; top: 0; font-style: normal; }
+  .gbv-vogel { transform: translate(-100px, 0); } .gbv-fluegel { transform-origin: 46px 28px; animation: gbv-flap .28s ease-in-out infinite alternate; }
+  @keyframes gbv-flap { from { transform: scaleY(1); } to { transform: scaleY(-.6); } }
+  .gbv-paket { opacity: 0; } .gbv-fetzen { width: 7px; height: 5px; border-radius: 1px; text-decoration: none; }
+  .gbv-strauss { font-size: 3.6rem; line-height: 1; opacity: 0; filter: drop-shadow(0 3px 4px rgba(0,0,0,.35)); }
+  .gbv-text { position: absolute; left: 0; right: 0; text-align: center; font: 800 2rem/1.1 Georgia, serif; white-space: nowrap; opacity: 0; }
+  .gbv-text span { display: inline-block; text-shadow: 0 2px 0 rgba(0,0,0,.35), 0 0 8px rgba(255,255,255,.6); }
+  .gbv-text span:nth-child(6n+1) { color: #e94b3c; } .gbv-text span:nth-child(6n+2) { color: #f2a900; } .gbv-text span:nth-child(6n+3) { color: #2fa36b; }
+  .gbv-text span:nth-child(6n+4) { color: #3d9be9; } .gbv-text span:nth-child(6n+5) { color: #b05bd8; } .gbv-text span:nth-child(6n) { color: #ff7ab6; }
+  .gbv-feier .gbv-text { opacity: 1; } .gbv-feier .gbv-text span { animation: gbv-hupf .9s cubic-bezier(.3,1.6,.5,1) both, gbv-wipp 1.6s ease-in-out .9s infinite alternate; animation-delay: calc(var(--i) * 55ms), calc(.9s + var(--i) * 80ms); }
+  @keyframes gbv-hupf { from { transform: translateY(-30px) scale(.2); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes gbv-wipp { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+  .gbv-name { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; font: 700 1rem/1.2 system-ui, sans-serif; color: #fff; background: rgba(116,21,33,.88); border: 1px solid #c9a46a; border-radius: 12px; padding: 3px 12px; opacity: 0; }
   /* 2.502.0 KC-CLUB-KOPF-EFFEKTE-2: Theatervorhang, Servierglocke, Marktbude (CD-Farben Weinrot/Beige) */
   .ke-theater-l, .ke-theater-r { position: absolute; top: 0; bottom: 0; width: 51%; background: repeating-linear-gradient(to right, #5c0f19 0 6px, #8a1c2b 12px, #741521 18px, #4a0c14 24px); box-shadow: inset 0 -8px 0 #c9a46a, inset 0 -10px 0 #8a6d3b; }
   .ke-theater-l { left: 0; transform-origin: left center; border-right: 2px solid #3a0910; } .ke-theater-r { right: 0; transform-origin: right center; border-left: 2px solid #3a0910; }
@@ -5088,6 +5103,8 @@
       <details class="su-wahl" data-abh="setKuckuck"><summary>🔔 Welche Uhr? <small class="hinweis">– jede Uhr zum Aufklappen, ▶ zum Anhören, mehrere = jede Stunde eine andere</small></summary><div id="stundenUhrWahl"></div></details> <!-- 2.467.0 KC-CLUB-STUNDENUHREN -->
       <div class="schalter versteckt" id="setAdventZeile"><div><b>🎄 Adventskalender</b><div class="hinweis">Vom 1. bis 24. Dezember jeden Tag ein Türchen mit einer Bastelanleitung für eine kleine süße Nascherei – Erinnerung oben im Info-Laufband. Aus: keine Erinnerung. Gilt für dieses Gerät.</div><button type="button" class="knopf klein" style="margin-top:6px" onclick="akZeigen()">🎄 Kalender ansehen</button></div><input type="checkbox" id="setAdvent" aria-label="Adventskalender an oder aus" onchange="einstellung('advent', this.checked)"></div> <!-- 2.468.0 KC-CLUB-ADVENTSKALENDER -->
       <div class="schalter"><div><b>🧚 Die kleine Fee</b><div class="hinweis">Bei jedem 20. Start kommt die Fee – und beim Antippen gibt sie dir einen Spruch. Aus: sie kommt nicht mehr. Gilt für dieses Gerät.</div><button type="button" class="knopf klein" id="feeKnopf" style="margin-top:6px" onclick="feeKommt(true)">🧚 Fee ansehen</button></div><input type="checkbox" id="setFee" aria-label="Die kleine Fee an oder aus" onchange="einstellung('fee', this.checked)"></div> <!-- 2.373.0 KC-CLUB-FEE: eigene Zeile; 2.379.0: abschaltbar -->
+      <!-- 2.507.0 KC-CLUB-GEBURTSTAG-VOGEL -->
+      <div class="schalter"><div><b>🎁 Geburtstags-Vogel</b><div class="hinweis">Hat heute jemand Geburtstag, bringt ein Vogel im Kopf ein Geschenk – es platzt unten, ein Blumenstrauß und „Happy Birthday“ erscheinen. Höchstens einmal pro Stunde. <button type="button" class="knopf klein" onclick="gbvVorschau()">▶ Vorschau</button></div></div><input type="checkbox" id="setGbVogel" onchange="einstellung('gbvogel', this.checked)"></div>
       <div class="schalter"><div><b>🍂 Jahreszeiten im Kopf</b><div class="hinweis">Herbstlaub bleibt unten liegen, bis ein Windstoß es wegweht – Schnee ebenso, jedes 3. Mal wird ein lachender Schneemann daraus. Im Frühling wachsen Gras und Blumen, im Sommer eine Sonnenblume. Feuerwerk zu Silvester.</div></div><input type="checkbox" id="setJahreszeit" onchange="jahreszeitUmschalten(this.checked)"></div>
       <details class="abh-klappe" data-abh="setJahreszeit"><summary>🍂 Szenen: Jahreszeit wählen &amp; Vorschau</summary> <!-- 2.478.0 KC-CLUB-EINST-KLAPPEN: klappt mit dem Häkchen darüber auf -->
         <div class="schalter" style="display:block"><div><b>📅 Welche Jahreszeit?</b><div class="hinweis" id="jzWahlInfo"></div></div><div class="reg-effekt-wahl" id="jzWahl"></div></div> <!-- 2.273.0 KC-CLUB-JAHRESZEIT-AUTOMATIK --> <!-- 2.172.0 KC-CLUB-EFFEKTE-2, 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE -->
@@ -5508,7 +5525,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.506.0" data-v="2.506.0"></script>
+<script src="app.js?v=2.507.0" data-v="2.507.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>
