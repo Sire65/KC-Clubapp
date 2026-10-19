@@ -1367,7 +1367,7 @@ async function feedbackArchivieren(ich: Ich, grund: string, nurPerson: string | 
 const KA_ID = /^[a-z0-9_-]{1,30}$/;
 const kaIds = (v: unknown) => [...new Set((Array.isArray(v) ? v : []).filter((x) => typeof x === "string" && KA_ID.test(x)))].slice(0, 50) as string[];
 // KC-CLUB-EMPFANGS-EFFEKT (2.177.0): mit welchem Effekt meine Nachrichten beim Empfänger ankommen (Wahl unter 🎨 Darstellung)
-const SENDE_EFFEKT_ARTEN = ["flieger", "taube", "postauto", "fahrrad", "flasche", "rakete", "ballon", "muenchhausen", "wechsel", "aus"]; // 2.362.0: + Fahrrad, Flaschenpost, Rakete, Ballon · 2.363.0: + Münchhausen
+const SENDE_EFFEKT_ARTEN = ["flieger", "taube", "postauto", "fahrrad", "flasche", "rakete", "ballon", "uhu", "muenchhausen", "wechsel", "aus"]; // 2.362.0: + Fahrrad, Flaschenpost, Rakete, Ballon · 2.363.0: + Münchhausen
 const MAHNUNG_TAGE = 5; // KC-CLUB-NACHRICHT-MAHNUNG (2.223.0): ab so vielen Tagen ungelesen blinkt die Nachrichten-Kachel
 const RC_EIGENE_MAX = 12; // KC-CLUB-REISE-CHECKLISTE (2.223.0): eigene Punkte je Reise
 const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {

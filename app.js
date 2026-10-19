@@ -2616,7 +2616,7 @@ const RG_EFFEKTE = [
     x: "Hier schaltest du die Jahreszeiten im Kopf ein oder aus. Haken raus – und der Kopf ist wieder ruhig. Darunter kannst du dir jede Jahreszeit und die Extras als Vorschau ansehen.",
     live: async (L) => { await L.tipp("#setJahreszeit"); await L.warte(900); await L.tipp(() => [...document.querySelectorAll(`${rgKlappe("effekte")} .chip`)].find((c) => /Herbst/.test(c.textContent))); } },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("regEffektWahl"), "#regEffektWahl"], mussSel: true, t: "🪟 Kacheln und Senden",
-    x: "Hier wählst du, wie die Kacheln hereinschweben – Jalousie, Kartenstapel, Umdrehen, Zufall – oder Aus. Darunter der Effekt beim Senden: Papierflieger, Brieftaube oder Postauto.",
+    x: "Hier wählst du, wie die Kacheln hereinschweben – Jalousie, Kartenstapel, Umdrehen, Zufall – oder Aus. Darunter der Effekt beim Senden: Papierflieger, Brieftaube, Uhu mit Posttasche oder Postauto.",
     live: async (L) => { await L.tipp(() => [...document.querySelectorAll("#regEffektWahl .chip")].find((c) => /Aus/.test(c.textContent))); } },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("setAnimiert")], puls: ["#setAnimiert"], mussSel: true, t: "✨ Der Hauptschalter",
     x: "Ganz oben der Hauptschalter: Animierte Knöpfe. Ist er aus, ist alles ruhig – auch die Jahreszeiten und alle Effekte. Nichts davon ist Pflicht, und du kannst alles jederzeit wieder einschalten." },
@@ -2655,7 +2655,7 @@ const RG_ANPASSEN = [
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("jzDekoWahl"), "#jzDekoWahl"], mussSel: true, t: "🎏 Deko an der Leiste",
     x: "An der Leiste mit den Lämpchen kann eine Deko hängen: Wimpel, Lichterkette oder Laternen. Automatisch passt sie zur Jahreszeit – im Herbst Laternen, im Advent warmweiße Lichter. Oder du wählst selbst, oder schaltest sie aus." },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("regEffektWahl"), "#regEffektWahl", "#sendeEffektWahl"], mussSel: true, t: "🪟 Kacheln und Senden",
-    x: "Hier wählst du, wie die Kacheln hereinschweben – als Jalousie, Kartenstapel oder sie drehen sich um. Und was beim Senden einer Nachricht losfliegt: Papierflieger, Brieftaube oder Postauto." },
+    x: "Hier wählst du, wie die Kacheln hereinschweben – als Jalousie, Kartenstapel oder sie drehen sich um. Und was beim Senden einer Nachricht losfliegt: Papierflieger, Brieftaube, Uhu mit Posttasche oder Postauto." },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("setAnimiert")], puls: ["#setAnimiert"], mussSel: true, t: "✨ Ruhig oder lebendig",
     x: "Der Hauptschalter: Animierte Knöpfe. Ist er aus, ist alles ruhig – keine Bewegungen, kein Jahreszeiten-Bild, keine Effekte. Ideal, wenn dich das ablenkt." },
   { v: "einstellungen", vor: () => rgAuf("darstellung"), sel: [rgSchalter("sparWahl"), "#sparWahl"], mussSel: true, t: "🐢 Sparmodus und Akku",
@@ -5108,7 +5108,7 @@ const HILFE = [
   { id: "schrift_zoom", thema: "darstellung", sym: "🔍", t: "Schrift größer ziehen – mit zwei Fingern", x: "Zu klein zum Lesen? Lege <b>zwei Finger</b> auf den Bildschirm und ziehe sie <b>auseinander</b> – Nachrichten, Zettel und Texte werden größer (Knöpfe und Leisten bleiben, wie sie sind). Zusammenschieben macht sie kleiner. Die Größe bleibt gemerkt. Zurück auf normal: mit zwei Fingern <b>doppelt tippen</b> oder unter ⚙️ → Darstellung → „🔍 Schriftgröße“. <b>Ganz ausschalten:</b> ⚙️ → Darstellung → „✌️ Schrift mit zwei Fingern ändern“ (A− / A+ gehen weiter). Ein aufliegender Daumen beim Scrollen verstellt die Schrift nicht mehr.", seit: "2.364.0" }, // 2.364.0 KC-CLUB-SCHRIFT-ZOOM
   { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag – am 🏎️-Knopf steht, wie viele du heute schon verschickt hast (z. B. <b>2/5</b>). Nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
   { id: "fee", thema: "darstellung", sym: "🧚", t: "Eine kleine Fee zu Besuch", x: "Bei jeder <b>20. Anmeldung</b> schwebt eine kleine Fee durchs obere Startbild, bleibt kurz stehen und lächelt. <b>Tipp sie an</b> – dann schenkt sie dir einen schönen Spruch. Vorab ansehen oder per Häkchen abschalten: <b>⚙️ → ✨ Effekte → 🧚 Die kleine Fee</b>.", zeig: () => einstiegHin("effekte", "setFee"), seit: "2.372.0" },
-  { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b>, <b>Luftballon</b> oder <b>Baron Münchhausen</b> auf der Kanonenkugel – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen.", zeig: () => einstiegHin("effekte", "sendeEffektWahl"), seit: "2.362.0" },
+  { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b>, <b>Luftballon</b>, <b>Uhu mit Posttasche</b> oder <b>Baron Münchhausen</b> auf der Kanonenkugel – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen.", zeig: () => einstiegHin("effekte", "sendeEffektWahl"), seit: "2.362.0" },
   { id: "zurueckholen", thema: "nachrichten", sym: "↩️", t: "Vertippt? Nachricht zurückholen", x: "Solange noch niemand deine Nachricht gelesen hat, kannst du sie <b>zurückholen</b>: Nachricht antippen (am PC: rechte Maustaste) oder im <b>ⓘ</b>-Fenster → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet für alle und steht wieder in deinem Schreibfeld – ändern und neu senden.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-ZURUECKHOLEN
   { id: "spaeter_senden", thema: "nachrichten", sym: "⏰", t: "Nachricht später senden – auch jeden Montag", x: "Nachricht schreiben, unten auf <b>⏰</b> tippen, Zeit wählen (z. B. <b>morgen früh 8 Uhr</b>) und wie oft (<b>einmal</b>, <b>jeden Tag</b>, <b>werktags</b>, <b>jeden Montag</b> …). Bis dahin steht sie blass unten im Chat – nur du siehst sie; antippen zum Ändern oder Löschen. Gesendet wird auch, wenn dein Handy aus ist.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-SPAETER-SENDEN
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN (Wunsch Hansi „Videos, Hilfetexte, Suche und Twinkey auf die neuen Funktionen umstellen und gut erklären“)
@@ -14691,8 +14691,8 @@ async function fxAusHinweis(nochmal) {
 // 2.176.0 (Wunsch Hansi „als drittes ein gelbes Postauto – und wenn als wichtig markiert ein Auto mit Blaulicht“)
 // 2.362.0 KC-CLUB-BOTEN (Wunsch Hansi „als Versand auch einen Postboten auf dem Fahrrad, Brieftaube, Papierflieger … auch unter Voreinstellungen“):
 // + 🚴 Postbote mit Fahrrad, 🍾 Flaschenpost, 🚀 Rakete, 🎈 Luftballon. 🏎️ Rennwagen = Express-Sendung (eigener Knopf, nicht wählbar als Standard).
-const SENDE_EFFEKTE = [["flieger", "✈️ Papierflieger"], ["taube", "🕊️ Brieftaube"], ["postauto", "🚐 Postauto"], ["fahrrad", "🚴 Postbote mit Fahrrad"], ["flasche", "🍾 Flaschenpost"], ["rakete", "🚀 Rakete"], ["ballon", "🎈 Luftballon"], ["muenchhausen", "🎩 Baron Münchhausen"], ["wechsel", "🔀 Abwechselnd"], ["aus", "🚫 Aus"]];
-const SENDE_REIHE = ["flieger", "taube", "postauto", "fahrrad", "flasche", "rakete", "ballon", "muenchhausen"]; // 2.363.0 + Münchhausen
+const SENDE_EFFEKTE = [["flieger", "✈️ Papierflieger"], ["taube", "🕊️ Brieftaube"], ["postauto", "🚐 Postauto"], ["fahrrad", "🚴 Postbote mit Fahrrad"], ["flasche", "🍾 Flaschenpost"], ["rakete", "🚀 Rakete"], ["ballon", "🎈 Luftballon"], ["muenchhausen", "🎩 Baron Münchhausen"], ["uhu", "🦉 Uhu mit Posttasche"], ["wechsel", "🔀 Abwechselnd"], ["aus", "🚫 Aus"]];
+const SENDE_REIHE = ["flieger", "taube", "postauto", "fahrrad", "flasche", "rakete", "ballon", "uhu", "muenchhausen"]; // 2.363.0 + Münchhausen, KC-CLUB-UHU + Uhu
 const sendeEffektWahl = () => { const t = themaWert("effekt"); if (t) return t; try { const w = localStorage.getItem("kc_club_sendeEffekt"); return SENDE_EFFEKTE.some(([k]) => k === w) ? w : "wechsel"; } catch { return "wechsel"; } };
 let SENDE_FX_N = 0;
 const FLIEGER_SVG = (g) => `<svg viewBox="0 0 120 120" width="${g}" height="${g}" style="transform:scaleX(-1)">
@@ -14709,6 +14709,25 @@ const TAUBE_SVG = (g) => `<svg viewBox="0 0 140 120" width="${Math.round(g * 1.1
     <path d="M29 51 17 55 29 57Z" fill="#e8a33d" stroke="#b97a1e" stroke-width="1" stroke-linejoin="round"/>
     <g class="tb-brief" transform="rotate(-8 17 64)"><rect x="4" y="57" width="26" height="17" rx="2" fill="#f3e6cf" stroke="#7b1e2b" stroke-width="2"/><path d="M4 57 17 67 30 57" fill="none" stroke="#7b1e2b" stroke-width="2"/><circle cx="17" cy="67" r="2.6" fill="#7b1e2b"/></g>
     <g class="fl-vorn" fill="#fff" stroke="#9a948c" stroke-width="2" stroke-linejoin="round"><path d="M58 60C58 30 76 6 106 2 100 22 92 42 80 62Z"/><path d="M72 40 88 22M76 48 94 32" fill="none" stroke-width="1.5"/></g></svg>`;
+// KC-CLUB-UHU (Wunsch Hansi 19.10.2026 „ein Uhu mit blauer Briefträger-Mütze und Umhängetasche, der die Nachricht überbringt“):
+// gleicher Aufbau wie die Taube (schaut nach links, Flügel .fl-vorn/.fl-hinten, Kuvert .tb-brief) – das Kuvert steckt in der Posttasche
+const UHU_SVG = (g) => `<svg viewBox="0 0 140 120" width="${Math.round(g * 1.17)}" height="${g}" overflow="visible">
+    <g class="fl-hinten" fill="#6e4826" stroke="#4a2f17" stroke-width="2" stroke-linejoin="round"><path d="M64 60C66 34 84 14 112 10 104 28 96 44 84 60Z"/></g>
+    <path d="M96 62 128 52 125 66 132 80 96 76Z" fill="#8b5e34" stroke="#4a2f17" stroke-width="2" stroke-linejoin="round"/><path d="M104 66 124 62M104 71 126 74" stroke="#4a2f17" stroke-width="1.3"/>
+    <ellipse cx="74" cy="66" rx="30" ry="19" fill="#9c6b3c" stroke="#4a2f17" stroke-width="2"/><ellipse cx="64" cy="72" rx="17" ry="11" fill="#e3c9a0"/>
+    <path d="M56 70l3 3 3-3M64 74l3 3 3-3M58 78l3 3 3-3" fill="none" stroke="#9c6b3c" stroke-width="1.4"/>
+    <g class="tb-brief" transform="rotate(-12 84 80)"><rect x="72" y="69" width="24" height="16" rx="2" fill="#f3e6cf" stroke="#7b1e2b" stroke-width="2"/><path d="M72 69 84 78 96 69" fill="none" stroke="#7b1e2b" stroke-width="2"/><circle cx="84" cy="78" r="2.4" fill="#7b1e2b"/></g>
+    <path d="M54 44C64 56 76 66 86 80" fill="none" stroke="#5a1520" stroke-width="4" stroke-linecap="round"/>
+    <rect x="70" y="78" width="32" height="22" rx="4" fill="#7b1e2b" stroke="#3b0d14" stroke-width="2"/><path d="M70 82q0-4 4-4h24q4 0 4 4v6q-16 6-32 0Z" fill="#5a1520" stroke="#3b0d14" stroke-width="1.5"/><rect x="83" y="87" width="6" height="5" rx="1" fill="#f5c400" stroke="#8a6a00" stroke-width="1"/>
+    <path d="M30 34l-4-10 9 6ZM56 34l5-10-9 6Z" fill="#6e4826" stroke="#4a2f17" stroke-width="1.5" stroke-linejoin="round"/>
+    <circle cx="42" cy="50" r="19" fill="#9c6b3c" stroke="#4a2f17" stroke-width="2"/><ellipse cx="40" cy="54" rx="15.5" ry="12" fill="#e3c9a0"/>
+    <circle cx="33" cy="52" r="6.5" fill="#fff" stroke="#4a2f17" stroke-width="1.5"/><circle cx="47" cy="52" r="6.5" fill="#fff" stroke="#4a2f17" stroke-width="1.5"/>
+    <circle cx="32" cy="52.5" r="3.6" fill="#f2a20c"/><circle cx="46" cy="52.5" r="3.6" fill="#f2a20c"/><circle cx="32" cy="52.5" r="2" fill="#111"/><circle cx="46" cy="52.5" r="2" fill="#111"/><circle cx="31" cy="51" r=".9" fill="#fff"/><circle cx="45" cy="51" r=".9" fill="#fff"/>
+    <path d="M37 57h6l-3 7Z" fill="#e8a33d" stroke="#8a5a14" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M26 39q1-15 18-16 17 1 18 14l-1 4H27Z" fill="#1f4e9c" stroke="#0f2a5a" stroke-width="2" stroke-linejoin="round"/><rect x="26" y="36" width="36" height="6" rx="2" fill="#163a78" stroke="#0f2a5a" stroke-width="1.5"/>
+    <path d="M28 41q-10-1-17 4 9 3 19 0Z" fill="#0f2a5a"/><circle cx="44" cy="30" r="3.4" fill="#f5c400" stroke="#8a6a00" stroke-width="1"/>
+    <g class="fl-vorn" fill="#8b5e34" stroke="#4a2f17" stroke-width="2" stroke-linejoin="round"><path d="M58 60C58 30 76 6 106 2 100 22 92 42 80 62Z"/><path d="M70 42 88 22M74 50 94 32M78 58 98 42" fill="none" stroke-width="1.5"/></g></svg>`;
+const VOGEL_SVG = { taube: TAUBE_SVG, uhu: UHU_SVG };
 // 2.362.0 KC-CLUB-BOTEN: neue Boten (neutral, ohne Firmenzeichen; Club-Farben Weinrot/Beige). Fahrzeuge schauen nach links (Fahrtrichtung).
 const BRIEF_SVG = (x, y, w = 24, h = 16) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="#f3e6cf" stroke="#7b1e2b" stroke-width="2"/><path d="M${x} ${y} ${x + w / 2} ${y + h * 0.6} ${x + w} ${y}" fill="none" stroke="#7b1e2b" stroke-width="2"/>`;
 const VELO_RAD = (x) => `<g class="fz-rad"><circle cx="${x}" cy="90" r="21" fill="none" stroke="#222" stroke-width="5"/><path d="M${x} 69v42M${x - 21} 90h42M${x - 15} 75l30 30M${x + 15} 75l-30 30" stroke="#999" stroke-width="1.4"/><circle cx="${x}" cy="90" r="3" fill="#555"/></g>`;
@@ -14805,26 +14824,27 @@ function papierflieger(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTI
   if (art === "rakete" || art === "ballon" || art === "flasche" || art === "muenchhausen") return sendeFlug(r, art);
   const g = Math.round(Math.min(130, innerWidth * 0.3));
   const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
-  f.innerHTML = art === "taube" ? TAUBE_SVG(g) : FLIEGER_SVG(g);
-  const b = art === "taube" ? Math.round(g * 1.17) : g;
+  const vogel = VOGEL_SVG[art]; // Taube oder Uhu (KC-CLUB-UHU)
+  f.innerHTML = vogel ? vogel(g) : FLIEGER_SVG(g);
+  const b = vogel ? Math.round(g * 1.17) : g;
   f.style.left = r.left + r.width / 2 - b / 2 + "px"; f.style.top = r.top + r.height / 2 - g / 2 + "px"; document.body.appendChild(f);
   // Schlangenlinie: Grundbogen nach oben links + seitliches Pendeln (2½ Wellen), Spitze zeigt immer in Flugrichtung
   const dx = -(r.left + b), dy = -(r.top + g * 0.6), len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len;
   const amp = Math.min(70, innerWidth * 0.12), N = 16, bild = [];
   const pos = (t) => { const welle = Math.sin(t * Math.PI * 5) * amp * Math.sin(t * Math.PI); return { x: dx * t + nx * welle, y: dy * (t * t * 0.4 + t * 0.6) + ny * welle }; };
-  const nase = art === "taube" ? 180 : -149; // Richtung, in die die Figur ohne Drehung zeigt
+  const nase = vogel ? 180 : -149; // Richtung, in die die Figur ohne Drehung zeigt
   bild.push({ transform: "translate(0,0) rotate(0deg) scale(.3)", opacity: 0 }, { transform: "translate(14px,18px) rotate(8deg) scale(1.1)", opacity: 1, offset: 0.12 });
   for (let i = 0; i <= N; i++) {
     const t = i / N, p = pos(t), q = pos(Math.min(1, t + 0.02)), p0 = pos(Math.max(0, t - 0.02));
     let w = Math.atan2(q.y - p0.y, q.x - p0.x) * 180 / Math.PI - nase; w = ((w + 540) % 360) - 180;
-    if (art === "taube") w = Math.max(-35, Math.min(35, w)); // Taube neigt sich nur, kippt nicht über Kopf
+    if (vogel) w = Math.max(-35, Math.min(35, w)); // Taube/Uhu neigt sich nur, kippt nicht über Kopf
     bild.push({ transform: `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) rotate(${w.toFixed(1)}deg) scale(${(1 - t * 0.45).toFixed(2)})`, opacity: t > 0.9 ? (1 - t) * 10 : 1, offset: 0.2 + t * 0.8 });
   }
-  const dauer = art === "taube" ? 2400 : 2000;
+  const dauer = art === "uhu" ? 2700 : vogel ? 2400 : 2000;
   f.animate(bild, { duration: dauer, easing: "ease-in-out", fill: "forwards" }).onfinish = () => f.remove();
-  if (art === "taube") f.querySelectorAll(".fl-vorn, .fl-hinten").forEach((fl, i) => {
+  if (vogel) f.querySelectorAll(".fl-vorn, .fl-hinten").forEach((fl, i) => {
     fl.style.transformOrigin = "72px 60px";
-    fl.animate([{ transform: "scaleY(1)" }, { transform: `scaleY(${i ? -0.45 : -0.6})` }], { duration: 190, iterations: Math.ceil(dauer / 190), direction: "alternate", easing: "ease-in-out", delay: i ? 30 : 0 });
+    fl.animate([{ transform: "scaleY(1)" }, { transform: `scaleY(${i ? -0.45 : -0.6})` }], { duration: art === "uhu" ? 260 : 190, iterations: Math.ceil(dauer / 190), direction: "alternate", easing: "ease-in-out", delay: i ? 30 : 0 });
   });
   setTimeout(() => f.remove(), dauer + 400);
 }
@@ -14906,13 +14926,13 @@ async function ankunftEffekt(el, art) {
   const r = el.getBoundingClientRect(); if (!r.width || r.bottom < 0 || r.top > innerHeight) return;
   const weg = [], zurueck = []; const fertig = () => { weg.forEach((x) => x.remove()); zurueck.forEach((f) => f()); }; setTimeout(fertig, 8000);
   try {
-    if (art === "taube") {
+    if (VOGEL_SVG[art]) {
       // fliegt von oben rechts in Wellen heran, schwebt über der Blase, lässt das Kuvert fallen und fliegt nach links davon
       const g = Math.round(Math.min(110, innerWidth * 0.26)), b = Math.round(g * 1.17);
       const zx = Math.max(4, Math.min(innerWidth - b - 4, r.left + r.width / 2 - b * 0.2)), zy = Math.max(4, r.top - g * 0.95);
-      const f = fxEl(TAUBE_SVG(g), zx, zy); weg.push(f);
+      const f = fxEl(VOGEL_SVG[art](g), zx, zy); weg.push(f);
       const sx = innerWidth - zx + 20, sy = -zy - g, flap = [];
-      f.querySelectorAll(".fl-vorn, .fl-hinten").forEach((fl, i) => { fl.style.transformOrigin = "72px 60px"; flap.push(fl.animate([{ transform: "scaleY(1)" }, { transform: `scaleY(${i ? -0.45 : -0.6})` }], { duration: 190, iterations: Infinity, direction: "alternate", easing: "ease-in-out", delay: i ? 30 : 0 })); });
+      f.querySelectorAll(".fl-vorn, .fl-hinten").forEach((fl, i) => { fl.style.transformOrigin = "72px 60px"; flap.push(fl.animate([{ transform: "scaleY(1)" }, { transform: `scaleY(${i ? -0.45 : -0.6})` }], { duration: art === "uhu" ? 260 : 190, iterations: Infinity, direction: "alternate", easing: "ease-in-out", delay: i ? 30 : 0 })); });
       const hin = []; for (let i = 0; i <= 10; i++) { const t = i / 10, e = 1 - Math.pow(1 - t, 2); hin.push({ transform: `translate(${(sx * (1 - e)).toFixed(1)}px, ${(sy * (1 - e) + Math.sin(t * Math.PI * 3) * 18 * (1 - t)).toFixed(1)}px) rotate(${(-12 * (1 - t)).toFixed(1)}deg)` }); }
       await fxWarte(f.animate(hin, { duration: 1300, fill: "forwards" }));
       await fxWarte(f.animate([{ transform: "translate(0,0)" }, { transform: "translate(0,-6px)" }, { transform: "translate(0,0)" }], { duration: 380, fill: "forwards" }));
@@ -37186,7 +37206,7 @@ function suAppListe() {
     ["🍂", "Jahreszeiten-Bild im Kopf (fest oder automatisch)", "jahreszeit jahreszeiten kopf bild herbst winter frühling sommer advent silvester laub schnee schneemann eichhörnchen iglu vorschau", ein("jzWahl")],
     ["🎏", "Deko an der Leiste (Wimpel, Lichterkette, Laternen)", "deko dekoration wimpel wimpelkette lichterkette lichter laternen lampions girlande leiste", ein("jzDekoWahl")],
     ["✨", "Ruhige oder lebendige Knöpfe (Animationen)", "animation animiert ruhig bewegung effekte knöpfe", ein("setAnimiert")],
-    ["🪟", "Kachel- und Sende-Effekt (Jalousie, Papierflieger …)", "kachel effekt jalousie kartenstapel umdrehen senden papierflieger brieftaube postauto", ein("regEffektWahl")],
+    ["🪟", "Kachel- und Sende-Effekt (Jalousie, Papierflieger …)", "kachel effekt jalousie kartenstapel umdrehen senden papierflieger brieftaube uhu eule postauto", ein("regEffektWahl")],
     ["🐢", "Sparmodus / Akku sparen", "sparmodus sparen akku batterie strom langsam netz datensparen", ein("sparWahl")],
     ["🎨", "Erklär-Video: Meine App nach meinem Geschmack", "anpassen einstellen aussehen geschmack video themen farben jahreszeiten deko schrift", () => rgListeAbspielen(["anpassen"])],
     ["🗣️", "Videos: Stimme und Tempo wählen", "stimme video tempo langsam schneller vorlesen klingt komisch roboter sprecher erklär videos herunterladen thorsten dii", () => stimmenWahl()], // 2.348.0

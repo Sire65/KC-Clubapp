@@ -10290,6 +10290,14 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/"muenchhausen", "wechsel", "aus"\]/.test(server), "Server kennt die Art");
 }
 
+// KC-CLUB-UHU: Uhu mit blauer Briefträger-Mütze und Posttasche als Bote (wie Brieftaube)
+{
+  assert.ok(html.includes('["uhu", "🦉 Uhu mit Posttasche"]') && /const SENDE_REIHE = \[[^\]]*"uhu"/.test(html), "wählbar und bei Abwechselnd dabei");
+  assert.ok(/const UHU_SVG = /.test(html) && /const VOGEL_SVG = \{ taube: TAUBE_SVG, uhu: UHU_SVG \}/.test(html), "Uhu-Bild wie Taube");
+  assert.ok(/f\.innerHTML = vogel \? vogel\(g\)/.test(html) && /if \(VOGEL_SVG\[art\]\) \{/.test(html), "Absender- und Empfänger-Animation");
+  assert.ok(/"uhu", "muenchhausen", "wechsel", "aus"\]/.test(server), "Server kennt die Art");
+}
+
 // 2.364.0 KC-CLUB-AKKU-7: Mitschauen im Hintergrund still
 {
   assert.ok(/async function ssHolen\(sofort\) \{\n  if \(document\.hidden && sofort !== true\) return;/.test(html) && /if \(!document\.hidden && SS\?\.id\) ssHolen\(true\);/.test(html), "Mitschauen fragt im Hintergrund nicht nach");
