@@ -5905,7 +5905,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7009,6 +7009,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(alt !== undefined\)/.test(tg) && /if \(TT\.chat !== chatId\)/.test(tg), "beim Öffnen kein Geprassel für vorhandenen Text");
   assert.ok(/document\.hidden \|\| aktuelleAnsicht !== "chat" \|\| \(chatId && stummAn\(chatId\)\)/.test(tg) && /n = Math\.min\(n, 24\)/.test(tg), "nur offene, nicht stumme Unterhaltung, begrenzt");
   assert.ok(/function tipptZeigen\(namen, entwurf = \[\], sprechen = \[\]\) \{\s*const e = \$\("tipptAnzeige"\); if \(!e\) return;\s*tippGeraeusche\(entwurf\);/.test(html), "hängt an der Live-Tippen-Anzeige (nur Entwurf, nicht bloß „schreibt …“)");
+}
+
+// 2.506.0 KC-CLUB-PROTOKOLL-SCHNELL (Hansi: Veröffentlichen dauerte 21 s): Benachrichtigung im Hintergrund, Antwort sofort
+{
+  const c = server.slice(server.indexOf('case "protokoll_veroeffentlichen": {'), server.indexOf('case "protokoll_korrigieren": {'));
+  assert.ok(c.indexOf('.eq("status", "entwurf").select("id")') < c.indexOf("const nachher = (async () => {"), "erst veröffentlicht (Status gesetzt), dann der Versand");
+  assert.ok(/EdgeRuntime\?\.waitUntil\?\.\(nachher\)/.test(c) && /return json\(\{ ok: true, einspruch_bis: bis, versand: p\.benachrichtigen === false \? null : "laeuft" \}\);/.test(c), "Antwort wartet nicht auf den Versand");
+  assert.ok(/\}\)\(\)\.catch\(async \(e\) => \{[\s\S]{0,200}console\.error\("protokoll versand"/.test(c) && /versand: \{ fehler: "abgebrochen"/.test(c), "Fehler im Hintergrund nie still");
+  assert.ok(/r\.versand === "laeuft" \? " · die Mitglieder werden gerade benachrichtigt" : ""/.test(html), "App sagt, dass benachrichtigt wird");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

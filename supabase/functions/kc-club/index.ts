@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.504.0";
+const SERVER_VERSION = "2.506.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -12711,6 +12711,9 @@ Köcheclub Werne`,
         await db.from("kc_club_sitzungsprotokoll_gelesen").upsert({ protokoll_id: pr.id, person_id: ich.person_id, version: pr.version, gelesen_am: jetzt() });
         const ziel = (await protokollLeser()).filter((id) => id !== ich.person_id);
         const bisText = fTag.format(new Date(bis));
+        // 2.506.0 KC-CLUB-PROTOKOLL-SCHNELL (Hansi: Veröffentlichen dauerte 21 s, weil erst alle 14 Mitglieder benachrichtigt wurden): das
+        // Protokoll ist ab hier veröffentlicht – Benachrichtigung, Aufgaben-Mitteilung und Protokolleintrag laufen im Hintergrund weiter.
+        const nachher = (async () => {
         const versand = p.benachrichtigen === false ? null : await senden("club_protokoll", ziel, {
           titel: `📝 Protokoll${pr.version > 1 ? " (korrigiert)" : ""}: ${pr.titel}`, kurz: `Bitte lesen – Einwände bis ${bisText} möglich.`,
           betreff: `Köcheclub Werne – Protokoll${pr.version > 1 ? " (korrigierte Fassung)" : ""}: ${pr.titel} vom ${tagText(pr.datum)}`,
@@ -12720,7 +12723,12 @@ Köcheclub Werne`,
         const { data: auf } = await db.from("kc_club_aufgaben").select("*").eq("protokoll_id", pr.id);
         await aufgabenMitteilen(auf ?? [], ich, pr.titel);
         await protokoll(ich.person_id, "sitzungsprotokoll_veroeffentlicht", { protokoll: pr.id, version: pr.version, einspruch_bis: bis, versand });
-        return json({ ok: true, einspruch_bis: bis, versand });
+        })().catch(async (e) => { // nie still: der Fehler steht im Server-Log und im Protokoll (Regel 11)
+          console.error("protokoll versand", String(e));
+          await protokoll(ich.person_id, "sitzungsprotokoll_veroeffentlicht", { protokoll: pr.id, version: pr.version, einspruch_bis: bis, versand: { fehler: "abgebrochen", grund: String(e).slice(0, 200) } }).catch(() => {});
+        });
+        try { (globalThis as any).EdgeRuntime?.waitUntil?.(nachher); } catch { /* ohne Hintergrund-Hilfe läuft es trotzdem an */ }
+        return json({ ok: true, einspruch_bis: bis, versand: p.benachrichtigen === false ? null : "laeuft" });
       }
 
       case "protokoll_korrigieren": {

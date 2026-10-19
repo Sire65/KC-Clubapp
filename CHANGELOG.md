@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.506.0 – 2026-10-19 – Protokoll veröffentlichen ohne Warten (KC-CLUB-PROTOKOLL-SCHNELL)
+- KC-CLUB-PROTOKOLL-SCHNELL (Hansi: Veröffentlichen dauerte 21 s): Das Protokoll ist sofort veröffentlicht; die Benachrichtigung der Mitglieder, die Aufgaben-Mitteilung und der Protokolleintrag laufen im Hintergrund (Fehler landen im Server-Log und im Protokoll).
+- Server 2.506.0.
+
 ## 2.505.0 – 2026-10-19 – Kopf: Theatervorhang, Servierglocke, Marktbude · Tippgeräusche beim Live-Tippen
 - Feature KC-CLUB-KOPF-EFFEKTE-2 (Wunsch Hansi): drei neue Arten, den Kopf auf- und zuzumachen – 🎪 Theatervorhang (weinroter Samt), 🍽️ Servierglocke („Voilà!“), 🏠 Marktbude (Holzklappe) – und „🎭 Passend zum Thema bzw. zur Jahreszeit“ (Themen-Registry `kopf`; ohne Thema: Advent → Marktbude, sonst Servierglocke).
 - KC-CLUB-KOPF-CLIMBER-2 (Hansi: „soll sich Lamelle für Lamelle hochkrempeln“): Der Climber arbeitet jetzt wie ein echter Raffstore – die Endschiene fährt hoch und sammelt Lamelle für Lamelle ein; Öffnen umgekehrt.

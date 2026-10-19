@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.505.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.506.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -31631,7 +31631,7 @@ async function protokollVeroeffentlichen() {
   try { await prSpeichernJetzt(false); } catch { return; }
   if (!PR.anlagen.length && !$("prK").value.trim() && !(await frage("Es ist noch kein Foto und keine Datei angehängt. Trotzdem veröffentlichen?"))) return;
   if (!(await frage("Protokoll jetzt veröffentlichen? Alle Mitglieder (ohne Aushilfen) bekommen Bescheid und haben 7 Tage Zeit für Einwände."))) return;
-  try { const r = await api("protokoll_veroeffentlichen", { id: prId }); melde(`📢 Veröffentlicht – Einwände bis ${fKurz.format(new Date(r.einspruch_bis))}`); protokollOeffnen(prId, true); }
+  try { const r = await api("protokoll_veroeffentlichen", { id: prId }); melde(`📢 Veröffentlicht – Einwände bis ${fKurz.format(new Date(r.einspruch_bis))}${r.versand === "laeuft" ? " · die Mitglieder werden gerade benachrichtigt" : ""}`); protokollOeffnen(prId, true); }
   catch (e) { meldeFehler(e); }
 }
 async function protokollLoeschen(id, veroeffentlicht) {
