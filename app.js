@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.493.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.496.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5273,7 +5273,7 @@ const HILFE = [
   // 18.10.2026 KC-CLUB-HILFE-AKTUELL: Hilfe zu Funktionen seit 2.416.0 nachgezogen
   { id: "info_laufband", thema: "start", sym: "📣", t: "Das Info-Laufband auf der Startseite", x: "Über den drei Feldern Nachrichten, Mitglieder und Clubtreffen zeigt das <b>📣 Info-Laufband</b> nacheinander, was ansteht. Die <b>Rahmenfarbe</b> sagt, wie wichtig es ist: rot = bitte erledigen, orange = Clubleitung, gold = Hinweis, weiß = schöne Info. Alle 6 Sekunden kommt die nächste Meldung; <b>Wischen</b> blättert, <b>Berühren</b> hält an. Antippen öffnet das Ziel, Knöpfe wie <b>✔ Zusagen</b> oder <b>💬 Gratulieren</b> erledigen es gleich, <b>✕</b> blendet eine Meldung für heute aus. Steht nichts an: „Alles erledigt 👍“ und der Tipp des Tages.", zeig: () => zeige("start"), seit: "2.441.0" },
   { id: "kuckuck_ton", thema: "toene", sym: "🔊", t: "Der Kuckuck ruft, aber ich höre nichts", x: "Handys geben den Ton erst frei, wenn du in der App einmal getippt hast. Öffnest du die App genau zur vollen Stunde, zeigt die Uhr darum bis zu 20 Sekunden lang <b>„🔊 Antippen – der Kuckuck ruft 10×“</b>. Ein Tipp genügt, dann ruft er hörbar so oft, wie es Uhr ist; danach gibt es noch eine Minute lang „🔊 Antippen – mit Ton“. Gleiches gilt für Big Ben und die anderen Uhren. Nachts (22–7 Uhr) bleibt alles still.", zeig: () => einstiegHin("effekte", "setKuckuck"), seit: "2.428.0" },
-  { id: "zeitumstellung", thema: "toene", sym: "🕐", t: "Erinnerung an die Zeitumstellung", x: "Am Samstag vor der Zeitumstellung (im März und im Oktober) bekommst du ab 18 Uhr einen Push, ob du die Uhr vor- oder zurückstellen musst. Das passiert jedes Jahr von selbst – einstellen musst du nichts.", seit: "2.442.0" },
+  { id: "zeitumstellung", thema: "toene", sym: "🕐", t: "Erinnerung an die Zeitumstellung", x: "Am Samstag vor der Zeitumstellung (im März und im Oktober) bekommst du ab 18 Uhr einen Push, ob du die Uhr vor- oder zurückstellen musst. Seit 2.496.0 steht es ab Donnerstag auch im Info-Feld oben auf der Startseite – am Samstag gelb, am Sonntag mit der Frage, ob Backofen- und Autouhr schon umgestellt sind. Das passiert jedes Jahr von selbst – einstellen musst du nichts.", seit: "2.442.0" },
   { id: "schreiben_klappen", thema: "nachrichten", sym: "▾", t: "Mehr Nachrichten sehen: Schreibbereich wegklappen", x: "Im Chat sitzt oben mittig über dem Schreibfeld ein kleiner <b>▾-Griff</b>. Antippen klappt den Schreibbereich weg – es bleibt nur eine schmale Leiste <b>„▴ ✏️ Schreiben“</b>, und du siehst mehr Nachrichten. Ein Tipp auf die Leiste holt das Schreibfeld zurück. Öffnest du einen Chat, ist der Schreibbereich immer offen.", seit: "2.433.0" },
   { id: "sonderstunden", thema: "termine", sym: "★", t: "Sonderstunden melden und den Stand sehen", x: "Hast du bei einem Sondereinsatz geholfen (z. B. Grünkohl kochen), meldest du die Zeit über <b>📝 Dienstwunsch → Twinkey → „Sonderstunden melden“</b>: Einsatz, Tag, Zeit von zuhause bis zuhause, Tätigkeit und wer noch dabei war. Danach kannst du gleich Fahrtkosten oder Auslagen erfassen. Den Stand siehst du in <b>🗓️ Mein Dienst</b> auf der Karte <b>„★ Sonderstunden“</b>: gutgeschrieben, offen (zählt erst nach Bestätigung) oder abgelehnt mit Grund.", seit: "2.423.0" },
   { id: "fernhilfe_bedienen", thema: "technik", sym: "🖱️", t: "Wenn dir jemand aus der Ferne hilft", x: "Bittet dich Hansi (oder ein freigeschalteter Helfer), mitschauen zu dürfen, entscheidest du: Erst wenn du zusagst, sieht er live, was in deiner Club-App angezeigt wird – oben steht dann eine rote Leiste mit <b>Beenden</b>. Soll er dir etwas direkt einstellen, tippst du in der Leiste auf <b>„🖱️ Bedienen erlauben“</b>: Dann darf er in deiner App tippen und blättern; jeder Tipp wird grün markiert. Was etwas senden, löschen oder auslösen könnte, fragt die App dich vorher. Mit <b>„🔊 Ton an“</b> in der Leiste könnt ihr dabei miteinander sprechen – dein Mikrofon geht erst an, wenn du selbst annimmst. Mit <b>„🖱️ Bedienen aus“</b> oder <b>Beenden</b> ist sofort Schluss (auch der Ton). Andere Apps auf deinem Handy sieht und bedient niemand.", seit: "2.475.0" },
@@ -23721,6 +23721,46 @@ function ilAnlass() {
     "12-26": ["🎄", "Schöne Feiertage!"], "12-31": ["🎆", "Guten Rutsch ins neue Jahr!"], "01-01": ["🥂", "Frohes neues Jahr!"] }[md];
   return g ? { id: "anlass:" + h, stufe: "weiss", sym: g[0], t: g[1], u: "Dein Köcheclub Werne" } : null;
 }
+// 2.496.0 KC-CLUB-ZEITUMSTELLUNG-INFO (Wunsch Hansi „Wird in der Info auf Uhrzeit umstellen hingewiesen?“): ab Donnerstag vor der Umstellung
+// (letzter Sonntag im März/Oktober) ein Hinweis im Info-Feld, am Samstag gelb, am Sonntag „seit heute Nacht“. Nur App, keine Abfrage.
+function ilZeitumstellung() {
+  const h = heuteIso(), j = +h.slice(0, 4);
+  for (const [m, winter] of [[3, false], [10, true]]) {
+    const e = new Date(Date.UTC(j, m, 0)), so = tagPlus(`${j}-${String(m).padStart(2, "0")}-${String(e.getUTCDate()).padStart(2, "0")}`, -e.getUTCDay());
+    const d = Math.round((Date.parse(so) - Date.parse(h)) / 86400000);
+    if (d < 0 || d > 3) continue;
+    const um = winter ? "zurückstellen" : "vorstellen", wie = winter ? "um 3 Uhr wird es wieder 2 Uhr" : "um 2 Uhr wird es gleich 3 Uhr";
+    if (d >= 2) return { id: "zeit:" + so + ":vor", stufe: "weiss", sym: "🕑", t: `In der Nacht zum Sonntag: Uhr ${um}`, u: `${winter ? "Winterzeit" : "Sommerzeit"} – ${wie}` };
+    if (d === 1) return { id: "zeit:" + so + ":heute", stufe: "gold", sym: "🕑", t: `Heute Nacht: Uhr ${um}`, u: winter ? "Eine Stunde länger schlafen 😴 – das Handy stellt sich selbst um" : "Eine Stunde weniger Schlaf ⏰ – das Handy stellt sich selbst um" };
+    return { id: "zeit:" + so + ":seit", stufe: "weiss", sym: "🕑", t: `Seit heute Nacht ${winter ? "Winterzeit" : "Sommerzeit"}`, u: "Backofen-, Auto- und Wanduhren schon umgestellt?" };
+  }
+  return null;
+}
+// 2.496.0 KC-CLUB-WERNE-WISSEN (Wunsch Hansi „in die Info einbauen“): jeden Tag ein „Wusstest du?“ über Werne im Info-Feld – nur sichere
+// Fakten (Jahreszahlen erst nach Prüfung durch Hansi, Wunschliste #26); Antippen führt zum Bilderrätsel „Wie gut kennst du …?“ auf der Bühne.
+const IL_WERNE = [
+  ["🌊", "Werne liegt an der Lippe", "Der Fluss gibt der Stadt ihren vollen Namen: Werne an der Lippe"],
+  ["🗺️", "Werne gehört zum Kreis Unna", "Nachbarn sind unter anderem Hamm und Bergkamen"],
+  ["🎡", "Sim-Jü heißt die große Kirmes", "Ende Oktober – der Name kommt von Simon und Judas (28. Oktober)"],
+  ["♨️", "Werne ist eine Solestadt", "Im Natur-Solebad badet man in salzhaltiger Sole aus der Tiefe"],
+  ["🐈", "Der bunte Turmkater", "Das Kunstwerk stammt von Otmar Alt"],
+  ["⛪", "St. Christophorus ist die Stadtkirche", "Rundherum der Kirchhof mit seinen Fachwerkhäusern"],
+  ["🏛️", "Das Alte Rathaus am Markt", "Mit seinen Arkaden das Wahrzeichen von Werne – davor steht der Ausrufer aus Bronze"],
+  ["🏭", "Das Gersteinwerk steht in Stockum", "Die Kühltürme des Kraftwerks sieht man von weit her"],
+  ["🏘️", "Stockum, Langern und Horst", "… gehören zu Werne – Cappenberg dagegen zu Selm"],
+  ["👥", "Rund 30.000 Menschen leben in Werne", "Und mittendrin unser Köcheclub 👨‍🍳"],
+  ["🦌", "Wildgehege im Buschkämpken", "Dort leben Wildschweine und Damwild – ein schöner Spaziergang"],
+  ["⛲", "Der Sprichwörterbrunnen", "Seine Figuren zeigen bekannte Redensarten – findest du sie alle?"],
+];
+function ilWerneWissen() {
+  const h = heuteIso(), n = Math.round(Date.parse(h) / 86400000), [sym, t, u] = IL_WERNE[((n % IL_WERNE.length) + IL_WERNE.length) % IL_WERNE.length];
+  return { id: "werne-wissen:" + h, stufe: "weiss", sym, t: "Wusstest du? " + t, u, auf: "ilWerneRaetsel()", knoepfe: [["🧩 Werne-Rätsel", "ilWerneRaetsel()"]] };
+}
+function ilWerneRaetsel() { // Bühne umdrehen und das Bilderrätsel öffnen
+  zeige("start"); esSchreib("tab", "raetsel");
+  if (ES.offen) esTab("raetsel"); else esDrehen(true);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 function ilNachTreffen(t) {
   if (t?.id) try { localStorage.setItem(IL_LETZTES, JSON.stringify({ id: t.id, titel: t.titel, beginn: t.beginn, meine: t.meine })); } catch {}
   let l = null; try { l = JSON.parse(localStorage.getItem(IL_LETZTES) || "null"); } catch {}
@@ -23790,7 +23830,9 @@ function ilMeldungen() {
   else if (!ICH?.admin && !uaKuerzlich()) add({ id: "unterstuetzung", stufe: "weiss", sym: "🙋", t: "Unterstützung bei der Club-App?", u: "Anfrage senden – Hansi meldet sich", auf: "uaStart()", knoepfe: [["🙋 Anfrage senden", "uaStart()"]] });
   // ⚪ schöne Infos
   const an = ilAnlass(); if (an) add(an);
+  const zu = ilZeitumstellung(); if (zu) add(zu); // 2.496.0 KC-CLUB-ZEITUMSTELLUNG-INFO
   const sw = ilStadt(); if (sw) add(sw); // 🏙️ Werne
+  add(ilWerneWissen()); // 2.496.0 KC-CLUB-WERNE-WISSEN: täglich ein „Wusstest du?“
 
   const dk = ilNachTreffen(t); if (dk) add(dk);
   for (const g of INIT?.geburtstageHeute || []) if (g.person_id !== ICH?.person_id) add({ id: "geb:" + g.person_id, stufe: "weiss", sym: "🎂", t: `${g.name} hat heute Geburtstag`, u: "Gratuliere mit einem Tipp", auf: `gratulieren('${esc(g.person_id)}', true)`, knoepfe: [["💬 Gratulieren", `gratulieren('${esc(g.person_id)}', true)`]] });

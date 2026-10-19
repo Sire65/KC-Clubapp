@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.496.0 – 2026-10-19 – 🕑 Zeitumstellung und 🏛️ Werne-Wissen im Info-Feld (KC-CLUB-ZEITUMSTELLUNG-INFO, KC-CLUB-WERNE-WISSEN)
+Wunsch Hansi („Wird in der Info auf Uhrzeit umstellen hingewiesen?“ – bisher nur der Push am Samstag ab 18 Uhr).
+- Ab Donnerstag vor der Umstellung (letzter Sonntag im März/Oktober) steht im Info-Feld „🕑 In der Nacht zum Sonntag: Uhr zurückstellen“ (bzw. vorstellen), am Samstag gelb „Heute Nacht: Uhr zurückstellen – eine Stunde länger schlafen 😴“, am Sonntag „Seit heute Nacht Winterzeit – Backofen-, Auto- und Wanduhren schon umgestellt?“. Jedes Jahr von selbst berechnet.
+- Der Push am Samstag ab 18 Uhr bleibt. Hilfe-Eintrag „Erinnerung an die Zeitumstellung“ ergänzt. Nur App, keine zusätzliche Datenbank-Abfrage.
+- **Werne-Wissen (KC-CLUB-WERNE-WISSEN, Wunsch Hansi „in die Info einbauen“):** jeden Tag ein „🏛️ Wusstest du? …“ über Werne im Info-Feld (Lippe, Kreis Unna, Sim-Jü, Sole, Turmkater, St. Christophorus, Altes Rathaus, Gersteinwerk, Stadtteile, Wildgehege, Sprichwörterbrunnen …) – nur sichere Fakten, Jahreszahlen erst nach Prüfung. Antippen oder „🧩 Werne-Rätsel“ dreht die Bühne um und öffnet das Bilderrätsel „Wie gut kennst du …?“. Das Werne-Wissensquiz selbst ist vorgemerkt (Wunschliste #26).
+- Tests: Vertragstests (Zeitumstellung Oktober 2026/März 2027; Werne-Wissen täglich wechselnd, keine Jahreszahlen) grün.
+
 ## Server 2.495.0 – 2026-10-19 (ohne App-Build) – App-Start sparsamer, Stufe 2 Punkt 3 (KC-CLUB-START-SPARSAM-2)
 Wunsch Hansi („Bau die offenen Positionen noch, damit sie um 12:00 noch rübergehen“):
 - Clubtermine für den App-Start je Server-Instanz 60 s gemerkt: das nächste Treffen (Startseite) und die kommenden Treffen für die Zahl auf der Termin-Kachel. Gemerkt werden nur die Termin-Zeilen – Zu- und Absagen werden weiter jedes Mal frisch gelesen. Speichert die App einen Termin (anlegen, ändern, absagen, Erinnerung), ist der Merker sofort weg; Fehler werden nie gemerkt. Spart 2 Abfragen je App-Start.

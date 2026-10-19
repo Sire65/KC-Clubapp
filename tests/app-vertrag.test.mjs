@@ -11113,6 +11113,27 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(!neu && jetztMs - z < 30000\) return;/.test(server) && /ZULETZT_TAKT_MS = 30_000/.test(server) && /const ONLINE_SEK = 150/.test(server), "„online seit“ und „zuletzt gesehen“ unverändert (sonst flackert die Anzeige)");
   assert.ok(fs.existsSync(new URL("../tools/db-sparsam/start-sparsam-2-test.ts", import.meta.url)), "Gleichwertigkeits-Test vorhanden");
 }
+
+// 2.496.0 KC-CLUB-ZEITUMSTELLUNG-INFO (Wunsch Hansi): Hinweis im Info-Feld ab Donnerstag vor der Zeitumstellung
+{
+  const f = programm.slice(programm.indexOf("function ilZeitumstellung()"), programm.indexOf("function ilNachTreffen(t) {"));
+  const tp = (iso, n) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const am = (h) => new Function("heuteIso", "tagPlus", f + "return ilZeitumstellung();")(() => h, tp);
+  assert.ok(!am("2026-10-21") && am("2026-10-22")?.t === "In der Nacht zum Sonntag: Uhr zurückstellen" && am("2026-10-24")?.stufe === "gold" && /Seit heute Nacht Winterzeit/.test(am("2026-10-25")?.t) && !am("2026-10-26"), "Oktober: Do–So");
+  assert.ok(am("2027-03-27")?.t === "Heute Nacht: Uhr vorstellen" && /Sommerzeit/.test(am("2027-03-28")?.t) && !am("2027-03-24"), "März: vorstellen");
+  assert.ok(/const zu = ilZeitumstellung\(\); if \(zu\) add\(zu\);/.test(programm), "im Info-Feld eingehängt");
+}
+
+// 2.496.0 KC-CLUB-WERNE-WISSEN: täglich ein „Wusstest du?“ über Werne im Info-Feld, führt zum Bilderrätsel
+{
+  const f = programm.slice(programm.indexOf("const IL_WERNE = ["), programm.indexOf("function ilWerneRaetsel()"));
+  const am = (h) => new Function("heuteIso", f + "return ilWerneWissen();")(() => h);
+  const tage = ["2026-10-19", "2026-10-20", "2026-10-21"].map(am);
+  assert.ok(tage.every((x) => x && /^Wusstest du\? /.test(x.t) && x.auf === "ilWerneRaetsel()") && new Set(tage.map((x) => x.t)).size === 3 && am("2026-10-19").t === tage[0].t, "jeden Tag ein anderer, am selben Tag derselbe");
+  assert.ok(!/\b1[0-9]{3}\b|\b20[0-9]{2}\b/.test(f.replace(/\d+\.000/g, "")), "keine ungeprüften Jahreszahlen");
+  assert.ok(/add\(ilWerneWissen\(\)\);/.test(programm) && /function ilWerneRaetsel\(\) \{[^}]*esSchreib\("tab", "raetsel"\)/.test(programm), "eingehängt, öffnet das Rätsel");
+}
+
 // Server 2.495.0 KC-CLUB-START-SPARSAM-2 Punkt 3: Clubtermine (nur Termin-Zeilen) beim Start 60 s gemerkt, Zu-/Absagen frisch, Speichern leert
 {
   assert.ok(/else if \(t === "kc_club_treffen"\) TREFFEN_MERK\.clear\(\);/.test(server) && /function treffenGemerkt\(k: string,/.test(server), "Termin-Merker, Speichern eines Termins leert ihn");
