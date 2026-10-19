@@ -45,16 +45,13 @@ const DB_AUS = { n: 0 }; // zählt abgebrochene Abfragen (je Anfrage vorher/nach
 // gleichzeitige andere Anfragen sehen ihn nie), lebt nur so lange wie der Aufruf und wird bei jedem Schreiben geleert. Fehler werden nie gepuffert.
 type DbAntwort = { status: number; statusText: string; headers: [string, string][]; body: ArrayBuffer | null };
 // KC-CLUB-DB-SPARSAM (2.464.0): haltbarMs > 0 → eine gepufferte Antwort gilt nur so lange (normale App-Aufrufe); 0 → den ganzen Aufruf (Notpaket-Teil, nur lesend).
-type DbPuffer = { antworten: Map<string, Promise<DbAntwort>>; zeit: Map<string, number>; netz: number; puffer: number; haltbarMs: number; aktion?: string; pfade?: Map<string, number>; treffer?: Map<string, number> };
+type DbPuffer = { antworten: Map<string, Promise<DbAntwort>>; zeit: Map<string, number>; netz: number; puffer: number; haltbarMs: number; aktion?: string; treffer?: Map<string, number> };
 const dbPufferNeu = (haltbarMs: number): DbPuffer => ({ antworten: new Map(), zeit: new Map(), netz: 0, puffer: 0, haltbarMs });
 // Schreibt etwas außerhalb der Schnittstelle (andere Server-Funktion, direkter Datenbank-Weg), muss der Puffer des Aufrufs weg – nie veraltet lesen.
 const dbPufferLeeren = () => { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) { pf.antworten.clear(); pf.zeit.clear(); } };
 // Nur lesende Datenbank-Funktionen (STABLE bzw. reines SELECT, geprüft 18.10.2026): gehen ungepuffert durch, leeren den Puffer aber nicht.
 // Jede andere Funktion gilt vorsichtshalber als Schreiben. (Messung 2.453.0: diese drei leerten den Puffer mehrmals je Mitglied → nur 2 % gespart.)
 const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret"]);
-// KC-CLUB-DB-PFADE (2.489.0, Messung „App-Start sparsamer“): bei einem Teil der Aufrufe zählen, WELCHE Tabelle/Funktion wie oft gefragt wird
-// (nur Name + Anzahl, keine Inhalte) – zeigt, wo sich Zusammenfassen lohnt. Nur Server-Log, keine Datenbank.
-const dbPfad = (pf: DbPuffer, methode: string, url: string) => { if (!pf.pfade) return; const k = methode + " " + (/\/rest\/v1\/([a-z0-9_/]+)/.exec(url)?.[1] || "?"); pf.pfade.set(k, (pf.pfade.get(k) || 0) + 1); };
 const dbFetch: typeof fetch = (input, init) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
   const pf = url.includes("/rest/v1/") ? DB_PUFFER.getStore() as DbPuffer | undefined : undefined;
@@ -64,7 +61,7 @@ const dbFetch: typeof fetch = (input, init) => {
   if (methode !== "GET" && methode !== "HEAD") {
     const rpc = /\/rest\/v1\/rpc\/([a-z0-9_]+)/.exec(url)?.[1];
     if (!(methode === "POST" && rpc && DB_RPC_NUR_LESEN.has(rpc))) { pf.antworten.clear(); pf.zeit.clear(); }
-    pf.netz++; dbPfad(pf, methode, url); return dbFetchNetz(input, init);
+    pf.netz++; return dbFetchNetz(input, init);
   }
   const h = new Headers(ri?.headers ?? (input instanceof Request ? input.headers : undefined));
   const schluessel = [methode, url, h.get("accept"), h.get("prefer"), h.get("range"), h.get("accept-profile")].join("|");
@@ -72,7 +69,7 @@ const dbFetch: typeof fetch = (input, init) => {
   if (a && pf.haltbarMs && Date.now() - (pf.zeit.get(schluessel) ?? 0) > pf.haltbarMs) a = undefined;
   if (a) { pf.puffer++; if (pf.treffer) pf.treffer.set(schluessel, (pf.treffer.get(schluessel) || 0) + 1); }
   else {
-    pf.netz++; dbPfad(pf, methode, url);
+    pf.netz++;
     a = dbFetchNetz(input, init).then(async (r) => {
       const body = methode === "HEAD" ? null : await r.arrayBuffer();
       if (!r.ok) pf.antworten.delete(schluessel);
@@ -87,15 +84,30 @@ const dbFetchNetz: typeof fetch = (input, init) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
   if (!url.includes("/rest/v1/")) return fetch(input, init);
   const zeit = AbortSignal.timeout(DB_ZEIT_MS), ri = init as RequestInit | undefined;
-  return fetch(input, { ...ri, signal: ri?.signal ? AbortSignal.any([ri.signal, zeit]) : zeit }).catch((e) => {
+  // KC-CLUB-START-SPARSAM-2: Schreiben in eine gemerkte Tabelle → Merker dieser Instanz vorher UND nachher leeren (nie veraltet nach eigenem Speichern)
+  const schreibt = !["GET", "HEAD"].includes(String(ri?.method || (input instanceof Request ? input.method : "GET")).toUpperCase());
+  if (schreibt) merkerVergessen(url);
+  const r = fetch(input, { ...ri, signal: ri?.signal ? AbortSignal.any([ri.signal, zeit]) : zeit }).catch((e) => {
     if (zeit.aborted) { DB_AUS.n++; console.error("DB-Zeitgrenze", DB_ZEIT_MS, "ms"); }
     throw e;
   });
+  return schreibt ? r.finally(() => merkerVergessen(url)) : r;
 };
+// KC-CLUB-START-SPARSAM-2 (Server 2.494.0, Stufe 2 „App-Start sparsamer“, Freigabe Hansi): Club-Einstellungen, Wartung, Freigaben,
+// Zustand KC Communicator und Namen ändern sich selten, wurden aber bei JEDEM App-Start neu gefragt. Jetzt je Server-Instanz MERK_MS lang gemerkt.
+// Speichert diese Instanz selbst etwas in einer dieser Tabellen, ist der Merker sofort weg; andere Instanzen sehen es spätestens nach MERK_MS.
+const MERK_MS = 60_000;
+function merkerVergessen(url: string) {
+  const t = /\/rest\/v1\/([a-z0-9_]+)/.exec(url)?.[1];
+  if (t === "kc_club_konfig") { KONFIG_MERK.clear(); KONFIG_STAND++; }
+  else if (t === "kc_core_app_registry") WARTUNG_MERK = null;
+  else if (t === "kc_club_funktion_freigabe") FREIGABE.bis = 0;
+  else if (t === "kc_club_terminumfragen") LIVE_KURZ = null;
+}
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.493.0";
+const SERVER_VERSION = "2.494.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -222,11 +234,25 @@ function gleichZeit(a: unknown, b: string) {
   for (let i = 0; i < y.length; i++) d |= (x[i] ?? 0) ^ y[i];
   return d === 0;
 }
+// KC-CLUB-START-SPARSAM-2: Namen aktiver Mitglieder kommen aus der gemerkten Mitgliederliste (MERK_MS); nur wer dort fehlt
+// (ausgeschieden, Gast, Test) wird wie bisher einzeln gefragt. Gleiche Felder wie vorher, jeder Aufruf bekommt eigene Kopien.
+const PERSON_FELDER = ["person_id", "display_name", "given_name", "preferred_name", "email"] as const;
+const personKopie = (p: any): Person => Object.fromEntries(PERSON_FELDER.map((k) => [k, p[k] ?? null])) as Person;
+let MG_NAMEN: { t: number; v: Promise<Map<string, Person>> } | null = null;
+function mgNamenMerken(liste: any[]) { MG_NAMEN = { t: Date.now(), v: Promise.resolve(new Map(liste.map((p) => [p.person_id, personKopie(p)]))) }; }
+function mgNamen(): Promise<Map<string, Person>> {
+  if (!MG_NAMEN || Date.now() - MG_NAMEN.t > MERK_MS) { const m: { t: number; v: Promise<Map<string, Person>> } = { t: Date.now(), v: aktiveMitglieder().then(() => { if (MG_NAMEN && MG_NAMEN !== m) return MG_NAMEN.v; if (MG_NAMEN === m) MG_NAMEN = null; return new Map<string, Person>(); }) }; MG_NAMEN = m; }
+  return MG_NAMEN.v;
+}
 async function personen(ids: string[]): Promise<Map<string, Person>> {
   const u = [...new Set(ids.filter(Boolean))];
   if (!u.length) return new Map();
-  const { data } = await db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,email").in("person_id", u);
-  return new Map((data ?? []).map((p: Person) => [p.person_id, p]));
+  const mg = await mgNamen().catch(() => new Map<string, Person>()), aus = new Map<string, Person>(), rest: string[] = [];
+  for (const id of u) { const p = mg.get(id); if (p) aus.set(id, personKopie(p)); else rest.push(id); }
+  if (!rest.length) return aus;
+  const { data } = await db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,email").in("person_id", rest);
+  for (const p of (data ?? []) as Person[]) aus.set(p.person_id, p);
+  return aus;
 }
 // KC-CLUB-START-PARALLEL-3 (2.162.0): laufen mehrere Aufrufe gleichzeitig (z. B. beim Start), teilen sie sich EINE Abfrage –
 // nichts wird zwischengespeichert, jeder bekommt eine eigene Kopie (spart Datenbank-Verbindungen, Inhalt bleibt gleich)
@@ -234,8 +260,9 @@ let MG_LAUF: Promise<(Person & { birth_date?: string })[]> | null = null;
 async function aktiveMitglieder() {
   if (!MG_LAUF) MG_LAUF = (async () => {
     // birth_date nur für „Geburtstag heute“ – wird nie ungefiltert an die App gegeben
-    const { data } = await db.from("kc_core_people").select("person_id,display_name,given_name,family_name,preferred_name,email,birth_date")
+    const { data, error } = await db.from("kc_core_people").select("person_id,display_name,given_name,family_name,preferred_name,email,birth_date")
       .eq("active", true).eq("org_id", ORG).not("person_id", "like", "KC-P-TEST%").order("display_name");
+    if (!error && data) mgNamenMerken(data); // KC-CLUB-START-SPARSAM-2: frische Liste auch für die Namen (personen)
     return (data ?? []) as (Person & { birth_date?: string })[];
   })().finally(() => { MG_LAUF = null; });
   return (await MG_LAUF).map((x) => ({ ...x }));
@@ -674,7 +701,9 @@ async function zuletztDaMap(ich: Ich, ids: string[]) {
 // Jede Browser-Kennung (G-…, je Browser eine) meldet sich mit dem Online-Abgleich. Gab es in den letzten 3 Minuten eine ANDERE Kennung derselben Person
 // im selben Netz (gleiche IP, nur als Prüfsumme) mit demselben System (z. B. „Android 10“), ist es sehr wahrscheinlich dasselbe Gerät in einem zweiten Browser.
 // Gespeichert wird nur Kennung, Browser-Name, System, Netz-Prüfsumme und Zeit – höchstens 6 Einträge je Person.
-const FENSTER_SEK = 180, FENSTER_SCHREIB_MS = 30000; // KC-CLUB-ONLINE-SPARSAM: eigenes Fenster höchstens alle 30 s neu schreiben
+// KC-CLUB-ONLINE-SPARSAM: eigenes Fenster höchstens alle FENSTER_SCHREIB_MS neu schreiben. KC-CLUB-START-SPARSAM-2: 30 → 75 s – die App meldet sich alle 60 s,
+// mit 30 s wurde also JEDES Mal geschrieben, jetzt jedes 2. Mal. Ältester Stand ≈ 75 + 60 s < FENSTER_SEK (180 s): der zweite Browser wird weiter erkannt.
+const FENSTER_SEK = 180, FENSTER_SCHREIB_MS = 75000;
 // 2.477.0 KC-CLUB-ONLINE-GERAET (Wunsch Hansi „nur für Admin sagen: Klaus ist vom PC, Tablet oder Handy online“): Gerät aus der Browser-Kennung
 // (User-Agent) bzw. dem Hinweis der App (g). Nur der Admin bekommt es zu sehen/hören (Online-Liste, Push-Titel). Gespeichert wird nur handy/tablet/pc.
 const GERAETE = new Set(["handy", "tablet", "pc"]);
@@ -890,7 +919,7 @@ async function konferenzBeine(k: string) {
 const ANRUF_ANTWORTEN_STANDARD = ["⏳ Bin gerade beschäftigt", "📞 Ich melde mich gleich", "🔁 Versuch es bitte später nochmal", "📅 Ich melde mich morgen", "🚗 Bin unterwegs"];
 const ANRUF_ANTWORTEN_MAX = 8, ANRUF_ANTWORT_ZEICHEN = 60, ANRUF_EIGEN_ZEICHEN = 160;
 async function anrufAntworten() {
-  const { data } = await db.from("kc_club_konfig").select("wert,geaendert_am").eq("schluessel", "anruf_antworten").maybeSingle();
+  const { data } = await konfigZeile("anruf_antworten"); // KC-CLUB-START-SPARSAM-2: gebündelt + gemerkt (vorher eigene Abfrage)
   const texte = Array.isArray((data?.wert as any)?.texte) ? (data!.wert as any).texte.map((x: unknown) => txt(x, ANRUF_ANTWORT_ZEICHEN)).filter(Boolean).slice(0, ANRUF_ANTWORTEN_MAX) : [];
   return { texte: texte.length ? texte : ANRUF_ANTWORTEN_STANDARD, geaendertAm: data?.geaendert_am ?? null };
 }
@@ -2086,18 +2115,28 @@ const PINNWAND_FRISTEN_STANDARD = { erinnernTage: 3, pauseTage: 7 };
 const PINNWAND_FRISTEN_GRENZEN = { erinnernTage: [1, 30], pauseTage: [1, 60] } as const;
 // KC-CLUB-SOS-FREIGABE (2.22.5, Wunsch Hansi): der Admin kann „🚨 SOS an alle“ für alle Mitglieder freigeben (Club-Einstellung „sos“)
 // KC-CLUB-START-PARALLEL-3 (2.162.0): Lesungen aus kc_club_konfig, die im selben Augenblick anfallen (Start: sos, pinnwand,
-// einstieg, anruf_antworten), gehen gebündelt in EINER Abfrage raus – kein Zwischenspeicher, jede Lesung ist frisch
+// einstieg, anruf_antworten), gehen gebündelt in EINER Abfrage raus
+// KC-CLUB-START-SPARSAM-2: fehlerfreie Antworten MERK_MS lang gemerkt (KONFIG_MERK); Speichern leert den Merker (merkerVergessen).
+// KONFIG_STAND: lief beim Speichern gerade eine Lesung, wird ihr (alter) Wert nicht gemerkt.
 const KONFIG_WARTE = new Map<string, ((r: { data: any; error: any }) => void)[]>();
+const KONFIG_MERK = new Map<string, { t: number; z: { wert: any; geaendert_am: string | null } | null }>();
+let KONFIG_STAND = 0;
 function konfigZeile(schluessel: string): Promise<{ data: { wert: any; geaendert_am: string | null } | null; error: any }> {
+  const m = KONFIG_MERK.get(schluessel);
+  if (m && Date.now() - m.t <= MERK_MS) return Promise.resolve({ data: m.z ? structuredClone(m.z) : null, error: null });
   return new Promise((fertig) => {
     const liste = KONFIG_WARTE.get(schluessel); if (liste) { liste.push(fertig); return; }
     KONFIG_WARTE.set(schluessel, [fertig]);
     if (KONFIG_WARTE.size > 1) return; // Abfrage ist schon angemeldet
     queueMicrotask(async () => {
       const warte = new Map(KONFIG_WARTE); KONFIG_WARTE.clear();
-      let rows: any[] = [], error: any = null;
+      let rows: any[] = [], error: any = null; const t0 = Date.now(), stand = KONFIG_STAND;
       try { const r = await db.from("kc_club_konfig").select("schluessel,wert,geaendert_am").in("schluessel", [...warte.keys()]); rows = r.data ?? []; error = r.error; } catch (e) { error = e; }
-      for (const [k, fs] of warte) { const z = rows.find((x: any) => x.schluessel === k); for (const f of fs) f({ data: z ? { wert: z.wert, geaendert_am: z.geaendert_am ?? null } : null, error }); }
+      for (const [k, fs] of warte) {
+        const z0 = rows.find((x: any) => x.schluessel === k), z = z0 ? { wert: z0.wert, geaendert_am: z0.geaendert_am ?? null } : null;
+        if (!error && stand === KONFIG_STAND) KONFIG_MERK.set(k, { t: t0, z: z ? structuredClone(z) : null });
+        for (const f of fs) f({ data: z ? structuredClone(z) : null, error });
+      }
     });
   });
 }
@@ -2250,9 +2289,17 @@ async function pinnwandSichtbar(ich: Ich) {
   return data ?? [];
 }
 const MAX_TESTDATEN = 2 * 1024 * 1024; // Verbindungstest: höchstens 2 MB je Richtung
+// KC-CLUB-START-SPARSAM-2: MERK_MS lang gemerkt (nur fehlerfreie Antworten); Ein-/Ausschalten hier leert den Merker sofort
+let WARTUNG_MERK: { t: number; v: Promise<{ an: boolean; hinweis: string | null; seit: string | null }> } | null = null;
 async function wartungLesen() {
-  const { data } = await db.from("kc_core_app_registry").select("wartung,wartung_hinweis,wartung_seit").eq("app_id", APP_ID).maybeSingle();
-  return { an: !!data?.wartung, hinweis: data?.wartung_hinweis ?? null, seit: data?.wartung_seit ?? null };
+  if (!WARTUNG_MERK || Date.now() - WARTUNG_MERK.t > MERK_MS) {
+    const m: typeof WARTUNG_MERK = { t: Date.now(), v: Promise.resolve(db.from("kc_core_app_registry").select("wartung,wartung_hinweis,wartung_seit").eq("app_id", APP_ID).maybeSingle()).then(({ data, error }) => {
+      if (error && WARTUNG_MERK === m) WARTUNG_MERK = null;
+      return { an: !!data?.wartung, hinweis: data?.wartung_hinweis ?? null, seit: data?.wartung_seit ?? null };
+    }, (e) => { if (WARTUNG_MERK === m) WARTUNG_MERK = null; throw e; }) };
+    WARTUNG_MERK = m;
+  }
+  return { ...(await WARTUNG_MERK!.v) };
 }
 // zufällige, kaum komprimierbare Testdaten (sonst misst der Test die Kompression statt der Leitung)
 function testDaten(n: number) {
@@ -2272,20 +2319,32 @@ const COMM_FEHLER = ["failed", "dead_lettered", "error"];
 // dieselbe Liste wie im KC Communicator (kc-communication-router/-dispatch „empfaengerFehler“). Sie färben die LED nicht.
 const COMM_EMPFAENGER_FEHLER = /^(PUSH_NO_ACTIVE_SUBSCRIPTION|PUSH_SUBSCRIPTION_NOT_FOUND|PUSH_USER_RECIPIENT_MISSING|EMAIL_RECIPIENT_MISSING)/;
 const commSystemFehler = (x: any) => COMM_FEHLER.includes(x.status) && !COMM_EMPFAENGER_FEHLER.test(String(x.error_code || ""));
-async function communicatorStatus(ich: Ich, erreichbarkeit = false) {
+// KC-CLUB-START-SPARSAM-2: die fünf Lesungen sind für alle gleich (nur „wege“ gibt es zusätzlich für Admins – das wird unten je Aufruf
+// gebaut) → MERK_MS lang gemerkt, nur wenn alle fehlerfrei waren. Die Admin-Ansicht (erreichbarkeit) liest immer frisch und erneuert den Merker.
+let COMM_MERK: { t: number; v: Promise<any[]> } | null = null;
+function commLesen(frisch: boolean): Promise<any[]> {
+  if (!frisch && COMM_MERK && Date.now() - COMM_MERK.t <= MERK_MS) return COMM_MERK.v;
   const seit7 = new Date(Date.now() - 7 * 86400000).toISOString(), seit24 = new Date(Date.now() - 86400000).toISOString();
-  const [{ data: st }, { data: wege }, { data: bericht }, { data: auftr }, erreichbar, { data: alle24 }] = await Promise.all([
+  const m: { t: number; v: Promise<any[]> } = { t: Date.now(), v: Promise.all([
     db.from("kc_communication_settings").select("enabled,dispatch_enabled").eq("id", "global").maybeSingle(),
     db.from("kc_communication_provider_routes").select("channel,provider_id,role,enabled,health_status,last_success_at,last_failure_at,consecutive_failures").eq("enabled", true).in("channel", ["push", "email"]),
     db.from("kc_communication_health_snapshots").select("created_at,success_rate,avg_push_ms,avg_email_ms,queued,retrying,failed,active_devices").order("created_at", { ascending: false }).limit(1).maybeSingle(),
     db.from("kc_communication_requests").select("status,channel,sent_at,created_at,error_code").eq("source_program", "kc-club").gte("created_at", seit7).order("created_at", { ascending: false }).limit(500),
+    // fehlgeschlagene Aufträge aller Programme (24 h) – ersetzt den Zähler „failed“ des Zustandsberichts, der Empfängerfehler mitzählt
+    db.from("kc_communication_requests").select("status,error_code").in("status", COMM_FEHLER).gte("created_at", seit24).limit(500),
+  ]).then((r) => { if (r.some((x: any) => x.error) && COMM_MERK === m) COMM_MERK = null; return r; }, (e) => { if (COMM_MERK === m) COMM_MERK = null; throw e; }) };
+  COMM_MERK = m;
+  return m.v;
+}
+async function communicatorStatus(ich: Ich, erreichbarkeit = false) {
+  const seit24 = new Date(Date.now() - 86400000).toISOString();
+  const [[{ data: st }, { data: wege }, { data: bericht }, { data: auftr }, { data: alle24 }], erreichbar] = await Promise.all([
+    commLesen(erreichbarkeit),
     erreichbarkeit ? (async () => {
       const t0 = Date.now();
       try { const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, { method: "OPTIONS", signal: AbortSignal.timeout(4000) }); return { ok: r.status < 400, ms: Date.now() - t0 }; } // 1.97.0: 404 (nicht eingerichtet) ist NICHT erreichbar
       catch { return { ok: false, ms: null }; }
     })() : Promise.resolve(null),
-    // fehlgeschlagene Aufträge aller Programme (24 h) – ersetzt den Zähler „failed“ des Zustandsberichts, der Empfängerfehler mitzählt
-    db.from("kc_communication_requests").select("status,error_code").in("status", COMM_FEHLER).gte("created_at", seit24).limit(500),
   ]);
   const liste = auftr ?? [];
   const systemFehler24 = (alle24 ?? []).filter(commSystemFehler).length;
@@ -3603,7 +3662,7 @@ const FREIGABE = { bis: 0, werte: new Map<string, string>() };
 async function freigaben(): Promise<Record<string, "alle" | "admin">> {
   if (Date.now() > FREIGABE.bis) {
     const { data, error } = await db.from("kc_club_funktion_freigabe").select("funktion,fuer");
-    if (!error) { FREIGABE.werte = new Map((data ?? []).map((x: any) => [x.funktion, x.fuer])); FREIGABE.bis = Date.now() + 15_000; }
+    if (!error) { FREIGABE.werte = new Map((data ?? []).map((x: any) => [x.funktion, x.fuer])); FREIGABE.bis = Date.now() + MERK_MS; } // KC-CLUB-START-SPARSAM-2: 15 s → MERK_MS, Speichern leert
   }
   return Object.fromEntries(Object.entries(FUNKTIONEN).map(([id, f]) => [id, (FREIGABE.werte.get(id) === "alle" || FREIGABE.werte.get(id) === "admin" ? FREIGABE.werte.get(id) : f.standard) as "alle" | "admin"]));
 }
@@ -4658,9 +4717,9 @@ async function mitfahrtBezugTitel(art: string, id: string) {
 // Der Sprecher sieht das Ergebnis live und legt fest (vorhandener Kern terminumfrage_festlegen: Termin + Zusagen) oder schlägt eine
 // Alternative vor. Nach dem Festlegen fragt jede App: „In deinen Kalender eintragen?“. Läuft höchstens LIVE_TERMIN_STD Stunden.
 const LIVE_TERMIN_STD = 3;
-// KC-CLUB-ONLINE-SPARSAM: für die Online-Meldung 15 s gemerkt (alle Mitglieder fragen dasselbe; Start/Ende einer Live-Umfrage meldet zusätzlich die direkte Leitung)
+// KC-CLUB-ONLINE-SPARSAM: für die Online-Meldung 15 s gemerkt (KC-CLUB-START-SPARSAM-2: 30 s; Speichern einer Umfrage leert den Merker) (alle Mitglieder fragen dasselbe; Start/Ende einer Live-Umfrage meldet zusätzlich die direkte Leitung)
 let LIVE_KURZ: { t: number; v: Promise<any> } | null = null;
-function liveTerminKurz() { if (!LIVE_KURZ || Date.now() - LIVE_KURZ.t > 15000) LIVE_KURZ = { t: Date.now(), v: liveTerminAktiv().catch((e) => { LIVE_KURZ = null; throw e; }) }; return LIVE_KURZ.v; }
+function liveTerminKurz() { if (!LIVE_KURZ || Date.now() - LIVE_KURZ.t > 30000) LIVE_KURZ = { t: Date.now(), v: liveTerminAktiv().catch((e) => { LIVE_KURZ = null; throw e; }) }; return LIVE_KURZ.v; }
 async function liveTerminAktiv() {
   const { data } = await db.from("kc_club_terminumfragen").select("*").eq("live", true).gte("erstellt_am", new Date(Date.now() - LIVE_TERMIN_STD * 3600000).toISOString())
     .order("erstellt_am", { ascending: false }).limit(1).maybeSingle();
@@ -5949,7 +6008,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
   let p: any; try { p = await req.json(); } catch { return json({ error: "Ungültige Anfrage" }, 400); }
   const dbAusVorher = DB_AUS.n; // KC-CLUB-DB-ZEITGRENZE
   const a = String(p?.action || "");
-  { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) { pf.aktion = a; if (DB_PFADE_AKTIONEN.has(a) && Math.random() < DB_PFADE_ANTEIL) pf.pfade = new Map(); } } // KC-CLUB-DB-SPARSAM: Messung je Aktion
+  { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) pf.aktion = a; } // KC-CLUB-DB-SPARSAM: Messung je Aktion
   try {
     // ----- KC-CLUB-NOTBETRIEB (1.52.0): Notfall-Paket bauen und beim Ersatz-Server ablegen (Zeitplaner, alle 15 Min.) -----
     if (a === "fra_sicherung") { // KC-CLUB-FRA-SICHERUNG (2.236.0): Schritt der nächtlichen Frankfurt-Sicherung (nur Zeitplaner)
@@ -6459,12 +6518,11 @@ Köcheclub Werne`,
 // gepuffert, andere gleichzeitige Aufrufe sehen ihn nie). Messung: ab DB_LOG_AB Abfragen eine Zeile ins Server-Log mit Aktion und Zahlen
 // (keine Inhalte, keine Personen, keine Datenbank-Schreibung – kostet nichts). So sieht man, welche Aktion wie viele Abfragen braucht.
 const DB_PUFFER_MS = 2000, DB_LOG_AB = 15;
-const DB_PFADE_AKTIONEN = new Set(["init", "online", "unterhaltung"]), DB_PFADE_ANTEIL = 0.25; // KC-CLUB-DB-PFADE: jeder 4. Aufruf dieser Aktionen
 Deno.serve((req) => {
   const pf = dbPufferNeu(DB_PUFFER_MS);
   return DB_PUFFER.run(pf, async () => {
     const t0 = Date.now(), antwort = await kcAnfrage(req);
-    if (pf.netz + pf.puffer >= DB_LOG_AB || pf.pfade) console.log(JSON.stringify({ db: txt(pf.aktion || req.method, 40), netz: pf.netz, puffer: pf.puffer, ms: Date.now() - t0, ...(pf.pfade ? { pfade: Object.fromEntries(pf.pfade) } : {}) }));
+    if (pf.netz + pf.puffer >= DB_LOG_AB) console.log(JSON.stringify({ db: txt(pf.aktion || req.method, 40), netz: pf.netz, puffer: pf.puffer, ms: Date.now() - t0 }));
     return antwort;
   });
 });

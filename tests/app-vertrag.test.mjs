@@ -431,7 +431,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 31. 0.17.0: Communicator-LED – Zustand des KC Communicators (nur lesen), nie „grün“ ohne aktuelle Serververbindung.
 {
   assert.ok(aktionen.has("communicator_status"), "Server-Aktion communicator_status fehlt");
-  const cs = server.slice(server.indexOf("async function communicatorStatus"), server.indexOf("// ---------- Anmeldung"));
+  // 2.494.0 KC-CLUB-START-SPARSAM-2: die Lesungen stehen in commLesen (gemerkt) direkt davor
+  const cs = server.slice(server.indexOf(server.includes("function commLesen(") ? "function commLesen(" : "async function communicatorStatus"), server.indexOf("// ---------- Anmeldung"));
   assert.ok(!/\.(insert|update|upsert|delete)\(/.test(cs), "Communicator-Status darf nichts verändern");
   assert.ok(/kc_communication_health_snapshots/.test(cs) && /kc_communication_provider_routes/.test(cs) && /eq\("source_program", "kc-club"\)/.test(cs), "Quellen des Communicator-Status fehlen");
   assert.ok(/method: "OPTIONS"/.test(cs), "Erreichbarkeit wird nicht ohne Versand geprüft");
@@ -1399,7 +1400,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const aw = server.slice(server.indexOf('case "anruf_antwort"'), server.indexOf('case "anruf_verpasst_gesehen"'));
   assert.ok(/a\.an !== ich\.person_id/.test(aw) && /status: "abgelehnt"/.test(aw) && /zweierGespraech\(ich\.person_id, a\.von\)/.test(aw) && /senden\("club_nachricht", \[a\.von\]/.test(aw), "Kurzantwort: nur Angerufener, ablehnen, Nachricht an Anrufer");
   assert.ok(/kurzantwort: a\.kurzantwort \?\? null \} : \{ angebot: a\.angebot \}/.test(server), "Kurzantwort nur an den Anrufer");
-  assert.ok(/schluessel", "anruf_antworten"/.test(server) && /case "anruf_antworten_setzen": \{\s*nurAdmin\(ich\)/.test(server) && /anrufAntworten: anrufAntw/.test(server), "Schnellantworten als Admin-Registry");
+  assert.ok((/schluessel", "anruf_antworten"/.test(server) || /konfigZeile\("anruf_antworten"\)/.test(server)) && /schluessel: "anruf_antworten"/.test(server) && /case "anruf_antworten_setzen": \{\s*nurAdmin\(ich\)/.test(server) && /anrufAntworten: anrufAntw/.test(server), "Schnellantworten als Admin-Registry");
   assert.ok(/verpasst: verp\.map/.test(server) && /is\("verpasst_gesehen_am", null\)/.test(server), "verpasste Anrufe");
   assert.ok(/anrufAntwortBereich\(art === "eingehend"\)/.test(html) && /api\("anruf_antwort", \{ id, text \}\)/.test(html), "App: mit Text ablehnen");
   assert.ok(/else if \(ruf && RUF && !ZWEIT && ruf\.id !== RUF\.id && !\(RUF\.rolle === "rufer"/.test(html) && /function zweitAnnehmen\(\)/.test(html) && /if \(ZWEIT\) \{ const z = ZWEIT; zweitWeg\(\); setTimeout\(\(\) => anrufEingehend\(z\.id\)/.test(html), "App: zweiter Anruf");
@@ -5904,7 +5905,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -10905,8 +10906,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/const DB_PUFFER_MS = 2000, DB_LOG_AB = 15;/.test(server) && /Deno\.serve\(\(req\) => \{\n  const pf = dbPufferNeu\(DB_PUFFER_MS\);\n  return DB_PUFFER\.run\(pf, async \(\) => \{/.test(server), "jeder Aufruf mit eigenem, kurzlebigem Puffer");
   assert.ok(/if \(a && pf\.haltbarMs && Date\.now\(\) - \(pf\.zeit\.get\(schluessel\) \?\? 0\) > pf\.haltbarMs\) a = undefined;/.test(server), "gepufferte Antwort nur DB_PUFFER_MS gültig");
   assert.ok(/console\.log\(JSON\.stringify\(\{ db: txt\(pf\.aktion \|\| req\.method, 40\), netz: pf\.netz, puffer: pf\.puffer, ms: Date\.now\(\) - t0(, \.\.\.\(pf\.pfade \? \{ pfade: Object\.fromEntries\(pf\.pfade\) \} : \{\}\))? \}\)\)/.test(server), "Messung nur ins Log: Aktion und Zahlen, keine Inhalte/Personen");
-  // 2.489.0 KC-CLUB-DB-PFADE: nur Tabellen-/Funktionsnamen (aus der Adresse ohne Filter) und Anzahl
-  assert.ok(/const k = methode \+ " " \+ \(\/\\\/rest\\\/v1\\\/\(\[a-z0-9_\/\]\+\)\/\.exec\(url\)\?\.\[1\] \|\| "\?"\)/.test(server) && /DB_PFADE_ANTEIL = 0\.25/.test(server), "Pfad-Messung: nur Namen, keine Filterwerte, jeder 4. Aufruf");
+  // 2.494.0: die Pfad-Zählung KC-CLUB-DB-PFADE (2.489.0) ist wieder ausgebaut (KC-SPARSAM-PROTOKOLLE: Messen über eigene Tabellen, nicht übers Log)
+  assert.ok(!/DB_PFADE_ANTEIL|pf\.pfade|dbPfad\(/.test(server), "Pfad-Zählung ausgebaut – Log-Zeile nur Aktion und Zahlen");
   assert.ok(/dbPufferLeeren\(\); \/\/ KC-CLUB-DB-SPARSAM: der Communicator schreibt selbst/.test(server) && /const out = await r\.json\(\)\.catch\(\(\) => \(\{\}\)\);\n  dbPufferLeeren\(\);/.test(server), "Communicator: Puffer vorher und nachher leeren");
   assert.ok(/dbPufferLeeren\(\); \/\/ KC-CLUB-DB-SPARSAM: der Termin-Baustein schreibt selbst/.test(server) && /const direktSql = \(\) => \(dbPufferLeeren\(\), DIREKT \?\?= postgres\(/.test(server) && /\.then\(\(r\) => \{ dbPufferLeeren\(\); return r\.body\?\.cancel\(\); \}\)/.test(server), "andere Schreibwege leeren den Puffer");
   assert.ok(/const kcAnfrage = async \(req: Request\): Promise<Response> => \{/.test(server) && /\{ const pf = DB_PUFFER\.getStore\(\) as DbPuffer \| undefined; if \(pf\) (pf\.aktion = a; |\{ pf\.aktion = a; if \(DB_PFADE_AKTIONEN\.has\(a\) && Math\.random\(\) < DB_PFADE_ANTEIL\) pf\.pfade = new Map\(\); \} )\}/.test(server), "Aktion für die Messung");
@@ -10988,7 +10989,9 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\.in\("schluessel", \["online_seit", "fenster", "online", "vorfuehren", "schnappschuss"\]\)/.test(on) && /onlineAnklopfenTeilen\(/.test(on) && /onlineAnrufeTeilen\(/.test(on) && /liveTerminKurz\(\)/.test(on), "Online-Meldung: zusammengefasste Abfragen");
   assert.ok(!/onlineZeigenMap\(\[ich\.person_id\]\)/.test(on) && !/anklopfenErlaubtMap\(/.test(on), "keine Einzelabfragen mehr in der Online-Meldung");
   assert.ok(/async function onlineJetztMit\(weitere: string\[\]\)/.test(server) && /\.in\("schluessel", \["online", "inkognito", \.\.\.weitere\]\)/.test(server) && /eq\("ist_admin", true\)\.in\("person_id", inkoAn\)/.test(server) && /not\("person_id", "like", "KC-P-TEST%"\)/.test(server.slice(server.indexOf("async function onlineJetztMit"))), "onlineJetztMit: verborgen, Inkognito nur für Admins, keine Testpersonen");
-  assert.ok(/FENSTER_SCHREIB_MS = 30000/.test(server) && /t - Number\(ich0\.t\) < FENSTER_SCHREIB_MS/.test(server) && /const FENSTER_SEK = 180,/.test(server), "eigenes Fenster höchstens alle 30 s schreiben (< FENSTER_SEK)");
+  // 2.494.0 KC-CLUB-START-SPARSAM-2: Abstand darf wachsen, solange Abstand + App-Takt (60 s) + 30 s Reserve ≤ FENSTER_SEK bleibt
+  const fsMs = Number(/FENSTER_SCHREIB_MS = (\d+)/.exec(server)?.[1]);
+  assert.ok(fsMs >= 30000 && fsMs + 60000 + 30000 <= 180000 && /t - Number\(ich0\.t\) < FENSTER_SCHREIB_MS/.test(server) && /const FENSTER_SEK = 180,/.test(server), "eigenes Fenster höchstens alle FENSTER_SCHREIB_MS schreiben (mit Reserve < FENSTER_SEK)");
   const wa = server.slice(server.indexOf('if (a === "wartung") {'), server.indexOf('if (stunde < 9) return json({ ok: true, erinnerungen: 0'));
   assert.ok(/const stuendlich = new Date\(\)\.getUTCMinutes\(\) < 15 \|\| p\.alles === true;/.test(wa) && /pf\.aktion = stuendlich \? "wartung_stunde" : "wartung"/.test(wa), "Wartung: Stundenlauf zur vollen Stunde, getrennt gemessen");
   for (const f of ["adminAbwesendPruefen", "stadtAutoLauf", "wochenberichtLauf", "dbWarnungLauf", "schulungNachfrageErinnern", "reiseChecklisteErinnern", "dienstGrussSenden", "rtZaehlerWarnen", "antwortErinnerung2T", "wichtigUngelesenMelden", "probeErinnern", "todoFristenErinnern", "geburtstagZettelAbnehmen", "zeitumstellungMelden", "protokollWaechter"])
