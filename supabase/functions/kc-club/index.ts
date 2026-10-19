@@ -51,7 +51,7 @@ const dbPufferNeu = (haltbarMs: number): DbPuffer => ({ antworten: new Map(), ze
 const dbPufferLeeren = () => { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) { pf.antworten.clear(); pf.zeit.clear(); } };
 // Nur lesende Datenbank-Funktionen (STABLE bzw. reines SELECT, geprüft 18.10.2026): gehen ungepuffert durch, leeren den Puffer aber nicht.
 // Jede andere Funktion gilt vorsichtshalber als Schreiben. (Messung 2.453.0: diese drei leerten den Puffer mehrmals je Mitglied → nur 2 % gespart.)
-const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret"]);
+const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret", "kc_club_kachel_zahlen"]); // 2.496.0: Kachel-Zahlen (STABLE, nur lesend)
 const dbFetch: typeof fetch = (input, init) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
   const pf = url.includes("/rest/v1/") ? DB_PUFFER.getStore() as DbPuffer | undefined : undefined;
@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.503.0";
+const SERVER_VERSION = "2.504.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4277,7 +4277,22 @@ function hilfeLeser(x: any, antworten: any[], gesehen: any[], aktiv: any[], n: (
 // KC-CLUB-KACHEL-ZAHLEN (2.22.12, Wunsch Hansi): Zahlen auf weiteren großen Kacheln (nur erweiterte Ansicht) – nur, wo etwas auf mich wartet.
 // Jede Zahl einzeln abgesichert: Fehler → null (die App zeigt dann keine Zahl, nie eine falsche „0 = alles erledigt“).
 // fotosSeit / dienstSeit: wann ich Fotoalbum / Dienstpläne zuletzt geöffnet habe (merkt sich das Gerät).
+// KC-CLUB-KACHEL-EINS (Server 2.496.0, Stufe 2 Punkt 4): Termine, Helfen, Fotos und Dienste in EINER Datenbank-Abfrage (vorher bis zu 9).
+// Gleiche Rechnung (Migration 20261019_kc_club_kachel_zahlen.sql, Test tools/db-sparsam/kachel-test.mjs). Schlägt sie fehl → wie bisher einzeln.
 async function kachelZahlen(ich: Ich, p: any) {
+  const seit = (v: unknown) => { const d = new Date(String(v || "")); return isNaN(d.getTime()) ? null : d.toISOString(); };
+  const heute = berlinTag(new Date());
+  const [r, buero] = await Promise.all([
+    Promise.resolve(db.rpc("kc_club_kachel_zahlen", { p_person: ich.person_id, p_vorstand: !!ich.vorstand, p_jetzt: jetzt(), p_heute: heute,
+      p_fotos_seit: seit(p?.fotosSeit), p_dienst_seit: seit(p?.dienstSeit), p_org: ORG })).catch((e: unknown) => ({ data: null, error: e })),
+    ich.buero ? (async () => { try { return Object.values(await bueroEingang(ich)).reduce((a: number, b: any) => a + Number(b || 0), 0); } catch (e) { console.error("kachel zahl", String(e)); return null; } })() : Promise.resolve(0),
+  ]);
+  const z: any = r.error ? null : r.data, zahl = (k: string) => Number.isFinite(Number(z?.[k])) && z?.[k] != null ? Number(z[k]) : NaN;
+  if (z && ["termine", "helfen", "fotos", "dienste"].every((k) => !isNaN(zahl(k)))) return { termine: zahl("termine"), helfen: zahl("helfen"), buero, fotos: zahl("fotos"), dienste: zahl("dienste") };
+  console.error("kachel zahlen eins", String((r.error as any)?.message ?? r.error ?? "leer"));
+  return { ...(await kachelZahlenEinzeln(ich, p)), buero };
+}
+async function kachelZahlenEinzeln(ich: Ich, p: any) { // bis 2.495.0 die einzige Rechnung, jetzt Rückfall
   const jetztIso = jetzt(), heute = berlinTag(new Date());
   const seit = (v: unknown) => { const d = new Date(String(v || "")); return isNaN(d.getTime()) ? null : d.toISOString(); };
   const sicher = async (fn: () => Promise<number>) => { try { return await fn(); } catch (e) { console.error("kachel zahl", String(e)); return null; } };
@@ -4314,7 +4329,7 @@ async function kachelZahlen(ich: Ich, p: any) {
       return offen + leih;
     }),
     // 🗂️ Büro: alles im Eingangskorb (nur wer ins Büro darf)
-    ich.buero ? sicher(async () => Object.values(await bueroEingang(ich)).reduce((a: number, b: any) => a + Number(b || 0), 0)) : Promise.resolve(0),
+    Promise.resolve(0), // 🗂️ Büro rechnet kachelZahlen selbst (nur wer ins Büro darf: alles im Eingangskorb)
     // 📷 neue Fotos anderer seit meinem letzten Besuch
     seit(p?.fotosSeit) ? sicher(async () => { const r = await db.from("kc_club_fotos").select("id", { count: "exact", head: true }).is("geloescht_am", null)
       .gt("hochgeladen_am", seit(p.fotosSeit)!).neq("hochgeladen_von", ich.person_id); if (r.error) throw new Error(r.error.message); return r.count ?? 0; }) : Promise.resolve(0),

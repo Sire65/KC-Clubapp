@@ -1,5 +1,12 @@
 # Änderungen
 
+## Server 2.504.0 – 2026-10-19 (ohne App-Build) – Kachel-Zahlen in einer Abfrage (KC-CLUB-KACHEL-EINS, Stufe 2 Punkt 4)
+Wunsch Hansi („Punkt 4 bis 20 Uhr bauen“):
+- Die Zahlen auf den Kacheln 📅 Termine, 🤝 Helfen, 📷 Fotos und 🗓️ Dienste kommen beim App-Start aus EINER Datenbank-Abfrage (neue Lesefunktion `kc_club_kachel_zahlen`) statt aus bis zu 9. Gleiche Rechnung wie vorher; 🗂️ Büro wie bisher.
+- Schlägt die Funktion fehl, rechnet der Server wie bisher einzeln (alte Rechnung bleibt als Rückfall).
+- DB: `supabase/migrations/20261019_kc_club_kachel_zahlen.sql` (bereits eingespielt, nur lesend; nur der Server darf sie aufrufen).
+- Tests: `tools/db-sparsam/kachel-test.mjs` – echte Funktion in Postgres 16 im Speicher (PGlite), 400 Zufallswelten × 4 Personen/Rollen, alt = neu. Zusätzlich an den echten Daten nur lesend geprüft: 19 Mitglieder, 0 Abweichungen. Vertragstest-Block Server 2.504.0.
+- Rückweg: Server 2.503.0 erneut hochladen (die Funktion bleibt dann ungenutzt).
 ## 2.503.0 – 2026-10-19 – 🪟 Kopf-Effekte wählbar, 🦉 Uhu als Bote
 - Feature KC-CLUB-KOPF-EFFEKTE (Wunsch Hansi): unter ⚙️ → ✨ Effekte Häkchen „🪟 Anderer Effekt beim Einrollen des Kopfes“; Klappbereich mit Jalousie (Standard), Lamellenvorhang (zu den Seiten), Climber (Lamellen kippen und schieben sich nach oben) und Automatisch (wechselt), ▶ Ausprobieren. Ohne Häkchen bleibt die Jalousie.
 - Feature KC-CLUB-UHU (Wunsch Hansi): neuer Sende-Bote „🦉 Uhu mit Posttasche“ – blaue Briefträger-Mütze, Umhängetasche in Club-Farben; fliegt wie die Brieftaube, beim Empfänger fällt das Kuvert aus der Tasche. Auch bei „Abwechselnd“ dabei.
