@@ -5905,7 +5905,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|464|458|461|462|463|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -11112,4 +11112,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/FREIGABE\.bis = Date\.now\(\) \+ MERK_MS;/.test(server) && /Date\.now\(\) - LIVE_KURZ\.t > 30000/.test(server), "Freigaben 60 s, Live-Umfrage 30 s");
   assert.ok(/if \(!neu && jetztMs - z < 30000\) return;/.test(server) && /ZULETZT_TAKT_MS = 30_000/.test(server) && /const ONLINE_SEK = 150/.test(server), "„online seit“ und „zuletzt gesehen“ unverändert (sonst flackert die Anzeige)");
   assert.ok(fs.existsSync(new URL("../tools/db-sparsam/start-sparsam-2-test.ts", import.meta.url)), "Gleichwertigkeits-Test vorhanden");
+}
+// Server 2.495.0 KC-CLUB-START-SPARSAM-2 Punkt 3: Clubtermine (nur Termin-Zeilen) beim Start 60 s gemerkt, Zu-/Absagen frisch, Speichern leert
+{
+  assert.ok(/else if \(t === "kc_club_treffen"\) TREFFEN_MERK\.clear\(\);/.test(server) && /function treffenGemerkt\(k: string,/.test(server), "Termin-Merker, Speichern eines Termins leert ihn");
+  assert.ok(/nurNaechstes && !zeitraum \? await treffenGemerkt\("naechstes", \(\) => q\) : await q;/.test(server) && /treffenGemerkt\("kommend", \(\) => db\.from\("kc_club_treffen"\)\.select\("id"\)/.test(server), "nur nächstes Treffen und Kachel-Termine gemerkt");
+  const tl = server.slice(server.indexOf("async function treffenListe("), server.indexOf("async function treffenListe(") + 2500);
+  assert.ok(/await db\.from\("kc_club_teilnahme"\)\.select\("\*"\)\.in\("treffen_id", ids\)/.test(tl), "Zu-/Absagen bleiben frisch");
 }

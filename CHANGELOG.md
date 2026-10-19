@@ -1,5 +1,12 @@
 # Änderungen
 
+## Server 2.495.0 – 2026-10-19 (ohne App-Build) – App-Start sparsamer, Stufe 2 Punkt 3 (KC-CLUB-START-SPARSAM-2)
+Wunsch Hansi („Bau die offenen Positionen noch, damit sie um 12:00 noch rübergehen“):
+- Clubtermine für den App-Start je Server-Instanz 60 s gemerkt: das nächste Treffen (Startseite) und die kommenden Treffen für die Zahl auf der Termin-Kachel. Gemerkt werden nur die Termin-Zeilen – Zu- und Absagen werden weiter jedes Mal frisch gelesen. Speichert die App einen Termin (anlegen, ändern, absagen, Erinnerung), ist der Merker sofort weg; Fehler werden nie gemerkt. Spart 2 Abfragen je App-Start.
+- Punkt 4 (Kachel-Zahlen in einer Datenbank-Funktion) braucht eine neue Datenbank-Funktion und mehr Tests – kommt mit dem 20-Uhr-Bündel.
+- Tests: `tools/db-sparsam/start-sparsam-2-test.ts` erweitert (Termine gemerkt, Kopien, Speichern leert, Fehler nie gemerkt) · Vertragstest-Block 2.495.0.
+- Rückweg: Server 2.494.0 erneut hochladen (keine Datenbank-Änderung).
+
 ## Server 2.494.0 – 2026-10-19 (ohne App-Build) – App-Start sparsamer, Stufe 2 (KC-CLUB-START-SPARSAM-2)
 Freigabe Hansi („Ja“ zu Stufe 2, Punkte 1, 2 und 5 – „vorsichtig, damit alles lauffähig bleibt“). Gleiche Anzeige, weniger Datenbank-Abfragen:
 - Selten geänderte Daten merkt sich jede Server-Instanz 60 s: Club-Einstellungen (SOS, Pinnwand, Einstieg, Thema, Schnellantworten – jetzt in der gebündelten Lesung), Wartungsmodus, Funktions-Freigaben (vorher 15 s) und der Zustand des KC Communicators (5 Lesungen). Speichert die App selbst etwas davon, ist der Merker sofort weg; andere Instanzen sehen es spätestens nach 60 s. Fehler werden nie gemerkt. Die Admin-Ansicht des Communicators liest immer frisch.
