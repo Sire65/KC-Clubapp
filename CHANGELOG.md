@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.529.0 – 2026-10-20 – 🕵️ Geheimagent bringt verschlüsselte Nachrichten · 🔑 Schlüssel beim Senden (KC-CLUB-GEHEIMAGENT)
+Wunsch Hansi („Beim Versenden mit Schlüsselbund kurz einen Schlüssel zeigen … welche besondere Figur könnte die verschlüsselte wegbringen?“ → „🕵️ Geheimagent“).
+- Beim Senden einer verschlüsselten Nachricht (🔒 Kennwort oder Schlüsselbund) blitzt am Senden-Knopf kurz ein goldener 🔑 Schlüssel auf und dreht sich wie im Schloss. Danach läuft ein Geheimagent (Hut, Sonnenbrille, Trenchcoat, Aktenkoffer) mit der Nachricht davon – statt des gewählten Boten.
+- Beim Empfänger kommt der Geheimagent ebenfalls an, bleibt kurz stehen, der Schlüssel dreht sich, das Kofferschloss springt auf.
+- Express behält Vorrang (Rennwagen). „Effekte aus“ gilt weiter. Hilfe-Eintrag „Wer bringt deine Nachricht?“ ergänzt. Nur App.
+
 ## DB – 2026-10-20 (ohne App-Build) – Graue Haken sofort, wenn der Push auf dem Handy angezeigt wird (KC-CLUB-RT-PUSH-ANGEZEIGT)
 Wunsch Hansi („Warum bekommt man bei WhatsApp graue Haken, sobald es auf dem Handy angekommen ist? Bei uns sieht man lange nur einen Haken“ → „Ja, bauen und sofort einspielen“).
 - Ursache: Meldete das Handy „Push angezeigt“, erfuhr das die App des Absenders nur beim nächsten Nachsehen. Seit 2.510.0 fragt sie bei stehender Leitung nicht mehr alle 4 s nach, sondern verlässt sich auf Signale – für „Push angezeigt“ gab es aber keins. Folge: graue Haken erst nach 30–60 s oder später.

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.528.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.529.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5138,7 +5138,7 @@ const HILFE = [
   { id: "schrift_zoom", thema: "darstellung", sym: "🔍", t: "Schrift größer ziehen – mit zwei Fingern", x: "Zu klein zum Lesen? Lege <b>zwei Finger</b> auf den Bildschirm und ziehe sie <b>auseinander</b> – Nachrichten, Zettel und Texte werden größer (Knöpfe und Leisten bleiben, wie sie sind). Zusammenschieben macht sie kleiner. Die Größe bleibt gemerkt. Zurück auf normal: mit zwei Fingern <b>doppelt tippen</b> oder unter ⚙️ → Darstellung → „🔍 Schriftgröße“. <b>Ganz ausschalten:</b> ⚙️ → Darstellung → „✌️ Schrift mit zwei Fingern ändern“ (A− / A+ gehen weiter). Ein aufliegender Daumen beim Scrollen verstellt die Schrift nicht mehr.", seit: "2.364.0" }, // 2.364.0 KC-CLUB-SCHRIFT-ZOOM
   { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Über dem Schreibfeld <b>🏎️ Express</b> anhaken, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag – neben Express steht, wie viele du heute schon verschickt hast (z. B. <b>2/5</b>). Express und <b>❗ Wichtig</b> kannst du auch zusammen anhaken. Nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
   { id: "fee", thema: "darstellung", sym: "🧚", t: "Eine kleine Fee zu Besuch", x: "Bei jeder <b>20. Anmeldung</b> schwebt eine kleine Fee durchs obere Startbild, bleibt kurz stehen und lächelt. <b>Tipp sie an</b> – dann schenkt sie dir einen schönen Spruch. Vorab ansehen oder per Häkchen abschalten: <b>⚙️ → ✨ Effekte → 🧚 Die kleine Fee</b>.", zeig: () => einstiegHin("effekte", "setFee"), seit: "2.372.0" },
-  { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b>, <b>Luftballon</b>, <b>Uhu mit Posttasche</b> oder <b>Baron Münchhausen</b> auf der Kanonenkugel – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen.", zeig: () => einstiegHin("effekte", "sendeEffektWahl"), seit: "2.362.0" },
+  { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b>, <b>Luftballon</b>, <b>Uhu mit Posttasche</b> oder <b>Baron Münchhausen</b> auf der Kanonenkugel – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen. Mit dem 🔒 Schlüsselbund verschlüsselte Nachrichten bringt immer der <b>🕵️ Geheimagent</b> mit Aktenkoffer – vorher blitzt kurz ein 🔑 Schlüssel auf.", zeig: () => einstiegHin("effekte", "sendeEffektWahl"), seit: "2.362.0" },
   { id: "zurueckholen", thema: "nachrichten", sym: "↩️", t: "Vertippt? Nachricht zurückholen", x: "Solange noch niemand deine Nachricht gelesen hat, kannst du sie <b>zurückholen</b>: Nachricht antippen (am PC: rechte Maustaste) oder im <b>ⓘ</b>-Fenster → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet für alle und steht wieder in deinem Schreibfeld – ändern und neu senden.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-ZURUECKHOLEN
   { id: "spaeter_senden", thema: "nachrichten", sym: "⏰", t: "Nachricht später senden – auch jeden Montag", x: "Nachricht schreiben, unten auf <b>⏰</b> tippen, Zeit wählen (z. B. <b>morgen früh 8 Uhr</b>) und wie oft (<b>einmal</b>, <b>jeden Tag</b>, <b>werktags</b>, <b>jeden Montag</b> …). Bis dahin steht sie blass unten im Chat – nur du siehst sie; antippen zum Ändern oder Löschen. Gesendet wird auch, wenn dein Handy aus ist.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-SPAETER-SENDEN
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN (Wunsch Hansi „Videos, Hilfetexte, Suche und Twinkey auf die neuen Funktionen umstellen und gut erklären“)
@@ -14954,11 +14954,11 @@ function sendeFlug(r, art) {
   f.querySelectorAll(".rk-flamme").forEach((x) => { x.style.transformBox = "fill-box"; x.style.transformOrigin = "top"; x.animate([{ transform: "scaleY(.7)" }, { transform: "scaleY(1.25)" }], { duration: 90, iterations: Infinity, direction: "alternate" }); });
   setTimeout(() => f.remove(), dauer + 400);
 }
-function papierflieger(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG, mid = null, express = typeof EXPRESS !== "undefined" && !!EXPRESS) {
+function papierflieger(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG, mid = null, express = typeof EXPRESS !== "undefined" && !!EXPRESS, geheim = false) {
   if (!fxAn() || !von) return;
   const r = von.getBoundingClientRect(); if (!r.width) return;
   const wahl = sendeEffektWahl(); if (wahl === "aus") return;
-  const art = fxArt(wahl, wichtig, mid, express); if (!art) return; // ❗ wichtig → immer Blaulicht; 🏎️ Express → Rennwagen; „Abwechselnd“ nach Nachrichten-Kennung (2.177.0)
+  const art = fxArt(wahl, wichtig, mid, express, geheim); if (!art) return; // 🔒 verschlüsselt → Geheimagent (2.529.0); ❗ wichtig → immer Blaulicht; 🏎️ Express → Rennwagen; „Abwechselnd“ nach Nachrichten-Kennung (2.177.0)
   if (FZ_SVG[art]) return sendeFahrzeug(r, art);
   if (art === "rakete" || art === "ballon" || art === "flasche" || art === "muenchhausen") return sendeFlug(r, art);
   const g = Math.round(Math.min(130, innerWidth * 0.3));
@@ -15004,16 +15004,52 @@ const BLAULICHT_SVG = (b) => `<svg viewBox="0 0 200 110" width="${b}" height="${
     <rect x="12" y="64" width="176" height="10" fill="#7b1e2b"/><text x="100" y="86" text-anchor="middle" font-size="11" font-weight="800" fill="#7b1e2b" font-family="sans-serif">❗ WICHTIG</text>
     <rect x="70" y="18" width="46" height="9" rx="3" fill="#333"/><rect class="bl-a" x="72" y="16" width="20" height="9" rx="3" fill="#2f7bff"/><rect class="bl-b" x="94" y="16" width="20" height="9" rx="3" fill="#2f7bff"/>
     <rect x="10" y="64" width="7" height="7" rx="2" fill="#ffe680" stroke="#333" stroke-width="1.5"/>${RAD(46)}${RAD(156)}</svg>`;
-const FZ_SVG = { postauto: (b) => POSTAUTO_SVG(b), blaulicht: (b) => BLAULICHT_SVG(b), fahrrad: (b) => FAHRRAD_SVG(b), express: (b) => RENNWAGEN_SVG(b) }; // 2.362.0
+// ---------- 2.529.0 KC-CLUB-GEHEIMAGENT (Wunsch Hansi „beim Versenden mit Schlüsselbund kurz einen Schlüssel zeigen – und welche besondere Figur könnte
+// die verschlüsselte wegbringen?“; Wahl Hansi: Geheimagent): verschlüsselte Nachrichten (🔒KCV1) bringt immer ein Geheimagent mit Hut, Sonnenbrille,
+// Trenchcoat und weinrotem Aktenkoffer mit Zahlenschloss – er schleicht nach links davon (Beine schwingen). Vorher dreht sich am Senden-Knopf ein 🔑.
+// Beim Empfänger kommt er von rechts, bleibt stehen, der Koffer klickt (🔑 dreht sich über der Blase), dann schleicht er weiter. Gilt unabhängig vom
+// gewählten Boten (wie Blaulicht und Rennwagen); 🏎️ Express geht vor.
+const AGENT_SVG = (b) => `<svg viewBox="0 0 120 150" width="${Math.round(b * 0.62)}" height="${Math.round(b * 0.78)}" overflow="visible">
+    <g class="ag-bein ag-h"><path d="M64 104 70 138" stroke="#2b2b2b" stroke-width="9" stroke-linecap="round"/><path d="M70 138H58" stroke="#111" stroke-width="7" stroke-linecap="round"/></g>
+    <g class="ag-bein ag-v"><path d="M54 104 48 138" stroke="#3a3a3a" stroke-width="9" stroke-linecap="round"/><path d="M48 138H36" stroke="#111" stroke-width="7" stroke-linecap="round"/></g>
+    <path d="M40 54q20-10 40 0l8 54H32Z" fill="#c8b48a" stroke="#6b5a36" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M60 52v56" stroke="#6b5a36" stroke-width="1.5"/><path d="M50 52l10 14 10-14" fill="#e9e2d0" stroke="#6b5a36" stroke-width="1.5" stroke-linejoin="round"/><path d="M33 80h54" stroke="#6b5a36" stroke-width="4"/>
+    <circle cx="60" cy="36" r="14" fill="#f2c9a0" stroke="#8a5a3a" stroke-width="1.5"/>
+    <rect x="45" y="32" width="12" height="6" rx="2" fill="#111"/><rect x="59" y="32" width="11" height="6" rx="2" fill="#111"/><path d="M57 35h2" stroke="#111" stroke-width="2"/>
+    <path d="M36 27q24-7 48 0l-4 4H40Z" fill="#2b2b2b"/><path d="M46 27q2-15 14-15t14 15Z" fill="#3a3a3a" stroke="#1a1a1a" stroke-width="1.5"/><path d="M46 23h28" stroke="#7b1e2b" stroke-width="3"/>
+    <path d="M44 62 34 92" stroke="#b9a479" stroke-width="9" stroke-linecap="round"/>
+    <g class="ag-koffer"><rect x="14" y="88" width="36" height="26" rx="3" fill="#7b1e2b" stroke="#3b0d14" stroke-width="2"/><path d="M26 88v-5h12v5" fill="none" stroke="#3b0d14" stroke-width="3"/>
+      <rect x="27" y="97" width="10" height="8" rx="1.5" fill="#f5c400" stroke="#8a6a00" stroke-width="1"/><path class="ag-buegel" d="M29 97v-3a3 3 0 0 1 6 0v3" fill="none" stroke="#8a6a00" stroke-width="1.5"/></g></svg>`;
+function agentLaufen(f) { // Beine im Wechsel schwingen, Koffer wippt – gibt die Animationen zurück (zum Anhalten)
+  const a = [];
+  f.querySelectorAll(".ag-bein").forEach((bein, i) => { bein.style.transformBox = "view-box"; bein.style.transformOrigin = "59px 104px";
+    a.push(bein.animate([{ transform: `rotate(${i ? -18 : 18}deg)` }, { transform: `rotate(${i ? 18 : -18}deg)` }], { duration: 340, iterations: Infinity, direction: "alternate", easing: "ease-in-out" })); });
+  f.querySelectorAll(".ag-koffer").forEach((k) => a.push(k.animate([{ transform: "translateY(0)" }, { transform: "translateY(-3px)" }], { duration: 340, iterations: Infinity, direction: "alternate" })));
+  return a;
+}
+// 🔑 dreht sich kurz wie im Schloss (Senden-Knopf beim Absender, über der Blase beim Empfänger)
+function vnSchluesselZeigen(von) {
+  if (!fxAn() || !von) return; const r = von.getBoundingClientRect(); if (!r.width) return;
+  const g = 56, f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
+  f.innerHTML = `<svg viewBox="0 0 64 64" width="${g}" height="${g}"><circle cx="20" cy="32" r="12" fill="#f5c400" stroke="#8a6a00" stroke-width="3"/><circle cx="20" cy="32" r="4.5" fill="#fff8d6" stroke="#8a6a00" stroke-width="2"/>
+    <path d="M32 32h26M50 32v9M44 32v7" stroke="#8a6a00" stroke-width="6" stroke-linecap="round"/><path d="M32 32h26M50 32v9M44 32v7" stroke="#f5c400" stroke-width="3" stroke-linecap="round"/></svg>`;
+  f.style.left = Math.max(4, Math.min(innerWidth - g - 4, r.left + r.width / 2 - g / 2)) + "px"; f.style.top = Math.max(4, r.top - g - 6) + "px"; document.body.appendChild(f);
+  f.animate([{ opacity: 0, transform: "translateY(14px) scale(.4) rotate(-40deg)" }, { opacity: 1, transform: "translateY(0) scale(1.15) rotate(0deg)", offset: 0.3 },
+    { opacity: 1, transform: "scale(1) rotate(90deg)", offset: 0.6 }, { opacity: 1, transform: "scale(1.05) rotate(90deg)", offset: 0.8 }, { opacity: 0, transform: "translateY(-16px) scale(.7) rotate(90deg)" }],
+    { duration: 1300, easing: "ease-out", fill: "forwards" }).onfinish = () => f.remove();
+  try { navigator.vibrate?.(25); } catch {} // „klick“
+  setTimeout(() => f.remove(), 1800);
+}
+const FZ_SVG = { postauto: (b) => POSTAUTO_SVG(b), blaulicht: (b) => BLAULICHT_SVG(b), fahrrad: (b) => FAHRRAD_SVG(b), express: (b) => RENNWAGEN_SVG(b), agent: (b) => AGENT_SVG(b) }; // 2.362.0 · 2.529.0 Geheimagent
 function sendeFahrzeug(r, art) {
-  const b = Math.round(Math.min(190, innerWidth * 0.42)), h = Math.round(b * (art === "fahrrad" ? 0.58 : 0.55));
+  const b0 = Math.round(Math.min(190, innerWidth * 0.42)), b = art === "agent" ? Math.round(b0 * 0.62) : b0, h = Math.round(b0 * (art === "fahrrad" ? 0.58 : art === "agent" ? 0.78 : 0.55));
   const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
-  f.innerHTML = FZ_SVG[art](b);
+  f.innerHTML = FZ_SVG[art](b0); if (art === "agent") agentLaufen(f);
   const links = Math.max(0, Math.min(r.right, innerWidth) - b - 6); // ganz im Bild starten, Heck am Senden-Knopf
   f.style.left = links + "px"; f.style.top = r.top - h - 4 + "px"; document.body.appendChild(f);
   const dx = -(links + b + 20), N = 18, bild = [{ transform: "translate(30px,0) scale(.4)", opacity: 0 }, { transform: "translate(0,0) rotate(3deg) scale(1)", opacity: 1, offset: 0.1 }];
   for (let i = 1; i <= N; i++) { const t = i / N, x = dx * (0.2 * t + 0.8 * t * t), y = -Math.abs(Math.sin(t * Math.PI * 7)) * 4; bild.push({ transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${(i < 4 ? 3 - i : 0)}deg)`, opacity: 1, offset: 0.1 + t * 0.9 }); }
-  const dauer = art === "express" ? 1200 : art === "blaulicht" ? 1900 : art === "fahrrad" ? 2900 : 2300;
+  const dauer = art === "express" ? 1200 : art === "blaulicht" ? 1900 : art === "fahrrad" ? 2900 : art === "agent" ? 3000 : 2300;
   f.animate(bild, { duration: dauer, easing: "ease-in", fill: "forwards" }).onfinish = () => f.remove();
   if (art === "fahrrad") try { navigator.vibrate?.([30, 60, 30]); } catch {} // „kling-kling“
   f.querySelectorAll(".fz-tempo path").forEach((x, i) => x.animate([{ opacity: 0, transform: "translateX(0)" }, { opacity: 1 }, { opacity: 0, transform: "translateX(24px)" }], { duration: 300, iterations: Infinity, delay: i * 90 }));
@@ -15031,7 +15067,7 @@ function sendeFahrzeug(r, art) {
 // Nachrichten-Kennung → Absender und Empfänger sehen dasselbe. ❗ wichtig → Blaulicht. Der Empfänger sieht es nur bei offener
 // Unterhaltung, frischer Nachricht, eigenen Effekten an (✨ Animierte Knöpfe, kein Sparmodus) und eigenem Sende-Effekt nicht „Aus“.
 const fxReihe = (mid) => { let h = 0; for (const c of String(mid)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return SENDE_REIHE[h % SENDE_REIHE.length]; };
-const fxArt = (wahl, wichtig, mid, express) => wahl === "aus" ? null : express ? "express" : wichtig ? "blaulicht" : wahl === "wechsel" ? (mid ? fxReihe(mid) : SENDE_REIHE[SENDE_FX_N++ % SENDE_REIHE.length]) : SENDE_REIHE.includes(wahl) ? wahl : null;
+const fxArt = (wahl, wichtig, mid, express, geheim) => wahl === "aus" ? null : express ? "express" : geheim ? "agent" : wichtig ? "blaulicht" : wahl === "wechsel" ? (mid ? fxReihe(mid) : SENDE_REIHE[SENDE_FX_N++ % SENDE_REIHE.length]) : SENDE_REIHE.includes(wahl) ? wahl : null;
 function sendeEffektMelden() {
   const w = sendeEffektWahl(); if (!INIT?.einstellungen || INIT.einstellungen.sende_effekt?.art === w) return;
   api("einstellung_setzen", { schluessel: "sende_effekt", wert: { art: w } }).then(() => { INIT.einstellungen.sende_effekt = { art: w }; }).catch(einstNurLokal); // KC-CLUB-RC-PRUEFUNG (20.10.2026)
@@ -15046,7 +15082,7 @@ function empfangsEffekt(u) {
   // ungelesene Nachricht anderer ihren Effekt – genau die, zu der die App springt („⬇ Neue Nachrichten“). Höchstens 7 Tage alt.
   const ziel = neu ? letzte : erst && u.gelesenBis ? u.nachrichten.find((m) => !m.eigen && m.zeit > u.gelesenBis) : null;
   if (!ziel || document.hidden || !fxAn() || sendeEffektWahl() === "aus" || Date.now() - Date.parse(ziel.zeit) > (neu ? 120000 : 7 * 86400000)) return;
-  const art = fxArt(u.sendeEffekte?.[ziel.vonId], ziel.wichtig, ziel.id, !!ziel.express); if (!art) return;
+  const art = fxArt(u.sendeEffekte?.[ziel.vonId], ziel.wichtig, ziel.id, !!ziel.express, vnIst(ziel.text)); if (!art) return;
   setTimeout(() => { const el = document.getElementById("msg-" + ziel.id); if (el) ankunftEffekt(el, art).catch(() => {}); }, neu ? 450 : 750);
 }
 const fxWarte = (a) => new Promise((ok) => { a.onfinish = a.oncancel = () => ok(); });
@@ -15150,9 +15186,10 @@ async function ankunftEffekt(el, art) {
       await fxWarte(f.animate([{ transform: "translate(0,0)" }, { transform: hoch ? `translate(${art === "ballon" ? -30 : 0}px, ${-(zy + h + 20)}px)` : `translate(${-(zx + b + 20)}px, 4px) rotate(-8deg)` }], { duration: art === "rakete" ? 900 : 1500, easing: "ease-in", fill: "forwards" }));
     } else {
       // 🚐/🚨/🚴/🏎️ fährt von rechts heran, bremst neben der Blase, liefert ab (Kuvert hüpft hinein / Blaulicht blinkt) und fährt links davon
-      const b = Math.round(Math.min(170, innerWidth * 0.38)), h = Math.round(b * (art === "fahrrad" ? 0.58 : 0.55));
+      const b0 = Math.round(Math.min(170, innerWidth * 0.38)), b = art === "agent" ? Math.round(b0 * 0.62) : b0, h = Math.round(b0 * (art === "fahrrad" ? 0.58 : art === "agent" ? 0.78 : 0.55));
       const zx = Math.min(innerWidth - b - 6, Math.max(r.right - b * 0.35, 6)), zy = Math.min(innerHeight - h - 4, r.bottom - h * 0.75);
-      const f = fxEl((FZ_SVG[art] || FZ_SVG.postauto)(b), zx, zy); weg.push(f);
+      const f = fxEl((FZ_SVG[art] || FZ_SVG.postauto)(b0), zx, zy); weg.push(f);
+      const beine = art === "agent" ? agentLaufen(f) : []; // 2.529.0 KC-CLUB-GEHEIMAGENT
       const raeder = [...f.querySelectorAll(".fz-rad")].map((rad) => { rad.style.transformBox = "fill-box"; rad.style.transformOrigin = "center"; return rad.animate([{ transform: "rotate(0deg)" }, { transform: "rotate(-360deg)" }], { duration: 380, iterations: Infinity }); });
       if (art === "blaulicht") {
         f.querySelectorAll(".bl-a").forEach((x) => x.animate([{ opacity: 1 }, { opacity: 0.15 }], { duration: 160, iterations: Infinity, direction: "alternate" }));
@@ -15166,6 +15203,11 @@ async function ankunftEffekt(el, art) {
         const dx = r.left + r.width / 2 - (zx + b * 0.55), dy = r.top + Math.min(20, r.height / 2) - (zy + h * 0.3);
         await fxWarte(k.animate([{ transform: "translate(0,0) scale(.5)" }, { transform: `translate(${dx * 0.5}px, ${dy - 50}px) scale(1.2) rotate(-12deg)`, offset: 0.5 }, { transform: `translate(${dx}px, ${dy}px) scale(1) rotate(0deg)` }], { duration: 750, easing: "ease-in-out", fill: "forwards" }));
         fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1200); k.remove();
+      } else if (art === "agent") { // stehen bleiben, Koffer klickt auf: 🔑 dreht sich über der Blase
+        beine.forEach((a) => a.pause()); vnSchluesselZeigen(el);
+        f.querySelectorAll(".ag-buegel").forEach((x) => x.animate([{ transform: "translateY(0)" }, { transform: "translateY(-2px)" }], { duration: 200, fill: "forwards", delay: 500 }));
+        fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1400);
+        await new Promise((ok) => setTimeout(ok, 1100)); beine.forEach((a) => a.play());
       } else {
         fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1600);
         try { navigator.vibrate?.([60, 60, 60]); } catch {}
@@ -30697,7 +30739,7 @@ let WICHTIG = false;
 // noch Express an ist – es ist nie „nichts“ gewählt. Ersetzt die Frage vor dem Senden (KC-CLUB-WICHTIGKEIT-FRAGE 2.287.0): man sieht die Wahl vorher,
 // eine normale Nachricht braucht weiter nur ➤. Die Leiste erscheint, sobald etwas im Feld steht; der alte Schalter (gleicher Speicherplatz, Standard:
 // an für den Admin) heißt jetzt „Versand-Leiste immer zeigen“.
-// 2.528.0 KC-CLUB-VERSAND-BEIM-SCHREIBEN (Wunsch Hansi „die Leiste mit Express usw. erst einblenden, wenn Text eingetragen wird“): Standard für alle
+// 2.529.0 KC-CLUB-VERSAND-BEIM-SCHREIBEN (Wunsch Hansi „die Leiste mit Express usw. erst einblenden, wenn Text eingetragen wird“): Standard für alle
 // (auch den Admin) ist jetzt „erst beim Schreiben“; neuer Speicherplatz, damit die alte Voreinstellung „immer“ nicht mehr greift. Wer sie immer sehen
 // will, schaltet sie unter ⚙️ wieder ein. Mit Anhang oder gewähltem ❗/🏎️ bleibt sie sichtbar.
 const WF_KEY = "kc_versand_immer";
@@ -30990,7 +31032,8 @@ async function senden() {
       ...(lvSendeUrl(text) ? { vorschau_url: lvSendeUrl(text) } : {}) }; // KC-CLUB-LINK-VORSCHAU
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
-    papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
+    if (vnIst(text)) { vnSchluesselZeigen($("sendenKnopf")); setTimeout(() => papierflieger($("sendenKnopf"), undefined, r?.mid, undefined, true), 650); } // 2.529.0 KC-CLUB-GEHEIMAGENT: 🔑 dreht sich, dann der Agent
+    else papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
     if (daten.express) { const st = r?.expressStand; if (st) EXS.stand = st; melde("🏎️ Per Express versandt" + expressWegeText(r?.versand) + ". Unter der Nachricht siehst du, wann sie angekommen ist und gelesen wurde" + (st && !st.unbegrenzt ? ` (heute ${st.genutzt}/${st.max})` : ""), r?.versand?.fehler > 0); } // 2.403.0 KC-CLUB-EXPRESS-WEGE // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG, 2.391.0 Zähler
     HAKEN_SEIT = Date.now(); // 2.367.0 KC-CLUB-HAKEN-SCHNELL: Zustell-Haken eine Minute lang zügig nachsehen
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];

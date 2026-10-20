@@ -9078,7 +9078,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const idx = lies("index.html");
   assert.ok(/\["postauto", "🚐 Postauto"\]/.test(html) && /const SENDE_REIHE = \["flieger", "taube", "postauto"(, "[a-z]+")*\];/.test(html), "Postauto als dritte Wahl, Abwechselnd über alle drei");
-  assert.ok(/const fxArt = \(wahl, wichtig, mid(, express)?\) => wahl === "aus" \? null : (express \? "express" : )?wichtig \? "blaulicht" :/.test(html) && /function papierflieger\(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG, mid = null(, express = [^)]+)?\)/.test(html), "❗ wichtig → Blaulicht");
+  assert.ok(/const fxArt = \(wahl, wichtig, mid(, express(, geheim)?)?\) => wahl === "aus" \? null : (express \? "express" : (geheim \? "agent" : )?)?wichtig \? "blaulicht" :/.test(html) && /function papierflieger\(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG, mid = null(, express = [^)]+?(, geheim = false)?)?\)/.test(html), "❗ wichtig → Blaulicht");
   assert.ok(/if \(wahl === "aus"\) return;/.test(html), "Aus bleibt aus – auch bei wichtig");
   assert.ok(/const POSTAUTO_SVG = /.test(html) && /const BLAULICHT_SVG = /.test(html) && /KÖCHECLUB-POST/.test(html) && !/Deutsche Post|POLIZEI/i.test(html.slice(html.indexOf("const POSTAUTO_SVG"), html.indexOf("function sendeFahrzeug"))), "neutral, kein fremdes Zeichen");
   assert.ok(/blaulichtVorschau\(this\)/.test(idx), "Vorschau „wichtig“");
@@ -9089,7 +9089,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/sende_effekt: \(w\) => \(\{ art: SENDE_EFFEKT_ARTEN\.includes\(w\?\.art\) \? w\.art : "wechsel" \}\)/.test(server), "Server merkt nur bekannte Kennungen");
   assert.ok(/\.eq\("schluessel", "sende_effekt"\)\.in\("person_id", \(tn \?\? \[\]\)\.map/.test(server) && /selbstloeschen: slStd\(slChat\?\.stunden\), sendeEffekte,/.test(server), "Unterhaltung liefert Effekte der Teilnehmer");
   assert.ok(/return json\(\{ ok: true, id: threadId, versand, mid: m\.id(?:, \.\.\.\(express \? \{ expressStand: await expressStand\(ich\) \} : \{\}\))? \}\);/.test(server), "Senden liefert Nachrichten-Kennung");
-  assert.ok(/const fxReihe = \(mid\) =>/.test(html) && /fxArt\(u\.sendeEffekte\?\.\[ziel\.vonId\], ziel\.wichtig, ziel\.id(, !!ziel\.express)?\)/.test(html), "gleicher Effekt bei Absender und Empfänger");
+  assert.ok(/const fxReihe = \(mid\) =>/.test(html) && /fxArt\(u\.sendeEffekte\?\.\[ziel\.vonId\], ziel\.wichtig, ziel\.id(, !!ziel\.express(, vnIst\(ziel\.text\))?)?\)/.test(html), "gleicher Effekt bei Absender und Empfänger");
   assert.ok(/const neu = !erst && letzte\.id !== EMPF\.letzte;/.test(html) && /Date\.now\(\) - Date\.parse\(ziel\.zeit\) > \(neu \? 120000 : 7 \* 86400000\)\) return;/.test(html) && /sendeEffektWahl\(\) === "aus"/.test(html), "nur neue, frische Nachrichten, nicht beim Öffnen, abschaltbar");
   assert.ok(/empfangsEffekt\(u\); \/\/ 2\.177\.0/.test(html) && /sendeEffektMelden\(\); \/\/ 2\.177\.0/.test(html), "eingebunden in Chat-Laden und Start");
   assert.ok(/class="tb-brief"/.test(html) && /if \(brief\) brief\.style\.visibility = "hidden";/.test(html) && /\} finally \{ fertig\(\); \}/.test(html), "Taube lässt das Kuvert fallen, alles wird sicher weggeräumt");
@@ -11542,4 +11542,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/kc_club_rt_klingeln\(array\[v_von\], 'gelesen', v_thread\)/.test(mig) && /exception when others then null;/.test(mig) && /security definer set search_path = ''/.test(mig) && !/\b(insert into|update public|delete from|truncate)\b/i.test(mig.replace(/^--.*$/gm, "")), "nur Signal an den Absender, stört die Zustellung nie");
   assert.ok(/if \(s\.art === "gelesen"\) \{ if \(s\.thread && s\.thread === chatId && aktuelleAnsicht === "chat"/.test(html), "App lädt bei diesem Signal den offenen Chat");
   assert.ok(fs.existsSync(new URL("../tools/chat-sparsam/rt-push-angezeigt-test.mjs", import.meta.url)), "Test (Postgres im Speicher) vorhanden");
+}
+// 2.529.0 KC-CLUB-GEHEIMAGENT (Wunsch Hansi „Schlüssel kurz anzeigen … besondere Figur bringt die verschlüsselte weg“ → Geheimagent)
+{
+  assert.ok(/express \? "express" : geheim \? "agent" : wichtig \? "blaulicht"/.test(html), "verschlüsselt → Geheimagent (Express hat Vorrang)");
+  assert.ok(/if \(vnIst\(text\)\) \{ vnSchluesselZeigen\(\$\("sendenKnopf"\)\); setTimeout\(\(\) => papierflieger\(\$\("sendenKnopf"\), undefined, r\?\.mid, undefined, true\), 650\); \}/.test(html), "beim Senden erst der Schlüssel, dann der Agent");
+  assert.ok(/agent: \(b\) => AGENT_SVG\(b\)/.test(html) && /function vnSchluesselZeigen\(/.test(html) && /function agentLaufen\(/.test(html), "Figur, Schlüssel und Laufen vorhanden");
+  assert.ok(/Geheimagent/.test(html.slice(html.indexOf('id: "boten"'), html.indexOf('id: "boten"') + 1200)), "Hilfe nennt den Geheimagenten");
 }
