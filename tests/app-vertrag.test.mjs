@@ -5905,7 +5905,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7020,7 +7020,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/r\.versand === "laeuft" \? " · die Mitglieder werden gerade benachrichtigt" : ""/.test(html), "App sagt, dass benachrichtigt wird");
 }
 
-// 2.507.0 KC-CLUB-GEBURTSTAG-VOGEL (Wunsch Hansi): Vogel bringt ein Geschenk, es platzt, Blumenstrauß + bunter „Happy Birthday“-Schriftzug
+// 2.508.0 KC-CLUB-GEBURTSTAG-VOGEL (Wunsch Hansi): Vogel bringt ein Geschenk, es platzt, Blumenstrauß + bunter „Happy Birthday“-Schriftzug
 {
   const g = html.slice(html.indexOf("function gbvPruefen() {"), html.indexOf("function wichtigZeigen() {"));
   assert.ok(/if \(!gbvAn\(\) \|\| !fxAn\(\) \|\| aktuelleAnsicht !== "start" \|\| document\.hidden \|\| kopfRolloStand\(\) === "ganz"\) return;/.test(g), "nur auf der sichtbaren Startseite, abschaltbar, Sparmodus/Animationen beachtet");
@@ -7032,7 +7032,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.gbv \{ position: absolute; inset: 0; z-index: 4; pointer-events: none;/.test(html), "blockiert keine Bedienung");
 }
 
-// 2.507.0 KC-CLUB-HILFE-NACHTRAG-3 (Wunsch Hansi „Hilfetexte, Lupe, Twinkey und Videos an die neuen Sachen anpassen – nix von Adminfunktionen“)
+// 2.508.0 KC-CLUB-HILFE-NACHTRAG-3 (Wunsch Hansi „Hilfetexte, Lupe, Twinkey und Videos an die neuen Sachen anpassen – nix von Adminfunktionen“)
 {
   const neu = ["kopf_effekte", "geburtstag_vogel", "tippgeraeusche", "dienst_uebersicht", "dienstwunsch_hinweis", "vorschlag_bearbeiten", "protokoll_drucken", "kurz_erklaert_zu", "info_neues", "kalender_heute", "anfrage_mehrere"];
   for (const id of neu) { const m = html.match(new RegExp(`\\{ id: "${id}", thema: "[a-z]+", sym: "[^"]+", t: "[^"]+", x: "([^"]+)"[^\\n]*seit: "2\\.\\d+\\.0" \\}`));
@@ -7045,7 +7045,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/"h:kopf_effekte": \["effekte", "anpassen"\]/.test(html) && /"h:dienst_uebersicht": \["dienst"\]/.test(html), "Twinkey verweist auf die passenden Videos");
 }
 
-// 2.507.0 KC-CLUB-DIENST-AUSNAHMEN (Wunsch Hansi: weggezogenes Mitglied steht für den Dienstplan nicht zur Verfügung)
+// 2.508.0 KC-CLUB-DIENST-AUSNAHMEN (Wunsch Hansi: weggezogenes Mitglied steht für den Dienstplan nicht zur Verfügung)
 {
   const mig = lies("supabase/migrations/20261019_kc_club_dienst_ausnahmen.sql");
   assert.ok(/enable row level security/i.test(mig) && /to service_role/.test(mig) && !/to (anon|authenticated)/i.test(mig), "Ausnahmen nur über den Server");
@@ -7056,7 +7056,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/!abgegeben\.has\(m\.person_id\) && !aus\.has\(m\.person_id\)\)\.map/.test(server), "nicht unter „noch nicht abgegeben“");
 }
 
-// 2.507.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi „Wenn er sie erledigt hat, muss er sie bestätigen mit einem Bemerkungstext“)
+// 2.508.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi „Wenn er sie erledigt hat, muss er sie bestätigen mit einem Bemerkungstext“)
 {
   assert.ok(/add column if not exists bemerkung text check \(bemerkung is null or char_length\(bemerkung\) <= 1000\)/.test(lies("supabase/migrations/20261019_kc_club_aufgaben_bemerkung.sql")), "Spalte Bemerkung");
   const c = server.slice(server.indexOf('case "aufgabe_erledigt": {'), server.indexOf('case "aufgabe_loeschen": {'));
@@ -11304,4 +11304,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/faNeuSeit = kzSeit\("fotos"\);[^\n]*\n\s*if \(aktuelleAnsicht === "fotos"\) fotosLaden\(\); else zeige\("fotos"\);/.test(fn), "„seit“ gemerkt, bevor das Öffnen die Zahl zurücksetzt");
   assert.ok(/f\.hochgeladen > seit && f\.von\?\.person_id !== ICH\?\.person_id/.test(fn) && /scrollIntoView/.test(fn) && /fk-neu/.test(fn), "nur fremde neue Fotos, oben gesammelt, NEU-Marke, hingescrollt");
   assert.ok(/faNeuKasten\(\); \/\/ 2\.498\.0/.test(programm), "nach dem Zeichnen des Albums");
+}
+
+// Server 2.507.0 KC-CLUB-DW-HALBE-STUNDE: Dienstwunsch-Aufstellung/Bestätigung zeigt halbe Stunden als :30 (vorher „12.5:00“)
+{
+  const z = server.slice(server.indexOf("async function dienstwunschAufstellung("), server.indexOf("async function dienstwunschAufstellung(") + 2500);
+  const m = /const h = (\(x: unknown\) => \{[\s\S]*?\};)/.exec(z);
+  assert.ok(m, "Uhrzeit-Formatierung vorhanden");
+  const h = new Function("return " + m[1].replace("(x: unknown)", "(x)"))();
+  assert.deepEqual([h(12.5), h(8), h(9.25), h(13.75), h("11"), h(23.999)], ["12:30", "08:00", "09:15", "13:45", "11:00", "24:00"], "Dezimalstunden → hh:mm");
 }

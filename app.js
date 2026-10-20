@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.507.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.508.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5156,7 +5156,7 @@ const HILFE = [
   { id: "unterstuetzung_anfrage", thema: "technik", sym: "🙋", t: "Hilfe bei der App anfragen", x: "Du kommst mit etwas nicht klar? Unter <b>Mehr → 🙋 Unterstützung anfragen</b> (oder im Info-Laufband) kreuzt du an, wobei du Hilfe möchtest – zum Beispiel Benachrichtigungen oder die Schrift – und wie: Anruf, Nachricht oder persönlich. Hansi bekommt Bescheid und meldet sich bei dir.", seit: "2.492.0" },
   // 2.508.0 KC-CLUB-HILFE-NACHTRAG-3 (Wunsch Hansi „Hilfetexte, Lupe, Twinkey und Videos an die neuen Sachen anpassen – nix von Adminfunktionen“)
   { id: "kopf_effekte", thema: "darstellung", sym: "🎪", t: "Wie geht der Kopf auf und zu?", x: "Tippst du oben am Kopf auf <b>⌃</b> oder <b>⌃⌃</b>, rollt er sich ein – normal wie eine <b>🪟 Jalousie</b>. Unter ⚙️ → „✨ Effekte“ → <b>„🪟 Anderer Effekt beim Einrollen des Kopfes“</b> wählst du stattdessen: <b>🎭 Lamellenvorhang</b> (zu den Seiten), <b>🗄️ Climber</b> (krempelt sich Lamelle für Lamelle hoch), <b>🎪 Theatervorhang</b> (weinroter Samt), <b>🍽️ Servierglocke</b> („Voilà!“), <b>🏠 Marktbude</b> (die Holzklappe geht zu), <b>🔄 Automatisch</b> (jedes Mal ein anderer) oder <b>🎭 Passend zum Thema</b> – z. B. im Advent die Marktbude, zu Karneval der Theatervorhang. Mit <b>▶ Ausprobieren</b> siehst du ihn sofort.", zeig: () => einstiegHin("effekte", "setKopfEffekt"), seit: "2.505.0" },
-  { id: "geburtstag_vogel", thema: "start", sym: "🎁", t: "Ein Vogel bringt ein Geschenk?", x: "Hat heute jemand aus dem Club Geburtstag, fliegt oben im Kopf ein <b>Vogel mit einem Geschenkpaket</b> herein und lässt es fallen. Unten platzt es, ein <b>Blumenstrauß</b> springt heraus, darüber steht bunt <b>„Happy Birthday“</b> mit dem Vornamen. Er kommt höchstens einmal pro Stunde und ist nie im Weg. Abschalten oder als Vorschau ansehen: ⚙️ → „✨ Effekte“ → <b>„🎁 Geburtstags-Vogel“</b>.", zeig: () => einstiegHin("effekte", "setGbVogel"), seit: "2.507.0" },
+  { id: "geburtstag_vogel", thema: "start", sym: "🎁", t: "Ein Vogel bringt ein Geschenk?", x: "Hat heute jemand aus dem Club Geburtstag, fliegt oben im Kopf ein <b>Vogel mit einem Geschenkpaket</b> herein und lässt es fallen. Unten platzt es, ein <b>Blumenstrauß</b> springt heraus, darüber steht bunt <b>„Happy Birthday“</b> mit dem Vornamen. Er kommt höchstens einmal pro Stunde und ist nie im Weg. Abschalten oder als Vorschau ansehen: ⚙️ → „✨ Effekte“ → <b>„🎁 Geburtstags-Vogel“</b>.", zeig: () => einstiegHin("effekte", "setGbVogel"), seit: "2.508.0" },
   { id: "tippgeraeusche", thema: "nachrichten", sym: "⌨️", t: "Tippgeräusche hören", x: "Hat jemand <b>„👁️ Andere sehen live, was ich tippe“</b> eingeschaltet und du hast die Unterhaltung mit ihm offen, kannst du seine Anschläge hören – wie eine <b>⌨️ Computertastatur</b> oder eine <b>📠 Schreibmaschine</b> (mit „Ding“ am Zeilenende). Einschalten: ⚙️ → „🔔 Benachrichtigungen“ → <b>„⌨️ Tippgeräusche beim Live-Tippen“</b> – beim Auswählen hörst du gleich eine Probe. Von Haus aus aus; in stummgeschalteten Unterhaltungen bleibt es still.", zeig: () => einstiegHin("benachrichtigung", "setTippTon"), seit: "2.505.0" },
   { id: "dienst_uebersicht", thema: "termine", sym: "📊", t: "Wer kann wann beim Weihnachtsmarkt? – die Übersicht", x: "Mit dem <b>📊</b>-Knopf oben in <b>🗓️ Dienstpläne</b>, in <b>„Mein Dienst“</b> und in den <b>Dienstwünschen</b> öffnest du die <b>Dienstzeiten-Übersicht</b>: vorne die Namen, oben die Tage, farbige Balken für Kann, Wunsch, Wenn nötig und Sperre – und wie viele Stunden. Du siehst deine eigenen Zeiten und die der Mitglieder, die ihre Zeiten freigegeben haben. Deine eigenen gibst du in den Dienstplänen ganz unten frei. Auf dem Handy am besten quer halten; <b>🖨️ Drucken</b> geht auch.", zeig: () => zeige("dienste"), seit: "2.501.0" },
   { id: "dienstwunsch_hinweis", thema: "termine", sym: "📝", t: "„Dienstplan Weihnachtsmarkt: Wünsche eingeben?“", x: "Hast du für den Weihnachtsmarkt noch keine Dienstwünsche abgegeben, erinnert dich das <b>📣 Info-Laufband</b> oben daran. Mit <b>„📝 Mit Twinkey eingeben“</b> geht es direkt los: Twinkey fragt dich Tag für Tag, wann du kannst. Sobald du abgegeben hast, verschwindet der Hinweis.", seit: "2.493.0" },
@@ -24707,7 +24707,7 @@ function installHilfe() {
   if (START_ART !== "app") return einrichtenAssistent(); // 1.87.0: Schritt-für-Schritt-Assistent (Android mit „Jetzt installieren“ obenauf)
   zeige("einstellungen"); const d = document.querySelector('details[data-klappe="install"]'); if (d) { d.open = true; setTimeout(() => d.scrollIntoView({ block: "start", behavior: "smooth" }), 100); }
 }
-// ---------- 2.507.0 KC-CLUB-GEBURTSTAG-VOGEL (Wunsch Hansi): Hat heute ein Mitglied Geburtstag, fliegt im Kopf der Startseite ein Vogel mit einem
+// ---------- 2.508.0 KC-CLUB-GEBURTSTAG-VOGEL (Wunsch Hansi): Hat heute ein Mitglied Geburtstag, fliegt im Kopf der Startseite ein Vogel mit einem
 // Geschenkpaket herein und wirft es ab; unten platzt es, ein Blumenstrauß springt heraus, darüber ein bunter „Happy Birthday“-Schriftzug mit
 // Vornamen. Nur die Geburtstage, die die App ohnehin zeigt (Freigabe). Höchstens einmal je Stunde und Gerät; ⚙️ → ✨ Effekte (an/aus + Vorschau).
 const GBV_ABSTAND_MS = 60 * 60000;
@@ -31691,7 +31691,7 @@ function aufgabenMitGruppe(liste) {
   for (const a of liste) a.mit = a.gruppe ? (g.get(a.gruppe) || []).filter((x) => x.id !== a.id).map((x) => (x.name || "").split(" ")[0]) : [];
   return liste;
 }
-// 2.507.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi): Erledigt nur mit kurzer Bemerkung – „Was ist dabei herausgekommen?“
+// 2.508.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi): Erledigt nur mit kurzer Bemerkung – „Was ist dabei herausgekommen?“
 async function aufgabeBemerkung() {
   for (;;) {
     const t = await eingabe("✔ Aufgabe erledigt\n\nWas ist dabei herausgekommen? Ein, zwei Sätze reichen – wer die Aufgabe eingetragen hat, bekommt sie zu lesen.", "", { mehrzeilig: true, ja: "✔ Erledigt melden", nein: "Abbrechen" });

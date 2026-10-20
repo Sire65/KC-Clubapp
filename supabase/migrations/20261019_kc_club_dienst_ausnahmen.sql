@@ -1,4 +1,4 @@
--- 2.507.0 KC-CLUB-DIENST-AUSNAHMEN (Wunsch Hansi): Mitglieder, die im Club bleiben, aber für den Dienstplan nicht zur Verfügung stehen
+-- 2.508.0 KC-CLUB-DIENST-AUSNAHMEN (Wunsch Hansi): Mitglieder, die im Club bleiben, aber für den Dienstplan nicht zur Verfügung stehen
 -- (z. B. weggezogen). Registry statt fest im Programm: wer hier steht, wird nicht an Dienstwünsche erinnert, erscheint nicht unter
 -- „noch nicht abgegeben“ und bekommt den Laufband-Hinweis „Wünsche eingeben?“ nicht. DP2 führt dasselbe heute in K.nonPlanningPersonIds.
 -- Rückweg: drop table public.kc_club_dienst_ausnahmen;
