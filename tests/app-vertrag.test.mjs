@@ -11704,3 +11704,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/const EW_OHNE_BEREICH = \["admin", "leitung_start"\], EW_OHNE = \/\\\(Admin\\\)\|nur Admin\|Inkognito\|🕶️\/i, EW_OHNE_TEXT = \/admin\/i;/.test(ew), "nichts über den Admin (Wunsch Hansi)");
   assert.ok(/\{ id: "einst_wegweiser", thema: "start"/.test(html) && /\{ id: "einstellungen-erklaert", sym: "🧭"/.test(html) && /if \(b\.art === "wegweiser"\) return ewStart\(\);/.test(html), "Hilfe, Twinkey, Sprachsteuerung");
 }
+// KICC-F-107 Quelle: Backup-Arbeiter liegt als Quelle im Repo (Stand Deploy Version 20, übernommen 20.10.2026; kein automatisches Hochladen)
+{
+  const bw = lies("supabase/functions/kc-db-backup-worker/index.ts");
+  assert.ok(/"X-KC-Function-Version":"20"/.test(bw), "Backup-Arbeiter: Stand Version 20");
+  assert.ok(/!await sicherGleich\(token,String\(expected\)\)/.test(bw) && /token\.length<32/.test(bw), "Backup-Arbeiter: Token zeitkonstant geprüft");
+  assert.ok(/encryptPayload\(payload,String\(backupKey\)\)/.test(bw) && /rejectUnauthorized:true/.test(bw), "Backup-Arbeiter: verschlüsselt, TLS geprüft");
+  assert.ok(!/postgres(ql)?:\/\/|eyJ[A-Za-z0-9_-]{20,}|sk_[A-Za-z0-9]{16,}/.test(bw), "Backup-Arbeiter: keine Verbindungsdaten oder Schlüssel im Quelltext");
+}
