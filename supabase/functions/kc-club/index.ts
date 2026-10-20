@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.540.0";
+const SERVER_VERSION = "2.541.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -3829,6 +3829,13 @@ async function sperreVersuchMerken(pid: string, art: string, aktion: string) {
     .gte("zeit", new Date(Date.now() - 10 * 60000).toISOString());
   if (!error && count) return;
   await protokoll(pid, "gesperrt_versuch", { art, aktion: txt(aktion, 40) });
+  // 2.541.0 KC-CLUB-SPERRE-MELDUNG (Wunsch Hansi „Informiere mich, wenn Thomas sich anmelden will“): Push an die Admins – gleiche Drossel
+  // (höchstens 1× je 10 Min. und Person). Läuft im Hintergrund, die gesperrte Person wartet nicht darauf.
+  const adm = await adminIds(), name = (await personen([pid])).get(pid)?.display_name || pid;
+  if (adm.length) nebenbei(routerSenden("club_nachricht_push", adm, { titel: `👀 ${name} wollte die Club-App öffnen`,
+    kurz: `Gesperrt (${art === "stoerung" ? "Server nicht erreichbar" : "Wartung"}) – sah nur den Hinweis.`, betreff: `Köcheclub Werne – ${name} wollte die Club-App öffnen`,
+    text: `${name} hat versucht, die Club-App zu öffnen, und sah nur den Hinweis „${art === "stoerung" ? "Server nicht erreichbar" : "Wartungsarbeiten"}“. Übersicht: Admin → 🛠️ Wartung → Zurzeit gesperrt.`,
+    url: APP_URL }, `club-sperre-versuch:${pid}:${Math.floor(Date.now() / 600000)}`).catch(() => null));
 }
 async function sperrenAktuell() {
   if (Date.now() > SPERREN.bis) {

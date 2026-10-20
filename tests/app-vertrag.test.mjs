@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7175,6 +7175,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/if \(spf\) throw new Error\("Sperren nicht lesbar/.test(server) && /const zug = \(zug0 \?\? \[\]\)\.filter\(\(z: any\) => !gesperrt\.has\(z\.person_id\)\);/.test(server), "Notfall-Paket ohne Gesperrte, Lesefehler → kein Bau");
   assert.ok(/if \(r\.status === 423 && j\?\.gesperrt\) \{ try \{ localStorage\.removeItem\(STAND_KEY\); \} catch \{\}/.test(programm), "gesperrt: Offline-Stand gelöscht");
+}
+// 2.541.0 KC-CLUB-SPERRE-MELDUNG: Push an die Admins, wenn ein Gesperrter die App öffnen will (gedrosselt wie der Protokolleintrag)
+{
+  const f = server.slice(server.indexOf("async function sperreVersuchMerken"), server.indexOf("async function sperrenAktuell"));
+  assert.ok(/if \(Date\.now\(\) - \(SPV_ZULETZT\.get\(pid\) \?\? 0\) < 10 \* 60000\) return;/.test(f) && /if \(!error && count\) return;/.test(f), "gedrosselt vor dem Push");
+  assert.ok(/nebenbei\(routerSenden\("club_nachricht_push", adm,/.test(f) && /const adm = await adminIds\(\)/.test(f), "Push nur an Admins, im Hintergrund");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

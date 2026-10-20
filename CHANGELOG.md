@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.541.0 – 2026-10-20 – 👀 Push an dich, wenn ein Gesperrter die Club-App öffnen will (KC-CLUB-SPERRE-MELDUNG)
+Wunsch Hansi („Informiere mich, wenn Thomas sich anmelden will“).
+- Server: Öffnet eine gesperrte Person die App, bekommen die Admins einen Push „👀 <Name> wollte die Club-App öffnen – Gesperrt (Wartung) – sah nur den Hinweis“. Gleiche Drossel wie der Protokolleintrag aus 2.539.0: höchstens einmal je 10 Minuten und Person. Läuft im Hintergrund; die gesperrte Person merkt davon nichts.
+- Test: Vertragstest-Block 2.541.0. Rückweg: Server 2.540.0.
+
 ## 2.540.0 – 2026-10-20 – 🔒 Gesperrte: kein Notfall-Paket und kein gespeicherter Offline-Stand mehr (KC-CLUB-SPERRE-NOTPAKET, KC-CLUB-SPERRE-OFFLINE)
 Prüfung nach Hansis Auftrag (20.10.: „Prüfe jetzt nochmal alles, dass er nicht ins Programm kommt, die Wartung sieht, keine Push und E-Mail bekommt – also keinerlei Kommunikation“).
 - Lücke 1: Das Notfall-Paket (Notbetrieb bei Ausfall von Supabase) enthielt auch für Gesperrte Termine und Chats. Jetzt baut es nur noch für nicht Gesperrte; sind die Sperren nicht lesbar, wird nicht gebaut (altes Paket bleibt).
