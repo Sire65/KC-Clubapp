@@ -11415,3 +11415,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 {
   assert.ok(/const felder = \[\.\.\.f\.entries\(\)\]\.slice\(0, 20\)/.test(lies("sw.js")) && /felder: Array\.isArray\(info\.felder\)/.test(programm), "Teilen-Diagnose");
 }
+
+// 2.516.0 KC-CLUB-ABLAGEKORB-DUBLETTE-DEUTLICH (Fund Hansi): Dubletten als deutlicher Warnkasten oben im Eintrag, mit „Dubletten löschen“
+{
+  assert.ok(/x\.status === "offen" && x\.anlagen\.some\(\(f\) => f\.dublette\) \? ablkWarnung\(x\)/.test(programm) && /async function ablkDublettenWeg\(/.test(programm) && /\.ablk-warn \{/.test(seite), "Warnkasten mit Löschen");
+}

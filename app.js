@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.515.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.516.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -30840,7 +30840,7 @@ async function ablkAblegen(text, dateien, titel) {
     const meta = []; for (const d of dateien.slice(0, 10)) meta.push(/^image\//.test(d.type) ? await exifLesen(d).catch(() => ({})) : {}); // 2.512.0 Dublettenprüfung
     const r = await api("ablagekorb_ablegen", { text, titel: titel || "", anlagen: ids, meta });
     if (ICH.admin) { melde(r.dubletten ? `📥 Im Ablagekorb – ⚠️ ${r.dubletten === 1 ? "1 Datei gibt" : r.dubletten + " Dateien gibt"} es schon (markiert)` : "📥 Im Ablagekorb – jetzt entscheiden, wohin damit"); ablkZeigen(r.id); }
-    else melde(`📥 Im Ablagekorb abgelegt – ${INIT?.adminName || "der Admin"} kümmert sich darum. Danke!`);
+    else melde(`📥 Im Ablagekorb abgelegt – ${INIT?.adminName || "der Admin"} kümmert sich darum. Danke!${r.dubletten ? ` Hinweis: ${r.dubletten === 1 ? "1 Datei gibt" : r.dubletten + " Dateien gibt"} es schon in der Club-App.` : ""}`);
     return true;
   } catch (e) {
     if (ids.length || dateien.length === 0) meldeFehler(e); // hochgeladen, aber nicht abgelegt → Fehler zeigen; danach selbst wählen
@@ -30858,6 +30858,7 @@ async function ablkZeigen(fokus) {
   const d = ABLK.daten;
   const karte = (x) => `<div class="karte ablk-eintrag${x.id === fokus ? " fokus" : ""}" id="ablk-${x.id}">
       <div class="ablk-kopf"><b>${esc(x.vonName)}</b><span class="hinweis">${esc(wann(x.am))}</span></div>
+      ${x.status === "offen" && x.anlagen.some((f) => f.dublette) ? ablkWarnung(x) : ""}
       ${x.titel ? `<div><b>${esc(x.titel)}</b></div>` : ""}${x.text ? `<div class="ablk-text">${esc(x.text.slice(0, 600))}${x.text.length > 600 ? " …" : ""}</div>` : ""}
       ${x.anlagen.length ? `<div class="ablk-dateien">${x.anlagen.map((f) => `<div class="ablk-datei-w${ablkGewaehlt(x.id).has(f.id) ? " an" : ""}${f.dublette ? " doppelt" : ""}">
         <button type="button" class="ablk-datei" onclick="anlageOeffnen('${f.id}')" title="${esc(f.name)}">${ablkBild(f) ? `<img data-anlage="${f.id}" alt="">` : `<span>${ablkSym(f)}</span>`}<small>${esc(f.name)}</small></button>
@@ -30887,6 +30888,19 @@ async function ablkZeigen(fokus) {
 // 2.512.0 KC-CLUB-ABLAGEKORB-AUSWAHL (Wunsch Hansi „bei z. B. 10 Fotos anklicken, welche ins Album sollen oder gelöscht werden“) und
 // KC-CLUB-ABLAGEKORB-DUBLETTEN: Häkchen je Datei, „Alle / Keine / Dubletten wählen“, Auswahl ins Fotoalbum oder löschen. Was ins Album geht,
 // wird als eigener erledigter Eintrag abgespalten (bleibt 14 Tage wiederherstellbar), der Rest bleibt offen.
+// 2.516.0 KC-CLUB-ABLAGEKORB-DUBLETTE-DEUTLICH (Fund Hansi „Dubletten-Check hätte anmeckern müssen – die sind schon in der Club-App“): die Prüfung
+// hatte es erkannt, aber nur als kleine Zeile unter der Datei. Jetzt ein deutlicher Warnkasten oben im Eintrag mit Fundstellen und „Dubletten löschen“.
+function ablkWarnung(x) {
+  const d = x.anlagen.filter((f) => f.dublette);
+  return `<div class="ablk-warn"><b>⚠️ ${d.length === x.anlagen.length ? (d.length === 1 ? "Diese Datei gibt" : "Alle Dateien gibt") : `${d.length} von ${x.anlagen.length} Dateien gibt`} es schon in der Club-App</b>
+    <ul>${d.slice(0, 5).map((f) => `<li>${esc(f.name)} → ${f.dublette.map((z) => `<b>${esc(z.wo)}</b>${z.text ? ` (${esc(z.text)})` : ""}`).join(", ")}</li>`).join("")}${d.length > 5 ? `<li>… und ${d.length - 5} weitere</li>` : ""}</ul>
+    <button class="knopf klein rot" onclick="ablkDublettenWeg('${x.id}')">🗑️ ${d.length === 1 ? "Dublette" : d.length + " Dubletten"} löschen</button></div>`;
+}
+async function ablkDublettenWeg(id) {
+  const x = ablkEintrag(id); if (!x) return; const ids = x.anlagen.filter((f) => f.dublette).map((f) => f.id); if (!ids.length) return;
+  if (!(await frage(`${ids.length === 1 ? "Die doppelte Datei" : ids.length + " doppelte Dateien"} aus dem Ablagekorb löschen? Die vorhandenen in der Club-App bleiben.`, { ja: "🗑️ Löschen", nein: "Abbrechen" }))) return;
+  try { const r = await api("ablagekorb_dateien_loeschen", { id, ids }); delete ABLK.wahl[id]; melde(`🗑️ ${ids.length === 1 ? "Dublette" : ids.length + " Dubletten"} gelöscht${r.rest === 0 ? " – Eintrag ist leer und weg" : ""}`); if (INIT?.ablagekorb && r.rest === 0) INIT.ablagekorb--; ablkZeigen(r.rest ? id : undefined); ilZeigen?.(); } catch (e) { meldeFehler(e); }
+}
 const ablkGewaehlt = (id) => ABLK.wahl[id] || (ABLK.wahl[id] = new Set());
 function ablkWahlLeiste(x) {
   const w = ablkGewaehlt(x.id), n = w.size, bilder = x.anlagen.filter((f) => w.has(f.id) && ablkBild(f)).length, doppelt = x.anlagen.filter((f) => f.dublette).length;

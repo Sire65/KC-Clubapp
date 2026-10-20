@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.516.0 – 2026-10-20 – ⚠️ Dubletten im Ablagekorb deutlich anzeigen (KC-CLUB-ABLAGEKORB-DUBLETTE-DEUTLICH)
+Fund Hansi („Datei liegt im Eingangskorb. Dubletten-Check hätte sie eigentlich anmeckern müssen – die müssten schon in der Club-App sein“). Die Prüfung hatte die PDF richtig erkannt (gleiche Datei im Archiv „Bescheinigung Ehrenamt … (2)“ vom 17.10., in einem Chat und bei einem Vorschlag) – angezeigt wurde das aber nur als kleine orange Zeile unter der Datei.
+- Jetzt steht oben im Eintrag ein deutlicher Warnkasten „⚠️ Diese Datei gibt es schon in der Club-App“ mit allen Fundstellen je Datei und dem Knopf **„🗑️ Dublette(n) löschen“** (die vorhandenen in der Club-App bleiben; ist der Eintrag danach leer, verschwindet er).
+- Wer als Mitglied etwas Doppeltes teilt, bekommt den Hinweis „… gibt es schon in der Club-App“.
+- Nur App. Tests: Vertragstest grün; Browserprobe (Warnkasten mit Fundstellen, keine Fehler).
+
 ## 2.515.0 – 2026-10-20 – Teilen-Diagnose (KC-CLUB-TEILEN-DIAGNOSE)
 Nachtrag zu 2.514.0 (Hansi: Datei aus dem Datenspeicher kommt weiterhin leer an – vermutlich hat das Handy die erweiterte Teilen-Liste der installierten App noch nicht übernommen). Die App merkt sich jetzt beim Teilen, welche Felder und Dateitypen das Handy wirklich schickt (nur Feldname, Typ und Größe, keine Inhalte) und schreibt das in die Diagnose – so lässt sich genau sehen, woran es liegt. Nur App.
 
