@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.521.0 – 2026-10-20 – 🎓 Schulung im Info-Feld nur, wenn Termine angeboten sind (KC-CLUB-SCHULUNG-INFO) · Server 2.521.0
+Wunsch Hansi („Dass in der Info nix von Schulungstermin steht, wenn ich im Schulungsteil nix freigegeben habe. Erst wenn ich welche anbiete, dann in der Info darauf hinweisen“). Anlass: Hansi las im Info-Feld „Schulung: bitte einen Termin wählen – Hansi hat dir Termine vorgeschlagen“, obwohl kein Termin angeboten war – gezählt hatte eine abgelaufene Einladung (Admin-„wartet“-Zahl, dazu „Protokoll fehlt“/„Nachfrage“).
+- Mitglieder: „🎓 Schulung: bitte einen Termin wählen“ im Info-Feld, der Start-Hinweis und die Zahl auf der Kachel „Meine Schulung“ nur noch bei offener Einladung **mit freien Terminen**.
+- Admin: im Info-Feld nur noch „🎓 Schulung: x Termin(e) warten auf deine Freigabe“, wenn ein Mitglied einen Termin gewählt oder einen Gegenvorschlag gemacht hat (öffnet die Schulungen). Abgelaufene Einladungen, fehlende Protokolle und Nachfragen bleiben im Schulungs-Hinweis und an der Kachel „🎓 Schulungen“.
+- Server: zusätzliche Zahl `schulungFrei` (ohne weitere Abfrage).
+- Tests: Vertragstests grün (neu: Info-Feld nach Angebot, Admin nur bei Freigabe).
+
 ## 2.520.0 – 2026-10-20 – ✉️ Mails über web.de mit Zeitverzögerung statt Brevo (KC-COMM-WARTEN) · Server 2.520.0
 Wunsch Hansi („Wenn es mehr Mails sind als 5, sollte eine Zeitverzögerung eingehalten werden, damit web.de nicht zumacht“; Wahl Hansi: warten, nach 15 Minuten übernimmt Brevo). Anlass: Reinhildes Rundnachricht am 20.10. ging zur Hälfte über web.de, zur Hälfte über Brevo (zwei verschiedene Absender).
 - Communicator (KC-Communication, Router): Ist die web.de-Grenze erreicht (5 je Minute, 40 je Stunde), bekommt die Mail einen **Warteplatz** statt sofort Brevo – gleichmäßig verteilt, nie mehr als 5 in einer Minute. Eine Rundmail an 16 Leute ist nach gut 3 Minuten komplett draußen, alle mit demselben Absender. Müsste eine Mail länger als 15 Minuten warten, Express/Notfall oder Push: wie bisher sofort über den nächsten Weg. Klappt web.de beim Abarbeiten nicht, übernimmt gleich Brevo.
