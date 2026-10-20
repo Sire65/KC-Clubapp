@@ -7067,6 +7067,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/await eingabe\("✔ Aufgabe erledigt/.test(html) && !/prompt\(/.test(html.slice(html.indexOf("async function aufgabeBemerkung"), html.indexOf("async function aufgabeErledigt"))), "eigenes Eingabefenster, kein prompt()");
 }
 
+// KC-DP-NICHT-PLANBAR (DB, ohne App-Build): DP2 liest die Liste „Nicht für den Dienstplan“ nur über eine Lesefunktion für Planungsrollen
+{
+  const m = lies("supabase/migrations/20261020_kc_dp_nicht_planbar.sql");
+  assert.ok(/security definer/.test(m) && /stable/.test(m) && !/\b(insert|update|delete)\b/i.test(m.replace(/--[^\n]*/g, "")), "nur lesend");
+  assert.ok(/m\.role in \('admin', 'planner', 'duty_manager'\)/.test(m) && /raise exception 'Keine aktive dp2-Planungsberechtigung'/.test(m), "nur Planungsrollen der Organisation");
+  assert.ok(/join public\.kc_core_people p on p\.person_id = a\.person_id and p\.org_id = p_org/.test(m), "nur Personen der angefragten Organisation");
+  assert.ok(/revoke all on function public\.kc_dp_nicht_planbar\(text\) from public, anon;/.test(m) && /grant execute on function public\.kc_dp_nicht_planbar\(text\) to authenticated;/.test(m), "kein anonymer Zugriff");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

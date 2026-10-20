@@ -1,5 +1,12 @@
 # Änderungen
 
+## DB – 2026-10-20 (ohne App-Build) – DP2 liest „Nicht für den Dienstplan“ (KC-DP-NICHT-PLANBAR)
+Wunsch Hansi („Fridbert soll auch nicht mehr bei der Dienstplan-Erstellung auftauchen“ – DP2 führt ihn bisher fest im Programm, `K.nonPlanningPersonIds`):
+- Neue Lesefunktion `kc_dp_nicht_planbar(p_org)` → `{ vertrag: "KC_DP_NICHT_PLANBAR_V1", personIds: [...], stand }` aus der Club-App-Liste `kc_club_dienst_ausnahmen`. Nur für aktive DP2-Planungsrollen (admin/planner/duty_manager) der Organisation, nur deren Personen, nur lesend; anon ohne Zugriff, Tabelle selbst bleibt nur für den Server.
+- Geprüft: Planer bekommt `["KC-P-M0004"]`, Fremder → „Keine aktive dp2-Planungsberechtigung“.
+- DP2 (Codex) muss die Funktion noch nutzen – Auftrag an Codex über Hansi.
+- Rückweg: `drop function public.kc_dp_nicht_planbar(text);`
+
 ## 2.508.0 – 2026-10-20 – 🎁 Geburtstags-Vogel im Kopf (KC-CLUB-GEBURTSTAG-VOGEL)
 - Feature KC-CLUB-GEBURTSTAG-VOGEL (Wunsch Hansi): Hat heute ein Mitglied Geburtstag (nur freigegebene Geburtstage), fliegt im Kopf der Startseite ein Vogel mit Geschenkpaket herein und wirft es ab; unten platzt es, ein Blumenstrauß springt heraus, darüber ein bunter „Happy Birthday“-Schriftzug mit Vornamen. Höchstens einmal je Stunde und Gerät; blockiert keine Bedienung. ⚙️ → ✨ Effekte: 🎁 Geburtstags-Vogel (an/aus + ▶ Vorschau).
 - KC-CLUB-HILFE-NACHTRAG-3 (Wunsch Hansi „Hilfetexte, Lupe, Twinkey und Videos an die neuen Sachen anpassen – nix von Adminfunktionen“): 11 neue Hilfe-Einträge (Kopf-Effekte, Geburtstags-Vogel, Tippgeräusche, 📊 Dienstzeiten-Übersicht, Dienstwunsch-Hinweis, Vorschlag bearbeiten + 📎 Anlagen-Zahl, Protokoll drucken, „Kurz erklärt“ einklappen, Neues im Info-Feld, heutiger Tag im Kalender, Terminanfrage an mehrere), „Kurz erklärt“ für Dienstpläne/Protokolle ergänzt, 6 Twinkey-Fragen, 4 Lupe-Treffer; Videos „Effekte & Wetter“ (Kopf auf/zu, Geburtstag, Einstellungen), „Mein Dienst“ (📊 wer kann wann), „Anpassen“ und „Privatsphäre“ ergänzt – Fassung 2 für Effekte, Dienst, Anpassen. Keine Admin-Funktionen; Vorführungen ändern keine Einstellung (kopfRolloFahren mit Vorgabe).
