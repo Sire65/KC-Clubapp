@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.531.0 – 2026-10-20 – Korrektur: geplante, selbstlöschende und vorgemerkte Nachrichten im Chat wieder sichtbar
+Fehler aus 2.529.0 (KC-CLUB-VN-RUECKFRAGE): Ein Kommentar stand mitten in einer Zeile und schaltete dahinter drei Aufrufe ab – im offenen Chat fehlten seitdem die eigenen geplanten Nachrichten („später senden“), die Selbstlösch-Anzeige und die ohne Netz vorgemerkten Nachrichten. Jetzt wieder auf eigener Zeile. Neuer Vertragstest prüft genau diese Zeile; alle Änderungen seit 2.494.0 auf dasselbe Muster durchsucht – keine weitere Stelle.
+- Rückweg: nicht sinnvoll (2.529.0/2.530.0 enthalten den Fehler).
+
 ## 2.530.0 – 2026-10-20 – 🕵️ Geheimagent bringt verschlüsselte Nachrichten · 🔑 Schlüssel beim Senden (KC-CLUB-GEHEIMAGENT)
 Wunsch Hansi („Beim Versenden mit Schlüsselbund kurz einen Schlüssel zeigen … welche besondere Figur könnte die verschlüsselte wegbringen?“ → „🕵️ Geheimagent“).
 - Beim Senden einer verschlüsselten Nachricht (🔒 Kennwort oder Schlüsselbund) blitzt am Senden-Knopf kurz ein goldener 🔑 Schlüssel auf und dreht sich wie im Schloss. Danach läuft ein Geheimagent (Hut, Sonnenbrille, Trenchcoat, Aktenkoffer) mit der Nachricht davon – statt des gewählten Boten.

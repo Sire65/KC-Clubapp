@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.530.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.531.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -29001,7 +29001,8 @@ async function chatLaden(scrollen) {
   try {
     const fuer = chatId, u = await api("unterhaltung", { id: fuer });
     if (fuer !== chatId) return; // 1.97.0: inzwischen eine andere Unterhaltung geöffnet → alte Antwort verwerfen
-    CHAT = u; CHAT_VOLL_AM = Date.now(); if (VN.an && VN.chat !== fuer) vnUmschalten(false); // 2.529.0 KC-CLUB-VN-RUECKFRAGE: Schloss gilt nur im Chat, in dem es eingeschaltet wurde setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
+    if (VN.an && VN.chat !== fuer) vnUmschalten(false); // 2.529.0 KC-CLUB-VN-RUECKFRAGE: Schloss gilt nur im Chat, in dem es eingeschaltet wurde
+    CHAT = u; CHAT_VOLL_AM = Date.now(); setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
     // KC-CLUB-CHAT-KOPF-BILD (2.24.19): Bild vorn (Person: Avatar/Kreis; Gruppe: Symbol mit 🔗; Runde: gestrichelt), Titel ohne doppeltes Symbol
     $("chatTitel").textContent = (u.gruppe ? u.gruppe.name : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");
