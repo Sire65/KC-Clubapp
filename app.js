@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.508.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.509.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7985,7 +7985,10 @@ function chatTakt() {
   // 2.367.0 KC-CLUB-HAKEN-SCHNELL (Fund Hansi: Express an Steven war nach 20 s auf dessen Handy, die zwei grauen Haken kamen bei Hansi erst viel später):
   // nach dem eigenen Senden 60 s lang alle 4 s nach dem Zustellstand fragen – nur bei offenem Chat und nur, bis die letzte eigene Nachricht „angekommen“ ist
   const hakenWarten = Date.now() - HAKEN_SEIT < 60000 && (() => { const m = [...(CHAT?.nachrichten || [])].reverse().find((x) => x.eigen); return !!m && m.haken === "gesendet"; })();
-  if (!(CHAT?.tippt?.length || (hakenWarten && ONL.takt % 2 === 0) || (jemandDa && ONL.takt % (rtAn() ? 15 : frisch ? 2 : 4) === 0) || ONL.takt % ruhig === 0)) return; // Realtime: „gelesen“-Haken kommen per Signal (2.230.0) – Nachfragen nur alle 30 s
+  // 2.509.0 KC-CLUB-CHAT-SPARSAM (Wunsch Hansi): steht die direkte Leitung, kommen „angekommen“/„gelesen“ (KC-CLUB-RT-ANGEKOMMEN) und „tippt“ als Signal –
+  // dann kein Nachfragen alle 4 s nach den Haken, und beim Tippen nur alle 6 s statt 2 s (Aufhören meldet kein Signal; Sparbremse ab 70 % ohne „tippt“).
+  const rt = rtAn(), tipptTakt = rt ? 3 : 1;
+  if (!((CHAT?.tippt?.length && ONL.takt % tipptTakt === 0) || (hakenWarten && !rt && ONL.takt % 2 === 0) || (jemandDa && ONL.takt % (rt ? 15 : frisch ? 2 : 4) === 0) || ONL.takt % ruhig === 0)) return; // Realtime: „gelesen“-Haken kommen per Signal (2.230.0) – Nachfragen nur alle 30 s
   chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; });
 }
 // KC-CLUB-TIPPT (0.54.0): beim Tippen höchstens alle 3 s „ich schreibe“ melden, Feld leer → sofort aus.

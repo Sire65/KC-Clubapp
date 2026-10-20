@@ -3756,7 +3756,9 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 359. 2.23.9: Spar-Takt (KC-CLUB-SPARTAKT) – weniger Server-Aufrufe, damit die kostenlose Grenze sicher hält
 {
   assert.ok(/if \(chatTakt\.laeuft \|\| document\.hidden\) return;/.test(html), "Chat im Hintergrund nicht nachfragen");
-  assert.ok(/const frisch = Date\.now\(\) - CHAT_AKTIV < 90000, ruhig = (rtAn\(\) \? 30 : )?PUSH_AKTIV \? 10 : 6;/.test(html) && /CHAT\?\.tippt\?\.length \|\| (\(hakenWarten && ONL\.takt % 2 === 0\) \|\| )?\(jemandDa && ONL\.takt % \((rtAn\(\) \? 1?5 : )?frisch \? 2 : 4\) === 0\)/.test(html), "Tippen bleibt sofort, sonst seltener"); // 2.226.0: mit Realtime noch seltener
+  assert.ok(/const frisch = Date\.now\(\) - CHAT_AKTIV < 90000, ruhig = (rtAn\(\) \? 30 : )?PUSH_AKTIV \? 10 : 6;/.test(html) && (/CHAT\?\.tippt\?\.length \|\| (\(hakenWarten && ONL\.takt % 2 === 0\) \|\| )?\(jemandDa && ONL\.takt % \((rtAn\(\) \? 1?5 : )?frisch \? 2 : 4\) === 0\)/.test(html)
+    // 2.509.0 KC-CLUB-CHAT-SPARSAM: ohne direkte Leitung wie bisher (Tippen jedes Mal, Haken alle 4 s); mit Leitung Tippen alle 6 s, Haken per Signal
+    || (/const rt = rtAn\(\), tipptTakt = rt \? 3 : 1;/.test(html) && /\(CHAT\?\.tippt\?\.length && ONL\.takt % tipptTakt === 0\) \|\| \(hakenWarten && !rt && ONL\.takt % 2 === 0\) \|\| \(jemandDa && ONL\.takt % \(rt \? 15 : frisch \? 2 : 4\) === 0\)/.test(html))), "Tippen bleibt sofort, sonst seltener"); // 2.226.0: mit Realtime noch seltener
   assert.ok(/NA\.idStand = idStand; CHAT_AKTIV = Date\.now\(\);/.test(html), "neue Nachricht → wieder schnell");
   assert.ok(/if \(SP\.offen\.ichDran \? SPT_TAKT\.n % 5 : SPT_TAKT\.ruhig > 40 && !SP\.offen\.uhr\?\.laeuft && SPT_TAKT\.n % 3\) return;/.test(html) && /SPT_TAKT\.ruhig = 0; const warDran/.test(html), "Spiele-Takt");
   assert.ok(!/function aeErledigt/.test(html), "alter Knopf „Im KC Manager eingetragen“ entfernt");
@@ -11313,4 +11315,12 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(m, "Uhrzeit-Formatierung vorhanden");
   const h = new Function("return " + m[1].replace("(x: unknown)", "(x)"))();
   assert.deepEqual([h(12.5), h(8), h(9.25), h(13.75), h("11"), h(23.999)], ["12:30", "08:00", "09:15", "13:45", "11:00", "24:00"], "Dezimalstunden → hh:mm");
+}
+// 2.509.0 KC-CLUB-RT-ANGEKOMMEN + KC-CLUB-CHAT-SPARSAM (Wunsch Hansi „Ja, 1 und 2 bauen“): „angekommen“ als Signal, offener Chat fragt seltener nach
+{
+  const mig = lies("supabase/migrations/20261020_kc_club_rt_angekommen.sql");
+  assert.ok(/create trigger kc_club_rt_angekommen after insert on public\.kc_club_chat_quittung\s+for each row when \(new\.art = 'angekommen'\)/.test(mig) && /'gelesen', new\.thread_id\);/.test(mig), "Quittung „angekommen“ → Signal wie „gelesen“ an die anderen");
+  assert.ok(/t\.person_id <> new\.person_id and t\.hidden_at is null/.test(mig) && /exception when others then null;/.test(mig) && /security definer set search_path = ''/.test(mig) && !/\b(delete from|truncate|update public)\b/i.test(mig), "nicht an sich selbst, Signal stört nie, nur Signal");
+  assert.ok(/if \(s\.art === "gelesen"\) \{ if \(s\.thread && s\.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt\.laeuft\)/.test(html), "App lädt bei diesem Signal den offenen Chat");
+  assert.ok(/hakenWarten && !rt && ONL\.takt % 2 === 0/.test(html) && /tipptTakt = rt \? 3 : 1/.test(html), "mit Leitung: Haken per Signal, Tippen alle 6 s; ohne Leitung wie bisher");
 }
