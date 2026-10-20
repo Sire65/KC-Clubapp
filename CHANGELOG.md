@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.513.0 – 2026-10-20 – 📥 Ablagekorb → Fotoalbum: erst nach dem Hochladen erledigt (KC-CLUB-ABLAGEKORB-ALBUM-FIX)
+Fund Hansi („Ich habe über den Ablagekorb Fotos ins Album gelegt. Da sind sie aber nicht zu sehen“): „📷 Fotoalbum“ markierte den Eintrag schon beim Öffnen des Hochlade-Formulars als erledigt – im Album landen die Fotos aber erst mit „Hochladen“ (bei Hansi kam zudem ein App-Update dazwischen, das Formular war weg). Die 10 Fotos waren nicht verloren (Ablagekorb → „Zuletzt erledigt“ → „↩ Wieder offen“).
+- Jetzt merkt sich die App den Eintrag und erledigt ihn erst, wenn **alle** Fotos wirklich im Album sind („10 Fotos ins Fotoalbum hochgeladen“). Klappt etwas nicht oder wird das Formular verlassen, bleibt der Eintrag offen.
+- Im Hochlade-Formular steht ein goldener Hinweis: „Aus dem Ablagekorb: Thema wählen und ‚Hochladen‘ tippen – erst dann sind die Fotos im Album.“ Gilt auch für „📷 n ins Fotoalbum“ bei ausgewählten Fotos.
+- Behebt einen Fehler, der die Benutzung verhindert → sofort eingespielt (AGENTS.md). Nur App.
+- Tests: Vertragstest grün; Browserprobe (Öffnen → nichts erledigt; nach dem Hochladen beider Fotos erledigt; keine Fehler).
+
 ## 2.512.0 – 2026-10-20 – 📥 Ablagekorb: Fotos einzeln auswählen · ⚠️ Dubletten-Check (KC-CLUB-ABLAGEKORB-AUSWAHL, KC-CLUB-ABLAGEKORB-DUBLETTEN) · Server 2.512.0
 Wunsch Hansi („Wenn z. B. 10 Fotos im Eingangskorb liegen, dass man anklicken kann, welche ins Album sollen oder gelöscht werden sollen. Außerdem Dubletten-Check einbauen: wenn was in den Ablagekorb reinkommt, wird alles durchsucht, ob es das schon gibt“).
 - **Auswahl:** Bei mehreren Dateien hat jede ein Häkchen. Darunter „☑️ 3 von 10 ausgewählt“ mit **Alle / Keine / ⚠️ Dubletten** und den Knöpfen **📷 3 ins Fotoalbum** und **🗑️ 3 löschen**. Was ins Album geht, wird als eigener erledigter Eintrag abgelegt (14 Tage wiederherstellbar), der Rest bleibt offen.
