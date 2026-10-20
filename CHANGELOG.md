@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.547.0 – 2026-10-20 – Kochmütze mit „since 1991“ auf Holzklappe und Servierglocke (KC-CLUB-KOPF-EMBLEM)
+Wunsch Hansi („Baue noch auf die Holzklappe und die Glocke die Kochmütze mit since 1991“).
+- Kopf-Effekt 🎪 Holzklappe: neben dem Schild „Geschlossen“ die Kochmütze mit „since 1991“, hell wie eingebrannt.
+- Kopf-Effekt 🛎️ Servierglocke: in der Mitte der Glocke dieselbe Marke, dunkel wie eingraviert (glänzt beim Öffnen mit).
+- Gleiche CD-Kochmütze wie oben im Kopf, nur Bild, nicht antippbar. Browser-Test beider Effekte. Rückweg: App 2.546.0.
+
 ## 2.546.0 – 2026-10-20 – „since 1991“ jetzt im Knopf der Kochmütze (KC-CLUB-KOPF-SEIT-2)
 Wunsch Hansi („Besser sähe es aus, wenn es mit im Button der Mütze ist – pack es darein“).
 - Der Schriftzug steht jetzt im Kochmützen-Feld unter der (etwas kleineren) Mütze; das Feld bleibt 54 × 54 px, die Versionsnummer steht darunter wie vorher.

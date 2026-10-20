@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.546.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.547.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -21370,6 +21370,8 @@ async function kopfEffektProbe() { // einmal ein- und wieder ausrollen, damit ma
   const von = kopfRolloStand(), ziel = von === "offen" ? "ganz" : "offen";
   await kopfRolloFahren(ziel); await new Promise((r) => setTimeout(r, 500)); await kopfRolloFahren(von);
 }
+// 2.547.0 KC-CLUB-KOPF-EMBLEM (Wunsch Hansi „auf die Holzklappe und die Glocke die Kochmütze mit since 1991“): CD-Kochmütze + Schriftzug
+const KE_MARKE = '<span class="ke-marke" aria-hidden="true"><img src="kc-kochmuetze-weiss.webp" alt=""><small>since 1991</small></span>';
 async function kopfEffektAnimieren(effekt, h, zu, gross, klein, oben) {
   const warten = (a) => a.finished.catch(() => {}), bereich = Math.max(0, gross - oben), MS = 1500;
   const fahren = (von, bis, ms) => { h.style.overflow = "hidden"; return warten(h.animate([{ height: von + "px" }, { height: bis + "px" }], { duration: ms, easing: "cubic-bezier(.45,.05,.4,1)", fill: "forwards" })); };
@@ -21397,7 +21399,7 @@ async function kopfEffektAnimieren(effekt, h, zu, gross, klein, oben) {
   }
   if (effekt === "glocke") {
     // silberne Servierglocke senkt sich über den Kopf; beim Öffnen glänzt sie kurz, hebt sich – „Voilà!“
-    box.innerHTML = '<i class="ke-glocke"><b class="ke-glanz"></b><u class="ke-knauf"></u></i><span class="ke-voila">Voilà!</span>';
+    box.innerHTML = `<i class="ke-glocke"><b class="ke-glanz"></b><u class="ke-knauf"></u>${KE_MARKE}</i><span class="ke-voila">Voilà!</span>`; // 2.547.0: eingraviertes Emblem
     const g = box.firstElementChild, voila = box.lastElementChild, oben0 = { transform: "translateY(-115%)" }, unten = { transform: "translateY(0)" };
     h.append(box);
     if (zu) { g.style.transform = oben0.transform; await warten(g.animate([oben0, unten], { duration: 750, easing: "cubic-bezier(.5,0,.3,1.25)", fill: "forwards" })); await fahren(gross, klein, MS * 0.6); }
@@ -21411,7 +21413,7 @@ async function kopfEffektAnimieren(effekt, h, zu, gross, klein, oben) {
   }
   if (effekt === "bude") {
     // Holzklappe einer Weihnachtsmarkt-Bude, oben am Vordach angeschlagen: klappt herunter (Ladenschluss) bzw. hoch (wird zum Vordach)
-    box.innerHTML = '<i class="ke-bude-dach"></i><i class="ke-bude-klappe"><b class="ke-bude-schild">Geschlossen</b></i>';
+    box.innerHTML = `<i class="ke-bude-dach"></i><i class="ke-bude-klappe">${KE_MARKE}<b class="ke-bude-schild">Geschlossen</b></i>`; // 2.547.0: eingebranntes Emblem
     const k = box.lastElementChild, hoch = { transform: "rotateX(-100deg)", opacity: .25 }, runter = { transform: "rotateX(0deg)", opacity: 1 };
     h.append(box);
     if (zu) { k.style.transform = hoch.transform; await warten(k.animate([hoch, runter], { duration: 800, easing: "cubic-bezier(.6,0,.45,1.3)", fill: "forwards" })); await fahren(gross, klein, MS * 0.6); }

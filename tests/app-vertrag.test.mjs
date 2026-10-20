@@ -7213,6 +7213,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/\.kopflogo \.logo \{ display: flex; flex-direction: column;/.test(seite) && /\.kopflogo \.logo img \{ width: 34px; \}/.test(seite), "Mütze und Schriftzug untereinander im Knopf");
 }
+// 2.547.0 KC-CLUB-KOPF-EMBLEM: Kochmütze + „since 1991“ auf der Holzklappe und der Servierglocke
+{
+  assert.ok(/const KE_MARKE = '<span class="ke-marke" aria-hidden="true"><img src="kc-kochmuetze-weiss\.webp" alt=""><small>since 1991<\/small><\/span>';/.test(programm), "Emblem aus der CD-Kochmütze");
+  assert.ok(/<i class="ke-glocke"><b class="ke-glanz"><\/b><u class="ke-knauf"><\/u>\$\{KE_MARKE\}<\/i>/.test(programm) && /<i class="ke-bude-klappe">\$\{KE_MARKE\}<b class="ke-bude-schild">Geschlossen<\/b><\/i>/.test(programm), "auf Glocke und Holzklappe");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
