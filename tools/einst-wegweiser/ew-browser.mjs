@@ -23,7 +23,7 @@ const r = await seite.evaluate(async () => {
   e.kachel = !!KACHELN.programme.find((k) => k.id === "einstwegweiser" && k.aktion === "ewStart()");
   ewStart(); await warte(300); const vorher = __stand();
   e.n = EW.liste.length; e.ordner = EW.baum.ordner.map((o) => o.name + " (" + ewZahl(o) + ")");
-  e.adminDa = EW.baum.ordner.some((o) => /Admin/.test(o.name)); e.einfachDa = EW.baum.ordner.some((o) => /Das Wichtigste/.test(o.name));
+  e.adminDa = EW.baum.ordner.some((o) => /Admin/.test(o.name)); e.inko = EW.liste.some((x) => /inkognito|admin/i.test(x.name + x.hinweis)); e.einfachDa = EW.baum.ordner.some((o) => /Das Wichtigste/.test(o.name));
   e.ohneName = EW.liste.filter((x) => x.name.length < 3).length; e.ohneHinweis = EW.liste.filter((x) => !x.hinweis).map((x) => x.name);
   e.blatt = !!$("ewBlatt") && document.querySelectorAll("#ewBaum > details.ew-ordner").length === EW.baum.ordner.length;
   // Farbe-Eintrag erklären
@@ -42,11 +42,11 @@ const r = await seite.evaluate(async () => {
   return e;
 });
 console.log(JSON.stringify({ ...r, ohneHinweis: r.ohneHinweis.length + ": " + r.ohneHinweis.join(" · ") }, null, 1));
-if (process.env.EW_LISTE) console.log(await seite.evaluate(() => EW.liste.map((x) => x.pfad.join(" › ") + " | " + x.name + " | " + x.hinweis.slice(0, 70) + " | " + (x.id || "")).join("\n")));
+if (process.env.EW_LISTE) console.log(await seite.evaluate(() => { ICH.admin = true; EW.gefuellt = false; ewStart(); const r = EW.liste.map((x) => x.pfad.join(" › ") + " | " + x.name + " | " + x.hinweis + " | " + (ewHilfe(x)?.x || "").replace(/<[^>]+>/g, "")).filter((z) => /admin|inkognito|leitung|hansi|kassenwart|clubsprecher/i.test(z)).join("\n"); fensterZu($("ewBlatt")); ICH.admin = false; $("adminBereich").classList.add("versteckt"); EW.gefuellt = false; return r; }));
 await bild("1-baum");
 ok(r.kachel, "Kachel „🧭 Einstellungen erklärt“ unter Technik");
 ok(r.n >= 80 && r.blatt && r.ohneName === 0, `Explorer-Baum mit ${r.n} Einstellungen in ${r.ordner.length} Bereichen`);
-ok(!r.adminDa && !r.einfachDa, "erweiterte Ansicht: kein Admin-Bereich für Mitglieder, kein „Das Wichtigste“ (gehört zur einfachen Ansicht)");
+ok(!r.adminDa && !r.einfachDa && !r.inko, "erweiterte Ansicht: kein Admin-Bereich, kein Inkognito, kein „Das Wichtigste“ (gehört zur einfachen Ansicht)");
 ok(r.erkl, "Antippen erklärt: Was bewirkt das? · Ort · 👉 Hinbringen (" + r.tt + ")");
 ok(r.mitHilfe >= 15 && r.mitVideo >= 40, `${r.mitHilfe} Einträge mit ausführlichem Hilfe-Text, ${r.mitVideo} mit Erklär-Video`);
 ok(r.sucheFarbe >= 2 && r.sucheTippfehler >= 1 && r.zurueck, "Suche (auch mit Tippfehler) und zurück zum Baum");
@@ -59,10 +59,10 @@ const h = await seite.evaluate(async () => { const tt = EW.liste.find((x) => x.i
   return { blattZu: !$("ewBlatt"), ansicht: aktuelleAnsicht, hervor: tt.el.classList.contains("hervor"), offen: !tt.el.closest("details") || tt.el.closest("details").open }; });
 await bild("3-hinbringen");
 ok(h.blattZu && h.ansicht === "einstellungen" && h.hervor && h.offen, "👉 Hinbringen: ⚙️ offen, Bereich aufgeklappt, Schalter leuchtet");
-const a = await seite.evaluate(async () => { ICH.admin = true; EW.gefuellt = false; ewStart(); const admin = EW.baum.ordner.some((o) => /Admin/.test(o.name)); fensterZu($("ewBlatt"));
+const a = await seite.evaluate(async () => { ICH.admin = true; EW.gefuellt = false; ewStart(); const admin = EW.baum.ordner.some((o) => /Admin|Clubleitung beim Start/.test(o.name)), adminText = EW.liste.some((x) => /admin|inkognito|🕶️/i.test(x.name + " " + x.hinweis + " " + x.pfad.join(" ") + " " + (ewHilfe(x)?.x || ""))) || /admin|inkognito/i.test(ewDruck().html); fensterZu($("ewBlatt"));
   ICH.admin = false; $("adminBereich").classList.add("versteckt"); ANSICHT = "einfach"; document.body.classList.add("einfach"); ewStart(); const n = EW.liste.length, wichtig = EW.baum.ordner.some((o) => /Das Wichtigste/.test(o.name)), effekte = EW.baum.ordner.some((o) => /Effekte/.test(o.name));
-  fensterZu($("ewBlatt")); ANSICHT = "erweitert"; document.body.classList.remove("einfach"); return { admin, n, wichtig, effekte }; });
-ok(a.admin, "Admin sieht seinen Admin-Bereich");
+  fensterZu($("ewBlatt")); ANSICHT = "erweitert"; document.body.classList.remove("einfach"); return { admin, adminText, n, wichtig, effekte }; });
+ok(!a.admin && !a.adminText, "auch beim Admin: nichts über Admin, Inkognito oder was der Admin sieht");
 ok(a.wichtig && !a.effekte && a.n < r.n, `einfache Ansicht: nur ihre ${a.n} Einstellungen („Das Wichtigste“, ohne Effekte)`);
 const f = await seite.evaluate(() => { SU.q = "einstellungen erklärt"; SU.genau = false;
   return { sb: sbErkennen("Einstellungen erklärt"), lupe: suAppTreffer().slice(0, 2).map((x) => x.t), tw: twFinden("Was bewirken die ganzen Einstellungen?").slice(0, 3).map((x) => x.e?.id || x.id), hilfe: hzEintraege().some((h) => h.id === "h:einst_wegweiser") }; });

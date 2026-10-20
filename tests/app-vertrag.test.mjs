@@ -11624,5 +11624,6 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(!/\.checked = |\.click\(\)|dispatchEvent|einstellung\(|api\(/.test(ew), "Wegweiser stellt nichts um und fragt keine Datenbank");
   assert.ok(/👉 Hinbringen/.test(ew) && /📖 Ganze Hilfe/.test(ew) && /🎬 Video/.test(ew) && /einstwegweiser: \{ bauen: \(\) => ewDruck\(\) \}/.test(html), "Erklärung mit Hinbringen, Hilfe, Video; Schriftstück");
   assert.ok(/if \(v === "einstellungen"\) einstFuellen\(\);/.test(html), "Werte füllen wie beim Öffnen von ⚙️");
+  assert.ok(/const EW_OHNE_BEREICH = \["admin", "leitung_start"\], EW_OHNE = \/\\\(Admin\\\)\|nur Admin\|Inkognito\|🕶️\/i, EW_OHNE_TEXT = \/admin\/i;/.test(ew), "nichts über den Admin (Wunsch Hansi)");
   assert.ok(/\{ id: "einst_wegweiser", thema: "start"/.test(html) && /\{ id: "einstellungen-erklaert", sym: "🧭"/.test(html) && /if \(b\.art === "wegweiser"\) return ewStart\(\);/.test(html), "Hilfe, Twinkey, Sprachsteuerung");
 }
