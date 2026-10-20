@@ -1,5 +1,12 @@
 # Änderungen
 
+## Server 2.534.0 – 2026-10-20 – Notfall-Paket: Pause nach Fehlschlag (KC-CLUB-NOTPAKET-FEHLERPAUSE)
+Anlass: Lastwarnung 20.10.2026 16:03 („10417 SQL-Aufrufe / 15 Min., Ursache unbekannt“). Ursache: Das Notfall-Paket (~3.000 Abfragen je Bau) scheiterte um 15:45 (Zeitlimit 546) und 16:00 (Datenbank-Zeitgrenze, 503). Weil der 3-Stunden-Abstand seit dem letzten guten Paket (12:45) schon um war, baute jeder 15-Min.-Lauf sofort neu. Um 16:15 klappte es wieder.
+- Nach einem Fehlschlag wird frühestens nach 30 Min. neu gebaut (nicht bei „erzwingen“). Bisher galt die 30-Min.-Pause nur, solange der 3-Stunden-Abstand noch lief.
+- Ein Fehlschlag wird als `notpaket_fehler` protokolliert (vorher nur erfolgreiche Bauten) – Grundlage dafür, dass die Lastwarnung die Ursache nennen kann.
+- Nur Server, keine App-Änderung. Test: Vertragstest-Block Server 2.534.0.
+- Rückweg: Server 2.529.0 erneut einspielen.
+
 ## 2.533.0 – 2026-10-20 – 🕵️ Hilfe neu aufgebaut: Video „Geheim schreiben“, Twinkey, Lupe und Sprachsuche zu allen Neuheiten · 🪶 Friedenspfeife im Wilden Westen (KC-CLUB-HILFE-NACHTRAG-4, KC-CLUB-VIDEO-GEHEIM, KC-CLUB-FRIEDENSPFEIFE)
 Wunsch Hansi („Prüfe alles und baue die Hilfen neu auf wie Twinkey, Lupe, Suchfunktion, Sprachsuche, Video auch mit Verschlüsselung usw.“). Geprüft wurden alle Neuheiten seit dem letzten Nachtrag (2.508.0–2.532.0) gegen Hilfe-Zentrum, Twinkey, Lupe, Sprachsteuerung und Erklär-Videos – nur Mitglieder-Funktionen.
 - **Neues Erklär-Video „🕵️ Geheim schreiben: verschlüsseln & Schlüsselbund“** (Thema „Schreiben & Kontakt“, ca. 3 Min.): an einem Beispiel-Zweierchat mit Anne – die kleine Zeile (▾ ⌨️ 🔊 🔒), Schloss an, Rückfrage „Ja, mit Schlüssel / Normal senden“, Schlüssel festlegen und auf anderem Weg weitersagen, 🔑 und Geheimagent beim Senden, verschlossene und geöffnete Nachricht, ⋮ → Schlüsselbund, fünf Schlüssel als Datei, Grenzen. Es wird nichts verschlüsselt, gesendet oder gespeichert (Platzhalter-Blasen, Beispielbilder, Weiche vor api nur für den Beispiel-Chat); am Ende ist alles wie vorher.
