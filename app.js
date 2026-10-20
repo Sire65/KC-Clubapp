@@ -782,7 +782,7 @@ function einst(k, def) { try { const v = localStorage.getItem("kc_club_" + k); r
 // KC-CLUB-KACHEL-KLEIN (2.23.87, Wunsch Hansi): Startseiten-Kacheln klein (3 je Reihe) – je Gerät, weil Bildschirme verschieden groß sind
 // KC-CLUB-KACHEL-MINI (2.54.0, Wunsch Hansi): zusätzlich „sehr klein“ – 4 nebeneinander (nur Symbol + Name, ohne Untertitel)
 function kachelStufe() { try { const g = localStorage.getItem("kc_club_kachelgroesse"); return g === "klein" || g === "mini" ? g : "normal"; } catch { return "normal"; } }
-function kachelKlein() { return kachelStufe() !== "normal"; }
+// KC-CLUB-RC-PRUEFUNG (20.10.2026): kachelKlein entfernt – nirgends benutzt
 function kachelGroesse(g) {
   try { localStorage.setItem("kc_club_kachelgroesse", g); } catch {}
   document.querySelectorAll("#kachelGroesseWahl button").forEach((b) => b.classList.toggle("an", b.dataset.g === g));
@@ -1401,7 +1401,7 @@ async function pwFuer(f) {
 function pwListe() {
   const q = $("pwSuche").value.toLowerCase();
   $("pwListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) =>
-    `<label><input type="checkbox" ${PW.form.personen.includes(m.person_id) ? "checked" : ""} onchange="pwWahl('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}</span></label>`).join("");
+    `<label><input type="checkbox" ${PW.form.personen.includes(m.person_id) ? "checked" : ""} onchange="pwWahl('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   const namen = PW.form.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name.split(" ")[0]).filter(Boolean);
   $("pwGewaehlt").textContent = namen.length ? "Für: " + namen.join(", ") : "Noch niemand ausgewählt";
 }
@@ -1517,12 +1517,17 @@ function ansichtPruefen() {
   $("ansichtBlatt").classList.remove("versteckt");
   return true;
 }
+// KC-CLUB-RC-PRUEFUNG (20.10.2026): Einstellung ging nicht an den Server → einmal je Sitzung ein leiser Hinweis (statt still zu schlucken)
+function einstNurLokal() {
+  try { if (sessionStorage.getItem("kc_club_einst_lokal")) return; sessionStorage.setItem("kc_club_einst_lokal", "1"); } catch { if (einstNurLokal.gezeigt) return; }
+  einstNurLokal.gezeigt = true; melde("Nur auf diesem Gerät gespeichert – der Server war gerade nicht erreichbar.", true);
+}
 async function ansichtSetzen(art, ausFrage) {
   ANSICHT = art === "erweitert" ? "erweitert" : "einfach";
   try { localStorage.setItem("kc_club_ansicht", ANSICHT); } catch {}
   $("ansichtBlatt").classList.add("versteckt");
   if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), ansicht: { art: ANSICHT, gewaehlt: true } };
-  api("einstellung_setzen", { schluessel: "ansicht", wert: { art: ANSICHT, gewaehlt: true } }).catch(() => {});
+  api("einstellung_setzen", { schluessel: "ansicht", wert: { art: ANSICHT, gewaehlt: true } }).catch(einstNurLokal); // KC-CLUB-RC-PRUEFUNG (20.10.2026)
   if (aktuelleAnsicht === "einstellungen" && !ausFrage) zeige("start");
   ansichtAnwenden();
   if (ausFrage) {
@@ -2153,7 +2158,7 @@ function rgDrehen(an, kachel) {
   krUmdrehen(k); if (!RG.drehZurueck) { RG.drehZurueck = true; RG.zurueck.push(() => { RG.drehZurueck = false; rgDrehen(false); }); }
   setTimeout(() => { clearTimeout(KR.zu); RG.ziel = document.querySelector("#raster > .kachel.kr-hinten") || RG.ziel; rgLage(); }, 300); // bleibt offen, solange erzählt wird
 }
-const rgRegName = (i) => REGISTER[i]?.[1] || "";
+// KC-CLUB-RC-PRUEFUNG (20.10.2026): rgRegName entfernt – nirgends benutzt
 function rgKaSchieben(id, d) { // wie kaSchieben, aber nur auf dem Bildschirm (nicht gespeichert); Reihenfolge am Ende zurück
   if (!RG.reihAlt) { RG.reihAlt = { r: JSON.parse(JSON.stringify(KA.reihenfolge || {})) }; RG.zurueck.push(() => { if (RG.reihAlt) { KA.reihenfolge = RG.reihAlt.r; RG.reihAlt = null; kaFrisch = null; kachelnZeigen(); } }); }
   const liste = kaListe().map((k) => k.id), i = liste.indexOf(id), j = i + d;
@@ -4950,7 +4955,7 @@ const tippStand = () => ({ an: true, bekannt: {}, spaeter: {}, zuletzt: null, ..
 function tippSpeichern(neu) {
   const w = { ...tippStand(), ...neu };
   INIT.einstellungen = { ...(INIT.einstellungen || {}), tipps: w };
-  api("einstellung_setzen", { schluessel: "tipps", wert: w }).catch(() => {});
+  api("einstellung_setzen", { schluessel: "tipps", wert: w }).catch(einstNurLokal); // KC-CLUB-RC-PRUEFUNG (20.10.2026)
 }
 // ---------- KC-CLUB-RUHE (2.24.13, Wunsch Hansi „Mitglieder nicht überhäufen – nur Notwendiges, moderat“) ----------
 // Je Öffnen höchstens EIN Info-Fenster (Was-ist-neu, Pinnwand-Zettel, Tipp, Spiele-Einladung) – was zuerst kommt, gewinnt (Was-ist-neu
@@ -5394,7 +5399,7 @@ function ustFragen(erstes) {
 async function ustSetzen(stufe) {
   lsSetzen(ustKey(), stufe); spur("unterstuetzung_" + stufe);
   if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), unterstuetzung: { stufe } };
-  api("einstellung_setzen", { schluessel: "unterstuetzung", wert: { stufe } }).catch(() => {});
+  api("einstellung_setzen", { schluessel: "unterstuetzung", wert: { stufe } }).catch(einstNurLokal); // KC-CLUB-RC-PRUEFUNG (20.10.2026)
   if (stufe === "keine") return melde("😎 Alles klar – Hilfe findest du jederzeit unter ⚙️ Einstellungen");
   shSchalter(true);
   if (stufe === "viel") {
@@ -9331,7 +9336,7 @@ function mfListe() {
   $("mfSchnell").innerHTML = `<button type="button" class="chip${MF.alle ? " an" : ""}" onclick="MF.alle=!MF.alle;MF.personen=[];mfListe()">${MF.alle ? "☑️" : "⬜"} 👥 Alle Mitglieder</button>`
     + `<button type="button" class="chip" onclick="MF.alle=false;MF.personen=[];mfListe()">✖ Keiner</button>`;
   $("mfListe").innerHTML = andere.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<label>
-    <input type="checkbox" ${MF.alle || MF.personen.includes(m.person_id) ? "checked" : ""} onchange="mfPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}</span></label>`).join("");
+    <input type="checkbox" ${MF.alle || MF.personen.includes(m.person_id) ? "checked" : ""} onchange="mfPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   const n = MF.alle ? andere.length : MF.personen.length;
   $("mfWer").innerHTML = `An: <b>${MF.alle ? "alle Mitglieder" : !n ? "noch niemand gewählt" : n <= 3 ? esc(MF.personen.map(zeName).join(", ")) : n + " Mitglieder"}</b>`;
   $("mfWege").innerHTML = TW_WEGE.map(([k, t]) => `<button type="button" class="chip${MF.wege.includes(k) ? " an" : ""}" aria-pressed="${MF.wege.includes(k)}" onclick="MF.wege=MF.wege.includes('${k}')?MF.wege.filter((x)=>x!=='${k}'):[...MF.wege,'${k}'];mfListe()">${MF.wege.includes(k) ? "☑️" : "⬜"} ${t}</button>`).join("");
@@ -12795,7 +12800,8 @@ async function erstattungLaden() {
     $("ersMeine").innerHTML = r.antraege.length ? r.antraege.map((a) => `<div class="zeile"><div style="flex:1"><b>${eur(a.summe)}</b> · ${a.anzahl} Position${a.anzahl === 1 ? "" : "en"}<div class="hinweis" style="margin:0;font-size:.85rem">${esc(wann(a.zeit))} · ${a.auszahlung === "bar" ? "bar" : "Überweisung"}</div></div>
       <span class="stmarke ${a.status === "erstattet" ? "st-verfuegbar" : a.status === "abgelehnt" ? "st-abwesend" : "st-beschaeftigt"}">${a.status === "erstattet" ? "✅ erstattet" : a.status === "abgelehnt" ? "❌ abgelehnt" : "📨 eingereicht"}</span></div>`).join("")
       : '<p class="hinweis" style="margin:0">Noch keine Anträge.</p>';
-    if (!r.empfaengerDa) $("ersHinweis").innerHTML = '<p class="hinweis" style="color:#c62828">⚠️ Es ist noch kein Kassenwart oder Clubsprecher eingetragen.</p>';
+    // KC-CLUB-RC-PRUEFUNG (20.10.2026): Rot über var(--textRot) – im Dunkelmodus lesbar
+    if (!r.empfaengerDa) $("ersHinweis").innerHTML = '<p class="hinweis" style="color:var(--textRot, #c62828)">⚠️ Es ist noch kein Kassenwart oder Clubsprecher eingetragen.</p>';
   } catch (e) { meldeFehler(e); if (!ERS.geladen) $("ersMeine").innerHTML = `<div class="karte hinweis">⚠️ ${esc(fehlerText(e, "Konnte nicht geladen werden."))}<div style="margin-top:8px"><button type="button" class="knopf klein" onclick="erstattungLaden()">🔄 Nochmal laden</button></div></div>`; } // 2.337.0
   erstattungZeigen();
 }
@@ -12834,7 +12840,7 @@ function erstattungArt(art, getippt) {
        <p class="hinweis" id="ersVorschau" style="margin:0">Pauschale: ${eur(satzAm(heute))} je km</p>`
     : `<label class="feld">Betrag in €<input id="ersBetrag" inputmode="decimal" placeholder="z. B. 23,90"></label>
        ${art === "kraftstoff" ? `<label class="feld">Fahrzeug<select id="ersFahrzeug" onchange="$('ersEigenHinweis').classList.toggle('versteckt', this.value !== 'eigen')"><option value="">– bitte wählen –</option><option value="miete">Mietfahrzeug</option><option value="club">Clubfahrzeug</option><option value="eigen">Eigenes Auto</option></select></label>
-         <p class="hinweis versteckt" id="ersEigenHinweis" style="margin:0;color:#c62828">Mit dem eigenen Auto gibt es nur die km-Pauschale – bitte unter 🚗 Fahrtkosten eintragen.</p>
+         <p class="hinweis versteckt" id="ersEigenHinweis" style="margin:0;color:var(--textRot, #c62828)">Mit dem eigenen Auto gibt es nur die km-Pauschale – bitte unter 🚗 Fahrtkosten eintragen.</p>
          <label class="feld">Liter (freiwillig)<input id="ersLiter" inputmode="decimal" placeholder="z. B. 35"></label>` : ""}
        <label class="feld">${art === "einkauf" ? "Was wurde eingekauft?" : art === "parken" ? "Wo wurde geparkt?" : art === "kaution" ? "Wofür ist die Kaution?" : art === "kraftstoff" ? "Wofür? (freiwillig)" : "Wofür war die Auslage?"}<input id="ersWas" maxlength="200" placeholder="${art === "einkauf" ? "z. B. Getränke für die Sitzung" : art === "parken" ? "z. B. Klinikum Dortmund" : art === "kaution" ? "z. B. Thermoboxen" : "z. B. Parkgebühr"}"></label>
        ${art === "einkauf" ? `<label class="feld">Geschäft (freiwillig)<input id="ersGeschaeft" maxlength="120" placeholder="z. B. Edeka Werne"></label>` : ""}
@@ -14184,7 +14190,7 @@ function dwSperreHinweis(funde) {
     <p style="margin:0 0 8px">Außerhalb deiner Kann-Zeit wirst du sowieso nicht eingeplant. Eine Sperrzeit brauchst du nur, wenn du <b>innerhalb</b> der Kann-Zeit kurz weg musst.</p>
     <ul style="margin:0 0 8px;padding-left:20px">${funde.slice(0, 20).map((x) => `<li><b>${tag(x.datum)}</b>: Sperrzeit ${esc(x.sperre)} Uhr${x.kann ? ` · Kann ${esc(x.kann)} Uhr` : " · keine Kann-Zeit"}</li>`).join("")}</ul>
     <p class="hinweis" style="margin:0 0 8px">Beispiel richtig: Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr.<br>
-      Zum Entfernen: den Tag öffnen → „Sperren ändern“ → „✓ Ich kann an diesem Tag“. Schaden entsteht keiner, wenn du es so lässt.</p>
+      Zum Entfernen: „Meinen Wunschplan eintragen oder ändern“ → Tag antippen → „＋ Zwischendurch verhindert“ → „Sperrzeit entfernen“ → „Angaben speichern“. Schaden entsteht keiner, wenn du es so lässt.</p>
     <button class="knopf haupt" onclick="fensterZu($('dwSperreBlatt'))">Verstanden</button>`);
   f.style.zIndex = "2100"; // über dem Twinkey-Fenster
 }
@@ -15020,7 +15026,7 @@ const fxReihe = (mid) => { let h = 0; for (const c of String(mid)) h = (h * 31 +
 const fxArt = (wahl, wichtig, mid, express) => wahl === "aus" ? null : express ? "express" : wichtig ? "blaulicht" : wahl === "wechsel" ? (mid ? fxReihe(mid) : SENDE_REIHE[SENDE_FX_N++ % SENDE_REIHE.length]) : SENDE_REIHE.includes(wahl) ? wahl : null;
 function sendeEffektMelden() {
   const w = sendeEffektWahl(); if (!INIT?.einstellungen || INIT.einstellungen.sende_effekt?.art === w) return;
-  api("einstellung_setzen", { schluessel: "sende_effekt", wert: { art: w } }).then(() => { INIT.einstellungen.sende_effekt = { art: w }; }).catch(() => {});
+  api("einstellung_setzen", { schluessel: "sende_effekt", wert: { art: w } }).then(() => { INIT.einstellungen.sende_effekt = { art: w }; }).catch(einstNurLokal); // KC-CLUB-RC-PRUEFUNG (20.10.2026)
 }
 const EMPF = { chat: null, letzte: null };
 function empfangsEffekt(u) {
@@ -16373,7 +16379,7 @@ function esZfFarbe(art, c) { const z = esZ(art); z.farbe = c; z.werkzeug = "stif
 function esZfDicke(art, i) { const z = esZ(art); z.dicke = i; z.werkzeug = "stift"; esZfLeiste(art); }
 function esZfWerkzeug(art, w) { const z = esZ(art); z.werkzeug = z.werkzeug === w ? "stift" : w; esZfLeiste(art); if (z.werkzeug === "radier") melde("🧽 " + ES_ZF[art].radierName); }
 function esZfZurueck(art) { const s = esZfStriche(art); if (!s.length) return melde(art === "flip" ? "Das Blatt ist schon leer." : "Die Tafel ist schon leer."); s.pop(); esZfMerken(art); esZfMalen(art); }
-const esTafelFarbe = (c) => esZfFarbe("tafel", c), esTafelDicke = (i) => esZfDicke("tafel", i), esTafelWerkzeug = (w) => esZfWerkzeug("tafel", w === "schwamm" ? "radier" : w), esTafelZurueck = () => esZfZurueck("tafel");
+// KC-CLUB-RC-PRUEFUNG (20.10.2026): esTafelFarbe/-Dicke/-Werkzeug/-Zurueck entfernt – nirgends benutzt
 async function esTafelAbwischen() {
   const s = esTafelStriche(), c = $("esTafel"); if (!c) return;
   if (!s.length) return melde("Die Tafel ist schon sauber. ✨");
@@ -16440,7 +16446,7 @@ function esZfTeilen(art) {
       <button class="knopf" onclick="esTafelNach('archiv','${art}')">🗄️ Im Archiv speichern</button>
       <button class="knopf" onclick="$('esTafelBlatt').remove()">Abbrechen</button></div>`);
 }
-const esTafelTeilen = () => esZfTeilen("tafel");
+// KC-CLUB-RC-PRUEFUNG (20.10.2026): esTafelTeilen entfernt – nirgends benutzt
 async function esTafelNach(wohin, art) {
   art = art || "tafel"; $("esTafelBlatt")?.remove();
   const d = await esTafelDatei(art); if (!d) return melde("Das Bild konnte gerade nicht erstellt werden – bitte nochmal versuchen.", true);
@@ -19371,7 +19377,7 @@ function jzbHwMalenVorn(c, F) {
 // kein Regen aus alten Daten, kein zusätzlicher Wetter-Abruf): Tropfen, Pfützen mit Ringen, ab und zu läuft ein gelber Schirm vorbei.
 // 🍲 Heute ist Treffen: ein dampfender Kochtopf (bis 5 Std. nach Beginn). 🥚 Ostern (Karfreitag bis Ostermontag): bunte Eier im Gras –
 // antippen, dann schlüpft ein Küken. 🦔 Herbst: ab und zu raschelt ein Igel durchs Laub. Vorschau je Extra unter ⚙️ → ✨ Effekte.
-const JZB_EXTRAS = { nikolaus: "advent", regen: "", topf: "", ostern: "fruehling", igel: "herbst", kuerbis: "herbst" }; // Extra → Jahreszeit der Vorschau ("" = die jetzige)
+// KC-CLUB-RC-PRUEFUNG (20.10.2026): JZB_EXTRAS entfernt – nirgends benutzt
 function jzbExtrasBestimmen() {
   const J = JZB, heute = heuteIso(), x = { igel: J.saison === "herbst" };
   x.nikolaus = heute.slice(5) === "12-06" && J.saison === "winter";
@@ -21569,7 +21575,7 @@ async function zeBlatt() {
 function zeBlattZu() { $("zeBlatt").classList.add("versteckt"); heroZeigen(0); }
 function zeListe() {
   const q = $("zeSuche").value.toLowerCase(), gruppen = (INFO_DATEN.zentrale?.r?.unterhaltungen || []).filter((u) => u.gruppe);
-  const amt = (a) => { const g = empfGruppe(a), an = !ZE.gruppe && g.length && g.every((p) => ZE.personen.includes(p)); return `<button class="knopf klein ${an ? "haupt" : ""}" onclick='zeAmt(${JSON.stringify(a).replace(/'/g, "&#39;")})'>🎖️ ${esc(a)} <small>(${g.length})</small></button>`; };
+  const amt = (a) => { const g = empfGruppe(a), an = !ZE.gruppe && g.length && g.every((p) => ZE.personen.includes(p)); return `<button class="knopf klein ${an ? "haupt" : ""}" onclick='zeAmt(${hlJs(a)})'>🎖️ ${esc(a)} <small>(${g.length})</small></button>`; }; // KC-CLUB-RC-PRUEFUNG (20.10.2026): onclick-JSON über hlJs/esc – auch & maskiert
   $("zeSchnell").innerHTML = `<button class="knopf klein" onclick="zeWahl('alle')">👥 Alle</button><button class="knopf klein" onclick="zeWahl('online')">🟢 Online</button><button class="knopf klein" onclick="zeWahl('keiner')">✖ Keiner</button>`
     + AEMTER.map(amt).join("") + gruppen.map((g) => `<button class="knopf klein ${ZE.gruppe?.id === g.id ? "haupt" : ""}" onclick="zeGruppe('${g.id}')">${esc(g.gruppe.symbol)} ${esc(g.gruppe.name)} <small>(${g.anzahl})</small></button>`).join("");
   $("zeListe").innerHTML = (ZE.gruppe ? `<p class="hinweis" style="margin:0">Gewählt ist die Gruppe <b>${esc(ZE.gruppe.name)}</b> – ein Häkchen bei einer Person wählt stattdessen einzelne Mitglieder.</p>` : "")
@@ -21945,7 +21951,7 @@ function wuZeile(x, art) {
     <div class="knoepfe"><button class="knopf haupt klein" onclick="wuAntworten('${x.id}')">↩️ Antworten</button></div></div>`;
   const knoepfe = art === "offen" ? `<div class="knoepfe"><button class="knopf klein" title="früher" onclick="wuSchieben('${x.id}', -1)">▲</button><button class="knopf klein" title="später" onclick="wuSchieben('${x.id}', 1)">▼</button>
       <button class="knopf klein" onclick="WU.bearbeiten='${x.id}';wuZeigen()">✏️ Ändern</button><button class="knopf klein" onclick="wuWichtig('${x.id}')">${x.wichtig ? "☆ nicht wichtig" : "⭐ wichtig"}</button>
-      <button class="knopf klein" onclick="wuStatus('${x.id}', 'zurueckgestellt')">⏸ Später</button>${x.status === "offen" && !x.antwort ? `<button class="knopf klein" onclick="wuLoeschen('${x.id}')">🗑️</button>` : ""}</div>`
+      <button class="knopf klein" onclick="wuStatus('${x.id}', 'zurueckgestellt')">⏸ Später</button>${x.status === "offen" && !x.antwort ? `<button class="knopf klein" onclick="wuLoeschen('${x.id}')" aria-label="Löschen" title="Löschen">🗑️</button>` : ""}</div>`
     : art === "zurueck" ? `<div class="knoepfe"><button class="knopf klein" onclick="wuStatus('${x.id}', 'offen')">▶️ Wieder aufnehmen</button></div>`
     : art === "erledigt" ? `<div class="knoepfe"><button class="knopf klein" onclick="wuStatus('${x.id}', 'offen')">↩️ Nochmal öffnen</button></div>` : "";
   return `<div class="karte wu-z">${kopf}${text}${antwort}${rm}${knoepfe}</div>`;
@@ -21954,7 +21960,7 @@ function wuZeigen() {
   const f = $("wuBlatt")?.querySelector(".blatt-innen"); if (!f) return;
   const l = WU.liste || [], frage = l.filter((x) => x.status === "rueckfrage"), offen = wuOffen(l), erl = l.filter((x) => x.status === "erledigt").sort((a, b) => String(b.erledigt_am || "").localeCompare(String(a.erledigt_am || ""))), zur = l.filter((x) => x.status === "zurueckgestellt");
   const entwurf = $("wuText")?.value || "";
-  f.innerHTML = `<div class="kopf2" style="margin:0 0 6px"><h3 style="margin:0;flex:1">📝 Wünsche an Claude</h3><button class="knopf klein" onclick="$('wuBlatt').remove()">✕</button></div>
+  f.innerHTML = `<div class="kopf2" style="margin:0 0 6px"><h3 style="margin:0;flex:1">📝 Wünsche an Claude</h3><button class="knopf klein" onclick="$('wuBlatt').remove()" aria-label="Schließen" title="Schließen">✕</button></div>
     <p class="hinweis" style="margin:0 0 8px">Schreib hier hinein, was geändert, gebaut oder repariert werden soll – gern mit 🎤. Claude schaut regelmäßig hinein, arbeitet die Punkte <b>der Reihe nach</b> ab (⭐ wichtig zuerst) und schreibt dir hier, was gemacht wurde und in welcher Version. Hat Claude eine Frage, steht sie ganz oben.</p>
     <div class="karte" style="margin:0 0 10px"><textarea id="wuText" rows="3" maxlength="4000" placeholder="Was soll Claude machen? Zum Beispiel: Im Kalender die Feiertage fetter schreiben" data-diktat>${esc(entwurf)}</textarea>
       <div class="knoepfe" style="align-items:center"><select id="wuBereich" aria-label="Bereich">${WU_BEREICHE.map((b) => `<option>${b}</option>`).join("")}</select>
@@ -22320,7 +22326,7 @@ async function sperreAuswahl() {
   const zeichnen = () => { const q = $("psSuche").value.toLowerCase();
     $("psListe").innerHTML = alle.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => { const an = gew.has(m.person_id), st = gew.get(m.person_id) === true;
       return `<div class="ps-zeile${an ? " an" : ""}"><label style="flex:1;display:flex;align-items:center;gap:10px;min-width:0;cursor:pointer"><input type="checkbox" data-p="${esc(m.person_id)}" ${an ? "checked" : ""}> <span>${esc(m.name)}</span></label>
-        <button type="button" class="ps-symbol${st ? " aus" : ""}" data-s="${esc(m.person_id)}" title="${sperreSymbolTitel(st)}" aria-label="${esc(m.name)}: ${sperreSymbolTitel(st)}">${sperreSymbol(st)}</button></div>`; }).join("");
+        <button type="button" class="ps-symbol${st ? " aus" : ""}" data-s="${esc(m.person_id)}" title="${sperreSymbolTitel(st)}" aria-label="${esc(m.name)}: ${sperreSymbolTitel(st)}">${sperreSymbol(st)}</button></div>`; }).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
     $("psListe").querySelectorAll("[data-p]").forEach((c) => (c.onchange = () => { c.checked ? gew.set(c.dataset.p, false) : gew.delete(c.dataset.p); zeichnen(); }));
     $("psListe").querySelectorAll("[data-s]").forEach((b) => (b.onclick = () => { const id = b.dataset.s; gew.set(id, !(gew.get(id) === true)); zeichnen(); })); // Symbol antippen kreuzt die Person mit an
     zaehlen(); };
@@ -23213,7 +23219,7 @@ async function aeOffenLaden() {
     return (r.meine || []).filter((x) => ["offen", "freigegeben"].includes(x.status)).map((x) => ({ ...x, name: n[x.art] || x.art })); } catch { return []; }
 }
 // 2.91.0 KC-CLUB-AE-RUECKFRAGE: „Hast du Rückfragen?“ → direkt in den Chat mit dem, der die Meldung bearbeitet (Wunsch Hansi, Fall Wilfried)
-const aeRueckKnopf = (x, name) => x?.ansprech && ["offen", "freigegeben"].includes(x.status) ? `<button class="knopf klein" onclick='aeRueckChat(${JSON.stringify(x.ansprech)}, ${JSON.stringify(name || "").replace(/'/g, "&#39;")})'>💬 Rückfragen?</button>` : "";
+const aeRueckKnopf = (x, name) => x?.ansprech && ["offen", "freigegeben"].includes(x.status) ? `<button class="knopf klein" onclick='aeRueckChat(${hlJs(x.ansprech)}, ${hlJs(name || "")})'>💬 Rückfragen?</button>` : ""; // KC-CLUB-RC-PRUEFUNG (20.10.2026): onclick-JSON über hlJs/esc – auch & maskiert
 async function aeRueckChat(pid, name) {
   document.querySelectorAll(".blatt[data-dyn]").forEach((b) => b.remove()); $("aeBlatt")?.remove(); // nur geöffnete Fenster, die festen bleiben
   await direkt(pid);
@@ -25617,7 +25623,7 @@ function treffenKarte(t, vorbei) {
     </div>`}
     ${mitfahrtBlock("treffen", t.id, t.mitfahrten || [], offen, t.mitfahrtSuche || [], va || t.meine === "ja")}
     ${offen ? `<div class="knoepfe"><button class="knopf klein" onclick="inKalender('${t.id}')">📲 In meinen Kalender</button></div>` : ""}
-    ${ICH?.vorstand ? `<div class="knoepfe">${offen ? `<button class="knopf klein" onclick='treffenForm(${JSON.stringify(bearbeiten).replace(/'/g, "&#39;")})'>✏️ Ändern</button><button class="knopf klein" onclick="treffenAbsagen('${t.id}', ${va})">Absagen</button>` : ""}<button class="knopf klein" onclick="treffenLoeschen('${t.id}', ${va})">🗑️ Löschen</button></div>` : ""}
+    ${ICH?.vorstand ? `<div class="knoepfe">${offen ? `<button class="knopf klein" onclick='treffenForm(${hlJs(bearbeiten)})'>✏️ Ändern</button><button class="knopf klein" onclick="treffenAbsagen('${t.id}', ${va})">Absagen</button>` : ""}<button class="knopf klein" onclick="treffenLoeschen('${t.id}', ${va})">🗑️ Löschen</button></div>` : ""}
   </div>`;
 }
 // KC-CLUB-THEMA-FRAGE (1.24.1): nach „Ich komme“ freundlich fragen; bei „Ja“ Vorschläge öffnen, Hinweis zeigen, „＋ Neu“ hervorheben
@@ -25704,7 +25710,7 @@ async function treffenForm(t) {
     ${oaFeld("tf")}${t?.id ? '<p class="hinweis" style="margin:-4px 0 0">Schon angehängte Prospekte bleiben – hier nur neue dazunehmen.</p>' : ""}
     <label class="schalter"><span><b>📣 Im Info-Laufband ankündigen</b><br><small class="hinweis">oben auf der Startseite, ab 3 Wochen vorher bis zum Termin</small></span><input type="checkbox" id="tfLauf" ${t?.imLaufband ? "checked" : ""}></label>
     <label class="schalter"><span>Alle Mitglieder benachrichtigen (Push/Mail)</span><input type="checkbox" id="tfInfo" ${art === "treffen" ? "checked" : ""}></label>
-    <div class="knoepfe"><button class="knopf haupt" onclick="treffenSpeichern('${t?.id || ""}', this)">Speichern</button><button class="knopf" onclick="$('treffenForm').classList.add('versteckt')">Abbrechen</button></div>`;
+    <div class="knoepfe"><button class="knopf haupt" onclick="treffenSpeichern('${t?.id || ""}', this)">💾 Speichern</button><button class="knopf" onclick="$('treffenForm').classList.add('versteckt')">Abbrechen</button></div>`;
   tfArtWahl(art, true);
   $("treffenForm").classList.remove("versteckt"); window.scrollTo(0, 0);
 }
@@ -25795,7 +25801,7 @@ function vorschlagKarte(v) {
       + (e.namen?.length ? `<div class="wer hinweis" style="font-size:.85rem;margin-top:6px">👍 ${esc(e.namen.join(", "))}</div>` : "");
   } else {
     const kannWaehlen = offen && !(v.geheim && v.abgestimmt);
-    mitte = (kannWaehlen ? `<div class="wahl">${v.optionen.map((o) => `<button class="${v.meine === o ? "an" : ""}" onclick='stimme("${v.id}", ${JSON.stringify(o).replace(/'/g, "&#39;")})'>${v.meine === o ? "✔ " : ""}${esc(o)}</button>`).join("")}</div>`
+    mitte = (kannWaehlen ? `<div class="wahl">${v.optionen.map((o) => `<button class="${v.meine === o ? "an" : ""}" onclick='stimme("${v.id}", ${hlJs(o)})'>${v.meine === o ? "✔ " : ""}${esc(o)}</button>`).join("")}</div>` // KC-CLUB-RC-PRUEFUNG (20.10.2026): onclick-JSON über hlJs/esc – auch & maskiert
       + (v.geheim ? '<p class="hinweis" style="font-size:.85rem">🔒 Geheim: Niemand sieht, wie du stimmst. Die Stimme kann danach nicht mehr geändert werden.</p>' : "") : "")
       + (offen && v.geheim && v.abgestimmt ? '<p><span class="marke gruen">✔ Du hast abgestimmt</span></p>' : "")
       + balken(v);
@@ -26944,7 +26950,7 @@ function dvZeichnen() {
 // KC-CLUB-DV-UEBERALL (2.500.0, Wunschliste Nr. 27): derselbe 📊-Knopf wie im Büro-Eingang überall, wo der Dienstplan aufgeht
 // (Dienstpläne, Mein Dienst, Dienstwünsche). KC-CLUB-DV-MITGLIEDER (2.501.0): auch für Mitglieder – der Server liefert ihnen nur sich selbst
 // und wer das Teilen erlaubt hat; Ablegen und „wer fehlt noch“ bleiben bei der Clubleitung.
-const dvLeitung = () => !!(ICH?.vorstand || ICH?.admin);
+// KC-CLUB-RC-PRUEFUNG (20.10.2026): dvLeitung entfernt – nirgends benutzt
 const dvDarf = () => !!ICH;
 const dvKnopf = () => dvDarf() ? `<button type="button" class="knopf klein pr-filter-knopf" onclick="dvStart()" title="Dienstzeiten-Übersicht (alle Namen und Tage)" aria-label="Dienstzeiten-Übersicht">📊</button>` : "";
 async function dvStart() {
@@ -27651,7 +27657,7 @@ function flAngaben(id) {
     <div class="zwei"><label class="feld">Termin<input id="flAT" type="date" value="${tag}"></label><label class="feld">Uhrzeit<input id="flAZ" type="time" value="${zeit}"></label></div>
     <label class="feld">Ort<input id="flAO" maxlength="120" value="${esc(f.termin_ort || "")}"></label>
     <label class="feld">Betrag (€)<input id="flAB" type="number" min="0" max="10000" value="${f.betrag ?? ""}"></label>
-    <div class="knoepfe"><button class="knopf haupt" onclick="flAngabenSpeichern('${id}')">Speichern</button><button class="knopf" onclick="$('flAng').remove()">Abbrechen</button></div>`);
+    <div class="knoepfe"><button class="knopf haupt" onclick="flAngabenSpeichern('${id}')">💾 Speichern</button><button class="knopf" onclick="$('flAng').remove()">Abbrechen</button></div>`);
 }
 function flAngabenSpeichern(id) {
   const t = $("flAT").value, termin = t ? new Date(taZeitpunkt(t, $("flAZ").value || "11:00")).toISOString() : null;
@@ -27959,7 +27965,7 @@ function angebotFormHtml() {
   const f = HL.angebotForm, sy = HL.hilfe?.angebotSymbole || ["🤲"];
   return `<div class="karte hl-form"><h3 style="margin:0 0 6px">🤲 ${f.id ? "Angebot ändern" : "Ich biete Hilfe an"}</h3>
     <div class="hl-frage" data-sh="af-was">Wobei kannst du helfen?</div>
-    <div class="hl-chips">${ANGEBOT_IDEEN.map((t) => `<button class="chip${f.titel === t ? " an" : ""}" onclick="HL.angebotForm.titel=${JSON.stringify(t).replace(/"/g, "&quot;")};hlZeigen()">${esc(t)}</button>`).join("")}</div>
+    <div class="hl-chips">${ANGEBOT_IDEEN.map((t) => `<button class="chip${f.titel === t ? " an" : ""}" onclick="HL.angebotForm.titel=${esc(JSON.stringify(t))};hlZeigen()">${esc(t)}</button>`).join("")}</div>
     <label class="feld">oder eigener Text<input maxlength="80" placeholder="z. B. Einführung in den Bilderrechner" value="${esc(f.titel)}" oninput="HL.angebotForm.titel=this.value"></label>
     <div class="hl-frage" data-sh="af-sym">Symbol</div><div class="symbolwahl">${sy.map((x) => `<button class="${x === f.sym ? "an" : ""}" onclick="HL.angebotForm.sym='${x}';hlZeigen()">${x}</button>`).join("")}</div>
     <label class="feld">Was genau? (freiwillig)<textarea id="afText" data-diktat rows="3" maxlength="600" placeholder="z. B. Ich komme vorbei oder wir treffen uns im Vereinsheim – ca. 30 Minuten, Handy bitte mitbringen." oninput="HL.angebotForm.text=this.value">${esc(f.text)}</textarea></label>
@@ -28614,7 +28620,7 @@ function uhMehrfachStarten() {
   $("chat").innerHTML = `<p class="hinweis">Schreib deine Nachricht und tippe auf ➤. Sie geht <b>einzeln</b> in jeden markierten Chat – wie eine normale Nachricht von dir. In Gruppen lesen alle Gruppenmitglieder mit.</p>`;
   $("text").focus();
 }
-const DOPPELTIPP_MS = 400;
+// KC-CLUB-RC-PRUEFUNG (20.10.2026): DOPPELTIPP_MS entfernt – nirgends benutzt
 const unterhName = (u) => u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
 // ---------- 2.387.0 KC-CLUB-CHAT-FAVORITEN (Wunsch Hansi „Gruppe Favoriten: oben anklicken, dann erscheinen die, mit denen man am meisten
 // schreibt, oder die man mit Sternchen markiert“) ----------
@@ -28904,7 +28910,7 @@ function frageVerb(text) {
 async function geraetAbmelden() {
   if (!(await frage("Von diesem Gerät abmelden?\n\nDein Zugang und alle Club-Daten auf diesem Gerät werden gelöscht – auch Notfallpass, Entwürfe und Einstellungen. Auf deinen anderen Geräten und im Club bleibt alles. Wieder anmelden geht nur mit deinem Zugangslink.", { ja: "🚪 Abmelden", nein: "Abbrechen", gefahr: true }))) return;
   try { const r = await navigator.serviceWorker?.getRegistration?.(); const a = await r?.pushManager?.getSubscription(); await a?.unsubscribe(); } catch {}
-  try { Object.keys(localStorage).filter((k) => /^(kc_club_|kc_buero_|kc-clubapp\.|kcclub)/.test(k)).forEach((k) => localStorage.removeItem(k)); } catch {}
+  try { Object.keys(localStorage).filter((k) => /^(kc_club_|kc_buero_|kc-clubapp\.|kcclub)/.test(k) || /^(kc_wichtig_frage|kc-einw-zu)/.test(k)).forEach((k) => localStorage.removeItem(k)); } catch {} // KC-CLUB-RC-PRUEFUNG (20.10.2026): auch „Wichtig“-Frage und Einweisung-zu
   try { sessionStorage.clear(); } catch {}
   try { await caches.delete("kcclub-geteilt"); } catch {}
   location.replace(location.pathname);
@@ -30249,7 +30255,7 @@ function empfListe() {
   const q = $("empfSuche").value.toLowerCase();
   const chip = (a, text) => {
     const g = empfGruppe(a), an = g.length > 0 && g.every((p) => empfWahl.personen.includes(p));
-    return `<button class="knopf klein ${an ? "haupt" : ""}" onclick='gruppeWahl(${JSON.stringify(a).replace(/'/g, "&#39;")})'>${text} <small>(${g.length})</small></button>`;
+    return `<button class="knopf klein ${an ? "haupt" : ""}" onclick='gruppeWahl(${hlJs(a)})'>${text} <small>(${g.length})</small></button>`; // KC-CLUB-RC-PRUEFUNG (20.10.2026): onclick-JSON über hlJs/esc – auch & maskiert
   };
   $("schnellEmpf").innerHTML = [
     ...(empfGruppe("@online").length ? [chip("@online", "🟢 Alle gerade online")] : []), // KC-CLUB-ONLINE-RUNDE (1.21.2)
@@ -30259,7 +30265,7 @@ function empfListe() {
   ].join("");
   $("empfListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label>
     <input type="checkbox" ${empfWahl.personen.includes(m.person_id) ? "checked" : ""} onchange="personWahl('${m.person_id}', this.checked)">
-    <span style="flex:1">${esc(m.name)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}</span>${wegIcons(m)}</label>`).join("");
+    <span style="flex:1">${esc(m.name)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}</span>${wegIcons(m)}</label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   $("empfGewaehlt").textContent = empfTest() ? "nur du selbst (Test)" : (empfWahl.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name).filter(Boolean).join(", ") || "niemand");
 }
 function gruppeWahl(a) {
@@ -30374,7 +30380,7 @@ function grListe() {
   $("grListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => {
     const fest = m.person_id === GR.ersteller && GR.id;
     return `<label><input type="checkbox" ${GR.personen.includes(m.person_id) ? "checked" : ""} ${fest ? "disabled" : ""} onchange="grWahl('${m.person_id}', this.checked)">
-      <span style="flex:1">${esc(m.name)}${fest ? ' <span class="marke">👑 angelegt</span>' : ""}</span>${wegIcons(m)}${!fest && GR.personen.includes(m.person_id) ? `<button type="button" class="gr-krone${GR.admins.includes(m.person_id) ? " an" : ""}" title="Gruppen-Admin" aria-label="Gruppen-Admin" aria-pressed="${GR.admins.includes(m.person_id)}" onclick="event.preventDefault();grAdmin('${m.person_id}')">👑</button>` : ""}</label>`; }).join("");
+      <span style="flex:1">${esc(m.name)}${fest ? ' <span class="marke">👑 angelegt</span>' : ""}</span>${wegIcons(m)}${!fest && GR.personen.includes(m.person_id) ? `<button type="button" class="gr-krone${GR.admins.includes(m.person_id) ? " an" : ""}" title="Gruppen-Admin" aria-label="Gruppen-Admin" aria-pressed="${GR.admins.includes(m.person_id)}" onclick="event.preventDefault();grAdmin('${m.person_id}')">👑</button>` : ""}</label>`; }).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   const namen = GR.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name.split(" ")[0]).filter(Boolean);
   $("grGewaehlt").textContent = "Du" + (namen.length ? ", " + namen.join(", ") : "") + ` (${namen.length + 1})`;
 }
@@ -32225,7 +32231,7 @@ function privatForm(x, vorkommen) {
     ${x.wiederholung && x.wiederholung !== "keine" ? `<p class="hinweis" style="margin:0">🔁 Das ist eine Terminreihe – Änderungen gelten für alle Termine der Reihe.</p>` : ""}
     <label class="schalter"><span><b>📌 Auf der Startseite</b> – oben im Countdown mitlaufen lassen („noch 5 Tage“)</span><input type="checkbox" id="ptStart" ${x.startseite ? "checked" : ""}></label><!-- KC-CLUB-PRIVAT-STARTSEITE (2.242.0) -->
     <label class="feld">⏰ Erinnerung<select id="ptErinnerung">${PT_ERINNERUNG.map(([m, t]) => `<option value="${m}" ${Number(x.erinnerung_min || 0) === m ? "selected" : ""}>${t}</option>`).join("")}</select></label>
-    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => privatSpeichern('${x.id || ""}'))">Speichern</button>
+    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => privatSpeichern('${x.id || ""}'))">💾 Speichern</button>
       ${x.id ? `<button class="knopf" onclick="privatLoeschen('${x.id}', ${x.wiederholung && x.wiederholung !== "keine" ? "true" : "false"})">🗑️ Löschen</button>` : ""}
       <button class="knopf" onclick="$('treffenForm').classList.add('versteckt')">Abbrechen</button></div>`;
   if (x.ganztaegig) { $("ptZeit").disabled = $("ptBis").disabled = true; }
@@ -33071,7 +33077,7 @@ function bsFormular(id, vorgabe = {}) {
       <button type="button" class="knopf klein" onclick="$('bsFotoInput').click()">📷 Foto aufnehmen / auswählen</button><input id="bsFotoInput" type="file" accept="image/*,application/pdf" multiple class="versteckt" onchange="bsFotosGewaehlt(this.files)">
       <div id="bsFotos" class="bs-fotos"></div></div>
     <div class="karte" id="bsVersand"></div>
-    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="bsSpeichern" onclick="bsSpeichern(this)">Speichern</button><button class="knopf" onclick="$('bsBlatt').remove()">Abbrechen</button></div>`);
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="bsSpeichern" onclick="bsSpeichern(this)">💾 Speichern</button><button class="knopf" onclick="$('bsBlatt').remove()">Abbrechen</button></div>`);
   f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null; // 2.23.63: nicht aus Versehen schließen
   // 2.23.65: Entwurf eines neuen Besuchs wie im alten Programm – bleibt auf diesem Gerät, falls die App zugeht
   if (!b && !Object.keys(vorgabe).length) bsEntwurfLaden();
@@ -33145,7 +33151,7 @@ function bsZeigen() {
 }
 function bsZeigenKnopf() {
   const k = $("bsSpeichern"); if (!k) return;
-  k.textContent = BS.f.geplant ? ($("bsTerminSenden")?.checked ? "📅 Speichern & Termin bestätigen" : "📅 Geplant speichern") : $("bsSenden")?.checked ? "Speichern & senden" : BS.f.id ? "Änderungen speichern" : "Speichern";
+  k.textContent = BS.f.geplant ? ($("bsTerminSenden")?.checked ? "📅 Speichern & Termin bestätigen" : "📅 Geplant speichern") : $("bsSenden")?.checked ? "Speichern & senden" : BS.f.id ? "Änderungen speichern" : "💾 Speichern"; // KC-CLUB-RC-PRUEFUNG (20.10.2026): wie der Knopf
 }
 async function bsFotosGewaehlt(files) {
   for (const f of files) {
@@ -33495,7 +33501,7 @@ function taEmpfListe() {
   $("taGruppen").innerHTML = TA.gruppen.map((g) => `<button type="button" class="knopf klein ${TA.wahl.gruppe?.id === g.id ? "haupt" : ""}" onclick="taGruppe('${g.id}')">${esc(g.symbol)} ${esc(g.name)} <small>(${g.anzahl})</small></button>`).join("")
     + `<button type="button" class="knopf klein" onclick="taAlle()">👥 Alle</button><button type="button" class="knopf klein" onclick="TA.wahl={personen:[],gruppe:null};taEmpfListe()">✖ Keiner</button>`;
   $("taListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label>
-    <input type="checkbox" ${!TA.wahl.gruppe && TA.wahl.personen.includes(m.person_id) ? "checked" : ""} onchange="taPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}</span></label>`).join("");
+    <input type="checkbox" ${!TA.wahl.gruppe && TA.wahl.personen.includes(m.person_id) ? "checked" : ""} onchange="taPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   $("taWer").innerHTML = `An: <b>${esc(taWerText())}</b>`;
 }
 function taPerson(pid, an) { if (TA.wahl.gruppe) TA.wahl = { personen: [], gruppe: null }; TA.wahl.personen = an ? [...new Set([...TA.wahl.personen, pid])] : TA.wahl.personen.filter((x) => x !== pid); taEmpfListe(); }
@@ -33849,7 +33855,7 @@ function mfAutoHtml(m, art, bezugId, aktiv, offen, ichDabei) {
   return `<div class="mf-karte">
     <div class="mf-kopf"><div style="flex:1;min-width:0"><b>🚗 ${esc(m.fahrer.name)}</b>${m.eigen ? ' <span class="marke">deine Fahrt</span>' : ""}
       <div class="hinweis" style="font-size:.85rem">${m.treffpunkt ? "📍 " + esc(m.treffpunkt) : "📍 Treffpunkt noch offen"}${m.notiz ? " · " + esc(m.notiz) : ""}</div></div>
-      ${m.eigen && offen ? `<button class="knopf klein" title="ändern" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}', ${m.plaetze}, ${JSON.stringify(m.treffpunkt || "").replace(/"/g, "&quot;")})">✏️</button>` : ""}
+      ${m.eigen && offen ? `<button class="knopf klein" title="ändern" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}', ${m.plaetze}, ${esc(JSON.stringify(m.treffpunkt || ""))})">✏️</button>` : ""}
       ${m.darfLoeschen ? `<button aria-label="Löschen" class="knopf klein" title="löschen" onclick="mitfahrtLoeschen('${m.id}', '${art}')">🗑️</button>` : ""}</div>
     <div class="mf-auto${m.plaetze > 4 ? " mf-bus" : ""}">${reihen.map((rh) => `<div class="mf-reihe">${rh.map(sitz).join("")}</div>`).join("")}</div>
     <div class="mf-status"><span>${frei} von ${m.plaetze} ${m.plaetze === 1 ? "Platz" : "Plätzen"} frei</span>${marke}</div></div>`;
@@ -33966,7 +33972,7 @@ function kalIcs(id) {
 const KALV = { url: null, info: null };
 const kalWebcal = (u) => u.replace(/^https:/, "webcal:");
 function kalVerbindenHtml() {
-  const u = KALV.url, a = KALV.info || INIT?.kalenderAbo, js = (x) => JSON.stringify(x).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+  const u = KALV.url, a = KALV.info || INIT?.kalenderAbo, js = (x) => JSON.stringify(x).replace(/&/g, "&amp;").replace(/'/g, "&#39;").replace(/"/g, "&quot;"); // KC-CLUB-RC-PRUEFUNG (20.10.2026): & zuerst maskieren
   if (!u) return `<h3 style="margin-top:0">📲 Kalender verbinden</h3>
     ${a ? `<p>✅ Ein Kalender ist schon verbunden (seit ${esc(zeitKurz(a.erstellt_am))}${a.zuletzt_abgerufen ? `, zuletzt aktualisiert ${esc(zeitKurz(a.zuletzt_abgerufen))}` : ""}).</p>
       <p class="hinweis">Dieser ältere Link lässt sich nicht noch einmal anzeigen. Für ein weiteres Handy oder Google braucht es einmal einen neuen Link – danach geht das jederzeit ohne Neuanlage. Den bisherigen Kalender dann bitte mit dem neuen Link neu verbinden.</p>
@@ -34014,7 +34020,7 @@ function kalenderAboZeigen() {
   if ($("kalAboInfo")) $("kalAboInfo").innerHTML = a ? `<p class="hinweis">✅ Kalender verbunden seit ${esc(zeitKurz(a.erstellt_am))}${a.zuletzt_abgerufen ? ` · zuletzt aktualisiert ${esc(zeitKurz(a.zuletzt_abgerufen))}` : " · noch nicht abgerufen"}.</p>` : "";
   if ($("kalAboKnopf")) $("kalAboKnopf").textContent = a ? "📲 Weiteren Kalender verbinden / Link zeigen" : "📲 Kalender verbinden";
 }
-const kalenderAbo = kalVerbinden; // ältere Knöpfe/Verweise
+// KC-CLUB-RC-PRUEFUNG (20.10.2026): kalenderAbo (Alias) entfernt – nirgends benutzt
 
 // ---------- KC-CLUB-AENDERUNG (2.22.7, Wunsch Hansi): „✏️ Meine Daten haben sich geändert“ ----------
 // Mitglied tippt an, was sich geändert hat (Register AENDERUNG auf dem Server) → geht je Art an Clubsprecher/Kassenwart/Admin.
@@ -34496,7 +34502,8 @@ async function fotosHochladen() {
     }
   }
   knopf.disabled = false; faDateien = [];
-  $("faFortschritt").innerHTML = fehler.length ? `<div style="color:#c62828">⚠️ Nicht hochgeladen:<br>${fehler.map(esc).join("<br>")}</div>` : "";
+  // KC-CLUB-RC-PRUEFUNG (20.10.2026): Rot über var(--textRot) – im Dunkelmodus lesbar
+  $("faFortschritt").innerHTML = fehler.length ? `<div style="color:var(--textRot, #c62828)">⚠️ Nicht hochgeladen:<br>${fehler.map(esc).join("<br>")}</div>` : "";
   melde(ok ? `✔ ${ok} Foto${ok > 1 ? "s" : ""} im Album${fehler.length ? ` – ${fehler.length} fehlgeschlagen` : ""}` : "Es wurde kein Foto hochgeladen.", !ok);
   if (ok) await fotosLaden(fehler.length > 0);
 }
@@ -34582,7 +34589,7 @@ function fotoAendernForm() {
     <label class="feld">Anlass${anlassAuswahl("fbAnlass", f.bezug_art, f.bezug_id)}</label>
     <label class="feld">Datum<input type="date" id="fbDatum" value="${esc(f.datum)}"></label>
     <label class="feld">Beschreibung<input id="fbBeschr" maxlength="300" value="${esc(f.beschreibung)}"></label>
-    <div class="knoepfe"><button class="knopf haupt klein" onclick="fotoAendern()">Speichern</button><button class="knopf klein" onclick="fotoAnsehen(faIndex)">Abbrechen</button></div>`;
+    <div class="knoepfe"><button class="knopf haupt klein" onclick="fotoAendern()">💾 Speichern</button><button class="knopf klein" onclick="fotoAnsehen(faIndex)">Abbrechen</button></div>`;
 }
 async function fotoAendern() {
   const f = FA.fotos[faIndex], [ba, ...bid] = ($("fbAnlass").value || "").split("|");
@@ -35008,7 +35015,7 @@ async function rcAngebotPruefen(versuch = 0) {
       <p style="margin:0 0 6px">Hier ist deine <b>persönliche Checkliste für die Kreuzfahrt</b> – damit nichts zuhause bleibt (auch Brille, Hörgeräte, Medikamente …).</p>
       <p style="margin:0 0 6px"><b>Möchtest du sie ausdrucken oder am Bildschirm abhaken?</b></p></div>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">
-      <button class="knopf haupt" style="text-align:center" onclick="rcAngebotAntwort('${esc(a.id)}', 'druck')">🖨️ Ausdrucken (PDF)</button>
+      <button class="knopf haupt" style="text-align:center" onclick="rcAngebotAntwort('${esc(a.id)}', 'druck')">🖨️ Drucken / PDF</button>
       <button class="knopf haupt" style="text-align:center" onclick="rcAngebotAntwort('${esc(a.id)}', 'bildschirm')">☑️ Am Bildschirm abhaken</button>
       <button class="knopf" style="text-align:center" onclick="rcAngebotAntwort('${esc(a.id)}', 'spaeter')">⏰ Später</button>
       <button class="knopf klein" style="text-align:center" onclick="rcAngebotAntwort('${esc(a.id)}', 'aus')">🔕 Nicht mehr erinnern</button></div>
@@ -35045,7 +35052,7 @@ async function rcOeffnen(id) {
     <details class="karte rc-sblock" open><summary><b>✏️ Eigene Punkte</b></summary>${eigene}
       <div style="display:flex;gap:6px;margin-top:6px"><input id="rcNeu" maxlength="80" placeholder="z. B. Reiseführer, Spielkarten …" style="flex:1" onkeydown="if(event.key==='Enter')rcEigenNeu()"><button type="button" class="knopf" aria-label="Eigenen Eintrag hinzufügen" onclick="rcEigenNeu()">＋</button></div></details>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch;margin-top:10px">
-      <button class="knopf haupt" style="text-align:center" onclick="rcDrucken('${esc(id)}')">🖨️ Ausdrucken / als PDF</button>
+      <button class="knopf haupt" style="text-align:center" onclick="rcDrucken('${esc(id)}')">🖨️ Drucken / PDF</button>
       <button class="knopf" style="text-align:center" onclick="einmal(this, () => rcAblegen('${esc(id)}'))">🗄️ Aktuellen Stand im Archiv ablegen</button>
       <button class="knopf" style="text-align:center" onclick="$('rcBlatt').remove()">Schließen</button></div>
     <p class="hinweis" style="margin:8px 0 0">Jeder Haken wird sofort gespeichert – auf Handy, Tablet und PC gleich. 2 Tage vor der Abfahrt erinnert dich die App, wenn noch etwas offen ist.</p>`);
@@ -35879,7 +35886,7 @@ const ausweisSpeicher = () => "kc_club_ausweis_" + (ICH?.person_id || "");
 function ausweisGemerkt() { try { const x = JSON.parse(localStorage.getItem(ausweisSpeicher()) || "null"); return x && /^KC-\d{3,5}$/.test(x.nummer) && x.svg ? x : null; } catch { return null; } }
 function ausweisSvg(nummer) { const q = qrcode(0, "M"); q.addData(nummer); q.make(); return q.createSvgTag({ cellSize: 8, margin: 4, scalable: true }); }
 function ausweisHtml(x, frisch) {
-  const kopf = `<div class="kopf2" style="margin:0 0 6px"><h3 style="margin:0;flex:1">🪪 Mein Ausweis-QR</h3><button class="knopf klein" onclick="$('ausweisBlatt').remove()">✕</button></div>`;
+  const kopf = `<div class="kopf2" style="margin:0 0 6px"><h3 style="margin:0;flex:1">🪪 Mein Ausweis-QR</h3><button class="knopf klein" onclick="$('ausweisBlatt').remove()" aria-label="Schließen" title="Schließen">✕</button></div>`;
   if (!x) return kopf + `<p class="hinweis">Für dich ist noch keine Mitgliedsnummer hinterlegt. Bitte bei der Clubleitung melden – dann erscheint hier dein QR-Code.</p>`;
   return kopf + `<div class="ausweis-karte"><div class="ausweis-kopf">${cdLogo(9)}<b>${esc(KC_CD.name)}</b></div>
     <div class="ausweis-qr">${x.svg}</div><div class="ausweis-name">${esc(ICH?.name || "")}</div><div class="ausweis-nr">${esc(x.nummer)}</div></div>
@@ -36960,7 +36967,7 @@ function arOrdnerForm(id) {
     <label class="schalter"><span><b>🔒 Nur Clubleitung</b> – nur Clubsprecher, Kassenwart und Admin sehen diesen Ordner</span><input type="checkbox" id="arLeitung" ${(o ? o.nur_vorstand : d.arten[art].vorstand) ? "checked" : ""}></label>
     <label class="feld">📜 Einleitung (freiwillig) <small class="hinweis">– erste Zeile = Überschrift, Absätze mit Leerzeile</small><textarea id="arEinleitung" rows="5" maxlength="4000" placeholder="z. B. Wie alles begann">${esc(o?.einleitung || "")}</textarea></label>
     <label class="schalter"><span><b>📥 Alle dürfen einreichen</b> – Mitglieder können etwas hineinlegen; sichtbar erst nach Prüfung durch Clubsprecher/Admin</span><input type="checkbox" id="arEinreichen" ${(o ? o.einreichen : art === "chronik") ? "checked" : ""}></label>
-    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => arOrdnerSpeichern('${o?.id || ""}'))">Speichern</button><button class="knopf" onclick="arBlattZu()">Abbrechen</button></div>`);
+    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => arOrdnerSpeichern('${o?.id || ""}'))">💾 Speichern</button><button class="knopf" onclick="arBlattZu()">Abbrechen</button></div>`);
   arRegZeigen();
 }
 function arArtGewaehlt(art) {
@@ -37425,7 +37432,7 @@ function arEigenForm(o) {
     <div class="feld">Farbe des Ordners<div class="ar-farben">${AR_FARBEN.map((c, i) => `<button type="button" class="${(o.farbe || 6) === i + 1 ? "an" : ""}" style="background:${c}" data-f="${i + 1}" onclick="document.querySelectorAll('.ar-farben button').forEach((b)=>b.classList.toggle('an',b===this))" aria-label="Farbe ${i + 1}"></button>`).join("")}</div></div>
     <div class="feld">Register (Reiter im Ordner)<div class="chips" id="arRegChips"></div>
       <div class="ar-zeile"><input id="arRegNeu" maxlength="30" placeholder="weiteres Register, z. B. Zeugnisse" onkeydown="if(event.key==='Enter')arRegDazu()"><button class="knopf klein" aria-label="Register hinzufügen" onclick="arRegDazu()">＋</button></div></div>
-    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => arEigenSpeichern('${o.id}'))">Speichern</button><button class="knopf" onclick="arBlattZu()">Abbrechen</button></div>`);
+    <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => arEigenSpeichern('${o.id}'))">💾 Speichern</button><button class="knopf" onclick="arBlattZu()">Abbrechen</button></div>`);
   arRegZeigen();
 }
 async function arEigenSpeichern(id) {
@@ -38857,7 +38864,8 @@ async function fpAdmin(tage) {
     return `<div class="fp-zeile${x.stufe === "schwer" || art === "hilferuf" ? " fp-rot" : ""}"><span class="hinweis">${esc(fKurz.format(new Date(x.zeit)) + " " + fZeit.format(new Date(x.zeit)))}</span> ${FP_STUFE_ZEICHEN[x.stufe] || ""} ${sym} <b>${esc(name)}</b>${info ? `<div class="hinweis">${esc(info)}</div>` : ""}${tun ? `<div class="hinweis" style="font-style:italic">→ ${esc(tun)}</div>` : ""}</div>`; };
   const karten = [...gruppen.entries()].map(([name, liste]) => { const probleme = liste.filter((x) => x.stufe ? x.stufe !== "info" : !nurStarts(x) && !/umgebung|hinweis|update_getippt|link_kopiert/.test(x.aktion));
     const zeigen = FP_ADMIN.info ? liste : probleme, still = liste.length - zeigen.length;
-    return `<details class="karte innen"${probleme.length ? " open" : ""}><summary><b>${esc(name)}</b> – ${probleme.length ? `<span style="color:#c62828">${probleme.length} Auffälligkeit${probleme.length === 1 ? "" : "en"}</span>` : "✅ unauffällig"} · ${liste.filter(nurStarts).length}× geöffnet</summary>${zeigen.map(zeile).join("")}${still ? `<div class="hinweis" style="margin:4px 0">⚪ ${still} Info-Einträge ausgeblendet (Messwerte, Updates, Gerät)</div>` : ""}</details>`; }).join("");
+    // KC-CLUB-RC-PRUEFUNG (20.10.2026): Rot über var(--textRot) – im Dunkelmodus lesbar
+    return `<details class="karte innen"${probleme.length ? " open" : ""}><summary><b>${esc(name)}</b> – ${probleme.length ? `<span style="color:var(--textRot, #c62828)">${probleme.length} Auffälligkeit${probleme.length === 1 ? "" : "en"}</span>` : "✅ unauffällig"} · ${liste.filter(nurStarts).length}× geöffnet</summary>${zeigen.map(zeile).join("")}${still ? `<div class="hinweis" style="margin:4px 0">⚪ ${still} Info-Einträge ausgeblendet (Messwerte, Updates, Gerät)</div>` : ""}</details>`; }).join("");
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">🩺 Fehlerprotokoll</h3>
     <p class="hinweis" style="margin:0">Alles, was bei den Mitgliedern beim Starten oder Bedienen schiefging – mit Gerät, Browser und Version. Nur Technik, keine Inhalte.</p>
     ${r.gesamt ? `<div class="fp-gesamt"><span>Im Protokoll: <b>${r.gesamt.anzahl}</b> Einträge – 🔴 ${r.gesamt.schwer} schwerwiegend · 🟡 ${r.gesamt.hinweis} Hinweise · ⚪ ${r.gesamt.info} Info</span>${r.gesamt.anzahl ? `<button class="knopf klein" onclick="fpLeeren(${r.gesamt.anzahl}, ${r.gesamt.schwer})">🗑️ Protokoll leeren</button>` : ""}</div>
@@ -38867,6 +38875,11 @@ async function fpAdmin(tage) {
   $("adminBlatt").classList.remove("versteckt");
 }
 
+// KC-CLUB-RC-PRUEFUNG (20.10.2026): Koch-Emoji-Werte VOR dem Start-Block – der Start kann schon jzbTwinkeyMalen (liest KOCH) erreichen,
+// vorher stand „const KOCH“ dahinter (Zeitzone vor der Zuweisung → ReferenceError)
+const KOCH_EMO = { "🧑‍🍳": "1f9d1-200d-1f373", "👨‍🍳": "1f468-200d-1f373", "👩‍🍳": "1f469-200d-1f373" };
+const KOCH_RE = /🧑‍🍳|👨‍🍳|👩‍🍳/g;
+const KOCH = { ok: true, bild: null };
 // ---------- Start der App ----------
 (function start() {
   START_MESS.eingerichtet = performance.now(); // KC-CLUB-STARTZEIT
@@ -38923,7 +38936,7 @@ async function fpAdmin(tage) {
   updatePruefen(false).then(() => setTimeout(updateSelbst, updateFrisch() ? 0 : 4000)); // KC-CLUB-UPDATE-START: frisch geöffnet → sofort
   setInterval(() => { if (!document.hidden && aktuelleAnsicht === "start" && !chatId) updatePruefen(false).then(updateSelbst); }, UPDATE_TAKT_MS);
   setTimeout(stStart, 2500); // KC-CLUB-STANDORT
-  document.addEventListener("visibilitychange", () => { updWeg(document.hidden); if (!document.hidden) { if (ST.eigen) stMelden(true); neuLaden(); updatePruefen(false).then(updateSelbst); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
+  document.addEventListener("visibilitychange", () => { updWeg(document.hidden); if (!document.hidden) { if (ST.eigen) stMelden(true); if (Date.now() - NEU_ZULETZT >= 60000) neuLaden(); /* KC-CLUB-RC-PRUEFUNG (20.10.2026): höchstens 1× je 60 s neu laden (DB sparen) */ updatePruefen(false).then(updateSelbst); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
   setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat" && !(RT.ok && Date.now() - NEU_ZULETZT < 180000)) neuLaden(); }, sparTakt(60000)); // KC-CLUB-SPARMODUS · 2.359.0: steht die direkte Leitung, nur alle 3 Min. (Neues kommt sofort über die Leitung)
   setInterval(() => pwLive(true), PW_LIVE_MS); // KC-CLUB-PINNWAND-LIVE: auch im Chat · 2.360.0: mit Leitung seltener
 })();
@@ -38932,9 +38945,7 @@ async function fpAdmin(tage) {
 // 🧑‍🍳 (Koch) ist ein zusammengesetztes Emoji (🧑 + 🍳). Ältere Windows-PCs und manche Browser kennen es nicht und zeigen beide Teile nebeneinander.
 // Die App misst beim Start, ob das Gerät es als EIN Zeichen malt. Wenn nicht: überall ein kleines Bild (Twemoji, CC BY 4.0, lib/emoji/) statt
 // der zwei Teile – in Kacheln, Texten und beim Twinkey im Kopf. Eingabefelder und Auswahllisten bleiben unberührt.
-const KOCH_EMO = { "🧑‍🍳": "1f9d1-200d-1f373", "👨‍🍳": "1f468-200d-1f373", "👩‍🍳": "1f469-200d-1f373" };
-const KOCH_RE = /🧑‍🍳|👨‍🍳|👩‍🍳/g;
-const KOCH = { ok: true, bild: null };
+// KOCH_EMO, KOCH_RE und KOCH stehen jetzt vor dem Start-Block (KC-CLUB-RC-PRUEFUNG, 20.10.2026)
 function kochEmojiPruefen() {
   let erzwingen = ""; try { erzwingen = localStorage.getItem("kc_club_koch_bild") || ""; } catch {}
   if (erzwingen) return (KOCH.ok = erzwingen !== "1");

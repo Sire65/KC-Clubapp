@@ -4550,6 +4550,16 @@
   /* 2.499.0 KC-CLUB-PROTOKOLL-NACHTRAG */
   .pr-nachtrag { border: 2px solid var(--gold); } .pr-nt + .pr-nt { border-top: 1px solid var(--linie); margin-top: 10px; padding-top: 10px; }
   .pr-nt-text { background: var(--karte2); border-radius: 10px; padding: 8px 10px; white-space: normal; line-height: 1.45; }
+  /* KC-CLUB-RC-PRUEFUNG (20.10.2026): Tippflächen ≥ 44 px für ältere Mitglieder – Aussehen bleibt, nur die Trefferfläche wächst */
+  .sc-blatt .knoepfe .knopf, .sc-blatt .knopf.klein { min-height: 44px; font-size: .9rem; } .sc-blatt .sc-eintrag .knoepfe .knopf { font-size: .9rem; }
+  .il-zu, .bf-zu, .anl-chip .anl-weg, .na-seite button, .rund.zustell-knopf { position: relative; }
+  .il-zu::after, .bo-mini button::after, .lv-weg::after, .druckknopf.klein::after { content: ""; position: absolute; inset: -8px; }
+  .bf-zu::after { content: ""; position: absolute; inset: -8px -8px -8px -2px; } /* links liegt der Auslöser – nicht überdecken */
+  .anl-chip .anl-weg::after { content: ""; position: absolute; inset: -6px -6px -6px -3px; }
+  .na-seite button::after { content: ""; position: absolute; inset: -3px -7px; } /* übereinander mit 6 px Abstand – nur seitlich weit */
+  .bu-top-knoepfe button, .ar-farben button { min-width: 40px; min-height: 40px; } .rund.zustell-knopf { width: 40px; height: 40px; min-width: 40px; }
+  /* KC-CLUB-RC-PRUEFUNG (20.10.2026): Einstellungs-Reiter lesbar – größere Schrift, Umbruch statt „…“, Beschriftung nicht blass */
+  .rk-tab { opacity: 1; } .rk-tab small { font-size: .8rem; line-height: 1.15; max-width: 84px; white-space: normal; overflow: visible; text-overflow: clip; text-align: center; overflow-wrap: anywhere; hyphens: auto; }
 </style>
 </head>
 <body>
@@ -4560,7 +4570,7 @@
   <div class="app-laedt-lang" id="appLaedtLang" hidden>Das Netz ist gerade langsam – die App lädt noch. Beim nächsten Mal geht es schneller.<br><button type="button" id="appLaedtNeu" hidden onclick="location.reload()">🔄 Neu laden</button></div></div>
 <div id="gesperrt" class="seite versteckt">
   <div class="hero"><div class="kopfzeile"><div class="logo"><img src="kc-kochmuetze-weiss.webp" alt=""></div><div><div class="marke-klein">KÖCHECLUB WERNE</div><div class="titel">Willkommen</div></div></div></div>
-  <div class="karte versteckt" id="linkUngueltig" style="border:2px solid #c62828"><h3 style="color:#c62828">⚠️ Dieser Link gilt nicht mehr</h3><p style="margin:0">Es wurde inzwischen ein <b>neuerer Link</b> für dich verschickt – oder der Link ist unvollständig. Kein Problem: unten bei <b>„Link verloren?“</b> deine E-Mail-Adresse eingeben, dann kommt sofort ein neuer, gültiger Link.</p></div>
+  <div class="karte versteckt" id="linkUngueltig" style="border:2px solid #c62828"><h3 style="color:var(--textRot, #c62828)">⚠️ Dieser Link gilt nicht mehr</h3><p style="margin:0">Es wurde inzwischen ein <b>neuerer Link</b> für dich verschickt – oder der Link ist unvollständig. Kein Problem: unten bei <b>„Link verloren?“</b> deine E-Mail-Adresse eingeben, dann kommt sofort ein neuer, gültiger Link.</p></div>
   <!-- KC-CLUB-KURZCODE (1.87.0, Wunsch Hansi): anmelden mit 6 Ziffern statt Link kopieren -->
   <div class="karte kc-code-karte"><h3>🔢 Mit Code anmelden</h3>
     <p style="margin:0 0 8px">Tippe auf deinen <b>persönlichen Link</b> (WhatsApp oder Mail). In der App, die sich dann öffnet, steht bei <b>„📲 Köcheclub als App einrichten“</b> ein <b>6-stelliger Code</b> – den hier eingeben. Schon auf einem anderen Gerät angemeldet? Dort ⚙️ → App-Installation → <b>„🔢 Code für ein anderes Gerät“</b>.</p>
@@ -5491,7 +5501,7 @@
 <div class="blatt versteckt" id="statusBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen"><h3>Mein Status</h3><div class="liste" style="display:grid;gap:8px"></div>
     <div id="stExtra"><label class="feld">Bis (freiwillig)<input type="date" id="stBis"></label><label class="feld">Hinweis (freiwillig, z. B. „ab 18 Uhr erreichbar“)<input id="stHinweis" maxlength="120"></label></div>
-    <button class="knopf haupt" onclick="statusSpeichern()">Speichern</button><button class="knopf" onclick="$('statusBlatt').classList.add('versteckt')">Abbrechen</button></div>
+    <button class="knopf haupt" onclick="statusSpeichern()">💾 Speichern</button><button class="knopf" onclick="$('statusBlatt').classList.add('versteckt')">Abbrechen</button></div>
 </div>
 <div class="blatt versteckt" id="chatBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen"><h3 id="chatBlattTitel">Unterhaltung</h3>

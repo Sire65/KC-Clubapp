@@ -4314,7 +4314,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const noetig = (sp, kann) => kann.some((k) => sp.start < k.end && sp.end > k.start);
   assert.ok(!noetig({ start: 14, end: 22 }, [{ start: 10, end: 14 }]) && noetig({ start: 12, end: 13 }, [{ start: 10, end: 18 }]), "Rechenprobe");
   assert.ok(/<details class="dw-tipp"><summary>💡 Tipp: Wann eine Sperrzeit\?<\/summary><b>Sperrzeit nur, wenn du innerhalb deiner Kann-Zeit kurz weg musst\.<\/b> Beispiel: Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr\./.test(html), "Beispiel im Fenster (ab 2.312.0 zugeklappt)");
-  assert.ok(/if \(e\.data\?\.art === "dw-sperre"\) return dwSperreHinweis\(e\.data\.funde\);/.test(html) && /function dwSperreHinweis\(funde\)/.test(html) && /„Sperren ändern“ → „✓ Ich kann an diesem Tag“/.test(html), "Hinweis mit Weg zum Ändern");
+  assert.ok(/if \(e\.data\?\.art === "dw-sperre"\) return dwSperreHinweis\(e\.data\.funde\);/.test(html) && /function dwSperreHinweis\(funde\)/.test(html) && /„Meinen Wunschplan eintragen oder ändern“ → Tag antippen → „＋ Zwischendurch verhindert“ → „Sperrzeit entfernen“/.test(html), "Hinweis mit Weg zum Ändern (KC-CLUB-RC-PRUEFUNG: echte Twinkey-Beschriftungen)");
 }
 // 427. 2.23.76: LED-Fenster drucken + Ergebnis an Admin per Push und E-Mail (KC-CLUB-VERBINDUNG-MELDEN)
 {
