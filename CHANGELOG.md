@@ -1,10 +1,22 @@
 # Änderungen
 
-## 2.529.0 – 2026-10-20 – 🕵️ Geheimagent bringt verschlüsselte Nachrichten · 🔑 Schlüssel beim Senden (KC-CLUB-GEHEIMAGENT)
+## 2.530.0 – 2026-10-20 – 🕵️ Geheimagent bringt verschlüsselte Nachrichten · 🔑 Schlüssel beim Senden (KC-CLUB-GEHEIMAGENT)
 Wunsch Hansi („Beim Versenden mit Schlüsselbund kurz einen Schlüssel zeigen … welche besondere Figur könnte die verschlüsselte wegbringen?“ → „🕵️ Geheimagent“).
 - Beim Senden einer verschlüsselten Nachricht (🔒 Kennwort oder Schlüsselbund) blitzt am Senden-Knopf kurz ein goldener 🔑 Schlüssel auf und dreht sich wie im Schloss. Danach läuft ein Geheimagent (Hut, Sonnenbrille, Trenchcoat, Aktenkoffer) mit der Nachricht davon – statt des gewählten Boten.
 - Beim Empfänger kommt der Geheimagent ebenfalls an, bleibt kurz stehen, der Schlüssel dreht sich, das Kofferschloss springt auf.
 - Express behält Vorrang (Rennwagen). „Effekte aus“ gilt weiter. Hilfe-Eintrag „Wer bringt deine Nachricht?“ ergänzt. Nur App.
+
+## 2.529.0 – 2026-10-20 – 🤠 Thema „Wilder Westen“ · 🔒 Schloss fragt erst · ✍️ „… schreibt dir gerade“ auch außerhalb des Chats (KC-CLUB-WILDWEST, KC-CLUB-VN-RUECKFRAGE, KC-CLUB-SCHREIBT-HINWEIS) · Server 2.529.0
+Wunsch Hansi („neue Szene Wild West: links ein Indianerzelt, davor ein Lagerfeuer, am Horizont laufen Büffel, ab und an reiten 2 Cowboys vorbei, zwischendurch eine Kutsche – dann eine riesige Büffelherde, trampelt alles nieder, Staubwolke, Szene fängt wieder von vorne an“):
+- Unten im Kopf der Startseite die Prärie: links ein Tipi, davor knistert ein Lagerfeuer (Funken, leichter Rauch). Am Horizont ziehen kleine Büffel vor Tafelbergen und Kakteen.
+- Zweimal je Lauf reiten zwei Cowboys vorbei (einer schwingt das Lasso), zweimal rumpelt die Postkutsche „KÖCHECLUB“ durch.
+- Zum Schluss bebt der Boden: eine riesige Büffelherde donnert von rechts heran, trampelt Zelt und Feuer nieder, eine Staubwolke deckt alles zu – aus dem Staub heraus beginnt die Szene von vorn (nahtlos, ein Lauf ≈ 96 s).
+- Thema „🤠 Wilder Westen“ (Design Ocker, Western-Schrift, Wimpel in Westernfarben), Vorschau unter ⚙️ → ✨ Effekte, Hilfe-Eintrag, Suchwörter. Alles nur Bild, nichts wird gespeichert oder gesendet; keine Datenbank-Abfrage.
+- Tests: `tools/wildwest/ww-browser.mjs` (echtes app.js, zwei Läufe à 30 Bilder/s: Ablauf, Niedertrampeln, Staubwolke, nahtloser Neustart) · Vertragstest-Block 2.529.0.
+- **🔒 Schloss fragt erst (KC-CLUB-VN-RUECKFRAGE, Fund Hansi „ich wollte Klaus antworten, soll aber eine Verschlüsselungsnummer eingeben – ich will gar nicht verschlüsseln“):** Das Schloss am Schreibfeld (neben ▾ ⌨️ 🔊) war aus Versehen an; Abbrechen der Schlüssel-Frage hieß „nicht senden“. Jetzt fragt die App zuerst „🔒 Ja, mit Schlüssel“ oder „✉️ Normal senden“ – „Normal senden“ schaltet das Schloss aus und schickt die Nachricht wie immer. Beim Wechsel in einen anderen Chat geht das Schloss von selbst aus. (Mit Schlüsselbund bleibt alles wie bisher.)
+- **✍️ „Hansi schreibt dir gerade …“ auch außerhalb des Chats (KC-CLUB-SCHREIBT-HINWEIS, Wunsch Hansi):** Ist jemand in der App, hat den Einzelchat aber nicht offen, erscheint oben kurz „✍️ Hansi schreibt dir gerade …“, „🗣️ Hansi diktiert dir gerade eine Nachricht …“ oder „🎤 Hansi nimmt gerade eine Sprachnachricht für dich auf …“ – Antippen öffnet den Chat, die ankommende Nachricht nimmt den Hinweis weg. Nur Einzelchats, nicht bei stumm geschalteten Chats; wer die Online-Anzeige aus hat, meldet wie bisher nichts. Im Chat steht jetzt auch „🗣️ … diktiert …“. Kostet nichts extra: es nutzt die Signale der direkten Leitung. DB: `supabase/migrations/20261020_kc_club_rt_spricht.sql` (Trigger: Signal „spricht“/„diktiert“; keine neue Spalte).
+- Tests dazu: `tools/chat-sparsam/schreibt-hinweis-browser.mjs` (Schloss-Rückfrage, Chatwechsel, Hinweis außerhalb des Chats, Diktat) · `tools/chat-sparsam/rt-spricht-test.mjs` (Trigger in Postgres 16 im Speicher).
+- Rückweg: App/Server 2.528.0/2.527.0 erneut einspielen; `drop trigger kc_club_rt_spricht on public.kc_club_tippen;`
 
 ## DB – 2026-10-20 (ohne App-Build) – Graue Haken sofort, wenn der Push auf dem Handy angezeigt wird (KC-CLUB-RT-PUSH-ANGEZEIGT)
 Wunsch Hansi („Warum bekommt man bei WhatsApp graue Haken, sobald es auf dem Handy angekommen ist? Bei uns sieht man lange nur einen Haken“ → „Ja, bauen und sofort einspielen“).

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.529.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.530.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -930,6 +930,7 @@ const THEMEN = [
   { id: "weltraum", sym: "🚀", name: "Weltraum", design: "tiefsee", jz: "weltraum", effekt: "flieger" }, // 2.444.0 KC-CLUB-WELTRAUM (Wunschliste #2)
   { id: "bauernhof", sym: "🐄", name: "Bauernhof", design: "kuechengruen", jz: "bauernhof", effekt: "taube", schrift: "kirmes" }, // 2.445.0 KC-CLUB-BAUERNHOF (Wunschliste #3)
   { id: "kegeln", sym: "🎳", name: "Kegelabend", design: "schokolade", jz: "kegeln", effekt: "flieger", schrift: "schwung", kopf: "theater" }, // 2.446.0 KC-CLUB-KEGELN (Wunschliste #4)
+  { id: "wildwest", sym: "🤠", name: "Wilder Westen", design: "ocker", jz: "wildwest", effekt: "flieger", schrift: "kirmes", kopf: "bude" }, // 2.529.0 KC-CLUB-WILDWEST
   { id: "oktoberfest", sym: "🥨", name: "Oktoberfest", design: "nordsee", jz: "wiesn", effekt: "postauto", schrift: "fraktur", kopf: "bude" },
   { id: "herbst", sym: "🍂", name: "Herbst", design: "ocker", jz: "herbst", effekt: "flieger" },
   { id: "indian", sym: "🍁", name: "Indian Summer", design: "glut", jz: "herbst", effekt: "taube",
@@ -5241,6 +5242,7 @@ const HILFE = [
   { id: "weltraum", thema: "darstellung", sym: "🚀", t: "Thema Weltraum", x: "Im Thema <b>🚀 Weltraum</b> wird der Kopf der Startseite zum Nachthimmel: Sterne funkeln, ein <b>Ringplanet</b> schwebt herein, oben steht der <b>Mond</b>, ab und zu fällt eine <b>Sternschnuppe</b>. Ein <b>Astronaut</b> schwebt herein und winkt, eine <b>Rakete</b> startet mit Feuerschweif. Dann schreibt der Astronaut <b>deinen Vornamen in Sternenschrift</b>. Zum Schluss holt ihn ein <b>UFO</b> mit dem Lichtstrahl ab – dann beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚀 Weltraum.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.444.0" },
   { id: "bauernhof", thema: "darstellung", sym: "🐄", t: "Thema Bauernhof", x: "Im Thema <b>🐄 Bauernhof</b> läuft im Kopf der Startseite ein ganzer Tag auf dem Hof: Morgens geht die Sonne auf und der <b>Hahn</b> kräht auf dem Zaunpfosten. <b>Kuh</b>, <b>Schwein</b> und <b>Hühner</b> kommen auf die Wiese – das Schwein suhlt sich in der Pfütze. Der <b>Traktor</b> bringt Stroh und lädt einen Ballen ab, dann steht ein Holzschild <b>„Hof“ mit deinem Vornamen</b>. Abends gehen alle Tiere in den <b>Stall</b>, das Tor geht zu, nachts schläft der Hahn – und am nächsten Morgen beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🐄 Bauernhof.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.445.0" },
   { id: "kegeln", thema: "darstellung", sym: "🎳", t: "Thema Kegelabend", x: "Im Thema <b>🎳 Kegelabend</b> wird unten im Kopf der Startseite gekegelt: Ein <b>Koch mit Kochmütze</b> nimmt Anlauf und rollt die Kugel auf die <b>9 Kegel</b> (der König trägt eine rote Krone) – die Kegel fliegen, „5 Holz!“, dann stellen sie sich wieder auf. Oben rechts zählt die <b>Kreidetafel mit deinem Vornamen</b> die Striche. Der 6. Wurf ist immer <b>„Alle Neune!“</b> mit Konfetti – danach wischt ein Schwamm die Tafel sauber und es geht von vorn los. Vorschau: ⚙️ → ✨ Effekte → 🎳 Kegelabend.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.446.0" },
+  { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Horizont ziehen <b>Büffel</b> vor Tafelbergen und Kakteen vorbei, ab und an reiten <b>zwei Cowboys</b> durchs Bild, zwischendurch rumpelt die <b>Postkutsche „Köcheclub“</b> vorbei. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
   { id: "eingangskorb_mitglied", thema: "club", sym: "📥", t: "Dein Eingangskorb fürs Archiv", x: "Legt dir die Clubleitung ein Dokument hin (z. B. eine Anleitung oder Urkunde), steht unter <b>„Heute wichtig“ → 📥 Eingangskorb</b>. Antippen – du siehst das Dokument und entscheidest: <b>✔ annehmen</b> – dann fragt die App <b>„Wohin?“</b> (Ordner und Register, der 💡 Vorschlag des Absenders ist schon ausgewählt) und legt es in deinen persönlichen Archiv-Ordner – oder <b>✖ ablehnen</b>, dann wird es gelöscht. Dein Ordner bleibt privat. <i>Clubleitung:</i> Mitglied antippen → <b>„📥 In den Eingangskorb“</b>.", seit: "2.432.0" },
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
@@ -7638,6 +7640,9 @@ function rtTrennen() { RT.zu = true; clearTimeout(RT.neu); clearInterval(RT.herz
 function rtNachholen() { onlinePing(); if (chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } }
 function rtSignal(s) {
   RT.signale++;
+  if (s.art === "tippt" || s.art === "spricht" || s.art === "diktiert") tippHinweisSignal(s); // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS
+  if (s.art === "spricht" || s.art === "diktiert") return; // im offenen Chat lädt schon das Signal „tippt“
+  if (s.art === "chat" && TH.thread === s.thread) tippHinweisWeg(); // die Nachricht ist da
   // KC-CLUB-RT-SPARBREMSE + weitere Bereiche (2.230.0): Alarm sofort (ohne Pause), Gelesen-Haken, Online, Pinnwand, Termine, Abstimmungen
   if (s.art === "alarm") { neuLaden(); return; } // Notfall-Meldung → init → alarmPruefen() zeigt sie groß in Rot
   if (s.art === "gelesen") { if (s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } return; }
@@ -8014,6 +8019,32 @@ async function chatNachsehen() {
   }
   return chatLaden(false);
 }
+// ---------- 2.529.0 KC-CLUB-SCHREIBT-HINWEIS (Wunsch Hansi „wenn Klaus oder andere in der App sind, aber nicht das Nachrichten-Fenster auf haben,
+// und ich schreibe denen gerade: ‚Hansi schreibt gerade an dich‘ oder ‚Hansi diktiert gerade eine Nachricht‘ – damit der andere weiß, dass noch
+// eine Nachricht kommt“): Das Signal „tippt“/„diktiert“/„spricht“ der direkten Leitung kommt ohnehin an. Ist der Einzelchat gerade NICHT offen,
+// erscheint oben kurz ein Hinweis (Antippen öffnet den Chat); er verschwindet, sobald die Nachricht da ist, oder nach TH_DAUER_MS ohne neues Signal.
+// Nur Einzelchats (in Gruppen wäre es zu unruhig), nicht bei stumm geschalteten Chats. Wer die Online-Anzeige aus hat, meldet ohnehin kein Tippen.
+const TH_DAUER_MS = 8000, TH = { thread: null, uhr: 0, warte: 0, art: new Map(), listeGeholt: 0 };
+const TH_TEXT = { tippt: ["✍️", "schreibt dir gerade …"], diktiert: ["🗣️", "diktiert dir gerade eine Nachricht …"], spricht: ["🎤", "nimmt gerade eine Sprachnachricht für dich auf …"] };
+function tippHinweisSignal(s) {
+  if (!s.thread || document.hidden || (s.thread === chatId && aktuelleAnsicht === "chat")) return; // im offenen Chat zeigt es die Zeile über dem Schreibfeld
+  if (typeof stummAn === "function" && stummAn(s.thread)) return;
+  const jetzt = Date.now(), alt = TH.art.get(s.thread);
+  if (!(s.art === "tippt" && alt && alt.art !== "tippt" && jetzt - alt.t < 4000)) TH.art.set(s.thread, { art: s.art, t: jetzt }); else alt.t = jetzt; // „diktiert“/„spricht“ kommt mit „tippt“
+  clearTimeout(TH.warte); TH.warte = setTimeout(() => tippHinweisZeigen(s.thread).catch(() => {}), s.art === "tippt" ? 400 : 0);
+}
+async function tippHinweisZeigen(thread) {
+  let u = UH.liste.find((x) => x.id === thread);
+  if (!u && Date.now() - TH.listeGeholt > 300000) { TH.listeGeholt = Date.now(); try { UH.liste = (await api("unterhaltungen", {})).unterhaltungen || UH.liste; } catch {} u = UH.liste.find((x) => x.id === thread); }
+  if (!u || u.gruppe || (u.teilnehmer || []).length !== 1 || (thread === chatId && aktuelleAnsicht === "chat") || document.hidden) return;
+  const [sym, was] = TH_TEXT[TH.art.get(thread)?.art] || TH_TEXT.tippt, name = String(u.teilnehmer[0]).split(" ")[0];
+  let el = $("schreibtHinweis");
+  if (!el) { el = document.createElement("button"); el.type = "button"; el.id = "schreibtHinweis"; el.className = "schreibt-hinweis"; document.body.appendChild(el); }
+  el.innerHTML = `<span class="punkte3"><i></i><i></i><i></i></span> ${sym} <b>${esc(name)}</b> ${esc(was)}`;
+  el.onclick = () => { tippHinweisWeg(); chatOeffnen(thread); };
+  TH.thread = thread; clearTimeout(TH.uhr); TH.uhr = setTimeout(tippHinweisWeg, TH_DAUER_MS);
+}
+function tippHinweisWeg() { clearTimeout(TH.uhr); clearTimeout(TH.warte); TH.thread = null; $("schreibtHinweis")?.remove(); }
 // KC-CLUB-TIPPT (0.54.0): beim Tippen höchstens alle 3 s „ich schreibe“ melden, Feld leer → sofort aus.
 // Wer die Online-Anzeige ausgeschaltet hat (Privatsphäre), meldet auch kein „schreibt …“.
 // KC-CLUB-LIVETIPPEN (0.56.0): wer es selbst einschaltet, schickt den Entwurf mit (höchstens 1× je Sekunde, letzter Stand kommt nach)
@@ -8023,8 +8054,9 @@ let TIPP = { zuletzt: 0, id: null, nach: null };
 function tippenMelden() {
   if (!chatId || !ONL.zeigen) return;
   const text = $("text").value;
-  if (!text.trim()) return tippenAus();
-  const live = liveTippen(), abstand = live ? 1000 : 3000;
+  const diktiert = typeof DT !== "undefined" && DT.aktiv && DT.ziel === "text"; // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS: beim Diktieren „diktiert …“ statt „schreibt …“
+  if (!text.trim() && !diktiert) return tippenAus();
+  const live = liveTippen() && !diktiert, abstand = live ? 1000 : 3000;
   clearTimeout(TIPP.nach);
   if (TIPP.id === chatId && Date.now() - TIPP.zuletzt < abstand) { if (live) TIPP.nach = setTimeout(tippenMelden, abstand); return; }
   // KC-CLUB-TEMPO (2.115.0, Tempo-Log 08.10.: bei langsamem Netz 6 „tippen“ gleichzeitig, je 2–8 s – danach waren Chat und Senden
@@ -8032,7 +8064,7 @@ function tippenMelden() {
   if (TIPP_UNTERWEGS) { TIPP_NOCHMAL = true; return; }
   TIPP = { zuletzt: Date.now(), id: chatId, nach: null }; CHAT_AKTIV = Date.now(); // KC-CLUB-SPARTAKT
   TIPP_UNTERWEGS = true;
-  api("tippen", { id: chatId, ...(live ? { text: [...text].slice(-LIVE_TIPPEN_ZEICHEN).join("") } : {}) }).catch(() => {})
+  api("tippen", { id: chatId, ...(diktiert ? { diktat: true } : live ? { text: [...text].slice(-LIVE_TIPPEN_ZEICHEN).join("") } : {}) }).catch(() => {})
     .finally(() => { TIPP_UNTERWEGS = false; if (TIPP_NOCHMAL) { TIPP_NOCHMAL = false; if (live) tippenMelden(); } });
 }
 let TIPP_UNTERWEGS = false, TIPP_NOCHMAL = false;
@@ -8182,12 +8214,13 @@ function tippGeraeusche(entwurf) {
   for (let i = 0; i < n; i++) tippAnschlag(w, i * abstand + Math.random() * abstand * .4);
   if (w === "schreibmaschine" && (TT.zeile += n) >= 40) { TT.zeile = 0; tippGlocke(n * abstand + .1); }
 }
-function tipptZeigen(namen, entwurf = [], sprechen = []) {
+function tipptZeigen(namen, entwurf = [], sprechen = [], diktiert = []) {
   const e = $("tipptAnzeige"); if (!e) return;
   tippGeraeusche(entwurf);
-  if (!namen.length && !sprechen.length) { e.classList.add("versteckt"); e.innerHTML = ""; e.dataset.stand = ""; return; }
-  // KC-CLUB-SPRICHT (1.11.0): „nimmt eine Sprachnachricht auf“ mit Oszilloskop-Welle
-  const sp = sprechen.length ? `<div class="zeile">${OSZI_SVG}<span>🎤 ${esc(werText(sprechen))} ${sprechen.length > 1 ? "nehmen" : "nimmt"} eine Sprachnachricht auf</span></div>` : "";
+  if (!namen.length && !sprechen.length && !diktiert.length) { e.classList.add("versteckt"); e.innerHTML = ""; e.dataset.stand = ""; return; }
+  // KC-CLUB-SPRICHT (1.11.0): „nimmt eine Sprachnachricht auf“ mit Oszilloskop-Welle · 2.529.0: „diktiert …“
+  const sp = (sprechen.length ? `<div class="zeile">${OSZI_SVG}<span>🎤 ${esc(werText(sprechen))} ${sprechen.length > 1 ? "nehmen" : "nimmt"} eine Sprachnachricht auf</span></div>` : "")
+    + (diktiert.length ? `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span>🗣️ ${esc(werText(diktiert))} ${diktiert.length > 1 ? "diktieren" : "diktiert"} …</span></div>` : "");
   if (!namen.length) { if (e.dataset.stand !== sp) { e.innerHTML = sp; e.dataset.stand = sp; } e.classList.remove("versteckt"); return; }
   const kurz = (t) => { const z = [...t]; return z.length > LIVE_ANZEIGE_ZEICHEN ? "…" + z.slice(-LIVE_ANZEIGE_ZEICHEN).join("") : t; };
   const entwuerfe = entwurf.map((x) => `<div class="entwurf">✍️ <b>${esc(x.name)}:</b> ${esc(kurz(x.text))}</div>`).join("");
@@ -9004,6 +9037,7 @@ async function diktatStart(ziel, nachSenden, opt = {}) { // 2.22.0: auch für an
     <p class="hinweis" style="font-size:.8rem;margin:6px 0 0">🔒 Das Handy hört nur zu, solange dieses Fenster offen ist.</p></div>`);
   f.onclick = null; // nicht aus Versehen durch Tippen daneben schließen
   f.querySelectorAll("[data-d]").forEach((b) => (b.onclick = () => diktatEnde(b.dataset.d)));
+  if (DT.ziel === "text" && chatId) tippenMelden(); // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS: gleich „diktiert …“ melden, nicht erst beim ersten Wort
   diktatHoeren();
 }
 function diktatHoeren() {
@@ -9249,7 +9283,7 @@ const TW_VIDEOS = { "h:kopf_effekte": ["effekte", "anpassen"], "h:geburtstag_vog
   "h:info_laufband": ["oberflaeche"], "h:kachel_auswahl": ["oberflaeche"], "h:kachel_vorschlag": ["oberflaeche"], "h:gelesen_von": ["chatprofi"], "h:tastatur_knopf": ["chatprofi"],
   "h:schreiben_klappen": ["chatprofi"], "h:tage_einklappen": ["chatprofi"], "h:anlage_mitschicken": ["vorschlag"], "h:termin_link_prospekt": ["termin"], "h:sonderstunden": ["dienst", "erstattung"],
   "h:avatar_bearbeiten": ["figur", "figurbau"], "h:schuerze": ["figurbau"], "h:foto_muetze": ["figur"], "h:bild_zuletzt": ["figur"], "h:stundenuhren": ["effekte"], "h:kuckuck_ton": ["effekte"],
-  "h:unterwasserwelt": ["anpassen"], "h:weltraum": ["anpassen"], "h:bauernhof": ["anpassen"], "h:kegeln": ["anpassen"], "h:eingangskorb_mitglied": ["archiv"], "f:wer-gelesen": ["chatprofi"], "f:sonderstunden-melden": ["dienst"],
+  "h:unterwasserwelt": ["anpassen"], "h:weltraum": ["anpassen"], "h:bauernhof": ["anpassen"], "h:kegeln": ["anpassen"], "h:wildwest": ["anpassen"], "h:eingangskorb_mitglied": ["archiv"], "f:wer-gelesen": ["chatprofi"], "f:sonderstunden-melden": ["dienst"],
   "h:status": ["status"], "h:erstattung": ["erstattung"], "h:feedback": ["feedback"], "h:daten_geaendert": ["meinedaten"], "h:meine_daten": ["privat", "meinedaten"], "h:aenderung_rueckfrage": ["meinedaten"], "h:wer_online": ["mitglieder"], "h:anruf_kachel": ["mitglieder"], "h:mitglieder_ansicht": ["mitglieder"], "h:bild_punkt": ["mitglieder"], "h:pinnwand_antwort": ["pinnwand"], "h:pinnwand_wichtig": ["pinnwand"], "h:pinnwand_alt": ["pinnwand"], "h:foto_details": ["fotos"], "h:foto_teilen": ["fotos"], "h:hilfe_anbieten": ["helfen"], "h:hilfe_veroeffentlichen": ["helfen"], "h:hilfe_absprache": ["helfen"], "h:vorschlag_unterstuetzen": ["vorschlag"], "h:spende": ["vorschlag"], "h:abstimmung_ziel": ["vorschlag"], "h:spiel_mitglieder": ["spiele"], "h:spiel_schach": ["spiele"], "h:spiel_pause": ["spiele"], "h:ttt_toene": ["spiele"], "h:spiele_fdk_dk_mg": ["spiele"], "h:spiele_leiste": ["spiele"], "h:aktionen_kacheln": ["aktionen"], "h:wo_bin_ich": ["sos"], "h:notfallkontakt": ["sos"], "h:notfallpass_sichern": ["sos"], "h:notfallkontakt_wer": ["sos"], "h:mein_dienst": ["dienst"], "h:dienst_erinnerung": ["dienst"], "h:dw_fertig": ["dienst"], "h:wunschbogen": ["dienst"], "h:meine_schulung": ["schulung"], "h:kalender_blaettern": ["zusagen"], "h:naechstes_treffen": ["zusagen"], "h:termin_zahl": ["zusagen"], "h:drucken": ["zusagen"], "h:wiederholen": ["terminfinden", "termin"], "h:kachel_lang": ["oberflaeche"], "h:kachel_aus": ["oberflaeche"], "h:register_ziehen": ["oberflaeche"], "h:register_wischen": ["oberflaeche"], "h:ansicht": ["einfach", "oberflaeche"], "h:rundgang": ["ueberblick"], "h:ueberblick": ["ueberblick"], "h:twinkey": ["hilfe"], "h:einstellung_suchen": ["hilfe"], "h:diktat_feld": ["sprache"], "h:sprache_einstellung": ["sprache"], "h:installieren": ["installieren"], "h:pc_tablet": ["inst_geraet"], "h:code_geraet": ["privat", "inst_codes", "inst_geraet"], "h:code_ipad": ["inst_safari", "inst_codes"], "h:update": ["probleme", "technik"], "h:version": ["probleme", "technik"], "h:sicherheitscheck": ["probleme", "technik"], "h:programme_frei": ["technik"], "h:nacht": ["anpassen"], "h:schrift": ["anpassen"], "h:animiert": ["anpassen"], "h:wetter_tage": ["effekte"], "h:protokoll_aufgaben": ["todo", "lesen"], "h:push": ["push"], "h:push_selbst": ["push"], "h:test_an_mich": ["push"], "h:meine_geraete": ["push"], "h:anklopfton": ["push"], "h:ansage_nachholen": ["push"], "h:ansage_verlassen": ["push"], "h:ruhe": ["push"], "f:ruhe": ["push"], "h:privatsphaere": ["privat"], "h:zugangslink": ["privat"], "h:live_tippen": ["privat"], "h:zuletzt_da": ["privat"], "h:link_verloren": ["privat"], "h:abmelden": ["privat"], "f:daten": ["privat"], "h:haengt": ["probleme"], "h:laden_dauert": ["probleme"], "h:zwei_fenster": ["probleme"], "h:verbindung": ["probleme"], "h:mikrofon": ["probleme"], "h:verbindung_senden": ["probleme"], "h:app_schliessen": ["probleme"], "h:twinkey_haengt": ["probleme"], "h:pfeil_menue": ["chatprofi"], "h:anheften": ["chatprofi"], "h:merken": ["chatprofi"], "h:weiterleiten": ["chatprofi"], "h:haken": ["chatprofi"], "h:sprachtempo": ["chatprofi"], "h:chat_vorlesen": ["chatprofi"], "h:chat_abstimmung": ["chatprofi"], "h:selbstloeschen": ["chatprofi"], "h:entwurf": ["chatprofi"], "h:ohne_netz": ["chatprofi"], "h:chat_archiv": ["chatprofi"], "h:chat_ganz": ["chatprofi"], "h:wichtig_nachtraeglich": ["chatprofi"], "h:kopieren": ["chatprofi"], "h:neue_linie": ["chatprofi"], "h:gruppe_bereiche": ["gruppen"], "h:gruppen_admin": ["gruppen"], "h:gruppe_loeschen": ["gruppen"], "h:terminanfrage": ["terminfinden"], "h:anfrage_status": ["terminfinden"], "h:anfrage_vorbehalt": ["terminfinden"], "h:terminfindung": ["terminfinden"], "h:todo": ["todo"], "h:erst_einfach": ["einfach"], "h:es_musik": ["buehne"], "h:club_song": ["buehne"], "h:bw_einladung": ["buehne"], "h:eingangskorb": ["buero"], "h:eingang_hinweis": ["buero"], "h:ablage_mehrere": ["buero"], "h:buero_sprache": ["buero"], "h:buero_einlesen": ["buero"], "h:buero_mail": ["buero"], "h:schilder": ["buero"],
 }; // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4
 const TW_HILFETEXT = { "f:mein-bild": "h:mein_bild", "f:figur-bauen": "h:mein_bild" };
@@ -14958,7 +14992,7 @@ function papierflieger(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTI
   if (!fxAn() || !von) return;
   const r = von.getBoundingClientRect(); if (!r.width) return;
   const wahl = sendeEffektWahl(); if (wahl === "aus") return;
-  const art = fxArt(wahl, wichtig, mid, express, geheim); if (!art) return; // 🔒 verschlüsselt → Geheimagent (2.529.0); ❗ wichtig → immer Blaulicht; 🏎️ Express → Rennwagen; „Abwechselnd“ nach Nachrichten-Kennung (2.177.0)
+  const art = fxArt(wahl, wichtig, mid, express, geheim); if (!art) return; // 🔒 verschlüsselt → Geheimagent (2.530.0); ❗ wichtig → immer Blaulicht; 🏎️ Express → Rennwagen; „Abwechselnd“ nach Nachrichten-Kennung (2.177.0)
   if (FZ_SVG[art]) return sendeFahrzeug(r, art);
   if (art === "rakete" || art === "ballon" || art === "flasche" || art === "muenchhausen") return sendeFlug(r, art);
   const g = Math.round(Math.min(130, innerWidth * 0.3));
@@ -15004,7 +15038,7 @@ const BLAULICHT_SVG = (b) => `<svg viewBox="0 0 200 110" width="${b}" height="${
     <rect x="12" y="64" width="176" height="10" fill="#7b1e2b"/><text x="100" y="86" text-anchor="middle" font-size="11" font-weight="800" fill="#7b1e2b" font-family="sans-serif">❗ WICHTIG</text>
     <rect x="70" y="18" width="46" height="9" rx="3" fill="#333"/><rect class="bl-a" x="72" y="16" width="20" height="9" rx="3" fill="#2f7bff"/><rect class="bl-b" x="94" y="16" width="20" height="9" rx="3" fill="#2f7bff"/>
     <rect x="10" y="64" width="7" height="7" rx="2" fill="#ffe680" stroke="#333" stroke-width="1.5"/>${RAD(46)}${RAD(156)}</svg>`;
-// ---------- 2.529.0 KC-CLUB-GEHEIMAGENT (Wunsch Hansi „beim Versenden mit Schlüsselbund kurz einen Schlüssel zeigen – und welche besondere Figur könnte
+// ---------- 2.530.0 KC-CLUB-GEHEIMAGENT (Wunsch Hansi „beim Versenden mit Schlüsselbund kurz einen Schlüssel zeigen – und welche besondere Figur könnte
 // die verschlüsselte wegbringen?“; Wahl Hansi: Geheimagent): verschlüsselte Nachrichten (🔒KCV1) bringt immer ein Geheimagent mit Hut, Sonnenbrille,
 // Trenchcoat und weinrotem Aktenkoffer mit Zahlenschloss – er schleicht nach links davon (Beine schwingen). Vorher dreht sich am Senden-Knopf ein 🔑.
 // Beim Empfänger kommt er von rechts, bleibt stehen, der Koffer klickt (🔑 dreht sich über der Blase), dann schleicht er weiter. Gilt unabhängig vom
@@ -15040,7 +15074,7 @@ function vnSchluesselZeigen(von) {
   try { navigator.vibrate?.(25); } catch {} // „klick“
   setTimeout(() => f.remove(), 1800);
 }
-const FZ_SVG = { postauto: (b) => POSTAUTO_SVG(b), blaulicht: (b) => BLAULICHT_SVG(b), fahrrad: (b) => FAHRRAD_SVG(b), express: (b) => RENNWAGEN_SVG(b), agent: (b) => AGENT_SVG(b) }; // 2.362.0 · 2.529.0 Geheimagent
+const FZ_SVG = { postauto: (b) => POSTAUTO_SVG(b), blaulicht: (b) => BLAULICHT_SVG(b), fahrrad: (b) => FAHRRAD_SVG(b), express: (b) => RENNWAGEN_SVG(b), agent: (b) => AGENT_SVG(b) }; // 2.362.0 · 2.530.0 Geheimagent
 function sendeFahrzeug(r, art) {
   const b0 = Math.round(Math.min(190, innerWidth * 0.42)), b = art === "agent" ? Math.round(b0 * 0.62) : b0, h = Math.round(b0 * (art === "fahrrad" ? 0.58 : art === "agent" ? 0.78 : 0.55));
   const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
@@ -15189,7 +15223,7 @@ async function ankunftEffekt(el, art) {
       const b0 = Math.round(Math.min(170, innerWidth * 0.38)), b = art === "agent" ? Math.round(b0 * 0.62) : b0, h = Math.round(b0 * (art === "fahrrad" ? 0.58 : art === "agent" ? 0.78 : 0.55));
       const zx = Math.min(innerWidth - b - 6, Math.max(r.right - b * 0.35, 6)), zy = Math.min(innerHeight - h - 4, r.bottom - h * 0.75);
       const f = fxEl((FZ_SVG[art] || FZ_SVG.postauto)(b0), zx, zy); weg.push(f);
-      const beine = art === "agent" ? agentLaufen(f) : []; // 2.529.0 KC-CLUB-GEHEIMAGENT
+      const beine = art === "agent" ? agentLaufen(f) : []; // 2.530.0 KC-CLUB-GEHEIMAGENT
       const raeder = [...f.querySelectorAll(".fz-rad")].map((rad) => { rad.style.transformBox = "fill-box"; rad.style.transformOrigin = "center"; return rad.animate([{ transform: "rotate(0deg)" }, { transform: "rotate(-360deg)" }], { duration: 380, iterations: Infinity }); });
       if (art === "blaulicht") {
         f.querySelectorAll(".bl-a").forEach((x) => x.animate([{ opacity: 1 }, { opacity: 0.15 }], { duration: 160, iterations: Infinity, direction: "alternate" }));
@@ -15576,9 +15610,9 @@ const JZ_DEKO_WAHL = [["auto", "🔄 Automatisch"], ["wimpel", "🎏 Wimpel"], [
 const JZ_DEKO_FARBEN = { bunt: ["#e63946", "#ffb703", "#2a9d8f", "#3a86ff", "#ff6b9a", "#8ac926"], pastell: ["#f7a8c4", "#9fd3ff", "#fff3a0", "#b6f0b0", "#d9b8f7"],
   bayern: ["#1f6fd1", "#ffffff"], herbst: ["#e85d04", "#ffba08", "#dc2f02", "#f48c06", "#9d0208"], karibik: ["#ff006e", "#ffbe0b", "#00bbf9", "#00f5d4", "#fb5607"],
   warm: ["#ffd27a", "#fff0c2", "#ffc65c"], gold: ["#ffd700", "#fff1a8", "#f5c542", "#ffe680"], halloween: ["#ff7a00", "#9b4dca", "#ffae42", "#7b2cbf"],
-  meer: ["#00b4d8", "#90e0ef", "#ffd166", "#ff6b9a", "#06d6a0"], all: ["#ffffff", "#9bb7ff", "#ffd166", "#c77dff"], hof: ["#9b2226", "#e9c46a", "#6a994e", "#f8f9fa"] }; // 2.434.0 · 2.444.0: all (Weltraum) · 2.445.0: hof
+  meer: ["#00b4d8", "#90e0ef", "#ffd166", "#ff6b9a", "#06d6a0"], all: ["#ffffff", "#9bb7ff", "#ffd166", "#c77dff"], hof: ["#9b2226", "#e9c46a", "#6a994e", "#f8f9fa"], western: ["#9b2226", "#e9c46a", "#264653", "#bc6c25"] }; // 2.529.0: western · 2.434.0 · 2.444.0: all (Weltraum) · 2.445.0: hof
 const JZ_DEKO_AUTO = { herbst: ["laternen", "herbst"], advent: ["lichter", "warm"], silvester: ["lichter", "gold"], sommer: ["wimpel", "bunt"], fruehling: ["wimpel", "pastell"],
-  wiesn: ["wimpel", "bayern"], karneval: ["wimpel", "bunt"], kirmes: ["lichter", "bunt"], karibik: ["laternen", "karibik"], halloween: ["lichter", "halloween"], unterwasser: ["wimpel", "meer"], weltraum: ["lichter", "all"], bauernhof: ["wimpel", "hof"], kegeln: ["lichter", "warm"] };
+  wiesn: ["wimpel", "bayern"], karneval: ["wimpel", "bunt"], kirmes: ["lichter", "bunt"], karibik: ["laternen", "karibik"], halloween: ["lichter", "halloween"], unterwasser: ["wimpel", "meer"], weltraum: ["lichter", "all"], bauernhof: ["wimpel", "hof"], kegeln: ["lichter", "warm"], wildwest: ["wimpel", "western"] }; // 2.529.0: + Wilder Westen
 const JZ_DEKO_STANDARD = { wimpel: "bunt", lichter: "warm", laternen: "herbst" };
 const jzDekoWahl = () => { try { const w = localStorage.getItem("kc_club_jzDeko"); return JZ_DEKO_WAHL.some(([k]) => k === w) ? w : "auto"; } catch { return "auto"; } };
 function jzDekoArt(art) { // → [Art, Farben] oder null
@@ -15701,7 +15735,7 @@ addEventListener("resize", () => requestAnimationFrame(() => { jzEisLaenge(); jz
     jzTropfTakt();
   }, 3500 + Math.random() * 4500); // 2.283.0: etwas öfter (alle 3½–8 s)
 })();
-const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"], unterwasser: ["🐠", "🫧", "🐟", "🐚"], weltraum: ["⭐", "✨", "🚀", "🪐"], bauernhof: ["🐄", "🐖", "🐓", "🌾"], kegeln: ["🎳", "✨", "🎉"] };
+const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"], unterwasser: ["🐠", "🫧", "🐟", "🐚"], weltraum: ["⭐", "✨", "🚀", "🪐"], bauernhof: ["🐄", "🐖", "🐓", "🌾"], kegeln: ["🎳", "✨", "🎉"], wildwest: ["🤠", "🐃", "🌵", "🔥"] };
 function jahreszeitKopf() {
   const h = document.querySelector("#v-start .hero"); if (!h) return;
   h.querySelector(".jz-schicht")?.remove(); h.querySelector(".jz-sprech")?.remove(); h.classList.remove("jz-boden"); jzbStop(); jzDekoWeg(h);
@@ -17535,7 +17569,7 @@ function bwHoerPause() { const H = BW.hoeren; if (!H) return; H.pause = !H.pause
 // 🌻 Sommer: eine Sonnenblume wächst (jeder 3. Lauf drei), eine Biene besucht sie – abends Glühwürmchen. Am Ende fallen die Blütenblätter, Windstoß.
 // Ein <canvas> im Kopf; zeichnet nur, wenn die Startseite im Bild und die App im Vordergrund ist. Aus bei „✨ Animierte Knöpfe“ aus,
 // Sparmodus oder „Bewegung reduzieren“ (dann wie bisher). Tippen geht durch (pointer-events: none). Lauf-Zähler je Gerät (kc_club_jzLauf).
-const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln"]; // 2.331.0: + Themen-Bühnen · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof · 2.446.0: + Kegeln
+const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest"]; // 2.529.0: + Wilder Westen · 2.331.0: + Themen-Bühnen · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof · 2.446.0: + Kegeln
 const JZB_BLUEHT = 150; // 2.250.0 (Fund Hansi „Sonnenblume nur kurz“): Blumen/Sonnenblume blühen 2½ Min., bevor der Wind kommt
 const JZB_SP = 3, JZB_RAND = 22; // 2.259.0: 22 statt 16 – nichts in die runden Ecken (Radius 26) // Bodenspalten in px; nichts in den runden Ecken ablegen
 const JZB_LAUB = ["#e0802a", "#c8432b", "#e8b23a", "#a85a2a", "#d96a1f", "#b33a2a", "#cf9a2b"];
@@ -18139,7 +18173,7 @@ function jzbGastMalen(c, g) {
 // 🥨 Oktoberfest: blau-weiße Wimpel, Brezn, Fass wird angezapft („O'zapft is!“), zwei Maßkrüge stoßen an („Prost!“), Lebkuchenherz mit Namen.
 // 🌴 Karibik: Meer mit Wellen, Strand und Palme (ab und zu fällt eine Kokosnuss), Segelboot, Papagei oder springender Fisch, der Vorname
 // wird in den Sand geschrieben – eine Welle holt ihn; zum Schluss Sonnenuntergang. Alles nur Bild, nichts wird gespeichert oder gesendet.
-const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln"]; // 2.446.0: + Kegeln · 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof
+const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest"]; // 2.529.0: + Wilder Westen · 2.446.0: + Kegeln · 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof
 const JZB_FEST_DAUER = 120; // Sekunden je Lauf
 const JZB_FEST_BUNT = ["#ff4d6d", "#ffd23f", "#3ec1ff", "#7bed6f", "#c77dff", "#ff9f1c", "#ffffff"];
 function jzbFestStart() {
@@ -18151,6 +18185,7 @@ function jzbFest(dt) {
   const J = JZB, k = J.k;
   if (J.phase === "anfang" || !J.fest) { jzbFestStart(); jzbPhase("fest"); }
   const F = J.fest; F.t += dt;
+  if (J.saison === "wildwest") return jzbWwSchritt(F, dt); // 2.529.0: Tipi, Lagerfeuer, Cowboys, Kutsche – zum Schluss die Büffelherde
   if (J.saison === "kegeln") return jzbKgSchritt(F, dt); // 2.446.0: 6 Würfe, zuletzt „Alle Neune“, Tafel wischen
   if (J.saison === "bauernhof") return jzbBhSchritt(F, dt); // 2.445.0: ein Tag auf dem Hof – Morgen bis Nacht, dann wieder Morgen
   if (J.saison === "weltraum") return jzbWrSchritt(F, dt); // 2.444.0: eigener Ablauf (Rakete, Astronaut, UFO)
@@ -18239,7 +18274,7 @@ function jzbSpritzerMalen(c, F) {
 function jzbFestMalen(c) {
   const J = JZB, F = J.fest; if (!F) return;
   c.save(); c.globalAlpha = F.a;
-  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else if (J.saison === "bauernhof") jzbBauernhofMalen(c, F); else if (J.saison === "kegeln") jzbKegelnMalen(c, F); else jzbKaribikMalen(c, F);
+  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else if (J.saison === "wildwest") jzbWildwestMalen(c, F); else if (J.saison === "bauernhof") jzbBauernhofMalen(c, F); else if (J.saison === "kegeln") jzbKegelnMalen(c, F); else jzbKaribikMalen(c, F);
   c.restore();
 }
 // ---- 🎡 Sim-Jü ----
@@ -19138,6 +19173,168 @@ function jzbKegelnMalen(c, F) {
   if (K.holz) { const H = K.holz, a = Math.min(1, H.t * 4, (2.6 - H.t) * 2), neun = H.n === 9, txt = neun ? "Alle Neune!" : H.n + " Holz!";
     c.save(); c.globalAlpha *= a; c.font = `800 ${(neun ? 13 : 11) * k}px "Comic Sans MS","Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle";
     const tx = Math.min(J.w - JZB_RAND - 40 * k, P.kegel - 10 * k), ty = P.boden - 17 * k - H.t * 2 * k; c.lineWidth = 3; c.strokeStyle = "rgba(255,255,255,.95)"; c.strokeText(txt, tx, ty); c.fillStyle = neun ? "#c1121f" : "#3b2412"; c.fillText(txt, tx, ty); c.restore(); }
+}
+// ---- 2.529.0 KC-CLUB-WILDWEST (Wunsch Hansi „neue Szene Wild West: links ein Indianerzelt, davor ein Lagerfeuer, am Horizont laufen Büffel,
+// ab und an reiten 2 Cowboys vorbei, zwischendurch eine Kutsche – dann kommt eine riesige Büffelherde, trampelt alles nieder, Staubwolke,
+// Szene fängt wieder von vorne an“) ----
+// Unten im Kopf der Wilde Westen: links ein Tipi, davor knistert ein Lagerfeuer (Funken, Rauch). Am Horizont ziehen kleine Büffel vor Tafelbergen
+// und Kakteen. Zweimal reiten zwei Cowboys vorbei (einer schwingt das Lasso), zweimal rumpelt die Postkutsche „Köcheclub-Express“ durch.
+// Zum Schluss bebt der Boden: eine riesige Büffelherde donnert von rechts heran, trampelt Zelt und Feuer nieder, eine Staubwolke deckt alles zu –
+// aus dem Staub heraus beginnt die Szene von vorn (nahtlos). Alles nur Bild, nichts wird gespeichert oder gesendet.
+const JZB_WW_DAUER = 96, JZB_WW_REITER = [8, 44], JZB_WW_KUTSCHE = [25, 61], JZB_WW_HERDE = 77, JZB_WW_STAUB = 84, JZB_WW_HERDE_N = 36; // Sekunden · Tiere
+const JZB_WW_COWBOYS = [{ hemd: "#c1121f", hut: "#5c3a1a", pferd: "#8b4513" }, { hemd: "#1d3557", hut: "#2b2b2b", pferd: "#6b4226", lasso: true }];
+function jzbWwOrt() { const J = JZB, k = J.k, boden = J.h - 5 * k; return { boden, horizont: boden - 22 * k, zelt: JZB_RAND + 22 * k, feuer: JZB_RAND + 56 * k }; }
+function jzbWwNeu() {
+  const J = JZB, ausStaub = !!J.wwStaub; J.wwStaub = false;
+  return { ausStaub, horizont: [], hUhr: 0, reiter: null, kutsche: null, herde: [], staub: [], funken: [], rauch: [], fUhr: 0, rUhr: 0,
+    zeltFall: 0, feuerAus: 0, beben: 0, schleier: ausStaub ? 1 : 0, gestartet: {} };
+}
+function jzbWwSchritt(F, dt) {
+  const J = JZB, k = J.k, t = F.t, O = jzbWwOrt(), W = F.ww || (F.ww = jzbWwNeu());
+  if (t >= JZB_WW_DAUER) { J.fest = null; J.wwStaub = true; return jzbLaufEnde(); } // nächster Lauf beginnt in der Staubwolke
+  F.a = W.ausStaub ? 1 : Math.min(1, t / 2.5);
+  // Staubschleier: am Anfang lichtet er sich (nach der Herde), am Ende deckt er alles zu
+  W.schleier = Math.max(W.ausStaub ? Math.max(0, 1 - t / 4) : 0, Math.max(0, Math.min(1, (t - JZB_WW_STAUB) / 6)));
+  // 🐃 kleine Büffel am Horizont (bis die Herde kommt)
+  if (t < JZB_WW_HERDE && (W.hUhr -= dt) <= 0) { W.hUhr = jzbZ(2.5, 6); W.horizont.push({ x: -12 * k, v: jzbZ(5, 9) * k, ph: jzbZ(0, 6), sc: jzbZ(.38, .5) }); }
+  for (const b of W.horizont) { b.x += b.v * dt * (t > JZB_WW_HERDE - 3 ? 4 : 1); b.ph += dt * (t > JZB_WW_HERDE - 3 ? 9 : 3); }
+  W.horizont = W.horizont.filter((b) => b.x < J.w + 14 * k);
+  // 🤠 zwei Cowboys von rechts nach links · 🚌 Postkutsche von links nach rechts
+  for (const s of JZB_WW_REITER) if (t >= s && !W.gestartet["r" + s]) { W.gestartet["r" + s] = 1; W.reiter = { x: J.w + 24 * k, v: 52 * k, ph: 0 }; }
+  for (const s of JZB_WW_KUTSCHE) if (t >= s && !W.gestartet["k" + s]) { W.gestartet["k" + s] = 1; W.kutsche = { x: -100 * k, v: 44 * k, ph: 0 }; }
+  if (W.reiter) { W.reiter.x -= W.reiter.v * dt; W.reiter.ph += dt * 11; if (W.reiter.x < -90 * k) W.reiter = null; }
+  if (W.kutsche) { W.kutsche.x += W.kutsche.v * dt; W.kutsche.ph += dt * 9; if (W.kutsche.x > J.w + 110 * k) W.kutsche = null; }
+  // 🔥 Lagerfeuer: Funken und Rauch, solange es brennt
+  if (W.feuerAus < 1) {
+    if ((W.fUhr -= dt) <= 0) { W.fUhr = jzbZ(.08, .25); W.funken.push({ x: O.feuer + jzbZ(-3, 3) * k, y: O.boden - 7 * k, vx: jzbZ(-6, 6) * k, vy: -jzbZ(16, 32) * k, a: 1 }); }
+    if ((W.rUhr -= dt) <= 0) { W.rUhr = jzbZ(.5, .9); W.rauch.push({ x: O.feuer, y: O.boden - 16 * k, r: 2.2 * k, a: .16 }); }
+  }
+  for (const f of W.funken) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 6 * k * dt; f.a -= dt * .9; }
+  W.funken = W.funken.filter((f) => f.a > 0);
+  for (const r of W.rauch) { r.y -= 9 * k * dt; r.x += 4 * k * dt; r.r += 2.6 * k * dt; r.a -= dt * .045; }
+  W.rauch = W.rauch.filter((r) => r.a > 0);
+  // 🐃🐃🐃 die große Herde: erst bebt der Boden, dann donnert sie von rechts heran
+  W.beben = t > JZB_WW_HERDE - 3 && t < JZB_WW_STAUB + 5 ? Math.min(1, (t - JZB_WW_HERDE + 3) / 3) * Math.min(1, (JZB_WW_STAUB + 5 - t) / 2) : 0;
+  if (t >= JZB_WW_HERDE && !W.gestartet.herde) { W.gestartet.herde = 1;
+    for (let i = 0; i < JZB_WW_HERDE_N; i++) W.herde.push({ x: J.w + jzbZ(8, 560) * k, tiefe: jzbZ(0, 1), v: jzbZ(125, 170) * k, ph: jzbZ(0, 6), sc: jzbZ(1.05, 1.5), staubUhr: jzbZ(0, .2) });
+    W.herde.sort((a, b) => b.tiefe - a.tiefe); } // hinten zuerst malen
+  for (const b of W.herde) {
+    b.x -= b.v * dt; b.ph += dt * 15;
+    if ((b.staubUhr -= dt) <= 0 && b.x < J.w + 10 * k && b.x > -40 * k) { b.staubUhr = jzbZ(.08, .16);
+      W.staub.push({ x: b.x + jzbZ(4, 14) * k, y: O.boden - b.tiefe * 10 * k - jzbZ(0, 4) * k, r: jzbZ(3, 6) * k, vx: jzbZ(-10, 20) * k, a: jzbZ(.35, .55) }); }
+    if (b.x < O.zelt + 22 * k) W.zeltFall = Math.min(1, W.zeltFall + dt * 1.6); // Zelt wird niedergetrampelt
+    if (b.x < O.feuer + 12 * k) W.feuerAus = Math.min(1, W.feuerAus + dt * 3); // Feuer aus
+  }
+  W.herde = W.herde.filter((b) => b.x > -60 * k);
+  for (const s of W.staub) { s.x += s.vx * dt; s.y -= 5 * k * dt; s.r += 10 * k * dt; s.a -= dt * .085; }
+  W.staub = W.staub.filter((s) => s.a > 0).slice(-240);
+}
+function jzbWwBueffelMalen(c, x, y, sc, dir, ph, laeuft) { // Büffel von der Seite, Kopf in Laufrichtung (dir 1 = rechts, -1 = links)
+  c.save(); c.translate(x, y); c.scale(sc * dir, sc); c.lineCap = "round";
+  const b = laeuft ? Math.sin(ph) : 0;
+  c.strokeStyle = "#3b2414"; c.lineWidth = 2; c.beginPath(); // Beine
+  c.moveTo(-6, -5); c.lineTo(-6 + b * 2.2, 0); c.moveTo(-3, -5); c.lineTo(-3 - b * 2.2, 0); c.moveTo(5, -5); c.lineTo(5 - b * 2.2, 0); c.moveTo(8, -5); c.lineTo(8 + b * 2.2, 0); c.stroke();
+  c.fillStyle = "#5a3a22"; c.beginPath(); c.ellipse(-1, -8.5, 9, 4.8, 0, 0, 7); c.fill(); // Körper
+  c.fillStyle = "#3d2616"; c.beginPath(); c.ellipse(5, -10.5, 6.2, 5.6, -.35, 0, 7); c.fill(); // zotteliger Buckel
+  c.beginPath(); c.ellipse(11, -7.2, 3.2, 3.7, .35, 0, 7); c.fill(); // Kopf
+  c.fillStyle = "#2b1a0e"; c.beginPath(); c.moveTo(9.6, -4.6); c.lineTo(11.4, -1.4); c.lineTo(12.8, -4.4); c.closePath(); c.fill(); // Bart
+  c.strokeStyle = "#ece4d0"; c.lineWidth = 1; c.beginPath(); c.moveTo(11.4, -10.2); c.quadraticCurveTo(13.4, -11.6, 12.8, -13.4); c.stroke(); // Horn
+  c.fillStyle = "#111"; c.beginPath(); c.arc(12.2, -8, .55, 0, 7); c.fill(); // Auge
+  c.strokeStyle = "#3b2414"; c.lineWidth = 1; c.beginPath(); c.moveTo(-9.6, -9.5); c.quadraticCurveTo(-11.6, -7.5 + b, -12, -5.2); c.stroke(); // Schwanz
+  c.restore();
+}
+function jzbWwPferdMalen(c, ph, farbe) { // Pferd im Galopp (Blick nach +x), Füße bei y = 0 – im schon verschobenen Bild
+  const g = Math.sin(ph), g2 = Math.cos(ph);
+  c.strokeStyle = farbe; c.lineWidth = 1.8; c.lineCap = "round"; c.beginPath(); // Beine
+  c.moveTo(-6, -8); c.lineTo(-7 + g * 3, 0); c.moveTo(-4, -8); c.lineTo(-3 - g * 3, 0); c.moveTo(6, -8); c.lineTo(5 + g2 * 3, 0); c.moveTo(8, -8); c.lineTo(9 - g2 * 3, 0); c.stroke();
+  c.fillStyle = farbe; c.beginPath(); c.ellipse(1, -11 + g * .5, 9, 4.2, 0, 0, 7); c.fill(); // Rumpf
+  c.beginPath(); c.moveTo(6.5, -13.5); c.lineTo(10.5, -20); c.lineTo(13.4, -19); c.lineTo(10.2, -10.5); c.closePath(); c.fill(); // Hals
+  c.beginPath(); c.ellipse(14.4, -18.4, 3.4, 1.8, .5, 0, 7); c.fill(); // Kopf
+  c.fillStyle = "#111"; c.beginPath(); c.arc(14, -19.2, .45, 0, 7); c.fill();
+  c.strokeStyle = "#2b1a0e"; c.lineWidth = 1.4; c.beginPath(); c.moveTo(7.6, -14.5); c.lineTo(10.8, -20.4); c.stroke(); // Mähne
+  c.beginPath(); c.moveTo(-8, -12); c.quadraticCurveTo(-12, -11 + g, -13, -6); c.stroke(); // Schweif
+}
+function jzbWwReiterMalen(c, x, y, sc, dir, ph, C, T) {
+  c.save(); c.translate(x, y + Math.abs(Math.sin(ph)) * -1.2 * sc); c.scale(sc * dir, sc);
+  jzbWwPferdMalen(c, ph, C.pferd);
+  c.strokeStyle = "#264653"; c.lineWidth = 2; c.beginPath(); c.moveTo(.4, -14); c.lineTo(2.4, -8.6); c.stroke(); // Bein (Jeans)
+  c.fillStyle = C.hemd; c.fillRect(-1.8, -22, 4.4, 8); // Hemd
+  c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(.6, -24.6, 2.4, 0, 7); c.fill(); // Gesicht
+  c.fillStyle = C.hut; c.beginPath(); c.ellipse(.6, -26.4, 5, 1.1, 0, 0, 7); c.fill(); c.fillRect(-1.6, -29.4, 4.6, 3.2); // Cowboyhut
+  c.strokeStyle = C.hemd; c.lineWidth = 1.4; c.beginPath(); c.moveTo(1.4, -20); // Arm
+  if (C.lasso) { c.lineTo(2, -28); c.stroke(); c.strokeStyle = "#d4a373"; c.lineWidth = .8; c.beginPath(); c.ellipse(2, -31, 5, 1.6 + Math.abs(Math.sin(T * 6)) * .8, Math.sin(T * 6) * .2, 0, 7); c.stroke(); }
+  else { c.lineTo(6, -17); c.stroke(); c.strokeStyle = "#2b1a0e"; c.lineWidth = .5; c.beginPath(); c.moveTo(6, -17); c.lineTo(12.4, -17.6); c.stroke(); } // Zügel
+  c.restore();
+}
+function jzbWwKutscheMalen(c, x, y, sc, ph) { // Postkutsche nach rechts, zwei Pferde vorn, Kutscher auf dem Bock
+  c.save(); c.translate(x, y); c.scale(sc, sc);
+  for (const [dx, f] of [[40, "#8b4513"], [30, "#a0522d"]]) { c.save(); c.translate(dx, 0); jzbWwPferdMalen(c, ph + dx, f); c.restore(); }
+  c.strokeStyle = "#2b1a0e"; c.lineWidth = .6; c.beginPath(); c.moveTo(14, -16); c.lineTo(42, -18); c.stroke(); // Leinen
+  const hb = Math.abs(Math.sin(ph * 1.3)) * 1.2; // die Kutsche schaukelt
+  c.fillStyle = "#7f1d1d"; c.beginPath(); c.roundRect ? c.roundRect(-16, -27 - hb, 28, 16, 2) : c.rect(-16, -27 - hb, 28, 16); c.fill(); // Kasten
+  c.fillStyle = "#ffd166"; c.fillRect(-16, -14 - hb, 28, 1.4); c.fillRect(-16, -27 - hb, 28, 1.2); // Zierleisten
+  c.fillStyle = "#3b2412"; c.fillRect(-12, -24 - hb, 7, 6); c.fillRect(1, -24 - hb, 7, 6); // Fenster
+  c.fillStyle = "#c9a227"; c.fillRect(-14, -31 - hb, 22, 4); // Gepäck auf dem Dach
+  c.fillStyle = "#ffd166"; c.font = "700 3.1px sans-serif"; c.textAlign = "center"; c.fillText("KÖCHECLUB", -2, -15.6 - hb);
+  c.fillStyle = "#5c3a1a"; c.fillRect(11, -22 - hb, 7, 2); // Kutschbock
+  c.fillStyle = "#e9c46a"; c.fillRect(13, -28 - hb, 3.6, 6); c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(14.8, -30 - hb, 2, 0, 7); c.fill(); // Kutscher
+  c.fillStyle = "#2b2b2b"; c.beginPath(); c.ellipse(14.8, -31.6 - hb, 3.6, .9, 0, 0, 7); c.fill(); c.fillRect(13.2, -34 - hb, 3.2, 2.4);
+  for (const wx of [-10, 7]) { // Räder mit drehenden Speichen
+    c.strokeStyle = "#3b2412"; c.lineWidth = 1.3; c.beginPath(); c.arc(wx, -6, 6, 0, 7); c.stroke(); c.lineWidth = .6;
+    for (let s = 0; s < 6; s++) { const a = ph * .9 + s * Math.PI / 3; c.beginPath(); c.moveTo(wx, -6); c.lineTo(wx + Math.cos(a) * 6, -6 + Math.sin(a) * 6); c.stroke(); } }
+  c.restore();
+}
+function jzbWwZeltMalen(c, x, y, k, fall) { // Tipi mit Stangen, Streifen und Eingang – „fall“ 0…1: niedergetrampelt
+  const f = jzbEase(fall);
+  c.save(); c.translate(x, y); c.rotate(-f * .1); c.scale(k * (1 + f * .45), k * (1 - f * .8));
+  c.strokeStyle = "#5c3a1a"; c.lineWidth = 1.3; c.beginPath(); for (const s of [-5, -1.5, 2, 5.5]) { c.moveTo(s * .5, -33); c.lineTo(-s * .9, -40); } c.stroke(); // Stangen oben
+  c.fillStyle = "#f1e3c6"; c.beginPath(); c.moveTo(-17, 0); c.lineTo(0, -33); c.lineTo(17, 0); c.closePath(); c.fill(); // Plane
+  c.save(); c.clip();
+  c.fillStyle = "#9b2226"; c.fillRect(-20, -9, 40, 3); c.fillStyle = "#264653"; c.fillRect(-20, -22, 40, 2.4);
+  c.fillStyle = "#e9c46a"; c.beginPath(); for (let i = -18; i < 18; i += 4) { c.moveTo(i, -15); c.lineTo(i + 2, -18); c.lineTo(i + 4, -15); } c.fill(); // Zickzack-Muster
+  c.restore();
+  c.strokeStyle = "rgba(92,58,26,.45)"; c.lineWidth = .8; c.beginPath(); c.moveTo(-17, 0); c.lineTo(0, -33); c.lineTo(17, 0); c.stroke();
+  c.fillStyle = "#3b2412"; c.beginPath(); c.moveTo(-5, 0); c.lineTo(0, -13); c.lineTo(5, 0); c.closePath(); c.fill(); // Eingang
+  c.fillStyle = "#e3d2ad"; c.beginPath(); c.moveTo(0, -13); c.lineTo(5, 0); c.lineTo(8, 0); c.closePath(); c.fill(); // zurückgeschlagene Plane
+  c.restore();
+}
+function jzbWwFeuerMalen(c, x, y, k, T, aus) {
+  c.fillStyle = "#6c757d"; for (let i = -2; i <= 2; i++) { c.beginPath(); c.arc(x + i * 3.4 * k, y - 1 * k, 1.6 * k, 0, 7); c.fill(); } // Steinkreis
+  c.strokeStyle = aus >= 1 ? "#2b1a0e" : "#5c3a1a"; c.lineWidth = 2.2 * k; c.lineCap = "round";
+  c.beginPath(); c.moveTo(x - 6 * k, y - 1.5 * k); c.lineTo(x + 5 * k, y - 4.5 * k); c.moveTo(x + 6 * k, y - 1.5 * k); c.lineTo(x - 5 * k, y - 4.5 * k); c.stroke(); // Holzscheite
+  const s = 1 - aus; if (s <= 0) return;
+  const gl = c.createRadialGradient(x, y - 6 * k, 0, x, y - 6 * k, 14 * k); gl.addColorStop(0, `rgba(255,170,60,${.28 * s})`); gl.addColorStop(1, "rgba(255,120,0,0)");
+  c.fillStyle = gl; c.beginPath(); c.arc(x, y - 6 * k, 14 * k, 0, 7); c.fill(); // Glut-Schein
+  for (const [farbe, hoehe, breite, ph] of [["#e85d04", 14, 6, 0], ["#f48c06", 10.5, 4.6, 1.7], ["#ffd166", 6.5, 2.8, 3.1]]) {
+    const h = hoehe * k * s * (1 + .16 * Math.sin(T * 13 + ph)), b = breite * k * s, wob = Math.sin(T * 9 + ph) * 1.4 * k;
+    c.fillStyle = farbe; c.beginPath(); c.moveTo(x - b, y - 3 * k); c.bezierCurveTo(x - b, y - 3 * k - h * .5, x + wob - b * .3, y - 3 * k - h * .8, x + wob, y - 3 * k - h);
+    c.bezierCurveTo(x + wob + b * .3, y - 3 * k - h * .8, x + b, y - 3 * k - h * .5, x + b, y - 3 * k); c.closePath(); c.fill(); }
+}
+function jzbWildwestMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T, W = F.ww; if (!W) return;
+  const O = jzbWwOrt();
+  c.save(); if (W.beben > 0) c.translate(Math.sin(T * 47) * W.beben * 1.6 * k, Math.cos(T * 39) * W.beben * 1.1 * k); // der Boden bebt
+  const g = c.createLinearGradient(0, O.horizont, 0, J.h); g.addColorStop(0, "rgba(233,196,106,.85)"); g.addColorStop(1, "rgba(204,149,92,.95)");
+  c.fillStyle = g; c.fillRect(-4 * k, O.horizont, J.w + 8 * k, J.h - O.horizont + 4 * k); // Prärie
+  c.fillStyle = "rgba(174,92,40,.8)"; // Tafelberge
+  for (const [mx, mb, mh] of [[J.w * .42, 46, 15], [J.w * .76, 60, 20]]) { c.beginPath(); c.moveTo(mx - mb / 2 * k, O.horizont); c.lineTo(mx - mb / 2 * k + 7 * k, O.horizont - mh * k);
+    c.lineTo(mx + mb / 2 * k - 7 * k, O.horizont - mh * k); c.lineTo(mx + mb / 2 * k, O.horizont); c.closePath(); c.fill(); }
+  c.strokeStyle = "#2d6a4f"; c.lineCap = "round"; // Kakteen
+  for (const [kx, kh] of [[J.w * .6, 14], [J.w * .9, 11]]) { c.lineWidth = 2.4 * k; c.beginPath(); c.moveTo(kx, O.horizont + 4 * k); c.lineTo(kx, O.horizont + 4 * k - kh * k); c.stroke();
+    c.lineWidth = 1.6 * k; c.beginPath(); c.moveTo(kx, O.horizont - kh * .3 * k); c.lineTo(kx - 3.5 * k, O.horizont - kh * .3 * k); c.lineTo(kx - 3.5 * k, O.horizont - kh * .65 * k);
+    c.moveTo(kx, O.horizont - kh * .45 * k); c.lineTo(kx + 3 * k, O.horizont - kh * .45 * k); c.lineTo(kx + 3 * k, O.horizont - kh * .8 * k); c.stroke(); }
+  for (const b of W.horizont) jzbWwBueffelMalen(c, b.x, O.horizont + 2 * k, k * b.sc, 1, b.ph, true);
+  if (W.kutsche) jzbWwKutscheMalen(c, W.kutsche.x, O.boden - 7 * k, k * 1.05, W.kutsche.ph);
+  if (W.reiter) JZB_WW_COWBOYS.forEach((C, i) => jzbWwReiterMalen(c, W.reiter.x + i * 26 * k, O.boden - 6 * k - i * 2 * k, k * 1.1, -1, W.reiter.ph + i * 1.3, C, T));
+  for (const r of W.rauch) { c.fillStyle = `rgba(120,120,120,${r.a})`; c.beginPath(); c.arc(r.x, r.y, r.r, 0, 7); c.fill(); }
+  jzbWwZeltMalen(c, O.zelt, O.boden, k * 1.15, W.zeltFall);
+  jzbWwFeuerMalen(c, O.feuer, O.boden, k, T, W.feuerAus);
+  for (const f of W.funken) { c.fillStyle = `rgba(255,200,80,${Math.max(0, f.a)})`; c.fillRect(f.x, f.y, 1.3 * k, 1.3 * k); }
+  for (const s of W.staub) { c.fillStyle = `rgba(196,160,110,${s.a})`; c.beginPath(); c.arc(s.x, s.y, s.r, 0, 7); c.fill(); } // Staub hinter der Herde
+  for (const b of W.herde) jzbWwBueffelMalen(c, b.x, O.boden - b.tiefe * 9 * k, k * b.sc, -1, b.ph, true);
+  c.restore();
+  if (W.schleier > 0) { const v = c.createLinearGradient(0, 0, 0, J.h); v.addColorStop(0, `rgba(214,180,130,${W.schleier * .55})`); v.addColorStop(1, `rgba(196,160,110,${W.schleier * .97})`);
+    c.fillStyle = v; c.fillRect(0, 0, J.w, J.h); } // die Staubwolke deckt alles zu – und lichtet sich zu Beginn des nächsten Laufs
 }
 // ---- 2.435.0 KC-CLUB-HALLOWEEN-GEWITTER (Wunsch Hansi „bei Halloween noch die Hexe auf ihrem Besen durchfliegen lassen, mehr Geister, Blitz und
 // Donner wie bei Gewitter, auf seinem Sarg kommt ein Vampir mit Umhang – der setzt sich erst hin, dann steht er auf und geht weg – und die Hexe
@@ -20505,7 +20702,7 @@ function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, t
 // ---------- 2.355.0 KC-CLUB-VORSCHAU-ENDE (Fund Hansi „in den Einstellungen z. B. Nikolaus-Stiefel gewählt, wird angezeigt – wie bekomme ich ihn
 // wieder weg?“): solange eine Vorschau läuft, steht auf der Startseite ein Knopf „✕ Vorschau beenden“ (vorher nur „📅 Heute“ in den Einstellungen)
 const JZ_VORSCHAU_NAME = { nikolaus: "Nikolaus-Stiefel", regen: "Regen", topf: "Kochtopf am Treffen-Tag", ostern: "Ostereier", igel: "Igel", kuerbis: "Kürbis-Hund", twinkey: "Twinkey fegt",
-  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", unterwasser: "Unterwasserwelt", weltraum: "Weltraum", bauernhof: "Bauernhof", kegeln: "Kegelabend", advent: "Advent" };
+  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", unterwasser: "Unterwasserwelt", weltraum: "Weltraum", bauernhof: "Bauernhof", kegeln: "Kegelabend", wildwest: "Wilder Westen", advent: "Advent" };
 function jzVorschauLeiste(v = aktuelleAnsicht) {
   const an = !!(JZB.vorschau || JZB.extra) && v === "start" && !(typeof RG !== "undefined" && RG.an);
   let b = $("jzVorschauAus");
@@ -28784,6 +28981,7 @@ async function unterhEntfernen(id, fuerAlle) {
   } catch (e) { meldeFehler(e); }
 }
 async function chatOeffnen(id, ausHistorie) {
+  if (TH.thread === id) tippHinweisWeg(); // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS
   vorlesenZeigen(); // KC-CLUB-VORLESEN: Lautsprecher oben zeigt den gespeicherten Zustand
   if (id !== chatId) { naAntwortWeg(); NA.erw.clear(); } // KC-CLUB-ANTWORT: Antwort/Erwähnung gehört zum vorigen Chat
   if (id !== chatId) ZW = { push: false, email: false, whatsapp: false };
@@ -28803,7 +29001,7 @@ async function chatLaden(scrollen) {
   try {
     const fuer = chatId, u = await api("unterhaltung", { id: fuer });
     if (fuer !== chatId) return; // 1.97.0: inzwischen eine andere Unterhaltung geöffnet → alte Antwort verwerfen
-    CHAT = u; CHAT_VOLL_AM = Date.now(); setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
+    CHAT = u; CHAT_VOLL_AM = Date.now(); if (VN.an && VN.chat !== fuer) vnUmschalten(false); // 2.529.0 KC-CLUB-VN-RUECKFRAGE: Schloss gilt nur im Chat, in dem es eingeschaltet wurde setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
     // KC-CLUB-CHAT-KOPF-BILD (2.24.19): Bild vorn (Person: Avatar/Kreis; Gruppe: Symbol mit 🔗; Runde: gestrichelt), Titel ohne doppeltes Symbol
     $("chatTitel").textContent = (u.gruppe ? u.gruppe.name : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");
@@ -28816,8 +29014,9 @@ async function chatLaden(scrollen) {
     $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `🔗 Feste Gruppe · ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : andere.length > 1 ? "Runde (keine feste Gruppe) · Mit: " + andere.map((x) => x.name).join(", ") : u.betreff ? "Mit: " + andere.map((x) => x.name).join(", ") : [zuletztText(u.partnerDa), st].filter(Boolean).join(" · "); // 1.20.0: zuletzt da
     rundeAngebotZeigen(u); // KC-CLUB-GRUPPE-AUS-RUNDE
     $("chatAngeheftet").innerHTML = (u.angeheftet || []).map((a) => `<button class="pin-zeile" onclick="zuNachricht('${a.id}')">📌 <b>${esc(a.von)}:</b> ${esc(a.text)}</button>`).join(""); // KC-CLUB-ANHEFTEN
-    tipptZeigen(u.tippt || [], u.entwurf || [], u.spricht || []); chatAbstand();
+    tipptZeigen(u.tippt || [], u.entwurf || [], u.spricht || [], u.diktiert || []); chatAbstand();
     if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
+    else if (u.diktiert?.length && andere.length === 1) $("chatTeilnehmer").textContent = "🗣️ diktiert …"; // 2.529.0
     const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, m.haken, m.express?.quittungen?.length, JSON.stringify(m.express?.empfaenger || null), (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join(""),
       m.text, m.bearbeitet, m.gemerkt, m.angeheftet, m.umfrage?.optionen.map((o) => o.stimmen + (o.meine ? "*" : "")).join(","), m.loeschtAm ? slRest(m.loeschtAm) : ""])); // 1.12.0: auch Stimmen/Bearbeitungen anderer
     const idStand = u.nachrichten.map((m) => m.id).join(",");
@@ -28890,7 +29089,7 @@ async function vnEnt(t, pw, bund) {
   } catch { return null; }
 }
 function vnUmschalten(an) {
-  VN.an = an ?? !VN.an; const k = $("vnKnopf"); k?.classList.toggle("an", VN.an); k?.setAttribute("aria-pressed", String(VN.an));
+  VN.an = an ?? !VN.an; VN.chat = VN.an ? chatId : null; const k = $("vnKnopf"); k?.classList.toggle("an", VN.an); k?.setAttribute("aria-pressed", String(VN.an));
   const t = $("text"); if (t) t.placeholder = VN.an ? "🔒 Verschlüsselte Nachricht schreiben …" : "Nachricht schreiben …";
   if (!VN.an) return;
   const p = vbPartner();
@@ -28903,6 +29102,10 @@ async function vnVerschluesseln(text) { // fragt den Schlüssel, gibt den versch
   if (anlagen.length) melde("🔒 Hinweis: Nur der Text wird verschlüsselt – Fotos und Dateien nicht.");
   const vp = vbPartner(), bund = vp && vbHolen(vp.person_id);
   if (bund) { const v = await vnVer(text, "", bund.schluessel[crypto.getRandomValues(new Uint32Array(1))[0] % bund.schluessel.length]); VN.klar.set(v, text); return v; } // 2.518.0: einer der 5 Schlüssel, zufällig
+  // 2.529.0 KC-CLUB-VN-RUECKFRAGE (Fund Hansi „ich wollte Klaus antworten, soll aber eine Verschlüsselungsnummer eingeben – ich will gar nicht
+  // verschlüsseln“): das Schloss neben ▾ ⌨️ 🔊 ist schnell aus Versehen angetippt – erst fragen; „Normal senden“ schaltet es aus und sendet wie immer
+  if (!(await frage("🔒 Verschlüsselt senden ist eingeschaltet\nDas Schloss am Schreibfeld ist an. Soll diese Nachricht wirklich verschlüsselt werden? Dann braucht der Empfänger einen Schlüssel, den du ihm persönlich sagst.",
+    { ja: "🔒 Ja, mit Schlüssel", nein: "✉️ Normal senden" }))) { vnUmschalten(false); return text; }
   let pw = vnGemerkt(chatId);
   for (;;) {
     pw = await eingabe(`🔒 Schlüssel für diese Nachricht\nMindestens ${VN_MIN} Zeichen, z. B. „Kochmütze7“. Der Empfänger braucht denselben Schlüssel – sag ihn ihm persönlich, am Telefon oder per SMS, nicht über die Club-App.${vnGemerkt(chatId) ? "\nVorgeschlagen ist der für diese Unterhaltung gemerkte Schlüssel." : ""}`, pw || "");
@@ -31032,7 +31235,7 @@ async function senden() {
       ...(lvSendeUrl(text) ? { vorschau_url: lvSendeUrl(text) } : {}) }; // KC-CLUB-LINK-VORSCHAU
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
-    if (vnIst(text)) { vnSchluesselZeigen($("sendenKnopf")); setTimeout(() => papierflieger($("sendenKnopf"), undefined, r?.mid, undefined, true), 650); } // 2.529.0 KC-CLUB-GEHEIMAGENT: 🔑 dreht sich, dann der Agent
+    if (vnIst(text)) { vnSchluesselZeigen($("sendenKnopf")); setTimeout(() => papierflieger($("sendenKnopf"), undefined, r?.mid, undefined, true), 650); } // 2.530.0 KC-CLUB-GEHEIMAGENT: 🔑 dreht sich, dann der Agent
     else papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
     if (daten.express) { const st = r?.expressStand; if (st) EXS.stand = st; melde("🏎️ Per Express versandt" + expressWegeText(r?.versand) + ". Unter der Nachricht siehst du, wann sie angekommen ist und gelesen wurde" + (st && !st.unbegrenzt ? ` (heute ${st.genutzt}/${st.max})` : ""), r?.versand?.fehler > 0); } // 2.403.0 KC-CLUB-EXPRESS-WEGE // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG, 2.391.0 Zähler
     HAKEN_SEIT = Date.now(); // 2.367.0 KC-CLUB-HAKEN-SCHNELL: Zustell-Haken eine Minute lang zügig nachsehen
@@ -38081,7 +38284,7 @@ function suAppListe() {
     ["💡", "Vorschläge zur Startseite (Kacheln ausblenden, Funktionen freischalten)", "vorschlag vorschläge kacheln ausblenden verbergen freischalten nutzung gemerkt adaptiv startseite löschen", () => suEinstellung("setKachelVorschlag")], // 2.418.0
     ["🎚️", "Bühne: Musik / Stimme lauter oder leiser", "lautstärke lauter leiser regler musik stimme stumm bühne", () => esOeffnen("buehne")],
     // 2.344.0 KC-CLUB-HILFE-NACHTRAG: alle Möglichkeiten, die App anzupassen, auch über die Lupe
-    ["🎭", "Thema wählen (Weihnachten, Herbst, Oktoberfest …)", "thema themen weihnachten herbst indian summer oktoberfest sim-jü simjue karneval halloween ostern karibik unterwasser weltraum sterne planet rakete astronaut ufo bauernhof kuh schwein hahn traktor stall kegeln kegelabend kegel bowling alle neune meer fische taucher silvester winter sommer frühling paket kalender club-thema", ein("themaWahl")],
+    ["🎭", "Thema wählen (Weihnachten, Herbst, Oktoberfest …)", "thema themen weihnachten herbst indian summer oktoberfest sim-jü simjue karneval halloween ostern karibik unterwasser weltraum sterne planet rakete astronaut ufo bauernhof kuh schwein hahn traktor stall kegeln kegelabend kegel bowling alle neune wild west wilder westen cowboy büffel tipi lagerfeuer kutsche meer fische taucher silvester winter sommer frühling paket kalender club-thema", ein("themaWahl")],
     ["✍️", "Schrift des Themas (Begrüßung)", "schrift schriftart fraktur thema begrüßung", ein("themaSchriftAn")],
     ["🍂", "Jahreszeiten-Bild im Kopf (fest oder automatisch)", "jahreszeit jahreszeiten kopf bild herbst winter frühling sommer advent silvester laub schnee schneemann eichhörnchen iglu vorschau", ein("jzWahl")],
     ["🎏", "Deko an der Leiste (Wimpel, Lichterkette, Laternen)", "deko dekoration wimpel wimpelkette lichterkette lichter laternen lampions girlande leiste", ein("jzDekoWahl")],

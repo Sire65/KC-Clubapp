@@ -1053,7 +1053,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/kc_club_tippen"\)\.delete\(\)\.eq\("thread_id", threadId\)/.test(server), "Senden beendet „schreibt …“ nicht");
   assert.ok(/if \(!chatId \|\| !ONL\.zeigen\) return;/.test(html) && /abstand = live \? 1000 : 3000/.test(html) && /Date\.now\(\) - TIPP\.zuletzt < abstand/.test(html), "Tipp-Meldung ohne Privatsphäre/Drosselung");
   assert.ok(/tippenMelden\(\)(;entwurfMerken\(\))?(;entwurfMarkeZeigen\(\))?"><\/textarea>/.test(html) && /id="tipptAnzeige"/.test(html) && /"tippen"(, "[a-z_]+")*\]\);/.test(html), "Anzeige/Eingabe/WARTEN_STILL fehlt");
-  assert.ok(/tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\](, u\.spricht \|\| \[\])?\);( chatAbstand\(\);)?\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
+  assert.ok(/tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\](, u\.spricht \|\| \[\])?(, u\.diktiert \|\| \[\])?\);( chatAbstand\(\);)?\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n(    else if \(u\.diktiert\?\.length && andere\.length === 1\)[^\n]*\n)?    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
   assert.ok(/if \(chatTakt\.laeuft( \|\| document\.hidden)?\) return;/.test(html) && !/setInterval\(chatTakt, 4000\)/.test(html), "Chat-Takt überlappt / alter Takt");
   assert.ok(/if \(v !== "chat" && TIPP\.id\) tippenAus\(\);/.test(html), "Verlassen beendet „schreibt …“ nicht");
   assert.ok(/mirror_enabled, backup_enabled, note, updated_at\)\nvalues \('kc_club_tippen', 'Club-App', 'sensitive', false, false, false/.test(lies("supabase/migrations/20260929_kc_club_v54_tippen.sql")), "Spiegel-Regel für kc_club_tippen fehlt");
@@ -1090,8 +1090,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/live_tippen: \(w\) => \(\{ an: w\?\.an === true \}\)/.test(server), "Einstellung nicht standardmäßig aus");
   const ti = server.slice(server.indexOf('case "tippen"'), server.indexOf('case "nachricht_senden"'));
   assert.ok(/eq\("schluessel", "live_tippen"\)/.test(ti) && /e\?\.wert\?\.an === true\) text = /.test(ti) && /slice\(-LIVE_TIPPEN_ZEICHEN\)/.test(ti), "Server speichert Entwurf ohne Zustimmung/Begrenzung");
-  assert.ok(/entwurf = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.text\)/.test(server) && /tippt, entwurf,/.test(server), "Entwurf wird nicht geliefert");
-  assert.ok(/\.\.\.\(live \? \{ text:/.test(html) && /id="setLiveTippen"/.test(html) && /id="liveHinweis"/.test(html), "App: Entwurf nur bei eingeschaltetem Live-Tippen / Hinweis fehlt");
+  assert.ok(/entwurf = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.text( && x\.art !== "sprache")?\)/.test(server) && /tippt, entwurf,/.test(server), "Entwurf wird nicht geliefert");
+  assert.ok(/\.\.\.\((diktiert \? \{ diktat: true \} : )?live \? \{ text:/.test(html) && /id="setLiveTippen"/.test(html) && /id="liveHinweis"/.test(html), "App: Entwurf nur bei eingeschaltetem Live-Tippen / Hinweis fehlt");
   assert.ok(/'\*\/5 \* \* \* \*', \$\$delete from public\.kc_club_tippen where bis < now\(\)\$\$/.test(lies("supabase/migrations/20260929_kc_club_v56_live_tippen.sql")), "Entwürfe bleiben zu lange liegen");
 }
 
@@ -1637,8 +1637,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/padding: 8px 0 var\(--chatUnten, 160px\)/.test(html) && /function chatAbstand\(\)/.test(html) && /new ResizeObserver\((chatAbstand|\(\) => requestAnimationFrame\(chatAbstand\))\)/.test(html), "Abstand unten gemessen");
   assert.ok(/@keyframes tippWelle/.test(html) && /\.punkte3 i \{ width: 9px; height: 9px/.test(html), "Punkte größer + Welle");
   const ti = server.slice(server.indexOf('case "tippen"'), server.indexOf('case "nachricht_senden"'));
-  assert.ok(/const art = p\.sprache \? "sprache" : "text"/.test(ti) && /text: art === "sprache" \? null : text, art/.test(ti), "Server: Sprachaufnahme ohne Text");
-  assert.ok(/const spricht = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.art === "sprache"\)/.test(server), "Server liefert spricht");
+  assert.ok(/const art = p\.sprache( \|\| p\.diktat)? \? "sprache" : "text"/.test(ti) && /text: (p\.diktat \? "diktat" : )?art === "sprache" \? null : text, art/.test(ti), "Server: Sprachaufnahme ohne Text");
+  assert.ok(/const spricht = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.art === "sprache"( && x\.text !== "diktat")?\)/.test(server), "Server liefert spricht");
   assert.ok(/function sprichtMelden\(\) \{\n  if \(!SPR \|\| !chatId \|\| !ONL\.zeigen\) return;/.test(html) && /getByteTimeDomainData/.test(html) && /osziStopp\(\); if \(s\.meldeId\) api\("tippen", \{ id: s\.meldeId, aus: true \}\)/.test(html), "App: melden nur bei Online-Status, echtes Oszilloskop, Ende meldet ab");
   const mig = lies("supabase/migrations/20261001_kc_club_v1110_spricht.sql");
   assert.ok(/add column if not exists art text not null default 'text'/.test(mig), "Migration additiv");
@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6102,7 +6102,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.332.0 KC-CLUB-THEMEN-BUEHNE-2 (Wunsch Hansi „weitere Themen: Ostern, Karneval und Halloween“)
 {
   for (const [id, jz] of [["ostern", "fruehling"], ["karneval", "karneval"], ["halloween", "halloween"]]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", name: "[^"]+", design: "[a-z]+", jz: "${jz}", effekt: "[a-z]+"`).test(html), `Thema ${id}`);
-  assert.ok(/const JZB_FESTE = \["kirmes", "wiesn", "karibik", "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln")?)?)?)?\];/.test(html) && /else if \(J\.saison === "karneval"\) jzbKarnevalMalen\(c, F\); else if \(J\.saison === "halloween"\) jzbHalloweenMalen\(c, F\);/.test(html), "Karneval und Halloween auf der Bühne");
+  assert.ok(/const JZB_FESTE = \["kirmes", "wiesn", "karibik", "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?)?)?)?)?\];/.test(html) && /else if \(J\.saison === "karneval"\) jzbKarnevalMalen\(c, F\); else if \(J\.saison === "halloween"\) jzbHalloweenMalen\(c, F\);/.test(html), "Karneval und Halloween auf der Bühne");
   assert.ok(/const txt = name \? `Helau, \$\{name\}!` : "Helau!";/.test(html) && /const txt = name \? `Buuuh, \$\{name\}!` : "Buuuh!";/.test(html), "Vorname auf dem Wagen und beim Gespenst");
   assert.ok(/if \(te === "ostern" && J\.saison === "fruehling"\) x\.ostern = true;/.test(html) && /J\.gaeste\.push\(\{ typ: "osterhase", x: J\.w \+ 24, t: 0 \}\)/.test(html) && /if \(e\.da === false && hase\) continue;/.test(html) && /!v\.gef && v\.da !== false/.test(html), "Ostern: Osterhase legt die Eier, erst dann sicht- und findbar");
   assert.ok(/function osterSonntag\(jahr\)/.test(html) && /const ostern = osterSonntag\(jahr\);/.test(html), "eine Osterformel für Feiertage und Themen");
@@ -6553,7 +6553,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.444.0 KC-CLUB-WELTRAUM (Wunschliste #2): Thema Weltraum mit eigener Szene (Sterne, Planet, Rakete, Astronaut schreibt den Namen, UFO)
 {
   assert.ok(/\{ id: "weltraum", sym: "🚀", name: "Weltraum", design: "tiefsee", jz: "weltraum"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "weltraum"\) return jzbWrSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "weltraum"\) jzbWeltraumMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const w = programm.slice(programm.indexOf("function jzbWrSchritt("), programm.indexOf("function jzbWrBahn("));
   assert.ok(/if \(t >= JZB_WR_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(w), "Lauf endet, neuer Lauf");
@@ -6564,7 +6564,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.445.0 KC-CLUB-BAUERNHOF (Wunschliste #3): Thema Bauernhof – ein Tag von Morgen bis Nacht, dann wieder Morgen
 {
   assert.ok(/\{ id: "bauernhof", sym: "🐄", name: "Bauernhof", design: "kuechengruen", jz: "bauernhof"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"bauernhof"(?:, "kegeln")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"bauernhof"(?:, "kegeln")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "bauernhof"\) return jzbBhSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "bauernhof"\) jzbBauernhofMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const b = programm.slice(programm.indexOf("function jzbBhSchritt("), programm.indexOf("function jzbBhHimmel("));
   assert.ok(/if \(t >= JZB_BH_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(b) && /if \(abend\) \{ T\.ziel = st\.tuer;/.test(b) && /B\.tor = Math\.max\(0, B\.tor - dt \* \.8\)/.test(b), "abends in den Stall, Tor zu, neuer Lauf");
@@ -6576,7 +6576,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.446.0 KC-CLUB-KEGELN (Wunschliste #4): Thema Kegelabend – 6 Würfe, Tafel mit Namen und Strichen, „Alle Neune“, Tafel wischen
 {
   assert.ok(/\{ id: "kegeln", sym: "🎳", name: "Kegelabend", design: "schokolade", jz: "kegeln"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"kegeln"\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"kegeln"\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"kegeln"(?:, "wildwest")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"kegeln"(?:, "wildwest")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "kegeln"\) return jzbKgSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "kegeln"\) jzbKegelnMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const g = programm.slice(programm.indexOf("function jzbKgNeu("), programm.indexOf("function jzbKgKegelMalen("));
   assert.ok(/i === JZB_KG_WUERFE - 1 \? 9 :/.test(g) && /if \(t >= JZB_KG_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(g) && /K\.wisch = Math\.min\(1, K\.wisch \+ dt \/ 3\)/.test(g), "letzter Wurf alle Neune, Tafel wischen, neuer Lauf");
@@ -7010,7 +7010,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const tg = html.slice(html.indexOf("function tippGeraeusche(entwurf) {"), html.indexOf("function tipptZeigen("));
   assert.ok(/if \(alt !== undefined\)/.test(tg) && /if \(TT\.chat !== chatId\)/.test(tg), "beim Öffnen kein Geprassel für vorhandenen Text");
   assert.ok(/document\.hidden \|\| aktuelleAnsicht !== "chat" \|\| \(chatId && stummAn\(chatId\)\)/.test(tg) && /n = Math\.min\(n, 24\)/.test(tg), "nur offene, nicht stumme Unterhaltung, begrenzt");
-  assert.ok(/function tipptZeigen\(namen, entwurf = \[\], sprechen = \[\]\) \{\s*const e = \$\("tipptAnzeige"\); if \(!e\) return;\s*tippGeraeusche\(entwurf\);/.test(html), "hängt an der Live-Tippen-Anzeige (nur Entwurf, nicht bloß „schreibt …“)");
+  assert.ok(/function tipptZeigen\(namen, entwurf = \[\], sprechen = \[\](, diktiert = \[\])?\) \{\s*const e = \$\("tipptAnzeige"\); if \(!e\) return;\s*tippGeraeusche\(entwurf\);/.test(html), "hängt an der Live-Tippen-Anzeige (nur Entwurf, nicht bloß „schreibt …“)");
 }
 
 // 2.506.0 KC-CLUB-PROTOKOLL-SCHNELL (Hansi: Veröffentlichen dauerte 21 s): Benachrichtigung im Hintergrund, Antwort sofort
@@ -9750,7 +9750,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE"), html.indexOf("// ---------- KC-CLUB-KONFETTI (2.169.0)"));
   assert.ok(b.length > 1000, "Bühne vorhanden");
-  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln")?)?)?)?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
+  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?)?)?)?)?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
   assert.ok(/J\.wind = \{ dir: \(J\.lauf >> 1\) % 2 \? -1 : 1/.test(b), "Windstoß abwechselnd von links und rechts (2.259.0: über die Wind-Läufe, dazwischen Twinkey)");
   assert.ok(/if \(J\.lauf % 3 === 2\) (jzbSchneemannStart|\(Math\.floor\(J\.lauf \/ 3\) % 2 \? jzbIgluStart : jzbSchneemannStart\))\(\); else (if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else )?jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (ab 2.320.0 abwechselnd mit dem Iglu; Advent mit Weihnachtsmütze)");
   assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!fxAn\(\) \|\| !einst\("jahreszeit", true\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");
@@ -11000,7 +11000,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.434.0 KC-CLUB-UNTERWASSER: Thema Unterwasserwelt mit eigener Szene (Regen füllt, Stöpsel leert)
 {
   assert.ok(/\{ id: "unterwasser", sym: "🐠", name: "Unterwasserwelt", design: "nordsee", jz: "unterwasser"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "unterwasser"\) return jzbUwSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "unterwasser"\) jzbUnterwasserMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const u = programm.slice(programm.indexOf("function jzbUwSchritt("), programm.indexOf("function jzbUwSog("));
   assert.ok(/U\.phase = "ablauf"; U\.at = 0; U\.plopp = 0;/.test(u) && /J\.fest = null; return jzbLaufEnde\(\);/.test(u), "Stöpsel → ablaufen → neuer Lauf");
@@ -11543,7 +11543,31 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(s\.art === "gelesen"\) \{ if \(s\.thread && s\.thread === chatId && aktuelleAnsicht === "chat"/.test(html), "App lädt bei diesem Signal den offenen Chat");
   assert.ok(fs.existsSync(new URL("../tools/chat-sparsam/rt-push-angezeigt-test.mjs", import.meta.url)), "Test (Postgres im Speicher) vorhanden");
 }
-// 2.529.0 KC-CLUB-GEHEIMAGENT (Wunsch Hansi „Schlüssel kurz anzeigen … besondere Figur bringt die verschlüsselte weg“ → Geheimagent)
+// 2.529.0 KC-CLUB-WILDWEST (Wunsch Hansi): Thema Wilder Westen – Tipi, Lagerfeuer, Büffel am Horizont, Cowboys, Postkutsche, Herde trampelt alles nieder, Staubwolke, von vorn
+{
+  assert.ok(/\{ id: "wildwest", sym: "🤠", name: "Wilder Westen", design: "ocker", jz: "wildwest"/.test(programm), "Thema eingetragen");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest"\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest"\]/.test(programm), "Bühne bekannt");
+  assert.ok(/if \(J\.saison === "wildwest"\) return jzbWwSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "wildwest"\) jzbWildwestMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
+  const g = programm.slice(programm.indexOf("function jzbWwSchritt("), programm.indexOf("function jzbWwBueffelMalen("));
+  assert.ok(/if \(t >= JZB_WW_DAUER\) \{ J\.fest = null; J\.wwStaub = true; return jzbLaufEnde\(\); \}/.test(g) && /W\.zeltFall = Math\.min\(1, W\.zeltFall \+ dt \* 1\.6\)/.test(g) && /W\.feuerAus = Math\.min\(1, W\.feuerAus \+ dt \* 3\)/.test(g), "Herde trampelt Zelt und Feuer nieder, nächster Lauf aus der Staubwolke");
+  assert.ok(/for \(const s of JZB_WW_REITER\)/.test(g) && /for \(const s of JZB_WW_KUTSCHE\)/.test(g) && /const JZB_WW_COWBOYS = \[\{ hemd: "#c1121f"/.test(programm) && /c\.fillText\("KÖCHECLUB"/.test(programm), "Cowboys und Postkutsche");
+  assert.ok(/jahreszeitVorschau\('wildwest'\)">🤠 Wilder Westen</.test(seite) && /wildwest: \["🤠", "🐃", "🌵", "🔥"\]/.test(programm) && /\{ id: "wildwest", thema: "darstellung"/.test(programm) && /wildwest: \["wimpel", "western"\]/.test(programm), "Vorschau, Ersatz-Bild, Hilfe, Deko");
+  assert.ok(fs.existsSync(new URL("../tools/wildwest/ww-browser.mjs", import.meta.url)), "Browser-Test vorhanden");
+}
+// 2.529.0 KC-CLUB-VN-RUECKFRAGE (Fund Hansi „soll eine Verschlüsselungsnummer eingeben – ich will gar nicht verschlüsseln“) + KC-CLUB-SCHREIBT-HINWEIS
+// (Wunsch Hansi „Hansi schreibt gerade an dich / diktiert gerade eine Nachricht“ auch außerhalb des Chats)
+{
+  assert.ok(/\{ ja: "🔒 Ja, mit Schlüssel", nein: "✉️ Normal senden" \}\)\)\) \{ vnUmschalten\(false\); return text; \}/.test(html) && /if \(VN\.an && VN\.chat !== fuer\) vnUmschalten\(false\);/.test(html) && /VN\.chat = VN\.an \? chatId : null;/.test(html), "Schloss: Rückfrage „Normal senden“, gilt nur im eigenen Chat");
+  assert.ok(/const diktiert = typeof DT !== "undefined" && DT\.aktiv && DT\.ziel === "text";/.test(html) && /if \(DT\.ziel === "text" && chatId\) tippenMelden\(\);/.test(html), "Diktat meldet „diktiert“");
+  assert.ok(/text: p\.diktat \? "diktat" : art === "sprache" \? null : text, art/.test(server) && /const diktiert = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.art === "sprache" && x\.text === "diktat"\)/.test(server) && /stand, tippt, entwurf, spricht, diktiert,/.test(server), "Server: Diktat ohne Text, eigene Liste");
+  const th = html.slice(html.indexOf("function tippHinweisSignal("), html.indexOf("function tippHinweisWeg("));
+  assert.ok(/s\.thread === chatId && aktuelleAnsicht === "chat"\)\) return;/.test(th) && /stummAn\(s\.thread\)\) return;/.test(th) && /if \(!u \|\| u\.gruppe \|\| \(u\.teilnehmer \|\| \[\]\)\.length !== 1/.test(th) && /el\.onclick = \(\) => \{ tippHinweisWeg\(\); chatOeffnen\(thread\); \};/.test(th), "Hinweis nur außerhalb des offenen Chats, nur Einzelchats, nicht stumm, Antippen öffnet");
+  assert.ok(/if \(s\.art === "tippt" \|\| s\.art === "spricht" \|\| s\.art === "diktiert"\) tippHinweisSignal\(s\);/.test(html) && /if \(s\.art === "chat" && TH\.thread === s\.thread\) tippHinweisWeg\(\);/.test(html), "Signal zeigt den Hinweis, die Nachricht nimmt ihn weg");
+  const mig = lies("supabase/migrations/20261020_kc_club_rt_spricht.sql");
+  assert.ok(/create trigger kc_club_rt_spricht after insert or update on public\.kc_club_tippen\s+for each row when \(new\.art = 'sprache'\)/.test(mig) && /case when new\.text = 'diktat' then 'diktiert' else 'spricht' end/.test(mig) && /exception when others then null;/.test(mig), "DB: Signal „spricht“/„diktiert“ an die anderen");
+  assert.ok(/\.schreibt-hinweis \{ position: fixed;/.test(seite), "Aussehen des Hinweises");
+}
+// 2.530.0 KC-CLUB-GEHEIMAGENT (Wunsch Hansi „Schlüssel kurz anzeigen … besondere Figur bringt die verschlüsselte weg“ → Geheimagent)
 {
   assert.ok(/express \? "express" : geheim \? "agent" : wichtig \? "blaulicht"/.test(html), "verschlüsselt → Geheimagent (Express hat Vorrang)");
   assert.ok(/if \(vnIst\(text\)\) \{ vnSchluesselZeigen\(\$\("sendenKnopf"\)\); setTimeout\(\(\) => papierflieger\(\$\("sendenKnopf"\), undefined, r\?\.mid, undefined, true\), 650\); \}/.test(html), "beim Senden erst der Schlüssel, dann der Agent");
