@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.543.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.544.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -21268,10 +21268,35 @@ function kopfRolloSetzen(stand) {
   kopfRolloKlassen(h, stand);
   kopfPfeileZeigen(stand);
 }
+// 2.544.0 KC-CLUB-KOPF-PFEIL-NEU (Wunsch Hansi „ist der Kopf hochgefahren, sehe ich nicht, ob in den 3 Feldern neue Sachen ankommen –
+// der Pfeil, mit dem hochgefahren wurde, soll blinken, wenn eine neue Nachricht da ist oder neue Mitglieder angemeldet sind“):
+// Bei eingerolltem Kopf (⌃ halb oder ⌃⌃ ganz – in beiden Stellungen sind die drei Felder weg) blinkt der Pfeil der aktuellen Stellung,
+// sobald mehr ungelesene Nachrichten da sind, jemand neu online kommt oder die Mitgliederzahl steigt. Ausrollen beendet das Blinken.
+// Ohne Bewegung (Effekte aus, Sparmodus) leuchtet der Pfeil fest statt zu blinken. Keine zusätzlichen Abfragen – nur vorhandene Zahlen.
+const KPN = { n: null, mg: null, ids: null, an: false };
+function kopfNeuPruefen() {
+  const stand = kopfRolloStand(), n = INIT?.ungelesen || 0, mg = Number(INIT?.mitgliederAnzahl) || 0;
+  const ids = ONL.zeigen && mpOnline() > 0 ? new Set(ONL.ids) : ONL.zeigen && ONL.stand && Date.now() - ONL.stand < 180000 ? new Set() : null; // null = Online-Stand unbekannt
+  if (stand === "offen") { KPN.an = false; }
+  else if (!KPN.an) {
+    const ersterBlick = KPN.n === null; // App startet mit eingerolltem Kopf: ungelesene Nachrichten sind dann auch „neu“ für den Blick
+    if ((ersterBlick ? n > 0 : n > KPN.n) || (KPN.mg !== null && mg > KPN.mg) || (KPN.ids && ids && [...ids].some((id) => !KPN.ids.has(id)))) KPN.an = true;
+  }
+  KPN.n = n; KPN.mg = mg; KPN.ids = ids;
+  kopfPfeilNeuZeigen(stand);
+}
+function kopfPfeilNeuZeigen(stand = kopfRolloStand()) {
+  const ruhig = !fxAn();
+  [["kopfPfeil", "ganz"], ["kopfPfeilHalb", "halb"]].forEach(([id, s]) => { const p = $(id); if (!p) return;
+    const an = KPN.an && stand === s; p.classList.toggle("kp-neu", an); p.classList.toggle("still", an && ruhig);
+    if (an) p.title = "Neues im Kopf (Nachrichten oder Mitglieder) – antippen zum Ausrollen"; });
+}
 function kopfPfeileZeigen(stand) {
+  if (stand === "offen") KPN.an = false; // ausgerollt: die drei Felder sind wieder zu sehen
   const g = $("kopfPfeil"), hb = $("kopfPfeilHalb");
   if (g) { const zu = stand === "ganz"; g.classList.toggle("dreh", zu); g.setAttribute("aria-expanded", zu ? "false" : "true"); g.title = zu ? "Kopf ausrollen – alles zeigen" : "Kopf ganz einrollen – nur die Kopfzeile bleibt"; g.setAttribute("aria-label", zu ? "Kopf ausrollen" : "Kopf ganz einrollen"); }
   if (hb) { const zu = stand !== "offen"; hb.classList.toggle("dreh", zu); hb.setAttribute("aria-expanded", zu ? "false" : "true"); hb.title = stand === "halb" ? "Kopf ausrollen – alles zeigen" : stand === "ganz" ? "Kopf halb ausrollen – Statusleiste mit LEDs zeigen" : "Kopf halb einrollen – Statusleiste mit LEDs bleibt"; hb.setAttribute("aria-label", hb.title.split(" – ")[0]); }
+  kopfPfeilNeuZeigen(stand);
 }
 async function kopfRolloFahren(ziel, vorgabe) { // vorgabe: nur Erklär-Video – zeigt einen Effekt, ohne die Einstellung zu ändern
   const h = document.querySelector("#v-start .hero"), kz = h?.querySelector(".kopfzeile"), sl = h?.querySelector(".statusleiste");
@@ -22153,6 +22178,7 @@ addEventListener("pointerdown", () => { try { if (audio && audio.state === "susp
 setInterval(kuckuckPruefen, 15000); document.addEventListener("visibilitychange", () => { if (!document.hidden) kuckuckPruefen(); });
 try { const w = localStorage.getItem(KOPF_ROLLO); if (w === "1") kopfRolloSetzen("ganz"); else if (w === "halb") kopfRolloSetzen("halb"); } catch {}
 function heroZeigen(richtung) {
+  kopfNeuPruefen(); // 2.544.0 KC-CLUB-KOPF-PFEIL-NEU: heroZeigen läuft nach jedem Abgleich und jedem Online-Takt
   const f = INFO_FELDER[INFO_I] || INFO_FELDER[0], inhalt = f.html();
   // gleicher Inhalt → nicht neu zeichnen (sonst springen Wetter-Animationen bei jedem Online-Takt neu an)
   const erzwingen = richtung !== undefined; // heroZeigen(0) = sofort neu zeichnen (ohne Wisch-Animation)

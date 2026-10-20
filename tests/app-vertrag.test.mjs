@@ -7197,6 +7197,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/ankunftEffekt\(el, "agent"\)/.test(seg), "Agent kommt beim Empfänger an (vorhandener Effekt)");
   assert.ok(/\{ id: "geheim", stand: "2", sym: "🕵️"/.test(programm), "Video-Stand 2");
 }
+// 2.544.0 KC-CLUB-KOPF-PFEIL-NEU: bei eingerolltem Kopf blinkt der Pfeil der Stellung, wenn Neues (Nachrichten, Mitglieder) ankommt
+{
+  assert.ok(/function heroZeigen\(richtung\) \{\n  kopfNeuPruefen\(\);/.test(programm), "Prüfung läuft bei jedem Neuzeichnen des Kopfes (Abgleich, Online-Takt)");
+  assert.ok(/\(ersterBlick \? n > 0 : n > KPN\.n\) \|\| \(KPN\.mg !== null && mg > KPN\.mg\) \|\| \(KPN\.ids && ids && \[\.\.\.ids\]\.some\(\(id\) => !KPN\.ids\.has\(id\)\)\)/.test(programm), "neue Nachricht, neue Mitglieder, neu online");
+  assert.ok(/\[\["kopfPfeil", "ganz"\], \["kopfPfeilHalb", "halb"\]\]/.test(programm) && /if \(stand === "offen"\) KPN\.an = false;/.test(programm), "Pfeil der aktuellen Stellung, Ausrollen beendet");
+  assert.ok(/\.kopf-pfeil\.kp-neu \{[^}]*animation: kpNeu/.test(seite) && /\.kopf-pfeil\.kp-neu\.still \{ animation: none;/.test(seite), "Blinken, ohne Bewegung fest leuchtend");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.544.0 – 2026-10-20 – 🔔 Eingerollter Kopf: der Pfeil blinkt bei Neuem (KC-CLUB-KOPF-PFEIL-NEU)
+Wunsch Hansi („Wenn ich den Kopfbereich mit einem oder zwei Pfeilen hochfahre, sehe ich nicht, in welchem der 3 Felder neue Sachen ankommen – der Pfeil, mit dem hochgefahren wurde, soll blinken, wenn eine neue Nachricht da ist oder neue Mitglieder angemeldet sind“).
+- Ist der Kopf mit ⌃ (halb) oder ⌃⌃ (ganz) eingerollt, blinkt der Pfeil dieser Stellung gelb-orange, sobald mehr ungelesene Nachrichten da sind, ein Mitglied neu online kommt oder die Mitgliederzahl steigt. Startet die App schon eingerollt, blinkt er auch bei vorhandenen ungelesenen Nachrichten.
+- Ausrollen beendet das Blinken (dann sind die drei Felder wieder zu sehen). Ohne Bewegung (Effekte aus, Sparmodus) leuchtet der Pfeil fest statt zu blinken.
+- Keine zusätzlichen Datenbank-Abfragen: es werden nur die vorhandenen Zahlen aus Abgleich und Online-Takt verglichen.
+- Test: Vertragstest-Block 2.544.0, Browser-Probe (eingerollt + neue Nachricht → Pfeil blinkt, ausrollen → aus). Rückweg: App 2.543.0.
+
 ## 2.543.0 – 2026-10-20 – 🎬 Video „Geheim schreiben“: so kommt die verschlüsselte Nachricht beim Empfänger an (KC-CLUB-VIDEO-GEHEIM-2)
 Wunsch Hansi („Wie sieht z. B. Klaus die verschlüsselte, wenn sie ankommt – einmal mit Schlüsselbund oder temporärem Schlüssel“ → „Ja, Video ergänzen und einspielen“).
 - Fünf neue Stationen aus Sicht des Empfängers: 📲 die Mitteilung aufs Handy (kein Wort vom Inhalt), 🕵️ der Agent liefert ab (echter Ankunfts-Effekt im Beispiel-Chat), 🔑 Einmal-Schlüssel eintippen, ❌ Falscher Schlüssel, 🔑 mit Schlüsselbund öffnet sie sich von selbst.
