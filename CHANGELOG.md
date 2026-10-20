@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.518.0 – 2026-10-20 – 🔒 Schloss in die kleine Zeile (KC-CLUB-VERSCHLUESSELT-KLEIN)
+Wunsch Hansi („Unten sind jetzt zu viele Symbole. Nimm das Schloss in die kleine Zeile mit dem Lautsprecher, Tastatur, Pfeil“).
+- Der 🔒-Knopf sitzt jetzt in der kleinen Zeile über dem Schreibfeld neben ▾, ⌨️ und 🔊 (grün, wenn an); unten in der Knopfreihe ist wieder mehr Platz. Antippen lässt die Tastatur offen.
+- Hilfe-Eintrag angepasst. Nur App.
+
 ## 2.517.0 – 2026-10-20 – 🔒 Nachrichten mit eigenem Schlüssel verschlüsseln (KC-CLUB-VERSCHLUESSELT) · Server 2.517.0
 Wunsch Hansi („Wenn ich eine Nachricht an jemanden schicke, vorher einen Schlüssel festlegen, z. B. 1234 oder abcd – damit wird meine Nachricht verschlüsselt. Aber wie kommt der Empfänger an den Schlüssel?“; Wahl Hansi: selbst gewählter Schlüssel, mindestens 6 Zeichen, je Person merkbar).
 - Unten im Chat neuer Knopf **🔒** (grün, wenn an). Beim Senden fragt die App nach dem Schlüssel (mindestens 6 Zeichen; „1234“ wäre in Sekunden geknackt). Die Nachricht wird **auf dem Handy** verschlüsselt (PBKDF2-SHA-256 mit 310 000 Runden → AES-GCM 256, zufälliges Salz je Nachricht) – auf dem Server, in der Datenbank, in Push und Mail steht nur Zeichensalat bzw. „🔒 Verschlüsselte Nachricht“. Auch der Admin kann sie nicht lesen.
