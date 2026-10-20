@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.532.0 – 2026-10-20 – 🤠 Wilder Westen: Indianer und Häuptling, Saguaro-Kakteen, Steppenläufer, Duell mit Abtransport (KC-CLUB-WILDWEST-2)
+Wunsch Hansi („es fehlen noch 2 Indianer und ein Häuptling, rechts ein paar Kakteen so groß wie im Westen, ab und an ein Windstoß, der einen Ballen weht, und 2 Cowboys, die sich duellieren – dann kommt eine flache Kutsche und der Verwundete wird abtransportiert“):
+- Am Lagerfeuer sitzen zwei Indianer (einer hebt ab und zu die Hand), daneben steht der Häuptling mit Federhaube und verschränkten Armen. Wenn der Boden bebt, laufen alle drei vor der Herde davon – im nächsten Lauf sind sie wieder da.
+- Rechts zwei große Saguaro-Kakteen und ein kleiner Kugelkaktus mit Blüte.
+- Ab und zu ein Windstoß (Windstriche), der einen Steppenläufer-Ballen hüpfend durchs Bild rollt.
+- Duell: zwei Cowboys kommen, stehen sich gegenüber, ziehen – Mündungsfeuer, „PENG!“, einer fällt um (der Hut fliegt), der Sieger geht davon. Ein flacher Wagen kommt, der Verwundete wird mit Kopfverband aufgeladen und abtransportiert.
+- Zeitplan so verschoben, dass sich nichts überschneidet (Reiter 8 s/56 s, Kutsche 13 s/64 s, Duell 29–56 s, Herde 77 s). Alles nur Bild, keine Datenbank.
+- Test: `tools/wildwest/ww-browser.mjs` erweitert (Steppenläufer, Duell und Abtransport über 800 Bilder ohne Fehler) · Vertragstest-Block 2.532.0.
+- Rückweg: App 2.531.0 erneut einspielen.
+
 ## 2.531.0 – 2026-10-20 – Korrektur: geplante, selbstlöschende und vorgemerkte Nachrichten im Chat wieder sichtbar
 Fehler aus 2.529.0 (KC-CLUB-VN-RUECKFRAGE): Ein Kommentar stand mitten in einer Zeile und schaltete dahinter drei Aufrufe ab – im offenen Chat fehlten seitdem die eigenen geplanten Nachrichten („später senden“), die Selbstlösch-Anzeige und die ohne Netz vorgemerkten Nachrichten. Jetzt wieder auf eigener Zeile. Neuer Vertragstest prüft genau diese Zeile; alle Änderungen seit 2.494.0 auf dasselbe Muster durchsucht – keine weitere Stelle.
 - Rückweg: nicht sinnvoll (2.529.0/2.530.0 enthalten den Fehler).

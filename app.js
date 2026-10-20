@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.531.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.532.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5242,7 +5242,7 @@ const HILFE = [
   { id: "weltraum", thema: "darstellung", sym: "🚀", t: "Thema Weltraum", x: "Im Thema <b>🚀 Weltraum</b> wird der Kopf der Startseite zum Nachthimmel: Sterne funkeln, ein <b>Ringplanet</b> schwebt herein, oben steht der <b>Mond</b>, ab und zu fällt eine <b>Sternschnuppe</b>. Ein <b>Astronaut</b> schwebt herein und winkt, eine <b>Rakete</b> startet mit Feuerschweif. Dann schreibt der Astronaut <b>deinen Vornamen in Sternenschrift</b>. Zum Schluss holt ihn ein <b>UFO</b> mit dem Lichtstrahl ab – dann beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚀 Weltraum.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.444.0" },
   { id: "bauernhof", thema: "darstellung", sym: "🐄", t: "Thema Bauernhof", x: "Im Thema <b>🐄 Bauernhof</b> läuft im Kopf der Startseite ein ganzer Tag auf dem Hof: Morgens geht die Sonne auf und der <b>Hahn</b> kräht auf dem Zaunpfosten. <b>Kuh</b>, <b>Schwein</b> und <b>Hühner</b> kommen auf die Wiese – das Schwein suhlt sich in der Pfütze. Der <b>Traktor</b> bringt Stroh und lädt einen Ballen ab, dann steht ein Holzschild <b>„Hof“ mit deinem Vornamen</b>. Abends gehen alle Tiere in den <b>Stall</b>, das Tor geht zu, nachts schläft der Hahn – und am nächsten Morgen beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🐄 Bauernhof.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.445.0" },
   { id: "kegeln", thema: "darstellung", sym: "🎳", t: "Thema Kegelabend", x: "Im Thema <b>🎳 Kegelabend</b> wird unten im Kopf der Startseite gekegelt: Ein <b>Koch mit Kochmütze</b> nimmt Anlauf und rollt die Kugel auf die <b>9 Kegel</b> (der König trägt eine rote Krone) – die Kegel fliegen, „5 Holz!“, dann stellen sie sich wieder auf. Oben rechts zählt die <b>Kreidetafel mit deinem Vornamen</b> die Striche. Der 6. Wurf ist immer <b>„Alle Neune!“</b> mit Konfetti – danach wischt ein Schwamm die Tafel sauber und es geht von vorn los. Vorschau: ⚙️ → ✨ Effekte → 🎳 Kegelabend.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.446.0" },
-  { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Horizont ziehen <b>Büffel</b> vor Tafelbergen und Kakteen vorbei, ab und an reiten <b>zwei Cowboys</b> durchs Bild, zwischendurch rumpelt die <b>Postkutsche „Köcheclub“</b> vorbei. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
+  { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Feuer sitzen <b>zwei Indianer</b>, daneben steht der <b>Häuptling</b> mit Federhaube; rechts ragen große <b>Saguaro-Kakteen</b> auf. Am Horizont ziehen <b>Büffel</b> vorbei, ab und zu rollt ein <b>Windstoß</b> einen Steppenläufer durchs Bild. Zwei <b>Cowboys</b> reiten vorbei, die <b>Postkutsche „Köcheclub“</b> rumpelt durch, und zwei Cowboys <b>duellieren</b> sich – „PENG!“, einer fällt, ein <b>flacher Wagen</b> bringt den Verwundeten mit Kopfverband weg. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
   { id: "eingangskorb_mitglied", thema: "club", sym: "📥", t: "Dein Eingangskorb fürs Archiv", x: "Legt dir die Clubleitung ein Dokument hin (z. B. eine Anleitung oder Urkunde), steht unter <b>„Heute wichtig“ → 📥 Eingangskorb</b>. Antippen – du siehst das Dokument und entscheidest: <b>✔ annehmen</b> – dann fragt die App <b>„Wohin?“</b> (Ordner und Register, der 💡 Vorschlag des Absenders ist schon ausgewählt) und legt es in deinen persönlichen Archiv-Ordner – oder <b>✖ ablehnen</b>, dann wird es gelöscht. Dein Ordner bleibt privat. <i>Clubleitung:</i> Mitglied antippen → <b>„📥 In den Eingangskorb“</b>.", seit: "2.432.0" },
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
@@ -19181,13 +19181,13 @@ function jzbKegelnMalen(c, F) {
 // und Kakteen. Zweimal reiten zwei Cowboys vorbei (einer schwingt das Lasso), zweimal rumpelt die Postkutsche „Köcheclub-Express“ durch.
 // Zum Schluss bebt der Boden: eine riesige Büffelherde donnert von rechts heran, trampelt Zelt und Feuer nieder, eine Staubwolke deckt alles zu –
 // aus dem Staub heraus beginnt die Szene von vorn (nahtlos). Alles nur Bild, nichts wird gespeichert oder gesendet.
-const JZB_WW_DAUER = 96, JZB_WW_REITER = [8, 44], JZB_WW_KUTSCHE = [25, 61], JZB_WW_HERDE = 77, JZB_WW_STAUB = 84, JZB_WW_HERDE_N = 36; // Sekunden · Tiere
+const JZB_WW_DAUER = 96, JZB_WW_REITER = [8, 56], JZB_WW_KUTSCHE = [13, 64], JZB_WW_DUELL = 29, JZB_WW_HERDE = 77, JZB_WW_STAUB = 84, JZB_WW_HERDE_N = 36; // Sekunden · Tiere (2.532.0: + Duell, Zeiten so, dass sich nichts überschneidet)
 const JZB_WW_COWBOYS = [{ hemd: "#c1121f", hut: "#5c3a1a", pferd: "#8b4513" }, { hemd: "#1d3557", hut: "#2b2b2b", pferd: "#6b4226", lasso: true }];
 function jzbWwOrt() { const J = JZB, k = J.k, boden = J.h - 5 * k; return { boden, horizont: boden - 22 * k, zelt: JZB_RAND + 22 * k, feuer: JZB_RAND + 56 * k }; }
 function jzbWwNeu() {
   const J = JZB, ausStaub = !!J.wwStaub; J.wwStaub = false;
   return { ausStaub, horizont: [], hUhr: 0, reiter: null, kutsche: null, herde: [], staub: [], funken: [], rauch: [], fUhr: 0, rUhr: 0,
-    zeltFall: 0, feuerAus: 0, beben: 0, schleier: ausStaub ? 1 : 0, gestartet: {} };
+    zeltFall: 0, feuerAus: 0, beben: 0, schleier: ausStaub ? 1 : 0, gestartet: {}, ballen: [], windUhr: jzbZ(5, 9), wind: null }; // 2.532.0: Steppenläufer + Windstoß
 }
 function jzbWwSchritt(F, dt) {
   const J = JZB, k = J.k, t = F.t, O = jzbWwOrt(), W = F.ww || (F.ww = jzbWwNeu());
@@ -19204,6 +19204,12 @@ function jzbWwSchritt(F, dt) {
   for (const s of JZB_WW_KUTSCHE) if (t >= s && !W.gestartet["k" + s]) { W.gestartet["k" + s] = 1; W.kutsche = { x: -100 * k, v: 44 * k, ph: 0 }; }
   if (W.reiter) { W.reiter.x -= W.reiter.v * dt; W.reiter.ph += dt * 11; if (W.reiter.x < -90 * k) W.reiter = null; }
   if (W.kutsche) { W.kutsche.x += W.kutsche.v * dt; W.kutsche.ph += dt * 9; if (W.kutsche.x > J.w + 110 * k) W.kutsche = null; }
+  // 🌬️ 2.532.0: ab und zu ein Windstoß, der einen Steppenläufer-Ballen durchs Bild rollt (nicht mehr, wenn die Herde kommt)
+  if (t < JZB_WW_HERDE - 4 && (W.windUhr -= dt) <= 0) { W.windUhr = jzbZ(14, 24); const dir = Math.random() < .5 ? 1 : -1;
+    W.ballen.push({ x: dir > 0 ? -16 * k : J.w + 16 * k, dir, v: jzbZ(85, 120) * k, dreh: 0, ph: 0, sc: jzbZ(.9, 1.25) }); W.wind = { dir, t: 0 }; }
+  for (const b of W.ballen) { b.x += b.dir * b.v * dt; b.dreh += b.dir * dt * 7; b.ph += dt * 5; }
+  W.ballen = W.ballen.filter((b) => b.x > -30 * k && b.x < J.w + 30 * k);
+  if (W.wind && (W.wind.t += dt) > 2.4) W.wind = null;
   // 🔥 Lagerfeuer: Funken und Rauch, solange es brennt
   if (W.feuerAus < 1) {
     if ((W.fUhr -= dt) <= 0) { W.fUhr = jzbZ(.08, .25); W.funken.push({ x: O.feuer + jzbZ(-3, 3) * k, y: O.boden - 7 * k, vx: jzbZ(-6, 6) * k, vy: -jzbZ(16, 32) * k, a: 1 }); }
@@ -19311,7 +19317,7 @@ function jzbWwFeuerMalen(c, x, y, k, T, aus) {
     c.bezierCurveTo(x + wob + b * .3, y - 3 * k - h * .8, x + b, y - 3 * k - h * .5, x + b, y - 3 * k); c.closePath(); c.fill(); }
 }
 function jzbWildwestMalen(c, F) {
-  const J = JZB, k = J.k, T = J.T, W = F.ww; if (!W) return;
+  const J = JZB, k = J.k, T = J.T, W = F.ww, t = F.t; if (!W) return;
   const O = jzbWwOrt();
   c.save(); if (W.beben > 0) c.translate(Math.sin(T * 47) * W.beben * 1.6 * k, Math.cos(T * 39) * W.beben * 1.1 * k); // der Boden bebt
   const g = c.createLinearGradient(0, O.horizont, 0, J.h); g.addColorStop(0, "rgba(233,196,106,.85)"); g.addColorStop(1, "rgba(204,149,92,.95)");
@@ -19324,17 +19330,128 @@ function jzbWildwestMalen(c, F) {
     c.lineWidth = 1.6 * k; c.beginPath(); c.moveTo(kx, O.horizont - kh * .3 * k); c.lineTo(kx - 3.5 * k, O.horizont - kh * .3 * k); c.lineTo(kx - 3.5 * k, O.horizont - kh * .65 * k);
     c.moveTo(kx, O.horizont - kh * .45 * k); c.lineTo(kx + 3 * k, O.horizont - kh * .45 * k); c.lineTo(kx + 3 * k, O.horizont - kh * .8 * k); c.stroke(); }
   for (const b of W.horizont) jzbWwBueffelMalen(c, b.x, O.horizont + 2 * k, k * b.sc, 1, b.ph, true);
+  if (W.wind) { const a = Math.sin(Math.PI * Math.min(1, W.wind.t / 2.4)) * .55; c.strokeStyle = `rgba(255,255,255,${a})`; c.lineWidth = 1.1 * k; c.lineCap = "round"; // 🌬️ Windstriche
+    for (let i = 0; i < 6; i++) { const yy = O.horizont - 14 * k + i * 6 * k, lx = ((W.wind.t * 260 * k + i * 73 * k) % (J.w + 120 * k)) - 60 * k, x0 = W.wind.dir > 0 ? lx : J.w - lx;
+      c.beginPath(); c.moveTo(x0, yy); c.lineTo(x0 - W.wind.dir * (26 + i % 3 * 10) * k, yy); c.stroke(); } }
   if (W.kutsche) jzbWwKutscheMalen(c, W.kutsche.x, O.boden - 7 * k, k * 1.05, W.kutsche.ph);
   if (W.reiter) JZB_WW_COWBOYS.forEach((C, i) => jzbWwReiterMalen(c, W.reiter.x + i * 26 * k, O.boden - 6 * k - i * 2 * k, k * 1.1, -1, W.reiter.ph + i * 1.3, C, T));
   for (const r of W.rauch) { c.fillStyle = `rgba(120,120,120,${r.a})`; c.beginPath(); c.arc(r.x, r.y, r.r, 0, 7); c.fill(); }
   jzbWwZeltMalen(c, O.zelt, O.boden, k * 1.15, W.zeltFall);
   jzbWwFeuerMalen(c, O.feuer, O.boden, k, T, W.feuerAus);
+  // 2.532.0: zwei Indianer sitzen am Feuer, der Häuptling steht daneben – wenn der Boden bebt, laufen sie davon (nächster Lauf: wieder da)
+  const flucht = t > JZB_WW_HERDE - 3 ? (t - JZB_WW_HERDE + 3) * 62 * k : 0, lauf = flucht ? T * 11 : 0;
+  if (O.feuer + 40 * k - flucht > -30 * k) {
+    jzbWwIndianerMalen(c, O.feuer - 15 * k - flucht, O.boden, k * 1.05, { hemd: "#a1683a", sitzt: !flucht, lauf, dir: flucht ? -1 : 1 }, T);
+    jzbWwIndianerMalen(c, O.feuer + 16 * k - flucht, O.boden, k * 1.12, { hemd: "#7f4f24", haube: true, lauf, dir: -1 }, T);
+    jzbWwIndianerMalen(c, O.feuer + 32 * k - flucht, O.boden, k * 1.05, { hemd: "#9c6644", sitzt: !flucht, winkt: true, lauf, dir: -1 }, T); }
+  // 🌵 2.532.0: rechts große Saguaro-Kakteen wie im Westen und ein kleiner Kugelkaktus
+  jzbWwKaktusMalen(c, J.w - JZB_RAND - 12 * k, O.boden, 46, k, false); jzbWwKaktusMalen(c, J.w - JZB_RAND - 44 * k, O.boden + 1 * k, 32, k, true);
+  c.fillStyle = "#2d6a4f"; c.beginPath(); c.ellipse(J.w - JZB_RAND - 28 * k, O.boden - 3 * k, 4.4 * k, 3.4 * k, 0, 0, 7); c.fill(); c.fillStyle = "#ff6b9a"; c.beginPath(); c.arc(J.w - JZB_RAND - 28 * k, O.boden - 6.4 * k, 1.2 * k, 0, 7); c.fill();
+  const dd = t - JZB_WW_DUELL; if (dd >= 0 && dd < 27) jzbWwDuellMalen(c, dd, O, k, T); // 🤠🤠 Duell, dann holt der flache Wagen den Verwundeten
+  for (const b of W.ballen) jzbWwBallenMalen(c, b, O.boden, k);
   for (const f of W.funken) { c.fillStyle = `rgba(255,200,80,${Math.max(0, f.a)})`; c.fillRect(f.x, f.y, 1.3 * k, 1.3 * k); }
   for (const s of W.staub) { c.fillStyle = `rgba(196,160,110,${s.a})`; c.beginPath(); c.arc(s.x, s.y, s.r, 0, 7); c.fill(); } // Staub hinter der Herde
   for (const b of W.herde) jzbWwBueffelMalen(c, b.x, O.boden - b.tiefe * 9 * k, k * b.sc, -1, b.ph, true);
   c.restore();
   if (W.schleier > 0) { const v = c.createLinearGradient(0, 0, 0, J.h); v.addColorStop(0, `rgba(214,180,130,${W.schleier * .55})`); v.addColorStop(1, `rgba(196,160,110,${W.schleier * .97})`);
     c.fillStyle = v; c.fillRect(0, 0, J.w, J.h); } // die Staubwolke deckt alles zu – und lichtet sich zu Beginn des nächsten Laufs
+}
+// ---- 2.532.0 KC-CLUB-WILDWEST-2 (Wunsch Hansi „es fehlen noch 2 Indianer und ein Häuptling, rechts ein paar Kakteen so groß wie im Westen,
+// ab und an ein Windstoß, der einen Ballen weht, und 2 Cowboys, die sich duellieren – dann kommt eine flache Kutsche und der Verwundete wird
+// abtransportiert“): Figuren und Abläufe dazu. Duell ab JZB_WW_DUELL: beide kommen, stehen sich gegenüber, ziehen – „PENG!“, einer fällt um
+// (der Hut fliegt), der Sieger geht davon; ein flacher Wagen holt den Verwundeten (Kopfverband) ab. Alles aus der Zeit im Lauf berechnet.
+function jzbWwIndianerMalen(c, x, y, sc, o, T) { // o: { hemd, sitzt, haube (Häuptling), winkt, lauf (Schrittphase beim Weglaufen), dir }
+  c.save(); c.translate(x, y); c.scale(sc * (o.dir || 1), sc); c.lineCap = "round";
+  const haut = "#b5764b"; let kopfY;
+  if (o.sitzt) {
+    c.fillStyle = "#7f5539"; c.beginPath(); c.ellipse(0, -2.2, 6, 2.4, 0, 0, 7); c.fill(); // gekreuzte Beine
+    c.fillStyle = o.hemd; c.beginPath(); c.roundRect ? c.roundRect(-3, -12, 6, 9.5, 2) : c.rect(-3, -12, 6, 9.5); c.fill();
+    const heb = o.winkt ? Math.max(0, Math.sin(T * 1.2)) : 0;
+    c.strokeStyle = haut; c.lineWidth = 1.6; c.beginPath(); c.moveTo(2, -10); c.lineTo(5.6, -6.6 - heb * 6.5); c.moveTo(-2, -10); c.lineTo(-4.2, -6); c.stroke();
+    kopfY = -14.6;
+  } else {
+    const s = o.lauf ? Math.sin(o.lauf) * 2.4 : 0;
+    c.strokeStyle = "#7f5539"; c.lineWidth = 2.2; c.beginPath(); c.moveTo(-1.2, -9); c.lineTo(-1.6 + s, 0); c.moveTo(1.2, -9); c.lineTo(1.6 - s, 0); c.stroke();
+    c.fillStyle = o.hemd; c.beginPath(); c.roundRect ? c.roundRect(-3.4, -19, 6.8, 11, 2) : c.rect(-3.4, -19, 6.8, 11); c.fill();
+    c.fillStyle = "#e9c46a"; c.fillRect(-3.4, -12.2, 6.8, 1); // Gürtel
+    c.strokeStyle = haut; c.lineWidth = 1.6; c.beginPath();
+    if (o.lauf) { c.moveTo(-2, -17); c.lineTo(-4 - s, -11); c.moveTo(2, -17); c.lineTo(4 + s, -11); } else { c.moveTo(-3, -15.6); c.lineTo(3, -14.4); c.moveTo(3, -15.8); c.lineTo(-3, -14.2); } // verschränkte Arme
+    c.stroke(); kopfY = -21.6;
+  }
+  c.fillStyle = haut; c.beginPath(); c.arc(0, kopfY, 2.5, 0, 7); c.fill(); // Gesicht
+  c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(0, kopfY - .5, 2.6, Math.PI, 0); c.fill(); c.fillRect(-2.6, kopfY - .5, 1.1, 4.4); c.fillRect(1.5, kopfY - .5, 1.1, 4.4); // Haare, Zöpfe
+  c.fillStyle = "#c1121f"; c.fillRect(-2.7, kopfY - 1.7, 5.4, .9); // Stirnband
+  if (o.haube) { // Federhaube des Häuptlings, Federband den Rücken hinab
+    for (let i = -4; i <= 4; i++) { const a = i * .3 - Math.PI / 2, fx = Math.cos(a) * 6.4, fy = kopfY - 1.4 + Math.sin(a) * 6.4;
+      c.strokeStyle = "#fffaf0"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(Math.cos(a) * 2.4, kopfY - 1.4 + Math.sin(a) * 2.4); c.lineTo(fx, fy); c.stroke();
+      c.fillStyle = "#3b2414"; c.beginPath(); c.arc(fx, fy, .7, 0, 7); c.fill(); }
+    c.strokeStyle = "#fffaf0"; c.lineWidth = 1.4; c.beginPath(); c.moveTo(-2.4, kopfY); c.quadraticCurveTo(-4.6, kopfY + 6, -3.6, kopfY + 13); c.stroke();
+  } else { c.strokeStyle = "#fffaf0"; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-1.4, kopfY - 1.7); c.lineTo(-2.4, kopfY - 7.4); c.stroke(); c.fillStyle = "#3b2414"; c.beginPath(); c.arc(-2.4, kopfY - 7.4, .6, 0, 7); c.fill(); } // eine Feder
+  c.restore();
+}
+function jzbWwCowboyMalen(c, x, y, sc, dir, C, o) { // zu Fuß, Blick nach +x: o.geh (Schrittphase), o.zieht 0…1 (Revolver hoch), o.liegt 0…1, o.hut, o.verband
+  c.save(); c.translate(x, y); c.scale(sc * dir, sc); c.rotate(-(o.liegt || 0) * 1.5); c.lineCap = "round";
+  const s = o.geh ? Math.sin(o.geh) * 2.4 : 0;
+  c.strokeStyle = "#264653"; c.lineWidth = 2.2; c.beginPath(); c.moveTo(-1.2, -9); c.lineTo(-1.8 + s, 0); c.moveTo(1.2, -9); c.lineTo(1.8 - s, 0); c.stroke(); // Jeans
+  c.fillStyle = "#3b2412"; c.fillRect(-3.2 + s, -1.3, 3, 1.5); c.fillRect(.6 - s, -1.3, 3, 1.5); // Stiefel
+  c.fillStyle = C.hemd; c.beginPath(); c.roundRect ? c.roundRect(-3.2, -19.5, 6.4, 11, 2) : c.rect(-3.2, -19.5, 6.4, 11); c.fill(); // Hemd
+  c.fillStyle = "#5c3a1a"; c.fillRect(-3.2, -10.2, 6.4, 1.3); c.fillRect(2.6, -10, 1.4, 3); // Gürtel mit Holster
+  c.strokeStyle = C.hemd; c.lineWidth = 1.5; c.beginPath(); c.moveTo(-1.6, -17.5); c.lineTo(-3 - s * .5, -11.5); c.stroke();
+  const z = o.zieht || 0; c.beginPath(); c.moveTo(1.6, -17.5); c.lineTo(3.4 + z * 3.4, -11.5 - z * 5.2); c.stroke(); // Schussarm
+  if (z > 0) { c.fillStyle = "#343a40"; c.fillRect(5.6 + z * 1.2, -17.6 - z * .2, 3.4, 1.2); } // Revolver
+  c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(.3, -22.2, 2.4, 0, 7); c.fill(); // Gesicht
+  if (o.verband) { c.fillStyle = "#ffffff"; c.fillRect(-2.2, -23.6, 4.8, 1.3); }
+  if (o.hut) { c.fillStyle = C.hut; c.beginPath(); c.ellipse(.3, -24, 5, 1.1, 0, 0, 7); c.fill(); c.fillRect(-1.9, -27, 4.4, 3.2); }
+  c.restore();
+}
+function jzbWwHutMalen(c, x, y, sc, w, farbe) { c.save(); c.translate(x, y); c.rotate(w); c.scale(sc, sc); c.fillStyle = farbe; c.beginPath(); c.ellipse(0, 0, 5, 1.1, 0, 0, 7); c.fill(); c.fillRect(-2.2, -3, 4.4, 3.2); c.restore(); }
+function jzbWwWagenMalen(c, x, y, sc, ph, k) { // flacher Wagen nach rechts: ein Pferd, niedrige Ladefläche, Fahrer vorn
+  c.save(); c.translate(x, y); c.scale(sc, sc);
+  c.save(); c.translate(31, 0); jzbWwPferdMalen(c, ph, "#a0522d"); c.restore();
+  c.strokeStyle = "#2b1a0e"; c.lineWidth = .9; c.beginPath(); c.moveTo(14, -10.5); c.lineTo(25, -11); c.stroke(); // Deichsel
+  c.fillStyle = "#8d5a3b"; c.fillRect(-19, -11.5, 34, 3); c.fillStyle = "#6b4226"; c.fillRect(-19, -13, 34, 1.5); // Ladefläche, niedrige Bordwand
+  for (const wx of [-12, 8]) { c.strokeStyle = "#3b2412"; c.lineWidth = 1.2; c.beginPath(); c.arc(wx, -5, 5, 0, 7); c.stroke(); c.lineWidth = .55;
+    for (let s = 0; s < 6; s++) { const a = ph * .9 + s * Math.PI / 3; c.beginPath(); c.moveTo(wx, -5); c.lineTo(wx + Math.cos(a) * 5, -5 + Math.sin(a) * 5); c.stroke(); } }
+  c.fillStyle = "#e9c46a"; c.fillRect(9.4, -21, 3.6, 7.6); c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(11.2, -23, 2, 0, 7); c.fill(); // Fahrer
+  c.fillStyle = "#6c757d"; c.beginPath(); c.ellipse(11.2, -24.6, 3.6, .9, 0, 0, 7); c.fill(); c.fillRect(9.6, -27, 3.2, 2.4);
+  c.restore();
+}
+function jzbWwKaktusMalen(c, x, y, h, k, spiegel) { // großer Saguaro mit zwei Armen
+  c.save(); c.translate(x, y); c.scale(spiegel ? -k : k, k); c.lineCap = "round";
+  for (const [farbe, b] of [["#1b4332", 6.4], ["#2d6a4f", 5]]) { c.strokeStyle = farbe; c.lineWidth = b; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -h);
+    c.moveTo(0, -h * .45); c.lineTo(-7, -h * .45); c.lineTo(-7, -h * .72); c.moveTo(0, -h * .6); c.lineTo(6, -h * .6); c.lineTo(6, -h * .85); c.stroke(); }
+  c.strokeStyle = "rgba(255,255,255,.18)"; c.lineWidth = .6; c.beginPath(); c.moveTo(-1, -2); c.lineTo(-1, -h + 2); c.stroke(); // Rippe
+  c.restore();
+}
+function jzbWwBallenMalen(c, b, boden, k) { // Steppenläufer: rollt und hüpft
+  c.save(); c.translate(b.x, boden - 5 * k * b.sc - Math.abs(Math.sin(b.ph)) * 9 * k); c.rotate(b.dreh);
+  c.strokeStyle = "rgba(150,110,60,.95)"; c.lineWidth = .9 * k; const r = 5.5 * k * b.sc;
+  for (let i = 0; i < 7; i++) { c.beginPath(); c.ellipse(0, 0, r, r * .55, i * .9, 0, 7); c.stroke(); }
+  c.restore();
+}
+function jzbWwDuellMalen(c, d, O, k, T) { // d = Sekunden seit Duell-Beginn
+  const J = JZB, y = O.boden - 2 * k, xA0 = J.w * .38, xB0 = J.w * .64, A = JZB_WW_COWBOYS[0], B = JZB_WW_COWBOYS[1], sc = k * 1.15;
+  const rein = jzbEase(Math.min(1, d / 4)), zieht = d < 6.6 ? 0 : Math.min(1, (d - 6.6) / .5), liegt = d < 7.35 ? 0 : jzbEase(Math.min(1, (d - 7.35) / .6));
+  // Sieger A: kommt (0–4 s), steht, zieht, schießt (7,2 s), dreht sich um und geht davon (9–13 s)
+  const xA = d < 9 ? xA0 - (1 - rein) * 46 * k : xA0 - jzbEase((d - 9) / 4) * (xA0 + 30 * k);
+  if (xA > -20 * k) jzbWwCowboyMalen(c, xA, y, sc, d < 9 ? 1 : -1, A, { geh: d < 4 || d >= 9 ? T * 8 : 0, zieht: d < 9 ? zieht : 0, hut: true });
+  // flacher Wagen: kommt (10–16 s), hält (16–18 s, Verwundeter wird aufgeladen), fährt davon
+  const halt = xB0 - 62 * k, wx = d < 10 ? null : d < 16 ? -70 * k + jzbEase((d - 10) / 6) * (halt + 70 * k) : d < 18 ? halt : halt + (d - 18) * 52 * k;
+  const fahrt = wx !== null && (d < 16 || d >= 18), bett = O.boden - 1 * k - 13 * k * 1.05;
+  if (wx !== null && wx < J.w + 80 * k) jzbWwWagenMalen(c, wx, O.boden - 1 * k, k * 1.05, fahrt ? T * 9 : 0, k);
+  // Verwundeter B: steht, zieht zu spät, fällt rückwärts; ab 16 s auf den Wagen gehoben, dann mit Kopfverband abtransportiert
+  const auf = d < 16 ? 0 : Math.min(1, (d - 16) / 1.4);
+  if (auf < 1) { c.save(); c.globalAlpha *= 1 - auf; jzbWwCowboyMalen(c, d < 4 ? xB0 + (1 - rein) * 46 * k : xB0, y - auf * 10 * k, sc, -1, B, { geh: d < 4 ? T * 8 : 0, zieht: d < 7.35 ? zieht * .7 : 0, liegt, hut: d < 7.3, verband: d > 12 }); c.restore(); }
+  if (auf > 0 && wx !== null && wx < J.w + 60 * k) { c.save(); c.globalAlpha *= auf; jzbWwCowboyMalen(c, wx + 9 * k, bett, sc * .95, 1, B, { liegt: 1, verband: true }); c.restore(); }
+  // Hut fliegt davon und bleibt liegen (bis zum Aufladen)
+  if (d >= 7.3 && d < 17.5) { const h = Math.min(1, (d - 7.3) / 1), hx = xB0 + h * 26 * k, hy = y - 26 * k - Math.sin(h * Math.PI) * 18 * k + h * 24 * k;
+    c.save(); c.globalAlpha *= d > 16 ? Math.max(0, 1 - (d - 16) / 1.4) : 1; jzbWwHutMalen(c, hx, hy, k, h * 6, B.hut); c.restore(); }
+  // Mündungsfeuer, Rauch und „PENG!“
+  if (d >= 7.2 && d < 7.5) { const gx = xA + 10 * sc, gy = y - 17.6 * sc; c.fillStyle = "#ffd166"; c.beginPath();
+    for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5, r = (i % 2 ? 2 : 5) * k; c.lineTo(gx + Math.cos(a) * r, gy + Math.sin(a) * r); } c.fill(); }
+  if (d >= 7.2 && d < 9) { const p = (d - 7.2) / 1.8; c.fillStyle = `rgba(200,200,200,${.5 * (1 - p)})`; c.beginPath(); c.arc(xA + 12 * sc + p * 6 * k, y - 18 * sc - p * 8 * k, (2 + p * 6) * k, 0, 7); c.fill(); }
+  if (d >= 7.2 && d < 8.8) { const a = Math.min(1, (d - 7.2) * 5, (8.8 - d) * 2.5); c.save(); c.globalAlpha *= a; c.font = `800 ${13 * k}px "Comic Sans MS","Trebuchet MS",sans-serif`; c.textAlign = "center";
+    c.lineWidth = 3; c.strokeStyle = "rgba(255,255,255,.95)"; c.strokeText("PENG!", (xA + xB0) / 2, y - 34 * k); c.fillStyle = "#c1121f"; c.fillText("PENG!", (xA + xB0) / 2, y - 34 * k); c.restore(); }
 }
 // ---- 2.435.0 KC-CLUB-HALLOWEEN-GEWITTER (Wunsch Hansi „bei Halloween noch die Hexe auf ihrem Besen durchfliegen lassen, mehr Geister, Blitz und
 // Donner wie bei Gewitter, auf seinem Sarg kommt ein Vampir mit Umhang – der setzt sich erst hin, dann steht er auf und geht weg – und die Hexe

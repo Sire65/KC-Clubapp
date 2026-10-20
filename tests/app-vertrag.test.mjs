@@ -11579,3 +11579,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\n    CHAT = u; CHAT_VOLL_AM = Date\.now\(\); setTimeout\(owZeigen, 0\); setTimeout\(gpZeigen, 0\); slAnzeigen\(\);/.test(html), "geplante/selbstlöschende/vorgemerkte Nachrichten werden nach dem Laden gezeigt");
   assert.ok(!/\/\/[^\n]*setTimeout\(owZeigen, 0\)/.test(html), "kein Aufruf in einem Kommentar");
 }
+// 2.532.0 KC-CLUB-WILDWEST-2 (Wunsch Hansi): Indianer und Häuptling am Feuer, Saguaro-Kakteen, Steppenläufer im Wind, Duell mit Abtransport
+{
+  assert.ok(/JZB_WW_DUELL = 29/.test(programm) && /const dd = t - JZB_WW_DUELL; if \(dd >= 0 && dd < 27\) jzbWwDuellMalen\(c, dd, O, k, T\);/.test(programm), "Duell eingeplant und gemalt");
+  const d = programm.slice(programm.indexOf("function jzbWwDuellMalen("), programm.indexOf("// ---- 2.435.0 KC-CLUB-HALLOWEEN-GEWITTER"));
+  assert.ok(/c\.fillText\("PENG!"/.test(d) && /jzbWwWagenMalen\(c, wx/.test(d) && /verband: true/.test(d), "PENG, Wagen, Verwundeter mit Kopfverband");
+  assert.ok(/haube: true/.test(programm) && /jzbWwKaktusMalen\(c, J\.w - JZB_RAND - 12 \* k, O\.boden, 46, k, false\)/.test(programm) && /W\.ballen\.push\(/.test(programm), "Häuptling, große Kakteen, Steppenläufer");
+  assert.ok(/const flucht = t > JZB_WW_HERDE - 3 \?/.test(programm), "Indianer laufen vor der Herde davon");
+}
