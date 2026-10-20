@@ -11535,3 +11535,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/language plpgsql\s+stable/.test(neu) && /into v_stand;\s+return v_stand;/.test(neu) && !/\b(insert into|update public|delete from|truncate)\b/i.test(neu.replace(/^--.*$/gm, "")), "nur lesend, gibt den Fingerabdruck zurück");
   assert.ok(/revoke all on function public\.kc_club_chat_stand\(uuid, text, timestamptz, integer, integer, integer, integer\) from public, anon, authenticated;/.test(neu) && /to service_role;/.test(neu), "Rechte unverändert: nur der Server");
 }
+// DB 20.10.2026 KC-CLUB-RT-PUSH-ANGEZEIGT (Wunsch Hansi „graue Haken wie bei WhatsApp“): Push angezeigt/geöffnet → Signal an den Absender
+{
+  const mig = lies("supabase/migrations/20261020_kc_club_rt_push_angezeigt.sql");
+  assert.ok(/create trigger kc_club_rt_push_angezeigt after update of status on public\.kc_communication_requests/.test(mig) && /new\.source_program = 'kc-club' and new\.channel = 'push' and new\.correlation_id like 'club-nachricht:%'/.test(mig) && /new\.status in \('displayed', 'opened'\) and old\.status is distinct from new\.status/.test(mig), "nur Chat-Pushes der Club-App, nur beim Wechsel auf angezeigt/geöffnet");
+  assert.ok(/kc_club_rt_klingeln\(array\[v_von\], 'gelesen', v_thread\)/.test(mig) && /exception when others then null;/.test(mig) && /security definer set search_path = ''/.test(mig) && !/\b(insert into|update public|delete from|truncate)\b/i.test(mig.replace(/^--.*$/gm, "")), "nur Signal an den Absender, stört die Zustellung nie");
+  assert.ok(/if \(s\.art === "gelesen"\) \{ if \(s\.thread && s\.thread === chatId && aktuelleAnsicht === "chat"/.test(html), "App lädt bei diesem Signal den offenen Chat");
+  assert.ok(fs.existsSync(new URL("../tools/chat-sparsam/rt-push-angezeigt-test.mjs", import.meta.url)), "Test (Postgres im Speicher) vorhanden");
+}

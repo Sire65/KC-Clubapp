@@ -1,5 +1,13 @@
 # Änderungen
 
+## DB – 2026-10-20 (ohne App-Build) – Graue Haken sofort, wenn der Push auf dem Handy angezeigt wird (KC-CLUB-RT-PUSH-ANGEZEIGT)
+Wunsch Hansi („Warum bekommt man bei WhatsApp graue Haken, sobald es auf dem Handy angekommen ist? Bei uns sieht man lange nur einen Haken“ → „Ja, bauen und sofort einspielen“).
+- Ursache: Meldete das Handy „Push angezeigt“, erfuhr das die App des Absenders nur beim nächsten Nachsehen. Seit 2.510.0 fragt sie bei stehender Leitung nicht mehr alle 4 s nach, sondern verlässt sich auf Signale – für „Push angezeigt“ gab es aber keins. Folge: graue Haken erst nach 30–60 s oder später.
+- Jetzt: Wechselt der Versandauftrag eines Chat-Pushes auf „angezeigt“ oder „geöffnet“, bekommt der Absender sofort das Signal (wie bei „angekommen/gelesen“) – die zwei grauen Haken kommen im Mittel ~5 s nach dem Zustellen. Nur Chat-Pushes der Club-App, nur beim Wechsel, nur Signal; ein gestörtes Signal kann die Zustellung nie stören.
+- Grenze (wie bei jeder Web-App): Zeigt ein Handy den Push nicht an oder meldet nichts zurück (Stromsparen, Mitteilungen aus, manche iPhones – 7 Tage: 27 von 59 Pushes mit Rückmeldung), kommen die grauen Haken erst, wenn der Empfänger die App öffnet.
+- DB: `supabase/migrations/20261020_kc_club_rt_push_angezeigt.sql` (bereits eingespielt; live geprüft: Absender bei 57 von 59 Chat-Pushes gefunden, die übrigen 2 Nachrichten sind gelöscht). Test: `tools/chat-sparsam/rt-push-angezeigt-test.mjs`.
+- Rückweg: `drop trigger kc_club_rt_push_angezeigt on public.kc_communication_requests;`
+
 ## 2.528.0 – 2026-10-20 – 📝❗🏎️ Versand-Leiste erst beim Schreiben (KC-CLUB-VERSAND-BEIM-SCHREIBEN)
 Wunsch Hansi („Die Leiste mit Express usw. erst einblenden, wenn Text eingetragen wird“). Die Leiste konnte das schon – für den Admin stand die Einstellung „Versand-Leiste immer zeigen“ aber von Haus aus auf an. Jetzt ist für alle (auch den Admin) „erst beim Schreiben“ der Standard; die alte Voreinstellung greift nicht mehr (neuer Speicherplatz). Wer sie immer sehen möchte: ⚙️ → „Versand-Leiste immer zeigen“. Mit Anhang oder gewähltem ❗/🏎️ bleibt sie sichtbar. Abmelden löscht auch die neue Einstellung. Nur App. Tests grün; Browserprobe als Admin mit alter „immer“-Einstellung: leeres Feld → Leiste versteckt, „Hallo“ getippt → sichtbar.
 
