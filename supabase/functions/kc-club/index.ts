@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.550.0";
+const SERVER_VERSION = "2.551.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2992,7 +2992,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -6014,16 +6014,34 @@ async function expressOffen(ich: Ich, zahlen: any[]): Promise<any[]> {
     return { id: x.message_id, thread: x.thread_id, von: vonL.get(x.absender)?.display_name || "?", zeit: x.erstellt_am, chat: g ? `${g.symbol} ${g.name}` : t?.subject || "" }; });
 }
 const GEPLANT_WDH = ["einmal", "taeglich", "werktags", "woechentlich", "monatlich"], GEPLANT_MAX = 25, GEPLANT_TAGE = 31;
-const GEPLANT_FELDER = "id,thread_id,text,wichtig,wege,senden_um,erste_um,wiederholung,anzahl,letzter_fehler,erstellt_am,geaendert_am"; // 2.549.0: + angelegt/geändert für die ⏰-Infos
+const GEPLANT_FELDER = "id,thread_id,text,wichtig,wege,senden_um,erste_um,wiederholung,anzahl,letzter_fehler,erstellt_am,geaendert_am,vorab"; // 2.549.0: + angelegt/geändert für die ⏰-Infos · 2.551.0: + vorab
 function geplantNaechstes(ersteUm: string, regel: string, nach: Date): string | null {
   if (regel === "einmal") return null;
   return wiederholungen(ersteUm, regel, new Date(nach.getTime() + 1000), new Date(nach.getTime() + 400 * 86400000), null, [], 1)[0] ?? null;
 }
 const geplantAus = (g: any) => ({ id: g.id, text: g.text, um: g.senden_um, wiederholung: g.wiederholung, wichtig: !!g.wichtig, anzahl: g.anzahl || 0, fehler: g.letzter_fehler || null,
-  wege: Array.isArray(g.wege) ? g.wege : [], angelegt: g.erstellt_am || null, geaendert: g.geaendert_am || null }); // 2.549.0 KC-CLUB-GEPLANT-WECKER
+  wege: Array.isArray(g.wege) ? g.wege : [], angelegt: g.erstellt_am || null, geaendert: g.geaendert_am || null, vorab: !!g.vorab }); // 2.549.0 KC-CLUB-GEPLANT-WECKER · 2.551.0 KC-CLUB-GEPLANT-VORAB
 async function geplantMeine(ich: Ich, threadId: string) {
   const { data } = await db.from("kc_club_geplant").select(GEPLANT_FELDER).eq("person_id", ich.person_id).eq("thread_id", threadId).eq("status", "offen").order("senden_um").limit(GEPLANT_MAX);
   return (data ?? []).map(geplantAus);
+}
+// 2.551.0 KC-CLUB-GEPLANT-VORAB (Wunsch Hansi „früher abrufen erlauben – Empfänger informieren, sonst zur geplanten Zeit senden“):
+// Empfänger sehen nur, DASS eine Nachricht von X für eine Zeit bereitliegt – nie den Text, bevor sie sie abrufen.
+async function geplantVorabFuerMich(ich: Ich, threadId: string) {
+  const { data } = await db.from("kc_club_geplant").select("id,person_id,senden_um").eq("thread_id", threadId).eq("status", "offen").eq("vorab", true)
+    .eq("wiederholung", "einmal").neq("person_id", ich.person_id).order("senden_um").limit(GEPLANT_MAX);
+  if (!data?.length) return [];
+  const leute = await personen(data.map((x: any) => x.person_id));
+  return data.map((x: any) => ({ id: x.id, von: vorname(leute.get(x.person_id)) || "?", um: x.senden_um }));
+}
+async function geplantVorabMelden(ich: Ich, g: { id: string; thread_id: string; senden_um: string }) {
+  const { data: tn } = await db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", g.thread_id);
+  const an = (tn ?? []).map((x: any) => x.person_id).filter((x: string) => x !== ich.person_id);
+  if (!an.length) return;
+  const wann = `${fTag.format(new Date(g.senden_um))}, ${fZeit.format(new Date(g.senden_um))} Uhr`;
+  await sendenGewaehlt("club_nachricht", an, ["push"], { titel: `⏰ Nachricht von ${ich.vorname} wartet`, kurz: `${ich.vorname} hat dir eine Nachricht für ${wann} geplant – du darfst sie schon jetzt abrufen`,
+    betreff: "Köcheclub Werne – zeitgesteuerte Nachricht", text: `${ich.name} hat dir eine zeitgesteuerte Nachricht für ${wann} geplant. Du darfst sie schon vorher in der Club-App abrufen – sonst kommt sie zur geplanten Zeit.`,
+    url: `${APP_URL}#nachricht=${g.thread_id}` }, `club-geplant-vorab:${g.id}`).catch(() => null);
 }
 // 2.520.0 KC-COMM-WARTEN (Wunsch Hansi „mehr als 5 Mails → Zeitverzögerung, damit web.de nicht zumacht“): Mails über der web.de-Grenze
 // (5/Min., 40/Std.) bekommen im Communicator einen Warteplatz (status „queued“ + scheduled_for). Der Minuten-Zeitplan ruft diese Aktion auch,
@@ -9744,8 +9762,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           runde = { ersteller: t?.created_by_person_id === ich.person_id || ich.admin, gleiche };
         }
         const geplant = await geplantMeine(ich, id).catch(() => []); // KC-CLUB-SPAETER-SENDEN (2.362.0): nur meine, nur in diesem Chat
+        const geplantVorab = await geplantVorabFuerMich(ich, id).catch(() => []); // 2.551.0 KC-CLUB-GEPLANT-VORAB: für mich bereit (ohne Text)
         const stand = (await pStand) ?? null; // KC-CLUB-CHAT-STAND
-        return json({ id, betreff: t?.subject ?? "", stand, tippt, entwurf, spricht, diktiert, angeheftet, gelesenBis, partnerDa, runde, selbstloeschen: slStd(slChat?.stunden), sendeEffekte, geplant,
+        return json({ id, betreff: t?.subject ?? "", stand, tippt, entwurf, spricht, diktiert, angeheftet, gelesenBis, partnerDa, runde, selbstloeschen: slStd(slChat?.stunden), sendeEffekte, geplant, geplantVorab,
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, admins: gr.admins ?? [], darfVerwalten: gruppenAdmin(gr, ich.person_id) || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
       }
 
@@ -9826,14 +9845,17 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const wiederholung = GEPLANT_WDH.includes(String(p.wiederholung)) ? String(p.wiederholung) : "einmal";
         if (wiederholung === "werktags" && [0, 6].includes(new Date(berlinTag(um) + "T12:00:00Z").getUTCDay())) throw new Fehler("„Werktags“ geht nur mit einem Tag von Montag bis Freitag als erstem Termin.");
         if (p.geplant_id) {
-          const { data: alt } = await db.from("kc_club_geplant").select("id").eq("id", String(p.geplant_id)).eq("person_id", ich.person_id).eq("status", "offen").maybeSingle();
+          const { data: alt } = await db.from("kc_club_geplant").select("id,thread_id,vorab").eq("id", String(p.geplant_id)).eq("person_id", ich.person_id).eq("status", "offen").maybeSingle();
           if (!alt) throw new Fehler("Diese geplante Nachricht gibt es nicht mehr.", 404);
           // 2.549.0 KC-CLUB-GEPLANT-WECKER: auf Wunsch auch der Text (gleiche Regeln wie beim Anlegen)
           let neuText: string | null = null;
           if (typeof p.text === "string") { neuText = txt(p.text, 4000); if (!neuText) throw new Fehler("Bitte die Nachricht schreiben."); if (NOTFALL_RE.test(neuText)) throw new Fehler("Notfall-Meldungen gehen immer sofort raus – nicht planen."); }
-          const { error } = await db.from("kc_club_geplant").update({ senden_um: um.toISOString(), erste_um: um.toISOString(), wiederholung, letzter_fehler: null, geaendert_am: jetzt(), ...(neuText ? { text: neuText } : {}) }).eq("id", alt.id);
+          // 2.551.0 KC-CLUB-GEPLANT-VORAB: „vorher abrufen“ an/aus (nur bei einmaligen); beim Einschalten den Empfänger informieren
+          const vorab = (typeof p.vorab === "boolean" ? p.vorab : !!alt.vorab) && wiederholung === "einmal";
+          const { error } = await db.from("kc_club_geplant").update({ senden_um: um.toISOString(), erste_um: um.toISOString(), wiederholung, letzter_fehler: null, geaendert_am: jetzt(), vorab, ...(neuText ? { text: neuText } : {}) }).eq("id", alt.id);
           if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
-          await protokoll(ich.person_id, "geplant_geaendert", { id: alt.id, um: um.toISOString(), wiederholung, text: !!neuText });
+          if (vorab && !alt.vorab) await geplantVorabMelden(ich, { id: alt.id, thread_id: alt.thread_id, senden_um: um.toISOString() });
+          await protokoll(ich.person_id, "geplant_geaendert", { id: alt.id, um: um.toISOString(), wiederholung, text: !!neuText, vorab });
           return json({ ok: true, id: alt.id });
         }
         const threadId = String(p.id || ""), text = txt(p.text, 4000);
@@ -9844,10 +9866,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { count } = await db.from("kc_club_geplant").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("status", "offen");
         if ((count ?? 0) >= GEPLANT_MAX) throw new Fehler(`Du hast schon ${GEPLANT_MAX} geplante Nachrichten – bitte erst eine löschen.`);
         const wege = zustellwege(p.wege);
+        const vorab = p.vorab === true && wiederholung === "einmal"; // 2.551.0 KC-CLUB-GEPLANT-VORAB
         const { data: g, error } = await db.from("kc_club_geplant").insert({ person_id: ich.person_id, thread_id: threadId, text, wichtig: !!p.wichtig, wege,
-          senden_um: um.toISOString(), erste_um: um.toISOString(), wiederholung }).select("id").single();
+          senden_um: um.toISOString(), erste_um: um.toISOString(), wiederholung, vorab }).select("id").single();
         if (error || !g) throw new Fehler("Konnte nicht geplant werden.", 500);
-        await protokoll(ich.person_id, "geplant_angelegt", { id: g.id, thread: threadId, um: um.toISOString(), wiederholung });
+        if (vorab) await geplantVorabMelden(ich, { id: g.id, thread_id: threadId, senden_um: um.toISOString() });
+        await protokoll(ich.person_id, "geplant_angelegt", { id: g.id, thread: threadId, um: um.toISOString(), wiederholung, vorab });
         return json({ ok: true, id: g.id });
       }
       case "geplant_loeschen": {
@@ -9866,6 +9890,24 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           try { await geplantSenden(g, ich); } catch (e) { await db.from("kc_club_geplant").update({ status: "offen" }).eq("id", g.id); throw e; }
         } else await geplantSenden(g, ich);
         await db.from("kc_club_geplant").update({ anzahl: (g.anzahl || 0) + 1, gesendet_am: jetzt() }).eq("id", g.id);
+        return json({ ok: true });
+      }
+      // 2.551.0 KC-CLUB-GEPLANT-VORAB: Empfänger holt eine freigegebene geplante Nachricht vorzeitig ab – gesendet wird wie zur geplanten Zeit
+      // (im Namen des Absenders, mit dessen Sperr-Prüfung); erst belegen (status „fertig“), dann senden – nie doppelt.
+      case "geplant_abrufen": {
+        const { data: g } = await db.from("kc_club_geplant").select(GEPLANT_FELDER + ",person_id,status").eq("id", String(p.id || "")).eq("status", "offen").eq("vorab", true).eq("wiederholung", "einmal").maybeSingle();
+        if (!g || g.person_id === ich.person_id) throw new Fehler("Diese Nachricht gibt es nicht mehr – vielleicht ist sie schon da.", 404);
+        await binTeilnehmer(g.thread_id, ich.person_id);
+        const absender = await geplantIch(g.person_id);
+        if (!absender) throw new Fehler("Der Absender ist nicht mehr aktiv.", 409);
+        if (!absender.admin && await sperreFuer(absender.person_id)) throw new Fehler("Gerade nicht abrufbar.", 409);
+        const { data: belegt } = await db.from("kc_club_geplant").update({ status: "fertig", geaendert_am: jetzt() }).eq("id", g.id).eq("status", "offen").select("id");
+        if (!belegt?.length) throw new Fehler("Diese Nachricht wurde gerade schon gesendet.", 409);
+        try { await geplantSenden(g, absender); } catch (e) { await db.from("kc_club_geplant").update({ status: "offen" }).eq("id", g.id); throw e; }
+        await db.from("kc_club_geplant").update({ anzahl: (g.anzahl || 0) + 1, gesendet_am: jetzt(), letzter_fehler: null }).eq("id", g.id);
+        await protokoll(ich.person_id, "geplant_vorab_abgerufen", { id: g.id, von: g.person_id, geplant_fuer: g.senden_um });
+        await sendenGewaehlt("club_nachricht", [absender.person_id], ["push"], { titel: `📩 ${ich.vorname} hat abgerufen`, kurz: `${ich.vorname} hat deine geplante Nachricht schon vorher abgerufen`,
+          betreff: "Köcheclub Werne – geplante Nachricht abgerufen", text: `${ich.name} hat deine zeitgesteuerte Nachricht schon vor der geplanten Zeit abgerufen.`, url: `${APP_URL}#nachricht=${g.thread_id}` }, `club-geplant-abgerufen:${g.id}`).catch(() => null);
         return json({ ok: true });
       }
       case "nachricht_senden": {

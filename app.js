@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.550.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.551.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14736,7 +14736,7 @@ const ZUGANG_AKTIONEN = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -26037,7 +26037,8 @@ async function gpPlanen() {
   try {
     if (GP.aendern) await api("geplant_speichern", { geplant_id: GP.aendern, um: GP.um.toISOString(), wiederholung: GP.wdh }, { warten: true });
     else {
-      await api("geplant_speichern", { id: chatId, text: GP.text, um: GP.um.toISOString(), wiederholung: GP.wdh, wege: ["push", "email"].filter((w) => ZW[w]), ...(WICHTIG ? { wichtig: true } : {}) }, { warten: true });
+      const vorab = GP.wdh === "einmal" && (await gpVorabFrage()); // 2.551.0 KC-CLUB-GEPLANT-VORAB: beim Anlegen fragen
+      await api("geplant_speichern", { id: chatId, text: GP.text, um: GP.um.toISOString(), wiederholung: GP.wdh, wege: ["push", "email"].filter((w) => ZW[w]), ...(WICHTIG ? { wichtig: true } : {}), ...(vorab ? { vorab: true } : {}) }, { warten: true });
       if ($("text").value.trim() === GP.text) { entwurfWeg(chatId); clearTimeout(entwurfTimer); $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); wichtigUmschalten(false); }
       spur("geplant", chatId);
     }
@@ -26046,13 +26047,42 @@ async function gpPlanen() {
     chatStand = ""; await chatLaden(true);
   } catch (e) { if (knopf) knopf.disabled = false; meldeFehler(e); }
 }
+// 2.551.0 KC-CLUB-GEPLANT-VORAB (Wunsch Hansi): darf der Empfänger die Nachricht schon vor der Zeit abrufen? Er bekommt dann gleich einen Hinweis.
+function gpEmpfaenger() {
+  const n = (CHAT?.teilnehmer || []).filter((t) => t.person_id !== ICH.person_id).map((t) => String(t.name || "").split(" ")[0]).filter(Boolean);
+  return n.length === 1 ? n[0] : n.length ? "die anderen im Chat" : "der Empfänger";
+}
+function gpVorabFrage() {
+  const wer = gpEmpfaenger();
+  return frage(`📩 Darf ${wer} die Nachricht schon vorher abrufen?\n${wer === "die anderen im Chat" ? "Sie bekommen" : wer + " bekommt"} dann gleich einen Hinweis: „Zeitgesteuerte Nachricht von ${ICH?.vorname || "dir"} liegt bereit“ – ohne den Text. Wird sie nicht abgerufen, kommt sie zur geplanten Zeit.`,
+    { ja: "📩 Ja, vorher abrufen erlauben", nein: "Nein, erst zur geplanten Zeit" });
+}
+async function gpVorab(id, an) {
+  const g = (CHAT?.geplant || []).find((x) => x.id === id); if (!g) return;
+  $("gpMenue")?.remove();
+  if (Date.parse(g.um) - Date.now() < 60000) return melde("⏰ Die Nachricht wird gleich gesendet – jetzt nicht mehr änderbar.", true);
+  try { await api("geplant_speichern", { geplant_id: g.id, um: g.um, wiederholung: g.wiederholung, vorab: an }, { warten: true });
+    melde(an ? `📩 Erlaubt – ${gpEmpfaenger()} wurde informiert` : "🔒 Vorher abrufen ausgeschaltet"); chatStand = ""; await chatLaden(true); }
+  catch (e) { meldeFehler(e); }
+}
+async function gpAbrufen(id, knopf) {
+  if (knopf) knopf.disabled = true;
+  try { await api("geplant_abrufen", { id }, { warten: true }); melde("📩 Abgerufen"); chatStand = ""; await chatLaden(true); }
+  catch (e) { if (knopf) knopf.disabled = false; meldeFehler(e); chatStand = ""; await chatLaden(true).catch(() => {}); }
+}
+function gpVorabZeigen(z) {
+  const l = (CHAT?.id === chatId && CHAT.geplantVorab) || []; if (!l.length) return;
+  z.insertAdjacentHTML("beforeend", `<div class="gp-warte gp-vorab-liste">${l.map((g) => `<div class="gp-vorab"><b>⏰ Zeitgesteuerte Nachricht von ${esc(g.von)}</b>
+    <small>Kommt ${esc(gpWann(g.um))} – du darfst sie schon jetzt abrufen.</small><button type="button" class="knopf haupt klein" onclick="gpAbrufen('${esc(g.id)}', this)">📩 Jetzt abrufen</button></div>`).join("")}</div>`);
+}
 function gpZeigen() {
   const z = $("chat"); if (!z || !chatId) return;
-  z.querySelector(".gp-warte")?.remove();
+  z.querySelectorAll(".gp-warte:not(#rgCpGeplant)").forEach((x) => x.remove());
+  gpVorabZeigen(z);
   const l = (CHAT?.id === chatId && CHAT.geplant) || []; if (!l.length) return;
   // 2.549.0 KC-CLUB-GEPLANT-WECKER (Wunsch Hansi): rechts neben jeder geplanten Nachricht ein ⏰ – antippen zeigt die Infos und „✏️ Ändern“
   z.insertAdjacentHTML("beforeend", `<div class="gp-warte">${l.map((g) => `<div class="gp-zeile"><button type="button" class="gp-blase" onclick="gpMenue('${esc(g.id)}')">${esc(g.text)}
-    <small>⏰ wird gesendet ${esc(gpWann(g.um))}${g.wiederholung !== "einmal" ? ` · 🔁 ${esc(gpWdhText(g.wiederholung, g.um))}` : ""}${g.fehler ? `<br>⚠️ Letztes Mal nicht gesendet: ${esc(g.fehler)}` : ""}<br><i>Nur du siehst das – antippen zum Ändern</i></small></button><button type="button" class="gp-wecker" onclick="gpMenue('${esc(g.id)}')" aria-label="Geplante Nachricht: Infos und ändern" title="Geplant – Infos und ändern">⏰</button></div>`).join("")}</div>`);
+    <small>⏰ wird gesendet ${esc(gpWann(g.um))}${g.wiederholung !== "einmal" ? ` · 🔁 ${esc(gpWdhText(g.wiederholung, g.um))}` : ""}${g.fehler ? `<br>⚠️ Letztes Mal nicht gesendet: ${esc(g.fehler)}` : ""}${g.vorab ? "<br>📩 Vorher abrufen erlaubt" : ""}<br><i>Nur du siehst das – antippen zum Ändern</i></small></button><button type="button" class="gp-wecker" onclick="gpMenue('${esc(g.id)}')" aria-label="Geplante Nachricht: Infos und ändern" title="Geplant – Infos und ändern">⏰</button></div>`).join("")}</div>`);
 }
 function gpMenue(id) {
   const g = (CHAT?.geplant || []).find((x) => x.id === id); if (!g) return;
@@ -26063,7 +26093,7 @@ function gpMenue(id) {
     <table class="gp-infos">${zeile("📤 Wird gesendet", esc(gpWann(g.um)))}${zeile("🔁 Wie oft", wdh ? esc(gpWdhText(g.wiederholung, g.um)) + (g.anzahl ? ` · schon ${g.anzahl}× gesendet` : "") : "einmal")}
       ${zeile("📣 Benachrichtigung", esc(wege))}${g.wichtig ? zeile("❗ Wichtig", "ja") : ""}${g.angelegt ? zeile("🗓️ Geplant am", esc(wann(g.angelegt))) : ""}
       ${g.geaendert && g.angelegt && Date.parse(g.geaendert) - Date.parse(g.angelegt) > 60000 ? zeile("✏️ Zuletzt geändert", esc(wann(g.geaendert))) : ""}
-      ${g.fehler ? zeile("⚠️ Letztes Mal", esc(g.fehler)) : ""}</table>
+      ${g.fehler ? zeile("⚠️ Letztes Mal", esc(g.fehler)) : ""}${wdh ? "" : zeile("📩 Vorher abrufen", g.vorab ? `erlaubt (${esc(gpEmpfaenger())} weiß Bescheid)` : "nein – erst zur Zeit")}</table>
     <button class="knopf haupt" onclick="gpAendernWahl('${esc(g.id)}')">✏️ Ändern</button>
     <button class="knopf" onclick="gpJetzt('${esc(g.id)}')">📤 Jetzt senden${wdh ? " (einmal extra)" : ""}</button>
     <button class="knopf gefahr" onclick="gpLoeschen('${esc(g.id)}')">🗑️ ${wdh ? "Löschen (Wiederholung beenden)" : "Löschen"}</button>
@@ -26076,6 +26106,7 @@ function gpAendernWahl(id) {
   blattAuf("gpMenue", `<h3 style="margin:0 0 8px">✏️ Was möchtest du ändern?</h3>
     <button class="knopf haupt" onclick="$('gpMenue').remove();spaeterWahl((CHAT?.geplant||[]).find((x)=>x.id==='${esc(g.id)}'))">🕐 Zeit oder Wiederholung</button>
     <button class="knopf" onclick="gpTextAendern('${esc(g.id)}')">📝 Text der Nachricht</button>
+    ${g.wiederholung === "einmal" ? `<button class="knopf" onclick="gpVorab('${esc(g.id)}', ${!g.vorab})">${g.vorab ? "🔒 Vorher abrufen ausschalten" : "📩 Vorher abrufen erlauben"}</button>` : ""}
     <button class="knopf" onclick="gpMenue('${esc(g.id)}')">← Zurück</button>`);
 }
 async function gpTextAendern(id) {

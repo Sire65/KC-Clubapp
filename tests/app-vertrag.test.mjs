@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -11748,4 +11748,18 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/!await sicherGleich\(token,String\(expected\)\)/.test(bw) && /token\.length<32/.test(bw), "Backup-Arbeiter: Token zeitkonstant geprüft");
   assert.ok(/encryptPayload\(payload,String\(backupKey\)\)/.test(bw) && /rejectUnauthorized:true/.test(bw), "Backup-Arbeiter: verschlüsselt, TLS geprüft");
   assert.ok(!/postgres(ql)?:\/\/|eyJ[A-Za-z0-9_-]{20,}|sk_[A-Za-z0-9]{16,}/.test(bw), "Backup-Arbeiter: keine Verbindungsdaten oder Schlüssel im Quelltext");
+}
+// 2.551.0 KC-CLUB-GEPLANT-VORAB (Wunsch Hansi „beim Anlegen fragen: eher Abruf erlauben – dann Empfänger informieren, sonst zur geplanten Zeit senden“)
+{
+  const mig = lies("supabase/migrations/20261020_kc_club_geplant_vorab.sql");
+  assert.ok(/add column if not exists vorab boolean not null default false/.test(mig), "Spalte vorab, Standard aus");
+  assert.ok(/const vorab = p\.vorab === true && wiederholung === "einmal";/.test(server) && /if \(vorab\) await geplantVorabMelden\(ich,/.test(server), "Anlegen: nur einmalige, Empfänger wird informiert");
+  assert.ok(/if \(vorab && !alt\.vorab\) await geplantVorabMelden\(ich,/.test(server), "Ändern: beim Einschalten informieren (nicht doppelt)");
+  const fm = server.slice(server.indexOf("async function geplantVorabFuerMich"), server.indexOf("async function geplantVorabMelden"));
+  assert.ok(/\.neq\("person_id", ich\.person_id\)/.test(fm) && /\.eq\("vorab", true\)/.test(fm) && !/text/.test(fm.replace(/threadId/g, "")), "Empfänger sieht nur Absender + Zeit, nie den Text");
+  const ab = server.slice(server.indexOf('case "geplant_abrufen":'), server.indexOf('case "nachricht_senden":'));
+  assert.ok(/await binTeilnehmer\(g\.thread_id, ich\.person_id\)/.test(ab) && /g\.person_id === ich\.person_id/.test(ab), "Abrufen nur als anderer Teilnehmer");
+  assert.ok(/sperreFuer\(absender\.person_id\)/.test(ab) && /\.eq\("status", "offen"\)\.select\("id"\)/.test(ab) && /geplantSenden\(g, absender\)/.test(ab), "Absender-Sperre, erst belegen, dann im Namen des Absenders senden");
+  assert.ok(/"geplant_abrufen"/.test(programm) && /"geplant_jetzt", "geplant_abrufen",/.test(server), "Zugangsliste App = Server");
+  assert.ok(/const vorab = GP\.wdh === "einmal" && \(await gpVorabFrage\(\)\);/.test(programm) && /function gpVorabZeigen\(z\)/.test(programm) && /gpVorab\('\$\{esc\(g\.id\)\}', \$\{!g\.vorab\}\)/.test(programm), "App: Frage, Abruf-Kasten, Schalter unter ⏰");
 }

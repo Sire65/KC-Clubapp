@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.551.0 – 2026-10-20 – Geplante Nachricht vorher abrufen (KC-CLUB-GEPLANT-VORAB)
+- Beim Planen einer einmaligen Nachricht fragt die App: Darf der Empfänger sie schon vorher abrufen? Bei Ja bekommt er sofort einen Hinweis (ohne Text) und im Chat einen Knopf „📩 Jetzt abrufen“; sonst kommt sie zur geplanten Zeit.
+- Unter ⏰ bei der geplanten Nachricht: „📩 Vorher abrufen erlauben / 🔒 ausschalten“ (auch für schon geplante). Der Absender bekommt einen Push, wenn abgerufen wurde.
+- Server 2.551.0: Aktion geplant_abrufen (nur andere Teilnehmer, Sperre des Absenders geprüft, nie doppelt); Spalte kc_club_geplant.vorab.
+
 ## 2.550.0 – 2026-10-20 – 🔑 Push an dich bei wiederholten Versuchen ohne gültigen Link (KC-CLUB-FEHLVERSUCHE)
 Wunsch Hansi („herausfinden, wer ohne gültigen Zugang in unsere private App will“ → Vorschlag 1 „Ja“).
 - Server: Öffnet dasselbe Gerät (anonyme Geräte-Kennung der App) die Club-App in 2 Stunden 3-mal ohne persönlichen Link oder mit ungültigem Link, bekommen die Admins einen Push: „🔑 3× versucht, die Club-App ohne persönlichen Link zu öffnen“ mit Gerätetyp (System, Browser wie von der App gemeldet), Uhrzeit und Geräte-Kennung. Je Gerät höchstens 1× am Tag, insgesamt höchstens 5 am Tag. Keine IP-Adresse.
