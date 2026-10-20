@@ -11455,3 +11455,9 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(smOffen\(\)\.length\) add\(\{ id: "schulung"/.test(programm) && !/if \(kz\.schulung > 0\) add/.test(programm), "Info-Feld: Mitglied nach Angebot, nicht nach Admin-Wartezahl");
   assert.ok(/kz\.schulungFrei > 0/.test(programm) && /w\.art === "gewaehlt" \|\| w\.art === "gegenvorschlag"/.test(server), "Admin nur bei Freigabe");
 }
+
+// 2.521.0 KC-CLUB-VERLAUF-SEITEN (Fund Hansi): Verlauf lädt seitenweise – die Schnittstelle liefert je Abfrage höchstens 1000 Zeilen
+{
+  const v = server.slice(server.indexOf('case "admin_verlauf"'), server.indexOf('case "admin_verlauf"') + 4000);
+  assert.ok(/\.range\(seite \* 1000, seite \* 1000 \+ 999\)/.test(v) && /if \(\(teil \?\? \[\]\)\.length < 1000\) break;/.test(v) && !/\.limit\(12000\)/.test(v), "Verlauf seitenweise");
+}

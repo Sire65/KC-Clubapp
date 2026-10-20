@@ -14072,12 +14072,19 @@ Köcheclub-App`,
         const tage = [1, 7, 30].includes(Number(p.tage)) ? Number(p.tage) : 1;
         const schrittMin = tage === 1 ? 30 : tage === 7 ? 240 : 1440, n = Math.round((tage * 1440) / schrittMin);
         const ende = Math.ceil(Date.now() / (schrittMin * 60000)) * schrittMin * 60000, start = ende - n * schrittMin * 60000;
-        const { data, error } = await db.from("kc_club_messwerte").select("zeit,quelle,db_bytes,verbindungen,net_ok,net_fehler,db_ms")
-          .gte("zeit", new Date(start).toISOString()).order("zeit").limit(12000);
-        if (error) throw new Fehler("Verlauf konnte nicht geladen werden.", 503);
+        // 2.521.0 KC-CLUB-VERLAUF-SEITEN (Fund Hansi 20.10.: 7 Tage „61 % erreichbar“, ab 17.10. alles rot – die Messungen liefen aber lückenlos):
+        // die Datenschnittstelle gibt je Abfrage höchstens 1000 Zeilen zurück (ein höheres Limit half nicht) – 7 Tage sind ~1700, 30 Tage ~7200 Messwerte.
+        // Darum seitenweise zu je 1000 nachladen (höchstens 12 Seiten).
+        const data: any[] = [];
+        for (let seite = 0; seite < 12; seite++) {
+          const { data: teil, error } = await db.from("kc_club_messwerte").select("zeit,quelle,db_bytes,verbindungen,net_ok,net_fehler,db_ms")
+            .gte("zeit", new Date(start).toISOString()).order("zeit").order("id").range(seite * 1000, seite * 1000 + 999);
+          if (error) throw new Fehler("Verlauf konnte nicht geladen werden.", 503);
+          data.push(...(teil ?? [])); if ((teil ?? []).length < 1000) break;
+        }
         const { data: erster } = await db.from("kc_club_messwerte").select("zeit").order("zeit").limit(1).maybeSingle();
         const ab = Array.from({ length: n }, (_, i) => ({ von: new Date(start + i * schrittMin * 60000).toISOString(), dbN: 0, apiN: 0, netOk: 0, netFehler: 0, msSumme: 0, msMax: null as number | null, bytes: null as number | null, verb: null as number | null }));
-        for (const m of data ?? []) {
+        for (const m of data) {
           const i = Math.floor((new Date(m.zeit).getTime() - start) / (schrittMin * 60000)); const b = ab[i]; if (!b) continue;
           if (m.quelle === "db") { b.dbN++; b.netOk += m.net_ok ?? 0; b.netFehler += m.net_fehler ?? 0; b.bytes = m.db_bytes ?? b.bytes; b.verb = Math.max(b.verb ?? 0, m.verbindungen ?? 0); }
           else { b.apiN++; b.msSumme += m.db_ms ?? 0; b.msMax = Math.max(b.msMax ?? 0, m.db_ms ?? 0); }
