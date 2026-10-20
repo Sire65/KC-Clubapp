@@ -11323,3 +11323,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const h = new Function("return " + m[1].replace("(x: unknown)", "(x)"))();
   assert.deepEqual([h(12.5), h(8), h(9.25), h(13.75), h("11"), h(23.999)], ["12:30", "08:00", "09:15", "13:45", "11:00", "24:00"], "Dezimalstunden → hh:mm");
 }
+
+// 2.509.0 KC-CLUB-TIPPTON-KNOPF (Wunsch Hansi): im Chat neben ▾ und ⌨️ ein Mini-Lautsprecher – Tippgeräusche an/aus
+{
+  assert.ok(/<button class="eg-ton" id="egTon" type="button" onpointerdown="event\.preventDefault\(\)"[^>]*onclick="tippTonKnopf\(\)"/.test(seite), "Lautsprecher-Knopf bei den Griffen, nimmt der Tastatur den Fokus nicht");
+  const fn = programm.slice(programm.indexOf("function tippTonKnopf()"), programm.indexOf("tippTonKnopfZeigen();\n"));
+  assert.ok(/localStorage\.setItem\("kc_club_tippton", "aus"\)/.test(fn) && /else tippTonSetzen\(zuletzt\);/.test(fn) && /kc_club_tippton_zuletzt/.test(fn), "aus → zuletzt gewählte Art wieder an");
+  assert.ok(/k\.textContent = an \? "🔊" : "🔇";/.test(fn), "zeigt 🔊 / 🔇");
+}
