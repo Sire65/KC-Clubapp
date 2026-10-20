@@ -5343,7 +5343,7 @@ const HILFE = [
   { id: "weltraum", thema: "darstellung", sym: "🚀", t: "Thema Weltraum", x: "Im Thema <b>🚀 Weltraum</b> wird der Kopf der Startseite zum Nachthimmel: Sterne funkeln, ein <b>Ringplanet</b> schwebt herein, oben steht der <b>Mond</b>, ab und zu fällt eine <b>Sternschnuppe</b>. Ein <b>Astronaut</b> schwebt herein und winkt, eine <b>Rakete</b> startet mit Feuerschweif. Dann schreibt der Astronaut <b>deinen Vornamen in Sternenschrift</b>. Zum Schluss holt ihn ein <b>UFO</b> mit dem Lichtstrahl ab – dann beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚀 Weltraum.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.444.0" },
   { id: "bauernhof", thema: "darstellung", sym: "🐄", t: "Thema Bauernhof", x: "Im Thema <b>🐄 Bauernhof</b> läuft im Kopf der Startseite ein ganzer Tag auf dem Hof: Morgens geht die Sonne auf und der <b>Hahn</b> kräht auf dem Zaunpfosten. <b>Kuh</b>, <b>Schwein</b> und <b>Hühner</b> kommen auf die Wiese – das Schwein suhlt sich in der Pfütze. Der <b>Traktor</b> bringt Stroh und lädt einen Ballen ab, dann steht ein Holzschild <b>„Hof“ mit deinem Vornamen</b>. Abends gehen alle Tiere in den <b>Stall</b>, das Tor geht zu, nachts schläft der Hahn – und am nächsten Morgen beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🐄 Bauernhof.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.445.0" },
   { id: "kegeln", thema: "darstellung", sym: "🎳", t: "Thema Kegelabend", x: "Im Thema <b>🎳 Kegelabend</b> wird unten im Kopf der Startseite gekegelt: Ein <b>Koch mit Kochmütze</b> nimmt Anlauf und rollt die Kugel auf die <b>9 Kegel</b> (der König trägt eine rote Krone) – die Kegel fliegen, „5 Holz!“, dann stellen sie sich wieder auf. Oben rechts zählt die <b>Kreidetafel mit deinem Vornamen</b> die Striche. Der 6. Wurf ist immer <b>„Alle Neune!“</b> mit Konfetti – danach wischt ein Schwamm die Tafel sauber und es geht von vorn los. Vorschau: ⚙️ → ✨ Effekte → 🎳 Kegelabend.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.446.0" },
-  { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Feuer sitzen <b>zwei Indianer</b>, daneben steht der <b>Häuptling</b> mit Federhaube; rechts ragen große <b>Saguaro-Kakteen</b> auf. Am Horizont ziehen <b>Büffel</b> vorbei, ab und zu rollt ein <b>Windstoß</b> einen Steppenläufer durchs Bild. Zwei <b>Cowboys</b> reiten vorbei, die <b>Postkutsche „Köcheclub“</b> rumpelt durch, und zwei Cowboys <b>duellieren</b> sich – „PENG!“, einer fällt, ein <b>flacher Wagen</b> bringt den Verwundeten mit Kopfverband weg. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
+  { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Feuer sitzen <b>zwei Indianer</b>, daneben steht der <b>Häuptling</b> mit Federhaube und raucht die <b>Friedenspfeife</b> – aus dem Rauch entsteht am Himmel Buchstabe für Buchstabe <b>dein Vorname</b>, bis ihn der Wind verweht; rechts ragen große <b>Saguaro-Kakteen</b> auf. Am Horizont ziehen <b>Büffel</b> vorbei, ab und zu rollt ein <b>Windstoß</b> einen Steppenläufer durchs Bild. Zwei <b>Cowboys</b> reiten vorbei, die <b>Postkutsche „Köcheclub“</b> rumpelt durch, und zwei Cowboys <b>duellieren</b> sich – „PENG!“, einer fällt, ein <b>flacher Wagen</b> bringt den Verwundeten mit Kopfverband weg. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
   { id: "eingangskorb_mitglied", thema: "club", sym: "📥", t: "Dein Eingangskorb fürs Archiv", x: "Legt dir die Clubleitung ein Dokument hin (z. B. eine Anleitung oder Urkunde), steht unter <b>„Heute wichtig“ → 📥 Eingangskorb</b>. Antippen – du siehst das Dokument und entscheidest: <b>✔ annehmen</b> – dann fragt die App <b>„Wohin?“</b> (Ordner und Register, der 💡 Vorschlag des Absenders ist schon ausgewählt) und legt es in deinen persönlichen Archiv-Ordner – oder <b>✖ ablehnen</b>, dann wird es gelöscht. Dein Ordner bleibt privat. <i>Clubleitung:</i> Mitglied antippen → <b>„📥 In den Eingangskorb“</b>.", seit: "2.432.0" },
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
@@ -9231,7 +9231,7 @@ const TW_FAQ = [
   { id: "graue-haken", sym: "✔️", t: "Warum hat meine Nachricht erst nur einen Haken?", x: "<b>Ein grauer Haken</b> = gesendet. <b>Zwei graue</b> kommen, sobald die Mitteilung auf dem anderen Handy erscheint oder seine App die Nachricht lädt. Bleibt es lange bei einem, ist das Handy aus, ohne Netz oder hat die Benachrichtigungen abgeschaltet. <b>Blau</b> = gelesen.", los: () => zeige("nachrichten") },
   { id: "erstattung-pdf", sym: "📄", t: "Kann ich meinen Erstattungsantrag ausdrucken?", x: "Ja – nach dem Einreichen bietet die App den Antrag auf dem <b>Club-Briefbogen</b> an: <b>📄 PDF speichern / teilen</b> oder <b>🖨️ Drucken</b>, mit Feldern für die Unterschriften. Ein PDF gibt es in jeder Druckvorschau der App.", los: () => zeige("erstattung") },
   { id: "vorschlag-sitzung-offen", sym: "📅", t: "Die nächste Sitzung hat noch kein Datum – kann ich trotzdem etwas vorschlagen?", x: "Ja. Beim Vorschlag unter „Für welchen Termin?“ <b>„📅 Nächste/Übernächste Sitzung – Datum noch offen“</b> wählen. Sobald die Sitzung im Kalender steht, ordnet die App den Vorschlag selbst zu.", los: () => zeige("vorschlaege") },
-  { id: "wildwest", sym: "🤠", t: "Gibt es ein Thema mit Cowboys und Indianern?", x: "Ja – das Thema <b>🤠 Wilder Westen</b>: Tipi mit Lagerfeuer, Indianer und Häuptling, Kakteen, Steppenläufer, Cowboys, Postkutsche, ein Duell und zum Schluss die große Büffelherde. Unter ⚙️ → „✨ Effekte“ → 🤠 Wilder Westen gibt es eine Vorschau.", los: () => einstiegHin("effekte", "jzWahl") },
+  { id: "wildwest", sym: "🤠", t: "Gibt es ein Thema mit Cowboys und Indianern?", x: "Ja – das Thema <b>🤠 Wilder Westen</b>: Tipi mit Lagerfeuer, Indianer und Häuptling (aus seiner Friedenspfeife steigt dein Vorname in Rauchschrift auf), Kakteen, Steppenläufer, Cowboys, Postkutsche, ein Duell und zum Schluss die große Büffelherde. Unter ⚙️ → „✨ Effekte“ → 🤠 Wilder Westen gibt es eine Vorschau.", los: () => einstiegHin("effekte", "jzWahl") },
   // 2.508.0 KC-CLUB-HILFE-NACHTRAG-3: Fragen zu den neuen Möglichkeiten (nur Mitglieder-Funktionen)
   { id: "dienst-uebersicht", sym: "📊", t: "Wo sehe ich, wer wann beim Weihnachtsmarkt kann?", x: "Tippe in <b>🗓️ Dienstpläne</b>, in <b>„Mein Dienst“</b> oder in den Dienstwünschen auf <b>📊</b>. Die Übersicht zeigt deine Zeiten und die der Mitglieder, die ihre Zeiten freigegeben haben.", los: () => zeige("dienste") },
   { id: "tippgeraeusche", sym: "⌨️", t: "Kann ich hören, wenn jemand tippt?", x: "Ja – wenn die andere Person <b>„Andere sehen live, was ich tippe“</b> eingeschaltet hat. Unter ⚙️ → „🔔 Benachrichtigungen“ → <b>„⌨️ Tippgeräusche“</b> wählst du Tastatur oder Schreibmaschine.", los: () => einstiegHin("benachrichtigung", "setTippTon") },
@@ -19464,11 +19464,12 @@ function jzbWildwestMalen(c, F) {
   const flucht = t > JZB_WW_HERDE - 3 ? (t - JZB_WW_HERDE + 3) * 62 * k : 0, lauf = flucht ? T * 11 : 0;
   if (O.feuer + 40 * k - flucht > -30 * k) {
     jzbWwIndianerMalen(c, O.feuer - 15 * k - flucht, O.boden, k * 1.05, { hemd: "#a1683a", sitzt: !flucht, lauf, dir: flucht ? -1 : 1 }, T);
-    jzbWwIndianerMalen(c, O.feuer + 16 * k - flucht, O.boden, k * 1.12, { hemd: "#7f4f24", haube: true, lauf, dir: -1 }, T);
+    jzbWwIndianerMalen(c, O.feuer + 16 * k - flucht, O.boden, k * 1.12, { hemd: "#7f4f24", haube: true, lauf, dir: -1, pfeife: flucht ? 0 : jzbWwPfeifeGlut(t) }, T);
     jzbWwIndianerMalen(c, O.feuer + 32 * k - flucht, O.boden, k * 1.05, { hemd: "#9c6644", sitzt: !flucht, winkt: true, lauf, dir: -1 }, T); }
   // 🌵 2.532.0: rechts große Saguaro-Kakteen wie im Westen und ein kleiner Kugelkaktus
   jzbWwKaktusMalen(c, J.w - JZB_RAND - 12 * k, O.boden, 46, k, false); jzbWwKaktusMalen(c, J.w - JZB_RAND - 44 * k, O.boden + 1 * k, 32, k, true);
   c.fillStyle = "#2d6a4f"; c.beginPath(); c.ellipse(J.w - JZB_RAND - 28 * k, O.boden - 3 * k, 4.4 * k, 3.4 * k, 0, 0, 7); c.fill(); c.fillStyle = "#ff6b9a"; c.beginPath(); c.arc(J.w - JZB_RAND - 28 * k, O.boden - 6.4 * k, 1.2 * k, 0, 7); c.fill();
+  jzbWwRauchNameMalen(c, t, O, k, T); // 2.533.0: aus der Friedenspfeife steigt Buchstabe für Buchstabe der Vorname auf
   const dd = t - JZB_WW_DUELL; if (dd >= 0 && dd < 27) jzbWwDuellMalen(c, dd, O, k, T); // 🤠🤠 Duell, dann holt der flache Wagen den Verwundeten
   for (const b of W.ballen) jzbWwBallenMalen(c, b, O.boden, k);
   for (const f of W.funken) { c.fillStyle = `rgba(255,200,80,${Math.max(0, f.a)})`; c.fillRect(f.x, f.y, 1.3 * k, 1.3 * k); }
@@ -19482,7 +19483,47 @@ function jzbWildwestMalen(c, F) {
 // ab und an ein Windstoß, der einen Ballen weht, und 2 Cowboys, die sich duellieren – dann kommt eine flache Kutsche und der Verwundete wird
 // abtransportiert“): Figuren und Abläufe dazu. Duell ab JZB_WW_DUELL: beide kommen, stehen sich gegenüber, ziehen – „PENG!“, einer fällt um
 // (der Hut fliegt), der Sieger geht davon; ein flacher Wagen holt den Verwundeten (Kopfverband) ab. Alles aus der Zeit im Lauf berechnet.
-function jzbWwIndianerMalen(c, x, y, sc, o, T) { // o: { hemd, sitzt, haube (Häuptling), winkt, lauf (Schrittphase beim Weglaufen), dir }
+// ---- 2.533.0 KC-CLUB-FRIEDENSPFEIFE (Wunsch Hansi „Der Häuptling soll eine Friedenspfeife rauchen und daraus entsteht wieder Buchstabe für
+// Buchstabe der Username“): ab 3 s raucht der Häuptling; je Buchstabe ein Zug (Glut leuchtet), eine Rauchwolke steigt auf, schwebt an ihren Platz
+// am Himmel und wird zum Buchstaben des Vornamens (ohne Namen: „Köcheclub“). Fertig steht der Name in Rauchschrift, ab 26 s verweht ihn der Wind –
+// rechtzeitig vor dem Duell (29 s). Alles aus der Zeit im Lauf berechnet, nur Bild, nichts wird gespeichert oder gesendet.
+const JZB_WW_PFEIFE = [3, 26], JZB_WW_NAME_AB = 5, JZB_WW_NAME_TAKT = 1.4, JZB_WW_NAME_WEHT = 26;
+const jzbWwNameText = () => [...(jzbEisNameText() || "Köcheclub")].slice(0, 12);
+const jzbWwNameStart = (i) => JZB_WW_NAME_AB + i * JZB_WW_NAME_TAKT;
+function jzbWwPfeifeGlut(t) { // 0 = Pfeife nicht in der Hand · sonst 0,15 (glimmt) bis 1 (kurz vor jeder Wolke wird gezogen)
+  if (t < JZB_WW_PFEIFE[0] || t >= JZB_WW_PFEIFE[1]) return 0;
+  const n = jzbWwNameText().length; let g = .15;
+  for (let i = 0; i < n; i++) { const d = jzbWwNameStart(i) - t; if (d >= 0 && d < .6) g = Math.max(g, 1 - d / .6); }
+  return g;
+}
+function jzbWwRauchNameLage(O, k) {
+  const J = JZB, z = jzbWwNameText(), fs = Math.round(Math.max(10, Math.min(26 * k, (O.horizont - 8 * k) * .8))), f = `700 ${fs}px Georgia, "Times New Roman", serif`;
+  const c = J.ctx; c.save(); c.font = f; const b = z.map((ch) => c.measureText(ch).width + 1.5 * k); c.restore();
+  const ges = b.reduce((a, v) => a + v, 0); let x = Math.max(JZB_RAND, Math.min(J.w - JZB_RAND - ges, J.w * .56 - ges / 2));
+  return { z, fs, f, y: Math.max(fs * .85 + 2, O.horizont - 24 * k), pos: b.map((w) => { const m = x + w / 2; x += w; return m; }) };
+}
+function jzbWwRauchNameMalen(c, t, O, k, T) {
+  if (t < JZB_WW_PFEIFE[0] || t >= JZB_WW_DUELL) return;
+  const sc = k * 1.12, bx = O.feuer + 16 * k - 10.5 * sc, by = O.boden - 21.4 * sc; // Pfeifenkopf (Häuptling schaut nach links)
+  if (t < JZB_WW_PFEIFE[1]) for (let j = 0; j < 3; j++) { const p = (T * .5 + j / 3) % 1; // feiner Rauchfaden aus dem Pfeifenkopf
+    c.fillStyle = `rgba(235,235,235,${.28 * (1 - p)})`; c.beginPath(); c.arc(bx + Math.sin(p * 6 + j) * 1.6 * k, by - p * 12 * k, (1 + p * 2.4) * k, 0, 7); c.fill(); }
+  const L = jzbWwRauchNameLage(O, k), weht = Math.max(0, t - JZB_WW_NAME_WEHT), aus = Math.max(0, 1 - weht / 3);
+  c.save(); c.font = L.f; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.shadowColor = "rgba(255,255,255,.9)"; c.shadowBlur = 6 * k;
+  L.z.forEach((ch, i) => {
+    const s = jzbWwNameStart(i), d = t - s; if (d < 0) return;
+    const zx = L.pos[i], zy = L.y - L.fs * .35;
+    if (d < 1.7) { // die Rauchwolke steigt auf und schwebt an ihren Platz
+      const p = jzbEase(Math.min(1, d / 1.6)), x = bx + (zx - bx) * p, y = by + (zy - by) * p - Math.sin(p * Math.PI) * 10 * k, r = 2 * k + p * L.fs * .14, a = (.55 - p * .25) * (d > 1.3 ? (1.7 - d) / .4 : 1);
+      c.shadowBlur = 0; for (const [ox, oy, rr] of [[0, 0, 1], [-.7, .3, .75], [.7, .35, .7], [0, -.6, .65]]) { c.fillStyle = `rgba(240,240,240,${a})`; c.beginPath(); c.arc(x + ox * r, y + oy * r, rr * r, 0, 7); c.fill(); }
+      c.shadowBlur = 6 * k;
+    }
+    const sichtbar = Math.min(1, Math.max(0, (d - 1.3) / .6)) * aus; if (sichtbar <= 0) return;
+    const wob = Math.sin(T * 1.3 + i * 1.7) * .8 * k; // Rauch steht nie ganz still
+    c.fillStyle = `rgba(248,248,248,${.88 * sichtbar})`; c.fillText(ch, zx + wob + weht * (14 + i * 2) * k, L.y + Math.cos(T * 1.1 + i) * .6 * k - weht * (5 + i % 3 * 2) * k);
+  });
+  c.restore();
+}
+function jzbWwIndianerMalen(c, x, y, sc, o, T) { // o: { hemd, sitzt, haube (Häuptling), winkt, lauf (Schrittphase beim Weglaufen), dir, pfeife (2.533.0: Glut 0…1) }
   c.save(); c.translate(x, y); c.scale(sc * (o.dir || 1), sc); c.lineCap = "round";
   const haut = "#b5764b"; let kopfY;
   if (o.sitzt) {
@@ -19497,8 +19538,15 @@ function jzbWwIndianerMalen(c, x, y, sc, o, T) { // o: { hemd, sitzt, haube (Hä
     c.fillStyle = o.hemd; c.beginPath(); c.roundRect ? c.roundRect(-3.4, -19, 6.8, 11, 2) : c.rect(-3.4, -19, 6.8, 11); c.fill();
     c.fillStyle = "#e9c46a"; c.fillRect(-3.4, -12.2, 6.8, 1); // Gürtel
     c.strokeStyle = haut; c.lineWidth = 1.6; c.beginPath();
-    if (o.lauf) { c.moveTo(-2, -17); c.lineTo(-4 - s, -11); c.moveTo(2, -17); c.lineTo(4 + s, -11); } else { c.moveTo(-3, -15.6); c.lineTo(3, -14.4); c.moveTo(3, -15.8); c.lineTo(-3, -14.2); } // verschränkte Arme
+    if (o.lauf) { c.moveTo(-2, -17); c.lineTo(-4 - s, -11); c.moveTo(2, -17); c.lineTo(4 + s, -11); } else if (!o.pfeife) { c.moveTo(-3, -15.6); c.lineTo(3, -14.4); c.moveTo(3, -15.8); c.lineTo(-3, -14.2); } // verschränkte Arme
     c.stroke(); kopfY = -21.6;
+  }
+  if (o.pfeife) { // 2.533.0: Friedenspfeife – langer Holzstiel vom Mund nach vorn, roter Steinkopf, zwei Federn; die Glut leuchtet beim Ziehen
+    c.strokeStyle = "#b5764b"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(2, -17); c.lineTo(5.6, kopfY + 2.6); c.moveTo(-2, -17); c.lineTo(3.4, kopfY + 2.2); c.stroke(); // Hände an der Pfeife
+    c.strokeStyle = "#8b5a2b"; c.lineWidth = .9; c.beginPath(); c.moveTo(1.8, kopfY + 1.1); c.lineTo(10.2, kopfY + 2.8); c.stroke(); // Stiel
+    c.fillStyle = "#9b2226"; c.fillRect(9.4, kopfY + .2, 2.2, 2.8); // Pfeifenkopf (roter Stein)
+    c.fillStyle = `rgba(255,${120 + o.pfeife * 80 | 0},40,${.45 + o.pfeife * .55})`; c.beginPath(); c.arc(10.5, kopfY + .2, .9 + o.pfeife * .5, 0, 7); c.fill(); // Glut
+    c.strokeStyle = "#fffaf0"; c.lineWidth = .7; c.beginPath(); c.moveTo(6, kopfY + 2.1); c.lineTo(6.4, kopfY + 6.4); c.moveTo(7.2, kopfY + 2.4); c.lineTo(7.8, kopfY + 6.2); c.stroke(); // Federn am Stiel
   }
   c.fillStyle = haut; c.beginPath(); c.arc(0, kopfY, 2.5, 0, 7); c.fill(); // Gesicht
   c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(0, kopfY - .5, 2.6, Math.PI, 0); c.fill(); c.fillRect(-2.6, kopfY - .5, 1.1, 4.4); c.fillRect(1.5, kopfY - .5, 1.1, 4.4); // Haare, Zöpfe

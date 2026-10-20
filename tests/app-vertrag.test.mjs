@@ -11608,3 +11608,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/function rgHilfeLupe\(\)/.test(html) && /SU\.offen = true; sucheAuf\(""\); SU\.q = \$\("suEingabe"\)\.value = "verschlüsselt"; SU\.ergebnis = \[\]; suZeigen\(\);/.test(html), "Hilfe-Video: Lupe nur mit App-Treffern, ohne Server und ohne Verlaufseintrag");
   assert.ok(/\{ id: "hilfe", stand: "2"/.test(html) && /\{ id: "chatprofi", stand: "2"/.test(html) && /t: "✍️ Anne schreibt dir gerade"/.test(html), "Fassung 2 für Hilfe und Chat-Profi");
 }
+// 2.533.0 KC-CLUB-FRIEDENSPFEIFE (Wunsch Hansi „Der Häuptling soll eine Friedenspfeife rauchen und daraus entsteht wieder Buchstabe für Buchstabe der Username“)
+{
+  assert.ok(/haube: true, lauf, dir: -1, pfeife: flucht \? 0 : jzbWwPfeifeGlut\(t\) \}/.test(programm) && /if \(o\.pfeife\) \{ \/\/ 2\.533\.0: Friedenspfeife/.test(programm), "Häuptling hält die Pfeife (nicht beim Weglaufen)");
+  assert.ok(/const jzbWwNameText = \(\) => \[\.\.\.\(jzbEisNameText\(\) \|\| "Köcheclub"\)\]\.slice\(0, 12\);/.test(programm) && /jzbWwRauchNameMalen\(c, t, O, k, T\);/.test(programm), "Vorname (sonst Köcheclub) aus Rauch");
+  assert.ok(/JZB_WW_NAME_WEHT = 26/.test(programm) && /if \(t < JZB_WW_PFEIFE\[0\] \|\| t >= JZB_WW_DUELL\) return;/.test(programm), "Name verweht vor dem Duell");
+  assert.ok(/raucht die <b>Friedenspfeife<\/b>/.test(html), "Hilfe nennt die Friedenspfeife");
+}
