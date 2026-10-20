@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.548.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.549.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -26050,19 +26050,43 @@ function gpZeigen() {
   const z = $("chat"); if (!z || !chatId) return;
   z.querySelector(".gp-warte")?.remove();
   const l = (CHAT?.id === chatId && CHAT.geplant) || []; if (!l.length) return;
-  z.insertAdjacentHTML("beforeend", `<div class="gp-warte">${l.map((g) => `<button type="button" class="gp-blase" onclick="gpMenue('${esc(g.id)}')">${esc(g.text)}
-    <small>⏰ wird gesendet ${esc(gpWann(g.um))}${g.wiederholung !== "einmal" ? ` · 🔁 ${esc(gpWdhText(g.wiederholung, g.um))}` : ""}${g.fehler ? `<br>⚠️ Letztes Mal nicht gesendet: ${esc(g.fehler)}` : ""}<br><i>Nur du siehst das – antippen zum Ändern</i></small></button>`).join("")}</div>`);
+  // 2.549.0 KC-CLUB-GEPLANT-WECKER (Wunsch Hansi): rechts neben jeder geplanten Nachricht ein ⏰ – antippen zeigt die Infos und „✏️ Ändern“
+  z.insertAdjacentHTML("beforeend", `<div class="gp-warte">${l.map((g) => `<div class="gp-zeile"><button type="button" class="gp-blase" onclick="gpMenue('${esc(g.id)}')">${esc(g.text)}
+    <small>⏰ wird gesendet ${esc(gpWann(g.um))}${g.wiederholung !== "einmal" ? ` · 🔁 ${esc(gpWdhText(g.wiederholung, g.um))}` : ""}${g.fehler ? `<br>⚠️ Letztes Mal nicht gesendet: ${esc(g.fehler)}` : ""}<br><i>Nur du siehst das – antippen zum Ändern</i></small></button><button type="button" class="gp-wecker" onclick="gpMenue('${esc(g.id)}')" aria-label="Geplante Nachricht: Infos und ändern" title="Geplant – Infos und ändern">⏰</button></div>`).join("")}</div>`);
 }
 function gpMenue(id) {
   const g = (CHAT?.geplant || []).find((x) => x.id === id); if (!g) return;
-  const wdh = g.wiederholung !== "einmal";
+  const wdh = g.wiederholung !== "einmal", wege = (g.wege || []).map((w) => (w === "push" ? "🔔 Push" : w === "email" ? "✉️ E-Mail" : w)).join(" + ") || "nur in der App";
+  const zeile = (t, w) => `<tr><td>${t}</td><td><b>${w}</b></td></tr>`; // 2.549.0 KC-CLUB-GEPLANT-WECKER: alle Infos auf einen Blick
   blattAuf("gpMenue", `<h3 style="margin:0 0 4px">⏰ Geplante Nachricht</h3>
     <div class="gp-vorschau">${esc(g.text.length > 200 ? g.text.slice(0, 200) + " …" : g.text)}</div>
-    <p class="hinweis" style="margin:0 0 10px">Wird gesendet: <b>${esc(gpWann(g.um))}</b>${wdh ? `<br>🔁 ${esc(gpWdhText(g.wiederholung, g.um))}${g.anzahl ? ` · schon ${g.anzahl}× gesendet` : ""}` : ""}</p>
-    <button class="knopf haupt" onclick="gpJetzt('${esc(g.id)}')">📤 Jetzt senden${wdh ? " (einmal extra)" : ""}</button>
-    <button class="knopf" onclick="$('gpMenue').remove();spaeterWahl((CHAT?.geplant||[]).find((x)=>x.id==='${esc(g.id)}'))">🕐 Zeit ändern</button>
+    <table class="gp-infos">${zeile("📤 Wird gesendet", esc(gpWann(g.um)))}${zeile("🔁 Wie oft", wdh ? esc(gpWdhText(g.wiederholung, g.um)) + (g.anzahl ? ` · schon ${g.anzahl}× gesendet` : "") : "einmal")}
+      ${zeile("📣 Benachrichtigung", esc(wege))}${g.wichtig ? zeile("❗ Wichtig", "ja") : ""}${g.angelegt ? zeile("🗓️ Geplant am", esc(wann(g.angelegt))) : ""}
+      ${g.geaendert && g.angelegt && Date.parse(g.geaendert) - Date.parse(g.angelegt) > 60000 ? zeile("✏️ Zuletzt geändert", esc(wann(g.geaendert))) : ""}
+      ${g.fehler ? zeile("⚠️ Letztes Mal", esc(g.fehler)) : ""}</table>
+    <button class="knopf haupt" onclick="gpAendernWahl('${esc(g.id)}')">✏️ Ändern</button>
+    <button class="knopf" onclick="gpJetzt('${esc(g.id)}')">📤 Jetzt senden${wdh ? " (einmal extra)" : ""}</button>
     <button class="knopf gefahr" onclick="gpLoeschen('${esc(g.id)}')">🗑️ ${wdh ? "Löschen (Wiederholung beenden)" : "Löschen"}</button>
     <button class="knopf" onclick="$('gpMenue').remove()">Schließen</button>`);
+}
+// 2.549.0 KC-CLUB-GEPLANT-WECKER: „✏️ Ändern“ – Zeit/Wiederholung (vorhandene Auswahl) oder den Text
+function gpAendernWahl(id) {
+  const g = (CHAT?.geplant || []).find((x) => x.id === id); if (!g) return;
+  $("gpMenue")?.remove();
+  blattAuf("gpMenue", `<h3 style="margin:0 0 8px">✏️ Was möchtest du ändern?</h3>
+    <button class="knopf haupt" onclick="$('gpMenue').remove();spaeterWahl((CHAT?.geplant||[]).find((x)=>x.id==='${esc(g.id)}'))">🕐 Zeit oder Wiederholung</button>
+    <button class="knopf" onclick="gpTextAendern('${esc(g.id)}')">📝 Text der Nachricht</button>
+    <button class="knopf" onclick="gpMenue('${esc(g.id)}')">← Zurück</button>`);
+}
+async function gpTextAendern(id) {
+  const g = (CHAT?.geplant || []).find((x) => x.id === id); if (!g) return;
+  $("gpMenue")?.remove();
+  const t = await eingabe("📝 Text ändern\nSo wird die Nachricht gesendet:", g.text, { mehrzeilig: true });
+  if (t === null || t === undefined) return gpMenue(id);
+  const neu = String(t).trim(); if (!neu) return melde("Bitte einen Text schreiben.", true); if (neu === g.text) return gpMenue(id);
+  if (Date.parse(g.um) - Date.now() < 60000) return melde("⏰ Die Nachricht wird gleich gesendet – Text jetzt nicht mehr änderbar.", true);
+  try { await api("geplant_speichern", { geplant_id: g.id, um: g.um, wiederholung: g.wiederholung, text: neu }, { warten: true }); melde("✏️ Text geändert"); chatStand = ""; await chatLaden(true); }
+  catch (e) { meldeFehler(e); }
 }
 async function gpJetzt(id) {
   $("gpMenue")?.remove();

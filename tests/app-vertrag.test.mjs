@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7227,6 +7227,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/jahreszeitVorschau\('wueste'\)">🐪 Wüste</.test(seite) && /\{ id: "wueste", thema: "darstellung"/.test(programm) && /\{ id: "wueste", sym: "🐪", t: "Gibt es ein Thema mit Pyramiden und Pharao\?"/.test(programm), "Vorschau, Hilfe, Twinkey");
   assert.ok(fs.existsSync(new URL("../tools/wueste/wu-browser.mjs", import.meta.url)), "Browser-Test vorhanden");
   assert.ok(/const jzbWwNameTakt = \(\) => Math\.min\(2\.8, 16 \/ Math\.max\(1, jzbWwNameText\(\)\.length\)\);/.test(programm) && /JZB_WW_WOLKE = 2\.4/.test(programm), "Friedenspfeife: Name langsamer");
+}
+// 2.549.0 KC-CLUB-GEPLANT-WECKER: ⏰ neben geplanten Nachrichten, Infos + „✏️ Ändern“ (Zeit/Wiederholung oder Text)
+{
+  assert.ok(/class="gp-wecker" onclick="gpMenue\('\$\{esc\(g\.id\)\}'\)"/.test(programm) && /\.gp-wecker \{[^}]*animation: gpKlingeln/.test(seite), "Wecker rechts neben der geplanten Nachricht");
+  assert.ok(/<table class="gp-infos">/.test(programm) && /onclick="gpAendernWahl\('\$\{esc\(g\.id\)\}'\)">✏️ Ändern<\/button>/.test(programm), "Infos und Ändern-Knopf");
+  assert.ok(/async function gpTextAendern\(id\)/.test(programm) && /if \(typeof p\.text === "string"\) \{ neuText = txt\(p\.text, 4000\);/.test(server) && /\.eq\("person_id", ich\.person_id\)\.eq\("status", "offen"\)\.maybeSingle\(\);/.test(server), "Text ändern – nur eigene, offene");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

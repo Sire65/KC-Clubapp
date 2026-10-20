@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.549.0 – 2026-10-20 – ⏰ Wecker neben geplanten Nachrichten: Infos und „Ändern“ (KC-CLUB-GEPLANT-WECKER)
+Wunsch Hansi („Zeige neben einer zeitgeplanten Nachricht rechts daneben einen Wecker. Wenn man drauf tippt, dann Infos anzeigen wie geplante Zeit usw. und einen Button Ändern“).
+- Im Chat steht rechts neben jeder geplanten Nachricht ein ⏰ (klingelt beim Öffnen einmal kurz, ruhig bei „Bewegung reduzieren“).
+- Antippen zeigt die Infos: wird gesendet (Zeit), wie oft, Benachrichtigung (🔔 Push / ✉️ E-Mail), ❗ wichtig, geplant am, zuletzt geändert, Fehler beim letzten Mal – dazu „✏️ Ändern“, „📤 Jetzt senden“, „🗑️ Löschen“.
+- „✏️ Ändern“: 🕐 Zeit oder Wiederholung (bisherige Auswahl) oder 📝 Text der Nachricht (neu).
+- Server 2.549.0: geplante Nachrichten liefern zusätzlich Wege, angelegt/geändert; beim Ändern darf auch der Text mitkommen (nur eigene, offene; gleiche Regeln wie beim Anlegen).
+- Browser-Test (Wecker rechts, Infos, Ändern-Auswahl). Vertragstest-Block 2.549.0. Rückweg: App 2.548.0 / Server 2.541.0.
+
 ## 2.548.0 – 2026-10-20 – 🐪 Neues Thema Wüste: Pyramiden, Karawane, Oase, Pharao auf der Sänfte, Flaschengeist – Name aus Goldstaub, Sonnenuntergang · 🪶 Friedenspfeife langsamer (KC-CLUB-WUESTE, KC-CLUB-FRIEDENSPFEIFE-2)
 Wunsch Hansi („Szene Wüste: im Hintergrund Pyramiden, vorne zieht eine Karawane vorbei, links eine Oase, dann kommt der Pharao – er wird auf einer Sänfte getragen –, rechts kommt ein Flaschengeist aus der Lampe“; Ende: „1 + 3, eigenes Thema, einspielen“).
 - **🐪 Thema Wüste** (⚙️ → Themen; Vorschau unter ✨ Effekte): hinten drei Pyramiden mit Licht- und Schattenseite, Sonne darüber; links eine Oase mit Wasser, Palmen und Datteln; vorne zieht eine Karawane mit vier Kamelen (Reiter mit Turban, Decken, Gepäck) von rechts nach links.

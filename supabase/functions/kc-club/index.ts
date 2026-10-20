@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.541.0";
+const SERVER_VERSION = "2.549.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5992,12 +5992,13 @@ async function expressOffen(ich: Ich, zahlen: any[]): Promise<any[]> {
     return { id: x.message_id, thread: x.thread_id, von: vonL.get(x.absender)?.display_name || "?", zeit: x.erstellt_am, chat: g ? `${g.symbol} ${g.name}` : t?.subject || "" }; });
 }
 const GEPLANT_WDH = ["einmal", "taeglich", "werktags", "woechentlich", "monatlich"], GEPLANT_MAX = 25, GEPLANT_TAGE = 31;
-const GEPLANT_FELDER = "id,thread_id,text,wichtig,wege,senden_um,erste_um,wiederholung,anzahl,letzter_fehler";
+const GEPLANT_FELDER = "id,thread_id,text,wichtig,wege,senden_um,erste_um,wiederholung,anzahl,letzter_fehler,erstellt_am,geaendert_am"; // 2.549.0: + angelegt/geändert für die ⏰-Infos
 function geplantNaechstes(ersteUm: string, regel: string, nach: Date): string | null {
   if (regel === "einmal") return null;
   return wiederholungen(ersteUm, regel, new Date(nach.getTime() + 1000), new Date(nach.getTime() + 400 * 86400000), null, [], 1)[0] ?? null;
 }
-const geplantAus = (g: any) => ({ id: g.id, text: g.text, um: g.senden_um, wiederholung: g.wiederholung, wichtig: !!g.wichtig, anzahl: g.anzahl || 0, fehler: g.letzter_fehler || null });
+const geplantAus = (g: any) => ({ id: g.id, text: g.text, um: g.senden_um, wiederholung: g.wiederholung, wichtig: !!g.wichtig, anzahl: g.anzahl || 0, fehler: g.letzter_fehler || null,
+  wege: Array.isArray(g.wege) ? g.wege : [], angelegt: g.erstellt_am || null, geaendert: g.geaendert_am || null }); // 2.549.0 KC-CLUB-GEPLANT-WECKER
 async function geplantMeine(ich: Ich, threadId: string) {
   const { data } = await db.from("kc_club_geplant").select(GEPLANT_FELDER).eq("person_id", ich.person_id).eq("thread_id", threadId).eq("status", "offen").order("senden_um").limit(GEPLANT_MAX);
   return (data ?? []).map(geplantAus);
@@ -9802,9 +9803,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (p.geplant_id) {
           const { data: alt } = await db.from("kc_club_geplant").select("id").eq("id", String(p.geplant_id)).eq("person_id", ich.person_id).eq("status", "offen").maybeSingle();
           if (!alt) throw new Fehler("Diese geplante Nachricht gibt es nicht mehr.", 404);
-          const { error } = await db.from("kc_club_geplant").update({ senden_um: um.toISOString(), erste_um: um.toISOString(), wiederholung, letzter_fehler: null, geaendert_am: jetzt() }).eq("id", alt.id);
+          // 2.549.0 KC-CLUB-GEPLANT-WECKER: auf Wunsch auch der Text (gleiche Regeln wie beim Anlegen)
+          let neuText: string | null = null;
+          if (typeof p.text === "string") { neuText = txt(p.text, 4000); if (!neuText) throw new Fehler("Bitte die Nachricht schreiben."); if (NOTFALL_RE.test(neuText)) throw new Fehler("Notfall-Meldungen gehen immer sofort raus – nicht planen."); }
+          const { error } = await db.from("kc_club_geplant").update({ senden_um: um.toISOString(), erste_um: um.toISOString(), wiederholung, letzter_fehler: null, geaendert_am: jetzt(), ...(neuText ? { text: neuText } : {}) }).eq("id", alt.id);
           if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
-          await protokoll(ich.person_id, "geplant_geaendert", { id: alt.id, um: um.toISOString(), wiederholung });
+          await protokoll(ich.person_id, "geplant_geaendert", { id: alt.id, um: um.toISOString(), wiederholung, text: !!neuText });
           return json({ ok: true, id: alt.id });
         }
         const threadId = String(p.id || ""), text = txt(p.text, 4000);
