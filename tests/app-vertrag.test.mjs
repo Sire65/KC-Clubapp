@@ -11431,3 +11431,12 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/id="vnKnopf"/.test(seite) && /vnKurz\(u\.letzte\.text\)/.test(programm), "Knopf, Vorschauen ohne Zeichensalat");
   assert.ok(/\/\^🔒KCV1:\/\.test\(text\) \? "🔒 Verschlüsselte Nachricht/.test(server), "Push/Mail nur „Verschlüsselte Nachricht“");
 }
+
+// 2.518.0 KC-CLUB-SCHLUESSELBUND (Wunsch Hansi): 5 zufällige Schlüssel je Zweier-Chat, Übergabe per Datei – nie über den Server
+{
+  const v = programm.slice(programm.indexOf("const VN_PRE ="), programm.indexOf("function naText(t) {"));
+  assert.ok(/VB_ANZAHL = 5/.test(v) && /crypto\.getRandomValues\(new Uint8Array\(32\)\)/.test(v) && /name: "HKDF", hash: "SHA-256"/.test(v), "5 zufällige 256-Bit-Schlüssel, HKDF");
+  assert.ok(/async function vbEntRing\(/.test(v) && /\$\{vbVormerken\(t\)\}/.test(v) && /Kein passender Schlüssel im Schlüsselbund/.test(v), "Empfang probiert alle durch, sonst Fehlermeldung");
+  assert.ok(/for \(const d of dateien\) if \(await vbEinlesen\(d\)\) return;[^\n]*\n\s*api\("diagnose"/.test(programm), "Teilen liest die Datei ein, bevor irgendetwas an den Server oder in den Ablagekorb geht");
+  assert.ok(/id="chatVbKnopf"/.test(seite) && /class="eg-ton eg-vn" id="vnKnopf"/.test(seite), "Menüpunkt und 🔒 in der kleinen Zeile");
+}

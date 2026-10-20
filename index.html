@@ -2327,7 +2327,7 @@
   .eingabe .innen > #text.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.25); }
   /* KC-CLUB-SELBSTLOESCHEN (2.148.0): ⏳ an = violett; neun gleich große Knöpfe passen auch auf schmale Handys (alle gleich breit) */
   .eingabe .innen > .rund:not(#sendenKnopf) { width: min(40px, calc((100vw - 140px) / 8)) !important; height: min(40px, calc((100vw - 140px) / 8)) !important; }
-  .eingabe .innen > #vnKnopf.rund.an { background: #1b5e20 !important; border-color: #0d3d12 !important; color: #fff; box-shadow: 0 0 0 3px rgba(27,94,32,.35); } /* 2.517.0 */
+  .eingabe .eg-vn.an { background: #1b5e20; border-color: #0d3d12; color: #fff; box-shadow: 0 0 0 2px rgba(27,94,32,.35); } /* 2.517.0, 2.518.0 kleine Zeile */
   .vn-zu { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; border: 1.5px dashed currentColor; border-radius: 12px; background: rgba(0,0,0,.08); color: inherit; font: inherit; font-weight: 700; cursor: pointer; text-align: left; }
   .vn-zu small { font-weight: 400; opacity: .8; } .vn-auf { font-size: .85em; }
   .eingabe .innen > #ablaufKnopf.rund.an { background: #6a1b9a !important; border-color: #4a148c !important; color: #fff; box-shadow: 0 0 0 3px rgba(106,27,154,.3); }
@@ -5303,7 +5303,7 @@
 <div class="eingabe versteckt" id="eingabe">
   <!-- 2.433.0 KC-CLUB-SCHREIBEN-KLAPPEN (Wunsch Hansi): ▾ klappt den Schreibbereich kurz weg, damit mehr Nachrichten zu sehen sind; beim Öffnen eines Chats ist er immer offen -->
   <!-- 2.455.0 KC-CLUB-TASTATUR-KNOPF (Wunschliste #14): daneben ⌨️ – Tastatur des Handys aus- und wieder einblenden (nur Touch-Geräte) -->
-  <div class="eg-griffe"><button class="eg-klapp" id="egKlapp" type="button" onclick="eingabeKlappen(true)" title="Schreibbereich einklappen – mehr Nachrichten sehen" aria-label="Schreibbereich einklappen – mehr Nachrichten sehen">▾</button><button class="eg-tast" id="egTast" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="tastaturUmschalten()" title="Tastatur einblenden" aria-label="Tastatur einblenden" aria-pressed="false">⌨️ ▴</button><button class="eg-ton" id="egTon" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="tippTonKnopf()" title="Tippgeräusche aus" aria-label="Tippgeräusche aus" aria-pressed="true">🔊</button></div>
+  <div class="eg-griffe"><button class="eg-klapp" id="egKlapp" type="button" onclick="eingabeKlappen(true)" title="Schreibbereich einklappen – mehr Nachrichten sehen" aria-label="Schreibbereich einklappen – mehr Nachrichten sehen">▾</button><button class="eg-tast" id="egTast" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="tastaturUmschalten()" title="Tastatur einblenden" aria-label="Tastatur einblenden" aria-pressed="false">⌨️ ▴</button><button class="eg-ton" id="egTon" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="tippTonKnopf()" title="Tippgeräusche aus" aria-label="Tippgeräusche aus" aria-pressed="true">🔊</button><!-- 2.517.0 KC-CLUB-VERSCHLUESSELT (2.518.0 in die kleine Zeile): Nachricht mit selbst gewähltem Schlüssel verschlüsseln --><button class="eg-ton eg-vn" id="vnKnopf" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="vnUmschalten()" title="Verschlüsselt senden (mit Schlüssel)" aria-label="Verschlüsselt senden" aria-pressed="false">🔒</button></div>
   <button class="eg-auf" id="egAuf" type="button" onclick="eingabeKlappen(false)" aria-label="Schreibbereich wieder öffnen">▴ ✏️ Schreiben</button>
   <!-- KC-CLUB-TIPPT (0.54.0): „Klaus schreibt …“ -->
   <div class="tippt versteckt" id="tipptAnzeige" aria-live="polite"></div>
@@ -5335,8 +5335,6 @@
     <button class="rund ablauf-knopf" title="Nachricht löscht sich selbst …" aria-label="Selbstlöschen für diese Nachricht" aria-pressed="false" id="ablaufKnopf" onclick="slWahl('nachricht')">⏳</button>
     <!-- KC-CLUB-SPAETER-SENDEN (2.362.0, Wunsch Hansi): Nachricht zu einer späteren Zeit senden – auch jeden Montag um 8 Uhr usw. -->
     <button class="rund spaeter-knopf" title="Später senden …" aria-label="Nachricht später senden" id="spaeterKnopf" onclick="spaeterWahl()">⏰</button>
-    <!-- 2.517.0 KC-CLUB-VERSCHLUESSELT: Nachricht mit selbst gewähltem Schlüssel verschlüsseln -->
-    <button class="rund vn-knopf" title="Verschlüsselt senden (mit Schlüssel)" aria-label="Verschlüsselt senden" aria-pressed="false" id="vnKnopf" onclick="vnUmschalten()">🔒</button>
     <textarea id="text" rows="2" spellcheck="true" lang="de" autocapitalize="sentences" autocorrect="on" placeholder="Nachricht schreiben …" aria-label="Nachricht schreiben" onblur="emoStelleMerken('text')" onkeyup="emoStelleMerken('text')" onclick="emoStelleMerken('text')" oninput="emoStelleMerken('text');naErwPruefen();this.style.height='auto';this.style.height=this.scrollHeight+'px';tippenMelden();entwurfMerken();entwurfMarkeZeigen()"></textarea>
     <!-- KC-CLUB-EINGABE-LEEREN (2.148.0, Wunsch Hansi): rotes ✕ rechts im Schreibfeld – Text auf einmal löschen (nur sichtbar, wenn Text drinsteht) -->
     <button class="text-leeren versteckt" type="button" title="Text löschen" aria-label="Geschriebenen Text löschen" id="textLeerenKnopf" onclick="textLeeren()">✕</button>
@@ -5522,6 +5520,7 @@
     <button class="knopf" onclick="chatInsArchiv()">🗄️ Chat in mein Archiv legen</button>
     <button class="knopf" onclick="cfOeffnen()">🎨 Chat-Farben &amp; Hintergrund</button> <!-- KC-CLUB-CHAT-FARBEN 2.145.0 -->
     <button class="knopf" id="chatSlKnopf" onclick="$('chatBlatt').classList.add('versteckt');slWahl('chat')">⏳ Selbstlöschen: Aus</button> <!-- KC-CLUB-SELBSTLOESCHEN 2.148.0 -->
+    <button class="knopf versteckt" id="chatVbKnopf" onclick="$('chatBlatt').classList.add('versteckt');vbMenue()">🔑 Schlüsselbund</button> <!-- 2.518.0 KC-CLUB-SCHLUESSELBUND -->
     <button class="knopf" id="chatArchivKnopf" onclick="chatArchivieren(chatId, !!UH.liste.find((u) => u.id === chatId)?.archiviert)">📦 Chat archivieren</button> <!-- KC-CLUB-CHAT-ARCHIV 2.23.28 -->
     <button class="knopf" onclick="unterhaltungWeg(false)">🙈 Nur bei mir entfernen</button>
     <button class="knopf" id="chatKomplettKnopf" onclick="chatKomplettLoeschen(chatId)">🗑️ Bei mir komplett löschen</button>
@@ -5558,7 +5557,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.517.0" data-v="2.517.0"></script>
+<script src="app.js?v=2.518.0" data-v="2.518.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>
