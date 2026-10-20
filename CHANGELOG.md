@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.529.0 – 2026-10-20 – 🤠 Neues Thema „Wilder Westen“ mit eigener Szene im Kopf (KC-CLUB-WILDWEST)
+Wunsch Hansi („neue Szene Wild West: links ein Indianerzelt, davor ein Lagerfeuer, am Horizont laufen Büffel, ab und an reiten 2 Cowboys vorbei, zwischendurch eine Kutsche – dann eine riesige Büffelherde, trampelt alles nieder, Staubwolke, Szene fängt wieder von vorne an“):
+- Unten im Kopf der Startseite die Prärie: links ein Tipi, davor knistert ein Lagerfeuer (Funken, leichter Rauch). Am Horizont ziehen kleine Büffel vor Tafelbergen und Kakteen.
+- Zweimal je Lauf reiten zwei Cowboys vorbei (einer schwingt das Lasso), zweimal rumpelt die Postkutsche „KÖCHECLUB“ durch.
+- Zum Schluss bebt der Boden: eine riesige Büffelherde donnert von rechts heran, trampelt Zelt und Feuer nieder, eine Staubwolke deckt alles zu – aus dem Staub heraus beginnt die Szene von vorn (nahtlos, ein Lauf ≈ 96 s).
+- Thema „🤠 Wilder Westen“ (Design Ocker, Western-Schrift, Wimpel in Westernfarben), Vorschau unter ⚙️ → ✨ Effekte, Hilfe-Eintrag, Suchwörter. Alles nur Bild, nichts wird gespeichert oder gesendet; keine Datenbank-Abfrage.
+- Tests: `tools/wildwest/ww-browser.mjs` (echtes app.js, zwei Läufe à 30 Bilder/s: Ablauf, Niedertrampeln, Staubwolke, nahtloser Neustart) · Vertragstest-Block 2.529.0.
+- Rückweg: App 2.528.0 erneut einspielen.
+
 ## DB – 2026-10-20 (ohne App-Build) – Graue Haken sofort, wenn der Push auf dem Handy angezeigt wird (KC-CLUB-RT-PUSH-ANGEZEIGT)
 Wunsch Hansi („Warum bekommt man bei WhatsApp graue Haken, sobald es auf dem Handy angekommen ist? Bei uns sieht man lange nur einen Haken“ → „Ja, bauen und sofort einspielen“).
 - Ursache: Meldete das Handy „Push angezeigt“, erfuhr das die App des Absenders nur beim nächsten Nachsehen. Seit 2.510.0 fragt sie bei stehender Leitung nicht mehr alle 4 s nach, sondern verlässt sich auf Signale – für „Push angezeigt“ gab es aber keins. Folge: graue Haken erst nach 30–60 s oder später.
