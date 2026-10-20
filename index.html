@@ -2859,6 +2859,9 @@
   .chat-kopf { position: sticky; top: 0; z-index: 30; background: var(--bg); padding: 2px 0 4px; margin: 0 -4px; padding-left: 4px; padding-right: 4px; box-shadow: 0 6px 8px -8px rgba(0,0,0,.35); }
   #chat > * { scroll-margin-top: var(--chatKopfHoehe, 120px); }
   .zurueck { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--karte); box-shadow: var(--schatten); font-size: 1.2rem; cursor: pointer; }
+  /* 2.529.0 KC-CLUB-SCHREIBT-HINWEIS: „Klaus schreibt dir gerade …“ außerhalb des Chats */
+  .schreibt-hinweis { position: fixed; left: 50%; transform: translateX(-50%); top: calc(14px + var(--notH, 0px)); z-index: 2290; max-width: 92%; display: flex; align-items: center; gap: 6px;
+    background: #fff; color: #2b1a1c; border: 2px solid #c9a46a; border-radius: 14px; padding: 9px 14px; font: inherit; font-size: .95rem; box-shadow: 0 6px 18px rgba(0,0,0,.25); cursor: pointer; }
   .meldung { position: fixed; left: 50%; transform: translateX(-50%); top: calc(14px + var(--notH, 0px)); background: #2b1a1c; color: #fff; padding: 12px 18px; border-radius: 14px; z-index: 2300; max-width: 92%; box-shadow: 0 8px 24px rgba(0,0,0,.25); } /* 2.23.29 (Fund Hansi): auch über Vollbild-Fenstern wie Twinkey (2000) sichtbar */
   .meldung.fehler { background: #a51d1d; }
   /* 2.523.0 KC-CLUB-MELDUNG-AUFFAELLIG (Wunsch Hansi „kontrastreich und 2× aufblinken, damit es auffällt“): heller Text auf fast Schwarz,

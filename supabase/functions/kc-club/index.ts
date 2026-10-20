@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.527.0";
+const SERVER_VERSION = "2.529.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -9652,9 +9652,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_club_tippen").select("person_id,text,art").eq("thread_id", id).neq("person_id", ich.person_id).gt("bis", jetzt()),
         ]);
         const tippt = (tippen ?? []).filter((x: any) => x.art !== "sprache").map((x: any) => vorname(leute.get(x.person_id)) || x.person_id);
-        const spricht = (tippen ?? []).filter((x: any) => x.art === "sprache").map((x: any) => vorname(leute.get(x.person_id)) || x.person_id); // KC-CLUB-SPRICHT
+        const spricht = (tippen ?? []).filter((x: any) => x.art === "sprache" && x.text !== "diktat").map((x: any) => vorname(leute.get(x.person_id)) || x.person_id); // KC-CLUB-SPRICHT
+        const diktiert = (tippen ?? []).filter((x: any) => x.art === "sprache" && x.text === "diktat").map((x: any) => vorname(leute.get(x.person_id)) || x.person_id); // 2.529.0
         // KC-CLUB-LIVETIPPEN: Entwurf nur von denen, die es freiwillig eingeschaltet haben (Server speichert sonst keinen Text)
-        const entwurf = (tippen ?? []).filter((x: any) => x.text).map((x: any) => ({ name: vorname(leute.get(x.person_id)) || x.person_id, text: x.text }));
+        const entwurf = (tippen ?? []).filter((x: any) => x.text && x.art !== "sprache").map((x: any) => ({ name: vorname(leute.get(x.person_id)) || x.person_id, text: x.text }));
         const angeheftet = pinIds.map((pid: string) => { const m: any = nachMid.get(pid); return { id: pid, von: m.sender_person_id === ich.person_id ? "Du" : vorname(leute.get(m.sender_person_id)) || "?", text: txt(m.body, 90) }; });
         // KC-CLUB-NEU-LINIE (1.12.0): bis wann hatte ich gelesen (vor diesem Öffnen) – für die Linie „Neue Nachrichten“
         const gelesenBis = (tn ?? []).find((x: any) => x.person_id === ich.person_id)?.last_read_at ?? null;
@@ -9681,7 +9682,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         const geplant = await geplantMeine(ich, id).catch(() => []); // KC-CLUB-SPAETER-SENDEN (2.362.0): nur meine, nur in diesem Chat
         const stand = (await pStand) ?? null; // KC-CLUB-CHAT-STAND
-        return json({ id, betreff: t?.subject ?? "", stand, tippt, entwurf, spricht, angeheftet, gelesenBis, partnerDa, runde, selbstloeschen: slStd(slChat?.stunden), sendeEffekte, geplant,
+        return json({ id, betreff: t?.subject ?? "", stand, tippt, entwurf, spricht, diktiert, angeheftet, gelesenBis, partnerDa, runde, selbstloeschen: slStd(slChat?.stunden), sendeEffekte, geplant,
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, admins: gr.admins ?? [], darfVerwalten: gruppenAdmin(gr, ich.person_id) || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
       }
 
@@ -9704,8 +9705,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (e?.wert?.an === true) text = [...p.text].slice(-LIVE_TIPPEN_ZEICHEN).join("");
         }
         // KC-CLUB-SPRICHT (1.11.0): „nimmt eine Sprachnachricht auf“ statt „schreibt …“ (ohne Text)
-        const art = p.sprache ? "sprache" : "text";
-        await db.from("kc_club_tippen").upsert({ thread_id: id, person_id: ich.person_id, bis: new Date(Date.now() + TIPPT_SEK * 1000).toISOString(), text: art === "sprache" ? null : text, art });
+        // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS: Diktat = Art „sprache“ mit Kennzeichen „diktat“ (keine neue Spalte/Art nötig) → „diktiert …“
+        const art = p.sprache || p.diktat ? "sprache" : "text";
+        await db.from("kc_club_tippen").upsert({ thread_id: id, person_id: ich.person_id, bis: new Date(Date.now() + TIPPT_SEK * 1000).toISOString(), text: p.diktat ? "diktat" : art === "sprache" ? null : text, art });
         return json({ ok: true });
       }
 

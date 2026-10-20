@@ -1053,7 +1053,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/kc_club_tippen"\)\.delete\(\)\.eq\("thread_id", threadId\)/.test(server), "Senden beendet „schreibt …“ nicht");
   assert.ok(/if \(!chatId \|\| !ONL\.zeigen\) return;/.test(html) && /abstand = live \? 1000 : 3000/.test(html) && /Date\.now\(\) - TIPP\.zuletzt < abstand/.test(html), "Tipp-Meldung ohne Privatsphäre/Drosselung");
   assert.ok(/tippenMelden\(\)(;entwurfMerken\(\))?(;entwurfMarkeZeigen\(\))?"><\/textarea>/.test(html) && /id="tipptAnzeige"/.test(html) && /"tippen"(, "[a-z_]+")*\]\);/.test(html), "Anzeige/Eingabe/WARTEN_STILL fehlt");
-  assert.ok(/tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\](, u\.spricht \|\| \[\])?\);( chatAbstand\(\);)?\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
+  assert.ok(/tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\](, u\.spricht \|\| \[\])?(, u\.diktiert \|\| \[\])?\);( chatAbstand\(\);)?\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n(    else if \(u\.diktiert\?\.length && andere\.length === 1\)[^\n]*\n)?    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
   assert.ok(/if \(chatTakt\.laeuft( \|\| document\.hidden)?\) return;/.test(html) && !/setInterval\(chatTakt, 4000\)/.test(html), "Chat-Takt überlappt / alter Takt");
   assert.ok(/if \(v !== "chat" && TIPP\.id\) tippenAus\(\);/.test(html), "Verlassen beendet „schreibt …“ nicht");
   assert.ok(/mirror_enabled, backup_enabled, note, updated_at\)\nvalues \('kc_club_tippen', 'Club-App', 'sensitive', false, false, false/.test(lies("supabase/migrations/20260929_kc_club_v54_tippen.sql")), "Spiegel-Regel für kc_club_tippen fehlt");
@@ -1090,8 +1090,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/live_tippen: \(w\) => \(\{ an: w\?\.an === true \}\)/.test(server), "Einstellung nicht standardmäßig aus");
   const ti = server.slice(server.indexOf('case "tippen"'), server.indexOf('case "nachricht_senden"'));
   assert.ok(/eq\("schluessel", "live_tippen"\)/.test(ti) && /e\?\.wert\?\.an === true\) text = /.test(ti) && /slice\(-LIVE_TIPPEN_ZEICHEN\)/.test(ti), "Server speichert Entwurf ohne Zustimmung/Begrenzung");
-  assert.ok(/entwurf = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.text\)/.test(server) && /tippt, entwurf,/.test(server), "Entwurf wird nicht geliefert");
-  assert.ok(/\.\.\.\(live \? \{ text:/.test(html) && /id="setLiveTippen"/.test(html) && /id="liveHinweis"/.test(html), "App: Entwurf nur bei eingeschaltetem Live-Tippen / Hinweis fehlt");
+  assert.ok(/entwurf = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.text( && x\.art !== "sprache")?\)/.test(server) && /tippt, entwurf,/.test(server), "Entwurf wird nicht geliefert");
+  assert.ok(/\.\.\.\((diktiert \? \{ diktat: true \} : )?live \? \{ text:/.test(html) && /id="setLiveTippen"/.test(html) && /id="liveHinweis"/.test(html), "App: Entwurf nur bei eingeschaltetem Live-Tippen / Hinweis fehlt");
   assert.ok(/'\*\/5 \* \* \* \*', \$\$delete from public\.kc_club_tippen where bis < now\(\)\$\$/.test(lies("supabase/migrations/20260929_kc_club_v56_live_tippen.sql")), "Entwürfe bleiben zu lange liegen");
 }
 
@@ -1637,8 +1637,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/padding: 8px 0 var\(--chatUnten, 160px\)/.test(html) && /function chatAbstand\(\)/.test(html) && /new ResizeObserver\((chatAbstand|\(\) => requestAnimationFrame\(chatAbstand\))\)/.test(html), "Abstand unten gemessen");
   assert.ok(/@keyframes tippWelle/.test(html) && /\.punkte3 i \{ width: 9px; height: 9px/.test(html), "Punkte größer + Welle");
   const ti = server.slice(server.indexOf('case "tippen"'), server.indexOf('case "nachricht_senden"'));
-  assert.ok(/const art = p\.sprache \? "sprache" : "text"/.test(ti) && /text: art === "sprache" \? null : text, art/.test(ti), "Server: Sprachaufnahme ohne Text");
-  assert.ok(/const spricht = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.art === "sprache"\)/.test(server), "Server liefert spricht");
+  assert.ok(/const art = p\.sprache( \|\| p\.diktat)? \? "sprache" : "text"/.test(ti) && /text: (p\.diktat \? "diktat" : )?art === "sprache" \? null : text, art/.test(ti), "Server: Sprachaufnahme ohne Text");
+  assert.ok(/const spricht = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.art === "sprache"( && x\.text !== "diktat")?\)/.test(server), "Server liefert spricht");
   assert.ok(/function sprichtMelden\(\) \{\n  if \(!SPR \|\| !chatId \|\| !ONL\.zeigen\) return;/.test(html) && /getByteTimeDomainData/.test(html) && /osziStopp\(\); if \(s\.meldeId\) api\("tippen", \{ id: s\.meldeId, aus: true \}\)/.test(html), "App: melden nur bei Online-Status, echtes Oszilloskop, Ende meldet ab");
   const mig = lies("supabase/migrations/20261001_kc_club_v1110_spricht.sql");
   assert.ok(/add column if not exists art text not null default 'text'/.test(mig), "Migration additiv");
@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7010,7 +7010,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const tg = html.slice(html.indexOf("function tippGeraeusche(entwurf) {"), html.indexOf("function tipptZeigen("));
   assert.ok(/if \(alt !== undefined\)/.test(tg) && /if \(TT\.chat !== chatId\)/.test(tg), "beim Öffnen kein Geprassel für vorhandenen Text");
   assert.ok(/document\.hidden \|\| aktuelleAnsicht !== "chat" \|\| \(chatId && stummAn\(chatId\)\)/.test(tg) && /n = Math\.min\(n, 24\)/.test(tg), "nur offene, nicht stumme Unterhaltung, begrenzt");
-  assert.ok(/function tipptZeigen\(namen, entwurf = \[\], sprechen = \[\]\) \{\s*const e = \$\("tipptAnzeige"\); if \(!e\) return;\s*tippGeraeusche\(entwurf\);/.test(html), "hängt an der Live-Tippen-Anzeige (nur Entwurf, nicht bloß „schreibt …“)");
+  assert.ok(/function tipptZeigen\(namen, entwurf = \[\], sprechen = \[\](, diktiert = \[\])?\) \{\s*const e = \$\("tipptAnzeige"\); if \(!e\) return;\s*tippGeraeusche\(entwurf\);/.test(html), "hängt an der Live-Tippen-Anzeige (nur Entwurf, nicht bloß „schreibt …“)");
 }
 
 // 2.506.0 KC-CLUB-PROTOKOLL-SCHNELL (Hansi: Veröffentlichen dauerte 21 s): Benachrichtigung im Hintergrund, Antwort sofort
@@ -11553,4 +11553,17 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/for \(const s of JZB_WW_REITER\)/.test(g) && /for \(const s of JZB_WW_KUTSCHE\)/.test(g) && /const JZB_WW_COWBOYS = \[\{ hemd: "#c1121f"/.test(programm) && /c\.fillText\("KÖCHECLUB"/.test(programm), "Cowboys und Postkutsche");
   assert.ok(/jahreszeitVorschau\('wildwest'\)">🤠 Wilder Westen</.test(seite) && /wildwest: \["🤠", "🐃", "🌵", "🔥"\]/.test(programm) && /\{ id: "wildwest", thema: "darstellung"/.test(programm) && /wildwest: \["wimpel", "western"\]/.test(programm), "Vorschau, Ersatz-Bild, Hilfe, Deko");
   assert.ok(fs.existsSync(new URL("../tools/wildwest/ww-browser.mjs", import.meta.url)), "Browser-Test vorhanden");
+}
+// 2.529.0 KC-CLUB-VN-RUECKFRAGE (Fund Hansi „soll eine Verschlüsselungsnummer eingeben – ich will gar nicht verschlüsseln“) + KC-CLUB-SCHREIBT-HINWEIS
+// (Wunsch Hansi „Hansi schreibt gerade an dich / diktiert gerade eine Nachricht“ auch außerhalb des Chats)
+{
+  assert.ok(/\{ ja: "🔒 Ja, mit Schlüssel", nein: "✉️ Normal senden" \}\)\)\) \{ vnUmschalten\(false\); return text; \}/.test(html) && /if \(VN\.an && VN\.chat !== fuer\) vnUmschalten\(false\);/.test(html) && /VN\.chat = VN\.an \? chatId : null;/.test(html), "Schloss: Rückfrage „Normal senden“, gilt nur im eigenen Chat");
+  assert.ok(/const diktiert = typeof DT !== "undefined" && DT\.aktiv && DT\.ziel === "text";/.test(html) && /if \(DT\.ziel === "text" && chatId\) tippenMelden\(\);/.test(html), "Diktat meldet „diktiert“");
+  assert.ok(/text: p\.diktat \? "diktat" : art === "sprache" \? null : text, art/.test(server) && /const diktiert = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.art === "sprache" && x\.text === "diktat"\)/.test(server) && /stand, tippt, entwurf, spricht, diktiert,/.test(server), "Server: Diktat ohne Text, eigene Liste");
+  const th = html.slice(html.indexOf("function tippHinweisSignal("), html.indexOf("function tippHinweisWeg("));
+  assert.ok(/s\.thread === chatId && aktuelleAnsicht === "chat"\)\) return;/.test(th) && /stummAn\(s\.thread\)\) return;/.test(th) && /if \(!u \|\| u\.gruppe \|\| \(u\.teilnehmer \|\| \[\]\)\.length !== 1/.test(th) && /el\.onclick = \(\) => \{ tippHinweisWeg\(\); chatOeffnen\(thread\); \};/.test(th), "Hinweis nur außerhalb des offenen Chats, nur Einzelchats, nicht stumm, Antippen öffnet");
+  assert.ok(/if \(s\.art === "tippt" \|\| s\.art === "spricht" \|\| s\.art === "diktiert"\) tippHinweisSignal\(s\);/.test(html) && /if \(s\.art === "chat" && TH\.thread === s\.thread\) tippHinweisWeg\(\);/.test(html), "Signal zeigt den Hinweis, die Nachricht nimmt ihn weg");
+  const mig = lies("supabase/migrations/20261020_kc_club_rt_spricht.sql");
+  assert.ok(/create trigger kc_club_rt_spricht after insert or update on public\.kc_club_tippen\s+for each row when \(new\.art = 'sprache'\)/.test(mig) && /case when new\.text = 'diktat' then 'diktiert' else 'spricht' end/.test(mig) && /exception when others then null;/.test(mig), "DB: Signal „spricht“/„diktiert“ an die anderen");
+  assert.ok(/\.schreibt-hinweis \{ position: fixed;/.test(seite), "Aussehen des Hinweises");
 }

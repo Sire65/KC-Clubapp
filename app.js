@@ -7640,6 +7640,9 @@ function rtTrennen() { RT.zu = true; clearTimeout(RT.neu); clearInterval(RT.herz
 function rtNachholen() { onlinePing(); if (chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } }
 function rtSignal(s) {
   RT.signale++;
+  if (s.art === "tippt" || s.art === "spricht" || s.art === "diktiert") tippHinweisSignal(s); // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS
+  if (s.art === "spricht" || s.art === "diktiert") return; // im offenen Chat lädt schon das Signal „tippt“
+  if (s.art === "chat" && TH.thread === s.thread) tippHinweisWeg(); // die Nachricht ist da
   // KC-CLUB-RT-SPARBREMSE + weitere Bereiche (2.230.0): Alarm sofort (ohne Pause), Gelesen-Haken, Online, Pinnwand, Termine, Abstimmungen
   if (s.art === "alarm") { neuLaden(); return; } // Notfall-Meldung → init → alarmPruefen() zeigt sie groß in Rot
   if (s.art === "gelesen") { if (s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } return; }
@@ -8016,6 +8019,32 @@ async function chatNachsehen() {
   }
   return chatLaden(false);
 }
+// ---------- 2.529.0 KC-CLUB-SCHREIBT-HINWEIS (Wunsch Hansi „wenn Klaus oder andere in der App sind, aber nicht das Nachrichten-Fenster auf haben,
+// und ich schreibe denen gerade: ‚Hansi schreibt gerade an dich‘ oder ‚Hansi diktiert gerade eine Nachricht‘ – damit der andere weiß, dass noch
+// eine Nachricht kommt“): Das Signal „tippt“/„diktiert“/„spricht“ der direkten Leitung kommt ohnehin an. Ist der Einzelchat gerade NICHT offen,
+// erscheint oben kurz ein Hinweis (Antippen öffnet den Chat); er verschwindet, sobald die Nachricht da ist, oder nach TH_DAUER_MS ohne neues Signal.
+// Nur Einzelchats (in Gruppen wäre es zu unruhig), nicht bei stumm geschalteten Chats. Wer die Online-Anzeige aus hat, meldet ohnehin kein Tippen.
+const TH_DAUER_MS = 8000, TH = { thread: null, uhr: 0, warte: 0, art: new Map(), listeGeholt: 0 };
+const TH_TEXT = { tippt: ["✍️", "schreibt dir gerade …"], diktiert: ["🗣️", "diktiert dir gerade eine Nachricht …"], spricht: ["🎤", "nimmt gerade eine Sprachnachricht für dich auf …"] };
+function tippHinweisSignal(s) {
+  if (!s.thread || document.hidden || (s.thread === chatId && aktuelleAnsicht === "chat")) return; // im offenen Chat zeigt es die Zeile über dem Schreibfeld
+  if (typeof stummAn === "function" && stummAn(s.thread)) return;
+  const jetzt = Date.now(), alt = TH.art.get(s.thread);
+  if (!(s.art === "tippt" && alt && alt.art !== "tippt" && jetzt - alt.t < 4000)) TH.art.set(s.thread, { art: s.art, t: jetzt }); else alt.t = jetzt; // „diktiert“/„spricht“ kommt mit „tippt“
+  clearTimeout(TH.warte); TH.warte = setTimeout(() => tippHinweisZeigen(s.thread).catch(() => {}), s.art === "tippt" ? 400 : 0);
+}
+async function tippHinweisZeigen(thread) {
+  let u = UH.liste.find((x) => x.id === thread);
+  if (!u && Date.now() - TH.listeGeholt > 300000) { TH.listeGeholt = Date.now(); try { UH.liste = (await api("unterhaltungen", {})).unterhaltungen || UH.liste; } catch {} u = UH.liste.find((x) => x.id === thread); }
+  if (!u || u.gruppe || (u.teilnehmer || []).length !== 1 || (thread === chatId && aktuelleAnsicht === "chat") || document.hidden) return;
+  const [sym, was] = TH_TEXT[TH.art.get(thread)?.art] || TH_TEXT.tippt, name = String(u.teilnehmer[0]).split(" ")[0];
+  let el = $("schreibtHinweis");
+  if (!el) { el = document.createElement("button"); el.type = "button"; el.id = "schreibtHinweis"; el.className = "schreibt-hinweis"; document.body.appendChild(el); }
+  el.innerHTML = `<span class="punkte3"><i></i><i></i><i></i></span> ${sym} <b>${esc(name)}</b> ${esc(was)}`;
+  el.onclick = () => { tippHinweisWeg(); chatOeffnen(thread); };
+  TH.thread = thread; clearTimeout(TH.uhr); TH.uhr = setTimeout(tippHinweisWeg, TH_DAUER_MS);
+}
+function tippHinweisWeg() { clearTimeout(TH.uhr); clearTimeout(TH.warte); TH.thread = null; $("schreibtHinweis")?.remove(); }
 // KC-CLUB-TIPPT (0.54.0): beim Tippen höchstens alle 3 s „ich schreibe“ melden, Feld leer → sofort aus.
 // Wer die Online-Anzeige ausgeschaltet hat (Privatsphäre), meldet auch kein „schreibt …“.
 // KC-CLUB-LIVETIPPEN (0.56.0): wer es selbst einschaltet, schickt den Entwurf mit (höchstens 1× je Sekunde, letzter Stand kommt nach)
@@ -8025,8 +8054,9 @@ let TIPP = { zuletzt: 0, id: null, nach: null };
 function tippenMelden() {
   if (!chatId || !ONL.zeigen) return;
   const text = $("text").value;
-  if (!text.trim()) return tippenAus();
-  const live = liveTippen(), abstand = live ? 1000 : 3000;
+  const diktiert = typeof DT !== "undefined" && DT.aktiv && DT.ziel === "text"; // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS: beim Diktieren „diktiert …“ statt „schreibt …“
+  if (!text.trim() && !diktiert) return tippenAus();
+  const live = liveTippen() && !diktiert, abstand = live ? 1000 : 3000;
   clearTimeout(TIPP.nach);
   if (TIPP.id === chatId && Date.now() - TIPP.zuletzt < abstand) { if (live) TIPP.nach = setTimeout(tippenMelden, abstand); return; }
   // KC-CLUB-TEMPO (2.115.0, Tempo-Log 08.10.: bei langsamem Netz 6 „tippen“ gleichzeitig, je 2–8 s – danach waren Chat und Senden
@@ -8034,7 +8064,7 @@ function tippenMelden() {
   if (TIPP_UNTERWEGS) { TIPP_NOCHMAL = true; return; }
   TIPP = { zuletzt: Date.now(), id: chatId, nach: null }; CHAT_AKTIV = Date.now(); // KC-CLUB-SPARTAKT
   TIPP_UNTERWEGS = true;
-  api("tippen", { id: chatId, ...(live ? { text: [...text].slice(-LIVE_TIPPEN_ZEICHEN).join("") } : {}) }).catch(() => {})
+  api("tippen", { id: chatId, ...(diktiert ? { diktat: true } : live ? { text: [...text].slice(-LIVE_TIPPEN_ZEICHEN).join("") } : {}) }).catch(() => {})
     .finally(() => { TIPP_UNTERWEGS = false; if (TIPP_NOCHMAL) { TIPP_NOCHMAL = false; if (live) tippenMelden(); } });
 }
 let TIPP_UNTERWEGS = false, TIPP_NOCHMAL = false;
@@ -8184,12 +8214,13 @@ function tippGeraeusche(entwurf) {
   for (let i = 0; i < n; i++) tippAnschlag(w, i * abstand + Math.random() * abstand * .4);
   if (w === "schreibmaschine" && (TT.zeile += n) >= 40) { TT.zeile = 0; tippGlocke(n * abstand + .1); }
 }
-function tipptZeigen(namen, entwurf = [], sprechen = []) {
+function tipptZeigen(namen, entwurf = [], sprechen = [], diktiert = []) {
   const e = $("tipptAnzeige"); if (!e) return;
   tippGeraeusche(entwurf);
-  if (!namen.length && !sprechen.length) { e.classList.add("versteckt"); e.innerHTML = ""; e.dataset.stand = ""; return; }
-  // KC-CLUB-SPRICHT (1.11.0): „nimmt eine Sprachnachricht auf“ mit Oszilloskop-Welle
-  const sp = sprechen.length ? `<div class="zeile">${OSZI_SVG}<span>🎤 ${esc(werText(sprechen))} ${sprechen.length > 1 ? "nehmen" : "nimmt"} eine Sprachnachricht auf</span></div>` : "";
+  if (!namen.length && !sprechen.length && !diktiert.length) { e.classList.add("versteckt"); e.innerHTML = ""; e.dataset.stand = ""; return; }
+  // KC-CLUB-SPRICHT (1.11.0): „nimmt eine Sprachnachricht auf“ mit Oszilloskop-Welle · 2.529.0: „diktiert …“
+  const sp = (sprechen.length ? `<div class="zeile">${OSZI_SVG}<span>🎤 ${esc(werText(sprechen))} ${sprechen.length > 1 ? "nehmen" : "nimmt"} eine Sprachnachricht auf</span></div>` : "")
+    + (diktiert.length ? `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span>🗣️ ${esc(werText(diktiert))} ${diktiert.length > 1 ? "diktieren" : "diktiert"} …</span></div>` : "");
   if (!namen.length) { if (e.dataset.stand !== sp) { e.innerHTML = sp; e.dataset.stand = sp; } e.classList.remove("versteckt"); return; }
   const kurz = (t) => { const z = [...t]; return z.length > LIVE_ANZEIGE_ZEICHEN ? "…" + z.slice(-LIVE_ANZEIGE_ZEICHEN).join("") : t; };
   const entwuerfe = entwurf.map((x) => `<div class="entwurf">✍️ <b>${esc(x.name)}:</b> ${esc(kurz(x.text))}</div>`).join("");
@@ -9006,6 +9037,7 @@ async function diktatStart(ziel, nachSenden, opt = {}) { // 2.22.0: auch für an
     <p class="hinweis" style="font-size:.8rem;margin:6px 0 0">🔒 Das Handy hört nur zu, solange dieses Fenster offen ist.</p></div>`);
   f.onclick = null; // nicht aus Versehen durch Tippen daneben schließen
   f.querySelectorAll("[data-d]").forEach((b) => (b.onclick = () => diktatEnde(b.dataset.d)));
+  if (DT.ziel === "text" && chatId) tippenMelden(); // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS: gleich „diktiert …“ melden, nicht erst beim ersten Wort
   diktatHoeren();
 }
 function diktatHoeren() {
@@ -28907,6 +28939,7 @@ async function unterhEntfernen(id, fuerAlle) {
   } catch (e) { meldeFehler(e); }
 }
 async function chatOeffnen(id, ausHistorie) {
+  if (TH.thread === id) tippHinweisWeg(); // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS
   vorlesenZeigen(); // KC-CLUB-VORLESEN: Lautsprecher oben zeigt den gespeicherten Zustand
   if (id !== chatId) { naAntwortWeg(); NA.erw.clear(); } // KC-CLUB-ANTWORT: Antwort/Erwähnung gehört zum vorigen Chat
   if (id !== chatId) ZW = { push: false, email: false, whatsapp: false };
@@ -28926,7 +28959,7 @@ async function chatLaden(scrollen) {
   try {
     const fuer = chatId, u = await api("unterhaltung", { id: fuer });
     if (fuer !== chatId) return; // 1.97.0: inzwischen eine andere Unterhaltung geöffnet → alte Antwort verwerfen
-    CHAT = u; CHAT_VOLL_AM = Date.now(); setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
+    CHAT = u; CHAT_VOLL_AM = Date.now(); if (VN.an && VN.chat !== fuer) vnUmschalten(false); // 2.529.0 KC-CLUB-VN-RUECKFRAGE: Schloss gilt nur im Chat, in dem es eingeschaltet wurde setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
     // KC-CLUB-CHAT-KOPF-BILD (2.24.19): Bild vorn (Person: Avatar/Kreis; Gruppe: Symbol mit 🔗; Runde: gestrichelt), Titel ohne doppeltes Symbol
     $("chatTitel").textContent = (u.gruppe ? u.gruppe.name : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");
@@ -28939,8 +28972,9 @@ async function chatLaden(scrollen) {
     $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `🔗 Feste Gruppe · ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : andere.length > 1 ? "Runde (keine feste Gruppe) · Mit: " + andere.map((x) => x.name).join(", ") : u.betreff ? "Mit: " + andere.map((x) => x.name).join(", ") : [zuletztText(u.partnerDa), st].filter(Boolean).join(" · "); // 1.20.0: zuletzt da
     rundeAngebotZeigen(u); // KC-CLUB-GRUPPE-AUS-RUNDE
     $("chatAngeheftet").innerHTML = (u.angeheftet || []).map((a) => `<button class="pin-zeile" onclick="zuNachricht('${a.id}')">📌 <b>${esc(a.von)}:</b> ${esc(a.text)}</button>`).join(""); // KC-CLUB-ANHEFTEN
-    tipptZeigen(u.tippt || [], u.entwurf || [], u.spricht || []); chatAbstand();
+    tipptZeigen(u.tippt || [], u.entwurf || [], u.spricht || [], u.diktiert || []); chatAbstand();
     if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
+    else if (u.diktiert?.length && andere.length === 1) $("chatTeilnehmer").textContent = "🗣️ diktiert …"; // 2.529.0
     const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, m.haken, m.express?.quittungen?.length, JSON.stringify(m.express?.empfaenger || null), (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join(""),
       m.text, m.bearbeitet, m.gemerkt, m.angeheftet, m.umfrage?.optionen.map((o) => o.stimmen + (o.meine ? "*" : "")).join(","), m.loeschtAm ? slRest(m.loeschtAm) : ""])); // 1.12.0: auch Stimmen/Bearbeitungen anderer
     const idStand = u.nachrichten.map((m) => m.id).join(",");
@@ -29013,7 +29047,7 @@ async function vnEnt(t, pw, bund) {
   } catch { return null; }
 }
 function vnUmschalten(an) {
-  VN.an = an ?? !VN.an; const k = $("vnKnopf"); k?.classList.toggle("an", VN.an); k?.setAttribute("aria-pressed", String(VN.an));
+  VN.an = an ?? !VN.an; VN.chat = VN.an ? chatId : null; const k = $("vnKnopf"); k?.classList.toggle("an", VN.an); k?.setAttribute("aria-pressed", String(VN.an));
   const t = $("text"); if (t) t.placeholder = VN.an ? "🔒 Verschlüsselte Nachricht schreiben …" : "Nachricht schreiben …";
   if (!VN.an) return;
   const p = vbPartner();
@@ -29026,6 +29060,10 @@ async function vnVerschluesseln(text) { // fragt den Schlüssel, gibt den versch
   if (anlagen.length) melde("🔒 Hinweis: Nur der Text wird verschlüsselt – Fotos und Dateien nicht.");
   const vp = vbPartner(), bund = vp && vbHolen(vp.person_id);
   if (bund) { const v = await vnVer(text, "", bund.schluessel[crypto.getRandomValues(new Uint32Array(1))[0] % bund.schluessel.length]); VN.klar.set(v, text); return v; } // 2.518.0: einer der 5 Schlüssel, zufällig
+  // 2.529.0 KC-CLUB-VN-RUECKFRAGE (Fund Hansi „ich wollte Klaus antworten, soll aber eine Verschlüsselungsnummer eingeben – ich will gar nicht
+  // verschlüsseln“): das Schloss neben ▾ ⌨️ 🔊 ist schnell aus Versehen angetippt – erst fragen; „Normal senden“ schaltet es aus und sendet wie immer
+  if (!(await frage("🔒 Verschlüsselt senden ist eingeschaltet\nDas Schloss am Schreibfeld ist an. Soll diese Nachricht wirklich verschlüsselt werden? Dann braucht der Empfänger einen Schlüssel, den du ihm persönlich sagst.",
+    { ja: "🔒 Ja, mit Schlüssel", nein: "✉️ Normal senden" }))) { vnUmschalten(false); return text; }
   let pw = vnGemerkt(chatId);
   for (;;) {
     pw = await eingabe(`🔒 Schlüssel für diese Nachricht\nMindestens ${VN_MIN} Zeichen, z. B. „Kochmütze7“. Der Empfänger braucht denselben Schlüssel – sag ihn ihm persönlich, am Telefon oder per SMS, nicht über die Club-App.${vnGemerkt(chatId) ? "\nVorgeschlagen ist der für diese Unterhaltung gemerkte Schlüssel." : ""}`, pw || "");
