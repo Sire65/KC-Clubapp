@@ -11403,3 +11403,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const hoch = programm.slice(programm.indexOf("async function fotosHochladen()"), programm.indexOf("async function fotoAnsehen("));
   assert.ok(/if \(korb && ok && !fehler\.length\) await api\("ablagekorb_abspalten"/.test(hoch) && /der Eintrag bleibt im Ablagekorb offen/.test(hoch), "erst nach vollständigem Hochladen erledigt, sonst bleibt er offen");
 }
+
+// 2.514.0 KC-CLUB-TEILEN-ALLE-DATEIEN (Fund Hansi): Teilen aus dem Dateimanager – alle Dateitypen, jeder Feldname
+{
+  const m = JSON.parse(lies("manifest.webmanifest")).share_target;
+  assert.ok(m.params.files[0].accept.includes("*/*") && m.params.files[0].name === "fotos", "Teilen-Liste nimmt alle Dateitypen an");
+  assert.ok(/const dateien = \[\.\.\.f\.values\(\)\]\.filter\(\(x\) => x && typeof x === "object" && typeof x\.size === "number" && x\.size\)/.test(lies("sw.js")), "SW nimmt jede mitgeschickte Datei");
+}

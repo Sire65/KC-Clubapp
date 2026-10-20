@@ -47,7 +47,11 @@
         {
           "name": "fotos",
           "accept": [
+            "*/*",
             "image/*",
+            "video/*",
+            "text/*",
+            "application/*",
             "application/pdf",
             "text/plain",
             ".txt",
