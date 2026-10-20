@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.511.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.518.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5196,8 +5196,9 @@ const HILFE = [
   { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Kein Umweg über das Fotoalbum nötig.", seit: "2.23.1" },
+  { id: "verschluesselt", thema: "nachrichten", sym: "🔒", t: "Nachricht verschlüsselt senden", x: "Für Geheimes: im Chat oben am Schreibfeld in der kleinen Zeile (neben ▾, ⌨️ und 🔊) auf das Schloss <b>🔒</b> tippen, Nachricht schreiben, senden – dann legst du einen <b>Schlüssel</b> fest (mindestens 6 Zeichen, z. B. „Kochmütze7“). Die Nachricht wird auf deinem Handy verschlüsselt; niemand sonst kann sie lesen – auch nicht der Server oder der Admin. Den Schlüssel sagst du dem Empfänger <b>auf einem anderen Weg</b>: persönlich, am Telefon oder per SMS. Er tippt auf „🔒 Verschlüsselte Nachricht“ und gibt ihn ein. Das Handy merkt sich den Schlüssel je Unterhaltung. Bequemer im Zweier-Chat: oben ⋮ → <b>🔑 Schlüsselbund</b> – die App legt 5 zufällige Schlüssel an, die du per WhatsApp oder Signal als Datei schickst; der Partner liest sie ein (Teilen → Club-App). Danach geht alles ohne Eintippen, passt kein Schlüssel, kommt eine Fehlermeldung. Achtung: Schlüssel vergessen = Nachricht nicht mehr lesbar; Fotos und Dateien werden nicht verschlüsselt.", seit: "2.517.0" },
   { id: "ablagekorb", thema: "club", sym: "📥", t: "Teilen → Köcheclub: alles landet im Ablagekorb", x: "Fotos, Dokumente oder Texte aus anderen Programmen (Galerie, WhatsApp, Mail, Dateien) schickst du mit <b>Teilen → Köcheclub</b>. Alles kommt zuerst in den <b>📥 Ablagekorb</b>; der Admin bekommt Bescheid und entscheidet, wohin damit – Fotoalbum, Ordner, Chat, Aufgabe, Thema für die Sitzung oder weiter an Clubsprecher bzw. Kassenwart.", seit: "2.511.0" },
-  { id: "ablagekorb_admin", thema: "club", sym: "📥", t: "Ablagekorb bearbeiten (Admin)", x: "Was Mitglieder geteilt haben, liegt im <b>📥 Ablagekorb</b> (Admin-Kachel, Hinweis im Info-Feld, Push). Je Eintrag: <b>📷 Fotoalbum</b>, <b>🗄️ In Ordner</b>, <b>💬 In Chat</b>, <b>👤 Weitergeben</b> (Clubsprecher und Kassenwart stehen oben), <b>✅ Als Aufgabe</b> (To-do + Unterlagen per Nachricht), <b>🗳️ Vorschlag Sitzung</b>, <b>✔ Erledigt</b> oder <b>🗑️ Löschen</b>. Erledigtes wird nach 14 Tagen weggeräumt.", nur: () => !!ICH?.admin, seit: "2.511.0" },
+  { id: "ablagekorb_admin", thema: "club", sym: "📥", t: "Ablagekorb bearbeiten (Admin)", x: "Was Mitglieder geteilt haben, liegt im <b>📥 Ablagekorb</b> (Admin-Kachel, Hinweis im Info-Feld, Push). Je Eintrag: <b>📷 Fotoalbum</b>, <b>🗄️ In Ordner</b>, <b>💬 In Chat</b>, <b>👤 Weitergeben</b> (Clubsprecher und Kassenwart stehen oben), <b>✅ Als Aufgabe</b> (To-do + Unterlagen per Nachricht), <b>🗳️ Vorschlag Sitzung</b>, <b>✔ Erledigt</b> oder <b>🗑️ Löschen</b>. Erledigtes wird nach 14 Tagen weggeräumt. Seit 2.512.0: bei mehreren Dateien je Datei ein <b>Häkchen</b> – nur die ausgewählten <b>ins Fotoalbum</b> oder <b>löschen</b>; <b>⚠️ gibt es schon</b> zeigt Dubletten (gleiche Datei in Fotoalbum, Archiv, Chat oder Ablagekorb, im Album auch gleiche Aufnahme), „⚠️ Dubletten“ wählt sie mit einem Tipp aus.", nur: () => !!ICH?.admin, seit: "2.511.0" },
   { id: "hilfe_anbieten", thema: "club", sym: "🤲", t: "Du kannst etwas besonders gut?", x: "Unter 🤝 Helfen &amp; Leihen → <b>„＋ Neu“</b> → <b>„🤲 Ich biete Hilfe an“</b> machst du ein Angebot, zum Beispiel beim Einrichten der App. Es erscheint als Kachel für alle.", zeig: () => hlStart(), seit: "2.23.1" },
   { id: "hilfe_veroeffentlichen", thema: "club", sym: "📣", t: "Hilfe-Aufruf oder Angebot veröffentlichen", x: "Beim Einstellen fragt die App: <b>„📣 Wie möchtest du es veröffentlichen?“</b> – <b>📌 Pinnwand</b> (grüner Aushang, antippbar), <b>🔔 Push</b> und/oder <b>✉️ E-Mail</b> an alle Mitglieder. Mehrere gehen, die Wahl merkt sich dein Handy. Nichts angehakt: nur in Helfen &amp; Leihen sichtbar. Bei einem fremden Angebot schreibt <b>„💬 Nachricht“</b> gleich den Betreff „Dein Angebot … vom …“ für dich.", zeig: () => hlStart("helfen"), seit: "2.23.44" },
   { id: "hilfe_absprache", thema: "club", sym: "🙋", t: "Hilfe gesucht, aber noch ohne festen Tag", x: "Beim Hilfe-Aufruf musst du dich nicht auf ein Datum festlegen – „nach Absprache“ geht auch. Und wenn jede helfende Hand willkommen ist, wähle bei der Anzahl <b>„♾️ Egal wie viele“</b>.", zeig: () => hlStart(), seit: "2.23.1" },
@@ -21526,7 +21527,7 @@ function infoZentrale() {
   const d = INFO_DATEN.zentrale, unt = d?.r?.unterhaltungen || [], neu = unt.reduce((s, u) => s + (u.ungelesen || 0), 0);
   const push = "Notification" in window && Notification.permission === "granted";
   const ticker = [ZE.letzte ? `${fZeit.format(new Date(ZE.letzte.zeit))} Du → ${ZE.letzte.an}: gesendet ✓` : "",
-    ...unt.filter((u) => u.letzte).slice(0, 4).map((u) => `${zeitKurz(u.letzte.zeit)} ${u.letzte.von === "Du" ? "Du → " + (u.gruppe?.name || u.teilnehmer.join(", ")) : u.letzte.von + (u.gruppe ? " in " + u.gruppe.name : "")}: ${u.letzte.text.slice(0, 40)}`)].filter(Boolean);
+    ...unt.filter((u) => u.letzte).slice(0, 4).map((u) => `${zeitKurz(u.letzte.zeit)} ${u.letzte.von === "Du" ? "Du → " + (u.gruppe?.name || u.teilnehmer.join(", ")) : u.letzte.von + (u.gruppe ? " in " + u.gruppe.name : "")}: ${vnKurz(u.letzte.text).slice(0, 40)}`)].filter(Boolean);
   const tick = ticker.length ? ticker.map((t) => `▸ ${esc(t)}`).join("&emsp;&emsp;") : (d?.fehler ? "⚠️ " + esc(d.fehler) : d?.r ? "▸ Noch keine Nachrichten" : "▸ Wird geladen …");
   const n = ZE.personen.length, eine = !ZE.gruppe && n === 1, pid = eine ? ZE.personen[0] : null, online = !!pid && ONL.ids?.has(pid), leer = !ZE.gruppe && !n;
   const nurEine = "Dafür genau 1 Person auswählen", nichtOnline = pid ? `${zeVorname(pid)} ist gerade nicht online – das geht nur, wenn beide die App offen haben` : nurEine;
@@ -26233,7 +26234,7 @@ function buNeuZeigen(neu) {
   const u = neu[0], gruppe = u.gruppe || u.anzahl > 2;
   const von = gruppe ? `${u.letzte.von} in „${u.gruppe?.name || u.betreff || "Gruppe"}“` : u.letzte.von;
   el.innerHTML = `<button type="button" class="bnn-auf${u.wichtigNeu ? " wichtig" : ""}" onclick="buNeuOeffnen()"><span class="bnn-sym">${u.wichtigNeu ? "❗" : "💬"}</span>`
-    + `<span><b>Neue Nachricht von ${esc(von)}</b><small>${esc(u.letzte.text || "📎")}</small>${neu.length > 1 ? `<small>＋ ${neu.length - 1} weitere neue Unterhaltung${neu.length > 2 ? "en" : ""}</small>` : ""}</span>`
+    + `<span><b>Neue Nachricht von ${esc(von)}</b><small>${esc(vnKurz(u.letzte.text) || "📎")}</small>${neu.length > 1 ? `<small>＋ ${neu.length - 1} weitere neue Unterhaltung${neu.length > 2 ? "en" : ""}</small>` : ""}</span>`
     + `<span class="bnn-los">Öffnen ›</span></button><button type="button" class="bnn-weg" aria-label="Hinweis schließen" onclick="buNeuWeg()">✕</button>`;
   el.classList.remove("versteckt");
 }
@@ -28446,7 +28447,7 @@ async function unterhLaden() {
     if (rkAn("chats") && !UH.archivAnsicht && zeigen.length) { $("unterhListe").innerHTML = archKopf + uhKarteiHtml(zeigen); uhKarteiAn(); uhAmeisen(); return; }
     $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Antippen = öffnen · <b>⋯</b> = ⭐ Favorit, ${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
-      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
+      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + vnKurz(u.letzte.text)) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div><button type="button" class="uh-mehr" aria-label="Mehr zu diesem Chat: Favorit, archivieren, löschen" aria-expanded="${u.id === UH.wahl}" onclick="event.stopPropagation();uhMenue('${u.id}')">⋯</button></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
       || (favKopf ? '<p class="hinweis">Noch keine Favoriten. Rechts am Chat auf <b>⋯</b> tippen und „⭐ Als Favorit“ wählen.</p>' : arch.length ? '<p class="hinweis">Alle Chats sind archiviert – oben auf „📦 Archiviert“ tippen.</p>' : '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>');
     UH.mark.forEach((id) => { if (!zeigen.some((u) => u.id === id)) UH.mark.delete(id); }); uhMarkZeichnen(); uhLangDruck(); // KC-CLUB-MEHRFACH-NACHRICHT
@@ -28765,7 +28766,7 @@ async function chatLaden(scrollen) {
     }
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
     const blaseHtml = (m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
-      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}
+      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}
       ${m.anlagen.map((a) => a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
@@ -28791,7 +28792,179 @@ async function chatLaden(scrollen) {
 // In Gruppen schlägt „@“ beim Tippen die Mitglieder der Unterhaltung vor; Erwähnte bekommen eine eigene Meldung.
 const NA = { nachrichten: new Map(), antwort: null, erw: new Map() };
 const NA_SCHNELL = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+// ---------- 2.517.0 KC-CLUB-VERSCHLUESSELT (Wunsch Hansi „vor dem Senden einen Schlüssel festlegen, z. B. 1234 oder abcd – damit wird meine Nachricht
+// verschlüsselt“; Antwort: Schlüssel auf anderem Weg weitergeben; Wahl Hansi: selbst gewählter Schlüssel, mind. 6 Zeichen, je Person merkbar).
+// Nur auf dem Handy: PBKDF2-SHA-256 (310 000 Runden) → AES-GCM 256. Gesendet wird „🔒KCV1:“ + Base64(Salz 16 | IV 12 | Geheimtext) – Server, Push,
+// Mail und Datenbank sehen nur Zeichensalat bzw. „🔒 Verschlüsselte Nachricht“. Den Schlüssel merkt sich das Gerät je Unterhaltung (nur lokal).
+// Anlagen werden nicht verschlüsselt (Hinweis). Schlüssel vergessen = Nachricht nicht mehr lesbar (niemand kann helfen).
+const VN_PRE = "🔒KCV1:", VN_MIN = 6, VN_MAX_TEXT = 2900, VN = { an: false, klar: new Map() };
+const vnIst = (t) => typeof t === "string" && t.startsWith(VN_PRE);
+const vnKurz = (t) => (vnIst(t) ? (VN.klar.has(t) ? "🔓 " + VN.klar.get(t) : "🔒 Verschlüsselte Nachricht") : t);
+const vnKeyName = (id) => "kc_club_vschluessel:" + (id || "neu");
+function vnGemerkt(id) { try { return localStorage.getItem(vnKeyName(id)) || ""; } catch { return ""; } }
+function vnMerken(id, k) { try { if (id && k) localStorage.setItem(vnKeyName(id), k); } catch {} }
+async function vnAbleiten(pw, salz) {
+  const roh = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "PBKDF2", salt: salz, iterations: 310000, hash: "SHA-256" }, roh, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+const vnB64 = (u) => { let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000)); return btoa(s); };
+const vnUnB64 = (t) => Uint8Array.from(atob(t), (c) => c.charCodeAt(0));
+async function vnVer(text, pw, bund) { // bund: Schlüssel aus dem Schlüsselbund (2.518.0) statt eingetipptem Schlüssel
+  const salz = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await (bund ? vbAbleiten(bund, salz) : vnAbleiten(pw, salz)), new TextEncoder().encode(text)));
+  const alles = new Uint8Array(28 + ct.length); alles.set(salz, 0); alles.set(iv, 16); alles.set(ct, 28);
+  return VN_PRE + vnB64(alles);
+}
+async function vnEnt(t, pw, bund) {
+  try { const b = vnUnB64(t.slice(VN_PRE.length)); if (b.length < 29) return null;
+    const klar = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b.slice(16, 28) }, await (bund ? vbAbleiten(bund, b.slice(0, 16)) : vnAbleiten(pw, b.slice(0, 16))), b.slice(28));
+    return new TextDecoder().decode(klar);
+  } catch { return null; }
+}
+function vnUmschalten(an) {
+  VN.an = an ?? !VN.an; const k = $("vnKnopf"); k?.classList.toggle("an", VN.an); k?.setAttribute("aria-pressed", String(VN.an));
+  const t = $("text"); if (t) t.placeholder = VN.an ? "🔒 Verschlüsselte Nachricht schreiben …" : "Nachricht schreiben …";
+  if (!VN.an) return;
+  const p = vbPartner();
+  if (p && vbHolen(p.person_id)) melde(`🔒 Verschlüsselt senden ist an – mit eurem Schlüsselbund, kein Eintippen nötig.`);
+  else if (p) vbMenue(true); // 2.518.0: Zweier-Chat ohne Schlüsselbund → anbieten (oder diesmal eintippen)
+  else melde("🔒 Verschlüsselt senden ist an – beim Senden legst du den Schlüssel fest.");
+}
+async function vnVerschluesseln(text) { // fragt den Schlüssel, gibt den verschlüsselten Text zurück (oder null = abbrechen)
+  if (new TextEncoder().encode(text).length > VN_MAX_TEXT) { melde("🔒 Für eine verschlüsselte Nachricht ist der Text zu lang (etwa 2.800 Zeichen, Emojis zählen mehr) – bitte kürzen.", true); return null; } // Geheimtext muss unter die 4.000-Zeichen-Grenze passen
+  if (anlagen.length) melde("🔒 Hinweis: Nur der Text wird verschlüsselt – Fotos und Dateien nicht.");
+  const vp = vbPartner(), bund = vp && vbHolen(vp.person_id);
+  if (bund) { const v = await vnVer(text, "", bund.schluessel[crypto.getRandomValues(new Uint32Array(1))[0] % bund.schluessel.length]); VN.klar.set(v, text); return v; } // 2.518.0: einer der 5 Schlüssel, zufällig
+  let pw = vnGemerkt(chatId);
+  for (;;) {
+    pw = await eingabe(`🔒 Schlüssel für diese Nachricht\nMindestens ${VN_MIN} Zeichen, z. B. „Kochmütze7“. Der Empfänger braucht denselben Schlüssel – sag ihn ihm persönlich, am Telefon oder per SMS, nicht über die Club-App.${vnGemerkt(chatId) ? "\nVorgeschlagen ist der für diese Unterhaltung gemerkte Schlüssel." : ""}`, pw || "");
+    if (pw === null || pw === undefined || pw === false) return null;
+    pw = String(pw);
+    if ([...pw].length >= VN_MIN) break;
+    melde(`🔒 Bitte mindestens ${VN_MIN} Zeichen – „1234“ errät ein Computer in Sekunden.`, true);
+  }
+  const v = await vnVer(text, pw);
+  VN.klar.set(v, text); if (chatId) vnMerken(chatId, pw);
+  return v;
+}
+function vnHtml(t) {
+  if (VN.klar.has(t)) return `<span class="vn-auf" title="Verschlüsselte Nachricht – auf diesem Handy geöffnet">🔓</span> ${naText(VN.klar.get(t))}`;
+  return `<button type="button" class="vn-zu" data-vn="${esc(t)}" onclick="event.stopPropagation();vnOeffnen(this)">🔒 Verschlüsselte Nachricht<small>Antippen und Schlüssel eingeben</small></button>${vbVormerken(t)}`;
+}
+async function vnOeffnen(knopf) {
+  const t = knopf?.dataset.vn; if (!t) return;
+  let klar = await vbEntRing(t), pw = vnGemerkt(chatId);
+  const vp = vbPartner();
+  if (klar === null && vp && vbHolen(vp.person_id)) melde(`❌ Kein passender Schlüssel im Schlüsselbund mit ${vbVorname(vp)} – sie wurde wohl mit einem eingetippten Schlüssel oder einem älteren Schlüsselbund verschlüsselt.`, true); // 2.518.0
+  if (klar === null && pw) klar = await vnEnt(t, pw);
+  while (klar === null) {
+    pw = await eingabe("🔒 Schlüssel eingeben\nDen Schlüssel hat dir der Absender persönlich, am Telefon oder per SMS gesagt. Nutzt ihr einen Schlüsselbund, fehlt er auf diesem Handy: oben ⋮ → „🔑 Schlüsselbund“ → „Datei einlesen“.", "");
+    if (!pw) return;
+    klar = await vnEnt(t, String(pw));
+    if (klar === null) melde("❌ Falscher Schlüssel – bitte nochmal versuchen.", true);
+  }
+  VN.klar.set(t, klar); if (chatId && pw) vnMerken(chatId, String(pw));
+  document.querySelectorAll(".vn-zu").forEach((b) => { if (b.dataset.vn === t) b.outerHTML = vnHtml(t); });
+  // weitere Nachrichten dieser Unterhaltung mit demselben Schlüssel gleich mit öffnen
+  if (pw) for (const b of [...document.querySelectorAll(".vn-zu")]) { const k = await vnEnt(b.dataset.vn, String(pw)); if (k !== null) { VN.klar.set(b.dataset.vn, k); b.outerHTML = vnHtml(b.dataset.vn); } }
+}
+// ---------- 2.518.0 KC-CLUB-SCHLUESSELBUND (Wunsch Hansi „mit einem Partner 5 verschiedene Schlüssel festlegen, die hat man auf dem Handy in einer
+// Datei; kommt die Nachricht an, guckt das Handy, ob ein Schlüssel passt – wenn ja anzeigen, sonst Fehlermeldung“; Wahl Hansi: Übergabe per Datei).
+// Je Zweier-Chat 5 zufällige 256-Bit-Schlüssel, nur auf den beiden Handys (localStorage „kc_club_vbund:<Partner>“). Senden nimmt einen davon
+// (HKDF-SHA-256 mit dem Salz der Nachricht → AES-GCM 256, gleiches „🔒KCV1:“-Format), Empfang probiert alle durch. Die Datei geht über
+// WhatsApp/Signal o. Ä. direkt von Handy zu Handy – nie über den Club-Server; „Teilen → Club-App“ liest sie ein statt sie in den Ablagekorb zu legen.
+const VB_TYP = "KC-SCHLUESSELBUND-1", VB_ANZAHL = 5, VBR = { warte: new Set(), fehl: new Set(), timer: 0 };
+const vbName = (pid) => "kc_club_vbund:" + pid;
+const vbVorname = (p) => (p.person_id === ICH?.person_id ? "dir selbst" : String(p.name || "Partner").split(" ")[0]);
+function vbHolen(pid) { try { const b = JSON.parse(localStorage.getItem(vbName(pid)) || "null"); return Array.isArray(b?.schluessel) && b.schluessel.length ? b : null; } catch { return null; } }
+function vbAlle() { const r = []; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i) || ""; if (k.startsWith("kc_club_vbund:")) { const b = vbHolen(k.slice(14)); if (b) r.push(b); } } } catch {} return r; }
+function vbPartner() { // nur Zweier-Chats (und die Test-Unterhaltung mit sich selbst)
+  if (!chatId || CHAT?.id !== chatId || CHAT.gruppe) return null;
+  const a = (CHAT.teilnehmer || []).filter((x) => x.person_id !== ICH?.person_id);
+  return a.length > 1 ? null : a[0] || (ICH ? { person_id: ICH.person_id, name: ICH.name } : null);
+}
+async function vbAbleiten(k64, salz) {
+  const roh = await crypto.subtle.importKey("raw", vnUnB64(k64), "HKDF", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "HKDF", hash: "SHA-256", salt: salz, info: new TextEncoder().encode(VB_TYP) }, roh, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+async function vbEntRing(t) { // alle Schlüsselbünde durchprobieren, den des Chat-Partners zuerst
+  const p = vbPartner()?.person_id, ringe = vbAlle().sort((a, b) => (b.partner === p) - (a.partner === p));
+  for (const r of ringe) for (const k of r.schluessel) { const klar = await vnEnt(t, "", k); if (klar !== null) return klar; }
+  return null;
+}
+function vbVormerken(t) { // aus vnHtml: nach dem Zeichnen still mit dem Schlüsselbund öffnen
+  if (!VBR.fehl.has(t)) { VBR.warte.add(t); if (!VBR.timer) VBR.timer = setTimeout(vbProbieren, 0); }
+  return "";
+}
+async function vbProbieren() {
+  VBR.timer = 0; const liste = [...VBR.warte]; VBR.warte.clear();
+  if (!vbAlle().length) return;
+  for (const t of liste) {
+    if (VN.klar.has(t) || VBR.fehl.has(t)) continue;
+    const klar = await vbEntRing(t);
+    if (klar === null) { VBR.fehl.add(t); continue; }
+    VN.klar.set(t, klar); document.querySelectorAll(".vn-zu").forEach((b) => { if (b.dataset.vn === t) b.outerHTML = vnHtml(t); });
+  }
+}
+function vbNeuProbieren() { VBR.fehl.clear(); document.querySelectorAll(".vn-zu").forEach((b) => VBR.warte.add(b.dataset.vn)); vbProbieren(); }
+function vbMenue(beimEinschalten) {
+  const p = vbPartner(); if (!p) return melde("🔑 Einen Schlüsselbund gibt es nur für Zweier-Chats.", true);
+  const vn = esc(vbVorname(p)), b = vbHolen(p.person_id);
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">🔑 Schlüsselbund mit ${vn}</h3>
+    <p class="dlg-text">${b ? `Vorhanden seit ${esc(new Date(b.erstellt || Date.now()).toLocaleDateString("de-DE"))}: ${b.schluessel.length} Schlüssel auf diesem Handy. Verschlüsselte Nachrichten (🔒) gehen damit ohne Eintippen und öffnen sich von selbst.`
+      : `Mit einem Schlüsselbund müsst ihr keinen Schlüssel mehr eintippen: ${VB_ANZAHL} zufällige Schlüssel liegen auf beiden Handys. Beim Senden nimmt die App einen davon, beim Empfang probiert sie alle durch – passt keiner, kommt eine Fehlermeldung. Die Schlüssel gehen per Datei direkt an ${vn}, nie über den Club-Server.`}</p>
+    <div class="dlg-knoepfe" style="flex-direction:column;align-items:stretch">
+      ${b ? `<button class="knopf" data-a="senden">📤 Datei nochmal an ${vn} schicken</button><button class="knopf" data-a="sichern">💾 Sicherung speichern (für ein neues Handy)</button>`
+        : `<button class="knopf haupt" data-a="neu">🔑 Anlegen und ${vn} schicken</button>`}
+      <button class="knopf" data-a="einlesen">📥 Datei von ${vn} einlesen</button>
+      ${b ? `<button class="knopf dlg-gefahr" data-a="weg">🗑️ Schlüsselbund löschen</button>` : ""}
+      <button class="knopf" data-a="zu">${beimEinschalten && !b ? "✍️ Diesmal Schlüssel eintippen" : "Schließen"}</button>
+    </div>`, () => f.remove());
+  f.querySelectorAll("[data-a]").forEach((k) => (k.onclick = async () => {
+    f.remove(); const a = k.dataset.a;
+    try {
+      if (a === "neu") {
+        const neu = { typ: VB_TYP, partner: p.person_id, name: p.name || "", erstellt: new Date().toISOString(), schluessel: Array.from({ length: VB_ANZAHL }, () => vnB64(crypto.getRandomValues(new Uint8Array(32)))) };
+        localStorage.setItem(vbName(p.person_id), JSON.stringify(neu)); vbNeuProbieren();
+        melde(`🔑 Schlüsselbund mit ${vbVorname(p)} angelegt – jetzt die Datei schicken.`);
+        await vbDateiGeben(p, neu, false);
+      } else if (a === "senden") await vbDateiGeben(p, b, false);
+      else if (a === "sichern") await vbDateiGeben(p, b, true);
+      else if (a === "einlesen") vbDateiWaehlen();
+      else if (a === "weg" && (await frage(`Schlüsselbund mit ${vbVorname(p)} löschen?\nVerschlüsselte Nachrichten mit diesem Schlüsselbund kann dieses Handy dann nicht mehr öffnen (außer du liest die Datei wieder ein).`))) { localStorage.removeItem(vbName(p.person_id)); melde("🗑️ Schlüsselbund gelöscht"); }
+    } catch (e) { meldeFehler(e); }
+  }));
+}
+async function vbDateiGeben(p, b, sicherung) {
+  const ich = String(ICH?.name || "Ich").split(" ")[0], er = vbVorname(p).replace(/\s+/g, "-");
+  const inhalt = { typ: VB_TYP, von: ICH?.person_id, vonName: ICH?.name || "", an: p.person_id, anName: p.name || "", erstellt: b.erstellt, schluessel: b.schluessel };
+  const datei = new File([JSON.stringify(inhalt, null, 1)], `KC-Schluesselbund_${ich}_${er}.json`, { type: "application/json" });
+  if (!sicherung && !(await frage(`📤 Schlüsselbund-Datei an ${vbVorname(p)} schicken\nAm besten per WhatsApp oder Signal – die sind selbst verschlüsselt; nicht per Mail. ${vbVorname(p)} öffnet sie so: Datei antippen → Teilen → „Club-App“ (oder im Chat oben ⋮ → „🔑 Schlüsselbund“ → „Datei einlesen“). Wer die Datei hat, kann eure verschlüsselten Nachrichten lesen – also nicht weitergeben und danach löschen.`, { ja: "📤 Schicken" }))) return;
+  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: "Schlüsselbund Club-App" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  melde(sicherung ? "💾 Sicherung gespeichert – gut aufheben (wer sie hat, kann mitlesen)." : `💾 Datei gespeichert – bitte per WhatsApp oder Signal an ${vbVorname(p)} schicken.`);
+}
+function vbDateiWaehlen() {
+  const i = document.createElement("input"); i.type = "file"; i.accept = ".json,application/json,text/plain,*/*";
+  i.onchange = async () => { const d = i.files?.[0]; if (d && !(await vbEinlesen(d))) melde("❌ Das ist keine Schlüsselbund-Datei der Club-App.", true); };
+  i.click();
+}
+async function vbIstDatei(d) { if (!d || d.size > 20000) return null; try { const j = JSON.parse(await d.text()); return j?.typ === VB_TYP ? j : null; } catch { return null; } }
+async function vbEinlesen(d) { // true = war eine Schlüsselbund-Datei (eingelesen oder mit Hinweis abgelehnt)
+  const j = await vbIstDatei(d); if (!j) return false;
+  const ok = Array.isArray(j.schluessel) && j.schluessel.length >= 1 && j.schluessel.length <= 10 && j.schluessel.every((k) => { try { return vnUnB64(String(k)).length === 32; } catch { return false; } });
+  if (!ok) { melde("❌ Die Schlüsselbund-Datei ist beschädigt – bitte neu schicken lassen.", true); return true; }
+  const ich = ICH?.person_id, partner = j.an === ich ? j.von : j.von === ich ? j.an : null, name = j.an === ich ? j.vonName : j.anName;
+  if (!partner) { melde(`❌ Diese Schlüsselbund-Datei ist nicht für dich, sondern für ${j.anName || "jemand anderen"}.`, true); return true; }
+  const alt = vbHolen(partner), vn = vbVorname({ person_id: partner, name });
+  if (alt && alt.schluessel.join() !== j.schluessel.join() && !(await frage(`Schlüsselbund mit ${vn} ersetzen?\nAuf diesem Handy gibt es schon einen anderen. Nachrichten mit dem alten lassen sich danach nicht mehr öffnen.`, { ja: "🔑 Ersetzen" }))) return true;
+  localStorage.setItem(vbName(partner), JSON.stringify({ typ: VB_TYP, partner, name: name || "", erstellt: j.erstellt || new Date().toISOString(), schluessel: j.schluessel }));
+  melde(`🔑 Schlüsselbund mit ${vn} eingelesen – verschlüsselte Nachrichten öffnen sich jetzt von selbst. Die Datei kannst du jetzt löschen.`);
+  vbNeuProbieren(); return true;
+}
 function naText(t) { // Text sicher ausgeben, @Namen hervorheben, App-Sprünge als Knopf (KC-CLUB-SPRUNGKNOPF 2.23.97)
+  if (vnIst(t)) return vnHtml(t); // 2.517.0 KC-CLUB-VERSCHLUESSELT
   return esc(t).replace(/(^|\s)@([A-Za-zÄÖÜäöüß][\wÄÖÜäöüß-]*)/g, (x, v, n) => `${v}<span class="erw">@${n}</span>`).replace(SPRUNG_RE, (x, id) => sprungKnopf(id));
 }
 // ---------- KC-CLUB-SPRUNGKNOPF (2.23.97, Wunsch Hansi): Knopf in einer Nachricht, der an eine Stelle der App führt ----------
@@ -30139,6 +30312,7 @@ function chatMenue() {
   $("chatArchivKnopf").classList.toggle("versteckt", !chatId); $("chatKomplettKnopf").classList.toggle("versteckt", !chatId);
   const sl = chatId && CHAT?.id === chatId ? CHAT.selbstloeschen || 0 : 0; // KC-CLUB-SELBSTLOESCHEN (2.148.0)
   $("chatSlKnopf").textContent = `⏳ Selbstlöschen: ${sl ? "nach " + slText(sl) : "Aus"}`; $("chatSlKnopf").classList.toggle("versteckt", !chatId);
+  const vp = vbPartner(); $("chatVbKnopf").classList.toggle("versteckt", !vp); if (vp) $("chatVbKnopf").textContent = `🔑 Schlüsselbund mit ${vbVorname(vp)}: ${vbHolen(vp.person_id) ? "vorhanden" : "anlegen …"}`; // 2.518.0
   stummBereichZeigen();
   $("chatBlatt").classList.remove("versteckt");
 }
@@ -30746,11 +30920,12 @@ async function anlagenFertig(maxMs = 180000) {
 }
 async function senden() {
   emoUmschalten(false); // KC-CLUB-EMOJI
-  const text = $("text").value.trim();
+  let text = $("text").value.trim();
   if (!text && !anlagen.length) return;
   if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
   await inkoChatFrage(chatId ? "c:" + chatId : "neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT: auch beim Schreiben in einem schon offenen Chat (einmal je Chat)
   await wichtigkeitFragen(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0)
+  if (VN.an && text) { const v = await vnVerschluesseln(text); if (!v) return; text = v; } // 2.517.0 KC-CLUB-VERSCHLUESSELT: erst jetzt (Prüfungen oben sahen den Klartext)
   // 2.164.0 KC-CLUB-ANLAGE-WARTEN (Fund Hansi: PDF fehlte – Senden getippt, während die Anlage noch hochlud; sie wurde still weggelassen):
   // lädt noch eine Anlage, wird gewartet, bis sie fertig ist – dann geht alles zusammen raus. Klappt das Hochladen nicht, bleibt der Text stehen.
   if (anlagen.some((a) => a.laedt)) {
@@ -30785,6 +30960,7 @@ async function senden() {
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     lvZurueck(); // KC-CLUB-LINK-VORSCHAU
     if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); expressUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN
+    if (VN.an) vnUmschalten(false); // 2.517.0 KC-CLUB-VERSCHLUESSELT: 🔒 gilt nur für diese Nachricht
     $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; EINMAL = false; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
     spur(daten.anlagen.length ? "gesendet_anlage" : "gesendet", r?.id || chatId); // KC-CLUB-SPUR: nur „gesendet“ + Unterhaltung, nie der Text
     if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
@@ -30825,9 +31001,10 @@ async function geteiltEmpfangen() {
     }
     await caches.delete("kcclub-geteilt");
   } catch {}
-  api("diagnose", { art: "teilen", daten: { anzahl: dateien.length, text: !!info.text } }).catch(() => {});
+  for (const d of dateien) if (await vbEinlesen(d)) return; // 2.518.0 KC-CLUB-SCHLUESSELBUND: Schlüssel bleiben auf dem Handy, nie in den Ablagekorb
+  api("diagnose", { art: "teilen", daten: { anzahl: dateien.length, text: !!info.text, felder: Array.isArray(info.felder) ? info.felder.slice(0, 20) : null, typen: dateien.map((d) => d.type || "?").slice(0, 10) } }).catch(() => {}); // 2.515.0: Felder/Typen zur Fehlersuche
   const text = [info.text, info.url && !String(info.text || "").includes(info.url) ? info.url : ""].filter(Boolean).join("\n").trim();
-  if (!dateien.length && !text) return melde("Es ist nichts angekommen – bitte nochmal über „Teilen → Köcheclub“ versuchen.", true);
+  if (!dateien.length && !text) return melde("Es ist nichts angekommen. Fotos, PDFs und Office-Dateien gehen sofort; andere Dateitypen nimmt die Club-App an, sobald das Handy sie aktualisiert hat (meist nach dem nächsten Start, spätestens nach einem Tag).", true); // 2.514.0
   if (await ablkAblegen(text, dateien, info.titel)) return; // 2.511.0 KC-CLUB-ABLAGEKORB: zuerst in den Korb
   teilenWahl(text, dateien); // Korb nicht erreichbar (z. B. Gast/Aushilfe oder alter Server) → wie bisher selbst wählen
 }
@@ -30835,7 +31012,7 @@ async function geteiltEmpfangen() {
 // mir zeigen und ich entscheide: Fotoalbum, Ordner, löschen, in Chats weiterleiten, als Aufgabe delegieren, als Vorschlag für die nächste
 // Sitzung, Weitergabe an Clubsprecher …“; Wahl Hansi: alle Mitglieder teilen, alles kommt zuerst in den Korb). Die Dateien werden wie
 // Chat-Anlagen hochgeladen, der Server legt das Paket ab und sagt den Admins Bescheid. Bearbeiten nur Admin (Info-Feld, Kachel, Push).
-const ABLK = { daten: null, laeuft: false };
+const ABLK = { daten: null, laeuft: false, wahl: {} }; // wahl: je Eintrag die angehakten Dateien (2.512.0)
 async function ablkAblegen(text, dateien, titel) {
   if (!ICH || ABLK.laeuft) return false;
   ABLK.laeuft = true; const ids = [];
@@ -30843,9 +31020,10 @@ async function ablkAblegen(text, dateien, titel) {
     if (dateien.length) melde(`📥 ${dateien.length === 1 ? "Datei wird" : dateien.length + " Dateien werden"} in den Ablagekorb gelegt …`);
     // Original behalten, solange es passt (Aufnahmedatum der Fotos fürs Album) – zu große Fotos verkleinert wie im Chat
     for (const d of dateien.slice(0, 10)) ids.push((d.size <= 8 * 1024 * 1024 ? await api("anlage_hochladen", { name: d.name, mime: d.type || "application/octet-stream", daten: base64(await d.arrayBuffer()) }) : await anlageHochladen(d)).id);
-    const r = await api("ablagekorb_ablegen", { text, titel: titel || "", anlagen: ids });
-    if (ICH.admin) { melde("📥 Im Ablagekorb – jetzt entscheiden, wohin damit"); ablkZeigen(r.id); }
-    else melde(`📥 Im Ablagekorb abgelegt – ${INIT?.adminName || "der Admin"} kümmert sich darum. Danke!`);
+    const meta = []; for (const d of dateien.slice(0, 10)) meta.push(/^image\//.test(d.type) ? await exifLesen(d).catch(() => ({})) : {}); // 2.512.0 Dublettenprüfung
+    const r = await api("ablagekorb_ablegen", { text, titel: titel || "", anlagen: ids, meta });
+    if (ICH.admin) { melde(r.dubletten ? `📥 Im Ablagekorb – ⚠️ ${r.dubletten === 1 ? "1 Datei gibt" : r.dubletten + " Dateien gibt"} es schon (markiert)` : "📥 Im Ablagekorb – jetzt entscheiden, wohin damit"); ablkZeigen(r.id); }
+    else melde(`📥 Im Ablagekorb abgelegt – ${INIT?.adminName || "der Admin"} kümmert sich darum. Danke!${r.dubletten ? ` Hinweis: ${r.dubletten === 1 ? "1 Datei gibt" : r.dubletten + " Dateien gibt"} es schon in der Club-App.` : ""}`);
     return true;
   } catch (e) {
     if (ids.length || dateien.length === 0) meldeFehler(e); // hochgeladen, aber nicht abgelegt → Fehler zeigen; danach selbst wählen
@@ -30863,8 +31041,13 @@ async function ablkZeigen(fokus) {
   const d = ABLK.daten;
   const karte = (x) => `<div class="karte ablk-eintrag${x.id === fokus ? " fokus" : ""}" id="ablk-${x.id}">
       <div class="ablk-kopf"><b>${esc(x.vonName)}</b><span class="hinweis">${esc(wann(x.am))}</span></div>
+      ${x.status === "offen" && x.anlagen.some((f) => f.dublette) ? ablkWarnung(x) : ""}
       ${x.titel ? `<div><b>${esc(x.titel)}</b></div>` : ""}${x.text ? `<div class="ablk-text">${esc(x.text.slice(0, 600))}${x.text.length > 600 ? " …" : ""}</div>` : ""}
-      ${x.anlagen.length ? `<div class="ablk-dateien">${x.anlagen.map((f) => `<button type="button" class="ablk-datei" onclick="anlageOeffnen('${f.id}')" title="${esc(f.name)}">${ablkBild(f) ? `<img data-anlage="${f.id}" alt="">` : `<span>${ablkSym(f)}</span>`}<small>${esc(f.name)}</small></button>`).join("")}</div>` : ""}
+      ${x.anlagen.length ? `<div class="ablk-dateien">${x.anlagen.map((f) => `<div class="ablk-datei-w${ablkGewaehlt(x.id).has(f.id) ? " an" : ""}${f.dublette ? " doppelt" : ""}">
+        <button type="button" class="ablk-datei" onclick="anlageOeffnen('${f.id}')" title="${esc(f.name)}">${ablkBild(f) ? `<img data-anlage="${f.id}" alt="">` : `<span>${ablkSym(f)}</span>`}<small>${esc(f.name)}</small></button>
+        ${x.status === "offen" && x.anlagen.length > 1 ? `<label class="ablk-haken" title="Auswählen"><input type="checkbox"${ablkGewaehlt(x.id).has(f.id) ? " checked" : ""} onchange="ablkWaehle('${x.id}', '${f.id}', this.checked)" aria-label="${esc(f.name)} auswählen"></label>` : ""}
+        ${f.dublette ? `<div class="ablk-doppelt" title="${esc(f.dublette.map((d) => d.wo + (d.text ? ": " + d.text : "")).join(" · "))}">⚠️ gibt es schon: ${esc(f.dublette.map((d) => d.wo).filter((w, i, l) => l.indexOf(w) === i).join(", "))}</div>` : ""}</div>`).join("")}</div>
+        ${x.status === "offen" && x.anlagen.length > 1 ? `<div class="ablk-wahl" id="ablkWahl-${x.id}">${ablkWahlLeiste(x)}</div>` : ""}` : ""}
       ${x.status === "offen" ? `<div class="ablk-knoepfe">
         ${x.anlagen.some(ablkBild) ? `<button class="knopf klein" onclick="ablkFotoalbum('${x.id}')">📷 Fotoalbum</button>` : ""}
         <button class="knopf klein" onclick="ablkOrdner('${x.id}')">🗄️ In Ordner</button>
@@ -30872,6 +31055,7 @@ async function ablkZeigen(fokus) {
         <button class="knopf klein" onclick="ablkPerson('${x.id}', 'weiter')">👤 Weitergeben</button>
         <button class="knopf klein" onclick="ablkPerson('${x.id}', 'aufgabe')">✅ Als Aufgabe</button>
         <button class="knopf klein" onclick="ablkVorschlag('${x.id}')">🗳️ Vorschlag Sitzung</button>
+        ${x.anlagen.length ? `<button class="knopf klein" onclick="ablkDublettenPruefen('${x.id}')">🔍 Dubletten prüfen</button>` : ""}
         <button class="knopf klein" onclick="ablkFertig('${x.id}', 'Erledigt')">✔ Erledigt</button>
         <button class="knopf klein rot" onclick="ablkLoeschen('${x.id}')">🗑️ Löschen</button></div>`
       : `<div class="hinweis">✔ ${esc(x.ergebnis || "Erledigt")}${x.erledigtVon ? " · " + esc(x.erledigtVon) : ""}${x.erledigtAm ? " · " + esc(wann(x.erledigtAm)) : ""} <button class="knopf klein" onclick="ablkWieder('${x.id}')">↩ Wieder offen</button></div>`}
@@ -30883,6 +31067,54 @@ async function ablkZeigen(fokus) {
     <div class="knoepfe"><button class="knopf" onclick="document.getElementById('ablkBlatt').remove()">Schließen</button></div>`);
   for (const im of document.querySelectorAll("#ablkBlatt img[data-anlage]")) bildLaden(im).catch?.(() => {});
   if (fokus) setTimeout(() => $("ablk-" + fokus)?.scrollIntoView({ block: "center", behavior: "smooth" }), 100);
+}
+// 2.512.0 KC-CLUB-ABLAGEKORB-AUSWAHL (Wunsch Hansi „bei z. B. 10 Fotos anklicken, welche ins Album sollen oder gelöscht werden“) und
+// KC-CLUB-ABLAGEKORB-DUBLETTEN: Häkchen je Datei, „Alle / Keine / Dubletten wählen“, Auswahl ins Fotoalbum oder löschen. Was ins Album geht,
+// wird als eigener erledigter Eintrag abgespalten (bleibt 14 Tage wiederherstellbar), der Rest bleibt offen.
+// 2.516.0 KC-CLUB-ABLAGEKORB-DUBLETTE-DEUTLICH (Fund Hansi „Dubletten-Check hätte anmeckern müssen – die sind schon in der Club-App“): die Prüfung
+// hatte es erkannt, aber nur als kleine Zeile unter der Datei. Jetzt ein deutlicher Warnkasten oben im Eintrag mit Fundstellen und „Dubletten löschen“.
+function ablkWarnung(x) {
+  const d = x.anlagen.filter((f) => f.dublette);
+  return `<div class="ablk-warn"><b>⚠️ ${d.length === x.anlagen.length ? (d.length === 1 ? "Diese Datei gibt" : "Alle Dateien gibt") : `${d.length} von ${x.anlagen.length} Dateien gibt`} es schon in der Club-App</b>
+    <ul>${d.slice(0, 5).map((f) => `<li>${esc(f.name)} → ${f.dublette.map((z) => `<b>${esc(z.wo)}</b>${z.text ? ` (${esc(z.text)})` : ""}`).join(", ")}</li>`).join("")}${d.length > 5 ? `<li>… und ${d.length - 5} weitere</li>` : ""}</ul>
+    <button class="knopf klein rot" onclick="ablkDublettenWeg('${x.id}')">🗑️ ${d.length === 1 ? "Dublette" : d.length + " Dubletten"} löschen</button></div>`;
+}
+async function ablkDublettenWeg(id) {
+  const x = ablkEintrag(id); if (!x) return; const ids = x.anlagen.filter((f) => f.dublette).map((f) => f.id); if (!ids.length) return;
+  if (!(await frage(`${ids.length === 1 ? "Die doppelte Datei" : ids.length + " doppelte Dateien"} aus dem Ablagekorb löschen? Die vorhandenen in der Club-App bleiben.`, { ja: "🗑️ Löschen", nein: "Abbrechen" }))) return;
+  try { const r = await api("ablagekorb_dateien_loeschen", { id, ids }); delete ABLK.wahl[id]; melde(`🗑️ ${ids.length === 1 ? "Dublette" : ids.length + " Dubletten"} gelöscht${r.rest === 0 ? " – Eintrag ist leer und weg" : ""}`); if (INIT?.ablagekorb && r.rest === 0) INIT.ablagekorb--; ablkZeigen(r.rest ? id : undefined); ilZeigen?.(); } catch (e) { meldeFehler(e); }
+}
+const ablkGewaehlt = (id) => ABLK.wahl[id] || (ABLK.wahl[id] = new Set());
+function ablkWahlLeiste(x) {
+  const w = ablkGewaehlt(x.id), n = w.size, bilder = x.anlagen.filter((f) => w.has(f.id) && ablkBild(f)).length, doppelt = x.anlagen.filter((f) => f.dublette).length;
+  return `<div class="ablk-wahl-zeile"><b>☑️ ${n} von ${x.anlagen.length} ausgewählt</b>
+      <button class="knopf klein" onclick="ablkWahlAlle('${x.id}', 'alle')">Alle</button><button class="knopf klein" onclick="ablkWahlAlle('${x.id}', 'keine')">Keine</button>
+      ${doppelt ? `<button class="knopf klein" onclick="ablkWahlAlle('${x.id}', 'doppelt')">⚠️ Dubletten (${doppelt})</button>` : ""}</div>
+    ${n ? `<div class="ablk-wahl-zeile">${bilder ? `<button class="knopf klein haupt" onclick="ablkAuswahlAlbum('${x.id}')">📷 ${bilder} ins Fotoalbum</button>` : ""}<button class="knopf klein rot" onclick="ablkAuswahlLoeschen('${x.id}')">🗑️ ${n} löschen</button></div>` : ""}`;
+}
+function ablkWahlNeu(id) {
+  const x = ablkEintrag(id); if (!x) return; const l = $("ablkWahl-" + id); if (l) l.innerHTML = ablkWahlLeiste(x);
+  const w = ablkGewaehlt(id);
+  document.querySelectorAll(`#ablk-${id} .ablk-datei-w`).forEach((k, i) => { const f = x.anlagen[i]; if (!f) return; k.classList.toggle("an", w.has(f.id)); const c = k.querySelector("input"); if (c) c.checked = w.has(f.id); });
+}
+function ablkWaehle(id, fid, an) { const w = ablkGewaehlt(id); an ? w.add(fid) : w.delete(fid); ablkWahlNeu(id); }
+function ablkWahlAlle(id, art) {
+  const x = ablkEintrag(id); if (!x) return;
+  ABLK.wahl[id] = new Set(art === "alle" ? x.anlagen.map((f) => f.id) : art === "doppelt" ? x.anlagen.filter((f) => f.dublette).map((f) => f.id) : []);
+  ablkWahlNeu(id);
+}
+async function ablkAuswahlLoeschen(id) {
+  const ids = [...ablkGewaehlt(id)]; if (!ids.length) return;
+  if (!(await frage(`${ids.length === 1 ? "Diese Datei" : "Diese " + ids.length + " Dateien"} endgültig löschen?`, { ja: "🗑️ Löschen", nein: "Abbrechen" }))) return;
+  try { await api("ablagekorb_dateien_loeschen", { id, ids }); delete ABLK.wahl[id]; melde(`🗑️ ${ids.length} gelöscht`); ablkZeigen(id); } catch (e) { meldeFehler(e); }
+}
+async function ablkAuswahlAlbum(id) {
+  const x = ablkEintrag(id); if (!x) return; const w = ablkGewaehlt(id), ids = x.anlagen.filter((f) => w.has(f.id) && ablkBild(f)).map((f) => f.id); if (!ids.length) return;
+  try { melde("⏳ Fotos werden geholt …"); const d = await ablkDateien(x, (f) => ids.includes(f.id)); delete ABLK.wahl[id]; ablkInsAlbum(id, d, ids); }
+  catch (e) { meldeFehler(e); }
+}
+async function ablkDublettenPruefen(id) {
+  try { melde("🔍 Suche nach Dubletten …"); const r = await api("ablagekorb_dubletten", { id }, { warten: true }); melde(r.dubletten ? `⚠️ ${r.dubletten === 1 ? "1 Datei gibt" : r.dubletten + " Dateien gibt"} es schon – markiert` : "✅ Keine Dubletten gefunden"); ablkZeigen(id); } catch (e) { meldeFehler(e); }
 }
 async function ablkFertig(id, ergebnis, still) {
   try { await api("ablagekorb_erledigt", { id, ergebnis }); if (INIT?.ablagekorb) INIT.ablagekorb--; if (!still) { melde("✔ " + ergebnis); ablkZeigen(); } ilZeigen?.(); } catch (e) { meldeFehler(e); }
@@ -30901,12 +31133,18 @@ async function ablkDateien(x, nur) { // Dateien als echte Datei-Objekte (für Fo
   return aus;
 }
 async function ablkKopie(id) { return (await api("ablagekorb_kopie", { id }, { warten: true })).anlagen || []; } // eigene Kopie zum Anhängen
+// 2.513.0 KC-CLUB-ABLAGEKORB-ALBUM-FIX (Fund Hansi „über den Ablagekorb Fotos ins Album gelegt – da sind sie nicht zu sehen“): vorher wurde der
+// Eintrag schon beim Öffnen des Hochlade-Formulars „erledigt“ – ohne „Hochladen“ (oder bei einem Update dazwischen) kam nichts im Album an.
+// Jetzt merkt sich die App den Eintrag (faAusKorb) und erledigt ihn erst, wenn ALLE Fotos wirklich hochgeladen sind; sonst bleibt er offen.
+function ablkInsAlbum(id, d, ids) {
+  $("ablkBlatt")?.remove(); faAusKorb = { id, ids };
+  faFilter = {}; faPapierkorb = false; faGeteilt = d; zeige("fotos");
+  melde(`📷 ${d.length} Foto${d.length > 1 ? "s" : ""} – Thema wählen und unten „Hochladen“ tippen. Erst dann sind sie im Album.`);
+}
 async function ablkFotoalbum(id) {
   const x = ablkEintrag(id); if (!x) return;
-  try { melde("⏳ Fotos werden geholt …"); const d = await ablkDateien(x, ablkBild); $("ablkBlatt")?.remove();
-    await ablkFertig(id, "Ins Fotoalbum gegeben", true);
-    faFilter = {}; faPapierkorb = false; faGeteilt = d; zeige("fotos"); melde(`📷 ${d.length} Foto${d.length > 1 ? "s" : ""} – Thema wählen und „Hochladen“ tippen`);
-  } catch (e) { meldeFehler(e); }
+  try { melde("⏳ Fotos werden geholt …"); const d = await ablkDateien(x, ablkBild); ablkInsAlbum(id, d, x.anlagen.filter(ablkBild).map((f) => f.id)); }
+  catch (e) { meldeFehler(e); }
 }
 async function ablkOrdner(id) {
   const x = ablkEintrag(id); if (!x) return; $("ablkBlatt")?.remove();
@@ -34202,11 +34440,13 @@ const mb = (b) => (b / 1024 / 1024).toLocaleString("de-DE", { maximumFractionDig
 const anlassText = (x) => x ? `${x.art === "aktion" ? "🧳" : "📅"} ${x.titel}${x.datum ? " · " + fTagDe(x.datum) : ""}` : "";
 const anlassVon = (f) => f.bezug_art ? (FA?.anlaesse || []).find((x) => x.art === f.bezug_art && x.id === f.bezug_id) : null;
 function fotosFuer(art, id) { faFilter = { bezug_art: art, bezug_id: id }; faPapierkorb = false; zeige("fotos"); }
+let faAusKorb = null; // 2.513.0 KC-CLUB-ABLAGEKORB-ALBUM-FIX: { id, ids } – erst nach dem Hochladen im Ablagekorb erledigen
 let faGeteilt = null; // KC-CLUB-TEILEN: aus der Galerie geteilte Fotos, die ins Hochlade-Formular sollen
 async function fotosLaden(formBehalten) {
   if (!formBehalten) $("fotoForm").classList.add("versteckt");
   try { FA = await api("fotos_liste", { ...faFilter, papierkorb: faPapierkorb }); fotosZeigen();
-    if (faGeteilt) { const d = faGeteilt; faGeteilt = null; fotoForm(); faGewaehlt({ files: d, value: "" }); } }
+    if (faGeteilt) { const d = faGeteilt; faGeteilt = null; fotoForm(); faGewaehlt({ files: d, value: "" });
+      if (faAusKorb && $("faFortschritt")) $("faFortschritt").innerHTML = '<div class="karte" style="border:2px solid var(--gold)">📥 Aus dem Ablagekorb: Thema wählen und <b>„Hochladen“</b> tippen – erst dann sind die Fotos im Album. Der Eintrag im Korb bleibt bis dahin offen.</div>'; } }
   catch (e) { $("fotoListe").innerHTML = `<div class="karte hinweis">⚠️ ${esc(fehlerText(e))}<div style="margin-top:8px"><button type="button" class="knopf klein" onclick="fotosLaden()">🔄 Nochmal laden</button></div></div>`; } // 2.337.0: wie überall mit „Nochmal laden“
 }
 function fotosZeigen() {
@@ -34505,6 +34745,9 @@ async function fotosHochladen() {
   // KC-CLUB-RC-PRUEFUNG (20.10.2026): Rot über var(--textRot) – im Dunkelmodus lesbar
   $("faFortschritt").innerHTML = fehler.length ? `<div style="color:var(--textRot, #c62828)">⚠️ Nicht hochgeladen:<br>${fehler.map(esc).join("<br>")}</div>` : "";
   melde(ok ? `✔ ${ok} Foto${ok > 1 ? "s" : ""} im Album${fehler.length ? ` – ${fehler.length} fehlgeschlagen` : ""}` : "Es wurde kein Foto hochgeladen.", !ok);
+  const korb = faAusKorb; faAusKorb = null; // 2.513.0: Ablagekorb erst jetzt erledigen – und nur, wenn alles angekommen ist
+  if (korb && ok && !fehler.length) await api("ablagekorb_abspalten", { id: korb.id, ids: korb.ids, ergebnis: `${ok} Foto${ok > 1 ? "s" : ""} ins Fotoalbum hochgeladen` }).catch(() => melde("Im Album – bitte den Eintrag im Ablagekorb selbst als erledigt markieren.", true));
+  else if (korb && (fehler.length || !ok)) melde("Nicht alle Fotos sind im Album – der Eintrag bleibt im Ablagekorb offen.", true);
   if (ok) await fotosLaden(fehler.length > 0);
 }
 

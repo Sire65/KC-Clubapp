@@ -1,5 +1,5 @@
 {
-  "version": "2.511.0",
+  "version": "2.518.0",
   "datum": "2026-10-20",
   "stufe": "RC",
   "mindest": "2.500.0",
@@ -7,6 +7,55 @@
     "Kleine Systemanpassung"
   ],
   "verlauf": [
+    {
+      "version": "2.518.0",
+      "datum": "2026-10-20",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
+    {
+      "version": "2.517.0",
+      "datum": "2026-10-20",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
+    {
+      "version": "2.516.0",
+      "datum": "2026-10-20",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
+    {
+      "version": "2.515.0",
+      "datum": "2026-10-20",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
+    {
+      "version": "2.514.0",
+      "datum": "2026-10-20",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
+    {
+      "version": "2.513.0",
+      "datum": "2026-10-20",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
+    {
+      "version": "2.512.0",
+      "datum": "2026-10-20",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
     {
       "version": "2.511.0",
       "datum": "2026-10-20",
@@ -233,55 +282,6 @@
     },
     {
       "version": "2.467.0",
-      "datum": "2026-10-18",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.466.0",
-      "datum": "2026-10-18",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.463.0",
-      "datum": "2026-10-18",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.462.0",
-      "datum": "2026-10-18",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.461.0",
-      "datum": "2026-10-18",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.460.0",
-      "datum": "2026-10-18",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.459.0",
-      "datum": "2026-10-18",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.458.0",
       "datum": "2026-10-18",
       "neu": [
         "Kleine Systemanpassung"

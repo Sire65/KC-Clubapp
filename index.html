@@ -995,6 +995,15 @@
   .ablk-datei { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; border: 1px solid var(--linie); border-radius: 10px; background: var(--karte2); color: var(--text); cursor: pointer; overflow: hidden; }
   .ablk-datei img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; background: var(--linie); } .ablk-datei span { font-size: 2rem; line-height: 1.4; }
   .ablk-datei small { font-size: .65rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* 2.512.0 Auswahl + Dubletten */
+  .ablk-datei-w { position: relative; display: flex; flex-direction: column; gap: 2px; } .ablk-datei-w .ablk-datei { width: 100%; }
+  .ablk-datei-w.an .ablk-datei { outline: 3px solid var(--gold); } .ablk-datei-w.doppelt .ablk-datei { border-color: #e0a23b; }
+  .ablk-haken { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; display: grid; place-items: center; background: rgba(0,0,0,.45); border-radius: 8px; cursor: pointer; }
+  .ablk-haken input { width: 18px; height: 18px; margin: 0; cursor: pointer; }
+  .ablk-doppelt { font-size: .62rem; font-weight: 700; color: #b26b00; background: rgba(224,162,59,.18); border-radius: 6px; padding: 2px 4px; line-height: 1.2; }
+  .ablk-warn { margin: 6px 0; padding: 8px 10px; border: 2px solid #e0a23b; border-radius: 12px; background: rgba(224,162,59,.16); } /* 2.516.0 */
+  .ablk-warn ul { margin: 4px 0 6px; padding-left: 18px; font-size: .88rem; } .ablk-warn li { margin: 2px 0; word-break: break-word; }
+  .ablk-wahl { margin: 4px 0 2px; } .ablk-wahl-zeile { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0; }
   .ablk-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; } .ablk-erledigt summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
   .fa-neu { border: 2px solid var(--gold); } .fa-neu .abschnitt { margin-top: 0; } /* 2.498.0 KC-CLUB-FOTOS-NEU-INFO */
   .fk-neu { position: absolute; left: 4px; top: 4px; padding: 1px 6px; border-radius: 999px; background: var(--rot); color: #fff; font-size: .62rem; font-weight: 800; letter-spacing: .03em; }
@@ -2318,6 +2327,9 @@
   .eingabe .innen > #text.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.25); }
   /* KC-CLUB-SELBSTLOESCHEN (2.148.0): ⏳ an = violett; neun gleich große Knöpfe passen auch auf schmale Handys (alle gleich breit) */
   .eingabe .innen > .rund:not(#sendenKnopf) { width: min(40px, calc((100vw - 140px) / 8)) !important; height: min(40px, calc((100vw - 140px) / 8)) !important; }
+  .eingabe .eg-vn.an { background: #1b5e20; border-color: #0d3d12; color: #fff; box-shadow: 0 0 0 2px rgba(27,94,32,.35); } /* 2.517.0, 2.518.0 kleine Zeile */
+  .vn-zu { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; border: 1.5px dashed currentColor; border-radius: 12px; background: rgba(0,0,0,.08); color: inherit; font: inherit; font-weight: 700; cursor: pointer; text-align: left; }
+  .vn-zu small { font-weight: 400; opacity: .8; } .vn-auf { font-size: .85em; }
   .eingabe .innen > #ablaufKnopf.rund.an { background: #6a1b9a !important; border-color: #4a148c !important; color: #fff; box-shadow: 0 0 0 3px rgba(106,27,154,.3); }
   .eingabe-entwurf.sl-leiste { color: #6a1b9a; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; } /* 2.163.0: antippbar */ :root.dunkel .eingabe-entwurf.sl-leiste { color: #ce93d8; }
   .chat-unterzeile { display: flex; align-items: center; gap: 6px; min-width: 0; } .chat-unterzeile > #chatTeilnehmer { min-width: 0; }
@@ -5301,7 +5313,7 @@
 <div class="eingabe versteckt" id="eingabe">
   <!-- 2.433.0 KC-CLUB-SCHREIBEN-KLAPPEN (Wunsch Hansi): ▾ klappt den Schreibbereich kurz weg, damit mehr Nachrichten zu sehen sind; beim Öffnen eines Chats ist er immer offen -->
   <!-- 2.455.0 KC-CLUB-TASTATUR-KNOPF (Wunschliste #14): daneben ⌨️ – Tastatur des Handys aus- und wieder einblenden (nur Touch-Geräte) -->
-  <div class="eg-griffe"><button class="eg-klapp" id="egKlapp" type="button" onclick="eingabeKlappen(true)" title="Schreibbereich einklappen – mehr Nachrichten sehen" aria-label="Schreibbereich einklappen – mehr Nachrichten sehen">▾</button><button class="eg-tast" id="egTast" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="tastaturUmschalten()" title="Tastatur einblenden" aria-label="Tastatur einblenden" aria-pressed="false">⌨️ ▴</button><button class="eg-ton" id="egTon" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="tippTonKnopf()" title="Tippgeräusche aus" aria-label="Tippgeräusche aus" aria-pressed="true">🔊</button></div>
+  <div class="eg-griffe"><button class="eg-klapp" id="egKlapp" type="button" onclick="eingabeKlappen(true)" title="Schreibbereich einklappen – mehr Nachrichten sehen" aria-label="Schreibbereich einklappen – mehr Nachrichten sehen">▾</button><button class="eg-tast" id="egTast" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="tastaturUmschalten()" title="Tastatur einblenden" aria-label="Tastatur einblenden" aria-pressed="false">⌨️ ▴</button><button class="eg-ton" id="egTon" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="tippTonKnopf()" title="Tippgeräusche aus" aria-label="Tippgeräusche aus" aria-pressed="true">🔊</button><!-- 2.517.0 KC-CLUB-VERSCHLUESSELT (2.518.0 in die kleine Zeile): Nachricht mit selbst gewähltem Schlüssel verschlüsseln --><button class="eg-ton eg-vn" id="vnKnopf" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="vnUmschalten()" title="Verschlüsselt senden (mit Schlüssel)" aria-label="Verschlüsselt senden" aria-pressed="false">🔒</button></div>
   <button class="eg-auf" id="egAuf" type="button" onclick="eingabeKlappen(false)" aria-label="Schreibbereich wieder öffnen">▴ ✏️ Schreiben</button>
   <!-- KC-CLUB-TIPPT (0.54.0): „Klaus schreibt …“ -->
   <div class="tippt versteckt" id="tipptAnzeige" aria-live="polite"></div>
@@ -5518,6 +5530,7 @@
     <button class="knopf" onclick="chatInsArchiv()">🗄️ Chat in mein Archiv legen</button>
     <button class="knopf" onclick="cfOeffnen()">🎨 Chat-Farben &amp; Hintergrund</button> <!-- KC-CLUB-CHAT-FARBEN 2.145.0 -->
     <button class="knopf" id="chatSlKnopf" onclick="$('chatBlatt').classList.add('versteckt');slWahl('chat')">⏳ Selbstlöschen: Aus</button> <!-- KC-CLUB-SELBSTLOESCHEN 2.148.0 -->
+    <button class="knopf versteckt" id="chatVbKnopf" onclick="$('chatBlatt').classList.add('versteckt');vbMenue()">🔑 Schlüsselbund</button> <!-- 2.518.0 KC-CLUB-SCHLUESSELBUND -->
     <button class="knopf" id="chatArchivKnopf" onclick="chatArchivieren(chatId, !!UH.liste.find((u) => u.id === chatId)?.archiviert)">📦 Chat archivieren</button> <!-- KC-CLUB-CHAT-ARCHIV 2.23.28 -->
     <button class="knopf" onclick="unterhaltungWeg(false)">🙈 Nur bei mir entfernen</button>
     <button class="knopf" id="chatKomplettKnopf" onclick="chatKomplettLoeschen(chatId)">🗑️ Bei mir komplett löschen</button>
@@ -5554,7 +5567,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.511.0" data-v="2.511.0"></script>
+<script src="app.js?v=2.518.0" data-v="2.518.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

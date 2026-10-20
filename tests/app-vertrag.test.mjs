@@ -3719,7 +3719,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(aktuelleAnsicht === "buero" && !PUSH_AKTIV && Date\.now\(\) - BNN\.zuletzt > 55000\) buNeuPruefen\(\);/.test(html), "ohne Push selbst nachsehen");
   assert.ok(/u\.ungelesen && u\.letzte && u\.letzte\.von !== "Du" && !stummAn\(u\.id\)/.test(html), "nur fremde, nicht stumme Unterhaltungen");
   assert.ok(/function buNeuOeffnen\(\) \{[^}]*chatOeffnen\(u\.id\);/.test(html), "Tippen öffnet die Unterhaltung");
-  assert.ok(/<span><b>Neue Nachricht von \$\{esc\(von\)\}<\/b><small>\$\{esc\(u\.letzte\.text/.test(html), "Text escaped");
+  assert.ok(/<span><b>Neue Nachricht von \$\{esc\(von\)\}<\/b><small>\$\{esc\((?:vnKurz\()?u\.letzte\.text/.test(html), "Text escaped (2.517.0: verschlüsselte als „🔒 Verschlüsselte Nachricht“)");
 }
 // 355 KC-CLUB-EINGANGSKORB (2.23.6): Erstattungen + Dienstzeiten im Eingang, alle drei der Clubleitung, Ablage in mehrere Ordner
 {
@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7197,7 +7197,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/nachrichtMenue\('\$\{m\.id\}'\)/.test(html) && /const NA_SCHNELL = \["👍", "❤️", "😂", "😮", "😢", "🙏"\]/.test(html), "Menü mit Schnell-Reaktionen fehlt");
   assert.ok(/function naAntworten\(/.test(html) && /id="antwortLeiste"/.test(html) && /antwort_auf: NA\.antwort\.id/.test(html), "Antworten fehlt");
   assert.ok(/function naErwPruefen\(/.test(html) && /id="erwVorschlag"/.test(html) && /erwaehnt: naErwaehnteIds\(text\)/.test(html), "@Erwähnen fehlt");
-  assert.ok(/function naText\(t\) \{[^\n]*\n\s*return esc\(t\)/.test(html), "Nachrichtentext muss weiter sicher (esc) ausgegeben werden");
+  assert.ok(/function naText\(t\) \{[^\n]*\n(\s*if \(vnIst\(t\)\) return vnHtml\(t\);[^\n]*\n)?\s*return esc\(t\)/.test(html) && /function vnHtml\(t\) \{\n[^\n]*naText\(VN\.klar\.get\(t\)\)[^\n]*\n\s*return `<button[^\n]*data-vn="\$\{esc\(t\)\}"/.test(html), "Nachrichtentext muss weiter sicher (esc) ausgegeben werden (2.517.0: auch verschlüsselte)");
 }
 
 // 122. 0.98.0: Weiterleiten, Nicht stören, Meine Geräte
@@ -11380,4 +11380,63 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   for (const f of ["ablkFotoalbum", "ablkOrdner", "ablkChat", "ablkPerson", "ablkVorschlag", "ablkFertig", "ablkLoeschen"]) assert.ok(programm.includes(`async function ${f}(`), "Aktion " + f);
   assert.ok(/id: "ad-ablagekorb"/.test(programm) && /id: "ablagekorb", stufe: "orange"/.test(programm) && /h === "#ablagekorb"\) ablkZeigen\(\)/.test(programm), "Kachel, Info-Feld, Push-Sprung");
   assert.ok(/beiNein: \(\) => ablkZeigen\(id\)/.test(programm) && /ABL\?\.beiNein !== undefined \? ABL\.beiNein : ABL\?\.danach/.test(programm), "„Nein“ beim Ordner lässt den Eintrag offen");
+}
+
+// 2.512.0 KC-CLUB-ABLAGEKORB-AUSWAHL + -DUBLETTEN (Wunsch Hansi): Fotos einzeln anhaken (ins Album / löschen), Dubletten-Check beim Ablegen
+{
+  const dub = server.slice(server.indexOf("async function ablkDubletten("), server.indexOf("async function ablagekorbAufraeumen("));
+  assert.ok(/\.in\("sha256", shas\)/.test(dub) && /kc_club_fotos/.test(dub) && /kc_club_archiv_dokumente/.test(dub) && /kc_communication_message_attachments/.test(dub) && /kc_club_ablagekorb/.test(dub), "gleiche Datei überall gesucht");
+  assert.ok(/\.in\("meta->>aufnahme", zeiten\)/.test(dub) && /\.in\("meta->>datei", namen\)/.test(dub), "Album: gleiche Aufnahme bzw. Original-Datei (Album speichert verkleinert)");
+  assert.ok(/dieselbe Datei doppelt geteilt/.test(dub) && !/dateienEntfernen|delete\(/.test(dub), "auch im selben Paket; nur Lesen, nichts automatisch gelöscht");
+  assert.ok(/const anlagen = await ablkDubletten\(roh, null\)\.catch\(\(\) => roh\);/.test(server), "beim Ablegen geprüft, Fehler blockieren nie");
+  for (const c of ["ablagekorb_dubletten", "ablagekorb_dateien_loeschen", "ablagekorb_abspalten"]) assert.ok(/nurAdmin\(ich\);/.test(server.slice(server.indexOf(`case "${c}"`), server.indexOf(`case "${c}"`) + 400)), "nur Admin: " + c);
+  assert.ok(/status: "erledigt",\s*ergebnis:/.test(server.slice(server.indexOf('case "ablagekorb_abspalten"'), server.indexOf('case "ablagekorb_abspalten"') + 1500)), "Abgespaltenes bleibt als erledigter Eintrag wiederherstellbar");
+  assert.ok(/onchange="ablkWaehle\(/.test(programm) && /ablkWahlAlle\('\$\{x\.id\}', 'doppelt'\)/.test(programm) && /async function ablkAuswahlAlbum\(/.test(programm) && /async function ablkAuswahlLoeschen\(/.test(programm), "Häkchen, Dubletten wählen, Auswahl ins Album / löschen");
+  assert.ok(/meta\.push\(\/\^image\\\/\/\.test\(d\.type\) \? await exifLesen\(d\)/.test(programm), "Foto-Angaben für die Prüfung mitgeschickt");
+}
+
+// 2.513.0 KC-CLUB-ABLAGEKORB-ALBUM-FIX (Fund Hansi): Ablagekorb → Fotoalbum erst nach erfolgreichem Hochladen erledigt
+{
+  const fa = programm.slice(programm.indexOf("function ablkInsAlbum("), programm.indexOf("async function ablkOrdner("));
+  assert.ok(!/ablkFertig\(|ablagekorb_abspalten|ablagekorb_erledigt/.test(fa), "Öffnen des Formulars erledigt nichts mehr");
+  assert.ok(/faAusKorb = \{ id, ids \};/.test(fa), "Eintrag gemerkt");
+  const hoch = programm.slice(programm.indexOf("async function fotosHochladen()"), programm.indexOf("async function fotoAnsehen("));
+  assert.ok(/if \(korb && ok && !fehler\.length\) await api\("ablagekorb_abspalten"/.test(hoch) && /der Eintrag bleibt im Ablagekorb offen/.test(hoch), "erst nach vollständigem Hochladen erledigt, sonst bleibt er offen");
+}
+
+// 2.514.0 KC-CLUB-TEILEN-ALLE-DATEIEN (Fund Hansi): Teilen aus dem Dateimanager – alle Dateitypen, jeder Feldname
+{
+  const m = JSON.parse(lies("manifest.webmanifest")).share_target;
+  assert.ok(m.params.files[0].accept.includes("*/*") && m.params.files[0].name === "fotos", "Teilen-Liste nimmt alle Dateitypen an");
+  assert.ok(/const dateien = \[\.\.\.f\.values\(\)\]\.filter\(\(x\) => x && typeof x === "object" && typeof x\.size === "number" && x\.size\)/.test(lies("sw.js")), "SW nimmt jede mitgeschickte Datei");
+}
+
+// 2.515.0 KC-CLUB-TEILEN-DIAGNOSE: welche Felder/Dateitypen beim Teilen ankommen (nur Feldname, Typ, Größe – keine Inhalte)
+{
+  assert.ok(/const felder = \[\.\.\.f\.entries\(\)\]\.slice\(0, 20\)/.test(lies("sw.js")) && /felder: Array\.isArray\(info\.felder\)/.test(programm), "Teilen-Diagnose");
+}
+
+// 2.516.0 KC-CLUB-ABLAGEKORB-DUBLETTE-DEUTLICH (Fund Hansi): Dubletten als deutlicher Warnkasten oben im Eintrag, mit „Dubletten löschen“
+{
+  assert.ok(/x\.status === "offen" && x\.anlagen\.some\(\(f\) => f\.dublette\) \? ablkWarnung\(x\)/.test(programm) && /async function ablkDublettenWeg\(/.test(programm) && /\.ablk-warn \{/.test(seite), "Warnkasten mit Löschen");
+}
+
+// 2.517.0 KC-CLUB-VERSCHLUESSELT (Wunsch Hansi): Nachricht mit selbst gewähltem Schlüssel – nur auf dem Handy ver-/entschlüsselt
+{
+  const v = programm.slice(programm.indexOf("const VN_PRE ="), programm.indexOf("function naText(t) {"));
+  assert.ok(/iterations: 310000, hash: "SHA-256"/.test(v) && /name: "AES-GCM", length: 256/.test(v) && /crypto\.getRandomValues\(new Uint8Array\(16\)\)/.test(v) && /crypto\.getRandomValues\(new Uint8Array\(12\)\)/.test(v), "PBKDF2 + AES-GCM, zufälliges Salz und IV");
+  assert.ok(/VN_MIN = 6/.test(v) && /\[\.\.\.pw\]\.length >= VN_MIN/.test(v), "mindestens 6 Zeichen");
+  assert.ok(!/api\(/.test(v), "Schlüssel und Klartext gehen nie an den Server");
+  assert.ok(/if \(vnIst\(t\)\) return vnHtml\(t\);/.test(programm) && /if \(VN\.an && text\) \{ const v = await vnVerschluesseln\(text\); if \(!v\) return; text = v; \}/.test(programm), "Anzeige gesperrt, Senden verschlüsselt");
+  assert.ok(/id="vnKnopf"/.test(seite) && /vnKurz\(u\.letzte\.text\)/.test(programm), "Knopf, Vorschauen ohne Zeichensalat");
+  assert.ok(/\/\^🔒KCV1:\/\.test\(text\) \? "🔒 Verschlüsselte Nachricht/.test(server), "Push/Mail nur „Verschlüsselte Nachricht“");
+}
+
+// 2.518.0 KC-CLUB-SCHLUESSELBUND (Wunsch Hansi): 5 zufällige Schlüssel je Zweier-Chat, Übergabe per Datei – nie über den Server
+{
+  const v = programm.slice(programm.indexOf("const VN_PRE ="), programm.indexOf("function naText(t) {"));
+  assert.ok(/VB_ANZAHL = 5/.test(v) && /crypto\.getRandomValues\(new Uint8Array\(32\)\)/.test(v) && /name: "HKDF", hash: "SHA-256"/.test(v), "5 zufällige 256-Bit-Schlüssel, HKDF");
+  assert.ok(/async function vbEntRing\(/.test(v) && /\$\{vbVormerken\(t\)\}/.test(v) && /Kein passender Schlüssel im Schlüsselbund/.test(v), "Empfang probiert alle durch, sonst Fehlermeldung");
+  assert.ok(/for \(const d of dateien\) if \(await vbEinlesen\(d\)\) return;[^\n]*\n\s*api\("diagnose"/.test(programm), "Teilen liest die Datei ein, bevor irgendetwas an den Server oder in den Ablagekorb geht");
+  assert.ok(/id="chatVbKnopf"/.test(seite) && /class="eg-ton eg-vn" id="vnKnopf"/.test(seite), "Menüpunkt und 🔒 in der kleinen Zeile");
 }
