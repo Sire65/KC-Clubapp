@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.542.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.543.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -3063,7 +3063,7 @@ const RUNDGAENGE = [
   { id: "privat", stand: "1", sym: "🔒", t: "Privatsphäre & Handy weitergeben", u: "Wer sieht was: online, zuletzt da, Tippen, Geburtstag, Kontakt – Abmelden, persönlicher Link, Link verloren, Meine Daten (ca. 4 Min.)", st: () => RG_PRIVAT }, // 2.348.0
   { id: "probleme", stand: "1", sym: "🛠️", t: "Wenn etwas nicht klappt", u: "App neu öffnen, Update, Lämpchen, Schnecke, Laden dauert, zweimal offen, Mikrofon, Sicherheits-Check – und wann du Hansi fragst (ca. 4 Min.)", st: () => RG_PROBLEME }, // 2.348.0
   { id: "chatprofi", stand: "2", sym: "💬", t: "Chat für Fortgeschrittene", u: "Antippen, Pfeil, Haken, Sprachtempo, Vorlesen, Abstimmung, Selbstlöschen, Entwurf, Archiv, ganzer Chat, „… schreibt dir gerade“ (ca. 5 Min.)", st: () => RG_CHATPROFI }, // 2.348.0 · 2.533.0 Fassung 2
-  { id: "geheim", stand: "1", sym: "🕵️", t: "Geheim schreiben: verschlüsseln & Schlüsselbund", u: "Schloss, Rückfrage, Schlüssel, Geheimagent, Öffnen, Schlüsselbund – nichts wird gesendet (ca. 3 Min.)", st: () => RG_GEHEIM }, // 2.533.0 KC-CLUB-VIDEO-GEHEIM
+  { id: "geheim", stand: "2", sym: "🕵️", t: "Geheim schreiben: verschlüsseln & Schlüsselbund", u: "Schloss, Rückfrage, Schlüssel, Geheimagent – und so kommt es beim Empfänger an: Mitteilung, Schlüssel eingeben, Schlüsselbund – nichts wird gesendet (ca. 5 Min.)", st: () => RG_GEHEIM }, // 2.533.0 KC-CLUB-VIDEO-GEHEIM
   { id: "gruppen", stand: "1", sym: "👥", t: "Gruppen anlegen & verwalten", u: "Neue Gruppe, Name & Symbol, Mitglieder, Bereiche klappen, Gruppen-Admin, auflösen – und in Nachricht oder Terminanfrage nutzen (ca. 3 Min.)", st: () => RG_GRUPPEN }, // 2.348.0
   { id: "terminfinden", stand: "1", sym: "📅", t: "Termin ausmachen & Tag finden", u: "Terminanfrage, Stand der Anfrage, Gegenvorschlag unter Vorbehalt, Terminfindung, Terminreihen (ca. 4 Min.)", st: () => RG_TERMINFINDEN }, // 2.348.0
   { id: "todo", stand: "1", sym: "✅", t: "Die gemeinsame To-do-Liste", u: "Umschalter To-do, Aufgabe eintragen, verteilen, abhaken, Frist-Erinnerung, Aufgaben aus Protokollen (ca. 3 Min.)", st: () => RG_TODO }, // 2.348.0
@@ -3440,6 +3440,16 @@ const rgGeheimSchluesselBild = () => `<div class="sim-dialog-hg"><div class="sim
 const rgGeheimBundBild = () => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin-top:0">🔑 Schlüsselbund mit Anne</h3>
   <p style="margin:0 0 8px">Mit einem Schlüsselbund müsst ihr keinen Schlüssel mehr eintippen: ${VB_ANZAHL} zufällige Schlüssel liegen auf beiden Handys. Beim Senden nimmt die App einen davon, beim Empfang probiert sie alle durch – passt keiner, kommt eine Fehlermeldung. Die Schlüssel gehen per Datei direkt an Anne, nie über den Club-Server.</p>
   <div style="display:grid;gap:8px"><span class="knopf haupt" data-s="neu">🔑 Anlegen und Anne schicken</span><span class="knopf" data-s="einlesen">📥 Datei von Anne einlesen</span><span class="knopf">Schließen</span></div></div></div>`;
+// 2.543.0 KC-CLUB-VIDEO-GEHEIM-2 (Wunsch Hansi „Wie sieht z. B. Klaus die verschlüsselte, wenn sie ankommt – mit Schlüsselbund oder Einmal-Schlüssel?“):
+// Empfänger-Seite – Mitteilung aufs Handy, Ankunft des Agenten, Schlüssel eingeben (auch falsch), mit Schlüsselbund von selbst offen. Nur Beispielbilder.
+const rgGeheimPushBild = () => `<div class="sim-dialog-hg" style="align-items:flex-start;padding-top:70px"><div class="sim-dialog karte" data-s="push" style="border-radius:18px">
+  <div style="display:flex;gap:10px;align-items:center"><span style="font-size:1.6em">👨‍🍳</span><div><b>Köcheclub Werne · Anne Beispiel</b><div class="hinweis" style="font-size:.85em">jetzt</div></div></div>
+  <p style="margin:8px 0 0">🔒 Verschlüsselte Nachricht – in der Club-App mit dem Schlüssel öffnen</p></div></div>`;
+const rgGeheimEingebenBild = (falsch) => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin-top:0">🔒 Schlüssel eingeben</h3>
+  <p style="margin:0 0 8px">Den Schlüssel hat dir der Absender persönlich, am Telefon oder per SMS gesagt. Nutzt ihr einen Schlüsselbund, fehlt er auf diesem Handy: oben ⋮ → „🔑 Schlüsselbund“ → „Datei einlesen“.</p>
+  <div data-s="feld" style="border:2px solid ${falsch ? "var(--rot,#741521)" : "var(--gruen,#2e6b3a)"};border-radius:10px;padding:10px 12px;margin:0 0 10px;font-size:1.1em">${falsch ? "Kochmuetze" : "Kochmütze7"}</div>
+  ${falsch ? '<p data-s="falsch" style="margin:0 0 10px;color:var(--rot,#741521);font-weight:800">❌ Falscher Schlüssel – bitte nochmal versuchen.</p>' : ""}
+  <div class="knoepfe"><span class="knopf haupt" data-s="ok">OK</span><span class="knopf">Abbrechen</span></div></div></div>`;
 const RG_GEHEIM = [
   { v: "chat", vor: rgGeheimAuf, sel: ["#chatKopf"], t: "🕵️ Geheim schreiben",
     x: "Manches soll nur der Empfänger lesen – zum Beispiel ein Code fürs Gartentor. Dafür kannst du Nachrichten verschlüsseln. Ich zeige es dir an einem Beispiel-Chat mit Anne. Keine Sorge: Ich verschlüssele, sende und speichere nichts." },
@@ -3455,14 +3465,25 @@ const RG_GEHEIM = [
   { v: "chat", vor: rgGeheimAuf, sel: ['#eingabe [title="Senden"]'], puls: ['#eingabe [title="Senden"]'], t: "🕵️ Der Geheimagent",
     x: "Beim Senden dreht sich am Senden-Knopf kurz ein goldener Schlüssel wie im Schloss. Dann bringt ein Geheimagent mit Hut, Sonnenbrille und Aktenkoffer die Nachricht weg – egal, welchen Boten du sonst gewählt hast. Nur Express geht vor: Da kommt der Rennwagen.",
     live: async (L) => { const k = document.querySelector('#eingabe [title="Senden"]'); if (!k) return; vnSchluesselZeigen(k); await L.warte(1300); if (fxAn()) sendeFahrzeug(k.getBoundingClientRect(), "agent"); await L.warte(3200); } },
+  { v: "chat", vor: () => { rgGeheimAuf(); rgSim(rgGeheimPushBild(), "ueber"); }, nach: rgSimWeg, sel: ['#rgSim [data-s="push"]'], mussSel: true, t: "📲 Beim Empfänger: die Mitteilung",
+    x: "Jetzt die andere Seite – zum Beispiel bei Klaus. Auf seinem Handy erscheint die Mitteilung: Verschlüsselte Nachricht, in der Club-App mit dem Schlüssel öffnen. Vom Inhalt steht da kein Wort – auch nicht in der E-Mail." },
+  { v: "chat", vor: rgGeheimAuf, sel: [() => $("msg-rg-gh-2")], mussSel: true, t: "🕵️ Der Agent liefert ab",
+    x: "Öffnet er den Chat, kommt der Geheimagent von rechts, bleibt bei der Nachricht stehen, der Koffer klickt auf und ein Schlüssel dreht sich. Dann schleicht er weiter.",
+    live: async (L) => { const el = $("msg-rg-gh-2"); if (el && fxAn()) ankunftEffekt(el, "agent").catch(() => {}); await L.warte(4200); } },
   { v: "chat", vor: rgGeheimAuf, sel: [() => document.querySelector("#msg-rg-gh-2 .vn-zu")], mussSel: true, puls: [() => document.querySelector("#msg-rg-gh-2 .vn-zu")], t: "📩 So kommt sie an",
     x: "Beim Empfänger steht nur: Verschlüsselte Nachricht – antippen und Schlüssel eingeben. Auch in der Chat-Liste, in der Mitteilung aufs Handy und in der E-Mail steht kein Wort vom Inhalt. Wer den falschen Schlüssel eintippt, bekommt Falscher Schlüssel." },
+  { v: "chat", vor: () => { rgGeheimAuf(); rgSim(rgGeheimEingebenBild(false), "ueber"); }, nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="feld"]'], t: "🔑 Einmal-Schlüssel: eintippen",
+    x: "Hast du einen Schlüssel eingetippt, tippt Klaus auf die Nachricht. Es kommt das Fenster Schlüssel eingeben. Er gibt den Schlüssel ein, den du ihm persönlich, am Telefon oder per SMS gesagt hast – zum Beispiel Kochmütze7 – und tippt auf OK." },
+  { v: "chat", vor: () => { rgGeheimAuf(); rgSim(rgGeheimEingebenBild(true), "ueber"); }, nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="falsch"]'], t: "❌ Falscher Schlüssel",
+    x: "Vertippt er sich – hier fehlt die Sieben und das ü ist falsch –, steht da: Falscher Schlüssel, bitte nochmal versuchen. Er kann es so oft probieren, wie er will. Ohne den richtigen Schlüssel kann niemand die Nachricht lesen – auch der Server nicht." },
   { v: "chat", vor: rgGeheimAuf, sel: [() => $("msg-rg-gh-3")], mussSel: true, puls: [() => document.querySelector("#msg-rg-gh-3 .vn-auf")], t: "🔓 Geöffnet",
     x: "Mit dem richtigen Schlüssel erscheint der Text, mit einem offenen Schloss davor. Das Handy merkt sich den Schlüssel für diesen Chat und öffnet weitere Nachrichten damit gleich mit. Verschlüsselt wird auf deinem Handy – niemand dazwischen kann mitlesen, auch nicht der Server." },
   { v: "chat", vor: rgGeheimMenue, nach: () => rgFest("chatBlatt", false), tippVor: "#chatMenueKnopf", sel: ["#chatVbKnopf"], mussSel: true, puls: ["#chatVbKnopf"], t: "🔑 Bequemer: der Schlüsselbund",
     x: "Schreibt ihr öfter geheim, geht es bequemer – im Zweier-Chat oben über die drei Punkte: Schlüsselbund mit Anne." },
   { v: "chat", vor: () => { rgGeheimAuf(); rgSim(rgGeheimBundBild(), "ueber"); }, nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="neu"]', '#rgSim [data-s="einlesen"]'], t: "🔑 Fünf Schlüssel als Datei",
     x: "Die App legt fünf zufällige Schlüssel an und gibt sie als Datei weiter – am besten per WhatsApp oder Signal, nicht per E-Mail. Anne tippt die Datei an, wählt Teilen und dann die Club-App, oder hier Datei einlesen. Danach geht alles ohne Eintippen: Schloss an, senden – und bei Anne öffnet sich die Nachricht von selbst. Passt kein Schlüssel, kommt eine Fehlermeldung." },
+  { v: "chat", vor: rgGeheimAuf, sel: [() => $("msg-rg-gh-3")], mussSel: true, puls: [() => document.querySelector("#msg-rg-gh-3 .vn-auf")], t: "🔑 Mit Schlüsselbund: öffnet sich von selbst",
+    x: "Habt ihr einen Schlüsselbund, muss Klaus gar nichts tun: Der Agent bringt die Nachricht, die App probiert die Schlüssel durch und zeigt den Text gleich mit dem offenen Schloss. Passt ausnahmsweise keiner – etwa bei einem älteren Schlüsselbund –, sagt die App das, und er kann den Schlüssel eintippen." },
   { v: "chat", vor: rgGeheimAuf, sel: [".eg-griffe", "#vnKnopf"], t: "⚠️ Gut zu wissen",
     x: "Nur der Text wird verschlüsselt – Fotos und Dateien nicht, darauf weist die App hin. Ein verschlüsselter Text darf etwa zweitausendachthundert Zeichen lang sein. Und: Wer den Schlüssel vergisst, kann die Nachricht nicht mehr lesen – dann kann niemand mehr helfen." },
   { v: "chat", vor: rgGeheimAuf, t: "✅ Fertig", x: "Das war's: Schloss antippen, Rückfrage mit Ja beantworten, Schlüssel festlegen und auf anderem Weg weitersagen – oder einmal einen Schlüsselbund anlegen. Der Geheimagent bringt die Nachricht, und nur ihr beide könnt sie lesen." },

@@ -7189,6 +7189,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const ziele = UH\.liste\.filter\(\(u\) => uhUngelesen\(u\) \|\| uhHervor\(u\)\);/.test(programm) && /const uhHervor = \(u\) => !!u\.gruppe && UH_HERVOR\.some/.test(programm), "Ameisenrahmen (vorhandener Kern) für neue und hervorgehobene Gruppe");
   assert.ok(/\.unterh\.uh-neu \.punkt, \.uhk\.uh-neu > summary \.punkt \{ animation: chatNeuPuls \.7s ease-in-out 3; \}/.test(seite) && /prefers-reduced-motion: reduce\) \{ \.unterh\.uh-neu \.punkt/.test(seite), "Zahl pulsiert 3×, ruhig bei reduzierter Bewegung");
 }
+// 2.543.0 KC-CLUB-VIDEO-GEHEIM-2: Video „Geheim schreiben“ zeigt die Empfänger-Seite (Mitteilung, Agent, Schlüssel eingeben, falsch, Schlüsselbund)
+{
+  const i = programm.indexOf("const RG_GEHEIM = ["), seg = programm.slice(i, programm.indexOf("];", i));
+  for (const t of ["📲 Beim Empfänger: die Mitteilung", "🕵️ Der Agent liefert ab", "🔑 Einmal-Schlüssel: eintippen", "❌ Falscher Schlüssel", "🔑 Mit Schlüsselbund: öffnet sich von selbst"])
+    assert.ok(seg.includes(`t: "${t}"`), "Video-Station: " + t);
+  assert.ok(/ankunftEffekt\(el, "agent"\)/.test(seg), "Agent kommt beim Empfänger an (vorhandener Effekt)");
+  assert.ok(/\{ id: "geheim", stand: "2", sym: "🕵️"/.test(programm), "Video-Stand 2");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

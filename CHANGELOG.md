@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.543.0 – 2026-10-20 – 🎬 Video „Geheim schreiben“: so kommt die verschlüsselte Nachricht beim Empfänger an (KC-CLUB-VIDEO-GEHEIM-2)
+Wunsch Hansi („Wie sieht z. B. Klaus die verschlüsselte, wenn sie ankommt – einmal mit Schlüsselbund oder temporärem Schlüssel“ → „Ja, Video ergänzen und einspielen“).
+- Fünf neue Stationen aus Sicht des Empfängers: 📲 die Mitteilung aufs Handy (kein Wort vom Inhalt), 🕵️ der Agent liefert ab (echter Ankunfts-Effekt im Beispiel-Chat), 🔑 Einmal-Schlüssel eintippen, ❌ Falscher Schlüssel, 🔑 mit Schlüsselbund öffnet sie sich von selbst.
+- Nur Beispielbilder im Beispiel-Chat mit Anne – es wird nichts verschlüsselt, gesendet oder gespeichert. Video-Stand 2 (ca. 5 Min.).
+- Test: tools/hilfe/hilfe-nachtrag4-browser.mjs (17 Schritte, jedes Pflicht-Ziel sichtbar, nichts an den Server), Vertragstest-Block 2.543.0. Rückweg: App 2.542.0.
+
 ## 2.542.0 – 2026-10-20 – 💬 Chats mit neuen Nachrichten sind in der Übersicht markiert (KC-CLUB-CHAT-NEU-MARKIERT)
 Wunsch Hansi („Wenn man in die Nachrichten-Übersicht reingeht, sollen die Zeilen markiert sein, wo neue Nachrichten drin sind – Ameisenlauf, Blinken oder die Anzahl blinkt“).
 - Alle drei Ideen kombiniert, aber ruhig: Beim Öffnen läuft 5 s ein Ameisenrahmen um jeden Chat mit Neuem (vorhandener Rahmen der hervorgehobenen Gruppe, höchstens 1× je Minute), die rote Zahl pulsiert 3×. Danach bleibt die Zeile leicht golden getönt mit roter Leiste links und fettem Namen – bis gelesen.
