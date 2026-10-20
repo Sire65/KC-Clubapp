@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.520.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.521.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14506,7 +14506,7 @@ const KACHELN = {
     { id: "meinedaten", sym: "🔐", t: "Meine Daten", u: "Was ist über mich gespeichert?", aktion: "mdatStart()" },
     { id: "aenderung", sym: "✏️", t: "Änderung melden", u: "Neue Anschrift, Telefon, Größe …", aktion: "aeStart()", zahl: () => (ICH?.vorstand || ICH?.admin ? AE.offen : 0) },
     { id: "unterstuetzung", sym: "🙋", t: "Unterstützung anfragen", u: "Hilfe bei der Club-App", aktion: "uaStart()", nur: () => !ICH?.admin }, // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE
-    { id: "schulungen", sym: "🎓", t: "Meine Schulung", u: "Termin aussuchen · Zusammenfassungen", aktion: "smStart()", zahl: () => (SM.liste || []).filter((e) => e.status === "offen").length }, // 2.23.62 KC-CLUB-SCHULUNG-MITGLIED
+    { id: "schulungen", sym: "🎓", t: "Meine Schulung", u: "Termin aussuchen · Zusammenfassungen", aktion: "smStart()", zahl: () => smOffen().length }, // 2.23.62 KC-CLUB-SCHULUNG-MITGLIED
     { id: "fitness", sym: "🏋️", t: "Fit bleiben", u: () => (nurTest("fitness") ? "🔒 nur für dich (Test) · " : "") + "Übungen mit Twinkey", aktion: "fiStart()", nur: () => frei("fitness") }, // KC-CLUB-FITNESS (2.55.0)
     // 2.143.0 KC-CLUB-STUDIO (Wunsch Hansi): Kachel nur unter „Meins“ und nur, solange ein Mitglied freigeschaltet ist – der Admin nutzt die Studio-Karte im Kopf
     { id: "studio", sym: "🎬", t: "Studio", u: () => studioStufe() === "alles" ? "Foto · Mitschauen · Live zeigen" : "Live zeigen", aktion: "stOeffnen()", nur: () => !ICH?.admin && !!studioStufe() },
@@ -24061,7 +24061,11 @@ function ilMeldungen() {
   for (const a of INIT?.terminanfragenOffen || []) add({ id: "anfrage:" + a.id, stufe: "rot", sym: "📨", t: `${a.von} fragt an: ${a.anlass}`, u: "Bitte antworten", auf: `taZeigen('${esc(a.id)}')`, fertig: `Terminanfrage von ${a.von} beantwortet` });
   if (INIT?.offeneAbstimmungen) add({ id: "abstimmung", stufe: "rot", sym: "🗳️", t: INIT.offeneAbstimmungen === 1 ? "Eine Abstimmung wartet auf deine Stimme" : `${INIT.offeneAbstimmungen} Abstimmungen warten auf deine Stimme`, u: "Antippen und abstimmen", auf: "zeige('vorschlaege')", fertig: "Deine Stimme ist abgegeben" });
   for (const u of INIT?.terminfindungOffen || []) add({ id: "terminfindung:" + (u.id || u.titel), stufe: "rot", sym: "🗓️", t: `Bitte Termine ankreuzen: ${u.titel}`, u: "Wann kannst du?", auf: "zeige('termine')", fertig: `Termine angekreuzt: ${u.titel}` });
-  if (kz.schulung > 0) add({ id: "schulung", stufe: "rot", sym: "🎓", t: "Schulung: bitte einen Termin wählen", u: "Hansi hat dir Termine vorgeschlagen", auf: "smStart()", fertig: "Schulungstermin gewählt" }); // 2.466.0 (Wunschliste #24): vorher Sprung auf die Seite „schulungen“, die es nicht gibt → leere Seite
+  // 2.521.0 KC-CLUB-SCHULUNG-INFO (Wunsch Hansi „in der Info nix von Schulungstermin, wenn ich im Schulungsteil nix freigegeben habe – erst wenn ich
+  // welche anbiete“): Mitglied nur mit offener Einladung UND freien Terminen; Admin nur, wenn ein Mitglied gewählt/gegenvorgeschlagen hat (vorher zählte
+  // auch „abgelaufen“, „Protokoll fehlt“ und „Nachfrage“ – und der Admin las „Hansi hat dir Termine vorgeschlagen“)
+  if (smOffen().length) add({ id: "schulung", stufe: "rot", sym: "🎓", t: "Schulung: bitte einen Termin wählen", u: "Hansi hat dir Termine vorgeschlagen", auf: "smStart()", fertig: "Schulungstermin gewählt" });
+  if (ICH?.admin && kz.schulungFrei > 0) add({ id: "schulung_frei", stufe: "orange", sym: "🎓", t: kz.schulungFrei === 1 ? "Schulung: 1 Termin wartet auf deine Freigabe" : `Schulung: ${kz.schulungFrei} Termine warten auf deine Freigabe`, u: "Gewählt oder Gegenvorschlag – bitte entscheiden", auf: "scStart('termine')", fertig: "Schulungstermine entschieden" }); // 2.466.0 (Wunschliste #24): vorher Sprung auf die Seite „schulungen“, die es nicht gibt → leere Seite
   const in7 = tagPlus(heuteIso(), 7);
   for (const a of (INIT?.meineAufgaben || []).filter((x) => x.faellig && x.faellig <= in7).slice(0, 3)) add({ id: "aufgabe:" + a.id, stufe: "rot", sym: "📌", t: a.text, u: "Aufgabe " + faelligText(a.faellig).replace(/<[^>]+>/g, ""), auf: "zeige('protokolle')", knoepfe: [["✔ erledigt", `aufgabeErledigt('${esc(a.id)}', true)`]], fertig: `Erledigt: ${a.text}` });
   if (pushMoeglich() && Notification.permission !== "granted") add({ id: "push", stufe: "rot", sym: "🔔", t: "Benachrichtigungen sind aus", u: "Sonst verpasst du Nachrichten und Anklopfen", auf: "zeige('einstellungen')", knoepfe: [["Einschalten", "pushEinschalten()"]], fertig: "Benachrichtigungen sind an" });
@@ -33456,8 +33460,10 @@ const SM_ART = { bei_hansi: "🏠 bei Hansi", beim_mitglied: "🚗 Hansi kommt z
 const SM_KEY = "kc_club_sm_hinweis";
 async function smLaden(oeffnen = false, still = false) { // 2.23.63: Fehler sichtbar – nie „keine Einladung“ anzeigen, wenn der Stand unbekannt ist
   try { const r = await api("schulung_meine", { oeffnen }, { still }); SM.liste = r.einladungen || []; SM.fehler = !!r.unvollstaendig; } catch { SM.liste = SM.liste || []; SM.fehler = true; }
+  try { ilZeigen(); } catch {} // 2.521.0: Info-Feld kennt jetzt den Schulungsstand
   return SM.liste;
 }
+const smOffen = () => (SM.liste || []).filter((e) => e.status === "offen" && (e.frei || []).length); // 2.521.0: nur mit angebotenen freien Terminen
 async function smStart() {
   blattAuf("smBlatt", `<h3 style="margin:0">🎓 Meine Schulung</h3>${ICH?.admin ? `<button class="knopf haupt" onclick="$('smBlatt').remove();scStart()">🎓 Schulungen verwalten</button>` : ""}<div id="smInhalt"><p class="hinweis">Wird geladen …</p></div>
     <button type="button" class="tw-nicht" onclick="$('smBlatt').remove();zeige('archiv')">📄 Meine Zusammenfassungen im Archiv (Register „Schulung“)</button>
@@ -33536,7 +33542,7 @@ async function smHinweisPruefen() {
   if (!ICH || document.querySelector(".blatt:not(.versteckt)")) return;
   let ruhe = {}; try { ruhe = JSON.parse(lsLesen(SM_KEY) || "{}") || {}; } catch {}
   if (ruhe.heute === heuteIso() || Date.now() < Number(ruhe.bis || 0)) return;
-  const offen = (await smLaden(false, true)).filter((e) => e.status === "offen"); // KC-CLUB-START-STILL
+  await smLaden(false, true); const offen = smOffen(); // KC-CLUB-START-STILL · 2.521.0: nur, wenn Hansi freie Termine anbietet
   if (!offen.length || document.querySelector(".blatt:not(.versteckt)")) return;
   const f = blattAuf("smHinweisBlatt", `<h3 style="margin:0">🎓 Du bist zur Schulung eingeladen</h3>
     <p style="margin:6px 0">Hansi zeigt dir die Programme des Clubs. Such dir einfach einen Termin aus – die Antwort ist bis ${esc(zeitKurz(offen[0].gueltig_bis))} möglich.</p>

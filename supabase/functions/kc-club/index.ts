@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.520.0";
+const SERVER_VERSION = "2.521.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -6781,7 +6781,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           .or(`and(status.eq.laeuft,dran.eq.${ich.person_id}),and(status.eq.angefragt,an.eq.${ich.person_id})`));
         // 🎓 Schulungen: was auf den Admin wartet – KC-CLUB-SCHULUNG-HINWEIS (2.23.68); Fehler → keine Zahl.
         // 2.301.0 KC-CLUB-SCHNECKE-START: gleichzeitig mit den Kachelzahlen statt danach (war beim Admin-Start der letzte, längste Schritt „kz“)
-        const pSchulungZahl = ich.admin ? schulungStand(ich, null).then((x) => x.wartet.length).catch(() => null) : Promise.resolve(null);
+        const pSchulungZahl = ich.admin ? schulungStand(ich, null).then((x) => x.wartet).catch(() => null) : Promise.resolve(null);
         // KC-CLUB-UNTERSTUETZUNG-ANFRAGE (2.492.0): offene Unterstützungs-Anfragen – nur für den Admin (1 Abfrage), Fehler → keine Zahl
         // KC-CLUB-DW-LAUFBAND (2.493.0, Wunsch Hansi „Dienstplan Weihnachtsmarkt eingeben? – wer schon eingegeben hat, nicht anzeigen“):
         // nur Mitglieder/Aushilfen, nur bei offener Wunschphase (5 Min. gemerkt); 1 Abfrage, Fehler → null (die App zeigt dann nichts)
@@ -6793,7 +6793,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }).catch(() => null);
         const pUaZahl = ich.admin ? Promise.resolve(db.from("kc_club_unterstuetzung").select("id", { count: "exact", head: true }).eq("status", "offen")).then((r: any) => r.error ? null : r.count ?? 0, () => null) : Promise.resolve(null);
         const pKz = kachelZahlen(ich, p).catch(() => null).then(async (kz) => {
-          if (kz && ich.admin) { (kz as any).schulung = await pSchulungZahl; (kz as any).unterstuetzung = await pUaZahl; }
+          if (kz && ich.admin) { const sw = await pSchulungZahl; (kz as any).schulung = sw ? sw.length : null; (kz as any).unterstuetzung = await pUaZahl;
+            (kz as any).schulungFrei = sw ? sw.filter((w: any) => w.art === "gewaehlt" || w.art === "gegenvorschlag").length : null; } // 2.521.0 KC-CLUB-SCHULUNG-INFO: nur was eine Freigabe braucht
           return kz;
         });
         const pComm = communicatorStatus(ich).catch(() => null), pSos = sosFuerAlle(), pAdmin = adminVorname(), pThema = konfigZeile("thema").then((r) => { const w: any = r.data?.wert; return w?.id ? w : null; }).catch(() => null); // 2.323.0 KC-CLUB-THEMEN
@@ -14071,12 +14072,19 @@ Köcheclub-App`,
         const tage = [1, 7, 30].includes(Number(p.tage)) ? Number(p.tage) : 1;
         const schrittMin = tage === 1 ? 30 : tage === 7 ? 240 : 1440, n = Math.round((tage * 1440) / schrittMin);
         const ende = Math.ceil(Date.now() / (schrittMin * 60000)) * schrittMin * 60000, start = ende - n * schrittMin * 60000;
-        const { data, error } = await db.from("kc_club_messwerte").select("zeit,quelle,db_bytes,verbindungen,net_ok,net_fehler,db_ms")
-          .gte("zeit", new Date(start).toISOString()).order("zeit").limit(12000);
-        if (error) throw new Fehler("Verlauf konnte nicht geladen werden.", 503);
+        // 2.521.0 KC-CLUB-VERLAUF-SEITEN (Fund Hansi 20.10.: 7 Tage „61 % erreichbar“, ab 17.10. alles rot – die Messungen liefen aber lückenlos):
+        // die Datenschnittstelle gibt je Abfrage höchstens 1000 Zeilen zurück (ein höheres Limit half nicht) – 7 Tage sind ~1700, 30 Tage ~7200 Messwerte.
+        // Darum seitenweise zu je 1000 nachladen (höchstens 12 Seiten).
+        const data: any[] = [];
+        for (let seite = 0; seite < 12; seite++) {
+          const { data: teil, error } = await db.from("kc_club_messwerte").select("zeit,quelle,db_bytes,verbindungen,net_ok,net_fehler,db_ms")
+            .gte("zeit", new Date(start).toISOString()).order("zeit").order("id").range(seite * 1000, seite * 1000 + 999);
+          if (error) throw new Fehler("Verlauf konnte nicht geladen werden.", 503);
+          data.push(...(teil ?? [])); if ((teil ?? []).length < 1000) break;
+        }
         const { data: erster } = await db.from("kc_club_messwerte").select("zeit").order("zeit").limit(1).maybeSingle();
         const ab = Array.from({ length: n }, (_, i) => ({ von: new Date(start + i * schrittMin * 60000).toISOString(), dbN: 0, apiN: 0, netOk: 0, netFehler: 0, msSumme: 0, msMax: null as number | null, bytes: null as number | null, verb: null as number | null }));
-        for (const m of data ?? []) {
+        for (const m of data) {
           const i = Math.floor((new Date(m.zeit).getTime() - start) / (schrittMin * 60000)); const b = ab[i]; if (!b) continue;
           if (m.quelle === "db") { b.dbN++; b.netOk += m.net_ok ?? 0; b.netFehler += m.net_fehler ?? 0; b.bytes = m.db_bytes ?? b.bytes; b.verb = Math.max(b.verb ?? 0, m.verbindungen ?? 0); }
           else { b.apiN++; b.msSumme += m.db_ms ?? 0; b.msMax = Math.max(b.msMax ?? 0, m.db_ms ?? 0); }
