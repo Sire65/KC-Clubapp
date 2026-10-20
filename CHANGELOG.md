@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.514.0 – 2026-10-20 – 📥 Teilen: auch Dateien aus dem Dateimanager (KC-CLUB-TEILEN-ALLE-DATEIEN)
+Fund Hansi („Konnte eine Datei aus dem Datenspeicher nicht teilen“ – Meldung „Es ist nichts angekommen“; Diagnose: 0 Dateien, kein Text). Die Teilen-Liste der App nahm nur bestimmte Dateitypen an (Fotos, PDF, Word, Excel, ZIP, Audio, Text) – andere Dateien (oder Dateimanager, die einen anderen Typ melden) kamen leer an.
+- Die App nimmt jetzt **alle Dateitypen** an (manifest `*/*`, dazu Video, Text, Anwendungen); der Service Worker übernimmt jede mitgeschickte Datei, egal unter welchem Feldnamen. Gefährliche Typen (Programme, Skripte, HTML/SVG) lehnt der Server weiterhin ab.
+- Die erweiterte Teilen-Liste übernimmt das Handy beim nächsten Aktualisieren der installierten App (meist beim nächsten Start, spätestens nach einem Tag) – die Meldung sagt das jetzt auch.
+- Behebt einen Fehler, der die Benutzung verhindert → sofort eingespielt (AGENTS.md). Nur App.
+- Tests: Vertragstests grün.
+
 ## 2.513.0 – 2026-10-20 – 📥 Ablagekorb → Fotoalbum: erst nach dem Hochladen erledigt (KC-CLUB-ABLAGEKORB-ALBUM-FIX)
 Fund Hansi („Ich habe über den Ablagekorb Fotos ins Album gelegt. Da sind sie aber nicht zu sehen“): „📷 Fotoalbum“ markierte den Eintrag schon beim Öffnen des Hochlade-Formulars als erledigt – im Album landen die Fotos aber erst mit „Hochladen“ (bei Hansi kam zudem ein App-Update dazwischen, das Formular war weg). Die 10 Fotos waren nicht verloren (Ablagekorb → „Zuletzt erledigt“ → „↩ Wieder offen“).
 - Jetzt merkt sich die App den Eintrag und erledigt ihn erst, wenn **alle** Fotos wirklich im Album sind („10 Fotos ins Fotoalbum hochgeladen“). Klappt etwas nicht oder wird das Formular verlassen, bleibt der Eintrag offen.
