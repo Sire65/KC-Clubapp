@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.521.0";
+const SERVER_VERSION = "2.527.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4038,6 +4038,24 @@ function suchTag(v: unknown, plus = 0) {
 
 // ---------- Vorschläge & Abstimmungen (KC-CLUB-VORSCHLAG) ----------
 const STANDARD_OPTIONEN = ["Ja", "Nein", "Enthaltung"];
+// 2.527.0 KC-CLUB-VORSCHLAG-SPAETER (Wunsch Hansi „bei Vorschlägen: jetziges Datum oder nächste oder übernächste Sitzung – Datum noch nicht bekannt –,
+// aber schon mal vorwählen“): ein Vorschlag kann sich „die K-te Sitzung ab Wahl“ merken (sitzung_nr 1–3, sitzung_ab = Zeitpunkt der Wahl). Sobald es so
+// viele Sitzungen (Termine der Art „Treffen“, nicht abgesagt) nach sitzung_ab gibt, bekommt er die passende Sitzung fest zugeordnet. Läuft beim Laden
+// der Vorschläge und nach dem Speichern eines Termins – nur eine kleine Abfrage, solange nichts wartet.
+async function vorschlaegeSitzungZuordnen() {
+  const { data: off, error } = await db.from("kc_club_vorschlaege").select("id,sitzung_nr,sitzung_ab,erstellt_am").eq("status", "offen").is("treffen_id", null).not("sitzung_nr", "is", null).limit(100);
+  if (error || !off?.length) return 0;
+  const ab = (v: any) => v.sitzung_ab || v.erstellt_am, frueh = off.map(ab).sort()[0];
+  const { data: tr } = await db.from("kc_club_treffen").select("id,beginn,status").eq("art", "treffen").neq("status", "abgesagt").gt("beginn", frueh).order("beginn").limit(60);
+  let n = 0;
+  for (const v of off) {
+    const t = (tr ?? []).filter((x: any) => x.beginn > ab(v))[Number(v.sitzung_nr) - 1]; if (!t) continue;
+    const { error: ue } = await db.from("kc_club_vorschlaege").update({ treffen_id: t.id, sitzung_nr: null }).eq("id", v.id).is("treffen_id", null);
+    if (!ue) n++;
+  }
+  return n;
+}
+const sitzungNrPruefen = (x: unknown) => ([1, 2, 3].includes(Number(x)) ? Number(x) : null);
 async function vorschlaegeListe(ich: Ich) {
   const [{ data: offen }, { data: fertig }] = await Promise.all([
     db.from("kc_club_vorschlaege").select("*").eq("status", "offen").order("erstellt_am", { ascending: false }).limit(100),
@@ -4073,7 +4091,7 @@ async function vorschlaegeListe(ich: Ich) {
       ...(v.art === "spende" ? { spenden: v.spenden ?? [], summe: spendenSumme(v.spenden) } : {}),
       status: v.status, frist: v.frist, erstellt_am: v.erstellt_am, abgeschlossen_am: v.abgeschlossen_am,
       von: { person_id: v.erstellt_von, name: leute.get(v.erstellt_von)?.display_name || v.erstellt_von },
-      treffen: t ? { id: t.id, titel: t.titel, beginn: t.beginn } : null,
+      treffen: t ? { id: t.id, titel: t.titel, beginn: t.beginn } : null, sitzungSpaeter: t ? null : v.sitzung_nr ?? null, // 2.527.0
       abgestimmt: !!mein, meine: v.geheim ? null : mein?.wahl ?? null, stimmen: s.length, berechtigt: v.ziel_ids?.length || berechtigt, ergebnis,
       ziel: v.ziel_text || null, fuerMich: !v.ziel_ids || v.ziel_ids.includes(ich.person_id),
       darfAbschliessen: v.status === "offen" && (ich.vorstand || (eigener && unterstuetzbar(v.art))),
@@ -7126,6 +7144,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           versand = await senden("club_treffen", gast ? ziel.filter((id) => id !== t.gastgeber_person_id) : ziel, treffenText(t, vorname(g), anlass), `club-treffen:${t.id}:${Date.now()}`);
           elternHinweis(ziel, "termin", `${anlass === "neu" ? "📅 Neuer" : "✏️ Geänderter"} Köcheclub-Termin – {kind}`, `${t.titel}: ${wann(t.beginn)}${t.ort ? " – " + t.ort : ""}`); // 2.431.0 KC-CLUB-ELTERN
         }
+        await vorschlaegeSitzungZuordnen().catch(() => {}); // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER: neue Sitzung → wartende Vorschläge zuordnen
         await protokoll(ich.person_id, anlass === "neu" ? "treffen_angelegt" : "treffen_geaendert", { treffen: t.id, titel, beginn: t.beginn, versand });
         return json({ ok: true, id: t.id, versand });
       }
@@ -7543,7 +7562,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
 
       // ----- Vorschläge & Abstimmungen -----
       case "vorschlaege_liste": {
-        const { data: kommend } = await db.from("kc_club_treffen").select("id,titel,beginn").eq("status", "geplant").gte("beginn", jetzt()).order("beginn").limit(10);
+        await vorschlaegeSitzungZuordnen().catch((e) => console.error("vorschlag sitzung", String(e))); // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER
+        const { data: kommend } = await db.from("kc_club_treffen").select("id,titel,beginn,art").eq("status", "geplant").gte("beginn", jetzt()).order("beginn").limit(10);
         return json({ vorschlaege: await vorschlaegeListe(ich), treffen: kommend ?? [], spenden: { empfaenger: await spendenEmpfaenger(), betraege: SPENDEN_BETRAEGE, max: SPENDE_MAX } });
       }
 
@@ -7572,6 +7592,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: v, error } = await db.from("kc_club_vorschlaege").insert({ ziel_ids: zielIds, ziel_text: zielText,
           art, titel, beschreibung: txt(p.beschreibung, 2000) || null, optionen, geheim: art === "abstimmung" && !!p.geheim, spenden,
           treffen_id: p.treffen_id ? String(p.treffen_id) : null, frist: art === "abstimmung" && frist ? frist.toISOString() : null, erstellt_von: ich.person_id,
+          ...(!p.treffen_id && sitzungNrPruefen(p.sitzung_nr) ? { sitzung_nr: sitzungNrPruefen(p.sitzung_nr), sitzung_ab: jetzt() } : {}), // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER
         }).select().single();
         if (error || !v) throw new Fehler("Speichern fehlgeschlagen.", 500);
         await objAnlagenSetzen(ich, "vorschlag", v.id, p.anlagen); // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN (z. B. Skizze, Flyer des Spendenempfängers)
@@ -7660,6 +7681,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         const neu: Record<string, unknown> = { titel, beschreibung: txt(p.beschreibung, 2000) || null };
         if ("treffen_id" in p) neu.treffen_id = p.treffen_id ? String(p.treffen_id) : null;
+        if ("treffen_id" in p && "sitzung_nr" in v) { const nr = p.treffen_id ? null : sitzungNrPruefen(p.sitzung_nr); // 2.527.0: „Datum folgt“ ändern
+          neu.sitzung_nr = nr; if (nr && nr !== v.sitzung_nr) neu.sitzung_ab = jetzt(); }
         const { error } = await db.from("kc_club_vorschlaege").update(neu).eq("id", v.id).eq("status", "offen");
         if (error) throw new Fehler("Speichern fehlgeschlagen.", 500);
         const anlagen = Array.isArray(p.anlagen) ? await objAnlagenErsetzen(ich, "vorschlag", v.id, p.anlagen) : null;

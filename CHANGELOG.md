@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.527.0 – 2026-10-20 – 📅 Vorschläge: übernächste Sitzung schon vorwählen (KC-CLUB-VORSCHLAG-SPAETER) · Server 2.527.0 · Datenbank
+Wunsch Hansi („bei Vorschläge: jetziges Datum oder nächste oder übernächste Sitzung (Datum noch nicht bekannt) – aber schon mal vorwählen“).
+- Unter „Für welchen Termin?“ stehen wie bisher die geplanten Termine mit Datum; fehlen Sitzungen bis zur übernächsten, kommen **„📅 Nächste/Übernächste Sitzung – Datum noch offen“** dazu (auch beim Bearbeiten).
+- Der Vorschlag zeigt dann „für die übernächste Sitzung (Datum folgt)“. Sobald die Sitzung angelegt ist (Termin der Art „Treffen“), ordnet der Server ihn automatisch zu – beim Speichern des Termins und beim Laden der Vorschläge.
+- Datenbank: `kc_club_vorschlaege.sitzung_nr` (1–3) und `sitzung_ab` (Migration `20261020_kc_club_v2527_vorschlag_sitzung_spaeter.sql`).
+- Hilfe-Eintrag „Vorschlag für eine spätere Sitzung“.
+- Tests: Vertragstests grün; Browserprobe (Auswahl mit „Übernächste Sitzung – Datum noch offen“, gesendet als sitzung_nr 2), keine Fehler.
+
 ## 2.526.0 – 2026-10-20 – 📄 Erstattungsantrag auf dem Club-Briefbogen als PDF · ▶️ Diashow im Fotoalbum · Teilen: klare Abhilfe (KC-CLUB-ERSTATTUNG-BRIEFBOGEN, KC-CLUB-DRUCK-PDF, KC-CLUB-FOTO-DIASHOW, KC-CLUB-TEILEN-LEER)
 Drei Wünsche/Funde von Hansi, eine Version:
 - **Erstattung auf dem Kopfbogen** („wenn ein Mitglied eine km- oder sonstige Erstattung einreicht, auf den Kopfbogen des Köcheclubs als PDF für einen vernünftigen Ausdruck – und den Ausdruck an den Stellen anbieten, z. B. fürs Mitglied oder Leitungsteam“): Blatt im Briefbogen-Stil (Kochmütze, „Köcheclub Werne“, Fußzeile mit Clubsprecher) mit Antragsteller, Positionen, Summe, Vorschuss/Kaution, Bemerkung und drei Unterschriftsfeldern (Antragsteller · Kassenwart · Leitungsteam). Angeboten **nach dem Einreichen** (danach wie bisher die Ablage-Frage) und im **Eingang beim Antrag** („📄 Antrag als PDF / Drucken“ für Kassenwart/Leitungsteam); auch der bisherige Druck „Erstattungsantrag“ nutzt das Blatt.

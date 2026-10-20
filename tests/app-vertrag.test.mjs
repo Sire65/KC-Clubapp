@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -11519,4 +11519,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/<div>Datum, Unterschrift Antragsteller<\/div><div>Sachlich geprüft \/ ausgezahlt am – Kassenwart<\/div><div>Freigabe – Leitungsteam<\/div>/.test(programm), "drei Unterschriften");
   assert.ok(/id="druckVorschauPdf" onclick="druckPdf\(\)"/.test(seite) && /function pdfAusCanvas\(c, quer\)/.test(programm) && /<foreignObject/.test(programm), "PDF in der Vorschau, selbst gebaut");
   assert.ok(/onclick="faDiashow\(\)"/.test(seite) && /esSchreib\("album", id\); esSchreib\("diaMusik"/.test(programm), "Diashow im Fotoalbum mit Album und Musik");
+}
+
+// 2.527.0 KC-CLUB-VORSCHLAG-SPAETER (Wunsch Hansi): übernächste Sitzung ohne Datum schon vorwählen
+{
+  assert.ok(/📅 \$\{VS_SITZ\[k - 1\]\} Sitzung – Datum noch offen/.test(programm) && /\.\.\.vsTerminWert\(\$\("vfTreffen"\)\.value\)/.test(programm) && /\.\.\.vsTerminWert\(\$\("vbTreffen"\)\.value\)/.test(programm), "Auswahl beim Anlegen und Bearbeiten");
+  assert.ok(/async function vorschlaegeSitzungZuordnen\(\)/.test(server) && /await vorschlaegeSitzungZuordnen\(\)\.catch\(\(\) => \{\}\); \/\/ 2\.527\.0/.test(server) && /sitzung_nr: sitzungNrPruefen\(p\.sitzung_nr\), sitzung_ab: jetzt\(\)/.test(server), "Server merkt und ordnet zu");
+  assert.ok(/add column if not exists sitzung_nr smallint check \(sitzung_nr is null or sitzung_nr between 1 and 3\)/.test(lies("supabase/migrations/20261020_kc_club_v2527_vorschlag_sitzung_spaeter.sql")), "Migration");
 }

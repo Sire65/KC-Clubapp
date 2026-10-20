@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.526.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.527.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5203,6 +5203,7 @@ const HILFE = [
   { id: "hilfe_veroeffentlichen", thema: "club", sym: "📣", t: "Hilfe-Aufruf oder Angebot veröffentlichen", x: "Beim Einstellen fragt die App: <b>„📣 Wie möchtest du es veröffentlichen?“</b> – <b>📌 Pinnwand</b> (grüner Aushang, antippbar), <b>🔔 Push</b> und/oder <b>✉️ E-Mail</b> an alle Mitglieder. Mehrere gehen, die Wahl merkt sich dein Handy. Nichts angehakt: nur in Helfen &amp; Leihen sichtbar. Bei einem fremden Angebot schreibt <b>„💬 Nachricht“</b> gleich den Betreff „Dein Angebot … vom …“ für dich.", zeig: () => hlStart("helfen"), seit: "2.23.44" },
   { id: "hilfe_absprache", thema: "club", sym: "🙋", t: "Hilfe gesucht, aber noch ohne festen Tag", x: "Beim Hilfe-Aufruf musst du dich nicht auf ein Datum festlegen – „nach Absprache“ geht auch. Und wenn jede helfende Hand willkommen ist, wähle bei der Anzahl <b>„♾️ Egal wie viele“</b>.", zeig: () => hlStart(), seit: "2.23.1" },
   { id: "vorschlag_unterstuetzen", thema: "club", sym: "👍", t: "Gute Ideen unterstützen", x: "Bei den <b>🗳️ Vorschlägen</b> kannst du Themen anderer mit 👍 unterstützen. So sieht die Clubleitung schnell, was vielen am Herzen liegt.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
+  { id: "vorschlag_spaeter", thema: "club", sym: "📅", t: "Vorschlag für eine spätere Sitzung", x: "Steht die übernächste Sitzung noch nicht im Kalender? Beim Vorschlag unter „Für welchen Termin?“ einfach <b>„📅 Übernächste Sitzung – Datum noch offen“</b> wählen. Sobald die Sitzung angelegt ist, ordnet die App den Vorschlag ihr automatisch zu – bis dahin steht „(Datum folgt)“ dabei.", seit: "2.527.0" },
   { id: "spende", thema: "club", sym: "💝", t: "Ein Spendenprojekt vorschlagen", x: "Kennst du ein Projekt, das der Club unterstützen könnte? Bei den Vorschlägen gibt es dafür die Art <b>„💝 Spende“</b> – die Projekte kommen dann in die nächste Sitzung.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spiel_mitglieder", thema: "club", sym: "🎲", t: "Gegen andere Mitglieder spielen", x: "In den Spielen unter <b>„👥 Gegen Mitglieder“</b> forderst du jemanden heraus – ihr zieht abwechselnd, und du bekommst Bescheid, wenn du dran bist. An offenen Partien lässt sich sogar <b>„📅 Termin vereinbaren“</b>. Oben steht der 🏆 Pokal des Monats.", zeig: () => spStart(), seit: "2.23.1" },
   { id: "spiel_schach", thema: "club", sym: "♟️", t: "Schach: schieben, Rochade, Twinkey", x: "Figuren einfach mit dem Finger <b>schieben</b> – oder antippen und dann das Zielfeld. <b>Rochade:</b> den König auf den Turm schieben. Geht sie nicht, sagt dir Twinkey in der Sprechblase, warum (z. B. „Im Schach darfst du nicht rochieren“). Gegen den Computer spielst du gegen <b>🧑‍🍳 Twinkey</b>: Er macht Sprüche, und mit <b>💡 Tipp</b> verrät er dir einen guten Zug. Ob gesprochen wird, stellst du mit einem Knopf ein: <b>🔇 Stumm</b> → <b>🗣️ Nur Twinkey</b> (nur seine Sprüche und Tipps) → <b>🔊 Twinkey + Züge</b> (auch jeder Zug). <b>🔔 Töne</b> schaltet das leise Klacken beim Ziehen. Mit <b>♟️ Figuren</b> wechselst du zwischen Klassisch (Standard), Plastisch und der Küchenbrigade. Twinkey spricht mit der Männerstimme (⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ → „👨 Männerstimme“). Während einer Partie ist oben alles ausgeblendet, damit das Brett groß ist – mit <b>⚙️ Einstellungen</b> holst du es zurück. <b>📼 Meine Partien:</b> Jede Partie wird aufgezeichnet – mit <b>▶ Nachspielen</b> siehst du sie Zug für Zug noch einmal an (⏮ ◀ ▶ ⏭ oder ▶️ Abspielen). Bei Partien gegen Mitglieder geht das auch über <b>📼 Nachspielen</b>.", zeig: () => spStart("pc", "schach"), seit: "2.118.0" },
@@ -25775,6 +25776,18 @@ async function treffenAbsagen(id, va) {
 
 // ---------- Vorschläge & Abstimmungen ----------
 let VORSCHLAG_TREFFEN = [], VORSCHLAG_SPENDEN = { empfaenger: [], betraege: [50, 100, 250, 500, 1000], max: 100000 };
+// 2.527.0 KC-CLUB-VORSCHLAG-SPAETER (Wunsch Hansi „jetziges Datum oder nächste oder übernächste Sitzung – Datum noch nicht bekannt –, aber schon mal
+// vorwählen“): fehlen bekannte Sitzungen bis zur übernächsten, stehen „📅 … Sitzung – Datum noch offen“ in der Auswahl (Wert „s:K“ = K-te Sitzung ab jetzt).
+// Der Server ordnet den Vorschlag zu, sobald die Sitzung angelegt ist.
+const VS_SITZ = ["Nächste", "Übernächste", "Überübernächste"];
+function vsTerminOptionen(termine, gewaehlt, spaeter) {
+  const sitzungen = termine.filter((t) => !t.art || t.art === "treffen").length;
+  const offen = []; for (let k = sitzungen + 1; k <= 2; k++) offen.push(k);
+  if (spaeter && !offen.includes(spaeter)) offen.push(spaeter);
+  return termine.map((t) => `<option value="${t.id}" ${t.id === gewaehlt ? "selected" : ""}>${esc(t.titel)} · ${esc(wann(t.beginn))}</option>`).join("")
+    + offen.map((k) => `<option value="s:${k}" ${spaeter === k ? "selected" : ""}>📅 ${VS_SITZ[k - 1]} Sitzung – Datum noch offen</option>`).join("");
+}
+const vsTerminWert = (w) => (/^s:\d$/.test(w || "") ? { treffen_id: null, sitzung_nr: Number(w.slice(2)) } : { treffen_id: w || null });
 async function vorschlaegeLaden() {
   try {
     const { vorschlaege, treffen, spenden: spCfg } = await api("vorschlaege_liste");
@@ -25804,7 +25817,7 @@ function vorschlagKarte(v) {
   const kopf = `${v.art === "abstimmung" ? `<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span>` : v.art === "spende" ? '<span class="marke">💝 Spende</span>' : '<span class="marke">💡 Thema</span>'}
     ${v.status === "abgeschlossen" ? ' <span class="marke gruen">✔ erledigt</span>' : v.status === "zurueckgezogen" ? ' <span class="marke rot">zurückgezogen</span>' : ""}
     ${offen && v.frist ? ` <span class="marke gelb">⏳ bis ${esc(wann(v.frist))}</span>` : ""}`;
-  const unter = `<div class="hinweis" style="font-size:.85rem">von ${esc(v.von.name)} · ${esc(zeitKurz(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : ""}</div>`;
+  const unter = `<div class="hinweis" style="font-size:.85rem">von ${esc(v.von.name)} · ${esc(zeitKurz(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : v.sitzungSpaeter ? ` · für die ${VS_SITZ[v.sitzungSpaeter - 1].toLowerCase()} Sitzung (Datum folgt)` : ""}</div>`;
   let mitte = "";
   if (v.art !== "abstimmung") { // Thema und Spendenprojekt: unterstützen 👍
     const e = v.ergebnis?.[0] || { anzahl: 0, namen: [] };
@@ -25847,14 +25860,14 @@ function vorschlagBearbeiten(id) {
     <label class="feld">${v.art === "abstimmung" ? "Frage" : v.art === "spende" ? "Überschrift" : "Thema"}<input id="vbTitel" maxlength="150" value="${esc(v.titel)}"></label>
     ${v.art === "abstimmung" && v.stimmen ? '<p class="hinweis" style="margin:-4px 0 6px">Es wurde schon abgestimmt – die Frage bleibt deshalb, wie sie ist.</p>' : ""}
     <label class="feld">Beschreibung (freiwillig)<textarea id="vbBeschr" rows="4">${esc(v.beschreibung || "")}</textarea></label>
-    <label class="feld">Für welchen Termin?<select id="vbTreffen"><option value="">– allgemein –</option>${termine.map((t) => `<option value="${t.id}" ${v.treffen?.id === t.id ? "selected" : ""}>${esc(t.titel)} · ${esc(wann(t.beginn))}</option>`).join("")}</select></label>
+    <label class="feld">Für welchen Termin?<select id="vbTreffen"><option value="">– allgemein –</option>${vsTerminOptionen(termine, v.treffen?.id, v.sitzungSpaeter || null)}</select></label>
     ${oaFeld("vb")}
     <p class="hinweis" style="margin:6px 0 0">Beim Speichern wird niemand benachrichtigt.</p>
     <div class="knoepfe bs-fuss"><button class="knopf haupt" id="vbOk">💾 Speichern</button><button class="knopf" onclick="$('vorschlagBearb').remove()">Abbrechen</button></div>`);
   if (v.art === "abstimmung" && v.stimmen) $("vbTitel").disabled = true;
   $("vbOk").onclick = () => einmal($("vbOk"), async () => {
     try {
-      const r = await api("vorschlag_aendern", { id, titel: $("vbTitel").value, beschreibung: $("vbBeschr").value, treffen_id: $("vbTreffen").value || null, anlagen: oaIds("vb") });
+      const r = await api("vorschlag_aendern", { id, titel: $("vbTitel").value, beschreibung: $("vbBeschr").value, ...vsTerminWert($("vbTreffen").value), anlagen: oaIds("vb") });
       oaLeeren("vb"); f.remove();
       melde(r.anlagen?.neu ? `💾 Gespeichert – ${r.anlagen.neu} Anlage${r.anlagen.neu > 1 ? "n" : ""} dazu` : "💾 Gespeichert");
       await vorschlaegeLaden(); if (VORSCHLAG_MAP.get(id)) vorschlagInfo(id);
@@ -25884,8 +25897,9 @@ function vorschlagKachel(v) {
   const lage = !offen ? (v.status === "abgeschlossen" ? '<span class="marke gruen">✔ erledigt</span>' : '<span class="marke rot">zurückgezogen</span>')
     : v.art === "abstimmung" ? (v.meine || v.abgestimmt ? '<span class="marke gruen">✔ Du hast abgestimmt</span>' : '<span class="marke gelb">👉 Stimme fehlt</span>') : "";
   const zahl = (v.art === "abstimmung" ? `🗳️ ${v.stimmen ?? 0} von ${v.berechtigt ?? "?"}` : `👍 ${e}${v.meine ? " · auch von dir" : ""}`) + (v.ziel ? ` · 🔐 ${v.ziel}` : ""); // KC-CLUB-ABSTIMMUNG-ZIEL
+  const spaeter = offen && !v.treffen && v.sitzungSpaeter ? `<span class="marke">📅 ${VS_SITZ[v.sitzungSpaeter - 1]} Sitzung</span>` : ""; // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER
   return `<button class="mini-kachel${offen && v.art === "abstimmung" && !(v.meine || v.abgestimmt) ? " mk-offen" : ""}" onclick="vorschlagInfo('${v.id}')"><span class="mk-sym">${sym}</span>
-    <span class="mk-titel">${esc(v.titel)}</span>${lage}<span class="mk-unter">${zahl}</span>
+    <span class="mk-titel">${esc(v.titel)}</span>${lage}${spaeter}<span class="mk-unter">${zahl}</span>
     ${offen && v.frist ? `<span class="mk-unter">⏳ bis ${esc(wann(v.frist))}</span>` : ""}<span class="mk-unter">von ${esc(v.von?.name || "?")}</span>${vsAnlagenZahl(v)}</button>`;
 }
 function vorschlagInfo(id) {
@@ -25984,7 +25998,7 @@ function vorschlagForm(art) {
     ${vfArt === "spende" ? `<p class="hinweis" style="margin:8px 0 0">Ein oder mehrere Spendenprojekte für die nächste Sitzung – einfach antippen.</p><div id="vfSpenden"></div>` : ""}
     <label class="feld">${vfArt === "abstimmung" ? "Frage" : vfArt === "spende" ? "Überschrift (freiwillig – sonst automatisch)" : "Thema"}<input id="vfTitel" maxlength="150" placeholder="${vfArt === "abstimmung" ? "z. B. Sollen wir im Mai ein Grillfest machen?" : vfArt === "spende" ? "z. B. Spenden aus dem Weihnachtsmarkt" : "z. B. Grillfest im Mai"}"></label>
     <label class="feld">Beschreibung (freiwillig)<textarea id="vfBeschr" rows="3"></textarea></label>
-    <label class="feld">Für welchen Termin?<select id="vfTreffen"><option value="">– allgemein –</option>${VORSCHLAG_TREFFEN.map((t) => `<option value="${t.id}" ${t.id === t0 ? "selected" : ""}>${esc(t.titel)} · ${esc(wann(t.beginn))}</option>`).join("")}</select></label>
+    <label class="feld">Für welchen Termin?<select id="vfTreffen"><option value="">– allgemein –</option>${vsTerminOptionen(VORSCHLAG_TREFFEN, t0, null)}</select></label>
     ${vfArt === "abstimmung" ? `<label class="feld">Antworten (eine pro Zeile)<textarea id="vfOptionen" rows="3">Ja\nNein\nEnthaltung</textarea></label>
       <label class="schalter"><span><b>🔒 Geheime Abstimmung</b><br><small class="hinweis">Niemand sieht, wer wie gestimmt hat; Ergebnis erst am Ende</small></span><input type="checkbox" id="vfGeheim"></label>
       <div class="zwei"><label class="feld">Abstimmen bis (freiwillig)<input id="vfFristDatum" type="date"></label><label class="feld">Uhrzeit<input id="vfFristZeit" type="time" value="20:00"></label></div>
@@ -26038,7 +26052,7 @@ async function vfAuswahl() {
   zeichnen();
 }
 async function vorschlagSpeichern(knopf) {
-  const daten = { art: vfArt, titel: $("vfTitel").value, beschreibung: $("vfBeschr").value, treffen_id: $("vfTreffen").value || null, benachrichtigen: $("vfInfo").checked };
+  const daten = { art: vfArt, titel: $("vfTitel").value, beschreibung: $("vfBeschr").value, ...vsTerminWert($("vfTreffen").value), benachrichtigen: $("vfInfo").checked };
   if (vfArt === "spende") {
     daten.spenden = VF_SP.map((x) => ({ empfaenger: String(x.empfaenger || "").trim(), betrag: Number(x.betrag) || 0 }));
     const fehlt = daten.spenden.find((x) => !x.empfaenger || !(x.betrag > 0));

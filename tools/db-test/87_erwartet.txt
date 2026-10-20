@@ -1,0 +1,4 @@
+angelegt=t
+nr_gemerkt=t
+nur_1_bis_3=t
+alte_ohne_nr=t
