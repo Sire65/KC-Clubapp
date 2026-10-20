@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.527.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.528.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -29109,7 +29109,7 @@ function frageVerb(text) {
 async function geraetAbmelden() {
   if (!(await frage("Von diesem Gerät abmelden?\n\nDein Zugang und alle Club-Daten auf diesem Gerät werden gelöscht – auch Notfallpass, Entwürfe und Einstellungen. Auf deinen anderen Geräten und im Club bleibt alles. Wieder anmelden geht nur mit deinem Zugangslink.", { ja: "🚪 Abmelden", nein: "Abbrechen", gefahr: true }))) return;
   try { const r = await navigator.serviceWorker?.getRegistration?.(); const a = await r?.pushManager?.getSubscription(); await a?.unsubscribe(); } catch {}
-  try { Object.keys(localStorage).filter((k) => /^(kc_club_|kc_buero_|kc-clubapp\.|kcclub)/.test(k) || /^(kc_wichtig_frage|kc-einw-zu)/.test(k)).forEach((k) => localStorage.removeItem(k)); } catch {} // KC-CLUB-RC-PRUEFUNG (20.10.2026): auch „Wichtig“-Frage und Einweisung-zu
+  try { Object.keys(localStorage).filter((k) => /^(kc_club_|kc_buero_|kc-clubapp\.|kcclub)/.test(k) || /^(kc_wichtig_frage|kc_versand_immer|kc-einw-zu)/.test(k)).forEach((k) => localStorage.removeItem(k)); } catch {} // KC-CLUB-RC-PRUEFUNG (20.10.2026): auch „Wichtig“-Frage und Einweisung-zu
   try { sessionStorage.clear(); } catch {}
   try { await caches.delete("kcclub-geteilt"); } catch {}
   location.replace(location.pathname);
@@ -30697,8 +30697,11 @@ let WICHTIG = false;
 // noch Express an ist – es ist nie „nichts“ gewählt. Ersetzt die Frage vor dem Senden (KC-CLUB-WICHTIGKEIT-FRAGE 2.287.0): man sieht die Wahl vorher,
 // eine normale Nachricht braucht weiter nur ➤. Die Leiste erscheint, sobald etwas im Feld steht; der alte Schalter (gleicher Speicherplatz, Standard:
 // an für den Admin) heißt jetzt „Versand-Leiste immer zeigen“.
-const WF_KEY = "kc_wichtig_frage";
-function versandImmerAn() { try { const v = localStorage.getItem(WF_KEY); return v === null ? !!ICH?.admin : v === "1"; } catch (e) { return !!ICH?.admin; } }
+// 2.528.0 KC-CLUB-VERSAND-BEIM-SCHREIBEN (Wunsch Hansi „die Leiste mit Express usw. erst einblenden, wenn Text eingetragen wird“): Standard für alle
+// (auch den Admin) ist jetzt „erst beim Schreiben“; neuer Speicherplatz, damit die alte Voreinstellung „immer“ nicht mehr greift. Wer sie immer sehen
+// will, schaltet sie unter ⚙️ wieder ein. Mit Anhang oder gewähltem ❗/🏎️ bleibt sie sichtbar.
+const WF_KEY = "kc_versand_immer";
+function versandImmerAn() { try { return localStorage.getItem(WF_KEY) === "1"; } catch (e) { return false; } }
 function versandImmerSetzen(an) { try { localStorage.setItem(WF_KEY, an ? "1" : "0"); } catch (e) { /* ohne Speicher gilt der Standard */ } versandZeigen(); melde(an ? "📝❗🏎️ Die Versand-Leiste steht immer über dem Schreibfeld" : "📝❗🏎️ Die Versand-Leiste erscheint, sobald du schreibst"); }
 function versandZeigen() {
   const l = $("versandLeiste"), t = $("text"), n = $("normalKnopf"), normal = !WICHTIG && !EXPRESS;

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.528.0 – 2026-10-20 – 📝❗🏎️ Versand-Leiste erst beim Schreiben (KC-CLUB-VERSAND-BEIM-SCHREIBEN)
+Wunsch Hansi („Die Leiste mit Express usw. erst einblenden, wenn Text eingetragen wird“). Die Leiste konnte das schon – für den Admin stand die Einstellung „Versand-Leiste immer zeigen“ aber von Haus aus auf an. Jetzt ist für alle (auch den Admin) „erst beim Schreiben“ der Standard; die alte Voreinstellung greift nicht mehr (neuer Speicherplatz). Wer sie immer sehen möchte: ⚙️ → „Versand-Leiste immer zeigen“. Mit Anhang oder gewähltem ❗/🏎️ bleibt sie sichtbar. Abmelden löscht auch die neue Einstellung. Nur App. Tests grün; Browserprobe als Admin mit alter „immer“-Einstellung: leeres Feld → Leiste versteckt, „Hallo“ getippt → sichtbar.
+
 ## DB – 2026-10-20 (ohne App-Build) – Chat-Nachfrage schneller (KC-CLUB-CHAT-STAND-TEMPO)
 Wunsch Hansi („Ja dann optimiere die Chat Nachfrage“). Die kurze Chat-Nachfrage (Fingerabdruck, 2.510.0) brauchte im Schnitt 80 ms – fast alles Planung der großen Abfrage bei jedem Aufruf.
 - `kc_club_chat_stand` ist jetzt plpgsql statt SQL: dieselbe Abfrage Zeichen für Zeichen, Postgres merkt sich den Plan je Datenbank-Verbindung. Gleiche Signatur, gleiche Rechte (nur der Server), gleicher Fingerabdruck – App und Server unverändert.
