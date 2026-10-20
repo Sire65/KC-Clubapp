@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -11361,4 +11361,23 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 {
   assert.ok(/<span class="stift-schreibt" aria-hidden="true">✏️<\/span> \$\{esc\(wer\)\}/.test(programm), "Stift in der Schreibt-Anzeige");
   assert.ok(/\.stift-schreibt \{[^}]*animation: stiftSchreibt 1\.6s ease-in-out infinite;/.test(seite) && /@keyframes stiftSchreibt/.test(seite), "Schreibbewegung");
+}
+
+// 2.511.0 KC-CLUB-ABLAGEKORB (Wunsch Hansi): „Teilen → Köcheclub“ legt alles zuerst in den Ablagekorb, Admin bekommt Bescheid und entscheidet
+{
+  const mig = lies("supabase/migrations/20261020_kc_club_v2511_ablagekorb.sql");
+  assert.ok(/create table if not exists public\.kc_club_ablagekorb/.test(mig) && /enable row level security/.test(mig) && /revoke all on public\.kc_club_ablagekorb from public, anon, authenticated/.test(mig) && /kc_db_mirror_table_rules/.test(mig) && /kc_neon_resume_tables/.test(mig) && /Rückweg:/.test(mig), "Tabelle mit RLS, Spiegel, Rückweg");
+  assert.ok(/if \(await ablkAblegen\(text, dateien, info\.titel\)\) return;/.test(programm) && /teilenWahl\(text, dateien\); \/\/ Korb nicht erreichbar/.test(programm), "Teilen → zuerst Korb, sonst wie bisher wählen");
+  const ab = server.slice(server.indexOf('case "ablagekorb_ablegen"'), server.indexOf('case "ablagekorb_liste"'));
+  assert.ok(/String\(x\.object_path\)\.startsWith\(`club\/\$\{ich\.person_id\}\/`\)/.test(ab) && /ABLK_MAX_OFFEN/.test(ab) && /await adminIds\(\)/.test(ab) && /#ablagekorb/.test(ab), "nur eigene Dateien, Grenze, Admin bekommt Bescheid");
+  for (const c of ["ablagekorb_liste", "ablagekorb_kopie", "ablagekorb_erledigt", "ablagekorb_loeschen"]) {
+    const s = server.slice(server.indexOf(`case "${c}"`), server.indexOf(`case "${c}"`) + 300);
+    assert.ok(/nurAdmin\(ich\);/.test(s), "nur Admin: " + c);
+  }
+  assert.ok(/if \(!erlaubt && ich\.admin\) \{ \/\/ 2\.511\.0 KC-CLUB-ABLAGEKORB/.test(server), "Admin darf Korb-Dateien ansehen");
+  assert.ok(/await dateiDuplizieren\(ich, id\)/.test(server.slice(server.indexOf('case "ablagekorb_kopie"'), server.indexOf('case "ablagekorb_erledigt"'))), "Weitergeben mit eigener Kopie");
+  assert.ok(/if \(stuendlich\) await ablagekorbAufraeumen\(\)/.test(server) && /ABLK_TAGE = 14/.test(server), "Erledigtes nach 14 Tagen weg");
+  for (const f of ["ablkFotoalbum", "ablkOrdner", "ablkChat", "ablkPerson", "ablkVorschlag", "ablkFertig", "ablkLoeschen"]) assert.ok(programm.includes(`async function ${f}(`), "Aktion " + f);
+  assert.ok(/id: "ad-ablagekorb"/.test(programm) && /id: "ablagekorb", stufe: "orange"/.test(programm) && /h === "#ablagekorb"\) ablkZeigen\(\)/.test(programm), "Kachel, Info-Feld, Push-Sprung");
+  assert.ok(/beiNein: \(\) => ablkZeigen\(id\)/.test(programm) && /ABL\?\.beiNein !== undefined \? ABL\.beiNein : ABL\?\.danach/.test(programm), "„Nein“ beim Ordner lässt den Eintrag offen");
 }

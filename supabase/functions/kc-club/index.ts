@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.510.0";
+const SERVER_VERSION = "2.511.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1030,6 +1030,25 @@ async function dateienEntfernen(ids: (string | null | undefined)[]) {
   await db.from("kc_communication_attachments").delete().in("id", u);
 }
 
+// ---------- 2.511.0 KC-CLUB-ABLAGEKORB (Wunsch Hansi „Teilen aus anderen Programmen – erst mal in einen Korb legen, Info an Admin, dann
+// entscheide ich: Fotoalbum, Ordner, löschen, in Chats weiterleiten, als Aufgabe, als Vorschlag für die Sitzung, Weitergabe an Clubsprecher …“;
+// Wahl Hansi: alle Mitglieder dürfen teilen, alles kommt zuerst in den Korb). Die App lädt die Dateien hoch (wie Chat-Anlagen, nur eigene),
+// der Server legt das Paket in kc_club_ablagekorb und sagt den Admins Bescheid. Bearbeiten nur Admin. Zum Weitergeben kopiert der Server die
+// Dateien in den Bereich des Admins (dateiDuplizieren) – so gelten überall die üblichen Regeln „nur eigene Anlagen anhängen“.
+// Erledigte Einträge (samt Original-Dateien) räumt der stündliche Lauf nach ABLK_TAGE Tagen weg.
+const ABLK_MAX_DATEIEN = 10, ABLK_MAX_OFFEN = 30, ABLK_TAGE = 14;
+const ablkIds = (z: any): string[] => (Array.isArray(z?.anlagen) ? z.anlagen : []).map((x: any) => String(x?.id || "")).filter((x: string) => /^[0-9a-f-]{36}$/i.test(x));
+async function ablkHolen(id: unknown) {
+  const { data, error } = await db.from("kc_club_ablagekorb").select("*").eq("id", String(id || "")).maybeSingle();
+  if (error) throw new Fehler("Der Ablagekorb ist gerade nicht erreichbar.", 503);
+  if (!data) throw new Fehler("Diesen Eintrag gibt es nicht mehr.", 404);
+  return data;
+}
+async function ablagekorbAufraeumen() {
+  const { data } = await db.from("kc_club_ablagekorb").select("id,anlagen").eq("status", "erledigt").lt("erledigt_am", new Date(Date.now() - ABLK_TAGE * 86400000).toISOString()).limit(50);
+  for (const z of data ?? []) { await dateienEntfernen(ablkIds(z)).catch(() => {}); await db.from("kc_club_ablagekorb").delete().eq("id", z.id); }
+  return (data ?? []).length;
+}
 // ---------- KC-CLUB-EINMAL-FOTO (2.220.0, Wunsch Hansi „Foto nur einmal ansehen – gegen Missbrauch“) ----------
 // Das Bild gibt nur „einmal_foto_ansehen“ heraus (als Daten, nie als Link); je Empfänger genau einmal (Primärschlüssel).
 // Sobald alle Empfänger es gesehen haben – spätestens nach EINMAL_TAGE – wird die Bilddatei gelöscht.
@@ -6147,6 +6166,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       await aeFreigabeMelden().catch((e) => console.error("aenderung freigabe", String(e))); // KC-CLUB-AE-FREIGABE-PUSH (2.88.0)
       if (stuendlich) await wochenberichtLauf().catch((e) => console.error("wochenbericht", String(e))); // KC-CLUB-WOCHENBERICHT (2.23.81)
       if (stuendlich) await dbWarnungLauf().catch((e) => console.error("db warnung", String(e))); // KC-CLUB-DB-AUFRAEUMEN (2.24.7)
+      if (stuendlich) await ablagekorbAufraeumen().catch((e) => console.error("ablagekorb aufraeumen", String(e))); // 2.511.0 KC-CLUB-ABLAGEKORB
       if (stuendlich) await schulungNachfrageErinnern().catch((e) => console.error("schulung nachfrage", String(e))); // KC-CLUB-SCHULUNG-NACHFRAGE (2.35.0)
       if (stuendlich) await reiseChecklisteErinnern().catch((e) => console.error("reise checkliste", String(e))); // KC-CLUB-REISE-CHECKLISTE (2.223.0)
       if (stuendlich) await dienstGrussSenden().catch((e) => console.error("dienst gruss", String(e))); // KC-CLUB-DIENST-GRUSS (2.224.0)
@@ -6744,6 +6764,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { count } = await db.from("kc_club_archiv_dokumente").select("id", { count: "exact", head: true }).in("ordner_id", ids).eq("status", "pruefung").neq("hochgeladen_von", ich.person_id);
           return count ?? 0;
         })().catch(() => 0);
+        const pAblk = ich.admin ? Promise.resolve(db.from("kc_club_ablagekorb").select("id", { count: "exact", head: true }).eq("status", "offen"))
+          .then((r: any) => (r.error ? null : r.count ?? 0), () => null) : Promise.resolve(undefined); // 2.511.0 KC-CLUB-ABLAGEKORB
         const pRest = Promise.all([
           db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", ich.person_id).maybeSingle(),
           db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
@@ -6875,7 +6897,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -11861,6 +11883,71 @@ Köcheclub Werne`,
       }
 
       // ----- KC-CLUB-EINGANGSKORB (2.23.6): Erstattungen + Dienstzeiten im Büro-Eingang, Ablage in mehrere Ordner -----
+      // ----- 2.511.0 KC-CLUB-ABLAGEKORB -----
+      case "ablagekorb_ablegen": {
+        const ids = [...new Set((Array.isArray(p.anlagen) ? p.anlagen : []).map((x: unknown) => String(x)).filter((x: string) => /^[0-9a-f-]{36}$/i.test(x)))].slice(0, ABLK_MAX_DATEIEN);
+        const text = txt(p.text, 4000), titel = txt(p.titel, 200);
+        if (!ids.length && !text) throw new Fehler("Es ist nichts angekommen – bitte nochmal teilen.");
+        const { data: att } = ids.length ? await db.from("kc_communication_attachments").select("id,object_path,file_name,mime_type,size_bytes").in("id", ids) : { data: [] as any[] };
+        const eigene = (att ?? []).filter((x: any) => String(x.object_path).startsWith(`club/${ich.person_id}/`)); // nur selbst hochgeladene
+        if (ids.length && !eigene.length) throw new Fehler("Die Dateien konnten nicht übernommen werden – bitte nochmal teilen.", 400);
+        const { count } = await db.from("kc_club_ablagekorb").select("id", { count: "exact", head: true }).eq("von", ich.person_id).eq("status", "offen");
+        if ((count ?? 0) >= ABLK_MAX_OFFEN) throw new Fehler("Im Ablagekorb liegen schon viele Sachen von dir – bitte warte, bis sie bearbeitet sind.", 429);
+        const anlagen = eigene.map((x: any) => ({ id: x.id, name: x.file_name, mime: x.mime_type, groesse: x.size_bytes }));
+        const { data: z, error } = await db.from("kc_club_ablagekorb").insert({ von: ich.person_id, titel: titel || null, text: text || null, anlagen }).select("id").single();
+        if (error || !z) throw new Fehler("Konnte nicht im Ablagekorb abgelegt werden.", 500);
+        const bilder = anlagen.filter((x: any) => /^image\//.test(x.mime)).length, rest = anlagen.length - bilder;
+        const was = [bilder ? `${bilder} Foto${bilder > 1 ? "s" : ""}` : "", rest ? `${rest} Datei${rest > 1 ? "en" : ""}` : "", !anlagen.length ? "ein Text" : ""].filter(Boolean).join(" und ");
+        const admins = (await adminIds()).filter((x) => x !== ich.person_id);
+        const versand = admins.length ? await senden("club_nachricht", admins, { titel: "📥 Neu im Ablagekorb", kurz: `${ich.vorname} hat ${was} geteilt – bitte entscheiden, wohin damit.`,
+          betreff: `Köcheclub Werne – Neu im Ablagekorb (von ${ich.vorname})`, text: `${ich.name} hat ${was} mit der Club-App geteilt.${text ? `\n\n„${txt(text, 300)}“` : ""}\n\nIn der App: ${APP_URL}#ablagekorb`,
+          url: `${APP_URL}#ablagekorb` }, `club-ablagekorb:${z.id}`).catch(() => null) : null;
+        await protokoll(ich.person_id, "ablagekorb_abgelegt", { id: z.id, dateien: anlagen.length, text: !!text, versand });
+        return json({ ok: true, id: z.id, dateien: anlagen.length });
+      }
+
+      case "ablagekorb_liste": {
+        nurAdmin(ich);
+        const [{ data: offen, error }, { data: erledigt }] = await Promise.all([
+          db.from("kc_club_ablagekorb").select("*").eq("status", "offen").order("erstellt_am", { ascending: false }).limit(100),
+          db.from("kc_club_ablagekorb").select("*").eq("status", "erledigt").order("erledigt_am", { ascending: false }).limit(20)]);
+        if (error) throw new Fehler("Der Ablagekorb ist gerade nicht erreichbar.", 503);
+        const alle = [...(offen ?? []), ...(erledigt ?? [])], leute = await personen(alle.flatMap((x: any) => [x.von, x.erledigt_von]).filter(Boolean));
+        const name = (pid: string) => leute.get(pid)?.display_name || pid;
+        const aus = (x: any) => ({ id: x.id, von: x.von, vonName: name(x.von), titel: x.titel, text: x.text, anlagen: x.anlagen ?? [], am: x.erstellt_am, status: x.status,
+          ergebnis: x.ergebnis, erledigtVon: x.erledigt_von ? name(x.erledigt_von) : null, erledigtAm: x.erledigt_am });
+        const { data: ro } = await db.from("kc_club_rollen").select("person_id,aemter").overlaps("aemter", ["Clubsprecher", "Kassenwart"]);
+        const aemter = await personen((ro ?? []).map((r: any) => r.person_id));
+        return json({ offen: (offen ?? []).map(aus), erledigt: (erledigt ?? []).map(aus), tage: ABLK_TAGE,
+          aemter: (ro ?? []).filter((r: any) => r.person_id !== ich.person_id).map((r: any) => ({ person_id: r.person_id, name: aemter.get(r.person_id)?.display_name || r.person_id, amt: (r.aemter || []).find((x: string) => /^(Clubsprecher|Kassenwart)/.test(x)) || "" })) });
+      }
+
+      case "ablagekorb_kopie": { // Dateien als eigene Kopie des Admins – zum Anhängen in Chat, Vorschlag usw.
+        nurAdmin(ich);
+        const z = await ablkHolen(p.id), aus: any[] = [];
+        for (const id of ablkIds(z)) { const r = await dateiDuplizieren(ich, id); const o = (z.anlagen || []).find((x: any) => x.id === id); aus.push({ ...r, mime: o?.mime || "" }); }
+        return json({ ok: true, anlagen: aus });
+      }
+
+      case "ablagekorb_erledigt": {
+        nurAdmin(ich);
+        const z = await ablkHolen(p.id), wieder = p.wieder === true;
+        const { error } = await db.from("kc_club_ablagekorb").update(wieder ? { status: "offen", ergebnis: null, erledigt_von: null, erledigt_am: null }
+          : { status: "erledigt", ergebnis: txt(p.ergebnis, 300) || "Erledigt", erledigt_von: ich.person_id, erledigt_am: jetzt() }).eq("id", z.id);
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, wieder ? "ablagekorb_wieder_offen" : "ablagekorb_erledigt", { id: z.id, ergebnis: wieder ? null : txt(p.ergebnis, 300) });
+        return json({ ok: true });
+      }
+
+      case "ablagekorb_loeschen": {
+        nurAdmin(ich);
+        const z = await ablkHolen(p.id);
+        await dateienEntfernen(ablkIds(z));
+        await db.from("kc_club_ablagekorb").delete().eq("id", z.id);
+        await protokoll(ich.person_id, "ablagekorb_geloescht", { id: z.id, von: z.von, dateien: ablkIds(z).length });
+        return json({ ok: true });
+      }
+
       case "eingang_korb": {
         nurLeitung(ich);
         const [{ data: ers }, { data: dw }] = await Promise.all([
@@ -12954,6 +13041,10 @@ Köcheclub Werne`,
             const { data: tp } = await db.from("kc_communication_thread_participants").select("thread_id").eq("thread_id", m.thread_id).eq("person_id", ich.person_id).maybeSingle();
             if (tp) { erlaubt = true; break; }
           }
+        }
+        if (!erlaubt && ich.admin) { // 2.511.0 KC-CLUB-ABLAGEKORB: Admin sieht, was Mitglieder in den Ablagekorb geteilt haben
+          const { data: ak } = await db.from("kc_club_ablagekorb").select("id").contains("anlagen", JSON.stringify([{ id: att.id }])).limit(1);
+          if (ak?.length) erlaubt = true;
         }
         if (!erlaubt && ich.zugang === "mitglied") { // 2.425.0 KC-CLUB-GENERALCHECK: Gäste/Aushilfen nur eigene und Chat-Anlagen
           // KC-CLUB-BOERSE (1.43.0): Fotos aktiver Börsen-Anzeigen dürfen alle Mitglieder sehen

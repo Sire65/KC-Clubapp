@@ -1,0 +1,7 @@
+angelegt=t
+erledigt=t
+status_geprueft=t
+hoechstens_10=t
+rls=t
+kein_zugriff_ohne_server=t
+spiegelregel=t
