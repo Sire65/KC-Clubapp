@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.511.0";
+const SERVER_VERSION = "2.512.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1043,6 +1043,59 @@ async function ablkHolen(id: unknown) {
   if (error) throw new Fehler("Der Ablagekorb ist gerade nicht erreichbar.", 503);
   if (!data) throw new Fehler("Diesen Eintrag gibt es nicht mehr.", 404);
   return data;
+}
+// 2.512.0 KC-CLUB-ABLAGEKORB-DUBLETTEN (Wunsch Hansi „Dubletten-Check: wenn was in den Ablagekorb kommt, alles durchsuchen, ob es das schon gibt“):
+// 1) exakt gleiche Datei (SHA-256 aus kc_communication_attachments) irgendwo sonst – Fotoalbum, Archiv, Chat, Vorschlag/Protokoll, Ablagekorb;
+// 2) Fotos zusätzlich wie im Album gespeichert (dort verkleinert, also anderer Fingerabdruck): gleiche Aufnahmezeit + Kamera bzw. gleiche
+//    Original-Datei (Name + Größe) aus den Foto-Angaben (kc_club_fotos.meta); 3) dieselbe Datei zweimal im selben Paket.
+// Ergebnis steht je Datei in anlagen[].dublette (höchstens 3 Fundstellen). Nur Lesen, nichts wird automatisch gelöscht.
+async function ablkDubletten(anlagen: any[], korbId: string | null) {
+  const ids = anlagen.map((x) => x.id).filter(Boolean);
+  if (!ids.length) return anlagen;
+  const { data: eigene } = await db.from("kc_communication_attachments").select("id,sha256").in("id", ids);
+  const shaVon = new Map((eigene ?? []).map((x: any) => [x.id, x.sha256]));
+  const shas = [...new Set((eigene ?? []).map((x: any) => x.sha256).filter(Boolean))];
+  const { data: gleich } = shas.length ? await db.from("kc_communication_attachments").select("id,sha256,file_name").in("sha256", shas).limit(300) : { data: [] as any[] };
+  const fremd = (gleich ?? []).filter((x: any) => !ids.includes(x.id)), fids = fremd.map((x: any) => x.id);
+  const [{ data: fo }, { data: ar }, { data: ma }, { data: oa }, { data: pa }, { data: korb }] = fids.length ? await Promise.all([
+    db.from("kc_club_fotos").select("attachment_id,datum,thema").in("attachment_id", fids).is("geloescht_am", null),
+    db.from("kc_club_archiv_dokumente").select("attachment_id,titel,datum").in("attachment_id", fids).is("geloescht_am", null),
+    db.from("kc_communication_message_attachments").select("attachment_id").in("attachment_id", fids),
+    db.from("kc_club_objekt_anlagen").select("attachment_id,art").in("attachment_id", fids),
+    db.from("kc_club_sitzungsprotokoll_anlagen").select("attachment_id").in("attachment_id", fids),
+    db.from("kc_club_ablagekorb").select("id,anlagen,erstellt_am").neq("id", korbId ?? "00000000-0000-0000-0000-000000000000").order("erstellt_am", { ascending: false }).limit(200),
+  ]) : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }] as any[];
+  const fundstellen = (aid: string) => {
+    const f: { wo: string; text: string }[] = [];
+    for (const x of fo ?? []) if (x.attachment_id === aid) f.push({ wo: "Fotoalbum", text: [x.thema, x.datum].filter(Boolean).join(", ") });
+    for (const x of ar ?? []) if (x.attachment_id === aid) f.push({ wo: "Archiv", text: [x.titel, x.datum].filter(Boolean).join(", ") });
+    if ((ma ?? []).some((x: any) => x.attachment_id === aid)) f.push({ wo: "Chat", text: "als Anlage in einer Nachricht" });
+    for (const x of oa ?? []) if (x.attachment_id === aid) f.push({ wo: x.art === "vorschlag" ? "Vorschlag" : "Anlage", text: "" });
+    if ((pa ?? []).some((x: any) => x.attachment_id === aid)) f.push({ wo: "Sitzungsprotokoll", text: "" });
+    for (const k of korb ?? []) if ((k.anlagen || []).some((y: any) => y.id === aid)) f.push({ wo: "Ablagekorb", text: String(k.erstellt_am || "").slice(0, 10) });
+    return f;
+  };
+  // Fotos: wie im Album gespeichert (verkleinert) – über Aufnahmezeit/Kamera bzw. Original-Name + Größe
+  const fotos = anlagen.filter((x) => /^image\//.test(x.mime || "") && (x.aufnahme || (x.datei && x.groesseOrig)));
+  const zeiten = [...new Set(fotos.map((x) => x.aufnahme).filter(Boolean))], namen = [...new Set(fotos.map((x) => x.datei).filter(Boolean))];
+  const [{ data: fz }, { data: fn }] = await Promise.all([
+    zeiten.length ? db.from("kc_club_fotos").select("datum,thema,meta").in("meta->>aufnahme", zeiten).is("geloescht_am", null).limit(200) : Promise.resolve({ data: [] as any[] }),
+    namen.length ? db.from("kc_club_fotos").select("datum,thema,meta").in("meta->>datei", namen).is("geloescht_am", null).limit(200) : Promise.resolve({ data: [] as any[] }),
+  ]);
+  const gesehen = new Map<string, number>();
+  return anlagen.map((x) => {
+    const sha = shaVon.get(x.id), f: { wo: string; text: string }[] = [];
+    for (const g of fremd) if (sha && g.sha256 === sha) f.push(...fundstellen(g.id));
+    if (/^image\//.test(x.mime || "")) for (const p of [...(fz ?? []), ...(fn ?? [])]) {
+      const m = p.meta || {};
+      const zeit = x.aufnahme && m.aufnahme === x.aufnahme && (!x.kamera || !m.kamera || m.kamera === x.kamera);
+      const datei = x.datei && x.groesseOrig && m.datei === x.datei && Number(m.groesse) === Number(x.groesseOrig);
+      if ((zeit || datei) && !f.some((y) => y.wo === "Fotoalbum" && y.text === [p.thema, p.datum].filter(Boolean).join(", "))) f.push({ wo: "Fotoalbum", text: [p.thema, p.datum].filter(Boolean).join(", ") + (zeit ? " · gleiche Aufnahme" : " · gleiche Datei") });
+    }
+    if (sha) { const n = (gesehen.get(sha) || 0) + 1; gesehen.set(sha, n); if (n > 1) f.push({ wo: "dieses Paket", text: "dieselbe Datei doppelt geteilt" }); }
+    const { dublette: _alt, ...rest } = x;
+    return f.length ? { ...rest, dublette: f.slice(0, 3) } : rest;
+  });
 }
 async function ablagekorbAufraeumen() {
   const { data } = await db.from("kc_club_ablagekorb").select("id,anlagen").eq("status", "erledigt").lt("erledigt_am", new Date(Date.now() - ABLK_TAGE * 86400000).toISOString()).limit(50);
@@ -11893,7 +11946,12 @@ Köcheclub Werne`,
         if (ids.length && !eigene.length) throw new Fehler("Die Dateien konnten nicht übernommen werden – bitte nochmal teilen.", 400);
         const { count } = await db.from("kc_club_ablagekorb").select("id", { count: "exact", head: true }).eq("von", ich.person_id).eq("status", "offen");
         if ((count ?? 0) >= ABLK_MAX_OFFEN) throw new Fehler("Im Ablagekorb liegen schon viele Sachen von dir – bitte warte, bis sie bearbeitet sind.", 429);
-        const anlagen = eigene.map((x: any) => ({ id: x.id, name: x.file_name, mime: x.mime_type, groesse: x.size_bytes }));
+        const meta = Array.isArray(p.meta) ? p.meta : []; // 2.512.0: Foto-Angaben je Datei (gleiche Reihenfolge wie anlagen) für die Dublettenprüfung
+        const roh = eigene.map((x: any) => { const m = meta[ids.indexOf(x.id)] || {};
+          return { id: x.id, name: x.file_name, mime: x.mime_type, groesse: x.size_bytes,
+            ...(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(String(m.aufnahme || "")) ? { aufnahme: String(m.aufnahme) } : {}),
+            ...(m.kamera ? { kamera: txt(m.kamera, 80) } : {}), ...(m.datei ? { datei: txt(m.datei, 120) } : {}), ...(Number(m.groesse) > 0 ? { groesseOrig: Number(m.groesse) } : {}) }; });
+        const anlagen = await ablkDubletten(roh, null).catch(() => roh);
         const { data: z, error } = await db.from("kc_club_ablagekorb").insert({ von: ich.person_id, titel: titel || null, text: text || null, anlagen }).select("id").single();
         if (error || !z) throw new Fehler("Konnte nicht im Ablagekorb abgelegt werden.", 500);
         const bilder = anlagen.filter((x: any) => /^image\//.test(x.mime)).length, rest = anlagen.length - bilder;
@@ -11903,7 +11961,40 @@ Köcheclub Werne`,
           betreff: `Köcheclub Werne – Neu im Ablagekorb (von ${ich.vorname})`, text: `${ich.name} hat ${was} mit der Club-App geteilt.${text ? `\n\n„${txt(text, 300)}“` : ""}\n\nIn der App: ${APP_URL}#ablagekorb`,
           url: `${APP_URL}#ablagekorb` }, `club-ablagekorb:${z.id}`).catch(() => null) : null;
         await protokoll(ich.person_id, "ablagekorb_abgelegt", { id: z.id, dateien: anlagen.length, text: !!text, versand });
-        return json({ ok: true, id: z.id, dateien: anlagen.length });
+        return json({ ok: true, id: z.id, dateien: anlagen.length, dubletten: anlagen.filter((x: any) => x.dublette).length });
+      }
+
+      case "ablagekorb_dubletten": { // 2.512.0: Prüfung von Hand (auch für ältere Einträge)
+        nurAdmin(ich);
+        const z = await ablkHolen(p.id), anlagen = await ablkDubletten(z.anlagen || [], z.id);
+        await db.from("kc_club_ablagekorb").update({ anlagen }).eq("id", z.id);
+        return json({ ok: true, dubletten: anlagen.filter((x: any) => x.dublette).length });
+      }
+
+      // 2.512.0 KC-CLUB-ABLAGEKORB-AUSWAHL (Wunsch Hansi „bei z. B. 10 Fotos anklicken, welche ins Album sollen oder gelöscht werden“)
+      case "ablagekorb_dateien_loeschen": {
+        nurAdmin(ich);
+        const z = await ablkHolen(p.id), weg = new Set((Array.isArray(p.ids) ? p.ids : []).map(String).filter((x: string) => ablkIds(z).includes(x)));
+        if (!weg.size) throw new Fehler("Bitte zuerst Dateien auswählen.");
+        const rest = (z.anlagen || []).filter((x: any) => !weg.has(x.id));
+        await dateienEntfernen([...weg]);
+        if (!rest.length && !z.text) await db.from("kc_club_ablagekorb").delete().eq("id", z.id);
+        else await db.from("kc_club_ablagekorb").update({ anlagen: rest }).eq("id", z.id);
+        await protokoll(ich.person_id, "ablagekorb_dateien_geloescht", { id: z.id, anzahl: weg.size });
+        return json({ ok: true, rest: rest.length });
+      }
+      case "ablagekorb_abspalten": { // ausgewählte Dateien als eigener, erledigter Eintrag (z. B. „Ins Fotoalbum gegeben“) – der Rest bleibt offen
+        nurAdmin(ich);
+        const z = await ablkHolen(p.id), wahl = new Set((Array.isArray(p.ids) ? p.ids : []).map(String).filter((x: string) => ablkIds(z).includes(x)));
+        if (!wahl.size) throw new Fehler("Bitte zuerst Dateien auswählen.");
+        const mit = (z.anlagen || []).filter((x: any) => wahl.has(x.id)), rest = (z.anlagen || []).filter((x: any) => !wahl.has(x.id));
+        const { data: neu, error } = await db.from("kc_club_ablagekorb").insert({ von: z.von, titel: z.titel, text: null, anlagen: mit, status: "erledigt",
+          ergebnis: txt(p.ergebnis, 300) || "Erledigt", erledigt_von: ich.person_id, erledigt_am: jetzt(), erstellt_am: z.erstellt_am }).select("id").single();
+        if (error || !neu) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        if (!rest.length && !z.text) await db.from("kc_club_ablagekorb").delete().eq("id", z.id);
+        else await db.from("kc_club_ablagekorb").update({ anlagen: rest }).eq("id", z.id);
+        await protokoll(ich.person_id, "ablagekorb_abgespalten", { id: z.id, neu: neu.id, anzahl: mit.length, ergebnis: txt(p.ergebnis, 300) });
+        return json({ ok: true, id: neu.id, rest: rest.length });
       }
 
       case "ablagekorb_liste": {

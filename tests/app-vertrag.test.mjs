@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -11380,4 +11380,17 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   for (const f of ["ablkFotoalbum", "ablkOrdner", "ablkChat", "ablkPerson", "ablkVorschlag", "ablkFertig", "ablkLoeschen"]) assert.ok(programm.includes(`async function ${f}(`), "Aktion " + f);
   assert.ok(/id: "ad-ablagekorb"/.test(programm) && /id: "ablagekorb", stufe: "orange"/.test(programm) && /h === "#ablagekorb"\) ablkZeigen\(\)/.test(programm), "Kachel, Info-Feld, Push-Sprung");
   assert.ok(/beiNein: \(\) => ablkZeigen\(id\)/.test(programm) && /ABL\?\.beiNein !== undefined \? ABL\.beiNein : ABL\?\.danach/.test(programm), "„Nein“ beim Ordner lässt den Eintrag offen");
+}
+
+// 2.512.0 KC-CLUB-ABLAGEKORB-AUSWAHL + -DUBLETTEN (Wunsch Hansi): Fotos einzeln anhaken (ins Album / löschen), Dubletten-Check beim Ablegen
+{
+  const dub = server.slice(server.indexOf("async function ablkDubletten("), server.indexOf("async function ablagekorbAufraeumen("));
+  assert.ok(/\.in\("sha256", shas\)/.test(dub) && /kc_club_fotos/.test(dub) && /kc_club_archiv_dokumente/.test(dub) && /kc_communication_message_attachments/.test(dub) && /kc_club_ablagekorb/.test(dub), "gleiche Datei überall gesucht");
+  assert.ok(/\.in\("meta->>aufnahme", zeiten\)/.test(dub) && /\.in\("meta->>datei", namen\)/.test(dub), "Album: gleiche Aufnahme bzw. Original-Datei (Album speichert verkleinert)");
+  assert.ok(/dieselbe Datei doppelt geteilt/.test(dub) && !/dateienEntfernen|delete\(/.test(dub), "auch im selben Paket; nur Lesen, nichts automatisch gelöscht");
+  assert.ok(/const anlagen = await ablkDubletten\(roh, null\)\.catch\(\(\) => roh\);/.test(server), "beim Ablegen geprüft, Fehler blockieren nie");
+  for (const c of ["ablagekorb_dubletten", "ablagekorb_dateien_loeschen", "ablagekorb_abspalten"]) assert.ok(/nurAdmin\(ich\);/.test(server.slice(server.indexOf(`case "${c}"`), server.indexOf(`case "${c}"`) + 400)), "nur Admin: " + c);
+  assert.ok(/status: "erledigt",\s*ergebnis:/.test(server.slice(server.indexOf('case "ablagekorb_abspalten"'), server.indexOf('case "ablagekorb_abspalten"') + 1500)), "Abgespaltenes bleibt als erledigter Eintrag wiederherstellbar");
+  assert.ok(/onchange="ablkWaehle\(/.test(programm) && /ablkWahlAlle\('\$\{x\.id\}', 'doppelt'\)/.test(programm) && /async function ablkAuswahlAlbum\(/.test(programm) && /async function ablkAuswahlLoeschen\(/.test(programm), "Häkchen, Dubletten wählen, Auswahl ins Album / löschen");
+  assert.ok(/meta\.push\(\/\^image\\\/\/\.test\(d\.type\) \? await exifLesen\(d\)/.test(programm), "Foto-Angaben für die Prüfung mitgeschickt");
 }

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.511.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.512.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5192,7 +5192,7 @@ const HILFE = [
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Kein Umweg über das Fotoalbum nötig.", seit: "2.23.1" },
   { id: "ablagekorb", thema: "club", sym: "📥", t: "Teilen → Köcheclub: alles landet im Ablagekorb", x: "Fotos, Dokumente oder Texte aus anderen Programmen (Galerie, WhatsApp, Mail, Dateien) schickst du mit <b>Teilen → Köcheclub</b>. Alles kommt zuerst in den <b>📥 Ablagekorb</b>; der Admin bekommt Bescheid und entscheidet, wohin damit – Fotoalbum, Ordner, Chat, Aufgabe, Thema für die Sitzung oder weiter an Clubsprecher bzw. Kassenwart.", seit: "2.511.0" },
-  { id: "ablagekorb_admin", thema: "club", sym: "📥", t: "Ablagekorb bearbeiten (Admin)", x: "Was Mitglieder geteilt haben, liegt im <b>📥 Ablagekorb</b> (Admin-Kachel, Hinweis im Info-Feld, Push). Je Eintrag: <b>📷 Fotoalbum</b>, <b>🗄️ In Ordner</b>, <b>💬 In Chat</b>, <b>👤 Weitergeben</b> (Clubsprecher und Kassenwart stehen oben), <b>✅ Als Aufgabe</b> (To-do + Unterlagen per Nachricht), <b>🗳️ Vorschlag Sitzung</b>, <b>✔ Erledigt</b> oder <b>🗑️ Löschen</b>. Erledigtes wird nach 14 Tagen weggeräumt.", nur: () => !!ICH?.admin, seit: "2.511.0" },
+  { id: "ablagekorb_admin", thema: "club", sym: "📥", t: "Ablagekorb bearbeiten (Admin)", x: "Was Mitglieder geteilt haben, liegt im <b>📥 Ablagekorb</b> (Admin-Kachel, Hinweis im Info-Feld, Push). Je Eintrag: <b>📷 Fotoalbum</b>, <b>🗄️ In Ordner</b>, <b>💬 In Chat</b>, <b>👤 Weitergeben</b> (Clubsprecher und Kassenwart stehen oben), <b>✅ Als Aufgabe</b> (To-do + Unterlagen per Nachricht), <b>🗳️ Vorschlag Sitzung</b>, <b>✔ Erledigt</b> oder <b>🗑️ Löschen</b>. Erledigtes wird nach 14 Tagen weggeräumt. Seit 2.512.0: bei mehreren Dateien je Datei ein <b>Häkchen</b> – nur die ausgewählten <b>ins Fotoalbum</b> oder <b>löschen</b>; <b>⚠️ gibt es schon</b> zeigt Dubletten (gleiche Datei in Fotoalbum, Archiv, Chat oder Ablagekorb, im Album auch gleiche Aufnahme), „⚠️ Dubletten“ wählt sie mit einem Tipp aus.", nur: () => !!ICH?.admin, seit: "2.511.0" },
   { id: "hilfe_anbieten", thema: "club", sym: "🤲", t: "Du kannst etwas besonders gut?", x: "Unter 🤝 Helfen &amp; Leihen → <b>„＋ Neu“</b> → <b>„🤲 Ich biete Hilfe an“</b> machst du ein Angebot, zum Beispiel beim Einrichten der App. Es erscheint als Kachel für alle.", zeig: () => hlStart(), seit: "2.23.1" },
   { id: "hilfe_veroeffentlichen", thema: "club", sym: "📣", t: "Hilfe-Aufruf oder Angebot veröffentlichen", x: "Beim Einstellen fragt die App: <b>„📣 Wie möchtest du es veröffentlichen?“</b> – <b>📌 Pinnwand</b> (grüner Aushang, antippbar), <b>🔔 Push</b> und/oder <b>✉️ E-Mail</b> an alle Mitglieder. Mehrere gehen, die Wahl merkt sich dein Handy. Nichts angehakt: nur in Helfen &amp; Leihen sichtbar. Bei einem fremden Angebot schreibt <b>„💬 Nachricht“</b> gleich den Betreff „Dein Angebot … vom …“ für dich.", zeig: () => hlStart("helfen"), seit: "2.23.44" },
   { id: "hilfe_absprache", thema: "club", sym: "🙋", t: "Hilfe gesucht, aber noch ohne festen Tag", x: "Beim Hilfe-Aufruf musst du dich nicht auf ein Datum festlegen – „nach Absprache“ geht auch. Und wenn jede helfende Hand willkommen ist, wähle bei der Anzahl <b>„♾️ Egal wie viele“</b>.", zeig: () => hlStart(), seit: "2.23.1" },
@@ -30829,7 +30829,7 @@ async function geteiltEmpfangen() {
 // mir zeigen und ich entscheide: Fotoalbum, Ordner, löschen, in Chats weiterleiten, als Aufgabe delegieren, als Vorschlag für die nächste
 // Sitzung, Weitergabe an Clubsprecher …“; Wahl Hansi: alle Mitglieder teilen, alles kommt zuerst in den Korb). Die Dateien werden wie
 // Chat-Anlagen hochgeladen, der Server legt das Paket ab und sagt den Admins Bescheid. Bearbeiten nur Admin (Info-Feld, Kachel, Push).
-const ABLK = { daten: null, laeuft: false };
+const ABLK = { daten: null, laeuft: false, wahl: {} }; // wahl: je Eintrag die angehakten Dateien (2.512.0)
 async function ablkAblegen(text, dateien, titel) {
   if (!ICH || ABLK.laeuft) return false;
   ABLK.laeuft = true; const ids = [];
@@ -30837,8 +30837,9 @@ async function ablkAblegen(text, dateien, titel) {
     if (dateien.length) melde(`📥 ${dateien.length === 1 ? "Datei wird" : dateien.length + " Dateien werden"} in den Ablagekorb gelegt …`);
     // Original behalten, solange es passt (Aufnahmedatum der Fotos fürs Album) – zu große Fotos verkleinert wie im Chat
     for (const d of dateien.slice(0, 10)) ids.push((d.size <= 8 * 1024 * 1024 ? await api("anlage_hochladen", { name: d.name, mime: d.type || "application/octet-stream", daten: base64(await d.arrayBuffer()) }) : await anlageHochladen(d)).id);
-    const r = await api("ablagekorb_ablegen", { text, titel: titel || "", anlagen: ids });
-    if (ICH.admin) { melde("📥 Im Ablagekorb – jetzt entscheiden, wohin damit"); ablkZeigen(r.id); }
+    const meta = []; for (const d of dateien.slice(0, 10)) meta.push(/^image\//.test(d.type) ? await exifLesen(d).catch(() => ({})) : {}); // 2.512.0 Dublettenprüfung
+    const r = await api("ablagekorb_ablegen", { text, titel: titel || "", anlagen: ids, meta });
+    if (ICH.admin) { melde(r.dubletten ? `📥 Im Ablagekorb – ⚠️ ${r.dubletten === 1 ? "1 Datei gibt" : r.dubletten + " Dateien gibt"} es schon (markiert)` : "📥 Im Ablagekorb – jetzt entscheiden, wohin damit"); ablkZeigen(r.id); }
     else melde(`📥 Im Ablagekorb abgelegt – ${INIT?.adminName || "der Admin"} kümmert sich darum. Danke!`);
     return true;
   } catch (e) {
@@ -30858,7 +30859,11 @@ async function ablkZeigen(fokus) {
   const karte = (x) => `<div class="karte ablk-eintrag${x.id === fokus ? " fokus" : ""}" id="ablk-${x.id}">
       <div class="ablk-kopf"><b>${esc(x.vonName)}</b><span class="hinweis">${esc(wann(x.am))}</span></div>
       ${x.titel ? `<div><b>${esc(x.titel)}</b></div>` : ""}${x.text ? `<div class="ablk-text">${esc(x.text.slice(0, 600))}${x.text.length > 600 ? " …" : ""}</div>` : ""}
-      ${x.anlagen.length ? `<div class="ablk-dateien">${x.anlagen.map((f) => `<button type="button" class="ablk-datei" onclick="anlageOeffnen('${f.id}')" title="${esc(f.name)}">${ablkBild(f) ? `<img data-anlage="${f.id}" alt="">` : `<span>${ablkSym(f)}</span>`}<small>${esc(f.name)}</small></button>`).join("")}</div>` : ""}
+      ${x.anlagen.length ? `<div class="ablk-dateien">${x.anlagen.map((f) => `<div class="ablk-datei-w${ablkGewaehlt(x.id).has(f.id) ? " an" : ""}${f.dublette ? " doppelt" : ""}">
+        <button type="button" class="ablk-datei" onclick="anlageOeffnen('${f.id}')" title="${esc(f.name)}">${ablkBild(f) ? `<img data-anlage="${f.id}" alt="">` : `<span>${ablkSym(f)}</span>`}<small>${esc(f.name)}</small></button>
+        ${x.status === "offen" && x.anlagen.length > 1 ? `<label class="ablk-haken" title="Auswählen"><input type="checkbox"${ablkGewaehlt(x.id).has(f.id) ? " checked" : ""} onchange="ablkWaehle('${x.id}', '${f.id}', this.checked)" aria-label="${esc(f.name)} auswählen"></label>` : ""}
+        ${f.dublette ? `<div class="ablk-doppelt" title="${esc(f.dublette.map((d) => d.wo + (d.text ? ": " + d.text : "")).join(" · "))}">⚠️ gibt es schon: ${esc(f.dublette.map((d) => d.wo).filter((w, i, l) => l.indexOf(w) === i).join(", "))}</div>` : ""}</div>`).join("")}</div>
+        ${x.status === "offen" && x.anlagen.length > 1 ? `<div class="ablk-wahl" id="ablkWahl-${x.id}">${ablkWahlLeiste(x)}</div>` : ""}` : ""}
       ${x.status === "offen" ? `<div class="ablk-knoepfe">
         ${x.anlagen.some(ablkBild) ? `<button class="knopf klein" onclick="ablkFotoalbum('${x.id}')">📷 Fotoalbum</button>` : ""}
         <button class="knopf klein" onclick="ablkOrdner('${x.id}')">🗄️ In Ordner</button>
@@ -30866,6 +30871,7 @@ async function ablkZeigen(fokus) {
         <button class="knopf klein" onclick="ablkPerson('${x.id}', 'weiter')">👤 Weitergeben</button>
         <button class="knopf klein" onclick="ablkPerson('${x.id}', 'aufgabe')">✅ Als Aufgabe</button>
         <button class="knopf klein" onclick="ablkVorschlag('${x.id}')">🗳️ Vorschlag Sitzung</button>
+        ${x.anlagen.length ? `<button class="knopf klein" onclick="ablkDublettenPruefen('${x.id}')">🔍 Dubletten prüfen</button>` : ""}
         <button class="knopf klein" onclick="ablkFertig('${x.id}', 'Erledigt')">✔ Erledigt</button>
         <button class="knopf klein rot" onclick="ablkLoeschen('${x.id}')">🗑️ Löschen</button></div>`
       : `<div class="hinweis">✔ ${esc(x.ergebnis || "Erledigt")}${x.erledigtVon ? " · " + esc(x.erledigtVon) : ""}${x.erledigtAm ? " · " + esc(wann(x.erledigtAm)) : ""} <button class="knopf klein" onclick="ablkWieder('${x.id}')">↩ Wieder offen</button></div>`}
@@ -30877,6 +30883,43 @@ async function ablkZeigen(fokus) {
     <div class="knoepfe"><button class="knopf" onclick="document.getElementById('ablkBlatt').remove()">Schließen</button></div>`);
   for (const im of document.querySelectorAll("#ablkBlatt img[data-anlage]")) bildLaden(im).catch?.(() => {});
   if (fokus) setTimeout(() => $("ablk-" + fokus)?.scrollIntoView({ block: "center", behavior: "smooth" }), 100);
+}
+// 2.512.0 KC-CLUB-ABLAGEKORB-AUSWAHL (Wunsch Hansi „bei z. B. 10 Fotos anklicken, welche ins Album sollen oder gelöscht werden“) und
+// KC-CLUB-ABLAGEKORB-DUBLETTEN: Häkchen je Datei, „Alle / Keine / Dubletten wählen“, Auswahl ins Fotoalbum oder löschen. Was ins Album geht,
+// wird als eigener erledigter Eintrag abgespalten (bleibt 14 Tage wiederherstellbar), der Rest bleibt offen.
+const ablkGewaehlt = (id) => ABLK.wahl[id] || (ABLK.wahl[id] = new Set());
+function ablkWahlLeiste(x) {
+  const w = ablkGewaehlt(x.id), n = w.size, bilder = x.anlagen.filter((f) => w.has(f.id) && ablkBild(f)).length, doppelt = x.anlagen.filter((f) => f.dublette).length;
+  return `<div class="ablk-wahl-zeile"><b>☑️ ${n} von ${x.anlagen.length} ausgewählt</b>
+      <button class="knopf klein" onclick="ablkWahlAlle('${x.id}', 'alle')">Alle</button><button class="knopf klein" onclick="ablkWahlAlle('${x.id}', 'keine')">Keine</button>
+      ${doppelt ? `<button class="knopf klein" onclick="ablkWahlAlle('${x.id}', 'doppelt')">⚠️ Dubletten (${doppelt})</button>` : ""}</div>
+    ${n ? `<div class="ablk-wahl-zeile">${bilder ? `<button class="knopf klein haupt" onclick="ablkAuswahlAlbum('${x.id}')">📷 ${bilder} ins Fotoalbum</button>` : ""}<button class="knopf klein rot" onclick="ablkAuswahlLoeschen('${x.id}')">🗑️ ${n} löschen</button></div>` : ""}`;
+}
+function ablkWahlNeu(id) {
+  const x = ablkEintrag(id); if (!x) return; const l = $("ablkWahl-" + id); if (l) l.innerHTML = ablkWahlLeiste(x);
+  const w = ablkGewaehlt(id);
+  document.querySelectorAll(`#ablk-${id} .ablk-datei-w`).forEach((k, i) => { const f = x.anlagen[i]; if (!f) return; k.classList.toggle("an", w.has(f.id)); const c = k.querySelector("input"); if (c) c.checked = w.has(f.id); });
+}
+function ablkWaehle(id, fid, an) { const w = ablkGewaehlt(id); an ? w.add(fid) : w.delete(fid); ablkWahlNeu(id); }
+function ablkWahlAlle(id, art) {
+  const x = ablkEintrag(id); if (!x) return;
+  ABLK.wahl[id] = new Set(art === "alle" ? x.anlagen.map((f) => f.id) : art === "doppelt" ? x.anlagen.filter((f) => f.dublette).map((f) => f.id) : []);
+  ablkWahlNeu(id);
+}
+async function ablkAuswahlLoeschen(id) {
+  const ids = [...ablkGewaehlt(id)]; if (!ids.length) return;
+  if (!(await frage(`${ids.length === 1 ? "Diese Datei" : "Diese " + ids.length + " Dateien"} endgültig löschen?`, { ja: "🗑️ Löschen", nein: "Abbrechen" }))) return;
+  try { await api("ablagekorb_dateien_loeschen", { id, ids }); delete ABLK.wahl[id]; melde(`🗑️ ${ids.length} gelöscht`); ablkZeigen(id); } catch (e) { meldeFehler(e); }
+}
+async function ablkAuswahlAlbum(id) {
+  const x = ablkEintrag(id); if (!x) return; const w = ablkGewaehlt(id), ids = x.anlagen.filter((f) => w.has(f.id) && ablkBild(f)).map((f) => f.id); if (!ids.length) return;
+  try { melde("⏳ Fotos werden geholt …"); const d = await ablkDateien(x, (f) => ids.includes(f.id));
+    await api("ablagekorb_abspalten", { id, ids, ergebnis: `${ids.length} Foto${ids.length > 1 ? "s" : ""} ins Fotoalbum gegeben` }); delete ABLK.wahl[id]; $("ablkBlatt")?.remove();
+    faFilter = {}; faPapierkorb = false; faGeteilt = d; zeige("fotos"); melde(`📷 ${d.length} Foto${d.length > 1 ? "s" : ""} – Thema wählen und „Hochladen“ tippen`);
+  } catch (e) { meldeFehler(e); }
+}
+async function ablkDublettenPruefen(id) {
+  try { melde("🔍 Suche nach Dubletten …"); const r = await api("ablagekorb_dubletten", { id }, { warten: true }); melde(r.dubletten ? `⚠️ ${r.dubletten === 1 ? "1 Datei gibt" : r.dubletten + " Dateien gibt"} es schon – markiert` : "✅ Keine Dubletten gefunden"); ablkZeigen(id); } catch (e) { meldeFehler(e); }
 }
 async function ablkFertig(id, ergebnis, still) {
   try { await api("ablagekorb_erledigt", { id, ergebnis }); if (INIT?.ablagekorb) INIT.ablagekorb--; if (!still) { melde("✔ " + ergebnis); ablkZeigen(); } ilZeigen?.(); } catch (e) { meldeFehler(e); }

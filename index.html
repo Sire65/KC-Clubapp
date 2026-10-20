@@ -995,6 +995,13 @@
   .ablk-datei { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; border: 1px solid var(--linie); border-radius: 10px; background: var(--karte2); color: var(--text); cursor: pointer; overflow: hidden; }
   .ablk-datei img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; background: var(--linie); } .ablk-datei span { font-size: 2rem; line-height: 1.4; }
   .ablk-datei small { font-size: .65rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* 2.512.0 Auswahl + Dubletten */
+  .ablk-datei-w { position: relative; display: flex; flex-direction: column; gap: 2px; } .ablk-datei-w .ablk-datei { width: 100%; }
+  .ablk-datei-w.an .ablk-datei { outline: 3px solid var(--gold); } .ablk-datei-w.doppelt .ablk-datei { border-color: #e0a23b; }
+  .ablk-haken { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; display: grid; place-items: center; background: rgba(0,0,0,.45); border-radius: 8px; cursor: pointer; }
+  .ablk-haken input { width: 18px; height: 18px; margin: 0; cursor: pointer; }
+  .ablk-doppelt { font-size: .62rem; font-weight: 700; color: #b26b00; background: rgba(224,162,59,.18); border-radius: 6px; padding: 2px 4px; line-height: 1.2; }
+  .ablk-wahl { margin: 4px 0 2px; } .ablk-wahl-zeile { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0; }
   .ablk-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; } .ablk-erledigt summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
   .fa-neu { border: 2px solid var(--gold); } .fa-neu .abschnitt { margin-top: 0; } /* 2.498.0 KC-CLUB-FOTOS-NEU-INFO */
   .fk-neu { position: absolute; left: 4px; top: 4px; padding: 1px 6px; border-radius: 999px; background: var(--rot); color: #fff; font-size: .62rem; font-weight: 800; letter-spacing: .03em; }
@@ -5544,7 +5551,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.511.0" data-v="2.511.0"></script>
+<script src="app.js?v=2.512.0" data-v="2.512.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

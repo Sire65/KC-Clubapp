@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.512.0 – 2026-10-20 – 📥 Ablagekorb: Fotos einzeln auswählen · ⚠️ Dubletten-Check (KC-CLUB-ABLAGEKORB-AUSWAHL, KC-CLUB-ABLAGEKORB-DUBLETTEN) · Server 2.512.0
+Wunsch Hansi („Wenn z. B. 10 Fotos im Eingangskorb liegen, dass man anklicken kann, welche ins Album sollen oder gelöscht werden sollen. Außerdem Dubletten-Check einbauen: wenn was in den Ablagekorb reinkommt, wird alles durchsucht, ob es das schon gibt“).
+- **Auswahl:** Bei mehreren Dateien hat jede ein Häkchen. Darunter „☑️ 3 von 10 ausgewählt“ mit **Alle / Keine / ⚠️ Dubletten** und den Knöpfen **📷 3 ins Fotoalbum** und **🗑️ 3 löschen**. Was ins Album geht, wird als eigener erledigter Eintrag abgelegt (14 Tage wiederherstellbar), der Rest bleibt offen.
+- **Dubletten-Check** beim Ablegen (und von Hand mit „🔍 Dubletten prüfen“, auch für ältere Einträge): gesucht wird die exakt gleiche Datei im **Fotoalbum, Archiv, in Chats, Vorschlägen, Sitzungsprotokollen und im Ablagekorb**; bei Fotos zusätzlich wie im Album gespeichert (dort verkleinert): **gleiche Aufnahmezeit + Kamera** bzw. **gleiche Original-Datei** (Name + Größe). Auch zweimal dieselbe Datei im selben Paket. Treffer stehen orange unter dem Bild: „⚠️ gibt es schon: Fotoalbum“ (Fundstelle beim Antippen/Halten). Nichts wird automatisch gelöscht.
+- Grenze: Ein Foto, das schon einmal bearbeitet/zugeschnitten oder über WhatsApp verkleinert wurde, ohne Aufnahmedaten, erkennt die Prüfung nicht als gleich.
+- Nur App + Server, keine Datenbank-Änderung (die Treffer stehen bei den Dateien des Eintrags).
+- Tests: Vertragstests grün; Dubletten-Prüfung mit nachgestellter Datenbank (Album+Chat, Archiv, doppelt im Paket, Album über Original-Datei, neues Foto ohne Treffer); Browserprobe (10 Fotos, 2 Dubletten markiert, Dubletten wählen, Auswahl löschen, keine Fehler).
+
 ## 2.511.0 – 2026-10-20 – 📥 Ablagekorb für alles, was mit der Club-App geteilt wird (KC-CLUB-ABLAGEKORB) · Server 2.511.0
 Wunsch Hansi („In anderen Programmen gibt es Teilen – Dokumente, Fotos. Die Club-App braucht eine Art Eingangskorb, um so etwas anzunehmen und erst mal abzulegen. Info an Admin … dann mir zeigen, und ich entscheide: Fotoalbum, Ordner, löschen, in Chats weiterleiten, als Aufgabe delegieren, als Vorschlag für die nächste Sitzung, Weitergabe an Clubsprecher …“; Wahl Hansi: alle Mitglieder dürfen teilen, alles kommt zuerst in den Korb).
 - **Teilen → Köcheclub** (aus Galerie, WhatsApp, Mail, Dateien): Fotos, Dokumente und Text landen sofort im 📥 Ablagekorb – bis 10 Dateien, Fotos im Original (Aufnahmedatum bleibt fürs Album). Das Mitglied sieht „Im Ablagekorb abgelegt – Hansi kümmert sich darum“. Gäste/Aushilfen und ohne Verbindung: wie bisher selbst wählen (Chat, Fotoalbum, Archiv).
