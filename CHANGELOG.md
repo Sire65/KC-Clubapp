@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.517.0 – 2026-10-20 – 🔒 Nachrichten mit eigenem Schlüssel verschlüsseln (KC-CLUB-VERSCHLUESSELT) · Server 2.517.0
+Wunsch Hansi („Wenn ich eine Nachricht an jemanden schicke, vorher einen Schlüssel festlegen, z. B. 1234 oder abcd – damit wird meine Nachricht verschlüsselt. Aber wie kommt der Empfänger an den Schlüssel?“; Wahl Hansi: selbst gewählter Schlüssel, mindestens 6 Zeichen, je Person merkbar).
+- Unten im Chat neuer Knopf **🔒** (grün, wenn an). Beim Senden fragt die App nach dem Schlüssel (mindestens 6 Zeichen; „1234“ wäre in Sekunden geknackt). Die Nachricht wird **auf dem Handy** verschlüsselt (PBKDF2-SHA-256 mit 310 000 Runden → AES-GCM 256, zufälliges Salz je Nachricht) – auf dem Server, in der Datenbank, in Push und Mail steht nur Zeichensalat bzw. „🔒 Verschlüsselte Nachricht“. Auch der Admin kann sie nicht lesen.
+- Der Empfänger sieht „🔒 Verschlüsselte Nachricht – antippen und Schlüssel eingeben“; falscher Schlüssel → „Falscher Schlüssel“. Den Schlüssel bekommt er **auf anderem Weg** (persönlich, Telefon, SMS) – das sagt die App beim Festlegen.
+- Das Handy merkt sich den Schlüssel je Unterhaltung (nur auf dem Gerät) und öffnet weitere Nachrichten mit demselben Schlüssel gleich mit. Chatliste, Hinweise und Zitate zeigen „🔒 Verschlüsselte Nachricht“.
+- Grenzen: Fotos/Dateien werden nicht verschlüsselt (Hinweis), Text bis etwa 2.800 Zeichen; Schlüssel vergessen = Nachricht nicht mehr lesbar.
+- Hilfe-Eintrag „Nachricht verschlüsselt senden“.
+- Tests: Vertragstests grün; Ver-/Entschlüsseln (richtiger/falscher Schlüssel, Umlaute/Emojis, je Nachricht anderer Geheimtext); Browserprobe Absender → Empfänger (nur Geheimtext gesendet, falscher Schlüssel abgelehnt, richtiger öffnet), keine Fehler.
+
 ## 2.516.0 – 2026-10-20 – ⚠️ Dubletten im Ablagekorb deutlich anzeigen (KC-CLUB-ABLAGEKORB-DUBLETTE-DEUTLICH)
 Fund Hansi („Datei liegt im Eingangskorb. Dubletten-Check hätte sie eigentlich anmeckern müssen – die müssten schon in der Club-App sein“). Die Prüfung hatte die PDF richtig erkannt (gleiche Datei im Archiv „Bescheinigung Ehrenamt … (2)“ vom 17.10., in einem Chat und bei einem Vorschlag) – angezeigt wurde das aber nur als kleine orange Zeile unter der Datei.
 - Jetzt steht oben im Eintrag ein deutlicher Warnkasten „⚠️ Diese Datei gibt es schon in der Club-App“ mit allen Fundstellen je Datei und dem Knopf **„🗑️ Dublette(n) löschen“** (die vorhandenen in der Club-App bleiben; ist der Eintrag danach leer, verschwindet er).

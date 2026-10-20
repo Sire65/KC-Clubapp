@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.512.0";
+const SERVER_VERSION = "2.517.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -9878,7 +9878,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (ae) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler("Selbstlöschen konnte nicht gespeichert werden – Nachricht nicht gesendet.", 500); }
         }
         // Selbstlöschende Nachrichten: Text nie in Push/Mail (eine Mail bliebe sonst im Postfach stehen)
-        const slHinweis = slNachricht ? `⏳ Nachricht löscht sich nach ${slText(slNachricht)} – nur in der App lesen` : "";
+        // 2.517.0 KC-CLUB-VERSCHLUESSELT: verschlüsselte Nachricht (nur das Handy kennt den Schlüssel) → Push/Mail ohne Zeichensalat
+        const slHinweis = /^🔒KCV1:/.test(text) ? "🔒 Verschlüsselte Nachricht – in der Club-App mit dem Schlüssel öffnen" : slNachricht ? `⏳ Nachricht löscht sich nach ${slText(slNachricht)} – nur in der App lesen` : "";
         const wMarke = notfall ? "🚨 NOTFALL – " : wichtig ? "❗ Wichtig – " : "";
         await Promise.all([
           // neue Nachricht: wer die Unterhaltung ausgeblendet hatte, sieht sie wieder (wie bei WhatsApp)

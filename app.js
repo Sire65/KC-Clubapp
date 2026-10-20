@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.516.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.517.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5191,6 +5191,7 @@ const HILFE = [
   { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Kein Umweg über das Fotoalbum nötig.", seit: "2.23.1" },
+  { id: "verschluesselt", thema: "nachrichten", sym: "🔒", t: "Nachricht verschlüsselt senden", x: "Für Geheimes: im Chat auf das Schloss <b>🔒</b> tippen, Nachricht schreiben, senden – dann legst du einen <b>Schlüssel</b> fest (mindestens 6 Zeichen, z. B. „Kochmütze7“). Die Nachricht wird auf deinem Handy verschlüsselt; niemand sonst kann sie lesen – auch nicht der Server oder der Admin. Den Schlüssel sagst du dem Empfänger <b>auf einem anderen Weg</b>: persönlich, am Telefon oder per SMS. Er tippt auf „🔒 Verschlüsselte Nachricht“ und gibt ihn ein. Das Handy merkt sich den Schlüssel je Unterhaltung. Achtung: Schlüssel vergessen = Nachricht nicht mehr lesbar; Fotos und Dateien werden nicht verschlüsselt.", seit: "2.517.0" },
   { id: "ablagekorb", thema: "club", sym: "📥", t: "Teilen → Köcheclub: alles landet im Ablagekorb", x: "Fotos, Dokumente oder Texte aus anderen Programmen (Galerie, WhatsApp, Mail, Dateien) schickst du mit <b>Teilen → Köcheclub</b>. Alles kommt zuerst in den <b>📥 Ablagekorb</b>; der Admin bekommt Bescheid und entscheidet, wohin damit – Fotoalbum, Ordner, Chat, Aufgabe, Thema für die Sitzung oder weiter an Clubsprecher bzw. Kassenwart.", seit: "2.511.0" },
   { id: "ablagekorb_admin", thema: "club", sym: "📥", t: "Ablagekorb bearbeiten (Admin)", x: "Was Mitglieder geteilt haben, liegt im <b>📥 Ablagekorb</b> (Admin-Kachel, Hinweis im Info-Feld, Push). Je Eintrag: <b>📷 Fotoalbum</b>, <b>🗄️ In Ordner</b>, <b>💬 In Chat</b>, <b>👤 Weitergeben</b> (Clubsprecher und Kassenwart stehen oben), <b>✅ Als Aufgabe</b> (To-do + Unterlagen per Nachricht), <b>🗳️ Vorschlag Sitzung</b>, <b>✔ Erledigt</b> oder <b>🗑️ Löschen</b>. Erledigtes wird nach 14 Tagen weggeräumt. Seit 2.512.0: bei mehreren Dateien je Datei ein <b>Häkchen</b> – nur die ausgewählten <b>ins Fotoalbum</b> oder <b>löschen</b>; <b>⚠️ gibt es schon</b> zeigt Dubletten (gleiche Datei in Fotoalbum, Archiv, Chat oder Ablagekorb, im Album auch gleiche Aufnahme), „⚠️ Dubletten“ wählt sie mit einem Tipp aus.", nur: () => !!ICH?.admin, seit: "2.511.0" },
   { id: "hilfe_anbieten", thema: "club", sym: "🤲", t: "Du kannst etwas besonders gut?", x: "Unter 🤝 Helfen &amp; Leihen → <b>„＋ Neu“</b> → <b>„🤲 Ich biete Hilfe an“</b> machst du ein Angebot, zum Beispiel beim Einrichten der App. Es erscheint als Kachel für alle.", zeig: () => hlStart(), seit: "2.23.1" },
@@ -21520,7 +21521,7 @@ function infoZentrale() {
   const d = INFO_DATEN.zentrale, unt = d?.r?.unterhaltungen || [], neu = unt.reduce((s, u) => s + (u.ungelesen || 0), 0);
   const push = "Notification" in window && Notification.permission === "granted";
   const ticker = [ZE.letzte ? `${fZeit.format(new Date(ZE.letzte.zeit))} Du → ${ZE.letzte.an}: gesendet ✓` : "",
-    ...unt.filter((u) => u.letzte).slice(0, 4).map((u) => `${zeitKurz(u.letzte.zeit)} ${u.letzte.von === "Du" ? "Du → " + (u.gruppe?.name || u.teilnehmer.join(", ")) : u.letzte.von + (u.gruppe ? " in " + u.gruppe.name : "")}: ${u.letzte.text.slice(0, 40)}`)].filter(Boolean);
+    ...unt.filter((u) => u.letzte).slice(0, 4).map((u) => `${zeitKurz(u.letzte.zeit)} ${u.letzte.von === "Du" ? "Du → " + (u.gruppe?.name || u.teilnehmer.join(", ")) : u.letzte.von + (u.gruppe ? " in " + u.gruppe.name : "")}: ${vnKurz(u.letzte.text).slice(0, 40)}`)].filter(Boolean);
   const tick = ticker.length ? ticker.map((t) => `▸ ${esc(t)}`).join("&emsp;&emsp;") : (d?.fehler ? "⚠️ " + esc(d.fehler) : d?.r ? "▸ Noch keine Nachrichten" : "▸ Wird geladen …");
   const n = ZE.personen.length, eine = !ZE.gruppe && n === 1, pid = eine ? ZE.personen[0] : null, online = !!pid && ONL.ids?.has(pid), leer = !ZE.gruppe && !n;
   const nurEine = "Dafür genau 1 Person auswählen", nichtOnline = pid ? `${zeVorname(pid)} ist gerade nicht online – das geht nur, wenn beide die App offen haben` : nurEine;
@@ -26227,7 +26228,7 @@ function buNeuZeigen(neu) {
   const u = neu[0], gruppe = u.gruppe || u.anzahl > 2;
   const von = gruppe ? `${u.letzte.von} in „${u.gruppe?.name || u.betreff || "Gruppe"}“` : u.letzte.von;
   el.innerHTML = `<button type="button" class="bnn-auf${u.wichtigNeu ? " wichtig" : ""}" onclick="buNeuOeffnen()"><span class="bnn-sym">${u.wichtigNeu ? "❗" : "💬"}</span>`
-    + `<span><b>Neue Nachricht von ${esc(von)}</b><small>${esc(u.letzte.text || "📎")}</small>${neu.length > 1 ? `<small>＋ ${neu.length - 1} weitere neue Unterhaltung${neu.length > 2 ? "en" : ""}</small>` : ""}</span>`
+    + `<span><b>Neue Nachricht von ${esc(von)}</b><small>${esc(vnKurz(u.letzte.text) || "📎")}</small>${neu.length > 1 ? `<small>＋ ${neu.length - 1} weitere neue Unterhaltung${neu.length > 2 ? "en" : ""}</small>` : ""}</span>`
     + `<span class="bnn-los">Öffnen ›</span></button><button type="button" class="bnn-weg" aria-label="Hinweis schließen" onclick="buNeuWeg()">✕</button>`;
   el.classList.remove("versteckt");
 }
@@ -28440,7 +28441,7 @@ async function unterhLaden() {
     if (rkAn("chats") && !UH.archivAnsicht && zeigen.length) { $("unterhListe").innerHTML = archKopf + uhKarteiHtml(zeigen); uhKarteiAn(); uhAmeisen(); return; }
     $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Antippen = öffnen · <b>⋯</b> = ⭐ Favorit, ${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
-      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + u.letzte.text) : "Noch keine Nachricht"}</div></div>
+      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + vnKurz(u.letzte.text)) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div><button type="button" class="uh-mehr" aria-label="Mehr zu diesem Chat: Favorit, archivieren, löschen" aria-expanded="${u.id === UH.wahl}" onclick="event.stopPropagation();uhMenue('${u.id}')">⋯</button></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
       || (favKopf ? '<p class="hinweis">Noch keine Favoriten. Rechts am Chat auf <b>⋯</b> tippen und „⭐ Als Favorit“ wählen.</p>' : arch.length ? '<p class="hinweis">Alle Chats sind archiviert – oben auf „📦 Archiviert“ tippen.</p>' : '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>');
     UH.mark.forEach((id) => { if (!zeigen.some((u) => u.id === id)) UH.mark.delete(id); }); uhMarkZeichnen(); uhLangDruck(); // KC-CLUB-MEHRFACH-NACHRICHT
@@ -28759,7 +28760,7 @@ async function chatLaden(scrollen) {
     }
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
     const blaseHtml = (m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
-      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(m.antwortAuf.text)}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}
+      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}
       ${m.anlagen.map((a) => a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
@@ -28785,7 +28786,76 @@ async function chatLaden(scrollen) {
 // In Gruppen schlägt „@“ beim Tippen die Mitglieder der Unterhaltung vor; Erwähnte bekommen eine eigene Meldung.
 const NA = { nachrichten: new Map(), antwort: null, erw: new Map() };
 const NA_SCHNELL = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+// ---------- 2.517.0 KC-CLUB-VERSCHLUESSELT (Wunsch Hansi „vor dem Senden einen Schlüssel festlegen, z. B. 1234 oder abcd – damit wird meine Nachricht
+// verschlüsselt“; Antwort: Schlüssel auf anderem Weg weitergeben; Wahl Hansi: selbst gewählter Schlüssel, mind. 6 Zeichen, je Person merkbar).
+// Nur auf dem Handy: PBKDF2-SHA-256 (310 000 Runden) → AES-GCM 256. Gesendet wird „🔒KCV1:“ + Base64(Salz 16 | IV 12 | Geheimtext) – Server, Push,
+// Mail und Datenbank sehen nur Zeichensalat bzw. „🔒 Verschlüsselte Nachricht“. Den Schlüssel merkt sich das Gerät je Unterhaltung (nur lokal).
+// Anlagen werden nicht verschlüsselt (Hinweis). Schlüssel vergessen = Nachricht nicht mehr lesbar (niemand kann helfen).
+const VN_PRE = "🔒KCV1:", VN_MIN = 6, VN_MAX_TEXT = 2900, VN = { an: false, klar: new Map() };
+const vnIst = (t) => typeof t === "string" && t.startsWith(VN_PRE);
+const vnKurz = (t) => (vnIst(t) ? (VN.klar.has(t) ? "🔓 " + VN.klar.get(t) : "🔒 Verschlüsselte Nachricht") : t);
+const vnKeyName = (id) => "kc_club_vschluessel:" + (id || "neu");
+function vnGemerkt(id) { try { return localStorage.getItem(vnKeyName(id)) || ""; } catch { return ""; } }
+function vnMerken(id, k) { try { if (id && k) localStorage.setItem(vnKeyName(id), k); } catch {} }
+async function vnAbleiten(pw, salz) {
+  const roh = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "PBKDF2", salt: salz, iterations: 310000, hash: "SHA-256" }, roh, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+const vnB64 = (u) => { let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000)); return btoa(s); };
+const vnUnB64 = (t) => Uint8Array.from(atob(t), (c) => c.charCodeAt(0));
+async function vnVer(text, pw) {
+  const salz = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await vnAbleiten(pw, salz), new TextEncoder().encode(text)));
+  const alles = new Uint8Array(28 + ct.length); alles.set(salz, 0); alles.set(iv, 16); alles.set(ct, 28);
+  return VN_PRE + vnB64(alles);
+}
+async function vnEnt(t, pw) {
+  try { const b = vnUnB64(t.slice(VN_PRE.length)); if (b.length < 29) return null;
+    const klar = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b.slice(16, 28) }, await vnAbleiten(pw, b.slice(0, 16)), b.slice(28));
+    return new TextDecoder().decode(klar);
+  } catch { return null; }
+}
+function vnUmschalten(an) {
+  VN.an = an ?? !VN.an; const k = $("vnKnopf"); k?.classList.toggle("an", VN.an); k?.setAttribute("aria-pressed", String(VN.an));
+  const t = $("text"); if (t) t.placeholder = VN.an ? "🔒 Verschlüsselte Nachricht schreiben …" : "Nachricht schreiben …";
+  if (VN.an) melde("🔒 Verschlüsselt senden ist an – beim Senden legst du den Schlüssel fest.");
+}
+async function vnVerschluesseln(text) { // fragt den Schlüssel, gibt den verschlüsselten Text zurück (oder null = abbrechen)
+  if (new TextEncoder().encode(text).length > VN_MAX_TEXT) { melde("🔒 Für eine verschlüsselte Nachricht ist der Text zu lang (etwa 2.800 Zeichen, Emojis zählen mehr) – bitte kürzen.", true); return null; } // Geheimtext muss unter die 4.000-Zeichen-Grenze passen
+  if (anlagen.length) melde("🔒 Hinweis: Nur der Text wird verschlüsselt – Fotos und Dateien nicht.");
+  let pw = vnGemerkt(chatId);
+  for (;;) {
+    pw = await eingabe(`🔒 Schlüssel für diese Nachricht\nMindestens ${VN_MIN} Zeichen, z. B. „Kochmütze7“. Der Empfänger braucht denselben Schlüssel – sag ihn ihm persönlich, am Telefon oder per SMS, nicht über die Club-App.${vnGemerkt(chatId) ? "\nVorgeschlagen ist der für diese Unterhaltung gemerkte Schlüssel." : ""}`, pw || "");
+    if (pw === null || pw === undefined || pw === false) return null;
+    pw = String(pw);
+    if ([...pw].length >= VN_MIN) break;
+    melde(`🔒 Bitte mindestens ${VN_MIN} Zeichen – „1234“ errät ein Computer in Sekunden.`, true);
+  }
+  const v = await vnVer(text, pw);
+  VN.klar.set(v, text); if (chatId) vnMerken(chatId, pw);
+  return v;
+}
+function vnHtml(t) {
+  if (VN.klar.has(t)) return `<span class="vn-auf" title="Verschlüsselte Nachricht – auf diesem Handy geöffnet">🔓</span> ${naText(VN.klar.get(t))}`;
+  return `<button type="button" class="vn-zu" data-vn="${esc(t)}" onclick="event.stopPropagation();vnOeffnen(this)">🔒 Verschlüsselte Nachricht<small>Antippen und Schlüssel eingeben</small></button>`;
+}
+async function vnOeffnen(knopf) {
+  const t = knopf?.dataset.vn; if (!t) return;
+  let klar = null, pw = vnGemerkt(chatId);
+  if (pw) klar = await vnEnt(t, pw);
+  while (klar === null) {
+    pw = await eingabe("🔒 Schlüssel eingeben\nDen Schlüssel hat dir der Absender persönlich, am Telefon oder per SMS gesagt.", "");
+    if (!pw) return;
+    klar = await vnEnt(t, String(pw));
+    if (klar === null) melde("❌ Falscher Schlüssel – bitte nochmal versuchen.", true);
+  }
+  VN.klar.set(t, klar); if (chatId && pw) vnMerken(chatId, String(pw));
+  document.querySelectorAll(".vn-zu").forEach((b) => { if (b.dataset.vn === t) b.outerHTML = vnHtml(t); });
+  // weitere Nachrichten dieser Unterhaltung mit demselben Schlüssel gleich mit öffnen
+  for (const b of [...document.querySelectorAll(".vn-zu")]) { const k = await vnEnt(b.dataset.vn, String(pw)); if (k !== null) { VN.klar.set(b.dataset.vn, k); b.outerHTML = vnHtml(b.dataset.vn); } }
+}
 function naText(t) { // Text sicher ausgeben, @Namen hervorheben, App-Sprünge als Knopf (KC-CLUB-SPRUNGKNOPF 2.23.97)
+  if (vnIst(t)) return vnHtml(t); // 2.517.0 KC-CLUB-VERSCHLUESSELT
   return esc(t).replace(/(^|\s)@([A-Za-zÄÖÜäöüß][\wÄÖÜäöüß-]*)/g, (x, v, n) => `${v}<span class="erw">@${n}</span>`).replace(SPRUNG_RE, (x, id) => sprungKnopf(id));
 }
 // ---------- KC-CLUB-SPRUNGKNOPF (2.23.97, Wunsch Hansi): Knopf in einer Nachricht, der an eine Stelle der App führt ----------
@@ -30740,11 +30810,12 @@ async function anlagenFertig(maxMs = 180000) {
 }
 async function senden() {
   emoUmschalten(false); // KC-CLUB-EMOJI
-  const text = $("text").value.trim();
+  let text = $("text").value.trim();
   if (!text && !anlagen.length) return;
   if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
   await inkoChatFrage(chatId ? "c:" + chatId : "neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT: auch beim Schreiben in einem schon offenen Chat (einmal je Chat)
   await wichtigkeitFragen(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0)
+  if (VN.an && text) { const v = await vnVerschluesseln(text); if (!v) return; text = v; } // 2.517.0 KC-CLUB-VERSCHLUESSELT: erst jetzt (Prüfungen oben sahen den Klartext)
   // 2.164.0 KC-CLUB-ANLAGE-WARTEN (Fund Hansi: PDF fehlte – Senden getippt, während die Anlage noch hochlud; sie wurde still weggelassen):
   // lädt noch eine Anlage, wird gewartet, bis sie fertig ist – dann geht alles zusammen raus. Klappt das Hochladen nicht, bleibt der Text stehen.
   if (anlagen.some((a) => a.laedt)) {
@@ -30779,6 +30850,7 @@ async function senden() {
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     lvZurueck(); // KC-CLUB-LINK-VORSCHAU
     if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); expressUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN
+    if (VN.an) vnUmschalten(false); // 2.517.0 KC-CLUB-VERSCHLUESSELT: 🔒 gilt nur für diese Nachricht
     $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; EINMAL = false; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
     spur(daten.anlagen.length ? "gesendet_anlage" : "gesendet", r?.id || chatId); // KC-CLUB-SPUR: nur „gesendet“ + Unterhaltung, nie der Text
     if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
