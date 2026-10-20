@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.515.0 – 2026-10-20 – Teilen-Diagnose (KC-CLUB-TEILEN-DIAGNOSE)
+Nachtrag zu 2.514.0 (Hansi: Datei aus dem Datenspeicher kommt weiterhin leer an – vermutlich hat das Handy die erweiterte Teilen-Liste der installierten App noch nicht übernommen). Die App merkt sich jetzt beim Teilen, welche Felder und Dateitypen das Handy wirklich schickt (nur Feldname, Typ und Größe, keine Inhalte) und schreibt das in die Diagnose – so lässt sich genau sehen, woran es liegt. Nur App.
+
 ## 2.514.0 – 2026-10-20 – 📥 Teilen: auch Dateien aus dem Dateimanager (KC-CLUB-TEILEN-ALLE-DATEIEN)
 Fund Hansi („Konnte eine Datei aus dem Datenspeicher nicht teilen“ – Meldung „Es ist nichts angekommen“; Diagnose: 0 Dateien, kein Text). Die Teilen-Liste der App nahm nur bestimmte Dateitypen an (Fotos, PDF, Word, Excel, ZIP, Audio, Text) – andere Dateien (oder Dateimanager, die einen anderen Typ melden) kamen leer an.
 - Die App nimmt jetzt **alle Dateitypen** an (manifest `*/*`, dazu Video, Text, Anwendungen); der Service Worker übernimmt jede mitgeschickte Datei, egal unter welchem Feldnamen. Gefährliche Typen (Programme, Skripte, HTML/SVG) lehnt der Server weiterhin ab.

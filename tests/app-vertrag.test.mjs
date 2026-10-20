@@ -11410,3 +11410,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(m.params.files[0].accept.includes("*/*") && m.params.files[0].name === "fotos", "Teilen-Liste nimmt alle Dateitypen an");
   assert.ok(/const dateien = \[\.\.\.f\.values\(\)\]\.filter\(\(x\) => x && typeof x === "object" && typeof x\.size === "number" && x\.size\)/.test(lies("sw.js")), "SW nimmt jede mitgeschickte Datei");
 }
+
+// 2.515.0 KC-CLUB-TEILEN-DIAGNOSE: welche Felder/Dateitypen beim Teilen ankommen (nur Feldname, Typ, Größe – keine Inhalte)
+{
+  assert.ok(/const felder = \[\.\.\.f\.entries\(\)\]\.slice\(0, 20\)/.test(lies("sw.js")) && /felder: Array\.isArray\(info\.felder\)/.test(programm), "Teilen-Diagnose");
+}
