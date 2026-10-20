@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.540.0 – 2026-10-20 – 🔒 Gesperrte: kein Notfall-Paket und kein gespeicherter Offline-Stand mehr (KC-CLUB-SPERRE-NOTPAKET, KC-CLUB-SPERRE-OFFLINE)
+Prüfung nach Hansis Auftrag (20.10.: „Prüfe jetzt nochmal alles, dass er nicht ins Programm kommt, die Wartung sieht, keine Push und E-Mail bekommt – also keinerlei Kommunikation“).
+- Lücke 1: Das Notfall-Paket (Notbetrieb bei Ausfall von Supabase) enthielt auch für Gesperrte Termine und Chats. Jetzt baut es nur noch für nicht Gesperrte; sind die Sperren nicht lesbar, wird nicht gebaut (altes Paket bleibt).
+- Lücke 2: Die App merkt sich einen Stand für den Offline-Start. Bekommt sie vom Server „gesperrt“ (423), löscht sie diesen Stand.
+- Geprüft und schon dicht: App (Wartungs-Bildschirm bei jedem Aufruf), Kalender-Abo (403 bei Sperre), direkte Leitung (2.426.0), Push/E-Mail (stumme Sperre + Liste „Ohne Benachrichtigungen“), Termine-Mails (kc-termine), Nachtrag aus dem Notbetrieb.
+- Test: Vertragstest-Block 2.540.0. Rückweg: App/Server 2.539.0.
+
 ## 2.539.0 – 2026-10-20 – 👀 Gesperrte: Öffnungsversuche werden aufgezeichnet und in der Sperrliste angezeigt (KC-CLUB-SPERRE-VERSUCHE)
 Hansi (20.10.: „Ich möchte ihn sperren. Er bekommt ja dann Wartung angezeigt. Du zeichnest es ja auf, wenn er sich anmelden will.“) – bisher wurde das NICHT aufgezeichnet.
 - Server: Öffnet eine gesperrte Person die App, kommt vor dem Wartungs-/Störungs-Bildschirm ein Protokolleintrag `gesperrt_versuch` (Art der Sperre, Name der Aktion – keine Inhalte), höchstens einmal je 10 Minuten und Person.

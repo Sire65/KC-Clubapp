@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.539.0";
+const SERVER_VERSION = "2.540.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -15031,7 +15031,13 @@ function notVorratLaden(pf: DbPuffer, vorrat: unknown): number {
 }
 // nur: bloß diese Mitglieder bauen (2.491.0 KC-CLUB-NOTPAKET-NUR-GEAENDERTE) – sonst alle
 async function notpaketBauen(geheim: string, nur: Set<string> | null = null) {
-  const { data: zug } = await db.from("kc_club_zugang").select("person_id,token_hash").eq("aktiv", true).not("token_hash", "is", null).not("person_id", "like", "KC-P-TEST%");
+  const { data: zug0 } = await db.from("kc_club_zugang").select("person_id,token_hash").eq("aktiv", true).not("token_hash", "is", null).not("person_id", "like", "KC-P-TEST%");
+  // 2.540.0 KC-CLUB-SPERRE-NOTPAKET: Gesperrte bekommen kein Notfall-Paket – sonst sähen sie im Notbetrieb, was die Sperre in der App verbirgt.
+  // Lesefehler bei den Sperren → Bau abbrechen (altes Paket bleibt), nie ohne Prüfung bauen.
+  const { data: spz, error: spf } = await db.from("kc_club_person_sperre").select("person_id,bis").eq("aktiv", true);
+  if (spf) throw new Error("Sperren nicht lesbar – Notfall-Paket bleibt auf dem letzten Stand");
+  const gesperrt = new Set((spz ?? []).filter(sperreGilt).map((x: any) => x.person_id));
+  const zug = (zug0 ?? []).filter((z: any) => !gesperrt.has(z.person_id));
   const mitglieder: Record<string, unknown> = {}, dbz = { netz: 0, puffer: 0, vorrat: 0 };
   let vorrat: unknown[] | null = null;
   const teil = async (gruppe: any[], geben = false) => {
