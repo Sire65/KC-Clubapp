@@ -1,0 +1,5 @@
+zeitplan_da=t
+jede_minute=t
+geplant_bleibt=t
+warteschlange_neu=t
+ein_job=t

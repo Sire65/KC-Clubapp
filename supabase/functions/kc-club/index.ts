@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.519.0";
+const SERVER_VERSION = "2.520.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -470,7 +470,7 @@ async function routerSendenRoh(eventKey: string, personIds: string[], vars: Reco
 }
 function routerWege(attempts: any[]): { push: string; mail: string } {
   const weg = (k: string) => { const a = (Array.isArray(attempts) ? attempts : []).filter((x: any) => x?.channel === k);
-    if (!a.length) return "-"; if (a.some((x: any) => x.result === "sent" || x.result === "deduplicated")) return "ja";
+    if (!a.length) return "-"; if (a.some((x: any) => x.result === "sent" || x.result === "deduplicated" || x.result === "queued")) return "ja"; // queued: KC-COMM-WARTEN
     return a.some((x: any) => /^(NO_ACTIVE_PUSH_DEVICE|NO_EMAIL|PUSH_NO_ACTIVE_SUBSCRIPTION|PUSH_SUBSCRIPTION_NOT_FOUND|EMAIL_RECIPIENT_MISSING)/.test(String(x.reason || ""))) ? "kein" : "fehler"; };
   return { push: weg("push"), mail: weg("email") };
 }
@@ -5954,6 +5954,16 @@ async function geplantMeine(ich: Ich, threadId: string) {
   const { data } = await db.from("kc_club_geplant").select(GEPLANT_FELDER).eq("person_id", ich.person_id).eq("thread_id", threadId).eq("status", "offen").order("senden_um").limit(GEPLANT_MAX);
   return (data ?? []).map(geplantAus);
 }
+// 2.520.0 KC-COMM-WARTEN (Wunsch Hansi „mehr als 5 Mails → Zeitverzögerung, damit web.de nicht zumacht“): Mails über der web.de-Grenze
+// (5/Min., 40/Std.) bekommen im Communicator einen Warteplatz (status „queued“ + scheduled_for). Der Minuten-Zeitplan ruft diese Aktion auch,
+// wenn nur wartende Mails fällig sind; dann arbeitet der Communicator sie ab (nach 15 Min. Wartezeit übernimmt dort gleich Brevo).
+async function mailWarteschlange() {
+  const { count } = await db.from("kc_communication_requests").select("id", { count: "exact", head: true }).eq("status", "queued").not("scheduled_for", "is", null).lte("scheduled_for", jetzt());
+  if (!count) return { faellig: 0 };
+  const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, { signal: AbortSignal.timeout(28000), method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE }, body: JSON.stringify({ action: "warteschlange" }) });
+  return await r.json().catch(() => ({ status: r.status }));
+}
 async function geplantSenden(g: any, ich: Ich) {
   const r = await aktionAusfuehren("nachricht_senden", { id: g.thread_id, text: g.text, wege: Array.isArray(g.wege) ? g.wege : ["push"], ...(g.wichtig ? { wichtig: true } : {}) },
     ich, new Request(APP_URL, { method: "POST" }), Date.now(), 0);
@@ -6205,7 +6215,9 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
     if (a === "geplant_faellig") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
       if (!geheim || !gleichZeit(p.cronSecret, geheim)) return json({ error: "Kein Zugang" }, 401);
-      return json({ ok: true, ...(await geplantFaelligLauf()) });
+      const lauf = await geplantFaelligLauf();
+      const warteschlange = await mailWarteschlange().catch((e) => ({ fehler: String(e) })); // 2.520.0 KC-COMM-WARTEN
+      return json({ ok: true, ...lauf, warteschlange });
     }
     // ----- Zeitplaner: Erinnerung am Vortag (ab 9 Uhr) an alle, die nicht abgesagt haben -----
     if (a === "wartung") {
