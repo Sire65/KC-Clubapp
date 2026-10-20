@@ -4739,7 +4739,7 @@
 
   <!-- FOTOALBUM (KC-CLUB-FOTOALBUM) -->
   <section id="v-fotos" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="faKopfZurueck()" aria-label="Zurück">‹</button><h2>📷 Fotoalbum</h2><button class="knopf haupt klein" onclick="fotoForm()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="faKopfZurueck()" aria-label="Zurück">‹</button><h2>📷 Fotoalbum</h2><button class="knopf klein" onclick="faDiashow()" title="Diashow mit Musik – Album wählen" aria-label="Diashow starten">▶️ Diashow</button><button class="knopf haupt klein" onclick="fotoForm()">＋ Neu</button></div>
     <div id="fotoForm" class="karte versteckt"></div>
     <div id="fotoSpeicher"></div>
     <div id="fotoAlben"></div><!-- KC-CLUB-FOTO-ALBEN (1.63.0) -->
@@ -5439,7 +5439,7 @@
   <div style="background:var(--karte);box-shadow:var(--schatten);padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top))">
     <div style="display:flex;align-items:center;gap:8px"><button class="knopf klein" style="min-height:44px" onclick="druckVorschauZu()">✕ Schließen</button>
       <b id="druckVorschauTitel" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Vorschau</b><span class="marke">Vorschau</span></div>
-    <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" style="min-height:48px" onclick="druckJetzt()">🖨️ Drucken / als PDF</button>
+    <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" style="min-height:48px" onclick="druckJetzt()">🖨️ Drucken</button><button class="knopf" style="min-height:48px" id="druckVorschauPdf" onclick="druckPdf()">📄 PDF speichern / teilen</button>
       <button class="knopf versteckt" id="druckVorschauTeilen" onclick="druckTeilen()">📤 Teilen</button>
       <button class="knopf versteckt" id="druckVorschauAendern" onclick="druckVorschauAendern()">✏️ Auswahl ändern</button></div>
     <p class="hinweis" id="druckVorschauHinweis" style="margin:6px 0 0;font-size:.85rem"></p></div>
@@ -5583,7 +5583,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.525.0" data-v="2.525.0"></script>
+<script src="app.js?v=2.526.0" data-v="2.526.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

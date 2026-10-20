@@ -1172,7 +1172,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 83. 0.61.0: Druckvorschau vor jedem Ausdruck (KC-CLUB-DRUCKVORSCHAU)
 {
   assert.ok(!/window\.print\(\)/.test(html.replace("function druckJetzt() { setTimeout(() => window.print(), 60); }", "")), "Gedruckt wird nur aus der Vorschau");
-  assert.ok(/onclick="druckJetzt\(\)">🖨️ Drucken \/ als PDF<\/button>/.test(html) && /id="druckVorschau"/.test(html) && /id="druckVorschauRahmen"/.test(html), "Vorschau mit Druckknopf fehlt");
+  assert.ok(/onclick="druckJetzt\(\)">🖨️ Drucken( \/ als PDF)?<\/button>/.test(html) /* 2.526.0: PDF eigener Knopf */ && /id="druckVorschau"/.test(html) && /id="druckVorschauRahmen"/.test(html), "Vorschau mit Druckknopf fehlt");
   assert.ok(/onclick="druckVorschau\(\)">👁️ Vorschau ansehen<\/button>/.test(html) && !/druckLos/.test(html), "Auswahlfenster druckt noch direkt");
   assert.ok(/rahmen\.srcdoc = druckHtml\(true\)/.test(html) && /const html = druckHtml\(false\);/.test(html), "Vorschau/Teilen nicht aus derselben Druckseite");
 }
@@ -8498,7 +8498,9 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   // Regel: kein Ausdruck ohne CD-Rahmen – eigene Layouts (ohneRahmen) nur Brief (mit cdKopf) und Originalseiten als Bild
   const ohne = [...programm.matchAll(/return \{[^}]*ohneRahmen: true[^}]*\}/g)].map((m) => m[0]);
   // 2.150.0: Schilder (KC-CLUB-SCHILDER) haben ihr CD im Bild selbst (Kochmütze im weinroten Kreis + „Köcheclub Werne“ unten)
-  assert.ok(ohne.length === 4 && ohne.every((x) => /dseite|titel: b\.betreff|SDR\.bildUrl/.test(x)), "nur Originalseiten (Bild), Brief und Schild ohne zentralen Rahmen");
+  // 2.526.0 KC-CLUB-ERSTATTUNG-BRIEFBOGEN: Erstattungsantrag als Briefbogen-Blatt (erstBlatt mit cdKopf + cdFuss) – zwei Einstiege
+  assert.ok(ohne.length === 5 && ohne.every((x) => /dseite|titel: b\.betreff|SDR\.bildUrl|html: erstBlatt\(/.test(x)), "nur Originalseiten (Bild), Brief und Schild ohne zentralen Rahmen");
+  assert.ok(/return `<div class="cd-blatt cd-brief">\$\{cdKopf\("Antrag auf Erstattung"/.test(programm) && /\$\{cdFuss\(`Erstellt mit der Köcheclub-App am/.test(programm), "Erstattungsantrag = Briefbogen-CD");
   const schild = programm.slice(programm.indexOf("function schZeichnen("), programm.indexOf("function schBild()"));
   assert.ok(/ctx\.fillStyle = KC_CD\.weinrot/.test(schild) && /ctx\.drawImage\(SCH_LOGO/.test(schild) && /ctx\.fillText\(KC_CD\.name/.test(schild) && /const SCH_LOGO = new Image\(\); SCH_LOGO\.src = KC_CD\.logo;/.test(programm), "Schild trägt das CD selbst");
   assert.ok(!/icon-192\.png/.test(programm.slice(programm.indexOf("const DRUCKARTEN"))), "kein altes Logo in Ausdrucken");
@@ -11509,4 +11511,12 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 {
   const v = server.slice(server.indexOf('case "admin_verlauf"'), server.indexOf('case "admin_verlauf"') + 4000);
   assert.ok(/\.range\(seite \* 1000, seite \* 1000 \+ 999\)/.test(v) && /if \(\(teil \?\? \[\]\)\.length < 1000\) break;/.test(v) && !/\.limit\(12000\)/.test(v), "Verlauf seitenweise");
+}
+
+// 2.526.0 KC-CLUB-ERSTATTUNG-BRIEFBOGEN / KC-CLUB-DRUCK-PDF / KC-CLUB-FOTO-DIASHOW (Wünsche Hansi)
+{
+  assert.ok(/erstAnsehen\(blatt, \(\) => erstattungAblageFragen\(kopie, r\)\)/.test(programm) && /data-fn="ekErstBlatt\('\$\{x\.id\}'\)">📄 Antrag als PDF \/ Drucken/.test(programm), "Antrag angeboten: nach dem Einreichen und im Eingang");
+  assert.ok(/<div>Datum, Unterschrift Antragsteller<\/div><div>Sachlich geprüft \/ ausgezahlt am – Kassenwart<\/div><div>Freigabe – Leitungsteam<\/div>/.test(programm), "drei Unterschriften");
+  assert.ok(/id="druckVorschauPdf" onclick="druckPdf\(\)"/.test(seite) && /function pdfAusCanvas\(c, quer\)/.test(programm) && /<foreignObject/.test(programm), "PDF in der Vorschau, selbst gebaut");
+  assert.ok(/onclick="faDiashow\(\)"/.test(seite) && /esSchreib\("album", id\); esSchreib\("diaMusik"/.test(programm), "Diashow im Fotoalbum mit Album und Musik");
 }
