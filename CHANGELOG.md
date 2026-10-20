@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.522.0 – 2026-10-20 – Teilen: Fehler sichtbar statt „Es ist nichts angekommen“ (KC-CLUB-TEILEN-FEHLER)
+Fund Hansi (Screenshot v2.521.0: „Es ist nichts angekommen …“ – „scheinbar wieder ein Format, das er nicht kennt“). Die Diagnose zeigte: keine Dateien, kein Text, keine Felder – das Annehmen im Hintergrund (Service Worker) war abgebrochen, und der Fehlerweg öffnete die App ohne jede Spur. Außerdem kamen Listen in der Teilen-Diagnose seit 2.515.0 leer an (der Server speichert nur Text/Zahlen).
+- Das Handy vermerkt jetzt, warum es nicht geklappt hat (nur Art und Größe, keine Inhalte); eine Datei, die nicht in den Zwischenspeicher passt, wird übersprungen statt alles abzubrechen.
+- Klare Meldungen: „zu groß für den Zwischenspeicher – kleiner teilen oder über 📎 anhängen“, „Das Handy hat die Datei leer übergeben – aus Galerie/Drive/„Dateien“ teilen oder über 📎 anhängen“, oder allgemein „konnte nicht übernommen werden“; bei mehreren Dateien kommen die übrigen trotzdem an.
+- Diagnose: Felder, Dateitypen und Fehler kommen jetzt lesbar an.
+- Nur App. Tests: Vertragstests grün; Browserprobe (Speicher voll → „zu groß“, 0-Byte-Datei → „leer übergeben“, Diagnose mit Fehler lesbar), keine Fehler.
+
 ## 2.521.0 – 2026-10-20 – 🎓 Schulung im Info-Feld nur, wenn Termine angeboten sind · 📈 Admin-Verlauf zeigt wieder alle Tage (KC-CLUB-SCHULUNG-INFO, KC-CLUB-VERLAUF-SEITEN) · Server 2.521.0
 Wunsch Hansi („Dass in der Info nix von Schulungstermin steht, wenn ich im Schulungsteil nix freigegeben habe. Erst wenn ich welche anbiete, dann in der Info darauf hinweisen“). Anlass: Hansi las im Info-Feld „Schulung: bitte einen Termin wählen – Hansi hat dir Termine vorgeschlagen“, obwohl kein Termin angeboten war – gezählt hatte eine abgelaufene Einladung (Admin-„wartet“-Zahl, dazu „Protokoll fehlt“/„Nachfrage“).
 - Mitglieder: „🎓 Schulung: bitte einen Termin wählen“ im Info-Feld, der Start-Hinweis und die Zahl auf der Kachel „Meine Schulung“ nur noch bei offener Einladung **mit freien Terminen**.
