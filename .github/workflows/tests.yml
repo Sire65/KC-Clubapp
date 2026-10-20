@@ -16,3 +16,6 @@ jobs:
       - run: node tests/notfall-tresor.test.mjs
       - run: node tests/avatar-rueckwaerts.test.mjs
       - run: node tests/termine-kennung.test.mjs
+      # KC-CLUB-RC-PRUEFUNG (20.10.2026): Prüfungen der RC-Vorbereitung
+      - run: node tests/rc-server.test.mjs
+      - run: node tests/rc-app.test.mjs

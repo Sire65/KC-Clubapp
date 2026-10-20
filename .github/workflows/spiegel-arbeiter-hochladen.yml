@@ -22,8 +22,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # erst die Tests – ein roter Test verhindert das Hochladen
-      - run: node tests/app-vertrag.test.mjs
+      # KC-CLUB-RC-PRUEFUNG (20.10.2026): alle Tests – ein roter Test verhindert das Hochladen
+      - run: for t in tests/*.test.mjs; do node "$t" || exit 1; done
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0

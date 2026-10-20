@@ -1,0 +1,46 @@
+# KC-CLUB-PAGES-NACH-TESTS (RC 20.10.2026, Freigabe Hansi): die App geht erst live, wenn alle Tests grün sind.
+# Vorher veröffentlichte GitHub Pages direkt vom Zweig – ein roter Test hielt nichts auf (AGENTS.md: „ein roter Test verhindert das Einspielen“).
+# Wirksam erst, wenn in den Repository-Einstellungen unter Pages → „Build and deployment“ → Source „GitHub Actions“ gewählt ist.
+# Gebaut wird wie bisher mit Jekyll (gleiches Ergebnis wie „pages-build-deployment“), nur eben nach den Tests.
+name: Seite veröffentlichen
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # ein roter Test verhindert das Veröffentlichen
+      - run: for t in tests/*.test.mjs; do node "$t" || exit 1; done
+  bauen:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+      - uses: actions/upload-pages-artifact@v3
+  veroeffentlichen:
+    needs: bauen
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.seite.outputs.page_url }}
+    steps:
+      - id: seite
+        uses: actions/deploy-pages@v4
