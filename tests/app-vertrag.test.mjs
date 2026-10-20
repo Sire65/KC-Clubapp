@@ -7204,6 +7204,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\[\["kopfPfeil", "ganz"\], \["kopfPfeilHalb", "halb"\]\]/.test(programm) && /if \(stand === "offen"\) KPN\.an = false;/.test(programm), "Pfeil der aktuellen Stellung, Ausrollen beendet");
   assert.ok(/\.kopf-pfeil\.kp-neu \{[^}]*animation: kpNeu/.test(seite) && /\.kopf-pfeil\.kp-neu\.still \{ animation: none;/.test(seite), "Blinken, ohne Bewegung fest leuchtend");
 }
+// 2.545.0 KC-CLUB-KOPF-SEIT: „since 1991“ klein unter der Kochmütze im Kopf
+{
+  assert.ok(/<img src="kc-kochmuetze-weiss\.webp" alt="Kochmütze"><\/button><span class="kopf-seit">since 1991<\/span><button class="kopf-version"/.test(seite), "since 1991 unter der Kochmütze");
+  assert.ok(/\.kopf-seit \{[^}]*color: #f3e9dc;/.test(seite), "in CD-Beige");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

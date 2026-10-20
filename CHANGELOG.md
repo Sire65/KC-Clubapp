@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.545.0 – 2026-10-20 – „since 1991“ unter der Kochmütze im Kopf (KC-CLUB-KOPF-SEIT)
+Wunsch Hansi („Oben auf der Kopfseite ganz links ist die Kochmütze. Schreibe dort noch klein darunter „since 1991““).
+- Klein, kursiv, in Beige aus dem Corporate Design direkt unter der Kochmütze, darunter wie bisher die Versionsnummer. Nicht antippbar (der Kochmützen-Knopf und die Version bleiben wie sie sind).
+- Browser-Test bei 320 und 390 px: sichtbar, nichts läuft über. Vertragstest-Block 2.545.0. Rückweg: App 2.544.0.
+
 ## 2.544.0 – 2026-10-20 – 🔔 Eingerollter Kopf: der Pfeil blinkt bei Neuem (KC-CLUB-KOPF-PFEIL-NEU)
 Wunsch Hansi („Wenn ich den Kopfbereich mit einem oder zwei Pfeilen hochfahre, sehe ich nicht, in welchem der 3 Felder neue Sachen ankommen – der Pfeil, mit dem hochgefahren wurde, soll blinken, wenn eine neue Nachricht da ist oder neue Mitglieder angemeldet sind“).
 - Ist der Kopf mit ⌃ (halb) oder ⌃⌃ (ganz) eingerollt, blinkt der Pfeil dieser Stellung gelb-orange, sobald mehr ungelesene Nachrichten da sind, ein Mitglied neu online kommt oder die Mitgliederzahl steigt. Startet die App schon eingerollt, blinkt er auch bei vorhandenen ungelesenen Nachrichten.
