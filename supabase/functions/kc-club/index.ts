@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.549.0";
+const SERVER_VERSION = "2.550.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -822,7 +822,7 @@ async function fpNurNeue(liste: any[], eingrenzen: (q: any) => any) {
   const neu = new Set<string>();
   return liste.filter((e: any) => { const k = fpArt(e?.art) + "|" + String(e?.z ?? ""); if (da.has(k) || neu.has(k)) return false; neu.add(k); return true; });
 }
-const FP_ROBOTER = /bot\b|bot\/|crawler|spider|crawl|slurp|headlesschrome|lighthouse|facebookexternalhit/i; // Suchmaschinen & Vorschau-Dienste sind keine Mitglieder
+const FP_ROBOTER = /bot\b|bot\/|crawler|spider|crawl|slurp|headlesschrome|lighthouse|facebookexternalhit|google-read-aloud/i; // 2.550.0: + Google-Vorlesedienst (20.10. nachts) // Suchmaschinen & Vorschau-Dienste sind keine Mitglieder
 async function fpUeberwachen() {
   const { data: letzte } = await db.from("kc_club_protokoll").select("zeit").eq("aktion", "fp_schwer_gemeldet").order("zeit", { ascending: false }).limit(1);
   const seit = letzte?.[0]?.zeit ?? new Date(Date.now() - 3600000).toISOString();
@@ -5860,6 +5860,28 @@ function fpSauber(d: any): Record<string, unknown> {
   return out;
 }
 const fpArt = (x: unknown) => txt(x, 24).toLowerCase().replace(/[^a-z_]/g, "") || "allg";
+// ---------- 2.550.0 KC-CLUB-FEHLVERSUCHE (Wunsch Hansi „herausfinden, wer ohne gültigen Link in unsere App will“) ----------
+// Öffnet dasselbe Gerät (anonyme Geräte-Kennung der App) die App FV_SCHWELLE-mal in FV_STUNDEN Stunden ohne gültigen Link, bekommen die
+// Admins einen Push mit Anzahl, Uhrzeit und grobem Gerätetyp (System/Browser, wie die App sie meldet). Je Gerät höchstens 1× am Tag,
+// insgesamt höchstens FV_MAX_TAG Meldungen am Tag. Keine IP-Adresse; Roboter/Vorschau-Dienste kommen gar nicht bis hierher (FP_ROBOTER).
+const FV_SCHWELLE = 3, FV_STUNDEN = 2, FV_MAX_TAG = 5;
+async function fehlversucheMelden(geraet: string, e: any) {
+  const seit = new Date(Date.now() - FV_STUNDEN * 3600000).toISOString(), tag = new Date(Date.now() - 86400000).toISOString();
+  const [{ count: n }, { count: schon }, { count: heute }] = await Promise.all([
+    db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).in("aktion", ["fehler_anonym_ohne_link", "fehler_anonym_link_ungueltig"]).eq("details->>geraet", geraet).gte("zeit", seit),
+    db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "fehlversuche_gemeldet").eq("details->>geraet", geraet).gte("zeit", tag),
+    db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "fehlversuche_gemeldet").gte("zeit", tag),
+  ]);
+  if ((n ?? 0) < FV_SCHWELLE || (schon ?? 0) > 0 || (heute ?? 0) >= FV_MAX_TAG) return;
+  const geraetText = [txt(e?.system, 40), txt(e?.browser, 40)].filter(Boolean).join(", ") || "unbekanntes Gerät";
+  const art = fpArt(e?.art) === "link_ungueltig" ? "mit einem ungültigen Link" : "ohne persönlichen Link";
+  await protokoll(null, "fehlversuche_gemeldet", { geraet, anzahl: n, art: fpArt(e?.art), system: txt(e?.system, 40), browser: txt(e?.browser, 40) });
+  const adm = await adminIds(); if (!adm.length) return;
+  await routerSenden("club_nachricht_push", adm, { titel: `🔑 ${n}× versucht, die Club-App ${art} zu öffnen`,
+    kurz: `${geraetText} · zuletzt ${NOT_UHR.format(new Date())} Uhr · Gerät ${geraet}`, betreff: "Köcheclub-App: wiederholte Versuche ohne gültigen Link",
+    text: `Dasselbe Gerät hat in den letzten ${FV_STUNDEN} Stunden ${n}-mal versucht, die Club-App ${art} zu öffnen.\nGerät: ${geraetText}\nGeräte-Kennung: ${geraet}\nGesehen hat es nur den Anmelde-Hinweis – keine Club-Daten.\nEinzelheiten: Admin → 🩺 Fehler.`,
+    url: APP_URL }, `club-fehlversuche:${geraet}:${berlinTag(new Date())}`);
+}
 // KC-CLUB-FEHLER-ALARM (2.48.0, Wunsch Hansi: „bekomme ich als Admin Push und E-Mail über solche Fälle?“): ernste Fälle eines
 // angemeldeten Mitglieds → Admins sofort per Push + E-Mail (wie „Problem melden“, Weg club_nachricht). Nicht an den Verursacher selbst,
 // keine Testpersonen. Grenzen: je Mitglied höchstens 1 Alarm in 6 Stunden, insgesamt höchstens 3 je Stunde. Jeder Alarm steht im
@@ -6702,6 +6724,9 @@ Köcheclub Werne`,
         schonGemeldet = (c ?? 0) > 0 || (cAlle ?? 0) >= 3;
       }
       await db.from("kc_club_protokoll").insert(neu.map((e: any) => ({ person_id: null, aktion: "fehler_anonym_" + fpArt(e?.art), details: { ...fpSauber(e), geraet, ua, version } })));
+      // 2.550.0 KC-CLUB-FEHLVERSUCHE (Wunsch Hansi): mehrere Versuche ohne gültigen Link vom selben Gerät → Push an die Admins
+      const zf = neu.filter((e: any) => ["ohne_link", "link_ungueltig"].includes(fpArt(e?.art)));
+      if (zf.length) nebenbei(fehlversucheMelden(geraet, zf[zf.length - 1]).catch((x) => console.error("fehlversuche", String(x))));
       if (alarm && !schonGemeldet) {
         await db.from("kc_club_protokoll").insert({ person_id: null, aktion: "fehler_anonym_admin_benachrichtigt", details: { geraet } });
         const { data: admins } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);

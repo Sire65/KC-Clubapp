@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.550.0 – 2026-10-20 – 🔑 Push an dich bei wiederholten Versuchen ohne gültigen Link (KC-CLUB-FEHLVERSUCHE)
+Wunsch Hansi („herausfinden, wer ohne gültigen Zugang in unsere private App will“ → Vorschlag 1 „Ja“).
+- Server: Öffnet dasselbe Gerät (anonyme Geräte-Kennung der App) die Club-App in 2 Stunden 3-mal ohne persönlichen Link oder mit ungültigem Link, bekommen die Admins einen Push: „🔑 3× versucht, die Club-App ohne persönlichen Link zu öffnen“ mit Gerätetyp (System, Browser wie von der App gemeldet), Uhrzeit und Geräte-Kennung. Je Gerät höchstens 1× am Tag, insgesamt höchstens 5 am Tag. Keine IP-Adresse.
+- Der Google-Vorlesedienst gilt jetzt als Roboter und wird nicht mehr als Fehlversuch mitgeschrieben (Fund 20.10., 3:37 Uhr).
+- Vertragstest-Block 2.550.0. Rückweg: Server 2.549.0.
+
 ## 2.549.0 – 2026-10-20 – ⏰ Wecker neben geplanten Nachrichten: Infos und „Ändern“ (KC-CLUB-GEPLANT-WECKER)
 Wunsch Hansi („Zeige neben einer zeitgeplanten Nachricht rechts daneben einen Wecker. Wenn man drauf tippt, dann Infos anzeigen wie geplante Zeit usw. und einen Button Ändern“).
 - Im Chat steht rechts neben jeder geplanten Nachricht ein ⏰ (klingelt beim Öffnen einmal kurz, ruhig bei „Bewegung reduzieren“).

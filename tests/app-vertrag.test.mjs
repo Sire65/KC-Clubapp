@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7233,6 +7233,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/class="gp-wecker" onclick="gpMenue\('\$\{esc\(g\.id\)\}'\)"/.test(programm) && /\.gp-wecker \{[^}]*animation: gpKlingeln/.test(seite), "Wecker rechts neben der geplanten Nachricht");
   assert.ok(/<table class="gp-infos">/.test(programm) && /onclick="gpAendernWahl\('\$\{esc\(g\.id\)\}'\)">✏️ Ändern<\/button>/.test(programm), "Infos und Ändern-Knopf");
   assert.ok(/async function gpTextAendern\(id\)/.test(programm) && /if \(typeof p\.text === "string"\) \{ neuText = txt\(p\.text, 4000\);/.test(server) && /\.eq\("person_id", ich\.person_id\)\.eq\("status", "offen"\)\.maybeSingle\(\);/.test(server), "Text ändern – nur eigene, offene");
+}
+// 2.550.0 KC-CLUB-FEHLVERSUCHE: wiederholte Versuche ohne gültigen Link vom selben Gerät → Push an Admins (gedrosselt, ohne IP)
+{
+  const f = server.slice(server.indexOf("async function fehlversucheMelden"), server.indexOf("async function fehlversucheMelden") + 2600);
+  assert.ok(/const FV_SCHWELLE = 3, FV_STUNDEN = 2, FV_MAX_TAG = 5;/.test(server) && /if \(\(n \?\? 0\) < FV_SCHWELLE \|\| \(schon \?\? 0\) > 0 \|\| \(heute \?\? 0\) >= FV_MAX_TAG\) return;/.test(f), "Schwelle und Drossel");
+  assert.ok(/const adm = await adminIds\(\);/.test(f) && /routerSenden\("club_nachricht_push", adm,/.test(f) && !/x-forwarded-for|cf-connecting-ip/i.test(f), "Push nur an Admins, keine IP");
+  assert.ok(/\["ohne_link", "link_ungueltig"\]\.includes\(fpArt\(e\?\.art\)\)/.test(server) && /google-read-aloud\/i;/.test(server), "Auslöser: ohne/ungültiger Link · Vorlesedienst ist Roboter");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
