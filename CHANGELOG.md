@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.536.0 – 2026-10-20 – Keine Benachrichtigungen: Mitglieder ganz aus der Club-Kommunikation herausnehmen (KC-CLUB-KOMMUNIKATION-AUS)
+Wunsch Hansi (20.10.: „Thomas Hess möchte aus der Kommunikation der Club-App herausgenommen werden … auch wenn ich eine Nachricht an alle schreibe, bekommt er nix. Stelle das sicher.“).
+- Befund: Die Haken in den Einstellungen gelten nur, solange der Absender „wie eingestellt“ sendet. Wählt er 🔔/✉️ ausdrücklich, bei Express, Notfall oder als Kopie ging die Nachricht trotzdem raus.
+- Neu: Registry `kc_club_kommunikation_aus` (nur Server). Wer dort steht, bekommt über keinen Weg der Club-App (kc-club) und der Termine (kc-termine) Push oder Mail – geprüft an der einen Stelle, durch die jeder Versand läuft (wie die stumme Sperre). Chats und Inhalte bleiben in der App sichtbar.
+- Ist die Liste nicht lesbar, gilt der letzte bekannte Stand; gibt es noch keinen, wird nicht gesendet (Regel 11).
+- Nicht betroffen: andere Programme (KICC-Handmail, Weihnachtsmarkt-Umfrage).
+- Test: Vertragstest-Block 2.536.0. Rückweg: App/Server 2.535.0, Tabelle bleibt unschädlich.
+
 ## 2.535.0 – 2026-10-20 – Notfall-Paket: Pause nach Fehlschlag · Teilen: ehrliche Meldung, wenn das Handy nichts mitschickt
 Anlass: Lastwarnung 20.10.2026 16:03 („10417 SQL-Aufrufe / 15 Min., Ursache unbekannt“) und Hansis Rechnung-PDF (1,2 MB), die beim Teilen leer ankam.
 - **Server – KC-CLUB-NOTPAKET-FEHLERPAUSE:** Das Notfall-Paket (~3.000 Abfragen je Bau) scheiterte um 15:45 (Zeitlimit 546) und 16:00 (Datenbank-Zeitgrenze, 503). Weil der 3-Stunden-Abstand seit dem letzten guten Paket schon um war, baute jeder 15-Min.-Lauf sofort neu. Jetzt nach einem Fehlschlag immer frühestens nach 30 Min. (nicht bei „erzwingen“). Fehlschläge kommen als `notpaket_fehler` ins Protokoll (Grundlage, damit die Lastwarnung die Ursache nennen kann).

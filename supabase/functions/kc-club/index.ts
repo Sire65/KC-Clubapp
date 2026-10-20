@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.535.0";
+const SERVER_VERSION = "2.536.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -439,9 +439,20 @@ async function routerSenden(eventKey: string, personIds: string[], vars: Record<
   try { return await routerSendenRoh(eventKey, personIds, vars, korrelation, kopie); }
   catch (e) { console.error("routerSenden", eventKey, String(e)); return { gesendet: 0, fehler: personIds.length }; }
 }
+// 2.536.0 KC-CLUB-KOMMUNIKATION-AUS (Wunsch Hansi „aus der Kommunikation der Club-App herausnehmen“): Registry kc_club_kommunikation_aus.
+// Wer dort steht, bekommt über KEINEN Club-Weg Push oder Mail – auch nicht bei ausdrücklich gewähltem Weg, Express, Notfall oder Kopie.
+// Liste 60 s im Speicher. Lädt sie nicht, gilt der letzte bekannte Stand; gab es noch keinen, wird nicht gesendet (Regel 11: unbekannt ≠ leer).
+let KA_STAND: { t: number; ids: Set<string> } | null = null;
+async function kommunikationAus(): Promise<Set<string>> {
+  if (KA_STAND && Date.now() - KA_STAND.t < 60000) return KA_STAND.ids;
+  const { data, error } = await db.from("kc_club_kommunikation_aus").select("person_id");
+  if (error) { if (KA_STAND) return KA_STAND.ids; throw new Error("Liste „keine Benachrichtigungen“ nicht lesbar – nichts gesendet"); }
+  KA_STAND = { t: Date.now(), ids: new Set((data ?? []).map((x: any) => String(x.person_id))) };
+  return KA_STAND.ids;
+}
 async function routerSendenRoh(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, kopie?: { cc?: string[]; bcc?: string[] }) {
   // KC-CLUB-PERSON-SPERRE (2.23.77): Gesperrte mit „Benachrichtigungen aus“ bekommen nichts (alle Club-Wege laufen hier durch)
-  const stumm = (await sperrenAktuell()).stumm;
+  const stumm = new Set([...(await sperrenAktuell()).stumm, ...await kommunikationAus()]); // 2.536.0 KC-CLUB-KOMMUNIKATION-AUS
   if (stumm.size) {
     personIds = personIds.filter((id) => !stumm.has(id));
     if (kopie) kopie = { cc: kopie.cc?.filter((id) => !stumm.has(id)), bcc: kopie.bcc?.filter((id) => !stumm.has(id)) };
