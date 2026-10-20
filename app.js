@@ -7989,7 +7989,19 @@ function chatTakt() {
   // dann kein Nachfragen alle 4 s nach den Haken, und beim Tippen nur alle 6 s statt 2 s (Aufhören meldet kein Signal; Sparbremse ab 70 % ohne „tippt“).
   const rt = rtAn(), tipptTakt = rt ? 3 : 1;
   if (!((CHAT?.tippt?.length && ONL.takt % tipptTakt === 0) || (hakenWarten && !rt && ONL.takt % 2 === 0) || (jemandDa && ONL.takt % (rt ? 15 : frisch ? 2 : 4) === 0) || ONL.takt % ruhig === 0)) return; // Realtime: „gelesen“-Haken kommen per Signal (2.230.0) – Nachfragen nur alle 30 s
-  chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; });
+  chatTakt.laeuft = true; chatNachsehen().finally(() => { chatTakt.laeuft = false; });
+}
+// 2.509.0 KC-CLUB-CHAT-STAND (Wunsch Hansi, Chat sparsamer Schritt 3): im Takt erst nur den Fingerabdruck des Chats holen (1 statt ~34 Abfragen) –
+// ganz neu laden nur, wenn er sich geändert hat, ohne Fingerabdruck (alter Server, Fehler) oder spätestens alle CHAT_VOLL_MS (Namen u. Ä.).
+// Signale der direkten Leitung und eigene Aktionen laden weiter sofort ganz (chatLaden).
+const CHAT_VOLL_MS = 5 * 60000;
+let CHAT_VOLL_AM = 0;
+async function chatNachsehen() {
+  const fuer = chatId, s0 = CHAT?.stand;
+  if (fuer && s0 && Date.now() - CHAT_VOLL_AM < CHAT_VOLL_MS) {
+    try { const r = await api("unterhaltung_stand", { id: fuer }); if (fuer !== chatId) return; if (r?.stand && r.stand === CHAT?.stand) return; } catch { /* lieber ganz laden */ }
+  }
+  return chatLaden(false);
 }
 // KC-CLUB-TIPPT (0.54.0): beim Tippen höchstens alle 3 s „ich schreibe“ melden, Feld leer → sofort aus.
 // Wer die Online-Anzeige ausgeschaltet hat (Privatsphäre), meldet auch kein „schreibt …“.
@@ -14505,7 +14517,7 @@ const ZUGANG_AKTIONEN = {
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
-    "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
+    "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
     "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
@@ -28695,7 +28707,7 @@ async function chatLaden(scrollen) {
   try {
     const fuer = chatId, u = await api("unterhaltung", { id: fuer });
     if (fuer !== chatId) return; // 1.97.0: inzwischen eine andere Unterhaltung geöffnet → alte Antwort verwerfen
-    CHAT = u; setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
+    CHAT = u; CHAT_VOLL_AM = Date.now(); setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
     // KC-CLUB-CHAT-KOPF-BILD (2.24.19): Bild vorn (Person: Avatar/Kreis; Gruppe: Symbol mit 🔗; Runde: gestrichelt), Titel ohne doppeltes Symbol
     $("chatTitel").textContent = (u.gruppe ? u.gruppe.name : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");

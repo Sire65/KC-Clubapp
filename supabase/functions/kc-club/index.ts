@@ -51,7 +51,7 @@ const dbPufferNeu = (haltbarMs: number): DbPuffer => ({ antworten: new Map(), ze
 const dbPufferLeeren = () => { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) { pf.antworten.clear(); pf.zeit.clear(); } };
 // Nur lesende Datenbank-Funktionen (STABLE bzw. reines SELECT, geprüft 18.10.2026): gehen ungepuffert durch, leeren den Puffer aber nicht.
 // Jede andere Funktion gilt vorsichtshalber als Schreiben. (Messung 2.453.0: diese drei leerten den Puffer mehrmals je Mitglied → nur 2 % gespart.)
-const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret", "kc_club_kachel_zahlen"]); // 2.496.0: Kachel-Zahlen (STABLE, nur lesend)
+const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret", "kc_club_kachel_zahlen", "kc_club_chat_stand"]); // 2.496.0: Kachel-Zahlen · 2.509.0: Chat-Fingerabdruck (beide STABLE, nur lesend)
 const dbFetch: typeof fetch = (input, init) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
   const pf = url.includes("/rest/v1/") ? DB_PUFFER.getStore() as DbPuffer | undefined : undefined;
@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.508.0";
+const SERVER_VERSION = "2.509.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2900,7 +2900,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
-    "unterhaltungen", "unterhaltung", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
+    "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
     "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
@@ -5563,6 +5563,15 @@ async function kalenderIcs(token: string) {
 }
 
 // ---------- Nachrichten ----------
+// KC-CLUB-CHAT-STAND (2.509.0, Chat sparsamer Schritt 3): Fingerabdruck eines Chats für die Person in EINER Abfrage (Migration
+// 20261020_kc_club_chat_stand.sql). null = nicht im Chat, undefined = gerade nicht berechenbar (dann lädt die App einfach den ganzen Chat).
+async function chatStand(threadId: string, person: string): Promise<string | null | undefined> {
+  if (!/^[0-9a-f-]{36}$/i.test(threadId)) return null;
+  const r: any = await Promise.resolve(db.rpc("kc_club_chat_stand", { p_thread: threadId, p_person: person, p_jetzt: jetzt(), p_online_sek: ONLINE_SEK,
+    p_zuletzt_tage: ZULETZT_TAGE, p_einmal_tage: EINMAL_TAGE, p_bearbeiten_min: BEARBEITEN_MIN })).catch((e: unknown) => ({ data: undefined, error: e }));
+  if (r.error) { console.error("chat stand", String(r.error?.message ?? r.error)); return undefined; }
+  return typeof r.data === "string" ? r.data : null;
+}
 async function binTeilnehmer(threadId: string, person: string) {
   const { data } = await db.from("kc_communication_thread_participants").select("thread_id").eq("thread_id", threadId).eq("person_id", person).maybeSingle();
   if (!data) throw new Fehler("Unterhaltung nicht gefunden.", 404);
@@ -9347,6 +9356,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       case "unterhaltung": {
         const id = String(p.id || "");
         await binTeilnehmer(id, ich.person_id);
+        const pStand = chatStand(id, ich.person_id); // KC-CLUB-CHAT-STAND: VOR dem Lesen – was sich danach ändert, fällt beim nächsten Nachsehen auf
         const [{ data: t }, { data: tn }, { data: msgsRoh }] = await Promise.all([
           db.from("kc_communication_threads").select("id,subject,created_by_person_id").eq("id", id).single(),
           db.from("kc_communication_thread_participants").select("person_id,last_read_at").eq("thread_id", id),
@@ -9540,8 +9550,16 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           runde = { ersteller: t?.created_by_person_id === ich.person_id || ich.admin, gleiche };
         }
         const geplant = await geplantMeine(ich, id).catch(() => []); // KC-CLUB-SPAETER-SENDEN (2.362.0): nur meine, nur in diesem Chat
-        return json({ id, betreff: t?.subject ?? "", tippt, entwurf, spricht, angeheftet, gelesenBis, partnerDa, runde, selbstloeschen: slStd(slChat?.stunden), sendeEffekte, geplant,
+        const stand = (await pStand) ?? null; // KC-CLUB-CHAT-STAND
+        return json({ id, betreff: t?.subject ?? "", stand, tippt, entwurf, spricht, angeheftet, gelesenBis, partnerDa, runde, selbstloeschen: slStd(slChat?.stunden), sendeEffekte, geplant,
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, admins: gr.admins ?? [], darfVerwalten: gruppenAdmin(gr, ich.person_id) || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
+      }
+
+      // KC-CLUB-CHAT-STAND (2.509.0): nur der Fingerabdruck des Chats (1 Abfrage statt ~34) – die App lädt den Chat nur ganz, wenn er sich geändert hat
+      case "unterhaltung_stand": {
+        const s = await chatStand(String(p.id || ""), ich.person_id);
+        if (s === null) throw new Fehler("Unterhaltung nicht gefunden.", 404);
+        return json({ stand: s ?? null });
       }
 
       // KC-CLUB-TIPPT (0.54.0): ich tippe gerade (aus: true = Feld geleert/verlassen). Nur Teilnehmer der Unterhaltung.

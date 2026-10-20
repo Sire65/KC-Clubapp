@@ -1049,7 +1049,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const ti = server.slice(server.indexOf('case "tippen"'), server.indexOf('case "nachricht_senden"'));
   assert.ok(/await binTeilnehmer\(id, ich\.person_id\)/.test(ti) && /TIPPT_SEK \* 1000/.test(ti) && /p\.aus/.test(ti), "tippen: Teilnehmer-Prüfung/Ablauf fehlt");
-  assert.ok(/\.neq\("person_id", ich\.person_id\)\.gt\("bis", jetzt\(\)\)/.test(server) && /betreff: t\?\.subject \?\? "", tippt,/.test(server), "unterhaltung liefert tippt nicht (oder mich selbst)");
+  assert.ok(/\.neq\("person_id", ich\.person_id\)\.gt\("bis", jetzt\(\)\)/.test(server) && /betreff: t\?\.subject \?\? "", (stand, )?tippt,/.test(server), "unterhaltung liefert tippt nicht (oder mich selbst)");
   assert.ok(/kc_club_tippen"\)\.delete\(\)\.eq\("thread_id", threadId\)/.test(server), "Senden beendet „schreibt …“ nicht");
   assert.ok(/if \(!chatId \|\| !ONL\.zeigen\) return;/.test(html) && /abstand = live \? 1000 : 3000/.test(html) && /Date\.now\(\) - TIPP\.zuletzt < abstand/.test(html), "Tipp-Meldung ohne Privatsphäre/Drosselung");
   assert.ok(/tippenMelden\(\)(;entwurfMerken\(\))?(;entwurfMarkeZeigen\(\))?"><\/textarea>/.test(html) && /id="tipptAnzeige"/.test(html) && /"tippen"(, "[a-z_]+")*\]\);/.test(html), "Anzeige/Eingabe/WARTEN_STILL fehlt");
@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -11031,7 +11031,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const f = server.slice(server.indexOf("const dbFetch: typeof fetch"), server.indexOf("const dbWeg"));
   assert.ok(/DB_PUFFER\.getStore\(\)/.test(f) && /if \(!\(methode === "POST" && rpc && DB_RPC_NUR_LESEN\.has\(rpc\)\)\) \{ pf\.antworten\.clear\(\); pf\.zeit\.clear\(\); \}/.test(f), "Schreiben leert den Puffer");
   // 2.496.0: kc_club_kachel_zahlen (language sql stable, nur select – Migration 20261019_kc_club_kachel_zahlen.sql) dazu
-  assert.ok(/const DB_RPC_NUR_LESEN = new Set\(\["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret"(, "kc_club_kachel_zahlen")?\]\);/.test(server), "nur geprüfte Lese-Funktionen lassen den Puffer stehen");
+  assert.ok(/const DB_RPC_NUR_LESEN = new Set\(\["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret"(, "kc_club_kachel_zahlen"(, "kc_club_chat_stand")?)?\]\);/.test(server), "nur geprüfte Lese-Funktionen lassen den Puffer stehen");
   assert.ok(/if \(!r\.ok\) pf\.antworten\.delete\(schluessel\);/.test(f) && /a\.catch\(\(\) => pf\.antworten\.delete\(schluessel\)\);/.test(f), "Fehler und Abbrüche werden nie gepuffert");
   assert.ok(/if \(!pf\) return dbFetchNetz\(input, init\);/.test(f) && /if \(zeit\.aborted\) \{ DB_AUS\.n\+\+;/.test(f), "ohne Notpaket-Teil unverändert, Zeitgrenze bleibt");
   const nt = server.slice(server.indexOf('if (a === "notpaket_teil")'), server.indexOf('if (a === "notpaket_teil")') + 1500);
@@ -11323,4 +11323,19 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/t\.person_id <> new\.person_id and t\.hidden_at is null/.test(mig) && /exception when others then null;/.test(mig) && /security definer set search_path = ''/.test(mig) && !/\b(delete from|truncate|update public)\b/i.test(mig), "nicht an sich selbst, Signal stört nie, nur Signal");
   assert.ok(/if \(s\.art === "gelesen"\) \{ if \(s\.thread && s\.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt\.laeuft\)/.test(html), "App lädt bei diesem Signal den offenen Chat");
   assert.ok(/hakenWarten && !rt && ONL\.takt % 2 === 0/.test(html) && /tipptTakt = rt \? 3 : 1/.test(html), "mit Leitung: Haken per Signal, Tippen alle 6 s; ohne Leitung wie bisher");
+}
+// 2.509.0 KC-CLUB-CHAT-STAND (Schritt 3) (Wunsch Hansi „Ja Bau das jetzt“, Chat sparsamer Schritt 3): im Takt erst nur der Fingerabdruck, ganz laden nur bei Änderung
+{
+  const mig = lies("supabase/migrations/20261020_kc_club_chat_stand.sql");
+  assert.ok(/create or replace function public\.kc_club_chat_stand\(p_thread uuid, p_person text, p_jetzt timestamptz,/.test(mig) && /language sql\s+stable/.test(mig) && !/\b(insert into|update public|delete from|truncate)\b/i.test(mig.replace(/^--.*$/gm, "")), "Fingerabdruck nur lesend");
+  assert.ok(/revoke all on function public\.kc_club_chat_stand\(uuid, text, timestamptz, integer, integer, integer, integer\) from public, anon, authenticated;/.test(mig) && /to service_role;/.test(mig), "nur der Server darf ihn berechnen");
+  assert.ok(/case when not exists \(select 1 from tn where tn\.person_id = p_person\) then null/.test(mig) && /case when tn\.person_id = p_person then '' else coalesce\(tn\.last_read_at::text, ''\) end/.test(mig), "nur Teilnehmer; eigenes „gelesen bis“ zählt nicht");
+  assert.ok(/p_online_sek: ONLINE_SEK,\s+p_zuletzt_tage: ZULETZT_TAGE, p_einmal_tage: EINMAL_TAGE, p_bearbeiten_min: BEARBEITEN_MIN/.test(server), "Zeitgrenzen kommen aus dem Server (eine Stelle)");
+  const uh = server.slice(server.indexOf('case "unterhaltung": {'), server.indexOf('case "unterhaltung_stand": {'));
+  assert.ok(/const pStand = chatStand\(id, ich\.person_id\);/.test(uh) && uh.indexOf("const pStand") < uh.indexOf('db.from("kc_communication_messages")') && /return json\(\{ id, betreff: t\?\.subject \?\? "", stand,/.test(uh), "Stand VOR dem Lesen berechnet und mitgeliefert");
+  assert.ok(/case "unterhaltung_stand": \{\s*const s = await chatStand\(String\(p\.id \|\| ""\), ich\.person_id\);\s*if \(s === null\) throw new Fehler\("Unterhaltung nicht gefunden\.", 404\);/.test(server), "kurze Nachfrage nur für Teilnehmer");
+  const cn = html.slice(html.indexOf("async function chatNachsehen()"), html.indexOf("async function chatNachsehen()") + 600);
+  assert.ok(/if \(r\?\.stand && r\.stand === CHAT\?\.stand\) return;/.test(cn) && /Date\.now\(\) - CHAT_VOLL_AM < CHAT_VOLL_MS/.test(cn) && /return chatLaden\(false\);/.test(cn) && /const CHAT_VOLL_MS = 5 \* 60000;/.test(html), "App: gleich → nichts laden; sonst/Fehler/alle 5 Min. ganz laden");
+  assert.ok(/chatTakt\.laeuft = true; chatNachsehen\(\)\.finally/.test(html) && /CHAT = u; CHAT_VOLL_AM = Date\.now\(\);/.test(html), "nur der Takt fragt kurz nach; Signale laden weiter ganz");
+  assert.ok(fs.existsSync(new URL("../tools/chat-sparsam/chat-stand-test.mjs", import.meta.url)), "Änderungstest (Postgres im Speicher) vorhanden");
 }
