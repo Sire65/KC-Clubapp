@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.538.0";
+const SERVER_VERSION = "2.539.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -3818,6 +3818,18 @@ const SPERRE_TEXT: Record<string, string> = {
 // 2.23.79: „bis“ (Uhrzeit) – abgelaufene Sperren gelten sofort nicht mehr (Prüfung bei jedem Zugriff, auch aus dem Speicher)
 const SPERREN = { bis: 0, zeilen: [] as { person_id: string; art: string; stumm: boolean; bis: string | null }[] };
 const sperreGilt = (x: { bis: string | null }) => !x.bis || Date.parse(x.bis) > Date.now();
+// 2.539.0 KC-CLUB-SPERRE-VERSUCHE (Hansi: „Du zeichnest es ja auf, wenn er sich anmelden will“): Versuch eines Gesperrten, die App zu
+// öffnen, ins Protokoll – höchstens einmal je 10 Min. und Person (ein App-Start schickt mehrere Anfragen). Die Admin-Sperrliste zeigt
+// daraus „zuletzt versucht … (n×)“. Nur Zeit, Art und Aktionsname, keine Inhalte.
+const SPV_ZULETZT = new Map<string, number>();
+async function sperreVersuchMerken(pid: string, art: string, aktion: string) {
+  if (Date.now() - (SPV_ZULETZT.get(pid) ?? 0) < 10 * 60000) return;
+  SPV_ZULETZT.set(pid, Date.now());
+  const { count, error } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", pid).eq("aktion", "gesperrt_versuch")
+    .gte("zeit", new Date(Date.now() - 10 * 60000).toISOString());
+  if (!error && count) return;
+  await protokoll(pid, "gesperrt_versuch", { art, aktion: txt(aktion, 40) });
+}
 async function sperrenAktuell() {
   if (Date.now() > SPERREN.bis) {
     const { data, error } = await db.from("kc_club_person_sperre").select("person_id,art,stumm,bis").eq("aktiv", true);
@@ -6699,7 +6711,10 @@ Köcheclub Werne`,
     const tAnm = Date.now();
     const ich = await anmelden(req);
     const gesperrt = ich.admin ? null : await sperreFuer(ich.person_id); // KC-CLUB-PERSON-SPERRE (2.23.77)
-    if (gesperrt) return json({ error: SPERRE_TEXT[gesperrt.art] || SPERRE_TEXT.wartung, gesperrt: gesperrt.art, bis: gesperrt.bis }, 423);
+    if (gesperrt) {
+      await sperreVersuchMerken(ich.person_id, gesperrt.art, a).catch(() => {}); // 2.539.0 KC-CLUB-SPERRE-VERSUCHE
+      return json({ error: SPERRE_TEXT[gesperrt.art] || SPERRE_TEXT.wartung, gesperrt: gesperrt.art, bis: gesperrt.bis }, 423);
+    }
     const anmeldungMs = Date.now() - tAnm;
     const antwort = await aktionAusfuehren(a, p, ich, req, t0Anfrage, anmeldungMs);
     // KC-CLUB-TEMPO (2.113.0, Wunsch Hansi „Tempo-Check“): langsame Vorgänge mit Namen und Dauer ins Server-Log (keine Inhalte,
@@ -7070,7 +7085,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         // 2.538.0 KC-CLUB-KOMMUNIKATION-AUS-GRAU: wer keine Benachrichtigungen bekommt, ist in den Empfänger-Listen ausgegraut
         // (Liste nicht lesbar → niemand ausgegraut; gesendet wird trotzdem nicht, das prüft routerSendenRoh)
-        const ohneKomm = await kommunikationAus().catch(() => new Set<string>());
+        const ohneKomm = new Set([...await kommunikationAus().catch(() => new Set<string>()), ...(await sperrenAktuell()).stumm]); // 2.539.0: + gesperrt mit 📵
         return json({
           aemter, onlineSichtbar: ichZeige,
           mitglieder: leute.map((m) => ({
@@ -14239,7 +14254,16 @@ Köcheclub-App`,
       case "sperre_liste": {
         nurAdmin(ich);
         const { data } = await db.from("kc_club_person_sperre").select("person_id,art,stumm,seit,bis").eq("aktiv", true).order("seit", { ascending: false });
-        return json({ sperren: (data ?? []).filter(sperreGilt) });
+        const sperren = (data ?? []).filter(sperreGilt);
+        // 2.539.0 KC-CLUB-SPERRE-VERSUCHE: wie oft und wann zuletzt hat die Person seit der Sperre versucht, die App zu öffnen
+        const ids = sperren.map((x: any) => x.person_id), aeltest = sperren.reduce((m: string, x: any) => (x.seit < m ? x.seit : m), jetzt());
+        const { data: vs, error: vf } = ids.length ? await db.from("kc_club_protokoll").select("person_id,zeit").eq("aktion", "gesperrt_versuch").in("person_id", ids)
+          .gte("zeit", aeltest).order("zeit", { ascending: false }).limit(1000) : { data: [], error: null };
+        return json({ sperren: sperren.map((x: any) => {
+          if (vf) return { ...x, versuche: null }; // unbekannt ≠ 0 (Regel 11)
+          const v = (vs ?? []).filter((y: any) => y.person_id === x.person_id && y.zeit >= x.seit);
+          return { ...x, versuche: v.length, versuch_zuletzt: v[0]?.zeit ?? null };
+        }) });
       }
       case "sperre_setzen": {
         nurAdmin(ich);

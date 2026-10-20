@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.539.0 – 2026-10-20 – 👀 Gesperrte: Öffnungsversuche werden aufgezeichnet und in der Sperrliste angezeigt (KC-CLUB-SPERRE-VERSUCHE)
+Hansi (20.10.: „Ich möchte ihn sperren. Er bekommt ja dann Wartung angezeigt. Du zeichnest es ja auf, wenn er sich anmelden will.“) – bisher wurde das NICHT aufgezeichnet.
+- Server: Öffnet eine gesperrte Person die App, kommt vor dem Wartungs-/Störungs-Bildschirm ein Protokolleintrag `gesperrt_versuch` (Art der Sperre, Name der Aktion – keine Inhalte), höchstens einmal je 10 Minuten und Person.
+- Admin → 🛠️ Wartung → „Zurzeit gesperrt“: je Person „👀 n× versucht, die App zu öffnen · zuletzt …“ bzw. „seit der Sperre nicht versucht“ (Lesefehler → „unbekannt“, nie 0).
+- Gesperrt mit 📵 (keine Push/E-Mail) gilt jetzt auch für das Ausgrauen in den Empfänger-Listen (2.538.0).
+- Test: Vertragstest-Block 2.539.0, Browser-Test der Sperrliste. Rückweg: App/Server 2.538.0.
+
 ## 2.538.0 – 2026-10-20 – 📵 Wer keine Benachrichtigungen bekommt, ist in allen Empfänger-Listen ausgegraut (KC-CLUB-KOMMUNIKATION-AUS-GRAU)
 Wunsch Hansi („Dass wenn jemand Nachricht an alle auswählt oder Terminanfrage usw. Thomas ausgegraut ist und nicht gewählt werden kann“).
 - Die Mitgliederliste vom Server meldet je Person `ohne_komm` (aus der Registry `kc_club_kommunikation_aus`).

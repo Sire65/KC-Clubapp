@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.538.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.539.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -22997,13 +22997,17 @@ function sperreZeigen(art, text, bis) {
 // 2.23.79 (Hansi: „neben jeder Person ein Icon“): 🔔 = Push/E-Mail laufen weiter · 📵 = keine Push, keine E-Mail
 const sperreSymbol = (stumm) => (stumm ? "📵" : "🔔");
 const sperreSymbolTitel = (stumm) => (stumm ? "Keine Push, keine E-Mail – antippen zum Einschalten" : "Push/E-Mail laufen weiter – antippen zum Abschalten");
+// 2.539.0 KC-CLUB-SPERRE-VERSUCHE: hat die gesperrte Person seitdem versucht, die App zu öffnen?
+const sperreVersuchText = (x) => x.versuche == null ? "👀 Öffnungsversuche: unbekannt" : !x.versuche ? "👀 seit der Sperre nicht versucht, die App zu öffnen"
+  : `👀 ${x.versuche}× versucht, die App zu öffnen · zuletzt ${esc(wann(x.versuch_zuletzt))}`;
 async function sperrenLaden() {
   const z = $("adSperren"); if (!z) return;
   try {
     const [{ sperren }] = await Promise.all([api("sperre_liste"), MITGLIEDER ? null : mitgliederHolen().catch(() => null)]);
     if (!$("adSperren")) return;
     $("adSperren").innerHTML = sperren.length ? `<div style="display:grid;gap:6px">${sperren.map((x) => `<div class="ps-zeile ps-gesperrt">
-        <span style="flex:1 1 100%;min-width:0"><b>${esc(vfName(x.person_id))}</b><br><small class="hinweis">${SPERRE_ART[x.art]?.kurz || esc(x.art)} · ${x.bis ? "bis " + esc(wann(x.bis)) : "bis du freigibst"}</small></span>
+        <span style="flex:1 1 100%;min-width:0"><b>${esc(vfName(x.person_id))}</b><br><small class="hinweis">${SPERRE_ART[x.art]?.kurz || esc(x.art)} · ${x.bis ? "bis " + esc(wann(x.bis)) : "bis du freigibst"}</small>
+        <br><small class="hinweis">${sperreVersuchText(x)}</small></span>
         <button type="button" class="ps-symbol${x.stumm ? " aus" : ""}" title="${sperreSymbolTitel(x.stumm)}" aria-label="${sperreSymbolTitel(x.stumm)}" onclick="sperreStumm('${esc(x.person_id)}', ${!x.stumm}, this)">${sperreSymbol(x.stumm)}</button>
         <button class="knopf klein" onclick="sperreAufheben('${esc(x.person_id)}', this)">🔓 Freigeben</button></div>`).join("")}</div>
         <p class="hinweis" style="margin:4px 0 0;font-size:.85rem">🔔 Push/E-Mail laufen weiter · 📵 keine Push, keine E-Mail – Symbol antippen zum Umschalten.</p>`

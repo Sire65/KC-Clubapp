@@ -4329,7 +4329,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 428. 2.23.77: einzelne Personen sperren – Hinweisfenster Wartung / nicht erreichbar (KC-CLUB-PERSON-SPERRE)
 {
-  assert.ok(/const gesperrt = ich\.admin \? null : await sperreFuer\(ich\.person_id\);[^\n]*\n\s*if \(gesperrt\) return json\(\{ error: SPERRE_TEXT\[gesperrt\.art\] \|\| SPERRE_TEXT\.wartung, gesperrt: gesperrt\.art, bis: gesperrt\.bis \}, 423\);/.test(server), "Server sperrt nach der Anmeldung, nie Admins");
+  assert.ok(/const gesperrt = ich\.admin \? null : await sperreFuer\(ich\.person_id\);[^\n]*\n\s*if \(gesperrt\) \{\n[^\n]*sperreVersuchMerken[^\n]*\n\s*return json\(\{ error: SPERRE_TEXT\[gesperrt\.art\] \|\| SPERRE_TEXT\.wartung, gesperrt: gesperrt\.art, bis: gesperrt\.bis \}, 423\);/.test(server), "Server sperrt nach der Anmeldung, nie Admins");
   assert.ok(/Zur Zeit führen wir für Sie Wartungsarbeiten durch\. Bitte versuchen Sie es später nochmals\. Wir bitten um Verständnis\./.test(server), "Wortlaut Wartung");
   assert.ok(/if \(!error\) \{ SPERREN\.zeilen = /.test(server), "Lesefehler sperren nie alle");
   const g = server.slice(server.indexOf('case "sperre_liste"'), server.indexOf('case "wartung_setzen"'));
@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7163,6 +7163,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const empfGruppe = \(a\) => MITGLIEDER\.filter\(\(m\) => m\.person_id !== ICH\.person_id && okFrei\(m\)/.test(programm), "Alle/Ämter/Online ohne sie");
   assert.ok(/function taAlle\(\) \{ TA\.wahl = \{ personen: MITGLIEDER\.filter\(\(m\) => m\.person_id !== ICH\.person_id && okFrei\(m\)\)/.test(programm), "Terminanfrage Alle ohne sie");
   assert.ok(/label\.ok-grau \{ opacity: \.5;/.test(seite), "ausgegraut sichtbar");
+}
+// 2.539.0 KC-CLUB-SPERRE-VERSUCHE: Öffnungsversuche Gesperrter protokolliert (gedrosselt) und in der Sperrliste angezeigt
+{
+  assert.ok(/if \(gesperrt\) \{\n\s*await sperreVersuchMerken\(ich\.person_id, gesperrt\.art, a\)\.catch\(\(\) => \{\}\);/.test(server), "Versuch wird gemerkt, bevor 423 kommt");
+  assert.ok(/if \(Date\.now\(\) - \(SPV_ZULETZT\.get\(pid\) \?\? 0\) < 10 \* 60000\) return;/.test(server) && /await protokoll\(pid, "gesperrt_versuch", \{ art, aktion: txt\(aktion, 40\) \}\);/.test(server), "höchstens 1× je 10 Min., keine Inhalte");
+  assert.ok(/if \(vf\) return \{ \.\.\.x, versuche: null \};/.test(server) && /x\.versuche == null \? "👀 Öffnungsversuche: unbekannt"/.test(programm), "unbekannt ≠ 0");
+  assert.ok(/\.\.\.\(await sperrenAktuell\(\)\)\.stumm\]\); \/\/ 2\.539\.0/.test(server), "gesperrt mit 📵 ist auch ausgegraut");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
