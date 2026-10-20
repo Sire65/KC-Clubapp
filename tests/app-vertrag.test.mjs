@@ -7206,8 +7206,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.545.0 KC-CLUB-KOPF-SEIT: „since 1991“ klein unter der Kochmütze im Kopf
 {
-  assert.ok(/<img src="kc-kochmuetze-weiss\.webp" alt="Kochmütze"><\/button><span class="kopf-seit">since 1991<\/span><button class="kopf-version"/.test(seite), "since 1991 unter der Kochmütze");
+  assert.ok(/<img src="kc-kochmuetze-weiss\.webp" alt="Kochmütze"><span class="kopf-seit">since 1991<\/span><\/button><button class="kopf-version"/.test(seite), "since 1991 unter der Kochmütze – im Knopf der Mütze (2.546.0)");
   assert.ok(/\.kopf-seit \{[^}]*color: #f3e9dc;/.test(seite), "in CD-Beige");
+}
+// 2.546.0 KC-CLUB-KOPF-SEIT-2: „since 1991“ im Knopf der Kochmütze
+{
+  assert.ok(/\.kopflogo \.logo \{ display: flex; flex-direction: column;/.test(seite) && /\.kopflogo \.logo img \{ width: 34px; \}/.test(seite), "Mütze und Schriftzug untereinander im Knopf");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

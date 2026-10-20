@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.546.0 – 2026-10-20 – „since 1991“ jetzt im Knopf der Kochmütze (KC-CLUB-KOPF-SEIT-2)
+Wunsch Hansi („Besser sähe es aus, wenn es mit im Button der Mütze ist – pack es darein“).
+- Der Schriftzug steht jetzt im Kochmützen-Feld unter der (etwas kleineren) Mütze; das Feld bleibt 54 × 54 px, die Versionsnummer steht darunter wie vorher.
+- Browser-Test bei 320 und 390 px: Schriftzug ganz im Knopf. Vertragstest angepasst + Block 2.546.0. Rückweg: App 2.545.0.
+
 ## 2.545.0 – 2026-10-20 – „since 1991“ unter der Kochmütze im Kopf (KC-CLUB-KOPF-SEIT)
 Wunsch Hansi („Oben auf der Kopfseite ganz links ist die Kochmütze. Schreibe dort noch klein darunter „since 1991““).
 - Klein, kursiv, in Beige aus dem Corporate Design direkt unter der Kochmütze, darunter wie bisher die Versionsnummer. Nicht antippbar (der Kochmützen-Knopf und die Version bleiben wie sie sind).
