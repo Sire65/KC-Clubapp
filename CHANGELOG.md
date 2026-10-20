@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.524.0 – 2026-10-20 – Versand-Leiste über dem Schreibfeld: 📝 Normal · ❗ Wichtig · 🏎️ Express (KC-CLUB-VERSANDART)
+Wunsch Hansi („Unter dem Schreibfeld sind viele Knöpfe. Wichtig und Express raus und vor dem Senden als Option: Normal ist schon markiert, dann Wichtig, dann Express. Wenn Express, Haken bei Normal raus. Wichtig und Express muss zusammen möglich sein“; Wahl Hansi: Leiste fest, WhatsApp bleibt am Platz).
+- ❗ und 🏎️ sind aus der Knopfreihe unter dem Schreibfeld heraus (jetzt 9 statt 11 runde Knöpfe – passen in eine Reihe).
+- Neu direkt über dem Schreibfeld: **☐/✔ 📝 Normal · ❗ Wichtig · 🏎️ Express**. Normal ist vorgewählt – eine normale Nachricht braucht weiter nur ➤. Wichtig oder Express anhaken nimmt den Haken bei Normal raus; beides zusammen geht (Server konnte das schon: Push + E-Mail, Wichtigkeit hoch, eilig). Normal antippen nimmt beides weg; ist beides abgewählt, ist Normal wieder markiert – es ist nie „nichts“ gewählt.
+- Die Leiste erscheint, sobald etwas im Feld steht oder ein Anhang dran ist; Antippen lässt die Tastatur offen. Der Express-Zähler „2/5“ steht neben Express; Farben wie bisher (Wichtig orange, Express rot). Nach dem Senden und beim Chatwechsel wieder Normal – jetzt auch nach „gleiche Nachricht an mehrere Chats“ (dort blieb Express bisher an).
+- Die kleine Zeile (▾ Einklappen, ⌨️ Tastatur, 🔊 Tippgeräusche, 🔒 Verschlüsselt) bleibt unverändert ganz oben; WA bleibt am bisherigen Platz.
+- Die Frage „Wie wichtig ist diese Nachricht?“ vor dem Senden (KC-CLUB-WICHTIGKEIT-FRAGE, 2.287.0) entfällt – die Leiste zeigt die Wahl schon vorher. Ihr Schalter in ⚙️ → 🔔 heißt jetzt „📝❗🏎️ Versand-Leiste immer zeigen“ (auch ohne Text; bisherige Einstellung bleibt erhalten, Standard: an für den Admin).
+- Hilfe, Rundgang und Suche sagen „über dem Schreibfeld anhaken“ statt „auf 🏎️ tippen“.
+- Nur App. Tests: Vertragstests grün (neu: Verhalten der Haken – Start Normal, Express ohne Normal, Wichtig + Express, zurück auf Normal, Leiste mit/ohne Text, WA am Platz); Browserprobe 390 px: Leiste einzeilig, keine Fehler.
+
 ## 2.523.0 – 2026-10-20 – Meldung oben auffällig · ✕ im Schlüsselbund-Fenster (KC-CLUB-MELDUNG-AUFFAELLIG)
 - KC-CLUB-MELDUNG-AUFFAELLIG (Wunsch Hansi „kontrastreich und 2× aufblinken, damit es auffällt“): Meldungen oben jetzt weiß und fett auf fast Schwarz mit goldenem Rand (Fehler: weiß auf Rot mit weißem Rand); beim Erscheinen blinken sie zweimal kurz auf (nur Farbe/Leuchten, kein Wackeln).
 - KC-CLUB-DLG-SCHLIESSEN (Wunsch Hansi): Das Fenster „🔑 Schlüsselbund“ hat oben rechts ein Schließkreuz ✕ (wie „Schließen“).
