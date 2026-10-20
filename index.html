@@ -2327,6 +2327,9 @@
   .eingabe .innen > #text.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.25); }
   /* KC-CLUB-SELBSTLOESCHEN (2.148.0): ⏳ an = violett; neun gleich große Knöpfe passen auch auf schmale Handys (alle gleich breit) */
   .eingabe .innen > .rund:not(#sendenKnopf) { width: min(40px, calc((100vw - 140px) / 8)) !important; height: min(40px, calc((100vw - 140px) / 8)) !important; }
+  .eingabe .innen > #vnKnopf.rund.an { background: #1b5e20 !important; border-color: #0d3d12 !important; color: #fff; box-shadow: 0 0 0 3px rgba(27,94,32,.35); } /* 2.517.0 */
+  .vn-zu { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; border: 1.5px dashed currentColor; border-radius: 12px; background: rgba(0,0,0,.08); color: inherit; font: inherit; font-weight: 700; cursor: pointer; text-align: left; }
+  .vn-zu small { font-weight: 400; opacity: .8; } .vn-auf { font-size: .85em; }
   .eingabe .innen > #ablaufKnopf.rund.an { background: #6a1b9a !important; border-color: #4a148c !important; color: #fff; box-shadow: 0 0 0 3px rgba(106,27,154,.3); }
   .eingabe-entwurf.sl-leiste { color: #6a1b9a; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; } /* 2.163.0: antippbar */ :root.dunkel .eingabe-entwurf.sl-leiste { color: #ce93d8; }
   .chat-unterzeile { display: flex; align-items: center; gap: 6px; min-width: 0; } .chat-unterzeile > #chatTeilnehmer { min-width: 0; }
@@ -5332,6 +5335,8 @@
     <button class="rund ablauf-knopf" title="Nachricht löscht sich selbst …" aria-label="Selbstlöschen für diese Nachricht" aria-pressed="false" id="ablaufKnopf" onclick="slWahl('nachricht')">⏳</button>
     <!-- KC-CLUB-SPAETER-SENDEN (2.362.0, Wunsch Hansi): Nachricht zu einer späteren Zeit senden – auch jeden Montag um 8 Uhr usw. -->
     <button class="rund spaeter-knopf" title="Später senden …" aria-label="Nachricht später senden" id="spaeterKnopf" onclick="spaeterWahl()">⏰</button>
+    <!-- 2.517.0 KC-CLUB-VERSCHLUESSELT: Nachricht mit selbst gewähltem Schlüssel verschlüsseln -->
+    <button class="rund vn-knopf" title="Verschlüsselt senden (mit Schlüssel)" aria-label="Verschlüsselt senden" aria-pressed="false" id="vnKnopf" onclick="vnUmschalten()">🔒</button>
     <textarea id="text" rows="2" spellcheck="true" lang="de" autocapitalize="sentences" autocorrect="on" placeholder="Nachricht schreiben …" aria-label="Nachricht schreiben" onblur="emoStelleMerken('text')" onkeyup="emoStelleMerken('text')" onclick="emoStelleMerken('text')" oninput="emoStelleMerken('text');naErwPruefen();this.style.height='auto';this.style.height=this.scrollHeight+'px';tippenMelden();entwurfMerken();entwurfMarkeZeigen()"></textarea>
     <!-- KC-CLUB-EINGABE-LEEREN (2.148.0, Wunsch Hansi): rotes ✕ rechts im Schreibfeld – Text auf einmal löschen (nur sichtbar, wenn Text drinsteht) -->
     <button class="text-leeren versteckt" type="button" title="Text löschen" aria-label="Geschriebenen Text löschen" id="textLeerenKnopf" onclick="textLeeren()">✕</button>
@@ -5553,7 +5558,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.516.0" data-v="2.516.0"></script>
+<script src="app.js?v=2.517.0" data-v="2.517.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

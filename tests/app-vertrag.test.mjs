@@ -3719,7 +3719,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(aktuelleAnsicht === "buero" && !PUSH_AKTIV && Date\.now\(\) - BNN\.zuletzt > 55000\) buNeuPruefen\(\);/.test(html), "ohne Push selbst nachsehen");
   assert.ok(/u\.ungelesen && u\.letzte && u\.letzte\.von !== "Du" && !stummAn\(u\.id\)/.test(html), "nur fremde, nicht stumme Unterhaltungen");
   assert.ok(/function buNeuOeffnen\(\) \{[^}]*chatOeffnen\(u\.id\);/.test(html), "Tippen öffnet die Unterhaltung");
-  assert.ok(/<span><b>Neue Nachricht von \$\{esc\(von\)\}<\/b><small>\$\{esc\(u\.letzte\.text/.test(html), "Text escaped");
+  assert.ok(/<span><b>Neue Nachricht von \$\{esc\(von\)\}<\/b><small>\$\{esc\((?:vnKurz\()?u\.letzte\.text/.test(html), "Text escaped (2.517.0: verschlüsselte als „🔒 Verschlüsselte Nachricht“)");
 }
 // 355 KC-CLUB-EINGANGSKORB (2.23.6): Erstattungen + Dienstzeiten im Eingang, alle drei der Clubleitung, Ablage in mehrere Ordner
 {
@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /\(kz as any\)\.schulung = await pSchulungZahl;/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7197,7 +7197,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/nachrichtMenue\('\$\{m\.id\}'\)/.test(html) && /const NA_SCHNELL = \["👍", "❤️", "😂", "😮", "😢", "🙏"\]/.test(html), "Menü mit Schnell-Reaktionen fehlt");
   assert.ok(/function naAntworten\(/.test(html) && /id="antwortLeiste"/.test(html) && /antwort_auf: NA\.antwort\.id/.test(html), "Antworten fehlt");
   assert.ok(/function naErwPruefen\(/.test(html) && /id="erwVorschlag"/.test(html) && /erwaehnt: naErwaehnteIds\(text\)/.test(html), "@Erwähnen fehlt");
-  assert.ok(/function naText\(t\) \{[^\n]*\n\s*return esc\(t\)/.test(html), "Nachrichtentext muss weiter sicher (esc) ausgegeben werden");
+  assert.ok(/function naText\(t\) \{[^\n]*\n(\s*if \(vnIst\(t\)\) return vnHtml\(t\);[^\n]*\n)?\s*return esc\(t\)/.test(html) && /function vnHtml\(t\) \{\n[^\n]*naText\(VN\.klar\.get\(t\)\)[^\n]*\n\s*return `<button[^\n]*data-vn="\$\{esc\(t\)\}"/.test(html), "Nachrichtentext muss weiter sicher (esc) ausgegeben werden (2.517.0: auch verschlüsselte)");
 }
 
 // 122. 0.98.0: Weiterleiten, Nicht stören, Meine Geräte
@@ -11419,4 +11419,15 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.516.0 KC-CLUB-ABLAGEKORB-DUBLETTE-DEUTLICH (Fund Hansi): Dubletten als deutlicher Warnkasten oben im Eintrag, mit „Dubletten löschen“
 {
   assert.ok(/x\.status === "offen" && x\.anlagen\.some\(\(f\) => f\.dublette\) \? ablkWarnung\(x\)/.test(programm) && /async function ablkDublettenWeg\(/.test(programm) && /\.ablk-warn \{/.test(seite), "Warnkasten mit Löschen");
+}
+
+// 2.517.0 KC-CLUB-VERSCHLUESSELT (Wunsch Hansi): Nachricht mit selbst gewähltem Schlüssel – nur auf dem Handy ver-/entschlüsselt
+{
+  const v = programm.slice(programm.indexOf("const VN_PRE ="), programm.indexOf("function naText(t) {"));
+  assert.ok(/iterations: 310000, hash: "SHA-256"/.test(v) && /name: "AES-GCM", length: 256/.test(v) && /crypto\.getRandomValues\(new Uint8Array\(16\)\)/.test(v) && /crypto\.getRandomValues\(new Uint8Array\(12\)\)/.test(v), "PBKDF2 + AES-GCM, zufälliges Salz und IV");
+  assert.ok(/VN_MIN = 6/.test(v) && /\[\.\.\.pw\]\.length >= VN_MIN/.test(v), "mindestens 6 Zeichen");
+  assert.ok(!/api\(/.test(v), "Schlüssel und Klartext gehen nie an den Server");
+  assert.ok(/if \(vnIst\(t\)\) return vnHtml\(t\);/.test(programm) && /if \(VN\.an && text\) \{ const v = await vnVerschluesseln\(text\); if \(!v\) return; text = v; \}/.test(programm), "Anzeige gesperrt, Senden verschlüsselt");
+  assert.ok(/id="vnKnopf"/.test(seite) && /vnKurz\(u\.letzte\.text\)/.test(programm), "Knopf, Vorschauen ohne Zeichensalat");
+  assert.ok(/\/\^🔒KCV1:\/\.test\(text\) \? "🔒 Verschlüsselte Nachricht/.test(server), "Push/Mail nur „Verschlüsselte Nachricht“");
 }
