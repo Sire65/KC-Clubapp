@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.547.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.548.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -931,6 +931,7 @@ const THEMEN = [
   { id: "bauernhof", sym: "🐄", name: "Bauernhof", design: "kuechengruen", jz: "bauernhof", effekt: "taube", schrift: "kirmes" }, // 2.445.0 KC-CLUB-BAUERNHOF (Wunschliste #3)
   { id: "kegeln", sym: "🎳", name: "Kegelabend", design: "schokolade", jz: "kegeln", effekt: "flieger", schrift: "schwung", kopf: "theater" }, // 2.446.0 KC-CLUB-KEGELN (Wunschliste #4)
   { id: "wildwest", sym: "🤠", name: "Wilder Westen", design: "ocker", jz: "wildwest", effekt: "flieger", schrift: "kirmes", kopf: "bude" }, // 2.529.0 KC-CLUB-WILDWEST
+  { id: "wueste", sym: "🐪", name: "Wüste", design: "sonnenuntergang", jz: "wueste", effekt: "flieger", schrift: "kirmes", kopf: "theater" }, // 2.548.0 KC-CLUB-WUESTE
   { id: "oktoberfest", sym: "🥨", name: "Oktoberfest", design: "nordsee", jz: "wiesn", effekt: "postauto", schrift: "fraktur", kopf: "bude" },
   { id: "herbst", sym: "🍂", name: "Herbst", design: "ocker", jz: "herbst", effekt: "flieger" },
   { id: "indian", sym: "🍁", name: "Indian Summer", design: "glut", jz: "herbst", effekt: "taube",
@@ -5367,6 +5368,7 @@ const HILFE = [
   { id: "bauernhof", thema: "darstellung", sym: "🐄", t: "Thema Bauernhof", x: "Im Thema <b>🐄 Bauernhof</b> läuft im Kopf der Startseite ein ganzer Tag auf dem Hof: Morgens geht die Sonne auf und der <b>Hahn</b> kräht auf dem Zaunpfosten. <b>Kuh</b>, <b>Schwein</b> und <b>Hühner</b> kommen auf die Wiese – das Schwein suhlt sich in der Pfütze. Der <b>Traktor</b> bringt Stroh und lädt einen Ballen ab, dann steht ein Holzschild <b>„Hof“ mit deinem Vornamen</b>. Abends gehen alle Tiere in den <b>Stall</b>, das Tor geht zu, nachts schläft der Hahn – und am nächsten Morgen beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🐄 Bauernhof.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.445.0" },
   { id: "kegeln", thema: "darstellung", sym: "🎳", t: "Thema Kegelabend", x: "Im Thema <b>🎳 Kegelabend</b> wird unten im Kopf der Startseite gekegelt: Ein <b>Koch mit Kochmütze</b> nimmt Anlauf und rollt die Kugel auf die <b>9 Kegel</b> (der König trägt eine rote Krone) – die Kegel fliegen, „5 Holz!“, dann stellen sie sich wieder auf. Oben rechts zählt die <b>Kreidetafel mit deinem Vornamen</b> die Striche. Der 6. Wurf ist immer <b>„Alle Neune!“</b> mit Konfetti – danach wischt ein Schwamm die Tafel sauber und es geht von vorn los. Vorschau: ⚙️ → ✨ Effekte → 🎳 Kegelabend.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.446.0" },
   { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Feuer sitzen <b>zwei Indianer</b>, daneben steht der <b>Häuptling</b> mit Federhaube und raucht die <b>Friedenspfeife</b> – aus dem Rauch entsteht am Himmel Buchstabe für Buchstabe <b>dein Vorname</b>, bis ihn der Wind verweht; rechts ragen große <b>Saguaro-Kakteen</b> auf. Am Horizont ziehen <b>Büffel</b> vorbei, ab und zu rollt ein <b>Windstoß</b> einen Steppenläufer durchs Bild. Zwei <b>Cowboys</b> reiten vorbei, die <b>Postkutsche „Köcheclub“</b> rumpelt durch, und zwei Cowboys <b>duellieren</b> sich – „PENG!“, einer fällt, ein <b>flacher Wagen</b> bringt den Verwundeten mit Kopfverband weg. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
+  { id: "wueste", thema: "darstellung", sym: "🐪", t: "Thema Wüste", x: "Im Thema <b>🐪 Wüste</b> liegt unten im Kopf der Startseite die Wüste: hinten die <b>Pyramiden</b>, links eine <b>Oase</b> mit Palmen, vorne zieht eine <b>Karawane</b> vorbei. Dann wird der <b>Pharao auf seiner Sänfte</b> herangetragen, und rechts steigt ein <b>Flaschengeist aus der Lampe</b>. Er verbeugt sich, schnippt – und aus der Lampe schreibt <b>Goldstaub langsam deinen Vornamen</b> in den Himmel. Danach wirbelt er zurück in die Lampe, die <b>Sonne geht hinter den Pyramiden unter</b>, Sterne und Halbmond erscheinen, die Karawane rastet an der Oase – und es wird wieder Tag. Vorschau: ⚙️ → ✨ Effekte → 🐪 Wüste.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.548.0" },
   { id: "eingangskorb_mitglied", thema: "club", sym: "📥", t: "Dein Eingangskorb fürs Archiv", x: "Legt dir die Clubleitung ein Dokument hin (z. B. eine Anleitung oder Urkunde), steht unter <b>„Heute wichtig“ → 📥 Eingangskorb</b>. Antippen – du siehst das Dokument und entscheidest: <b>✔ annehmen</b> – dann fragt die App <b>„Wohin?“</b> (Ordner und Register, der 💡 Vorschlag des Absenders ist schon ausgewählt) und legt es in deinen persönlichen Archiv-Ordner – oder <b>✖ ablehnen</b>, dann wird es gelöscht. Dein Ordner bleibt privat. <i>Clubleitung:</i> Mitglied antippen → <b>„📥 In den Eingangskorb“</b>.", seit: "2.432.0" },
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
@@ -9240,7 +9242,7 @@ const TW_SYN = [["termin", "verabredung", "treffen", "datum", "verabreden", "aus
   // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4
   ["verschluesseln", "verschluesselt", "verschluesselung", "geheim", "schluessel", "schloss", "kennwort", "codiert", "schluesselbund", "geheimagent", "agent"],
   ["ablagekorb", "dateimanager", "hochschicken"], ["versandleiste", "normal", "wichtig", "leiste"], ["schreibt", "tippt", "diktiert"],
-  ["pdf", "drucken", "ausdrucken", "briefbogen", "papier"], ["cowboy", "indianer", "westen", "wildwest", "bueffel", "kutsche"]]; // 2.252.0 Fund Hansi: Wilfried fragte „Kochbild“
+  ["pdf", "drucken", "ausdrucken", "briefbogen", "papier"], ["cowboy", "indianer", "westen", "wildwest", "bueffel", "kutsche"], ["wueste", "pyramide", "pharao", "kamel", "karawane", "flaschengeist", "geist", "oase"]]; // 2.252.0 Fund Hansi: Wilfried fragte „Kochbild“
 // Twinkeys eigene Fragen und Antworten (Wunsch Hansi: „mehr Fragen und Antworten“) – kurz, mit Sprung an die richtige Stelle
 const TW_FAQ = [
   { id: "einstellungen-erklaert", sym: "🧭", t: "Was bewirken die ganzen Einstellungen?", x: "Unter <b>Technik → 🧭 Einstellungen erklärt</b> siehst du alle Einstellungen wie Ordner im Explorer – antippen erklärt, was sie bewirken, und <b>👉 Hinbringen</b> führt dich zum Schalter. Mit 🖨️ auch zum Ausdrucken.", los: () => ewStart() }, // 2.534.0
@@ -9258,6 +9260,7 @@ const TW_FAQ = [
   { id: "erstattung-pdf", sym: "📄", t: "Kann ich meinen Erstattungsantrag ausdrucken?", x: "Ja – nach dem Einreichen bietet die App den Antrag auf dem <b>Club-Briefbogen</b> an: <b>📄 PDF speichern / teilen</b> oder <b>🖨️ Drucken</b>, mit Feldern für die Unterschriften. Ein PDF gibt es in jeder Druckvorschau der App.", los: () => zeige("erstattung") },
   { id: "vorschlag-sitzung-offen", sym: "📅", t: "Die nächste Sitzung hat noch kein Datum – kann ich trotzdem etwas vorschlagen?", x: "Ja. Beim Vorschlag unter „Für welchen Termin?“ <b>„📅 Nächste/Übernächste Sitzung – Datum noch offen“</b> wählen. Sobald die Sitzung im Kalender steht, ordnet die App den Vorschlag selbst zu.", los: () => zeige("vorschlaege") },
   { id: "wildwest", sym: "🤠", t: "Gibt es ein Thema mit Cowboys und Indianern?", x: "Ja – das Thema <b>🤠 Wilder Westen</b>: Tipi mit Lagerfeuer, Indianer und Häuptling (aus seiner Friedenspfeife steigt dein Vorname in Rauchschrift auf), Kakteen, Steppenläufer, Cowboys, Postkutsche, ein Duell und zum Schluss die große Büffelherde. Unter ⚙️ → „✨ Effekte“ → 🤠 Wilder Westen gibt es eine Vorschau.", los: () => einstiegHin("effekte", "jzWahl") },
+  { id: "wueste", sym: "🐪", t: "Gibt es ein Thema mit Pyramiden und Pharao?", x: "Ja – das Thema <b>🐪 Wüste</b>: Pyramiden, Oase, Karawane, der Pharao auf seiner Sänfte und ein Flaschengeist aus der Lampe, der deinen Vornamen aus Goldstaub in den Himmel schreibt – zum Schluss ein Sonnenuntergang mit Sternen. Unter ⚙️ → „✨ Effekte“ → 🐪 Wüste gibt es eine Vorschau.", los: () => einstiegHin("effekte", "jzWahl") },
   // 2.508.0 KC-CLUB-HILFE-NACHTRAG-3: Fragen zu den neuen Möglichkeiten (nur Mitglieder-Funktionen)
   { id: "dienst-uebersicht", sym: "📊", t: "Wo sehe ich, wer wann beim Weihnachtsmarkt kann?", x: "Tippe in <b>🗓️ Dienstpläne</b>, in <b>„Mein Dienst“</b> oder in den Dienstwünschen auf <b>📊</b>. Die Übersicht zeigt deine Zeiten und die der Mitglieder, die ihre Zeiten freigegeben haben.", los: () => zeige("dienste") },
   { id: "tippgeraeusche", sym: "⌨️", t: "Kann ich hören, wenn jemand tippt?", x: "Ja – wenn die andere Person <b>„Andere sehen live, was ich tippe“</b> eingeschaltet hat. Unter ⚙️ → „🔔 Benachrichtigungen“ → <b>„⌨️ Tippgeräusche“</b> wählst du Tastatur oder Schreibmaschine.", los: () => einstiegHin("benachrichtigung", "setTippTon") },
@@ -9431,7 +9434,7 @@ const TW_VIDEOS = { "h:verschluesselt": ["geheim"], "h:schluesselbund": ["geheim
   "h:info_laufband": ["oberflaeche"], "h:kachel_auswahl": ["oberflaeche"], "h:kachel_vorschlag": ["oberflaeche"], "h:gelesen_von": ["chatprofi"], "h:tastatur_knopf": ["chatprofi"],
   "h:schreiben_klappen": ["chatprofi"], "h:tage_einklappen": ["chatprofi"], "h:anlage_mitschicken": ["vorschlag"], "h:termin_link_prospekt": ["termin"], "h:sonderstunden": ["dienst", "erstattung"],
   "h:avatar_bearbeiten": ["figur", "figurbau"], "h:schuerze": ["figurbau"], "h:foto_muetze": ["figur"], "h:bild_zuletzt": ["figur"], "h:stundenuhren": ["effekte"], "h:kuckuck_ton": ["effekte"],
-  "h:unterwasserwelt": ["anpassen"], "h:weltraum": ["anpassen"], "h:bauernhof": ["anpassen"], "h:kegeln": ["anpassen"], "h:wildwest": ["anpassen"], "h:eingangskorb_mitglied": ["archiv"], "f:wer-gelesen": ["chatprofi"], "f:sonderstunden-melden": ["dienst"],
+  "h:unterwasserwelt": ["anpassen"], "h:weltraum": ["anpassen"], "h:bauernhof": ["anpassen"], "h:kegeln": ["anpassen"], "h:wildwest": ["anpassen"], "h:wueste": ["anpassen"], "h:eingangskorb_mitglied": ["archiv"], "f:wer-gelesen": ["chatprofi"], "f:sonderstunden-melden": ["dienst"],
   "h:status": ["status"], "h:erstattung": ["erstattung"], "h:feedback": ["feedback"], "h:daten_geaendert": ["meinedaten"], "h:meine_daten": ["privat", "meinedaten"], "h:aenderung_rueckfrage": ["meinedaten"], "h:wer_online": ["mitglieder"], "h:anruf_kachel": ["mitglieder"], "h:mitglieder_ansicht": ["mitglieder"], "h:bild_punkt": ["mitglieder"], "h:pinnwand_antwort": ["pinnwand"], "h:pinnwand_wichtig": ["pinnwand"], "h:pinnwand_alt": ["pinnwand"], "h:foto_details": ["fotos"], "h:foto_teilen": ["fotos"], "h:hilfe_anbieten": ["helfen"], "h:hilfe_veroeffentlichen": ["helfen"], "h:hilfe_absprache": ["helfen"], "h:vorschlag_unterstuetzen": ["vorschlag"], "h:spende": ["vorschlag"], "h:abstimmung_ziel": ["vorschlag"], "h:spiel_mitglieder": ["spiele"], "h:spiel_schach": ["spiele"], "h:spiel_pause": ["spiele"], "h:ttt_toene": ["spiele"], "h:spiele_fdk_dk_mg": ["spiele"], "h:spiele_leiste": ["spiele"], "h:aktionen_kacheln": ["aktionen"], "h:wo_bin_ich": ["sos"], "h:notfallkontakt": ["sos"], "h:notfallpass_sichern": ["sos"], "h:notfallkontakt_wer": ["sos"], "h:mein_dienst": ["dienst"], "h:dienst_erinnerung": ["dienst"], "h:dw_fertig": ["dienst"], "h:wunschbogen": ["dienst"], "h:meine_schulung": ["schulung"], "h:kalender_blaettern": ["zusagen"], "h:naechstes_treffen": ["zusagen"], "h:termin_zahl": ["zusagen"], "h:drucken": ["zusagen"], "h:wiederholen": ["terminfinden", "termin"], "h:kachel_lang": ["oberflaeche"], "h:kachel_aus": ["oberflaeche"], "h:register_ziehen": ["oberflaeche"], "h:register_wischen": ["oberflaeche"], "h:ansicht": ["einfach", "oberflaeche"], "h:rundgang": ["ueberblick"], "h:ueberblick": ["ueberblick"], "h:twinkey": ["hilfe"], "h:einstellung_suchen": ["hilfe"], "h:diktat_feld": ["sprache"], "h:sprache_einstellung": ["sprache"], "h:installieren": ["installieren"], "h:pc_tablet": ["inst_geraet"], "h:code_geraet": ["privat", "inst_codes", "inst_geraet"], "h:code_ipad": ["inst_safari", "inst_codes"], "h:update": ["probleme", "technik"], "h:version": ["probleme", "technik"], "h:sicherheitscheck": ["probleme", "technik"], "h:programme_frei": ["technik"], "h:nacht": ["anpassen"], "h:schrift": ["anpassen"], "h:animiert": ["anpassen"], "h:wetter_tage": ["effekte"], "h:protokoll_aufgaben": ["todo", "lesen"], "h:push": ["push"], "h:push_selbst": ["push"], "h:test_an_mich": ["push"], "h:meine_geraete": ["push"], "h:anklopfton": ["push"], "h:ansage_nachholen": ["push"], "h:ansage_verlassen": ["push"], "t:ruhe": ["push"], "f:ruhe": ["push"], "h:privatsphaere": ["privat"], "h:zugangslink": ["privat"], "h:live_tippen": ["privat"], "h:zuletzt_da": ["privat"], "h:link_verloren": ["privat"], "h:abmelden": ["privat"], "f:daten": ["privat"], "h:haengt": ["probleme"], "h:laden_dauert": ["probleme"], "h:zwei_fenster": ["probleme"], "h:verbindung": ["probleme"], "h:mikrofon": ["probleme"], "h:verbindung_senden": ["probleme"], "h:app_schliessen": ["probleme"], "h:twinkey_haengt": ["probleme"], "h:pfeil_menue": ["chatprofi"], "h:anheften": ["chatprofi"], "h:merken": ["chatprofi"], "h:weiterleiten": ["chatprofi"], "h:haken": ["chatprofi"], "h:sprachtempo": ["chatprofi"], "h:chat_vorlesen": ["chatprofi"], "h:chat_abstimmung": ["chatprofi"], "h:selbstloeschen": ["chatprofi"], "h:entwurf": ["chatprofi"], "h:ohne_netz": ["chatprofi"], "h:chat_archiv": ["chatprofi"], "h:chat_ganz": ["chatprofi"], "h:wichtig_nachtraeglich": ["chatprofi"], "h:kopieren": ["chatprofi"], "h:neue_linie": ["chatprofi"], "h:gruppe_bereiche": ["gruppen"], "h:gruppen_admin": ["gruppen"], "h:gruppe_loeschen": ["gruppen"], "h:terminanfrage": ["terminfinden"], "h:anfrage_status": ["terminfinden"], "h:anfrage_vorbehalt": ["terminfinden"], "h:terminfindung": ["terminfinden"], "h:todo": ["todo"], "h:erst_einfach": ["einfach"], "h:es_musik": ["buehne"], "h:club_song": ["buehne"], "h:bw_einladung": ["buehne"], "h:eingangskorb": ["buero"], "h:eingang_hinweis": ["buero"], "h:ablage_mehrere": ["buero"], "h:buero_sprache": ["buero"], "h:buero_einlesen": ["buero"], "h:buero_mail": ["buero"], "h:schilder": ["buero"],
 }; // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4
 const TW_HILFETEXT = { "f:mein-bild": "h:mein_bild", "f:figur-bauen": "h:mein_bild", "f:verschluesseln": "h:verschluesselt", "f:schluessel-frage": "h:verschluesselt", "f:schluessel-oeffnen": "h:verschluesselt", "f:schluesselbund": "h:schluesselbund", "f:geheimagent": "h:boten", "f:versand-leiste": "h:versand_leiste", "f:schreibt-dir": "h:schreibt_hinweis", "f:graue-haken": "h:haken" }; // 2.533.0: + Verschlüsseln & Co.
@@ -15759,9 +15762,9 @@ const JZ_DEKO_WAHL = [["auto", "🔄 Automatisch"], ["wimpel", "🎏 Wimpel"], [
 const JZ_DEKO_FARBEN = { bunt: ["#e63946", "#ffb703", "#2a9d8f", "#3a86ff", "#ff6b9a", "#8ac926"], pastell: ["#f7a8c4", "#9fd3ff", "#fff3a0", "#b6f0b0", "#d9b8f7"],
   bayern: ["#1f6fd1", "#ffffff"], herbst: ["#e85d04", "#ffba08", "#dc2f02", "#f48c06", "#9d0208"], karibik: ["#ff006e", "#ffbe0b", "#00bbf9", "#00f5d4", "#fb5607"],
   warm: ["#ffd27a", "#fff0c2", "#ffc65c"], gold: ["#ffd700", "#fff1a8", "#f5c542", "#ffe680"], halloween: ["#ff7a00", "#9b4dca", "#ffae42", "#7b2cbf"],
-  meer: ["#00b4d8", "#90e0ef", "#ffd166", "#ff6b9a", "#06d6a0"], all: ["#ffffff", "#9bb7ff", "#ffd166", "#c77dff"], hof: ["#9b2226", "#e9c46a", "#6a994e", "#f8f9fa"], western: ["#9b2226", "#e9c46a", "#264653", "#bc6c25"] }; // 2.529.0: western · 2.434.0 · 2.444.0: all (Weltraum) · 2.445.0: hof
+  meer: ["#00b4d8", "#90e0ef", "#ffd166", "#ff6b9a", "#06d6a0"], all: ["#ffffff", "#9bb7ff", "#ffd166", "#c77dff"], hof: ["#9b2226", "#e9c46a", "#6a994e", "#f8f9fa"], western: ["#9b2226", "#e9c46a", "#264653", "#bc6c25"], wueste: ["#1d4e89", "#ffd166", "#9b2226", "#2a9d8f"] }; // 2.548.0: wueste // 2.529.0: western · 2.434.0 · 2.444.0: all (Weltraum) · 2.445.0: hof
 const JZ_DEKO_AUTO = { herbst: ["laternen", "herbst"], advent: ["lichter", "warm"], silvester: ["lichter", "gold"], sommer: ["wimpel", "bunt"], fruehling: ["wimpel", "pastell"],
-  wiesn: ["wimpel", "bayern"], karneval: ["wimpel", "bunt"], kirmes: ["lichter", "bunt"], karibik: ["laternen", "karibik"], halloween: ["lichter", "halloween"], unterwasser: ["wimpel", "meer"], weltraum: ["lichter", "all"], bauernhof: ["wimpel", "hof"], kegeln: ["lichter", "warm"], wildwest: ["wimpel", "western"] }; // 2.529.0: + Wilder Westen
+  wiesn: ["wimpel", "bayern"], karneval: ["wimpel", "bunt"], kirmes: ["lichter", "bunt"], karibik: ["laternen", "karibik"], halloween: ["lichter", "halloween"], unterwasser: ["wimpel", "meer"], weltraum: ["lichter", "all"], bauernhof: ["wimpel", "hof"], kegeln: ["lichter", "warm"], wildwest: ["wimpel", "western"], wueste: ["laternen", "wueste"] }; // 2.548.0: + Wüste // 2.529.0: + Wilder Westen
 const JZ_DEKO_STANDARD = { wimpel: "bunt", lichter: "warm", laternen: "herbst" };
 const jzDekoWahl = () => { try { const w = localStorage.getItem("kc_club_jzDeko"); return JZ_DEKO_WAHL.some(([k]) => k === w) ? w : "auto"; } catch { return "auto"; } };
 function jzDekoArt(art) { // → [Art, Farben] oder null
@@ -15884,7 +15887,7 @@ addEventListener("resize", () => requestAnimationFrame(() => { jzEisLaenge(); jz
     jzTropfTakt();
   }, 3500 + Math.random() * 4500); // 2.283.0: etwas öfter (alle 3½–8 s)
 })();
-const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"], unterwasser: ["🐠", "🫧", "🐟", "🐚"], weltraum: ["⭐", "✨", "🚀", "🪐"], bauernhof: ["🐄", "🐖", "🐓", "🌾"], kegeln: ["🎳", "✨", "🎉"], wildwest: ["🤠", "🐃", "🌵", "🔥"] };
+const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"], unterwasser: ["🐠", "🫧", "🐟", "🐚"], weltraum: ["⭐", "✨", "🚀", "🪐"], bauernhof: ["🐄", "🐖", "🐓", "🌾"], kegeln: ["🎳", "✨", "🎉"], wildwest: ["🤠", "🐃", "🌵", "🔥"], wueste: ["🐪", "🌴", "🪔", "✨"] };
 function jahreszeitKopf() {
   const h = document.querySelector("#v-start .hero"); if (!h) return;
   h.querySelector(".jz-schicht")?.remove(); h.querySelector(".jz-sprech")?.remove(); h.classList.remove("jz-boden"); jzbStop(); jzDekoWeg(h);
@@ -17718,7 +17721,7 @@ function bwHoerPause() { const H = BW.hoeren; if (!H) return; H.pause = !H.pause
 // 🌻 Sommer: eine Sonnenblume wächst (jeder 3. Lauf drei), eine Biene besucht sie – abends Glühwürmchen. Am Ende fallen die Blütenblätter, Windstoß.
 // Ein <canvas> im Kopf; zeichnet nur, wenn die Startseite im Bild und die App im Vordergrund ist. Aus bei „✨ Animierte Knöpfe“ aus,
 // Sparmodus oder „Bewegung reduzieren“ (dann wie bisher). Tippen geht durch (pointer-events: none). Lauf-Zähler je Gerät (kc_club_jzLauf).
-const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest"]; // 2.529.0: + Wilder Westen · 2.331.0: + Themen-Bühnen · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof · 2.446.0: + Kegeln
+const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste"]; // 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.331.0: + Themen-Bühnen · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof · 2.446.0: + Kegeln
 const JZB_BLUEHT = 150; // 2.250.0 (Fund Hansi „Sonnenblume nur kurz“): Blumen/Sonnenblume blühen 2½ Min., bevor der Wind kommt
 const JZB_SP = 3, JZB_RAND = 22; // 2.259.0: 22 statt 16 – nichts in die runden Ecken (Radius 26) // Bodenspalten in px; nichts in den runden Ecken ablegen
 const JZB_LAUB = ["#e0802a", "#c8432b", "#e8b23a", "#a85a2a", "#d96a1f", "#b33a2a", "#cf9a2b"];
@@ -18322,7 +18325,7 @@ function jzbGastMalen(c, g) {
 // 🥨 Oktoberfest: blau-weiße Wimpel, Brezn, Fass wird angezapft („O'zapft is!“), zwei Maßkrüge stoßen an („Prost!“), Lebkuchenherz mit Namen.
 // 🌴 Karibik: Meer mit Wellen, Strand und Palme (ab und zu fällt eine Kokosnuss), Segelboot, Papagei oder springender Fisch, der Vorname
 // wird in den Sand geschrieben – eine Welle holt ihn; zum Schluss Sonnenuntergang. Alles nur Bild, nichts wird gespeichert oder gesendet.
-const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest"]; // 2.529.0: + Wilder Westen · 2.446.0: + Kegeln · 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof
+const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste"]; // 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.446.0: + Kegeln · 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof
 const JZB_FEST_DAUER = 120; // Sekunden je Lauf
 const JZB_FEST_BUNT = ["#ff4d6d", "#ffd23f", "#3ec1ff", "#7bed6f", "#c77dff", "#ff9f1c", "#ffffff"];
 function jzbFestStart() {
@@ -18334,6 +18337,7 @@ function jzbFest(dt) {
   const J = JZB, k = J.k;
   if (J.phase === "anfang" || !J.fest) { jzbFestStart(); jzbPhase("fest"); }
   const F = J.fest; F.t += dt;
+  if (J.saison === "wueste") return jzbWuSchritt(F, dt); // 2.548.0: Pyramiden, Karawane, Oase, Pharao, Flaschengeist – Name aus Goldstaub, Sonnenuntergang
   if (J.saison === "wildwest") return jzbWwSchritt(F, dt); // 2.529.0: Tipi, Lagerfeuer, Cowboys, Kutsche – zum Schluss die Büffelherde
   if (J.saison === "kegeln") return jzbKgSchritt(F, dt); // 2.446.0: 6 Würfe, zuletzt „Alle Neune“, Tafel wischen
   if (J.saison === "bauernhof") return jzbBhSchritt(F, dt); // 2.445.0: ein Tag auf dem Hof – Morgen bis Nacht, dann wieder Morgen
@@ -18423,7 +18427,7 @@ function jzbSpritzerMalen(c, F) {
 function jzbFestMalen(c) {
   const J = JZB, F = J.fest; if (!F) return;
   c.save(); c.globalAlpha = F.a;
-  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else if (J.saison === "wildwest") jzbWildwestMalen(c, F); else if (J.saison === "bauernhof") jzbBauernhofMalen(c, F); else if (J.saison === "kegeln") jzbKegelnMalen(c, F); else jzbKaribikMalen(c, F);
+  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else if (J.saison === "wildwest") jzbWildwestMalen(c, F); else if (J.saison === "wueste") jzbWuesteMalen(c, F); else if (J.saison === "bauernhof") jzbBauernhofMalen(c, F); else if (J.saison === "kegeln") jzbKegelnMalen(c, F); else jzbKaribikMalen(c, F);
   c.restore();
 }
 // ---- 🎡 Sim-Jü ----
@@ -19330,6 +19334,201 @@ function jzbKegelnMalen(c, F) {
 // und Kakteen. Zweimal reiten zwei Cowboys vorbei (einer schwingt das Lasso), zweimal rumpelt die Postkutsche „Köcheclub-Express“ durch.
 // Zum Schluss bebt der Boden: eine riesige Büffelherde donnert von rechts heran, trampelt Zelt und Feuer nieder, eine Staubwolke deckt alles zu –
 // aus dem Staub heraus beginnt die Szene von vorn (nahtlos). Alles nur Bild, nichts wird gespeichert oder gesendet.
+// ---------- 2.548.0 KC-CLUB-WUESTE (Wunsch Hansi „Szene Wüste: im Hintergrund Pyramiden, vorne zieht eine Karawane vorbei, links eine Oase, dann kommt
+// der Pharao – auf einer Sänfte getragen –, rechts kommt ein Flaschengeist aus der Lampe“; Ende nach Wahl Hansi „1 + 3“): der Geist verbeugt sich vor dem
+// Pharao und schnippt – aus der Lampe steigt Goldstaub und schreibt langsam Buchstabe für Buchstabe den Vornamen in den Himmel (ohne Namen „Köcheclub“);
+// dann wirbelt der Geist zurück in die Lampe, die Lampe wackelt, der Pharao wird davongetragen. Zum Schluss Sonnenuntergang hinter den Pyramiden,
+// Sterne und Halbmond, die Karawane rastet an der Oase – dann wird es wieder Tag. Alles aus der Zeit im Lauf berechnet, nur Bild, nichts gespeichert/gesendet.
+const JZB_WU_KARAWANE = 5, JZB_WU_PHARAO = 26, JZB_WU_ANKUNFT = 36, JZB_WU_GEIST = 37, JZB_WU_NAME_AB = 47, JZB_WU_TAKT = 2.6, JZB_WU_KAMELE = 4;
+const jzbWuName = () => [...(jzbEisNameText() || "Köcheclub")].slice(0, 12);
+function jzbWuZeiten() { // der Ablauf richtet sich nach der Länge des Namens
+  const n = jzbWuName().length, fertig = JZB_WU_NAME_AB + n * JZB_WU_TAKT + 2.2, zurueck = fertig + 6, abend = zurueck + 5;
+  return { n, fertig, zurueck, abend, ende: abend + 22 };
+}
+function jzbWuOrt() { const J = JZB, k = J.k, boden = J.h - 5 * k; return { boden, horizont: boden - 22 * k, oase: JZB_RAND + 30 * k, lampe: J.w - JZB_RAND - 24 * k, mitte: J.w * .46 }; }
+function jzbWuNeu() { return { glitzer: [], gUhr: 0, sterne: Array.from({ length: 28 }, () => ({ x: Math.random(), y: Math.random(), ph: jzbZ(0, 6) })) }; }
+function jzbWuNameLage(O, k) {
+  const J = JZB, z = jzbWuName(), fs = Math.round(Math.max(10, Math.min(24 * k, (O.horizont - 8 * k) * .75))), f = `700 ${fs}px Georgia, "Times New Roman", serif`;
+  const c = J.ctx; c.save(); c.font = f; const b = z.map((ch) => c.measureText(ch).width + 1.5 * k); c.restore();
+  const ges = b.reduce((a, v) => a + v, 0); let x = Math.max(JZB_RAND, Math.min(J.w - JZB_RAND - ges, J.w * .5 - ges / 2));
+  return { z, fs, f, y: Math.max(fs * .85 + 2, O.horizont - 26 * k), pos: b.map((w) => { const m = x + w / 2; x += w; return m; }) };
+}
+function jzbWuGeistLage(t, Z, O, k) { // null = in der Lampe
+  const sx = O.lampe + 7 * k, sy = O.boden - 9 * k, gx = O.mitte + 44 * k, gy = O.boden - 26 * k;
+  if (t < JZB_WU_GEIST || t >= Z.zurueck + 2.6) return null;
+  if (t < JZB_WU_GEIST + 3) { const p = jzbEase((t - JZB_WU_GEIST) / 3); return { x: sx, y: sy - p * 16 * k, sc: .15 + p * .65, verbeugt: 0, schnipp: 0, sx, sy }; }
+  if (t < JZB_WU_GEIST + 6) { const p = jzbEase((t - JZB_WU_GEIST - 3) / 3); return { x: sx + (gx - sx) * p, y: sy - 16 * k + (gy - sy + 16 * k) * p, sc: .8 + p * .2, verbeugt: 0, schnipp: 0, sx, sy }; }
+  if (t < Z.zurueck) {
+    const vb = t - JZB_WU_GEIST - 6, verbeugt = vb < 3 ? Math.sin(Math.PI * Math.min(1, vb / 3)) : 0, sn = t - (JZB_WU_NAME_AB - 1.2);
+    return { x: gx, y: gy + Math.sin(t * 1.6) * 1.5 * k, sc: 1, verbeugt, schnipp: sn >= 0 && sn < .8 ? 1 - sn / .8 : 0, sx, sy };
+  }
+  const p = jzbEase((t - Z.zurueck) / 2.6), w = p * Math.PI * 4; // Wirbel zurück in die Lampe
+  return { x: gx + (sx - gx) * p + Math.cos(w) * (1 - p) * 10 * k, y: gy + (sy - gy) * p + Math.sin(w) * (1 - p) * 6 * k, sc: 1 - p * .9, verbeugt: 0, schnipp: 0, dreh: w, sx, sy };
+}
+function jzbWuSchritt(F, dt) {
+  const J = JZB, k = J.k, t = F.t, Z = jzbWuZeiten(), O = jzbWuOrt(), W = F.wu || (F.wu = jzbWuNeu());
+  if (t >= Z.ende) { J.fest = null; return jzbLaufEnde(); }
+  F.a = Math.min(1, t / 2) * Math.min(1, Math.max(0, (Z.ende - t) / 1.5));
+  // ✨ Goldstaub: nach dem Schnipsen steigt er aus der Lampe zu jedem neuen Buchstaben
+  if (t >= JZB_WU_NAME_AB - .6 && t < Z.fertig && (W.gUhr -= dt) <= 0) {
+    W.gUhr = .045; const L = jzbWuNameLage(O, k), i = Math.min(L.z.length - 1, Math.max(0, Math.floor((t - JZB_WU_NAME_AB + .6) / JZB_WU_TAKT)));
+    W.glitzer.push({ x: O.lampe + 9 * k, y: O.boden - 9 * k, zx: L.pos[i] + jzbZ(-4, 4) * k, zy: L.y - L.fs * .35 + jzbZ(-5, 5) * k, p: 0, v: jzbZ(.45, .7), r: jzbZ(.7, 1.5) * k, ph: jzbZ(0, 6) });
+  }
+  for (const g of W.glitzer) g.p += dt * g.v;
+  W.glitzer = W.glitzer.filter((g) => g.p < 1.35);
+}
+function jzbWuKamelMalen(c, x, y, sc, ph, o = {}) { // Dromedar nach links (Karawane zieht nach links), Füße bei y · o.liegt: rastet · o.decke/o.last/o.reiter
+  c.save(); c.translate(x, y); c.scale(sc, sc);
+  const fell = "#c19a6b", dunkel = "#9c7a50";
+  if (o.liegt) {
+    c.fillStyle = fell; c.beginPath(); c.ellipse(0, -5, 11, 4.5, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(1, -9, 5, 4, 0, 0, 7); c.fill(); // Körper + Höcker
+    c.strokeStyle = fell; c.lineWidth = 2.6; c.lineCap = "round"; c.beginPath(); c.moveTo(-9, -6); c.quadraticCurveTo(-14, -9, -13, -15); c.stroke(); // Hals
+    c.fillStyle = fell; c.beginPath(); c.ellipse(-15, -15.5, 3.2, 1.8, -.2, 0, 7); c.fill();
+    c.fillStyle = "#2b1a0e"; c.beginPath(); c.arc(-15.5, -16.2, .45, 0, 7); c.fill(); c.restore(); return;
+  }
+  const bein = (bx, w) => { c.strokeStyle = dunkel; c.lineWidth = 1.8; c.lineCap = "round"; c.beginPath(); c.moveTo(bx, -10); c.lineTo(bx + Math.sin(w) * 3, -4.5); c.lineTo(bx + Math.sin(w) * 3.6, 0); c.stroke(); };
+  bein(6, ph + Math.PI); bein(-6, ph); // hintere Beine
+  c.fillStyle = fell; c.beginPath(); c.ellipse(0, -13, 10, 4.6, 0, 0, 7); c.fill(); // Rumpf
+  c.beginPath(); c.ellipse(1, -17, 5.5, 4.8, 0, 0, 7); c.fill(); // Höcker
+  c.strokeStyle = fell; c.lineWidth = 3; c.lineCap = "round"; c.beginPath(); c.moveTo(-8, -14); c.quadraticCurveTo(-15, -16 + Math.sin(ph) * .6, -14, -24); c.stroke(); // Hals
+  c.fillStyle = fell; c.beginPath(); c.ellipse(-16, -24.5, 3.6, 2, -.15, 0, 7); c.fill(); c.beginPath(); c.arc(-13.6, -26, 1, 0, 7); c.fill(); // Kopf, Ohr
+  c.fillStyle = "#2b1a0e"; c.beginPath(); c.arc(-16.4, -25.3, .5, 0, 7); c.fill();
+  c.strokeStyle = fell; c.lineWidth = 1.2; c.beginPath(); c.moveTo(10, -14); c.quadraticCurveTo(13, -12, 12, -8); c.stroke(); // Schwanz
+  bein(5, ph); bein(-7, ph + Math.PI); // vordere Beine
+  if (o.decke) { c.fillStyle = o.decke; c.beginPath(); c.moveTo(-5, -20); c.quadraticCurveTo(1, -24, 7, -20); c.lineTo(8, -12); c.lineTo(-6, -12); c.closePath(); c.fill();
+    c.fillStyle = "#ffd166"; for (let i = -5; i <= 7; i += 2.4) { c.beginPath(); c.arc(i, -11.6, .6, 0, 7); c.fill(); } }
+  if (o.last) { c.fillStyle = "#8d6e63"; c.fillRect(-7, -21, 5, 6); c.fillRect(4, -21, 5, 6); c.strokeStyle = "#5d4037"; c.lineWidth = .7; c.strokeRect(-7, -21, 5, 6); c.strokeRect(4, -21, 5, 6); }
+  if (o.reiter) { c.fillStyle = "#f1faee"; c.beginPath(); c.ellipse(1, -26, 3.2, 4.6, 0, 0, 7); c.fill(); // Gewand
+    c.fillStyle = "#c68b59"; c.beginPath(); c.arc(0.5, -32.5, 2.3, 0, 7); c.fill(); c.fillStyle = o.reiter; c.beginPath(); c.ellipse(.8, -34.2, 2.9, 1.7, 0, 0, 7); c.fill(); } // Kopf + Turban
+  c.restore();
+}
+function jzbWuTraegerMalen(c, x, y, ph) { // Träger (Lendenschurz, Stab auf der Schulter), Blick nach rechts
+  const bein = (w) => { c.beginPath(); c.moveTo(0, -9); c.lineTo(Math.sin(w) * 3, 0); c.stroke(); };
+  c.save(); c.translate(x, y); c.strokeStyle = "#a0673a"; c.lineWidth = 1.7; c.lineCap = "round"; bein(ph); bein(ph + Math.PI);
+  c.fillStyle = "#f1faee"; c.fillRect(-2.2, -11, 4.4, 3); c.fillStyle = "#a0673a"; c.fillRect(-1.6, -17, 3.2, 6.5); // Schurz, Oberkörper
+  c.beginPath(); c.arc(0, -19.2, 2.1, 0, 7); c.fill(); c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(-.3, -20, 2.1, Math.PI, 0); c.fill(); c.restore(); // Kopf, Haar
+}
+function jzbWuSaenfteMalen(c, x, y, k, ph, geht) { // Sänfte mit Pharao, vier Träger (vorn/hinten je zwei, versetzt)
+  const s = k * 1.05, schw = geht ? Math.sin(ph * 2) * .8 * k : 0;
+  c.save();
+  for (const [dx, p] of [[-24, 0], [24, Math.PI]]) jzbWuTraegerMalen(c, x + dx * s - 2 * s, y, geht ? ph + p + 1 : 0); // hintere Reihe (versetzt)
+  c.translate(0, schw);
+  c.strokeStyle = "#7f5539"; c.lineWidth = 1.6 * s; c.lineCap = "round"; c.beginPath(); c.moveTo(x - 30 * s, y - 17 * s); c.lineTo(x + 30 * s, y - 17 * s); c.stroke(); // Tragestangen
+  c.fillStyle = "#b5892f"; c.fillRect(x - 13 * s, y - 21 * s, 26 * s, 5 * s); // Sitzkasten
+  c.fillStyle = "#1d3557"; for (let i = 0; i < 5; i++) c.fillRect(x - 12 * s + i * 5.2 * s, y - 20 * s, 2.4 * s, 3 * s);
+  // Pharao: weißes Gewand, Nemes-Kopftuch blau-gold gestreift, Bart, Krummstab
+  c.fillStyle = "#f8f9fa"; c.beginPath(); c.ellipse(x, y - 25 * s, 4.6 * s, 5.5 * s, 0, 0, 7); c.fill();
+  c.fillStyle = "#ffd166"; c.fillRect(x - 4.2 * s, y - 28 * s, 8.4 * s, 1.6 * s); // Kragen
+  c.fillStyle = "#c68b59"; c.beginPath(); c.arc(x + .6 * s, y - 33 * s, 3 * s, 0, 7); c.fill();
+  for (let i = 0; i < 5; i++) { c.fillStyle = i % 2 ? "#ffd166" : "#1d4e89"; c.beginPath(); c.moveTo(x - 3.6 * s, y - 34 * s + i * 1.4 * s); c.lineTo(x - 5.6 * s, y - 28.5 * s + i * .4 * s); c.lineTo(x - 4.6 * s, y - 28.5 * s + i * .4 * s); c.lineTo(x - 2.8 * s, y - 34 * s + i * 1.4 * s); c.fill(); }
+  c.fillStyle = "#1d4e89"; c.beginPath(); c.moveTo(x - 3.8 * s, y - 34 * s); c.quadraticCurveTo(x + .6 * s, y - 39 * s, x + 4 * s, y - 34 * s); c.lineTo(x + 3 * s, y - 33.5 * s); c.lineTo(x - 3 * s, y - 33.5 * s); c.fill();
+  c.strokeStyle = "#ffd166"; c.lineWidth = .7 * s; c.beginPath(); c.moveTo(x - 3.4 * s, y - 35 * s); c.quadraticCurveTo(x + .6 * s, y - 38.6 * s, x + 3.6 * s, y - 35 * s); c.stroke();
+  c.fillStyle = "#1d4e89"; c.fillRect(x + 2.6 * s, y - 31 * s, 1 * s, 2.6 * s); // Bart
+  c.strokeStyle = "#ffd166"; c.lineWidth = 1 * s; c.beginPath(); c.moveTo(x + 5 * s, y - 22 * s); c.lineTo(x + 5 * s, y - 33 * s); c.arc(x + 6.6 * s, y - 33 * s, 1.6 * s, Math.PI, 0); c.stroke(); // Krummstab
+  // Baldachin
+  c.strokeStyle = "#b5892f"; c.lineWidth = 1 * s; c.beginPath(); c.moveTo(x - 12 * s, y - 21 * s); c.lineTo(x - 12 * s, y - 42 * s); c.moveTo(x + 12 * s, y - 21 * s); c.lineTo(x + 12 * s, y - 42 * s); c.stroke();
+  c.fillStyle = "#9b2226"; c.beginPath(); c.moveTo(x - 15 * s, y - 42 * s); c.quadraticCurveTo(x, y - 49 * s, x + 15 * s, y - 42 * s); c.closePath(); c.fill();
+  c.fillStyle = "#ffd166"; for (let i = -14; i <= 14; i += 3.5) { c.beginPath(); c.arc(x + i * s, y - 41.6 * s, .8 * s, 0, 7); c.fill(); }
+  c.restore();
+  for (const [dx, p] of [[-26, Math.PI], [22, 0]]) jzbWuTraegerMalen(c, x + dx * s, y, geht ? ph + p : 0); // vordere Reihe
+}
+function jzbWuLampeMalen(c, x, y, k, wackel) { // goldene Öllampe, Tülle nach links
+  c.save(); c.translate(x, y); c.rotate(wackel); c.scale(k, k);
+  const g = c.createLinearGradient(0, -8, 0, 0); g.addColorStop(0, "#ffe08a"); g.addColorStop(1, "#b8860b");
+  c.fillStyle = g; c.beginPath(); c.ellipse(0, -3.5, 7, 3.4, 0, 0, 7); c.fill(); // Bauch
+  c.beginPath(); c.moveTo(-5, -4.5); c.quadraticCurveTo(-10, -5.5, -13, -8.5); c.lineTo(-12, -6.6); c.quadraticCurveTo(-9, -3, -5, -2); c.fill(); // Tülle
+  c.strokeStyle = "#b8860b"; c.lineWidth = 1.2; c.beginPath(); c.arc(8, -4, 2.6, -Math.PI / 2, Math.PI / 2); c.stroke(); // Henkel
+  c.fillStyle = "#e9b949"; c.beginPath(); c.ellipse(0, -6.8, 3, 1.2, 0, 0, 7); c.fill(); c.beginPath(); c.arc(0, -8.2, 1, 0, 7); c.fill(); // Deckel + Knopf
+  c.fillStyle = "#8a6d1d"; c.fillRect(-2.5, -.5, 5, 1); c.restore();
+}
+function jzbWuGeistMalen(c, G, k, T) { // blauer Flaschengeist mit Rauchschweif zur Lampe
+  const s = k * G.sc; if (s <= 0) return;
+  c.save();
+  // Rauchschweif: von der Lampen-Tülle geschwungen bis unter den Oberkörper
+  const n = 14; for (let i = 0; i < n; i++) { const p = i / (n - 1), bx = G.sx - 6 * k, by = G.sy - 1 * k;
+    const x = bx + (G.x - bx) * p + Math.sin(p * 6 + T * 3) * 3 * k * (1 - p), y = by + (G.y + 6 * s - by) * p;
+    c.fillStyle = `rgba(76,201,240,${.18 + p * .5})`; c.beginPath(); c.arc(x, y, (1 + p * 3.2) * s, 0, 7); c.fill(); }
+  c.translate(G.x, G.y); if (G.dreh) c.rotate(G.dreh * .25); c.rotate(G.verbeugt * .45); c.scale(s, s);
+  c.fillStyle = "#4cc9f0"; c.beginPath(); c.moveTo(-5, 4); c.quadraticCurveTo(-6, -6, 0, -8); c.quadraticCurveTo(6, -6, 5, 4); c.quadraticCurveTo(0, 8, -5, 4); c.fill(); // Oberkörper
+  c.fillStyle = "#7b2cbf"; c.beginPath(); c.moveTo(-5, -5); c.lineTo(-2, 3); c.lineTo(-5, 4); c.closePath(); c.fill(); c.beginPath(); c.moveTo(5, -5); c.lineTo(2, 3); c.lineTo(5, 4); c.closePath(); c.fill(); // Weste
+  // Arme: beim Schnipsen ein Arm hoch, sonst verschränkt
+  c.strokeStyle = "#4cc9f0"; c.lineWidth = 2.2; c.lineCap = "round";
+  if (G.schnipp > 0) { c.beginPath(); c.moveTo(4, -4); c.lineTo(9, -10); c.stroke(); c.fillStyle = `rgba(255,214,102,${G.schnipp})`;
+    for (let i = 0; i < 6; i++) { const w = i * Math.PI / 3; c.beginPath(); c.arc(9 + Math.cos(w) * 3.5 * (1.4 - G.schnipp), -11 + Math.sin(w) * 3.5 * (1.4 - G.schnipp), .8, 0, 7); c.fill(); } }
+  else { c.beginPath(); c.moveTo(-5, -3); c.quadraticCurveTo(0, 1, 5, -3); c.stroke(); }
+  c.fillStyle = "#ffd166"; c.fillRect(-6, -2, 2, 1.2); c.fillRect(4, -2, 2, 1.2); // Armreifen
+  c.fillStyle = "#4cc9f0"; c.beginPath(); c.arc(0, -11.5, 4, 0, 7); c.fill(); // Kopf
+  c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(-1.4, -12, .55, 0, 7); c.arc(1.4, -12, .55, 0, 7); c.fill();
+  c.strokeStyle = "#1b1b1b"; c.lineWidth = .6; c.beginPath(); c.arc(0, -10.6, 1.5, .2, Math.PI - .2); c.stroke(); // Lächeln
+  c.fillStyle = "#1b1b1b"; c.beginPath(); c.moveTo(0, -15.3); c.quadraticCurveTo(2.5, -19, .5, -21); c.quadraticCurveTo(1.2, -18, -1, -15.4); c.fill(); // Haarzopf
+  c.fillStyle = "#ffd166"; c.beginPath(); c.arc(3.9, -11, .7, 0, 7); c.fill(); // Ohrring
+  c.restore();
+}
+function jzbWuPalmeMalen(c, x, y, h, k, T, neig) {
+  c.strokeStyle = "#7f5539"; c.lineWidth = 2.2 * k; c.lineCap = "round"; const tx = x + neig * k, ty = y - h * k;
+  c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + neig * .2 * k, y - h * .6 * k, tx, ty); c.stroke();
+  c.strokeStyle = "#2d6a4f"; c.lineWidth = 1.8 * k;
+  for (let i = 0; i < 6; i++) { const w = -Math.PI + i * Math.PI / 5 + Math.sin(T * 1.2 + i) * .06, l = 11 * k;
+    c.beginPath(); c.moveTo(tx, ty); c.quadraticCurveTo(tx + Math.cos(w) * l * .6, ty + Math.sin(w) * l * .6 - 3 * k, tx + Math.cos(w) * l, ty + Math.sin(w) * l + 4 * k); c.stroke(); }
+  c.fillStyle = "#6f4e37"; c.beginPath(); c.arc(tx - 1 * k, ty + 1.5 * k, 1.2 * k, 0, 7); c.arc(tx + 1.4 * k, ty + 1.8 * k, 1.2 * k, 0, 7); c.fill(); // Datteln
+}
+function jzbWuesteMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T, W = F.wu, t = F.t; if (!W) return;
+  const O = jzbWuOrt(), Z = jzbWuZeiten(), ab = t - Z.abend;
+  // Tageszeit: 0 = Tag … 1 = Nacht (Sonnenuntergang 0–7 s, Nacht bis 15 s, Morgen bis 21 s)
+  const nacht = ab < 0 ? 0 : ab < 7 ? jzbEase(ab / 7) : ab < 15 ? 1 : Math.max(0, 1 - (ab - 15) / 5), glut = ab < 0 ? 0 : ab < 7 ? Math.sin(Math.PI * ab / 7) : 0;
+  // ☀️ Sonne: tagsüber hoch rechts über den Pyramiden – beim Sonnenuntergang sinkt sie glutrot hinter sie
+  const sx = J.w * .68, sy0 = Math.max(10 * k, O.horizont - 44 * k), sy = ab < 0 ? sy0 : ab < 7 ? sy0 + (O.horizont + 6 * k - sy0) * jzbEase(ab / 7) : O.horizont + 30 * k;
+  if (glut > 0) { const hg = c.createLinearGradient(0, 0, 0, O.horizont); hg.addColorStop(0, `rgba(255,120,60,${glut * .25})`); hg.addColorStop(1, `rgba(255,170,80,${glut * .55})`); c.fillStyle = hg; c.fillRect(0, 0, J.w, O.horizont); }
+  if (sy < O.horizont + 8 * k) { const r = 9 * k, sg = c.createRadialGradient(sx, sy, 0, sx, sy, r * 2.4); sg.addColorStop(0, `rgba(255,${Math.round(220 - glut * 110)},90,.95)`); sg.addColorStop(.45, `rgba(255,${Math.round(190 - glut * 100)},70,.45)`); sg.addColorStop(1, "rgba(255,160,60,0)");
+    c.fillStyle = sg; c.beginPath(); c.arc(sx, sy, r * 2.4, 0, 7); c.fill(); }
+  // 🔺 Pyramiden am Horizont (Lichtseite / Schattenseite)
+  for (const [px, ph, pb] of [[J.w * .56, 34, 62], [J.w * .73, 26, 48], [J.w * .86, 18, 34]]) {
+    const top = O.horizont - ph * k; c.fillStyle = "#e9c46a"; c.beginPath(); c.moveTo(px - pb / 2 * k, O.horizont); c.lineTo(px, top); c.lineTo(px + pb * .08 * k, O.horizont); c.closePath(); c.fill();
+    c.fillStyle = "#c8963e"; c.beginPath(); c.moveTo(px + pb * .08 * k, O.horizont); c.lineTo(px, top); c.lineTo(px + pb / 2 * k, O.horizont); c.closePath(); c.fill();
+    c.strokeStyle = "rgba(140,100,40,.35)"; c.lineWidth = .6 * k; for (let i = 1; i < 5; i++) { const yy = O.horizont - ph * k * i / 5, ww = pb / 2 * k * (1 - i / 5); c.beginPath(); c.moveTo(px - ww, yy); c.lineTo(px + ww, yy); c.stroke(); } }
+  // 🏜️ Sand mit Dünen
+  const g = c.createLinearGradient(0, O.horizont, 0, J.h); g.addColorStop(0, "rgba(240,200,120,.92)"); g.addColorStop(1, "rgba(214,164,92,.97)");
+  c.fillStyle = g; c.beginPath(); c.moveTo(-4 * k, O.horizont + 2 * k);
+  for (let x = 0; x <= J.w + 8 * k; x += 8 * k) c.lineTo(x, O.horizont + Math.sin(x / (34 * k)) * 1.6 * k); c.lineTo(J.w + 8 * k, J.h + 4 * k); c.lineTo(-4 * k, J.h + 4 * k); c.closePath(); c.fill();
+  c.strokeStyle = "rgba(190,140,70,.45)"; c.lineWidth = 1 * k; for (const [x0, y0, b] of [[J.w * .3, 8, 50], [J.w * .62, 13, 60], [J.w * .15, 16, 40]]) { c.beginPath(); c.moveTo(x0 - b * k / 2, O.horizont + y0 * k); c.quadraticCurveTo(x0, O.horizont + (y0 - 4) * k, x0 + b * k / 2, O.horizont + y0 * k); c.stroke(); }
+  // 🌴 Oase links: Wasser mit Glitzern, zwei Palmen, Gras
+  c.fillStyle = "#3a86c8"; c.beginPath(); c.ellipse(O.oase, O.boden - 4 * k, 19 * k, 3.6 * k, 0, 0, 7); c.fill();
+  c.fillStyle = "rgba(255,255,255,.55)"; for (let i = 0; i < 3; i++) { const gx = O.oase - 10 * k + i * 9 * k + Math.sin(T * 1.5 + i) * 1.5 * k; c.fillRect(gx, O.boden - 4.6 * k, 3.4 * k, .7 * k); }
+  c.strokeStyle = "#52b788"; c.lineWidth = 1 * k; for (let i = -4; i <= 4; i++) { const gx = O.oase + i * 4.6 * k; c.beginPath(); c.moveTo(gx, O.boden - 1 * k); c.lineTo(gx - 1 * k, O.boden - 4.5 * k); c.moveTo(gx, O.boden - 1 * k); c.lineTo(gx + 1.2 * k, O.boden - 4 * k); c.stroke(); }
+  jzbWuPalmeMalen(c, O.oase - 14 * k, O.boden - 3 * k, 30, k, T, -4); jzbWuPalmeMalen(c, O.oase + 13 * k, O.boden - 2 * k, 24, k, T + 1, 5);
+  // 🐫 Karawane zieht vorne von rechts nach links
+  const kt = t - JZB_WU_KARAWANE, kv = 24 * k;
+  if (kt >= 0) for (let i = 0; i < JZB_WU_KAMELE; i++) { const x = J.w + 24 * k + i * 38 * k - kt * kv; if (x < -40 * k || x > J.w + 40 * k) continue;
+    jzbWuKamelMalen(c, x, O.boden, k * 1.05, T * 5 + i * 1.3, { reiter: i === 0 ? "#e63946" : i === 2 ? "#f1faee" : null, decke: i % 2 ? "#1d3557" : "#9b2226", last: i === 3 }); }
+  // 👑 der Pharao auf der Sänfte: von links bis zur Mitte, wartet auf den Geist, wird danach nach rechts davongetragen
+  const pt = t - JZB_WU_PHARAO, xm = O.mitte - 8 * k, x0 = -60 * k;
+  if (pt >= 0 && t < Z.abend + 1) { const geht = t < JZB_WU_ANKUNFT || t > Z.zurueck + 1.5;
+    const px = t < JZB_WU_ANKUNFT ? x0 + (xm - x0) * Math.min(1, pt / (JZB_WU_ANKUNFT - JZB_WU_PHARAO)) : t <= Z.zurueck + 1.5 ? xm : xm + (t - Z.zurueck - 1.5) * 26 * k;
+    if (px < J.w + 60 * k) jzbWuSaenfteMalen(c, px, O.boden, k, T * 5, geht); }
+  // 🪔 Lampe rechts – wackelt, wenn der Geist herauskommt und wenn er zurückwirbelt
+  const wa = t >= JZB_WU_GEIST - 1 && t < JZB_WU_GEIST + .8 ? Math.sin(t * 30) * .12 : t >= Z.zurueck + 2.4 && t < Z.zurueck + 4.2 ? Math.sin(t * 26) * .16 * (Z.zurueck + 4.2 - t) / 1.8 : 0;
+  jzbWuLampeMalen(c, O.lampe, O.boden, k * 1.15, wa);
+  const G = jzbWuGeistLage(t, Z, O, k); if (G) jzbWuGeistMalen(c, G, k, T);
+  // ✨ Goldstaub und der Name in Goldschrift
+  for (const s of W.glitzer) { const p = Math.min(1, s.p), e = jzbEase(p), x = s.x + (s.zx - s.x) * e + Math.sin(p * 9 + s.ph) * 4 * k * (1 - p), y = s.y + (s.zy - s.y) * e - Math.sin(p * Math.PI) * 14 * k;
+    c.fillStyle = `rgba(255,${200 + Math.round(Math.sin(T * 8 + s.ph) * 40)},90,${Math.max(0, 1 - Math.max(0, s.p - 1) / .35)})`; c.beginPath(); c.arc(x, y, s.r, 0, 7); c.fill(); }
+  if (t >= JZB_WU_NAME_AB) { const L = jzbWuNameLage(O, k), weg = Math.max(0, Math.min(1, (t - Z.zurueck - 1) / 2.5));
+    c.save(); c.font = L.f; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.shadowColor = "rgba(255,200,60,.95)"; c.shadowBlur = 8 * k;
+    L.z.forEach((ch, i) => { const d = t - JZB_WU_NAME_AB - i * JZB_WU_TAKT - 1.4; if (d < 0) return; const a = Math.min(1, d / 1) * (1 - weg); if (a <= 0) return;
+      const fl = 1 + Math.max(0, 1 - d / .6) * .35; c.save(); c.translate(L.pos[i], L.y + Math.sin(T * 1.4 + i) * .8 * k - weg * 8 * k); c.scale(fl, fl);
+      const gg = c.createLinearGradient(0, -L.fs, 0, 0); gg.addColorStop(0, `rgba(255,236,150,${a})`); gg.addColorStop(1, `rgba(214,160,40,${a})`); c.fillStyle = gg; c.fillText(ch, 0, 0); c.restore(); });
+    c.restore(); }
+  // 🌙 Nacht: dunkler Himmel, Sterne, Halbmond – die Karawane rastet an der Oase
+  if (nacht > 0) {
+    c.fillStyle = `rgba(12,20,58,${nacht * .62})`; c.fillRect(0, 0, J.w, J.h);
+    for (const s of W.sterne) { const a = nacht * (.5 + .5 * Math.sin(T * 2 + s.ph)); c.fillStyle = `rgba(255,255,230,${a})`; c.fillRect(s.x * J.w, s.y * (O.horizont - 6 * k), 1.4 * k, 1.4 * k); }
+    const mx = J.w * .22, my = Math.max(10 * k, O.horizont - 40 * k); c.fillStyle = `rgba(255,244,200,${nacht})`; c.beginPath(); c.arc(mx, my, 7 * k, 0, 7); c.fill();
+    c.fillStyle = `rgba(12,20,58,${nacht})`; c.beginPath(); c.arc(mx + 3.2 * k, my - 1.6 * k, 6.4 * k, 0, 7); c.fill();
+    c.save(); c.globalAlpha *= Math.min(1, nacht * 1.4); for (let i = 0; i < 3; i++) jzbWuKamelMalen(c, O.oase + 30 * k + i * 22 * k, O.boden, k * (1 - i * .06), 0, { liegt: true });
+    c.fillStyle = "rgba(255,170,60,.9)"; c.beginPath(); c.arc(O.oase + 52 * k, O.boden - 2 * k, 2 * k + Math.sin(T * 12) * .5 * k, 0, 7); c.fill(); c.restore(); // kleines Lagerfeuer
+  }
+}
 const JZB_WW_DAUER = 96, JZB_WW_REITER = [8, 56], JZB_WW_KUTSCHE = [13, 64], JZB_WW_DUELL = 29, JZB_WW_HERDE = 77, JZB_WW_STAUB = 84, JZB_WW_HERDE_N = 36; // Sekunden · Tiere (2.532.0: + Duell, Zeiten so, dass sich nichts überschneidet)
 const JZB_WW_COWBOYS = [{ hemd: "#c1121f", hut: "#5c3a1a", pferd: "#8b4513" }, { hemd: "#1d3557", hut: "#2b2b2b", pferd: "#6b4226", lasso: true }];
 function jzbWwOrt() { const J = JZB, k = J.k, boden = J.h - 5 * k; return { boden, horizont: boden - 22 * k, zelt: JZB_RAND + 22 * k, feuer: JZB_RAND + 56 * k }; }
@@ -19514,9 +19713,12 @@ function jzbWildwestMalen(c, F) {
 // Buchstabe der Username“): ab 3 s raucht der Häuptling; je Buchstabe ein Zug (Glut leuchtet), eine Rauchwolke steigt auf, schwebt an ihren Platz
 // am Himmel und wird zum Buchstaben des Vornamens (ohne Namen: „Köcheclub“). Fertig steht der Name in Rauchschrift, ab 26 s verweht ihn der Wind –
 // rechtzeitig vor dem Duell (29 s). Alles aus der Zeit im Lauf berechnet, nur Bild, nichts wird gespeichert oder gesendet.
-const JZB_WW_PFEIFE = [3, 26], JZB_WW_NAME_AB = 5, JZB_WW_NAME_TAKT = 1.4, JZB_WW_NAME_WEHT = 26;
+// 2.548.0 KC-CLUB-FRIEDENSPFEIFE-2 (Hansi: „der Name kommt zu schnell – das muss sich etwas hinziehen“): je Buchstabe bis 2,8 s statt 1,4 s (bei langen
+// Namen so viel, dass er vor dem Verwehen fertig ist), die Rauchwolke schwebt 2,4 s statt 1,6 s an ihren Platz.
+const JZB_WW_PFEIFE = [3, 26], JZB_WW_NAME_AB = 5, JZB_WW_NAME_WEHT = 26, JZB_WW_WOLKE = 2.4;
+const jzbWwNameTakt = () => Math.min(2.8, 16 / Math.max(1, jzbWwNameText().length));
 const jzbWwNameText = () => [...(jzbEisNameText() || "Köcheclub")].slice(0, 12);
-const jzbWwNameStart = (i) => JZB_WW_NAME_AB + i * JZB_WW_NAME_TAKT;
+const jzbWwNameStart = (i) => JZB_WW_NAME_AB + i * jzbWwNameTakt();
 function jzbWwPfeifeGlut(t) { // 0 = Pfeife nicht in der Hand · sonst 0,15 (glimmt) bis 1 (kurz vor jeder Wolke wird gezogen)
   if (t < JZB_WW_PFEIFE[0] || t >= JZB_WW_PFEIFE[1]) return 0;
   const n = jzbWwNameText().length; let g = .15;
@@ -19539,12 +19741,12 @@ function jzbWwRauchNameMalen(c, t, O, k, T) {
   L.z.forEach((ch, i) => {
     const s = jzbWwNameStart(i), d = t - s; if (d < 0) return;
     const zx = L.pos[i], zy = L.y - L.fs * .35;
-    if (d < 1.7) { // die Rauchwolke steigt auf und schwebt an ihren Platz
-      const p = jzbEase(Math.min(1, d / 1.6)), x = bx + (zx - bx) * p, y = by + (zy - by) * p - Math.sin(p * Math.PI) * 10 * k, r = 2 * k + p * L.fs * .14, a = (.55 - p * .25) * (d > 1.3 ? (1.7 - d) / .4 : 1);
+    if (d < JZB_WW_WOLKE + .1) { // die Rauchwolke steigt auf und schwebt langsam an ihren Platz
+      const p = jzbEase(Math.min(1, d / JZB_WW_WOLKE)), x = bx + (zx - bx) * p, y = by + (zy - by) * p - Math.sin(p * Math.PI) * 12 * k, r = 2 * k + p * L.fs * .14, a = (.55 - p * .25) * (d > JZB_WW_WOLKE - .3 ? (JZB_WW_WOLKE + .1 - d) / .4 : 1);
       c.shadowBlur = 0; for (const [ox, oy, rr] of [[0, 0, 1], [-.7, .3, .75], [.7, .35, .7], [0, -.6, .65]]) { c.fillStyle = `rgba(240,240,240,${a})`; c.beginPath(); c.arc(x + ox * r, y + oy * r, rr * r, 0, 7); c.fill(); }
       c.shadowBlur = 6 * k;
     }
-    const sichtbar = Math.min(1, Math.max(0, (d - 1.3) / .6)) * aus; if (sichtbar <= 0) return;
+    const sichtbar = Math.min(1, Math.max(0, (d - (JZB_WW_WOLKE - .3)) / 1)) * aus; if (sichtbar <= 0) return; // Buchstabe erscheint langsam aus der Wolke
     const wob = Math.sin(T * 1.3 + i * 1.7) * .8 * k; // Rauch steht nie ganz still
     c.fillStyle = `rgba(248,248,248,${.88 * sichtbar})`; c.fillText(ch, zx + wob + weht * (14 + i * 2) * k, L.y + Math.cos(T * 1.1 + i) * .6 * k - weht * (5 + i % 3 * 2) * k);
   });
@@ -21016,7 +21218,7 @@ function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, t
 // ---------- 2.355.0 KC-CLUB-VORSCHAU-ENDE (Fund Hansi „in den Einstellungen z. B. Nikolaus-Stiefel gewählt, wird angezeigt – wie bekomme ich ihn
 // wieder weg?“): solange eine Vorschau läuft, steht auf der Startseite ein Knopf „✕ Vorschau beenden“ (vorher nur „📅 Heute“ in den Einstellungen)
 const JZ_VORSCHAU_NAME = { nikolaus: "Nikolaus-Stiefel", regen: "Regen", topf: "Kochtopf am Treffen-Tag", ostern: "Ostereier", igel: "Igel", kuerbis: "Kürbis-Hund", twinkey: "Twinkey fegt",
-  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", unterwasser: "Unterwasserwelt", weltraum: "Weltraum", bauernhof: "Bauernhof", kegeln: "Kegelabend", wildwest: "Wilder Westen", advent: "Advent" };
+  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", unterwasser: "Unterwasserwelt", weltraum: "Weltraum", bauernhof: "Bauernhof", kegeln: "Kegelabend", wildwest: "Wilder Westen", wueste: "Wüste", advent: "Advent" };
 function jzVorschauLeiste(v = aktuelleAnsicht) {
   const an = !!(JZB.vorschau || JZB.extra) && v === "start" && !(typeof RG !== "undefined" && RG.an);
   let b = $("jzVorschauAus");

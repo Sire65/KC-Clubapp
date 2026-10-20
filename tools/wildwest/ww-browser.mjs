@@ -35,9 +35,9 @@ const r = await seite.evaluate(() => {
     } else if ([.5, 2, 5].some((z) => Math.abs(F.t - z) < dt / 2)) e.lauf2.push([Math.round(F.t * 10) / 10, S.schleier, S.zeltFall, S.feuerAus]);
   }
   // 2.533.0 KC-CLUB-FRIEDENSPFEIFE: Buchstaben-Zeiten, Lage am Himmel (über den Tafelbergen, im Bild), fertig vor dem Verwehen und vor dem Duell
-  const L = jzbWwRauchNameLage(jzbWwOrt(), 1); e.name = L.z.join(""); e.letzter = jzbWwNameStart(L.z.length - 1) + 1.9;
+  const L = jzbWwRauchNameLage(jzbWwOrt(), 1); e.name = L.z.join(""); e.letzter = jzbWwNameStart(L.z.length - 1) + JZB_WW_WOLKE + .7; // 2.548.0: Wolke schwebt länger, Buchstabe erscheint langsamer
   e.lageOk = L.y - L.fs * .85 >= 0 && L.y < jzbWwOrt().horizont - 20 && L.pos[0] >= JZB_RAND && L.pos[L.pos.length - 1] <= W - JZB_RAND;
-  const lang = [...("Maximiliane-Jo")].slice(0, 12).length; e.langFertig = jzbWwNameStart(lang - 1) + 1.9 <= JZB_WW_NAME_WEHT;
+  const lang = [...("Maximiliane-Jo")].slice(0, 12).length; e.langFertig = JZB_WW_NAME_AB + (lang - 1) * Math.min(2.8, 16 / lang) + JZB_WW_WOLKE + .7 <= JZB_WW_NAME_WEHT; e.takt = jzbWwNameTakt(); // Takt richtet sich nach der Namenslänge e.takt = jzbWwNameTakt();
   return { ...e, reiter: [...e.reiter], kutsche: [...e.kutsche] };
 });
 ok(!r.fehler && !seitenFehler.length, "zwei Läufe ohne Fehler (Schritt und Malen)" + (r.fehler ? ": " + r.fehler : ""));
@@ -49,5 +49,6 @@ ok(r.ballen, "2.532.0: Windstoß rollt einen Steppenläufer durchs Bild");
 ok(r.duellBilder > 27 * 29, `2.532.0: Duell und Abtransport des Verwundeten über ${r.duellBilder} Bilder ohne Fehler gemalt`);
 ok(r.name === "Hansi" && r.pfeifeBilder > 25 * 29 && r.glutMax > .9 && r.glutAus === 0, `2.533.0: Häuptling raucht die Friedenspfeife (Glut leuchtet beim Ziehen), ${r.pfeifeBilder} Bilder ohne Fehler`);
 ok(r.letzter <= JZB_WW_NAME_WEHT_T && r.langFertig && r.lageOk, "2.533.0: Vorname Buchstabe für Buchstabe aus Rauch – fertig, bevor der Wind ihn verweht, am Himmel und im Bild (auch 12 Buchstaben)");
+ok(r.takt >= 2.7, `2.548.0: langsamer – ${r.takt.toFixed(2)} s je Buchstabe bei „Hansi“ (vorher 1,4 s)`);
 ok(r.laeufe >= 2 && r.lauf2.length === 3 && r.lauf2[0][1] > .8 && r.lauf2[2][1] === 0 && r.lauf2.every((x) => x[2] === 0 && x[3] === 0), "nächster Lauf beginnt in der Wolke, sie lichtet sich – Zelt und Feuer wieder da");
 await browser.close(); srv.close(); console.log("ALLE TESTS GRÜN");

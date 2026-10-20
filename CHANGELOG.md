@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.548.0 – 2026-10-20 – 🐪 Neues Thema Wüste: Pyramiden, Karawane, Oase, Pharao auf der Sänfte, Flaschengeist – Name aus Goldstaub, Sonnenuntergang · 🪶 Friedenspfeife langsamer (KC-CLUB-WUESTE, KC-CLUB-FRIEDENSPFEIFE-2)
+Wunsch Hansi („Szene Wüste: im Hintergrund Pyramiden, vorne zieht eine Karawane vorbei, links eine Oase, dann kommt der Pharao – er wird auf einer Sänfte getragen –, rechts kommt ein Flaschengeist aus der Lampe“; Ende: „1 + 3, eigenes Thema, einspielen“).
+- **🐪 Thema Wüste** (⚙️ → Themen; Vorschau unter ✨ Effekte): hinten drei Pyramiden mit Licht- und Schattenseite, Sonne darüber; links eine Oase mit Wasser, Palmen und Datteln; vorne zieht eine Karawane mit vier Kamelen (Reiter mit Turban, Decken, Gepäck) von rechts nach links.
+- Ab 26 s wird der **Pharao auf seiner Sänfte** (Baldachin, vier Träger, Nemes-Kopftuch, Krummstab) bis zur Mitte getragen. Rechts steht eine goldene Lampe: sie wackelt, der **blaue Flaschengeist** steigt mit Rauchschweif heraus, schwebt zum Pharao und verbeugt sich.
+- **Ende 1:** Er schnippt – aus der Lampe steigt **Goldstaub** und schreibt langsam (2,6 s je Buchstabe) den **Vornamen** in Goldschrift in den Himmel (ohne Namen „Köcheclub“). Danach wirbelt der Geist zurück in die Lampe, die Lampe wackelt, der Name verblasst, der Pharao wird davongetragen.
+- **Ende 3:** **Sonnenuntergang** – die Sonne sinkt glutrot hinter die Pyramiden, Sterne und Halbmond gehen auf, die Karawane rastet mit kleinem Lagerfeuer an der Oase; dann wird es wieder Tag und alles beginnt von vorn (Lauf ≈ 95 s, richtet sich nach der Namenslänge).
+- Design Sonnenuntergang, Laternen-Girlande, Kopf-Effekt Theater, Hilfe/Twinkey/Lupe ergänzt.
+- **🪶 Friedenspfeife (Wilder Westen) langsamer** (Hansi: „der Name kommt zu schnell – das muss sich etwas hinziehen“): je Buchstabe bis 2,8 s statt 1,4 s, die Rauchwolke schwebt 2,4 s statt 1,6 s, der Buchstabe erscheint langsam; bei langen Namen so, dass er vor dem Verwehen fertig ist.
+- Test: tools/wueste/wu-browser.mjs (zwei Läufe à 30 Bilder/s, alle Abschnitte), tools/wildwest/ww-browser.mjs angepasst, Vertragstest-Block 2.548.0. Rückweg: App 2.547.0.
+
 ## 2.547.0 – 2026-10-20 – Kochmütze mit „since 1991“ auf Holzklappe und Servierglocke (KC-CLUB-KOPF-EMBLEM)
 Wunsch Hansi („Baue noch auf die Holzklappe und die Glocke die Kochmütze mit since 1991“).
 - Kopf-Effekt 🎪 Holzklappe: neben dem Schild „Geschlossen“ die Kochmütze mit „since 1991“, hell wie eingebrannt.
