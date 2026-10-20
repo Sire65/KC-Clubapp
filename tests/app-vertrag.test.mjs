@@ -7182,6 +7182,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(Date\.now\(\) - \(SPV_ZULETZT\.get\(pid\) \?\? 0\) < 10 \* 60000\) return;/.test(f) && /if \(!error && count\) return;/.test(f), "gedrosselt vor dem Push");
   assert.ok(/nebenbei\(routerSenden\("club_nachricht_push", adm,/.test(f) && /const adm = await adminIds\(\)/.test(f), "Push nur an Admins, im Hintergrund");
 }
+// 2.542.0 KC-CLUB-CHAT-NEU-MARKIERT: Chats mit neuen Nachrichten markiert (getönt + Leiste), Ameisenrahmen beim Öffnen, Zahl pulsiert
+{
+  assert.ok(/const uhUngelesen = \(u\) => \(u\?\.ungelesen \|\| 0\) > 0 && !stummAn\(u\.id\);/.test(programm), "nur ungelesen und nicht stumm");
+  assert.ok(/\$\{uhUngelesen\(u\) \? " uh-neu" : ""\}" data-id=/.test(programm) && /<details class="karte uhk\$\{uhUngelesen\(u\) \? " uh-neu" : ""\}"/.test(programm), "Liste und Kartei markiert");
+  assert.ok(/const ziele = UH\.liste\.filter\(\(u\) => uhUngelesen\(u\) \|\| uhHervor\(u\)\);/.test(programm) && /const uhHervor = \(u\) => !!u\.gruppe && UH_HERVOR\.some/.test(programm), "Ameisenrahmen (vorhandener Kern) für neue und hervorgehobene Gruppe");
+  assert.ok(/\.unterh\.uh-neu \.punkt, \.uhk\.uh-neu > summary \.punkt \{ animation: chatNeuPuls \.7s ease-in-out 3; \}/.test(seite) && /prefers-reduced-motion: reduce\) \{ \.unterh\.uh-neu \.punkt/.test(seite), "Zahl pulsiert 3×, ruhig bei reduzierter Bewegung");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

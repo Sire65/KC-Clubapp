@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.542.0 – 2026-10-20 – 💬 Chats mit neuen Nachrichten sind in der Übersicht markiert (KC-CLUB-CHAT-NEU-MARKIERT)
+Wunsch Hansi („Wenn man in die Nachrichten-Übersicht reingeht, sollen die Zeilen markiert sein, wo neue Nachrichten drin sind – Ameisenlauf, Blinken oder die Anzahl blinkt“).
+- Alle drei Ideen kombiniert, aber ruhig: Beim Öffnen läuft 5 s ein Ameisenrahmen um jeden Chat mit Neuem (vorhandener Rahmen der hervorgehobenen Gruppe, höchstens 1× je Minute), die rote Zahl pulsiert 3×. Danach bleibt die Zeile leicht golden getönt mit roter Leiste links und fettem Namen – bis gelesen.
+- Gilt in der Liste und in der Chat-Kartei; stummgeschaltete Chats werden nicht hervorgehoben. Bei „Bewegung reduzieren“ im Handy pulsiert nichts.
+- Test: Vertragstest-Block 2.542.0, Browser-Test (2 neue Chats markiert, gelesener normal). Rückweg: App 2.541.0.
+
 ## 2.541.0 – 2026-10-20 – 👀 Push an dich, wenn ein Gesperrter die Club-App öffnen will (KC-CLUB-SPERRE-MELDUNG)
 Wunsch Hansi („Informiere mich, wenn Thomas sich anmelden will“).
 - Server: Öffnet eine gesperrte Person die App, bekommen die Admins einen Push „👀 <Name> wollte die Club-App öffnen – Gesperrt (Wartung) – sah nur den Hinweis“. Gleiche Drossel wie der Protokolleintrag aus 2.539.0: höchstens einmal je 10 Minuten und Person. Läuft im Hintergrund; die gesperrte Person merkt davon nichts.

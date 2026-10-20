@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.541.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.542.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -29218,7 +29218,7 @@ async function unterhLaden() {
     // KC-CLUB-CHAT-KARTEI (2.191.0, Wunsch Hansi): Chats als Rollkartei – die vordere Karte ist schon „offen“ (letzte Nachrichten)
     uhKarteiKnopf(); $("unterhListe").classList.toggle("karte", !(rkAn("chats") && !UH.archivAnsicht && zeigen.length));
     if (rkAn("chats") && !UH.archivAnsicht && zeigen.length) { $("unterhListe").innerHTML = archKopf + uhKarteiHtml(zeigen); uhKarteiAn(); uhAmeisen(); return; }
-    $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Antippen = öffnen · <b>⋯</b> = ⭐ Favorit, ${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
+    $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Antippen = öffnen · <b>⋯</b> = ⭐ Favorit, ${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}${uhUngelesen(u) ? " uh-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + vnKurz(u.letzte.text)) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div><button type="button" class="uh-mehr" aria-label="Mehr zu diesem Chat: Favorit, archivieren, löschen" aria-expanded="${u.id === UH.wahl}" onclick="event.stopPropagation();uhMenue('${u.id}')">⋯</button></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
@@ -29241,7 +29241,7 @@ function uhKarteiHtml(liste) {
   const uhOn = (u) => !u.gruppe && u.anzahl <= 2 && mgOn(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0])); // Einzelchat mit jemandem, der online ist
   return `<div class="rk-box" id="uhKartei">${rkOnlineVorn(liste, uhOn).map((u) => { const titel = u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
     const bild = u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 30);
-    return `<details class="karte uhk" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</summary>
+    return `<details class="karte uhk${uhUngelesen(u) ? " uh-neu" : ""}" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</summary>
       <div class="hinweis uhk-info">${u.gruppe ? `🔗 Feste Gruppe · ${u.anzahl} Mitgl.` : u.anzahl > 2 ? `Runde · ${u.anzahl} Personen` : "Einzelchat"}${uhOn(u) ? " · 🟢 online" : ""}${u.letzte ? ` · zuletzt ${esc(zeitKurz(u.letzte.zeit))}` : ""}${stummAn(u.id) ? " · 🔕" : ""}</div>
       <div class="uhk-verlauf" data-teil="verlauf">${u.letzte ? '<p class="hinweis">Wird geladen …</p>' : '<p class="hinweis">Noch keine Nachricht.</p>'}</div>
       <div class="uhk-knoepfe"><button type="button" class="knopf haupt" onclick="chatOeffnen('${esc(u.id)}')">💬 Öffnen &amp; antworten${u.ungelesen ? ` (${u.ungelesen} neu)` : ""}</button></div>
@@ -29335,11 +29335,15 @@ function rundeZuGruppe() {
 }
 // KC-CLUB-GRUPPE-AMEISEN (2.22.6): Gruppen aus UH_HERVOR bekommen beim Öffnen von „Nachrichten“ ~5 s einen laufenden Rahmen (höchstens 1× je Minute)
 const UH_HERVOR = ["Innovation"];
+// 2.542.0 KC-CLUB-CHAT-NEU-MARKIERT (Wunsch Hansi „Zeilen markieren, wo neue Nachrichten drin sind“): Chat mit Ungelesenem, nicht stumm –
+// markiert in Liste/Kartei und bekommt auch den Ameisenrahmen aus uhAmeisen()
+const uhUngelesen = (u) => (u?.ungelesen || 0) > 0 && !stummAn(u.id);
+const uhHervor = (u) => !!u.gruppe && UH_HERVOR.some((n) => n.toLowerCase() === String(u.gruppe.name || "").toLowerCase());
 function uhAmeisen() {
   const jetzt = Date.now();
   if (!UH.ameisenBis || jetzt - UH.ameisenBis > 60000) UH.ameisenBis = jetzt + 5000; // neues 5-s-Fenster höchstens 1× je Minute
   if (jetzt >= UH.ameisenBis) return;
-  const ziele = UH.liste.filter((u) => u.gruppe && UH_HERVOR.some((n) => n.toLowerCase() === String(u.gruppe.name || "").toLowerCase()));
+  const ziele = UH.liste.filter((u) => uhUngelesen(u) || uhHervor(u));
   for (const u of ziele) {
     const el = document.querySelector(`#unterhListe .unterh[data-id="${u.id}"]`); if (!el || el.querySelector(".uh-rahmen")) continue;
     el.classList.add("uh-ameisen");
