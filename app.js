@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.509.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.510.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5157,7 +5157,7 @@ const HILFE = [
   // 2.508.0 KC-CLUB-HILFE-NACHTRAG-3 (Wunsch Hansi „Hilfetexte, Lupe, Twinkey und Videos an die neuen Sachen anpassen – nix von Adminfunktionen“)
   { id: "kopf_effekte", thema: "darstellung", sym: "🎪", t: "Wie geht der Kopf auf und zu?", x: "Tippst du oben am Kopf auf <b>⌃</b> oder <b>⌃⌃</b>, rollt er sich ein – normal wie eine <b>🪟 Jalousie</b>. Unter ⚙️ → „✨ Effekte“ → <b>„🪟 Anderer Effekt beim Einrollen des Kopfes“</b> wählst du stattdessen: <b>🎭 Lamellenvorhang</b> (zu den Seiten), <b>🗄️ Climber</b> (krempelt sich Lamelle für Lamelle hoch), <b>🎪 Theatervorhang</b> (weinroter Samt), <b>🍽️ Servierglocke</b> („Voilà!“), <b>🏠 Marktbude</b> (die Holzklappe geht zu), <b>🔄 Automatisch</b> (jedes Mal ein anderer) oder <b>🎭 Passend zum Thema</b> – z. B. im Advent die Marktbude, zu Karneval der Theatervorhang. Mit <b>▶ Ausprobieren</b> siehst du ihn sofort.", zeig: () => einstiegHin("effekte", "setKopfEffekt"), seit: "2.505.0" },
   { id: "geburtstag_vogel", thema: "start", sym: "🎁", t: "Ein Vogel bringt ein Geschenk?", x: "Hat heute jemand aus dem Club Geburtstag, fliegt oben im Kopf ein <b>Vogel mit einem Geschenkpaket</b> herein und lässt es fallen. Unten platzt es, ein <b>Blumenstrauß</b> springt heraus, darüber steht bunt <b>„Happy Birthday“</b> mit dem Vornamen. Er kommt höchstens einmal pro Stunde und ist nie im Weg. Abschalten oder als Vorschau ansehen: ⚙️ → „✨ Effekte“ → <b>„🎁 Geburtstags-Vogel“</b>.", zeig: () => einstiegHin("effekte", "setGbVogel"), seit: "2.508.0" },
-  { id: "tippgeraeusche", thema: "nachrichten", sym: "⌨️", t: "Tippgeräusche hören", x: "Hat jemand <b>„👁️ Andere sehen live, was ich tippe“</b> eingeschaltet und du hast die Unterhaltung mit ihm offen, kannst du seine Anschläge hören – wie eine <b>⌨️ Computertastatur</b> oder eine <b>📠 Schreibmaschine</b> (mit „Ding“ am Zeilenende). Einschalten: ⚙️ → „🔔 Benachrichtigungen“ → <b>„⌨️ Tippgeräusche beim Live-Tippen“</b> – beim Auswählen hörst du gleich eine Probe. Von Haus aus aus; in stummgeschalteten Unterhaltungen bleibt es still.", zeig: () => einstiegHin("benachrichtigung", "setTippTon"), seit: "2.505.0" },
+  { id: "tippgeraeusche", thema: "nachrichten", sym: "⌨️", t: "Tippgeräusche hören", x: "Hat jemand <b>„👁️ Andere sehen live, was ich tippe“</b> eingeschaltet und du hast die Unterhaltung mit ihm offen, kannst du seine Anschläge hören – wie eine <b>⌨️ Computertastatur</b> oder eine <b>📠 Schreibmaschine</b> (mit „Ding“ am Zeilenende). Einschalten: ⚙️ → „🔔 Benachrichtigungen“ → <b>„⌨️ Tippgeräusche beim Live-Tippen“</b> – beim Auswählen hörst du gleich eine Probe. Von Haus aus aus; in stummgeschalteten Unterhaltungen bleibt es still. Schnell an und aus: unten im Chat neben ▾ und ⌨️ der kleine Lautsprecher <b>🔊 / 🔇</b>.", zeig: () => einstiegHin("benachrichtigung", "setTippTon"), seit: "2.505.0" },
   { id: "dienst_uebersicht", thema: "termine", sym: "📊", t: "Wer kann wann beim Weihnachtsmarkt? – die Übersicht", x: "Mit dem <b>📊</b>-Knopf oben in <b>🗓️ Dienstpläne</b>, in <b>„Mein Dienst“</b> und in den <b>Dienstwünschen</b> öffnest du die <b>Dienstzeiten-Übersicht</b>: vorne die Namen, oben die Tage, farbige Balken für Kann, Wunsch, Wenn nötig und Sperre – und wie viele Stunden. Du siehst deine eigenen Zeiten und die der Mitglieder, die ihre Zeiten freigegeben haben. Deine eigenen gibst du in den Dienstplänen ganz unten frei. Auf dem Handy am besten quer halten; <b>🖨️ Drucken</b> geht auch.", zeig: () => zeige("dienste"), seit: "2.501.0" },
   { id: "dienstwunsch_hinweis", thema: "termine", sym: "📝", t: "„Dienstplan Weihnachtsmarkt: Wünsche eingeben?“", x: "Hast du für den Weihnachtsmarkt noch keine Dienstwünsche abgegeben, erinnert dich das <b>📣 Info-Laufband</b> oben daran. Mit <b>„📝 Mit Twinkey eingeben“</b> geht es direkt los: Twinkey fragt dich Tag für Tag, wann du kannst. Sobald du abgegeben hast, verschwindet der Hinweis.", seit: "2.493.0" },
   { id: "vorschlag_bearbeiten", thema: "club", sym: "✏️", t: "Meinen Vorschlag nachträglich ändern", x: "Bei <b>🗳️ Vorschläge</b> hat dein offener Vorschlag den Knopf <b>„✏️ Bearbeiten“</b>: Thema, Beschreibung, Termin und Anlagen kannst du nachträglich ändern – vorhandene Anlagen bleiben, mit ✕ entfernst du eine, neue kommen dazu. Die anderen werden dafür nicht extra benachrichtigt. Hängen Anlagen an einem Vorschlag, steht auf der Kachel z. B. <b>„📎 2 Anlagen“</b>.", zeig: () => zeige("vorschlaege"), seit: "2.504.0" },
@@ -7985,13 +7985,13 @@ function chatTakt() {
   // 2.367.0 KC-CLUB-HAKEN-SCHNELL (Fund Hansi: Express an Steven war nach 20 s auf dessen Handy, die zwei grauen Haken kamen bei Hansi erst viel später):
   // nach dem eigenen Senden 60 s lang alle 4 s nach dem Zustellstand fragen – nur bei offenem Chat und nur, bis die letzte eigene Nachricht „angekommen“ ist
   const hakenWarten = Date.now() - HAKEN_SEIT < 60000 && (() => { const m = [...(CHAT?.nachrichten || [])].reverse().find((x) => x.eigen); return !!m && m.haken === "gesendet"; })();
-  // 2.509.0 KC-CLUB-CHAT-SPARSAM (Wunsch Hansi): steht die direkte Leitung, kommen „angekommen“/„gelesen“ (KC-CLUB-RT-ANGEKOMMEN) und „tippt“ als Signal –
+  // 2.510.0 KC-CLUB-CHAT-SPARSAM (Wunsch Hansi): steht die direkte Leitung, kommen „angekommen“/„gelesen“ (KC-CLUB-RT-ANGEKOMMEN) und „tippt“ als Signal –
   // dann kein Nachfragen alle 4 s nach den Haken, und beim Tippen nur alle 6 s statt 2 s (Aufhören meldet kein Signal; Sparbremse ab 70 % ohne „tippt“).
   const rt = rtAn(), tipptTakt = rt ? 3 : 1;
   if (!((CHAT?.tippt?.length && ONL.takt % tipptTakt === 0) || (hakenWarten && !rt && ONL.takt % 2 === 0) || (jemandDa && ONL.takt % (rt ? 15 : frisch ? 2 : 4) === 0) || ONL.takt % ruhig === 0)) return; // Realtime: „gelesen“-Haken kommen per Signal (2.230.0) – Nachfragen nur alle 30 s
   chatTakt.laeuft = true; chatNachsehen().finally(() => { chatTakt.laeuft = false; });
 }
-// 2.509.0 KC-CLUB-CHAT-STAND (Wunsch Hansi, Chat sparsamer Schritt 3): im Takt erst nur den Fingerabdruck des Chats holen (1 statt ~34 Abfragen) –
+// 2.510.0 KC-CLUB-CHAT-STAND (Wunsch Hansi, Chat sparsamer Schritt 3): im Takt erst nur den Fingerabdruck des Chats holen (1 statt ~34 Abfragen) –
 // ganz neu laden nur, wenn er sich geändert hat, ohne Fingerabdruck (alter Server, Fehler) oder spätestens alle CHAT_VOLL_MS (Namen u. Ä.).
 // Signale der direkten Leitung und eigene Aktionen laden weiter sofort ganz (chatLaden).
 const CHAT_VOLL_MS = 5 * 60000;
@@ -8114,8 +8114,24 @@ const werText = (n) => n.length === 1 ? n[0] : n.length === 2 ? `${n[0]} und ${n
 const TIPP_TOENE = { aus: "🔇 Aus", tastatur: "⌨️ Computer-Tastatur", schreibmaschine: "📠 Schreibmaschine" };
 const TT = { chat: null, stand: new Map(), zeile: 0, rauschen: null };
 const tippTonWahl = () => { try { const w = localStorage.getItem("kc_club_tippton"); return TIPP_TOENE[w] ? w : "aus"; } catch { return "aus"; } };
-function tippTonZeigen() { const s = $("setTippTon"); if (s) s.value = tippTonWahl(); }
-function tippTonSetzen(w) { try { localStorage.setItem("kc_club_tippton", TIPP_TOENE[w] ? w : "aus"); } catch {} if (w !== "aus") tippTonProbe(w); }
+function tippTonZeigen() { const s = $("setTippTon"); if (s) s.value = tippTonWahl(); tippTonKnopfZeigen(); }
+function tippTonSetzen(w) { try { localStorage.setItem("kc_club_tippton", TIPP_TOENE[w] ? w : "aus"); if (w !== "aus") localStorage.setItem("kc_club_tippton_zuletzt", w); } catch {} if (w !== "aus") tippTonProbe(w); tippTonKnopfZeigen(); }
+// 2.509.0 KC-CLUB-TIPPTON-KNOPF (Wunsch Hansi „im Chat neben dem kleinen Pfeil und der kleinen Tastatur ein Mini-Lautsprecher, der den Tastatur-
+// Anschlag-Sound abschaltet“): 🔊 = Tippgeräusche an → antippen schaltet aus (🔇); nochmal → wieder die zuletzt gewählte Art (sonst Tastatur).
+// Dieselbe Einstellung wie ⚙️ → Benachrichtigungen → „⌨️ Tippgeräusche“; gilt für dieses Gerät.
+function tippTonKnopf() {
+  const an = tippTonWahl() !== "aus";
+  let zuletzt = "tastatur"; try { const z = localStorage.getItem("kc_club_tippton_zuletzt"); if (TIPP_TOENE[z] && z !== "aus") zuletzt = z; } catch {}
+  if (an) { try { localStorage.setItem("kc_club_tippton_zuletzt", tippTonWahl()); localStorage.setItem("kc_club_tippton", "aus"); } catch {} }
+  else tippTonSetzen(zuletzt);
+  tippTonZeigen(); melde(an ? "🔇 Tippgeräusche aus" : `🔊 Tippgeräusche an – ${TIPP_TOENE[zuletzt]}`);
+}
+function tippTonKnopfZeigen() {
+  const k = $("egTon"); if (!k) return; const an = tippTonWahl() !== "aus";
+  k.textContent = an ? "🔊" : "🔇"; k.classList.toggle("aus", !an); k.setAttribute("aria-pressed", String(an));
+  k.title = an ? "Tippgeräusche aus" : "Tippgeräusche an"; k.setAttribute("aria-label", k.title);
+}
+tippTonKnopfZeigen();
 function tippTonProbe(w = tippTonWahl()) { const art = w === "aus" ? "tastatur" : w; for (let i = 0; i < 14; i++) tippAnschlag(art, i * 0.12 + Math.random() * 0.05); if (art === "schreibmaschine") tippGlocke(1.85); }
 function tippAnschlag(art, ab) {
   try {
@@ -8166,7 +8182,7 @@ function tipptZeigen(namen, entwurf = [], sprechen = []) {
   const entwuerfe = entwurf.map((x) => `<div class="entwurf">✍️ <b>${esc(x.name)}:</b> ${esc(kurz(x.text))}</div>`).join("");
   const wer = namen.length === 1 ? namen[0] : namen.length === 2 ? `${namen[0]} und ${namen[1]}` : `${namen.length} Personen`;
   // 1.21.5: nur neu zeichnen, wenn sich etwas geändert hat – sonst fängt die Punkte-Welle bei jedem Takt (2 s) von vorn an
-  const html = `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span>✏️ ${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span></div>${entwuerfe}${sp}`;
+  const html = `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span><span class="stift-schreibt" aria-hidden="true">✏️</span> ${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span></div>${entwuerfe}${sp}`;
   if (e.dataset.stand !== html) { e.innerHTML = html; e.dataset.stand = html; }
   e.classList.remove("versteckt");
 }

@@ -1,4 +1,4 @@
-// KC-CLUB-CHAT-SPARSAM (2.509.0): Browser-Test des echten app.js (Chromium über playwright-core). Zählt, wie oft ein offener Chat in 2 Minuten
+// KC-CLUB-CHAT-SPARSAM (2.510.0): Browser-Test des echten app.js (Chromium über playwright-core). Zählt, wie oft ein offener Chat in 2 Minuten
 // neu lädt (chatTakt alle 2 s), alte Fassung (ALT = Ordner mit dem alten Stand, z. B. git worktree) gegen neue – mit und ohne direkte Leitung (Realtime).
 // Start: PW_CORE=… PW_CHROME=… [ALT=/pfad/alter-stand] node tools/chat-sparsam/chat-takt-browser.mjs
 import http from "node:http"; import fs from "node:fs"; import path from "node:path"; import { createRequire } from "node:module";

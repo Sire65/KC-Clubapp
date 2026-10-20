@@ -1,4 +1,4 @@
--- KC-CLUB-CHAT-STAND (2.509.0, Wunsch Hansi „Ja Bau das jetzt“ – Chat sparsamer, Schritt 3): Fingerabdruck eines Chats in EINER Abfrage.
+-- KC-CLUB-CHAT-STAND (2.510.0, Wunsch Hansi „Ja Bau das jetzt“ – Chat sparsamer, Schritt 3): Fingerabdruck eines Chats in EINER Abfrage.
 -- Der offene Chat fragt im Takt erst nur diesen Fingerabdruck ab und lädt den Chat (~34 Abfragen) nur dann ganz, wenn er sich geändert hat.
 -- Er umfasst alles, was die Aktion „unterhaltung“ (supabase/functions/kc-club/index.ts) für die Person p_person anzeigt: Nachrichten (Text,
 -- Antwort-Bezug), Teilnehmer und deren „gelesen bis“ (das EIGENE zählt nicht – es wird beim Laden selbst weitergesetzt), für mich ausgeblendete,
@@ -8,7 +8,7 @@
 -- des Gegenübers, meine geplanten Nachrichten, Chat-Betreff. Was hier fehlt (Namen, „Daraus eine Gruppe machen?“), holt die App spätestens alle 5 Min.
 -- Gibt NULL zurück, wenn p_person nicht im Chat ist. Nur lesend; nur der Server (service_role) darf sie aufrufen.
 -- Zeitgrenzen kommen vom Server (eine Stelle): p_online_sek (ONLINE_SEK), p_zuletzt_tage (ZULETZT_TAGE), p_einmal_tage (EINMAL_TAGE), p_bearbeiten_min (BEARBEITEN_MIN).
--- Rückweg: App/Server 2.508.0 einspielen; drop function public.kc_club_chat_stand(uuid, text, timestamptz, integer, integer, integer, integer);
+-- Rückweg: App 2.509.0 / Server 2.508.0 einspielen; drop function public.kc_club_chat_stand(uuid, text, timestamptz, integer, integer, integer, integer);
 create or replace function public.kc_club_chat_stand(p_thread uuid, p_person text, p_jetzt timestamptz,
   p_online_sek integer, p_zuletzt_tage integer, p_einmal_tage integer, p_bearbeiten_min integer)
 returns text

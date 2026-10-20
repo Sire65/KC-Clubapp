@@ -1,4 +1,4 @@
-// KC-CLUB-CHAT-STAND (2.509.0): echte Migration in Postgres 16 im Speicher (PGlite, nichts geht an Supabase). Änderungstest:
+// KC-CLUB-CHAT-STAND (2.510.0): echte Migration in Postgres 16 im Speicher (PGlite, nichts geht an Supabase). Änderungstest:
 // JEDE Änderung, die die Aktion „unterhaltung“ anders anzeigen würde, muss den Fingerabdruck ändern; Unsichtbares (eigenes „gelesen bis“,
 // andere Chats, Lebenszeichen des Gegenübers während er online ist, Quittungen) darf ihn NICHT ändern – sonst spart es nichts.
 // Start: PGLITE=<Pfad zu node_modules/@electric-sql/pglite> node tools/chat-sparsam/chat-stand-test.mjs

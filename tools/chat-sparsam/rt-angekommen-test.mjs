@@ -1,4 +1,4 @@
-// KC-CLUB-RT-ANGEKOMMEN (2.509.0): echte Migration in Postgres 16 im Speicher (PGlite, nichts geht an Supabase). Prüft: Eintrag „angekommen“ →
+// KC-CLUB-RT-ANGEKOMMEN (2.510.0): echte Migration in Postgres 16 im Speicher (PGlite, nichts geht an Supabase). Prüft: Eintrag „angekommen“ →
 // Signal „gelesen“ mit Chat-Kennung an alle ANDEREN sichtbaren Teilnehmer; „gelesen“-Einträge → kein zusätzliches Signal; Fehler im Signal
 // verhindert das Speichern der Quittung nicht. Start: PGLITE=<Pfad zu node_modules/@electric-sql/pglite> node tools/chat-sparsam/rt-angekommen-test.mjs
 import fs from "node:fs"; import { createRequire } from "node:module";

@@ -1,4 +1,4 @@
--- KC-CLUB-RT-ANGEKOMMEN (Server/App 2.509.0, Wunsch Hansi „Ja, 1 und 2 bauen für 12 Uhr“ – Chat sparsamer):
+-- KC-CLUB-RT-ANGEKOMMEN (Server/App 2.510.0, Wunsch Hansi „Ja, 1 und 2 bauen für 12 Uhr“ – Chat sparsamer):
 -- Ist eine Nachricht beim Empfänger angekommen (dessen App hat sie geladen → Eintrag „angekommen“ in kc_club_chat_quittung), bekommen die
 -- anderen Teilnehmer dasselbe Signal wie bei „gelesen“ (Art „gelesen“ + Chat-Kennung). Die App lädt einen offenen Chat dann einmal neu
 -- und zeigt die zwei grauen Haken sofort – statt 60 s lang alle 4 s nachzufragen (bis zu 15 Ladevorgänge à ~34 Abfragen je Nachricht).

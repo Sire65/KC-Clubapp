@@ -1,4 +1,4 @@
-// KC-CLUB-CHAT-STAND (2.509.0): Browser-Test des echten app.js – chatNachsehen() lädt den Chat nur ganz, wenn sich der Fingerabdruck geändert hat,
+// KC-CLUB-CHAT-STAND (2.510.0): Browser-Test des echten app.js – chatNachsehen() lädt den Chat nur ganz, wenn sich der Fingerabdruck geändert hat,
 // es keinen gibt (älterer Server), die kurze Nachfrage scheitert oder das letzte volle Laden ≥ 5 Min. her ist. Start: PW_CORE=… PW_CHROME=… node tools/chat-sparsam/chat-stand-browser.mjs
 import http from "node:http"; import fs from "node:fs"; import path from "node:path"; import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
