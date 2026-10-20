@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.537.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.538.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1402,7 +1402,7 @@ async function pwFuer(f) {
 function pwListe() {
   const q = $("pwSuche").value.toLowerCase();
   $("pwListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) =>
-    `<label><input type="checkbox" ${PW.form.personen.includes(m.person_id) ? "checked" : ""} onchange="pwWahl('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
+    `<label${okKl(m, PW.form.personen.includes(m.person_id))}><input type="checkbox"${okAttr(m, PW.form.personen.includes(m.person_id))} ${PW.form.personen.includes(m.person_id) ? "checked" : ""} onchange="pwWahl('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}${okZusatz(m)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   const namen = PW.form.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name.split(" ")[0]).filter(Boolean);
   $("pwGewaehlt").textContent = namen.length ? "Für: " + namen.join(", ") : "Noch niemand ausgewählt";
 }
@@ -8863,8 +8863,8 @@ async function personenWaehlen(opt) {
 }
 function personenListe() {
   const alle = [MITGLIEDER.find((m) => m.person_id === ICH.person_id) || { person_id: ICH.person_id, name: ICH.name }, ...MITGLIEDER.filter((m) => m.person_id !== ICH.person_id)];
-  $("personenListe").innerHTML = alle.map((m) => `<label><input type="checkbox" ${PW_AUSWAHL.ids.includes(m.person_id) ? "checked" : ""} onchange="personenHaken('${m.person_id}', this.checked)">
-    <span style="flex:1">${m.person_id === ICH.person_id ? "ich selbst" : esc(m.name)}</span></label>`).join("");
+  $("personenListe").innerHTML = alle.map((m) => `<label${okKl(m, PW_AUSWAHL.ids.includes(m.person_id))}><input type="checkbox"${okAttr(m, PW_AUSWAHL.ids.includes(m.person_id))} ${PW_AUSWAHL.ids.includes(m.person_id) ? "checked" : ""} onchange="personenHaken('${m.person_id}', this.checked)">
+    <span style="flex:1">${m.person_id === ICH.person_id ? "ich selbst" : esc(m.name) + okZusatz(m)}</span></label>`).join("");
   $("personenZahl").textContent = PW_AUSWAHL.ids.length ? `${PW_AUSWAHL.ids.length} ausgewählt: ${todoNamen(PW_AUSWAHL.ids)}` : PW_AUSWAHL.leerText;
 }
 function personenHaken(pid, an) {
@@ -9497,17 +9497,17 @@ async function mfFormular(vorgabe = "") {
   mfListe(); setTimeout(() => (vorgabe ? $("mfSuche") : $("mfFrage"))?.focus(), 150);
 }
 function mfListe() {
-  const q = ($("mfSuche")?.value || "").toLowerCase(), andere = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id);
+  const q = ($("mfSuche")?.value || "").toLowerCase(), andere = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id), frei = andere.filter(okFrei);
   $("mfSchnell").innerHTML = `<button type="button" class="chip${MF.alle ? " an" : ""}" onclick="MF.alle=!MF.alle;MF.personen=[];mfListe()">${MF.alle ? "☑️" : "⬜"} 👥 Alle Mitglieder</button>`
     + `<button type="button" class="chip" onclick="MF.alle=false;MF.personen=[];mfListe()">✖ Keiner</button>`;
-  $("mfListe").innerHTML = andere.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<label>
-    <input type="checkbox" ${MF.alle || MF.personen.includes(m.person_id) ? "checked" : ""} onchange="mfPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
-  const n = MF.alle ? andere.length : MF.personen.length;
+  $("mfListe").innerHTML = andere.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<label${okKl(m, MF.personen.includes(m.person_id))}>
+    <input type="checkbox"${okAttr(m, MF.personen.includes(m.person_id))} ${(MF.alle && okFrei(m)) || MF.personen.includes(m.person_id) ? "checked" : ""} onchange="mfPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}${okZusatz(m)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
+  const n = MF.alle ? frei.length : MF.personen.length;
   $("mfWer").innerHTML = `An: <b>${MF.alle ? "alle Mitglieder" : !n ? "noch niemand gewählt" : n <= 3 ? esc(MF.personen.map(zeName).join(", ")) : n + " Mitglieder"}</b>`;
   $("mfWege").innerHTML = TW_WEGE.map(([k, t]) => `<button type="button" class="chip${MF.wege.includes(k) ? " an" : ""}" aria-pressed="${MF.wege.includes(k)}" onclick="MF.wege=MF.wege.includes('${k}')?MF.wege.filter((x)=>x!=='${k}'):[...MF.wege,'${k}'];mfListe()">${MF.wege.includes(k) ? "☑️" : "⬜"} ${t}</button>`).join("");
 }
 function mfPerson(pid, an) {
-  if (MF.alle) { MF.alle = false; MF.personen = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id).map((m) => m.person_id); }
+  if (MF.alle) { MF.alle = false; MF.personen = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m)).map((m) => m.person_id); }
   MF.personen = an ? [...new Set([...MF.personen, pid])] : MF.personen.filter((x) => x !== pid); mfListe();
 }
 async function mfSenden() {
@@ -22270,8 +22270,8 @@ async function zeMitglieder() { if (!MITGLIEDER) await mitgliederHolen(); return
 async function zeWahl(art) {
   try { await zeMitglieder(); } catch (e) { return meldeFehler(e); }
   ZE.gruppe = null;
-  if (art === "alle") ZE.personen = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id).map((m) => m.person_id);
-  else if (art === "online") { ZE.personen = ONL.liste.map((m) => m.person_id).filter((p) => p !== ICH.person_id); if (!ZE.personen.length) melde(ONL.zeigen ? "Gerade ist niemand sonst online." : "Die Online-Anzeige ist bei dir ausgeschaltet (⚙️ → Privatsphäre)."); }
+  if (art === "alle") ZE.personen = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m)).map((m) => m.person_id);
+  else if (art === "online") { ZE.personen = ONL.liste.map((m) => m.person_id).filter((p) => p !== ICH.person_id && okFrei(MITGLIEDER.find((m) => m.person_id === p))); if (!ZE.personen.length) melde(ONL.zeigen ? "Gerade ist niemand sonst online." : "Die Online-Anzeige ist bei dir ausgeschaltet (⚙️ → Privatsphäre)."); }
   else ZE.personen = [];
   heroZeigen(0); if ($("zeBlatt") && !$("zeBlatt").classList.contains("versteckt")) zeListe();
 }
@@ -22286,10 +22286,10 @@ function zeListe() {
   $("zeSchnell").innerHTML = `<button class="knopf klein" onclick="zeWahl('alle')">👥 Alle</button><button class="knopf klein" onclick="zeWahl('online')">🟢 Online</button><button class="knopf klein" onclick="zeWahl('keiner')">✖ Keiner</button>`
     + AEMTER.map(amt).join("") + gruppen.map((g) => `<button class="knopf klein ${ZE.gruppe?.id === g.id ? "haupt" : ""}" onclick="zeGruppe('${g.id}')">${esc(g.gruppe.symbol)} ${esc(g.gruppe.name)} <small>(${g.anzahl})</small></button>`).join("");
   $("zeListe").innerHTML = (ZE.gruppe ? `<p class="hinweis" style="margin:0">Gewählt ist die Gruppe <b>${esc(ZE.gruppe.name)}</b> – ein Häkchen bei einer Person wählt stattdessen einzelne Mitglieder.</p>` : "")
-    + MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label>
-      <input type="checkbox" ${!ZE.gruppe && ZE.personen.includes(m.person_id) ? "checked" : ""} onchange="zePerson('${m.person_id}', this.checked)">
+    + MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label${okKl(m, ZE.personen.includes(m.person_id))}>
+      <input type="checkbox"${okAttr(m, ZE.personen.includes(m.person_id))} ${!ZE.gruppe && ZE.personen.includes(m.person_id) ? "checked" : ""} onchange="zePerson('${m.person_id}', this.checked)">
       <span class="zpunkt ${ONL.ids?.has(m.person_id) ? "on" : ""}" title="${ONL.ids?.has(m.person_id) ? "online" : "nicht online"}"></span>
-      <span style="flex:1">${esc(m.name)} <span class="stmarke st-${statusArt(m.status)}">${esc(statusKurz(m.status))}</span></span>${wegIcons(m)}</label>`).join("");
+      <span style="flex:1">${esc(m.name)}${okZusatz(m)} <span class="stmarke st-${statusArt(m.status)}">${esc(statusKurz(m.status))}</span></span>${wegIcons(m)}</label>`).join("");
   $("zeZahl").textContent = zeWerText();
 }
 function zePerson(p, an) { if (ZE.gruppe) { ZE.gruppe = null; ZE.personen = []; } ZE.personen = an ? [...new Set([...ZE.personen, p])] : ZE.personen.filter((x) => x !== p); zeListe(); }
@@ -26785,11 +26785,11 @@ async function vfAuswahl() {
     <div class="knoepfe bs-fuss"><button class="knopf haupt" id="vfaOk">Übernehmen</button><button class="knopf" onclick="$('vfAuswahlBlatt').remove()">Abbrechen</button></div>`);
   f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null;
   const zeichnen = () => { const q = $("vfaSuche").value.toLowerCase();
-    $("vfaListe").innerHTML = alle.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<label><input type="checkbox" data-p="${esc(m.person_id)}" ${gew.has(m.person_id) ? "checked" : ""}> <span style="flex:1">${esc(m.name)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
+    $("vfaListe").innerHTML = alle.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<label${okKl(m, gew.has(m.person_id))}><input type="checkbox"${okAttr(m, gew.has(m.person_id))} data-p="${esc(m.person_id)}" ${gew.has(m.person_id) ? "checked" : ""}> <span style="flex:1">${esc(m.name)}${okZusatz(m)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
     $("vfaListe").querySelectorAll("[data-p]").forEach((c) => (c.onchange = () => { c.checked ? gew.add(c.dataset.p) : gew.delete(c.dataset.p); $("vfaOk").textContent = `Übernehmen (${gew.size})`; }));
     $("vfaOk").textContent = `Übernehmen (${gew.size})`; };
   $("vfaSuche").oninput = zeichnen;
-  $("vfaAlle").onclick = () => { alle.forEach((m) => gew.add(m.person_id)); zeichnen(); };
+  $("vfaAlle").onclick = () => { alle.filter(okFrei).forEach((m) => gew.add(m.person_id)); zeichnen(); }; // 2.538.0: ohne „keine Benachrichtigungen“
   $("vfaKeiner").onclick = () => { gew.clear(); zeichnen(); };
   $("vfaOk").onclick = () => { VF_ZIEL.ids = [...gew]; f.remove(); vfZielZeigen(); };
   zeichnen();
@@ -31199,7 +31199,14 @@ async function neuGruppenZeigen(ziel = "neuGruppen", frisch = false) {
 }
 // Schnellwahl (Alle / Ämter) setzt die Häkchen der zugehörigen Personen – so sieht man sofort, wer dazugehört
 // KC-CLUB-ONLINE-RUNDE (1.21.2, Wunsch Hansi): „🟢 Alle gerade online“ – spontane Runde mit allen, die jetzt in der App sind
-const empfGruppe = (a) => MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (a === "*" || (a === "@online" ? (m.online || ONL.ids.has(m.person_id)) : (m.aemter || []).includes(a)))).map((m) => m.person_id);
+// 2.538.0 KC-CLUB-KOMMUNIKATION-AUS-GRAU (Wunsch Hansi): wer keine Benachrichtigungen bekommt (Admin → 📵), ist in allen Empfänger-Listen
+// ausgegraut und nicht wählbar und fällt bei „Alle“/Ämtern/Online heraus. Schon Gewählte bleiben abwählbar.
+const okAus = (m) => !!m?.ohne_komm;
+const okFrei = (m) => !okAus(m);
+const okAttr = (m, gewaehlt = false) => (okAus(m) && !gewaehlt ? ' disabled title="Möchte keine Benachrichtigungen"' : "");
+const okKl = (m, gewaehlt = false) => (okAus(m) && !gewaehlt ? ' class="ok-grau"' : "");
+const okZusatz = (m) => (okAus(m) ? ' <small class="ok-hinweis">📵 keine Benachrichtigungen</small>' : "");
+const empfGruppe = (a) => MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m) && (a === "*" || (a === "@online" ? (m.online || ONL.ids.has(m.person_id)) : (m.aemter || []).includes(a)))).map((m) => m.person_id);
 const empfTest = () => empfWahl.personen.length === 1 && empfWahl.personen[0] === ICH.person_id;
 function empfListe() {
   const q = $("empfSuche").value.toLowerCase();
@@ -31213,9 +31220,9 @@ function empfListe() {
     ...AEMTER.map((a) => chip(a, "🎖️ " + esc(a))),
     `<button class="knopf klein ${empfTest() ? "haupt" : ""}" onclick="testAnMich()">🧪 Test an mich</button>`,
   ].join("");
-  $("empfListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label>
-    <input type="checkbox" ${empfWahl.personen.includes(m.person_id) ? "checked" : ""} onchange="personWahl('${m.person_id}', this.checked)">
-    <span style="flex:1">${esc(m.name)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}</span>${wegIcons(m)}</label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
+  $("empfListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label${okKl(m, empfWahl.personen.includes(m.person_id))}>
+    <input type="checkbox"${okAttr(m, empfWahl.personen.includes(m.person_id))} ${empfWahl.personen.includes(m.person_id) ? "checked" : ""} onchange="personWahl('${m.person_id}', this.checked)">
+    <span style="flex:1">${esc(m.name)}${okZusatz(m)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}</span>${wegIcons(m)}</label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   $("empfGewaehlt").textContent = empfTest() ? "nur du selbst (Test)" : (empfWahl.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name).filter(Boolean).join(", ") || "niemand");
 }
 function gruppeWahl(a) {
@@ -31329,8 +31336,8 @@ function grListe() {
   const q = $("grSuche").value.toLowerCase();
   $("grListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => {
     const fest = m.person_id === GR.ersteller && GR.id;
-    return `<label><input type="checkbox" ${GR.personen.includes(m.person_id) ? "checked" : ""} ${fest ? "disabled" : ""} onchange="grWahl('${m.person_id}', this.checked)">
-      <span style="flex:1">${esc(m.name)}${fest ? ' <span class="marke">👑 angelegt</span>' : ""}</span>${wegIcons(m)}${!fest && GR.personen.includes(m.person_id) ? `<button type="button" class="gr-krone${GR.admins.includes(m.person_id) ? " an" : ""}" title="Gruppen-Admin" aria-label="Gruppen-Admin" aria-pressed="${GR.admins.includes(m.person_id)}" onclick="event.preventDefault();grAdmin('${m.person_id}')">👑</button>` : ""}</label>`; }).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
+    return `<label${okKl(m, GR.personen.includes(m.person_id))}><input type="checkbox"${okAttr(m, GR.personen.includes(m.person_id))} ${GR.personen.includes(m.person_id) ? "checked" : ""} ${fest ? "disabled" : ""} onchange="grWahl('${m.person_id}', this.checked)">
+      <span style="flex:1">${esc(m.name)}${okZusatz(m)}${fest ? ' <span class="marke">👑 angelegt</span>' : ""}</span>${wegIcons(m)}${!fest && GR.personen.includes(m.person_id) ? `<button type="button" class="gr-krone${GR.admins.includes(m.person_id) ? " an" : ""}" title="Gruppen-Admin" aria-label="Gruppen-Admin" aria-pressed="${GR.admins.includes(m.person_id)}" onclick="event.preventDefault();grAdmin('${m.person_id}')">👑</button>` : ""}</label>`; }).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   const namen = GR.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name.split(" ")[0]).filter(Boolean);
   $("grGewaehlt").textContent = "Du" + (namen.length ? ", " + namen.join(", ") : "") + ` (${namen.length + 1})`;
 }
@@ -34534,13 +34541,13 @@ function taEmpfListe() {
   const q = ($("taSuche")?.value || "").toLowerCase();
   $("taGruppen").innerHTML = TA.gruppen.map((g) => `<button type="button" class="knopf klein ${TA.wahl.gruppe?.id === g.id ? "haupt" : ""}" onclick="taGruppe('${g.id}')">${esc(g.symbol)} ${esc(g.name)} <small>(${g.anzahl})</small></button>`).join("")
     + `<button type="button" class="knopf klein" onclick="taAlle()">👥 Alle</button><button type="button" class="knopf klein" onclick="TA.wahl={personen:[],gruppe:null};taEmpfListe()">✖ Keiner</button>`;
-  $("taListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label>
-    <input type="checkbox" ${!TA.wahl.gruppe && TA.wahl.personen.includes(m.person_id) ? "checked" : ""} onchange="taPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
+  $("taListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label${okKl(m, TA.wahl.personen.includes(m.person_id))}>
+    <input type="checkbox"${okAttr(m, TA.wahl.personen.includes(m.person_id))} ${!TA.wahl.gruppe && TA.wahl.personen.includes(m.person_id) ? "checked" : ""} onchange="taPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}${okZusatz(m)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   $("taWer").innerHTML = `An: <b>${esc(taWerText())}</b>`;
 }
 function taPerson(pid, an) { if (TA.wahl.gruppe) TA.wahl = { personen: [], gruppe: null }; TA.wahl.personen = an ? [...new Set([...TA.wahl.personen, pid])] : TA.wahl.personen.filter((x) => x !== pid); taEmpfListe(); }
 function taGruppe(id) { const g = TA.gruppen.find((x) => x.id === id); TA.wahl = { personen: [], gruppe: TA.wahl.gruppe?.id === id ? null : g }; taEmpfListe(); }
-function taAlle() { TA.wahl = { personen: MITGLIEDER.filter((m) => m.person_id !== ICH.person_id).map((m) => m.person_id), gruppe: null }; taEmpfListe(); }
+function taAlle() { TA.wahl = { personen: MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m)).map((m) => m.person_id), gruppe: null }; taEmpfListe(); }
 function taZeitpunkt(datum, zeit) { // deutsche Ortszeit → ISO (Sommer-/Winterzeit richtig)
   if (!/^\d{4}-\d\d-\d\d$/.test(datum || "") || !/^\d\d:\d\d$/.test(zeit || "")) return ""; // 2.425.0: ungültig/leer → new Date("") = „Invalid Date“ (wie vorher), nie ein falsches Datum
   const probe = new Date(`${datum}T${zeit}:00Z`);

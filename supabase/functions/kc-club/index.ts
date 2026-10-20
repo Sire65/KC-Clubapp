@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.537.0";
+const SERVER_VERSION = "2.538.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -7068,10 +7068,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             fehler.set(id, x.channel === "push" ? "Push kam nicht an (letzte 7 Tage)" : "E-Mail kam nicht an (letzte 7 Tage)");
           }
         }
+        // 2.538.0 KC-CLUB-KOMMUNIKATION-AUS-GRAU: wer keine Benachrichtigungen bekommt, ist in den Empfänger-Listen ausgegraut
+        // (Liste nicht lesbar → niemand ausgegraut; gesendet wird trotzdem nicht, das prüft routerSendenRoh)
+        const ohneKomm = await kommunikationAus().catch(() => new Set<string>());
         return json({
           aemter, onlineSichtbar: ichZeige,
           mitglieder: leute.map((m) => ({
             person_id: m.person_id, name: m.display_name, vorname: vorname(m), avatar: avatar.get(m.person_id) ?? null,
+            ...(ohneKomm.has(m.person_id) ? { ohne_komm: true } : {}),
             ...(ordentlich.has(m.person_id) ? {} : { nichtMitglied: true }), // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
             vorstand: !!(r.get(m.person_id) as any)?.ist_vorstand, aemter: (r.get(m.person_id) as any)?.aemter ?? [], admin: !!(r.get(m.person_id) as any)?.ist_admin,
             status: st.get(m.person_id) ?? null, online: on.has(m.person_id) && m.person_id !== ich.person_id, zuletztDa: zd.get(m.person_id) ?? null,

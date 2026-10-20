@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7151,6 +7151,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/async function kommAusSetzen\(pid, aus, knopf\) \{\n  const name = vfName\(pid\);\n  if \(!\(await frage\(/.test(programm), "Schalter fragt vorher (frage statt confirm)");
   const ka = server.slice(server.indexOf('case "komm_aus_liste"'), server.indexOf('case "sperre_aufheben"'));
   assert.ok((ka.match(/nurAdmin\(ich\);/g) || []).length === 2 && /KA_STAND = null;/.test(ka) && /if \(id === ich\.person_id\) throw/.test(ka), "nur Admin, nicht sich selbst, Liste sofort neu");
+}
+// 2.538.0 KC-CLUB-KOMMUNIKATION-AUS-GRAU: ausgegraut und nicht wählbar in allen Empfänger-Listen, „Alle“ ohne sie
+{
+  assert.ok(/\.\.\.\(ohneKomm\.has\(m\.person_id\) \? \{ ohne_komm: true \} : \{\}\),/.test(server), "Mitgliederliste meldet ohne_komm");
+  assert.ok(/const okAttr = \(m, gewaehlt = false\) => \(okAus\(m\) && !gewaehlt \? ' disabled/.test(programm), "nicht wählbar (schon Gewählte abwählbar)");
+  for (const f of ["function empfListe()", "function taEmpfListe()", "function zeListe()", "function mfListe()", "function pwListe()", "function grListe()", "function personenListe()", "async function vfAuswahl()"]) {
+    const i = programm.indexOf(f), seg = programm.slice(i, i + 3000);
+    assert.ok(i > 0 && /okAttr\(m/.test(seg) && /okZusatz\(m\)/.test(seg), "ausgegraut in " + f);
+  }
+  assert.ok(/const empfGruppe = \(a\) => MITGLIEDER\.filter\(\(m\) => m\.person_id !== ICH\.person_id && okFrei\(m\)/.test(programm), "Alle/Ämter/Online ohne sie");
+  assert.ok(/function taAlle\(\) \{ TA\.wahl = \{ personen: MITGLIEDER\.filter\(\(m\) => m\.person_id !== ICH\.person_id && okFrei\(m\)\)/.test(programm), "Terminanfrage Alle ohne sie");
+  assert.ok(/label\.ok-grau \{ opacity: \.5;/.test(seite), "ausgegraut sichtbar");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

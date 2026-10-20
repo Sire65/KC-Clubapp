@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.538.0 – 2026-10-20 – 📵 Wer keine Benachrichtigungen bekommt, ist in allen Empfänger-Listen ausgegraut (KC-CLUB-KOMMUNIKATION-AUS-GRAU)
+Wunsch Hansi („Dass wenn jemand Nachricht an alle auswählt oder Terminanfrage usw. Thomas ausgegraut ist und nicht gewählt werden kann“).
+- Die Mitgliederliste vom Server meldet je Person `ohne_komm` (aus der Registry `kc_club_kommunikation_aus`).
+- Ausgegraut, nicht ankreuzbar, mit Hinweis „📵 keine Benachrichtigungen“ in: Neue Nachricht/Rundnachricht, Zentrale, Terminanfrage, Frage an Mitglieder, Pinnwand-Zettel für Personen, Abstimmung (Auswahl), Gruppe anlegen/bearbeiten, To-do „Wer?“. Wer schon gewählt war (z. B. alte Gruppe), bleibt abwählbar.
+- „👥 Alle“, Ämter und „🟢 Online“ wählen sie nicht mit. Der Server sendet ihnen ohnehin nichts (2.536.0).
+- Test: Vertragstest-Block 2.538.0, Browser-Test (Liste, Alle, Terminanfrage, Zentrale, To-do). Rückweg: App/Server 2.537.0.
+
 ## 2.537.0 – 2026-10-20 – 📵 Admin-Schalter „Ohne Benachrichtigungen“ (KC-CLUB-KOMMUNIKATION-AUS-SCHALTER)
 Wunsch Hansi („Ja, Schalter im Admin-Bereich einbauen, dann kann ich ihn komplett aus der Kommunikation rausnehmen“).
 - Neue Admin-Kachel **📵 Ohne Benachrichtigungen**: zeigt, wer zurzeit keine Push/E-Mail bekommt, mit Knopf „🔔 Wieder benachrichtigen“. „＋ Mitglied herausnehmen“ öffnet die Mitgliederliste mit Suche – antippen, Rückfrage bestätigen, fertig.
