@@ -1,5 +1,8 @@
 # Änderungen
 
+## Datenbank 20.10.2026 – web.de-Bremse enger: 3 je Minute, 20 je Stunde (KC-COMM-WARTEN, Nachschärfung)
+Erster Echtbetrieb der Mail-Warteschlange (10:01–10:12 Uhr, 3 Rundnachrichten, 41 Mails): die Warteschlange arbeitete (höchstens 5 je Minute über web.de, alle Mails kamen an), aber web.de lehnte nach 26 Mails in 9 Minuten ab – Brevo übernahm die übrigen 14. Freigabe Hansi „Ja“: Bremse auf 3 je Minute und 20 je Stunde (Migration `20261020_kc_comm_webde_bremse_enger.sql`, nur Einstellung in `kc_communication_providers`, kein Programmcode). Keine neue App-Version.
+
 ## 2.524.0 – 2026-10-20 – Versand-Leiste über dem Schreibfeld: 📝 Normal · ❗ Wichtig · 🏎️ Express (KC-CLUB-VERSANDART)
 Wunsch Hansi („Unter dem Schreibfeld sind viele Knöpfe. Wichtig und Express raus und vor dem Senden als Option: Normal ist schon markiert, dann Wichtig, dann Express. Wenn Express, Haken bei Normal raus. Wichtig und Express muss zusammen möglich sein“; Wahl Hansi: Leiste fest, WhatsApp bleibt am Platz).
 - ❗ und 🏎️ sind aus der Knopfreihe unter dem Schreibfeld heraus (jetzt 9 statt 11 runde Knöpfe – passen in eine Reihe).
