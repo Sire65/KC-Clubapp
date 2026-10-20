@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.536.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.537.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -22601,6 +22601,7 @@ function adZustand(id) {
       return gemessen([f, `${fs.filter((x) => x === "gruen").length} von ${fs.length} melden sich`]); }
     case "versionen": return gemessen(!r ? null : m.alteVersion ? ["gelb", `${m.alteVersion} mit alter Version`] : ["gruen", "alle aktuell"]);
     case "zugang": return gemessen(!r ? null : [m.nieAngemeldet ? "gelb" : "gruen", `${m.mitZugang} von ${m.gesamt} mit Zugang`]);
+    case "stumm": return ["keine", "Mitglieder ganz ohne Push/E-Mail"]; // 2.537.0 KC-CLUB-KOMMUNIKATION-AUS-SCHALTER
     case "wartung": return gemessen(!r ? null : r.wartung?.an ? ["gelb", "AN – Mitglieder sehen Blau"] : ["gruen", "aus"]);
     case "freigaben": { const f = INIT?.freigaben || {}, n = Object.values(f).filter((x) => x !== "alle").length; return ["keine", n ? `${n} nur für dich (Test)` : "alles freigegeben"]; } // KC-CLUB-FREIGABE (2.23.86)
     case "inkognito": return ["keine", inkognitoAn() ? "🕶️ AN" : "aus"];
@@ -22621,7 +22622,7 @@ const AD_KACHELN = [
   ["neon", "🪞", "Neon-Spiegel", "ueb"], ["backup", "🛟", "Backups", "ueb"], ["b2", "💾", "B2-Backup", "ueb"], ["not", "🚑", "Notbetrieb", "ueb"],
   ["comm", "📨", "Communicator", "dienst"], ["mail", "✉️", "Mail · Brevo", "dienst"], ["push", "🔔", "Push", "dienst"], ["kasse", "🧾", "Kasse · Gateway", "dienst"],
   ["programme", "💻", "KC-Programme", "dienst"], ["rt", "⚡", "Direkte Leitung", "ueb"], ["versionen", "📱", "Versionen", "app"], ["fehler", "🩺", "Fehler", "app"], ["nutzung", "👥", "Nutzung", "app"],
-  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["freigaben", "🚦", "Freigaben", "app"], ["inkognito", "🕶️", "Inkognito", "app"], ["stadt", "🏙️", "Stadt-Termine", "app"],
+  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["stumm", "📵", "Ohne Benachrichtigungen", "app"], ["freigaben", "🚦", "Freigaben", "app"], ["inkognito", "🕶️", "Inkognito", "app"], ["stadt", "🏙️", "Stadt-Termine", "app"],
   ...Object.entries(AD_DIENSTE).map(([k, d]) => ["l-" + k, d.sym, d.t, "link"]),
 ];
 KACHELN.admin = AD_KACHELN.map(([id, sym, t, gr]) => ({ id: "ad-" + id, sym, t, nur: () => !!ICH?.admin, aktion: `adBlatt('${id}')`,
@@ -22957,6 +22958,13 @@ function adBlatt(id) {
         <b style="font-size:.95rem">Zurzeit gesperrt</b><div id="adSperren"><p class="hinweis" style="margin:0">Wird geladen …</p></div></div>`;
       setTimeout(sperrenLaden, 0);
       break;
+    case "stumm": // 2.537.0 KC-CLUB-KOMMUNIKATION-AUS-SCHALTER
+      html = `${kopf("📵", "Ohne Benachrichtigungen")}
+        <p class="hinweis" style="margin:0">Wer hier steht, bekommt von der Club-App und den Terminen <b>keine Push und keine E-Mail</b> – auch nicht bei „an alle“, ❗ Wichtig, Express, Notfall oder als Kopie. Chats und Termine kann er weiter selbst in der App ansehen.</p>
+        <div class="knoepfe">${adKnopf("＋ Mitglied herausnehmen", "kommAusAuswahl()", true)}</div>
+        <b style="font-size:.95rem">Zurzeit ohne Benachrichtigungen</b><div id="adOhneKomm"><p class="hinweis" style="margin:0">Wird geladen …</p></div>`;
+      setTimeout(kommAusLaden, 0);
+      break;
     case "freigaben":
       html = `${kopf("🚦", "Freigaben")}<p class="hinweis" style="margin:0">Neue Funktionen erst <b>🔒 nur für dich</b> testen – wenn alles passt, mit einem Tipp <b>✅ für alle</b> freigeben. Mitglieder sehen nicht Freigegebenes gar nicht.</p>
         <div id="adFreigaben"><p class="hinweis" style="margin:0">Wird geladen …</p></div>`;
@@ -23066,6 +23074,41 @@ async function sperreAuswahl() {
     });
   };
   artZeigen(); endeZeigen(); zeichnen();
+}
+// ---------- 2.537.0 KC-CLUB-KOMMUNIKATION-AUS-SCHALTER: Mitglieder ganz aus der Club-Kommunikation nehmen (Admin → 📵) ----------
+async function kommAusLaden() {
+  if (!$("adOhneKomm")) return;
+  try {
+    const [{ liste }] = await Promise.all([api("komm_aus_liste"), MITGLIEDER ? null : mitgliederHolen().catch(() => null)]);
+    if (!$("adOhneKomm")) return;
+    $("adOhneKomm").innerHTML = liste.length ? `<div style="display:grid;gap:6px">${liste.map((x) => `<div class="ps-zeile ps-gesperrt">
+        <span style="flex:1 1 100%;min-width:0"><b>📵 ${esc(vfName(x.person_id))}</b><br><small class="hinweis">seit ${esc(wann(x.seit))}</small></span>
+        <button class="knopf klein" onclick="kommAusSetzen('${esc(x.person_id)}', false, this)">🔔 Wieder benachrichtigen</button></div>`).join("")}</div>`
+      : '<p class="hinweis" style="margin:0">Zurzeit bekommen alle Mitglieder Benachrichtigungen (wie jeder es selbst eingestellt hat).</p>';
+  } catch (e) { if ($("adOhneKomm")) $("adOhneKomm").innerHTML = `<p class="hinweis" style="margin:0">⚠️ Liste nicht geladen: ${esc(fehlerText(e))}</p>`; }
+}
+async function kommAusSetzen(pid, aus, knopf) {
+  const name = vfName(pid);
+  if (!(await frage(aus ? `${name} ganz aus der Kommunikation nehmen?\n\n${name} bekommt dann keine Push und keine E-Mail mehr von der Club-App – auch nicht bei Nachrichten an alle, Wichtig, Express oder Notfall.`
+    : `${name} wieder benachrichtigen?\n\nDann gelten wieder die eigenen Einstellungen von ${name} für Push und E-Mail.`, { ja: aus ? "📵 Herausnehmen" : "🔔 Wieder benachrichtigen" }))) return;
+  await einmal(knopf, async () => {
+    try { await api("komm_aus_setzen", { id: pid, aus }, { warten: true }); melde(aus ? `📵 ${name}: keine Push, keine E-Mail mehr` : `🔔 ${name} wird wieder benachrichtigt`); $("kaBlatt")?.remove(); kommAusLaden(); }
+    catch (e) { meldeFehler(e); }
+  });
+}
+async function kommAusAuswahl() {
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+  const alle = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id);
+  const f = blattAuf("kaBlatt", `<h3 style="margin:0">📵 Wen herausnehmen?</h3>
+    <input id="kaSuche" type="search" placeholder="🔍 Name suchen …" style="width:100%;box-sizing:border-box;margin:6px 0">
+    <div id="kaListe" class="ps-liste"></div>
+    <div class="knoepfe bs-fuss"><button class="knopf" onclick="$('kaBlatt').remove()">Abbrechen</button></div>`);
+  f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null;
+  const zeichnen = () => { const q = $("kaSuche").value.toLowerCase();
+    $("kaListe").innerHTML = alle.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<div class="ps-zeile"><span style="flex:1;min-width:0">${esc(m.name)}</span>
+      <button type="button" class="knopf klein" data-p="${esc(m.person_id)}">📵 Herausnehmen</button></div>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
+    $("kaListe").querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => kommAusSetzen(b.dataset.p, true, b))); };
+  $("kaSuche").oninput = zeichnen; zeichnen();
 }
 async function sperreAufheben(pid, knopf) {
   await einmal(knopf, async () => {

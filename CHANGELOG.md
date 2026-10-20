@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.537.0 – 2026-10-20 – 📵 Admin-Schalter „Ohne Benachrichtigungen“ (KC-CLUB-KOMMUNIKATION-AUS-SCHALTER)
+Wunsch Hansi („Ja, Schalter im Admin-Bereich einbauen, dann kann ich ihn komplett aus der Kommunikation rausnehmen“).
+- Neue Admin-Kachel **📵 Ohne Benachrichtigungen**: zeigt, wer zurzeit keine Push/E-Mail bekommt, mit Knopf „🔔 Wieder benachrichtigen“. „＋ Mitglied herausnehmen“ öffnet die Mitgliederliste mit Suche – antippen, Rückfrage bestätigen, fertig.
+- Server: Aktionen `komm_aus_liste` / `komm_aus_setzen` (nur Admin, nicht sich selbst) pflegen die Registry `kc_club_kommunikation_aus` aus 2.536.0; wirkt sofort, auf anderen Server-Instanzen nach höchstens 60 s. Jede Änderung im Protokoll.
+- Test: Vertragstest-Block 2.537.0, Browser-Test der Kachel. Rückweg: App/Server 2.536.0 (Liste bleibt erhalten).
+
 ## 2.536.0 – 2026-10-20 – Keine Benachrichtigungen: Mitglieder ganz aus der Club-Kommunikation herausnehmen (KC-CLUB-KOMMUNIKATION-AUS)
 Wunsch Hansi (20.10.: „Thomas Hess möchte aus der Kommunikation der Club-App herausgenommen werden … auch wenn ich eine Nachricht an alle schreibe, bekommt er nix. Stelle das sicher.“).
 - Befund: Die Haken in den Einstellungen gelten nur, solange der Absender „wie eingestellt“ sendet. Wählt er 🔔/✉️ ausdrücklich, bei Express, Notfall oder als Kopie ging die Nachricht trotzdem raus.

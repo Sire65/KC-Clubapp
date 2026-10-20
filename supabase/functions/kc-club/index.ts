@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.536.0";
+const SERVER_VERSION = "2.537.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -14273,6 +14273,29 @@ Köcheclub-App`,
         SPERREN.bis = 0;
         await protokoll(ich.person_id, "person_sperre_stumm", { id, stumm });
         return json({ ok: true, stumm });
+      }
+      // 2.537.0 KC-CLUB-KOMMUNIKATION-AUS-SCHALTER (Wunsch Hansi „Schalter im Admin-Bereich“): Mitglied ganz aus der Club-Kommunikation
+      // nehmen bzw. wieder aufnehmen – pflegt die Registry kc_club_kommunikation_aus (wirkt sofort auf diesem Server, sonst nach ≤ 60 s)
+      case "komm_aus_liste": {
+        nurAdmin(ich);
+        const { data, error } = await db.from("kc_club_kommunikation_aus").select("person_id,grund,seit,eingetragen_von").order("seit", { ascending: false });
+        if (error) throw new Fehler("Liste konnte nicht geladen werden.", 503);
+        return json({ liste: data ?? [] });
+      }
+      case "komm_aus_setzen": {
+        nurAdmin(ich);
+        const id = txt(p.id, 40), aus = p.aus === true;
+        if (!id) throw new Fehler("Keine Person angegeben.", 400);
+        if (id === ich.person_id) throw new Fehler("Dich selbst kannst du hier nicht herausnehmen.", 400);
+        const { data: pe } = await db.from("kc_core_people").select("person_id").eq("person_id", id).maybeSingle();
+        if (!pe) throw new Fehler("Diese Person gibt es nicht.", 404);
+        const { error } = aus
+          ? await db.from("kc_club_kommunikation_aus").upsert({ person_id: id, grund: txt(p.grund, 300) || "Admin-Schalter", seit: jetzt(), eingetragen_von: ich.person_id }, { onConflict: "person_id" })
+          : await db.from("kc_club_kommunikation_aus").delete().eq("person_id", id);
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        KA_STAND = null;
+        await protokoll(ich.person_id, aus ? "kommunikation_aus" : "kommunikation_an", { id });
+        return json({ ok: true, aus });
       }
       case "sperre_aufheben": {
         nurAdmin(ich);

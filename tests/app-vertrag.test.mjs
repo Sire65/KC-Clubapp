@@ -4333,7 +4333,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/Zur Zeit führen wir für Sie Wartungsarbeiten durch\. Bitte versuchen Sie es später nochmals\. Wir bitten um Verständnis\./.test(server), "Wortlaut Wartung");
   assert.ok(/if \(!error\) \{ SPERREN\.zeilen = /.test(server), "Lesefehler sperren nie alle");
   const g = server.slice(server.indexOf('case "sperre_liste"'), server.indexOf('case "wartung_setzen"'));
-  assert.equal((g.match(/nurAdmin\(ich\);/g) || []).length, 4, "alle Sperr-Aktionen nur Admin (2.23.79: + sperre_stumm)");
+  assert.equal((g.match(/nurAdmin\(ich\);/g) || []).length, 6, "alle Sperr-Aktionen nur Admin (2.23.79: + sperre_stumm · 2.537.0: + komm_aus_liste/_setzen)");
   assert.ok(/x !== ich\.person_id && !admins\.has\(x\)/.test(g) && /aktiv: false, aufgehoben_am: jetzt\(\)/.test(g) && /"person_gesperrt"/.test(g) && /"person_entsperrt"/.test(g), "nicht sich selbst/Admins, Aufheben ohne Löschen, Protokoll");
   assert.ok(/if \(r\.status === 423 && j\?\.gesperrt\) \{ sperreZeigen\(j\.gesperrt, j\.error, j\.bis\);/.test(html) && /function sperreZeigen\(art, text, bis\)/.test(html), "App zeigt das Hinweisfenster");
   assert.ok(/adKnopf\("🔒 Personen sperren", "sperreAuswahl\(\)", true\)/.test(html) && /api\("sperre_setzen", \{ personen: \[\.\.\.gew\]\.map/.test(html) && /api\("sperre_aufheben"/.test(html), "Verwaltung im Wartungs-Blatt");
@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7144,6 +7144,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(error\) \{ if \(KA_STAND\) return KA_STAND\.ids; throw new Error/.test(server), "Liste unbekannt → nicht senden");
   assert.ok(/from\("kc_club_kommunikation_aus"\)/.test(termine) && /if \(ausFehler\) return \[/.test(termine) && /personIds = personIds\.filter\(\(id\) => !ohneKomm\.has\(id\)\);/.test(termine), "kc-termine prüft die Liste");
   assert.ok(!/KC-P-M0012/.test(server + termine), "keine Person fest im Programm");
+}
+// 2.537.0 KC-CLUB-KOMMUNIKATION-AUS-SCHALTER: Admin-Kachel 📵, nur Admin, Rückfrage, Liste sofort neu
+{
+  assert.ok(/\["stumm", "📵", "Ohne Benachrichtigungen", "app"\]/.test(programm) && /case "stumm": \/\/ 2\.537\.0/.test(programm), "Admin-Kachel Ohne Benachrichtigungen");
+  assert.ok(/async function kommAusSetzen\(pid, aus, knopf\) \{\n  const name = vfName\(pid\);\n  if \(!\(await frage\(/.test(programm), "Schalter fragt vorher (frage statt confirm)");
+  const ka = server.slice(server.indexOf('case "komm_aus_liste"'), server.indexOf('case "sperre_aufheben"'));
+  assert.ok((ka.match(/nurAdmin\(ich\);/g) || []).length === 2 && /KA_STAND = null;/.test(ka) && /if \(id === ich\.person_id\) throw/.test(ka), "nur Admin, nicht sich selbst, Liste sofort neu");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
