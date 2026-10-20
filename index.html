@@ -2131,6 +2131,13 @@
   .punkte3 { display: inline-flex; align-items: center; gap: 5px; background: var(--karte); border-radius: 16px; padding: 10px 13px; box-shadow: var(--schatten); }
   .punkte3 i { width: 9px; height: 9px; border-radius: 50%; background: var(--rot); opacity: .35; animation: tippWelle 1.3s infinite ease-in-out; }
   .punkte3 i:nth-child(2) { animation-delay: .18s; } .punkte3 i:nth-child(3) { animation-delay: .36s; }
+  /* 2.509.0 KC-CLUB-STIFT-SCHREIBT (Wunsch Hansi „den Stift animieren, als wenn er den Text schreibt“): kleine Schreibbewegung – Zickzack nach rechts,
+     kurzes Absetzen, zurück an den Zeilenanfang */
+  .stift-schreibt { display: inline-block; transform-origin: 20% 90%; animation: stiftSchreibt 1.6s ease-in-out infinite; }
+  @keyframes stiftSchreibt { 0% { transform: translate(-3px, 0) rotate(-6deg); } 12% { transform: translate(-1px, -2px) rotate(4deg); } 24% { transform: translate(1px, 0) rotate(-6deg); }
+    36% { transform: translate(3px, -2px) rotate(4deg); } 48% { transform: translate(5px, 0) rotate(-6deg); } 60% { transform: translate(6px, -3px) rotate(0deg); }
+    80% { transform: translate(-3px, -3px) rotate(-4deg); } 100% { transform: translate(-3px, 0) rotate(-6deg); } }
+  @media (prefers-reduced-motion: reduce) { .stift-schreibt { animation-duration: 3.2s; } }
   @keyframes tippWelle { 0%, 60%, 100% { transform: translateY(0) scale(1); opacity: .35; } 30% { transform: translateY(-8px) scale(1.15); opacity: 1; } }
   .tippt .zeile { display: flex; align-items: center; gap: 10px; font-size: .98rem; font-style: normal; font-weight: 600; margin: 2px 0; }
   /* KC-CLUB-SPRICHT (1.11.0): Oszilloskop – bei den anderen als laufende Welle, bei mir echt vom Mikrofon */
@@ -2223,6 +2230,9 @@
   .eingabe .eg-tast { display: none; width: 64px; height: 20px; padding: 0; border: 1px solid var(--linie); border-radius: 10px; background: var(--karte2); color: var(--grau); font-size: .8rem; line-height: 1; cursor: pointer; }
   .eingabe .eg-tast.an { background: var(--rot); color: #fff; border-color: var(--rot); }
   @media (hover: none) and (pointer: coarse) { .eingabe .eg-tast { display: block; } }
+  /* 2.509.0 KC-CLUB-TIPPTON-KNOPF: Mini-Lautsprecher daneben – Tippgeräusche an/aus (ausgegraut = aus) */
+  .eingabe .eg-ton { width: 34px; height: 20px; padding: 0; border: 1px solid var(--linie); border-radius: 10px; background: var(--karte2); color: var(--grau); font-size: .72rem; line-height: 1; cursor: pointer; }
+  .eingabe .eg-ton.aus { opacity: .6; }
   .eingabe.zu { padding: 6px 12px; }
   .eingabe.zu > *:not(.eg-auf) { display: none !important; }
   .eingabe.zu .eg-auf { display: block; width: 100%; max-width: 1100px; margin: 0 auto; padding: 9px 12px; border: 1px solid var(--linie); border-radius: 12px; background: var(--karte); color: var(--text); font: inherit; font-weight: 700; cursor: pointer; }
@@ -5272,7 +5282,7 @@
 <div class="eingabe versteckt" id="eingabe">
   <!-- 2.433.0 KC-CLUB-SCHREIBEN-KLAPPEN (Wunsch Hansi): ▾ klappt den Schreibbereich kurz weg, damit mehr Nachrichten zu sehen sind; beim Öffnen eines Chats ist er immer offen -->
   <!-- 2.455.0 KC-CLUB-TASTATUR-KNOPF (Wunschliste #14): daneben ⌨️ – Tastatur des Handys aus- und wieder einblenden (nur Touch-Geräte) -->
-  <div class="eg-griffe"><button class="eg-klapp" id="egKlapp" type="button" onclick="eingabeKlappen(true)" title="Schreibbereich einklappen – mehr Nachrichten sehen" aria-label="Schreibbereich einklappen – mehr Nachrichten sehen">▾</button><button class="eg-tast" id="egTast" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="tastaturUmschalten()" title="Tastatur einblenden" aria-label="Tastatur einblenden" aria-pressed="false">⌨️ ▴</button></div>
+  <div class="eg-griffe"><button class="eg-klapp" id="egKlapp" type="button" onclick="eingabeKlappen(true)" title="Schreibbereich einklappen – mehr Nachrichten sehen" aria-label="Schreibbereich einklappen – mehr Nachrichten sehen">▾</button><button class="eg-tast" id="egTast" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="tastaturUmschalten()" title="Tastatur einblenden" aria-label="Tastatur einblenden" aria-pressed="false">⌨️ ▴</button><button class="eg-ton" id="egTon" type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="tippTonKnopf()" title="Tippgeräusche aus" aria-label="Tippgeräusche aus" aria-pressed="true">🔊</button></div>
   <button class="eg-auf" id="egAuf" type="button" onclick="eingabeKlappen(false)" aria-label="Schreibbereich wieder öffnen">▴ ✏️ Schreiben</button>
   <!-- KC-CLUB-TIPPT (0.54.0): „Klaus schreibt …“ -->
   <div class="tippt versteckt" id="tipptAnzeige" aria-live="polite"></div>
@@ -5525,7 +5535,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.508.0" data-v="2.508.0"></script>
+<script src="app.js?v=2.509.0" data-v="2.509.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

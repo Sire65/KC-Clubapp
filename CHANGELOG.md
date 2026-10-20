@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.509.0 – 2026-10-20 – 🔊 Mini-Lautsprecher im Chat · ✏️ schreibender Stift (KC-CLUB-TIPPTON-KNOPF, KC-CLUB-STIFT-SCHREIBT)
+Wunsch Hansi („Im Chat gibt es einen kleinen Pfeil und eine kleine Tastatur. Daneben noch ein Mini-Lautsprecher-Symbol, das den Tastatur-Anschlag-Sound abschaltet“).
+- Unten im Chat neben ▾ (Schreibbereich einklappen) und ⌨️ (Tastatur) sitzt jetzt ein kleiner Lautsprecher: 🔊 = Tippgeräusche an – antippen schaltet sie aus (🔇, ausgegraut); nochmal antippen schaltet die zuletzt gewählte Art wieder ein (Tastatur oder Schreibmaschine). Kurze Meldung zur Bestätigung.
+- Dieselbe Einstellung wie ⚙️ → Benachrichtigungen → „⌨️ Tippgeräusche“, gilt für dieses Gerät; der Knopf nimmt der Handy-Tastatur den Fokus nicht weg. Hilfe-Eintrag ergänzt. Nur App.
+- **✏️ Schreibender Stift** (Wunsch Hansi „Es bewegen sich 3 Punkte, wenn jemand im Chat schreibt. Daneben ist ein Stiftsymbol – animiere den Stift, als wenn er den Text schreibt“): Der Stift in „✏️ Klaus schreibt …“ macht jetzt eine kleine Schreibbewegung – im Zickzack nach rechts, kurz absetzen, zurück an den Zeilenanfang. Bei „Bewegung reduzieren“ langsamer.
+- Tests: Vertragstests grün; Browserprobe (Schreibmaschine → 🔇 aus → 🔊 wieder Schreibmaschine; Stift bewegt sich; keine Fehler).
+
 ## DB – 2026-10-20 (ohne App-Build) – DP2 liest „Nicht für den Dienstplan“ (KC-DP-NICHT-PLANBAR)
 Wunsch Hansi („Fridbert soll auch nicht mehr bei der Dienstplan-Erstellung auftauchen“ – DP2 führt ihn bisher fest im Programm, `K.nonPlanningPersonIds`):
 - Neue Lesefunktion `kc_dp_nicht_planbar(p_org)` → `{ vertrag: "KC_DP_NICHT_PLANBAR_V1", personIds: [...], stand }` aus der Club-App-Liste `kc_club_dienst_ausnahmen`. Nur für aktive DP2-Planungsrollen (admin/planner/duty_manager) der Organisation, nur deren Personen, nur lesend; anon ohne Zugriff, Tabelle selbst bleibt nur für den Server.
