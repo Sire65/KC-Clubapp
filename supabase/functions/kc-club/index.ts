@@ -185,6 +185,10 @@ const cors = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" } });
 class Fehler extends Error { constructor(msg: string, public status = 400) { super(msg); } }
+// KC-CLUB-RC-PRUEFUNG (20.10.2026): Schreiben mit Rückmeldung – schlägt es fehl, meldet die App das ehrlich statt „gespeichert“ (Freigaben, Notfall, Zusagen, Links)
+function schreibOk<R extends { error: unknown }>(r: R, was = "Speichern"): R { if (r?.error) throw new Fehler(`${was} hat nicht geklappt – bitte gleich noch einmal versuchen.`, 500); return r; }
+// KC-CLUB-RC-PRUEFUNG (20.10.2026): Arbeit nebenbei (ohne zu warten) – EdgeRuntime.waitUntil hält die Funktion wach, bis sie fertig ist
+function nebenbei(p: Promise<unknown>) { try { (globalThis as any).EdgeRuntime?.waitUntil?.(p); } catch {} return p; }
 
 // ---------- Hilfen ----------
 async function sha256(s: string) {
@@ -3194,7 +3198,8 @@ async function neonDateispeicher() {
   const { data: roh } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_archiv_kopie" });
   let z: any = null; try { z = roh ? JSON.parse(String(roh)) : null; } catch { z = null; }
   if (!z?.endpoint || !z?.bucket || !z?.key || !z?.secret) return null;
-  const s3 = new AwsClient({ accessKeyId: z.key, secretAccessKey: z.secret, region: z.region || "eu-central-1", service: "s3" });
+  // KC-CLUB-RC-PRUEFUNG (20.10.2026): höchstens 2 Wiederholungen (Standard wären 10 – ein gestörter Speicher hielte jeden Lauf minutenlang auf)
+  const s3 = new AwsClient({ accessKeyId: z.key, secretAccessKey: z.secret, region: z.region || "eu-central-1", service: "s3", retries: 2 });
   const basis = `${String(z.endpoint).replace(/\/$/, "")}/${encodeURIComponent(z.bucket)}`;
   const url = (k: string) => `${basis}/${k.split("/").map(encodeURIComponent).join("/")}`;
   return { s3, url, basis, fach: String(z.bucket) };
@@ -4631,7 +4636,8 @@ async function protokollLeser(): Promise<string[]> {
 }
 // KC-CLUB-PROTOKOLL-NAECHSTER-TERMIN (1.84.0, Wunsch Hansi): Vorschlag = die nächste geplante Sitzung nach dem Protokolldatum
 async function protokollNaechsterVorschlag(pr: any) {
-  const ab = new Date(`${pr.datum}T23:59:59Z`).toISOString();
+  // KC-CLUB-RC-PRUEFUNG (20.10.2026): Tagesende in deutscher Zeit (vorher UTC – Sitzungen am Abend nach 22/23 Uhr fielen falsch)
+  const d0 = String(pr.datum || ""), ab = new Date(berlinZuUtc(Number(d0.slice(0, 4)), Number(d0.slice(5, 7)), Number(d0.slice(8, 10)), 23, 59).getTime() + 59999).toISOString();
   const { data } = await db.from("kc_club_treffen").select("titel,beginn,ort").eq("art", "treffen").neq("status", "abgesagt").gt("beginn", ab).order("beginn").limit(1);
   const t: any = data?.[0];
   return t ? txt(`${t.titel} · ${wann(t.beginn)}${t.ort ? " · " + t.ort : ""}`, 200) : null;
@@ -5376,7 +5382,7 @@ const RC_ERINNERN_TAGE = 2;
 async function reiseChecklisteErinnern() {
   if (berlinStunde(new Date()) < 9) return;
   const ziel = berlinTag(new Date(Date.now() + RC_ERINNERN_TAGE * 86400000));
-  const { aktionen } = await aktionenLesen({ person_id: "-", name: "System", vorname: "System", admin: false, vorstand: false, aemter: [], protokolle: false, kontakte: false, buero: null, nurLesen: true });
+  const { aktionen } = await aktionenLesen({ person_id: "-", name: "System", vorname: "System", admin: false, vorstand: false, aemter: [], protokolle: false, kontakte: false, buero: null, zugang: "mitglied", nurLesen: true }); // KC-CLUB-RC-PRUEFUNG (20.10.2026): zugang ergänzt (Typ Ich)
   for (const a of (aktionen as any[]).filter((x) => x.von === ziel && RC_KREUZFAHRT.test(`${x.titel} ${x.veranstalter || ""}`))) {
     const ids = [...new Set((a.teilnehmer as any[]).map((t) => t.person_id).filter(Boolean))] as string[];
     if (!ids.length) continue;
@@ -5507,7 +5513,7 @@ async function kalenderIcs(token: string) {
   const [{ data: zg }, sp] = await Promise.all([db.from("kc_club_zugang").select("aktiv").eq("person_id", abo.person_id).maybeSingle(), sperreFuer(abo.person_id)]);
   if (!zg?.aktiv || sp) return new Response("Kein Zugang.", { status: 403 });
   db.from("kc_club_kalender_abo").update({ zuletzt_abgerufen: jetzt() }).eq("person_id", abo.person_id).then(() => {});
-  const ich = { person_id: pe.person_id, name: pe.display_name, vorname: vorname(pe), admin: false, vorstand: false, aemter: [], protokolle: false, kontakte: false, buero: null } as Ich;
+  const ich = { person_id: pe.person_id, name: pe.display_name, vorname: vorname(pe), admin: false, vorstand: false, aemter: [], protokolle: false, kontakte: false, buero: null, zugang: "mitglied" } as Ich; // KC-CLUB-RC-PRUEFUNG (20.10.2026): zugang ergänzt (nur Geburtstage, kein Recht daran geknüpft)
   const [{ data: tr }, akt, geb] = await Promise.all([
     db.from("kc_club_treffen").select("*").gte("beginn", new Date(Date.now() - 60 * 86400000).toISOString()).lte("beginn", new Date(Date.now() + 500 * 86400000).toISOString()).order("beginn"),
     aktionenRoh(), geburtstageSichtbar(ich),
@@ -5915,6 +5921,7 @@ async function geplantFaelligLauf() {
     try {
       const ich = await geplantIch(g.person_id);
       if (!ich) throw new Fehler("Absender ist nicht mehr aktiv.");
+      if (!ich.admin && await sperreFuer(ich.person_id)) throw new Fehler("Absender ist im Moment gesperrt – nicht gesendet."); // KC-CLUB-RC-PRUEFUNG (20.10.2026): Sperre gilt auch für geplante Nachrichten
       await geplantSenden(g, ich);
       await db.from("kc_club_geplant").update({ anzahl: (g.anzahl || 0) + 1, letzter_fehler: null, gesendet_am: jetzt() }).eq("id", g.id);
       z.gesendet++;
@@ -6981,7 +6988,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const status = String(p.status || "");
         if (!STATUS.includes(status)) throw new Fehler("Unbekannter Status.");
         const bis = /^\d{4}-\d{2}-\d{2}$/.test(String(p.bis || "")) ? String(p.bis) : null;
-        await db.from("kc_club_status").upsert({ person_id: ich.person_id, status, hinweis: txt(p.hinweis, 120) || null, bis: status === "verfuegbar" ? null : bis, geaendert_am: jetzt() });
+        schreibOk(await db.from("kc_club_status").upsert({ person_id: ich.person_id, status, hinweis: txt(p.hinweis, 120) || null, bis: status === "verfuegbar" ? null : bis, geaendert_am: jetzt() })); // KC-CLUB-RC-PRUEFUNG (20.10.2026)
         await protokoll(ich.person_id, "status_gesetzt", { status, bis });
         return json({ ok: true });
       }
@@ -7079,8 +7086,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!["ja", "nein", "vielleicht", "keine"].includes(antwort)) throw new Fehler("Bitte zusagen, absagen oder vielleicht wählen.");
         const { data: t } = await db.from("kc_club_treffen").select("id,status,beginn").eq("id", p.id).maybeSingle();
         if (!t || t.status !== "geplant") throw new Fehler("Dieses Treffen ist nicht mehr offen.", 409);
-        if (antwort === "keine") await db.from("kc_club_teilnahme").delete().eq("treffen_id", t.id).eq("person_id", ich.person_id);
-        else await db.from("kc_club_teilnahme").upsert({ treffen_id: t.id, person_id: ich.person_id, antwort, notiz: txt(p.notiz, 300) || null, geaendert_am: jetzt() });
+        // KC-CLUB-RC-PRUEFUNG (20.10.2026): Zusage/Absage nur als gespeichert melden, wenn sie wirklich gespeichert ist
+        if (antwort === "keine") await db.from("kc_club_teilnahme").delete().eq("treffen_id", t.id).eq("person_id", ich.person_id).then((r) => schreibOk(r, "Zurücknehmen"));
+        else schreibOk(await db.from("kc_club_teilnahme").upsert({ treffen_id: t.id, person_id: ich.person_id, antwort, notiz: txt(p.notiz, 300) || null, geaendert_am: jetzt() }), "Antworten");
         if (antwort !== "ja") await db.from("kc_club_mitfahrt_suche").delete().eq("bezug_art", "treffen").eq("bezug_id", t.id).eq("person_id", ich.person_id); // KC-CLUB-MITFAHRT-SUCHE
         await protokoll(ich.person_id, "treffen_antwort", { treffen: t.id, antwort });
         return json({ ok: true, treffen: (await treffenListe(ich)).find((x: any) => x.id === t.id) });
@@ -8069,7 +8077,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const zweck = p.zweck ? String(p.zweck) : null;
         if (zweck && !LEIH_ZWECKE[zweck]) throw new Fehler("Unbekannter Zweck.");
         const wunsch = new Map<string, number>();
-        for (const x of Array.isArray(p.positionen) ? p.positionen : []) {
+        for (const x of Array.isArray(p.positionen) ? p.positionen.slice(0, 200) : []) { // KC-CLUB-RC-PRUEFUNG (20.10.2026): Liste begrenzt
           const n = Math.floor(Number(x?.anzahl)); if (x?.id && n > 0) wunsch.set(String(x.id), (wunsch.get(String(x.id)) ?? 0) + n);
         }
         if (!wunsch.size) throw new Fehler("Bitte mindestens einen Gegenstand auswählen.");
@@ -8151,7 +8159,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!name) throw new Fehler("Bitte einen Namen angeben.");
         if (!(anzahl >= 0 && anzahl <= 999)) throw new Fehler("Anzahl 0 bis 999.");
         const daten: any = { name, sym, anzahl, aktiv: p.aktiv !== false, geaendert_am: jetzt() };
-        if (p.sort !== undefined && Number.isFinite(Number(p.sort))) daten.sort = Math.floor(Number(p.sort));
+        if (p.sort !== undefined && Number.isFinite(Number(p.sort))) daten.sort = Math.max(0, Math.min(32000, Math.round(Number(p.sort)))); // KC-CLUB-RC-PRUEFUNG (20.10.2026): sinnvoller Bereich
         let alt: any = null;
         if (p.id) {
           ({ data: alt } = await db.from("kc_club_leih_gegenstaende").select("*").eq("id", String(p.id)).maybeSingle());
@@ -9176,6 +9184,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       case "kalender": {
         const datum = (s: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || "")) ? String(s) : null;
         const von = datum(p.von), bis = datum(p.bis);
+        // KC-CLUB-RC-PRUEFUNG (20.10.2026): unmögliche Tage (z. B. 31.02.) abweisen – Date.parse würde sie still in den März schieben
+        const tagEcht = (s: string) => { const t = Date.parse(s); return !isNaN(t) && new Date(t).toISOString().slice(0, 10) === s; };
+        if ((von && !tagEcht(von)) || (bis && !tagEcht(bis))) throw new Fehler("Ungültiges Datum.");
         if (!von || !bis || bis < von || (new Date(bis).getTime() - new Date(von).getTime()) > 62 * 86400000) throw new Fehler("Ungültiger Zeitraum.");
         // Tagesgrenzen in deutscher Zeit (großzügig ±1 Tag, genaue Zuordnung macht die App)
         const zeitraum = { von: new Date(new Date(von).getTime() - 86400000).toISOString(), bis: new Date(new Date(bis).getTime() + 2 * 86400000).toISOString() };
@@ -9219,7 +9230,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       case "kontakt_freigabe": {
         const feld = String(p.feld || "");
         if (!KONTAKT_FELDER.includes(feld)) throw new Fehler("Unbekannte Angabe.");
-        await db.from("kc_club_freigaben").upsert({ person_id: ich.person_id, bereich: "kontakt_" + feld, erlaubt: !!p.erlaubt, geaendert_am: jetzt() });
+        schreibOk(await db.from("kc_club_freigaben").upsert({ person_id: ich.person_id, bereich: "kontakt_" + feld, erlaubt: !!p.erlaubt, geaendert_am: jetzt() })); // KC-CLUB-RC-PRUEFUNG (20.10.2026)
         await protokoll(ich.person_id, "kontakt_freigabe", { feld, erlaubt: !!p.erlaubt });
         return json({ ok: true });
       }
@@ -9316,20 +9327,20 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       case "geburtstag_freigabe": {
-        await db.from("kc_club_freigaben").upsert({ person_id: ich.person_id, bereich: "geburtstag", erlaubt: !!p.erlaubt, geaendert_am: jetzt() });
+        schreibOk(await db.from("kc_club_freigaben").upsert({ person_id: ich.person_id, bereich: "geburtstag", erlaubt: !!p.erlaubt, geaendert_am: jetzt() })); // KC-CLUB-RC-PRUEFUNG (20.10.2026)
         await protokoll(ich.person_id, "geburtstag_freigabe", { erlaubt: !!p.erlaubt });
         return json({ ok: true });
       }
 
       // KC-CLUB-RUNDER-GEBURTSTAG (1.30.0): freiwillig – Clubleitung darf bei runden Geburtstagen das Alter sehen
       case "runder_geburtstag_freigabe": {
-        await db.from("kc_club_freigaben").upsert({ person_id: ich.person_id, bereich: "runder_geburtstag", erlaubt: !!p.erlaubt, geaendert_am: jetzt() });
+        schreibOk(await db.from("kc_club_freigaben").upsert({ person_id: ich.person_id, bereich: "runder_geburtstag", erlaubt: !!p.erlaubt, geaendert_am: jetzt() })); // KC-CLUB-RC-PRUEFUNG (20.10.2026)
         await protokoll(ich.person_id, "runder_geburtstag_freigabe", { erlaubt: !!p.erlaubt });
         return json({ ok: true });
       }
 
       case "dienst_freigabe": {
-        await db.from("kc_club_freigaben").upsert({ person_id: ich.person_id, bereich: "dienstzeiten", erlaubt: !!p.erlaubt, geaendert_am: jetzt() });
+        schreibOk(await db.from("kc_club_freigaben").upsert({ person_id: ich.person_id, bereich: "dienstzeiten", erlaubt: !!p.erlaubt, geaendert_am: jetzt() })); // KC-CLUB-RC-PRUEFUNG (20.10.2026)
         await protokoll(ich.person_id, "dienst_freigabe", { erlaubt: !!p.erlaubt });
         return json({ ok: true });
       }
@@ -9405,7 +9416,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-EINMAL-FOTO: Kennzeichnung je Anlage (gesehen? weg?), Absender sieht wer wann; alte/fertige räumt es nebenbei auf
         const einm = await einmalFotos(aids);
         const { data: einmGes } = einm.size ? await db.from("kc_club_einmal_foto_gesehen").select("attachment_id,person_id,gesehen_am").in("attachment_id", [...einm.keys()]) : { data: [] as any[] };
-        for (const e of einm.values()) if (!e.entfernt_am && Date.now() - Date.parse(e.erstellt_am) > EINMAL_TAGE * 86400000) einmalDateiWeg(e).catch(() => {});
+        for (const e of einm.values()) if (!e.entfernt_am && Date.now() - Date.parse(e.erstellt_am) > EINMAL_TAGE * 86400000) nebenbei(einmalDateiWeg(e).catch(() => {})); // KC-CLUB-RC-PRUEFUNG (20.10.2026): waitUntil
         const einmalInfo = (aid: string) => { const e = einm.get(aid); if (!e) return null; const g = (einmGes ?? []).filter((x: any) => x.attachment_id === aid);
           const weg = !!e.entfernt_am || Date.now() - Date.parse(e.erstellt_am) > EINMAL_TAGE * 86400000;
           return { eigen: e.absender === ich.person_id, gesehenAm: g.find((x: any) => x.person_id === ich.person_id)?.gesehen_am ?? null, weg,
@@ -10650,7 +10661,7 @@ Köcheclub-App`,
         const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
         // 1.96.0 (Sicherheitsprüfung): in fremden Gruppen darf die Clubleitung verwalten, sich aber nicht selbst hinzufügen (sonst Mitlesen)
         const hinzu = ([...new Set((Array.isArray(p.hinzu) ? p.hinzu : []).map(String))] as string[]).filter((id) => aktiv.has(id) && (id !== ich.person_id || gruppenAdmin(g, ich.person_id))).slice(0, 60);
-        const weg = ([...new Set((Array.isArray(p.weg) ? p.weg : []).map(String))] as string[]).filter((id) => id !== g.erstellt_von);
+        const weg = ([...new Set((Array.isArray(p.weg) ? p.weg : []).slice(0, 300).map(String))] as string[]).filter((id) => id !== g.erstellt_von); // KC-CLUB-RC-PRUEFUNG (20.10.2026): Liste begrenzt
         let neu: string[] = [];
         if (hinzu.length) {
           const { data: da } = await db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", g.thread_id).in("person_id", hinzu);
@@ -11187,7 +11198,8 @@ Köcheclub-App`,
             deviceType: "PROGRAM", version, build: version, status: hinten ? "DEGRADED" : "ONLINE", measuredAt: zeit, latencyMs: null, trafficRx: null, trafficTx: verkehr,
             queueDepth: 0, errorCount: 0, source: "KC_PROGRAM_SELF_HEARTBEAT", trust: "SELF_REPORTED", message: hinten ? "KC Club-App im Hintergrund" : "KC Club-App aktiv" } };
         try {
-          const r = await fetch(`${SUPA}/functions/v1/kicc-program-heartbeat`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE }, body: JSON.stringify(umschlag) });
+          // KC-CLUB-RC-PRUEFUNG (20.10.2026): Zeitgrenze 10 s
+          const r = await fetch(`${SUPA}/functions/v1/kicc-program-heartbeat`, { method: "POST", signal: AbortSignal.timeout(10000), headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE }, body: JSON.stringify(umschlag) });
           const out: any = await r.json().catch(() => ({}));
           return json({ ok: r.ok && out?.ok !== false, grund: r.ok ? null : String(out?.error || `HTTP ${r.status}`) });
         } catch { return json({ ok: false, grund: "KICC nicht erreichbar" }); }
@@ -11745,7 +11757,8 @@ Köcheclub-App`,
         const stand = await aenderungStand(ich);
         const anAlle = !!art.alle && p.an_alle === true;
         // Notfallkontakt: wie bisher selbst gespeichert (kc_club_notfall); Kleidergröße wird nur hier geführt → beides gleich „erledigt“
-        if (art.id === "notfall") await db.from("kc_club_notfall").upsert({ person_id: ich.person_id, name: neu.name || null, telefon: neu.telefon || null, beziehung: neu.beziehung || null, geaendert_am: jetzt() });
+        // KC-CLUB-RC-PRUEFUNG (20.10.2026): Notfallkontakt nicht gespeichert → abbrechen, bevor die Meldung „erledigt“ verschickt wird
+        if (art.id === "notfall") schreibOk(await db.from("kc_club_notfall").upsert({ person_id: ich.person_id, name: neu.name || null, telefon: neu.telefon || null, beziehung: neu.beziehung || null, geaendert_am: jetzt() }), "Notfallkontakt speichern");
         const { data: a, error } = await db.from("kc_club_aenderungen").insert({ person_id: ich.person_id, art: art.id, alt: stand[art.id] ?? null, neu, gilt_ab: giltAb,
           bemerkung: txt(p.bemerkung, 1000) || null, empfaenger, an_alle: anAlle, ...(art.auto ? { status: "erledigt", erledigt_am: jetzt() } : {}) }).select("id").single();
         if (error || !a) throw new Fehler("Meldung konnte nicht gespeichert werden.", 500);
@@ -11990,7 +12003,7 @@ Köcheclub Werne`,
         const { data: rows, error } = await db.from("kc_dp_wish_inbox").select("person_id").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source", "club_app").limit(300);
         if (error) throw new Fehler("Die Dienstwünsche konnten gerade nicht geprüft werden.", 503);
         const abgegeben = new Set((rows ?? []).map((x: any) => x.person_id)), erinnert = await dwZuletztErinnert(), aus = await dienstAusnahmen();
-        const wunsch = Array.isArray(p.personen) ? new Set(p.personen.map(String)) : null;
+        const wunsch = Array.isArray(p.personen) ? new Set(p.personen.slice(0, 200).map(String)) : null; // KC-CLUB-RC-PRUEFUNG (20.10.2026): Liste begrenzt
         const ziel = (await aktiveMitglieder()).filter((m) => !abgegeben.has(m.person_id) && !aus.has(m.person_id) && (!wunsch || wunsch.has(m.person_id)))
           .filter((m) => { const z = erinnert.get(m.person_id); return !z || Date.now() - Date.parse(z) > 24 * 3600000; });
         if (!ziel.length) return json({ ok: true, erinnert: 0, hinweis: "Alle Fehlenden wurden in den letzten 24 Stunden schon erinnert." });
@@ -12571,8 +12584,9 @@ Köcheclub Werne`,
       // ----- Notfallkontakt (KC-CLUB-NOTFALL) & Kalender-Abo (KC-CLUB-KALENDERABO) -----
       case "notfall_setzen": {
         const zeile = { name: txt(p.name, 120) || null, telefon: txt(p.telefon, 40) || null, beziehung: txt(p.beziehung, 60) || null };
-        if (!zeile.name && !zeile.telefon) await db.from("kc_club_notfall").delete().eq("person_id", ich.person_id);
-        else await db.from("kc_club_notfall").upsert({ person_id: ich.person_id, ...zeile, geaendert_am: jetzt() });
+        // KC-CLUB-RC-PRUEFUNG (20.10.2026): Notfallkontakt nur als gespeichert melden, wenn er wirklich gespeichert ist
+        if (!zeile.name && !zeile.telefon) schreibOk(await db.from("kc_club_notfall").delete().eq("person_id", ich.person_id), "Notfallkontakt löschen");
+        else schreibOk(await db.from("kc_club_notfall").upsert({ person_id: ich.person_id, ...zeile, geaendert_am: jetzt() }), "Notfallkontakt speichern");
         await protokoll(ich.person_id, "notfall_gesetzt", { gesetzt: !!(zeile.name || zeile.telefon) });
         return json({ ok: true });
       }
@@ -12581,7 +12595,7 @@ Köcheclub Werne`,
         // neuer Link (der alte wird ungültig) – gespeichert wird nur der Hash
         // 2.430.0 KC-CLUB-KALENDER-EINFACH: Link = HMAC(Server-Geheimnis, Person + Erstellzeit) → später wieder abrufbar (für das 2. Gerät)
         const erstellt = jetzt(), token = await kalenderToken(ich.person_id, erstellt);
-        await db.from("kc_club_kalender_abo").upsert({ person_id: ich.person_id, token_hash: await sha256(token), erstellt_am: erstellt, zuletzt_abgerufen: null });
+        schreibOk(await db.from("kc_club_kalender_abo").upsert({ person_id: ich.person_id, token_hash: await sha256(token), erstellt_am: erstellt, zuletzt_abgerufen: null }), "Kalender-Link anlegen"); // KC-CLUB-RC-PRUEFUNG (20.10.2026): sonst ein Link, der nie geht
         await protokoll(ich.person_id, "kalender_abo_erzeugt", {});
         return json({ ok: true, url: `${SUPA}/functions/v1/kc-club?kalender=${token}`, erstellt_am: erstellt });
       }
@@ -12609,7 +12623,8 @@ Köcheclub Werne`,
           db.from("kc_club_treffen").select("id,titel,beginn,ende").eq("art", "veranstaltung").eq("status", "geplant").lt("beginn", bisIso)
             .or(`ende.gte.${jetztIso},and(ende.is.null,beginn.gte.${jetztIso})`).order("beginn").limit(40),
           // 2.242.0 KC-CLUB-PRIVAT-STARTSEITE (Wunsch Hansi): eigene private Termine mit Häkchen „Auf der Startseite“ – ab heute 0 Uhr
-          privatListe(ich, new Date(`${heute}T00:00:00Z`).toISOString(), bisIso).catch(() => [])]);
+          // KC-CLUB-RC-PRUEFUNG (20.10.2026): „heute 0 Uhr“ in deutscher Zeit (vorher UTC = 1–2 Uhr nachts)
+          privatListe(ich, berlinZuUtc(Number(heute.slice(0, 4)), Number(heute.slice(5, 7)), Number(heute.slice(8, 10)), 0, 0).toISOString(), bisIso).catch(() => [])]);
         const privGesehen = new Set<string>(); // Reihe: nur der nächste Termin
         const privat = (priv as any[]).filter((t: any) => t.startseite && !privGesehen.has(t.id) && privGesehen.add(t.id))
           .slice(0, 5).map((t: any) => ({ id: t.id, titel: txt(t.titel, 120), beginn: t.beginn, ganztaegig: !!t.ganztaegig }));
@@ -13025,7 +13040,7 @@ Köcheclub Werne`,
         const bytes = new Uint8Array(await blob.arrayBuffer());
         let b = ""; for (let i = 0; i < bytes.length; i += 0x8000) b += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
         await protokoll(ich.person_id, "einmal_foto_angesehen", { anlage: aid, absender: e.absender });
-        einmalAufraeumen(e).catch(() => {});
+        nebenbei(einmalAufraeumen(e).catch(() => {})); // KC-CLUB-RC-PRUEFUNG (20.10.2026): waitUntil – Aufräumen läuft sicher zu Ende
         return json({ mime: a.mime_type, daten: btoa(b), betrachter: ich.name, am: jetzt() });
       }
 
@@ -14006,7 +14021,8 @@ Köcheclub-App`,
         nurAdmin(ich);
         const neu: Record<string, unknown> = { geaendert_am: new Date().toISOString() };
         if (["offen", "zurueckgestellt", "erledigt"].includes(String(p.status))) { neu.status = String(p.status); neu.erledigt_am = p.status === "erledigt" ? new Date().toISOString() : null; }
-        if (Number.isFinite(Number(p.reihenfolge))) neu.reihenfolge = Number(p.reihenfolge);
+        // KC-CLUB-RC-PRUEFUNG (20.10.2026): Spalte ist eine Kommazahl (Start = Sekunden seit 1970, ▲▼ legt Mittelwerte dazwischen) → nur begrenzen, nicht runden
+        if (Number.isFinite(Number(p.reihenfolge))) neu.reihenfolge = Math.max(-1e12, Math.min(1e12, Number(p.reihenfolge)));
         const { error } = await db.from("kc_club_wunschliste").update(neu).eq("id", String(p.id || ""));
         if (error) throw new Fehler("Konnte nicht speichern.", 500);
         return json({ ok: true });
@@ -14625,7 +14641,7 @@ Köcheclub-App`,
         } else {
           const { data: e } = await db.from("kc_club_eltern").select("id,kind,name").eq("id", String(p.id || "")).eq("aktiv", true).maybeSingle();
           if (!e) throw new Fehler("Eintrag nicht gefunden.", 404);
-          await db.from("kc_club_eltern").update({ token_hash: hash, subscription: null, endpoint: null, angemeldet_am: null }).eq("id", e.id);
+          schreibOk(await db.from("kc_club_eltern").update({ token_hash: hash, subscription: null, endpoint: null, angemeldet_am: null }).eq("id", e.id), "Neuer Link"); // KC-CLUB-RC-PRUEFUNG (20.10.2026)
           id = e.id; kind = e.kind; name = e.name;
         }
         const { data: e2 } = await db.from("kc_club_eltern").select("telefon").eq("id", id).single();
@@ -14637,7 +14653,7 @@ Köcheclub-App`,
         nurLeitung(ich);
         const { data: e } = await db.from("kc_club_eltern").select("id,kind").eq("id", String(p.id || "")).maybeSingle();
         if (!e) throw new Fehler("Eintrag nicht gefunden.", 404);
-        await db.from("kc_club_eltern").update({ aktiv: false, subscription: null, endpoint: null }).eq("id", e.id);
+        schreibOk(await db.from("kc_club_eltern").update({ aktiv: false, subscription: null, endpoint: null }).eq("id", e.id), "Entfernen"); // KC-CLUB-RC-PRUEFUNG (20.10.2026): sonst bekäme das Eltern-Handy weiter Hinweise
         await protokoll(ich.person_id, "eltern_entfernt", { kind: e.kind, eltern: e.id });
         return json({ ok: true });
       }
@@ -14716,13 +14732,7 @@ Köcheclub-App`,
         return json({ ok: true, lauf: { ok: !!(lauf as any).ok }, eintraege: (meine ?? []).filter((x: any) => x.status !== "offen").map((x: any) => ({ notId: x.not_id, aktion: x.aktion, status: x.status, grund: x.status === "abgelehnt" ? x.ergebnis : null })) });
       }
 
-      // KC-CLUB-NOTBETRIEB (1.52.0): Stand des Notfall-Pakets + öffentlicher Prüfschlüssel für den Ersatz-Server (Admin)
-      case "notbetrieb_info": {
-        nurAdmin(ich);
-        const st = await notStand();
-        return json({ eingerichtet: !!st.url, url: st.url, hochgeladen_am: st.hochgeladen_am, groesse: st.groesse, mitglieder: st.mitglieder, fehler: st.fehler,
-          pruefschluessel: (await notSchluessel()).oeffentlich });
-      }
+      // KC-CLUB-RC-PRUEFUNG (20.10.2026): „notbetrieb_info“ entfernt – wurde von keiner App und keinem Werkzeug aufgerufen
 
       default: return json({ error: "Unbekannte Aktion" }, 400);
     }
@@ -14932,7 +14942,8 @@ async function notSigniert(pfad: string, inhalt: Record<string, unknown>) {
   const st = await notStand(), { privat } = await notSchluessel();
   const roh = new TextEncoder().encode(JSON.stringify({ ...inhalt, zeit: jetzt() }));
   const sig = new Uint8Array(await crypto.subtle.sign({ name: "Ed25519" }, privat, roh as BufferSource));
-  const r = await fetch(String(st.url).replace(/\/+$/, "") + pfad, { method: "POST", headers: { "content-type": "application/json", "x-kc-signatur": b64(sig) }, body: roh as unknown as BodyInit });
+  // KC-CLUB-RC-PRUEFUNG (20.10.2026): Zeitgrenze – ein hängender Ersatz-Server hält den Lauf nicht auf
+  const r = await fetch(String(st.url).replace(/\/+$/, "") + pfad, { method: "POST", signal: AbortSignal.timeout(15000), headers: { "content-type": "application/json", "x-kc-signatur": b64(sig) }, body: roh as unknown as BodyInit });
   if (!r.ok) throw new Error(`Ersatz-Server antwortet ${r.status}`);
   return await r.json();
 }
@@ -14972,6 +14983,9 @@ async function notEingangLauf() {
     ]);
     if (!pe?.active) { await ablehnen("Mitglied nicht mehr aktiv.", zg.person_id); continue; }
     const ich = ichAus(pe, ro ?? null), daten: any = notDatenKuerzen(e.aktion, e.daten);
+    // KC-CLUB-RC-PRUEFUNG (20.10.2026): gesperrte Personen tragen auch aus dem Notbetrieb nichts nach (wie bei jedem normalen Aufruf)
+    const gesperrt = ich.admin ? null : await sperreFuer(zg.person_id);
+    if (gesperrt) { await ablehnen(SPERRE_TEXT[gesperrt.art] || SPERRE_TEXT.wartung, zg.person_id); continue; }
     if (!daten) { await ablehnen("Unvollständig – im Notbetrieb nicht nachtragbar.", zg.person_id); continue; }
     // im Chat erkennbar: wann es wirklich geschrieben wurde (die Nachricht erscheint erst jetzt)
     if (e.aktion === "nachricht_senden" && daten.text) daten.text = `${daten.text}\n\n🟠 im Notbetrieb geschrieben um ${NOT_UHR.format(new Date(e.zeit || Date.now()))} Uhr`;
@@ -15001,7 +15015,7 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
   const { privat } = await notSchluessel();
   const senden = async (pfad: string, roh: Uint8Array, art: string) => {
     const sig = new Uint8Array(await crypto.subtle.sign({ name: "Ed25519" }, privat, roh as BufferSource));
-    const r = await fetch(ziel + pfad, { method: "POST", headers: { "content-type": art, "x-kc-signatur": b64(sig) }, body: roh as unknown as BodyInit });
+    const r = await fetch(ziel + pfad, { method: "POST", signal: AbortSignal.timeout(15000), headers: { "content-type": art, "x-kc-signatur": b64(sig) }, body: roh as unknown as BodyInit }); // KC-CLUB-RC-PRUEFUNG (20.10.2026): Zeitgrenze
     if (!r.ok) throw new Error(`Ersatz-Server antwortet ${r.status}`);
   };
   try {

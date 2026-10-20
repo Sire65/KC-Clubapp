@@ -156,7 +156,7 @@ async function senden(eventKey: string, personIds: string[], vars: Record<string
   // Jede Mail an Mitglieder geht als echtes BCC auch an Hansi (KC-COMM-CCBCC im Communicator) – das Mitglied sieht davon nichts
   const bcc = MITGLIED_EREIGNISSE.includes(eventKey) && !personIds.includes(HANSI) ? [{ personId: HANSI }] : undefined;
   const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, {
-    method: "POST",
+    method: "POST", signal: AbortSignal.timeout(20000), // KC-CLUB-RC-PRUEFUNG (20.10.2026): Zeitgrenze 20 s
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
     body: JSON.stringify({ sourceProgram: "kc-besuche", eventKey, recipients: personIds.map((personId) => ({ personId })), bcc, variables: vars, correlationId: korrelation }),
   });
@@ -699,7 +699,7 @@ Deno.serve(async (req) => {
     if (a === "kalender_abgleich" || a === "kalender_gemeldet") {
       const key = req.headers.get("x-kalender-key") ?? "";
       const { data: ks } = await db.from("kc_termin_kalender_status").select("key_sha256").eq("id", 1).maybeSingle();
-      if (!key || !ks?.key_sha256 || (await sha256(key)) !== ks.key_sha256) return json({ error: "Kein Zugang" }, 401);
+      if (!key || !ks?.key_sha256 || !gleichZeit(await sha256(key), String(ks.key_sha256))) return json({ error: "Kein Zugang" }, 401); // KC-CLUB-RC-PRUEFUNG (20.10.2026): gleichbleibende Zeit
       if (a === "kalender_abgleich") {
         await db.from("kc_termin_kalender_status").update({ letzter_abruf: jetzt() }).eq("id", 1);
         return json({ eintraege: (await kalenderEintraege()).slice(0, 40) });
@@ -826,9 +826,9 @@ Deno.serve(async (req) => {
     // Prüfschlüssel (nur für Funktionstests, liegt befristet im Vault): erzwingt Testmodus, verschickt nie etwas
     const { data: pruef } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_termine_pruefschluessel_sha256" });
     const { data: intern } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_termine_admin_token" });
-    const istPruefung = !!key && !!pruef && pruef === h;
+    const istPruefung = !!key && !!pruef && gleichZeit(h, String(pruef)); // KC-CLUB-RC-PRUEFUNG (20.10.2026): gleichbleibende Zeit
     const istIntern = !!internKey && !!intern && gleichZeit(internKey, intern);
-    if (!istIntern && (!key || !((zug ?? []).some((z: any) => z.key_sha256 === h) || istPruefung))) return json({ error: "Kein Zugang" }, 401);
+    if (!istIntern && (!key || !((zug ?? []).some((z: any) => gleichZeit(h, String(z.key_sha256 ?? ""))) || istPruefung))) return json({ error: "Kein Zugang" }, 401); // KC-CLUB-RC-PRUEFUNG (20.10.2026): gleichbleibende Zeit
     if (istPruefung) p.test = true;
 
     switch (a) {

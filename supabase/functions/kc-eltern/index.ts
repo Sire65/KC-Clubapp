@@ -67,7 +67,7 @@ async function senden(kinder: string[], art: string, titel: string, text: string
     const k = vn.get(e.kind) || "dein Kind", fuell = (t: string) => t.replaceAll("{kind}", k);
     const nutzlast = JSON.stringify({ title: txt(fuell(titel), 140), body: txt(fuell(text), 300), data: { url: url || "./" } });
     try {
-      await webpush.sendNotification(e.subscription, nutzlast, { TTL: 86400, urgency: art === "notfall" ? "high" : "normal" });
+      await webpush.sendNotification(e.subscription, nutzlast, { TTL: 86400, urgency: art === "notfall" ? "high" : "normal", timeout: 10000 }); // KC-CLUB-RC-PRUEFUNG (20.10.2026): Zeitgrenze 10 s je Handy
       gesendet++;
       await db.from("kc_club_eltern").update({ letzter_push: new Date().toISOString(), ...(art === "nachricht" ? { letzter_nachricht_hinweis: new Date().toISOString() } : {}) }).eq("id", e.id);
     } catch (x: any) {
