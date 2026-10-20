@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.521.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.522.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -31006,8 +31006,12 @@ async function geteiltEmpfangen() {
     await caches.delete("kcclub-geteilt");
   } catch {}
   for (const d of dateien) if (await vbEinlesen(d)) return; // 2.518.0 KC-CLUB-SCHLUESSELBUND: Schlüssel bleiben auf dem Handy, nie in den Ablagekorb
-  api("diagnose", { art: "teilen", daten: { anzahl: dateien.length, text: !!info.text, felder: Array.isArray(info.felder) ? info.felder.slice(0, 20) : null, typen: dateien.map((d) => d.type || "?").slice(0, 10) } }).catch(() => {}); // 2.515.0: Felder/Typen zur Fehlersuche
+  api("diagnose", { art: "teilen", daten: { anzahl: dateien.length, text: !!info.text, felder: Array.isArray(info.felder) ? info.felder.slice(0, 20).join(" | ") : null, typen: dateien.map((d) => d.type || "?").slice(0, 10).join(" | "), fehler: info.fehler ? String(info.fehler).slice(0, 300) : null, groesse: info.groesse ?? null } }).catch(() => {}); // 2.515.0: Felder/Typen zur Fehlersuche · 2.522.0: Fehler
   const text = [info.text, info.url && !String(info.text || "").includes(info.url) ? info.url : ""].filter(Boolean).join("\n").trim();
+  if (!dateien.length && !text && info.fehler) return melde(/Quota/i.test(info.fehler) ? "Die Datei ist zu groß für den Zwischenspeicher dieses Handys – bitte kleiner teilen (z. B. Video kürzen) oder in der Club-App über 📎 anhängen." : "Die Datei konnte beim Teilen nicht übernommen werden – bitte in der Club-App über 📎 anhängen. (Fehler ist für Hansi vermerkt.)", true); // 2.522.0 KC-CLUB-TEILEN-FEHLER
+  const leer = Array.isArray(info.felder) && info.felder.some((x) => /:0$/.test(String(x))); // Datei mit 0 Byte: das Handy hat sie nicht hergegeben
+  if (!dateien.length && !text && leer) return melde("Das Handy hat die Datei leer übergeben (kommt bei manchen Dateimanagern vor) – bitte aus der Galerie, Google Drive oder „Dateien“ teilen oder in der Club-App über 📎 anhängen.", true); // 2.522.0
+  if (dateien.length && info.fehler) melde("⚠️ Nicht alle Dateien passten in den Zwischenspeicher – die übrigen kommen an.", true);
   if (!dateien.length && !text) return melde("Es ist nichts angekommen. Fotos, PDFs und Office-Dateien gehen sofort; andere Dateitypen nimmt die Club-App an, sobald das Handy sie aktualisiert hat (meist nach dem nächsten Start, spätestens nach einem Tag).", true); // 2.514.0
   if (await ablkAblegen(text, dateien, info.titel)) return; // 2.511.0 KC-CLUB-ABLAGEKORB: zuerst in den Korb
   teilenWahl(text, dateien); // Korb nicht erreichbar (z. B. Gast/Aushilfe oder alter Server) → wie bisher selbst wählen
