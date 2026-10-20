@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.530.0 – 2026-10-20 – 🕵️ Geheimagent bringt verschlüsselte Nachrichten · 🔑 Schlüssel beim Senden (KC-CLUB-GEHEIMAGENT)
+Wunsch Hansi („Beim Versenden mit Schlüsselbund kurz einen Schlüssel zeigen … welche besondere Figur könnte die verschlüsselte wegbringen?“ → „🕵️ Geheimagent“).
+- Beim Senden einer verschlüsselten Nachricht (🔒 Kennwort oder Schlüsselbund) blitzt am Senden-Knopf kurz ein goldener 🔑 Schlüssel auf und dreht sich wie im Schloss. Danach läuft ein Geheimagent (Hut, Sonnenbrille, Trenchcoat, Aktenkoffer) mit der Nachricht davon – statt des gewählten Boten.
+- Beim Empfänger kommt der Geheimagent ebenfalls an, bleibt kurz stehen, der Schlüssel dreht sich, das Kofferschloss springt auf.
+- Express behält Vorrang (Rennwagen). „Effekte aus“ gilt weiter. Hilfe-Eintrag „Wer bringt deine Nachricht?“ ergänzt. Nur App.
+
 ## 2.529.0 – 2026-10-20 – 🤠 Thema „Wilder Westen“ · 🔒 Schloss fragt erst · ✍️ „… schreibt dir gerade“ auch außerhalb des Chats (KC-CLUB-WILDWEST, KC-CLUB-VN-RUECKFRAGE, KC-CLUB-SCHREIBT-HINWEIS) · Server 2.529.0
 Wunsch Hansi („neue Szene Wild West: links ein Indianerzelt, davor ein Lagerfeuer, am Horizont laufen Büffel, ab und an reiten 2 Cowboys vorbei, zwischendurch eine Kutsche – dann eine riesige Büffelherde, trampelt alles nieder, Staubwolke, Szene fängt wieder von vorne an“):
 - Unten im Kopf der Startseite die Prärie: links ein Tipi, davor knistert ein Lagerfeuer (Funken, leichter Rauch). Am Horizont ziehen kleine Büffel vor Tafelbergen und Kakteen.
