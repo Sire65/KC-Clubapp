@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.525.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.526.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5274,6 +5274,8 @@ const HILFE = [
   { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am grünen Kopf ist eine kleine Ecke umgeknickt. <b>Doppelt tippen</b> (oder nach links ziehen) – der Kopf dreht sich um wie ein Blatt Papier. Auf der Rückseite oben sieben Reiter: <b>🖼️ Diashow</b>, <b>🖍️ Tafel</b>, <b>📋 Flipchart</b>, <b>🕰️ Uhr</b>, <b>🎭 Bühne</b>, <b>🪞 Spiegel</b> und <b>🧩 Rätsel</b>. Damit man das Eselsohr nicht übersieht, blinkt es ab und zu kurz gelb-orange. Sie nutzt den ganzen Bildschirm bis zur Leiste unten. <b>Nochmal doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „📄 Eselsohr am Kopf“. Alles zum Ansehen: Erklär-Video <b>„📄 Die Rückseite: Eselsohr“</b>.", zeig: () => esOeffnen(null), seit: "2.292.0" },
   { id: "sardinendose", thema: "start", sym: "🥫", t: "Kopf aufrollen wie eine Sardinenbüchse", x: "<b>Lange aufs Eselsohr</b> unten rechts am Kopf drücken – dann rollt sich der Kopf wie der Deckel einer Sardinenbüchse von rechts unten nach links oben auf, und darunter liegt die <b>Rückseite</b> mit Bühne, Diashow, Tafel, Uhr … – genau wie nach dem Doppeltipp. Zurück: doppelt aufs Eselsohr hinten tippen – oder <b>lange festhalten</b>, dann rollt sich der Deckel wieder zu.", seit: "2.488.0" },
   // 2.300.0 KC-CLUB-RUECKSEITE-HILFE (Wunsch Hansi „Hilfetexte anpassen“): je ein Text für jeden Reiter der Rückseite
+  { id: "foto_diashow", thema: "start", sym: "▶️", t: "Diashow aus dem Fotoalbum", x: "Im 📷 Fotoalbum oben auf <b>▶️ Diashow</b> tippen: oben <b>🎵 Mit Musik</b> an- oder ausschalten, dann das Album antippen (oder „Alle Fotos“) – die Diashow läuft sofort mit dem Club-Song. Foto antippen blendet die Leiste aus.", seit: "2.526.0" },
+  { id: "erstattung_pdf", thema: "club", sym: "📄", t: "Erstattungsantrag als PDF", x: "Nach dem Einreichen fragt die App, ob du den Antrag auf dem <b>Club-Briefbogen</b> sehen möchtest – mit Kochmütze, allen Positionen, Summe und Feldern für deine Unterschrift, den Kassenwart und das Leitungsteam. In der Vorschau: <b>📄 PDF speichern / teilen</b> oder <b>🖨️ Drucken</b>. Kassenwart und Leitungsteam finden denselben Knopf im Eingang beim Antrag. Den PDF-Knopf gibt es jetzt in jeder Druckvorschau.", seit: "2.526.0" },
   { id: "es_dia", thema: "start", sym: "🖼️", t: "Rückseite: Diashow", x: "Die <b>🖼️ Diashow</b> zeigt die Fotos aus dem 📷 Fotoalbum, sanft überblendet. Unten: Album wählen, ◀ ▶ blättern, ⏸ anhalten, <b>🎵 Club-Song dazu</b> (🔇 = ohne Musik, wird gemerkt), ⛶ Vollbild. <b>Aufs Foto tippen</b> blendet Leiste und Text aus (nochmal tippen holt sie zurück). Querformat-Fotos stehen auf einem weichen Hintergrund statt schwarzer Balken.", zeig: () => esOeffnen("dia"), seit: "2.300.0" },
   { id: "es_tafel", thema: "start", sym: "🖍️", t: "Rückseite: Tafel & Flipchart", x: "Zum Skizzieren mit dem Finger. <b>🖍️ Tafel</b>: Kreide in sieben Farben, drei Dicken, 🧽 Schwamm, 🧹 alles abwischen, ↶ letzten Strich zurück. <b>📋 Flipchart</b>: Marker, Radierer, <b>„⤴ Umblättern“</b> klappt das volle Blatt nach hinten, ⤵ holt das vorige zurück, ✂️ reißt ein Blatt ab; ein Knopf schaltet das Papier <b>blanko → kariert → liniert</b>. Mit <b>„📤 Sichern“</b> kommt die Skizze ins 🗄️ Archiv oder als Nachricht zu jemandem.", zeig: () => esOeffnen("flip"), seit: "2.300.0" },
   { id: "es_uhr", thema: "start", sym: "🕰️", t: "Rückseite: große Uhr", x: "Die <b>🕰️ große Uhr</b> gibt es in vier Stilen: <b>🟩 Digital</b> (grün), <b>🔢 Fallblatt</b> mit Datum, <b>🚉 Bahnhofsuhr</b> und <b>🔠 Groß &amp; klar</b>. Den Stil unten antippen – die App merkt ihn sich.", zeig: () => esOeffnen("uhr"), seit: "2.300.0" },
@@ -12964,13 +12966,17 @@ async function erstattungSenden() {
   const summe = ERS.pos.filter(ersZaehlt).reduce((a, x) => a + x.betrag, 0);
   if (!(await frage(`Erstattung über ${eur(summe)} beantragen?\n\nDer Antrag geht per Mail an Kassenwart und Clubsprecher. Du bekommst eine Kopie.`))) return;
   try {
-    const kopie = { pos: ERS.pos.slice(), auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung").value.trim() };
+    const kopie = { pos: ERS.pos.slice(), auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung").value.trim(), vorschuss: zahlDe($("ersVorschuss")?.value) || 0 };
     const r = await api("erstattung_senden", { positionen: ERS.pos.map(({ belegNamen, belegDateien, satz, sonder_titel, ...x }) => x), auszahlung: ERS.auszahlung, bemerkung: kopie.bemerkung,
-      vorschuss: zahlDe($("ersVorschuss")?.value) || 0 });
+      vorschuss: kopie.vorschuss });
     ERS.pos = []; ERS.gewaehlt = false; Object.assign(ERS, { vorSonder: null, vorDatum: null, vorGrund: null, vorZiel: null }); $("ersBemerkung").value = ""; if ($("ersVorschuss")) $("ersVorschuss").value = ""; erstattungZeigen();
     melde(`📨 Antrag über ${eur(r.summe)} verschickt an ${[...r.an, ...r.cc].join(" und ")} – du bekommst eine Kopie per Mail.`);
     erstattungLaden();
-    erstattungAblageFragen(kopie, r); // KC-CLUB-ARCHIV-ABLAGE (1.18.0): erst nach erfolgreichem Versand
+    // 2.526.0 KC-CLUB-ERSTATTUNG-BRIEFBOGEN: Antrag auf dem Club-Briefbogen anbieten (PDF/Drucken), danach wie bisher die Ablage-Frage
+    const blatt = erstDaten({ positionen: kopie.pos, auszahlung: kopie.auszahlung, bemerkung: kopie.bemerkung, vorschuss: kopie.vorschuss, summe: r.summe, name: ICH?.name || "", zeit: new Date().toISOString(), status: "eingereicht" });
+    if (await frage("📄 Antrag auf dem Club-Briefbogen\nMöchtest du deinen Antrag als PDF speichern oder ausdrucken – z. B. zum Unterschreiben oder für den Kassenwart?", { ja: "📄 Ansehen", nein: "Nein, danke" }))
+      erstAnsehen(blatt, () => erstattungAblageFragen(kopie, r));
+    else erstattungAblageFragen(kopie, r); // KC-CLUB-ARCHIV-ABLAGE (1.18.0): erst nach erfolgreichem Versand
   } catch (e) { meldeFehler(e); }
 }
 
@@ -27040,10 +27046,12 @@ function ekErstInfo(id) {
     ${x.bemerkung ? `<p>💬 ${esc(x.bemerkung)}</p>` : ""}${x.kenntnis.length ? `<p class="hinweis">👁️ Gesehen: ${esc(x.kenntnis.join(", "))}</p>` : ""}
     <p class="hinweis">Belege und Aufstellung kamen zusätzlich per Mail.</p>
     <div style="display:grid;gap:8px">${x.kenntnisIch ? "" : `<button class="knopf" data-fn="ekKenntnis('erstattung','${x.id}')">👁️ Zur Kenntnis genommen</button>`}
+      <button class="knopf" data-fn="ekErstBlatt('${x.id}')">📄 Antrag als PDF / Drucken</button>
       <button class="knopf haupt" data-fn="ekErstattet('${x.id}')">✅ Erstattet</button><button class="knopf" data-fn="ekErstAblehnen('${x.id}')">✖ Ablehnen</button>
       <button class="knopf" data-fn="ekAblage('erstattung','${x.id}')">🗄️ Ablegen …</button><button class="knopf" data-fn="">Schließen</button></div>`);
   f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.fn) new Function(b.dataset.fn)(); }));
 }
+function ekErstBlatt(id) { const x = ekErst(id); if (x) erstAnsehen(erstDaten({ ...x, status: "eingereicht – in Bearbeitung" })); } // 2.526.0
 function ekErstattet(id) {
   const x = ekErst(id); if (!x) return;
   const bar = x.auszahlung === "bar", vor = esc(x.name.split(" ")[0]);
@@ -31019,6 +31027,7 @@ async function geteiltEmpfangen() {
   if (!dateien.length && !text && info.fehler) return melde(/Quota/i.test(info.fehler) ? "Die Datei ist zu groß für den Zwischenspeicher dieses Handys – bitte kleiner teilen (z. B. Video kürzen) oder in der Club-App über 📎 anhängen." : "Die Datei konnte beim Teilen nicht übernommen werden – bitte in der Club-App über 📎 anhängen. (Fehler ist für Hansi vermerkt.)", true); // 2.522.0 KC-CLUB-TEILEN-FEHLER
   const leer = Array.isArray(info.felder) && info.felder.some((x) => /:0$/.test(String(x))); // Datei mit 0 Byte: das Handy hat sie nicht hergegeben
   if (!dateien.length && !text && leer) return melde("Das Handy hat die Datei leer übergeben (kommt bei manchen Dateimanagern vor) – bitte aus der Galerie, Google Drive oder „Dateien“ teilen oder in der Club-App über 📎 anhängen.", true); // 2.522.0
+  if (!dateien.length && !text && Array.isArray(info.felder) && !info.felder.length) return melde("📭 Das Handy hat die Datei nicht mitgeschickt – die installierte Club-App kennt diesen Dateityp noch nicht (Fund 20.10.: PDF aus dem Dateimanager). Abhilfe: Club-App-Symbol lange drücken → deinstallieren (nicht „Daten löschen“), in Chrome neu „App installieren“. Bis dahin in der Club-App über 📎 anhängen.", true); // 2.526.0 KC-CLUB-TEILEN-LEER
   if (dateien.length && info.fehler) melde("⚠️ Nicht alle Dateien passten in den Zwischenspeicher – die übrigen kommen an.", true);
   if (!dateien.length && !text) return melde("Es ist nichts angekommen. Fotos, PDFs und Office-Dateien gehen sofort; andere Dateitypen nimmt die Club-App an, sobald das Handy sie aktualisiert hat (meist nach dem nächsten Start, spätestens nach einem Tag).", true); // 2.514.0
   if (await ablkAblegen(text, dateien, info.titel)) return; // 2.511.0 KC-CLUB-ABLAGEKORB: zuerst in den Korb
@@ -34554,6 +34563,23 @@ function faAlbenZeigen() {
     <div class="fa-alben"><button class="fa-album neu" onclick="faAlbumForm()"><div class="deckel">＋</div><b>Neues Album</b><small>Fotos auswählen</small></button>
     ${alben.map((x) => `<button class="fa-album" onclick="albumOeffnen('${x.id}')"><div class="deckel">${x.deckel ? `<img src="${esc(x.deckel)}" alt="" loading="lazy">` : "📸"}<span class="wer">${x.sichtbar === "alle" ? "👥" : "🔒"}</span></div><b>${esc(x.name)}</b><small>${x.jahr} · ${x.anzahl} Foto${x.anzahl === 1 ? "" : "s"}</small></button>`).join("")}</div>`;
 }
+// 2.526.0 KC-CLUB-FOTO-DIASHOW (Wunsch Hansi „in den grünen Kopf bei Fotos ansehen: Diashow mit Musik, vorher Album wählen“): ▶️ Diashow oben im
+// Fotoalbum – Album wählen (oder alle), 🎵 Club-Song an/aus, dann läuft die vorhandene Diashow der Kopf-Rückseite mit diesem Album (Foto antippen = Vollbild-Ansicht).
+function faDiashow() {
+  const alben = (FA?.alben || []).filter((x) => x.anzahl > 0), musik = esDiaMusikGewuenscht();
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">▶️ Diashow</h3>
+    <label class="schalter" style="margin:4px 0 8px"><span>🎵 Mit Musik (Club-Song)</span><input type="checkbox" id="faDiaMusik"${musik ? " checked" : ""}></label>
+    <p class="dlg-text">Welche Fotos sollen laufen? Antippen startet die Diashow.</p>
+    <div class="dlg-knoepfe" style="flex-direction:column;align-items:stretch;max-height:46vh;overflow-y:auto">
+      <button class="knopf" data-album="">📷 Alle Fotos</button>${alben.map((a) => `<button class="knopf" data-album="${esc(a.id)}">📸 ${esc(a.name)} <small class="hinweis">(${a.anzahl})</small></button>`).join("")}</div>
+    <div class="dlg-knoepfe"><button class="knopf" data-album="-">Abbrechen</button></div>`, () => f.remove());
+  f.querySelectorAll("[data-album]").forEach((b) => (b.onclick = () => {
+    const id = b.dataset.album, mitMusik = f.querySelector("#faDiaMusik").checked; f.remove(); if (id === "-") return;
+    esSchreib("album", id); esSchreib("diaMusik", mitMusik ? "1" : ""); ES.dia.fotos = null; ES.dia.i = 0; ES.dia.laeuft = true;
+    if (!esAn()) esSchreib("an", "1"); // Diashow wohnt auf der Kopf-Rückseite – das Eselsohr dafür einschalten
+    esOeffnen("dia");
+  }));
+}
 function faWaehlen(an, ziel = null) {
   FAW.an = !!an; FAW.ids.clear(); FAW.ziel = an ? ziel : null;
   document.body.classList.toggle("fa-waehlen", FAW.an);
@@ -35433,6 +35459,7 @@ const DRUCKARTEN = {
   feste: { bauen: () => druckFeste() }, // KC-CLUB-BUERO-FESTE (1.29.0)
   mitgliederliste: { bauen: () => druckMitgliederliste() }, // KC-CLUB-BUERO-MITGLIEDERLISTE (1.31.0) // KC-CLUB-BRIEFBOGEN (1.26.0): eigener Briefkopf, ohne App-Kopf/-Fuß
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
+  erstattungBlatt: { titel: "📄 Erstattungsantrag", bauen: (o, d) => ({ titel: `Erstattungsantrag ${d.name}`.trim(), ohneRahmen: true, html: erstBlatt(d) }) }, // 2.526.0
   anleitung: { bauen: () => druckAnleitung() },
   ueberblick: { bauen: () => druckUeberblick() },
   hilfe: { titel: "🖨️ Hilfe drucken / als PDF", optionen: () => hzDruckOptionen(), bauen: (o) => hzDruck(o) }, // KC-CLUB-HILFEZENTRUM (2.23.2)
@@ -35525,7 +35552,67 @@ async function druckVorschau() {
   const blattPx = (DRUCK.quer ? 297 : 210) * 3.78 + 20, zoom = Math.min(1, (rahmen.clientWidth || innerWidth) / blattPx);
   rahmen.srcdoc = druckHtml(true).replace("</style>", `html{zoom:${zoom.toFixed(3)}}</style>`);
 }
-function druckVorschauZu() { $("druckVorschau").classList.add("versteckt"); $("druckVorschauRahmen").srcdoc = ""; document.body.style.overflow = ""; }
+function druckVorschauZu() { $("druckVorschau").classList.add("versteckt"); $("druckVorschauRahmen").srcdoc = ""; document.body.style.overflow = "";
+  const danach = DRUCK?.danach; if (danach) { DRUCK.danach = null; setTimeout(danach, 250); } } // 2.526.0: z. B. Ablage-Frage nach dem Erstattungsantrag
+// ---------- 2.526.0 KC-CLUB-DRUCK-PDF: „📄 PDF“ in jeder Druckvorschau – echtes A4-PDF (mehrseitig) aus der Druckseite. html2canvas liegt in lib/,
+// das PDF baut die App selbst (wie bei den Schildern) – nichts geht an fremde Dienste. Teilen, wo das Handy es kann, sonst herunterladen.
+function pdfAusCanvas(c, quer) {
+  const pw = quer ? 841.89 : 595.28, ph = quer ? 595.28 : 841.89, seiteH = Math.round(c.width * ph / pw);
+  const n = Math.max(1, Math.ceil((c.height - seiteH * 0.03) / seiteH)), bilder = [];
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement("canvas"); s.width = c.width; s.height = seiteH; const g = s.getContext("2d");
+    g.fillStyle = "#fff"; g.fillRect(0, 0, s.width, s.height); g.drawImage(c, 0, -i * seiteH);
+    bilder.push(Uint8Array.from(atob(s.toDataURL("image/jpeg", 0.88).split(",")[1]), (z) => z.charCodeAt(0)));
+  }
+  const enc = new TextEncoder(), teile = [], off = []; let len = 0;
+  const add = (x) => { const b = typeof x === "string" ? enc.encode(x) : x; teile.push(b); len += b.length; };
+  const obj = (nr, kopf, strom) => { off[nr] = len; add(`${nr} 0 obj\n${kopf}\n`); if (strom) { add("stream\n"); add(strom); add("\nendstream\n"); } add("endobj\n"); };
+  const inhalt = enc.encode(`q ${pw} 0 0 ${ph} 0 0 cm /Im0 Do Q`);
+  add("%PDF-1.4\n");
+  obj(1, "<< /Type /Catalog /Pages 2 0 R >>");
+  obj(2, `<< /Type /Pages /Kids [${bilder.map((_, i) => `${3 + i * 3} 0 R`).join(" ")}] /Count ${n} >>`);
+  bilder.forEach((jpg, i) => { const p = 3 + i * 3;
+    obj(p, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 ${p + 2} 0 R >> >> /Contents ${p + 1} 0 R >>`);
+    obj(p + 1, `<< /Length ${inhalt.length} >>`, inhalt);
+    obj(p + 2, `<< /Type /XObject /Subtype /Image /Width ${c.width} /Height ${seiteH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>`, jpg); });
+  const anzahl = 3 + n * 3, xref = len;
+  add(`xref\n0 ${anzahl}\n0000000000 65535 f \n${Array.from({ length: anzahl - 1 }, (_, k) => String(off[k + 1]).padStart(10, "0") + " 00000 n \n").join("")}trailer\n<< /Size ${anzahl} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return new Blob(teile, { type: "application/pdf" });
+}
+async function druckPdfBlob() { // Druckseite im unsichtbaren A4-Blatt messen, dann als SVG-Bild (foreignObject) zeichnen – Logo als data:-Adresse, nichts Fremdes
+  const ifr = document.createElement("iframe"); ifr.setAttribute("aria-hidden", "true");
+  const breite = DRUCK.quer ? 1123 : 794;
+  ifr.style.cssText = `position:fixed;left:-12000px;top:0;width:${breite + 20}px;height:1200px;border:0;pointer-events:none`;
+  document.body.appendChild(ifr);
+  try {
+    const css = "html,body{background:#fff!important;padding:0!important;margin:0!important} #druck{box-shadow:none!important;margin:0!important}";
+    await new Promise((ok) => { ifr.onload = ok; ifr.srcdoc = druckHtml(true).replace("</style>", css + "</style>"); });
+    const doc = ifr.contentDocument, el = doc.getElementById("druck");
+    for (const i of [...el.querySelectorAll("img")]) { // Bilder einbetten (im SVG-Bild lädt der Browser nichts nach)
+      try { const b = await (await fetch(i.src, { signal: zeitSignal(15000) })).blob(); i.src = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(b); }); } catch { i.remove(); }
+    }
+    await Promise.all([...doc.images].map((i) => (i.complete ? 0 : new Promise((ok) => { i.onload = i.onerror = ok; }))));
+    const hoehe = Math.max(el.scrollHeight, Math.round(breite * (DRUCK.quer ? 210 / 297 : 297 / 210)));
+    const stil = [...doc.querySelectorAll("style")].map((x) => x.textContent).join("\n");
+    const xml = new XMLSerializer().serializeToString(el);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${breite}" height="${hoehe}"><foreignObject x="0" y="0" width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="width:${breite}px;background:#fff"><style>${stil.replace(/</g, "\\3c ")}</style>${xml}</div></foreignObject></svg>`;
+    const bild = await new Promise((ok, fehler) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => fehler(new Error("PDF konnte nicht gezeichnet werden.")); im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); });
+    const c = document.createElement("canvas"); c.width = breite * 2; c.height = hoehe * 2;
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.scale(2, 2); g.drawImage(bild, 0, 0);
+    return pdfAusCanvas(c, DRUCK.quer);
+  } finally { ifr.remove(); }
+}
+async function druckPdf() {
+  const k = $("druckVorschauPdf"); if (k) { k.disabled = true; k.textContent = "⏳ PDF wird erstellt …"; }
+  try {
+    const name = (DRUCK.titel || "Koecheclub").replace(/[^\wäöüÄÖÜß.-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60) + ".pdf";
+    const datei = new File([await druckPdfBlob()], name, { type: "application/pdf" });
+    try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+    const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000); melde("📄 PDF gespeichert (Downloads)");
+  } catch (e) { meldeFehler(e); }
+  finally { if (k) { k.disabled = false; k.textContent = "📄 PDF speichern / teilen"; } }
+}
 function druckVorschauAendern() { druckVorschauZu(); druckStarten(DRUCK.art, DRUCK.param); }
 // erst hier wird gedruckt – die Druckseite (#druck) ist schon gebaut und entspricht der Vorschau
 function druckJetzt() { setTimeout(() => window.print(), 60); }
@@ -35681,20 +35768,38 @@ function druckErstattung(o) {
   const a = o.antrag === "entwurf" ? { positionen: ERS.pos, auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung")?.value || "", zeit: null, status: "Entwurf – noch nicht gesendet" }
     : (ERS.antraege || []).find((x) => x.id === o.antrag);
   if (!a) throw new Error("Antrag nicht gefunden.");
-  const pos = a.positionen || [], summe = pos.reduce((s, x) => s + Number(x.betrag || 0), 0);
-  const art = (x) => (x.art === "fahrt" ? "🚗 Fahrtkosten" : x.art === "einkauf" ? "🛒 Einkauf vorgestreckt" : "📦 Sonstige Auslage");
-  const was = (x) => (x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km × ${eur(x.satz)} – ${x.grund || ""}${x.ziel ? " (" + x.ziel + ")" : ""}` : `${x.was || ""}${x.geschaeft ? " · " + x.geschaeft : ""}`);
-  const belege = pos.reduce((n, x) => n + ((x.belege || []).length), 0);
-  return { titel: "Antrag auf Erstattung", unter: `${ICH.name} · ${a.zeit ? "eingereicht " + wann(a.zeit) : "Entwurf"}`,
-    html: `<table class="dinfo"><tbody><tr><th style="width:40mm">Antragsteller</th><td>${esc(ICH.name)}</td></tr><tr><th>Datum</th><td>${esc(a.zeit ? fKurzJahr.format(new Date(a.zeit)) : fKurzJahr.format(new Date()))}</td></tr>
-        <tr><th>Status</th><td>${esc(a.status || "")}</td></tr><tr><th>Auszahlung</th><td>${a.auszahlung === "bar" ? "bar" : "per Überweisung"}</td></tr></tbody></table>
-      <h2>Positionen</h2><table><thead><tr><th style="width:8mm">#</th><th style="width:22mm">Datum</th><th style="width:38mm">Art</th><th>Beschreibung</th><th style="width:14mm">Beleg</th><th style="width:24mm;text-align:right">Betrag</th></tr></thead><tbody>
-      ${pos.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(dz(x.datum))}</td><td>${art(x)}</td><td>${esc(was(x))}</td><td>${(x.belege || []).length ? "ja (" + x.belege.length + ")" : "–"}</td><td style="text-align:right">${esc(eur(Number(x.betrag)))}</td></tr>`).join("")}
-      <tr><td colspan="5" style="text-align:right"><b>Summe</b></td><td style="text-align:right"><b>${esc(eur(summe))}</b></td></tr></tbody></table>
-      ${a.bemerkung ? `<p><b>Bemerkung:</b> ${esc(a.bemerkung)}</p>` : ""}
-      <p class="dklein">${belege ? `Belege: ${belege} (liegen der Antrags-Mail bei bzw. im Original beifügen).` : "Keine Belege angehängt."} Fahrtkosten mit dem km-Satz, der am Tag der Fahrt galt.</p>
-      <div class="unterschrift"><div>Datum, Unterschrift Antragsteller</div><div>Geprüft / ausgezahlt am – Kassenwart</div></div>` };
+  const d = erstDaten({ ...a, name: ICH?.name || "" });
+  return { titel: "Antrag auf Erstattung", ohneRahmen: true, html: erstBlatt(d) }; // 2.526.0: Club-Briefbogen
 }
+// ---------- 2.526.0 KC-CLUB-ERSTATTUNG-BRIEFBOGEN (Wunsch Hansi „km- oder sonstige Erstattung auf den Kopfbogen des Köcheclubs als PDF für einen
+// vernünftigen Ausdruck – und den Ausdruck an den Stellen anbieten, z. B. fürs Mitglied oder Leitungsteam“): ein Blatt im Briefbogen-Stil (Kochmütze,
+// „Köcheclub Werne“, Fußzeile mit Clubsprecher) mit Antragsteller, Positionen, Summe, Vorschuss/Kaution und drei Unterschriftsfeldern
+// (Antragsteller · Kassenwart · Leitungsteam). Angeboten nach dem Einreichen (Mitglied) und im Eingang beim Antrag (Kassenwart/Leitungsteam);
+// in der Vorschau „📄 PDF speichern / teilen“ (echtes A4-PDF, baut die App selbst) oder „🖨️ Drucken“.
+const ERST_ART = { fahrt: "🚗 Fahrtkosten", einkauf: "🛒 Einkauf vorgestreckt", kaution: "🔐 Kaution", parken: "🅿️ Parken", kraftstoff: "⛽ Kraftstoff" };
+function erstDaten(a) { // eigene Anträge (ERS) und Anträge aus dem Eingang auf eine Form bringen
+  const pos = (a.positionen || []).map((x) => ({ datum: x.datum, betrag: Number(x.betrag || 0), kaution: !!x.kaution || x.art === "kaution",
+    art: x.text ? "" : ERST_ART[x.art] || "📦 Sonstige Auslage", beleg: x.beleg || ((x.belege || []).length ? "anbei" : ""),
+    text: x.text || (x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km × ${eur(x.satz)} – ${x.grund || ""}${x.ziel ? " (" + x.ziel + ")" : ""}` : `${x.was || x.sonder_titel || ""}${x.geschaeft ? " · " + x.geschaeft : ""}`) }));
+  const summe = a.summe ?? pos.filter((x) => !x.kaution).reduce((s, x) => s + x.betrag, 0);
+  return { name: a.name || "", zeit: a.zeit || a.erstellt_am || null, status: a.status || "", auszahlung: a.auszahlung, bemerkung: a.bemerkung || "", vorschuss: Number(a.vorschuss || 0), positionen: pos, summe };
+}
+function erstBlatt(d) {
+  const datum = fKurzJahr.format(d.zeit ? new Date(d.zeit) : new Date()), kaution = d.positionen.some((x) => x.kaution);
+  const rest = d.summe - d.vorschuss;
+  return `<div class="cd-blatt cd-brief">${cdKopf("Antrag auf Erstattung", d.name, esc(datum))}
+    <table class="dinfo"><tbody><tr><th style="width:40mm">Antragsteller</th><td>${esc(d.name)}</td></tr><tr><th>Eingereicht am</th><td>${esc(d.zeit ? datum : "noch nicht eingereicht")}</td></tr>
+      <tr><th>Auszahlung</th><td>${d.auszahlung === "bar" ? "bar" : "per Überweisung"}</td></tr>${d.status ? `<tr><th>Stand</th><td>${esc(d.status)}</td></tr>` : ""}</tbody></table>
+    <h2>Positionen</h2><table><thead><tr><th style="width:8mm">#</th><th style="width:22mm">Datum</th><th>Beschreibung</th><th style="width:16mm">Beleg</th><th style="width:26mm;text-align:right">Betrag</th></tr></thead><tbody>
+    ${d.positionen.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(dz(x.datum))}</td><td>${x.art ? esc(x.art) + " – " : ""}${esc(x.text)}${x.kaution ? " <i>(Kaution – zählt nicht zur Summe)</i>" : ""}</td><td>${esc(x.beleg === "papier" ? "Papier" : x.beleg ? "ja" : "–")}</td><td style="text-align:right">${esc(eur(x.betrag))}</td></tr>`).join("")}
+    <tr><td colspan="4" style="text-align:right"><b>Summe</b></td><td style="text-align:right"><b>${esc(eur(d.summe))}</b></td></tr>
+    ${d.vorschuss ? `<tr><td colspan="4" style="text-align:right">abzüglich Vorschuss ${esc(eur(d.vorschuss))} → ${rest >= 0 ? "Auszahlung" : "Rückzahlung an den Club"}</td><td style="text-align:right"><b>${esc(eur(Math.abs(rest)))}</b></td></tr>` : ""}</tbody></table>
+    ${d.bemerkung ? `<p><b>Bemerkung:</b> ${esc(d.bemerkung)}</p>` : ""}
+    <p class="dklein">${kaution ? "Kautionen werden gesondert zurückgegeben. " : ""}Belege liegen der Antrags-Mail bei bzw. werden im Original abgegeben. Fahrtkosten mit dem km-Satz, der am Tag der Fahrt galt.</p>
+    <div class="unterschrift"><div>Datum, Unterschrift Antragsteller</div><div>Sachlich geprüft / ausgezahlt am – Kassenwart</div><div>Freigabe – Leitungsteam</div></div>
+    <div style="flex:1"></div>${cdFuss(`Erstellt mit der Köcheclub-App am ${esc(fKurzJahr.format(new Date()))}`, true)}</div>`;
+}
+function erstAnsehen(d, danach) { druckStarten("erstattungBlatt", d); if (danach) DRUCK.danach = danach; }
 
 // ---------- KC-CLUB-KM-ABRECHNUNG (2.25.3, Wunsch Hansi): Fahrten-/km-Abrechnung der Besuche zum Ausdrucken ----------
 // Kopf (Kochmütze + Köcheclub Werne) kommt aus dem Druck-Kern. Je Einsatz: Nr., ID, Datum, Zeit von–bis, besuchte Personen (Anzahl), Grund, km

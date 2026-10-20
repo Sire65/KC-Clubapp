@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.526.0 – 2026-10-20 – 📄 Erstattungsantrag auf dem Club-Briefbogen als PDF · ▶️ Diashow im Fotoalbum · Teilen: klare Abhilfe (KC-CLUB-ERSTATTUNG-BRIEFBOGEN, KC-CLUB-DRUCK-PDF, KC-CLUB-FOTO-DIASHOW, KC-CLUB-TEILEN-LEER)
+Drei Wünsche/Funde von Hansi, eine Version:
+- **Erstattung auf dem Kopfbogen** („wenn ein Mitglied eine km- oder sonstige Erstattung einreicht, auf den Kopfbogen des Köcheclubs als PDF für einen vernünftigen Ausdruck – und den Ausdruck an den Stellen anbieten, z. B. fürs Mitglied oder Leitungsteam“): Blatt im Briefbogen-Stil (Kochmütze, „Köcheclub Werne“, Fußzeile mit Clubsprecher) mit Antragsteller, Positionen, Summe, Vorschuss/Kaution, Bemerkung und drei Unterschriftsfeldern (Antragsteller · Kassenwart · Leitungsteam). Angeboten **nach dem Einreichen** (danach wie bisher die Ablage-Frage) und im **Eingang beim Antrag** („📄 Antrag als PDF / Drucken“ für Kassenwart/Leitungsteam); auch der bisherige Druck „Erstattungsantrag“ nutzt das Blatt.
+- **📄 PDF in jeder Druckvorschau**: echtes A4-PDF (mehrseitig), das die App selbst baut (Druckseite als Bild, Logo eingebettet) – teilen (z. B. WhatsApp/Mail) oder speichern; nichts geht an fremde Dienste.
+- **▶️ Diashow im Fotoalbum** („in den grünen Kopf bei Fotos ansehen: Diashow mit Musik und vorher Album wählen“): Knopf oben im Fotoalbum → 🎵 Musik an/aus, Album (oder alle) antippen → die Diashow läuft sofort mit Club-Song.
+- **Teilen**: kommt das Paket leer an (Fund 20.10.: PDF aus dem Dateimanager, die installierte App kannte den Dateityp noch nicht), sagt die App jetzt, was hilft (App neu installieren, bis dahin 📎).
+- Hilfe-Einträge „Erstattungsantrag als PDF“ und „Diashow aus dem Fotoalbum“. Nur App.
+- Tests: Vertragstests grün; Browserprobe (Antrag-Vorschau, PDF 1 Seite A4 mit Kopf/Positionen/Unterschriften geprüft, Diashow aus dem Fotoalbum mit Album + Musik), keine Fehler.
+
 ## 2.525.0 – 2026-10-20 – Teilen-Diagnose genauer (KC-CLUB-TEILEN-DIAGNOSE-2)
 Nachtrag zu 2.522.0: Hansis neuer Versuch (10:44 Uhr, v2.524.0) kam wieder mit „Es ist nichts angekommen“ an – die Diagnose konnte aber nicht unterscheiden, ob im Zwischenspeicher gar nichts stand (Teilen hat den Hintergrund-Dienst nicht erreicht oder der Speicher ist voll) oder ob das Handy ein leeres Paket geschickt hat (Dateityp für die installierte App noch nicht freigeschaltet). Jetzt meldet die Diagnose zusätzlich, welche Angaben im Zwischenspeicher standen, wie viele Felder das Handy schickte und welche Version des Hintergrund-Dienstes das Teilen angenommen hat. Nur App, keine Inhalte.
 
