@@ -10303,7 +10303,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // 2.351.0 KC-CLUB-VIDEOS-NEU + KC-CLUB-VIDEO-STIMMEN (+ -DOWNLOAD)
 {
   for (const id of ["push", "privat", "probleme", "chatprofi", "gruppen", "terminfinden", "todo", "einfach", "raetsel", "buehne", "buero"]) {
-    assert.ok(new RegExp(`\\{ id: "${id}", stand: "1"[^\\n]*st: \\(\\) => RG_${id.toUpperCase()}`).test(html) && html.includes(`const RG_${id.toUpperCase()} = [`), "Video " + id);
+    assert.ok(new RegExp(`\\{ id: "${id}", stand: "\\d+"[^\\n]*st: \\(\\) => RG_${id.toUpperCase()}`).test(html) && html.includes(`const RG_${id.toUpperCase()} = [`), "Video " + id);
     assert.ok(new RegExp(`videos: \\[[^\\]]*"${id}"`).test(html), "Video " + id + " in den Themen");
   }
   assert.ok(/rgMitErg\(RG_DIENST, RG_DIENST_ERG,/.test(html) && /rgMitErg\(RG_MITGLIEDER, RG_MITGLIEDER_ERG,/.test(html), "Dienst/Mitglieder ergänzt");
@@ -11586,4 +11586,25 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/c\.fillText\("PENG!"/.test(d) && /jzbWwWagenMalen\(c, wx/.test(d) && /verband: true/.test(d), "PENG, Wagen, Verwundeter mit Kopfverband");
   assert.ok(/haube: true/.test(programm) && /jzbWwKaktusMalen\(c, J\.w - JZB_RAND - 12 \* k, O\.boden, 46, k, false\)/.test(programm) && /W\.ballen\.push\(/.test(programm), "Häuptling, große Kakteen, Steppenläufer");
   assert.ok(/const flucht = t > JZB_WW_HERDE - 3 \?/.test(programm), "Indianer laufen vor der Herde davon");
+}
+// 2.533.0 KC-CLUB-HILFE-NACHTRAG-4 + KC-CLUB-VIDEO-GEHEIM (Wunsch Hansi „Prüfe alles und baue die Hilfen neu auf wie Twinkey, Lupe, Suchfunktion,
+// Sprachsuche, Video auch mit Verschlüsselung“)
+{
+  for (const id of ["schluesselbund", "versand_leiste", "schreibt_hinweis", "druck_pdf", "meldung_oben"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "[a-z]+", sym:`).test(html), "Hilfe-Eintrag " + id);
+  const vn = html.slice(html.indexOf('{ id: "verschluesselt", thema'), html.indexOf('{ id: "verschluesselt", thema') + 2200);
+  assert.ok(/✉️ Normal senden/.test(vn) && /Geheimagent/.test(vn) && /zeig: \(\) => rgListeAbspielen\(\["geheim"\]\)/.test(vn), "Hilfe „verschlüsselt senden“: Rückfrage, Geheimagent, Video");
+  assert.ok(/zwei graue Haken<\/b> heißen auf dem Handy angekommen/.test(html) && /Es landet im <b>📥 Ablagekorb<\/b>/.test(html), "Haken und Teilen auf dem neuen Stand");
+  for (const id of ["verschluesseln", "schluessel-frage", "schluessel-oeffnen", "schluesselbund", "geheimagent", "versand-leiste", "teilen-ablagekorb", "schreibt-dir", "tippton-aus", "graue-haken", "erstattung-pdf", "vorschlag-sitzung-offen", "wildwest"])
+    assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+[?!]", x: `).test(html), "Twinkey-Frage " + id);
+  assert.ok(/"f:verschluesseln": \["geheim"\]/.test(html) && /"f:verschluesseln": "h:verschluesselt"/.test(html) && /"t:ruhe": \["push"\]/.test(html), "Twinkey bietet Video und Hilfetext an (Tipp „ruhe“ mit t:)");
+  assert.ok(/\["verschluesseln", "verschluesselt", "verschluesselung", "geheim", "schluessel", "schloss"/.test(html), "Twinkey kennt andere Wörter fürs Verschlüsseln");
+  const su = html.slice(html.indexOf("function suAppListe"), html.indexOf("function suAppListe") + 30000);
+  assert.ok(/\["🔒", "Nachricht verschlüsselt senden/.test(su) && /\["🔑", "Schlüsselbund/.test(su) && /\["📥", "Teilen → Köcheclub \(Ablagekorb\)"/.test(su) && /\["📝", "Normal, Wichtig, Express/.test(su), "Lupe findet die Neuheiten");
+  assert.ok(/\[\/verschlüssel\|geheime\? nachricht\|geheim schreiben\/, "verschlüsselt"\]/.test(html) && html.indexOf("[/verschlüssel|") < html.indexOf("let q; if ((q = t.match(/^(?:such"), "Sprachsuche: Verschlüsseln & Co. → Lupe");
+  assert.ok(/\{ id: "geheim", stand: "\d+", sym: "🕵️"[^\n]*st: \(\) => RG_GEHEIM \}/.test(html) && /videos: \[[^\]]*"chatprofi", "geheim"/.test(html), "Video „Geheim schreiben“ registriert und im Thema");
+  const g = html.slice(html.indexOf("// ---------- 2.533.0 KC-CLUB-VIDEO-GEHEIM"), html.indexOf("const RG_GR_ID"));
+  assert.ok(g.length > 3000 && !/vnVer\(|vnUmschalten\(|vbMenue\(|localStorage\.setItem|senden\(/.test(g), "Video verschlüsselt, speichert und sendet nichts");
+  assert.ok(/RG\.zurueck\.push\(\(\) => \{\s*RG\.ghAn = false; api = alt\.api;/.test(g) && /VN\.klar\.delete\(rgGeheimAuf2\(\)\)/.test(g), "am Ende alles zurück");
+  assert.ok(/function rgHilfeLupe\(\)/.test(html) && /SU\.offen = true; sucheAuf\(""\); SU\.q = \$\("suEingabe"\)\.value = "verschlüsselt"; SU\.ergebnis = \[\]; suZeigen\(\);/.test(html), "Hilfe-Video: Lupe nur mit App-Treffern, ohne Server und ohne Verlaufseintrag");
+  assert.ok(/\{ id: "hilfe", stand: "2"/.test(html) && /\{ id: "chatprofi", stand: "2"/.test(html) && /t: "✍️ Anne schreibt dir gerade"/.test(html), "Fassung 2 für Hilfe und Chat-Profi");
 }
