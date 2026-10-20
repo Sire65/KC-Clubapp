@@ -7104,9 +7104,9 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const fn = (n) => { const i = js.indexOf(`function ${n}(`); assert.ok(i >= 0, n); let t = 0, k = js.indexOf("{", i); for (let j = k; j < js.length; j++) { if (js[j] === "{") t++; else if (js[j] === "}" && !--t) return js.slice(i, j + 1); } };
   const el = () => ({ classList: { s: new Set(), toggle(c, an) { an ?? !this.s.has(c) ? this.s.add(c) : this.s.delete(c); }, contains(c) { return this.s.has(c); } }, attr: {}, setAttribute(k, v) { this.attr[k] = v; }, dataset: {}, value: "", placeholder: "" });
   const dom = { versandLeiste: el(), text: el(), normalKnopf: el(), wichtigKnopf: el(), expressKnopf: el() };
-  const ctx = { $: (id) => dom[id], melde: () => {}, anlagen: [], ICH: { admin: false }, localStorage: { getItem: () => null }, EXS: { stand: null }, expressStandHolen: () => {} };
+  const ctx = { $: (id) => dom[id], melde: () => {}, anlagen: [], ICH: { admin: true }, /* 2.528.0: auch der Admin standardmäßig erst beim Schreiben */ localStorage: { getItem: () => null }, EXS: { stand: null }, expressStandHolen: () => {} };
   vm.createContext(ctx);
-  vm.runInContext(`var WICHTIG = false, EXPRESS = false; const WF_KEY = "kc_wichtig_frage";\n${["versandImmerAn", "versandZeigen", "versandNormal", "versandZurueck", "wichtigUmschalten", "expressUmschalten", "expressZahlZeigen"].map(fn).join("\n")}`, ctx);
+  vm.runInContext(`var WICHTIG = false, EXPRESS = false; const WF_KEY = "kc_versand_immer";\n${["versandImmerAn", "versandZeigen", "versandNormal", "versandZurueck", "wichtigUmschalten", "expressUmschalten", "expressZahlZeigen"].map(fn).join("\n")}`, ctx);
   const stand = () => ({ n: dom.normalKnopf.classList.contains("an"), w: !!ctx.WICHTIG, x: !!ctx.EXPRESS });
   const tippe = (f) => vm.runInContext(f, ctx);
   tippe("versandZeigen()"); assert.deepEqual(stand(), { n: true, w: false, x: false }, "Start: Normal");

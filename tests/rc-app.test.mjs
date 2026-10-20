@@ -48,7 +48,7 @@ for (const id of ["pwListe", "mfListe", "psListe", "empfListe", "taListe"]) {
 }
 { const i = app.indexOf('$("grListe").innerHTML = MITGLIEDER.filter'); assert.ok(i > 0 && app.slice(i, app.indexOf("\n", app.indexOf('.join("")', i))).includes("Niemand gefunden."), "grListe: „Niemand gefunden.“"); }
 // 11. Abmelden räumt auch „Wichtig“-Frage und Einweisung-zu weg
-assert.ok(/\/\^\(kc_wichtig_frage\|kc-einw-zu\)\/\.test\(k\)/.test(app) && /const WF_KEY = "kc_wichtig_frage"/.test(app) && /const EINW_ZU_KEY = "kc-einw-zu"/.test(app), "geraetAbmelden löscht kc_wichtig_frage und kc-einw-zu");
+assert.ok(/\/\^\(kc_wichtig_frage\|kc_versand_immer\|kc-einw-zu\)\/\.test\(k\)/.test(app) && /const WF_KEY = "kc_versand_immer"/.test(app) && /const EINW_ZU_KEY = "kc-einw-zu"/.test(app), "geraetAbmelden löscht kc_wichtig_frage und kc-einw-zu");
 // 12. Toter Code entfernt
 for (const n of ["kachelKlein", "rgRegName", "esTafelFarbe", "esTafelDicke", "esTafelWerkzeug", "esTafelZurueck", "esTafelTeilen", "JZB_EXTRAS", "dvLeitung", "DOPPELTIPP_MS"])
   assert.ok(!new RegExp(`(?:const|function) ${n}\\b`).test(app), n + " entfernt");
