@@ -5191,7 +5191,7 @@ const HILFE = [
   { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Kein Umweg über das Fotoalbum nötig.", seit: "2.23.1" },
-  { id: "verschluesselt", thema: "nachrichten", sym: "🔒", t: "Nachricht verschlüsselt senden", x: "Für Geheimes: im Chat oben am Schreibfeld in der kleinen Zeile (neben ▾, ⌨️ und 🔊) auf das Schloss <b>🔒</b> tippen, Nachricht schreiben, senden – dann legst du einen <b>Schlüssel</b> fest (mindestens 6 Zeichen, z. B. „Kochmütze7“). Die Nachricht wird auf deinem Handy verschlüsselt; niemand sonst kann sie lesen – auch nicht der Server oder der Admin. Den Schlüssel sagst du dem Empfänger <b>auf einem anderen Weg</b>: persönlich, am Telefon oder per SMS. Er tippt auf „🔒 Verschlüsselte Nachricht“ und gibt ihn ein. Das Handy merkt sich den Schlüssel je Unterhaltung. Achtung: Schlüssel vergessen = Nachricht nicht mehr lesbar; Fotos und Dateien werden nicht verschlüsselt.", seit: "2.517.0" },
+  { id: "verschluesselt", thema: "nachrichten", sym: "🔒", t: "Nachricht verschlüsselt senden", x: "Für Geheimes: im Chat oben am Schreibfeld in der kleinen Zeile (neben ▾, ⌨️ und 🔊) auf das Schloss <b>🔒</b> tippen, Nachricht schreiben, senden – dann legst du einen <b>Schlüssel</b> fest (mindestens 6 Zeichen, z. B. „Kochmütze7“). Die Nachricht wird auf deinem Handy verschlüsselt; niemand sonst kann sie lesen – auch nicht der Server oder der Admin. Den Schlüssel sagst du dem Empfänger <b>auf einem anderen Weg</b>: persönlich, am Telefon oder per SMS. Er tippt auf „🔒 Verschlüsselte Nachricht“ und gibt ihn ein. Das Handy merkt sich den Schlüssel je Unterhaltung. Bequemer im Zweier-Chat: oben ⋮ → <b>🔑 Schlüsselbund</b> – die App legt 5 zufällige Schlüssel an, die du per WhatsApp oder Signal als Datei schickst; der Partner liest sie ein (Teilen → Club-App). Danach geht alles ohne Eintippen, passt kein Schlüssel, kommt eine Fehlermeldung. Achtung: Schlüssel vergessen = Nachricht nicht mehr lesbar; Fotos und Dateien werden nicht verschlüsselt.", seit: "2.517.0" },
   { id: "ablagekorb", thema: "club", sym: "📥", t: "Teilen → Köcheclub: alles landet im Ablagekorb", x: "Fotos, Dokumente oder Texte aus anderen Programmen (Galerie, WhatsApp, Mail, Dateien) schickst du mit <b>Teilen → Köcheclub</b>. Alles kommt zuerst in den <b>📥 Ablagekorb</b>; der Admin bekommt Bescheid und entscheidet, wohin damit – Fotoalbum, Ordner, Chat, Aufgabe, Thema für die Sitzung oder weiter an Clubsprecher bzw. Kassenwart.", seit: "2.511.0" },
   { id: "ablagekorb_admin", thema: "club", sym: "📥", t: "Ablagekorb bearbeiten (Admin)", x: "Was Mitglieder geteilt haben, liegt im <b>📥 Ablagekorb</b> (Admin-Kachel, Hinweis im Info-Feld, Push). Je Eintrag: <b>📷 Fotoalbum</b>, <b>🗄️ In Ordner</b>, <b>💬 In Chat</b>, <b>👤 Weitergeben</b> (Clubsprecher und Kassenwart stehen oben), <b>✅ Als Aufgabe</b> (To-do + Unterlagen per Nachricht), <b>🗳️ Vorschlag Sitzung</b>, <b>✔ Erledigt</b> oder <b>🗑️ Löschen</b>. Erledigtes wird nach 14 Tagen weggeräumt. Seit 2.512.0: bei mehreren Dateien je Datei ein <b>Häkchen</b> – nur die ausgewählten <b>ins Fotoalbum</b> oder <b>löschen</b>; <b>⚠️ gibt es schon</b> zeigt Dubletten (gleiche Datei in Fotoalbum, Archiv, Chat oder Ablagekorb, im Album auch gleiche Aufnahme), „⚠️ Dubletten“ wählt sie mit einem Tipp aus.", nur: () => !!ICH?.admin, seit: "2.511.0" },
   { id: "hilfe_anbieten", thema: "club", sym: "🤲", t: "Du kannst etwas besonders gut?", x: "Unter 🤝 Helfen &amp; Leihen → <b>„＋ Neu“</b> → <b>„🤲 Ich biete Hilfe an“</b> machst du ein Angebot, zum Beispiel beim Einrichten der App. Es erscheint als Kachel für alle.", zeig: () => hlStart(), seit: "2.23.1" },
@@ -28803,26 +28803,32 @@ async function vnAbleiten(pw, salz) {
 }
 const vnB64 = (u) => { let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000)); return btoa(s); };
 const vnUnB64 = (t) => Uint8Array.from(atob(t), (c) => c.charCodeAt(0));
-async function vnVer(text, pw) {
+async function vnVer(text, pw, bund) { // bund: Schlüssel aus dem Schlüsselbund (2.518.0) statt eingetipptem Schlüssel
   const salz = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await vnAbleiten(pw, salz), new TextEncoder().encode(text)));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await (bund ? vbAbleiten(bund, salz) : vnAbleiten(pw, salz)), new TextEncoder().encode(text)));
   const alles = new Uint8Array(28 + ct.length); alles.set(salz, 0); alles.set(iv, 16); alles.set(ct, 28);
   return VN_PRE + vnB64(alles);
 }
-async function vnEnt(t, pw) {
+async function vnEnt(t, pw, bund) {
   try { const b = vnUnB64(t.slice(VN_PRE.length)); if (b.length < 29) return null;
-    const klar = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b.slice(16, 28) }, await vnAbleiten(pw, b.slice(0, 16)), b.slice(28));
+    const klar = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b.slice(16, 28) }, await (bund ? vbAbleiten(bund, b.slice(0, 16)) : vnAbleiten(pw, b.slice(0, 16))), b.slice(28));
     return new TextDecoder().decode(klar);
   } catch { return null; }
 }
 function vnUmschalten(an) {
   VN.an = an ?? !VN.an; const k = $("vnKnopf"); k?.classList.toggle("an", VN.an); k?.setAttribute("aria-pressed", String(VN.an));
   const t = $("text"); if (t) t.placeholder = VN.an ? "🔒 Verschlüsselte Nachricht schreiben …" : "Nachricht schreiben …";
-  if (VN.an) melde("🔒 Verschlüsselt senden ist an – beim Senden legst du den Schlüssel fest.");
+  if (!VN.an) return;
+  const p = vbPartner();
+  if (p && vbHolen(p.person_id)) melde(`🔒 Verschlüsselt senden ist an – mit eurem Schlüsselbund, kein Eintippen nötig.`);
+  else if (p) vbMenue(true); // 2.518.0: Zweier-Chat ohne Schlüsselbund → anbieten (oder diesmal eintippen)
+  else melde("🔒 Verschlüsselt senden ist an – beim Senden legst du den Schlüssel fest.");
 }
 async function vnVerschluesseln(text) { // fragt den Schlüssel, gibt den verschlüsselten Text zurück (oder null = abbrechen)
   if (new TextEncoder().encode(text).length > VN_MAX_TEXT) { melde("🔒 Für eine verschlüsselte Nachricht ist der Text zu lang (etwa 2.800 Zeichen, Emojis zählen mehr) – bitte kürzen.", true); return null; } // Geheimtext muss unter die 4.000-Zeichen-Grenze passen
   if (anlagen.length) melde("🔒 Hinweis: Nur der Text wird verschlüsselt – Fotos und Dateien nicht.");
+  const vp = vbPartner(), bund = vp && vbHolen(vp.person_id);
+  if (bund) { const v = await vnVer(text, "", bund.schluessel[crypto.getRandomValues(new Uint32Array(1))[0] % bund.schluessel.length]); VN.klar.set(v, text); return v; } // 2.518.0: einer der 5 Schlüssel, zufällig
   let pw = vnGemerkt(chatId);
   for (;;) {
     pw = await eingabe(`🔒 Schlüssel für diese Nachricht\nMindestens ${VN_MIN} Zeichen, z. B. „Kochmütze7“. Der Empfänger braucht denselben Schlüssel – sag ihn ihm persönlich, am Telefon oder per SMS, nicht über die Club-App.${vnGemerkt(chatId) ? "\nVorgeschlagen ist der für diese Unterhaltung gemerkte Schlüssel." : ""}`, pw || "");
@@ -28837,14 +28843,16 @@ async function vnVerschluesseln(text) { // fragt den Schlüssel, gibt den versch
 }
 function vnHtml(t) {
   if (VN.klar.has(t)) return `<span class="vn-auf" title="Verschlüsselte Nachricht – auf diesem Handy geöffnet">🔓</span> ${naText(VN.klar.get(t))}`;
-  return `<button type="button" class="vn-zu" data-vn="${esc(t)}" onclick="event.stopPropagation();vnOeffnen(this)">🔒 Verschlüsselte Nachricht<small>Antippen und Schlüssel eingeben</small></button>`;
+  return `<button type="button" class="vn-zu" data-vn="${esc(t)}" onclick="event.stopPropagation();vnOeffnen(this)">🔒 Verschlüsselte Nachricht<small>Antippen und Schlüssel eingeben</small></button>${vbVormerken(t)}`;
 }
 async function vnOeffnen(knopf) {
   const t = knopf?.dataset.vn; if (!t) return;
-  let klar = null, pw = vnGemerkt(chatId);
-  if (pw) klar = await vnEnt(t, pw);
+  let klar = await vbEntRing(t), pw = vnGemerkt(chatId);
+  const vp = vbPartner();
+  if (klar === null && vp && vbHolen(vp.person_id)) melde(`❌ Kein passender Schlüssel im Schlüsselbund mit ${vbVorname(vp)} – sie wurde wohl mit einem eingetippten Schlüssel oder einem älteren Schlüsselbund verschlüsselt.`, true); // 2.518.0
+  if (klar === null && pw) klar = await vnEnt(t, pw);
   while (klar === null) {
-    pw = await eingabe("🔒 Schlüssel eingeben\nDen Schlüssel hat dir der Absender persönlich, am Telefon oder per SMS gesagt.", "");
+    pw = await eingabe("🔒 Schlüssel eingeben\nDen Schlüssel hat dir der Absender persönlich, am Telefon oder per SMS gesagt. Nutzt ihr einen Schlüsselbund, fehlt er auf diesem Handy: oben ⋮ → „🔑 Schlüsselbund“ → „Datei einlesen“.", "");
     if (!pw) return;
     klar = await vnEnt(t, String(pw));
     if (klar === null) melde("❌ Falscher Schlüssel – bitte nochmal versuchen.", true);
@@ -28852,7 +28860,102 @@ async function vnOeffnen(knopf) {
   VN.klar.set(t, klar); if (chatId && pw) vnMerken(chatId, String(pw));
   document.querySelectorAll(".vn-zu").forEach((b) => { if (b.dataset.vn === t) b.outerHTML = vnHtml(t); });
   // weitere Nachrichten dieser Unterhaltung mit demselben Schlüssel gleich mit öffnen
-  for (const b of [...document.querySelectorAll(".vn-zu")]) { const k = await vnEnt(b.dataset.vn, String(pw)); if (k !== null) { VN.klar.set(b.dataset.vn, k); b.outerHTML = vnHtml(b.dataset.vn); } }
+  if (pw) for (const b of [...document.querySelectorAll(".vn-zu")]) { const k = await vnEnt(b.dataset.vn, String(pw)); if (k !== null) { VN.klar.set(b.dataset.vn, k); b.outerHTML = vnHtml(b.dataset.vn); } }
+}
+// ---------- 2.518.0 KC-CLUB-SCHLUESSELBUND (Wunsch Hansi „mit einem Partner 5 verschiedene Schlüssel festlegen, die hat man auf dem Handy in einer
+// Datei; kommt die Nachricht an, guckt das Handy, ob ein Schlüssel passt – wenn ja anzeigen, sonst Fehlermeldung“; Wahl Hansi: Übergabe per Datei).
+// Je Zweier-Chat 5 zufällige 256-Bit-Schlüssel, nur auf den beiden Handys (localStorage „kc_club_vbund:<Partner>“). Senden nimmt einen davon
+// (HKDF-SHA-256 mit dem Salz der Nachricht → AES-GCM 256, gleiches „🔒KCV1:“-Format), Empfang probiert alle durch. Die Datei geht über
+// WhatsApp/Signal o. Ä. direkt von Handy zu Handy – nie über den Club-Server; „Teilen → Club-App“ liest sie ein statt sie in den Ablagekorb zu legen.
+const VB_TYP = "KC-SCHLUESSELBUND-1", VB_ANZAHL = 5, VBR = { warte: new Set(), fehl: new Set(), timer: 0 };
+const vbName = (pid) => "kc_club_vbund:" + pid;
+const vbVorname = (p) => (p.person_id === ICH?.person_id ? "dir selbst" : String(p.name || "Partner").split(" ")[0]);
+function vbHolen(pid) { try { const b = JSON.parse(localStorage.getItem(vbName(pid)) || "null"); return Array.isArray(b?.schluessel) && b.schluessel.length ? b : null; } catch { return null; } }
+function vbAlle() { const r = []; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i) || ""; if (k.startsWith("kc_club_vbund:")) { const b = vbHolen(k.slice(14)); if (b) r.push(b); } } } catch {} return r; }
+function vbPartner() { // nur Zweier-Chats (und die Test-Unterhaltung mit sich selbst)
+  if (!chatId || CHAT?.id !== chatId || CHAT.gruppe) return null;
+  const a = (CHAT.teilnehmer || []).filter((x) => x.person_id !== ICH?.person_id);
+  return a.length > 1 ? null : a[0] || (ICH ? { person_id: ICH.person_id, name: ICH.name } : null);
+}
+async function vbAbleiten(k64, salz) {
+  const roh = await crypto.subtle.importKey("raw", vnUnB64(k64), "HKDF", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "HKDF", hash: "SHA-256", salt: salz, info: new TextEncoder().encode(VB_TYP) }, roh, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+async function vbEntRing(t) { // alle Schlüsselbünde durchprobieren, den des Chat-Partners zuerst
+  const p = vbPartner()?.person_id, ringe = vbAlle().sort((a, b) => (b.partner === p) - (a.partner === p));
+  for (const r of ringe) for (const k of r.schluessel) { const klar = await vnEnt(t, "", k); if (klar !== null) return klar; }
+  return null;
+}
+function vbVormerken(t) { // aus vnHtml: nach dem Zeichnen still mit dem Schlüsselbund öffnen
+  if (!VBR.fehl.has(t)) { VBR.warte.add(t); if (!VBR.timer) VBR.timer = setTimeout(vbProbieren, 0); }
+  return "";
+}
+async function vbProbieren() {
+  VBR.timer = 0; const liste = [...VBR.warte]; VBR.warte.clear();
+  if (!vbAlle().length) return;
+  for (const t of liste) {
+    if (VN.klar.has(t) || VBR.fehl.has(t)) continue;
+    const klar = await vbEntRing(t);
+    if (klar === null) { VBR.fehl.add(t); continue; }
+    VN.klar.set(t, klar); document.querySelectorAll(".vn-zu").forEach((b) => { if (b.dataset.vn === t) b.outerHTML = vnHtml(t); });
+  }
+}
+function vbNeuProbieren() { VBR.fehl.clear(); document.querySelectorAll(".vn-zu").forEach((b) => VBR.warte.add(b.dataset.vn)); vbProbieren(); }
+function vbMenue(beimEinschalten) {
+  const p = vbPartner(); if (!p) return melde("🔑 Einen Schlüsselbund gibt es nur für Zweier-Chats.", true);
+  const vn = esc(vbVorname(p)), b = vbHolen(p.person_id);
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">🔑 Schlüsselbund mit ${vn}</h3>
+    <p class="dlg-text">${b ? `Vorhanden seit ${esc(new Date(b.erstellt || Date.now()).toLocaleDateString("de-DE"))}: ${b.schluessel.length} Schlüssel auf diesem Handy. Verschlüsselte Nachrichten (🔒) gehen damit ohne Eintippen und öffnen sich von selbst.`
+      : `Mit einem Schlüsselbund müsst ihr keinen Schlüssel mehr eintippen: ${VB_ANZAHL} zufällige Schlüssel liegen auf beiden Handys. Beim Senden nimmt die App einen davon, beim Empfang probiert sie alle durch – passt keiner, kommt eine Fehlermeldung. Die Schlüssel gehen per Datei direkt an ${vn}, nie über den Club-Server.`}</p>
+    <div class="dlg-knoepfe" style="flex-direction:column;align-items:stretch">
+      ${b ? `<button class="knopf" data-a="senden">📤 Datei nochmal an ${vn} schicken</button><button class="knopf" data-a="sichern">💾 Sicherung speichern (für ein neues Handy)</button>`
+        : `<button class="knopf haupt" data-a="neu">🔑 Anlegen und ${vn} schicken</button>`}
+      <button class="knopf" data-a="einlesen">📥 Datei von ${vn} einlesen</button>
+      ${b ? `<button class="knopf dlg-gefahr" data-a="weg">🗑️ Schlüsselbund löschen</button>` : ""}
+      <button class="knopf" data-a="zu">${beimEinschalten && !b ? "✍️ Diesmal Schlüssel eintippen" : "Schließen"}</button>
+    </div>`, () => f.remove());
+  f.querySelectorAll("[data-a]").forEach((k) => (k.onclick = async () => {
+    f.remove(); const a = k.dataset.a;
+    try {
+      if (a === "neu") {
+        const neu = { typ: VB_TYP, partner: p.person_id, name: p.name || "", erstellt: new Date().toISOString(), schluessel: Array.from({ length: VB_ANZAHL }, () => vnB64(crypto.getRandomValues(new Uint8Array(32)))) };
+        localStorage.setItem(vbName(p.person_id), JSON.stringify(neu)); vbNeuProbieren();
+        melde(`🔑 Schlüsselbund mit ${vbVorname(p)} angelegt – jetzt die Datei schicken.`);
+        await vbDateiGeben(p, neu, false);
+      } else if (a === "senden") await vbDateiGeben(p, b, false);
+      else if (a === "sichern") await vbDateiGeben(p, b, true);
+      else if (a === "einlesen") vbDateiWaehlen();
+      else if (a === "weg" && (await frage(`Schlüsselbund mit ${vbVorname(p)} löschen?\nVerschlüsselte Nachrichten mit diesem Schlüsselbund kann dieses Handy dann nicht mehr öffnen (außer du liest die Datei wieder ein).`))) { localStorage.removeItem(vbName(p.person_id)); melde("🗑️ Schlüsselbund gelöscht"); }
+    } catch (e) { meldeFehler(e); }
+  }));
+}
+async function vbDateiGeben(p, b, sicherung) {
+  const ich = String(ICH?.name || "Ich").split(" ")[0], er = vbVorname(p).replace(/\s+/g, "-");
+  const inhalt = { typ: VB_TYP, von: ICH?.person_id, vonName: ICH?.name || "", an: p.person_id, anName: p.name || "", erstellt: b.erstellt, schluessel: b.schluessel };
+  const datei = new File([JSON.stringify(inhalt, null, 1)], `KC-Schluesselbund_${ich}_${er}.json`, { type: "application/json" });
+  if (!sicherung && !(await frage(`📤 Schlüsselbund-Datei an ${vbVorname(p)} schicken\nAm besten per WhatsApp oder Signal – die sind selbst verschlüsselt; nicht per Mail. ${vbVorname(p)} öffnet sie so: Datei antippen → Teilen → „Club-App“ (oder im Chat oben ⋮ → „🔑 Schlüsselbund“ → „Datei einlesen“). Wer die Datei hat, kann eure verschlüsselten Nachrichten lesen – also nicht weitergeben und danach löschen.`, { ja: "📤 Schicken" }))) return;
+  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: "Schlüsselbund Club-App" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  melde(sicherung ? "💾 Sicherung gespeichert – gut aufheben (wer sie hat, kann mitlesen)." : `💾 Datei gespeichert – bitte per WhatsApp oder Signal an ${vbVorname(p)} schicken.`);
+}
+function vbDateiWaehlen() {
+  const i = document.createElement("input"); i.type = "file"; i.accept = ".json,application/json,text/plain,*/*";
+  i.onchange = async () => { const d = i.files?.[0]; if (d && !(await vbEinlesen(d))) melde("❌ Das ist keine Schlüsselbund-Datei der Club-App.", true); };
+  i.click();
+}
+async function vbIstDatei(d) { if (!d || d.size > 20000) return null; try { const j = JSON.parse(await d.text()); return j?.typ === VB_TYP ? j : null; } catch { return null; } }
+async function vbEinlesen(d) { // true = war eine Schlüsselbund-Datei (eingelesen oder mit Hinweis abgelehnt)
+  const j = await vbIstDatei(d); if (!j) return false;
+  const ok = Array.isArray(j.schluessel) && j.schluessel.length >= 1 && j.schluessel.length <= 10 && j.schluessel.every((k) => { try { return vnUnB64(String(k)).length === 32; } catch { return false; } });
+  if (!ok) { melde("❌ Die Schlüsselbund-Datei ist beschädigt – bitte neu schicken lassen.", true); return true; }
+  const ich = ICH?.person_id, partner = j.an === ich ? j.von : j.von === ich ? j.an : null, name = j.an === ich ? j.vonName : j.anName;
+  if (!partner) { melde(`❌ Diese Schlüsselbund-Datei ist nicht für dich, sondern für ${j.anName || "jemand anderen"}.`, true); return true; }
+  const alt = vbHolen(partner), vn = vbVorname({ person_id: partner, name });
+  if (alt && alt.schluessel.join() !== j.schluessel.join() && !(await frage(`Schlüsselbund mit ${vn} ersetzen?\nAuf diesem Handy gibt es schon einen anderen. Nachrichten mit dem alten lassen sich danach nicht mehr öffnen.`, { ja: "🔑 Ersetzen" }))) return true;
+  localStorage.setItem(vbName(partner), JSON.stringify({ typ: VB_TYP, partner, name: name || "", erstellt: j.erstellt || new Date().toISOString(), schluessel: j.schluessel }));
+  melde(`🔑 Schlüsselbund mit ${vn} eingelesen – verschlüsselte Nachrichten öffnen sich jetzt von selbst. Die Datei kannst du jetzt löschen.`);
+  vbNeuProbieren(); return true;
 }
 function naText(t) { // Text sicher ausgeben, @Namen hervorheben, App-Sprünge als Knopf (KC-CLUB-SPRUNGKNOPF 2.23.97)
   if (vnIst(t)) return vnHtml(t); // 2.517.0 KC-CLUB-VERSCHLUESSELT
@@ -30203,6 +30306,7 @@ function chatMenue() {
   $("chatArchivKnopf").classList.toggle("versteckt", !chatId); $("chatKomplettKnopf").classList.toggle("versteckt", !chatId);
   const sl = chatId && CHAT?.id === chatId ? CHAT.selbstloeschen || 0 : 0; // KC-CLUB-SELBSTLOESCHEN (2.148.0)
   $("chatSlKnopf").textContent = `⏳ Selbstlöschen: ${sl ? "nach " + slText(sl) : "Aus"}`; $("chatSlKnopf").classList.toggle("versteckt", !chatId);
+  const vp = vbPartner(); $("chatVbKnopf").classList.toggle("versteckt", !vp); if (vp) $("chatVbKnopf").textContent = `🔑 Schlüsselbund mit ${vbVorname(vp)}: ${vbHolen(vp.person_id) ? "vorhanden" : "anlegen …"}`; // 2.518.0
   stummBereichZeigen();
   $("chatBlatt").classList.remove("versteckt");
 }
@@ -30891,6 +30995,7 @@ async function geteiltEmpfangen() {
     }
     await caches.delete("kcclub-geteilt");
   } catch {}
+  for (const d of dateien) if (await vbEinlesen(d)) return; // 2.518.0 KC-CLUB-SCHLUESSELBUND: Schlüssel bleiben auf dem Handy, nie in den Ablagekorb
   api("diagnose", { art: "teilen", daten: { anzahl: dateien.length, text: !!info.text, felder: Array.isArray(info.felder) ? info.felder.slice(0, 20) : null, typen: dateien.map((d) => d.type || "?").slice(0, 10) } }).catch(() => {}); // 2.515.0: Felder/Typen zur Fehlersuche
   const text = [info.text, info.url && !String(info.text || "").includes(info.url) ? info.url : ""].filter(Boolean).join("\n").trim();
   if (!dateien.length && !text) return melde("Es ist nichts angekommen. Fotos, PDFs und Office-Dateien gehen sofort; andere Dateitypen nimmt die Club-App an, sobald das Handy sie aktualisiert hat (meist nach dem nächsten Start, spätestens nach einem Tag).", true); // 2.514.0

@@ -5520,6 +5520,7 @@
     <button class="knopf" onclick="chatInsArchiv()">🗄️ Chat in mein Archiv legen</button>
     <button class="knopf" onclick="cfOeffnen()">🎨 Chat-Farben &amp; Hintergrund</button> <!-- KC-CLUB-CHAT-FARBEN 2.145.0 -->
     <button class="knopf" id="chatSlKnopf" onclick="$('chatBlatt').classList.add('versteckt');slWahl('chat')">⏳ Selbstlöschen: Aus</button> <!-- KC-CLUB-SELBSTLOESCHEN 2.148.0 -->
+    <button class="knopf versteckt" id="chatVbKnopf" onclick="$('chatBlatt').classList.add('versteckt');vbMenue()">🔑 Schlüsselbund</button> <!-- 2.518.0 KC-CLUB-SCHLUESSELBUND -->
     <button class="knopf" id="chatArchivKnopf" onclick="chatArchivieren(chatId, !!UH.liste.find((u) => u.id === chatId)?.archiviert)">📦 Chat archivieren</button> <!-- KC-CLUB-CHAT-ARCHIV 2.23.28 -->
     <button class="knopf" onclick="unterhaltungWeg(false)">🙈 Nur bei mir entfernen</button>
     <button class="knopf" id="chatKomplettKnopf" onclick="chatKomplettLoeschen(chatId)">🗑️ Bei mir komplett löschen</button>
