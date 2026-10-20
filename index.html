@@ -2131,6 +2131,13 @@
   .punkte3 { display: inline-flex; align-items: center; gap: 5px; background: var(--karte); border-radius: 16px; padding: 10px 13px; box-shadow: var(--schatten); }
   .punkte3 i { width: 9px; height: 9px; border-radius: 50%; background: var(--rot); opacity: .35; animation: tippWelle 1.3s infinite ease-in-out; }
   .punkte3 i:nth-child(2) { animation-delay: .18s; } .punkte3 i:nth-child(3) { animation-delay: .36s; }
+  /* 2.509.0 KC-CLUB-STIFT-SCHREIBT (Wunsch Hansi „den Stift animieren, als wenn er den Text schreibt“): kleine Schreibbewegung – Zickzack nach rechts,
+     kurzes Absetzen, zurück an den Zeilenanfang */
+  .stift-schreibt { display: inline-block; transform-origin: 20% 90%; animation: stiftSchreibt 1.6s ease-in-out infinite; }
+  @keyframes stiftSchreibt { 0% { transform: translate(-3px, 0) rotate(-6deg); } 12% { transform: translate(-1px, -2px) rotate(4deg); } 24% { transform: translate(1px, 0) rotate(-6deg); }
+    36% { transform: translate(3px, -2px) rotate(4deg); } 48% { transform: translate(5px, 0) rotate(-6deg); } 60% { transform: translate(6px, -3px) rotate(0deg); }
+    80% { transform: translate(-3px, -3px) rotate(-4deg); } 100% { transform: translate(-3px, 0) rotate(-6deg); } }
+  @media (prefers-reduced-motion: reduce) { .stift-schreibt { animation-duration: 3.2s; } }
   @keyframes tippWelle { 0%, 60%, 100% { transform: translateY(0) scale(1); opacity: .35; } 30% { transform: translateY(-8px) scale(1.15); opacity: 1; } }
   .tippt .zeile { display: flex; align-items: center; gap: 10px; font-size: .98rem; font-style: normal; font-weight: 600; margin: 2px 0; }
   /* KC-CLUB-SPRICHT (1.11.0): Oszilloskop – bei den anderen als laufende Welle, bei mir echt vom Mikrofon */

@@ -2458,7 +2458,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.match(html, /\["mein", "Meins"\]/, "Reiter heißt Meins");
   assert.doesNotMatch(html, /\["mein", "Mein Bereich"\]/, "alter Name weg");
-  assert.match(html, /<span class="punkte3"><i><\/i><i><\/i><i><\/i><\/span><span>✏️ \$\{esc\(wer\)\}/, "Stift + Welle bleiben");
+  assert.match(html, /<span class="punkte3"><i><\/i><i><\/i><i><\/i><\/span><span>(?:<span class="stift-schreibt" aria-hidden="true">✏️<\/span>|✏️) \$\{esc\(wer\)\}/, "Stift + Welle bleiben (2.509.0: Stift animiert)");
 }
 
 // 220. 1.53.3/1.53.4: „Neue Nachr.“ mit laufender orange Ameisenstraße (KC-CLUB-NEU-AMEISEN)
@@ -11330,4 +11330,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const fn = programm.slice(programm.indexOf("function tippTonKnopf()"), programm.indexOf("tippTonKnopfZeigen();\n"));
   assert.ok(/localStorage\.setItem\("kc_club_tippton", "aus"\)/.test(fn) && /else tippTonSetzen\(zuletzt\);/.test(fn) && /kc_club_tippton_zuletzt/.test(fn), "aus → zuletzt gewählte Art wieder an");
   assert.ok(/k\.textContent = an \? "🔊" : "🔇";/.test(fn), "zeigt 🔊 / 🔇");
+}
+
+// 2.509.0 KC-CLUB-STIFT-SCHREIBT (Wunsch Hansi): der Stift neben den drei Punkten bewegt sich, als schreibe er
+{
+  assert.ok(/<span class="stift-schreibt" aria-hidden="true">✏️<\/span> \$\{esc\(wer\)\}/.test(programm), "Stift in der Schreibt-Anzeige");
+  assert.ok(/\.stift-schreibt \{[^}]*animation: stiftSchreibt 1\.6s ease-in-out infinite;/.test(seite) && /@keyframes stiftSchreibt/.test(seite), "Schreibbewegung");
 }

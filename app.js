@@ -8167,7 +8167,7 @@ function tipptZeigen(namen, entwurf = [], sprechen = []) {
   const entwuerfe = entwurf.map((x) => `<div class="entwurf">✍️ <b>${esc(x.name)}:</b> ${esc(kurz(x.text))}</div>`).join("");
   const wer = namen.length === 1 ? namen[0] : namen.length === 2 ? `${namen[0]} und ${namen[1]}` : `${namen.length} Personen`;
   // 1.21.5: nur neu zeichnen, wenn sich etwas geändert hat – sonst fängt die Punkte-Welle bei jedem Takt (2 s) von vorn an
-  const html = `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span>✏️ ${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span></div>${entwuerfe}${sp}`;
+  const html = `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span><span class="stift-schreibt" aria-hidden="true">✏️</span> ${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span></div>${entwuerfe}${sp}`;
   if (e.dataset.stand !== html) { e.innerHTML = html; e.dataset.stand = html; }
   e.classList.remove("versteckt");
 }
