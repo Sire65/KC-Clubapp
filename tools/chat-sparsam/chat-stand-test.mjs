@@ -57,76 +57,90 @@ insert into kc_club_reaktionen values ('${M2}','P1','👍',now()); insert into k
 insert into kc_club_express values ('${M3}','${T}','P1',now()); insert into kc_club_gruppen values ('${T}','Grillteam','🍳','P1','{P1}');`;
 const db = new PGlite();
 await db.exec(SCHEMA); await db.exec(mig); ok(true, "Migration läuft in Postgres 16 (inkl. revoke/grant)");
+// KC-CLUB-CHAT-STAND-TEMPO (DB, 20.10.2026): plpgsql-Fassung unter Testnamen daneben – JEDER Fingerabdruck im Test muss in beiden Fassungen gleich sein
+const migPl = fs.readFileSync(new URL("../../supabase/migrations/20261020_kc_club_chat_stand_plpgsql.sql", import.meta.url), "utf8");
+await db.exec(migPl.replaceAll("public.kc_club_chat_stand(", "public.kc_club_chat_stand_pl("));
+ok((await db.query("select l.lanname from pg_proc p join pg_language l on l.oid = p.prolang where p.proname = 'kc_club_chat_stand_pl'")).rows[0].lanname === "plpgsql", "plpgsql-Fassung läuft in Postgres 16 (gleiche Signatur, inkl. revoke/grant)");
+let VERGLICHEN = 0;
 const tabellen = (await db.query("select tablename from pg_tables where schemaname='public'")).rows.map((x) => x.tablename);
 async function welt() { for (const t of tabellen) await db.exec(`truncate ${t}`); await db.exec(GRUND); }
-const stand = async (person = "P1", jetzt = JETZT) => (await db.query("select public.kc_club_chat_stand($1,$2,$3,150,30,7,15) s", [T, person, jetzt])).rows[0].s;
-await welt(); const S0 = await stand();
-ok(typeof S0 === "string" && S0.length === 32 && S0 === await stand(), "Fingerabdruck stabil (gleiche Daten → gleicher Wert)");
-ok((await stand("P3")) === null, "nicht im Chat → NULL");
-ok(S0 !== await stand("P2"), "je Person eigener Fingerabdruck (eigene/ausgeblendete/gemerkte Nachrichten)");
-
-const muss = [
-  ["neue Nachricht", `insert into kc_communication_messages values (gen_random_uuid(),'${T}','P2','Neu',null,'2026-10-20 09:58+00')`],
-  ["Nachricht gelöscht", `delete from kc_communication_messages where id='${M2}'`],
-  ["Text geändert (bearbeitet)", `update kc_communication_messages set body='Hallo!' where id='${M1}'`],
-  ["Bearbeitet-Kennzeichen", `insert into kc_club_nachricht_bearbeitet values ('${M1}', now())`],
-  ["anderer hat gelesen", `update kc_communication_thread_participants set last_read_at='2026-10-20 09:59+00' where thread_id='${T}' and person_id='P2'`],
-  ["neuer Teilnehmer", `insert into kc_communication_thread_participants values ('${T}','P4',now(),null,null,null)`],
-  ["Teilnehmer ausgetreten", `delete from kc_communication_thread_participants where thread_id='${T}' and person_id='P2'`],
-  ["für mich ausgeblendet", `insert into kc_communication_message_hidden values ('P1','${M2}',now())`],
-  ["Selbstlöschen-Ablauf gesetzt", `insert into kc_club_nachricht_ablauf values ('${M2}','${T}',1,'2026-10-20 11:00+00')`],
-  ["Chat-Selbstlöschen eingestellt", `insert into kc_club_chat_selbstloeschen values ('${T}',24,'P1',now())`],
-  ["Anlage dazu", `insert into kc_communication_message_attachments values ('${M1}',gen_random_uuid(),'P1')`],
-  ["Einmal-Foto entfernt", `update kc_club_einmal_foto set entfernt_am=now()`],
-  ["Einmal-Foto gesehen", `insert into kc_club_einmal_foto_gesehen values ('${A1}','P2',now())`],
-  ["Sende-Effekt geändert", `update kc_club_person_einstellung set wert='{"art":"stern"}' where person_id='P2' and schluessel='sende_effekt'`],
-  ["Inkognito eingeschaltet", `insert into kc_club_person_einstellung values ('P2','inkognito','{"an":true}',now())`],
-  ["Online-Anzeige verborgen", `insert into kc_club_person_einstellung values ('P2','online','{"zeigen":false}',now())`],
-  ["Rolle geändert (Vorstand)", `update kc_club_rollen set ist_vorstand=true where person_id='P1'`],
-  ["Push angezeigt", `update kc_communication_requests set status='displayed'`],
-  ["Mail-Auftrag dazu", `insert into kc_communication_requests values (gen_random_uuid(),'club-nachricht:${M1}','email','sent','[]')`],
-  ["Push-Anzeige-Ereignis", `insert into kc_communication_delivery_events (request_id,event_type,created_at) values ('${R1}','displayed',now())`],
-  ["Gegenüber hat nach meiner letzten Nachricht die App geladen", `update kc_club_zugang set zuletzt_gesehen='2026-10-20 09:57+00' where person_id='P2'; update kc_club_person_einstellung set wert='{"seit":"2026-10-20T09:50:00.000Z","zuletzt":"2026-10-20T09:57:00.000Z"}' where person_id='P2' and schluessel='online_seit'`],
-  ["Reaktion dazu", `insert into kc_club_reaktionen values ('${M1}','P2','❤️',now())`],
-  ["Reaktion geändert", `update kc_club_reaktionen set emoji='😂'`],
-  ["Reaktion weg", `delete from kc_club_reaktionen`],
-  ["Erwähnung", `insert into kc_club_erwaehnungen values ('${M1}','P2')`],
-  ["angeheftet", `insert into kc_club_angeheftet values ('${M1}','${T}','P1',now())`],
-  ["gemerkt (ich)", `insert into kc_club_gemerkt values ('P1','${M1}',now())`],
-  ["Stimme abgegeben", `insert into kc_club_chat_stimme values ('${M1}','P2',1,now())`],
-  ["Umfrage geändert", `update kc_club_chat_umfrage set optionen='["Mo","Di","Mi"]'`],
-  ["Kontakt geteilt", `insert into kc_club_chat_kontakt values ('${M1}','P2')`],
-  ["wichtig markiert", `insert into kc_club_nachricht_wichtig values ('${M1}','P1',now())`],
-  ["Link-Vorschau dazu", `insert into kc_club_link_vorschau values ('${M1}','https://x.de','Titel',null,null,'x.de')`],
-  ["Express-Bestätigung", `insert into kc_club_express_antwort values ('${M3}','P2','ok',now())`],
-  ["Express zugestellt", `insert into kc_club_express_zustellung values ('${M3}','P2',now(),null)`],
-  ["Gruppe umbenannt", `update kc_club_gruppen set name='Grillteam 2026'`],
-  ["Gruppen-Admin dazu", `update kc_club_gruppen set admins='{P1,P2}'`],
-  ["Betreff geändert", `update kc_communication_threads set subject='Neu' where id='${T}'`],
-  ["der andere tippt", `insert into kc_club_tippen values ('${T}','P2','2026-10-20 10:00:05+00',null,'text')`],
-  ["geplante Nachricht", `insert into kc_club_geplant values (gen_random_uuid(),'P1','${T}','Später','2026-10-21 08:00+00','offen',now())`],
-];
-for (const [name, sql] of muss) { await welt(); await db.exec(sql); const s = await stand(); if (s === S0) ok(false, "ändert den Fingerabdruck: " + name); }
-ok(true, `${muss.length} sichtbare Änderungen ändern alle den Fingerabdruck`);
-
-// mit der Zeit (ohne Datenänderung)
-await welt(); await db.exec(`insert into kc_club_nachricht_ablauf values ('${M2}','${T}',1,'2026-10-20 10:05+00')`); const vorAblauf = await stand();
-ok(vorAblauf !== await stand("P1", "2026-10-20 10:06:00+00"), "Selbstlöschen läuft ab → Fingerabdruck ändert sich von selbst");
-await welt();
-ok(S0 !== await stand("P1", "2026-10-20 10:12:00+00"), "Bearbeiten-Frist (15 Min.) läuft ab / Gegenüber geht offline → ändert sich");
-await db.exec(`delete from kc_club_tippen; insert into kc_club_tippen values ('${T}','P2','2026-10-20 10:00:05+00',null,'text')`); const tippt = await stand();
-ok(tippt !== await stand("P1", "2026-10-20 10:00:06+00"), "Tippen läuft ab (bis) → ändert sich");
-
-const darfNicht = [
-  ["mein eigenes „gelesen bis“ (setzt das Laden selbst)", `update kc_communication_thread_participants set last_read_at=now() where thread_id='${T}' and person_id='P1'`],
-  ["Quittung gemerkt", `insert into kc_club_chat_quittung values ('${T}','P2','angekommen',now())`],
-  ["Nachricht in einem anderen Chat", `insert into kc_communication_messages values (gen_random_uuid(),'${T2}','P3','Woanders',null,now())`],
-  ["Einstellung von jemandem außerhalb", `update kc_club_person_einstellung set wert='{"art":"y"}' where person_id='P9'`],
-  ["Lebenszeichen des Gegenübers, solange er online ist", `update kc_club_zugang set zuletzt_gesehen='2026-10-20 09:59:55+00' where person_id='P2'; update kc_club_person_einstellung set wert='{"seit":"2026-10-20T09:50:00.000Z","zuletzt":"2026-10-20T09:59:55.000Z"}' where person_id='P2' and schluessel='online_seit'`],
-  ["mein eigenes Lebenszeichen", `update kc_club_zugang set zuletzt_gesehen='2026-10-20 09:59:58+00' where person_id='P1'`],
-  ["Tippen von mir selbst", `insert into kc_club_tippen values ('${T}','P1','2026-10-20 10:00:05+00',null,'text')`],
-  ["abgelaufenes Tippen des anderen", `insert into kc_club_tippen values ('${T}','P2','2026-10-20 09:59:00+00',null,'text')`],
-];
-for (const [name, sql] of darfNicht) { await welt(); await db.exec(sql); const s = await stand(); if (s !== S0) ok(false, "darf den Fingerabdruck NICHT ändern: " + name); }
-ok(true, `${darfNicht.length} unsichtbare Änderungen lassen den Fingerabdruck gleich (sonst kein Spareffekt)`);
+let GEMESSEN = [];
+const stand = async (person = "P1", jetzt = JETZT) => {
+  const r = (await db.query("select public.kc_club_chat_stand($1,$2,$3,150,30,7,15) s, public.kc_club_chat_stand_pl($1,$2,$3,150,30,7,15) p", [T, person, jetzt])).rows[0];
+  if (r.s !== r.p) ok(false, `SQL- und plpgsql-Fassung verschieden (${r.s} ≠ ${r.p})`); VERGLICHEN++; GEMESSEN.push(r.s); return r.s; };
+async function lauf(art) {
+  GEMESSEN = []; console.log(`--- ${art}`);
+  await welt(); const S0 = await stand();
+  ok(typeof S0 === "string" && S0.length === 32 && S0 === await stand(), "Fingerabdruck stabil (gleiche Daten → gleicher Wert)");
+  ok((await stand("P3")) === null, "nicht im Chat → NULL");
+  ok(S0 !== await stand("P2"), "je Person eigener Fingerabdruck (eigene/ausgeblendete/gemerkte Nachrichten)");
+  
+  const muss = [
+    ["neue Nachricht", `insert into kc_communication_messages values (gen_random_uuid(),'${T}','P2','Neu',null,'2026-10-20 09:58+00')`],
+    ["Nachricht gelöscht", `delete from kc_communication_messages where id='${M2}'`],
+    ["Text geändert (bearbeitet)", `update kc_communication_messages set body='Hallo!' where id='${M1}'`],
+    ["Bearbeitet-Kennzeichen", `insert into kc_club_nachricht_bearbeitet values ('${M1}', now())`],
+    ["anderer hat gelesen", `update kc_communication_thread_participants set last_read_at='2026-10-20 09:59+00' where thread_id='${T}' and person_id='P2'`],
+    ["neuer Teilnehmer", `insert into kc_communication_thread_participants values ('${T}','P4',now(),null,null,null)`],
+    ["Teilnehmer ausgetreten", `delete from kc_communication_thread_participants where thread_id='${T}' and person_id='P2'`],
+    ["für mich ausgeblendet", `insert into kc_communication_message_hidden values ('P1','${M2}',now())`],
+    ["Selbstlöschen-Ablauf gesetzt", `insert into kc_club_nachricht_ablauf values ('${M2}','${T}',1,'2026-10-20 11:00+00')`],
+    ["Chat-Selbstlöschen eingestellt", `insert into kc_club_chat_selbstloeschen values ('${T}',24,'P1',now())`],
+    ["Anlage dazu", `insert into kc_communication_message_attachments values ('${M1}',gen_random_uuid(),'P1')`],
+    ["Einmal-Foto entfernt", `update kc_club_einmal_foto set entfernt_am=now()`],
+    ["Einmal-Foto gesehen", `insert into kc_club_einmal_foto_gesehen values ('${A1}','P2',now())`],
+    ["Sende-Effekt geändert", `update kc_club_person_einstellung set wert='{"art":"stern"}' where person_id='P2' and schluessel='sende_effekt'`],
+    ["Inkognito eingeschaltet", `insert into kc_club_person_einstellung values ('P2','inkognito','{"an":true}',now())`],
+    ["Online-Anzeige verborgen", `insert into kc_club_person_einstellung values ('P2','online','{"zeigen":false}',now())`],
+    ["Rolle geändert (Vorstand)", `update kc_club_rollen set ist_vorstand=true where person_id='P1'`],
+    ["Push angezeigt", `update kc_communication_requests set status='displayed'`],
+    ["Mail-Auftrag dazu", `insert into kc_communication_requests values (gen_random_uuid(),'club-nachricht:${M1}','email','sent','[]')`],
+    ["Push-Anzeige-Ereignis", `insert into kc_communication_delivery_events (request_id,event_type,created_at) values ('${R1}','displayed',now())`],
+    ["Gegenüber hat nach meiner letzten Nachricht die App geladen", `update kc_club_zugang set zuletzt_gesehen='2026-10-20 09:57+00' where person_id='P2'; update kc_club_person_einstellung set wert='{"seit":"2026-10-20T09:50:00.000Z","zuletzt":"2026-10-20T09:57:00.000Z"}' where person_id='P2' and schluessel='online_seit'`],
+    ["Reaktion dazu", `insert into kc_club_reaktionen values ('${M1}','P2','❤️',now())`],
+    ["Reaktion geändert", `update kc_club_reaktionen set emoji='😂'`],
+    ["Reaktion weg", `delete from kc_club_reaktionen`],
+    ["Erwähnung", `insert into kc_club_erwaehnungen values ('${M1}','P2')`],
+    ["angeheftet", `insert into kc_club_angeheftet values ('${M1}','${T}','P1',now())`],
+    ["gemerkt (ich)", `insert into kc_club_gemerkt values ('P1','${M1}',now())`],
+    ["Stimme abgegeben", `insert into kc_club_chat_stimme values ('${M1}','P2',1,now())`],
+    ["Umfrage geändert", `update kc_club_chat_umfrage set optionen='["Mo","Di","Mi"]'`],
+    ["Kontakt geteilt", `insert into kc_club_chat_kontakt values ('${M1}','P2')`],
+    ["wichtig markiert", `insert into kc_club_nachricht_wichtig values ('${M1}','P1',now())`],
+    ["Link-Vorschau dazu", `insert into kc_club_link_vorschau values ('${M1}','https://x.de','Titel',null,null,'x.de')`],
+    ["Express-Bestätigung", `insert into kc_club_express_antwort values ('${M3}','P2','ok',now())`],
+    ["Express zugestellt", `insert into kc_club_express_zustellung values ('${M3}','P2',now(),null)`],
+    ["Gruppe umbenannt", `update kc_club_gruppen set name='Grillteam 2026'`],
+    ["Gruppen-Admin dazu", `update kc_club_gruppen set admins='{P1,P2}'`],
+    ["Betreff geändert", `update kc_communication_threads set subject='Neu' where id='${T}'`],
+    ["der andere tippt", `insert into kc_club_tippen values ('${T}','P2','2026-10-20 10:00:05+00',null,'text')`],
+    ["geplante Nachricht", `insert into kc_club_geplant values (gen_random_uuid(),'P1','${T}','Später','2026-10-21 08:00+00','offen',now())`],
+  ];
+  for (const [name, sql] of muss) { await welt(); await db.exec(sql); const s = await stand(); if (s === S0) ok(false, "ändert den Fingerabdruck: " + name); }
+  ok(true, `${muss.length} sichtbare Änderungen ändern alle den Fingerabdruck`);
+  
+  // mit der Zeit (ohne Datenänderung)
+  await welt(); await db.exec(`insert into kc_club_nachricht_ablauf values ('${M2}','${T}',1,'2026-10-20 10:05+00')`); const vorAblauf = await stand();
+  ok(vorAblauf !== await stand("P1", "2026-10-20 10:06:00+00"), "Selbstlöschen läuft ab → Fingerabdruck ändert sich von selbst");
+  await welt();
+  ok(S0 !== await stand("P1", "2026-10-20 10:12:00+00"), "Bearbeiten-Frist (15 Min.) läuft ab / Gegenüber geht offline → ändert sich");
+  await db.exec(`delete from kc_club_tippen; insert into kc_club_tippen values ('${T}','P2','2026-10-20 10:00:05+00',null,'text')`); const tippt = await stand();
+  ok(tippt !== await stand("P1", "2026-10-20 10:00:06+00"), "Tippen läuft ab (bis) → ändert sich");
+  
+  const darfNicht = [
+    ["mein eigenes „gelesen bis“ (setzt das Laden selbst)", `update kc_communication_thread_participants set last_read_at=now() where thread_id='${T}' and person_id='P1'`],
+    ["Quittung gemerkt", `insert into kc_club_chat_quittung values ('${T}','P2','angekommen',now())`],
+    ["Nachricht in einem anderen Chat", `insert into kc_communication_messages values (gen_random_uuid(),'${T2}','P3','Woanders',null,now())`],
+    ["Einstellung von jemandem außerhalb", `update kc_club_person_einstellung set wert='{"art":"y"}' where person_id='P9'`],
+    ["Lebenszeichen des Gegenübers, solange er online ist", `update kc_club_zugang set zuletzt_gesehen='2026-10-20 09:59:55+00' where person_id='P2'; update kc_club_person_einstellung set wert='{"seit":"2026-10-20T09:50:00.000Z","zuletzt":"2026-10-20T09:59:55.000Z"}' where person_id='P2' and schluessel='online_seit'`],
+    ["mein eigenes Lebenszeichen", `update kc_club_zugang set zuletzt_gesehen='2026-10-20 09:59:58+00' where person_id='P1'`],
+    ["Tippen von mir selbst", `insert into kc_club_tippen values ('${T}','P1','2026-10-20 10:00:05+00',null,'text')`],
+    ["abgelaufenes Tippen des anderen", `insert into kc_club_tippen values ('${T}','P2','2026-10-20 09:59:00+00',null,'text')`],
+  ];
+  for (const [name, sql] of darfNicht) { await welt(); await db.exec(sql); const s = await stand(); if (s !== S0) ok(false, "darf den Fingerabdruck NICHT ändern: " + name); }
+  ok(true, `${darfNicht.length} unsichtbare Änderungen lassen den Fingerabdruck gleich (sonst kein Spareffekt)`);
+  return GEMESSEN;
+}
+await lauf("Änderungstest");
+ok(VERGLICHEN > 50, `SQL- und plpgsql-Fassung: alle ${VERGLICHEN} Fingerabdrücke Zeichen für Zeichen gleich`);
 console.log("ALLE TESTS GRÜN"); process.exit(0);

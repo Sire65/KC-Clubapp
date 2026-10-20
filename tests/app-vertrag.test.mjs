@@ -11527,3 +11527,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/async function vorschlaegeSitzungZuordnen\(\)/.test(server) && /await vorschlaegeSitzungZuordnen\(\)\.catch\(\(\) => \{\}\); \/\/ 2\.527\.0/.test(server) && /sitzung_nr: sitzungNrPruefen\(p\.sitzung_nr\), sitzung_ab: jetzt\(\)/.test(server), "Server merkt und ordnet zu");
   assert.ok(/add column if not exists sitzung_nr smallint check \(sitzung_nr is null or sitzung_nr between 1 and 3\)/.test(lies("supabase/migrations/20261020_kc_club_v2527_vorschlag_sitzung_spaeter.sql")), "Migration");
 }
+// DB 20.10.2026 KC-CLUB-CHAT-STAND-TEMPO: Fingerabdruck als plpgsql (Plan je Verbindung gemerkt) – gleiche Abfrage, gleiche Rechte
+{
+  const alt = lies("supabase/migrations/20261020_kc_club_chat_stand.sql"), neu = lies("supabase/migrations/20261020_kc_club_chat_stand_plpgsql.sql");
+  const kern = (x) => x.slice(x.indexOf("with tn as ("), x.indexOf(")) end") + 6).replace(/^\s*--.*$/gm, "").replace(/\s+/g, " ").trim();
+  assert.ok(kern(alt).length > 3000 && kern(alt) === kern(neu), "plpgsql-Fassung: dieselbe Abfrage wie die SQL-Fassung");
+  assert.ok(/language plpgsql\s+stable/.test(neu) && /into v_stand;\s+return v_stand;/.test(neu) && !/\b(insert into|update public|delete from|truncate)\b/i.test(neu.replace(/^--.*$/gm, "")), "nur lesend, gibt den Fingerabdruck zurück");
+  assert.ok(/revoke all on function public\.kc_club_chat_stand\(uuid, text, timestamptz, integer, integer, integer, integer\) from public, anon, authenticated;/.test(neu) && /to service_role;/.test(neu), "Rechte unverändert: nur der Server");
+}

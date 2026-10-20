@@ -1,5 +1,12 @@
 # Änderungen
 
+## DB – 2026-10-20 (ohne App-Build) – Chat-Nachfrage schneller (KC-CLUB-CHAT-STAND-TEMPO)
+Wunsch Hansi („Ja dann optimiere die Chat Nachfrage“). Die kurze Chat-Nachfrage (Fingerabdruck, 2.510.0) brauchte im Schnitt 80 ms – fast alles Planung der großen Abfrage bei jedem Aufruf.
+- `kc_club_chat_stand` ist jetzt plpgsql statt SQL: dieselbe Abfrage Zeichen für Zeichen, Postgres merkt sich den Plan je Datenbank-Verbindung. Gleiche Signatur, gleiche Rechte (nur der Server), gleicher Fingerabdruck – App und Server unverändert.
+- Live vor dem Einspielen geprüft (nur lesend, Prüf-Funktion nur vorübergehend): 149 Fingerabdrücke alt = neu, je Aufruf Ø 7,3 → 1,5 ms.
+- DB: `supabase/migrations/20261020_kc_club_chat_stand_plpgsql.sql` (bereits eingespielt). Test: `tools/chat-sparsam/chat-stand-test.mjs` rechnet in jeder Testwelt beide Fassungen und verlangt Gleichheit (56 von 56).
+- Rückweg: `supabase/migrations/20261020_kc_club_chat_stand.sql` erneut ausführen.
+
 ## 2.527.0 – 2026-10-20 – 📅 Vorschläge: übernächste Sitzung schon vorwählen (KC-CLUB-VORSCHLAG-SPAETER) · Server 2.527.0 · Datenbank
 Wunsch Hansi („bei Vorschläge: jetziges Datum oder nächste oder übernächste Sitzung (Datum noch nicht bekannt) – aber schon mal vorwählen“).
 - Unter „Für welchen Termin?“ stehen wie bisher die geplanten Termine mit Datum; fehlen Sitzungen bis zur übernächsten, kommen **„📅 Nächste/Übernächste Sitzung – Datum noch offen“** dazu (auch beim Bearbeiten).
