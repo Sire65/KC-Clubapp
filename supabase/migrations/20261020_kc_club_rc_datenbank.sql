@@ -4,10 +4,20 @@
 -- 1) Rechte: TRUNCATE/TRIGGER/REFERENCES braucht weder die App (PostgREST nutzt sie nie) noch sonst jemand.
 --    TRUNCATE umgeht RLS – deshalb für anon/authenticated auf allen public-Tabellen weg, auch für künftige Tabellen.
 --    Rückweg: grant truncate, trigger, references on all tables in schema public to anon, authenticated;
-do $$ declare t record; begin
-  for t in select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind in ('r', 'p') loop
-    execute format('revoke truncate, trigger, references on table public.%I from anon, authenticated', t.relname);
+--    Je Tabelle höchstens 3 s auf eine Sperre warten (laufende Spiegel-Läufe); gesperrte Tabellen werden übersprungen und gemeldet –
+--    ein zweiter Lauf erledigt den Rest (die Migration ist wiederholbar).
+do $$ declare t record; v_ok int := 0; v_weg text[] := '{}'; begin
+  perform set_config('lock_timeout', '3s', true);
+  for t in select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind in ('r', 'p')
+             and (has_table_privilege('anon', c.oid, 'TRUNCATE') or has_table_privilege('authenticated', c.oid, 'TRUNCATE')
+                  or has_table_privilege('anon', c.oid, 'TRIGGER') or has_table_privilege('authenticated', c.oid, 'TRIGGER')) loop
+    begin
+      execute format('revoke truncate, trigger, references on table public.%I from anon, authenticated', t.relname);
+      v_ok := v_ok + 1;
+    exception when lock_not_available then v_weg := v_weg || t.relname;
+    end;
   end loop;
+  raise notice 'KC-CLUB-RC-DATENBANK: % Tabellen eingeschränkt, übersprungen (Sperre): %', v_ok, v_weg;
 end $$;
 alter default privileges in schema public revoke truncate, trigger, references on tables from anon, authenticated;
 alter default privileges for role postgres in schema public revoke truncate, trigger, references on tables from anon, authenticated;
