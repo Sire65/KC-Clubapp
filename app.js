@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.512.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.513.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -30913,10 +30913,8 @@ async function ablkAuswahlLoeschen(id) {
 }
 async function ablkAuswahlAlbum(id) {
   const x = ablkEintrag(id); if (!x) return; const w = ablkGewaehlt(id), ids = x.anlagen.filter((f) => w.has(f.id) && ablkBild(f)).map((f) => f.id); if (!ids.length) return;
-  try { melde("⏳ Fotos werden geholt …"); const d = await ablkDateien(x, (f) => ids.includes(f.id));
-    await api("ablagekorb_abspalten", { id, ids, ergebnis: `${ids.length} Foto${ids.length > 1 ? "s" : ""} ins Fotoalbum gegeben` }); delete ABLK.wahl[id]; $("ablkBlatt")?.remove();
-    faFilter = {}; faPapierkorb = false; faGeteilt = d; zeige("fotos"); melde(`📷 ${d.length} Foto${d.length > 1 ? "s" : ""} – Thema wählen und „Hochladen“ tippen`);
-  } catch (e) { meldeFehler(e); }
+  try { melde("⏳ Fotos werden geholt …"); const d = await ablkDateien(x, (f) => ids.includes(f.id)); delete ABLK.wahl[id]; ablkInsAlbum(id, d, ids); }
+  catch (e) { meldeFehler(e); }
 }
 async function ablkDublettenPruefen(id) {
   try { melde("🔍 Suche nach Dubletten …"); const r = await api("ablagekorb_dubletten", { id }, { warten: true }); melde(r.dubletten ? `⚠️ ${r.dubletten === 1 ? "1 Datei gibt" : r.dubletten + " Dateien gibt"} es schon – markiert` : "✅ Keine Dubletten gefunden"); ablkZeigen(id); } catch (e) { meldeFehler(e); }
@@ -30938,12 +30936,18 @@ async function ablkDateien(x, nur) { // Dateien als echte Datei-Objekte (für Fo
   return aus;
 }
 async function ablkKopie(id) { return (await api("ablagekorb_kopie", { id }, { warten: true })).anlagen || []; } // eigene Kopie zum Anhängen
+// 2.513.0 KC-CLUB-ABLAGEKORB-ALBUM-FIX (Fund Hansi „über den Ablagekorb Fotos ins Album gelegt – da sind sie nicht zu sehen“): vorher wurde der
+// Eintrag schon beim Öffnen des Hochlade-Formulars „erledigt“ – ohne „Hochladen“ (oder bei einem Update dazwischen) kam nichts im Album an.
+// Jetzt merkt sich die App den Eintrag (faAusKorb) und erledigt ihn erst, wenn ALLE Fotos wirklich hochgeladen sind; sonst bleibt er offen.
+function ablkInsAlbum(id, d, ids) {
+  $("ablkBlatt")?.remove(); faAusKorb = { id, ids };
+  faFilter = {}; faPapierkorb = false; faGeteilt = d; zeige("fotos");
+  melde(`📷 ${d.length} Foto${d.length > 1 ? "s" : ""} – Thema wählen und unten „Hochladen“ tippen. Erst dann sind sie im Album.`);
+}
 async function ablkFotoalbum(id) {
   const x = ablkEintrag(id); if (!x) return;
-  try { melde("⏳ Fotos werden geholt …"); const d = await ablkDateien(x, ablkBild); $("ablkBlatt")?.remove();
-    await ablkFertig(id, "Ins Fotoalbum gegeben", true);
-    faFilter = {}; faPapierkorb = false; faGeteilt = d; zeige("fotos"); melde(`📷 ${d.length} Foto${d.length > 1 ? "s" : ""} – Thema wählen und „Hochladen“ tippen`);
-  } catch (e) { meldeFehler(e); }
+  try { melde("⏳ Fotos werden geholt …"); const d = await ablkDateien(x, ablkBild); ablkInsAlbum(id, d, x.anlagen.filter(ablkBild).map((f) => f.id)); }
+  catch (e) { meldeFehler(e); }
 }
 async function ablkOrdner(id) {
   const x = ablkEintrag(id); if (!x) return; $("ablkBlatt")?.remove();
@@ -34239,11 +34243,13 @@ const mb = (b) => (b / 1024 / 1024).toLocaleString("de-DE", { maximumFractionDig
 const anlassText = (x) => x ? `${x.art === "aktion" ? "🧳" : "📅"} ${x.titel}${x.datum ? " · " + fTagDe(x.datum) : ""}` : "";
 const anlassVon = (f) => f.bezug_art ? (FA?.anlaesse || []).find((x) => x.art === f.bezug_art && x.id === f.bezug_id) : null;
 function fotosFuer(art, id) { faFilter = { bezug_art: art, bezug_id: id }; faPapierkorb = false; zeige("fotos"); }
+let faAusKorb = null; // 2.513.0 KC-CLUB-ABLAGEKORB-ALBUM-FIX: { id, ids } – erst nach dem Hochladen im Ablagekorb erledigen
 let faGeteilt = null; // KC-CLUB-TEILEN: aus der Galerie geteilte Fotos, die ins Hochlade-Formular sollen
 async function fotosLaden(formBehalten) {
   if (!formBehalten) $("fotoForm").classList.add("versteckt");
   try { FA = await api("fotos_liste", { ...faFilter, papierkorb: faPapierkorb }); fotosZeigen();
-    if (faGeteilt) { const d = faGeteilt; faGeteilt = null; fotoForm(); faGewaehlt({ files: d, value: "" }); } }
+    if (faGeteilt) { const d = faGeteilt; faGeteilt = null; fotoForm(); faGewaehlt({ files: d, value: "" });
+      if (faAusKorb && $("faFortschritt")) $("faFortschritt").innerHTML = '<div class="karte" style="border:2px solid var(--gold)">📥 Aus dem Ablagekorb: Thema wählen und <b>„Hochladen“</b> tippen – erst dann sind die Fotos im Album. Der Eintrag im Korb bleibt bis dahin offen.</div>'; } }
   catch (e) { $("fotoListe").innerHTML = `<div class="karte hinweis">⚠️ ${esc(fehlerText(e))}<div style="margin-top:8px"><button type="button" class="knopf klein" onclick="fotosLaden()">🔄 Nochmal laden</button></div></div>`; } // 2.337.0: wie überall mit „Nochmal laden“
 }
 function fotosZeigen() {
@@ -34541,6 +34547,9 @@ async function fotosHochladen() {
   knopf.disabled = false; faDateien = [];
   $("faFortschritt").innerHTML = fehler.length ? `<div style="color:#c62828">⚠️ Nicht hochgeladen:<br>${fehler.map(esc).join("<br>")}</div>` : "";
   melde(ok ? `✔ ${ok} Foto${ok > 1 ? "s" : ""} im Album${fehler.length ? ` – ${fehler.length} fehlgeschlagen` : ""}` : "Es wurde kein Foto hochgeladen.", !ok);
+  const korb = faAusKorb; faAusKorb = null; // 2.513.0: Ablagekorb erst jetzt erledigen – und nur, wenn alles angekommen ist
+  if (korb && ok && !fehler.length) await api("ablagekorb_abspalten", { id: korb.id, ids: korb.ids, ergebnis: `${ok} Foto${ok > 1 ? "s" : ""} ins Fotoalbum hochgeladen` }).catch(() => melde("Im Album – bitte den Eintrag im Ablagekorb selbst als erledigt markieren.", true));
+  else if (korb && (fehler.length || !ok)) melde("Nicht alle Fotos sind im Album – der Eintrag bleibt im Ablagekorb offen.", true);
   if (ok) await fotosLaden(fehler.length > 0);
 }
 

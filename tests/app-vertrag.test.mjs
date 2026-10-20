@@ -11394,3 +11394,12 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/onchange="ablkWaehle\(/.test(programm) && /ablkWahlAlle\('\$\{x\.id\}', 'doppelt'\)/.test(programm) && /async function ablkAuswahlAlbum\(/.test(programm) && /async function ablkAuswahlLoeschen\(/.test(programm), "Häkchen, Dubletten wählen, Auswahl ins Album / löschen");
   assert.ok(/meta\.push\(\/\^image\\\/\/\.test\(d\.type\) \? await exifLesen\(d\)/.test(programm), "Foto-Angaben für die Prüfung mitgeschickt");
 }
+
+// 2.513.0 KC-CLUB-ABLAGEKORB-ALBUM-FIX (Fund Hansi): Ablagekorb → Fotoalbum erst nach erfolgreichem Hochladen erledigt
+{
+  const fa = programm.slice(programm.indexOf("function ablkInsAlbum("), programm.indexOf("async function ablkOrdner("));
+  assert.ok(!/ablkFertig\(|ablagekorb_abspalten|ablagekorb_erledigt/.test(fa), "Öffnen des Formulars erledigt nichts mehr");
+  assert.ok(/faAusKorb = \{ id, ids \};/.test(fa), "Eintrag gemerkt");
+  const hoch = programm.slice(programm.indexOf("async function fotosHochladen()"), programm.indexOf("async function fotoAnsehen("));
+  assert.ok(/if \(korb && ok && !fehler\.length\) await api\("ablagekorb_abspalten"/.test(hoch) && /der Eintrag bleibt im Ablagekorb offen/.test(hoch), "erst nach vollständigem Hochladen erledigt, sonst bleibt er offen");
+}
