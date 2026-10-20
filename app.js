@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.533.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.534.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5300,6 +5300,8 @@ const HILFE = [
   { id: "versand_leiste", thema: "nachrichten", sym: "📝", t: "Normal, ❗ Wichtig oder 🏎️ Express – die Leiste über dem Schreibfeld", x: "Sobald du etwas ins Schreibfeld tippst (oder etwas anhängst), erscheint darüber die Leiste <b>📝 Normal · ❗ Wichtig · 🏎️ Express</b>. <b>Normal</b> ist schon angehakt – eine normale Nachricht braucht nur ➤. Hakst du <b>❗ Wichtig</b> oder <b>🏎️ Express</b> an, geht der Haken bei Normal weg; beides zusammen geht auch. Neben Express steht, wie viele du heute schon hattest (z. B. 2/5). Nach dem Senden und beim Chatwechsel steht wieder Normal. Soll die Leiste immer zu sehen sein: ⚙️ → „🔔 Benachrichtigungen“ → <b>„📝❗🏎️ Versand-Leiste immer zeigen“</b>.", zeig: () => einstiegHin("benachrichtigung", "setWichtigFrage"), seit: "2.524.0" },
   { id: "schreibt_hinweis", thema: "nachrichten", sym: "✍️", t: "„… schreibt dir gerade“ – auch wenn der Chat zu ist", x: "Schreibt dir jemand im <b>Zweier-Chat</b>, während du woanders in der App bist, steht oben kurz <b>„✍️ Anne schreibt dir gerade …“</b> – oder <b>„🗣️ … diktiert dir gerade eine Nachricht …“</b> bzw. <b>„🎤 … nimmt gerade eine Sprachnachricht für dich auf …“</b>. So weißt du: Gleich kommt etwas. Antippen öffnet den Chat; ist die Nachricht da, verschwindet der Hinweis. Im offenen Chat steht es wie gewohnt über dem Schreibfeld – der ✏️ Stift schreibt dabei mit. Nicht in Gruppen und nicht bei stumm geschalteten Chats; wer seine Online-Anzeige ausgeschaltet hat, meldet kein Schreiben.", seit: "2.529.0" },
   { id: "druck_pdf", thema: "club", sym: "📄", t: "Aus jeder Druckvorschau ein PDF", x: "Überall, wo die App etwas zum Drucken zeigt (Termine, Protokoll, Erstattung, Wunschbogen …), gibt es neben <b>🖨️ Drucken</b> den Knopf <b>📄 PDF speichern / teilen</b>. Die App baut das PDF selbst auf dem Handy – du kannst es z. B. per WhatsApp oder Mail weiterschicken oder speichern. Nichts geht dafür an fremde Dienste.", seit: "2.526.0" },
+  // 2.534.0 KC-CLUB-EINST-WEGWEISER
+  { id: "einst_wegweiser", thema: "start", sym: "🧭", t: "Alle Einstellungen erklärt – wie im Explorer", x: "Unter <b>Technik → 🧭 Einstellungen erklärt</b> stehen alle Einstellungen deiner App wie Ordner im Windows-Explorer: <b>▸</b> klappt einen Bereich auf (z. B. 🔔 Benachrichtigungen), rechts steht, wie es gerade eingestellt ist. <b>Antippen</b> erklärt, was die Einstellung bewirkt – mit <b>👉 Hinbringen</b> (direkt zum Schalter), <b>📖 Ganze Hilfe</b> und <b>🎬 Video</b>. Oben suchst du nach einem Wort (auch mit 🎤), mit <b>🖨️ Als Schriftstück</b> druckst du alles oder speicherst es als PDF. Umgestellt wird dort nichts.", zeig: () => ewStart(), seit: "2.534.0" },
   { id: "meldung_oben", thema: "technik", sym: "💬", t: "Die Meldung oben blinkt zweimal", x: "Kurze Meldungen der App (z. B. „Gespeichert“) erscheinen oben <b>weiß auf fast Schwarz mit goldenem Rand</b> und blinken beim Erscheinen zweimal kurz auf, damit du sie nicht übersiehst. <b>Fehler</b> stehen weiß auf Rot. Sie verschwinden von selbst.", seit: "2.523.0" },
   { id: "hilfe_anbieten", thema: "club", sym: "🤲", t: "Du kannst etwas besonders gut?", x: "Unter 🤝 Helfen &amp; Leihen → <b>„＋ Neu“</b> → <b>„🤲 Ich biete Hilfe an“</b> machst du ein Angebot, zum Beispiel beim Einrichten der App. Es erscheint als Kachel für alle.", zeig: () => hlStart(), seit: "2.23.1" },
   { id: "hilfe_veroeffentlichen", thema: "club", sym: "📣", t: "Hilfe-Aufruf oder Angebot veröffentlichen", x: "Beim Einstellen fragt die App: <b>„📣 Wie möchtest du es veröffentlichen?“</b> – <b>📌 Pinnwand</b> (grüner Aushang, antippbar), <b>🔔 Push</b> und/oder <b>✉️ E-Mail</b> an alle Mitglieder. Mehrere gehen, die Wahl merkt sich dein Handy. Nichts angehakt: nur in Helfen &amp; Leihen sichtbar. Bei einem fremden Angebot schreibt <b>„💬 Nachricht“</b> gleich den Betreff „Dein Angebot … vom …“ für dich.", zeig: () => hlStart("helfen"), seit: "2.23.44" },
@@ -5632,6 +5634,7 @@ function sbErkennen(roh, mitglieder = [], ich = "") {
     [/^erstattung$|^(geld|kosten) (zurück|erstatten)$|^fahrtkosten$/, "erstattung"], [/^helfen( und leihen)?$|^hilfe suchen$/, "helfen"], [/^(die )?börse$|^flohmarkt$/, "boerse"],
     [/^(die )?protokolle$/, "protokolle"], [/^(die )?vorschläge$/, "vorschlaege"], [/^einstellungen$/, "einstellungen"], [/^(mein )?dienst(e|plan)?$/, "dienste"], [/^(alle )?nachrichten$|^(meine )?chats$/, "nachrichten"]])
     if (re.test(t)) return { art: "ziel", ziel };
+  if (/^(alle )?einstellungen erkl(ärt|ären)|^erklär(e|ung)? (mir )?(die |alle )?einstellungen|^was bewirken die einstellungen/.test(t)) return { art: "wegweiser" }; // 2.534.0 (eigene Art – die Server-Liste der Ziele bleibt gleich)
   // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4: neue Möglichkeiten per Sprache → Lupe mit dem passenden Treffer
   for (const [re, q] of [[/verschlüssel|geheime? nachricht|geheim schreiben/, "verschlüsselt"], [/schlüssel ?bund/, "schlüsselbund"], [/^(eine |die )?dia ?show( starten| zeigen| ansehen)?$/, "diashow fotoalbum"],
     [/ablage ?korb/, "ablagekorb"], [/versand ?leiste/, "versand leiste"]]) if (re.test(t)) return { art: "suche", q };
@@ -6118,6 +6121,7 @@ const sbVorname = (pid) => String(MITGLIEDER?.find((m) => m.person_id === pid)?.
 async function sbAusfuehren(b) {
   if (["antwort", "lies_nachrichten", "lies_pinnwand", "anruf", "ordner"].includes(b.art)) return sbStufe3(b); // 2.87.0
   if (b.art === "brief") return sbBrief(b); // 2.137.0 KC-CLUB-SPRACHE-BRIEF
+  if (b.art === "wegweiser") return ewStart(); // 2.534.0 KC-CLUB-EINST-WEGWEISER: nur lesen, darum ohne Rückfrage
   if (b.art === "ziel") { const z = SB_ZIELE.find((x) => x.id === b.ziel); if (!z) return; if (z.nur && !z.nur()) return melde("Das ist für dich nicht freigeschaltet.", true); if (["start", "naechster", "nachricht_neu", "pinnwand_neu", "brief_neu"].includes(z.id)) return z.los(); if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist"); return z.los(); }
   if (b.art === "start") return sbStartseite();
   if (b.art === "einst") { const e = SB_EINST.find((x) => x.k === b.k); if (!e) return; melde(`⚙️ Einstellungen → ${e.t}`); return einstiegHin(e.klappe, e.id); } // 2.151.0: genau zum Schalter
@@ -9218,6 +9222,7 @@ const TW_SYN = [["termin", "verabredung", "treffen", "datum", "verabreden", "aus
   ["pdf", "drucken", "ausdrucken", "briefbogen", "papier"], ["cowboy", "indianer", "westen", "wildwest", "bueffel", "kutsche"]]; // 2.252.0 Fund Hansi: Wilfried fragte „Kochbild“
 // Twinkeys eigene Fragen und Antworten (Wunsch Hansi: „mehr Fragen und Antworten“) – kurz, mit Sprung an die richtige Stelle
 const TW_FAQ = [
+  { id: "einstellungen-erklaert", sym: "🧭", t: "Was bewirken die ganzen Einstellungen?", x: "Unter <b>Technik → 🧭 Einstellungen erklärt</b> siehst du alle Einstellungen wie Ordner im Explorer – antippen erklärt, was sie bewirken, und <b>👉 Hinbringen</b> führt dich zum Schalter. Mit 🖨️ auch zum Ausdrucken.", los: () => ewStart() }, // 2.534.0
   // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4: Fragen zu Verschlüsseln, Schlüsselbund, Versand-Leiste, Teilen und den übrigen Neuheiten (nur Mitglieder-Funktionen)
   { id: "verschluesseln", sym: "🔒", t: "Wie schicke ich eine Nachricht verschlüsselt?", x: "Im Chat in der kleinen Zeile über dem Schreibfeld auf das Schloss <b>🔒</b> tippen (grün = an), schreiben, senden. Die App fragt nach – <b>„🔒 Ja, mit Schlüssel“</b> – dann einen Schlüssel festlegen (mindestens 6 Zeichen) und ihn dem Empfänger <b>persönlich, am Telefon oder per SMS</b> sagen. Ein Geheimagent bringt die Nachricht; lesen kann sie nur, wer den Schlüssel hat.", los: () => zeige("nachrichten") },
   { id: "schluessel-frage", sym: "✉️", t: "Ich soll einen Schlüssel eingeben – ich will aber gar nicht verschlüsseln!", x: "Dann ist das Schloss 🔒 über dem Schreibfeld aus Versehen an. Tippe in der Rückfrage auf <b>„✉️ Normal senden“</b> – das Schloss geht aus und die Nachricht geht ganz normal raus. Beim Wechsel in einen anderen Chat geht das Schloss ohnehin von selbst aus.", los: () => zeige("nachrichten") },
@@ -14682,6 +14687,7 @@ const KACHELN = {
     // KC-CLUB-SICHERHEIT (1.14.0, Wunsch Hansi): Prüfreihe „ist alles sicher und läuft?“ für alle Mitglieder
     { id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check", u: "Läuft alles sicher? Jetzt prüfen", aktion: "sicherheitStart()" },    // KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise nach Themen (Zahl = neue Hilfen seit dem letzten Besuch)
     { id: "hilfezentrum", sym: "❓", t: "Hilfe & Tipps", u: () => `${hzAnzahl()} Hilfen nach Themen`, aktion: "hzStart()", zahl: () => hzNeuZahl() },
+    { id: "einstwegweiser", sym: "🧭", t: "Einstellungen erklärt", u: "Alle Einstellungen – was sie bewirken", aktion: "ewStart()" }, // 2.534.0 KC-CLUB-EINST-WEGWEISER
     { id: "twinkey", sym: "🧑‍🍳", t: "Frag Twinkey", u: "Frage tippen oder 🎤 sprechen", aktion: "twFrageStart()" }, // 2.23.49 KC-CLUB-TWINKEY (früher „Frag den Küchenchef“)
     { id: "erklaer", sym: "🎬", t: "Erklär-Videos", u: "Rundgänge mit Ton – Schritt für Schritt", aktion: "erklaerVideos()" }, // KC-CLUB-ERKLAERVIDEOS (2.244.0)
   ],
@@ -21836,6 +21842,165 @@ function einstSuchen(q, leeren) {
   $("einstSucheNichts")?.classList.toggle("versteckt", irgendwas);
   if (RK.einst?.an) rkAufbauen(RK.einst);
 }
+// ---------- 2.534.0 KC-CLUB-EINST-WEGWEISER (Wunsch Hansi „spezielle Anleitung: Voreinstellungen leicht gemacht – alle Möglichkeiten auflisten und kurz
+// erklären … als eigene Kachel unter Technik, wie der Explorer bei Windows: Überschrift z. B. ‚Farben einstellen‘, antippen, dann kommt die Erklärung“) ----------
+// Liest die Einstellungen direkt aus der Seite ⚙️ (Bereiche = Ordner, Schalter/Auswahlen = Einträge, ihr grauer Hinweis = Kurz-Erklärung) – neue Einstellungen
+// stehen also von selbst drin, und es gilt dieselbe Sicht (einfach/erweitert, Admin nur für den Admin). Antippen zeigt: was es bewirkt, wie es gerade steht,
+// den passenden Hilfe-Text (gefunden über die ID im „Zeig mir“ der Hilfe), 👉 Hinbringen und ein Erklär-Video zum Bereich. 🖨️ druckt alles als Schriftstück.
+// Nur lesen: der Wegweiser schaltet nichts um; keine eigene Datenbank-Abfrage (füllt die Einstellungen wie beim Öffnen von ⚙️).
+const EW = { baum: null, liste: [], offen: null, gefuellt: false };
+// Ergänzungen, wo die Seite ⚙️ keinen grauen Hinweis hat (Schlüssel: ID des Bedienelements oder Anfang des Namens) – neue Einstellung ohne Hinweis → hier eintragen
+const EW_NAME = { nfName: "🆘 Notfallkontakt: Name", nfTel: "🆘 Notfallkontakt: Telefon", nfBez: "🆘 Notfallkontakt: Beziehung", ruheVon: "🌙 Ruhezeit von", ruheBis: "🌙 Ruhezeit bis" };
+const EW_ERKL = [
+  ["pushKnopf", "Schaltet die Mitteilungen (Push) auf diesem Handy ein oder aus. Nur mit Push erfährst du von neuen Nachrichten, Terminen und Anklopfen, wenn die App zu ist."],
+  ["Ton testen", "Spielt den Warnton einmal ab – so hörst du, ob dein Handy laut genug ist."],
+  ["Test-Push senden", "Schickt dir selbst eine Probe-Mitteilung. Kommt sie an, ist Push richtig eingerichtet."],
+  ["📱 Meine Geräte", "Zeigt, auf welchen Handys, Tablets und PCs du angemeldet bist und wo Push an ist – einzelne Geräte kannst du dort abmelden."],
+  ["ruheVon", "Beginn der Ruhezeit („Nicht stören“) – ab dann kommt kein Push mehr."], ["ruheBis", "Ende der Ruhezeit – ab dann kommen Mitteilungen wieder wie gewohnt."],
+  ["📋 Alle Sprachbefehle", "Liste aller Sätze, die die Sprachsteuerung versteht – antippen führt den Befehl gleich aus."],
+  ["🎓 Alle Einweisungen", "Die kurzen Erklärungen beim ersten Öffnen eines Bereichs kommen noch einmal."],
+  ["setStimme", "Welche Stimme deines Geräts Ansagen spricht und Nachrichten vorliest."],
+  ["setStimmeM", "Mit welcher Stimme Nachrichten von Männern im Chat vorgelesen werden."], ["setStimmeW", "Mit welcher Stimme Nachrichten von Frauen im Chat vorgelesen werden."],
+  [(e) => e.pfad.some((p) => /Welche Spiele/.test(p)) && /^✅/.test(e.name), "Haken = zu diesem Spiel dürfen dich andere herausfordern. Ohne Haken wirst du dafür nicht eingeladen."],
+  ["setKlopfTon", "Welcher Ton erklingt, wenn jemand bei dir anklopft."],
+  ["setKontakt_handy", "Ob andere Mitglieder deine Handynummer bei dir in der Mitgliederliste sehen. Haken = sichtbar."],
+  ["setKontakt_festnetz", "Ob andere Mitglieder deine Festnetznummer sehen. Haken = sichtbar."],
+  ["setKontakt_mail", "Ob andere Mitglieder deine E-Mail-Adresse sehen. Haken = sichtbar."], ["setKontakt_adresse", "Ob andere Mitglieder deine Adresse sehen. Haken = sichtbar."],
+  ["👁️ So sehen mich die anderen", "Zeigt deine Mitglieder-Seite so, wie die anderen sie sehen – zum Prüfen, was du freigegeben hast."],
+  ["nfName", "Dein Notfallkontakt – wer im Notfall (SOS) benachrichtigt wird. Bitte nicht dich selbst eintragen, sondern z. B. Ehefrau, Sohn, Tochter oder Nachbar."],
+  ["nfTel", "Telefonnummer deines Notfallkontakts – unter dieser Nummer wird er im Notfall erreicht."], ["nfBez", "Wer ist das für dich – z. B. Ehefrau, Sohn oder Nachbar."],
+  ["💾 Notfallkontakt speichern", "Speichert Name, Telefon und Beziehung deines Notfallkontakts."],
+  ["kalAboKnopf", "Verbindet die Club-Termine mit dem Kalender deines Handys (iPhone, Google, Outlook) – neue Termine erscheinen dort von selbst."],
+  ["🌗 Tag- und Nachtmodus", "Hell, dunkel oder automatisch – dunkel schont abends die Augen und den Akku."],
+  ["↺ Standard wiederherstellen", "Setzt Farben und Darstellung auf die Grundeinstellung zurück."], ["↺ Grundeinstellung", "Setzt die Schnellstart-Symbole auf die Vorgabe zurück."],
+  ["👥 Mitglieder anzeigen als", "Wie die Mitgliederliste aussieht – z. B. als Liste oder als Kacheln mit Bild."],
+  ["🔲 Kacheln auf der Startseite", "Wie groß die Kacheln auf der Startseite sind und wie viele nebeneinander passen."],
+  ["installHinweis", "Schritt für Schritt, wie du die App auf den Startbildschirm legst – erst dann kommen auch Mitteilungen zuverlässig."],
+  ["Nach Update suchen", "Prüft, ob es eine neue Version der App gibt, und lädt sie."], ["📋 Infos kopieren", "Kopiert Version und Geräte-Angaben – praktisch, wenn du Hansi ein Problem schilderst."],
+  ["🆘 Problem melden", "Meldet ein Problem direkt an Hansi – die App schickt die nötigen Angaben mit."],
+];
+const ewErkl = (e) => { const t = EW_ERKL.find(([m]) => (typeof m === "function" ? m(e) : m === e.id || e.name.startsWith(m))); return t ? t[1] : ""; };
+const EW_VIDEO = { einfach: "einstellungen", benachrichtigung: "push", ansagen: "einstellungen", privat: "privat", darstellung: "anpassen", effekte: "effekte", startseite: "oberflaeche", schnellstart: "oberflaeche", install: "installieren", handykalender: "termin" };
+function ewText(el) { // sichtbarer Text ohne Kommentare, Hinweise und Auswahl-Listen
+  if (!el) return ""; const k = el.cloneNode(true);
+  k.querySelectorAll(".hinweis, small, select, option, input, textarea, details, .abh-schloss, script").forEach((x) => x.remove());
+  return (k.textContent || "").replace(/\s+/g, " ").trim();
+}
+function ewSichtbar(el, w) {
+  const ein = einfach();
+  for (let x = el; x && x !== w; x = x.parentElement) {
+    if (x.classList.contains("versteckt") || x.style?.display === "none" || x.hidden) return false;
+    if (ein && x.classList.contains("nur-erweitert")) return false;
+    if (x.parentElement === w && x.matches("details[data-klappe]")) {
+      if (ein && !x.hasAttribute("data-einfach") && !x.classList.contains("einfach-sichtbar")) return false;
+      if (!ein && x.dataset.klappe === "einfach") return false;
+    }
+  }
+  return true;
+}
+function ewWert(st) { // aktueller Stand eines Bedienelements, kurz
+  if (!st) return "";
+  if (st.matches("input[type=checkbox]")) return st.checked ? "✅ an" : "⬜ aus";
+  if (st.matches("select")) return (st.selectedOptions?.[0]?.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40);
+  if (st.matches("input[type=range], input[type=number], input[type=time]")) return st.value || "–";
+  if (st.matches("input, textarea")) return st.value ? "✏️ " + st.value.slice(0, 30) : "–";
+  const t = (st.textContent || "").replace(/\s+/g, " ").trim(); return t && t.length <= 18 ? t : "›"; // Knopf in einer Zeile, z. B. „Einschalten“
+}
+function ewSammeln() {
+  const w = $("v-einstellungen"); if (!w) return { ordner: [], n: 0 };
+  const liste = [], baum = { ordner: [], eintraege: [] };
+  const eintrag = (ziel, el, name, hinweis, st) => {
+    name = EW_NAME[st?.id || el.id] || String(name || "").replace(/\s+/g, " ").replace(/:$/, "").trim();
+    if (!name || name.length < 2 || /^[▶✅] (Probe|Testton|Alle anzeigen)|^\d+\.\d+\.\d+$|^Vorschau im Kopf/.test(name)) return; // nur Probe-/Sammelknöpfe und die Versionsnummer
+    if (ziel.eintraege.some((e) => e.name === name)) return; // doppelt (z. B. Knopf und Zeile)
+    const e = { i: liste.length, name, hinweis: String(hinweis || "").replace(/\s+/g, " ").replace(/^…$/, "").trim(), el, st: st || null, id: st?.id || el.id || "", pfad: ziel.pfad };
+    const plus = ewErkl(e); if (plus && !e.hinweis.includes(plus)) e.hinweis = e.hinweis && e.hinweis.length > 30 ? e.hinweis : [plus, e.hinweis].filter(Boolean).join(" ");
+    liste.push(e); ziel.eintraege.push(e);
+  };
+  const hinweisVon = (el) => { const h = el.querySelector(".hinweis, small"); if (h) return h.textContent; const n = el.nextElementSibling; return n?.matches("p.hinweis, div.hinweis") ? n.textContent : ""; };
+  const lauf = (d, ziel) => {
+    for (const k of d.children) {
+      if (k.tagName === "SUMMARY" || !ewSichtbar(k, w)) continue;
+      if (k.tagName === "DETAILS") { const s = k.querySelector(":scope > summary"), o = { name: ewText(s), klappe: k.dataset.klappe || "", el: k, ordner: [], eintraege: [], pfad: [...ziel.pfad, ewText(s)] }; lauf(k, o); if (o.ordner.length || o.eintraege.length) ziel.ordner.push(o); continue; }
+      if (k.matches(".schalter")) { eintrag(ziel, k, ewText(k.querySelector("b") || k.firstElementChild), hinweisVon(k), k.querySelector("input, select, textarea") || k.querySelector("button")); continue; }
+      if (k.matches("label.feld")) { eintrag(ziel, k, ewText(k), hinweisVon(k), k.querySelector("select, input, textarea")); continue; }
+      if (k.matches(".knoepfe")) { k.querySelectorAll(":scope > button").forEach((b) => ewSichtbar(b, w) && eintrag(ziel, b, ewText(b), b.title || "", b)); continue; }
+      if (k.matches("button.knopf")) { eintrag(ziel, k, ewText(k), k.title || "", k); continue; }
+      const b = k.querySelector(":scope > b, :scope > div:first-child > b");
+      if (b && !k.matches("p") && (k.textContent || "").trim().startsWith((b.textContent || "").trim())) eintrag(ziel, k, ewText(b), hinweisVon(k), k.querySelector("input, select"));
+      if (k.querySelector("details, .schalter, label.feld")) lauf(k, ziel); // Hüllen (z. B. Farbwahl) – ihre Unterbereiche und Schalter mitnehmen
+    }
+  };
+  const wurzel = { ordner: [], eintraege: [], pfad: [] };
+  for (const d of w.querySelectorAll(":scope > details[data-klappe]")) if (ewSichtbar(d, w)) {
+    const s = d.querySelector(":scope > summary"), o = { name: ewText(s), klappe: d.dataset.klappe, el: d, ordner: [], eintraege: [], pfad: [ewText(s)] };
+    lauf(d, o); if (o.ordner.length || o.eintraege.length) wurzel.ordner.push(o);
+  }
+  baum.ordner = wurzel.ordner; EW.liste = liste; return baum;
+}
+const ewZahl = (o) => o.eintraege.length + o.ordner.reduce((a, x) => a + ewZahl(x), 0);
+function ewHilfe(e) { // passender Hilfe-Text: ein Eintrag, dessen „Zeig mir“ genau zu diesem Schalter führt
+  if (!e.id) return null;
+  try { return hzEintraege().find((h) => h.los && String(h.los).includes(`"${e.id}"`)) || null; } catch { return null; }
+}
+function ewVideo(e) { const top = EW.baum?.ordner.find((o) => o.name === e.pfad[0]), id = EW_VIDEO[top?.klappe]; return id ? RUNDGAENGE.find((r) => r.id === id && (!r.nur || r.nur())) : null; }
+function ewEintragHtml(e) { return `<button type="button" class="ew-eintrag" data-i="${e.i}" aria-expanded="false" onclick="ewErklaeren(${e.i})"><span class="ew-name">${esc(e.name)}</span><span class="ew-wert">${esc(e.st === e.el ? "›" : ewWert(e.st))}</span></button><div class="ew-erkl versteckt" id="ewErkl${e.i}"></div>`; }
+function ewOrdnerHtml(o, tiefe = 0) {
+  return `<details class="ew-ordner${tiefe ? " innen" : ""}"${EW.offen?.has(o.pfad.join("›")) ? " open" : ""} data-pfad="${esc(o.pfad.join("›"))}"><summary><span class="ew-name">${esc(o.name)}</span><span class="ew-zahl">${ewZahl(o)}</span></summary>
+    <div class="ew-inhalt">${o.eintraege.map(ewEintragHtml).join("")}${o.ordner.map((x) => ewOrdnerHtml(x, tiefe + 1)).join("")}</div></details>`;
+}
+function ewStart() {
+  if (!EW.gefuellt) { EW.gefuellt = true; try { einstFuellen(); } catch {} } // gleiche Werte wie beim Öffnen von ⚙️
+  EW.offen = new Set(); EW.baum = ewSammeln();
+  const f = blattAuf("ewBlatt", `<button type="button" class="dlg-x" onclick="fensterZu($('ewBlatt'))" aria-label="Schließen" title="Schließen">✕</button>
+    <h3 style="margin:0 0 4px">🧭 Einstellungen erklärt</h3>
+    <p class="hinweis" style="margin:0 0 8px">Alle <b>${EW.liste.length}</b> Einstellungen deiner App – sortiert wie in ⚙️. <b>▸</b> klappt einen Bereich auf, <b>Antippen</b> erklärt, was die Einstellung bewirkt. Hier wird nichts umgestellt – mit <b>👉 Hinbringen</b> kommst du direkt zum Schalter.</p>
+    <input type="search" id="ewSuche" data-diktat="einmal" placeholder="🔍 Suchen – z. B. Farbe, Ton, Schrift" aria-label="Einstellung suchen" autocomplete="off" oninput="ewSuchen(this.value)" style="width:100%">
+    <div class="knoepfe" style="margin:8px 0"><button type="button" class="knopf klein" onclick="ewAlle(this)">▾ Alle auf</button><button type="button" class="knopf klein" onclick="druckStarten('einstwegweiser')">🖨️ Als Schriftstück</button></div>
+    <div id="ewBaum" class="ew-baum">${EW.baum.ordner.map((o) => ewOrdnerHtml(o)).join("")}</div>`);
+  f.classList.add("ew-blatt"); return f;
+}
+function ewErklaeren(i) {
+  const e = EW.liste[i], z = $("ewErkl" + i); if (!e || !z) return;
+  const auf = z.classList.contains("versteckt");
+  document.querySelectorAll("#ewBlatt .ew-erkl:not(.versteckt)").forEach((x) => x.classList.add("versteckt"));
+  document.querySelectorAll('#ewBlatt .ew-eintrag[aria-expanded="true"]').forEach((x) => x.setAttribute("aria-expanded", "false"));
+  if (!auf) return;
+  const h = ewHilfe(e), v = ewVideo(e), w = e.st?.matches?.("input, select, textarea") ? ewWert(e.st) : "";
+  z.innerHTML = `<p class="ew-was"><b>Was bewirkt das?</b> ${e.hinweis ? esc(e.hinweis) : `Hier stellst du „${esc(e.name)}“ ein.`}</p>
+    ${h ? `<div class="ew-mehr">${h.x}</div>` : ""}
+    ${w && w !== "›" ? `<p class="ew-jetzt">Jetzt: <b>${esc(w)}</b></p>` : ""}
+    <p class="ew-wo">📍 ⚙️ Einstellungen › ${e.pfad.map(esc).join(" › ")}</p>
+    <div class="knoepfe"><button type="button" class="knopf haupt klein" onclick="ewHin(${i})">👉 Hinbringen</button>${h ? `<button type="button" class="knopf klein" onclick="fensterZu($('ewBlatt'));hzZuEintrag('${esc(h.id)}')">📖 Ganze Hilfe</button>` : ""}${v ? `<button type="button" class="knopf klein" onclick="fensterZu($('ewBlatt'));rgListeAbspielen(['${v.id}'])">🎬 Video</button>` : ""}</div>`;
+  z.classList.remove("versteckt"); document.querySelector(`#ewBlatt .ew-eintrag[data-i="${i}"]`)?.setAttribute("aria-expanded", "true");
+  for (let d = z.closest("details"); d; d = d.parentElement?.closest("details")) d.open = true;
+  z.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+function ewHin(i) { // wie suEinstellung – auch für Zeilen ohne eigene ID
+  const e = EW.liste[i]; if (!e) return; fensterZu($("ewBlatt")); zeige("einstellungen");
+  setTimeout(() => { const z = e.el; if (!z?.isConnected) return;
+    for (let d = z.closest("details"); d; d = d.parentElement?.closest("details")) d.open = true;
+    z.scrollIntoView({ behavior: "smooth", block: "center" }); z.classList.add("hervor"); setTimeout(() => z.classList.remove("hervor"), 2600); }, 300);
+}
+function ewAlle(k) {
+  const alle = [...document.querySelectorAll("#ewBaum details")], auf = alle.some((d) => !d.open);
+  alle.forEach((d) => (d.open = auf)); k.textContent = auf ? "▴ Alle zu" : "▾ Alle auf";
+}
+function ewSuchen(q) {
+  const b = $("ewBaum"); if (!b) return; q = String(q || "").trim();
+  if (suNorm(q).replace(/\s/g, "").length < 2) { b.innerHTML = EW.baum.ordner.map((o) => ewOrdnerHtml(o)).join(""); return; }
+  const t = EW.liste.filter((e) => suUnscharf(q, `${e.name} ${e.hinweis} ${e.pfad.join(" ")}`));
+  b.innerHTML = t.length ? `<p class="hinweis" style="margin:4px 0">${t.length} Treffer</p>` + t.map((e) => `<div class="ew-pfad">${e.pfad.map(esc).join(" › ")}</div>${ewEintragHtml(e)}`).join("")
+    : `<p class="hinweis">Nichts gefunden für „${esc(q)}“ – anderes Wort versuchen, z. B. „Ton“, „Farbe“ oder „Push“.</p>`;
+}
+function ewDruck() { // als Schriftstück: Inhaltsverzeichnis + je Bereich alle Einstellungen mit Erklärung und aktuellem Stand
+  if (!EW.baum) { if (!EW.gefuellt) { EW.gefuellt = true; try { einstFuellen(); } catch {} } EW.baum = ewSammeln(); }
+  const zeile = (e) => { const w = ewWert(e.st); return `<tr><td><b>${esc(e.name)}</b>${e.hinweis ? `<br><span style="color:#555">${esc(e.hinweis)}</span>` : ""}</td><td style="white-space:nowrap;text-align:right">${w && w !== "›" ? esc(w) : ""}</td></tr>`; };
+  const ordner = (o, t = 2) => `<h${t} style="margin:${t === 2 ? "14px" : "8px"} 0 4px">${esc(o.name)}</h${t}>${o.eintraege.length ? `<table style="width:100%;border-collapse:collapse;font-size:10pt">${o.eintraege.map(zeile).join("")}</table>` : ""}${o.ordner.map((x) => ordner(x, Math.min(4, t + 1))).join("")}`;
+  const iv = `<p><b>Inhalt:</b> ${EW.baum.ordner.map((o) => `${esc(o.name)} (${ewZahl(o)})`).join(" · ")}</p>`;
+  return { titel: "Einstellungen erklärt", unter: `Alle ${EW.liste.length} Einstellungen deiner App · Stand: Version ${APP_VERSION} · ${einfach() ? "einfache" : "erweiterte"} Ansicht`,
+    html: `<p>So findest du jede Einstellung: in der App unten <b>⚙️</b> bzw. Kachel <b>„Meine Einstellungen“</b>, dann den Bereich antippen. Rechts steht, wie es bei dir gerade eingestellt ist.</p>${iv}${EW.baum.ordner.map((o) => ordner(o)).join("")}` };
+}
 // 2.467.0 KC-CLUB-EINST-ABHAENGIG (Wunsch Hansi „Erst wenn man ein Klickkästchen aktiviert, sollen sich die weiteren Auswahlen öffnen lassen“): ein Klappbereich mit
 // data-abh="<id des Häkchens>" ist gesperrt (grau, 🔒), solange das Häkchen aus ist. Weitere Stellen = nur data-abh ergänzen (Registry statt Sonderfälle).
 function abhKlappen() {
@@ -25704,7 +25869,7 @@ function zeige(v, ausHistorie) {
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { MG_AMEISEN.bis = 0; MG_AMEISEN.neu = true; mgAnsichtWahlZeigen(); mitgliederLaden(); } // KC-CLUB-GRUPPEN-AMEISEN
   if (v === "einstellungen") akSichtbarSetzen(); // 2.482.0 KC-CLUB-ADVENT-UEBERRASCHUNG
-  if (v === "einstellungen") { leitungStartZeigen(); setTimeout(abhKlappen, 900); /* 2.469.0 KC-CLUB-EINST-ABHAENGIG (Häkchen kommen teils erst vom Server) */ notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+  if (v === "einstellungen") einstFuellen(); // 2.534.0: eigene Funktion – der Einstellungs-Wegweiser füllt die Werte genauso
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;
@@ -25720,6 +25885,7 @@ function zeige(v, ausHistorie) {
 // stehende werden versteckt, alle zur Laufzeit gebauten entfernt (Rückfragen über ihr „Abbrechen“). Gilt für Handy-Zurück und Escape.
 document.querySelectorAll(".blatt").forEach((b) => { b.dataset.fest = "1"; });
 // 2.24.6 (Fehlerprotokoll Hansi: avSetzen → fensterZu(null), wenn „Mein Bild“ schon zu war): ein nicht (mehr) offenes Fenster ist schon zu
+function einstFuellen() { leitungStartZeigen(); setTimeout(abhKlappen, 900); /* 2.469.0 KC-CLUB-EINST-ABHAENGIG (Häkchen kommen teils erst vom Server) */ notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
 function fensterZu(b) { if (!b) return; if (b._zu) b._zu(); else if (b.dataset.fest) b.classList.add("versteckt"); else b.remove(); }
 // 2.425.0 KC-CLUB-GENERALCHECK (Eingaben schützen): wer in einem Fenster etwas getippt hat und es aus Versehen schließt (daneben tippen,
 // ✕, Escape, Handy-„Zurück“), wird gefragt – vorher war der Text (z. B. SOS-Text, Termin-Vorschlag, Schild) ohne Rückfrage weg.
@@ -36012,6 +36178,7 @@ const DRUCKARTEN = {
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
   erstattungBlatt: { titel: "📄 Erstattungsantrag", bauen: (o, d) => ({ titel: `Erstattungsantrag ${d.name}`.trim(), ohneRahmen: true, html: erstBlatt(d) }) }, // 2.526.0
   anleitung: { bauen: () => druckAnleitung() },
+  einstwegweiser: { bauen: () => ewDruck() }, // 2.534.0 KC-CLUB-EINST-WEGWEISER
   ueberblick: { bauen: () => druckUeberblick() },
   hilfe: { titel: "🖨️ Hilfe drucken / als PDF", optionen: () => hzDruckOptionen(), bauen: (o) => hzDruck(o) }, // KC-CLUB-HILFEZENTRUM (2.23.2)
   dokument: { bauen: () => dokDruckSeite() }, // KC-CLUB-DOK-ANZEIGE (1.62.0): PDF-Seiten randlos auf A4
@@ -38522,6 +38689,7 @@ function suAppListe() {
     ["🎪", "Kopf-Effekt wählen (Jalousie, Vorhang, Glocke …)", "kopf effekt jalousie vorhang theater servierglocke marktbude climber einrollen", () => einstiegHin("effekte", "setKopfEffekt")],
     ["⌨️", "Tippgeräusche (Tastatur, Schreibmaschine)", "tippgeräusche tastatur schreibmaschine tippen hören live", () => einstiegHin("benachrichtigung", "setTippTon")],
     ["🎁", "Geburtstags-Vogel ansehen", "geburtstag vogel geschenk happy birthday blumenstrauß", () => gbvVorschau()],
+    ["🧭", "Einstellungen erklärt (alle Einstellungen wie im Explorer)", "einstellungen erklärt erklärung übersicht alle einstellungen explorer wegweiser anleitung voreinstellungen was bewirkt bedeutet schritt für schritt", () => ewStart()], // 2.534.0
     // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4: Verschlüsseln, Schlüsselbund, Versand-Leiste, Teilen, Diashow, PDF – auch per 🎤 Sprachsuche
     ["🔒", "Nachricht verschlüsselt senden (Schloss, Schlüssel)", "verschlüsseln verschlüsselt verschlüsselung geheim schloss schlüssel kennwort passwort code geheimnachricht sicher senden", () => hzZuEintrag("h:verschluesselt")],
     ["🔑", "Schlüsselbund (verschlüsselt ohne Eintippen)", "schlüsselbund schlüssel bund datei einlesen partner zweier chat verschlüsselt automatisch", () => hzZuEintrag("h:schluesselbund")],

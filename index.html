@@ -2860,6 +2860,22 @@
   #chat > * { scroll-margin-top: var(--chatKopfHoehe, 120px); }
   .zurueck { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--karte); box-shadow: var(--schatten); font-size: 1.2rem; cursor: pointer; }
   /* 2.529.0 KC-CLUB-SCHREIBT-HINWEIS: „Klaus schreibt dir gerade …“ außerhalb des Chats */
+  /* 2.534.0 KC-CLUB-EINST-WEGWEISER: „🧭 Einstellungen erklärt“ – Ordner-Baum wie im Explorer, Antippen klappt die Erklärung auf */
+  .ew-baum { display: grid; gap: 6px; }
+  .ew-ordner { border: 1px solid var(--linie); border-radius: 12px; background: var(--karte); }
+  .ew-ordner.innen { margin: 4px 0 4px 10px; border-style: dashed; }
+  .ew-ordner > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 10px; cursor: pointer; font-weight: 700; }
+  .ew-zahl { margin-left: auto; font-size: .8rem; font-weight: 700; color: var(--grau); background: var(--karte2); border-radius: 999px; padding: 1px 8px; }
+  .ew-inhalt { padding: 0 8px 8px; display: grid; gap: 4px; }
+  .ew-eintrag { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; text-align: left; padding: 6px 10px; border: 0; border-radius: 10px; background: var(--karte2); color: var(--text); font: inherit; cursor: pointer; }
+  .ew-eintrag[aria-expanded="true"] { outline: 2px solid var(--gruen); }
+  .ew-name { flex: 1; }
+  .ew-wert { font-size: .82rem; color: var(--grau); white-space: nowrap; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
+  .ew-erkl { margin: 0 4px 6px; padding: 8px 10px; border-left: 3px solid var(--gruen); background: var(--gruenbg); border-radius: 0 10px 10px 0; color: var(--text); }
+  .ew-erkl p { margin: 0 0 6px; }
+  .ew-mehr { font-size: .92rem; margin: 0 0 6px; }
+  .ew-wo, .ew-pfad { font-size: .8rem; color: var(--grau); }
+  .ew-pfad { margin: 6px 2px 2px; }
   .schreibt-hinweis { position: fixed; left: 50%; transform: translateX(-50%); top: calc(14px + var(--notH, 0px)); z-index: 2290; max-width: 92%; display: flex; align-items: center; gap: 6px;
     background: #fff; color: #2b1a1c; border: 2px solid #c9a46a; border-radius: 14px; padding: 9px 14px; font: inherit; font-size: .95rem; box-shadow: 0 6px 18px rgba(0,0,0,.25); cursor: pointer; }
   .meldung { position: fixed; left: 50%; transform: translateX(-50%); top: calc(14px + var(--notH, 0px)); background: #2b1a1c; color: #fff; padding: 12px 18px; border-radius: 14px; z-index: 2300; max-width: 92%; box-shadow: 0 8px 24px rgba(0,0,0,.25); } /* 2.23.29 (Fund Hansi): auch über Vollbild-Fenstern wie Twinkey (2000) sichtbar */
@@ -5586,7 +5602,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.533.0" data-v="2.533.0"></script>
+<script src="app.js?v=2.534.0" data-v="2.534.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

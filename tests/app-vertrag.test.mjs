@@ -4026,7 +4026,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/<details class="karte versteckt" data-klappe="leitung_start" id="leitungStart">/.test(html) && /id="setTagesinfo" onchange="leitungStartSetzen\('tagesinfo', this\.checked\)"/.test(html) && /id="setEkHinweis" onchange="leitungStartSetzen\('eingang', this\.checked\)"/.test(html), "zwei Schalter");
   assert.ok(/const key = was === "tagesinfo" \? "kc_buero_frage_aus" : EKH_AUS;/.test(html) && /localStorage\.getItem\("kc_buero_frage_aus"\)/.test(html), "Tages-Übersicht nutzt den vorhandenen Merker (kein zweiter)");
-  assert.ok(/!buDarf\(\) \|\| ekhLies\(EKH_AUS\) === "1"\) return;/.test(html) && /if \(v === "einstellungen"\) \{ leitungStartZeigen\(\);/.test(html) && /k\.classList\.toggle\("versteckt", !darf\)/.test(html), "Hinweis respektiert Aus; nur Clubleitung sieht den Bereich");
+  assert.ok(/!buDarf\(\) \|\| ekhLies\(EKH_AUS\) === "1"\) return;/.test(html) && /function einstFuellen\(\) \{ leitungStartZeigen\(\);/.test(html) && /k\.classList\.toggle\("versteckt", !darf\)/.test(html), "Hinweis respektiert Aus; nur Clubleitung sieht den Bereich");
 }
 // 396. 2.23.47: 🎤 Diktieren in Feldern (KC-CLUB-DIKTAT-FELD)
 {
@@ -6795,7 +6795,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const seiteE = lies("index.html");
   assert.ok(!/EINST_GRUPPEN|function einstGruppieren/.test(html) && !/data-klappe="hilfe"/.test(seiteE), "Hauptbereiche aus 2.469.0 wieder entfernt (alte Aufteilung)");
-  assert.ok(/if \(v === "einstellungen"\) \{ leitungStartZeigen\(\); setTimeout\(abhKlappen, 900\);/.test(html), "beim Öffnen Häkchen neu prüfen");
+  assert.ok(/function einstFuellen\(\) \{ leitungStartZeigen\(\); setTimeout\(abhKlappen, 900\);/.test(html), "beim Öffnen Häkchen neu prüfen");
   assert.ok(/<input type="search" id="einstSuche"[^>]*oninput="einstSuchen\(this\.value\)"/.test(seiteE) && /function einstSuchen\(q, leeren\)/.test(html) && /alle\.forEach\(\(d\) => \(d\.open = EINST_SUCHE\.offen\.has\(d\)\)\)/.test(html), "Suche + Zurückstellen der Auf/Zu-Stände");
   for (const id of ["setTipps", "setWasNeu", "setSchrittHilfe", "setEinw"]) assert.equal((seiteE.match(new RegExp(`id="${id}"`, "g")) || []).length, 1, "genau einmal: " + id);
   assert.ok(/<div class="schalter nur-erweitert"><div><b>❓ Fragezeichen unten rechts<\/b>/.test(seiteE) && /body\.einfach #v-einstellungen \.nur-erweitert \{ display: none; \}/.test(seiteE), "kein doppeltes Fragezeichen in der einfachen Ansicht");
@@ -11614,4 +11614,15 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/const jzbWwNameText = \(\) => \[\.\.\.\(jzbEisNameText\(\) \|\| "Köcheclub"\)\]\.slice\(0, 12\);/.test(programm) && /jzbWwRauchNameMalen\(c, t, O, k, T\);/.test(programm), "Vorname (sonst Köcheclub) aus Rauch");
   assert.ok(/JZB_WW_NAME_WEHT = 26/.test(programm) && /if \(t < JZB_WW_PFEIFE\[0\] \|\| t >= JZB_WW_DUELL\) return;/.test(programm), "Name verweht vor dem Duell");
   assert.ok(/raucht die <b>Friedenspfeife<\/b>/.test(html), "Hilfe nennt die Friedenspfeife");
+}
+// 2.534.0 KC-CLUB-EINST-WEGWEISER (Wunsch Hansi „alle Möglichkeiten auflisten und kurz erklären – als eigene Kachel unter Technik, wie der Explorer bei Windows“)
+{
+  assert.ok(/\{ id: "einstwegweiser", sym: "🧭", t: "Einstellungen erklärt", [^\n]*aktion: "ewStart\(\)" \}/.test(html), "Kachel unter Technik");
+  const ew = html.slice(html.indexOf("// ---------- 2.534.0 KC-CLUB-EINST-WEGWEISER"), html.indexOf("// 2.467.0 KC-CLUB-EINST-ABHAENGIG (Wunsch Hansi"));
+  assert.ok(ew.length > 5000 && /function ewSammeln\(\)/.test(ew) && /querySelectorAll\(":scope > details\[data-klappe\]"\)/.test(ew), "Baum kommt aus der Seite ⚙️ (neue Einstellungen von selbst)");
+  assert.ok(/if \(ein && !x\.hasAttribute\("data-einfach"\)/.test(ew) && /x\.classList\.contains\("versteckt"\)/.test(ew), "gleiche Sicht wie ⚙️ (einfach/erweitert, Admin)");
+  assert.ok(!/\.checked = |\.click\(\)|dispatchEvent|einstellung\(|api\(/.test(ew), "Wegweiser stellt nichts um und fragt keine Datenbank");
+  assert.ok(/👉 Hinbringen/.test(ew) && /📖 Ganze Hilfe/.test(ew) && /🎬 Video/.test(ew) && /einstwegweiser: \{ bauen: \(\) => ewDruck\(\) \}/.test(html), "Erklärung mit Hinbringen, Hilfe, Video; Schriftstück");
+  assert.ok(/if \(v === "einstellungen"\) einstFuellen\(\);/.test(html), "Werte füllen wie beim Öffnen von ⚙️");
+  assert.ok(/\{ id: "einst_wegweiser", thema: "start"/.test(html) && /\{ id: "einstellungen-erklaert", sym: "🧭"/.test(html) && /if \(b\.art === "wegweiser"\) return ewStart\(\);/.test(html), "Hilfe, Twinkey, Sprachsteuerung");
 }
