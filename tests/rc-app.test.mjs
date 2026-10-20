@@ -61,3 +61,14 @@ assert.ok(!/class="knopf haupt[^"]*"[^>]*>Speichern<\/button>/.test(app + seite)
 assert.ok(/onclick="statusSpeichern\(\)">💾 Speichern<\/button>/.test(seite) && /id="bsSpeichern" onclick="bsSpeichern\(this\)">💾 Speichern<\/button>/.test(app), "💾 Speichern");
 
 console.log("rc-app: alle Prüfungen bestanden");
+
+// KC-CLUB-MINDESTVERSION (RC 20.10.2026): Mindestversion in version.json, App aktualisiert sich, Server bittet beim Start um ein Update
+{
+  const vj = JSON.parse(lies("version.json"));
+  const srvM = lies("supabase/functions/kc-club/index.ts");
+  const appM = lies("app.js");
+  assert.ok(/^\d+\.\d+\.\d+$/.test(vj.mindest || ""), "version.json hat mindest");
+  assert.ok(srvM.includes(`const MINDEST_APP_VERSION = "${vj.mindest}";`), "Server und version.json gleich");
+  assert.ok(/versionAelter\(v, MINDEST_APP_VERSION\) && !ich\.admin\)\s*throw new Fehler\(`Deine Club-App ist veraltet/.test(srvM), "init bittet alte Apps um ein Update");
+  assert.ok(/function mindestPflicht\(v\)/.test(appM) && /v\.mindest && versionNeuer\(String\(v\.mindest\), APP_VERSION\)\) mindestPflicht\(v\)/.test(appM), "App aktualisiert sich bei zu alter Version");
+}

@@ -778,6 +778,7 @@ const FP_FILTER = "aktion.like.fehler_%,aktion.eq.hilferuf,aktion.eq.diagnose_st
 const FP_SCHWER = new Set(["hilferuf", "hilferuf_anonym", "start_kaputt"]);
 const FP_INFO = new Set(["alte_version", "update_getippt", "umgebung", "startzeit", "hinweis", "link_kopiert", "diagnose_start", "zugang_angefordert", "offline", "anonym_admin_benachrichtigt",
   "update_selbst", "update_start"]); // 2.310.2 KC-CLUB-FP-RUHIG: Updates sind Info, kein Fehler
+FP_INFO.add("update_mindest"); // KC-CLUB-MINDESTVERSION (RC 20.10.2026): erzwungenes Update ist Info, kein Fehler
 const FP_VOLL = 300; // ab so vielen Einträgen fragt die Tagesinfo, ob geleert werden soll
 const fpNurBrowser = (d: any) => /^Script error\.?$/i.test(String(d?.text ?? "").trim()) && !d?.datei && !Number(d?.zeile) && !String(d?.stapel ?? "").trim();
 function fpStufe(aktion: string, d: any): "schwer" | "hinweis" | "info" {
@@ -2869,6 +2870,9 @@ const ANMELDUNG_CACHE_MS = 60_000, ZULETZT_TAKT_MS = 30_000, ANMELDUNG_CACHE_MAX
 const ANMELDUNGEN = new Map<string, { ich: Ich; bis: number; gesehen: number; version: string | null }>();
 const anmeldungenVergessen = () => ANMELDUNGEN.clear();
 const INSTANZ = crypto.randomUUID().slice(0, 8); let ANMELDUNG_TREFFER = false; // Messung: welche Instanz, Speicher getroffen?
+// KC-CLUB-MINDESTVERSION (RC 20.10.2026): ältere App-Versionen werden beim Start um ein Update gebeten (gleich halten mit "mindest" in version.json)
+const MINDEST_APP_VERSION = "2.500.0";
+const versionAelter = (a: string, b: string) => { const x = a.split(".").map(Number), y = b.split(".").map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); return false; };
 async function anmelden(req: Request): Promise<Ich> {
   const token = req.headers.get("x-club-token") ?? "";
   if (!/^[0-9a-f]{32,96}$/.test(token)) throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401);
@@ -6665,6 +6669,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ code, bis, minuten: KURZCODE_MIN });
       }
       case "init": {
+        // KC-CLUB-MINDESTVERSION (RC 20.10.2026, Freigabe Hansi): sehr alte Apps starten nicht mehr mit altem Stand, sondern bekommen
+        // eine klare Bitte zum Aktualisieren (alte Apps zeigen die Meldung; ihre eigene Update-Prüfung bietet „Jetzt aktualisieren“ an)
+        { const v = txt(req.headers.get("x-club-version"), 20); if (v && /^\d+\.\d+\.\d+$/.test(v) && versionAelter(v, MINDEST_APP_VERSION) && !ich.admin)
+          throw new Fehler(`Deine Club-App ist veraltet (${v}). Bitte oben auf „🆕 Neue Version“ tippen – oder die App ganz schließen und neu öffnen.`, 426); }
         // KC-CLUB-START-PARALLEL (2.30.0, Fall Klara: 2–10 s Serverzeit im schwachen Netz): alle unabhängigen Abfragen sofort
         // gleichzeitig starten statt ~20 Runden nacheinander – Inhalt der Antwort bleibt genau gleich.
         // KC-CLUB-START-MESSUNG (2.157.0): wann welcher Teil fertig war (ms seit Anfrage) – nur Zahlen, für die Startmessung

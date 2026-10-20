@@ -36350,8 +36350,19 @@ async function updatePruefen(vonHand) {
       fpNeu("alte_version", { hat: APP_VERSION, neu: v.version, text: `läuft noch auf ${APP_VERSION}, aktuell ist ${v.version}` });
       $("updateHinweis").innerHTML = `<div class="updatebalken">🆕 Neue Version ${esc(v.version)} – du hast noch ${esc(APP_VERSION)}${v.neu?.length ? ": " + esc(v.neu[0]) : ""}<button class="knopf haupt klein" style="margin-left:auto" onclick="fpNeu('update_getippt',{hat:APP_VERSION});jetztAktualisieren()">🔄 Jetzt aktualisieren</button><button class="knopf klein" onclick="updateFenster()">Was ist neu?</button></div>`;
     } else if (vonHand) melde(`✔ Du hast die neueste Version (${APP_VERSION}).`);
+    if (NEUE_VERSION && v.mindest && versionNeuer(String(v.mindest), APP_VERSION)) mindestPflicht(v); // KC-CLUB-MINDESTVERSION
     versionAnzeigen();
   } catch { if (vonHand) melde("Update-Prüfung gerade nicht möglich – bitte Internet prüfen.", true); }
+}
+// KC-CLUB-MINDESTVERSION (RC 20.10.2026, Freigabe Hansi): ist diese App älter als "mindest" in version.json, wird sofort aktualisiert –
+// nur nicht mitten im Tippen (dann bleibt der Hinweis stehen, bis „Jetzt aktualisieren“ getippt wird). Höchstens 1× je 10 Min. von selbst.
+let MINDEST_VERSUCHT = 0;
+function mindestPflicht(v) {
+  if (!document.getElementById("mindestBlatt")) blattAuf("mindestBlatt", `<h3 style="margin-top:0">🆕 Bitte die App aktualisieren</h3>
+    <p style="margin:0 0 8px">Du hast noch Version ${esc(APP_VERSION)}. Aktuell ist ${esc(v.version)} – damit alle denselben Stand haben, wird jetzt aktualisiert.</p>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" onclick="jetztAktualisieren()">🔄 Jetzt aktualisieren</button></div>`);
+  if (RUF || SPR || etwasGetippt() || Date.now() - MINDEST_VERSUCHT < 10 * 60000) return;
+  MINDEST_VERSUCHT = Date.now(); fpNeu("update_mindest", { hat: APP_VERSION, neu: v.version, mindest: v.mindest }); jetztAktualisieren();
 }
 // Kachel „Update prüfen“ und kleiner Versions-Knopf: prüfen und – wenn es etwas Neues gibt – gleich anbieten
 async function updateKachel() {
@@ -38830,6 +38841,7 @@ const FP_ARTEN = {
   alte_version: ["🕰️", "Alte App-Version", "„Jetzt aktualisieren“ wurde angeboten"],
   update_getippt: ["🔄", "Aktualisieren getippt", ""],
   update_selbst: ["🔄", "App hat sich selbst aktualisiert", "neue Version geladen – nichts zu tun"], // 2.310.2
+  update_mindest: ["🆕", "Zu alte App-Version – Update erzwungen", "Mindestversion aus version.json – nichts zu tun"], // KC-CLUB-MINDESTVERSION
   update_start: ["🔄", "Beim Start aktualisiert", "neue Version geladen – nichts zu tun"],
   umgebung: ["📱", "Gerät & Browser", ""],
   ohne_link: ["🔑", "Ohne persönlichen Link geöffnet", "Link neu schicken"],
