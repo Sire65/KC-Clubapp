@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.525.0 – 2026-10-20 – Teilen-Diagnose genauer (KC-CLUB-TEILEN-DIAGNOSE-2)
+Nachtrag zu 2.522.0: Hansis neuer Versuch (10:44 Uhr, v2.524.0) kam wieder mit „Es ist nichts angekommen“ an – die Diagnose konnte aber nicht unterscheiden, ob im Zwischenspeicher gar nichts stand (Teilen hat den Hintergrund-Dienst nicht erreicht oder der Speicher ist voll) oder ob das Handy ein leeres Paket geschickt hat (Dateityp für die installierte App noch nicht freigeschaltet). Jetzt meldet die Diagnose zusätzlich, welche Angaben im Zwischenspeicher standen, wie viele Felder das Handy schickte und welche Version des Hintergrund-Dienstes das Teilen angenommen hat. Nur App, keine Inhalte.
+
 ## Datenbank 20.10.2026 – web.de-Bremse enger: 3 je Minute, 20 je Stunde (KC-COMM-WARTEN, Nachschärfung)
 Erster Echtbetrieb der Mail-Warteschlange (10:01–10:12 Uhr, 3 Rundnachrichten, 41 Mails): die Warteschlange arbeitete (höchstens 5 je Minute über web.de, alle Mails kamen an), aber web.de lehnte nach 26 Mails in 9 Minuten ab – Brevo übernahm die übrigen 14. Freigabe Hansi „Ja“: Bremse auf 3 je Minute und 20 je Stunde (Migration `20261020_kc_comm_webde_bremse_enger.sql`, nur Einstellung in `kc_communication_providers`, kein Programmcode). Keine neue App-Version.
 
