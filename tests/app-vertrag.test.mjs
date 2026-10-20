@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7127,6 +7127,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/versandZeigen\(\); \} \/\/ 2\.524\.0 KC-CLUB-VERSANDART/.test(js) && /function chipsZeigen\(\) \{\n  versandZeigen\(\);/.test(js), "Leiste erscheint beim Schreiben und mit Anhang");
 }
 
+// 2.535.0 KC-CLUB-NOTPAKET-FEHLERPAUSE (Server) + KC-CLUB-TEILEN-GROESSE
+{
+  assert.ok(/if \(!erzwingen && fehlerAm > \(zeitVon\(st\.hochgeladen_am\) \|\| 0\) && Date\.now\(\) - fehlerAm < 30 \* 60000\)/.test(server), "Notfall-Paket: Pause nach Fehlschlag");
+  assert.ok(/return \{ ok: true, gedrosselt: true, nachFehler: true,/.test(server), "Pause meldet gedrosselt");
+  assert.ok(/await protokoll\(null, "notpaket_fehler", \{ erzwungen: erzwingen, fehler \}\)\.catch\(\(\) => \{\}\);/.test(server), "Fehlschlag kommt ins Protokoll");
+  const swq = lies("sw.js");
+  assert.ok(/anzahl: dateien\.length, groesse: Number\(req\.headers\.get\("content-length"\)\) \|\| null,/.test(swq), "Teilen: Größe der Sendung immer festhalten");
+  assert.ok(/Das Handy hat beim Teilen keine Datei mitgeschickt/.test(programm) && !/kennt diesen Dateityp noch nicht/.test(programm), "Teilen-leer: kein falscher Grund");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

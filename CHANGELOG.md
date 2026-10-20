@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.535.0 – 2026-10-20 – Notfall-Paket: Pause nach Fehlschlag · Teilen: ehrliche Meldung, wenn das Handy nichts mitschickt
+Anlass: Lastwarnung 20.10.2026 16:03 („10417 SQL-Aufrufe / 15 Min., Ursache unbekannt“) und Hansis Rechnung-PDF (1,2 MB), die beim Teilen leer ankam.
+- **Server – KC-CLUB-NOTPAKET-FEHLERPAUSE:** Das Notfall-Paket (~3.000 Abfragen je Bau) scheiterte um 15:45 (Zeitlimit 546) und 16:00 (Datenbank-Zeitgrenze, 503). Weil der 3-Stunden-Abstand seit dem letzten guten Paket schon um war, baute jeder 15-Min.-Lauf sofort neu. Jetzt nach einem Fehlschlag immer frühestens nach 30 Min. (nicht bei „erzwingen“). Fehlschläge kommen als `notpaket_fehler` ins Protokoll (Grundlage, damit die Lastwarnung die Ursache nennen kann).
+- **App – KC-CLUB-TEILEN-LEER korrigiert:** Die Meldung nannte als Grund „Dateityp unbekannt“ und empfahl Neu-Installieren. Am 20.10. kamen PDFs (106 KB, 158 KB) aus demselben Dateimanager aber an – nur die größere nicht. Neue Meldung: das Handy hat keine Datei mitgeschickt, bitte über 📎 anhängen (bis 8 MB).
+- **KC-CLUB-TEILEN-GROESSE:** Der Service Worker hält bei jedem Teilen fest, wie groß die Sendung vom Handy war (nur Zahl, keine Inhalte) – so sieht man, ob eine große Datei leer ankam.
+- Test: Vertragstest-Block 2.535.0. Rückweg: App 2.534.0 / Server 2.529.0 erneut einspielen.
+
 ## 2.534.0 – 2026-10-20 – 🧭 „Einstellungen erklärt“: alle Einstellungen wie im Explorer (KC-CLUB-EINST-WEGWEISER)
 Wunsch Hansi („spezielle Anleitung – Voreinstellungen leicht gemacht: die gesamten Möglichkeiten auflisten und kurz erklären … als eigene Kachel unter Technik, wie der Explorer bei Windows; Überschrift z. B. ‚Farben einstellen‘, antippen, dann kommt die Erklärung“).
 - **Neue Kachel „🧭 Einstellungen erklärt“** unter Technik: alle Einstellungen als Ordner-Baum (Bereiche wie in ⚙️, ▸ klappt auf, daneben die Anzahl). Jede Einstellung mit ihrem aktuellen Stand (✅ an / ⬜ aus / gewählter Wert). **Antippen** klappt die Erklärung auf: „Was bewirkt das?“, „Jetzt: …“, wo sie in ⚙️ steht – dazu **👉 Hinbringen** (öffnet ⚙️, klappt den Bereich auf, der Schalter leuchtet), **📖 Ganze Hilfe** (wenn es einen Hilfe-Text dazu gibt) und **🎬 Video** zum Bereich.

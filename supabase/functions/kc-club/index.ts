@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.529.0";
+const SERVER_VERSION = "2.535.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -15179,6 +15179,11 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
       if (!neuerTag && !nachFehler && (nacht || Date.now() - zuletzt < NOT_ABSTAND_MIN * 60000))
         return { ok: true, gedrosselt: true, nacht, naechsterBau: nacht ? null : new Date(zuletzt + NOT_ABSTAND_MIN * 60000).toISOString() };
     }
+    // 2.535.0 KC-CLUB-NOTPAKET-FEHLERPAUSE (Lastwarnung 20.10.2026 16:03): nach einem Fehlschlag frühestens nach 30 Min. neu bauen – auch wenn
+    // der Abstand seit dem letzten guten Paket schon um ist. Sonst baute jeder 15-Min.-Lauf erneut (~3.000 Abfragen je Versuch). Nicht bei „erzwingen“.
+    const fehlerAm = zeitVon(st.fehler_am);
+    if (!erzwingen && fehlerAm > (zeitVon(st.hochgeladen_am) || 0) && Date.now() - fehlerAm < 30 * 60000)
+      return { ok: true, gedrosselt: true, nachFehler: true, naechsterBau: new Date(fehlerAm + 30 * 60000).toISOString() };
     if (!erzwingen && fp && st.fingerabdruck === fp) {
       // nichts geändert: nur „Stand ist aktuell bis jetzt“ melden (klein, signiert)
       await senden("/stand", new TextEncoder().encode(JSON.stringify({ stand: erstellt, fingerabdruck: fp })), "application/json");
@@ -15218,6 +15223,8 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
   } catch (e) {
     const fehler = txt(e instanceof Error ? e.message : String(e), 300);
     await db.from("kc_club_notbetrieb").update({ fehler, fehler_am: jetzt() }).eq("id", 1);
+    // KC-CLUB-NOTPAKET-FEHLERPAUSE: auch der Fehlschlag kommt ins Protokoll – die Lastwarnung kennt so die Ursache (vorher „unbekannt“)
+    await protokoll(null, "notpaket_fehler", { erzwungen: erzwingen, fehler }).catch(() => {});
     return { ok: false, fehler };
   }
 }
