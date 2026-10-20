@@ -2276,8 +2276,16 @@
   .eingabe .innen > #mikroKnopf.rund:not(#sendenKnopf) { background: #fff !important; border: 3px solid var(--rot3, var(--rot)) !important; font-size: 1.35rem !important; box-shadow: 0 0 0 2px var(--rot) inset, 0 1px 4px rgba(0,0,0,.25); }
   .eingabe .innen > .zustell-knopf.an { background: var(--rot) !important; border-color: var(--rot); color: #fff; }
   /* KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): ❗ an = Schreibfeld und Knopf orange; wichtige Nachrichten orange umrandet mit Marke */
-  .eingabe .innen > #expressKnopf.rund.an { background: #c0392b !important; border-color: #7b1e2b !important; color: #fff; box-shadow: 0 0 0 3px rgba(192,57,43,.35); } /* 2.362.0 KC-CLUB-EXPRESS */
-  #expressKnopf { position: relative; } #expressKnopf[data-zahl]::after { content: attr(data-zahl); position: absolute; top: -7px; right: -9px; background: #fff; color: #7b1e2b; border: 1.5px solid #7b1e2b; border-radius: 9px; font-size: .62rem; font-weight: 700; line-height: 1; padding: 2px 4px; pointer-events: none; } /* 2.391.0 KC-CLUB-EXPRESS-ZAEHLER */
+  /* 2.524.0 KC-CLUB-VERSANDART: Versand-Leiste über dem Schreibfeld – Haken ☐/✔, Wichtig orange, Express rot (Farben wie vorher an den runden Knöpfen) */
+  .versand { max-width: 1100px; margin: 0 auto 6px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: .85rem; color: var(--grau); font-weight: 700; }
+  .versand.versteckt { display: none; }
+  .versand .vs-wahl { min-height: 40px; display: inline-flex; align-items: center; gap: 5px; border: 2px solid var(--linie); background: var(--karte); color: var(--text); border-radius: 20px; padding: 4px 12px; font: inherit; font-size: .9rem; font-weight: 800; cursor: pointer; }
+  .versand .vs-wahl::before { content: "☐"; font-weight: 900; } .versand .vs-wahl.an::before { content: "✔"; }
+  @media (max-width: 440px) { .versand { gap: 5px; } .versand .vs-titel { display: none; } .versand .vs-wahl { padding: 4px 8px; gap: 3px; font-size: .84rem; } } /* Handy: eine Zeile */
+  .versand #normalKnopf.an { border-color: var(--text); }
+  .versand #wichtigKnopf.an { background: #ff9800; border-color: #e65100; color: #fff; box-shadow: 0 0 0 3px rgba(255,152,0,.35); }
+  .versand #expressKnopf.an { background: #c0392b; border-color: #7b1e2b; color: #fff; box-shadow: 0 0 0 3px rgba(192,57,43,.35); } /* 2.362.0 KC-CLUB-EXPRESS */
+  #expressKnopf[data-zahl]::after { content: attr(data-zahl); background: #fff; color: #7b1e2b; border: 1.5px solid #7b1e2b; border-radius: 9px; font-size: .7rem; font-weight: 700; line-height: 1; padding: 2px 5px; pointer-events: none; } /* 2.391.0 KC-CLUB-EXPRESS-ZAEHLER – 2.524.0 in der Leiste neben dem Wort */
   textarea.express { border-color: #c0392b !important; box-shadow: 0 0 0 2px rgba(192,57,43,.3); }
   .express-marke { display: inline-block; margin: 0 0 4px; padding: 1px 8px; border-radius: 999px; background: #c0392b; color: #fff; font-weight: 800; font-size: .78rem; letter-spacing: .03em; font-style: italic; }
   .blase.eigen .express-marke { background: #fff; color: #c0392b; }
@@ -2323,7 +2331,6 @@
   .express-best { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 2px 10px; padding: 10px 12px; margin: 0 0 10px; border-radius: 12px; background: var(--karte2); cursor: pointer; font-size: 1.05rem; }
   .express-best input { width: 26px; height: 26px; grid-row: span 2; accent-color: #c0392b; }
   .express-best small { grid-column: 2; color: var(--grau); font-size: .82rem; }
-  .eingabe .innen > #wichtigKnopf.rund.an { background: #ff9800 !important; border-color: #e65100 !important; color: #fff; box-shadow: 0 0 0 3px rgba(255,152,0,.35); }
   .eingabe .innen > #text.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.25); }
   /* KC-CLUB-SELBSTLOESCHEN (2.148.0): ⏳ an = violett; neun gleich große Knöpfe passen auch auf schmale Handys (alle gleich breit) */
   .eingabe .innen > .rund:not(#sendenKnopf) { width: min(40px, calc((100vw - 140px) / 8)) !important; height: min(40px, calc((100vw - 140px) / 8)) !important; }
@@ -5027,7 +5034,7 @@
         <div class="schalter"><div><b>📣 @Erwähnungen trotzdem melden</b><div class="hinweis">Wenn dich jemand mit @ direkt anspricht</div></div><input type="checkbox" id="ruheErw" checked onchange="ruheSpeichern()"></div>
       </details>
       <!-- KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0) -->
-      <div class="schalter"><div><b>❗ Vor dem Senden nach der Wichtigkeit fragen</b><div class="hinweis">📝 Normal oder ❗ Hoch – je Chat höchstens alle 30 Minuten. Hoch: farbig markiert, Push und E-Mail, nach 24 Std. ungelesen bekommst du Bescheid.</div></div><input type="checkbox" id="setWichtigFrage" onchange="wichtigFrageSetzen(this.checked)"></div>
+      <div class="schalter"><div><b>📝❗🏎️ Versand-Leiste immer zeigen</b><div class="hinweis">Normal / Wichtig / Express über dem Schreibfeld – auch wenn noch nichts im Feld steht (sonst erscheint sie beim Schreiben). Wichtig: farbig markiert, Push und E-Mail, nach 24 Std. ungelesen bekommst du Bescheid.</div></div><input type="checkbox" id="setWichtigFrage" onchange="versandImmerSetzen(this.checked)"></div>
     </details>
     <!-- KC-CLUB-ONLINE-ANSAGE (1.57.1, 1.58.1 + Tipp des Tages): eigener Kasten – in der einfachen UND der erweiterten Ansicht sichtbar -->
     <details class="karte" data-klappe="ansagen" data-einfach open>
@@ -5341,15 +5348,15 @@
   <div class="eingabe-entwurf versteckt" id="entwurfMarke">✏️ Entwurf – noch nicht gesendet</div>
   <div class="eingabe-entwurf sl-leiste versteckt" id="slMarke" role="button" tabindex="0" title="Antippen: Was bedeutet das?" onclick="slErklaeren()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();slErklaeren()}"></div> <!-- KC-CLUB-SELBSTLOESCHEN (2.148.0); 2.163.0: antippbar mit Erklärung -->
   <div class="eingabe-entwurf versteckt" id="sprungHinweis"></div> <!-- 2.23.99 (Wunsch Hansi): App-Link im Entwurf → „wird als Knopf angezeigt“ -->
+  <!-- KC-CLUB-VERSANDART (2.524.0, Wunsch Hansi): Versand als Haken direkt über dem Schreibfeld – 📝 Normal ist vorgewählt; ❗ Wichtig oder 🏎️ Express nimmt den Haken
+       bei Normal raus; Wichtig und Express gehen zusammen. Erscheint, sobald etwas im Feld steht (⚙️ → 🔔: „immer zeigen“). Antippen lässt die Tastatur offen. -->
+  <div class="versand versteckt" id="versandLeiste" role="group" aria-label="Versandart"><span class="vs-titel">Versand:</span><button type="button" class="vs-wahl an" id="normalKnopf" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="versandNormal()" title="Normal – wie immer" aria-label="Normal senden" aria-pressed="true">📝 Normal</button><button type="button" class="vs-wahl" id="wichtigKnopf" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="wichtigUmschalten()" title="Wichtig – Wichtigkeit hoch" aria-label="Als wichtig senden" aria-pressed="false">❗ Wichtig</button><button type="button" class="vs-wahl" id="expressKnopf" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="expressUmschalten()" title="Express-Sendung – kommt sofort an, auch nachts" aria-label="Als Express-Sendung senden" aria-pressed="false">🏎️ Express</button></div>
   <div class="innen">
     <button class="rund" title="Anlage" onclick="anlageMenue()">📎</button>
     <button class="rund" title="Mikrofon: Sprachnachricht oder Diktieren" id="mikroKnopf" onclick="mikroWahl()">🎤</button>
     <button class="rund emo-knopf" title="Emoji einfügen" id="emoKnopf" aria-expanded="false" onclick="emoUmschalten(undefined, 'text')">😊</button>
     <button class="rund zustell-knopf" title="Wie benachrichtigen? (Push, E-Mail, WhatsApp)" id="zustellKnopf" aria-expanded="false" onclick="zustellUmschalten()">🔔</button>
-    <!-- KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): Nachricht mit „Wichtigkeit hoch“ – wird beim Empfänger farbig umrandet -->
-    <button class="rund wichtig-knopf" title="Wichtig – Wichtigkeit hoch" aria-label="Als wichtig senden" aria-pressed="false" id="wichtigKnopf" onclick="wichtigUmschalten()">❗</button>
-    <!-- 2.362.0 KC-CLUB-EXPRESS (Wunsch Hansi): Express-Sendung per Rennwagen – kommt sofort an, beim Empfänger geht ein Fenster auf -->
-    <button class="rund express-knopf" title="Express-Sendung – kommt sofort an, auch nachts" aria-label="Als Express-Sendung senden" aria-pressed="false" id="expressKnopf" onclick="expressUmschalten()">🏎️</button>
+    <!-- ❗ Wichtig (KC-CLUB-WICHTIG 1.53.0) und 🏎️ Express (KC-CLUB-EXPRESS 2.362.0) stehen seit 2.524.0 in der Versand-Leiste über dem Schreibfeld (KC-CLUB-VERSANDART) -->
     <!-- KC-CLUB-SELBSTLOESCHEN (2.148.0, Wunsch Hansi): ⏳ diese Nachricht löscht sich nach 1 Std / 24 Std / 7 Tagen selbst -->
     <button class="rund ablauf-knopf" title="Nachricht löscht sich selbst …" aria-label="Selbstlöschen für diese Nachricht" aria-pressed="false" id="ablaufKnopf" onclick="slWahl('nachricht')">⏳</button>
     <!-- KC-CLUB-SPAETER-SENDEN (2.362.0, Wunsch Hansi): Nachricht zu einer späteren Zeit senden – auch jeden Montag um 8 Uhr usw. -->
@@ -5576,7 +5583,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.523.0" data-v="2.523.0"></script>
+<script src="app.js?v=2.524.0" data-v="2.524.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

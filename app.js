@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.523.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.524.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1873,9 +1873,9 @@ const RG_NACHRICHT = [
     sel: ["#empfWahlBereich"], puls: ["#schnellEmpf", "#empfSuche", "#neuGruppen .knopf"], t: "👤 An wen?", x: "Jetzt wählst du, an wen die Nachricht geht. Oben die Schnellwahl: alle, die gerade online sind, alle Mitglieder oder ein Amt wie den Clubsprecher. Darunter suchst du einen Namen – zum Beispiel Anne – und hakst ihn an; auch mehrere gehen. Deine Gruppen stehen ganz oben – antippen, und du schreibst direkt hinein." },
   { v: "neu", sel: [rgFeld("neuBetreff")], puls: ["#neuBetreff", rgOn("neuWeiter()")], t: "✏️ Betreff", x: "Ein Betreff ist freiwillig – praktisch bei Gruppen. Schreibst du nur einer Person und ohne Betreff, geht es gleich in euren bisherigen Chat. Mit Betreff beginnt ein eigener Chat zu diesem Thema. Dann tippst du auf Weiter zum Schreiben." },
   { v: "neu", tippVor: rgOn("neuWeiter()"), vor: () => { $("eingabe").classList.remove("versteckt"); RG.zurueck.push(() => { if (aktuelleAnsicht !== "chat") $("eingabe").classList.add("versteckt"); }); },
-    sel: ["#eingabe"], puls: ["#eingabe textarea", '#eingabe [title="Senden"]', '#eingabe [title="Anlage"]', '#eingabe [title^="Mikrofon"]', '#eingabe [title="Emoji einfügen"]', '#eingabe [title^="Wie benachrichtigen"]', '#eingabe [title^="Wichtig"]', '#eingabe [title^="Nachricht löscht"]', '#eingabe [title="Mit WhatsApp senden"]', "#expressKnopf", "#spaeterKnopf"], t: "⌨️ Schreiben und senden", x: "Unten schreibst du deine Nachricht, der Pfeil sendet sie. Darunter: die Büroklammer für Fotos und Dateien, das Mikrofon für eine Sprachnachricht oder zum Diktieren, Emojis, die Glocke – wie benachrichtigt wird, zum Beispiel per Push oder E-Mail –, das Ausrufezeichen für eine wichtige Nachricht und die Sanduhr für eine Nachricht, die sich selbst löscht. Mit WA geht sie auch über WhatsApp." },
+    sel: ["#eingabe"], puls: ["#eingabe textarea", '#eingabe [title="Senden"]', '#eingabe [title="Anlage"]', '#eingabe [title^="Mikrofon"]', '#eingabe [title="Emoji einfügen"]', '#eingabe [title^="Wie benachrichtigen"]', "#versandLeiste", '#eingabe [title^="Nachricht löscht"]', '#eingabe [title="Mit WhatsApp senden"]', "#spaeterKnopf"], t: "⌨️ Schreiben und senden", x: "Unten schreibst du deine Nachricht, der Pfeil sendet sie. Sobald du schreibst, steht darüber der Versand: Normal ist schon angehakt – du kannst stattdessen Wichtig oder Express anhaken, auch beides. Unter dem Feld: die Büroklammer für Fotos und Dateien, das Mikrofon für eine Sprachnachricht oder zum Diktieren, Emojis, die Glocke – wie benachrichtigt wird, zum Beispiel per Push oder E-Mail – und die Sanduhr für eine Nachricht, die sich selbst löscht. Mit WA geht sie auch über WhatsApp." },
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN: Express mit Zähler, Später senden, Zurückholen, Favoriten
-  { v: "neu", sel: ["#expressKnopf"], t: "🏎️ Express", x: "Eilt es wirklich? Dann tippst du auf den Rennwagen: Die Nachricht kommt sofort an – auch nachts. Unter deiner Nachricht siehst du später, wann sie angekommen ist und wann sie gelesen wurde. Pro Tag gehen fünf Express-Sendungen. Am Knopf steht, wie viele du heute schon hattest – zum Beispiel zwei von fünf." },
+  { v: "neu", sel: ["#expressKnopf"], t: "🏎️ Express", x: "Eilt es wirklich? Dann hakst du über dem Schreibfeld Express an: Die Nachricht kommt sofort an – auch nachts. Unter deiner Nachricht siehst du später, wann sie angekommen ist und wann sie gelesen wurde. Pro Tag gehen fünf Express-Sendungen. Neben Express steht, wie viele du heute schon hattest – zum Beispiel zwei von fünf." },
   { v: "neu", sel: ["#spaeterKnopf"], t: "⏰ Später senden", x: "Mit dem Wecker schickst du die Nachricht später – zum Beispiel morgen früh um acht, oder jeden Montag. Und hast du dich vertippt: Solange noch niemand die Nachricht gelesen hat, tippst du sie an und holst sie mit Zurückholen und ändern wieder in dein Schreibfeld." },
   { v: "nachrichten", sel: ["#v-nachrichten .kom-leiste"], puls: ["#v-nachrichten .kom-leiste .knopf"], t: "👥 Gruppe & mehr", x: "Mit Gruppe legst du eine eigene Gruppe an, zum Beispiel fürs Küchenteam. Gemerkt zeigt Nachrichten, die du dir mit dem Stern gemerkt hast. Mit dem Stern Favoriten siehst du nur deine Lieblings-Chats: In Mitglieder beim Mitglied auf den Stern tippen – oder hier rechts am Chat auf die drei Punkte tippen und Als Favorit wählen. Es ist derselbe Stern. Dazu kommen automatisch die fünf Chats, in denen du am meisten schreibst. Und Test schickt dir selbst eine Probe – so prüfst du, ob Push und E-Mail ankommen." },
   { v: "nachrichten", t: "✅ Fertig", x: "Das war's: Plus Neu, Empfänger wählen, schreiben, senden. Probier es aus – zum Beispiel mit einer Nachricht an dich selbst über Test." },
@@ -3340,7 +3340,7 @@ const RG_CHATPROFI = [
   { v: "chat", vor: () => rgChatprofiMenue("rg-cp-7", true), nach: () => $("naMenue")?.remove(), tippVor: "#msg-rg-cp-7 .na-pfeil", sel: ["#naMenue .na-menue"],
     puls: [rgChatprofiKnopf("#naMenue", "↪️ Weiterleiten"), rgChatprofiKnopf("#naMenue", "📋 Kopieren"), rgChatprofiKnopf("#naMenue", "✂️ Ausschneiden"), rgChatprofiKnopf("#naMenue", "🗄️ Archivieren"), rgChatprofiKnopf("#naMenue", "❗ Wichtig"), rgChatprofiKnopf("#naMenue", "🗑️ Löschen")],
     t: "➡️ Der kleine Pfeil", x: "Am kleinen Pfeil neben einer Nachricht gibt es noch mehr: Weiterleiten an eine andere Person oder Unterhaltung, Kopieren, Ausschneiden, Archivieren in deinen eigenen Archiv-Ordner und Löschen. Bei deinen eigenen Nachrichten kommt Wichtig dazu." },
-  { v: "chat", vor: rgChatprofiAuf, sel: [rgChatprofiBlase(9)], puls: ["#msg-rg-cp-9 .wichtig-marke", "#msg-rg-cp-9 .na-pfeil"], t: "❗ Nachträglich wichtig", x: "Vergessen, beim Senden das Ausrufezeichen anzutippen? Dann wählst du am Pfeil deiner Nachricht Wichtig. Sie bekommt den orangefarbenen Rahmen für alle im Chat – eine neue Benachrichtigung geht dabei nicht raus." },
+  { v: "chat", vor: rgChatprofiAuf, sel: [rgChatprofiBlase(9)], puls: ["#msg-rg-cp-9 .wichtig-marke", "#msg-rg-cp-9 .na-pfeil"], t: "❗ Nachträglich wichtig", x: "Vergessen, beim Senden Wichtig anzuhaken? Dann wählst du am Pfeil deiner Nachricht Wichtig. Sie bekommt den orangefarbenen Rahmen für alle im Chat – eine neue Benachrichtigung geht dabei nicht raus." },
   { v: "chat", vor: rgChatprofiAuf, sel: [rgChatprofiBlase(9)], puls: ["#msg-rg-cp-9 .haken", "#msg-rg-cp-8 .haken", "#msg-rg-cp-7 .haken", "#msg-rg-cp-9 .na-info"], t: "✔️ Was die Haken bedeuten", x: "Die Haken an deinen Nachrichten: ein grauer Haken heißt gesendet, zwei graue Haken heißen auf dem Handy angekommen, zwei blaue Haken heißen gelesen. Tippst du die Haken an, siehst du genau, wer gelesen hat, bei wem sie angekommen ist und bei wem noch nicht – mit Uhrzeit. Weitere Einzelheiten stehen unter dem kleinen i neben der Nachricht." },
   { v: "chat", vor: () => { rgChatprofiAuf(); setTimeout(rgChatprofiTempo, 60); }, sel: [rgChatprofiBlase(3)], puls: ["#msg-rg-cp-3 .sprache"],
     live: async (L) => { await L.warte(2500); await L.tipp("#msg-rg-cp-3 .tempo"); rgChatprofiTempoWeiter(); await L.warte(1500); await L.tipp("#msg-rg-cp-3 .tempo"); rgChatprofiTempoWeiter(); },
@@ -5136,13 +5136,13 @@ const HILFE = [
   { id: "themen_laufband", thema: "club", sym: "🗳️", t: "Themen für die nächste Sitzung im Info-Feld", x: "In den 3 Wochen vor einer Sitzung erinnert dich das Info-Feld oben auf der Startseite an die Themen: <b>„3 Themen für die Sitzung am …“</b>. Mit <b>„👍 Abstimmen“</b> unterstützt du die Themen, die dir wichtig sind, mit <b>„＋ Thema“</b> reichst du selbst eins ein – die Sitzung ist dabei schon ausgewählt. Hast du alle unterstützt, wird die Meldung ruhiger (weiß statt gelb).", zeig: () => zeige("vorschlaege"), seit: "2.463.0" },
   { id: "termin_link_prospekt", thema: "termine", sym: "🎪", t: "Termin mit Webseite, Prospekt und Laufband", x: "Beim Anlegen oder Ändern eines Clubtermins (z. B. <b>Adventsmarkt der Freilichtbühne</b>) gibt es jetzt: <b>🌐 Link zur Webseite</b> des Veranstalters, <b>📎 Anlage</b> für den Prospekt (Foto oder PDF) und <b>„📣 Im Info-Laufband ankündigen“</b> – dann erscheint der Termin oben auf der Startseite im Info-Feld, ab 3 Wochen vorher, mit Knopf <b>„🌐 Webseite“</b>. Antippen öffnet den Termin mit Webseite und Prospekt.", seit: "2.461.0" },
   { id: "schrift_zoom", thema: "darstellung", sym: "🔍", t: "Schrift größer ziehen – mit zwei Fingern", x: "Zu klein zum Lesen? Lege <b>zwei Finger</b> auf den Bildschirm und ziehe sie <b>auseinander</b> – Nachrichten, Zettel und Texte werden größer (Knöpfe und Leisten bleiben, wie sie sind). Zusammenschieben macht sie kleiner. Die Größe bleibt gemerkt. Zurück auf normal: mit zwei Fingern <b>doppelt tippen</b> oder unter ⚙️ → Darstellung → „🔍 Schriftgröße“. <b>Ganz ausschalten:</b> ⚙️ → Darstellung → „✌️ Schrift mit zwei Fingern ändern“ (A− / A+ gehen weiter). Ein aufliegender Daumen beim Scrollen verstellt die Schrift nicht mehr.", seit: "2.364.0" }, // 2.364.0 KC-CLUB-SCHRIFT-ZOOM
-  { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag – am 🏎️-Knopf steht, wie viele du heute schon verschickt hast (z. B. <b>2/5</b>). Nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
+  { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Über dem Schreibfeld <b>🏎️ Express</b> anhaken, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag – neben Express steht, wie viele du heute schon verschickt hast (z. B. <b>2/5</b>). Express und <b>❗ Wichtig</b> kannst du auch zusammen anhaken. Nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
   { id: "fee", thema: "darstellung", sym: "🧚", t: "Eine kleine Fee zu Besuch", x: "Bei jeder <b>20. Anmeldung</b> schwebt eine kleine Fee durchs obere Startbild, bleibt kurz stehen und lächelt. <b>Tipp sie an</b> – dann schenkt sie dir einen schönen Spruch. Vorab ansehen oder per Häkchen abschalten: <b>⚙️ → ✨ Effekte → 🧚 Die kleine Fee</b>.", zeig: () => einstiegHin("effekte", "setFee"), seit: "2.372.0" },
   { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b>, <b>Luftballon</b>, <b>Uhu mit Posttasche</b> oder <b>Baron Münchhausen</b> auf der Kanonenkugel – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen.", zeig: () => einstiegHin("effekte", "sendeEffektWahl"), seit: "2.362.0" },
   { id: "zurueckholen", thema: "nachrichten", sym: "↩️", t: "Vertippt? Nachricht zurückholen", x: "Solange noch niemand deine Nachricht gelesen hat, kannst du sie <b>zurückholen</b>: Nachricht antippen (am PC: rechte Maustaste) oder im <b>ⓘ</b>-Fenster → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet für alle und steht wieder in deinem Schreibfeld – ändern und neu senden.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-ZURUECKHOLEN
   { id: "spaeter_senden", thema: "nachrichten", sym: "⏰", t: "Nachricht später senden – auch jeden Montag", x: "Nachricht schreiben, unten auf <b>⏰</b> tippen, Zeit wählen (z. B. <b>morgen früh 8 Uhr</b>) und wie oft (<b>einmal</b>, <b>jeden Tag</b>, <b>werktags</b>, <b>jeden Montag</b> …). Bis dahin steht sie blass unten im Chat – nur du siehst sie; antippen zum Ändern oder Löschen. Gesendet wird auch, wenn dein Handy aus ist.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-SPAETER-SENDEN
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN (Wunsch Hansi „Videos, Hilfetexte, Suche und Twinkey auf die neuen Funktionen umstellen und gut erklären“)
-  { id: "express_zaehler", thema: "nachrichten", sym: "🏎️", t: "Express: höchstens 5 am Tag – am Knopf steht „2/5“", x: "Express ist für wirklich Eiliges. Jedes Mitglied kann <b>5 Express-Sendungen pro Tag</b> verschicken (gezählt werden die letzten 24 Stunden). Tippst du auf <b>🏎️</b>, steht am Knopf, wie viele du heute schon hattest – z. B. <b>2/5</b>. Nach dem Senden steht in der Meldung „heute 3/5“. Sind alle 5 verbraucht, geht Express nicht an – die App sagt dir, <b>ab wann</b> es wieder geht. Dann einfach normal senden.", seit: "2.391.0" },
+  { id: "express_zaehler", thema: "nachrichten", sym: "🏎️", t: "Express: höchstens 5 am Tag – daneben steht „2/5“", x: "Express ist für wirklich Eiliges. Jedes Mitglied kann <b>5 Express-Sendungen pro Tag</b> verschicken (gezählt werden die letzten 24 Stunden). Hakst du <b>🏎️ Express</b> an, steht daneben, wie viele du heute schon hattest – z. B. <b>2/5</b>. Nach dem Senden steht in der Meldung „heute 3/5“. Sind alle 5 verbraucht, geht Express nicht an – die App sagt dir, <b>ab wann</b> es wieder geht. Dann einfach normal senden.", seit: "2.391.0" },
   { id: "express_status", thema: "nachrichten", sym: "📬", t: "Express: angekommen um … gelesen um …", x: "Unter deiner Express-Sendung siehst du genau, was passiert ist: <b>„🏎️ Per Express versandt um 19:05“</b> und für jeden Empfänger <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Steht dort „📭 noch nicht angekommen“, ist das Handy des Empfängers vermutlich aus oder offline.", seit: "2.385.0" },
   { id: "chat_favoriten", thema: "nachrichten", sym: "⭐", t: "Favoriten: deine wichtigsten Leute oben", x: "In <b>💬 Nachrichten</b> oben auf <b>⭐ Favoriten</b> tippen – dann siehst du nur deine Lieblings-Chats. <b>Den Stern setzt du an zwei Stellen – es ist immer derselbe:</b> in <b>👥 Mitglieder</b> beim Mitglied auf <b>☆</b> tippen (wird ⭐), oder in der Chat-Liste rechts am Chat auf <b>⋯</b> tippen → <b>„⭐ Als Favorit“</b>. Ein Stern gehört zur <b>Person</b> – er steht dann in der Mitgliederliste <i>und</i> bei ihrem Chat. Gruppenchats bekommen ihren eigenen Stern. Dazu kommen automatisch die <b>5 Chats, in denen du am meisten schreibst</b> („· oft“). In <b>👥 Mitglieder</b> zeigt der Schalter <b>„⭐ Favoriten“</b> nur deine Favoriten. Die Sterne gelten auf all deinen Geräten.", zeig: () => { zeige("nachrichten"); uhFavAnsicht(true); }, seit: "2.387.0" },
   { id: "zustell_alle", thema: "nachrichten", sym: "✅", t: "Benachrichtigen: alles auf einmal mit „✅ Alle“", x: "Mit der <b>Glocke 🔔</b> unter dem Schreibfeld wählst du, wie benachrichtigt wird – <b>🔔 Push</b>, <b>✉️ E-Mail</b>, <b>WhatsApp</b>. Mit <b>„✅ Alle“</b> sind alle drei mit einem Tipp an – nochmal tippen schaltet alle aus.", seit: "2.386.0" },
@@ -8077,7 +8077,7 @@ function gruppenFarbe(name) {
   const [hell, dunkel] = GRUPPEN_FARBEN[i % GRUPPEN_FARBEN.length]; return `--pf:${hell};--pfd:${dunkel}`;
 }
 // KC-CLUB-ENTWURF-ANZEIGE (1.21.0, Wunsch Hansi): steht Text im Feld, der noch nicht gesendet ist → „✏️ Entwurf“
-function entwurfMarkeZeigen() { const t = $("text"), m = $("entwurfMarke"); if (t && m) m.classList.toggle("versteckt", !t.value.trim()); $("textLeerenKnopf")?.classList.toggle("versteckt", !t?.value); sprungHinweisZeigen(); }
+function entwurfMarkeZeigen() { const t = $("text"), m = $("entwurfMarke"); if (t && m) m.classList.toggle("versteckt", !t.value.trim()); $("textLeerenKnopf")?.classList.toggle("versteckt", !t?.value); sprungHinweisZeigen(); versandZeigen(); } // 2.524.0 KC-CLUB-VERSANDART
 // KC-CLUB-EINGABE-LEEREN (2.148.0, Wunsch Hansi): rotes ✕ im Schreibfeld – löscht nur den noch nicht gesendeten Text (und dessen Entwurf), nichts im Chat
 function textLeeren() {
   const t = $("text"); if (!t) return;
@@ -9099,7 +9099,7 @@ const TW_FAQ = [
   { id: "anrufen", sym: "📞", t: "Wie rufe ich ein Mitglied an?", x: "Bei <b>👥 Mitglieder</b> die Person antippen. Hat sie ihre Nummer freigegeben, kannst du direkt anrufen. Sonst schreib ihr eine Nachricht mit <b>💬</b>.", los: () => zeige("mitglieder") },
   { id: "online", sym: "🟢", t: "Wer ist gerade in der App?", x: "Bei <b>👥 Mitglieder</b> zeigt ein <b>grüner Punkt</b>, wer gerade online ist. Mit der Hand <b>👋</b> kannst du dort anklopfen. Auf Wunsch sagt die App sogar an, wer gerade reinkommt (⚙️ → 🔔 Töne).", los: () => zeige("mitglieder") },
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN: Express, Zurückholen, Favoriten, Später senden
-  { id: "express", sym: "🏎️", t: "Wie schicke ich eine Express-Nachricht – und wie viele darf ich?", x: "Im Chat unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden. Sie kommt <b>sofort</b> an – auch nachts und bei stummem Chat – und beim Empfänger geht ein Fenster auf. Unter deiner Nachricht siehst du <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Pro Tag gehen <b>5 Express-Sendungen</b>; am Knopf steht, wie viele du schon hattest (z. B. <b>2/5</b>).", los: () => zeige("nachrichten") },
+  { id: "express", sym: "🏎️", t: "Wie schicke ich eine Express-Nachricht – und wie viele darf ich?", x: "Im Chat über dem Schreibfeld <b>🏎️ Express</b> anhaken, dann senden. Sie kommt <b>sofort</b> an – auch nachts und bei stummem Chat – und beim Empfänger geht ein Fenster auf. Unter deiner Nachricht siehst du <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Pro Tag gehen <b>5 Express-Sendungen</b>; neben Express steht, wie viele du schon hattest (z. B. <b>2/5</b>).", los: () => zeige("nachrichten") },
   { id: "zurueckholen", sym: "↩️", t: "Ich habe mich vertippt – kann ich die Nachricht zurückholen?", x: "Ja, solange sie noch <b>niemand gelesen</b> hat: Nachricht antippen (am PC: rechte Maustaste) → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet bei allen und steht wieder in deinem Schreibfeld – verbessern und neu senden. Ist sie schon gelesen, kannst du sie noch <b>✏️ bearbeiten</b>.", los: () => zeige("nachrichten") },
   { id: "favoriten", sym: "⭐", t: "Wie lege ich Favoriten an?", x: "Am einfachsten in <b>👥 Mitglieder</b>: beim Mitglied auf den Stern <b>☆</b> tippen – er wird gelb ⭐. Oder in <b>💬 Nachrichten</b> rechts am Chat auf <b>⋯</b> tippen → <b>„⭐ Als Favorit“</b>. Es ist <b>derselbe Stern</b>: Er erscheint in der Mitgliederliste und bei den Chats unter <b>⭐ Favoriten</b>. Nochmal tippen nimmt ihn weg.", los: () => { zeige("nachrichten"); uhFavAnsicht(true); } },
   { id: "ausweis", sym: "🪪", t: "Wo ist mein Ausweis-QR für Kasse und Stechuhr?", x: "Auf der Startseite neben <b>Schnellzugriff</b> auf <b>QR</b> tippen – oder <b>Meins → 🪪 Mein Ausweis-QR</b>. Darin steht deine <b>Mitgliedsnummer</b>, wie auf dem Plastik-Ausweis. Vor den Scanner an der Kasse oder Stechuhr halten, Bildschirm hell stellen.", los: () => ausweisZeigen() },
@@ -24854,7 +24854,7 @@ async function neuLadenRoh(vonHand) {
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
-    if ($("setWichtigFrage")) $("setWichtigFrage").checked = wichtigFrageAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0)
+    if ($("setWichtigFrage")) $("setWichtigFrage").checked = versandImmerAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0) → 2.524.0 KC-CLUB-VERSANDART: Leiste immer zeigen
     ansichtUebernehmen(INIT.einstellungen?.ansicht);
     ansageVorgabeUebernehmen(INIT.einstellungen?.ansage_vorgabe); // 2.173.0 KC-CLUB-ANSAGE-VORGABE
     sendeEffektMelden(); // 2.177.0 KC-CLUB-EMPFANGS-EFFEKT
@@ -28724,7 +28724,7 @@ async function chatOeffnen(id, ausHistorie) {
   if (id !== chatId) { naAntwortWeg(); NA.erw.clear(); } // KC-CLUB-ANTWORT: Antwort/Erwähnung gehört zum vorigen Chat
   if (id !== chatId) ZW = { push: false, email: false, whatsapp: false };
   if (id !== chatId && CS.offen) chatSucheZu(); // KC-CLUB-CHATSUCHE: Suche gehört zum vorigen Chat
-  if (id !== chatId) { entwurfLaden(id); zustellUmschalten(false); wichtigUmschalten(false); expressUmschalten(false); } // KC-CLUB-ENTWURF / -RUHIGE-EINGABE (1.12.0) / -WICHTIG
+  if (id !== chatId) { entwurfLaden(id); zustellUmschalten(false); versandZurueck(); } // KC-CLUB-ENTWURF / -RUHIGE-EINGABE (1.12.0) / -WICHTIG / -VERSANDART
   NA.trennerChat = null; // KC-CLUB-NEU-LINIE: beim Öffnen neu bestimmen
   if (id !== chatId || aktuelleAnsicht !== "chat") spur("chat", id); // KC-CLUB-SPUR: welche Unterhaltung (ohne Inhalt)
   chatId = id; zeige("chat", ausHistorie); chatId = id;
@@ -30670,19 +30670,27 @@ async function slGewaehlt(art, std) {
 }
 // KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): ❗ = „Wichtigkeit hoch“ für die nächste Nachricht (gilt nur für diesen Chat)
 let WICHTIG = false;
-// KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0, Wunsch Hansi „immer fragen, ob Wichtigkeit normal oder hoch“): vor dem Senden 📝 Normal / ❗ Hoch.
-// Je Chat höchstens alle 30 Min. einmal (sonst nervt es beim Hin- und Herschreiben). Schalter: ⚙️ → 🔔 Benachrichtigungen; Standard: an für den Admin.
-const WF_KEY = "kc_wichtig_frage", WF_ZULETZT = {};
-function wichtigFrageAn() { try { const v = localStorage.getItem(WF_KEY); return v === null ? !!ICH?.admin : v === "1"; } catch (e) { return !!ICH?.admin; } }
-function wichtigFrageSetzen(an) { try { localStorage.setItem(WF_KEY, an ? "1" : "0"); } catch (e) { /* ohne Speicher gilt der Standard */ } melde(an ? "❗ Vor dem Senden wird nach der Wichtigkeit gefragt" : "Keine Frage mehr nach der Wichtigkeit – ❗ geht weiter von Hand"); }
-async function wichtigkeitFragen() {
-  if (WICHTIG || !wichtigFrageAn()) return;
-  const k = chatId || "neu";
-  if (chatId && Date.now() - (WF_ZULETZT[k] || 0) < 30 * 60000) return;
-  const hoch = await frage("Wie wichtig ist diese Nachricht?\n\n📝 Normal – wie immer.\n❗ Hoch – bei allen farbig markiert, geht per Push UND E-Mail raus. Liest sie nach 24 Std. noch jemand nicht, bekommst du Bescheid.", { ja: "❗ Hoch", nein: "📝 Normal" });
-  WF_ZULETZT[k] = Date.now();
-  if (hoch) wichtigUmschalten(true);
+// KC-CLUB-VERSANDART (2.524.0, Wunsch Hansi „Wichtig und Express raus aus den Knöpfen, vor dem Senden als Option: Normal ist schon markiert, dann Wichtig,
+// dann Express; Wichtig und Express zusammen möglich“): Versand-Leiste direkt über dem Schreibfeld. Normal ist genau dann markiert, wenn weder Wichtig
+// noch Express an ist – es ist nie „nichts“ gewählt. Ersetzt die Frage vor dem Senden (KC-CLUB-WICHTIGKEIT-FRAGE 2.287.0): man sieht die Wahl vorher,
+// eine normale Nachricht braucht weiter nur ➤. Die Leiste erscheint, sobald etwas im Feld steht; der alte Schalter (gleicher Speicherplatz, Standard:
+// an für den Admin) heißt jetzt „Versand-Leiste immer zeigen“.
+const WF_KEY = "kc_wichtig_frage";
+function versandImmerAn() { try { const v = localStorage.getItem(WF_KEY); return v === null ? !!ICH?.admin : v === "1"; } catch (e) { return !!ICH?.admin; } }
+function versandImmerSetzen(an) { try { localStorage.setItem(WF_KEY, an ? "1" : "0"); } catch (e) { /* ohne Speicher gilt der Standard */ } versandZeigen(); melde(an ? "📝❗🏎️ Die Versand-Leiste steht immer über dem Schreibfeld" : "📝❗🏎️ Die Versand-Leiste erscheint, sobald du schreibst"); }
+function versandZeigen() {
+  const l = $("versandLeiste"), t = $("text"), n = $("normalKnopf"), normal = !WICHTIG && !EXPRESS;
+  n?.classList.toggle("an", normal); n?.setAttribute("aria-pressed", String(normal));
+  if (t) t.placeholder = EXPRESS && WICHTIG ? "🏎️❗ Wichtige Express-Sendung schreiben …" : EXPRESS ? "🏎️ Express-Sendung schreiben …" : WICHTIG ? "❗ Wichtige Nachricht schreiben …" : "Nachricht schreiben …";
+  l?.classList.toggle("versteckt", !(t?.value.trim() || anlagen.length || !normal || versandImmerAn()));
 }
+function versandNormal() {
+  if (!WICHTIG && !EXPRESS) return versandZeigen();
+  wichtigUmschalten(false); expressUmschalten(false);
+  melde("📝 Normal – wie immer");
+}
+// Nach dem Senden und beim Chatwechsel: wieder 📝 Normal
+function versandZurueck() { wichtigUmschalten(false); expressUmschalten(false); }
 document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => { try { expressPruefen(); } catch {} }, 1200); }); // 2.362.0 KC-CLUB-EXPRESS
 document.addEventListener("visibilitychange", () => { if (!document.hidden && SS?.id) ssHolen(true); }); // 2.364.0 KC-CLUB-AKKU-7: Mitschauen nach dem Zurückkommen sofort frisch
 // ---------- 2.362.0 KC-CLUB-EXPRESS (Wunsch Hansi „per Rennwagen – Express-Sendung, wird sofort zugestellt; beim Empfänger ploppt ein Fenster auf:
@@ -30705,11 +30713,11 @@ function expressUmschalten(an) {
   const vorher = EXPRESS; EXPRESS = an ?? !EXPRESS;
   const k = $("expressKnopf"), t = $("text");
   k?.classList.toggle("an", EXPRESS); k?.setAttribute("aria-pressed", String(EXPRESS));
-  t?.classList.toggle("express", EXPRESS); if (t) t.placeholder = EXPRESS ? "🏎️ Express-Sendung schreiben …" : WICHTIG ? "❗ Wichtige Nachricht schreiben …" : "Nachricht schreiben …";
+  t?.classList.toggle("express", EXPRESS); versandZeigen(); // 2.524.0 KC-CLUB-VERSANDART: Normal-Haken und Platzhalter
   expressZahlZeigen();
   if (EXPRESS && !vorher && an === undefined) expressStandHolen(true);
 }
-// 2.391.0 KC-CLUB-EXPRESS-ZAEHLER (Wunsch Hansi „bei 5 lassen und in der Express 1/5 anzeigen“): am 🏎️-Knopf „2/5“ = heute (letzte
+// 2.391.0 KC-CLUB-EXPRESS-ZAEHLER (Wunsch Hansi „bei 5 lassen und in der Express 1/5 anzeigen“): am 🏎️-Haken „2/5“ = heute (letzte
 // 24 Std.) schon verschickt. Sind alle 5 verbraucht, geht Express gar nicht erst an – mit Hinweis, ab wann es wieder geht. Admin: unbegrenzt.
 const EXS = { stand: null };
 function expressZahlZeigen() {
@@ -30871,8 +30879,8 @@ function wichtigUmschalten(an) {
   WICHTIG = an ?? !WICHTIG;
   const k = $("wichtigKnopf"), t = $("text");
   k?.classList.toggle("an", WICHTIG); k?.setAttribute("aria-pressed", String(WICHTIG));
-  t?.classList.toggle("wichtig", WICHTIG); if (t) t.placeholder = WICHTIG ? "❗ Wichtige Nachricht schreiben …" : "Nachricht schreiben …";
-  if (an === undefined) melde(WICHTIG ? "❗ Wird als WICHTIG gesendet – bei allen farbig markiert" : "Normale Wichtigkeit");
+  t?.classList.toggle("wichtig", WICHTIG); versandZeigen(); // 2.524.0 KC-CLUB-VERSANDART: Normal-Haken und Platzhalter
+  if (an === undefined) melde(WICHTIG ? "❗ Wird als WICHTIG gesendet – bei allen farbig markiert" + (EXPRESS ? " und per 🏎️ Express" : "") : EXPRESS ? "❗ Wichtig aus – geht weiter per 🏎️ Express" : "📝 Normal – wie immer");
 }
 // ---------- KC-CLUB-SENSIBEL-GAESTE (2.78.0, Wunsch Hansi): vertrauliche Inhalte (z. B. Verträge) an Nicht-Mitglieder? ----------
 // Vor dem Senden: Ist der Inhalt vertraulich (Wort im Text oder Dateinamen, oder ein Dokument wie PDF/Word/Excel) UND bekommt ihn
@@ -30928,7 +30936,6 @@ async function senden() {
   if (!text && !anlagen.length) return;
   if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
   await inkoChatFrage(chatId ? "c:" + chatId : "neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT: auch beim Schreiben in einem schon offenen Chat (einmal je Chat)
-  await wichtigkeitFragen(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0)
   if (VN.an && text) { const v = await vnVerschluesseln(text); if (!v) return; text = v; } // 2.517.0 KC-CLUB-VERSCHLUESSELT: erst jetzt (Prüfungen oben sahen den Klartext)
   // 2.164.0 KC-CLUB-ANLAGE-WARTEN (Fund Hansi: PDF fehlte – Senden getippt, während die Anlage noch hochlud; sie wurde still weggelassen):
   // lädt noch eine Anlage, wird gewartet, bis sie fertig ist – dann geht alles zusammen raus. Klappt das Hochladen nicht, bleibt der Text stehen.
@@ -30963,7 +30970,7 @@ async function senden() {
     HAKEN_SEIT = Date.now(); // 2.367.0 KC-CLUB-HAKEN-SCHNELL: Zustell-Haken eine Minute lang zügig nachsehen
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     lvZurueck(); // KC-CLUB-LINK-VORSCHAU
-    if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); expressUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN
+    if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); versandZurueck(); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN / -VERSANDART
     if (VN.an) vnUmschalten(false); // 2.517.0 KC-CLUB-VERSCHLUESSELT: 🔒 gilt nur für diese Nachricht
     $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; EINMAL = false; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
     spur(daten.anlagen.length ? "gesendet_anlage" : "gesendet", r?.id || chatId); // KC-CLUB-SPUR: nur „gesendet“ + Unterhaltung, nie der Text
@@ -30983,7 +30990,7 @@ async function uhMehrfachSenden(daten, text) {
     for (const id of ids) { try { await api("nachricht_senden", { id, ...daten }); } catch (e) { fehl.push(id); if (fehl.length === ids.length) throw e; } }
     spur("gesendet_mehrfach", null); // nur die Aktion, nie Text oder Empfänger
     UH.mark = new Set(fehl);
-    if (!fehl.length) { clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); slZurueck(); $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; chipsZeigen(); neuEntwurf = null;
+    if (!fehl.length) { clearTimeout(entwurfTimer); zustellUmschalten(false); versandZurueck(); slZurueck(); // 2.524.0: auch Express zurück auf Normal $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; chipsZeigen(); neuEntwurf = null;
       if (ZW.whatsapp && text) melde("🟢 WhatsApp geht bei mehreren Chats nur einzeln – im jeweiligen Chat auf WA tippen."); }
     else neuEntwurf = { mehrfach: fehl };
     melde(fehl.length ? `📨 ${ids.length - fehl.length} von ${ids.length} Chats bekommen – ${fehl.length} ging nicht (bleibt markiert, einfach nochmal ➤)` : `📨 An ${ids.length === 1 ? "den Chat" : `alle ${ids.length} Chats`} gesendet`, !!fehl.length);
@@ -31753,6 +31760,7 @@ async function einmalOeffnen(id) {
 }
 function einmalSchliessen() { const f = $("einmalSchirm"); if (!f) return; f._weg?.(); f.remove(); melde("👁️ Das Foto ist jetzt weg."); chatLaden(true).catch(() => {}); }
 function chipsZeigen() {
+  versandZeigen(); // 2.524.0 KC-CLUB-VERSANDART: mit Anhang auch ohne Text
   if (!(anlagen.length === 1 && anlagen[0].bild)) EINMAL = false; // KC-CLUB-EINMAL-FOTO: nur bei genau einem Foto
   $("anlagenChips").innerHTML = anlagen.map((a, i) => `<span class="chip anl-chip"><button type="button" class="anl-auf" onclick="anlageAnsehen(${i})" aria-label="Anhang ansehen: ${esc(a.name)}">${a.bild ? `<img src="${a.bild}" alt="">` : a.laedt ? "⏳" : "📎"} ${esc(a.name)}</button><button type="button" class="anl-weg" onclick="anlageEntfernen(${i})" aria-label="Anhang entfernen" title="Anhang entfernen">✕</button></span>`).join("");
   if (anlagen.length === 1 && anlagen[0].bild) $("anlagenChips").insertAdjacentHTML("beforeend", `<button type="button" class="chip einmal-chip${EINMAL ? " an" : ""}" onclick="einmalUmschalten()" aria-pressed="${EINMAL}" title="Der Empfänger kann das Foto nur ein einziges Mal öffnen">👁️ Einmal ansehen: ${EINMAL ? "An" : "Aus"}</button>`);
@@ -37860,7 +37868,7 @@ function suAppListe() {
     ["⭐", "Gemerkte Nachrichten", "gemerkt merken stern favorit", () => { zeige("nachrichten"); gemerktZeigen(); }],
     // 2.396.0 KC-CLUB-HILFE-NEUHEITEN
     ["⭐", "Favoriten (Lieblings-Chats)", "favoriten favorit stern sternchen lieblings chat wichtig oft", () => { zeige("nachrichten"); uhFavAnsicht(true); }],
-    ["🏎️", "Express-Nachricht (5 am Tag)", "express eilig dringend sofort rennwagen schnell 5 tag zähler", () => { melde("🏎️ Im Chat unter dem Schreibfeld auf 🏎️ tippen – am Knopf steht, wie viele du heute schon hattest (z. B. 2/5)"); zeige("nachrichten"); }],
+    ["🏎️", "Express-Nachricht (5 am Tag)", "express eilig dringend sofort rennwagen schnell 5 tag zähler", () => { melde("🏎️ Im Chat über dem Schreibfeld „🏎️ Express“ anhaken – daneben steht, wie viele du heute schon hattest (z. B. 2/5)"); zeige("nachrichten"); }],
     ["↩️", "Nachricht zurückholen", "zurückholen zurueckholen vertippt zurücknehmen ändern korrigieren falsch", () => { melde("↩️ Nachricht antippen (PC: rechte Maustaste) → „Zurückholen und ändern“ – geht, solange sie noch niemand gelesen hat"); zeige("nachrichten"); }],
     ["⏰", "Nachricht später senden", "später senden planen zeit morgen montag wiederholen", () => { melde("⏰ Nachricht schreiben, unten auf ⏰ tippen und Zeit wählen"); zeige("nachrichten"); }],
     ["📨", "Offene Terminanfragen", "terminanfrage anfrage termin offen antworten einladung", () => zeige("termine")],

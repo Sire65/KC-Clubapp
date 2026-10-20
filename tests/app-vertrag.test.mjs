@@ -2429,9 +2429,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 217. 1.53.0: Wichtige Nachricht (KC-CLUB-WICHTIG)
 {
   const srv = lies("supabase/functions/kc-club/index.ts"), mig = lies("supabase/migrations/20261002_kc_club_v1530_wichtig.sql");
-  assert.match(html, /id="wichtigKnopf" onclick="wichtigUmschalten\(\)">❗<\/button>/, "❗-Knopf unter dem Schreibfeld");
+  assert.match(html, /id="wichtigKnopf" [^>]*onclick="wichtigUmschalten\(\)"[^>]*>❗ Wichtig<\/button>/, "❗ Wichtig in der Versand-Leiste (2.524.0 KC-CLUB-VERSANDART)");
   assert.match(html, /\.\.\.\(WICHTIG \? \{ wichtig: true \} : \{\}\)/, "senden schickt wichtig nur wenn an");
-  assert.match(html, /wichtigUmschalten\(false\);( expressUmschalten\(false\);)?( slZurueck\(\);)? \/\/ KC-CLUB-ENTWURF \/ -RUHIGE-EINGABE \/ -WICHTIG/, "nach dem Senden wieder normal");
+  assert.match(html, /(wichtigUmschalten\(false\);( expressUmschalten\(false\);)?|versandZurueck\(\);)( slZurueck\(\);)? \/\/ KC-CLUB-ENTWURF \/ -RUHIGE-EINGABE \/ -WICHTIG/, "nach dem Senden wieder normal");
   assert.match(html, /\$\{m\.wichtig \? " wichtig" : ""\}/, "Blase bekommt Klasse wichtig");
   assert.match(html, /\.blase\.wichtig \{ border: 3px solid #ff9800/, "wichtige Nachricht orange umrandet");
   assert.match(html, /u\.wichtigNeu \? " wichtig-neu" : ""/, "Chat-Liste markiert ungelesene wichtige Nachricht");
@@ -6322,7 +6322,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/async function expressStand\(ich: Ich\) \{\n\s+if \(ich\.admin\) return \{ genutzt: 0, max: EXPRESS_MAX, unbegrenzt: true/.test(server) && /case "express_stand": \{[^\n]*\n\s+const st: any = await expressStand\(ich\);/.test(server), "Server: Stand je Person, Admin unbegrenzt");
   assert.ok(/const EXPRESS_MAX = 5,/.test(server) && /if \(express && !ich\.admin\) \{/.test(server) && /\.\.\.\(express \? \{ expressStand: await expressStand\(ich\) \} : \{\}\)/.test(server), "Grenze bleibt 5, Antwort liefert neuen Stand");
-  assert.ok(/const z = EXPRESS && st && !st\.unbegrenzt \? `\$\{st\.genutzt\}\/\$\{st\.max\}` : "";/.test(html) && /#expressKnopf\[data-zahl\]::after \{ content: attr\(data-zahl\);/.test(html), "„2/5“ am 🏎️-Knopf");
+  assert.ok(/const z = EXPRESS && st && !st\.unbegrenzt \? `\$\{st\.genutzt\}\/\$\{st\.max\}` : "";/.test(html) && /#expressKnopf\[data-zahl\]::after \{ content: attr\(data-zahl\);/.test(html), "„2/5“ am 🏎️-Haken");
   assert.ok(/if \(st && !st\.unbegrenzt && st\.genutzt >= st\.max\) \{\n\s+expressUmschalten\(false\);/.test(html) && /\(heute \$\{st\.genutzt\}\/\$\{st\.max\}\)/.test(html), "voll → Express geht nicht an, Hinweis; nach dem Senden „heute 3/5“");
 }
 // 2.392.0 KC-CLUB-HERBST-MITTE-FREI (Fund Hansi): Pilze kleiner, höchstens 2 Fliegenpilze, in der Mitte (Name aus Nüssen) nur Laub
@@ -7084,6 +7084,47 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/@keyframes meldung-blink \{ 50% \{ background: #c9a46a; color: #140a0b;/.test(html) && /\.meldung\.fehler \{[^}]*animation-name: meldung-blink-fehler; \}/.test(html), "Fehlermeldungen blinken rot/weiß");
   assert.ok(!/@keyframes meldung-blink[^{]*\{[^}]*transform/.test(html), "Blinken ohne Bewegung (transform bleibt für die Mittelung)");
   assert.ok(/dlgOeffnen\(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen" title="Schließen">✕<\/button><h3 class="dlg-kopf">🔑 Schlüsselbund/.test(html) && /\.dlg-x \{ position: absolute; top: 8px; right: 8px; min-width: 44px; min-height: 44px;/.test(html), "Schließkreuz oben rechts, 44 px Tippfläche");
+}
+
+// 2.524.0 KC-CLUB-VERSANDART (Wunsch Hansi): ❗ und 🏎️ raus aus der Knopfreihe – Versand-Leiste über dem Schreibfeld:
+// 📝 Normal vorgewählt; Wichtig oder Express nimmt den Haken bei Normal raus; Wichtig + Express zusammen; nach dem Senden wieder Normal
+{
+  const vm = await import("node:vm"), ix = lies("index.html"), js = lies("app.js");
+  const innen = ix.slice(ix.indexOf('<div class="innen">'), ix.indexOf("</div>", ix.indexOf('id="bfChatKnopf"')));
+  assert.ok(!/id="wichtigKnopf"|id="expressKnopf"/.test(innen), "❗ und 🏎️ nicht mehr in der Knopfreihe");
+  assert.ok(/id="waKnopf" onclick="waSenden\(\)">WA<\/button>/.test(innen), "WA bleibt am bisherigen Platz (Variante A)");
+  const l = ix.indexOf('id="versandLeiste"');
+  assert.ok(l > ix.indexOf('class="eg-griffe"') && l < ix.indexOf('<div class="innen">'), "Leiste unter der kleinen Zeile (▾ ⌨️ 🔊 🔒), direkt über dem Schreibfeld");
+  const leiste = ix.slice(l, ix.indexOf("</div>", l));
+  const ids = [...leiste.matchAll(/id="(\w+Knopf)"/g)].map((m) => m[1]);
+  assert.deepEqual(ids, ["normalKnopf", "wichtigKnopf", "expressKnopf"], "Reihenfolge Normal – Wichtig – Express");
+  assert.ok(/class="vs-wahl an" id="normalKnopf"[^>]*aria-pressed="true"/.test(leiste), "Normal ist von Anfang an markiert");
+  assert.equal((leiste.match(/onpointerdown="event\.preventDefault\(\)"/g) || []).length, 3, "Antippen lässt die Tastatur offen");
+  // Verhalten: echte Funktionen aus app.js in einer kleinen Umgebung ausführen
+  const fn = (n) => { const i = js.indexOf(`function ${n}(`); assert.ok(i >= 0, n); let t = 0, k = js.indexOf("{", i); for (let j = k; j < js.length; j++) { if (js[j] === "{") t++; else if (js[j] === "}" && !--t) return js.slice(i, j + 1); } };
+  const el = () => ({ classList: { s: new Set(), toggle(c, an) { an ?? !this.s.has(c) ? this.s.add(c) : this.s.delete(c); }, contains(c) { return this.s.has(c); } }, attr: {}, setAttribute(k, v) { this.attr[k] = v; }, dataset: {}, value: "", placeholder: "" });
+  const dom = { versandLeiste: el(), text: el(), normalKnopf: el(), wichtigKnopf: el(), expressKnopf: el() };
+  const ctx = { $: (id) => dom[id], melde: () => {}, anlagen: [], ICH: { admin: false }, localStorage: { getItem: () => null }, EXS: { stand: null }, expressStandHolen: () => {} };
+  vm.createContext(ctx);
+  vm.runInContext(`var WICHTIG = false, EXPRESS = false; const WF_KEY = "kc_wichtig_frage";\n${["versandImmerAn", "versandZeigen", "versandNormal", "versandZurueck", "wichtigUmschalten", "expressUmschalten", "expressZahlZeigen"].map(fn).join("\n")}`, ctx);
+  const stand = () => ({ n: dom.normalKnopf.classList.contains("an"), w: !!ctx.WICHTIG, x: !!ctx.EXPRESS });
+  const tippe = (f) => vm.runInContext(f, ctx);
+  tippe("versandZeigen()"); assert.deepEqual(stand(), { n: true, w: false, x: false }, "Start: Normal");
+  assert.ok(dom.versandLeiste.classList.contains("versteckt"), "ohne Text versteckt");
+  dom.text.value = "Hallo"; tippe("versandZeigen()"); assert.ok(!dom.versandLeiste.classList.contains("versteckt"), "mit Text sichtbar");
+  tippe("expressUmschalten()"); assert.deepEqual(stand(), { n: false, w: false, x: true }, "Express → Haken bei Normal raus");
+  tippe("wichtigUmschalten()"); assert.deepEqual(stand(), { n: false, w: true, x: true }, "Wichtig und Express zusammen");
+  assert.equal(dom.text.placeholder, "🏎️❗ Wichtige Express-Sendung schreiben …");
+  tippe("expressUmschalten()"); assert.deepEqual(stand(), { n: false, w: true, x: false }, "Express weg – Wichtig bleibt");
+  tippe("wichtigUmschalten()"); assert.deepEqual(stand(), { n: true, w: false, x: false }, "beides weg → Normal wieder markiert");
+  tippe("wichtigUmschalten(); expressUmschalten(); versandNormal()"); assert.deepEqual(stand(), { n: true, w: false, x: false }, "Normal antippen nimmt Wichtig und Express weg");
+  tippe("wichtigUmschalten(); expressUmschalten(); versandZurueck()"); assert.deepEqual(stand(), { n: true, w: false, x: false }, "nach dem Senden wieder Normal");
+  dom.text.value = ""; tippe("versandZeigen()"); assert.ok(dom.versandLeiste.classList.contains("versteckt"), "leeres Feld → wieder versteckt");
+  ctx.localStorage.getItem = () => "1"; tippe("versandZeigen()"); assert.ok(!dom.versandLeiste.classList.contains("versteckt"), "Schalter „immer zeigen“");
+  // Senden und Aufräumen
+  assert.ok(!/wichtigkeitFragen/.test(js), "keine Frage mehr vor dem Senden");
+  assert.ok((js.match(/versandZurueck\(\);/g) || []).length >= 3, "Senden, Mehrfach-Senden und Chatwechsel setzen auf Normal zurück");
+  assert.ok(/versandZeigen\(\); \} \/\/ 2\.524\.0 KC-CLUB-VERSANDART/.test(js) && /function chipsZeigen\(\) \{\n  versandZeigen\(\);/.test(js), "Leiste erscheint beim Schreiben und mit Anhang");
 }
 
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
@@ -9829,8 +9870,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/function ampelHtml\(stufen\)/.test(html) && /e\.ampel \? ampelHtml\(\[/.test(html) && /\$\{scVersandStand\(e\)\}\$\{scAmpel\(e\)\}/.test(html), "Ampel in Nachrichten-Infos und Schulungs-Karte");
   assert.ok(/e\.ampel = \{ gesendet, gesendetWie/.test(server) && /j\.ampel = await schulungAmpel\(j\)\.catch\(\(\) => \(\{\}\)\)/.test(server), "Server liefert die Ampel");
   assert.ok(/!inko\.has\(e\.person_id\)/.test(server) && /!inko\.has\(pid\)/.test(server), "Inkognito-Admin wird über „Club-App geöffnet“ nicht verraten");
-  assert.ok(/await wichtigkeitFragen\(\); \/\/ KC-CLUB-WICHTIGKEIT-FRAGE/.test(html) && /id="setWichtigFrage" onchange="wichtigFrageSetzen\(this\.checked\)"/.test(html), "Frage vor dem Senden + Schalter");
-  assert.ok(/Date\.now\(\) - \(WF_ZULETZT\[k\] \|\| 0\) < 30 \* 60000/.test(html), "je Chat höchstens alle 30 Min.");
+  // 2.524.0 KC-CLUB-VERSANDART: die Frage vor dem Senden ist durch die Versand-Leiste ersetzt (Freigabe Hansi) – der Schalter heißt jetzt „Versand-Leiste immer zeigen“
+  assert.ok(!/wichtigkeitFragen/.test(html) && /id="setWichtigFrage" onchange="versandImmerSetzen\(this\.checked\)"/.test(html), "Versand-Leiste statt Frage + Schalter");
   assert.ok(/const wege = notfall \|\| wichtig (\|\| express )?\? \["push", "email"\]/.test(server) && /vars\.wichtigkeit === "hoch" \? \{ priority: "high" \}/.test(server), "Hoch: Push + E-Mail, Priorität an den Communicator");
   assert.ok(/await wichtigUngelesenMelden\(\)/.test(server) && /await protokoll\(null, "wichtig_ungelesen"[^\n]*\n\s*if \(!offen\.length\) continue;/.test(server), "24-Std.-Hinweis einmal (erst merken, dann senden)");
 }
@@ -10367,7 +10408,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.362.0 KC-CLUB-EXPRESS + KC-CLUB-BOTEN
 {
-  assert.ok(/id="expressKnopf" onclick="expressUmschalten\(\)">🏎️<\/button>/.test(seite) && /\.\.\.\(EXPRESS \? \{ express: true \} : \{\}\)/.test(html), "🏎️-Knopf und Express beim Senden");
+  assert.ok(/id="expressKnopf" [^>]*onclick="expressUmschalten\(\)"[^>]*>🏎️ Express<\/button>/.test(seite) && /\.\.\.\(EXPRESS \? \{ express: true \} : \{\}\)/.test(html), "🏎️ Express (Versand-Leiste) und Express beim Senden");
   assert.ok(/if \(notfall \|\| express\) stumm\.clear\(\);/.test(server) && /\{ notfall: notfall \|\| express \}\);/.test(server) && /EXPRESS_MAX = 5/.test(server), "Express durchbricht Stumm/Ruhezeit, höchstens 5 am Tag");
   assert.ok(server.includes('case "express_antwort": {') && /\["geoeffnet", "spaeter", "nein"\]/.test(server) && /📬 Express angekommen/.test(server), "Antwort + Empfangsbestätigung an den Absender");
   assert.ok(/const express = await pExpress;/.test(server) && /async function expressOffen\(ich: Ich, zahlen: any\[\]\)/.test(server), "init liefert offene Express-Sendungen");
