@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.522.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.523.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -28914,7 +28914,7 @@ function vbNeuProbieren() { VBR.fehl.clear(); document.querySelectorAll(".vn-zu"
 function vbMenue(beimEinschalten) {
   const p = vbPartner(); if (!p) return melde("🔑 Einen Schlüsselbund gibt es nur für Zweier-Chats.", true);
   const vn = esc(vbVorname(p)), b = vbHolen(p.person_id);
-  const f = dlgOeffnen(`<h3 class="dlg-kopf">🔑 Schlüsselbund mit ${vn}</h3>
+  const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen" title="Schließen">✕</button><h3 class="dlg-kopf">🔑 Schlüsselbund mit ${vn}</h3>
     <p class="dlg-text">${b ? `Vorhanden seit ${esc(new Date(b.erstellt || Date.now()).toLocaleDateString("de-DE"))}: ${b.schluessel.length} Schlüssel auf diesem Handy. Verschlüsselte Nachrichten (🔒) gehen damit ohne Eintippen und öffnen sich von selbst.`
       : `Mit einem Schlüsselbund müsst ihr keinen Schlüssel mehr eintippen: ${VB_ANZAHL} zufällige Schlüssel liegen auf beiden Handys. Beim Senden nimmt die App einen davon, beim Empfang probiert sie alle durch – passt keiner, kommt eine Fehlermeldung. Die Schlüssel gehen per Datei direkt an ${vn}, nie über den Club-Server.`}</p>
     <div class="dlg-knoepfe" style="flex-direction:column;align-items:stretch">

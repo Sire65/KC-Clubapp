@@ -2854,6 +2854,15 @@
   .zurueck { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--karte); box-shadow: var(--schatten); font-size: 1.2rem; cursor: pointer; }
   .meldung { position: fixed; left: 50%; transform: translateX(-50%); top: calc(14px + var(--notH, 0px)); background: #2b1a1c; color: #fff; padding: 12px 18px; border-radius: 14px; z-index: 2300; max-width: 92%; box-shadow: 0 8px 24px rgba(0,0,0,.25); } /* 2.23.29 (Fund Hansi): auch über Vollbild-Fenstern wie Twinkey (2000) sichtbar */
   .meldung.fehler { background: #a51d1d; }
+  /* 2.523.0 KC-CLUB-MELDUNG-AUFFAELLIG (Wunsch Hansi „kontrastreich und 2× aufblinken, damit es auffällt“): heller Text auf fast Schwarz,
+     goldener Rand (CD), fett; blinkt beim Erscheinen zweimal (nur Farbe/Leuchten – kein Wackeln, darum auch bei „Bewegung reduzieren“) */
+  .meldung { background: #140a0b; color: #fff; font-weight: 700; border: 3px solid #c9a46a; box-shadow: 0 8px 24px rgba(0,0,0,.45); animation: meldung-blink .42s ease-in-out 2; }
+  .meldung.fehler { background: #a51d1d; border-color: #fff; animation-name: meldung-blink-fehler; }
+  @keyframes meldung-blink { 50% { background: #c9a46a; color: #140a0b; box-shadow: 0 0 0 6px rgba(201,164,106,.55), 0 8px 24px rgba(0,0,0,.45); } }
+  @keyframes meldung-blink-fehler { 50% { background: #fff; color: #a51d1d; box-shadow: 0 0 0 6px rgba(255,255,255,.6), 0 8px 24px rgba(0,0,0,.45); } }
+  /* 2.523.0 KC-CLUB-DLG-SCHLIESSEN: Schließkreuz oben rechts in Fenstern (zuerst Schlüsselbund) */
+  .dlg-innen:has(> .dlg-x) { position: relative; } .dlg-innen > .dlg-x + .dlg-kopf { padding-right: 46px; }
+  .dlg-x { position: absolute; top: 8px; right: 8px; min-width: 44px; min-height: 44px; border: 2px solid var(--linie); border-radius: 50%; background: var(--karte); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1; cursor: pointer; }
   .updatebalken { background: var(--gelbbg); color: var(--gelb); border-radius: 14px; padding: 12px; margin-top: 10px; display: flex; gap: 10px; align-items: center; font-weight: 700; }
   .schalter { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--linie); }
   .schalter:last-child { border-bottom: none; }
@@ -5567,7 +5576,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.522.0" data-v="2.522.0"></script>
+<script src="app.js?v=2.523.0" data-v="2.523.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

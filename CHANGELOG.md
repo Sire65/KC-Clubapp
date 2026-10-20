@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.523.0 – 2026-10-20 – Meldung oben auffällig · ✕ im Schlüsselbund-Fenster (KC-CLUB-MELDUNG-AUFFAELLIG)
+- KC-CLUB-MELDUNG-AUFFAELLIG (Wunsch Hansi „kontrastreich und 2× aufblinken, damit es auffällt“): Meldungen oben jetzt weiß und fett auf fast Schwarz mit goldenem Rand (Fehler: weiß auf Rot mit weißem Rand); beim Erscheinen blinken sie zweimal kurz auf (nur Farbe/Leuchten, kein Wackeln).
+- KC-CLUB-DLG-SCHLIESSEN (Wunsch Hansi): Das Fenster „🔑 Schlüsselbund“ hat oben rechts ein Schließkreuz ✕ (wie „Schließen“).
+
 ## 2.522.0 – 2026-10-20 – Teilen: Fehler sichtbar statt „Es ist nichts angekommen“ (KC-CLUB-TEILEN-FEHLER)
 Fund Hansi (Screenshot v2.521.0: „Es ist nichts angekommen …“ – „scheinbar wieder ein Format, das er nicht kennt“). Die Diagnose zeigte: keine Dateien, kein Text, keine Felder – das Annehmen im Hintergrund (Service Worker) war abgebrochen, und der Fehlerweg öffnete die App ohne jede Spur. Außerdem kamen Listen in der Teilen-Diagnose seit 2.515.0 leer an (der Server speichert nur Text/Zahlen).
 - Das Handy vermerkt jetzt, warum es nicht geklappt hat (nur Art und Größe, keine Inhalte); eine Datei, die nicht in den Zwischenspeicher passt, wird übersprungen statt alles abzubrechen.

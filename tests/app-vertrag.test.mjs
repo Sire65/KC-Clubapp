@@ -7078,6 +7078,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/revoke all on function public\.kc_dp_nicht_planbar\(text\) from public, anon;/.test(m) && /grant execute on function public\.kc_dp_nicht_planbar\(text\) to authenticated;/.test(m), "kein anonymer Zugriff");
 }
 
+// 2.523.0 KC-CLUB-MELDUNG-AUFFAELLIG + KC-CLUB-DLG-SCHLIESSEN (Wunsch Hansi): Meldung oben kontrastreich, blinkt 2×; Schlüsselbund-Fenster mit ✕
+{
+  assert.ok(/\.meldung \{ background: #140a0b; color: #fff; font-weight: 700; border: 3px solid #c9a46a;[^}]*animation: meldung-blink \.42s ease-in-out 2; \}/.test(html), "kontrastreich (CD-Gold-Rand), blinkt genau 2×");
+  assert.ok(/@keyframes meldung-blink \{ 50% \{ background: #c9a46a; color: #140a0b;/.test(html) && /\.meldung\.fehler \{[^}]*animation-name: meldung-blink-fehler; \}/.test(html), "Fehlermeldungen blinken rot/weiß");
+  assert.ok(!/@keyframes meldung-blink[^{]*\{[^}]*transform/.test(html), "Blinken ohne Bewegung (transform bleibt für die Mittelung)");
+  assert.ok(/dlgOeffnen\(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen" title="Schließen">✕<\/button><h3 class="dlg-kopf">🔑 Schlüsselbund/.test(html) && /\.dlg-x \{ position: absolute; top: 8px; right: 8px; min-width: 44px; min-height: 44px;/.test(html), "Schließkreuz oben rechts, 44 px Tippfläche");
+}
+
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
