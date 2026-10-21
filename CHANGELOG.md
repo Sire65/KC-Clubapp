@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.573.0 – 2026-10-21 – Stundenuhren: Pause vor dem ersten Schlag
+- Fund Hansi „immer ein Schlag zu wenig“: Zählung und Uhrzeit stimmten (Diagnose z. B. 19 Uhr → 7 Schläge, alle gespielt; Zeitzone Europe/Berlin, Winterzeit stellt sich von selbst um). Bei Uhren mit Melodie kam der 1. Schlag nur 0,4–1,6 s nach dem letzten, noch nachklingenden Melodieton und ging darin unter. Jetzt 2,5 s Pause wie bei echten Uhren.
+
 ## 2.572.0 – 2026-10-21 – Adventsgesteck + Kochmütze als Push-Zeichen
 - 🕯️ Adventsgesteck oben rechts im Kopf vom 1. Advent bis Heiligabend: Tannengrün, 2 rote glänzende Kugeln, 1 Tannenzapfen, je Adventssonntag eine brennende Kerze mehr. ⚙️ → Effekte: ein/aus + Vorschau.
 - Push-Mitteilungen zeigen oben in der Leiste die Kochmütze statt eines Vierecks (eigenes Statusleisten-Zeichen badge-muetze.png).

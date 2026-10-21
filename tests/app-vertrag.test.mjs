@@ -11917,3 +11917,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/const agAn = \(\) => einst\("adventgesteck", true\);/.test(html) && /id="setAdventGesteck" onchange="einstellung\('adventgesteck', this\.checked\)/.test(ix), "unter ⚙️ ein/aus");
   assert.ok(/\.ag-gesteck \{ position: absolute;[^}]*pointer-events: none;/.test(ix) && /prefers-reduced-motion: reduce\) \{ \.ag-flamme \{ animation: none; \} \}/.test(ix), "blockiert nichts; ruhige Flammen bei „weniger Bewegung“");
 }
+// 2.573.0 KC-CLUB-STUNDENSCHLAG-PAUSE (Fund Hansi „immer einer zu wenig“): Zählung/Zeitzone stimmen; nach der Melodie eine echte Pause vor dem 1. Schlag
+{
+  assert.ok(/const SU_PAUSE_MS = 2500;/.test(html) && /Math\.round\(d \* 1000\) \+ SU_PAUSE_MS\)/.test(html), "Pause zwischen Melodie und erstem Stundenschlag");
+  assert.ok(/timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23"/.test(html) && /const kkRufe = \(h\) => \(h % 12\) \|\| 12;/.test(html), "Berliner Zeit (Sommer-/Winterzeit von selbst), 12-Stunden-Schlag");
+}

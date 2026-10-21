@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.572.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.573.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -22817,6 +22817,10 @@ document.addEventListener("change", (e) => {
   // 2.478.0 KC-CLUB-EINST-KLAPPEN (Wunsch Hansi „wenn ich z. B. Szenen einschalte, öffnet sich der Klappbereich mit den Szenen“): beim Einschalten geht die Auswahl dazu auf
   if (e.target.checked && e.target.id) document.querySelectorAll(`details[data-abh="${e.target.id}"]`).forEach((d) => (d.open = true));
 });
+// 2.573.0 KC-CLUB-STUNDENSCHLAG-PAUSE (Fund Hansi „es schlägt immer einer zu wenig“ – Diagnose: Zählung und Uhrzeit stimmen, z. B. 19 Uhr → 7 Schläge,
+// alle 7 gespielt; Zeitzone Europe/Berlin, die Winterzeit stellt sich also von selbst um): bei Uhren mit Melodie kam der erste Stundenschlag nur
+// 0,4–1,6 s nach dem letzten Melodieton, der noch nachklang – man hörte ihn als Ende der Melodie. Jetzt wie bei echten Uhren eine deutliche Pause.
+const SU_PAUSE_MS = 2500;
 function kuckuckZeigen(h = kkJetzt().h, tonImmer = false, uhrId = null) { // tonImmer: Probe (🔊 in den Einstellungen) – auch nachts; 2.467.0: uhrId = andere Stundenuhr
   document.querySelector(".kuckuck")?.remove();
   const U = suUhr(uhrId), n = U?.rufe ? U.rufe(h) : kkRufe(h), mitTon = einst("ton", true) && (tonImmer || !(h >= KK_NACHT_VON || h < KK_NACHT_BIS));
@@ -22858,7 +22862,7 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false, uhrId = null) { // ton
     if (U?.vorspiel && !vorspielDa && i === 0) { vorspielDa = true;
       if (mitTon && audio && audio.state === "running") { let d = 0; try { audio.__zuletzt = Date.now(); d = U.vorspiel(audio.currentTime + 0.05); } catch {}
         u.classList.add("spielt"); const halten = setInterval(() => { if (!u.isConnected) return clearInterval(halten); audio.__zuletzt = Date.now(); }, 1000); // Akku-Schutz: Ton bleibt wach
-        u._t = setTimeout(() => { clearInterval(halten); u.classList.remove("spielt"); ruf(); }, Math.round(d * 1000)); return; } }
+        u._t = setTimeout(() => { clearInterval(halten); u.classList.remove("spielt"); ruf(); }, Math.round(d * 1000) + SU_PAUSE_MS); return; } } // 2.573.0: Pause wie bei echten Uhren
     if (i >= n) {
       u.classList.remove("offen"); kkDiagnose(h, n, gespielt, mitTon, U?.id || "kuckuck");
       // 2.428.0 KC-CLUB-KUCKUCK-FREIGABE: Ton war gesperrt (stumm gerufen) → Uhr bleibt eine Minute stehen, Antippen ruft alles nochmal mit Ton
