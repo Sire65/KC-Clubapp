@@ -11322,7 +11322,7 @@ Köcheclub-App`,
         const a = await anrufHolen(ich, p.id);
         if (a.von !== ich.person_id) throw new Fehler("Nur der Anrufer kann neu verbinden.", 403);
         if (a.status !== "angenommen" || a.konferenz_id) throw new Fehler("Das Gespräch läuft nicht mehr.", 409);
-        await db.from("kc_club_anruf").update({ angebot: sdpText(p.angebot), antwort: null }).eq("id", a.id).eq("status", "angenommen");
+        schreibOk(await db.from("kc_club_anruf").update({ angebot: sdpText(p.angebot), antwort: null }).eq("id", a.id).eq("status", "angenommen"), "Neu verbinden");
         return json({ ok: true });
       }
       case "anruf_neu_antwort": {
@@ -11331,7 +11331,7 @@ Köcheclub-App`,
         if (a.status !== "angenommen" || a.konferenz_id) throw new Fehler("Das Gespräch läuft nicht mehr.", 409);
         const ufrag = /a=ice-ufrag:(\S+)/.exec(String(a.angebot || ""))?.[1] || "";
         if (a.antwort || !ufrag || String(p.fuer || "") !== ufrag) throw new Fehler("Veraltete Verbindungsdaten.", 409);
-        await db.from("kc_club_anruf").update({ antwort: sdpText(p.antwort) }).eq("id", a.id).eq("status", "angenommen").is("antwort", null);
+        schreibOk(await db.from("kc_club_anruf").update({ antwort: sdpText(p.antwort) }).eq("id", a.id).eq("status", "angenommen").is("antwort", null), "Neu verbinden");
         return json({ ok: true });
       }
 
