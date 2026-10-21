@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.573.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.574.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -22406,6 +22406,11 @@ Object.assign(SU_AUFNAHMEN, {
     quelle: "https://commons.wikimedia.org/wiki/File:Westminster-vom-Carillon_MaxMetz.wav", geaendert: SU_GEKUERZT },
   roehren_schlag: { datei: "uhr-roehren-schlag.mp3", was: "Standuhr aus Röhrenglocken (am Computer gespielt)", urheber: "gsb1039", lizenz: "CC0", lizenzLink: "https://creativecommons.org/publicdomain/zero/1.0/deed.de",
     quelle: "https://commons.wikimedia.org/wiki/File:415061_gsb1039_clock-chime-tubebells-handbells-vibes.wav", geaendert: SU_GEKUERZT },
+  // 2.574.0 KC-CLUB-STANDUHR-ECHT (Wunsch Hansi „eine richtige große Standuhr mit echtem Klang“): echte Großvater-Standuhr, London-Hackney, 9-Uhr-Schlag
+  standuhr_ticken: { datei: "uhr-standuhr-ticken.mp3", was: "Große Standuhr (Großvateruhr) in London-Hackney: Ticken und Anlauf vor dem Schlag", urheber: "radio aporee (Aufnahme 52813)", lizenz: "gemeinfrei (Public Domain Mark 1.0)",
+    lizenzLink: "https://creativecommons.org/publicdomain/mark/1.0/deed.de", quelle: "https://archive.org/details/aporee_52813_60333", geaendert: SU_GEKUERZT + ", mono" },
+  standuhr_schlag: { datei: "uhr-standuhr-schlag.mp3", was: "Große Standuhr (Großvateruhr) in London-Hackney: Stundenschlag", urheber: "radio aporee (Aufnahme 52813)", lizenz: "gemeinfrei (Public Domain Mark 1.0)",
+    lizenzLink: "https://creativecommons.org/publicdomain/mark/1.0/deed.de", quelle: "https://archive.org/details/aporee_52813_60333", geaendert: SU_GEKUERZT + ", mono" },
   kiel: { datei: "uhr-kiel.mp3", was: "Glockenspiel im Kieler Rathausturm", urheber: "Michael Brandtner", lizenz: "CC BY 4.0", lizenzLink: "https://creativecommons.org/licenses/by/4.0/deed.de",
     quelle: "https://commons.wikimedia.org/wiki/File:Glockenspiel_Kieler_Rathausturm.flac", geaendert: SU_GEKUERZT },
   berlin: { datei: "uhr-berlin.mp3", was: "Geläut des Berliner Doms (2016)", urheber: "Morn", lizenz: "CC BY-SA 4.0", lizenzLink: SU_CC_BY_SA,
@@ -22434,6 +22439,10 @@ STUNDENUHREN.push(
     schlag: (t) => suVon("koeln").schlag(t), takt: () => 2200, bild: (h) => suVon("koeln").bild(h) },
   { id: "roehren", sym: "🎐", t: "Röhrenglocken-Standuhr", u: "Tiefer, voller Schlag aus Röhrenglocken (frei verwendbare Aufnahme)",
     aufnahmen: ["roehren_schlag"], schlag: (t) => suEcht("roehren_schlag", t, suVon("standuhr").schlag), takt: () => 2600, bild: (h) => suVon("standuhr").bild(h) },
+  // 2.574.0 KC-CLUB-STANDUHR-ECHT: echtes Ticken mit dem Anlauf des Schlagwerks, dann gleich die echten Schläge im Takt der Uhr (0,85 s) – wie im Original ohne Melodie
+  { id: "standuhr_echt", sym: "🕰️", t: "Große Standuhr – echt", u: "Echte alte Großvateruhr: erst das Ticken, dann ihre tiefen Stundenschläge",
+    aufnahmen: ["standuhr_ticken", "standuhr_schlag"], vorspiel: (t) => suEcht("standuhr_ticken", t, null), pause: 0,
+    schlag: (t) => suEcht("standuhr_schlag", t, suVon("standuhr").schlag, 1), takt: () => 850, bild: (h) => suVon("standuhr").bild(h) },
 );
 // Aufnahmen einer Uhr laden (braucht die Tonausgabe – erst nach deren Start aufrufen)
 const suAufnahmenLaden = (U) => (U?.aufnahmen || []).forEach((k) => suAufnahmeLaden(k));
@@ -22862,7 +22871,7 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false, uhrId = null) { // ton
     if (U?.vorspiel && !vorspielDa && i === 0) { vorspielDa = true;
       if (mitTon && audio && audio.state === "running") { let d = 0; try { audio.__zuletzt = Date.now(); d = U.vorspiel(audio.currentTime + 0.05); } catch {}
         u.classList.add("spielt"); const halten = setInterval(() => { if (!u.isConnected) return clearInterval(halten); audio.__zuletzt = Date.now(); }, 1000); // Akku-Schutz: Ton bleibt wach
-        u._t = setTimeout(() => { clearInterval(halten); u.classList.remove("spielt"); ruf(); }, Math.round(d * 1000) + SU_PAUSE_MS); return; } } // 2.573.0: Pause wie bei echten Uhren
+        u._t = setTimeout(() => { clearInterval(halten); u.classList.remove("spielt"); ruf(); }, Math.round(d * 1000) + (U.pause ?? SU_PAUSE_MS)); return; } } // 2.573.0: Pause wie bei echten Uhren (2.574.0: je Uhr, echte Standuhr ohne)
     if (i >= n) {
       u.classList.remove("offen"); kkDiagnose(h, n, gespielt, mitTon, U?.id || "kuckuck");
       // 2.428.0 KC-CLUB-KUCKUCK-FREIGABE: Ton war gesperrt (stumm gerufen) → Uhr bleibt eine Minute stehen, Antippen ruft alles nochmal mit Ton

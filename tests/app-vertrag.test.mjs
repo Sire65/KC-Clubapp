@@ -6885,7 +6885,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const ids = [...neu.matchAll(/\{ id: "([a-z0-9]+)", sym: "[^"]+", t: "[^"]+", u: "[^"]+",\s*aufnahmen: \[([^\]]+)\]/g)];
   assert.deepEqual(ids.map((m) => m[1]), ["bigben1945", "carillon", "kiel", "freiburg", "berlin", "roehren"], "sechs neue Uhren, jede mit ihren Aufnahmen");
   for (const m of ids) for (const k of m[2].match(/"([a-z_]+)"/g).map((x) => x.slice(1, -1))) assert.ok(new RegExp(`\\b${k}: \\{ datei:`).test(reg), "Aufnahme registriert: " + k);
-  assert.equal((neu.match(/suEcht\("[a-z_]+", t, suVon\("[a-z]+"\)\.(vorspiel|schlag)/g) || []).length, 8, "jede Aufnahme hat einen Ersatzton einer bestehenden Uhr");
+  assert.equal((neu.split("// 2.574.0 KC-CLUB-STANDUHR-ECHT")[0].match(/suEcht\("[a-z_]+", t, suVon\("[a-z]+"\)\.(vorspiel|schlag)/g) || []).length, 8, "jede Aufnahme hat einen Ersatzton einer bestehenden Uhr (die sechs Uhren von 2.481.0)");
   assert.ok(/const suEcht = \(k, t, ersatz, laut\) => \{ const p = SU_AUFNAHMEN\[k\]\?\.puffer; if \(p && suAufnahme\(k, t, laut\)\) return p\.duration; return ersatz \? ersatz\(t\) : 0; \};/.test(html), "Länge der Aufnahme = Dauer des Vorspiels");
   const kz = html.slice(html.indexOf("function kuckuckZeigen("), html.indexOf("function kkLautsprecherWecken("));
   assert.ok(kz.indexOf("if (mitTon) suAufnahmenLaden(U);") > kz.indexOf("audio = audio || new (window.AudioContext"), "Laden erst nach Start der Tonausgabe (decodeAudioData braucht sie)");
@@ -11919,6 +11919,14 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 }
 // 2.573.0 KC-CLUB-STUNDENSCHLAG-PAUSE (Fund Hansi „immer einer zu wenig“): Zählung/Zeitzone stimmen; nach der Melodie eine echte Pause vor dem 1. Schlag
 {
-  assert.ok(/const SU_PAUSE_MS = 2500;/.test(html) && /Math\.round\(d \* 1000\) \+ SU_PAUSE_MS\)/.test(html), "Pause zwischen Melodie und erstem Stundenschlag");
+  assert.ok(/const SU_PAUSE_MS = 2500;/.test(html) && /Math\.round\(d \* 1000\) \+ (?:SU_PAUSE_MS|\(U\.pause \?\? SU_PAUSE_MS\))\)/.test(html), "Pause zwischen Melodie und erstem Stundenschlag");
   assert.ok(/timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23"/.test(html) && /const kkRufe = \(h\) => \(h % 12\) \|\| 12;/.test(html), "Berliner Zeit (Sommer-/Winterzeit von selbst), 12-Stunden-Schlag");
+}
+// 2.574.0 KC-CLUB-STANDUHR-ECHT (Wunsch Hansi „eine richtige große Standuhr mit echtem Klang“)
+{
+  const reg = html.slice(html.indexOf("Object.assign(SU_AUFNAHMEN, {"), html.indexOf("const suEcht ="));
+  for (const k of ["standuhr_ticken", "standuhr_schlag"]) assert.ok(new RegExp(`${k}: \\{ datei: "uhr-[a-z-]+\\.mp3", was: "[^"]+", urheber: "radio aporee \\(Aufnahme 52813\\)", lizenz: "gemeinfrei \\(Public Domain Mark 1\\.0\\)",\\s*lizenzLink: "https://creativecommons\\.org/publicdomain/mark/1\\.0/deed\\.de", quelle: "https://archive\\.org/details/aporee_52813_60333"`).test(reg), "Aufnahme mit Urheber, Lizenz, Quelle: " + k);
+  for (const d of ["uhr-standuhr-ticken.mp3", "uhr-standuhr-schlag.mp3"]) { const f = new URL("../" + d, import.meta.url); assert.ok(fs.existsSync(f) && fs.statSync(f).size < 200000, "Datei da und klein: " + d); }
+  assert.ok(/\{ id: "standuhr_echt", sym: "🕰️", t: "Große Standuhr – echt"/.test(html) && /schlag: \(t\) => suEcht\("standuhr_schlag", t, suVon\("standuhr"\)\.schlag, 1\), takt: \(\) => 850/.test(html), "Uhr mit echtem Schlag (Ersatz: Standuhr), Takt wie das Original");
+  assert.ok(/Math\.round\(d \* 1000\) \+ \(U\.pause \?\? SU_PAUSE_MS\)\)/.test(html), "Pause je Uhr (echte Standuhr schlägt direkt nach dem Anlauf)");
 }

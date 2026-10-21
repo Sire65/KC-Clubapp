@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.574.0 – 2026-10-21 – Große Standuhr mit echtem Klang (KC-CLUB-STANDUHR-ECHT)
+- Neue Stundenuhr „🕰️ Große Standuhr – echt“: echte alte Großvateruhr (London-Hackney, gemeinfreie Aufnahme von radio aporee über archive.org) – erst das Ticken mit dem Anlauf des Schlagwerks, dann so viele echte Stundenschläge, wie es Uhr ist, im Takt der Uhr (0,85 s).
+- Pause nach der Melodie jetzt je Uhr einstellbar (diese Uhr schlägt wie das Original direkt nach dem Anlauf).
+
 ## 2.573.0 – 2026-10-21 – Stundenuhren: Pause vor dem ersten Schlag
 - Fund Hansi „immer ein Schlag zu wenig“: Zählung und Uhrzeit stimmten (Diagnose z. B. 19 Uhr → 7 Schläge, alle gespielt; Zeitzone Europe/Berlin, Winterzeit stellt sich von selbst um). Bei Uhren mit Melodie kam der 1. Schlag nur 0,4–1,6 s nach dem letzten, noch nachklingenden Melodieton und ging darin unter. Jetzt 2,5 s Pause wie bei echten Uhren.
 
