@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.555.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.556.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -8391,14 +8391,48 @@ function tipptZeigen(namen, entwurf = [], sprechen = [], diktiert = []) {
 // (manche Mobilfunknetze), sagt die App es ehrlich und bietet Nachricht/Anruf übers Telefon an.
 const ICE = [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }];
 let RUF = null; // { id, pc, strom, rolle, poll, uhr, start, gegen, verbunden, klang }
-function iceFertig(pc, ms = 3500) {
-  return new Promise((ok) => { if (pc.iceGatheringState === "complete") return ok(); const t = setTimeout(ok, ms);
-    pc.addEventListener("icegatheringstatechange", () => { if (pc.iceGatheringState === "complete") { clearTimeout(t); ok(); } }); });
+// KC-CLUB-ANRUF-BESSER (21.10.2026, Wunsch Hansi „bau 2 bis 4 jetzt“) 3): nicht mehr stur bis 3,5 s sammeln – fertig, sobald das
+// Sammeln endet, oder nach 1,5 s, wenn schon ein Weg übers Internet (srflx/relay) dabei ist; spätestens nach ms (harte Grenze).
+function iceFertig(pc, ms = 3000, frueh = 1500) {
+  return new Promise((ok) => {
+    const t0 = Date.now(); let t = null, fertig = false;
+    const pruef = () => { if (fertig) return; const d = Date.now() - t0;
+      if (pc.iceGatheringState === "complete" || d >= ms || (d >= frueh && / typ (srflx|relay)/.test(pc.localDescription?.sdp || ""))) {
+        fertig = true; clearInterval(t); pc.removeEventListener?.("icegatheringstatechange", pruef); ok(); } };
+    t = setInterval(pruef, 250); pc.addEventListener?.("icegatheringstatechange", pruef); pruef();
+  });
+}
+// KC-CLUB-ANRUF-BESSER 4): Opus mit eingebauter Fehlerkorrektur (useinbandfec) und Sprechpausen-Sparen (usedtx) – nur ergänzen,
+// was fehlt; geht etwas schief, bleibt das SDP unverändert
+function sdpOpus(sdp) {
+  try {
+    const z = String(sdp).split(/\r?\n/), pts = z.map((l) => /^a=rtpmap:(\d+) opus\/48000/i.exec(l)?.[1]).filter(Boolean);
+    for (const pt of pts) {
+      const i = z.findIndex((l) => l.startsWith(`a=fmtp:${pt} `));
+      if (i < 0) { z.splice(z.findIndex((l) => l.startsWith(`a=rtpmap:${pt} `)) + 1, 0, `a=fmtp:${pt} useinbandfec=1;usedtx=1`); continue; }
+      if (!/useinbandfec=/.test(z[i])) z[i] += ";useinbandfec=1";
+      if (!/usedtx=/.test(z[i])) z[i] += ";usedtx=1";
+    }
+    return z.join("\r\n");
+  } catch { return sdp; }
+}
+const sdpUfrag = (s) => /a=ice-ufrag:(\S+)/.exec(String(s || ""))?.[1] || "";
+// Angebot/Antwort erzeugen und (mit Opus-Einstellung) als eigene Beschreibung setzen; lehnt der Browser das ab, ohne Änderung
+async function rufBeschreibung(pc, angebot, opt) {
+  const d = angebot ? await pc.createOffer(opt) : await pc.createAnswer();
+  try { await pc.setLocalDescription({ type: d.type, sdp: sdpOpus(d.sdp) }); } catch { await pc.setLocalDescription(d); }
+}
+// KC-CLUB-ANRUF-BESSER 4): Bildrate des eigenen Videos (bps) und an/aus – Ton bleibt unberührt
+async function rufVideoRate(pc, bps, aktiv = true) {
+  const s = pc?.getSenders?.().find((x) => x.track?.kind === "video"); if (!s?.getParameters || !s.setParameters) return false;
+  const setze = async (mitVorrang) => { const p = s.getParameters(); if (!p.encodings?.length) return false;
+    p.encodings[0].maxBitrate = bps; p.encodings[0].active = aktiv; if (mitVorrang) p.degradationPreference = "balanced"; await s.setParameters(p); return true; };
+  try { return await setze(true); } catch { try { return await setze(false); } catch { return false; } }
 }
 async function anrufVerbindung(mitBild) {
   if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) throw new Error("Dieses Handy/dieser Browser kann keine App-Anrufe.");
   let strom;
-  try { strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true },
+  try { strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, // KC-CLUB-ANRUF-BESSER 4)
     video: mitBild ? { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } : false }); }
   catch { throw new Error(mitBild ? "Bitte Kamera und Mikrofon erlauben (Chrome fragt danach) – sonst geht der Videoanruf nicht." : "Bitte das Mikrofon erlauben (Chrome fragt danach) – sonst geht der Anruf nicht."); }
   const pc = new RTCPeerConnection({ iceServers: ICE });
@@ -8411,12 +8445,118 @@ async function anrufVerbindung(mitBild) {
   };
   pc.onconnectionstatechange = () => {
     if (!RUF || RUF.pc !== pc) return;
-    if (pc.connectionState === "connected" && !RUF.verbunden) { RUF.verbunden = true; RUF.start = Date.now(); klangAus(); anrufUhr(); anrufKnoepfe("aktiv"); if (RUF.vf || RUF.ms) { melde(`🔊 Ton an – ihr könnt jetzt miteinander sprechen`); rufLeisten(); } }
-    if (pc.connectionState === "connected" && RUF.konf) { const h = RUF.konf.beine.get(RUF.id); if (h) h.verbunden = true; konfAnzeigen(); } // KC-CLUB-KONFERENZ: Hauptverbindung steht
-    if (pc.connectionState === "failed") { if (RUF.konf) konfBeinWeg(RUF.id, true); else anrufFehlgeschlagen(); }
-    if (pc.connectionState === "disconnected" && !RUF.konf) anrufZustand("⚠️ Verbindung wackelt …");
+    const R = RUF, s = pc.connectionState;
+    if (s === "connected" && !R.verbunden) { R.verbunden = true; R.start = Date.now(); klangAus(); anrufUhr(); anrufKnoepfe("aktiv"); rufQStart(); rufTaktWahl(); if (R.vf || R.ms) { melde(`🔊 Ton an – ihr könnt jetzt miteinander sprechen`); rufLeisten(); } }
+    if (s === "connected") { clearTimeout(R.wackelUhr); R.wackelt = false; if (R.neu && !R.neuOffen) { rufNeuWeg(R); rufTaktWahl(); } } // KC-CLUB-ANRUF-BESSER: wieder da
+    if (s === "connected" && R.konf) { const h = R.konf.beine.get(R.id); if (h) h.verbunden = true; konfAnzeigen(); } // KC-CLUB-KONFERENZ: Hauptverbindung steht
+    // KC-CLUB-ANRUF-BESSER 2): stand das Gespräch schon, erst neu aufbauen (Konferenz: wie bisher)
+    if (s === "failed") { if (R.konf) konfBeinWeg(R.id, true); else if (R.verbunden) rufGestoert(R); else anrufFehlgeschlagen(); }
+    if (s === "disconnected" && !R.konf) { R.wackelt = true; if (!R.neu) anrufZustand("⚠️ Verbindung wackelt …");
+      if (R.verbunden) { clearTimeout(R.wackelUhr); R.wackelUhr = setTimeout(() => { if (RUF === R && pc.connectionState === "disconnected") rufGestoert(R); }, RUF_NEU.wackel); } }
   };
   return { pc, strom };
+}
+// ---- KC-CLUB-ANRUF-BESSER (21.10.2026, Wunsch Hansi „bau 2 bis 4 jetzt“) ----
+// 3) Takt der Statusabfrage je Lage. Die direkte Leitung (KC-CLUB-REALTIME) meldet jede Änderung am Anruf (Status/Antwort) sofort
+//    als Signal „anruf“ → anrufPruefen(); der Takt ist dann nur noch Rückfallnetz. Vorher fest: Anrufer 1,5 s / Angerufener 2 s
+//    beim Klingeln, danach 3 s. Jetzt: mit Leitung 3 s beim Klingeln, 6 s im Gespräch; ohne Leitung Anrufer 1 s (erste 20 s, dann 1,5 s),
+//    Angerufener 2 s, im Gespräch 3 s; nur während eines Neuaufbaus 1 s.
+function rufTaktWahl(start = false) {
+  const R = RUF; if (!R?.id || R.konf || (!R.poll && !start)) return;
+  const rt = rtAn(), jetzt = Date.now();
+  const ms = R.neu || jetzt < (R.schnellBis || 0) ? 1000
+    : R.pc?.remoteDescription ? (rt ? 6000 : 3000)
+    : R.rolle === "rufer" ? (rt ? 3000 : jetzt - (R.klingelSeit || 0) < 20000 ? 1000 : 1500)
+    : (rt ? 3000 : 2000);
+  if (R.poll && R.taktMs === ms) return;
+  clearInterval(R.poll); R.taktMs = ms; R.poll = setInterval(anrufPruefen, ms);
+}
+// 2) Netzwechsel (WLAN ↔ Mobilfunk) oder kurzer Abriss: nicht auflegen, sondern die Verbindung neu aufbauen (ICE-Neustart).
+//    Der Anrufer schickt ein neues Angebot (iceRestart) über den Server (anruf_neu_angebot), der Angerufene antwortet (anruf_neu_antwort).
+//    Bis zu 3 Versuche in ~30 s; erst dann wie bisher „ließ sich nicht aufbauen“. Konferenzen bleiben wie bisher (Bein fällt weg).
+const RUF_NEU = { wackel: 3000, versuche: 3, frist: 30000, versuch: 10000 };
+function rufNeuWeg(R) { if (!R) return; clearTimeout(R.wackelUhr); const N = R.neu; if (!N) return; clearTimeout(N.uhr); clearInterval(N.pruef); R.neu = null; }
+function rufNeuStart(R) {
+  if (R.neu) return R.neu;
+  const N = R.neu = { n: 0, seit: Date.now() };
+  N.pruef = setInterval(() => {
+    if (RUF !== R || R.neu !== N) return clearInterval(N.pruef);
+    if (R.pc?.connectionState === "connected" && !R.neuOffen && !R.neuLaeuft) { rufNeuWeg(R); R.wackelt = false; rufTaktWahl(); return; } // wieder da
+    if (R.rolle !== "rufer" && Date.now() - N.seit > RUF_NEU.frist + 5000) anrufFehlgeschlagen(); // Angerufener: kam kein neues Angebot
+  }, 1000);
+  rufTaktWahl(); if (R.pc?.connectionState !== "connected") anrufZustand("🔄 Verbindung wird neu aufgebaut …");
+  return N;
+}
+function rufGestoert(R) { if (RUF !== R || R.konf) return; if (R.rolle === "rufer") anrufNeuAufbau(); else rufNeuStart(R); }
+async function anrufNeuAufbau(frueh = false) {
+  const R = RUF, pc = R?.pc; if (!pc || R.konf || !R.verbunden || !R.id || R.rolle !== "rufer" || R.neuLaeuft) return;
+  if (frueh && (R.neu || Date.now() - (R.neuZuletzt || 0) < 5000)) return; // Netzwechsel-Hinweis: höchstens alle 5 s
+  const N = rufNeuStart(R);
+  if (N.n >= RUF_NEU.versuche || Date.now() - N.seit > RUF_NEU.frist) return anrufFehlgeschlagen(); // bisherige Fehlerbehandlung
+  N.n++; R.neuLaeuft = true; R.neuZuletzt = Date.now(); R.neuOffen = false; clearTimeout(N.uhr);
+  N.uhr = setTimeout(() => rufNeuVersuchUm(R, N), RUF_NEU.versuch);
+  try {
+    if (pc.signalingState === "have-local-offer") await pc.setLocalDescription({ type: "rollback" }); // altes, unbeantwortetes Angebot
+    await rufBeschreibung(pc, true, { iceRestart: true }); await iceFertig(pc);
+    if (RUF !== R) return;
+    await api("anruf_neu_angebot", { id: R.id, angebot: pc.localDescription.sdp });
+    R.neuAb = Date.now(); R.neuOffen = true;
+  } catch {} finally { R.neuLaeuft = false; }
+  if (RUF === R) anrufPruefen(); // Antwort (oder Ende des Anrufs) gleich abholen
+}
+function rufNeuVersuchUm(R, N) {
+  if (RUF !== R || R.neu !== N) return;
+  if (R.pc.connectionState === "connected") { // Verbindung hielt doch – Angebot zurücknehmen, fertig
+    R.neuOffen = false; if (R.pc.signalingState === "have-local-offer") R.pc.setLocalDescription({ type: "rollback" }).catch(() => {});
+    rufNeuWeg(R); R.wackelt = false; rufTaktWahl(); return;
+  }
+  anrufNeuAufbau();
+}
+async function rufNeuAntworten(angebot) {
+  const R = RUF, pc = R?.pc; if (!pc || R.neuLaeuft || pc.signalingState !== "stable") return;
+  R.neuLaeuft = true; R.angebot = angebot;
+  try {
+    await pc.setRemoteDescription({ type: "offer", sdp: angebot }); await rufBeschreibung(pc, false); await iceFertig(pc);
+    if (RUF === R) await api("anruf_neu_antwort", { id: R.id, antwort: pc.localDescription.sdp, fuer: sdpUfrag(angebot) });
+  } catch {} finally { R.neuLaeuft = false; }
+}
+// Handy meldet Netzwechsel/wieder online → Anrufer baut gleich neu auf, Angerufener fragt 15 s lang öfter nach dem neuen Angebot
+function anrufNetzWechsel() {
+  const R = RUF; if (!R?.verbunden || R.konf || !R.pc) return;
+  if (R.rolle === "rufer") setTimeout(() => { if (RUF === R) anrufNeuAufbau(true); }, 1000);
+  else { R.schnellBis = Date.now() + 15000; rufTaktWahl(); }
+}
+try { navigator.connection?.addEventListener?.("change", anrufNetzWechsel); } catch {}
+window.addEventListener("online", anrufNetzWechsel);
+// 4) Schwaches Netz: alle 3 s getStats() – Verlust (eingehend + was die Gegenseite meldet) und Laufzeit. Zweimal hintereinander
+//    schlecht → Hinweis „📶 Verbindung schwach“ und eigenes Bild in Stufen: 500 → 150 kbit/s → pausiert (Ton läuft weiter).
+//    Dreimal hintereinander gut → eine Stufe zurück. Reiner Tonanruf: nur der Hinweis.
+const RUF_Q = { takt: 3000, verlust: 0.08, rtt: 0.6, stufen: [500000, 150000, 150000] };
+function rufQStart() { const R = RUF; if (!R || R.q || R.konf) return; R.q = { stufe: 0, schlecht: 0, gut: 0, alt: {} }; R.q.uhr = setInterval(anrufQualitaet, RUF_Q.takt); }
+async function anrufQualitaet() {
+  const R = RUF, Q = R?.q; if (!Q || !R.pc || Q.laeuft) return; Q.laeuft = true;
+  try {
+    const st = await R.pc.getStats(); let verl = 0, rtt = 0; const neu = {};
+    st.forEach((s) => {
+      if (s.type === "inbound-rtp" && (s.kind === "audio" || s.kind === "video")) {
+        const a = Q.alt[s.id] || { l: 0, r: 0 }, l = Math.max(0, (s.packetsLost || 0) - a.l), r = Math.max(0, (s.packetsReceived || 0) - a.r);
+        neu[s.id] = { l: s.packetsLost || 0, r: s.packetsReceived || 0 }; if (l + r > 0) verl = Math.max(verl, l / (l + r));
+      }
+      if (s.type === "remote-inbound-rtp") { if (s.fractionLost > 0) verl = Math.max(verl, s.fractionLost); if (s.roundTripTime > 0) rtt = Math.max(rtt, s.roundTripTime); }
+      if (s.type === "candidate-pair" && s.nominated && s.state === "succeeded" && s.currentRoundTripTime > 0) rtt = Math.max(rtt, s.currentRoundTripTime);
+    });
+    Q.alt = neu; Q.verlust = verl; Q.rtt = rtt; if (RUF !== R) return;
+    if (verl > RUF_Q.verlust || rtt > RUF_Q.rtt) { Q.schlecht++; Q.gut = 0; } else { Q.gut++; Q.schlecht = 0; }
+    const video = R.pc.getSenders().some((x) => x.track?.kind === "video");
+    if (Q.schlecht >= 2) { Q.schwach = true; Q.schlecht = 0; if (video && Q.stufe < 2) { Q.stufe++; await rufVideoRate(R.pc, RUF_Q.stufen[Q.stufe], Q.stufe < 2); } }
+    else if (Q.gut >= 3 && Q.schwach) { Q.gut = 0; if (video && Q.stufe > 0) { Q.stufe--; await rufVideoRate(R.pc, RUF_Q.stufen[Q.stufe], true); } if (!Q.stufe) Q.schwach = false; }
+    rufQAnzeigen();
+  } catch {} finally { Q.laeuft = false; }
+}
+function rufQAnzeigen(weg) {
+  const el = $("anrufSchwach"); if (!el) return; const Q = !weg && RUF?.q;
+  el.textContent = Q?.schwach ? (Q.stufe >= 2 ? "📶 Verbindung schwach · Bild pausiert – Ton läuft weiter" : "📶 Verbindung schwach") : "";
+  el.classList.toggle("versteckt", !Q?.schwach);
 }
 // kleiner Klingel-/Freiton über die Lautsprecher (ohne Audiodatei); Vibration dazu
 function klang(art) {
@@ -8481,6 +8621,8 @@ function anrufKnoepfe(art) {
 function anrufUhr() {
   clearInterval(RUF.uhr);
   RUF.uhr = setInterval(() => { if (!RUF?.start) return; const s = Math.floor((Date.now() - RUF.start) / 1000); const zeit = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+    if (!RUF.konf && RUF.neu && RUF.pc?.connectionState !== "connected") return anrufZustand("🔄 Verbindung wird neu aufgebaut …"); // KC-CLUB-ANRUF-BESSER
+    if (!RUF.konf && RUF.wackelt) return anrufZustand("⚠️ Verbindung wackelt …");
     anrufZustand(RUF.konf ? `👥 Konferenz · ${Math.max(2, (RUF.konf.teilnehmer || []).length)} Personen · ${zeit}` : `🟢 Verbunden · ${zeit}`); }, 1000);
 }
 function anrufStumm() {
@@ -8515,38 +8657,44 @@ async function anrufen(pid, mitBild, vf = false, ms = false) {
     const { pc, strom } = await anrufVerbindung(mitBild);
     if (RUF !== lauf) { try { strom?.getTracks?.().forEach((t) => t.stop()); pc?.close?.(); } catch {} return; } // abgebrochen: Mikrofon/Kamera wieder frei
     Object.assign(RUF, { pc, strom }); anrufKnoepfe("rufe");
-    await pc.setLocalDescription(await pc.createOffer()); await iceFertig(pc);
+    await rufBeschreibung(pc, true); if (mitBild) rufVideoRate(pc, RUF_Q.stufen[0]); await iceFertig(pc); // KC-CLUB-ANRUF-BESSER 4)
     if (RUF !== lauf) return;
     const r = await api("anruf_start", { an: pid, angebot: pc.localDescription.sdp, art });
     if (r.gegenanruf) { anrufAufraeumen(); return gegenanrufAnnehmen(r.gegenanruf, mitBild); }
     if (RUF !== lauf) { api("anruf_ende", { id: r.id }).catch(() => {}); return; } // während des Startens aufgelegt → beim Server gleich beenden
     RUF.id = r.id; anrufZustand(`${mitBild ? "🎥" : "📞"} Klingelt bei ${m.vorname || m.name} …`); klang("frei"); rufLeisten();
-    RUF.poll = setInterval(anrufPruefen, 1500);
+    RUF.klingelSeit = Date.now(); rufTaktWahl(true); // KC-CLUB-ANRUF-BESSER 3): Takt je Lage (vorher fest 1,5 s)
   } catch (e) { if (RUF !== lauf) return; anrufAufraeumen(); meldeFehler(e); }
 }
 // Status abfragen: Anrufer wartet auf Antwort; beide merken, wenn der andere auflegt
 async function anrufPruefen() {
-  if (!RUF?.id || RUF.pruefe) return; RUF.pruefe = true;
+  if (!RUF?.id) return; if (RUF.pruefe) { RUF.nochmal = true; return; } // KC-CLUB-ANRUF-BESSER: Signal während einer Abfrage → gleich danach nochmal
+  const R = RUF, t0 = Date.now(); R.pruefe = true; R.nochmal = false;
   try {
     const r = await api("anruf_status", { id: RUF.id });
-    if (!RUF) return;
+    if (RUF !== R) return;
     if (RUF.rolle === "rufer" && r.status === "angenommen" && r.antwort && !RUF.pc.remoteDescription) {
       klangAus(); anrufZustand("🔗 Verbindung wird aufgebaut …"); anrufKnoepfe("aktiv");
-      await RUF.pc.setRemoteDescription({ type: "answer", sdp: r.antwort });
-      clearInterval(RUF.poll); RUF.poll = setInterval(anrufPruefen, 3000); rufLeisten();
-      setTimeout(() => { if (RUF && !RUF.verbunden) anrufFehlgeschlagen(); }, 15000);
+      await RUF.pc.setRemoteDescription({ type: "answer", sdp: r.antwort }); RUF.antwortSdp = r.antwort;
+      rufLeisten(); // Takt danach: rufTaktWahl (unten)
+      setTimeout(() => { if (RUF === R && !RUF.verbunden) anrufFehlgeschlagen(); }, 15000);
     }
+    // KC-CLUB-ANRUF-BESSER 2): ICE-Neustart – Anrufer übernimmt die neue Antwort, Angerufener beantwortet ein neues Angebot
+    if (RUF.rolle === "rufer" && RUF.neuOffen && r.status === "angenommen" && r.antwort && r.antwort !== RUF.antwortSdp && t0 >= (RUF.neuAb || 0) && RUF.pc?.signalingState === "have-local-offer") {
+      RUF.antwortSdp = r.antwort; RUF.neuOffen = false; await RUF.pc.setRemoteDescription({ type: "answer", sdp: r.antwort }).catch(() => {});
+    }
+    if (RUF.rolle === "angerufen" && !RUF.konf && !r.konferenz && r.status === "angenommen" && r.angebot && r.angebot !== RUF.angebot && RUF.pc?.remoteDescription) await rufNeuAntworten(r.angebot);
     // KC-CLUB-KONFERENZ (0.82.0): unser Gespräch ist jetzt Teil einer Konferenz → ab hier übernimmt der Konferenz-Takt
     if (r.konferenz && !RUF.konf && RUF.pc?.remoteDescription && r.status === "angenommen") { konfStart(r.konferenz); return; }
     // KC-CLUB-ANRUF-KURZANTWORT (0.81.0): Antwort des Angerufenen ein paar Sekunden im Anrufbildschirm zeigen
     if (RUF.rolle === "rufer" && r.status === "abgelehnt" && r.kurzantwort) {
-      const g = r.gegenueber || RUF.gegen; klangAus(); clearInterval(RUF.poll); $("anrufBild").classList.remove("klingelt");
+      const g = r.gegenueber || RUF.gegen; klangAus(); clearInterval(RUF.poll); RUF.poll = null; $("anrufBild").classList.remove("klingelt");
       anrufZustand(`💬 ${g.vorname || g.name}: „${r.kurzantwort}“`); $("anrufKnoepfe").innerHTML = `<button class="rund2 rotk" title="Schließen" onclick="anrufAufraeumen()">✖</button>`;
       const jetzt = RUF; setTimeout(() => { if (RUF === jetzt) anrufAufraeumen(); }, 6000); return;
     }
     const ende = { abgelehnt: `${RUF.gegen.vorname || RUF.gegen.name || "Er/sie"} hat gerade keine Zeit.`, verpasst: RUF.rolle === "rufer" ? `${RUF.gegen.vorname || RUF.gegen.name} hat nicht abgenommen.` : "Anruf verpasst.", beendet: "Anruf beendet." }[r.status];
     if (ende) { anrufAufraeumen(); melde(ende); }
-  } catch {} finally { if (RUF) RUF.pruefe = false; }
+  } catch {} finally { if (RUF === R) { R.pruefe = false; rufTaktWahl(); if (R.nochmal) { R.nochmal = false; setTimeout(anrufPruefen, 0); } } }
 }
 // Es ruft jemand an (aus dem Online-Takt oder aus dem Push-Link)
 async function anrufEingehend(id) {
@@ -8559,7 +8707,7 @@ async function anrufEingehend(id) {
     RUF.ms = !RUF.vf && !r.konferenz && !!r.gegenueber?.person_id && r.gegenueber.person_id === msPartner(); // KC-CLUB-FERNHILFE F4
     anrufSchirm(r.gegenueber); anrufKnoepfe("eingehend");
     anrufZustand(RUF.konferenzId ? `👥 ${r.gegenueber.vorname} holt dich in eine Konferenz …` : RUF.art === "video" ? `🎥 ${r.gegenueber.vorname} ruft per Video an …` : `📞 ${r.gegenueber.vorname} ruft an …`); klang("klingeln");
-    RUF.poll = setInterval(anrufPruefen, 2000); rufLeisten();
+    rufTaktWahl(true); rufLeisten(); // KC-CLUB-ANRUF-BESSER 3)
   } catch {}
 }
 // ---- KC-CLUB-ANRUF-KURZANTWORT (0.81.0): mit Text ablehnen – Texte vom Admin (INIT.anrufAntworten), sonst Grundeinstellung ----
@@ -8821,9 +8969,9 @@ async function anrufAnnehmen(mitBild) {
   try {
     const { pc, strom } = await anrufVerbindung(!!mitBild && RUF.art === "video"); Object.assign(RUF, { pc, strom }); anrufKnoepfe("aktiv"); rufLeisten();
     await pc.setRemoteDescription({ type: "offer", sdp: RUF.angebot });
-    await pc.setLocalDescription(await pc.createAnswer()); await iceFertig(pc);
+    await rufBeschreibung(pc, false); if (strom.getVideoTracks().length) rufVideoRate(pc, RUF_Q.stufen[0]); await iceFertig(pc); // KC-CLUB-ANRUF-BESSER 4)
     await api("anruf_annehmen", { id: RUF.id, antwort: pc.localDescription.sdp });
-    clearInterval(RUF.poll); RUF.poll = setInterval(anrufPruefen, 3000);
+    rufTaktWahl();
     if (RUF.konferenzId) konfStart(RUF.konferenzId); // KC-CLUB-KONFERENZ: Einladung angenommen
     setTimeout(() => { if (RUF && !RUF.verbunden) anrufFehlgeschlagen(); }, 15000);
   } catch (e) { const id = RUF?.id; anrufAufraeumen(); if (id) api("anruf_ende", { id }).catch(() => {}); meldeFehler(e); }
@@ -8847,7 +8995,7 @@ function anrufAufraeumen() {
   if (!RUF) return;
   if (RUF.konf) { clearInterval(RUF.konf.takt); for (const b of RUF.konf.beine.values()) { try { b.pc.close(); } catch {} } RUF.konf = null; }
   document.querySelectorAll("#anrufSchirm .konf-ton").forEach((a) => a.remove()); $("anrufKonf").innerHTML = ""; $("konfWahlBlatt").classList.add("versteckt");
-  klangAus(); clearInterval(RUF.poll); clearInterval(RUF.uhr);
+  klangAus(); clearInterval(RUF.poll); clearInterval(RUF.uhr); rufNeuWeg(RUF); clearInterval(RUF.q?.uhr); rufQAnzeigen(true); // KC-CLUB-ANRUF-BESSER
   try { RUF.strom?.getTracks().forEach((t) => t.stop()); } catch {}
   try { RUF.pc?.close(); } catch {}
   $("anrufTon").srcObject = null; $("anrufVideo").srcObject = null; $("anrufSelbst").srcObject = null;

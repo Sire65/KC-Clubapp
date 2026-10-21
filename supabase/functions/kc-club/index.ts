@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.555.0";
+const SERVER_VERSION = "2.556.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -11456,6 +11456,27 @@ Köcheclub-App`,
         if (a.an !== ich.person_id) throw new Fehler("Nur der Angerufene kann annehmen.", 403);
         if (a.status !== "klingelt") throw new Fehler(a.status === "verpasst" ? "Der Anruf ist schon vorbei." : "Der Anruf wurde schon beendet.", 409);
         await db.from("kc_club_anruf").update({ status: "angenommen", antwort: sdpText(p.antwort), angenommen_am: jetzt() }).eq("id", a.id);
+        return json({ ok: true });
+      }
+
+      // KC-CLUB-ANRUF-BESSER (21.10.2026, Wunsch Hansi „bau 2 bis 4 jetzt“): Verbindung im laufenden Gespräch neu aufbauen (ICE-Neustart
+      // nach Netzwechsel). Nur die beiden Beteiligten, nur angenommene Einzelgespräche (keine Konferenz), SDP-Grenze wie beim Anrufen.
+      // Neues Angebot (nur Anrufer) ersetzt das alte und leert die Antwort – das löst über den bestehenden Trigger das Signal „anruf“
+      // an beide aus; die Antwort (nur Angerufener) muss zum aktuellen Angebot gehören (ice-ufrag), sonst ist sie veraltet.
+      case "anruf_neu_angebot": {
+        const a = await anrufHolen(ich, p.id);
+        if (a.von !== ich.person_id) throw new Fehler("Nur der Anrufer kann neu verbinden.", 403);
+        if (a.status !== "angenommen" || a.konferenz_id) throw new Fehler("Das Gespräch läuft nicht mehr.", 409);
+        schreibOk(await db.from("kc_club_anruf").update({ angebot: sdpText(p.angebot), antwort: null }).eq("id", a.id).eq("status", "angenommen"), "Neu verbinden");
+        return json({ ok: true });
+      }
+      case "anruf_neu_antwort": {
+        const a = await anrufHolen(ich, p.id);
+        if (a.an !== ich.person_id) throw new Fehler("Nur der Angerufene kann antworten.", 403);
+        if (a.status !== "angenommen" || a.konferenz_id) throw new Fehler("Das Gespräch läuft nicht mehr.", 409);
+        const ufrag = /a=ice-ufrag:(\S+)/.exec(String(a.angebot || ""))?.[1] || "";
+        if (a.antwort || !ufrag || String(p.fuer || "") !== ufrag) throw new Fehler("Veraltete Verbindungsdaten.", 409);
+        schreibOk(await db.from("kc_club_anruf").update({ antwort: sdpText(p.antwort) }).eq("id", a.id).eq("status", "angenommen").is("antwort", null), "Neu verbinden");
         return json({ ok: true });
       }
 
