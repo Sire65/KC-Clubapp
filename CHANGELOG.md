@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.561.0 – 2026-10-21 – Vorlage „Technik, Bilderrechner, Abrechnung“: Einleitung und zwei Änderungen (KC-CLUB-ABSTIMMUNG-VORLAGE)
+Wunsch Hansi nach Durchsicht.
+- Neue Einleitung oben: „Für den kommenden Weihnachtsmarkt sollten im Vorfeld einige Entscheidungen getroffen werden. So ist sichergestellt, dass alle nach den gleichen Regeln arbeiten und keine Unsicherheiten entstehen. Alle, die bei Hansi in der Bilderrechner-Schulung waren, wurden über die verschiedenen Vorgehensweisen informiert.“
+- Frage 2 (Stand vernetzen) mit Erklärung: „Die Geräte können automatisch Daten austauschen und, wenn nötig, auch in die Datenbank senden.“
+- Frage 8 (Entnahmen für Personalverpflegung): „möglichst“ gestrichen.
+- Nur die Vorlage (vorlagen/abstimmungen.json) – App und Server unverändert. Rückweg: App 2.560.0.
+
 ## 2.560.0 – 2026-10-21 – 🖨️ Ankreuzbogen schon vor dem Start ansehen und senden (KC-CLUB-ABSTIMMUNG-BOGEN-ENTWURF)
 Hansi: „ich sehe den Button nicht, um den leeren Bogen wegzuschicken“ – der Bogen ging bisher nur aus einer gestarteten Abstimmung.
 - Im Formular „📋 Mehrere Fragen mit Überschrift“ neu: **🖨️ Bogen ansehen / senden** – baut den Ankreuzbogen aus dem Entwurf (Überschrift, Fragen, Frist, geheim), mit „Für wen?“ und derselben Druckvorschau (🖨️ Drucken, 📄 PDF, 💬 In der Club-App senden). Nichts wird gespeichert, das Formular bleibt offen.
