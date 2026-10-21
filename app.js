@@ -27015,7 +27015,7 @@ function vorschlagKarte(v) {
     ${v.beschreibung ? `<p style="white-space:pre-wrap;margin:8px 0 0">${esc(v.beschreibung)}</p>` : ""}${oaAnzeige(v.anlagen)}${mitte}${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}</div>`;
 }
 async function stimme(id, wahl) {
-  try { await api("vorschlag_stimme", { id, wahl }); melde(wahl ? "Deine Stimme ist gespeichert 👍" : "Zurückgenommen"); vorschlaegeLaden(); neuLaden(); }
+  try { await api("vorschlag_stimme", { id, wahl }); melde(wahl && wahl.length !== 0 ? "Deine Stimme ist gespeichert 👍" : "Zurückgenommen"); vorschlaegeLaden(); neuLaden(); } // 2.555.0: Mehrfachauswahl leer = zurückgenommen
   catch (e) { meldeFehler(e); }
 }
 async function vorschlagStatus(id, status, art) {
@@ -27095,10 +27095,18 @@ function vsPakete(liste) {
   for (const l of m.values()) l.sort((a, b) => (a.paket.nr ?? 0) - (b.paket.nr ?? 0));
   return m;
 }
-const pkBeantwortet = (l) => l.filter((x) => x.meine || x.abgestimmt).length;
+const pkBeantwortet = (l) => l.filter((x) => (Array.isArray(x.meine) ? x.meine.length : x.meine) || x.abgestimmt).length;
+// 2.555.0 KC-CLUB-ABSTIMMUNG-WENN: Folgefrage nur zeigen, wenn die eigene Antwort auf die frühere Frage passt (geheim: Antwort unbekannt → immer zeigen, mit Hinweis)
+function pkSichtbar(v, l) {
+  const w = v.paket?.wenn; if (!w || v.status !== "offen") return true;
+  const vor = l.find((x) => x.paket?.nr === w.nr); if (!vor || vor.geheim) return true;
+  return (Array.isArray(vor.meine) ? vor.meine : [vor.meine]).includes(w.antwort);
+}
+const pkMeine = (l) => l.filter((x) => x.fuerMich !== false && pkSichtbar(x, l));
+const PK_AUSWAHL = {}; // geheime Mehrfachauswahl: erst ankreuzen, dann einmal abgeben
 function paketKachel(pid) {
   const l = VS_PAKETE.get(pid) || [], v = l[0]; if (!v) return "";
-  const offen = l.some((x) => x.status === "offen"), mir = l.filter((x) => x.fuerMich !== false), fehlt = offen && pkBeantwortet(mir) < mir.length;
+  const offen = l.some((x) => x.status === "offen"), mir = pkMeine(l), fehlt = offen && pkBeantwortet(mir) < mir.length;
   const lage = !offen ? (l.some((x) => x.status === "abgeschlossen") ? '<span class="marke gruen">✔ beendet</span>' : '<span class="marke rot">zurückgezogen</span>')
     : fehlt ? `<span class="marke gelb">👉 ${pkBeantwortet(mir) ? `noch ${mir.length - pkBeantwortet(mir)} offen` : "Stimme fehlt"}</span>` : '<span class="marke gruen">✔ Du hast abgestimmt</span>';
   return `<button class="mini-kachel${fehlt ? " mk-offen" : ""}" onclick="vorschlagPaketInfo('${esc(pid)}')"><span class="mk-sym">🗳️</span>
@@ -27106,27 +27114,36 @@ function paketKachel(pid) {
     ${offen && v.frist ? `<span class="mk-unter">⏳ bis ${esc(wann(v.frist))}</span>` : ""}<span class="mk-unter">von ${esc(v.von?.name || "?")}</span>${vsAnlagenZahl({ anlagen: l.flatMap((x) => x.anlagen || []) })}</button>`;
 }
 // Eine Frage im Paket: Frage, freiwillige Erklärung, Antwortknöpfe, Ergebnis – ohne Kopfzeilen (die stehen einmal oben)
-function paketFrageKarte(v) {
+function paketFrageKarte(v, l = []) {
   const offen = v.status === "offen", kannWaehlen = offen && v.fuerMich !== false && !(v.geheim && v.abgestimmt);
   const knoepfe = v.darfBearbeiten ? `<div class="knoepfe"><button class="knopf klein" onclick="vorschlagBearbeiten('${v.id}')">✏️ Bearbeiten</button></div>` : "";
+  const w = v.paket?.wenn, vor = w && l.find((x) => x.paket?.nr === w.nr);
+  const wennText = w && vor ? `<p class="hinweis pk-wenn">↪️ Folgefrage zu „${esc(vor.titel)}“${vor.geheim && offen ? ` – nur beantworten, wenn du dort „${esc(w.antwort)}“ gewählt hast` : ` (bei „${esc(w.antwort)}“)`}</p>` : "";
+  // 2.555.0 KC-CLUB-ABSTIMMUNG-MEHRFACH: ankreuzen; offen sofort gespeichert, geheim erst ankreuzen und einmal abgeben
+  const mehr = !!v.paket?.mehrfach, gew = mehr ? new Set(v.geheim ? PK_AUSWAHL[v.id] || [] : v.meine || []) : null;
+  const wahl = !kannWaehlen ? "" : mehr
+    ? `<p class="hinweis" style="margin:6px 0 0">☑️ Mehrere Antworten möglich</p><div class="wahl">${v.optionen.map((o) => `<button class="${gew.has(o) ? "an" : ""}" onclick='pkKreuz("${v.id}", ${hlJs(o)})'>${gew.has(o) ? "☑️ " : "⬜ "}${esc(o)}</button>`).join("")}</div>`
+      + (v.geheim ? `<div class="knoepfe"><button class="knopf haupt klein" ${gew.size ? "" : "disabled"} onclick="pkAbgeben('${v.id}')">🗳️ Stimme abgeben (${gew.size})</button></div>` : "")
+    : `<div class="wahl">${v.optionen.map((o) => `<button class="${v.meine === o ? "an" : ""}" onclick='stimme("${v.id}", ${hlJs(o)})'>${v.meine === o ? "✔ " : ""}${esc(o)}</button>`).join("")}</div>`;
   return `<div class="karte pk-frage"><div class="pk-frage-titel">${esc(v.titel)}${!offen ? ` <span class="marke ${v.status === "abgeschlossen" ? "gruen" : "rot"}">${v.status === "abgeschlossen" ? "✔ beendet" : "zurückgezogen"}</span>` : ""}</div>
     ${v.beschreibung ? `<p style="white-space:pre-wrap;margin:4px 0 0">${esc(v.beschreibung)}</p>` : ""}${v.paket?.nr ? oaAnzeige(v.anlagen) : ""}
-    ${kannWaehlen ? `<div class="wahl">${v.optionen.map((o) => `<button class="${v.meine === o ? "an" : ""}" onclick='stimme("${v.id}", ${hlJs(o)})'>${v.meine === o ? "✔ " : ""}${esc(o)}</button>`).join("")}</div>` : ""}
+    ${wennText}${wahl}
     ${offen && v.geheim && v.abgestimmt ? '<p><span class="marke gruen">✔ Du hast abgestimmt</span></p>' : ""}${balken(v)}${knoepfe}</div>`;
 }
 function vorschlagPaketInfo(pid) {
   const l = VS_PAKETE.get(pid), alt = document.querySelector("#vorschlagInfo .blatt-innen")?.scrollTop || 0;
   if (!l?.length) { document.getElementById("vorschlagInfo")?.remove(); return; }
-  const v = l[0], offen = l.some((x) => x.status === "offen"), mir = l.filter((x) => x.fuerMich !== false);
+  const v = l[0], offen = l.some((x) => x.status === "offen"), mir = pkMeine(l);
   const kopf = `<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span> <span class="marke">📋 ${l.length} ${l.length === 1 ? "Frage" : "Fragen"}</span>
     ${!offen ? ' <span class="marke gruen">✔ beendet</span>' : v.frist ? ` <span class="marke gelb">⏳ bis ${esc(wann(v.frist))}</span>` : ""}`;
   const unter = `<div class="hinweis" style="font-size:.85rem">von ${esc(v.von.name)} · ${esc(zeitKurz(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : ""}${v.ziel ? ` · 🔐 ${esc(v.ziel)}` : ""}</div>`;
   const stand = offen && mir.length ? `<p class="hinweis" style="margin:8px 0 0">Du hast <b>${pkBeantwortet(mir)} von ${mir.length}</b> Fragen beantwortet.${v.geheim ? " 🔒 Geheim: Niemand sieht, wie du stimmst; jede Stimme gilt sofort und lässt sich nicht mehr ändern." : " Bis zum Ende kannst du deine Antworten noch ändern."}</p>` : "";
   let bereich, fragen = "";
   for (const x of l) {
+    if (!pkSichtbar(x, l)) continue; // 2.555.0: Folgefrage erst nach passender Antwort
     const b = x.paket.abschnitt || "";
     if (b !== bereich) { bereich = b; if (b) fragen += `<h4 class="pk-bereich">📂 ${esc(b)}</h4>`; }
-    fragen += paketFrageKarte(x);
+    fragen += paketFrageKarte(x, l);
   }
   const knoepfe = [
     offen && v.darfAbschliessen ? `<button class="knopf klein" onclick="paketStatus('${esc(pid)}','abgeschlossen')">🏁 Abstimmung beenden</button>` : "",
@@ -27138,6 +27155,19 @@ function vorschlagPaketInfo(pid) {
     ${fragen}${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}</div><button class="knopf" style="text-align:center" onclick="$('vorschlagInfo').remove()">Schließen</button>`);
   f.dataset.paket = pid;
   const innen = f.querySelector(".blatt-innen"); if (innen && alt) innen.scrollTop = alt; // nach dem Abstimmen an derselben Stelle bleiben
+}
+function pkKreuz(id, o) {
+  const v = VORSCHLAG_MAP.get(id); if (!v) return;
+  const gew = new Set(v.geheim ? PK_AUSWAHL[id] || [] : v.meine || []);
+  gew.has(o) ? gew.delete(o) : gew.add(o);
+  const liste = v.optionen.filter((x) => gew.has(x));
+  if (v.geheim) { PK_AUSWAHL[id] = liste; if (v.paket?.id) vorschlagPaketInfo(v.paket.id); return; }
+  stimme(id, liste);
+}
+async function pkAbgeben(id) {
+  const liste = PK_AUSWAHL[id] || []; if (!liste.length) return;
+  if (!(await frage(`Deine Stimme: ${liste.join(", ")}\n\nGeheim – sie lässt sich danach nicht mehr ändern. Abgeben?`))) return;
+  await stimme(id, liste); delete PK_AUSWAHL[id];
 }
 async function paketStatus(pid, status) {
   const v = VS_PAKETE.get(pid)?.[0]; if (!v) return;
@@ -27231,18 +27261,44 @@ function oaBilderBeobachten() {
 }
 // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: bei 🗳️ Abstimmung „❓ Eine Frage“ (wie bisher) oder „📋 Mehrere Fragen mit Überschrift“ (Bereiche + Fragen)
 let vfPaket = false, VF_PK = [];
-const vfPkFrage = () => ({ frage: "", optionen: "Ja\nNein\nEnthaltung" });
+let VF_PK_NR = 0;
+const vfPkFrage = (x = {}) => ({ key: "q" + ++VF_PK_NR, frage: "", beschreibung: "", optionen: "Ja\nNein\nEnthaltung", mehrfach: false, wenn: null, ...x });
 const vfPkAnzahl = () => VF_PK.reduce((s, b) => s + b.fragen.length, 0);
+const vfPkOpt = (f) => String(f.optionen || "").split("\n").map((x) => x.trim()).filter(Boolean);
 function vfPkZeigen() {
   const z = $("vfPaket"); if (!z) return;
-  const voll = vfPkAnzahl() >= 30, eine = vfPkAnzahl() <= 1;
+  const voll = vfPkAnzahl() >= 30, eine = vfPkAnzahl() <= 1, alle = VF_PK.flatMap((b) => b.fragen);
+  // 2.555.0 KC-CLUB-ABSTIMMUNG-WENN: „Nur zeigen, wenn …“ – Auswahl aus den Antworten der Fragen davor (kein Tippen)
+  const wennWahl = (f, i, j) => { const vorher = alle.slice(0, alle.indexOf(f)); if (!vorher.length) return "";
+    const an = f.wenn ? f.wenn.key + "|" + f.wenn.antwort : "";
+    return `<label class="feld">Nur zeigen, wenn …<select onchange="vfPkWenn(${i},${j},this.value)"><option value="">– immer zeigen –</option>${vorher.map((g, k) => vfPkOpt(g).map((o) => `<option value="${esc(g.key + "|" + o)}" ${an === g.key + "|" + o ? "selected" : ""}>Frage ${k + 1} (${esc((g.frage || "…").slice(0, 40))}) = ${esc(o)}</option>`).join("")).join("")}</select></label>`; };
   z.innerHTML = VF_PK.map((b, i) => `<div class="sp-projekt"><div class="hl-frage" style="margin-top:0">📂 Bereich ${i + 1}${VF_PK.length > 1 ? ` <button aria-label="Bereich löschen" class="knopf klein" style="float:right" onclick="VF_PK.splice(${i},1);vfPkZeigen()">🗑️</button>` : ""}</div>
       <label class="feld">Name des Bereichs (freiwillig)<input maxlength="80" placeholder="z. B. Technik" value="${esc(b.name)}" oninput="VF_PK[${i}].name=this.value"></label>
-      ${b.fragen.map((f, j) => `<div class="pk-frage"><div class="hinweis" style="margin:4px 0">❓ Frage ${j + 1}${!eine ? ` <button aria-label="Frage löschen" class="knopf klein" style="float:right" onclick="vfPkWeg(${i},${j})">🗑️</button>` : ""}</div>
-        <label class="feld">Frage<input maxlength="150" placeholder="z. B. Sollen Tablets und Halterungen beschafft werden?" value="${esc(f.frage)}" oninput="VF_PK[${i}].fragen[${j}].frage=this.value"></label>
-        <label class="feld">Antworten (eine pro Zeile)<textarea rows="3" oninput="VF_PK[${i}].fragen[${j}].optionen=this.value">${esc(f.optionen)}</textarea></label></div>`).join("")}
+      ${b.fragen.map((f, j) => `<div class="pk-frage"><div class="hinweis" style="margin:4px 0">❓ Frage ${alle.indexOf(f) + 1}${!eine ? ` <button aria-label="Frage löschen" class="knopf klein" style="float:right" onclick="vfPkWeg(${i},${j})">🗑️</button>` : ""}</div>
+        <label class="feld">Frage<input maxlength="150" placeholder="z. B. Sollen Tablets und Halterungen beschafft werden?" value="${esc(f.frage)}" oninput="VF_PK[${i}].fragen[${j}].frage=this.value" onchange="vfPkZeigen()"></label>
+        <label class="feld">Erklärung (freiwillig)<input maxlength="1000" placeholder="z. B. Vorteil: genaue Auswertung nach dem Weihnachtsmarkt" value="${esc(f.beschreibung || "")}" oninput="VF_PK[${i}].fragen[${j}].beschreibung=this.value"></label>
+        <label class="feld">Antworten (eine pro Zeile, höchstens 12)<textarea rows="3" oninput="VF_PK[${i}].fragen[${j}].optionen=this.value" onchange="vfPkZeigen()">${esc(f.optionen)}</textarea></label>
+        <label class="schalter"><span>☑️ Mehrere Antworten ankreuzen erlauben</span><input type="checkbox" ${f.mehrfach ? "checked" : ""} onchange="VF_PK[${i}].fragen[${j}].mehrfach=this.checked"></label>
+        ${wennWahl(f, i, j)}</div>`).join("")}
       <button class="knopf klein" ${voll ? "disabled" : ""} onclick="VF_PK[${i}].fragen.push(vfPkFrage());vfPkZeigen()">＋ Frage in diesem Bereich</button></div>`).join("")
     + `<button class="knopf klein" ${voll ? "disabled" : ""} onclick="VF_PK.push({ name: '', fragen: [vfPkFrage()] });vfPkZeigen()">＋ weiterer Bereich</button>${voll ? '<p class="hinweis">Höchstens 30 Fragen.</p>' : ""}`;
+}
+function vfPkWenn(i, j, wert) { const t = wert.indexOf("|"); VF_PK[i].fragen[j].wenn = t > 0 ? { key: wert.slice(0, t), antwort: wert.slice(t + 1) } : null; }
+// 2.555.0 KC-CLUB-ABSTIMMUNG-VORLAGE: fertige Abstimmungen aus vorlagen/abstimmungen.json übernehmen – danach frei änderbar, nichts wird ohne „Abstimmung starten“ gesendet
+async function vfVorlagen() {
+  let l; try { l = (await (await fetch("vorlagen/abstimmungen.json", { cache: "no-cache", signal: zeitSignal(10000) })).json()).vorlagen || []; } catch { return melde("Vorlagen gerade nicht erreichbar.", true); }
+  if (!l.length) return melde("Noch keine Vorlagen.", true);
+  const f = blattAuf("vfVorlageBlatt", `<h3 style="margin:0 0 6px">📄 Vorlage übernehmen</h3><p class="hinweis" style="margin:0 0 8px">Füllt Überschrift, Bereiche und Fragen aus – danach kannst du alles ändern.</p>
+    ${l.map((v, i) => `<button class="knopf" style="display:block;width:100%;text-align:left;margin:6px 0" data-i="${i}"><b>${esc(v.titel)}</b><br><small class="hinweis">${v.bereiche.map((b) => `${esc(b.name)} (${b.fragen.length})`).join(" · ")}</small></button>`).join("")}
+    <div class="knoepfe bs-fuss"><button class="knopf" onclick="$('vfVorlageBlatt').remove()">Abbrechen</button></div>`);
+  f.querySelectorAll("[data-i]").forEach((k) => (k.onclick = () => { vfVorlageNehmen(l[Number(k.dataset.i)]); f.remove(); }));
+}
+function vfVorlageNehmen(v) {
+  const keys = []; // wenn.nr in der Vorlage = laufende Nummer der Frage (ab 0)
+  VF_PK = v.bereiche.map((b) => ({ name: b.name || "", fragen: b.fragen.map((x) => { const f = vfPkFrage({ frage: x.frage, beschreibung: x.beschreibung || "", optionen: (x.optionen || ["Ja", "Nein", "Enthaltung"]).join("\n"), mehrfach: !!x.mehrfach }); f._wenn = x.wenn; keys.push(f.key); return f; }) }));
+  VF_PK.forEach((b) => b.fragen.forEach((f) => { f.wenn = f._wenn && keys[f._wenn.nr] ? { key: keys[f._wenn.nr], antwort: f._wenn.antwort } : null; delete f._wenn; }));
+  vorschlagForm("abstimmung", true); $("vfTitel").value = v.titel || ""; $("vfBeschr").value = v.beschreibung || "";
+  melde("📄 Vorlage übernommen – bitte prüfen und dann „Abstimmung starten“");
 }
 function vfPkWeg(i, j) { VF_PK[i].fragen.splice(j, 1); if (!VF_PK[i].fragen.length) VF_PK.splice(i, 1); vfPkZeigen(); }
 function vorschlagForm(art, paket) {
@@ -27257,7 +27313,7 @@ function vorschlagForm(art, paket) {
   $("vorschlagForm").innerHTML = `<h3>Neuer Vorschlag</h3>
     <div class="artwahl drei"><button class="knopf ${vfArt === "thema" ? "haupt" : ""}" onclick="vorschlagForm('thema')">💡 Thema</button><button class="knopf ${vfArt === "spende" ? "haupt" : ""}" onclick="vorschlagForm('spende')">💝 Spende</button>${ICH.vorstand ? `<button class="knopf ${vfArt === "abstimmung" ? "haupt" : ""}" onclick="vorschlagForm('abstimmung')">🗳️ Abstimmung</button>` : ""}</div>
     ${vfArt === "spende" ? `<p class="hinweis" style="margin:8px 0 0">Ein oder mehrere Spendenprojekte für die nächste Sitzung – einfach antippen.</p><div id="vfSpenden"></div>` : ""}
-    ${vfArt === "abstimmung" ? `<div class="hl-chips" id="vfPaketWahl" style="margin-top:8px"><button type="button" class="chip${pk ? "" : " an"}" onclick="vorschlagForm('abstimmung', false)">❓ Eine Frage</button><button type="button" class="chip${pk ? " an" : ""}" onclick="vorschlagForm('abstimmung', true)">📋 Mehrere Fragen mit Überschrift</button></div>` : ""}
+    ${vfArt === "abstimmung" ? `<div class="hl-chips" id="vfPaketWahl" style="margin-top:8px"><button type="button" class="chip${pk ? "" : " an"}" onclick="vorschlagForm('abstimmung', false)">❓ Eine Frage</button><button type="button" class="chip${pk ? " an" : ""}" onclick="vorschlagForm('abstimmung', true)">📋 Mehrere Fragen mit Überschrift</button><button type="button" class="chip" onclick="vfVorlagen()">📄 Vorlage</button></div>` : ""}
     <label class="feld">${pk ? "Überschrift" : vfArt === "abstimmung" ? "Frage" : vfArt === "spende" ? "Überschrift (freiwillig – sonst automatisch)" : "Thema"}<input id="vfTitel" maxlength="150" placeholder="${pk ? "z. B. Technik, Bilderrechner, Abrechnung" : vfArt === "abstimmung" ? "z. B. Sollen wir im Mai ein Grillfest machen?" : vfArt === "spende" ? "z. B. Spenden aus dem Weihnachtsmarkt" : "z. B. Grillfest im Mai"}"></label>
     <label class="feld">Beschreibung (freiwillig)<textarea id="vfBeschr" rows="3"></textarea></label>
     <label class="feld">Für welchen Termin?<select id="vfTreffen"><option value="">– allgemein –</option>${vsTerminOptionen(VORSCHLAG_TREFFEN, t0, null)}</select></label>
@@ -27326,11 +27382,15 @@ async function vorschlagSpeichern(knopf) {
   const pk = vfArt === "abstimmung" && vfPaket;
   if (pk) { // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET
     if (!daten.titel.trim()) return melde("Bitte eine Überschrift eingeben.", true);
-    daten.fragen = VF_PK.flatMap((b) => b.fragen.map((f) => ({ abschnitt: b.name.trim(), frage: f.frage.trim(), optionen: f.optionen.split("\n").map((x) => x.trim()).filter(Boolean) })));
+    const alle = VF_PK.flatMap((b) => b.fragen.map((f) => ({ b, f }))), nrVon = (key) => alle.findIndex((x) => x.f.key === key);
+    daten.fragen = alle.map(({ b, f }) => ({ abschnitt: b.name.trim(), frage: f.frage.trim(), beschreibung: (f.beschreibung || "").trim(), optionen: vfPkOpt(f), mehrfach: !!f.mehrfach,
+      wenn: f.wenn && nrVon(f.wenn.key) >= 0 ? { nr: nrVon(f.wenn.key), antwort: f.wenn.antwort } : null }));
     const leer = daten.fragen.findIndex((f) => !f.frage);
     if (leer >= 0) return melde(`Bitte Frage ${leer + 1} ausfüllen oder mit 🗑️ löschen.`, true);
-    const kurz = daten.fragen.find((f) => f.optionen.length < 2 || f.optionen.length > 8);
-    if (kurz) return melde(`Bitte bei „${kurz.frage}“ 2 bis 8 Antworten angeben (eine pro Zeile).`, true);
+    const kurz = daten.fragen.find((f) => f.optionen.length < 2 || f.optionen.length > 12);
+    if (kurz) return melde(`Bitte bei „${kurz.frage}“ 2 bis 12 Antworten angeben (eine pro Zeile).`, true);
+    const falsch = daten.fragen.findIndex((f, i) => f.wenn && !(f.wenn.nr < i && daten.fragen[f.wenn.nr].optionen.includes(f.wenn.antwort)));
+    if (falsch >= 0) return melde(`Frage ${falsch + 1}: „Nur zeigen, wenn …“ passt nicht mehr – bitte neu wählen.`, true);
   }
   if (vfArt === "abstimmung") {
     if (!pk) daten.optionen = $("vfOptionen").value.split("\n").map((x) => x.trim()).filter(Boolean);

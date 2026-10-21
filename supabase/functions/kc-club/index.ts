@@ -3993,7 +3993,7 @@ async function archivAuto(ich: Ich) {
       ]) : [leer, leer];
       for (const v of vs ?? []) {
         const s = (v.geheim ? geh : st) ?? [];
-        const erg = (v.optionen ?? []).map((o: string) => `${o}: ${s.filter((x: any) => x.vorschlag_id === v.id && x.wahl === o).length}`).join(" · ");
+        const erg = (v.optionen ?? []).map((o: string) => `${o}: ${s.filter((x: any) => x.vorschlag_id === v.id && wahlTrifft(x.wahl, o)).length}`).join(" · ");
         e.push({ art: "abstimmung", id: v.id, titel: v.titel, datum: berlinTag(new Date(v.abgeschlossen_am || v.erstellt_am)), text: (v.geheim ? "🔒 " : "") + erg });
       }
     }),
@@ -4077,6 +4077,9 @@ function suchTag(v: unknown, plus = 0) {
 
 // ---------- Vorschläge & Abstimmungen (KC-CLUB-VORSCHLAG) ----------
 const STANDARD_OPTIONEN = ["Ja", "Nein", "Enthaltung"];
+// 2.555.0 KC-CLUB-ABSTIMMUNG-MEHRFACH: bei Mehrfachauswahl steht die Stimme als JSON-Liste in wahl ('["Bauhof","Feuerwehr"]'), sonst als Text
+const wahlListe = (w: unknown): string[] => { if (typeof w !== "string" || !w) return []; if (w[0] !== "[") return [w]; try { const l = JSON.parse(w); return Array.isArray(l) ? l.map(String) : []; } catch { return [w]; } };
+const wahlTrifft = (w: unknown, o: string) => wahlListe(w).includes(o);
 function abstimmungFrist(roh: unknown) {
   const frist = roh ? new Date(String(roh)) : null;
   if (frist && (isNaN(frist.getTime()) || frist.getTime() < Date.now())) throw new Fehler("Die Frist liegt in der Vergangenheit.");
@@ -4091,7 +4094,7 @@ async function abstimmungZiel(p: any, ich: Ich) {
   return { zielIds, zielText: p.ziel.art === "gruppe" ? `Gruppe ${txt(p.ziel.name, 60) || ""}`.trim() : `${zielIds.length} ausgewählte Mitglieder` };
 }
 // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: Abstimmung mit Überschrift, Bereichen und mehreren Fragen (Zeilen mit gleicher paket.id)
-const PAKET_MAX_FRAGEN = 30;
+const PAKET_MAX_FRAGEN = 30, PAKET_MAX_ANTWORTEN = 12; // 2.555.0: bis 12 Antworten (z. B. „Wer zählt zu den Helfern?“)
 const paketNr = (v: any) => Number(v?.paket?.nr ?? 0);
 async function paketZeilen(paketId: string) {
   const { data } = await db.from("kc_club_vorschlaege").select("*").eq("paket->>id", paketId);
@@ -4149,8 +4152,8 @@ async function vorschlaegeListe(ich: Ich) {
     // geheim: Ergebnis erst nach Abschluss und nie mit Namen
     const ergebnis = !v.geheim || v.status !== "offen" ? optionen.map((o: string) => ({
       option: o,
-      anzahl: v.geheim ? (geh ?? []).filter((g: any) => g.vorschlag_id === v.id && g.wahl === o).length : s.filter((x: any) => x.wahl === o).length,
-      ...(v.geheim ? {} : { namen: s.filter((x: any) => x.wahl === o).map((x: any) => leute.get(x.person_id)?.display_name || x.person_id).sort() }),
+      anzahl: v.geheim ? (geh ?? []).filter((g: any) => g.vorschlag_id === v.id && wahlTrifft(g.wahl, o)).length : s.filter((x: any) => wahlTrifft(x.wahl, o)).length,
+      ...(v.geheim ? {} : { namen: s.filter((x: any) => wahlTrifft(x.wahl, o)).map((x: any) => leute.get(x.person_id)?.display_name || x.person_id).sort() }),
     })) : null;
     const eigener = v.erstellt_von === ich.person_id;
     const t: any = v.treffen_id ? treffen.get(v.treffen_id) : null;
@@ -4161,7 +4164,7 @@ async function vorschlaegeListe(ich: Ich) {
       status: v.status, frist: v.frist, erstellt_am: v.erstellt_am, abgeschlossen_am: v.abgeschlossen_am,
       von: { person_id: v.erstellt_von, name: leute.get(v.erstellt_von)?.display_name || v.erstellt_von },
       treffen: t ? { id: t.id, titel: t.titel, beginn: t.beginn } : null, sitzungSpaeter: t ? null : v.sitzung_nr ?? null, // 2.527.0
-      abgestimmt: !!mein, meine: v.geheim ? null : mein?.wahl ?? null, stimmen: s.length, berechtigt: v.ziel_ids?.length || berechtigt, ergebnis,
+      abgestimmt: !!mein, meine: v.geheim ? null : v.paket?.mehrfach ? wahlListe(mein?.wahl) : mein?.wahl ?? null, stimmen: s.length, berechtigt: v.ziel_ids?.length || berechtigt, ergebnis,
       ziel: v.ziel_text || null, fuerMich: !v.ziel_ids || v.ziel_ids.includes(ich.person_id),
       darfAbschliessen: v.status === "offen" && (ich.vorstand || (eigener && unterstuetzbar(v.art))),
       darfZurueckziehen: v.status === "offen" && (ich.vorstand || eigener),
@@ -4190,7 +4193,7 @@ async function vorschlagAbschliessen(v: any, von: string | null) {
 async function abstimmungsErgebnis(v: any) {
   const { data: s } = await db.from(v.geheim ? "kc_club_geheime_stimmen" : "kc_club_stimmen").select("wahl").eq("vorschlag_id", v.id);
   const zaehl = new Map<string, number>();
-  (s ?? []).forEach((x: any) => x.wahl && zaehl.set(x.wahl, (zaehl.get(x.wahl) ?? 0) + 1));
+  (s ?? []).forEach((x: any) => wahlListe(x.wahl).forEach((w) => zaehl.set(w, (zaehl.get(w) ?? 0) + 1))); // 2.555.0: Mehrfachauswahl zählt jede Antwort
   return v.optionen.map((o: string) => `${o}: ${zaehl.get(o) ?? 0}`).join(" · ");
 }
 // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: das Ergebnis geht erst raus, wenn die letzte Frage des Pakets beendet ist – einmal, mit allen Fragen
@@ -7759,11 +7762,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const fragen = (Array.isArray(p.fragen) ? p.fragen : []).map((f: any) => ({
           abschnitt: txt(f?.abschnitt, 80) || null, frage: txt(f?.frage, 150), beschreibung: txt(f?.beschreibung, 1000) || null,
           optionen: [...new Set((Array.isArray(f?.optionen) ? f.optionen : STANDARD_OPTIONEN).map((o: unknown) => txt(o, 60)).filter(Boolean))] as string[],
+          mehrfach: !!f?.mehrfach, wenn: f?.wenn && typeof f.wenn === "object" ? { nr: Number(f.wenn.nr), antwort: txt(f.wenn.antwort, 60) } : null,
         })).filter((f: any) => f.frage);
         if (!fragen.length) throw new Fehler("Bitte mindestens eine Frage eingeben.");
         if (fragen.length > PAKET_MAX_FRAGEN) throw new Fehler(`Höchstens ${PAKET_MAX_FRAGEN} Fragen in einer Abstimmung.`);
-        const zuWenig = fragen.find((f: any) => f.optionen.length < 2 || f.optionen.length > 8);
-        if (zuWenig) throw new Fehler(`Bitte bei „${zuWenig.frage}“ 2 bis 8 Antworten angeben.`);
+        const zuWenig = fragen.find((f: any) => f.optionen.length < 2 || f.optionen.length > PAKET_MAX_ANTWORTEN);
+        if (zuWenig) throw new Fehler(`Bitte bei „${zuWenig.frage}“ 2 bis ${PAKET_MAX_ANTWORTEN} Antworten angeben.`);
+        // 2.555.0 KC-CLUB-ABSTIMMUNG-WENN: „nur einblenden, wenn Frage nr mit … beantwortet“ – nur auf eine frühere Frage und eine ihrer Antworten
+        fragen.forEach((f: any, i: number) => { if (f.wenn && !(Number.isInteger(f.wenn.nr) && f.wenn.nr >= 0 && f.wenn.nr < i && fragen[f.wenn.nr].optionen.includes(f.wenn.antwort))) f.wenn = null; });
         const frist = abstimmungFrist(p.frist);
         const { zielIds, zielText } = await abstimmungZiel(p, ich);
         const paketId = crypto.randomUUID(), beschreibung = txt(p.beschreibung, 2000) || null, geheim = !!p.geheim;
@@ -7773,7 +7779,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: zeilen, error } = await db.from("kc_club_vorschlaege").insert(fragen.map((f: any, nr: number) => ({
           ziel_ids: zielIds, ziel_text: zielText, art: "abstimmung", titel: f.frage, beschreibung: f.beschreibung, optionen: f.optionen, geheim,
           treffen_id: p.treffen_id ? String(p.treffen_id) : null, frist: frist ? frist.toISOString() : null, erstellt_von: ich.person_id,
-          erstellt_am: new Date(t0 + nr).toISOString(), paket: { id: paketId, titel, beschreibung, abschnitt: f.abschnitt, nr }, ...sitzung,
+          erstellt_am: new Date(t0 + nr).toISOString(), paket: { id: paketId, titel, beschreibung, abschnitt: f.abschnitt, nr, ...(f.mehrfach ? { mehrfach: true } : {}), ...(f.wenn ? { wenn: f.wenn } : {}) }, ...sitzung,
         }))).select("id,paket");
         if (error || !zeilen?.length) throw new Fehler("Speichern fehlgeschlagen.", 500);
         const erste = zeilen.find((z: any) => z.paket?.nr === 0) ?? zeilen[0];
@@ -7805,6 +7811,21 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { error: se } = p.wahl ? await db.from("kc_club_stimmen").upsert({ vorschlag_id: v.id, person_id: ich.person_id, wahl: "dafuer", geaendert_am: jetzt() })
             : await db.from("kc_club_stimmen").delete().eq("vorschlag_id", v.id).eq("person_id", ich.person_id);
           if (se) throw new Fehler("Stimme konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500); // nie mehr still verlieren
+        } else if (v.paket?.mehrfach) {
+          // 2.555.0 KC-CLUB-ABSTIMMUNG-MEHRFACH: Liste der angekreuzten Antworten (Reihenfolge wie die Antworten); leer = Stimme zurücknehmen (nur offen)
+          const gewaehlt = new Set((Array.isArray(p.wahl) ? p.wahl : []).map(String));
+          const liste = v.optionen.filter((o: string) => gewaehlt.has(o));
+          if (gewaehlt.size !== liste.length) throw new Fehler("Bitte nur die angebotenen Antworten wählen.");
+          if (v.geheim) {
+            if (!liste.length) throw new Fehler("Bitte mindestens eine Antwort ankreuzen.");
+            const { data: ok, error } = await db.rpc("kc_club_geheim_abstimmen", { p_vorschlag: v.id, p_person: ich.person_id, p_wahl: JSON.stringify(liste) });
+            if (error) throw new Fehler("Stimme konnte nicht gespeichert werden.", 500);
+            if (!ok) throw new Fehler("Du hast hier schon abgestimmt – bei geheimen Abstimmungen geht das nur einmal.", 409);
+          } else {
+            const { error: se } = liste.length ? await db.from("kc_club_stimmen").upsert({ vorschlag_id: v.id, person_id: ich.person_id, wahl: JSON.stringify(liste), geaendert_am: jetzt() })
+              : await db.from("kc_club_stimmen").delete().eq("vorschlag_id", v.id).eq("person_id", ich.person_id);
+            if (se) throw new Fehler("Deine Auswahl konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500);
+          }
         } else {
           const wahl = String(p.wahl || "");
           if (!v.optionen.includes(wahl)) throw new Fehler("Bitte eine der Antworten wählen.");
@@ -7814,6 +7835,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             if (!ok) throw new Fehler("Du hast hier schon abgestimmt – bei geheimen Abstimmungen geht das nur einmal.", 409);
           } else { const { error: se } = await db.from("kc_club_stimmen").upsert({ vorschlag_id: v.id, person_id: ich.person_id, wahl, geaendert_am: jetzt() });
             if (se) throw new Fehler("Stimme konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500); }
+        }
+        // 2.555.0 KC-CLUB-ABSTIMMUNG-WENN: passt eine geänderte Antwort nicht mehr zur Bedingung einer Folgefrage, fällt die eigene Stimme dort weg
+        if (v.paket?.id && !v.geheim) {
+          const folge = (await paketZeilen(v.paket.id)).filter((z: any) => z.paket?.wenn?.nr === paketNr(v) && z.status === "offen" && !(Array.isArray(p.wahl) ? p.wahl.map(String) : wahlListe(p.wahl)).includes(z.paket.wenn.antwort));
+          if (folge.length) await db.from("kc_club_stimmen").delete().eq("person_id", ich.person_id).in("vorschlag_id", folge.map((z: any) => z.id));
         }
         // bei geheimer Abstimmung keine Wahl ins Protokoll
         await protokoll(ich.person_id, "vorschlag_stimme", { vorschlag: v.id, ...(v.geheim ? {} : { wahl: p.wahl ?? null }) });

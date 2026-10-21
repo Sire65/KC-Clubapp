@@ -6,11 +6,11 @@ const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PW_CORE || "playwright-core");
 const wurzel = path.resolve(new URL("../..", import.meta.url).pathname);
 const typ = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".webmanifest": "application/json" };
-const srv = http.createServer((q, a) => { const f = path.join(wurzel, decodeURIComponent(q.url.split("?")[0]).replace(/^\/+/, "") || "index.html"); fs.readFile(fs.existsSync(f) && fs.statSync(f).isFile() ? f : path.join(wurzel, "index.html"), (e, d) => { a.writeHead(e ? 404 : 200, { "content-type": typ[path.extname(f)] || "application/octet-stream" }); a.end(d); }); }).listen(8798);
+const srv = http.createServer((q, a) => { const f = path.join(wurzel, decodeURIComponent(q.url.split("?")[0]).replace(/^\/+/, "") || "index.html"); fs.readFile(fs.existsSync(f) && fs.statSync(f).isFile() ? f : path.join(wurzel, "index.html"), (e, d) => { a.writeHead(e ? 404 : 200, { "content-type": typ[path.extname(f)] || "application/octet-stream" }); a.end(d); }); }).listen(8799);
 const browser = await chromium.launch({ executablePath: process.env.PW_CHROME || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
 const seite = await browser.newPage({ viewport: { width: 400, height: 820 } }); const fehler = []; seite.on("pageerror", (e) => fehler.push(String(e)));
 await seite.route(/supabase\.co/, (r) => r.fulfill({ status: 200, contentType: "application/json", body: '{"error":"test"}' }));
-await seite.goto("http://localhost:8798/index.html"); await seite.waitForTimeout(2500);
+await seite.goto("http://localhost:8799/index.html"); await seite.waitForTimeout(2500);
 const ok = (b, t) => { if (!b) { console.error("FEHLER:", t); process.exit(1); } console.log("ok:", t); };
 const bild = async (n) => { if (process.env.AP_BILD) await seite.screenshot({ path: path.join(process.env.AP_BILD, n + ".png"), fullPage: false }); };
 await seite.evaluate(() => {
@@ -92,5 +92,37 @@ ok(n.an?.titel === "Technik, Bilderrechner, Abrechnung" && n.an.fragen.length ==
 const e1 = await seite.evaluate(async () => { vorschlagForm("abstimmung", false); $("vfTitel").value = "Grillfest?"; await vorschlagSpeichern(document.querySelector("#vorschlagForm .knopf.haupt")); await new Promise((x) => setTimeout(x, 100));
   return __api.filter((x) => x[0] === "vorschlag_speichern").pop()?.[1]; });
 ok(e1?.titel === "Grillfest?" && e1.optionen.join("/") === "Ja/Nein/Enthaltung" && !e1.fragen, "❓ Eine Frage wie bisher (vorschlag_speichern)");
+// Vorlage „Technik, Bilderrechner, Abrechnung“ übernehmen und starten
+const vo = await seite.evaluate(async () => { const warte = (t) => new Promise((x) => setTimeout(x, t)), e = {};
+  vorschlagForm("abstimmung", false); await vfVorlagen(); await warte(300);
+  e.liste = !!$("vfVorlageBlatt"); $("vfVorlageBlatt").querySelector("[data-i='0']").click(); await warte(200);
+  e.titel = $("vfTitel").value; e.bereiche = [...document.querySelectorAll("#vfPaket .sp-projekt input[placeholder='z. B. Technik']")].map((x) => x.value);
+  e.wennGewaehlt = [...document.querySelectorAll("#vfPaket select")].map((s) => s.selectedOptions[0]?.textContent).filter((t) => !/immer/.test(t));
+  await vorschlagSpeichern(document.querySelector("#vorschlagForm .knopf.haupt")); await warte(200);
+  e.an = __api.filter((x) => x[0] === "abstimmungspaket_speichern").pop()?.[1]; return e; });
+await bild("3-vorlage");
+const f5 = vo.an?.fragen?.[5];
+ok(vo.liste && vo.titel === "Technik, Bilderrechner, Abrechnung" && vo.bereiche.join("|") === "Technik|Bilderrechner|Abrechnung" && vo.an?.fragen.length === 12, "📄 Vorlage: Überschrift, 3 Bereiche, 12 Fragen");
+ok(f5?.mehrfach === true && f5.wenn?.nr === 4 && f5.wenn.antwort === "Ja" && f5.optionen.length === 11 && /Frage 5 .*= Ja/.test(vo.wennGewaehlt[0] || ""), "„Wer zählt zu den Helfern?“: mehrere ankreuzen, nur bei Frage 5 = Ja");
+// Anzeige: Folgefrage erst nach „Ja“, ankreuzen schickt die Liste
+const an = await seite.evaluate(async () => { const warte = (t) => new Promise((x) => setTimeout(x, t)), e = {};
+  const fr = __api.filter((x) => x[0] === "abstimmungspaket_speichern").pop()[1].fragen;
+  __liste = fr.map((f, nr) => ({ id: "V" + nr, art: "abstimmung", titel: f.frage, beschreibung: f.beschreibung || null, optionen: f.optionen, geheim: false, anlagen: [], status: "offen", frist: null, erstellt_am: "2026-10-21T08:00:00Z",
+    von: { person_id: "P1", name: "Hansi Test" }, treffen: null, abgestimmt: false, meine: f.mehrfach ? [] : null, stimmen: 0, berechtigt: 12, ergebnis: f.optionen.map((o) => ({ option: o, anzahl: 0, namen: [] })), ziel: null, fuerMich: true,
+    darfAbschliessen: true, darfBearbeiten: true, paket: { id: "PK2", titel: "Technik, Bilderrechner, Abrechnung", abschnitt: f.abschnitt, nr, ...(f.mehrfach ? { mehrfach: true } : {}), ...(f.wenn ? { wenn: f.wenn } : {}) } }));
+  const alt = api; api = async (a, p) => { if (a === "vorschlag_stimme") { __api.push([a, p]); const v = __liste.find((x) => x.id === p.id); v.meine = p.wahl; v.abgestimmt = Array.isArray(p.wahl) ? p.wahl.length > 0 : true; return { ok: true }; } return alt(a, p); };
+  await vorschlaegeLaden(); vorschlagPaketInfo("PK2"); await warte(100);
+  const titel = () => [...$("vorschlagInfo").querySelectorAll(".pk-frage-titel")].map((x) => x.textContent);
+  e.vorher = titel().length; e.helferVorher = titel().some((t) => /Helfern/.test(t)); e.stand = /0 von 11/.test($("vorschlagInfo").textContent);
+  stimme("V4", "Ja"); await warte(300);
+  e.helferNach = titel().some((t) => /Helfern/.test(t)); e.stand2 = /1 von 12/.test($("vorschlagInfo").textContent);
+  pkKreuz("V5", "Feuerwehr"); await warte(300); pkKreuz("V5", "Bauhof"); await warte(300);
+  e.gesendet = __api.filter((x) => x[0] === "vorschlag_stimme" && x[1].id === "V5").pop()?.[1].wahl;
+  e.angekreuzt = [...$("vorschlagInfo").querySelectorAll(".wahl button.an")].map((b) => b.textContent.trim());
+  return e; });
+await bild("4-helfer");
+console.log(JSON.stringify(an));
+ok(an.vorher === 11 && !an.helferVorher && an.stand && an.helferNach && an.stand2, "Folgefrage „Wer zählt zu den Helfern?“ erscheint erst nach „Ja“ (11 → 12 Fragen)");
+ok(an.gesendet?.join("/") === "Bauhof/Feuerwehr" && an.angekreuzt.some((t) => /Feuerwehr/.test(t)) && an.angekreuzt.some((t) => /Bauhof/.test(t)), "mehrere ankreuzen: Liste in Reihenfolge der Antworten");
 ok(!fehler.length, "keine Skriptfehler" + (fehler.length ? ": " + fehler.join(" | ") : ""));
 await browser.close(); srv.close();

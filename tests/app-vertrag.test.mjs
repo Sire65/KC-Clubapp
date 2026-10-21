@@ -11801,12 +11801,28 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const mig = lies("supabase/migrations/20261021_kc_club_v2555_abstimmung_paket.sql");
   assert.ok(/alter table public\.kc_club_vorschlaege add column if not exists paket jsonb;/.test(mig), "Spalte paket");
   const sp = server.slice(server.indexOf('case "abstimmungspaket_speichern":'), server.indexOf('case "vorschlag_stimme":'));
-  assert.ok(/nurVorstand\(ich\);/.test(sp) && /fragen\.length > PAKET_MAX_FRAGEN/.test(sp) && /f\.optionen\.length < 2 \|\| f\.optionen\.length > 8/.test(sp), "nur Clubleitung, höchstens 30 Fragen, je Frage 2–8 Antworten");
-  assert.ok(/paket: \{ id: paketId, titel, beschreibung, abschnitt: f\.abschnitt, nr \}/.test(sp) && /art: "abstimmung"/.test(sp) && /await abstimmungZiel\(p, ich\)/.test(sp), "jede Frage eine normale Abstimmung, gleiche Zielgruppe");
+  assert.ok(/nurVorstand\(ich\);/.test(sp) && /fragen\.length > PAKET_MAX_FRAGEN/.test(sp) && /f\.optionen\.length < 2 \|\| f\.optionen\.length > PAKET_MAX_ANTWORTEN/.test(sp), "nur Clubleitung, höchstens 30 Fragen, je Frage 2–12 Antworten");
+  assert.ok(/paket: \{ id: paketId, titel, beschreibung, abschnitt: f\.abschnitt, nr,/.test(sp) && /art: "abstimmung"/.test(sp) && /await abstimmungZiel\(p, ich\)/.test(sp), "jede Frage eine normale Abstimmung, gleiche Zielgruppe");
   assert.ok((sp.match(/await senden\(/g) || []).length === 1 && /`club-vorschlag:\$\{paketId\}`/.test(sp), "eine Benachrichtigung fürs ganze Paket");
   assert.ok(/if \(v\.paket\?\.id\) return await paketErgebnisSenden\(v\);/.test(server) && /if \(zeilen\.some\(\(z: any\) => z\.status === "offen"\)\) return \{ gesendet: 0 \};/.test(server), "Ergebnis einmal, wenn die letzte Frage beendet ist");
   assert.ok(/if \(p\.paket && v\.paket\?\.id\) \{\s*if \(!ich\.vorstand\) throw new Fehler\("Abstimmungen beenden/.test(server) && /if \(p\.paket && v\.paket\?\.id\) \{\s*if \(!ich\.vorstand\) throw new Fehler\("Ganze Abstimmungen löschen/.test(server), "ganzes Paket beenden/löschen nur Clubleitung");
   assert.ok(/paket: v\.paket \?\? null, \/\/ 2\.555\.0/.test(server), "Liste liefert paket");
   assert.ok(/onclick="vorschlagForm\('abstimmung', true\)">📋 Mehrere Fragen mit Überschrift/.test(html) && /api\(pk \? "abstimmungspaket_speichern" : "vorschlag_speichern", daten\)/.test(html), "App: Formular mit Bereichen und Fragen");
   assert.ok(/if \(v\.paket\?\.id && VS_PAKETE\.has\(v\.paket\.id\)\) return paketKachel\(v\.paket\.id\);/.test(html) && /function vorschlagPaketInfo\(pid\)/.test(html) && /api\("vorschlag_status", \{ id: v\.id, status, paket: true \}\)/.test(html), "App: eine Kachel, Fenster nach Bereichen, beenden fürs ganze Paket");
+}
+// 2.555.0 KC-CLUB-ABSTIMMUNG-MEHRFACH / -WENN / -VORLAGE (Wunsch Hansi: Bilderrechner-Fragen – „Wer zählt zu den Helfern?“ nur bei Ja einblenden, mehrere ankreuzen)
+{
+  assert.ok(/const wahlListe = \(w: unknown\): string\[\] =>/.test(server) && /wahlTrifft\(x\.wahl, o\)\)\.length/.test(server) && /wahlListe\(x\.wahl\)\.forEach/.test(server), "Mehrfachauswahl wird je Antwort gezählt (Liste, Ergebnis, Clubleben)");
+  const st = server.slice(server.indexOf('case "vorschlag_stimme":'), server.indexOf('case "vorschlag_status":'));
+  assert.ok(/\} else if \(v\.paket\?\.mehrfach\) \{/.test(st) && /if \(gewaehlt\.size !== liste\.length\) throw/.test(st) && /p_wahl: JSON\.stringify\(liste\)/.test(st), "Mehrfach: nur angebotene Antworten, geheim nur einmal");
+  assert.ok(/z\.paket\?\.wenn\?\.nr === paketNr\(v\)/.test(st), "geänderte Antwort → Stimme bei nicht mehr passender Folgefrage fällt weg");
+  assert.ok(/f\.wenn\.nr < i && fragen\[f\.wenn\.nr\]\.optionen\.includes\(f\.wenn\.antwort\)/.test(server), "Bedingung nur auf frühere Frage und vorhandene Antwort");
+  assert.ok(/function pkSichtbar\(v, l\)/.test(html) && /if \(!pkSichtbar\(x, l\)\) continue;/.test(html) && /function pkKreuz\(id, o\)/.test(html) && /async function pkAbgeben\(id\)/.test(html), "App: Folgefrage nur bei passender Antwort, ankreuzen, geheim einmal abgeben");
+  assert.ok(/<select onchange="vfPkWenn\(/.test(html) && /onclick="vfVorlagen\(\)">📄 Vorlage/.test(html), "App: Bedingung per Auswahl, Vorlage übernehmen");
+  const vl = JSON.parse(lies("vorlagen/abstimmungen.json")).vorlagen;
+  for (const v of vl) { const alle = v.bereiche.flatMap((b) => b.fragen);
+    assert.ok(v.titel && alle.length >= 1 && alle.length <= 30, "Vorlage " + v.titel + ": 1–30 Fragen");
+    alle.forEach((f, i) => { const o = f.optionen || ["Ja", "Nein", "Enthaltung"]; assert.ok(f.frage && f.frage.length <= 150 && o.length >= 2 && o.length <= 12 && o.every((x) => x.length <= 60), "Vorlage-Frage gültig: " + f.frage);
+      if (f.wenn) assert.ok(f.wenn.nr < i && (alle[f.wenn.nr].optionen || ["Ja", "Nein", "Enthaltung"]).includes(f.wenn.antwort), "Vorlage-Bedingung gültig: " + f.frage); });
+  }
 }
