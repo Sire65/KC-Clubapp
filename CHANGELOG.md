@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.577.0 – 2026-10-21 – 🧑‍🍳 Kochmütze in der Handy-Statusleiste größer + 👥 Chat-Filter (KC-CLUB-PUSH-MUETZE-GROSS, KC-CLUB-CHAT-FILTER)
+Wunsch Hansi Chat-Filter („Texte in Nachrichten nur seine oder nur die des Partners oder wieder alle … Togglebutton in der kleinen Zeile mit Tastatur, Lautsprecher, Schloss. Beim Öffnen immer alles, 1× nur Fremduser, nochmals nur meine, dann wieder alles“).
+- Chat: neuer Knopf **👥** in der kleinen Zeile über dem Schreibfeld (neben ⌨️ 🔊 🔒). 1× → **👤 nur die Nachrichten der anderen** (im Zweierchat „Nur Nachrichten von Dieter“), 2× → **🙋 nur meine**, 3× → wieder alle. Oben im Chat steht dann „👤 Nur Nachrichten von Dieter · ✕ alle zeigen“ (antippen = alle). Beim Öffnen eines Chats immer alle. Nur Anzeige, lädt nichts nach.
+Wunsch Hansi („Die kleine Kochmütze oben in der Statusleiste vom Handy ist zu klein. Kannst du größer machen“).
+- badge-muetze.png (Zeichen oben in der Statusleiste bei Mitteilungen, Android zeigt nur die Form): weiter die Club-Logo-Kochmütze (aus kc-kochmuetze-weiss.webp), jetzt randlos auf volle Breite (94 statt 86 px von 96) und mit kräftigeren Linien – in der kleinen Statusleiste besser zu erkennen. (Ein erster Entwurf mit gezeichneter Mütze wurde verworfen: „Es soll die Logo-Kochmütze des Clubs sein“.)
+- Wirkt bei der nächsten Mitteilung, sobald die neue Version auf dem Handy ist (Service Worker lädt das Bild neu). Server unverändert.
+- Test: Vertragstest-Block 2.577.0 (Größe 96×96, im Push verwendet). Rückweg: App 2.576.0.
+
 ## 2.576.0 – 2026-10-21 – Schnellerer Start (KC-CLUB-START-PAKET)
 Die vielen kleinen Start-Abfragen kommen jetzt in einem einzigen Datenbank-Aufruf. Der bisherige Weg bleibt als Rückfall, ein Not-Aus ist eingebaut.
 

@@ -11949,3 +11949,17 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/language sql stable set search_path = public/.test(mig) && !/security definer/.test(mig) && !/\b(insert|update|delete)\b/i.test(mig.replace(/^--.*$/gm, "")), "nur lesend");
   assert.ok(/paket: pPaket, pk: pPk/.test(server), "Start-Messung zeigt die Paket-Zeit");
 }
+
+// 2.577.0 KC-CLUB-PUSH-MUETZE-GROSS (Wunsch Hansi „die kleine Kochmütze oben in der Statusleiste vom Handy ist zu klein“)
+{
+  const png = fs.readFileSync(new URL("../badge-muetze.png", import.meta.url));
+  assert.equal(png.readUInt32BE(16), 96, "Statusleisten-Zeichen 96 px breit"); assert.equal(png.readUInt32BE(20), 96, "96 px hoch");
+  assert.ok(/badge: "badge-muetze\.png"/.test(fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8")), "Push nutzt das Mützen-Zeichen");
+}
+
+// 2.577.0 KC-CLUB-CHAT-FILTER (Wunsch Hansi „nur seine, nur die des Partners oder wieder alle – Knopf in der kleinen Zeile“)
+{
+  assert.ok(/id="chatFilterKnopf"[^>]*onclick="chatFilterWeiter\(\)"/.test(seite) && /#chat\.nur-andere \.blase\.eigen, #chat\.nur-meine \.blase:not\(\.eigen\) \{ display: none; \}/.test(seite), "Knopf in der kleinen Zeile, Filter nur per Anzeige");
+  assert.ok(/const CHAT_FILTER = \["alle", "andere", "meine"\];/.test(programm) && /chatFilterSetzen\("alle", true\); \/\/ 2\.577\.0 KC-CLUB-CHAT-FILTER: beim Öffnen immer alle/.test(programm), "Reihenfolge alle → andere → meine; beim Öffnen alle");
+}
+
