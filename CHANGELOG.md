@@ -1,9 +1,10 @@
 # Änderungen
 
-## 2.577.0 – 2026-10-21 – 🧑‍🍳 Kochmütze im Kopf größer (KC-CLUB-KOPF-MUETZE)
-Wunsch Hansi („Die kleine Kochmütze oben … ist zu klein. Kannst du größer machen“).
-- Kopf der App: Feld der Kochmütze 54 → 62 px, Mütze 34 → 50 px breit, „since 1991“ etwas größer (0,5 → 0,56 rem). Nur Darstellung.
-- Test: Vertragstest angepasst + Block 2.577.0, Browser-Bild vorher/nachher. Server unverändert. Rückweg: App 2.576.0.
+## 2.577.0 – 2026-10-21 – 🧑‍🍳 Kochmütze in der Handy-Statusleiste größer (KC-CLUB-PUSH-MUETZE-GROSS)
+Wunsch Hansi („Die kleine Kochmütze oben in der Statusleiste vom Handy ist zu klein. Kannst du größer machen“).
+- badge-muetze.png (Zeichen oben in der Statusleiste bei Mitteilungen, Android zeigt nur die Form): statt der dünnen Umrisslinie aus dem Logo (nutzte nur ⅔ der Fläche) eine gefüllte Kochmütze – drei Wölbungen, zwei Falten, Band –, die die ganze Fläche ausfüllt. Bei 24 px gut als Mütze zu erkennen.
+- Wirkt bei der nächsten Mitteilung, sobald die neue Version auf dem Handy ist (Service Worker lädt das Bild neu). Server unverändert.
+- Test: Vertragstest-Block 2.577.0 (Größe 96×96, im Push verwendet). Rückweg: App 2.576.0.
 
 ## 2.576.0 – 2026-10-21 – Schnellerer Start (KC-CLUB-START-PAKET)
 Die vielen kleinen Start-Abfragen kommen jetzt in einem einzigen Datenbank-Aufruf. Der bisherige Weg bleibt als Rückfall, ein Not-Aus ist eingebaut.

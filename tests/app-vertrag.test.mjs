@@ -7213,7 +7213,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.546.0 KC-CLUB-KOPF-SEIT-2: „since 1991“ im Knopf der Kochmütze
 {
-  assert.ok(/\.kopflogo \.logo \{ display: flex; flex-direction: column;/.test(seite) && /\.kopflogo \.logo img \{ width: 50px; \}/.test(seite), "Mütze und Schriftzug untereinander im Knopf");
+  assert.ok(/\.kopflogo \.logo \{ display: flex; flex-direction: column;/.test(seite) && /\.kopflogo \.logo img \{ width: 34px; \}/.test(seite), "Mütze und Schriftzug untereinander im Knopf");
 }
 // 2.547.0 KC-CLUB-KOPF-EMBLEM: Kochmütze + „since 1991“ auf der Holzklappe und der Servierglocke
 {
@@ -11950,8 +11950,9 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/paket: pPaket, pk: pPk/.test(server), "Start-Messung zeigt die Paket-Zeit");
 }
 
-// 2.577.0 KC-CLUB-KOPF-MUETZE (Wunsch Hansi „die kleine Kochmütze oben ist zu klein“)
+// 2.577.0 KC-CLUB-PUSH-MUETZE-GROSS (Wunsch Hansi „die kleine Kochmütze oben in der Statusleiste vom Handy ist zu klein“)
 {
-  assert.ok(/\.kopflogo \.logo \{ width: 62px; height: 62px; \} \.kopflogo \.logo img \{ width: 50px; \}/.test(seite) && /\.kopf-seit \{ color: #f3e9dc; font: italic 600 \.56rem\/1 Georgia/.test(seite), "Mütze im Kopf größer (62 px Feld, 50 px Mütze)");
+  const png = fs.readFileSync(new URL("../badge-muetze.png", import.meta.url));
+  assert.equal(png.readUInt32BE(16), 96, "Statusleisten-Zeichen 96 px breit"); assert.equal(png.readUInt32BE(20), 96, "96 px hoch");
+  assert.ok(/badge: "badge-muetze\.png"/.test(fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8")), "Push nutzt das Mützen-Zeichen");
 }
-
