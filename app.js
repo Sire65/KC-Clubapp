@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.562.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.563.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5406,6 +5406,7 @@ const HILFE = [
   { id: "anwesenheit", thema: "club", sym: "📋", t: "Wer ist da? Die Anwesenheitstafel", x: "Bei <b>👥 Mitglieder</b> oben auf <b>📋</b> tippen: Dann siehst du nur Namen und ein Lämpchen – wer online ist, steht oben. Einen Namen antippen öffnet das Mitglied; dort kannst du schreiben, anklopfen oder anrufen.", zeig: () => { zeige("mitglieder"); mgAnsichtSetzen("tafel"); }, seit: "2.23.89" },
   { id: "bild_gross", thema: "club", sym: "🔍", t: "Ein Bild groß ansehen", x: "Öffne bei <b>👥 Mitglieder</b> ein Mitglied – ganz oben steht sein Bild. Ein Tipp darauf zeigt es groß; noch ein Tipp schließt es wieder.", zeig: () => zeige("mitglieder"), seit: "2.23.89" },
   { id: "anruf_kachel", thema: "club", sym: "📞", t: "Anrufen direkt von der Mitglieder-Kachel", x: "Auf jeder Mitglieder-Kachel stehen <b>📞</b> (Anruf) und <b>🎥</b> (Videoanruf). Hell und antippbar sind sie nur, wenn das Mitglied gerade online ist – denn beide müssen die App offen haben.", zeig: () => zeige("mitglieder"), seit: "2.23.87" },
+  { id: "anruf_umleitung", thema: "privat", sym: "🛰️", t: "Anrufe bei schlechtem Netz: die Umleitung", x: "Normalerweise läuft ein Anruf oder Videoanruf <b>direkt von Handy zu Handy</b>. In manchen Mobilfunknetzen und Firmen-WLANs finden die Handys aber keinen direkten Weg. Dann läuft das Gespräch automatisch über einen <b>Umleitungs-Server</b> (Anbieter Metered, Kanada) – <b>verschlüsselt</b>: Der Anbieter leitet nur weiter und kann nichts mithören oder speichern. Damit die Umleitung im Ernstfall bereitsteht, meldet sich das Handy <b>bei jedem Anruf</b> kurz dort an; Metered sieht dabei die Internet-Adresse (IP) und merkt sie sich zur Missbrauchsabwehr 30 Tage lang. Über die Umleitung wird das Bild etwas kleiner gestellt, der Ton bleibt gleich. Für den Club kostenlos." },
   { id: "abmelden", thema: "privat", sym: "🚪", t: "Von einem Gerät abmelden (Handy weitergeben)", x: "Gibst du ein Handy oder Tablet weiter, tippe vorher unter ⚙️ → <b>„🔒 Privatsphäre“</b> ganz unten auf <b>„🚪 Von diesem Gerät abmelden“</b>. Dann sind dein Zugang und alle Club-Daten auf diesem Gerät gelöscht – auch Notfallpass und Entwürfe. Auf deinen anderen Geräten bleibt alles; wieder anmelden geht mit deinem Zugangslink.", zeig: () => einstiegHin("privat"), seit: "2.337.0" }, // 2.337.0 KC-CLUB-ABMELDEN
   { id: "handy_verloren", thema: "privat", sym: "🔒", t: "Handy verloren oder gestohlen – was tun?", x: "Auf einem anderen Gerät, auf dem die Club-App läuft, unter ⚙️ → <b>„🔒 Privatsphäre“</b> auf <b>„🔒 Alle anderen Geräte abmelden“</b> tippen. Dann ist die Club-App auf dem verlorenen Handy sofort abgemeldet und bekommt keine Benachrichtigungen mehr. Hast du kein anderes Gerät, sag der Clubleitung Bescheid: Ein neuer Link macht den alten sofort ungültig.", zeig: () => einstiegHin("privat"), seit: "2.352.0" }, // 2.352.0 KC-CLUB-GERAETE-ABMELDEN
   { id: "meine_daten", thema: "privat", sym: "🔐", t: "Meine Daten ansehen", x: "Was weiß die App über dich? Die Kachel <b>„🔐 Meine Daten“</b> (Register Meins) zeigt es: Angaben, Zugang, Rechte, Benachrichtigungen und wie viel du angelegt hast. Du kannst es ausdrucken oder als Datei sichern; stimmt etwas nicht, meldest du es gleich dort.", zeig: () => mdatStart(), seit: "2.23.82" },
@@ -8390,6 +8391,20 @@ function tipptZeigen(namen, entwurf = [], sprechen = [], diktiert = []) {
 // direkt zwischen den Handys. Kostenlose öffentliche STUN-Server helfen, den Weg durchs Heimnetz zu finden. Klappt das nicht
 // (manche Mobilfunknetze), sagt die App es ehrlich und bietet Nachricht/Anruf übers Telefon an.
 const ICE = [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }];
+// KC-CLUB-ANRUF-TURN (2.563.0, Wunsch Hansi „als Sicherheit beim Anrufen und Video“): zusätzlich der Umleitungs-Server (TURN, Metered).
+// Der Browser nimmt ihn nur, wenn kein direkter Weg klappt. Zugangsdaten holt der Club-Server (anruf_wege), gemerkt bis kurz vor Ablauf;
+// höchstens 2,5 s warten – sonst (oder ohne Umleitung) wie bisher nur STUN. Ein Anruf scheitert nie an der Umleitung.
+let RUF_ICE = null; // { liste, bis }
+const rufIceJetzt = () => (RUF_ICE && Date.now() < RUF_ICE.bis ? [...ICE, ...RUF_ICE.liste] : ICE);
+async function rufIce() {
+  if (RUF_ICE && Date.now() < RUF_ICE.bis) return rufIceJetzt();
+  try {
+    const r = await Promise.race([api("anruf_wege", {}), new Promise((_, nein) => setTimeout(() => nein(new Error("Zeit")), 2500))]);
+    const liste = Array.isArray(r?.ice) ? r.ice.filter((s) => s && (typeof s.urls === "string" || Array.isArray(s.urls))) : [];
+    RUF_ICE = { liste, bis: liste.length && r.bis ? Math.min(Date.parse(r.bis) || 0, Date.now() + 6 * 3600000) : Date.now() + 10 * 60000 };
+  } catch {}
+  return rufIceJetzt();
+}
 let RUF = null; // { id, pc, strom, rolle, poll, uhr, start, gegen, verbunden, klang }
 // KC-CLUB-ANRUF-BESSER (21.10.2026, Wunsch Hansi „bau 2 bis 4 jetzt“) 3): nicht mehr stur bis 3,5 s sammeln – fertig, sobald das
 // Sammeln endet, oder nach 1,5 s, wenn schon ein Weg übers Internet (srflx/relay) dabei ist; spätestens nach ms (harte Grenze).
@@ -8431,11 +8446,12 @@ async function rufVideoRate(pc, bps, aktiv = true) {
 }
 async function anrufVerbindung(mitBild) {
   if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) throw new Error("Dieses Handy/dieser Browser kann keine App-Anrufe.");
+  const iceWarte = rufIce(); // KC-CLUB-ANRUF-TURN: gleichzeitig mit der Mikrofon-/Kamera-Freigabe holen
   let strom;
   try { strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, // KC-CLUB-ANRUF-BESSER 4)
     video: mitBild ? { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } : false }); }
   catch { throw new Error(mitBild ? "Bitte Kamera und Mikrofon erlauben (Chrome fragt danach) – sonst geht der Videoanruf nicht." : "Bitte das Mikrofon erlauben (Chrome fragt danach) – sonst geht der Anruf nicht."); }
-  const pc = new RTCPeerConnection({ iceServers: ICE });
+  const pc = new RTCPeerConnection({ iceServers: await iceWarte });
   strom.getTracks().forEach((t) => pc.addTrack(t, strom));
   // KC-CLUB-VIDEO: wer „nur mit Ton“ annimmt, empfängt das Bild trotzdem (der Video-Kanal kommt aus dem Angebot)
   if (mitBild) { $("anrufSelbst").srcObject = strom; $("anrufSelbst").classList.remove("versteckt"); }
@@ -8531,13 +8547,17 @@ window.addEventListener("online", anrufNetzWechsel);
 // 4) Schwaches Netz: alle 3 s getStats() – Verlust (eingehend + was die Gegenseite meldet) und Laufzeit. Zweimal hintereinander
 //    schlecht → Hinweis „📶 Verbindung schwach“ und eigenes Bild in Stufen: 500 → 150 kbit/s → pausiert (Ton läuft weiter).
 //    Dreimal hintereinander gut → eine Stufe zurück. Reiner Tonanruf: nur der Hinweis.
-const RUF_Q = { takt: 3000, verlust: 0.08, rtt: 0.6, stufen: [500000, 150000, 150000] };
+const RUF_Q = { takt: 3000, verlust: 0.08, rtt: 0.6, stufen: [500000, 150000, 150000], umleitung: 300000 };
+// KC-CLUB-ANRUF-TURN: läuft das Gespräch über den Umleitungs-Server, Bild höchstens 300 kbit/s (schont das freie Kontingent, Ton unverändert)
+const rufQRate = (R, stufe) => (R?.weg === "umleitung" ? Math.min(RUF_Q.stufen[stufe], RUF_Q.umleitung) : RUF_Q.stufen[stufe]);
 function rufQStart() { const R = RUF; if (!R || R.q || R.konf) return; R.q = { stufe: 0, schlecht: 0, gut: 0, alt: {} }; R.q.uhr = setInterval(anrufQualitaet, RUF_Q.takt); }
 async function anrufQualitaet() {
   const R = RUF, Q = R?.q; if (!Q || !R.pc || Q.laeuft) return; Q.laeuft = true;
   try {
-    const st = await R.pc.getStats(); let verl = 0, rtt = 0; const neu = {};
+    const st = await R.pc.getStats(); let verl = 0, rtt = 0, paar = null; const neu = {}, kand = {};
     st.forEach((s) => {
+      if (s.type === "local-candidate" || s.type === "remote-candidate") kand[s.id] = s.candidateType; // KC-CLUB-ANRUF-TURN
+      if (s.type === "candidate-pair" && s.nominated && s.state === "succeeded") paar = s;
       if (s.type === "inbound-rtp" && (s.kind === "audio" || s.kind === "video")) {
         const a = Q.alt[s.id] || { l: 0, r: 0 }, l = Math.max(0, (s.packetsLost || 0) - a.l), r = Math.max(0, (s.packetsReceived || 0) - a.r);
         neu[s.id] = { l: s.packetsLost || 0, r: s.packetsReceived || 0 }; if (l + r > 0) verl = Math.max(verl, l / (l + r));
@@ -8546,10 +8566,14 @@ async function anrufQualitaet() {
       if (s.type === "candidate-pair" && s.nominated && s.state === "succeeded" && s.currentRoundTripTime > 0) rtt = Math.max(rtt, s.currentRoundTripTime);
     });
     Q.alt = neu; Q.verlust = verl; Q.rtt = rtt; if (RUF !== R) return;
+    // KC-CLUB-ANRUF-TURN: welcher Weg trägt das Gespräch? „umleitung“, sobald eine Seite über den Umleitungs-Server geht
+    const weg = paar ? (kand[paar.localCandidateId] === "relay" || kand[paar.remoteCandidateId] === "relay" ? "umleitung" : "direkt") : null;
+    const video0 = R.pc.getSenders().some((x) => x.track?.kind === "video");
+    if (weg && weg !== R.weg) { R.weg = weg; if (weg === "umleitung") R.umleitung = true; if (video0 && Q.stufe < 2) await rufVideoRate(R.pc, rufQRate(R, Q.stufe), true); }
     if (verl > RUF_Q.verlust || rtt > RUF_Q.rtt) { Q.schlecht++; Q.gut = 0; } else { Q.gut++; Q.schlecht = 0; }
     const video = R.pc.getSenders().some((x) => x.track?.kind === "video");
-    if (Q.schlecht >= 2) { Q.schwach = true; Q.schlecht = 0; if (video && Q.stufe < 2) { Q.stufe++; await rufVideoRate(R.pc, RUF_Q.stufen[Q.stufe], Q.stufe < 2); } }
-    else if (Q.gut >= 3 && Q.schwach) { Q.gut = 0; if (video && Q.stufe > 0) { Q.stufe--; await rufVideoRate(R.pc, RUF_Q.stufen[Q.stufe], true); } if (!Q.stufe) Q.schwach = false; }
+    if (Q.schlecht >= 2) { Q.schwach = true; Q.schlecht = 0; if (video && Q.stufe < 2) { Q.stufe++; await rufVideoRate(R.pc, rufQRate(R, Q.stufe), Q.stufe < 2); } }
+    else if (Q.gut >= 3 && Q.schwach) { Q.gut = 0; if (video && Q.stufe > 0) { Q.stufe--; await rufVideoRate(R.pc, rufQRate(R, Q.stufe), true); } if (!Q.stufe) Q.schwach = false; }
     rufQAnzeigen();
   } catch {} finally { Q.laeuft = false; }
 }
@@ -8767,7 +8791,7 @@ function konfStart(k) {
   RUF.konf.takt = setInterval(konfTakt, 2000); konfTakt();
 }
 function konfPc(gegen) {
-  const pc = new RTCPeerConnection({ iceServers: ICE });
+  const pc = new RTCPeerConnection({ iceServers: rufIceJetzt() }); // KC-CLUB-ANRUF-TURN: Wege vom Gesprächsbeginn (gemerkt)
   RUF.strom.getAudioTracks().forEach((t) => pc.addTrack(t, RUF.strom));
   const audio = document.createElement("audio"); audio.autoplay = true; audio.setAttribute("playsinline", ""); audio.className = "konf-ton"; $("anrufSchirm").appendChild(audio);
   const bein = { pc, gegen, audio };
@@ -8978,17 +9002,17 @@ async function anrufAnnehmen(mitBild) {
 }
 async function anrufFehlgeschlagen() {
   if (!RUF) return; const g = RUF.gegen, id = RUF.id, vf = RUF.vf || RUF.ms;
-  api("diagnose", { art: "anruf", daten: { verbunden: false, rolle: RUF.rolle, ice: RUF.pc?.iceConnectionState || "" } }).catch(() => {});
+  api("diagnose", { art: "anruf", daten: { verbunden: false, rolle: RUF.rolle, ice: RUF.pc?.iceConnectionState || "", umleitungDa: !!RUF_ICE?.liste?.length } }).catch(() => {});
   anrufAufraeumen(); if (id) api("anruf_ende", { id }).catch(() => {});
   if (vf) return melde(`🔈 Der Ton zu ${g.vorname || g.name} ließ sich über dieses Netz nicht verbinden – die Sitzung läuft weiter. Am besten kurz normal anrufen.`, true);
   if ((await frage(`Die Verbindung zu ${g.vorname || g.name} ließ sich nicht aufbauen – das passiert in manchen Mobilfunknetzen.\n\nStattdessen eine Nachricht schreiben?`))) direkt(g.person_id);
 }
 async function anrufAuflegen() {
-  if (!RUF) return; const id = RUF.id, verbunden = !!RUF.verbunden, dauer = RUF.start ? Math.round((Date.now() - RUF.start) / 1000) : 0, rolle = RUF.rolle;
+  if (!RUF) return; const id = RUF.id, verbunden = !!RUF.verbunden, dauer = RUF.start ? Math.round((Date.now() - RUF.start) / 1000) : 0, rolle = RUF.rolle, umleitung = !!RUF.umleitung;
   const konfBeine = RUF.konf ? [...RUF.konf.beine.keys()].filter((x) => x !== id) : []; // KC-CLUB-KONFERENZ: alle meine Verbindungen beenden
   anrufAufraeumen();
   konfBeine.forEach((b) => api("anruf_ende", { id: b, verbunden: true }).catch(() => {}));
-  if (id) { api("anruf_ende", { id, verbunden }).catch(() => {}); if (verbunden) api("diagnose", { art: "anruf", daten: { verbunden: true, dauer, rolle } }).catch(() => {}); }
+  if (id) { api("anruf_ende", { id, verbunden }).catch(() => {}); if (verbunden) api("diagnose", { art: "anruf", daten: { verbunden: true, dauer, rolle, umleitung } }).catch(() => {}); }
   if (verbunden) melde(`📞 Aufgelegt · ${Math.floor(dauer / 60)}:${String(dauer % 60).padStart(2, "0")}`);
 }
 function anrufAufraeumen() {
@@ -13638,7 +13662,7 @@ async function zugangAnfordern() {
 }
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
-const WARTEN_STILL = new Set(["nutzung_melden", "spur_melden", "standort_update", "standort_liste", "terminanfragen_liste", "init", "online", "anruf_status", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu", "pinnwand_gesehen"]);
+const WARTEN_STILL = new Set(["nutzung_melden", "spur_melden", "standort_update", "standort_liste", "terminanfragen_liste", "init", "online", "anruf_status", "anruf_wege", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu", "pinnwand_gesehen"]);
 const WARTEN_TEXT = { buero_mail_senden: "E-Mail wird gesendet …", anhaenge_laden: "Anhänge werden geladen …", standort_ort: "Standort wird bestimmt …", sos_ort: "Adresse wird gesucht …", standort_start: "Standort wird geteilt …", standort_ende: "Wird beendet …", terminanfrage_senden: "Anfrage wird gesendet …", terminanfrage_antwort: "Antwort wird gemeldet …", terminanfrage_absagen: "Wird abgesagt …", nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …",
@@ -13708,7 +13732,7 @@ async function api(action, daten = {}, opt = {}) {
 // (bricht ab und fragt neu) und ✖ Abbrechen. Scheitert Laden am Netz: dieselbe Frage. Schreiben (Senden/Speichern) wird nie
 // abgebrochen oder wiederholt (sonst evtl. doppelt) – dort nur „bitte warten, nicht doppelt senden“.
 const LADE_LANGSAM_MS = 12000, LADE_TIPP_MS = 1500;
-const LADE_NIE = new Set(["lebenszeichen", "online", "ping", "nutzung_melden", "spur_melden", "tippen", "anruf_status", "diagnose", "communicator_status", "standort_update", "protokoll_speichern", "pinnwand_gesehen", "schnappschuss_bild", "schnappschuss_holen"]);
+const LADE_NIE = new Set(["lebenszeichen", "online", "ping", "nutzung_melden", "spur_melden", "tippen", "anruf_status", "anruf_wege", "diagnose", "communicator_status", "standort_update", "protokoll_speichern", "pinnwand_gesehen", "schnappschuss_bild", "schnappschuss_holen"]);
 const LADE = { laufe: new Set(), frage: null, zu: false };
 let ladeTippZeit = 0;
 try { addEventListener("pointerdown", () => { ladeTippZeit = Date.now(); }, true); addEventListener("keydown", () => { ladeTippZeit = Date.now(); }, true); } catch {}
@@ -23015,6 +23039,19 @@ async function adExternPruefen(erzwingen) {
 // Lämpchen: grün = Schlüssel-Kopie hat entschlüsselt (≤ 8 Tage alt), rot = abgelehnt/abweichend, grau = nie gelaufen, nicht eingerichtet, veraltet oder nicht abrufbar
 // 2.352.0 KC-CORE-NOTFALL-ZWEITKOPIE: Ergebnis der wöchentlichen Zweitkopie bei Cloudflare (gleiche öffentliche Abfrage, höchstens alle 30 Min.)
 // grün nur bei erfolgreich zurückgelesener und entschlüsselter Kopie ≤ 9 Tage; rot bei Fehler; sonst grau
+// KC-CLUB-ANRUF-TURN (2.563.0): Lämpchen „Umleitung für Anrufe“ – grün nur, wenn der Server nutzbare Zugangsdaten hat (Regel: unbekannt nie grün)
+async function adTurnLaden(erzwingen) {
+  if (!erzwingen && AD.turn && Date.now() - AD.turn.zeit < 30 * 60000) return;
+  try {
+    const r = await api("turn_status", {}), v = r.verbrauch, gb = (x) => String(Math.round(x * 100) / 100).replace(".", ",");
+    const voll = v && v.verbrauchtGB != null && v.kontingentGB ? v.verbrauchtGB / v.kontingentGB : null;
+    const vt = v && v.verbrauchtGB != null ? ` Verbrauch diesen Monat: ${gb(v.verbrauchtGB)} von ${v.kontingentGB != null ? gb(v.kontingentGB) : "?"} GB.` : " Verbrauch gerade nicht abrufbar.";
+    AD.turn = { zeit: Date.now(), ...(!r.eingerichtet ? { f: "grau", kurz: "nicht eingerichtet", text: "Kein Metered-Schlüssel bei Supabase hinterlegt – Anrufe laufen nur direkt (wie bisher)." }
+      : r.nutzbar ? { f: voll != null && voll >= 0.8 ? "gelb" : "gruen", kurz: voll != null && voll >= 0.8 ? "Kontingent fast voll" : "bereit ✓", text: `Zugangsdaten gültig bis ${fKurz.format(new Date(r.gueltig_bis))} (werden selbst erneuert).${vt}` }
+      : r.wartet ? { f: "gelb", kurz: "wird vorbereitet", text: "Neue Zugangsdaten sind angelegt und in wenigen Minuten nutzbar. Bis dahin laufen Anrufe nur direkt." }
+      : { f: "rot", kurz: "gestört", text: `Metered hat keine Zugangsdaten geliefert${r.fehlerPause ? " (neuer Versuch in spätestens 10 Min.)" : ""} – Anrufe laufen nur direkt.` }) };
+  } catch { AD.turn = { zeit: Date.now() - 25 * 60000, f: "grau", kurz: "unbekannt", text: "⚠️ Stand gerade nicht abrufbar." }; }
+}
 async function adZweitLaden(erzwingen) {
   if (!erzwingen && AD.zweit && Date.now() - AD.zweit.zeit < 30 * 60000) return;
   const gh = (pfad) => fetch(`https://api.github.com/repos/${AD_NOTFALL.repo}/actions/${pfad}`, { headers: { Accept: "application/vnd.github+json" }, cache: "no-store", signal: zeitSignal(8000) })
@@ -23294,6 +23331,8 @@ function adNotfallDaten() {
     ${adZeile(p ? p.f : "grau", "🔐 Wochenprobe", p ? p.kurz : "wird geprüft …")}
     ${p ? `<p class="hinweis" style="margin:0">${esc(p.text)}${p.url ? ` <a href="${esc(p.url)}" target="_blank" rel="noopener">Lauf ansehen ↗</a>` : ""}</p>` : ""}
     ${adZeile(AD.zweit ? AD.zweit.f : "grau", "📦 Zweitkopie (Cloudflare)", AD.zweit ? AD.zweit.kurz : "wird geprüft …")}
+    ${adZeile(AD.turn ? AD.turn.f : "grau", "🛰️ Umleitung für Anrufe (Metered)", AD.turn ? AD.turn.kurz : "wird geprüft …")}
+    ${AD.turn ? `<p class="hinweis" style="margin:0">${esc(AD.turn.text)} Hilft, wenn zwei Handys keinen direkten Weg finden (Anruf und Video).</p>` : ""}
     ${AD.zweit ? `<p class="hinweis" style="margin:0">${esc(AD.zweit.text)} Sie liegt getrennt von Neon – das Datenbank-Passwort reicht nicht, um sie zu löschen.${AD.zweit.url ? ` <a href="${esc(AD.zweit.url)}" target="_blank" rel="noopener">Lauf ansehen ↗</a>` : ""}</p>` : ""}
     <p class="hinweis" style="margin:0">Täglich wird jede Tabelle verschlüsselt auf Neon gesichert und geprüft. Sonntags liest GitHub eine zufällige Tabelle mit der <b>Schlüssel-Kopie außerhalb von Supabase</b> zurück – so ist bewiesen, dass die Daten auch ohne Supabase lesbar sind.</p>
     <details class="karte innen" style="margin:0"><summary>🧭 Was tun, wenn …</summary><ol style="margin:6px 0 0;padding-left:20px;display:grid;gap:6px">
@@ -23305,7 +23344,7 @@ function adNotfallDaten() {
       <p style="margin:6px 0 0">Die Kopie des Sicherungsschlüssels liegt im <b>Cloudflare-Tresor</b> – außerhalb von Supabase. GitHub legt sie selbst dort ab und gleicht sie <b>jeden Monatsersten</b> mit Supabase ab. Nur der Ablauf „Notfall – Sicherung lesen“ bekommt sie heraus. Abtippen oder Kopieren ist nicht nötig.</p>
       <p class="hinweis" style="margin:6px 0 0">Lämpchen grau „nicht eingerichtet“ oder Schlüssel gewechselt? Einmal „Notfall einrichten“ starten (Run workflow) – danach „Probe jetzt starten“.</p>
       <div class="knoepfe" style="margin-top:6px">${link("⚙️ Notfall einrichten", AD_GH + "/KC-Clubapp/actions/workflows/" + AD_NOTFALL.einrichten)}</div></details>
-    <div class="knoepfe">${link("🧪 Probe jetzt starten", lauf, true)}${link("📖 Anleitung", AD_NOTFALL.anleitung)}${adKnopf("↻ Neu abfragen", "Promise.all([adProbeLaden(true),adZweitLaden(true)]).then(()=>adBlatt('notfall'))")}</div></div>`;
+    <div class="knoepfe">${link("🧪 Probe jetzt starten", lauf, true)}${link("📖 Anleitung", AD_NOTFALL.anleitung)}${adKnopf("↻ Neu abfragen", "Promise.all([adProbeLaden(true),adZweitLaden(true),adTurnLaden(true)]).then(()=>adBlatt('notfall'))")}</div></div>`;
 }
 function adBlatt(id) {
   if (id === "alarm") return notfallMeldung(); // KC-CLUB-NOTFALL-MELDUNG
@@ -23349,7 +23388,7 @@ function adBlatt(id) {
         <div class="knoepfe">${adKnopf("🪞 Spiegel jetzt anstoßen", "adminSpiegeln()")}${adKnopf("🧪 Notbetrieb-Probe (dieses Gerät)", "notProbeSetzen(!notProbe())")}${adKnopf("🧯 Ernstfall simulieren (dieses Gerät)", "notErnstfallSetzen(!notErnstfall())")}</div>
         ${adNotfallDaten()}
         ${adLinks("supabase")}`;
-      if (!AD.probe || Date.now() - AD.probe.zeit > 30 * 60000 || !AD.zweit || Date.now() - AD.zweit.zeit > 30 * 60000) Promise.all([adProbeLaden(), adZweitLaden()]).then(() => { if (AD.offen === "notfall" && document.getElementById("adBlatt")) adBlatt("notfall"); });
+      if (!AD.probe || Date.now() - AD.probe.zeit > 30 * 60000 || !AD.zweit || Date.now() - AD.zweit.zeit > 30 * 60000 || !AD.turn || Date.now() - AD.turn.zeit > 30 * 60000) Promise.all([adProbeLaden(), adZweitLaden(), adTurnLaden()]).then(() => { if (AD.offen === "notfall" && document.getElementById("adBlatt")) adBlatt("notfall"); });
       break;
     case "verlauf":
       if (!AD.verlauf[AD.vTage]) adVerlaufLaden(AD.vTage).then(() => { if (AD.offen === "verlauf") adBlatt("verlauf"); });
@@ -40749,7 +40788,7 @@ async function nzAdmin(tage) {
 // Der Fehlerfänger (window.KCFP) steht ganz oben im <head> und läuft auch, wenn die App selbst nicht startet. Hier hängt die
 // App ihre eigenen Beobachtungen an (Serveranfragen, alte Version, Gerät/Browser) und zeigt verständliche Hilfe-Schritte.
 const fpNeu = (art, d) => { try { window.KCFP?.neu(art, d); } catch {} };
-const FP_LEISE = new Set(["nutzung_melden", "spur_melden", "lebenszeichen", "tippen", "anruf_status", "ping", "online", "standort_update", "fehler_melden", "diagnose"]);
+const FP_LEISE = new Set(["nutzung_melden", "spur_melden", "lebenszeichen", "tippen", "anruf_status", "anruf_wege", "ping", "online", "standort_update", "fehler_melden", "diagnose"]);
 function fpApiFehler(action, e) {
   if (FP_LEISE.has(action) || notErnstfall() || NOT.an) return; // KC-CLUB-NOTBETRIEB(-ERNSTFALL): Notbetrieb/Simulation nicht ins Fehlerprotokoll
   fpNeu(navigator.onLine ? "api" : "offline", { aktion: action, text: String(e?.message || e) });
