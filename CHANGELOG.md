@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.566.0 – 2026-10-21 – 🌀 Kacheln kommen hereingedreht (KC-CLUB-KACHEL-WIRBEL)
+Wunsch Hansi („dass die Kacheln reingedreht kommen“).
+- ⚙️ → ✨ Effekte → „🎬 Effekt beim Register-Wechsel“: neuer Effekt **🌀 Hereindrehen** – jede Kachel kommt klein und gedreht von außen herein (linke Spalte von links, rechte von rechts, in Wischrichtung), mit anderthalb Umdrehungen, setzt leicht über und rastet ein; Kachel für Kachel versetzt (≈ 0,8 s). Auch im 🎲 Zufall dabei. Wie die anderen: nur transform/opacity, aus bei „✨ Animierte Knöpfe“ aus, im Sparmodus und in der einfachen Ansicht.
+- Erklär-Video „Effekte“, Hilfe-Texte und Suche (hereindrehen, wirbel) ergänzt.
+- Test: Vertragstest-Block 2.566.0, Browser-Bilder des Ablaufs (150/350/600/1400 ms, danach alle Kacheln wieder gerade). Server unverändert (2.565.0). Rückweg: App 2.565.0.
+
 ## 2.565.0 – 2026-10-21 – 🛰️ Umleitung: Lämpchen nennt den Grund und was zu tun ist (KC-CLUB-ANRUF-TURN-GRUND)
 Wunsch Hansi („Kannst du nicht die Fehlermeldung erkennen“, „bau es und spiel ein“). Anlass: Metered meldete „please subscribe to a TURN Server plan before using this API“.
 - Server 2.565.0: erkennt die Absagen von Metered und übersetzt sie – kein Plan gewählt, Schlüssel falsch, App nicht gefunden, Kontingent erschöpft, nicht erreichbar, sonst die Meldung selbst (gekürzt). Schlüssel und Passwörter werden geschwärzt. Fragt der Admin ausdrücklich nach, versucht der Server es sofort neu (ohne 10-Min.-Pause).

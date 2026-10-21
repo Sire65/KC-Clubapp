@@ -11854,3 +11854,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/id="vfBogenKnopf" onclick="vfBogenVorschau\(\)">🖨️ Bogen ansehen \/ senden/.test(programm) && /function vfBogenVorschau\(\)/.test(programm) && /abBogenDrucken\("ENTWURF"\)/.test(programm), "Bogen schon aus dem Formular (vor dem Start)");
   assert.ok(/const abDruckListe = \(pid\) => \(pid === "ENTWURF" \? VF_ENTWURF : null\)/.test(programm) && /daten\.fragen = vfPkFragen\(\);/.test(programm), "gleiche Fragen wie beim Starten, nichts wird gespeichert");
 }
+// 2.566.0 KC-CLUB-KACHEL-WIRBEL (Wunsch Hansi „dass die Kacheln reingedreht kommen“)
+{
+  assert.ok(/\["wirbel", "🌀 Hereindrehen"\], \["zufall", "🎲 Zufall"\]/.test(programm) && /\["jalousie", "karten", "drehen", "wirbel"\]\[Math\.floor\(Math\.random\(\) \* 4\)\]/.test(programm), "Hereindrehen wählbar und im Zufall");
+  const w = programm.slice(programm.indexOf('} else if (w === "wirbel") {'), programm.indexOf("} else { // Umdrehen"));
+  assert.ok(/rotate\(\$\{rein \* -540\}deg\) scale\(\.15\)/.test(w) && /\{ transform: "none", opacity: 1 \}/.test(w) && !/left|top|width|margin/.test(w), "von außen gedreht herein, endet gerade – nur transform/opacity");
+  assert.ok(/if \(w === "aus" \|\| !einst\("animiert", true\) \|\| SPAR\?\.an \|\| kaBearb \|\| einfach\(\)\) return false;/.test(programm), "aus bei Animationen aus, Sparmodus, einfacher Ansicht");
+}

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.565.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.566.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2654,8 +2654,8 @@ const RG_EFFEKTE = [
   { v: "start", vor: () => rgKopf("offen"), t: "✨ Effekte & Wetter",
     x: "Die App kann ein bisschen zaubern: Kacheln schweben herein, oben im Kopf zeigt sich die Jahreszeit, und das Wetter verrät dir mehr, als man denkt. Das sind alles nur Möglichkeiten – gefällt dir etwas nicht, schaltest du es jederzeit wieder ab. Ich zeige dir auch, wo." },
   { v: "start", nur: () => !einfach() && fxAn(), vor: () => rgKopf("ganz"), sel: ["#register", "#raster"], t: "🪟 Kacheln schweben herein",
-    x: "Wechselst du oben zwischen Club, Meins und Technik, schweben die Kacheln herein. Als Jalousie, als Kartenstapel – oder sie drehen sich um. Ich zeige dir alle drei.",
-    live: async (L) => { for (const art of ["jalousie", "karten", "drehen"]) { await L.tipp(`#register button[data-r="${reg}"]`); regEffekt(1, art); await L.warte(1500); } } },
+    x: "Wechselst du oben zwischen Club, Meins und Technik, schweben die Kacheln herein. Als Jalousie, als Kartenstapel, sie drehen sich um – oder sie wirbeln hereingedreht. Ich zeige dir alle vier.",
+    live: async (L) => { for (const art of ["jalousie", "karten", "drehen", "wirbel"]) { await L.tipp(`#register button[data-r="${reg}"]`); regEffekt(1, art); await L.warte(1500); } } },
   // 2.508.0 KC-CLUB-HILFE-NACHTRAG-3: Kopf-Effekte und Geburtstags-Vogel – nur vorgeführt (kopfRolloFahren mit festem Effekt), die Einstellung bleibt
   { v: "start", nur: () => fxAn(), vor: () => rgKopf("offen"), sel: ["#v-start .hero"], t: "🎪 Der Kopf geht auf und zu",
     x: "Oben am Kopf rollst du ihn mit den Pfeilen ein – normal wie eine Jalousie. Du kannst aber auch etwas anderes wählen: einen weinroten Theatervorhang, eine silberne Servierglocke oder die Holzklappe einer Marktbude. Schau mal.",
@@ -2680,7 +2680,7 @@ const RG_EFFEKTE = [
     x: "Hier schaltest du die Jahreszeiten im Kopf ein oder aus. Haken raus – und der Kopf ist wieder ruhig. Darunter kannst du dir jede Jahreszeit und die Extras als Vorschau ansehen.",
     live: async (L) => { await L.tipp("#setJahreszeit"); await L.warte(900); await L.tipp(() => [...document.querySelectorAll(`${rgKlappe("effekte")} .chip`)].find((c) => /Herbst/.test(c.textContent))); } },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("regEffektWahl"), "#regEffektWahl"], mussSel: true, t: "🪟 Kacheln und Senden",
-    x: "Hier wählst du, wie die Kacheln hereinschweben – Jalousie, Kartenstapel, Umdrehen, Zufall – oder Aus. Darunter der Effekt beim Senden: Papierflieger, Brieftaube, Uhu mit Posttasche oder Postauto.",
+    x: "Hier wählst du, wie die Kacheln hereinschweben – Jalousie, Kartenstapel, Umdrehen, Hereindrehen, Zufall – oder Aus. Darunter der Effekt beim Senden: Papierflieger, Brieftaube, Uhu mit Posttasche oder Postauto.",
     live: async (L) => { await L.tipp(() => [...document.querySelectorAll("#regEffektWahl .chip")].find((c) => /Aus/.test(c.textContent))); } },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("setAnimiert")], puls: ["#setAnimiert"], mussSel: true, t: "✨ Der Hauptschalter",
     x: "Ganz oben der Hauptschalter: Animierte Knöpfe. Ist er aus, ist alles ruhig – auch die Jahreszeiten und alle Effekte. Nichts davon ist Pflicht, und du kannst alles jederzeit wieder einschalten." },
@@ -2721,7 +2721,7 @@ const RG_ANPASSEN = [
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("jzDekoWahl"), "#jzDekoWahl"], mussSel: true, t: "🎏 Deko an der Leiste",
     x: "An der Leiste mit den Lämpchen kann eine Deko hängen: Wimpel, Lichterkette oder Laternen. Automatisch passt sie zur Jahreszeit – im Herbst Laternen, im Advent warmweiße Lichter. Oder du wählst selbst, oder schaltest sie aus." },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("regEffektWahl"), "#regEffektWahl", "#sendeEffektWahl"], mussSel: true, t: "🪟 Kacheln und Senden",
-    x: "Hier wählst du, wie die Kacheln hereinschweben – als Jalousie, Kartenstapel oder sie drehen sich um. Und was beim Senden einer Nachricht losfliegt: Papierflieger, Brieftaube, Uhu mit Posttasche oder Postauto. Auch wie der Kopf auf- und zugeht, stellst du hier ein – vom Theatervorhang bis zur Servierglocke." },
+    x: "Hier wählst du, wie die Kacheln hereinschweben – als Jalousie, Kartenstapel, sie drehen sich um oder wirbeln hereingedreht. Und was beim Senden einer Nachricht losfliegt: Papierflieger, Brieftaube, Uhu mit Posttasche oder Postauto. Auch wie der Kopf auf- und zugeht, stellst du hier ein – vom Theatervorhang bis zur Servierglocke." },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("setAnimiert")], puls: ["#setAnimiert"], mussSel: true, t: "✨ Ruhig oder lebendig",
     x: "Der Hauptschalter: Animierte Knöpfe. Ist er aus, ist alles ruhig – keine Bewegungen, kein Jahreszeiten-Bild, keine Effekte. Ideal, wenn dich das ablenkt." },
   { v: "einstellungen", vor: () => rgAuf("darstellung"), sel: [rgSchalter("sparWahl"), "#sparWahl"], mussSel: true, t: "🐢 Sparmodus und Akku",
@@ -15152,12 +15152,12 @@ function register(r, richtung) {
 // Beim Wechsel Club / Meins / Technik erscheinen die Kacheln mit Effekt. Je Gerät wählbar (⚙️ → 🎨 Darstellung), Standard Jalousie
 // (passt zum Kopf). Kurz (≈ 0,5 s), nur transform/opacity (Grafikkarte, auch auf älteren Handys flüssig). Aus bei „✨ Animierte Knöpfe“
 // aus oder im Sparmodus. Läuft nur beim Antippen/Wischen – nie von selbst.
-const REG_EFFEKTE = [["jalousie", "🪟 Jalousie"], ["karten", "🃏 Kartenstapel"], ["drehen", "🔄 Umdrehen"], ["zufall", "🎲 Zufall"], ["aus", "🚫 Aus"]];
+const REG_EFFEKTE = [["jalousie", "🪟 Jalousie"], ["karten", "🃏 Kartenstapel"], ["drehen", "🔄 Umdrehen"], ["wirbel", "🌀 Hereindrehen"], ["zufall", "🎲 Zufall"], ["aus", "🚫 Aus"]]; // 2.566.0: + Hereindrehen
 const regEffektWahl = () => { try { const w = localStorage.getItem("kc_club_regEffekt"); return REG_EFFEKTE.some(([k]) => k === w) ? w : "jalousie"; } catch { return "jalousie"; } };
 function regEffekt(richtung, art) {
   let w = art || regEffektWahl();
   if (w === "aus" || !einst("animiert", true) || SPAR?.an || kaBearb || einfach()) return false;
-  if (w === "zufall") w = ["jalousie", "karten", "drehen"][Math.floor(Math.random() * 3)];
+  if (w === "zufall") w = ["jalousie", "karten", "drehen", "wirbel"][Math.floor(Math.random() * 4)];
   const ra = $("raster"); if (!ra?.animate) return false;
   const k = [...ra.querySelectorAll(":scope > .kachel, :scope > .mini-kachel, :scope > *")].filter((x) => x.offsetParent !== null).slice(0, 40);
   if (!k.length) return false;
@@ -15174,6 +15174,12 @@ function regEffekt(richtung, art) {
     } else if (w === "karten") { // Kartenstapel: fliegen in Wischrichtung herein und legen sich ab
       f = [{ transform: `translate(${seite * 115}%, -18%) rotate(${seite * 16}deg) scale(.82)`, opacity: 0 }, { transform: `translate(${seite * -4}%, 2%) rotate(${seite * -2.5}deg) scale(1.03)`, opacity: 1, offset: 0.72 }, { transform: "none", opacity: 1 }];
       o = { duration: 540, delay: i * 48, easing: "cubic-bezier(.2,.85,.3,1)" };
+    } else if (w === "wirbel") { // 2.566.0 KC-CLUB-KACHEL-WIRBEL (Wunsch Hansi „Kacheln reingedreht kommen“): klein und gedreht von außen
+      // herein (Wischrichtung), mit anderthalb Umdrehungen, setzen leicht über und rasten ein – Kachel für Kachel wie ein Wirbel
+      const rein = seite * (spalte % 2 ? 1 : -1);
+      f = [{ transform: `translate(${rein * 120}%, 60%) rotate(${rein * -540}deg) scale(.15)`, opacity: 0 }, { transform: `translate(${rein * -3}%, -2%) rotate(${rein * 10}deg) scale(1.06)`, opacity: 1, offset: 0.74 },
+        { transform: `rotate(${rein * -3}deg) scale(.98)`, opacity: 1, offset: 0.88 }, { transform: "none", opacity: 1 }];
+      o = { duration: 760, delay: i * 55, easing: "cubic-bezier(.22,.8,.3,1)" };
     } else { // Umdrehen: eine schnelle Drehung um die eigene Achse, kommt wie eine Karte nach vorn
       f = [{ transform: P + "rotateY(-300deg) scale(.6)", opacity: 0 }, { transform: P + "rotateY(18deg) scale(1.05)", opacity: 1, offset: 0.7 }, { transform: P + "rotateY(0) scale(1)", opacity: 1 }];
       o = { duration: 640, delay: i * 42, easing: "cubic-bezier(.2,.7,.3,1)" };
@@ -39725,7 +39731,7 @@ function suAppListe() {
     ["🍂", "Jahreszeiten-Bild im Kopf (fest oder automatisch)", "jahreszeit jahreszeiten kopf bild herbst winter frühling sommer advent silvester laub schnee schneemann eichhörnchen iglu vorschau", ein("jzWahl")],
     ["🎏", "Deko an der Leiste (Wimpel, Lichterkette, Laternen)", "deko dekoration wimpel wimpelkette lichterkette lichter laternen lampions girlande leiste", ein("jzDekoWahl")],
     ["✨", "Ruhige oder lebendige Knöpfe (Animationen)", "animation animiert ruhig bewegung effekte knöpfe", ein("setAnimiert")],
-    ["🪟", "Kachel- und Sende-Effekt (Jalousie, Papierflieger …)", "kachel effekt jalousie kartenstapel umdrehen senden papierflieger brieftaube uhu eule postauto", ein("regEffektWahl")],
+    ["🪟", "Kachel- und Sende-Effekt (Jalousie, Papierflieger …)", "kachel effekt jalousie kartenstapel umdrehen hereindrehen wirbel drehen senden papierflieger brieftaube uhu eule postauto", ein("regEffektWahl")],
     ["🐢", "Sparmodus / Akku sparen", "sparmodus sparen akku batterie strom langsam netz datensparen", ein("sparWahl")],
     ["🎨", "Erklär-Video: Meine App nach meinem Geschmack", "anpassen einstellen aussehen geschmack video themen farben jahreszeiten deko schrift", () => rgListeAbspielen(["anpassen"])],
     ["🗣️", "Videos: Stimme und Tempo wählen", "stimme video tempo langsam schneller vorlesen klingt komisch roboter sprecher erklär videos herunterladen thorsten dii", () => stimmenWahl()], // 2.348.0
